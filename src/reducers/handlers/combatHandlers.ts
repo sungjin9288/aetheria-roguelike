@@ -141,6 +141,16 @@ const settleVictory = (
         now: () => now,
     });
 
+    // 2026-09 D3: 전투 결과 카드 게이트 — 승리 후처리(combatVictory)가 넣은 결과 카드는
+    //   "플레이어의 다음 판단이 대기 중이 아닐 때"만 남긴다. 트랜잭션이 끝난 실제 상태로
+    //   판단하므로 combatVictory 내부 dispatch 순서(심연 층 유물은 카드보다 먼저, 정예의
+    //   흔적 유물은 카드보다 나중)와 무관하게 한 곳에서 결정된다.
+    //   - pendingRelics: 유물 3(4)선택(z-50 전체 화면)이 카드(z-40)를 덮으므로 카드는 내린다.
+    //   - gameState !== idle: 승천(마왕 격파) / 진엔딩 / 진보스 재교전 화면을 카드가 가리지 않는다.
+    if (draft.postCombatResult && (draft.pendingRelics || draft.gameState !== GS.IDLE)) {
+        draft = { ...draft, postCombatResult: null };
+    }
+
     return {
         ...draft,
         combatReceipt: {

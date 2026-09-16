@@ -273,14 +273,40 @@ export const handleVictoryOutcome = ({
         bossRewardHint: victoryResult.bossClearBonus?.rewardHint || null,
         bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
     });
-    // 전투 결과 카드(PostCombatCard)는 현재 프로덕션에서 열리지 않는다 — 승리 요약은 위의
-    //   digest 로그가 담당하고, 카드는 QA 시나리오(useGameTestApi.injectPostCombatResult)에서만
-    //   주입된다. 2026-09 D2의 "밀어붙인다 / 숨을 고른다" 선택은 카드가 열릴 때 항상 함께
-    //   렌더되며(utils/postCombatChoice.isPostCombatChoiceOffered), 적용은 reducer 단일 전이
-    //   (AT.RESOLVE_POST_COMBAT_CHOICE)로만 이뤄진다. 카드를 매 승리마다 띄우려면 아래 payload를
-    //   null 대신 승리 요약 객체로 바꾸면 되지만, 하단 고정 오버레이가 탐험 버튼을 가려
-    //   smoke/e2e 조작 흐름을 바꾸므로 그 전환은 별도 검증(브라우저 실행)이 필요하다.
-    dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+    // 2026-09 D3: 전투 결과 카드(PostCombatCard)를 실제 승리 흐름에 연결한다.
+    //   기존엔 payload: null을 넣어 카드가 QA 주입(useGameTestApi.injectPostCombatResult)에서만
+    //   열렸고, 카드에 붙은 판단 요약·전리품 신호·"밀어붙인다 / 숨을 고른다" 선택이 모두
+    //   프로덕션에서 보이지 않았다. 필드는 injectPostCombatResult 픽스처와 같은 스키마이며,
+    //   값은 모두 위에서 이미 계산한 것만 재사용한다(신규 계산 없음).
+    //   hpLow/mpLow 불리언 대신 실제 생명/기력 수치를 넘긴다 — outcomeAnalysis가 비율로
+    //   승리 등급(완승/안정/아슬아슬/붕괴 직전)을 나누므로 불리언보다 정확하다.
+    //   카드를 띄울지 말지의 최종 판단은 reducer(settleVictory)가 전투 트랜잭션이 끝난
+    //   상태(유물 선택 대기 / 승천 / 진엔딩 / 진보스)를 보고 한 곳에서 결정한다.
+    const inventoryCap = (updatedPlayer as any).maxInv || BALANCE.INV_MAX_SIZE;
+    dispatch({
+        type: AT.SET_POST_COMBAT_RESULT,
+        payload: {
+            enemy: deadEnemy.name,
+            enemyTier: isBossKill ? 'BOSS' : (deadEnemy?.isElite ? 'ELITE' : 'NORMAL'),
+            isBoss: isBossKill,
+            exp: victoryResult.expGained,
+            gold: victoryResult.goldGained,
+            items: droppedItems,
+            leveledUp: Boolean(victoryResult.leveledUp),
+            playerHp: updatedPlayer.hp,
+            playerMaxHp: victoryStats.maxHp,
+            playerMp: updatedPlayer.mp,
+            playerMaxMp: victoryStats.maxMp,
+            invFull: (updatedPlayer.inv?.length || 0) >= inventoryCap,
+            primaryBuild: buildProfile.primary.name,
+            enemyWeakness: deadEnemy?.weakness || null,
+            enemyResistance: deadEnemy?.resistance || null,
+            upgradeHint,
+            traitHint,
+            bossRewardHint: victoryResult.bossClearBonus?.rewardHint || null,
+            bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
+        },
+    });
 
     // 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
     applyScoutGuaranteedRelic(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });

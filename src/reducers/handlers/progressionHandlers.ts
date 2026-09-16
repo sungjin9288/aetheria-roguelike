@@ -120,8 +120,13 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
         };
     },
 
-    SET_PENDING_RELICS: (state: GameState, action: GameAction) =>
-        ({ ...state, pendingRelics: action.payload }),
+    // 2026-09 D3: 유물 선택이 열리면 전투 결과 카드는 내린다 — 유물 패널(z-50 전체 화면)이
+    //   카드(z-40)를 덮어 카드 CTA가 닿지 않는 상태로 남는 것을 막는다 (lessons R12).
+    SET_PENDING_RELICS: (state: GameState, action: GameAction) => ({
+        ...state,
+        pendingRelics: action.payload,
+        postCombatResult: action.payload ? null : state.postCombatResult,
+    }),
 
     ADD_RELIC: (state: GameState, action: GameAction) => {
         const relic = action.payload;

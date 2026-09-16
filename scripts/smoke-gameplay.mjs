@@ -1194,6 +1194,27 @@ async function resolveEvent(page, observations) {
   await settleAfterCommand(page);
 }
 
+/**
+ * 2026-09 D3: 실제 승리 후에는 전투 결과 카드(PostCombatCard)가 하단 고정 오버레이로 열린다.
+ * 다음 조작(탐험 버튼, 탭, 상점 CTA)을 가리지 않도록 카드가 있으면 실제 CTA로 닫는다
+ * (장식 shell 대신 CTA 기준 — lessons R8). 주 행동 버튼은 추천에 따라 인벤토리를 열 수 있어
+ * '계속 탐험'(있을 때) → '닫기' 순으로만 누른다.
+ */
+async function dismissPostCombatCardIfPresent(page) {
+  const card = page.locator('[data-testid="post-combat-card"]');
+  if (!(await card.count())) return false;
+
+  for (const testId of ['post-combat-continue', 'post-combat-close']) {
+    const cta = page.locator(`[data-testid="${testId}"]`);
+    if (!(await cta.count())) continue;
+    await cta.click();
+    await waitForState(page, (state) => !state.postCombatResult, 'post-combat card to close');
+    logSmoke(`post-combat card dismissed via ${testId}`);
+    return true;
+  }
+  throw new Error('Post-combat card is open without a reachable dismissal CTA');
+}
+
 async function resolveCombat(page, observations) {
   observations.combat = true;
   for (let turn = 0; turn < 18; turn += 1) {
@@ -1239,6 +1260,7 @@ async function driveExploreLoop(page, { requireEvent = true } = {}) {
     combat: false,
     victory: false,
     syntheticEvent: false,
+    postCombatCard: false,
   };
 
   for (let attempt = 0; attempt < 60; attempt += 1) {
@@ -1286,6 +1308,12 @@ async function driveExploreLoop(page, { requireEvent = true } = {}) {
 
     if (hasVictorySignal(state)) {
       observations.victory = true;
+    }
+
+    // 실제 승리 카드는 다음 탐험/탭 조작 전에 닫는다.
+    if (await dismissPostCombatCardIfPresent(page)) {
+      observations.postCombatCard = true;
+      state = await readState(page);
     }
 
     if (observations.combat && observations.victory && !requireEvent) {
