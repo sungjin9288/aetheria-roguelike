@@ -32,6 +32,7 @@ import {
     resolveCloudBootstrapAuthority,
     type GameSaveRecord,
 } from '../platform/gameStorage';
+import { createCloudAutosave } from './createCloudAutosave';
 import { useLiveConfigAndLeaderboard } from './useLiveConfigAndLeaderboard';
 
 const BOOTSTRAP_TIMEOUT_MS = 6000;
@@ -442,81 +443,31 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
     ]);
 
     // --- Auto Save (Debounced) ---
+    // 본문은 createCloudAutosave 로 분리 — Firestore 의존성을 주입받아 훅 없이 테스트된다.
     useEffect(() => {
         if (mockMode) return undefined;
         if (syncStatus !== 'syncing' || !uid) return;
 
-        const saveData = async () => {
-            try {
-                const userDocRef = doc(db, 'artifacts', APP_ID, 'users', uid);
-                const localRecord = (await localSavePromiseRef.current)
-                    ?? await getRuntimeGameStorage().load().catch(() => null);
-                if (
-                    !localRecord
-                    || pendingCloudRecordRef.current
-                    || localRecord.revision < cloudRevisionFloorRef.current
-                    || (
-                        cloudRevisionAdvanceRequiredRef.current
-                        && localRecord.revision <= cloudRevisionFloorRef.current
-                    )
-                ) {
-                    dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
-                    return;
-                }
-                // 복귀 브리핑 카드(returnBriefing.ts)가 클라이언트 ms 타임스탬프로 경과 시간을
-                // 계산하므로, Firestore serverTimestamp()(lastActive)와 별도로 player.stats에
-                // 저장 시각을 기록한다. 매 autosave마다 갱신 — 플레이 중에는 계속 최신화되고,
-                // 세션 종료 후에는 마지막 저장 시각에 고정된다.
-                const playerPayload = {
-                    ...player,
-                    archivedHistory: [],
-                    stats: { ...player.stats, lastSeenAt: Date.now() },
-                };
-                const payload: Record<string, any> = {
-                    player: playerPayload,
-                    gameState,
-                    enemy,
-                    grave,
-                    currentEvent,
-                    quickSlots,
-                    version: CONSTANTS.DATA_VERSION,
-                    saveSchemaVersion: localRecord?.saveVersion ?? 1,
-                    saveRevision: localRecord?.revision ?? 0,
-                    savedAt: localRecord?.savedAt ?? Date.now(),
-                    lastActive: serverTimestamp()
-                };
+        const flushCloudSave = createCloudAutosave({
+            db,
+            doc,
+            collection,
+            setDoc,
+            addDoc,
+            serverTimestamp,
+            loadLocalRecord: () => getRuntimeGameStorage().load().catch(() => null),
+            dispatch,
+            refs: {
+                localSavePromise: localSavePromiseRef,
+                pendingCloudRecord: pendingCloudRecordRef,
+                cloudRevisionFloor: cloudRevisionFloorRef,
+                cloudRevisionAdvanceRequired: cloudRevisionAdvanceRequiredRef,
+            },
+        });
 
-                if (player.archivedHistory && player.archivedHistory.length > 0) {
-                    const historyCol = collection(userDocRef, 'history');
-                    await Promise.all(player.archivedHistory.map((h: any) => addDoc(historyCol, h)));
-                }
-
-                await setDoc(userDocRef, payload, { merge: true });
-
-                // v5.0: 리더보드 entry 업데이트 (kills > 0 일 때만)
-                if (player.name && (player.stats?.kills || 0) > 0) {
-                    const lbDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard', uid);
-                    await setDoc(lbDocRef, {
-                        nickname:     player.name,
-                        totalKills:   player.stats?.kills || 0,
-                        prestigeRank: player.meta?.prestigeRank || 0,
-                        activeTitle:  player.activeTitle || null,
-                        level:        player.level || 1,
-                        bossKills:    player.stats?.bossKills || 0,
-                        job:          player.job || CONSTANTS.DEFAULT_JOB,
-                        uid,
-                        updatedAt:    serverTimestamp(),
-                    }, { merge: true });
-                }
-
-                dispatch({ type: AT.SET_SYNC_STATUS, payload: 'synced' });
-            } catch (e) {
-                console.error('Save Failed', e);
-                dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
-            }
-        };
-
-        const timer = setTimeout(saveData, BALANCE.DEBOUNCE_SAVE_MS);
+        const timer = setTimeout(() => {
+            void flushCloudSave({ uid, player, gameState, enemy, grave, currentEvent, quickSlots });
+        }, BALANCE.DEBOUNCE_SAVE_MS);
         return () => clearTimeout(timer);
     }, [player, gameState, enemy, grave, currentEvent, quickSlots, syncStatus, uid, dispatch, mockMode]);
 
