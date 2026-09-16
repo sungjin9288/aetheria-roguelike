@@ -34,8 +34,6 @@ export const MSG = {
     COMBAT_ENEMY_GUARD: (name: string | undefined) => `${name}이(가) 방어 자세를 취했습니다.`,
     COMBAT_ENEMY_STUNNED: (name: string | undefined) => `${name}이(가) 기절하여 턴을 잃습니다.`,
     COMBAT_CRIT: '치명타!',
-    COMBAT_WEAKNESS: '속성 약점 적중!',
-    COMBAT_RESIST: '적이 속성을 저항했습니다.',
 
     // --- 스킬 (Skill) ---
     // slice 19: tags 추가 — 치명타/약점/저항을 본문에 통합 (COMBAT_ATTACK_DETAIL 동일 패턴)
@@ -82,8 +80,6 @@ export const MSG = {
     // 2026-07 — 에테르 거울: revive 노드(런당 1회 치명상 부활) 발동 로그.
     MIRROR_REVIVE: '[에테르 수호] 거울의 가호가 치명상을 막아냈습니다!',
     MIRROR_PURCHASE: (name: string, newLevel: number, cost: number) => `에테르 거울에 ${name} ${newLevel}단계를 새겼습니다. 계승 정수 -${cost}`,
-    MIRROR_MAX_LEVEL: (name: string) => `${name}은(는) 이미 최대 레벨입니다.`,
-    MIRROR_ESSENCE_INSUFFICIENT: (cost: number) => `에센스가 부족합니다. (필요: ${cost})`,
     // slice 19: 스탯 상승 표기 — 레벨업이 무엇을 바꿨는지 로그에서 즉시 확인 (성장 가시화)
     LEVEL_UP: (level: number, attack: number, health: number) => `레벨 ${level} 상승 · 공격력 +${attack} · 생명 +${health}`,
     LEVEL_MILESTONE: (level: number, gold: number) => `레벨 ${level} 달성 · 골드 ${gold.toLocaleString()} 획득`,
@@ -130,7 +126,6 @@ export const MSG = {
 
     // --- 프리미엄 (Premium) ---
     PREMIUM_PURCHASE: (name: string, cost: number) => `${name} 교환 완료 (에테르 크리스탈 ${cost}개)`,
-    PREMIUM_NOT_ENOUGH: '에테르 크리스탈이 부족합니다.',
     PREMIUM_INV_EXPAND: (size: number) => `가방을 ${size}칸까지 확장했습니다.`,
 
     // --- 강화 (Enhancement) ---
@@ -186,14 +181,6 @@ export const MSG = {
     CLASS_TIER_1: '1차 전직',
     CLASS_TIER_2: '2차 전직',
     CLASS_TIER_3: '최종 전직',
-    CLASS_STAT_HP: '생명',
-    CLASS_STAT_MP: '기력',
-    CLASS_STAT_ATK: '공격력',
-    CLASS_REQ_LEVEL: (level: number) => `레벨 ${level} 이상`,
-    CLASS_TREE_TITLE: '전직 계통도',
-    CLASS_CURRENT: '현재 직업',
-    CLASS_AVAILABLE: '전직 가능',
-    CLASS_LOCKED: '잠김',
 
     // --- 도감 ---
     // cycle 116: CODEX_NEW_ENTRY/DISCOVERED/UNDISCOVERED/PROGRESS 제거 — 0건 사용.
@@ -222,20 +209,15 @@ export const MSG = {
     SHOP_SELL_DONE: (name: string | undefined, gold: number) => `${name} 판매 · 골드 +${gold}`,
     CRAFT_MAT_INSUFFICIENT: (name: string) => `재료 부족: ${name}`,
     CRAFT_DONE: (name: string) => `${name} 제작 완료`,
-    QUEST_NOT_COMPLETE: '아직 완료 조건을 만족하지 못했습니다.',
     QUEST_REWARD_ITEM: (name: string) => `보상 아이템: ${name}`,
     QUEST_TRAIT_BONUS: (title: string, gold: number) => `${title} 공명 보상 · 골드 +${gold}`,
     QUEST_DONE: (title: string) => `퀘스트 완료: ${title}`,
-    ACH_NOT_UNLOCKED: '아직 달성하지 못한 업적입니다.',
-    ACH_ALREADY_CLAIMED: '이미 수령한 업적입니다.',
     ACH_REWARD_ITEM: (name: string) => `업적 보상 아이템: ${name}`,
     ACH_DONE: (title: string | undefined) => `업적 달성: ${title}`,
     PREMIUM_INSUFFICIENT: (name: string) => `${name}이(가) 부족합니다.`,
-    TITLE_ALREADY_OWNED: '이미 보유 중인 칭호입니다.',
     ITEM_NOT_FOUND: '아이템을 찾을 수 없습니다.',
     SKILL_BRANCH_CHOSEN: (name: string, branchName: string) => `${name} 성장 선택: ${branchName}`,
     SKILL_BRANCH_ALREADY_CHOSEN: (name: string) => `${name}의 첫 성장 선택은 끝났습니다. 안전한 지역에서 다시 선택할 수 있습니다.`,
-    BULK_SELL_EMPTY: '판매할 저가 재료가 없습니다.',
     BULK_SELL_DONE: (count: number, gold: number) => `재료 ${count}개 판매 · 골드 +${gold}`,
 
     // --- 이동/탐험 ---
@@ -338,7 +320,6 @@ export const MSG = {
 
     // --- 체인 저널 (Quest 탭) ---
     CHAIN_JOURNAL_TITLE: '진행 중인 이야기',
-    CHAIN_JOURNAL_EMPTY: '아직 진행 중인 이야기가 없습니다. 탐험 중 우연히 시작될 수 있습니다.',
     CHAIN_JOURNAL_STEP: (current: number, total: number) => `${current}/${total} 단계`,
     CHAIN_JOURNAL_NEXT_LOC: (loc: string) => `다음 이야기: ${loc}`,
 
@@ -420,17 +401,13 @@ export const MSG = {
 
     // --- UI 라벨 (버튼/섹션) ---
     UI_CLOSE: '닫기',
-    UI_OPEN: '열기',
     UI_REFRESH: '갱신',
     UI_REVIEW: '검토',
     UI_NOTABLE: '주목',
     // cycle 116: UI_ALL / UI_EQUIPPED 제거 — 0건 사용 (INV_FILTER_ALL과 inline string으로 대체).
-    UI_MY_RANK: '내 순위',
     UI_LOOT_REVIEW: '전리품 검토',
     UI_LOOT_FOCUS: '전리품 주목',
     UI_LOOT_FOCUS_HINT: '이번 전투에서 얻은 장비를 우선 확인하세요.',
-    UI_PRESTIGE: 'PRESTIGE',
-    UI_PRESTIGE_COMPLETE: '환생 완료',
     UI_AUTO_EQUIP_BEST: '최적 장비 자동 장착',
 
     // --- 인벤토리 필터 ---
