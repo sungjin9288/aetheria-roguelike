@@ -1,4 +1,5 @@
 import { BALANCE } from '../../data/constants';
+import { DB } from '../../data/db';
 import { GS } from '../gameStates';
 import { resolveCombatItemTurn } from '../../systems/combatItemTurn';
 import { createSeededRandom } from '../../systems/combatItemTurn';
@@ -11,6 +12,8 @@ import { rewardActionMap } from './rewardHandlers';
 import type { GameAction, GameState } from '../gameReducer';
 import type { UseCombatItemPayload } from '../actionTypes';
 import { addNewTitles, sanitizeQuickSlots } from './helpers';
+import { applyPostCombatChoice, isPostCombatChoiceOffered, type PostCombatChoiceId } from '../../utils/postCombatChoice';
+import { calculateFullStats } from '../../utils/statsCalculator';
 
 const appendCombatLogs = (
     currentLogs: any[],
@@ -149,6 +152,40 @@ const settleVictory = (
 };
 
 export const makeCombatActionMap = (initialPlayer: any) => ({
+    /**
+     * 2026-09 D2 — 전투 후 "밀어붙인다 / 숨을 고른다" 단일 전이.
+     *
+     * 효과 계산은 전부 순수 함수(utils/postCombatChoice)에 있고, 여기서는 상태 전이만 한다.
+     * postCombatResult.postCombatChoiceResolved 플래그로 1회만 적용되므로 빠른 연타로
+     * 버프·회복이 두 번 들어가지 않는다 (두 번째 dispatch는 같은 state를 그대로 반환).
+     */
+    RESOLVE_POST_COMBAT_CHOICE: (state: GameState, action: GameAction): GameState => {
+        const choice = action.payload?.choice as PostCombatChoiceId | undefined;
+        if (choice !== 'push' && choice !== 'breather') return state;
+
+        const result = state.postCombatResult;
+        if (!result || result.postCombatChoiceResolved === true) return state;
+        if (!isPostCombatChoiceOffered(result)) return state;
+
+        const mapData = DB.MAPS[state.player.loc as string] || null;
+        const effectiveMaxHp = calculateFullStats(state.player)?.maxHp || state.player.maxHp || 1;
+        const applied = applyPostCombatChoice(state.player, choice, mapData, effectiveMaxHp);
+
+        return {
+            ...state,
+            player: applied.player,
+            postCombatResult: { ...result, postCombatChoiceResolved: true, postCombatChoice: choice },
+            logs: [
+                ...state.logs,
+                ...applied.logs.map((entry, index) => ({
+                    id: `post-combat-choice-${choice}-${state.combatTurn || 0}-${state.logs.length + index}`,
+                    type: entry.type,
+                    text: entry.text,
+                })),
+            ].slice(-BALANCE.LOG_MAX_SIZE),
+            syncStatus: 'syncing',
+        };
+    },
     RESOLVE_COMBAT_ACTION: (state: GameState, action: GameAction): GameState => {
         if (state.gameState !== GS.COMBAT || !state.enemy) return state;
         const kind = action.payload?.kind;

@@ -101,6 +101,9 @@ export const AT = Object.freeze({
 
     // 2026-07 — 에테르 거울 (에센스 소비 영구 업그레이드 트리)
     PURCHASE_MIRROR_NODE: 'PURCHASE_MIRROR_NODE',
+
+    // 2026-09 — 전투 후 "밀어붙인다 / 숨을 고른다" 2선택 (단일 reducer 전이 + 1회 한정)
+    RESOLVE_POST_COMBAT_CHOICE: 'RESOLVE_POST_COMBAT_CHOICE',
 } as const);
 
 // cycle 301: ActionType type alias 제거 — 외부 import 0건. AT const literal types로 충분.

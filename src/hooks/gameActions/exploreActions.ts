@@ -125,7 +125,19 @@ export const createExploreActions = (deps: any, shared: any) => {
             const campfireChance = BALANCE.CAMPFIRE_CHANCE
                 + getPrestigeUnlocks(player.meta?.prestigeRank).campfireChanceBonus
                 + getMirrorEffects(player.meta).campfireChanceBonus;
-            if (mapData.type === 'dungeon' && rng() < campfireChance) {
+            // 2026-09 D2 — "밀어붙인다"를 고른 직후 1회는 모닥불이 나타나지 않는다.
+            //   플래그는 이번 탐험에서 소비되며(성공/실패 무관), 아래 롤을 건너뛴다.
+            const campfireBlocked = Boolean(player.stats?.nextExploreCampfireBlocked);
+            if (campfireBlocked) {
+                dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (p: any) => ({
+                        ...p,
+                        stats: { ...(p.stats || {}), nextExploreCampfireBlocked: false },
+                    }),
+                });
+            }
+            if (!campfireBlocked && mapData.type === 'dungeon' && rng() < campfireChance) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const campfireEvent = buildCampfireEvent(getFullStats());
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });

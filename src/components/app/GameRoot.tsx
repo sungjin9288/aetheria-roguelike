@@ -360,6 +360,10 @@ const GameRoot = ({
                         result={engine.postCombatResult}
                         onClose={() => engine.actions.clearPostCombat?.()}
                         onOpenInventory={() => handleOpenArchiveTab('inventory')}
+                        onResolveChoice={(choice) => engine.dispatch({
+                            type: AT.RESOLVE_POST_COMBAT_CHOICE,
+                            payload: { choice },
+                        })}
                     />
                 </Suspense>
             )}

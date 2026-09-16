@@ -273,6 +273,13 @@ export const handleVictoryOutcome = ({
         bossRewardHint: victoryResult.bossClearBonus?.rewardHint || null,
         bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
     });
+    // 전투 결과 카드(PostCombatCard)는 현재 프로덕션에서 열리지 않는다 — 승리 요약은 위의
+    //   digest 로그가 담당하고, 카드는 QA 시나리오(useGameTestApi.injectPostCombatResult)에서만
+    //   주입된다. 2026-09 D2의 "밀어붙인다 / 숨을 고른다" 선택은 카드가 열릴 때 항상 함께
+    //   렌더되며(utils/postCombatChoice.isPostCombatChoiceOffered), 적용은 reducer 단일 전이
+    //   (AT.RESOLVE_POST_COMBAT_CHOICE)로만 이뤄진다. 카드를 매 승리마다 띄우려면 아래 payload를
+    //   null 대신 승리 요약 객체로 바꾸면 되지만, 하단 고정 오버레이가 탐험 버튼을 가려
+    //   smoke/e2e 조작 흐름을 바꾸므로 그 전환은 별도 검증(브라우저 실행)이 필요하다.
     dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
 
     // 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
