@@ -61,7 +61,7 @@ export const getShopMaxTier = (location: string) => {
     return Math.min(6, tierFromLevel + safeBonus + shopBonus);
 };
 
-export const getShopCatalog = (location: string) => {
+const getShopCatalog = (location: string) => {
     const maxTier = getShopMaxTier(location);
     return [
         ...(DB.ITEMS.consumables || []),

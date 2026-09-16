@@ -13,7 +13,7 @@ export const SEASON_ACTIVITY_SOURCES = [
     { id: 'kill', label: '일반 처치', xp: 5 },
 ] as const;
 
-export const SEASON_CHAPTERS = [
+const SEASON_CHAPTERS = [
     { id: 'opening', title: '여정의 시작', from: 1, to: 10 },
     { id: 'deepening', title: '깊어지는 모험', from: 11, to: 20 },
     { id: 'finale', title: '시즌의 완성', from: 21, to: 30 },

@@ -78,7 +78,7 @@ export const getWeaponAttackValue = (weapon: any, slot: any) => {
     return Math.floor(baseVal * BALANCE.ONE_HAND_ATK_RATIO);
 };
 
-export const getEnhancedEquipmentStatValue = (
+const getEnhancedEquipmentStatValue = (
     item: Item | null | undefined,
     slot: EquipmentEnhanceSlot,
 ) => {

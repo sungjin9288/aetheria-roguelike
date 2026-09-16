@@ -38,7 +38,7 @@ export const getCurrentDailyProtocol = (player: Player, date: Date) => {
     return createDailyProtocol(player, date);
 };
 
-export const createWeeklyProtocol = (date: Date): WeeklyProtocol => ({
+const createWeeklyProtocol = (date: Date): WeeklyProtocol => ({
     kills: 0,
     explores: 0,
     bossKills: 0,
