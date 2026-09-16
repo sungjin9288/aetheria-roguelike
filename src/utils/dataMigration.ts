@@ -9,6 +9,7 @@ import { normalizeMilestoneStoryState } from './milestoneStory.js';
 import { normalizeCurrentRunProgress } from './runProgress.js';
 import { normalizeClassJourneyLedger } from './classJourney.js';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward.js';
+import { getSpentMirrorEssence } from '../systems/mirrorUpgrades.js';
 
 // gameUtils.ts에서 분리 (저장 데이터 마이그레이션) — 행동 보존 리팩토링.
 //   순환 의존을 피하려 toArray(1줄 헬퍼)는 인라인.
@@ -83,6 +84,14 @@ export const migrateData = (rawData: any) => {
     // 2026-07 — 에테르 거울: meta.mirror가 없는 구세이브(v5.0 이전 전부 + v5.0 일부)에서도
     //   getMirrorEffects가 항상 객체를 참조할 수 있도록 {}로 보강. 기존 레벨은 보존.
     target.meta.mirror = target.meta.mirror || {};
+    // v5.1 — 2026-09 G2: meta.essenceLifetime(누적 획득 정수) 도입. 구세이브에는 없으므로
+    //   `잔여 정수 + 거울에서 이미 지출한 정수`로 정확히 역산한다. 지출액은 구매 이력
+    //   (meta.mirror의 노드별 레벨)과 MIRROR_NODES의 레벨별 비용으로 결정론적으로 재구성
+    //   되므로 기존 유저는 rank를 단 한 단계도 잃지 않는다.
+    if (!Number.isFinite(Number(target.meta.essenceLifetime))) {
+        target.meta.essenceLifetime = Math.max(0, Number(target.meta.essence) || 0)
+            + getSpentMirrorEssence(target.meta.mirror);
+    }
     target.meta.storyMilestones = normalizeMilestoneStoryState(target.meta.storyMilestones);
     target.settings = {
         ...(target.settings || {}),

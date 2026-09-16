@@ -34,10 +34,13 @@ test('투자 미리보기는 실제 거울 효과와 비용을 현재와 다음 
 });
 
 test('부족한 정수와 완료된 성장은 투자 불가 상태를 분명하게 계산한다', () => {
-    const shortage = getMirrorInvestmentPreview('revive', {}, 180);
-    const maxed = getMirrorInvestmentPreview('start_boot_extra', { start_boot_extra: 1 }, 999);
+    const revive = MIRROR_NODES.find((node) => node.id === 'revive');
+    const boot = MIRROR_NODES.find((node) => node.id === 'start_boot_extra');
+    const held = revive.costs[0] - 180;
+    const shortage = getMirrorInvestmentPreview('revive', {}, held);
+    const maxed = getMirrorInvestmentPreview('start_boot_extra', { start_boot_extra: boot.maxLevel }, 99_999);
 
-    assert.equal(shortage?.shortage, 320);
+    assert.equal(shortage?.shortage, 180);
     assert.equal(shortage?.canAfford, false);
     assert.equal(maxed?.maxed, true);
     assert.equal(maxed?.nextCost, null);
@@ -48,7 +51,8 @@ test('효과 문구와 전체 진행도는 플레이어가 읽는 표현으로 �
     assert.equal(getMirrorEffectLabel('relic_pity', 2), '유물 발견 누적 보정 +50%');
     assert.equal(getMirrorEffectLabel('rest_discount', 2), '휴식 비용 -40%');
     assert.equal(getMirrorEffectLabel('revive', 1), '치명상 1회 방어 · 생명 30% 회복');
-    assert.deepEqual(getMirrorCompletion({ start_gold: 2, revive: 1 }), { completed: 3, total: 13 });
+    const totalLevels = MIRROR_NODES.reduce((sum, node) => sum + node.maxLevel, 0);
+    assert.deepEqual(getMirrorCompletion({ start_gold: 2, revive: 1 }), { completed: 3, total: totalLevels });
 });
 
 test('거울 화면은 작은 글자와 즉시 구매를 제거하고 고정 결정 영역을 사용한다', async () => {

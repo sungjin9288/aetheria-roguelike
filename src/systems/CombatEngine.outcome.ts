@@ -4,6 +4,7 @@ import { getActiveRelicSynergies } from '../data/relics.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getMirrorEffects } from './mirrorUpgrades';
+import { applyEssenceGain, getEssenceGainFromExp } from './essenceLedger';
 import { getPacedCombatExp } from '../utils/progressionPacing.js';
 import type { Player, Monster } from '../types/index.js';
 import { scaleProgressionExpReward } from '../data/progressionProfiles.js';
@@ -157,20 +158,15 @@ export const outcomeMethods: any = {
         // PR #8: 프레스티지 rank≥1 해금 — 에센스 획득 +10% (essenceMult).
         // 2026-07 — 에테르 거울: essence_flow 노드(레벨당 +10%)를 rank 배율과 곱연산으로 누적.
         const essenceMult = getPrestigeUnlocks(meta.prestigeRank).essenceMult * getMirrorEffects(meta).essenceFlowMult;
-        const essenceGain = Math.max(1, Math.floor((enemy.exp ?? 0) / 8 * essenceMult));
-        meta.essence += essenceGain;
+        const essenceGain = getEssenceGainFromExp(enemy.exp, essenceMult);
         logs.push({ type: 'event', text: MSG.LEGACY_ESSENCE(essenceGain) });
 
-        const nextRank = Math.floor(meta.essence / 150);
-        if (nextRank > meta.rank) {
-            const gain = nextRank - meta.rank;
-            meta.rank = nextRank;
-            meta.bonusAtk += gain;
-            meta.bonusHp += gain * 5;
-            meta.bonusMp += gain * 3;
-            logs.push({ type: 'system', text: MSG.LEGACY_RANK(meta.rank) });
+        // 2026-09 G2: rank는 누적 획득량(essenceLifetime) 기준 — 거울 구매로 내려가지 않는다.
+        const granted = applyEssenceGain(meta, essenceGain);
+        if (granted.rankGain > 0) {
+            logs.push({ type: 'system', text: MSG.LEGACY_RANK(granted.meta.rank) });
         }
-        p.meta = meta;
+        p.meta = granted.meta;
 
         // 유물: 피의 서약 (on_kill_heal) — 처치 시 HP 회복
         const healRelic = relics.find((r: any) => r.effect === 'on_kill_heal');

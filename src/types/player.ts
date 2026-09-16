@@ -94,6 +94,9 @@ interface TempBuff {
 
 interface PlayerMeta {
     essence?: number;
+    // 2026-09 G2: 지금까지 *번* 정수의 총합(소비해도 줄지 않음). rank 산출 기준.
+    //   단일 진실 원천은 systems/essenceLedger.ts.
+    essenceLifetime?: number;
     rank?: number;
     bonusAtk?: number;
     bonusHp?: number;

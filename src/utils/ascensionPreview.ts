@@ -1,5 +1,6 @@
 import { BALANCE } from '../data/constants';
 import { PRESTIGE_TITLES } from '../data/titles';
+import { getEssenceLifetime } from '../systems/essenceLedger';
 
 export interface PrestigeMilestone {
     rank: number;
@@ -54,6 +55,8 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
             ...currentMeta,
             prestigeRank: nextRank,
             essence: toNonNegativeNumber(currentMeta.essence) + BALANCE.PRESTIGE_ESSENCE_REWARD,
+            // 2026-09 G2: 승천 보상도 누적 원장에 함께 기록 (rank는 누적 기준으로 오른다).
+            essenceLifetime: getEssenceLifetime(currentMeta) + BALANCE.PRESTIGE_ESSENCE_REWARD,
             bonusAtk: toNonNegativeNumber(currentMeta.bonusAtk) + BALANCE.PRESTIGE_ATK_BONUS,
             bonusHp: toNonNegativeNumber(currentMeta.bonusHp) + BALANCE.PRESTIGE_HP_BONUS,
             bonusMp: toNonNegativeNumber(currentMeta.bonusMp) + BALANCE.PRESTIGE_MP_BONUS,

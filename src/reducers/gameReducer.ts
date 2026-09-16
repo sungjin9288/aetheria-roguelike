@@ -73,6 +73,7 @@ export const INITIAL_STATE: GameState = {
         settings: { readabilityMode: 'standard', equipmentDetailMode: 'auto' },
         meta: {
             essence: 0,
+            essenceLifetime: 0,
             rank: 0,
             bonusAtk: 0,
             bonusHp: 0,

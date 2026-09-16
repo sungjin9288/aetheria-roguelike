@@ -42,7 +42,8 @@ export const CONSTANTS: GameConstants = {
     //   요구 745 → 998 (+34%).
     START_NEXT_EXP: 200,
     // cycle 195: SAVE_KEY 제거 — Firebase Firestore 사용으로 localStorage save key 미사용 (dead).
-    DATA_VERSION: 5.0,
+    // 5.1 — meta.essenceLifetime 도입 (dataMigration에서 essence + 거울 구매 이력으로 역산)
+    DATA_VERSION: 5.1,
     // cycle 309: REMOTE_CONFIG_ENABLED 제거 — RemoteConfigLoader.ts (dead module) 외
     //   read 0건. RemoteConfigLoader 자체가 import 0건이라 cascade dead.
     MONSTER_PREFIXES: [
@@ -531,6 +532,15 @@ export const BALANCE: BalanceConfig = {
     //   `<= 30`은 SmartInventory와 economyHandlers에 각각 하드코딩되어 있었다.
     SELL_PRICE_RATIO: 0.5,                 // 아이템 판매가 = price × 이 비율 (내림)
     INVENTORY_JUNK_MATERIAL_PRICE_MAX: 30, // 일괄 판매 대상으로 간주하는 재료 최대 가격
+    // 2026-09 — 계승 정수 원장(essence ledger).
+    //   rank는 "지금 들고 있는 정수"가 아니라 "지금까지 번 정수"(meta.essenceLifetime)로
+    //   산출한다. 거울 구매가 영구 스탯 사다리를 갉아먹던 숨은 비용을 제거하는 계약이며,
+    //   단일 진실 원천은 systems/essenceLedger.ts.
+    ESSENCE_PER_RANK: 150,       // 누적 정수 이만큼마다 계승 rank +1
+    ESSENCE_EXP_DIVISOR: 8,      // 전투 정수 획득 = floor(enemy.exp / 이 값 × 획득 배율)
+    ESSENCE_RANK_ATK: 1,         // rank 1단계당 영구 공격력
+    ESSENCE_RANK_HP: 5,          // rank 1단계당 영구 최대 생명
+    ESSENCE_RANK_MP: 3,          // rank 1단계당 영구 최대 기력
 };
 
 Object.freeze(CONSTANTS);
