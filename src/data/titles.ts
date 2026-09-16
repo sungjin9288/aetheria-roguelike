@@ -451,7 +451,17 @@ export const TITLES = Object.freeze([
 //   쓰는지 알 수 없는 함정이었다. 소비처는 constants.ts의 Tailwind 맵을 직접
 //   import한다 (hex는 BALANCE 쪽 동명 키).
 
-export const TITLE_PASSIVES: Record<string, any> = Object.freeze({
+/** 칭호 패시브 — 칭호마다 채우는 스탯 키만 존재하고 `label`은 항상 있다. */
+export interface TitlePassive {
+    atk?: number;
+    def?: number;
+    hp?: number;
+    mp?: number;
+    crit?: number;
+    label: string;
+}
+
+export const TITLE_PASSIVES: Record<string, TitlePassive> = Object.freeze({
     first_blood:      { atk: 1, label: 'ATK +1' },
     centurion:        { atk: 2, label: 'ATK +2' },
     warlord:          { atk: 4, crit: 0.01, label: 'ATK +4 · CRIT +1%' },

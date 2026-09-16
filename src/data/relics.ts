@@ -5,7 +5,7 @@
  */
 
 import { BALANCE } from './constants.js';
-import type { Relic } from '../types/relic.js';
+import type { Relic, RelicSynergy } from '../types/relic.js';
 
 export const RELICS: Relic[] = [
     // ─── 공격 계열 (8개) ───────────────────────────────────────────────────
@@ -431,7 +431,7 @@ const RARITY_ORDER: readonly string[] = Object.freeze(['common', 'uncommon', 'ra
  * cap이 RARITY_ORDER에 없는 값이면 무필터(pool 그대로 반환) — 방어적 fallback.
  * 시작 부트(START_BOOT_RARITY_CAP: 'rare')에서 epic/legendary를 제외하는 데 사용.
  */
-const filterByRarityCap = (pool: any[], rarityCap?: string) => {
+const filterByRarityCap = (pool: Relic[], rarityCap?: string) => {
     if (!rarityCap) return pool;
     const capIndex = RARITY_ORDER.indexOf(rarityCap);
     if (capIndex < 0) return pool;
@@ -455,7 +455,7 @@ export const MAX_RELICS_PER_RUN = 5;
  *   (statsCalculator + CombatEngine + 회귀 가드 cycle 153/154/236/237).
  *   syn.id read는 src/, tests/ 어디에도 0건. StatsPanel React key는 syn.name 사용.
  */
-export const RELIC_SYNERGIES = Object.freeze([
+export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
     {
         label: '흡혈 군주',
         requires: ['피의 서약', '영혼 흡수'],
@@ -587,21 +587,21 @@ export const RELIC_SYNERGIES = Object.freeze([
  */
 // cycle 597: relics default [] 제거 — 5 production caller (statsCalculator/
 //   CombatEngine x4) + 1 test 모두 명시 전달이라 default 도달 불가.
-export const getActiveRelicSynergies = (relics: any) => {
-    const ownedNames = new Set(relics.map((r: any) => r.name));
-    return RELIC_SYNERGIES.filter((syn: any) => syn.requires.every((name: any) => ownedNames.has(name)));
+export const getActiveRelicSynergies = (relics: Relic[]): RelicSynergy[] => {
+    const ownedNames = new Set(relics.map((r) => r.name));
+    return RELIC_SYNERGIES.filter((syn) => syn.requires.every((name) => ownedNames.has(name)));
 };
 
 /**
  * remaining 배열에서 가중치 기반으로 1개를 뽑아 반환 (remaining 자체는 변경하지 않음).
  * pickWeightedRelics의 일반 슬롯 / 시너지 pity 슬롯 추첨 로직에서 공용으로 사용.
  */
-const drawOneWeighted = (remaining: any[], random: () => number) => {
-    const totalWeight = remaining.reduce((sum: any, r: any) => sum + (RELIC_WEIGHTS[r.rarity] || 1), 0);
+const drawOneWeighted = (remaining: Relic[], random: () => number): Relic => {
+    const totalWeight = remaining.reduce((sum: number, r) => sum + (RELIC_WEIGHTS[r.rarity as string] || 1), 0);
     let rand = random() * totalWeight;
     let chosen = remaining[remaining.length - 1]; // fallback
     for (let j = 0; j < remaining.length; j++) {
-        rand -= RELIC_WEIGHTS[remaining[j].rarity] || 1;
+        rand -= RELIC_WEIGHTS[remaining[j].rarity as string] || 1;
         if (rand <= 0) { chosen = remaining[j]; break; }
     }
     return chosen;
@@ -619,28 +619,28 @@ const drawOneWeighted = (remaining: any[], random: () => number) => {
  * - 1순위 후보가 하나라도 있으면 2순위는 쓰지 않는다 (완성에 가까운 쪽 우선).
  * - 결과는 relic id 기준 중복 제거.
  */
-const findSynergyPityCandidates = (pool: any[], owned: any[]) => {
+const findSynergyPityCandidates = (pool: Relic[], owned: Relic[] | undefined): Relic[] => {
     if (!owned || owned.length === 0) return [];
-    const ownedNames = new Set(owned.map((r: any) => r.name));
-    const poolByName = new Map(pool.map((r: any) => [r.name, r]));
-    const nearCandidates = new Map<string, any>();
-    const partialCandidates = new Map<string, any>();
+    const ownedNames = new Set(owned.map((r) => r.name));
+    const poolByName = new Map(pool.map((r) => [r.name, r]));
+    const nearCandidates = new Map<string, Relic>();
+    const partialCandidates = new Map<string, Relic>();
 
     for (const syn of RELIC_SYNERGIES) {
-        const missingNames = syn.requires.filter((name: string) => !ownedNames.has(name));
+        const missingNames = syn.requires.filter((name) => !ownedNames.has(name));
         if (missingNames.length === 0) continue; // 이미 완성됨
         const ownedCount = syn.requires.length - missingNames.length;
 
         if (missingNames.length === 1) {
             const missingRelic = poolByName.get(missingNames[0]);
-            if (missingRelic) nearCandidates.set(missingRelic.id, missingRelic);
+            if (missingRelic) nearCandidates.set(missingRelic.id as string, missingRelic);
             continue;
         }
         // 3피스 이상 세트에서 1개 이상 보유 + 2개 부족 → 부족분 전체를 2순위 후보로.
         if (syn.requires.length >= 3 && ownedCount >= 1 && missingNames.length === 2) {
             for (const name of missingNames) {
                 const missingRelic = poolByName.get(name);
-                if (missingRelic) partialCandidates.set(missingRelic.id, missingRelic);
+                if (missingRelic) partialCandidates.set(missingRelic.id as string, missingRelic);
             }
         }
     }
@@ -659,7 +659,7 @@ const findSynergyPityCandidates = (pool: any[], owned: any[]) => {
 // 관대함 하향 (2026-07 밸런스 감사): options.rarityCap을 넘기면 pool을 해당 등급 이하로만
 //   제한한 뒤 기존 로직(시너지 pity 포함)을 그대로 태운다. 시작 부트(characterActions.ts)만
 //   'rare'를 전달 — 일반 탐험 유물 발견(exploreUtils.ts)은 전달하지 않아 기존 확률 분포 불변.
-export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: any[]; rarityCap?: string; rng?: () => number }) => {
+export const pickWeightedRelics = (pool: Relic[], count: number, options?: { owned?: Relic[]; rarityCap?: string; rng?: () => number }): Relic[] => {
     const random = typeof options?.rng === 'function' ? options.rng : Math.random;
     const cappedPool = filterByRarityCap(pool, options?.rarityCap);
     if (cappedPool.length === 0) return [];
@@ -667,8 +667,8 @@ export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: an
     const needed = Math.min(count, remaining.length);
     if (needed === 0) return [];
 
-    const result = [];
-    const pityCandidates = findSynergyPityCandidates(remaining, options?.owned as any[]);
+    const result: Relic[] = [];
+    const pityCandidates = findSynergyPityCandidates(remaining, options?.owned);
 
     if (pityCandidates.length > 0) {
         const pitySlots = Math.min(BALANCE.SYNERGY_PITY_SLOT, needed, pityCandidates.length);

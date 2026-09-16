@@ -80,7 +80,7 @@ export const createEventActions = (deps: any, shared: any) => {
                         const pickedRelics = pickWeightedRelics(availableRelics, 1, { owned: ownedRelics, rng });
                         if (pickedRelics.length > 0) {
                             updatedPlayer = { ...updatedPlayer, relics: [...(updatedPlayer.relics || []), pickedRelics[0]] };
-                            addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name));
+                            addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name!));
                         }
                     }
                     if (rwd.type === 'combat_bonus') {

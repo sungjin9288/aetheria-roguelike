@@ -1,6 +1,6 @@
 /** 특성(trait) 시스템 — 아키타입 레이블, 특성 정의, 속성-상태 매핑, 직업 빌드 데이터 */
 
-export const ARCHETYPE_LABELS: Record<string, any> = Object.freeze({
+export const ARCHETYPE_LABELS: Record<string, string> = Object.freeze({
     balanced: '균형형 런',
     crusher: '양손 파쇄',
     dual: '쌍수 연격',
@@ -11,7 +11,45 @@ export const ARCHETYPE_LABELS: Record<string, any> = Object.freeze({
     status: '상태이상 집행자',
 });
 
-export const TRAIT_DEFINITIONS: Record<string, any> = Object.freeze({
+/** 특성 패시브 배율 — 특성마다 쓰는 키만 채운다. */
+export interface TraitBonusDef {
+    atkMult?: number;
+    defMult?: number;
+    mpFlat?: number;
+    critBonus?: number;
+}
+
+/** 특성 전용 스킬 정의 (`getTraitSkill`이 그대로 스킬 슬롯에 노출). */
+export interface TraitSkillDef {
+    name: string;
+    type: string;
+    effect: string;
+    val?: number;
+    mult?: number;
+    turn?: number;
+    mp: number;
+    cooldown: number;
+    desc: string;
+}
+
+/** 특성 1종의 표시/판정 정의. `getTraitProfile`이 통째로 spread 해 노출한다. */
+export interface TraitDefinition {
+    id: string;
+    name: string;
+    title: string;
+    accent: string;
+    chipClass: string;
+    desc: string;
+    passiveLabel: string;
+    unlockHint: string;
+    rewardFocus: string;
+    questFocus: string;
+    bossDirective: string;
+    bonus: TraitBonusDef;
+    skill?: TraitSkillDef;
+}
+
+export const TRAIT_DEFINITIONS: Record<string, TraitDefinition> = Object.freeze({
     balanced: {
         id: 'balanced',
         name: '균형',
@@ -134,7 +172,7 @@ export const TRAIT_DEFINITIONS: Record<string, any> = Object.freeze({
     },
 });
 
-export const ELEMENT_TO_STATUS: Record<string, any> = Object.freeze({
+export const ELEMENT_TO_STATUS: Record<string, string> = Object.freeze({
     화염: 'burn',
     냉기: 'freeze',
     자연: 'poison',

@@ -23,3 +23,54 @@ export interface Relic {
     /** 동적으로 추가되는 임의 필드 (런타임 확장 호환). */
     [key: string]: any;
 }
+
+/**
+ * 유물 시너지 정의 (`RELIC_SYNERGIES`).
+ *
+ * `bonus`는 시너지마다 쓰는 키가 다르지만, 20종 전체에서 등장하는 키 집합이
+ * 유한하므로 인덱스 시그니처 대신 optional 필드로 전부 선언한다.
+ * (`effect`만 필수 — 모든 분기가 `bonus.effect` 문자열 비교로 이뤄진다.)
+ */
+export interface RelicSynergyBonus {
+    effect: string;
+    atkMult?: number;
+    cdReduction?: number;
+    chaosAtk?: number;
+    critChance?: number;
+    critDmg?: number;
+    damage?: number;
+    defMult?: number;
+    devour?: number;
+    dotMult?: number;
+    executeThreshold?: number;
+    extraAction?: number;
+    extraTurnChance?: number;
+    fixedDmg?: number;
+    freeSkillChance?: number;
+    healOnSave?: number;
+    healPerTurn?: number;
+    hpCostReduction?: number;
+    interval?: number;
+    killHeal?: number;
+    killStack?: number;
+    lifeSteal?: number;
+    lifeStealBonus?: number;
+    lowHpAtk?: number;
+    mpMult?: number;
+    reflect?: number;
+    regenPerTurn?: number;
+    reviveCount?: number;
+    reviveHeal?: number;
+    skillMult?: number;
+    statBonus?: number;
+    stunOnReflect?: number;
+}
+
+export interface RelicSynergy {
+    /** UI 표시용 시너지 이름. */
+    label: string;
+    /** 모두 보유해야 발동하는 유물 name 목록. */
+    requires: string[];
+    bonus: RelicSynergyBonus;
+    desc: string;
+}
