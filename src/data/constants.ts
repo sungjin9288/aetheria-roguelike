@@ -106,6 +106,7 @@ export interface BalanceConfig {
     RETURN_BRIEFING_HOURS: number;
     ABYSS_DAILY_DIVE_MULT: number;
     ABYSS_DAILY_DIVE_COMBAT_COUNT: number;
+    ERROR_REPORT_RING_SIZE: number;
 }
 
 export const BALANCE: BalanceConfig = {
@@ -510,6 +511,9 @@ export const BALANCE: BalanceConfig = {
     // 리텐션 훅 — 심연 데일리 다이브
     ABYSS_DAILY_DIVE_MULT: 1.5,         // 혼돈의 심연 일일 첫 다이브 EXP/골드 배율
     ABYSS_DAILY_DIVE_COMBAT_COUNT: 5,   // 배율이 적용되는 하루 첫 전투 수 (1회는 체감 없음 — 리뷰 후속)
+
+    // E1 — 런타임 에러 리포트 로컬 링버퍼
+    ERROR_REPORT_RING_SIZE: 20,         // localStorage에 보관하는 최근 에러 리포트 최대 개수
 };
 
 Object.freeze(CONSTANTS);

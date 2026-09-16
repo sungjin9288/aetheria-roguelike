@@ -441,4 +441,11 @@ export const MSG = {
     INV_FILTER_CONSUMABLE: '회복',
     INV_FILTER_MATERIAL: '재료',
     // cycle 116: INV_FULL_WARNING 제거 — INV_FULL이 active.
+
+    // --- E1: 로컬 에러 리포트 (SystemTab "저장과 기기 점검") ---
+    ERROR_REPORT_COUNT: (count: number) => `저장된 오류 리포트 · ${count}건`,
+    ERROR_REPORT_LAST: (code: string, time: string) => `최근 오류 · ${code} (${time})`,
+    ERROR_REPORT_EMPTY: '저장된 오류 리포트가 없습니다.',
+    ERROR_REPORT_CLEAR_BUTTON: '오류 리포트 지우기',
+    ERROR_REPORT_CLEARED: '오류 리포트를 지웠습니다.',
 };
