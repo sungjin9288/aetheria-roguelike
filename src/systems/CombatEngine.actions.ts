@@ -358,7 +358,7 @@ export const actionMethods: any = {
         if (spellStackRelic) {
             const perStack = spellStackRelic.val?.perStack || 0;
             const maxStack = spellStackRelic.val?.max || 0.6;
-            const prevStack = (player as any).combatFlags?.spellStackCount || 0;
+            const prevStack = player.combatFlags?.spellStackCount || 0;
             const stackBonus = Math.min(maxStack, prevStack * perStack);
             if (stackBonus > 0) {
                 damage = Math.floor(damage * (1 + stackBonus));
@@ -450,8 +450,8 @@ export const actionMethods: any = {
                 //   (attack 메서드에서 처리). spell_stack 유물 미보유여도 카운터 증분은 안전 (값 사용
                 //   여부는 데미지 계산 시 유물 체크).
                 spellStackCount: spellStackRelic
-                    ? Math.min(((player as any).combatFlags?.spellStackCount || 0) + 1, 999)
-                    : ((player as any).combatFlags?.spellStackCount || 0),
+                    ? Math.min((player.combatFlags?.spellStackCount || 0) + 1, 999)
+                    : (player.combatFlags?.spellStackCount || 0),
             }
         };
         // cycle 151: 'cooldown_reduce' (시간 군주의 왕관) — 스킬 사용 시 초기 쿨다운 -val.cdReduction. firstFree는 별도 사이클.

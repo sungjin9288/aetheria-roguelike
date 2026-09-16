@@ -27,7 +27,7 @@ export const rewardActionMap = {
     // ── Codex ─────────────────────────────────────────────────────────────
     UPDATE_CODEX: (state: GameState, action: GameAction) => {
         const { category, name } = action.payload;
-        const codex: Record<string, any> = (state.player.stats as any)?.codex || {};
+        const codex: Record<string, any> = state.player.stats?.codex || {};
         const cat = codex[category] || {};
         if (cat[name]) return state;
         return {

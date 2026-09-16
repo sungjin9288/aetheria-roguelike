@@ -75,7 +75,7 @@ const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: 
     const hpRatio = (player.hp ?? 0) / Math.max(1, player.maxHp ?? 1);
 
     // cycle 158: 'kill_stack_atk' (허공의 왕좌) — combatFlags.killStackAtkBonus per-combat 누적치를 atkFlat에 합산.
-    const killStackAtkPerCombat = (player as any)?.combatFlags?.killStackAtkBonus || 0;
+    const killStackAtkPerCombat = player?.combatFlags?.killStackAtkBonus || 0;
 
     const atkFlat = relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'kill_stack_atk') return acc + killStackAtkPerCombat;

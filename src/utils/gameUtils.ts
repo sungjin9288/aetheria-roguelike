@@ -1,5 +1,5 @@
 import { ITEMS } from '../data/items.js';
-import type { Item, Player, Achievement } from "../types/index.js";
+import type { CodexCategory, Item, Player, Achievement } from "../types/index.js";
 import { DB } from '../data/db.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { getWeaponMagicSkills } from './equipmentUtils.js';
@@ -135,11 +135,9 @@ export const getTitlePassiveLabel = (token: any) => {
 
 /**
  * 아이템/몬스터를 도감에 등록 (immutable — 새 player 반환)
- * @param {object} player
- * @param {'weapons'|'armors'|'shields'|'monsters'|'recipes'|'materials'} category
- * @param {string} name
+ * 2026-09 B3: category를 CodexCategory로 좁힘 — JSDoc에만 있던 계약을 타입으로 옮겼다.
  */
-export const registerCodex = (player: Player, category: any, name: any) => {
+export const registerCodex = (player: Player, category: CodexCategory, name: any) => {
     if (!name || !category) return player;
     const codex = player.stats?.codex || {};
     const cat = codex[category] || {};

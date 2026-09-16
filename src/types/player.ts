@@ -112,14 +112,24 @@ export interface AbyssDailyDive {
     used?: boolean;
 }
 
+/** 도감 한 칸 — registerCodex()/dataMigration이 기록하는 유일한 두 필드. */
+export interface CodexEntry {
+    discovered?: boolean;
+    kills?: number;
+}
+
+/** 도감 카테고리 키 — registerCodex(player, category, name)의 category. */
+export type CodexCategory = 'weapons' | 'armors' | 'shields' | 'monsters' | 'recipes' | 'materials';
+
+// 2026-09 B3 stage 2: `[key: string]: any` 제거 — 카테고리는 이 6개가 전부다.
+//   (CodexCategory와 키 집합이 일치해야 한다 — registerCodex/UPDATE_CODEX가 둘을 잇는다.)
 interface PlayerCodex {
-    weapons?: Record<string, any>;
-    armors?: Record<string, any>;
-    shields?: Record<string, any>;
-    monsters?: Record<string, any>;
-    recipes?: Record<string, any>;
-    materials?: Record<string, any>;
-    [key: string]: any;
+    weapons?: Record<string, CodexEntry>;
+    armors?: Record<string, CodexEntry>;
+    shields?: Record<string, CodexEntry>;
+    monsters?: Record<string, CodexEntry>;
+    recipes?: Record<string, CodexEntry>;
+    materials?: Record<string, CodexEntry>;
 }
 
 // cycle 282: SignaturePity interface 제거 — Player.signaturePity 외 consumer 0건이라 동시 cleanup.
@@ -157,15 +167,35 @@ interface PlayerMeta {
     };
 }
 
+/**
+ * CombatFlags — 전투 내 한정 플래그. 2026-09 B3 stage 2: 인덱스 시그니처 제거.
+ *
+ * INITIAL_STATE가 초기화하는 것은 comboCount / deathSaveUsed / voidHeartUsed /
+ * voidHeartArmed 4개뿐이고, 나머지는 유물 발동 시점에 처음 생긴다. 초기화 여부와
+ * 무관하게 모든 consumer가 `|| 0` / `Boolean()` 로 읽으므로 전부 optional로 둔다
+ * (INITIAL_STATE에 추가하는 것은 런타임 + 세이브 형태 변경이라 여기서 하지 않는다).
+ */
 interface CombatFlags {
     comboCount?: number;
     deathSaveUsed?: boolean;
     deathSaveUsedCount?: number;
     voidHeartUsed?: boolean;
     voidHeartArmed?: boolean;
+    /** cycle 229: 연속 스킬 사용 스택 — 일반 공격이 0으로 리셋. */
+    spellStackCount?: number;
+    /** cycle 158: '허공의 왕좌' 전투 내 누적 ATK 보너스 — 전투 시작 시 0으로 리셋. */
+    killStackAtkBonus?: number;
+    /** 불사조 부활 유물 1회 소진 플래그. */
+    phoenixUsed?: boolean;
+    /** cycle 163: cooldown_reduce.firstFree — 전투 첫 스킬 무료 사용 소진 여부. */
+    firstSkillUsed?: boolean;
+    /** cycle 159: entropy_tick / entropy_brand 주기 판정용 전투 내 턴 수. */
+    turnCount?: number;
+    /** cycle 186: 부활 토큰 소비 신호 — applyDeathSave가 세우고 호출부가 소비. */
+    reviveTokenUsed?: boolean;
+    /** 2026-07 에테르 거울 revive 소진 신호 — 영속 값은 player.mirrorReviveUsed(top-level). */
+    mirrorReviveUsed?: boolean;
     echoArmed?: boolean;
-    /** 동적으로 추가되는 임의 플래그 (런타임 확장 호환). */
-    [key: string]: any;
 }
 
 interface SeasonPassState {
@@ -184,10 +214,10 @@ interface WeeklyProtocol {
     claimed?: string[];
 }
 
+// 2026-09 B3 stage 2: `[key: string]: any` 제거 — 설정 키는 이 2개가 전부다.
 interface PlayerSettings {
     readabilityMode?: 'standard' | 'high' | string;
     equipmentDetailMode?: 'auto' | 'summary' | 'full' | string;
-    [key: string]: any;
 }
 
 export interface ExpeditionInventoryCheckpoint {
@@ -326,7 +356,7 @@ export interface Player {
     status?: any[];
     skillLoadout?: SkillLoadout;
     settings?: PlayerSettings;
-    meta?: PlayerMeta & { [key: string]: any };
+    meta?: PlayerMeta;
     relics?: import('./relic.js').Relic[];
     titles?: string[];
     activeTitle?: string | null;
