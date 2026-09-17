@@ -164,6 +164,127 @@ test('normalizeOutcomeSpecials: status 문자열 축약형도 화이트리스트
     assert.deepEqual(normalizeOutcomeSpecials(null), {});
 });
 
+// ── 2026-09 Wave 3 I2: 절차적 outcome의 "위험" 선택 특수 결과 ────────────────
+// buildProceduralOutcome은 rng가 아니라 hashString(location|desc|choice|index)
+// 시드로 움직인다 → 같은 입력은 항상 같은 결과. 분포는 서로 다른 입력을 쓸어서 본다.
+
+const specialKindOf = (outcome) => (
+    outcome.status ? 'status'
+        : outcome.elite ? 'elite'
+            : outcome.relic ? 'relic'
+                : outcome.buff ? 'buff'
+                    : 'none'
+);
+
+const sweepProceduralOutcomes = (count, { hp = 300 } = {}) => {
+    const rows = [];
+    for (let i = 0; i < count; i += 1) {
+        const packaged = buildEventPackage({
+            desc: `시험용 조우 ${i}`,
+            choices: ['강제로 연다', '후퇴한다', '조심히 접근한다'],
+        }, {
+            location: '에테르 관문',
+            playerSnapshot: { level: 20, maxHp: 300, maxMp: 150, hp },
+            mapSnapshot: { level: 20 },
+        });
+        const [risky, retreat, safe] = packaged.outcomes;
+        rows.push({ risky, retreat, safe });
+    }
+    return rows;
+};
+
+test('buildProceduralOutcome: "위험" 선택만 특수 결과를 받는다 — safe/retreat는 0건', () => {
+    const rows = sweepProceduralOutcomes(400);
+
+    for (const row of rows) {
+        assert.equal(specialKindOf(row.safe), 'none', '신중한 선택에는 특수 결과가 붙지 않는다');
+        assert.equal(specialKindOf(row.retreat), 'none', '후퇴 선택에는 특수 결과가 붙지 않는다');
+    }
+    assert.ok(rows.some((row) => specialKindOf(row.risky) !== 'none'), '위험 선택에는 특수 결과가 나와야 함');
+});
+
+test('buildProceduralOutcome: 위험 선택 특수 결과 발생률이 EVENT_RISKY_SPECIAL_CHANCE 근방이고 가중 분포를 따른다', () => {
+    const rows = sweepProceduralOutcomes(600);
+    const kinds = rows.map((row) => specialKindOf(row.risky));
+    const countOf = (kind) => kinds.filter((value) => value === kind).length;
+
+    const specials = kinds.filter((kind) => kind !== 'none').length;
+    const rate = specials / kinds.length;
+    assert.ok(
+        Math.abs(rate - BALANCE.EVENT_RISKY_SPECIAL_CHANCE) <= 0.07,
+        `특수 결과 발생률 ${rate.toFixed(3)}이 ${BALANCE.EVENT_RISKY_SPECIAL_CHANCE} 근방이어야 함`,
+    );
+
+    // 가중 표 status 45 / elite 30 / relic 15 / buff 10 — 순서와 대략적 비율을 고정한다.
+    assert.ok(countOf('status') > countOf('elite'), '상태이상이 가장 흔해야 함');
+    assert.ok(countOf('elite') > countOf('relic'), '정예가 유물보다 흔해야 함');
+    assert.ok(countOf('relic') > countOf('buff'), '유물이 버프보다 흔해야 함');
+
+    const weights = BALANCE.EVENT_SPECIAL_WEIGHTS;
+    const total = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+    for (const kind of Object.keys(weights)) {
+        const share = countOf(kind) / specials;
+        assert.ok(
+            Math.abs(share - (weights[kind] / total)) <= 0.12,
+            `${kind} 비중 ${share.toFixed(3)}이 가중치 ${weights[kind]}/${total} 근방이어야 함`,
+        );
+    }
+});
+
+test('buildProceduralOutcome: 같은 입력은 항상 같은 특수 결과를 준다 (시드 결정론)', () => {
+    const first = sweepProceduralOutcomes(40);
+    const second = sweepProceduralOutcomes(40);
+    assert.deepEqual(first, second);
+});
+
+test('buildProceduralOutcome: 생명이 바닥이면 정예 조우로 밀어 넣지 않는다 (부당한 죽음 금지)', () => {
+    const healthy = sweepProceduralOutcomes(600).map((row) => specialKindOf(row.risky));
+    const wounded = sweepProceduralOutcomes(600, { hp: 300 * BALANCE.SCOUT_LOW_HP_RATIO }).map((row) => specialKindOf(row.risky));
+
+    assert.ok(healthy.includes('elite'), '전제: 정상 체력에서는 정예 조우가 나온다');
+    assert.ok(!wounded.includes('elite'), '저생명 구간에서는 정예 조우 0건');
+    assert.equal(
+        wounded.filter((kind) => kind !== 'none').length,
+        healthy.filter((kind) => kind !== 'none').length,
+        '정예는 사라지는 게 아니라 상태이상으로 대체된다 (발생률 자체는 동일)',
+    );
+});
+
+test('buildProceduralOutcome: "균형" 선택은 소폭 버프만 낮은 확률로 받는다', () => {
+    let buffs = 0;
+    const total = 400;
+    for (let i = 0; i < total; i += 1) {
+        const packaged = buildEventPackage({
+            desc: `균형 시험 ${i}`,
+            choices: ['살펴본다', '지켜본다'],
+        }, vocabularyContext);
+        const outcome = packaged.outcomes[0];
+        const kind = specialKindOf(outcome);
+        assert.ok(kind === 'none' || kind === 'buff', `균형 선택 특수 결과는 버프만: ${kind}`);
+        if (kind === 'buff') {
+            buffs += 1;
+            assert.equal(outcome.buff.atkMult, BALANCE.EVENT_SPECIAL_BUFF_MULT);
+            assert.equal(outcome.buff.turns, BALANCE.EVENT_SPECIAL_BUFF_TURNS);
+        }
+    }
+    const rate = buffs / total;
+    assert.ok(
+        Math.abs(rate - BALANCE.EVENT_BALANCED_BUFF_CHANCE) <= 0.06,
+        `균형 버프 확률 ${rate.toFixed(3)}이 ${BALANCE.EVENT_BALANCED_BUFF_CHANCE} 근방이어야 함`,
+    );
+});
+
+test('buildProceduralOutcome: 특수 결과가 붙어도 생명 피해 크기는 기존 그대로다', () => {
+    const rows = sweepProceduralOutcomes(200);
+    const withSpecial = rows.filter((row) => specialKindOf(row.risky) !== 'none').map((row) => row.risky.hp);
+    const withoutSpecial = rows.filter((row) => specialKindOf(row.risky) === 'none').map((row) => row.risky.hp);
+
+    assert.ok(withSpecial.length > 0 && withoutSpecial.length > 0, '두 표본 모두 존재해야 함');
+    const worst = Math.min(...withSpecial, ...withoutSpecial);
+    // 위험 선택의 생명 피해는 최대 12% (maxHp 300 → 36). 특수 결과가 이를 키우지 않는다.
+    assert.ok(worst >= -Math.floor(300 * 0.12), `생명 피해 상한 유지: ${worst}`);
+});
+
 test('BALANCE.EVENT_STATUS_IDS: 이벤트는 턴 강탈(freeze/stun) 어휘를 쓰지 않는다 (공정성 규칙)', () => {
     assert.deepEqual(BALANCE.EVENT_STATUS_IDS, ['poison', 'burn', 'bleed', 'curse']);
     assert.ok(!BALANCE.EVENT_STATUS_IDS.includes('freeze'));

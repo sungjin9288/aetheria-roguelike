@@ -144,6 +144,67 @@ const pickRewardItem = (poolKey: any, seed: any, level: any) => {
     return pool[seed % pool.length];
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 2026-09 Wave 3 I2 — 절차적 outcome의 "위험" 선택에 특수 결과를 붙인다.
+//   rng 파라미터를 새로 받지 않는다: buildProceduralOutcome은 원래부터
+//   hashString(location|desc|choice|index) 기반 결정론이고(호출부는 rng를 넘기지
+//   않는다), 같은 이벤트·같은 선택지는 몇 번을 다시 그려도 같은 결과여야 한다.
+//   각 판정은 salt가 다른 파생 해시를 써서 서로 독립적으로 움직인다.
+// ─────────────────────────────────────────────────────────────────────────────
+const seedRoll = (salt: string, seed: number) => (hashString(`${salt}|${seed}`) % 10000) / 10000;
+
+/** status 45% / elite 30% / relic 15% / buff 10% (BALANCE.EVENT_SPECIAL_WEIGHTS). */
+const pickSpecialKind = (seed: number) => {
+    const weights = BALANCE.EVENT_SPECIAL_WEIGHTS;
+    const kinds = Object.keys(weights);
+    const total = kinds.reduce((sum: number, kind: string) => sum + weights[kind], 0);
+    let ticket = hashString(`kind|${seed}`) % total;
+    for (const kind of kinds) {
+        ticket -= weights[kind];
+        if (ticket < 0) return kind;
+    }
+    return kinds[kinds.length - 1];
+};
+
+/** 생명이 바닥일 때 정예 조우로 밀어 넣지 않는다 — "부당한 죽음 금지" 규칙. */
+const isLowHp = (context: any) => {
+    const hp = Number(context?.playerSnapshot?.hp);
+    const maxHp = Number(context?.playerSnapshot?.maxHp);
+    if (!Number.isFinite(hp) || !Number.isFinite(maxHp) || maxHp <= 0) return false;
+    return (hp / maxHp) <= BALANCE.SCOUT_LOW_HP_RATIO;
+};
+
+const SPECIAL_LOG_SUFFIX: Record<string, string> = {
+    status: ' 몸에 남은 흔적이 쉽게 가시지 않습니다.',
+    elite: ' 소란을 듣고 정예가 모습을 드러냅니다.',
+    relic: ' 잔해 속에서 낯선 유물의 기운이 새어 나옵니다.',
+    buff: ' 손끝에 남은 열기가 다음 싸움까지 이어집니다.',
+};
+
+const buildSpecialPayload = (kind: string, seed: number) => {
+    if (kind === 'elite') return { elite: true as const };
+    if (kind === 'relic') return { relic: { count: 1 } };
+    if (kind === 'buff') {
+        return { buff: { atkMult: BALANCE.EVENT_SPECIAL_BUFF_MULT, turns: BALANCE.EVENT_SPECIAL_BUFF_TURNS } };
+    }
+    const ids = BALANCE.EVENT_STATUS_IDS;
+    return { status: { id: ids[seed % ids.length], turns: BALANCE.EVENT_SPECIAL_STATUS_TURNS } };
+};
+
+/** "위험" 선택 — EVENT_RISKY_SPECIAL_CHANCE 확률로 특수 결과 1건만 얹는다. */
+const buildRiskySpecial = (seed: number, context: any) => {
+    if (seedRoll('special', seed) >= BALANCE.EVENT_RISKY_SPECIAL_CHANCE) return null;
+    const rolled = pickSpecialKind(seed);
+    const kind = rolled === 'elite' && isLowHp(context) ? 'status' : rolled;
+    return { kind, payload: buildSpecialPayload(kind, seed), logSuffix: SPECIAL_LOG_SUFFIX[kind] };
+};
+
+/** "균형" 선택 — 소폭 버프만 아주 낮은 확률로. */
+const buildBalancedSpecial = (seed: number) => {
+    if (seedRoll('balanced', seed) >= BALANCE.EVENT_BALANCED_BUFF_CHANCE) return null;
+    return { kind: 'buff', payload: buildSpecialPayload('buff', seed), logSuffix: SPECIAL_LOG_SUFFIX.buff };
+};
+
 // cycle 561: outer + inner context defaults 제거 — 1 internal callsite (line
 //   236)가 완전 object 명시 전달이라 두 default 모두 도달 불가. 청소 메가
 //   시리즈 54번째 batch (cycle 502-560).
@@ -191,6 +252,11 @@ const buildProceduralOutcome = ({ desc, choice, choiceIndex, context }: any) => 
         const backlash = Math.max(8, Math.floor(maxHp * (seed % 2 === 0 ? 0.08 : 0.12)));
         const jackpot = seed % 3 !== 0;
         const item = jackpot ? pickRewardItem(poolKey, seed + 7, level + 5) : null;
+        // I2: 생명 피해 크기는 그대로 두고, 대신 특수 결과 1건(상태이상/정예/유물/버프)을 얹는다.
+        const special = buildRiskySpecial(seed, context);
+        const baseLog = jackpot
+            ? `대담한 선택이 적중했습니다. 위험을 감수한 만큼 큰 성과를 얻었습니다${item ? ` [${item}]도 손에 넣었습니다.` : '.'}`
+            : '무리한 판단이 화를 불렀습니다. 대가를 치렀지만 약간의 실마리는 남겼습니다.';
         return {
             choiceIndex,
             gold: jackpot ? Math.max(20, Math.floor(baseReward * 1.45)) : Math.max(0, Math.floor(baseReward * 0.35)),
@@ -198,22 +264,24 @@ const buildProceduralOutcome = ({ desc, choice, choiceIndex, context }: any) => 
             hp: jackpot ? 0 : -backlash,
             mp: jackpot ? 0 : Math.max(0, Math.floor(maxMp * 0.04)),
             ...(jackpot && item ? { item } : {}),
-            log: jackpot
-                ? `대담한 선택이 적중했습니다. 위험을 감수한 만큼 큰 성과를 얻었습니다${item ? ` [${item}]도 손에 넣었습니다.` : '.'}`
-                : '무리한 판단이 화를 불렀습니다. 대가를 치렀지만 약간의 실마리는 남겼습니다.'
+            ...(special ? special.payload : {}),
+            log: special ? `${baseLog}${special.logSuffix}` : baseLog
         };
     }
 
     const balancedGain = seed % 2 === 0;
+    const balancedSpecial = buildBalancedSpecial(seed);
+    const balancedLog = balancedGain
+        ? '균형 잡힌 판단으로 안정적인 성과를 거두었습니다.'
+        : '성과는 있었지만 완벽하진 않았습니다. 약간의 대가를 치렀습니다.';
     return {
         choiceIndex,
         gold: balancedGain ? Math.max(14, Math.floor(baseReward * 0.85)) : Math.max(8, Math.floor(baseReward * 0.45)),
         exp: balancedGain ? Math.max(14, Math.floor(baseReward)) : Math.max(10, Math.floor(baseReward * 0.65)),
         hp: balancedGain ? 0 : -Math.max(6, Math.floor(maxHp * 0.05)),
         mp: balancedGain ? Math.max(5, Math.floor(maxMp * 0.05)) : 0,
-        log: balancedGain
-            ? '균형 잡힌 판단으로 안정적인 성과를 거두었습니다.'
-            : '성과는 있었지만 완벽하진 않았습니다. 약간의 대가를 치렀습니다.'
+        ...(balancedSpecial ? balancedSpecial.payload : {}),
+        log: balancedSpecial ? `${balancedLog}${balancedSpecial.logSuffix}` : balancedLog
     };
 };
 
