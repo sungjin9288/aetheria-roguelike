@@ -29,6 +29,8 @@ const targetUrl = smokeUrl.toString();
 const artifactLabel = sanitizeName(getArgValue('--artifact-label') || `perf-${viewportLabel}`);
 const artifactDir = path.resolve(process.cwd(), 'playtest-artifacts', artifactLabel);
 const CLOSE_TIMEOUT_MS = 2500;
+const BOOT_MARK_TIMEOUT_MS = 10000;
+const FCP_ENTRY_TIMEOUT_MS = 10000;
 
 const thresholds = isMobile
   ? {
@@ -93,6 +95,48 @@ async function settleClose(task, label) {
 async function readState(page) {
   const raw = await page.evaluate(() => window.render_game_to_text?.() || '{}');
   return JSON.parse(raw);
+}
+
+// 부트 신호 대기를 두 단계로 나눈다. 앱 마크(boot-ready/intro-visible)는 앱이 결정적으로 찍지만
+// `first-contentful-paint` 엔트리는 브라우저 컴포지터가 첫 프레임을 제출해야 생겨 CI 러너 부하에
+// 따라 수 초 늦거나(2026-09-17 PR #31: desktop 1회·mobile 1회 10s 타임아웃, 통과 시엔 572ms) 아예
+// 안 올 수 있다. 어느 조건이 빠졌는지 남기지 않으면 재발 시 앱 회귀/러너 노이즈를 가를 수 없다.
+async function readBootSignals(page) {
+  return page.evaluate(() => {
+    const snapshot = window.__AETHERIA_TEST_API__?.getPerfSnapshot?.() || {};
+    return {
+      fcpEntries: performance.getEntriesByName('first-contentful-paint', 'paint').length,
+      paintEntries: performance.getEntriesByType('paint').map((entry) => `${entry.name}@${Math.round(entry.startTime)}`),
+      bootReadyMs: snapshot['aetheria:boot-ready-ms'] ?? null,
+      introVisibleMs: snapshot['aetheria:intro-visible-ms'] ?? null,
+      visibilityState: document.visibilityState,
+    };
+  });
+}
+
+async function waitForBootSignals(page) {
+  const describe = async (stage) => {
+    const signals = await readBootSignals(page).catch((error) => ({ error: error.message }));
+    return `${stage} — ${JSON.stringify(signals)}`;
+  };
+  try {
+    await page.waitForFunction(() => {
+      const snapshot = window.__AETHERIA_TEST_API__?.getPerfSnapshot?.();
+      return Number.isFinite(snapshot?.['aetheria:boot-ready-ms'])
+        && Number.isFinite(snapshot?.['aetheria:intro-visible-ms']);
+    }, null, { timeout: BOOT_MARK_TIMEOUT_MS });
+  } catch (error) {
+    throw new Error(`app boot marks missing after ${BOOT_MARK_TIMEOUT_MS}ms: ${await describe('marks')} (${error.message})`);
+  }
+  try {
+    await page.waitForFunction(
+      () => performance.getEntriesByName('first-contentful-paint', 'paint').length > 0,
+      null,
+      { timeout: FCP_ENTRY_TIMEOUT_MS },
+    );
+  } catch (error) {
+    throw new Error(`first-contentful-paint entry missing after ${FCP_ENTRY_TIMEOUT_MS}ms: ${await describe('fcp')} (${error.message})`);
+  }
 }
 
 async function waitForState(page, predicate, description, timeout = 15000) {
@@ -179,12 +223,7 @@ async function main() {
     await startButton.waitFor({ state: 'visible', timeout: 10000 });
     metrics.introReadyMs = Number((performance.now() - navigationStartedAt).toFixed(1));
 
-    await page.waitForFunction(() => {
-      const snapshot = window.__AETHERIA_TEST_API__?.getPerfSnapshot?.();
-      return performance.getEntriesByName('first-contentful-paint', 'paint').length > 0
-        && Number.isFinite(snapshot?.['aetheria:boot-ready-ms'])
-        && Number.isFinite(snapshot?.['aetheria:intro-visible-ms']);
-    }, null, { timeout: 10000 });
+    await waitForBootSignals(page);
     Object.assign(metrics, await capturePerfMetrics(page));
     const initialAppPerf = await readAppPerfSnapshot(page);
     metrics.bootReadyMeasureMs = initialAppPerf['aetheria:boot-ready-ms'] ?? null;
