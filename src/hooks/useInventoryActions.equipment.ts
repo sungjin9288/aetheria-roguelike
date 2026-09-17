@@ -1,9 +1,10 @@
 import { AT } from '../reducers/actionTypes';
 import { getEquipmentIdentity } from '../utils/equipmentUtils';
-import type { Item } from '../types/index.js';
+import type { EquipSlots, Item, Player } from '../types/index.js';
 
-const findEnhanceTarget = (player: any, itemId: string) => {
-    const fallbackSlot = itemId.startsWith('equip:') ? itemId.split(':')[1] : null;
+const findEnhanceTarget = (player: Player, itemId: string) => {
+    // 'equip:<slot>' 형식의 id만 fallbackSlot을 갖는다 — 슬롯 키는 EquipSlots의 3종.
+    const fallbackSlot = itemId.startsWith('equip:') ? (itemId.split(':')[1] as keyof EquipSlots) : null;
     const equippedSlot = (['weapon', 'armor', 'offhand'] as const).find((slot) => (
         player.equip?.[slot]?.id === itemId
     ));

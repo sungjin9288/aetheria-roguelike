@@ -14,8 +14,9 @@ import { createQuestProgressState } from '../../utils/questProgress';
 import { getDefaultExpeditionFocusQuestIds } from '../../utils/expeditionMissionFocus';
 import { getRestCost } from '../../utils/expeditionReturnFlow';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
+import type { Player } from '../../types';
 
-const getStartingQuests = (player: any) => {
+const getStartingQuests = (player: Player) => {
     const quests = Array.isArray(player.quests) ? player.quests : [];
     const claimedQuestIds = Array.isArray(player.stats?.claimedQuestIds)
         ? player.stats.claimedQuestIds
@@ -31,7 +32,7 @@ const getStartingQuests = (player: any) => {
     return [...quests, createQuestProgressState(firstStoryQuest, player)];
 };
 
-const hasPreviousRunExperience = (player: any) => {
+const hasPreviousRunExperience = (player: Player) => {
     const stats = player.stats || {};
     return [
         player.meta?.prestigeRank,
@@ -166,7 +167,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
             const oldLabel = branches.find((entry: any) => entry.choice === oldChoice)?.label || '기본 성장';
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => ({
+                payload: (p: Player) => ({
                     ...p,
                     gold: (p.gold || 0) - cost,
                     skillChoices: { ...(p.skillChoices || {}), [skillName]: newChoice },

@@ -381,4 +381,9 @@ export interface Player {
     mirrorReviveUsed?: boolean;
     /** 다음 적 공격 1회 회피 예약 — enemyAttack이 소비하며 즉시 해제. */
     nextHitEvaded?: boolean;
+    /**
+     * 마지막 처치 시각(ms). killStreak 시간 감쇠(BALANCE.KILL_STREAK_DECAY_MS) 비교용.
+     * 2026-09 L stage 2: combatVictory가 쓰고 읽는데 미선언이라 `as any`로 우회하던 필드.
+     */
+    lastKillAt?: number;
 }

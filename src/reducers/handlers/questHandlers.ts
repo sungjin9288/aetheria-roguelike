@@ -41,11 +41,16 @@ const getRequestDate = (requestedAt: unknown) => {
 
 const getBountyTargets = (level: number) => {
     const targets: string[] = [];
-    (Object.values(DB.MAPS) as any[]).forEach((map) => {
+    Object.values(DB.MAPS).forEach((map) => {
+        // L-TODO(types) 잠재 버그: GameMap.level은 number | number[] | 'infinite'인데 아래 비교는
+        //   number만 가정한다. 범위 배열로 적힌 2개 지역([5,15] / [20,35])은 JS 암묵 변환에서
+        //   NaN이 되어 현상수배 대상 풀에서 항상 빠진다. 런타임 동등성을 지키기 위해 비교식은
+        //   그대로 두고 타입만 좁힌다(값 변환 없음).
+        const mapLevel = map.level as number;
         if (
             map.level !== 'infinite'
-            && map.level <= level + 5
-            && map.level >= Math.max(1, level - 10)
+            && mapLevel <= level + 5
+            && mapLevel >= Math.max(1, level - 10)
             && !map.boss
         ) {
             targets.push(...(map.monsters || []));

@@ -18,13 +18,14 @@ import {
     sanitizeQuickSlots,
 } from './helpers';
 import { appendRewardLogs } from './rewardLog';
+import type { Player } from '../../types';
 
 type EquipmentLog = { type: string; text: string };
 type EquipmentSlot = 'weapon' | 'armor' | 'offhand' | null;
 
 const completeEquipmentTransaction = (
     state: GameState,
-    player: any,
+    player: Player,
     logs: EquipmentLog[],
 ): GameState => {
     const trackedPlayer = trackExpeditionVitals(player);
@@ -248,7 +249,7 @@ const enhanceItem = (state: GameState, action: GameAction): GameState => {
         equip[slot] = { ...equip[slot], enhance: nextLevel };
     }
 
-    let player: any = {
+    let player: Player = {
         ...state.player,
         gold: (state.player.gold || 0) - preview.requirement.gold,
         inv: inventory,

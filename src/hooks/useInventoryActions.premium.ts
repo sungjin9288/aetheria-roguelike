@@ -1,6 +1,7 @@
 import { AT } from '../reducers/actionTypes';
+import type { Player } from '../types';
 
-const purchaseOffer = (player: any, dispatch: any, offerId: string) => {
+const purchaseOffer = (player: Player, dispatch: any, offerId: string) => {
     dispatch({
         type: AT.PURCHASE_PREMIUM_OFFER,
         payload: {

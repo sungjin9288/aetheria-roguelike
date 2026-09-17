@@ -6,13 +6,14 @@ import { MSG } from '../../data/messages';
 import { makeItem } from '../../utils/gameUtils';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
+import type { Player } from '../../types';
 
 /**
  * 마왕 처치 후처리: 파편 드랍 / 진 보스 진입 / 일반 환생
  * @returns {boolean} true이면 호출자가 즉시 return해야 함
  */
 export const handleDemonKingSlain = (
-    updatedPlayer: any,
+    updatedPlayer: Player,
     dispatch: any,
     addLog: any,
     rng: () => number = Math.random,
@@ -32,7 +33,7 @@ export const handleDemonKingSlain = (
             rng,
             now,
         );
-        dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
+        dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, inv: [...(p.inv || []), shardItem] }) });
         addLog('event', MSG.PRIMAL_SHARD_DROP(shardCount + 1));
     }
 
@@ -61,7 +62,7 @@ export const handleDemonKingSlain = (
                 exp: 5000, gold: 9999,
                 pattern: { guardChance: 0.05, heavyChance: 0.4 },
             };
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: newInv }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, inv: newInv }) });
             dispatch({ type: AT.SET_ENEMY, payload: trueBoss });
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
             addLog('critical', MSG.TRUE_BOSS_APPEAR);
@@ -82,7 +83,7 @@ export const handleDemonKingSlain = (
  * @returns {object} 업데이트된 player
  */
 export const applyAbyssFloorAdvance = (
-    p: any,
+    p: Player,
     dispatch: any,
     addLog: any,
     rng: () => number = Math.random,
@@ -116,11 +117,11 @@ export const applyAbyssFloorAdvance = (
         } else if (milestone.type === 'legendary_item') {
             // cycle 179: DB.ITEMS는 object — `.flat()` 호출은 TypeError. abyss 50/100/300층
             //   milestone 처리 중 예외 발생해 abyss 진행 끊기던 잠복 회귀 fix.
-            const allItems: any[] = (Object.values(DB.ITEMS) as any[]).flat().filter((i: any) => i && typeof i === 'object');
-            const legendaryPool = allItems.filter((i: any) => i.tier === 5);
+            const allItems = Object.values(DB.ITEMS).flat().filter((i) => i && typeof i === 'object');
+            const legendaryPool = allItems.filter((i) => i.tier === 5);
             if (legendaryPool.length > 0) {
                 const item = makeItem(
-                    legendaryPool[Math.floor(rng() * legendaryPool.length)] as any,
+                    legendaryPool[Math.floor(rng() * legendaryPool.length)],
                     rng,
                     now,
                 );

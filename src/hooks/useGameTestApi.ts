@@ -35,7 +35,7 @@ const getLevelExpRequirement = (level: number) => {
     return requirement;
 };
 
-const buildReturnBriefingScenarioPlayer = (player: any, now: Date) => {
+const buildReturnBriefingScenarioPlayer = (player: Player, now: Date) => {
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const weeklyMission = BALANCE.WEEKLY_MISSIONS[0];
@@ -908,7 +908,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
 
                 er.dispatch({
                     type: AT.SET_PLAYER,
-                    payload: (player: any) => ({
+                    payload: (player: Player) => ({
                         ...player,
                         stats: { ...player.stats, dailyProtocol },
                     }),
@@ -1284,7 +1284,7 @@ export const useGameTestApi = (engineRef: any, fullStatsRef: any, inventorySpotl
                     current.dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
                     current.dispatch({
                         type: AT.SET_PLAYER,
-                        payload: (player: any) => buildReturnBriefingScenarioPlayer(player, now),
+                        payload: (player: Player) => buildReturnBriefingScenarioPlayer(player, now),
                     });
 
                     setTimeout(() => {

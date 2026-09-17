@@ -26,12 +26,13 @@ import {
     sanitizeQuickSlots,
 } from './helpers';
 import { appendRewardLogs } from './rewardLog';
+import type { ItemRecipeDef, Player } from '../../types';
 
 type EconomyLog = { type: string; text: string };
 
 const completeTransaction = (
     state: GameState,
-    player: any,
+    player: Player,
     logs: EconomyLog[],
     economyReceipt: GameState['economyReceipt'] = null,
 ): GameState => {
@@ -119,7 +120,7 @@ const sellInventoryItem = (state: GameState, action: GameAction): GameState => {
     return completeTransaction(state, player, logs);
 };
 
-const getRecipeInputIds = (player: any, recipe: any) => {
+const getRecipeInputIds = (player: Player, recipe: ItemRecipeDef) => {
     const available = [...(player.inv || [])];
     const inputIds: string[] = [];
     for (const input of recipe.inputs || []) {

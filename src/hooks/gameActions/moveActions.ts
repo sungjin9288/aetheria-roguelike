@@ -9,6 +9,7 @@ import { CombatEngine } from '../../systems/CombatEngine';
 import { isAreaBossUndefeated, getAreaBossName } from '../../utils/bossGauge';
 import { finishExpedition, normalizeActiveExpedition, startExpedition } from '../../utils/expeditionLedger';
 import { resolveProgressionProfile, scaleProgressionExpReward } from '../../data/progressionProfiles';
+import type { Player } from '../../types';
 
 // cycle 314: addStoryLog 미사용 dependency 제거 — moveActions 어디에서도 호출 0건.
 //   `void addStoryLog` 자가-suppress 라인도 함께 cleanup.
@@ -50,7 +51,7 @@ export const createMoveActions = (deps: any) => {
 
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => {
+                payload: (p: Player) => {
                     let nextPlayer = { ...p };
                     if (shouldFinishExpedition) {
                         nextPlayer = finishExpedition(nextPlayer, loc, movedAt, DB.QUESTS).player;
@@ -93,7 +94,7 @@ export const createMoveActions = (deps: any) => {
                     addLog('system', visitReward.msg);
                     dispatch({
                         type: AT.SET_PLAYER,
-                        payload: (p: any) => {
+                        payload: (p: Player) => {
                             let updated = isSafeDestination ? clearTemporaryAdventureState(p) : { ...p };
                             updated = { ...updated, gold: (updated.gold || 0) + visitReward.gold };
                             const expResult = CombatEngine.applyExpGain(

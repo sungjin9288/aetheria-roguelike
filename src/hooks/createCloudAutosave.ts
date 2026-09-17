@@ -1,6 +1,8 @@
 import { CONSTANTS, APP_ID } from '../data/constants';
 import { AT } from '../reducers/actionTypes';
 import { type GameSaveRecord } from '../platform/gameStorage';
+import type { Player } from '../types';
+import type { GameAction } from '../reducers/gameReducer';
 
 interface MutableRef<T> {
     current: T;
@@ -30,14 +32,14 @@ export interface CloudAutosaveDeps {
     serverTimestamp: () => any;
     /** 로컬 저장소에서 최신 레코드를 읽는다(실패 시 null). */
     loadLocalRecord: () => Promise<GameSaveRecord | null>;
-    dispatch: (action: any) => void;
+    dispatch: (action: GameAction) => void;
     refs: CloudAutosaveRefs;
     now?: () => number;
 }
 
 export interface CloudAutosaveSnapshot {
     uid: string;
-    player: any;
+    player: Player;
     gameState: any;
     enemy: any;
     grave: any;

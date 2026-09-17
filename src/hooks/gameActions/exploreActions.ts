@@ -16,6 +16,7 @@ import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent, getScoutAvailability, consumeScoutCharge } from '../../utils/scoutEvents';
 import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent, advanceBossGauge } from '../../utils/bossGauge';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
+import type { Player } from '../../types';
 
 /**
  * 캠프파이어/스카우팅 이후 AI 랜덤 이벤트 체크 (explore() 전용 — AI_SERVICE는 firebase에
@@ -131,7 +132,7 @@ export const createExploreActions = (deps: any, shared: any) => {
             if (campfireBlocked) {
                 dispatch({
                     type: AT.SET_PLAYER,
-                    payload: (p: any) => ({
+                    payload: (p: Player) => ({
                         ...p,
                         stats: { ...(p.stats || {}), nextExploreCampfireBlocked: false },
                     }),
@@ -193,7 +194,7 @@ export const createExploreActions = (deps: any, shared: any) => {
 
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => {
+                payload: (p: Player) => {
                     const chargedStats = availability.isFree ? consumeScoutCharge(p) : (p.stats || {});
                     const withGauge = advanceBossGauge({ ...p, stats: chargedStats }, mapData);
                     return {

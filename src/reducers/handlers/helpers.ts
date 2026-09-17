@@ -147,7 +147,7 @@ export const resolveDailyProtocolProgress = (
         nextPlayer.relics = [...(nextPlayer.relics || []), convertedRelicAdded];
         nextPlayer.stats = {
             ...nextPlayer.stats,
-            relicCount: ((nextPlayer.stats as any)?.relicCount || 0) + 1,
+            relicCount: (nextPlayer.stats?.relicCount || 0) + 1,
         };
     }
 

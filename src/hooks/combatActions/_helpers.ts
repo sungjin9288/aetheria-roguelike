@@ -33,7 +33,7 @@ export const getSelectedSkill = (player: Player) => {
 //   `atk + def + crit*2 + floor(mp/5)`를 inline 복제해 constants.ts의 장비 점수
 //   가중치(EQUIP_SCORE_CRIT_WEIGHT / EQUIP_SCORE_MP_DIVISOR)와 이중 관리 상태였다. 이제 상점/인벤/루팅 3표면이 동일한 델타를 보고한다.
 //   첫 인자가 equip에서 player로 바뀐 이유: 강화·직업 제한 판정에 player가 필요.
-export const getLootUpgradeHint = (player: any, lootItems: Item[]): any => {
+export const getLootUpgradeHint = (player: Player, lootItems: Item[]): any => {
     const equipmentDrops = (lootItems || []).filter((item: any) => ['weapon', 'armor', 'shield'].includes(item?.type));
     if (!equipmentDrops.length) return null;
 
@@ -117,8 +117,8 @@ export const applyScoutGuaranteedRelic = (
     { dispatch, addLog, rng }: any,
 ) => {
     if (!deadEnemy?.scoutGuaranteedRelic) return;
-    const ownedRelics = (updatedPlayer as any).relics || [];
-    const relicUnlocks = getPrestigeUnlocks((updatedPlayer as any).meta?.prestigeRank);
+    const ownedRelics = updatedPlayer.relics || [];
+    const relicUnlocks = getPrestigeUnlocks(updatedPlayer.meta?.prestigeRank);
     if (ownedRelics.length >= relicUnlocks.maxRelics) return;
     const available = RELICS.filter((r: any) => !ownedRelics.some((pr: any) => pr.id === r.id));
     if (available.length === 0) return;

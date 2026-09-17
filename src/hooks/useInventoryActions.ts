@@ -8,6 +8,7 @@ import { resolveInvasion } from '../utils/graveUtils';
 import { createRewardActions } from './useInventoryActions.rewards';
 import { createEquipmentActions } from './useInventoryActions.equipment';
 import { createEconomyActions } from './useInventoryActions.economy';
+import type { Player } from '../types';
 import { createPremiumActions } from './useInventoryActions.premium';
 
 /**
@@ -26,7 +27,7 @@ export const createInventoryActions = ({
 }: any) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
-    const syncLevelQuests = (updatedPlayer: any) => {
+    const syncLevelQuests = (updatedPlayer: Player) => {
         const questResult = CombatEngine.updateQuestProgress(updatedPlayer, '');
         return { ...updatedPlayer, quests: questResult.updatedQuests };
     };

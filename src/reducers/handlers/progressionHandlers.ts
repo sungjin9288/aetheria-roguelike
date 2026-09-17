@@ -237,11 +237,11 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
             seasonPass: state.player.seasonPass || INITIAL_STATE.player.seasonPass,
             // cycle 188: 프리미엄 구매 자산 보존 — 환생해도 잔여 토큰/확장 슬롯 유지.
             reviveTokens: state.player.reviveTokens || 0,
-            maxInv: (state.player as any).maxInv || undefined,
+            maxInv: state.player.maxInv || undefined,
             // cycle 214: 주간 미션 진행도 / claimed ledger 보존 — mid-week ASCEND 시 같은 주
             //   재청구 exploit 방지. lastResetWeek 자동 reset 로직(exploreUtils.resetWeeklyProtocolIfNeeded)은
             //   그대로 — 새 주 시작 시 정상 reset.
-            weeklyProtocol: (state.player as any).weeklyProtocol || INITIAL_STATE.player.weeklyProtocol,
+            weeklyProtocol: state.player.weeklyProtocol || INITIAL_STATE.player.weeklyProtocol,
             expeditionSequence: Number.isSafeInteger(state.player.expeditionSequence)
                 ? state.player.expeditionSequence
                 : 0,

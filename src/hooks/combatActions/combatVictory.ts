@@ -15,6 +15,7 @@ import { isSignatureItem } from '../../data/signatureItems.js';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 import { appendExpeditionBoss } from '../../utils/expeditionLedger';
+import type { Player } from '../../types';
 
 /**
  * 전투 승리 공통 후처리.
@@ -145,7 +146,7 @@ export const handleVictoryOutcome = ({
     // constant 정의만 있고 실제 decay 로직 없어 사망 외엔 streak가 영원히 누적되던 갭.
     // 마지막 킬 timestamp(lastKillAt)와 비교해 elapsed > DECAY_MS이면 새 streak 시작.
     const resolvedAt = currentTime();
-    const lastKillAt = (updatedPlayer as any).lastKillAt;
+    const lastKillAt = updatedPlayer.lastKillAt;
     const decayed = typeof lastKillAt === 'number' && (resolvedAt - lastKillAt) > BALANCE.KILL_STREAK_DECAY_MS;
     const prevStreak = decayed ? 0 : (updatedPlayer.killStreak || 0);
     const newStreak = prevStreak + 1;
@@ -196,13 +197,14 @@ export const handleVictoryOutcome = ({
             const isAreaBossKill = typeof currentMapBoss === 'string' && currentMapBoss === deadEnemy.baseName;
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => {
+                payload: (p: Player) => {
                     const playerWithBossClear = {
                         ...p,
                         stats: {
                             ...p.stats,
                             areaBossDefeated: {
-                                ...(p.stats.areaBossDefeated || {}),
+                                // INITIAL_STATE가 stats를 보장한다(비필수 선언은 구세이브 호환용).
+                                ...(p.stats!.areaBossDefeated || {}),
                                 [deadEnemy.baseName]: true,
                             },
                         },
@@ -223,7 +225,7 @@ export const handleVictoryOutcome = ({
         }
         dispatch({ type: AT.ADD_SEASON_XP, payload: isBossKill ? SEASON_XP.bossKill : SEASON_XP.kill });
         const winHpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
-        dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio)) }) });
+        dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio)) }) });
     }
 
     emitUnlockedTitles(updatedPlayer);
@@ -239,7 +241,7 @@ export const handleVictoryOutcome = ({
                 random,
                 currentTime,
             );
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, inv: [...(p.inv || []), heartItem] }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, inv: [...(p.inv || []), heartItem] }) });
             dispatch({ type: AT.TRIGGER_TRUE_ENDING });
             addLog('critical', MSG.TRUE_GOD_SLAIN);
             return { earlyReturn: true };
@@ -250,7 +252,7 @@ export const handleVictoryOutcome = ({
                 random,
                 currentTime,
             );
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
+            dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({
                 ...p,
                 inv: [...(p.inv || []), voidCore],
                 titles: [...new Set([...(p.titles || []), '허무의 정복자'])],
@@ -282,7 +284,7 @@ export const handleVictoryOutcome = ({
     //   승리 등급(완승/안정/아슬아슬/붕괴 직전)을 나누므로 불리언보다 정확하다.
     //   카드를 띄울지 말지의 최종 판단은 reducer(settleVictory)가 전투 트랜잭션이 끝난
     //   상태(유물 선택 대기 / 승천 / 진엔딩 / 진보스)를 보고 한 곳에서 결정한다.
-    const inventoryCap = (updatedPlayer as any).maxInv || BALANCE.INV_MAX_SIZE;
+    const inventoryCap = updatedPlayer.maxInv || BALANCE.INV_MAX_SIZE;
     dispatch({
         type: AT.SET_POST_COMBAT_RESULT,
         payload: {

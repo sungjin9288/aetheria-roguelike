@@ -12,6 +12,7 @@ import { BALANCE } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
+import type { Player } from '../../types';
 
 export const createEventActions = (deps: any, shared: any) => {
     const { emitUnlockedTitles } = shared;
@@ -204,7 +205,7 @@ export const createEventActions = (deps: any, shared: any) => {
  * - 신규 배율 스키마 { atkMult?, defMult?, turns }: aiEventUtils가 BALANCE 상한으로 잘라 보낸다.
  * - 기존 캠프파이어 스키마 { atk, def, turn, name }: 그대로 spread (동작 불변).
  */
-const applyOutcomeBuff = (player: any, buff: any, addLog: any) => {
+const applyOutcomeBuff = (player: Player, buff: any, addLog: any) => {
     const isMultSchema = buff.atkMult !== undefined || buff.defMult !== undefined || buff.turns !== undefined;
     if (!isMultSchema) {
         return { ...player, tempBuff: { atk: 0, def: 0, turn: 0, name: null, ...buff } };
@@ -222,7 +223,7 @@ const applyOutcomeBuff = (player: any, buff: any, addLog: any) => {
  * exploreUtils의 기상 이변 경로와 같은 표현(문자열 id 중복 없는 누적)을 쓴다.
  * 화이트리스트는 aiEventUtils에서 이미 통과했지만, dispatch 직전에 한 번 더 확인한다.
  */
-const applyOutcomeStatus = (player: any, status: any, addLog: any) => {
+const applyOutcomeStatus = (player: Player, status: any, addLog: any) => {
     const id = String(status?.id || '');
     if (!BALANCE.EVENT_STATUS_IDS.includes(id)) return player;
     const turns = Math.max(1, Number(status?.turns) || 1);
@@ -239,7 +240,7 @@ const applyOutcomeStatus = (player: any, status: any, addLog: any) => {
  * 체인 보상(위 handleEventChoice)과 같은 pickWeightedRelics(available, n, { owned, rng }) 경로를
  * 그대로 쓰고, 보유 한도를 넘는 경우에는 조용히 건너뛴다(탐험 중 유물 발견과 동일 규칙).
  */
-const queueOutcomeRelics = (player: any, relic: any, { dispatch, addLog, rng }: any) => {
+const queueOutcomeRelics = (player: Player, relic: any, { dispatch, addLog, rng }: any) => {
     const ownedRelics = player.relics || [];
     if (ownedRelics.length >= getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics) return;
     const count = Math.max(1, Math.min(BALANCE.EVENT_RELIC_MAX_COUNT, Number(relic?.count) || 1));
@@ -271,8 +272,8 @@ const buildEliteStats = (rawStats: any, baseName: string) => ({
  * SET_ENEMY → GS.COMBAT)를 재사용한다. 탐험 카운터는 이벤트가 열릴 때 이미 커밋됐으므로
  * commitExploreOutcome은 호출하지 않는다(중복 누적 방지).
  */
-const startEliteEncounter = (player: any, { dispatch, addLog, getFullStats, rng }: any) => {
-    const mapData = DB.MAPS[player.loc];
+const startEliteEncounter = (player: Player, { dispatch, addLog, getFullStats, rng }: any) => {
+    const mapData = DB.MAPS[player.loc!];
     if (!mapData) {
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
         return;
@@ -281,7 +282,7 @@ const startEliteEncounter = (player: any, { dispatch, addLog, getFullStats, rng 
     const fullStats = getFullStats();
     dispatch({
         type: AT.SET_PLAYER,
-        payload: (p: any) => applyBattleStartRelics(p, p.relics || [], fullStats, { addLog, rng }),
+        payload: (p: Player) => applyBattleStartRelics(p, p.relics || [], fullStats, { addLog, rng }),
     });
     const mStats = buildEliteStats(rawStats, baseName);
     dispatch({ type: AT.SET_ENEMY, payload: mStats });
@@ -307,7 +308,7 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
     }
 
     addLog('event', outcome.log || '');
-    const mapData = DB.MAPS[player.loc];
+    const mapData = DB.MAPS[player.loc!];
     const playerRelics = player.relics || [];
 
     // 이벤트 패널을 닫고(현재 스카우팅 카드) 아래 분기에서 필요한 다음 상태를 dispatch한다.
@@ -399,7 +400,7 @@ const handleBossGaugeChoice = (idx: any, currentEvent: any, deps: any) => {
     }
 
     // 도전 — 게이지 리셋 + 구역 보스 결정론적 스폰.
-    const mapData = DB.MAPS[player.loc];
+    const mapData = DB.MAPS[player.loc!];
     const playerRelics = player.relics || [];
     const { mStats } = spawnEnemy(
         mapData,
@@ -412,8 +413,8 @@ const handleBossGaugeChoice = (idx: any, currentEvent: any, deps: any) => {
     const fullStats = getFullStats();
     dispatch({
         type: AT.SET_PLAYER,
-        payload: (p: any) => {
-            const nextPlayer = { ...p, stats: resetBossGaugeAfterChallenge(p, p.loc) };
+        payload: (p: Player) => {
+            const nextPlayer = { ...p, stats: resetBossGaugeAfterChallenge(p, p.loc!) };
             return applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog, rng });
         },
     });

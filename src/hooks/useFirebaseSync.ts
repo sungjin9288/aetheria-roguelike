@@ -34,13 +34,15 @@ import {
 } from '../platform/gameStorage';
 import { createCloudAutosave } from './createCloudAutosave';
 import { useLiveConfigAndLeaderboard } from './useLiveConfigAndLeaderboard';
+import type { Player } from '../types';
+import type { GameState } from '../reducers/gameReducer';
 
 const BOOTSTRAP_TIMEOUT_MS = 6000;
 const AUTH_TIMEOUT_MS = 8000;
 const makeLogPayload = (type: any, text: any) => ({ type, text, id: `${Date.now()}_${Math.random()}` });
 
 const trackPersistenceResult = (
-    player: any,
+    player: Player,
     name: Extract<ProductEventName, 'save' | 'restore'>,
     outcome: string,
     receipt: string,
@@ -88,7 +90,7 @@ const getDeviceQaBootstrapData = (scenario: string | null) => {
 /**
  * useFirebaseSync — Firebase 인증, 실시간 동기화, 리더보드, 자동 저장
  */
-export const useFirebaseSync = (state: any, dispatch: any) => {
+export const useFirebaseSync = (state: GameState, dispatch: any) => {
     const mockMode = isMockRuntime();
     const deviceQaScenario = getDeviceQaScenario();
     const deviceQaMode = deviceQaScenario !== null;
