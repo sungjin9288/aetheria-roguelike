@@ -41,7 +41,7 @@ export const enemyAIMethods: any = {
             updatedPlayer = { ...updatedPlayer, nextHitEvaded: false };
             return {
                 updatedPlayer, updatedEnemy, damage: 0, isDead: false,
-                logs: [...logs, { type: 'success', text: `[은신] ${enemy.name}의 공격을 회피했습니다!` }]
+                logs: [...logs, { type: 'success', text: MSG.STEALTH_EVADE_PROC(enemy.name) }]
             };
         }
 
@@ -53,14 +53,21 @@ export const enemyAIMethods: any = {
         if (armorEvasion > 0 && random() < armorEvasion) {
             return {
                 updatedPlayer, updatedEnemy, damage: 0, isDead: false,
-                logs: [...logs, { type: 'success', text: `[회피] ${enemy.name}의 공격을 회피했습니다!` }]
+                logs: [...logs, { type: 'success', text: MSG.ARMOR_EVADE_PROC(enemy.name) }]
             };
         }
 
         // ── Phase 전환 체크 (보스 + 엘리트 통합) ───────────────────
         if (updatedEnemy.isBoss || updatedEnemy.isElite) {
             const hpRatio = (updatedEnemy.hp ?? 0) / Math.max(1, updatedEnemy.maxHp || (updatedEnemy.hp ?? 1));
-            const statusLabels: Record<string, string> = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주' };
+            // 2026-09 Wave 6 X2: DOT_LABELS(8종 StatusId) 재사용 — 원래 이 4키만 인식하던
+            //   동작(stun/bleed/blind/fear는 fallback으로 원문 그대로 노출)을 그대로 보존한다.
+            //   p3/p2.statusEffect가 string(느슨한 타입)이라 statusLabels도 Record<string, string>
+            //   그대로 유지 — 값만 DOT_LABELS에서 가져온다.
+            const statusLabels: Record<string, string> = {
+                burn: MSG.DOT_LABELS.burn, poison: MSG.DOT_LABELS.poison,
+                freeze: MSG.DOT_LABELS.freeze, curse: MSG.DOT_LABELS.curse,
+            };
 
             // Phase 3 (원시의 신 등 3페이즈 보스, threshold 25%)
             if (updatedEnemy.phase3 && !updatedEnemy.phase3Triggered) {
@@ -85,9 +92,9 @@ export const enemyAIMethods: any = {
                         const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
                         if (!currentStatus.includes(p3.statusEffect) && random() >= resistChance) {
                             updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p3.statusEffect] };
-                            logs.push({ type: 'warning', text: `[Phase 3] [${statusLabels[p3.statusEffect] || p3.statusEffect}] 상태이상 부여!` });
+                            logs.push({ type: 'warning', text: MSG.ENEMY_PHASE_STATUS_APPLIED(3, statusLabels[p3.statusEffect] || p3.statusEffect) });
                         } else if (resistRelic && random() < resistChance) {
-                            logs.push({ type: 'success', text: `[고대의 봉인] 상태이상을 저항했습니다!` });
+                            logs.push({ type: 'success', text: MSG.ANCIENT_SEAL_RESIST });
                         }
                     }
                 }
@@ -114,9 +121,9 @@ export const enemyAIMethods: any = {
                         const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
                         if (!currentStatus.includes(p2.statusEffect) && random() >= resistChance2) {
                             updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p2.statusEffect] };
-                            logs.push({ type: 'warning', text: `[Phase 2] [${statusLabels[p2.statusEffect] || p2.statusEffect}] 상태이상 부여!` });
+                            logs.push({ type: 'warning', text: MSG.ENEMY_PHASE_STATUS_APPLIED(2, statusLabels[p2.statusEffect] || p2.statusEffect) });
                         } else if (resistRelic2 && random() < resistChance2) {
-                            logs.push({ type: 'success', text: `[고대의 봉인] 상태이상을 저항했습니다!` });
+                            logs.push({ type: 'success', text: MSG.ANCIENT_SEAL_RESIST });
                         }
                     }
                 }
@@ -156,7 +163,7 @@ export const enemyAIMethods: any = {
         const critBlockRelic = relics.find((relic) => relic.effect === 'crit_block');
         if (heavy && critBlockRelic && random() < critBlockRelic.val) {
             mult = 1;
-            logs.push({ type: 'event', text: '[강철 의지] 강타를 흘려냈습니다!' });
+            logs.push({ type: 'event', text: MSG.CRIT_BLOCK_PROC });
         }
         const heavyResolved = heavy && mult > 1;
 
@@ -170,11 +177,11 @@ export const enemyAIMethods: any = {
         const enemyHpAfterReflect = reflectDmg > 0 ? Math.max(0, (updatedEnemy.hp ?? 0) - reflectDmg) : (updatedEnemy.hp ?? 0);
         if (reflectDmg > 0) {
             updatedEnemy = { ...updatedEnemy, hp: enemyHpAfterReflect };
-            logs.push({ type: 'event', text: `[반사] 반사 피해 ${reflectDmg}!` });
+            logs.push({ type: 'event', text: MSG.REFLECT_DAMAGE_PROC(reflectDmg) });
             // 스턴 확률
             if (absoluteReflectSyn && random() < (absoluteReflectSyn.bonus.stunOnReflect || 0)) {
                 updatedEnemy = { ...updatedEnemy, stunnedTurns: Math.max(updatedEnemy.stunnedTurns ?? 0, 1) };
-                logs.push({ type: 'event', text: '[절대 반사] 반사 충격으로 적이 기절!' });
+                logs.push({ type: 'event', text: MSG.ABSOLUTE_REFLECT_STUN_PROC });
             }
         }
 
@@ -185,8 +192,8 @@ export const enemyAIMethods: any = {
         const minEnemyDmg = Math.max(1, Math.floor(rawEnemyAtk * 0.10));
         let enemyDmg = Math.max(minEnemyDmg, Math.floor(rawEnemyAtk - stats.def));
         if (enemyAtkMult < 1 && ((updatedEnemy.blindTurns ?? 0) > 0 || (updatedEnemy.fearTurns ?? 0) > 0 || (updatedEnemy.cursedTurns ?? 0) > 0)) {
-            const statusName = (updatedEnemy.blindTurns ?? 0) > 0 ? '실명' : (updatedEnemy.fearTurns ?? 0) > 0 ? '공포' : '저주';
-            logs.push({ type: 'info', text: `[${statusName}] ${updatedEnemy.name}의 공격력이 감소합니다!` });
+            const statusName = (updatedEnemy.blindTurns ?? 0) > 0 ? MSG.DOT_LABELS.blind : (updatedEnemy.fearTurns ?? 0) > 0 ? MSG.DOT_LABELS.fear : MSG.DOT_LABELS.curse;
+            logs.push({ type: 'info', text: MSG.ENEMY_ATK_REDUCED_STATUS(statusName, updatedEnemy.name) });
         }
 
         // cycle 108: 플레이어 curse 상태이상 — 받는 피해 증폭 (BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT).
@@ -198,7 +205,7 @@ export const enemyAIMethods: any = {
             const before = enemyDmg;
             enemyDmg = Math.floor(enemyDmg * ampMult);
             const pct = Math.round((ampMult - 1) * 100);
-            logs.push({ type: 'warning', text: `[저주] 받는 피해 +${pct}% (${before} → ${enemyDmg})` });
+            logs.push({ type: 'warning', text: MSG.PLAYER_CURSE_DMG_AMP(pct, before, enemyDmg) });
         }
 
         // cycle 162: 'titan' 유물 (타이탄의 허리띠) — val.critReduce 0.5 받는 치명타 피해 감소.
@@ -211,7 +218,7 @@ export const enemyAIMethods: any = {
                 const before = enemyDmg;
                 enemyDmg = Math.max(1, Math.floor(enemyDmg * (1 - reduce)));
                 const pct = Math.round(reduce * 100);
-                logs.push({ type: 'success', text: `[타이탄의 허리띠] 강타 피해 -${pct}% (${before} → ${enemyDmg})` });
+                logs.push({ type: 'success', text: MSG.TITAN_CRIT_REDUCE_PROC(pct, before, enemyDmg) });
             }
         }
 
@@ -242,20 +249,17 @@ export const enemyAIMethods: any = {
             //   저항 유물(status_resist)은 발동 이후 단계 그대로.
             if (!currentStatus.includes(enemyStatusOnHit) && random() < BALANCE.MONSTER_STATUS_ON_HIT_CHANCE) {
                 if (random() >= resistChance) {
-                    const statusLabels: Record<string, string> = {
-                        poison: '독', burn: '화상', freeze: '빙결', curse: '저주',
-                        bleed: '출혈', stun: '기절', blind: '실명', fear: '공포',
-                    };
+                    const statusLabels = MSG.DOT_LABELS;
                     protectedResult.updatedPlayer = {
                         ...protectedResult.updatedPlayer,
                         status: [...currentStatus, enemyStatusOnHit],
                     };
                     logs.push({
                         type: 'warning',
-                        text: `[${updatedEnemy.name}] 강타 — [${statusLabels[enemyStatusOnHit] || enemyStatusOnHit}] 상태이상 부여!`,
+                        text: MSG.ENEMY_HEAVY_STATUS_ON_HIT(updatedEnemy.name, (statusLabels as Record<string, string>)[enemyStatusOnHit] || enemyStatusOnHit),
                     });
                 } else {
-                    logs.push({ type: 'success', text: '[고대의 봉인] 상태이상을 저항했습니다!' });
+                    logs.push({ type: 'success', text: MSG.ANCIENT_SEAL_RESIST });
                 }
             }
         }
@@ -270,7 +274,7 @@ export const enemyAIMethods: any = {
             && random() < playerBuff.counterChance) {
             const counterDmg = Math.max(1, Math.floor(stats.atk));
             finalEnemy = { ...finalEnemy, hp: Math.max(0, (finalEnemy.hp ?? 0) - counterDmg) };
-            logs.push({ type: 'event', text: `[${playerBuff.name}] 반격! ${finalEnemy.name}에게 ${counterDmg} 피해!` });
+            logs.push({ type: 'event', text: MSG.PLAYER_COUNTER_PROC(playerBuff.name, finalEnemy.name, counterDmg) });
         }
 
         return {
@@ -313,12 +317,12 @@ export const enemyAIMethods: any = {
      */
     predictEnemyNextAction(enemy: Monster) {
         if (!enemy || (enemy.hp ?? 0) <= 0) return null;
-        if ((enemy.stunnedTurns || 0) > 0) return { type: 'stunned', label: '기절 중 — 행동 불가', color: 'blue' };
+        if ((enemy.stunnedTurns || 0) > 0) return { type: 'stunned', label: MSG.ENEMY_TELEGRAPH_STUNNED, color: 'blue' };
 
         // 보스 Phase 2 전환 임박 체크
         const hpRatio = (enemy.hp ?? 0) / Math.max(1, enemy.maxHp || (enemy.hp ?? 1));
         if (enemy.isBoss && !enemy.phase2Triggered && enemy.phase2 && hpRatio <= BALANCE.BOSS_PHASE2_THRESHOLD + 0.1) {
-            return { type: 'phase2_imminent', label: `⚡ Phase 2 임박 — ${enemy.phase2?.name || '형태 변환'}`, color: 'purple' };
+            return { type: 'phase2_imminent', label: MSG.ENEMY_TELEGRAPH_PHASE2_IMMINENT(enemy.phase2?.name), color: 'purple' };
         }
 
         const pattern = enemy.taunted
@@ -329,10 +333,10 @@ export const enemyAIMethods: any = {
         // slice 20: heavy 텔레그래프 라벨 '강타' → '맹공' — 플레이어 시작 스킬
         //   '강타'와 같은 화면에서 명칭이 충돌해 적 의도를 내 스킬 확률로 오독하던 문제.
         //   적 heavy hit 로그("맹렬하게 공격합니다")와 용어 통일.
-        if (pattern.guardChance >= 0.5) return { type: 'guard', label: `방어 태세 (${Math.round(pattern.guardChance * 100)}%)`, color: 'blue' };
-        if (pattern.heavyChance >= 0.4) return { type: 'heavy', label: `맹공 준비 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'red' };
-        if (pattern.guardChance >= 0.3) return { type: 'guard', label: `방어 가능 (${Math.round(pattern.guardChance * 100)}%)`, color: 'blue' };
-        if (pattern.heavyChance >= 0.25) return { type: 'heavy', label: `맹공 주의 (${Math.round(pattern.heavyChance * 100)}%)`, color: 'orange' };
-        return { type: 'normal', label: '일반 공격 예상', color: 'gray' };
+        if (pattern.guardChance >= 0.5) return { type: 'guard', label: MSG.ENEMY_TELEGRAPH_GUARD_HIGH(Math.round(pattern.guardChance * 100)), color: 'blue' };
+        if (pattern.heavyChance >= 0.4) return { type: 'heavy', label: MSG.ENEMY_TELEGRAPH_HEAVY_HIGH(Math.round(pattern.heavyChance * 100)), color: 'red' };
+        if (pattern.guardChance >= 0.3) return { type: 'guard', label: MSG.ENEMY_TELEGRAPH_GUARD_MED(Math.round(pattern.guardChance * 100)), color: 'blue' };
+        if (pattern.heavyChance >= 0.25) return { type: 'heavy', label: MSG.ENEMY_TELEGRAPH_HEAVY_MED(Math.round(pattern.heavyChance * 100)), color: 'orange' };
+        return { type: 'normal', label: MSG.ENEMY_TELEGRAPH_NORMAL, color: 'gray' };
     },
 };

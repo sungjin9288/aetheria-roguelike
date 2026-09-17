@@ -88,14 +88,16 @@ export const statusMethods = {
         (updated.dots || []).forEach((dot: any) => {
             const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * BALANCE.STATUS_DOT_RATIO * synergyDotMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
-            const dotKor = dot === 'burn' ? '화상' : dot === 'poison' ? '독' : '출혈';
-            logs.push({ type: 'event', text: `[${dotKor}] ${updated.name}에게 ${dmg} 지속 피해!` });
+            // 2026-09 Wave 6 X2: DOT_LABELS 재사용 — burn/poison만 인식하고 나머지(bleed 등)는
+            //   출혈로 처리하던 기존 3-분기 동작을 그대로 보존한다(라벨 값만 MSG 소유로 이동).
+            const dotKor = dot === 'burn' ? MSG.DOT_LABELS.burn : dot === 'poison' ? MSG.DOT_LABELS.poison : MSG.DOT_LABELS.bleed;
+            logs.push({ type: 'event', text: MSG.ENEMY_DOT_TICK(dotKor, updated.name, dmg) });
         });
         // 저주 DoT (curse_amp 패시브 반영)
         if (updated.cursed) {
             const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || BALANCE.DEFAULT_MAX_HP) * BALANCE.CURSE_DOT_RATIO * curseAmpMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
-            logs.push({ type: 'event', text: `[저주] ${updated.name}에게 ${dmg} 저주 피해!` });
+            logs.push({ type: 'event', text: MSG.ENEMY_CURSE_DOT_TICK(updated.name, dmg) });
         }
 
         // 상태 턴 감소 & 만료

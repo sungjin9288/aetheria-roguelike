@@ -169,7 +169,12 @@ test('debt-ratchet: src/types/*.ts 에 인덱스 시그니처가 다시 생기�
 // "systems/reducers 안에 messages.ts 밖 한글 문자열 리터럴이 몇 개인가"를 총량으로
 // 잡아서 새로운 하드코딩이 조용히 늘어나는 것만 막는 안전망이다. 개별 문자열이
 // 데이터 키(예: 상태이상 이름 비교)인지 로그 문구인지는 구분하지 않는다.
-const SYSTEMS_KOREAN_STRING_BASELINE = 260;
+// 2026-09 Wave 6 X2 재고정: 260 → 122 (CombatEngine.actions/enemyAI/status/relics/outcome.ts,
+//   DifficultyManager.ts, endgameSettlement.ts 감사, combatActionTurn/combatItemTurn.ts,
+//   FeedbackValidator.ts, TokenQuotaManager.ts, consumableEffect.ts를 MSG로 이관하고
+//   상태이상 라벨 테이블을 MSG.STATUS_LABELS/DOT_LABELS로 단일화. 남은 값은 *Audit.ts
+//   증빙 스크립트(SHA-bound, 미변경)와 데이터 식별자 리터럴(몬스터/맵/직업명 비교 등)뿐이다.
+const SYSTEMS_KOREAN_STRING_BASELINE = 122;
 const REDUCERS_KOREAN_STRING_BASELINE = 26;
 
 test(`debt-ratchet: src/systems/** 한글 문자열 리터럴은 ${SYSTEMS_KOREAN_STRING_BASELINE}건을 넘지 않는다 (하락만 허용, engine-msg-ownership.test.js와 별개)`, () => {

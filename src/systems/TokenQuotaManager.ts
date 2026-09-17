@@ -1,5 +1,6 @@
 import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { BALANCE } from '../data/constants';
+import { MSG } from '../data/messages.js';
 
 type FirestoreOperations = {
     doc?: (db: any, ...pathSegments: string[]) => any;
@@ -41,7 +42,7 @@ export const TokenQuotaManager = {
     },
 
     getExhaustedMessage() {
-        return "⚡ 에테르니아의 마력이 소진되었습니다. 내일 다시 시도해주세요.";
+        return MSG.AI_QUOTA_EXHAUSTED;
     },
 
     // Sync quota to Firestore for cross-device tracking
