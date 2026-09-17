@@ -8,6 +8,7 @@ import { premiumActionMap } from './premiumHandlers';
 import { makeCombatActionMap } from './combatHandlers';
 import { chainEventActionMap } from './chainEventHandlers';
 import { fallbackEventActionMap } from './fallbackEventHandlers';
+import { exploreActionMap } from './exploreHandlers';
 
 export const makeFeatureActionMap = (initialPlayer: any) => ({
     ...protocolActionMap,
@@ -19,5 +20,6 @@ export const makeFeatureActionMap = (initialPlayer: any) => ({
     ...makeCombatActionMap(initialPlayer),
     ...chainEventActionMap,
     ...fallbackEventActionMap,
+    ...exploreActionMap,
     ...multiplayerActionMap,
 });

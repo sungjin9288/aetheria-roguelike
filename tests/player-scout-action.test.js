@@ -14,6 +14,11 @@ import {
 } from '../src/utils/scoutEvents.js';
 import { getMirrorEffects } from '../src/systems/mirrorUpgrades.js';
 import { MIRROR_NODES } from '../src/data/mirror.js';
+import { AT } from '../src/reducers/actionTypes.js';
+import { GS } from '../src/reducers/gameStates.js';
+import { DB } from '../src/data/db.js';
+import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
+import { createExploreActions } from '../src/hooks/gameActions/exploreActions.js';
 
 /**
  * 2026-09 D1 — 플레이어가 직접 부르는 정찰.
@@ -212,18 +217,148 @@ test('④ consumeScoutCharge는 기존 stats를 변이하지 않는다', () => {
     assert.equal(next.scoutCharges.used, 1);
 });
 
-// ── ⑤ 액션·UI 계약 (정적 가드) ────────────────────────────────────────────
-test('⑤ exploreActions.scout은 골드 차감과 보스 게이지 1칸을 같은 전이로 처리한다', async () => {
+// ── ⑤ 단일 전이 · 연타 멱등성 (2026-09 N1b) ──────────────────────────────
+const DUNGEON_LOC = '고요한 숲';
+
+/** 리듀서를 실제로 물린 미니 엔진 — 훅이 본 스냅샷(player/gameState)은 렌더 전이라 그대로 둔다. */
+const makeScoutHarness = (playerOverrides = {}) => {
+    let state = {
+        ...structuredClone(INITIAL_STATE),
+        gameState: GS.IDLE,
+        logs: [],
+        player: {
+            ...structuredClone(INITIAL_STATE.player),
+            loc: DUNGEON_LOC,
+            gold: 5000,
+            ...playerOverrides,
+        },
+    };
+    const snapshotPlayer = state.player;
+    const errorLogs = [];
+    const actions = createExploreActions(
+        {
+            player: snapshotPlayer,
+            gameState: GS.IDLE,
+            dispatch: (action) => { state = gameReducer(state, action); },
+            addLog: (type, text) => errorLogs.push({ type, text }),
+            getFullStats: () => ({ maxHp: 100, maxMp: 50 }),
+        },
+        {
+            commitExploreOutcome: () => {
+                // Codex 79df84f: 카드 "선택" 해소만이 탐험 결과 정산 권한을 갖는다.
+                assert.fail('정찰 카드 개방은 commitExploreOutcome을 호출하지 않는다');
+            },
+        },
+    );
+    return {
+        actions,
+        errorLogs,
+        get state() { return state; },
+        set state(next) { state = next; },
+    };
+};
+
+test('⑤ 정찰을 연속 두 번 호출해도 골드는 1회만 차감되고 무료 횟수도 1회만 소모된다', () => {
+    const cost = getScoutGoldCost(DB.MAPS[DUNGEON_LOC]);
+    const harness = makeScoutHarness({ gold: 5000 });
+
+    harness.actions.scout();
+    const afterFirst = harness.state;
+    harness.actions.scout();
+
+    assert.equal(harness.state.player.gold, 5000 - cost, '골드는 1회분만 빠진다');
+    assert.equal(harness.state.gameState, GS.EVENT);
+    assert.equal(harness.state.currentEvent?.isScout, true, '정찰 카드가 열려 있다');
+    assert.equal(harness.state, afterFirst, '두 번째 호출은 상태를 바꾸지 않는다');
+    assert.deepEqual(harness.errorLogs, [], '훅 스냅샷 기준으로는 두 번 다 가용하므로 오류 로그가 없다');
+
+    const costLogs = harness.state.logs.filter((log) => log.text === MSG.SCOUT_PAID_LOG(cost));
+    assert.equal(costLogs.length, 1, '비용 로그도 1건뿐이다');
+});
+
+test('⑤ 무료 정찰도 연타에서 1회만 소모된다', () => {
+    const granted = getMirrorEffects({ mirror: { scout_charges: 1 } }).freeScoutCharges;
+    const harness = makeScoutHarness({
+        gold: 0,
+        meta: { ...structuredClone(INITIAL_STATE.player.meta), mirror: { scout_charges: 1 } },
+        activeExpedition: null,
+    });
+
+    harness.actions.scout();
+    harness.actions.scout();
+
+    assert.equal(harness.state.player.gold, 0, '무료 정찰은 골드를 쓰지 않는다');
+    assert.equal(harness.state.player.stats.scoutCharges.used, 1, '무료 횟수는 1회만 소모된다');
+    assert.equal(getRemainingScoutCharges(harness.state.player), granted - 1);
+});
+
+test('⑤ 같은 RESOLVE_SCOUT를 두 번 dispatch하면 두 번째는 같은 state 객체를 돌려준다', () => {
+    const harness = makeScoutHarness({ gold: 5000 });
+    const action = { type: AT.RESOLVE_SCOUT, payload: { seed: 12345, now: 1700000000000 } };
+
+    const first = gameReducer(harness.state, action);
+    assert.notEqual(first, harness.state, '첫 전이는 상태를 바꾼다');
+    const second = gameReducer(first, action);
+    assert.equal(second, first, '두 번째 전이는 동일 객체(no-op)');
+});
+
+test('⑤ 안전지대에서는 RESOLVE_SCOUT가 상태를 바꾸지 않는다 (리듀서 자체 판정)', () => {
+    const harness = makeScoutHarness({ loc: '시작의 마을' });
+    const next = gameReducer(harness.state, {
+        type: AT.RESOLVE_SCOUT,
+        payload: { seed: 7, now: 1700000000000 },
+    });
+    assert.equal(next, harness.state);
+});
+
+test('⑤ 훅은 불가 사유만 알리고 dispatch하지 않는다', () => {
+    const dispatched = [];
+    const errorLogs = [];
+    createExploreActions(
+        {
+            player: { ...structuredClone(INITIAL_STATE.player), loc: DUNGEON_LOC, gold: 0 },
+            gameState: GS.IDLE,
+            dispatch: (action) => dispatched.push(action),
+            addLog: (type, text) => errorLogs.push({ type, text }),
+            getFullStats: () => ({}),
+        },
+        { commitExploreOutcome: () => assert.fail('정산 호출 금지') },
+    ).scout();
+
+    assert.deepEqual(dispatched, []);
+    assert.equal(errorLogs.length, 1);
+    assert.equal(errorLogs[0].type, 'error');
+});
+
+// ── ⑥ 액션·UI 계약 (정적 가드) ────────────────────────────────────────────
+test('⑥ exploreActions.scout은 판정만 하고 정산은 AT.RESOLVE_SCOUT 단일 전이가 소유한다', async () => {
     const source = await readFile(new URL('../src/hooks/gameActions/exploreActions.ts', import.meta.url), 'utf8');
 
     assert.match(source, /scout: \(\) => \{/);
     assert.match(source, /getScoutAvailability\(player, mapData, gameState === GS\.IDLE\)/);
-    assert.match(source, /advanceBossGauge\(/, '정찰도 시간이 흐른 것으로 처리한다');
-    assert.match(source, /consumeScoutCharge/);
-    assert.match(source, /buildScoutEvent\(player, mapData, rng\)/, '같은 카드 빌더를 재사용한다');
+    assert.match(source, /type: AT\.RESOLVE_SCOUT/, '정산은 단일 전이로 위임한다');
+    assert.doesNotMatch(source, /advanceBossGauge\(/, '게이지 누적은 리듀서 소유');
+    assert.doesNotMatch(source, /consumeScoutCharge/, '무료 횟수 차감은 리듀서 소유');
+    assert.doesNotMatch(source, /buildScoutEvent\(player, mapData, rng\)/, '카드 생성도 리듀서 소유');
     // 병합(2026-09): Codex가 explore() 내부 RNG를 harness seed를 받을 수 있는 actionRng로
     //   바꿨다(exploreActionSeed). "랜덤 25% 발동이 유지된다"는 의도는 동일하다.
     assert.match(source, /shouldTriggerScout\(mapData, actionRng\)/, '랜덤 25% 발동은 유지된다');
+});
+
+test('⑥ 리듀서 핸들러가 게이지·무료 횟수·카드 개방을 한 전이에 담는다', async () => {
+    const source = await readFile(new URL('../src/reducers/handlers/exploreHandlers.ts', import.meta.url), 'utf8');
+
+    assert.match(source, /RESOLVE_SCOUT/);
+    assert.match(source, /getScoutAvailability\(state\.player, mapData, state\.gameState === GS\.IDLE\)/,
+        '훅 스냅샷이 아니라 리듀서 상태로 재판정한다');
+    assert.match(source, /advanceBossGauge\(/, '정찰도 시간이 흐른 것으로 처리한다');
+    assert.match(source, /consumeScoutCharge/);
+    assert.match(source, /buildScoutEvent\(state\.player, mapData, createSeededRandom\(seed\)\)/,
+        '같은 카드 빌더를 seed 스트림으로 재사용한다');
+    // 주석은 이 규칙을 설명하므로 코드 본문만 본다.
+    const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');
+    assert.doesNotMatch(code, /commitExploreOutcome/,
+        '카드 개방은 탐험 결과 정산이 아니다 (선택 해소가 유일한 정산 권한)');
 });
 
 test('⑤ ControlPanel은 탐험 화면에 비용이 적힌 정찰 버튼을 렌더한다', async () => {

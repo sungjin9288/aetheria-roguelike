@@ -13,11 +13,11 @@ import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
-import { shouldTriggerScout, buildScoutEvent, getScoutAvailability, consumeScoutCharge } from '../../utils/scoutEvents';
-import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent, advanceBossGauge } from '../../utils/bossGauge';
+import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../../utils/scoutEvents';
+import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
 import type { Player } from '../../types';
-import { resolveExploreActionRandom } from '../../utils/exploreActionSeed';
+import { resolveExploreActionRandom, resolveExploreActionSeed } from '../../utils/exploreActionSeed';
 import { BOUNDED_ENCOUNTER_PACK_ENABLED, BOUNDED_ENCOUNTERS } from '../../data/boundedEncounters';
 import { buildBoundedEncounterContext, selectBoundedEncounter } from '../../utils/boundedEncounterSelector';
 import { buildBoundedEncounterEvent } from '../../utils/boundedEncounterEvent';
@@ -224,6 +224,13 @@ export const createExploreActions = (deps: any, shared: any) => {
          *  - 정찰하는 동안에도 시간은 흐른다 — 보스 접근 게이지를 1칸 올린다(advanceBossGauge 재사용).
          *  - 카드 자체와 선택 해소는 랜덤 발동과 완전히 같은 경로(buildScoutEvent →
          *    eventActions.handleScoutChoice)를 탄다 — 신규 스폰/해소 로직 없음.
+         *
+         * 2026-09 N1b — 여기서는 "불가 사유 안내"만 하고, 실제 비용·게이지·카드 개방은
+         *   AT.RESOLVE_SCOUT 단일 전이가 소유한다(reducers/handlers/exploreHandlers.ts).
+         *   훅이 SET_PLAYER → SET_GAME_STATE → SET_EVENT를 연달아 쏘던 예전 구조는 리렌더
+         *   전에 두 번 눌리면 카드 1장에 골드/무료 횟수가 2번 빠졌다. 리듀서가 같은 판정을
+         *   자기 상태로 다시 실행하므로 두 번째 전이는 state를 그대로 돌려준다(전투 경로의
+         *   claimCombatAction과 같은 위험을 이 프로젝트 방식으로 막는다).
          */
         scout: () => {
             const mapData = DB.MAPS[player.loc];
@@ -231,32 +238,9 @@ export const createExploreActions = (deps: any, shared: any) => {
             if (!availability.available) return addLog('error', availability.reason || MSG.SCOUT_BUSY);
 
             dispatch({
-                type: AT.SET_PLAYER,
-                payload: (p: Player) => {
-                    const chargedStats = availability.isFree ? consumeScoutCharge(p) : (p.stats || {});
-                    const withGauge = advanceBossGauge({ ...p, stats: chargedStats }, mapData);
-                    return {
-                        ...p,
-                        gold: Math.max(0, (p.gold || 0) - availability.cost),
-                        stats: withGauge,
-                    };
-                },
+                type: AT.RESOLVE_SCOUT,
+                payload: { seed: resolveExploreActionSeed(rng), now: Date.now() },
             });
-
-            addLog(
-                'system',
-                availability.isFree
-                    ? MSG.SCOUT_FREE_LOG(Math.max(0, availability.remainingFree - 1))
-                    : MSG.SCOUT_PAID_LOG(availability.cost),
-            );
-
-            // 게이지가 실제로 오르는 지역에서만 "시간이 흐른다"는 대가를 함께 알린다 (lessons R26).
-            if (isAreaBossUndefeated(mapData, player)) addLog('info', MSG.SCOUT_TIME_PASSES);
-
-            const scoutEvent = buildScoutEvent(player, mapData, rng);
-            dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
-            dispatch({ type: AT.SET_EVENT, payload: scoutEvent });
-            addLog('event', scoutEvent.desc);
         },
     };
 };
