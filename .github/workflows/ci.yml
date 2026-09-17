@@ -40,6 +40,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Install Playwright chromium (unit suite needs a browser)
+        # tests/damage-feedback-restore.test.js 와 scripts/normalize-monster-source.mjs
+        # (tests/monster-source-preflight.test.js 경유)는 unit 단계에서 chromium.launch()로
+        # 실제 렌더를 검증한다. 브라우저가 없으면 9건이 launch 실패로 붉어진다.
+        run: npx playwright install --with-deps chromium
+
       - name: Lint
         run: npm run lint
 
