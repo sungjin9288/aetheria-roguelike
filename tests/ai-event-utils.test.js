@@ -1,7 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { buildEventPackage, classifyChoice, pickFallbackEvent, summarizeHistory } from '../src/utils/aiEventUtils.js';
+import { BALANCE } from '../src/data/constants.js';
+import { buildEventPackage, classifyChoice, normalizeOutcomeSpecials, pickFallbackEvent, summarizeHistory } from '../src/utils/aiEventUtils.js';
 
 test('summarizeHistory compacts recent event records', () => {
     const history = [
@@ -85,4 +86,86 @@ test('pickFallbackEvent does not immediately repeat the previous event when alte
         previous = event.desc;
         history = [...history, { event: event.desc, choice: event.choices[0], outcome: event.outcomes[0].log }];
     }
+});
+
+// ── 2026-09 Wave 3 I1: outcome 어휘 확장 (relic / status / elite / buff) ──────
+// 모델 출력은 신뢰 불가 — 화이트리스트 밖의 값은 조용히 드롭되고, 수치는 BALANCE
+// 상한으로 잘린다. 실행 기반 검증(문자열 가드 아님).
+
+const vocabularyContext = {
+    location: '에테르 관문',
+    playerSnapshot: { level: 20, maxHp: 300, maxMp: 150, hp: 300 },
+    mapSnapshot: { level: 20 },
+};
+
+const packageWithOutcome = (outcome) => buildEventPackage({
+    desc: '관문 중앙의 룬이 순차적으로 점등됩니다.',
+    choices: ['동조한다', '즉시 봉인'],
+    outcomes: [{ choiceIndex: 0, log: '결과', gold: 10, ...outcome }],
+}, vocabularyContext).outcomes[0];
+
+test('normalizeOutcomes: 유효한 relic/status/elite/buff는 정규화되어 통과한다', () => {
+    const outcome = packageWithOutcome({
+        relic: { count: 2 },
+        status: { id: 'poison', turns: 2 },
+        elite: true,
+        buff: { atkMult: 1.2, turns: 3 },
+    });
+
+    assert.deepEqual(outcome.relic, { count: 2 });
+    assert.deepEqual(outcome.status, { id: 'poison', turns: 2 });
+    assert.equal(outcome.elite, true);
+    assert.deepEqual(outcome.buff, { atkMult: 1.2, turns: 3 });
+});
+
+test('normalizeOutcomes: 화이트리스트 밖 상태이상 id와 정체불명 필드는 드롭된다', () => {
+    const outcome = packageWithOutcome({
+        status: { id: 'instant_death', turns: 99 },
+        relic: { count: 'all' },
+        elite: 'yes',
+        buff: { atkMult: 1.2 },      // turns 없음 → 무효
+        teleport: '마왕성',          // 미지원 어휘
+    });
+
+    assert.equal(outcome.status, undefined);
+    assert.equal(outcome.elite, undefined);
+    assert.equal(outcome.buff, undefined);
+    assert.equal(outcome.teleport, undefined);
+    // relic.count는 숫자가 아니면 1로 수렴 (선택지 자체는 살린다)
+    assert.deepEqual(outcome.relic, { count: 1 });
+});
+
+test('normalizeOutcomes: 확장 어휘 수치는 BALANCE 상한으로 잘린다', () => {
+    const outcome = packageWithOutcome({
+        relic: { count: 9 },
+        status: { id: 'curse', turns: 99 },
+        buff: { atkMult: 99, defMult: 50, turns: 99 },
+    });
+
+    assert.equal(outcome.relic.count, BALANCE.EVENT_RELIC_MAX_COUNT);
+    assert.equal(outcome.status.turns, BALANCE.EVENT_STATUS_MAX_TURNS);
+    assert.equal(outcome.buff.atkMult, BALANCE.EVENT_BUFF_MAX_MULT);
+    assert.equal(outcome.buff.defMult, BALANCE.EVENT_BUFF_MAX_MULT);
+    assert.equal(outcome.buff.turns, BALANCE.EVENT_BUFF_MAX_TURNS);
+});
+
+test('normalizeOutcomes: 배율 1 이하 버프는 디버프 통로가 되지 않도록 드롭된다', () => {
+    const outcome = packageWithOutcome({ buff: { atkMult: 0.5, defMult: 1, turns: 3 } });
+    assert.equal(outcome.buff, undefined);
+});
+
+test('normalizeOutcomeSpecials: status 문자열 축약형도 화이트리스트를 통과해야만 정규화된다', () => {
+    assert.deepEqual(
+        normalizeOutcomeSpecials({ status: 'burn' }),
+        { status: { id: 'burn', turns: BALANCE.EVENT_SPECIAL_STATUS_TURNS } },
+    );
+    assert.deepEqual(normalizeOutcomeSpecials({ status: 'stun' }), {});
+    assert.deepEqual(normalizeOutcomeSpecials({ status: 'freeze' }), {});
+    assert.deepEqual(normalizeOutcomeSpecials(null), {});
+});
+
+test('BALANCE.EVENT_STATUS_IDS: 이벤트는 턴 강탈(freeze/stun) 어휘를 쓰지 않는다 (공정성 규칙)', () => {
+    assert.deepEqual(BALANCE.EVENT_STATUS_IDS, ['poison', 'burn', 'bleed', 'curse']);
+    assert.ok(!BALANCE.EVENT_STATUS_IDS.includes('freeze'));
+    assert.ok(!BALANCE.EVENT_STATUS_IDS.includes('stun'));
 });

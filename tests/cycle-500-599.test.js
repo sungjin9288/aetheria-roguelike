@@ -1289,11 +1289,16 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/\bfallback\b/.test(sig), 'fallback 파라미터 자체는 보존');
   });
 
-  test('cycle 522: 정합성 가드 — 8 internal callsite 보존', async () => {
+  test('cycle 522: 정합성 가드 — 모든 internal callsite가 fallback을 명시한다', async () => {
+      // 2026-09 Wave 3 I1: outcome 어휘 확장(relic/status/buff 검증)으로 toInt 호출부가
+      //   8건에서 늘었다. 이 가드의 원 의도는 "호출 수"가 아니라 "default 0이 사라진 뒤에도
+      //   모든 호출부가 fallback을 명시한다"이므로, 고정 개수 대신 그 불변식을 직접 검증한다.
       const source = await readSrc('src/utils/aiEventUtils.ts');
-      const calls = (source.match(/toInt\(/g) || []).length;
-      // 정의 1 (const toInt = (...))는 paren 미사용, 사용처만 8회 매칭
-      assert.equal(calls, 8, `toInt 호출 8건 보존: ${calls}건`);
+      const calls = source.match(/toInt\(([^()]*)\)/g) || [];
+      assert.ok(calls.length >= 8, `cycle 522 당시 8건 이상 보존: ${calls.length}건`);
+      for (const call of calls) {
+          assert.ok(call.includes(','), `fallback 인자 명시 필요: ${call}`);
+      }
   });
 
   test('cycle 522: body ternary 처리 보존', async () => {

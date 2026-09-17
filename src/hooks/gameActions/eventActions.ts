@@ -9,6 +9,7 @@ import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
 import { spawnEnemy, rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from '../../utils/exploreUtils';
 import { BALANCE } from '../../data/constants';
+import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
 
@@ -143,8 +144,14 @@ export const createEventActions = (deps: any, shared: any) => {
                 if (selectedOutcome.item) updatedPlayer = addItemByName(updatedPlayer, selectedOutcome.item);
                 // 캠프파이어 "단련" 등 — 다음 전투용 tempBuff 부여 (combatItem 물약과 동일 패턴).
                 //   turn-based라 전투 전까지 유지되며 다음 전투에서 소모된다.
+                //   2026-09 Wave 3 I1: 이벤트 outcome이 보내는 { atkMult/defMult/turns } 배율
+                //   스키마도 같은 tempBuff로 환산한다(캠프파이어의 { atk, def, turn, name }는 불변).
                 if (selectedOutcome.buff) {
-                    updatedPlayer = { ...updatedPlayer, tempBuff: { atk: 0, def: 0, turn: 0, name: null, ...selectedOutcome.buff } };
+                    updatedPlayer = applyOutcomeBuff(updatedPlayer, selectedOutcome.buff, addLog);
+                }
+                // 상태이상 — 기상 이변(exploreUtils)과 동일하게 id 문자열만 중복 없이 누적한다.
+                if (selectedOutcome.status) {
+                    updatedPlayer = applyOutcomeStatus(updatedPlayer, selectedOutcome.status, addLog);
                 }
                 resultText = formatEventText(selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT);
                 addLog('event', resultText);
@@ -175,9 +182,108 @@ export const createEventActions = (deps: any, shared: any) => {
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
             emitUnlockedTitles(updatedPlayer);
             dispatch({ type: AT.SET_EVENT, payload: null });
+
+            // 2026-09 Wave 3 I1: 유물 선택지를 먼저 큐잉하고 전투는 맨 마지막에 연다.
+            //   순서를 뒤집으면 전투 전이가 나머지 보상 dispatch를 삼킨다.
+            if (selectedOutcome?.relic) {
+                queueOutcomeRelics(updatedPlayer, selectedOutcome.relic, { dispatch, addLog, rng });
+            }
+
+            if (selectedOutcome?.elite) {
+                startEliteEncounter(updatedPlayer, { dispatch, addLog, getFullStats, rng });
+                return;
+            }
+
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
         },
     };
+};
+
+/**
+ * 이벤트 outcome 버프 → tempBuff 환산 (2026-09 Wave 3 I1).
+ * - 신규 배율 스키마 { atkMult?, defMult?, turns }: aiEventUtils가 BALANCE 상한으로 잘라 보낸다.
+ * - 기존 캠프파이어 스키마 { atk, def, turn, name }: 그대로 spread (동작 불변).
+ */
+const applyOutcomeBuff = (player: any, buff: any, addLog: any) => {
+    const isMultSchema = buff.atkMult !== undefined || buff.defMult !== undefined || buff.turns !== undefined;
+    if (!isMultSchema) {
+        return { ...player, tempBuff: { atk: 0, def: 0, turn: 0, name: null, ...buff } };
+    }
+    const atk = Math.max(0, (Number(buff.atkMult) || 1) - 1);
+    const def = Math.max(0, (Number(buff.defMult) || 1) - 1);
+    const turn = Math.max(0, Number(buff.turns) || 0);
+    if (turn <= 0 || (atk <= 0 && def <= 0)) return player;
+    addLog('success', MSG.EVENT_BUFF_APPLIED(Math.round(atk * 100), Math.round(def * 100), turn));
+    return { ...player, tempBuff: { atk, def, turn, name: MSG.EVENT_BUFF_NAME } };
+};
+
+/**
+ * 이벤트 outcome 상태이상 적용 (2026-09 Wave 3 I1).
+ * exploreUtils의 기상 이변 경로와 같은 표현(문자열 id 중복 없는 누적)을 쓴다.
+ * 화이트리스트는 aiEventUtils에서 이미 통과했지만, dispatch 직전에 한 번 더 확인한다.
+ */
+const applyOutcomeStatus = (player: any, status: any, addLog: any) => {
+    const id = String(status?.id || '');
+    if (!BALANCE.EVENT_STATUS_IDS.includes(id)) return player;
+    const turns = Math.max(1, Number(status?.turns) || 1);
+    addLog('warning', MSG.EVENT_STATUS_APPLIED(id, turns));
+    return { ...player, status: [...new Set([...(player.status || []), id])] };
+};
+
+/**
+ * 이벤트 outcome 유물 선택지 큐잉 (2026-09 Wave 3 I1).
+ * 체인 보상(위 handleEventChoice)과 같은 pickWeightedRelics(available, n, { owned, rng }) 경로를
+ * 그대로 쓰고, 보유 한도를 넘는 경우에는 조용히 건너뛴다(탐험 중 유물 발견과 동일 규칙).
+ */
+const queueOutcomeRelics = (player: any, relic: any, { dispatch, addLog, rng }: any) => {
+    const ownedRelics = player.relics || [];
+    if (ownedRelics.length >= getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics) return;
+    const count = Math.max(1, Math.min(BALANCE.EVENT_RELIC_MAX_COUNT, Number(relic?.count) || 1));
+    const available = RELICS.filter((r: any) => !ownedRelics.some((pr: any) => pr.id === r.id));
+    if (available.length === 0) return;
+    const candidates = pickWeightedRelics(available, count, { owned: ownedRelics, rng });
+    if (candidates.length === 0) return;
+    dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
+    addLog('event', MSG.EVENT_RELIC_CHOICE(candidates.length));
+};
+
+/**
+ * 정예 조우 스탯 — 정찰 "정예의 흔적" 카드와 동일한 산출(신규 스폰 로직 없음).
+ * 확정 유물 보상(scoutGuaranteedRelic)은 "골라서 들어간" 정찰 카드에만 붙인다.
+ */
+const buildEliteStats = (rawStats: any, baseName: string) => ({
+    ...rawStats,
+    name: rawStats.name?.startsWith('정예') ? rawStats.name : `정예 ${baseName}`,
+    baseName,
+    isElite: true,
+    hp: Math.floor(rawStats.hp * BALANCE.SCOUT_ELITE_HP_MULT),
+    maxHp: Math.floor(rawStats.maxHp * BALANCE.SCOUT_ELITE_HP_MULT),
+    atk: Math.floor(rawStats.atk * BALANCE.SCOUT_ELITE_HP_MULT),
+});
+
+/**
+ * 이벤트 outcome의 정예 조우 (2026-09 Wave 3 I1).
+ * 정찰 elite 카드 / 보스 게이지 도전과 동일한 파이프(spawnEnemy → applyBattleStartRelics →
+ * SET_ENEMY → GS.COMBAT)를 재사용한다. 탐험 카운터는 이벤트가 열릴 때 이미 커밋됐으므로
+ * commitExploreOutcome은 호출하지 않는다(중복 누적 방지).
+ */
+const startEliteEncounter = (player: any, { dispatch, addLog, getFullStats, rng }: any) => {
+    const mapData = DB.MAPS[player.loc];
+    if (!mapData) {
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+        return;
+    }
+    const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, player.relics || [], { addLog }, { rng });
+    const fullStats = getFullStats();
+    dispatch({
+        type: AT.SET_PLAYER,
+        payload: (p: any) => applyBattleStartRelics(p, p.relics || [], fullStats, { addLog, rng }),
+    });
+    const mStats = buildEliteStats(rawStats, baseName);
+    dispatch({ type: AT.SET_ENEMY, payload: mStats });
+    dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+    addLog('warning', MSG.EVENT_ELITE_AMBUSH);
+    addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
 };
 
 /**
@@ -213,16 +319,7 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
         );
         const isEliteCard = outcome.scoutEffect === 'elite';
         const mStats = isEliteCard
-            ? {
-                ...rawStats,
-                name: rawStats.name?.startsWith('정예') ? rawStats.name : `정예 ${baseName}`,
-                baseName,
-                isElite: true,
-                hp: Math.floor(rawStats.hp * BALANCE.SCOUT_ELITE_HP_MULT),
-                maxHp: Math.floor(rawStats.maxHp * BALANCE.SCOUT_ELITE_HP_MULT),
-                atk: Math.floor(rawStats.atk * BALANCE.SCOUT_ELITE_HP_MULT),
-                scoutGuaranteedRelic: true,
-            }
+            ? { ...buildEliteStats(rawStats, baseName), scoutGuaranteedRelic: true }
             : { ...rawStats, scoutRewardBonus: outcome.rewardBonus ?? BALANCE.SCOUT_COMBAT_REWARD_BONUS };
 
         const fullStats = getFullStats();

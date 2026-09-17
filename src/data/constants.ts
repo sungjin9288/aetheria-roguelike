@@ -119,6 +119,17 @@ export interface BalanceConfig {
     POST_COMBAT_PUSH_ATK_BONUS: number;
     POST_COMBAT_PUSH_TURNS: number;
     POST_COMBAT_BREATHER_HEAL_RATIO: number;
+    EVENT_STATUS_IDS: string[];
+    EVENT_RELIC_MAX_COUNT: number;
+    EVENT_STATUS_MAX_TURNS: number;
+    EVENT_BUFF_MAX_MULT: number;
+    EVENT_BUFF_MAX_TURNS: number;
+    EVENT_RISKY_SPECIAL_CHANCE: number;
+    EVENT_SPECIAL_WEIGHTS: Record<string, number>;
+    EVENT_BALANCED_BUFF_CHANCE: number;
+    EVENT_SPECIAL_STATUS_TURNS: number;
+    EVENT_SPECIAL_BUFF_MULT: number;
+    EVENT_SPECIAL_BUFF_TURNS: number;
 }
 
 export const BALANCE: BalanceConfig = {
@@ -596,6 +607,25 @@ export const BALANCE: BalanceConfig = {
     POST_COMBAT_PUSH_ATK_BONUS: 0.25,   // 밀어붙이기 공격력 +25%
     POST_COMBAT_PUSH_TURNS: 6,          // 버프 지속 턴 (다음 전투 1회를 대체로 커버 — 모닥불 단련과 동일 방식)
     POST_COMBAT_BREATHER_HEAL_RATIO: 0.18, // 숨 고르기 회복량 = 최대 생명 × 18%
+
+    // 2026-09 Wave 3 I — 이벤트 결과 어휘 확장(유물/상태이상/정예/버프).
+    //   모델 출력은 신뢰할 수 없으므로 aiEventUtils.normalizeOutcomes가 이 화이트리스트와
+    //   상한만 통과시킨다. "죽음은 항상 공정" 원칙에 따라 이벤트가 직접 생명을 0으로
+    //   만들 수 있는 어휘는 넣지 않는다 — 위험은 상태이상/정예 조우로만 표현한다.
+    //   freeze/stun(턴 강탈)과 blind/fear(플레이어측 효과 없음)는 의도적으로 제외.
+    EVENT_STATUS_IDS: ['poison', 'burn', 'bleed', 'curse'],
+    EVENT_RELIC_MAX_COUNT: 2,           // 이벤트 1건이 열 수 있는 유물 선택지 최대 개수
+    EVENT_STATUS_MAX_TURNS: 3,          // 이벤트 상태이상 지속 턴 상한
+    EVENT_BUFF_MAX_MULT: 1.3,           // 이벤트 버프 배율 상한 (모닥불 단련과 같은 눈금)
+    EVENT_BUFF_MAX_TURNS: 6,            // 이벤트 버프 지속 턴 상한 (POST_COMBAT_PUSH_TURNS와 동일)
+    // 절차적 outcome(buildProceduralOutcome)의 "위험" 선택 특수 결과 확률/가중.
+    //   위험 선택이 ±골드로만 끝나지 않도록 1건의 특수 결과를 얹는다.
+    EVENT_RISKY_SPECIAL_CHANCE: 0.35,
+    EVENT_SPECIAL_WEIGHTS: { status: 45, elite: 30, relic: 15, buff: 10 },
+    EVENT_BALANCED_BUFF_CHANCE: 0.12,   // "균형" 선택의 소폭 버프 확률
+    EVENT_SPECIAL_STATUS_TURNS: 2,
+    EVENT_SPECIAL_BUFF_MULT: 1.15,
+    EVENT_SPECIAL_BUFF_TURNS: 4,
 };
 
 Object.freeze(CONSTANTS);

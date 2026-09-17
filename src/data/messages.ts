@@ -485,4 +485,31 @@ export const MSG = {
     EXPLORE_ANOMALY_MANA_REGEN: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)',
     EXPLORE_ANOMALY_BURN: '피부를 찌르는 산성비가 내립니다. (화상)',
     EXPLORE_CHAIN_EVENT: (label: string, desc: string) => `📜 [${label}] ${desc}`,
+    // --- 2026-09 Wave 3 I: 이벤트 결과 어휘 확장 (유물 / 상태이상 / 정예 / 버프) ---
+    // 이벤트 outcome이 ±골드를 넘어 분기할 때의 로그. 모델·풀 어느 쪽에서 왔든
+    //   aiEventUtils.normalizeOutcomes를 통과한 값만 여기로 온다.
+    EVENT_RELIC_CHOICE: (count: number) => (
+        count > 1
+            ? `기묘한 기운이 남았습니다. 유물 선택지 ${count}개가 열렸습니다.`
+            : '기묘한 기운이 남았습니다. 유물 하나를 고를 수 있습니다.'
+    ),
+    EVENT_STATUS_APPLIED: (effect: string, turns: number) => {
+        const label = effect === 'poison' ? '중독'
+            : effect === 'burn' ? '화상'
+            : effect === 'bleed' ? '출혈'
+            : effect === 'curse' ? '저주'
+            : effect;
+        // 지속 턴은 "최소" 표기 — 플레이어 상태이상 만료는 별도 트랙(H1)에서 도입되며,
+        //   그 전까지는 휴식/정화까지 남는다. 어느 쪽이든 문구가 거짓이 되지 않는다.
+        return `[${label}] 선택의 흔적이 몸에 남았습니다. 다음 전투에서 최소 ${turns}턴은 따라붙습니다.`;
+    },
+    EVENT_BUFF_NAME: '고조된 기세',
+    EVENT_BUFF_APPLIED: (attackPercent: number, defensePercent: number, turns: number) => {
+        const parts = [
+            attackPercent > 0 && `공격력 +${attackPercent}%`,
+            defensePercent > 0 && `방어력 +${defensePercent}%`,
+        ].filter(Boolean).join(' · ');
+        return `기세가 올랐습니다. 다음 전투 ${turns}턴 동안 ${parts}.`;
+    },
+    EVENT_ELITE_AMBUSH: '기척이 짙어집니다 — 정예가 앞을 막아섰습니다.',
 };

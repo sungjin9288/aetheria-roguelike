@@ -217,6 +217,74 @@ const buildProceduralOutcome = ({ desc, choice, choiceIndex, context }: any) => 
     };
 };
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 2026-09 Wave 3 I1 — outcome 어휘 확장 (relic / status / elite / buff).
+//   모델 출력도, 풀 저작 엔트리도 여기를 통과한 값만 consumer(eventActions)로 간다.
+//   화이트리스트 밖의 id/kind는 조용히 드롭하고, 수치는 BALANCE 상한으로 자른다.
+//   "이벤트가 직접 죽이지 않는다"는 공정성 규칙은 consumer의 HP 클램프(≥1)와
+//   여기서 생명 감소 어휘를 새로 늘리지 않는 것으로 같이 지킨다.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** relic: { count: 1..EVENT_RELIC_MAX_COUNT } — 유물 "선택지"를 여는 수. */
+const normalizeRelicOutcome = (raw: any) => {
+    if (raw === true) return { count: 1 };
+    if (!raw || typeof raw !== 'object') return null;
+    return { count: clamp(toInt(raw.count, 1), 1, BALANCE.EVENT_RELIC_MAX_COUNT) };
+};
+
+/** status: { id: <BALANCE.EVENT_STATUS_IDS>, turns?: 1..EVENT_STATUS_MAX_TURNS }. */
+const normalizeStatusOutcome = (raw: any) => {
+    if (!raw) return null;
+    const id = normalizeText(typeof raw === 'string' ? raw : (raw.id || raw.effect));
+    if (!BALANCE.EVENT_STATUS_IDS.includes(id)) return null;
+    const turns = clamp(
+        toInt(typeof raw === 'string' ? BALANCE.EVENT_SPECIAL_STATUS_TURNS : raw.turns, BALANCE.EVENT_SPECIAL_STATUS_TURNS),
+        1,
+        BALANCE.EVENT_STATUS_MAX_TURNS,
+    );
+    return { id, turns };
+};
+
+/** elite: true — 즉시 정예 조우. 문자열/숫자 truthy는 받지 않는다(오탐 방지). */
+const normalizeEliteOutcome = (raw: any) => (raw === true || raw === 'true' ? true : null);
+
+/** 버프 배율 — 1 이하(디버프/무효)는 드롭, 상한은 EVENT_BUFF_MAX_MULT. */
+const normalizeBuffMult = (raw: any) => {
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value <= 1) return 0;
+    return Math.min(BALANCE.EVENT_BUFF_MAX_MULT, Math.round(value * 100) / 100);
+};
+
+/** buff: { atkMult?, defMult?, turns } — consumer가 tempBuff로 환산한다. */
+const normalizeBuffOutcome = (raw: any) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const turns = clamp(toInt(raw.turns ?? raw.turn, 0), 0, BALANCE.EVENT_BUFF_MAX_TURNS);
+    if (turns <= 0) return null;
+    const atkMult = normalizeBuffMult(raw.atkMult);
+    const defMult = normalizeBuffMult(raw.defMult);
+    if (!atkMult && !defMult) return null;
+    return {
+        ...(atkMult ? { atkMult } : {}),
+        ...(defMult ? { defMult } : {}),
+        turns,
+    };
+};
+
+/** 확장 어휘 4종을 한 번에 검증해 존재하는 것만 담아 돌려준다. */
+export const normalizeOutcomeSpecials = (raw: any) => {
+    if (!raw || typeof raw !== 'object') return {};
+    const relic = normalizeRelicOutcome(raw.relic);
+    const status = normalizeStatusOutcome(raw.status);
+    const elite = normalizeEliteOutcome(raw.elite);
+    const buff = normalizeBuffOutcome(raw.buff);
+    return {
+        ...(relic ? { relic } : {}),
+        ...(status ? { status } : {}),
+        ...(elite ? { elite } : {}),
+        ...(buff ? { buff } : {}),
+    };
+};
+
 // cycle 527: 3 defaults (rawOutcomes/choices/context) 제거 — 1 internal callsite
 //   (line 260) normalizeOutcomes(raw.outcomes, choices, { ...context, desc })
 //   3 args 명시. choices는 dedupeChoices() 결과(항상 배열), context는 spread
@@ -239,6 +307,7 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
                 hp: toInt(outcome.hp, 0),
                 mp: toInt(outcome.mp, 0),
                 ...(normalizeText(outcome.item) ? { item: normalizeText(outcome.item) } : {}),
+                ...normalizeOutcomeSpecials(outcome),
             });
         });
     }
