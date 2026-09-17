@@ -72,6 +72,58 @@ const RELIC_EFFECTS = [
     'titan', 'triple_up', 'void_heart',
 ];
 
+/**
+ * types/relic.ts NumericRelicEffect — `val`이 number 단일값인 effect (34종).
+ * 2026-09 Wave 4 M: `Relic`이 `effect` 판별 유니온이 되면서 이 3분할이 타입 계약이다.
+ */
+const NUMERIC_RELIC_EFFECTS = [
+    'armor_pen', 'battle_start_atk', 'battle_start_heal', 'cd_minus', 'chaos_buff',
+    'crit_block', 'crit_dmg', 'crit_mp_regen', 'death_save', 'devour_hp', 'dot_mult',
+    'double_strike', 'drop_rate', 'dual_crit', 'echo_atk', 'elem_boost', 'event_chance',
+    'execute_atk', 'exp_mult', 'first_turn_evade', 'free_skill', 'gold_mult', 'low_hp_dmg',
+    'mp_mult', 'mp_regen_turn', 'omega', 'on_hit_freeze', 'on_kill_heal', 'reflect',
+    'regen', 'skill_lifesteal', 'skill_mult', 'status_resist', 'stone_skin',
+];
+
+/** types/relic.ts DictRelicEffect — `val`이 RelicVal dict인 effect (23종). */
+const DICT_RELIC_EFFECTS = [
+    'abyss_atk_scale', 'abyss_crit_scale', 'abyss_floor_power', 'ancient_power',
+    'battle_start_buff', 'boss_hunter', 'combo_stack', 'cooldown_reduce', 'cursed_power',
+    'entropy_tick', 'execute_bonus', 'fortress', 'genesis', 'glass_cannon', 'hp_drain_atk',
+    'kill_bonus', 'kill_stack_atk', 'low_hp_atk', 'phoenix_revive', 'reflect_crit',
+    'spell_stack', 'titan', 'void_heart',
+];
+
+/** types/relic.ts ValuelessRelicEffect — `val`을 아예 쓰지 않는 effect (4종). */
+const VALUELESS_RELIC_EFFECTS = ['chaos_relic', 'kill_stack', 'mp_restore_battle', 'triple_up'];
+
+/** types/relic.ts RelicValByEffect — dict effect별 필수 키 집합. */
+const RELIC_VAL_BY_EFFECT = {
+    abyss_atk_scale: ['perFloors', 'atkPer', 'maxBonus'],
+    abyss_crit_scale: ['perFloors', 'critPer', 'maxBonus'],
+    abyss_floor_power: ['minFloor', 'atkBonus', 'defBonus'],
+    ancient_power: ['atk', 'crit'],
+    battle_start_buff: ['atk', 'turns'],
+    boss_hunter: ['spawn', 'drop'],
+    combo_stack: ['stack', 'bonus'],
+    cooldown_reduce: ['cdReduction', 'firstFree'],
+    cursed_power: ['atk', 'hp_cost'],
+    entropy_tick: ['interval', 'damage'],
+    execute_bonus: ['threshold', 'mult'],
+    fortress: ['def', 'hp'],
+    genesis: ['statBonus', 'healPerTurn'],
+    glass_cannon: ['atk', 'def'],
+    hp_drain_atk: ['hpCost', 'atkBonus'],
+    kill_bonus: ['exp', 'gold'],
+    kill_stack_atk: ['perKill', 'max'],
+    low_hp_atk: ['threshold', 'bonus'],
+    phoenix_revive: ['healRatio', 'atkBuff', 'duration'],
+    reflect_crit: ['reflect', 'critBonus'],
+    spell_stack: ['perStack', 'max'],
+    titan: ['hp', 'critReduce'],
+    void_heart: ['survive', 'dmg_mult'],
+};
+
 /** types/relic.ts RelicVal — val이 dict일 때 등장 가능한 키 전체. */
 const RELIC_VAL_FIELDS = [
     'atk', 'atkBonus', 'atkBuff', 'atkPer', 'bonus', 'cdReduction', 'crit', 'critBonus',
@@ -106,6 +158,45 @@ test('Relic: effect / rarity 리터럴 유니온이 데이터와 정확히 일�
     assertUnionExact('RELICS', RELICS, 'effect', RELIC_EFFECTS);
     assertUnionExact('RELICS', RELICS, 'rarity', RELIC_RARITIES);
     assert.equal(RELIC_EFFECTS.length, 61);
+});
+
+test('Relic: effect 3분할(number/dict/없음)이 RelicEffect 61종을 정확히 덮는다', () => {
+    const split = [...NUMERIC_RELIC_EFFECTS, ...DICT_RELIC_EFFECTS, ...VALUELESS_RELIC_EFFECTS];
+    assert.equal(new Set(split).size, split.length, 'effect가 두 분할에 중복 등장');
+    assert.deepEqual([...split].sort(), [...RELIC_EFFECTS].sort(), '3분할 합집합 ≠ RelicEffect');
+    assert.equal(NUMERIC_RELIC_EFFECTS.length, 34);
+    assert.equal(DICT_RELIC_EFFECTS.length, 23);
+    assert.equal(VALUELESS_RELIC_EFFECTS.length, 4);
+});
+
+test('Relic: 모든 유물의 val 형태가 effect의 선언 형태와 일치한다', () => {
+    const numeric = new Set(NUMERIC_RELIC_EFFECTS);
+    const dict = new Set(DICT_RELIC_EFFECTS);
+    for (const relic of RELICS) {
+        const actual = relic.val === undefined
+            ? 'none'
+            : typeof relic.val === 'number' ? 'number'
+            : (relic.val && typeof relic.val === 'object' && !Array.isArray(relic.val)) ? 'dict'
+            : typeof relic.val;
+        const declared = numeric.has(relic.effect) ? 'number' : dict.has(relic.effect) ? 'dict' : 'none';
+        assert.equal(actual, declared, `${relic.id}(${relic.effect}): val 형태 ${actual} ≠ 선언 ${declared}`);
+    }
+});
+
+test('Relic: dict effect별 val 키 집합이 RelicValByEffect 선언과 정확히 일치한다', () => {
+    assert.deepEqual(Object.keys(RELIC_VAL_BY_EFFECT).sort(), [...DICT_RELIC_EFFECTS].sort());
+    for (const relic of RELICS) {
+        const declared = RELIC_VAL_BY_EFFECT[relic.effect];
+        if (!declared) continue;
+        assert.deepEqual(
+            Object.keys(relic.val).sort(),
+            [...declared].sort(),
+            `${relic.id}(${relic.effect}): val 키 집합 불일치`,
+        );
+    }
+    // RelicVal 39키 = dict effect별 키 집합의 합집합 (죽은 키 0개).
+    const union = [...new Set(Object.values(RELIC_VAL_BY_EFFECT).flat())].sort();
+    assert.deepEqual(union, [...RELIC_VAL_FIELDS].sort());
 });
 
 test('RelicSynergy: bonus 필드/effect 유니온이 데이터와 일치한다', () => {

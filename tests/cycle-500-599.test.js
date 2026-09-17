@@ -2553,8 +2553,10 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 547: body turnCount / relics 처리 보존', async () => {
       // applyEntropyTick은 CombatEngine.relics.ts로 분리됨 (mixin).
       const source = await readSrc('src/systems/CombatEngine.relics.ts');
-      assert.ok(/const relics = \(player as any\)\?\.relics \|\| \[\]/.test(source),
-          '(player as any)?.relics || [] defensive 보존');
+      // 2026-09 Wave 4 M: Relic.val 판별 유니온화로 (player as any) 캐스트가 Relic[] 주석으로 대체됨.
+      //   가드 의도(player.relics 미보유 시 [] fallback 보존)는 그대로.
+      assert.ok(/const relics: Relic\[\] = player\?\.relics \|\| \[\]/.test(source),
+          'player?.relics || [] defensive 보존');
       assert.ok(/turnCount = \(flags\.turnCount \|\| 0\) \+ 1/.test(source),
           'turnCount 증가 보존');
   });
@@ -2628,7 +2630,8 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 548: body crit_mp_regen 분기 + getEffectiveMaxMp 보존', async () => {
       // applyCritMpRestore는 CombatEngine.relics.ts로 분리됨 (mixin).
       const source = await readSrc('src/systems/CombatEngine.relics.ts');
-      assert.ok(/relics\.find\(\(relic: any\) => relic\.effect === 'crit_mp_regen'\)/.test(source),
+      // 2026-09 Wave 4 M: 콜백의 `: any` 제거 (Relic 판별 유니온이 val을 좁혀줌).
+      assert.ok(/relics\.find\(\(relic\) => relic\.effect === 'crit_mp_regen'\)/.test(source),
           'crit_mp_regen find 보존');
       assert.ok(/this\.getEffectiveMaxMp\(player, relics\)/.test(source),
           'getEffectiveMaxMp(player, relics) 호출 보존');

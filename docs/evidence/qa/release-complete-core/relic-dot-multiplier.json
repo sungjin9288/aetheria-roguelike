@@ -2,9 +2,9 @@
   "hashAlgorithm": "sha256",
   "reportHash": "b123dee8e47f7b405584470bc03087f6e81fbbb98aecfd0ee1bb10068068a204",
   "sourceHashes": {
-    "src/data/relics.ts": "795c720eab26592915e6e797f8fac15fc93d678f4722328d9535c82d5ed40c14",
-    "src/systems/CombatEngine.actions.ts": "54387789220ac0aae1a0c52eb86b5873649f458ceb2ca0431d9fabedddc3c4f1",
-    "src/systems/relicDotMultiplierAudit.ts": "8f98a4788ed3df33d0de1cd0dbda8b065f7b4b0f82dfca197f9714f3b6a5ae6c",
+    "src/data/relics.ts": "cc6f41c48cd70385c30db73d9e83db7cb4567b6c6a4749c1a4b5b472a251aa72",
+    "src/systems/CombatEngine.actions.ts": "c81974c22d501249e3a502c1c031914ccf4d6a160fba416b19c07d9f1571a1c5",
+    "src/systems/relicDotMultiplierAudit.ts": "46024294ff8c14e2d58578eb813be97d44b45a3019be8aacbf0ddda478b069f5",
     "src/utils/dataMigration.ts": "4379b7a642536fc62fc5369ccb7eb949848f56cb3f92a3d8fbcd7386075c7eeb",
     "src/reducers/handlers/combatHandlers.ts": "75372cd2b8473d72b691b8f400bae20d333cf7e8ec47748767ebd4d7c95ffee7",
     "tests/relic-dot-multiplier-coherence.test.js": "8cd65cfa561bb915d9e9b878b7b01b7f75e576b0748ea3ffce423c54d50ed807",

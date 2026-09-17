@@ -95,7 +95,7 @@ export const outcomeMethods: any = {
             : 1;
 
         // 유물 + 패시브 스킬: EXP/골드 배율 (cycle 265: liveConfig 곱셈 합류)
-        const expMult = (1 + (relics.find((r: any) => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0))
+        const expMult = (1 + (relics.find((r) => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0))
             * eventMult * seasonXpMult;
         const goldMult = (1 + getStrongestNumericRelicValue(relics, 'gold_mult') + (passiveBonus.goldMult || 0))
             * seasonGoldMult;
@@ -107,7 +107,7 @@ export const outcomeMethods: any = {
             : challengeMods.length >= (challengeScale.threshold || 3) ? (challengeScale.mult || 1.5)
             : 1;
         // 유물: 처치 보너스 (kill_bonus)
-        const killBonusRelic = relics.find((r: any) => r.effect === 'kill_bonus');
+        const killBonusRelic = relics.find((r) => r.effect === 'kill_bonus');
         const killExpMult = killBonusRelic ? (1 + (killBonusRelic.val?.exp || 0)) : 1;
         const killGoldMult = killBonusRelic ? (1 + (killBonusRelic.val?.gold || 0)) : 1;
         // feat/prestige-rank-ladder: rank≥9 "심연 사냥꾼" — 정예(isElite) 처치 시 EXP/골드 +25%.
@@ -186,7 +186,7 @@ export const outcomeMethods: any = {
         p.meta = granted.meta;
 
         // 유물: 피의 서약 (on_kill_heal) — 처치 시 HP 회복
-        const healRelic = relics.find((r: any) => r.effect === 'on_kill_heal');
+        const healRelic = relics.find((r) => r.effect === 'on_kill_heal');
         if (healRelic) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * healRelic.val);
             p.hp = Math.min(p.maxHp!, (p.hp || 1) + heal);
@@ -194,7 +194,7 @@ export const outcomeMethods: any = {
         }
 
         // 처치 공격력은 원정 동안 유지하며 시너지는 처치당 증가량에 합산한다.
-        const killStackRelic = relics.find((r: any) => r.effect === 'kill_stack_atk');
+        const killStackRelic = relics.find((r) => r.effect === 'kill_stack_atk');
         const synergiesForKill = (passiveBonus as any)?.activeSynergies || [];
         const killStackSynergyBonus = synergiesForKill.reduce((acc: number, s: any) =>
             acc + (s.bonus?.killStack || 0), 0);
@@ -208,7 +208,7 @@ export const outcomeMethods: any = {
         }
 
         // 마지막 처치량만 다음 전투에 예약한다. 승리 화면에서는 HP를 올리지 않는다.
-        const devourRelic = relics.find((r: any) => r.effect === 'devour_hp');
+        const devourRelic = relics.find((r) => r.effect === 'devour_hp');
         if (devourRelic && enemy.maxHp) {
             const hpGain = Math.floor((enemy.maxHp || 0) * (devourRelic.val || 0));
             if (hpGain > 0) {
@@ -238,7 +238,7 @@ export const outcomeMethods: any = {
         }
 
         // 유물: 별의 핵 (mp_restore_battle) — 전투 종료 시 MP 전량 회복
-        const starCoreRelic = relics.find((r: any) => r.effect === 'mp_restore_battle');
+        const starCoreRelic = relics.find((r) => r.effect === 'mp_restore_battle');
         if (starCoreRelic) {
             p.mp = p.maxMp || 50;
             logs.push({ type: 'heal', text: MSG.STAR_CORE_RESTORE });

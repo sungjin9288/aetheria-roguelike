@@ -10,7 +10,7 @@ import type { Player, Relic, Monster } from '../types/index.js';
  */
 export const relicEffectMethods: any = {
     applyCritMpRestore(player: Player, relics: Relic[], logs: any[]) {
-        const critMpRelic = relics.find((relic: any) => relic.effect === 'crit_mp_regen');
+        const critMpRelic = relics.find((relic) => relic.effect === 'crit_mp_regen');
         if (!critMpRelic) return player;
 
         const nextMp = Math.min(this.getEffectiveMaxMp(player, relics), (player.mp || 0) + critMpRelic.val);
@@ -32,7 +32,7 @@ export const relicEffectMethods: any = {
         let phoenixTempBuff: any = null;
 
         if (nextHp <= 0) {
-            const deathSaveRelic = relics.find((relic: any) => relic.effect === 'death_save');
+            const deathSaveRelic = relics.find((relic) => relic.effect === 'death_save');
             // cycle 153: 시너지 'absolute_immortal' — reviveCount 2회 부활. effect-name primary + bonus-key fallback.
             const absoluteImmortalSyn = activeSynergies.find((s: any) =>
                 s.bonus.effect === 'absolute_immortal' || s.bonus.reviveCount);
@@ -62,7 +62,7 @@ export const relicEffectMethods: any = {
                 const reviveMsg = reviveUsedCount > 0 ? `[절대 불사] ${reviveUsedCount + 1}회 부활!` : '[불사의 의지] 치명상을 버텼습니다!';
                 logs.push({ type: 'event', text: reviveMsg });
             } else {
-                const voidHeartRelic = relics.find((relic: any) => relic.effect === 'void_heart');
+                const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
                 if (voidHeartRelic && !flags.voidHeartUsed) {
                     nextHp = 1;
                     flags.voidHeartUsed = true;
@@ -81,7 +81,7 @@ export const relicEffectMethods: any = {
                     } else {
                     // cycle 157: 'phoenix_revive' (불사조의 깃털) — HP 0 도달 시 1회 부활 (HP healRatio% 회복).
                     // cycle 162: atkBuff/duration tempBuff 적용 추가 — 부활 직후 N턴 동안 ATK 증폭.
-                    const phoenixRelic = relics.find((relic: any) => relic.effect === 'phoenix_revive');
+                    const phoenixRelic = relics.find((relic) => relic.effect === 'phoenix_revive');
                     if (phoenixRelic && !flags.phoenixUsed) {
                         const healRatio = phoenixRelic.val?.healRatio || 0.3;
                         nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healRatio));
@@ -153,7 +153,7 @@ export const relicEffectMethods: any = {
     //   1037) + N test callsite (cycle 159/236/237) 모두 || [] 명시 전달이라
     //   default 도달 불가. 청소 메가 시리즈 42번째 (cycle 502-546).
     applyEntropyTick(player: Player, enemy: Monster, activeSynergies: any[]) {
-        const relics = (player as any)?.relics || [];
+        const relics: Relic[] = player?.relics || [];
         const flags = { ...((player as any).combatFlags || {}) };
         const turnCount = (flags.turnCount || 0) + 1;
         flags.turnCount = turnCount;
@@ -162,7 +162,7 @@ export const relicEffectMethods: any = {
         let updatedEnemy: any = enemy;
         const logs: any[] = [];
 
-        const tickRelic = relics.find((r: any) => r.effect === 'entropy_tick');
+        const tickRelic = relics.find((r) => r.effect === 'entropy_tick');
         // cycle 236: entropy_god 시너지의 fixedDmg + interval 패턴도 catch.
         //   기존엔 'damage && interval'만 잡아 entropy_god(fixedDmg 0.15)가 dispatch 0건이던 dead config.
         const brandSyn = activeSynergies.find((s: any) =>

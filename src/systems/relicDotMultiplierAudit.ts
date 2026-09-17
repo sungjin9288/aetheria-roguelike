@@ -7,7 +7,9 @@ import type { Relic } from '../types/relic.js';
 import { CombatEngine } from './CombatEngine.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
 
-type DotRelic = Pick<Relic, 'id' | 'name' | 'rarity' | 'desc' | 'effect' | 'val'>;
+// `Relic`이 effect 판별 유니온이 된 뒤로는 유니온 전체에 Pick을 걸면 effect/val이
+// 다시 넓어져 Relic에 대입할 수 없다. dot_mult 분기만 뽑아 Pick한다.
+type DotRelic = Pick<Extract<Relic, { effect: 'dot_mult' }>, 'id' | 'name' | 'rarity' | 'desc' | 'effect' | 'val'>;
 
 export interface RelicDotMultiplierReport {
     schemaVersion: 1;

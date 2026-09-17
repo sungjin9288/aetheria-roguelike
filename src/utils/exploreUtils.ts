@@ -71,7 +71,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         }
     });
 
-    const bossHunterRelic = playerRelics.find((r: any) => r.effect === 'boss_hunter');
+    const bossHunterRelic = playerRelics.find((r) => r.effect === 'boss_hunter');
     if (bossHunterRelic && mapBossMonsters.length > 0) {
         for (let i = 1; i < Math.max(1, Math.floor(bossHunterRelic.val.spawn || 1)); i += 1) {
             encounterPool = [...encounterPool, ...mapBossMonsters];

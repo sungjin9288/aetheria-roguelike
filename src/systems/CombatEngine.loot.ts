@@ -99,7 +99,7 @@ export const processLoot = (
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
     const dropRateMult = 1 + getStrongestNumericRelicValue(relics, 'drop_rate');
-    const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic: any) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
+    const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
     const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
     const progressionLootMult = getProgressionLootMultiplier(player);
     const enemyDropMult = enemy.dropMod || 1.0;

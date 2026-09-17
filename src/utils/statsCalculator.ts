@@ -1,7 +1,7 @@
 import { CONSTANTS, BALANCE } from '../data/constants.js';
-import type { Player, Relic, RelicSynergy } from "../types/index.js";
+import type { Player, Relic, RelicSynergy, RelicValByEffect } from "../types/index.js";
 import { DB } from '../data/db.js';
-import { getActiveRelicSynergies } from '../data/relics.js';
+import { getActiveRelicSynergies, relicNumber } from '../data/relics.js';
 import { getEquipmentProfile, getItemEnhanceBonus, getWeaponHands, isMagicWeapon, isShield } from './equipmentUtils.js';
 import { getRunBuildProfile, getTraitBonus, getTraitProfile } from './runProfileUtils.js';
 import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
@@ -90,8 +90,12 @@ const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: 
         // cycle 149: 'genesis' (창세의 핵) — 전 스탯 statBonus 다중 적용. 매 턴 회복은 별도 사이클.
         if (r.effect === 'genesis') return acc + (r.val?.statBonus || 0);
         if (r.effect === 'low_hp_atk') {
-            const threshold = typeof r.val === 'object' ? r.val.threshold : 0.3;
-            const bonus = typeof r.val === 'object' ? r.val.bonus : (r.val - 1);
+            // 구형 스냅샷 호환: low_hp_atk의 val이 dict가 아니라 배율 number이던 시절의
+            //   세이브/픽스처가 남아 있다(tests/synergies-cycle.test.js:'berserker_rage').
+            //   타입상 dict 단일이라 else 분기가 never가 되므로 legacy 유니온으로 되돌려 읽는다.
+            const legacyVal = r.val as number | RelicValByEffect['low_hp_atk'];
+            const threshold = typeof legacyVal === 'object' ? legacyVal.threshold : 0.3;
+            const bonus = typeof legacyVal === 'object' ? legacyVal.bonus : (legacyVal - 1);
             if (hpRatio < threshold) return acc + bonus;
         }
         return acc;
@@ -101,7 +105,9 @@ const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: 
         if (r.effect === 'glass_cannon') return acc + r.val.def;
         // L-TODO(types) 잠재 버그: 'def_mult' effect를 가진 유물은 RELICS 67종에 없다(죽은 분기).
         //   RelicEffect 유니온화 이후 TS2367이 되므로 런타임 동등성 유지를 위해 string으로 비교한다.
-        if (r.effect === 'stone_skin' || (r.effect as string) === 'def_mult') return acc + r.val;
+        //   Wave 4 M: `||` 두 번째 항이 판별을 못 하므로 r이 좁혀지지 않는다 → relicNumber로 읽는다.
+        //   stone_skin의 val은 데이터상 항상 number라 relicNumber(r) === r.val (accessors 테스트).
+        if (r.effect === 'stone_skin' || (r.effect as string) === 'def_mult') return acc + relicNumber(r);
         if (r.effect === 'fortress') return acc + r.val.def;
         if (r.effect === 'omega') return acc + r.val;
         if (r.effect === 'triple_up') return acc + (r.defVal || 0);

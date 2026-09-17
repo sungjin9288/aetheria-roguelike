@@ -230,11 +230,11 @@
       },
       {
         "path": "src/systems/CombatEngine.loot.ts",
-        "sha256": "3aa0c798d77dcbb7f250ac0c00f824e230cf0bcc7325a4faa1e5ba9cdba90278"
+        "sha256": "c0b7c2931c77a491b437ea1c42dd1c7d20bb8708eebb55943da5d4b1b2da84eb"
       },
       {
         "path": "src/systems/relicDropRateAudit.ts",
-        "sha256": "2b7750261028594d419e84df7603b3070c7dc33566544a0951e506f9807dca4f"
+        "sha256": "919455cb3d51493094697a279772c34d7a15b0237acbbcd833c5cea2ca315a31"
       },
       {
         "path": "tests/combat-engine-loot.test.js",

@@ -122,7 +122,7 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
     // 유물 발견 — PR #8: 프레스티지 rank≥2면 보유 한도 +1(6) · 선택지 4지선다.
     const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
     if (playerRelics.length < relicUnlocks.maxRelics && rng() < discoveryOdds.relicChance) {
-        const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
+        const available = RELICS.filter((r) => !playerRelics.some((pr) => pr.id === r.id));
         if (available.length > 0) {
             const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
@@ -158,7 +158,7 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
 
     // cycle 158: 'battle_start_buff' (전쟁의 북) — 전투 시작 시 ATK +val.atk (val.turns 턴).
     //   tempBuff.atk는 multiplier (1 + atk) 로 statsCalculator에서 적용.
-    const startBuffRelic = playerRelics.find((r: any) => r.effect === 'battle_start_buff');
+    const startBuffRelic = playerRelics.find((r) => r.effect === 'battle_start_buff');
     if (startBuffRelic) {
         const atkBonus = startBuffRelic.val?.atk || 0;
         const turns = startBuffRelic.val?.turns || 1;
@@ -171,14 +171,14 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
         addLog('event', `[전쟁의 북] 전투 시작 ATK +${Math.round(atkBonus * 100)}% (${turns}턴)`);
     }
 
-    const startHealRelic = playerRelics.find((r: any) => r.effect === 'battle_start_heal');
+    const startHealRelic = playerRelics.find((r) => r.effect === 'battle_start_heal');
     if (startHealRelic) {
         const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * startHealRelic.val));
         combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp, (combatStartPlayer.hp || 0) + heal);
         addLog('heal', `[재생 코어] 전투 시작 회복 +${heal} HP`);
     }
 
-    const cursedPowerRelic = playerRelics.find((r: any) => r.effect === 'cursed_power');
+    const cursedPowerRelic = playerRelics.find((r) => r.effect === 'cursed_power');
     if (cursedPowerRelic) {
         const selfDamage = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * cursedPowerRelic.val.hp_cost));
         combatStartPlayer.hp = Math.max(1, (combatStartPlayer.hp || 1) - selfDamage);
@@ -186,7 +186,7 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
     }
 
     // 유물: 혼돈의 심장 (chaos_relic) — 전투 시작 시 랜덤 효과 발동
-    const chaosRelic = playerRelics.find((r: any) => r.effect === 'chaos_relic');
+    const chaosRelic = playerRelics.find((r) => r.effect === 'chaos_relic');
     if (chaosRelic) {
         const roll = Math.floor(rng() * 3);
         if (roll === 0) {
@@ -204,7 +204,7 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
         }
     }
 
-    const chaosBuffRelic = playerRelics.find((r: any) => r.effect === 'chaos_buff');
+    const chaosBuffRelic = playerRelics.find((r) => r.effect === 'chaos_buff');
     if (chaosBuffRelic) {
         const existingBuff = { atk: 0, def: 0, turn: 0, name: null, ...(combatStartPlayer.tempBuff || {}) };
         const rollAtk = rng() < 0.5;
@@ -256,7 +256,7 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
     const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
     if (playerRelics.length < relicUnlocks.maxRelics
         && (firstRelicPity || rng() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
-        const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
+        const available = RELICS.filter((r) => !playerRelics.some((pr) => pr.id === r.id));
         if (available.length > 0) {
             commitExploreOutcome('relic_found', null, gaugeMapData);
             const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });

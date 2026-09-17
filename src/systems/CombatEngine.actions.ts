@@ -1,11 +1,11 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
-import type { FullStats, Monster, Player, Relic } from '../types/index.js';
+import type { FullStats, Monster, NumericRelicEffect, Player, Relic } from '../types/index.js';
 
 export function getStrongestNumericRelicValue(
     relics: readonly Relic[],
-    effect: string,
+    effect: NumericRelicEffect,
 ): number {
     let strongest = 0;
 
@@ -243,7 +243,7 @@ export const actionMethods: any = {
         }
         const relics = stats.relics || [];
         const resolvedDotMult = getStrongestNumericRelicValue(relics, 'dot_mult');
-        const hasDotMultRelic = relics.some((relic: any) => relic.effect === 'dot_mult');
+        const hasDotMultRelic = relics.some((relic) => relic.effect === 'dot_mult');
         const dotMult = hasDotMultRelic ? resolvedDotMult : 1;
 
         // cycle 107: freeze/stun 상태이상 턴 스킵 — attack()와 동일 처리.

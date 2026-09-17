@@ -1,8 +1,14 @@
 import { RELICS } from '../data/relics.js';
-import type { Relic } from '../types/relic.js';
+import type { Relic, RelicEffect } from '../types/relic.js';
 import { migrateData } from '../utils/gameUtils.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
 import { processLoot } from './CombatEngine.loot.js';
+
+/**
+ * 런타임 가드 음성 케이스 전용 — `Relic.val` 타입 계약 밖의 값(문자열/NaN/누락)을
+ * 일부러 넣어 fail-closed를 확인한다. 정상 경로는 언제나 `Relic`을 쓴다.
+ */
+type MalformedRelic = { id: string; effect: RelicEffect; val: unknown };
 
 type DropRateCatalogRelic = {
     id: string;
@@ -153,7 +159,7 @@ const captureFailClosedCase = ({
     enemy,
 }: {
     label: string;
-    relic: Relic;
+    relic: Relic | MalformedRelic;
     enemy: Record<string, unknown>;
 }) => {
     let rngCalls = 0;

@@ -7,7 +7,7 @@ import { BOSS_BRIEFS } from '../data/monsters.js';
 import { syncQuestProgress } from '../utils/questProgress.js';
 import { buildGraveData } from '../utils/graveUtils.js';
 import { MSG } from '../data/messages.js';
-import { getActiveRelicSynergies } from '../data/relics.js';
+import { getActiveRelicSynergies, relicNumber } from '../data/relics.js';
 import { processLoot as _processLoot, resolveEnemyBaseName as _resolveEnemyBaseName } from './CombatEngine.loot.js';
 import { statusMethods } from './CombatEngine.status.js';
 import { outcomeMethods } from './CombatEngine.outcome.js';
@@ -37,12 +37,12 @@ export const CombatEngine = {
     //   + N test callsite 모두 명시 전달이라 default 도달 불가. body의
     //   (relics || []) defensive guard는 별개 보존 (caller가 null 넘기는 path
     //   활성). 청소 메가 시리즈 41번째 (cycle 502-545).
-    getElementMultiplier(elem: any, enemy: Monster, relics: any[]) {
+    getElementMultiplier(elem: any, enemy: Monster, relics: Relic[]) {
         if (!elem || elem === 'physical' || elem === 'none') return 1;
         if (enemy?.weakness && enemy.weakness === elem) {
             // cycle 151: 'elem_boost' (프리즘 핵) — 약점 적중 배율에 val 추가 (1.25 → 1.5).
-            const boostRelic = (relics || []).find((r: any) => r.effect === 'elem_boost');
-            const boost = typeof boostRelic?.val === 'number' ? boostRelic.val : 0;
+            const boostRelic = (relics || []).find((r) => r.effect === 'elem_boost');
+            const boost = relicNumber(boostRelic);
             return BALANCE.ELEMENT_WEAK_MULT + boost;
         }
         if (enemy?.resistance && enemy.resistance === elem) return BALANCE.ELEMENT_RESIST_MULT;
@@ -77,7 +77,7 @@ export const CombatEngine = {
     mitigateByEnemyDef(rawDamage: number, enemyDef: number, relics: Relic[]) {
         const def = Math.max(0, enemyDef || 0);
         if (def === 0) return rawDamage;
-        const apRelic = relics.find((r: any) => r.effect === 'armor_pen');
+        const apRelic = relics.find((r) => r.effect === 'armor_pen');
         const effDef = apRelic ? Math.floor(def * (1 - apRelic.val)) : def;
         const K = BALANCE.ENEMY_DEF_K;
         return Math.max(1, Math.floor(rawDamage * K / (K + Math.max(0, effDef))));
@@ -92,7 +92,7 @@ export const CombatEngine = {
     //   caller 0건. systems/CombatEngine method 시리즈 5번째 (cycle 546-549에
     //   이은). 청소 메가 시리즈 45번째 (cycle 502-550).
     getEffectiveMaxMp(player: Player, relics: Relic[]) {
-        const rmp = 1 + relics.reduce((acc: any, relic: any) => {
+        const rmp = 1 + relics.reduce((acc: number, relic: Relic) => {
             if (relic.effect === 'mp_mult') return acc + relic.val;
             if (relic.effect === 'omega') return acc + relic.val;
             return acc;
@@ -156,7 +156,7 @@ export const CombatEngine = {
         updated.status = statusTick.status;
         updated.statusTurns = statusTick.statusTurns;
 
-        const mpRegenRelic = relics.find((relic: any) => relic.effect === 'mp_regen_turn');
+        const mpRegenRelic = relics.find((relic) => relic.effect === 'mp_regen_turn');
         if (mpRegenRelic) {
             const nextMp = Math.min(this.getEffectiveMaxMp(updated, relics), (updated.mp || 0) + mpRegenRelic.val);
             if (nextMp > (updated.mp || 0)) {
@@ -166,7 +166,7 @@ export const CombatEngine = {
         }
 
         // 유물: 대지의 심장 (regen) — 매 턴 최대 HP의 5% 회복
-        const regenRelic = relics.find((relic: any) => relic.effect === 'regen');
+        const regenRelic = relics.find((relic) => relic.effect === 'regen');
         if (regenRelic && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (regenRelic.val || 0.05)));
             updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
@@ -183,7 +183,7 @@ export const CombatEngine = {
 
         // cycle 161: 'genesis' 유물 (창세의 핵) — val.healPerTurn 0.02 매 턴 HP 회복.
         //   cycle 149에서 statBonus만 적용했고 healPerTurn은 별도 사이클로 미뤘던 잔존.
-        const genesisRelic = relics.find((r: any) => r.effect === 'genesis');
+        const genesisRelic = relics.find((r) => r.effect === 'genesis');
         if (genesisRelic && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const ratio = genesisRelic.val?.healPerTurn || 0;
             if (ratio > 0) {
@@ -227,7 +227,7 @@ export const CombatEngine = {
         }
 
         // 유물: 시간의 파편 (cd_minus) — 매 턴 모든 스킬 쿨타임 추가 -1
-        const cdMinusRelic = relics.find((relic: any) => relic.effect === 'cd_minus');
+        const cdMinusRelic = relics.find((relic) => relic.effect === 'cd_minus');
         if (cdMinusRelic) {
             const cds = { ...(updated.skillLoadout?.cooldowns || {}) };
             let reduced = false;

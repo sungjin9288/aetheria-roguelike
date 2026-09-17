@@ -5,7 +5,28 @@
  */
 
 import { BALANCE } from './constants.js';
-import type { Relic, RelicSynergy } from '../types/relic.js';
+import type { Relic, RelicSynergy, RelicVal } from '../types/relic.js';
+
+/**
+ * `relic.val`의 number 성분 (dict이거나 없으면 0).
+ *
+ * `Relic`은 `effect` 판별 유니온이라 `relic.effect === 'x'` 비교가 있는 자리에서는
+ * `val`이 자동으로 좁혀진다. 이 접근자는 판별이 불가능한 자리(죽은 분기 보존,
+ * effect를 변수로 받는 일반 헬퍼)에서만 쓰며, 기존 소비처가 쓰던
+ * `typeof relic.val === 'number' ? relic.val : 0` 식과 의미가 같다.
+ * 67종 전체 동치는 `tests/relic-val-accessors.test.js`가 검증한다.
+ */
+export const relicNumber = (relic: Relic | null | undefined): number => (
+    typeof relic?.val === 'number' ? relic.val : 0
+);
+
+/**
+ * `relic.val`의 dict 성분 (number이거나 없으면 빈 객체).
+ * `relicNumber`와 같은 용도 — 판별 없이 dict 키를 읽어야 하는 자리에서만 쓴다.
+ */
+export const relicDict = (relic: Relic | null | undefined): Partial<RelicVal> => (
+    relic && typeof relic.val === 'object' && relic.val !== null ? relic.val : {}
+);
 
 export const RELICS: Relic[] = [
     // ─── 공격 계열 (8개) ───────────────────────────────────────────────────

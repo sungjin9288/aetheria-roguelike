@@ -1793,7 +1793,9 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 546: body defensive guard + weakness 분기 보존', async () => {
       const source = await readSrc('src/systems/CombatEngine.ts');
-      assert.ok(/\(relics \|\| \[\]\)\.find\(\(r: any\) => r\.effect === 'elem_boost'\)/.test(source),
+      // 2026-09 Wave 4 M: 콜백의 `: any` 제거 (Relic 판별 유니온이 val을 좁혀줌).
+      //   가드 의도((relics || []) null-safe 보존)는 그대로.
+      assert.ok(/\(relics \|\| \[\]\)\.find\(\(r\) => r\.effect === 'elem_boost'\)/.test(source),
           '(relics || []).find defensive guard 보존');
       assert.ok(/if \(enemy\?\.weakness && enemy\.weakness === elem\)/.test(source),
           'weakness 분기 보존');
