@@ -215,20 +215,11 @@ export const enemyAIMethods: any = {
             }
         }
 
-        // 몬스터 공격 시 상태이상 부여 (pattern.statusEffect + pattern.statusChance 지원)
-        if (heavy && updatedEnemy.pattern?.statusEffect && random() < (updatedEnemy.pattern.statusChance || 0.25)) {
-            const sEff = updatedEnemy.pattern.statusEffect;
-            const resistRelic = relics.find((r) => r.effect === 'status_resist');
-            const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
-            const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-            if (!currentStatus.includes(sEff) && random() >= resistChance) {
-                const statusLabels: Record<string, string> = { burn: '화상', poison: '독', freeze: '빙결', curse: '저주', bleed: '출혈' };
-                updatedPlayer = { ...updatedPlayer, status: [...currentStatus, sEff] };
-                logs.push({ type: 'warning', text: `[${updatedEnemy.name}] [${statusLabels[sEff] || sEff}] 부여!` });
-            } else if (resistRelic) {
-                logs.push({ type: 'success', text: `[고대의 봉인] 상태이상을 저항했습니다!` });
-            }
-        }
+        // 2026-09 N3: `pattern.statusEffect` + `pattern.statusChance` 분기 제거 — MONSTERS의
+        //   pattern 187개 중 두 키를 정의한 것이 0개라 한 번도 실행되지 않았다(조건이
+        //   `updatedEnemy.pattern?.statusEffect`에서 단락되어 random()도 소비하지 않았으므로
+        //   시드 스트림에도 영향 없음). 일반 적의 상태이상 부여는 아래 statusOnHit 경로가
+        //   유일한 살아 있는 구현이다.
 
         const protectedResult = this.applyFatalProtection(updatedPlayer, relics, enemyDmg, logs, activeSynergies);
 

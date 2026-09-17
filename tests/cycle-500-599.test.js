@@ -1139,12 +1139,15 @@ import { readFile, readdir } from 'node:fs/promises';
           'internal callsite (targetMap, playerLevel) 보존');
   });
 
-  test('cycle 519: body (playerLevel || 1) defensive 가드 + map?.minLv 체인 보존', async () => {
+  test('cycle 519: body (playerLevel || 1) defensive 가드 보존 (N3: minLv 체인은 제거)', async () => {
       const source = await readSrc('src/utils/adventureGuide.ts');
       assert.ok(/\(playerLevel \|\| 1\) \+ 8/.test(source),
           '(playerLevel || 1) nullish defensive guard 보존');
-      assert.ok(/map\?\.minLv\s*\?\?\s*\(typeof map\?\.level/.test(source),
-          'map?.minLv ?? fallback chain 보존');
+      // 2026-09 N3: `map?.minLv ??` 우선 분기는 MAPS 52개 중 정의 0개라 죽은 리더였다.
+      //   cycle 519가 지키려던 것은 defensive 가드와 level fallback 자체다 — 후자만 남긴다.
+      assert.ok(/typeof map\?\.level === 'number' \? map\.level : 1/.test(source),
+          'level fallback chain 보존');
+      assert.ok(!/map\?\.minLv/.test(source), 'minLv 리더는 제거됨 (주석 언급은 허용)');
   });
 
   test('cycle 519: cycle 502-518 회귀 가드 — util default 청소 시리즈 보존', async () => {

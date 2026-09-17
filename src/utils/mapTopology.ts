@@ -10,7 +10,7 @@ interface MapSelectionRoute {
 
 export const getMapRequiredLevel = (map: GameMap | null | undefined, playerLevel: number) => {
     if (map?.level === 'infinite') return Math.max(playerLevel + 8, 50);
-    if (typeof map?.minLv === 'number') return map.minLv;
+    // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
     if (Array.isArray(map?.level)) return Number(map.level[0] || 1);
     return typeof map?.level === 'number' ? map.level : 1;
 };

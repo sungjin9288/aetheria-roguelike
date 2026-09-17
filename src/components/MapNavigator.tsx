@@ -35,8 +35,9 @@ interface MapNavigatorProps {
 const MAP_ORDER = Object.entries(DB.MAPS)
     .map(([name, map]) => ({ name, ...map }))
     .sort((left, right) => {
-        const leftLevel = left.level === 'infinite' ? 999 : (left.minLv ?? left.level ?? 1);
-        const rightLevel = right.level === 'infinite' ? 999 : (right.minLv ?? right.level ?? 1);
+        // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
+        const leftLevel = left.level === 'infinite' ? 999 : (left.level ?? 1);
+        const rightLevel = right.level === 'infinite' ? 999 : (right.level ?? 1);
         if (left.type === 'safe' && right.type !== 'safe') return -1;
         if (left.type !== 'safe' && right.type === 'safe') return 1;
         return Number(leftLevel) - Number(rightLevel);

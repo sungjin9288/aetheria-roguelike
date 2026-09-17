@@ -184,7 +184,7 @@ const getOperationTargetLevel = (targetMaps: string[], maps: Record<string, Game
     const targetMap = maps?.[targetMaps[0]];
     if (!targetMap) return null;
     if (targetMap.level === 'infinite') return Math.max((playerLevel || 1) + 8, 50);
-    if (typeof targetMap.minLv === 'number') return targetMap.minLv;
+    // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
     if (typeof targetMap.level === 'number') return targetMap.level;
     return null;
 };

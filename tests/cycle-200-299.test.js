@@ -3330,7 +3330,8 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 284: 활성 GameMap 필드 유지 (회귀 가드)', async () => {
       const source = await readSrc('src/types/map.ts');
-      const activeFields = ['name', 'type', 'level', 'minLv', 'desc', 'exits', 'monsters', 'boss', 'bossMonsters', 'eventChance', 'lore'];
+      // 2026-09 N3: minLv는 죽은 우선순위(정의 0개)라 제거됨 — 활성 필드 목록에서도 뺀다.
+      const activeFields = ['name', 'type', 'level', 'desc', 'exits', 'monsters', 'boss', 'bossMonsters', 'eventChance', 'lore'];
       activeFields.forEach((field) => {
           const re = new RegExp(`${field}\\??:\\s*`);
           assert.ok(re.test(source), `GameMap.${field} 필드 유지`);

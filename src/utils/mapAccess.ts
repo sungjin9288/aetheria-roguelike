@@ -1,6 +1,5 @@
 type AccessMap = {
     level?: number | number[] | string;
-    minLv?: number;
     seasonOnly?: boolean;
     exits?: string[];
 };
@@ -14,8 +13,8 @@ export const getMapAccess = (
     seasonActive = false,
 ) => {
     const target = maps[to];
-    const requiredLevel = target?.minLv
-        ?? (Array.isArray(target?.level) ? target.level[0] : target?.level) ?? 1;
+    // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
+    const requiredLevel = (Array.isArray(target?.level) ? target.level[0] : target?.level) ?? 1;
     if (!target) return { reason: 'missing', requiredLevel } as const;
     if (target.seasonOnly && !seasonActive) return { reason: 'season', requiredLevel } as const;
     // Preserve the existing numeric comparison, including unbounded 'infinite' maps.

@@ -71,7 +71,9 @@ export const getCombatForecast = ({
     const skillName = getSkillShortName(selectedSkill);
     const skillHitsWeakness = Boolean(canUseSkill && selectedSkill?.type && enemy.weakness && selectedSkill.type === enemy.weakness);
     const skillIsDefensive = Boolean(canUseSkill && (selectedSkill?.type === 'buff' || DEFENSIVE_EFFECTS.has(selectedSkill?.effect)));
-    const statusThreat = getStatusLabel(enemy.pattern?.statusEffect || enemy.statusOnHit);
+    // 2026-09 N3: `enemy.pattern?.statusEffect ||` fallback 제거 — 정의한 pattern이 0개라
+    //   항상 statusOnHit로 내려가던 죽은 우선순위였다.
+    const statusThreat = getStatusLabel(enemy.statusOnHit);
     const telegraphType = enemyTelegraph?.type || 'normal';
 
     let intent = enemyTelegraph?.label || '일반 공격 예상';

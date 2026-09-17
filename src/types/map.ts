@@ -15,13 +15,10 @@ export interface GameMap {
     name?: string;
     /** 지역 분류 — MAPS 52개가 쓰는 4종. */
     type?: GameMapType;
-    /**
-     * 입장 가능 최소 레벨 (legacy alias: level).
-     * L-TODO(types) 잠재 버그: maps.ts 52개 중 `minLv`를 정의한 지역은 0개인데
-     * MapNavigator.tsx:38-39 와 gameActions/moveActions.ts:37 이 `minLv ?? level`
-     * 순으로 읽는다 — minLv 분기는 항상 미발동(죽은 우선순위). optional 유지.
-     */
-    minLv?: number;
+    // 2026-09 N3: `minLv`(입장 최소 레벨 legacy alias) 제거. MAPS 52개 중 정의한 지역이
+    //   0개라 mapTopology/mapAccess/adventureGuide/MapNavigator의 `minLv ?? level`
+    //   우선 분기는 한 번도 실행되지 않는 죽은 리더였다. 입장 레벨의 단일 진실 원천은
+    //   `level`이다 — tests/data-shape-types.test.js가 재도입을 막는다.
     /** 레벨 — 숫자 / [최소, 최대] 범위 / 'infinite'(무한 심연). */
     level?: number | number[] | 'infinite';
     desc?: string;

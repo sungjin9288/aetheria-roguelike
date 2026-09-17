@@ -79,7 +79,8 @@ const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRa
 const getMapLevel = (map: GameMap | null | undefined, playerLevel: any) => (
     map?.level === 'infinite'
         ? Math.max((playerLevel || 1) + 8, 50)
-        : (map?.minLv ?? (typeof map?.level === 'number' ? map.level : 1))
+        // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
+        : (typeof map?.level === 'number' ? map.level : 1)
 );
 const getVisitedMaps = (player: Player) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
 

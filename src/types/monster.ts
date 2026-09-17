@@ -26,18 +26,14 @@ export type ElementKey =
  * 적 행동 패턴 확률 (템플릿 / 보스 페이즈 공용).
  * monsters.ts의 187개 pattern 전부가 두 확률을 모두 정의하므로 필수로 둔다.
  */
+// 2026-09 N3: `pattern.statusEffect` / `pattern.statusChance` 제거. MONSTERS의 pattern
+//   187개(base/phase2/phase3) 중 이 두 키를 정의한 것이 0개라 CombatEngine.enemyAI의
+//   heavy-hit 분기와 combatForecast의 fallback은 한 번도 실행되지 않는 죽은 리더였다.
+//   상태이상 부여의 살아 있는 경로는 몬스터 최상위 `statusOnHit`(+ 보스 페이즈의
+//   `phase2/phase3.statusEffect`)뿐이다 — tests/data-shape-types.test.js가 재도입을 막는다.
 export interface MonsterPattern {
     guardChance: number;
     heavyChance: number;
-    /**
-     * L-TODO(types) 잠재 버그: `pattern.statusEffect` / `pattern.statusChance`를
-     * CombatEngine.enemyAI.ts:219 와 utils/combatForecast.ts:74 가 읽지만
-     * monsters.ts의 pattern 187개 중 이 두 키를 정의한 것은 0개다(죽은 분기).
-     * 살아 있는 경로는 몬스터 최상위 `statusOnHit`. 데이터 저작으로 살릴지
-     * 소비처를 걷어낼지 결정될 때까지 optional로 정직하게 선언한다.
-     */
-    statusEffect?: string;
-    statusChance?: number;
 }
 
 export interface MonsterBase {

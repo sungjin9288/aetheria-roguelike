@@ -191,7 +191,7 @@ test('Monster: pattern 187개가 guardChance / heavyChance 를 모두 정의한�
         assert.equal(typeof pattern.guardChance, 'number');
         assert.equal(typeof pattern.heavyChance, 'number');
     }
-    assertDeclared('MONSTERS pattern', patterns, ['guardChance', 'heavyChance', 'statusEffect', 'statusChance']);
+    assertDeclared('MONSTERS pattern', patterns, ['guardChance', 'heavyChance']);
 });
 
 test('Monster: 보스 페이즈 필드가 BossPhase 선언 집합 안에 있다', () => {
@@ -204,7 +204,7 @@ test('Monster: 보스 페이즈 필드가 BossPhase 선언 집합 안에 있다'
 // --- types/map.ts ---
 
 const MAP_FIELDS = [
-    'name', 'type', 'minLv', 'level', 'desc', 'lore', 'exits', 'monsters', 'bossMonsters',
+    'name', 'type', 'level', 'desc', 'lore', 'exits', 'monsters', 'bossMonsters',
     'boss', 'eventChance', 'seasonOnly', 'graveDropBonus', 'shopBonus',
 ];
 
@@ -212,6 +212,38 @@ test('GameMap: 지역 필드/타입 유니온이 types/map.ts 선언과 일치�
     const maps = Object.values(MAPS);
     assertDeclared('MAPS', maps, MAP_FIELDS);
     assertUnionExact('MAPS', maps, 'type', ['safe', 'field', 'dungeon', 'boss']);
+});
+
+// 2026-09 N3: 입장 최소 레벨의 단일 진실 원천은 `level`이다. `minLv`는 52개 지역 중
+//   정의가 0개인데도 mapTopology/mapAccess/adventureGuide/questOperations/MapNavigator가
+//   `minLv ?? level` 순으로 읽어 죽은 우선순위를 만들고 있었다. 리더와 타입 필드를 모두
+//   걷어냈으므로, 데이터가 다시 minLv를 쓰면 아무도 읽지 않는 필드가 된다 — 0건 고정.
+test('GameMap: minLv를 정의한 지역이 0개다 (N3 — 죽은 우선순위 재도입 차단)', () => {
+    const offenders = Object.entries(MAPS)
+        .filter(([, map]) => Object.hasOwn(map, 'minLv'))
+        .map(([name]) => name);
+    assert.deepEqual(offenders, [], 'minLv는 제거된 필드다 — 입장 레벨은 level로만 표현한다');
+});
+
+// 2026-09 N3: 일반 적의 상태이상 부여는 몬스터 최상위 `statusOnHit`(보스는 phase2/phase3의
+//   `statusEffect`)만 살아 있다. pattern 안의 statusEffect/statusChance는 187개 중 정의가
+//   0개라 CombatEngine.enemyAI / combatForecast의 분기가 죽어 있었다 — 리더와 함께 제거.
+test('MonsterPattern: pattern에 statusEffect/statusChance를 정의한 항목이 0개다 (N3)', () => {
+    const offenders = [];
+    for (const [name, monster] of Object.entries(MONSTERS)) {
+        const patterns = [
+            ['base', monster.pattern],
+            ['phase2', monster.phase2?.pattern],
+            ['phase3', monster.phase3?.pattern],
+        ];
+        for (const [slot, pattern] of patterns) {
+            if (!pattern) continue;
+            if (Object.hasOwn(pattern, 'statusEffect') || Object.hasOwn(pattern, 'statusChance')) {
+                offenders.push(`${name}.${slot}`);
+            }
+        }
+    }
+    assert.deepEqual(offenders, [], 'pattern 상태이상 키는 제거된 필드다 — statusOnHit / phase statusEffect를 쓸 것');
 });
 
 // --- types/quest.ts ---
