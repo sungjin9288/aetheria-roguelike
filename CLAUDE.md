@@ -111,7 +111,7 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 217 파일 / ~3,900 케이스)
+tests/                # 단위 테스트 (Node.js built-in test, 229 파일 / ~4,000 케이스, 재현성 9건은 AETHERIA_ART_REPRO=1 opt-in)
                       #   + e2e/ (Playwright 31 스펙, iPhone 12 뷰포트) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 android/ ios/         # Capacitor 네이티브 프로젝트
