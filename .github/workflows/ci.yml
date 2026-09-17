@@ -94,3 +94,74 @@ jobs:
           name: playwright-report
           path: playwright-report/
           retention-days: 7
+
+  perf:
+    name: Perf guard (FCP/DCL budgets, non-blocking)
+    runs-on: ubuntu-latest
+    needs: static-checks
+    # scripts/perf-guard.mjs asserts real FCP/DCL/interaction budgets but, until now, no
+    # workflow ever ran it — CI truthfulness gap called out in
+    # docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md §7 (Track K2). continue-on-error keeps
+    # this informational: a perf regression shows up red in the PR checks list without
+    # blocking merges, since the budgets are not yet calibrated against CI runner noise.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Install Playwright chromium
+        # perf-guard.mjs drives Playwright's chromium directly (not via `playwright test`),
+        # so only chromium is needed here — no webkit/iPhone device emulation like the e2e job.
+        run: npx playwright install --with-deps chromium
+
+      - name: Resolve installed chromium path
+        id: resolve-chromium
+        # perf-guard.mjs's default executablePath is a macOS-only Chrome.app path; on Linux it
+        # must be told explicitly where the browser the previous step installed actually lives.
+        # Playwright itself knows this path for the currently installed browser revision, so we
+        # ask it instead of hardcoding a version-specific path here.
+        run: echo "path=$(node -e "console.log(require('playwright').chromium.executablePath())")" >> "$GITHUB_OUTPUT"
+
+      - name: Build (test API enabled)
+        # perf-guard.mjs reads window.__AETHERIA_TEST_API__ perf marks (markPerf/getPerfSnapshot),
+        # which are tree-shaken out of a normal production build. build:guard matches
+        # scripts/local-playtest.sh's own VITE_ENABLE_TEST_API=1 build step.
+        run: VITE_ENABLE_TEST_API=1 npm run build:guard
+        env:
+          # 더미 Firebase config — e2e job과 동일한 이유(가짜 값, 실제 호출 없음)로
+          # 부팅이 initializeApp({})에서 멈추지 않도록만 채운다.
+          VITE_FIREBASE_CONFIG: '{"apiKey":"e2e-key","authDomain":"e2e.firebaseapp.com","projectId":"e2e-proj","appId":"e2e"}'
+
+      - name: Start preview server
+        run: |
+          npx vite preview --host 127.0.0.1 --port 4173 --strictPort >/tmp/aetheria-preview.log 2>&1 &
+          for _ in $(seq 1 40); do
+            if curl -sf http://127.0.0.1:4173/ >/dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Preview server did not become ready" >&2
+          cat /tmp/aetheria-preview.log >&2
+          exit 1
+
+      - name: perf:guard (desktop)
+        run: node scripts/perf-guard.mjs --url http://127.0.0.1:4173/
+        env:
+          # perf-guard.mjs launches Playwright's chromium with an explicit executablePath and,
+          # if that launch fails, rethrows rather than falling back to the bundled browser — so
+          # this must point at the chromium the previous step installed.
+          PLAYWRIGHT_CHROME_PATH: ${{ steps.resolve-chromium.outputs.path }}
+
+      - name: perf:guard (mobile)
+        run: node scripts/perf-guard.mjs --url http://127.0.0.1:4173/ --mobile
+        env:
+          PLAYWRIGHT_CHROME_PATH: ${{ steps.resolve-chromium.outputs.path }}
