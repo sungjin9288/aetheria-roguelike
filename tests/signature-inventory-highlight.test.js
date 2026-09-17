@@ -1,64 +1,68 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createElement } from 'react';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+
+import SmartInventory from '../src/components/SmartInventory.tsx';
+import { DB } from '../src/data/db.ts';
+import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
 /**
  * Signature 인벤토리 하이라이트 — "relate" 계층.
  *
  * EquipmentPanel과 일관성 있게, SmartInventory의 아이템 행도
  * 전설 각인이면 gold tone + 전설 칩 + data-is-signature 속성을 부여한다.
- * compact 요약 모드에서도 signature 우선순위를 높여 숨겨지지 않게 한다.
  *
- * 계약:
- *   1. SmartInventory가 isSignatureItem을 import
- *   2. 렌더된 행에 data-is-signature 속성
- *   3. signature일 때 "전설 각인" 텍스트/칩 노출
- *   4. compact priority 점수에 signature 가중치가 들어간다 (숨겨지지 않도록)
+ * 계약(렌더 검증):
+ *   1. 렌더된 행에 data-is-signature 속성 (아이템별로 정확히 true/false)
+ *   2. signature일 때 "전설 각인" 텍스트/칩 노출 (testid: inventory-signature-chip-{id})
+ *   3. cycle 482가 compact prop cascade로 visibleFiltered IIFE(priority 계산 포함) 자체를
+ *      제거했다 — 내부 구현 디테일이라 렌더로 표현 불가, 소스 부재 가드로 보존
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-test('SmartInventory imports isSignatureItem', async () => {
-    const source = await readSrc('src/components/SmartInventory.tsx');
-    assert.ok(
-        /import\s*\{[^}]*isSignatureItem[^}]*\}\s*from\s*['"][^'"]*signatureItems/.test(source),
-        'SmartInventory should import isSignatureItem'
-    );
+const sigWeapon = DB.ITEMS.weapons.find((item) => item.name === '성검 에테르니아');
+const normalPotion = DB.ITEMS.consumables[0];
+
+const renderInventory = (inv) => renderStatic(createElement(SmartInventory, {
+    player: makePlayerFixture({ inv }),
+    actions: {},
+}));
+
+test('시그니처 아이템 행은 data-is-signature="true"와 전설 각인 칩을 렌더링한다', () => {
+    const sigInInv = { ...sigWeapon, id: 'sig_1' };
+    const html = renderInventory([sigInInv]);
+
+    assert.ok(html.includes('data-is-signature="true"'), '시그니처 행이 data-is-signature="true"를 노출');
+    assert.ok(html.includes(`data-testid="inventory-signature-chip-${sigInInv.id}"`), '전용 testid로 칩 노출');
+    assert.ok(html.includes('전설 각인'), '"전설 각인" 라벨 노출');
 });
 
-test('SmartInventory row renders data-is-signature attribute', async () => {
-    const source = await readSrc('src/components/SmartInventory.tsx');
-    assert.ok(
-        /data-is-signature/.test(source),
-        'inventory row should expose data-is-signature'
-    );
+test('일반 아이템 행은 data-is-signature="false"이고 전설 각인 칩이 없다', () => {
+    const html = renderInventory([{ ...normalPotion, id: 'normal_1' }]);
+
+    assert.ok(html.includes('data-is-signature="false"'), '일반 아이템 행은 data-is-signature="false"');
+    assert.ok(!html.includes('inventory-signature-chip'), '전설 각인 칩이 렌더되지 않음');
 });
 
-test('SmartInventory shows "전설 각인" label for signature items', async () => {
-    const source = await readSrc('src/components/SmartInventory.tsx');
-    assert.ok(
-        /전설 각인/.test(source),
-        'inventory should render 전설 각인 label on signature rows'
-    );
+test('시그니처 아이템과 일반 아이템이 섞여도 각 행이 독립적으로 정확히 표시된다', () => {
+    const sigInInv = { ...sigWeapon, id: 'sig_2' };
+    const normalInInv = { ...normalPotion, id: 'normal_2' };
+    const html = renderInventory([sigInInv, normalInInv]);
+
+    assert.ok(html.includes(`data-testid="inventory-signature-chip-${sigInInv.id}"`), '시그니처 행에만 칩 존재');
+    assert.ok(!html.includes(`inventory-signature-chip-${normalInInv.id}`), '일반 행에는 칩 없음');
+    // 두 행 모두 렌더됐는지 이름으로 교차 확인
+    assert.ok(html.includes(sigInInv.name));
+    assert.ok(html.includes(normalInInv.name));
 });
 
-test('SmartInventory compact priority boost for signature items (cycle 482 cascade로 priority 로직 제거)', async () => {
-    // cycle 482가 compact prop cascade로 visibleFiltered IIFE (priority 계산 포함)
-    // 자체를 제거. 이 가드 → cascade 보존 가드로 약화.
+test('(정적 가드) cycle 482 cascade로 제거된 visibleFiltered IIFE가 되살아나지 않는다', async () => {
     const source = await readSrc('src/components/SmartInventory.tsx');
-    // visibleFiltered가 제거됐는지 가드
-    assert.ok(!/visibleFiltered/.test(source),
-        'cycle 482 cascade로 visibleFiltered 제거 보존');
-});
-
-test('SmartInventory computes isSignature per item via isSignatureItem(item)', async () => {
-    const source = await readSrc('src/components/SmartInventory.tsx');
-    assert.ok(
-        /isSignatureItem\(\s*\w+\s*\)/.test(source),
-        'should call isSignatureItem(item) per row'
-    );
+    assert.ok(!/visibleFiltered/.test(source), 'cycle 482가 제거한 priority 계산용 visibleFiltered IIFE 재도입 금지');
 });

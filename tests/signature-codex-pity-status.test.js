@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+import { createElement } from 'react';
+
+import LegendaryCodex from '../src/components/codex/LegendaryCodex.tsx';
+import { getSignaturePityMultiplier, SIGNATURE_PITY } from '../src/utils/signaturePity.ts';
+import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
 /**
  * LegendaryCodex pity status — "reflect" 계층 상시 surface.
@@ -15,57 +17,49 @@ import path from 'node:path';
  *   - 임계값 대비 진행도 또는 활성 배율 +pct%
  *   - threshold 미달일 땐 남은 횟수 안내
  *
- * 계약:
- *   1. LegendaryCodex가 getSignaturePityMultiplier + SIGNATURE_PITY import
- *   2. player.stats.signaturePity 읽기
- *   3. 전용 testid(legendary-codex-pity-status) 노출
- *   4. "공명" 라벨 포함
+ * 계약(렌더 검증, getSignaturePityMultiplier/SIGNATURE_PITY 실제 값으로 교차 검증):
+ *   1. player.stats.signaturePity를 읽어 전용 testid(legendary-codex-pity-status) 카드 렌더
+ *   2. "공명" 라벨 포함
+ *   3. threshold 미달: 적재 N/THRESHOLD + 남은 횟수 안내, +0%
+ *   4. threshold 이상: 배율에서 파생된 +pct% 노출
  */
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(HERE, '..');
-const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
+const renderCodexWithPity = (pity) => {
+    const base = makePlayerFixture();
+    const player = makePlayerFixture({ stats: { ...base.stats, signaturePity: pity } });
+    return renderStatic(createElement(LegendaryCodex, { player }));
+};
 
-test('LegendaryCodex imports pity helpers', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
-    assert.ok(
-        /getSignaturePityMultiplier/.test(source),
-        'should import getSignaturePityMultiplier'
-    );
-    assert.ok(
-        /SIGNATURE_PITY/.test(source),
-        'should import SIGNATURE_PITY constants (for THRESHOLD/CAP)'
-    );
+test('pity 미적재(0) 상태 — 공명 카드가 THRESHOLD 안내 문구와 +0%를 보여준다', () => {
+    const html = renderCodexWithPity(0);
+    assert.ok(html.includes('data-testid="legendary-codex-pity-status"'), 'pity 상태 카드가 렌더링됨');
+    assert.ok(html.includes('공명'), '"공명" 라벨 포함');
+    assert.ok(html.includes(`보스 ${SIGNATURE_PITY.THRESHOLD}회 연속 무획득 시 배율 상승`), 'THRESHOLD 기반 안내 문구');
+    assert.ok(html.includes('+0%'), '미적재 상태에서는 +0% 표시');
+    assert.equal(getSignaturePityMultiplier(0), 1.0, '전제: pity 0 배율은 1.0');
 });
 
-test('LegendaryCodex reads player.stats.signaturePity', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
+test('pity가 THRESHOLD 미만으로 적재됐을 때 진행도(N/THRESHOLD)와 남은 횟수를 보여준다', () => {
+    const pity = SIGNATURE_PITY.THRESHOLD - 2;
+    assert.ok(pity > 0, '테스트 전제: THRESHOLD보다 2 작은 pity는 양수');
+    const html = renderCodexWithPity(pity);
+
+    assert.equal(getSignaturePityMultiplier(pity), 1.0, '전제: THRESHOLD 미만은 배율 미적용');
     assert.ok(
-        /player[^]{0,40}stats[^]{0,10}signaturePity/.test(source),
-        'should read player.stats.signaturePity'
+        html.includes(`적재 ${pity}/${SIGNATURE_PITY.THRESHOLD} · 임계까지 2회`),
+        '실제 SIGNATURE_PITY.THRESHOLD 기반 진행도 문구가 렌더됨',
     );
+    assert.ok(html.includes(`data-pity="${pity}"`), 'data-pity 속성이 실제 pity 값을 반영');
 });
 
-test('LegendaryCodex renders stable pity status testid', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
-    assert.ok(
-        /legendary-codex-pity-status/.test(source),
-        'pity status card should carry data-testid="legendary-codex-pity-status"'
-    );
-});
+test('pity가 THRESHOLD 이상이면 실제 배율에서 파생된 +pct%를 렌더링한다', () => {
+    const pity = SIGNATURE_PITY.THRESHOLD;
+    const expectedMult = getSignaturePityMultiplier(pity);
+    assert.ok(expectedMult > 1, '전제: THRESHOLD 도달 시 배율 > 1.0');
+    const expectedPct = Math.round((expectedMult - 1) * 100);
 
-test('LegendaryCodex shows "공명" label in pity card', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
-    assert.ok(
-        /공명/.test(source),
-        'pity card should include the 공명 (resonance) label'
-    );
-});
-
-test('LegendaryCodex references SIGNATURE_PITY.THRESHOLD for progress', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
-    assert.ok(
-        /SIGNATURE_PITY\.THRESHOLD/.test(source),
-        'pity progress calculation should reference SIGNATURE_PITY.THRESHOLD'
-    );
+    const html = renderCodexWithPity(pity);
+    assert.ok(html.includes(`+${expectedPct}%`), 'getSignaturePityMultiplier로 계산한 실제 배율이 렌더에 반영됨');
+    assert.ok(html.includes(`보스 ${pity}회 누적`), '활성 상태에서는 누적 횟수 문구로 전환');
+    assert.ok(html.includes(`data-pity-mult="${expectedMult}"`), 'data-pity-mult 속성이 실제 배율 값을 반영');
 });
