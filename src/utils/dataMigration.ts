@@ -88,7 +88,8 @@ export const migrateData = (rawData: any) => {
     //   `잔여 정수 + 거울에서 이미 지출한 정수`로 정확히 역산한다. 지출액은 구매 이력
     //   (meta.mirror의 노드별 레벨)과 MIRROR_NODES의 레벨별 비용으로 결정론적으로 재구성
     //   되므로 기존 유저는 rank를 단 한 단계도 잃지 않는다.
-    if (!Number.isFinite(Number(target.meta.essenceLifetime))) {
+    // `null`은 Number(null) === 0 으로 finite라 별도 검사 — 숫자가 아니면 전부 역산한다.
+    if (typeof target.meta.essenceLifetime !== 'number' || !Number.isFinite(target.meta.essenceLifetime)) {
         target.meta.essenceLifetime = Math.max(0, Number(target.meta.essence) || 0)
             + getSpentMirrorEssence(target.meta.mirror);
     }

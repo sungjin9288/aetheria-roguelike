@@ -365,3 +365,22 @@ test('BALANCE.EVENT_STATUS_IDS: 이벤트는 턴 강탈(freeze/stun) 어휘를 �
     assert.ok(!BALANCE.EVENT_STATUS_IDS.includes('freeze'));
     assert.ok(!BALANCE.EVENT_STATUS_IDS.includes('stun'));
 });
+
+
+test('buildEventPackage: 모델이 넣은 라우팅 플래그(isScout/isBossGaugeChallenge/_chainId)는 패키지에 남지 않는다', async () => {
+    const { buildEventPackage } = await import('../src/utils/aiEventUtils.ts');
+    const pkg = buildEventPackage({
+        desc: '낯선 표식이 새겨진 문이 있다.',
+        choices: ['조사한다', '지나친다'],
+        isScout: true,
+        isBossGaugeChallenge: true,
+        _chainId: 'forged',
+        bossName: '가짜 보스',
+        outcomes: [{ choiceIndex: 0, gold: 5 }],
+    }, { location: '고대 하수도', source: 'ai', playerLevel: 3 });
+    assert.ok(pkg, '정상 이벤트는 패키지가 만들어진다');
+    assert.deepEqual(Object.keys(pkg).sort(), ['choices', 'desc', 'outcomes', 'source']);
+    assert.equal(pkg.isScout, undefined);
+    assert.equal(pkg.isBossGaugeChallenge, undefined);
+    assert.equal(pkg._chainId, undefined);
+});

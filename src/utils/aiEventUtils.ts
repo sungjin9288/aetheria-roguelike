@@ -397,7 +397,18 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
 // cycle 561: context default {} 제거 — 3 callers (internal:548, aiService
 //   :100, ai-event-utils.test.js:26) 모두 2 args 명시 전달이라 default 도달
 //   불가.
-export const buildEventPackage = (payload: any, context: any) => {
+/** AI/풀 이벤트 패키지 — 라우팅 플래그(isScout 등)는 의도적으로 없다. */
+export interface EventPackage {
+    source: string;
+    desc: string;
+    choices: string[];
+    outcomes: ReturnType<typeof normalizeOutcomes>;
+    /** aiService가 일일 한도 초과 폴백일 때만 덧붙인다. */
+    fallbackReason?: 'quota';
+    fallbackMessage?: string;
+}
+
+export const buildEventPackage = (payload: any, context: any): EventPackage | null => {
     const raw = payload?.data || payload;
     if (!raw || typeof raw !== 'object') return null;
 
@@ -413,9 +424,12 @@ export const buildEventPackage = (payload: any, context: any) => {
 
     if (choices.length < 2) return null;
 
+    // 신뢰 경계: 모델/풀 원본(raw)은 desc·choices·outcomes만 이벤트로 승격한다. `...raw`로
+    //   최상위 필드를 그대로 넘기면 모델이 `isScout` / `isBossGaugeChallenge` / `_chainId` 같은
+    //   라우팅 플래그를 실어 eventActions의 분기(정찰·보스 도전·체인 진행)를 탈취할 수 있다.
+    //   그 플래그들은 exploreActions / bossGauge / scoutEvents가 직접 만드는 이벤트에만 존재한다.
     return {
-        ...raw,
-        source: raw.source || context.source || 'ai',
+        source: typeof raw.source === 'string' && raw.source ? raw.source : (context.source || 'ai'),
         desc,
         choices,
         outcomes: normalizeOutcomes(raw.outcomes, choices, { ...context, desc })

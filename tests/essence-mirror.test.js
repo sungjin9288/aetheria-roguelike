@@ -677,3 +677,14 @@ test('⑦ 승천 화면은 에테르 거울 진입 CTA를 제공한다 (MSG 사�
         'MirrorPanel은 오버레이 순서상 AscensionScreen 뒤',
     );
 });
+
+
+test('migrateData: essenceLifetime이 null이면 숫자가 아니므로 역산 backfill한다', async () => {
+    const { migrateData } = await import('../src/utils/dataMigration.ts');
+    const { getEssenceLifetime } = await import('../src/systems/essenceLedger.ts');
+    const migrated = migrateData({ player: { meta: { essence: 5000, rank: 30, essenceLifetime: null, mirror: {} } } });
+    const meta = (migrated.player || migrated).meta;
+    assert.equal(typeof meta.essenceLifetime, 'number');
+    assert.equal(meta.essenceLifetime, 5000);
+    assert.equal(getEssenceLifetime(meta), 5000);
+});

@@ -64,11 +64,9 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
                     rhythm: pacingProfile.label
                 }
             }, rng);
-            if (eventData?.exhausted) {
-                commitExploreOutcome('nothing', null, mapData);
-                dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
-                addLog('warning', eventData.message || MSG.AI_QUOTA_REACHED);
-            } else if (eventData && eventData.desc) {
+            // (구) `eventData.exhausted` 분기는 생산자가 없는 죽은 경로였다 — 한도 초과는
+            //   aiService가 폴백 이벤트에 fallbackReason:'quota'를 붙여 아래 분기로 들어온다.
+            if (eventData && eventData.desc) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) addLog('info', eventData.fallbackMessage);
                 const normalizedChoices = toArray(eventData.choices)

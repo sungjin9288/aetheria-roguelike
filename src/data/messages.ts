@@ -281,7 +281,6 @@ export const MSG = {
     GRAVE_FOUND_SINGLE: '근처에서 당신의 유해를 발견했습니다.',
     START_JOURNEY: (name: string) => `${name}의 첫 여정이 시작됩니다.`,
     START_SKILL: (name: string) => `첫 기술로 익힌 능력은 ${name}입니다.`,
-    AI_QUOTA_REACHED: '오늘 AI 호출 한도에 도달했습니다.',
     ABYSS_FLOOR_WARNING: (floor: number) => `🌀 심연 ${floor}층 — 강대한 적들이 기다립니다...`,
     ENEMY_APPEAR: (name: string) => `${name} 등장!`,
     EVENT_RESULT_DEFAULT: '선택의 결과가 반영되었습니다.',

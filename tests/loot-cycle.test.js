@@ -166,12 +166,14 @@ import { readFile } from 'node:fs/promises';
           { name: '강철 롱소드', type: 'weapon', val: 12, hands: 1 },
           { name: '낡은 단검', type: 'weapon', val: 4, hands: 1 },
       ];
-      const hint = getLootUpgradeHint(equip, lootItems);
-      if (hint) {
-          assert.ok('name' in hint, 'name 보존');
-          assert.ok('summary' in hint, 'summary 보존');
-          assert.equal(hint.score, undefined, 'score 출력 0건');
-      }
+      // A2(2026-09) 이후 시그니처는 (player, lootItems) — 강화 반영 비교를 위해 player 전체를 받는다.
+      const { INITIAL_STATE } = await import('../src/reducers/gameReducer.ts');
+      const player = { ...INITIAL_STATE.player, level: 5, equip: { ...INITIAL_STATE.player.equip, ...equip } };
+      const hint = getLootUpgradeHint(player, lootItems);
+      assert.ok(hint, '강철 롱소드(val 12)는 녹슨 단검(val 5) 대비 업그레이드라 힌트가 있어야 한다');
+      assert.equal(hint.name, '강철 롱소드', '최고 score 후보를 고른다');
+      assert.ok('summary' in hint, 'summary 보존');
+      assert.equal(hint.score, undefined, 'score 출력 0건');
   });
 
   test('cycle 351 회귀 가드: getTraitProfile 3 redundant override 0건 보존', async () => {
