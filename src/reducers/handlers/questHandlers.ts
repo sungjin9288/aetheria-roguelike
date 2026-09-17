@@ -7,6 +7,7 @@ import {
     MAX_EXPEDITION_FOCUS_QUESTS,
     removeExpeditionFocusQuest,
 } from '../../utils/expeditionMissionFocus';
+import { getMapRequiredLevel } from '../../utils/mapTopology';
 import { getProtocolDayKey } from '../../utils/protocolCycle';
 import { createQuestProgressState } from '../../utils/questProgress';
 import { getUnmetQuestPrerequisite } from '../../utils/questPrerequisites';
@@ -39,13 +40,18 @@ const getRequestDate = (requestedAt: unknown) => {
     return new Date(acceptedTime);
 };
 
-const getBountyTargets = (level: number) => {
+export const getBountyTargets = (level: number) => {
     const targets: string[] = [];
-    (Object.values(DB.MAPS) as any[]).forEach((map) => {
+    Object.values(DB.MAPS).forEach((map) => {
+        // 시즌 한정 지역(seasonOnly, level이 [min,max] 범위)은 시즌이 닫혀 있으면 갈 수 없으므로
+        //   현상수배 대상에서 명시적으로 제외한다. (이전에는 범위 배열이 NaN으로 비교돼 우연히
+        //   빠지고 있었다 — 결과는 같지만 의도를 코드로 고정한다.)
+        if (map.seasonOnly) return;
+        const mapLevel = getMapRequiredLevel(map, level);
         if (
             map.level !== 'infinite'
-            && map.level <= level + 5
-            && map.level >= Math.max(1, level - 10)
+            && mapLevel <= level + 5
+            && mapLevel >= Math.max(1, level - 10)
             && !map.boss
         ) {
             targets.push(...(map.monsters || []));

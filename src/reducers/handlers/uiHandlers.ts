@@ -1,4 +1,5 @@
 import { BALANCE } from '../../data/constants';
+import { GS } from '../gameStates';
 import { sanitizeQuickSlots } from './helpers';
 import type { GameState, GameAction } from '../gameReducer';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
@@ -7,10 +8,14 @@ export const uiActionMap = {
     SET_SYNC_STATUS: (state: GameState, action: GameAction) =>
         ({ ...state, syncStatus: action.payload }),
 
+    // 2026-09 D3: 다른 화면으로 넘어가면 지난 전투 결과 카드는 내린다 — 카드(z-40 하단 고정)가
+    //   전투/이벤트/상점 화면의 주 행동 위에 남아 조작을 가리는 것을 막는다 (lessons R12).
+    //   탐험 대기(idle)에서는 유지 — 승리 직후 판단 카드가 바로 사라지면 안 되기 때문.
     SET_GAME_STATE: (state: GameState, action: GameAction) => ({
         ...state,
         gameState: action.payload,
         economyReceipt: action.payload === 'shop' ? state.economyReceipt : null,
+        postCombatResult: action.payload === GS.IDLE ? state.postCombatResult : null,
         syncStatus: 'syncing',
     }),
 

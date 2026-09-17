@@ -14,7 +14,7 @@ import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { db, hasFirebaseConfig } from '../firebase';
 import { APP_ID, BALANCE } from '../data/constants';
 import { isSignatureItem } from '../data/signatureItems.js';
-import { calcInvasionChance, getGraveRecoveryGroups } from '../utils/graveUtils';
+import { calcInvasionChance, excludeOwnGraves, getGraveRecoveryGroups } from '../utils/graveUtils';
 import {
     PRODUCTION_GAME_CAPABILITIES,
     type GameCapabilities,
@@ -25,6 +25,8 @@ const GRAVES_LIMIT = 10;
 
 interface GravePanelProps {
     player: Player;
+    /** H5(a): 세션 uid(engine state.uid). 공개 목록에서 내 묘비를 제외하는 유일한 기준. */
+    uid?: string | null;
     grave?: any;
     actions?: any;
     onOpenMap?: () => void;
@@ -33,6 +35,7 @@ interface GravePanelProps {
 
 const GravePanel = ({
     player,
+    uid,
     grave,
     actions,
     onOpenMap,
@@ -62,10 +65,11 @@ const GravePanel = ({
             const snapshot = await getDocs(graveQuery);
             const fetched: any[] = [];
             snapshot.forEach((document: any) => {
-                const data = document.data();
-                if (data.uid !== player?.uid) fetched.push({ ...data, uid: document.id });
+                fetched.push({ ...document.data(), uid: document.id });
             });
-            setPublicGraves(fetched);
+            // H5(a): 내 묘비 제외 — 이전에는 존재하지 않는 player.uid와 비교해 필터가 항상
+            //   통과했고 자기 묘비가 침공 후보로 노출됐다. 판정은 순수 함수가 소유한다.
+            setPublicGraves(excludeOwnGraves(fetched, uid));
             setPublicLoaded(true);
         } catch (error) {
             console.warn('Grave fetch failed', error);

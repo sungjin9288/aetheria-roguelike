@@ -648,7 +648,9 @@ const addCapacitySample = (
 const buildCapacityPressure = (focusedSeeds: readonly number[], hardErrors: string[]) => {
     const oneSlot = emptyCapacityAggregate();
     const full = emptyCapacityAggregate();
-    const filler: Item = { id: 'diagnostic-capacity-filler', name: '진단 자리 점유', type: 'material' };
+    // 병합(2026-09): ItemType 유니온의 소재 타입은 'mat'이다('material'은 데이터에 없다).
+    //   이 채움 아이템은 가방 칸만 차지하므로 canonical 값으로 맞춘다.
+    const filler: Item = { id: 'diagnostic-capacity-filler', name: '진단 자리 점유', type: 'mat' };
 
     for (const job of PROGRESSION_DIAGNOSTIC_JOBS) {
         const level = jobUnlockLevel(job);

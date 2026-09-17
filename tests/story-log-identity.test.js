@@ -38,9 +38,13 @@ test('story identity stays unique with a stopped or backwards clock and consumes
     }
 });
 
-test('production story callback allocates identity from a persistent ref before awaiting narration', () => {
+test('production story callback allocates identity from a persistent sequence before awaiting narration', () => {
     const source = readFileSync(new URL('../src/hooks/useGameEngine.ts', import.meta.url), 'utf8');
-    assert.match(source, /const storyLogSequenceRef = useRef\(0\)/);
-    assert.match(source, /const tempId = allocateStoryLogId\(storyLogSequenceRef\)/);
+    // 2026-09 N2: 시퀀스를 useRef에서 모듈 스코프 상수로 옮겼다 — addStoryLog가 ref를 잡는
+    //   바람에 react-hooks/refs가 actions 팩토리 호출을 "렌더 중 ref 접근"으로 오탐했다.
+    //   가드 의도("await 이전에 영속 시퀀스에서 id를 뽑는다")는 그대로다.
+    assert.match(source, /const storyLogSequence = \{ current: 0 \};/);
+    assert.doesNotMatch(source, /const storyLogSequenceRef = useRef\(0\)/, '시퀀스는 더 이상 ref가 아니다');
+    assert.match(source, /const tempId = allocateStoryLogId\(storyLogSequence\)/);
     assert.ok(source.indexOf('const tempId = allocateStoryLogId') < source.indexOf('await AI_SERVICE.generateStory'));
 });

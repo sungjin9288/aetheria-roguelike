@@ -5,7 +5,7 @@
 //   MAX_HISTORY 5 dead surface 제거 — getStats 외부 0건, getAverageLatency는
 //   getStats 내부 1회만, recordLatency는 getStats가 읽지 않을 array 채우기만.
 //   활성 surface는 trackCall (slow-response console.warn + custom event) 하나뿐.
-export const LatencyTracker: any = {
+export const LatencyTracker = {
     THRESHOLD_MS: 3000, // 3 seconds threshold
 
     async trackCall(asyncFn: any, callType: any) {

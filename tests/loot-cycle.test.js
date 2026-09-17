@@ -44,8 +44,13 @@ import { readFile } from 'node:fs/promises';
       isBoss: false,
   });
 
-  // drop/loot 둘 다 없는 monster 이름 선택 — '폭풍 수호자' 등.
-  const NO_TABLE_MONSTER = '폭풍 수호자';
+  // drop/loot 둘 다 없는 monster 이름 선택.
+  // Track J3(2026-09): '폭풍 수호자'는 콘텐츠 패리티 작업으로 DROP_TABLES에
+  // 항목이 추가돼 더 이상 "테이블 없음" 픽스처로 쓸 수 없음 — 무한 심연
+  // ("혼돈의 심연", level: 'infinite') 전용 회전 보스 풀은 의도적으로 두
+  // 테이블 모두에서 제외돼 있으므로(exp 기반 티어 보너스 드랍에 위임,
+  // tests/track-j3-drop-table-coverage.test.js 참고) 이 중 하나로 교체.
+  const NO_TABLE_MONSTER = '혼돈의 수호자';
 
   test('cycle 171 RED→GREEN: drop/loot 없는 고레벨 enemy도 보너스 드랍 발동 가능', () => {
       // 보장: 이 monster가 정말 두 테이블 모두에 없음.
@@ -161,12 +166,14 @@ import { readFile } from 'node:fs/promises';
           { name: '강철 롱소드', type: 'weapon', val: 12, hands: 1 },
           { name: '낡은 단검', type: 'weapon', val: 4, hands: 1 },
       ];
-      const hint = getLootUpgradeHint(equip, lootItems);
-      if (hint) {
-          assert.ok('name' in hint, 'name 보존');
-          assert.ok('summary' in hint, 'summary 보존');
-          assert.equal(hint.score, undefined, 'score 출력 0건');
-      }
+      // A2(2026-09) 이후 시그니처는 (player, lootItems) — 강화 반영 비교를 위해 player 전체를 받는다.
+      const { INITIAL_STATE } = await import('../src/reducers/gameReducer.ts');
+      const player = { ...INITIAL_STATE.player, level: 5, equip: { ...INITIAL_STATE.player.equip, ...equip } };
+      const hint = getLootUpgradeHint(player, lootItems);
+      assert.ok(hint, '강철 롱소드(val 12)는 녹슨 단검(val 5) 대비 업그레이드라 힌트가 있어야 한다');
+      assert.equal(hint.name, '강철 롱소드', '최고 score 후보를 고른다');
+      assert.ok('summary' in hint, 'summary 보존');
+      assert.equal(hint.score, undefined, 'score 출력 0건');
   });
 
   test('cycle 351 회귀 가드: getTraitProfile 3 redundant override 0건 보존', async () => {
@@ -307,16 +314,22 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 534: 정합성 가드 — 1 callsite 보존', async () => {
       const source = await readSrc('src/hooks/combatActions/combatVictory.ts');
-      assert.ok(/getLootUpgradeHint\(updatedPlayer\.equip,\s*admittedItems\)/.test(source),
-          'getLootUpgradeHint(updatedPlayer.equip, admittedItems) callsite 보존');
+      // A2 (2026-09 감사 G4): 첫 인자가 equip → player로 바뀌었다 (강화/직업 판정에 player 필요).
+      // Codex 95ecf13: 대상 목록이 lootResult.items → admittedItems(수용량 정산 통과분)로 바뀌었다.
+      //   "1 callsite가 두 인자를 명시 전달한다"는 의도는 동일.
+      assert.ok(/getLootUpgradeHint\(updatedPlayer,\s*admittedItems\)/.test(source),
+          'getLootUpgradeHint(updatedPlayer, admittedItems) callsite 보존');
   });
 
   test('cycle 534: body defensive guard 보존', async () => {
       const source = await readSrc('src/hooks/combatActions/_helpers.ts');
       assert.ok(/\(lootItems \|\| \[\]\)\.filter/.test(source),
           '(lootItems || []) defensive guard 보존');
-      assert.ok(/getEquipmentProfile\(equip\)/.test(source),
-          'getEquipmentProfile(equip) 호출 보존');
+      // A2: 델타 계산은 equipmentUtils.getEquipmentComparison에 위임 (강화 반영 단일 원천).
+      assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(source),
+          'getEquipmentComparison(player, item) 위임 보존');
+      assert.ok(!/critDelta \* 2/.test(source),
+          '점수식 inline 복제 재도입 금지 (BALANCE 가중치 이중 관리 방지)');
       assert.ok(/let bestScore = -Infinity/.test(source),
           'cycle 352 bestScore internal 변수 보존');
   });

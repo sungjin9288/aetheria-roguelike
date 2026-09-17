@@ -81,6 +81,13 @@ type ContentSource = {
     ITEMS: Record<string, any[]>;
 };
 
+/**
+ * 병합(2026-09): `DB.ITEMS`(ItemDatabase)는 고정 카테고리 인터페이스(인덱스 시그니처 0)라
+ * `ContentSource.ITEMS`(Record<string, any[]>)와 구조적으로 겹치지 않는다. 기본 소스 비교와
+ * 기본값 주입은 이 단일 별칭을 통해서만 한다 — 캐스팅 지점을 한 곳으로 고정한다.
+ */
+const DB_SOURCE = DB as unknown as ContentSource;
+
 const START_LOCATION = '시작의 마을';
 const CHECKPOINT_LEVELS = [2, 5, 10, 20, 45, 60, 75];
 const EXPECTED_CATALOG_COUNTS = Object.freeze({
@@ -91,8 +98,10 @@ const EXPECTED_CATALOG_COUNTS = Object.freeze({
     equipment: 229,
     signatures: 25,
 });
+// 병합(2026-09): 퀘스트 target 표기는 H5에서 소문자 'level'로 통일됐다(업적 계통과 동일).
+//   구 표기 'Level'은 데이터에 남아 있지 않지만 외부 소스를 받는 함수라 둘 다 허용한다.
 const SYSTEM_QUEST_TARGETS = new Set([
-    'Level', 'explores', 'kills', 'bossKills', 'crafts', 'discoveries',
+    'level', 'Level', 'explores', 'kills', 'bossKills', 'crafts', 'discoveries',
     'escapes', 'bountiesCompleted', 'signaturesDiscovered', 'lowHpWins',
     'crusher', 'dual', 'fortress', 'arcane',
 ]);
@@ -227,7 +236,7 @@ const maxShopTier = (map: any) => {
 };
 
 const shopCatalogFor = (source: ContentSource, region: string, map: any) => (
-    source === DB
+    source === DB_SOURCE
         ? getShopCatalog(region)
         : itemCatalog(source).filter((item) => Number(item?.tier || 1) <= maxShopTier(map))
 );
@@ -424,7 +433,7 @@ const progressionJobErrors = (
 };
 
 export const buildContentReachabilityReport = (
-    source: ContentSource = DB as ContentSource,
+    source: ContentSource = DB_SOURCE,
     signatureIndex: Readonly<Record<string, ReadonlyArray<{ monster: string }>>> = getAllSignatureDropSourceIndex(),
 ): Readonly<ContentReachabilityReport> => {
     const maps = source.MAPS || {};
@@ -437,7 +446,7 @@ export const buildContentReachabilityReport = (
     const signatures = signatureReport(signatureIndex, source.MONSTERS || {});
     let progression: ReturnType<typeof simulateProgression> | null = null;
     const errors = [...equipment.errors, ...classSchemaErrors(source.CLASSES || {})];
-    if (source === DB) {
+    if (source === DB_SOURCE) {
         try {
             progression = simulateProgression({ seed: 20_260_810 });
         } catch (error) {

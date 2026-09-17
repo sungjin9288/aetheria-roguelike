@@ -581,9 +581,10 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/getNarrativeEventChance\([^)]*,[^)]*,[^)]*,[^)]*\)/.test(exploreActions),
           'exploreActions getNarrativeEventChance 4 args 보존');
 
-      const exploreUtils = await readSrc('src/utils/exploreUtils.ts');
-      assert.ok(/getDiscoveryOdds\([^)]*,[^)]*\)/.test(exploreUtils),
-          'exploreUtils getDiscoveryOdds 2 args 보존 (quietChance 경유 호출)');
+      // Wave 4 N1: getDiscoveryOdds 호출부가 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const exploreFlow = await readSrc('src/hooks/gameActions/exploreFlow.ts');
+      assert.ok(/getDiscoveryOdds\([^)]*,[^)]*\)/.test(exploreFlow),
+          'exploreFlow getDiscoveryOdds 2 args 보존 (quietChance 경유 호출)');
 
       const pacing = await readSrc('src/utils/explorationPacing.ts');
       assert.ok(/getNarrativeEventChance\(mapData\?\.eventChance \|\| 0, 0, player\?\.stats, mapData(?: \?\? null)?\)/.test(pacing),
@@ -1138,12 +1139,15 @@ import { readFile, readdir } from 'node:fs/promises';
           'internal callsite (targetMap, playerLevel) 보존');
   });
 
-  test('cycle 519: body (playerLevel || 1) defensive 가드 + map?.minLv 체인 보존', async () => {
+  test('cycle 519: body (playerLevel || 1) defensive 가드 보존 (N3: minLv 체인은 제거)', async () => {
       const source = await readSrc('src/utils/adventureGuide.ts');
       assert.ok(/\(playerLevel \|\| 1\) \+ 8/.test(source),
           '(playerLevel || 1) nullish defensive guard 보존');
-      assert.ok(/map\?\.minLv\s*\?\?\s*\(typeof map\?\.level/.test(source),
-          'map?.minLv ?? fallback chain 보존');
+      // 2026-09 N3: `map?.minLv ??` 우선 분기는 MAPS 52개 중 정의 0개라 죽은 리더였다.
+      //   cycle 519가 지키려던 것은 defensive 가드와 level fallback 자체다 — 후자만 남긴다.
+      assert.ok(/typeof map\?\.level === 'number' \? map\.level : 1/.test(source),
+          'level fallback chain 보존');
+      assert.ok(!/map\?\.minLv/.test(source), 'minLv 리더는 제거됨 (주석 언급은 허용)');
   });
 
   test('cycle 519: cycle 502-518 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1289,11 +1293,16 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/\bfallback\b/.test(sig), 'fallback 파라미터 자체는 보존');
   });
 
-  test('cycle 522: 정합성 가드 — 8 internal callsite 보존', async () => {
+  test('cycle 522: 정합성 가드 — 모든 internal callsite가 fallback을 명시한다', async () => {
+      // 2026-09 Wave 3 I1: outcome 어휘 확장(relic/status/buff 검증)으로 toInt 호출부가
+      //   8건에서 늘었다. 이 가드의 원 의도는 "호출 수"가 아니라 "default 0이 사라진 뒤에도
+      //   모든 호출부가 fallback을 명시한다"이므로, 고정 개수 대신 그 불변식을 직접 검증한다.
       const source = await readSrc('src/utils/aiEventUtils.ts');
-      const calls = (source.match(/toInt\(/g) || []).length;
-      // 정의 1 (const toInt = (...))는 paren 미사용, 사용처만 8회 매칭
-      assert.equal(calls, 8, `toInt 호출 8건 보존: ${calls}건`);
+      const calls = source.match(/toInt\(([^()]*)\)/g) || [];
+      assert.ok(calls.length >= 8, `cycle 522 당시 8건 이상 보존: ${calls.length}건`);
+      for (const call of calls) {
+          assert.ok(call.includes(','), `fallback 인자 명시 필요: ${call}`);
+      }
   });
 
   test('cycle 522: body ternary 처리 보존', async () => {
@@ -1901,7 +1910,9 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/systems/CombatEngine.outcome.ts');
       assert.ok(/\(player\.exp \|\| 0\) \+ expGained/.test(source),
           '(player.exp || 0) + expGained defensive 보존');
-      assert.ok(/while \(p\.level < CONSTANTS\.MAX_LEVEL && p\.exp >= p\.nextExp\)/.test(source),
+      // Wave 4 N1: `p: any` → `Player`로 좁히면서 INITIAL_STATE가 보장하는 수치 필드에만
+      //   `!`를 붙였다. 루프 조건 자체(레벨 상한 · 누적 exp 소진)는 그대로다.
+      assert.ok(/while \(p\.level!? < CONSTANTS\.MAX_LEVEL && p\.exp!? >= p\.nextExp!?\)/.test(source),
           'level-up while loop 보존');
   });
 
@@ -1966,7 +1977,8 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 537: calculateDamage signature에서 options default 0건', async () => {
       const source = await readSrc('src/systems/CombatEngine.ts');
-      const fnIdx = source.indexOf('calculateDamage(stats: any');
+      // B2(2026-09): stats 파라미터가 FullStats로 타입화되면서 앵커 문자열 갱신.
+      const fnIdx = source.indexOf('calculateDamage(stats: FullStats');
       const fnEnd = source.indexOf(')', fnIdx) + 1;
       const sig = source.slice(fnIdx, fnEnd);
       assert.ok(!/options:\s*any\s*=\s*\{\}/.test(sig),
@@ -2036,7 +2048,10 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 538: body 동작 보존', async () => {
       const source = await readSrc('src/reducers/handlers/helpers.ts');
-      assert.ok(/const dp = \(player\.stats as any\)\?\.dailyProtocol/.test(source),
+      // 2026-09 Wave 3 L stage 3 재고정: PlayerStats.dailyProtocol이 DailyProtocol로
+      //   타입화되면서 `as any` 우회가 사라졌다. 앵커의 의도(=dp 추출 보존)는 그대로 두고
+      //   캐스트 유무만 허용 범위로 넓힌다.
+      assert.ok(/const dp = (?:\(player\.stats as any\)|player\.stats)\?\.dailyProtocol/.test(source),
           'dp 추출 보존');
       assert.ok(/if \(!dp\) return \{ player, reward: emptyDailyProtocolReward\(\) \}/.test(source),
           'dp 가드와 빈 지급 결과 보존');
@@ -2172,35 +2187,47 @@ import { readFile, readdir } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 542: signedDelta signature에서 value default 0건', async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      const fnIdx = source.indexOf('const signedDelta');
+  // A2 (2026-09 감사 G4): ShopPanel의 signedDelta / formatPercent는
+  //   equipmentUtils.formatEquipmentDelta 한 곳으로 이동했다(상점·루팅·인벤 3표면
+  //   공용). cycle 542/621이 지키려던 의도 — "부호 + 값 + 접미사를 만드는 헬퍼에
+  //   도달 불가한 default가 없고, 호출부가 인자를 명시한다" — 를 새 위치에서 그대로 검증한다.
+  test('cycle 542 (A2 이관): 델타 포맷 헬퍼 signature에 default 0건', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      const fnIdx = source.indexOf('export const formatEquipmentDelta');
+      assert.ok(fnIdx >= 0, 'formatEquipmentDelta가 equipmentUtils의 단일 원천');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(!/value:\s*any\s*=\s*0/.test(sig),
-          'signedDelta value default 0 제거');
+      assert.ok(!/=\s*0/.test(sig), 'value default 0 없음');
+      assert.ok(!/=\s*''/.test(sig), "suffix default '' 없음");
   });
 
-  test('cycle 542: suffix 파라미터 보존 (cycle 621 explicit elimination)', async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      const fnIdx = source.indexOf('const signedDelta');
+  test('cycle 542 (A2 이관): 두 파라미터 모두 보존', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      const fnIdx = source.indexOf('export const formatEquipmentDelta');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(/suffix:\s*any\)/.test(sig),
-          'signedDelta suffix 파라미터 보존 (cycle 621에서 default 제거됨)');
+      assert.ok(/key:\s*EquipmentDeltaKey/.test(sig), 'key 파라미터 보존');
+      assert.ok(/value:\s*number/.test(sig), 'value 파라미터 보존');
   });
 
-  test('cycle 542: 정합성 가드 — 3 internal callsite 보존', async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/signedDelta\(atkDelta,\s*''\)/.test(source), 'ATK callsite 보존');
-      assert.ok(/signedDelta\(defDelta,\s*''\)/.test(source), 'DEF callsite 보존');
-      assert.ok(/signedDelta\(mpDelta,\s*''\)/.test(source), 'MP callsite 보존');
+  test('cycle 542 (A2 이관): 정합성 가드 — 델타 조각 생성 callsite 보존', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(/formatEquipmentDelta\(key,\s*decision\.diff\[key\]\)/.test(source),
+          'getEquipmentComparison segment callsite 보존');
+      assert.ok(/formatEquipmentDelta\(primaryKey,\s*value\)/.test(source),
+          'getPrimaryEquipmentDelta callsite 보존');
+      // 상점/루팅 두 표면이 자체 계산 대신 공용 비교에 위임하는지 (G4 중복 제거의 핵심)
+      const shop = await readSrc('src/components/ShopPanel.tsx');
+      assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(shop), 'ShopPanel 위임 보존');
+      assert.ok(!/const signedDelta/.test(shop), 'ShopPanel 자체 델타 포맷 재도입 금지');
+      const helpers = await readSrc('src/hooks/combatActions/_helpers.ts');
+      assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(helpers), '_helpers 위임 보존');
   });
 
-  test('cycle 542: body template literal 보존', async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/`\$\{value >= 0 \? '\+' : ''\}\$\{value\}\$\{suffix\}`/.test(source),
-          'template literal `${sign}${value}${suffix}` 보존');
+  test('cycle 542 (A2 이관): body template literal 보존', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(/\$\{value > 0 \? '\+' : ''\}\$\{value\}\$\{EQUIP_DELTA_SUFFIX\[key\]\}/.test(source),
+          'template literal `${label} ${sign}${value}${suffix}` 보존');
   });
 
   test('cycle 542: cycle 502-541 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2526,8 +2553,10 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 547: body turnCount / relics 처리 보존', async () => {
       // applyEntropyTick은 CombatEngine.relics.ts로 분리됨 (mixin).
       const source = await readSrc('src/systems/CombatEngine.relics.ts');
-      assert.ok(/const relics = \(player as any\)\?\.relics \|\| \[\]/.test(source),
-          '(player as any)?.relics || [] defensive 보존');
+      // 2026-09 Wave 4 M: Relic.val 판별 유니온화로 (player as any) 캐스트가 Relic[] 주석으로 대체됨.
+      //   가드 의도(player.relics 미보유 시 [] fallback 보존)는 그대로.
+      assert.ok(/const relics: Relic\[\] = player\?\.relics \|\| \[\]/.test(source),
+          'player?.relics || [] defensive 보존');
       assert.ok(/turnCount = \(flags\.turnCount \|\| 0\) \+ 1/.test(source),
           'turnCount 증가 보존');
   });
@@ -2601,7 +2630,8 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 548: body crit_mp_regen 분기 + getEffectiveMaxMp 보존', async () => {
       // applyCritMpRestore는 CombatEngine.relics.ts로 분리됨 (mixin).
       const source = await readSrc('src/systems/CombatEngine.relics.ts');
-      assert.ok(/relics\.find\(\(relic: any\) => relic\.effect === 'crit_mp_regen'\)/.test(source),
+      // 2026-09 Wave 4 M: 콜백의 `: any` 제거 (Relic 판별 유니온이 val을 좁혀줌).
+      assert.ok(/relics\.find\(\(relic\) => relic\.effect === 'crit_mp_regen'\)/.test(source),
           'crit_mp_regen find 보존');
       assert.ok(/this\.getEffectiveMaxMp\(player, relics\)/.test(source),
           'getEffectiveMaxMp(player, relics) 호출 보존');
@@ -3871,12 +3901,14 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 579: 정합성 가드 — 다수 callsite 보존', async () => {
+      // H5(c)(Wave 3): 가짜 {maxHp, maxMp} 폴백을 없애며 두 호출부가 한 줄로 바뀌었다.
+      //   이 가드의 의도(maps를 포함한 4 args 명시 전달)는 그대로 유지한다.
       const mn = await readSrc('src/components/MapNavigator.tsx');
-      assert.ok(/getMoveRecommendations\(\s*\n\s*player,\s*\n[\s\S]*?DB\.MAPS,\s*\n\s*\)/.test(mn),
+      assert.ok(/getMoveRecommendations\(player,\s*stats,\s*currentMap,\s*DB\.MAPS\)/.test(mn),
           'MapNavigator getMoveRecommendations 4-arg callsite 보존');
 
       const cp = await readSrc('src/components/ControlPanel.tsx');
-      assert.ok(/getMoveRecommendations\(player,\s*stats \|\| \{ maxHp: player\.maxHp, maxMp: player\.maxMp \},\s*mapData,\s*DB\.MAPS\)/.test(cp),
+      assert.ok(/getMoveRecommendations\(player,\s*stats,\s*mapData,\s*DB\.MAPS\)/.test(cp),
           'ControlPanel getMoveRecommendations callsite 보존');
   });
 

@@ -1,6 +1,6 @@
-import type { Item, Monster } from '../types/index.js';
+import type { Item, Monster, MonsterPattern } from '../types/index.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
-import type { Player } from "../types/index.js";
+import type { FullStats, Player } from "../types/index.js";
 // cycle 271: getDifficultyMults / calcPerformanceScore / getExploreState / CLASS_BUILD_IDENTITIES /
 //   hasProfileTag — getRunDiagnostics + 3 class-build helpers 제거 후 dead imports cleanup.
 import { countLowHpWins } from '../systems/DifficultyManager.js';
@@ -10,6 +10,20 @@ import {
     TRAIT_DEFINITIONS,
     ELEMENT_TO_STATUS,
 } from '../data/traits.js';
+
+/**
+ * 빌드/특성 판정이 실제로 읽는 파생 스탯 부분집합.
+ *
+ * `calculateFullStats`가 중간 산출물(preBuildStats)을 그대로 넘겨 호출하므로 여기에
+ * `FullStats`를 쓰면 `FullStats → getRunBuildProfile → FullStats` 타입 순환이 생긴다.
+ * 읽는 필드만 좁게 선언해 `FullStats`도 그대로 전달 가능하게 둔다.
+ */
+export interface DerivedStatsView {
+    maxHp?: number;
+    maxMp?: number;
+    elem?: string;
+    isMagic?: boolean;
+}
 
 // --- Internal helpers ---
 
@@ -82,7 +96,7 @@ const getClassFallback = (job: string | undefined) => {
 // cycle 612: stats default {} 제거 — explicit default-elimination pattern
 //   (cycle 608/609/611에 이은 4번째 적용). BuildAdvicePanel:56 + cycle-345
 //   test:65 두 1-arg caller에 {} 명시 추가 후 모든 7 caller가 명시 전달.
-export const getRunBuildProfile = (player: Player, stats: any) => {
+export const getRunBuildProfile = (player: Player, stats: DerivedStatsView | null | undefined) => {
     const relicEffects = relicEffectsOf(player);
     const mainWeapon = player?.equip?.weapon || null;
     const offhand = player?.equip?.offhand || null;
@@ -91,10 +105,10 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     const shield = isShield(offhand) && !isFocusOffhand(offhand);
     const focus = isFocusOffhand(offhand);
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
-    const tags: any[] = [];
+    const tags = [];
 
     if (twoHand || relicEffects.has('execute_bonus') || relicEffects.has('armor_pen')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (twoHand) { score += 4; reasons.push('양손 무기'); }
         if (relicEffects.has('execute_bonus')) { score += 2; reasons.push('처형 보정'); }
@@ -105,7 +119,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (dualWield || relicEffects.has('combo_stack') || relicEffects.has('double_strike')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (dualWield) { score += 4; reasons.push('쌍수 무기'); }
         if (relicEffects.has('combo_stack')) { score += 2; reasons.push('연격 스택'); }
@@ -115,7 +129,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (shield || relicEffects.has('reflect') || relicEffects.has('stone_skin') || relicEffects.has('fortress')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (shield) { score += 4; reasons.push('방패 운용'); }
         if (relicEffects.has('reflect')) { score += 2; reasons.push('반사 피해'); }
@@ -126,7 +140,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (stats?.isMagic || focus || isMagicWeapon(mainWeapon) || isMagicWeapon(offhand)) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (stats?.isMagic) { score += 2; reasons.push('마법 공격'); }
         if (focus) { score += 3; reasons.push('주문서/마도서'); }
@@ -139,7 +153,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (relicEffects.has('event_chance') || relicEffects.has('drop_rate') || relicEffects.has('gold_mult') || relicEffects.has('exp_mult') || relicEffects.has('boss_hunter')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (relicEffects.has('event_chance')) { score += 2; reasons.push('이벤트 증가'); }
         if (relicEffects.has('drop_rate')) { score += 2; reasons.push('드롭 증가'); }
@@ -150,7 +164,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (relicEffects.has('glass_cannon') || relicEffects.has('cursed_power') || relicEffects.has('low_hp_atk') || hpRatio < 0.45) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (relicEffects.has('glass_cannon')) { score += 2; reasons.push('유리 대포'); }
         if (relicEffects.has('cursed_power')) { score += 2; reasons.push('체력 대가 화력'); }
@@ -161,7 +175,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
     }
 
     if (relicEffects.has('dot_mult') || (mainWeapon?.elem && mainWeapon.elem !== '물리')) {
-        const reasons: any[] = [];
+        const reasons = [];
         let score = 0;
         if (relicEffects.has('dot_mult')) { score += 3; reasons.push('지속 피해 증폭'); }
         if (mainWeapon?.elem && mainWeapon.elem !== '물리') { score += 2; reasons.push(`${mainWeapon.elem} 속성 무기`); }
@@ -191,7 +205,7 @@ export const getRunBuildProfile = (player: Player, stats: any) => {
 
 // --- Trait functions ---
 
-const pickTraitId = (player: Player, buildProfile: any) => {
+const pickTraitId = (player: Player, buildProfile: BuildProfile) => {
     const relicEffects = relicEffectsOf(player);
     const primaryId = buildProfile.primary.id;
     const lowHpWins = countLowHpWins(player?.stats, 0.2);
@@ -207,7 +221,7 @@ const pickTraitId = (player: Player, buildProfile: any) => {
 
 // cycle 558: stats default {} 제거 — 1 internal callsite (line 212) 명시
 //   전달이라 default 도달 불가. private (no export). 청소 메가 시리즈 52번째.
-const buildTraitSkill = (traitId: any, player: Player, stats: any) => {
+const buildTraitSkill = (traitId: string, player: Player, stats: DerivedStatsView | null | undefined) => {
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
     if (!definition.skill) return null;
 
@@ -240,7 +254,7 @@ const buildTraitSkill = (traitId: any, player: Player, stats: any) => {
 // cycle 613: stats default {} 제거 — explicit default-elimination pattern
 //   (cycle 608/609/611/612에 이은 5번째 적용). DashboardMobileSummary:37
 //   1-arg caller에 {} 명시 추가 후 모든 caller가 명시 전달.
-export const getTraitProfile = (player: Player, stats: any) => {
+export const getTraitProfile = (player: Player, stats: DerivedStatsView | null | undefined) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const traitId = pickTraitId(player, buildProfile);
     const definition = TRAIT_DEFINITIONS[traitId] || TRAIT_DEFINITIONS.balanced;
@@ -276,15 +290,15 @@ export const getTraitProfile = (player: Player, stats: any) => {
 // cycle 558: stats default {} 제거 — 1 external callsite (statsCalculator
 //   :376) 명시 전달이라 default 도달 불가. test caller 0건.
 //   getTraitProfile/getTraitSkill는 1-arg caller가 존재 (cleanup 대상 외).
-export const getTraitBonus = (player: Player, stats: any) => getTraitProfile(player, stats).bonus;
+export const getTraitBonus = (player: Player, stats: DerivedStatsView | null | undefined) => getTraitProfile(player, stats).bonus;
 
 // cycle 613: stats default {} 제거 — explicit default-elimination cascade
 //   (gameUtils:23 1-arg caller에 {} 명시 추가).
-export const getTraitSkill = (player: Player, stats: any) => getTraitProfile(player, stats).skill;
+export const getTraitSkill = (player: Player, stats: DerivedStatsView | null | undefined) => getTraitProfile(player, stats).skill;
 
-export const getTraitPassiveParts = (traitProfile: any) => {
-    const bonus = traitProfile?.bonus || {};
-    const parts: any[] = [];
+export const getTraitPassiveParts = (traitProfile: TraitProfile | null | undefined) => {
+    const bonus: Partial<TraitProfile['bonus']> = traitProfile?.bonus || {};
+    const parts = [];
     if ((bonus.atkMult || 1) > 1) parts.push(`공격력 +${toPercent((bonus.atkMult || 1) - 1)}`);
     if ((bonus.defMult || 1) > 1) parts.push(`방어력 +${toPercent((bonus.defMult || 1) - 1)}`);
     if ((bonus.critBonus || 0) > 0) parts.push(`치명타 +${toPercent(bonus.critBonus || 0)}`);
@@ -294,11 +308,11 @@ export const getTraitPassiveParts = (traitProfile: any) => {
 
 // cycle 409: reasons 출력 dead 정리 — 외부 read 0건. 내부 reasons 배열은 summary
 //   계산용 로컬 var로만 사용. score / label / summary는 활성 보존.
-export const getTraitItemResonance = (item: Item | null | undefined, traitProfile: any, player: Player | null) => {
+export const getTraitItemResonance = (item: Item | null | undefined, traitProfile: TraitProfile | null | undefined, player: Player | null) => {
     if (!item) return { score: 0, label: null, summary: null };
 
     const traitId = traitProfile?.id || 'balanced';
-    const reasons: any[] = [];
+    const reasons: string[] = [];
     let score = 0;
 
     switch (traitId) {
@@ -369,7 +383,7 @@ export const getTraitItemResonance = (item: Item | null | undefined, traitProfil
 // cycle 598: items / player / limit 3 defaults batch 제거 — 2 callers (1
 //   internal:340 + 1 test:213) 모두 4 args 명시 전달이라 3 defaults 모두 도달
 //   불가. body의 (items || []) defensive guard 보존.
-export const getTraitFeaturedItems = (items: any[], traitProfile: any, player: Player | null, limit: any) => (
+export const getTraitFeaturedItems = (items: Item[], traitProfile: TraitProfile | null | undefined, player: Player | null, limit: number) => (
     (items || [])
         .map((item: any) => ({
             item,
@@ -386,7 +400,7 @@ export const getTraitFeaturedItems = (items: any[], traitProfile: any, player: P
 // cycle 602: items / player defaults 제거 — 3 callers (combatVictory:217 +
 //   2 test) 모두 3 args 명시 전달이라 두 default 모두 도달 불가. cycle 598
 //   getTraitFeaturedItems와 paired (동일 모듈).
-export const getTraitLootHint = (items: any[], traitProfile: any, player: Player | null) => {
+export const getTraitLootHint = (items: Item[], traitProfile: TraitProfile | null | undefined, player: Player | null) => {
     const [best] = getTraitFeaturedItems(items, traitProfile, player, 1);
     if (!best) return null;
 
@@ -396,7 +410,7 @@ export const getTraitLootHint = (items: any[], traitProfile: any, player: Player
     };
 };
 
-export const getTraitQuestResonance = (quest: any, traitProfile: any) => {
+export const getTraitQuestResonance = (quest: any, traitProfile: TraitProfile | null | undefined) => {
     if (!quest) return { score: 0, label: null, summary: null };
 
     const buildTags = new Set([
@@ -406,7 +420,7 @@ export const getTraitQuestResonance = (quest: any, traitProfile: any) => {
     ].filter(Boolean));
 
     let score = 0;
-    const reasons: any[] = [];
+    const reasons = [];
 
     if (quest.buildTag && buildTags.has(quest.buildTag)) {
         score += 6;
@@ -449,11 +463,11 @@ export const getTraitQuestResonance = (quest: any, traitProfile: any) => {
 //   5 test (cycle-270, run-profile-utils) 모두 명시 전달이라 default 도달
 //   불가. body의 void stats는 cycle 270 시그니처 호환 보존. 청소 메가
 //   시리즈 53번째.
-export const getEnemyTacticalProfile = (enemy: Monster, stats: any) => {
+export const getEnemyTacticalProfile = (enemy: Monster, stats: FullStats | null | undefined) => {
     if (!enemy) return null;
     void stats; // cycle 270: stats 파라미터는 estimatedHit/estimatedHeavy 계산용이었으나 dead — 시그니처 호환 보존.
 
-    const pattern = enemy.pattern || {};
+    const pattern: Partial<MonsterPattern> = enemy.pattern || {};
     const guardChance = Math.max(0, Math.round((pattern.guardChance || 0) * 100));
     const heavyChance = Math.max(0, Math.round((pattern.heavyChance || 0) * 100));
     const bossBrief = enemy.isBoss ? BOSS_BRIEFS[(enemy.baseName || enemy.name) as string] : null;
@@ -478,3 +492,9 @@ export const getEnemyTacticalProfile = (enemy: Monster, stats: any) => {
         phaseHint,
     };
 };
+
+/** `getRunBuildProfile()` 결과 — 빌드 아키타입 판정. */
+export type BuildProfile = ReturnType<typeof getRunBuildProfile>;
+
+/** `getTraitProfile()` 결과 — 특성 정의 + 빌드 프로파일 + 패시브 보너스. */
+export type TraitProfile = ReturnType<typeof getTraitProfile>;

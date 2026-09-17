@@ -3,6 +3,7 @@ import { motion as Motion } from 'framer-motion';
 import { ShieldCheck } from 'lucide-react';
 import { DB } from '../../data/db';
 import { BALANCE } from '../../data/constants';
+import { MSG } from '../../data/messages';
 import { getSynthesisGroups, validateSynthesis } from '../../utils/synthesisUtils';
 import { getItemRarity } from '../../utils/gameUtils';
 import { getCraftingInvestmentPreview, getSynthesisOutcomePreviews } from '../../utils/itemInvestmentPreview';
@@ -10,8 +11,7 @@ import FocusPanelHeader from '../FocusPanelHeader';
 import ItemIcon from '../icons/ItemIcon';
 import SignalBadge from '../SignalBadge';
 
-const TYPE_LABEL: any = { weapon: '무기', armor: '방어구', shield: '방패' };
-const RARITY_LABEL: any = { common: '일반', uncommon: '고급', rare: '희귀', epic: '영웅', legendary: '전설' };
+const TYPE_LABEL: Record<string, string> = { weapon: '무기', armor: '방어구', shield: '방패' };
 
 /** 제작법과 장비 합성을 한 흐름에서 다룬다. */
 // cycle 403: `mobileFocused?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
@@ -172,7 +172,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                       <ItemIcon item={item} size={34} showBorder />
                       <span className="aether-type-label mt-1 w-full truncate font-readable font-bold">{item.name}</span>
                       <span className="aether-type-label mt-0.5" style={{ color: BALANCE.RARITY_COLORS[getItemRarity(item)] }}>
-                        {item.tier}단계 · {RARITY_LABEL[getItemRarity(item)]}
+                        {item.tier}단계 · {MSG.RARITY_LABEL[getItemRarity(item)]}
                       </span>
                     </>
                   ) : (

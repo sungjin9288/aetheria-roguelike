@@ -100,6 +100,18 @@ const getChainPreview = (outcome: any): EventChoicePreview => {
 const getGeneralPreview = (outcome: any): EventChoicePreview => {
     if (!outcome) return { text: '결과는 선택 뒤에 드러남', tone: 'unknown' };
 
+    // 2026-09 Wave 3 I1: 확장 어휘(정예/상태이상/유물/버프)는 숫자 보상보다 먼저 읽힌다 —
+    //   위험을 고르는 순간 무엇이 걸려 있는지 선택 전에 보여야 "공정한 위험"이 된다.
+    if (outcome.elite === true) {
+        return { text: outcome.relic ? '정예 전투 · 유물 선택' : '정예 전투로 이어짐', tone: 'danger' };
+    }
+    if (outcome.status) {
+        const rewarded = Number(outcome.gold) > 0 || Number(outcome.exp) > 0 || Boolean(outcome.item) || Boolean(outcome.relic);
+        return { text: rewarded ? '보상 가능 · 상태이상 위험' : '상태이상 위험', tone: 'danger' };
+    }
+    if (outcome.relic) return { text: '유물 선택지가 열림', tone: 'reward' };
+    if (outcome.buff?.turns) return { text: '다음 전투 강화', tone: 'reward' };
+
     const hasReward = Number(outcome.gold) > 0 || Number(outcome.exp) > 0 || Boolean(outcome.item) || Boolean(outcome.buff);
     const hasRecovery = Number(outcome.hp) > 0 || Number(outcome.mp) > 0;
     const hasDanger = Number(outcome.hp) < 0 || Number(outcome.mp) < 0;

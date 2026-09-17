@@ -136,12 +136,13 @@ test('slice 19: 몬스터 골드 — 초반 휴식 경제 (4전투 내 휴식 1�
         '4전투 골드로 휴식 1회 가능');
 });
 
-test('slice 19: 첫 유물 보장 pity — exploreUtils 소스 가드', async () => {
-    // 탐험 스카우팅(2026-07): 유물 pity 분기가 exploreUtils.ts의 runQuietRollAndCombat으로
-    // 이동(exploreActions.ts와 eventActions.ts "짙은 안개" 카드 공유) — 경로만 갱신.
-    const source = await readSrc('src/utils/exploreUtils.ts');
+test('slice 19: 첫 유물 보장 pity — exploreFlow 소스 가드', async () => {
+    // 탐험 스카우팅(2026-07): 유물 pity 분기가 runQuietRollAndCombat으로 이동
+    // (exploreActions.ts와 eventActions.ts "짙은 안개" 카드 공유).
+    // Wave 4 N1: runQuietRollAndCombat이 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+    const source = await readSrc('src/hooks/gameActions/exploreFlow.ts');
     assert.ok(/FIRST_RELIC_PITY_EXPLORES/.test(source),
-        'exploreUtils가 FIRST_RELIC_PITY_EXPLORES 참조');
+        'exploreFlow가 FIRST_RELIC_PITY_EXPLORES 참조');
     assert.ok(/firstRelicPity/.test(source),
         '첫 유물 pity 분기 존재');
 });

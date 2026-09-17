@@ -2,38 +2,20 @@
 import type { GameMap, Relic } from '../types/index.js';
 import type { Player } from '../types/index.js';
 /**
- * exploreUtils.js — explore() 로직 분리 모듈 (Phase 1-B)
- * useGameActions.js의 explore()에서 추출한 순수 함수들.
+ * exploreUtils.ts — 탐험 파이프의 순수 구간 (Phase 1-B → Wave 4 N1).
+ *
+ * dispatch/addLog를 주입받던 부수효과 함수 6개는 hooks/gameActions/exploreFlow.ts로
+ * 옮겼다. 이 모듈은 reducer 계층(actionTypes/gameStates)을 import하지 않는다 —
+ * 입력 → 값만 돌려주는 순수 함수(selectEncounterMonster / spawnEnemy /
+ * getFirstVisitReward)만 남는다. tests/explore-flow-equivalence.test.js가 계층 가드.
  */
 import { DB } from '../data/db.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
-import { RELICS, pickWeightedRelics } from '../data/relics.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { BOSS_MONSTERS } from '../data/monsters.js';
-import { AT } from '../reducers/actionTypes.js';
-import { GS } from '../reducers/gameStates.js';
-import { MSG } from '../data/messages.js';
-import { getDiscoveryOdds } from './explorationPacing.js';
-import { findItemByName } from './gameUtils.js';
-import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
-import { applyDynamicDifficulty } from '../systems/DifficultyManager';
-import { CombatEngine } from '../systems/CombatEngine';
-import { scaleProgressionExpReward } from '../data/progressionProfiles';
-import { getBossSignatureDrops } from './bossSignatureHint';
-import { getSignaturePityMultiplier } from './signaturePity';
-import { resolveAbyssDailyDive } from './abyssDailyDive';
-import { activateDevourBonus } from './adventureRelicBonuses.js';
-import { calculateFullStats } from './statsCalculator.js';
+// Track J1: FIRST_VISIT_REWARDS 테이블은 data/firstVisitRewards.ts로 분리됨.
+import { FIRST_VISIT_REWARDS } from '../data/firstVisitRewards.js';
 import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
-import {
-    createDailyProtocol,
-    getCurrentWeeklyProtocol,
-    getProtocolDayKey,
-} from './protocolCycle';
-
-// explorationPacing.ts의 clamp와 동일 구현 (해당 모듈은 export하지 않음) — 소규모 순수
-// 헬퍼는 모듈 간 공유보다 지역 복제가 이 코드베이스의 기존 관례(pacing/aiEventUtils 등).
-const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
 
 const getActiveHuntTargets = (mapData: GameMap, player: Player) => {
     const mapMonsters = Array.isArray(mapData.monsters) ? mapData.monsters : [];
@@ -55,96 +37,6 @@ export const selectEncounterMonster = (encounterPool: string[], mapData: GameMap
         return huntTargets[Math.floor(random() * huntTargets.length)];
     }
     return encounterPool[Math.floor(random() * encounterPool.length)];
-};
-
-// ─────────────────────────────────────────────────────────────────────────
-// 0.5. 주간 프로토콜 리셋
-// ─────────────────────────────────────────────────────────────────────────
-export const resetWeeklyProtocolIfNeeded = (player: Player, dispatch: any) => {
-    const weeklyProtocol = getCurrentWeeklyProtocol(player.weeklyProtocol, new Date());
-    if (player.weeklyProtocol?.lastResetWeek !== weeklyProtocol.lastResetWeek) {
-        dispatch({
-            type: AT.SET_PLAYER,
-            payload: (p: any) => ({
-                ...p,
-                weeklyProtocol,
-            }),
-        });
-    }
-};
-
-// ─────────────────────────────────────────────────────────────────────────
-// 1. 일일 프로토콜 리셋 & 카운트 업 (Phase 1-B)
-// ─────────────────────────────────────────────────────────────────────────
-export const resetDailyProtocolIfNeeded = (player: Player, dispatch: any) => {
-    const today = getProtocolDayKey(new Date());
-    const dp = player.stats?.dailyProtocol;
-    if (!dp || dp.date !== today) {
-        dispatch({ type: AT.SET_DAILY_PROTOCOL, payload: createDailyProtocol(player, new Date()) });
-    }
-};
-
-// ─────────────────────────────────────────────────────────────────────────
-// 2. 탐색 이벤트 롤 — 아노말리, 열쇠 이벤트, 유물 발견 처리 (Phase 1-B)
-// 반환값: 'event_triggered' | 'relic_found' | 'anomaly' | 'nothing' | null (계속 진행)
-// ─────────────────────────────────────────────────────────────────────────
-// 관대함 하향 (2026-07 밸런스 감사): deps.anomalyMult(기본 1 = 무변경)로 anomalyChance에
-//   곱연산 가중을 줄 수 있다. 스카우팅 "이상 신호" 카드(eventActions.ts handleScoutChoice)가
-//   BALANCE.SCOUT_SIGNAL_ANOMALY_MULT(1.5)를 전달 — 전투를 회피하는 "안전 버튼"이 부정
-//   효과(중독/화상) 확률까지 낮춰주지는 않도록 재조정. 일반 탐험 quiet 롤
-//   (runQuietRollAndCombat)은 anomalyMult 미전달 → 기존 확률 분포 완전 불변.
-export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRelics: Relic[], { dispatch, addLog, getFullStats, anomalyMult, rng = Math.random }: any) => {
-    const discoveryOdds = getDiscoveryOdds(player, mapData);
-    const hasKey = (player.inv || []).some((i: any) => i.name === '잊혀진 열쇠');
-    if (hasKey && (typeof mapData.level === 'number' && mapData.level >= 10) && rng() < discoveryOdds.keyEventChance) {
-        dispatch({
-            type: AT.SET_PLAYER,
-            payload: (p: any) => {
-                const keyIdx = p.inv.findIndex((i: any) => i.name === '잊혀진 열쇠');
-                const newInv = [...p.inv];
-                if (keyIdx > -1) newInv.splice(keyIdx, 1);
-                return { ...p, inv: newInv, loc: '고대 보물고' };
-            }
-        });
-        addLog('event', '💎 [잊혀진 열쇠]가 빛나며 숨겨진 <고대 보물고> 입구가 열립니다!');
-        return 'key_event';
-    }
-
-    const effectiveAnomalyChance = clamp(
-        discoveryOdds.anomalyChance * (anomalyMult ?? 1),
-        0,
-        BALANCE.ANOMALY_MAX_CHANCE
-    );
-    if (rng() < effectiveAnomalyChance && player.loc !== '고대 보물고') {
-        const anomalies = [
-            { effect: 'poison',    desc: '자욱한 독안개가 밀려옵니다! (중독)' },
-            { effect: 'mana_regen', desc: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)' },
-            { effect: 'burn',      desc: '피부를 찌르는 산성비가 내립니다. (화상)' }
-        ];
-        const anomaly = anomalies[Math.floor(rng() * anomalies.length)];
-        addLog('warning', `[기상 이변] ${anomaly.desc}`);
-        if (anomaly.effect === 'mana_regen') {
-            const stats = getFullStats();
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * 0.3)) }) });
-        } else {
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])]} ) });
-        }
-        return 'anomaly';
-    }
-
-    // 유물 발견 — PR #8: 프레스티지 rank≥2면 보유 한도 +1(6) · 선택지 4지선다.
-    const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
-    if (playerRelics.length < relicUnlocks.maxRelics && rng() < discoveryOdds.relicChance) {
-        const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
-        if (available.length > 0) {
-            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
-            dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-            addLog('event', '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.');
-            return 'relic_found';
-        }
-    }
-
-    return 'nothing';
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -179,7 +71,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         }
     });
 
-    const bossHunterRelic = playerRelics.find((r: any) => r.effect === 'boss_hunter');
+    const bossHunterRelic = playerRelics.find((r) => r.effect === 'boss_hunter');
     if (bossHunterRelic && mapBossMonsters.length > 0) {
         for (let i = 1; i < Math.max(1, Math.floor(bossHunterRelic.val.spawn || 1)); i += 1) {
             encounterPool = [...encounterPool, ...mapBossMonsters];
@@ -216,7 +108,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // slice 19: HP 곡선 120+30L → BALANCE.MONSTER_HP_BASE(70)+L×32 — 초반 전투
     //   템포 가속 (Lv1 -32%, Lv50 +3%). 골드 base 10 → 16 (초반 휴식 경제).
     //   ATK/EXP 곡선은 불변 (quest pacing 가드 보존).
-    const mStats: any = {
+    const mStats: { [key: string]: any; name: string; hp: number; maxHp: number; atk: number; def: number; exp: number; gold: number } = {
         name: isInfinite ? `[${depth}층] ${baseName}` : baseName,
         baseName,
         level,
@@ -247,6 +139,12 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         if (profile.resistance) mStats.resistance = profile.resistance;
         if (profile.pattern)  mStats.pattern = { ...mStats.pattern, ...profile.pattern };
         if (profile.phase2)   mStats.phase2 = profile.phase2;
+        // A1 (2026-09 감사 G1): statusOnHit / phase3 전파 누락 복구.
+        //   리더는 이미 존재했으나(enemyAI.ts:66 phase3, :239 statusOnHit) spawnEnemy가
+        //   프로파일에서 복사하지 않아 27몬스터의 상태이상 정체성과 보스 3페이즈가
+        //   영구 미발동 상태였다.
+        if (profile.statusOnHit) mStats.statusOnHit = profile.statusOnHit;
+        if (profile.phase3)   mStats.phase3 = profile.phase3;
     }
 
     mStats.isBoss = Boolean(
@@ -330,314 +228,10 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 };
 
 // ─────────────────────────────────────────────────────────────────────────
-// 4. 전투 시작 유물 효과 적용 (Phase 1-B)
-// ─────────────────────────────────────────────────────────────────────────
-export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog, rng = Math.random }: any) => {
-    const activatedPlayer = activateDevourBonus(player);
-    if (activatedPlayer !== player) fullStats = calculateFullStats(activatedPlayer);
-    const combatStartPlayer: any = {
-        ...activatedPlayer,
-        combatFlags: {
-            comboCount: 0,
-            deathSaveUsed: false,
-            voidHeartUsed: Boolean(player.combatFlags?.voidHeartUsed),
-            voidHeartArmed: Boolean(player.combatFlags?.voidHeartArmed),
-            // cycle 158: 'phoenix_revive' (cycle 157) — 부활 1회는 매 전투마다 새로 사용 가능.
-            phoenixUsed: false,
-            // cycle 159: 'entropy_tick' / 'entropy_brand' — turnCount는 매 전투 시작 시 0으로 리셋.
-            turnCount: 0,
-            // cycle 163: 'cooldown_reduce.firstFree' (시간 군주의 왕관) — 매 전투 첫 스킬 무료 가능.
-            firstSkillUsed: false,
-        }
-    };
-
-    // cycle 158: 'battle_start_buff' (전쟁의 북) — 전투 시작 시 ATK +val.atk (val.turns 턴).
-    //   tempBuff.atk는 multiplier (1 + atk) 로 statsCalculator에서 적용.
-    const startBuffRelic = playerRelics.find((r: any) => r.effect === 'battle_start_buff');
-    if (startBuffRelic) {
-        const atkBonus = startBuffRelic.val?.atk || 0;
-        const turns = startBuffRelic.val?.turns || 1;
-        combatStartPlayer.tempBuff = {
-            atk: atkBonus,
-            def: 0,
-            turn: turns,
-            name: 'battle_start_buff',
-        };
-        addLog('event', `[전쟁의 북] 전투 시작 ATK +${Math.round(atkBonus * 100)}% (${turns}턴)`);
-    }
-
-    const startHealRelic = playerRelics.find((r: any) => r.effect === 'battle_start_heal');
-    if (startHealRelic) {
-        const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * startHealRelic.val));
-        combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp, (combatStartPlayer.hp || 0) + heal);
-        addLog('heal', `[재생 코어] 전투 시작 회복 +${heal} HP`);
-    }
-
-    const cursedPowerRelic = playerRelics.find((r: any) => r.effect === 'cursed_power');
-    if (cursedPowerRelic) {
-        const selfDamage = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * cursedPowerRelic.val.hp_cost));
-        combatStartPlayer.hp = Math.max(1, (combatStartPlayer.hp || 1) - selfDamage);
-        addLog('warning', `[저주받은 반지] 전투 시작 대가 -${selfDamage} HP`);
-    }
-
-    // 유물: 혼돈의 심장 (chaos_relic) — 전투 시작 시 랜덤 효과 발동
-    const chaosRelic = playerRelics.find((r: any) => r.effect === 'chaos_relic');
-    if (chaosRelic) {
-        const roll = Math.floor(rng() * 3);
-        if (roll === 0) {
-            const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * 0.1));
-            combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp, (combatStartPlayer.hp || 0) + heal);
-            addLog('heal', `[혼돈의 심장] 혼돈의 기운 — HP +${heal} 회복!`);
-        } else if (roll === 1) {
-            const existing = combatStartPlayer.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
-            combatStartPlayer.tempBuff = { ...existing, atk: (existing.atk ?? 0) + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
-            addLog('event', `[혼돈의 심장] 혼돈의 기운 — ATK +25% (3턴)!`);
-        } else {
-            const existing = combatStartPlayer.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
-            combatStartPlayer.tempBuff = { ...existing, def: (existing.def ?? 0) + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
-            addLog('event', `[혼돈의 심장] 혼돈의 기운 — DEF +25% (3턴)!`);
-        }
-    }
-
-    const chaosBuffRelic = playerRelics.find((r: any) => r.effect === 'chaos_buff');
-    if (chaosBuffRelic) {
-        const existingBuff = { atk: 0, def: 0, turn: 0, name: null, ...(combatStartPlayer.tempBuff || {}) };
-        const rollAtk = rng() < 0.5;
-        const baseAtk = existingBuff.name === '혼돈의 보석' ? 0 : existingBuff.atk;
-        const baseDef = existingBuff.name === '혼돈의 보석' ? 0 : existingBuff.def;
-        combatStartPlayer.tempBuff = {
-            atk: baseAtk + (rollAtk ? chaosBuffRelic.val : 0),
-            def: baseDef + (rollAtk ? 0 : chaosBuffRelic.val),
-            turn: Math.max(existingBuff.turn || 0, 3),
-            name: '혼돈의 보석'
-        };
-        addLog('event', `[혼돈의 보석] ${rollAtk ? 'ATK' : 'DEF'} +${Math.round(chaosBuffRelic.val * 100)}% 버프`);
-    }
-
-    return combatStartPlayer;
-};
-
-// ─────────────────────────────────────────────────────────────────────────
-// 4.2. quiet 롤 → 유물 보장 → 전투 스폰 (AI 이벤트 제외 파이프)
-//   exploreActions.ts의 explore()가 AI 이벤트 롤 실패 후 호출하는 나머지 파이프이자,
-//   탐험 스카우팅(2026-07) "짙은 안개" 카드가 그대로 재사용하는 공유 지점이다. AI_SERVICE
-//   (firebase 의존)를 참조하지 않도록 exploreUtils.ts에 둔다 — eventActions.ts 단위 테스트가
-//   firebase import 체인 없이 이 함수를 로드할 수 있어야 하기 때문 (campfire-node.test.js와
-//   동일한 제약).
-//   2026-07 — 원정 보스 접근 게이지: commitExploreOutcome에 mapData를 전달해 게이지를
-//   누적하지만, "짙은 안개"(스카우팅 unknown 카드) 경로로 재호출될 때는 이미 스카우팅
-//   카드가 뜬 시점(같은 explore() 턴)에 게이지가 1회 누적됐으므로 중복 누적을 막기 위해
-//   deps.skipBossGaugeAdvance:true를 전달받으면 mapData를 넘기지 않는다.
-// ─────────────────────────────────────────────────────────────────────────
-export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome, skipBossGaugeAdvance, rng = Math.random }: any) => {
-    const playerRelics = player.relics || [];
-    const quietChance = getDiscoveryOdds(player, mapData).quietChance;
-    const gaugeMapData = skipBossGaugeAdvance ? null : mapData;
-
-    if (rng() < quietChance) {
-        const quietResult = rollExplorationEvent(player, mapData, playerRelics, { dispatch, addLog, getFullStats, rng });
-        if (quietResult !== 'nothing') {
-            commitExploreOutcome(quietResult, null, gaugeMapData);
-            return;
-        }
-        commitExploreOutcome('nothing', null, gaugeMapData);
-        addLog('info', MSG.EXPLORE_QUIET);
-        return;
-    }
-
-    // 전투 직전 유물 발견 기회
-    const firstRelicPity = playerRelics.length === 0
-        && (player.stats?.exploreState?.sinceRelic || 0) >= BALANCE.FIRST_RELIC_PITY_EXPLORES;
-    const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
-    if (playerRelics.length < relicUnlocks.maxRelics
-        && (firstRelicPity || rng() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
-        const available = RELICS.filter((r: any) => !playerRelics.some((pr: any) => pr.id === r.id));
-        if (available.length > 0) {
-            commitExploreOutcome('relic_found', null, gaugeMapData);
-            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
-            dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-            addLog('event', MSG.EXPLORE_RELIC_FOUND);
-            return;
-        }
-    }
-
-    // 몬스터 생성
-    const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog }, { rng });
-    let { mStats } = applyDynamicDifficulty(rawStats, player, addLog);
-
-    // 무한 심연 모드
-    if (mapData.level === 'infinite') {
-        const floor = (player.stats?.abyssFloor || 0) + 1;
-        const abyssScale = 1 + (floor - 1) * 0.08;
-        mStats = {
-            ...mStats,
-            hp: Math.floor(mStats.hp * abyssScale),
-            maxHp: Math.floor(mStats.maxHp * abyssScale),
-            atk: Math.floor(mStats.atk * abyssScale),
-            exp: Math.floor(mStats.exp * (1 + (floor - 1) * 0.12)),
-            gold: Math.floor(mStats.gold * (1 + (floor - 1) * 0.1)),
-            level: 50 + floor,
-        };
-        if (BALANCE.ABYSS_BOSS_FLOORS.includes(floor)) {
-            const bossName = BALANCE.ABYSS_BOSS_NAMES[floor] || '혼돈의 수호자';
-            const bossProfile = DB.MONSTERS?.[bossName];
-            mStats = {
-                ...mStats,
-                name: `[${floor}층 보스] ${bossName}`,
-                baseName: bossName,
-                isBoss: true,
-                hp: Math.floor(mStats.hp * (bossProfile?.hpMult || 2.0)),
-                maxHp: Math.floor(mStats.maxHp * (bossProfile?.hpMult || 2.0)),
-                atk: Math.floor(mStats.atk * (bossProfile?.atkMult || 1.5)),
-                exp: Math.floor(mStats.exp * (bossProfile?.expMult || 2.5)),
-                gold: Math.floor(mStats.gold * (bossProfile?.goldMult || 2.5)),
-                dropMod: bossProfile?.dropMod || 2.5,
-                weakness: bossProfile?.weakness,
-                resistance: bossProfile?.resistance,
-                phase2: bossProfile?.phase2,
-                phase3: bossProfile?.phase3,
-            };
-            addLog('critical', MSG.ABYSS_BOSS_APPEAR(bossName));
-        } else if (floor % 5 === 0) {
-            addLog('warning', MSG.ABYSS_FLOOR_WARNING(floor));
-        }
-
-        // 리텐션 훅 — 심연 데일리 다이브: 하루 첫 ABYSS_DAILY_DIVE_COMBAT_COUNT(5)전투에
-        // EXP/골드 배율 적용 (dailyProtocol과 동일한 날짜 문자열 판정 — 탐험마다 리셋 금지,
-        // CLAUDE.md §8-4). multiplierActive일 때만 dispatch — 카운트 소진 후에는 상태 변화가
-        // 없어 불필요한 SET_PLAYER(및 Firestore autosave 트리거)를 매 전투마다 반복하지 않는다.
-        // 안내 로그는 오늘 첫 버프 전투(isFirstOfDay)에 1회만 (5연속 스팸 방지).
-        const today = getProtocolDayKey(new Date());
-        const { multiplierActive, isFirstOfDay, nextAbyssDailyDive } = resolveAbyssDailyDive(player, today);
-        if (multiplierActive) {
-            dispatch({
-                type: AT.SET_PLAYER,
-                payload: (p: any) => ({ ...p, stats: { ...(p.stats || {}), abyssDailyDive: nextAbyssDailyDive } }),
-            });
-            mStats = {
-                ...mStats,
-                exp: Math.floor(mStats.exp * BALANCE.ABYSS_DAILY_DIVE_MULT),
-                gold: Math.floor(mStats.gold * BALANCE.ABYSS_DAILY_DIVE_MULT),
-            };
-            if (isFirstOfDay) {
-                addLog('event', MSG.ABYSS_DAILY_DIVE_START(BALANCE.ABYSS_DAILY_DIVE_MULT));
-            }
-        }
-    }
-
-    const fullStats = getFullStats();
-    commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog, rng }), gaugeMapData);
-    dispatch({ type: AT.SET_ENEMY, payload: mStats });
-    dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
-    addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
-    // anticipate 레이어: boss가 signature를 드롭 가능한 경우 pre-combat 예고
-    if (mStats.isBoss) {
-        const sigDrops = getBossSignatureDrops(mStats.baseName);
-        if (sigDrops.length > 0) {
-            const top = sigDrops[0];
-            const topPct = Math.max(1, Math.round(top.rate * 100));
-            addLog('legendary', MSG.SIGNATURE_BOSS_HINT(mStats.baseName, sigDrops.length, top.name, topPct));
-            const pityMult = getSignaturePityMultiplier(player.stats?.signaturePity);
-            if (pityMult > 1) {
-                const pct = Math.round((pityMult - 1) * 100);
-                addLog('legendary', MSG.SIGNATURE_PITY_RESONANCE(pct, player.stats?.signaturePity));
-            }
-        }
-    }
-    if (typeof addStoryLog === 'function') addStoryLog('encounter', { loc: player.loc, name: baseName });
-};
-
-// ─────────────────────────────────────────────────────────────────────────
-// 4.5. 발견 체인 체크 — 지역 조합 방문 시 보상 (Discovery Chains)
-// ─────────────────────────────────────────────────────────────────────────
-export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLog }: any) => {
-    const chains = BALANCE.DISCOVERY_CHAINS;
-    if (!chains) return;
-    const visited = new Set([...(player.stats?.visitedMaps || []), loc]);
-    const completed = player.stats?.discoveryChains || [];
-
-    chains.forEach((chain: any) => {
-        if (completed.includes(chain.id)) return;
-        if (!chain.locations.every((l: any) => visited.has(l))) return;
-
-        // 체인 달성!
-        const rewardParts: any[] = [];
-        if (chain.reward.gold) rewardParts.push(`${chain.reward.gold}G`);
-        if (chain.reward.exp) rewardParts.push(`${chain.reward.exp} EXP`);
-        if (chain.reward.item) rewardParts.push(chain.reward.item);
-        if (chain.reward.premiumCurrency) rewardParts.push(`${chain.reward.premiumCurrency} 크리스탈`);
-
-        addLog('event', `🔍 ${chain.desc}`);
-        addLog('success', `🏆 [발견 체인 완료] ${chain.label}! 보상: ${rewardParts.join(', ')}`);
-        dispatch({
-            type: AT.SET_PLAYER,
-            payload: (p: any) => {
-                const updated = { ...p };
-                updated.gold = (updated.gold || 0) + (chain.reward.gold || 0);
-                const expResult = CombatEngine.applyExpGain(
-                    updated,
-                    scaleProgressionExpReward(updated, chain.reward.exp || 0),
-                );
-                Object.assign(updated, expResult.updatedPlayer);
-                if (chain.reward.premiumCurrency) {
-                    updated.premiumCurrency = (updated.premiumCurrency || 0) + chain.reward.premiumCurrency;
-                }
-                if (chain.reward.item) {
-                    // cycle 180: 이전엔 존재하지 않는 allItems 필드를 lookup해 silent miss — DB.ITEMS는 object
-                    //   { weapons, armors, ... }. 기존 lookup이 항상 undefined 반환해 cycle 177
-                    //   reward.item fix 후에도 chain reward 아이템이 silent 누락이던 회귀 fix.
-                    //   gameUtils.findItemByName(getAllItems() lookup) 사용으로 정합.
-                    const itemData = findItemByName(chain.reward.item);
-                    // cycle 182: player.maxInv (PremiumShop 확장)을 우선 — 기존엔 BALANCE.INV_MAX_SIZE
-                    // 만 사용해 확장된 인벤(25칸)에서도 20칸 기준으로 reward skip 가능했음.
-                    const invCap = (updated.maxInv as number) || (BALANCE.INV_MAX_SIZE || 20);
-                    if (itemData && (updated.inv || []).length < invCap) {
-                        updated.inv = [...(updated.inv || []), withCanonicalEquipmentBaseIdentity({
-                            ...itemData,
-                            id: `disc_${Date.now()}`,
-                        })];
-                    }
-                }
-                updated.stats = {
-                    ...updated.stats,
-                    discoveryChains: [...(updated.stats?.discoveryChains || []), chain.id],
-                };
-                return updated;
-            },
-        });
-    });
-};
-
-// ─────────────────────────────────────────────────────────────────────────
 // 5. 지역 최초 방문 보상 (Phase 2-C)
 // 처음 방문하는 지역에 고정 보상을 지급합니다.
+// Track J1 (2026-09): 테이블 본체는 data/firstVisitRewards.ts로 분리됨.
 // ─────────────────────────────────────────────────────────────────────────
-// slice 23: 초반(맵 Lv≤10) 5지역 첫 방문 EXP 절반 — 레벨 간격 감속 (학습
-//   구간 확보). 골드는 유지 (휴식/상점 경제 불변). 중후반 지역은 nextExp가
-//   충분히 커서 그대로.
-const FIRST_VISIT_REWARDS: any = {
-    '고요한 숲':    { gold: 100,  exp: 25,  msg: '고요한 숲에 처음 발을 들였습니다. 골드 100 · 경험 25' },
-    '서쪽 평원':   { gold: 150,  exp: 30,  msg: '서쪽 평원에 처음 도착했습니다. 골드 150 · 경험 30' },
-    '호수의 신전': { gold: 200,  exp: 50,  msg: '호수의 신전을 처음 발견했습니다. 골드 200 · 경험 50' },
-    '잊혀진 폐허': { gold: 200,  exp: 60,  msg: '잊혀진 폐허에 처음 들어섰습니다. 골드 200 · 경험 60' },
-    '버려진 광산': { gold: 250,  exp: 80,  msg: '버려진 광산의 첫 탐색을 시작했습니다. 골드 250 · 경험 80' },
-    '어둠의 동굴': { gold: 300,  exp: 200, msg: '어둠의 동굴에 처음 들어섰습니다. 골드 300 · 경험 200' },
-    '화염의 협곡': { gold: 400,  exp: 300, msg: '화염의 협곡에 처음 도착했습니다. 골드 400 · 경험 300' },
-    '용의 둥지':   { gold: 500,  exp: 400, msg: '용의 둥지를 처음 발견했습니다. 골드 500 · 경험 400' },
-    '사막 오아시스':{ gold: 350, exp: 250, msg: '사막 오아시스에 처음 도착했습니다. 골드 350 · 경험 250' },
-    '피라미드':    { gold: 450,  exp: 350, msg: '피라미드에 처음 들어섰습니다. 골드 450 · 경험 350' },
-    '얼음 성채':   { gold: 400,  exp: 300, msg: '얼음 성채의 첫 탐색을 시작했습니다. 골드 400 · 경험 300' },
-    '빙하 심연':   { gold: 600,  exp: 500, msg: '빙하 심연을 처음 발견했습니다. 골드 600 · 경험 500' },
-    '북부 요새':   { gold: 350,  exp: 280, msg: '북부 요새에 처음 도착했습니다. 골드 350 · 경험 280' },
-    '기계 폐도':   { gold: 500,  exp: 400, msg: '기계 폐도의 첫 탐색을 시작했습니다. 골드 500 · 경험 400' },
-    '천공 정원':   { gold: 600,  exp: 500, msg: '천공 정원에 처음 들어섰습니다. 골드 600 · 경험 500' },
-    '심해 회랑':   { gold: 700,  exp: 600, msg: '심해 회랑을 처음 발견했습니다. 골드 700 · 경험 600' },
-    '에테르 관문': { gold: 800,  exp: 700, msg: '에테르 관문을 처음 열었습니다. 골드 800 · 경험 700' },
-    '암흑 성':     { gold: 500,  exp: 400, msg: '암흑 성에 처음 들어섰습니다. 골드 500 · 경험 400' },
-    '마왕성':      { gold: 1000, exp: 800, msg: '마왕성에 처음 도착했습니다. 운명이 기다립니다. 골드 1,000 · 경험 800' },
-    '혼돈의 심연': { gold: 500,  exp: 500, msg: '혼돈의 심연에 처음 들어섰습니다. 끝없는 싸움이 시작됩니다. 골드 500 · 경험 500' },
-    '고대 보물고': { gold: 300,  exp: 200, msg: '고대 보물고를 처음 발견했습니다. 골드 300 · 경험 200' },
-};
 
 /**
  * 지역 첫 방문 여부를 확인하고, 해당되면 보상 객체를 반환합니다.

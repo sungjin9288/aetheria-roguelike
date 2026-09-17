@@ -4,7 +4,7 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { AI_SERVICE } from '../../services/aiService';
 import { toArray } from '../../utils/gameUtils';
-import { runQuietRollAndCombat } from '../../utils/exploreUtils';
+import { runQuietRollAndCombat } from './exploreFlow';
 import { canOfferOptionalExploreDecision, getMapPacingProfile, getNarrativeEventChance } from '../../utils/explorationPacing';
 import { getRunBuildProfile } from '../../utils/runProfileUtils';
 import { enrichSnapshotWithDifficulty } from '../../systems/DifficultyManager';
@@ -13,10 +13,11 @@ import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
-import { shouldTriggerScout, buildScoutEvent } from '../../utils/scoutEvents';
+import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../../utils/scoutEvents';
 import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
-import { resolveExploreActionRandom } from '../../utils/exploreActionSeed';
+import type { Player } from '../../types';
+import { resolveExploreActionRandom, resolveExploreActionSeed } from '../../utils/exploreActionSeed';
 import { BOUNDED_ENCOUNTER_PACK_ENABLED, BOUNDED_ENCOUNTERS } from '../../data/boundedEncounters';
 import { buildBoundedEncounterContext, selectBoundedEncounter } from '../../utils/boundedEncounterSelector';
 import { buildBoundedEncounterEvent } from '../../utils/boundedEncounterEvent';
@@ -38,7 +39,7 @@ const takeHarnessExploreSeed = (): number | undefined => {
 /**
  * 캠프파이어/스카우팅 이후 AI 랜덤 이벤트 체크 (explore() 전용 — AI_SERVICE는 firebase에
  * 의존하므로 eventActions.ts의 스카우팅 "짙은 안개" 카드는 이 함수를 거치지 않고
- * runQuietRollAndCombat(exploreUtils.ts)만 재사용한다 — firebase-free 단위 테스트 유지).
+ * runQuietRollAndCombat(exploreFlow.ts)만 재사용한다 — firebase-free 단위 테스트 유지).
  * AI 이벤트가 발동하지 않으면 quiet 롤 이하 파이프(runQuietRollAndCombat)로 이어진다.
  */
 const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExploreOutcome }: any, optionalDecisionAllowed: boolean) => {
@@ -97,11 +98,9 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
                     rhythm: pacingProfile.label
                 }
             }, rng);
-            if (eventData?.exhausted) {
-                commitExploreOutcome('nothing', null, mapData);
-                dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
-                addLog('warning', eventData.message || MSG.AI_QUOTA_REACHED);
-            } else if (eventData && eventData.desc) {
+            // (구) `eventData.exhausted` 분기는 생산자가 없는 죽은 경로였다 — 한도 초과는
+            //   aiService가 폴백 이벤트에 fallbackReason:'quota'를 붙여 아래 분기로 들어온다.
+            if (eventData && eventData.desc) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) addLog('info', eventData.fallbackMessage);
                 const normalizedChoices = toArray(eventData.choices)
@@ -150,7 +149,7 @@ export const createExploreActions = (deps: any, shared: any) => {
                     _chainId: chain.id,
                     _chainStep: step.step,
                 }});
-                addLog('event', `📜 [${chain.label}] ${step.event.desc}`);
+                addLog('event', MSG.EXPLORE_CHAIN_EVENT(chain.label, step.event.desc));
                 return;
             }
 
@@ -165,7 +164,19 @@ export const createExploreActions = (deps: any, shared: any) => {
                 player.stats,
                 player.activeExpedition,
             );
-            if (optionalDecisionAllowed && mapData.type === 'dungeon' && actionRng() < campfireChance) {
+            // 2026-09 D2 — "밀어붙인다"를 고른 직후 1회는 모닥불이 나타나지 않는다.
+            //   플래그는 이번 탐험에서 소비되며(성공/실패 무관), 아래 롤을 건너뛴다.
+            const campfireBlocked = Boolean(player.stats?.nextExploreCampfireBlocked);
+            if (campfireBlocked) {
+                dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (p: Player) => ({
+                        ...p,
+                        stats: { ...(p.stats || {}), nextExploreCampfireBlocked: false },
+                    }),
+                });
+            }
+            if (!campfireBlocked && optionalDecisionAllowed && mapData.type === 'dungeon' && actionRng() < campfireChance) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const campfireEvent = buildCampfireEvent(getFullStats());
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
@@ -204,6 +215,32 @@ export const createExploreActions = (deps: any, shared: any) => {
             }
 
             await runExplorePostDecisionRoll(mapData, { ...deps, rng: actionRng }, shared, optionalDecisionAllowed);
+        },
+
+        /**
+         * 2026-09 D1 — 플레이어가 직접 부르는 정찰.
+         *  - 안전지대/마을과 전투·이벤트 중에는 제공하지 않는다 (getScoutAvailability 단일 판정).
+         *  - 비용: 골드(지역 레벨에 따라 완만 상승) 또는 에테르 거울 scout_charges 무료 횟수.
+         *  - 정찰하는 동안에도 시간은 흐른다 — 보스 접근 게이지를 1칸 올린다(advanceBossGauge 재사용).
+         *  - 카드 자체와 선택 해소는 랜덤 발동과 완전히 같은 경로(buildScoutEvent →
+         *    eventActions.handleScoutChoice)를 탄다 — 신규 스폰/해소 로직 없음.
+         *
+         * 2026-09 N1b — 여기서는 "불가 사유 안내"만 하고, 실제 비용·게이지·카드 개방은
+         *   AT.RESOLVE_SCOUT 단일 전이가 소유한다(reducers/handlers/exploreHandlers.ts).
+         *   훅이 SET_PLAYER → SET_GAME_STATE → SET_EVENT를 연달아 쏘던 예전 구조는 리렌더
+         *   전에 두 번 눌리면 카드 1장에 골드/무료 횟수가 2번 빠졌다. 리듀서가 같은 판정을
+         *   자기 상태로 다시 실행하므로 두 번째 전이는 state를 그대로 돌려준다(전투 경로의
+         *   claimCombatAction과 같은 위험을 이 프로젝트 방식으로 막는다).
+         */
+        scout: () => {
+            const mapData = DB.MAPS[player.loc];
+            const availability = getScoutAvailability(player, mapData, gameState === GS.IDLE);
+            if (!availability.available) return addLog('error', availability.reason || MSG.SCOUT_BUSY);
+
+            dispatch({
+                type: AT.RESOLVE_SCOUT,
+                payload: { seed: resolveExploreActionSeed(rng), now: Date.now() },
+            });
         },
     };
 };

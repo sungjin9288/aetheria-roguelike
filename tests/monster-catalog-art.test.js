@@ -207,7 +207,33 @@ test('every canonical monster resolves to one unique exact RGBA illustration', a
     assert.equal(getMonsterVisual('등록되지 않은 몬스터'), null);
 });
 
-test('monster art generator reproduces the canonical manifest and runtime bytes', async (t) => {
+// 2026-09-17 (PR #31): 재현성 판정을 PNG 인코딩 바이트가 아니라 디코딩 픽셀(RGBA)로 한다.
+//   macOS에서 생성·추적된 254개 PNG 중 20개는 Linux Pillow가 다른 압축 바이트를 내지만 픽셀은
+//   254/254 동일했다(장비/시그니처 아트가 a2e9bbc에서 택한 것과 같은 cross-platform 계약).
+//   추적된 manifest의 sha256 ↔ 추적된 파일 바이트 결합(provenance)은 그대로 검증한다.
+const stripEntryHashes = (manifest) => ({
+    ...manifest,
+    entries: Object.fromEntries(Object.entries(manifest.entries).map(([name, entry]) => {
+        const { sha256: _ignored, ...rest } = entry;
+        return [name, rest];
+    })),
+});
+
+const PIXEL_COMPARE_SCRIPT = `
+import json, sys
+from pathlib import Path
+from PIL import Image
+generated_root, tracked_root = sys.argv[1], sys.argv[2]
+mismatches = []
+for relative in json.load(sys.stdin):
+    a = Image.open(Path(generated_root) / relative).convert('RGBA')
+    b = Image.open(Path(tracked_root) / relative).convert('RGBA')
+    if a.size != b.size or a.tobytes() != b.tobytes():
+        mismatches.append(relative)
+print(json.dumps(mismatches))
+`;
+
+test('monster art generator reproduces the canonical manifest and runtime pixels', async (t) => {
     const temporaryRoot = await mkdtemp(path.join(os.tmpdir(), 'aetheria-monster-art-'));
     t.after(() => rm(temporaryRoot, { recursive: true, force: true }));
     const publicRoot = path.join(temporaryRoot, 'public');
@@ -220,16 +246,22 @@ test('monster art generator reproduces the canonical manifest and runtime bytes'
 
     assert.equal(result.status, 0, result.stderr || result.stdout);
     const generated = JSON.parse(await readFile(manifestPath, 'utf8'));
-    assert.deepEqual(generated, monsterArtManifest);
+    // 구조·경로·분류·카탈로그 해시는 플랫폼 무관하게 완전히 같아야 한다.
+    assert.deepEqual(stripEntryHashes(generated), stripEntryHashes(monsterArtManifest));
 
-    for (const entry of Object.values(generated.entries)) {
+    // provenance: 추적된 manifest의 sha256는 추적된 런타임 파일의 실제 바이트와 결합돼 있다.
+    for (const entry of Object.values(monsterArtManifest.entries)) {
         const relativePath = entry.runtimePath.replace(/^\//, '');
-        assert.deepEqual(
-            await readFile(path.join(publicRoot, relativePath)),
-            await readFile(path.join(ROOT, 'public', relativePath)),
-            entry.runtimePath,
-        );
+        assert.equal(sha256(await readFile(path.join(ROOT, 'public', relativePath))), entry.sha256, entry.runtimePath);
     }
+
+    // 재현성: 생성본과 추적본은 디코딩 픽셀이 동일해야 한다 (PNG 인코더 바이트는 플랫폼별로 다를 수 있다).
+    const relativePaths = Object.values(generated.entries).map((entry) => entry.runtimePath.replace(/^\//, ''));
+    const compare = spawnSync('python3', ['-c', PIXEL_COMPARE_SCRIPT, publicRoot, path.join(ROOT, 'public')], {
+        cwd: ROOT, encoding: 'utf8', input: JSON.stringify(relativePaths),
+    });
+    assert.equal(compare.status, 0, compare.stderr || compare.stdout);
+    assert.deepEqual(JSON.parse(compare.stdout), [], '생성본과 추적본의 픽셀이 다른 런타임 PNG');
 });
 
 test('approved full art verification includes the complete monster surface', async () => {

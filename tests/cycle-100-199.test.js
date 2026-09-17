@@ -1947,11 +1947,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const { fileURLToPath } = await import('node:url');
       const HERE = path.dirname(fileURLToPath(import.meta.url));
       const ROOT = path.join(HERE, '..');
-      const src = await readFile(path.join(ROOT, 'src/utils/exploreUtils.ts'), 'utf8');
+      // Wave 4 N1: checkDiscoveryChains(체인 보상 lookup)이 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const src = await readFile(path.join(ROOT, 'src/hooks/gameActions/exploreFlow.ts'), 'utf8');
       // 코멘트의 경고는 OK, 실제 코드에서 호출 안 되어야 함.
       // 'DB.ITEMS?.allItems?.find' 또는 'DB.ITEMS.allItems.find' 패턴이 .find 호출로 이어지면 안 됨.
       assert.doesNotMatch(src, /DB\.ITEMS\??\.\s*allItems\??\.\s*find/,
-          'exploreUtils.ts에 DB.ITEMS.allItems.find 잘못된 lookup이 없어야 함');
+          'exploreFlow.ts에 DB.ITEMS.allItems.find 잘못된 lookup이 없어야 함');
   });
 }
 
@@ -2088,10 +2089,10 @@ import { readFile, readdir } from 'node:fs/promises';
       return out;
   };
 
-  test('cycle 182: src/utils/exploreUtils.ts 의 chain reward cap에 maxInv 우선 사용', async () => {
-      const src = await readFile(path.join(SRC, 'utils/exploreUtils.ts'), 'utf8');
+  test('cycle 182: chain reward cap에 maxInv 우선 사용 (Wave 4 N1: exploreFlow.ts 소유)', async () => {
+      const src = await readFile(path.join(SRC, 'hooks/gameActions/exploreFlow.ts'), 'utf8');
       // chain reward 분기에 invCap 변수 또는 maxInv 폴백 패턴 명시.
-      assert.match(src, /maxInv/, 'exploreUtils.ts에 maxInv 참조 있어야 함');
+      assert.match(src, /maxInv/, 'exploreFlow.ts에 maxInv 참조 있어야 함');
       assert.match(src, /invCap/, 'cycle 182 invCap 변수 도입 명시');
   });
 

@@ -29,12 +29,12 @@ interface TintableItem {
 }
 
 // scripts/generate_exact_avatar_style_equipment_items.py의 hint 리스트와 동기 유지
-const RUST_HINTS: any = ['녹슨', '낡은'];
-const HOLY_HINTS: any = ['성', '천공', '천상', '팔라딘', '심판', '성광'];
-const ARCANE_HINTS: any = ['마법', '주문', '룬', '그리모어', '마도', '현자', '아크', '에테르', '차원'];
-const SHADOW_HINTS: any = ['암흑', '어둠', '심연', '공허', '혼돈', '그림자'];
-const NATURE_HINTS: any = ['세계수', '정령', '숲', '엘프', '레인저', '자연', '사냥'];
-const WOOD_HINTS: any = ['나무', '목재', '곤봉', '완드'];
+const RUST_HINTS = ['녹슨', '낡은'];
+const HOLY_HINTS = ['성', '천공', '천상', '팔라딘', '심판', '성광'];
+const ARCANE_HINTS = ['마법', '주문', '룬', '그리모어', '마도', '현자', '아크', '에테르', '차원'];
+const SHADOW_HINTS = ['암흑', '어둠', '심연', '공허', '혼돈', '그림자'];
+const NATURE_HINTS = ['세계수', '정령', '숲', '엘프', '레인저', '자연', '사냥'];
+const WOOD_HINTS = ['나무', '목재', '곤봉', '완드'];
 
 // cycle 359: 불 / 얼음 / 화염속성 3 unreachable aliases 제거 — items.ts의 모든
 //   item.elem은 화염 / 냉기 / 빛 / 자연 / 대지 / 어둠 / 에테르 / 바람 / 물리 8종만

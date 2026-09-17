@@ -12,6 +12,7 @@ import {
     startRewardedAdSession,
     type RewardedAdSessionPhase,
 } from '../platform/rewardedAdSession';
+import type { GameAction } from '../reducers/gameReducer';
 import type { ExpeditionSummary, Player } from '../types/player';
 import {
     getReturnSupplyRewardStatus,
@@ -49,7 +50,7 @@ export const useReturnSupplyRewardedAd = ({
     summary: ExpeditionSummary | null;
     debriefOpen: boolean;
     player: Player;
-    dispatch: (action: any) => void;
+    dispatch: (action: GameAction) => void;
     flushLocalSave?: () => Promise<unknown> | unknown;
     port?: RewardedAdPort;
     configuredGroupId?: unknown;

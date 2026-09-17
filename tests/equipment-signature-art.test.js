@@ -13,6 +13,7 @@ import { ITEMS } from '../src/data/items.ts';
 import { getWeaponVisualKey } from '../src/utils/itemVisuals.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
 const MANIFEST_PATH = path.join(ROOT, 'src/data/equipmentArtManifest.json');
 const PROVENANCE_PATH = path.join(ROOT, 'docs/evidence/art/equipment-signature-mythic-provenance.json');
 const ANSWER_KEY_PATH = path.join(ROOT, 'docs/evidence/art/equipment-signature-mythic-contact-sheet-answer-key.json');

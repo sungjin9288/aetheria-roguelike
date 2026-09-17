@@ -10,7 +10,7 @@ import type { Player, Relic, Monster } from '../types/index.js';
  */
 export const relicEffectMethods: any = {
     applyCritMpRestore(player: Player, relics: Relic[], logs: any[]) {
-        const critMpRelic = relics.find((relic: any) => relic.effect === 'crit_mp_regen');
+        const critMpRelic = relics.find((relic) => relic.effect === 'crit_mp_regen');
         if (!critMpRelic) return player;
 
         const nextMp = Math.min(this.getEffectiveMaxMp(player, relics), (player.mp || 0) + critMpRelic.val);
@@ -32,7 +32,7 @@ export const relicEffectMethods: any = {
         let phoenixTempBuff: any = null;
 
         if (nextHp <= 0) {
-            const deathSaveRelic = relics.find((relic: any) => relic.effect === 'death_save');
+            const deathSaveRelic = relics.find((relic) => relic.effect === 'death_save');
             // cycle 153: 시너지 'absolute_immortal' — reviveCount 2회 부활. effect-name primary + bonus-key fallback.
             const absoluteImmortalSyn = activeSynergies.find((s: any) =>
                 s.bonus.effect === 'absolute_immortal' || s.bonus.reviveCount);
@@ -62,7 +62,7 @@ export const relicEffectMethods: any = {
                 const reviveMsg = reviveUsedCount > 0 ? `[절대 불사] ${reviveUsedCount + 1}회 부활!` : '[불사의 의지] 치명상을 버텼습니다!';
                 logs.push({ type: 'event', text: reviveMsg });
             } else {
-                const voidHeartRelic = relics.find((relic: any) => relic.effect === 'void_heart');
+                const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
                 if (voidHeartRelic && !flags.voidHeartUsed) {
                     nextHp = 1;
                     flags.voidHeartUsed = true;
@@ -72,7 +72,7 @@ export const relicEffectMethods: any = {
                     // cycle 186: 'reviveTokens' (PremiumShop revive) — HP 0 도달 시 token 1개 소비해 즉시 부활.
                     //   spec: 'HP/MP 50% 회복 후 즉시 부활'. token 음수 가드.
                     //   기존엔 token 구매되지만 소비 로직 없어 dead purchase 회귀.
-                    const reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0);
+                    const reviveTokens = Math.max(0, Number(player.reviveTokens) || 0);
                     if (reviveTokens > 0) {
                         nextHp = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * 0.5);
                         // reviveTokens 소비는 updatedPlayer 합류 시점에 처리 (return 직전).
@@ -81,7 +81,7 @@ export const relicEffectMethods: any = {
                     } else {
                     // cycle 157: 'phoenix_revive' (불사조의 깃털) — HP 0 도달 시 1회 부활 (HP healRatio% 회복).
                     // cycle 162: atkBuff/duration tempBuff 적용 추가 — 부활 직후 N턴 동안 ATK 증폭.
-                    const phoenixRelic = relics.find((relic: any) => relic.effect === 'phoenix_revive');
+                    const phoenixRelic = relics.find((relic) => relic.effect === 'phoenix_revive');
                     if (phoenixRelic && !flags.phoenixUsed) {
                         const healRatio = phoenixRelic.val?.healRatio || 0.3;
                         nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healRatio));
@@ -105,7 +105,7 @@ export const relicEffectMethods: any = {
                         //   플래그는 handleDefeat(새 런 시작)/ASCEND에서 자연 리셋(freshPlayer가
                         //   INITIAL_STATE.player 기반이라 별도 처리 불필요).
                         const mirrorEffects = getMirrorEffects((player as any).meta);
-                        if (mirrorEffects.reviveEnabled && !(player as any).mirrorReviveUsed) {
+                        if (mirrorEffects.reviveEnabled && !player.mirrorReviveUsed) {
                             nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * mirrorEffects.reviveHpRatio));
                             flags.mirrorReviveUsed = true;
                             logs.push({ type: 'event', text: MSG.MIRROR_REVIVE });
@@ -116,11 +116,11 @@ export const relicEffectMethods: any = {
             }
         }
 
-        const updatedPlayer: any = { ...player, hp: nextHp, combatFlags: flags };
+        const updatedPlayer: Player = { ...player, hp: nextHp, combatFlags: flags };
         if (phoenixTempBuff) updatedPlayer.tempBuff = phoenixTempBuff;
         // cycle 186: reviveTokens 소비 + MP 50% 회복 (token 사용 시).
         if (flags.reviveTokenUsed) {
-            updatedPlayer.reviveTokens = Math.max(0, Number((player as any).reviveTokens) || 0) - 1;
+            updatedPlayer.reviveTokens = Math.max(0, Number(player.reviveTokens) || 0) - 1;
             updatedPlayer.mp = Math.min(player.maxMp || 50, Math.floor((player.maxMp || 50) * 0.5));
         }
         // 2026-07 — 에테르 거울: mirrorReviveUsed는 player 최상위 필드(combatFlags 아님) —
@@ -153,16 +153,16 @@ export const relicEffectMethods: any = {
     //   1037) + N test callsite (cycle 159/236/237) 모두 || [] 명시 전달이라
     //   default 도달 불가. 청소 메가 시리즈 42번째 (cycle 502-546).
     applyEntropyTick(player: Player, enemy: Monster, activeSynergies: any[]) {
-        const relics = (player as any)?.relics || [];
-        const flags: any = { ...((player as any).combatFlags || {}) };
+        const relics: Relic[] = player?.relics || [];
+        const flags = { ...((player as any).combatFlags || {}) };
         const turnCount = (flags.turnCount || 0) + 1;
         flags.turnCount = turnCount;
 
-        const updatedPlayer: any = { ...player, combatFlags: flags };
+        const updatedPlayer = { ...player, combatFlags: flags };
         let updatedEnemy: any = enemy;
         const logs: any[] = [];
 
-        const tickRelic = relics.find((r: any) => r.effect === 'entropy_tick');
+        const tickRelic = relics.find((r) => r.effect === 'entropy_tick');
         // cycle 236: entropy_god 시너지의 fixedDmg + interval 패턴도 catch.
         //   기존엔 'damage && interval'만 잡아 entropy_god(fixedDmg 0.15)가 dispatch 0건이던 dead config.
         const brandSyn = activeSynergies.find((s: any) =>

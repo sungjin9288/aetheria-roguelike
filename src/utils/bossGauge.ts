@@ -12,9 +12,9 @@ import type { GameMap, Player } from '../types/index.js';
  * 선택 카드를 제시한다(StS식 "위험을 선택한다"). scoutEvents.ts/campfireEvent.ts와
  * 동일한 순수 함수 빌더 패턴 — 입력 → 새 객체, 부수효과 없음.
  *
- * 저장 위치: player.stats.bossGauge — Record<지역명, number>(0~1). PlayerStats가
- * 이미 `[key: string]: any` 인덱스 시그니처를 갖고 있어(areaBossDefeated와 동일 패턴)
- * 타입 정의 변경 없이 안전하게 추가 가능. 구세이브에는 필드 자체가 없으므로 모든
+ * 저장 위치: player.stats.bossGauge — Record<지역명, number>(0~1). 2026-09 B3에서
+ * PlayerStats의 인덱스 시그니처를 제거했으므로 types/player.ts에 명시 선언되어 있다
+ * (areaBossDefeated와 동일 패턴). 구세이브에는 필드 자체가 없으므로 모든
  * accessor가 `?.bossGauge?.[loc] ?? 0` 형태로 optional chaining + 기본값 0 처리 —
  * migrateData() 갱신 불필요(areaBossDefeated와 동일 completion 근거, dataMigration.ts:203-204 참조).
  */

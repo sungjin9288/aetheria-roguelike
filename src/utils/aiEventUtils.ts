@@ -1,8 +1,6 @@
 import { BALANCE } from '../data/constants.js';
-import {
-    getStructuredFallbackPoolEvent,
-    getStructuredFallbackTransaction,
-} from '../data/structuredFallbackEvents.js';
+import { FALLBACK_EVENT_POOL } from '../data/aiEventPools.js';
+import { getStructuredFallbackTransaction } from '../data/structuredFallbackEvents.js';
 import { findItemByName } from './gameUtils.js';
 
 const RECENT_HISTORY_LIMIT = 6;
@@ -94,7 +92,7 @@ const getPoolKeyByLocation = (loc: string) => {
     return keyByKeyword?.key || 'default';
 };
 
-const FALLBACK_CHOICE_SETS: any = {
+const FALLBACK_CHOICE_SETS: Record<string, string[]> = {
     default: ['조사한다', '경계한다', '지나친다'],
     forest: ['살펴본다', '경계한다', '돌아선다'],
     ruins: ['해독한다', '조심히 접근한다', '지나친다'],
@@ -110,7 +108,7 @@ const FALLBACK_CHOICE_SETS: any = {
     gate: ['동조한다', '봉인한다', '후퇴한다'],
 };
 
-const ITEM_REWARD_BY_POOL: any = {
+const ITEM_REWARD_BY_POOL: Record<string, string[]> = {
     default: ['하급 체력 물약', '하급 마나 물약'],
     forest: ['하급 체력 물약', '해독제'],
     ruins: ['중급 체력 물약', '저주해제 주문서'],
@@ -126,9 +124,9 @@ const ITEM_REWARD_BY_POOL: any = {
     gate: ['영웅의 물약', '상급 마나 물약'],
 };
 
-const SAFE_KEYWORDS: any = ['관찰', '해독', '조심', '우회', '분석', '기록', '표식', '표시', '점검', '봉인', '확인', '읽', '해제', '가림막', '거리 유지', '은폐', '경계'];
-const RETREAT_KEYWORDS: any = ['돌아', '되돌아', '후퇴', '철수', '포기', '무시', '지나친', '대기', '기다린다', '눈을 감는다', '도망'];
-const RISKY_KEYWORDS: any = ['만진다', '달린다', '강제로', '뛰어내', '기습', '정면 돌파', '직접 진입', '접촉', '전투 준비', '파괴', '돌파', '재가동', '강제 해제', '연다', '추적', '공명 강화'];
+const SAFE_KEYWORDS = ['관찰', '해독', '조심', '우회', '분석', '기록', '표식', '표시', '점검', '봉인', '확인', '읽', '해제', '가림막', '거리 유지', '은폐', '경계'];
+const RETREAT_KEYWORDS = ['돌아', '되돌아', '후퇴', '철수', '포기', '무시', '지나친', '대기', '기다린다', '눈을 감는다', '도망'];
+const RISKY_KEYWORDS = ['만진다', '달린다', '강제로', '뛰어내', '기습', '정면 돌파', '직접 진입', '접촉', '전투 준비', '파괴', '돌파', '재가동', '강제 해제', '연다', '추적', '공명 강화'];
 
 // cycle 525: choiceText default '' 제거 — 1 internal callsite (line 131
 //   classifyChoice(choice)) + 4 test callsite 모두 string 명시이라 default
@@ -147,6 +145,67 @@ const pickRewardItem = (poolKey: any, seed: any, level: any) => {
     const threshold = level >= 25 ? 3 : level >= 10 ? 4 : 5;
     if ((seed % threshold) !== 0) return null;
     return pool[seed % pool.length];
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2026-09 Wave 3 I2 — 절차적 outcome의 "위험" 선택에 특수 결과를 붙인다.
+//   rng 파라미터를 새로 받지 않는다: buildProceduralOutcome은 원래부터
+//   hashString(location|desc|choice|index) 기반 결정론이고(호출부는 rng를 넘기지
+//   않는다), 같은 이벤트·같은 선택지는 몇 번을 다시 그려도 같은 결과여야 한다.
+//   각 판정은 salt가 다른 파생 해시를 써서 서로 독립적으로 움직인다.
+// ─────────────────────────────────────────────────────────────────────────────
+const seedRoll = (salt: string, seed: number) => (hashString(`${salt}|${seed}`) % 10000) / 10000;
+
+/** status 45% / elite 30% / relic 15% / buff 10% (BALANCE.EVENT_SPECIAL_WEIGHTS). */
+const pickSpecialKind = (seed: number) => {
+    const weights = BALANCE.EVENT_SPECIAL_WEIGHTS;
+    const kinds = Object.keys(weights);
+    const total = kinds.reduce((sum: number, kind: string) => sum + weights[kind], 0);
+    let ticket = hashString(`kind|${seed}`) % total;
+    for (const kind of kinds) {
+        ticket -= weights[kind];
+        if (ticket < 0) return kind;
+    }
+    return kinds[kinds.length - 1];
+};
+
+/** 생명이 바닥일 때 정예 조우로 밀어 넣지 않는다 — "부당한 죽음 금지" 규칙. */
+const isLowHp = (context: any) => {
+    const hp = Number(context?.playerSnapshot?.hp);
+    const maxHp = Number(context?.playerSnapshot?.maxHp);
+    if (!Number.isFinite(hp) || !Number.isFinite(maxHp) || maxHp <= 0) return false;
+    return (hp / maxHp) <= BALANCE.SCOUT_LOW_HP_RATIO;
+};
+
+const SPECIAL_LOG_SUFFIX: Record<string, string> = {
+    status: ' 몸에 남은 흔적이 쉽게 가시지 않습니다.',
+    elite: ' 소란을 듣고 정예가 모습을 드러냅니다.',
+    relic: ' 잔해 속에서 낯선 유물의 기운이 새어 나옵니다.',
+    buff: ' 손끝에 남은 열기가 다음 싸움까지 이어집니다.',
+};
+
+const buildSpecialPayload = (kind: string, seed: number) => {
+    if (kind === 'elite') return { elite: true as const };
+    if (kind === 'relic') return { relic: { count: 1 } };
+    if (kind === 'buff') {
+        return { buff: { atkMult: BALANCE.EVENT_SPECIAL_BUFF_MULT, turns: BALANCE.EVENT_SPECIAL_BUFF_TURNS } };
+    }
+    const ids = BALANCE.EVENT_STATUS_IDS;
+    return { status: { id: ids[seed % ids.length], turns: BALANCE.EVENT_SPECIAL_STATUS_TURNS } };
+};
+
+/** "위험" 선택 — EVENT_RISKY_SPECIAL_CHANCE 확률로 특수 결과 1건만 얹는다. */
+const buildRiskySpecial = (seed: number, context: any) => {
+    if (seedRoll('special', seed) >= BALANCE.EVENT_RISKY_SPECIAL_CHANCE) return null;
+    const rolled = pickSpecialKind(seed);
+    const kind = rolled === 'elite' && isLowHp(context) ? 'status' : rolled;
+    return { kind, payload: buildSpecialPayload(kind, seed), logSuffix: SPECIAL_LOG_SUFFIX[kind] };
+};
+
+/** "균형" 선택 — 소폭 버프만 아주 낮은 확률로. */
+const buildBalancedSpecial = (seed: number) => {
+    if (seedRoll('balanced', seed) >= BALANCE.EVENT_BALANCED_BUFF_CHANCE) return null;
+    return { kind: 'buff', payload: buildSpecialPayload('buff', seed), logSuffix: SPECIAL_LOG_SUFFIX.buff };
 };
 
 // cycle 561: outer + inner context defaults 제거 — 1 internal callsite (line
@@ -196,6 +255,11 @@ const buildProceduralOutcome = ({ desc, choice, choiceIndex, context }: any) => 
         const backlash = Math.max(8, Math.floor(maxHp * (seed % 2 === 0 ? 0.08 : 0.12)));
         const jackpot = seed % 3 !== 0;
         const item = jackpot ? pickRewardItem(poolKey, seed + 7, level + 5) : null;
+        // I2: 생명 피해 크기는 그대로 두고, 대신 특수 결과 1건(상태이상/정예/유물/버프)을 얹는다.
+        const special = buildRiskySpecial(seed, context);
+        const baseLog = jackpot
+            ? `대담한 선택이 적중했습니다. 위험을 감수한 만큼 큰 성과를 얻었습니다${item ? ` [${item}]도 손에 넣었습니다.` : '.'}`
+            : '무리한 판단이 화를 불렀습니다. 대가를 치렀지만 약간의 실마리는 남겼습니다.';
         return {
             choiceIndex,
             gold: jackpot ? Math.max(20, Math.floor(baseReward * 1.45)) : Math.max(0, Math.floor(baseReward * 0.35)),
@@ -203,22 +267,92 @@ const buildProceduralOutcome = ({ desc, choice, choiceIndex, context }: any) => 
             hp: jackpot ? 0 : -backlash,
             mp: jackpot ? 0 : Math.max(0, Math.floor(maxMp * 0.04)),
             ...(jackpot && item ? { item } : {}),
-            log: jackpot
-                ? `대담한 선택이 적중했습니다. 위험을 감수한 만큼 큰 성과를 얻었습니다${item ? ` [${item}]도 손에 넣었습니다.` : '.'}`
-                : '무리한 판단이 화를 불렀습니다. 대가를 치렀지만 약간의 실마리는 남겼습니다.'
+            ...(special ? special.payload : {}),
+            log: special ? `${baseLog}${special.logSuffix}` : baseLog
         };
     }
 
     const balancedGain = seed % 2 === 0;
+    const balancedSpecial = buildBalancedSpecial(seed);
+    const balancedLog = balancedGain
+        ? '균형 잡힌 판단으로 안정적인 성과를 거두었습니다.'
+        : '성과는 있었지만 완벽하진 않았습니다. 약간의 대가를 치렀습니다.';
     return {
         choiceIndex,
         gold: balancedGain ? Math.max(14, Math.floor(baseReward * 0.85)) : Math.max(8, Math.floor(baseReward * 0.45)),
         exp: balancedGain ? Math.max(14, Math.floor(baseReward)) : Math.max(10, Math.floor(baseReward * 0.65)),
         hp: balancedGain ? 0 : -Math.max(6, Math.floor(maxHp * 0.05)),
         mp: balancedGain ? Math.max(5, Math.floor(maxMp * 0.05)) : 0,
-        log: balancedGain
-            ? '균형 잡힌 판단으로 안정적인 성과를 거두었습니다.'
-            : '성과는 있었지만 완벽하진 않았습니다. 약간의 대가를 치렀습니다.'
+        ...(balancedSpecial ? balancedSpecial.payload : {}),
+        log: balancedSpecial ? `${balancedLog}${balancedSpecial.logSuffix}` : balancedLog
+    };
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2026-09 Wave 3 I1 — outcome 어휘 확장 (relic / status / elite / buff).
+//   모델 출력도, 풀 저작 엔트리도 여기를 통과한 값만 consumer(eventActions)로 간다.
+//   화이트리스트 밖의 id/kind는 조용히 드롭하고, 수치는 BALANCE 상한으로 자른다.
+//   "이벤트가 직접 죽이지 않는다"는 공정성 규칙은 consumer의 HP 클램프(≥1)와
+//   여기서 생명 감소 어휘를 새로 늘리지 않는 것으로 같이 지킨다.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** relic: { count: 1..EVENT_RELIC_MAX_COUNT } — 유물 "선택지"를 여는 수. */
+const normalizeRelicOutcome = (raw: any) => {
+    if (raw === true) return { count: 1 };
+    if (!raw || typeof raw !== 'object') return null;
+    return { count: clamp(toInt(raw.count, 1), 1, BALANCE.EVENT_RELIC_MAX_COUNT) };
+};
+
+/** status: { id: <BALANCE.EVENT_STATUS_IDS>, turns?: 1..EVENT_STATUS_MAX_TURNS }. */
+const normalizeStatusOutcome = (raw: any) => {
+    if (!raw) return null;
+    const id = normalizeText(typeof raw === 'string' ? raw : (raw.id || raw.effect));
+    if (!BALANCE.EVENT_STATUS_IDS.includes(id)) return null;
+    const turns = clamp(
+        toInt(typeof raw === 'string' ? BALANCE.EVENT_SPECIAL_STATUS_TURNS : raw.turns, BALANCE.EVENT_SPECIAL_STATUS_TURNS),
+        1,
+        BALANCE.EVENT_STATUS_MAX_TURNS,
+    );
+    return { id, turns };
+};
+
+/** elite: true — 즉시 정예 조우. 문자열/숫자 truthy는 받지 않는다(오탐 방지). */
+const normalizeEliteOutcome = (raw: any) => (raw === true || raw === 'true' ? true : null);
+
+/** 버프 배율 — 1 이하(디버프/무효)는 드롭, 상한은 EVENT_BUFF_MAX_MULT. */
+const normalizeBuffMult = (raw: any) => {
+    const value = Number(raw);
+    if (!Number.isFinite(value) || value <= 1) return 0;
+    return Math.min(BALANCE.EVENT_BUFF_MAX_MULT, Math.round(value * 100) / 100);
+};
+
+/** buff: { atkMult?, defMult?, turns } — consumer가 tempBuff로 환산한다. */
+const normalizeBuffOutcome = (raw: any) => {
+    if (!raw || typeof raw !== 'object') return null;
+    const turns = clamp(toInt(raw.turns ?? raw.turn, 0), 0, BALANCE.EVENT_BUFF_MAX_TURNS);
+    if (turns <= 0) return null;
+    const atkMult = normalizeBuffMult(raw.atkMult);
+    const defMult = normalizeBuffMult(raw.defMult);
+    if (!atkMult && !defMult) return null;
+    return {
+        ...(atkMult ? { atkMult } : {}),
+        ...(defMult ? { defMult } : {}),
+        turns,
+    };
+};
+
+/** 확장 어휘 4종을 한 번에 검증해 존재하는 것만 담아 돌려준다. */
+export const normalizeOutcomeSpecials = (raw: any) => {
+    if (!raw || typeof raw !== 'object') return {};
+    const relic = normalizeRelicOutcome(raw.relic);
+    const status = normalizeStatusOutcome(raw.status);
+    const elite = normalizeEliteOutcome(raw.elite);
+    const buff = normalizeBuffOutcome(raw.buff);
+    return {
+        ...(relic ? { relic } : {}),
+        ...(status ? { status } : {}),
+        ...(elite ? { elite } : {}),
+        ...(buff ? { buff } : {}),
     };
 };
 
@@ -246,6 +380,7 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
                 hp: toInt(outcome.hp, 0),
                 mp: toInt(outcome.mp, 0),
                 ...(itemName ? { item: itemName } : {}),
+                ...normalizeOutcomeSpecials(outcome),
             });
         });
     }
@@ -266,20 +401,25 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
 // cycle 561: context default {} 제거 — 3 callers (internal:548, aiService
 //   :100, ai-event-utils.test.js:26) 모두 2 args 명시 전달이라 default 도달
 //   불가.
-export const buildEventPackage = (payload: any, context: any) => {
+/** AI/풀 이벤트 패키지 — 라우팅 플래그(isScout 등)는 의도적으로 없다. */
+export interface EventPackage {
+    source: string;
+    desc: string;
+    choices: string[];
+    outcomes: ReturnType<typeof normalizeOutcomes>;
+    /** aiService가 일일 한도 초과 폴백일 때만 덧붙인다. */
+    fallbackReason?: 'quota';
+    fallbackMessage?: string;
+    /**
+     * 로컬에서 선택된 canonical 폴백 이벤트에만 붙는 트랜잭션 신원(Codex dc308c2).
+     * 모델/외부 페이로드는 buildEventPackage의 허용 목록에서 떨어지므로 자칭할 수 없다.
+     */
+    fallbackTransactionId?: string;
+}
+
+export const buildEventPackage = (payload: any, context: any): EventPackage | null => {
     const raw = payload?.data || payload;
     if (!raw || typeof raw !== 'object') return null;
-
-    const {
-        source: _untrustedSource,
-        fallbackTransactionId: _untrustedFallbackTransactionId,
-        transactionId: _untrustedTransactionId,
-        cost: _untrustedCost,
-        payout: _untrustedPayout,
-        grossGold: _untrustedGrossGold,
-        netGold: _untrustedNetGold,
-        ...safeRaw
-    } = raw;
 
     const desc = normalizeText(raw.desc || raw.text || raw.event || raw.message);
     if (!desc) return null;
@@ -293,8 +433,15 @@ export const buildEventPackage = (payload: any, context: any) => {
 
     if (choices.length < 2) return null;
 
+    // 신뢰 경계: 모델/풀 원본(raw)은 desc·choices·outcomes만 이벤트로 승격한다. `...raw`로
+    //   최상위 필드를 그대로 넘기면 모델이 `isScout` / `isBossGaugeChallenge` / `_chainId` 같은
+    //   라우팅 플래그를 실어 eventActions의 분기(정찰·보스 도전·체인 진행)를 탈취할 수 있다.
+    //   그 플래그들은 exploreActions / bossGauge / scoutEvents가 직접 만드는 이벤트에만 존재한다.
+    //   이 허용 목록은 Codex의 예약어 차단(source/fallbackTransactionId/transactionId/cost/
+    //   payout/grossGold/netGold)을 포함한다 — 허용 목록에 없는 필드는 전부 떨어진다.
     return {
-        ...safeRaw,
+        // source는 호출자(컨텍스트) 권한이다 — 모델/외부 페이로드가 'fallback'을 자칭해
+        //   폴백 전용 트랜잭션 권한을 주장할 수 없다 (Codex dc308c2).
         source: context.source || 'ai',
         desc,
         choices,
@@ -302,248 +449,11 @@ export const buildEventPackage = (payload: any, context: any) => {
     };
 };
 
-// cycle 357: '시작의 마을' 12 events 제거 — exploreActions가 START_LOCATION에서
-//   `if (player.loc === START_LOCATION) return` 조기 반환, AI_SERVICE.generateEvent
-//   진입 자체 차단. type='safe' / eventChance=0인 안전지대라 게임 디자인상 explore
-//   루프 비대상. 12 fallback events 모두 unreachable dead config.
-const FALLBACK_EVENT_POOL: any = {
-    forest: [
-        { desc: '나무 사이로 신비로운 빛이 흘러나옵니다.', choices: ['따라간다', '멀리서 관찰한다', '돌아선다'] },
-        { desc: '오래된 석상이 덩굴에 감겨 있습니다.', choices: ['살펴본다', '정화한다', '지나친다'] },
-        { desc: '반짝이는 무언가가 풀숲에 있습니다.', choices: ['줍는다', '막대기로 쑤셔본다', '무시한다'] },
-        { desc: '커다란 버섯군락이 고리 모양으로 자라 있습니다.', choices: ['안으로 들어간다', '주변을 분석한다', '우회한다'] },
-        { desc: '낯선 문양이 새겨진 나무가 있습니다. 수액이 금빛으로 빛납니다.', choices: ['수액을 채취한다', '문양을 기록한다', '지나친다'] },
-        { desc: '숲 속 빈터에서 불씨가 꺼진 모닥불을 발견했습니다.', choices: ['흔적을 조사한다', '불씨를 살린다', '경계한다'] },
-        { desc: '거대한 고목 뿌리 사이에 반투명한 결계가 쳐져 있습니다. 안쪽에서 무언가 빛납니다.', choices: ['결계를 통과한다', '결계 주변을 살핀다', '그냥 지나친다'] },
-        { desc: '숲 깊숙한 곳에서 기계음과 자연음이 뒤섞인 이상한 소리가 납니다.', choices: ['소리를 추적한다', '나무 위로 올라가 살핀다', '돌아선다'] },
-        { desc: '쓰러진 고목 위에서 이끼로 덮인 갑옷 한 쪽이 발견되었습니다. 내부에 잔열이 남아 있습니다.', choices: ['갑옷을 살펴본다', '주변 흔적을 탐색한다', '건드리지 않는다'] },
-        { desc: '동물들이 일제히 동쪽으로 도망칩니다. 서쪽에서 짙은 연기 냄새가 납니다.', choices: ['서쪽으로 향한다', '동물들을 따라간다', '나무 위에서 관망한다'] },
-        { desc: '숲의 정령으로 보이는 작은 존재가 당신의 발 앞에 씨앗 하나를 떨어뜨리고 사라집니다.', choices: ['씨앗을 간직한다', '씨앗을 심는다', '두고 간다'] },
-        { desc: '낡은 사냥꾼의 덫이 길 한가운데 숨겨져 있습니다. 이미 작동 직전입니다.', choices: ['덫을 해제한다', '표시만 남긴다', '조심히 우회한다'] },
-    ],
-    ruins: [
-        { desc: '벽면에서 고대 문자가 빛나기 시작합니다.', choices: ['해독한다', '손으로 만진다', '무시한다'] },
-        { desc: '바닥에 함정 흔적이 보입니다.', choices: ['조심히 넘는다', '돌아서 우회한다', '무시하고 달린다'] },
-        { desc: '던전 깊숙한 곳에서 낡은 상자를 발견했습니다.', choices: ['연다', '두드려본다', '지나친다'] },
-        { desc: '천장에서 물방울이 규칙적으로 떨어집니다. 바닥 문양이 드러납니다.', choices: ['문양을 해독한다', '조심히 밟는다', '우회 경로 탐색'] },
-        { desc: '돌기둥에 낡은 방패가 기대어 있습니다.', choices: ['장비로 취한다', '각인을 분석한다', '건드리지 않는다'] },
-        { desc: '무너진 제단 위에 봉인된 두루마리가 놓여 있습니다.', choices: ['봉인을 해제한다', '두루마리만 가져간다', '그대로 둔다'] },
-        { desc: '유적 회랑 끝에 여전히 타오르는 횃불이 있습니다. 누군가 최근에 여기 있었던 것 같습니다.', choices: ['발자국을 추적한다', '불을 끄고 어둠 속에서 대기한다', '횃불을 가져간다'] },
-        { desc: '반파된 석상의 손이 특정 방향을 가리키고 있습니다. 손가락 끝은 새로 깎인 흔적이 있습니다.', choices: ['가리키는 방향으로 간다', '석상 받침대를 조사한다', '무시한다'] },
-        { desc: '유적 벽면에 전투 장면을 묘사한 부조가 있습니다. 그림 속 마지막 장면은 미완성입니다.', choices: ['미완성 부분에 손을 댄다', '전체 내용을 기록한다', '지나친다'] },
-        { desc: '두 개의 통로가 갈리는 지점에 골격 유해가 앉아 있습니다. 오른손에 쪽지를 쥐고 있습니다.', choices: ['쪽지를 읽는다', '골격 소지품을 확인한다', '조심스럽게 우회한다'] },
-        { desc: '기계식 장치가 내장된 고대 문이 버튼 입력을 기다리는 듯합니다. 버튼은 세 개입니다.', choices: ['왼쪽 버튼을 누른다', '가운데 버튼을 누른다', '오른쪽 버튼을 누른다'] },
-        { desc: '유적 지하에서 올라오는 바람에서 이상한 약초 향이 납니다. 지하로 내려가는 계단이 보입니다.', choices: ['계단을 내려간다', '향의 출처를 추적한다', '지상에 머문다'] },
-    ],
-    cave: [
-        { desc: '동굴 벽에 크고 날카로운 발톱 자국이 있습니다.', choices: ['추적한다', '경계한다', '되돌아간다'] },
-        { desc: '암벽 틈새에서 뜨거운 기류가 뿜어져 나옵니다.', choices: ['조사한다', '피한다', '봉인한다'] },
-        { desc: '발밑이 흔들리며 협곡 아래에서 금속성 소리가 울립니다.', choices: ['뛰어내린다', '밧줄 설치', '후퇴한다'] },
-        { desc: '동굴 천장에 수백 개의 보석 같은 눈이 빛납니다.', choices: ['소리 없이 접근한다', '불빛으로 유인한다', '돌아선다'] },
-        { desc: '지하 수맥 근처에서 희귀한 광물 결정이 보입니다.', choices: ['채굴한다', '분석만 한다', '지나친다'] },
-        { desc: '협곡 절벽에 오래된 로프가 매달려 있습니다.', choices: ['타고 내려간다', '로프 상태 점검', '다른 길을 찾는다'] },
-        { desc: '동굴 깊숙이에서 붉은 용암이 서서히 흘러내리고 있습니다. 열기가 뜨겁습니다.', choices: ['가까이 다가간다', '열기를 이용해 불을 밝힌다', '멀리 우회한다'] },
-        { desc: '박쥐 떼가 갑자기 당신을 향해 돌진합니다. 어딘가 놀란 것 같습니다.', choices: ['납작 엎드린다', '횃불로 쫓아낸다', '재빨리 달린다'] },
-        { desc: '낡은 광부의 등잔이 아직도 켜져 있습니다. 근처에 도구 가방이 있습니다.', choices: ['가방을 뒤진다', '등잔 기름을 채운다', '그대로 두고 간다'] },
-        { desc: '동굴 한쪽 벽에 누군가 손톱으로 날짜를 새긴 흔적이 빼곡합니다. 가장 마지막 날짜는 얼마 전입니다.', choices: ['세어본다', '주변을 수색한다', '서둘러 지나간다'] },
-        { desc: '지하 호수 수면에 거꾸로 비친 달빛이 보입니다. 이곳은 지하인데.', choices: ['물속을 들여다본다', '수면에 돌을 던진다', '눈을 감고 집중한다'] },
-        { desc: '좁은 통로 너머에서 부드러운 바람이 불어옵니다. 출구가 있는 것 같습니다.', choices: ['통로를 기어간다', '통로를 넓힌다', '다른 길을 탐색한다'] },
-    ],
-    desert: [
-        { desc: '모래 폭풍이 갑자기 몰아칩니다.', choices: ['바위 뒤로 숨는다', '정면 돌파', '경로를 바꾼다'] },
-        { desc: '반쯤 파묻힌 고대 석판을 발견했습니다.', choices: ['읽어본다', '파낸다', '표시만 남긴다'] },
-        { desc: '오아시스 근처에서 수상한 발자국을 발견했습니다.', choices: ['추적한다', '매복한다', '무시한다'] },
-        { desc: '모래 아래에서 손잡이 하나가 솟아 있습니다.', choices: ['잡아당긴다', '주변을 먼저 살핀다', '그대로 둔다'] },
-        { desc: '일렬로 늘어선 거대 석상들이 모두 동쪽을 가리키고 있습니다.', choices: ['동쪽으로 향한다', '석상 각인을 기록한다', '다른 방향으로 간다'] },
-        { desc: '뜨거운 모래 위에서 상인의 낡은 배낭을 발견했습니다.', choices: ['열어본다', '지형 단서 탐색', '그냥 지나친다'] },
-        { desc: '사막 한가운데 기묘하게도 그림자가 없는 인물이 서 있습니다. 당신을 향해 손짓합니다.', choices: ['다가간다', '뒤로 물러선다', '소리쳐 부른다'] },
-        { desc: '모래 더미 아래에서 옛 왕조의 문장이 새겨진 투구가 노출되어 있습니다.', choices: ['발굴한다', '문장을 기록한다', '모래로 다시 덮는다'] },
-        { desc: '황혼 무렵 지평선에서 불길이 피어오릅니다. 캐러밴이 공격받고 있는 것 같습니다.', choices: ['구하러 달려간다', '망원경으로 관찰한다', '안전한 방향으로 우회한다'] },
-        { desc: '모래시계 모양의 천연 암석 사이에 봉인된 항아리가 끼워져 있습니다.', choices: ['항아리를 꺼낸다', '봉인 문양을 해독한다', '암석 뒤를 조사한다'] },
-        { desc: '밤하늘을 올려다보니 별자리가 지금껏 본 적 없는 형태를 그리고 있습니다.', choices: ['별자리를 기록한다', '별이 가리키는 방향으로 간다', '눈을 감고 위험을 감지한다'] },
-        { desc: '낮은 언덕 너머에 낡은 망루가 보입니다. 꼭대기에서 깃발이 힘없이 나부낍니다.', choices: ['망루에 오른다', '망루를 멀리서 관찰한다', '지나쳐 간다'] },
-    ],
-    ice: [
-        { desc: '얼어붙은 벽면 뒤에서 맥동하는 빛이 보입니다.', choices: ['깨고 들어간다', '우회한다', '표식만 남긴다'] },
-        { desc: '빙하 균열 아래에서 오래된 갑옷 파편을 발견했습니다.', choices: ['회수한다', '분석한다', '두고 간다'] },
-        { desc: '눈보라 속에서 구조 요청 신호가 들립니다.', choices: ['신호를 따라간다', '경계하며 접근', '철수한다'] },
-        { desc: '얼음 속에 완벽하게 보존된 고대 전사가 봉인되어 있습니다.', choices: ['해빙시킨다', '유물만 확인한다', '건드리지 않는다'] },
-        { desc: '설원 한가운데 불꽃이 꺼지지 않는 횃불이 타오릅니다.', choices: ['가까이 다가간다', '멀리서 관찰한다', '다른 길로 간다'] },
-        { desc: '얼어붙은 호수 표면에 무언가가 아래에서 두드립니다.', choices: ['조심히 살펴본다', '얼음을 깬다', '재빨리 피한다'] },
-        { desc: '빙결 협곡에서 늑대 한 마리가 발이 얼어 꼼짝 못하고 있습니다.', choices: ['얼음을 녹여 구한다', '식량으로 취한다', '그냥 지나친다'] },
-        { desc: '얼음으로 뒤덮인 비석에 인명부가 새겨져 있습니다. 당신의 이름도 있습니다.', choices: ['이름을 지운다', '비석을 부순다', '눈을 감고 기도한다'] },
-        { desc: '설원 한쪽에서 수증기가 솟아오릅니다. 온천이 있는 것 같습니다.', choices: ['온천에서 휴식한다', '열원의 원인을 조사한다', '계속 이동한다'] },
-        { desc: '눈밭에서 완전히 얼어붙은 마법 지팡이를 발견했습니다. 내부에서 빛이 깜빡입니다.', choices: ['해빙 주문을 건다', '천천히 녹인다', '충격으로 꺼낸다'] },
-        { desc: '절벽 아래 눈더미에 최근 추락한 듯한 흔적이 있습니다. 뭔가 묻혀 있습니다.', choices: ['눈을 파헤친다', '추락 경위를 분석한다', '위험을 피해 지나간다'] },
-        { desc: '차가운 안개 속에서 어린아이의 노랫소리가 들려옵니다.', choices: ['소리를 따라간다', '귀를 막고 계속 전진한다', '노래로 응답한다'] },
-    ],
-    dark: [
-        { desc: '검은 제단에서 속삭임이 새어 나옵니다.', choices: ['의식을 방해한다', '경청한다', '파괴한다'] },
-        { desc: '성벽의 초상화가 당신을 응시합니다.', choices: ['가림막을 씌운다', '조사한다', '무시한다'] },
-        { desc: '붉은 달빛이 비치는 회랑에서 핏자국이 이어집니다.', choices: ['추적한다', '함정 탐지', '후퇴'] },
-        { desc: '마왕성 한켠에서 갑옷도 없이 기절한 기사를 발견했습니다.', choices: ['치료한다', '심문한다', '내버려둔다'] },
-        { desc: '어둠 속 거울이 당신의 모습 대신 다른 무언가를 비춥니다.', choices: ['거울을 깬다', '오래 들여다본다', '뒤돌아선다'] },
-        { desc: '해골 더미 속에서 아직 빛을 잃지 않은 수정 구슬이 있습니다.', choices: ['가져간다', '정화 주문을 건다', '손대지 않는다'] },
-        { desc: '마왕성 지하 감옥에서 누군가 문을 두드리고 있습니다. "제발... 열어주세요."', choices: ['문을 연다', '대화를 나눈다', '자물쇠를 확인한다'] },
-        { desc: '타오르는 검은 촛불이 일렬로 놓인 복도를 발견했습니다. 어떤 의식의 흔적 같습니다.', choices: ['촛불을 모두 끈다', '의식 기록을 찾는다', '서둘러 지나간다'] },
-        { desc: '어두운 방에서 낡은 음악 상자가 혼자 돌아가고 있습니다. 멜로디가 어딘가 낯섭니다.', choices: ['상자를 멈춘다', '멜로디를 듣는다', '상자를 가져간다'] },
-        { desc: '저주받은 무기들이 벽에 전시되어 있습니다. 하나가 당신을 향해 진동하고 있습니다.', choices: ['진동하는 무기를 집는다', '모두 무너뜨린다', '조심히 빠져나간다'] },
-        { desc: '암흑 성의 지붕 위에 올라서자 멀리 희미한 불빛이 보입니다. 생존자가 있는 것 같습니다.', choices: ['신호를 보낸다', '조용히 접근한다', '위험을 무릅쓰고 달려간다'] },
-        { desc: '마왕의 옛 서재에서 금지된 마법서가 펼쳐진 채 놓여 있습니다. 글자들이 움직입니다.', choices: ['책을 읽는다', '책을 닫는다', '불로 태운다'] },
-    ],
-    abyss: [
-        { desc: '심연의 바닥에서 낮은 공명이 울립니다.', choices: ['공명점 탐색', '즉시 전투 준비', '기록 후 철수'] },
-        { desc: '공허 틈에서 잠시 미래의 잔상이 보였습니다.', choices: ['잔상을 따른다', '현재에 집중', '눈을 감는다'] },
-        { desc: '어둠 속에서 이름을 부르는 목소리가 들립니다.', choices: ['응답한다', '무시한다', '봉인 주문'] },
-        { desc: '공간이 접혀 짧은 거리가 두 방향으로 갈라집니다.', choices: ['왼쪽 공간으로 진입', '오른쪽 공간으로 진입', '현재 위치 유지'] },
-        { desc: '무중력 구역에 둥둥 떠 있는 고대 유물 파편들이 보입니다.', choices: ['모아서 분석한다', '하나만 가져간다', '건드리지 않는다'] },
-        { desc: '심연의 안개 속에서 익숙한 실루엣이 걸어옵니다.', choices: ['대기한다', '소리친다', '전투 태세를 갖춘다'] },
-        { desc: '심연 벽면에 수천 개의 눈동자가 새겨져 있습니다. 당신이 다가가자 모두 눈을 뜹니다.', choices: ['눈을 마주친다', '눈을 감고 걷는다', '뒤로 물러선다'] },
-        { desc: '시간이 느려지는 구역을 만났습니다. 당신의 발걸음도 천천히 가라앉습니다.', choices: ['서둘러 빠져나간다', '느린 시간 속에서 주변을 관찰한다', '가만히 서서 기다린다'] },
-        { desc: '심연 깊숙한 곳에서 빛을 발하는 계단이 위로 이어집니다. 이상합니다, 아래로 내려오고 있었는데.', choices: ['계단을 오른다', '계단 주변을 조사한다', '무시하고 계속 내려간다'] },
-        { desc: '공허 공간에 편지 한 장이 바람도 없이 떠다닙니다. 필체가 당신의 것과 똑같습니다.', choices: ['편지를 읽는다', '편지를 태운다', '편지를 접어 보관한다'] },
-        { desc: '심연의 가장 조용한 구역에서 갑자기 아이의 웃음소리가 들립니다.', choices: ['소리가 나는 곳으로 간다', '귀를 막고 전진한다', '소리 방향 반대로 이동한다'] },
-        { desc: '당신의 그림자가 멋대로 움직이기 시작합니다. 그림자는 무언가를 가리킵니다.', choices: ['그림자가 가리키는 곳으로 간다', '그림자를 밟아 멈춘다', '빛을 비춰 없앤다'] },
-    ],
-    treasure: [
-        { desc: '금박 상자 주변에 미세한 함정선이 보입니다.', choices: ['해제한다', '강제로 연다', '포기한다'] },
-        { desc: '보물 더미 아래에서 낡은 지도가 튀어나왔습니다.', choices: ['지도 확보', '즉시 탈출', '위조 여부 확인'] },
-        { desc: '벽면 홈에 열쇠 모양의 흔적이 남아 있습니다.', choices: ['장치 작동', '메모만 남김', '파괴 시도'] },
-        { desc: '상자 안에 편지와 반지가 같이 들어 있습니다.', choices: ['편지를 읽는다', '반지를 낀다', '두 가지 모두 챙긴다'] },
-        { desc: '보석이 박힌 문이 잠겨 있고 수수께끼 문구가 새겨져 있습니다.', choices: ['수수께끼를 푼다', '문을 부순다', '우회 경로를 찾는다'] },
-        { desc: '보물고 한켠에 오래된 제단이 있습니다. 헌물을 바라는 듯합니다.', choices: ['골드를 바친다', '소지품을 바친다', '무시한다'] },
-    ],
-    machina: [
-        { desc: '멈춘 자동인형의 코어가 다시 점등됩니다.', choices: ['코어를 뽑는다', '재가동시킨다', '전력 차단'] },
-        { desc: '톱니 장치가 어긋난 문이 반쯤 열려 있습니다.', choices: ['조정한다', '강제 개방', '다른 길 탐색'] },
-        { desc: '기계 음성으로 정체 불명의 경고 방송이 울립니다.', choices: ['해독한다', '주파수 차단', '무시한다'] },
-        { desc: '폐기된 드론의 메모리 칩이 아직 살아 있습니다.', choices: ['데이터를 추출한다', '전원을 살린다', '분해한다'] },
-        { desc: '제어 패널에 미완성 명령어 입력 화면이 켜져 있습니다.', choices: ['명령어를 완성한다', '시스템을 종료한다', '방치한다'] },
-        { desc: '기계 폐도 깊은 곳에서 혼자 가동 중인 수리 봇을 발견했습니다.', choices: ['접근해 관찰한다', '업무 지시를 내린다', '전원을 끊는다'] },
-    ],
-    sky: [
-        { desc: '공중 정원 난간 밖에서 빛나는 파편이 떠다닙니다.', choices: ['채집한다', '거리 유지', '마력 분석'] },
-        { desc: '성운의 흐름이 길을 재배치하고 있습니다.', choices: ['새 길 진입', '기존 길 고수', '표식 남김'] },
-        { desc: '천공 수호조가 원형 비행 패턴을 반복합니다.', choices: ['패턴을 이용해 잠입', '기습', '우회'] },
-        { desc: '구름 위 발판에 작은 제단이 홀로 떠 있습니다.', choices: ['제단에 예를 올린다', '구조를 조사한다', '스쳐 지나간다'] },
-        { desc: '하늘 결정체가 천천히 당신의 손 위로 내려앉습니다.', choices: ['흡수한다', '조심스럽게 채취한다', '떨쳐낸다'] },
-        { desc: '바람이 멈춘 공중 구역에서 아무 소리도 들리지 않습니다.', choices: ['조용히 탐색한다', '소리를 내서 반응 확인', '빠르게 통과한다'] },
-    ],
-    deepsea: [
-        { desc: '심해 회랑 벽면에서 맥박 같은 진동이 느껴집니다.', choices: ['원인 조사', '장비 점검', '철수'] },
-        { desc: '해류가 거꾸로 흐르며 문양을 그립니다.', choices: ['문양 기록', '직접 진입', '기다린다'] },
-        { desc: '물안개 너머로 거대한 그림자가 스쳐 지나갑니다.', choices: ['추적', '은폐', '신호탄 발사'] },
-        { desc: '산호 군락 사이에서 빛을 발하는 고대 석판이 보입니다.', choices: ['회수한다', '현장에서 해독한다', '사진만 남긴다'] },
-        { desc: '수중 동굴 입구에 오래된 닻이 사슬로 묶여 있습니다.', choices: ['사슬을 푼다', '닻 각인을 기록한다', '다른 경로를 탐색한다'] },
-        { desc: '유리처럼 투명한 생물이 당신을 감싸듯 맴돌기 시작합니다.', choices: ['가만히 있는다', '쫓아낸다', '뒤따라간다'] },
-    ],
-    gate: [
-        { desc: '관문 중앙의 룬이 순차적으로 점등됩니다.', choices: ['동조한다', '즉시 봉인', '강제 해제'] },
-        { desc: '차원 틈에서 무기와 공명하는 소리가 납니다.', choices: ['공명 강화', '소리 차단', '퇴각'] },
-        { desc: '문턱 너머에서 또 다른 당신의 실루엣이 보입니다.', choices: ['접촉 시도', '전투 준비', '기록 후 후퇴'] },
-        { desc: '에테르 에너지가 소용돌이치며 단편적인 언어를 내뱉습니다.', choices: ['언어를 해독한다', '에너지를 흡수한다', '거리를 둔다'] },
-        { desc: '관문 바닥에 희생의 흔적과 함께 강화 문양이 새겨져 있습니다.', choices: ['문양에 에너지를 주입한다', '문양을 기록한다', '즉시 봉인한다'] },
-        { desc: '에테르 관문 너머에서 아직 도달하지 않은 지형이 흐릿하게 비칩니다.', choices: ['투시를 지속한다', '정보를 빠르게 메모한다', '시선을 차단한다'] },
-    ],
-    default: [
-        { desc: '오래된 석상이 덩굴에 감겨 있습니다.', choices: ['살펴본다', '지나친다'] },
-        { desc: '버려진 야영지 흔적을 발견했습니다.', choices: ['뒤져본다', '휴식한다'] },
-        { desc: '반짝이는 무언가가 풀숲에 있습니다.', choices: ['줍는다', '무시한다'] },
-        { desc: '낡은 표지판 하나가 길가에 쓰러져 있습니다.', choices: ['읽어본다', '세워놓는다', '지나친다'] },
-        { desc: '멀리서 이상한 소리가 들려옵니다.', choices: ['확인한다', '경계한다', '도망간다'] },
-        { desc: '길 한쪽에 금이 간 항아리가 있습니다. 안에서 빛이 새어 나옵니다.', choices: ['열어본다', '깨뜨린다', '그냥 지나친다'] },
-        { desc: '낯선 여행자가 지름길을 알려주겠다고 합니다.', choices: ['따라간다', '경계하며 거절한다', '지켜본다'] },
-    ],
-
-    // ── 구조화 보상 이벤트 (NPC 조우 · 도박 · 퍼즐) ─────────────────────────
-    structured: [
-        // NPC: 부상당한 행상인
-        getStructuredFallbackPoolEvent('fallback:wounded-merchant:v1'),
-        // 도박: 수상한 상인의 내기
-        getStructuredFallbackPoolEvent('fallback:suspicious-merchant-wager:v1'),
-        // 퍼즐: 고대 석판 수수께끼
-        {
-            desc: '"하나는 둘이 되고, 둘은 하나가 된다." 석판에 새겨진 문구 앞에 세 개의 보석 홈이 있습니다.',
-            choices: ['보석을 끼워 맞춘다', '석판을 부순다', '무시하고 지나친다'],
-            outcomes: [
-                { choiceIndex: 0, exp: 50, log: '퍼즐을 풀었다! 석판에서 빛이 솟아오르며 지식이 스며든다. (+50 EXP)' },
-                { choiceIndex: 1, hp: -30, log: '석판이 폭발하며 파편이 날아온다. (-30 HP)' },
-                { choiceIndex: 2, log: '수수께끼를 그냥 지나친다.' },
-            ],
-        },
-        // NPC: 마법사의 체력 회복 제안
-        {
-            desc: '길가에 앉아 있던 방랑 마법사가 "마력 소모가 많군요. 도움을 드리죠"라고 말합니다.',
-            choices: ['치료를 받는다', '거절한다'],
-            outcomes: [
-                { choiceIndex: 0, hp: 50, mp: 30, log: '마법사가 온기 어린 빛으로 상처를 낫게 해주었다. (+50HP +30MP)' },
-                { choiceIndex: 1, log: '정중히 거절하고 길을 계속한다.' },
-            ],
-        },
-        // 도박: 운명의 주사위
-        // 관대함 하향 (2026-07 밸런스 감사): 구조화 이벤트 풀 전수 스캔 결과 gold 상위
-        //   ~10% 이상치(1000G, 풀 내 최댓값) — BALANCE.STRUCTURED_EVENT_GOLD_CAP(720)으로
-        //   -28% 하향. 손실 분기(거절)는 무변경 — 위험-보상 대칭 유지.
-        getStructuredFallbackPoolEvent('fallback:destiny-dice-wager:v1'),
-        // NPC: 상처 입은 전사 구호
-        {
-            desc: '쓰러진 전사가 숨을 고르며 "제 배낭을... 지켜주시오"라고 말합니다.',
-            choices: ['배낭을 지키며 경계한다', '배낭을 열어본다', '모른 척한다'],
-            outcomes: [
-                { choiceIndex: 0, gold: 500, item: '중급 체력 물약', log: '전사가 회복 후 감사의 표시로 보상을 건넨다. (+500G +물약)' },
-                { choiceIndex: 1, hp: -20, log: '배낭에 장치된 함정이 폭발한다. (-20HP)' },
-                { choiceIndex: 2, log: '전사의 신음 소리를 뒤로 하고 길을 간다.' },
-            ],
-        },
-        // 퍼즐: 마력 공명 시험
-        {
-            desc: '"세 개의 크리스탈 중 하나에 마력을 주입하시오." 틀린 크리스탈을 건드리면 폭발할 것 같습니다.',
-            choices: ['왼쪽 크리스탈', '가운데 크리스탈', '오른쪽 크리스탈'],
-            outcomes: [
-                { choiceIndex: 0, mp: 50, log: '정답! 크리스탈이 공명하며 마나가 충전된다. (+50MP)' },
-                { choiceIndex: 1, exp: 80, log: '정답! 크리스탈이 황금빛으로 빛나며 경험이 쌓인다. (+80EXP)' },
-                { choiceIndex: 2, hp: -25, log: '크리스탈이 폭발한다! (-25HP)' },
-            ],
-        },
-        // NPC: 도전하는 신참 전사
-        {
-            desc: '"용감한 모험가여! 나와 겨루어 보자!" 어린 전사가 자신만만하게 검을 내밉니다.',
-            choices: ['훈련 대결에 응한다', '가르침을 베풀며 훈련시킨다', '거절한다'],
-            outcomes: [
-                { choiceIndex: 0, exp: 60, gold: 200, log: '짧은 수련 대련 끝에 신참 전사가 승복한다. (+60EXP +200G)' },
-                { choiceIndex: 1, exp: 100, log: '가르침의 시간을 통해 자신도 성장함을 느꼈다. (+100EXP)' },
-                { choiceIndex: 2, log: '손을 흔들며 길을 계속한다.' },
-            ],
-        },
-        // 도박: 3장 카드 트릭
-        {
-            desc: '"세 장 중 한 장에 골드가 있소. 선택하시오." 노름꾼이 카드를 뒤섞습니다.',
-            choices: ['첫 번째 카드', '두 번째 카드', '세 번째 카드'],
-            outcomes: [
-                { choiceIndex: 0, gold: 300, log: '맞췄다! (+300G)' },
-                { choiceIndex: 1, gold: 300, log: '맞췄다! (+300G)' },
-                { choiceIndex: 2, log: '빈 카드다. 노름꾼이 쓴웃음을 짓는다.' },
-            ],
-        },
-        // 퍼즐: 잠긴 보물 상자의 암호
-        // 관대함 하향 (2026-07 밸런스 감사): 풀 내 두 번째 상위 이상치(800G) —
-        //   BALANCE.STRUCTURED_EVENT_PUZZLE_GOLD_CAP(600)으로 -25% 하향.
-        {
-            desc: '"1 + 2 + 3 + ... + 10 = ?" 오래된 보물 상자 자물쇠에 숫자 입력 장치가 있습니다.',
-            choices: ['45', '50', '55'],
-            outcomes: [
-                { choiceIndex: 0, log: '땡! 45는 아니다. 자물쇠가 더 꽉 잠긴다.' },
-                { choiceIndex: 1, log: '땡! 50도 아니다. 자물쇠에서 경고음이 울린다.' },
-                { choiceIndex: 2, gold: BALANCE.STRUCTURED_EVENT_PUZZLE_GOLD_CAP, item: '중급 체력 물약', log: '정답 55! 자물쇠가 열리며 보물이 쏟아진다. (+600G +물약)' },
-            ],
-        },
-    ],
-};
 
 // cycle 545: history / context defaults 제거 — 3 production caller (aiService
 //   :69/74/108) + 5 test caller 모두 3 args 명시이라 두 default 모두 도달
 //   불가. 청소 메가 시리즈 40번째 cross-file batch (cycle 502-544).
-export const pickFallbackEvent = (loc: string, history: any[], context: any, rng: () => number = Math.random) => {
+export const pickFallbackEvent = (loc: string, history: any[], context: any, rng: () => number = Math.random): EventPackage | null => {
     // cycle 425: 직접 loc lookup 분기 제거 — cycle 357 이후 FALLBACK_EVENT_POOL은
     //   English category 키만 (forest/ruins/cave/...). loc 파라미터는 항상 Korean
     //   지명이라 직접 매칭 0건이었음. getPoolKeyByLocation이 유일 path.

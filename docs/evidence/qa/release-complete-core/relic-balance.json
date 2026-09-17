@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "9046fc0cee05d6af9289a68989388b226e1229df417a8d5a02ad534b08040a7e",
+  "reportHash": "4e4246c52581e481d4031b07c9f410e1ef072a9ed30e1cc74628879b02a0dbe0",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -86,7 +86,7 @@
           "war_drum"
         ],
         "runtimeOwners": [
-          "src/utils/exploreUtils.ts"
+          "src/hooks/gameActions/exploreFlow.ts"
         ]
       },
       {
@@ -96,7 +96,7 @@
           "regen_core"
         ],
         "runtimeOwners": [
-          "src/utils/exploreUtils.ts"
+          "src/hooks/gameActions/exploreFlow.ts"
         ]
       },
       {
@@ -127,7 +127,7 @@
           "chaos_gem"
         ],
         "runtimeOwners": [
-          "src/utils/exploreUtils.ts"
+          "src/hooks/gameActions/exploreFlow.ts"
         ]
       },
       {
@@ -137,7 +137,7 @@
           "chaos_heart"
         ],
         "runtimeOwners": [
-          "src/utils/exploreUtils.ts"
+          "src/hooks/gameActions/exploreFlow.ts"
         ]
       },
       {
@@ -197,7 +197,7 @@
           "cursed_ring"
         ],
         "runtimeOwners": [
-          "src/utils/exploreUtils.ts",
+          "src/hooks/gameActions/exploreFlow.ts",
           "src/utils/statsCalculator.ts"
         ]
       },
@@ -290,8 +290,8 @@
           "entropy_engine"
         ],
         "runtimeOwners": [
-          "src/systems/CombatEngine.relics.ts",
-          "src/utils/exploreUtils.ts"
+          "src/hooks/gameActions/exploreFlow.ts",
+          "src/systems/CombatEngine.relics.ts"
         ]
       },
       {
@@ -530,8 +530,8 @@
           "phoenix_feather"
         ],
         "runtimeOwners": [
-          "src/systems/CombatEngine.relics.ts",
-          "src/utils/exploreUtils.ts"
+          "src/hooks/gameActions/exploreFlow.ts",
+          "src/systems/CombatEngine.relics.ts"
         ]
       },
       {

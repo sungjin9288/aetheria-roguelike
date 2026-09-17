@@ -114,13 +114,13 @@ export const buildRelicEventChanceReport = ({
         errors.add('WANDERER_CHARM_POLICY_MISMATCH');
     }
 
-    const candidateMap = {
+    const candidateMap: Relic = {
         id: 'ancient_map', effect: 'event_chance', val: numericValue(ancientMap),
     };
-    const candidateCharm = {
+    const candidateCharm: Relic = {
         id: 'wanderer_charm', effect: 'event_chance', val: numericValue(wandererCharm),
     };
-    const legacyMap = { id: 'ancient_map', effect: 'event_chance', val: 0.6 };
+    const legacyMap: Relic = { id: 'ancient_map', effect: 'event_chance', val: 0.6 };
     const candidateBothOrders: [number, number] = [
         getAdditiveNumericRelicValue([candidateMap, candidateCharm], 'event_chance'),
         getAdditiveNumericRelicValue([candidateCharm, candidateMap], 'event_chance'),

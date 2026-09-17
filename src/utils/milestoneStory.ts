@@ -1,6 +1,6 @@
 import type { Player } from '../types/player.js';
 
-export const MILESTONE_STORY_BEATS = {
+const MILESTONE_STORY_BEATS = {
     first_safe_return: {
         eyebrow: '첫 귀환',
         title: '돌아오는 것도 모험이다',

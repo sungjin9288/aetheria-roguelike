@@ -25,8 +25,13 @@ export default defineConfig({
     projects: [
         {
             name: 'chromium-mobile',
-            // iPhone 12 viewport — 실기기와 가장 가까움
-            use: { ...devices['iPhone 12'] },
+            // iPhone 12 viewport/UA/DPR/touch 에뮬레이션 — 실기기와 가장 가까움.
+            // 엔진은 이름 그대로 chromium 으로 고정한다. devices['iPhone 12'] 의 기본 엔진은 webkit 인데,
+            // Linux headless WebKit(ubuntu-24.04 러너)은 click 이 "visible, enabled and stable" 대기에서
+            // rAF 가 멈춰 무기한 hang 하는 업스트림 결함이 열려 있다(microsoft/playwright#33057 —
+            // 2026-09 PR #31 첫 CI 실행에서 progression-acceptance 성장 변경 클릭이 3/3 재현).
+            // 게이트는 결정적이어야 하므로 chromium 을 쓰고, WebKit 실기기 검증은 device-qa/iOS 빌드가 맡는다.
+            use: { ...devices['iPhone 12'], defaultBrowserType: 'chromium' },
         },
     ],
     webServer: {

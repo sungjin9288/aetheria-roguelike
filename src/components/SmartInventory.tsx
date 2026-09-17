@@ -2,7 +2,7 @@ import React, { useCallback, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle, ListTree } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
-import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentIdentity, getItemStatText, getWeaponStyleLabel, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentIdentity, getItemStatText, getWeaponStyleLabel, isWeapon, pickBestEquippable } from '../utils/equipmentUtils';
 import { getEnhanceAvailability, getEnhancePreview, type EnhanceItemSlot } from '../utils/enhancementUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { MSG } from '../data/messages';
@@ -40,7 +40,7 @@ const StatDiff = ({ val, label, suffix }: any) => {
 /**
  * SmartInventory — 인벤토리 스마트 필터 + 장비 비교 (시나리오 2)
  */
-const FILTERS: any = [
+const FILTERS = [
     { id: 'all', label: MSG.INV_FILTER_ALL },
     { id: 'weapon', label: MSG.INV_FILTER_WEAPON },
     { id: 'armor', label: MSG.INV_FILTER_ARMOR },
@@ -49,7 +49,7 @@ const FILTERS: any = [
     { id: 'material', label: MSG.INV_FILTER_MATERIAL },
 ];
 
-const ITEM_TYPE_TO_FILTER: any = {
+const ITEM_TYPE_TO_FILTER: Record<string, string> = {
     weapon: 'weapon',
     armor: 'armor',
     shield: 'shield',
@@ -61,7 +61,7 @@ const ITEM_TYPE_TO_FILTER: any = {
 };
 
 const getItemTags = (item: any) => {
-    const tags: any[] = [];
+    const tags = [];
     if (isWeapon(item) || item?.type === 'shield') tags.push(getWeaponStyleLabel(item));
     return tags;
 };
@@ -104,29 +104,17 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
         });
     }, [grouped, activeFilter]);
 
-    // 지금 장착할 수 있는 upgrade 안에서만 추천 후보를 고른다.
-    const getEquipPreview = useCallback((item: any) => {
-        const decision = getEquipmentDecision(player, item);
-        return decision ? { ...decision.diff, score: decision.score } : { atk: 0, def: 0, crit: 0, mp: 0, score: 0 };
-    }, [player]);
+    // A2 (2026-09 감사 G4): bestWeapon은 getEquipPreview 점수, bestArmor는 raw val이라
+    //   두 슬롯의 "최적" 정책이 서로 달랐다(방어구는 강화·직업 제한을 무시).
+    //   pickBestEquippable이 두 슬롯 모두 getEquipmentDecision 점수(강화 반영)로 통일한다.
+    //   Codex: 추천은 "지금 장착 가능한 실제 업그레이드"만 — upgradesOnly가 score > 0을 요구한다.
+    const bestWeapon = useMemo(() => pickBestEquippable(player, 'weapon', { upgradesOnly: true }), [player]);
+    const bestArmor = useMemo(() => pickBestEquippable(player, 'armor', { upgradesOnly: true }), [player]);
 
     const isEquipUpgrade = useCallback((item: any) => {
         const decision = getEquipmentDecision(player, item);
         return Boolean(decision?.equipable && decision.score > 0);
     }, [player]);
-
-    const bestWeapon = useMemo(() =>
-        (player.inv || [])
-            .filter((i: any) => i.type === 'weapon' && isEquipUpgrade(i))
-            .sort((a: any, b: any) => getEquipPreview(b).score - getEquipPreview(a).score)[0],
-        [player.inv, isEquipUpgrade, getEquipPreview]
-    );
-    const bestArmor = useMemo(() =>
-        (player.inv || [])
-            .filter((i: any) => i.type === 'armor' && isEquipUpgrade(i))
-            .sort((a: any, b: any) => (b.val || 0) - (a.val || 0))[0],
-        [player.inv, isEquipUpgrade]
-    );
 
     const confirmEnhancement = () => {
         if (!enhanceTarget || !enhancePreview?.affordable) return;
@@ -144,7 +132,8 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
     // 시나리오 2: 인벤토리 과밀 감지 (최대의 90%)
     const isInvNearFull = (player.inv || []).length >= BALANCE.INV_FULL_THRESHOLD;
     const sellableMatCount = useMemo(() =>
-        (player.inv || []).filter((i: any) => i.type === 'mat' && (i.price || 0) <= 30).length,
+        (player.inv || []).filter((i: any) => i.type === 'mat'
+            && (i.price || 0) <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX).length,
         [player.inv]
     );
 

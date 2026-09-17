@@ -34,8 +34,6 @@ export const MSG = {
     COMBAT_ENEMY_GUARD: (name: string | undefined) => `${name}이(가) 방어 자세를 취했습니다.`,
     COMBAT_ENEMY_STUNNED: (name: string | undefined) => `${name}이(가) 기절하여 턴을 잃습니다.`,
     COMBAT_CRIT: '치명타!',
-    COMBAT_WEAKNESS: '속성 약점 적중!',
-    COMBAT_RESIST: '적이 속성을 저항했습니다.',
 
     // --- 스킬 (Skill) ---
     // slice 19: tags 추가 — 치명타/약점/저항을 본문에 통합 (COMBAT_ATTACK_DETAIL 동일 패턴)
@@ -83,8 +81,6 @@ export const MSG = {
     // 2026-07 — 에테르 거울: revive 노드(런당 1회 치명상 부활) 발동 로그.
     MIRROR_REVIVE: '[에테르 수호] 거울의 가호가 치명상을 막아냈습니다!',
     MIRROR_PURCHASE: (name: string, newLevel: number, cost: number) => `에테르 거울에 ${name} ${newLevel}단계를 새겼습니다. 계승 정수 -${cost}`,
-    MIRROR_MAX_LEVEL: (name: string) => `${name}은(는) 이미 최대 레벨입니다.`,
-    MIRROR_ESSENCE_INSUFFICIENT: (cost: number) => `에센스가 부족합니다. (필요: ${cost})`,
     // slice 19: 스탯 상승 표기 — 레벨업이 무엇을 바꿨는지 로그에서 즉시 확인 (성장 가시화)
     LEVEL_UP: (level: number, attack: number, health: number) => `레벨 ${level} 상승 · 공격력 +${attack} · 생명 +${health}`,
     LEVEL_MILESTONE: (level: number, gold: number) => `레벨 ${level} 달성 · 골드 ${gold.toLocaleString()} 획득`,
@@ -116,6 +112,16 @@ export const MSG = {
         return `[${label}] 상태이상 피해 ${dmg}`;
     },
 
+    // H1 (Wave 3 감사): 플레이어 상태이상 만료 안내 — BALANCE.PLAYER_STATUS_DURATION_TURNS
+    // 턴이 지나 CombatEngine.tickCombatState가 상태를 해제할 때의 로그.
+    PLAYER_STATUS_EXPIRED: (effect: string) => {
+        const labels: Record<string, string> = {
+            poison: '중독', burn: '화상', bleed: '출혈', freeze: '빙결',
+            stun: '기절', curse: '저주', blind: '실명', fear: '공포',
+        };
+        return `[${labels[effect] || effect}] 효과가 사라졌습니다.`;
+    },
+
     // cycle 116: 데드 마일스톤 / 도감 메시지 키 제거 — MILESTONE_KILLS_*, MILESTONE_BOSS_*,
     // CODEX_DISCOVER/MILESTONE 등은 active 컴포넌트에서 inline 메시지로 대체되어 0건 사용.
 
@@ -131,7 +137,6 @@ export const MSG = {
 
     // --- 프리미엄 (Premium) ---
     PREMIUM_PURCHASE: (name: string, cost: number) => `${name} 교환 완료 (에테르 크리스탈 ${cost}개)`,
-    PREMIUM_NOT_ENOUGH: '에테르 크리스탈이 부족합니다.',
     PREMIUM_INV_EXPAND: (size: number) => `가방을 ${size}칸까지 확장했습니다.`,
 
     // --- 강화 (Enhancement) ---
@@ -187,14 +192,6 @@ export const MSG = {
     CLASS_TIER_1: '1차 전직',
     CLASS_TIER_2: '2차 전직',
     CLASS_TIER_3: '최종 전직',
-    CLASS_STAT_HP: '생명',
-    CLASS_STAT_MP: '기력',
-    CLASS_STAT_ATK: '공격력',
-    CLASS_REQ_LEVEL: (level: number) => `레벨 ${level} 이상`,
-    CLASS_TREE_TITLE: '전직 계통도',
-    CLASS_CURRENT: '현재 직업',
-    CLASS_AVAILABLE: '전직 가능',
-    CLASS_LOCKED: '잠김',
 
     // --- 도감 ---
     // cycle 116: CODEX_NEW_ENTRY/DISCOVERED/UNDISCOVERED/PROGRESS 제거 — 0건 사용.
@@ -228,20 +225,15 @@ export const MSG = {
     SHOP_SELL_DONE: (name: string | undefined, gold: number) => `${name} 판매 · 골드 +${gold}`,
     CRAFT_MAT_INSUFFICIENT: (name: string) => `재료 부족: ${name}`,
     CRAFT_DONE: (name: string) => `${name} 제작 완료`,
-    QUEST_NOT_COMPLETE: '아직 완료 조건을 만족하지 못했습니다.',
     QUEST_REWARD_ITEM: (name: string) => `보상 아이템: ${name}`,
     QUEST_TRAIT_BONUS: (title: string, gold: number) => `${title} 공명 보상 · 골드 +${gold}`,
     QUEST_DONE: (title: string) => `퀘스트 완료: ${title}`,
-    ACH_NOT_UNLOCKED: '아직 달성하지 못한 업적입니다.',
-    ACH_ALREADY_CLAIMED: '이미 수령한 업적입니다.',
     ACH_REWARD_ITEM: (name: string) => `업적 보상 아이템: ${name}`,
     ACH_DONE: (title: string | undefined) => `업적 달성: ${title}`,
     PREMIUM_INSUFFICIENT: (name: string) => `${name}이(가) 부족합니다.`,
-    TITLE_ALREADY_OWNED: '이미 보유 중인 칭호입니다.',
     ITEM_NOT_FOUND: '아이템을 찾을 수 없습니다.',
     SKILL_BRANCH_CHOSEN: (name: string, branchName: string) => `${name} 성장 선택: ${branchName}`,
     SKILL_BRANCH_ALREADY_CHOSEN: (name: string) => `${name}의 첫 성장 선택은 끝났습니다. 안전한 지역에서 다시 선택할 수 있습니다.`,
-    BULK_SELL_EMPTY: '판매할 저가 재료가 없습니다.',
     BULK_SELL_DONE: (count: number, gold: number) => `재료 ${count}개 판매 · 골드 +${gold}`,
 
     // --- 이동/탐험 ---
@@ -295,7 +287,6 @@ export const MSG = {
     GRAVE_FOUND_SINGLE: '근처에서 당신의 유해를 발견했습니다.',
     START_JOURNEY: (name: string) => `${name}의 첫 여정이 시작됩니다.`,
     START_SKILL: (name: string) => `첫 기술로 익힌 능력은 ${name}입니다.`,
-    AI_QUOTA_REACHED: '오늘 AI 호출 한도에 도달했습니다.',
     ABYSS_FLOOR_WARNING: (floor: number) => `🌀 심연 ${floor}층 — 강대한 적들이 기다립니다...`,
     ENEMY_APPEAR: (name: string) => `${name} 등장!`,
     EVENT_RESULT_DEFAULT: '선택의 결과가 반영되었습니다.',
@@ -347,7 +338,6 @@ export const MSG = {
 
     // --- 체인 저널 (Quest 탭) ---
     CHAIN_JOURNAL_TITLE: '진행 중인 이야기',
-    CHAIN_JOURNAL_EMPTY: '아직 진행 중인 이야기가 없습니다. 탐험 중 우연히 시작될 수 있습니다.',
     CHAIN_JOURNAL_STEP: (current: number, total: number) => `${current}/${total} 단계`,
     CHAIN_JOURNAL_NEXT_LOC: (loc: string) => `다음 이야기: ${loc}`,
 
@@ -431,17 +421,13 @@ export const MSG = {
 
     // --- UI 라벨 (버튼/섹션) ---
     UI_CLOSE: '닫기',
-    UI_OPEN: '열기',
     UI_REFRESH: '갱신',
     UI_REVIEW: '검토',
     UI_NOTABLE: '주목',
     // cycle 116: UI_ALL / UI_EQUIPPED 제거 — 0건 사용 (INV_FILTER_ALL과 inline string으로 대체).
-    UI_MY_RANK: '내 순위',
     UI_LOOT_REVIEW: '전리품 검토',
     UI_LOOT_FOCUS: '전리품 주목',
     UI_LOOT_FOCUS_HINT: '이번 전투에서 얻은 장비를 우선 확인하세요.',
-    UI_PRESTIGE: 'PRESTIGE',
-    UI_PRESTIGE_COMPLETE: '환생 완료',
     UI_AUTO_EQUIP_BEST: '최적 장비 자동 장착',
 
     // --- 인벤토리 필터 ---
@@ -452,4 +438,96 @@ export const MSG = {
     INV_FILTER_CONSUMABLE: '회복',
     INV_FILTER_MATERIAL: '재료',
     // cycle 116: INV_FULL_WARNING 제거 — INV_FULL이 active.
+
+    // --- E1: 로컬 에러 리포트 (SystemTab "저장과 기기 점검") ---
+    ERROR_REPORT_COUNT: (count: number) => `저장된 오류 리포트 · ${count}건`,
+    ERROR_REPORT_LAST: (code: string, time: string) => `최근 오류 · ${code} (${time})`,
+    ERROR_REPORT_EMPTY: '저장된 오류 리포트가 없습니다.',
+    ERROR_REPORT_CLEAR_BUTTON: '오류 리포트 지우기',
+    ERROR_REPORT_CLEARED: '오류 리포트를 지웠습니다.',
+    // --- 장비 비교 델타 라벨 (A2 · 2026-09 감사 G4) ---
+    // ShopPanel(getComparisonMeta) / combatActions(_helpers.getLootUpgradeHint)가
+    // 각자 한국어 라벨을 하드코딩하고 있어 표기 드리프트가 가능했다. 단일 원천.
+    EQUIP_DELTA_LABEL: { atk: '공격력', def: '방어력', crit: '치명타', mp: '기력' } as Record<string, string>,
+    EQUIP_DELTA_NONE: '현재 장비와 동일한 효율',
+    EQUIP_DELTA_NONE_COMPACT: '변화 없음',
+    EQUIP_DELTA_OFFHAND_RELEASED: '보조손 해제',
+    // --- 상시 HUD 원정 신호 (2026-09 · 보스 접근 게이지 / 심연 데일리 다이브) ---
+    HUD_BOSS_GAUGE: (ticks: number, total: number) => `보스 접근 ${ticks}/${total}`,
+    HUD_BOSS_GAUGE_FULL: (bossName: string) => `${bossName} 조우 임박`,
+    HUD_ABYSS_DAILY_DIVE: (remaining: number, mult: number) => `오늘의 다이브 ${remaining}전투 ${mult}배`,
+
+    // --- 에테르 거울 진입 (2026-09 · 승천 화면 CTA) ---
+    MIRROR_CTA_LABEL: '에테르 거울 열기',
+    MIRROR_CTA_HINT: (essence: number) => `계승 정수 ${essence}로 영구 성장을 새길 수 있습니다.`,
+    // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
+    SCOUT_ACTION_LABEL: '정찰',
+    SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
+    SCOUT_ACTION_FREE_LABEL: (remaining: number) => `무료 ${remaining}회 남음`,
+    SCOUT_ACTION_HINT: '앞길을 미리 살펴 다음 한 걸음을 고릅니다.',
+    SCOUT_SAFE_ONLY: '안전지대에서는 정찰할 곳이 없습니다.',
+    SCOUT_BUSY: '지금은 정찰할 수 없습니다.',
+    SCOUT_GOLD_INSUFFICIENT: (cost: number) => `정찰에는 골드 ${cost.toLocaleString('ko-KR')}이 필요합니다.`,
+    SCOUT_PAID_LOG: (cost: number) => `골드 ${cost.toLocaleString('ko-KR')}을 들여 앞길을 정찰합니다.`,
+    SCOUT_FREE_LOG: (remaining: number) => `거울의 눈으로 앞길을 정찰합니다. 남은 무료 정찰 ${remaining}회`,
+    SCOUT_TIME_PASSES: '정찰하는 동안에도 시간은 흐릅니다.',
+
+    // --- 2026-09 D2: 전투 후 밀어붙이기 / 숨 고르기 ---
+    POST_COMBAT_CHOICE_TITLE: '다음 한 걸음',
+    POST_COMBAT_PUSH_CHOICE: '밀어붙인다',
+    POST_COMBAT_PUSH_BUFF_NAME: '맹공의 기세',
+    POST_COMBAT_BREATHER_CHOICE: '숨을 고른다',
+    POST_COMBAT_PUSH_DETAIL: (pct: number, turns: number) => `다음 전투 ${turns}턴 공격력 +${pct}% · 보스가 더 빨리 다가옵니다`,
+    POST_COMBAT_BREATHER_DETAIL: (pct: number) => `생명 ${pct}% 회복 · 연속 처치가 끊깁니다`,
+    POST_COMBAT_PUSH_LOG: (pct: number, turns: number) => `숨 돌릴 틈 없이 밀어붙입니다. 다음 전투 ${turns}턴 동안 공격력 +${pct}%.`,
+    POST_COMBAT_PUSH_GAUGE_LOG: '거칠어진 발소리를 따라 보스의 기척이 한 걸음 가까워집니다.',
+    POST_COMBAT_BREATHER_LOG: (health: number) => `자리를 잡고 숨을 고릅니다. 생명 +${health} 회복, 연속 처치는 여기서 끊깁니다.`,
+
+    // --- H4 (Wave 3 감사): 엔진/리듀서/탐험 계층의 하드코딩 한국어 회수 ---
+    //   문구는 이전과 한 글자도 다르지 않다 — 소유만 MSG로 옮긴다.
+    COMBAT_BLIND_MISS: '[실명] 공격이 빗나갔습니다!',
+    COMBAT_FEAR_FLINCH: '[공포] 두려움에 움츠립니다!',
+    RETURN_SUPPLY_DELIVERED: '귀환 보급 지급 · 하급 체력 물약 1개',
+    EXPLORE_KEY_EVENT: '💎 [잊혀진 열쇠]가 빛나며 숨겨진 <고대 보물고> 입구가 열립니다!',
+    EXPLORE_RELIC_DISCOVERED: '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.',
+    EXPLORE_ANOMALY: (desc: string) => `[기상 이변] ${desc}`,
+    EXPLORE_ANOMALY_POISON: '자욱한 독안개가 밀려옵니다! (중독)',
+    EXPLORE_ANOMALY_MANA_REGEN: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)',
+    EXPLORE_ANOMALY_BURN: '피부를 찌르는 산성비가 내립니다. (화상)',
+    EXPLORE_CHAIN_EVENT: (label: string, desc: string) => `📜 [${label}] ${desc}`,
+    // --- 2026-09 Wave 3 I: 이벤트 결과 어휘 확장 (유물 / 상태이상 / 정예 / 버프) ---
+    // 이벤트 outcome이 ±골드를 넘어 분기할 때의 로그. 모델·풀 어느 쪽에서 왔든
+    //   aiEventUtils.normalizeOutcomes를 통과한 값만 여기로 온다.
+    EVENT_RELIC_CHOICE: (count: number) => (
+        count > 1
+            ? `기묘한 기운이 남았습니다. 유물 선택지 ${count}개가 열렸습니다.`
+            : '기묘한 기운이 남았습니다. 유물 하나를 고를 수 있습니다.'
+    ),
+    EVENT_STATUS_APPLIED: (effect: string, turns: number) => {
+        const label = effect === 'poison' ? '중독'
+            : effect === 'burn' ? '화상'
+            : effect === 'bleed' ? '출혈'
+            : effect === 'curse' ? '저주'
+            : effect;
+        return `[${label}] 선택의 흔적이 몸에 남았습니다. 다음 전투에서 ${turns}턴 동안 따라붙습니다.`;
+    },
+    EVENT_BUFF_NAME: '고조된 기세',
+    EVENT_BUFF_APPLIED: (attackPercent: number, defensePercent: number, turns: number) => {
+        const parts = [
+            attackPercent > 0 && `공격력 +${attackPercent}%`,
+            defensePercent > 0 && `방어력 +${defensePercent}%`,
+        ].filter(Boolean).join(' · ');
+        return `기세가 올랐습니다. 다음 전투 ${turns}턴 동안 ${parts}.`;
+    },
+    EVENT_ELITE_AMBUSH: '기척이 짙어집니다 — 정예가 앞을 막아섰습니다.',
+    // --- I4 (2026-09 Wave 3): eventActions 하드코딩 한국어 회수 (출력 문구는 모두 동일) ---
+    CHAIN_REWARD_STAT_LABEL: { atk: '공격력', def: '방어력', hp: '생명', mp: '기력' } as Record<string, string>,
+    CHAIN_REWARD_STAT_BONUS: (parts: string) => `이야기 보상 · ${parts}`,
+    CHAIN_REWARD_COMBAT_BONUS_NAME: '기사의 혼령',
+    ELITE_ENEMY_PREFIX: '정예',
+    ELITE_ENEMY_NAME: (baseName: string) => `정예 ${baseName}`,
+    // --- Wave 4 O2: 유물 선택 추천 사유 (빌드 공명 추첨과 표기를 맞춘다) ---
+    //   '현재 성장 보완'은 이제 실제로 현재 빌드가 굴리는 효과일 때만 쓴다.
+    //   빌드와 무관한 후보는 아래 문구로 구분해 "왜 추천됐는지"가 어긋나지 않게 한다.
+    RELIC_REASON_NEW_DIRECTION: '새로운 성장 방향',
 };

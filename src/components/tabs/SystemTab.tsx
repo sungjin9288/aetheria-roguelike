@@ -12,21 +12,24 @@ import {
     Shield,
     Skull,
     Sparkles,
+    Trash2,
     Trophy,
     Wrench,
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
+import type { FullStats } from '../../types/index.js';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { APP_ID, CONSTANTS } from '../../data/constants';
+import { APP_ID, CONSTANTS, RARITY_CLASSES } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { exportToJson } from '../../utils/fileUtils';
 import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/gameUtils';
-import { RARITY_COLORS } from '../../data/titles';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
 import { formatRelicText, getRelicDisplayName } from '../../utils/relicPresentation';
+import { clearErrorReports, readErrorReports } from '../../platform/localErrorReportStore';
 import { trackRuntimeProductEvent } from '../../platform/productEventCoordinator';
 import { normalizeProductEventJob } from '../../platform/productEvents';
+import { MSG } from '../../data/messages';
 import RelicIcon from '../icons/RelicIcon';
 
 const SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
@@ -86,7 +89,7 @@ const SettingsDisclosure = ({ testId, icon: Icon, title, summary, children }: an
 interface SystemTabProps {
     player?: any;
     actions?: any;
-    stats?: any;
+    stats?: FullStats | null;
     runtime?: any;
 }
 
@@ -242,6 +245,16 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         });
         setNotice({ type: 'success', text: '플레이 기록을 저장했습니다.' });
     }, [player, stats]);
+
+    // E1 — 로컬 에러 리포트 링버퍼 (읽기 전용 노출 + 지우기)
+    const [errorReports, setErrorReports] = useState(() => readErrorReports());
+    const lastErrorReport = errorReports[errorReports.length - 1] || null;
+
+    const handleClearErrorReports = useCallback(() => {
+        clearErrorReports();
+        setErrorReports([]);
+        setNotice({ type: 'success', text: MSG.ERROR_REPORT_CLEARED });
+    }, []);
 
     const updateLiveConfig = useCallback(async (partialConfig: any) => {
         const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
@@ -520,7 +533,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                 <div key={relic.id} className="flex items-center gap-2.5 border-b border-white/6 px-1 pb-2 last:border-b-0 last:pb-0">
                                     <RelicIcon relic={relic} size={42} />
                                     <div className="min-w-0 flex-1">
-                                        <div className={`font-readable text-xs font-bold ${RARITY_COLORS[relic.rarity] || 'text-slate-200'}`}>
+                                        <div className={`font-readable text-xs font-bold ${RARITY_CLASSES[relic.rarity] || 'text-slate-200'}`}>
                                             {getRelicDisplayName(relic.name)}
                                         </div>
                                         <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">{formatRelicText(relic.desc)}</p>
@@ -639,6 +652,30 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                             <div>동기화 · {getQaValueLabel(runtime?.syncStatus)}</div>
                             <div>이야기 · {runtime?.isAiThinking ? '생성 중' : '대기'}</div>
                         </div>
+
+                        <div className="mt-3 flex items-center justify-between gap-2 border-b border-white/8 pb-3">
+                            <div className="min-w-0 font-readable text-[11px] text-slate-400">
+                                <div>{MSG.ERROR_REPORT_COUNT(errorReports.length)}</div>
+                                <div className="mt-0.5 truncate">
+                                    {lastErrorReport
+                                        ? MSG.ERROR_REPORT_LAST(
+                                            lastErrorReport.report.code,
+                                            new Date(lastErrorReport.capturedAt).toLocaleString('ko-KR'),
+                                        )
+                                        : MSG.ERROR_REPORT_EMPTY}
+                                </div>
+                            </div>
+                            <button
+                                type="button"
+                                data-testid="system-clear-error-reports"
+                                onClick={handleClearErrorReports}
+                                disabled={errorReports.length === 0}
+                                className="flex min-h-[44px] shrink-0 items-center gap-1 rounded-[0.55rem] border border-white/8 bg-black/20 px-2.5 py-1.5 font-readable text-[11px] font-semibold text-slate-300 transition-colors hover:bg-black/30 disabled:opacity-40"
+                            >
+                                <Trash2 size={13} /> {MSG.ERROR_REPORT_CLEAR_BUTTON}
+                            </button>
+                        </div>
+
                         <pre className="mt-3 whitespace-pre-wrap break-all font-fira text-[11px] leading-relaxed text-slate-500">{qaReadout}</pre>
                     </SettingsDisclosure>
 

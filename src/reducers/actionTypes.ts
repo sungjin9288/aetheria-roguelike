@@ -39,6 +39,12 @@ export interface ResolveFallbackEventTransactionPayload {
     choiceIndex: number;
 }
 
+/** 2026-09 N1b — 플레이어 호출 정찰의 단일 전이 페이로드 (비용·게이지·카드 개방). */
+export interface ResolveScoutPayload {
+    seed: number;
+    now: number;
+}
+
 export const AT = Object.freeze({
     // Boot / Auth
     SET_BOOT_STAGE: 'SET_BOOT_STAGE',
@@ -95,6 +101,8 @@ export const AT = Object.freeze({
     RESOLVE_CHAIN_GOLD_CHOICE: 'RESOLVE_CHAIN_GOLD_CHOICE',
     DEFER_CHAIN_EVENT: 'DEFER_CHAIN_EVENT',
     RESOLVE_FALLBACK_EVENT_TRANSACTION: 'RESOLVE_FALLBACK_EVENT_TRANSACTION',
+    // 2026-09 N1b — 정찰 1회를 단일 reducer 전이로 해소 (연타 이중 과금 차단)
+    RESOLVE_SCOUT: 'RESOLVE_SCOUT',
 
     // v4.0 — Relic / Prestige / Title / Daily
     SET_PENDING_RELICS: 'SET_PENDING_RELICS',
@@ -132,6 +140,9 @@ export const AT = Object.freeze({
 
     // 2026-07 — 에테르 거울 (에센스 소비 영구 업그레이드 트리)
     PURCHASE_MIRROR_NODE: 'PURCHASE_MIRROR_NODE',
+
+    // 2026-09 — 전투 후 "밀어붙인다 / 숨을 고른다" 2선택 (단일 reducer 전이 + 1회 한정)
+    RESOLVE_POST_COMBAT_CHOICE: 'RESOLVE_POST_COMBAT_CHOICE',
 } as const);
 
 // cycle 301: ActionType type alias 제거 — 외부 import 0건. AT const literal types로 충분.

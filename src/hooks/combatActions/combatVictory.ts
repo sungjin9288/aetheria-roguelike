@@ -16,6 +16,7 @@ import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 import { appendExpeditionBoss } from '../../utils/expeditionLedger';
 import { admitCombatLoot } from '../../systems/combatLootCapacity';
+import type { Player } from '../../types';
 import type { LootSettlementReceipt } from '../../reducers/gameReducer';
 
 /**
@@ -167,7 +168,7 @@ export const handleVictoryOutcome = ({
     // constant 정의만 있고 실제 decay 로직 없어 사망 외엔 streak가 영원히 누적되던 갭.
     // 마지막 킬 timestamp(lastKillAt)와 비교해 elapsed > DECAY_MS이면 새 streak 시작.
     const resolvedAt = currentTime();
-    const lastKillAt = (updatedPlayer as any).lastKillAt;
+    const lastKillAt = updatedPlayer.lastKillAt;
     const decayed = typeof lastKillAt === 'number' && (resolvedAt - lastKillAt) > BALANCE.KILL_STREAK_DECAY_MS;
     const prevStreak = decayed ? 0 : (updatedPlayer.killStreak || 0);
     const newStreak = prevStreak + 1;
@@ -221,13 +222,14 @@ export const handleVictoryOutcome = ({
             const isAreaBossKill = typeof currentMapBoss === 'string' && currentMapBoss === deadEnemy.baseName;
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => {
+                payload: (p: Player) => {
                     const playerWithBossClear = {
                         ...p,
                         stats: {
                             ...p.stats,
                             areaBossDefeated: {
-                                ...(p.stats.areaBossDefeated || {}),
+                                // INITIAL_STATE가 stats를 보장한다(비필수 선언은 구세이브 호환용).
+                                ...(p.stats!.areaBossDefeated || {}),
                                 [deadEnemy.baseName]: true,
                             },
                         },
@@ -248,7 +250,7 @@ export const handleVictoryOutcome = ({
         }
         dispatch({ type: AT.ADD_SEASON_XP, payload: isBossKill ? SEASON_XP.bossKill : SEASON_XP.kill });
         const winHpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
-        dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio)) }) });
+        dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio)) }) });
     }
 
     emitUnlockedTitles(updatedPlayer);
@@ -260,7 +262,7 @@ export const handleVictoryOutcome = ({
                 random,
                 currentTime,
             );
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({
+            dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({
                 ...p,
                 inv: [...(p.inv || []), voidCore],
                 titles: [...new Set([...(p.titles || []), '허무의 정복자'])],
@@ -275,7 +277,9 @@ export const handleVictoryOutcome = ({
 
     const droppedItems = admittedItems.map((i: any) => i.name);
     const traitProfile = getTraitProfile(updatedPlayer, victoryStats);
-    const upgradeHint = getLootUpgradeHint(updatedPlayer.equip, admittedItems);
+    // A2(감사 G4): getLootUpgradeHint는 강화 수치를 반영하려고 player 전체를 받는다.
+    //   대상 목록은 Codex의 수용량 정산을 통과한 admittedItems만이다(가방에 못 들어간 전리품은 힌트 대상 아님).
+    const upgradeHint = getLootUpgradeHint(updatedPlayer, admittedItems);
     const traitHint = getTraitLootHint(admittedItems, traitProfile, updatedPlayer);
     addCombatDigestLogs({
         addLog, enemyName: deadEnemy.name, victoryResult, droppedItems,
@@ -283,7 +287,40 @@ export const handleVictoryOutcome = ({
         bossRewardHint: victoryResult.bossClearBonus?.rewardHint || null,
         bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
     });
-    dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+    // 2026-09 D3: 전투 결과 카드(PostCombatCard)를 실제 승리 흐름에 연결한다.
+    //   기존엔 payload: null을 넣어 카드가 QA 주입(useGameTestApi.injectPostCombatResult)에서만
+    //   열렸고, 카드에 붙은 판단 요약·전리품 신호·"밀어붙인다 / 숨을 고른다" 선택이 모두
+    //   프로덕션에서 보이지 않았다. 필드는 injectPostCombatResult 픽스처와 같은 스키마이며,
+    //   값은 모두 위에서 이미 계산한 것만 재사용한다(신규 계산 없음).
+    //   hpLow/mpLow 불리언 대신 실제 생명/기력 수치를 넘긴다 — outcomeAnalysis가 비율로
+    //   승리 등급(완승/안정/아슬아슬/붕괴 직전)을 나누므로 불리언보다 정확하다.
+    //   카드를 띄울지 말지의 최종 판단은 reducer(settleVictory)가 전투 트랜잭션이 끝난
+    //   상태(유물 선택 대기 / 승천 / 진엔딩 / 진보스)를 보고 한 곳에서 결정한다.
+    const inventoryCap = updatedPlayer.maxInv || BALANCE.INV_MAX_SIZE;
+    dispatch({
+        type: AT.SET_POST_COMBAT_RESULT,
+        payload: {
+            enemy: deadEnemy.name,
+            enemyTier: isBossKill ? 'BOSS' : (deadEnemy?.isElite ? 'ELITE' : 'NORMAL'),
+            isBoss: isBossKill,
+            exp: victoryResult.expGained,
+            gold: victoryResult.goldGained,
+            items: droppedItems,
+            leveledUp: Boolean(victoryResult.leveledUp),
+            playerHp: updatedPlayer.hp,
+            playerMaxHp: victoryStats.maxHp,
+            playerMp: updatedPlayer.mp,
+            playerMaxMp: victoryStats.maxMp,
+            invFull: (updatedPlayer.inv?.length || 0) >= inventoryCap,
+            primaryBuild: buildProfile.primary.name,
+            enemyWeakness: deadEnemy?.weakness || null,
+            enemyResistance: deadEnemy?.resistance || null,
+            upgradeHint,
+            traitHint,
+            bossRewardHint: victoryResult.bossClearBonus?.rewardHint || null,
+            bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
+        },
+    });
 
     // 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
     applyScoutGuaranteedRelic(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });

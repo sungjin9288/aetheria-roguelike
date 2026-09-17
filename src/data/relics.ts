@@ -5,7 +5,28 @@
  */
 
 import { BALANCE } from './constants.js';
-import type { Relic } from '../types/relic.js';
+import type { Relic, RelicSynergy, RelicVal } from '../types/relic.js';
+
+/**
+ * `relic.val`의 number 성분 (dict이거나 없으면 0).
+ *
+ * `Relic`은 `effect` 판별 유니온이라 `relic.effect === 'x'` 비교가 있는 자리에서는
+ * `val`이 자동으로 좁혀진다. 이 접근자는 판별이 불가능한 자리(죽은 분기 보존,
+ * effect를 변수로 받는 일반 헬퍼)에서만 쓰며, 기존 소비처가 쓰던
+ * `typeof relic.val === 'number' ? relic.val : 0` 식과 의미가 같다.
+ * 67종 전체 동치는 `tests/relic-val-accessors.test.js`가 검증한다.
+ */
+export const relicNumber = (relic: Relic | null | undefined): number => (
+    typeof relic?.val === 'number' ? relic.val : 0
+);
+
+/**
+ * `relic.val`의 dict 성분 (number이거나 없으면 빈 객체).
+ * `relicNumber`와 같은 용도 — 판별 없이 dict 키를 읽어야 하는 자리에서만 쓴다.
+ */
+export const relicDict = (relic: Relic | null | undefined): Partial<RelicVal> => (
+    relic && typeof relic.val === 'object' && relic.val !== null ? relic.val : {}
+);
 
 export const RELICS: Relic[] = [
     // ─── 공격 계열 (8개) ───────────────────────────────────────────────────
@@ -408,12 +429,18 @@ export const RELICS: Relic[] = [
 
 /** 희귀도별 가중치 (가중 추첨) */
 // cycle 285: export 제거 — pickWeightedRelics 내부에서만 사용. private const로 downgrade.
+// 2026-09 감사 G8: 구 곡선(50/30/15/4/1)에서는 epic 16종 + legendary 16종, 즉 저작된
+//   유물의 48%가 전체 가중치의 7.9%밖에 차지하지 못해 시너지 20개 중 12개가 사실상
+//   도달 불가였다. 꼬리를 평탄화해 epic+legendary 합계를 17.3%까지 끌어올린다
+//   (실측 분포는 tests/relics.test.js가 살아있는 RELICS 배열로 계산해 고정).
+//   Codex의 개별 유물 등급 조정(예: undying uncommon→epic)과는 층위가 다르다 —
+//   여기는 "등급별 가중치", 저쪽은 "유물의 등급"이다. 둘 다 유지한다.
 const RELIC_WEIGHTS: Readonly<Record<string, number>> = Object.freeze({
-    common: 50,
+    common: 40,
     uncommon: 30,
-    rare: 15,
-    epic: 4,
-    legendary: 1,
+    rare: 18,
+    epic: 9,
+    legendary: 3,
 });
 
 /**
@@ -422,6 +449,25 @@ const RELIC_WEIGHTS: Readonly<Record<string, number>> = Object.freeze({
  */
 const RARITY_ORDER = Object.freeze(['common', 'uncommon', 'rare', 'epic', 'legendary'] as const);
 type RelicRarity = (typeof RARITY_ORDER)[number];
+
+/**
+ * 빌드 아키타입 → 그 빌드가 실제로 굴리는 유물 effect 5종 (앞이 더 핵심).
+ *
+ * Wave 4 O2: 원래 `utils/relicBuildFit.ts`에 있었으나, 추첨(`pickWeightedRelics`)이
+ * 이 표를 읽게 되면서 data 계층이 단일 원천이 됐다. `utils/relicBuildFit.ts`는 여기서
+ * re-export 하므로 기존 importer(BuildAdvicePanel / relicChoiceDecision / 테스트)는 무수정.
+ * data → utils 역방향 import를 만들지 않기 위한 배치다.
+ */
+export const RELIC_EFFECTS_BY_BUILD: Readonly<Record<string, readonly string[]>> = Object.freeze({
+    crusher:  ['double_strike', 'execute_bonus', 'ancient_power', 'combo_stack', 'low_hp_atk'],
+    dual:     ['double_strike', 'combo_stack', 'execute_bonus', 'armor_pen', 'ancient_power'],
+    fortress: ['fortress', 'reflect', 'stone_skin', 'battle_start_heal', 'crit_block'],
+    arcane:   ['skill_mult', 'free_skill', 'mp_regen_turn', 'skill_lifesteal', 'crit_mp_regen'],
+    explorer: ['drop_rate', 'gold_mult', 'event_chance', 'boss_hunter', 'exp_mult'],
+    risk:     ['low_hp_atk', 'execute_bonus', 'ancient_power', 'death_save', 'double_strike'],
+    status:   ['dot_mult', 'armor_pen', 'execute_bonus', 'skill_mult', 'ancient_power'],
+    balanced: ['battle_start_heal', 'stone_skin', 'gold_mult', 'exp_mult', 'ancient_power'],
+});
 
 /**
  * 관대함 하향 (2026-07 밸런스 감사): pool에서 rarityCap 이하 등급만 남기는 순수 필터.
@@ -469,7 +515,7 @@ export const getBaseRelicOfferProbability = (
     const target = pool.find((relic) => relic.id === targetRelicId);
     if (!target) return 0;
 
-    const cappedPool = filterByRarityCap(pool, options?.rarityCap);
+    const cappedPool = filterByRarityCap(pool, options?.rarityCap as Relic['rarity']);
     if (!cappedPool.some((relic) => relic.id === targetRelicId)) return 0;
     if (count === 0) return 0;
     if (count >= cappedPool.length) return 1;
@@ -521,7 +567,7 @@ export const MAX_RELICS_PER_RUN = 5;
  *   (statsCalculator + CombatEngine + 회귀 가드 cycle 153/154/236/237).
  *   syn.id read는 src/, tests/ 어디에도 0건. StatsPanel React key는 syn.name 사용.
  */
-export const RELIC_SYNERGIES = Object.freeze([
+export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
     {
         label: '흡혈 군주',
         requires: ['피의 서약', '영혼 흡수'],
@@ -653,46 +699,86 @@ export const RELIC_SYNERGIES = Object.freeze([
  */
 // cycle 597: relics default [] 제거 — 5 production caller (statsCalculator/
 //   CombatEngine x4) + 1 test 모두 명시 전달이라 default 도달 불가.
-export const getActiveRelicSynergies = (relics: any) => {
-    const ownedNames = new Set(relics.map((r: any) => r.name));
-    return RELIC_SYNERGIES.filter((syn: any) => syn.requires.every((name: any) => ownedNames.has(name)));
+export const getActiveRelicSynergies = (relics: Relic[]): RelicSynergy[] => {
+    const ownedNames = new Set(relics.map((r) => r.name));
+    return RELIC_SYNERGIES.filter((syn) => syn.requires.every((name) => ownedNames.has(name)));
+};
+
+/**
+ * Wave 4 O2: buildId → 그 빌드가 굴리는 effect 집합. 미지정/미등록 빌드는 null —
+ * 이 경우 추첨 가중치는 기존과 완전히 동일(편향 없음)하다.
+ */
+const buildFitEffects = (buildId?: string): Set<string> | null => {
+    if (!buildId) return null;
+    const effects = RELIC_EFFECTS_BY_BUILD[buildId];
+    return effects && effects.length > 0 ? new Set(effects) : null;
 };
 
 /**
  * remaining 배열에서 가중치 기반으로 1개를 뽑아 반환 (remaining 자체는 변경하지 않음).
  * pickWeightedRelics의 일반 슬롯 / 시너지 pity 슬롯 추첨 로직에서 공용으로 사용.
+ *
+ * Wave 4 O2: buildEffects가 주어지면 해당 effect를 가진 유물의 가중치에만
+ * BALANCE.RELIC_BUILD_FIT_WEIGHT_MULT를 곱한다. buildEffects가 없으면 곱셈 자체를
+ * 하지 않아 기존 경로의 부동소수 결과가 비트 단위로 동일하게 유지된다.
  */
-const drawOneWeighted = (remaining: any[], random: () => number) => {
-    const totalWeight = remaining.reduce((sum: any, r: any) => sum + (RELIC_WEIGHTS[r.rarity] || 1), 0);
+const drawOneWeighted = (remaining: Relic[], random: () => number, buildEffects?: Set<string> | null): Relic => {
+    const weightOf = (relic: Relic): number => {
+        const base = RELIC_WEIGHTS[relic.rarity as string] || 1;
+        return buildEffects && buildEffects.has(relic.effect as string)
+            ? base * (BALANCE.RELIC_BUILD_FIT_WEIGHT_MULT || 1)
+            : base;
+    };
+    const totalWeight = remaining.reduce((sum: number, r) => sum + weightOf(r), 0);
     let rand = random() * totalWeight;
     let chosen = remaining[remaining.length - 1]; // fallback
     for (let j = 0; j < remaining.length; j++) {
-        rand -= RELIC_WEIGHTS[remaining[j].rarity] || 1;
+        rand -= weightOf(remaining[j]);
         if (rand <= 0) { chosen = remaining[j]; break; }
     }
     return chosen;
 };
 
 /**
- * owned(보유 유물) 기준 "정확히 1개만 더 모으면 완성"되는 RELIC_SYNERGIES의
- * 잔여 유물 중, pool에 실제로 존재하는(=아직 보유하지 않은) 후보 목록을 반환.
+ * owned(보유 유물) 기준 "거의 완성된" RELIC_SYNERGIES의 잔여 유물 중, pool에 실제로
+ * 존재하는(=아직 보유하지 않은) 후보 목록을 반환.
+ *
+ * - 1순위: 정확히 1개만 더 모으면 완성되는 시너지의 잔여 유물.
+ * - 2순위 (2026-09 감사 G8): 3피스 시너지에서 이미 1개를 보유하고 2개가 부족한 경우의
+ *   잔여 유물 전부. 3피스 세트 5종은 "1개 부족" 상태에 도달하는 것 자체가 어려워
+ *   구 로직에서는 pity가 사실상 발동하지 않았다. 중간 단계를 받쳐준다.
  * - 이미 완성된 시너지(모든 requires 보유)는 후보를 만들지 않는다.
- * - 2개 이상 부족한 시너지도 제외 (정확히 1개 부족일 때만 "소프트 pity" 대상).
+ * - 1순위 후보가 하나라도 있으면 2순위는 쓰지 않는다 (완성에 가까운 쪽 우선).
  * - 결과는 relic id 기준 중복 제거.
  */
-const findSynergyPityCandidates = (pool: any[], owned: any[]) => {
+const findSynergyPityCandidates = (pool: Relic[], owned: Relic[] | undefined): Relic[] => {
     if (!owned || owned.length === 0) return [];
-    const ownedNames = new Set(owned.map((r: any) => r.name));
-    const poolByName = new Map(pool.map((r: any) => [r.name, r]));
-    const candidates = new Map<string, any>();
+    const ownedNames = new Set(owned.map((r) => r.name));
+    const poolByName = new Map(pool.map((r) => [r.name, r]));
+    const nearCandidates = new Map<string, Relic>();
+    const partialCandidates = new Map<string, Relic>();
 
     for (const syn of RELIC_SYNERGIES) {
-        const missingNames = syn.requires.filter((name: string) => !ownedNames.has(name));
-        if (missingNames.length !== 1) continue; // 이미 완성됐거나 2개 이상 부족
-        const missingRelic = poolByName.get(missingNames[0]);
-        if (missingRelic) candidates.set(missingRelic.id, missingRelic);
+        const missingNames = syn.requires.filter((name) => !ownedNames.has(name));
+        if (missingNames.length === 0) continue; // 이미 완성됨
+        const ownedCount = syn.requires.length - missingNames.length;
+
+        if (missingNames.length === 1) {
+            const missingRelic = poolByName.get(missingNames[0]);
+            if (missingRelic) nearCandidates.set(missingRelic.id as string, missingRelic);
+            continue;
+        }
+        // 3피스 이상 세트에서 1개 이상 보유 + 2개 부족 → 부족분 전체를 2순위 후보로.
+        if (syn.requires.length >= 3 && ownedCount >= 1 && missingNames.length === 2) {
+            for (const name of missingNames) {
+                const missingRelic = poolByName.get(name);
+                if (missingRelic) partialCandidates.set(missingRelic.id as string, missingRelic);
+            }
+        }
     }
-    return Array.from(candidates.values());
+
+    if (nearCandidates.size > 0) return Array.from(nearCandidates.values());
+    return Array.from(partialCandidates.values());
 };
 
 // cycle 597: count default 3 제거 — 4 production caller (exploreUtils/
@@ -705,16 +791,21 @@ const findSynergyPityCandidates = (pool: any[], owned: any[]) => {
 // 관대함 하향 (2026-07 밸런스 감사): options.rarityCap을 넘기면 pool을 해당 등급 이하로만
 //   제한한 뒤 기존 로직(시너지 pity 포함)을 그대로 태운다. 시작 부트(characterActions.ts)만
 //   'rare'를 전달 — 일반 탐험 유물 발견(exploreUtils.ts)은 전달하지 않아 기존 확률 분포 불변.
-export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: any[]; rarityCap?: string; rng?: () => number }) => {
+// Wave 4 O2 (빌드–유물 공명): options.buildId를 넘기면 RELIC_EFFECTS_BY_BUILD[buildId]에
+//   속한 effect의 유물만 가중치에 BALANCE.RELIC_BUILD_FIT_WEIGHT_MULT를 곱해 뽑힌다.
+//   buildId 미전달 시 가중치 계산은 기존과 완전히 동일하다(기존 호출부/분포 테스트 무영향).
+//   시너지 pity 슬롯은 편향 대상이 아니다 — pity 후보가 있으면 그 슬롯은 항상 pity가 가진다.
+export const pickWeightedRelics = (pool: Relic[], count: number, options?: { owned?: Relic[]; rarityCap?: string; rng?: () => number; buildId?: string }): Relic[] => {
     const random = typeof options?.rng === 'function' ? options.rng : Math.random;
-    const cappedPool = filterByRarityCap(pool, options?.rarityCap);
+    const buildEffects = buildFitEffects(options?.buildId);
+    const cappedPool = filterByRarityCap(pool, options?.rarityCap as Relic['rarity']);
     if (cappedPool.length === 0) return [];
     const remaining = [...cappedPool];
     const needed = Math.min(count, remaining.length);
     if (needed === 0) return [];
 
-    const result: any[] = [];
-    const pityCandidates = findSynergyPityCandidates(remaining, options?.owned as any[]);
+    const result: Relic[] = [];
+    const pityCandidates = findSynergyPityCandidates(remaining, options?.owned);
 
     if (pityCandidates.length > 0) {
         const pitySlots = Math.min(BALANCE.SYNERGY_PITY_SLOT, needed, pityCandidates.length);
@@ -729,7 +820,7 @@ export const pickWeightedRelics = (pool: any, count: any, options?: { owned?: an
 
     const remainingNeeded = needed - result.length;
     for (let i = 0; i < remainingNeeded; i++) {
-        const chosen = drawOneWeighted(remaining, random);
+        const chosen = drawOneWeighted(remaining, random, buildEffects);
         result.push(chosen);
         remaining.splice(remaining.indexOf(chosen), 1);
     }

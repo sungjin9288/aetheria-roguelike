@@ -2,7 +2,7 @@ import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
 
-const REQUIRED_FIREBASE_KEYS: any = ['apiKey', 'authDomain', 'projectId'];
+const REQUIRED_FIREBASE_KEYS = ['apiKey', 'authDomain', 'projectId'];
 
 const readInjectedConfig = () => {
     if (typeof window === 'undefined') return null;

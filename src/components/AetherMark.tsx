@@ -1,7 +1,7 @@
 
 // cycle 418: sm 제거 — AetherMark consumers (IntroScreen / BootScreen)는
 //   md / lg만 사용. size="sm" 호출 0건이라 SIZE_MAP.sm lookup 절대 hit 안 됨.
-const SIZE_MAP: any = {
+const SIZE_MAP: Record<string, { shell: string }> = {
     md: {
         shell: 'h-10 w-10',
     },

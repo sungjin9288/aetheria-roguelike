@@ -823,7 +823,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 618: 정합성 가드 — caller new Date() 명시 추가', async () => {
-      const source = await readSrc('src/utils/exploreUtils.ts');
+      // Wave 4 N1: dispatch 소비 함수가 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const source = await readSrc('src/hooks/gameActions/exploreFlow.ts');
       assert.ok(/getCurrentWeeklyProtocol\(player\.weeklyProtocol,\s*new Date\(\)\)/.test(source),
           'resetWeeklyProtocolIfNeeded current cycle date 명시');
   });
@@ -937,22 +938,22 @@ import { readFile } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test("cycle 621: signedDelta signature에서 suffix default '' 0건", async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(!/const signedDelta = \([^)]*suffix:\s*any\s*=\s*''\)/.test(source),
-          "signedDelta suffix default '' 제거");
-      assert.ok(/const signedDelta = \(value: any, suffix: any\)/.test(source),
-          'signedDelta suffix 파라미터 보존 (default 없이)');
+  // A2 (2026-09 감사 G4): signedDelta는 equipmentUtils.formatEquipmentDelta로 이관.
+  //   cycle 621의 의도(접미사 default 제거 + 호출부 명시)를 새 위치에서 검증한다.
+  test("cycle 621 (A2 이관): 델타 포맷 헬퍼 signature에 default '' 0건", async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(!/const signedDelta/.test(await readSrc('src/components/ShopPanel.tsx')),
+          'ShopPanel 자체 signedDelta 재도입 금지 (공용 헬퍼로 이관)');
+      assert.ok(/export const formatEquipmentDelta = \(key: EquipmentDeltaKey, value: number\)/.test(source),
+          'formatEquipmentDelta 두 파라미터 모두 default 없이 보존');
   });
 
-  test("cycle 621: 3 callsite suffix '' 명시 추가", async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/signedDelta\(atkDelta,\s*''\)/.test(source),
-          "atkDelta caller suffix '' 명시");
-      assert.ok(/signedDelta\(defDelta,\s*''\)/.test(source),
-          "defDelta caller suffix '' 명시");
-      assert.ok(/signedDelta\(mpDelta,\s*''\)/.test(source),
-          "mpDelta caller suffix '' 명시");
+  test('cycle 621 (A2 이관): 접미사는 단일 맵에서만 결정된다', async () => {
+      const source = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(/EQUIP_DELTA_SUFFIX: Record<EquipmentDeltaKey, string> = \{ atk: '', def: '', crit: '%', mp: '' \}/.test(source),
+          '접미사 맵(atk/def/mp는 없음, crit은 %) 보존');
+      assert.ok(/EQUIP_DELTA_ORDER: EquipmentDeltaKey\[\] = \['atk', 'def', 'crit', 'mp'\]/.test(source),
+          '표시 순서 atk → def → crit → mp 보존');
   });
 
   test('cycle 621: cycle 502-620 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -1068,7 +1069,8 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/systems/DifficultyManager.ts');
       assert.ok(!/countLowHpWins = \(stats:\s*any,\s*threshold:\s*any\s*=\s*0\.2\)/.test(source),
           'countLowHpWins threshold default 0.2 제거');
-      assert.ok(/countLowHpWins = \(stats:\s*any,\s*threshold:\s*any\)/.test(source),
+      // B2(2026-09): stats는 Player['stats'], threshold는 number로 타입화 — 의도(파라미터 보존 + default 없음)는 동일.
+      assert.ok(/countLowHpWins = \(stats: Player\['stats'\],\s*threshold:\s*number\)/.test(source),
           'countLowHpWins threshold 파라미터 보존 (default 없이)');
   });
 
@@ -1451,21 +1453,27 @@ import { readFile } from 'node:fs/promises';
       const exploreActions = await readSrc('src/hooks/gameActions/exploreActions.ts');
       assert.ok(/commitExploreOutcome\('narrative_event',\s*null,\s*mapData\)/.test(exploreActions),
           "narrative_event callsite null + mapData 명시 (2026-07 보스 게이지 누적)");
+      // 2026-09 I-track: `eventData.exhausted` 분기는 생산자가 0건인 죽은 경로여서 제거했다
+      //   (한도 초과는 aiService가 폴백 이벤트에 fallbackReason:'quota'를 붙여 내려보낸다).
+      //   그 분기가 갖고 있던 'nothing' 콜사이트 1건이 함께 사라져 2 → 1이 됐다 —
+      //   "각 콜사이트가 null + mapData를 명시한다"는 계약 자체는 그대로다.
       const exploreActionsNothing = (exploreActions.match(/commitExploreOutcome\('nothing',\s*null,\s*mapData\)/g) || []).length;
-      assert.ok(exploreActionsNothing >= 2, `exploreActions 'nothing' callsite null+mapData 명시 2건 이상 (got ${exploreActionsNothing})`);
+      assert.ok(exploreActionsNothing >= 1, `exploreActions 'nothing' callsite null+mapData 명시 1건 이상 (got ${exploreActionsNothing})`);
 
-      const exploreUtils = await readSrc('src/utils/exploreUtils.ts');
-      const exploreUtilsNothing = (exploreUtils.match(/commitExploreOutcome\('nothing',\s*null,\s*gaugeMapData\)/g) || []).length;
-      assert.ok(exploreUtilsNothing >= 1, `exploreUtils 'nothing' callsite null 명시 1건 이상 (got ${exploreUtilsNothing})`);
-      assert.ok(/commitExploreOutcome\(quietResult,\s*null,\s*gaugeMapData\)/.test(exploreUtils),
+      // Wave 4 N1: runQuietRollAndCombat이 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const exploreFlow = await readSrc('src/hooks/gameActions/exploreFlow.ts');
+      const exploreFlowNothing = (exploreFlow.match(/commitExploreOutcome\('nothing',\s*null,\s*gaugeMapData\)/g) || []).length;
+      assert.ok(exploreFlowNothing >= 1, `exploreFlow 'nothing' callsite null 명시 1건 이상 (got ${exploreFlowNothing})`);
+      assert.ok(/commitExploreOutcome\(quietResult,\s*null,\s*gaugeMapData\)/.test(exploreFlow),
           'quietResult callsite null 명시 보존 (gaugeMapData — skipBossGaugeAdvance 시 null)');
-      assert.ok(/commitExploreOutcome\('relic_found',\s*null,\s*gaugeMapData\)/.test(exploreUtils),
+      assert.ok(/commitExploreOutcome\('relic_found',\s*null,\s*gaugeMapData\)/.test(exploreFlow),
           "'relic_found' callsite null 명시 보존 (gaugeMapData)");
   });
 
   test('cycle 628: combat 2-arg callsite 보존 (line 168)', async () => {
-      // 탐험 스카우팅(2026-07): combat callsite가 exploreUtils.ts로 이동 — 경로만 갱신.
-      const source = await readSrc('src/utils/exploreUtils.ts');
+      // 탐험 스카우팅(2026-07): combat callsite가 exploreUtils.ts로 이동.
+      // Wave 4 N1: 다시 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const source = await readSrc('src/hooks/gameActions/exploreFlow.ts');
       assert.ok(/commitExploreOutcome\('combat',\s*\(nextPlayer:\s*any\)\s*=>/.test(source),
           "combat 2-arg callsite (applyBattleStartRelics callback) 보존");
   });
@@ -1522,7 +1530,8 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/utils/runProfile.ts');
       assert.ok(!/getTraitItemResonance = \([^)]*player:\s*Player\s*\|\s*null\s*=\s*null\)/.test(source),
           'getTraitItemResonance player default null 제거');
-      assert.ok(/getTraitItemResonance = \(item:[^)]+,\s*traitProfile:\s*any,\s*player:\s*Player\s*\|\s*null\)/.test(source),
+      // B2(2026-09): traitProfile이 TraitProfile 타입으로 바뀌었다 — player 파라미터 보존 의도는 동일.
+      assert.ok(/getTraitItemResonance = \(item:[^)]+,\s*traitProfile:[^,]+,\s*player:\s*Player\s*\|\s*null\)/.test(source),
           'getTraitItemResonance player 파라미터 보존 (default 없이)');
   });
 

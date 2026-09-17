@@ -59,6 +59,23 @@ test('ordinary events reveal useful outcome categories without disclosing exact 
     assert.deepEqual(getEventChoicePreview(event, 3), { text: '결과는 선택 뒤에 드러남', tone: 'unknown' });
 });
 
+test('확장 어휘 결과(정예/상태이상/유물/버프)는 선택 전에 위험과 보상이 읽힌다', () => {
+    const event = {
+        choices: ['정면으로 맞선다', '실선을 끊는다', '봉인을 연다', '저울에 올라선다'],
+        outcomes: [
+            { choiceIndex: 0, elite: true },
+            { choiceIndex: 1, gold: 260, hp: -18, status: { id: 'bleed', turns: 2 } },
+            { choiceIndex: 2, gold: 180, relic: { count: 1 } },
+            { choiceIndex: 3, buff: { atkMult: 1.2, turns: 5 } },
+        ],
+    };
+
+    assert.deepEqual(getEventChoicePreview(event, 0), { text: '정예 전투로 이어짐', tone: 'danger' });
+    assert.deepEqual(getEventChoicePreview(event, 1), { text: '보상 가능 · 상태이상 위험', tone: 'danger' });
+    assert.deepEqual(getEventChoicePreview(event, 2), { text: '유물 선택지가 열림', tone: 'reward' });
+    assert.deepEqual(getEventChoicePreview(event, 3), { text: '다음 전투 강화', tone: 'reward' });
+});
+
 test('known campfire, scout, and boss rules are explained before commitment', () => {
     const campfire = buildCampfireEvent({ maxHp: 200, maxMp: 100 });
     assert.deepEqual(getEventChoicePreview(campfire, 0), { text: '생명 +80 · 기력 +40', tone: 'recovery' });
@@ -148,10 +165,11 @@ test('story-chain gold costs are exact danger previews while positive gold remai
 });
 
 test('event screen and result log keep the same natural player vocabulary', async () => {
-    const [panel, actions, smokeInjector] = await Promise.all([
+    const [panel, actions, smokeInjector, messages] = await Promise.all([
         readSrc('src/components/EventPanel.tsx'),
         readSrc('src/hooks/gameActions/eventActions.ts'),
         readSrc('src/hooks/useGameTestApi.ts'),
+        readSrc('src/data/messages.ts'),
     ]);
 
     for (const label of ['탐험 중 마주친 일', '지금 상황', '어떤 길을 택하시겠습니까?', '예상 결과']) {
@@ -161,7 +179,9 @@ test('event screen and result log keep the same natural player vocabulary', asyn
     assert.doesNotMatch(panel, /Decision Window|>Event<|>Prompt<|Choice \{idx \+ 1\}|>\s*Commit\s*</);
 
     assert.match(actions, /formatEventText\(selectedOutcome\.log/);
-    assert.match(actions, /이야기 보상 ·/);
+    // 2026-09 Wave 3 I4: 문구 자체는 MSG로 옮겼다 — 훅은 MSG를 부르고, 문장은 messages.ts에 있다.
+    assert.match(actions, /MSG\.CHAIN_REWARD_STAT_BONUS\(parts\)/);
+    assert.match(messages, /CHAIN_REWARD_STAT_BONUS: \(parts: string\) => `이야기 보상 · \$\{parts\}`/);
     assert.doesNotMatch(actions, /`ATK \+|`DEF \+|`HP \+|`MP \+|\[체인 보상\]/);
     assert.doesNotMatch(smokeInjector, /\[TEST EVENT\]/);
 });

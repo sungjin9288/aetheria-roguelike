@@ -300,6 +300,11 @@ export const CLASSES: Record<string, ClassDef> = {
                 { choice: 'A', label: '정화의 광선', desc: '데미지 +35%', override: { mult: 2.43 } },
                 { choice: 'B', label: '기절의 빛', desc: '25% 확률 기절 1턴', override: { mult: 1.8, effect: 'stun', effectChance: 0.25 } },
             ],
+            // Wave 4 O1: 두 번째 분기 — 회복 총량 vs 회복 + 보호. 성직자의 역할 선택.
+            '기적의 손길': [
+                { choice: 'A', label: '충만한 손길', desc: '생명 회복 15%에서 22%로 상승', override: { effect: 'hp_regen', val: 0.22 } },
+                { choice: 'B', label: '수호의 손길', desc: '생명 15% 회복 + 방어력 40% 상승 3턴', override: { effect: 'hp_regen', val: 0.15, defBonus: 1.4 } },
+            ],
         },
         next: ['팔라딘']
     },
@@ -325,6 +330,11 @@ export const CLASSES: Record<string, ClassDef> = {
                 { choice: 'A', label: '심판의 강타', desc: '데미지 +30%', override: { mult: 4.55 } },
                 { choice: 'B', label: '봉인의 강타', desc: '기절 2턴 (1→2턴)', override: { mult: 3.5, effect: 'stun', stunTurn: 2 } },
             ],
+            // Wave 4 O1: 두 번째 분기 — 단일 대상 보호 강화 vs 보호 유지 + 상태이상 정화.
+            '성스러운 방패': [
+                { choice: 'A', label: '불굴의 방패', desc: '방어력 150%에서 200% 상승으로 강화 5턴', override: { effect: 'def_up', val: 3.0 } },
+                { choice: 'B', label: '정화의 방패', desc: '방어력 150% 상승 5턴 + 내 상태이상 정화', override: { effect: 'purify', defBonus: 2.5 } },
+            ],
         },
         next: []
     },
@@ -347,6 +357,11 @@ export const CLASSES: Record<string, ClassDef> = {
             '용의 포효': [
                 { choice: 'A', label: '폭염의 포효', desc: '데미지 +30%', override: { mult: 5.85 } },
                 { choice: 'B', label: '맹독의 숨결', desc: '화상 + 독 동시 부여', override: { mult: 4.5, secondEffect: 'poison' } },
+            ],
+            // Wave 4 O1: 두 번째 분기 — 한 방 폭발 화력 vs 화상에 출혈을 더한 지속 피해.
+            '용왕의 노여움': [
+                { choice: 'A', label: '멸망의 화염', desc: '피해 +25%', override: { mult: 11.25 } },
+                { choice: 'B', label: '불타는 낙인', desc: '피해 유지 + 화상과 출혈 동시 부여', override: { mult: 9.0, secondEffect: 'bleed' } },
             ],
         },
         next: []
@@ -371,6 +386,13 @@ export const CLASSES: Record<string, ClassDef> = {
                 { choice: 'A', label: '절대 소멸', desc: '데미지 +25%', override: { mult: 7.5 } },
                 { choice: 'B', label: '얼어붙는 파멸', desc: '화상 + 빙결 동시 부여', override: { mult: 6.0, secondEffect: 'freeze' } },
             ],
+            // Wave 4 O1: 두 번째 분기 — 집중(단일 폭발) vs 연쇄(빙결 2턴 + 저주). B는 정화를 포기한다.
+            //   base '대소멸' effect 'purify'는 적 상태이상 경로가 아니므로 B에서 'freeze'로 교체해야
+            //   실제로 발현한다 (아크메이지 '천벌' B와 동일 패턴).
+            '대소멸': [
+                { choice: 'A', label: '집중 소멸', desc: '피해 +25%', override: { mult: 12.5 } },
+                { choice: 'B', label: '연쇄 소멸', desc: '정화를 포기하고 빙결 2턴 + 저주 연쇄', override: { mult: 10.0, effect: 'freeze', secondEffect: 'curse', stunTurn: 2 } },
+            ],
         },
         next: []
     },
@@ -393,6 +415,11 @@ export const CLASSES: Record<string, ClassDef> = {
             '신의 일격': [
                 { choice: 'A', label: '필멸의 일격', desc: '치명타 확률 100% 확정', override: { crit: 1.0 } },
                 { choice: 'B', label: '독혈의 일격', desc: '독 부여 + 데미지', override: { mult: 7.0, secondEffect: 'poison' } },
+            ],
+            // Wave 4 O1: 두 번째 분기 — 처형 화력 vs 회피 지속(다음 적 공격 1회 무효).
+            '허무의 각': [
+                { choice: 'A', label: '처형의 각', desc: '피해 +20%', override: { mult: 13.2 } },
+                { choice: 'B', label: '허무의 장막', desc: '피해 유지 + 다음 적 공격 1회 회피', override: { mult: 11.0, effect: 'stealth' } },
             ],
         },
         next: []
@@ -451,6 +478,11 @@ export const CLASSES: Record<string, ClassDef> = {
                 { choice: 'A', label: '시공 소멸', desc: '데미지 4.8배 (순수 폭딜)', override: { mult: 4.8 } },
                 { choice: 'B', label: '확정 파열', desc: '치명타 확정', override: { mult: 3.5, crit: 1.0 } },
             ],
+            // Wave 4 O1: 세 번째 분기 — 되감기(쿨타임 초기화 + 보호) vs 가속(초기화를 버리고 추가 행동).
+            '시간 역행': [
+                { choice: 'A', label: '심층 되감기', desc: '쿨타임 초기화 + 방어력 50% 상승 3턴', override: { effect: 'resetCooldowns', defBonus: 1.5 } },
+                { choice: 'B', label: '역류 가속', desc: '쿨타임 초기화를 포기하고 추가 행동 + 공격력 30% 상승', override: { effect: 'extraTurn', val: 1.3 } },
+            ],
         },
         next: []
     },
@@ -473,6 +505,11 @@ export const CLASSES: Record<string, ClassDef> = {
             '신성 화살비': [
                 { choice: 'A', label: '관통 화살비', desc: '데미지 +30%', override: { mult: 7.15 } },
                 { choice: 'B', label: '표식의 화살비', desc: '기절 + 출혈 동시 부여 (30% 확률)', override: { mult: 5.5, secondEffect: 'bleed', effectChance: 0.3 } },
+            ],
+            // Wave 4 O1: 두 번째 분기 — 다중 사격(순수 화력) vs 표식 폭발(출혈 + 독 지속 피해).
+            '천지의 화살': [
+                { choice: 'A', label: '다중 사격', desc: '피해 +25%', override: { mult: 11.875 } },
+                { choice: 'B', label: '표식 폭발', desc: '피해 유지 + 출혈과 독 동시 부여', override: { mult: 9.5, effect: 'bleed', secondEffect: 'poison' } },
             ],
         },
         next: []

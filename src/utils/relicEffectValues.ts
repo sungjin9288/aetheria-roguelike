@@ -1,10 +1,10 @@
-import type { Relic } from '../types/relic.js';
+import type { NumericRelicEffect, Relic } from '../types/relic.js';
 
 const normalizeRelicTotal = (value: number) => Number(value.toFixed(12));
 
 export const getAdditiveNumericRelicValue = (
     relics: readonly Relic[],
-    effect: string,
+    effect: NumericRelicEffect,
 ): number => {
     let total = 0;
 

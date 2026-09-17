@@ -4,13 +4,16 @@ import { MSG } from '../../data/messages';
 import { DB } from '../../data/db';
 import { toArray, grantGold, findItemByName } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
-import { pickWeightedRelics } from '../../data/relics';
+import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
-import { spawnEnemy, rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from '../../utils/exploreUtils';
+import { spawnEnemy } from '../../utils/exploreUtils';
+import { rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from './exploreFlow';
 import { BALANCE } from '../../data/constants';
+import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
+import type { Player } from '../../types';
 import {
     STRUCTURED_FALLBACK_TRANSACTIONS,
     getStructuredFallbackTransaction,
@@ -130,14 +133,26 @@ export const createEventActions = (deps: any, shared: any) => {
                         }
                     }
                     if (rwd.type === 'relic') {
-                        const pickedRelics = pickWeightedRelics(updatedPlayer.relics || [], 1, { rng });
+                        // 2026-09 감사 G8: pool은 "아직 보유하지 않은 유물"이어야 하고,
+                        //   owned를 넘겨야 시너지 소프트 pity가 체인 보상에도 적용된다.
+                        //   (기존에는 보유 유물 자체를 pool로 넘겨 중복만 뽑히고 pity도 미적용)
+                        const ownedRelics = updatedPlayer.relics || [];
+                        const availableRelics = RELICS.filter(
+                            (r: any) => !ownedRelics.some((pr: any) => pr.id === r.id),
+                        );
+                        // Wave 4 O2: 체인 보상도 현재 빌드 아키타입에 공명시킨다 (pity 우선은 유지).
+                        const pickedRelics = pickWeightedRelics(availableRelics, 1, {
+                            owned: ownedRelics,
+                            rng,
+                            buildId: fullStats?.buildProfile?.primary?.id,
+                        });
                         if (pickedRelics.length > 0) {
                             updatedPlayer = { ...updatedPlayer, relics: [...(updatedPlayer.relics || []), pickedRelics[0]] };
-                            addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name));
+                            addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name!));
                         }
                     }
                     if (rwd.type === 'combat_bonus') {
-                        updatedPlayer = { ...updatedPlayer, tempBuff: { atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: '기사의 혼령' } };
+                        updatedPlayer = { ...updatedPlayer, tempBuff: { atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: MSG.CHAIN_REWARD_COMBAT_BONUS_NAME } };
                         addLog('success', MSG.CHAIN_REWARD_COMBAT_BONUS(Math.round(((rwd.atkMult || 1.3) - 1) * 100), rwd.duration || 5));
                     }
                     // cycle 62: stat_bonus는 영구 ATK/DEF/HP 가산 — 기존 chain(rift_secret)에서
@@ -155,13 +170,13 @@ export const createEventActions = (deps: any, shared: any) => {
                             next.mp = Math.min(next.maxMp, (next.mp || 0) + rwd.mp);
                         }
                         updatedPlayer = next;
-                        const parts = [
-                            rwd.atk && `공격력 +${rwd.atk}`,
-                            rwd.def && `방어력 +${rwd.def}`,
-                            rwd.hp && `생명 +${rwd.hp}`,
-                            rwd.mp && `기력 +${rwd.mp}`,
-                        ].filter(Boolean).join(' · ');
-                        addLog('success', `이야기 보상 · ${parts}`);
+                        // I4 (2026-09 Wave 3): 하드코딩 한국어 → MSG 단일 원천 (출력 문구는 동일).
+                        const statLabels = MSG.CHAIN_REWARD_STAT_LABEL;
+                        const parts = (['atk', 'def', 'hp', 'mp'] as const)
+                            .filter((key) => rwd[key])
+                            .map((key) => `${statLabels[key]} +${rwd[key]}`)
+                            .join(' · ');
+                        addLog('success', MSG.CHAIN_REWARD_STAT_BONUS(parts));
                     }
                 }
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
@@ -199,8 +214,14 @@ export const createEventActions = (deps: any, shared: any) => {
                 if (selectedOutcome.item) updatedPlayer = addItemByName(updatedPlayer, selectedOutcome.item);
                 // 캠프파이어 "단련" 등 — 다음 전투용 tempBuff 부여 (combatItem 물약과 동일 패턴).
                 //   turn-based라 전투 전까지 유지되며 다음 전투에서 소모된다.
+                //   2026-09 Wave 3 I1: 이벤트 outcome이 보내는 { atkMult/defMult/turns } 배율
+                //   스키마도 같은 tempBuff로 환산한다(캠프파이어의 { atk, def, turn, name }는 불변).
                 if (selectedOutcome.buff) {
-                    updatedPlayer = { ...updatedPlayer, tempBuff: { atk: 0, def: 0, turn: 0, name: null, ...selectedOutcome.buff } };
+                    updatedPlayer = applyOutcomeBuff(updatedPlayer, selectedOutcome.buff, addLog);
+                }
+                // 상태이상 — 기상 이변(exploreFlow)과 동일하게 id 문자열만 중복 없이 누적한다.
+                if (selectedOutcome.status) {
+                    updatedPlayer = applyOutcomeStatus(updatedPlayer, selectedOutcome.status, addLog);
                 }
                 resultText = formatEventText(selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT);
                 addLog('event', resultText);
@@ -231,14 +252,120 @@ export const createEventActions = (deps: any, shared: any) => {
             dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
             emitUnlockedTitles(updatedPlayer);
             dispatch({ type: AT.SET_EVENT, payload: null });
+
+            // 2026-09 Wave 3 I1: 유물 선택지를 먼저 큐잉하고 전투는 맨 마지막에 연다.
+            //   순서를 뒤집으면 전투 전이가 나머지 보상 dispatch를 삼킨다.
+            if (selectedOutcome?.relic) {
+                queueOutcomeRelics(updatedPlayer, selectedOutcome.relic, {
+                    dispatch, addLog, rng, buildId: fullStats?.buildProfile?.primary?.id,
+                });
+            }
+
+            if (selectedOutcome?.elite) {
+                startEliteEncounter(updatedPlayer, { dispatch, addLog, getFullStats, rng });
+                return;
+            }
+
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
         },
     };
 };
 
 /**
+ * 이벤트 outcome 버프 → tempBuff 환산 (2026-09 Wave 3 I1).
+ * - 신규 배율 스키마 { atkMult?, defMult?, turns }: aiEventUtils가 BALANCE 상한으로 잘라 보낸다.
+ * - 기존 캠프파이어 스키마 { atk, def, turn, name }: 그대로 spread (동작 불변).
+ */
+const applyOutcomeBuff = (player: Player, buff: any, addLog: any) => {
+    const isMultSchema = buff.atkMult !== undefined || buff.defMult !== undefined || buff.turns !== undefined;
+    if (!isMultSchema) {
+        return { ...player, tempBuff: { atk: 0, def: 0, turn: 0, name: null, ...buff } };
+    }
+    const atk = Math.max(0, (Number(buff.atkMult) || 1) - 1);
+    const def = Math.max(0, (Number(buff.defMult) || 1) - 1);
+    const turn = Math.max(0, Number(buff.turns) || 0);
+    if (turn <= 0 || (atk <= 0 && def <= 0)) return player;
+    addLog('success', MSG.EVENT_BUFF_APPLIED(Math.round(atk * 100), Math.round(def * 100), turn));
+    return { ...player, tempBuff: { atk, def, turn, name: MSG.EVENT_BUFF_NAME } };
+};
+
+/**
+ * 이벤트 outcome 상태이상 적용 (2026-09 Wave 3 I1).
+ * exploreFlow의 기상 이변 경로와 같은 표현(문자열 id 중복 없는 누적)을 쓴다.
+ * 화이트리스트는 aiEventUtils에서 이미 통과했지만, dispatch 직전에 한 번 더 확인한다.
+ */
+const applyOutcomeStatus = (player: Player, status: any, addLog: any) => {
+    const id = String(status?.id || '');
+    if (!BALANCE.EVENT_STATUS_IDS.includes(id)) return player;
+    const turns = Math.max(1, Number(status?.turns) || 1);
+    addLog('warning', MSG.EVENT_STATUS_APPLIED(id, turns));
+    // H1 연동: 전투 중 tickPlayerStatusDurations가 읽는 statusTurns에 지속 턴을 기록한다.
+    //   이미 같은 상태가 더 길게 남아 있으면 줄이지 않는다(중첩 부여는 연장만 한다).
+    const prevTurns = (player.statusTurns || {}) as Record<string, number>;
+    const statusTurns = { ...prevTurns, [id]: Math.max(prevTurns[id] || 0, turns) };
+    return { ...player, status: [...new Set([...(player.status || []), id])], statusTurns };
+};
+
+/**
+ * 이벤트 outcome 유물 선택지 큐잉 (2026-09 Wave 3 I1).
+ * 체인 보상(위 handleEventChoice)과 같은 pickWeightedRelics(available, n, { owned, rng }) 경로를
+ * 그대로 쓰고, 보유 한도를 넘는 경우에는 조용히 건너뛴다(탐험 중 유물 발견과 동일 규칙).
+ */
+const queueOutcomeRelics = (player: Player, relic: any, { dispatch, addLog, rng, buildId }: any) => {
+    const ownedRelics = player.relics || [];
+    if (ownedRelics.length >= getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics) return;
+    const count = Math.max(1, Math.min(BALANCE.EVENT_RELIC_MAX_COUNT, Number(relic?.count) || 1));
+    const available = RELICS.filter((r: any) => !ownedRelics.some((pr: any) => pr.id === r.id));
+    if (available.length === 0) return;
+    // Wave 4 O2: 이벤트 outcome 유물 3택도 체인 보상과 같은 빌드 공명 규칙을 쓴다.
+    const candidates = pickWeightedRelics(available, count, { owned: ownedRelics, rng, buildId });
+    if (candidates.length === 0) return;
+    dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
+    addLog('event', MSG.EVENT_RELIC_CHOICE(candidates.length));
+};
+
+/**
+ * 정예 조우 스탯 — 정찰 "정예의 흔적" 카드와 동일한 산출(신규 스폰 로직 없음).
+ * 확정 유물 보상(scoutGuaranteedRelic)은 "골라서 들어간" 정찰 카드에만 붙인다.
+ */
+const buildEliteStats = (rawStats: any, baseName: string) => ({
+    ...rawStats,
+    name: rawStats.name?.startsWith(MSG.ELITE_ENEMY_PREFIX) ? rawStats.name : MSG.ELITE_ENEMY_NAME(baseName),
+    baseName,
+    isElite: true,
+    hp: Math.floor(rawStats.hp * BALANCE.SCOUT_ELITE_HP_MULT),
+    maxHp: Math.floor(rawStats.maxHp * BALANCE.SCOUT_ELITE_HP_MULT),
+    atk: Math.floor(rawStats.atk * BALANCE.SCOUT_ELITE_HP_MULT),
+});
+
+/**
+ * 이벤트 outcome의 정예 조우 (2026-09 Wave 3 I1).
+ * 정찰 elite 카드 / 보스 게이지 도전과 동일한 파이프(spawnEnemy → applyBattleStartRelics →
+ * SET_ENEMY → GS.COMBAT)를 재사용한다. 탐험 카운터는 이벤트가 열릴 때 이미 커밋됐으므로
+ * commitExploreOutcome은 호출하지 않는다(중복 누적 방지).
+ */
+const startEliteEncounter = (player: Player, { dispatch, addLog, getFullStats, rng }: any) => {
+    const mapData = DB.MAPS[player.loc!];
+    if (!mapData) {
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+        return;
+    }
+    const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, player.relics || [], { addLog }, { rng });
+    const fullStats = getFullStats();
+    dispatch({
+        type: AT.SET_PLAYER,
+        payload: (p: Player) => applyBattleStartRelics(p, p.relics || [], fullStats, { addLog, rng }),
+    });
+    const mStats = buildEliteStats(rawStats, baseName);
+    dispatch({ type: AT.SET_ENEMY, payload: mStats });
+    dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+    addLog('warning', MSG.EVENT_ELITE_AMBUSH);
+    addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+};
+
+/**
  * 스카우팅 카드 선택 처리 — 카드 4종(combat/anomaly/unknown/elite)을 같은 탐험 턴 안에서
- * 즉시 해소한다. exploreUtils.ts의 기존 파이프 함수들(spawnEnemy/rollExplorationEvent/
+ * 즉시 해소한다. 기존 파이프 함수들(exploreUtils.spawnEnemy / exploreFlow의 rollExplorationEvent/
  * applyBattleStartRelics/runQuietRollAndCombat)을 재호출/재배치하는 방식 — 신규 스폰
  * 로직을 만들지 않는다.
  */
@@ -252,7 +379,7 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any) => {
     }
 
     addLog('event', outcome.log || '');
-    const mapData = DB.MAPS[player.loc];
+    const mapData = DB.MAPS[player.loc!];
     const playerRelics = player.relics || [];
 
     // 이벤트 패널을 닫고(현재 스카우팅 카드) 아래 분기에서 필요한 다음 상태를 dispatch한다.
@@ -275,16 +402,7 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any) => {
         );
         const isEliteCard = outcome.scoutEffect === 'elite';
         const mStats = isEliteCard
-            ? {
-                ...rawStats,
-                name: rawStats.name?.startsWith('정예') ? rawStats.name : `정예 ${baseName}`,
-                baseName,
-                isElite: true,
-                hp: Math.floor(rawStats.hp * BALANCE.SCOUT_ELITE_HP_MULT),
-                maxHp: Math.floor(rawStats.maxHp * BALANCE.SCOUT_ELITE_HP_MULT),
-                atk: Math.floor(rawStats.atk * BALANCE.SCOUT_ELITE_HP_MULT),
-                scoutGuaranteedRelic: true,
-            }
+            ? { ...buildEliteStats(rawStats, baseName), scoutGuaranteedRelic: true }
             : { ...rawStats, scoutRewardBonus: outcome.rewardBonus ?? BALANCE.SCOUT_COMBAT_REWARD_BONUS };
 
         const fullStats = getFullStats();
@@ -363,7 +481,7 @@ const handleBossGaugeChoice = (idx: any, currentEvent: any, deps: any) => {
     }
 
     // 도전 — 게이지 리셋 + 구역 보스 결정론적 스폰.
-    const mapData = DB.MAPS[player.loc];
+    const mapData = DB.MAPS[player.loc!];
     const playerRelics = player.relics || [];
     const { mStats } = spawnEnemy(
         mapData,
@@ -376,8 +494,8 @@ const handleBossGaugeChoice = (idx: any, currentEvent: any, deps: any) => {
     const fullStats = getFullStats();
     dispatch({
         type: AT.SET_PLAYER,
-        payload: (p: any) => {
-            const nextPlayer = { ...p, stats: resetBossGaugeAfterChallenge(p, p.loc) };
+        payload: (p: Player) => {
+            const nextPlayer = { ...p, stats: resetBossGaugeAfterChallenge(p, p.loc!) };
             return applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog, rng });
         },
     });

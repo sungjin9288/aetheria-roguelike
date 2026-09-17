@@ -1,11 +1,11 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
-import type { Monster, Player, Relic } from '../types/index.js';
+import type { FullStats, Monster, NumericRelicEffect, Player, Relic } from '../types/index.js';
 
 export function getStrongestNumericRelicValue(
     relics: readonly Relic[],
-    effect: string,
+    effect: NumericRelicEffect,
 ): number {
     let strongest = 0;
 
@@ -28,7 +28,7 @@ export function getStrongestNumericRelicValue(
  * 호출 시점 바인딩 → 객체 any.
  */
 export const actionMethods: any = {
-    attack(player: Player, enemy: Monster, stats: any, rng?: () => number) {
+    attack(player: Player, enemy: Monster, stats: FullStats, rng?: () => number) {
         const random = typeof rng === 'function' ? rng : Math.random;
         // cycle 107: freeze/stun 상태이상 턴 스킵 — 보스 phase 2/3가 부여하는
         // freeze/stun이 player 쪽에서 처리되지 않아 정상 공격되던 회귀 fix.
@@ -52,7 +52,7 @@ export const actionMethods: any = {
             return {
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
-                logs: [{ type: 'warning', text: '[실명] 공격이 빗나갔습니다!' }],
+                logs: [{ type: 'warning', text: MSG.COMBAT_BLIND_MISS }],
                 isCrit: false,
                 isVictory: false,
             };
@@ -64,7 +64,7 @@ export const actionMethods: any = {
             return {
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
-                logs: [{ type: 'warning', text: '[공포] 두려움에 움츠립니다!' }],
+                logs: [{ type: 'warning', text: MSG.COMBAT_FEAR_FLINCH }],
                 isCrit: false,
                 isVictory: false,
             };
@@ -78,7 +78,7 @@ export const actionMethods: any = {
 
         // 유물: 방어 무시 (armor_pen) — PR #3: 적 DEF 경감 단계(mitigateByEnemyDef)에서
         //   effDef를 줄이는 방식으로 작동. 여기선 태그 표기용으로만 보유 여부 확인.
-        const apRelic = relics.find((r: any) => r.effect === 'armor_pen');
+        const apRelic = relics.find((r) => r.effect === 'armor_pen');
 
         const { damage: rawBaseDmg, isCrit } = this.calculateDamage(stats, {
             mult: 1,
@@ -92,22 +92,22 @@ export const actionMethods: any = {
         });
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
-        const critDmgRelic = relics.find((r: any) => r.effect === 'crit_dmg');
+        const critDmgRelic = relics.find((r) => r.effect === 'crit_dmg');
         // cycle 154: 시너지 'void_dragon' / 'primordial_wrath' — bonus.critDmg 곱셈 추가.
-        const critDmgSyn = (stats.activeSynergies || []).find((s: any) =>
+        const critDmgSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg);
         const critDmgMult = (critDmgRelic?.val || 1) * (isCrit && critDmgSyn ? (critDmgSyn.bonus.critDmg || 1) : 1);
         const baseDmg = (isCrit && (critDmgRelic || critDmgSyn)) ? Math.floor(rawBaseDmg * critDmgMult) : rawBaseDmg;
 
         // 유물: 연격 (double_strike) — 두 번째 타격 추가
-        const dsRelic = relics.find((r: any) => r.effect === 'double_strike');
+        const dsRelic = relics.find((r) => r.effect === 'double_strike');
         const secondHit = dsRelic ? Math.floor(baseDmg * dsRelic.val) : 0;
         const damage = baseDmg + secondHit;
 
         // 유물: 처형자의 날 (execute_bonus) — 적 HP 25% 미만 시 추가 피해.
-        const exRelic = relics.find((r: any) => r.effect === 'execute_bonus');
+        const exRelic = relics.find((r) => r.effect === 'execute_bonus');
         // cycle 156: 시너지 'annihilator' (executeThreshold 0.35) — 처형 임계치 상향. 유물의 threshold와 max 합산.
-        const annihilatorSyn = (stats.activeSynergies || []).find((s: any) =>
+        const annihilatorSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'annihilator' || s.bonus.executeThreshold);
         const exThreshold = Math.max(exRelic?.val?.threshold || 0, annihilatorSyn?.bonus.executeThreshold || 0);
         const executeTriggered = Boolean((exRelic || annihilatorSyn) && (enemy.hp ?? 0) / (enemy.maxHp || 1) < exThreshold);
@@ -116,7 +116,7 @@ export const actionMethods: any = {
             ? Math.floor(damage * (1 + exMult))
             : damage;
 
-        const comboRelic = relics.find((relic: any) => relic.effect === 'combo_stack');
+        const comboRelic = relics.find((relic) => relic.effect === 'combo_stack');
         let comboTriggered = false;
         if (comboRelic) {
             if ((flags.comboCount || 0) >= comboRelic.val.stack) {
@@ -128,7 +128,7 @@ export const actionMethods: any = {
             }
         }
 
-        const voidHeartRelic = relics.find((relic: any) => relic.effect === 'void_heart');
+        const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
         let voidHeartTriggered = false;
         if (voidHeartRelic && flags.voidHeartArmed) {
             finalDamage = Math.floor(finalDamage * voidHeartRelic.val.dmg_mult);
@@ -137,7 +137,7 @@ export const actionMethods: any = {
         }
 
         // 유물: 예언의 돌판 (execute_atk) — 보스 HP 25% 이하 시 ATK 2배
-        const executeAtkRelic = relics.find((r: any) => r.effect === 'execute_atk');
+        const executeAtkRelic = relics.find((r) => r.effect === 'execute_atk');
         let executeAtkTriggered = false;
         if (executeAtkRelic && enemy.isBoss && (enemy.hp ?? 0) / Math.max(1, enemy.maxHp || 1) < (executeAtkRelic.threshold || 0.25)) {
             finalDamage = Math.floor(finalDamage * (executeAtkRelic.val || 2.0));
@@ -145,7 +145,7 @@ export const actionMethods: any = {
         }
 
         // 유물: 공허의 메아리 (echo_atk) — 스킬 사용 후 다음 일반 공격 피해 강화
-        const echoAtkRelic = relics.find((r: any) => r.effect === 'echo_atk');
+        const echoAtkRelic = relics.find((r) => r.effect === 'echo_atk');
         let echoTriggered = false;
         if (echoAtkRelic && flags.echoArmed) {
             finalDamage = Math.floor(finalDamage * (echoAtkRelic.val || 1.8));
@@ -154,7 +154,7 @@ export const actionMethods: any = {
         }
 
         // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
-        const lowHpDmgRelic = relics.find((r: any) => r.effect === 'low_hp_dmg');
+        const lowHpDmgRelic = relics.find((r) => r.effect === 'low_hp_dmg');
         if (lowHpDmgRelic) {
             const hpRatio = (player.hp ?? 0) / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP);
             if (hpRatio < (lowHpDmgRelic.threshold || 0.4)) {
@@ -168,7 +168,7 @@ export const actionMethods: any = {
         const newEnemyHp = (enemy.hp ?? 0) - finalDamage;
         // slice 19: 치명타/약점/저항/연격을 본문 태그로 통합 — 기존엔 같은 정보가
         //   별도 로그 4건으로 중복 출력되어 한 턴 로그 burst의 주범이었음.
-        const tags: any[] = [];
+        const tags = [];
         if (isCrit) tags.push('치명타');
         if (enemy.guarding) tags.push('방어 격파');
         if (elementMultiplier > 1) tags.push('속성 약점');
@@ -186,10 +186,10 @@ export const actionMethods: any = {
         }
 
         // cycle 153: 시너지 'vampire_lord' — lifeSteal 일반 공격 흡혈.
-        const vampireSyn = (stats.activeSynergies || []).find((s: any) =>
+        const vampireSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'vampire_lord' || s.bonus.lifeSteal);
         // cycle 156: 시너지 'hell_reaper' — lifeStealBonus 0.5 추가 흡혈 (vampire_lord와 합산).
-        const hellReaperSyn = (stats.activeSynergies || []).find((s: any) =>
+        const hellReaperSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'hell_reaper' || s.bonus.lifeStealBonus);
         const totalLifeSteal = (vampireSyn?.bonus.lifeSteal || 0) + (hellReaperSyn?.bonus.lifeStealBonus || 0);
         if (totalLifeSteal > 0) {
@@ -215,7 +215,7 @@ export const actionMethods: any = {
 
         // cycle 152: 'on_hit_freeze' (frost_anchor) — val 확률로 적 1턴 빙결.
         let postHitEnemy: any = { ...enemy, hp: newEnemyHp, guarding: false };
-        const freezeRelic = relics.find((r: any) => r.effect === 'on_hit_freeze');
+        const freezeRelic = relics.find((r) => r.effect === 'on_hit_freeze');
         if (freezeRelic && newEnemyHp > 0 && random() < (freezeRelic.val || 0)) {
             postHitEnemy = this.applyStatusEffectToEnemy(postHitEnemy, 'freeze');
             logs.push({ type: 'event', text: `[동결의 닻] ${enemy.name} 빙결!` });
@@ -236,14 +236,14 @@ export const actionMethods: any = {
         };
     },
 
-    performSkill(player: Player, enemy: Monster, stats: any, skill: any, rng?: () => number) {
+    performSkill(player: Player, enemy: Monster, stats: FullStats, skill: any, rng?: () => number) {
         const random = typeof rng === 'function' ? rng : Math.random;
         if (!skill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
         const relics = stats.relics || [];
         const resolvedDotMult = getStrongestNumericRelicValue(relics, 'dot_mult');
-        const hasDotMultRelic = relics.some((relic: any) => relic.effect === 'dot_mult');
+        const hasDotMultRelic = relics.some((relic) => relic.effect === 'dot_mult');
         const dotMult = hasDotMultRelic ? resolvedDotMult : 1;
 
         // cycle 107: freeze/stun 상태이상 턴 스킵 — attack()와 동일 처리.
@@ -280,7 +280,7 @@ export const actionMethods: any = {
                 success: true,
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
-                logs: [{ type: 'warning', text: '[공포] 두려움에 움츠립니다!' }],
+                logs: [{ type: 'warning', text: MSG.COMBAT_FEAR_FLINCH }],
                 isCrit: false,
                 isVictory: false,
             };
@@ -328,16 +328,17 @@ export const actionMethods: any = {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
         }
 
+        // 유물: 주문 메아리 (free_skill) — 확률 MP 무료. 중복 보유 시 최강값 1개만 적용(Codex 권한 정책).
         const baseFreeSkillChance = getStrongestNumericRelicValue(relics, 'free_skill');
         const hasFreeSkillRelic = baseFreeSkillChance > 0;
         // cycle 155: 시너지 'arcane_singularity' — bonus.freeSkillChance 35% 추가. 유물과 합산.
-        const arcaneSingSyn = (stats.activeSynergies || []).find((s: any) =>
+        const arcaneSingSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'arcane_singularity' || s.bonus.freeSkillChance);
         const freeChance = baseFreeSkillChance + (arcaneSingSyn?.bonus.freeSkillChance || 0);
         // cycle 163: 'cooldown_reduce' (시간 군주의 왕관) — val.firstFree=true면 전투 첫 스킬 MP 무소비.
         //   cycle 151에서 cdReduction만 적용 → firstFree 보조 메커니즘 추가.
         const playerFlags: any = (player as any).combatFlags || {};
-        const cdRelicForFree = relics.find((r: any) => r.effect === 'cooldown_reduce');
+        const cdRelicForFree = relics.find((r) => r.effect === 'cooldown_reduce');
         const firstFreeAvailable = cdRelicForFree?.val?.firstFree && !playerFlags.firstSkillUsed;
         const actualMpCost = firstFreeAvailable
             ? 0
@@ -346,7 +347,7 @@ export const actionMethods: any = {
         const skillElem = skill.type || stats.elem;
         const elementMultiplier = this.getElementMultiplier(skillElem, enemy, relics);
         // cycle 155: 시너지 'arcane_singularity' — bonus.skillMult 0.3 스킬 피해 +30% (mult 합산).
-        const skillMultSyn = (stats.activeSynergies || []).find((s: any) =>
+        const skillMultSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'arcane_singularity' || s.bonus.skillMult);
         const skillMultBonus = skillMultSyn?.bonus.skillMult || 0;
         // cycle 242: skill.crit branch override 우선, fallback stats.critChance.
@@ -364,9 +365,9 @@ export const actionMethods: any = {
         });
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
-        const critDmgRelicSkill = relics.find((r: any) => r.effect === 'crit_dmg');
+        const critDmgRelicSkill = relics.find((r) => r.effect === 'crit_dmg');
         // cycle 154: 시너지 'void_dragon' / 'primordial_wrath' — 스킬 크리에도 bonus.critDmg 곱셈 적용.
-        const critDmgSynSkill = (stats.activeSynergies || []).find((s: any) =>
+        const critDmgSynSkill = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg);
         const skillCritMult = (critDmgRelicSkill?.val || 1) * (isCrit && critDmgSynSkill ? (critDmgSynSkill.bonus.critDmg || 1) : 1);
         let damage = (isCrit && (critDmgRelicSkill || critDmgSynSkill)) ? Math.floor(rawSkillDmg * skillCritMult) : rawSkillDmg;
@@ -374,11 +375,11 @@ export const actionMethods: any = {
         // cycle 229: 'spell_stack' (주문 직조자 spell_weaver) — 스킬 연속 사용 시 데미지 +perStack% 누적,
         //   max로 cap. 일반 공격(attack)이 spellStackCount를 0으로 리셋. 이전엔 정의만 있고 dispatch
         //   path 0건이던 silent dead config 8번째 (cycle 222-228 시리즈 마지막 합류).
-        const spellStackRelic = relics.find((r: any) => r.effect === 'spell_stack');
+        const spellStackRelic = relics.find((r) => r.effect === 'spell_stack');
         if (spellStackRelic) {
             const perStack = spellStackRelic.val?.perStack || 0;
             const maxStack = spellStackRelic.val?.max || 0.6;
-            const prevStack = (player as any).combatFlags?.spellStackCount || 0;
+            const prevStack = player.combatFlags?.spellStackCount || 0;
             const stackBonus = Math.min(maxStack, prevStack * perStack);
             if (stackBonus > 0) {
                 damage = Math.floor(damage * (1 + stackBonus));
@@ -390,10 +391,10 @@ export const actionMethods: any = {
             : 0;
 
         // 유물: 정신 연소 (skill_mult) — 스킬 피해 70% 증가
-        const smRelic = relics.find((r: any) => r.effect === 'skill_mult');
+        const smRelic = relics.find((r) => r.effect === 'skill_mult');
         const smMult = smRelic ? (1 + smRelic.val) : 1;
         // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
-        const lowHpDmgRelicSkill = relics.find((r: any) => r.effect === 'low_hp_dmg');
+        const lowHpDmgRelicSkill = relics.find((r) => r.effect === 'low_hp_dmg');
         const lowHpMultSkill = (lowHpDmgRelicSkill && (player.hp ?? 0) / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP) < (lowHpDmgRelicSkill.threshold || 0.4))
             ? (lowHpDmgRelicSkill.val || 1.4) : 1;
         // PR #3: 적 DEF 비율 경감 — 스킬 배율 전부 적용 후 최종 1회 (attack()과 동일 패턴).
@@ -468,21 +469,21 @@ export const actionMethods: any = {
                 //   (attack 메서드에서 처리). spell_stack 유물 미보유여도 카운터 증분은 안전 (값 사용
                 //   여부는 데미지 계산 시 유물 체크).
                 spellStackCount: spellStackRelic
-                    ? Math.min(((player as any).combatFlags?.spellStackCount || 0) + 1, 999)
-                    : ((player as any).combatFlags?.spellStackCount || 0),
+                    ? Math.min((player.combatFlags?.spellStackCount || 0) + 1, 999)
+                    : (player.combatFlags?.spellStackCount || 0),
             }
         };
         // cycle 151: 'cooldown_reduce' (시간 군주의 왕관) — 스킬 사용 시 초기 쿨다운 -val.cdReduction. firstFree는 별도 사이클.
-        const cdRelic = relics.find((r: any) => r.effect === 'cooldown_reduce');
+        const cdRelic = relics.find((r) => r.effect === 'cooldown_reduce');
         // cycle 155: 시너지 'time_dominator' — bonus.cdReduction 2 추가. 유물과 합산.
-        const timeDomSyn = (stats.activeSynergies || []).find((s: any) =>
+        const timeDomSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'time_dominator' || s.bonus.cdReduction);
         const cdReduction = (cdRelic?.val?.cdReduction || 0) + (timeDomSyn?.bonus.cdReduction || 0);
         const baseCd = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
         updatedPlayer.skillLoadout.cooldowns[skill.name] = Math.max(0, baseCd - cdReduction);
 
         // 유물: 영혼 흡수 (skill_lifesteal) — 스킬 피해의 10% HP 흡수
-        const slRelic = relics.find((r: any) => r.effect === 'skill_lifesteal');
+        const slRelic = relics.find((r) => r.effect === 'skill_lifesteal');
         if (slRelic) {
             const heal = Math.floor(totalDamage * slRelic.val);
             updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + heal);
@@ -495,7 +496,7 @@ export const actionMethods: any = {
         }
 
         if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(skill.effect)) {
-            const buff: any = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
+            const buff: { atk: number; def: number; turn: any; name: any; counterChance?: number } = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
             if (skill.effect === 'atk_up') buff.atk = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'def_up') buff.def = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'all_up') {
@@ -587,7 +588,7 @@ export const actionMethods: any = {
 
         // cycle 153: 시너지 'time_master' (extraTurnChance 0.1) / cycle 155: 'time_dominator' (extraAction 0.3) —
         //   스킬 사용 후 확률로 추가 행동. 두 시너지 동시 보유 시 더 높은 확률 채택.
-        const timeMasterSyn = relics && (stats.activeSynergies || []).find((s: any) =>
+        const timeMasterSyn = relics && (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'time_master' || s.bonus.effect === 'time_dominator'
             || s.bonus.extraTurnChance || s.bonus.extraAction);
         const extraChance = (timeMasterSyn?.bonus.extraTurnChance || timeMasterSyn?.bonus.extraAction || 0);
@@ -604,7 +605,7 @@ export const actionMethods: any = {
         }
 
         // 유물: 공허의 메아리 (echo_atk) — 스킬 사용 후 다음 일반 공격 강화 플래그
-        const echoRelicInSkill = relics.find((r: any) => r.effect === 'echo_atk');
+        const echoRelicInSkill = relics.find((r) => r.effect === 'echo_atk');
         if (echoRelicInSkill) {
             updatedPlayer.combatFlags = { ...this.getCombatFlags(updatedPlayer), echoArmed: true };
             logs.push({ type: 'event', text: `[공허의 메아리] 다음 공격이 강화됩니다!` });

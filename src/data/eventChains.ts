@@ -12,7 +12,7 @@ import { BALANCE } from './constants';
 
 const PRIMAL_SHARD_DROP_PERCENT = Math.round(BALANCE.PRIMAL_SHARD_DROP_CHANCE * 100);
 
-export const EVENT_CHAINS: any = [
+export const EVENT_CHAINS = [
     {
         id: 'ancient_prophecy',
         label: '고대의 예언',

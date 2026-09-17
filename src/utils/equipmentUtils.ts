@@ -1,13 +1,14 @@
 // cycle 321: unused Player type import 제거 — equipmentUtils 어디에서도 Player 참조 0건.
 import type { EquipSlots, Item } from '../types/index.js';
 import { BALANCE } from '../data/constants.js';
+import { MSG } from '../data/messages.js';
 import { canEquip, isWeapon, isTwoHandWeapon } from './equipmentValidation.js';
 export { isWeapon, getWeaponHands, isTwoHandWeapon } from './equipmentValidation.js';
 
-const MAGIC_WEAPON_KEYWORDS: any = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
-const RANGED_WEAPON_KEYWORDS: any = ['활', '석궁'];
+const MAGIC_WEAPON_KEYWORDS = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
+const RANGED_WEAPON_KEYWORDS = ['활', '석궁'];
 
-const WEAPON_SKILL_BY_ELEM: any = {
+const WEAPON_SKILL_BY_ELEM: Record<string, { name: string; effect: string | null; mp: number; mult: number; cooldown: number }> = {
     화염: { name: '이그니스 버스트', effect: 'burn', mp: 28, mult: 2.9, cooldown: 2 },
     냉기: { name: '프로스트 노바', effect: 'freeze', mp: 30, mult: 2.8, cooldown: 2 },
     어둠: { name: '섀도우 피어스', effect: 'curse', mp: 30, mult: 3.0, cooldown: 2 },
@@ -73,7 +74,7 @@ export const getWeaponAttackValue = (weapon: any, slot: any) => {
     return Math.floor(baseVal * BALANCE.ONE_HAND_ATK_RATIO);
 };
 
-export const getEnhancedEquipmentStatValue = (
+const getEnhancedEquipmentStatValue = (
     item: Item | null | undefined,
     slot: EquipmentEnhanceSlot,
 ) => {
@@ -279,27 +280,35 @@ export const getNextEquipmentState = (equip: EquipSlots, item: Item | null | und
     return nextEquip;
 };
 
+/**
+ * 장비 비교 델타 키 — EquipmentStatDiff의 키와 1:1.
+ * A2 (2026-09 감사 G4): 라벨은 MSG.EQUIP_DELTA_LABEL이 단일 원천, 접미사는 여기.
+ */
+export type EquipmentDeltaKey = keyof EquipmentStatDiff;
+
+const EQUIP_DELTA_SUFFIX: Record<EquipmentDeltaKey, string> = { atk: '', def: '', crit: '%', mp: '' };
+
+/** 표시 순서 — ShopPanel 비교 칩 / 전투 루팅 힌트 공용. */
+const EQUIP_DELTA_ORDER: EquipmentDeltaKey[] = ['atk', 'def', 'crit', 'mp'];
+
+/** '공격력 +12' / '치명타 -3%' 형태의 단일 델타 문자열. */
+export const formatEquipmentDelta = (key: EquipmentDeltaKey, value: number) => (
+    `${MSG.EQUIP_DELTA_LABEL[key]} ${value > 0 ? '+' : ''}${value}${EQUIP_DELTA_SUFFIX[key]}`
+);
+
 const getPrimaryEquipmentDelta = (item: Item, diff: EquipmentStatDiff) => {
-    const orderedStats = item.type === 'weapon'
-        ? [
-            { key: 'atk', label: '공격력', suffix: '' },
-            { key: 'crit', label: '치명타', suffix: '%' },
-            { key: 'mp', label: '기력', suffix: '' },
-            { key: 'def', label: '방어력', suffix: '' },
-        ]
-        : [
-            { key: 'def', label: '방어력', suffix: '' },
-            { key: 'atk', label: '공격력', suffix: '' },
-            { key: 'mp', label: '기력', suffix: '' },
-            { key: 'crit', label: '치명타', suffix: '%' },
-        ];
-    const primary = orderedStats.find(({ key }) => diff[key as keyof EquipmentStatDiff] !== 0) || orderedStats[0];
-    const value = diff[primary.key as keyof EquipmentStatDiff];
+    const orderedKeys: EquipmentDeltaKey[] = item.type === 'weapon'
+        ? ['atk', 'crit', 'mp', 'def']
+        : ['def', 'atk', 'mp', 'crit'];
+    const primaryKey = orderedKeys.find((key) => diff[key] !== 0) || orderedKeys[0];
+    const value = diff[primaryKey];
 
     return {
-        ...primary,
+        key: primaryKey,
+        label: MSG.EQUIP_DELTA_LABEL[primaryKey],
+        suffix: EQUIP_DELTA_SUFFIX[primaryKey],
         value,
-        text: `${primary.label} ${value > 0 ? '+' : ''}${value}${primary.suffix}`,
+        text: formatEquipmentDelta(primaryKey, value),
     };
 };
 
@@ -350,6 +359,87 @@ export const getEquipmentDecision = (
     };
 };
 
+/**
+ * A2 (2026-09 감사 G4): 장비 비교 단일 원천.
+ *
+ * 기존엔 3곳이 서로 다른 계산을 했다.
+ *   - `getEquipmentDecision` (여기)           → 강화(+N) 반영 ✓
+ *   - `ShopPanel.getComparisonMeta`           → 강화 무시 ✗ + 점수식 inline
+ *   - `combatActions/_helpers.getLootUpgradeHint` → 강화 무시 ✗ + 점수식 inline
+ * 결과적으로 강화 장비를 착용 중이면 상점/루팅 힌트가 업그레이드 폭을 과대 표시했다.
+ *
+ * 이 함수는 `getEquipmentDecision`의 결과에 "표시용 델타 조각"을 덧붙이기만 한다.
+ * 수치는 전적으로 decision(=강화 반영)에서 오고, 라벨은 MSG.EQUIP_DELTA_LABEL에서 온다.
+ */
+export interface EquipmentComparisonSegment {
+    key: EquipmentDeltaKey;
+    value: number;
+    text: string;
+}
+
+export const getEquipmentComparison = (
+    player: EquipmentDecisionPlayer | null | undefined,
+    item: Item | null | undefined
+) => {
+    const decision = getEquipmentDecision(player, item);
+    if (!decision) return null;
+
+    const segments: EquipmentComparisonSegment[] = EQUIP_DELTA_ORDER
+        .filter((key) => decision.diff[key] !== 0)
+        .map((key) => ({ key, value: decision.diff[key], text: formatEquipmentDelta(key, decision.diff[key]) }));
+    const upgrades = segments.filter((segment) => segment.value > 0);
+
+    return {
+        ...decision,
+        segments,
+        upgrades,
+        /** 모든 변화(증감)를 ' / '로 이은 문자열. 변화가 없으면 MSG.EQUIP_DELTA_NONE. */
+        summaryText: segments.length ? segments.map((segment) => segment.text).join(' / ') : MSG.EQUIP_DELTA_NONE,
+        /** 상승분만 ' / '로 이은 문자열 (전투 루팅 힌트용). 상승이 없으면 빈 문자열. */
+        upgradeText: upgrades.map((segment) => segment.text).join(' / '),
+    };
+};
+
+/**
+ * A2: 인벤토리에서 해당 슬롯 타입의 "가장 좋은 장착 후보" 1개.
+ *
+ * SmartInventory는 bestWeapon을 getEquipPreview(점수) 기준, bestArmor를 raw val 기준으로
+ * 골라 두 정책이 서로 달랐다(방어구는 강화/세트/직업 제한을 무시). 두 슬롯 모두
+ * getEquipmentDecision의 점수(=강화 반영)로 통일한다.
+ */
+export const pickBestEquippable = (
+    player: (EquipmentDecisionPlayer & { inv?: Item[] }) | null | undefined,
+    type: string,
+    // upgradesOnly: 현재 장비보다 실제로 나은 후보만 반환한다(score > 0). 추천 UI 전용 —
+    //   기본값은 "장착 가능한 것 중 최고"라 기존 호출부 동작은 그대로다.
+    options?: { upgradesOnly?: boolean }
+) => {
+    const inv = Array.isArray(player?.inv) ? player.inv : [];
+    const minScore = options?.upgradesOnly ? 0 : -Infinity;
+    let best: Item | undefined;
+    let bestScore = -Infinity;
+
+    inv.forEach((item) => {
+        if (item?.type !== type) return;
+        const decision = getEquipmentDecision(player, item);
+        if (!decision || !decision.equipable) return;
+        if (decision.score <= minScore) return;
+        if (decision.score <= bestScore) return;
+        best = item;
+        bestScore = decision.score;
+    });
+
+    return best;
+};
+
+/**
+ * A2: 아이템 판매가. `Math.floor((item.price || 0) * 0.5)`이 ShopPanel(판매 목록) /
+ * economyHandlers(개별 판매 · 재료 일괄 판매) 3곳에 inline 되어 있던 것을 단일화.
+ */
+export const getSellPrice = (item: Item | null | undefined) => (
+    Math.floor((item?.price || 0) * BALANCE.SELL_PRICE_RATIO)
+);
+
 export const isMagicWeapon = (weapon: any) => {
     if (!isWeapon(weapon)) return false;
     if (weapon.elem && weapon.elem !== '물리') return true;
@@ -371,7 +461,7 @@ export const isRangedWeapon = (weapon: any) => {
 };
 
 export const getEquippedWeapons = (equip: EquipSlots) => {
-    const list: any[] = [];
+    const list = [];
     if (isWeapon(equip.weapon)) list.push({ slot: 'main', weapon: equip.weapon });
     if (isWeapon(equip.offhand)) list.push({ slot: 'offhand', weapon: equip.offhand });
     return list;

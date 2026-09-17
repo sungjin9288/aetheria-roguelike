@@ -61,6 +61,9 @@ export const getShopMaxTier = (location: string) => {
     return Math.min(6, tierFromLevel + safeBonus + shopBonus);
 };
 
+// 병합(2026-09): 03e8b88에서 "파일 내부 전용"이라 export를 내렸으나, Codex가 추가한
+//   contentReachability / equipmentEconomyAudit / equipmentBaseIdentity가 이 카탈로그를
+//   단일 원천으로 참조한다 — 외부 소비자가 생겼으므로 export를 되살린다.
 export const getShopCatalog = (location: string) => {
     const maxTier = getShopMaxTier(location);
     return [

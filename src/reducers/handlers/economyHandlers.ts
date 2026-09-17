@@ -11,6 +11,7 @@ import {
     registerLootToCodex,
 } from '../../utils/gameUtils';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
+import { getSellPrice } from '../../utils/equipmentUtils';
 import { getCraftingInvestmentPreview } from '../../utils/itemInvestmentPreview';
 import { incrementStat } from '../../utils/playerStateUtils';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
@@ -25,12 +26,13 @@ import {
     sanitizeQuickSlots,
 } from './helpers';
 import { appendRewardLogs } from './rewardLog';
+import type { ItemRecipeDef, Player } from '../../types';
 
 type EconomyLog = { type: string; text: string };
 
 const completeTransaction = (
     state: GameState,
-    player: any,
+    player: Player,
     logs: EconomyLog[],
     economyReceipt: GameState['economyReceipt'] = null,
 ): GameState => {
@@ -107,7 +109,7 @@ const sellInventoryItem = (state: GameState, action: GameAction): GameState => {
         return rejectTransaction(state, 'warning', MSG.SIGNATURE_SELL_BLOCKED(item.name));
     }
 
-    const sellPrice = Math.floor((item.price || 0) * 0.5);
+    const sellPrice = getSellPrice(item);
     const logs: EconomyLog[] = [];
     let player = grantGold({
         ...state.player,
@@ -118,7 +120,7 @@ const sellInventoryItem = (state: GameState, action: GameAction): GameState => {
     return completeTransaction(state, player, logs);
 };
 
-const getRecipeInputIds = (player: any, recipe: any) => {
+const getRecipeInputIds = (player: Player, recipe: ItemRecipeDef) => {
     const available = [...(player.inv || [])];
     const inputIds: string[] = [];
     for (const input of recipe.inputs || []) {
@@ -253,13 +255,13 @@ const synthesizeItems = (state: GameState, action: GameAction): GameState => {
 
 const autoSellMaterials = (state: GameState): GameState => {
     const targets = (state.player.inv || []).filter(
-        (item: any) => item.type === 'mat' && (item.price || 0) <= 30,
+        (item: any) => item.type === 'mat' && (item.price || 0) <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX,
     );
     if (targets.length === 0) return state;
 
     const targetIds = new Set(targets.map((item: any) => item.id));
     const totalGold = targets.reduce(
-        (total: number, item: any) => total + Math.floor((item.price || 0) * 0.5),
+        (total: number, item: any) => total + getSellPrice(item),
         0,
     );
     const logs: EconomyLog[] = [];

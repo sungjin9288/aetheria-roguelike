@@ -11,6 +11,7 @@ import { ITEMS } from '../src/data/items.js';
 import { getItemIconAssetSrc } from '../src/utils/itemVisuals.js';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
 const DUMP_SCRIPT = resolve(REPO_ROOT, 'scripts/dump-equipment-catalog.mjs');
 const PROMPT_SCRIPT = resolve(REPO_ROOT, 'scripts/generate_equipment_art_prompts.mjs');
 const SOURCE_PREPARER_SCRIPT = resolve(REPO_ROOT, 'scripts/prepare_equipment_source_sheet.py');

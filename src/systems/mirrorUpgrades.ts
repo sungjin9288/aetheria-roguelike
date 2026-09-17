@@ -15,6 +15,8 @@ export interface MirrorEffects {
     reviveEnabled: boolean;
     reviveHpRatio: number;
     essenceFlowMult: number;
+    /** 2026-09 D1 — 원정마다 골드 없이 쓸 수 있는 정찰 횟수 (scout_charges 노드). */
+    freeScoutCharges: number;
 }
 
 export type MirrorLevels = Record<string, number>;
@@ -36,6 +38,7 @@ export const getMirrorEffects = (meta: { mirror?: MirrorLevels } | undefined | n
     const restDiscountLv = getLevel(mirror, 'rest_discount');
     const reviveLv = getLevel(mirror, 'revive');
     const essenceFlowLv = getLevel(mirror, 'essence_flow');
+    const scoutChargesLv = getLevel(mirror, 'scout_charges');
 
     return {
         startGoldBonus: startGoldLv * MIRROR_EFFECT_VALUES.START_GOLD_PER_LEVEL,
@@ -44,8 +47,11 @@ export const getMirrorEffects = (meta: { mirror?: MirrorLevels } | undefined | n
         relicPityBonus: relicPityLv * MIRROR_EFFECT_VALUES.RELIC_PITY_BONUS_PER_LEVEL,
         restCostMult: Math.max(0, 1 - restDiscountLv * MIRROR_EFFECT_VALUES.REST_DISCOUNT_PER_LEVEL),
         reviveEnabled: reviveLv > 0,
-        reviveHpRatio: MIRROR_EFFECT_VALUES.REVIVE_HP_RATIO,
+        // 2026-09: revive 2단계 — 부활 회복량이 단계에 비례(1단계 30% / 2단계 60%).
+        //   기존 의미(치명상 1회 방어)는 그대로, 회복 비율만 확장한다.
+        reviveHpRatio: Math.min(1, Math.max(1, reviveLv) * MIRROR_EFFECT_VALUES.REVIVE_HP_RATIO),
         essenceFlowMult: 1 + essenceFlowLv * MIRROR_EFFECT_VALUES.ESSENCE_FLOW_BONUS_PER_LEVEL,
+        freeScoutCharges: scoutChargesLv * MIRROR_EFFECT_VALUES.FREE_SCOUT_PER_LEVEL,
     };
 };
 
@@ -88,5 +94,17 @@ export const purchaseMirrorNode = (
         newLevel,
     };
 };
+
+/**
+ * getSpentMirrorEssence — 거울 레벨 이력으로부터 "이미 지출한 계승 정수" 총액을 역산.
+ * 구매는 항상 Lv0→1→2… 순서이므로 노드별 costs 앞에서부터 레벨 수만큼 더하면 정확하다.
+ * dataMigration의 essenceLifetime 백필(v5.1)과 거울 UI의 투자 총액 표시가 함께 쓴다.
+ */
+export const getSpentMirrorEssence = (mirror: MirrorLevels | undefined | null): number => (
+    MIRROR_NODES.reduce((total, node) => {
+        const level = getLevel(mirror, node.id);
+        return total + node.costs.slice(0, level).reduce((sum, cost) => sum + cost, 0);
+    }, 0)
+);
 
 export { MIRROR_NODES };

@@ -42,7 +42,8 @@ export const CONSTANTS: GameConstants = {
     //   요구 745 → 998 (+34%).
     START_NEXT_EXP: 200,
     // cycle 195: SAVE_KEY 제거 — Firebase Firestore 사용으로 localStorage save key 미사용 (dead).
-    DATA_VERSION: 5.0,
+    // 5.1 — meta.essenceLifetime 도입 (dataMigration에서 essence + 거울 구매 이력으로 역산)
+    DATA_VERSION: 5.1,
     // cycle 309: REMOTE_CONFIG_ENABLED 제거 — RemoteConfigLoader.ts (dead module) 외
     //   read 0건. RemoteConfigLoader 자체가 import 0건이라 cascade dead.
     MONSTER_PREFIXES: [
@@ -106,6 +107,29 @@ export interface BalanceConfig {
     RETURN_BRIEFING_HOURS: number;
     ABYSS_DAILY_DIVE_MULT: number;
     ABYSS_DAILY_DIVE_COMBAT_COUNT: number;
+    ERROR_REPORT_RING_SIZE: number;
+    SCOUT_GOLD_COST: number;
+    SCOUT_GOLD_COST_PER_MAP_LEVEL: number;
+    SCOUT_ELITE_PITY_THRESHOLD: number;
+    SCOUT_ELITE_PITY_PER_STEP: number;
+    SCOUT_ELITE_MAX_CARD_CHANCE: number;
+    SCOUT_LOW_HP_RATIO: number;
+    SCOUT_LOW_HP_ELITE_MULT: number;
+    MIRROR_FREE_SCOUT_PER_LEVEL: number;
+    POST_COMBAT_PUSH_ATK_BONUS: number;
+    POST_COMBAT_PUSH_TURNS: number;
+    POST_COMBAT_BREATHER_HEAL_RATIO: number;
+    EVENT_STATUS_IDS: string[];
+    EVENT_RELIC_MAX_COUNT: number;
+    EVENT_STATUS_MAX_TURNS: number;
+    EVENT_BUFF_MAX_MULT: number;
+    EVENT_BUFF_MAX_TURNS: number;
+    EVENT_RISKY_SPECIAL_CHANCE: number;
+    EVENT_SPECIAL_WEIGHTS: Record<string, number>;
+    EVENT_BALANCED_BUFF_CHANCE: number;
+    EVENT_SPECIAL_STATUS_TURNS: number;
+    EVENT_SPECIAL_BUFF_MULT: number;
+    EVENT_SPECIAL_BUFF_TURNS: number;
 }
 
 export const BALANCE: BalanceConfig = {
@@ -174,6 +198,12 @@ export const BALANCE: BalanceConfig = {
     //   시너지 잔여 유물이 pool에 있으면, 유물 3(4)지선다 중 이 슬롯 수만큼은 그
     //   잔여 유물 후보군에서 가중 추첨으로 보장한다 (pickWeightedRelics owned 옵션).
     SYNERGY_PITY_SLOT: 1,
+    // Wave 4 O2 (빌드–유물 공명): 현재 빌드 아키타입이 실제로 굴리는 유물 effect
+    //   (RELIC_EFFECTS_BY_BUILD 5종)에 곱해지는 추첨 가중치 배율. 1.0이면 편향 없음.
+    //   pickWeightedRelics에 buildId를 넘긴 호출부에만 적용되고, 시너지 pity 슬롯은
+    //   편향 대상이 아니다(pity가 항상 우선). 1.6은 "내 빌드 유물이 보통보다 눈에
+    //   띄게 자주 보이되, 다른 방향으로 갈아탈 선택지는 계속 남는" 수준.
+    RELIC_BUILD_FIT_WEIGHT_MULT: 1.6,
     PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
     PRESTIGE_HP_BONUS: 25,          // 환생당 영구 HP 증가
     PRESTIGE_MP_BONUS: 15,          // 환생당 영구 MP 증가
@@ -509,6 +539,98 @@ export const BALANCE: BalanceConfig = {
     // 리텐션 훅 — 심연 데일리 다이브
     ABYSS_DAILY_DIVE_MULT: 1.5,         // 혼돈의 심연 일일 첫 다이브 EXP/골드 배율
     ABYSS_DAILY_DIVE_COMBAT_COUNT: 5,   // 배율이 적용되는 하루 첫 전투 수 (1회는 체감 없음 — 리뷰 후속)
+
+    // E1 — 런타임 에러 리포트 로컬 링버퍼
+    ERROR_REPORT_RING_SIZE: 20,         // localStorage에 보관하는 최근 에러 리포트 최대 개수
+    // A1 (2026-09 감사 G1) — 몬스터 statusOnHit 발동 확률 (강타 적중 시).
+    //   spawnEnemy가 프로파일의 statusOnHit을 전파하기 전까지 CombatEngine.enemyAI의
+    //   해당 분기는 런타임에서 한 번도 실행된 적이 없었다(필드 사장). 전파를 복구하면서
+    //   "강타 적중 = 100% 상태이상"으로 두면 초반 정예 조우가 계약을 넘어선다.
+    //   Lv1 정예 거미떼 500회 시뮬(tests/early-elite-spawn) 시작 물약 2개 소진:
+    //     전파 전 13/500 · 전파 후 무조건 발동 73/500 · 0.35 → 44 · 0.15 → 28 · 0.08 → 22.
+    //   H1 (Wave 3): PLAYER_STATUS_DURATION_TURNS 도입으로 플레이어 status가 만료되면서
+    //   "한 번 중독 = 전투 끝까지 4%/턴" 구조가 해소됐다. 같은 시뮬 재측정(만료 3턴 기준,
+    //   물약 2개 소진 / 500회 — 괄호는 만료 없던 종전 값):
+    //     0.08 → 18(4.4% → 3.6%) · 0.15 → 24(5.6% → 4.8%) · 0.20 → 27(5.4%) · 0.25 → 29(6.6% → 5.8%).
+    //   ≤5% 계약을 지키는 최대 구간은 0.15~0.18(0.18은 정확히 25/500 = 5.0%로 여유 0)이므로
+    //   여유를 남겨 0.15로 올린다 — 만료 도입으로 종전 0.08의 두 배 가까운 발동률을 감당한다.
+    MONSTER_STATUS_ON_HIT_CHANCE: 0.15,
+
+    // H1 (Wave 3 감사) — 플레이어 상태이상 지속 턴. 적 상태이상(blindTurns/fearTurns/
+    //   cursedTurns/tauntTurns)은 tickEnemyStatus에서 감소·만료하는데 플레이어 status만
+    //   만료 경로가 없어 한 번 부여되면 전투 끝까지 유지됐다(중독 = maxHp 4%/턴 영구).
+    //   같은 모델을 플레이어에 적용해 CombatEngine.tickCombatState에서 매 플레이어 턴
+    //   1씩 감소시키고 0에서 해제한다. 해독제/정화/휴식은 종전대로 즉시 해제.
+    PLAYER_STATUS_DURATION_TURNS: 3,
+
+    // H3 (Wave 3 감사) — handleVictory / 탐험 이상기후의 inline 숫자 정리(값 변경 없음).
+    //   레벨 차 골드 감쇠: 플레이어가 적보다 (GAP_THRESHOLD + 1)레벨 이상 높을 때부터
+    //   레벨당 SLOPE만큼 골드를 줄이되 FLOOR 아래로는 내려가지 않는다.
+    VICTORY_GOLD_LEVEL_GAP_THRESHOLD: 9,
+    VICTORY_GOLD_LEVEL_PENALTY_FLOOR: 0.3,
+    VICTORY_GOLD_LEVEL_PENALTY_SLOPE: 0.07,
+    //   'noGold' 도전 수정자의 골드 배율(0 아님 — 완전 차단이 아니라 반감).
+    NO_GOLD_MODIFIER_MULT: 0.5,
+    //   보스 초회 토벌 보너스 골드 = max(FLOOR, 획득 골드 × RATE).
+    FIRST_BOSS_BONUS_GOLD_FLOOR: 120,
+    FIRST_BOSS_BONUS_GOLD_RATE: 0.35,
+    //   탐험 기상 이변 '마력의 폭풍' 회복량 = 최대 기력 × RATIO.
+    ANOMALY_MANA_REGEN_RATIO: 0.3,
+
+    // A2 (2026-09 감사 G4) — 경제/인벤 임계값 단일화.
+    //   기존엔 ShopPanel(판매 목록) / economyHandlers(개별 판매·재료 일괄 판매) 3곳에
+    //   `Math.floor((item.price || 0) * 0.5)`이 inline 되어 있었고, 재료 "잡템" 임계
+    //   `<= 30`은 SmartInventory와 economyHandlers에 각각 하드코딩되어 있었다.
+    SELL_PRICE_RATIO: 0.5,                 // 아이템 판매가 = price × 이 비율 (내림)
+    INVENTORY_JUNK_MATERIAL_PRICE_MAX: 30, // 일괄 판매 대상으로 간주하는 재료 최대 가격
+    // 2026-09 — 계승 정수 원장(essence ledger).
+    //   rank는 "지금 들고 있는 정수"가 아니라 "지금까지 번 정수"(meta.essenceLifetime)로
+    //   산출한다. 거울 구매가 영구 스탯 사다리를 갉아먹던 숨은 비용을 제거하는 계약이며,
+    //   단일 진실 원천은 systems/essenceLedger.ts.
+    ESSENCE_PER_RANK: 150,       // 누적 정수 이만큼마다 계승 rank +1
+    ESSENCE_EXP_DIVISOR: 8,      // 전투 정수 획득 = floor(enemy.exp / 이 값 × 획득 배율)
+    ESSENCE_RANK_ATK: 1,         // rank 1단계당 영구 공격력
+    ESSENCE_RANK_HP: 5,          // rank 1단계당 영구 최대 생명
+    ESSENCE_RANK_MP: 3,          // rank 1단계당 영구 최대 기력
+    // 2026-09 D1 — 플레이어가 직접 부르는 정찰(스카우팅). 기존 25% 랜덤 발동은 그대로 두고,
+    //   "골드를 내고 앞길을 미리 본다"는 능동 선택지를 추가한다. 비용은 지역 레벨에 따라
+    //   완만하게 오른다(초반 마을 근처에서 부담이 되지 않도록 기본값을 낮게 유지).
+    SCOUT_GOLD_COST: 30,                // 정찰 기본 비용 (골드)
+    SCOUT_GOLD_COST_PER_MAP_LEVEL: 2,   // 지역 레벨 1당 추가 비용 (Lv20 지역 = 30 + 40 = 70)
+    // 정예 카드 등장 편향 — 유물이 오래 안 나왔을수록(sinceRelic pity) 올리고,
+    //   생명이 낮을 때는 내린다. 기본값(SCOUT_ELITE_CARD_CHANCE)은 그대로 두고 가감만 한다.
+    SCOUT_ELITE_PITY_THRESHOLD: 3,      // 이 횟수를 넘긴 유물 미발견분부터 가산 시작
+    SCOUT_ELITE_PITY_PER_STEP: 0.05,    // 초과 1회당 정예 카드 확률 +5%p
+    SCOUT_ELITE_MAX_CARD_CHANCE: 0.45,  // 정예 카드 확률 상한
+    SCOUT_LOW_HP_RATIO: 0.4,            // 생명이 이 비율 이하이면 위험 카드 편향을 낮춘다
+    SCOUT_LOW_HP_ELITE_MULT: 0.35,      // 저생명 시 정예 카드 확률 배율
+    MIRROR_FREE_SCOUT_PER_LEVEL: 1,     // scout_charges 노드 레벨당 원정 무료 정찰 +1회
+
+    // 2026-09 D2 — 전투 후 "밀어붙인다 / 숨을 고른다" 2선택.
+    //   밀어붙인다: 다음 전투 공격력 버프 + 보스 접근 게이지 1칸 추가 + 다음 탐험 모닥불 차단.
+    //   숨을 고른다: 최대 생명의 일부 회복 + 연속 처치 초기화(게이지는 그대로).
+    POST_COMBAT_PUSH_ATK_BONUS: 0.25,   // 밀어붙이기 공격력 +25%
+    POST_COMBAT_PUSH_TURNS: 6,          // 버프 지속 턴 (다음 전투 1회를 대체로 커버 — 모닥불 단련과 동일 방식)
+    POST_COMBAT_BREATHER_HEAL_RATIO: 0.18, // 숨 고르기 회복량 = 최대 생명 × 18%
+
+    // 2026-09 Wave 3 I — 이벤트 결과 어휘 확장(유물/상태이상/정예/버프).
+    //   모델 출력은 신뢰할 수 없으므로 aiEventUtils.normalizeOutcomes가 이 화이트리스트와
+    //   상한만 통과시킨다. "죽음은 항상 공정" 원칙에 따라 이벤트가 직접 생명을 0으로
+    //   만들 수 있는 어휘는 넣지 않는다 — 위험은 상태이상/정예 조우로만 표현한다.
+    //   freeze/stun(턴 강탈)과 blind/fear(플레이어측 효과 없음)는 의도적으로 제외.
+    EVENT_STATUS_IDS: ['poison', 'burn', 'bleed', 'curse'],
+    EVENT_RELIC_MAX_COUNT: 2,           // 이벤트 1건이 열 수 있는 유물 선택지 최대 개수
+    EVENT_STATUS_MAX_TURNS: 3,          // 이벤트 상태이상 지속 턴 상한
+    EVENT_BUFF_MAX_MULT: 1.3,           // 이벤트 버프 배율 상한 (모닥불 단련과 같은 눈금)
+    EVENT_BUFF_MAX_TURNS: 6,            // 이벤트 버프 지속 턴 상한 (POST_COMBAT_PUSH_TURNS와 동일)
+    // 절차적 outcome(buildProceduralOutcome)의 "위험" 선택 특수 결과 확률/가중.
+    //   위험 선택이 ±골드로만 끝나지 않도록 1건의 특수 결과를 얹는다.
+    EVENT_RISKY_SPECIAL_CHANCE: 0.35,
+    EVENT_SPECIAL_WEIGHTS: { status: 45, elite: 30, relic: 15, buff: 10 },
+    EVENT_BALANCED_BUFF_CHANCE: 0.12,   // "균형" 선택의 소폭 버프 확률
+    EVENT_SPECIAL_STATUS_TURNS: 2,
+    EVENT_SPECIAL_BUFF_MULT: 1.15,
+    EVENT_SPECIAL_BUFF_TURNS: 4,
 };
 
 Object.freeze(CONSTANTS);

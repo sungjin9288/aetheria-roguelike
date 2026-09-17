@@ -198,3 +198,86 @@ test('이미 완성된 시너지·중복 보유 유물은 pity 후보에서 제�
         Math.random = originalRandom;
     }
 });
+
+
+// ─── 2026-09 감사 G8: 3피스 시너지 pity 확장 ───
+/**
+ * 3피스 세트 5종은 "정확히 1개 부족" 상태에 도달하는 것 자체가 어려워 구 pity가
+ * 사실상 발동하지 않았다. 1개 보유 + 2개 부족 단계도 pity 후보로 받쳐준다.
+ * 단, "1개 부족" 후보가 있으면 그쪽이 우선 (완성에 가까운 쪽 우선).
+ */
+test('6) 3피스 시너지: 1개만 보유(2개 부족)해도 부족분이 pity 후보가 된다', () => {
+    const owned = [manaCrystal];
+    // 마나 수정이 얽힌 2피스 시너지("비전 파동": 마나 수정 + 주문 메아리)가
+    // "1개 부족" 1순위 후보를 만들지 않도록 주문 메아리는 pool에서 제외한다.
+    const pool = RELICS.filter((r) => r.id !== manaCrystal.id && r.id !== spellEcho.id);
+
+    const originalRandom = Math.random;
+    Math.random = () => 0;
+    try {
+        const picked = pickWeightedRelics(pool, 3, { owned });
+        assert.ok(
+            picked.some((r) => r.id === mindBurn.id),
+            '3피스 시너지에서 1개 보유 상태의 부족분(정신 연소)이 pity 후보로 포함됨',
+        );
+    } finally {
+        Math.random = originalRandom;
+    }
+});
+
+test('6) "1개 부족" 후보가 있으면 "2개 부족" 후보보다 우선한다', () => {
+    // 피의 서약(2피스 흡혈 군주의 한쪽) + 마나 수정(3피스 비전 특이점의 한쪽) 보유.
+    // → 영혼 흡수는 1순위(1개 부족), 주문 메아리/정신 연소는 2순위(2개 부족).
+    const owned = [bloodPact, manaCrystal];
+    const pool = RELICS.filter((r) => !owned.some((o) => o.id === r.id));
+
+    const originalRandom = Math.random;
+    Math.random = () => 0;
+    try {
+        const picked = pickWeightedRelics(pool, 1, { owned });
+        assert.equal(picked.length, 1);
+        const ownedNames = new Set(owned.map((r) => r.name));
+        const nearNames = new Set();
+        for (const syn of RELIC_SYNERGIES) {
+            const missing = syn.requires.filter((name) => !ownedNames.has(name));
+            if (missing.length === 1) nearNames.add(missing[0]);
+        }
+        assert.ok(nearNames.size > 0, '1순위 후보가 실제로 존재하는 상황');
+        assert.ok(
+            nearNames.has(picked[0].name),
+            `pity 슬롯은 1개 부족 후보에서 뽑혀야 함 (뽑힘: ${picked[0].name})`,
+        );
+    } finally {
+        Math.random = originalRandom;
+    }
+});
+
+test('6) pity 후보가 전혀 없으면 owned 전달 여부와 무관하게 기존 분포 그대로', () => {
+    // owned가 아무 시너지와도 얽히지 않은 유물 1개뿐이면 후보 0개 → 기존 로직 동일.
+    const synergyNames = new Set(RELIC_SYNERGIES.flatMap((s) => s.requires));
+    const neutral = RELICS.find((r) => !synergyNames.has(r.name));
+    assert.ok(neutral, '어떤 시너지에도 속하지 않는 유물이 존재');
+
+    const owned = [neutral];
+    const pool = RELICS.filter((r) => r.id !== neutral.id);
+
+    const originalRandom = Math.random;
+    try {
+        const seq = [0.1, 0.4, 0.7, 0.2, 0.9];
+        let i1 = 0;
+        Math.random = () => seq[i1++ % seq.length];
+        const withOwned = pickWeightedRelics(pool, 3, { owned });
+
+        let i2 = 0;
+        Math.random = () => seq[i2++ % seq.length];
+        const withoutOwned = pickWeightedRelics(pool, 3);
+
+        assert.deepEqual(
+            withOwned.map((r) => r.id),
+            withoutOwned.map((r) => r.id),
+            'pity 후보가 없으면 owned 전달 여부와 무관하게 동일 결과',
+        );
+    } finally {
+        Math.random = originalRandom;
+    }
+});

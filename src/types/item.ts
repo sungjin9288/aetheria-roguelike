@@ -1,18 +1,36 @@
 /**
  * Item domain types (cycle 58 phase 4 — 도메인 타입 통합).
  *
- * items.js의 weapons/armors/consumables/materials 슬롯에 들어가는 모든 모양을 망라.
- * 점진 적용 — 이 타입을 import하는 파일은 ts-nocheck 제거 가능.
+ * items.ts의 weapons/armors/consumables/materials 슬롯에 들어가는 모든 모양을 망라.
+ *
+ * 2026-09 Wave 3 L stage 1: `[key: string]: any` 인덱스 시그니처 5개 제거
+ * (+ ItemDatabase의 카테고리 인덱스 시그니처도 7개 고정 카테고리로 대체).
+ * 데이터 실측 필드(`mpBonus`/`hpBonus`/`evasion`)를 선언하고 `type`은 9종 유니온으로
+ * 좁혔다. 계약은 `tests/data-shape-types.test.js`가 런타임으로 검증한다.
  */
 
-// cycle 284: ItemType type alias 제거 — import 0건. item.type은 string으로 직접 사용.
+/**
+ * items.ts에 실제로 존재하는 `type` 값 전체 (9종).
+ * weapons/armors는 장비, hp/mp/cure/buff는 소비 아이템, mat/key는 소재·열쇠.
+ * 2026-09 L stage 1: 인덱스 시그니처 제거와 함께 리터럴 유니온으로 복원.
+ */
+export type ItemType =
+    | 'weapon'
+    | 'armor'
+    | 'shield'
+    | 'hp'
+    | 'mp'
+    | 'cure'
+    | 'buff'
+    | 'mat'
+    | 'key';
 
 // cycle 369: export 제거 — 외부 import 0건 (src/utils, src/components, src/hooks,
 //   src/systems 모두). 동일 파일 Item 유니온 / EquipSlots 필드 타입 구성용 private.
 interface ItemBase {
     id?: string;
     name?: string;
-    type?: string;
+    type?: ItemType;
     desc?: string;
     desc_stat?: string;
     tier?: number;
@@ -41,8 +59,29 @@ interface ItemBase {
     effect?: string;
     /** 버프 지속 턴. */
     turn?: number;
-    /** 동적으로 추가 가능한 임의 필드 (런타임 확장 호환). */
-    [key: string]: any;
+    /** 무기/방어구의 추가 MP (items.ts 실측 — `mp`와 별개 필드). */
+    mpBonus?: number;
+    /** 방어구의 추가 HP (items.ts 실측 — `hp`와 별개 필드). */
+    hpBonus?: number;
+    /** 방어구의 회피율 보너스. */
+    evasion?: number;
+    /**
+     * 명시적 등급. ITEMS 데이터 어디에도 없고 `useGameTestApi`(QA 시드)만 설정한다.
+     * `getItemRarity`(utils/gameUtils.ts:71)가 tier 매핑보다 우선 읽으므로 optional로 유지.
+     */
+    rarity?: string;
+    /**
+     * 랜덤 접두사(applyItemPrefix)가 붙은 인스턴스 표식. 카탈로그 정의에는 없고
+     * 드롭/제작으로 생성된 인스턴스에만 존재한다.
+     */
+    prefixed?: boolean;
+    /** 접두사 이름 (`prefixed === true`일 때만). */
+    prefixName?: string;
+    /**
+     * 접두사가 붙기 전의 canonical 장비 이름 (equipmentBaseIdentity).
+     * 장비 3종에도 중복 선언돼 있으나, `Item` 유니온 전체에서 읽으려면 base에 필요하다.
+     */
+    baseItemName?: string;
 }
 
 // cycle 298: 4 type exports → private (외부 import 0건, 동일 파일 내 Item 유니온 구성용).
@@ -82,7 +121,7 @@ interface ShieldItem extends ItemBase {
 }
 
 export interface ConsumableItem extends ItemBase {
-    type: 'consumable';
+    type: 'hp' | 'mp' | 'cure' | 'buff';
     /** 효과 강도 (예: 회복량). */
     val?: number;
     /** 효과 종류 — heal_hp / heal_mp / cure 등. */
@@ -97,8 +136,6 @@ export interface EquipSlots {
     weapon?: ItemBase | null;
     armor?: ItemBase | null;
     offhand?: ItemBase | null;
-    /** 동적으로 추가 가능한 슬롯 (런타임 확장 호환). */
-    [key: string]: any;
 }
 
 /** 세트 효과 정의 (items.js의 sets 카테고리). */
@@ -106,7 +143,6 @@ export interface ItemSetDef {
     prefix?: string;
     setBonus?: Record<string, number>;
     desc?: string;
-    [key: string]: any;
 }
 
 /** 제작 레시피 정의 (items.js의 recipes 카테고리). */
@@ -115,7 +151,6 @@ export interface ItemRecipeDef {
     name?: string;
     inputs?: Array<{ name?: string; qty?: number }>;
     gold?: number;
-    [key: string]: any;
 }
 
 /** 접두사 정의 (items.js의 prefixes 카테고리 — 랜덤 강화 접두사). */
@@ -126,7 +161,6 @@ export interface ItemPrefixDef {
     val?: number;
     elem?: string;
     price?: number;
-    [key: string]: any;
 }
 
 /**
@@ -143,6 +177,4 @@ export interface ItemDatabase {
     prefixes: ItemPrefixDef[];
     sets: ItemSetDef[];
     recipes: ItemRecipeDef[];
-    /** 동적으로 추가 가능한 카테고리 (런타임 확장 호환). */
-    [key: string]: Item[] | ItemPrefixDef[] | ItemSetDef[] | ItemRecipeDef[];
 }

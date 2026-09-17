@@ -2,9 +2,10 @@ import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
 import MonsterIcon from './icons/MonsterIcon';
 import { useHitFlash } from '../hooks/useHitFlash';
-import type { Player, Monster } from '../types/index.js';
+import { getExpeditionHudChips } from '../utils/expeditionHud';
+import type { FullStats, Player, Monster } from '../types/index.js';
 
-const METER_THEME: any = {
+const METER_THEME: Record<string, { border: string; fill: string; label: string }> = {
   hp: {
     border: 'border-rose-300/24',
     fill: 'bg-gradient-to-r from-rose-400/55 to-rose-300',
@@ -134,7 +135,7 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
 //   0건이라 보간 결과 ''만 추가되는 unreachable. cycle 463/465/466/493 lens 회귀.
 interface StatusBarProps {
   player?: Player | null;
-  stats?: any;
+  stats?: FullStats | null;
   enemy?: Monster | null;
   enemyHitCrit?: boolean;
   onCrystalClick?: (() => void) | null;
@@ -151,6 +152,9 @@ const StatusBar = ({
 }: StatusBarProps) => {
   if (!player?.name) return null;
   const hasPremiumCurrency = (player.premiumCurrency || 0) > 0;
+  // 2026-09 G10: 원정 진행 신호(보스 접근 게이지 · 심연 데일리 다이브)를 상시 HUD로.
+  //   계산은 utils/expeditionHud.ts 순수 함수 — 여기서는 렌더링만 한다.
+  const expeditionChips = getExpeditionHudChips(player);
 
   if (enemy) {
     return (
@@ -216,8 +220,21 @@ const StatusBar = ({
               </div>
             </div>
           </div>
-          {((player.killStreak || 0) >= 3 || (Array.isArray(player.status) && player.status.length > 0)) && (
+          {((player.killStreak || 0) >= 3 || expeditionChips.length > 0 || (Array.isArray(player.status) && player.status.length > 0)) && (
             <div data-testid="status-context-line" className="mt-1 flex min-h-[18px] min-w-0 flex-wrap items-center gap-1.5">
+                {expeditionChips.map((chip) => (
+                  <span
+                    key={chip.id}
+                    data-testid={`status-${chip.id}-chip`}
+                    className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal ${
+                      chip.tone === 'warning'
+                        ? 'border-amber-400/32 bg-amber-500/16 text-amber-200'
+                        : 'border-[#9a8ac0]/34 bg-[#9a8ac0]/16 text-[#dcd2f6]'
+                    }`}
+                  >
+                    {chip.label}
+                  </span>
+                ))}
                 {(player.killStreak || 0) >= 3 && (
                   <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal text-orange-300">연속 처치 {player.killStreak}</span>
                 )}

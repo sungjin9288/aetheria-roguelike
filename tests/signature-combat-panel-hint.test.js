@@ -1,8 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+import { createElement } from 'react';
+
+import CombatPanel from '../src/components/tabs/CombatPanel.tsx';
+import { buildCombatView } from '../src/utils/combatView.ts';
+import { getBossSignatureDrops } from '../src/utils/bossSignatureHint.ts';
+import { CombatEngine } from '../src/systems/CombatEngine.ts';
+import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
 /**
  * CombatPanel — 전투 중 signature 드롭 가능성 reminder.
@@ -13,60 +17,68 @@ import path from 'node:path';
  * 노출하므로, signature 드롭 hint도 같은 layer에 상주해야 "이 보스를 굳이 도망치지
  * 말고 끝까지 버텨야 하는 이유"가 전투 내내 시야에 남는다.
  *
- * 계약:
- *   1. CombatPanel이 getBossSignatureDrops를 import
- *   2. CombatEngine.resolveEnemyBaseName으로 prefix-stripped baseName에 질의
- *   3. enemy.isBoss + signatureDrops.length > 0일 때만 렌더
- *   4. data-testid="combat-signature-drop-hint" 노출
- *   5. "전설 각인" 라벨 포함
- *   6. #f6e7a2 gold 팔레트 (기존 signature tone과 일관)
+ * 계약(순수 함수 buildCombatView 직접 호출 + CombatPanel 렌더 검증):
+ *   1. buildCombatView가 CombatEngine.resolveEnemyBaseName으로 prefix-stripped
+ *      baseName을 구해 getBossSignatureDrops에 질의하고, 실제 DROP_TABLES와
+ *      SIGNATURE_ITEM_REGISTRY 교집합을 primarySignatureDrop으로 반환한다
+ *   2. enemy.isBoss + signatureDrops.length > 0일 때만 CombatPanel이
+ *      data-testid="combat-signature-drop-hint"를 렌더
+ *   3. "전설 각인" 라벨 포함
+ *   4. #f6e7a2 gold 팔레트 (기존 signature tone과 일관)
  */
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(HERE, '..');
-const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
+const BOSS_NAME = '마왕'; // src/data/dropTables.ts: '마왕' → '마왕의 대낫'(0.15) / '성검 에테르니아'(0.1)
+const BOSS_STATS = { atk: 10, def: 5, maxHp: 100, maxMp: 50 };
+const ACTIONS = { getSelectedSkill: () => null };
 
-// 리팩토링: signature 드롭 reminder 계산은 buildCombatView(combatView.ts)로 분리.
-test('combatView imports getBossSignatureDrops', async () => {
-    const source = await readSrc('src/utils/combatView.ts');
-    assert.ok(
-        /import\s*\{[^}]*getBossSignatureDrops[^}]*\}\s*from\s*['"][^'"]*bossSignatureHint/.test(source),
-        'combatView should import getBossSignatureDrops from bossSignatureHint util'
-    );
+test('buildCombatView는 resolveEnemyBaseName으로 정규화한 이름을 getBossSignatureDrops에 질의한다', () => {
+    const player = makePlayerFixture();
+    const enemy = { name: `강화된 ${BOSS_NAME}`, isBoss: true, hp: 500, maxHp: 500 };
+
+    const expectedBaseName = CombatEngine.resolveEnemyBaseName(enemy);
+    assert.equal(expectedBaseName, BOSS_NAME, '전제: prefix가 제거된 baseName이 마왕이어야 함');
+    const expectedDrops = getBossSignatureDrops(expectedBaseName);
+    assert.ok(expectedDrops.length > 0, '전제: 마왕 drop table에 signature 아이템이 있어야 함');
+
+    const view = buildCombatView({ player, enemy, stats: BOSS_STATS, selectedSkill: null, skillCooldown: 0, mobile: false });
+    assert.deepEqual(view.signatureDropCandidates, expectedDrops, '실제 drop table 교집합과 동일한 후보 목록');
+    assert.deepEqual(view.primarySignatureDrop, expectedDrops[0], '최고 확률 signature가 primary로 선택됨');
 });
 
-test('combatView resolves enemy baseName before querying signature drops', async () => {
-    const source = await readSrc('src/utils/combatView.ts');
-    assert.ok(
-        /resolveEnemyBaseName\s*\(/.test(source),
-        'should normalize prefixed boss name via CombatEngine.resolveEnemyBaseName'
-    );
-    assert.ok(
-        /getBossSignatureDrops\s*\(/.test(source),
-        'should invoke getBossSignatureDrops with the resolved name'
-    );
+test('buildCombatView는 보스가 아니면 signature 후보를 비워둔다', () => {
+    const player = makePlayerFixture();
+    const enemy = { name: BOSS_NAME, isBoss: false, hp: 20, maxHp: 20 };
+
+    const view = buildCombatView({ player, enemy, stats: BOSS_STATS, selectedSkill: null, skillCooldown: 0, mobile: false });
+    assert.deepEqual(view.signatureDropCandidates, []);
+    assert.equal(view.primarySignatureDrop, null);
 });
 
-test('CombatPanel renders combat-signature-drop-hint testid', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
-    assert.ok(
-        /combat-signature-drop-hint/.test(source),
-        'should expose data-testid="combat-signature-drop-hint" for the signature reminder block'
-    );
+test('CombatPanel은 보스가 signature를 떨굴 수 있을 때 combat-signature-drop-hint를 실제로 렌더링한다', () => {
+    const player = makePlayerFixture();
+    const enemy = { name: BOSS_NAME, isBoss: true, hp: 500, maxHp: 500 };
+    const expectedTopDrop = getBossSignatureDrops(BOSS_NAME)[0];
+
+    const html = renderStatic(createElement(CombatPanel, {
+        player, actions: ACTIONS, enemy, stats: BOSS_STATS, isAiThinking: false, mobile: false,
+    }));
+
+    assert.ok(html.includes('data-testid="combat-signature-drop-hint"'), 'signature 드롭 힌트 노드가 렌더링됨');
+    assert.ok(html.includes('전설 각인'), '"전설 각인" 라벨 포함');
+    assert.ok(html.includes('f6e7a2'), 'gold 팔레트(#f6e7a2) 사용');
+    assert.ok(html.includes(expectedTopDrop.name), '실제 최고 확률 signature 이름이 힌트에 노출됨');
 });
 
-test('CombatPanel labels the reminder as 전설 각인', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
-    assert.ok(
-        /전설 각인/.test(source),
-        'reminder should be labeled "전설 각인"'
-    );
-});
+test('CombatPanel은 signature를 떨구지 않는 적/보스가 아닌 적에게는 힌트를 렌더링하지 않는다', () => {
+    const player = makePlayerFixture();
+    const nonBoss = { name: '하수도 쥐', isBoss: false, hp: 20, maxHp: 20 };
+    const htmlNonBoss = renderStatic(createElement(CombatPanel, {
+        player, actions: ACTIONS, enemy: nonBoss, stats: BOSS_STATS, isAiThinking: false, mobile: false,
+    }));
+    assert.ok(!htmlNonBoss.includes('combat-signature-drop-hint'));
 
-test('CombatPanel uses gold palette #f6e7a2 for signature reminder', async () => {
-    const source = await readSrc('src/components/tabs/CombatPanel.tsx');
-    assert.ok(
-        /#f6e7a2|246,231,162/.test(source),
-        'signature reminder should reuse #f6e7a2 / rgba(246,231,162) gold palette'
-    );
+    const htmlNoEnemy = renderStatic(createElement(CombatPanel, {
+        player, actions: ACTIONS, enemy: null, stats: BOSS_STATS, isAiThinking: false, mobile: false,
+    }));
+    assert.ok(!htmlNoEnemy.includes('combat-signature-drop-hint'), '적이 없을 때도 힌트 미노출');
 });

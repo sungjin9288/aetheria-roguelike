@@ -1,6 +1,7 @@
 import { ChevronRight } from 'lucide-react';
 import { AT } from '../reducers/actionTypes';
-import { RARITY_COLORS } from '../data/titles';
+import { RARITY_CLASSES } from '../data/constants';
+import { MSG } from '../data/messages';
 import { RELIC_SYNERGIES } from '../data/relics';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getRelicChoiceDecisionStrip } from '../utils/relicChoiceDecision';
@@ -8,20 +9,20 @@ import { getRunBuildProfile } from '../utils/runProfile';
 import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
 import RelicIcon from './icons/RelicIcon';
 import SignalBadge from './SignalBadge';
-import type { Player, Relic } from '../types/index.js';
+import type { FullStats, Player, Relic } from '../types/index.js';
 
 interface RelicChoicePanelProps {
     pendingRelics?: Relic[] | null;
     dispatch: (action: any) => void;
     player?: Player | null;
-    stats?: any;
+    stats?: FullStats | null;
 }
 
 /**
  * 유물 시너지 점수 계산 (0~100)
  * 현재 보유 유물과 새 유물의 effect 조합을 분석합니다.
  */
-const SYNERGY_MAP: any = {
+const SYNERGY_MAP: Record<string, string[]> = {
     // 공격 콤보
     double_strike: ['execute_bonus', 'combo_stack', 'armor_pen', 'ancient_power'],
     execute_bonus: ['double_strike', 'low_hp_atk', 'combo_stack'],
@@ -92,7 +93,7 @@ const getRelicSynergyScore = (newRelic: any, ownedRelics: any): any => {
     return { score, label, synergies: synergyNames, nearLegendary: nearLegendarySyn?.label || null };
 };
 
-const RARITY_CARD: any = {
+const RARITY_CARD: Record<string, string> = {
     common:    'border-white/10 bg-black/18 hover:border-white/16 hover:bg-white/[0.045]',
     uncommon:  'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 hover:border-[#7dd4d8]/28 hover:bg-[#7dd4d8]/14',
     rare:      'border-[#9a8ac0]/24 bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/32 hover:bg-[#9a8ac0]/14',
@@ -100,15 +101,7 @@ const RARITY_CARD: any = {
     legendary: 'border-rose-300/22 bg-rose-400/10 hover:border-rose-300/30 hover:bg-rose-400/14',
 };
 
-const RARITY_LABEL: any = {
-    common:    '일반',
-    uncommon:  '고급',
-    rare:      '희귀',
-    epic:      '영웅',
-    legendary: '전설',
-};
-
-const RARITY_BADGE_TONE: any = {
+const RARITY_BADGE_TONE: Record<string, string> = {
     common: 'neutral',
     uncommon: 'recommended',
     rare: 'resonance',
@@ -214,14 +207,14 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                 <div className="flex flex-wrap items-center gap-1">
                                     {isRecommended && <SignalBadge tone="spotlight" size="sm">추천</SignalBadge>}
                                     <SignalBadge tone={RARITY_BADGE_TONE[relic.rarity] || 'neutral'} size="sm">
-                                        {RARITY_LABEL[relic.rarity] || relic.rarity}
+                                        {MSG.RARITY_LABEL[relic.rarity] || relic.rarity}
                                     </SignalBadge>
                                     {isLegendaryComplete && <SignalBadge tone="danger" size="sm">전설 조합</SignalBadge>}
                                     {!isLegendaryComplete && hasSynergy && (
                                         <SignalBadge tone={synergy.score >= 80 ? 'success' : 'recommended'} size="sm">{synergy.label}</SignalBadge>
                                     )}
                                 </div>
-                                <div className={`mt-1 text-[13px] font-readable font-bold leading-tight ${RARITY_COLORS[relic.rarity] || 'text-white'} group-hover:text-white`}>
+                                <div className={`mt-1 text-[13px] font-readable font-bold leading-tight ${RARITY_CLASSES[relic.rarity] || 'text-white'} group-hover:text-white`}>
                                     {getRelicDisplayName(relic.name)}
                                 </div>
                                 <div className="mt-0.5 text-[11px] font-readable leading-snug text-slate-200/82">

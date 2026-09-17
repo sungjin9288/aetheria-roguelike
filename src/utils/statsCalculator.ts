@@ -1,10 +1,11 @@
 import { CONSTANTS, BALANCE } from '../data/constants.js';
-import type { Player } from "../types/index.js";
+import type { Player, Relic, RelicSynergy, RelicValByEffect } from "../types/index.js";
 import { DB } from '../data/db.js';
-import { getActiveRelicSynergies } from '../data/relics.js';
+import { getActiveRelicSynergies, relicNumber } from '../data/relics.js';
 import { getEquipmentProfile, getItemEnhanceBonus, getWeaponHands, isMagicWeapon, isShield } from './equipmentUtils.js';
 import { getRunBuildProfile, getTraitBonus, getTraitProfile } from './runProfileUtils.js';
 import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
+import type { TitlePassive } from '../data/titles.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
@@ -13,7 +14,7 @@ import { resolveHpDrainAtkRelic } from './hpDrainAtkRelic.js';
 // cycle 449: 물리 elem 필터 제거 — items.ts elem 값에 '물리' / 'physical' 0건.
 //   weaponElem 있는 무기는 항상 magic elem이라 필터 redundant.
 //   isMagic 체크는 `weaponElem`(truthy)로 단순화.
-const MAGIC_JOBS: any = ['마법사', '아크메이지', '흑마법사', '성직자', '대마법사', '무당', '시간술사'];
+const MAGIC_JOBS = ['마법사', '아크메이지', '흑마법사', '성직자', '대마법사', '무당', '시간술사'];
 
 /**
  * @param {object} equip
@@ -30,8 +31,8 @@ const computeSetBonus = (equip: any) => {
         return { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
     }
 
-    const counts = prefixes.reduce((acc: any, p: any) => ({ ...acc, [p]: (acc[p] || 0) + 1 }), {});
-    const setName = Object.keys(counts).find((k: any) => counts[k] >= 2);
+    const counts = prefixes.reduce((acc: Record<string, number>, p: string) => ({ ...acc, [p]: (acc[p] || 0) + 1 }), {});
+    const setName = Object.keys(counts).find((k) => counts[k] >= 2);
     if (!setName) return { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
 
     const setData = DB.ITEMS.sets?.find((s: any) => s.prefix === setName);
@@ -49,12 +50,12 @@ const computeSetBonus = (equip: any) => {
  * @param {object} stats player.stats
  * @returns {{ atk: number, def: number, hp: number }}
  */
-const computeCodexBonus = (stats: any) => {
+const computeCodexBonus = (stats: Player['stats']) => {
     let atk = 0;
     let def = 0;
     let hp = 0;
     const registry = stats?.killRegistry || {};
-    Object.values(registry).forEach((kills: any) => {
+    Object.values(registry).forEach((kills: number) => {
         if (kills >= 10) hp += 5;
         if (kills >= 50) def += 1;
         if (kills >= 100) atk += 1;
@@ -71,13 +72,14 @@ const computeCodexBonus = (stats: any) => {
  * @param {boolean} hasOffhandWeapon
  * @returns {object} relic-derived multipliers and flat bonuses
  */
-const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any) => {
+const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: boolean) => {
     const hpRatio = (player.hp ?? 0) / Math.max(1, player.maxHp ?? 1);
     const hpDrainAtkRelic = resolveHpDrainAtkRelic(relics);
 
+    // 'kill_stack_atk' (허공의 왕좌) — 원정 단위 누적치(adventureRelicBonuses)를 atkFlat에 합산.
     const killStackAtk = player.adventureRelicBonuses?.killStackAtk || 0;
 
-    const atkFlat = relics.reduce((acc: any, r: any) => {
+    const atkFlat = relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'kill_stack_atk') return acc + killStackAtk;
         if (r.effect === 'glass_cannon') return acc + r.val.atk;
         if (r.effect === 'ancient_power') return acc + r.val.atk;
@@ -88,16 +90,24 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
         // cycle 149: 'genesis' (창세의 핵) — 전 스탯 statBonus 다중 적용. 매 턴 회복은 별도 사이클.
         if (r.effect === 'genesis') return acc + (r.val?.statBonus || 0);
         if (r.effect === 'low_hp_atk') {
-            const threshold = typeof r.val === 'object' ? r.val.threshold : 0.3;
-            const bonus = typeof r.val === 'object' ? r.val.bonus : (r.val - 1);
+            // 구형 스냅샷 호환: low_hp_atk의 val이 dict가 아니라 배율 number이던 시절의
+            //   세이브/픽스처가 남아 있다(tests/synergies-cycle.test.js:'berserker_rage').
+            //   타입상 dict 단일이라 else 분기가 never가 되므로 legacy 유니온으로 되돌려 읽는다.
+            const legacyVal = r.val as number | RelicValByEffect['low_hp_atk'];
+            const threshold = typeof legacyVal === 'object' ? legacyVal.threshold : 0.3;
+            const bonus = typeof legacyVal === 'object' ? legacyVal.bonus : (legacyVal - 1);
             if (hpRatio < threshold) return acc + bonus;
         }
         return acc;
     }, 0);
 
-    const defFlat = relics.reduce((acc: any, r: any) => {
+    const defFlat = relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'glass_cannon') return acc + r.val.def;
-        if (r.effect === 'stone_skin' || r.effect === 'def_mult') return acc + r.val;
+        // L-TODO(types) 잠재 버그: 'def_mult' effect를 가진 유물은 RELICS 67종에 없다(죽은 분기).
+        //   RelicEffect 유니온화 이후 TS2367이 되므로 런타임 동등성 유지를 위해 string으로 비교한다.
+        //   Wave 4 M: `||` 두 번째 항이 판별을 못 하므로 r이 좁혀지지 않는다 → relicNumber로 읽는다.
+        //   stone_skin의 val은 데이터상 항상 number라 relicNumber(r) === r.val (accessors 테스트).
+        if (r.effect === 'stone_skin' || (r.effect as string) === 'def_mult') return acc + relicNumber(r);
         if (r.effect === 'fortress') return acc + r.val.def;
         if (r.effect === 'omega') return acc + r.val;
         if (r.effect === 'triple_up') return acc + (r.defVal || 0);
@@ -108,7 +118,7 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
         return acc;
     }, 0);
 
-    const hpMult = 1 + relics.reduce((acc: any, r: any) => {
+    const hpMult = 1 + relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'fortress') return acc + r.val.hp;
         if (r.effect === 'omega') return acc + r.val;
         // cycle 149: 'titan' (타이탄의 허리띠) — HP +30% 보너스. 받는 치명타 피해 -50%는 별도 사이클.
@@ -118,13 +128,13 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
         return acc;
     }, 0);
 
-    const mpMult = 1 + relics.reduce((acc: any, r: any) => {
+    const mpMult = 1 + relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'mp_mult') return acc + r.val;
         if (r.effect === 'omega') return acc + r.val;
         return acc;
     }, 0);
 
-    const critBonus = relics.reduce((acc: any, r: any) => {
+    const critBonus = relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'ancient_power') return acc + r.val.crit;
         if (r.effect === 'omega') return acc + r.val;
         if (r.effect === 'dual_crit' && hasOffhandWeapon) return acc + (r.val || 0);
@@ -133,7 +143,7 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
         return acc;
     }, 0);
 
-    const mpFlat = relics.reduce((acc: any, r: any) => {
+    const mpFlat = relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'triple_up') return acc + (r.mpVal || 0);
         return acc;
     }, 0);
@@ -153,8 +163,8 @@ const computeRelicBonuses = (relics: any, player: Player, hasOffhandWeapon: any)
  * @param {number} abyssFloor
  * @returns {{ atk: number, def: number, crit: number }}
  */
-const computeAbyssRelicBonuses = (relics: any, abyssFloor: any) => {
-    const atk = relics.reduce((acc: any, r: any) => {
+const computeAbyssRelicBonuses = (relics: Relic[], abyssFloor: number) => {
+    const atk = relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'abyss_atk_scale') {
             const bonus = Math.min(r.val.maxBonus, Math.floor(abyssFloor / r.val.perFloors) * r.val.atkPer);
             return acc + bonus;
@@ -165,14 +175,14 @@ const computeAbyssRelicBonuses = (relics: any, abyssFloor: any) => {
         return acc;
     }, 0);
 
-    const def = relics.reduce((acc: any, r: any) => {
+    const def = relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'abyss_floor_power' && abyssFloor >= r.val.minFloor) {
             return acc + r.val.defBonus;
         }
         return acc;
     }, 0);
 
-    const crit = relics.reduce((acc: any, r: any) => {
+    const crit = relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'abyss_crit_scale') {
             return acc + Math.min(r.val.maxBonus, Math.floor(abyssFloor / r.val.perFloors) * r.val.critPer);
         }
@@ -187,8 +197,8 @@ const computeAbyssRelicBonuses = (relics: any, abyssFloor: any) => {
  * @param {number} totalKills
  * @returns {number}
  */
-const computeKillStackAtkBonus = (relics: any, totalKills: any) =>
-    relics.reduce((acc: any, r: any) => {
+const computeKillStackAtkBonus = (relics: Relic[], totalKills: number) =>
+    relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'kill_stack') {
             const stacks = Math.floor(totalKills / (r.stackPer || 50));
             return acc + stacks * (r.stackVal || 25);
@@ -227,7 +237,7 @@ const computeEnhanceBonus = (equip: any) => {
  * @param {number} hpRatio
  * @returns {{ atkMult: number, statMult: number, mpFlat: number, lowHpAtk: number, defMult: number }}
  */
-const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) => {
+const applySynergyBonuses = (synergies: RelicSynergy[], preBuildStats: { maxMp: number }, hpRatio: number) => {
     let atkMult = 1;
     let statMult = 1;
     let mpFlat = 0;
@@ -237,7 +247,7 @@ const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) =
     // cycle 237: critBonus — 'primordial_wrath' 시너지 (critChance 0.25) 반영.
     let critBonus = 0;
 
-    synergies.forEach((syn: any) => {
+    synergies.forEach((syn) => {
         // cycle 153: 시너지 effect-name 명시 매핑 — baseline 가드 통과 + 향후 분기 확장 지점.
         // 'vampire_lord' (atkMult 0.2), 'arcane_surge' (mpMult 0.3), 'eternal_life' (statBonus 0.2),
         // 'primordial_wrath' (lowHpAtk 0.8) 모두 bonus-key 기반으로 이미 functional.
@@ -267,9 +277,9 @@ const applySynergyBonuses = (synergies: any, preBuildStats: any, hpRatio: any) =
  * @param {number} killStreak
  * @returns {{ atkBonus: number, critBonus: number }}
  */
-const computeKillStreakBonus = (killStreak: any) => {
+const computeKillStreakBonus = (killStreak: number) => {
     const tierIdx = BALANCE.KILL_STREAK_TIERS.reduce(
-        (best: any, threshold: any, i: any) => (killStreak >= threshold ? i : best),
+        (best: number, threshold: number, i: number) => (killStreak >= threshold ? i : best),
         -1
     );
     const atkBonus = tierIdx >= 0 ? BALANCE.KILL_STREAK_ATK_BONUS[tierIdx] : 0;
@@ -311,7 +321,7 @@ export const calculateFullStats = (player: Player) => {
     const meta = player.meta || {};
     // PR #8: 프레스티지 rank≥10 해금 "에테르 초월" — 영구 스탯 보너스 ×2.
     const prestigeStatMult = getPrestigeUnlocks(meta.prestigeRank).statMult;
-    const titlePassive = getTitlePassive(player.activeTitle) || {};
+    const titlePassive: Partial<TitlePassive> = getTitlePassive(player.activeTitle) || {};
 
     const setBonus = computeSetBonus(player.equip);
     const signatureSetBonus = computeSignatureSetBonus(player.equip);
@@ -363,7 +373,7 @@ export const calculateFullStats = (player: Player) => {
         BALANCE.CRIT_CHANCE + equipmentCritBonus + relicBonus.critBonus + abyssBonus.crit + (titlePassive.crit || 0) + passiveBonus.crit
     );
 
-    const preBuildStats: Record<string, any> = {
+    const preBuildStats = {
         atk: Math.floor(baseAtk * (1 + relicBonus.atkFlat) + (titlePassive.atk || 0)),
         def: Math.floor(baseDef * (1 + relicBonus.defFlat) + (titlePassive.def || 0)),
         maxHp: Math.floor(baseMaxHp * relicBonus.hpMult) + (titlePassive.hp || 0),
@@ -423,6 +433,15 @@ export const calculateFullStats = (player: Player) => {
         killStreak: player.killStreak || 0,
         passiveGoldMult: passiveBonus.goldMult,
         passiveExpMult: passiveBonus.expMult,
-        jobAffinity: affinity,  // cycle 45: { matchCount, totalSlots, bonus, label, tier, slots }
+        jobAffinity: affinity,  // cycle 45: { matchCount, bonus, label, tier, slots, twoHandCounted }
     };
 };
+
+/**
+ * `calculateFullStats()`가 돌려주는 파생 전투 스탯 전체.
+ *
+ * 계산식이 단일 진실 원천이므로 손으로 다시 적지 않고 반환 타입에서 추론한다.
+ * `calculateFullStats`는 `player`가 없으면 `null`을 돌려주므로 `NonNullable`로
+ * 벗겨내고, null 가능성은 각 소비처가 `FullStats | null`로 직접 표현한다.
+ */
+export type FullStats = NonNullable<ReturnType<typeof calculateFullStats>>;

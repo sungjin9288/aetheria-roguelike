@@ -327,16 +327,6 @@ const GameRoot = ({
                     </Suspense>
                 )}
 
-                {mirrorPanelOpen && (
-                    <Suspense fallback={null}>
-                        <MirrorPanel
-                            player={engine.player}
-                            onClose={() => setMirrorPanelOpen(false)}
-                            onPurchase={(nodeId: any) => { engine.actions.purchaseMirrorNode?.(nodeId); }}
-                        />
-                    </Suspense>
-                )}
-
                 <MobileGameLayout
                     engine={engine}
                     fullStats={fullStats}
@@ -375,6 +365,10 @@ const GameRoot = ({
                         result={engine.postCombatResult}
                         onClose={() => engine.actions.clearPostCombat?.()}
                         onOpenInventory={() => handleOpenArchiveTab('inventory')}
+                        onResolveChoice={(choice) => engine.dispatch({
+                            type: AT.RESOLVE_POST_COMBAT_CHOICE,
+                            payload: { choice },
+                        })}
                     />
                 </Suspense>
             )}
@@ -416,6 +410,7 @@ const GameRoot = ({
                     <AscensionScreen
                         player={engine.player}
                         actions={engine.actions}
+                        onOpenMirror={() => setMirrorPanelOpen(true)}
                     />
                 </Suspense>
             )}
@@ -430,6 +425,17 @@ const GameRoot = ({
             )}
 
             <LegendaryDropOverlay item={legendaryDrop} onDismiss={dismissLegendaryDrop} />
+
+            {/* 에테르 거울은 승천 화면(z-200) 위에서도 열려야 하므로 오버레이 중 가장 마지막에 그린다. */}
+            {mirrorPanelOpen && (
+                <Suspense fallback={null}>
+                    <MirrorPanel
+                        player={engine.player}
+                        onClose={() => setMirrorPanelOpen(false)}
+                        onPurchase={(nodeId: any) => { engine.actions.purchaseMirrorNode?.(nodeId); }}
+                    />
+                </Suspense>
+            )}
         </MainLayout>
     </MotionConfig>
     );

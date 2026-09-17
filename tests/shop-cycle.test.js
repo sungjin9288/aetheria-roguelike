@@ -453,18 +453,23 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 531: 정합성 가드 — 6 internal callsite 보존', async () => {
       const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/formatPercent\(critDelta\)/.test(source),
-          'formatPercent(critDelta) callsite 보존');
-      const cmpCalls = (source.match(/getComparisonMeta\(item,\s*player\.equip\)/g) || []).length;
+      // A2 (2026-09 감사 G4): formatPercent/signedDelta는 equipmentUtils로 이관되고
+      //   getComparisonMeta는 equip 대신 player를 받는다(강화 반영). callsite 수는 동일.
+      assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(source),
+          '공용 장비 비교 위임 보존');
+      const cmpCalls = (source.match(/getComparisonMeta\(item,\s*player\)/g) || []).length;
       assert.equal(cmpCalls, 2, `getComparisonMeta 2 callsite 보존: ${cmpCalls}건`);
       const cctCalls = (source.match(/getCompactText\(/g) || []).length;
       assert.ok(cctCalls >= 3, `getCompactText callsite 3건 이상 보존: ${cctCalls}건`);
   });
 
-  test('cycle 531: signedDelta suffix 파라미터 보존 (cycle 621 explicit elimination)', async () => {
-      const source = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/const signedDelta = \(value: any, suffix: any\)/.test(source),
-          'signedDelta suffix 파라미터 보존 (cycle 621에서 default 제거됨)');
+  test('cycle 531 (A2 이관): 델타 포맷 헬퍼는 공용 유틸 한 곳에만 존재', async () => {
+      const shop = await readSrc('src/components/ShopPanel.tsx');
+      assert.ok(!/const signedDelta|const formatPercent/.test(shop),
+          'ShopPanel 자체 델타 포맷 헬퍼 재도입 금지');
+      const eu = await readSrc('src/utils/equipmentUtils.ts');
+      assert.ok(/export const formatEquipmentDelta = \(key: EquipmentDeltaKey, value: number\)/.test(eu),
+          'formatEquipmentDelta가 단일 원천 (cycle 621 default 제거 형태 유지)');
   });
 
   test('cycle 531: cycle 502-529 회귀 가드 — util default 청소 시리즈 보존', async () => {

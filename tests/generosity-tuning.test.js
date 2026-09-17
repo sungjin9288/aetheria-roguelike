@@ -6,7 +6,7 @@ import { RELICS, pickWeightedRelics } from '../src/data/relics.js';
 import { createCharacterActions } from '../src/hooks/gameActions/characterActions.js';
 import { buildCampfireEvent } from '../src/utils/campfireEvent.js';
 import { pickFallbackEvent } from '../src/utils/aiEventUtils.js';
-import { rollExplorationEvent } from '../src/utils/exploreUtils.js';
+import { rollExplorationEvent } from '../src/hooks/gameActions/exploreFlow.js';
 import { createEventActions } from '../src/hooks/gameActions/eventActions.js';
 import { buildScoutEvent } from '../src/utils/scoutEvents.ts';
 

@@ -60,12 +60,12 @@ const getSlotWeight = (slot: string, item: Item | null | undefined) => (
  * }}
  */
 export const computeSignatureSetBonus = (equip: any) => { // EquipSlots-like (런타임 동적 슬롯 호환).
-    const neutral: any = { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
+    const neutral = { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
     if (!equip) return neutral;
 
     // slot별 setGroup + 가중치(2H 무기는 2) 수집. 2H 시그니처 무기 단독 장착 시에도
     // groups 물리 아이템 수는 1이지만 weight 합은 2가 되어 세트 발동 가능해야 한다.
-    const groups: any[] = [];
+    const groups = [];
     const counts: Record<string, number> = {};
     for (const slot of ['weapon', 'armor', 'offhand']) {
         const item = equip[slot];

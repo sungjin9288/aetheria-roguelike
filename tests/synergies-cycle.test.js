@@ -602,7 +602,8 @@ import { readFile } from 'node:fs/promises';
   test('cycle 396: StatsPanel syn.name 0건 (silent undefined 제거)', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
       // synergy block 추출 — activeSynergies map 영역
-      const blockStart = source.indexOf('stats.activeSynergies.map');
+      // B2(2026-09): stats prop이 FullStats | null 로 타입화되면서 non-null 단언이 붙었다(런타임 동일).
+      const blockStart = source.indexOf('stats!.activeSynergies.map');
       const blockEnd = source.indexOf('</div>\n                    ))}', blockStart);
       const block = source.slice(blockStart, blockEnd);
       assert.ok(!/syn\.name/.test(block),
@@ -611,7 +612,8 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 396: StatsPanel syn.label 사용 (fix 검증)', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
-      const blockStart = source.indexOf('stats.activeSynergies.map');
+      // B2(2026-09): stats prop이 FullStats | null 로 타입화되면서 non-null 단언이 붙었다(런타임 동일).
+      const blockStart = source.indexOf('stats!.activeSynergies.map');
       const blockEnd = source.indexOf('</div>\n                    ))}', blockStart);
       const block = source.slice(blockStart, blockEnd);
       assert.ok(/syn\.label/.test(block),

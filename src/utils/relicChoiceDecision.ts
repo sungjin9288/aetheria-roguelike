@@ -1,7 +1,8 @@
 import { getRelicDisplayName } from './relicPresentation';
 import { getRelicBuildFit } from './relicBuildFit';
+import { MSG } from '../data/messages';
 
-const RARITY_SCORE: any = {
+const RARITY_SCORE: Record<string, number> = {
     common: 0,
     uncommon: 12,
     rare: 24,
@@ -9,7 +10,7 @@ const RARITY_SCORE: any = {
     legendary: 52,
 };
 
-const EFFECT_BUILD_LABEL: any = {
+const EFFECT_BUILD_LABEL: Record<string, string> = {
     double_strike: '연속 공격',
     execute_bonus: '마무리 공격',
     combo_stack: '연속 공격 강화',
@@ -47,7 +48,9 @@ const getReasonLabel = (relic: any, synergy: any, buildFit: any) => {
     if (buildFit.matched) return '현재 성장 보완';
     if (relic?.rarity === 'legendary') return '가장 높은 등급';
     if (relic?.rarity === 'epic') return '높은 등급';
-    return '현재 성장 보완';
+    // Wave 4 O2: 빌드에 맞지 않는 후보까지 '현재 성장 보완'으로 부르면, 빌드 공명 추첨으로
+    //   실제 맞는 유물이 올라왔을 때와 표기가 구분되지 않는다.
+    return MSG.RELIC_REASON_NEW_DIRECTION;
 };
 
 const getTone = (relic: any, synergy: any) => {

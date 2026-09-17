@@ -53,6 +53,9 @@ const buildTrueBoss = (value: unknown): Monster | null => {
         dropMod: boss.dropMod,
         phase2: boss.phase2,
         phase3: boss.phase3,
+        // A1(감사 G1): 몬스터 프로파일의 statusOnHit은 스폰 경로마다 명시 전파해야 한다.
+        //   진 보스도 예외가 아니므로 카탈로그 값을 그대로 옮긴다(현 데이터엔 미정의 = undefined).
+        statusOnHit: boss.statusOnHit,
         exp: 5_000,
         gold: 9_999,
         pattern: { guardChance: 0.05, heavyChance: 0.4 },
@@ -94,7 +97,7 @@ export const resolveEndgameVictory = ({
                 {
                     id: heartId,
                     name: '원시의 심장',
-                    type: 'key',
+                    type: 'key' as const,
                     price: 0,
                     tier: 6,
                     desc: '원시의 신의 심장.',

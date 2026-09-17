@@ -4,11 +4,12 @@ import { MSG } from '../../data/messages';
 import { PREMIUM_SHOP } from '../../data/premiumShop';
 import { purchaseMirrorNode } from '../../systems/mirrorUpgrades';
 import type { GameAction, GameState } from '../gameReducer';
+import type { Player } from '../../types';
 import { appendRewardLogs } from './rewardLog';
 
 const completePremiumTransaction = (
     state: GameState,
-    player: any,
+    player: Player,
     text: string,
 ): GameState => ({
     ...state,
@@ -26,7 +27,7 @@ const purchasePreparationOffer = (
     state: GameState,
     offerId: string,
 ): GameState => {
-    const player: any = state.player;
+    const player: Player = state.player;
     const currentCurrency = Math.max(0, Number(player.premiumCurrency) || 0);
 
     if (offerId === PREMIUM_SHOP.invExpand.id) {
@@ -73,7 +74,7 @@ const purchaseCosmeticTitle = (
     const title = PREMIUM_SHOP.cosmeticTitles.find((entry: any) => entry.id === offerId);
     if (!title) return state;
 
-    const player: any = state.player;
+    const player: Player = state.player;
     const currentCurrency = Math.max(0, Number(player.premiumCurrency) || 0);
     const cosmeticTitles = Array.isArray(player.stats?.cosmeticTitles)
         ? player.stats.cosmeticTitles
@@ -112,7 +113,7 @@ const purchaseMirrorUpgrade = (state: GameState, action: GameAction): GameState 
     const node = getMirrorNode(nodeId);
     if (!node) return state;
 
-    const player: any = state.player;
+    const player: Player = state.player;
     const meta = player.meta || {};
     const essence = Math.max(0, Number(meta.essence) || 0);
     const mirror = meta.mirror || {};

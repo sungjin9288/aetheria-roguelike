@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { ArrowRight, Check, Compass, LockKeyhole, Route, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
-import type { GameMap } from '../types/index.js';
+import type { FullStats, GameMap } from '../types/index.js';
 import { getMoveRecommendations } from '../utils/adventureGuide';
 import { getGravesAtLoc } from '../utils/graveUtils';
 import { getExitBadges } from '../utils/mapBadges';
@@ -28,15 +28,16 @@ interface MapEntry extends GameMap {
 interface MapNavigatorProps {
     player: any;
     grave: any;
-    stats: any;
+    stats: FullStats | null | undefined;
     actions?: any;
 }
 
 const MAP_ORDER = Object.entries(DB.MAPS)
     .map(([name, map]) => ({ name, ...map }))
     .sort((left, right) => {
-        const leftLevel = left.level === 'infinite' ? 999 : (left.minLv ?? left.level ?? 1);
-        const rightLevel = right.level === 'infinite' ? 999 : (right.minLv ?? right.level ?? 1);
+        // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
+        const leftLevel = left.level === 'infinite' ? 999 : (left.level ?? 1);
+        const rightLevel = right.level === 'infinite' ? 999 : (right.level ?? 1);
         if (left.type === 'safe' && right.type !== 'safe') return -1;
         if (left.type !== 'safe' && right.type === 'safe') return 1;
         return Number(leftLevel) - Number(rightLevel);
@@ -82,6 +83,15 @@ const getEncounterLabel = (map: GameMap, route: any) => {
     return route?.routePlan?.approach || '일반 교전';
 };
 
+/** 배지 id → SignalBadge tone. 목록 행과 선택 카드가 같은 표를 쓴다(색 의미 일관). */
+const BADGE_TONE: Record<string, any> = {
+    boss: 'danger',
+    bossGauge: 'warning',
+    shop: 'upgrade',
+    highEvent: 'recommended',
+    grave: 'recommended',
+};
+
 const getRewardLabel = (entry: MapEntry) => {
     if (entry.undiscoveredSignatures.length > 0) return `전설 ${entry.undiscoveredSignatures.length}종`;
     if (entry.type === 'safe') return '회복·보급';
@@ -102,8 +112,8 @@ const WorldRouteList = ({
     blindMap: boolean;
     onSelect: (name: string) => void;
 }) => (
-    <details className="aether-map-world-list">
-        <summary className="flex min-h-[44px] cursor-pointer items-center justify-between gap-3 px-1 font-readable text-[11px] text-slate-300/84">
+    <details data-testid="map-world-list" className="aether-map-world-list">
+        <summary data-testid="map-world-list-toggle" className="flex min-h-[44px] cursor-pointer items-center justify-between gap-3 px-1 font-readable text-[11px] text-slate-300/84">
             <span>전체 경로</span>
             <span className="text-slate-500">{blindMap ? '도전 규칙으로 비공개' : `${entries.length}곳`}</span>
         </summary>
@@ -133,17 +143,31 @@ const WorldRouteList = ({
                                         <button
                                             key={entry.name}
                                             type="button"
+                                            data-testid="map-row"
                                             onClick={() => onSelect(entry.name)}
-                                            className={`flex min-h-[44px] w-full items-center gap-2 px-1.5 py-2 text-left ${selected ? 'bg-[#7dd4d8]/8' : 'hover:bg-white/[0.025]'}`}
+                                            className={`flex min-h-[44px] w-full flex-col gap-1 px-1.5 py-2 text-left ${selected ? 'bg-[#7dd4d8]/8' : 'hover:bg-white/[0.025]'}`}
                                         >
-                                            <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} />
-                                            <span className="aether-type-body min-w-0 flex-1 font-readable font-semibold text-slate-100/90">{entry.name}</span>
-                                            <span className="aether-type-meta shrink-0 font-readable text-slate-500">{formatMapLevel(entry, playerLevel)}</span>
-                                            {entry.state === 'completed'
-                                                ? <Check size={12} className="shrink-0 text-emerald-200" aria-label="탐험 완료" />
-                                                : entry.state === 'exploring'
-                                                    ? <Compass size={12} className="shrink-0 text-[#b9f1ec]" aria-label="탐험 중" />
-                                                    : <LockKeyhole size={12} className="shrink-0 text-slate-600" aria-label="미탐험" />}
+                                            <span className="flex w-full items-center gap-2">
+                                                <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} />
+                                                <span className="aether-type-body min-w-0 flex-1 font-readable font-semibold text-slate-100/90">{entry.name}</span>
+                                                <span className="aether-type-meta shrink-0 font-readable text-slate-500">{formatMapLevel(entry, playerLevel)}</span>
+                                                {entry.state === 'completed'
+                                                    ? <Check size={12} className="shrink-0 text-emerald-200" aria-label="탐험 완료" />
+                                                    : entry.state === 'exploring'
+                                                        ? <Compass size={12} className="shrink-0 text-[#b9f1ec]" aria-label="탐험 중" />
+                                                        : <LockKeyhole size={12} className="shrink-0 text-slate-600" aria-label="미탐험" />}
+                                            </span>
+                                            {/* 2026-09 G10: 배지를 선택 카드에서만 보여주던 것을 모든 행으로.
+                                                "갈 이유"를 목록에서 바로 비교할 수 있어야 한다. */}
+                                            {entry.badges.length > 0 && (
+                                                <span data-testid="map-row-badges" className="flex flex-wrap gap-1 pl-4">
+                                                    {entry.badges.map((badge) => (
+                                                        <SignalBadge key={badge.id} tone={BADGE_TONE[badge.id] || 'recommended'} size="sm">
+                                                            {badge.label}
+                                                        </SignalBadge>
+                                                    ))}
+                                                </span>
+                                            )}
                                         </button>
                                     );
                                 })}
@@ -166,12 +190,8 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
     const currentMap = DB.MAPS[player.loc];
     const playerLevel = player.level || 1;
     const blindMap = player.challengeModifiers?.includes('blindMap') || false;
-    const moveRecommendations = getMoveRecommendations(
-        player,
-        stats || { maxHp: player.maxHp, maxMp: player.maxMp },
-        currentMap,
-        DB.MAPS,
-    );
+    // H5(c): 가짜 stats 폴백 제거 — getMoveRecommendations가 내부에서 player.maxHp/maxMp로 폴백한다.
+    const moveRecommendations = getMoveRecommendations(player, stats, currentMap, DB.MAPS);
     const focusedQuestEntries = getFocusedExpeditionQuestEntries(player);
     const questTargets = getExpeditionFocusRouteTargets(player).filter((target) => DB.MAPS[target]);
     const questNextSteps = new Set(questTargets
@@ -332,7 +352,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                     {!blindMap && selectedEntry.badges.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
                             {selectedEntry.badges.map((badge) => (
-                                <SignalBadge key={badge.id} tone={badge.id === 'boss' ? 'danger' : badge.id === 'bossGauge' ? 'warning' : badge.id === 'shop' ? 'upgrade' : 'recommended'} size="sm">
+                                <SignalBadge key={badge.id} tone={BADGE_TONE[badge.id] || 'recommended'} size="sm">
                                     {badge.label}
                                 </SignalBadge>
                             ))}

@@ -34,6 +34,11 @@ const paceEarlyQuestReward = (quest: Quest): Quest => {
 export const EARLY_QUEST_EXP_CAPS = EARLY_QUEST_EXP_CAP_BY_MIN_LEVEL;
 export const FIRST_STORY_QUEST_ID = 80;
 
+// H5(d) (Wave 3 감사): 레벨 목표 target 표기 통일.
+//   퀘스트는 'Level', 업적은 'level'을 쓰고 있었고 두 계통이 각자의 분기에서 따로
+//   동작했다(퀘스트: questProgress.syncQuestProgress, 업적: gameUtils
+//   .getAchievementCurrentValue). 동작은 정상이었지만 같은 의미의 키가 두 표기로
+//   갈려 있어 소문자 'level'로 통일했다 — 데이터와 모든 소비처를 같은 커밋에서 맞춘다.
 const RAW_QUESTS: Quest[] = [
     // ── 초반 퀘스트 (Lv 1-10) ────────────────────────────────────────────────
     { id: 1,  title: '슬라임 소탕',      desc: '슬라임 3마리 처치',       target: '슬라임',      goal: 3,  reward: { exp: 50,   gold: 100 },           minLv: 1 },
@@ -45,7 +50,7 @@ const RAW_QUESTS: Quest[] = [
     { id: 7,  title: '광산 정화',        desc: '광석골렘 5마리 처치',     target: '광석골렘',    goal: 5,  reward: { exp: 600,  gold: 700,  item: '미스릴 원석' }, minLv: 8 },
     { id: 8,  title: '늑대 무리 토벌',   desc: '늑대 8마리 처치',         target: '늑대',        goal: 8,  reward: { exp: 150,  gold: 200 },           minLv: 2 },
     { id: 9,  title: '들개 퇴치',        desc: '들개 6마리 처치',         target: '들개',        goal: 6,  reward: { exp: 120,  gold: 180 },           minLv: 3 },
-    { id: 10, title: '전직의 자격 (1차)',desc: '레벨 5 달성',             target: 'Level',       goal: 5,  reward: { exp: 0,    gold: 1000 },          minLv: 4 },
+    { id: 10, title: '전직의 자격 (1차)',desc: '레벨 5 달성',             target: 'level',       goal: 5,  reward: { exp: 0,    gold: 1000 },          minLv: 4 },
     { id: 14, title: '독버섯 제거',      desc: '독버섯 10마리 처치',      target: '독버섯',      goal: 10, reward: { exp: 180,  gold: 220,  item: '해독제' },      minLv: 2 },
     { id: 15, title: '거대 벌레 퇴치',   desc: '거대 사슴벌레 5마리',     target: '거대 사슴벌레', goal: 5, reward: { exp: 200, gold: 280 },            minLv: 3 },
     { id: 16, title: '숲 요정의 위협',   desc: '숲 요정 8마리 처치',      target: '숲 요정',     goal: 8,  reward: { exp: 280,  gold: 350,  item: '요정의 날개' }, minLv: 4 },
@@ -70,7 +75,7 @@ const RAW_QUESTS: Quest[] = [
     { id: 136, title: '황금 골렘 격파',   desc: '고대 보물고의 황금 골렘 6기를 파괴하세요', target: '황금 골렘', location: '고대 보물고', goal: 6, reward: { exp: 2400, gold: 3000, item: '마나 결정' }, minLv: 25 },
     { id: 137, title: '보물고 미믹 퇴치', desc: '고대 보물고의 미믹 5마리를 처치하세요',    target: '미믹', location: '고대 보물고', goal: 5, reward: { exp: 2600, gold: 3500, item: '잊혀진 열쇠' }, minLv: 26 },
     { id: 29, title: '탑 수호자 격파',   desc: '탑 수호자 5마리 처치',    target: '탑 수호자',   goal: 5,  reward: { exp: 2200, gold: 2800, item: '현자의 예복' }, minLv: 25 },
-    { id: 30, title: '영웅의 길 (2차)',  desc: '레벨 30 달성',           target: 'Level',       goal: 30, reward: { exp: 0,    gold: 5000 },            minLv: 29 },
+    { id: 30, title: '영웅의 길 (2차)',  desc: '레벨 30 달성',           target: 'level',       goal: 30, reward: { exp: 0,    gold: 5000 },            minLv: 29 },
 
     // ── 고급 퀘스트 (Lv 25-40) ───────────────────────────────────────────────
     { id: 31, title: '용의 둥지 습격',   desc: '레드 드래곤 처치',        target: '레드 드래곤', goal: 1,  reward: { exp: 5000,  gold: 8000,  item: '용의 심장' },  minLv: 25 },
@@ -192,11 +197,11 @@ const RAW_QUESTS: Quest[] = [
     { id: 206, title: '세계 탐험가',      type: 'explore_count', desc: '총 200번 탐색', target: 'explores', goal: 200, reward: { exp: 40000, gold: 60000, item: '사냥꾼의 외투' }, minLv: 35 },
 
     // ── 레벨 전직 퀘스트 ─────────────────────────────────────────────────────
-    { id: 100, title: '전직의 자격 (2차)',  desc: '레벨 30 달성하여 2차 전직',   target: 'Level', goal: 30, reward: { exp: 0, gold: 5000 }, minLv: 29 },
-    { id: 101, title: '전직의 자격 (3차)',  desc: '레벨 60 달성하여 3차 전직',   target: 'Level', goal: 60, reward: { exp: 0, gold: 20000, item: '영웅의 물약' }, minLv: 59 },
-    { id: 102, title: '레벨 50 달성',       desc: '레벨 50 달성',                target: 'Level', goal: 50, reward: { exp: 0, gold: 15000, item: '엘릭서' }, minLv: 49 },
-    { id: 103, title: '레벨 70 달성',       desc: '레벨 70 달성 — 전설의 영역',  target: 'Level', goal: 70, reward: { exp: 0, gold: 50000, item: '영웅의 물약' }, minLv: 69 },
-    { id: 104, title: '레벨 80 달성',       desc: '레벨 80 달성 — 초월의 경지',  target: 'Level', goal: 80, reward: { exp: 0, gold: 100000, item: '영웅의 물약' }, minLv: 79 },
+    { id: 100, title: '전직의 자격 (2차)',  desc: '레벨 30 달성하여 2차 전직',   target: 'level', goal: 30, reward: { exp: 0, gold: 5000 }, minLv: 29 },
+    { id: 101, title: '전직의 자격 (3차)',  desc: '레벨 60 달성하여 3차 전직',   target: 'level', goal: 60, reward: { exp: 0, gold: 20000, item: '영웅의 물약' }, minLv: 59 },
+    { id: 102, title: '레벨 50 달성',       desc: '레벨 50 달성',                target: 'level', goal: 50, reward: { exp: 0, gold: 15000, item: '엘릭서' }, minLv: 49 },
+    { id: 103, title: '레벨 70 달성',       desc: '레벨 70 달성 — 전설의 영역',  target: 'level', goal: 70, reward: { exp: 0, gold: 50000, item: '영웅의 물약' }, minLv: 69 },
+    { id: 104, title: '레벨 80 달성',       desc: '레벨 80 달성 — 초월의 경지',  target: 'level', goal: 80, reward: { exp: 0, gold: 100000, item: '영웅의 물약' }, minLv: 79 },
 
     // ── Lv65+ 확장 퀘스트 ────────────────────────────────────────────────────
     // Lv65-70 킬 퀘스트 (4개)
@@ -338,7 +343,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: 'ach_streak_20', title: '학살자',           desc: '20연속 처치 달성', target: 'maxKillStreak', goal: 20, reward: { gold: 12000, item: '영웅의 물약' } },
 
     // ── 발견 체인 업적 (cycle 102: BALANCE.DISCOVERY_CHAINS 5개 시스템 reflection) ─
-    // exploreUtils.checkDiscoveryChains가 즉시 보상은 부여했지만 영구 reflection /
+    // exploreFlow.checkDiscoveryChains가 즉시 보상은 부여했지만 영구 reflection /
     // achievement reward가 비어있던 자리. 5 chains: fire/frozen/void/ancient/demon.
     { id: 'ach_chain_1',   title: '체인 입문자',      desc: '발견 체인 1개 완료',  target: 'discoveryChains', goal: 1, reward: { gold: 2000 } },
     { id: 'ach_chain_3',   title: '체인 추적자',      desc: '발견 체인 3개 완료',  target: 'discoveryChains', goal: 3, reward: { gold: 8000, item: '엘릭서' } },

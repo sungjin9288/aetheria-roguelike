@@ -4,7 +4,7 @@ import { makeEmitTitles } from '../../utils/gameUtils';
 import { AT } from '../../reducers/actionTypes';
 import { advanceExploreState } from '../../utils/explorationPacing';
 import { SEASON_XP } from '../../data/seasonPass';
-import { resetDailyProtocolIfNeeded, resetWeeklyProtocolIfNeeded } from '../../utils/exploreUtils';
+import { resetDailyProtocolIfNeeded, resetWeeklyProtocolIfNeeded } from './exploreFlow';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { advanceBossGauge } from '../../utils/bossGauge';
 import { QUESTS } from '../../data/quests';

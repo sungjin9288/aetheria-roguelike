@@ -19,7 +19,7 @@ const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, va
 // cycle 554: stats default {} 제거 — 4 internal callsite (line 90/103/114/
 //   145) 모두 명시 전달이라 default 도달 불가. body의 stats?.exploreState
 //   가드가 undefined 안전 처리. 청소 메가 시리즈 48번째 (cycle 502-553).
-const getExploreState = (stats: any) => {
+const getExploreState = (stats: Player['stats']) => {
     const raw = stats?.exploreState || {};
     return {
         sinceNarrativeEvent: Math.max(0, raw.sinceNarrativeEvent || 0),
@@ -122,9 +122,9 @@ export const getMapPacingProfile = (mapData: GameMap | null | undefined) => {
 // cycle 507: 4 default 제거 — 2 callsite 모두 4 args 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 6번째 (cycle 502-506 lens).
 export const getNarrativeEventChance = (
-    baseChance: any,
-    bonusMultiplier: any,
-    stats: any,
+    baseChance: number,
+    bonusMultiplier: number,
+    stats: Player['stats'],
     mapData: GameMap | null,
     progressionMultiplier?: number,
 ) => {
@@ -146,7 +146,7 @@ export const getNarrativeEventChance = (
 };
 
 // cycle 507: 2 default 제거 — 2 callsite 모두 2 args 전달이라 default 도달 불가.
-export const getQuietExplorationChance = (stats: any, mapData: GameMap | null) => {
+export const getQuietExplorationChance = (stats: Player['stats'], mapData: GameMap | null) => {
     const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const reduction = exploreState.quietStreak * BALANCE.QUIET_STREAK_NOTHING_REDUCTION;
@@ -197,7 +197,7 @@ export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undef
 // cycle 515: stats / outcome defaults 제거 — 1 callsite (_shared.ts:53)
 //   advanceExploreState(currentPlayer.stats, outcome) 항상 2 args 명시 전달이라
 //   default 도달 불가. util default 청소 메가 시리즈 13번째 (cycle 502-514).
-export const advanceExploreState = (stats: any, outcome: any) => {
+export const advanceExploreState = (stats: Player['stats'], outcome: string) => {
     const current = getExploreState(stats);
     const next = { ...current, lastOutcome: outcome };
 

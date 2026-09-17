@@ -2,7 +2,7 @@ import { auth } from '../firebase';
 import { CONSTANTS } from '../data/constants';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
 import { LatencyTracker } from '../systems/LatencyTracker';
-import { buildEventPackage, getRecentEventSet, pickFallbackEvent, summarizeHistory } from '../utils/aiEventUtils';
+import { buildEventPackage, getRecentEventSet, pickFallbackEvent, summarizeHistory, type EventPackage } from '../utils/aiEventUtils';
 import { isMockRuntime } from '../utils/runtimeMode';
 
 /**
@@ -79,7 +79,7 @@ export const AI_SERVICE = {
     //   모두 명시 전달한다. optional rng는 deterministic action/test 경로에서만
     //   주입하며 미전달 production behavior는 Math.random을 보존한다.
     //   cycle 539 callProxy paired completion (동일 모듈).
-    generateEvent: async (loc: any, history: any[], uid: any, context: any, rng?: () => number) => {
+    generateEvent: async (loc: any, history: any[], uid: any, context: any, rng?: () => number): Promise<EventPackage | null> => {
         const pickEventFallback = () => {
             if (typeof rng === 'function') return pickFallbackEvent(loc, history, context, rng);
             return pickFallbackEvent(loc, history, context);
@@ -89,8 +89,10 @@ export const AI_SERVICE = {
         }
 
         if (!TokenQuotaManager.canMakeAICall()) {
+            const exhaustedFallback = pickEventFallback();
+            if (!exhaustedFallback) return null;
             return {
-                ...pickEventFallback(),
+                ...exhaustedFallback,
                 fallbackReason: 'quota',
                 fallbackMessage: TokenQuotaManager.getExhaustedMessage()
             };

@@ -6,6 +6,7 @@ import {
     type ProductEventEmission,
 } from '../platform/productEventCoordinator';
 import { normalizeProductEventJob } from '../platform/productEvents';
+import type { GameState } from '../reducers/gameReducer';
 
 interface ProductTelemetrySnapshot {
     bootStage: string;
@@ -35,7 +36,7 @@ const asCount = (value: unknown): number => {
     return Number.isFinite(number) ? Math.max(0, Math.floor(number)) : 0;
 };
 
-export const createProductTelemetrySnapshot = (state: any): ProductTelemetrySnapshot => {
+export const createProductTelemetrySnapshot = (state: GameState): ProductTelemetrySnapshot => {
     const player = state?.player || {};
     const hasCharacter = Boolean(String(player.name || '').trim());
     const expedition = player.activeExpedition;
@@ -177,7 +178,7 @@ export const collectProductTelemetryTransitions = (
     return emissions;
 };
 
-export const useProductTelemetry = (state: any): void => {
+export const useProductTelemetry = (state: GameState): void => {
     const current = createProductTelemetrySnapshot(state);
     const previousRef = useRef(current);
     useEffect(() => {

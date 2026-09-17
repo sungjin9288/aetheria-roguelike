@@ -11,13 +11,14 @@ test('map access preserves directed exits, level precedence and seasonal entry',
         gate: { level: 62, exits: ['library'] },
         library: { level: 55, exits: [] },
         season: { level: 5, seasonOnly: true, exits: [] },
-        range: { level: [4, 9], minLv: 3, exits: [] },
+        // 2026-09 N3: minLv 제거 — 범위형 level의 첫 값이 곧 입장 최소 레벨이다.
+        range: { level: [4, 9], exits: [] },
     };
     assert.deepEqual(getMapAccess(maps, 'start', 'gate', 60), { reason: 'level', requiredLevel: 62 });
     assert.equal(getMapAccess(maps, 'library', 'start', 75).reason, 'exit');
     assert.equal(getMapAccess(maps, 'start', 'season', 75).reason, 'season');
     assert.equal(getMapAccess(maps, 'start', 'season', 5, true).reason, null);
-    assert.equal(getMapAccess(maps, 'start', 'range', 2).requiredLevel, 3);
+    assert.equal(getMapAccess(maps, 'start', 'range', 2).requiredLevel, 4);
     assert.equal(getMapAccess(maps, 'start', 'missing', 75).reason, 'missing');
     assert.deepEqual([...getReachableMaps(maps, 'start', 60)], ['start']);
     assert.deepEqual([...getReachableMaps(maps, 'start', 62)], ['start', 'gate', 'library']);

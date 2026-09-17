@@ -8,15 +8,18 @@ import {
     Swords,
 } from 'lucide-react';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
+import { MSG } from '../data/messages.js';
 import type { Player } from '../types/index.js';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
 
 interface AscensionScreenProps {
     player: Player;
     actions?: any;
+    /** 2026-09 G3: 승천 화면에서 곧바로 에테르 거울로 — SystemTab과 같은 진입점을 재사용. */
+    onOpenMirror?: () => void;
 }
 
-const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
+const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps) => {
     const outcome = getAscensionOutcome(player.meta);
     const signatureProgress = getSignatureDiscoveryProgress(player);
     const statRows = [
@@ -100,8 +103,18 @@ const AscensionScreen = ({ player, actions }: AscensionScreenProps) => {
                             ))}
                         </div>
                         <p className="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">
-                            계승 정수는 마을의 에테르 거울에서 원하는 영구 능력에 투자할 수 있습니다.
+                            {MSG.MIRROR_CTA_HINT(player.meta?.essence || 0)}
                         </p>
+                        {onOpenMirror && (
+                            <button
+                                type="button"
+                                data-testid="ascension-open-mirror"
+                                onClick={onOpenMirror}
+                                className="mt-2 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg border border-[#9a8ac0]/32 bg-[#9a8ac0]/12 px-3 text-[12px] font-readable font-bold text-[#e3dcff] transition-colors hover:bg-[#9a8ac0]/20"
+                            >
+                                <Sparkles size={14} /> {MSG.MIRROR_CTA_LABEL}
+                            </button>
+                        )}
                     </section>
 
                     <section

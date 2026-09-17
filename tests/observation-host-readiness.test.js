@@ -174,11 +174,21 @@ test('observation host verifier fails closed when a host request exceeds its tim
         });
     };
 
-    const report = await verifyObservationHost({
-        url: 'http://127.0.0.1:1',
-        fetchImpl,
-        timeoutMs: 5,
-    });
+    // 병합(2026-09, Linux/Node 22 이식성): AbortSignal.timeout의 타이머는 unref라서
+    //   이 테스트처럼 다른 대기 작업이 없으면 abort 전에 이벤트 루프가 비어 버린다
+    //   (테스트가 cancelledByParent로 취소됨). 판정 대상은 그대로 두고, await 동안만
+    //   ref된 타이머로 루프를 살려 둔다 — 프로덕션 동작은 건드리지 않는다.
+    const keepEventLoopAlive = setTimeout(() => {}, 1_000);
+    let report;
+    try {
+        report = await verifyObservationHost({
+            url: 'http://127.0.0.1:1',
+            fetchImpl,
+            timeoutMs: 5,
+        });
+    } finally {
+        clearTimeout(keepEventLoopAlive);
+    }
 
     assert.equal(report.ok, false);
     assert.deepEqual(report.checks, []);

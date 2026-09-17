@@ -246,21 +246,27 @@ test('firebase sync restores local data only on offline fallback and mirrors nam
 
 test('firebase sync promotes a local run only when the cloud document is absent', async () => {
     const source = await readFile(new URL('../src/hooks/useFirebaseSync.ts', import.meta.url), 'utf8');
+    // 자동저장 본문은 createCloudAutosave.ts 로 분리됐다(refactor(sync)). 업로드 payload와
+    // 리비전 floor 가드는 그 파일에서, ref 소유/전달은 훅에서 확인한다.
+    const autosaveSource = await readFile(new URL('../src/hooks/createCloudAutosave.ts', import.meta.url), 'utf8');
 
     assert.match(source, /if \(docSnap\.exists\(\)\)[\s\S]+?migrateData\(remoteData\)/);
     assert.match(source, /resolveCloudBootstrapAuthority\(localRecord, remoteData\)[\s\S]+?payload: 'syncing'/);
     assert.match(source, /else \{\s*const localResult = await getOfflineBootstrapData\(\)/);
     assert.match(source, /if \(localResult\.data\.player\?\.name\)[\s\S]+?payload: 'syncing'/);
-    assert.match(source, /saveSchemaVersion: localRecord\?\.saveVersion \?\? 1/);
-    assert.match(source, /saveRevision: localRecord\?\.revision \?\? 0/);
+    assert.match(autosaveSource, /saveSchemaVersion: localRecord\?\.saveVersion \?\? 1/);
+    assert.match(autosaveSource, /saveRevision: localRecord\?\.revision \?\? 0/);
     assert.match(source, /importCloudRecordAuthority\([\s\S]+?getRuntimeGameStorage\(\)[\s\S]+?remoteRecord/);
     assert.match(source, /const importedRecord = importResult\.record[\s\S]+?activeData = migrateData\(importedRecord\.payload\)/);
     assert.match(source, /localImportFailed[\s\S]+?LOAD_DATA, payload: activeData[\s\S]+?SET_SYNC_STATUS, payload: 'offline'/);
     assert.match(source, /pendingCloudRecordRef/);
     assert.match(source, /cloudRevisionFloorRef/);
     assert.match(source, /cloudRevisionAdvanceRequiredRef/);
-    assert.match(source, /localRecord\.revision < cloudRevisionFloorRef\.current/);
-    assert.match(source, /localRecord\.revision <= cloudRevisionFloorRef\.current/);
+    assert.match(source, /pendingCloudRecord: pendingCloudRecordRef/);
+    assert.match(source, /cloudRevisionFloor: cloudRevisionFloorRef/);
+    assert.match(source, /cloudRevisionAdvanceRequired: cloudRevisionAdvanceRequiredRef/);
+    assert.match(autosaveSource, /localRecord\.revision < refs\.cloudRevisionFloor\.current/);
+    assert.match(autosaveSource, /localRecord\.revision <= refs\.cloudRevisionFloor\.current/);
     assert.match(source, /callbackSequence/);
     assert.match(source, /sequence !== callbackSequence/);
 });

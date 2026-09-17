@@ -4,9 +4,10 @@ import { SEASON_TIER_XP } from '../../data/seasonPass';
 import { MSG } from '../../data/messages';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
+import { applyEssenceGain } from '../../systems/essenceLedger';
 import { getCurrentDailyProtocol } from '../../utils/protocolCycle';
 import { SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
-import type { Player } from '../../types/index.js';
+import type { DailyProtocolMissionType, Player } from '../../types/index.js';
 import type { Relic } from '../../types/relic.js';
 
 /**
@@ -81,21 +82,21 @@ const emptyDailyProtocolReward = (): DailyProtocolReward => ({
  */
 export const resolveDailyProtocolProgress = (
     player: Player,
-    type: any,
-    amount: any,
+    type: DailyProtocolMissionType,
+    amount: number,
     relicRoll?: number,
     itemEntropy?: DailyProtocolItemEntropy,
 ) => {
-    const dp = (player.stats as any)?.dailyProtocol;
+    const dp = player.stats?.dailyProtocol;
     if (!dp) return { player, reward: emptyDailyProtocolReward() };
 
     let essenceGain = 0;
     let relicShardGain = 0;
     let completedCount = 0;
     let newShards = dp.relicShards || 0;
-    const itemRewards: any[] = [];
+    const itemRewards: string[] = [];
 
-    const updatedMissions = dp.missions.map((mission: any) => {
+    const updatedMissions = dp.missions.map((mission) => {
         if (mission.type !== type || mission.done) return mission;
 
         const progress = Math.min(mission.goal, (mission.progress || 0) + amount);
@@ -130,7 +131,7 @@ export const resolveDailyProtocolProgress = (
         }
     }
 
-    const nextPlayer: Record<string, any> = {
+    const nextPlayer: Player = {
         ...player,
         stats: {
             ...player.stats,
@@ -146,7 +147,7 @@ export const resolveDailyProtocolProgress = (
         nextPlayer.relics = [...(nextPlayer.relics || []), convertedRelicAdded];
         nextPlayer.stats = {
             ...nextPlayer.stats,
-            relicCount: ((nextPlayer.stats as any)?.relicCount || 0) + 1,
+            relicCount: (nextPlayer.stats?.relicCount || 0) + 1,
         };
     }
 
@@ -159,23 +160,8 @@ export const resolveDailyProtocolProgress = (
         const essenceMult = getPrestigeUnlocks(baseMeta.prestigeRank).essenceMult
             * getMirrorEffects(baseMeta).essenceFlowMult;
         grantedEssence = Math.max(1, Math.floor(essenceGain * essenceMult));
-        const nextMeta: Record<string, any> = {
-            ...baseMeta,
-            essence: (baseMeta.essence || 0) + grantedEssence,
-            rank: nextPlayer.meta?.rank || 0,
-            bonusAtk: nextPlayer.meta?.bonusAtk || 0,
-            bonusHp: nextPlayer.meta?.bonusHp || 0,
-            bonusMp: nextPlayer.meta?.bonusMp || 0,
-        };
-        const nextRank = Math.floor(nextMeta.essence / 150);
-        if (nextRank > nextMeta.rank) {
-            const gain = nextRank - nextMeta.rank;
-            nextMeta.rank = nextRank;
-            nextMeta.bonusAtk += gain;
-            nextMeta.bonusHp += gain * 5;
-            nextMeta.bonusMp += gain * 3;
-        }
-        nextPlayer.meta = nextMeta;
+        // 2026-09 G2: rank 산출은 systems/essenceLedger.ts 단일 원천 — 누적 획득량 기준.
+        nextPlayer.meta = applyEssenceGain(baseMeta, grantedEssence).meta;
     }
 
     const rewardedItems = itemRewards
@@ -200,8 +186,8 @@ export const resolveDailyProtocolProgress = (
 
 export const advanceDailyProtocol = (
     player: Player,
-    type: any,
-    amount: any,
+    type: DailyProtocolMissionType,
+    amount: number,
     relicRoll?: number,
     now?: number,
     itemRng?: () => number,

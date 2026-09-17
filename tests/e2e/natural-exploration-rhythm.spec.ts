@@ -44,6 +44,30 @@ const isOptionalLocalResource = (resourceUrl: string) => {
     }
 };
 
+// CI는 더미 Firebase config(apiKey "e2e-key")로 빌드한다. ?e2e=1 mock 모드가 인증·저장을 건너뛰어도
+// firebase/auth 초기화 자체가 getProjectConfig 1회를 실제 googleapis.com으로 보내 400을 받고,
+// 오프라인 러너(샌드박스 프록시)에선 같은 요청이 requestfailed 로 잡힌다. 둘 다 이 스펙이 증명하려는
+// 앱 표면(자체 origin 리소스·AI proxy 미호출)의 오류가 아니므로 Firebase 백엔드 호스트만 수집에서 뺀다.
+// apis.google.com / gstatic.com: 모바일 UA에서 firebase/auth 가 popup-redirect iframe(gapi)을 선제 로드한다.
+const EXTERNAL_FIREBASE_HOST_SUFFIXES = [
+    'googleapis.com',
+    'firebaseapp.com',
+    'firebaseio.com',
+    'apis.google.com',
+    'gstatic.com',
+];
+
+const isExternalFirebaseResource = (resourceUrl: string) => {
+    try {
+        const { hostname } = new URL(resourceUrl, MOBILE_CONTEXT.baseURL);
+        return EXTERNAL_FIREBASE_HOST_SUFFIXES.some(
+            (suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`),
+        );
+    } catch {
+        return false;
+    }
+};
+
 type ErrorCollections = {
     page: string[];
     console: string[];
@@ -71,15 +95,21 @@ const createErrorCollectors = (page: Page) => {
     page.on('console', (message) => {
         if (message.type() === 'error') {
             const location = message.location().url;
+            if (location && isExternalFirebaseResource(location)) return;
             errors.console.push(location ? `${message.text()} @ ${location}` : message.text());
         }
     });
     page.on('response', (response) => {
-        if (response.status() >= 400 && !isOptionalLocalResource(response.url())) {
+        if (
+            response.status() >= 400
+            && !isOptionalLocalResource(response.url())
+            && !isExternalFirebaseResource(response.url())
+        ) {
             errors.response.push(`${response.status()} ${response.url()}`);
         }
     });
     page.on('requestfailed', (request) => {
+        if (isExternalFirebaseResource(request.url())) return;
         errors.request.push(`${request.url()} ${request.failure()?.errorText || 'failed'}`);
     });
     page.on('request', (request) => {
@@ -133,8 +163,19 @@ const winCombatThroughVisibleAttacks = async (page: Page) => {
     }
 
     await expect(attack).toBeHidden({ timeout: 10_000 });
-    const continueButton = page.getByTestId('post-combat-continue');
-    if (await continueButton.isVisible().catch(() => false)) await continueButton.click();
+    // 2026-09 D3: 실제 승리에도 전투 결과 카드가 열린다(이전엔 QA 주입 전용이었다).
+    //   lazy 청크라 전투 종료보다 한 프레임 늦게 마운트되고, 닫기 전에는 하단 고정
+    //   오버레이가 다음 탐험 CTA의 포인터 이벤트를 가로챈다. '계속 탐험'은 추천이
+    //   인벤토리일 때만 렌더되므로, 항상 있는 닫기 아이콘으로 닫는다.
+    const postCombatCard = page.getByTestId('post-combat-card');
+    const cardAppeared = await postCombatCard
+        .waitFor({ state: 'visible', timeout: 3_000 })
+        .then(() => true)
+        .catch(() => false);
+    if (cardAppeared) {
+        await page.getByTestId('post-combat-close').click();
+        await expect(postCombatCard).toBeHidden({ timeout: 8_000 });
+    }
     await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 10_000 });
     return attackCount;
 };

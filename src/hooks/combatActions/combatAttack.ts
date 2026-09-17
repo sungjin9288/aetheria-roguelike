@@ -26,7 +26,6 @@ export const createCombatAttackActions = (deps: any, _shared: any, pendingContro
         combatTurn = 0,
         claimCombatAction,
     } = deps;
-    const fallbackClaims = new Set<string>();
 
     return {
         combat: (kind: any) => {
@@ -37,12 +36,11 @@ export const createCombatAttackActions = (deps: any, _shared: any, pendingContro
             }
             if (!['attack', 'skill', 'escape'].includes(kind)) return;
 
+            // useGameEngine.ts가 항상 claimCombatAction을 명시 전달하므로
+            // (line 180) 자체 fallback Set 구현은 불필요.
             const claimKey = `combat:${combatTurn}`;
-            const accepted = claimCombatAction
-                ? claimCombatAction(claimKey)
-                : !fallbackClaims.has(claimKey);
+            const accepted = claimCombatAction(claimKey);
             if (!accepted) return;
-            fallbackClaims.add(claimKey);
 
             dispatch({
                 type: AT.RESOLVE_COMBAT_ACTION,

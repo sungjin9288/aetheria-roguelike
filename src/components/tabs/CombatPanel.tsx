@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Sword, Zap, ArrowRight, RotateCw, Sparkles, Backpack } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { buildCombatView } from '../../utils/combatView';
-import type { Player, Monster } from '../../types/index.js';
+import type { FullStats, Player, Monster } from '../../types/index.js';
 
 // cycle 485: 컴팩트/조밀 모드 props 인터페이스 제거 — cycle 457이 callsite 명시
 //   false 제거 후 caller 0건. cascade로 14 ternary + 1 const + 1 conditional UI
@@ -11,7 +11,7 @@ interface CombatPanelProps {
     player: Player;
     actions?: any;
     enemy?: Monster | null;
-    stats?: any;
+    stats?: FullStats | null;
     isAiThinking?: boolean;
     mobile?: boolean;
 }
@@ -19,7 +19,7 @@ interface CombatPanelProps {
 // cycle 416: tag / detail 출력 dead 정리 — render는 icon/key/className/
 //   mobileLabel/label만 read. tag (Burst/Core/Loadout/Exit) + detail (한국어 설명)
 //   src/, tests/ read 0건이라 dead.
-const ACTION_BUTTONS: any = [
+const ACTION_BUTTONS = [
   {
     key: 'attack',
     label: '공격',

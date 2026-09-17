@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import type { Player } from '../types/index.js';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
 import { RELICS } from '../data/relics';
@@ -48,7 +49,7 @@ const getLevelExpRequirement = (level: number) => {
     return requirement;
 };
 
-const buildReturnBriefingScenarioPlayer = (player: any, now: Date) => {
+const buildReturnBriefingScenarioPlayer = (player: Player, now: Date) => {
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const weeklyMission = BALANCE.WEEKLY_MISSIONS[0];
@@ -1080,7 +1081,7 @@ export const useGameTestApi = (
 
                 er.dispatch({
                     type: AT.SET_PLAYER,
-                    payload: (player: any) => ({
+                    payload: (player: Player) => ({
                         ...player,
                         stats: { ...player.stats, dailyProtocol },
                     }),
@@ -1363,7 +1364,7 @@ export const useGameTestApi = (
                 const scenario = avatarScenarioMap[preset];
                 if (!scenario) return false;
 
-                const payload: any = {
+                const payload: Partial<Player> = {
                     name: scenario.name,
                     job: scenario.job,
                     level: scenario.level,
@@ -1736,7 +1737,7 @@ export const useGameTestApi = (
                     current.dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
                     current.dispatch({
                         type: AT.SET_PLAYER,
-                        payload: (player: any) => buildReturnBriefingScenarioPlayer(player, now),
+                        payload: (player: Player) => buildReturnBriefingScenarioPlayer(player, now),
                     });
 
                     setTimeout(() => {

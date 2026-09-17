@@ -97,7 +97,7 @@ export const SPECIAL_ITEM_ICON_KEYS: Record<string, string> = {
 // cycle 424: 'undefined' 엔트리 제거 — `obj[item.type] || 'misc'` 패턴에서
 //   item.type 부재 시 lookup이 undefined 반환 → `||` fallback이 동일 'misc'
 //   산출. 엔트리는 기능적 잉여 (defensive fallback redundancy).
-const EXACT_ICON_CATEGORY_BY_TYPE: any = {
+const EXACT_ICON_CATEGORY_BY_TYPE: Record<string, string> = {
     weapon: 'weapon',
     armor: 'armor',
     shield: 'shield',

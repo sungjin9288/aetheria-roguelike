@@ -5,7 +5,7 @@ import { makeCombatActionMap } from '../src/reducers/handlers/combatHandlers.js'
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { RELICS, RELIC_SYNERGIES } from '../src/data/relics.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
-import { applyBattleStartRelics } from '../src/utils/exploreUtils.js';
+import { applyBattleStartRelics } from '../src/hooks/gameActions/exploreFlow.js';
 import { clearTemporaryAdventureState } from '../src/utils/playerStateUtils.js';
 import { migrateData } from '../src/utils/dataMigration.js';
 import { DB } from '../src/data/db.js';
@@ -16,7 +16,7 @@ import { buildClassVitals, makeSharedHelpers } from '../src/hooks/gameActions/_s
 import { createEventActions } from '../src/hooks/gameActions/eventActions.js';
 import { buildScoutEvent } from '../src/utils/scoutEvents.js';
 import { buildBossChallengeEvent } from '../src/utils/bossGauge.js';
-import { runQuietRollAndCombat } from '../src/utils/exploreUtils.js';
+import { runQuietRollAndCombat } from '../src/hooks/gameActions/exploreFlow.js';
 import { getJobSkills } from '../src/utils/gameUtils.js';
 
 const combatMap = makeCombatActionMap(INITIAL_STATE.player);

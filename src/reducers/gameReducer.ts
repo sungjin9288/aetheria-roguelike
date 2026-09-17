@@ -1,5 +1,6 @@
 import { DB } from '../data/db';
 import { BALANCE, CONSTANTS } from '../data/constants';
+import { MSG } from '../data/messages';
 import { DEFAULT_EXPLORE_STATE } from '../utils/explorationPacing';
 import { bootstrapActionMap } from './handlers/bootstrapHandlers';
 import { uiActionMap, entityActionMap } from './handlers/uiHandlers';
@@ -87,6 +88,7 @@ export const INITIAL_STATE: GameState = {
         settings: { readabilityMode: 'standard', equipmentDetailMode: 'auto' },
         meta: {
             essence: 0,
+            essenceLifetime: 0,
             rank: 0,
             bonusAtk: 0,
             bonusHp: 0,
@@ -180,7 +182,7 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
     const deliveryLogs = delivery.deliveredExpeditionIds.map((expeditionId) => ({
         id: `return-supply:${expeditionId}`,
         type: 'success',
-        text: '귀환 보급 지급 · 하급 체력 물약 1개',
+        text: MSG.RETURN_SUPPLY_DELIVERED,
     }));
     return {
         ...nextState,

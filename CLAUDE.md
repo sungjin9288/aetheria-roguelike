@@ -24,9 +24,19 @@
 | Node.js | — | >=18.0.0 |
 
 > **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
-> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` ~1,535건,
-> `as any` ~107곳 잔존 (2026-07 실측). `BALANCE`/`CONSTANTS`는 1차 인터페이스 적용(인덱스 시그니처 절충),
-> `MSG`/`DB`/데이터 export(`ITEMS`/`MONSTERS`/`RELICS`/`CLASSES`)는 타입화 예정.
+> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` ~1,290건,
+> `as any` ~88곳 잔존 (2026-09-17 Wave 4 실측, `codex/release-complete-core` 병합 베이스 기준 — 병합으로 합류한
+> 코드만큼 절대치는 올랐고, `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다).
+> **`src/types/*`의 인덱스 시그니처는 0개, `Relic.val`은 effect 판별 유니온**이다 —
+> `Player`/`PlayerStats`/`PlayerMeta`/`CombatFlags`(B3)에 이어 `Relic`/`Item`/`Monster`/`GameMap`/
+> `Quest`/`Achievement`/`ClassDef`(L)까지 닫혔으므로 `relic.오타`·`enemy.오타`도 컴파일 에러다.
+> 데이터의 닫힌 집합은 리터럴 유니온(`RelicEffect` 61종, `ItemType` 9종, `ElementKey` 9종,
+> `QuestType` 9종, `AchievementTarget` 20종, `ClassSkillEffect` 30종 등)이고,
+> 데이터↔타입 계약은 `tests/data-shape-types.test.js`가 런타임으로 검증한다.
+> `FullStats`(`statsCalculator.ts`)가 전투 수식의 표준 stats 타입.
+> `src/hooks`·`src/reducers`의 소유자 로컬(`p`/`player`/`updatedPlayer`/`state`)은 `Player`/`GameState`로
+> 정리됐다 — 새 코드도 `Player`/`FullStats`/`GameState`를 명시할 것.
+> 남은 `: any`는 대부분 `deps: any` / `addLog: any` 같은 주입 경계와 컴포넌트 props다.
 
 ---
 
@@ -42,20 +52,35 @@ src/
 │   ├── RelicChoicePanel.tsx  # 유물 3선택 UI (시너지 힌트 포함)
 │   ├── tabs/CombatPanel.tsx  # 전투 UI (로직은 utils/combatView.ts)
 │   └── ...
+│   ├── app/                  # GameRoot / MobileGameLayout / BootScreen / FatalErrorBoundary
+│   └── codex/                # 도감 카드 (무기/방어구/몬스터/소재/제작법)
 ├── hooks/            # 게임 로직 + 상태 관리
 │   ├── useGameEngine.ts       # 중앙 orchestrator (useReducer)
-│   ├── useGameActions.ts      # 이동/탐험/휴식/명령 처리 (gameActions/ 하위 분할)
-│   ├── useCombatActions.ts    # 전투 액션 (attack/skill/escape)
+│   ├── useGameActions.ts      # 얇은 조합자 → gameActions/ (explore/move/event/quest/character/ascension)
+│   ├── useCombatActions.ts    # 얇은 조합자 → combatActions/ (attack/item/victory/boss/_helpers)
+│   │                          #   전투 턴 해석 자체는 reducer 소유 (systems/combatActionTurn.ts)
 │   ├── useInventoryActions.ts # 오케스트레이터 (.rewards/.equipment/.economy/.premium 서브팩토리)
-│   ├── useFirebaseSync.ts     # 클라우드 세이브 (debounce 500ms)
-│   └── useDamageFlash.ts      # 데미지 플래시 효과
+│   ├── useFirebaseSync.ts     # 익명 인증 + 클라우드 세이브 + 로컬 미러 + 리더보드 구독
+│   ├── useGameTestApi.ts      # QA/e2e 전용 시드 API (프로덕션 번들에서 tree-shaken)
+│   └── useDamageFlash.ts / useHitFlash.ts / useLegendaryDropDetector.ts / useProductTelemetry.ts
 ├── systems/          # 핵심 게임 시스템 (pure functions)
 │   ├── CombatEngine.ts        # 전투 수식 본체 (부수효과 없음)
-│   │                          #  + mixin: .status / .loot / .relics / .outcome
+│   │                          #  + mixin: .actions / .enemyAI / .status / .loot / .relics / .outcome
+│   ├── combatActionTurn.ts    # 공격/기술/도주 1턴 단일 전이 (seeded, reducer가 호출)
+│   ├── combatItemTurn.ts      # 전투 소모품 1턴 단일 전이
 │   ├── prestigeUnlocks.ts     # 프레스티지 rank 해금 정의
-│   ├── SoundManager.ts        # Web Audio API 신시사이저
+│   ├── mirrorUpgrades.ts      # 에테르 거울(정수 소비) 효과 해석
 │   ├── DifficultyManager.ts   # 동적 난이도 조정 (비대칭 고무줄)
-│   └── TokenQuotaManager.ts   # AI API 일일 할당량 (50회)
+│   ├── progressionSimulator.ts# 성장 곡선 시뮬레이터 (scripts/simulate-progression.mjs)
+│   └── TokenQuotaManager.ts / LatencyTracker.ts / FeedbackValidator.ts
+├── platform/         # 저장·런타임 경계 (React 비의존)
+│   ├── gameStorage.ts         # 체크섬 envelope + revision 직렬화 + 2단계 publish 로컬 저장
+│   ├── cloudSaveAuthority.ts  # 로컬/원격 세이브 권한 판정
+│   ├── errorReporter.ts       # 크래시 리포트 sanitizer
+│   ├── productEvent*.ts       # 제품 텔레메트리 이벤트 컨텍스트/싱크
+│   └── rewardedAd*.ts / lifecycleBridge.ts / platformBack*.ts / runtimeEnvironment.ts
+├── types/            # 도메인 타입 (player/item/monster/relic/quest/class/map/progression)
+├── pwa/              # registerServiceWorker.ts
 ├── services/
 │   └── aiService.ts           # AI 이벤트 생성 + 오프라인 fallback
 ├── reducers/
@@ -85,8 +110,11 @@ src/
     ├── combatView.ts          # 전투 뷰모델 (CombatPanel용 순수함수)
     ├── graveUtils.ts          # 묘비 생성/복구
     ├── runProfileUtils.ts     # 플레이스타일 분석
+    ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
+    ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 117 파일 / ~3,000 케이스)
+tests/                # 단위 테스트 (Node.js built-in test, ~330 파일 / ~4,800 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준)
+                      #   + e2e/ (Playwright 31 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 android/ ios/         # Capacitor 네이티브 프로젝트
 ```
@@ -103,9 +131,15 @@ npm run build:guard       # 빌드 전 유효성 검증
 npm run preview           # 빌드 결과 프리뷰
 
 # 검증
+npm run verify            # type-check + lint + test:unit + build:guard (preview 서버 불필요) ← 기본 게이트
+npm run verify:full       # verify + preview 자동 기동 + smoke(desktop/mobile) + e2e
+npm run type-check        # tsc --noEmit
 npm run lint              # ESLint 검사
-npm run test:unit         # 단위 테스트 (tests/*.test.js)
-npm run test:smoke        # 스모크 게임플레이 테스트
+npm run test:unit         # 단위 테스트 (tests/*.test.js, tsx 로더)
+npm run test:smoke        # 스모크 게임플레이 테스트 (preview 서버 필요, 기본 127.0.0.1:4173)
+npm run test:e2e          # Playwright e2e (2 shard)
+npm run perf:guard        # FCP/DCL 예산 검사 (CI 미연동 — 수동 실행)
+npm run progression:simulate  # 성장 곡선 시뮬레이션 (밸런스 변경 시 compare와 함께)
 
 # 모바일
 npm run cap:sync          # Capacitor sync (iOS + Android 동시)
@@ -145,7 +179,7 @@ npm run mobile:doctor     # Capacitor 환경 점검
 - **한국어 문자열 하드코딩 금지**: `MSG.BATTLE_START` 처럼 `MSG` 객체 사용. 컴포넌트 JSX 안에 한국어 직접 입력 금지.
 - **`data/` 파일 직접 수정 시 주의**: `items.ts`, `monsters.ts`, `constants.ts` 변경 시 밸런스 전체에 영향. 반드시 테스트 후 반영.
 - **`CONSTANTS.DATA_VERSION` 무단 변경 금지**: save 구조 변경 시 반드시 버전 bump + `migrateData()` 업데이트 병행.
-- **enemy turn timeout 누수 금지**: `useCombatActions.ts`의 `pendingEnemyTurn` ref는 전투 중단 시 반드시 cleanup. 누락 시 stale dispatch 발생.
+- **전투 턴을 hook에서 해석 금지**: 공격/기술/도주/소모품은 `AT.RESOLVE_COMBAT_ACTION` 등 단일 reducer 전이(`systems/combatActionTurn.ts`)로만 해석. hook에서 `SET_PLAYER`/`SET_ENEMY`를 여러 번 쏘는 방식은 rapid tap 시 상태 분기를 만든다.
 
 ---
 
@@ -195,7 +229,7 @@ useGameEngine (useReducer)
 - **일일 한도**: 50회 (TokenQuotaManager)
 
 ### 저장 데이터 버전 관리
-- `CONSTANTS.DATA_VERSION = 5.0`
+- `CONSTANTS.DATA_VERSION = 5.1` (5.1: `meta.essenceLifetime` 역산 backfill — `dataMigration.ts`)
 - save 구조 변경 시: 버전 bump → `gameUtils.migrateData()` 업데이트 필수
 
 ---
@@ -229,8 +263,8 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 
 ### 특별히 조심할 것
 
-**1. enemy turn cleanup**
-`useCombatActions.ts`의 `pendingEnemyTurn` ref를 전투 중단(도망/사망/이벤트 전환) 시 반드시 `clearTimeout`. 누락 시 전투 종료 후 적이 계속 공격하는 버그 발생.
+**1. 전투 턴 authority**
+적 반격은 더 이상 timer가 아니라 reducer 내부에서 동기 해석된다(`combatHandlers.ts` → `combatActionTurn.ts`). 플레이어 행동·적 반격·승패 정산·보상은 한 action에서 끝나며 `combatTurn`/`expectedTurn`으로 replay를 거부한다. 새 전투 액션을 추가할 때는 이 전이 안에 넣고, RNG는 action의 seed 스트림을 써야 한다(`Math.random` 직접 호출 금지 — 결정론 테스트가 깨진다). `useGameEngine.ts`의 `combatPendingRef`는 시각 효과 해제 타이머만 관리한다.
 
 **2. grave 호환성**
 구형 save에는 `grave.item` (단수), 신형에는 `grave.items[]` (복수). `graveUtils.ts` 수정 시 양쪽 포맷 모두 처리 필요.

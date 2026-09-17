@@ -12,7 +12,7 @@ import {
     getBaseRelicOfferProbability,
 } from '../src/data/relics.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
-import { applyBattleStartRelics } from '../src/utils/exploreUtils.js';
+import { applyBattleStartRelics } from '../src/hooks/gameActions/exploreFlow.js';
 import { migrateData } from '../src/utils/gameUtils.js';
 import {
     buildRelicBalanceReport,
@@ -47,11 +47,14 @@ test('Undying rarity and exact three-choice base offer probability', () => {
     const legacyPool = RELICS.map((relic) => (
         relic.id === 'undying' ? { ...relic, rarity: 'uncommon' } : relic
     ));
-    assert.equal(getBaseRelicOfferProbability(legacyPool, 'undying', 3), 0.088781751469444);
-    assert.equal(getBaseRelicOfferProbability(RELICS, 'undying', 3), 0.012485766915007135);
+    // 병합(2026-09): 등급별 가중치 곡선이 C2(감사 G8)에서 50/30/15/4/1 → 40/30/18/9/3으로
+    //   평탄화됐다. Codex의 결정("불사의 의지는 uncommon이 아니라 epic이다")은 그대로 유지되며
+    //   실제 제시 확률도 여전히 3.2배 낮다 — 기대값만 병합 후 실측으로 갱신한다.
+    assert.equal(getBaseRelicOfferProbability(legacyPool, 'undying', 3), 0.08086974697908356);
+    assert.equal(getBaseRelicOfferProbability(RELICS, 'undying', 3), 0.02522462980354845);
     assert.equal(getBaseRelicOfferProbability(RELICS, 'undying', 3, { rarityCap: 'rare' }), 0);
-    assert.equal(1 - ((1 - 0.088781751469444) ** 5), 0.3717795886746684);
-    assert.equal(1 - ((1 - 0.012485766915007135) ** 5), 0.06088923421699066);
+    assert.equal(1 - ((1 - 0.08086974697908356) ** 5), 0.34402799496831304);
+    assert.equal(1 - ((1 - 0.02522462980354845) ** 5), 0.11991881523527359);
 });
 
 test('base relic offer probability returns zero for absent targets and fails closed on invalid inputs', () => {

@@ -222,6 +222,30 @@ async function verifyActionReachable(locator, label, options = {}) {
   return metrics;
 }
 
+/**
+ * 적 초상(MonsterIcon)은 canonical 몬스터면 <img src="/assets/monsters/catalog/*.png">를
+ * 렌더한다. 이 PNG는 public/sw.js의 stale-while-revalidate 경로를 타므로 첫 조우에서는
+ * 항상 캐시 미스 → (서비스 워커 기동 + 네트워크) 왕복이 필요하고, DOM 삽입 시점과
+ * 디코드 완료 시점이 분리된다. 로드 완료를 기다리지 않고 naturalWidth를 읽으면
+ * 머신 부하에 따라 "portraitRendered:false"로 깜빡이는 위양성이 난다.
+ * 실루엣(svg path) fallback은 로드가 필요 없으므로 즉시 통과한다.
+ * 타임아웃은 삼키고 실제 단정은 verifyCombatForecast의 ensure가 하도록 둔다 —
+ * 아트가 진짜로 깨졌을 때(404/디코드 실패) 진단 가능한 메시지를 유지하기 위함이다.
+ */
+async function waitForEnemyPortraitArt(page, timeout = 10000) {
+  try {
+    await page.waitForFunction(() => {
+      const portrait = document.querySelector('[data-testid="enemy-portrait"]');
+      if (!portrait) return false;
+      const image = portrait.querySelector('img');
+      if (!image) return Boolean(portrait.querySelector('svg path')?.getAttribute('d'));
+      return image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+    }, undefined, { timeout });
+  } catch (error) {
+    console.warn(`[smoke:${viewportLabel}] enemy portrait art wait timed out: ${error.message}`);
+  }
+}
+
 async function verifyCombatForecast(page) {
   const forecast = page.locator('[data-testid="combat-forecast-strip"]');
   const enemyStatus = page.locator('[data-testid="enemy-status"]');
@@ -229,6 +253,7 @@ async function verifyCombatForecast(page) {
   await forecast.waitFor({ state: 'visible', timeout: 5000 });
   await enemyStatus.waitFor({ state: 'visible', timeout: 5000 });
   await enemyPortrait.waitFor({ state: 'visible', timeout: 5000 });
+  await waitForEnemyPortraitArt(page);
   const text = await forecast.innerText();
   const enemyText = await enemyStatus.innerText();
   const tone = await forecast.getAttribute('data-forecast-tone');
@@ -1194,6 +1219,27 @@ async function resolveEvent(page, observations) {
   await settleAfterCommand(page);
 }
 
+/**
+ * 2026-09 D3: 실제 승리 후에는 전투 결과 카드(PostCombatCard)가 하단 고정 오버레이로 열린다.
+ * 다음 조작(탐험 버튼, 탭, 상점 CTA)을 가리지 않도록 카드가 있으면 실제 CTA로 닫는다
+ * (장식 shell 대신 CTA 기준 — lessons R8). 주 행동 버튼은 추천에 따라 인벤토리를 열 수 있어
+ * '계속 탐험'(있을 때) → '닫기' 순으로만 누른다.
+ */
+async function dismissPostCombatCardIfPresent(page) {
+  const card = page.locator('[data-testid="post-combat-card"]');
+  if (!(await card.count())) return false;
+
+  for (const testId of ['post-combat-continue', 'post-combat-close']) {
+    const cta = page.locator(`[data-testid="${testId}"]`);
+    if (!(await cta.count())) continue;
+    await cta.click();
+    await waitForState(page, (state) => !state.postCombatResult, 'post-combat card to close');
+    logSmoke(`post-combat card dismissed via ${testId}`);
+    return true;
+  }
+  throw new Error('Post-combat card is open without a reachable dismissal CTA');
+}
+
 async function resolveCombat(page, observations) {
   observations.combat = true;
   for (let turn = 0; turn < 18; turn += 1) {
@@ -1239,6 +1285,7 @@ async function driveExploreLoop(page, { requireEvent = true } = {}) {
     combat: false,
     victory: false,
     syntheticEvent: false,
+    postCombatCard: false,
   };
 
   for (let attempt = 0; attempt < 60; attempt += 1) {
@@ -1286,6 +1333,12 @@ async function driveExploreLoop(page, { requireEvent = true } = {}) {
 
     if (hasVictorySignal(state)) {
       observations.victory = true;
+    }
+
+    // 실제 승리 카드는 다음 탐험/탭 조작 전에 닫는다.
+    if (await dismissPostCombatCardIfPresent(page)) {
+      observations.postCombatCard = true;
+      state = await readState(page);
     }
 
     if (observations.combat && observations.victory && !requireEvent) {

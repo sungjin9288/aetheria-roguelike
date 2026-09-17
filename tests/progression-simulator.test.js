@@ -26,6 +26,16 @@ const EXPECTED_JOB_NAMES = [
     '모험가', '전사', '마법사', '도적', '나이트', '버서커', '아크메이지', '흑마법사', '어쌔신',
     '레인저', '성직자', '팔라딘', '드래곤 나이트', '대마법사', '그림자 주군', '무당', '시간술사', '사냥의 군주',
 ];
+// Track J3 (2026-09): 이 골든 해시는 DROP_TABLES/LOOT_TABLE 내용에 의존한다
+// (simulateProgression이 CombatEngine.loot.ts의 processLoot를 authority로
+// 호출하므로, 커버리지가 늘어난 몬스터를 시드가 실제로 만나면 리포트가
+// 바뀐다). 이전 값 '2e4c0726be5d78bb7af5e8b3f6377976d1bc397613512c83dc8e2681dd699c43'는
+// Track J3 드롭 테이블 확장(105+30종 신규 커버) 전 골든 값이었다 — 콘텐츠
+// 추가로 인한 의도된 변경이라 새 값으로 갱신한다(첫 방문 보상 J2는
+// authorityUsage에 없어 이 해시에 영향 없음 — J2 단독 적용 시 해시는
+// 기존 값과 동일했음을 실측으로 확인).
+// 병합(2026-09): J3가 드롭 테이블을 늘리며 갱신했던 해시를 Codex 값으로 되돌린다 —
+//   J3 데이터는 Codex의 normalBonusPool(레벨 티어 일반 장비) 경로와 충돌해 철회했다.
 const EXPECTED_BASELINE_REPORT_SHA256 = '2e4c0726be5d78bb7af5e8b3f6377976d1bc397613512c83dc8e2681dd699c43';
 const EXPECTED_JOB_LEVELS = [1, 5, 5, 5, 30, 30, 30, 30, 30, 30, 5, 60, 60, 60, 60, 12, 25, 60];
 

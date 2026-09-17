@@ -29,7 +29,7 @@ const SIGNATURE_TONE_RING: any = Object.freeze({
  *   `!isEquipmentItem` 케이스만 진입 (equipment는 EquipmentAvatarPreview가 takeover).
  *   따라서 equipment-style ICON_PATHS lookup 절대 hit 안 됨.
  */
-const ICON_PATHS: any = {
+const ICON_PATHS: Record<string, string> = {
     // 소모품
     potion: 'M9 3h6v3l2 4v8c0 1-1 3-5 3s-5-2-5-3V10l2-4V3Z',
     material: 'M12 2l8 5v10l-8 5-8-5V7l8-5Z',

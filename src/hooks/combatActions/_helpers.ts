@@ -1,10 +1,11 @@
 import { getJobSkills } from '../../utils/gameUtils';
-import { getEquipmentProfile, getNextEquipmentState } from '../../utils/equipmentUtils';
+import { getEquipmentComparison } from '../../utils/equipmentUtils';
 import { MSG } from '../../data/messages';
 import { AT } from '../../reducers/actionTypes';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
+import { getRunBuildProfile } from '../../utils/runProfile';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
-import type { Item, Player } from '../../types/index.js';
+import type { FullStats, Item, Player } from '../../types/index.js';
 
 /**
  * 현재 선택된 스킬 반환. 없으면 null.
@@ -24,41 +25,30 @@ export const getSelectedSkill = (player: Player) => {
  * 루트 아이템 중 장비 업그레이드 힌트 계산. 없으면 null.
  */
 // cycle 534: equip / lootItems defaults 제거 — 1 callsite (combatVictory
-//   :213) getLootUpgradeHint(updatedPlayer.equip, lootResult.items) 명시
-//   전달이라 두 default 모두 도달 불가. body의 (lootItems || []) defensive
-//   guard는 별개 보존. util/component/hook default 청소 메가 시리즈 30번째
-//   batch (cycle 502-533).
-export const getLootUpgradeHint = (equip: any, lootItems: Item[]): any => {
+//   :213) 명시 전달이라 두 default 모두 도달 불가. body의 (lootItems || [])
+//   defensive guard는 별개 보존. util/component/hook default 청소 메가 시리즈
+//   30번째 batch (cycle 502-533).
+// A2 (2026-09 감사 G4): 델타/점수/라벨을 자체 계산하던 로직 제거 →
+//   equipmentUtils.getEquipmentComparison(= getEquipmentDecision 기반)에 위임.
+//   기존 계산은 (a) 강화 +N 보너스를 무시했고 (b) 점수식
+//   `atk + def + crit*2 + floor(mp/5)`를 inline 복제해 constants.ts의 장비 점수
+//   가중치(EQUIP_SCORE_CRIT_WEIGHT / EQUIP_SCORE_MP_DIVISOR)와 이중 관리 상태였다. 이제 상점/인벤/루팅 3표면이 동일한 델타를 보고한다.
+//   첫 인자가 equip에서 player로 바뀐 이유: 강화·직업 제한 판정에 player가 필요.
+export const getLootUpgradeHint = (player: Player, lootItems: Item[]): any => {
     const equipmentDrops = (lootItems || []).filter((item: any) => ['weapon', 'armor', 'shield'].includes(item?.type));
     if (!equipmentDrops.length) return null;
-
-    const currentProfile = getEquipmentProfile(equip);
-    const currentAtk = currentProfile.mainAttack + currentProfile.offhandAttack;
-    const currentDef = (equip.armor?.val || 0) + currentProfile.shieldDef;
 
     // cycle 352: bestHint score 출력 dead 정리 — name / summary만 외부 read.
     //   score는 함수 내부 비교용으로만 사용 → 외부 노출 strip.
     let bestHint: any = null;
     let bestScore = -Infinity;
     equipmentDrops.forEach((item: any) => {
-        const nextEquip = getNextEquipmentState(equip, item);
-        const nextProfile = getEquipmentProfile(nextEquip);
-        const nextAtk = nextProfile.mainAttack + nextProfile.offhandAttack;
-        const nextDef = (nextEquip.armor?.val || 0) + nextProfile.shieldDef;
-        const critDelta = Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100);
-        const mpDelta = nextProfile.mpBonus - currentProfile.mpBonus;
-        const atkDelta = nextAtk - currentAtk;
-        const defDelta = nextDef - currentDef;
-        const score = atkDelta + defDelta + (critDelta * 2) + Math.floor(mpDelta / 5);
-        if (score <= 0) return;
-        if (score <= bestScore) return;
-        const summaryParts: any[] = [];
-        if (atkDelta > 0) summaryParts.push(`공격력 +${atkDelta}`);
-        if (defDelta > 0) summaryParts.push(`방어력 +${defDelta}`);
-        if (critDelta > 0) summaryParts.push(`치명타 +${critDelta}%`);
-        if (mpDelta > 0) summaryParts.push(`기력 +${mpDelta}`);
-        bestHint = { name: item.name, summary: summaryParts.join(' / ') || MSG.COMBAT_DIGEST_DEFAULT_SUMMARY };
-        bestScore = score;
+        const comparison = getEquipmentComparison(player, item);
+        if (!comparison) return;
+        if (comparison.score <= 0) return;
+        if (comparison.score <= bestScore) return;
+        bestHint = { name: item.name, summary: comparison.upgradeText || MSG.COMBAT_DIGEST_DEFAULT_SUMMARY };
+        bestScore = comparison.score;
     });
     return bestHint;
 };
@@ -109,7 +99,7 @@ export const addCombatDigestLogs = ({
  * CombatEngine.handleVictory가 받는 passiveBonus 스키마(goldMult/expMult)에 합산한다 —
  * CombatEngine 시그니처는 그대로 유지(신규 파라미터 없음). 순수 함수.
  */
-export const buildPassiveBonusWithScout = (stats: any, deadEnemy: any) => {
+export const buildPassiveBonusWithScout = (stats: FullStats, deadEnemy: any) => {
     const scoutRewardBonus = deadEnemy?.scoutRewardBonus || 0;
     return {
         goldMult: (stats?.passiveGoldMult || 0) + scoutRewardBonus,
@@ -128,15 +118,18 @@ export const applyScoutGuaranteedRelic = (
     { dispatch, addLog, rng }: any,
 ) => {
     if (!deadEnemy?.scoutGuaranteedRelic) return;
-    const ownedRelics = (updatedPlayer as any).relics || [];
-    const relicUnlocks = getPrestigeUnlocks((updatedPlayer as any).meta?.prestigeRank);
+    const ownedRelics = updatedPlayer.relics || [];
+    const relicUnlocks = getPrestigeUnlocks(updatedPlayer.meta?.prestigeRank);
     if (ownedRelics.length >= relicUnlocks.maxRelics) return;
     const available = RELICS.filter((r: any) => !ownedRelics.some((pr: any) => pr.id === r.id));
     if (available.length === 0) return;
 
+    // Wave 4 O2: 현재 빌드 아키타입을 추첨에 넘겨 빌드가 실제로 굴리는 effect를 더 자주 보여 준다.
+    //   승리 직후라 장비/유물은 최신 상태 — 파생 stats 없이 player만으로 판정해도 같은 결론이 나온다.
     const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, {
         owned: ownedRelics,
         rng,
+        buildId: getRunBuildProfile(updatedPlayer, null).primary.id,
     });
     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
     addLog('event', MSG.EXPLORE_RELIC_FOUND);

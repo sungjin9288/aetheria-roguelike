@@ -59,6 +59,20 @@ export const appendGrave = (grave: any, nextGrave: any) => {
     return merged.length > 0 ? merged.sort(sortGravesByLatest) : null;
 };
 
+/**
+ * H5(a): 공개 묘비 목록에서 내 묘비를 제외한다.
+ *
+ * 묘비 문서는 세션 uid(engine state.uid)를 문서 id이자 `uid` 필드로 기록한다
+ * (useFirebaseSync의 공개 묘비 업로드). 이전 화면 코드는 존재하지 않는 `player.uid`와
+ * 비교해 필터가 항상 통과했고 자기 묘비가 침공 후보로 노출됐다.
+ * 세션 uid를 모르는 상태(오프라인 · 인증 전)에서는 걸러낼 기준이 없으므로 그대로 둔다.
+ */
+export const excludeOwnGraves = (entries: any[], sessionUid?: string | null) => {
+    const list = Array.isArray(entries) ? entries : [];
+    if (!sessionUid) return list;
+    return list.filter((entry: any) => entry?.uid !== sessionUid);
+};
+
 export const getGravesAtLoc = (grave: any, loc: any) => (
     normalizeGraves(grave).filter((entry: any) => entry.loc === loc)
 );

@@ -86,10 +86,14 @@ test.describe('release-complete player journey', () => {
         await page.getByTestId('control-explore').click();
         await expect(page.getByTestId('combat-action-attack')).toBeVisible({ timeout: 10_000 });
         await winCurrentCombat(page);
+        // 2026-09 D3: 실제 승리에도 전투 결과 카드가 열린다(이전엔 QA 주입 전용이었다).
+        //   카드는 lazy 청크라 상태 전이보다 한 프레임 늦게 마운트되므로 스냅샷 판정이 아니라
+        //   등장/소멸을 기다린다. 하단 고정 오버레이라 닫기 전에는 이동 CTA를 가린다.
+        //   닫기 아이콘은 추천 CTA 종류와 무관하게 항상 있으므로 그것으로 닫는다.
         const postCombat = page.getByTestId('post-combat-card');
-        if (await postCombat.isVisible().catch(() => false)) {
-            await page.getByTestId('post-combat-continue').click();
-        }
+        await expect(postCombat).toBeVisible({ timeout: 8_000 });
+        await page.getByTestId('post-combat-close').click();
+        await expect(postCombat).toBeHidden({ timeout: 8_000 });
 
         await page.getByTestId('control-move').click();
         await page.getByTestId('control-route-option-시작의 마을').click();

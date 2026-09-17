@@ -1,8 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+import { createElement } from 'react';
+
+import PostCombatCard from '../src/components/PostCombatCard.tsx';
+import { DB } from '../src/data/db.ts';
+import { renderStatic } from './helpers/render.ts';
 
 /**
  * PostCombatCard — signature 각인이 loot에 포함됐을 때 "Legendary" 전용 row로 강조.
@@ -11,83 +13,46 @@ import path from 'node:path';
  * 보스를 잡고 얻는 가장 큰 순간을 시각적으로 두드러지게 만들기 위해
  * Field Report 상단에 gold-bordered row를 추가한다.
  *
- * 계약:
- *   1. isSignatureItem을 import
- *   2. droppedItems 중 signature 이름만 골라 별도 변수로 분리
- *   3. 일반 lootSummary에서는 signature 제외 (중복 방지)
- *   4. signature가 있으면 Sparkles 아이콘 + "Legendary" 레이블 row 렌더
- *   5. 렌더 조건이 signatureLoot.length > 0 도 포함 (일반 loot 없이 signature만 떨어진 케이스 커버)
+ * 계약(렌더 검증):
+ *   1. droppedItems 중 signature 이름만 골라 별도 row(post-combat-legendary)로 렌더
+ *   2. 일반 loot 요약에서는 signature 제외 (중복 방지)
+ *   3. Sparkles 아이콘 + "Legendary" 레이블 + gold 팔레트(#f6e7a2)
+ *   4. signatureLoot만 있고 다른 loot/signal이 없어도 패널이 렌더된다
  */
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(HERE, '..');
-const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
+const sigWeapon = DB.ITEMS.weapons.find((item) => item.name === '성검 에테르니아');
+const normalPotion = DB.ITEMS.consumables[0];
 
-test('PostCombatCard imports isSignatureItem', async () => {
-    const source = await readSrc('src/components/PostCombatCard.tsx');
-    assert.ok(
-        /import\s*\{[^}]*isSignatureItem[^}]*\}\s*from\s*['"]\.\.\/data\/signatureItems\.js['"]/.test(source),
-        'should import isSignatureItem from signatureItems.js'
-    );
+const renderCard = (result) => renderStatic(createElement(PostCombatCard, { result, onClose: () => {} }));
+
+test('signature 각인이 loot에 있으면 post-combat-legendary row로 별도 강조된다', () => {
+    const html = renderCard({ enemy: '마왕', items: [sigWeapon.name, normalPotion.name], leveledUp: false });
+
+    assert.ok(html.includes('data-testid="post-combat-legendary"'), 'Legendary row가 렌더링됨');
+    assert.ok(html.includes('Legendary'), '"Legendary" 레이블 노출');
+    assert.ok(html.includes('f6e7a2'), 'gold 팔레트(#f6e7a2) 사용');
+    assert.ok(html.includes(sigWeapon.name), 'signature 아이템 이름이 Legendary row에 노출');
 });
 
-test('PostCombatCard imports Sparkles icon', async () => {
-    const source = await readSrc('src/components/PostCombatCard.tsx');
-    assert.ok(
-        /import\s*\{[^}]*Sparkles[^}]*\}\s*from\s*['"]lucide-react['"]/.test(source),
-        'should import Sparkles from lucide-react'
-    );
+test('signature 아이템은 일반 loot 요약에서 제외되어 중복 노출되지 않는다', () => {
+    const html = renderCard({ enemy: '마왕', items: [sigWeapon.name, normalPotion.name], leveledUp: false });
+
+    // signature 이름은 Legendary row 한 곳에만 등장해야 한다 (일반 요약에 중복 노출 금지)
+    const occurrences = html.split(sigWeapon.name).length - 1;
+    assert.equal(occurrences, 1, 'signature 이름은 정확히 한 번만 렌더됨 (Legendary row 전용)');
+    assert.ok(html.includes(normalPotion.name), '일반 아이템은 그대로 일반 요약에 노출');
 });
 
-test('PostCombatCard splits droppedItems into signatureLoot and nonSignatureLoot', async () => {
-    const source = await readSrc('src/components/PostCombatCard.tsx');
-    assert.ok(
-        /signatureLoot/.test(source),
-        'should derive signatureLoot variable'
-    );
-    assert.ok(
-        /nonSignatureLoot/.test(source),
-        'should derive nonSignatureLoot variable'
-    );
-    // signature 필터링 근거: isSignatureItem({ name })
-    assert.ok(
-        /isSignatureItem\(\s*\{\s*name/.test(source),
-        'should call isSignatureItem with { name } shape'
-    );
+test('signature loot만 있고 다른 일반 loot/보상 신호가 없어도 패널이 렌더된다', () => {
+    const html = renderCard({ enemy: '마왕', items: [sigWeapon.name], leveledUp: false });
+
+    assert.ok(html.includes('data-testid="post-combat-legendary"'), 'signature만 있어도 Legendary row 렌더');
+    assert.ok(html.includes('data-testid="post-combat-card"'), '패널 자체가 정상적으로 렌더됨');
 });
 
-test('PostCombatCard lootSummary is built from nonSignatureLoot (excludes signatures)', async () => {
-    const source = await readSrc('src/components/PostCombatCard.tsx');
-    // lootSummary = nonSignatureLoot.length > 0 ? ... : null
-    assert.ok(
-        /lootSummary\s*=\s*nonSignatureLoot\.length/.test(source),
-        'lootSummary should be derived from nonSignatureLoot to avoid duplication'
-    );
-});
+test('signature 각인이 없으면 Legendary row가 렌더되지 않는다 (회귀 가드)', () => {
+    const html = renderCard({ enemy: '슬라임', items: [normalPotion.name], leveledUp: false });
 
-test('PostCombatCard renders Legendary row with gold styling when signatureLoot is non-empty', async () => {
-    const source = await readSrc('src/components/PostCombatCard.tsx');
-    assert.ok(
-        /signatureLoot\.length\s*>\s*0/.test(source),
-        'should guard Legendary row render behind signatureLoot.length > 0'
-    );
-    // Gold palette marker
-    assert.ok(
-        /f6e7a2/.test(source),
-        'Legendary row should use the gold palette (#f6e7a2)'
-    );
-    // "Legendary" 레이블 또는 ✦ 마커
-    assert.ok(
-        /Legendary|전설 각인/.test(source),
-        'should label the row with "Legendary" or "전설 각인"'
-    );
-});
-
-test('PostCombatCard primary panel renders when signatureLoot exists even if no other loot', async () => {
-    const source = await readSrc('src/components/PostCombatCard.tsx');
-    // 기존 조건 (lootSummary || primarySignal)에 signatureLoot 분기도 포함돼야 함
-    assert.ok(
-        /signatureLoot\.length\s*>\s*0/.test(source),
-        'panel render gate should include signatureLoot.length > 0'
-    );
+    assert.ok(!html.includes('post-combat-legendary'), 'signature가 없으면 Legendary row 미노출');
+    assert.ok(html.includes(normalPotion.name), '일반 loot 요약은 정상 노출');
 });

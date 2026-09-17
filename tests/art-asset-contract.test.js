@@ -19,6 +19,7 @@ const PIXEL_INSPECTOR_SCRIPT = fileURLToPath(new URL('../scripts/inspect_art_pix
 const EQUIPMENT_GENERATOR_SCRIPT = fileURLToPath(new URL('../scripts/generate_equipment_item_art.py', import.meta.url));
 const EQUIPMENT_MANIFEST_PATH = fileURLToPath(new URL('../src/data/equipmentArtManifest.json', import.meta.url));
 
+
 const crc32 = (buffer) => {
     let crc = 0xffffffff;
     for (const byte of buffer) {

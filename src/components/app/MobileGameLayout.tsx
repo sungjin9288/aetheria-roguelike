@@ -47,6 +47,7 @@ const MobileGameLayout = ({
                         <Dashboard
                             onReturnToLog={() => setMobileConsoleMode('log')}
                             player={engine.player}
+                            uid={engine.uid}
                             grave={engine.grave}
                             sideTab={engine.sideTab}
                             setSideTab={engine.actions.setSideTab}

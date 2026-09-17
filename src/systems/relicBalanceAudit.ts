@@ -55,6 +55,9 @@ export const RELIC_RUNTIME_OWNER_PATHS = Object.freeze([
     'src/utils/statsCalculator.ts',
     'src/utils/exploreUtils.ts',
     'src/hooks/gameActions/exploreActions.ts',
+    // Wave 4 N1: 전투 시작 유물(battle_start_*/cursed_power/chaos_*) 해석이
+    //   utils/exploreUtils.ts에서 hooks/gameActions/exploreFlow.ts로 이동했다.
+    'src/hooks/gameActions/exploreFlow.ts',
 ] as const);
 
 const RARITIES = Object.freeze(['common', 'uncommon', 'rare', 'epic', 'legendary'] as const);

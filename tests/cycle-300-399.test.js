@@ -761,7 +761,8 @@ import { fileURLToPath } from 'node:url';
       // 탐험 스카우팅(2026-07): encounter 로그가 exploreUtils.ts의 runQuietRollAndCombat으로
       // 이동(exploreActions.ts와 eventActions.ts "짙은 안개" 카드 공유) — 경로만 갱신.
       const characterSrc = await readSrc('src/hooks/gameActions/characterActions.ts');
-      const exploreSrc = await readSrc('src/utils/exploreUtils.ts');
+      // Wave 4 N1: runQuietRollAndCombat이 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const exploreSrc = await readSrc('src/hooks/gameActions/exploreFlow.ts');
       const engineSrc = await readSrc('src/hooks/useGameEngine.ts');
       assert.ok(/addStoryLog\('rest'/.test(characterSrc),
           'characterActions addStoryLog rest 사용 보존');
@@ -2916,25 +2917,19 @@ import { fileURLToPath } from 'node:url';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
+  // 2026-09 Wave 3 I3: 풀 데이터가 src/data/aiEventPools.ts로 분리됐다(로직/데이터 분리).
+  //   가드 의도('시작의 마을' 키 0건 + 활성 14키 보존)는 그대로, 읽는 파일만 옮긴다.
   test('cycle 357: FALLBACK_EVENT_POOL에서 \'시작의 마을\' 키 0건', async () => {
-      const source = await readSrc('src/utils/aiEventUtils.ts');
-      const fnStart = source.indexOf('const FALLBACK_EVENT_POOL');
-      const fnEnd = source.indexOf('export const pickFallbackEvent');
-      const block = source.slice(fnStart, fnEnd);
-      assert.ok(!/'시작의 마을':/.test(block),
+      const source = await readSrc('src/data/aiEventPools.ts');
+      assert.ok(!/'시작의 마을':/.test(source),
           'FALLBACK_EVENT_POOL에서 \'시작의 마을\' 키 0건');
   });
 
   test('cycle 357: FALLBACK_EVENT_POOL 활성 키 14종 보존 (회귀 가드)', async () => {
-      const source = await readSrc('src/utils/aiEventUtils.ts');
-      const fnStart = source.indexOf('const FALLBACK_EVENT_POOL');
-      const fnEnd = source.indexOf('export const pickFallbackEvent');
-      const block = source.slice(fnStart, fnEnd);
+      const { FALLBACK_EVENT_POOL } = await import('../src/data/aiEventPools.ts');
       const expected = ['forest', 'ruins', 'cave', 'desert', 'ice', 'dark', 'abyss',
                         'treasure', 'machina', 'sky', 'deepsea', 'gate', 'default', 'structured'];
-      for (const key of expected) {
-          assert.ok(new RegExp(`^    ${key}:`, 'm').test(block), `${key} 키 보존`);
-      }
+      assert.deepEqual(Object.keys(FALLBACK_EVENT_POOL).sort(), [...expected].sort());
   });
 
   test('cycle 357: explore 가드 회귀 보존 (START_LOCATION 차단)', async () => {
@@ -3793,7 +3788,8 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 396 회귀 가드: StatsPanel syn.label fix 보존', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
-      const blockStart = source.indexOf('stats.activeSynergies.map');
+      // B2(2026-09): stats prop이 FullStats | null 로 타입화되면서 non-null 단언이 붙었다(런타임 동일).
+      const blockStart = source.indexOf('stats!.activeSynergies.map');
       const blockEnd = source.indexOf('))}', blockStart);
       const block = source.slice(blockStart, blockEnd);
       assert.ok(!/syn\.name/.test(block),

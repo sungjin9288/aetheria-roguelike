@@ -14,18 +14,11 @@ export const createCombatActions = (deps: any) => {
     const shared = { emitUnlockedTitles };
 
     // 공격과 아이템 사용이 같은 지연 적 턴을 취소하거나 예약하도록 공유한다.
-    let fallbackPending: any = null;
+    // useGameEngine.ts가 항상 clearPendingCombat/schedulePendingCombat을 명시 전달하므로
+    // (line 177-178) 자체 fallback 구현은 불필요.
     const pendingControl = {
-        clear: deps.clearPendingCombat || (() => {
-            if (fallbackPending) clearTimeout(fallbackPending);
-            fallbackPending = null;
-        }),
-        schedule: deps.schedulePendingCombat || ((callback: () => void, delay: number) => {
-            fallbackPending = setTimeout(() => {
-                fallbackPending = null;
-                callback();
-            }, delay);
-        }),
+        clear: deps.clearPendingCombat,
+        schedule: deps.schedulePendingCombat,
     };
 
     return {

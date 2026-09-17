@@ -233,7 +233,8 @@ import { readFile } from 'node:fs/promises';
    * 회귀 가드:
    * - player.stats.signaturePity dispatch 동작 유지 (cycle 75 mercy 카운터).
    * - getSignaturePityMultiplier / SIGNATURE_PITY constant 동작 유지.
-   * - [key: string]: any index signature 유지로 동적 필드 호환.
+   * - [key: string]: any index signature는 2026-09 Wave 3 L stage 1에서 제거됨
+   *   (실측 필드 전수 선언 + tests/data-shape-types.test.js 계약 가드로 대체).
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -260,7 +261,7 @@ import { readFile } from 'node:fs/promises';
       const sources = await Promise.all([
           readSrc('src/utils/adventureGuide.ts'),
           readSrc('src/components/codex/LegendaryCodex.tsx'),
-          readSrc('src/utils/exploreUtils.ts'),
+          readSrc('src/hooks/gameActions/exploreFlow.ts'),
       ]);
       sources.forEach((src, i) => {
           assert.ok(/player[\?.]+stats[\?.]+signaturePity/.test(src),
@@ -422,11 +423,9 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 357 회귀 가드: FALLBACK_EVENT_POOL \'시작의 마을\' 0건 보존', async () => {
-      const source = await readSrc('src/utils/aiEventUtils.ts');
-      const fnStart = source.indexOf('const FALLBACK_EVENT_POOL');
-      const fnEnd = source.indexOf('export const pickFallbackEvent');
-      const block = source.slice(fnStart, fnEnd);
-      assert.ok(!/'시작의 마을':/.test(block),
+      // 2026-09 Wave 3 I3: 풀 데이터 파일 분리(src/data/aiEventPools.ts)에 따라 경로만 이동.
+      const source = await readSrc('src/data/aiEventPools.ts');
+      assert.ok(!/'시작의 마을':/.test(source),
           'cycle 357 \'시작의 마을\' 0건 보존');
   });
 }

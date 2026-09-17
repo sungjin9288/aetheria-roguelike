@@ -44,3 +44,19 @@ export function resolveAbyssDailyDive(player: { stats?: { abyssDailyDive?: Abyss
         nextAbyssDailyDive: { date: today, combats: multiplierActive ? usedCombats + 1 : usedCombats },
     };
 }
+
+/**
+ * getAbyssDailyDiveRemaining — 오늘 남은 다이브 버프 전투 수 (읽기 전용).
+ * resolveAbyssDailyDive와 동일한 판정을 쓰되 상태를 소비하지 않아 HUD 표시에 안전하다.
+ */
+export function getAbyssDailyDiveRemaining(
+    player: { stats?: { abyssDailyDive?: AbyssDailyDive | null } } | null | undefined,
+    today: string,
+): number {
+    const record = player?.stats?.abyssDailyDive;
+    const sameDay = Boolean(record && record.date === today);
+    const usedCombats = sameDay
+        ? (typeof record?.combats === 'number' ? record.combats : (record?.used ? BALANCE.ABYSS_DAILY_DIVE_COMBAT_COUNT : 0))
+        : 0;
+    return Math.max(0, BALANCE.ABYSS_DAILY_DIVE_COMBAT_COUNT - usedCombats);
+}

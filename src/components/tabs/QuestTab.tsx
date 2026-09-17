@@ -19,7 +19,7 @@ const getQuestObjectiveText = (quest: any) => (
     quest?.objective
         ? quest.objective
         : (
-    quest?.target === 'Level'
+    quest?.target === 'level'
         ? `레벨 ${quest.goal} 달성`
         : `${quest.target} ${quest.goal}회 달성`
         )
@@ -29,7 +29,7 @@ const getQuestObjectiveText = (quest: any) => (
 //   helper duplication. 호출자가 모두 명시 전달이라 default 도달 불가.
 //   default 청소 메가 시리즈 36번째 cross-file 4-default batch.
 const getQuestProgressText = (quest: any, progress: any) => (
-    quest?.target === 'Level'
+    quest?.target === 'level'
         ? `레벨 ${progress}/${quest.goal}`
         : `${progress}/${quest.goal}`
 );
@@ -62,7 +62,7 @@ const QuestRewardChips = ({ reward, accent }: any) => {
  * QuestTab — Dashboard의 quest 탭 콘텐츠 (#4 분리)
  * props: player, actions, isInSafeZone
  */
-const DAILY_TYPE_LABEL: any = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
+const DAILY_TYPE_LABEL: Record<string, string> = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
 
 const getDailyRewardLabel = (reward: any) => {
     if (reward?.essence) return `에센스 +${reward.essence}`;

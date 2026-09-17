@@ -124,7 +124,9 @@ test.describe('System settings design', () => {
             };
         });
         expect(reachability.top).toBeGreaterThanOrEqual(reachability.scrollTop);
-        expect(reachability.bottom).toBeLessThanOrEqual(reachability.scrollBottom);
+        // chromium DPR3 에뮬레이션은 분수 레이아웃(예: 825.09375 vs 825)을 만든다 — 다른 overflow 검사와
+        // 같은 1px 허용치(서브픽셀은 가시 잘림이 아니다).
+        expect(reachability.bottom).toBeLessThanOrEqual(reachability.scrollBottom + 1);
 
         await confirmButton.click();
         await expect(page.getByTestId('intro-start-button')).toBeVisible();

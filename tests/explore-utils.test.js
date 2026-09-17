@@ -2,10 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { AT } from '../src/reducers/actionTypes.js';
+// Wave 4 N1: dispatch를 받는 3개 함수는 hooks/gameActions/exploreFlow.ts로 이동했다.
+//   exploreUtils.ts에는 순수 함수(selectEncounterMonster / spawnEnemy)만 남는다.
 import {
     resetDailyProtocolIfNeeded,
     resetWeeklyProtocolIfNeeded,
     applyBattleStartRelics,
+} from '../src/hooks/gameActions/exploreFlow.js';
+import {
     selectEncounterMonster,
     spawnEnemy,
 } from '../src/utils/exploreUtils.js';

@@ -1,6 +1,12 @@
-import type { Relic } from '../types/relic.js';
+import type { Relic, RelicEffect } from '../types/relic.js';
 import { CombatEngine } from './CombatEngine.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
+
+/**
+ * 런타임 가드 음성 케이스 전용 — `Relic.val` 타입 계약 밖의 값(문자열/NaN/누락)을
+ * 일부러 넣어 fail-closed를 확인한다. 정상 경로는 언제나 `Relic`을 쓴다.
+ */
+type MalformedRelic = { id: string; effect: RelicEffect; val: unknown };
 
 type RejectionCode = 'INVALID_RELIC_EFFECT_VALUE' | 'ACCEPTED';
 
@@ -63,9 +69,9 @@ const settleGold = (relics: readonly Relic[], gold = 101) => (
     CombatEngine.handleVictory(makePlayer(relics), makeEnemy(gold), { expMult: 0, goldMult: 0 }, {}).goldGained
 );
 
-const rejectionCode = (relic: Relic, gold = 101): RejectionCode => {
+const rejectionCode = (relic: Relic | MalformedRelic, gold = 101): RejectionCode => {
     try {
-        settleGold([relic], gold);
+        settleGold([relic as Relic], gold);
         return 'ACCEPTED';
     } catch (error) {
         return error instanceof Error && error.message.startsWith('INVALID_RELIC_EFFECT_VALUE')

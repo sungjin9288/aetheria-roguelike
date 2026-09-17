@@ -2,11 +2,11 @@
   "hashAlgorithm": "sha256",
   "reportHash": "7560ce01d64893c90909793047a53e1aaa0631597b5b2b3f7bb8464c75e05793",
   "authorityHashes": {
-    "catalog": "3633ae2d256fdf79ba57c25a83664eca98db87d93985e17e07cc960a3780d0b5",
-    "resolver": "ba35a0034ce377bea81449f44d44acfa83e5511a2eb2324cbd88d04ede657d0e",
-    "statsCalculator": "c40aab55ca71bed513ae14e43e2d33a13208b3ccae922d11d4af9585005f3c84",
-    "combatEngine": "982f5f1eccd0803bcaf388feddb20d5aaf4127d491a033a6e7e0f604b8982fdc",
-    "audit": "71f1c37a63a2155cfcd4ebf8cdd5fc9b146c897af3adf11f062279f06b071ceb",
+    "catalog": "cc6f41c48cd70385c30db73d9e83db7cb4567b6c6a4749c1a4b5b472a251aa72",
+    "resolver": "df171d5221128d47b8bf516fe4fad2cf916b5cfc8be0211720dd0197c2692b55",
+    "statsCalculator": "7b85ec9f433d6b2be1855feef826c37757966d9d1f75c33d03921cca25e0f1a9",
+    "combatEngine": "971f16d4f39f74772f8b062a28ed3207ec1defe31346e07600a52066fa626831",
+    "audit": "25e51271c95473140e30fe4589693f4779873dc75e26dfe4f468ea31fc513ba0",
     "verifier": "e69920bf3143b989052fd8278ec8006d79412a8e3c58222f7c66cf22a5afbb0a",
     "focusedTest": "593d3a13864be14065980bd4d7f0ff7a6c6034ed6aec415b1e6cbc0cf75f4003",
     "plan": "281c446f0f5b283c35474dd26b65c743eec076b3bb8bc51a2143f4476876bffc"

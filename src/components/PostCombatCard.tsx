@@ -7,6 +7,12 @@ import {
     getPostCombatRecommendation,
 } from '../utils/outcomeAnalysis';
 import { isSignatureItem } from '../data/signatureItems.js';
+import {
+    getPostCombatChoiceOptions,
+    isPostCombatChoiceOffered,
+    type PostCombatChoiceId,
+} from '../utils/postCombatChoice';
+import { MSG } from '../data/messages';
 import SignalBadge from './SignalBadge';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 
@@ -21,9 +27,11 @@ interface PostCombatCardProps {
     result?: any;
     onClose?: () => void;
     onOpenInventory?: () => void;
+    /** 2026-09 D2 — "밀어붙인다 / 숨을 고른다" 선택을 reducer로 전달 (단일 전이). */
+    onResolveChoice?: (choice: PostCombatChoiceId) => void;
 }
 
-const PostCombatCard = ({ result, onClose, onOpenInventory }: PostCombatCardProps) => {
+const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice }: PostCombatCardProps) => {
     const [isClosing, setIsClosing] = useState(false);
     usePlatformBackHandler(Boolean(result && onClose), () => onClose?.(), 40);
 
@@ -79,6 +87,16 @@ const PostCombatCard = ({ result, onClose, onOpenInventory }: PostCombatCardProp
         if (isClosing) return;
         setIsClosing(true);
         setTimeout(() => onClose?.(), 280);
+    };
+
+    // 2026-09 D2 — 선택은 reducer 단일 전이. 카드가 닫히기 전 연타가 들어와도
+    //   reducer의 postCombatChoiceResolved 가드가 두 번째 적용을 막는다.
+    const choiceOffered = isPostCombatChoiceOffered(result) && Boolean(onResolveChoice);
+    const choiceOptions = getPostCombatChoiceOptions();
+    const handleChoice = (choice: PostCombatChoiceId) => {
+        if (isClosing || !choiceOffered) return;
+        onResolveChoice?.(choice);
+        handleClose();
     };
 
     const handlePrimaryAction = () => {
@@ -214,6 +232,39 @@ const PostCombatCard = ({ result, onClose, onOpenInventory }: PostCombatCardProp
                             <span className="shrink-0 font-readable font-bold text-[#f6e7c8]">{analysis.grade}</span>
                             <span className="truncate">{compactNote}</span>
                         </div>
+
+                        {choiceOffered && (
+                            <section
+                                data-testid="post-combat-choice"
+                                aria-label={MSG.POST_COMBAT_CHOICE_TITLE}
+                                className="rounded-[1rem] border border-white/8 bg-black/18 px-2.5 py-2"
+                            >
+                                <div className="font-readable text-[10px] font-bold text-slate-400/80">
+                                    {MSG.POST_COMBAT_CHOICE_TITLE}
+                                </div>
+                                <div className="mt-1.5 grid grid-cols-2 gap-2">
+                                    {choiceOptions.map((option) => (
+                                        <Motion.button
+                                            key={option.id}
+                                            type="button"
+                                            data-testid={option.testId}
+                                            whileTap={{ scale: 0.97 }}
+                                            onClick={() => handleChoice(option.id)}
+                                            className={`flex min-h-[44px] w-full flex-col items-start justify-center gap-0.5 rounded-[0.85rem] border px-2.5 py-1.5 text-left ${
+                                                option.id === 'push'
+                                                    ? 'border-rose-300/24 bg-rose-400/10 text-rose-100'
+                                                    : 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10 text-[#dff7f5]'
+                                            }`}
+                                        >
+                                            <span className="font-readable text-xs font-bold">{option.label}</span>
+                                            <span className="font-readable text-[10px] leading-tight opacity-80">
+                                                {option.detail}
+                                            </span>
+                                        </Motion.button>
+                                    ))}
+                                </div>
+                            </section>
+                        )}
 
                         <div className={recommendation.target === 'inventory' ? 'grid grid-cols-[1.25fr_0.75fr] gap-2' : ''}>
                             <Motion.button

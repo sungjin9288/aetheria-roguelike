@@ -1,5 +1,5 @@
 import { ITEMS } from '../data/items.js';
-import type { Item, Player, Achievement } from "../types/index.js";
+import type { CodexCategory, Item, Player, Achievement } from "../types/index.js";
 import { DB } from '../data/db.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { getWeaponMagicSkills } from './equipmentUtils.js';
@@ -66,7 +66,7 @@ export const getPassiveSkillBonuses = (player: Player) => {
 };
 
 /** 티어 → 등급 자동 매핑 */
-const TIER_TO_RARITY: any = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'legendary', 6: 'legendary' };
+const TIER_TO_RARITY: Record<number, string> = { 1: 'common', 2: 'uncommon', 3: 'rare', 4: 'epic', 5: 'legendary', 6: 'legendary' };
 
 /** 아이템 등급 반환 (명시적 rarity 우선, 없으면 tier 기반 자동 매핑) */
 export const getItemRarity = (item: Item | null | undefined) => item?.rarity || TIER_TO_RARITY[item?.tier ?? 0] || 'common';
@@ -102,7 +102,7 @@ export const findItemByName = (name: string | undefined) => getAllItems().find((
 // cycle 556: reward default {} 제거 — 3 callers (QuestBoardPanel/QuestTab/
 //   AchievementPanel) 모두 reward 명시 전달이라 default 도달 불가.
 export const formatRewardParts = (reward: any) => {
-    const parts: any[] = [];
+    const parts = [];
     if (reward.exp) parts.push(`경험 ${reward.exp}`);
     if (reward.gold) parts.push(`골드 ${reward.gold}`);
     if (reward.item) parts.push(reward.item);
@@ -136,11 +136,9 @@ export const getTitlePassiveLabel = (token: any) => {
 
 /**
  * 아이템/몬스터를 도감에 등록 (immutable — 새 player 반환)
- * @param {object} player
- * @param {'weapons'|'armors'|'shields'|'monsters'|'recipes'|'materials'} category
- * @param {string} name
+ * 2026-09 B3: category를 CodexCategory로 좁힘 — JSDoc에만 있던 계약을 타입으로 옮겼다.
  */
-export const registerCodex = (player: Player, category: any, name: any) => {
+export const registerCodex = (player: Player, category: CodexCategory, name: any) => {
     if (!name || !category) return player;
     const codex = player.stats?.codex || {};
     const cat = codex[category] || {};
@@ -258,7 +256,10 @@ export const getAchievementCurrentValue = (achievement: Achievement, player: Pla
     if (target === 'discoveryChains') return Array.isArray(stats?.discoveryChains) ? stats.discoveryChains.length : 0;
     if (target === 'signaturesDiscovered') return countDiscoveredSignatures(player);
     if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
-    return stats?.[target ?? ''] || 0;
+    // B3-TODO(2026-09): achievement.target은 data-driven 문자열이라 PlayerStats 키로
+    //   좁히려면 quests.ts ACHIEVEMENTS의 target 리터럴 유니온화가 선행돼야 한다.
+    //   그때까지 이 한 곳만 동적 인덱스 캐스트를 유지한다(런타임 동작 동일).
+    return (stats as Record<string, any>)[target ?? ''] || 0;
 };
 
 /** 업적 달성 여부 */
@@ -268,7 +269,7 @@ export const isAchievementUnlocked = (achievement: Achievement, player: Player) 
 
 // Milestone Utility
 export const checkMilestones = (killRegistry: any, lastKillName: any) => {
-    const rewards: any[] = [];
+    const rewards = [];
     const count = killRegistry[lastKillName] || 0;
 
     // 1. Monster Count Milestones
@@ -323,7 +324,7 @@ export const checkTitles = (player: Player) => {
         //   영구 복구 불가하던 회귀. stats.claimedQuestIds 영구 ledger와 매칭. cycle 199 / 201
         //   동일 lens. val = quest id (152/153/154/201/202).
         if (type === 'questReward') {
-            const claimedIds = (player.stats as any)?.claimedQuestIds;
+            const claimedIds = player.stats?.claimedQuestIds;
             return Array.isArray(claimedIds) && claimedIds.includes(val);
         }
         // cycle 262: 'cosmetic' cond.type — cycle 185 cosmetic 4종 ('별을 보는 자' 등) 정식
@@ -331,8 +332,8 @@ export const checkTitles = (player: Player) => {
         //   없어 player.titles 손실 시 premium 구매 자산 silent loss. cycle 199/201/260 동일 lens.
         //   매핑: PREMIUM_SHOP.cosmeticTitles[i].name === title.id (Korean) ↔ i.id (영문) ↔ stats.cosmeticTitles 영문 ID.
         if (type === 'cosmetic') {
-            const ownedEnglishIds = Array.isArray((player.stats as any)?.cosmeticTitles)
-                ? (player.stats as any).cosmeticTitles
+            const ownedEnglishIds = Array.isArray(player.stats?.cosmeticTitles)
+                ? player.stats.cosmeticTitles
                 : [];
             if (ownedEnglishIds.length === 0) return false;
             const cosmeticDef = (PREMIUM_SHOP as any)?.cosmeticTitles?.find(
@@ -346,13 +347,13 @@ export const checkTitles = (player: Player) => {
         if (type === 'crafts')         return (player.stats?.crafts        || 0) >= val;
         // cycle 85: 합성(synthesis) 카운터 — alchemist 칭호용. cycle 82에서 INITIAL_STATE에
         // syntheses:0 declarative하게 추가했고, achievement target='synths'와 동일한 필드를 읽음.
-        if (type === 'synths')         return ((player.stats as any)?.syntheses || 0) >= val;
+        if (type === 'synths')         return (player.stats?.syntheses || 0) >= val;
         // cycle 95: 최대 연속 처치 — berserker 칭호용. combatVictory에서 max-ever를 누적.
-        if (type === 'maxKillStreak') return ((player.stats as any)?.maxKillStreak || 0) >= val;
-        // cycle 103: 발견 체인 — chain_master 칭호용. exploreUtils.checkDiscoveryChains에서
+        if (type === 'maxKillStreak') return (player.stats?.maxKillStreak || 0) >= val;
+        // cycle 103: 발견 체인 — chain_master 칭호용. exploreFlow.checkDiscoveryChains에서
         // stats.discoveryChains 배열에 완료 ID push. cycle 102 achievement target과 동일 source.
         if (type === 'discoveryChains') {
-            const chains = (player.stats as any)?.discoveryChains;
+            const chains = player.stats?.discoveryChains;
             return Array.isArray(chains) && chains.length >= val;
         }
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;

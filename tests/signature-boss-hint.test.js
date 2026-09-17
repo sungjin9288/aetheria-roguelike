@@ -76,7 +76,7 @@ test('exploreActions wires signature boss hint before ENEMY_APPEAR log', async (
     // 탐험 스카우팅(2026-07): quiet 롤~전투 스폰 파이프가 exploreUtils.ts의
     // runQuietRollAndCombat으로 이동(exploreActions.ts와 eventActions.ts "짙은 안개" 카드가
     // 공유하기 위함 — firebase 의존 없는 경로 유지). 로직/가드는 그대로, 참조 파일만 갱신.
-    const source = await readSrc('src/utils/exploreUtils.ts');
+    const source = await readSrc('src/hooks/gameActions/exploreFlow.ts');
     assert.ok(
         source.includes("import { getBossSignatureDrops }"),
         'exploreUtils should import getBossSignatureDrops'

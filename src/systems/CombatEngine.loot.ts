@@ -23,13 +23,14 @@ export type LootResult = {
 const normalBonusPool = (enemy: Monster, player: Player | null): Item[] | null => {
     const map = player?.loc ? DB.MAPS[player.loc] : undefined;
     const name = enemy.baseName || enemy.name;
+    const enemyLevel = enemy.level;
     if (enemy.isBoss || enemy.isElite || !map || map.level === 'infinite'
         || !name || !map.monsters?.includes(name)
-        || !Number.isSafeInteger(enemy.level) || enemy.level <= 0) return null;
+        || !Number.isSafeInteger(enemyLevel) || (enemyLevel as number) <= 0) return null;
 
     const tier = Object.entries(BALANCE.TIER_REQ_LEVEL)
         .map(([key, value]) => [Number(key), Number(value)])
-        .filter(([, requiredLevel]) => requiredLevel <= enemy.level)
+        .filter(([, requiredLevel]) => requiredLevel <= (enemyLevel as number))
         .sort((left, right) => right[1] - left[1])[0]?.[0];
     const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter(item => (
         item.tier === tier && item.name && !SIGNATURE_ITEM_REGISTRY[item.name]
@@ -98,7 +99,7 @@ export const processLoot = (
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
     const dropRateMult = 1 + getStrongestNumericRelicValue(relics, 'drop_rate');
-    const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic: any) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
+    const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
     const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
     const progressionLootMult = getProgressionLootMultiplier(player);
     const enemyDropMult = enemy.dropMod || 1.0;

@@ -20,8 +20,8 @@ export const MIRROR_PATHS: MirrorPath[] = [
     {
         id: 'exploration',
         label: '탐험',
-        summary: '탐험에서 회복 지점과 유물을 만날 기회를 늘립니다.',
-        nodeIds: ['campfire_rate', 'relic_pity'],
+        summary: '탐험에서 회복 지점과 유물을 만날 기회를 늘리고, 앞길을 미리 살핍니다.',
+        nodeIds: ['campfire_rate', 'relic_pity', 'scout_charges'],
     },
     {
         id: 'survival',
@@ -67,6 +67,10 @@ export const getMirrorEffectLabel = (nodeId: string, level: number): string => {
             return effects.reviveEnabled
                 ? `치명상 1회 방어 · 생명 ${formatPercent(effects.reviveHpRatio)}% 회복`
                 : '치명상 보호 없음';
+        case 'scout_charges':
+            return effects.freeScoutCharges > 0
+                ? `원정마다 무료 정찰 ${effects.freeScoutCharges}회`
+                : '무료 정찰 없음';
         case 'essence_flow': {
             const bonus = formatPercent(effects.essenceFlowMult - 1);
             return bonus > 0 ? `계승 정수 획득 +${bonus}%` : '계승 정수 획득 기본';

@@ -17,7 +17,7 @@ import {
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
-import type { Player } from '../types/index.js';
+import type { FullStats, Player } from '../types/index.js';
 import ArchiveTabButton from './ArchiveTabButton';
 import EquipmentPanel from './EquipmentPanel';
 import SignalBadge from './SignalBadge';
@@ -43,17 +43,19 @@ const TabSpinner = () => (
 
 interface DashboardProps {
     player: Player;
+    /** H5(a): 세션 uid — 공개 묘비 목록에서 내 묘비를 제외하는 데 쓴다. */
+    uid?: string | null;
     grave?: any;
     sideTab?: string;
     setSideTab?: (tab: string) => void;
     actions?: any;
-    stats?: any;
+    stats?: FullStats | null;
     quickSlots?: any[];
     runtime?: any;
     onReturnToLog?: any;
 }
 
-const TAB_ITEMS: any[] = [
+const TAB_ITEMS = [
     { id: 'equipment', icon: Shield, label: '장비' },
     { id: 'inventory', icon: Package, label: '가방' },
     { id: 'quest', icon: Scroll, label: '임무' },
@@ -69,6 +71,7 @@ const TAB_ITEMS: any[] = [
 
 const Dashboard = ({
     player,
+    uid,
     grave,
     sideTab,
     setSideTab,
@@ -194,6 +197,7 @@ const Dashboard = ({
                 <Suspense fallback={<TabSpinner />}>
                     <GravePanel
                         player={player}
+                        uid={uid}
                         grave={grave}
                         actions={actions}
                         capabilities={PRODUCTION_GAME_CAPABILITIES}

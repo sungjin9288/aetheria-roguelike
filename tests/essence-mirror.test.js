@@ -1,8 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getMirrorEffects, purchaseMirrorNode } from '../src/systems/mirrorUpgrades.js';
-import { MIRROR_NODES } from '../src/data/mirror.js';
+import { getMirrorEffects, purchaseMirrorNode, getSpentMirrorEssence } from '../src/systems/mirrorUpgrades.js';
+import { MIRROR_NODES, MIRROR_TREE_TOTAL_COST } from '../src/data/mirror.js';
+import { applyEssenceGain, getEssenceGainFromExp, getRankFromLifetime } from '../src/systems/essenceLedger.js';
 import { BALANCE } from '../src/data/constants.js';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
 import { AT } from '../src/reducers/actionTypes.js';
@@ -49,8 +50,9 @@ test('② start_gold Lv1/Lv2/Lv3 → 시작 골드 +100/+200/+300', () => {
     assert.equal(getMirrorEffects({ mirror: { start_gold: 3 } }).startGoldBonus, 300);
 });
 
-test('② start_boot_extra Lv1 → 시작 부트 선택지 +1 (최대레벨 1)', () => {
+test('② start_boot_extra → 시작 부트 선택지가 레벨만큼 증가', () => {
     assert.equal(getMirrorEffects({ mirror: { start_boot_extra: 1 } }).startBootChoiceBonus, 1);
+    assert.equal(getMirrorEffects({ mirror: { start_boot_extra: 2 } }).startBootChoiceBonus, 2);
     assert.equal(getMirrorEffects({ mirror: { start_boot_extra: 0 } }).startBootChoiceBonus, 0);
 });
 
@@ -81,8 +83,13 @@ test('② essence_flow Lv1/Lv2 → 에센스 획득 배율 1.10/1.20', () => {
 });
 
 test('② 레벨이 maxLevel을 초과한 corrupt 데이터도 캡 (방어적)', () => {
+    const startGold = MIRROR_NODES.find((n) => n.id === 'start_gold');
     const eff = getMirrorEffects({ mirror: { start_gold: 99, revive: 5 } });
-    assert.equal(eff.startGoldBonus, 300, 'start_gold는 maxLevel 3에서 캡');
+    assert.equal(
+        eff.startGoldBonus,
+        startGold.maxLevel * BALANCE.MIRROR_START_GOLD_PER_LEVEL,
+        'start_gold는 maxLevel에서 캡',
+    );
     assert.equal(eff.reviveEnabled, true);
 });
 
@@ -110,10 +117,11 @@ test('③ purchaseMirrorNode: 에센스 부족 → no-op (success false, mirror 
 });
 
 test('③ purchaseMirrorNode: 최대레벨 도달 → no-op (추가 구매 불가)', () => {
-    const maxed = { start_boot_extra: 1 }; // maxLevel 1
+    const node = MIRROR_NODES.find((n) => n.id === 'start_boot_extra');
+    const maxed = { start_boot_extra: node.maxLevel };
     const result = purchaseMirrorNode(maxed, 'start_boot_extra', 99999);
     assert.equal(result.success, false);
-    assert.equal(result.newLevel, 1);
+    assert.equal(result.newLevel, node.maxLevel);
 });
 
 test('③ purchaseMirrorNode: 존재하지 않는 노드 id → no-op', () => {
@@ -165,15 +173,20 @@ test('③ reducer PURCHASE_MIRROR_NODE: 에센스 부족 시 no-op (state 그대
 });
 
 test('③ reducer PURCHASE_MIRROR_NODE: 최대레벨 도달 시 no-op (캡)', () => {
+    const node = MIRROR_NODES.find((n) => n.id === 'start_boot_extra');
     const state = {
         ...INITIAL_STATE,
         player: {
             ...INITIAL_STATE.player,
-            meta: { ...INITIAL_STATE.player.meta, essence: 99999, mirror: { start_boot_extra: 1 } },
+            meta: {
+                ...INITIAL_STATE.player.meta,
+                essence: 99999,
+                mirror: { start_boot_extra: node.maxLevel },
+            },
         },
     };
     const next = gameReducer(state, mirrorPurchaseAction(state, 'start_boot_extra'));
-    assert.equal(next.player.meta.mirror.start_boot_extra, 1, '최대레벨 유지');
+    assert.equal(next.player.meta.mirror.start_boot_extra, node.maxLevel, '최대레벨 유지');
     assert.equal(next.player.meta.essence, 99999, '에센스 차감 없음');
 });
 
@@ -186,20 +199,21 @@ test('③ reducer PURCHASE_MIRROR_NODE: meta.mirror가 undefined인 구세이브
     assert.equal(next.player.meta.mirror.start_gold, 1);
 });
 
-test('③ reducer PURCHASE_MIRROR_NODE: 순차 구매로 레벨이 누적됨', () => {
+test('③ reducer PURCHASE_MIRROR_NODE: 순차 구매로 레벨이 누적되고 최대레벨에서 멈춘다', () => {
+    const node = MIRROR_NODES.find((n) => n.id === 'campfire_rate');
     let state = {
         ...INITIAL_STATE,
-        player: { ...INITIAL_STATE.player, meta: { ...INITIAL_STATE.player.meta, essence: 1000, mirror: {} } },
+        player: { ...INITIAL_STATE.player, meta: { ...INITIAL_STATE.player.meta, essence: 99999, mirror: {} } },
     };
+    for (let level = 1; level <= node.maxLevel; level += 1) {
+        state = gameReducer(state, mirrorPurchaseAction(state, 'campfire_rate'));
+        assert.equal(state.player.meta.mirror.campfire_rate, level);
+    }
+    // maxLevel 도달 후 추가 구매 시도 → no-op
+    const essenceAfterMax = state.player.meta.essence;
     state = gameReducer(state, mirrorPurchaseAction(state, 'campfire_rate'));
-    assert.equal(state.player.meta.mirror.campfire_rate, 1);
-    state = gameReducer(state, mirrorPurchaseAction(state, 'campfire_rate'));
-    assert.equal(state.player.meta.mirror.campfire_rate, 2);
-    // maxLevel 2 도달 후 추가 구매 시도 → no-op
-    const essenceAfterTwo = state.player.meta.essence;
-    state = gameReducer(state, mirrorPurchaseAction(state, 'campfire_rate'));
-    assert.equal(state.player.meta.mirror.campfire_rate, 2, '최대레벨 캡');
-    assert.equal(state.player.meta.essence, essenceAfterTwo, '초과 구매 시도는 에센스 미차감');
+    assert.equal(state.player.meta.mirror.campfire_rate, node.maxLevel, '최대레벨 캡');
+    assert.equal(state.player.meta.essence, essenceAfterMax, '초과 구매 시도는 에센스 미차감');
 });
 
 // ── ④ revive: 치명상 → 1회 부활 + 플래그, 2번째 → 사망, 새 런 리셋 ─────────────
@@ -488,4 +502,192 @@ test('essence_flow + rank1 prestigeEssenceBonus 가산 (곱연산 배율 누적 
 
     assert.ok(rank1PlusMirror.updatedPlayer.meta.essence > rank1Only.updatedPlayer.meta.essence,
         'rank1 배율 위에 mirror essence_flow가 추가로 곱해져야 함');
+});
+
+
+// ── ⑦ 2026-09 G2/G3: 정수 원장(essenceLifetime) + 확장된 거울 트리 ──────────────
+test('⑦ 거울 트리 총액은 12,000~15,000 정수 · 첫 3구매는 초반 30킬(≈300 정수) 안', () => {
+    const nodeTotals = MIRROR_NODES.map((node) => ({
+        id: node.id,
+        levels: node.maxLevel,
+        total: node.costs.reduce((sum, cost) => sum + cost, 0),
+    }));
+    const treeTotal = nodeTotals.reduce((sum, entry) => sum + entry.total, 0);
+
+    assert.equal(treeTotal, MIRROR_TREE_TOTAL_COST, 'MIRROR_TREE_TOTAL_COST는 실제 합계와 일치');
+    assert.ok(treeTotal >= 12_000 && treeTotal <= 15_000, `트리 총액 ${treeTotal}은 12k~15k 구간`);
+    assert.ok(treeTotal > 2_570 * 4, '구 트리(2,570) 대비 소비처가 크게 늘었다');
+
+    // costs 배열은 maxLevel과 길이가 맞고, 단계마다 비용이 증가(기하급수)해야 한다.
+    for (const node of MIRROR_NODES) {
+        assert.equal(node.costs.length, node.maxLevel, `${node.id} costs 길이 = maxLevel`);
+        for (let i = 1; i < node.costs.length; i += 1) {
+            assert.ok(node.costs[i] > node.costs[i - 1], `${node.id} 비용은 단계마다 증가`);
+        }
+    }
+
+    const cheapestThree = MIRROR_NODES
+        .map((node) => node.costs[0])
+        .sort((a, b) => a - b)
+        .slice(0, 3)
+        .reduce((sum, cost) => sum + cost, 0);
+    assert.ok(cheapestThree <= 300, `첫 3구매 합계 ${cheapestThree} 정수는 Lv5~10 구간 ~30킬 안`);
+});
+
+test('⑦ getSpentMirrorEssence: 구매 레벨로부터 지출 정수를 정확히 역산', () => {
+    const startGold = MIRROR_NODES.find((n) => n.id === 'start_gold');
+    const campfire = MIRROR_NODES.find((n) => n.id === 'campfire_rate');
+
+    assert.equal(getSpentMirrorEssence({}), 0);
+    assert.equal(getSpentMirrorEssence(null), 0);
+    assert.equal(
+        getSpentMirrorEssence({ start_gold: 2, campfire_rate: 1 }),
+        startGold.costs[0] + startGold.costs[1] + campfire.costs[0],
+    );
+    // corrupt 레벨은 maxLevel로 캡되므로 지출도 트리 상한을 넘지 않는다.
+    assert.equal(
+        getSpentMirrorEssence({ start_gold: 99 }),
+        startGold.costs.reduce((sum, cost) => sum + cost, 0),
+    );
+});
+
+test('⑦ applyEssenceGain: essence/essenceLifetime 동시 증가 + rank는 누적 기준', () => {
+    const perRank = BALANCE.ESSENCE_PER_RANK;
+    const first = applyEssenceGain({ essence: 0, essenceLifetime: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 }, perRank);
+
+    assert.equal(first.meta.essence, perRank);
+    assert.equal(first.meta.essenceLifetime, perRank);
+    assert.equal(first.meta.rank, 1);
+    assert.equal(first.rankGain, 1);
+    assert.equal(first.meta.bonusAtk, BALANCE.ESSENCE_RANK_ATK);
+    assert.equal(first.meta.bonusHp, BALANCE.ESSENCE_RANK_HP);
+    assert.equal(first.meta.bonusMp, BALANCE.ESSENCE_RANK_MP);
+});
+
+test('⑦ 거울 구매로 정수를 다 써도 rank는 내려가지 않는다 (G2 숨은 비용 제거)', () => {
+    // 정수 1,000 획득 → rank 6. 이후 거울에 600을 지출해도 rank는 그대로.
+    let state = {
+        ...INITIAL_STATE,
+        player: {
+            ...INITIAL_STATE.player,
+            meta: { ...INITIAL_STATE.player.meta, essence: 0, essenceLifetime: 0, rank: 0 },
+        },
+    };
+    const granted = applyEssenceGain(state.player.meta, 1_000);
+    const rankBefore = granted.meta.rank;
+    assert.equal(rankBefore, Math.floor(1_000 / BALANCE.ESSENCE_PER_RANK));
+
+    state = { ...state, player: { ...state.player, meta: granted.meta } };
+    state = gameReducer(state, mirrorPurchaseAction(state, 'revive')); // 500 정수
+
+    assert.ok(state.player.meta.essence < granted.meta.essence, '잔여 정수는 줄어든다');
+    assert.equal(state.player.meta.essenceLifetime, 1_000, '누적 원장은 소비에 영향받지 않는다');
+
+    // 다음 획득에서도 rank는 잔여 정수가 아니라 누적 기준으로 이어진다.
+    const afterSpend = applyEssenceGain(state.player.meta, 0);
+    assert.equal(afterSpend.meta.rank, rankBefore, '구매 후에도 rank 유지');
+    assert.equal(afterSpend.rankGain, 0);
+});
+
+test('⑦ rank 단조성: 구세이브의 높은 rank는 누적이 낮아도 내려가지 않는다', () => {
+    const legacy = { essence: 0, essenceLifetime: 0, rank: 12, bonusAtk: 12, bonusHp: 60, bonusMp: 36 };
+    const result = applyEssenceGain(legacy, 10);
+    assert.equal(result.meta.rank, 12);
+    assert.equal(result.rankGain, 0);
+    assert.equal(result.meta.bonusAtk, 12, '영구 스탯도 그대로');
+});
+
+test('⑦ CombatEngine.handleVictory: 전투 정수가 essenceLifetime에도 누적된다', () => {
+    const basePlayer = {
+        level: 10, exp: 0, nextExp: 999999, gold: 0, maxHp: 200, hp: 200, maxMp: 50, mp: 50,
+        atk: 20, def: 10, relics: [], stats: {},
+        meta: { essence: 40, essenceLifetime: 40, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0, prestigeRank: 0, mirror: {} },
+    };
+    const enemy = { name: '슬라임', baseName: '슬라임', exp: 80, gold: 50, level: 10 };
+    const result = CombatEngine.handleVictory(basePlayer, enemy, {}, {});
+    const nextMeta = result.updatedPlayer.meta;
+
+    const gained = nextMeta.essence - 40;
+    assert.ok(gained > 0);
+    assert.equal(nextMeta.essenceLifetime, 40 + gained, '누적 원장이 동일량만큼 증가');
+    assert.equal(gained, getEssenceGainFromExp(enemy.exp, 1), 'BALANCE.ESSENCE_EXP_DIVISOR 기준 획득량');
+});
+
+test('⑦ dataMigration v5.1: essenceLifetime을 잔여 정수 + 거울 구매 이력으로 정확 역산', async () => {
+    const { migrateData } = await import('../src/utils/dataMigration.js');
+    const startGold = MIRROR_NODES.find((n) => n.id === 'start_gold');
+    const campfire = MIRROR_NODES.find((n) => n.id === 'campfire_rate');
+    // 3레벨 구매: start_gold Lv2 + campfire_rate Lv1
+    const spent = startGold.costs[0] + startGold.costs[1] + campfire.costs[0];
+
+    const oldSave = {
+        version: 5.0,
+        player: {
+            name: '거울투자자',
+            meta: { essence: 310, rank: 2, bonusAtk: 2, bonusHp: 10, bonusMp: 6, mirror: { start_gold: 2, campfire_rate: 1 } },
+            inv: [], equip: {}, stats: {},
+        },
+    };
+    const migrated = migrateData(oldSave);
+
+    assert.equal(migrated.player.meta.essenceLifetime, 310 + spent, '잔여 + 지출 = 누적');
+    assert.equal(migrated.player.meta.essence, 310, '잔여 정수는 그대로');
+    assert.ok(
+        getRankFromLifetime(migrated.player.meta.essenceLifetime, migrated.player.meta.rank) >= 2,
+        '역산된 누적으로도 기존 rank 이상이 보장된다',
+    );
+});
+
+test('⑦ dataMigration v5.1: 이미 essenceLifetime이 있는 세이브는 재계산하지 않는다 (멱등)', async () => {
+    const { migrateData } = await import('../src/utils/dataMigration.js');
+    const save = {
+        version: 5.1,
+        player: {
+            name: '신세이브',
+            meta: { essence: 100, essenceLifetime: 4_200, rank: 28, mirror: { start_gold: 2 } },
+            inv: [], equip: {}, stats: {},
+        },
+    };
+    assert.equal(migrateData(save).player.meta.essenceLifetime, 4_200);
+    // 두 번 돌려도 동일
+    assert.equal(migrateData(migrateData(save)).player.meta.essenceLifetime, 4_200);
+});
+
+test('⑦ CONSTANTS.DATA_VERSION은 essenceLifetime 도입과 함께 5.1로 bump', async () => {
+    const { CONSTANTS } = await import('../src/data/constants.js');
+    assert.equal(CONSTANTS.DATA_VERSION, 5.1);
+});
+
+test('⑦ 승천 미리보기도 essenceLifetime을 함께 누적한다', async () => {
+    const { getAscensionOutcome } = await import('../src/utils/ascensionPreview.js');
+    const outcome = getAscensionOutcome({ essence: 100, essenceLifetime: 900, prestigeRank: 1 });
+    assert.equal(outcome.meta.essence, 100 + BALANCE.PRESTIGE_ESSENCE_REWARD);
+    assert.equal(outcome.meta.essenceLifetime, 900 + BALANCE.PRESTIGE_ESSENCE_REWARD);
+});
+
+test('⑦ 승천 화면은 에테르 거울 진입 CTA를 제공한다 (MSG 사용)', async () => {
+    const { readFile } = await import('node:fs/promises');
+    const source = await readFile(new URL('../src/components/AscensionScreen.tsx', import.meta.url), 'utf8');
+    assert.match(source, /data-testid="ascension-open-mirror"/);
+    assert.match(source, /MSG\.MIRROR_CTA_LABEL/);
+    assert.match(source, /onOpenMirror/);
+
+    const root = await readFile(new URL('../src/components/app/GameRoot.tsx', import.meta.url), 'utf8');
+    assert.match(root, /onOpenMirror=\{\(\) => setMirrorPanelOpen\(true\)\}/);
+    // 거울 패널은 승천 화면보다 뒤에 그려져야 그 위에서 열린다.
+    assert.ok(
+        root.indexOf('<MirrorPanel') > root.indexOf('<AscensionScreen'),
+        'MirrorPanel은 오버레이 순서상 AscensionScreen 뒤',
+    );
+});
+
+
+test('migrateData: essenceLifetime이 null이면 숫자가 아니므로 역산 backfill한다', async () => {
+    const { migrateData } = await import('../src/utils/dataMigration.ts');
+    const { getEssenceLifetime } = await import('../src/systems/essenceLedger.ts');
+    const migrated = migrateData({ player: { meta: { essence: 5000, rank: 30, essenceLifetime: null, mirror: {} } } });
+    const meta = (migrated.player || migrated).meta;
+    assert.equal(typeof meta.essenceLifetime, 'number');
+    assert.equal(meta.essenceLifetime, 5000);
+    assert.equal(getEssenceLifetime(meta), 5000);
 });

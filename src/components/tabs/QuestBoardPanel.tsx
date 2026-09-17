@@ -12,7 +12,7 @@ import { getProtocolDayKey } from '../../utils/protocolCycle.js';
 const getQuestObjectiveText = (quest: any) => {
   if (quest?.objective) return quest.objective;
   if (quest?.desc) return quest.desc;
-  return quest?.target === 'Level'
+  return quest?.target === 'level'
     ? `레벨 ${quest.goal} 달성`
     : `${quest.target} ${quest.goal}회 달성`;
 };
@@ -21,7 +21,7 @@ const getQuestObjectiveText = (quest: any) => {
 //   helper duplication. 호출자가 모두 명시 전달이라 default 도달 불가.
 //   default 청소 메가 시리즈 36번째 cross-file 4-default batch.
 const getQuestProgressText = (quest: any, progress: any) => (
-  quest?.target === 'Level'
+  quest?.target === 'level'
     ? `레벨 ${progress}/${quest.goal}`
     : `${progress}/${quest.goal}`
 );
@@ -85,7 +85,7 @@ const QuestRowShell = ({ children, kind, testId }: any) => (
 const isBasicHuntQuest = (quest: any) => (
   !quest?.type
   && quest?.target
-  && quest.target !== 'Level'
+  && quest.target !== 'level'
   && Number.isFinite(Number(quest.goal))
 );
 

@@ -1,5 +1,5 @@
 import { BALANCE } from '../data/constants.js';
-import type { GameMap, Player } from "../types/index.js";
+import type { FullStats, GameMap, Player } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
@@ -79,13 +79,14 @@ const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRa
 const getMapLevel = (map: GameMap | null | undefined, playerLevel: any) => (
     map?.level === 'infinite'
         ? Math.max((playerLevel || 1) + 8, 50)
-        : (map?.minLv ?? (typeof map?.level === 'number' ? map.level : 1))
+        // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
+        : (typeof map?.level === 'number' ? map.level : 1)
 );
 const getVisitedMaps = (player: Player) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
 
 const getQuestProgressLabel = (entry: any) => {
     if (!entry?.quest) return '';
-    if (entry.quest.target === 'Level') return `Lv.${entry.progress}/${entry.quest.goal}`;
+    if (entry.quest.target === 'level') return `Lv.${entry.progress}/${entry.quest.goal}`;
     return `${entry.progress}/${entry.quest.goal}`;
 };
 
@@ -96,7 +97,7 @@ const getQuestProgressPercent = (entry: any) => {
 
 const getQuestRouteLabel = (quest: any, targetMaps: string[]) => {
     if (targetMaps.length > 0) return targetMaps[0];
-    if (quest?.target === 'Level') return '성장 루트';
+    if (quest?.target === 'level') return '성장 루트';
     if (quest?.type === 'craft') return '제작소';
     if (quest?.type === 'combat_count') return quest.target === 'bossKills' ? '보스 권역' : '모든 권역';
     if (quest?.type === 'bounty_count') return '현상금';
@@ -112,7 +113,7 @@ const getQuestNextStep = (entry: any, targetMaps: string[]) => {
     const remaining = Math.max(0, (quest.goal || 0) - (entry?.progress || 0));
 
     if (entry?.isComplete) return '마을에서 보상 회수';
-    if (quest.target === 'Level') return `Lv.${quest.goal}까지 성장`;
+    if (quest.target === 'level') return `Lv.${quest.goal}까지 성장`;
     if (quest.type === 'explore_count' && quest.location && targetMaps.length > 0) {
         return `${targetMaps[0]}에서 탐험 ${remaining}회 진행`;
     }
@@ -134,7 +135,7 @@ const getQuestNextStep = (entry: any, targetMaps: string[]) => {
 const getQuestReturnLabel = (entry: any, targetMaps: string[]) => {
     const quest = entry?.quest || {};
     if (entry?.isComplete) return '보상 받기';
-    if (quest.target === 'Level') return '성장';
+    if (quest.target === 'level') return '성장';
     if (targetMaps.length > 0) return '목표 지역';
     if (quest.type === 'craft') return '제작';
     if (quest.type === 'combat_count') return quest.target === 'bossKills' ? '보스 토벌' : '누적 토벌';
@@ -260,7 +261,7 @@ export const getExplorationForecast = (player: Player, mapData: any) => {
 // cycle 579: maps default {} 제거 — 2 production caller (MapNavigator:66,
 //   ControlPanel:58) + 8+ test caller 모두 maps 명시 (DB.MAPS / MAPS / object
 //   literal)이라 default 도달 불가. 청소 메가 시리즈 71번째.
-export const getMoveRecommendations = (player: Player, stats: any, currentMap: GameMap | null | undefined, maps: Record<string, GameMap>) => {
+export const getMoveRecommendations = (player: Player, stats: FullStats | null | undefined, currentMap: GameMap | null | undefined, maps: Record<string, GameMap>) => {
     if (!currentMap?.exits?.length) return [];
 
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
@@ -390,7 +391,7 @@ export const getMoveRecommendations = (player: Player, stats: any, currentMap: G
 
 export const getExpeditionPreparation = (
     player: Player,
-    stats: any,
+    stats: FullStats | null | undefined,
     currentMap: GameMap | null | undefined,
     maps: Record<string, GameMap>,
 ) => {
@@ -459,7 +460,7 @@ export const getExpeditionPreparation = (
 // cycle 509: runtimeState default 제거 — 1 callsite (ControlPanel:57) 항상
 //   gameState 명시 전달이라 default 도달 불가. util default 청소 메가 시리즈
 //   8번째 (cycle 502-508).
-export const getAdventureGuidance = (player: Player, stats: any, mapData: any, runtimeState: any) => {
+export const getAdventureGuidance = (player: Player, stats: FullStats | null | undefined, mapData: any, runtimeState: any) => {
     const safe = mapData?.type === 'safe';
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
     // cycle 332: mpRatio 제거 — secondaryAction 'MP도 회복' 분기 외 read 0건이라 dead.

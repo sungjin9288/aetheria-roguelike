@@ -13,6 +13,7 @@ process.env.VITE_USE_AI_PROXY = 'true';
 
 const { AI_SERVICE } = await import('../src/services/aiService.ts');
 const { TokenQuotaManager } = await import('../src/systems/TokenQuotaManager.ts');
+const { BALANCE } = await import('../src/data/constants.ts');
 
 /** localStorage 간이 스텁 — TokenQuotaManager가 사용하는 getItem/setItem만 구현. */
 const makeLocalStorageStub = () => {
@@ -229,6 +230,56 @@ test('generateStory: fetch 성공 + narrative 응답 → AI 내러티브 문자�
     }, async () => {
         const story = await AI_SERVICE.generateStory('victory', { name: '고블린' }, 'test-uid');
         assert.equal(story, '용사가 결정타를 날렸다!');
+    });
+});
+
+// ── 2026-09 Wave 3 I1: 모델 출력의 확장 어휘는 화이트리스트를 통과한 것만 살아남는다 ──
+
+test('generateEvent: 모델이 보낸 relic/status/elite/buff는 검증 후에만 이벤트 패키지에 실린다', async () => {
+    await withGlobalStub({
+        localStorage: makeLocalStorageStub(),
+        fetch: async () => ({
+            ok: true,
+            json: async () => ({
+                success: true,
+                data: {
+                    desc: '관문 너머에서 낯선 손짓이 이어집니다.',
+                    choices: ['손을 잡는다', '거리를 둔다'],
+                    outcomes: [
+                        {
+                            choiceIndex: 0,
+                            log: '손을 잡자 기운이 스며든다.',
+                            gold: 30,
+                            relic: { count: 5 },                       // 상한으로 잘림
+                            status: { id: 'poison', turns: 99 },       // 상한으로 잘림
+                            buff: { atkMult: 9, turns: 99 },           // 상한으로 잘림
+                        },
+                        {
+                            choiceIndex: 1,
+                            log: '거리를 두자 기척이 사라진다.',
+                            status: { id: 'instant_death' },           // 화이트리스트 밖 → 드롭
+                            elite: 'yes',                              // 불리언 아님 → 드롭
+                            teleport: '마왕성',                         // 미지원 어휘 → 드롭
+                            hp: -10,
+                        },
+                    ],
+                },
+            }),
+        }),
+    }, async () => {
+        const event = await AI_SERVICE.generateEvent('에테르 관문', [], 'test-uid', basePlayerContext);
+        assert.equal(event.source, 'ai');
+
+        const [first, second] = event.outcomes;
+        assert.equal(first.relic.count, BALANCE.EVENT_RELIC_MAX_COUNT);
+        assert.equal(first.status.turns, BALANCE.EVENT_STATUS_MAX_TURNS);
+        assert.equal(first.buff.atkMult, BALANCE.EVENT_BUFF_MAX_MULT);
+        assert.equal(first.buff.turns, BALANCE.EVENT_BUFF_MAX_TURNS);
+
+        assert.equal(second.status, undefined);
+        assert.equal(second.elite, undefined);
+        assert.equal(second.teleport, undefined);
+        assert.equal(second.hp, -10, '수치 어휘는 기존대로 통과');
     });
 });
 

@@ -15,8 +15,9 @@ import { getDefaultExpeditionFocusQuestIds } from '../../utils/expeditionMission
 import { getRestCost } from '../../utils/expeditionReturnFlow';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { endDevourBonus } from '../../utils/adventureRelicBonuses';
+import type { Player } from '../../types';
 
-const getStartingQuests = (player: any) => {
+const getStartingQuests = (player: Player) => {
     const quests = Array.isArray(player.quests) ? player.quests : [];
     const claimedQuestIds = Array.isArray(player.stats?.claimedQuestIds)
         ? player.stats.claimedQuestIds
@@ -32,7 +33,7 @@ const getStartingQuests = (player: any) => {
     return [...quests, createQuestProgressState(firstStoryQuest, player)];
 };
 
-const hasPreviousRunExperience = (player: any) => {
+const hasPreviousRunExperience = (player: Player) => {
     const stats = player.stats || {};
     return [
         player.meta?.prestigeRank,
@@ -89,8 +90,12 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
             if (hasPreviousRunExperience(player)) {
                 const startingRelicChoiceCount = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices
                     + mirrorEffects.startBootChoiceBonus;
+                // Wave 4 O2: 시작 부트 후보도 직업 기본 성향(빌드 아키타입)에 공명시킨다.
+                //   신규 런은 장비/유물이 없어 buildProfile.primary가 직업 기본값으로 잡히므로,
+                //   "내 직업이 쓸 만한 유물"이 첫 선택지에 더 자주 올라온다.
                 const startingRelics = pickWeightedRelics(RELICS, startingRelicChoiceCount, {
                     rarityCap: BALANCE.START_BOOT_RARITY_CAP,
+                    buildId: fullStartStats?.buildProfile?.primary?.id,
                 });
                 if (startingRelics.length > 0) {
                     dispatch({ type: AT.SET_PENDING_RELICS, payload: startingRelics });
@@ -167,7 +172,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
             const oldLabel = branches.find((entry: any) => entry.choice === oldChoice)?.label || '기본 성장';
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => ({
+                payload: (p: Player) => ({
                     ...p,
                     gold: (p.gold || 0) - cost,
                     skillChoices: { ...(p.skillChoices || {}), [skillName]: newChoice },

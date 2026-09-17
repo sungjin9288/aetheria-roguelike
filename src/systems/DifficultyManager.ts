@@ -24,7 +24,7 @@ const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
  * player.stats.recentBattles: Array<{ result: 'win'|'death'|'escape', hpRatio: number }>
  */
 export const calcPerformanceScore = (player: Player) => {
-    const battles = ((player.stats as any)?.recentBattles || []).slice(-WINDOW);
+    const battles = (player.stats?.recentBattles || []).slice(-WINDOW);
     if (battles.length < 5) return 0.5; // 데이터 부족 → 중립
 
     const wins    = battles.filter((b: any) => b.result === 'win').length;
@@ -64,7 +64,7 @@ export const calcPerformanceScore = (player: Player) => {
 //   (성공 처벌). 재설계 원칙: 상향(승리)은 난이도를 거의 안 올리는 대신 보상을 키워
 //   숙련을 *보상*하고, 하향(고전)은 적을 약화하는 안전망을 그대로 유지(리텐션).
 //   더 큰 도전을 원하면 프레스티지(PR #5)·심층 지역으로 가는 opt-in 축이 담당한다.
-const DIFF_TABLE: any = [
+const DIFF_TABLE = [
     // { minScore, label, hpMult, atkMult, goldMult, expMult }
     // ── 상향: 적 강화 완만(성공 처벌 완화) + 보상 강화(숙련 보상) ──
     { minScore: 0.85, label: '압도',   hpMult: 1.05, atkMult: 1.05, goldMult: 1.4,  expMult: 1.4  },
@@ -86,7 +86,7 @@ export const getDifficultyMults = (score: any) => {
 
 const applyBeginnerGrace = (diff: any, player: Player) => {
     const level = Number(player?.level || 1);
-    const recentBattleCount = ((player?.stats as any)?.recentBattles || []).length;
+    const recentBattleCount = (player?.stats?.recentBattles || []).length;
     if (level > BALANCE.BEGINNER_GRACE_MAX_LEVEL || recentBattleCount >= BALANCE.BEGINNER_GRACE_BATTLES) {
         return diff;
     }
@@ -154,27 +154,30 @@ export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any)
 // cycle 435: timestamp 출력 dead 필드 제거 — battle record consumers
 //   (calcPerformanceScore / countLowHpWins / gameUtils recentWinRate)는 result /
 //   hpRatio만 read. cycle 333-356 시리즈 회귀.
-export const makeBattleRecord = (result: any, hpRatio: any) => ({
+export const makeBattleRecord = (result: string, hpRatio: number) => ({
     result,
     hpRatio: Math.max(0, Math.min(1, hpRatio)),
 });
+
+/** `player.stats.recentBattles` 한 칸. */
+export type BattleRecord = ReturnType<typeof makeBattleRecord>;
 
 /**
  * player.stats.recentBattles를 새 전투 결과로 업데이트합니다.
  * 최대 50개까지 보관합니다.
  */
-export const pushBattleRecord = (stats: any, record: any) => {
-    const prev = stats?.recentBattles || [];
+export const pushBattleRecord = (stats: Player['stats'], record: BattleRecord) => {
+    const prev: BattleRecord[] = stats?.recentBattles || [];
     return {
         ...stats,
         recentBattles: [...prev, record].slice(-50),
     };
 };
 
-export const countLowHpWins = (stats: any, threshold: any) => {
-    const recentBattles = stats?.recentBattles || [];
+export const countLowHpWins = (stats: Player['stats'], threshold: number) => {
+    const recentBattles: BattleRecord[] = stats?.recentBattles || [];
     if (recentBattles.length > 0) {
-        return recentBattles.filter((battle: any) => (
+        return recentBattles.filter((battle) => (
             battle?.result === 'win'
             && Number.isFinite(battle?.hpRatio)
             && battle.hpRatio <= threshold

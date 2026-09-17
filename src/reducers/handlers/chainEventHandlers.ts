@@ -69,8 +69,12 @@ export const chainEventActionMap = {
         if ((state.player.eventChainProgress?.[chainId] ?? 0) !== step) return state;
         if (state.player.deferredEventChainSteps?.[chainId] === step) return state;
         const chain = EVENT_CHAINS.find((candidate: any) => candidate.id === chainId);
-        const stepData = chain?.steps.find((candidate: any) => candidate.step === step);
-        const outcome = stepData?.event.outcomes[choiceIndex];
+        // 병합(2026-09): EVENT_CHAINS는 `: any` 애노테이션을 걷어내 리터럴에서 추론된다.
+        //   step/outcome은 체인마다 모양이 달라 40여 개 유니온이 되므로, 이 범용 접근자
+        //   경로에서만 로컬 `any`로 받는다(런타임 검증은 아래 구조 비교가 담당).
+        const stepData: any = chain?.steps.find((candidate: any) => candidate.step === step);
+        const outcome: any = stepData?.event?.outcomes?.[choiceIndex];
+        if (!stepData) return state;
         if (outcome?.type !== 'nothing' || outcome.reward) return state;
         if (!structurallyEqual(event, { ...stepData.event, _chainId: chainId, _chainStep: step })) return state;
 
@@ -98,8 +102,11 @@ export const chainEventActionMap = {
         if ((state.player.eventChainProgress?.[chainId] ?? 0) !== step) return state;
 
         const chain = EVENT_CHAINS.find((candidate: any) => candidate.id === chainId);
-        const stepData = chain?.steps.find((candidate: any) => candidate.step === step);
-        const outcome = stepData?.event?.outcomes?.[choiceIndex];
+        // 병합(2026-09): EVENT_CHAINS는 `: any` 애노테이션을 걷어내 리터럴에서 추론된다.
+        //   step/outcome은 체인마다 모양이 달라 40여 개 유니온이 되므로, 이 범용 접근자
+        //   경로에서만 로컬 `any`로 받는다(런타임 검증은 아래 구조 비교가 담당).
+        const stepData: any = chain?.steps.find((candidate: any) => candidate.step === step);
+        const outcome: any = stepData?.event?.outcomes?.[choiceIndex];
         const amount = outcome?.reward?.amount;
         if (!stepData
             || !Number.isSafeInteger(amount)

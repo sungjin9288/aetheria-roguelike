@@ -216,8 +216,8 @@ export const buildRelicHpDrainAtkReport = ({
     const blood = bloodOathRing as Relic;
     const abyss = abyssalContract as Relic;
     const bothOrders = [pairFrom([blood, abyss]), pairFrom([abyss, blood])] as [Pair, Pair];
-    const equalAttackLeft = { id: 'zeta', name: '제타', effect: 'hp_drain_atk', val: { atkBonus: 0.6, hpCost: 0.09 } };
-    const equalAttackRight = { id: 'alpha', name: '알파', effect: 'hp_drain_atk', val: { atkBonus: 0.6, hpCost: 0.02 } };
+    const equalAttackLeft: Relic = { id: 'zeta', name: '제타', effect: 'hp_drain_atk', val: { atkBonus: 0.6, hpCost: 0.09 } };
+    const equalAttackRight: Relic = { id: 'alpha', name: '알파', effect: 'hp_drain_atk', val: { atkBonus: 0.6, hpCost: 0.02 } };
     const equalAttackTieOrders = [
         pairFrom([equalAttackLeft, equalAttackRight]),
         pairFrom([equalAttackRight, equalAttackLeft]),

@@ -1589,7 +1589,9 @@ import { readFile } from 'node:fs/promises';
       };
       const stats = { atk: 100, def: 50, relics: [], activeSynergies: [], critChance: 0 };
 
-      const result = CombatEngine.enemyAttack(player, enemy, stats);
+      // A1 (2026-09): statusOnHit 발동이 BALANCE.MONSTER_STATUS_ON_HIT_CHANCE로 게이팅되어
+      //   rng를 0으로 고정해야 결정론적이다. 회귀 가드의 의도(강타 + statusOnHit → poison)는 동일.
+      const result = CombatEngine.enemyAttack(player, enemy, stats, () => 0);
       assert.ok((result.updatedPlayer.status || []).includes('poison'), 'cycle 227 statusOnHit 보존');
   });
 }
@@ -3136,7 +3138,8 @@ import { readFile } from 'node:fs/promises';
    * 회귀 가드:
    * - combatFlags.comboCount (별도 active 카운터) 영향 없음.
    * - visitedMaps 기반 discoveries 계산 (buildRunSummary line 690) 동작 유지.
-   * - [key: string]: any index signature 유지로 잔존 saved 데이터 호환 보장.
+   * - [key: string]: any index signature는 2026-09 B3 / Wave 3 L에서 제거됨
+   *   (선언 필드 전수화로 대체 — 세이브 호환은 migrateData가 담당).
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -3291,7 +3294,8 @@ import { readFile } from 'node:fs/promises';
    * 회귀 가드:
    * - GameMap.type / level / desc / exits / monsters / boss / bossMonsters / eventChance / lore /
    *   minLv / shopBonus / graveDropBonus / seasonOnly 등 활성 필드 유지.
-   * - [key: string]: any 인덱스 시그니처 유지로 런타임 동적 필드 호환.
+   * - [key: string]: any 인덱스 시그니처는 2026-09 Wave 3 L stage 1에서 제거됨
+   *   (데이터 실측 필드 전수 선언 + tests/data-shape-types.test.js 계약 가드로 대체).
    * - cycle 280-283 cleanup 동작 유지.
    */
 
@@ -3299,10 +3303,17 @@ import { readFile } from 'node:fs/promises';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 284: types/item.ts ItemType 제거', async () => {
+  // 2026-09 Wave 3 L stage 1 재고정: cycle 284의 의도는 "string의 단순 alias는 가치가 없다"였다.
+  //   인덱스 시그니처 제거와 함께 ItemType이 items.ts 실측 9종 리터럴 유니온으로 복원됐으므로
+  //   "존재 금지"가 아니라 "string alias 금지 + 리터럴 유니온 유지"로 앵커를 옮긴다.
+  test('cycle 284: types/item.ts ItemType 는 string 단순 alias가 아니다', async () => {
       const source = await readSrc('src/types/item.ts');
-      assert.ok(!/export type ItemType/.test(source),
-          'ItemType type alias 제거됨');
+      assert.ok(!/export type ItemType\s*=\s*string\s*;/.test(source),
+          'ItemType은 string의 단순 alias가 아니어야 한다 (cycle 284 의도)');
+      const union = source.match(/export type ItemType\s*=([\s\S]+?);/);
+      assert.ok(union, 'ItemType 리터럴 유니온 선언 유지');
+      assert.ok(/'weapon'/.test(union[1]) && /'armor'/.test(union[1]) && /'mat'/.test(union[1]),
+          'items.ts 실측 리터럴 유니온 유지 (L stage 1)');
   });
 
   test('cycle 284: types/map.ts MapType 제거', async () => {
@@ -3319,7 +3330,8 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 284: 활성 GameMap 필드 유지 (회귀 가드)', async () => {
       const source = await readSrc('src/types/map.ts');
-      const activeFields = ['name', 'type', 'level', 'minLv', 'desc', 'exits', 'monsters', 'boss', 'bossMonsters', 'eventChance', 'lore'];
+      // 2026-09 N3: minLv는 죽은 우선순위(정의 0개)라 제거됨 — 활성 필드 목록에서도 뺀다.
+      const activeFields = ['name', 'type', 'level', 'desc', 'exits', 'monsters', 'boss', 'bossMonsters', 'eventChance', 'lore'];
       activeFields.forEach((field) => {
           const re = new RegExp(`${field}\\??:\\s*`);
           assert.ok(re.test(source), `GameMap.${field} 필드 유지`);

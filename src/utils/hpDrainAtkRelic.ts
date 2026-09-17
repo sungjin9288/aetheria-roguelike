@@ -1,3 +1,4 @@
+import { relicDict } from '../data/relics.js';
 import type { Relic } from '../types/relic.js';
 
 export interface HpDrainAtkRelicSelection {
@@ -24,8 +25,10 @@ const getFiniteNonNegativeNumber = (value: unknown): number => {
 const makeSelection = (relic: Relic): HpDrainAtkRelicSelection => {
     const value = relic.val;
     if (!value || typeof value !== 'object' || Array.isArray(value)) invalid();
-    const atkBonus = getFiniteNonNegativeNumber((value as Record<string, unknown>).atkBonus);
-    const hpCost = getFiniteNonNegativeNumber((value as Record<string, unknown>).hpCost);
+    // 위 가드를 통과하면 relicDict는 value 그 자체를 돌려준다 (동일 참조).
+    const dict = relicDict(relic);
+    const atkBonus = getFiniteNonNegativeNumber(dict.atkBonus);
+    const hpCost = getFiniteNonNegativeNumber(dict.hpCost);
     const id = typeof relic.id === 'string' ? relic.id : '';
     const label = typeof relic.name === 'string' && relic.name.length > 0
         ? relic.name

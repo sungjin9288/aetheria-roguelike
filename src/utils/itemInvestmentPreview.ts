@@ -31,7 +31,7 @@ export interface CraftingInvestmentPreview {
     lockReason: string | null;
 }
 
-export const getItemOutcomePreview = (player: Player, item: Item | null | undefined): ItemOutcomePreview | null => {
+const getItemOutcomePreview = (player: Player, item: Item | null | undefined): ItemOutcomePreview | null => {
     if (!item) return null;
 
     return {
