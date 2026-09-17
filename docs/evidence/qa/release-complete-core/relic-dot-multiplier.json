@@ -2,7 +2,7 @@
   "hashAlgorithm": "sha256",
   "reportHash": "b123dee8e47f7b405584470bc03087f6e81fbbb98aecfd0ee1bb10068068a204",
   "sourceHashes": {
-    "src/data/relics.ts": "a77b71d5309d3a8969382f0367e23522c8ea442ec93e69610ac9e7aacb8e242f",
+    "src/data/relics.ts": "795c720eab26592915e6e797f8fac15fc93d678f4722328d9535c82d5ed40c14",
     "src/systems/CombatEngine.actions.ts": "54387789220ac0aae1a0c52eb86b5873649f458ceb2ca0431d9fabedddc3c4f1",
     "src/systems/relicDotMultiplierAudit.ts": "8f98a4788ed3df33d0de1cd0dbda8b065f7b4b0f82dfca197f9714f3b6a5ae6c",
     "src/utils/dataMigration.ts": "4379b7a642536fc62fc5369ccb7eb949848f56cb3f92a3d8fbcd7386075c7eeb",
