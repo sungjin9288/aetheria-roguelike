@@ -15,7 +15,9 @@ test.describe('에테르 거울 영구 성장', () => {
         const panel = page.getByTestId('mirror-panel');
 
         await expect(panel).toContainText('새 여정에도 남는 성장');
-        await expect(page.getByTestId('mirror-completion')).toHaveText('2/13 단계');
+        // 2026-09 G3: 거울 트리 재설계로 총 단계가 13 → 28 (data/mirror.ts MIRROR_NODES,
+        //   기존 7노드 26단계 + 신규 scout_charges 2단계). 시드는 2단계 투자 상태 그대로다.
+        await expect(page.getByTestId('mirror-completion')).toHaveText('2/28 단계');
         for (const pathId of ['departure', 'exploration', 'survival', 'legacy']) {
             await expect(page.getByTestId(`mirror-path-${pathId}`)).toBeVisible();
         }
