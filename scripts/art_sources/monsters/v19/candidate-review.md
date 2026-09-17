@@ -1,0 +1,32 @@
+# Endpoint2 source candidate review — 2026-09-08
+
+## Current: exact2 integrated, focused and real-surface checks complete
+
+Native owner gate complete: production/cap/doctor81343, Android2795 and iOS63692 all exit0. `native-checkpoint.json` pins APK and isolated unsigned iOS App;327 image paths plus main JS byte-identical in both packages. Native tracked drift0, protectedcandidate6/Toss38 hashes unchanged, HEAD/index preserved. No installation/archive mutation/commit. This supersedes native-pending notes below. Full8060 PASS stands; readiness independent review remains separate.
+
+Owner full rerun8060 exited0: unit4407, E2E117(59+58), desktop/mobile smoke/type/lint/build PASS. `/tmp/aetheria-v19-full-readiness.log`. New Game+ test-only boot readiness correction is documented in the dedicated QA evidence; prior53034 failure retained. Production/cap/doctor81343 is now active, native build/comparison pending; no installation. Independent readiness review is separate from completed art review.
+
+Owner full gate terminal:53034 exit1. Unit4407/4407 PASS, E2E116/117 PASS; final New Game+ reload prestigeRank expected4/actual0 at tests/e2e/true-ending-new-game-plus.spec.ts:206. Root cause is not established; art review PASS does not override this full gate failure. Native packaging is held, latest completed native v18. Below running statuses are historical. Failure log /tmp/aetheria-v19-full.log is preserved; no numeric/save/test weakening or native install performed.
+
+Independent Sol/xhigh final verdict: Critical0/Important0/Minor0. Reviewer independently reproduced focused12/ESLint, exact2/source-to-runtime and other252 invariants, report/v1/seed/protected hashes, and viewed final dark46px fissure. Gray rim/magenta tear are readable;32px inner-plane loss remains documented. This is scoped art approval, not wholeGoal or kingdom-access approval. Full53034/native remain owner-owned; latest native isv18.
+
+Evidence33793 now exited0: art/content/diagnostic write+verify/event/equipment power/economy PASS. Comparing preimage confirms all top-level fields except sources deep-equal; only monster manifest source row changed to c2b3fe48a8d1b2d1e9377fe568a7297915a55b9c74d99fb9ddefee94c4e9a123. Report hash remains ff04ac3dc0cb2dd57ac08fb863a6aabf1ca64bd2be50d0b2c4e3d1c6183f68c2, v1/seed unchanged. Protected candidate6/Toss38 unchanged. Full53034 is running `/tmp/aetheria-v19-full.log`; poll same handle and do not rebuild dist/native until terminal. The evidence-running note below is historical. Independent review/native still pending.
+
+Source tests2 failed RED for missing preparer, then GREEN; source/export/ESLint/diff62917 exit0. Owner viewed final `output/playwright/v19-export-review-1.png` at96/46/32 on both backgrounds. Alpha128,160canvas,margin8/baseline152, aspect and source SHA contract remain the same reviewed exporter pattern. `exports/receipt.json` records exact bytes; originals were independently cmp-equal to master copies before preparation.
+
+Adoption61290 exited1 for two missing corrections. Generator68575 and focused12/ESLint/diff66208 exited0. Before mutation, all254 old runtime hashes matched; manifest/registry/diagnostic and exact2 old PNGs preserved in previous/. Other252 generated records/bytes are unchanged, registry114→116 add-only, exact2 manifest changes are sourceRuntimePath/sha256 only, catalogSha/classifier unchanged. Canonical manifest byte-matched generated manifest before copying the two PNGs. No gameplay numeric, save or production UI change.
+
+Final browser75787 exit0 (`/tmp/aetheria-v19-browser.log`): owner viewed both `output/playwright/v19-stable-{slug}-390x844.png`; canonical160px decoded at46px, ancestry opacity≥.99, attack enabled, overflowfalse. `.playwright-cli/console-2026-09-08T04-10-51-047Z.log` contains3 INFO only. FixedLv2/HP134 preboot QA snapshot is not natural progression or Lv68/75 reachability evidence. No DOM image substitution. Fissure is darker than the cyan fragment, but gray rim and magenta tear remain visible; independent visual review must judge actual-slot contrast, not just source alpha/hash. Fine rock planes collapse at32px as documented. Own browser closed and dev13045 intentionally terminated exit130.
+
+Evidence33793 is running `/tmp/aetheria-v19-evidence.log` (art/content passed, diagnostic write/verify underway). Poll same handle, then prove diagnostic report/v1/seed unchanged and exact monster manifest source row only, protected candidate6/Toss38 unchanged. Full/independent/native remain; latest verified nativev18. No install/commit/publication. The source-only notes below are historical.
+
+Source-only while v18 full25564 runs. Two generated originals remain unchanged in `/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/` and have unchanged copies under `masters/`. No export, runtime adoption, numeric/save/UI change or canonical evidence refresh yet. Current canonical preimages must be captured before adoption, not inferred from older manifests.
+
+| Subject | Original | SHA-256 | RGBA size | Alpha128 bounds |
+| --- | --- | --- | --- | --- |
+| 에테르 파편체 | exec-a1204e2c-3f69-4f6b-90b4-44c187c48eae.png | d3a6618ea0d329eaad5841ed3f7c990b67abb8bfb1102ec3489be96f24d5d0e2 | 1254×1254 | 236,17,1021,1217 |
+| 차원 균열체 | exec-add0c6fb-b16c-4c1f-a3d7-7a1a44379b79.png | 3979d35af51befdf3f32752d5fe58207370a13258ff5e372d6ed3e28702cd3a2 | 1254×1254 | 328,43,1041,1179 |
+
+Owner viewed both full sources and `output/playwright/v19-source-review-1.png` at96/46/32 on dark/light backgrounds. Fragment has actual separated blue mineral plates around a cyan core; fissure has an indigo rocky body around jagged negative space with magenta inner edges. Neither uses the previous intact-tree silhouette or floating eye sticker. Fragment's17px top source margin is narrow but no observed clipping; normalize padding only on a copy. Fissure's dark outer planes are subtler at32px on dark background, while gray rim and magenta tear retain its silhouette. Require final160canvas export and actual46px combat inspection before approval. No exact number-of-plates or micro-detail compliance claim.
+
+Next: source-pinned export TDD → final dark/light review → exact2 adoption/other252 invariants → actual390×844 → evidence/full/independent/native. Preserve original sources and historical release evidence. V18 native must wait for full terminal; this source-only preparation does not refresh its tested runtime.

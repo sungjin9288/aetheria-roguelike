@@ -302,9 +302,14 @@ export interface Player {
     titles?: string[];
     activeTitle?: string | null;
     combatFlags?: CombatFlags;
+    adventureRelicBonuses?: {
+        killStackAtk?: number;
+        devour?: { phase: 'ready' | 'active'; amount: number };
+    };
     killStreak?: number;
     history?: any[];
     eventChainProgress?: Record<string, any>;
+    deferredEventChainSteps?: Record<string, number>;
     activeExpedition?: ExpeditionSnapshot | null;
     lastExpeditionSummary?: ExpeditionSummary | null;
     classJourney?: ClassJourneyLedger;

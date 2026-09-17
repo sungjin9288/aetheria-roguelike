@@ -1,7 +1,9 @@
 import equipmentArtManifest from '../data/equipmentArtManifest.json' with { type: 'json' };
 import { CLASSES } from '../data/classes.js';
+import { BALANCE } from '../data/constants.js';
 import { ITEMS } from '../data/items.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
+import { LIBRARY_BONUS_LOOT } from '../data/libraryLoot.js';
 import { getShopCatalog } from './shopRotation.js';
 import type { Item } from '../types/item.js';
 
@@ -177,6 +179,24 @@ export const validateCanonicalEquipmentCatalog = (
         }
     }
 
+    for (const [tier, requiredLevel] of Object.entries(BALANCE.TIER_REQ_LEVEL)) {
+        if (!Number.isSafeInteger(Number(requiredLevel)) || Number(requiredLevel) < 1) {
+            errors.push(`invalid ordinary bonus requirement for tier ${tier}`);
+        }
+        if (!rows.some(row => row.tier === Number(tier) && row.name && !signatures?.[row.name])) {
+            errors.push(`empty ordinary bonus pool for tier ${tier}`);
+        }
+    }
+    const libraryItems = LIBRARY_BONUS_LOOT.itemNames;
+    if (libraryItems.length !== 8 || new Set(libraryItems).size !== libraryItems.length) {
+        errors.push('invalid library bonus pool count or duplicate');
+    }
+    for (const name of libraryItems) {
+        const item = rows.find(row => row.name === name);
+        if (!item || item.tier !== LIBRARY_BONUS_LOOT.tier || signatures?.[name]) {
+            errors.push(`invalid library bonus item ${name}`);
+        }
+    }
     if (errors.length > 0) failClosed(errors);
     return rows.sort(compareEquipmentIdentity) as CanonicalEquipment[];
 };

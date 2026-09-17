@@ -1,6 +1,20 @@
 # Art Contract Checkpoint — 2026-08-09
 
-This directory records reproducible art-contract evidence. Character art, all 229 exact equipment icons, all 22 family exemplars, and all 25 signature wearable overlays are complete under the shared style-version 2 contract.
+## Current implementation status — 2026-09-10
+
+Latest adopted V27: **234 authored corrections /20 retained portraits**, total254. Final69 corrections plus retained20 passed static and actual390×844 UI review, owner/Sol C0/I0. V27 full4505unit/118E2E and native884 selected paths PASS; [adoption evidence](../../../scripts/art_sources/monsters/v27/adoption-review.md). This is scoped visual acceptance, not254 original illustrations, natural play-all or device installation. Performance instrumentation correction and actual device/lifecycle remain in the final Goal audit. All v23/v22 status below is historical.
+
+Latest adopted v23: **143 pinned authored corrections /111 retained portraits**. Frost wolf, ink slime and flame watcher exact3-only replacements preserve the other251; owner reviewed160/46/32 exports and actual390×844 combat portraits, independent Sol C0/I0. Quality23 full4444unit/118E2E and native329 inspected paths per package PASS. See [latest quality/native evidence](../qa/game-quality-followup-20260909.md). No installation; remaining retained assets are not blanket accepted. The following v22 record is historical.
+
+The v22 checkpoint contains **140 pinned authored corrections and 114 retained prototype-derived portraits**, covering254 canonical monsters including47 bosses. These counts describe the export routes, not254 independently authored originals. The approved final7 boss bodies are connected in v22; independent candidate and post-adoption reviews found Critical0/Important0, and all7 actual390×844 portraits were reviewed. Full58171 and native packaging passed; see [v22 evidence](../../../scripts/art_sources/monsters/v22/candidate-review.md) and [package receipt](../../../scripts/art_sources/monsters/v22/native-verification.md). Neither native package was installed. The subsequently approved retained-image quality pass is tracked in [quality follow-up](../qa/game-quality-followup-20260909.md); candidate exports do not by themselves change the adopted count.
+
+Current design evidence also includes [character alpha correction](character-alpha-review-20260907.md), [equipment family review](equipment-owner-review-20260907.md), [signature originals](equipment-signature-source-review-20260908.md), [Earth Verdict correction](earth-verdict-adoption-20260907.md), [dark greatsword adoption](dark-greatsword-adoption-20260908.md) and [actual equipment interaction](../qa/game-completion-equipment-direct-20260908.md). Retained prototype reuse, fixed job portraits and fallback-only wearable overlays remain explicit limitations; source counts and green contracts are not a claim of composited equipment-on-character rendering or every natural progression path tested. Physical device testing is deferred until implementation is complete, per user instruction.
+
+The dated Task3–8 and RC sections below preserve historical measurements. Their old counts, hashes and pending states do not override this current status or the active task ledger.
+
+2026-09-07 correction: Earth Verdict now uses the reviewed two-handed sword item/overlay. The paired sheets, current signature provenance, manifest and contact/answer-key artifacts were regenerated; originals and the historical generation review are preserved. See [the adoption record](earth-verdict-adoption-20260907.md). Historical hashes and gate counts below describe their original checkpoints, not the current corrected artifacts or complete visual approval of all game content.
+
+This directory records reproducible art-contract evidence. The shared style-version 2 contract covers character art, all 229 exact equipment icons, all 22 family exemplars, all 25 signature wearable overlays, and all 254 canonical monster portrait exports. Coverage and deterministic bytes do not by themselves establish visual completion.
 
 ## Task 3 character checkpoint
 
@@ -14,11 +28,26 @@ This directory records reproducible art-contract evidence. Character art, all 22
 
 `character-review-2026-08.md` preserves the original provisional self-review and now records the immutable independent blind result: exact identity `18/18` and combat-promise match `17/18`, both PASS. Row 16 preserves the `그림자 주군` promise miss and correction from clone-led multi-hit control to darkness-stacking guaranteed execution.
 
+## Canonical monster portrait checkpoint
+
+Historical 2026-09-07 v7 selection:38 pinned corrections. v6 added the early goblin/kobold/green-slime bodies; v7 added the centipede, harpy, water spirit, dark mage and kobold miner. Source preservation, selective alpha extraction and actual-size/combat review are recorded in their `source-review.md` / `small-size-review.md`. This count is superseded by the current140 above.
+
+Historical v3 preparation: nine additional body corrections brought the authored/v1 registry to20 authored/234 prototype-derived. Source originals/preimages/provenance are in `scripts/art_sources/monsters/v3/README.md`; its later closeout superseded the then-pending independent/full/combat/native state. Neither this nor the eleven-body checkpoint below is current coverage.
+
+**2026-09-07 semantic review: eleven bodies corrected; overall incomplete.** The first three corrections (눈보라 정령/머맨/스핑크스) are preserved in `scripts/art_sources/monsters/v1/`. Eight further body corrections (스노우 울프/살아있는 마법서/미믹/프로토타입 제로/천둥새 제피로스/아누비스 수호자/성스러운 물고기/거대 거북) have original masters, previous PNGs, prompts and review notes in `scripts/art_sources/monsters/v2/`. Exact name/path/SHA pins prevent prototype fallback during regeneration. The other243 exports remain prototype-derived and are not approved by these corrections. Substring classification and decorative marks do not prove anatomy or regional meaning. Current full/browser/native closure is tracked separately in the active game-completion plan and ledger.
+
+- `scripts/monsterArtCatalog.mjs` derives one stable identity from the production `MONSTERS` and `MAPS` registries for every reachable monster. The catalog contains exactly `254` names and `47` bosses, and rejects unreachable monsters, duplicate names, duplicate keys, and locations without a visual identity.
+- `scripts/generate_monster_catalog_art.py` deterministically builds one unique transparent `160x160` PNG per canonical name. It currently copies140 pinned authored PNGs byte-for-byte; the remaining114 use prototype-derived rendering. Those variations alone do not establish body accuracy; consult the retained-monster review and subsequent v20/v21/v22 corrections for actual review scope. Earlier11/243 counts belong to v2 history.
+- `src/data/monsterArtManifest.json` binds every name to its exact runtime path, region, archetype, boss flag, source sprite, and exported SHA-256. Production combat and the monster Codex use this manifest directly; only unknown or corrupt legacy names may use the safe fallback silhouette.
+- `npm run art:monsters:build` reproduces all runtime bytes and the manifest. `npm run art:monsters:verify` validates two-way registry coverage, metadata, file identity, SHA-256, PNG dimensions, alpha, and margin bounds in one batched pixel-inspection pass.
+- The Toss allowlist contains the 254 canonical portrait paths instead of recursively packaging the legacy monster directory. Its deterministic file set contains `753` assets, hashes to `83e1f98a535c375e761194ec8a1d61d7d2f4df78a3d570408729433d8fc9886f`, and remains below the `80 MiB` working budget.
+
 ## Catalog identity
 
 - Catalog SHA-256: `c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0`
 - Classes: `18`
 - Equipment: `229` (`weapon 117`, `armor 91`, `shield 21`)
+- Monsters: `254` (`boss 47`)
 - Defined illustration families: `22`; used by the current catalog: `18`
 - Elements: `냉기`, `대지`, `바람`, `빛`, `어둠`, `에테르`, `자연`, `화염`
 

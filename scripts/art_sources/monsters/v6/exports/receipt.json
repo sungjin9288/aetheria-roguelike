@@ -1,0 +1,15 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "goblin": "cfea21976743d58fb7aa316284284ed845d83681a270e796e8db995e23e8052c",
+    "green-slime": "34163b7a91e9aab6d4e2d4e7248f52a483e451550d01534d9bd540244ff1c62c",
+    "kobold": "fe1edd2d84d6aae8ad77fbcbbeda1e7ec232d0a6ee8f40eac41d7d77fc4f7c77"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "goblin": "4135e83b69b70aa1e3ac8fe31927151c620ecd73d7897e8c8bbb990053c4fcb6",
+    "green-slime": "68dc614255cb418fb53ddee28fe02dd7a225b48d6b56dcb0a918695b3961f2c9",
+    "kobold": "399c361a0b37f36f90108e1b3149678b5f3198deb96a15067864f58e716ba71d"
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 2,
+  "candidateId": "release-core-0d456fbe81f9",
+  "sourceTreeSha256": "9ffe857d89a7c35c2ee4993567ef52aa6e8ed7960d32d88e6a763e0638cb92be",
+  "observationDigestSha256": "d9fb3a2305021ffbfca67da77314ba98b441c5376130d66963c10ad26a6629bd",
+  "freshObservationCount": 6,
+  "surfaceCounts": {
+    "browser": 6,
+    "ios": 0,
+    "android": 0
+  },
+  "issueCounts": {
+    "P0": 0,
+    "blockingP1": 0,
+    "nonblocking": 0
+  },
+  "counts": [
+    {
+      "region": "고요한 숲",
+      "acceptedActionCount": 5
+    },
+    {
+      "region": "서쪽 평원",
+      "acceptedActionCount": 1
+    }
+  ],
+  "selectedRegions": [
+    "고요한 숲",
+    "서쪽 평원"
+  ],
+  "enabled": true
+}

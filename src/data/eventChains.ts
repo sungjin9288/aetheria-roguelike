@@ -651,13 +651,30 @@ export const EVENT_CHAINS: any = [
  */
 // cycle 596: progress default {} 제거 — exploreActions:41 (production) + 6+
 //   test caller 모두 progress 명시 전달이라 default 도달 불가.
-export function getChainEventForLoc(loc: any, progress: any) {
+export function normalizeDeferredEventChainSteps(value: unknown, progress: Record<string, unknown> = {}): Record<string, number> | undefined {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+    const records = value as Record<string, unknown>;
+    const deferred: Record<string, number> = {};
+    for (const chain of EVENT_CHAINS) {
+        if (!Object.hasOwn(records, chain.id)) continue;
+        const step = records[chain.id];
+        if (!Number.isSafeInteger(step) || step !== (progress?.[chain.id] ?? 0)) continue;
+        const stepData = chain.steps.find((entry: any) => entry.step === step);
+        if (stepData?.event.outcomes.some((outcome: any) => outcome.type === 'nothing')) {
+            deferred[chain.id] = step as number;
+        }
+    }
+    return Object.keys(deferred).length > 0 ? deferred : undefined;
+}
+
+export function getChainEventForLoc(loc: any, progress: any, deferredSteps?: Record<string, number>) {
     for (const chain of EVENT_CHAINS) {
         const currentStep = progress[chain.id] ?? 0;
         // 이미 완료된 체인 스킵
         if (currentStep >= chain.steps.length) continue;
         // '실패(fail)' 체인도 스킵
         if (progress[chain.id] === 'failed') continue;
+        if (deferredSteps?.[chain.id] === currentStep) continue;
 
         const step = chain.steps[currentStep];
         if (step && step.loc === loc) {

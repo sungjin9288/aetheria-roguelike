@@ -1,0 +1,13 @@
+{
+  "apk": "android/app/build/outputs/apk/debug/app-debug.apk",
+  "apkBytes": 223012260,
+  "apkSha256": "04c66b6b7f81b67b99373332b33bf2c13e4127b3bd42a8afac94fa294f05b6d2",
+  "app": "/tmp/aetheria-contextual-five-ios.Ocpx1k/Build/Products/Release-iphoneos/App.app",
+  "main": "assets/index-DC3_fyux.js",
+  "mainSha256": "af582ab7d068e7c74d4108f7739a378f41ea45a716529366ef22a01a0562bd42",
+  "verifiedAssetCount": 31,
+  "authoredPortraits": 30,
+  "classification": "local-package-byte-verification",
+  "installed": false,
+  "signedIos": false
+}

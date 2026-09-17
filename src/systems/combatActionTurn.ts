@@ -3,6 +3,7 @@ import { CombatEngine } from './CombatEngine';
 import { buildRunSummary, getJobSkills } from '../utils/gameUtils';
 import { pushBattleRecord, makeBattleRecord } from './DifficultyManager';
 import { calculateFullStats } from '../utils/statsCalculator';
+import { endDevourBonus } from '../utils/adventureRelicBonuses';
 import { createSeededRandom } from './combatItemTurn';
 import type { Monster, Player } from '../types/index.js';
 
@@ -95,7 +96,7 @@ export const resolveCombatActionTurn = ({
             return {
                 kind: 'escape',
                 player: {
-                    ...player,
+                    ...endDevourBonus(player),
                     stats: {
                         ...pushBattleRecord(player.stats, makeBattleRecord('escape', hpRatio)),
                         escapes: (player.stats?.escapes || 0) + 1,
@@ -158,7 +159,7 @@ export const resolveCombatActionTurn = ({
     logs.push(...(actionResult.logs || []));
 
     if (actionResult.forceEscape) {
-        const escapedPlayer = actionResult.updatedPlayer;
+        const escapedPlayer = endDevourBonus(actionResult.updatedPlayer);
         const hpRatio = (escapedPlayer.hp || 0) / Math.max(1, escapedPlayer.maxHp || 1);
         return {
             kind: 'escape',
@@ -223,7 +224,9 @@ export const resolveCombatActionTurn = ({
             enemy: null,
             logs: [
                 ...turnLogs,
-                { type: 'success', text: MSG.COMBAT_DOT_KILL(actionResult.updatedEnemy?.name) },
+                { type: 'success', text: counterResult.damage > 0
+                    ? MSG.COMBAT_COUNTER_KILL(actionResult.updatedEnemy?.name)
+                    : MSG.COMBAT_DOT_KILL(actionResult.updatedEnemy?.name) },
             ],
             visualEffect: null,
             victoryStats: counterStats,

@@ -22,6 +22,41 @@ export const createQuestProgressState = (quest: any, player: Player) => {
     return progressState;
 };
 
+/**
+ * Return active quests whose authoritative reward can be claimed now.
+ *
+ * Regular quest labels/rewards/goals come from the canonical QUESTS registry rather than the
+ * serialized active-quest copy. Bounties are generated at runtime, so their
+ * active entry remains the source of truth for the existing claim action.
+ */
+export const getClaimableQuestEntries = (player: Player) => {
+    const claimedQuestIds = new Set(
+        Array.isArray(player?.stats?.claimedQuestIds)
+            ? player.stats.claimedQuestIds.map((id: any) => String(id))
+            : [],
+    );
+
+    return (Array.isArray(player?.quests) ? player.quests : []).flatMap((questState: any) => {
+        const isBounty = questState?.isBounty === true;
+        const quest = isBounty
+            ? questState
+            : QUESTS.find((entry: any) => entry.id === questState?.id);
+        if (!quest) return [];
+        if (!isBounty && claimedQuestIds.has(String(quest.id))) return [];
+
+        const progress = Number(questState?.progress);
+        const goal = Number(quest?.goal);
+        if (!Number.isFinite(progress) || !Number.isFinite(goal) || progress < goal) return [];
+
+        return [{
+            id: questState.id,
+            quest,
+            progress,
+            isBounty,
+        }];
+    });
+};
+
 // cycle 508: enemyName / questCatalog default 제거 — 1 callsite (CombatEngine
 //   :1571) 항상 3 args 전달이라 default 도달 불가. util default 청소 메가
 //   시리즈 7번째 (cycle 502-507).

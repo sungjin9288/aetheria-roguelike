@@ -55,6 +55,13 @@ export const createEventActions = (deps: any, shared: any) => {
             const selectedOutcome = isChainEvent
                 ? (toArray(currentEvent.outcomes)[idx] || null)
                 : (toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null);
+            if (isChainEvent && selectedOutcome?.type === 'nothing') {
+                dispatch({ type: AT.DEFER_CHAIN_EVENT, payload: {
+                    chainId: currentEvent._chainId, step: currentEvent._chainStep, choiceIndex: idx,
+                    expectedExploreCount: player.stats?.explores ?? 0,
+                } });
+                return;
+            }
             const reservedFallback = currentEvent.source === 'fallback'
                 ? STRUCTURED_FALLBACK_TRANSACTIONS.find((entry) => entry.event.desc === currentEvent.desc) || null
                 : null;

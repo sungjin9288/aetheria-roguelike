@@ -105,20 +105,6 @@ test('dimension set revived: 차원 마왕의 낫 alone triggers the 2-set (was 
     assert.equal(result.activeSet.count, 2);
 });
 
-test('dimension set also triggers via shield + scythe together (still count 2, capped at only tier)', () => {
-    const result = computeSignatureSetBonus({
-        weapon: dimensionScythe,
-        offhand: dimensionShield,
-        armor: null,
-    });
-    assert.ok(result.activeSet);
-    assert.equal(result.activeSet.key, 'dimension');
-    // NOTE: offhand is normally blocked by a 2H weapon in real equip flow (equipmentUtils
-    // enforces this on equip actions); this fixture only exercises the pure calculation.
-    assert.equal(result.activeSet.count, 3, '2H(2) + offhand(1) = 3, clamped to the only defined tier (2)');
-    assert.equal(result.activeSet.tier, 2);
-});
-
 // ⑥ getSignatureSetProgress: 2H 장착 시 equippedCount 2 반영
 test('getSignatureSetProgress reflects equippedCount=2 for a lone 2H weapon and flags twoHandCounted', () => {
     const result = getSignatureSetProgress({
@@ -159,44 +145,25 @@ test('getSignatureSetProgress missingMembers still lists real member names once 
     assert.ok(result.missingMembers.includes('용의 화염'));
 });
 
-// ⑦ celestial 4티어 부재 + 3티어 도달 가능
-test('celestial set no longer defines an unreachable 4-tier', () => {
+test('celestial set completes at its legally reachable 2-tier', () => {
     const defs = getSignatureSetDefinitions();
     const celestial = defs.celestial;
     assert.ok(celestial);
-    assert.equal(celestial.bonuses['4'], undefined, 'tier 4 must be removed — unreachable even with 2H counted as 2');
-    assert.ok(celestial.bonuses['3'], 'tier 3 must remain reachable');
+    assert.deepEqual(Object.keys(celestial.bonuses), ['2']);
 });
 
-test('celestial 3-tier is reachable: 2H weapon (성스러운 창) + offhand (천공 성전) = count 3', () => {
+test('celestial 2H weapon completes the set with the offhand empty', () => {
     const holySpear = findItemByName('성스러운 창'); // celestial, 2H weapon
     assert.equal(holySpear.hands, 2);
     const result = computeSignatureSetBonus({
         weapon: holySpear,
-        offhand: holyRelic,
+        offhand: null,
         armor: null,
     });
     assert.ok(result.activeSet);
     assert.equal(result.activeSet.key, 'celestial');
-    assert.equal(result.activeSet.count, 3);
-    assert.equal(result.activeSet.tier, 3);
-});
-
-test('every signature set tier is reachable given 3 equip slots and 2H=2 weighting', () => {
-    const defs = getSignatureSetDefinitions();
-    for (const [key, def] of Object.entries(defs)) {
-        const maxTier = Math.max(...Object.keys(def.bonuses).map(Number));
-        // Best-case reachable count: 2 (if a 2H member exists) + 1 (armor/offhand) = 3, or 2 members flat.
-        const hasTwoHandMember = def.members.some((name) => {
-            const dbItem = findItemByName(name);
-            return dbItem?.hands === 2;
-        });
-        const maxReachable = hasTwoHandMember ? 3 : 2;
-        assert.ok(
-            maxTier <= maxReachable,
-            `${key}: max tier ${maxTier} must be <= max reachable count ${maxReachable}`
-        );
-    }
+    assert.equal(result.activeSet.count, 2);
+    assert.equal(result.activeSet.tier, 2);
 });
 
 // --- MSG + EquipmentPanel wiring (컴포넌트에 로직 금지 — twoHandCounted 플래그만 렌더링) ---

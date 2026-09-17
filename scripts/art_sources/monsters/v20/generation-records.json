@@ -1,0 +1,54 @@
+{
+  "mode": "built-in-imagegen",
+  "design": "docs/superpowers/plans/2026-09-08-aetheria-boss-body-correction.md",
+  "runtimeAdopted": false,
+  "records": [
+    {
+      "key": "void-judge",
+      "generatedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-113b42f9-4f33-4169-8280-df9ec5839cf4.png",
+      "selectedMaster": "masters/void-judge.png"
+    },
+    {
+      "key": "rift-commander",
+      "generatedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-40f78832-7922-4724-945a-24d005eb0489.png",
+      "previousGeneratedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-947e7734-f193-4658-9aad-662172e1b062.png",
+      "selectedMaster": "masters/rift-commander.png"
+    },
+    {
+      "key": "annihilation-apostle",
+      "generatedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-f811a0c0-a308-4698-9b11-5b12f5d3ed01.png",
+      "selectedMaster": "masters/annihilation-apostle.png"
+    },
+    {
+      "key": "abyss-sentinel",
+      "generatedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-6f5b52ec-ca12-4d9b-b57f-9d82f153a1a3.png",
+      "selectedMaster": "masters/abyss-sentinel.png"
+    },
+    {
+      "key": "resentful-champion",
+      "generatedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-5ace256c-f62d-4e2b-aadf-cbd4ddbcc02c.png",
+      "previousGeneratedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-1466a30f-b1f9-4cbe-83e2-b55e9ce0f936.png",
+      "selectedMaster": "masters/resentful-champion.png"
+    },
+    {
+      "key": "outpost-commander",
+      "generatedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-f821ba80-d8cb-4520-97b1-a74dace16a25.png",
+      "selectedMaster": "masters/outpost-commander.png"
+    },
+    {
+      "key": "doom-knight",
+      "generatedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-4668ef19-6d6a-43ad-be42-b5af83e3636b.png",
+      "selectedMaster": "masters/doom-knight.png"
+    },
+    {
+      "key": "dimension-splitter",
+      "generatedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-e61caacf-e02c-4b50-bd54-c8c066e95daf.png",
+      "selectedMaster": "masters/dimension-splitter.png"
+    },
+    {
+      "key": "void-herald",
+      "generatedPath": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-4494fef3-ae41-4e55-8459-5a31c0bf4032.png",
+      "selectedMaster": "masters/void-herald.png"
+    }
+  ]
+}

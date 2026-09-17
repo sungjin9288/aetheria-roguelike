@@ -1,0 +1,119 @@
+{
+  "schemaVersion": 1,
+  "status": "incomplete-source-batch",
+  "runtimeUnchanged": true,
+  "promptSha256": "a7be18c42062bf499be8326dde32a72d003b2dca6bcc2432a98331d4b33cf836",
+  "preimageManifestSha256": "d97bf60e68499c572c9988125b37eb18907ccb9247daaa6d79025661861941af",
+  "entries": [
+    {
+      "name": "차원 파쇄자",
+      "key": "monster-33e00c5fa59c",
+      "masterPath": "scripts/art_sources/monsters/v4/masters/monster-33e00c5fa59c.png",
+      "previousPath": "scripts/art_sources/monsters/v4/previous/monster-33e00c5fa59c.png",
+      "exportPath": "scripts/art_sources/monsters/v4/exports/monster-33e00c5fa59c.png",
+      "masterSha256": "76f40f671b955e55aac483a00484e9621702600070e68df4cd7af6000db4567b",
+      "previousSha256": "202425bf1ae27a874aaab15378085615e1a63da64c67482109cc1c3234402aaa",
+      "exportSha256": "816a54d75d282c7dbe400215cf64771b553188bcab2ac5003c6871a841dfb3f5",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 148,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 148,
+          "left": 13,
+          "right": 142,
+          "top": 10
+        }
+      },
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "서리 군주",
+      "key": "monster-34852baa4124",
+      "masterPath": "scripts/art_sources/monsters/v4/masters/monster-34852baa4124.png",
+      "previousPath": "scripts/art_sources/monsters/v4/previous/monster-34852baa4124.png",
+      "exportPath": "scripts/art_sources/monsters/v4/exports/monster-34852baa4124.png",
+      "masterSha256": "4957bab72a9ccf7218867ea216a2a25e0a5b9e93d2f05040898d3fa1b3a956db",
+      "previousSha256": "6180dd08c5d40fb8b9b1c2c598c427184a804b7b28d105b295a8c1970d0ffcb1",
+      "exportSha256": "6d6b7dec99d7a03dada8b805a4d0580c38c98e4219ab29ac0a4df36cd76b7529",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 151,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 151,
+          "left": 15,
+          "right": 148,
+          "top": 8
+        }
+      },
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "차원 포식자",
+      "key": "monster-660242f15f1c",
+      "masterPath": "scripts/art_sources/monsters/v4/masters/monster-660242f15f1c.png",
+      "previousPath": "scripts/art_sources/monsters/v4/previous/monster-660242f15f1c.png",
+      "exportPath": "scripts/art_sources/monsters/v4/exports/monster-660242f15f1c.png",
+      "masterSha256": "aa1122e9436bb56af7f3ba2210ba2c29a534f1f8819b530c054cf7e41bb4b253",
+      "previousSha256": "e89bbc31433474062716bbc48bb21ed2d9abfff8159bfb130cedc764acd79863",
+      "exportSha256": "15064ce5ba615eab4519b246b0964f3255dabd390092c1412469682b21e4d12d",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 149,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 149,
+          "left": 9,
+          "right": 149,
+          "top": 11
+        }
+      },
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "타락한 세계수 수호자",
+      "key": "monster-e33191d1f61f",
+      "masterPath": "scripts/art_sources/monsters/v4/masters/monster-e33191d1f61f.png",
+      "previousPath": "scripts/art_sources/monsters/v4/previous/monster-e33191d1f61f.png",
+      "exportPath": "scripts/art_sources/monsters/v4/exports/monster-e33191d1f61f.png",
+      "masterSha256": "25900d53e2db9a1525f72bb54427134f0d2aa0f76e575d976d805e0bf1745fff",
+      "previousSha256": "9be704893463842182eab9dc78f2817755b907020cd27636bfca2748af610fd6",
+      "exportSha256": "be31946fc7e4113a77266d2ed5b36b887c40cf6f54c1e51f44c904c37775f737",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 147,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 147,
+          "left": 12,
+          "right": 142,
+          "top": 11
+        }
+      },
+      "status": "candidate-not-adopted"
+    }
+  ],
+  "rejected": [
+    {
+      "path": "scripts/art_sources/monsters/v4/rejected/primal-alpha-attempt.png",
+      "sha256": "b66a6445a889b74f4bc88176b210b0fc3be637a79a62ddaed46bcf581bcb39cc"
+    },
+    {
+      "path": "scripts/art_sources/monsters/v4/rejected/primal-clipped.png",
+      "sha256": "ee0ec48241ff2f7445843ad1706f48898d00c52c150066eb1042709cfa76bb4c"
+    },
+    {
+      "path": "scripts/art_sources/monsters/v4/rejected/primal-framing-opaque.png",
+      "sha256": "d1ff8218931ae13223689940cd4c968426d12eba0d65e8a446a70bdcc45b0a33"
+    }
+  ]
+}

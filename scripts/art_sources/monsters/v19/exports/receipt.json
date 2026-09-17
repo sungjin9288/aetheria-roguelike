@@ -1,0 +1,13 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "aether-fragment": "554608d15b7a827f72f5b6b06eff99e9cee9a0cbd4d0e60955d3bc253d7ac77a",
+    "dimensional-fissure": "62fd84970e7a084ebbb86c8483b4cc6b3efa5fe896aa8366b1e868f1300fbaaa"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "aether-fragment": "d3a6618ea0d329eaad5841ed3f7c990b67abb8bfb1102ec3489be96f24d5d0e2",
+    "dimensional-fissure": "3979d35af51befdf3f32752d5fe58207370a13258ff5e372d6ed3e28702cd3a2"
+  }
+}

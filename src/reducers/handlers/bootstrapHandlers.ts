@@ -1,6 +1,10 @@
 import { sanitizeQuickSlots } from './helpers';
 import type { GameState, GameAction } from '../gameReducer';
 import { MSG } from '../../data/messages';
+import { DB } from '../../data/db';
+import { clearAdventureRelicBonuses, endDevourBonus } from '../../utils/adventureRelicBonuses';
+import { normalizeAdventureRelicBonuses } from '../../utils/adventureRelicState';
+import { normalizeDeferredEventChainSteps } from '../../data/eventChains';
 
 const getBootstrapLogs = (state: GameState, playerName: string) => {
     if (state.logs.length > 0 || !playerName.trim()) return state.logs;
@@ -15,17 +19,33 @@ export const bootstrapActionMap = {
         ({ ...state, uid: action.payload }),
 
     LOAD_DATA: (state: GameState, action: GameAction) => {
-        const loadedPlayer = { ...state.player, ...action.payload.player };
+        let loadedPlayer = { ...state.player, ...action.payload.player,
+            deferredEventChainSteps: normalizeDeferredEventChainSteps(
+                action.payload.player?.deferredEventChainSteps, action.payload.player?.eventChainProgress,
+            ),
+            adventureRelicBonuses: normalizeAdventureRelicBonuses(
+                action.payload.player?.adventureRelicBonuses, action.payload.player?.maxHp,
+            ) };
+        const enemy = action.payload.enemy || null;
+        const requestedMode = action.payload.gameState || 'idle';
+        const gameState = requestedMode === 'combat' && !enemy ? 'idle' : requestedMode;
+        if (DB.MAPS[loadedPlayer.loc]?.type === 'safe' || gameState === 'dead') {
+            loadedPlayer = clearAdventureRelicBonuses(loadedPlayer);
+            loadedPlayer.deferredEventChainSteps = undefined;
+        } else if (gameState !== 'combat') {
+            loadedPlayer = endDevourBonus(loadedPlayer);
+        }
         return {
             ...state,
             player: loadedPlayer,
-            gameState: action.payload.gameState || 'idle',
-            enemy: action.payload.enemy || null,
+            gameState,
+            enemy,
             grave: action.payload.grave || null,
             currentEvent: action.payload.currentEvent || null,
             quickSlots: sanitizeQuickSlots(action.payload.quickSlots, loadedPlayer.inv),
             logs: getBootstrapLogs(state, loadedPlayer.name),
             bootStage: 'ready',
+            presentationEpoch: state.presentationEpoch + 1,
             syncStatus: 'synced',
             lastLoadedTimestamp: action.payload.lastActive?.toMillis
                 ? action.payload.lastActive.toMillis()

@@ -82,6 +82,15 @@ const createFixture = async ({
     characterArt = { width: 4, height: 4, margin: 1, footBaseline: 2 },
     equipmentArt = { width: 4, height: 4, margin: 1, families: { 'weapon-sword': {} } },
     equipmentStyleVersion = 2,
+    monsterCatalog = {
+        version: 1,
+        catalogSha256: 'b'.repeat(64),
+        monsters: [{ name: '슬라임', key: 'slime', regionKey: 'forest' }],
+    },
+    monsterEntries = {
+        슬라임: { key: 'slime', runtimePath: '/assets/monsters/catalog/slime.png', regionKey: 'forest' },
+    },
+    monsterArt = { width: 4, height: 4, margin: 1, assetRoot: '/assets/monsters/catalog/', styleVersion: 1 },
     pngs = {},
 } = {}) => {
     const publicRoot = await mkdtemp(join(tmpdir(), 'aetheria-art-contract-'));
@@ -96,6 +105,12 @@ const createFixture = async ({
         art: equipmentArt,
         entries: equipmentEntries,
     };
+    const monsterManifest = {
+        version: 1,
+        catalogSha256: monsterCatalog.catalogSha256,
+        art: monsterArt,
+        entries: monsterEntries,
+    };
 
     for (const entry of Object.values(characterEntries)) {
         await writeFixturePng(publicRoot, entry.runtimePath, pngs[entry.runtimePath] || { opaquePixels: [{ x: 1, y: 2 }] });
@@ -104,12 +119,17 @@ const createFixture = async ({
         const runtimePath = `/assets/equipment-exact/${key}.png`;
         await writeFixturePng(publicRoot, runtimePath, pngs[runtimePath]);
     }
+    for (const entry of Object.values(monsterEntries)) {
+        await writeFixturePng(publicRoot, entry.runtimePath, pngs[entry.runtimePath]);
+    }
 
     return {
         publicRoot,
         catalog,
         characterManifest,
         equipmentManifest,
+        monsterCatalog,
+        monsterManifest,
         async dispose() {
             await rm(publicRoot, { recursive: true, force: true });
         },
@@ -245,7 +265,7 @@ test('art verifier matches the catalog in both directions and records every expo
         const equipmentReport = await verifyFixture({ ...fixture, scope: 'equipment' });
         const exports = [...characterReport.exports, ...equipmentReport.exports];
 
-        assert.deepEqual(fullReport.verifiedSurfaces, ['characters', 'equipment', 'families']);
+        assert.deepEqual(fullReport.verifiedSurfaces, ['characters', 'equipment', 'families', 'monsters']);
         assert.equal(fullReport.missing.includes('signature-overlay:art metadata'), false);
         assert.deepEqual(characterReport.missing, []);
         assert.deepEqual(characterReport.extra, []);
@@ -340,7 +360,7 @@ test('art verifier uses code-point order for stable export reports', async () =>
     try {
         const report = await verifyFixture(fixture);
 
-        assert.deepEqual(report.exports.map((entry) => entry.identity), ['character:B', 'character:a']);
+        assert.deepEqual(report.exports.map((entry) => entry.identity), ['character:B', 'character:a', 'monster:슬라임']);
     } finally {
         await fixture.dispose();
     }

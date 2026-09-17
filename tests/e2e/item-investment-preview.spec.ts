@@ -117,7 +117,10 @@ test.describe('Item investment preview', () => {
         await expect(output).toContainText('강철 롱소드');
         await expect(output).toContainText('2단계 · 무기');
         await expect(output).toContainText('공격력');
-        await expect(output).toContainText('장착 가능');
+        await expect(output).toContainText('레벨 10 필요');
+        await expect(output).toContainText('가정 비교');
+        await expect(output).not.toContainText('직업 제한');
+        await expect(recipe.getByTestId('crafting-recipe-action')).toBeEnabled();
         await expect(recipe.locator('[data-item-icon-style]')).toHaveCount(1);
         expect(await findUndersizedText(recipe)).toEqual([]);
         await expect(page.getByTestId('damage-number')).toBeHidden({ timeout: 2_500 });
@@ -150,6 +153,8 @@ test.describe('Item investment preview', () => {
         await expect(firstCandidate).toBeVisible();
         await expect(firstCandidate.locator('[data-item-icon-style]')).toHaveCount(1);
         await expect(firstCandidate).toContainText(/공격력|방어력/);
+        await expect(firstCandidate).toContainText(/레벨 \d+ 필요/);
+        await expect(firstCandidate).toContainText('가정 비교');
         expect(await findUndersizedText(synthesisPreview)).toEqual([]);
 
         const geometry = await page.evaluate(() => ({

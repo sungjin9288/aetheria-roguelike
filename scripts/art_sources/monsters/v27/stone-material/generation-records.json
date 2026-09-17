@@ -1,0 +1,42 @@
+{
+  "mode": "built-in",
+  "runtimeAdopted": false,
+  "records": [
+    {
+      "slug": "prison-golem",
+      "name": "감옥 골렘",
+      "prompt": "Use case: stylized-concept. Asset type: single enemy sprite for Aetheria pixel-art mobile RPG, readable at 32px. Subject: PRISON GOLEM, squat square-shouldered iron-and-stone construct blocking a narrow dungeon passage. Its broad rectangular chest is an OPEN IRON BAR CAGE with a few thick vertical bars and clear transparent gaps, a large solid padlock on lower chest, heavy block forearms and short stout legs. Small recessed helmet-like head, no prisoner or gore. Three-quarter front combat stance. Distinct angular cage silhouette, NOT a generic boulder man. Crisp chunky pixel art, deliberate large clusters and stepped edges, limited slate iron and muted bronze palette, broad medium-value highlights readable on dark and light UI. Single entire figure centered square with generous empty margins, all limbs within frame. Genuinely transparent RGBA backdrop including cage gaps. No painted checkerboard, environment, floor, cast shadow, pedestal, text, frame, detached particles, glow haze.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-b58574bb-5a0b-4ec1-85a2-1bb5b5e416b1.png"
+    },
+    {
+      "slug": "ore-golem",
+      "name": "광석골렘",
+      "prompt": "Use case: stylized-concept. Asset type: single monster sprite for Aetheria pixel-art mobile RPG, readable at 32px. Subject: ORE GOLEM, asymmetric rough craggy rock creature with visible broad metallic mineral veins embedded in rock, one enormous angular mining-hammer shaped stone fist resting low and the other shorter rough arm. Wide crooked stone shoulders, compact head naturally part of torso, sturdy unequal boulder legs. Iron-gray rock with restrained ochre copper ore seams, no iron armor, no bars, no padlock, no handheld tools, no crystal crown. Entire body rough natural stone, mining fist part of arm. Three-quarter front combat stance. Crisp chunky pixel art, large deliberate clusters, hard stepped edges, restrained slate/ochre palette with broad readable midtone faces. Single entire figure centered square with generous empty margins. Genuinely transparent RGBA background. No painted checkerboard, scenery, floor, shadow, pedestal, text, frame, floating particles or glow haze.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-26a72010-7f92-4f42-9235-3333c2caa876.png"
+    },
+    {
+      "slug": "stone-giant",
+      "name": "돌 거인",
+      "prompt": "Use case: stylized-concept. Asset type: one monster sprite for Aetheria pixel-art mobile RPG readable at 32px. Subject: STONE GIANT, tall upright primordial rock humanoid with SMALL blunt head above a long narrow torso, exceptionally LONG heavy arms dangling beside knees and two long pillar legs. Vertical elongated silhouette, ancient natural weathered granite slabs forming coarse anatomy, large simple irregular stone faces. No armor, weapon, shield, cage, ore veins, gemstones, crown, pedestal, moss cloud. Both arms similarly long, fingers broad blunt stone blocks. Three-quarter front standing combat posture. Crisp chunky pixel art with large coherent clusters and hard stepped edges, warm gray granite and restrained cool gray shadows, mid-value body planes readable on dark and light. Single full creature centered square, entire head feet hands inside generous empty margins. Genuinely transparent RGBA background, no painted checkerboard, scenery, floor, cast shadow, text, frame or floating effects.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-66d39945-77e3-4c66-86a9-38da7ed098e8.png"
+    },
+    {
+      "slug": "statue-guardian",
+      "name": "석상 가디언",
+      "prompt": "Use case: stylized-concept. Asset type: single enemy sprite for Aetheria pixel-art mobile RPG readable at 32px. Subject: STATUE GUARDIAN, upright ceremonial stone sentinel, precisely carved pale limestone body with orderly chiseled geometric planes, calm carved mask head and simple squared ceremonial headdress. A single BROAD STONE SHIELD held firmly in front on one side covers torso and thigh, other massive carved hand visible, short orderly armored-stone legs. Sculpted material not metal armor, no flesh, no rough boulder anatomy. Broad shield with one bold recessed geometric cut, no tiny writing. Three-quarter front dignified defensive stance, clear separate shield silhouette. Crisp chunky pixel art, deliberate large clusters and stepped edges, limited pale sandstone/cool gray shadow palette and medium-value planes. Entire figure centered square with generous empty margins. Genuinely transparent RGBA backdrop. No throne, pedestal, floor, scene, cast shadow, cage, giant halo, floating ornaments, text, frame, checkerboard or haze.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-75a6ab82-4b71-49c6-9916-fabb698e0591.png"
+    },
+    {
+      "slug": "eternal-idol",
+      "name": "영겁의 수호신상",
+      "prompt": "Use case: stylized-concept. Asset type: single enemy sprite for Aetheria pixel-art mobile RPG readable at 32px. Subject: ETERNAL GUARDIAN IDOL, ancient eroded stone guardian with a broad layered SARCOPHAGUS-shaped torso, thick overlapping tomb-stone bands, short sturdy stone arms held near sides, upright on two solid short feet WITHOUT any pedestal. Small carved mask head framed by ONE thick ring-shaped stone head ornament attached directly to shoulders; ring aperture clearly open and transparent around head. Ancient solemn carved geometry, worn corners and large simple chipped planes, not rough boulder anatomy, no shield or weapon. Desaturated weathered sandstone with pale gray highlights and dark cracks, no gold armor. Three-quarter front, heavy upright ritual presence. Crisp chunky pixel art with large clusters and stepped edges, clear silhouette and midtones at 32px. Single entire figure centered square with generous empty margins. Genuinely transparent RGBA including ring holes. No painted checkerboard, throne, background scene, floor, cast shadow, pedestal, fine runic writing, text, frame, particles or glow cloud.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-6ba1c2b7-989f-4bbf-a824-bbd06e1f2c83.png"
+    },
+    {
+      "slug": "gold-golem",
+      "name": "황금 골렘",
+      "prompt": "Use case: stylized-concept. Asset type: single monster sprite for Aetheria pixel-art mobile RPG readable at 32px. Subject: GOLD GOLEM, low exceptionally WIDE heavy metal construct built from smooth thick polished gold plates and enormous solid GOLD INGOT joints. Squat wide barrel torso with overlapping large metal panels, tiny low recessed head between huge rounded rectangular shoulders, short robust legs spread apart, massive compact squared fists. Crisp broad reflected light bands and dark bronze seams show METAL, not rough stone painted yellow. No rocks, crystal, ore cracks, cage bars, padlock, shield, crown or floating coins. Three-quarter front braced combat stance, width visibly greater than height, chunky industrial-fantasy silhouette. Deliberate crisp pixel art, large coherent clusters, hard stepped edges, limited gold/ochre/pale cream highlights/dark bronze palette. Single entire creature centered square with generous empty margins, all hands and feet fully visible. Genuinely transparent RGBA background. No checkerboard, environment, floor, cast shadow, pedestal, text, border, particles or glow haze.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-1d35c32a-6a9b-490b-99de-e46a9dd050fd.png"
+    }
+  ]
+}

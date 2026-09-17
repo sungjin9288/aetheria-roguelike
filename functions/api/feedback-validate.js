@@ -1,10 +1,7 @@
-// Cloudflare Pages Functions 버전 (api/feedback-validate.js에서 포팅, 2026-07)
 // 파일 기반 라우팅: functions/api/feedback-validate.js → /api/feedback-validate
 //
-// 2026-07 재작성: 원본(Vercel 시절 포함)은 firebase-admin을 import했지만
-// 이 패키지는 package.json에 존재한 적이 없어 배포 시 처음부터 동작 불가였고,
-// Cloudflare Workers 런타임에서는 firebase-admin(Node 전용)이 어차피 실행 불가.
-// ai-proxy.js와 동일한 구성으로 교체:
+// Cloudflare Workers 런타임에서 실행할 수 없는 firebase-admin 대신
+// ai-proxy.js와 동일한 REST 구성으로 처리한다:
 //   - 인증: Firebase REST 검증 (identitytoolkit accounts:lookup) — 종전에는 토큰
 //     검증 없이 클라이언트가 보낸 userId를 그대로 신뢰하던 보안 공백도 함께 해소.
 //     userId는 이제 검증된 토큰의 uid에서 유도한다.

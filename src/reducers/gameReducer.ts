@@ -34,6 +34,7 @@ export interface GameState {
     leaderboard: any[];
     liveConfig: any;
     lastLoadedTimestamp: number;
+    presentationEpoch: number;
     quickSlots: any[];
     postCombatResult: any;
     pendingRelics: any;
@@ -135,6 +136,7 @@ export const INITIAL_STATE: GameState = {
 
     // Sync Guard
     lastLoadedTimestamp: 0,
+    presentationEpoch: 0,
 
     // Feature Additions
     quickSlots: [null, null, null],

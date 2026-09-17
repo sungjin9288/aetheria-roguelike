@@ -1,0 +1,27 @@
+{
+  "alphaThreshold": 128,
+  "originalsUnchanged": true,
+  "outputSha256": {
+    "item-sheet.png": "fd7811b58f8fb9d296234c26d6388d4f42efc8a2159eb4f2d0593037fa8df498",
+    "item.png": "d857a707f15c9ad7f63a83fc6e3353ca93184ca848346d70bd8f5dc79760cd22",
+    "overlay-sheet.png": "25772708a235d0e50d81bc31873ca0766b9e8e9b9c4d75ef835193a9d03fc31c",
+    "overlay.png": "f71553ee7a81fe0d91abaf8481b8bf745e2f3f25bc2697de9af649f6af63ae19"
+  },
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "masters/item.png": "3a443ec2daf260fed916d570f5c1c837ab8ab955d74fba248ae3f3028adfd45c",
+    "masters/overlay.png": "eb2c83b6e0afa61de0f11c1abba5b76aa9050cb6f5d8d8d1044659bdd4d4535c",
+    "previous/item-sheet.png": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+    "previous/overlay-sheet.png": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd"
+  },
+  "surfaces": {
+    "item": {
+      "targetCellChanged": true,
+      "unchangedNeighborCells": 5
+    },
+    "overlay": {
+      "targetCellChanged": true,
+      "unchangedNeighborCells": 5
+    }
+  }
+}

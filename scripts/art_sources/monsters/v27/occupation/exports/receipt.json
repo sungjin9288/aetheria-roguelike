@@ -1,0 +1,31 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "bone-collector": "631336422fdaafec813079ada4032dc6dd5ef26ba36ccfffcf199ece9454c08b",
+    "cursed-fisher": "42410ba16ff00a22c4195a119e6f48ec94e0c836612547ecdfa002e5c64c56d3",
+    "desert-bandit": "aec6176a0fd00a6a95b942b145668aa2fb350544a3046e4a76f400b977975ed7",
+    "greedy-merchant": "56a14ea0b93398ba6543a6a240ce4d7ef18e6744e0dc33f458e10db177a4d5f4",
+    "river-spirit": "657ba7d5e4868c44d5b1333269375b98cb52d231d0d6543bf41fd745bf956938",
+    "shadow-hunter": "c67a3a5bf41f5a6d512682ee5d8ccf92bdf0b0963d1bb9c51c258f7b899936a4",
+    "soul-draining-skeleton": "b3c7a07b882c4f247b35ea77e01bae81cb42fb18ebc3b3c58b44e425635f9ae8",
+    "stormcloud-hunter": "3ba53ac6b58a4187c8cbba47177181744830ce0b23c2d9e273cd47f30ceb436c",
+    "torturer": "6538bf3a84acc0792909555f5e0bd215a1b58fd227546aa2f28a1e1cbc862c13",
+    "treasure-hunter": "92407d75ab48d0aed98cdf2e5d10efb8498a5a6bba05f2deee12ab0566d15dab",
+    "wind-tracker": "23a6ebe331571fa5c762b7cffd140ff8f54c4ef58a7296e6f63b8509331c17e0"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "bone-collector": "0fefcb5351146df4d910f5d204915189e9cf87efbda095cb6e7024c7d17f1371",
+    "cursed-fisher": "d543b331470a2340806d7f1592c21453921024a7f641ef4d6a854d2700ab6658",
+    "desert-bandit": "38070827eb2e0770b373482ec1f3e3a07e9f280347378cc3308baf5efb194f5a",
+    "greedy-merchant": "cf49c6b9620f940a191a2431dd2530f9bf0d49edd857db97c28b4292a687f5f5",
+    "river-spirit": "8e29f77a75f6f66b33f20f263d9bdbfda408822714ef0fd8f2feadbfd5ba7fe0",
+    "shadow-hunter": "15e0017b306a029741ca3021c6a8b65acc501b44c5251f75a116bb92df8c2a1a",
+    "soul-draining-skeleton": "fff16f12aaab74f1341efab066d7c2e09d3fca2e4e391c11cf61ee1f1b27ec37",
+    "stormcloud-hunter": "2229a5bc75b6925fec73ee59c70ede3f5833bc068bd1c196da0cab68a6cc63d1",
+    "torturer": "be4d6a4eefdd1ed7aa116f9d8de13240052ec951e0156dd542b7fa20e363b6cd",
+    "treasure-hunter": "21f325c2825e0200a2af8b016c539e994fec268f1d0bc40445fbdf6b6fe73489",
+    "wind-tracker": "3ef871fb111d28a17f0349cc8da48586561c9fcb0ed1db9a63a316035269eb35"
+  }
+}

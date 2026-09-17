@@ -13,6 +13,7 @@ import { rewardActionMap } from './rewardHandlers';
 import type { GameAction, GameState } from '../gameReducer';
 import type { UseCombatItemPayload } from '../actionTypes';
 import { addNewTitles, sanitizeQuickSlots } from './helpers';
+import { activateDevourBonus } from '../../utils/adventureRelicBonuses';
 
 const appendCombatLogs = (
     currentLogs: any[],
@@ -146,7 +147,9 @@ const settleVictory = (
         now,
     });
     if (endgameResult.outcome !== 'none' && endgameResult.outcome !== 'replay') {
-        const endgamePlayer = trackExpeditionVitals(endgameResult.player);
+        const endgamePlayer = trackExpeditionVitals(endgameResult.gameState === GS.COMBAT
+            ? activateDevourBonus(endgameResult.player)
+            : endgameResult.player);
         draft = {
             ...draft,
             player: endgamePlayer,
@@ -208,9 +211,9 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
         }
 
         const logs = [...result.logs];
-        const player = result.kind === 'defeat'
+        const player = trackExpeditionVitals(result.kind === 'defeat'
             ? addNewTitles(result.player, logs)
-            : result.player;
+            : result.player);
         return {
             ...state,
             player,
@@ -282,9 +285,9 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
                 quickSlots: sanitizeConsumedQuickSlots(state.quickSlots, item, settled.player.inv || []),
             };
         }
-        const player = result.kind === 'defeat'
+        const player = trackExpeditionVitals(result.kind === 'defeat'
             ? addNewTitles(result.player, logs)
-            : result.player;
+            : result.player);
 
         return {
             ...state,

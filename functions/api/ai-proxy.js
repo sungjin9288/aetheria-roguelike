@@ -1,13 +1,11 @@
-// Cloudflare Pages Functions 버전 (api/ai-proxy.js에서 포팅, 2026-07)
 // 파일 기반 라우팅: functions/api/ai-proxy.js → /api/ai-proxy
-// Vercel (req,res) 스타일 → Web Request/Response 스타일로 변환.
-// 로직/타임아웃/레이트리밋/CORS 정책은 원본과 1:1 동일하게 유지.
+// Web Request/Response와 context.env binding을 사용하는 현행 Cloudflare 구현.
 
 // 인메모리 레이트리밋(Map)은 Cloudflare의 각 isolate(엣지 로케이션/워커 인스턴스)마다
 // 별도로 유지된다. 즉 동일 사용자의 요청이 서로 다른 isolate로 라우팅되면 이 카운터를
 // 공유하지 않으므로, 전역적으로 정확한 레이트리밋이 아니라 "isolate당 근사치" 한계가 있다.
 // 강한 보장이 필요하면 Durable Objects/KV 기반 카운터로 교체가 필요하지만, 여기서는
-// 기존 Vercel 서버리스 구현과 동일한 수준(인스턴스당 인메모리)의 동작을 그대로 포팅한다.
+// 현재 정책은 isolate당 인메모리 카운터를 사용한다.
 const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 40;
 const requestBuckets = new Map();
@@ -245,7 +243,7 @@ const callGemini = async (payloadConfig, apiKey) => {
     const { systemInstruction, prompt, schema } = payloadConfig;
 
     const controller = new AbortController();
-    // Vercel Serverless 10s 제한 호환: 8.5초 타임아웃 (Cloudflare Pages Functions에서도 동일 여유 유지)
+    // 외부 API 지연이 플레이 흐름을 붙잡지 않도록 8.5초에서 중단한다.
     const timeoutId = setTimeout(() => controller.abort(), 8_500);
 
     const requestBody = {

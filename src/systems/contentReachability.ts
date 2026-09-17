@@ -5,6 +5,7 @@ import { LOOT_TABLE } from '../data/loot.js';
 import { getAllSignatureDropSourceIndex } from '../utils/signatureDropSources.js';
 import { getShopCatalog } from '../utils/shopRotation.js';
 import { simulateProgression } from './progressionSimulator.js';
+import { canInvestigateTown } from '../utils/townInvestigation';
 
 export type AcquisitionRouteKind =
     | 'shop'
@@ -126,6 +127,7 @@ const mapMonsterNames = (map: any) => [
 const mapMonsterRoutes = (maps: Record<string, any>) => {
     const routes = new Map<string, Set<string>>();
     for (const [region, map] of Object.entries(maps)) {
+        if (map.type === 'safe' && !canInvestigateTown(region, map)) continue;
         for (const monster of mapMonsterNames(map)) {
             if (!routes.has(monster)) routes.set(monster, new Set());
             routes.get(monster)?.add(region);

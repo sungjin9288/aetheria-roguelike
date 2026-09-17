@@ -1,8 +1,8 @@
-import { EVENT_CHAINS } from '../../data/eventChains';
+import { EVENT_CHAINS, normalizeDeferredEventChainSteps } from '../../data/eventChains';
 import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { formatEventText } from '../../utils/eventPresentation';
-import type { ResolveChainGoldChoicePayload } from '../actionTypes';
+import type { DeferChainEventPayload, ResolveChainGoldChoicePayload } from '../actionTypes';
 import type { GameAction, GameState } from '../gameReducer';
 import { GS } from '../gameStates';
 import { RELICS } from '../../data/relics';
@@ -45,6 +45,12 @@ const structurallyEqual = (left: unknown, right: unknown): boolean => {
         ));
 };
 
+const isDeferralPayload = (value: unknown): value is DeferChainEventPayload => {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
+    const { expectedExploreCount, ...choice } = value as Record<string, unknown>;
+    return isPayload(choice) && Number.isSafeInteger(expectedExploreCount) && Number(expectedExploreCount) >= 0;
+};
+
 const appendRequirementError = (state: GameState, id: string, text: string) => {
     if (state.logs.some((log: any) => log?.id === id)) return state;
     return {
@@ -54,6 +60,35 @@ const appendRequirementError = (state: GameState, id: string, text: string) => {
 };
 
 export const chainEventActionMap = {
+    DEFER_CHAIN_EVENT: (state: GameState, action: GameAction) => {
+        if (state.gameState !== GS.EVENT || !isDeferralPayload(action.payload)) return state;
+        const { chainId, step, choiceIndex, expectedExploreCount } = action.payload;
+        if ((state.player.stats?.explores ?? 0) !== expectedExploreCount) return state;
+        const event = state.currentEvent;
+        if (event?._chainId !== chainId || event?._chainStep !== step) return state;
+        if ((state.player.eventChainProgress?.[chainId] ?? 0) !== step) return state;
+        if (state.player.deferredEventChainSteps?.[chainId] === step) return state;
+        const chain = EVENT_CHAINS.find((candidate: any) => candidate.id === chainId);
+        const stepData = chain?.steps.find((candidate: any) => candidate.step === step);
+        const outcome = stepData?.event.outcomes[choiceIndex];
+        if (outcome?.type !== 'nothing' || outcome.reward) return state;
+        if (!structurallyEqual(event, { ...stepData.event, _chainId: chainId, _chainStep: step })) return state;
+
+        return {
+            ...state,
+            player: { ...state.player, deferredEventChainSteps: {
+                ...normalizeDeferredEventChainSteps(state.player.deferredEventChainSteps, state.player.eventChainProgress),
+                [chainId]: step,
+            } },
+            currentEvent: null,
+            gameState: GS.IDLE,
+            logs: [...state.logs, {
+                id: `chain-deferred:${chainId}:${step}:${state.player.stats?.explores || 0}`,
+                type: 'event', text: `${formatEventText(outcome.log)} 이 이야기는 이번 원정에서 미룹니다.`,
+            }].slice(-BALANCE.LOG_MAX_SIZE),
+            syncStatus: 'syncing',
+        };
+    },
     RESOLVE_CHAIN_GOLD_CHOICE: (state: GameState, action: GameAction) => {
         if (state.gameState !== GS.EVENT || !isPayload(action.payload)) return state;
 

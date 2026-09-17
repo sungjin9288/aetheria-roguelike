@@ -356,6 +356,7 @@ const ControlPanel = ({
   const showGraveRecovery = getGravesAtLoc(grave, player.loc).length > 0;
   const townPresentation = getTownActionPresentation({
     player,
+    mapData,
     stats: stats || { maxHp: player.maxHp, maxMp: player.maxMp },
     guidance,
     preparation: expeditionPreparation,
@@ -569,6 +570,7 @@ const ControlPanel = ({
   );
   const townQuickButtons = townPresentation.quickKeys
     .map((key) => buttonByKey.get(key))
+    .map((button) => button?.key === 'explore' ? { ...button, label: '도시 조사 · 전투 가능' } : button)
     .filter(Boolean);
   const townFacilityButtons = townPresentation.facilityKeys
     .map((key) => buttonByKey.get(key))

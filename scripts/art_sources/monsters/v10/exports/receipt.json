@@ -1,0 +1,27 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "biological-weapon": "6c2ccb4d6fd03e9239736ed780fc17f59872be16fc21817160916c013565b017",
+    "closed-circuit-mage-soldier": "a5746d4643c5d98fcba6a40632043b3393981af90109ece9bc1e2a0ad69eb719",
+    "contaminated-researcher": "2afdde3742f4bdb742eedac0f3c6c0063c85148939d024edfbab0ba18a299f2e",
+    "malfunctioning-robot": "c56f231830a40d653f2f9089f2919eb1658e36aefc12bae4501c73d2905b071e",
+    "mummy": "c0b412c534f533c2cf786860dc804d2249ab42215cddacab63348878632ea84a",
+    "overloaded-artillery": "331d3393247414791db259b4357b1ef5aeded411db3f3229756640b26b390862",
+    "runaway-automaton": "74bafeb532396a59a3414a15345182271b61c8520ff086a252a8494ba1f54710",
+    "steam-golem": "6201dbc3ae761ae9afb4f2399cf26450232171effcdedcaa15ea4bc674e2a2e1",
+    "steel-automaton": "93d1eb580e1dced22766290e60eedf743883cfc196774ab27fd221e0a2f49630"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "biological-weapon": "c25ad39237fc1c32d501ffd31bc5c1b375666938818dc64d2463e2ed4f67ba95",
+    "closed-circuit-mage-soldier": "bea8cf1fd3f348a232aaeba841352834ba12bfbb4806b48641dca0726afb3d58",
+    "contaminated-researcher": "88d30401bfc2003dd53c342521e965061f5b748eed24d5a76e708eed523d140a",
+    "malfunctioning-robot": "bcb7261ef2a01c9adcb1cea36795c0fe58fea8f6b5299c91d275e1bb08285180",
+    "mummy": "94a83a21ff842d23e5295eaf550ccb1d0259ecd5f862adc54538a5f97ad17baa",
+    "overloaded-artillery": "7e667fc05b76d8b73926888a433c4371665f6a4fbd7563f5c37d0b66cd31bd7e",
+    "runaway-automaton": "581127f3b301326184a51a8b2113e220504e04a528ded422f01d8d248a7b4da8",
+    "steam-golem": "0fa4a2cdd1c21c4c9edabc20eb0954c790157113609b96a295b68d02b2fdd356",
+    "steel-automaton": "eebb80b7eb086e9e21fa680d428babc7ed9df4a229cb80e709ab0b7d735f5941"
+  }
+}

@@ -188,6 +188,12 @@ def crop_cell(source: Image.Image, sheet: SourceSheet, index: int) -> Image.Imag
     right = round((column + 1) * source.width / sheet.columns)
     top = round(row * source.height / sheet.rows)
     bottom = round((row + 1) * source.height / sheet.rows)
+    # These reviewed 1254px sheets place the next frame at x=932,
+    # inside the nominal third cell. End in the empty gutter instead.
+    if sheet.filename in {"frontier.png", "midlands.png", "endgame.png"} and column == 2:
+        if source.size != (1254, 1254) or (sheet.columns, sheet.rows) != (4, 4):
+            raise ValueError(f"{sheet.filename}: reviewed crop geometry changed")
+        right = 920
     return source.crop((left, top, right, bottom))
 
 

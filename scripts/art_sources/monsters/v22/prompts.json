@@ -1,0 +1,37 @@
+[
+  {
+    "name": "공허의 군주",
+    "slug": "void-lord",
+    "prompt": "Use case: stylized-concept. Asset type: Aetheria mobile roguelike boss sprite. Exactly ONE full-body isolated subject, genuinely transparent RGBA background. Square canvas, ample transparent margin around all extremities. Cohesive 16-bit dark-fantasy pixel art with crisp deliberate pixel clusters, limited rich palette, broad readable masses at final160px and combat46px/32px. No smooth painting, 3D, text, labels, borders, background, drawn checkerboard, ground, diffuse glow or particle noise. Subject: A broad hovering void sovereign with a widely spread heavy mantle forming the entire body; a deeply empty large central cavity, not an eye or fire elemental. Wide horizontal silhouette, violet midtone rim and substantial folded cloth masses, no thin smoky edges."
+  },
+  {
+    "name": "마왕",
+    "slug": "demon-king",
+    "prompt": "Use case: stylized-concept. Asset type: Aetheria mobile roguelike boss sprite. Exactly ONE full-body isolated subject, genuinely transparent RGBA background. Square canvas, ample transparent margin around all extremities. Cohesive 16-bit dark-fantasy pixel art with crisp deliberate pixel clusters, limited rich palette, broad readable masses at final160px and combat46px/32px. No smooth painting, 3D, text, labels, borders, background, drawn checkerboard, ground, diffuse glow or particle noise. Subject: A massive armored demon king, two thick legs braced in a low wide stance, both hands leaning on a huge grounded greatsword. Heavy horns and angular shoulder armor, deep crimson iron with readable pale metal edges. Entire sword and feet visible, no fire elemental body."
+  },
+  {
+    "name": "에테르 군주",
+    "slug": "aether-lord",
+    "prompt": "Use case: stylized-concept. Asset type: Aetheria mobile roguelike boss sprite. Exactly ONE full-body isolated subject, genuinely transparent RGBA background. Square canvas, ample transparent margin around all extremities. Cohesive 16-bit dark-fantasy pixel art with crisp deliberate pixel clusters, limited rich palette, broad readable masses at final160px and combat46px/32px. No smooth painting, 3D, text, labels, borders, background, drawn checkerboard, ground, diffuse glow or particle noise. Subject: An elongated floating living crystal sovereign, very long tapering crystalline lower body and two large wing-shaped crystal shoulder masses. Ivory cyan and lilac facets, strong tall silhouette, no humanoid legs, no sword, no fire or halo."
+  },
+  {
+    "name": "엔트로피 군주",
+    "slug": "entropy-lord",
+    "prompt": "Use case: stylized-concept. Asset type: Aetheria mobile roguelike boss sprite. Exactly ONE full-body isolated subject, genuinely transparent RGBA background. Square canvas, ample transparent margin around all extremities. Cohesive 16-bit dark-fantasy pixel art with crisp deliberate pixel clusters, limited rich palette, broad readable masses at final160px and combat46px/32px. No smooth painting, 3D, text, labels, borders, background, drawn checkerboard, ground, diffuse glow or particle noise. Subject: An asymmetrical entropy entity: one side of its body is an oversized solid shoulder and heavy arm, the opposite side visibly crumbling into a few LARGE separated blocks. Substantial ochre and muted violet stone masses, readable broken silhouette, no tiny particle cloud, no flames."
+  },
+  {
+    "name": "차원 마왕",
+    "slug": "dimension-demon",
+    "prompt": "Use case: stylized-concept. Asset type: Aetheria mobile roguelike boss sprite. Exactly ONE full-body isolated subject, genuinely transparent RGBA background. Square canvas, ample transparent margin around all extremities. Cohesive 16-bit dark-fantasy pixel art with crisp deliberate pixel clusters, limited rich palette, broad readable masses at final160px and combat46px/32px. No smooth painting, 3D, text, labels, borders, background, drawn checkerboard, ground, diffuse glow or particle noise. Subject: A dimensional demon with a visibly segmented floating body: angular armored upper torso offset sideways from the lower body across a clear empty gap, with two broad angular arms. Cyan edged dark purple material with bright midtone body planes. No conventional contiguous knight, no portals or background rings."
+  },
+  {
+    "name": "허무의 황제",
+    "slug": "void-emperor",
+    "prompt": "Use case: stylized-concept. Asset type: Aetheria mobile roguelike boss sprite. Exactly ONE full-body isolated subject, genuinely transparent RGBA background. Square canvas, ample transparent margin around all extremities. Cohesive 16-bit dark-fantasy pixel art with crisp deliberate pixel clusters, limited rich palette, broad readable masses at final160px and combat46px/32px. No smooth painting, 3D, text, labels, borders, background, drawn checkerboard, ground, diffuse glow or particle noise. Subject: An imposing seated void emperor whose heavy body is integrated into a monumental throne, broad squared throne back, massive armrests and clearly seated monarch silhouette. Deep violet with pale silver midtone sculpted surfaces so readable against dark background. Full throne and body visible, no flames, no halo."
+  },
+  {
+    "name": "에테르 드래곤",
+    "slug": "aether-dragon",
+    "prompt": "Use case: stylized-concept. Asset type: Aetheria mobile roguelike boss sprite. Exactly ONE full-body isolated subject, genuinely transparent RGBA background. Square canvas, ample transparent margin around all extremities. Cohesive 16-bit dark-fantasy pixel art with crisp deliberate pixel clusters, limited rich palette, broad readable masses at final160px and combat46px/32px. No smooth painting, 3D, text, labels, borders, background, drawn checkerboard, ground, diffuse glow or particle noise. Subject: A long-bodied aether dragon in three-quarter profile with two broad faceted crystal wings, serpentine curved neck and long clearly visible tail, four dragon legs. Cool pearl cyan and violet crystalline scales, sharp wing facets instead of red leathery wings. No fire, no ground or shadows, complete wings and tail inside frame."
+  }
+]

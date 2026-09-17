@@ -70,6 +70,28 @@ test('원정 시작은 저장 가능한 baseline을 만들고 이미 진행 중�
     assert.equal(repeated.activeExpedition.destination, '고요한 숲');
 });
 
+test('원정 HP 기록은 장비를 포함한 최대 HP를 사용하고 시작 분모를 보존한다', () => {
+    const player = makePlayer({
+        hp: 178, maxHp: 150, job: '모험가', relics: [], activeTitle: null,
+        skills: [], meta: {},
+        equip: { weapon: null, armor: { name: 'HP 검증 갑옷', type: 'armor', hpBonus: 8 }, offhand: null },
+    });
+    assert.equal(calculateFullStats(player).maxHp, 178);
+    const started = startExpedition(player, '고요한 숲', 1_000, DB.QUESTS);
+    assert.equal(started.activeExpedition.maxHpAtStart, 178);
+    const returned = { ...started, hp: 134 };
+    const { summary } = finishExpedition(returned, '시작의 마을', 2_000, DB.QUESTS);
+    assert.equal(summary.lowestHpPercent, 75);
+    assert.equal(summary.maxHpAtReturn, 178);
+    const unequipped = { ...returned, equip: { weapon: null, armor: null, offhand: null } };
+    const changed = finishExpedition(unequipped, '시작의 마을', 2_000, DB.QUESTS).summary;
+    assert.equal(changed.lowestHpPercent, 75);
+    assert.equal(changed.maxHpAtReturn, 170);
+    const legacy = { ...returned, activeExpedition: { ...started.activeExpedition, maxHpAtStart: 150 } };
+    assert.equal(finishExpedition(legacy, '시작의 마을', 2_000, DB.QUESTS).summary.lowestHpPercent, 89);
+    assert.equal(player.activeExpedition, INITIAL_STATE.player.activeExpedition);
+});
+
 test('공통 전투 승리 authority는 활성 원정의 canonical boss를 한 번만 기록한다', () => {
     const started = startExpedition(makePlayer({
         job: '전사',
@@ -160,7 +182,9 @@ test('정상 귀환은 전투/탐험/재화/아이템/임무/최저 HP delta를 
     assert.equal(summary.lostItemCount, 1);
     assert.deepEqual(summary.completedQuests, ['슬라임 소탕']);
     assert.equal(summary.lowestHp, 38);
-    assert.equal(summary.lowestHpPercent, 21);
+    // 기본 HP 180 + 모험가 패시브 20, 호환 장비 2피스 +5%.
+    assert.equal(started.activeExpedition.maxHpAtStart, 210);
+    assert.equal(summary.lowestHpPercent, 18);
     assert.equal(summary.reviewedAt, null);
     assert.deepEqual(summary.encounterDiscoveries, []);
 

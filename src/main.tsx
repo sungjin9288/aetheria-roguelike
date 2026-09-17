@@ -10,7 +10,9 @@ import {
 } from './platform/errorReporter';
 import { getRuntimeProductEventContext } from './platform/productEventContext';
 import { registerServiceWorker } from './pwa/registerServiceWorker';
+import { markPerfOnce } from './utils/performanceMarks';
 
+markPerfOnce('aetheria:app-mounted');
 registerServiceWorker();
 
 const errorContext = getRuntimeProductEventContext();

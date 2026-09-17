@@ -1,0 +1,72 @@
+{
+  "classification": "production-levelled canonical spawn fixtures; UI verification not natural encounters",
+  "errors": [],
+  "rows": [
+    {
+      "name": "번개 골렘",
+      "src": "/assets/monsters/catalog/monster-afc1ba2a24bc.png",
+      "decoded": 160,
+      "width": 46,
+      "height": 46,
+      "overflow": false,
+      "beforeHp": 1670,
+      "afterHp": 1556,
+      "level": 48
+    },
+    {
+      "name": "부식된 골렘",
+      "src": "/assets/monsters/catalog/monster-3c859cb03bef.png",
+      "decoded": 160,
+      "width": 46,
+      "height": 46,
+      "overflow": false,
+      "beforeHp": 1139,
+      "afterHp": 1039,
+      "level": 28
+    },
+    {
+      "name": "얼음 기사",
+      "src": "/assets/monsters/catalog/monster-b7be84912986.png",
+      "decoded": 160,
+      "width": 46,
+      "height": 46,
+      "overflow": false,
+      "beforeHp": 688,
+      "afterHp": 540,
+      "level": 20
+    },
+    {
+      "name": "호수 수호자",
+      "src": "/assets/monsters/catalog/monster-8b0a61414b4b.png",
+      "decoded": 160,
+      "width": 46,
+      "height": 46,
+      "overflow": false,
+      "beforeHp": 346,
+      "afterHp": 312,
+      "level": 7
+    },
+    {
+      "name": "화염 와이번",
+      "src": "/assets/monsters/catalog/monster-09881a8b21ed.png",
+      "decoded": 160,
+      "width": 46,
+      "height": 46,
+      "overflow": false,
+      "beforeHp": 957,
+      "afterHp": 871,
+      "level": 25
+    },
+    {
+      "name": "화염 비룡",
+      "src": "/assets/monsters/catalog/monster-2e2a633653f6.png",
+      "decoded": 160,
+      "width": 46,
+      "height": 46,
+      "overflow": false,
+      "beforeHp": 1038,
+      "afterHp": 934,
+      "level": 36
+    }
+  ]
+}

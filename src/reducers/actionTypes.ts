@@ -27,6 +27,13 @@ export interface ResolveChainGoldChoicePayload {
     choiceIndex: number;
 }
 
+export interface DeferChainEventPayload {
+    chainId: string;
+    step: number;
+    choiceIndex: number;
+    expectedExploreCount: number;
+}
+
 export interface ResolveFallbackEventTransactionPayload {
     transactionId: string;
     choiceIndex: number;
@@ -86,6 +93,7 @@ export const AT = Object.freeze({
     RESOLVE_COMBAT_ACTION: 'RESOLVE_COMBAT_ACTION',
     RESOLVE_BOUNDED_ENCOUNTER_CHOICE: 'RESOLVE_BOUNDED_ENCOUNTER_CHOICE',
     RESOLVE_CHAIN_GOLD_CHOICE: 'RESOLVE_CHAIN_GOLD_CHOICE',
+    DEFER_CHAIN_EVENT: 'DEFER_CHAIN_EVENT',
     RESOLVE_FALLBACK_EVENT_TRANSACTION: 'RESOLVE_FALLBACK_EVENT_TRANSACTION',
 
     // v4.0 — Relic / Prestige / Title / Daily

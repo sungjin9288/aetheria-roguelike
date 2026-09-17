@@ -11,6 +11,7 @@ export type RelicBalanceCategory =
     | 'resource-economy'
     | 'failure-rule'
     | 'combat-scaling'
+    | 'expedition-scaling'
     | 'run-scaling'
     | 'exploration-pacing'
     | 'abyss-only';
@@ -76,7 +77,7 @@ const EFFECT_CATEGORIES: ReadonlyArray<{
     },
     {
         category: 'combat-scaling',
-        effects: ['combo_stack', 'spell_stack', 'kill_stack_atk', 'entropy_tick'],
+        effects: ['combo_stack', 'spell_stack', 'entropy_tick'],
     },
     {
         category: 'conditional-combat',
@@ -87,7 +88,12 @@ const EFFECT_CATEGORIES: ReadonlyArray<{
             'dot_mult', 'chaos_buff', 'cd_minus', 'execute_atk', 'low_hp_dmg',
             'echo_atk', 'status_resist', 'mp_restore_battle', 'regen', 'on_hit_freeze',
             'first_turn_evade', 'battle_start_buff', 'hp_drain_atk', 'cooldown_reduce',
+            'devour_hp',
         ],
+    },
+    {
+        category: 'expedition-scaling',
+        effects: ['kill_stack_atk'],
     },
     {
         category: 'exploration-pacing',
@@ -103,7 +109,7 @@ const EFFECT_CATEGORIES: ReadonlyArray<{
     },
     {
         category: 'run-scaling',
-        effects: ['kill_stack', 'devour_hp'],
+        effects: ['kill_stack'],
     },
 ]);
 

@@ -137,6 +137,34 @@ const assertProductionSavesUntouched = async (page: Page) => {
 };
 
 test.describe('True Ending → New Game+ production journey', () => {
+    test('completed quests have distinct accessible reward actions', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await bootTrueEndingJourney(page);
+        await defeatDemonKing(page);
+        await defeatTrueBoss(page);
+        await flushJourney(page);
+        await page.addInitScript(() => {
+            const key = 'aetheria.device-qa.true-ending-journey.snapshot.v1';
+            const saved = JSON.parse(window.localStorage.getItem(key)!);
+            saved.player.quests.push({ id: 86, progress: 10, isBounty: false });
+            window.localStorage.setItem(key, JSON.stringify(saved));
+        });
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await expect(page.getByTestId('true-ending-screen')).toBeVisible();
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.triggerPlatformBack?.());
+        await expect(page.getByTestId('true-ending-pending-quest-86')).toBeVisible();
+        await expect(page.getByTestId('true-ending-pending-quest-87')).toBeVisible();
+        const finalQuest = page.getByRole('button', { name: '[스토리] 세계의 끝 보상 받기', exact: true });
+        const riftQuest = page.getByRole('button', { name: '[스토리] 에테르의 균열 보상 받기', exact: true });
+        await expect(finalQuest).toBeVisible();
+        await expect(riftQuest).toBeVisible();
+        await finalQuest.click();
+        await expect(finalQuest).toBeHidden();
+        await expect(riftQuest).toBeVisible();
+        await expect(page.getByTestId('true-ending-confirm')).toBeDisabled();
+        await assertProductionSavesUntouched(page);
+    });
+
     test('390x844: production combat, platform back, reload and duplicate confirmation stay atomic', async ({ page }) => {
         const viewport = { width: 390, height: 844 };
         await page.setViewportSize(viewport);
@@ -180,6 +208,15 @@ test.describe('True Ending → New Game+ production journey', () => {
         expect(backHandled).toBe(true);
         await expect(page.getByTestId('true-ending-screen')).toHaveAttribute('data-reveal-state', 'complete');
         await assertTrueEndingGeometry(page, viewport);
+        await expect(page.getByTestId('true-ending-pending-quest-87')).toBeVisible();
+        await expect(page.getByTestId('true-ending-pending-reward-guidance')).toBeVisible();
+        await expect(page.getByTestId('true-ending-confirm')).toBeDisabled();
+        await page.getByTestId('true-ending-claim-quest-87').click();
+        await expect(page.getByTestId('true-ending-pending-quests')).toBeHidden();
+        await expect(page.getByTestId('true-ending-confirm')).toBeEnabled();
+        const claimedBeforeAscension = await snapshot(page);
+        expect(claimedBeforeAscension.claimedQuestIds).toContain(87);
+        expect(claimedBeforeAscension.activeQuestIds).not.toContain(87);
 
         await page.evaluate(() => {
             const button = document.querySelector<HTMLButtonElement>('[data-testid="true-ending-confirm"]');
@@ -194,26 +231,47 @@ test.describe('True Ending → New Game+ production journey', () => {
         expect(ascended.primalShards).toBe(0);
         expect(ascended.trueEndingSeen).toBe(true);
         expect(ascended.heartCount).toBe(0);
+        expect(ascended.claimedQuestIds).toContain(87);
+        expect(ascended.activeQuestIds).not.toContain(87);
         expect(ascended.endgameReceiptKey).toBe(endingBeforeReload.endgameReceiptKey);
         expect(ascended.classJourney).toEqual(migratedClassJourney);
         expect(ascended.settings).toEqual(initial.settings);
         expect(ascended.titles.filter((title: string) => title === ascended.activeTitle)).toHaveLength(1);
 
         await flushJourney(page);
+        const savedJourney = await page.evaluate(() => JSON.parse(
+            window.localStorage.getItem('aetheria.device-qa.true-ending-journey.snapshot.v1') || 'null',
+        ));
+        expect(savedJourney?.player?.meta?.prestigeRank).toBe(4);
+        expect(savedJourney?.player?.stats?.claimedQuestIds).toContain(87);
+        expect(savedJourney?.player?.quests?.some((quest: { id: number }) => quest.id === 87)).toBe(false);
         await page.reload({ waitUntil: 'domcontentloaded' });
+        await expect.poll(() => page.evaluate(() => JSON.parse(
+            window.render_game_to_text?.() || '{}',
+        ).bootStage)).toBe('ready');
         await expect.poll(async () => (await snapshot(page))?.gameState).toBe('idle');
         const finalReload = await snapshot(page);
         expect(finalReload.prestigeRank).toBe(4);
         expect(finalReload.heartCount).toBe(0);
+        expect(finalReload.claimedQuestIds).toContain(87);
+        expect(finalReload.activeQuestIds).not.toContain(87);
         expect(finalReload.endgameReceiptKey).toBe(endingBeforeReload.endgameReceiptKey);
         expect(finalReload.classJourney).toEqual(migratedClassJourney);
         expect(finalReload.settings).toEqual(initial.settings);
         await assertProductionSavesUntouched(page);
 
+        await expect(page.getByRole('region', { name: '원정 준비' })).toBeVisible({ timeout: 10_000 });
+        await expect(page.getByRole('button', { name: '이동', exact: true })).toBeEnabled();
+        await expect.poll(() => page.getByRole('region', { name: '원정 준비' }).evaluate((element) => {
+            for (let node: Element | null = element; node; node = node.parentElement) {
+                if (Number(getComputedStyle(node).opacity) < 1) return false;
+            }
+            return true;
+        })).toBe(true);
+        await expect(page.getByRole('region', { name: '원정 준비' })).toBeInViewport();
         await page.screenshot({
             path: 'playtest-artifacts/long-term-progression-audit/true-ending-new-game-plus-390x844.png',
             fullPage: false,
-            animations: 'disabled',
         });
     });
 
@@ -227,7 +285,22 @@ test.describe('True Ending → New Game+ production journey', () => {
 
         await expect(page.getByTestId('true-ending-screen')).toHaveAttribute('data-reveal-state', 'complete');
         await expect(page.getByTestId('true-ending-skip')).toBeHidden();
+        await expect(page.getByTestId('true-ending-pending-quest-87')).toBeVisible();
+        await expect(page.getByTestId('true-ending-confirm')).toBeDisabled();
         await assertTrueEndingGeometry(page, viewport);
+        await page.getByTestId('true-ending-continue').click();
+        await expect(page.getByTestId('true-ending-screen')).toBeHidden({ timeout: 10_000 });
+        const continued = await snapshot(page);
+        expect(continued.gameState).toBe('idle');
+        expect(continued.activeQuestIds).toContain(87);
+        expect(continued.claimedQuestIds).not.toContain(87);
+        await flushJourney(page);
+        await page.reload({ waitUntil: 'domcontentloaded' });
+        await expect.poll(async () => (await snapshot(page))?.gameState).toBe('idle');
+        await expect(page.getByTestId('true-ending-screen')).toBeHidden();
+        const restoredJourney = await snapshot(page);
+        expect(restoredJourney.activeQuestIds).toContain(87);
+        expect(restoredJourney.claimedQuestIds).not.toContain(87);
         await assertProductionSavesUntouched(page);
     });
 

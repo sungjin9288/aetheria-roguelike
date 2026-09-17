@@ -7,6 +7,7 @@ import { applyItemPrefix } from '../utils/itemPrefixUtils';
 import { withCanonicalEquipmentBaseIdentity } from '../utils/equipmentBaseIdentity.js';
 import { MSG } from '../data/messages.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
+import { LIBRARY_BONUS_LOOT } from '../data/libraryLoot.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getProgressionLootMultiplier } from '../data/progressionProfiles.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
@@ -17,6 +18,32 @@ export type LootResult = {
     candidates: LootCandidate[];
     items: Item[];
     logs: LootLog[];
+};
+
+const normalBonusPool = (enemy: Monster, player: Player | null): Item[] | null => {
+    const map = player?.loc ? DB.MAPS[player.loc] : undefined;
+    const name = enemy.baseName || enemy.name;
+    if (enemy.isBoss || enemy.isElite || !map || map.level === 'infinite'
+        || !name || !map.monsters?.includes(name)
+        || !Number.isSafeInteger(enemy.level) || enemy.level <= 0) return null;
+
+    const tier = Object.entries(BALANCE.TIER_REQ_LEVEL)
+        .map(([key, value]) => [Number(key), Number(value)])
+        .filter(([, requiredLevel]) => requiredLevel <= enemy.level)
+        .sort((left, right) => right[1] - left[1])[0]?.[0];
+    const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter(item => (
+        item.tier === tier && item.name && !SIGNATURE_ITEM_REGISTRY[item.name]
+    ));
+    if (pool.length === 0) throw new Error('INVALID_NORMAL_BONUS_POOL');
+    if (player?.loc === LIBRARY_BONUS_LOOT.location && tier === LIBRARY_BONUS_LOOT.tier
+        && LIBRARY_BONUS_LOOT.monsterNames.includes(name)) {
+        return LIBRARY_BONUS_LOOT.itemNames.map(itemName => {
+            const item = pool.find(candidate => candidate.name === itemName);
+            if (!item) throw new Error('INVALID_LIBRARY_BONUS_POOL');
+            return item;
+        });
+    }
+    return pool;
 };
 
 const calculateCappedLootChance = (...factors: unknown[]) => {
@@ -179,7 +206,8 @@ export const processLoot = (
         const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
         const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
         if (random() < calculateCappedLootChance(bonusChance, dropRateMult, bossDropMult, progressionLootMult)) {
-            const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
+            const tierPool = normalBonusPool(enemy, player)
+                ?? [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
             if (tierPool.length > 0) {
                 const picked = tierPool[Math.floor(random() * tierPool.length)];
                 const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });

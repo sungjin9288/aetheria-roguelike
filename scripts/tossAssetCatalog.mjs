@@ -48,6 +48,7 @@ export const buildTossAssetCatalog = async ({ repoRoot }) => {
     const characterManifest = await readJson(path.join(repoRoot, 'src/data/characterArtManifest.json'));
     const equipmentManifest = await readJson(path.join(repoRoot, 'src/data/equipmentArtManifest.json'));
     const nonEquipmentManifest = await readJson(path.join(repoRoot, 'src/data/consumableArtManifest.json'));
+    const monsterManifest = await readJson(path.join(repoRoot, 'src/data/monsterArtManifest.json'));
 
     const characterFiles = Object.values(characterManifest.entries)
         .map((entry) => normalizePublicAssetPath(entry.runtimePath));
@@ -56,6 +57,8 @@ export const buildTossAssetCatalog = async ({ repoRoot }) => {
     const equipmentFamilyFiles = Object.values(equipmentManifest.art.families)
         .map((entry) => normalizePublicAssetPath(entry.runtimePath));
     const signatureOverlayFiles = Object.values(equipmentManifest.art.signatureOverlays)
+        .map((entry) => normalizePublicAssetPath(entry.runtimePath));
+    const monsterFiles = Object.values(monsterManifest.entries)
         .map((entry) => normalizePublicAssetPath(entry.runtimePath));
     const nonEquipmentFiles = Object.values(nonEquipmentManifest.entries)
         .map((assetKey) => `public/assets/items/${assetKey}.png`);
@@ -68,7 +71,6 @@ export const buildTossAssetCatalog = async ({ repoRoot }) => {
 
     const staticDirectories = [
         'public/assets/locations',
-        'public/assets/monsters',
         'public/assets/relics',
     ];
     const staticFiles = (await Promise.all(
@@ -87,6 +89,7 @@ export const buildTossAssetCatalog = async ({ repoRoot }) => {
         ...equipmentFiles,
         ...equipmentFamilyFiles,
         ...signatureOverlayFiles,
+        ...monsterFiles,
         ...nonEquipmentFiles,
         ...genericItemFiles,
         ...compatibilityAvatarFiles,
@@ -116,6 +119,7 @@ export const buildTossAssetCatalog = async ({ repoRoot }) => {
             equipment: equipmentFiles.length,
             equipmentFamilies: equipmentFamilyFiles.length,
             signatureOverlays: signatureOverlayFiles.length,
+            monsters: monsterFiles.length,
             nonEquipment: nonEquipmentFiles.length,
             compatibilityAvatars: compatibilityAvatarFiles.length,
         },

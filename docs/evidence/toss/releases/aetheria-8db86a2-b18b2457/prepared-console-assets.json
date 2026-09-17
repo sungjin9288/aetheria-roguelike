@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "candidateId": "aetheria-8db86a2-b18b2457",
+  "releaseId": null,
+  "status": "prepared_pending_deployment",
+  "assets": [
+    {
+      "kind": "logo",
+      "path": "assets/logo-600.png",
+      "width": 600,
+      "height": 600,
+      "sha256": "f157578a0a60d789fbbbf05abfec7872547c9d1f3eaa137db38c9da1a218e566",
+      "originalPlay": false,
+      "testMarker": false
+    },
+    {
+      "kind": "thumbnail",
+      "path": "assets/thumbnail-1932x828.png",
+      "width": 1932,
+      "height": 828,
+      "sha256": "6b32acf2ec7be87a553138e3f0ffec8a654764c5dc6e68384e7286dab1135b01",
+      "originalPlay": false,
+      "testMarker": false
+    },
+    {
+      "kind": "portrait_screenshot",
+      "path": "assets/screenshot-01-town.png",
+      "width": 636,
+      "height": 1048,
+      "sha256": "0e241f8e3cd5a37e75742917ae06abf15a99cb4df2593208330917f69013b32d",
+      "originalPlay": true,
+      "testMarker": false
+    },
+    {
+      "kind": "portrait_screenshot",
+      "path": "assets/screenshot-02-forest.png",
+      "width": 636,
+      "height": 1048,
+      "sha256": "a80017fe439043b8606012b006fc774312fdd2c34b11f2fe6cbdeef271c0ad71",
+      "originalPlay": true,
+      "testMarker": false
+    },
+    {
+      "kind": "portrait_screenshot",
+      "path": "assets/screenshot-03-event.png",
+      "width": 636,
+      "height": 1048,
+      "sha256": "194071a04ad4f8eb02fe079702513ef5f79e3a38e00db6f5fe0adfb012701fbe",
+      "originalPlay": true,
+      "testMarker": false
+    },
+    {
+      "kind": "portrait_screenshot",
+      "path": "assets/screenshot-04-combat.png",
+      "width": 636,
+      "height": 1048,
+      "sha256": "a3fbdcd1e01c8c7a3f17052d3210a601500238aebcf2219c82e2b56a93ad8b7b",
+      "originalPlay": true,
+      "testMarker": false
+    }
+  ]
+}

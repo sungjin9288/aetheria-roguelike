@@ -14,6 +14,7 @@ import { createQuestProgressState } from '../../utils/questProgress';
 import { getDefaultExpeditionFocusQuestIds } from '../../utils/expeditionMissionFocus';
 import { getRestCost } from '../../utils/expeditionReturnFlow';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
+import { endDevourBonus } from '../../utils/adventureRelicBonuses';
 
 const getStartingQuests = (player: any) => {
     const quests = Array.isArray(player.quests) ? player.quests : [];
@@ -184,7 +185,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
             if (player.level < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', MSG.JOB_CHANGE_LEVEL);
             const vitals = buildClassVitals(player.level, jobName, player.meta || {});
             const nextStats = getFullStats({
-                ...player,
+                ...endDevourBonus(player),
                 job: jobName,
                 maxHp: vitals.maxHp,
                 maxMp: vitals.maxMp,
@@ -192,7 +193,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
             dispatch({
                 type: AT.SET_PLAYER,
                 payload: (currentPlayer: any) => queueMilestoneStoryBeat({
-                    ...currentPlayer,
+                    ...endDevourBonus(currentPlayer),
                     job: jobName,
                     maxHp: vitals.maxHp,
                     hp: nextStats.maxHp,

@@ -1,0 +1,21 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "corroded-golem": "9c7d9b004d55c836232ed162a95661ef7782d248a18da9545ca80d530c0fc3a5",
+    "fire-drake": "d6fc76ebc2b43ec4fa656e1bc2ea664032ad6757b922500bf3f0256e8e1795c7",
+    "fire-wyvern": "1a8b7a9bdb13cf7603fb66253b54b109861f281205788177d522881d555ebf7f",
+    "ice-knight": "3957bc7703fac338d57a129b9ac4501deb53233c687c0a9eab6bbe545027d2fc",
+    "lake-guardian": "1d51e345faeca5822acf517c17755db022ba10b541bcb1d38918bd087cec8232",
+    "lightning-golem": "0136acc983fe2afd07bb155ee0806706576c07466f981a82bd4f3af48dbbc181"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "corroded-golem": "a002c4d8bfa73c623a1e3ebc02aa9aeb8fcd2db3ebdb97f62dfb0247f1b920b5",
+    "fire-drake": "dff8b9ac5ffed3191cd4ef953905c83d9e08c84104ba59352285f940b127ca12",
+    "fire-wyvern": "e00e05635dfd01b5f1e43282f98e91b327e3b97644f2afa605fd498144bdb973",
+    "ice-knight": "7b1d9e3d6f150788cf0912f2de941ef0bdfc260b7d202f5c11be304811356d0e",
+    "lake-guardian": "fd787cda3de0bd9f927276adccea06f3b4d2ecbf08c3f62203647f5b1192b3ec",
+    "lightning-golem": "179f2fb6880454189d44fef50911cde00474a67e20a94e993560b433ad537bfd"
+  }
+}

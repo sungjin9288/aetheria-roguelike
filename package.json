@@ -36,6 +36,8 @@
     "event-reward:verify": "node --import tsx scripts/verify-event-reward-coherence.mjs --verify docs/evidence/qa/release-complete-core/event-reward-coherence.json",
     "assets:brand": "python3 scripts/generate_app_brand_assets.py",
     "art:catalog": "node --import tsx scripts/artCatalog.mjs --stdout",
+    "art:monsters:build": "python3 scripts/generate_monster_catalog_art.py --output-root public --manifest-output src/data/monsterArtManifest.json",
+    "art:monsters:verify": "node --import tsx scripts/verify-art-assets.mjs --scope monsters",
     "art:verify": "node --import tsx scripts/verify-art-assets.mjs",
     "build:guard": "node scripts/build-guard.mjs",
     "lint": "eslint .",

@@ -29,7 +29,7 @@ export const CONSTANTS: GameConstants = {
     ABYSS_MAP_NAME: '혼돈의 심연',
     ENHANCE_MATERIAL_NAME: '강화 재료',
 
-    // Note: GEMINI_API_KEY moved to server-side (api/ai-proxy.js)
+    // GEMINI_API_KEY는 Cloudflare Pages Function에서만 사용한다.
     // Client no longer needs this key directly
     USE_AI_PROXY: ENV.VITE_USE_AI_PROXY === 'true' || false,
     AI_PROXY_URL: ENV.VITE_AI_PROXY_URL || '/api/ai-proxy',

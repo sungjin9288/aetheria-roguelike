@@ -1,6 +1,8 @@
 // cycle 321: unused Player type import 제거 — equipmentUtils 어디에서도 Player 참조 0건.
 import type { EquipSlots, Item } from '../types/index.js';
 import { BALANCE } from '../data/constants.js';
+import { canEquip, isWeapon, isTwoHandWeapon } from './equipmentValidation.js';
+export { isWeapon, getWeaponHands, isTwoHandWeapon } from './equipmentValidation.js';
 
 const MAGIC_WEAPON_KEYWORDS: any = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
 const RANGED_WEAPON_KEYWORDS: any = ['활', '석궁'];
@@ -20,15 +22,9 @@ const WEAPON_SKILL_BY_ELEM: any = {
     물리: { name: '아케인 볼트', effect: null, mp: 22, mult: 2.3, cooldown: 1 },
 };
 
-export const isWeapon = (item: Item | null | undefined) => item?.type === 'weapon';
-
 export const isShield = (item: Item | null | undefined) => item?.type === 'shield';
 
 export const isFocusOffhand = (item: Item | null | undefined) => isShield(item) && item?.subtype === 'focus';
-
-export const getWeaponHands = (weapon: any) => Math.max(1, Number(weapon?.hands) || 1);
-
-export const isTwoHandWeapon = (weapon: any) => isWeapon(weapon) && getWeaponHands(weapon) >= 2;
 
 export const isOneHandWeapon = (weapon: any) => isWeapon(weapon) && !isTwoHandWeapon(weapon);
 
@@ -309,6 +305,7 @@ const getPrimaryEquipmentDelta = (item: Item, diff: EquipmentStatDiff) => {
 
 interface EquipmentDecisionPlayer {
     job?: string;
+    level?: number;
     equip?: EquipSlots;
 }
 
@@ -331,7 +328,12 @@ export const getEquipmentDecision = (
         crit: Math.round((nextProfile.critBonus - currentProfile.critBonus) * 100),
         mp: nextProfile.mpBonus - currentProfile.mpBonus,
     };
-    const equipable = !Array.isArray(item.jobs) || item.jobs.includes(player?.job as string);
+    const validation = canEquip(item, { job: player?.job || '', level: player?.level ?? 1 }, equip);
+    const equipable = validation.ok;
+    const restriction = validation.ok ? null
+        : validation.reason === 'level' ? `레벨 ${validation.reqLevel} 필요`
+        : validation.reason === 'job' ? '직업 제한'
+        : '양손 무기 사용 중';
     const score = getEquipmentScore(diff);
     const matchesJob = equipable && Array.isArray(item.jobs) && item.jobs.includes(player?.job as string);
     const setContribution = matchesJob ? (isTwoHandWeapon(item) ? 2 : 1) : 0;
@@ -340,7 +342,7 @@ export const getEquipmentDecision = (
         diff,
         equipable,
         score,
-        recommendation: !equipable ? '직업 제한' : score > 0 ? '추천 교체' : score < 0 ? '능력치 하락' : '비슷한 성능',
+        recommendation: restriction ?? (score > 0 ? '추천 교체' : score < 0 ? '능력치 하락' : '비슷한 성능'),
         tone: !equipable ? 'blocked' : score > 0 ? 'positive' : score < 0 ? 'negative' : 'neutral',
         primaryDelta: getPrimaryEquipmentDelta(item, diff),
         setContribution,

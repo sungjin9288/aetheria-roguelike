@@ -1,0 +1,36 @@
+{
+  "mode": "built-in",
+  "runtimeAdopted": false,
+  "records": [
+    {
+      "slug": "red-dragon",
+      "name": "레드 드래곤",
+      "prompt": "Use case: stylized-concept. ONE enemy sprite for Aetheria mobile pixel-art RPG. Crisp coarse pixel art, broad coherent solid color clusters and hard stepped edges, readable at 32px on dark and ivory backgrounds. Square three-quarter front composition, complete creature including every horn, wing and foot entirely inside generous empty margins. Genuine transparent RGBA background and openings. No text, frame, checkerboard, backdrop, ground, shadow, haze, tiny detached particles or giant eye motifs. RED DRAGON: powerful natural dragon with broad reddish-brown wing membranes and a low long reptilian head; naturally connected dorsal armor plates from neck to tail. Large sturdy haunches and connected thick tail, compact spread-wing silhouette with readable membrane planes. Rust-red scales, midvalue warm terracotta membranes and pale warm belly. No turquoise ice ornaments, crystal spikes, armor suit or crown."
+    },
+    {
+      "slug": "demon-apostle",
+      "name": "마왕의 사도",
+      "prompt": "Use case: stylized-concept. ONE enemy sprite for Aetheria mobile pixel-art RPG. Crisp coarse pixel art, broad coherent solid color clusters and hard stepped edges, readable at 32px on dark and ivory backgrounds. Square three-quarter front composition, complete creature including every horn, wing and foot entirely inside generous empty margins. Genuine transparent RGBA background and openings. No text, frame, checkerboard, backdrop, ground, shadow, haze, tiny detached particles or giant eye motifs. DEMON LORD'S APOSTLE: asymmetrical ritual servant with ONE HIGH ceremonial shoulder plate and one LARGE heraldic shield bearing a simple abstract angular emblem, not lettering. Other shoulder low, no royal crown. Sturdy planted legs and short ritual mantle attached to torso. Broad midvalue slate and aged brass planes; imposing attendant, not king. Shield and high shoulder are opposite asymmetrical silhouette anchors."
+    },
+    {
+      "slug": "labyrinth-demon",
+      "name": "미궁의 마왕",
+      "prompt": "Use case: stylized-concept. ONE enemy sprite for Aetheria mobile pixel-art RPG. Crisp coarse pixel art, broad coherent solid color clusters and hard stepped edges, readable at 32px on dark and ivory backgrounds. Square three-quarter front composition, complete creature including every horn, wing and foot entirely inside generous empty margins. Genuine transparent RGBA background and openings. No text, frame, checkerboard, backdrop, ground, shadow, haze, tiny detached particles or giant eye motifs. LABYRINTH DEMON LORD: broad immovable blocking body with enormous chest armor built from a few visibly interlocking MAZE-like rectangular tiers. LOW thick horns, heavy wide thighs and planted feet, compact head. Opaque warm gray stone-metal planes with broad lighter maze ridges. Keep maze simple at32px. No tall crown, thin maze line texture, sword, floating symbols or huge wings."
+    },
+    {
+      "slug": "chain-demon",
+      "name": "사슬 마왕",
+      "prompt": "Use case: stylized-concept. ONE enemy sprite for Aetheria mobile pixel-art RPG. Crisp coarse pixel art, broad coherent solid color clusters and hard stepped edges, readable at 32px on dark and ivory backgrounds. Square three-quarter front composition, complete creature including every horn, wing and foot entirely inside generous empty margins. Genuine transparent RGBA background and openings. No text, frame, checkerboard, backdrop, ground, shadow, haze, tiny detached particles or giant eye motifs. CHAIN DEMON LORD: bulky demon whose arms are heavy restraint cuffs, with very THICK chains physically connected to the cuffs and torso harness. A few oversized interlocking oblong chain links hang in a low weighted arc between body and arms. Broad dull iron midgray planes and warm worn metal cuffs, small horned head, sturdy legs. Links must read as weight-bearing connected chains, not little circular decorations. No detached chain particles, glowing aura or whip filament."
+    },
+    {
+      "slug": "ifrit-lord",
+      "name": "화염 군주 이프리트",
+      "prompt": "Use case: stylized-concept. ONE enemy sprite for Aetheria mobile pixel-art RPG. Crisp coarse pixel art, broad coherent solid color clusters and hard stepped edges, readable at 32px on dark and ivory backgrounds. Square three-quarter front composition, complete creature including every horn, wing and foot entirely inside generous empty margins. Genuine transparent RGBA background and openings. No text, frame, checkerboard, backdrop, ground, shadow, haze, tiny detached particles or giant eye motifs. IFRIT FLAME LORD: vertically rising elemental sovereign with BROAD flame shoulders, a bright molten LAVA HEART in the chest and THICK LOWER BODY physically connected to the flame torso. Three large solid rising flame lobes, sturdy tapering lower mass, not thin smoke. Warm midvalue burnt-orange and amber outer planes, pale gold heart. Tall upward silhouette with no metal armor crown, no wings, no giant eye, no detached flame wisps. Fire rendered as opaque coarse stepped shapes, genuine transparent gaps."
+    },
+    {
+      "slug": "flame-sovereign",
+      "name": "화염의 군주",
+      "prompt": "Use case: stylized-concept. ONE enemy sprite for Aetheria mobile pixel-art RPG. Crisp coarse pixel art, broad coherent solid color clusters and hard stepped edges, readable at 32px on dark and ivory backgrounds. Square three-quarter front composition, complete creature including every horn, wing and foot entirely inside generous empty margins. Genuine transparent RGBA background and openings. No text, frame, checkerboard, backdrop, ground, shadow, haze, tiny detached particles or giant eye motifs. FLAME SOVEREIGN: horizontally broad regal figure in CLOSED heavy heat armor, a LARGE LOW flame crown and broad squared shoulders, feet set wide. Wide armored royal stance distinct from a tall elemental ifrit. Opaque burnt bronze-red armor with broad medium copper planes, pale warm crown tips. Face closed and small, chest plated shut rather than exposed lava heart. Thick flame crown physically attached above helmet, not tall horns, no rising tapering flame body, cape haze or detached sparks."
+    }
+  ]
+}

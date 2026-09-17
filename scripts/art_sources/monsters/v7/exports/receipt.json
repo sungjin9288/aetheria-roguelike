@@ -1,0 +1,77 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "centipede": "42cb0e9924cba98ee1a8e4ef99d91dc0a75913b8cd48499e919092a6a49c6d7b",
+    "dark-mage": "88973a659a070c0203d622b60acc6eecad3622d65e7fbbf6cc07361000aac585",
+    "harpy": "649095e032b17d9234dcfd7a75373cf121a095158e8ff1cf23c523478e4923f2",
+    "kobold-miner": "1a50dbdb830f6b1a2aefff6f7c210594b5692be91b3907c3e5e71da9ca51ad52",
+    "water-spirit": "f6cfc9c5a77a89b65d910a29d25486719c16f611939a7e6a1497f8b82bf82d0c"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "selection": {
+    "centipede": {
+      "backgroundSeeds": [],
+      "master": "centipede.png",
+      "sha256": "e1854ec9593eb9d145e7cad1ca20736bd90d26b462bfde4a0e967b50f11ba9e1"
+    },
+    "dark-mage": {
+      "backgroundSeeds": [],
+      "master": "dark-mage-readable.png",
+      "sha256": "a772ed3b8aca55d014e04369c4d0c92f27e4ab0ee43313f15b6dfee08d301b4a"
+    },
+    "harpy": {
+      "backgroundSeeds": [
+        [
+          0,
+          0
+        ],
+        [
+          560,
+          817
+        ],
+        [
+          549,
+          800
+        ],
+        [
+          426,
+          426
+        ],
+        [
+          460,
+          762
+        ],
+        [
+          774,
+          527
+        ]
+      ],
+      "master": "harpy-compact-candidate.png",
+      "sha256": "3e9679a9ebfafea9483223dec3a4fa5c12636c90923ca0dfeb09e13fb5ec7620"
+    },
+    "kobold-miner": {
+      "backgroundSeeds": [
+        [
+          0,
+          0
+        ],
+        [
+          783,
+          550
+        ],
+        [
+          491,
+          492
+        ]
+      ],
+      "master": "kobold-miner.png",
+      "sha256": "c04ea1e1e9fe64d43880c118b0dcae221f9bf22efaf732628318f1fd5c8aec0c"
+    },
+    "water-spirit": {
+      "backgroundSeeds": [],
+      "master": "water-spirit.png",
+      "sha256": "e64573d614293c2a94f8011fe260e884ff1015a52a7a13da8a090150722482f0"
+    }
+  }
+}

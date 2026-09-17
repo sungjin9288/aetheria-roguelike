@@ -30,6 +30,7 @@ const SOURCE_SNAPSHOT_PATHS = Object.freeze([
     'src/hooks/gameActions/_shared.ts',
     'src/utils/statsCalculator.ts',
     'src/utils/equipmentUtils.ts',
+    'src/utils/equipmentValidation.ts',
     'src/systems/CombatEngine.enemyAI.ts',
     'src/utils/signatureSetBonus.ts',
 ].sort());

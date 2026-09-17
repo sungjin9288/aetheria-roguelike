@@ -93,7 +93,7 @@ const getChainPreview = (outcome: any): EventChoicePreview => {
     if (rewardType && rewardText[rewardType]) return { text: rewardText[rewardType], tone: 'reward' };
     if (outcome?.type === 'chain_advance') return { text: '이야기가 다음 단계로 이어짐', tone: 'story' };
     if (outcome?.type === 'chain_advance_fail') return { text: '이야기의 흐름이 달라질 수 있음', tone: 'danger' };
-    if (outcome?.type === 'nothing') return { text: '이번에는 변화 없이 지나감', tone: 'unknown' };
+    if (outcome?.type === 'nothing') return { text: '이번 원정에서 미룸 · 귀환 후 다시 선택 가능', tone: 'unknown' };
     return { text: '결과는 선택 뒤에 드러남', tone: 'unknown' };
 };
 

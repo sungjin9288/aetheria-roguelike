@@ -56,7 +56,7 @@ export const MSG = {
     VICTORY: (exp: number, gold: number) => `승리했습니다. 경험 +${exp} · 골드 +${gold}`,
     FIRST_BOSS_GOLD: (gold: number) => `첫 보스 토벌 보상 · 골드 +${gold}`,
     BLOOD_OATH_HEAL: (health: number) => `피의 서약으로 생명을 ${health}만큼 회복했습니다.`,
-    WORLD_DEVOUR_HEALTH: (health: number) => `세계 포식자가 영혼을 흡수해 최대 생명이 ${health}만큼 늘었습니다.`,
+    WORLD_DEVOUR_HEALTH: (health: number) => `세계 포식자가 영혼을 흡수했습니다. 다음 전투 한 번의 기본 최대 생명과 현재 생명이 ${health}만큼 늘어납니다.`,
     IMMORTAL_WARRIOR_HEAL: (health: number) => `불멸의 전사 효과로 생명을 ${health}만큼 회복했습니다.`,
     INFINITE_DEVOUR_HEAL: (health: number) => `무한 포식 효과로 생명을 ${health}만큼 회복했습니다.`,
     STAR_CORE_RESTORE: '별의 핵이 기력을 모두 회복했습니다.',
@@ -382,7 +382,7 @@ export const MSG = {
     COMBAT_DIGEST_LOOT: (items: string) => `전리품 ${items}`,
     COMBAT_DIGEST: (parts: string) => `전투 정리: ${parts}`,
     COMBAT_DIGEST_BOSS_REWARD: (bonus: number, hint: string) => `보스 보상: ${bonus > 0 ? `첫 토벌 골드 +${bonus}` : '보스 전리품'} · ${hint}`,
-    KILL_STACK_ATTACK: (source: string, percent: number) => `${source} 효과로 이번 전투의 공격력이 ${percent}% 올랐습니다.`,
+    KILL_STACK_ATTACK: (source: string, percent: number) => `${source} 효과로 이번 원정의 공격력이 ${percent}% 올랐습니다.`,
     COMBAT_DIGEST_EQUIP_UPGRADE: (name: string, summary: string) => `장비 갱신: ${name} · ${summary}`,
     COMBAT_DIGEST_TRAIT_HINT: (name: string, summary: string) => `성향 공명: ${name} · ${summary}`,
     COMBAT_DIGEST_DEFAULT_SUMMARY: '장비 효율 상승',
@@ -399,6 +399,7 @@ export const MSG = {
     // --- 전투 아이템/스킬 ---
     COMBAT_CHAOS_SKILL: (name: string) => `뒤섞인 기술: [${name}]이(가) 발동했습니다!`,
     COMBAT_DOT_KILL: (name: string) => `[지속 피해] ${name}이(가) 쓰러졌습니다!`,
+    COMBAT_COUNTER_KILL: (name: string) => `[반사·반격] ${name}이(가) 쓰러졌습니다!`,
     ITEM_USE_SIMPLE: (name: string) => `${name} 사용.`,
     ITEM_USE_CURE: (name: string) => `${name} 사용: 상태이상 해제`,
 

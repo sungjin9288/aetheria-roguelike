@@ -64,6 +64,19 @@ const PARTIAL_2_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.15, defMult: 1
 const PARTIAL_1_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.05 });
 export const OUTFIT_SLOT_COUNT = 3;
 
+export const getJobOutfitNextHint = (
+    affinity: Pick<OutfitAffinity, 'matchCount'> & { twoHandCounted?: boolean },
+    job: string | undefined,
+): string => {
+    const { matchCount, twoHandCounted } = affinity;
+    if (matchCount === 0) return `같은 직업(${job}) 호환 장비 1개 장착 시 세트 효과 발동`;
+    if (matchCount === 1) return '1개 더 맞추면 2단계 효과 (공격력 +15%, 방어력 +10%)';
+    if (matchCount === 2) return '1개 더 맞추면 풀세트 효과 (공격력 +30%, 방어력 +20%)';
+    return twoHandCounted
+        ? '풀세트 발동 — 양손 무기 2피스와 방어구 매치 완료'
+        : '풀세트 발동 — 모든 슬롯 매치 완료';
+};
+
 /**
  * 직업별 set 효과 명칭 — 정체성 + 분위기로 흥미 유발.
  *

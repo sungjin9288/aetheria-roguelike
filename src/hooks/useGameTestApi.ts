@@ -437,6 +437,10 @@ export const useGameTestApi = (
                     titles: [...(er.player.titles || [])],
                     activeTitle: er.player.activeTitle || null,
                     demonKingSlain: er.player.stats?.demonKingSlain || 0,
+                    activeQuestIds: (er.player.quests || []).map((quest: any) => quest.id),
+                    claimedQuestIds: Array.isArray(er.player.stats?.claimedQuestIds)
+                        ? [...er.player.stats.claimedQuestIds]
+                        : [],
                 };
             },
             getInvestmentSnapshot: () => {
@@ -820,6 +824,7 @@ export const useGameTestApi = (
                         armor: structuredClone(basePlayer.equip?.armor || null),
                         offhand: null,
                     },
+                    quests: [{ id: 87, progress: 0, isBounty: false }],
                     settings: { readabilityMode: 'high', equipmentDetailMode: 'full' },
                     classJourney,
                     meta,

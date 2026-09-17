@@ -2,9 +2,9 @@
   "hashAlgorithm": "sha256",
   "reportHash": "424909de42bc199747279d17e645b9360996912c2b669f637a7ccce9e4574597",
   "authorityHashes": {
-    "combatExp": "a0f600bee0505624e0e1766991c119aabe40bdc97172b9dc17eaecf4e02786ff",
-    "combatLoot": "10fe7c4e995a4aa7ed2b2f97f1ecbbad2d5070b41ecb6e33edbad3dcaebcaee7",
-    "eventReward": "9a77e73f78cfa1322d0f6a8423825d8b9206100c18f63db217935f4c66556811",
+    "combatExp": "5c2bb0afaef07545214ae1bb8bb835bba552a43de61ce90aeab397b72300729d",
+    "combatLoot": "876171b92ed6ec477d54016df5f37994ec30e1cbc6a2681d52b37c60409a99a0",
+    "eventReward": "7062bc848088e17ad5c7db623e4df12b5220f0c0fe068cc1b893873c7bfa00ee",
     "progressionProfile": "3373f9a58e39a888bd18aaaa674e542c4682a30ca9edc24631c9c2c83ba5c483"
   },
   "report": {

@@ -1,0 +1,16 @@
+{
+  "candidateId": "aetheria-f45e44b-048c2eba",
+  "gitCommit": "f45e44b0f050cd9832416823b6c20411cc8773e9",
+  "gitTree": "1c80adda8473dafdf89ec14d7a7d26dcdcc6ff84",
+  "cleanTree": true,
+  "sdkVersion": "3.0.3",
+  "aitPath": "aetheria.ait",
+  "aitSha256": "048c2eba564b9a6872bfaddd8fe18d0d3c8120b604d9c4909dc566a7f05ace04",
+  "aitBytes": 72830455,
+  "distRoot": "dist-toss",
+  "distTreeSha256": "d0dbb7faeb269ea610d3a51f94afdcd09cabf73972a829a307c7a506fe992874",
+  "distBytes": 74097353,
+  "verifierReportPath": "docs/evidence/toss/releases/aetheria-f45e44b-048c2eba/bundle-report.json",
+  "verifierReportSha256": "f3a4965d0ae647fe9b053538d5c4fce8d1955d0bc9219fac5be61308b747299a",
+  "builtAt": "2026-09-04T01:51:54.885Z"
+}

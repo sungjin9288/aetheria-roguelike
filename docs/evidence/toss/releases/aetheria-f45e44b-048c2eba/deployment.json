@@ -1,0 +1,11 @@
+{
+  "candidateId": "aetheria-f45e44b-048c2eba",
+  "artifactSha256": "048c2eba564b9a6872bfaddd8fe18d0d3c8120b604d9c4909dc566a7f05ace04",
+  "appName": "aetheria",
+  "environment": "sandbox",
+  "deploymentId": "01a06a1d-8216-7278-a5dc-c5fd1970bf46",
+  "releaseId": "20260904-2",
+  "uploadedAt": "2026-09-04T04:27:00.000Z",
+  "receiptRef": "external/console-deployment.json",
+  "receiptSha256": "854eeba2b7d325cfb92c874c73ecd6219e7e18afaef6aadf080698b9387d1406"
+}

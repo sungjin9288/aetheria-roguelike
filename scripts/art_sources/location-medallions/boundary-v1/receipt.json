@@ -1,0 +1,294 @@
+{
+  "classification": "runtime-adopted-verification-in-progress",
+  "sourceSheets": [
+    {
+      "file": "frontier.png",
+      "sha256": "7efa47e5e46e8a82cc31df156e302a9481978f5e2f09ecf6c9f2ba86658cb708"
+    },
+    {
+      "file": "midlands.png",
+      "sha256": "058b9947d2b95730c1446460aa973a811b931c5b028282f3aeb717be140bd1bf"
+    },
+    {
+      "file": "endgame.png",
+      "sha256": "a18280d5059f08f547ec012e95e528e48c05fc6917f4c7d39e946f8cf16e702f"
+    },
+    {
+      "file": "secrets.png",
+      "sha256": "b1a36f0e67a5bcbfc96c2cea4784daf0b686265dcc5ce3a424ced11358dc4df7"
+    },
+    {
+      "file": "lava-zone.png",
+      "sha256": "8125d1ab2fb195649db5c1b9f3811f9771d3ddf820a6984cc8fd4dd0a1ab4936"
+    }
+  ],
+  "changedCount": 12,
+  "unchangedCount": 41,
+  "entries": [
+    {
+      "file": "abandoned-laboratory.png",
+      "previousSha256": "ccf3e6724790c69e4dba2520477f0df4460f5a89405b5833c8ea1c51633dc076",
+      "runtimeSha256": "38c3ce9808411ecfa1821e8bff50a552635d09f79fb945d7c25dfc0e81d57592"
+    },
+    {
+      "file": "abandoned-mine.png",
+      "previousSha256": "f9147ed061e82b2dfd18181290cce5020118df0ae8da58b33c303d9328cc6d7d",
+      "runtimeSha256": "e82fa2e02cff12a782b5a20bf18a336950efe466d3a982bf8be9522b104cb091"
+    },
+    {
+      "file": "aether-gate.png",
+      "previousSha256": "7809db9c643d4ee48706c1fbb5d43c89db9f55d4c2f7b78b721a3c9779fdd254",
+      "runtimeSha256": "7809db9c643d4ee48706c1fbb5d43c89db9f55d4c2f7b78b721a3c9779fdd254"
+    },
+    {
+      "file": "aether-ruins.png",
+      "previousSha256": "c5b3657e20cb9d36a4d2408c0c2a3e54646d9d55ed4f6b2a41c87225d0cdef24",
+      "runtimeSha256": "c5b3657e20cb9d36a4d2408c0c2a3e54646d9d55ed4f6b2a41c87225d0cdef24"
+    },
+    {
+      "file": "ancient-magic-tower.png",
+      "previousSha256": "3e5c289e13074703edddb728914ebee0dd3474fd5a3d4ccbdf8d9e1252041574",
+      "runtimeSha256": "7c427ba6744df6c8ce20b6a7bd38e6e31dee8376fe562edac6786d99640956e9"
+    },
+    {
+      "file": "ancient-sewer.png",
+      "previousSha256": "dda230e0e4fa89ec0feb58734def948485664241e8bdd4f7e4212dc26684c46c",
+      "runtimeSha256": "dda230e0e4fa89ec0feb58734def948485664241e8bdd4f7e4212dc26684c46c"
+    },
+    {
+      "file": "ancient-temple-city.png",
+      "previousSha256": "97e0774134ba2163caabb78be48be66e6105af8e99df96f685768e3aa5132f0d",
+      "runtimeSha256": "97e0774134ba2163caabb78be48be66e6105af8e99df96f685768e3aa5132f0d"
+    },
+    {
+      "file": "ancient-vault.png",
+      "previousSha256": "f5a890e6ea486f49630ff29dd9615e36d3aff297d9d5553ff0ed2c9156c1d3da",
+      "runtimeSha256": "f5a890e6ea486f49630ff29dd9615e36d3aff297d9d5553ff0ed2c9156c1d3da"
+    },
+    {
+      "file": "apocalypse-battlefield.png",
+      "previousSha256": "276d0949607b17272785c7c08ae534cde833a4163afbac4199524db2e53605db",
+      "runtimeSha256": "276d0949607b17272785c7c08ae534cde833a4163afbac4199524db2e53605db"
+    },
+    {
+      "file": "chaos-abyss.png",
+      "previousSha256": "e388da0958a4ef32ad6af929ebfa51907da6efaee5bf550a22c6d9425fe55d7a",
+      "runtimeSha256": "e388da0958a4ef32ad6af929ebfa51907da6efaee5bf550a22c6d9425fe55d7a"
+    },
+    {
+      "file": "collapsed-magic-fortress.png",
+      "previousSha256": "8cb19bbb4d6ad7bbbd3dafe3655cd71acf33d9ee5f832c668ff4ed1d892dad30",
+      "runtimeSha256": "8cb19bbb4d6ad7bbbd3dafe3655cd71acf33d9ee5f832c668ff4ed1d892dad30"
+    },
+    {
+      "file": "crystal-cave.png",
+      "previousSha256": "d783d74157ed8a1320b41478e8133d2feb79ff2b1fbc0dfe53f268a0d67cceba",
+      "runtimeSha256": "d783d74157ed8a1320b41478e8133d2feb79ff2b1fbc0dfe53f268a0d67cceba"
+    },
+    {
+      "file": "cursed-graveyard.png",
+      "previousSha256": "693fb704d1be6ba2c488305e500dd0190a48fbb70271675f5f819454da8d0272",
+      "runtimeSha256": "693fb704d1be6ba2c488305e500dd0190a48fbb70271675f5f819454da8d0272"
+    },
+    {
+      "file": "dark-castle.png",
+      "previousSha256": "a6f45102b0223c14bcb1d6f30f2a7f759dbd3e15972eb3a480fef8c8b30f243b",
+      "runtimeSha256": "21d5249915acc9b21c5707855f91e4b6aec0cdca4e3802f352c134fad6b7c66f"
+    },
+    {
+      "file": "dark-cave.png",
+      "previousSha256": "63b1ed6c43d7f73854cf8b0082ab8ce8b6b7a5af6110d4106437c8d21e632abe",
+      "runtimeSha256": "63b1ed6c43d7f73854cf8b0082ab8ce8b6b7a5af6110d4106437c8d21e632abe"
+    },
+    {
+      "file": "dark-dungeon.png",
+      "previousSha256": "62659be626fe042ce150b1a79b82198a9e6636148188479f728c8395d8f2569c",
+      "runtimeSha256": "62659be626fe042ce150b1a79b82198a9e6636148188479f728c8395d8f2569c"
+    },
+    {
+      "file": "deep-sea-corridor.png",
+      "previousSha256": "35637ec0858fac7d94e044e4db7b6c9c461407c8e3b4dde86c1bdbfa752599c3",
+      "runtimeSha256": "3597bf297f9a0dd4e9b1cf7d8e68a72ef5e8f4e7e69f93528d879441abe70d34"
+    },
+    {
+      "file": "demon-king-castle.png",
+      "previousSha256": "70d8ff3872ab78c5e5239063767202c67bc60b00d8e9b43a59f07e7e37a881ae",
+      "runtimeSha256": "70d8ff3872ab78c5e5239063767202c67bc60b00d8e9b43a59f07e7e37a881ae"
+    },
+    {
+      "file": "desert-oasis.png",
+      "previousSha256": "613db82882aa7755dfcb9d4982d99cf48c44373c20e80d7781bb246a0bc50457",
+      "runtimeSha256": "613db82882aa7755dfcb9d4982d99cf48c44373c20e80d7781bb246a0bc50457"
+    },
+    {
+      "file": "dimensional-rift.png",
+      "previousSha256": "96d6ec56fa0c52f259bfd49057d5f4cca95a580589ab09141a7304069acb64e1",
+      "runtimeSha256": "96d6ec56fa0c52f259bfd49057d5f4cca95a580589ab09141a7304069acb64e1"
+    },
+    {
+      "file": "dragon-nest.png",
+      "previousSha256": "a2a778eee340c17bc778b5a6468f7c5742b954dc2844400e10dcf45e48ac4623",
+      "runtimeSha256": "a2a778eee340c17bc778b5a6468f7c5742b954dc2844400e10dcf45e48ac4623"
+    },
+    {
+      "file": "fallen-outpost.png",
+      "previousSha256": "96fb2048b0ebfb80d763bea1c56e660df51faadb375c1d59e16af1fe05eb22ef",
+      "runtimeSha256": "63f77311315f19b9b060d73b14400a009ca4e42e1dd45d9ae742fe0358508647"
+    },
+    {
+      "file": "fire-temple.png",
+      "previousSha256": "7e2b78e8e6ace5d86e9f176341b12a5e713bc501ffaf133f3b07bd21bedf7472",
+      "runtimeSha256": "08db5a49fff9c4f116ef3e11550dff303f61aa365d95f60cda1a86fd32382790"
+    },
+    {
+      "file": "flame-canyon.png",
+      "previousSha256": "aee8ad5884cff5b2b7a3cfc3576baa346196906a00fbe971e401cba00ead87e7",
+      "runtimeSha256": "aee8ad5884cff5b2b7a3cfc3576baa346196906a00fbe971e401cba00ead87e7"
+    },
+    {
+      "file": "forbidden-library.png",
+      "previousSha256": "19ac52041e120f062df7667ed4444010e3fa7ff33d2efc94c6617d82b398fbc5",
+      "runtimeSha256": "fe4666b5cf9a63731b4096e0f817b12e8b8ff99bc6be3099326645dd2869a66d"
+    },
+    {
+      "file": "forgotten-ruins.png",
+      "previousSha256": "87843fa686a37f889a6f8811aa2f80f2847125305ed5188b1c41f04397e27529",
+      "runtimeSha256": "87843fa686a37f889a6f8811aa2f80f2847125305ed5188b1c41f04397e27529"
+    },
+    {
+      "file": "frost-storm-ruins.png",
+      "previousSha256": "40834297da7ddf104668aeb5399bb330f1bcba7993b90c226d3e52ee033c2111",
+      "runtimeSha256": "40834297da7ddf104668aeb5399bb330f1bcba7993b90c226d3e52ee033c2111"
+    },
+    {
+      "file": "glacial-abyss.png",
+      "previousSha256": "3bcc35fe1ba6f7a65cb63736821af2cc23a9b6cb20b0cdac282373b7c4a4ae8c",
+      "runtimeSha256": "3bcc35fe1ba6f7a65cb63736821af2cc23a9b6cb20b0cdac282373b7c4a4ae8c"
+    },
+    {
+      "file": "golden-kingdom.png",
+      "previousSha256": "e102e85ed4e44252725f822852263a6c2cd332f6067d9cbecc34d0541ac1b819",
+      "runtimeSha256": "386bf50eb6bd429d54b1020d8ed3760e5c8dbac29853e80c6e012df27f109ffd"
+    },
+    {
+      "file": "ice-citadel.png",
+      "previousSha256": "ef26b8e6fbe1ec9e479726dbca716e6f9de33a68633d2701ab0befa40543932b",
+      "runtimeSha256": "8abedc54c0b3f0baf725d6e49bb33f586da47100ad420d030ab897d5a9d22171"
+    },
+    {
+      "file": "lake-temple.png",
+      "previousSha256": "5cb308a2a69e1aa7127945e4750e8c5eadd90021eb76ad8f989a05cc97d0d000",
+      "runtimeSha256": "5cb308a2a69e1aa7127945e4750e8c5eadd90021eb76ad8f989a05cc97d0d000"
+    },
+    {
+      "file": "lava-zone.png",
+      "previousSha256": "691734937a316a0093577df4974d168ec8d37725cae6a5daee15d17aa168b9f5",
+      "runtimeSha256": "691734937a316a0093577df4974d168ec8d37725cae6a5daee15d17aa168b9f5"
+    },
+    {
+      "file": "machine-ruins.png",
+      "previousSha256": "dba2d32f7e73c922ad59a68028857cb4df9a664a549ce52bfa2d48324d4f28bc",
+      "runtimeSha256": "dba2d32f7e73c922ad59a68028857cb4df9a664a549ce52bfa2d48324d4f28bc"
+    },
+    {
+      "file": "northern-fortress.png",
+      "previousSha256": "5818a67efd3f7210f0403965828437862c6616882037ca6d87990b16e22a8a42",
+      "runtimeSha256": "5818a67efd3f7210f0403965828437862c6616882037ca6d87990b16e22a8a42"
+    },
+    {
+      "file": "northern-snowfield.png",
+      "previousSha256": "9880f98c8629453749d0b34e11812e53469b1fd5814575203e96e39b8f8c945d",
+      "runtimeSha256": "9880f98c8629453749d0b34e11812e53469b1fd5814575203e96e39b8f8c945d"
+    },
+    {
+      "file": "pyramid.png",
+      "previousSha256": "72fe8885e4655757bc86dd6eed300ba1d7920f55bc1f40ecffd39589551b41ed",
+      "runtimeSha256": "72fe8885e4655757bc86dd6eed300ba1d7920f55bc1f40ecffd39589551b41ed"
+    },
+    {
+      "file": "quiet-forest.png",
+      "previousSha256": "b377b1568dbb74ad33b01f9f53cebb172ab616434c1ce2650bbbff8df7ff45a2",
+      "runtimeSha256": "b377b1568dbb74ad33b01f9f53cebb172ab616434c1ce2650bbbff8df7ff45a2"
+    },
+    {
+      "file": "rift-outpost.png",
+      "previousSha256": "a40f14cc917be334b3ce28ab2d3a808fc0d4ae0997cf1a3bcd3832535c205fff",
+      "runtimeSha256": "a40f14cc917be334b3ce28ab2d3a808fc0d4ae0997cf1a3bcd3832535c205fff"
+    },
+    {
+      "file": "river-of-souls.png",
+      "previousSha256": "9d44522241af16c45346b93217ed7527e228ff619f1ac90543939bdd0d89033f",
+      "runtimeSha256": "9d44522241af16c45346b93217ed7527e228ff619f1ac90543939bdd0d89033f"
+    },
+    {
+      "file": "sacred-lake.png",
+      "previousSha256": "d1fe96b7954ec4ebf5a731bbe4f327d4eae0832e734c9995e34f0b76df360d62",
+      "runtimeSha256": "d1fe96b7954ec4ebf5a731bbe4f327d4eae0832e734c9995e34f0b76df360d62"
+    },
+    {
+      "file": "sky-garden.png",
+      "previousSha256": "deaae76baa463e5cb0d9fe07bd086064cc6ad769d9ba9f40e00a48f21949be9f",
+      "runtimeSha256": "deaae76baa463e5cb0d9fe07bd086064cc6ad769d9ba9f40e00a48f21949be9f"
+    },
+    {
+      "file": "sky-temple.png",
+      "previousSha256": "fd224aebb6dae243ce25170687f6ddf4a49a0fecbc87b484f2279dd1f0ad507b",
+      "runtimeSha256": "fd224aebb6dae243ce25170687f6ddf4a49a0fecbc87b484f2279dd1f0ad507b"
+    },
+    {
+      "file": "spring-garden.png",
+      "previousSha256": "034b7f9a5e6a23ae118c983b1e2cfab94bdeb163a5e7adc4a1947c67a7e28b1d",
+      "runtimeSha256": "034b7f9a5e6a23ae118c983b1e2cfab94bdeb163a5e7adc4a1947c67a7e28b1d"
+    },
+    {
+      "file": "start-village.png",
+      "previousSha256": "80f863fcf07d9e510eacb210ddf180461652508d2213b5683c85544a4dc91cfa",
+      "runtimeSha256": "80f863fcf07d9e510eacb210ddf180461652508d2213b5683c85544a4dc91cfa"
+    },
+    {
+      "file": "storm-highland.png",
+      "previousSha256": "0b0dcf77bcb50185c08566dec1e8518e11a1821bace9026629c1e097e5ec096e",
+      "runtimeSha256": "0b0dcf77bcb50185c08566dec1e8518e11a1821bace9026629c1e097e5ec096e"
+    },
+    {
+      "file": "traveler-rest.png",
+      "previousSha256": "fef4caa9f37b9267903d5cb037b731d0b094d8d48e57939eedcc955e11e702f4",
+      "runtimeSha256": "fef4caa9f37b9267903d5cb037b731d0b094d8d48e57939eedcc955e11e702f4"
+    },
+    {
+      "file": "underground-labyrinth.png",
+      "previousSha256": "7c592c4baf1a3308da2b72ecdadab3cad6ba21f32ef1f0c7fec4aec20c059f32",
+      "runtimeSha256": "7c592c4baf1a3308da2b72ecdadab3cad6ba21f32ef1f0c7fec4aec20c059f32"
+    },
+    {
+      "file": "unknown-route.png",
+      "previousSha256": "6cdfcd052c3c777aff5ae11716a50e82cd294cde413d72aaee561e9752abe3b4",
+      "runtimeSha256": "6cdfcd052c3c777aff5ae11716a50e82cd294cde413d72aaee561e9752abe3b4"
+    },
+    {
+      "file": "void-corridor.png",
+      "previousSha256": "320ba4a56c469b529aada8299e961c096ff43c7840dbc8f110f6bb01eef71367",
+      "runtimeSha256": "9fced07fcaccfa7c0cac59aaa436da3bdcac7be9beb066d30c8069bb0e5b0511"
+    },
+    {
+      "file": "void-island.png",
+      "previousSha256": "afadc2eaf94e7a5422bc4c294cc05677cbcf7ebcedfb34d1842f19acd216040e",
+      "runtimeSha256": "afadc2eaf94e7a5422bc4c294cc05677cbcf7ebcedfb34d1842f19acd216040e"
+    },
+    {
+      "file": "western-plains.png",
+      "previousSha256": "c07e4c6f0a892fe3406d2dfc0e6a9b32804240aeb37f26010e944785cf9bd7b6",
+      "runtimeSha256": "f0b5f1cadff8f6b740c3645b27248bad8ab1603afa34a10140b02d98f1fd056e"
+    },
+    {
+      "file": "wind-highland.png",
+      "previousSha256": "1a171776f0431a848eeb4b7a8261149f9380814e89ab444b796cd7798b414270",
+      "runtimeSha256": "1a171776f0431a848eeb4b7a8261149f9380814e89ab444b796cd7798b414270"
+    },
+    {
+      "file": "world-tree-forest.png",
+      "previousSha256": "01c9e17016eb040c43f0e683bb8c17b877208d462808cf838cc2453a72e62c00",
+      "runtimeSha256": "01c9e17016eb040c43f0e683bb8c17b877208d462808cf838cc2453a72e62c00"
+    }
+  ]
+}

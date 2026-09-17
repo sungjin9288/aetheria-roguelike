@@ -4724,8 +4724,8 @@ import { readFile, readdir } from 'node:fs/promises';
           'Codex getCodexProgress(codex, claimed) callsite 보존');
 
       const ea = await readSrc('src/hooks/gameActions/exploreActions.ts');
-      assert.ok(/getChainEventForLoc\(player\.loc,\s*player\.eventChainProgress\)/.test(ea),
-          'exploreActions getChainEventForLoc(player.loc, ...) callsite 보존');
+      assert.ok(/getChainEventForLoc\(player\.loc,\s*player\.eventChainProgress,\s*player\.deferredEventChainSteps\)/.test(ea),
+          'exploreActions는 명시적 progress와 현재 원정의 deferred steps를 함께 전달');
 
       const test1 = await readSrc('tests/forgotten-commander-chain.test.js');
       assert.ok(/getChainEventForLoc\('잊혀진 폐허',\s*\{\}\)/.test(test1),

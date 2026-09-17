@@ -26,12 +26,16 @@ export const consumeCombatReceiptStories = (
     return { consumedKey: receipt.key, stories: receipt.stories };
 };
 
+export const allocateStoryLogId = (sequence: { current: number }, now = Date.now()) =>
+    `story-${now}-${++sequence.current}`;
+
 export const useGameEngine = () => {
     const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
     useProductTelemetry(state);
     const combatPendingRef = useRef<any>(null);
     const combatItemLocksRef = useRef<Set<string>>(new Set());
     const combatActionLocksRef = useRef<Set<string>>(new Set());
+    const storyLogSequenceRef = useRef(0);
     const clearPendingCombat = useCallback(() => {
         if (combatPendingRef.current) clearTimeout(combatPendingRef.current);
         combatPendingRef.current = null;
@@ -65,6 +69,7 @@ export const useGameEngine = () => {
         syncStatus,
         uid,
         bootStage,
+        presentationEpoch,
         liveConfig,
         leaderboard,
         sideTab,
@@ -103,7 +108,7 @@ export const useGameEngine = () => {
     const addStoryLog = useCallback(
         async (type: any, data: any) => {
             dispatch({ type: AT.SET_AI_THINKING, payload: true });
-            const tempId = Date.now();
+            const tempId = allocateStoryLogId(storyLogSequenceRef);
             dispatch({ type: AT.ADD_LOG, payload: { type: 'loading', text: '...', id: tempId } });
             try {
                 const fullStats = getFullStats();
@@ -279,6 +284,7 @@ export const useGameEngine = () => {
         //   SystemTab은 actions.leaderboard 경로로만 사용 (line 147 actions 객체 내).
         liveConfig,
         bootStage,
+        presentationEpoch,
         handleCommand,
         // Feature additions
         quickSlots,

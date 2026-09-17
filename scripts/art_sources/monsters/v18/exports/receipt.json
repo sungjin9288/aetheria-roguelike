@@ -1,0 +1,19 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "golden-kingdom-guardian": "e8003f6569206cde882deac51a98315e758690894517613d4c6db47322d818bb",
+    "kingdom-knight": "b0f46554bb6b06bac77dd2477babcc67f843744c9b3c745e86a3133aae68c1dc",
+    "mercenary-warrior": "d51f85ca7f039b98232167968699a35d9c2a63bf0978ea5e12df12e2d756b2ba",
+    "sacred-officiant": "bd55407f9dfac7e4990f9868d3bebbaa8e11cf2fa440521a19f95ee791b2496d",
+    "time-fragment": "664c7a776b1eaecdac1f9569b4ca071b3a1a85f90b5a8da626c6e1618c9c47cf"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "golden-kingdom-guardian": "6cd1440501b97c4cb5101d63cd7a00383ca1dedc88c17605c7daaf52e7afc7ca",
+    "kingdom-knight": "d73abf7fb9343e4ca0278100fc04ff1294013c3d3852e92be50ade8ca20b8449",
+    "mercenary-warrior": "e06e0d205ae102af7f8dba3b986ab7c3de2f29936722801938fd7f5d8046e48c",
+    "sacred-officiant": "0e7d5152246632f55fc3958bb69d4a49330f4d89650f304aaf614afc4eaee78c",
+    "time-fragment": "f8a3244caeb2e62831feb167c51218843c8aae19b2341f79cc504e87130a4dca"
+  }
+}

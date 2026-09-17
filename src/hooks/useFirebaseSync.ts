@@ -28,6 +28,7 @@ import {
 } from '../utils/localGameSnapshot';
 import { getRuntimeGameStorage } from '../platform/gameStorageRuntime';
 import { importCloudRecordAuthority } from '../platform/cloudSaveAuthority';
+import { buildCloudPlayerSnapshot } from '../platform/cloudPlayerSnapshot';
 import { trackRuntimeProductEvent } from '../platform/productEventCoordinator';
 import { normalizeProductEventJob, type ProductEventName } from '../platform/productEvents';
 import { resolveOfflineBootstrapResult } from '../platform/persistenceTelemetry';
@@ -498,10 +499,7 @@ export const useFirebaseSync = (state: any, dispatch: any) => {
                 // 계산하므로, Firestore serverTimestamp()(lastActive)와 별도로 player.stats에
                 // 저장 시각을 기록한다. 매 autosave마다 갱신 — 플레이 중에는 계속 최신화되고,
                 // 세션 종료 후에는 마지막 저장 시각에 고정된다.
-                const playerPayload = {
-                    ...player,
-                    stats: { ...player.stats, lastSeenAt: Date.now() },
-                };
+                const playerPayload = buildCloudPlayerSnapshot(player, Date.now());
                 const payload: Record<string, any> = {
                     player: playerPayload,
                     gameState,

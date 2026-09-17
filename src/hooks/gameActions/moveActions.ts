@@ -1,4 +1,5 @@
 import { DB } from '../../data/db';
+import { getMapAccess } from '../../utils/mapAccess';
 import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
@@ -26,17 +27,13 @@ export const createMoveActions = (deps: any) => {
             if (!['idle', 'moving'].includes(gameState)) return addLog('error', MSG.MOVE_BLOCKED);
 
             const targetMap = DB.MAPS[loc];
-            if (!targetMap) return addLog('error', MSG.MAP_NOT_FOUND);
-            if (targetMap.seasonOnly && !liveConfig?.seasonEvent?.active) {
+            const { reason, requiredLevel } = getMapAccess(DB.MAPS, player.loc, loc, player.level, Boolean(liveConfig?.seasonEvent?.active));
+            if (reason === 'missing') return addLog('error', MSG.MAP_NOT_FOUND);
+            if (reason === 'season') {
                 return addLog('warn', MSG.MOVE_SEASON_ONLY);
             }
-            // 2026-07 타입화: targetMap.level은 number | number[] | 'infinite'. minLv가
-            // 없는 무한 심연 진입로('마왕성' 등)는 원래도 level: 'infinite' 그대로 비교식에
-            // 들어가던 latent 케이스 — MSG.MOVE_LEVEL_REQUIRED 등 number 파라미터와
-            // 호환되도록 number | string 유니온으로 명시해 동일 런타임 동작 보존.
-            const requiredLevel: number | string = targetMap.minLv ?? (Array.isArray(targetMap.level) ? targetMap.level[0] : targetMap.level) ?? 1;
-            if (player.level < requiredLevel) return addLog('error', MSG.MOVE_LEVEL_REQUIRED(requiredLevel));
-            if (!targetMap.seasonOnly && !(DB.MAPS[player.loc]?.exits || []).includes(loc)) return addLog('error', MSG.MOVE_NO_EXIT);
+            if (reason === 'level') return addLog('error', MSG.MOVE_LEVEL_REQUIRED(requiredLevel));
+            if (reason === 'exit') return addLog('error', MSG.MOVE_NO_EXIT);
 
             const firstVisit = !(player.stats?.visitedMaps || []).includes(loc);
             const isSafeOrigin = DB.MAPS[player.loc]?.type === 'safe';
@@ -52,10 +49,10 @@ export const createMoveActions = (deps: any) => {
                 type: AT.SET_PLAYER,
                 payload: (p: any) => {
                     let nextPlayer = { ...p };
+                    if (isSafeDestination) nextPlayer = clearTemporaryAdventureState(nextPlayer);
                     if (shouldFinishExpedition) {
                         nextPlayer = finishExpedition(nextPlayer, loc, movedAt, DB.QUESTS).player;
                     }
-                    if (isSafeDestination) nextPlayer = clearTemporaryAdventureState(nextPlayer);
                     if (shouldStartExpedition) {
                         nextPlayer = startExpedition(
                             nextPlayer,

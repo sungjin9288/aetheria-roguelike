@@ -121,7 +121,7 @@ const ShopEquipmentDecisionStrip = ({ player, item, scope }: any) => {
                 {decision.recommendation}
             </span>
             <span className={`font-bold ${decision.primaryDelta.value > 0 ? 'text-emerald-200' : decision.primaryDelta.value < 0 ? 'text-rose-200' : 'text-slate-300/78'}`}>
-                {decision.primaryDelta.text}
+                {!decision.equipable && '가정 비교 · '}{decision.primaryDelta.text}
             </span>
             <span
                 data-testid={`shop-set-contribution-${scope}-${item.id || item.name}`}

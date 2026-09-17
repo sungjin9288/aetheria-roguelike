@@ -1,0 +1,36 @@
+{
+  "mode": "built-in",
+  "classification": "candidate-not-adopted",
+  "records": [
+    {
+      "slug": "root-eater",
+      "prompt": "Use case: stylized-concept. Asset: a single full-body monster sprite for Aetheria mobile pixel-art roguelike. Genuine transparent RGBA background. Crafted 16-bit pixel art with bold dark outline, crisp compact pixel clusters, restrained four-tone shading, clear silhouette at 32px. One subject centered with ample transparent margins on every side; all feet, wings and tail contained. No scenery, no floor shadow, no text, no frame, no checkerboard, no gradients or bloom. ROOT EATER of a world-tree forest. Low, long crouching quadruped beast made of twisted thorny roots and bark, split wooden jaws and a jagged root mane, front claws gripping in a stalking stance. Small lime-green sap accents. Wide low silhouette. Not a lizard, no fire, no red tail, no humanoid, no leafy wreath accessory.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-feeb307d-e3f6-4577-9352-93820612b7e2.png"
+    },
+    {
+      "slug": "world-tree-guardian",
+      "prompt": "Use case: stylized-concept. Asset: a single full-body monster sprite for Aetheria mobile pixel-art roguelike. Genuine transparent RGBA background. Crafted 16-bit pixel art with bold dark outline, crisp compact pixel clusters, restrained four-tone shading, clear silhouette at 32px. One subject centered with ample transparent margins on every side; all feet, wings and tail contained. No scenery, no floor shadow, no text, no frame, no checkerboard, no gradients or bloom. WORLD TREE GUARDIAN, ordinary forest guardian distinct from a corrupted boss. Upright broad bark torso, stout exposed-root legs, asymmetric large wooden shield integrated into one arm with a few living leaves. Weathered brown bark and muted moss-green, pale warm highlights. Stable tall woody silhouette. No hood, ghost, metallic armor, sword, crown or weapons held separately.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-ed3bcab1-ecc3-4326-804f-223a53c2127e.png"
+    },
+    {
+      "slug": "petal-slime",
+      "prompt": "Use case: stylized-concept. Asset: a single full-body monster sprite for Aetheria mobile pixel-art roguelike. Genuine transparent RGBA background. Crafted 16-bit pixel art with bold dark outline, crisp compact pixel clusters, restrained four-tone shading, clear silhouette at 32px. One subject centered with ample transparent margins on every side; all feet, wings and tail contained. No scenery, no floor shadow, no text, no frame, no checkerboard, no gradients or bloom. PETAL SLIME of spring garden. Low pale-green translucent jelly blob with one visible golden seed inside. Broad pink flower petals form the body edge in distinct layered lobes, not a tiny flower stuck on top. Bright green center, pink petal silhouette, tiny readable eyes. Simple and compact. No blue water, humanoid, pot or scenery.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-96e46fcc-aedc-4b96-9ee1-9a83b7b397db.png"
+    },
+    {
+      "slug": "ash-golem",
+      "prompt": "Use case: stylized-concept. Asset: a single full-body monster sprite for Aetheria mobile pixel-art roguelike. Genuine transparent RGBA background. Crafted 16-bit pixel art with bold dark outline, crisp compact pixel clusters, restrained four-tone shading, clear silhouette at 32px. One subject centered with ample transparent margins on every side; all feet, wings and tail contained. No scenery, no floor shadow, no text, no frame, no checkerboard, no gradients or bloom. VOLCANIC ASH GOLEM. Squat heavy rough grey volcanic-rock body, broad ash-covered shoulders, short stout legs braced apart and thick blocky arms. Charcoal and warm grey masses with sparse narrow ember-orange cracks. Clear rock anatomy, no all-over flames. No blue/cyan, ice crystals, machinery, crown or weapon.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-6403fd5b-e642-423e-b11e-1bb9ec8b0822.png"
+    },
+    {
+      "slug": "storm-wyvern",
+      "prompt": "Use case: stylized-concept. Asset: a single full-body monster sprite for Aetheria mobile pixel-art roguelike. Genuine transparent RGBA background. Crafted 16-bit pixel art with bold dark outline, crisp compact pixel clusters, restrained four-tone shading, clear silhouette at 32px. One subject centered with ample transparent margins on every side; all feet, wings and tail contained. No scenery, no floor shadow, no text, no frame, no checkerboard, no gradients or bloom. THUNDERCLOUD WYVERN. Two rear legs and two large wings, angular wings raised high in a steep diving-preparation pose, compact slate-purple storm-cloud scales and pale yellow-white lightning-like ridges along jagged wing tips. Distinct vertical angular silhouette. Readable limbs. No extra front arms, no red or orange dragon, no flame breath, no cloud background, no detached lightning scenery.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-a82c84cb-5374-4f5f-8cb4-4d4393dbc2e2.png"
+    },
+    {
+      "slug": "wind-drake",
+      "prompt": "Use case: stylized-concept. Asset: a single full-body monster sprite for Aetheria mobile pixel-art roguelike. Genuine transparent RGBA background. Crafted 16-bit pixel art with bold dark outline, crisp compact pixel clusters, restrained four-tone shading, clear silhouette at 32px. One subject centered with ample transparent margins on every side; all feet, wings and tail contained. No scenery, no floor shadow, no text, no frame, no checkerboard, no gradients or bloom. WIND DRAKE. Slender long pale blue-grey scaled drake in horizontal gliding pose, thin wings spread broadly, flowing narrow long tail curved gently within frame. Light teal and ivory edge highlights, streamlined face and body. Strong wide horizontal silhouette distinct from upright thunder wyvern. No red, fire, lightning, clouds or scenery, no armored heavy torso.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-53130dc9-32ac-416c-8490-bcadd81be6ab.png"
+    }
+  ]
+}

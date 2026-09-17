@@ -1,4 +1,5 @@
 import { ITEMS } from '../data/items.js';
+import { normalizeDeferredEventChainSteps } from '../data/eventChains.js';
 import { QUESTS } from '../data/quests.js';
 import { getCumulativeQuestProgress } from './cumulativeQuestProgress.js';
 import { DEFAULT_EXPLORE_STATE } from './explorationPacing.js';
@@ -12,6 +13,7 @@ import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward.js';
 import { migrateEquipmentInstancePrice } from './equipmentBaseIdentity.js';
 import { BALANCE } from '../data/constants.js';
 import type { EndgameProgress } from '../types/player.js';
+import { normalizeAdventureRelicBonuses, getAdventureRelicDescription } from './adventureRelicState.js';
 
 // gameUtils.ts에서 분리 (저장 데이터 마이그레이션) — 행동 보존 리팩토링.
 //   순환 의존을 피하려 toArray(1줄 헬퍼)는 인라인.
@@ -49,6 +51,18 @@ export const migrateData = (rawData: any) => {
     // If savedData IS the player (old flat format?), use it.
     // But in this app, usually savedData matches App state structure.
     const target = savedData.player || savedData;
+    const deferredSteps = normalizeDeferredEventChainSteps(target.deferredEventChainSteps, target.eventChainProgress);
+    if (deferredSteps) target.deferredEventChainSteps = deferredSteps;
+    else delete target.deferredEventChainSteps;
+    const adventureRelicBonuses = normalizeAdventureRelicBonuses(target.adventureRelicBonuses, target.maxHp);
+    if (adventureRelicBonuses) target.adventureRelicBonuses = adventureRelicBonuses;
+    else delete target.adventureRelicBonuses;
+    if (Array.isArray(target.relics)) {
+        target.relics = target.relics.map((relic: any) =>
+            relic?.effect === 'kill_stack_atk' || relic?.effect === 'devour_hp'
+                ? { ...relic, desc: getAdventureRelicDescription(relic) }
+                : relic);
+    }
 
     // Version Limit
     if (!savedData.version || savedData.version < 2.7) {

@@ -17,6 +17,13 @@ test.describe('Equipment panel', () => {
         await expect(page.getByTestId('equipment-panel')).toHaveAttribute('data-equipment-view', 'summary');
         await expect(page.getByTestId('equipment-detail-toggle')).toContainText('상세 보기');
         await expect(page.getByTestId('job-outfit-affinity')).toBeVisible({ timeout: 8_000 });
+        const portrait = page.getByTestId('equipment-character-preview').locator('img');
+        await portrait.evaluate((image: HTMLImageElement) => image.decode());
+        await expect(portrait).toBeVisible();
+        await expect.poll(() => portrait.evaluate((image: HTMLImageElement) => ({
+            loaded: image.complete && image.naturalWidth > 0,
+            hasArea: image.getBoundingClientRect().width > 0 && image.getBoundingClientRect().height > 0,
+        }))).toEqual({ loaded: true, hasArea: true });
         await page.getByTestId('damage-number').waitFor({ state: 'hidden', timeout: 3_000 }).catch(() => undefined);
         await page.evaluate(() => window.scrollTo(0, 0));
         await page.screenshot({ path: 'playtest-artifacts/mobile-equipment-disclosure/equipment-summary.png' });

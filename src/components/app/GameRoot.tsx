@@ -19,6 +19,7 @@ import CritPulse from '../CritPulse';
 import PhaseBanner from '../PhaseBanner';
 import LegendaryDropOverlay from '../LegendaryDropOverlay';
 import MobileGameLayout from './MobileGameLayout';
+import ExpeditionDebriefCard from '../ExpeditionDebriefCard';
 import { usePlatformBackHandler } from '../../platform/platformBackRegistry';
 import { useReturnSupplyRewardedAd } from '../../hooks/useReturnSupplyRewardedAd';
 
@@ -29,7 +30,6 @@ const PostCombatCard   = lazy(() => import('../PostCombatCard'));
 const PremiumShop      = lazy(() => import('../PremiumShop'));
 const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
-const ExpeditionDebriefCard = lazy(() => import('../ExpeditionDebriefCard'));
 const MilestoneStoryCard = lazy(() => import('../MilestoneStoryCard'));
 
 const resolveExpeditionJob = (player: Player, summary: ExpeditionSummary | null) => {

@@ -8,6 +8,7 @@ import { GS } from '../gameStates';
 import { createCurrentRunProgress } from '../../utils/runProgress';
 import { pickPermanentPlayerState } from '../../utils/permanentProgress';
 import { getAscensionOutcome } from '../../utils/ascensionPreview';
+import { getClaimableQuestEntries } from '../../utils/questProgress';
 
 /**
  * makeProgressionActionMap(INITIAL_STATE) → action map
@@ -84,6 +85,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
 
     ASCEND: (state: GameState, action: GameAction) => {
         if (state.gameState !== GS.ASCENSION && state.gameState !== GS.TRUE_ENDING) return state;
+        if (state.gameState === GS.TRUE_ENDING && getClaimableQuestEntries(state.player).length > 0) return state;
         const payload = action.payload as Partial<AscendPayload> | undefined;
         const expectedPrestigeRank = Number(payload?.expectedPrestigeRank);
         if (!Number.isSafeInteger(expectedPrestigeRank) || expectedPrestigeRank < 0) return state;

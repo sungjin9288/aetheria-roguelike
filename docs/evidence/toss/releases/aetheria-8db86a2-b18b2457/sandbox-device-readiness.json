@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "candidateId": "aetheria-8db86a2-b18b2457",
+  "checkedAt": "2026-08-10T15:30:18.000Z",
+  "countsAsCandidateObservation": false,
+  "reason": "Sandbox app login surface only; no console deployment or Aetheria candidate was opened",
+  "android": {
+    "officialBuildDate": "2026-05-21",
+    "downloadUrl": "https://static.toss.im/appsintoss/rn-miniapp-real-release-protected.zip",
+    "downloadSha256": "2b19c5cd61b81c41ba9ae13468ad6886c86939c401460d437005c8e1f1dfb4ea",
+    "packageId": "viva.republica.toss.test",
+    "versionName": "1.0.0",
+    "versionCode": 100000,
+    "device": "Medium_Phone_API_36.1",
+    "installResult": "success",
+    "loginSurfaceScreenshot": "build/toss-sandbox/android-sandbox-ready.png",
+    "loginSurfaceSha256": "4c66e6a61c8030e6b993dfcbdbcb3f24cde48fe09b1e8a624a316b9e9404dcb0"
+  },
+  "ios": {
+    "officialBuildDate": "2026-06-02",
+    "downloadUrl": "https://static.toss.im/appsintoss/apps-in-toss-sandbox-202606022149.zip",
+    "downloadSha256": "34b1cbd3b0c33ad86287a910424bb4734aefdfbdd986b8828555d7fc4292f60f",
+    "bundleId": "com.vivarepublica.ent.cash.test",
+    "device": "Aetheria Fresh QA 2026-08-03",
+    "deviceId": "B5339EFB-0716-4B10-9832-F4F6A075EFBD",
+    "installResult": "success",
+    "loginSurfaceScreenshot": "build/toss-sandbox/ios-sandbox-ready.png",
+    "loginSurfaceSha256": "76d92884aa41ac9045ecc13a257094be0dd3355cbe4c89a2a1550ea71f3ce390"
+  }
+}

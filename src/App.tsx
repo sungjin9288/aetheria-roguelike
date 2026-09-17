@@ -45,7 +45,7 @@ function App() {
         import.meta.env.VITE_DEVICE_QA_SCENARIO === 'mirror-journey',
     );
     const fullStats = engine.getFullStats();
-    const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp);
+    const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp, engine.presentationEpoch);
 
     // Smoke test refs — updated synchronously during render so harness always reads fresh state.
     // cycle 100: react-hooks/refs 룰은 일반 컴포넌트엔 옳지만 여기선 의도적인 패턴이라 명시 disable.

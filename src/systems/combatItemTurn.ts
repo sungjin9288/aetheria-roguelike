@@ -59,7 +59,9 @@ export const resolveCombatItemTurn = ({
             kind: 'victory',
             player: counterResult.updatedPlayer,
             enemy: null,
-            logs: [...logs, { type: 'success', text: MSG.COMBAT_DOT_KILL(enemy.name || '적') }],
+            logs: [...logs, { type: 'success', text: counterResult.damage > 0
+                ? MSG.COMBAT_COUNTER_KILL(enemy.name || '적')
+                : MSG.COMBAT_DOT_KILL(enemy.name || '적') }],
             visualEffect: null,
             victoryStats: counterStats,
         };

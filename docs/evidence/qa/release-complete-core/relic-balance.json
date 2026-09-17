@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "c5c425d0a6554373dddd1c3bdce621b26225f84246101ead6d4cb57bfde719a8",
+  "reportHash": "9046fc0cee05d6af9289a68989388b226e1229df417a8d5a02ad534b08040a7e",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -213,7 +213,7 @@
       },
       {
         "effect": "devour_hp",
-        "category": "run-scaling",
+        "category": "conditional-combat",
         "relicIds": [
           "world_eater"
         ],
@@ -431,13 +431,12 @@
       },
       {
         "effect": "kill_stack_atk",
-        "category": "combat-scaling",
+        "category": "expedition-scaling",
         "relicIds": [
           "void_monarch"
         ],
         "runtimeOwners": [
           "src/systems/CombatEngine.outcome.ts",
-          "src/utils/exploreUtils.ts",
           "src/utils/statsCalculator.ts"
         ]
       },

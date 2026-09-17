@@ -1,7 +1,603 @@
 # Aetheria RPG - Task Board
 
-**Last Updated:** 2026-09-04
+**Last Updated:** 2026-09-14
+
+**신뢰 후 최신 iPhone 실행·저장복원 확인 완료:** 사용자 개발자 신뢰 완료 후 launch47531 exit0/PID57951, 오늘 설치 container와 일치. 미러링에서 복귀창→시작마을 및 저장불러옴 안내 확인; Lv1/HP130·178/MP32·52/EXP37·200/골드318 보존. 복귀창 X만 닫고 보상·이동·초기화 없음. 인증지연 offline 안내로 cloud sync 성공은 미주장. 아래 신뢰 대기 해소; 상세는 같은 20260914 설치 증빙에 추가. 이번 변경은 기록만이며 전체 gameplay gate 재실행 없음.
+
+**최신 iPhone 재설치 완료 / 개발자 신뢰 대기:** 현재 production rebuild+cap sync+signed archive67784 exit0, codesignPASS, dist2,265파일 및 이전884기준 일치. 동일freshqa bundle install58844 exit0. 실제 실행은 `신뢰하지 않는 개발자` 안내로 차단되어 사용자 기기 신뢰 확인 필요; 실행/저장복원 완료는 미주장. 삭제·초기화 없음. 증빙 `docs/evidence/qa/latest-iphone-install-20260914.md`, archive `/tmp/aetheria-iphone-20260914.DuM9oA/Aetheria.xcarchive`. Native tracked0; 전체gameplay gate 재실행 없음.
+
+**공유 웹 최신성 재확인:** 사용자 전달 전 요청으로 현재 source를 같은 no-cost profile로 isolated rebuild19846exit0. 기존 공유본과2265파일 exact byte동일, live ae15ef67 HTML+43JS 해시44/44 일치(90190exit0). 실제 웹 접속에서 기존 QA 저장복원 화면 확인. 이미최신이므로 재배포/URL변경 없음; 링크 https://ae15ef67.aetheria-roguelike.pages.dev/ 유지. 원본dist/native/사용자save 미변경, diffcheckPASS.
+
+**지인 전달본 준비 완료(사용자 요청):** 최신source에 Firebase config{}·AI proxy false·test API off를 적용한 local-save profile. 공유APK `/Users/sungjin/Downloads/Aetheria-test-20260910/Aetheria-20260910-android.apk` 228609278bytes/SHA af3f8c8464063096565864573d6d95c4bedeb585c142b7014eed4c716643f241. Preview https://ae15ef67.aetheria-roguelike.pages.dev/ 배포66658exit0, Functions 없는 임시cwd 정적배포. Live웹 시작→숲이동→reload 저장복원PASS, APK/index+43JS동일/apksignerPASS. Android77226exit0, 기존production build+capcopy42644exit0 복원/native tracked0. 전달문/배포정보는 같은 Downloads폴더. 물리Android미검증·로컬저장간미공유·오프라인안내 정상 명시. 기존공개주소/후보증빙/아이폰 설치본 변경 없음, 유료upgrade/commit/push 없음.
+
+**사용자 승인 최신 iPhone 업데이트/실행 확인:** isolated signed archive15519exit0/codesignPASS/884최신 경로 일치. Install91578은60s timeout(exit2)이지만 기기에서 로드중→updated icon을 확인, 중복설치 없음. App query76059/launch67635exit0/PID39312, 실제 복귀·저장불러옴 화면 확인. 동일freshqa1.1.0/build2/삭제·초기화 없음. 상세 `docs/evidence/qa/latest-iphone-install-20260910.md`. 인증지연 offline 안내가 있어 cloud sync 성공은 미주장. 실제 background/foreground는 별도 미완료; 아래 승인대기는 이번 설치 요청으로 해소됐다.
+
+**Goal blocked — 기기 테스트 시간 확인 대기:** 로컬 perf/full/native 종료 턴→설치본 read-only 조회 턴→이번 턴까지 같은 실제 기기 사용 조율 조건이 유지됐다. Local 작업과 안전한 조회 완료, 추가 사용자 응답 없음. 전체 objective는 그대로 보존하며 실제 foreground/PID/visibility/save-resume를 완료로 표시하지 않는다. `기기 테스트 가능` 응답 후 기존 설치본 관찰부터 재개한다. 최신 패키지 설치가 필요하면 별도 승인; 저장/원본/산출물 보존. 완료 검증 반복 없음.
+
+**기기 read-only 진척:** target iPhone available/paired 및 exact freshqa 앱조회68889exit0. 설치본1.1.0/build2 확인; 오늘 패키지와 byte동일·foreground/PID/lifecycle은 아직 미증명. 이전 connection reset을 현재 실패로 반복 주장하지 않는다. 기기 조작 가능 시간 응답 대기, launch/stop/install/save 조작 없음. Local 완료 유지, 다음은 실제 화면/저장 복원 관찰.
+
+**현재 local 완료 / 실제 device gate 남음:** perf full55522exit0(unit4508/E2E118/양쪽smoke/type/lint/build), readonly69154exit0, 독립 source/test/docs C0/I0. Cap8193/Android19521/unsigned iOS9641exit0, doctorPASS. `output/perf-fix-native-20260910.json`:841images+43JS=884 byte동일/native tracked0. APK228609598bytes/SHA c84508f16ff6fa61d6e9ebf32a0f6b41e8cff72a516835cfbf3feeb6c13dc24b; iOS `/tmp/aetheria-perf-ios.1LT4n3/Build/Products/Release-iphoneos/App.app`. 아래 실행중은 종료 전 이력. 전체Goal은 실제 iPhone 설치본/PID/foreground·실제visibility/save-resume 미검증으로 열려 있다. 사용자 기기 확인 가능 응답 대기, 설치/서명/commit/publish 없음.
+
+**독립 최종 source/test/docs 감사 C0/I0:** 추가 functional/art C/I 없음. Full55522 unit4508/4508 PASS, desktop smoke 후 mobile smoke 진행 중; 전체exit0 아직 아님. Native 후속과 실제 iPhone/build/PID/foreground·실제visibility/save-resume 미검증은 그대로다. Final audit 문서에 fixture/service/synthetic 한계와 남은 gate 유지. Desktop browser.close timeout warning 보존, 실패 원인으로 확대하지 않음.
+
+**Perf readonly PASS / full55522 유지:**69154 exit0, hash a80986bc…b2615d. Final audit의 초기 docs-only 설명과 plan 현재 상태가 perf source 변경 전후를 혼동하던2곳 정정·diffcheck PASS. Independent source/test C0/I0, 문서 최종 재확인 대기. Full55522는 실행 중이며 재시작하지 않는다. Native 후속 미완료.
+
+**Perf diagnostic writer 종료 / full 실행 중:**82928 exit0, envelope `a80986bcd5c7ac94bbe338750b2a9b8c9d70d3fbd5170af637d759cbd6b2615d`. Before/after nonSources digest 동일(report/v1포함),330sources 중main.tsx1해시만 변경/삭제0. 독립 Sol perf source/test C0/I0, 문서 정정 방향 수용. Readonly69154(`/tmp/aetheria-perf-diagnostic-verify.log`), full55522(`/tmp/aetheria-perf-full.log`) 실행 중. 두 reader는 solewriter terminal 이후 시작. 다음 동일handle 종료 확인→native/package 검증 및 최종 증빙. 새 writer/중복full 금지, 기기 조작 없음.
+
+**Perf source freeze / 진단 writer 실행 중:** sole `progression:diagnostic:write`82928, log `/tmp/aetheria-perf-diagnostic-write.log`. 시작 전 source330/nonSources digest를 비교용으로 확보했고 기존 writer/full process 없음 확인. Desktop/mobile receipt는 각각10개 필수 지표finite·기준 이내 재검증. 다음 동일handle terminal 확인→source 차이main.tsx만/report·v1불변→readonly→full/native. Source 추가 편집과 reader 병렬 실행 금지. 독립 재감사 진행 중.
+
+**S6 perf TDD 수정 및 실제 측정 통과:** `perf-metrics.mjs` 필수 finite/nonnegative 검증, main.tsx 시작 mark, guard의 실제 paint/boot/intro bounded wait 추가. RED→GREEN3 및 focused eslint/diffcheck PASS. QA-only build47722exit0, desktop47016/mobile67512 exit0/필수지표null0/FCP352ms·396ms. Preview81350 종료exit130. 이전 false PASS 로그 보존. Source 변경 후 diagnostic/main pin refresh·full/native·Sol 재감사는 아직 미완료. Master/art README/progress 현재 상태 정정, 기기 조작 없음.
+
+**S6 Important 성능검증 공백 확인:** 별도 QA perf38206은 exit0지만 FCP/boot/intro3지표null을 무시해 false PASS. `aetheria:app-mounted` mark 생산자가 src에 없음. Final audit 문서에 실패 및 별도QA산출물 기록. 다음은 missing-metric RED→measurement/guard 수정→desktop/mobile perf 및 필요한 full/evidence 재검증. V27 art checkpoint는 완료지만 전체 local 완료 판정은 보류한다. 사용자에게 기기 확인 가능 시간을 질의했으며 기기 조작 없음.
+
+**S6 요구별 감사 진행:** `docs/evidence/qa/game-completion-final-audit-20260910.md`에 세트/ending/지역loot/topology/디자인/save/native 증거와 한계를 기록했다. Plan의 S5/S6 및 상단 stale V26/89미검수 표기를 V27 완료로 정정했다. 독립 전체 감사 진행 중, 실제 iPhone/lifecycle 미검증. 문서만 변경했으며 full/native 재실행·기기 조작 없음.
+
+**V27 최신 완료 — 아래 진행중 표기는 이력:** 잔여69 runtime 교정과 유지20 포함 실제390×844 89종 검수 완료. Owner 및 Sol/xhigh 구현·UI 독립감사 C0/I0. Final verify:full15775 exit0(unit4505/4505, E2E118/118, 양쪽 smoke/type/lint/build), focused29·art/content/doctor·equipment power/economy/event/pacing PASS. Diagnostic readonly57977 PASS/report·v1 불변. Cap sync 로그 Sync finished 확인/실행 process 없음(유실 handle의 exit code는 주장하지 않음), Android4246·unsigned iOS68038 exit0. `output/v27-native-20260910.json`:841images+43JS=884 선택 경로 byte동일/native tracked0. APK228427589bytes/SHA `6a684163ee86039734ca170e201c78e940e34c7872fc975a791f791bfd544de1`; iOS `/tmp/aetheria-v27-ios.0NPI5i/Build/Products/Release-iphoneos/App.app`. QA browser21967 exit0/server47016 exit130. 설치·서명·commit·push·공개 없음. 전체 Goal의 실제 device/lifecycle 및 S6 최종 요구별 정합성 점검은 열려 있다.
+
+**V27 실제390 89종 검수 완료:** 독립 QA browser에서89 전투 fixture decode160/render46·공격HP감소89/89·errors0·overflowfalse PASS. `v27/ui-receipt.json`에 exact89/screenshotSHA 기록, owner portrait board9장+첫/마지막 전체화면 직접 확인. Natural growth/device 관찰과 구분. Generic webgame17626 exit0/owner crafting 화면 확인. Sol 구현감사 C0/I0, UI 독립검수 진행 중. Readonly57977 exit0/report·v1불변/source330 중manifest1변경. Finalfull15775 unit4505/4505·E2E첫59 PASS, 두번째 묶음 진행 중. Native 미재빌드, latest retained26. QA dev47016 정상중단(exit130), browserclose21967 확인 대기. 다음 full15775/UI review 종료→native/package bytes/최종감사. 전체Goal/device/lifecycle/S6 열린 상태.
+
+**V27 통합검증 최신:** initial unit94252 종료4498/4505(역사참조6+writer와 겹친 readonly hash검사1). 역사7 테스트 preserved 경로 보완 후 focused29/29 PASS(63074), assertion 유지. Writer59500 정상종료·report/v1불변·330source 중 manifest1pin 변경 확인. Writer 종료 후 readonly57977·최종 verify:full15775 실행 중. Art/content/doctor19511 PASS. Sol 구현감사/실제390 89종/native는 미완료. 상세 `v27/adoption-review.md`; 아래 실행중 unit/writer는 이전 상태이며 재실행하지 않는다.
+
+**V27 exact69 runtime 채택, 통합검증 진행 중:** 검수된69 PNG/manifest/registry 적용(234authored/20retained), other185/기존165/수치/prototype/보호44 보존을 new adoption RED2→GREEN3으로 고정. 역사6 checkpoint는 V27 preserved preimage로 연결하며 assertions 유지. Final focused27·eslint·diffcheck PASS. Unit94252(`/tmp/aetheria-v27-unit.log`, 초기 역사참조 실패 기록)와 sole diagnostic writer59500(`/tmp/aetheria-v27-diagnostic-write.log`) 실행 중; 종료/read-only/전체gate/Sol 구현감사 미완료. 상세 `scripts/art_sources/monsters/v27/adoption-review.md`. 다음 두 handle 종료확인→diagnostic readonly/report·v1불변→full/art/content/doctor→실제390 89종→native/최종감사. 기존 candidate 검수완료와 runtime 통합완료를 구분하며 전체Goal/device/lifecycle/S6 미완료.
+
+**V27 잔여69 전 후보 검수 완료, runtime 채택 전:** 마지막 named-presence6 원화7/선택6/거부사도1 보존. 마왕의 사도 dark32 명암·실루엣 교정 후 owner/Sol C0/I0. Final authority `v27/named-presence/exports-reviewed/`, 다른5 export 불변. TDD RED3→초기integration20/21(stale fixture key)→수정후21/21 PASS(session12216 exit0). 원본7/final6 hash·alpha·여백·clipping PASS. 일곱 그룹 exact69 unique 승인 이름/source/export 해시 PASS, runtime69/snapshots3/보호44 불변; eslint/diffcheck PASS/native tracked0/indexempty. 상세 `scripts/art_sources/monsters/v27/named-presence/candidate-review.md`. 다음은 승인된 exact69 runtime 채택/other185 보존→역사 fixture 연결→source freeze/diagnostic write·readonly→full/art/content/doctor→실제390 89종→native/최종감사. 69/69는 정적 후보 수용이며 게임 전체 완료 아님. 최신 native retained26, device/lifecycle/S6 미완료.
+
+**V27 차원·붕괴16 후보 검수 완료:** built-in 원화17/선택16/거부사령관1 보존. 차원 사령관 source 상단 잘림 교정, 다른15 export 불변. Final authority `v27/dimensional-form/exports-reviewed/`; owner/Sol160·46·32 dark/light/grayscale C0/I0. TDD RED3→GREEN3·기존5군 integration18 PASS(session50742 exit0), 원본17/final16 hash·alpha·여백·clipping PASS. Runtime69/snapshots3/보호44 불변, eslint/diffcheck PASS/native tracked0/indexempty. 누적6군 exact63 unique 승인 이름/source/export 해시 PASS. 상세 `scripts/art_sources/monsters/v27/dimensional-form/candidate-review.md`. 다음 승인된 named-presence6 미제작; 전체69 안정 전 runtime 미채택. 최신 native retained26, 전체 Goal/device/lifecycle/S6 미완료.
+
+**V27 마법사·의식7 후보 검수 완료:** built-in 원화8/선택7/거부1 보존. 사기꾼 마법사의 dark32 하반신 명암·비율 교정, 다른6 export 불변. Final authority `v27/caster-role/exports-reviewed/`; owner/Sol160·46·32 dark/light/grayscale C0/I0. TDD RED3→GREEN3·기존4군 integration15 PASS, 원본8/final7 alpha·여백·clipping·hash PASS. Runtime69/snapshots3/보호44 불변, eslint/diffcheck PASS/native tracked0/indexempty. 누적5군 exact47 unique 승인 이름·source/export 해시 PASS. 상세 `scripts/art_sources/monsters/v27/caster-role/candidate-review.md`. 누적47/69 후보 수용, 잔여22 미제작; 다음 차원·붕괴16. Runtime 미채택, latest native retained26, 전체 Goal/device/lifecycle/S6 미완료.
+
+**V27 기사·무장11 후보 검수 완료:** built-in 원화14/선택11/거부3 보존. 데스나이트 dark32 명암과 타락한 용사 파손검을 교정했으며 RGB 체크무늬 수정본은 거부했다. Final authority `v27/knight-form/exports-reviewed/`; 다른9 export 불변. Owner/Sol160·46·32 dark/light/grayscale C0/I0, TDD RED3→GREEN3·기존3군 integration12 PASS, source/export11 해시·alpha·여백·clipping PASS. Runtime69/snapshots3/보호44 불변, eslint/diffcheck PASS/native tracked0/indexempty. 상세 `scripts/art_sources/monsters/v27/knight-form/candidate-review.md`. 누적40/69 후보 수용, 잔여29 미제작; 다음 승인된 마법사·의식7. Runtime 미채택·최신 native retained26 유지, 전체 Goal/device/lifecycle/S6 미완료.
+
+**V27 경비·수호12 후보 검수 완료:** built-in 원화12/선택12 byte-identical 보존, source-pinned160 export 및 owner/Sol160·46·32 dark/light/grayscale C0/I0. TDD RED3→GREEN3·직업11/석재6 integration9 PASS, 실제source/export12 해시·alpha·여백·clipping PASS. 기존runtime69/snapshots3/보호6+38 불변, focused eslint/diffcheck PASS/native tracked0/indexempty. 상세 `scripts/art_sources/monsters/v27/guard-duty/candidate-review.md`. 누적29/69 후보 수용, 잔여40 미제작; 다음 승인된 기사·무장11. Runtime 미채택, 최신 full/native retained26 유지, 전체 Goal/device/lifecycle/S6 미완료.
+
+**V27 직업·도구11 후보 검수 완료:** 원화12/선택11/거부어부1 모두 원본 보존. Initial dark32 어부의 얇고 어두운 rod/coat를 교정, 다른10 exports 불변. Final authority `v27/occupation/exports-reviewed/`, owner/Sol160·46·32 dark/light 및 grayscale C0/I0. TDD RED3→GREEN3·stone6 integration6 PASS, focused eslint/diffcheck PASS, 원본12/최종alpha·여백11/기존runtime69/보호6+38 불변 확인. 상세 `scripts/art_sources/monsters/v27/occupation/candidate-review.md`. 누적17/69 후보 검수 완료, runtime 미채택; 다음 경비·수호12, 잔여52 미제작. 전체 Goal active·미완료, 최신 full/native retained26 유지.
+
+**V27 석재6 후보 검수 완료:** Built-in 원화6/원본6 보존, source-pinned export TDD RED3→GREEN3·기존10 integration6 PASS. 160/46/32 dark/light 및 grayscale owner/Sol 검수 C0/I0, source/export pins·alpha/crop6 PASS. Focused eslint/diffcheck PASS. `scripts/art_sources/monsters/v27/stone-material/candidate-review.md` 참조. Runtime 미채택, 잔여63 미제작. 다음은 승인된 직업·도구11, 전체69 안정 후 통합 채택·full/89 browser/native를 진행한다. 전체 Goal active·미완료, 추가 설계 승인 요청 없음.
+
+**현재: 잔여69 설계 승인 후 구현 재개.** 기존 Goal active, objective 유지. Current89 SHA/manifest165+89/diagnostic330/prototype/protected6+38 preflight PASS. `scripts/art_sources/monsters/v27/previous/`에 exact69 PNG+3 source snapshots 배타적 보존. 석재6부터 개별 원화·source-pinned export·작은 화면 검수 진행, 전체69 안정 후 runtime 일괄 채택. 아래 blocked는 이전 이력이다. 설치/commit/push/publish 없음.
+
+**현재 Goal: 승인 대기 blocked.** 잔여69 설계 승인 경계가 세 연속 Goal 턴에서 유지됐다. 앞선 전체 분류와 유지20 검수는 완료했으며 추가 제작 권한은 없다. 이번 S5/S6 점검에서 iPhone 목록은 available/paired였지만 exact freshqa 설치 정보 조회68347은 exit1/CoreDevice4000/connection reset by peer로 실패했다. 목록 표시를 실제 연결·설치·실행 증거로 취급하지 않는다. 앱 launch/stop/install 및 재시도 없음. 새69 설계 승인 후 같은 objective로 재개하며 실제 기기 테스트는 사용자 조작 시간을 조율해야 한다. 최신 local 완료는 retained26 및 유지20 검수; 전체게임 완료 아님.
+
+**유지20 추가 검수 완료:** runtime 미변경,160/46/32 dark/light Sol C0/I0 및 source20 exact match. 실제390×844 전투20종 decode160/render46,공격HP감소/overflowfalse/errors0. Owner 초상화20 crop·첫/마지막 full 확인. 상세 `docs/evidence/art/retained20-review-20260909.md`, receipt 동폴더 `retained20-ui-20260909.json`. 소유 browser/dev 종료. 최신 full/native는 retained26이며 반복하지 않았다. 새69 설계 승인·기기/lifecycle/S6는 여전히 남고 전체 Goal 미완료.
+
+## 지역·속성 몬스터6 — local checkpoint 완료
+
+**다음 설계: 잔여89 전체 disposition 완료.** 현재89 SHA-pinned96/32dark-light3시트 owner 검수, 유지후보20/교정제안69로 정확히 분류했다(최종수용 아님). 새 설계 `2026-09-09-aetheria-remaining-monster-art-closure.md`는69개 이름별 형태와7군 제작·통합gate 계약을 포함한다. JSON89/currentSHA/partition/설계69 중복0·누락0 PASS. 이프리트는 단일 map.boss source로 도달, 조회 누락을 보완했으며 runtime 미수정. 새69 이미지 생성·교체 승인 전. 이번에는 증거·설계만 추가했고 full/native 재실행 없음, 최신 완료는 retained26. Goal active, 승인 후 같은 objective로 진행한다.
+
+**최신 완료 retained26:** 승인10종 교정 local 구현·검증 완료. 원본11/선택10/거부1·preimage·other244·prototype·수치/save 보존, owner/Sol visual+implementation C0/I0. Focused29, full94987 exit0(unit4481/E2E118/양쪽smoke/type/lint/build), art/content/doctor PASS. 실제390 전투10종 owner 검수/공격 HP감소/overflowfalse/errors0. Diagnostic writer 종료→readonly PASS/report·v1불변,330입력 중 manifest1pin만 갱신. Cap39885/Android82804/iOS5086 exit0,841images+43productionJS=884선택경로 package byte동일/native tracked0/indexempty. 상세 `scripts/art_sources/monsters/v26/candidate-review.md`, receipt `output/retained26-native-20260909.json`.
+
+최신 unsigned/uninstalled iOS `/tmp/aetheria-retained26-ios.Wox2Yq/Build/Products/Release-iphoneos/App.app`; APK227093708bytes/SHA `74dc41491d849c1d43354a4376e7db48fc580ebebcfb7862ce301e5572018450`. 165authored/89retained는 coverage이며89 최종수용 아님. 다음은 잔여89 품질 판단과 기기/lifecycle/S6, 전체 Goal active·미완료. 설치/서명/commit/push/publish 없음. 아래 진행중/blocked/elemental25 최신 표기는 이전 이력이다.
+
+**Retained26 구현 checkpoint:** 원화11회/선택10/추적자 거부1과 최초 export/review 보존. 추적자 dark32 수정 후 Sol visual C0/I0. Exact10 runtime/authored 적용·other244/prototype/수치 보존, focused29 PASS. Diagnostic writer78729 종료→readonly14150 PASS, 실제 report/v1Baseline 동일·source330 중 manifest1pin만 변경. 실제390×844 전투10종 owner 검수·공격 HP감소·overflowfalse/errors0. 첫 UI는 QA env 누락으로 timeout, 기존 flag 설정 후72159 exit0(앱 변경 없음). 첫 full48940은 과거 evidence 참조2곳으로4479/4481, preimage 연결 후94987 재실행 중. Art/content/doctor31967 PASS. 최신 완료 native는 elemental25; retained26 full/native/최종감사 미완료. Goal active, 설치/commit/publish 없음.
+
+**현재 retained10 승인 후 구현 재개.** 사용자 `잔여 몬스터 10종 교정 설계 승인` 수신. 기존 Goal active, exact10/source/prototype/diagnostic 및 protected candidate6·Toss38 preflight PASS. 새 v26에 기존10 PNG·manifest·registry·diagnostic을 배타적으로 보존했다. 원화 제작→TDD export→small-scale/Sol 검수→exact10 채택→full/390/native 순서로 진행한다. 아직 원화·채택·전체검증 미완료이며 아래 blocked는 이전 이력이다.
+
+**현재 Goal: blocked — 잔여 몬스터10 설계 승인 대기.** 승인6종(elemental25)은 local 구현·검증 완료다. 후속 exact10 설계 제안 이후 세 번의 자동 continuation에서 사용자 승인이 추가되지 않았다. 첫 두 번의 검수·참조 경계 보완은 완료했고, 이번에는 동일 대기를 재검증으로 반복하지 않는다. `잔여 몬스터 10종 교정 설계 승인` 후 기존 objective를 유지해 재개한다. 원본·dirty changes·완료 증거·native 산출물을 보존하며 새 이미지 생성/교체, 설치, commit/push/publish는 수행하지 않았다. 아래 Goal active 표기는 당시 진행 이력이다.
+
+**승인 전 안전 경계 보완:** `fire-lizard` prototype current 소비자 exact3는 모두 설계10 안에 있음. Source generator fallback/과거재현 보호를 위한 prototype SHA 동결과 일반/정예/광폭한 runtime resolve3 PASS를 설계·triage에 기록했다. Main plan S5 최신 full/native를 elemental25로, S6 잔여 조건을10승인/89수용으로 정합화. 새 이미지/수치/source/build 변경 없음; 설계 승인 미수신, Goal active.
+
+**다음 설계 retained10:** Elemental25 완료 다음 current99만 source-pinned96/32dark-light4시트 생성·직접검수,99SHA/exclusion PASS. 기존 contextual4 외 암흑 시전자3·화염 도마뱀3을 우선 교정으로 좁혀 `2026-09-09-aetheria-retained-ten-identity.md`에 exact10/preimage/other244/prototype보존/TDD/full/390/native 계약을 제안했다. 특히 legacy `fire-lizard` catalog와 prototype을 구분한다. 아직 이미지 생성/교체 승인 전, 나머지89 자동수용 아님. 상세 `docs/evidence/art/retained99-triage-20260909.md`. 이번은 검수·설계 progress, source/runtime/native/full 재실행 없음; 최신 완료는 아래 elemental25.
+
+**최신 완료 elemental25:** 승인6종 원형 교정·original/rejected3/preimage 보존, exact6만 채택/other248불변. Fire-drake dark32 I1 교정 후 Sol visual/implementation/최종testdelta C0I0. Focused26 PASS. 첫 full의 catalog expected149 목록 누락1건 보완 후 full40074 exit0:4475unit/118E2E/desktop+mobile smoke/type/lint/build PASS. Art/content/doctor85136 PASS; writer50466 종료→readonly PASS/report+v1불변/manifest1sourcepin만 갱신. 실제390 안정화6장 owner 검수·각공격 HP감소·overflowfalse/errors0. Cap69173/Android59430/iOS96909 exit0,841images+43productionJS=884선택경로 source/dist/APK/iOS byte일치. Native tracked0/indexempty/HEAD38a3584/diffPASS/candidate6·Toss38보존, 소유 handle 종료.
+
+최신 unsigned/uninstalled iOS `/tmp/aetheria-elemental25-ios.jZdTdp/Build/Products/Release-iphoneos/App.app`; APK227040016bytes/SHA `2c32c4a36cce7cdadce132687f016f280496e06a3c1a12e0c69579d153d3c430`. 상세 `scripts/art_sources/monsters/v25/candidate-review.md`, native receipt `output/elemental25-native-20260909.json`. 155authored/99retained는 coverage일 뿐 나머지99 자동수용 아님. 다음은 contextual4/remaining95 수용 감사, 조율된 device/lifecycle/S6. 전체Goal active·미완료, 기기 설치/서명/commit/push/publish 없음. 아래 제작중·blocked·library 최신 표기는 당시 이력이다.
+
+**현재 elemental6 승인 후 구현 재개.** 사용자 `지역·속성 몬스터 6종 교정 설계 승인`에 따라 v25 개별 원화 제작 중. 설계의6 PNG·manifest·monsters/maps·diagnostic SHA 모두 일치, v25 기존 부재를 확인한 뒤 preimage 보존. Export TDD·160/46/32 검수·Sol 감사·exact6 채택·full/390/native는 아직 미완료. 최신 완료 빌드는 아래 library이며 다른248/수치/save 보존, commit/설치/공개 없음. 아래 blocked는 승인 전 이력이다.
+
+**Elemental6 진행 checkpoint:** 원화9calls/채택6/거부3 보존. Fire-drake dark32 I1 교정 후 Sol visual C0I0, exact6 runtime/authored 채택·other248 보존·focused16 PASS. Canonical writer50466 종료→readonly PASS, report/v1Baseline 동일/330paths중 manifest1pin만 변경. 실제390 안정화6사진 owner 확인·각공격 HP감소·overflowfalse/errors0, QA계절maplevel배열/전환중캡처 수정 이력 보존. Art/content/doctor85136 PASS. Full66138 unit 진행, 최종 구현감사와 native 미완료. 원본 `scripts/art_sources/monsters/v25`, 상세 candidate-review.md; 최신 완료 native는 library. Dev92801/CLI elemental25 소유, 무단 설치/commit 없음. 위 원화 제작 중 문장은 이전 진행 이력이다.
+
+**Elemental6 최신 검증:** Full66138은 common catalog expected149 목록 누락1건으로 종료(4474/4475). 정확히 승인6 추가 후 focused26 PASS·Sol 구현/추가delta C0I0. Full 재실행40074에서 unit4475/4475/type/lint/build PASS, smoke/E2E 진행 중(`/tmp/aetheria-elemental25-full-final.log`). 기존 lint3 warnings 보존. UI close33988 exit0/dev92801 중지 완료. 최종 native는 full 이후이며 전체Goal/설치 완료 아님.
+
+**현재 Goal blocked — elemental6 설계 승인 대기.** 설계 제시 이후 전체계획 reconciliation·retained 추가 감사까지 동일 승인 조건이 유지됐다. 직전 감사는 새로운 contextual4 근거를 남긴 progress였고, 이번 현황 재검증은 no progress다. 안전한 기존 이미지/source 대조와 local 구현 검증은 보존하며 재검사/새 scope 생성으로 승인 대기를 우회하지 않는다. 구체적6종 설계 승인 후 같은 전체 objective에서 재개한다. 추가4/remaining95 최종 수용과 사용자 조율 후 device/lifecycle/S6는 미완료. Source·이미지·save·native 변경 없음, diffPASS/native tracked0/indexempty/HEAD38a3584. 아래 active는 당시 이력이다.
+
+**Retained 추가 감사:** 기존114 sheet4장 직접 관찰 및 current105 SHA 일치, 교체된9셀 제외. Elemental6 외 전류 추적자/변이 실험체/에테르 잔류체·흡수체4종의 역할 표현 부족을 source 지역·profile과 대조해 `docs/evidence/art/retained-identity-followup-20260909.md`에 기록했다. 새 anatomy는 제안일 뿐 전투 결함으로 단정하지 않음.105=elemental6+contextual4+나머지95이며 나머지95 자동승인 아님. 이미지·수치·native 불변, 기존 승인경계 유지.
+
+**전체 계획 reconciliation:** Native Goal active 재확인. `2026-09-05-aetheria-game-completion.md`의 오래된 normal-loot/library 승인대기·regional24 최신 표기를 역사로 분리하고 library full/native 및 요구별 미완료 조건을 현재 절에 반영했다. S5 실제 lifecycle·S6 전체완료 체크는 유지. 직전 설계 턴은6개 source/이미지 대조와 pins 확정으로 progress이며 이번은 승인/기기 blocker를 우회하지 않는 문서 정합성 진척이다. 빌드·이미지·설치 변경 없음.
+
+**다음 단계 설계:** `docs/superpowers/plans/2026-09-09-aetheria-elemental-six-identity.md`. 현재6개 PNG 직접 재검수·실제DB 지역/속성·SHA 고정, 완료된 library 계약과 분리. 골렘2/기사2/비룡2의 몸체·자세 차별화와 exact6/other248 보존, export TDD→small-scale/독립검수→full/390/native 수용 기준 정리. 이미지 생성·교체는 기존 별도 설계 승인 경계에서 대기. 이번 docs만 변경하며 최신 library build/개인save/원본 보존.
+
+**최신 완료 library local:** 승인된 exact2/Tier4/8개 pool·설명·eager validator, focused97/독립 Sol C0I0(추가증빙 I1해소), 전후49152회씩/replay/excluded1344 PASS. Canonical writer41449 종료→readonly/report·v1불변. Full92160 exit0(unit4469/E2E118/양쪽smoke/type/lint/build), supporting17694/art·doctor71981 PASS. 실제390 book/slime 공격·아크스태프 획득·2H장착·직업거절·황금왕국 이동/reload/console0 PASS. Cap90774/Android8449/iOS52034 exit0, native verifier39968 exit0: 이미지841+productionJS43 총884선택경로 byte일치/native tracked0/diffPASS/indexempty/HEAD38a3584/보호candidate6·Toss38보존. 최신 unsigned/uninstalled iOS `/tmp/aetheria-library-loot-ios.eHjSHk/Build/Products/Release-iphoneos/App.app`; APK SHA bac5ff03…843173f. 모든 이번 소유 handle 종료. 상세 `docs/evidence/qa/library-loot-identity-20260909.md`. 전체Goal 미완료: 별도 elemental6 설계 승인·remaining art review·기기/lifecycle/S6 남음. 설치/서명/commit/push/publish 없음. 아래 normal-loot와 running/blocked는 이전 이력이다.
+
+**최신 완료 normal-loot local:** 승인된 actual-level ordinary bonus pool + eager catalog validation 적용. Focused90/독립 Sol C0I0(구현·추가증빙 감사), 전후358400회씩 정산/byte replay, canonical writer→readonly PASS. Full93992 exit0: unit4462/E2E118/desktop+mobile smoke/type/lint/build. 직접390 실제공격→Tier3대지방패 장착·쌍두마도서 직업제한→마을 이동·reload 유지/오류0. Cap74990·Android42785·iOS4748 exit0, 두 패키지 이미지328+JS43 총371 unique경로 byte일치, native tracked0/diff PASS/candidate6·Toss38 보존. 최신 미설치 unsigned iOS `/tmp/aetheria-normal-loot-ios.FviZzN/Build/Products/Release-iphoneos/App.app`; debug APK SHA7ba796bd…129899. 모든 이번 소유 handle 종료. `docs/evidence/qa/normal-loot-tier-20260909.md`에 산출물·실패/수정·한계 기록. 전체Goal 미완료: 도서관 보상 적합성·별도 이미지6 승인/retained 감사·기기/lifecycle/S6 남음. Goal 도구 blocked를 임의 완료/새Goal로 덮지 않았으며 설치/서명/commit/push/publish 없음.
+
+### 구현·검증 진행 이력 (아래 running/blocked는 당시 상태)
+
+일반 몬스터 보상 계약 승인 후 normal bonus tier/pool 구현. Luna writer를 변경 착수 전 중지하고 owner 단일 writer로 이어받았다. Canonical map/species와 valid level이 일치하는 일반 bonus만 actual-level Tier/ordinary pool 사용, 확률·eligibility·기존 enriched/boss/elite/infinite 유지. Eager catalog validation 보완, TDD/focused90/독립 Sol C0I0 PASS. 격리 production 정산 전후358,400회씩 비교 및 current byte replay PASS, 175cohort/18jobs에서 장비 개수 동일·Lv20~62 대표의 level-reject0; 판매 수입 감소를 별도 기록했다. Canonical writer67021 exit0→readonly PASS, v1/report 관련 불변 범위 확인. Full93992 실행 중(`/tmp/aetheria-normal-loot-full.log`), unit4462PASS 이후 browser gate 중. Art/content/economy/event/doctor53778 exit0. 직접390QA dev98592/CLI normal-loot에서 실제 UI승리→Tier3대지방패 확인, 장착/복원 진행 중. 상세 `docs/evidence/qa/normal-loot-tier-20260909.md`. 최신 완료 native는 regional24이며 이번 native 미실행. Native Goal 도구는 blocked를 반환하므로 강제로 새 Goal/완료를 만들지 않는다. 아래 blocked는 이전 이력이며 이미지6은 별도 승인 범위다.
+
+현재 Goal **blocked — 새 보상·이미지 설계 승인 대기**. 설계 제시 이후 자동 continuation들에도 실제 승인이 없으며, 안전한 source/visual/loot 감사로 다음 액션을 좁혔다. 직전 턴은 EXP/level·mirror test·signature pool 증빙으로 진척했으나 이번은 상태 재검증만으로 no progress다. 실행 중인 해당 full/native/evidence process 없음, diff PASS/native tracked0/index empty. 일반 bonus tier 계약(`2026-09-09-aetheria-normal-loot-tier-contract.md`) 또는 별도 이미지6 계약의 승인 후 해당 구현부터 재개한다. 도서관-only안은 보류 유지. 전체objective·dirty changes·원본·save·regional24 산출물 보존, 완료로 처리하지 않는다. 반복 빌드/분석/기기조작 없음.
+
+새 normal loot 계약 제안: `docs/superpowers/plans/2026-09-09-aetheria-normal-loot-tier-contract.md`. Production field/EXP 배율과 기존 인라인 mirror test를 감사했고, Tier5 pool45중 signature23/Tier6 20중2를 확인했다. 단순 tier 변경은 희귀 획득까지 바꾸므로 미적용. 권장안은 일반(non-elite/boss/abyss 제외) bonus eligibility·확률 유지, 실제 enemy.level 기반 최고 착용 Tier + non-signature pool; 미래 장비/판매가 감소와 legacy eligibility 잔존을 명시한다. 구체적 balance 계약 승인 전 적용하지 않는다. 도서관-only안 보류/이미지6 승인대기 유지. Source/수치/native 미변경, regional24가 최신 완료다.
+
+Continuation 진척: native Goal active 확인. 도서관 전용안 검토 중 공통 loot-level authority 불일치 확인: spawn EXP는10×level, bonus 추정은 /5. Production 강제roll read-only probe에서 Lv45 접근 가능 no-table map/species45행 중43행의 첫 장비가 level 제한, Lv62는73중71. 실제플레이/자연확률/전체item 주장 아님. `docs/evidence/qa/loot-level-authority-audit-20260909.md`에 재현 명령·결과·한계 기록. 도서관2종 Tier5 override는 이 문제를 가릴 수 있어 보류/re-plan; 단순 divisor 수정도 미승인이다. 이미지6 설계승인 대기는 별도. Source/이미지/수치/native 불변, 전체Goal 미완료이며 아래 blocked는 과거 상태다.
+
+다음 설계 제안: `docs/superpowers/plans/2026-09-09-aetheria-library-and-elemental-six.md`. Retained105 전부 기존114 records/current SHA 일치 및 네 시트 직접 재검수; 다음6(번개/부식 골렘·얼음 기사·호수 수호자·화염 와이번/비룡) 교정 방향 작성. 다른99 blanket승인 아님. 도서관2종은 기존6% bonus 성공 시 Lv75전 non-signature Tier5 pool3으로 대체하는 안이며 아직 미적용. DB/canEquip으로 후보·Lv62접근·공유3종의 실제 지역(붕괴된 마법 요새)을 확인했다. 구체적 보상·디자인 승인 후 구현하며 source/수치/이미지/diagnostic/native 변경 없음. 이번 docs/read-only 검사만 수행, full/native 반복 없음. 아래 regional24가 최신 완료 checkpoint다.
+
+**최신 완료 regional24 local:** 승인된6종 교정 적용,149 authored/105 retained, other248·수치·저장 불변. Focused24/24·실제390 전투6종·독립 Sol C0/I0, full56316 exit0(unit4452/E2E118/양쪽smoke/type/lint/build), art/content/doctor PASS. Writer92587 종료/report·v1불변, cap92413·Android73419·iOS26746 exit0,329선택경로/package byte일치/native tracked0/diff PASS. 최신 미설치 unsigned iOS `/tmp/aetheria-regional24-ios.gldQLh/Build/Products/Release-iphoneos/App.app`; APK SHA48e4888b…79fdb8. 모든 이번 소유검증 handle 종료. 상세 `scripts/art_sources/monsters/v24/candidate-review.md`에 최초실패/수정/최종증빙 보존. 전체완료 아님: 도서관 보상·retained105 평가·기기/S6 남음. Native Goal은 아직 blocked로 새 Goal/강제완료를 만들지 않았다. 아래 승인대기/진행 중 표시는 이전 이력이다.
+
+현재 Goal **blocked — retained6 설계 승인 대기**. 설계 제시 턴부터 두 자동 continuation까지 같은 승인 조건이 유지됐다. 직전 턴은 상태 재확인만으로 no progress이며 실행 중 검증은 없다. 원래 전체목표·dirty changes·원본·save·topology 산출물을 보존한다. `2026-09-09-aetheria-regional-six-design.md` 승인 후 원화/검증부터 재개한다. 도서관 보상 계약과 기기/S6도 완료로 처리하지 않는다. 이번 source/image/build 변경 없음, diff PASS/native tracked0/index empty. 아래 active는 당시 이력이다.
+
+다음 설계: `docs/superpowers/plans/2026-09-09-aetheria-regional-six-design.md`에 retained6 몸체/자세·exact6/other248 보존·160/46/32/실제390/전체gate 계약 작성, 승인 전 이미지 생성/교체 없음. 도서관 전용2종의 production processLoot 메모리 probe에서 legacy 재료추가는 Tier6 보너스 유지/enriched는 대체를 확인; legacy 기본확률0.4라 희귀Tier5장비를 그대로 추가하지 않는다. Source 수치/manifest/diagnostic SHA 불변 및 diff/native tracked0 확인. 전체Goal active, 이전 턴 topology 진척은 완료됐으며 이번 probe가 보상 설계의 선택지를 좁혔다. 도서관 보상은 아직 확정/구현하지 않았다.
+
+**최신 완료 topology local:** full71089 exit0(unit4447/E2E118/양쪽smoke/type/lint/build), test-only 감사보완 후 최종unit87593 **4448/4448**, focused27/이동27/실제390 이동·복원·귀환/독립Sol C0I0 PASS. Writer71887·readonly70054 exit0(hash7cabd664…0f5dcc), report/v1/seed불변. 초기 추가unit61597 동시writer 실패는 보존하고 frozen evidence 재실행으로 해소. Content/doctor·cap62607·Android5917·iOS64914 PASS,329선택경로/package 동일/native tracked0. 최신 unsigned iOS `/tmp/aetheria-topology-ios.63XliI/Build/Products/Release-iphoneos/App.app`, 미설치; APK SHAdb757e2a…516309. 모든 이번 소유검증 handle 종료. Goal active/전체미완료: 도서관 보상·이미지6·기기/S6 남음. 상세 game-quality-followup-20260909.md; 아래 진행/blocked는 역사다.
+
+승인 후 topology 구현 재개: 공유 `mapAccess.ts`의 static eligibility와 시작마을 directed traversal을 추가하고 실제 moveActions/진단기 모두 연결했다. Missing helper RED→기본4PASS, 이동 rejection 무dispatch 및 canonical Lv60도서관불가/Lv62가능/시즌제외 포함 focused26PASS, tsc/lint PASS. 게임수치·v1 source·지역설명·이미지는 미변경. Diagnostic writer4465(`/tmp/aetheria-topology-evidence.log`) 실행 중; 같은 handle 확인 후 report 변경범위 검토·전체gate·실제UI/native 순서로 이어간다. 이전 blocked는 승인 전 상태이며 이번 구현완료/전체완료 주장은 하지 않는다.
+
+현재 Goal **blocked — 설계 승인 대기**. 수정안 제시 턴과 두 자동 continuation에 걸쳐 같은 승인 조건이 유지됐다. 직전 턴은 retained111 실제시각/source 감사로 진척했으나, 현재 재검증에서는 새 승인·live 검사 작업이 없고 다음 구현이 승인에 의존한다. 반복 QA/기기조작 없이 원래 objective·dirty changes·원본·저장·quality23 산출물을 보존한다. 재개는 실제 이동 조건을 공유한 진단기 topology 수정 승인부터다. 도서관 문구 삭제만으로 보상경험을 완료 처리하지 않으며 이미지6 신규설계도 별도 확정한다. 이번에는 상태/문서만 변경, diff PASS/native tracked0/index empty; 전체완료 아님.
+
+Goal continuation: native Goal active 확인. 이전 설계만 제시한 턴은 구현 진척이 아니므로 안전한 S3 감사로 진행했다. Retained114 전체SHA 재대조에서111불변/exact3기적용 확인, 실제시트4 재검수 후 source 문맥과 불일치하는 우선6종(뿌리 포식자·세계수 수호자·꽃잎 슬라임·화산재 골렘·뇌운 와이번·바람 드레이크)을 evidence에 기록했다. 새 디자인/진단기 변경은 승인 전 미실행. 도서관 문구 삭제만으로 지역보상 적합성을 완료 처리하지 않는다. 현재143/111, 최신 full/native quality23 유지; 이번 audit/docs만 갱신.
+
+Quality24 준비: 현재 source에서 level-only diagnostic 선택과 도서관의 미구현 magic-drop 확률 설명을 재확인했다. Bounded 제안은 production 이동 eligibility를 공유한 시작마을 기반 directed reachability 진단, v1·게임 수치 보존, 도서관의 근거 없는 확률 설명 정정 후 내부 플레이로 별도 보상변경 필요성을 판단하는 것이다. `brainstorming`의 구체적 동작 승인 gate에서 구현 전 대기한다. 이번 확인은 read-only와 ledger만 변경; diff check PASS/native tracked0, 최신 완료 full/native는 아래 quality23 그대로다.
+
+**최신 완료 quality23:** story 위치/quest87 보상/접근성 수정, v23 지역3 교정(143 authored·111retained), focused·실제390검수·scoped SolC0I0 완료. Full61321 exit0(unit4444/E2E118/양쪽smoke/type/lint/build), art/content/diagnostic readonly verify/doctor PASS. Cap95591·Android23105·iOS44173 exit0, source/dist/패키지329경로 일치/native tracked0. 최신 미설치 unsigned iOS `/tmp/aetheria-quality23-ios.lfBBAj/Build/Products/Release-iphoneos/App.app`; APK SHA80483893…f0aff. `docs/evidence/qa/game-quality-followup-20260909.md`에 정확한 증빙. 아래 실행 중 상태는 역사이며 전체게임 완료는 아니다. 다음은 아래 diagnostic/library2건과 retained-art 잔여 판단; 전역 수치변경/설치/commit 없음.
+
+다음 알려진 결함2: Sol balance source 감사에서 diagnostic의 level-only map선택(실제 directed route 미반영)과 금지된 도서관의 magic-drop 설명/전리품 불일치 확인. Lv60 전역 장비수급 결함으로 확대하지 않으며 global EXP/drop/event 수치는 보존한다. Quality23 story/art gate 종료 뒤 topology 진단 회귀와 localized 도서관 보상 계약을 진행한다. 전체게임 C0/I0/완료가 아니다.
+
+최신 quality23: Quest87 explicit claim/continue·TRUE_ENDING ASCEND guard 구현 및 접근성2-quest RED→GREEN 완료. Ending E2E89392 exit0/4PASS(390·375·430), canonical source-only diagnostic77968 exit0/report·v1불변, Sol 재감사 C0/I0. CUA390에서 마왕→원시의 신 기술 승리→보상수령→현재여정 복귀 직접 확인/console errors0(강화된 QA fixture, 자연플레이 증빙 아님). V23 exact3 adoption/other251보존/143 authored·111retained 및 art gate PASS. 현재 full61321(`/tmp/aetheria-quality23-full.log`) 실행 중, 같은 handle 확인 후 native 진행. 최신 완료 native는 v22이며 새 설치/commit 없음. 아래 구현 중 상태는 역사다.
+
+현재 실행: narrative location 수정 및 owner18/18PASS/독립 correctness·PII blocker0. Quest87 true-ending→ASCEND에서 미수령 보상 소실은 reducer 재현으로 확정; Luna/max가 explicit claim/continue/ASCEND guard TDD 구현 중. V23 지역3 candidate 독립C0I0/원본bytes일치 후 Terra/xhigh가 exact3 adoption·other251보존 회귀를 진행한다. 상세 quality-followup 증빙. 새 source 변경 이후 full/native는 아직 재실행하지 않았으며 최종완료가 아니다.
+
+사용자 품질보완 승인 후 구현 작업 재개: `docs/evidence/qa/game-quality-followup-20260909.md`가 현재 다음 작업이다. Retained114 실제 sheet4 재검수, 지역성 미달3 원본 생성/보존 및 exporter RED2→관련4GREEN/160·46·32검수 완료(runtime 미연결). Story quest87 ending/계승 누락 후보는 Sol/xhigh 재현 중, narrative location 정합화는 Luna/max TDD 진행. Lv60 loot equipability anomaly는 원인/실제플레이 확인 전 수치 변경 금지. 기존 전체Goal 범위와 iPhone 승인 경계 보존; 아래 blocked/local완료 기록은 이 보완 승인 이전 상태다.
+
+승인 대기: 최신 unsigned package 검증 완료 이후 세 연속 Goal 턴에서 iPhone 서명·설치·실제 테스트 승인/시간 조율이 해결되지 않았다. 추가 빌드 반복이나 기기 변경 없이 Goal을 blocked로 보존한다. 재개 조건은 기존 앱/저장 데이터 삭제 없이 최신 버전 서명·설치·foreground/background 복원 검증 승인이다. 완료로 처리하지 않으며 아래 local PASS와 모든 산출물은 유지한다.
+
+최종 native 갱신: 독립 clang 진단 exit0 후 같은 canonical unsigned 빌드99757 exit0(`BUILD SUCCEEDED`). Android/iOS 각각329검사경로가 source/dist와 byte동일, tracked native drift0. `scripts/art_sources/monsters/v22/native-verification.md`에 SHA·실행명령·초기중단/재실행경계를 기록했다. 최신 iOS `/tmp/aetheria-boss22-ios.53lmUl/Build/Products/Release-iphoneos/App.app`는 미설치. 구현/full/native local gate 완료; 다음은 최신 iPhone 설치 승인·테스트 시간 조율 후 exact PID/foreground/lifecycle 검증. 아래 iOS 미완료는 이전 상태다.
+
+최신 checkpoint: v22 승인7종 교정 구현과 독립 Sol/xhigh C0/I0 완료. 최종 full58171 exit0: unit4434/4434, E2E117, desktop/mobile smoke 및 type/lint/build PASS(기존 lint warning3 유지). Art/content/event/equipment gates, focused18/18 PASS. cap14993·Android19256 exit0, mobile doctor PASS. iOS48667은 clang compiler-info 출력 write에서 10분 이상 대기하여 해당 xcodebuild PID67632에 TERM을 보냈다. 새 iOS/package329 검증은 미완료이며 설치하지 않았다. 상세 `docs/evidence/qa/game-completion-implementation-closeout-20260909.md`. 실기기 테스트는 구현 이후로 유지하며 아래 진행 중 표시는 역사다.
+
+현재 최종 full58171 실행 중(`/tmp/aetheria-boss22-full-final.log`). 첫 full18106은 unit4433/4434, 명시적 CORRECTED_NAMES에 신규7 누락1건으로 exit1; exact7 추가 후 focused18/18PASS. 파일/해시 검사 유지. Related content/event/equipment power·economy PASS. 같은58171을 확인하며 full완료 전 native 재빌드하지 않는다. 사후독립감사 v12_review 진행 중. 아래18106 진행 표시는 역사다.
+
+현재v22: contrast/offset 교정 후보 독립C0/I0 후 exact7 연결, other247 보존, 관련12/12 및 실제390 전투portrait7장 검수 PASS. Source-only 진단 hash1개 갱신/report전체불변, art PASS. Full18106(`/tmp/aetheria-boss22-full.log`) 실행 중이며 같은 handle을 확인한다. 최신완료 native는 Kingdom, 실기기테스트는 구현완성 뒤로 연기. v22/candidate-review.md에 최초 harness flag 누락과 역사보존 테스트 경계수정 증빙을 보존했다. 전체Goal 미완료.
+
+V22 export checkpoint: source2 RED→관련6GREEN, 원본7/교정전2 보존 및 source-pinned160RGBA export·두번bytes동일·drift/덮어쓰기거부 검증 PASS. Owner 실제160/46/32 양배경 sheet3 검수, dimension-demon dark contrast 독립감사 중. Manifest/registry/진단/old7 preimage 보존, adoption2RED로 exact7/other247 계약 고정. Runtime 미반영. 상세 v22/candidate-review.md, 독립 v12_review 결과 후 필요한 교정과 adoption 진행.
+
+사용자가 남은7종 교정을 승인했다. 같은 Goal active로 재개하며 v22의 개별 원화→원본 보존 export TDD→작은 크기 검수→exact7 연결/other247 보존→자동·브라우저·전체 gate 순서로 진행한다. 실기기 테스트는 사용자 지시에 따라 모든 기능·디자인 구현 이후로 연기한다. 아래 blocked와 기기 시간 요청은 이전 상태다. 전투 수치·페이즈·저장·기존 설치본 및 원본은 보존한다.
+
+현재 Goal은 **blocked**다. 보스7 설계 승인 및 기기 테스트 시간 조율 조건이 세 연속 Goal 턴 동안 해소되지 않았고 가능한 로컬 확인과 증빙 정리는 완료했다. 전체 목표·dirty changes·저장·원본을 보존한다. 승인 또는 기기 테스트 가능 안내 후 같은 Goal을 재개한다. 아래 active 표시는 당시 이력이며 게임 완료를 뜻하지 않는다.
+
+## 실기기 관찰 — 미러링 연결 확인, 사용자 조작과 시간 조율 필요
+
+2026-09-09 실제 CUA 화면에서 이전 인증 창 대신 연결된 iPhone을 확인했다. Home 전환 시 사용자 조작 감지 응답이 발생했고 재관찰에서도 다른 앱 사용 중이어서 추가 조작을 중단했다. 인증 요청을 반복하지 않는다. 사용자와 테스트 시간을 맞춘 뒤 기존 Aetheria 설치본 식별·background/foreground·저장 복원을 관찰한다. 최신 Kingdom 빌드 설치와 lifecycle 통과는 아직 증명하지 않았다. 상세 `docs/evidence/qa/game-completion-lifecycle-observation-20260908.md`. Production/native 변경 및 설치 없음; 보스7 설계 승인과 전체 S6는 계속 미완료다.
+
+## 남은 보스 원형 7종 — 교정안 승인 대기
+
+현재7종 manifest/runtime SHA 일치 확인, 원본 및 160/46/32px 기존 sheet 재검수. 공허의 군주·에테르 군주·엔트로피 군주·차원 마왕·허무의 황제는 같은 flame-lord body/eye 반복, 마왕과 에테르 드래곤은 기존boss/dragon 원형 파생이다. 일반body17종 결함과 구분하며 unique hash를 시각완성으로 세지 않는다. 몸체/자세를 분리하는 bounded 교정안을 대화로 제시하고 승인 전 생성·교체하지 않는다. 전투속성/수치/페이즈·다른247종·원본 보존, TDD/sourcepin/160·46·32/실제390/전체gate가 수용 조건이다. 최신 완료는 아래 Kingdom local이며 전체Goal active. 별도관리task의 Orca삭제전38worktree 읽기전용감사는 게임Goal완료와 무관하며 이 작업에서는 삭제하지 않는다.
+
+## 황금 왕국 도시 조사 — local checkpoint 완료
+
+**최신 완료:** full71487 exit0(unit4430/E2E117/양쪽smoke/type/lint/build), related gates/독립Sol C0I0/실제390조사→전투→복원→탈출 PASS. Mobile/cap22046·Android15499·iOS19379 exit0, 패키지329paths 일치/native tracked drift0/index empty/diff PASS. 최신 unsigned iOS `/tmp/aetheria-kingdom-ios.JKuvHO/Build/Products/Release-iphoneos/App.app`, APK SHA `265c8d62500e5d70014bf0576eca018f940f32d376606743ad1e9e4974ce4e18`. 상세 kingdom-investigation-20260909.md. 모든 소유 QA/full/build 실행 종료. 설치/서명/commit 없음. 다음은 별도boss-source7 최종 디자인 판정과 실제device/lifecycle/S6; 전체Goal active. 아래 진행 중/blocked 표시는 역사다.
+
+최신: 최종 full71487 unit4430/4430·양쪽smoke PASS 후 E2E 첫 shard 진행 중. 관련8699 art/equipment/event exit0, content/economy PASS. 독립 Sol/xhigh C0/I0/focused20PASS 및 actual UI 증거 대조 완료. Source-only diagnostic 변경은4 source records뿐, report 등 나머지 전체불변. Owned QA browser kingdom22와 dev90450은 정상 종료했다. **71487은 종료 전 재시작하지 않고 같은 handle을 poll한다.** Cap/native는 full 종료 후 실행하며 docs 상세는 kingdom-investigation-20260909.md. 전체Goal active.
+
+사용자 승인 후 기존 Goal active 확인. 공유 접근 조건+town 버튼+reachable 판정 최소 수정, RED2→focused20/20 및 cycle포함292/292 PASS. 실제390 버튼→사기꾼마법사→공격→전투reload동일→도망/idle PASS, 원정ID/귀환summary없음, console0/overflowfalse. 최초 full64174 실패2건(기존label계약/source seal)을 보존·해소하고 diagnostic writer89293exit0/sources외전부불변 확인. **최종 full71487 실행 중** `/tmp/aetheria-kingdom-full-final.log`; 독립 v12_review 진행 중. 다음은 full 종료→관련/cap gate와 필요 native 검증. 상세 `docs/evidence/qa/kingdom-investigation-20260909.md`. 기존v21 native가 최신 완료이며 설치/commit 없음. 아래 설계승인대기/blocked는 승인 전 이력이다.
+
+## 다음 기능 보완 — 황금 왕국 조우 접근성 설계 승인 대기
+
+현재 Goal **blocked**: 도시 조사 설계 승인과 실제 미러링 암호 인증 경계가 세 연속 Goal 턴에 유지됐다. 그동안 가능한 source 감사·기기 surface 발견·S5 증빙 정합성 보완은 완료했으며, 이번 실제 AX 재확인도 인증 화면이다. 동일 빌드/인증 요청 반복을 중단하고 전체 objective·변경 파일·설치본을 보존한다. 재개는 도시 조사 설계 승인 또는 사용자 미러링 인증 후 해당 범위부터 진행한다. 별도boss-source7 최종 수용/교정 설계와 S6는 미완료이며 아래 active 표시는 당시 이력이다.
+
+S5 checklist 정합성 보완: fresh 최신 증빙의 자연Lv2/슬라임 임무보상/reload와 v21 full/native 결과를 전체계획의 해당 체크리스트에 반영했다. 과거 원본 증빙은 유지한다. 미러링 인증 화면은 실제 AX 재확인에서도 잠김이며 기기 관찰은 진행하지 못했다. 코드·native 변경 없이 docs 정합성만 수정, 전체 S3/S5/S6 완료 아님.
+
+병행 device 조사: CUA에서 iPhone Mirroring 실행 surface를 발견했고 기존 `재개`를 1회 눌러 실제 Mac 암호 인증 화면까지 확인했다. 사용자 인증 필요, 암호 취급/게임 실행/설치 없음. 이전 Playwright3회 구성은 반복하지 않았다. 인증 후 기존 설치본 화면과 lifecycle을 관찰할 수 있으나 최신v21 설치 검증과 구분한다. 상세 `game-completion-lifecycle-observation-20260908.md`. 직전 설계 턴은 source 경계 확인으로 progress, 이번에는 새로운 실기기 관찰 경로와 구체적 인증 blocker를 확인했으며 전체Goal active다.
+
+Next8 완료 이후 source 재확인: 황금 왕국의 일반 몬스터5종은 해당 safe map에만 등록되며 town UI에는 explore가 없다. 기존 explore action은 시작 마을만 제외하므로 command parser 존재와 모바일 actionable route를 구분해야 한다. Move는 safe→위험 지역에서 원정을 시작하고 safe 도착에서 종료하며, 휴식은 idle/safe/유료 조건이다. 제안은 황금 왕국에 위험을 명시한 선택형 `도시 조사`로 기존 explore 경로를 노출하는 bounded 수정이다. Map safe 역할·5종 목록·수치·휴식 비용을 보존하고 도시 조사는 원정 시작/귀환 보상으로 집계하지 않는다. 승인 후 접근 조건 공유, TDD와 실제390 클릭→조우→복원, 전체 gate를 진행한다. 신규 지역/원정 mode/자동 전투는 추가하지 않는다. 현재 gameplay 변경 없이 설계 승인 대기이며 전체 Goal active. 최신 검증/native는 아래 v21 checkpoint 그대로이고 이번 조사에서 재빌드·설치·commit은 하지 않았다.
+
+## Next8 보스 조형 — 교정 local checkpoint 완료
+
+**최신 완료:** 승인8종 exact-only 교정/other246보존, 실제390 portrait8장, 후보·사후 Sol/xhigh C0/I0, related16PASS 및 independent4PASS. Full83518 exit0(unit4427/E2E117/양쪽smoke/type/lint/build), 관련art/content/equipment/event PASS. Cap99723·Android32843·iOS23111 exit0, package329paths byte-equal. 최신 unsigned iOS `/tmp/aetheria-boss21-ios.KdxC2u/Build/Products/Release-iphoneos/App.app`; APK SHA `344d9b184316ff49eb0200e54fa4ea6a8a796a2b466b2fdcfb5b4a3985af6154`. 기존lint3warnings와 smoke close tooling warning은 증빙에 유지. Historicalcandidate6/Toss38/원화/저장/native tracked/index 보존, 설치/sign/commit/publish 없음. 상세 v21/candidate-review.md. 일반body 파생17종(first9+next8)은 교정검증 완료; 별도boss-source7/Kingdom/device/lifecycle/S6가 남아 전체Goal active. 아래 중간/blocked 표시는 과거다.
+
+현재 next8 runtime 반영 완료: 후보 재감사 C0/I0, exact8-only generator rehearsal/other246보존, related16/16 PASS. 이전first9 historical preservation과 current246 preservation 검증을 분리해 승인된successor를 오거부하던 테스트1건 수정. 실제390 portrait8장 owner검수/overflowfalse/errors[], isolatedQA 종료. Diagnostic manifest sourceSHA1개 외 전체불변. Full83518 실행 중(`/tmp/aetheria-boss21-full.log`), native/post-adoption 감사 미완료. 상세 v21/candidate-review.md. 아래 승인대기·runtime미변경은 과거다.
+
+승인 수신 및 구현 재개: 기존 Goal **active** 확인. v21에 개별 원화8개·prompt·provenance·이전runtime8/manifest/registry/diagnostic 보존. 무한의 화신 첫4팔 후보와 심판자 edge 후보는 rejected로 보존하고 교정본을 선택했다. Source 신규2RED→기존v20 포함4/4GREEN, 160/46/32 light/dark3장 owner검수, focusedlint/diff PASS. Adoption 신규2는 registry 미반영으로 RED이며 독립 후보 감사 후에만 연결한다. 현재 runtime 미변경, 최종 작음크기 수용/전체native 미완료. 아래 blocked 기록은 승인 전 이력이다.
+
+현재 Goal은 **blocked**: next8 조형 승인 경계가 세 연속 Goal 턴에 유지되어 자동 반복을 중단했다. 원래 objective와 변경 파일은 보존하며 완료/삭제가 아니다. `brainstorming`상 조형 승인 전 생성·교체 불가. 재개 조건은 대화의 next8 조형 승인이다. Kingdom 설계와 실제 device/lifecycle 검증도 미완료로 남긴다. 최신 완료 checkpoint는 first9 local이며 이번에 runtime/build/설치본은 변경하지 않았다. 아래 active 표시는 당시 이력이다.
+
+2026-09-08 continuation: 이전 first9 구현·검증은 progress로 분류. monsters.ts의8종 profile/phase, maps.ts의 등장 문맥, current manifest8개와 실제PNG SHA를 대조했다(8/8 일치). Next8은 공허의 대행자·무한의 화신·에테르 심판자·봄의 여왕·수호신의 사도·에테르 거인·하수도의 여왕·혼돈의 수호자다. 하수도 여왕의 humanoid, 에테르 거인의 construct 분류와 봄 정원의 seasonOnly 조건을 보존한다. 기존 first9/다른246종·수치·저장·지역 조건을 건드리지 않는 bounded 조형안을 대화로 제시했다. 제안은 새 시각적 해석이지 기존 lore 사실이 아니다. 승인 전 원화 생성/runtime 교체 없음. 이번 턴은 source 감사와 ledger만 변경하여 full/native 재실행 안 함; 최신 검증 빌드는 아래 first9 checkpoint 그대로다. 전체Goal active, next8 조형 승인 필요.
+
+## First9 보스 설계 승인 — 구현 재개
+
+**완료 checkpoint:** first9 교정 local 검증 완료. Full72064 exit0(unit4423/E2E117/양쪽smoke/type/lint/build), art/content/equipment/event-reward PASS. Cap/doctor54606·Android26846·iOS51758 exit0, 패키지별329paths 동일bytes. 사후 Sol/xhigh C0/I0, 실제390 portrait9장 검수 완료(통제 fixture). 최신 unsigned iOS `/tmp/aetheria-boss20-ios.ANk5DZ/Build/Products/Release-iphoneos/App.app`, APK SHA `41931a2fcefb39f803082250d3ad6b23231f4d111dd3b96c412ebb874721e014`. Other245/historicalcandidate6/Toss38/index/native tracked paths 보존. 설치·sign·commit 없음. 상세 `scripts/art_sources/monsters/v20/candidate-review.md`. 다음은 나머지8종 조형 설계이며 별도7종·Kingdom·device/lifecycle·S6는 미완료, 전체Goal active. 아래 진행 중 기록은 역사다.
+
+현재: 교정 후보 Sol/xhigh 재감사 **C0/I0**, adoption RED2→관련21/21 PASS. Exact9 원화/registry/runtime 반영 및 other245 bytes 보존 확인. 실제390×844 전투 portrait9장 owner검수, decoded160/rendered46/overflowfalse/errors[] 모두 확인(통제 fixture이며 자연 보스 전투 증거 아님). Diagnostic은 manifest source SHA1개만 갱신/report·v1 등 불변. Full72064 진행 중, art/content45543 exit0. 다음은 full 종료 → native 동일bytes 검증 → post-adoption 감사다. 최신 완료 native는 story identity 그대로이며 설치·commit 없음. 아래 후보 미반영/I2 표시는 과거 이력이다.
+
+독립 후보 감사 C0/I2: 원한의 용사 broken blade 식별과 균열의 사령관 두 spectral legs 구분 미달. 다른7종 blocking없음. 문제2종만 승인된 형태로 재생성 중, 기존master/reviewsheet 보존, canonical 미반영. 보완본 작은크기 재검수 후 adoption한다.
+
+최종 focused9/9 PASS(session92620): boss-body2/endpoint2/preflight5. Independent candidate review 실행 중, canonical 미반영. 다음 gate는 후보 판정에 따른 최소 교정 → exact9 adoption TDD → 실제390 UI/full/native다. 새 사용자 승인 재요청 없이 승인 범위 내에서 이어간다.
+
+후보 준비 checkpoint: v20 원화9종/개별prompt/generated provenance/기존PNG9 및 manifest·registry·progression preimage 보존. 처리기 신규2RED→관련4/4GREEN, actual160/46/32 light/dark sheet3장 owner검수, focusedlint/diff PASS. 초기bottom151 정렬 문제와 체크무늬 편집 후보를 보존·제외, 최종분리 torso 새후보 선택. Current254runtime SHA 불변. Sol/xhigh 독립 후보 감사 진행 중이며 adoption/실제390/full/native 미실행. Goal tool active 확인; 아래 상태 전환 API 언급은 당시 미확인으로 대체한다.
+
+사용자 `첫 보스 9종 교정 설계 승인` 수신. 승인된 조형9종만 내장imagegen 개별 원화 준비를 시작했다. 원본보존/Pillow/TDD/작은크기/독립검수 후에만 runtime adoption한다. Game numeric·다른245종·historical evidence·설치본 보존. 아래 승인 대기 기록은 과거이며 실제 구현을 재개했다. Goal 도구는 active 전환 API가 없어 상태를 임의 재생성하지 않는다.
+
+## Goal 승인 대기 — 자동 실행 중단
+
+첫 보스9종 설계 승인 경계가 연속 Goal 턴에서 유지됐고 승인 없이 가능한 후속7종 분류와 device 연결 상태 확인까지 마쳤다. 변경 없는 반복을 막기 위해 기존 Goal을 `blocked`로 기록했다. 완료·삭제가 아니며 원래 objective와 모든 작업을 보존한다. 재개 조건은 `2026-09-08-aetheria-boss-body-correction.md`의 첫9종 조형 승인이다. Kingdom 접근성 설계 및 최신 signed 기기 설치/lifecycle도 별도 미완료로 유지한다. 마지막 완료 checkpoint는 아래 story identity full/native이며 새 실행·설치·commit은 하지 않았다. 아래 Goal active 표시는 당시 이력이다.
+
+## S3 boss-source 7종 후속 분류 감사
+
+기존 sheets2/3/4 원본 크기 재검수 및 current runtime/receipt/manifest46 SHA 재대조 PASS. 7종은 이미boss source이므로 일반-body17종 Important와 구분한다. 공허/에테르/엔트로피/차원/허무5종의 동일 body+eye 반복, 마왕의 horn 변형, 에테르 드래곤의 mirrored dragon 한계를 명시했다. 이름별 고유 디자인 최종 승인은 하지 않았으며 새 결함17종과 혼합 집계하지 않는다. 상세 retained-monster-small-size-review의 boss-source seven절. First9 디자인 승인 대기, runtime/native 변경 없음. 최신 완료는 아래 story-identity local checkpoint; 전체 Goal active.
+
+## S5 첫 자연 레벨업 — story log collision 교정
+
+Local checkpoint 완료: full24360/cap93053/Android38884/iOS17923 exit0. Unit4419/E2E117/두smoke, 관련 art/content/equipment gates, independent C0/I0, 실제390 browser 및 package329paths 일치. 최신 unsigned iOS `/tmp/aetheria-story-ios.V8SWG9/Build/Products/Release-iphoneos/App.app`, APK SHA `b4efb4063822d04ae8af5942a3d08a3c132c1e665d9f0c3152c2e2f7c9e313ba`. Historicalcandidate6/Toss38/HEAD/index/native tracked paths 보존. 설치/commit/publish 없음. 다음은 승인 대기 first9 보스 설계 교정과 잔여device/lifecycle/S6이며 전체Goal active다. 아래 중간 build 상태는 역사다.
+
+최신: full24360 exit0(unit4419/E2E117/양쪽smoke/type/lint/build), cap/doctor93053 exit0. Android38884/iOS17923 local build 실행 중(`/tmp/aetheria-story-ios.V8SWG9`), 설치하지 않는다. Map12·character8 current-byte 독립 감사 C0/I0로 이전 해당 결함 해소 확인. Boss17 디자인 결함과 나머지7 수용 판정, boss9 사용자 설계 승인, 실제 device/lifecycle, S6는 남았다. Astra 계획/구조, Sol 복잡한 검토, Terra high/xhigh, Luna max만 사용한다. 아래 중간 상태는 역사 기록이다.
+
+Fresh 후속 완료: 네 번째 귀환 LV1→2/전투6/탐험13/EXP+99/최저67을 직접 확인했다. 다섯 번째 원정에서 슬라임 임무3/3 달성→숲 수령disabled→마을 debrief 명시적 수령(+40EXP/+100gold)→reload claim1/quest0 보존까지 통과했다. 현재 townLv2EXP69HP199/209MP49/69gold619, active원정 없음. 390캡처4장 owner검수. Full24360은 첫 E2E59 통과 후 두 번째 묶음 진행 중. Historicalcandidate6/Toss38 hash 불변 재확인.
+
+중간 gate: full24360 unit4419와 desktop/mobile smoke PASS 후 E2E 실행 중. 관련 art/content/equipment power/economy PASS, diff check PASS/native tracked drift0/index empty. Desktop close timeout 경고는 유지 기록. 새 native 생성은 아직 수행하지 않았다.
+
+Natural Lv2 도달 중 동일 timestamp story ID가 victory/levelUp 로그를 함께 덮어쓰는 오류를 발견했다. Persistent sequence 기반 story ID로 최소 수정, 신규3 RED→GREEN/관련11PASS, 독립C0I0, 고정시각 별도390×844 browser에서 서로 다른 두 이야기/console0/overflowfalse 확인. 첫 full39296은 progression source pin mismatch1건; 정식 writer로 해당pin만 갱신/report 등 모든 나머지 필드 불변. **최종 full24360 실행 중**(`/tmp/aetheria-story-identity-full-final.log`), native는 통과 후. 최신 완료 native dark checkpoint에는 이번 수정 미포함.
+
+기존 natural save는 HMR hook-order 오류 후 reload해 Lv2EXP13HP89/209MP17/69gold560/슬라임2/3 복원을 직접 확인했다. 네 번째 원정 진행 중. Boss9 설계는 독립 지적2행(spectral identity) 수정 후 재검토 통과, 사용자 승인 전 원화 교체 보류. 상세 story-log-identity evidence. Commit/install 없음, 전체 Goal active.
+
+## S3 retained monster 검수 — 46종 current bytes 확인
+
+확정: requirement-aware Sol/xhigh **C0/I1(17종)**. 기존boss 원형 파생7종은 조건부 후보이며 최종 승인0. First9 설계 `docs/superpowers/plans/2026-09-08-aetheria-boss-body-correction.md` 작성, 승인 전 원화 생성/runtime 교체 보류. Natural fresh는 휴식63gold→숲 출발→탐험5회 중 유물 선택/슬라임 전투, 임무1/3과 shadow_cloak 저장 확인. 현재 숲 Lv1EXP126HP150/187MP57gold425; screenshot2장 owner검수. Game source/native/원본 불변, 전체Goal active.
+
+최신 독립 결과: static46 pin/size 검수 완료, 의미상 acceptable16/contextual30. 단, plan의 **보스는 체격·자세·주요 형태로 구분**한다는 명시적 요구를 main이 재확인했으므로 파생 보스24종을 별도 design-contract 재감사 중이다. 이름 모순 없음/C0I0만으로 이 요구를 닫지 않는다. Exact24 family 목록은 retained-monster evidence에 기록했다.
+
+후속: 4장을 original detail로 다시 열어 viewer 축소 없는 owner 작은 크기 검수를 마쳤다. Independent design acceptance는 아직 대기 중이다. 같은 fresh save에서 추천 슬라임 임무 실제 수락과 reload 후0/3 보존을 확인했다. 현재 임무 패널, Lv1EXP114/200HP59/187MP2/57gold470. 첫 레벨업/임무 완수는 미관측이며 다음 자연 플레이는 휴식부터 진행한다.
+
+`retained-monster-small-size-review-20260908.md`: exact46 runtime SHA/160×160 RGBA 확인 후 160/46/32px dark/light 4장(12/12/12/10)을 생성하고 owner overview 검수했다. 큰 sheet의 viewer 축소 한계를 기록했으며 실제 게임 pixel 검증으로 과장하지 않는다. 반복 body/overlay의 contextual 수용과 Sol/xhigh 독립 감사는 대기 중이다. 원본/runtime/게임 수치/native 불변. 기존 Goal 유지, 전체 S3 완료 아님.
+
+## S5 대표 플레이 흐름 — fresh 장비 선택과 midlate 확인
+
+`game-completion-midlate-direct-20260908.md`: 마왕→원시의 신→진엔딩→NewGame+→reload 직접UI PASS, 안정된390×8444장 owner검수. Seeded/1HP fixture 경계와 초기 fade-in 캡처 제외를 기록했다. 현재full의 전직/퀘스트 화면도 source/assertion과 대조해 owner검수했다.
+
+동일 naturalfresh save는 포크40gold 구매/장착/모험가3/3세트/reload를 확인했다. Current Lv1EXP114/200HP59/187MP2/57gold470, dagger main/forkoffhand/tunic, 장비 콘솔 열림. Fresh 신규장비판단은 확인했고 첫레벨업은 아직 관찰하지 않았다. Plan의 명시적 fresh행동목록과 대표중후반fixture 체크를 닫았으며 전체Goal 완료는 아니다. S3coverage 독립감사 진행 중. iPhone devicectl는available/paired지만 새 signed설치/foreground는 미검증이고 변경하지 않았다. 최신 native darkcheckpoint 그대로, commit/install없음.
+
+## S3 대검 canonical 교정 — local checkpoint 완료
+
+최종 full26974/cap87969/Android83772/iOS9221 exit0. **Unit4416/E2E117/두smoke/관련gates/독립C0I0**, 패키지329paths byte-identical/native tracked drift0. iOS unsigned `/tmp/aetheria-dark-ios.JVheQz/Build/Products/Release-iphoneos/App.app`, APK SHA `a22bf356f30ba6cbef19de877fbce4c66ac62c3e36bcb10da4c6b1f29793812f`. Historicalcandidate6/Toss38/HEAD/index 보존. 상세 dark-greatsword-adoption 문서. 모든 해당 gate handle 종료, 설치/commit 없음. 다음은 전체S3 coverage 정리 및 남은S5 성장/중후반/기기 관찰, S6 감사다. Kingdom UI 설계 승인 경계 유지.
+
+최신: **full26974 exit0**, unit4416/E2E117/양쪽smoke/type/lint/build PASS. Cap/doctor87969 exit0. Androiddebug83772+iOSunsigned9221 실행 중(`/tmp/aetheria-dark-ios.JVheQz`); package bytes 검증 전이다. Signature25 item/overlay 원본22장 각각 직접 검수 완료, 새 명백한 형태/crop 모순 없음. `equipment-signature-source-review-20260908.md`에 원본/작은크기/fallback의 승인 범위를 분리했다.
+
+후속: 최종 adoption Sol/xhigh **C0/I0**, 원본/다른228 runtime/manifest/diagnostic 불변 독립 확인. Full26974는 unit4416과 desktop/mobile smoke, 첫 E2E59 통과 후 두 번째 묶음 실행 중이다. Fresh 같은 캐릭터의 세 번째 원정은 자연 Scout 선택 포함 전투2/탐험2/+25EXP/최저HP59로 정상 귀환했고, 이전 최저HP127도 reload 후 실제 debrief로 재확인했다. 현재 town Lv1 EXP114/200, HP59/178, MP2/52, gold510; 첫 레벨업/장비선택 미관측. `game-completion-fresh-v19-20260908.md` 최신 절 참조. Native는 full 종료 후 진행한다.
+
+Replacement 안전 경로 독립 Sol/xhigh C0/I0, 실제54-output rehearsal과 canonical adoption TDD 포함111/111 PASS. 암흑의 대검 1개를 반영했으며 나머지228 runtime 불변, 원본/다른5 source cell/history 보존. Actual ItemIcon32/46/96 및 390×844 장착→저장→reload 검증 PASS (별도 fixture, 자연 획득 아님). 상세 `docs/evidence/art/dark-greatsword-adoption-20260908.md`.
+
+첫 full은4415/4416, source-bound diagnostic mismatch1건. 정상 writer로 equipment manifest pin만 갱신했고 report/v1 등 나머지 필드는 동일하다. 현재 full session26974, `/tmp/aetheria-dark-full-final.log` 실행 중. 같은 handle을 확인하며 완료 전 native 재생성하지 않는다. 이전 최신 native는 vitals로 새 대검 미포함. 후속 full/관련 gates/native/adoption 감사가 남았고 전체 Goal 미완료, install/commit 없음.
+
+## S3 대검 교체 경로 — safety contract 구현
+
+최종 focused suite **109/109 PASS** (`/tmp/aetheria-equipment-replacement-final.log`), 추가 계약 테스트3/3, ESLint/diff PASS. 기존 대검 source/runtime SHA 불변 및 Android/iOS tracked drift0 확인. 독립 processor 감사는 아직 대기 중이다.
+
+일반 equipment processor에 명시적 `--replace-existing`을 추가했다. 기본 conflict 거부를 유지하며 기존 output SHA, ordered identity/cell/runtimePath, catalog/cohort/source basename을 고정한다. 누락 batch와 다른 source 충돌은 쓰기 전에 거부한다. Dry run과 replay는 파일을 유지하며 기존 staged rollback과 historical generationReview를 보존한다. 신규 2개 테스트 RED→GREEN, pipeline+source 108/108 PASS 후 metadata/history/collision 회귀를 추가해 focused 3/3 PASS. ESLint와 diff check PASS. 최종 focused suite 및 독립 감사 진행 중이다.
+
+Sol/xhigh는 후보 32/46/96에서 대검 형태 결함이 교정됐다고 판정했다. **Canonical runtime 미반영**: 다음은 processor 감사 → 원본과 이웃 5 cell/다른 검 23개 보존 반영 → 실제 장착 화면 → full/native 검증이다. 최신 native는 vitals checkpoint 그대로다. 전체 Goal/S3/S5/S6는 미완료이며 commit/install/publication은 수행하지 않았다.
+
+## S3 대검 candidate 후속 — actual size / source safety
+
+ActualItemIcon32/46/96 후보미리보기390×844 확인: 정확한 assetURL 하나만candidate로응답한검수이며 runtime미적용. Source3개 각각 drift시 output생성전거부 regression 포함focused3/3PASS. 일반equipment processor에는finalized batch교체기능이없어 signature의--replace-existing와비교한최소TDD확장검토가필요하다. 기존hash검증우회/manualhash수정하지않음. 독립Sol에게후보시각/최소확장검토요청, 모든runtime/native유지.
+
+## S3 교정 진행 — 암흑의 대검 source candidate
+
+Built-in imagegen 원화1장을 `scripts/art_sources/equipment/v3/dark-greatsword/masters/item.png`에 원본 그대로 보존했다. 이전sheet/runtime도 보존. `prepare.py` RED→GREEN 및 EarthVerdict 포함 focused2/2, 대상bottom-center만교체/다른5cellpixel불변/반복출력byte동일/기존출력거부 검증. Candidate `exports/item.png`와 receipt생성, owner원화160px확인. **Runtime/provenance/manifest 미적용**이며 실제32/46/96·장비slot/독립감사/full/native가남았다. Prompt와다음gate는 해당README에 기록. 기존native vitals유지, commit/install없음.
+
+## S3 후속 — 일반 무기 supplemental 검수 종료 / 교정 대기
+
+Staff24 원본4장·ItemIcon72·390×8446화면 owner검수 완료(`equipment-staff-review-20260908.md`). 이로써 분리했던 일반무기101(core54+rangedmagic47) 보충 source/runtime 검수 수행. **암흑의 대검 Important1 미해결**이므로 전체장비시각완료아님. 다음 원본보존/다른5cell불변 조건으로 대검 형상교정 및 TDD/provenance/실제장비화면검증. Production/native는 vitals checkpoint 유지, S5/S6와 kingdom승인경계도 유지.
+
+## S3 후속 — 활/창/낫/채찍23 검수 및 Important 확정
+
+원본5장·actualItemIcon69/390×8446화면 검수 완료, `equipment-ranged-review-20260908.md`에 작은크기 한계와정확범위 기록. 남은 supplemental 미검수는 staff24. 별도 암흑의 대검은 독립Sol/xhigh **C0/I1**로 형태교정 필요 확정, sword-review에 최소교정계약 기록. 아직 원화/runtime수정 없고 vitalsnative 유지. 실제장착/S5/S6와 이1종교정은 완료하지 않았다.
+
+## S3 후속 — 검24 검수 / 암흑의 대검 판정 보류
+
+원본5장 및 실제 ItemIcon72/390×844 6화면 검수 완료. 23종은 명확한 형태/crop 결함을 발견하지 않았으나 암흑의 대검은 극단적으로 가는 날로32px에서 선처럼 보여 승인 보류, Sol/xhigh 독립 severity/교정계약 검토 요청. `equipment-sword-review-20260908.md`가 증거다. 다음 미검수47종과 이1종의 판정/필요교정을 구분한다. Production/native 변경 없음.
+
+## S3 후속 — 단검19 시각 검수
+
+원본4장(11+8종), 실제 ItemIcon57개(32/46/96),390×844 5화면을 owner확인했다. 표창/쌍칼/단검 이름별 형태와 crop에 명확한 결함 없음; 어두운32px세부 한계는 `equipment-dagger-review-20260908.md`에 기록했다. 보충 source/runtime 검수 잔여는 **검24+원거리·마법47=71종**. Production/native는 vitals checkpoint 그대로이며 전체Goal/S5/S6는 미완료다.
+
+## S3 후속 — 일반 offhand/headgear21 원본·크기 검수
+
+이어 일반 도끼/둔기11종의 원본2장과 실제 ItemIcon33개(32/46/96)·390×844 3화면을 검수했다. `equipment-heavy-review-20260908.md`에 형태/작은 크기 유사성 한계 기록. Production/native 변경 없음. 독립 gap 감사 기준 미검수였던 weapon-core54+weapon-ranged-magic47 중 heavy11을 완료해 **근접43+원거리·마법47=90종**의 보충 source/runtime 검수가 남는다. 이 수치는 실제 장착/UI전수·device 완료 수가 아니다.
+
+Book5에 이어 방패13·머리장비3을 원본6장 및 actual ItemIcon32/46/96(48이미지)·390×844 4화면으로 검수했다. 명백한 형태/clipping 결함 없음, 어두운32px장식 한계와 균열/세계 방패의 contextual 표현을 `equipment-offhand-headgear-review-20260908.md`에 기록했다. Favicon404는 검수 HTML에서 발생했으며 itemdecode48은 성공. Production/native 변경 없음; 최신 native는 vitals checkpoint 유지. 다른 장비 cohort와 S5/S6는 남아 있다.
+
+## 최신 완료 — endpoint2 v19 local checkpoint
+
+최신 local checkpoint는 **원정 최저 HP 교정**이다. `game-completion-vitals-native-20260908.md`에 full4409/E2E117, 독립 C0/I0, cap/doctor9051·Android30755·iOS31060 exit0와 328경로/package byte일치를 기록했다. APK SHA a1ae7df4…03aaa1, iOS `/tmp/aetheria-vitals-ios.02COuM/Build/Products/Release-iphoneos/App.app`. HEAD/index/protected6·38/native tracked 불변. 설치 없음. 아래 'native 진행 중'은 완료 전 이력이다. 다음은 남은 S3 장비 시각 범위와 S5/S6이며 전체 Goal은 active다.
+
+### 진행 중 — 전투 중 원정 최저 HP 기록 복구
+
+- Full89080 exit0: unit4409/4409, E2E59+58=117, desktop/mobile smoke PASS. Desktop smoke close-timeout 경고가 있었으나 기존 close guard 뒤 wrapper가 정상 종료했다. Cap/doctor9051 exit0. Android debug30755 및 iOS unsigned31060 실행 중(`/tmp/aetheria-vitals-{android,ios}.log`), 새 iOS DerivedData 사용. Doctor의 release signing 없음은 배포 환경 조건이며 이번 unsigned/debug gate와 구분한다.
+
+- 대기 중 S3 추가 검수: 일반 주문서/마도서/서판 exact5의 원본 및 실제 ItemIcon 32/46/96px를 owner 확인했다. 15이미지 decode/overflow0, 명확한 형태·crop 결함 없음. `equipment-book-review-20260908.md`에 작은 크기 세부 한계와 component-only 범위를 기록. 별도 검수 browser 종료/fresh save 보존.
+
+- 보조 gate 재확인: `art:verify`(18 character/229 equipment/254 monster), `content:verify`, `equipment:combat-power:verify`, `equipment:economy:verify` PASS. 최초 `equipment:verify`는 존재하지 않는 명령으로 실패했으며 실제 두 canonical script로 정정했다. Full89080 첫 E2E shard 완료 후 두 번째 shard 진행 중; 종료 전 native 재빌드하지 않는다. Sol/xhigh에게 기존 장비 시각 증빙의 미검수 cohort를 read-only로 분리 요청했다.
+
+- 직접 자연 전투 재검증: 같은 fresh save의 두 번째 원정에서 숲 요정 전투 HP127까지 하락→물약→승리→HP160 귀환. 실제 390×844 debrief와 저장 summary는 최저127/71%를 유지했다. Reload 후 저장 ID와 최저127도 동일. `game-completion-fresh-v19-20260908.md`에 화면·로그·한계 기록. 현재 Lv1 EXP89/200이며 첫 레벨업/새 장비 선택은 아직 미관측이다.
+- Sol/xhigh 독립 감사 C0/I0, 독립 focused28/28 PASS. Full89080은 unit 통과 후 browser/E2E 진행 중이다. 최신 완료 native는 수정 전 v19이며 변경 후 packaging은 남아 있다.
+
+- Astra가 계획·구조를 맡고, 독립 검토는 기존 Sol/xhigh reviewer에게 요청했다. 선택적 구현 모델은 Luna/max 또는 Terra/high·xhigh 범위를 유지한다.
+- `combat-item-transaction-authority.test.js`의 신규 2개 regression이 RED(100 ≠ 77, 100 ≠ 78)로 누락을 재현했다. `combatHandlers.ts`의 두 non-victory player 정산에 기존 `trackExpeditionVitals`를 연결했다.
+- focused combat-item/expedition-ledger/return-flow 36/36 PASS, `git diff --check` PASS. 최초 `npm run verify` session 88638은 exit1(4406/4409): progression 및 DOT evidence의 변경 source hash 미반영 3건이었다. 두 evidence를 canonical writer로 갱신했고 report는 그대로이며 source binding 필드만 변경됨을 확인했다. `/tmp/aetheria-expedition-vitals-full.log`에서 `verify:full` 재검증을 시작했다. 독립 감사, full/browser 및 변경 후 native 검증은 아직 완료하지 않았다.
+- v19 native receipt는 이 수정 이전 패키지다. 원래 fresh browser/save와 기존 변경은 보존하며 commit/install/publish는 하지 않았다. 아래의 'RED부터 수정필요'는 이 수정 전 발견 기록이다.
+
+Fresh v19실플레이진척:제라드Lv1/EXP77/200/518gold/HP160/MP32, 첫출정→조사선택→자연전투(attack/skill/potion)승리→귀환/임무보상. Seed/장비주입없음. **새결함:** 실제HP138까지하락했지만귀환lowestHp160기록. Continue/item reducer경로가trackExpeditionVitals를누락하며승리후HP만반영됨. 다음damage→heal→victory→return RED부터수정필요. 상세 `game-completion-fresh-v19-20260908.md`; 첫레벨업/장비선택아직미관측. Browser s5-fresh-v19/dev99422@4430 및격리save보존.
+
+S3 fallback 시각검수14789 exit0:canonical5종×32/46/96=15실제ItemIcon에서primaryPNG요청차단→avatarfallback전환/대체이미지로드/overflow0 확인. Normal/fallback390×844두화면 owner확인. 캐릭터중심구성이라32px무기·책세부약화/일부tipcrop한계를 `equipment-fallback-review-20260908.md`에 기록. 229전체/모든이미지실패/정상착용합성완료로확대하지않음. Production변경없음.
+
+S5 실제 background 관측 미완료: headed 탭 전환68932/94361/17311 모두 hidden 대신 visible 유지. Background flags/focus emulation 제외로도 해결되지 않아 같은 방식은 중단했다. Visibility 위조/이벤트 주입 없음. `game-completion-lifecycle-observation-20260908.md`에 전제 미성립을 기록했으며 앱 저장 결함이나 PASS로 판정하지 않는다. 실제 hidden을 관측할 수 있는 browser/device가 다음 조건이다. 다른 S3/S5 작업은 계속 가능하며 Goal은 active다.
+
+S5 quota browser service 검증: QA모드는quota분기우회하므로 별도same-origin blankpage에actualservice를import(mockRuntimefalse). 소진후event3choices/reasonquota/storyfallback/quotastorage불변·외부/API요청시도0 PASS. `game-completion-quota-browser-20260908.md`; gameplay UI/Firebase실서버검증으로주장하지않음. Production/native변경없음.
+
+S5 full inventory 직접검증 완료30827 exit0:canonical물약20/20, productiondrop+seed1로3rolled/0admitted/3blocked preflight, 실제공격→차단안내3개→idle/가방deep-equal/overflow0. `game-completion-capacity-direct-20260908.md` 및 실제390×844 screenshot확인. 초기19472 fixture migration(enhance0) 비교실패는보존하고postrestore/precombatbaseline으로분리했다. Production/native변경없음;quota/background/device는별도잔여.
+
+S5 직접검증 추가: offline98055 exit0(출정/탐험선택/귀환/로컬저장→연결복구후동일귀환ID복원), reset74763 exit0(취소snapshot불변/확정intro/정수220·계승2보존),390×844 stable4화면 owner확인/overflow0. `game-completion-offline-reset-direct-20260908.md`에 범위/한계기록. Cold offline launch·Firebase 복구·fullinventory·실제background/device는여전히미완료. Production/native패키지변경없음.
+
+Readiness Sol/xhigh 감사 C0/I0, 문서Minor2 교정: full8060 active→exit0, 원실패test-results screenshot/error-context는후속Playwright후없으며 별도archive하지않았음으로정정. 원실패로그는존재확인/보존. 전용QA문서가정확한현재증빙권위이며 아래artifact보존포괄표현은과거다. 코드추가지적없음.
+
+v19 local native 완료:full8060 exit0(unit4407/E2E117/bothsmoke), production/cap/doctor81343·Android2795·iOS63692 exit0. `v19/native-checkpoint.json`에 APK/iOS 경로·SHA기록. 328경로 양패키지 byte일치/native tracked drift0, protectedcandidate6/Toss38 및HEAD불변/indexempty. v19 art독립감사는C0/I0/Minor0; test-only readiness 독립검토는별도진행중. 설치·archive변경·commit없음. 아래nativev18/진행중기록은과거다. 다음 잔여S3/S5 및 황금왕국bounded승인게이트 유지.
+
+v19 full-readiness8060 exit0 확인:unit4407/4407, E2E59+58=117,desktop/mobile smoke,type/lint/build PASS(`/tmp/aetheria-v19-full-readiness.log`). NewGame+ readiness 보완후full통과이며 이전53034실패는보존한다. Production build/cap sync/mobile doctor81343진행중; Androiddebug/iOSunsigned 및 package비교 다음. Sol/xhigh readiness독립검토 진행중. 최신완료native는아직v18, 설치/commit없음.
+
+S5 canonical focus 추가: DB기반 세이지로드/세계수로브/천공성전 합법장착을 canEquip으로 확인한 뒤 실제가방버튼으로 신전도시지팡이2H 교체. 기존rod/focus 모두반환·offhandnull·focus재장착차단/disabled·overflow0 PASS87397. 마도서금색실루엣과차단이유 최종390×844 owner검수완료. 초기전환/legendary안내캡처는제외하고보존. 상세 equipment-direct 증빙참조. WholeGoal미완료/nativev18/full8060진행.
+
+S5 직접 장비 검증 추가:390×844 레인저2H/3피스설명, 팔라딘1H·방패 슬롯, 초반 가방 실제장착으로 단검→활 교체/기존단검반환/offhandnull/저장·reload후UI유지 확인. Console0error/0warning, overflow0. 기존QA fixture검증으로 자연획득/전체229디자인 승인 아님. `game-completion-equipment-direct-20260908.md`에 원화고정초상·fixture한계와5개stable screenshot 기록. Full8060은동일handle진행중, nativev18유지.
+
+v19 readiness 조사/보완: 기존focused5/5 미재현; 별도30회 reload 중29회 init/idle/rank0 선행, 저장rank3 유지 및 ready후30/30 복원 확인. E2E에 기존 bootStage ready 대기와 flush후 저장rank4 검증을 추가했다. Production 변경/기존 assertion 완화 없음. Focused57610 exit0:3시나리오×3회=9/9 PASS. 상세 `game-completion-new-game-plus-restore-readiness-20260908.md`. 새 full8060(`/tmp/aetheria-v19-full-readiness.log`) 진행중, native는통과후. 아래 원인미확정/53034진행 표시는과거이며 원실패증빙보존.
+
+현재 우선순위 갱신: v19 full53034가 exit1로 종료됐다(`/tmp/aetheria-v19-full.log`). Unit4407/4407 PASS, E2E shard1 59 PASS 및 shard2 57 PASS/1 FAIL. `true-ending-new-game-plus.spec.ts:206`의 새로고침 후 prestigeRank가 expected4/actual0이다. 저장 손실인지 복원 완료 전 관측인지 아직 미확정이며, 원인 조사 전 test 완화나 저장 코드 변경을 하지 않는다. v19 native는 보류하고 latest completed native는 v18을 유지한다. 아래 full진행중 기록은 이전 상태다. 모델 운영은 사용자 최신 요청에 따라 Astra 계획/구조, 필요시 Sol, Terra high/xhigh, Luna max만 사용한다. 기존 Goal과 변경 보존/무커밋 경계 유지.
+
+기기 상태 갱신: iPhone available/paired, passcodeRequired:false. 기존 `com.aetheria.roguelike.freshqa`1.1.0/build2만 설치확인; 일반bundle ID는없음. 새설치/강제종료없이 launch70632와 PID32039 initial29816/after-hold87379 exit0,110초이상동일PID/executable생존. 이번기존설치본에서즉시종료미재현이며과거원인해결/최신v19설치/foreground화면증명아님. `game-completion-installed-ios-survival-20260908.md`와보존raw receipts참조. 잠금은현재blocker가아니다. v19 독립Sol/xhigh C0/I0/Minor0 완료; full53034는여전히진행중, native는full후. 황금왕국bounded설계승인은계속대기.
+
+황금 왕국 수정은 bounded design 승인 대기다(`brainstorming`): 유일하게 monsters가있는safe지역의기존탐험을 `도시 탐색 · 전투 발생 가능`으로명시노출하고기존actions.explore에연결하는최소안. 나머지5safe지역·수치·map type·저장·원정/귀환집계는변경하지않는다. Source상6safe중황금왕국만5종등록확인. UI및검증기에서동일한탐색가능조건을사용하고실제버튼→production조우를회귀검증한다. 아직구현없음; 승인전implementation금지. v19full53034는별개로동일handle진행중.
+
+현재 v19 endpoint2 exact 적용: sourceTDD2 RED→GREEN62917, adoption61290 RED→generator68575/focused12/ESLint/diff66208 PASS. Registry114→116/other252 불변. Stable390×844 browser75787 exit0, 두화면 owner 확인/160→46/overflow0/공격enabled/INFO3 only. 차원균열체 dark-slot 대비는독립감사에서도확인한다. Evidence33793exit0/report-v1-seed/protected불변, source pin만c2b3fe48…e9a123. Full53034(`/tmp/aetheria-v19-full.log`) 진행 중; 독립감사/native 다음. Browser/dev종료, latestnativev18/noinstall. v19/candidate-review.md가상세권위이며아래source-only메모는과거다. 전체Goal·황금왕국접근성결함미완료.
+
+v18 full25564 exit0: unit4405/4405, E2E117, both smoke/type/lint/build PASS. 독립 Sol/xhigh C0/I0/Minor0. Production/cap/doctor57776, Android92449, iOS47645 exit0,328 package 경로 byte일치/native tracked drift0/protected6·38불변. 최신 native 증빙 v18/native-checkpoint.json; 설치·archive·commit 없음. 모든 v18 handle 종료. 다음 v19 endpoint2 export TDD/검수/적용, 이후 황금 왕국5종의 **실제 모바일 조우 시작 경로 부재** Important 수정 설계와 잔여S3/S5/S6. UI idle390×844 확인: input0/탐험버튼0, 모험기록 열고닫기 동일. 단순 parser 존재는 접근성 증거가 아님. 상세 kingdom-access 감사 갱신 완료. 아래 full진행/미확정 표시는 과거다.
+
+후속 source-only 진척: v19 endpoint2(에테르 파편체·차원 균열체) 원화·master 원본 보존 및96/46/32 양배경 검수 완료. Runtime/export 미적용, source pins는 v19/candidate-review.md. v18 full25564는 계속 진행 중이며 동일 handle 유지. 별도 읽기 전용 `docs/evidence/qa/game-completion-kingdom-access-audit-20260908.md`에서 황금 왕국5종의 safe-map 등록과 일반 모바일 탐험 버튼 부재 가능성을 기록했다. Command parser의 explore 경로가 존재하므로 아직 도달불가로 단정하지 않고 실제 UI/production 행동 검증을 다음 단계로 둔다.
+
+현재 v18 왕국·신전5 exact 적용: source2 RED→GREEN8506, adoption74153 RED→focused12/ESLint/diff80077 PASS. Registry109→114/other249 불변. 최종 isolated390×844 browser65680 exit0, 5장 owner 확인/canonical160→46/overflow0/공격enabled/INFO6 only. 초기 잘못된 dev 설정과 stale init script 실패는 v18/candidate-review.md에 별도 기록, 게임 코드는 변경하지 않았다. Evidence56029 exit0/report-v1-seed/protected 불변. Full25564(`/tmp/aetheria-v18-full.log`) 진행 중, 독립 감사·native 남음. Latestnative v17/no install. 황금 왕국 safe-map 몬스터의 실제 출현 경로는 후속 접근성 감사에서 확인한다.
+
+v17 full36146 exit0: unit4403/4403, E2E117, desktop/mobile smoke 및 type/lint/build PASS. 독립 Sol/xhigh 감사 C0/I0/Minor0. Production/cap/doctor96278, Android12776, iOS37914 exit0; 328개 package 경로 byte 일치/native tracked drift0. `scripts/art_sources/monsters/v17/native-checkpoint.json`이 최신 로컬 패키지 증빙이다. Protected candidate6/Toss38 불변, 설치·archive 변경·commit 없음. 아래 running 기록은 과거다. v18 왕국·신전5 원본 보존 완료, runtime 미적용. 다음 축소 검수→export TDD→exact5 적용·검증. 전체 Goal/S3/S5/S6는 진행 중이다.
+
+v17 actual390×844 six portraits owner검수완료71870exit0(canonical160→46,overflow0,공격enabled/opacity안정),INFO7만. 서리정령dark전투슬롯몸체식별확인; 고정QA로자연성장증명아님. Evidence72296exit0 모든관련gatePASS; report/v1/seed불변/sourceSHA만7b7645eb…395675, protected6/38불변. Full36146(`/tmp/aetheria-v17-full.log`)실행중/동일handle확인, 독립v12_review감사중. Full후native. Browser/dev닫힘, latestnativev16. 아래실제화면미검수표시는과거다.
+
+v17 exact6 runtime 적용 완료: source2 RED→GREEN80839, export두sheet owner검수; adoption66609 RED→focused12/ESLint/diff19053exit0. Other248 PNG/records불변, authored103→109. 원본/preimage보존, numeric/save/UI변경없음. 다음실제390×844전투6장(서리정령대비확인)→evidence/full/독립감사/native. 최신verifiednative/evidence는v16이며 v17검증으로주장하지않는다. `v17/candidate-review.md` 현재checkpoint가아래source-only메모보다우선한다.
+
+v16 local 완료: full86103exit0 unit4401/E2E117/bothsmoke, Sol/xhigh C0/I0/Minor0. Production/cap/doctor40697·Android44602·iOS78228 exit0. 328경로package byte일치/native tracked drift0/protected6·38불변. 최신패키지 `scripts/art_sources/monsters/v16/native-checkpoint.json`, 설치/archive변경/commit없음. 모든v16handle종료; 아래진행중메모는과거다. 다음v17얼음6 source-pinned export TDD부터진행한다. 전체Goal은미완료.
+
+v16 full86103 exit0(unit4401/E2E117/bothsmoke) 및 Sol/xhigh C0/I0/Minor0 완료. Production/cap/doctor40697 exit0, Android44602/iOS78228 실행중;328경로비교후local checkpoint를닫는다. 아래full진행중메모는이전상태다. 다음v17 얼음6 원화·원본/preimage보존·96/46/32검수완료, 실제export/adoption없음. `v17/candidate-review.md`에서 서리정령밝은배경대비와미세디테일한계를확인한후TDD export를진행한다. 전체Goal미완료.
+
+v16 실제390×844 전투7장 owner검수완료23067exit0: canonical160→46px, overflow0, opacity안정/공격enabled, INFO8만. QA고정Lv2/enemy134이며 자연플레이증명아님. Browser닫힘/dev20506exit130. Evidence35135 exit0(art/content/progression/event/equipment PASS). Full86103(`/tmp/aetheria-v16-full.log`) 실행중이며 동일handle로확인; native는full종료후. 진단파일현재비교는 sources의 monsterManifest SHA한건만6b8f5508…d6a258변경, report/v1/seed불변. Protected6/38불변. 독립Sol검토자v12_review에v16범위요청. 아래실제화면미검수표시는과거다.
+
+v16 exact7 runtime 적용/ focused 완료: source TDD2 RED→GREEN, adoption RED7116→focused12/12 PASS75620. 원본7·이전PNG/manifest/registry보존, 다른247기록/PNG불변, authored96→103. 실제export두sheet96/46/32 owner검수완료. 다음 실제390×844 전투7장→관련 evidence 갱신→full/독립감사/native. 현재 evidence는 아직v15라 최신검증으로주장하지 않는다. Native latest v15, 설치·commit없음. `v16/candidate-review.md` 최신 checkpoint가 아래 source-only 메모보다 우선한다.
+
+v16 원화7/7 준비 완료: generated originals 보존·masters byte copy, 전부RGBA1254. Full source와 두96/46/32 양배경 sheet owner검수 완료. 정확한SHA/alpha bounds는 `v16/source-metadata.json`, 한계와 original filenames는 `v16/candidate-review.md`. 다음 source-pinned export TDD부터 진행한다. 아직 canonical/authored96/native v15 그대로이며 아래1/7 메모는 이전 상태다. 모든 generation handle 종료, 설치·commit 없음.
+
+현재 v16 source-only 준비: 이름/키 대조에서 명시 누락된3종을 실제160/32px 양배경 검수했고 새 Important 불일치 없음(`monster-unmentioned-review-20260908.md`). 이 텍스트 대조는 전체 시각 승인 증명이 아니다. 다음7종 prompt·canonical preimage를 보존하고 첫 공허의 파편 원화1/7을 생성·workspace에 보존했다. RGBA/source SHA·한계·다음순서는 `scripts/art_sources/monsters/v16/candidate-review.md`. 아직 export/adoption 없음, runtime/native v15 유지. 원화 나머지6 및 small-size 검수부터 재개한다.
+
+v15 local 완료: full1389 exit0(unit4399/E2E117/bothsmoke), Sol/xhigh C0/I0/Minor0, production/cap/doctor8162·Android56725·iOS48825 exit0. 두 패키지328경로 byte 일치, native tracked drift0, protected candidate6/Toss38 불변. 최신 패키지 권위는 `scripts/art_sources/monsters/v15/native-checkpoint.json`. 모든 v15 실행 종료; 설치·archive 변경·commit 없음. 아래 full/native 진행중 메모는 이전 상태다.
+
+다음은 남은 감사의 exact-name coverage 대조 후 공허·혼돈7 → 얼음6 → 왕국·신전5 → endpoint2의 몸체/역할 교정이다. 각 범위는 해당 `docs/evidence/art/monster-*-general-review-20260908.md`를 따른다. Contextual은 별도 미결이며, S5 장비·세트 판단/중후반 플레이와 S6 최종 device gate도 남았다. Astra 계획, Terra high/xhigh, Luna max 제한을 유지한다. 전체 Goal은 아직 완료가 아니다.
+
+현재 v15 full/독립 감사 완료: full1389 exit0, unit4399/4399·E2E117·desktop/mobile smoke PASS. Sol/xhigh C0/I0/Minor0. Production/cap/doctor8162 exit0, native 328-path 비교가 남았다. 아래 full LIVE 표기는 이전 상태다. 읽기전용 왕국/신전11종 및 endpoint8종 감사도 완료했고 Important5+2를 해당 감사 문서에 기록했다. 다음 작업 순서와 모델 제한은 게임 완성 계획의 `다음 실행 순서 — 2026-09-08`이 권위다. 전체 Goal은 미완료이며 설치·commit·배포하지 않았다.
+
+v15 full대기중추가읽기전용감사: 에테르유적/공허회랑14종160·32px양배경3장검수완료. Important2(공허의파편·심연의눈),Contextual7,명백한역할모순미발견5; eye/ring 반복장식은별도style debt. `monster-aether-void-general-review-20260908.md`에기록, 현재runtime추가변경없음. v15독립감사는v12_review가진행중이다.
+
+현재v15 integration완료/전체gate진행: exact7 canonical 적용·다른247불변/authored96. Focused13·ESLint/diff6361exit0,실제390×844전투7장owner검수16071exit0(46px/nooverflow/INFOonly),evidence99858exit0. Report/v1/seed·protected6/38불변,sourcepin만b0a1203e…f7ba4. Full1389(`/tmp/aetheria-v15-full.log`)실행중,같은handle로확인. Native는full후/currentlatestv14. 독립감사요청예정. `v15/candidate-review.md`의현재integration checkpoint가권위이며아래export준비메모는과거다. 설치·commit없음.
+
+현재v15 export7 준비완료: vampire 대비수정 RGB source의 연결된외부배경만Pillow분리, 원본8보존·배경/피부보존·비율·재현·덮어쓰기/drift거부 TDD3 RED→GREEN. Focused13/13·ESLint/diff13912exit0, 두export sheet96/46/32양배경owner검수. `v15/exports/receipt.json` source/export pin권위. 아직canonical/authored89/v14native그대로. 다음exact7 adoption→실제390×844→evidence/full/independent/native. 아래vampire보류메모는이전단계다.
+
+Full32344exit0:4396unit/117E2E/bothsmoke. Production/cap/doctor5069·Android28054·iOS73480exit0,328경로package byte일치/native drift0. Sol xhigh 독립감사 C0/I0/Minor0. `v14/native-checkpoint.json`이최신local패키지권위, 설치/archive변경/commit없음. 모든v14프로세스종료. 아래진행중메모는이완료결과이전의역사다.
+
+다음v15 source7 준비·원본/previous보존·96/46/32양배경검수. Vampire dark32px대비가약해수정후보필요; 나머지6도export/실제전투검수전이며runtime미반영. `v15/candidate-review.md`의단일대비교정→TDD export/exact7 integration 순서로재개한다. 전체S3/S5/S6·device 미완료.
+
+2026-09-08 병행 읽기전용 감사: undead12/dungeon13 원본160·32px 양배경을 모두 확인, 확정몸체/역할불일치4+3을 별도문서 `monster-undead-general-review-20260908.md`, `monster-dungeon-general-review-20260908.md`에기록했다. 다음교정은7종으로묶을수있으며 아직원화생성/runtime변경없음. iPhone devicectl details61205exit0으로 연결·DeveloperMode enabled를 확인했으나 lockState74199exit0은 passcodeRequired=true다. 현재실행/설치는하지않았으며 잠금을crash로해석하지않는다. Raw device JSON은 /tmp/aetheria-v14-iphone-{details,lock}.json에보존.
+
+Exact3 canonical 적용 완료, 다른251 PNG/records와 catalogSha 불변, authored89/254. Focused12/12·ESLint·diff PASS25256; 실제390×844 전투3장 검수28605 exit0,46px/overflow0/console INFO만. 관련evidence36232 exit0, report/v1/seed불변·monster manifest sourcepin만47c738f4…629a5로 갱신, protected6/38불변. Full32344(`/tmp/aetheria-v14-full.log`) 실행 중이며 동일handle로 확인한다. 독립감사는 v12_review에 v14 읽기전용으로 요청했다. Native는full후; 현재latest는v13/설치없음. 아래 source 준비 설명은 이전 단계다.
+
+마법 구체/마법 인형/책의 정령 3종 원본과 이전 PNG·manifest·registry 보존. Built-in 원화 생성 후 원본/96·46·32px 양배경 검수, source-pinned export TDD2 RED→GREEN 및 ESLint/diff PASS(79641 exit0). `scripts/art_sources/monsters/v14/candidate-review.md`와 `exports/receipt.json`이 상세 권위다. Runtime 미적용이며 authored86/v13 native 그대로. 다음은 exact3 adoption TDD→실제390×844→evidence/full/독립감사/native. 전체 Goal 미완료, 설치·commit 없음.
+
+모델 운영 요청(2026-09-08): Astra 계획·구조, 필요에 따라 Sol 구현/검토, Terra high 또는 xhigh, Luna max만 사용. 모델 변경은 실제 실행 근거가 있을 때만 보고한다.
+
+## 최신 완료 checkpoint — 자연 계열 v13 exact3
+
+v13 local 검증 완료: focused12/12·실제390×844전투3장·관련evidence PASS, full18098 exit0(unit4394/4394,E2E117,bothsmoke). Production/cap/doctor96304·Android49395·iOS96603 exit0, 패키지328경로일치/native tracked drift0/protected6·38불변. Sol xhigh 독립감사 C0/I0/Minor0. 최신패키지와SHA는 `scripts/art_sources/monsters/v13/native-checkpoint.json`. 모든v13실행종료, 설치/archive변경/commit없음. Authored86은전체254시각승인아니다.
+
+별도실제fresh 세션: 생성→첫출발→이야기미룸→skill/attack/potion→승리→정상귀환→임무보상→reload자원/수령상태복원 확인. `docs/evidence/qa/game-completion-fresh-v13-20260907.md`에 화면·값·한계기록. Localproxy404 3회, 첫귀환Lv1/새장비0; 성장목표나console0으로과장하지않는다. 기존save보존/별도세션종료. 다음은magic3교정과남은S3/S5검증; 아래진행중메모는역사기록이다.
+
+고목골렘/꽃골렘/야생그리핀3종적용, 원본3·previous보존, 다른251 PNG/records불변/authored86. Source2TDD RED→GREEN, adoption RED23058→focused12PASS44526/ESLint/diff. Owner가stable390×844전투3장검수(47665exit0),160→46px/overflow0/마지막console0·0; 고목fine detail한계기록, 고정QA이며자연진행증빙아님. 자체browser/dev종료. Evidence33083exit0/art·content·event·equipment·diagnosticPASS, report/v1불변·manifest sourcepin249ae5f3…b7c1a만갱신, protected6/38불변.
+
+Full18098 LIVE: unit4394/4394PASS, smoke진행. 재시작하지말고동일handle확인. Sol xhigh v12_review가v13읽기전용감사중. Full/review후production/cap/doctor→native검증; latestcompletednative는v12이다. 대기중magic12감사확정3건은 `docs/evidence/art/monster-magic-general-review-20260907.md`의별도후속, 현재runtime에미반영. 전체Goal미완료.
+
+## 최신 완료 checkpoint — 하늘·폭풍 v12 교정
+
+v12 local 완료: exact11 적용·다른243불변, authored83/254는전체시각승인아님. Focused13PASS, 실제390×844전투11장owner검수, evidence/art/content/event/equipment/diagnosticPASS. Full62180 exit0(unit4392/4392,E2E117,desktop/mobile smoke). Production/cap/doctor12610·Android19931·iOS71987 exit0, 두패키지328경로byte일치/native tracked drift0. Sol xhigh 독립감사 C0/I0/Minor0. 최신패키지/SHA `scripts/art_sources/monsters/v12/native-checkpoint.json`. 모든v12실행종료; 설치·archive변경·commit없음. 전체Goal미완료.
+
+다음v13: 고목골렘/꽃골렘/야생그리핀 원본3·이전3PNG/manifest/registry보존, 전체원화와96/46/32양배경검수·원본copySHA확인. 고목dark32대비한계기록. `v13/candidate-review.md`/prompts/source-metadata가권위; source-pinned export TDD→exact3 integration이후후속gate. v13runtime미적용이며v12결과에섞지않는다. 아래live상태들은과거실행기록이다.
+
+마지막 live 확인: full62180은4392unit/bothsmokePASS 후E2Eshard1 진행, 종료 전 재실행 금지. Evidence26461/art-report54853 exit0. Sol xhigh v12_review는읽기전용감사중. Full/review후production/cap/doctor→Androiddebug/iOSunsigned→328경로byte검증예정; 현재latestnative는v11이며설치없음. 대기중세계수/봄정원9종감사로확정몸체불일치3건을 `docs/evidence/art/monster-nature-general-review-20260907.md`에기록했다(별도후속, runtime미변경).
+
+v12 canonical11 적용·390×844 전투11장 owner 검수 완료: authored83/254(전체시각승인 아님), 다른243 PNG/record 불변. Focused13/13(11363 exit0), art/content/event/equipment/diagnostic26461 exit0. Diagnostic report/v1 불변, monsterArtManifest source SHA만508dc088…ff61ab로 갱신, protected6/38불변. Browser33200 exit0, display46px/overflow0/마지막console0·0, fixed QA이며 자연진행 증빙 아님. 자체browser/dev종료. Full62180은unit4392/4392 PASS 후smoke 진행 중; desktop browser.close timeout 경고는 보존. Sol xhigh v12_review 감사 진행 중. Native는full이후이며 새설치없음. 상세v12/candidate-review.md. 아래export단계는과거상태다.
+
+현재11종 export 준비 완료: 세이렌 추가 생성은 광채 배경으로 rejected/원본 보존, compact 원본의 검수된4 background region만 Pillow로 분리했다. 원본13장 보존,3개 TDD RED→GREEN, focused15/15·ESLint·diff PASS(61268 exit0). Owner가 export96/46/32 양배경을 확인했다. `v12/exports/receipt.json`이11source/export SHA 권위다. 다음은 exact11 canonical adoption TDD→안정된390×844 전투→evidence/full/native. Canonical/authored72와 기존native는 그대로이며, 아래 source 보류 메모는 이전 단계다.
+
+Important11 후보의 원본12장(세이렌 초기/수정 포함)과 이전11 PNG를 보존했다. 전체 원화 및96/46/32px 양배경 검수, 원본 copy SHA 일치와 current manifest/registry 불변 확인. 세이렌 수정본은 RGB 체크무늬여서 적용 보류, 바람 정령 light32px 대비는 후속 검수 대상이다. `scripts/art_sources/monsters/v12/candidate-review.md`와 `source-metadata.json`이 현재 권위다. 다음은 세이렌 alpha 교정→source-pinned export TDD→exact11 adoption/실제 전투/full gate. Runtime은 v11/authored72 유지, 새 설치·commit 없음.
+
+## 최신 완료 checkpoint — 수중·영혼의 강 몬스터6종 교정 (2026-09-07)
+
+v11 local 검증 완료: exact6 적용과 안정된390×844 전투6장 검수, focused12/12·art/content/event/equipment/diagnostic PASS. Full28177 exit0(unit4389/4389, E2E117, desktop/mobile smoke), production/cap/doctor56371·Android73756·iOS77888 exit0. 두 패키지328경로 byte 일치, native tracked drift0, protected candidate6/Toss38 불변. 최신 artifact/SHA는 `scripts/art_sources/monsters/v11/native-checkpoint.json`. iPhone은 tunnel unavailable로 설치하지 않았다. Sol xhigh exact6 독립 감사는 C0/I0/Minor0으로 완료했고 모든 실행은 종료했다. 전체Goal은 미완료다. 다음은 하늘·폭풍17종 감사에서 확인한 Important11 교정; Contextual6은 별도 검토다. 상세 `v11/candidate-review.md`와 `docs/evidence/art/monster-sky-general-review-20260907.md`를 따른다.
+
+v11 원본6·이전PNG6·manifest/registry를 보존하고 built-in 개별 원화와160px export를 준비했다. Owner가 원본과96/46/32px 양배경을 검수했고, 원본 pin/비율/alpha/재현/덮어쓰기·drift 거부를 TDD2 RED→GREEN으로 고정했다. Focused16/16·ESLint·diff PASS(19257 exit0). 작은 기도서·눈·비늘 디테일의 한계를 기록했다. 상세와 정확한 프롬프트·SHA는 `scripts/art_sources/monsters/v11/candidate-review.md`, `prompts.md`, `exports/receipt.json`이다.
+
+다음은 exact6 canonical adoption TDD → 안정된390×844 실제 전투 캡처 → 관련 evidence/full/native gate다. 아직runtime/manifest/registry 변경은 없고 authored66 그대로다. 새2테스트를 이전full4387에 포함됐다고 주장하지 않는다. 모든 v11 실행은 종료했고 설치·commit·publication은 하지 않았다. 최신 완료 native는 아래v10, 전체 Goal은 진행 중이다.
+
+## 최신 완료 checkpoint — 화산·기계 몬스터19종 교정 (2026-09-07)
+
+v10 완료 checkpoint: 기계·연구실·피라미드 몬스터 9종을 원본 보존 조건으로 교정했다. TDD 후 focused12/12, 안정된 canonical 390×844 전투 화면9장, art/content/event/equipment/diagnostic gate를 통과했다. Full4075 exit0: unit4387/4387, E2E117, desktop/mobile smoke, typecheck/lint/build PASS. Production/cap/doctor24335와 Android1394/iOS30149도 exit0이며 두 패키지328경로 byte 일치, native tracked drift0을 확인했다. 최신 패키지 경로·SHA는 `scripts/art_sources/monsters/v10/native-checkpoint.json`에 기록했다. 초기 QA 지역명 오류와 전환 중 캡처는 보존했고, 올바른 지역·안정된 화면으로 별도 검증했다. 원본9·다른245종·historical candidate6/Toss38 불변, 진단 report/v1 불변이다. 모든 v10 실행은 종료했다. 기기 설치·archive 변경·commit·publication은 하지 않았다.
+
+다음은 수중·영혼의 강 감사에서 확인한 6종의 이름·몸체 불일치 교정이다. `docs/evidence/art/monster-water-general-review-20260907.md`에 검수한12종·Important6·Contextual4·SHA를 기록했다. Authored66/254는 전체 디자인 승인 수가 아니며, 나머지 시각 감사와 전체 Goal은 계속 진행 중이다. 아래 준비 메모는 역사 기록이다.
+
+현재v10 source9준비완료: 남은생체병기/오염연구원/폐회로마도병/폭주자동인형4원화도생성·원본보존, full및96/46/32양배경검수. 기존9PNG/manifest/registry보존·current불변. 연구원1240×1269비정사각형과미세alpha,32px 얼굴/표본병/회로손실을기록. `v10/candidate-review.md` exact9SHA/prompt권위. 다음9종source-pinned export TDD→실제크기·canonical전투검수→full/native. Runtime미적용/authored57유지. 모든호출terminal, 새install/commit없음. 아래5source준비는과거상태다.
+
+최신 완료 v9화산10: full39428exit0(unit4385/4385,E2E117,desktop/mobile smoke), production/cap/doctor10836exit0, Android71724/iOS6874exit0. 두패키지328경로byte일치, native tracked drift0, protectedcandidate6/Toss38불변. 최신 APK/App 경로·SHA는 `scripts/art_sources/monsters/v9/native-checkpoint.json`. iPhone설치/archive변경/commit없음. v9모든handle terminal; 아래39428LIVE는과거기록이다. 다음은v10 첫5source+나머지4원화→TDD export/전투 integration. 전체Goal미완료.
+
+Full39428 대기중 별도v10 source5준비: 강철자동인형/과부하포격기/미라/증기골렘/오작동로봇 built-in원화생성·원본5/이전5PNG보존, full원화와96/46/32양배경owner검수. 모두RGBA지만미세alpha residue/세부축소손실있음. 상세 `v10/candidate-review.md` 5SHA/prompt/한계; 나머지생체병기/오염연구원/폐회로마도병/폭주자동인형4원화후exportTDD. v10runtime미변경, v9검증과분리. Full39428은unit4385/4385통과·E2E진행중이며종료전재실행금지.
+
+최종 갱신: diagnostic write+verify26521은 exit0으로 완료했다. 아래26521 LIVE 표기는 이전 상태다. 현재 남은 실행은 full39428이며 종료 전 재실행하지 않는다.
+
+최신v9 canonical10종 적용: registry누락/용암거인construct RED→GREEN, focused12/12 PASS. Art분류exact1 warrior교정 외 gameplay/save수치미변경. Other244기록·PNG불변, authored57은254시각승인아님. Owner가실제390×844 canonical10장검수(160decode/46px/overflow0/console0/0), 고정Lv2/HP134/용암지대label QA이며자연전투/조작coverage아님. Art/content/event/equipment power/economy PASS. Diagnosticreport/v1불변, manifest sourceSHA만갱신; write+verify26521 LIVE. Full39428 LIVE `/tmp/aetheria-v9-full.log`; exact handle poll후 production/cap/native328path. Browserclosed/dev29314exit130. Protected6/38불변. 상세 `v9/candidate-review.md`가아래준비메모보다최신. Commit/설치/전체Goal완료없음.
+
+최신 v9 preparation: source-pinned `prepare.py`를 TDD2 RED→GREEN으로구현, 원본10불변/재실행byte동일/alpha128/160px/비율보존/덮어쓰기·source drift거부확인. `exports/receipt.json`은runtimeAdopted:false. Owner가10실제export를96/46/32px 양배경에서검수; 큰형태구분은유지, 작은방울은남기고미세무늬손실은기록. Focused15/15(34149exit0), ESLint/diff PASS. 상세 `v9/candidate-review.md`. 다음 actual390×844 candidate→canonical TDD integration→evidence/full/native. Runtime미적용/authored47그대로이며 새전체검증아님. 아래source메모는과거상태다.
+
+화산10종 source후보가 모두준비됐다. 추가5종(lava-spirit/volcanic-spirit/lava-giant/lava-golem/fire-golem)의 full원화와96/46/32px 양배경도 owner검수했고, 모두RGBA이나 잔여alpha와일부분리방울/연기조각을후속검수로남겼다. Lava-spirit원본은1214×1295로비정사각형이므로 export비율보존필수. 10원본·이전10PNG/manifest/registry보존. `v9/candidate-review.md`에10SHA/생성출력/검수한계기록. 다음은 source-pinned TDD preparation→160px 검수→canonical/실제전투 integration, 이후machine9. Runtime미변경/authored47유지, 모든생성terminal, 새full/native미실행. 아래첫5준비메모는이전상태다.
+
+첫5종(magma-slime/lava-turtle/fire-bat/fire-spirit/magma-spirit) 개별 원화를 built-in imagegen으로 생성해 `scripts/art_sources/monsters/v9/masters/`에 원본 보존했다. 이전5PNG·manifest·registry도 보존. Owner가 full원화5장과96/46/32px 양배경을 검수했고 실제RGBA이나 외곽미세alpha residue가 남아있음을 확인했다. 아직source후보이며 runtime/gameplay/save미변경, authored47유지. 상세SHA/원화출력/한계/다음gate는 `v9/candidate-review.md`, prompt는 `v9/prompts.md`. 다음은 남은fire5원화→원본보존TDD export→실제크기/전투검수→cohesive integration, 이후machine9교정. 모든생성호출terminal; 새앱full/native실행 없음. 아래v8이 최신 완료검증이며 전체Goal미완료.
+
+## 최신 완료 checkpoint — 동굴·설원 몬스터9종 교정 (2026-09-07)
+
+최신 adoption: exact9 authored/runtime와 manifest 연결, registry부재·설원거인construct분류 RED→GREEN, post-adoption13/13 PASS. 다른245종 기록/PNG불변; authored47/254는 전체시각승인 아님. Candidate DOM preflight와 별도로 fresh localhost origin에서 DOM 이미지변경 없는 canonical390×844 9장을 owner검수했고160→46px/overflow0/console0errors0warnings. 초기 route실패 캡처는 별도보존·PASS제외. Source/전투수치/save변경 없음(art classifier의설원거인만warrior로교정). Art/content/event-reward/diagnostic PASS; 진단report/v1불변, monsterArtManifest source SHA만갱신. Candidate6/Toss38불변.
+
+Full 로그 `/tmp/aetheria-v8-full.log` 최종완료 확인: unit4383/4383, desktop/mobile smoke, E2E59+58 PASS. 마지막 tool 출력이 잘려 exit code는 복원하지 않았으며 handle54204는 소멸했다. 비치명적 browser.close 경고 보존. Production build:guard/cap:sync/mobile:doctor 및 Android debug68510/iOS unsigned11113 exit0. 두 패키지328경로 byte일치, native tracked drift0, candidate6/Toss38불변. 최신 artifact/SHA는 `scripts/art_sources/monsters/v8/native-checkpoint.json`, 상세검증은 `v8/candidate-review.md`. iPhone tunnel unavailable로 설치하지 않았고 기존 archive도불변. Index비어있음/diff PASS. 아래 준비단계 메모는 과거 상태다. 새기기설치/commit/publication 없음.
+
+Full 대기 중 read-only 추가감사: fire/lava17종(Important10/contextual2/명백한이름충돌없음5), machine/lab/vault/pyramid16종(Important9/contextual5/충돌없음2)의 원본160px+32px와SHA33개를 검수했다. 상세 `docs/evidence/art/monster-fire-general-review-20260907.md`, `monster-machine-lab-vault-review-20260907.md`. 새Important19는 현재v8 gate에섞지 않고 다음교정으로둔다. Runtime변경없음, 전체254시각승인아님. Prototype의반복corner/meter장식도별도style debt다.
+
+최신: `v8/prepare.py`의 source-pinned 원본보존·검수영역 alpha제거·160px export를 TDD3 RED→GREEN으로 구현했다. 두 opaque 후보도 별도export에서 투명 처리했고, owner가 실제160px2장 및9종96/46/32px 양배경을 확인했다. Related extraction11/11, catalog/source13/13, focused ESLint, diff PASS. 원본10개는 보존, 준비receipt는runtimeAdopted:false. 다음은 prepared9 실제390×844 combat→exact9 runtime integration→evidence/full/art/native다. `v8/candidate-review.md`의 prepared checkpoint가 아래 초기 후보 메모를 대체한다. 모든 실행은 terminal; 새native/설치/commit 없음.
+
+9종 개별 원화와 다크엘프 compact revision1개를 built-in imagegen으로 생성해 `scripts/art_sources/monsters/v8/masters/`에 보존했다. 이전9PNG·registry·manifest도 보존했고 current와 byte동일, 새10master SHA검증 PASS. Owner가 원화10장과96/46/32px 양배경4장을 검수했다. 종족·재질·무리 수 방향은 개선됐지만 초기 dark elf는 너무 가늘어 제외하고 compact 후보를 준비했다. Compact elf의 검은 배경과 mineral centipede의 가짜 격자는 실제alpha가 아니므로 그대로 채택하지 않는다. Mineral의 exterior+3 enclosed-gap mask는 기존v7 helper로 복사본에만 preview했고 몸체·광물 보존을 시각 확인했다.
+
+다음: `scripts/art_sources/monsters/v8/candidate-review.md`의 exact source SHA/seed를 기준으로 TDD preparation, elf 검은 배경의 안전한 mask 검수, deterministic160px export→실제390×844 combat9→exact9 runtime integration→focused/full/art/native. 아직runtime/gameplay/evidence source manifest는 변경하지 않았고 authored는38/254 그대로다. 이번은 source-only 준비이며 app test/native 재실행 없음; 마지막 full/native 완료는 아래 캐릭터 checkpoint다. Imagegen 호출 모두 terminal, commit/install/publication 없음.
+
+## 최신 완료 checkpoint — 캐릭터 aperture 교정 (2026-09-07)
+
+최신: 나머지6종 source-specific mask와 흰 디테일 보존 회귀를 추가하고 전체8종 교정본을 source/runtime에 적용했다. 원본8·이전runtime18·이전provenance/contact를 별도 보존했다. Owner가 원본6장·제거영역 강조·96/64px 양배경을 검수했고, focused24/24·art·provenance18 SHA·diff PASS. 기존 renderer replay18 모두동일, 나머지10종 runtime/provenance불변. 변경된 provenance는8종의source/export hash16개뿐이며 역사metadata는 보존한다. 상세 character_alpha_v1/README.md.
+
+실제390×844 portrait8종 owner검수 완료: canonical768px decode·직업 label일치·opacity1·overflow0, console0errors/0warnings. 별도QA 입력의 빈 장비는 복원시 기본단검/튜닉으로 채워졌으므로 빈장비·합법build·자연Lv75 증거로 주장하지 않는다. Browser/dev25932는 종료했다.
+
+원 full89516 exit1: unit4380·smoke·E2E첫59 PASS, 둘째55PASS/3timeout. macOS 덮개/절전313/791/96초와 실패duration이 일치했고, 코드/timeout/retry 변경 없이 깨어난뒤 실패3개 모두PASS(41564exit0). 원본로그/실패화면 보존. 새full80148은 exit0:4380unit/117E2E/desktop·mobile smoke PASS, 비치명적 desktop browser-close 경고 보존. 상세 `docs/evidence/qa/character-art-full-sleep-20260907.md`.
+
+Production build:guard/cap:sync/mobile:doctor, Android debug35898/iOS unsigned63006 모두exit0. 두 패키지328경로 byte동일(몬스터254·지역53·캐릭터18·Earth Verdict2·main JS1), native tracked drift0. 최신 APK/App 경로·SHA는 `scripts/art_sources/character_alpha_v1/native-checkpoint.json`. Candidate6/Toss38 aggregate불변. iPhone paired/developerMode enabled지만 disconnected; release signing 자료도 별도 환경gate다. 기존 archive와 설치본은 변경하지 않았다. 실행 handle은 모두 terminal이며 재시작하지 않는다. Commit/push/publication 없음.
+
+다음: cave/snow audit의 확인된 몬스터9종 몸체·재질·개체수 불일치 교정과 나머지254종 범위 시각 감사. `docs/evidence/art/monster-cave-snow-review-20260907.md`의 기존 SHA와 방향을 기준으로 원본보존→개별 후보→실제 크기 검수→TDD integration을 진행한다. Authored38/254는 전체 시각 승인 수가 아니다. 전체Goal은 계속 진행 중이며 아래2종 준비 메모와 지도 단계의 다음-action은 과거 상태다.
+
+Ranger/hunt-lord의 hash-pinned 복사본에서 확인된 배경만 제거하고 기존 renderer로 별도768px 후보를 준비했다. 원본/runtime/manifest는 미변경이다. 실제 마스크·활줄·의상·애매한 화살 장식 보존과 deterministic export/덮어쓰기·source drift 거부를 RED→GREEN으로 고정했다. Focused character22/22, ESLint, diff PASS. Owner가 full-size 및96/64px 양배경을 비교했고 큰 흰 배경 덩어리 제거를 확인했다. 얇은 기존 가장자리 밝은 fringe는 별도 한계로 기록한다.
+
+상세 `scripts/art_sources/character_alpha_v1/README.md`, `prepared/receipt.json`. 다음은 나머지6종 staff/halo mask 준비→전체8종 actual portrait UI→source/runtime/provenance integration→full/art/native gate다. 새2테스트는 이전4376-unit full에 포함됐다고 주장하지 않는다. 최신 native/실제 지도 완료는 아래 location checkpoint이며 캐릭터 후보는 포함하지 않는다. 실행94322는 exit0으로 끝났고 재시작할 live handle은 없다. Goal진행 중, commit/install/publication 없음.
+
+## 최신 완료 checkpoint — 지역 아이콘 경계 교정 (2026-09-07)
+
+ART-LOCATION-01의12종 source-cell 오른쪽 경계를 교정해 runtime에 적용했다. 원본 시트와 기존53개 export는 보존했고, 나머지41개 export는 byte-identical이다(지역 identity52개 외 lava-zone 보조 파일 포함). 실제 crop의 이웃 테두리 RED→GREEN, focused27/27·art PASS. Owner가96/28px 양배경12종을 직접 검수했다. 상세 `docs/evidence/art/location-owner-review-20260907.md`.
+
+`npm run verify:full` handle66048 exit0: unit4376/4376, smoke desktop/mobile, E2E117/117, typecheck/lint/build PASS. Desktop browser-close timeout은 비치명적 종료 경고로 보존한다. 실제390×844 지도와 서쪽 평원 선택·잠금 안내를 owner검수했고 overflow0/96→32px decode를 확인했다. Production 재빌드/cap/mobile doctor와 Android debug/iOS unsigned PASS; 두 패키지310경로 byte동일, native tracked drift0. 최신 APK/App SHA·경로는 `scripts/art_sources/location-medallions/boundary-v1/native-checkpoint.json`. 이전v7 archive/설치본은 교체하지 않았다. Candidate6/Toss38 aggregate불변. 모든 이번 실행 handle은 terminal이며 재시작하지 않는다.
+
+다음: 캐릭터8종의 enclosed background 교정. Ranger/hunt-lord의 원본과 확대 후보를 확인하고 `character-alpha-review-20260907.md`에 source SHA/seed를 기록했다. 두 ranger 화살 장식 후보는 의미가 불분명해 제거 대상에서 제외한다. 원본 보존 TDD 마스크→별도 export→portrait 실제 크기/화면검수→runtime 적용 순서다. 나머지 몬스터9종과 전체 감사도 남아 있으며 Goal은 미완료다. Commit/push/install 없음.
+
+## 최신 checkpoint — 지역 몬스터 5종 교정 (2026-09-07)
+
+거대 지네·광풍의 하피·물의 정령·암흑 마법사·코볼트 광부를 이름에 맞는 그림으로 교체했다. 승인된 Python/Pillow 처리는 hash-pinned 원본의 복사본에만 적용했다. 하피와 광부의 배경은 검수한 연결 영역만 제거하고 흰 눈 등 본체 디테일은 보존했다. 이전 runtime/registry/manifest와 원본은 v7에 남겼으며, 나머지 249종 record와 PNG bytes는 바뀌지 않았다. Authored 38/254는 전체 시각 검수 완료를 뜻하지 않는다.
+
+- TDD: 배경·눈·원본 보존 회귀 2/2, focused integration 31/31. Export replay bytes 일치. 실제 160/46/32px 양배경과 390×844 전투 5종을 직접 확인하고 공격을 실행했다. Overflow 0; 통제 fixture이므로 자연 출현·밸런스 증거는 아니다.
+- `verify:full` exit0: unit 4375/4375, typecheck/lint/build, desktop/mobile smoke, E2E 59+58=117 PASS. Desktop browser-close timeout은 비치명적 종료 경고로 보존한다. Art/content/equipment combat-power/economy/event-reward PASS. Progression은 monster manifest source 1개만 갱신했고 report/seeds/v1은 그대로다.
+- Production 재빌드, cap:sync, mobile:doctor, Android debug, iOS unsigned build PASS. 두 패키지의 몬스터 254개·대지의 심판 2개·main JS 총 257경로가 dist와 byte-identical. Native tracked drift 0. APK와 iOS 경로·SHA는 `scripts/art_sources/monsters/v7/native-checkpoint.json`에 기록했다. Historical candidate 6/Toss 38 aggregate는 불변이다.
+- 다음: ART-LOCATION-01의 잘못된 cell 분리로 영향받는 지역 12종 교정. 원본과 나머지 40종 bytes를 보존하고 작은 화면에서 재검수한다. 이후 캐릭터 alpha 8종·동굴/설원 몬스터 9종과 나머지 전체 감사가 남아 있다. Python 원본 보존 승인은 이미 유효하다.
+- iPhone 설치·실기기 복원 검증·배포용 서명은 미완료이며 기존 archive/설치본은 교체하지 않았다. Commit/push/publication 없음. 전체 Goal은 계속 진행 중이다.
+
+아래 항목은 이전 시점의 기록이며, 현재 상태는 위 checkpoint를 따른다.
+
+2026-09-07 v6 초반 일반3종 적용: 고블린/코볼트/초록슬라임 alpha128 복사본 처리·160px/8px/baseline151 deterministic export, masters/이전runtime/registry/manifest 보존. 기존 catalog generator로 candidate검사 뒤 exact3 PNG와manifest만적용, 다른251종record/bytes불변. Authored30→33(전체254시각완료 아님). focused36/36, verify4373/4373·art·diagnostic readonlyverify PASS; report/v1불변·monster manifest source1개갱신. 실제32/46/160 양배경·390×844 전투3종검수, enabled공격클릭/overflow0; fade-in초기캡처는보존하되완료증거제외. Android debug20504/iOS unsigned78053 exit0, 두패키지257경로(몬스터254+대검2+mainJS) byte동일, trackeddrift0. v6/native-checkpoint.json·source-review.md·plan·progress.md갱신. 이번3종변경후 full smoke/E2E 통합재실행은 다음 묶음gate에 남김; iPhone설치/commit/push없음. 다음 v7 regional5와 나머지body/character-alpha/map-cell 작업, 전체Goal미완료.
+
+2026-09-07 Earth Verdict 적용 checkpoint 검증 종료: focused40/40, 전체unit4372/4372·typecheck/lint/build·art·diagnostic readonlyverify PASS. 최초 verify:full의 mobile boot timeout은 실패이력 보존; 단독 local-playtest desktop/mobile PASS(종료 경고 기록), 별도 E2E59/59+58/58=117/117 PASS(exit0). 실제390×844 sword/양손안내/overflow0 검수 완료. 원본4개 SHA·다른signature48 exports·historicalcandidate6/Toss38 aggregate 보존. cap:sync 및 두native web경로4개 PNG cmp PASS, tracked drift0. 전체게임완료/새nativebuild/iPhone설치/commit/push 아님. 상세 earth-verdict-adoption-20260907.md; 다음 art slice는 준비된 고블린·코볼트·초록슬라임3종 alpha/export/실제전투 검수.
+
+2026-09-07 Earth Verdict runtime 적용: 양손 대검 item/overlay를 production paired exporter로 적용, 다른 signature48 export와 각시트5개 이웃cell 보존. Provenance/manifest/contact/answer-key 갱신 및 replay no-op, focused40/40 PASS. 전체unit4372/4372·typecheck/lint/build PASS; desktop smoke PASS, mobile API boot timeout으로 full PASS 아님—단독 browser 재확인 중. Diagnostic은 equipment manifest source1개만 갱신, report/v1불변·readonlyverify PASS. 실제390×844 장비창 검수: sword경로decode·양손안내·overflow0. Art/mobile:doctor/cap:sync PASS, native tracked drift0. earth-verdict-adoption-20260907.md 기록; iPhone설치/commit/push없음, 나머지art미완료.
+
+2026-09-07 원본 보존 Python/Pillow 처리 승인 후 Earth Verdict 별도 출력 준비: hash-pinned master/previous 시트 보존, copied-alpha threshold128 + production nearest-neighbor normalization. paired sheet 각5개 이웃cell pixel-identical, target만변경. prepare.py/tests/earth-verdict-source.test.js RED→GREEN; 두 실행 output bytes동일·덮어쓰기거부 PASS. prepared/receipt.json에 source/output SHA 기록, 실제160/72px owner검수. Runtime/provenance 아직 미적용이므로 기존 full-unit4실패 해결·전체게임/native완료 주장 없음. 다음 paired-source/provenance integration 및32px/실제UI검수. Commit/push/install 없음.
+
+2026-09-07 export 정상회귀: synthetic2×2 fixture만으로160px/8px예상bounds, 두출력byte동일, 원본보존 및 EEXIST덮어쓰기거부 확인. preflight5/5·focused eslint·diff PASS(63649exit0), v7/small-size-review로그 기록. 실제게임원화변환0회, 정상export계약의fixture검증이며 전체art/native완료 아님. Progression manifest에normalizer참조없음, evidence미갱신.
+
+2026-09-07 monster export preflight 보완: --check 읽기전용 PNG 검사와 export전 동일guard 추가. 불투명/빈원화 거부, 기존exclusive-write 유지. RED3→GREEN4/4, focused eslint/diff PASS. 실제 마법사후보 최소alpha조건통과, 하피 opaque거부 확인; 실제PNG변환0회. v7/small-size-review에 한계와로그 기록. 성공export byte회귀/full gate는 미완료, 기존runtime/native보존.
+
+2026-09-07 cave/snow 일반12종 원본 감사:12 SHA 일치 및 owner PNG 확인. Important9(결정/얼음 정령, 광물 지네, 다크 엘프, 트롤, 박쥐 떼, 설원 거인, 설인, 수정 골렘), contextual3. monster-cave-snow-review-20260907.md에 이름별 교정 기준과 preimage 기록. 일반3개감사 합계 확정미해결17/contextual5이며 전체254완료 아님. 새runtime/native변경 없음.
+
+2026-09-07 암흑 마법사 대비 교정: built-in 새후보 dark-mage-readable.png 생성, 이전원본 보존. 동일 dark/light160/46/32px12개 decode 및 owner비교에서 얼굴/후드/로브가 dark32px에서 개선됨 확인. v7 prompt/SHA/small-size-review 기록, 새후보를 후속검수 대상으로 선택. Alpha/export/전투적용 미완료, runtime수치/native미변경, owned browser/server 종료.
+
+2026-09-07 regional5 actual-size source 검수: dark/light160/46/32px30이미지 decode 및 owner regional-five-small.png 확인. 지네/물 정령 형태는 구별, 암흑 마법사는 dark32px 대비 부족으로 추가교정 필요. 하피/광부 painted checkerboard가 실제표시에서도 확인되어 적용보류 유지. v7/small-size-review.md 기록; runtime/native미변경, 모든새서버/브라우저종료. 아직5종모두 미적용.
+
+2026-09-07 regional 나머지3종 후보 생성: 물 정령/암흑 마법사/코볼트 광부를 built-in image_gen으로 만들고 v7/masters·prompts·SHA 보존. Owner 원본 의미 확인. 물/마법사 hasAlpha:yes이나 clean-alpha/실제크기 미검증; 광부는 hasAlpha:no/checkerboard로 runtime 거부. v7 필수5종 후보 준비는 됐으나 적용0종. 다음 작은크기 검수·승인된 방식의 투명도 보정·TDD adoption; 기존게임/수치/native불변.
+
+2026-09-07 하피 단순화: compact 후보는 작은 몸체/날개 여백이 개선됐지만 painted checkerboard 및 sips hasAlpha:no로 투명도 거부. Built-in 배경추출1회도 hasAlpha:no, 같은 요청 반복 중단. v7/masters에 두 실패후보·prompt·SHA 보존. Runtime미적용; deterministic 픽셀처리 명시승인 대기, 다른 준비작업은 가능. Goal active.
+
+2026-09-07 regional source 준비: built-in image_gen으로 지네/하피 후보를 v7/masters에 보존, prompts/SHA/sips 기록. 지네의 단일 마디 몸체·다리 확인. 하피는 사람-새 형태는 맞지만 세부 과다/날개 여백 부족으로 runtime style 승인 거부, 단순화 필요. 물 정령/암흑 마법사/코볼트 광부 원화는 미준비. 기존 runtime 미변경, full/native/Goal 완료 아님.
+
+2026-09-07 mine/lake/highland 일반 8종 의미 감사: regional 12 SHA 일치, 이미 교정한 4종은 신규 검수에서 제외. 실제 PNG 8종 검수 결과 Important 5(지네/하피/물 정령/암흑 마법사/코볼트 광부), contextual 2(박쥐/수련 님프), 원본 모순 미발견 1(광석골렘). monster-mine-lake-highland-review-20260907.md에 exact preimage/교정 계약 기록. 기존 초반 3종과 합쳐 확정 미해결 8종; runtime 픽셀 미변경, 전체 S3 미완료.
+
+2026-09-07 최신 전체 unit94799 exit1:4365중4361PASS/4FAIL,105.864초. 실패4개는 대지의 심판 warhammer→greatsword answer-key 및 signature registry provenance 불일치로 분류, 새progression실패없음. Type-check+lint41964exit0. post-save-hp-regression-20260907.md에 정확한4테스트/로그 기록. 기존 art교정미완료를 metadata만 바꿔 통과시키지 않음; full/browser/native완료 아님, 모든handleterminal.
+
+2026-09-07 초반3종 small-size source 검수: unchanged masters를 dark/light160/46/32px18개로 browser표시, 모두decode/크기확인 및 owner early-three-small.png검수. 귀/주둥이·꼬리/초록몸체 구별,32px 장비세부 약화는 runtime전투재검수 대상. v6/source-review.md갱신. 실제export/전투적용 및 alpha보정미완료, 픽셀처리별도승인 질문 전송(미응답은 승인 아님). Runtime/native변경없음.
+
+2026-09-07 초반3종 원화 후보: built-in image_gen으로 고블린/코볼트/초록슬라임 생성, v6/masters에 원본 그대로 보존하고 prompts/source-review 기록. Full-size 형태·색 교정 방향 확인, read-only alpha 검사에서 극저alpha 잔여물이 가장자리에 닿아 transparency PASS 보류. 기존 runtime 미변경,3결함 아직 open. 다음 alpha 처리와32/46px검수·TDD adoption; Goal active, native/commit 없음.
+
+2026-09-07 초반 일반 몬스터 감사: forest/plains/ruins non-boss 17종을 8+9 batch로 실제 PNG 검수. 고블린=불꽃 군주, 초록슬라임=파란 몸체, 코볼트=인간 도적 재사용의 Important 3건 확정. 다른14종은 원본 의미 모순 미발견일 뿐 작은 화면 PASS 아님. 전체17 manifest SHA 일치. monster-early-general-review-20260907.md에 preimage/교정 계약 기록; PNG·production·native 변경 없음. 다음은3종 원화 교정과 실제 크기 검수, Goal active.
+
+2026-09-07 기기 read-only 재확인: devicectl list exit0. iPhone paired/developerMode enabled지만 tunnel disconnected, iPad unavailable. 새 install/launch/signing 없음. 최신 설치버전·PID survival·실제OS복원은 연결 없어서 미검증, 앱회귀로 분류하지 않음. late-game-owner-20260907.md에 정확한범위 기록. Local 진행 및 이미지보정 승인대기 유지.
+
+2026-09-07 가방 full 전투 UI:20/20 fixture에서 실제공격10회승리, EXP14/gold18지급·기존20IDs동일·전리품1개차단안내 확인. One-slot은 무드롭2회 후 seed109전투에서 하급마나물약1개19→20실제추가. Owner390×844캡처2장검수. 자연성장/동일state A/B/signature pity증거 아님. late-game-owner-20260907.md에 전체시도 기록. Browser/preview47293종료, code변경없음, Goalactive.
+
+2026-09-07 UI source reconciliation: diagnostic write/readonlyverify57940exit0, SHA375f0393f1ac8be1eeaf206a6ed1a484d5a14041a1fb4f3141d0b235557bb09d. EquipmentPanel source만 갱신, report/v1불변,64/1000seeds,hardErrors0. Artverify는 signature registry hash mismatch1건으로exit1; 기존 대지의 심판 pending이며 visual defects 해결 증거 아님. Historicalcandidate6/Toss38불변. 상세 post-save-hp-regression-20260907.md. Full/native 미완료, 모든handleterminal, Goalactive.
+
+2026-09-07 가방 full 상점 직접검수: 예산 fixture 후 실제18회 구매로2→20/20, gold100000→99460, 구매disabled/가방가득/overflow0. 판매 확인 전20유지→확정19/gold99475→재구매20/gold99445/disabled복귀. Owner full-inventory-shop.png390×844확인, late-game-owner-20260907.md기록. 전투capacity/mobile저장검증 대체 아님. Browser/preview1840종료, production변경 없음, Goalactive.
+
+2026-09-07 중후반 검수: 계승/분기사건/임무/진엔딩 E2E19/19PASS(94967exit0). New Game+ screenshot 준비 누락을 region/이동/ancestor opacity1 대기로 보강, 최종3/3PASS(87169exit0). Owner 화면6종 검수, 최초 잘못된 초반 버튼 대기 실패는 기록 보존. late-game-owner-20260907.md에 fixture/자연성장 한계 명시. Gameplay 변경 없음; S5전체/full/native/이미지교정 미완료, 모든handleterminal.
+
+2026-09-07 저대비 방어구 UI: production EquipmentPanel 통제 fixture5종(legal job/level75)을390×844로 owner검수, 이름/스탯 식별 및 overflow0. 암흑 로브 exact PNG 강제abort시 fallback표시/정보유지 확인. 실제 획득/장착플레이 아님; 단독32px 세부/모든fallback/Toss검증으로 확대하지 않는다. equipment-owner-review-20260907.md에 캡처6장/범위 기록. Browser/dev48347종료, pixel/gameplay 변경 없음. 이미지보정 방식 승인 및 full/source/native는 대기, Goalactive.
+
+2026-09-07 초상 공백 진단 완료: decode 후 complete=true/naturalWidth768/표시92.755px, 모험가 장비 초상 정상. Owner portrait-settled.png390×844 확인, overflow0. 기존 screenshot의 로딩 대기 누락을 보완한 equipment E2E3/3 PASS(handle7909exit0), production 레이아웃 변경 없음. 모든 직업/장비 fallback 완료 아님. Browser/preview79345 종료. 다음 S3 미완료 이미지 보정 및 fallback/저대비 장비 확인; source evidence/full/native 대기 유지.
+
+2026-09-07 직업 초상 계약 확인: 정상 캐릭터는 직업 고정 그림이며 착용 합성이 아님. Overlay는 ItemIcon 로딩 실패 fallback이다. 장비 패널 접근성 이름을 “직업 초상”으로 교정, RED→GREEN focused18/18·tsc/lint·equipment E2E3/3 PASS. 단 owner가 equipment-summary.png에서 패널 초상 공백을 발견하여 시각 PASS 보류; 다음 img decode/크기/안정화 캡처로 재현 원인 분리. equipment-owner-review-20260907.md 상세. 새 source evidence/full/native 미갱신, 모든 이번 handle terminal, Goal active.
+
+2026-09-07 방어구 작은 크기 검수: runtime82종을 64px/32px × dark/light로 표시한 armor-small-1..7.png owner 확인 완료. 명백한 잘림/형태 모순 미발견. 어둠 감옥/어둠의 왕 갑주·용암 판금갑·상급 폭풍/암흑 로브는 dark32px 저대비로 실제 UI 재검수 대상. `docs/evidence/art/equipment-owner-review-20260907.md`에 범위와 한계 기록. Pixel 변경 없음; 실제 avatar 합성 및 S3 전체는 미완료.
+
+2026-09-07 source reconciliation: progression write/readonlyverify70573exit0 SHA7401b63d9619a1f2fe8c04c0110b925c6068c9ab8da163b9c396339af09e0042. 직전 대비 GameRoot source만 변경, report/v1불변/hardErrors0/64+1000seeds. content/economy/event47920PASS(108rows/0errors), historicalcandidate6/Toss38aggregate불변, native trackeddrift0/diffcheckPASS. post-save-hp-regression-20260907.md 상세. Art4건/승인대기 및 full/native/S3/S5/S6는 미완료, 모든handleterminal, Goalactive.
+
+2026-09-07 일반 offline return 재검증 완료: query 없는 검증bundle에서 freshUI 생성→offline출정/탐험/미루기/귀환. 실제 primary snapshot revision5 마을/summary기록 후 online reload revision7에서도 동일ID/HP178/gold300 유지. Owner offline-real-{return,restored}.png 390×844 직접확인, overflow0. Cloudserver 직접read 아님; 다른기기/삭제복구는 미증명. offline-return-20260907.md에 증거 기록. Browser close, preview93957exit130, 모든handleterminal. 다음 source evidence/full/native 및 미완료S3/S5; 이미지보정승인은 여전히 대기.
+
+2026-09-07 OFFLINE-RETURN-01 수정: GameRoot의 귀환 카드만 eager import. 실제UI offline 첫귀환 RED→GREEN, 저장없는 e2e모드의 reload 실패를 isolated toss-first-five snapshot 대기로 교정. 순차80012 buildguard/E2E5/5, unit13/13, tsc/lint/diffcheckPASS. 최종390×844 캡처 owner검수. offline-return-20260907.md에 실패/한계 모두기록; 실제 cloud offline복구 전체 증거 아님. 이전116E2E는 수정전이며 새 progression source/full/native는 미완료. Art4건/이미지승인대기 유지, 모든 handleterminal, Goalactive.
+
+2026-09-07 latest: browser regression69777 exit0, buildguard/desktop+mobile smoke/E2E59+57 PASS, /tmp/aetheria-post-hp-browser-0907.log. Desktop close timeout 보존. 별도 actual offline-sep7에서 Important OFFLINE-RETURN-01 재현: 첫 안전귀환시 lazy ExpeditionDebriefCard chunk 실패로 전역오류, online reload는 숲 상태 복원. Owner 두 캡처 확인, docs/evidence/qa/offline-return-20260907.md. 기본suite가 이 경로를 커버하지 않음. 다음 core return chunk 의존성 TDD 수정과 같은 offline 재검사. Browser close, wrapper EXIT cleanup 완료;69777재실행 금지. Full/art/native 및 Goal전체 미완료.
+
+2026-09-07 armor source review: owner가17개600×400 원본 시트 전체를 직접 열고 batch row-major82개 이름과 큰 형태 대조를 완료했다. 뚜렷한 의미/원본crop 모순 미발견; 작은 크기/실제착용 검수는 미완료. equipment-owner-review-20260907.md 참조, pixel 변경 없음. Live69777은 E2E shard1 59/59PASS(5.1m), shard2 57개 시작; 종료 미확인으로 같은 handle만 wait. Full/art/native 전체 완료 아님.
+
+2026-09-07 owner six-source art inspection: mage/archmage/grand-mage/cleric/paladin/shaman 원본6장을 각각 직접 열어 확인했고 배경 후보 aperture와 보존할 의상/빛/영혼 얼굴 및 SHA를 character-alpha-review-20260907.md에 기록했다. Pixel 수정/alpha 승인 아님. 기존 live69777은 desktop/mobile smoke ok 후 E2E shard1 실행 중(현재19개PASS 관찰); 같은 handle을 기다리고 재실행하지 않는다. 아직 full/native/S3 완료 아님.
+
+2026-09-07 live browser regression: owned handle69777은 live 확인됨. /tmp/aetheria-post-hp-browser-0907.log, preview4381. Build guard PASS, desktop smoke ok 뒤 browser.close timeout 기록; mobile smoke 진행 중, E2E 최종 결과 미확인. 재시작/preview 조기 종료 금지, 동일 handle을 기다린다. docs/evidence/qa/post-save-hp-regression-20260907.md에 검증 범위 명시. 기본 suite는 offline/full inventory/physical background 완료 증거가 아니다. 이미지 승인 대기와 무관하게 S5 진행 중, Goal active.
+
+2026-09-07 post-save/HP regression: 전체 unit31919 exit1, 4364개 중4359PASS/5FAIL (art registry/answer-key 결합4건, progression source evidence1건). 로그 /tmp/aetheria-post-save-hp-unit-0907.log. 이어서 diagnostic write98365/readonly verify12225 모두exit0, SHA c03ebd7ac25a155adca4baaef7d7de7a8a4e2a02f9190803e62379680624b184. 이전 report/v1 byte projection 불변, focused64/comparison1000, hardErrors0; source4개(signatureRegistry/useFirebaseSync/cloudPlayerSnapshot/expeditionLedger)만 새 hash. Art4건은 미해결이며 전체unit 재실행/full/native PASS로 주장하지 않는다. quota local rule/path/limit 일치만 확인했고 deployed permission은 미검증. 이미지 Python보정 범위 승인을 다시 비동기로 요청, 답변 없이 실행하지 않는다. 모든 이 turn process terminal, Goal active.
+
+2026-09-07 HP修正 real-surface checkpoint: 실제 fresh UI 생성/자연 전투/귀환 후113/178→63% 확인. 동일 세션 reload 후 HP·MP·골드321·EXP39·전리품2개·원정1전투/2탐험 유지. Owner가 hp-fixed-{return,restored}-390x844.png 두 장 직접 검수, overflow0. 상세 fresh-combat-owner-20260907.md. Browser close 및 검증 완료 후 dev60691 종료. Local AI404×2/quota warning은 별개이며 full/native·전체S3/S5/S6는 미완료. 다음 남은 기능 감사와 전체 검증; Goal active.
+
+**EXPEDITION-HP-01 계산 수정:** 신규 원정 시작/귀환 최대 HP를 `calculateFullStats`로 기록한다. base150 + passive20 + equipment8 =178, HP134는75%; 장비 해제 후 귀환 max170에도 시작 분모178 유지, legacy150은89% 보존. RED150≠178 → focused27/27 및 integration95/95, tsc/lint/diff-check PASS. 실제 화면 재검증·full/native는 미완료이며 아래 v5는 이번 수정 포함 패키지가 아니다.
 **Engineer:** Aetheria Staff Engineer (Architectural Specialist)
+
+**Latest direct combat:** 두번째fresh에서실제공격/강타/물약→첫승리→귀환/임무수령검수. 전투1/탐험2,390×844overflow0. `docs/evidence/qa/fresh-combat-owner-20260907.md`. 새Important: 귀환HP134가89%로표시(rawmax150사용,실제max178이면75%). 다음expeditionLedger분모TDD교정. 마지막reload검수는문구대기timeout/서버조기종료로미확인;복원PASS아님. Browser/dev종료.
+
+**Latest fix — 실제 fresh cloud 저장:** 신규생성UI에서optionalundefined로Firestore저장실패 재현. cloud전용projection에서deferred/relic필드를null로표현하여merge된옛값도정리. Focused51/51·tsc/lintPASS; 실제출정/이야기미루기/귀환 서버read revision5→7→9 및null→marker→null확인. `docs/evidence/qa/cloud-player-optional-fields-20260907.md`. 전투0/탐험1경로이며전체S5미완료. Browser/dev종료,full/native아직미실행. 기존v5패키지는이번수정포함아님.
+
+**Signature hands audit:** 무기16종(1H5/2H11)의production helper와artNote 전수일치. 비무기9종별도. Signature offhand3종은빈손허용/2H거부3/3씩확인. 함수fixture검증이며UI/전체플레이완료아님. 새이미지처리승인은아직없고integration25/27상태유지.
+
+**Latest source visual check:** 대지의 심판 원본2장을 dark/light160/72/32px로 owner검수, 검날/가드/손잡이 구분 확인. `output/playwright/completion-20260907/earth-verdict-source-review.png`. CSS표시크기 검수일뿐 최종export/실제착용PASS는아님. 아직25/27 integration, runtime망치 유지. 원본시트 재조합·정규화 및 지역/캐릭터 픽셀수정은 명시적 이미지처리 승인대기.
+
+**Current implementation — 대지의 심판 metadata 교정:** production대검과 실제 생성prompt를 연결하는 회귀 RED→GREEN1/1. Registry artNote와 sword-01 batch를2Hgreatsword로교정; 기존registry/batch/provenance/6cell시트2장 보존. Runtime PNG는아직망치이며완료아님. Integration57386exit1:25/27, staleanswerkey/fullart2건 미완료. 새이미지반영 전 승인metadata만갱신하지 않는다. 다음pairedsource/runtime+시각검수→provenance/full/native. 기존v5는마지막완료패키지이며현재변경의검증증거가아님.
+
+**Latest candidate — 대지의 심판:** built-in imagegen2회로 대검 item/overlay 원본과 이전hammer2장 보존(`scripts/art_sources/equipment/v3/earth-verdict/`). Owner 원본검수·실제alpha/투명/margin2/2PASS. Runtime 미반영. 근본원인은 signatureRegistry artNote가2Hwarhammer인 것; 다음 TDD로production대검 계약과 artNote/batch/provenance를 함께교정한다. 작은크기·실제착용/full/native는 아직미완료. Python alpha수정은 승인대기.
+
+**Latest equipment audit:** 장비229 item+signature overlay25의 provenance SHA254/254 일치, 관련22/22 PASS. Owner가5 cohort sheet와 대지의 심판 runtime2장을 확인해 Important1 발견: production은2H대검인데 item/overlay는망치. `docs/evidence/art/equipment-owner-review-20260907.md` 참조. 다음 built-in imagegen으로 해당2장 교정/TDD/실제착용검수; gameplay 계약 변경 금지. Armor82 세부와 전체 착용조합은 아직 미완료. 지역12/캐릭터8 Python보정 승인 대기와 독립적으로 진행 가능.
+
+**Latest audit — 지역12종 분리 결함:** owner가52종 전체를 분할 sheet로 확인하여 Important1(12종 영향)을 발견했다. 세 번째 열 crop이 옆 테두리를 포함해 세로잔상·본체축소·왼쪽치우침 발생. 독립 C0/I0는 최종 승인으로 채택하지 않는다. `docs/evidence/art/location-owner-review-20260907.md`에 원인/정확한12종/검증한계 기록. Existing focused6/6 PASS는 픽셀 결함 미검출. Source/runtime 수정 없음; Python/Pillow extraction 수정은 명시 승인 전 보류. 최신 완료 packaging은 아래 v5이며 Goal 전체 미완료.
+
+**Latest checkpoint — contextual-five local verification 완료:** full23296 exit0(unit4360/4360,E2E59+57), cap37742/Android28630/iOSunsigned78500 exit0. 실제 APK/App 및 native public dirs의 productionJS+authored30 PNG31/31 일치; v5/native-checkpoint.json에 exact hash/path 기록. Native tracked drift0/diffcheckPASS. 모든 v5 handle 종료; 아래 실행중 표시는 과거 이력이다. 설치·서명·commit/push 없음. S3/S5/S6는 미완료.
+
+**Character correction method pending:** ranger/hunt-lord 원본 owner 확인, built-in 배경제거1회는 불투명체크무늬로 실패·보존. 정확한 Python/Pillow 영역마스크 처리는 사용자에게 별도 허용질문 전달했고 아직 답변 전이므로 실행하지 않는다. 캐릭터 source/runtime 변경 없음. Map52 독립 검토 C0/I0; owner 전체 sheet 검수는 출력 truncation 때문에 완료로 주장하지 않으며 후속 확인한다.
+
+**Latest handle correction:** v5 추가client22709은 screenshot timeout으로 종료; 동일시나리오 재검사92872은 exit0/owner screenshot+ready·crafting·offline 확인. 실패 원본 보존, browser/dev84854종료. Toss17045도PASS80760292bytes. 현재 v5 live handle은 full23296뿐이며 종료 후 native packaging을 수행한다.
+
+**Active slice — contextual-five v5:** Void broad 보완 후 독립C0/I0,5종 runtime반영·RED1→GREEN40/40,249종 보존. 진단50387검증PASS190746b2…52a(report/baseline/seeds불변); full23296진행 중. 통제된390×844전투5종 owner확인PASS. webgameclient22709/Toss17045 handle 회수와 dev84854/browser정리 후 full 종료→native 검증. 정확한 최신상태는 progress.md 최상단. Character8종 source-correction은 별도 후속이며 아직 변경 없음.
+
+**Next scoped artwork review:** `docs/evidence/art/monster-contextual-six-review-20260907.md`에 contextual6 owner/Sol audit 완료(C0/I5). 공허의 신·시간의 파수꾼·영겁의 수문장·타락한 세계수 영혼·고대 호수의 수호신을 v4 full/native 이후 별도5종 묶음으로 보완한다. 이프리트는 설정과 그림이 일치하므로 보존. 아직 해당5종 제작/반영은 하지 않았다.
+
+**Current continuation — required-five checkpoint 완료:** 보스5종 반영·focused40/40·작은 크기 독립 C0/I0·390×844 실제화면5장 PASS (통제된 fixture). Full63295/diagnostic77074 종료PASS: unit4360/4360, E2E59/59+57/57, smoke/type/lint/buildguard. Cap11702/Android20807/iOSunsigned56101도 종료PASS; 실제 APK/App 및 native public dirs의 productionJS+25개 authoredPNG26/26 일치. v4/native-checkpoint.json에 exact hash/path 기록. 다른249종 및 historical evidence 보존, native trackeddrift0. 모든 v4 handle terminal, 재시작 금지. 다음 contextual5 artwork와 character18 read-only audit, 이후 S3/S5/S6. 설치·commit/push 없음.
 
 ---
 
@@ -21,6 +617,32 @@
 ## 📋 Current Sprint
 
 ### 🎯 Pending Tasks
+
+- **Required-five 32/46 검수·TDD RED:** owner 5종 dark/light 비교 캡처 확인. 서리 군주가 다른 boss보다 작아 보이는 점을 Sol xhigh 독립 검토(body8_review)에 명시, 적용 전 결과 확인. 5개 pin 연결 test RED1은 예상 missing5 pins(`/tmp/aetheria-required-five-red-0907.log`); 아직 GREEN 아님. Runtime 변경 없음. QA browser/HTTP55238 종료. 다음 독립 지적 처리→5종 연결/GREEN, 신규 full/native 중복실행 금지.
+
+- **Required-five 후보 framing/alpha 보완:** fresh2회로 원시의 신/서리 군주 새 원화 보존, v4/selection-provenance.json에5후보 선택. 엄격한160px alpha/투명/8px margin5/5 PASS. 원시 원본alpha1 top fringe는 기록하되 보이는 형체 잘림 없음; alpha 조작 없음. Frost는-framed 파일 선택, 이전원화/실패본 보존. 다음32/46px/독립 검수→5-pin TDD/runtime연결. Runtime 전체 불변·현재 Goal 미완료.
+
+- **Required-five 원화 진행, runtime 불변:** v4에4종 candidate/160px/이전PNG 보존·alpha/margin4/4 PASS. 원시의 신 첫 원화 손끝/halo 잘림, edit2회는 불투명 checkerboard여서 모두 rejected 보존; 새 compact 원화 필요. 서리 군주 왕관 원본 상단 여백도 해결 전 승인 금지. 5original+2edit 총7 built-in 호출, prompts/hash 기록. 다음 두 framing/alpha 문제 해결→5종32/46 검수/TDD/runtime연결. v3가 마지막 full/native PASS; 이번 후보는 설치/적용 안 됨.
+
+- **S3 priority-nine 최종 closeout PASS:** full28312exit0(unit4360/4360, desktop/mobile smoke, E2E59/59+57/57); desktop browser.close 비차단 timeout 공개. Cap7868·Android57471·iOSunsigned21643exit0. 실제 APK222612537bytes SHAd092d1db…745000, iOS App `/tmp/aetheria-priority-nine-ios.0qjKW6/Build/Products/Release-iphoneos/App.app` 안 main `index-Bp8SXodu.js` SHAc0c91c6f…9d9b52 및 교정20 PNG가 dist와21/21 일치. Native tracked drift0/diffcheckPASS; 기존 archive/설치앱 보존. v3/native-checkpoint.json 기록. 아래 실행중 표시는 과거 이력이며 모든 priority-nine handle 종료. 다음 Required5(서리 군주/원시의 신/차원 파쇄자/차원 포식자/타락한 세계수 수호자) 교정, contextual6 및 S3/S5/S6 전체 승인 미완료. Goal 유지.
+
+- **Priority-nine 보조 gate 완료, 기존 full 대기:** full28312 두 번째 E2E shard 실행 중(first59 완료), 중복 시작 금지. 보조24862exit0: Toss80725539bytes<80MiB, equipment/event/mobile doctor PASS. Art report66154exit0,548 exports/oktrue SHAe0516536…49d51b5. Candidate6/Toss38 aggregate 불변, native tracked drift0/index empty. Distribution signing 입력 부재는 별도 gate. 다음28312terminal 후 cap/native 실제 패키지20 PNG 확인; 현재 패키지는 아직 body8 버전.
+
+- **Priority-nine 직접 전투/독립 검토 PASS, full 진행:** 9종390×844 전투 캡처 owner 검수·console error0, Sol xhigh 독립10/10/C0I0(README 역사 구분 지적 수정·재검토). Diagnostic69390exit0, SHA7c9222ae…de46c4f; report/v1Baseline/seedPolicy 불변. 현재 full28312 `/tmp/aetheria-priority-nine-full-0907.log` E2E 진행; 동일 handle 대기. 실제 자연 출현/밸런스 증빙 아님. QA browser/dev5173 종료, 아래69390진행 표시는 이력. 전체 종료 후 art report/budget/cap/native 미완료, 현재 iPhone 설치 버전 주장 금지.
+
+- **Priority-nine evidence gate:** art/content PASS; diagnostic verify process76723exit1(EVIDENCE_BYTE_MISMATCH). Preimage `/tmp/aetheria-priority-nine-progression-preimage-0907.json` 보존. Write→verify69390 진행 중; 같은 handle 대기 후 report/v1Baseline 불변 비교 필수, 아직 full 미실행.
+
+- **S3 priority-nine runtime 적용·focused PASS — 2026-09-07:** 160/46/32px dark/light owner 검수 후9종을 기존 authored/v1 pin에 연결(총20/나머지234 prototype). RED2→related40/40 PASS; exact-name 결정체construct/네크론caster만 추가. 정확히9 entries/PNG 변경, 나머지245 metadata/bytes 불변, 이전9 보존. 최종 sheet `priority-nine-final-160-46-32.png`; earlier blank/wrong-port404는 실패 이력. 검수용 browser/server64938 종료. Sol xhigh 독립 review 진행; full/실제390×844/native 미완료. 아래 후보-only 기록은 적용 전 이력.
+
+- **S3 priority-nine 후보 원화 준비 — 2026-09-07:** 보스6+일반3의 원본9개·160px export9개·이전PNG9개와 prompt/preimage/hash 보존(`scripts/art_sources/monsters/v3/`). Built-in 개별9회, owner 원본/160px 직접 확인; 기존 pixel inspector로 alpha/투명/8px margin9/9, 해시/160×1609/9 PASS. Runtime manifest 전체 불변, 아직 적용 안 됨. 다음은32/46px 검수→TDD pin/classification→9종 일괄 연결→실제390×844/독립/full/native 검증. Body8 최종 독립 artifact audit도 C0/I0로 종료. Goal 전체 완료 아님.
+
+최신 상태는 아래 첫 closeout 항목을 따른다. 그다음 body8 중간 기록의 실행 중 handle·source freeze는 이력이며, 최종 종료 결과로 대체됐다.
+
+- **S3 body8 최종 closeout PASS:** full session51684 exit0(unit4360/4360, smoke desktop/mobile, E2E59/59+57/57); 기존 비차단 desktop close timeout 공개. Art548 exports report SHA `00057783…547a3c`, equipment/event/mobile doctor, Toss web budget80719937bytes<80MiB PASS. Cap sync·Android debug·iOS unsigned build PASS; 실제 APK/App 안 JS `index-B9BRPLKS.js` SHA `659c2cf6…e10cdf`와 교정 PNG11개가 dist와 일치. APK222268394bytes SHA `b4ef5ef2…e0befd`; App `/tmp/aetheria-body8-ios.LRAn0R/Build/Products/Release-iphoneos/App.app`. Native tracked drift0/index 비어 있음. 모든 body8 검증/build handle 종료, 재시작 불필요. provenance 초기 오류 출력은 유효 JSON으로 교정하고8개 master/previous/export/runtime 해시를 재검증했다. Boss47 의미 inventory(교정4/required11/match26/contextual6) 완료; 전체 시각 승인 아님. 다음은 보스6+일반3의9종 교정. iPhone available/paired지만 passcodeRequired=true, exact bundle 조회 비어 설치 버전 미확인. 설치/실행/배포 없이 Goal 유지.
+- **S3 body8 구현·시각 검수 완료, full 진행 — 2026-09-07:** 스노우 울프/마법서/미믹/프로토타입 제로/제피로스/아누비스/물고기/거북 원화8개와 이전PNG 보존(`scripts/art_sources/monsters/v2/`). Exact-name classification4개·기존 authored pin 연결; RED2→GREEN10, related40/40, art/content PASS, Sol xhigh 독립10/10·C0/I0. 나머지246 metadata/bytes 불변. 32/46/160 비교 및 settled390×844 전투8장 직접 검수, clean run error0/overflow0. Initial QA harness 실패와 초기 transition 캡처는 구분했다. Initial full session51207은 stale progression seal1건으로 exit1(4359/4360); evidence write→verify 완료(`b518d71d…21f167`, report/v1 불변). 현재 full 재실행 session51684 `/tmp/aetheria-body8-full-verified-0907.log`를 먼저 확인하며 source 변경/중복 실행 금지. 이후 budget/cap/native/최종 ledger가 남음; 기존 iPhone·APK/App은 이번8종 포함으로 주장하지 않는다. Candidate6/Toss38 보존. 새로 교정된 총11종 외243종은 전체 의미 검수 미완료; Goal 유지, commit/push/설치/배포 없음.
+- **S5 restore feedback 검증 완료 — 2026-09-07:** LOAD_DATA 비저장 presentationEpoch로 복원 HP 교체와 실제 피해·회복을 구분했다. Focused57/57, full gate exit0(unit4359/4359, desktop/mobile smoke, E2E59/59+57/57) 및 독립 C0/I0. 기존 비차단 desktop browser.close timeout은 별도 기록. Direct390×844에서 복원HP97/가짜 피해 없음→공격HP82/DOM -15, width/scroll390/390, epoch 저장 없음 확인. `output/playwright/completion-20260907/feedback-{restored,real-damage}-390x844.png`; 실제 공격 캡처는 transient 종료 후다. Progression/art/content/equipment/event/mobile doctor·cap sync PASS. Android debug APK 221992690bytes SHA `078ccfb3…5563b5`, iOS unsigned `/tmp/aetheria-feedback-ios.XXit8c/Build/Products/Release-iphoneos/App.app`; 실제 APK/App의 JS `index-DYrguYkB.js` SHA `1d9d6462…75e4de2`와 교정 PNG3개가 dist와 동일. Native tracked drift0, candidate6/Toss38 aggregate 불변. 모든 해당 검증/build session은 종료됐으므로 재시작하지 않는다. 다음은 S3 body8종 교정; S3 전체/S5 실기기/S6는 미완료. Goal active, index 비어 있음. 새 설치/배포/commit/push 없음; Distribution identity·Android release keystore는 여전히 별도 blocker.
+- **게임 완성 Goal S3a — 첫 3종 body 교정·전체 gate 완료 (2026-09-05):** 눈보라 정령/머맨/스핑크스를 built-in imagegen으로 개별 제작하고 원화·이전 PNG를 보존했다. Authored 160px export/name/path/SHA pin과 무변형 byte-copy로 재빌드를 고정; 적용 전 251종 metadata/bytes 불변 확인. TDD RED2→GREEN9, related29/29, 독립 focused9/9·Critical/Important0. 32/160px 비교와 390×844 전투 portrait 확인, canonical-location clean fixture error0/overflow0(초기 잘못된 지역명 fixture 실패는 별도 기록). `verify:full` exit0: unit4355/4355, desktop/mobile smoke, E2E59/59+56/56; 기존 비차단 desktop close timeout 공개. Art/content/pacing/event-reward/equipment/relic/mobile doctor PASS. Progression source evidence SHA `236774f7…9f00646`, report/v1 불변·sources323 drift0. Toss local web bundle80,709,678bytes<80MiB, 업로드 없음. Cap sync·Android debug·iOS unsigned build PASS; 웹/Android APK/iOS App의 JS `index-BUwUIcdZ.js` SHA `fdfa0d79…a0f9a95`와 교정 PNG3개 byte-identical. APK `android/app/build/outputs/apk/debug/app-debug.apk`; 새 unsigned app `/tmp/aetheria-art-ios-device.4xu6J8/Build/Products/Release-iphoneos/App.app`. Native tracked drift0, candidate6/Toss38 aggregate 보존, HEAD38a3584/index 비어 있음. S3 전체·S5/S6·새 iPhone 설치는 미완료. 다음은 S5 restore UX 가짜 피격 표시 수정 후 body8종(스노우 울프/마법서/미믹/프로토타입 제로/제피로스/아누비스/물고기/거북). Commit/push/publication 없음; Goal 유지.
+- **게임 완성 Goal S2b — 이야기 미루기·전체 검증 완료 (2026-09-05):** 8개 이야기의 14개 `nothing` 선택에 원정 한정 deferral을 적용했다. 보상/progress/전역 수치는 불변이며 reducer가 canonical identity와 `expectedExploreCount`를 검사하여 중복·지난 원정 callback을 거부한다. 저장/위험 이동 보존, 안전 귀환/사망/RESET/ASCEND 해제와 정규화, 실제 Explore 전투/Scout/보스 경로를 검사했다. Focused 61/61, related 132/132, 독립 재감사 Critical/Important 0(51/51). `npm run verify:full` PASS: unit4352/4352, desktop/mobile smoke, E2E59/59+56/56(`/tmp/aetheria-chain-full-closed.log`). Cycle596 source 계약을 exact 3-arg로 갱신했고 기존 검사는 보존했다. 390×844 미루기→복원→전투→귀환→재제안 직접 확인; global-RNG fixture 경고와 분리한 clean per-action-seed 재검사 error0/overflow0. Progression/DOT/event source evidence 갱신·verify, report/v1 불변, source323 drift0. Art/content/pacing/event-reward/relic/equipment/mobile doctor·cap sync PASS; `assets/index-BxdTbq3y.js` web/Android/iOS SHA `e2f9ff17…0432a7` 일치, native tracked drift0. Candidate6/Toss38 aggregate 보존, HEAD38a3584/index 비어 있음. 새 archive/기기 설치 없음. 다음은 S3 디자인 의미 보완이며 S5/S6도 미완료다. Goal 유지; commit/push/publication은 하지 않는다.
 - 현재 작업 범위에서 제외된 RC-1 물리 Android 5분 QA와 release signing은 실제 기기·keystore가 준비될 때 별도 재개
 - TestFlight 업로드. 현재 App Store export profile은 확인됐지만 로컬 `Apple Distribution` identity가 없어 차단되며, signing 준비와 실기기 QA 뒤 명시적 업로드 승인이 필요
 - Android 실제 release keystore 기준 최종 번들 검증 (`android/key.properties` 또는 `AETHERIA_ANDROID_KEYSTORE_*` 누락으로 현재 blocker)
@@ -28,6 +650,12 @@
 - Current-source Android debug APK의 isolated host-GPU emulator 설치·cold launch·5분 핵심 루프·background/foreground·강제 종료 후 복원은 완료했으며, release acceptance용 물리 Android는 별도 확보
 
 ### 🔄 In Progress
+- **게임 완성 Goal S2 — 유물 수명·전체 검증 완료 (2026-09-05):** 허공의 왕좌는 원정 동안 공격력을 누적(5%, cap 50%)하고, 세계 포식자는 마지막 처치량을 다음 전투 한 번의 기본 HP 보너스로 교체한다. Optional save, 귀환/도주/사망/전직/복원, 연속 보스전, 소유 설명·시너지 및 반사·반격 즉시 승리를 동기화했다. Lifetime 25 tests, focused 343/343(마지막 counter-only 추가 전), 독립 감사 Critical/Important 0. `npm run verify:full` PASS: unit 4328/4328, desktop/mobile smoke, E2E 59/59 + 56/56(`/tmp/aetheria-relic-full.log`); 알려진 비차단 desktop close timeout은 별도 기록. Direct 390×844 승리→pending 복원→실제 전투→active 복원→다음 승리→안전 귀환, width/scroll 390/390, console error 0. Progression write→verify(`e03e8738…ee4c7c`), source 323개 drift 0, diagnostic/v1 baseline 불변. Relic/equipment/art/content/pacing/event-reward/mobile doctor/cap sync PASS; Android/iOS tracked drift 0, 동일 main JS `index-BzXMajTf.js` / `c6aaed1a…87e467`. Historical candidate/Toss evidence 불변. 다음은 S2b STORY-01: 무시한 이야기 step의 원정 한정 deferral. S3 디자인 의미 보완, S5 native/device와 S6 final audit는 미완료이며 Goal active. 새 native archive/실기기 설치, commit/push/공개 없음.
+- **게임 완성 Goal S1b — 장비 안내·전체 검증 완료 (2026-09-05):** `canEquip`의 level/job/2H 규칙을 가방·상점·제작·합성 안내에서 공유한다. 추천 장착은 legal positive upgrade만 고르며, signature 안내는 현재 멤버 보존·현 직업·동일 1H 두 자루를 구분한다. 직업 세트 1→2/2→3 남은 수량은 1개다. Focused 87/87, SSR/실제 390×844 장비·가방·제작 확인, 독립 감사 Critical/Important 0. 제작 E2E의 잘못된 Lv2 착용 기대값은 실제 레벨 제한과 별도 제작 권한을 검사하도록 정정했다. 최종 `npm run verify:full` PASS(unit 4303/4303, desktop/mobile smoke, E2E 59/59 + 56/56); 로그 `/tmp/aetheria-guidance-full-closed.log`. 비차단 desktop `browser.close timeout`은 별도 기록한다. Equipment/progression evidence write→verify, art/content, mobile doctor, cap sync PASS; 진단 source 321개 drift 0, Android/iOS tracked drift 0. 아래 S1/S4 기록은 이전 checkpoint다. 다음은 상세 설계된 S2 유물 lifetime이며, 전체 게임/디자인/새 iPhone 설치 완료는 아직 아니다. Native 재빌드·설치는 최종 S5에서 수행하며 기존 archive를 보존했다. Commit/push/publish 없음.
+- **현재 Goal checkpoint S1/S4 local verification 완료; 다음은 장비 안내 정합성 S1b (2026-09-05):** 실제 18-job 세트 장착 도달성 수정과 iOS exact process receipt 검증을 완료했다. `npm run verify:full` PASS(unit 4292/4292, E2E 59/59 + 56/56, desktop/mobile smoke); desktop 종료의 알려진 비차단 `browser.close timeout`은 별도 기록했다. Art/content/equipment/progression 검증, mobile doctor, cap sync, Android debug 및 iOS unsigned generic-device build도 PASS, native tracked drift 0. `output/playwright/completion-20260905/celestial-set-390x844.png`를 직접 확인했고 가로 overflow·console error 0, 천공 2세트 완료와 3세트 안내 제거를 검증했다. 최신 APK는 221991742 bytes / `27606bd1...f31c2`; Android/iOS/web의 main JS payload hash가 `926db8f3...57eec`로 일치한다. 재설치는 하지 않아 iPhone에는 여전히 이전 `AetheriaMonsterArtQA-20260904.xcarchive`가 설치되어 있다. 다음은 실제 화면에서 발견한 양손무기 사용 중 방패의 거짓 “장착 가능”, 두 signature offhand의 불가능한 완성 약속, 직업 세트 남은 수량 안내를 고치는 S1b이며 이어 유물 lifetime·몬스터 디자인을 수정한다. **전체 게임/디자인 완료는 아직 아니며 Goal active**. `tasks/todo.md`와 plan/progress를 갱신했고 commit/push/publish는 수행하지 않았다.
+- **게임 완성 Goal 재설계·실제 세트 도달성 수정 진행 (2026-09-05):** 실행 계획은 `docs/superpowers/plans/2026-09-05-aetheria-game-completion.md`. 이전 visual completeness 기록은 파일 coverage와 당시 gate 결과로만 해석한다. 현재 감사에서 천공 3세트의 불가능한 2H+offhand fixture, 허공의 왕좌의 다음 전투 reset으로 인한 무효 효과, 세계 포식자 지속 기간 불일치, 눈보라 정령/머맨/스핑크스 그림의 의미 불일치, generic iOS process로 인한 false PASS 위험을 확인했다. 세트는 18 jobs와 실제 `gameReducer(USE_INVENTORY_ITEM)` 탐색으로 RED 2건을 먼저 재현했고, 불가능한 천공 3세트만 제거해 유효한 2세트 수치를 보존했다. 관련 focused 70/70 PASS; 새 full gate와 native/visual 검증은 아직 대기다. iOS 검사 개선은 별도 exact-three-path slice로 진행한다. 이전 PID 11857 부재와 `passcodeRequired:true`는 동시 관찰일 뿐 종료 원인은 **unknown**이며, UDID install 성공도 USB 전송 원인의 증거가 아니다. 기존 기록의 “인증/화면만 남음” 판단을 이 항목이 정정한다. 게임·디자인 전체 완료나 최신 수정의 iPhone 설치를 주장하지 않는다. 물리 Android·유료 서비스·commit/push/publish는 제외한다.
+- **게임 전반 visual/content completeness 보완 및 latest iPhone QA 설치·launch 완료, awake 60초 hold와 직접 화면 확인 대기 (2026-09-04):** 기존 character `18`, map `52`, equipment `229`의 exact art와 weapon `117`종(`1H 56`, `2H 61`), armor `91`, shield `21`, signature set `5`종의 production 계약을 재검증하고, 실제 누락이던 canonical monster `254`종(`boss 47`)의 name-exact 160×160 RGBA art를 deterministic local generator·manifest·SHA-256 verifier로 추가했다. 모든 monster는 고유 runtime path와 고유 bytes를 가지며 aquatic/avian/reptile/dragon/machine/construct/spectral/undead/insect/spirit/aberration/divine/demon/caster/warrior/rogue/beast/humanoid 문맥과 boss 표식을 반영한다. Full art evidence는 `18/229/22/25/254`, 오류 `0`, SHA-256 `5804d1ff...4816`으로 갱신했고, focused art/Toss `43/43` 및 character/map/monster/equipment/set/1H·2H 회귀 `92/92`가 통과했다. `npm run verify:full`은 type-check, lint, unit `4266/4266`, build guard, desktop/mobile smoke와 E2E `59/59 + 56/56`을 통과했다. Progression Diagnostic v2 `b6e44d3d...2868`, content `a6626375...f0e8`, pacing `0818fb7a...424e`, event reward `108/108`·`0680a3f1...8084`, equipment combat-power `7678c999...64fe`, equipment economy `33558b95...9f93`도 deterministic verify PASS다. Toss production web bundle은 `803` files / `80683235 / 83886080` bytes, missing/forbidden/unexpected/test-harness `0`; source asset allowlist는 `753` files / `78541812` bytes / SHA-256 `83e1f98a...886f`다. `npm run cap:sync`, Android debug build, iOS Development archive와 strict codesign이 성공했고 tracked Android/iOS drift는 `0`이다. 최신 APK는 `221813450` bytes / `f9859aeb...042e`, 최신 archive는 `build/ios/AetheriaMonsterArtQA-20260904.xcarchive`이며 executable은 `eb6b8374...c87d`다. CoreDevice UUID 전송은 120초와 300초에서 멈췄지만 Xcode USB identifier `00008120-001605243E93C01E`로 같은 archive를 재전송해 `com.aetheria.roguelike.freshqa` update install receipt를 받았다. Unlock 상태에서 launch와 PID `11857`도 확인했으나 60초 hold 중 iPhone이 auto-lock되어 process가 종료됐고 직후 lock state가 `passcodeRequired:true`로 확인됐다. 현재 iPhone Mirroring 재개 화면은 Mac 로그인 암호 입력을 기다린다. 따라서 앱 crash 증거는 없으며 Mac 인증 후 화면을 awake 상태로 유지한 60초 hold와 직접 visual check만 남는다. 기존 save와 historical Toss artifact/evidence는 보존했다. Physical Android, distribution/release signing, paid service, commit, push, upload, review request, publication은 수행하지 않았다.
+- **Vercel 연결 제거 완료 및 iPhone 직접 품질 QA 준비 완료 (2026-09-04):** 현행 웹 배포 경로를 Cloudflare Pages로 단일화하고 tracked `vercel.json`, legacy `api/ai-proxy.js`, `api/feedback-validate.js`를 제거했다. 로컬 `.env.local`의 `VERCEL_OIDC_TOKEN`도 값 노출 없이 삭제했으며, GitHub repository webhook·Actions secret·variable과 로컬 `.vercel` 연결은 없음을 확인했다. `tests/cf-functions.test.js`에 Cloudflare-only hosting contract를 추가해 focused RED 후 전체 `14/14` GREEN으로 고정했다. `npm run verify:full`은 type-check, lint, unit `4260/4260`, build guard, desktop/mobile smoke, E2E `59/59 + 56/56`을 통과했다. deterministic verifier도 equipment `7678c999...64fe`, progression `88e56bf5...77ac`, content `a6626375...f0e8`, pacing `0818fb7a...424e`, event reward `108` rows·`0680a3f1...8084`, art `18/229/22/25`·catalog `c15c4e6f...ad0`로 PASS했다. 직접 품질 테스트용 별도 iOS bundle `com.aetheria.roguelike.freshqa`를 `/build/ios/AetheriaQualityQA-20260904.xcarchive`로 생성해 iPhone에 설치했고, executable SHA-256 `ffdbabb9f62fd29551ce4c5ab3797531fc49980dba6bf06d4326fc0702ae652f`, launch PID `11486`, 60초 hold를 확인했다. 기존 `com.aetheria.roguelike` 앱과 저장 상태는 덮어쓰지 않았다. GitHub App installation `105290032`는 선택된 `LooPyck`, `aetheria-roguelike`, `terminal-quest`, `Glitch-cafe` 네 repository 전체에서 uninstall했고, GitHub가 `A job has been queued to uninstall the 'Vercel' app.` receipt를 반환한 뒤 Installed GitHub Apps 목록에서 Vercel이 사라지고 Render만 남은 것을 재확인했다. 기존 PR의 과거 Vercel 실패 status는 historical check로 남을 수 있지만 새 접근·check·deployment 권한은 폐기됐다. Android 물리기기, distribution signing, commit, push, upload, publication은 수행하지 않았다.
 - **Apps in Toss iOS 첫 실기기 경로 검증 후 restore feedback 결함 수정 완료, replacement candidate pending (2026-09-04):** sealed candidate `aetheria-f45e44b-048c2eba`를 Apps in Toss console version `20260904-2` / deployment `01a06a1d-8216-7278-a5dc-c5fd1970bf46`로 등록하고 실제 iPhone의 Toss 앱에서 fresh character 생성, 첫 출정, optional event 선택, skill·기본 공격 전투, 승리, 정상 귀환, mission reward, background/foreground와 mini-app 종료 후 재실행 복원까지 수행했다. 플레이어 상태와 진행은 정확히 복원됐지만 재실행 뒤 runtime log가 비어 Terminal이 `모험 기록을 준비하고 있습니다.`를 무기한 표시하는 UI contract 결함을 확인했다. `LOAD_DATA`가 이름 있는 저장본을 복원하면서 기존 log가 없을 때만 stable system entry `저장된 모험을 불러왔습니다.`를 생성하도록 최소 수정했고, 기존 log와 fresh unnamed state는 보존한다. TDD focused persistence/reward path `27/27`, evidence-bound focused `21/21`, Progression Diagnostic v2 canonical verify SHA-256 `3ed63399869164c77752cf7d0aee8f70f25be77ddaec36c880029c02e1388f77`, fresh `npm run verify:full`의 unit `4259/4259`, desktop/mobile smoke, E2E `59/59 + 56/56`, 그리고 `npm run toss:rehearse:first-five`가 모두 PASS했다. 기존 console candidate는 source 수정 전 artifact이므로 observation PASS로 채택하지 않고 superseded 상태로 보존한다. 다음 gate는 이 source·test·deterministic evidence·ledger를 cohesive commit으로 확정한 뒤 clean successor `.ait`를 seal/upload하여 iOS Toss 재검증하는 것이다. 물리 Android가 없어 Apps in Toss Android platform coverage는 별도 blocker다. Review request, publication, ad activation, paid service, commit, push는 수행하지 않았다.
 - **Approved gameplay feature-completeness audit passed; core feature set frozen before Toss work (2026-09-04):** exact source HEAD `f45e44b0f050cd9832416823b6c20411cc8773e9`에서 player-facing route, production reducer authority, content reachability와 mobile surface를 다시 대조했다. Focused core/capability/economy/endgame `60/60`, content/dead-plumbing `9/9`, `npm run content:verify` `a6626375...0e8`, Progression Diagnostic v2 `9b8b143e...37d0`, exploration pacing `0818fb7a...424e`, event reward `108/108` · `0680a3f1...084`가 재현됐다. Fresh `npm run verify:full`은 type-check, warning-free lint, unit `4258/4258`, build guard, desktop/mobile smoke와 390×844 E2E `59/59 + 56/56`를 모두 통과했다. 전투·기술·아이템·장비/강화·상점/제작/합성·퀘스트/업적/시즌·직업/스킬 분기·Class Journey·무덤 회수·환생·True Ending/New Game+와 저장/복원 경로에서 새 기능 결함이나 dead purchase가 발견되지 않아 gameplay source 수정은 만들지 않았다. `publicGraveInvasion`은 server-authoritative claim이 없으므로 production에서 계속 숨기고, AI narrative는 무료 deterministic fallback을 기본으로 유지하며, IAP는 Soft Launch retention 이후의 별도 승인 범위로 둔다. 이 세 항목은 core 누락으로 재분류하지 않는다. Apps in Toss deployment/Sandbox 작업은 이 audit 동안 중단했고, paid service, console mutation, evidence refresh, native rebuild, commit, push, upload, review request, publication은 수행하지 않았다.
 - **Current-source Toss candidate sealed locally; deployment remains fail-closed (2026-09-04):** exact clean source commit `f45e44b0f050cd9832416823b6c20411cc8773e9` / tree `1c80adda8473dafdf89ec14d7a7d26dcdcc6ff84` was archived twice with matching SHA-256 `a6ee161ac11a35f6f2851681de662e87065819a00a404cd39bf88d8013e26f77` and built in an isolated root through `npm run toss:build`. The new local candidate is `aetheria-f45e44b-048c2eba`: `aetheria.ait` is `72830455` bytes, SHA-256 `048c2eba564b9a6872bfaddd8fe18d0d3c8120b604d9c4909dc566a7f05ace04`, and has exact `AITBUNDL` header; canonical `dist-toss` is `572` files / `74097353` bytes with tree SHA-256 `d0dbb7faeb269ea610d3a51f94afdcd09cabf73972a829a307c7a506fe992874`. All `572` embedded source records bind byte-for-byte to the dist tree, bundle report SHA-256 is `f3a4965d0ae647fe9b053538d5c4fce8d1955d0bc9219fac5be61308b747299a`, `npm run toss:verify` passed, and focused Toss contracts passed `11/11`. The prior August root artifact was moved intact to ignored recoverable archive `build/toss-artifact-archive/aetheria-8db86a2-b18b2457/`; archived `.ait` remains `72812250` bytes / `b18b2457...aa88`, archived dist remains `572` files / `74055642` bytes / `14d5bfe9...4161`, and the historical release evidence aggregate remains `05cc9de7...bbbd`. The new eight-file evidence scaffold is candidate-bound but intentionally has `deployment.json=null`, zero observations/issues/assets and all external gates unverified; its aggregate is `2ba507dc...6006`, combined Toss aggregate is now `493486c9...7c9b`, and the unrelated protected QA candidate aggregate remains `832249a8...afd1`. Accordingly Sandbox verification fails closed only at the absent deployment boundary (`deployment_missing`, followed by the wrapper `schema_or_phase_gate_failed`). This supersedes the preflight entry's candidate-pending wording. Console upload/deployment, Toss Sandbox observation, review request, publication, paid service, commit and push were not performed and each remains separately gated.

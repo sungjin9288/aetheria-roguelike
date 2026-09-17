@@ -1,0 +1,62 @@
+{
+  "runtimeAdopted": false,
+  "sources": [
+    {
+      "slug": "oldwood-golem",
+      "sha256": "edd025e77e7ffdfd7fe8ad4974d0b576c674ad9f3229510081cb14897fba41f3",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        63,
+        17,
+        1183,
+        1238
+      ]
+    },
+    {
+      "slug": "flower-golem",
+      "sha256": "0b3f3e9ff4f1e8a4884f825bffaef017b16644e0aa53b65ef9c9aef6512b30f7",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        46,
+        24,
+        1216,
+        1224
+      ]
+    },
+    {
+      "slug": "wild-griffin",
+      "sha256": "d4f39ae5c86676ad6e36627dd8618e8c656a62cede7bf9b3e25cbda883ac6461",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        18,
+        62,
+        1234,
+        1159
+      ]
+    }
+  ]
+}

@@ -9,6 +9,14 @@ import { getAllSignatureDropSourceIndex } from '../src/utils/signatureDropSource
 
 const clone = (value) => structuredClone(value);
 
+test('안전 지역에 등록만 된 몬스터를 모바일 조우 가능으로 세지 않는다', () => {
+    const maps = clone(DB.MAPS);
+    maps['시작의 마을'].monsters = ['황금 왕국 수호자'];
+    maps['황금 왕국'].monsters = maps['황금 왕국'].monsters.filter((name) => name !== '황금 왕국 수호자');
+    const report = buildContentReachabilityReport({ ...DB, MAPS: maps });
+    assert.ok(report.monsters.missingRoutes.includes('황금 왕국 수호자'));
+});
+
 test('canonical content has the approved production catalog counts and routes', () => {
     const report = buildContentReachabilityReport();
 

@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 2,
+  "candidateId": "release-core-6e7db48d536d",
+  "sourceTreeSha256": "07fca8ce44477839bb22d22ae0ddef053648890faf9d0ffff78410a76c4f2d3d",
+  "requiredFreshHumanObservations": 5,
+  "observations": [
+    {
+      "observationId": "obs_751f2799cf13d9d331c680a132006a49",
+      "candidateId": "release-core-6e7db48d536d",
+      "sourceTreeSha256": "07fca8ce44477839bb22d22ae0ddef053648890faf9d0ffff78410a76c4f2d3d",
+      "humanObserved": true,
+      "freshStateAttested": true,
+      "testMarker": false,
+      "surface": "browser",
+      "startedAt": "2026-09-02T23:48:50.773Z",
+      "endedAt": "2026-09-02T23:50:14.247Z",
+      "firstScreenMs": 10000,
+      "firstActionMs": 10000,
+      "firstActionAccepted": true,
+      "combatReached": true,
+      "safeReturnReached": true,
+      "saveRestorePassed": true,
+      "backgroundRestorePassed": true,
+      "backEventApplicable": false,
+      "backEventPassed": null,
+      "outcome": "pass",
+      "attachmentSha256": "c63dec8671dc8648c2f14d0f8c1589493a8f5addf4d1276e0c2b5178aee4b911",
+      "issueIds": [
+        "issue_a44324958fd5d8c28ffcf38f20321b49"
+      ]
+    }
+  ],
+  "issues": [
+    {
+      "issueId": "issue_a44324958fd5d8c28ffcf38f20321b49",
+      "observationId": "obs_751f2799cf13d9d331c680a132006a49",
+      "severity": "P1",
+      "category": "confusion",
+      "blocking": true
+    }
+  ],
+  "actions": [
+    {
+      "observationId": "obs_751f2799cf13d9d331c680a132006a49",
+      "sequence": 1,
+      "candidateId": "release-core-6e7db48d536d",
+      "sourceTreeSha256": "07fca8ce44477839bb22d22ae0ddef053648890faf9d0ffff78410a76c4f2d3d",
+      "humanObserved": true,
+      "freshStateAttested": true,
+      "testMarker": false,
+      "region": "고요한 숲",
+      "kind": "move",
+      "accepted": true
+    }
+  ]
+}

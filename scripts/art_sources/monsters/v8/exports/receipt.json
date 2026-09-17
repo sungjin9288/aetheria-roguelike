@@ -1,0 +1,94 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "bat-swarm": "0cd3d8cdaf49e3a0092fb5d7bc92b0203a8dcbffa2bd6a8dd094bb58884756e4",
+    "cave-troll": "eef7af1d90cd7817623d1cc57fdf13a4e5b23c251e7638b95af38af78c27b643",
+    "crystal-golem": "52539fd8c69ae0c420a6c39d0c5d58ffdb00ef5a464e1a5c7abe8382d0d54a12",
+    "crystal-spirit": "f0c4efbda38544e0e9567268a97fa9b60633aae525913eacdecaa1b9aef1fe41",
+    "dark-elf": "8277564a2a9cc81effdea08a838c6fd3cbb7aabdaad6bc46ff3463079a8d1c74",
+    "ice-spirit": "4270d5208a70e45e13fb845999b09ac3a03091d7112702a0b1b4ac21b5f7a66b",
+    "mineral-centipede": "6998365f8cb4ef4d4a5ff36d4a3753d519bbc357b07435740a9d16bed85cb0a6",
+    "snowfield-giant": "a698f822c73a5ff96fed58b3c978ed398abf5cad3b465dbccba532a920692708",
+    "yeti": "44422de870ac26eaffa09e37d458bb9528619497bde8f7ad06e828458e2de799"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "selection": {
+    "bat-swarm": {
+      "backgroundSeeds": [],
+      "backgroundTone": null,
+      "master": "bat-swarm.png",
+      "sha256": "9989ed75c2c252720566991f2ab97ed0c950b80cb2aaf4033b1a41498b344697"
+    },
+    "cave-troll": {
+      "backgroundSeeds": [],
+      "backgroundTone": null,
+      "master": "cave-troll.png",
+      "sha256": "15e76ef66986b384e5e835ba0950a5146b9b675908481842e5e45f36eb5967a4"
+    },
+    "crystal-golem": {
+      "backgroundSeeds": [],
+      "backgroundTone": null,
+      "master": "crystal-golem.png",
+      "sha256": "cbdfe527e85a57382ebf4429465ded0b05875815c04fdef59727a8de0f42e014"
+    },
+    "crystal-spirit": {
+      "backgroundSeeds": [],
+      "backgroundTone": null,
+      "master": "crystal-spirit.png",
+      "sha256": "7193ae759fe60a3feb632cab6a7043f03ca49e3b8abb2a40fe6818919aac0c1c"
+    },
+    "dark-elf": {
+      "backgroundSeeds": [
+        [
+          0,
+          0
+        ]
+      ],
+      "backgroundTone": "dark",
+      "master": "dark-elf-compact.png",
+      "sha256": "ae3ce5e5936b5589c46e196471c6bdaa2f6469be91b192e7630fe4508b2aa661"
+    },
+    "ice-spirit": {
+      "backgroundSeeds": [],
+      "backgroundTone": null,
+      "master": "ice-spirit.png",
+      "sha256": "0dce251e2d066ea1605212a9396f220c3eaae5f488e420c916a54013d98c107a"
+    },
+    "mineral-centipede": {
+      "backgroundSeeds": [
+        [
+          0,
+          0
+        ],
+        [
+          982,
+          466
+        ],
+        [
+          426,
+          784
+        ],
+        [
+          311,
+          919
+        ]
+      ],
+      "backgroundTone": "light",
+      "master": "mineral-centipede.png",
+      "sha256": "c6fd3a2d400fe0865d4820507c24d97ac755d62cbb239da1f6c0dc02b9899af8"
+    },
+    "snowfield-giant": {
+      "backgroundSeeds": [],
+      "backgroundTone": null,
+      "master": "snowfield-giant.png",
+      "sha256": "f4e73ce38a948a5a16e554bcd44af7abf30de3eb09edef2fe1cc27f615466ea0"
+    },
+    "yeti": {
+      "backgroundSeeds": [],
+      "backgroundTone": null,
+      "master": "yeti.png",
+      "sha256": "76a3be86ff659d690da8e74fb0ebb5f06aeaf4ef5079286cfe3af50f90ef856c"
+    }
+  }
+}

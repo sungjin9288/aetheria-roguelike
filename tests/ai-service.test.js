@@ -232,6 +232,83 @@ test('generateStory: fetch 성공 + narrative 응답 → AI 내러티브 문자�
     });
 });
 
+test('generateStory: canonical location이 questComplete outgoing context에 포함되고 undefined를 남기지 않는다', async () => {
+    let requestBody = null;
+    await withGlobalStub({
+        localStorage: makeLocalStorageStub(),
+        fetch: async (_url, options) => {
+            requestBody = JSON.parse(options.body);
+            return {
+                ok: true,
+                json: async () => ({ success: true, data: { narrative: '퀘스트를 완수했다.' } }),
+            };
+        },
+    }, async () => {
+        const story = await AI_SERVICE.generateStory('questComplete', {
+            questTitle: '황금 왕국의 문을 열다',
+            location: '황금 왕국',
+            history: [],
+        }, 'test-uid');
+
+        assert.equal(story, '퀘스트를 완수했다.');
+    });
+
+    assert.equal(requestBody.type, 'story');
+    assert.equal(requestBody.data.location, '황금 왕국');
+    assert.match(requestBody.data.context, /황금 왕국/);
+    assert.doesNotMatch(requestBody.data.context, /undefined/);
+});
+
+test('generateStory: legacy loc caller는 canonical narrative context로 계속 처리한다', async () => {
+    let requestBody = null;
+    await withGlobalStub({
+        localStorage: makeLocalStorageStub(),
+        fetch: async (_url, options) => {
+            requestBody = JSON.parse(options.body);
+            return {
+                ok: true,
+                json: async () => ({ success: true, data: { narrative: '숲의 기록이 이어졌다.' } }),
+            };
+        },
+    }, async () => {
+        const story = await AI_SERVICE.generateStory('rest', {
+            loc: '고요한 숲',
+            history: [],
+        }, 'test-uid');
+
+        assert.equal(story, '숲의 기록이 이어졌다.');
+    });
+
+    assert.equal(requestBody.data.loc, '고요한 숲');
+    assert.match(requestBody.data.context, /고요한 숲/);
+    assert.doesNotMatch(requestBody.data.context, /undefined/);
+});
+
+test('narrative location: canonical priority and invalid input fallback agree at proxy and offline boundaries', async () => {
+    const cases = [
+        { input: { location: '황금 왕국', loc: '고요한 숲' }, expected: '황금 왕국' },
+        { input: { location: '  ', loc: '고요한 숲' }, expected: '고요한 숲' },
+        { input: {}, expected: '알 수 없음' },
+        { input: { location: '  ', loc: '' }, expected: '알 수 없음' },
+        { input: { location: 42, loc: null }, expected: '알 수 없음' },
+    ];
+    for (const { input, expected } of cases) {
+        let requestBody;
+        await withGlobalStub({
+            localStorage: makeLocalStorageStub(),
+            fetch: async (_url, options) => {
+                requestBody = JSON.parse(options.body);
+                return { ok: true, json: async () => ({ success: true, data: { narrative: '휴식을 마쳤다.' } }) };
+            },
+        }, async () => {
+            await AI_SERVICE.generateStory('rest', input, 'test-uid');
+        });
+        assert.equal(requestBody.data.context, `${expected}에서 휴식`);
+        assert.equal(AI_SERVICE.getFallback('rest', input), `${expected}에서 편안히 쉬며 생명을 회복했습니다.`);
+        assert.equal(AI_SERVICE.getFallback('encounter', { ...input, name: '슬라임' }), `${expected}의 어둠 속에서 슬라임의 기척이 나타났습니다.`);
+    }
+});
+
 test('getFallback: 지원 타입 각각 고정 템플릿 문자열을 반환하고, 미지원 타입은 기본 문구로 대체된다', () => {
     assert.match(AI_SERVICE.getFallback('levelUp', { level: 9 }), /레벨 9/);
     assert.match(AI_SERVICE.getFallback('rest', { loc: '숲' }), /숲/);

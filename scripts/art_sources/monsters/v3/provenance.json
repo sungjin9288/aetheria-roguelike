@@ -1,0 +1,109 @@
+{
+  "schemaVersion": 1,
+  "status": "candidate-not-adopted",
+  "generation": "nine separate built-in imagegen calls",
+  "promptSha256": "23d16af7bd78f2733a12c73d68eb5b04691e7ae22af4fa8f0319624af5014fcd",
+  "preimageManifestSha256": "4540e2365b08583296e0c02e0db01c188e1912ee2fe9d3eb91e381a944558b07",
+  "currentManifestUnchanged": true,
+  "entries": [
+    {
+      "name": "심연의 크라켄",
+      "key": "monster-05ad7cddbc9b",
+      "masterPath": "scripts/art_sources/monsters/v3/masters/monster-05ad7cddbc9b.png",
+      "masterSha256": "27def8b268b9c8c3929f048edb5d85748a9924f3b4c30409bffda4f44e8b8f01",
+      "previousPath": "scripts/art_sources/monsters/v3/previous/monster-05ad7cddbc9b.png",
+      "previousSha256": "52dfa133f85c16dc4086199af6b042648933664693039b932a2423f6ef4e3a37",
+      "exportPath": "scripts/art_sources/monsters/v3/exports/monster-05ad7cddbc9b.png",
+      "exportSha256": "29ba0e6b6f009b409675c89718d20faeee8a508d031bf30269bceda0fc8a1cad",
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "혈월의 뱀파이어 로드",
+      "key": "monster-17cab8794c8d",
+      "masterPath": "scripts/art_sources/monsters/v3/masters/monster-17cab8794c8d.png",
+      "masterSha256": "c749044b1020aea66ddfc2639f576434d90fa7b7544105a1e73a59672aed648d",
+      "previousPath": "scripts/art_sources/monsters/v3/previous/monster-17cab8794c8d.png",
+      "previousSha256": "ece89f3135f4ed4c7406ded27f99a2dd2637546f4a8582055193efcb1d1545fa",
+      "exportPath": "scripts/art_sources/monsters/v3/exports/monster-17cab8794c8d.png",
+      "exportSha256": "6d7485b653c225f98bb3d52300d581059c501db8d426bd90fe94107df12bdbf3",
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "거대 지렁이",
+      "key": "monster-228caa618079",
+      "masterPath": "scripts/art_sources/monsters/v3/masters/monster-228caa618079.png",
+      "masterSha256": "e6f4ecbb8562b0f62665575f4a963719c59a4450538d5ee2125e83681a6d6c19",
+      "previousPath": "scripts/art_sources/monsters/v3/previous/monster-228caa618079.png",
+      "previousSha256": "bdcc4fa0b026387a1ac399999241ecb54a5e4b1a2c9ba310e594d786de646099",
+      "exportPath": "scripts/art_sources/monsters/v3/exports/monster-228caa618079.png",
+      "exportSha256": "afa991d35110cf75da6f45f9260bf7f44f1cfe08bd95e9617c6afd2a43506601",
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "묘지기 네크론",
+      "key": "monster-386ff5484904",
+      "masterPath": "scripts/art_sources/monsters/v3/masters/monster-386ff5484904.png",
+      "masterSha256": "973a4fb4753156df08a9799773301272b7e10a2cb9b95eeb845a33ee45fb889b",
+      "previousPath": "scripts/art_sources/monsters/v3/previous/monster-386ff5484904.png",
+      "previousSha256": "0e3678a41d97f218bcc2a09b5581e801a5534e92337bd0ecd70155301912d33d",
+      "exportPath": "scripts/art_sources/monsters/v3/exports/monster-386ff5484904.png",
+      "exportSha256": "10931ab74fa35f4a1d6d527dc27c8b6403f931bd6d11c562df464474549f4998",
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "아이스 드래곤",
+      "key": "monster-474123cd699b",
+      "masterPath": "scripts/art_sources/monsters/v3/masters/monster-474123cd699b.png",
+      "masterSha256": "9dc663c309356cfd40f5c083b8994fce2377b5c48e8f90ad8545245c447c9a32",
+      "previousPath": "scripts/art_sources/monsters/v3/previous/monster-474123cd699b.png",
+      "previousSha256": "aa080202214323872e60d71b7412c890c12a2813adfd40a8bf71c242519987aa",
+      "exportPath": "scripts/art_sources/monsters/v3/exports/monster-474123cd699b.png",
+      "exportSha256": "0907f678ae6d8b5d625b1474f2b39fc261d460d4919c4f9248b967ca966a8e10",
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "빙결의 마녀",
+      "key": "monster-6ccedb57c965",
+      "masterPath": "scripts/art_sources/monsters/v3/masters/monster-6ccedb57c965.png",
+      "masterSha256": "e7e4ff38e1cd8618915747a4961648a9785042fa46c4547015f84c3e074b225c",
+      "previousPath": "scripts/art_sources/monsters/v3/previous/monster-6ccedb57c965.png",
+      "previousSha256": "022e63ea53d2d950ee369f2d501408cfebf0e3c10e17bded93d8433968aa65de",
+      "exportPath": "scripts/art_sources/monsters/v3/exports/monster-6ccedb57c965.png",
+      "exportSha256": "a1c0b0546ea81384688ee24784c8b1ae44b249ff155de429a9ed2179e1660a2b",
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "기계 장군",
+      "key": "monster-88fa34d8f196",
+      "masterPath": "scripts/art_sources/monsters/v3/masters/monster-88fa34d8f196.png",
+      "masterSha256": "3e21138d20c3baa15bcefa2e510f46eadc086bd137b7fa4a22ea0b094aecca72",
+      "previousPath": "scripts/art_sources/monsters/v3/previous/monster-88fa34d8f196.png",
+      "previousSha256": "125eb91ddc988b4f4434f705b072d236879306802c89163160591399b69571aa",
+      "exportPath": "scripts/art_sources/monsters/v3/exports/monster-88fa34d8f196.png",
+      "exportSha256": "adfd5062d1cec50bd5908774865ce7074e817d0fc6a0b8899be35117cfdf3dab",
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "마력 결정체",
+      "key": "monster-9e71859d733f",
+      "masterPath": "scripts/art_sources/monsters/v3/masters/monster-9e71859d733f.png",
+      "masterSha256": "68e9e5dc0264e7487d920004438babee41fd238addbad7100971f6a02bdde0a8",
+      "previousPath": "scripts/art_sources/monsters/v3/previous/monster-9e71859d733f.png",
+      "previousSha256": "ab5e9a0d3703ab01730b0c927622fb838909f0331587613ffd735b546e039436",
+      "exportPath": "scripts/art_sources/monsters/v3/exports/monster-9e71859d733f.png",
+      "exportSha256": "5f7156a41b0e82321f12311531862beedac03cfa43e2adb87b3ab78db2962d84",
+      "status": "candidate-not-adopted"
+    },
+    {
+      "name": "고원 그리핀",
+      "key": "monster-a9965770730f",
+      "masterPath": "scripts/art_sources/monsters/v3/masters/monster-a9965770730f.png",
+      "masterSha256": "a128c5ac5f04445be184dc0ab3d08c0a0c228f8f5b4d1d082e345463817636ec",
+      "previousPath": "scripts/art_sources/monsters/v3/previous/monster-a9965770730f.png",
+      "previousSha256": "040f7db6a9509f7f65750753f6559d04df5c7f527009e3b03b60bcdb1e719624",
+      "exportPath": "scripts/art_sources/monsters/v3/exports/monster-a9965770730f.png",
+      "exportSha256": "15ce06db6b997050cdcfc0a02b0c3fae6366f707de03a76dc91d794d8e72da39",
+      "status": "candidate-not-adopted"
+    }
+  ]
+}

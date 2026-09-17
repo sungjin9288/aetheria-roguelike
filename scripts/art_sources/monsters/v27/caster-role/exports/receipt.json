@@ -1,0 +1,23 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "ancient-mage": "6836bddfa0858a8e1433ba8f6cef55cf93fca5cefe88b5d86f0d48ca84bd4321",
+    "apocalypse-mage": "5f787b9e89c2bd79675b3e41f40bd8729d587d6cdf6e5a6e4d580e874754eb09",
+    "doomsday-herald": "0017c3aea484110338f71edaba12aca1826379d8adec309f875b4177f95aa8ff",
+    "enraged-magus": "a2e5478e1acb28d929f8619c3a2fd15713db71eddde918a3847493a8b6d587fa",
+    "flame-priest": "6c6295c70b45e34ae087e2c0f39a0b7963bc78d52bc6ed85e7b5d47bf058d1eb",
+    "trickster-mage": "a24a05c46ff84a226b5ac84a2b4fc0e36a74e28ad120aaa2466a792cce6fc8fd",
+    "void-mage": "d17d74761d7e05d387db0c8927adb540430ff7f1cb061ee8f2c8ba17a56b03d6"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "ancient-mage": "a4bd067ca884e2e49f78ba73929791b3059fb16bd016e53ff7c6fdc20ad7d83f",
+    "apocalypse-mage": "e26b82b8bf255ee275818c750764091bc4aa98be96b80cfbd6a50f4fb4af363b",
+    "doomsday-herald": "645b21f975a49b1a740a5e4524f8b5ece5887427739719684a4372d80fef0b30",
+    "enraged-magus": "5e1dd054898372bcc7196f25c3d42965bffe936437ccc96aa9236f409260d6d2",
+    "flame-priest": "7b68f92d5f21defd79300dc06f73969b7154a21843af6527313def9914370b34",
+    "trickster-mage": "2b7bef468777d590c6f0ac3619fef9f5bb61acbe0ccc4441081663faae82a997",
+    "void-mage": "c8c2e2bf79ab5dd00d3194e10d2e0ceb36e176115e75e8b41bf678fe2d326c92"
+  }
+}

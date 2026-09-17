@@ -140,7 +140,7 @@ export const createExploreActions = (deps: any, shared: any) => {
             const mapData = DB.MAPS[player.loc];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
             // 내러티브 이벤트 체인 체크 (AI 이벤트보다 우선)
-            const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress);
+            const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps);
             if (chainTrigger) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const { chain, step } = chainTrigger;

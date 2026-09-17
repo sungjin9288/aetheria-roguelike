@@ -22,6 +22,8 @@ import { scaleProgressionExpReward } from '../data/progressionProfiles';
 import { getBossSignatureDrops } from './bossSignatureHint';
 import { getSignaturePityMultiplier } from './signaturePity';
 import { resolveAbyssDailyDive } from './abyssDailyDive';
+import { activateDevourBonus } from './adventureRelicBonuses.js';
+import { calculateFullStats } from './statsCalculator.js';
 import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
 import {
     createDailyProtocol,
@@ -331,15 +333,15 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
 export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog, rng = Math.random }: any) => {
+    const activatedPlayer = activateDevourBonus(player);
+    if (activatedPlayer !== player) fullStats = calculateFullStats(activatedPlayer);
     const combatStartPlayer: any = {
-        ...player,
+        ...activatedPlayer,
         combatFlags: {
             comboCount: 0,
             deathSaveUsed: false,
             voidHeartUsed: Boolean(player.combatFlags?.voidHeartUsed),
             voidHeartArmed: Boolean(player.combatFlags?.voidHeartArmed),
-            // cycle 158: 'kill_stack_atk' (허공의 왕좌) — 전투 내 ATK 누적은 매 전투 시작 시 0으로 리셋.
-            killStackAtkBonus: 0,
             // cycle 158: 'phoenix_revive' (cycle 157) — 부활 1회는 매 전투마다 새로 사용 가능.
             phoenixUsed: false,
             // cycle 159: 'entropy_tick' / 'entropy_brand' — turnCount는 매 전투 시작 시 0으로 리셋.

@@ -59,7 +59,6 @@ const ITEM_TYPE_TO_FILTER: any = {
     cure: 'hp',
     mat: 'material',
 };
-const canEquipItem = (item: any, job: any) => !Array.isArray(item.jobs) || item.jobs.includes(job);
 
 const getItemTags = (item: any) => {
     const tags: any[] = [];
@@ -105,29 +104,29 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
         });
     }, [grouped, activeFilter]);
 
-    // 추천 장착 계산 (최고 val 기준)
+    // 지금 장착할 수 있는 upgrade 안에서만 추천 후보를 고른다.
     const getEquipPreview = useCallback((item: any) => {
         const decision = getEquipmentDecision(player, item);
         return decision ? { ...decision.diff, score: decision.score } : { atk: 0, def: 0, crit: 0, mp: 0, score: 0 };
     }, [player]);
 
-    const bestWeapon = useMemo(() =>
-        (player.inv || [])
-            .filter((i: any) => i.type === 'weapon' && canEquipItem(i, player.job))
-            .sort((a: any, b: any) => getEquipPreview(b).score - getEquipPreview(a).score)[0],
-        [player.inv, player.job, getEquipPreview]
-    );
-    const bestArmor = useMemo(() =>
-        (player.inv || [])
-            .filter((i: any) => i.type === 'armor' && canEquipItem(i, player.job))
-            .sort((a: any, b: any) => (b.val || 0) - (a.val || 0))[0],
-        [player.inv, player.job]
-    );
-
     const isEquipUpgrade = useCallback((item: any) => {
         const decision = getEquipmentDecision(player, item);
         return Boolean(decision?.equipable && decision.score > 0);
     }, [player]);
+
+    const bestWeapon = useMemo(() =>
+        (player.inv || [])
+            .filter((i: any) => i.type === 'weapon' && isEquipUpgrade(i))
+            .sort((a: any, b: any) => getEquipPreview(b).score - getEquipPreview(a).score)[0],
+        [player.inv, isEquipUpgrade, getEquipPreview]
+    );
+    const bestArmor = useMemo(() =>
+        (player.inv || [])
+            .filter((i: any) => i.type === 'armor' && isEquipUpgrade(i))
+            .sort((a: any, b: any) => (b.val || 0) - (a.val || 0))[0],
+        [player.inv, isEquipUpgrade]
+    );
 
     const confirmEnhancement = () => {
         if (!enhanceTarget || !enhancePreview?.affordable) return;
@@ -301,7 +300,6 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                     )}
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
                                     {showDetails && resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
-                                    {!canEquip && <SignalBadge tone="danger" size="sm">직업 제한</SignalBadge>}
                                     {showDetails && canEquip && Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
                                         <span
                                             data-testid={`inventory-job-affinity-${item.id || item.name}`}
@@ -327,7 +325,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                             {isCurrentEquip ? '장착 중' : decision.recommendation}
                                         </SignalBadge>
                                         <span className={`text-[10px] font-readable font-bold ${decision.primaryDelta.value > 0 ? 'text-emerald-200' : decision.primaryDelta.value < 0 ? 'text-rose-200' : 'text-slate-300/78'}`}>
-                                            {decision.primaryDelta.text}
+                                            {!decision.equipable && '가정 비교 · '}{decision.primaryDelta.text}
                                         </span>
                                         <SignalBadge tone={decision.equipable ? 'success' : 'danger'} size="sm">
                                             {decision.equipable ? '장착 가능' : '장착 불가'}

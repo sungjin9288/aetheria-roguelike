@@ -1,0 +1,2545 @@
+{
+  "$comment": "The manifest covers the canonical 229 player equipment identities and keeps exact runtime routing evidence.",
+  "version": 1,
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "styleVersion": 2,
+  "art": {
+    "width": 160,
+    "height": 160,
+    "margin": 8,
+    "assetRoot": "/assets/equipment-exact/",
+    "familyAssetRoot": "/assets/equipment-family/items/",
+    "families": {
+      "armor-boots": {
+        "runtimePath": "/assets/equipment-family/items/armor-boots.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-armor-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-armor-01.png",
+        "sourceSha256": "3ea15d0bbb7d1ffdc8657a3487bb292fa75b788d9d141e25f53cb51a9fd24f0a",
+        "exportSha256": "5a4969964722fcff80a6b5dcc31c771a3f285188eb09b39e6f9f4d0f81b66207"
+      },
+      "armor-cloak": {
+        "runtimePath": "/assets/equipment-family/items/armor-cloak.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-armor-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-armor-01.png",
+        "sourceSha256": "3ea15d0bbb7d1ffdc8657a3487bb292fa75b788d9d141e25f53cb51a9fd24f0a",
+        "exportSha256": "a50678f92d5c52787fdf2f88ac1e61dcecd09aaa1b2f91a26d8e1f45903be5d8"
+      },
+      "armor-coat": {
+        "runtimePath": "/assets/equipment-family/items/armor-coat.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-armor-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-armor-01.png",
+        "sourceSha256": "3ea15d0bbb7d1ffdc8657a3487bb292fa75b788d9d141e25f53cb51a9fd24f0a",
+        "exportSha256": "39c40f82357296cf933e37611e07fa5b33051c3b425e62ca1a0a933c088dd819"
+      },
+      "armor-leather": {
+        "runtimePath": "/assets/equipment-family/items/armor-leather.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-armor-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-armor-01.png",
+        "sourceSha256": "3ea15d0bbb7d1ffdc8657a3487bb292fa75b788d9d141e25f53cb51a9fd24f0a",
+        "exportSha256": "b7181a2b9cd4be70e679b8215ee5032c141c65d126963eed6a9dd6426563acf3"
+      },
+      "armor-plate": {
+        "runtimePath": "/assets/equipment-family/items/armor-plate.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-armor-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-armor-01.png",
+        "sourceSha256": "3ea15d0bbb7d1ffdc8657a3487bb292fa75b788d9d141e25f53cb51a9fd24f0a",
+        "exportSha256": "d91668c82cab46f280713a97be64fd867331c663321640ebcd584ad1e3ab861b"
+      },
+      "armor-robe": {
+        "runtimePath": "/assets/equipment-family/items/armor-robe.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-armor-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-armor-01.png",
+        "sourceSha256": "3ea15d0bbb7d1ffdc8657a3487bb292fa75b788d9d141e25f53cb51a9fd24f0a",
+        "exportSha256": "810feea524c1e7261e0598adbd613d91472fd6deab93131d25c97c46be7d76c8"
+      },
+      "headgear-cap": {
+        "runtimePath": "/assets/equipment-family/items/headgear-cap.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-headgear-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-headgear-01.png",
+        "sourceSha256": "fe12f0fc445a6cacb63e2c75f81a7561dddfb30bf5076fbc08d50b02d23a47fd",
+        "exportSha256": "7dfb8e642a447af29da1a8accb6d72f89a1ae9fc585797e7acd345c18e82ea96"
+      },
+      "headgear-circlet": {
+        "runtimePath": "/assets/equipment-family/items/headgear-circlet.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-headgear-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-headgear-01.png",
+        "sourceSha256": "fe12f0fc445a6cacb63e2c75f81a7561dddfb30bf5076fbc08d50b02d23a47fd",
+        "exportSha256": "2623f50dfed0c97c54e4bc8e2f1765cfdecda8772bb2a056dd1bcde1b752501e"
+      },
+      "headgear-helm": {
+        "runtimePath": "/assets/equipment-family/items/headgear-helm.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-headgear-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-headgear-01.png",
+        "sourceSha256": "fe12f0fc445a6cacb63e2c75f81a7561dddfb30bf5076fbc08d50b02d23a47fd",
+        "exportSha256": "7f330393826eb7fc3aed9fdbedc09cb147398194629c83069bf49ef04ec07220"
+      },
+      "headgear-hood": {
+        "runtimePath": "/assets/equipment-family/items/headgear-hood.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-headgear-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-headgear-01.png",
+        "sourceSha256": "fe12f0fc445a6cacb63e2c75f81a7561dddfb30bf5076fbc08d50b02d23a47fd",
+        "exportSha256": "f7db146e1ffe03e8f94d2c4e786c45f5baa5a1d884084d912d0d98f07a792099"
+      },
+      "headgear-mask": {
+        "runtimePath": "/assets/equipment-family/items/headgear-mask.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-headgear-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-headgear-01.png",
+        "sourceSha256": "fe12f0fc445a6cacb63e2c75f81a7561dddfb30bf5076fbc08d50b02d23a47fd",
+        "exportSha256": "9cc753a2da8c5a485335e17c61ee47d7027ac195761ea054fea7436150365ec5"
+      },
+      "headgear-straw-hat": {
+        "runtimePath": "/assets/equipment-family/items/headgear-straw-hat.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-headgear-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-headgear-01.png",
+        "sourceSha256": "fe12f0fc445a6cacb63e2c75f81a7561dddfb30bf5076fbc08d50b02d23a47fd",
+        "exportSha256": "f7e2c7d08d118ac52430c7cc874760eedd59214a1c27b76fc5585444ccf34b17"
+      },
+      "headgear-wizard-hat": {
+        "runtimePath": "/assets/equipment-family/items/headgear-wizard-hat.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-headgear-02",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-headgear-02.png",
+        "sourceSha256": "1fbdedea7507eb1d139f968881330e52672215dbf622b0dda2c3dbe5efdb4cbe",
+        "exportSha256": "0aafd89a4fd011310ec564ab015a63f6e66dbe4543defdcb0993d84ef8f0e2d8"
+      },
+      "offhand-book": {
+        "runtimePath": "/assets/equipment-family/items/offhand-book.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-offhand-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-offhand-01.png",
+        "sourceSha256": "5b07f1fbac409b051d0253ac5766ba8d447f5018b9eacc20d70d8de29049d26e",
+        "exportSha256": "5495206b19b5c262cd4ed7d79631d99c67eacbadec802370979af2c8d4a7c378"
+      },
+      "offhand-shield": {
+        "runtimePath": "/assets/equipment-family/items/offhand-shield.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-offhand-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-offhand-01.png",
+        "sourceSha256": "5b07f1fbac409b051d0253ac5766ba8d447f5018b9eacc20d70d8de29049d26e",
+        "exportSha256": "77eae3b07e63b733caa5ef5f59a794f35dc84a577fe6a325e8b468e0cfa028f7"
+      },
+      "weapon-bow": {
+        "runtimePath": "/assets/equipment-family/items/weapon-bow.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-weapon-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-weapon-01.png",
+        "sourceSha256": "65bd207cbe766bd8663f05610574c6f7cb1bdfaf401758a16f3ceeae6d5ca383",
+        "exportSha256": "f786e78272d072bce93ee21a1be8f9be0ae7907d7207312be1f4fc0cdd34013c"
+      },
+      "weapon-dagger": {
+        "runtimePath": "/assets/equipment-family/items/weapon-dagger.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-weapon-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-weapon-01.png",
+        "sourceSha256": "65bd207cbe766bd8663f05610574c6f7cb1bdfaf401758a16f3ceeae6d5ca383",
+        "exportSha256": "b67a261637ca97d47318e874db79a300338ca1781aebca49ca1390d77af58c3c"
+      },
+      "weapon-heavy": {
+        "runtimePath": "/assets/equipment-family/items/weapon-heavy.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-weapon-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-weapon-01.png",
+        "sourceSha256": "65bd207cbe766bd8663f05610574c6f7cb1bdfaf401758a16f3ceeae6d5ca383",
+        "exportSha256": "d0b2c1fb51a144f985fa181ec96dd11595b3cdb601fba47734e0aede0786f70e"
+      },
+      "weapon-lance": {
+        "runtimePath": "/assets/equipment-family/items/weapon-lance.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-weapon-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-weapon-01.png",
+        "sourceSha256": "65bd207cbe766bd8663f05610574c6f7cb1bdfaf401758a16f3ceeae6d5ca383",
+        "exportSha256": "b486f948f22ccc998af659f56f0e1793779a7465fec95b135967866883a356f8"
+      },
+      "weapon-staff": {
+        "runtimePath": "/assets/equipment-family/items/weapon-staff.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-weapon-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-weapon-01.png",
+        "sourceSha256": "65bd207cbe766bd8663f05610574c6f7cb1bdfaf401758a16f3ceeae6d5ca383",
+        "exportSha256": "1abce4a61cbfdeb86c99d26c9b76277482a6568ee783cdb39c7a50535bc3fbdf"
+      },
+      "weapon-sword": {
+        "runtimePath": "/assets/equipment-family/items/weapon-sword.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-weapon-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-weapon-01.png",
+        "sourceSha256": "65bd207cbe766bd8663f05610574c6f7cb1bdfaf401758a16f3ceeae6d5ca383",
+        "exportSha256": "4b2298a7acb74551e9fc34296a7b762f072ec713c6edc1e3166b64f18d1b9027"
+      },
+      "weapon-whip": {
+        "runtimePath": "/assets/equipment-family/items/weapon-whip.png",
+        "styleVersion": 2,
+        "batchId": "family-exemplars-weapon-02",
+        "sourcePath": "scripts/art_sources/equipment/v2/family-exemplars/family-exemplars-weapon-02.png",
+        "sourceSha256": "6428681e8ed7e74b8fc9b4296078054fddee547fe48f14c7445ac405529908c2",
+        "exportSha256": "7b1181bccc5606456f9fdb08a4ca7ba44a3b2d8b7e3b2fd3615f00b84fb50dcb"
+      }
+    },
+    "signatureOverlays": {
+      "암흑 군주의 망토": {
+        "styleVersion": 2,
+        "familyKey": "armor-cloak",
+        "batchId": "signature-mythic-armor-cloak-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-cloak-01-overlay.png",
+        "sourceSha256": "46161545016f9c6468c1de86294e1d34add12f24e5796778d879a1d08710f678",
+        "exportSha256": "ae3a8491124165d24b2f0ce0ba2b42287cb9b0e0e07066fc3bd43aa9199af62d",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-armor-dark-lord-cloak.png"
+      },
+      "광기의 갑주": {
+        "styleVersion": 2,
+        "familyKey": "armor-plate",
+        "batchId": "signature-mythic-armor-plate-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-plate-01-overlay.png",
+        "sourceSha256": "0c3b08b18114f8cc59a97814a83d2bab41c7231d14a6734015ef0e3a6c188ace",
+        "exportSha256": "5f42489bd79ea63fd33023fad17e035dfc0bb6dde6c93266235e18054185248e",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-armor-mad-armor.png"
+      },
+      "드래곤로드 갑주": {
+        "styleVersion": 2,
+        "familyKey": "armor-plate",
+        "batchId": "signature-mythic-armor-plate-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-plate-01-overlay.png",
+        "sourceSha256": "0c3b08b18114f8cc59a97814a83d2bab41c7231d14a6734015ef0e3a6c188ace",
+        "exportSha256": "03682c44dbaf5650cb4cf63c6adcaae21444dea33c60bb67bdea1a7b389f3824",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-armor-dragon-lord.png"
+      },
+      "심해의 수호복": {
+        "styleVersion": 2,
+        "familyKey": "armor-plate",
+        "batchId": "signature-mythic-armor-plate-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-plate-01-overlay.png",
+        "sourceSha256": "0c3b08b18114f8cc59a97814a83d2bab41c7231d14a6734015ef0e3a6c188ace",
+        "exportSha256": "79d667cfce90754720efe705ae6e3ef1438eac5d70a1d0d551f84659b5c82554",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-armor-abyssal-guardian.png"
+      },
+      "혼돈의 갑주": {
+        "styleVersion": 2,
+        "familyKey": "armor-plate",
+        "batchId": "signature-mythic-armor-plate-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-plate-01-overlay.png",
+        "sourceSha256": "0c3b08b18114f8cc59a97814a83d2bab41c7231d14a6734015ef0e3a6c188ace",
+        "exportSha256": "def4d4a0ff403ff721e4abbc333ed4458e811b48bf14ec043dd0e96bcf1cbec5",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-armor-chaos-armor.png"
+      },
+      "세계수의 로브": {
+        "styleVersion": 2,
+        "familyKey": "armor-robe",
+        "batchId": "signature-mythic-armor-robe-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-robe-01-overlay.png",
+        "sourceSha256": "40d748fb74db434a60eba2b8d972f399e4ab2bf721084607f225817f996ca6e0",
+        "exportSha256": "0203840155114a0efcfaf278c59c7759305bea95ba91af39a121b8e2b96e199c",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-armor-worldtree-robe.png"
+      },
+      "에테르 그리모어": {
+        "styleVersion": 2,
+        "familyKey": "offhand-book",
+        "batchId": "signature-mythic-offhand-book-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-offhand-book-01-overlay.png",
+        "sourceSha256": "0229b1a29a07f80b41b74fa953ad7a3786f134bd49c47792cb47fd18c0559cff",
+        "exportSha256": "5911ebfa0338a6e2902b5fab760fe5e18ed88160965276a541ee99a06deb7620",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-shield-ether-grimoire.png"
+      },
+      "천공 성전": {
+        "styleVersion": 2,
+        "familyKey": "offhand-book",
+        "batchId": "signature-mythic-offhand-book-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-offhand-book-01-overlay.png",
+        "sourceSha256": "0229b1a29a07f80b41b74fa953ad7a3786f134bd49c47792cb47fd18c0559cff",
+        "exportSha256": "df5cc27501fc397572078cab6f7f3d37a7f6ed64ab85fabfac6bbbb0440d732b",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-shield-celestial-tome.png"
+      },
+      "차원 방패 이지스": {
+        "styleVersion": 2,
+        "familyKey": "offhand-shield",
+        "batchId": "signature-mythic-offhand-shield-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-offhand-shield-01-overlay.png",
+        "sourceSha256": "e9e8078501538a9241ade2af6931c68934e455608c9e16297725b1802c2a4588",
+        "exportSha256": "138989237edabd2615b16455baa71dae26a3685c7c13f2479ffdd0698f3ebc8a",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-shield-aegis-dimension.png"
+      },
+      "바람의 궁극": {
+        "styleVersion": 2,
+        "familyKey": "weapon-bow",
+        "batchId": "signature-mythic-weapon-bow-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-bow-01-overlay.png",
+        "sourceSha256": "f616ef1a109fc04bca85c3a66a54602f220b831d8a971fe4d4bc302442d7c149",
+        "exportSha256": "5ec6c2b4c2330e0b656e2559137daeedc1e41a77c8e2495e79620e397449d042",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-wind-ultimate-bow.png"
+      },
+      "그림자 절단기": {
+        "styleVersion": 2,
+        "familyKey": "weapon-dagger",
+        "batchId": "signature-mythic-weapon-dagger-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-dagger-01-overlay.png",
+        "sourceSha256": "0ba5a8bc22045c686b621cc991bd59776b8af14e5d1997bccbd06d5a67b37e9f",
+        "exportSha256": "9e49591c532a200a1f0612e078802648a4c575c8c0480296e5e18edac5005e8c",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-shadow-cutter.png"
+      },
+      "영혼 절단자": {
+        "styleVersion": 2,
+        "familyKey": "weapon-dagger",
+        "batchId": "signature-mythic-weapon-dagger-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-dagger-01-overlay.png",
+        "sourceSha256": "0ba5a8bc22045c686b621cc991bd59776b8af14e5d1997bccbd06d5a67b37e9f",
+        "exportSha256": "bbbfa928b5e769be217f3745305ead46a4ccfb858b8d6e64b0b20ff9dfe6460c",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-soul-reaper.png"
+      },
+      "마왕의 대낫": {
+        "styleVersion": 2,
+        "familyKey": "weapon-lance",
+        "batchId": "signature-mythic-weapon-lance-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-lance-01-overlay.png",
+        "sourceSha256": "7a2dad71439e4c990fb74e85299600e6f456574fb018af91d37eaca619e3b4c8",
+        "exportSha256": "3886ecc34b1f524455fcb2edbcd7efa478136a453c870137465b7bd45d124e0f",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-demon-scythe.png"
+      },
+      "성스러운 창": {
+        "styleVersion": 2,
+        "familyKey": "weapon-lance",
+        "batchId": "signature-mythic-weapon-lance-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-lance-01-overlay.png",
+        "sourceSha256": "7a2dad71439e4c990fb74e85299600e6f456574fb018af91d37eaca619e3b4c8",
+        "exportSha256": "45efcdea95b420d135272add8f8719ebc8803dd516ff53c0bcece9db885574b4",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-holy-spear.png"
+      },
+      "차원 마왕의 낫": {
+        "styleVersion": 2,
+        "familyKey": "weapon-lance",
+        "batchId": "signature-mythic-weapon-lance-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-lance-01-overlay.png",
+        "sourceSha256": "7a2dad71439e4c990fb74e85299600e6f456574fb018af91d37eaca619e3b4c8",
+        "exportSha256": "ec0f4848ecaa6440eb8850f8b5766cb48a4dfcf16a19291c7d5932c01e25573e",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-dimension-scythe.png"
+      },
+      "세계수의 지팡이": {
+        "styleVersion": 2,
+        "familyKey": "weapon-staff",
+        "batchId": "signature-mythic-weapon-staff-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-staff-01-overlay.png",
+        "sourceSha256": "ca1d90ab34d4718b81a57716bbbe2e70110d10242ebfef1ce5f7eeea52023900",
+        "exportSha256": "98f5ae9d6799de90c75a179b4ec1a34396821c1345e7b9a2515dc1440ef853ff",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-worldtree-staff.png"
+      },
+      "신전 도시의 지팡이": {
+        "styleVersion": 2,
+        "familyKey": "weapon-staff",
+        "batchId": "signature-mythic-weapon-staff-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-staff-01-overlay.png",
+        "sourceSha256": "ca1d90ab34d4718b81a57716bbbe2e70110d10242ebfef1ce5f7eeea52023900",
+        "exportSha256": "21386fa89cb8c10a8c74088697d121b3e2ba529216ecc6bda1249dc4f1d0f6a1",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-temple-city-staff.png"
+      },
+      "천벌의 지팡이": {
+        "styleVersion": 2,
+        "familyKey": "weapon-staff",
+        "batchId": "signature-mythic-weapon-staff-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-staff-01-overlay.png",
+        "sourceSha256": "ca1d90ab34d4718b81a57716bbbe2e70110d10242ebfef1ce5f7eeea52023900",
+        "exportSha256": "d8eabb005da76e98d78e1f00ac23250a4d8fa2809f6330910a024699f7f0d4c8",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-divine-wrath-staff.png"
+      },
+      "대지의 심판": {
+        "styleVersion": 2,
+        "familyKey": "weapon-sword",
+        "batchId": "signature-mythic-weapon-sword-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
+        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "exportSha256": "4a6665f3e02c764aea8bbed70477205cfc06f08b221f1b5729a59ba105936bd7",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-earth-verdict.png"
+      },
+      "라그나로크": {
+        "styleVersion": 2,
+        "familyKey": "weapon-sword",
+        "batchId": "signature-mythic-weapon-sword-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
+        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "exportSha256": "3758d504cb17a1b4316e0c0395fcb7ab49068d609b18ec94c69bd76b51d18e32",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-ragnarok.png"
+      },
+      "빙결의 왕관검": {
+        "styleVersion": 2,
+        "familyKey": "weapon-sword",
+        "batchId": "signature-mythic-weapon-sword-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
+        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "exportSha256": "0652338d7b08841a6d763cb1ca5d444199e522d8cfbc5da6ccee2f5d13b53a8e",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-frost-crown-sword.png"
+      },
+      "성검 에테르니아": {
+        "styleVersion": 2,
+        "familyKey": "weapon-sword",
+        "batchId": "signature-mythic-weapon-sword-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
+        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "exportSha256": "1798d5aa47e9f4096bf5e8f2bcf00e66b62134c547c21dbe8ed8298a4b53a012",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-ethernia.png"
+      },
+      "세계수의 검": {
+        "styleVersion": 2,
+        "familyKey": "weapon-sword",
+        "batchId": "signature-mythic-weapon-sword-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
+        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "exportSha256": "8d592bbe0741d8fa384fedcc774658515fd736e0e17fd71af95a216322e775a1",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-worldtree-sword.png"
+      },
+      "에테르 거인의 대검": {
+        "styleVersion": 2,
+        "familyKey": "weapon-sword",
+        "batchId": "signature-mythic-weapon-sword-01",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
+        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "exportSha256": "3201b8c35e87e05464b55e2db8f9de1d4468f0c8ea7650b8905761b7c4fc63b8",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-ether-giant-greatsword.png"
+      },
+      "용의 화염": {
+        "styleVersion": 2,
+        "familyKey": "weapon-sword",
+        "batchId": "signature-mythic-weapon-sword-02",
+        "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-02-overlay.png",
+        "sourceSha256": "4a64b6b17747c8bd0dc84cf1a479ffae3943b384442df50671a34c74c4ad9303",
+        "exportSha256": "b939d0afda8f925f03c896afa525f4f128ff98337510e0a21601596ad8a7ca34",
+        "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-dragon-flame.png"
+      }
+    },
+    "signatureOverlay": {
+      "width": 72,
+      "height": 72,
+      "margin": 4,
+      "assetRoot": "/assets/equipment-wearable-exact/"
+    }
+  },
+  "pipeline": {
+    "version": 1,
+    "catalog": {
+      "rowFields": [
+        "name",
+        "type",
+        "tier",
+        "elem",
+        "familyKey",
+        "runtimePath",
+        "cohort"
+      ],
+      "sort": "unicode-code-point",
+      "rowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed"
+    },
+    "batch": {
+      "grid": {
+        "columns": 3,
+        "rows": 2,
+        "cellOrder": [
+          "top-left",
+          "top-center",
+          "top-right",
+          "bottom-left",
+          "bottom-center",
+          "bottom-right"
+        ]
+      },
+      "identityDeclaration": "identityNames"
+    },
+    "provenance": {
+      "version": 1,
+      "sourceRoot": "scripts/art_sources/equipment/v2",
+      "recordPath": "docs/evidence/art/equipment-provenance.json",
+      "cohorts": {
+        "weapon-core": {
+          "generationReviewSha256": "8b2c3cc269125725b86e8d96b7892e56f41e914658012e442528cd8c4db592ee"
+        },
+        "weapon-ranged-magic": {
+          "generationReviewSha256": "63b6f4b98ec070ba4b36d8478e54a957e32227e482259d4e6b1691c3e7bac208"
+        },
+        "offhand-headgear": {
+          "generationReviewSha256": "7793e60093df928d2a3993b3afc4b278a6312bff4fa6a4f4e96aac6a0d655d6d"
+        },
+        "armor": {
+          "generationReviewSha256": "9633a8cc936d2907aa9947110271eca114dfcbd981ccaa9a7c495c5c5f47e6e5"
+        },
+        "signature-mythic": {
+          "generationReviewSha256": "6661866d57f350682def6642968d71ee9bcda807c85b1d52af524579399ef116"
+        }
+      },
+      "familyExemplars": {
+        "generationReviewSha256": "62be8e3f4e19b39a65b1d90eafdbc976a913ace9982adc4e1fc2f714b7e4c577"
+      }
+    }
+  },
+  "entries": {
+    "가죽 갑옷": "auto/auto-bd28001bebfa",
+    "가죽 장화": "auto/auto-d292a43f2b89",
+    "가죽 조끼": "auto/auto-f293406dda29",
+    "강철 롱소드": "auto/auto-e1d7dee4462c",
+    "강화가죽갑옷": "auto/auto-6dd186c9980e",
+    "견습 주문서": "auto/auto-18d5eb52ee3e",
+    "견습생의 단검": "auto/auto-d1c12f6f90b9",
+    "고대 마탑 스태프": "auto/auto-b8132cd23fa2",
+    "고대 마탑 예복": "auto/auto-923eea9745cf",
+    "공허의 대검": "auto/auto-251a338b0ba5",
+    "공허의 외투": "auto/auto-7aedd333f3a7",
+    "공허의 전투 외투": "auto/auto-471edd7ca347",
+    "광기의 갑주": "signature-armor-mad-armor",
+    "광기의 대갑주": "auto/auto-5ba94275be04",
+    "광기의 도끼": "auto/auto-8c3d7a804819",
+    "광전사의 도끼": "auto/auto-6ed99a36a622",
+    "광전사의 조끼": "auto/auto-f330f21e336a",
+    "균열 외피갑옷": "auto/auto-12ac317d8b8e",
+    "균열 차단 방패": "auto/auto-a65382954675",
+    "균열의 날": "auto/auto-f9d11e5d1637",
+    "그림자 망토": "auto/auto-6a3d22c34747",
+    "그림자 절단기": "signature-weapon-shadow-cutter",
+    "기계식 갑옷": "auto/auto-89386cf1316a",
+    "기계식 레이피어": "auto/auto-a17c1ffc7cd4",
+    "기사의 검": "auto/auto-4edcce577d36",
+    "기사의 흉갑": "auto/auto-07639734e68d",
+    "나무곤봉": "auto/auto-2c0caf97cc68",
+    "나무지팡이": "auto/auto-c8326da35aa4",
+    "나뭇가지 활": "auto/auto-1acb9448ba0d",
+    "낡은 철퇴": "auto/auto-70de6e67343f",
+    "냉기 방어복": "auto/auto-9a96452fb468",
+    "냉기 방패": "auto/auto-f7d6e79316ae",
+    "녹슨 단검": "auto/auto-12f3fd7fbfb6",
+    "녹슨 도끼": "auto/auto-1a757e6a6cd3",
+    "농부의 포크": "auto/auto-aeefaa514270",
+    "단궁": "auto/auto-63213b4d6a57",
+    "대마법사로브": "auto/auto-e1b5ad823e67",
+    "대지 방패": "auto/auto-45df1ce786ed",
+    "대지의 메이스": "auto/auto-cc9dcab53ba5",
+    "대지의 심판": "signature-weapon-earth-verdict",
+    "대지의 지팡이": "auto/auto-ae64afc35c68",
+    "도적 가죽갑옷": "auto/auto-17fb1c907b35",
+    "도적의 두건": "auto/auto-53fb3aa395de",
+    "독사의 송곳니": "auto/auto-4d5063e9d334",
+    "독아 채찍": "auto/auto-879d5c28d6b5",
+    "독안개 망토": "auto/auto-8c4783289cb6",
+    "독침 단검": "auto/auto-8842c4bfd07b",
+    "돌망치": "auto/auto-6482ed7d2e82",
+    "드래곤 임페리얼": "auto/auto-ff11604925f8",
+    "드래곤로드 갑주": "signature-armor-dragon-lord",
+    "드워프 흉갑": "auto/auto-654289f46c21",
+    "드워프의 망치": "auto/auto-2fa172484dc2",
+    "라그나로크": "signature-weapon-ragnarok",
+    "레인저 외투": "auto/auto-28a67a4cd0e2",
+    "롱소드": "auto/auto-a62da3020160",
+    "룬 마도서": "auto/auto-0ecdac0b9532",
+    "마녀의 지팡이": "auto/auto-ec9651c6ec57",
+    "마력천로브": "auto/auto-6164cb5fb893",
+    "마법 모자": "auto/auto-087b2fde8f7c",
+    "마법로브": "auto/auto-0c8457d4447a",
+    "마법봉": "auto/auto-adb5a87cda71",
+    "마법지팡이": "auto/auto-1cff983f5fef",
+    "마왕의 대낫": "signature-weapon-demon-scythe",
+    "목재 방패": "auto/auto-dad1d9c979c8",
+    "미스릴 갑옷": "auto/auto-3a7ff1fb451d",
+    "미스릴검": "auto/auto-712653558d1c",
+    "바람의 궁극": "signature-weapon-wind-ultimate-bow",
+    "바람의 외투": "auto/auto-84731b254f80",
+    "바람의 활": "auto/auto-1a5f2419d7aa",
+    "번개 지팡이": "auto/auto-e6d6d33d1595",
+    "별빛 경갑": "auto/auto-4bdb0e1372c8",
+    "병사 갑옷": "auto/auto-1e3c11b5a29c",
+    "병사의 창": "auto/auto-a42f4a105278",
+    "복합궁": "auto/auto-22a09d3534e6",
+    "불사조 흉갑": "auto/auto-b8f5a16d21f1",
+    "불사조의 활": "auto/auto-25ab45d2596e",
+    "빙결 장궁": "auto/auto-7749616e12ab",
+    "빙결 지팡이": "auto/auto-81d619f64560",
+    "빙결의 갑주": "auto/auto-e66563877252",
+    "빙결의 왕관검": "signature-weapon-frost-crown-sword",
+    "빙원의 장창": "auto/auto-b124f0959d47",
+    "빙하의 지팡이": "auto/auto-b01fa5e6bc3b",
+    "빙화 경갑": "auto/auto-63ece76c6105",
+    "뼈 갑옷": "auto/auto-a98066f61448",
+    "뼈 단검": "auto/auto-d96e1176c32d",
+    "사냥꾼 망토": "auto/auto-656ea9a9dea9",
+    "사냥꾼의 외투": "auto/auto-ff0852c0bdd4",
+    "사냥꾼의 장궁": "auto/auto-424aa241a9e6",
+    "사냥꾼의 활": "auto/auto-8a4a78fe557a",
+    "사냥칼": "auto/auto-994f11957368",
+    "사막의 시미터": "auto/auto-29eb8ffc5ac3",
+    "사슬 갑옷": "auto/auto-b9a7c1700ee3",
+    "상급 폭풍 로브": "auto/auto-a296c98aca88",
+    "서리칼날": "auto/auto-8de568bd4ccf",
+    "설원 갑주": "auto/auto-f90cb89fae84",
+    "성검 에테르니아": "signature-weapon-ethernia",
+    "성광 방벽": "auto/auto-82a80489862b",
+    "성기사의 갑주": "auto/auto-7136ce54a797",
+    "성기사의 검": "auto/auto-1587374b9be8",
+    "성수 단검": "auto/auto-e3a2ac762dd8",
+    "성수 로브": "auto/auto-f8be5076c3d9",
+    "성스러운 창": "signature-weapon-holy-spear",
+    "성운 지팡이": "auto/auto-49fa66b8b959",
+    "세계수 갑주": "auto/auto-572733d86ead",
+    "세계수 방패": "auto/auto-2bfa87ea75ee",
+    "세계수 뿌리 갑옷": "auto/auto-adfc8b26f381",
+    "세계수 절멸창": "auto/auto-842645e5831a",
+    "세계수의 검": "signature-weapon-worldtree-sword",
+    "세계수의 로브": "signature-armor-worldtree-robe",
+    "세계수의 지팡이": "signature-weapon-worldtree-staff",
+    "세계의 방패": "auto/auto-00330b0c4f69",
+    "세이지 로드": "auto/auto-31885beb700c",
+    "수련복": "auto/auto-e5e86573ace6",
+    "수련생 도복": "auto/auto-64cdb8f1ac4c",
+    "수련생 로브": "auto/auto-db46b6ef1d39",
+    "수련생의 검": "auto/auto-41877b74c6fa",
+    "수정 갑옷": "auto/auto-71508942572c",
+    "수정 완드": "auto/auto-20d567980add",
+    "수정 창": "auto/auto-6cc4f9f4d087",
+    "수호자의 방패": "auto/auto-e288fa11dc06",
+    "시간 파편 소드": "auto/auto-80015aed3005",
+    "신전 도시의 성의": "auto/auto-a9ebb2b6a9c7",
+    "신전 도시의 지팡이": "signature-weapon-temple-city-staff",
+    "신전 제관 예복": "auto/auto-b547a0635ab3",
+    "심연 잠수복": "auto/auto-4417a78e970f",
+    "심연 파쇄창": "auto/auto-fc7d43c53641",
+    "심연의 마도서": "auto/auto-3215fc4ebfe6",
+    "심판자의 검": "auto/auto-ff3c57933ce4",
+    "심해 외투": "auto/auto-49097a0a179c",
+    "심해의 수호복": "signature-armor-abyssal-guardian",
+    "심해의 창": "auto/auto-5b981e47b80c",
+    "쌍두 마도서": "auto/auto-9f7c5b552271",
+    "쌍칼": "auto/auto-d14c8c08f691",
+    "아크스태프": "auto/auto-fdf53e96ccd4",
+    "암살의 표창": "auto/auto-18fe01a70b57",
+    "암살자 장갑": "auto/auto-aacf9897ccd0",
+    "암살자의 단검": "auto/auto-0636274ff350",
+    "암살자의 야복": "auto/auto-8f52a96a52b5",
+    "암영 망토": "auto/auto-3e5264e98c9b",
+    "암흑 군주의 망토": "signature-armor-dark-lord-cloak",
+    "암흑 단검": "auto/auto-7338e701d345",
+    "암흑 로브": "auto/auto-7142cd8579e3",
+    "암흑의 대검": "auto/auto-4473919467f6",
+    "양손검": "auto/auto-faf398318db3",
+    "어둠 감옥 갑주": "auto/auto-48daaeb8d985",
+    "어둠 감옥 단검": "auto/auto-e78cd4490f2c",
+    "어둠 방패": "auto/auto-f116975c4019",
+    "어둠의 망토": "auto/auto-8ce0d098f7f1",
+    "어둠의 왕 갑주": "auto/auto-ae6099ef374b",
+    "어둠의 팔치온": "auto/auto-de012dfa9c16",
+    "얼음 지팡이": "auto/auto-04392b5132cd",
+    "에테르 갑옷": "auto/auto-5fdc8681e154",
+    "에테르 거인의 대검": "signature-weapon-ether-giant-greatsword",
+    "에테르 검": "auto/auto-8cee767ee6ab",
+    "에테르 군주 로브": "auto/auto-464261153d00",
+    "에테르 그리모어": "signature-shield-ether-grimoire",
+    "에테르 로브 오브 아포칼립스": "auto/auto-d8e9564f5f3c",
+    "에테르 세이버": "auto/auto-79d434bacd61",
+    "에테르 심판궁": "auto/auto-9d8887283ab4",
+    "에테르 전투복": "auto/auto-fc8a9bd31773",
+    "에테르 플럭스 로드": "auto/auto-ad0c43658553",
+    "엘프의 갑옷": "auto/auto-b8028e50b423",
+    "엘프의활": "auto/auto-2597c45a69fa",
+    "여행자 튜닉": "auto/auto-2e394a311182",
+    "영겁의 세이버": "auto/auto-65243ae13fcf",
+    "영혼 절단자": "signature-weapon-soul-reaper",
+    "용비늘 갑주": "auto/auto-8e31f3cb6492",
+    "용비늘갑옷": "auto/auto-181a9b03291e",
+    "용살자의창": "auto/auto-5534b9c2d7a8",
+    "용아 단검": "auto/auto-4e1e50c86bcc",
+    "용암 대검": "auto/auto-bf26ba4dcfab",
+    "용암 판금갑": "auto/auto-99c8c681ea28",
+    "용의 화염": "signature-weapon-dragon-flame",
+    "원시의 이지스": "auto/auto-a39b8b0ebf0f",
+    "원시의 전투갑주": "auto/auto-f82a912587f7",
+    "유성 완드": "auto/auto-6f9350599156",
+    "은빛 로브": "auto/auto-b9cd0d0bcaf4",
+    "자연 방패": "auto/auto-bfbb8191807a",
+    "전설의 사냥꾼 외투": "auto/auto-b66b779b949d",
+    "전투도끼": "auto/auto-931db88d2baa",
+    "정령의 로브": "auto/auto-0cc44f6d625d",
+    "정령의 지팡이": "auto/auto-6fe82208ff69",
+    "정밀 사격복": "auto/auto-fda4ff543c1c",
+    "정예병의 창": "auto/auto-c42edcb54fc4",
+    "죽음의 낫": "auto/auto-c8ef29d55493",
+    "질풍의 단검": "auto/auto-8c4c87f1786d",
+    "짚 모자": "auto/auto-5ef0e48c5b7e",
+    "차원 갑주": "auto/auto-09fa71ce3217",
+    "차원 균열 지팡이": "auto/auto-72c24c469127",
+    "차원 마왕의 낫": "signature-weapon-dimension-scythe",
+    "차원 방패 이지스": "signature-shield-aegis-dimension",
+    "차원 붕괴창": "auto/auto-ea524ba771cb",
+    "차원 사냥꾼 슈트": "auto/auto-bbc1e9dca806",
+    "차원의 로브": "auto/auto-498560c203e7",
+    "차원절단자": "auto/auto-ce9faeed673f",
+    "천 로브": "auto/auto-7045919e23d0",
+    "천공 성전": "signature-shield-celestial-tome",
+    "천공의 갑주": "auto/auto-fe84cb1f624c",
+    "천공의 활": "auto/auto-28800bd38fa6",
+    "천벌의 지팡이": "signature-weapon-divine-wrath-staff",
+    "천상의 갑옷": "auto/auto-3c4db2c11f50",
+    "천상의갑주": "auto/auto-a3ddd653381f",
+    "철제 방패": "auto/auto-412458001e61",
+    "철퇴장": "auto/auto-559770dc1710",
+    "청해 단검": "auto/auto-dcfd06b794ac",
+    "축복받은 갑옷": "auto/auto-35e7916cc62f",
+    "타락 기사의 검": "auto/auto-a29847b020f2",
+    "타이탄 해머": "auto/auto-6cf88873011d",
+    "투척용 단검": "auto/auto-befa10bbace0",
+    "파멸의 검": "auto/auto-79b196ebcb36",
+    "판금갑옷": "auto/auto-f300e0d7e5d5",
+    "폭풍 로브": "auto/auto-a4bc2ae5a97a",
+    "폭풍 스태프": "auto/auto-7235edcdd869",
+    "폭풍의 창": "auto/auto-af4db2f9aa40",
+    "허공의 지팡이": "auto/auto-17a299e101f7",
+    "현자의 서판": "auto/auto-065c659a4d9a",
+    "현자의 예복": "auto/auto-c77410b15728",
+    "호신용 지팡이": "auto/auto-c968bece9913",
+    "혼돈 절멸기": "auto/auto-e9ece94f2f24",
+    "혼돈의 갑주": "signature-armor-chaos-armor",
+    "혼돈의 로드": "auto/auto-9fb4f0b3e01c",
+    "혼돈의 지팡이": "auto/auto-538ca1897068",
+    "화염 방어복": "auto/auto-ff8b6df40e8e",
+    "화염 방패": "auto/auto-7dd4904c94a3",
+    "화염 사원 로브": "auto/auto-a200f6daed61",
+    "화염 사원의 검": "auto/auto-f2f5dfecb2d7",
+    "화염술사 로브": "auto/auto-49f60f9d1b54",
+    "화염의 지팡이": "auto/auto-767b6916c154",
+    "흑요석단검": "auto/auto-c1f6032fcdc8"
+  },
+  "artwork": {
+    "강철 롱소드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "3f664333949f5bce522dc9fbb1053a10ed4187401424577791ecc7ad7ddf953f"
+    },
+    "기계식 레이피어": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "dfac38d198e00a19ddf177e18098b800167c742bd291fd4af4275d8763ea2f90"
+    },
+    "기사의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "1d4f82f33b15a6c1d7ee2e516be3b944560bf93106e93dcf2894d34136a5b357"
+    },
+    "농부의 포크": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "7847aefeb3256fd7276789b89fe81de244f49d2a1ba9a09af4a6322459f1daab"
+    },
+    "롱소드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-01.png",
+      "sourceSha256": "af1ba7ae8ab0ee654fb5408aac4da5696c4ad94bb36994a6483d5316ee4a07a4",
+      "exportSha256": "17f2eb0d25e44b281e61a8abe20d942d265d4b1a1ca755b5077ab71a217de302"
+    },
+    "미스릴검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "4ef8f6fa2658a0d6eb0475411c113ace6b13e4f6ee6d37875bca2a7005950dc3"
+    },
+    "사냥칼": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "ba4d926c0f7ee618d28ff660fc42a2ea84aaff3dc5e1e7d97370e09c4f36e3ac"
+    },
+    "사막의 시미터": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "34ac704446a355e320bf849fbf5641f3e1710ad3bedea68fadeb141219046227"
+    },
+    "수련생의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "f474930712dca0ff2b686b2c8aaaeb071ded3e5bac0a79a4c98ce8282137d99a"
+    },
+    "양손검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-02.png",
+      "sourceSha256": "536c91828d4f2a7cf7356db8c7ee45d8d0fa151dcbf88ce6066f2f5bc784353f",
+      "exportSha256": "e980dd910b3bf12bf2d09d62208168cccf39dea918c80135dc7e34786beba8d8"
+    },
+    "어둠의 팔치온": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-03.png",
+      "sourceSha256": "9c64020a0bf39f32dd29fd727f56699fac86b3aeae273d03d6ff09daedb04d25",
+      "exportSha256": "adcb8615041895bbfd4508dac1430955d51d9df4bc7e4aa78dbf7781e1c66b69"
+    },
+    "에테르 세이버": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-03.png",
+      "sourceSha256": "9c64020a0bf39f32dd29fd727f56699fac86b3aeae273d03d6ff09daedb04d25",
+      "exportSha256": "e72897d8d2fc799b07b3932ded907e96cdb288ba870a62160d891d79ee839435"
+    },
+    "영겁의 세이버": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-03.png",
+      "sourceSha256": "9c64020a0bf39f32dd29fd727f56699fac86b3aeae273d03d6ff09daedb04d25",
+      "exportSha256": "cae3c14a16a2ec074b39627073bdd1600cf97368948a1c84fa7a42db14ee09bf"
+    },
+    "견습생의 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "46712c149541d8a174903a6b6325f924a6c44858ac8d5202a12417b8e3497495"
+    },
+    "녹슨 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "42b271a913fbe795e1edfcdc9b5fd6d9eab306bd7f34a7b6c266abd5cf8c3085"
+    },
+    "독사의 송곳니": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "441667532b8a0ee32f20f5e41035ef45c417f00d0896db2969eb36bbb6f9d955"
+    },
+    "독아 채찍": {
+      "styleVersion": 2,
+      "familyKey": "weapon-whip",
+      "batchId": "weapon-ranged-magic-whip-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-whip-01.png",
+      "sourceSha256": "dfb90a862c613620da0ace227b62442a389b6d81677cb117f530d55e0fbbfba7",
+      "exportSha256": "8e5f08fd39918c4f14e74893a12bcbf193c51a3a702f904dfd1352b736328acc"
+    },
+    "독침 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "faf2d28bacb8aa64367b95ab5f02d0ecbfb064c1d6210667b269a7f41fb80d23"
+    },
+    "뼈 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-01.png",
+      "sourceSha256": "215fd8d651e895e208b47ac07688f8dcb2eef5b609d3680492ec533a1fa60e99",
+      "exportSha256": "ba6f35f4eafc5e419775ac15f723a4d54b2e532242a55672b0dd68c004c89599"
+    },
+    "성수 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-02.png",
+      "sourceSha256": "8049fe67f87f1162688f8868522662056b8a4b8195186d3585e279da6165ae32",
+      "exportSha256": "1115458ef3846a17942f57775e9dc81cc0ad80a3db928a2d418af1ede978869d"
+    },
+    "쌍칼": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-02.png",
+      "sourceSha256": "8049fe67f87f1162688f8868522662056b8a4b8195186d3585e279da6165ae32",
+      "exportSha256": "4019e33cf1102f2d6c07630f25214d0e51207e54617838e2c23c064a120beaa7"
+    },
+    "암살의 표창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-02.png",
+      "sourceSha256": "8049fe67f87f1162688f8868522662056b8a4b8195186d3585e279da6165ae32",
+      "exportSha256": "546681c32d365f44dbd706fdc535cb3e6a0bdcb7547e1c331858919d64650108"
+    },
+    "암살자의 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-02.png",
+      "sourceSha256": "8049fe67f87f1162688f8868522662056b8a4b8195186d3585e279da6165ae32",
+      "exportSha256": "22b6d3547685ad5b937e27d2b72ad485b55af5a0035da29c284624e59821a535"
+    },
+    "암흑 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-02.png",
+      "sourceSha256": "8049fe67f87f1162688f8868522662056b8a4b8195186d3585e279da6165ae32",
+      "exportSha256": "e8b56545f99f2639d32ac082e20ad531d319cafeed9238b4960ad470c8f08b01"
+    },
+    "어둠 감옥 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-02.png",
+      "sourceSha256": "8049fe67f87f1162688f8868522662056b8a4b8195186d3585e279da6165ae32",
+      "exportSha256": "bd053622443a5bd3ffac0e8411aacbca6b2cdc498859e790796c1ffcfbcb3757"
+    },
+    "용아 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-03.png",
+      "sourceSha256": "478354c372a33586ac7a4ad8e9fd767a63119791676b188eddab863aca566cd8",
+      "exportSha256": "ef180d560afb1cd4e511a3cfaef08fa500931c318a70d44efead992d60e98b85"
+    },
+    "질풍의 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-03.png",
+      "sourceSha256": "478354c372a33586ac7a4ad8e9fd767a63119791676b188eddab863aca566cd8",
+      "exportSha256": "98e9466200039dbfd91c44ebbed5e1ee90445a7b89390f18e8dbf71674cc84f5"
+    },
+    "청해 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-03.png",
+      "sourceSha256": "478354c372a33586ac7a4ad8e9fd767a63119791676b188eddab863aca566cd8",
+      "exportSha256": "94a1abb97e18457ab853826de9d63180f04e1acc3118b50dee812abe1505adc4"
+    },
+    "투척용 단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-03.png",
+      "sourceSha256": "478354c372a33586ac7a4ad8e9fd767a63119791676b188eddab863aca566cd8",
+      "exportSha256": "c4d358e6d1f580ad747a2a6a0c4c2ae3b932e6308aa77b46c42360ef47602fdd"
+    },
+    "혼돈 절멸기": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-03.png",
+      "sourceSha256": "478354c372a33586ac7a4ad8e9fd767a63119791676b188eddab863aca566cd8",
+      "exportSha256": "f1b9a444bc4d6e614a0e29e3237a3515a3886d52eb0f61968e0cf92aa0f08a9b"
+    },
+    "흑요석단검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-03.png",
+      "sourceSha256": "478354c372a33586ac7a4ad8e9fd767a63119791676b188eddab863aca566cd8",
+      "exportSha256": "ebc7fb40c64f11a40b94b732227150e086aee325c3bbedd9358faf3be6589313"
+    },
+    "광기의 도끼": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-01.png",
+      "sourceSha256": "9b03fc05ec7f076105455da60526f2861a9a84adcfee6efecb78aaf72a8af65b",
+      "exportSha256": "d4e46f342243a662355f2224fcaf3800c3077340cc3701e07cacf15d1b6f7198"
+    },
+    "광전사의 도끼": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-01.png",
+      "sourceSha256": "9b03fc05ec7f076105455da60526f2861a9a84adcfee6efecb78aaf72a8af65b",
+      "exportSha256": "f1c5a1ed48b4104a5b9003951a98a34ddc025968f21dceb9cfdac6b060de9ee4"
+    },
+    "나무곤봉": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-01.png",
+      "sourceSha256": "9b03fc05ec7f076105455da60526f2861a9a84adcfee6efecb78aaf72a8af65b",
+      "exportSha256": "284350b0de4ae6f518137f3f1adcebeacb498cc7e5dddfa7912479249c0668db"
+    },
+    "낡은 철퇴": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-01.png",
+      "sourceSha256": "9b03fc05ec7f076105455da60526f2861a9a84adcfee6efecb78aaf72a8af65b",
+      "exportSha256": "831e7f0c359e63289482fc4749725628229ca24a295fd22675bd9b9169d27794"
+    },
+    "녹슨 도끼": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-01.png",
+      "sourceSha256": "9b03fc05ec7f076105455da60526f2861a9a84adcfee6efecb78aaf72a8af65b",
+      "exportSha256": "55bc8823af2790ddd66b904234de2d843fe01d733a223adffa3925d6cdd876f8"
+    },
+    "대지의 메이스": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-01.png",
+      "sourceSha256": "9b03fc05ec7f076105455da60526f2861a9a84adcfee6efecb78aaf72a8af65b",
+      "exportSha256": "3bc2f84984075891062eeeb990e82d6deb50f889f0076abfe20d64b840c90ea7"
+    },
+    "돌망치": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-02.png",
+      "sourceSha256": "7e4994e2a0a34cbca4b3339d0c3b212a6abcd313fb17e809fee805383df27cf7",
+      "exportSha256": "eae0fbdafa23b0b10f786e78609daf9364cfe0610ac9f80eec7451577fffc898"
+    },
+    "드워프의 망치": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-02.png",
+      "sourceSha256": "7e4994e2a0a34cbca4b3339d0c3b212a6abcd313fb17e809fee805383df27cf7",
+      "exportSha256": "92077a0b66dbbeb24a4c1071b708fd79dec52c3da3549f29d265b18953d5c4e2"
+    },
+    "전투도끼": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-02.png",
+      "sourceSha256": "7e4994e2a0a34cbca4b3339d0c3b212a6abcd313fb17e809fee805383df27cf7",
+      "exportSha256": "2f6a8eec3f57b36214c0e55d563bb85bc7f357743da41c386c49c62b6962e1dc"
+    },
+    "철퇴장": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-02.png",
+      "sourceSha256": "7e4994e2a0a34cbca4b3339d0c3b212a6abcd313fb17e809fee805383df27cf7",
+      "exportSha256": "b2df25d48ed91342290d978bd0f8888f6995891fb3871b16a83c224658cb8ee6"
+    },
+    "타이탄 해머": {
+      "styleVersion": 2,
+      "familyKey": "weapon-heavy",
+      "batchId": "weapon-core-heavy-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-heavy-02.png",
+      "sourceSha256": "7e4994e2a0a34cbca4b3339d0c3b212a6abcd313fb17e809fee805383df27cf7",
+      "exportSha256": "f44f04e8b11f30c810fa8e937f81354e96cb7239add71e6ee188497540bd8494"
+    },
+    "공허의 대검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "998d00a82cb9bb559c3c962cbe4b5f958ced2e710e9fe1c1a13a907c1000d8fa"
+    },
+    "성기사의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "ef0dcd8a2aa892e327f9ee336f38de93bd08af9bf1441f316214f4cdb33a1dee"
+    },
+    "시간 파편 소드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "124ced5bd56338e9b0cf75de1ad3f1e672498de575fc4c5f47b6bf1a4e9946ec"
+    },
+    "심판자의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "d5b6f6cedfd99f745d29ef466c040f31a4fd20c2379fcc0a78e859732d197a73"
+    },
+    "암흑의 대검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "f7ba4e202df3c21da330971cfd9112c03b12eda59c1f834fb70db5f48672af6a"
+    },
+    "에테르 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
+      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "exportSha256": "5c45aaadbc14e5269faea526250800c46b01c7a0cb2a1a1c42b909e30f13b6f6"
+    },
+    "용암 대검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "27ed02fad1673af121ffb68243d494352911d41425a6e45964b0c008a371ddd8"
+    },
+    "차원절단자": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "2089679d7683d22d5fab58191bf797a39f7624c69692ee92f59dacdbeb995da1"
+    },
+    "타락 기사의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "85b2e5f0e33a677856f28ce4af6fb88146b3a02e39d563dcec01a566c34c0f5d"
+    },
+    "파멸의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "9fe59d6fadef3f26021576759e08076582a717508305e9c3c7edb4284b86b2ec"
+    },
+    "화염 사원의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "weapon-core-sword-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-05.png",
+      "sourceSha256": "c4c048d7a9b6001233c2725437f0c4910a1bbef0cb2d6f408dafc6b7ccb85762",
+      "exportSha256": "9982b7b1cea3ef6674efb6ce882271848c931d1785405b6ede259fc65a294e2b"
+    },
+    "균열의 날": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-04.png",
+      "sourceSha256": "fe567ee92d0e9970282f56005e681e6f41bc788a99b59674d8ad7f5c4ff530bf",
+      "exportSha256": "3caf7ecb6599ec2dc0d5e4adf6e8e54586c1e80943babfcc219364cbf4defd51"
+    },
+    "서리칼날": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "weapon-core-dagger-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-dagger-04.png",
+      "sourceSha256": "fe567ee92d0e9970282f56005e681e6f41bc788a99b59674d8ad7f5c4ff530bf",
+      "exportSha256": "e0585ad997b3bd4cba6645a277680f075e4cade01daa8f40d082bd90eec6a5fc"
+    },
+    "나뭇가지 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "46e28bdf043b39556d21b99ea86a53f84bc34ac016d97eb173518107675897ac"
+    },
+    "단궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "da614aa9143338fc0050aafce8d272d0b7cd49e713a5ab0cdd5ce4a3aab7b4b5"
+    },
+    "바람의 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "caff8006751a299ce20dd8727bb80af2fe630fe7f7df97fb1cdf55e98dae4718"
+    },
+    "복합궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "8c035605750eb569509c5e8efdea12beb2e09cae8697bb47e271213889ef045b"
+    },
+    "불사조의 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "37fa4efe35513c0a9a327ca510656443210882b73f8700f05d8ac143637f392d"
+    },
+    "빙결 장궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-01.png",
+      "sourceSha256": "f2554eaf2716c0faf80b451e40f167aa416690f894628c6038e68a1ca2601e23",
+      "exportSha256": "177700eb90c703c62524b4523520147e2a8f991850d5eaf9f5edd6d9a418c36c"
+    },
+    "사냥꾼의 장궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "b4d6f1bcfaf9be989eef89ad05060eea93f417805e86aba3dc04b70de66b6f7a"
+    },
+    "사냥꾼의 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "e43478dfcabf2b92a9fc240748875b65ae783a5eda24421fa02cdd4d9c846f82"
+    },
+    "에테르 심판궁": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "8968b984784e3ec8939e0595df661d94c2282a4ee7e41d3639307e66a718a205"
+    },
+    "엘프의활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "d3e6ab60eb88bb55bdb56df3a8034c4044965164f0112cc6c803404b21613217"
+    },
+    "천공의 활": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "weapon-ranged-magic-bow-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-bow-02.png",
+      "sourceSha256": "34cffbd2f4859f1b2f3270c496d39c95317ec91567fafaa991d91598682c1011",
+      "exportSha256": "43addc1bf3e49182daa0748131f5824406fbfec09aff3f2f5b7d20803266589c"
+    },
+    "고대 마탑 스태프": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "e92a1b2f24caf9080dd2a039952deacc2fe4ffb2589c274646f8f8cfabdcf30b"
+    },
+    "나무지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "27f99d2db840cf4693364103ced53938eb20f480a2aef1ca657dcf5b967659c9"
+    },
+    "대지의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "eb66182a40adc9161d42ee6b51e33e30d6a64477996731ec28c65cd2169608fb"
+    },
+    "마녀의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "3093a7db4bceefcb61f2d3fab11ca98044911a0bb136596ce499e1eeeaecef6e"
+    },
+    "마법봉": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "4f49ffe9744a34fb822604c4a4519462c329091ae50a4d67b96b33a9c565405f"
+    },
+    "마법지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-01.png",
+      "sourceSha256": "cca8e86704e82f587aef7e6d04964d79b7172cada06e598cc2e78c6a73439444",
+      "exportSha256": "fbe59b506d4ce78aeb870c871681bbabaed7b57010baf1eee75f212e857d6f8d"
+    },
+    "번개 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "2abe07bf3635816ab52be00c065e9dcd256a32c96e73be82c64c48594282358c"
+    },
+    "빙결 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "fdb2bd36681d9d77263d63dc2d5723ac3049bf0c14a2cc13acdd9408a031c8ef"
+    },
+    "빙하의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "5513c3438e0d64e094bf802087dd5a03e3f7b909aa3baab3a355bf30a7d3de47"
+    },
+    "성운 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "ae24bbff6718d0f89817d975f4908760234334df6418fc08331e151dad2c8956"
+    },
+    "세이지 로드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "a9557ebe8a9d81efe1dc7945d338369a0455d101f2b69e912c806b93fa9deb47"
+    },
+    "수정 완드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-02.png",
+      "sourceSha256": "7b019a27e944e530c7b3f6ca447491de6e5bdd2554f35124bd8bebed6dd82dff",
+      "exportSha256": "2f39557ee761ae8668cb310c1a4d26e9cbc471e186fa8e0ca32915a45ff0c07a"
+    },
+    "아크스태프": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "13489eea7bea36a9904a1153365e503db4d288806f667a8a9cda218b84dfb666"
+    },
+    "얼음 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "a9c07450796c8cd85bc7c5d51c4284e5ec329c004e8b39d5f9af88b4bcd01456"
+    },
+    "에테르 플럭스 로드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "9d76e44a49bd0386064ae74d5814d770a2c8ecd988a0f16a44565e4334f53438"
+    },
+    "유성 완드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "3073745be8f353470b6bb68a29d740d01518eb5623c5d111b245a19cecc5fa7b"
+    },
+    "정령의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "709b150bc4c6664f71832b27acbd5141b21f2fef408ca1bc8b14e2391aa68ab3"
+    },
+    "차원 균열 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-03.png",
+      "sourceSha256": "af8c96cc938052e9602903157170ce248d87f34db650caeb00500fa5f9ec110d",
+      "exportSha256": "c90e023b9b61d9c099af46c010d69a0e3225f07e095f739820ac8bcba53b8e32"
+    },
+    "폭풍 스태프": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "d00738e1dc7b042c6f275bd7d4f9c2e7107500e0e5e79cf14ba3ba5232cb9973"
+    },
+    "허공의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "76e7fa92ef1ca9f34bbead67fe938dd15b8f29265b998032bad95c0bcdf11205"
+    },
+    "호신용 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "fe1f1e6db1a20ece278ecb39a4d5da74993634dc20db5c654616cb4dc8f9d156"
+    },
+    "혼돈의 로드": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "114381cb1158cd8101dd68a1f280c1aaca70673fb88d3c8d162c75c4da26b642"
+    },
+    "혼돈의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "25a4f71c6c46c4540b28040e9c95d17679c907d8a520a13ed5a936405f839fde"
+    },
+    "화염의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "weapon-ranged-magic-staff-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-staff-04.png",
+      "sourceSha256": "664c6fad2ebad1b0a0fc1e73e91555b8f0ace6d4073d4542c6f68bc822001a48",
+      "exportSha256": "00d8ecaa26016567675b523530e509c60daf3368d67bf2a6d4e5f40bfab485ac"
+    },
+    "병사의 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "a32e4fc90a56663a053bca863128156df83a5881c489683abc50aa18aa7a8929"
+    },
+    "빙원의 장창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "8b3419ddf8a421c7e47dd35c745e0c1bf8b3fd9764d876f91f53aea3790f643b"
+    },
+    "세계수 절멸창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "7c1fc06610a3d0606000d3f9408551184f38cf3a76f4b1f04652bce9f7676074"
+    },
+    "수정 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "0da27d1b8733ca198c6ca08ceacd83498a71ba97e00b4c0f2b9327989c29dcbe"
+    },
+    "심연 파쇄창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "fd99f71c22ed9c5a62bc56bf74b51192ecf46b9d90255d3169b7f76bced67d2c"
+    },
+    "심해의 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-01.png",
+      "sourceSha256": "4d70dcf077821d3dbb5e348533b7f9f737a830082dda93bc895ca5446e6487a4",
+      "exportSha256": "050f3bf74af4fbfde57bd5577f8055c559699adeced41fbeac5bc07e161d13dc"
+    },
+    "용살자의창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "11c7502996f510df93e71d91b509a61139addd3b493d5d651f82a3aa6b4e6f48"
+    },
+    "정예병의 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "640d43d5e1cf5c4b09f2a4f27b1489e9202097f2284631f308d62269794ce697"
+    },
+    "죽음의 낫": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "46c9ac7232ed22ec96a86b5baaec1843a5195e00943651545df2564708e2e5d9"
+    },
+    "차원 붕괴창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "f14c8137259c1ff5eab1f3a56603805a2b9c586c5a2d789517fbeda5e2d2c0de"
+    },
+    "폭풍의 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "weapon-ranged-magic-lance-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/weapon-ranged-magic/weapon-ranged-magic-lance-02.png",
+      "sourceSha256": "a2711b3bc273b64524d7fdec6ce4b000bb345dbf251afd78454adee808cdb3ec",
+      "exportSha256": "61f9dd6469cd0414dc5520d29972a4e964bc6e0b20ae83e9f9f2e7a375605ee3"
+    },
+    "견습 주문서": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "1ac74dbe5f336a5367a83a3d6c1e135fcdf72f45c4d95c369560abd343c5ca74"
+    },
+    "룬 마도서": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "cff6e0a3862029929d63991714ae17c1c76fb2114aa2a9453e83a641bc6a8272"
+    },
+    "심연의 마도서": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "808ecfd1bdb2c55e0b5b7d2e9dfba7c95afd3386a467cb4a29614af64b7be62d"
+    },
+    "쌍두 마도서": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "e3871a17ca15f0908720ec8672c22b61e10df3ff8ca4dbfe510ca84dfc5382c1"
+    },
+    "현자의 서판": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "offhand-headgear-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-book-01.png",
+      "sourceSha256": "1248a469988b8b69ee2b8aa807953e2d099b7e917851ec6a6e5842a5f87098cd",
+      "exportSha256": "e2f8357635c7f59e2adaf10d64f9885425c5d299b8d1a39b1b0ff355df3cef42"
+    },
+    "도적의 두건": {
+      "styleVersion": 2,
+      "familyKey": "headgear-hood",
+      "batchId": "offhand-headgear-hood-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-hood-01.png",
+      "sourceSha256": "7eb8cc6ac88f5d73e2ec86a6fb8fe41a6aaccd2b686529ff958460516832edc7",
+      "exportSha256": "a9722a59f0d639e0d2442a414b803d4bbe9d866785ec72536d3aa9f2be2b0029"
+    },
+    "균열 차단 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "58cf5c487f3c18196af31502a9918705a5a91f80090bd6d4a0506c1d9b3f0dda"
+    },
+    "냉기 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "8fb17cd0285f29609cc4cb958159b77df2e2785835ace24f933b5ffb9e63ffce"
+    },
+    "대지 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "9ff32be7cfbf4f1c26267a958ee1775bfc416c45b3a56ce022877776c3e2a399"
+    },
+    "목재 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "3ddc114cd9db03713841299acceefc93af39a06367c93ad3defed76890b49ce6"
+    },
+    "성광 방벽": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "c873e5e6cfc7370d90d7c95a6cda8c7096753c86ced450d6de30dab174bb6721"
+    },
+    "세계수 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-01.png",
+      "sourceSha256": "3ff72b0e835f7be75fed34624139bddb483f7dcba116e787ae30826e8d626c17",
+      "exportSha256": "b7075e12a26a9d9986631e8e056ae49e1f154bf54a4428b794c85ee18e3c7e88"
+    },
+    "세계의 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "15f8e38d78667c7d96811d39c82c113fe717afc11cee2d0b04ee07cb600248c6"
+    },
+    "수호자의 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "23ebcb4794f5a3c451b284b366eae1c680debb92566042de300987657ae8869c"
+    },
+    "어둠 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "ed9b6977f5ced2a48534a4f8e2de94680eecd22b1852b1bcfff91d090f255853"
+    },
+    "원시의 이지스": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "b2d34e1f534b58cee57c87156781fdccc21a0de5145650209ab45c60dbfd0815"
+    },
+    "자연 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "da454ff9678c84625971ca326ee9536cc11bc4fb181237d948049cb932385fb6"
+    },
+    "철제 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-02.png",
+      "sourceSha256": "953291515b0aa9931eeb756a8765943dddce90401aa4c5bc79e957e4c613999d",
+      "exportSha256": "2f4e8e7847f0f6a7aa3c349f2bcae1228482ed227126eed304aa8c9cdf1d55ab"
+    },
+    "화염 방패": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "offhand-headgear-shield-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-shield-03.png",
+      "sourceSha256": "205db54724094768fd5b64cb44c1d4e301d829a473a6bc9929da08932eb937c4",
+      "exportSha256": "4451a972dce8cb14efea30c459b09899a958a9f4e4da57a41c04b37a90a9e987"
+    },
+    "짚 모자": {
+      "styleVersion": 2,
+      "familyKey": "headgear-straw-hat",
+      "batchId": "offhand-headgear-straw-hat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-straw-hat-01.png",
+      "sourceSha256": "a632a5bf8c9b65e4b9debc44ffcfc1921756df74af3477d7d14dc70c169e4ebf",
+      "exportSha256": "eadc2b4802aa2130a4a46808f6ec6dcd21ec44ecd788ffb990a602e25305e70e"
+    },
+    "마법 모자": {
+      "styleVersion": 2,
+      "familyKey": "headgear-wizard-hat",
+      "batchId": "offhand-headgear-wizard-hat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/offhand-headgear/offhand-headgear-wizard-hat-01.png",
+      "sourceSha256": "f0cf1e63ffc034f173b120aff8b78ece438a3aa4b38674cadb1a5726bb984aa1",
+      "exportSha256": "f8fc7829cd19b49c804b31e24662f713a1c622f6dbe2d3a3accec91488bfef8a"
+    },
+    "가죽 장화": {
+      "styleVersion": 2,
+      "familyKey": "armor-boots",
+      "batchId": "armor-boots-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-boots-01.png",
+      "sourceSha256": "467750807c73092ca102c59c3f1b5ccb82427753bcd8ca1a12ea258026304583",
+      "exportSha256": "c34b49d0bdb3a4d5a71b520aa3c30da0be6ecebeb1f96e80eeecd81a92c90202"
+    },
+    "공허의 외투": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-01.png",
+      "sourceSha256": "5294931aba4d639b782e4d9baf1d3bbcade59be92a5f5fb89ed94d9d5bed2a8a",
+      "exportSha256": "4310966146aa8e02ea6352729f4fe270d2c1a149b2e80782056b146cd796b1b9"
+    },
+    "공허의 전투 외투": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-01.png",
+      "sourceSha256": "5294931aba4d639b782e4d9baf1d3bbcade59be92a5f5fb89ed94d9d5bed2a8a",
+      "exportSha256": "503d02a6eac2980935f2f6d9b6c3da99c0bc32590b753ee8d416b6f6eb7f0605"
+    },
+    "그림자 망토": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-01.png",
+      "sourceSha256": "5294931aba4d639b782e4d9baf1d3bbcade59be92a5f5fb89ed94d9d5bed2a8a",
+      "exportSha256": "de8db8db17bf0acee62658c4d98b064bc98beffc7d8ebe3c781494674f906885"
+    },
+    "독안개 망토": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-01.png",
+      "sourceSha256": "5294931aba4d639b782e4d9baf1d3bbcade59be92a5f5fb89ed94d9d5bed2a8a",
+      "exportSha256": "1983cbd7f0884a8bd7dd7d05ae4ef8c3d80e2ef7f81b8423727b0f5c1381337f"
+    },
+    "레인저 외투": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-01.png",
+      "sourceSha256": "5294931aba4d639b782e4d9baf1d3bbcade59be92a5f5fb89ed94d9d5bed2a8a",
+      "exportSha256": "5b04098be809048d394d280ebc7915a1c8f3fe1c0725e91166d995317102e98d"
+    },
+    "바람의 외투": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-01.png",
+      "sourceSha256": "5294931aba4d639b782e4d9baf1d3bbcade59be92a5f5fb89ed94d9d5bed2a8a",
+      "exportSha256": "82046442d79f03528bff3258a33d4098086814dc3cbe1b1136dfa8042fa59de4"
+    },
+    "사냥꾼 망토": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-02.png",
+      "sourceSha256": "79c1b6bb1e721c8533fb31bdff5b6d012d8f29fc5921b095f44aa75fb5111b03",
+      "exportSha256": "13ce5d6e87467263441104ae5b6a6b63258db0460bc870e353895db28275c64a"
+    },
+    "사냥꾼의 외투": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-02.png",
+      "sourceSha256": "79c1b6bb1e721c8533fb31bdff5b6d012d8f29fc5921b095f44aa75fb5111b03",
+      "exportSha256": "c9aac93261f6c3d33878676f40c6f6d95f8f4939e28e2830ba44441826a9352c"
+    },
+    "심해 외투": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-02.png",
+      "sourceSha256": "79c1b6bb1e721c8533fb31bdff5b6d012d8f29fc5921b095f44aa75fb5111b03",
+      "exportSha256": "bdf42aef6b77c0cd04d1ce8cde56c63e72d33770eda34e411eaafac8ad90d861"
+    },
+    "암영 망토": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-02.png",
+      "sourceSha256": "79c1b6bb1e721c8533fb31bdff5b6d012d8f29fc5921b095f44aa75fb5111b03",
+      "exportSha256": "a32f2325aa5a7fcbc3b243e4dfd419ee46a4337c1ba97f4a0eed45f1db4b725c"
+    },
+    "어둠의 망토": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-02.png",
+      "sourceSha256": "79c1b6bb1e721c8533fb31bdff5b6d012d8f29fc5921b095f44aa75fb5111b03",
+      "exportSha256": "2cd8fe18ac8c48a68a97fb812e7c0d264765efda5c6ea21d7789ccb426d67374"
+    },
+    "전설의 사냥꾼 외투": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "armor-cloak-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-cloak-02.png",
+      "sourceSha256": "79c1b6bb1e721c8533fb31bdff5b6d012d8f29fc5921b095f44aa75fb5111b03",
+      "exportSha256": "0ccd6278778c501505be3e49805c41480e9afea074d4f2293f080706a56124fa"
+    },
+    "수련복": {
+      "styleVersion": 2,
+      "familyKey": "armor-coat",
+      "batchId": "armor-coat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-coat-01.png",
+      "sourceSha256": "26fc0a8a63fe197eb929ec4045a3143e094833c10bdcb4c3ac9d617d7b405392",
+      "exportSha256": "89cffe8dee1b7dc0d377a3693a736a3327b6dbe85598932b8c689b930bdca693"
+    },
+    "수련생 도복": {
+      "styleVersion": 2,
+      "familyKey": "armor-coat",
+      "batchId": "armor-coat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-coat-01.png",
+      "sourceSha256": "26fc0a8a63fe197eb929ec4045a3143e094833c10bdcb4c3ac9d617d7b405392",
+      "exportSha256": "353675a6a47e3d55c4fd7aeeb7bcc9343e77436b220227a5e966b27a95b8f3cf"
+    },
+    "심연 잠수복": {
+      "styleVersion": 2,
+      "familyKey": "armor-coat",
+      "batchId": "armor-coat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-coat-01.png",
+      "sourceSha256": "26fc0a8a63fe197eb929ec4045a3143e094833c10bdcb4c3ac9d617d7b405392",
+      "exportSha256": "e694ee0b7fdcf3db5dcd11dc5b647af6736cefd02254f46411157321b1e1f962"
+    },
+    "에테르 전투복": {
+      "styleVersion": 2,
+      "familyKey": "armor-coat",
+      "batchId": "armor-coat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-coat-01.png",
+      "sourceSha256": "26fc0a8a63fe197eb929ec4045a3143e094833c10bdcb4c3ac9d617d7b405392",
+      "exportSha256": "7e6b82b847a0767c9bf58712282dfcd0f68aad12b5191ceb9e0a5b5e5d3c1b20"
+    },
+    "여행자 튜닉": {
+      "styleVersion": 2,
+      "familyKey": "armor-coat",
+      "batchId": "armor-coat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-coat-01.png",
+      "sourceSha256": "26fc0a8a63fe197eb929ec4045a3143e094833c10bdcb4c3ac9d617d7b405392",
+      "exportSha256": "40ca1bfa035f30b2e96b7d38232614010e6bf330e420c0b270b7a6b8801b5712"
+    },
+    "정밀 사격복": {
+      "styleVersion": 2,
+      "familyKey": "armor-coat",
+      "batchId": "armor-coat-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-coat-01.png",
+      "sourceSha256": "26fc0a8a63fe197eb929ec4045a3143e094833c10bdcb4c3ac9d617d7b405392",
+      "exportSha256": "bb4ac94df28dc15d4dbe39ae177861a427479c22e0b8a45e4ca1d3c502c6e23c"
+    },
+    "차원 사냥꾼 슈트": {
+      "styleVersion": 2,
+      "familyKey": "armor-coat",
+      "batchId": "armor-coat-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-coat-02.png",
+      "sourceSha256": "3ff3f8bc296788b957c9d5bb716201d07cdb964d47b008726824237863951d16",
+      "exportSha256": "ed06d5c36b7635367f8e5e17adde80cc4eb97bc69f2739d589b49ba97119d814"
+    },
+    "가죽 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-01.png",
+      "sourceSha256": "7dd96ba8d33e9d4a9799b9dee5030a8edf48887ed16dd98efb598252f32e655f",
+      "exportSha256": "39794702c976e974b09de3bcd44daae639d30f530f5cdf958d4ee826ef58bf41"
+    },
+    "가죽 조끼": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-01.png",
+      "sourceSha256": "7dd96ba8d33e9d4a9799b9dee5030a8edf48887ed16dd98efb598252f32e655f",
+      "exportSha256": "6376128dd1030856e3d4abcc3b2bc7b185e21939da6b8f14a0b194014e77eb8b"
+    },
+    "강화가죽갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-01.png",
+      "sourceSha256": "7dd96ba8d33e9d4a9799b9dee5030a8edf48887ed16dd98efb598252f32e655f",
+      "exportSha256": "0a040b0770633645c9eb9e58923eead123a3135e55761c105459f5b8a58bcb79"
+    },
+    "광전사의 조끼": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-01.png",
+      "sourceSha256": "7dd96ba8d33e9d4a9799b9dee5030a8edf48887ed16dd98efb598252f32e655f",
+      "exportSha256": "7814b95c1d450d6d89352b58ec055f8895e9d01eb0ce00ff59c63912f1a45092"
+    },
+    "균열 외피갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-01.png",
+      "sourceSha256": "7dd96ba8d33e9d4a9799b9dee5030a8edf48887ed16dd98efb598252f32e655f",
+      "exportSha256": "9140dfe7beb1b0ea9330133b79882423984658680b75f48a10cd72fece1796da"
+    },
+    "도적 가죽갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-01.png",
+      "sourceSha256": "7dd96ba8d33e9d4a9799b9dee5030a8edf48887ed16dd98efb598252f32e655f",
+      "exportSha256": "464714cb61f664f26193879879307ac7e93a188b7906321369372fa2e78c9f54"
+    },
+    "별빛 경갑": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-02.png",
+      "sourceSha256": "9023394265516496d4b71ccb67c00ea405e69899c355a8c3c28695ae42f55fa9",
+      "exportSha256": "bf80742e6a037bb9bf374a46cb0f9220c99eed5e3115dd466ccb74528ce716af"
+    },
+    "빙화 경갑": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-02.png",
+      "sourceSha256": "9023394265516496d4b71ccb67c00ea405e69899c355a8c3c28695ae42f55fa9",
+      "exportSha256": "f85fbe44df5416730541bd5d408ad237a5f101c33b84c44f6a2a943fdff3d548"
+    },
+    "암살자 장갑": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-02.png",
+      "sourceSha256": "9023394265516496d4b71ccb67c00ea405e69899c355a8c3c28695ae42f55fa9",
+      "exportSha256": "fce85b76e0ccec7efd86517ef9160cad90bcfc01041301489601a6714b6b78ea"
+    },
+    "암살자의 야복": {
+      "styleVersion": 2,
+      "familyKey": "armor-leather",
+      "batchId": "armor-leather-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-leather-02.png",
+      "sourceSha256": "9023394265516496d4b71ccb67c00ea405e69899c355a8c3c28695ae42f55fa9",
+      "exportSha256": "61adc6bfc8a4a2142b8614fd8d6cb3f1e5fed9e3e885fd9130613ba6664885e0"
+    },
+    "광기의 대갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-01.png",
+      "sourceSha256": "b891a09ccc4e9bd8ff967ceb8def1d574a56fa966b1ce502ed53a4b40ed17032",
+      "exportSha256": "6963bb067604a6d7f01a06dde037a35d8f7430d6f595f4b9ea2e8ffd6c5d5ad5"
+    },
+    "기계식 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-01.png",
+      "sourceSha256": "b891a09ccc4e9bd8ff967ceb8def1d574a56fa966b1ce502ed53a4b40ed17032",
+      "exportSha256": "c94c03a6ab06d5b2f1f3a5debb4b3b45fc9c1aeebf83996033e82548c24fdbb3"
+    },
+    "기사의 흉갑": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-01.png",
+      "sourceSha256": "b891a09ccc4e9bd8ff967ceb8def1d574a56fa966b1ce502ed53a4b40ed17032",
+      "exportSha256": "7755bd1d061a187bed3e6947ba2123992ec8be29621338cbcc904fe9ea2c2274"
+    },
+    "냉기 방어복": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-01.png",
+      "sourceSha256": "b891a09ccc4e9bd8ff967ceb8def1d574a56fa966b1ce502ed53a4b40ed17032",
+      "exportSha256": "7bf9ed4c103d9d6cb9e1882e86b3f7944530408436d54717c60bf9db1d7ee744"
+    },
+    "드래곤 임페리얼": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-01.png",
+      "sourceSha256": "b891a09ccc4e9bd8ff967ceb8def1d574a56fa966b1ce502ed53a4b40ed17032",
+      "exportSha256": "2efadd353e630926585793e8a94fd2b22ee945ea1925f702cb5b9be089b9fb77"
+    },
+    "드워프 흉갑": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-01.png",
+      "sourceSha256": "b891a09ccc4e9bd8ff967ceb8def1d574a56fa966b1ce502ed53a4b40ed17032",
+      "exportSha256": "58fd0e4becba4f37b49f63791e38262688ecb35609ebcf815644c25b8a696d07"
+    },
+    "미스릴 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-02.png",
+      "sourceSha256": "12fb233701b5756a2e2ff86a1641e40dc1cfb10a61204a43bc761aaa10971ddd",
+      "exportSha256": "8fb0e1fa1c7e7ec8348d42fdd89b2478934973b6eec855e57b65b7a67c26900c"
+    },
+    "병사 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-02.png",
+      "sourceSha256": "12fb233701b5756a2e2ff86a1641e40dc1cfb10a61204a43bc761aaa10971ddd",
+      "exportSha256": "02dc72d2429ef9000580ac49b7dc20ed16780c2cc37c0b9000d2724934957971"
+    },
+    "불사조 흉갑": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-02.png",
+      "sourceSha256": "12fb233701b5756a2e2ff86a1641e40dc1cfb10a61204a43bc761aaa10971ddd",
+      "exportSha256": "fe0955723a7a0da7f4111d9a9b5300efdfa4c84408504076123ff1a0863d3f7a"
+    },
+    "빙결의 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-02.png",
+      "sourceSha256": "12fb233701b5756a2e2ff86a1641e40dc1cfb10a61204a43bc761aaa10971ddd",
+      "exportSha256": "d9128102a18982a6e43910071e745952b0225f6fd6168aa4bc066eaffd23da06"
+    },
+    "뼈 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-02.png",
+      "sourceSha256": "12fb233701b5756a2e2ff86a1641e40dc1cfb10a61204a43bc761aaa10971ddd",
+      "exportSha256": "20ac7191e796b82d358e9b160cc96a5d91b50813ce051c1217db27a266d7d0d3"
+    },
+    "사슬 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-02.png",
+      "sourceSha256": "12fb233701b5756a2e2ff86a1641e40dc1cfb10a61204a43bc761aaa10971ddd",
+      "exportSha256": "71f125e644e980a6ef6dc31d7afe1931ed28649b919c302e1ab32eb0719bcfb1"
+    },
+    "설원 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-03.png",
+      "sourceSha256": "030e76222812c440a2b26942c2942fc9daf0345c96520ca0a0794e6a6baff5f0",
+      "exportSha256": "ba3a879527bcfe6bed91d2cb6690c4a7fa5ff3c8fe4ecac6c6dd349b73a308eb"
+    },
+    "성기사의 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-03.png",
+      "sourceSha256": "030e76222812c440a2b26942c2942fc9daf0345c96520ca0a0794e6a6baff5f0",
+      "exportSha256": "f0f7e616aa5d367179369ce97fe176dd1fd1e54c5f2ec98ed54a34bb08f96097"
+    },
+    "세계수 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-03.png",
+      "sourceSha256": "030e76222812c440a2b26942c2942fc9daf0345c96520ca0a0794e6a6baff5f0",
+      "exportSha256": "46a3aa40e2d040ad4818dd4712fd8dda24fe45fa968210aebdbbb68c4919212a"
+    },
+    "세계수 뿌리 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-03.png",
+      "sourceSha256": "030e76222812c440a2b26942c2942fc9daf0345c96520ca0a0794e6a6baff5f0",
+      "exportSha256": "7f931b04c45db6a79a759023bfd9ae927124bc4f0f9fe8001127f66bc8563933"
+    },
+    "수정 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-03.png",
+      "sourceSha256": "030e76222812c440a2b26942c2942fc9daf0345c96520ca0a0794e6a6baff5f0",
+      "exportSha256": "31ff7521e8f7e7f120d1dba34d3eb5e8ca104aff27a51ac3019310a8da28ccef"
+    },
+    "어둠 감옥 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-03.png",
+      "sourceSha256": "030e76222812c440a2b26942c2942fc9daf0345c96520ca0a0794e6a6baff5f0",
+      "exportSha256": "eb3539f58a6f0fc2026879cf495b20a14c09fce536b7079de2d3c5d7509046bb"
+    },
+    "어둠의 왕 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-04.png",
+      "sourceSha256": "7dae71d7e865576a78918f5bb42b5079da0d43aca58ed1fc5d52363970414f51",
+      "exportSha256": "196ab1ac93cff441f0b6c67a6d684766dd0c33cf05e77ee1e2353dc666e16849"
+    },
+    "에테르 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-04.png",
+      "sourceSha256": "7dae71d7e865576a78918f5bb42b5079da0d43aca58ed1fc5d52363970414f51",
+      "exportSha256": "a9611f7a605d94f01cf19bf9c4edd3dadfeb7dc7262747b4582017f7b91206df"
+    },
+    "엘프의 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-04.png",
+      "sourceSha256": "7dae71d7e865576a78918f5bb42b5079da0d43aca58ed1fc5d52363970414f51",
+      "exportSha256": "b81f13b3eb1b76be5dfe273ceb3100f1bd15d9d93509fae521a614c0272ca9ea"
+    },
+    "용비늘 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-04.png",
+      "sourceSha256": "7dae71d7e865576a78918f5bb42b5079da0d43aca58ed1fc5d52363970414f51",
+      "exportSha256": "2197723b13895fac5190b87d30f274afa65e086be27e66b28d470107691b572e"
+    },
+    "용비늘갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-04.png",
+      "sourceSha256": "7dae71d7e865576a78918f5bb42b5079da0d43aca58ed1fc5d52363970414f51",
+      "exportSha256": "815ea8233406babe312e5a9fde9301001b0d6365daca8daba7493a008bf1af59"
+    },
+    "용암 판금갑": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-04.png",
+      "sourceSha256": "7dae71d7e865576a78918f5bb42b5079da0d43aca58ed1fc5d52363970414f51",
+      "exportSha256": "1b3bb0475fa8ebd9a9d92716a5d62c6f4a248b86b053cdd276a6427c29a288e7"
+    },
+    "원시의 전투갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-05.png",
+      "sourceSha256": "02700104bd7af0f80723b5bfdda4a1dfd259bcf0f7036c12af6f83da28eb000c",
+      "exportSha256": "4a6382dc8a292bf20a97271bfc782bf1aa4389a9e3186ece4cb6b4043295fdbd"
+    },
+    "차원 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-05.png",
+      "sourceSha256": "02700104bd7af0f80723b5bfdda4a1dfd259bcf0f7036c12af6f83da28eb000c",
+      "exportSha256": "84ae59e117765fcd6154fd30d4a1e2ecfb584101911b86aadc96ae413dae6a19"
+    },
+    "천공의 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-05.png",
+      "sourceSha256": "02700104bd7af0f80723b5bfdda4a1dfd259bcf0f7036c12af6f83da28eb000c",
+      "exportSha256": "ad4deda76207bad3f17ccffe4cad0f0d238bee360c3c52163c509c8fafa432e7"
+    },
+    "천상의 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-05.png",
+      "sourceSha256": "02700104bd7af0f80723b5bfdda4a1dfd259bcf0f7036c12af6f83da28eb000c",
+      "exportSha256": "9ca91330490c2887c9c520d2623c148a9608f6ee67ddb1a779bc3d4fd1066f32"
+    },
+    "천상의갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-05.png",
+      "sourceSha256": "02700104bd7af0f80723b5bfdda4a1dfd259bcf0f7036c12af6f83da28eb000c",
+      "exportSha256": "61a09f9eac0a47906ed296cc5114d9ec8250e5c6ef93b3ecf0d60a9613193087"
+    },
+    "축복받은 갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-05",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-05.png",
+      "sourceSha256": "02700104bd7af0f80723b5bfdda4a1dfd259bcf0f7036c12af6f83da28eb000c",
+      "exportSha256": "05733307645426cc4712dae36a1a1b734cb59c2999b3f16abfa862ae4d41f8e5"
+    },
+    "판금갑옷": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-06",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-06.png",
+      "sourceSha256": "b138b0ba4b8d82e692f69328ab29d0c0d6104a9f9b92554cddbb1714dd96adcd",
+      "exportSha256": "9a115aea4b3dcbc53fa151b7779a638c29fbd9e8157d2188a9399537556273dc"
+    },
+    "화염 방어복": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "armor-plate-06",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-plate-06.png",
+      "sourceSha256": "b138b0ba4b8d82e692f69328ab29d0c0d6104a9f9b92554cddbb1714dd96adcd",
+      "exportSha256": "e48f8db3bde65aab17d3bae25f40ab09a876b6001ac49d18ae4492c0c42c6bd7"
+    },
+    "고대 마탑 예복": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-01.png",
+      "sourceSha256": "8803820a1f12fdc190dbe5b803573a7ed7accce2ad7270c51082092495548799",
+      "exportSha256": "8e2c6547e2d54ec44ecb43cf3fd2f7363086a070368f4687154cb4c6c8dfe8ee"
+    },
+    "대마법사로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-01.png",
+      "sourceSha256": "8803820a1f12fdc190dbe5b803573a7ed7accce2ad7270c51082092495548799",
+      "exportSha256": "4412c6f7e6da145f94448d72c8cba56426daf79db373223834ac942f617e19f7"
+    },
+    "마력천로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-01.png",
+      "sourceSha256": "8803820a1f12fdc190dbe5b803573a7ed7accce2ad7270c51082092495548799",
+      "exportSha256": "7d948dd250bf9be3989a578d4e32d8f25cbcb7d1c7ab9ebab1a84bbdf26434f2"
+    },
+    "마법로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-01.png",
+      "sourceSha256": "8803820a1f12fdc190dbe5b803573a7ed7accce2ad7270c51082092495548799",
+      "exportSha256": "aed6a48cec7966ade01d3f0eae921f6602c201f179a1d2240eae306b84b003df"
+    },
+    "상급 폭풍 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-01.png",
+      "sourceSha256": "8803820a1f12fdc190dbe5b803573a7ed7accce2ad7270c51082092495548799",
+      "exportSha256": "4f8f68aa5964c0163a54772ac590ecb322a68f21a3cdac0824151bd30b9bb3b1"
+    },
+    "성수 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-01.png",
+      "sourceSha256": "8803820a1f12fdc190dbe5b803573a7ed7accce2ad7270c51082092495548799",
+      "exportSha256": "92c79154585f6efb98ead4d7ac09b50ced7e2471c00892736e0c70c90a123f79"
+    },
+    "수련생 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-02.png",
+      "sourceSha256": "8f128e1eff4a13a8c032e58e113966b3fb5ba92645c436905f3064aecc5369a7",
+      "exportSha256": "0945221d915a894f81723bad1f88945641f0e9dbf6f1fb91afbf8f8ea602af52"
+    },
+    "신전 도시의 성의": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-02.png",
+      "sourceSha256": "8f128e1eff4a13a8c032e58e113966b3fb5ba92645c436905f3064aecc5369a7",
+      "exportSha256": "b2acbb8d96be5cb8c116307ea15acb706793665639b34edfe699c493bdce7dcf"
+    },
+    "신전 제관 예복": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-02.png",
+      "sourceSha256": "8f128e1eff4a13a8c032e58e113966b3fb5ba92645c436905f3064aecc5369a7",
+      "exportSha256": "8215c32b49fae6ea94b5bbe27b1d50e62a749ae66274ea2dc85e35ccb64a0d5b"
+    },
+    "암흑 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-02.png",
+      "sourceSha256": "8f128e1eff4a13a8c032e58e113966b3fb5ba92645c436905f3064aecc5369a7",
+      "exportSha256": "d00508e238bde12595ba9dca6f51920ad960fd96f1f311d751a5bcf98aa818db"
+    },
+    "에테르 군주 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-02.png",
+      "sourceSha256": "8f128e1eff4a13a8c032e58e113966b3fb5ba92645c436905f3064aecc5369a7",
+      "exportSha256": "88873ec74e13dc5d06d7f37a159526e9921477335380df8b9c1367a5be7b2323"
+    },
+    "에테르 로브 오브 아포칼립스": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-02.png",
+      "sourceSha256": "8f128e1eff4a13a8c032e58e113966b3fb5ba92645c436905f3064aecc5369a7",
+      "exportSha256": "044670ee73a14b5b80fade2d72a478fa4bba2bb952281d27c8249332d687d562"
+    },
+    "은빛 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-03.png",
+      "sourceSha256": "746d49889e5958f60bc6e9502146edcab600895f1e9c2907733377eece284764",
+      "exportSha256": "ba7d842010bba9aab2e966ca8aa0298ad17e4b5d58c9771310c5ffe175741ac4"
+    },
+    "정령의 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-03.png",
+      "sourceSha256": "746d49889e5958f60bc6e9502146edcab600895f1e9c2907733377eece284764",
+      "exportSha256": "5498608bcd6c501f9fa40c05550bc14f04c1c362c691d11f9736274a678a0fbd"
+    },
+    "차원의 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-03.png",
+      "sourceSha256": "746d49889e5958f60bc6e9502146edcab600895f1e9c2907733377eece284764",
+      "exportSha256": "88f100c4e977238db02e62c40627e74f37ac0f01eecd6a65e7e0fb796bfcd21b"
+    },
+    "천 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-03.png",
+      "sourceSha256": "746d49889e5958f60bc6e9502146edcab600895f1e9c2907733377eece284764",
+      "exportSha256": "29f4a5a7432bb89baeb0a4fd97147758c7d73b923cd1cd2a932d8d36274b3283"
+    },
+    "폭풍 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-03.png",
+      "sourceSha256": "746d49889e5958f60bc6e9502146edcab600895f1e9c2907733377eece284764",
+      "exportSha256": "7ea21fcc7bfd7b9e2a03d7c0244b5a879617aaaea24b7b0d0e5a93cdf8fab4d5"
+    },
+    "현자의 예복": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-03",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-03.png",
+      "sourceSha256": "746d49889e5958f60bc6e9502146edcab600895f1e9c2907733377eece284764",
+      "exportSha256": "d1dc625a2c668eebfd54c0abd2aab53605fe46e35068b60d02d8737692ccf46d"
+    },
+    "화염 사원 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-04.png",
+      "sourceSha256": "f5ddcd41c381fbf48b373149840b0c0dbe1c59893f3a4fae65660396a47c753b",
+      "exportSha256": "87f4b39f3465d6a335b4402ea8890c8993eb861a5fc3ca7e8999e4399d778bca"
+    },
+    "화염술사 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "armor-robe-04",
+      "sourcePath": "scripts/art_sources/equipment/v2/armor/armor-robe-04.png",
+      "sourceSha256": "f5ddcd41c381fbf48b373149840b0c0dbe1c59893f3a4fae65660396a47c753b",
+      "exportSha256": "f7cdf215e56e587d16de48b7cd9bd2ae0bc80f0f0b824a791a67a0d403ac0379"
+    },
+    "암흑 군주의 망토": {
+      "styleVersion": 2,
+      "familyKey": "armor-cloak",
+      "batchId": "signature-mythic-armor-cloak-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-cloak-01-item.png",
+      "sourceSha256": "1038c069e83e323c32078e6ffe40b38b7874538585de3c73d6eeedd88ea200c7",
+      "exportSha256": "fe62a2831768cb135f6a9df0289068a8ea42729a8a27511d7ee9c1703884a487"
+    },
+    "광기의 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "signature-mythic-armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-plate-01-item.png",
+      "sourceSha256": "006fd1e2ab65ffe0b1e7add67a01f217e39f675b45833a55ac8e16c3eaaee2f5",
+      "exportSha256": "94bbc7d8bc76f2906c735adcab320c50a60a0a9ab699805bfdef351493785ed6"
+    },
+    "드래곤로드 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "signature-mythic-armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-plate-01-item.png",
+      "sourceSha256": "006fd1e2ab65ffe0b1e7add67a01f217e39f675b45833a55ac8e16c3eaaee2f5",
+      "exportSha256": "2df548f5d26c5f1825d578699a5a185d494a170e243b5aaf69e9a56ff95db65d"
+    },
+    "심해의 수호복": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "signature-mythic-armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-plate-01-item.png",
+      "sourceSha256": "006fd1e2ab65ffe0b1e7add67a01f217e39f675b45833a55ac8e16c3eaaee2f5",
+      "exportSha256": "a9b8fc109eb5069a5d30184abeaf9bd5a4e69331249369b3448f35ad611260e3"
+    },
+    "혼돈의 갑주": {
+      "styleVersion": 2,
+      "familyKey": "armor-plate",
+      "batchId": "signature-mythic-armor-plate-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-plate-01-item.png",
+      "sourceSha256": "006fd1e2ab65ffe0b1e7add67a01f217e39f675b45833a55ac8e16c3eaaee2f5",
+      "exportSha256": "673158ff70d6967be6a5c4fad425965a107a2da3e3cf00fa3c9eede4ea6268fd"
+    },
+    "세계수의 로브": {
+      "styleVersion": 2,
+      "familyKey": "armor-robe",
+      "batchId": "signature-mythic-armor-robe-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-armor-robe-01-item.png",
+      "sourceSha256": "4ce0a08960f8de220c7d4ff5fcc3a055aad656aa672e58dc03a79d4d92ede3a7",
+      "exportSha256": "4229a23b77a88911cf846ba18fddb3258b8ce89cb2c3e8ff631caf0d9dff9104"
+    },
+    "에테르 그리모어": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "signature-mythic-offhand-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-offhand-book-01-item.png",
+      "sourceSha256": "e39073dca4e513c68d0d9f1cba100bb1647625f7df9ac0178fae1c7adbd87c52",
+      "exportSha256": "784d63aa0de8aec39e5cdcedafab99be1e964c2e29a765f553995c8b1d6e27b9"
+    },
+    "천공 성전": {
+      "styleVersion": 2,
+      "familyKey": "offhand-book",
+      "batchId": "signature-mythic-offhand-book-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-offhand-book-01-item.png",
+      "sourceSha256": "e39073dca4e513c68d0d9f1cba100bb1647625f7df9ac0178fae1c7adbd87c52",
+      "exportSha256": "08b2d16375a91b191dfaf2b5be9179c1e69e99fc328b59f5ba7ba0e2aee63433"
+    },
+    "차원 방패 이지스": {
+      "styleVersion": 2,
+      "familyKey": "offhand-shield",
+      "batchId": "signature-mythic-offhand-shield-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-offhand-shield-01-item.png",
+      "sourceSha256": "758208c65bb091c09b9486a9f05bcb4c9a452cfce16807076698f9be7904dda0",
+      "exportSha256": "1e7d667755c35e89c7a076e82f6e6940a45159517077306df4067008c3f5d87b"
+    },
+    "바람의 궁극": {
+      "styleVersion": 2,
+      "familyKey": "weapon-bow",
+      "batchId": "signature-mythic-weapon-bow-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-bow-01-item.png",
+      "sourceSha256": "3a5b301e00fe1992e079dc8b4329a1318f36662125a714a48eb163073461498a",
+      "exportSha256": "b40b06e1829191b82e048830eb04148b8aa12fc85850c51eb19aa752a8d5bfac"
+    },
+    "그림자 절단기": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "signature-mythic-weapon-dagger-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-dagger-01-item.png",
+      "sourceSha256": "626b56c3e9dde95216445ea91e0f6bd9228282cea6b649231b1acf3025777a29",
+      "exportSha256": "2d493fb01d1abbe5df7e1a795b313c8a45e1052b167bcdf71db968b4923c1b23"
+    },
+    "영혼 절단자": {
+      "styleVersion": 2,
+      "familyKey": "weapon-dagger",
+      "batchId": "signature-mythic-weapon-dagger-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-dagger-01-item.png",
+      "sourceSha256": "626b56c3e9dde95216445ea91e0f6bd9228282cea6b649231b1acf3025777a29",
+      "exportSha256": "73aaddd822849a11eafe63845dd77e2b770210e7edf9d78ca1a16d6aa4db9502"
+    },
+    "마왕의 대낫": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "signature-mythic-weapon-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-lance-01-item.png",
+      "sourceSha256": "469269d03774eb9b4253ad47b7abb3c796fd822e388f1dd6dabb5595235b0fa0",
+      "exportSha256": "142dfd75e545db164ddd5ec387578af262ffef15e80520566b03150192160540"
+    },
+    "성스러운 창": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "signature-mythic-weapon-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-lance-01-item.png",
+      "sourceSha256": "469269d03774eb9b4253ad47b7abb3c796fd822e388f1dd6dabb5595235b0fa0",
+      "exportSha256": "abb5c42ab48d776d4d8a3df478eebf131ea8ea0635e00969824389fbdf069fb9"
+    },
+    "차원 마왕의 낫": {
+      "styleVersion": 2,
+      "familyKey": "weapon-lance",
+      "batchId": "signature-mythic-weapon-lance-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-lance-01-item.png",
+      "sourceSha256": "469269d03774eb9b4253ad47b7abb3c796fd822e388f1dd6dabb5595235b0fa0",
+      "exportSha256": "fe529d4afe2a2098d2f5f4a1f70e8982317796815f1874e30c7fa9d1c2724b6e"
+    },
+    "세계수의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "signature-mythic-weapon-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-staff-01-item.png",
+      "sourceSha256": "474523941c277cf096bf2c038e086f29775eb7f0926111be76525ede43273327",
+      "exportSha256": "640b618d75837dee05b91c892ed64f4cac8d6b6a3073cae79729b5c444bfd58b"
+    },
+    "신전 도시의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "signature-mythic-weapon-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-staff-01-item.png",
+      "sourceSha256": "474523941c277cf096bf2c038e086f29775eb7f0926111be76525ede43273327",
+      "exportSha256": "d4e90020d70f0d2dd94ee96cea2c1191e397342e36b9a86b4520eb3a89504311"
+    },
+    "천벌의 지팡이": {
+      "styleVersion": 2,
+      "familyKey": "weapon-staff",
+      "batchId": "signature-mythic-weapon-staff-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-staff-01-item.png",
+      "sourceSha256": "474523941c277cf096bf2c038e086f29775eb7f0926111be76525ede43273327",
+      "exportSha256": "a54263201bfacb57946082f821db616b2affb1d4724f57c25cf996f316b178f8"
+    },
+    "대지의 심판": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "signature-mythic-weapon-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
+      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "exportSha256": "c721c88c45fd864a398bb975d7b82097438d469ed2dbfc67988297bf6bf4d9ea"
+    },
+    "라그나로크": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "signature-mythic-weapon-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
+      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "exportSha256": "3efc33c62a99839611e6420c0325ada0c382345165c8fb034824201e7d9c1edc"
+    },
+    "빙결의 왕관검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "signature-mythic-weapon-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
+      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "exportSha256": "6bd0fea1bf86b964b11d5be656907fabb7f5931440062d3e9c6b29e6fa122b73"
+    },
+    "성검 에테르니아": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "signature-mythic-weapon-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
+      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "exportSha256": "bda55ffbad64c11e9c15eec8610ae2f77d79b9dc84c5e9ba26617e4f21149e78"
+    },
+    "세계수의 검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "signature-mythic-weapon-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
+      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "exportSha256": "20886319ab2c1886638defdab71841ed2c792935ff5f42b016787d0807a26d2c"
+    },
+    "에테르 거인의 대검": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "signature-mythic-weapon-sword-01",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
+      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "exportSha256": "f21883f6c4cb39f20528790920ae6601cba0cad089c6cfc4e679dc4456646d86"
+    },
+    "용의 화염": {
+      "styleVersion": 2,
+      "familyKey": "weapon-sword",
+      "batchId": "signature-mythic-weapon-sword-02",
+      "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-02-item.png",
+      "sourceSha256": "576a2c8a8ca4effff6481f3e79b811a3166f853ed3e694409863c39cbf652ebf",
+      "exportSha256": "c21470f6fd5bd19ff79e105a69e490f40b8df11140bfebea103d766d0d97bea5"
+    }
+  }
+}

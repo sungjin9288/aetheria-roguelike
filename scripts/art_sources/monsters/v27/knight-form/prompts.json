@@ -1,0 +1,61 @@
+{
+  "mode": "built-in",
+  "runtimeAdopted": false,
+  "records": [
+    {
+      "slug": "death-knight",
+      "name": "데스나이트",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: DEATH KNIGHT with SOLID black steel plate armor, CLOSED helmet, two planted heavy armored legs. Holds one large broad TWO-HANDED SWORD diagonally across torso, both gauntlets gripping hilt. Broad cool gray highlight planes make black plate legible. Compact powerful grounded body, no hollow cloth ghost, no floating torso, no shield, no enormous horns."
+    },
+    {
+      "slug": "wraith-knight",
+      "name": "망령 기사",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: WRAITH KNIGHT, empty armored helmet above broad haunted shoulders, lower body breaks into TWO short separated ragged spectral armor/cloth lobes with no feet. Carries a BROAD shield off to one side. Pale desaturated blue-gray opaque leading edges and midtone chest plate, clear open dark helmet. Wide ghost silhouette, no physical legs, no wispy haze, no crown or staff."
+    },
+    {
+      "slug": "wraith-commander",
+      "name": "망령 기사단장",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: WRAITH KNIGHT COMMANDER: very upright empty knight helmet with HIGH solid crest, slim raised COMMAND SWORD, and long cape SPLIT into two broad spread side tails. Opaque silver-gray helmet and central breastplate with pale purple broad cloth shapes. Lower torso suspended without ordinary feet. Tall commanding silhouette distinct from a squat shield wraith. No shield, staff, diffuse glow, tiny particles."
+    },
+    {
+      "slug": "ghost-knight",
+      "name": "유령 기사",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: GHOST KNIGHT: thin ghostly armor surrounding a THICK bright pale teal CENTRAL breastplate. Narrow continuous body tapering down into ONE curved spectral tail with crisp pixel outline, not two legs or ragged separated lobes. Small empty helmet and slender folded arms along torso, a short dim blade close at waist. Bright opaque central plate and strong outlined outer contour remain visible at32px. No large shield, crest, cape wings, haze or disconnected particles."
+    },
+    {
+      "slug": "drowned-knight",
+      "name": "익사한 기사",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: DROWNED KNIGHT in heavy damp rusted armor, ROUND domed helmet with dark narrow visor, low held SHORT broad sword. A long wide ragged SEAWEED cape drags behind one bent leg, green-blue broad strands grouped as a solid readable silhouette. Hunched grounded posture, thick rusty bronze plates with blue-green patches, two visible boots. No water scene, puddle, bubbles, fish, floating ghost body or thin hairlike weeds."
+    },
+    {
+      "slug": "cursed-knight",
+      "name": "저주받은 기사",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: CURSED KNIGHT with strongly ASYMMETRIC armor: ONE shoulder plate rises high beside helmet while other shoulder stays low. Holds a broad INWARD-CURVING blade close across the body, hooked toward chest. Two solid planted plate legs, closed angular helmet. Muted violet steel midtones, two broad pale cracks CONTAINED inside armor surfaces not flying outward. No symmetric giant shoulders, shield, flames, smoke or ghost tail."
+    },
+    {
+      "slug": "fallen-knight",
+      "name": "타락 기사",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: FALLEN KNIGHT with broad TWISTED shoulder armor, a heavy TILTED shield slanting across one side, and TWO very thick plated legs firmly spread. Closed low helmet recessed in shoulders. Dark iron with broad mossy gray metallic light planes and dull bronze joints. Shield angled off vertical is a major silhouette cue. No ghost torso, flowing spectral cloth, crown, spear, flames or giant eye."
+    },
+    {
+      "slug": "fallen-champion",
+      "name": "타락한 용사",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: FALLEN CHAMPION, worn human heroic fighter with a visibly HUMAN tired face under half-open simple helmet, a TORN broad hero cape extending sideways, and a large BROKEN GREATSWORD held out LOW along one long diagonal arm. Long asymmetric stance one leg forward. Dented silver-bronze armor and muted faded red cape, broad clusters. Broken blade tip visibly truncated and jagged. Not a skull, ghost, faceless black helmet or demon. No shield or gore."
+    },
+    {
+      "slug": "doom-knight",
+      "name": "파멸의 기사",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: DOOM KNIGHT, massive WEDGE-SHAPED helmet and heavy plate body LEANING diagonally forward in a downward cutting stance. One long broad sword angles DOWN from two-handed grip, fully inside frame. Asymmetric tilted body axis, thick rear leg bracing momentum. Charcoal plate with broad warm gray planes and restrained dark crimson cloth. No vertical statue pose, shield, huge wings, flames or spectral tail."
+    },
+    {
+      "slug": "hell-gatekeeper",
+      "name": "지옥의 문지기",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: HELL GATEKEEPER: extremely BROAD grounded guard with two thick short armored legs and TWO enormous DOOR-PANEL rectangular shields, one on each forearm, held out symmetrically like closed gate leaves. Small solid helmet between shoulders. Dark bronze iron armor with broad medium-value orange-brown planes; a few dull ember marks ONLY low on armor. Solid heavy humanoid, not a ghost or robe. No fire cloud, floating particles, weapons, horns, archway or actual environment gate."
+    },
+    {
+      "slug": "void-knight",
+      "name": "허무의 기사",
+      "prompt": "Use case: stylized-concept. Asset type: ONE enemy sprite for Aetheria mobile pixel-art RPG, must read clearly at 32px. Coarse crisp pixel-art with large coherent clusters and hard stepped edges, not fine stippling or painterly detail. Broad mid-value surfaces readable on dark and ivory backgrounds. Entire single figure and every weapon inside generous empty margins (at least 8 percent on all sides), square composition three-quarter front. True transparent RGBA background and holes. No backdrop, floor, shadow, pedestal, checkerboard, text, frame, detached particles or glow haze. Subject: VOID KNIGHT: visibly BROKEN segmented armor surrounding a LARGE genuine TRANSPARENT EMPTY GAP in the torso, empty closed metal helmet, separated shoulder and hip armor aligned into a humanoid outline. Holds ONE continuous SOLID broad sword vertically along one side as a clear body anchor. Purple-gray steel plates with broad pale gray edges. No eyeball anywhere, no black blob filling the empty torso hole, no cloak filling the gap, no shield, smoke, haze or detached tiny particles."
+    }
+  ]
+}

@@ -104,7 +104,7 @@ test('canonical relic balance report is deterministic, complete, and owner-quote
     assert.equal(report.effects.length, 61);
     const effectsByCategory = Object.fromEntries([
         'abyss-only', 'baseline-stat', 'combat-scaling', 'conditional-combat',
-        'exploration-pacing', 'failure-rule', 'resource-economy', 'run-scaling',
+        'expedition-scaling', 'exploration-pacing', 'failure-rule', 'resource-economy', 'run-scaling',
     ].map((category) => [
         category,
         report.effects.filter((row) => row.category === category).map((row) => row.effect),
@@ -116,19 +116,20 @@ test('canonical relic balance report is deterministic, complete, and owner-quote
             'elem_boost', 'fortress', 'genesis', 'glass_cannon', 'mp_mult', 'omega',
             'reflect_crit', 'skill_mult', 'stone_skin', 'titan', 'triple_up',
         ],
-        'combat-scaling': ['combo_stack', 'entropy_tick', 'kill_stack_atk', 'spell_stack'],
+        'combat-scaling': ['combo_stack', 'entropy_tick', 'spell_stack'],
         'conditional-combat': [
             'battle_start_buff', 'battle_start_heal', 'cd_minus', 'chaos_buff',
-            'cooldown_reduce', 'crit_block', 'crit_mp_regen', 'cursed_power', 'dot_mult',
+            'cooldown_reduce', 'crit_block', 'crit_mp_regen', 'cursed_power', 'devour_hp', 'dot_mult',
             'double_strike', 'echo_atk', 'execute_atk', 'execute_bonus', 'first_turn_evade',
             'free_skill', 'hp_drain_atk', 'low_hp_atk', 'low_hp_dmg', 'mp_regen_turn',
             'mp_restore_battle', 'on_hit_freeze', 'on_kill_heal', 'reflect', 'regen',
             'skill_lifesteal', 'status_resist',
         ],
+        'expedition-scaling': ['kill_stack_atk'],
         'exploration-pacing': ['boss_hunter', 'chaos_relic', 'event_chance'],
         'failure-rule': ['death_save', 'phoenix_revive', 'void_heart'],
         'resource-economy': ['drop_rate', 'exp_mult', 'gold_mult', 'kill_bonus'],
-        'run-scaling': ['devour_hp', 'kill_stack'],
+        'run-scaling': ['kill_stack'],
     });
     assert.deepEqual(
         [...new Set(report.effects.flatMap(({ runtimeOwners }) => runtimeOwners))].sort(),

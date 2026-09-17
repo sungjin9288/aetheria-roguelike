@@ -1,0 +1,233 @@
+{
+  "runtimeAdopted": false,
+  "sources": [
+    {
+      "file": "cloud-spirit.png",
+      "sha256": "8548dd8cc010338e7e371479c4941dcc688fcb791bdd21d969323762218885c8",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        111,
+        27,
+        1180,
+        1224
+      ]
+    },
+    {
+      "file": "gale-elemental.png",
+      "sha256": "535ffcb7b9ae5fcf3221712c40f8c0806593d6b74f47577808c202c0f6123bb9",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        40,
+        18,
+        1217,
+        1235
+      ]
+    },
+    {
+      "file": "light-crystal.png",
+      "sha256": "457c05d678d5b6ab09aca66a9808a1d60e0ef358df93ee36520ff859b5ecbab6",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        214,
+        14,
+        1017,
+        1231
+      ]
+    },
+    {
+      "file": "lightning-spirit.png",
+      "sha256": "62495b17ee46eff19669555b8eba8c0e0307a665885519b75aef821a1056a271",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        113,
+        17,
+        1149,
+        1235
+      ]
+    },
+    {
+      "file": "nebula-watcher.png",
+      "sha256": "324ce8a80f485b804a33ea10b0ac636ae8e8298cd1645f2f6c9991268e0c922a",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        43,
+        17,
+        1210,
+        1231
+      ]
+    },
+    {
+      "file": "sky-guardian-bird.png",
+      "sha256": "ba59268bda3f12bc9a13bd6cb36b349cf0ea7fde2d79d4fd0c3138bb4d9a2d9d",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        19,
+        21,
+        1236,
+        1232
+      ]
+    },
+    {
+      "file": "sky-spirit.png",
+      "sha256": "50d304d5fca75a5e2eb551f6d0aeed37e615ebe52666f0ca989d5cf2e982d2b0",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        154,
+        30,
+        1155,
+        1227
+      ]
+    },
+    {
+      "file": "storm-falcon.png",
+      "sha256": "3a2d87091728a0ffb117d1bdbd1e917df0e55ee9c44341403cd561a0ede2e0b9",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        41,
+        6,
+        1239,
+        1214
+      ]
+    },
+    {
+      "file": "storm-griffin.png",
+      "sha256": "79e964b99b4cb20e920815919197e3d7195153a011bff6858b2dc5cd8879c804",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        64,
+        64,
+        1233,
+        1180
+      ]
+    },
+    {
+      "file": "storm-siren-compact.png",
+      "sha256": "f9b3cbe97030ceef1470996023e54b8854622fb73e24203922d9884879d4852c",
+      "mode": "RGB",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        255,
+        255
+      ],
+      "opaqueBounds": [
+        0,
+        0,
+        1254,
+        1254
+      ]
+    },
+    {
+      "file": "storm-siren-initial.png",
+      "sha256": "c2f564930b6236c5b893099d8eebdf815351abbf8d78f76d1318dc0d53d07643",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        10,
+        12,
+        1246,
+        1238
+      ]
+    },
+    {
+      "file": "wind-spirit.png",
+      "sha256": "b8bae5b2420653e71e7592d04530c730841f22f0d85761c8775f967bd39081ff",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "opaqueBounds": [
+        100,
+        26,
+        1190,
+        1222
+      ]
+    }
+  ]
+}

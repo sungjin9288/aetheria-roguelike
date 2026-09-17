@@ -50,7 +50,7 @@ test('ruins and fire visual families cover their planned encounter set', async (
     assert.equal(getMonsterVisual('분노한 화염의 군주')?.key, 'fire-lord');
     assert.equal(getMonsterVisual('격노한 레드 드래곤')?.key, 'red-dragon');
     assert.equal(getMonsterVisual('정예 숲의 정령')?.key, 'forest-spirit');
-    assert.equal(getMonsterVisual('고대 호수의 수호신'), null);
+    assert.ok(getMonsterVisual('고대 호수의 수호신'));
 });
 
 test('every world location has one unique fixed 96px RGBA medallion', async () => {
@@ -70,7 +70,7 @@ test('every world location has one unique fixed 96px RGBA medallion', async () =
     assert.equal(visualKeys.size, Object.keys(MAPS).length);
 });
 
-test('runtime components expose exact and fallback art states without revealing blind routes', async () => {
+test('runtime components expose exact canonical and undiscovered art states without revealing blind routes', async () => {
     const [monsterIcon, routeTopology, terminalView] = await Promise.all([
         readFile(path.join(ROOT, 'src/components/icons/MonsterIcon.tsx'), 'utf8'),
         readFile(path.join(ROOT, 'src/components/RouteTopology.tsx'), 'utf8'),
@@ -78,7 +78,7 @@ test('runtime components expose exact and fallback art states without revealing 
     ]);
 
     assert.match(monsterIcon, /data-monster-art=/);
-    assert.match(monsterIcon, /'family-fallback'/);
+    assert.match(monsterIcon, /'unknown-fallback'/);
     assert.match(monsterIcon, /data-region-family=\{visual\?\.regionKey\}/);
     assert.match(routeTopology, /blindMap \? null : getLocationVisual/);
     assert.match(routeTopology, /data-location-visual=\{locationVisual\?\.key\}/);

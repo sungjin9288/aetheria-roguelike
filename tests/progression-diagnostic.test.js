@@ -8,6 +8,7 @@ import {
     buildProgressionDiagnostic,
 } from '../src/systems/progressionSimulator.ts';
 import { getBossSignatureDrops } from '../src/utils/bossSignatureHint.ts';
+import { getReachableMaps } from '../src/utils/mapAccess.ts';
 
 const codePointOrder = (left, right) => (left < right ? -1 : left > right ? 1 : 0);
 const EXPECTED_JOBS = Object.keys(DB.CLASSES).sort(codePointOrder);
@@ -20,6 +21,27 @@ const options = {
     comparisonSeeds: [20_260_824, 20_260_825, 20_260_826],
     maxCombatTurns: 200,
 };
+
+const assertHighestReachableMap = (row) => {
+    const reachable = getReachableMaps(DB.MAPS, '시작의 마을', row.level);
+    const candidates = Object.entries(DB.MAPS)
+        .filter(([name, map]) => reachable.has(name)
+            && map.type !== 'safe'
+            && typeof map.level === 'number'
+            && map.level <= row.level
+            && map.monsters?.length > 0)
+        .sort(([leftName, left], [rightName, right]) => (
+            right.level - left.level || codePointOrder(leftName, rightName)
+        ));
+    assert.equal(row.map, candidates[0]?.[0], `${row.job}: highest reachable map`);
+};
+
+test('map selection oracle rejects a reachable but lower-level diagnostic fixture', () => {
+    assert.throws(() => assertHighestReachableMap({
+        job: '대마법사', level: 60, map: '고요한 숲',
+    }), /highest reachable map/);
+    assertHighestReachableMap({ job: '대마법사', level: 60, map: '심해 회랑' });
+});
 
 test('schema v2 keeps diagnostic claims honest and covers every production cohort', () => {
     const report = buildProgressionDiagnostic(options);
@@ -39,6 +61,10 @@ test('schema v2 keeps diagnostic claims honest and covers every production cohor
     assert.deepEqual(report.combat.jobs.map(({ job }) => job), EXPECTED_JOBS);
     assert.deepEqual(report.loot.jobs.map(({ job }) => job), EXPECTED_JOBS);
     assert.equal(report.combat.jobs.length, 18);
+    for (const row of [...report.combat.jobs, ...report.loot.jobs]) {
+        assertHighestReachableMap(row);
+        if (row.level === 60) assert.notEqual(row.map, '금지된 도서관');
+    }
     assert.equal(report.combat.jobs.every(({ cohorts }) => cohorts.length === 4), true);
     assert.equal(report.combat.jobs.every(({ cohorts }) => (
         cohorts.slice(1).every(({ encounterKeys }) => (

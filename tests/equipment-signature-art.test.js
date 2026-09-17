@@ -8,6 +8,9 @@ import { fileURLToPath } from 'node:url';
 import signatureRegistry from '../src/data/signatureRegistry.json' with { type: 'json' };
 import { buildEquipmentCatalogRows } from '../scripts/dump-equipment-catalog.mjs';
 import { verifyArtAssets } from '../scripts/verify-art-assets.mjs';
+import { buildSignaturePromptBatchFromRows } from '../scripts/signaturePromptContract.mjs';
+import { ITEMS } from '../src/data/items.ts';
+import { getWeaponVisualKey } from '../src/utils/itemVisuals.ts';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const MANIFEST_PATH = path.join(ROOT, 'src/data/equipmentArtManifest.json');
@@ -20,6 +23,43 @@ const SOURCE_DIR = path.join(ROOT, 'scripts/art_sources/equipment/v2/signature-m
 const PUBLIC_DIR = path.join(ROOT, 'public');
 const SHA256 = /^[0-9a-f]{64}$/;
 const CELL_ORDER = ['top-left', 'top-center', 'top-right', 'bottom-left', 'bottom-center', 'bottom-right'];
+
+test('Earth Verdict runtime adopts the reviewed sword while preserving other signature exports', async () => {
+    const correction = path.join(ROOT, 'scripts/art_sources/equipment/v3/earth-verdict');
+    for (const [surface, directory] of [['item', 'equipment-exact'], ['overlay', 'equipment-wearable-exact']]) {
+        assert.deepEqual(
+            await readFile(path.join(PUBLIC_DIR, 'assets', directory, 'signature-weapon-earth-verdict.png')),
+            await readFile(path.join(correction, 'prepared', `${surface}.png`)),
+            `${surface} must use the reviewed normalized sword`,
+        );
+    }
+    const previous = JSON.parse(await readFile(path.join(correction, 'previous/provenance.json'), 'utf8'));
+    for (const batch of previous.batches) {
+        for (const entry of [...batch.itemExports, ...batch.overlayExports]) {
+            if (entry.name === '대지의 심판') continue;
+            const bytes = await readFile(path.join(PUBLIC_DIR, entry.runtimePath));
+            assert.equal(createHash('sha256').update(bytes).digest('hex'), entry.exportSha256, entry.name);
+        }
+    }
+});
+
+test('Earth Verdict generation prompts preserve the production two-handed greatsword', async () => {
+    const item = ITEMS.weapons.find((entry) => entry.name === '대지의 심판');
+    assert.equal(item.hands, 2);
+    assert.equal(getWeaponVisualKey(item), 'greatsword');
+    const manifest = JSON.parse(await readFile(MANIFEST_PATH, 'utf8'));
+    const batch = buildSignaturePromptBatchFromRows({
+        catalog: await buildEquipmentCatalogRows(),
+        registry: signatureRegistry.entries,
+        catalogSha256: manifest.catalogSha256,
+        batchId: 'signature-mythic-earth-verdict-regression',
+        names: item.name,
+    });
+    for (const prompt of [batch.itemPrompt, batch.overlayPrompt]) {
+        assert.match(prompt, /2H greatsword/);
+        assert.doesNotMatch(prompt, /warhammer|네모 대형 헤드/);
+    }
+});
 
 const EXPECTED_BATCHES = Object.freeze({
     'signature-mythic-armor-cloak-01': ['암흑 군주의 망토'],
@@ -232,7 +272,7 @@ test('Task 8 anonymous contact answer key is an exact deterministic row-major re
         readJson(PROVENANCE_PATH),
         readFile(ANSWER_KEY_PATH),
     ]);
-    assert.equal(sha256(answerKeyBytes), '7e909dfa746bf332c8a98e3cc7277a9590130d4128d31c0cb2c906e75efe3092');
+    assert.equal(sha256(answerKeyBytes), '30e5a01f44bcd04a8cf590528281b86d3f60ef5040c9bdd094a58753a6c2b796');
     const answerKey = JSON.parse(answerKeyBytes.toString('utf8'));
     const names = provenance.batches.flatMap((record) => record.identityNames);
     assert.deepEqual(Object.keys(answerKey), ['version', 'order', 'entries']);
@@ -254,17 +294,18 @@ test('Task 8 named, anonymous, and corrected staff review sheets are determinist
     assert.deepEqual([named.width, named.height, named.colorType], [1400, 1100, 6]);
     assert.deepEqual([anonymous.width, anonymous.height, anonymous.colorType], [1400, 900, 6]);
     assert.deepEqual([staff.width, staff.height, staff.colorType], [560, 180, 6]);
-    assert.equal(sha256(named.bytes), '2367047e45010b383dc77ecb2e0899b0be74bc53a13d41b61ee8aba186df566c');
-    assert.equal(sha256(anonymous.bytes), 'b88f8826dec8501ac28cc0c4e21e2d792ce3d4adec736535a41ae824dc2d7e36');
+    assert.equal(sha256(named.bytes), '51b1548d0186ecef32723d7541e1ad36fb1b3f358686eb62620b8f0012692109');
+    assert.equal(sha256(anonymous.bytes), '066a0601bcf0fde450230d441b3d989a662bd226646b7d57e90dfd11bdfbde21');
     assert.equal(sha256(staff.bytes), '07eebdc19515cf234290662aca0602be1f33400524dec2527b4729d76e822556');
 });
 
 test('Task 8 full verifier includes families and signature overlays in the approved art report', async () => {
     const report = await verifyArtAssets({ scope: 'all' });
-    assert.deepEqual(report.verifiedSurfaces, ['characters', 'equipment', 'families', 'signature-overlays']);
+    assert.deepEqual(report.verifiedSurfaces, ['characters', 'equipment', 'families', 'signature-overlays', 'monsters']);
     assert.equal(report.counts.equipment, 229);
     assert.equal(report.counts.families, 22);
     assert.equal(report.counts.signatureOverlays, 25);
-    assert.equal(report.exports.length, 294, '18 characters + 229 equipment + 22 families + 25 overlays');
+    assert.equal(report.counts.monsters, 254);
+    assert.equal(report.exports.length, 548, '18 characters + 229 equipment + 22 families + 25 overlays + 254 monsters');
     assert.equal(report.ok, true, JSON.stringify(report, null, 2));
 });

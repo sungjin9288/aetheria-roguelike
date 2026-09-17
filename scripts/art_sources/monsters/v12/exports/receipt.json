@@ -1,0 +1,82 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "cloud-spirit": "9c3127730e41ea6af4c4bd1c6b8fc5323176798c7f1d5d1aacf8ff652c9d713b",
+    "gale-elemental": "9bd3aaff9402d25dbd7947a2b4d0416005880cd4c2cc9bd343cd4a8c9910fa79",
+    "light-crystal": "3bf87a1adcec7f794b2777e3de487c4e5488ba56d83d0946fb528f86e2de6e6d",
+    "lightning-spirit": "a6fc825f4635ad72b4968600ceca6c83183c2203ef4847d1c97bd2a1574c5a6a",
+    "nebula-watcher": "d4fca2d3c5df53248e556c26ee3cfcffb7c8d88ade144f7e030dca3cbc1bfdf7",
+    "sky-guardian-bird": "d7e5f991c97ea96aac5e36f152234a69afb661da456a5296433f210956b9264a",
+    "sky-spirit": "0bdae57945e3abc77950359972e2820ab324574c07d7134846fb0ff46e3a9226",
+    "storm-falcon": "93c38ba9d5db01d06d2c5136a8be2664bf330b73969829701ac1acef22207db6",
+    "storm-griffin": "d8102570c19a0c09ab257ea08ab08421a4023a9215e141b0f6df32a35d166d7c",
+    "storm-siren": "8478e1197c5255ad2fc5792444fc1753d3045368399c70653c98c7e1b58de810",
+    "wind-spirit": "ad5ec7730df950acbd3f65ec68600cd96d26336e3da7c7e7c6e5fc14fbfebb27"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "selection": {
+    "cloud-spirit": {
+      "master": "cloud-spirit.png",
+      "sha256": "8548dd8cc010338e7e371479c4941dcc688fcb791bdd21d969323762218885c8"
+    },
+    "gale-elemental": {
+      "master": "gale-elemental.png",
+      "sha256": "535ffcb7b9ae5fcf3221712c40f8c0806593d6b74f47577808c202c0f6123bb9"
+    },
+    "light-crystal": {
+      "master": "light-crystal.png",
+      "sha256": "457c05d678d5b6ab09aca66a9808a1d60e0ef358df93ee36520ff859b5ecbab6"
+    },
+    "lightning-spirit": {
+      "master": "lightning-spirit.png",
+      "sha256": "62495b17ee46eff19669555b8eba8c0e0307a665885519b75aef821a1056a271"
+    },
+    "nebula-watcher": {
+      "master": "nebula-watcher.png",
+      "sha256": "324ce8a80f485b804a33ea10b0ac636ae8e8298cd1645f2f6c9991268e0c922a"
+    },
+    "sky-guardian-bird": {
+      "master": "sky-guardian-bird.png",
+      "sha256": "ba59268bda3f12bc9a13bd6cb36b349cf0ea7fde2d79d4fd0c3138bb4d9a2d9d"
+    },
+    "sky-spirit": {
+      "master": "sky-spirit.png",
+      "sha256": "50d304d5fca75a5e2eb551f6d0aeed37e615ebe52666f0ca989d5cf2e982d2b0"
+    },
+    "storm-falcon": {
+      "master": "storm-falcon.png",
+      "sha256": "3a2d87091728a0ffb117d1bdbd1e917df0e55ee9c44341403cd561a0ede2e0b9"
+    },
+    "storm-griffin": {
+      "master": "storm-griffin.png",
+      "sha256": "79e964b99b4cb20e920815919197e3d7195153a011bff6858b2dc5cd8879c804"
+    },
+    "storm-siren": {
+      "master": "storm-siren-compact.png",
+      "sha256": "f9b3cbe97030ceef1470996023e54b8854622fb73e24203922d9884879d4852c"
+    },
+    "wind-spirit": {
+      "master": "wind-spirit.png",
+      "sha256": "b8bae5b2420653e71e7592d04530c730841f22f0d85761c8775f967bd39081ff"
+    }
+  },
+  "sirenBackgroundSeeds": [
+    [
+      0,
+      0
+    ],
+    [
+      806,
+      675
+    ],
+    [
+      720,
+      811
+    ],
+    [
+      506,
+      409
+    ]
+  ]
+}

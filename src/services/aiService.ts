@@ -47,15 +47,26 @@ const callProxy = async (body: any, trackLabel: any, timeoutMs: any) => {
     }
 };
 
+const getNarrativeLocation = (data: any) => {
+    const canonicalLocation = data?.location;
+    if (typeof canonicalLocation === 'string' && canonicalLocation.trim()) return canonicalLocation;
+
+    const legacyLocation = data?.loc;
+    if (typeof legacyLocation === 'string' && legacyLocation.trim()) return legacyLocation;
+
+    return '알 수 없음';
+};
+
 // --- AI SERVICE (v3.7) ---
 export const AI_SERVICE = {
     getFallback: (type: any, data: any) => {
+        const location = getNarrativeLocation(data);
         const templates: Record<string, any> = {
-            encounter: `${data.loc}의 어둠 속에서 ${data.name}의 기척이 나타났습니다.`,
+            encounter: `${location}의 어둠 속에서 ${data.name}의 기척이 나타났습니다.`,
             victory:   `${data.name}에게 마지막 일격을 가해 승리했습니다.`,
             death:     `${data.player?.name || '당신'}의 의식이 서서히 흐려집니다.`,
             levelUp:   `새로운 힘이 깨어나 레벨 ${data.level}에 도달했습니다.`,
-            rest:      `${data.loc}에서 편안히 쉬며 생명을 회복했습니다.`,
+            rest:      `${location}에서 편안히 쉬며 생명을 회복했습니다.`,
             // Stage 1 확장 타입
             bossPhase2:    `${data.bossName || '보스'}의 진정한 힘이 드러나며 공간이 뒤틀립니다.`,
             questComplete: `${data.questTitle || '새로운'} 임무를 마쳤습니다. 에테리아의 기록에 새로운 이야기가 새겨집니다.`,
@@ -126,17 +137,18 @@ export const AI_SERVICE = {
         }
 
         const compactHistory = summarizeHistory(data?.history);
+        const location = getNarrativeLocation(data);
 
         // Stage 1: 지원 타입 확장 맵핑 (bossPhase2, questComplete, ruinRecap)
         const contextMap: Record<string, any> = {
-            encounter:     `${data.loc}에서 ${data.name} 몬스터와 조우`,
+            encounter:     `${location}에서 ${data.name} 몬스터와 조우`,
             victory:       `${data.name} 처치 후 승리`,
-            death:         `${data.player?.name || '용사'}의 전사 — ${data.loc}`,
+            death:         `${data.player?.name || '용사'}의 전사 — ${location}`,
             levelUp:       `레벨 ${data.level} 달성`,
-            rest:          `${data.loc}에서 휴식`,
-            bossPhase2:    `보스 [${data.bossName}] Phase 2 전환 \u2014 ${data.loc}`,
-            questComplete: `퀘스트 [퀘스트: ${data.questTitle}] 완료 in ${data.loc}`,
-            ruinRecap:     `${data.name}의 사망 후회고 — 레벨 ${data.level}, ${data.loc}에서 전사`,
+            rest:          `${location}에서 휴식`,
+            bossPhase2:    `보스 [${data.bossName}] Phase 2 전환 \u2014 ${location}`,
+            questComplete: `퀘스트 [퀘스트: ${data.questTitle}] 완료 in ${location}`,
+            ruinRecap:     `${data.name}의 사망 후회고 — 레벨 ${data.level}, ${location}에서 전사`,
         };
         // context 변수를 AI 프록시에 전달하여 문맥 품질 향상
         const resolvedContext = contextMap[data.storyType] || contextMap[type] || (data.context || '모험');

@@ -29,7 +29,9 @@ AETHERIA_IOS_ALLOW_PROVISIONING_UPDATES=1 npm run ios:archive
 npm run ios:device:smoke
 ```
 
-`ios:device:smoke`는 archive를 설치한 뒤 실행하고, 기본 120초의 CoreDevice 단계 제한과 60초 process hold로 설치·실행 생존을 확인합니다. `devicectl`의 process 목록은 앱이 화면 앞에 있는지 증명하지 못하므로, 시작과 60초 뒤의 foreground 화면은 실제 기기 또는 iPhone 미러링으로 별도 확인합니다. 잠금은 설치 전 metadata 확인, 설치, 설치 후 확인, 실행 어느 단계에서도 발생할 수 있습니다. 스크립트가 잠금과 개발자 프로필 신뢰를 구분하고, 실패한 단계와 필요한 조치를 바로 출력합니다. 더 느린 연결에서만 `AETHERIA_DEVICECTL_TIMEOUT_SECONDS`를 명시해 제한을 늘립니다.
+`ios:device:smoke`는 archive를 설치한 뒤 실행하고, 기본 120초의 CoreDevice 단계 제한과 60초 process hold로 설치·실행 생존을 확인합니다. 설치된 bundle, launch receipt, 첫 process probe와 hold 이후 probe는 모두 `devicectl --json-output`으로 판정합니다. Metadata의 exact `bundleIdentifier`와 bundle URL에 launch의 `processIdentifier`·executable URL을 연결하고, 두 probe에서 같은 device·PID·실행 경로가 확인돼야 통과합니다. 다른 `App.app/App` 또는 Aetheria QA 앱의 생존은 대상 앱의 증거가 될 수 없으며 누락·손상·실패 receipt도 통과시키지 않습니다. 임시 receipt는 성공과 실패 모두 정리됩니다.
+
+`devicectl`의 process 목록은 앱이 화면 앞에 있는지 증명하지 못하므로, 시작과 60초 뒤의 foreground 화면은 실제 기기 또는 iPhone 미러링으로 별도 확인합니다. 마지막 probe에서 process가 사라졌다면 종료 원인은 **unknown**입니다. 같은 시점의 잠금 상태만으로 자동 잠금이나 crash를 원인으로 단정하지 않고, device state와 termination/crash 기록을 함께 확인합니다. 잠금은 설치 전 metadata 확인, 설치, 설치 후 확인, 실행 어느 단계에서도 발생할 수 있습니다. 스크립트가 잠금과 개발자 프로필 신뢰를 구분하고, 실패한 단계와 필요한 조치를 바로 출력합니다. 더 느린 연결에서만 `AETHERIA_DEVICECTL_TIMEOUT_SECONDS`를 명시해 제한을 늘립니다.
 
 기존 플레이어 세이브를 지우지 않고 신규 세이브 동선을 확인할 때는 production app을 초기화하지 않습니다. 아래 명령은 같은 source를 `com.aetheria.roguelike.freshqa` bundle로 별도 archive·설치하므로 기존 `com.aetheria.roguelike` data container를 건드리지 않습니다. 화면의 앱 이름은 production과 같을 수 있으므로 install·launch·제거 대상은 bundle ID로 구분합니다.
 

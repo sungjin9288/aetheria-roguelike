@@ -1,5 +1,6 @@
 import { DB } from '../data/db.js';
-import { BALANCE } from '../data/constants.js';
+import { BALANCE, CONSTANTS } from '../data/constants.js';
+import { getReachableMaps } from '../utils/mapAccess.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { buildClassVitals } from '../hooks/gameActions/_shared.js';
 import { INITIAL_STATE, type GameState } from '../reducers/gameReducer.js';
@@ -266,9 +267,11 @@ const jobUnlockLevel = (job: string) => (
 );
 
 const highestReachableMap = (level: number) => {
+    const reachable = getReachableMaps(DB.MAPS, CONSTANTS.START_LOCATION, level);
     const maps = Object.entries(DB.MAPS)
         .flatMap(([name, map]) => (
-            map.type !== 'safe'
+            reachable.has(name)
+            && map.type !== 'safe'
             && typeof map.level === 'number'
             && map.level <= level
             && Array.isArray(map.monsters)

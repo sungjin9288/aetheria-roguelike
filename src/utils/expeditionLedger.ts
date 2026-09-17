@@ -22,6 +22,7 @@ import {
 import { projectBoundedEncounterDiscoveries } from './boundedEncounterDiscovery.js';
 import { queueMilestoneStoryBeat } from './milestoneStory.js';
 import { isSignatureName } from './signatureDiscovery.js';
+import { calculateFullStats } from './statsCalculator.js';
 
 const numberOr = (value: unknown, fallback = 0) => (
     Number.isFinite(Number(value)) ? Number(value) : fallback
@@ -301,7 +302,7 @@ export const startExpedition = (
         startNextExp: Math.max(1, nonNegative(player.nextExp, CONSTANTS.START_NEXT_EXP)),
         startGold: nonNegative(player.gold),
         startHp: hp,
-        maxHpAtStart: Math.max(1, nonNegative(player.maxHp, 1)),
+        maxHpAtStart: Math.max(1, nonNegative(calculateFullStats(player)?.maxHp, 1)),
         lowestHp: hp,
         kills: nonNegative(player.stats?.kills),
         bossKills: nonNegative(player.stats?.bossKills),
@@ -355,7 +356,7 @@ export const finishExpedition = (player: Player, returnLocation: string, now: nu
         lowestHp,
         lowestHpPercent: Math.max(0, Math.min(100, Math.round((lowestHp / snapshot.maxHpAtStart) * 100))),
         returnHp: nonNegative(player.hp),
-        maxHpAtReturn: Math.max(1, nonNegative(player.maxHp, snapshot.maxHpAtStart)),
+        maxHpAtReturn: Math.max(1, nonNegative(calculateFullStats(player)?.maxHp, snapshot.maxHpAtStart)),
         reviewedAt: null,
         job: snapshot.job,
         skillChoices: snapshot.skillChoices,

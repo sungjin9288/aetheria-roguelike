@@ -8,9 +8,12 @@
  * 순수함수: 입력 → { ok, reason, ... } 반환. side effect 없음.
  */
 import { BALANCE } from '../data/constants';
-import { isTwoHandWeapon } from './equipmentUtils';
 import type { EquipSlots, Item } from '../types/index.js';
 import type { Player } from '../types/index.js';
+
+export const isWeapon = (item: Item | null | undefined) => item?.type === 'weapon';
+export const getWeaponHands = (weapon: Item | null | undefined) => Math.max(1, Number(weapon?.hands) || 1);
+export const isTwoHandWeapon = (weapon: Item | null | undefined) => isWeapon(weapon) && getWeaponHands(weapon) >= 2;
 
 export type CanEquipReason = 'level' | 'job' | 'two_hand_shield';
 
@@ -24,7 +27,7 @@ export type CanEquipResult =
  * 장비 착용 가능 여부를 판정한다. 원본 useItem의 검증 순서(레벨 → 직업 → 양손무기+방패)를
  * 그대로 보존 — 순서가 바뀌면 동시에 여러 조건을 위반하는 아이템의 로그 문구가 달라진다.
  */
-export const canEquip = (item: Item, player: Player, currentEquip: EquipSlots): CanEquipResult => {
+export const canEquip = (item: Item, player: Pick<Player, 'job' | 'level'>, currentEquip: EquipSlots): CanEquipResult => {
     const reqLevel = (item as any).reqLevel ?? (BALANCE.TIER_REQ_LEVEL?.[(item as any).tier] ?? 1);
     if (((player as any).level || 1) < reqLevel) {
         return { ok: false, reason: 'level', reqLevel };

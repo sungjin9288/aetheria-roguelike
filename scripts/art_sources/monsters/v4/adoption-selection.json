@@ -1,0 +1,129 @@
+{
+  "status": "visually-reviewed-five-ready-for-runtime-adoption",
+  "originalPromptSha256": "a7be18c42062bf499be8326dde32a72d003b2dca6bcc2432a98331d4b33cf836",
+  "framingPromptSha256": "ed041390ff3fd7a87fc007f1a066f91b503791486b5019a4865c891649abada7",
+  "preimageManifestSha256": "d97bf60e68499c572c9988125b37eb18907ccb9247daaa6d79025661861941af",
+  "entries": [
+    {
+      "name": "서리 군주",
+      "key": "monster-34852baa4124",
+      "masterPath": "scripts/art_sources/monsters/v4/masters/monster-34852baa4124-compact.png",
+      "masterSha256": "be626506749ec4a3a20561f3538ed71804d2b0fb03ee5feda4f4d5734091f173",
+      "exportPath": "scripts/art_sources/monsters/v4/exports/monster-34852baa4124-compact.png",
+      "exportSha256": "073baf8ae6646b78a83ad31c565a7e8a5bada620796f124dbf6178166f6b6a0f",
+      "previousPath": "scripts/art_sources/monsters/v4/previous/monster-34852baa4124.png",
+      "previousSha256": "6180dd08c5d40fb8b9b1c2c598c427184a804b7b28d105b295a8c1970d0ffcb1",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 149,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 149,
+          "left": 12,
+          "right": 145,
+          "top": 12
+        }
+      }
+    },
+    {
+      "name": "원시의 신",
+      "key": "monster-e1b8a03dea25",
+      "masterPath": "scripts/art_sources/monsters/v4/masters/monster-e1b8a03dea25.png",
+      "masterSha256": "bafa210e49cc3cb96e61be6bbde14df55e434afdbf99cf383d803bac7520c0fb",
+      "exportPath": "scripts/art_sources/monsters/v4/exports/monster-e1b8a03dea25.png",
+      "exportSha256": "f5b2c1931b1d09e3f4388643a7e7ef0c887084d568078c44f53b995f61cd3574",
+      "previousPath": "scripts/art_sources/monsters/v4/previous/monster-e1b8a03dea25.png",
+      "previousSha256": "c7c1b184e4a84c6c7adce1bd502d226dc75f2c1e28563d6a779cf027e5f5c129",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 145,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 145,
+          "left": 45,
+          "right": 114,
+          "top": 8
+        }
+      }
+    },
+    {
+      "name": "차원 파쇄자",
+      "key": "monster-33e00c5fa59c",
+      "masterPath": "scripts/art_sources/monsters/v4/masters/monster-33e00c5fa59c.png",
+      "masterSha256": "76f40f671b955e55aac483a00484e9621702600070e68df4cd7af6000db4567b",
+      "exportPath": "scripts/art_sources/monsters/v4/exports/monster-33e00c5fa59c.png",
+      "exportSha256": "816a54d75d282c7dbe400215cf64771b553188bcab2ac5003c6871a841dfb3f5",
+      "previousPath": "scripts/art_sources/monsters/v4/previous/monster-33e00c5fa59c.png",
+      "previousSha256": "202425bf1ae27a874aaab15378085615e1a63da64c67482109cc1c3234402aaa",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 148,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 148,
+          "left": 13,
+          "right": 142,
+          "top": 10
+        }
+      }
+    },
+    {
+      "name": "차원 포식자",
+      "key": "monster-660242f15f1c",
+      "masterPath": "scripts/art_sources/monsters/v4/masters/monster-660242f15f1c.png",
+      "masterSha256": "aa1122e9436bb56af7f3ba2210ba2c29a534f1f8819b530c054cf7e41bb4b253",
+      "exportPath": "scripts/art_sources/monsters/v4/exports/monster-660242f15f1c.png",
+      "exportSha256": "15064ce5ba615eab4519b246b0964f3255dabd390092c1412469682b21e4d12d",
+      "previousPath": "scripts/art_sources/monsters/v4/previous/monster-660242f15f1c.png",
+      "previousSha256": "e89bbc31433474062716bbc48bb21ed2d9abfff8159bfb130cedc764acd79863",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 149,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 149,
+          "left": 9,
+          "right": 149,
+          "top": 11
+        }
+      }
+    },
+    {
+      "name": "타락한 세계수 수호자",
+      "key": "monster-e33191d1f61f",
+      "masterPath": "scripts/art_sources/monsters/v4/masters/monster-e33191d1f61f.png",
+      "masterSha256": "25900d53e2db9a1525f72bb54427134f0d2aa0f76e575d976d805e0bf1745fff",
+      "exportPath": "scripts/art_sources/monsters/v4/exports/monster-e33191d1f61f.png",
+      "exportSha256": "be31946fc7e4113a77266d2ed5b36b887c40cf6f54c1e51f44c904c37775f737",
+      "previousPath": "scripts/art_sources/monsters/v4/previous/monster-e33191d1f61f.png",
+      "previousSha256": "9be704893463842182eab9dc78f2817755b907020cd27636bfca2748af610fd6",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 147,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 147,
+          "left": 12,
+          "right": 142,
+          "top": 11
+        }
+      }
+    }
+  ],
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "scope": "five candidate artwork; compact Frost Lord re-review",
+    "screenshot": "output/playwright/completion-20260907/frost-compact-160-46-32.png"
+  }
+}

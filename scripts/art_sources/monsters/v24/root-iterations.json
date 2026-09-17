@@ -1,0 +1,17 @@
+{
+  "initial": {
+    "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-feeb307d-e3f6-4577-9352-93820612b7e2.png",
+    "preserved": "rejected/root-eater-haze.png",
+    "reason": "Soft halo and weak small-size silhouette"
+  },
+  "edit": {
+    "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-f2a00725-8ceb-49fe-ba63-d3a2c33a0641.png",
+    "preserved": "rejected/root-eater-checkerboard.png",
+    "reason": "RGB baked checkerboard, not transparency"
+  },
+  "selected": {
+    "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-7fb8ddce-212f-425c-bf8f-71171e7ab06f.png",
+    "workspace": "masters/root-eater.png",
+    "prompt": "Use case: stylized-concept. One monster sprite for a mobile 16-bit pixel-art game: ROOT EATER, a crouching quadruped beast of roots and wood. Entire body isolated on genuinely transparent RGBA background, no painted checkerboard. Compact low but HEAVY broad torso with large split wooden jaw, four thick root claws, jagged thorn-root mane rising above shoulders and a short coiled root tail. Three-quarter frontal view, compressed perspective, body silhouette roughly 1.4 times wider than tall, clear large readable masses, not thin tangled vines. Light warm tan bark highlights, mid brown body, very limited deep shadows, small lime-green sap eye and cracks. Strong silhouette legible at 32px. Simple crisp coarse pixel clusters, restrained four-tone shading, no noisy microtexture. No ghost, no human, no lizard, no fire, no red. Absolutely NO glow, halo, haze, vignette, floor, shadow, scenery, text or frame. All appendages fully inside generous transparent margins."
+  }
+}

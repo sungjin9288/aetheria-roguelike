@@ -1,8 +1,8 @@
 /**
  * CombatEngine 루팅 로직 유닛 테스트
  *
- * CombatEngine.loot.js는 db.js/loot.js/dropTables.js 의존으로
- * Node.js 직접 임포트 불가. 인라인 미러 패턴으로 핵심 알고리즘 검증.
+ * Bonus tier는 production processLoot로 검증한다.
+ * 아래 일부 오래된 확률/이름 helper 미러는 통합 검증을 대체하지 않는다.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -76,17 +76,6 @@ function resolveEnemyBaseName(enemy, lootTable = new Set()) {
     return parts.length > 1 ? parts.slice(1).join(' ') : (enemy.name || '');
 }
 
-/**
- * 고레벨 몬스터 보너스 장비 드랍 — 레벨 추정 + 티어 결정 로직 미러
- */
-function inferLevelAndBonusTier(enemy) {
-    const inferredLevel = Math.max(1, Math.floor(((enemy.exp || 10) - 10) / 5));
-    if (inferredLevel < 30) return { inferredLevel, bonusTier: null, eligible: false };
-    const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
-    const bonusChance = enemy.isBoss ? 0.25 : 0.06;
-    return { inferredLevel, bonusTier, bonusChance, eligible: true };
-}
-
 // ── resolveEnemyBaseName 테스트 ─────────────────────────────────────────────
 
 test('resolveEnemyBaseName: baseName 존재 → 그대로 반환', () => {
@@ -129,60 +118,21 @@ test('resolveEnemyBaseName: baseName이 빈 문자열 → 빈 문자열 반환 (
     assert.equal(resolveEnemyBaseName(enemy), '슬라임');
 });
 
-// ── 고레벨 보너스 드랍 로직 테스트 ──────────────────────────────────────────
-
-test('inferLevelAndBonusTier: exp=10 → inferredLevel=1, 보너스 없음', () => {
-    const result = inferLevelAndBonusTier({ exp: 10 });
-    assert.equal(result.inferredLevel, 1);
-    assert.equal(result.eligible, false);
-});
-
-test('inferLevelAndBonusTier: exp 없음 → fallback 10 → level=1', () => {
-    const result = inferLevelAndBonusTier({});
-    assert.equal(result.inferredLevel, 1);
-    assert.equal(result.eligible, false);
-});
-
-test('inferLevelAndBonusTier: exp=160 → level=30, tier=4', () => {
-    // (160-10)/5 = 30
-    const result = inferLevelAndBonusTier({ exp: 160 });
-    assert.equal(result.inferredLevel, 30);
-    assert.equal(result.bonusTier, 4);
-    assert.equal(result.eligible, true);
-});
-
-test('inferLevelAndBonusTier: exp=210 → level=40, tier=5', () => {
-    // (210-10)/5 = 40
-    const result = inferLevelAndBonusTier({ exp: 210 });
-    assert.equal(result.inferredLevel, 40);
-    assert.equal(result.bonusTier, 5);
-});
-
-test('inferLevelAndBonusTier: exp=260 → level=50, tier=6', () => {
-    // (260-10)/5 = 50
-    const result = inferLevelAndBonusTier({ exp: 260 });
-    assert.equal(result.inferredLevel, 50);
-    assert.equal(result.bonusTier, 6);
-});
-
-test('inferLevelAndBonusTier: 보스 → bonusChance=0.25', () => {
-    const result = inferLevelAndBonusTier({ exp: 200, isBoss: true });
-    assert.equal(result.bonusChance, 0.25);
-});
-
-test('inferLevelAndBonusTier: 일반 → bonusChance=0.06', () => {
-    const result = inferLevelAndBonusTier({ exp: 200, isBoss: false });
-    assert.equal(result.bonusChance, 0.06);
-});
-
-test('inferLevelAndBonusTier: level 29 → 보너스 미해당', () => {
-    // (155-10)/5 = 29
-    const result = inferLevelAndBonusTier({ exp: 155 });
-    assert.equal(result.inferredLevel, 29);
-    assert.equal(result.eligible, false);
-});
-
-// ── 드랍 확률 계산 로직 미러 테스트 ─────────────────────────────────────────
+// Excluded legacy enemies have no trustworthy level/map provenance.
+for (const [exp, tier] of [[undefined,null],[10,null],[155,null],[160,4],[210,5],[260,6]]) {
+    test(`production legacy bonus: exp=${exp}, tier=${tier}`, () => {
+        const result = processLoot({ name: 'legacy bonus fixture', baseName: 'legacy bonus fixture', exp }, null, 1, () => 0, () => 1);
+        assert.equal(result.items.length, tier === null ? 0 : 1);
+        if (tier !== null) assert.equal(result.items[0].tier, tier);
+    });
+}
+for (const [isBoss, chance] of [[false,0.06],[true,0.25]]) {
+    test(`production legacy bonus chance boundary: boss=${isBoss}`, () => {
+        const enemy = { name: 'legacy bonus fixture', baseName: 'legacy bonus fixture', exp: 200, isBoss };
+        assert.equal(processLoot(enemy, null, 1, () => chance, () => 1).items.length, 0);
+        assert.equal(processLoot(enemy, null, 1, () => chance - 0.000001, () => 1).items.length, 1);
+    });
+}
 
 /**
  * 단일 아이템 드랍 확률 계산 (DROP_TABLES 경로)
