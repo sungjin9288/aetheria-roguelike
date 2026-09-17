@@ -44,6 +44,30 @@ const isOptionalLocalResource = (resourceUrl: string) => {
     }
 };
 
+// CI는 더미 Firebase config(apiKey "e2e-key")로 빌드한다. ?e2e=1 mock 모드가 인증·저장을 건너뛰어도
+// firebase/auth 초기화 자체가 getProjectConfig 1회를 실제 googleapis.com으로 보내 400을 받고,
+// 오프라인 러너(샌드박스 프록시)에선 같은 요청이 requestfailed 로 잡힌다. 둘 다 이 스펙이 증명하려는
+// 앱 표면(자체 origin 리소스·AI proxy 미호출)의 오류가 아니므로 Firebase 백엔드 호스트만 수집에서 뺀다.
+// apis.google.com / gstatic.com: 모바일 UA에서 firebase/auth 가 popup-redirect iframe(gapi)을 선제 로드한다.
+const EXTERNAL_FIREBASE_HOST_SUFFIXES = [
+    'googleapis.com',
+    'firebaseapp.com',
+    'firebaseio.com',
+    'apis.google.com',
+    'gstatic.com',
+];
+
+const isExternalFirebaseResource = (resourceUrl: string) => {
+    try {
+        const { hostname } = new URL(resourceUrl, MOBILE_CONTEXT.baseURL);
+        return EXTERNAL_FIREBASE_HOST_SUFFIXES.some(
+            (suffix) => hostname === suffix || hostname.endsWith(`.${suffix}`),
+        );
+    } catch {
+        return false;
+    }
+};
+
 type ErrorCollections = {
     page: string[];
     console: string[];
@@ -71,15 +95,21 @@ const createErrorCollectors = (page: Page) => {
     page.on('console', (message) => {
         if (message.type() === 'error') {
             const location = message.location().url;
+            if (location && isExternalFirebaseResource(location)) return;
             errors.console.push(location ? `${message.text()} @ ${location}` : message.text());
         }
     });
     page.on('response', (response) => {
-        if (response.status() >= 400 && !isOptionalLocalResource(response.url())) {
+        if (
+            response.status() >= 400
+            && !isOptionalLocalResource(response.url())
+            && !isExternalFirebaseResource(response.url())
+        ) {
             errors.response.push(`${response.status()} ${response.url()}`);
         }
     });
     page.on('requestfailed', (request) => {
+        if (isExternalFirebaseResource(request.url())) return;
         errors.request.push(`${request.url()} ${request.failure()?.errorText || 'failed'}`);
     });
     page.on('request', (request) => {
