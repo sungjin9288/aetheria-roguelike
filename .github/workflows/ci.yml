@@ -82,9 +82,10 @@ jobs:
         run: npm ci
 
       - name: Install Playwright browsers
-        # playwright.config의 chromium-mobile 프로젝트는 devices['iPhone 12']를 사용 →
-        # iPhone 디바이스 기본 엔진은 webkit이므로 webkit도 설치해야 한다 (chromium만 설치 시 launch 실패).
-        run: npx playwright install --with-deps chromium webkit
+        # playwright.config의 chromium-mobile 프로젝트는 devices['iPhone 12'] 에뮬레이션에
+        # defaultBrowserType: 'chromium' 을 고정한다 — Linux headless WebKit 은 click 안정성 대기에서
+        # 무기한 hang 하는 업스트림 결함(microsoft/playwright#33057)이 있어 게이트 엔진에서 제외했다.
+        run: npx playwright install --with-deps chromium
 
       - name: Run E2E tests
         run: npm run test:e2e
@@ -134,7 +135,7 @@ jobs:
 
       - name: Install Playwright chromium
         # perf-guard.mjs drives Playwright's chromium directly (not via `playwright test`),
-        # so only chromium is needed here — no webkit/iPhone device emulation like the e2e job.
+        # so only chromium is needed here — no iPhone device emulation like the e2e job.
         run: npx playwright install --with-deps chromium
 
       - name: Resolve installed chromium path
