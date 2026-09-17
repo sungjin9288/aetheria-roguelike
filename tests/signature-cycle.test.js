@@ -421,11 +421,9 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 357 회귀 가드: FALLBACK_EVENT_POOL \'시작의 마을\' 0건 보존', async () => {
-      const source = await readSrc('src/utils/aiEventUtils.ts');
-      const fnStart = source.indexOf('const FALLBACK_EVENT_POOL');
-      const fnEnd = source.indexOf('export const pickFallbackEvent');
-      const block = source.slice(fnStart, fnEnd);
-      assert.ok(!/'시작의 마을':/.test(block),
+      // 2026-09 Wave 3 I3: 풀 데이터 파일 분리(src/data/aiEventPools.ts)에 따라 경로만 이동.
+      const source = await readSrc('src/data/aiEventPools.ts');
+      assert.ok(!/'시작의 마을':/.test(source),
           'cycle 357 \'시작의 마을\' 0건 보존');
   });
 }

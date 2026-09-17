@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { BALANCE } from '../src/data/constants.js';
+import { FALLBACK_EVENT_POOL } from '../src/data/aiEventPools.js';
 import { buildEventPackage, classifyChoice, normalizeOutcomeSpecials, pickFallbackEvent, summarizeHistory } from '../src/utils/aiEventUtils.js';
 
 test('summarizeHistory compacts recent event records', () => {
@@ -283,6 +284,80 @@ test('buildProceduralOutcome: 특수 결과가 붙어도 생명 피해 크기는
     const worst = Math.min(...withSpecial, ...withoutSpecial);
     // 위험 선택의 생명 피해는 최대 12% (maxHp 300 → 36). 특수 결과가 이를 키우지 않는다.
     assert.ok(worst >= -Math.floor(300 * 0.12), `생명 피해 상한 유지: ${worst}`);
+});
+
+// ── 2026-09 Wave 3 I3: 후반 5개 풀 두껍게 하기 (6 → 12) ──────────────────────
+
+const ENDGAME_REGIONS = [
+    { loc: '고대 보물고', key: 'treasure' },
+    { loc: '기계 폐도', key: 'machina' },
+    { loc: '천공 정원', key: 'sky' },
+    { loc: '심해 회랑', key: 'deepsea' },
+    { loc: '에테르 관문', key: 'gate' },
+];
+
+test('FALLBACK_EVENT_POOL: 후반 5개 지역 풀이 12개 엔트리를 가진다 (8-deep 반복 필터가 돌 여유)', () => {
+    for (const { key } of ENDGAME_REGIONS) {
+        assert.equal(FALLBACK_EVENT_POOL[key].length, 12, `${key} 풀 엔트리 수`);
+    }
+});
+
+test('FALLBACK_EVENT_POOL: 후반 5개 지역마다 저작 outcomes 4건 이상 + 확장 어휘 4종을 모두 쓴다', () => {
+    for (const { key } of ENDGAME_REGIONS) {
+        const pool = FALLBACK_EVENT_POOL[key];
+        const authored = pool.filter((entry) => Array.isArray(entry.outcomes));
+        assert.ok(authored.length >= 4, `${key} 저작 엔트리 ${authored.length}건`);
+
+        const outcomes = authored.flatMap((entry) => entry.outcomes);
+        for (const kind of ['relic', 'status', 'elite', 'buff']) {
+            assert.ok(outcomes.some((outcome) => outcome[kind]), `${key} 풀에 ${kind} 결과 존재`);
+        }
+        for (const entry of pool) {
+            assert.ok(entry.choices.length >= 2 && entry.choices.length <= 3, `${key} 선택지 2~3개: ${entry.desc}`);
+            assert.equal(new Set(entry.choices).size, entry.choices.length, `${key} 선택지 중복 없음: ${entry.desc}`);
+        }
+    }
+});
+
+test('pickFallbackEvent: 후반 지역에서도 12연속 조우가 서로 다른 이벤트로 이어진다 (반복 필터 유지)', () => {
+    for (const { loc } of ENDGAME_REGIONS) {
+        let history = [];
+        const seen = [];
+        for (let i = 0; i < 12; i += 1) {
+            const event = pickFallbackEvent(loc, history, {
+                playerSnapshot: { level: 45, maxHp: 500, maxMp: 250, hp: 500 },
+                mapSnapshot: { level: 45 },
+            }, () => (i + 0.5) / 12);
+            assert.ok(event, `${loc} 폴백 이벤트 생성`);
+            assert.ok(!seen.slice(-8).includes(event.desc), `${loc} 최근 8건 내 반복 없음: ${event.desc}`);
+            seen.push(event.desc);
+            history = [...history, { event: event.desc, choice: event.choices[0], outcome: event.outcomes[0].log }];
+        }
+        assert.ok(new Set(seen).size >= 8, `${loc} 12회 중 서로 다른 이벤트 ${new Set(seen).size}종`);
+    }
+});
+
+test('pickFallbackEvent: 저작된 확장 어휘가 정규화를 통과해 이벤트 패키지에 살아남는다', () => {
+    const kinds = new Set();
+    for (const { loc, key } of ENDGAME_REGIONS) {
+        for (const entry of FALLBACK_EVENT_POOL[key]) {
+            if (!Array.isArray(entry.outcomes)) continue;
+            const packaged = buildEventPackage({ ...entry, source: 'fallback' }, {
+                location: loc,
+                playerSnapshot: { level: 45, maxHp: 500, maxMp: 250, hp: 500 },
+                mapSnapshot: { level: 45 },
+            });
+            for (const authored of entry.outcomes) {
+                const normalized = packaged.outcomes.find((outcome) => outcome.choiceIndex === authored.choiceIndex);
+                for (const kind of ['relic', 'status', 'elite', 'buff']) {
+                    if (!authored[kind]) continue;
+                    assert.ok(normalized[kind], `${loc} ${kind} 결과 보존: ${entry.desc}`);
+                    kinds.add(kind);
+                }
+            }
+        }
+    }
+    assert.deepEqual([...kinds].sort(), ['buff', 'elite', 'relic', 'status']);
 });
 
 test('BALANCE.EVENT_STATUS_IDS: 이벤트는 턴 강탈(freeze/stun) 어휘를 쓰지 않는다 (공정성 규칙)', () => {

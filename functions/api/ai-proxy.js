@@ -134,7 +134,13 @@ const normalizeEventData = (raw) => {
             ...(Number.isFinite(Number(outcome?.exp)) ? { exp: Number(outcome.exp) } : {}),
             ...(Number.isFinite(Number(outcome?.hp)) ? { hp: Number(outcome.hp) } : {}),
             ...(Number.isFinite(Number(outcome?.mp)) ? { mp: Number(outcome.mp) } : {}),
-            ...(typeof outcome?.item === 'string' && outcome.item.trim() ? { item: outcome.item.trim() } : {})
+            ...(typeof outcome?.item === 'string' && outcome.item.trim() ? { item: outcome.item.trim() } : {}),
+            // 2026-09 Wave 3 I3: 확장 어휘는 형태만 보존해 그대로 넘긴다. 실제 화이트리스트/상한
+            // 검증은 클라이언트의 aiEventUtils.normalizeOutcomes가 단독으로 책임진다(프록시는 신뢰 경계 밖).
+            ...(outcome?.status && typeof outcome.status === 'object' ? { status: outcome.status } : {}),
+            ...(outcome?.elite === true ? { elite: true } : {}),
+            ...(outcome?.relic && typeof outcome.relic === 'object' ? { relic: outcome.relic } : {}),
+            ...(outcome?.buff && typeof outcome.buff === 'object' ? { buff: outcome.buff } : {})
         }))
     };
 };
@@ -180,6 +186,12 @@ UID: ${uid}
 - 전투 난이도가 '위기' 또는 '열세'이면 HP 회복이나 도움이 되는 이벤트를 섞을 것
 - outcomes 길이는 choices 길이와 같아야 함
 - outcome의 gold/exp/hp/mp는 정수, item은 실제 보상 아이템명일 때만 기입
+- 위험한 선택 1개에 한해 다음 특수 결과를 최대 1종만 붙일 수 있음 (없으면 전부 생략)
+  · status: { id: 'poison' | 'burn' | 'bleed' | 'curse', turns: 1~3 } — 상태이상
+  · elite: true — 즉시 정예 적과 조우
+  · relic: { count: 1~2 } — 유물 선택지 개방
+  · buff: { atkMult/defMult 1.0~1.3, turns: 1~6 } — 다음 전투 강화
+- 위 목록 밖의 id/필드는 게임이 폐기하므로 창작하지 말 것. hp는 절대 즉사시키지 않음
 상황과 선택지, 결과를 생성해주세요.`;
 
         schema = {
@@ -202,7 +214,34 @@ UID: ${uid}
                             exp: { type: "INTEGER", description: "획득 경험치 (없으면 0 또는 생략)" },
                             hp: { type: "INTEGER", description: "HP 변화량. 회복은 양수, 피해는 음수" },
                             mp: { type: "INTEGER", description: "MP 변화량. 회복은 양수, 소모/혼란은 음수" },
-                            item: { type: "STRING", description: "획득 아이템명. 없으면 생략" }
+                            item: { type: "STRING", description: "획득 아이템명. 없으면 생략" },
+                            // 2026-09 Wave 3 I1/I3 — 확장 어휘. 게임 쪽(aiEventUtils.normalizeOutcomes)이
+                            // 화이트리스트/상한으로 다시 검증하므로 여기 값은 "요청"일 뿐이다.
+                            status: {
+                                type: "OBJECT",
+                                description: "상태이상. 위험한 선택에만. 없으면 생략",
+                                properties: {
+                                    id: { type: "STRING", description: "poison | burn | bleed | curse 중 하나" },
+                                    turns: { type: "INTEGER", description: "지속 턴 1~3" }
+                                }
+                            },
+                            elite: { type: "BOOLEAN", description: "true면 즉시 정예 조우. 위험한 선택에만. 없으면 생략" },
+                            relic: {
+                                type: "OBJECT",
+                                description: "유물 선택지 개방. 없으면 생략",
+                                properties: {
+                                    count: { type: "INTEGER", description: "선택지 개수 1~2" }
+                                }
+                            },
+                            buff: {
+                                type: "OBJECT",
+                                description: "다음 전투 강화. 없으면 생략",
+                                properties: {
+                                    atkMult: { type: "NUMBER", description: "공격 배율 1.0~1.3" },
+                                    defMult: { type: "NUMBER", description: "방어 배율 1.0~1.3" },
+                                    turns: { type: "INTEGER", description: "지속 턴 1~6" }
+                                }
+                            }
                         },
                         required: ["choiceIndex", "log", "gold"]
                     }
