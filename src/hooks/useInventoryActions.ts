@@ -80,7 +80,7 @@ export const createInventoryActions = ({
             const { success, reward } = resolveInvasion(targetGrave, playerAtk);
             dispatch({ type: AT.INVADE_GRAVE, payload: { reward: reward || null, uid: targetGrave.uid } });
             if (success && reward) {
-                addLog('success', MSG.INVADE_SUCCESS(targetGrave.playerName || '무명 용사', reward.name));
+                addLog('success', MSG.INVADE_SUCCESS(targetGrave.playerName || '무명 용사', reward.name || ''));
             } else {
                 addLog('warn', MSG.INVADE_FAIL(targetGrave.playerName || '무명 용사'));
             }

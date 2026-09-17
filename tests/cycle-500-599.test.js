@@ -1572,9 +1572,9 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/utils/aiEventUtils.ts');
       assert.ok(/if \(Array\.isArray\(rawOutcomes\)\)/.test(source),
           'Array.isArray(rawOutcomes) 가드 보존 (undefined 안전)');
-      assert.ok(/choices\.filter\(\(choice: any\) =>/.test(source),
+      assert.ok(/choices\.filter\(\(choice\) =>/.test(source),
           'dedupeChoices filter 보존');
-      assert.ok(/choices\.forEach\(\(choice: any, idx: any\)/.test(source),
+      assert.ok(/choices\.forEach\(\(choice, idx\)/.test(source),
           'normalizeOutcomes choices.forEach 보존');
   });
 
