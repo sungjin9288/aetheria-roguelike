@@ -290,3 +290,16 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 **순서**: W1·W2·W3·W4 병렬(파일 집합 분리: 컴포넌트 1개 / types+소비처 / tests / engine) → W2 머지 후 W5 → 전체 `npm run verify` + e2e(chromium) → W6 → PR.
 
 **게이트**: type-check 0 · lint 0 · unit 전량(skip 0) · `tests/debt-ratchet.test.js` 기준선 하향 재고정 · e2e 121/121 · perf guard FCP 실측(측정 공백 경고 0회가 W1의 완료 조건).
+
+### 9.1 Wave 5 실행 결과 (2026-09-17, branch `claude/funny-rubin-xdv43e`, 최종 head 아래 표 참조)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| W1 인트로 reveal | ✅ | 루트 `Motion.section` → 평범한 `<section>`(첫 프레임 opacity 1), 배경 `<img>`만 0.35s fade. perf guard desktop/mobile 각 3회 FCP 실측(552~684ms), 측정 공백 경고 0회. e2e intro 5/5. `intro-visual-contract`에 "루트 opacity 0 금지" 회귀 단언 추가. 콘텐츠 블록 transform 진입은 e2e 레이아웃 단정(`controlsBottom ≤ viewport+1`)과 경합할 수 있어 보류 |
+| W2 `Player` any[] 3개 | ✅ | `QuestProgressState`(카탈로그 진행 + 현상수배 전용 optional 필드) · `StatusId` 8종 리터럴 유니온(단일 정의 테이블이 없어 monsters `statusEffect`/`statusOnHit` + `BALANCE.EVENT_STATUS_IDS` + exploreFlow 이상기후의 합집합으로 도출, 라벨 테이블 3곳과 일치) · `EventHistoryEntry`. tsc 표면화 9건 정리(`MSG.QUEST_DONE` 등 3개 시그니처를 `string \| undefined`로 — 기존 `QUEST_ACCEPTED` 선례). 레거시 스칼라 `status`는 `migrateData`가 배열로 정규화(부재 시 무접촉 → `DATA_VERSION` 불변). **실제 dead-read 버그 3건 수정**: `Dashboard` 수령 가능 퀘스트 배지가 존재하지 않는 `done/claimed` 필드를 읽어 영구 false, `DashboardMobileSummary` "퀘스트 0/N" 고정, AI 이벤트 컨텍스트 `activeQuests`가 `[undefined, …]`(카탈로그 퀘스트 상태엔 title이 없음) |
+| W3 정적 가드 → 행동 테스트 | ✅ | 18파일(A 9 + B 9) → `renderStatic` 렌더 단언·순수 함수 호출로 전환(142 케이스), `src/` 무변경. 구조 불변식(dead plumbing 부재, `useMemo` deps, 포털 컴포넌트, DOM 게이트 effect, 셸/빌드 스크립트)은 "구조 불변식(소스 텍스트)" 라벨로 유지·사유 기록. 변이 테스트 4건(터치 타깃 44→36px, `status: []` 제거, 시그니처 배지 조건, testid 개명)으로 새 단언이 실제 회귀를 잡는 것 확인 |
+| W4 `exp_mult` | ✅ | `getStrongestNumericRelicValue` 정책, 순서 무관·합산 아님 테스트, 증빙 재생성 |
+| W5 utils 8파일 | ✅ | 8파일 모두 `: any`/`as any` 0 (185건 → 0). stale 캐스트 4건 제거(`Player.maxInv`·`seasonPass.tier`·`stats.explores/visitedMaps/escapes`·`PREMIUM_SHOP.cosmeticTitles` — 전부 이미 선언된 필드). `mapData.level >= 20`의 타입-런타임 불일치 1건을 `Number()`로 정정(의미 동일). 교차 tsc 오류 1건(`combatActionTurn` skill.name) 통합 시 정리. `toArray<T = any>`(gameUtils)는 `deps: any` 호출부 ~30곳을 위한 경계 기본값 — 리터럴 `: any`가 아니며 다음 슬라이스(hooks `deps`)에서 사라진다 |
+| 래칫 | ✅ | `: any` 1,581 → 1,301, `as any` 99 → 83 (하락만 허용 유지) |
+
+**남은 후보 (Wave 6)**: hooks `deps: any` 주입 경계(`createXxxActions(deps: any)` → 명시 인터페이스, `toArray<T = any>` 기본값 제거), 컴포넌트 props `any`(`ShopPanel`·`QuestBoardPanel`·`ControlPanel` 등 ~350건), systems 한글 리터럴 260건 중 데이터 키(상태이상·원소) → `StatusId`/`ElementKey` 유니온, 순수 정적 가드 잔여 22파일(아트/네이티브/Toss 증빙 계약 — 전환 가치 낮음, 유지).
