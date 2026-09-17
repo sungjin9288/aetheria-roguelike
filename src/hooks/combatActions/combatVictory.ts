@@ -9,13 +9,15 @@ import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../../uti
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
 import { SEASON_XP } from '../../data/seasonPass';
 import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, buildPassiveBonusWithScout } from './_helpers';
-import { applyAbyssFloorAdvance, handleDemonKingSlain } from './combatBossHandlers';
+import { applyAbyssFloorAdvance } from './combatBossHandlers';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 import { appendExpeditionBoss } from '../../utils/expeditionLedger';
+import { admitCombatLoot } from '../../systems/combatLootCapacity';
 import type { Player } from '../../types';
+import type { LootSettlementReceipt } from '../../reducers/gameReducer';
 
 /**
  * 전투 승리 공통 후처리.
@@ -79,19 +81,29 @@ export const handleVictoryOutcome = ({
         random,
         currentTime,
     );
-    lootResult.logs.forEach((log: any) => addLog(log.type, log.text));
+    const lootAdmission = admitCombatLoot(updatedPlayer, lootResult.candidates);
+    const admittedCandidates = lootAdmission.admitted;
+    const blockedCandidates = lootAdmission.blocked;
+    const admittedItems = admittedCandidates.map(({ item }) => item);
+    const admittedLogs = admittedCandidates.flatMap(({ logs }) => logs);
+    admittedLogs.forEach((log: any) => addLog(log.type, log.text));
+    if (blockedCandidates.length > 0) {
+        addLog('warn', MSG.COMBAT_LOOT_CAPACITY_BLOCKED(blockedCandidates.length));
+    }
     // cycle 193: 신규 codex 등록 수 추적 — SEASON_XP.codexDiscover dispatch용.
     const codexBefore = countNewCodexEntries(updatedPlayer);
-    if (lootResult.items.length > 0) {
-        updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...lootResult.items] };
-        updatedPlayer = registerLootToCodex(updatedPlayer, lootResult.items);
+    if (admittedItems.length > 0) {
+        updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...admittedItems] };
+        updatedPlayer = registerLootToCodex(updatedPlayer, admittedItems);
     }
 
     // signature pity bookkeeping:
     //  - signature 하나라도 드롭 → pity = 0
     //  - 보스 토벌 + signature 미획득 → pity += 1
     //  - 일반 몹은 pity 영향 없음
-    const signatureDropped = lootResult.items.some((it: any) => isSignatureItem(it));
+    const admittedSignatureCount = admittedItems.filter((item: any) => isSignatureItem(item)).length;
+    const blockedSignatureCount = blockedCandidates.filter(({ item }: any) => isSignatureItem(item)).length;
+    const signatureDropped = admittedSignatureCount > 0;
     const prevPity = updatedPlayer.stats?.signaturePity || 0;
     if (signatureDropped) {
         if (prevPity > 0) {
@@ -106,6 +118,18 @@ export const handleVictoryOutcome = ({
             stats: { ...updatedPlayer.stats, signaturePity: prevPity + 1 },
         };
     }
+    const lootSettlement: LootSettlementReceipt = {
+        rolledCount: lootResult.candidates.length,
+        admittedCount: admittedItems.length,
+        blockedCount: blockedCandidates.length,
+        admittedItemIds: admittedItems.flatMap((item: any) => (
+            typeof item.id === 'string' ? [item.id] : []
+        )),
+        admittedSignatureCount,
+        blockedSignatureCount,
+        pityBefore: prevPity,
+        pityAfter: updatedPlayer.stats?.signaturePity || 0,
+    };
 
     // codex
     const baseName = CombatEngine.resolveEnemyBaseName(deadEnemy);
@@ -116,9 +140,7 @@ export const handleVictoryOutcome = ({
     //   key 정의됐으나 dispatch 0건이던 dead config. loot/monster 모두 포함.
     const codexAfter = countNewCodexEntries(updatedPlayer);
     const newCodexCount = codexAfter - codexBefore;
-    if (newCodexCount > 0) {
-        dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.codexDiscover * newCodexCount });
-    }
+    const codexDiscoverXp = newCodexCount > 0 ? SEASON_XP.codexDiscover * newCodexCount : 0;
 
     // milestone (attack/skill 직접 승리에만)
     if (extendedChecks) {
@@ -174,6 +196,9 @@ export const handleVictoryOutcome = ({
     };
 
     dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
+    if (codexDiscoverXp > 0) {
+        dispatch({ type: AT.ADD_SEASON_XP, payload: codexDiscoverXp });
+    }
     dispatch({
         type: AT.UPDATE_DAILY_PROTOCOL,
         payload: {
@@ -231,21 +256,6 @@ export const handleVictoryOutcome = ({
     emitUnlockedTitles(updatedPlayer);
 
     if (extendedChecks) {
-        if (victoryResult.isDemonKingSlain) {
-            handleDemonKingSlain(updatedPlayer, dispatch, addLog, random, currentTime);
-            return { earlyReturn: true };
-        }
-        if (deadEnemy.baseName === '원시의 신' || deadEnemy.name?.includes('원시의 신') || deadEnemy.name?.includes('원초적 혼돈')) {
-            const heartItem = makeItem(
-                { name: '원시의 심장', type: 'key', price: 0, tier: 6, desc: '원시의 신의 심장.' },
-                random,
-                currentTime,
-            );
-            dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, inv: [...(p.inv || []), heartItem] }) });
-            dispatch({ type: AT.TRIGGER_TRUE_ENDING });
-            addLog('critical', MSG.TRUE_GOD_SLAIN);
-            return { earlyReturn: true };
-        }
         if (deadEnemy.baseName === '공허의 신' || deadEnemy.name?.includes('공허의 신') || deadEnemy.name?.includes('절대 공허')) {
             const voidCore = makeItem(
                 { name: '공허의 핵심', type: 'key', price: 0, tier: 6, desc: '심연 100층을 정복한 자에게만 허락된 공허의 본질. 세상의 어떤 힘도 이것을 무너뜨릴 수 없다.' },
@@ -260,15 +270,17 @@ export const handleVictoryOutcome = ({
                 stats: { ...(p.stats || {}), abyssRecord: Math.max(p.stats?.abyssRecord || 0, p.stats?.abyssFloor || 100) },
             })});
             addLog('critical', MSG.VOID_GOD_SLAIN);
-            return { earlyReturn: false };
+            return { earlyReturn: false, lootSettlement };
         }
         addStoryLog('victory', { name: deadEnemy.name });
     }
 
-    const droppedItems = lootResult.items.map((i: any) => i.name);
+    const droppedItems = admittedItems.map((i: any) => i.name);
     const traitProfile = getTraitProfile(updatedPlayer, victoryStats);
-    const upgradeHint = getLootUpgradeHint(updatedPlayer, lootResult.items);
-    const traitHint = getTraitLootHint(lootResult.items, traitProfile, updatedPlayer);
+    // A2(감사 G4): getLootUpgradeHint는 강화 수치를 반영하려고 player 전체를 받는다.
+    //   대상 목록은 Codex의 수용량 정산을 통과한 admittedItems만이다(가방에 못 들어간 전리품은 힌트 대상 아님).
+    const upgradeHint = getLootUpgradeHint(updatedPlayer, admittedItems);
+    const traitHint = getTraitLootHint(admittedItems, traitProfile, updatedPlayer);
     addCombatDigestLogs({
         addLog, enemyName: deadEnemy.name, victoryResult, droppedItems,
         upgradeHint, traitHint,
@@ -313,5 +325,5 @@ export const handleVictoryOutcome = ({
     // 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
     applyScoutGuaranteedRelic(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });
 
-    return { earlyReturn: false };
+    return { earlyReturn: false, lootSettlement };
 };

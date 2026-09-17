@@ -6,7 +6,6 @@
 이 프로젝트의 `.env.local`에는 아래 민감 정보가 포함됩니다:
 
 - `VITE_GEMINI_API_KEY` — Gemini API 키
-- `VERCEL_OIDC_TOKEN` — Vercel 인증 토큰
 
 ### ⚠️ 주의사항
 

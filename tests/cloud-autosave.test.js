@@ -9,7 +9,7 @@ import { AT } from '../src/reducers/actionTypes.ts';
 /**
  * useFirebaseSync 의 클라우드 자동저장 경로는 그동안 실행 테스트가 0건이었다
  * (4개 테스트가 소스 텍스트만 정규식으로 확인). 본문을 createCloudAutosave 로
- * 분리하면서 Firestore 의존성(doc/setDoc/addDoc/serverTimestamp)과 로컬 저장소
+ * 분리하면서 Firestore 의존성(doc/setDoc/serverTimestamp)과 로컬 저장소
  * 로드를 전부 주입받게 했으므로, 여기서는 가짜 구현으로 실제 동작을 검증한다.
  *
  * 디바운스(BALANCE.DEBOUNCE_SAVE_MS)는 훅의 setTimeout 이 담당하므로 대기 없이
@@ -115,7 +115,10 @@ test('자동저장: 로컬 리비전이 클라우드 floor 이상이면 유저 �
     assert.deepEqual(userSave.options, { merge: true });
     assert.equal(userSave.data.player.name, '아에테리아');
     assert.equal(userSave.data.player.stats.lastSeenAt, NOW);
-    assert.deepEqual(userSave.data.player.archivedHistory, []);
+    // Firestore는 undefined를 거부하므로 신규 선택 필드는 null로 정규화된다
+    //   (buildCloudPlayerSnapshot — Codex d8a111e).
+    assert.equal(userSave.data.player.deferredEventChainSteps, null);
+    assert.equal(userSave.data.player.adventureRelicBonuses, null);
     assert.equal(userSave.data.version, CONSTANTS.DATA_VERSION);
     assert.equal(userSave.data.saveSchemaVersion, 3);
     assert.equal(userSave.data.saveRevision, 9);
@@ -231,15 +234,18 @@ test('자동저장: 리더보드 entry 는 kills > 0 일 때만 기록된다', a
     });
 });
 
-test('자동저장: archivedHistory 는 history 서브컬렉션으로 옮기고 본문에서는 비운다', async () => {
+// 병합(2026-09): Codex가 archivedHistory를 죽은 배관으로 제거했다
+//   (tests/release-dead-plumbing.test.js). 자동저장은 더 이상 history 서브컬렉션에
+//   쓰지 않는다 — 원래 의도(“자동저장이 유저 문서 밖으로 곁가지 쓰기를 하지 않는다”)를
+//   그대로 유지하되, 기대값을 병합 후 동작으로 갱신한다.
+test('자동저장: 유저 문서 밖 서브컬렉션 쓰기는 하지 않는다 (archivedHistory 배관 제거)', async () => {
     const harness = makeHarness();
 
     await harness.flush(makeSnapshot({ archivedHistory: [{ run: 1 }, { run: 2 }] }));
 
-    assert.equal(harness.addDocCalls.length, 2);
-    assert.equal(harness.addDocCalls[0].path, `artifacts/${APP_ID}/users/uid-1/history`);
-    assert.deepEqual(harness.addDocCalls.map((call) => call.data), [{ run: 1 }, { run: 2 }]);
-    assert.deepEqual(harness.setDocCalls[0].data.player.archivedHistory, []);
+    assert.equal(harness.addDocCalls.length, 0);
+    assert.equal(harness.setDocCalls.length, 1);
+    assert.equal(harness.setDocCalls[0].path, `artifacts/${APP_ID}/users/uid-1`);
 });
 
 test('useFirebaseSync 는 syncStatus 가 syncing 일 때만 디바운스 후 분리된 flush 를 호출한다', async () => {

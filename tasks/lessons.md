@@ -9,6 +9,7 @@
 
 | Date | Issue | Root Cause | New Rule |
 |------|-------|------------|----------|
+| 2026-09-09 | Source-bound evidence의 read-only unit test가 실행 전후 hash 불일치로 실패 | 같은 evidence 파일을 갱신하는 writer와 전체 unit runner를 동시에 실행함 | Evidence write의 terminal success와 source freeze를 확인한 뒤 해당 evidence를 읽는 unit/full/readonly verify를 시작한다. 실행 중 bytes 변경은 보호 가드의 정상 실패이므로 assertion을 완화하지 않는다. |
 | 2026-02-05 | (초기화) | N/A | 시스템 구축 완료 |
 | 2026-03-12 | Android debug build failed with missing `metadata.bin` under `/tmp/aetheria-gradle` | Shared temporary Gradle cache became inconsistent after interrupted/reused runs | Android Gradle wrapper scripts must retry once with a fresh `GRADLE_USER_HOME` before treating the build as failed |
 | 2026-03-13 | 새 게임 시작 시 HP가 실효 최대치보다 낮게 보임 | 런타임 파생 보너스가 저장 기본 HP/MP와 분리되어 UI에만 추가 적용됨 | 시작 스탯과 런타임 스탯은 같은 기준을 공유해야 하며, 숨은 파생 보너스는 플레이어가 읽는 시스템으로만 노출한다 |

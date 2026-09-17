@@ -1,0 +1,159 @@
+# Release-complete core requirement matrix
+
+Status vocabulary is deliberately narrow:
+
+- `implemented`: owning production code and focused tests are green.
+- `browser verified`: the production transition was exercised through the rendered browser surface.
+- `native packaged`: current web assets were packaged successfully; this is not physical-device proof.
+- `physical observed`: a human observed the exact candidate on a physical device.
+- `external blocker`: the named evidence cannot be produced inside the repository.
+
+The current branch is `codex/release-complete-core`. Historical observation candidates,
+including `release-core-79df84f6efb7`, remain bound to their exact source checkpoints and
+stay audit-only. Historical candidate source commit
+`6e7db48d536d4de872fae1bb1038baa69ee9c0a3` is bound to
+`release-core-6e7db48d536d` with archive SHA-256
+`07fca8ce44477839bb22d22ae0ddef053648890faf9d0ffff78410a76c4f2d3d`.
+Its candidate-specific schema-v2 summary now records blocking restart issue
+`issue_a44324958fd5d8c28ffcf38f20321b49` without adding a human session. The summary SHA-256 is
+`c012ddaa...c0ed`; the historical count remains `1/5`, but the candidate is invalid for further
+observation. Its then-current protected candidate aggregate was `c432d896...51ac`, while historical
+Toss evidence remains `05cc9de7...bbbd`. The latest repository-owned gate below was executed on
+2026-09-03 KST.
+
+The verified restart fix and ledger reconciliation are included in source commit
+`0d456fbe81f9bda96891274721651c046ca64c2c`, bound to replacement candidate
+`release-core-0d456fbe81f9` with archive SHA-256 `9ffe857d...92be`. Its schema-v2 summary now
+contains six accepted browser observations and no issues, hashes to `7cd506ac...48d0`, and
+completes required human `5/5` plus one supplemental second-region session; the protected candidate
+aggregate is `832249a8...afd1`. Preview
+deployment `b8de235a-2639-4c88-8e18-62cc1aa9ddc1` and its
+candidate alias pass the production-host verifier. Direct 390×844 agent QA verified confirmation
+reachability, focus/cancel/reopen behavior and final reset to Intro with width `390/390` and no
+console warning/error. Firebase Spark rules and the two required Firebase auth bindings remain
+deployed; Gemini remains disabled. Selector regression is `14/14`; candidate-specific
+`region-selection.json` is enabled with `고요한 숲 5`, `서쪽 평원 1`, while the historical root
+selection remains absent.
+
+| Requirement | Current state | Direct evidence | Remaining gate |
+| --- | --- | --- | --- |
+| Fresh creation and first action | replacement Preview deployed/browser verified; required human `5/5` plus supplemental session | `release-core-0d456fbe81f9`, archive SHA `9ffe857d...92be`, Pages Preview `b8de235a...ddc1`, six unique browser observations through `obs_487f...c7cd`; historical `1/5` candidate remains blocked | physical-device observation |
+| First move, explore, combat and safe return | implemented/deployed-browser verified; required human `5/5` plus supplemental session | focused Scout/generosity/quota `48/48`; current full unit `4258/4258`; replacement host contracts PASS; six accepted browser checklist observations | physical-device observation |
+| Equipment decision and level-5 job change | browser verified | `tests/e2e/release-complete-core.spec.ts` | fresh human candidate observation |
+| Skill branch and Class Journey | browser verified | production UI journey E2E and class-journey contracts | fresh human candidate observation |
+| Class Journey encounter discovery | implemented/browser verified; candidate region selection enabled | accepted receipt -> safe return projection; v1->v2 additive migration; Class Journey focused `131/131`; six candidate observations with selected regions `고요한 숲`, `서쪽 평원` | physical-device observation |
+| Death preserves permanent progress | implemented | `tests/permanent-progress.test.js`, `tests/permanent-progress-copy.test.js` | physical-device observation |
+| Manual reset preserves permanent progress | fix committed and replacement Preview browser verified | source `0d456fbe81f9`; reducer preservation tests; focused reset/language `27/27`; post-commit regression `292/292`; settings E2E `5/5`; full E2E `59/59 + 56/56`; deployed 390×844 confirmation/focus/cancel/reopen/Intro transition | human and physical-device observation |
+| Ascension preserves permanent progress | browser verified | permanent-state tests, release-complete E2E | physical-device observation |
+| Save migration and reload preserve permanent state | implemented/browser verified; scoped quota snapshot contract deployed | migration/storage suites, endgame reload E2E, direct sealed-production reload; exact self-only quota runtime/rules regression; emulator `12/12`; deployed Spark rule with clean anonymous write/reload | physical iOS/Android observation |
+| Demon King shard settlement is atomic and idempotent | implemented/browser verified | `tests/endgame-settlement.test.js`, exact-name regression, endgame E2E | physical-device observation |
+| Third shard immediately unlocks the true boss | browser verified | endgame settlement and real combat E2E | physical-device observation |
+| True boss and True Ending | browser verified/native packaged | three-viewport endgame E2E, current Android/iOS debug packages | physical-device observation |
+| New Game+ is one-shot and reload-safe | browser verified/native packaged | endgame E2E including double-click and reload | physical-device observation |
+| Own grave recovery | browser verified | capability/own-grave tests and grave E2E | physical-device observation |
+| Public grave invasion is absent | browser verified | `tests/game-capabilities.test.js`, grave E2E | server-authoritative design before any re-enable |
+| Background, foreground and forced reload | implemented/browser verified | lifecycle/storage tests and endgame reload E2E | physical iOS/Android observation |
+| Nearest reversible surface consumes back | implemented/browser verified | back registry tests and endgame platform-back E2E | Toss Sandbox remains HOLD |
+| 375×667 geometry | browser verified | reduced-motion True Ending E2E | physical-device observation |
+| 390×844 geometry | browser verified | journey/True Ending/grave E2E; tracked screenshots below | physical-device observation |
+| 430×932 geometry | browser verified | skip/CTA True Ending E2E | physical-device observation |
+| Bounded encounter region selection | candidate-specific selection enabled | six complete candidate-bound observations; accepted actions `고요한 숲 5`, `서쪽 평원 1`; selection SHA `72b983aa...a24c`, selector `14/14` | use as the bounded tuning authority; root historical selection remains absent |
+| Bounded encounter schema, eligibility and receipt settlement | implemented/browser verified | canonical catalog binding, eligibility, effective-HP settlement, receipt replay tests | candidate-bound human observation |
+| Eight bounded encounter families | implemented/browser verified | existing four plus Codex-signature, previous-boss and two canonical build-reactive families; rendered choice/settlement/replay E2E at 375/390/430 widths and 390×844 build flow | candidate-bound human observation |
+| Combat Loot Capacity Settlement | implemented, committed and post-commit verified | commit `95ecf132d02d0eb770007aec71f2bf3136dd5f70`; production `admitCombatLoot()` remains the sole admitted/blocked settlement authority; final focused gate `123/123`; full repository/mobile gates and tracked native drift 0 passed at the checkpoint | consumed diagnostically by the committed Progression Simulator v2; physical-device observation remains separate |
+| Progression Simulator v2 | implemented, committed and deterministic evidence verified | commit `e6d1f8a767777d901b1f7c771f218a25ecd2bdd6`; exact `4,608` combat encounters, `36,864` general kills, `20,480` signature attempts and 1,000-seed exploration comparison; current evidence SHA `9b8b143e...37d0`, report SHA `ff04ac3d...68c2`, `hardErrors:[]` | diagnostic only: `activationReady:false`, `actualPlayClaim:false`; actual play time, expedition count, AI/story frequency and retention remain unavailable |
+| Content reachability | verified | report SHA `a6626375...b4f0e8`; checkpoints `1/5/5/6/13/18/18`, job snapshots `18` | use live funnel before further expansion |
+| Exploration rhythm | verified; human and two-region evidence complete | report SHA `7d903b82...72bfe2`; predecessor p10/p50/p90 `1/2/6`, candidate `2/4/9`; required human `5/5` plus supplemental `서쪽 평원` action | retain current profile unless simulator and observation identify the same issue |
+| Relic rarity and effect coherence | implemented/browser verified | Base audit `c5c425d0...719a8`; free-skill `ddf2e9a1...dffd`; event-chance `424909de...4597`; gold `16a7bcc7...efa9`; drop `2ddf68f9...9e60`; dot `b123dee8...a204`; HP-drain `7560ce01...05793`; focused drop `42/42`, dot `10/10`, HP-drain `14/14`; 390×844 gold reducer/UI proof | human candidate observation |
+| Equipment identity, economy and combat sidegrades | implemented/browser verified | 229/229 identities; 20 price-only corrections; four bounded sidegrades; current v3 combat evidence `786c4898...e6bb` with defect/pair/replan `0/0/0`; economy evidence `80a209ee...c61c`; focused `44/44`; 390×844 shop transaction E2E | human candidate observation |
+| Consumable and event reward authority | implemented/browser verified | current-state consumable transaction; structured fallback 3; chain/relic/item reward authority; bounded `8/16`, total 108-row report `0680a3f1...8084`; focused encounter/event `51/51` | human candidate observation |
+| Repository gate | replacement candidate sealed, Preview deployed, direct mobile restart verified, human threshold and region selection complete (2026-09-03) | source `0d456fbe81f9`; archive `9ffe857d...92be`; build manifest `c4ef7841...2ae0`; Preview `b8de235a...ddc1`; host verifier PASS; six observations/zero issues; candidate selection `72b983aa...a24c`; prior full gate unit `4258/4258`, E2E `59/59 + 56/56`; tracked native drift 0 | physical and signing gates; separate release approval |
+| Native package regression | native packaged | Android debug APK and unsigned iOS device app | fresh-QA iOS profile/account, Android device, signing and physical-device observation |
+| Apps in Toss resume | `HOLD` | source changes invalidate prior candidate | separate approval after every required row is bound |
+
+## Class Journey encounter discovery checkpoint (2026-08-31)
+
+- `finishExpedition()` is the sole permanent settlement boundary: it projects exact
+  accepted receipts for the active expedition once, writes the same canonical array to
+  the summary and snapshotted job, and leaves defeat, abandonment, rejected input,
+  malformed/foreign receipts and replay without new discovery or sequence.
+- Class Journey v1 saves normalize to nested schema v2 with an empty additive list.
+  Same-choice identity is stored once, different choices remain distinct, duplicate job
+  records merge in first-discovery order, and defeat/reset/ascension preserve the data.
+- The current 390x844 production movement flow renders one optional Korean discovery
+  line, reopens it from town without duplication, keeps the primary action reachable and
+  has no horizontal overflow. Raw receipt keys and encounter identities are excluded
+  from the general render projection.
+- Current evidence is focused `131/131`, mobile E2E `10/10`, type-check/lint/content/
+  pacing/event-reward PASS and Progression evidence SHA-256 `7b61327b...d379`.
+  `reportHash=ff04ac3d...68c2`, v1 baseline `d39dce20...a17c`, focused/comparison
+  seeds `64/1000`, `actualPlayClaim:false`, `activationReady:false` and zero hard errors
+  are unchanged. The final clean repository gate passed unit `4241/4241`, desktop/mobile
+  smoke and E2E `59/59 + 55/55`; independent Sol ultra review passed with
+  Critical/Important/Minor `0/0/0`.
+- The initial full unit pass found one stale v1 exact-object expectation in the
+  production storage/New Game+ test. The bounded Sol re-plan added that coupled test
+  path, now GREEN `15/15`. The next full browser gate reached `113/114` and exposed the
+  same stale raw-v1 comparison in the True Ending E2E; its three viewport paths are now
+  GREEN `3/3`, and the current implementation boundary is exact 20 paths with sorted
+  path-list SHA-256 `741bbc569fa66ba61aabb15dc864616ea806ab5508ac54a6886f71e638d65add`.
+
+## Combat Loot Capacity Settlement checkpoint (2026-08-24)
+
+- `processLoot()` remains the only roll authority: candidate-level item/log provenance is additive, while RNG consumption, item IDs/order and legacy `items`/`logs` aggregates remain unchanged. Stable signature-first admission uses a positive safe-integer `maxInv`, falls back to `BALANCE.INV_MAX_SIZE` for malformed legacy values, preserves existing over-cap inventory, and admits no new combat loot when no space remains.
+- Only admitted candidates reach inventory, Codex and Codex XP, pity, acquisition logs, digest, upgrade hint and trait hint. Blocked candidates produce only `가방이 가득해 전리품 {count}개를 챙기지 못했습니다.`; blocked names and success/prefix logs do not leak. Admitted signatures reset pity, blocked boss signatures count as a boss miss (`+1`), and normal-monster pity is unchanged. Direct attack, skill, attack-DOT and item-DOT victory converge through the existing settlement owner; replay and stale actions remain exact no-ops.
+- Initial Task 3 RED was `8 pass / 3 fail`, reproducing inventory overflow `4 != 3` and boss/full-normal inventory `3 != 2`. Task 1 focused/compatibility were `34/34` and `83/83`; Task 2 was `7/7` with intermediate full unit `4185/4185`; Task 3 final was `13/13` with six-file compatibility `79/79`; Task 4 characterization/convergence were `34/34` and `49/49`, with Task 3 compatibility still `83/83` after Task 4. Sol reviews for Tasks 1–4 are approved with final open Critical/Important/Minor `0/0/0`.
+- Current Goal implementation paths are `src/systems/CombatEngine.loot.ts`, `src/systems/combatLootCapacity.ts`, `src/hooks/combatActions/combatVictory.ts`, `src/data/messages.ts`, `tests/combat-engine-loot.test.js`, `tests/combat-loot-capacity-authority.test.js`, and `tests/loot-cycle.test.js`; evidence paths are `docs/evidence/qa/release-complete-core/relic-drop-rate.json` and `docs/evidence/qa/release-complete-core/relic-event-chance.json`; Task 5 synchronized exactly `docs/evidence/qa/release-complete-core/requirement-matrix.md`, `docs/evidence/qa/release-complete-core/completion-summary.md`, `tasks/todo.md` and `progress.md`. The historical `docs/evidence/qa/release-complete-core/candidates/` and `docs/evidence/toss/releases/` directories are preserved and excluded; screenshots, candidate/Toss JSON and other historical evidence were not refreshed. Relic-drop `reportHash` `2ddf...9e60` and relic-event `reportHash` `424909de...4597` are unchanged; only declared source provenance advanced.
+- Task 6 is complete on the current unstaged bytes: focused production `97/97`; stale `loot-cycle` static guards RED `24/26` then GREEN `26/26`; `npm run verify` and `npm run verify:full` both passed unit `4195/4195`, build guard, desktop/mobile smoke and E2E `57/57 + 54/54`. Relic-drop/event hashes remain `2ddf...9e60`/`424909de...4597`; event reward is `104` rows with hash `b3d69916...41ec`. The ephemeral 1000-seed loot-axis audit report is `ab96cc4a...a9ad`, `report-only`, `activationReady:false`, with `18000/18000` job snapshots, zero truncation and only the declared production-funnel/full-combat-model blockers. Art verification passed `18/229/22/25` with catalog `c15c4e6...3ad0`; `mobile:doctor` and `cap:sync` passed with tracked Android/iOS drift 0. The latest inspected real surface is `playtest-artifacts/mobile/05-combat-2.png`; no tracked screenshot was refreshed. Protected candidate/Toss aggregates remain `f14235c7...1b9` and `05cc9de7...bbbd`. `candidate seal: not assigned`; `human observation: not refreshed`; `push/signing/publication: not performed`; iOS distribution and Android release signing inputs remain unavailable. `Progression Simulator v2: blocked until this prerequisite is committed and post-commit verified`.
+- The final complete focused gate, including the corrected `loot-cycle` guards, is `123/123`; the earlier `97/97` count is the production/replay subset.
+
+## Current artifacts
+
+- Android debug APK: `214644299` bytes, SHA-256
+  `672518c64d2fcc303c8629052068133b59e57c412d9b2ac0550a883de2c0f283`.
+- Unsigned iOS arm64 executable: `102376` bytes, SHA-256
+  `6372d559d57e897c21f87244863be80a792e7db279c8d9e1deef6ec53306292f`.
+- Content-pacing screenshots: `375x667 e525be7a...31b2f9`,
+  `390x844 e8b26827...b0cbc7`, `430x932 eac835d2...663943`.
+- Encounter-depth 390×844 screenshots: signature `4665b12f...b4e`, previous boss
+  `f74fb2a3...0117`.
+- Equipment-economy 390×844 screenshot: SHA-256
+  `3b73b798b246224c2e6cee07d3b07c425750a775d8e86e2bc9e3ee7ad0c0279c`.
+- Relic event-chance 390×844 screenshot: SHA-256
+  `a9073a1eb9fdc9652f18e812bf1f119c46dfe308384918c165f32f6273592e31`.
+- Relic gold-multiplier 390×844 screenshot: SHA-256
+  `5fa54793454a5e5333bf64ee82fd90b3ea7841b0252d113f479d17e9cca39b0e`.
+- Art catalog: 18 character, 229 equipment, 22 family and 25 signature-overlay
+  surfaces; catalog SHA-256
+  `c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0`.
+- Relic dot-multiplier evidence JSON: SHA-256
+  `5664a5ec0a9d11adae9f720b14bdf4ff4942a63363e85f4cca4eea6ba2e55e67`.
+- Relic HP-drain evidence JSON: SHA-256
+  `5b28e1eb312ec039265679d843109bcabd4b53977188809d0477dd0d026044df`.
+- True Ending/New Game+ 390×844 screenshot: SHA-256
+  `0aec6b148d9ce09f11ed0ac3f1cebed9feb0eebc1035c755789f79971e6aabeb`.
+- Own-grave recovery 390×844 screenshot: SHA-256
+  `f7c0aeba9789c044c87e664ddfd6b43bb8932d1c8b60981eec5c91552bbe4084`.
+- These artifacts are local package/browser evidence, not signed release or physical-device evidence.
+- No physical-device observation was performed for the current candidate.
+  Apple Distribution identity, Android release signing and matching install/profile
+  inputs remain external gates.
+
+## Privacy and evidence rules
+
+- Commit only opaque observation IDs and attachment SHA-256 values.
+- Never commit nickname, Toss/Firebase user key, device serial, inventory dump or free-form logs.
+- Automated or test-harness sessions may validate tooling but never satisfy the five human-observation gate.
+- The tracked summary accepts no raw issue prose. It records opaque IDs, bounded enums
+  and attachment SHA-256 values only; see `OBSERVATION_RUNBOOK.md`.
+- A source or artifact change invalidates prior region counts and physical observations.
+- `implemented`, `browser verified`, `native packaged`, `physical observed`, and
+  `Toss resume eligible` are independent claims.
+- The root `region-selection.json` is intentionally absent. The root summary bound to
+  `3a2407a` contains `0/5` observations and is historical after the relic changes;
+  the earlier `1/5` record for `f9d463a` is also historical. A new candidate must use
+  `candidates/${candidate_id}/observation-summary.json` and
+  `candidates/${candidate_id}/region-selection.json`. The candidate-specific region
+  selection is currently absent, and no selector output is written before five fresh
+  observations pass. An empty `0/5` candidate summary remains untracked Goal-owned
+  audit evidence and is never committed.

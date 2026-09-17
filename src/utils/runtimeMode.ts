@@ -16,6 +16,7 @@ export const MIRROR_JOURNEY_DEVICE_QA_SCENARIO = 'mirror-journey';
 export const CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO = 'crystal-exchange';
 export const SYSTEM_SETTINGS_DEVICE_QA_SCENARIO = 'system-settings';
 export const PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO = 'progression-acceptance';
+export const TRUE_ENDING_JOURNEY_DEVICE_QA_SCENARIO = 'true-ending-journey';
 export const TOSS_FIRST_FIVE_DEVICE_QA_SCENARIO = ['toss', 'first-five'].join('-');
 
 const DEVICE_QA_SCENARIOS = new Set([
@@ -26,6 +27,7 @@ const DEVICE_QA_SCENARIOS = new Set([
     CRYSTAL_EXCHANGE_DEVICE_QA_SCENARIO,
     SYSTEM_SETTINGS_DEVICE_QA_SCENARIO,
     PROGRESSION_ACCEPTANCE_DEVICE_QA_SCENARIO,
+    TRUE_ENDING_JOURNEY_DEVICE_QA_SCENARIO,
     TOSS_FIRST_FIVE_DEVICE_QA_SCENARIO,
 ]);
 
@@ -48,8 +50,20 @@ export const isSmokeRuntime = (): boolean => isTestHarnessBuild() && hasFlag('sm
 // cycle 303: export 제거 — isMockRuntime 내부 1회만 사용, 외부 consumer 0건.
 const isE2ERuntime = (): boolean => isTestHarnessBuild() && hasFlag('e2e');
 
+const getHarnessDeviceQaScenario = (): string => {
+    if (typeof window === 'undefined') return '';
+    try {
+        return String(new URLSearchParams(window.location.search).get('deviceQa') || '').trim();
+    } catch {
+        return '';
+    }
+};
+
 export const getDeviceQaScenario = (): string | null => {
-    const scenario = String(import.meta.env?.VITE_DEVICE_QA_SCENARIO || '').trim();
+    const configuredScenario = String(import.meta.env?.VITE_DEVICE_QA_SCENARIO || '').trim();
+    const scenario = DEVICE_QA_SCENARIOS.has(configuredScenario)
+        ? configuredScenario
+        : isTestHarnessBuild() ? getHarnessDeviceQaScenario() : '';
     return DEVICE_QA_SCENARIOS.has(scenario) ? scenario : null;
 };
 

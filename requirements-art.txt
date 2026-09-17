@@ -1,10 +1,1 @@
-# Aetheria art pipeline — Python dependencies for tests/*art*.test.js and scripts/*.py.
-#
-# Pinned to the version verified against the current test fixtures (2026-09, Wave 3 Track K1).
-# NOTE: the ORIGINAL asset-generation platform's Pillow version/OS is unrecorded (see
-# docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md §7). This pin only guarantees the pipeline runs and
-# the non-pixel-reproducibility art tests pass — it does NOT reproduce the original bytes.
-# The 9 byte-exact reproducibility checks fail identically on Pillow 11.3/12.0/12.3 alike and are
-# gated behind AETHERIA_ART_REPRO=1 (see tests/art-asset-contract.test.js,
-# tests/equipment-art-pipeline.test.js, tests/equipment-signature-art.test.js).
-pillow==12.3.0
+Pillow==12.1.1

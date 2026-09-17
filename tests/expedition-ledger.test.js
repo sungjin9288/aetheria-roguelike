@@ -2,12 +2,14 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { DB } from '../src/data/db.js';
+import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.js';
 import { AT } from '../src/reducers/actionTypes.js';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { createMoveActions } from '../src/hooks/gameActions/moveActions.js';
 import { handleVictoryOutcome } from '../src/hooks/combatActions/combatVictory.js';
 import { migrateData } from '../src/utils/gameUtils.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
+import { applyBoundedEncounterChoice } from '../src/utils/boundedEncounterSelector.js';
 import {
     calculateExpeditionExpGain,
     finishExpedition,
@@ -66,6 +68,28 @@ test('원정 시작은 저장 가능한 baseline을 만들고 이미 진행 중�
     const repeated = startExpedition(started, '신성한 호수', 2_000, DB.QUESTS);
     assert.equal(repeated.activeExpedition.id, started.activeExpedition.id);
     assert.equal(repeated.activeExpedition.destination, '고요한 숲');
+});
+
+test('원정 HP 기록은 장비를 포함한 최대 HP를 사용하고 시작 분모를 보존한다', () => {
+    const player = makePlayer({
+        hp: 178, maxHp: 150, job: '모험가', relics: [], activeTitle: null,
+        skills: [], meta: {},
+        equip: { weapon: null, armor: { name: 'HP 검증 갑옷', type: 'armor', hpBonus: 8 }, offhand: null },
+    });
+    assert.equal(calculateFullStats(player).maxHp, 178);
+    const started = startExpedition(player, '고요한 숲', 1_000, DB.QUESTS);
+    assert.equal(started.activeExpedition.maxHpAtStart, 178);
+    const returned = { ...started, hp: 134 };
+    const { summary } = finishExpedition(returned, '시작의 마을', 2_000, DB.QUESTS);
+    assert.equal(summary.lowestHpPercent, 75);
+    assert.equal(summary.maxHpAtReturn, 178);
+    const unequipped = { ...returned, equip: { weapon: null, armor: null, offhand: null } };
+    const changed = finishExpedition(unequipped, '시작의 마을', 2_000, DB.QUESTS).summary;
+    assert.equal(changed.lowestHpPercent, 75);
+    assert.equal(changed.maxHpAtReturn, 170);
+    const legacy = { ...returned, activeExpedition: { ...started.activeExpedition, maxHpAtStart: 150 } };
+    assert.equal(finishExpedition(legacy, '시작의 마을', 2_000, DB.QUESTS).summary.lowestHpPercent, 89);
+    assert.equal(player.activeExpedition, INITIAL_STATE.player.activeExpedition);
 });
 
 test('공통 전투 승리 authority는 활성 원정의 canonical boss를 한 번만 기록한다', () => {
@@ -158,8 +182,11 @@ test('정상 귀환은 전투/탐험/재화/아이템/임무/최저 HP delta를 
     assert.equal(summary.lostItemCount, 1);
     assert.deepEqual(summary.completedQuests, ['슬라임 소탕']);
     assert.equal(summary.lowestHp, 38);
-    assert.equal(summary.lowestHpPercent, 21);
+    // 기본 HP 180 + 모험가 패시브 20, 호환 장비 2피스 +5%.
+    assert.equal(started.activeExpedition.maxHpAtStart, 210);
+    assert.equal(summary.lowestHpPercent, 18);
     assert.equal(summary.reviewedAt, null);
+    assert.deepEqual(summary.encounterDiscoveries, []);
 
     const duplicate = finishExpedition(result.player, '시작의 마을', 62_000, DB.QUESTS);
     assert.equal(duplicate.summary, null);
@@ -204,6 +231,7 @@ test('귀환은 시작 직업과 새 signature를 summary와 직업 여정에 �
         signatureItems: ['라그나로크'],
         bossNames: ['숲의 군주'],
         regions: ['고요한 숲', '신성한 호수'],
+        encounterDiscoveries: [],
         representativeExpeditionId: started.activeExpedition.id,
         lastPlayedAt: 4_000,
     });
@@ -212,6 +240,143 @@ test('귀환은 시작 직업과 새 signature를 summary와 직업 여정에 �
     assert.equal(replay.summary, null);
     assert.equal(replay.player.classJourney, firstReturn.player.classJourney);
     assert.equal(replay.player.classJourney.sequence, 1);
+});
+
+const rootEncounter = () => BOUNDED_ENCOUNTERS.find(
+    ({ id }) => id === 'forest-root-resonance',
+);
+
+const startDiscoveryExpedition = () => startExpedition(makePlayer({
+    job: '전사',
+    mp: 100,
+    maxMp: 100,
+    inv: [],
+    maxInv: 20,
+}), '고요한 숲', 1_000, DB.QUESTS);
+
+test('정상 귀환은 실제 bounded choice receipt를 summary와 Class Journey에 함께 확정한다', () => {
+    const started = startDiscoveryExpedition();
+    const encounter = rootEncounter();
+    const settled = applyBoundedEncounterChoice(started, encounter, 'anchor-root-ward', {
+        expeditionId: started.activeExpedition.id,
+        occurrenceSequence: 1,
+    });
+    assert.equal(settled.applied, true);
+
+    const returned = finishExpedition(settled.player, '시작의 마을', 2_000, DB.QUESTS);
+    const expected = [{
+        encounterId: encounter.id,
+        encounterVersion: encounter.version,
+        choiceId: 'anchor-root-ward',
+        family: encounter.family,
+        choiceLabel: '결계의 흐름을 이어 둔다',
+    }];
+    assert.deepEqual(returned.summary.encounterDiscoveries, expected);
+    assert.deepEqual(
+        returned.player.classJourney.byJob['전사'].encounterDiscoveries,
+        expected,
+    );
+});
+
+test('같은 사건 선택의 여러 occurrence는 정상 귀환에서 한 발견으로 합친다', () => {
+    const started = startDiscoveryExpedition();
+    const encounter = rootEncounter();
+    const first = applyBoundedEncounterChoice(started, encounter, 'anchor-root-ward', {
+        expeditionId: started.activeExpedition.id,
+        occurrenceSequence: 1,
+    });
+    const second = applyBoundedEncounterChoice(first.player, encounter, 'anchor-root-ward', {
+        expeditionId: started.activeExpedition.id,
+        occurrenceSequence: 2,
+    });
+
+    const returned = finishExpedition(second.player, '시작의 마을', 2_000, DB.QUESTS);
+    assert.equal(returned.summary.encounterDiscoveries.length, 1);
+    assert.equal(returned.player.classJourney.byJob['전사'].encounterDiscoveries.length, 1);
+});
+
+test('같은 사건의 서로 다른 선택은 occurrence 순서대로 각각 발견된다', () => {
+    const started = startDiscoveryExpedition();
+    const encounter = rootEncounter();
+    const first = applyBoundedEncounterChoice(started, encounter, 'anchor-root-ward', {
+        expeditionId: started.activeExpedition.id,
+        occurrenceSequence: 1,
+    });
+    const second = applyBoundedEncounterChoice(first.player, encounter, 'gather-root-crystal', {
+        expeditionId: started.activeExpedition.id,
+        occurrenceSequence: 2,
+    });
+
+    const returned = finishExpedition(second.player, '시작의 마을', 2_000, DB.QUESTS);
+    assert.deepEqual(
+        returned.summary.encounterDiscoveries.map(({ choiceId }) => choiceId),
+        ['anchor-root-ward', 'gather-root-crystal'],
+    );
+});
+
+test('foreign·malformed receipt는 버리고 같은 ledger의 유효한 발견은 보존한다', () => {
+    const started = startDiscoveryExpedition();
+    const encounter = rootEncounter();
+    const settled = applyBoundedEncounterChoice(started, encounter, 'anchor-root-ward', {
+        expeditionId: started.activeExpedition.id,
+        occurrenceSequence: 1,
+    });
+    const player = {
+        ...settled.player,
+        eventChainProgress: {
+            ...settled.player.eventChainProgress,
+            boundedEncounterReceipts: {
+                ...settled.player.eventChainProgress.boundedEncounterReceipts,
+                'expedition-foreign-1:forest-root-resonance:1': {
+                    encounterId: encounter.id,
+                    choiceId: 'gather-root-crystal',
+                },
+                [`${started.activeExpedition.id}:forest-root-resonance:not-a-sequence`]: {
+                    encounterId: encounter.id,
+                    choiceId: 'gather-root-crystal',
+                },
+            },
+        },
+    };
+
+    const returned = finishExpedition(player, '시작의 마을', 2_000, DB.QUESTS);
+    assert.deepEqual(
+        returned.summary.encounterDiscoveries.map(({ choiceId }) => choiceId),
+        ['anchor-root-ward'],
+    );
+});
+
+test('시작 직업이 없어도 summary 발견은 남지만 Class Journey는 생성하지 않는다', () => {
+    const started = startDiscoveryExpedition();
+    const encounter = rootEncounter();
+    const settled = applyBoundedEncounterChoice(started, encounter, 'anchor-root-ward', {
+        expeditionId: started.activeExpedition.id,
+        occurrenceSequence: 1,
+    });
+    const withoutJob = {
+        ...settled.player,
+        activeExpedition: { ...settled.player.activeExpedition, job: undefined },
+    };
+
+    const returned = finishExpedition(withoutJob, '시작의 마을', 2_000, DB.QUESTS);
+    assert.equal(returned.summary.encounterDiscoveries.length, 1);
+    assert.equal(returned.player.classJourney, undefined);
+});
+
+test('receipt를 얻었어도 정상 귀환 전에는 영구 발견이 없고 귀환 replay는 exact no-op이다', () => {
+    const started = startDiscoveryExpedition();
+    const encounter = rootEncounter();
+    const settled = applyBoundedEncounterChoice(started, encounter, 'anchor-root-ward', {
+        expeditionId: started.activeExpedition.id,
+        occurrenceSequence: 1,
+    });
+    assert.equal(settled.player.classJourney, undefined);
+
+    const returned = finishExpedition(settled.player, '시작의 마을', 2_000, DB.QUESTS);
+    const replayed = finishExpedition(returned.player, '시작의 마을', 3_000, DB.QUESTS);
+    assert.equal(replayed.summary, null);
+    assert.equal(replayed.player.classJourney, returned.player.classJourney);
+    assert.equal(replayed.player.classJourney.sequence, 1);
 });
 
 test('원정 중 얻어 바로 장착한 접두 signature는 canonical 이름으로 남긴다', () => {

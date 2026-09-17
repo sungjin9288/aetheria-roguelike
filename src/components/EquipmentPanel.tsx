@@ -6,9 +6,9 @@ import { MSG } from '../data/messages';
 import { countInventoryItemByName, getEnhancePreview, type EnhanceItemSlot } from '../utils/enhancementUtils';
 import { getEquipmentDisclosure, getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
-import { getSignatureSetProgress } from '../utils/signatureSetBonus.js';
+import { getSignatureSetGuidance } from '../utils/signatureSetBonus.js';
 import { isSignatureItem } from '../data/signatureItems.js';
-import { getJobSetCatalog } from '../utils/jobOutfitAffinity.js';
+import { getJobSetCatalog, getJobOutfitNextHint } from '../utils/jobOutfitAffinity.js';
 import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import ItemIcon from './icons/ItemIcon';
@@ -100,7 +100,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const twoHandSetCounted = Boolean(stats?.jobAffinity?.twoHandCounted);
     const activeSignatureSet = stats?.activeSignatureSet || null;
     const sigSetTone = activeSignatureSet ? (SIG_SET_TONE[activeSignatureSet.tone] || SIG_SET_TONE.holy) : null;
-    const setProgress = useMemo(() => getSignatureSetProgress(player?.equip), [player?.equip]);
+    const setProgress = useMemo(() => getSignatureSetGuidance(player), [player]);
     // 아직 활성화되지 않았거나(1개만 착용) 상위 티어가 남은 경우에만 힌트 카드 표시
     const showProgressHint = setProgress && setProgress.nextBonus;
     const progressTone = setProgress ? (SIG_SET_TONE[setProgress.tone] || SIG_SET_TONE.holy) : null;
@@ -136,7 +136,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         appearance={appearance}
                         size="lg"
                         dataTestId="equipment-character-preview"
-                        label="장비 외형 미리보기"
+                        label="직업 초상"
                         className="shrink-0"
                         showEnhanceBadge={false}
                     />
@@ -188,13 +188,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                 aff.tier === 'partial1' ? { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.10)' } :
                                 { color: '#94a3b8', border: 'rgba(148,163,184,0.32)', bg: 'rgba(148,163,184,0.06)' };
                             const dots = [0, 1, 2].map((i: any) => i < matchCount ? '●' : '○').join('');
-                            const nextHint = matchCount === 0
-                                ? `같은 직업(${player?.job}) 호환 장비 1개 장착 시 세트 효과 발동`
-                                : matchCount < 3
-                                    ? `${3 - matchCount}개 더 맞추면 ${matchCount === 1 ? '2단계 효과 (공격력 +15%, 방어력 +10%)' : '풀세트 효과 (공격력 +30%, 방어력 +20%)'}`
-                                    : aff.twoHandCounted
-                                        ? '풀세트 발동 — 양손 무기 2피스와 방어구 매치 완료'
-                                        : '풀세트 발동 — 모든 슬롯 매치 완료';
+                            const nextHint = getJobOutfitNextHint(aff, player.job);
                             return (
                                 <div
                                     data-testid="job-outfit-affinity"
@@ -350,26 +344,35 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                 {setProgress.name}
                             </span>
                             <span className="shrink-0 text-[9px] font-fira text-slate-400/80">
-                                {setProgress.equippedCount}/{setProgress.totalMembers} 장착
+                                {setProgress.equippedCount}피스 적용
                             </span>
                         </div>
                         <span
                             className="shrink-0 rounded-full px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.12em]"
                             style={{ color: progressTone.text, border: `1px solid ${progressTone.border}` }}
                         >
-                            {setProgress.nextTier}세트 대기
+                            {setProgress.nextItems.length > 0 ? `${setProgress.nextTier}세트 후보` : '조합 확인'}
                         </span>
                     </div>
-                    {setProgress.nextBonus?.desc && (
+                    {setProgress.nextItems.length > 0 ? (
                         <div className="mt-1 text-[10px] font-fira leading-[1.4] text-slate-300/75">
-                            {(setProgress.nextTier ?? 0) - setProgress.equippedCount}개 더 장착 시 — {setProgress.nextBonus.desc}
+                            아래 후보 중 1개를 추가 장착하면 — {setProgress.nextBonus?.desc}
+                        </div>
+                    ) : (
+                        <div className="mt-1 text-[10px] font-fira leading-relaxed text-slate-300/85">
+                            {setProgress.additionStatus === 'previous-job'
+                                ? '이전 직업의 장비를 유지 중입니다. 현재 직업의 착용 조건에 맞춰 조합을 다시 살펴보세요.'
+                                : '현재 직업에서 이 세트 장비를 유지한 채 추가 장착으로 다음 단계를 완성할 수 없습니다.'}
+                            {' '}장비 자체 능력과 이미 발동한 효과는 그대로 적용됩니다.
                         </div>
                     )}
-                    {setProgress.missingMembers.length > 0 && (
-                        <div className="mt-1 text-[9px] font-fira text-slate-500/85 truncate">
-                            필요: {setProgress.missingMembers.slice(0, 3).join(' · ')}
-                            {setProgress.missingMembers.length > 3 ? ` +${setProgress.missingMembers.length - 3}` : ''}
+                    {setProgress.nextItems.map((candidate) => (
+                        <div key={candidate.name} className="mt-1 text-[10px] font-fira leading-relaxed text-slate-300/85">
+                            후보: {candidate.name} · {candidate.availableNow ? '착용 조건 충족' : `레벨 ${candidate.requiredLevel} 필요`}
                         </div>
+                    ))}
+                    {setProgress.nextItems.length > 0 && (
+                        <div className="mt-1 text-[9px] font-fira text-slate-400/85">미보유 장비도 포함합니다. 같은 한손무기는 별도의 한 자루가 필요합니다.</div>
                     )}
                     {setProgress.twoHandCounted && (
                         <div

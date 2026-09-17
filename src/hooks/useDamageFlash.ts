@@ -1,16 +1,24 @@
 import { useEffect, useRef, useState } from 'react';
 
-/**
- * useDamageFlash — HP 변화 시 데미지/회복 flash 및 float 숫자 상태를 생성합니다.
- * returns: { damageFlash, healFlash, damageAmount }
- */
-export const useDamageFlash = (currentHp: any) => {
-    const [damageFlash, setDamageFlash] = useState(false);
-    const [healFlash, setHealFlash] = useState(false);
-    const [damageAmount, setDamageAmount] = useState<any>(null);
+const EMPTY_FEEDBACK = {
+    damageFlash: false,
+    healFlash: false,
+    damageAmount: null as { value: number; isHeal: boolean } | null,
+};
+
+// 저장 복원은 HP 기준만 교체하고, 같은 epoch의 실제 변화만 연출합니다.
+export const useDamageFlash = (currentHp: number | undefined, resetEpoch: number) => {
+    const [feedback, setFeedback] = useState({ ...EMPTY_FEEDBACK, epoch: resetEpoch });
     const prevHpRef = useRef(currentHp);
+    const epochRef = useRef(resetEpoch);
 
     useEffect(() => {
+        if (epochRef.current !== resetEpoch) {
+            epochRef.current = resetEpoch;
+            prevHpRef.current = currentHp;
+            setFeedback({ ...EMPTY_FEEDBACK, epoch: resetEpoch });
+            return;
+        }
         if (typeof currentHp !== 'number') return;
 
         const prev = prevHpRef.current;
@@ -21,23 +29,26 @@ export const useDamageFlash = (currentHp: any) => {
         if (delta === 0) return;
 
         const isHeal = delta > 0;
-        setDamageFlash(!isHeal);
-        setHealFlash(isHeal);
-        setDamageAmount({ value: Math.abs(delta), isHeal });
+        setFeedback({
+            epoch: resetEpoch,
+            damageFlash: !isHeal,
+            healFlash: isHeal,
+            damageAmount: { value: Math.abs(delta), isHeal },
+        });
 
         const flashTimer = setTimeout(() => {
-            setDamageFlash(false);
-            setHealFlash(false);
+            setFeedback((current) => ({ ...current, damageFlash: false, healFlash: false }));
         }, 500);
         const amountTimer = setTimeout(() => {
-            setDamageAmount(null);
+            setFeedback((current) => ({ ...current, damageAmount: null }));
         }, 1200);
 
         return () => {
             clearTimeout(flashTimer);
             clearTimeout(amountTimer);
         };
-    }, [currentHp]);
+    }, [currentHp, resetEpoch]);
 
-    return { damageFlash, healFlash, damageAmount };
+    const { epoch, ...visibleFeedback } = feedback;
+    return epoch === resetEpoch ? visibleFeedback : EMPTY_FEEDBACK;
 };

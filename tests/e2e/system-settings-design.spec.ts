@@ -94,7 +94,40 @@ test.describe('System settings design', () => {
 
         const reset = page.getByTestId('system-reset-section');
         await reset.scrollIntoViewIfNeeded();
-        await expect(reset).toContainText('현재 모험을 지우고 처음부터 시작합니다.');
+        await expect(reset).toContainText('이번 회차만 정리하고 영구 성장과 기록은 보존합니다.');
         await expect(page.getByTestId('menu-reset')).toBeVisible();
+    });
+
+    test('다시 시작 확인은 즉시 드러나고 실행 후 새 여정으로 전환된다', async ({ page }) => {
+        const resetSection = page.getByTestId('system-reset-section');
+        const resetTrigger = page.getByTestId('menu-reset');
+
+        await resetSection.scrollIntoViewIfNeeded();
+        await resetTrigger.click();
+
+        const confirmation = page.getByTestId('menu-reset-confirmation');
+        const confirmButton = page.getByTestId('menu-reset-confirm');
+        await expect(resetTrigger).toHaveAttribute('aria-expanded', 'true');
+        await expect(confirmation).toHaveAttribute('role', 'alertdialog');
+        await expect(confirmButton).toBeVisible();
+        await expect(confirmButton).toBeFocused();
+
+        const reachability = await confirmation.evaluate((node) => {
+            const rect = node.getBoundingClientRect();
+            const scroll = node.closest('[data-testid="mobile-archive-console-content"]');
+            const scrollRect = scroll?.getBoundingClientRect();
+            return {
+                top: rect.top,
+                bottom: rect.bottom,
+                scrollTop: scrollRect?.top ?? 0,
+                scrollBottom: scrollRect?.bottom ?? window.innerHeight,
+            };
+        });
+        expect(reachability.top).toBeGreaterThanOrEqual(reachability.scrollTop);
+        expect(reachability.bottom).toBeLessThanOrEqual(reachability.scrollBottom);
+
+        await confirmButton.click();
+        await expect(page.getByTestId('intro-start-button')).toBeVisible();
+        await expect(page.getByTestId('persistent-status-bar')).toBeHidden();
     });
 });

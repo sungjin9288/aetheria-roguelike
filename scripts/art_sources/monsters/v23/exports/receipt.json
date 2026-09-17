@@ -1,0 +1,15 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "flame-watcher": "9af6c9e3401b1493eed16f4a322325c1d4d7e1736668bc4ce72014a48e6dee9a",
+    "frost-wolf": "9ae7400e8e7f427cebc68cb8dc9a91dd1c4bc398848d0aa4ab47a3a8b85be4f2",
+    "ink-slime": "76e37a34689ba3bfe6e11f0485e57083613f80a7dfe6e8012f826f7e48eb4307"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "flame-watcher": "7c98c338cc331c6c637faa812057ce1352ce1382158acc91d617a20d8f893f3b",
+    "frost-wolf": "77df154f98569d511baa1534676a49efde8f6648c6faee75b8760830c56a81ad",
+    "ink-slime": "ef001eef5266fba62b7c1a3f91ece464d36e5f7efa414f10b0ec0d260c62747d"
+  }
+}

@@ -5,6 +5,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildArtCatalog, compareCodePoints } from './artCatalog.mjs';
+import { buildMonsterArtCatalog } from './monsterArtCatalog.mjs';
 import { buildEquipmentCatalogRows, getEquipmentCohort } from './dump-equipment-catalog.mjs';
 import { validateEquipmentArtEvidence } from './equipmentArtEvidence.mjs';
 import { validateEquipmentFamilyArtEvidence } from './equipmentFamilyArtEvidence.mjs';
@@ -14,6 +15,7 @@ const PNG_SIGNATURE = Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]);
 const REPO_ROOT = dirname(fileURLToPath(new URL('../package.json', import.meta.url)));
 const DEFAULT_CHARACTER_MANIFEST = resolve(REPO_ROOT, 'src/data/characterArtManifest.json');
 const DEFAULT_EQUIPMENT_MANIFEST = resolve(REPO_ROOT, 'src/data/equipmentArtManifest.json');
+const DEFAULT_MONSTER_MANIFEST = resolve(REPO_ROOT, 'src/data/monsterArtManifest.json');
 const DEFAULT_SIGNATURE_REGISTRY = resolve(REPO_ROOT, 'src/data/signatureRegistry.json');
 const DEFAULT_INSPECTOR = resolve(REPO_ROOT, 'scripts/inspect_art_pixels.py');
 const DEFAULT_PUBLIC_ROOT = resolve(REPO_ROOT, 'public');
@@ -79,16 +81,25 @@ const getEquipmentRuntimePath = (entry) => {
     return `/assets/equipment-exact/${entry.endsWith('.png') ? entry : `${entry}.png`}`;
 };
 
-const runPixelInspector = ({ inspectorPath, pythonCommand, path, margin, footBaseline }) => {
-    const args = [inspectorPath, '--path', path, '--margin', String(margin)];
-    if (footBaseline !== null) args.push('--foot-baseline', String(footBaseline));
-    const result = spawnSync(pythonCommand, args, { encoding: 'utf8' });
+const runPixelInspectorBatch = ({ inspectorPath, pythonCommand, inspections }) => {
+    const result = spawnSync(pythonCommand, [inspectorPath, '--batch'], {
+        encoding: 'utf8',
+        input: JSON.stringify(inspections.map(({ path, metadata }) => ({
+            path,
+            margin: metadata.margin,
+            footBaseline: metadata.footBaseline,
+        }))),
+    });
     if (result.error) return { error: `pixel inspector unavailable: ${result.error.message}` };
     if (result.status !== 0) {
         return { error: `pixel inspector failed: ${(result.stderr || result.stdout || `exit ${result.status}`).trim()}` };
     }
     try {
-        return { result: JSON.parse(result.stdout) };
+        const parsed = JSON.parse(result.stdout);
+        if (!Array.isArray(parsed) || parsed.length !== inspections.length) {
+            return { error: 'pixel inspector returned an unexpected result count' };
+        }
+        return { results: parsed };
     } catch (error) {
         return { error: `pixel inspector emitted invalid JSON: ${error.message}` };
     }
@@ -119,13 +130,12 @@ const addSetDifference = ({ expected, actual, prefix, missing, extra }) => {
 const validateAsset = async ({
     identity,
     runtimePath,
+    expectedSha256 = null,
     metadata,
     publicRoot,
-    inspectorPath,
-    pythonCommand,
     invalidPng,
-    invalidAlpha,
-    invalidBounds,
+    invalidArtwork,
+    pixelInspections,
     exports,
 }) => {
     const path = resolvePublicPath(publicRoot, runtimePath);
@@ -144,43 +154,32 @@ const validateAsset = async ({
         return;
     }
 
+    const sha256 = createHash('sha256').update(png.data).digest('hex');
     exports.push({
         identity,
         path: runtimePath,
-        sha256: createHash('sha256').update(png.data).digest('hex'),
+        sha256,
     });
+    if (expectedSha256 !== null && sha256 !== expectedSha256) {
+        invalidArtwork.push(`${identity}:sha256 mismatch`);
+    }
 
-    const inspection = runPixelInspector({
-        inspectorPath,
-        pythonCommand,
+    pixelInspections.push({
+        identity,
         path,
-        margin: metadata.margin,
-        footBaseline: metadata.footBaseline,
+        metadata,
     });
-    if (inspection.error) {
-        invalidAlpha.push(`${identity}:${inspection.error}`);
-        invalidBounds.push(`${identity}:${inspection.error}`);
-        return;
-    }
-
-    const result = inspection.result;
-    if (!result.hasAlpha || !result.hasTransparentPixels) {
-        invalidAlpha.push(`${identity}:requires alpha channel and transparent pixels`);
-    }
-    if (!result.boundsWithinMargin) {
-        invalidBounds.push(`${identity}:opaque bounds exceed margin ${metadata.margin}`);
-    }
-    if (metadata.footBaseline !== null && !result.footBaselineMatches) {
-        invalidBounds.push(`${identity}:expected foot baseline ${metadata.footBaseline}, got ${result.footBaseline}`);
-    }
 };
 
 export const verifyArtAssets = async ({
     catalog = null,
+    monsterCatalog = null,
     characterManifest = null,
     equipmentManifest = null,
+    monsterManifest = null,
     characterManifestPath = DEFAULT_CHARACTER_MANIFEST,
     equipmentManifestPath = DEFAULT_EQUIPMENT_MANIFEST,
+    monsterManifestPath = DEFAULT_MONSTER_MANIFEST,
     inspectorPath = DEFAULT_INSPECTOR,
     publicRoot = DEFAULT_PUBLIC_ROOT,
     pythonCommand = 'python3',
@@ -190,7 +189,7 @@ export const verifyArtAssets = async ({
     equipmentSourceDir = null,
     signatureRegistryPath = DEFAULT_SIGNATURE_REGISTRY,
 } = {}) => {
-    if (!['all', 'characters', 'equipment', 'families'].includes(scope)) {
+    if (!['all', 'characters', 'equipment', 'families', 'monsters'].includes(scope)) {
         throw new Error(`Unknown art verification scope: ${scope}`);
     }
     if (cohort !== null && (!EQUIPMENT_COHORTS.has(cohort) || scope !== 'equipment')) {
@@ -198,12 +197,15 @@ export const verifyArtAssets = async ({
     }
 
     const resolvedCatalog = catalog || await buildArtCatalog();
+    const resolvedMonsterCatalog = monsterCatalog || await buildMonsterArtCatalog();
     const resolvedCharacterManifest = characterManifest || await readJson(characterManifestPath);
     const resolvedEquipmentManifest = equipmentManifest || await readJson(equipmentManifestPath);
+    const resolvedMonsterManifest = monsterManifest || await readJson(monsterManifestPath);
     const resolvedInspectorPath = inspectorPath instanceof URL ? fileURLToPath(inspectorPath) : inspectorPath;
     const verifyCharacters = scope === 'all' || scope === 'characters';
     const verifyEquipment = scope === 'all' || scope === 'equipment';
     const verifyFamilies = scope === 'all' || scope === 'families';
+    const verifyMonsters = scope === 'all' || scope === 'monsters';
     const equipmentCatalog = cohort
         ? resolvedCatalog.equipment.filter((entry) => getEquipmentCohort({ name: entry.name, familyKey: entry.family }) === cohort)
         : resolvedCatalog.equipment;
@@ -218,6 +220,7 @@ export const verifyArtAssets = async ({
         ...(verifyEquipment ? ['equipment'] : []),
         ...(verifyFamilies ? ['families'] : []),
         ...(verifySignatureOverlays ? ['signature-overlays'] : []),
+        ...(verifyMonsters ? ['monsters'] : []),
     ]);
     const report = {
         ok: false,
@@ -225,6 +228,7 @@ export const verifyArtAssets = async ({
         cohort,
         verifiedSurfaces,
         catalogSha256: resolvedCatalog.catalogSha256,
+        monsterCatalogSha256: resolvedMonsterCatalog.catalogSha256,
         counts: {
             classes: resolvedCatalog.classes.length,
             equipment: equipmentCatalog.length,
@@ -232,6 +236,7 @@ export const verifyArtAssets = async ({
             usedFamilies: resolvedCatalog.usedFamilies.length,
             families: resolvedCatalog.definedFamilies.length,
             signatureOverlays: verifySignatureOverlays ? signatureCatalog.length : 0,
+            monsters: verifyMonsters ? resolvedMonsterCatalog.monsters.length : 0,
         },
         missing: [],
         extra: [],
@@ -251,7 +256,9 @@ export const verifyArtAssets = async ({
 
     const characterEntries = resolvedCharacterManifest?.entries || {};
     const equipmentEntries = resolvedEquipmentManifest?.entries || {};
+    const monsterEntries = resolvedMonsterManifest?.entries || {};
     const selectedAssets = [];
+    const pixelInspections = [];
 
     if (verifyCharacters) {
         addSetDifference({
@@ -419,18 +426,106 @@ export const verifyArtAssets = async ({
         }
     }
 
+    if (verifyMonsters) {
+        addSetDifference({
+            expected: resolvedMonsterCatalog.monsters.map((entry) => entry.name),
+            actual: Object.keys(monsterEntries),
+            prefix: 'monster',
+            missing: report.missing,
+            extra: report.extra,
+        });
+        if (resolvedMonsterManifest?.catalogSha256 !== resolvedMonsterCatalog.catalogSha256) {
+            report.missing.push('monster:catalogSha256 mismatch');
+        }
+        if (resolvedMonsterManifest?.version !== 1) {
+            report.invalidStyleVersion.push(`monster:expected manifest version 1, got ${String(resolvedMonsterManifest?.version)}`);
+        }
+        if (resolvedMonsterManifest?.art?.styleVersion !== 2) {
+            report.invalidStyleVersion.push(`monster:expected styleVersion 2, got ${String(resolvedMonsterManifest?.art?.styleVersion)}`);
+        }
+        const metadata = parseArtMetadata(resolvedMonsterManifest, 'monster');
+        if (!metadata) {
+            report.missing.push('monster:art metadata');
+        } else {
+            for (const monster of resolvedMonsterCatalog.monsters) {
+                const entry = monsterEntries[monster.name];
+                if (entry) {
+                    for (const [field, expected] of [
+                        ['key', monster.key],
+                        ['regionKey', monster.regionKey],
+                        ['archetype', monster.archetype],
+                        ['isBoss', monster.isBoss],
+                    ]) {
+                        if (entry[field] !== expected) {
+                            report.invalidArtwork.push(`monster:${monster.name}:${field} mismatch`);
+                        }
+                    }
+                    const expectedRuntimePath = `${resolvedMonsterManifest.art.assetRoot}${monster.key}.png`;
+                    if (entry.runtimePath !== expectedRuntimePath) {
+                        report.invalidArtwork.push(`monster:${monster.name}:runtimePath mismatch`);
+                    }
+                    if (
+                        typeof entry.sourceRuntimePath !== 'string'
+                        || !entry.sourceRuntimePath.startsWith('/assets/monsters/')
+                        || entry.sourceRuntimePath.includes('..')
+                    ) {
+                        report.invalidArtwork.push(`monster:${monster.name}:sourceRuntimePath invalid`);
+                    }
+                    if (!/^[a-f0-9]{64}$/.test(entry.sha256 || '')) {
+                        report.invalidArtwork.push(`monster:${monster.name}:sha256 invalid`);
+                    }
+                    const correction = resolvedMonsterCatalog.corrections?.[monster.name];
+                    if (correction && (entry.sourceRuntimePath !== correction.sourceRuntimePath
+                        || entry.sha256 !== correction.sha256)) {
+                        report.invalidArtwork.push(`monster:${monster.name}:authored correction mismatch`);
+                    }
+                }
+                selectedAssets.push({
+                    identity: `monster:${monster.name}`,
+                    runtimePath: entry?.runtimePath,
+                    expectedSha256: entry?.sha256,
+                    metadata,
+                });
+            }
+        }
+    }
+
     addDuplicateRuntimePaths(selectedAssets, report.duplicates);
     for (const asset of selectedAssets) {
         await validateAsset({
             ...asset,
             publicRoot,
-            inspectorPath: resolvedInspectorPath,
-            pythonCommand,
             invalidPng: report.invalidPng,
-            invalidAlpha: report.invalidAlpha,
-            invalidBounds: report.invalidBounds,
+            invalidArtwork: report.invalidArtwork,
+            pixelInspections,
             exports: report.exports,
         });
+    }
+
+    const inspection = runPixelInspectorBatch({
+        inspectorPath: resolvedInspectorPath,
+        pythonCommand,
+        inspections: pixelInspections,
+    });
+    if (inspection.error) {
+        for (const { identity } of pixelInspections) {
+            report.invalidAlpha.push(`${identity}:${inspection.error}`);
+            report.invalidBounds.push(`${identity}:${inspection.error}`);
+        }
+    } else {
+        for (let index = 0; index < pixelInspections.length; index += 1) {
+            const { identity, metadata } = pixelInspections[index];
+            const result = inspection.results[index];
+            if (!result.hasAlpha || !result.hasTransparentPixels) {
+                report.invalidAlpha.push(`${identity}:requires alpha channel and transparent pixels`);
+            }
+            if (!result.boundsWithinMargin) {
+                report.invalidBounds.push(`${identity}:opaque bounds exceed margin ${metadata.margin}`);
+            }
+            if (metadata.footBaseline !== null && !result.footBaselineMatches) {
+                report.invalidBounds.push(`${identity}:expected foot baseline ${metadata.footBaseline}, got ${result.footBaseline}`);
+            }
+        }
     }
 
     for (const key of ['missing', 'extra', 'duplicates', 'invalidPng', 'invalidAlpha', 'invalidBounds', 'invalidStyleVersion', 'invalidArtwork']) {
@@ -452,7 +547,7 @@ export const writeArtVerificationReport = async (report, path) => {
     if (!report.ok) throw new Error('Refusing to write failing art verification as approved evidence');
     if (
         report.scope !== 'all'
-        || report.verifiedSurfaces?.join(',') !== 'characters,equipment,families,signature-overlays'
+        || report.verifiedSurfaces?.join(',') !== 'characters,equipment,families,signature-overlays,monsters'
     ) {
         throw new Error('Refusing to write partial-scope art verification as approved evidence');
     }
@@ -470,6 +565,7 @@ const parseCli = (args) => {
             '--write-report': 'writeReport',
             '--character-manifest': 'characterManifestPath',
             '--equipment-manifest': 'equipmentManifestPath',
+            '--monster-manifest': 'monsterManifestPath',
             '--equipment-provenance': 'equipmentProvenancePath',
             '--equipment-source-dir': 'equipmentSourceDir',
             '--public-root': 'publicRoot',
@@ -479,7 +575,7 @@ const parseCli = (args) => {
 
         const value = args[index + 1];
         if (!value || value.startsWith('--')) throw new Error(`Missing value for ${argument}`);
-        if (argument === '--scope' && !['all', 'characters', 'equipment', 'families'].includes(value)) {
+        if (argument === '--scope' && !['all', 'characters', 'equipment', 'families', 'monsters'].includes(value)) {
             throw new Error(`Invalid value for --scope: ${value}`);
         }
         if (argument === '--cohort' && !EQUIPMENT_COHORTS.has(value)) {
@@ -504,6 +600,7 @@ if (isCli) {
             cohort: options.cohort || null,
             ...(options.characterManifestPath ? { characterManifestPath: resolve(options.characterManifestPath) } : {}),
             ...(options.equipmentManifestPath ? { equipmentManifestPath: resolve(options.equipmentManifestPath) } : {}),
+            ...(options.monsterManifestPath ? { monsterManifestPath: resolve(options.monsterManifestPath) } : {}),
             ...(options.equipmentProvenancePath ? { equipmentProvenancePath: resolve(options.equipmentProvenancePath) } : {}),
             ...(options.equipmentSourceDir ? { equipmentSourceDir: resolve(options.equipmentSourceDir) } : {}),
             ...(options.publicRoot ? { publicRoot: resolve(options.publicRoot) } : {}),

@@ -18,10 +18,11 @@ test('readability foundation uses Korean-friendly readable font stack', async ()
     assert.match(tailwind, /readable:\s*\['var\(--aether-readable-font\)'\]/);
 });
 
-test('mobile first fold preserves a readable log height', async () => {
+test('mobile first fold keeps readable combat history above decisions', async () => {
     const mobileLayout = await readSrc('src/components/app/MobileGameLayout.tsx');
 
-    assert.match(mobileLayout, /isCombat \? 'order-2 min-h-\[132px\]' : 'min-h-\[240px\] min-\[740px\]:min-h-\[280px\]'/);
+    assert.match(mobileLayout, /isCombat \? 'order-1 min-h-\[132px\]' : 'min-h-\[240px\] min-\[740px\]:min-h-\[280px\]'/);
+    assert.match(mobileLayout, /isCombat \? 'order-2 shrink-0'/);
     assert.match(mobileLayout, /<TerminalView/);
 });
 

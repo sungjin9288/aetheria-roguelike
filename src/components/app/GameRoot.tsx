@@ -19,6 +19,7 @@ import CritPulse from '../CritPulse';
 import PhaseBanner from '../PhaseBanner';
 import LegendaryDropOverlay from '../LegendaryDropOverlay';
 import MobileGameLayout from './MobileGameLayout';
+import ExpeditionDebriefCard from '../ExpeditionDebriefCard';
 import { usePlatformBackHandler } from '../../platform/platformBackRegistry';
 import { useReturnSupplyRewardedAd } from '../../hooks/useReturnSupplyRewardedAd';
 
@@ -29,7 +30,6 @@ const PostCombatCard   = lazy(() => import('../PostCombatCard'));
 const PremiumShop      = lazy(() => import('../PremiumShop'));
 const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
-const ExpeditionDebriefCard = lazy(() => import('../ExpeditionDebriefCard'));
 const MilestoneStoryCard = lazy(() => import('../MilestoneStoryCard'));
 
 const resolveExpeditionJob = (player: Player, summary: ExpeditionSummary | null) => {
@@ -71,7 +71,6 @@ const ReturnBriefingGate = ({
 const GameRoot = ({
     engine, fullStats,
     isPanelFocusState, mobileArchiveDockVisible,
-    inventorySpotlight,
     premiumShopOpen, setPremiumShopOpen,
     mirrorPanelOpen, setMirrorPanelOpen,
     handleQuickSlotUse,
@@ -249,6 +248,13 @@ const GameRoot = ({
         closeExpeditionDebrief();
     };
 
+    const visiblePhaseBanner = engine.enemy && phaseBanner
+        && engine.enemy.name === phaseBanner.name
+        && ((phaseBanner.n === 2 && engine.enemy.phase2Triggered)
+            || (phaseBanner.n === 3 && engine.enemy.phase3Triggered))
+        ? phaseBanner
+        : null;
+
     return (
     <MotionConfig reducedMotion="user">
         <MainLayout visualEffect={engine.visualEffect} readabilityMode={readabilityMode} regionTheme={regionTheme}>
@@ -326,7 +332,6 @@ const GameRoot = ({
                     fullStats={fullStats}
                     isPanelFocusState={isPanelFocusState}
                     mobileArchiveDockVisible={mobileArchiveDockVisible}
-                    inventorySpotlight={inventorySpotlight}
                     handleQuickSlotUse={handleQuickSlotUse}
                     damageFlash={damageFlash}
                     healFlash={healFlash}
@@ -341,7 +346,7 @@ const GameRoot = ({
             {damageAmount && <DamageNumber amount={damageAmount} />}
             <LevelUpBanner level={levelUpBanner} />
             <CritPulse active={critPulse} />
-            <PhaseBanner phase={phaseBanner} />
+            <PhaseBanner phase={visiblePhaseBanner} />
 
             {engine.pendingRelics && (
                 <Suspense fallback={null}>

@@ -1,5 +1,6 @@
 import type { Player } from '../types/index.js';
 import { FIRST_STORY_QUEST_ID } from '../data/quests.js';
+import { canInvestigateTown } from './townInvestigation';
 
 export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'grave';
 
@@ -14,6 +15,7 @@ type TownPrimaryKind =
 
 interface TownActionContext {
     player: Player;
+    mapData?: { type?: string; monsters?: readonly string[] };
     stats: { maxHp?: number; maxMp?: number };
     guidance: any;
     preparation: any;
@@ -110,6 +112,7 @@ const getPrimaryLabel = (kind: TownPrimaryKind, guidance: any, preparation: any)
 
 export const getTownActionPresentation = ({
     player,
+    mapData,
     stats,
     guidance,
     preparation,
@@ -165,6 +168,7 @@ export const getTownActionPresentation = ({
     // 시작 마을의 explore action은 이벤트 없이 안내 로그만 남긴다. 실제 이동과
     // 구별되는 결과가 있는 행동만 첫 화면에 남겨 선택 비용을 줄인다.
     const quickKeys = [...contextualKeys.slice(0, 1), 'move'] as TownActionKey[];
+    if (canInvestigateTown(player.loc, mapData) && primaryKey !== 'explore') quickKeys.push('explore');
     const visibleKeys = new Set<TownActionKey>([...quickKeys, ...(primaryKey ? [primaryKey] : [])]);
     const facilityKeys = FACILITY_KEYS.filter((key) => !visibleKeys.has(key));
 

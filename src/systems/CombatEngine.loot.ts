@@ -1,13 +1,65 @@
-import type { Monster, Player } from '../types/index.js';
+import type { Item, Monster, Player } from '../types/index.js';
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES } from '../data/dropTables.js';
 import { BALANCE } from '../data/constants.js';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
+import { withCanonicalEquipmentBaseIdentity } from '../utils/equipmentBaseIdentity.js';
 import { MSG } from '../data/messages.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
+import { LIBRARY_BONUS_LOOT } from '../data/libraryLoot.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getProgressionLootMultiplier } from '../data/progressionProfiles.js';
+import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
+
+export type LootLog = { type: string; text: string };
+export type LootCandidate = { item: Item; logs: LootLog[] };
+export type LootResult = {
+    candidates: LootCandidate[];
+    items: Item[];
+    logs: LootLog[];
+};
+
+const normalBonusPool = (enemy: Monster, player: Player | null): Item[] | null => {
+    const map = player?.loc ? DB.MAPS[player.loc] : undefined;
+    const name = enemy.baseName || enemy.name;
+    const enemyLevel = enemy.level;
+    if (enemy.isBoss || enemy.isElite || !map || map.level === 'infinite'
+        || !name || !map.monsters?.includes(name)
+        || !Number.isSafeInteger(enemyLevel) || (enemyLevel as number) <= 0) return null;
+
+    const tier = Object.entries(BALANCE.TIER_REQ_LEVEL)
+        .map(([key, value]) => [Number(key), Number(value)])
+        .filter(([, requiredLevel]) => requiredLevel <= (enemyLevel as number))
+        .sort((left, right) => right[1] - left[1])[0]?.[0];
+    const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter(item => (
+        item.tier === tier && item.name && !SIGNATURE_ITEM_REGISTRY[item.name]
+    ));
+    if (pool.length === 0) throw new Error('INVALID_NORMAL_BONUS_POOL');
+    if (player?.loc === LIBRARY_BONUS_LOOT.location && tier === LIBRARY_BONUS_LOOT.tier
+        && LIBRARY_BONUS_LOOT.monsterNames.includes(name)) {
+        return LIBRARY_BONUS_LOOT.itemNames.map(itemName => {
+            const item = pool.find(candidate => candidate.name === itemName);
+            if (!item) throw new Error('INVALID_LIBRARY_BONUS_POOL');
+            return item;
+        });
+    }
+    return pool;
+};
+
+const calculateCappedLootChance = (...factors: unknown[]) => {
+    let chance = 1;
+
+    for (const factor of factors) {
+        if (typeof factor !== 'number' || !Number.isFinite(factor) || factor < 0) {
+            throw new Error('INVALID_LOOT_DROP_CHANCE');
+        }
+        chance *= factor;
+        if (!Number.isFinite(chance)) throw new Error('INVALID_LOOT_DROP_CHANCE');
+    }
+
+    return Math.min(1, chance);
+};
 
 /**
  * 적의 기본 이름을 해석합니다 (접두사 제거).
@@ -29,7 +81,7 @@ export const resolveEnemyBaseName = (enemy: Monster) => {
  * @param {Object} enemy
  * @param {Object|null} player
  * @param {number} [signaturePityMult=1.0] - signature 드롭에만 적용되는 pity 배율
- * @returns {{ items: Object[], logs: Object[] }}
+ * @returns {LootResult}
  */
 export const processLoot = (
     enemy: Monster,
@@ -37,17 +89,38 @@ export const processLoot = (
     signaturePityMult: any,
     rng?: () => number,
     now?: () => number,
-) => {
+): LootResult => {
     const random = typeof rng === 'function' ? rng : Math.random;
     const currentTime = typeof now === 'function' ? now : Date.now;
-    const items = [];
-    const logs = [];
+    const candidates: LootCandidate[] = [];
+    const appendCandidate = (item: Item, candidateLogs: LootLog[]) => {
+        candidates.push({ item, logs: candidateLogs });
+    };
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
-    const dropRateMult = 1 + (relics.find((relic: any) => relic.effect === 'drop_rate')?.val || 0);
+    const dropRateMult = 1 + getStrongestNumericRelicValue(relics, 'drop_rate');
     const bossDropMult = enemy?.isBoss ? 1 + (relics.find((relic: any) => relic.effect === 'boss_hunter')?.val?.drop || 0) : 1;
     const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
     const progressionLootMult = getProgressionLootMultiplier(player);
+    const enemyDropMult = enemy.dropMod || 1.0;
+    const enrichedList = DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string];
+    const lootList = LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string];
+    const inferredLevel = Math.max(1, Math.floor(((enemy.exp || BALANCE.LOOT_BASE_EXP) - BALANCE.LOOT_BASE_EXP) / BALANCE.LOOT_EXP_LEVEL_DIVISOR));
+
+    if (!Number.isFinite(dropRateMult)) throw new Error('INVALID_LOOT_DROP_CHANCE');
+    if (enrichedList) {
+        enrichedList.forEach((entry: any) => {
+            const entryPityMult = SIGNATURE_ITEM_REGISTRY[entry.item] ? pityMult : 1;
+            calculateCappedLootChance(entry.rate, enemyDropMult, dropRateMult, bossDropMult, progressionLootMult, entryPityMult);
+        });
+    }
+    if (lootList && lootList.length > 0) {
+        calculateCappedLootChance(BALANCE.DROP_CHANCE, enemyDropMult, dropRateMult, bossDropMult, progressionLootMult);
+    }
+    if (inferredLevel >= BALANCE.LOOT_BONUS_MIN_LEVEL) {
+        const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
+        calculateCappedLootChance(bonusChance, dropRateMult, bossDropMult, progressionLootMult);
+    }
 
     const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
 
@@ -60,94 +133,94 @@ export const processLoot = (
         const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === rareTier);
         if (pool.length > 0) {
             const picked = pool[Math.floor(random() * pool.length)];
-            const baseItem = { ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+            const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
             const newItem = applyItemPrefix(baseItem, random);
-            items.push(newItem);
-            logs.push({ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name) });
-            if (newItem.prefixed) logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+            const candidateLogs: LootLog[] = [{ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name) }];
+            if (newItem.prefixed) candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+            appendCandidate(newItem, candidateLogs);
         }
     }
 
     // 강화 드롭 테이블 우선 참조
-    const enrichedList = DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string];
     if (enrichedList) {
         enrichedList.forEach((entry: any) => {
             // Signature 아이템에만 pity 배율 적용 (일반 아이템 드롭률은 변동 없음)
             const isSignature = Boolean(SIGNATURE_ITEM_REGISTRY[entry.item]);
             const entryPityMult = isSignature ? pityMult : 1;
-            const chance = Math.min(
-                1,
-                entry.rate
-                    * (enemy.dropMod || 1.0)
-                    * dropRateMult
-                    * bossDropMult
-                    * progressionLootMult
-                    * entryPityMult,
+            const chance = calculateCappedLootChance(
+                entry.rate,
+                enemyDropMult,
+                dropRateMult,
+                bossDropMult,
+                progressionLootMult,
+                entryPityMult,
             );
             if (random() < chance) {
                 const itemData = allItems.find((i: any) => i.name === entry.item);
                 if (!itemData) return;
                 const qty = entry.qty ? (entry.qty[0] + Math.floor(random() * (entry.qty[1] - entry.qty[0] + 1))) : 1;
                 for (let q = 0; q < qty; q++) {
-                    const baseItem = { ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+                    const baseItem = withCanonicalEquipmentBaseIdentity({ ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                     const newItem = applyItemPrefix(baseItem, random);
-                    items.push(newItem);
-                    logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
+                    const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name) }];
                     if (newItem.prefixed) {
-                        logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                        candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
                     }
+                    appendCandidate(newItem, candidateLogs);
                 }
             }
         });
-        return { items, logs };
+        const items = candidates.map(({ item }) => item);
+        const logs = candidates.flatMap(({ logs: candidateLogs }) => candidateLogs);
+        return { candidates, items, logs };
     }
 
     // 레거시 LOOT_TABLE 폴백 (없으면 보너스 드랍만 시도)
     // cycle 171: 기존에는 lootList 없으면 early return으로 보너스 드랍 로직까지 차단됐음.
     //   non-boss 104종(drop/loot 둘 다 없음)이 고레벨이어도 빈손 회귀 fix.
-    const lootList = LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string];
     if (lootList && lootList.length > 0) {
         lootList.forEach((itemName: any) => {
-            const chance = Math.min(
-                1,
-                BALANCE.DROP_CHANCE
-                    * (enemy.dropMod || 1.0)
-                    * dropRateMult
-                    * bossDropMult
-                    * progressionLootMult,
+            const chance = calculateCappedLootChance(
+                BALANCE.DROP_CHANCE,
+                enemyDropMult,
+                dropRateMult,
+                bossDropMult,
+                progressionLootMult,
             );
             if (random() < chance) {
                 const itemData = allItems.find((i: any) => i.name === itemName);
                 if (!itemData) return;
 
-                const baseItem = { ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+                const baseItem = withCanonicalEquipmentBaseIdentity({ ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                 const newItem = applyItemPrefix(baseItem, random);
-                items.push(newItem);
-                logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
+                const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name) }];
                 if (newItem.prefixed) {
-                    logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                    candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
                 }
+                appendCandidate(newItem, candidateLogs);
             }
         });
     }
 
     // 고레벨 몬스터 보너스 장비 드랍 (exp 기반 레벨 추정)
-    const inferredLevel = Math.max(1, Math.floor(((enemy.exp || BALANCE.LOOT_BASE_EXP) - BALANCE.LOOT_BASE_EXP) / BALANCE.LOOT_EXP_LEVEL_DIVISOR));
     if (inferredLevel >= BALANCE.LOOT_BONUS_MIN_LEVEL) {
         const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
         const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
-        if (random() < Math.min(1, bonusChance * dropRateMult * bossDropMult * progressionLootMult)) {
-            const tierPool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
+        if (random() < calculateCappedLootChance(bonusChance, dropRateMult, bossDropMult, progressionLootMult)) {
+            const tierPool = normalBonusPool(enemy, player)
+                ?? [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
             if (tierPool.length > 0) {
                 const picked = tierPool[Math.floor(random() * tierPool.length)];
-                const baseItem = { ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+                const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                 const newItem = applyItemPrefix(baseItem, random);
-                items.push(newItem);
-                logs.push({ type: 'success', text: MSG.LOOT_GET(newItem.name) });
-                if (newItem.prefixed) logs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name) }];
+                if (newItem.prefixed) candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                appendCandidate(newItem, candidateLogs);
             }
         }
     }
 
-    return { items, logs };
+    const items = candidates.map(({ item }) => item);
+    const logs = candidates.flatMap(({ logs: candidateLogs }) => candidateLogs);
+    return { candidates, items, logs };
 };

@@ -1,0 +1,107 @@
+[
+  {
+    "name": "abyss-eye",
+    "sha256": "d2901a0e758503b0a3ebd63f9dce441cd64317773849f7edb1deebd8d7f52847",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      90,
+      68,
+      1159,
+      1147
+    ]
+  },
+  {
+    "name": "dimensional-infantry",
+    "sha256": "d1054b42da5885e69ce2fda69bf592b3a0b7a37b9c34747eb442bd266319b9ce",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      148,
+      22,
+      993,
+      1209
+    ]
+  },
+  {
+    "name": "dragon-knight",
+    "sha256": "43654f6bc667c3dc239b4a3210cad3ccd4e48dca9339aa989415940eeaf2aeae",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      56,
+      9,
+      1202,
+      1245
+    ]
+  },
+  {
+    "name": "fallen-angel",
+    "sha256": "d088f942bcff4f85476b4ea529a7f92ea1a19f3624fe43c7cedc028da3a7a4d3",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      64,
+      44,
+      1185,
+      1216
+    ]
+  },
+  {
+    "name": "void-beast",
+    "sha256": "3b10cf51ef593ec3f4316890041b62ae68d9bd7662718e713c5caf9f2ccaca9b",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      45,
+      90,
+      1236,
+      1157
+    ]
+  },
+  {
+    "name": "void-bombardier",
+    "sha256": "51af8e0af22f20adc2c8d7dc4012be1fb207aa602536e375d69df957c1335256",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      162,
+      39,
+      1189,
+      1224
+    ]
+  },
+  {
+    "name": "void-fragment",
+    "sha256": "f9d8edd75fa7a3d48586f9b72943e9c09689a5a0fbaac31c622f7cec20e8d848",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      209,
+      19,
+      1120,
+      1235
+    ]
+  }
+]

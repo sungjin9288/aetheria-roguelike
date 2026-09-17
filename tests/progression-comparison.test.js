@@ -4,7 +4,11 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
-import { BASELINE_PROGRESSION_PROFILE } from '../src/data/progressionProfiles.ts';
+import {
+    BASELINE_PROGRESSION_PROFILE,
+    EXPLORATION_RHYTHM_PROFILE,
+    EXPLORATION_RHYTHM_V3_PROFILE,
+} from '../src/data/progressionProfiles.ts';
 import { DB } from '../src/data/db.ts';
 import {
     ProgressionSimulationError,
@@ -38,6 +42,9 @@ test('multi-seed comparison is deterministic, canonical, and remains report-only
     assert.equal(first.gates.targetMetricDirection.matched, true);
     assert.equal(first.gates.productFunnelEvidence, false);
     assert.equal(first.gates.fullCombatModel, false);
+    assert.ok(first.limitations.includes(
+        'The current comparison predecessor is the registered baseline profile.',
+    ));
     assert.deepEqual(first.blockers, [
         'production_funnel_evidence_missing',
         'full_combat_model_unavailable',
@@ -97,6 +104,31 @@ test('event and loot axes move their bounded proxy in the declared direction', (
         loot.aggregates.equipmentDropAttempts.candidate.total
             > loot.aggregates.equipmentDropAttempts.predecessor.total,
         true,
+    );
+});
+
+test('comparison accepts only the registered v2 to v3 event transition', () => {
+    const report = simulateProgressionComparison({
+        seeds: [20_260_824, 20_260_825],
+        predecessorProfile: EXPLORATION_RHYTHM_PROFILE,
+        candidateProfile: EXPLORATION_RHYTHM_V3_PROFILE,
+        declaredAxis: 'event',
+    });
+    assert.equal(report.gates.profileTransition, true);
+    assert.equal(report.gates.targetMetricDirection.matched, true);
+    assert.equal(report.candidateProfile.version, 3);
+    assert.ok(report.limitations.includes(
+        'The current comparison predecessor is the registered exploration-rhythm v2 profile.',
+    ));
+
+    assert.throws(
+        () => simulateProgressionComparison({
+            seeds: [11, 23],
+            predecessorProfile: { ...EXPLORATION_RHYTHM_PROFILE, eventMultiplier: 0.75 },
+            candidateProfile: EXPLORATION_RHYTHM_V3_PROFILE,
+            declaredAxis: 'event',
+        }),
+        /registered v2 predecessor|UNSUPPORTED_PREDECESSOR_PROFILE/i,
     );
 });
 
@@ -214,6 +246,8 @@ test('comparison CLI emits a deterministic SHA-256 envelope and rejects unsafe f
         '--import', 'tsx', scriptPath,
         '--axis', 'exp',
         '--multiplier', '1.2',
+        '--candidate-id', 'baseline-exp-candidate',
+        '--candidate-version', '2',
         '--seed-start', '20260810',
         '--seed-count', '2',
     ];
@@ -235,6 +269,8 @@ test('comparison CLI emits a deterministic SHA-256 envelope and rejects unsafe f
         '--import', 'tsx', scriptPath,
         '--axis', 'exp',
         '--multiplier', '2',
+        '--candidate-id', 'baseline-exp-candidate',
+        '--candidate-version', '2',
         '--seed-count', '2',
     ], { cwd: repoRoot, encoding: 'utf8' });
     assert.equal(unsafe.status, 1);
@@ -245,6 +281,8 @@ test('comparison CLI emits a deterministic SHA-256 envelope and rejects unsafe f
         '--import', 'tsx', scriptPath,
         '--axis', 'exp',
         '--multiplier', '1.2',
+        '--candidate-id', 'baseline-exp-candidate',
+        '--candidate-version', '2',
         '--seed-start', String(0xffffffff),
         '--seed-count', '2',
     ], { cwd: repoRoot, encoding: 'utf8' });

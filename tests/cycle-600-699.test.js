@@ -271,7 +271,7 @@ import { readFile } from 'node:fs/promises';
    * - history default [] 제거.
    * - uid default 'anonymous' 제거.
    * - context default {} 제거.
-   * - body의 isSmokeRuntime / pickFallbackEvent 호출 보존.
+   * - body의 isMockRuntime / pickFallbackEvent 호출 보존.
    *
    * 회귀 가드:
    * - 1 production callsite (exploreActions) 동작 그대로.
@@ -301,9 +301,9 @@ import { readFile } from 'node:fs/promises';
           'exploreActions AI_SERVICE.generateEvent 4-arg callsite 보존');
   });
 
-  test('cycle 606: body isSmokeRuntime / pickFallbackEvent 보존', async () => {
+  test('cycle 606: body isMockRuntime / pickFallbackEvent 보존', async () => {
       const source = await readSrc('src/services/aiService.ts');
-      assert.ok(/if \(isSmokeRuntime\(\)\)/.test(source), 'isSmokeRuntime 가드 보존');
+      assert.ok(/if \(isMockRuntime\(\)\)/.test(source), 'isMockRuntime 가드 보존');
       assert.ok(/return pickFallbackEvent\(loc,\s*history,\s*context\)/.test(source),
           'pickFallbackEvent(loc, history, context) 호출 보존');
   });
@@ -692,14 +692,14 @@ import { readFile } from 'node:fs/promises';
           "safeText fallback default '' 제거");
   });
 
-  test('cycle 616: 정합성 가드 — 3 callsite \'\' 명시 추가', async () => {
+  test('cycle 616: 정합성 가드 — active callsite는 fallback을 명시하고 dead spotlight 호출은 제거', async () => {
       const source = await readSrc('src/hooks/useGameTestApi.ts');
       assert.ok(/safeText\(e\.currentEvent\.desc,\s*''\)/.test(source),
           "currentEvent.desc safeText '' 명시");
       assert.ok(/safeText\(e\.postCombatResult\.enemy,\s*''\)/.test(source),
           "postCombatResult.enemy safeText '' 명시");
-      assert.ok(/safeText\(is\.title,\s*''\)/.test(source),
-          "is.title safeText '' 명시");
+      assert.ok(!/safeText\(is\.title,\s*''\)/.test(source),
+          'removed inventory spotlight title stays absent');
   });
 
   test('cycle 616: cycle 502-615 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -759,12 +759,12 @@ import { readFile } from 'node:fs/promises';
           "safeList fallback default '[item]' 제거");
   });
 
-  test("cycle 617: 정합성 가드 — 2 callsite '[item]' 명시 추가", async () => {
+  test("cycle 617: 정합성 가드 — active item caller는 fallback을 명시하고 dead spotlight 호출은 제거", async () => {
       const source = await readSrc('src/hooks/useGameTestApi.ts');
       assert.ok(/safeList\(e\.postCombatResult\.items,\s*'\[item\]'\)/.test(source),
           "postCombatResult.items safeList '[item]' 명시");
-      assert.ok(/safeList\(is\.names,\s*'\[item\]'\)/.test(source),
-          "is.names safeList '[item]' 명시");
+      assert.ok(!/safeList\(is\.names,\s*'\[item\]'\)/.test(source),
+          'removed inventory spotlight names stay absent');
   });
 
   test("cycle 617: '[choice]' caller (currentEvent.choices) 보존", async () => {
@@ -1452,8 +1452,12 @@ import { readFile } from 'node:fs/promises';
       const exploreActions = await readSrc('src/hooks/gameActions/exploreActions.ts');
       assert.ok(/commitExploreOutcome\('narrative_event',\s*null,\s*mapData\)/.test(exploreActions),
           "narrative_event callsite null + mapData 명시 (2026-07 보스 게이지 누적)");
+      // 2026-09 I-track: `eventData.exhausted` 분기는 생산자가 0건인 죽은 경로여서 제거했다
+      //   (한도 초과는 aiService가 폴백 이벤트에 fallbackReason:'quota'를 붙여 내려보낸다).
+      //   그 분기가 갖고 있던 'nothing' 콜사이트 1건이 함께 사라져 2 → 1이 됐다 —
+      //   "각 콜사이트가 null + mapData를 명시한다"는 계약 자체는 그대로다.
       const exploreActionsNothing = (exploreActions.match(/commitExploreOutcome\('nothing',\s*null,\s*mapData\)/g) || []).length;
-      assert.ok(exploreActionsNothing >= 2, `exploreActions 'nothing' callsite null+mapData 명시 2건 이상 (got ${exploreActionsNothing})`);
+      assert.ok(exploreActionsNothing >= 1, `exploreActions 'nothing' callsite null+mapData 명시 1건 이상 (got ${exploreActionsNothing})`);
 
       const exploreUtils = await readSrc('src/utils/exploreUtils.ts');
       const exploreUtilsNothing = (exploreUtils.match(/commitExploreOutcome\('nothing',\s*null,\s*gaugeMapData\)/g) || []).length;

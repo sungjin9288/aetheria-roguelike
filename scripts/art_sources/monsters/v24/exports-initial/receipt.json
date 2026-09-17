@@ -1,0 +1,21 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "ash-golem": "385409eda7f24e7f6a8c93bdf40a0cb5fb9d45449cbfbbfda7cff06aeed3f470",
+    "petal-slime": "b7a8d4f2fed6177ade29404920601d68df3100be92dca9ae4b75ea3efb0f3366",
+    "root-eater": "c810d999a18adcd29e0603da9c7f3078ccd726a87951ac54ebb4a36865b79607",
+    "storm-wyvern": "def64c3444093f76b97793d0f7eb9307563913eaf3fb10c09e4ab6741a7bb7f8",
+    "wind-drake": "1c1d46dd49d5487bec48ae96692a822914cf79971bf92d80ed90270037bb1f7b",
+    "world-tree-guardian": "f4c851296c69019611bba7c6eb8ac45bf63053b066cd96e39af5cd478a16ebbe"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "ash-golem": "997a8ee4f0672f4ba31a3b4252aeea45b74893a2dc3a4e8b003be88525502438",
+    "petal-slime": "9ccf17c7682b3c2520237e14fe09929175a7b0bf77b864eb968bfd1547887a32",
+    "root-eater": "b227982a2d976994bf6675934095ccc9d892c481a02af5455f482c235fca3dc4",
+    "storm-wyvern": "fecbb70a7b6ea35db6f157105f25b39f2a13cc6ddaea844c8e34d7c50489679f",
+    "wind-drake": "9b81e01fd458507ed4378ab28a81fff8d6e796d220de6c13106b7ddc66f42e1b",
+    "world-tree-guardian": "1f62ccd5c95fc4f966dc8a42dfb3c95e3e5fedccf7f4bcfbb0ad07f94f40c223"
+  }
+}

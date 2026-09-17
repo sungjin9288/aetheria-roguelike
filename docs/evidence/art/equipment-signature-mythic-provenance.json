@@ -403,7 +403,7 @@
       "itemExports": [
         {
           "cell": "top-left",
-          "exportSha256": "c721c88c45fd864a398bb975d7b82097438d469ed2dbfc67988297bf6bf4d9ea",
+          "exportSha256": "d857a707f15c9ad7f63a83fc6e3353ca93184ca848346d70bd8f5dc79760cd22",
           "name": "대지의 심판",
           "runtimePath": "/assets/equipment-exact/signature-weapon-earth-verdict.png"
         },
@@ -439,11 +439,11 @@
         }
       ],
       "itemSourceSheet": "signature-mythic-weapon-sword-01-item.png",
-      "itemSourceSheetSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "itemSourceSheetSha256": "fd7811b58f8fb9d296234c26d6388d4f42efc8a2159eb4f2d0593037fa8df498",
       "overlayExports": [
         {
           "cell": "top-left",
-          "exportSha256": "4a6665f3e02c764aea8bbed70477205cfc06f08b221f1b5729a59ba105936bd7",
+          "exportSha256": "f71553ee7a81fe0d91abaf8481b8bf745e2f3f25bc2697de9af649f6af63ae19",
           "name": "대지의 심판",
           "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-earth-verdict.png"
         },
@@ -479,8 +479,8 @@
         }
       ],
       "overlaySourceSheet": "signature-mythic-weapon-sword-01-overlay.png",
-      "overlaySourceSheetSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
-      "replayKey": "b51ce2fe0192060cbd0c9f1dda01104e571183620fa034bd352748496512e767"
+      "overlaySourceSheetSha256": "25772708a235d0e50d81bc31873ca0766b9e8e9b9c4d75ef835193a9d03fc31c",
+      "replayKey": "a4f24abd13b30518d6f403dd3e4a4e9a57c922a422bef39e14cc834aa7b03286"
     },
     {
       "batchId": "signature-mythic-weapon-sword-02",
@@ -767,6 +767,6 @@
     ],
     "tool": "OpenAI built-in image_gen imagegen with paired strict source preparation and original-size 160px/72px visual review"
   },
-  "registrySha256": "779f6e4df4b606c7ca7ec3041fd111d2ee861cb1530fce2fcd74a56da435e667",
+  "registrySha256": "d4823327d9c94be6483f52c9e72ff49ba26855f9c5ce3776ebc901b5c4bf31af",
   "version": 1
 }

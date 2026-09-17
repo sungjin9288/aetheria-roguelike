@@ -6,8 +6,10 @@ import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getMirrorEffects } from './mirrorUpgrades';
 import { applyEssenceGain, getEssenceGainFromExp } from './essenceLedger';
 import { getPacedCombatExp } from '../utils/progressionPacing.js';
+import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
 import type { Player, Monster } from '../types/index.js';
 import { scaleProgressionExpReward } from '../data/progressionProfiles.js';
+import { endDevourBonus } from '../utils/adventureRelicBonuses.js';
 
 /**
  * CombatEngine 결과(경험치/승리) 메서드 — mixin으로 CombatEngine에 spread.
@@ -71,7 +73,7 @@ export const outcomeMethods: any = {
     },
 
     handleVictory(player: Player, enemy: Monster, passiveBonus: any, liveConfig: any) {
-        const p: any = { ...player };
+        const p: any = { ...endDevourBonus(player) };
         const relics = p.relics || [];
         const baseName: string = this.resolveEnemyBaseName(enemy) || '';
         const previousBossClears = p.stats?.killRegistry?.[baseName] || 0;
@@ -94,7 +96,7 @@ export const outcomeMethods: any = {
         // 유물 + 패시브 스킬: EXP/골드 배율 (cycle 265: liveConfig 곱셈 합류)
         const expMult = (1 + (relics.find((r: any) => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0))
             * eventMult * seasonXpMult;
-        const goldMult = (1 + (relics.find((r: any) => r.effect === 'gold_mult')?.val || 0) + (passiveBonus.goldMult || 0))
+        const goldMult = (1 + getStrongestNumericRelicValue(relics, 'gold_mult') + (passiveBonus.goldMult || 0))
             * seasonGoldMult;
         // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배, rank≥7 풀 스택 4개 → 2.0배)
         const challengeMods = p.challengeModifiers || [];
@@ -124,11 +126,19 @@ export const outcomeMethods: any = {
         );
         const expGained = getPacedCombatExp(p, rawExpGained);
         const noGold = p.challengeModifiers?.includes('noGold');
-        const goldGained = Math.floor((enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty * (noGold ? BALANCE.NO_GOLD_MODIFIER_MULT : 1) * challengeRewardMult * eliteRewardMult);
+        const rawGoldGained = (enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty
+            * (noGold ? BALANCE.NO_GOLD_MODIFIER_MULT : 1) * challengeRewardMult * eliteRewardMult;
+        if (!Number.isFinite(rawGoldGained)) throw new Error('INVALID_RELIC_EFFECT_VALUE');
+        const goldGained = Math.floor(rawGoldGained);
+        const currentGold = Number.isFinite(p.gold) ? p.gold : 0;
+        const nextGold = currentGold + goldGained;
+        if (!Number.isFinite(nextGold) || (goldGained > 0 && nextGold <= currentGold)) {
+            throw new Error('INVALID_RELIC_EFFECT_VALUE');
+        }
 
-        p.gold += goldGained;
+        p.gold = nextGold;
 
-        const isDemonKingSlain = baseName === '마왕' || baseName.includes('마왕');
+        const isDemonKingSlain = baseName === '마왕';
         const prevStats = p.stats || { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 };
         p.stats = {
             ...prevStats,
@@ -182,10 +192,7 @@ export const outcomeMethods: any = {
             logs.push({ type: 'heal', text: MSG.BLOOD_OATH_HEAL(heal) });
         }
 
-        // cycle 158: 'kill_stack_atk' (허공의 왕좌) — 적 처치 시 ATK perKill 누적, max 캡.
-        //   combatFlags.killStackAtkBonus에 저장. applyBattleStartRelics에서 0으로 리셋(전투 내 한정).
-        // cycle 236: 시너지 'annihilator'(killStack 0.07) / 'void_dragon'(killStack 0.08)의
-        //   killStack 보너스를 perKill에 합산 — silent dead config fix.
+        // 처치 공격력은 원정 동안 유지하며 시너지는 처치당 증가량에 합산한다.
         const killStackRelic = relics.find((r: any) => r.effect === 'kill_stack_atk');
         const synergiesForKill = (passiveBonus as any)?.activeSynergies || [];
         const killStackSynergyBonus = synergiesForKill.reduce((acc: number, s: any) =>
@@ -193,22 +200,22 @@ export const outcomeMethods: any = {
         if (killStackRelic || killStackSynergyBonus > 0) {
             const perKill = (killStackRelic?.val?.perKill || 0) + killStackSynergyBonus;
             const maxStack = killStackRelic?.val?.max || 1;
-            const flags: any = p.combatFlags || {};
-            const next = Math.min(maxStack, (flags.killStackAtkBonus || 0) + perKill);
-            p.combatFlags = { ...flags, killStackAtkBonus: next };
+            const next = Math.min(maxStack, (p.adventureRelicBonuses?.killStackAtk || 0) + perKill);
+            p.adventureRelicBonuses = { ...p.adventureRelicBonuses, killStackAtk: next };
             const sourceLabel = killStackRelic ? '[허공의 왕좌]' : '[시너지 처형 분노]';
             logs.push({ type: 'event', text: MSG.KILL_STACK_ATTACK(sourceLabel, Math.round(next * 100)) });
         }
 
-        // cycle 157: 'devour_hp' (세계 포식자) — 적 처치 시 적 maxHp의 val(=0.1)만큼 player maxHp 영구 증가.
-        // 스펙은 "전투 내"이지만 per-combat 리셋 인프라 미구현 → 런 내 영구 적용 (관대한 해석).
+        // 마지막 처치량만 다음 전투에 예약한다. 승리 화면에서는 HP를 올리지 않는다.
         const devourRelic = relics.find((r: any) => r.effect === 'devour_hp');
         if (devourRelic && enemy.maxHp) {
             const hpGain = Math.floor((enemy.maxHp || 0) * (devourRelic.val || 0));
             if (hpGain > 0) {
-                p.maxHp = (p.maxHp || BALANCE.DEFAULT_MAX_HP) + hpGain;
-                p.hp = (p.hp || 0) + hpGain; // 신규 HP만큼 현재 HP도 증가 (overheal 방지: maxHp 갱신 후)
-                logs.push({ type: 'heal', text: MSG.WORLD_DEVOUR_HEALTH(hpGain) });
+                p.adventureRelicBonuses = {
+                    ...p.adventureRelicBonuses,
+                    devour: { phase: 'ready', amount: hpGain },
+                };
+                logs.push({ type: 'event', text: MSG.WORLD_DEVOUR_HEALTH(hpGain) });
             }
         }
 

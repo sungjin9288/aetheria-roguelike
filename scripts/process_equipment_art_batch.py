@@ -100,6 +100,21 @@ def sha256_file(path: Path) -> str:
     return digest.hexdigest()
 
 
+def has_same_rgba_pixels(payload: bytes, path: Path) -> bool:
+    try:
+        with Image.open(io.BytesIO(payload)) as generated, Image.open(path) as published:
+            generated.load()
+            published.load()
+            return (
+                generated.mode == "RGBA"
+                and published.mode == "RGBA"
+                and generated.size == published.size == (CANVAS, CANVAS)
+                and generated.tobytes() == published.tobytes()
+            )
+    except OSError:
+        return False
+
+
 def canonical_json_bytes(value: object, *, sort_keys: bool = False) -> bytes:
     return (
         json.dumps(
@@ -647,21 +662,76 @@ def prepare_next_provenance(
     provenance: dict,
     record: dict,
     outputs: list[tuple[dict, Path, bytes, str]],
+    replace_existing: bool = False,
 ) -> tuple[bool, bytes | None]:
     existing = next(
         (entry for entry in provenance["batches"] if entry["batchId"] == record["batchId"]),
         None,
     )
     if existing is not None:
-        existing_projection = {key: value for key, value in existing.items() if key != "sourceSheet"}
-        record_projection = {key: value for key, value in record.items() if key != "sourceSheet"}
-        if existing.get("replayKey") != record["replayKey"] or existing_projection != record_projection:
-            raise ValueError(f"Conflicting batchId in provenance ledger: {record['batchId']}")
-        for _identity, destination, _payload, export_sha256 in outputs:
-            if not destination.is_file() or sha256_file(destination) != export_sha256:
+        existing_projection = {
+            key: value
+            for key, value in existing.items()
+            if key not in {"sourceSheet", "exports"}
+        }
+        record_projection = {
+            key: value
+            for key, value in record.items()
+            if key not in {"sourceSheet", "exports"}
+        }
+        existing_exports = existing["exports"]
+        record_exports = record["exports"]
+        existing_export_metadata = [
+            {key: value for key, value in entry.items() if key != "exportSha256"}
+            for entry in existing_exports
+        ]
+        record_export_metadata = [
+            {key: value for key, value in entry.items() if key != "exportSha256"}
+            for entry in record_exports
+        ]
+        if (
+            existing.get("replayKey") != record["replayKey"]
+            or existing_projection != record_projection
+            or existing_export_metadata != record_export_metadata
+        ):
+            mutable_fields = {"sourceSheetSha256", "replayKey", "exports"}
+            same_identity = (
+                {key: value for key, value in existing.items() if key not in mutable_fields}
+                == {key: value for key, value in record.items() if key not in mutable_fields}
+                and existing_export_metadata == record_export_metadata
+            )
+            if not replace_existing or not same_identity:
+                raise ValueError(f"Conflicting batchId in provenance ledger: {record['batchId']}")
+            for (_, destination, _, _), prior_export in zip(outputs, existing_exports, strict=True):
+                if not destination.is_file() or sha256_file(destination) != prior_export["exportSha256"]:
+                    raise ValueError(f"Replacement output does not match provenance: {destination}")
+            for prior in provenance["batches"]:
+                if prior["batchId"] != record["batchId"] and (
+                    record["sourceSheet"] == prior["sourceSheet"]
+                    or record["sourceSheetSha256"] == prior["sourceSheetSha256"]
+                ):
+                    raise ValueError(f"Replacement source conflicts with prior provenance: {record['batchId']}")
+            next_provenance = dict(provenance)
+            next_provenance["batches"] = [
+                record if entry["batchId"] == record["batchId"] else entry
+                for entry in provenance["batches"]
+            ]
+            return False, canonical_json_bytes(next_provenance, sort_keys=True)
+        for (_identity, destination, payload, _export_sha256), existing_export in zip(
+            outputs,
+            existing_exports,
+            strict=True,
+        ):
+            if (
+                not destination.is_file()
+                or sha256_file(destination) != existing_export["exportSha256"]
+                or not has_same_rgba_pixels(payload, destination)
+            ):
                 raise ValueError(f"Exact replay output does not match provenance: {destination}")
         return True, None
 
+    if replace_existing:
+        raise ValueError(f"Replacement batch does not exist: {record['batchId']}")
     if "generationReview" in provenance:
         raise ValueError(f"Finalized provenance ledger cannot append batch: {record['batchId']}")
 
@@ -788,6 +858,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser.add_argument("--equipment-manifest", required=True, type=Path)
     parser.add_argument("--provenance", required=True, type=Path)
     parser.add_argument("--dry-run", action="store_true")
+    parser.add_argument(
+        "--replace-existing", action="store_true",
+        help="Replace an existing batch only when identity metadata and prior output hashes match.",
+    )
     return parser.parse_args(argv)
 
 
@@ -824,7 +898,9 @@ def main(argv: list[str] | None = None) -> None:
     outputs = build_outputs(source_sheet, identities, public_root)
     source_sheet_sha256 = sha256_file(source_sheet)
     record = build_provenance_record(batch, source_sheet, source_sheet_sha256, outputs)
-    exact_replay, provenance_payload = prepare_next_provenance(provenance, record, outputs)
+    exact_replay, provenance_payload = prepare_next_provenance(
+        provenance, record, outputs, replace_existing=args.replace_existing,
+    )
 
     if exact_replay:
         print(f"replay no-op: {len(outputs)} equipment icons already match {batch['batchId']}")

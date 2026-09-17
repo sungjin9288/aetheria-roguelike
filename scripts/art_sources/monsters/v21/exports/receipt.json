@@ -1,0 +1,25 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "aether-giant": "55516fd5d50ce0796e12419bd86d3216745a15b6088d54c938d410d0940c1e43",
+    "aether-judge": "24902f76796079c5e56c0d774cd35ae7a7e2f03cd986488ca7b205cc732e458a",
+    "chaos-guardian": "56892e7e2b6fac4d758d45ac2cac7fd2f0055d789fdbd3dedb2270414dc1f4a8",
+    "guardian-apostle": "b57d8251d18e220e072999f24d6110ccd59bd328e6356a0a68b43839d291dd83",
+    "infinite-avatar": "9e562012192e0e4de782d9f95471d0eda0c210368dc9a496ec88d27fa7ede072",
+    "sewer-queen": "0274128477a0c30b36ffecfce04b63f9f5292b63b1788b5aa563719e2886d62d",
+    "spring-queen": "0bb2e5273caa2fbb857b7f3e6bda586acb1f55cd6dfb1e8c1a0f3806c833b375",
+    "void-proxy": "a72693a6c229825bb29c0016733952f1a204b2d43a394f8fedb392de58ad3ecc"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "aether-giant": "de80e26b88b04ee67f153290c3e923b9f7c7c4908a4ef52a93232122b89a3f3a",
+    "aether-judge": "1919abb785d3c1af9a2a963edb45a81f22ada43cbda0a4c527a35b92e05cf5f3",
+    "chaos-guardian": "aacbc4cf45a9e60c65b6e9b07abdc805ef664bbe358a5dbdf65a40e2e4bb11f7",
+    "guardian-apostle": "50b3c345149ae13b27644172e5a1102ab4f782abe9d8d0e6dcd3aa249230b7af",
+    "infinite-avatar": "855b3650450e77ea99c18ae2432ad97f58c1fd45417be13abedec316c59685c2",
+    "sewer-queen": "c6b605a25082157999ce89714311ba5ae53e0df9b400d2fdb9f0d21237c9cf3f",
+    "spring-queen": "e92ad3c62856edaca073957d3cf43f3a169b9b96c5f43bdd7cd3b23c61da8ad3",
+    "void-proxy": "a5fcadf9bb0d9e1084e914c8b4fc5c04a51fd0e5ca30993574172a7465d8ab55"
+  }
+}

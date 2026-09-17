@@ -1,0 +1,21 @@
+{
+  "mode": "built-in",
+  "classification": "candidate-not-adopted",
+  "records": [
+    {
+      "slug": "frost-wolf",
+      "prompt": "Use case: stylized-concept. Asset: single monster sprite for Aetheria mobile pixel-art roguelike, frost wolf. Genuine transparent RGBA background. A single full-body lean white and blue-grey wolf in a low stalking quadruped pose, thick frost-crusted angular fur on shoulders and tail, subtle icy cyan paws and muzzle, alert eyes. Cold-adapted animal, not armor, not humanoid, no weapons, no crown. Crafted readable 16-bit pixel art, dark violet-grey outline, compact flat pixel clusters and restrained 4-tone shading, silhouette clear at 32 pixels. Three-quarter side view facing left. All four paws and entire long tail contained with generous transparent margins. One subject centered only, no scenery, no ground shadow, no text, no frame, no checkerboard, no bloom.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-e9fa5da2-e5d6-4128-9e42-93442a5ff837.png"
+    },
+    {
+      "slug": "ink-slime",
+      "prompt": "Use case: stylized-concept. Single monster sprite for Aetheria mobile pixel-art roguelike: INK SLIME living in a forbidden library. Genuine transparent RGBA background. One squat asymmetrical blob of glossy black-purple ink, a curved heavy ink droplet crest and three thick puddle lobes, small pale parchment-gold eyes, broad lavender highlights along outline so dark body reads on dark UI. Body is ink, not blue water, not fire. Crafted readable 16-bit pixel art, bold dark outline, compact flat clusters, restricted 4-tone shading; silhouette clear at32pixels. Three-quarter view. Fully contained centered subject with generous transparent margins. No book props, no letters, no scenery, no floor shadow, no glow, no frame, no checkerboard, no text.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-415d49ba-16f7-42bd-8489-04791c5a3ac7.png"
+    },
+    {
+      "slug": "flame-watcher",
+      "prompt": "Use case: stylized-concept. Asset: single ordinary monster sprite for Aetheria mobile pixel-art roguelike. FLAME WATCHER in an ash temple, weak to ice resistant to fire. One compact crouching humanoid ash sentinel with blackened stone/charcoal body, a broad ember-orange slit eye under an angular hood-like stone brow, short arms braced around a small integrated brazier chest emitting a restrained upright flame. Distinct vigilant guard silhouette, not a boss, no crown, no ornate armor, no separate staff, not a green goblin, no cyan or blue. Crafted readable 16-bit pixel art, dark warm brown outlines, blocky flat clusters, few colors charcoal/rust/amber/pale yellow. Clear body shape at32pixels. Full body and feet in frame, centered with ample transparent margins. Genuine transparent RGBA background, no scenery, no ground shadow, no bloom, no text, no frame, no checkerboard.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-b963be19-7588-4bad-a694-d2dcf89aa5da.png"
+    }
+  ]
+}

@@ -1,0 +1,125 @@
+{
+  "candidateCount": 9,
+  "dimensions": "160x160",
+  "hashesMatch": true,
+  "manifestUnchanged": true,
+  "pixels": [
+    {
+      "boundsWithinMargin": true,
+      "footBaseline": 150,
+      "footBaselineMatches": true,
+      "hasAlpha": true,
+      "hasTransparentPixels": true,
+      "opaqueBounds": {
+        "bottom": 150,
+        "left": 12,
+        "right": 149,
+        "top": 9
+      }
+    },
+    {
+      "boundsWithinMargin": true,
+      "footBaseline": 151,
+      "footBaselineMatches": true,
+      "hasAlpha": true,
+      "hasTransparentPixels": true,
+      "opaqueBounds": {
+        "bottom": 151,
+        "left": 12,
+        "right": 148,
+        "top": 8
+      }
+    },
+    {
+      "boundsWithinMargin": true,
+      "footBaseline": 151,
+      "footBaselineMatches": true,
+      "hasAlpha": true,
+      "hasTransparentPixels": true,
+      "opaqueBounds": {
+        "bottom": 151,
+        "left": 11,
+        "right": 147,
+        "top": 22
+      }
+    },
+    {
+      "boundsWithinMargin": true,
+      "footBaseline": 149,
+      "footBaselineMatches": true,
+      "hasAlpha": true,
+      "hasTransparentPixels": true,
+      "opaqueBounds": {
+        "bottom": 149,
+        "left": 18,
+        "right": 145,
+        "top": 13
+      }
+    },
+    {
+      "boundsWithinMargin": true,
+      "footBaseline": 149,
+      "footBaselineMatches": true,
+      "hasAlpha": true,
+      "hasTransparentPixels": true,
+      "opaqueBounds": {
+        "bottom": 149,
+        "left": 12,
+        "right": 148,
+        "top": 11
+      }
+    },
+    {
+      "boundsWithinMargin": true,
+      "footBaseline": 147,
+      "footBaselineMatches": true,
+      "hasAlpha": true,
+      "hasTransparentPixels": true,
+      "opaqueBounds": {
+        "bottom": 147,
+        "left": 13,
+        "right": 148,
+        "top": 13
+      }
+    },
+    {
+      "boundsWithinMargin": true,
+      "footBaseline": 149,
+      "footBaselineMatches": true,
+      "hasAlpha": true,
+      "hasTransparentPixels": true,
+      "opaqueBounds": {
+        "bottom": 149,
+        "left": 12,
+        "right": 148,
+        "top": 12
+      }
+    },
+    {
+      "boundsWithinMargin": true,
+      "footBaseline": 145,
+      "footBaselineMatches": true,
+      "hasAlpha": true,
+      "hasTransparentPixels": true,
+      "opaqueBounds": {
+        "bottom": 145,
+        "left": 15,
+        "right": 140,
+        "top": 20
+      }
+    },
+    {
+      "boundsWithinMargin": true,
+      "footBaseline": 147,
+      "footBaselineMatches": true,
+      "hasAlpha": true,
+      "hasTransparentPixels": true,
+      "opaqueBounds": {
+        "bottom": 147,
+        "left": 12,
+        "right": 147,
+        "top": 16
+      }
+    }
+  ]
+}

@@ -355,8 +355,8 @@
         "familyKey": "weapon-sword",
         "batchId": "signature-mythic-weapon-sword-01",
         "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
-        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
-        "exportSha256": "4a6665f3e02c764aea8bbed70477205cfc06f08b221f1b5729a59ba105936bd7",
+        "sourceSha256": "25772708a235d0e50d81bc31873ca0766b9e8e9b9c4d75ef835193a9d03fc31c",
+        "exportSha256": "f71553ee7a81fe0d91abaf8481b8bf745e2f3f25bc2697de9af649f6af63ae19",
         "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-earth-verdict.png"
       },
       "라그나로크": {
@@ -364,7 +364,7 @@
         "familyKey": "weapon-sword",
         "batchId": "signature-mythic-weapon-sword-01",
         "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
-        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "sourceSha256": "25772708a235d0e50d81bc31873ca0766b9e8e9b9c4d75ef835193a9d03fc31c",
         "exportSha256": "3758d504cb17a1b4316e0c0395fcb7ab49068d609b18ec94c69bd76b51d18e32",
         "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-ragnarok.png"
       },
@@ -373,7 +373,7 @@
         "familyKey": "weapon-sword",
         "batchId": "signature-mythic-weapon-sword-01",
         "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
-        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "sourceSha256": "25772708a235d0e50d81bc31873ca0766b9e8e9b9c4d75ef835193a9d03fc31c",
         "exportSha256": "0652338d7b08841a6d763cb1ca5d444199e522d8cfbc5da6ccee2f5d13b53a8e",
         "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-frost-crown-sword.png"
       },
@@ -382,7 +382,7 @@
         "familyKey": "weapon-sword",
         "batchId": "signature-mythic-weapon-sword-01",
         "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
-        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "sourceSha256": "25772708a235d0e50d81bc31873ca0766b9e8e9b9c4d75ef835193a9d03fc31c",
         "exportSha256": "1798d5aa47e9f4096bf5e8f2bcf00e66b62134c547c21dbe8ed8298a4b53a012",
         "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-ethernia.png"
       },
@@ -391,7 +391,7 @@
         "familyKey": "weapon-sword",
         "batchId": "signature-mythic-weapon-sword-01",
         "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
-        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "sourceSha256": "25772708a235d0e50d81bc31873ca0766b9e8e9b9c4d75ef835193a9d03fc31c",
         "exportSha256": "8d592bbe0741d8fa384fedcc774658515fd736e0e17fd71af95a216322e775a1",
         "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-worldtree-sword.png"
       },
@@ -400,7 +400,7 @@
         "familyKey": "weapon-sword",
         "batchId": "signature-mythic-weapon-sword-01",
         "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-overlay.png",
-        "sourceSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+        "sourceSha256": "25772708a235d0e50d81bc31873ca0766b9e8e9b9c4d75ef835193a9d03fc31c",
         "exportSha256": "3201b8c35e87e05464b55e2db8f9de1d4468f0c8ea7650b8905761b7c4fc63b8",
         "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-ether-giant-greatsword.png"
       },
@@ -1050,7 +1050,7 @@
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-04",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
-      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "sourceSha256": "f1dcefa9c5219f40775058c62d465a2c34a564f15f8163a8433fb10529e6f9c5",
       "exportSha256": "998d00a82cb9bb559c3c962cbe4b5f958ced2e710e9fe1c1a13a907c1000d8fa"
     },
     "성기사의 검": {
@@ -1058,7 +1058,7 @@
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-04",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
-      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "sourceSha256": "f1dcefa9c5219f40775058c62d465a2c34a564f15f8163a8433fb10529e6f9c5",
       "exportSha256": "ef0dcd8a2aa892e327f9ee336f38de93bd08af9bf1441f316214f4cdb33a1dee"
     },
     "시간 파편 소드": {
@@ -1066,7 +1066,7 @@
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-04",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
-      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "sourceSha256": "f1dcefa9c5219f40775058c62d465a2c34a564f15f8163a8433fb10529e6f9c5",
       "exportSha256": "124ced5bd56338e9b0cf75de1ad3f1e672498de575fc4c5f47b6bf1a4e9946ec"
     },
     "심판자의 검": {
@@ -1074,7 +1074,7 @@
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-04",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
-      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "sourceSha256": "f1dcefa9c5219f40775058c62d465a2c34a564f15f8163a8433fb10529e6f9c5",
       "exportSha256": "d5b6f6cedfd99f745d29ef466c040f31a4fd20c2379fcc0a78e859732d197a73"
     },
     "암흑의 대검": {
@@ -1082,15 +1082,15 @@
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-04",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
-      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
-      "exportSha256": "f7ba4e202df3c21da330971cfd9112c03b12eda59c1f834fb70db5f48672af6a"
+      "sourceSha256": "f1dcefa9c5219f40775058c62d465a2c34a564f15f8163a8433fb10529e6f9c5",
+      "exportSha256": "2e1d2c19bdfd3b49b3381cee405653d844cbc05c9fef70cbb4a4b26f1e0b90e5"
     },
     "에테르 검": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "weapon-core-sword-04",
       "sourcePath": "scripts/art_sources/equipment/v2/weapon-core/weapon-core-sword-04.png",
-      "sourceSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc",
+      "sourceSha256": "f1dcefa9c5219f40775058c62d465a2c34a564f15f8163a8433fb10529e6f9c5",
       "exportSha256": "5c45aaadbc14e5269faea526250800c46b01c7a0cb2a1a1c42b909e30f13b6f6"
     },
     "용암 대검": {
@@ -2490,15 +2490,15 @@
       "familyKey": "weapon-sword",
       "batchId": "signature-mythic-weapon-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
-      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
-      "exportSha256": "c721c88c45fd864a398bb975d7b82097438d469ed2dbfc67988297bf6bf4d9ea"
+      "sourceSha256": "fd7811b58f8fb9d296234c26d6388d4f42efc8a2159eb4f2d0593037fa8df498",
+      "exportSha256": "d857a707f15c9ad7f63a83fc6e3353ca93184ca848346d70bd8f5dc79760cd22"
     },
     "라그나로크": {
       "styleVersion": 2,
       "familyKey": "weapon-sword",
       "batchId": "signature-mythic-weapon-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
-      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "sourceSha256": "fd7811b58f8fb9d296234c26d6388d4f42efc8a2159eb4f2d0593037fa8df498",
       "exportSha256": "3efc33c62a99839611e6420c0325ada0c382345165c8fb034824201e7d9c1edc"
     },
     "빙결의 왕관검": {
@@ -2506,7 +2506,7 @@
       "familyKey": "weapon-sword",
       "batchId": "signature-mythic-weapon-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
-      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "sourceSha256": "fd7811b58f8fb9d296234c26d6388d4f42efc8a2159eb4f2d0593037fa8df498",
       "exportSha256": "6bd0fea1bf86b964b11d5be656907fabb7f5931440062d3e9c6b29e6fa122b73"
     },
     "성검 에테르니아": {
@@ -2514,7 +2514,7 @@
       "familyKey": "weapon-sword",
       "batchId": "signature-mythic-weapon-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
-      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "sourceSha256": "fd7811b58f8fb9d296234c26d6388d4f42efc8a2159eb4f2d0593037fa8df498",
       "exportSha256": "bda55ffbad64c11e9c15eec8610ae2f77d79b9dc84c5e9ba26617e4f21149e78"
     },
     "세계수의 검": {
@@ -2522,7 +2522,7 @@
       "familyKey": "weapon-sword",
       "batchId": "signature-mythic-weapon-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
-      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "sourceSha256": "fd7811b58f8fb9d296234c26d6388d4f42efc8a2159eb4f2d0593037fa8df498",
       "exportSha256": "20886319ab2c1886638defdab71841ed2c792935ff5f42b016787d0807a26d2c"
     },
     "에테르 거인의 대검": {
@@ -2530,7 +2530,7 @@
       "familyKey": "weapon-sword",
       "batchId": "signature-mythic-weapon-sword-01",
       "sourcePath": "scripts/art_sources/equipment/v2/signature-mythic/signature-mythic-weapon-sword-01-item.png",
-      "sourceSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "sourceSha256": "fd7811b58f8fb9d296234c26d6388d4f42efc8a2159eb4f2d0593037fa8df498",
       "exportSha256": "f21883f6c4cb39f20528790920ae6601cba0cad089c6cfc4e679dc4456646d86"
     },
     "용의 화염": {

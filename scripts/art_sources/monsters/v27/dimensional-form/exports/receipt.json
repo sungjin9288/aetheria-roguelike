@@ -1,0 +1,41 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "aether-assault": "ae435bb0fd809a572fbd689a7a25a801f299cfd9c23d84e742b39e3ce5e9c36a",
+    "aether-wanderer": "e5ade25b551e7c755bf8e7c43c116f0da9108a27860d9fde7428e1886c792a81",
+    "chaos-follower": "788020dbc0fa9e2ac91c487f0863419d21fb487f40d84a0ef5ec266082a7bb83",
+    "chaos-incarnation": "546ed3a0b22300bb2e1ea7ff8db700365984495bcfd0654417bef99a21a91eca",
+    "collapsed-guardian-floating": "d9fe7396c6d770d9ac93f1c39d5b46dae1661b6e9ca3b4205eac07ba9a5bbc73",
+    "collapsed-guardian-grounded": "b540839ef5cf3679505785e9658bcee9b75993cf6be7c70ca3925cf893a3588d",
+    "dimension-commander": "67c19ed12d246be5cb9c588af420ae03f1543d47ae4a0ff01440fd1388510eb7",
+    "dimension-devourer": "89be40a21a3b9280ed7a6a0eab8c6fa13fee9d1b63e63a42034f61db5640e41b",
+    "dimension-splitter": "930cf2268f60c561143bfb84521003033a1b4b47c59fb00b7fdbe68398bc84fa",
+    "dimension-wanderer": "49995e0f86a6b167baa100aff1208f8d5e184cf15a0b51dc2c107a01da28179f",
+    "nihil-executor": "7919da8120bb998cb40da2dba923640c324f6583d2a663e64f6b718fb266af75",
+    "nihility-executor": "b62bcacce471d5503d15c7bcd9ed029a2ee84afffae24a010d73a8804b5dde9f",
+    "space-breaker": "7fda70ab774d6f0c4ff1d7108feff17be7a4a2d5ee3c04d6ebe171e6daf8f52f",
+    "void-executor": "3b7503c7d14d2ec1b553124d2497844842159e65eb139245f7c3f2daa7708155",
+    "void-observer": "ff64fbfb904b52de4d42487d8c01f9847e75a7e5d2cd113f24c07a65971bede8",
+    "void-sentry": "0ae366ec4d3d6efb40932ce26a9f0c1534e51e20ee85ec7b7c00065d188d06f1"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "aether-assault": "9c4866c6c72ed301e0f1eef4b9a5fd2b0c0315862867358647ee3f9ceeb2e2d2",
+    "aether-wanderer": "a64e27ed42c56e7e53c50a9c0458518255ef512b99a3443ee6557d1966976049",
+    "chaos-follower": "e9ab58a0b30a1df046a22559ae9260323d181fb99d86062c57621f70748985d7",
+    "chaos-incarnation": "edac63d8c0470f70b46a9f51bd010ae91b6b6bc83af326534edfa9ccbae1ff1b",
+    "collapsed-guardian-floating": "753d2f486ba9dec530029d9c35f889ecbaaf7018a3294b1932c8e2915f37f586",
+    "collapsed-guardian-grounded": "3ad96949d2403e18a7c4bf6b21a842036bffbb5b270e6ea18cf5a9f13d465cfd",
+    "dimension-commander": "c44b8ed303d921670173f99e40924957c15f7f688d5ef92e6eed95beb1f87289",
+    "dimension-devourer": "a38489954a049dbd42df3b147e9734a9db16d3d7dfa9090d0df7410cf39b4cfb",
+    "dimension-splitter": "de236a232c4d7311e2f342a102d4d489b36039b6cab38b56ae4cde6653b8168f",
+    "dimension-wanderer": "14c9d25b7d31e05a5dac491fdec06409d6f3cc65e61c8369001b4dfacfa5a630",
+    "nihil-executor": "fce130c065f6ec22f3ffd8ab1baf8feaeae5638e61b48e37acd47942f632c2ce",
+    "nihility-executor": "65df7c2132e2152ab0ab31a94c2b14aa623c26b041242ac5d5906dec2e260a69",
+    "space-breaker": "500189749e05d8ce04734d1e25b898a798b4741634fd3fae321f00d0ddb0fb34",
+    "void-executor": "6d99efafad7d915d6a049a50a120a3438df46cf554bc65df4db1fc3e4493194b",
+    "void-observer": "dc44b84c57a0790ed29f7bb11413193a20f09cc064c610cb57c233f747643ea5",
+    "void-sentry": "b14ae867721cc924ab4f976072926d06fa206d73dafc6552d81b2f80f2839e09"
+  }
+}

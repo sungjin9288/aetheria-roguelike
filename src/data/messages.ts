@@ -54,7 +54,7 @@ export const MSG = {
     VICTORY: (exp: number, gold: number) => `승리했습니다. 경험 +${exp} · 골드 +${gold}`,
     FIRST_BOSS_GOLD: (gold: number) => `첫 보스 토벌 보상 · 골드 +${gold}`,
     BLOOD_OATH_HEAL: (health: number) => `피의 서약으로 생명을 ${health}만큼 회복했습니다.`,
-    WORLD_DEVOUR_HEALTH: (health: number) => `세계 포식자가 영혼을 흡수해 최대 생명이 ${health}만큼 늘었습니다.`,
+    WORLD_DEVOUR_HEALTH: (health: number) => `세계 포식자가 영혼을 흡수했습니다. 다음 전투 한 번의 기본 최대 생명과 현재 생명이 ${health}만큼 늘어납니다.`,
     IMMORTAL_WARRIOR_HEAL: (health: number) => `불멸의 전사 효과로 생명을 ${health}만큼 회복했습니다.`,
     INFINITE_DEVOUR_HEAL: (health: number) => `무한 포식 효과로 생명을 ${health}만큼 회복했습니다.`,
     STAR_CORE_RESTORE: '별의 핵이 기력을 모두 회복했습니다.',
@@ -62,6 +62,7 @@ export const MSG = {
     LOOT_PREFIX: (name: string) => `접두사 부여: [${name}]`,
     PRESTIGE_RARE_DROP: (name: string) => `✦ [심연의 메아리] 보스가 희귀 장비를 떨어뜨렸습니다: ${name}`,
     SIGNATURE_DISCOVERED: (name: string) => `✦ 전설 각인 ─ ${name} 획득!`,
+    COMBAT_LOOT_CAPACITY_BLOCKED: (count: number) => `가방이 가득해 전리품 ${count}개를 챙기지 못했습니다.`,
     SIGNATURE_SELL_BLOCKED: (name: string | undefined) => `[${name}]은(는) 전설 각인 아이템이라 판매할 수 없습니다.`,
     SIGNATURE_SYNTH_BLOCKED: (name: string) => `[${name}]은(는) 전설 각인 아이템이라 합성 재료로 사용할 수 없습니다.`,
     SIGNATURE_BOSS_HINT: (bossName: string, count: number, topName: string, topPct: number | string) => (
@@ -212,6 +213,11 @@ export const MSG = {
     EQUIP_OFFHAND_REPLACE: '보조 손 장비를 교체했습니다.',
     EQUIP_DONE: (name: string) => `${name} 장착.`,
     CHALLENGE_NO_CONSUMABLE: '물약 없이: 회복과 보조 아이템을 사용할 수 없습니다.',
+    CONSUMABLE_INVALID: '사용할 수 없는 소모품입니다.',
+    CONSUMABLE_FULL_HP: '생명이 이미 가득합니다.',
+    CONSUMABLE_FULL_MP: '기력이 이미 가득합니다.',
+    CONSUMABLE_STATUS_ABSENT: '해제할 상태이상이 없습니다.',
+    CONSUMABLE_BUFF_DOMINATED: '더 강하거나 오래가는 강화 효과가 이미 적용 중입니다.',
     ITEM_USE_BUFF: (name: string) => `${name}을 사용해 강화 효과를 얻었습니다.`,
     GOLD_INSUFFICIENT: '골드가 부족합니다.',
     INV_FULL: '가방이 가득 찼습니다.',
@@ -284,6 +290,9 @@ export const MSG = {
     ABYSS_FLOOR_WARNING: (floor: number) => `🌀 심연 ${floor}층 — 강대한 적들이 기다립니다...`,
     ENEMY_APPEAR: (name: string) => `${name} 등장!`,
     EVENT_RESULT_DEFAULT: '선택의 결과가 반영되었습니다.',
+    EVENT_REWARD_UNAVAILABLE: '이 선택의 보상 정보를 확인할 수 없습니다. 다른 선택을 골라주세요.',
+    CHAIN_RELIC_ALREADY_OWNED: (name: string) => `${name}은 이미 보유하고 있습니다. 다른 선택을 골라주세요.`,
+    CHAIN_RELIC_SLOTS_FULL: '유물 슬롯이 가득 찼습니다. 자리를 마련한 뒤 다시 선택하세요.',
     // 캠프파이어 노드 (Phase 2, B+ 2026-06): 휴식 vs 단련 결정 (StS 캠프파이어).
     CAMPFIRE_DESC: '사그라드는 모닥불을 발견했습니다. 잠시 숨을 고를 수 있습니다. 무엇을 하시겠습니까?',
     CAMPFIRE_REST_CHOICE: '휴식 — 생명과 기력을 회복한다',
@@ -363,7 +372,7 @@ export const MSG = {
     COMBAT_DIGEST_LOOT: (items: string) => `전리품 ${items}`,
     COMBAT_DIGEST: (parts: string) => `전투 정리: ${parts}`,
     COMBAT_DIGEST_BOSS_REWARD: (bonus: number, hint: string) => `보스 보상: ${bonus > 0 ? `첫 토벌 골드 +${bonus}` : '보스 전리품'} · ${hint}`,
-    KILL_STACK_ATTACK: (source: string, percent: number) => `${source} 효과로 이번 전투의 공격력이 ${percent}% 올랐습니다.`,
+    KILL_STACK_ATTACK: (source: string, percent: number) => `${source} 효과로 이번 원정의 공격력이 ${percent}% 올랐습니다.`,
     COMBAT_DIGEST_EQUIP_UPGRADE: (name: string, summary: string) => `장비 갱신: ${name} · ${summary}`,
     COMBAT_DIGEST_TRAIT_HINT: (name: string, summary: string) => `성향 공명: ${name} · ${summary}`,
     COMBAT_DIGEST_DEFAULT_SUMMARY: '장비 효율 상승',
@@ -380,6 +389,7 @@ export const MSG = {
     // --- 전투 아이템/스킬 ---
     COMBAT_CHAOS_SKILL: (name: string) => `뒤섞인 기술: [${name}]이(가) 발동했습니다!`,
     COMBAT_DOT_KILL: (name: string) => `[지속 피해] ${name}이(가) 쓰러졌습니다!`,
+    COMBAT_COUNTER_KILL: (name: string) => `[반사·반격] ${name}이(가) 쓰러졌습니다!`,
     ITEM_USE_SIMPLE: (name: string) => `${name} 사용.`,
     ITEM_USE_CURE: (name: string) => `${name} 사용: 상태이상 해제`,
 
@@ -396,6 +406,7 @@ export const MSG = {
 
     // --- Firebase 동기화 ---
     SYNC_SERVER_LOADED: '서버 데이터와 동기화되었습니다.',
+    SYNC_SAVE_RESTORED: '저장된 모험을 불러왔습니다.',
     SYNC_AUTH_TIMEOUT: '인증 지연으로 오프라인 모드로 시작했습니다.',
     SYNC_NO_CONFIG: '클라우드 설정을 찾을 수 없어 오프라인 모드로 시작했습니다.',
     SYNC_AUTH_FAIL: '클라우드 인증 실패로 오프라인 모드로 시작했습니다.',

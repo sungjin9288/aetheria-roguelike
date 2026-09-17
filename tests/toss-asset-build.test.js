@@ -28,12 +28,13 @@ test('Toss asset catalog includes every canonical player surface and excludes le
         equipment: 229,
         equipmentFamilies: 22,
         signatureOverlays: 25,
+        monsters: 254,
         nonEquipment: 77,
         compatibilityAvatars: 52,
     });
     assert.equal(catalog.missing.length, 0);
-    assert.equal(catalog.files.length, 522);
-    assert.equal(catalog.filesSha256, '3a336d99252762c24cf6b00dc1893b1ad51b54c7a8e3cf142c564fcd24155f20');
+    assert.equal(catalog.files.length, 753);
+    assert.equal(catalog.filesSha256, '83e1f98a535c375e761194ec8a1d61d7d2f4df78a3d570408729433d8fc9886f');
     assert.equal(new Set(catalog.files).size, catalog.files.length);
     assert.ok(catalog.files.includes('public/assets/avatars/canonical/adventurer.png'));
     assert.ok(catalog.files.includes('public/assets/equipment-exact/signature-weapon-ragnarok.png'));

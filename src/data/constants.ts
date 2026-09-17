@@ -29,7 +29,7 @@ export const CONSTANTS: GameConstants = {
     ABYSS_MAP_NAME: '혼돈의 심연',
     ENHANCE_MATERIAL_NAME: '강화 재료',
 
-    // Note: GEMINI_API_KEY moved to server-side (api/ai-proxy.js)
+    // GEMINI_API_KEY는 Cloudflare Pages Function에서만 사용한다.
     // Client no longer needs this key directly
     USE_AI_PROXY: ENV.VITE_USE_AI_PROXY === 'true' || false,
     AI_PROXY_URL: ENV.VITE_AI_PROXY_URL || '/api/ai-proxy',
@@ -362,10 +362,9 @@ export const BALANCE: BalanceConfig = {
     // 탐험 스카우팅 (2026-07 감사 (b)): 던전 탐험 시 사전 정찰 선택 카드 2~3장을 제시해
     //   "정보 없는 단일 버튼 탐험"에 사전 결정 지점을 추가한다 (StS 노드맵/FTL 비콘 이식).
     //   체인 > 캠프파이어 > 스카우팅 > 나머지 롤 순으로 우선순위. 매번 뜨면 모바일 루프
-    //   마찰이 크므로(스카우팅 1회 = 탭 +1) 확률형. 0.25 = 탐험 4회당 ~1회 —
-    //   캠프파이어(8%)·체인과 합쳐 "탐험 ~3회당 결정 1회"가 되는 결정 밀도 목표치.
-    //   (초기 구현 0.06은 기능이 사실상 안 보이는 수준이라 상향. 플레이테스트 후 재조정 대상.)
-    SCOUT_CHANCE: 0.25,                 // 던전 탐험당 스카우팅 조우 확률
+    //   마찰이 크므로(스카우팅 1회 = 탭 +1) 확률형. 선택 화면이 연속되지 않도록
+    //   optional spacing과 함께 0.15로 운영하며, 실제 관찰 뒤 한 축씩만 재조정한다.
+    SCOUT_CHANCE: 0.15,                 // 던전 탐험당 스카우팅 조우 확률
     SCOUT_ELITE_CARD_CHANCE: 0.15,      // 3번째 슬롯이 "정예의 흔적" 카드로 대체될 확률
     SCOUT_COMBAT_REWARD_BONUS: 0.1,     // "전투의 기척" 선택 시 해당 전투 처치 보상(EXP/골드) +10%
     SCOUT_ELITE_HP_MULT: 1.5,           // 선택형 전투 + 확정 유물 보상이라 자동 초반 정예보다 강하게 유지

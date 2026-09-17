@@ -64,11 +64,18 @@ test.describe('유해 회수 화면', () => {
         await expect(page.getByTestId('map-navigator')).toBeVisible({ timeout: 8_000 });
     });
 
-    test('다른 모험가 침입은 보조 화면에서만 불러온다', async ({ page }) => {
-        await page.getByTestId('grave-view-public').click();
+    test('server authority가 없는 다른 모험가 침입은 노출하거나 요청하지 않는다', async ({ page }) => {
+        const publicGraveRequests: string[] = [];
+        page.on('request', (request) => {
+            if (/\/public\/data\/graves|graves/i.test(request.url())) {
+                publicGraveRequests.push(request.url());
+            }
+        });
 
-        await expect(page.getByTestId('grave-public-view')).toBeVisible();
-        await expect(page.getByTestId('grave-mine-view')).toBeHidden();
-        await expect(page.getByTestId('grave-public-view')).toContainText(/오프라인|불러오는 중|침입할 수 있는 유해|유해 침입/);
+        await expect(page.getByTestId('grave-view-public')).toHaveCount(0);
+        await expect(page.getByTestId('grave-public-view')).toHaveCount(0);
+        await expect(page.getByTestId('grave-mine-view')).toBeVisible();
+        await page.waitForTimeout(250);
+        expect(publicGraveRequests).toEqual([]);
     });
 });

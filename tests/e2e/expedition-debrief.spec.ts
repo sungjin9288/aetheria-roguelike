@@ -37,6 +37,9 @@ test.describe('Expedition return debrief', () => {
         await expect(journey).toContainText('성검 에테르니아');
         await expect(journey).toContainText('고대 호수의 수호신');
         await expect(journey).toContainText('신성한 호수');
+        await expect(page.getByTestId('class-journey-encounter')).toHaveText(
+            '사건의 흔적 · 뿌리 아래 공명 결계 · 결계의 흐름을 이어 둔다',
+        );
 
         const player = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player);
         expect(player.job).toBe('전사');
@@ -145,5 +148,56 @@ test.describe('Expedition return debrief', () => {
         const stateAfterRestart = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
         expect(stateAfterRestart.player.storyMilestones.seen).toContain('first_death');
         expect(stateAfterRestart.player.storyMilestones.pending).not.toContain('first_death');
+    });
+});
+
+test.describe('Class Journey encounter discovery', () => {
+    test('지역 사건 선택을 안전 귀환 뒤 직업 여정에 한 번 기록한다', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await startE2ERun(page);
+
+        expect(await page.evaluate(() => (
+            window.__AETHERIA_TEST_API__?.seedBoundedEncounterScenario?.(
+                '고요한 숲',
+                'forest-root-resonance',
+            )
+        ))).toBe(true);
+
+        const before = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
+        await page.getByTestId('event-choice-list').getByRole('button').nth(0).click();
+        await page.getByTestId('control-move').click();
+        await page.getByTestId('control-route-option-시작의 마을').click();
+
+        const discovery = page.getByTestId('class-journey-encounter');
+        await expect(discovery).toHaveText(
+            '사건의 흔적 · 뿌리 아래 공명 결계 · 결계의 흐름을 이어 둔다',
+        );
+        await expect(discovery).toHaveCount(1);
+
+        const returned = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
+        expect(returned.player.classJourneySequence).toBe(
+            (before.player.classJourneySequence || 0) + 1,
+        );
+
+        await page.evaluate(({ expeditionId }) => {
+            window.__AETHERIA_TEST_API__?.resolveBoundedEncounterChoice?.(
+                'forest-root-resonance',
+                'anchor-root-ward',
+                expeditionId,
+                1,
+            );
+        }, { expeditionId: before.player.activeExpeditionId });
+        expect(await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'))).toEqual(returned);
+
+        await expect(page.getByTestId('expedition-debrief-primary-action')).toBeVisible();
+        await page.getByTestId('expedition-debrief-close-icon').click();
+        await page.getByTestId('control-last-expedition').click();
+        await expect(page.getByTestId('class-journey-encounter')).toHaveCount(1);
+
+        const widths = await page.evaluate(() => ({
+            viewport: window.innerWidth,
+            document: document.documentElement.scrollWidth,
+        }));
+        expect(widths.document).toBeLessThanOrEqual(widths.viewport);
     });
 });

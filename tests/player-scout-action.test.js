@@ -221,7 +221,9 @@ test('⑤ exploreActions.scout은 골드 차감과 보스 게이지 1칸을 같�
     assert.match(source, /advanceBossGauge\(/, '정찰도 시간이 흐른 것으로 처리한다');
     assert.match(source, /consumeScoutCharge/);
     assert.match(source, /buildScoutEvent\(player, mapData, rng\)/, '같은 카드 빌더를 재사용한다');
-    assert.match(source, /shouldTriggerScout\(mapData, rng\)/, '랜덤 25% 발동은 유지된다');
+    // 병합(2026-09): Codex가 explore() 내부 RNG를 harness seed를 받을 수 있는 actionRng로
+    //   바꿨다(exploreActionSeed). "랜덤 25% 발동이 유지된다"는 의도는 동일하다.
+    assert.match(source, /shouldTriggerScout\(mapData, actionRng\)/, '랜덤 25% 발동은 유지된다');
 });
 
 test('⑤ ControlPanel은 탐험 화면에 비용이 적힌 정찰 버튼을 렌더한다', async () => {

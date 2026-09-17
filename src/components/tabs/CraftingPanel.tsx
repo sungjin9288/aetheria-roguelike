@@ -85,10 +85,10 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                     {decision && (
                       <div className="mt-1.5 flex flex-wrap gap-1.5">
                         <SignalBadge tone={decision.equipable ? 'success' : 'danger'} size="sm">
-                          {decision.equipable ? '장착 가능' : '직업 제한'}
+                          {decision.equipable ? '장착 가능' : decision.recommendation}
                         </SignalBadge>
                         <SignalBadge tone={decision.score > 0 ? 'recommended' : decision.score < 0 ? 'warning' : 'neutral'} size="sm">
-                          {decision.primaryDelta.text}
+                          {!decision.equipable && '가정 비교 · '}{decision.primaryDelta.text}
                         </SignalBadge>
                       </div>
                     )}
@@ -241,9 +241,12 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                           <div className="aether-type-label mt-0.5 font-readable text-slate-300/72">{outcome.statText}</div>
                         </div>
                         {decision && (
-                          <span className={`aether-type-label shrink-0 font-readable font-bold ${decision.score > 0 ? 'text-emerald-200' : decision.score < 0 ? 'text-rose-200' : 'text-slate-300'}`}>
-                            {decision.primaryDelta.text}
-                          </span>
+                          <div className="min-w-0 max-w-[45%] text-right">
+                            {!decision.equipable && <div className="aether-type-label font-readable text-rose-200">{decision.recommendation}</div>}
+                            <span className={`aether-type-label font-readable font-bold ${decision.score > 0 ? 'text-emerald-200' : decision.score < 0 ? 'text-rose-200' : 'text-slate-300'}`}>
+                              {!decision.equipable && '가정 비교 · '}{decision.primaryDelta.text}
+                            </span>
+                          </div>
                         )}
                       </div>
                     );

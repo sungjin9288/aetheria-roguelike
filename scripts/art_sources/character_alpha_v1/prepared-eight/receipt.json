@@ -1,0 +1,316 @@
+{
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "selection": {
+    "archmage": {
+      "seeds": [
+        [
+          273,
+          247
+        ],
+        [
+          290,
+          499
+        ],
+        [
+          995,
+          493
+        ],
+        [
+          1018,
+          492
+        ]
+      ],
+      "sha256": "380c3eaab7be17e5417f45be1d9a9675be858518e6e357749096a2a2efc66fde"
+    },
+    "cleric": {
+      "seeds": [
+        [
+          392,
+          402
+        ],
+        [
+          830,
+          398
+        ],
+        [
+          914,
+          420
+        ],
+        [
+          944,
+          512
+        ],
+        [
+          854,
+          496
+        ],
+        [
+          271,
+          300
+        ],
+        [
+          962,
+          372
+        ],
+        [
+          970,
+          533
+        ],
+        [
+          811,
+          352
+        ],
+        [
+          975,
+          359
+        ],
+        [
+          792,
+          356
+        ],
+        [
+          858,
+          564
+        ]
+      ],
+      "sha256": "735134f201e1667e1dc7e07f1fee1a54b45af6f1f0c8dc338e70228f3f861368"
+    },
+    "grand-mage": {
+      "seeds": [
+        [
+          838,
+          313
+        ],
+        [
+          264,
+          528
+        ],
+        [
+          965,
+          563
+        ],
+        [
+          845,
+          459
+        ],
+        [
+          498,
+          471
+        ],
+        [
+          240,
+          230
+        ],
+        [
+          394,
+          604
+        ],
+        [
+          952,
+          536
+        ],
+        [
+          411,
+          540
+        ],
+        [
+          370,
+          270
+        ],
+        [
+          948,
+          508
+        ],
+        [
+          326,
+          203
+        ],
+        [
+          359,
+          194
+        ],
+        [
+          462,
+          489
+        ],
+        [
+          994,
+          330
+        ],
+        [
+          385,
+          555
+        ],
+        [
+          252,
+          327
+        ],
+        [
+          985,
+          520
+        ],
+        [
+          188,
+          545
+        ],
+        [
+          378,
+          386
+        ]
+      ],
+      "sha256": "af8614afe2550fbcbd51697e2a1934e7720d422cbf72aae7ccd8dc03ff1a005e"
+    },
+    "hunt-lord": {
+      "seeds": [
+        [
+          949,
+          444
+        ],
+        [
+          886,
+          696
+        ],
+        [
+          976,
+          675
+        ],
+        [
+          786,
+          1017
+        ],
+        [
+          890,
+          846
+        ]
+      ],
+      "sha256": "8afa1b80e71972f81fc2445054f40ff947fc7d584e24d7f76e27be45b31f1e9b"
+    },
+    "mage": {
+      "seeds": [
+        [
+          316,
+          442
+        ],
+        [
+          438,
+          810
+        ],
+        [
+          477,
+          953
+        ]
+      ],
+      "sha256": "40960d0e9b9fb3803db60906326509d81357df2260d4d90b3f7b77909c5f01a9"
+    },
+    "paladin": {
+      "seeds": [
+        [
+          802,
+          300
+        ],
+        [
+          946,
+          294
+        ],
+        [
+          939,
+          238
+        ],
+        [
+          943,
+          364
+        ],
+        [
+          820,
+          226
+        ],
+        [
+          951,
+          218
+        ],
+        [
+          776,
+          331
+        ],
+        [
+          857,
+          386
+        ],
+        [
+          817,
+          200
+        ]
+      ],
+      "sha256": "5b271f68b480d744b70bb9df2e89524aae296f99080208ec4762208b6a65f63f"
+    },
+    "ranger": {
+      "seeds": [
+        [
+          837,
+          412
+        ],
+        [
+          834,
+          736
+        ],
+        [
+          809,
+          880
+        ]
+      ],
+      "sha256": "6adaecfe4a7e16a48d4afe802b786050d10ca853a9c8d3b80ca134addd842a8f"
+    },
+    "shaman": {
+      "seeds": [
+        [
+          256,
+          320
+        ],
+        [
+          478,
+          1002
+        ],
+        [
+          422,
+          811
+        ],
+        [
+          222,
+          259
+        ],
+        [
+          315,
+          550
+        ],
+        [
+          219,
+          346
+        ],
+        [
+          303,
+          423
+        ]
+      ],
+      "sha256": "26d6a4f8e4e9d353dde6aa809a67f6e97df0d34794ef384a3b4ed0916a87bf87"
+    }
+  },
+  "sha256": {
+    "runtime/archmage.png": "57119b7b395e03e03700ba577c8f59e177def403e7afcefa44672f41b6c20f80",
+    "runtime/cleric.png": "a732ab8650d1232f8f303ed1c13818de5ef5ae8191c9f9d53f0327a80f3fc6e8",
+    "runtime/grand-mage.png": "442c3fd381dded1af665eb83a997e6eccb4cad38ec2d8813e6774e056714d95b",
+    "runtime/hunt-lord.png": "fa0131ad79dcdf23ee1e82426e38030a7a2a139d946bc6c9cdb4cdf933d722f4",
+    "runtime/mage.png": "39e747af820b99089f3d6bfb68040b7d51dabff18dbb322b7c46dbecf9c51590",
+    "runtime/paladin.png": "2a63f5e6773a8b16732bc82593ebed52a1671799cb78d4c3592c4e24a3e7fe40",
+    "runtime/ranger.png": "3648a1910408e2e85004a1dd835425dd049fa0a620734c7002ae0ea9538ee82b",
+    "runtime/shaman.png": "e91b273c06a519a86f9ba50d8f067962b193d908f104176b3afa10b7e2055769",
+    "sources/archmage.png": "23c812dcef3cf3acd4d881f4c1c060b29c0f703fd7600929f2f99ca3b682cd26",
+    "sources/cleric.png": "b0ba559428dad5f214a4e1de71b66c244f6539114d9bb1e96c9493b710025ffd",
+    "sources/grand-mage.png": "d2fd081bb1417acad041041704509711611fb9358fca5bc928d056f8b809d4eb",
+    "sources/hunt-lord.png": "de657ddb8b848b30b69501888f4c99c3f5297d6fa7bf4129f53fba390c25eea0",
+    "sources/mage.png": "5a76d8aa199ac98e63361c725fed69eadd31e7bf73b957606e3a344dbd0ee18a",
+    "sources/paladin.png": "2941eee6908a1715f9011390246377ab69a1a3287c5586d67919fb5cc00ed73d",
+    "sources/ranger.png": "d95f1d1128f19f0919d8d13502f58ba74fb8fa42ce64b46bb429b3123e5759a4",
+    "sources/shaman.png": "a131159ff45c3ca136fad2fdd4c80e4fd10d7b7298c80272f5d67399939225d4"
+  }
+}

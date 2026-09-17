@@ -1,0 +1,21 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "chain-demon": "59c85feaa24d46f9fbfca0c0acdc8f14abdbd52a8cb848a97b283a1752d0f7f5",
+    "demon-apostle": "c333f70b5661681a05dc78034067df87cb40b9bd9b932b1f684c7e2cf344d093",
+    "flame-sovereign": "094b142ad42b18b8b468e1b9f1669cff841bc74d03c835089f6ef1b7d08a160e",
+    "ifrit-lord": "fef97906e84106188107a60c05f8aa14af19fdb0f2371f13d367d35ce3103a81",
+    "labyrinth-demon": "73ac000a4a688f28a643c1fb091a44e3c868eead31985ae8f7a92aa0ad461bee",
+    "red-dragon": "bd5788b0ce07b7a7e7fbf98d5cdb067d47a6ae46d8db0c27a64cba1ac240162d"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "chain-demon": "92542af51ba8afa5483e78c8100bf4a7a5a545281d0736597be122c79795b57b",
+    "demon-apostle": "5d040119202951a4b0aa7b1c8da28e9d5a6f6f6bc70642d821180a11059f2a77",
+    "flame-sovereign": "544ca2f75c6048dd0baf7969ad239a96cc86c6c583c6f5797707c2f29b08c8c3",
+    "ifrit-lord": "456c54533f7475be4a2a79f08e683a548163bdd0c0f18ee3ad417ff03f2c666a",
+    "labyrinth-demon": "07d29b0532e1d52e6141db879977b69a3dbbb7b59f33a4e6cccbadba8a44c16c",
+    "red-dragon": "5bee0ea57d8fe8c899ae9b385a83fae2bd035fe3d071bf2c9973e6f1bfb2e649"
+  }
+}

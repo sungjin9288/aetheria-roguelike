@@ -1,0 +1,54 @@
+{
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "selection": {
+    "hunt-lord": {
+      "seeds": [
+        [
+          949,
+          444
+        ],
+        [
+          886,
+          696
+        ],
+        [
+          976,
+          675
+        ],
+        [
+          786,
+          1017
+        ],
+        [
+          890,
+          846
+        ]
+      ],
+      "sha256": "8afa1b80e71972f81fc2445054f40ff947fc7d584e24d7f76e27be45b31f1e9b"
+    },
+    "ranger": {
+      "seeds": [
+        [
+          837,
+          412
+        ],
+        [
+          834,
+          736
+        ],
+        [
+          809,
+          880
+        ]
+      ],
+      "sha256": "6adaecfe4a7e16a48d4afe802b786050d10ca853a9c8d3b80ca134addd842a8f"
+    }
+  },
+  "sha256": {
+    "runtime/hunt-lord.png": "fa0131ad79dcdf23ee1e82426e38030a7a2a139d946bc6c9cdb4cdf933d722f4",
+    "runtime/ranger.png": "3648a1910408e2e85004a1dd835425dd049fa0a620734c7002ae0ea9538ee82b",
+    "sources/hunt-lord.png": "de657ddb8b848b30b69501888f4c99c3f5297d6fa7bf4129f53fba390c25eea0",
+    "sources/ranger.png": "d95f1d1128f19f0919d8d13502f58ba74fb8fa42ce64b46bb429b3123e5759a4"
+  }
+}

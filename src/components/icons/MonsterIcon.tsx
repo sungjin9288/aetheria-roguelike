@@ -1,7 +1,7 @@
 
 import { getMonsterVisual } from '../../utils/monsterVisuals';
 
-/** 발견한 주요 몬스터는 고유 art를, 나머지는 계열 silhouette을 사용한다. */
+/** 발견한 canonical 몬스터는 name-exact art를, 손상된 legacy 이름만 안전 실루엣을 사용한다. */
 
 const SILHOUETTE_PATHS = {
     // 기본 (슬라임류)
@@ -68,7 +68,7 @@ const MonsterIcon = ({ name, discovered, isBoss, size }: MonsterIconProps) => {
 
     return (
         <div
-            data-monster-art={!discovered ? 'undiscovered' : visual ? 'exact' : 'family-fallback'}
+            data-monster-art={!discovered ? 'undiscovered' : visual ? 'exact' : 'unknown-fallback'}
             data-monster-key={visual?.key}
             data-region-family={visual?.regionKey}
             className="aether-monster-art inline-flex shrink-0 items-center justify-center"

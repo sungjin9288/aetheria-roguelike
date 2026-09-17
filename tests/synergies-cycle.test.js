@@ -415,7 +415,7 @@ import { readFile } from 'node:fs/promises';
       const player = {
           name: 'Test', level: 10, hp: 100, maxHp: 100, mp: 50, maxMp: 100,
           meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
-          combatFlags: { killStackAtkBonus: 0 }, // 0 stack
+          adventureRelicBonuses: { killStackAtk: 0 },
           relics: [{ id: 'void_throne', effect: 'kill_stack_atk', val: { perKill: 0.05, max: 1 } }],
           skillChoices: {}, titles: [], stats: {}, equip: {},
       };
@@ -424,7 +424,7 @@ import { readFile } from 'node:fs/promises';
       const result = CombatEngine.handleVictory(player, enemy, passiveBonus, {}); // cycle 624: explicit elimination
       // void_throne perKill 0.05 → 0.05 누적. 시너지 killStack 0.07 추가 시 0.12 누적.
       // 본 테스트는 시너지 없이 baseline 0.05 유지 검증 (회귀 가드).
-      assert.ok((result.updatedPlayer.combatFlags?.killStackAtkBonus || 0) >= 0.05,
+      assert.ok((result.updatedPlayer.adventureRelicBonuses?.killStackAtk || 0) >= 0.05,
           `kill_stack_atk relic perKill 0.05 누적되어야 함`);
   });
 
@@ -433,7 +433,7 @@ import { readFile } from 'node:fs/promises';
       const player = {
           name: 'Test', level: 10, hp: 100, maxHp: 100, mp: 50, maxMp: 100,
           meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
-          combatFlags: { killStackAtkBonus: 0 },
+          adventureRelicBonuses: { killStackAtk: 0 },
           relics: [{ id: 'void_throne', effect: 'kill_stack_atk', val: { perKill: 0.05, max: 1 } }],
           skillChoices: {}, titles: [], stats: {}, equip: {},
           activeSynergies: [{ bonus: { effect: 'annihilator', executeThreshold: 0.35, killStack: 0.07 } }],
@@ -442,7 +442,7 @@ import { readFile } from 'node:fs/promises';
       const passiveBonus = { goldMult: 0, expMult: 0, activeSynergies: player.activeSynergies };
       const result = CombatEngine.handleVictory(player, enemy, passiveBonus, {}); // cycle 624: explicit elimination
       // 합산 0.05 + 0.07 = 0.12 누적
-      const stack = result.updatedPlayer.combatFlags?.killStackAtkBonus || 0;
+      const stack = result.updatedPlayer.adventureRelicBonuses?.killStackAtk || 0;
       assert.ok(stack >= 0.12,
           `annihilator killStack 0.07 + relic 0.05 = 0.12 누적되어야 함 (실제 ${stack})`);
   });

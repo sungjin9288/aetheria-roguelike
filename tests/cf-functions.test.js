@@ -1,15 +1,28 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { existsSync, readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import * as aiProxy from '../functions/api/ai-proxy.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
+const repoRoot = path.join(__dirname, '..');
 
-// Vercel(api/*.js)에서 Cloudflare Pages Functions(functions/api/*.js)로 포팅한 뒤
-// 시그니처 변환(onRequestPost/onRequestOptions 존재, Web Request/Response 사용,
+test('hosting: Cloudflare is the only active web function surface', () => {
+    assert.equal(existsSync(path.join(repoRoot, 'vercel.json')), false);
+    assert.equal(existsSync(path.join(repoRoot, 'api', 'ai-proxy.js')), false);
+    assert.equal(existsSync(path.join(repoRoot, 'api', 'feedback-validate.js')), false);
+
+    const packageJson = readFileSync(path.join(repoRoot, 'package.json'), 'utf8');
+    const workflow = readFileSync(path.join(repoRoot, '.github', 'workflows', 'deploy.yml'), 'utf8');
+
+    assert.doesNotMatch(packageJson, /\bvercel\b/i);
+    assert.doesNotMatch(workflow, /\bvercel\b/i);
+});
+
+// Cloudflare Pages Functions의 handler contract(onRequestPost/onRequestOptions 존재,
+// Web Request/Response 사용,
 // context.env 바인딩)이 실제로 성립하는지 검증하는 스모크 테스트.
 // 실 Gemini/Firebase 호출은 하지 않는다 (fetch를 mock으로 대체).
 
@@ -143,8 +156,7 @@ test('ai-proxy: Origin not in ALLOWED_ORIGINS is rejected with 403', async () =>
 
 // feedback-validate.js는 firebase-admin(devDependencies에 미포함, 이번 마이그레이션에서도
 // 신규 의존성 추가 금지 조건 하에 그대로 유지)을 정적 import 하므로, 패키지가 설치되지
-// 않은 환경에서는 동적 import 자체가 실패한다. 이는 Vercel 버전(api/feedback-validate.js)
-// 에서도 동일했던 기존 상태로, 이번 포팅이 새로 만든 문제가 아니다.
+// 않은 환경에서는 동적 import 자체가 실패한다.
 // 따라서 여기서는 소스 코드 정적 검사로 시그니처 변환(onRequestPost/onRequestOptions export,
 // Web Request/Response 사용, context.env 사용)만 확인한다.
 test('feedback-validate: source exports Cloudflare Pages Functions handlers', () => {

@@ -1,0 +1,29 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "fire-bat": "aa81ca6b696b602f3bb8c15137edcda48e24435249c2f360f0b6a6cc0b59cbbe",
+    "fire-golem": "47ef1f68c86d10ceab76c5c27acacee1711086128bd97b20fd7c92fb7eaf0018",
+    "fire-spirit": "db997290c647750d85be442a46e16504aa5e85531a388c94d37db637f218c111",
+    "lava-giant": "3c1a8fd317fe2950a7d1b177e9bdbce11cd914e27c85edf616359ec4b50e9f3e",
+    "lava-golem": "0ac7a9f9ebf05eb9c0b5a1cc702e65c4bb37342811d037a1b1629cc8a2076b4f",
+    "lava-spirit": "c692a029af97daac6da4ee84364f597089e11a6eefe20665b028579c86907711",
+    "lava-turtle": "8ee3e3c86022aa85c0184c8dc5641fefee20850e2185b1fb63a27ec675408f6e",
+    "magma-slime": "ef42d4ea13ef2bacaa35ee46c01a7c95cc934f3114b9fae876446303fbf0eb4c",
+    "magma-spirit": "d3b0dad9cbb175a32821bde17d082655f58a15fefb367bea49a9d42b71a9dec2",
+    "volcanic-spirit": "15f2583c63b10c71175d2bd04f5b3496c72914ae084f339d4923ad1f4bb9d72a"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "fire-bat": "bcb56afcaae47d7f28ca17ca4c3fef8f57fd93635e3b47aa5adb1d7bd21e21d4",
+    "fire-golem": "d28f2a0c6d3683eda179d9ad27c2ebfae76c1751aea28fe70b0b638939ea0280",
+    "fire-spirit": "83bb89253921ae14d5f34dd71376f70c4b574ee5b50da598b7bb5ca4c377afcd",
+    "lava-giant": "35d5f0572806b1ff78b2ff06d1dbb4e300c89d49dacba0d5fe28a1a7dc3e782e",
+    "lava-golem": "636632f58ee1ac132642f47077162755d68c2243d9c985e6ff28f93ef7752f9e",
+    "lava-spirit": "c516d0cdcdd5788f475a0d42f054ecca1a417a97ccd78eef6849310580fa4c7f",
+    "lava-turtle": "64541f9f279510e6ed27cfae89103ebef1f72a99c2b01b27338c4b8ea840748a",
+    "magma-slime": "226352f16031764ff69133253728465aba1095ea5ec1fcfadc5c47ebe873284a",
+    "magma-spirit": "2b6a350545f27e35da2ab003a6289abc72569c03a919a03566e2f4b727710d01",
+    "volcanic-spirit": "9afd2c71d3afd3241d3da1747b5f855fbb6df1d08f5d33da6518228b71160ec2"
+  }
+}

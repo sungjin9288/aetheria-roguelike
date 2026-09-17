@@ -8,6 +8,10 @@
  * 0 = 미시작, 1 = 1단계 완료, 2 = 2단계 완료, 3 = 완료
  */
 
+import { BALANCE } from './constants';
+
+const PRIMAL_SHARD_DROP_PERCENT = Math.round(BALANCE.PRIMAL_SHARD_DROP_CHANCE * 100);
+
 export const EVENT_CHAINS = [
     {
         id: 'ancient_prophecy',
@@ -34,7 +38,7 @@ export const EVENT_CHAINS = [
                     desc: '탑 안에서 예언의 학자 노인을 만났습니다. "당신이 돌판을 보셨군요. 원시의 파편을 3개 모아 마왕을 세 번 이상 쓰러뜨리면... 진짜가 나타납니다."',
                     choices: ['학자의 말에 귀 기울인다', '시간이 없다, 돌아간다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '진실에 한 발짝 다가섰습니다. 파편 수집의 방법을 알게 되었습니다.', reward: { type: 'info', text: '원시의 파편: 프레스티지 후 마왕 처치 시 40% 확률로 획득' } },
+                        { type: 'chain_advance', log: '진실에 한 발짝 다가섰습니다. 파편 수집의 방법을 알게 되었습니다.', reward: { type: 'info', text: `원시의 파편: 계승 1단계부터 마왕 처치 시 ${PRIMAL_SHARD_DROP_PERCENT}% 확률로 획득` } },
                         { type: 'nothing', log: '무언가 중요한 것을 놓쳤을지도 모릅니다.', reward: null },
                     ],
                 },
@@ -171,10 +175,10 @@ export const EVENT_CHAINS = [
                 loc: '어둠의 동굴',
                 event: {
                     title: '암시장 접선',
-                    desc: '동굴 깊은 곳에서 복면을 쓴 상인을 만났습니다. "표식을 알고 왔다면... 특별한 물건이 있소. 하지만 공짜는 없지." 그는 희귀 유물을 2000G에 제시합니다.',
-                    choices: ['거래한다 (2000G)', '거절하고 정보만 얻는다'],
+                    desc: '동굴 깊은 곳에서 복면을 쓴 상인을 만났습니다. "표식을 알고 왔다면... 상인의 인장을 넘기겠소. 하지만 공짜는 없지." 그는 희귀 유물 상인의 인장을 2000G에 제시합니다.',
+                    choices: ['상인의 인장을 산다 (2000G)', '거절하고 정보만 얻는다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '거래를 완료했습니다. 그림자 길드와 신뢰가 쌓였습니다.', reward: { type: 'gold', amount: -2000 } },
+                        { type: 'chain_advance', log: '거래를 완료해 희귀 유물 상인의 인장을 얻었습니다. 그림자 길드와 신뢰가 쌓였습니다.', reward: { type: 'gold', amount: -2000, relicId: 'merchant_seal' } },
                         { type: 'chain_advance', log: '정보를 얻었습니다. 더 큰 거래가 기다립니다.', reward: null },
                     ],
                 },
@@ -581,7 +585,7 @@ export const EVENT_CHAINS = [
                     choices: ['사령관의 영혼과 함께 싸운다', '영혼에게 안식을 권한다'],
                     outcomes: [
                         { type: 'chain_advance', log: '사령관의 영혼이 당신과 동행합니다. 그의 마지막 의지가 전설 유물로 응결됩니다.', reward: { type: 'relic' } },
-                        { type: 'chain_advance', log: '사령관에게 안식을 권했습니다. 영혼이 미소 지으며 사라지고, 그의 갑옷이 당신에게 남겨집니다.', reward: { type: 'item', name: '기사의 흉갑' } },
+                        { type: 'chain_advance', log: '사령관에게 안식을 권했습니다. 영혼이 남긴 수호의 의지가 스며들어 방어력과 생명이 영구히 강해집니다.', reward: { type: 'stat_bonus', def: 12, hp: 100 } },
                     ],
                 },
             },
@@ -647,13 +651,30 @@ export const EVENT_CHAINS = [
  */
 // cycle 596: progress default {} 제거 — exploreActions:41 (production) + 6+
 //   test caller 모두 progress 명시 전달이라 default 도달 불가.
-export function getChainEventForLoc(loc: any, progress: any) {
+export function normalizeDeferredEventChainSteps(value: unknown, progress: Record<string, unknown> = {}): Record<string, number> | undefined {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+    const records = value as Record<string, unknown>;
+    const deferred: Record<string, number> = {};
+    for (const chain of EVENT_CHAINS) {
+        if (!Object.hasOwn(records, chain.id)) continue;
+        const step = records[chain.id];
+        if (!Number.isSafeInteger(step) || step !== (progress?.[chain.id] ?? 0)) continue;
+        const stepData = chain.steps.find((entry: any) => entry.step === step);
+        if (stepData?.event.outcomes.some((outcome: any) => outcome.type === 'nothing')) {
+            deferred[chain.id] = step as number;
+        }
+    }
+    return Object.keys(deferred).length > 0 ? deferred : undefined;
+}
+
+export function getChainEventForLoc(loc: any, progress: any, deferredSteps?: Record<string, number>) {
     for (const chain of EVENT_CHAINS) {
         const currentStep = progress[chain.id] ?? 0;
         // 이미 완료된 체인 스킵
         if (currentStep >= chain.steps.length) continue;
         // '실패(fail)' 체인도 스킵
         if (progress[chain.id] === 'failed') continue;
+        if (deferredSteps?.[chain.id] === currentStep) continue;
 
         const step = chain.steps[currentStep];
         if (step && step.loc === loc) {

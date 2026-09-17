@@ -2,7 +2,7 @@ import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { DB } from '../../data/db';
-import { toArray, grantGold } from '../../utils/gameUtils';
+import { toArray, grantGold, findItemByName } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
@@ -13,6 +13,10 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
 import type { Player } from '../../types';
+import {
+    STRUCTURED_FALLBACK_TRANSACTIONS,
+    getStructuredFallbackTransaction,
+} from '../../data/structuredFallbackEvents';
 
 export const createEventActions = (deps: any, shared: any) => {
     const { emitUnlockedTitles } = shared;
@@ -22,9 +26,24 @@ export const createEventActions = (deps: any, shared: any) => {
         handleEventChoice: (idx: any) => {
             if (!currentEvent) return;
 
+            if (currentEvent.isBoundedEncounter) {
+                const outcome = toArray(currentEvent.outcomes)[idx];
+                if (!outcome) return;
+                dispatch({
+                    type: AT.RESOLVE_BOUNDED_ENCOUNTER_CHOICE,
+                    payload: {
+                        encounterId: currentEvent.boundedEncounterId,
+                        choiceId: outcome.choiceId,
+                        expeditionId: player.activeExpedition?.id,
+                        occurrenceSequence: currentEvent.boundedOccurrenceSequence,
+                    },
+                });
+                return;
+            }
+
             // 스카우팅 카드 처리 — 같은 탐험 턴 안에서 즉시 해소 (탐험의 나머지 롤 파이프 재호출).
             if (currentEvent.isScout) {
-                handleScoutChoice(idx, currentEvent, { ...deps, rng }, shared);
+                handleScoutChoice(idx, currentEvent, { ...deps, rng });
                 return;
             }
 
@@ -38,6 +57,47 @@ export const createEventActions = (deps: any, shared: any) => {
             const selectedOutcome = isChainEvent
                 ? (toArray(currentEvent.outcomes)[idx] || null)
                 : (toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null);
+            if (isChainEvent && selectedOutcome?.type === 'nothing') {
+                dispatch({ type: AT.DEFER_CHAIN_EVENT, payload: {
+                    chainId: currentEvent._chainId, step: currentEvent._chainStep, choiceIndex: idx,
+                    expectedExploreCount: player.stats?.explores ?? 0,
+                } });
+                return;
+            }
+            const reservedFallback = currentEvent.source === 'fallback'
+                ? STRUCTURED_FALLBACK_TRANSACTIONS.find((entry) => entry.event.desc === currentEvent.desc) || null
+                : null;
+            if (reservedFallback) {
+                const transaction = getStructuredFallbackTransaction(currentEvent.fallbackTransactionId);
+                if (!transaction || transaction.id !== reservedFallback.id) return;
+                if (idx === transaction.choiceIndex) {
+                    dispatch({
+                        type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION,
+                        payload: {
+                            transactionId: transaction.id,
+                            choiceIndex: idx,
+                        },
+                    });
+                    return;
+                }
+            }
+            if (isChainEvent
+                && selectedOutcome?.reward?.type === 'gold'
+                && selectedOutcome.reward.amount < 0) {
+                dispatch({
+                    type: AT.RESOLVE_CHAIN_GOLD_CHOICE,
+                    payload: {
+                        chainId: currentEvent._chainId,
+                        step: currentEvent._chainStep,
+                        choiceIndex: idx,
+                    },
+                });
+                return;
+            }
+            if (selectedOutcome?.item && !findItemByName(selectedOutcome.item)) {
+                addLog('error', MSG.EVENT_REWARD_UNAVAILABLE);
+                return;
+            }
             const roll = rng();
             let updatedPlayer = player;
             const fullStats = getFullStats();
@@ -114,9 +174,12 @@ export const createEventActions = (deps: any, shared: any) => {
                     }
                 }
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
-                if (outcome.type === 'chain_advance' || outcome.type === 'chain_advance_fail') {
+                if (outcome.type === 'chain_advance') {
                     const nextStep = (currentEvent._chainStep ?? 0) + 1;
                     dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId: currentEvent._chainId, step: nextStep } });
+                }
+                if (outcome.type === 'chain_advance_fail') {
+                    dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId: currentEvent._chainId, step: 'failed' } });
                 }
                 dispatch({ type: AT.SET_EVENT, payload: null });
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
@@ -297,9 +360,8 @@ const startEliteEncounter = (player: Player, { dispatch, addLog, getFullStats, r
  * applyBattleStartRelics/runQuietRollAndCombat)을 재호출/재배치하는 방식 — 신규 스폰
  * 로직을 만들지 않는다.
  */
-const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) => {
+const handleScoutChoice = (idx: any, currentEvent: any, deps: any) => {
     const { player, dispatch, addLog, getFullStats, rng = Math.random } = deps;
-    const { commitExploreOutcome } = shared;
     const outcome = toArray(currentEvent.outcomes).find((o: any) => o.choiceIndex === idx) || null;
     if (!outcome) {
         dispatch({ type: AT.SET_EVENT, payload: null });
@@ -313,6 +375,13 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
 
     // 이벤트 패널을 닫고(현재 스카우팅 카드) 아래 분기에서 필요한 다음 상태를 dispatch한다.
     dispatch({ type: AT.SET_EVENT, payload: null });
+
+    // Scout 카드가 열린 시점에 exploreActions.ts가 이미 shared settlement를 완료한다.
+    // 선택 해소는 branch effect만 적용하고, 전투 시작 유물 transform만 reducer에 전달한다.
+    const dispatchScoutPlayerTransform = (transformPlayer: any) => {
+        if (typeof transformPlayer !== 'function') return;
+        dispatch({ type: AT.SET_PLAYER, payload: transformPlayer });
+    };
 
     if (outcome.scoutEffect === 'combat' || outcome.scoutEffect === 'elite') {
         const { mStats: rawStats, baseName } = spawnEnemy(
@@ -328,7 +397,7 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
             : { ...rawStats, scoutRewardBonus: outcome.rewardBonus ?? BALANCE.SCOUT_COMBAT_REWARD_BONUS };
 
         const fullStats = getFullStats();
-        commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(
+        dispatchScoutPlayerTransform((nextPlayer: any) => applyBattleStartRelics(
             nextPlayer,
             nextPlayer.relics || [],
             fullStats,
@@ -351,7 +420,6 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
             anomalyMult: BALANCE.SCOUT_SIGNAL_ANOMALY_MULT,
             rng,
         });
-        commitExploreOutcome(quietResult === 'nothing' ? 'nothing' : quietResult, null);
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
         if (quietResult === 'nothing') addLog('info', MSG.EXPLORE_QUIET);
         return;
@@ -364,12 +432,16 @@ const handleScoutChoice = (idx: any, currentEvent: any, deps: any, shared: any) 
     // skipBossGaugeAdvance: 이 explore() 턴의 게이지는 스카우팅 카드가 처음 뜬 시점에
     // 이미 1회 누적됐으므로(exploreActions.ts) 여기서 재호출 시 중복 누적 방지.
     const { addStoryLog } = deps;
+    const applyScoutTransformOnly = (_outcome: any, transformPlayer: any) => {
+        dispatchScoutPlayerTransform(transformPlayer);
+    };
+    dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
     runQuietRollAndCombat(player, mapData, {
         dispatch,
         addLog,
         addStoryLog,
         getFullStats,
-        commitExploreOutcome,
+        commitExploreOutcome: applyScoutTransformOnly,
         skipBossGaugeAdvance: true,
         rng,
     });

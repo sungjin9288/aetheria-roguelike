@@ -1,7 +1,9 @@
-import type { Item } from '../types/index.js';
+import type { Item, Player } from '../types/index.js';
+import { CONSTANTS } from '../data/constants.js';
 import signatureRegistry from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSets from '../data/signatureSets.json' with { type: 'json' };
-import { isTwoHandWeapon } from './equipmentUtils.js';
+import { isTwoHandWeapon, getNextEquipmentState } from './equipmentUtils.js';
+import { canEquip } from './equipmentValidation.js';
 import { findItemByName } from './gameUtils.js';
 
 /**
@@ -240,5 +242,42 @@ export const getSignatureSetProgress = (equip: any) => {
             }
             : null,
         isActive: currentTier != null,
+    };
+};
+
+/** 현재 signature를 유지하면서 다음 tier를 완성할 수 있는 장비만 안내한다. */
+export const getSignatureSetGuidance = (player: Pick<Player, 'job' | 'level' | 'equip'>) => {
+    const progress = getSignatureSetProgress(player.equip);
+    if (!progress) return null;
+    const nextItems: Array<{ name: string; availableNow: boolean; requiredLevel: number | null }> = [];
+    const retained = Object.values(player.equip || {}).filter((item) => getRegistryEntry(item)?.setGroup === progress.key);
+    const futurePlayer = { job: player.job, level: CONSTANTS.MAX_LEVEL };
+    const previousJobGear = retained.some((item) => !canEquip(item!, futurePlayer, {}).ok);
+
+    if (progress.nextTier != null && !previousJobGear) {
+        for (const name of SETS[progress.key].members as string[]) {
+            const source = findItemByName(name);
+            if (!source) continue;
+            // 같은 한손무기 두 개도 후보다. 현재 착용 instance와 별개로 비교한다.
+            const candidate = { ...source };
+            if (!canEquip(candidate, futurePlayer, player.equip || {}).ok) continue;
+            const nextEquip = getNextEquipmentState(player.equip || {}, candidate);
+            if (!retained.every((item) => Object.values(nextEquip).includes(item))) continue;
+            const next = getSignatureSetProgress(nextEquip);
+            if (next?.key !== progress.key || next.equippedCount < progress.nextTier) continue;
+            const validation = canEquip(candidate, player, player.equip || {});
+            nextItems.push({
+                name,
+                availableNow: validation.ok,
+                requiredLevel: !validation.ok && validation.reason === 'level' ? validation.reqLevel : null,
+            });
+        }
+    }
+
+    return {
+        ...progress,
+        nextItems,
+        additionStatus: previousJobGear ? 'previous-job' as const
+            : nextItems.length > 0 ? 'available' as const : 'unavailable' as const,
     };
 };

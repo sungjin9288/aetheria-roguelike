@@ -46,6 +46,37 @@ service cloud.firestore {
         }
       }
 
+      // ── AI token quota (client write-only, per-user) ─────────────
+      // 경로: artifacts/aetheria-rpg/users/{uid}/quota/daily-ai
+      // 클라이언트는 자신의 quota snapshot만 생성/갱신할 수 있고, 읽기/삭제는 불가.
+      match /users/{uid}/quota/daily-ai {
+        allow read: if false;
+        allow delete: if false;
+
+        allow create: if isSelf(uid)
+          && request.resource.data.keys().hasAll(['date', 'used', 'limit', 'updatedAt'])
+          && request.resource.data.keys().hasOnly(['date', 'used', 'limit', 'updatedAt'])
+          && request.resource.data.date is string
+          && request.resource.data.used is int
+          && request.resource.data.used >= 0
+          && request.resource.data.used <= 50
+          && request.resource.data.limit == 50
+          && request.resource.data.updatedAt == request.time;
+
+        allow update: if isSelf(uid)
+          && request.resource.data.keys().hasAll(['date', 'used', 'limit', 'updatedAt'])
+          && request.resource.data.keys().hasOnly(['date', 'used', 'limit', 'updatedAt'])
+          && request.resource.data.date is string
+          && request.resource.data.used is int
+          && request.resource.data.used >= 0
+          && request.resource.data.used <= 50
+          && request.resource.data.limit == 50
+          && request.resource.data.updatedAt == request.time
+          && (request.resource.data.date == resource.data.date
+              ? request.resource.data.used >= resource.data.used
+              : request.resource.data.used == 0);
+      }
+
       // ── 공개 설정 (live config) ────────────────────────────────
       // 경로: artifacts/aetheria-rpg/public/data
       // 읽기: 모두 허용 (앱 초기화에 필요)

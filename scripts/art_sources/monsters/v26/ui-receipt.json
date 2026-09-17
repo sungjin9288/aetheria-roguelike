@@ -1,0 +1,127 @@
+{
+  "classification": "production-levelled canonical spawn fixtures; UI verification not natural encounters",
+  "ownerViewedAllTenScreenshots": true,
+  "results": [
+    {
+      "name": "전류 추적자",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-60f43416e1e9.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 966,
+      "afterEnemyHp": 792
+    },
+    {
+      "name": "변이 실험체",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-9da39d1152ff.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 962,
+      "afterEnemyHp": 856
+    },
+    {
+      "name": "에테르 잔류체",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-4b17248f8de5.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 1827,
+      "afterEnemyHp": 1647
+    },
+    {
+      "name": "에테르 흡수체",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-960af22a3197.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 1827,
+      "afterEnemyHp": 1657
+    },
+    {
+      "name": "망자의 사제",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-411b4ac30c1e.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 984,
+      "afterEnemyHp": 858
+    },
+    {
+      "name": "암흑 사제",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-1138655832ae.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 1190,
+      "afterEnemyHp": 980
+    },
+    {
+      "name": "언데드 마법사",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-90af280d7002.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 1158,
+      "afterEnemyHp": 1061
+    },
+    {
+      "name": "화염 도마뱀",
+      "portrait": {
+        "src": "/assets/monsters/catalog/fire-lizard.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 550,
+      "afterEnemyHp": 486
+    },
+    {
+      "name": "불꽃 도마뱀",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-02c52111756b.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 646,
+      "afterEnemyHp": 582
+    },
+    {
+      "name": "화산 도마뱀",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-fa417fa9f7b8.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeEnemyHp": 1222,
+      "afterEnemyHp": 1120
+    }
+  ],
+  "errors": []
+}

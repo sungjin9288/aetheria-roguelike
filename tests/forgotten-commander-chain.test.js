@@ -63,3 +63,13 @@ test('forgotten_commander outcomes use supported reward types', () => {
         }
     }
 });
+
+test('forgotten_commander finale offers a class-neutral late-game defense choice beside the relic', () => {
+    const chain = EVENT_CHAINS.find((candidate) => candidate.id === 'forgotten_commander');
+    const finale = chain.steps.find((step) => step.step === 2);
+    const peacefulOutcome = finale.event.outcomes[1];
+
+    assert.equal(peacefulOutcome.type, 'chain_advance');
+    assert.deepEqual(peacefulOutcome.reward, { type: 'stat_bonus', def: 12, hp: 100 });
+    assert.match(peacefulOutcome.log, /방어력과 생명/);
+});

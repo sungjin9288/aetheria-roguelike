@@ -1,0 +1,50 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "corroded-soldier": "a6092c45b3baa20bd68246a428368d69da8a3f51f4220c1f08b20a13e1c28807",
+    "ghost-legion": "7ab81bdef201a53e630d1a721888d22ff7b97cd9b2ce8a0f47460a16cc43dbf4",
+    "lich": "eb0221a3325b9a5f3e844cee450d8a7c3b36989ec16dc83227e67b2190235e26",
+    "poison-centipede": "b71a9c1516df0c8262cd917282342f05290fd2efb5ffd46a14cbff96d2a9a4e0",
+    "sewer-crocodile": "47765cb4d8458bef5644c462c9a2a797eceb46e5a3fe3c72d49589244c664400",
+    "skeleton-mage": "9d13c12d32af559137629dd4793e1013c3c70c06bb097351a474911d46aaf54a",
+    "vampire": "b84638cbfee9f6ffca5f0b796b8ef6d6c36cadd158967a342df167b671adfe56"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "selection": {
+    "corroded-soldier": {
+      "master": "corroded-soldier.png",
+      "sha256": "d14e4fe9c289dcb73571c416060d783c0f04da2272cffccef3a0dc6641393ddd"
+    },
+    "ghost-legion": {
+      "master": "ghost-legion.png",
+      "sha256": "3e403c91846f904fd19de4403f1c29fd470972c5432a90b2ffc9ecd08ae440bd"
+    },
+    "lich": {
+      "master": "lich.png",
+      "sha256": "644a4a1d080a36dbdf5061ce9f6dd5a02b74f869523bb9c14aaddc60aac2fecf"
+    },
+    "poison-centipede": {
+      "master": "poison-centipede.png",
+      "sha256": "dde6106aa1df6930157a35813ab113a727a30950fe9d5536629262b3aab635c5"
+    },
+    "sewer-crocodile": {
+      "master": "sewer-crocodile.png",
+      "sha256": "f6727368fdaea6c3393030a911acfb580340d27de3624b2e8baa9791615b441a"
+    },
+    "skeleton-mage": {
+      "master": "skeleton-mage.png",
+      "sha256": "fc23f39527589358991d089a45c58f0ee8f9e7767f8877b835b6b3e73bd2bf9c"
+    },
+    "vampire": {
+      "master": "vampire-readable.png",
+      "sha256": "da6891cc8b3c34d6406f7802b38e39e152bcceaa420eb562a1ddb36e24120fcd"
+    }
+  },
+  "vampireBackgroundSeeds": [
+    [
+      0,
+      0
+    ]
+  ]
+}

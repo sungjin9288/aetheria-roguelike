@@ -44,6 +44,7 @@ import { readFile } from 'node:fs/promises';
 
   const buildState = (statsOverrides = {}) => ({
       ...INITIAL_STATE,
+      gameState: 'ascension',
       player: {
           ...INITIAL_STATE.player,
           name: 'Test',
@@ -61,8 +62,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   const ASCEND_PAYLOAD = {
-      meta: { essence: 100, rank: 1, prestigeRank: 1, bonusAtk: 5, bonusHp: 50, bonusMp: 25 },
-      newTitle: '각성자',
+      expectedPrestigeRank: 0,
+      sourceReceiptKey: null,
   };
 
   test('cycle 212: ASCEND가 signaturePity mercy 카운터 보존', () => {

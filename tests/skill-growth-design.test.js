@@ -37,6 +37,17 @@ test('성장 후보 선택과 실제 적용은 별도 action으로 분리된다'
     assert.match(source, /min-h-\[48px\]/);
 });
 
+test('성장 변경 후보는 entrance transform 없이 즉시 누를 수 있다', async () => {
+    const source = await readSrc('src/components/SkillTreePreview.tsx');
+    const swapDecision = source.match(/<AnimatePresence initial=\{false\}>[\s\S]*?<\/AnimatePresence>/)?.[0] || '';
+
+    assert.match(swapDecision, /initial=\{\{ opacity: 0 \}\}/);
+    assert.match(swapDecision, /animate=\{\{ opacity: 1 \}\}/);
+    assert.match(swapDecision, /exit=\{\{ opacity: 0 \}\}/);
+    assert.doesNotMatch(swapDecision, /\by:/);
+    assert.doesNotMatch(swapDecision, /\bscale:/);
+});
+
 test('전직 계보는 전체 직업 표 대신 현재 직업에서 이어지는 경로만 보여 준다', async () => {
     const source = await readSrc('src/components/ClassTree.tsx');
 

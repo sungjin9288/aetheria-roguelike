@@ -1,5 +1,6 @@
 import { CONSTANTS, APP_ID } from '../data/constants';
 import { AT } from '../reducers/actionTypes';
+import { buildCloudPlayerSnapshot } from '../platform/cloudPlayerSnapshot';
 import { type GameSaveRecord } from '../platform/gameStorage';
 import type { Player } from '../types';
 import type { GameAction } from '../reducers/gameReducer';
@@ -26,9 +27,7 @@ export interface CloudAutosaveDeps {
     /** Firestore 인스턴스 — 이 모듈은 firebase 를 직접 import 하지 않는다(테스트 주입 가능). */
     db: any;
     doc: (...args: any[]) => any;
-    collection: (...args: any[]) => any;
     setDoc: (ref: any, data: any, options?: any) => Promise<any>;
-    addDoc: (ref: any, data: any) => Promise<any>;
     serverTimestamp: () => any;
     /** 로컬 저장소에서 최신 레코드를 읽는다(실패 시 null). */
     loadLocalRecord: () => Promise<GameSaveRecord | null>;
@@ -58,9 +57,7 @@ export type CloudAutosaveResult = 'synced' | 'offline';
 export const createCloudAutosave = ({
     db,
     doc,
-    collection,
     setDoc,
-    addDoc,
     serverTimestamp,
     loadLocalRecord,
     dispatch,
@@ -95,11 +92,10 @@ export const createCloudAutosave = ({
         // 계산하므로, Firestore serverTimestamp()(lastActive)와 별도로 player.stats에
         // 저장 시각을 기록한다. 매 autosave마다 갱신 — 플레이 중에는 계속 최신화되고,
         // 세션 종료 후에는 마지막 저장 시각에 고정된다.
-        const playerPayload = {
-            ...player,
-            archivedHistory: [],
-            stats: { ...player.stats, lastSeenAt: now() },
-        };
+        //   Firestore는 undefined를 거부하므로 신규 선택 필드는 null로 정규화한다
+        //   (buildCloudPlayerSnapshot — Codex d8a111e). 레거시 archivedHistory 배관은
+        //   Codex가 죽은 배관으로 제거했다(tests/release-dead-plumbing.test.js).
+        const playerPayload = buildCloudPlayerSnapshot(player, now());
         const payload: Record<string, any> = {
             player: playerPayload,
             gameState,
@@ -113,11 +109,6 @@ export const createCloudAutosave = ({
             savedAt: localRecord?.savedAt ?? now(),
             lastActive: serverTimestamp()
         };
-
-        if (player.archivedHistory && player.archivedHistory.length > 0) {
-            const historyCol = collection(userDocRef, 'history');
-            await Promise.all(player.archivedHistory.map((h: any) => addDoc(historyCol, h)));
-        }
 
         await setDoc(userDocRef, payload, { merge: true });
 

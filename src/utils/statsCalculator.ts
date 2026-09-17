@@ -9,6 +9,7 @@ import type { TitlePassive } from '../data/titles.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
+import { resolveHpDrainAtkRelic } from './hpDrainAtkRelic.js';
 
 // cycle 449: 물리 elem 필터 제거 — items.ts elem 값에 '물리' / 'physical' 0건.
 //   weaponElem 있는 무기는 항상 magic elem이라 필터 redundant.
@@ -73,12 +74,13 @@ const computeCodexBonus = (stats: Player['stats']) => {
  */
 const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: boolean) => {
     const hpRatio = (player.hp ?? 0) / Math.max(1, player.maxHp ?? 1);
+    const hpDrainAtkRelic = resolveHpDrainAtkRelic(relics);
 
-    // cycle 158: 'kill_stack_atk' (허공의 왕좌) — combatFlags.killStackAtkBonus per-combat 누적치를 atkFlat에 합산.
-    const killStackAtkPerCombat = player?.combatFlags?.killStackAtkBonus || 0;
+    // 'kill_stack_atk' (허공의 왕좌) — 원정 단위 누적치(adventureRelicBonuses)를 atkFlat에 합산.
+    const killStackAtk = player.adventureRelicBonuses?.killStackAtk || 0;
 
     const atkFlat = relics.reduce((acc: number, r: Relic) => {
-        if (r.effect === 'kill_stack_atk') return acc + killStackAtkPerCombat;
+        if (r.effect === 'kill_stack_atk') return acc + killStackAtk;
         if (r.effect === 'glass_cannon') return acc + r.val.atk;
         if (r.effect === 'ancient_power') return acc + r.val.atk;
         if (r.effect === 'omega') return acc + r.val;
@@ -87,8 +89,6 @@ const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: 
         if (r.effect === 'triple_up') return acc + (r.atkVal || 0);
         // cycle 149: 'genesis' (창세의 핵) — 전 스탯 statBonus 다중 적용. 매 턴 회복은 별도 사이클.
         if (r.effect === 'genesis') return acc + (r.val?.statBonus || 0);
-        // cycle 150: 'hp_drain_atk' (혈맹의 반지 / 심연의 계약) — atkBonus 부분 반영. 매 턴 HP cost는 별도 사이클.
-        if (r.effect === 'hp_drain_atk') return acc + (r.val?.atkBonus || 0);
         if (r.effect === 'low_hp_atk') {
             const threshold = typeof r.val === 'object' ? r.val.threshold : 0.3;
             const bonus = typeof r.val === 'object' ? r.val.bonus : (r.val - 1);
@@ -142,7 +142,14 @@ const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: 
         return acc;
     }, 0);
 
-    return { atkFlat, defFlat, hpMult, mpMult, critBonus, mpFlat };
+    return {
+        atkFlat: atkFlat + (hpDrainAtkRelic?.atkBonus || 0),
+        defFlat,
+        hpMult,
+        mpMult,
+        critBonus,
+        mpFlat,
+    };
 };
 
 /**

@@ -38,7 +38,7 @@ Aetheria RPG는 AI 기반 동적 내러티브를 특징으로 하는 **텍스트
 |------|------|
 | **Firebase Auth** | 익명 인증 |
 | **Firestore** | NoSQL 데이터베이스 (게임 저장) |
-| **Vercel Functions** | AI Proxy 서버리스 함수 |
+| **Cloudflare Pages Functions** | AI Proxy 서버리스 함수 |
 | **AWS Lambda** | 백업 AI Proxy 및 분석 |
 | **AWS API Gateway** | Lambda 엔드포인트 관리 |
 
@@ -94,7 +94,7 @@ aetheria-rpg/
 │   ├── firebase.js          # Firebase 초기화
 │   └── main.jsx             # 엔트리 포인트
 │
-├── api/                     # Vercel Serverless Functions
+├── functions/api/           # Cloudflare Pages Functions
 │   ├── ai-proxy.js              # Gemini AI 프록시
 │   └── feedback-validate.js     # 피드백 검증 API
 │
@@ -169,9 +169,9 @@ Tier 0: 모험가
 └────────────────────────────────────────────────────┼────────────────┘
                                                      │
                     ┌────────────────────────────────▼────────────────────────────────┐
-                    │                        Vercel Edge                              │
+                    │                      Cloudflare Pages                          │
                     │  ┌─────────────────────────────────────────────────────────┐   │
-                    │  │                   api/ai-proxy.js                        │   │
+                    │  │              functions/api/ai-proxy.js                  │   │
                     │  │            (Gemini API Key 서버 사이드 보관)             │   │
                     │  └─────────────────────────────────────────────────────────┘   │
                     └────────────────────────────────┬────────────────────────────────┘
@@ -217,7 +217,7 @@ Tier 0: 모험가
 ## 7. 보안 설계
 
 ### 7.1 API 키 보호
-- Gemini API 키는 **서버 사이드에서만** 사용 (Vercel/AWS)
+- Gemini API 키는 **서버 사이드에서만** 사용 (Cloudflare Pages/AWS)
 - 클라이언트는 프록시 엔드포인트만 호출
 
 ### 7.2 인증

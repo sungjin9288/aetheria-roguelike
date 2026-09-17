@@ -301,9 +301,9 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
                                             {isSwapping && (
                                                 <Motion.div
                                                     key={`${name}-${currentChoice}`}
-                                                    initial={{ opacity: 0, y: -6 }}
-                                                    animate={{ opacity: 1, y: 0 }}
-                                                    exit={{ opacity: 0, y: -4 }}
+                                                    initial={{ opacity: 0 }}
+                                                    animate={{ opacity: 1 }}
+                                                    exit={{ opacity: 0 }}
                                                     className="pb-2"
                                                 >
                                                     <GrowthDecision

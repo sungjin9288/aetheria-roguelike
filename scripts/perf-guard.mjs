@@ -3,6 +3,7 @@ import path from 'node:path';
 import process from 'node:process';
 import { setTimeout as delay } from 'node:timers/promises';
 import { chromium, devices } from 'playwright';
+import { validatePerfMetrics } from './perf-metrics.mjs';
 
 const DEFAULT_URL = 'http://127.0.0.1:4173/';
 const DEFAULT_CHROME_PATH = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
@@ -178,6 +179,12 @@ async function main() {
     await startButton.waitFor({ state: 'visible', timeout: 10000 });
     metrics.introReadyMs = Number((performance.now() - navigationStartedAt).toFixed(1));
 
+    await page.waitForFunction(() => {
+      const snapshot = window.__AETHERIA_TEST_API__?.getPerfSnapshot?.();
+      return performance.getEntriesByName('first-contentful-paint', 'paint').length > 0
+        && Number.isFinite(snapshot?.['aetheria:boot-ready-ms'])
+        && Number.isFinite(snapshot?.['aetheria:intro-visible-ms']);
+    }, null, { timeout: 10000 });
     Object.assign(metrics, await capturePerfMetrics(page));
     const initialAppPerf = await readAppPerfSnapshot(page);
     metrics.bootReadyMeasureMs = initialAppPerf['aetheria:boot-ready-ms'] ?? null;
@@ -238,9 +245,7 @@ async function main() {
       timeout: 60000,
     });
 
-    const failures = Object.entries(thresholds)
-      .filter(([name, limit]) => metrics[name] != null && metrics[name] > limit)
-      .map(([name, limit]) => `${name}: ${metrics[name]}ms > ${limit}ms`);
+    const failures = validatePerfMetrics(metrics, thresholds);
 
     logPerf(`metrics ${JSON.stringify(metrics)}`);
 

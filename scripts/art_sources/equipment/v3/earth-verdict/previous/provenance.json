@@ -1,0 +1,772 @@
+{
+  "batches": [
+    {
+      "batchId": "signature-mythic-armor-cloak-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "암흑 군주의 망토"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "fe62a2831768cb135f6a9df0289068a8ea42729a8a27511d7ee9c1703884a487",
+          "name": "암흑 군주의 망토",
+          "runtimePath": "/assets/equipment-exact/signature-armor-dark-lord-cloak.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-armor-cloak-01-item.png",
+      "itemSourceSheetSha256": "1038c069e83e323c32078e6ffe40b38b7874538585de3c73d6eeedd88ea200c7",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "ae3a8491124165d24b2f0ce0ba2b42287cb9b0e0e07066fc3bd43aa9199af62d",
+          "name": "암흑 군주의 망토",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-armor-dark-lord-cloak.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-armor-cloak-01-overlay.png",
+      "overlaySourceSheetSha256": "46161545016f9c6468c1de86294e1d34add12f24e5796778d879a1d08710f678",
+      "replayKey": "34c1c724056f7b3681973b0f5b4cffe8696d65514d34e2022e413793df204d0a"
+    },
+    {
+      "batchId": "signature-mythic-armor-plate-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "광기의 갑주",
+        "드래곤로드 갑주",
+        "심해의 수호복",
+        "혼돈의 갑주"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "94bbc7d8bc76f2906c735adcab320c50a60a0a9ab699805bfdef351493785ed6",
+          "name": "광기의 갑주",
+          "runtimePath": "/assets/equipment-exact/signature-armor-mad-armor.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "2df548f5d26c5f1825d578699a5a185d494a170e243b5aaf69e9a56ff95db65d",
+          "name": "드래곤로드 갑주",
+          "runtimePath": "/assets/equipment-exact/signature-armor-dragon-lord.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "a9b8fc109eb5069a5d30184abeaf9bd5a4e69331249369b3448f35ad611260e3",
+          "name": "심해의 수호복",
+          "runtimePath": "/assets/equipment-exact/signature-armor-abyssal-guardian.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "673158ff70d6967be6a5c4fad425965a107a2da3e3cf00fa3c9eede4ea6268fd",
+          "name": "혼돈의 갑주",
+          "runtimePath": "/assets/equipment-exact/signature-armor-chaos-armor.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-armor-plate-01-item.png",
+      "itemSourceSheetSha256": "006fd1e2ab65ffe0b1e7add67a01f217e39f675b45833a55ac8e16c3eaaee2f5",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "5f42489bd79ea63fd33023fad17e035dfc0bb6dde6c93266235e18054185248e",
+          "name": "광기의 갑주",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-armor-mad-armor.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "03682c44dbaf5650cb4cf63c6adcaae21444dea33c60bb67bdea1a7b389f3824",
+          "name": "드래곤로드 갑주",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-armor-dragon-lord.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "79d667cfce90754720efe705ae6e3ef1438eac5d70a1d0d551f84659b5c82554",
+          "name": "심해의 수호복",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-armor-abyssal-guardian.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "def4d4a0ff403ff721e4abbc333ed4458e811b48bf14ec043dd0e96bcf1cbec5",
+          "name": "혼돈의 갑주",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-armor-chaos-armor.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-armor-plate-01-overlay.png",
+      "overlaySourceSheetSha256": "0c3b08b18114f8cc59a97814a83d2bab41c7231d14a6734015ef0e3a6c188ace",
+      "replayKey": "0180d9b4cfc6ea7e7fc4d507dbd44185e5cec2310ab0f0e40b5d0fb25a8bc858"
+    },
+    {
+      "batchId": "signature-mythic-armor-robe-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "세계수의 로브"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "4229a23b77a88911cf846ba18fddb3258b8ce89cb2c3e8ff631caf0d9dff9104",
+          "name": "세계수의 로브",
+          "runtimePath": "/assets/equipment-exact/signature-armor-worldtree-robe.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-armor-robe-01-item.png",
+      "itemSourceSheetSha256": "4ce0a08960f8de220c7d4ff5fcc3a055aad656aa672e58dc03a79d4d92ede3a7",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "0203840155114a0efcfaf278c59c7759305bea95ba91af39a121b8e2b96e199c",
+          "name": "세계수의 로브",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-armor-worldtree-robe.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-armor-robe-01-overlay.png",
+      "overlaySourceSheetSha256": "40d748fb74db434a60eba2b8d972f399e4ab2bf721084607f225817f996ca6e0",
+      "replayKey": "e254eb8aba1d1479d1ffbcb9f965b87e3c04532c9c62b8424e35a58e3177779a"
+    },
+    {
+      "batchId": "signature-mythic-offhand-book-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "에테르 그리모어",
+        "천공 성전"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "784d63aa0de8aec39e5cdcedafab99be1e964c2e29a765f553995c8b1d6e27b9",
+          "name": "에테르 그리모어",
+          "runtimePath": "/assets/equipment-exact/signature-shield-ether-grimoire.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "08b2d16375a91b191dfaf2b5be9179c1e69e99fc328b59f5ba7ba0e2aee63433",
+          "name": "천공 성전",
+          "runtimePath": "/assets/equipment-exact/signature-shield-celestial-tome.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-offhand-book-01-item.png",
+      "itemSourceSheetSha256": "e39073dca4e513c68d0d9f1cba100bb1647625f7df9ac0178fae1c7adbd87c52",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "5911ebfa0338a6e2902b5fab760fe5e18ed88160965276a541ee99a06deb7620",
+          "name": "에테르 그리모어",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-shield-ether-grimoire.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "df5cc27501fc397572078cab6f7f3d37a7f6ed64ab85fabfac6bbbb0440d732b",
+          "name": "천공 성전",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-shield-celestial-tome.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-offhand-book-01-overlay.png",
+      "overlaySourceSheetSha256": "0229b1a29a07f80b41b74fa953ad7a3786f134bd49c47792cb47fd18c0559cff",
+      "replayKey": "bef2305cab6c1f339e19f283bcd91cfb0802f557e44768c279bc38a43d96fc1e"
+    },
+    {
+      "batchId": "signature-mythic-offhand-shield-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "차원 방패 이지스"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "1e7d667755c35e89c7a076e82f6e6940a45159517077306df4067008c3f5d87b",
+          "name": "차원 방패 이지스",
+          "runtimePath": "/assets/equipment-exact/signature-shield-aegis-dimension.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-offhand-shield-01-item.png",
+      "itemSourceSheetSha256": "758208c65bb091c09b9486a9f05bcb4c9a452cfce16807076698f9be7904dda0",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "138989237edabd2615b16455baa71dae26a3685c7c13f2479ffdd0698f3ebc8a",
+          "name": "차원 방패 이지스",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-shield-aegis-dimension.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-offhand-shield-01-overlay.png",
+      "overlaySourceSheetSha256": "e9e8078501538a9241ade2af6931c68934e455608c9e16297725b1802c2a4588",
+      "replayKey": "bf676d52a67e5d650c9b8572330813bfc2ee892800792018f8e3596e67cd1dde"
+    },
+    {
+      "batchId": "signature-mythic-weapon-bow-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "바람의 궁극"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "b40b06e1829191b82e048830eb04148b8aa12fc85850c51eb19aa752a8d5bfac",
+          "name": "바람의 궁극",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-wind-ultimate-bow.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-weapon-bow-01-item.png",
+      "itemSourceSheetSha256": "3a5b301e00fe1992e079dc8b4329a1318f36662125a714a48eb163073461498a",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "5ec6c2b4c2330e0b656e2559137daeedc1e41a77c8e2495e79620e397449d042",
+          "name": "바람의 궁극",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-wind-ultimate-bow.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-weapon-bow-01-overlay.png",
+      "overlaySourceSheetSha256": "f616ef1a109fc04bca85c3a66a54602f220b831d8a971fe4d4bc302442d7c149",
+      "replayKey": "2d73a4a493511c856099cb49baf90b6dd1e1a048130d4eb75cd6299da879c69d"
+    },
+    {
+      "batchId": "signature-mythic-weapon-dagger-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "그림자 절단기",
+        "영혼 절단자"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "2d493fb01d1abbe5df7e1a795b313c8a45e1052b167bcdf71db968b4923c1b23",
+          "name": "그림자 절단기",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-shadow-cutter.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "73aaddd822849a11eafe63845dd77e2b770210e7edf9d78ca1a16d6aa4db9502",
+          "name": "영혼 절단자",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-soul-reaper.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-weapon-dagger-01-item.png",
+      "itemSourceSheetSha256": "626b56c3e9dde95216445ea91e0f6bd9228282cea6b649231b1acf3025777a29",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "9e49591c532a200a1f0612e078802648a4c575c8c0480296e5e18edac5005e8c",
+          "name": "그림자 절단기",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-shadow-cutter.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "bbbfa928b5e769be217f3745305ead46a4ccfb858b8d6e64b0b20ff9dfe6460c",
+          "name": "영혼 절단자",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-soul-reaper.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-weapon-dagger-01-overlay.png",
+      "overlaySourceSheetSha256": "0ba5a8bc22045c686b621cc991bd59776b8af14e5d1997bccbd06d5a67b37e9f",
+      "replayKey": "056cdef2f83839a49a649842b4736f41992f73678f22c394c73ec60647e97f78"
+    },
+    {
+      "batchId": "signature-mythic-weapon-lance-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "마왕의 대낫",
+        "성스러운 창",
+        "차원 마왕의 낫"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "142dfd75e545db164ddd5ec387578af262ffef15e80520566b03150192160540",
+          "name": "마왕의 대낫",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-demon-scythe.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "abb5c42ab48d776d4d8a3df478eebf131ea8ea0635e00969824389fbdf069fb9",
+          "name": "성스러운 창",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-holy-spear.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "fe529d4afe2a2098d2f5f4a1f70e8982317796815f1874e30c7fa9d1c2724b6e",
+          "name": "차원 마왕의 낫",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-dimension-scythe.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-weapon-lance-01-item.png",
+      "itemSourceSheetSha256": "469269d03774eb9b4253ad47b7abb3c796fd822e388f1dd6dabb5595235b0fa0",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "3886ecc34b1f524455fcb2edbcd7efa478136a453c870137465b7bd45d124e0f",
+          "name": "마왕의 대낫",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-demon-scythe.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "45efcdea95b420d135272add8f8719ebc8803dd516ff53c0bcece9db885574b4",
+          "name": "성스러운 창",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-holy-spear.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "ec0f4848ecaa6440eb8850f8b5766cb48a4dfcf16a19291c7d5932c01e25573e",
+          "name": "차원 마왕의 낫",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-dimension-scythe.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-weapon-lance-01-overlay.png",
+      "overlaySourceSheetSha256": "7a2dad71439e4c990fb74e85299600e6f456574fb018af91d37eaca619e3b4c8",
+      "replayKey": "138f5caf16bfdec3d9676403bb842f0794ebfd69ec9f4929372dc46c251d45b1"
+    },
+    {
+      "batchId": "signature-mythic-weapon-staff-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "세계수의 지팡이",
+        "신전 도시의 지팡이",
+        "천벌의 지팡이"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "640b618d75837dee05b91c892ed64f4cac8d6b6a3073cae79729b5c444bfd58b",
+          "name": "세계수의 지팡이",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-worldtree-staff.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "d4e90020d70f0d2dd94ee96cea2c1191e397342e36b9a86b4520eb3a89504311",
+          "name": "신전 도시의 지팡이",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-temple-city-staff.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "a54263201bfacb57946082f821db616b2affb1d4724f57c25cf996f316b178f8",
+          "name": "천벌의 지팡이",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-divine-wrath-staff.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-weapon-staff-01-item.png",
+      "itemSourceSheetSha256": "474523941c277cf096bf2c038e086f29775eb7f0926111be76525ede43273327",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "98f5ae9d6799de90c75a179b4ec1a34396821c1345e7b9a2515dc1440ef853ff",
+          "name": "세계수의 지팡이",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-worldtree-staff.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "21386fa89cb8c10a8c74088697d121b3e2ba529216ecc6bda1249dc4f1d0f6a1",
+          "name": "신전 도시의 지팡이",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-temple-city-staff.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "d8eabb005da76e98d78e1f00ac23250a4d8fa2809f6330910a024699f7f0d4c8",
+          "name": "천벌의 지팡이",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-divine-wrath-staff.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-weapon-staff-01-overlay.png",
+      "overlaySourceSheetSha256": "ca1d90ab34d4718b81a57716bbbe2e70110d10242ebfef1ce5f7eeea52023900",
+      "replayKey": "93eabe6163d9ff2f6df959018799eca1f565ce05f3fe41379776cfab6ad78b27"
+    },
+    {
+      "batchId": "signature-mythic-weapon-sword-01",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "대지의 심판",
+        "라그나로크",
+        "빙결의 왕관검",
+        "성검 에테르니아",
+        "세계수의 검",
+        "에테르 거인의 대검"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "c721c88c45fd864a398bb975d7b82097438d469ed2dbfc67988297bf6bf4d9ea",
+          "name": "대지의 심판",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-earth-verdict.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "3efc33c62a99839611e6420c0325ada0c382345165c8fb034824201e7d9c1edc",
+          "name": "라그나로크",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-ragnarok.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "6bd0fea1bf86b964b11d5be656907fabb7f5931440062d3e9c6b29e6fa122b73",
+          "name": "빙결의 왕관검",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-frost-crown-sword.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "bda55ffbad64c11e9c15eec8610ae2f77d79b9dc84c5e9ba26617e4f21149e78",
+          "name": "성검 에테르니아",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-ethernia.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "20886319ab2c1886638defdab71841ed2c792935ff5f42b016787d0807a26d2c",
+          "name": "세계수의 검",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-worldtree-sword.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "f21883f6c4cb39f20528790920ae6601cba0cad089c6cfc4e679dc4456646d86",
+          "name": "에테르 거인의 대검",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-ether-giant-greatsword.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-weapon-sword-01-item.png",
+      "itemSourceSheetSha256": "84d7f87f6aef49699138ac33f08f822c675da9a196a4454c8de5822540c94103",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "4a6665f3e02c764aea8bbed70477205cfc06f08b221f1b5729a59ba105936bd7",
+          "name": "대지의 심판",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-earth-verdict.png"
+        },
+        {
+          "cell": "top-center",
+          "exportSha256": "3758d504cb17a1b4316e0c0395fcb7ab49068d609b18ec94c69bd76b51d18e32",
+          "name": "라그나로크",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-ragnarok.png"
+        },
+        {
+          "cell": "top-right",
+          "exportSha256": "0652338d7b08841a6d763cb1ca5d444199e522d8cfbc5da6ccee2f5d13b53a8e",
+          "name": "빙결의 왕관검",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-frost-crown-sword.png"
+        },
+        {
+          "cell": "bottom-left",
+          "exportSha256": "1798d5aa47e9f4096bf5e8f2bcf00e66b62134c547c21dbe8ed8298a4b53a012",
+          "name": "성검 에테르니아",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-ethernia.png"
+        },
+        {
+          "cell": "bottom-center",
+          "exportSha256": "8d592bbe0741d8fa384fedcc774658515fd736e0e17fd71af95a216322e775a1",
+          "name": "세계수의 검",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-worldtree-sword.png"
+        },
+        {
+          "cell": "bottom-right",
+          "exportSha256": "3201b8c35e87e05464b55e2db8f9de1d4468f0c8ea7650b8905761b7c4fc63b8",
+          "name": "에테르 거인의 대검",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-ether-giant-greatsword.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-weapon-sword-01-overlay.png",
+      "overlaySourceSheetSha256": "1c4ac02acbf7f05bcb2d52dcc018d9c9da101ad1c959d82543e0fd97ff3d12fd",
+      "replayKey": "b51ce2fe0192060cbd0c9f1dda01104e571183620fa034bd352748496512e767"
+    },
+    {
+      "batchId": "signature-mythic-weapon-sword-02",
+      "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+      "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+      "cohort": "signature-mythic",
+      "identityNames": [
+        "용의 화염"
+      ],
+      "itemExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "c21470f6fd5bd19ff79e105a69e490f40b8df11140bfebea103d766d0d97bea5",
+          "name": "용의 화염",
+          "runtimePath": "/assets/equipment-exact/signature-weapon-dragon-flame.png"
+        }
+      ],
+      "itemSourceSheet": "signature-mythic-weapon-sword-02-item.png",
+      "itemSourceSheetSha256": "576a2c8a8ca4effff6481f3e79b811a3166f853ed3e694409863c39cbf652ebf",
+      "overlayExports": [
+        {
+          "cell": "top-left",
+          "exportSha256": "b939d0afda8f925f03c896afa525f4f128ff98337510e0a21601596ad8a7ca34",
+          "name": "용의 화염",
+          "runtimePath": "/assets/equipment-wearable-exact/signature-weapon-dragon-flame.png"
+        }
+      ],
+      "overlaySourceSheet": "signature-mythic-weapon-sword-02-overlay.png",
+      "overlaySourceSheetSha256": "4a64b6b17747c8bd0dc84cf1a479ffae3943b384442df50671a34c74c4ad9303",
+      "replayKey": "fe7e59ace9448be50cb796b39734177aed44a6d7ee9130cb89b4dfffffa1fa4c"
+    }
+  ],
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "cohort": "signature-mythic",
+  "generationReview": {
+    "accepted": [
+      {
+        "batchId": "signature-mythic-armor-cloak-01",
+        "rawImage": "exec-733b6ef9-c60f-4bfc-81da-add6ee9e05b0.png",
+        "rawSha256": "36705bb0a82d6640acf5fe78fc67dcbdcf05e429f27c7b979c68f308281de706",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-armor-cloak-01",
+        "rawImage": "exec-b1981c46-c85e-4c47-bf77-97f75ab8efd5.png",
+        "rawSha256": "c28784bff6429123da31c8cc21ac15c65069de6ba4cc64378288eb3907db94b7",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-armor-plate-01",
+        "rawImage": "exec-b8e05234-d217-4667-a835-168d6bc0b587.png",
+        "rawSha256": "e58537705ef7ecee80ae56262e5a786835e502343f87d7bb82c451f6cae26a23",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-armor-plate-01",
+        "rawImage": "exec-14fffe81-8825-4668-acab-f7e862bb85f2.png",
+        "rawSha256": "557cfe1924469bae1f69fb9444ee33a88cdd9d3cd8588e45dbdafd2ba3550058",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-armor-robe-01",
+        "rawImage": "exec-91823470-eb61-4636-b4be-e76dd84f9464.png",
+        "rawSha256": "2d561e82296cbf814b70b4cb1c9a5ec378563d48455cb68a2f1d9b9e195e4ec1",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-armor-robe-01",
+        "rawImage": "exec-e2b4e8b8-64b9-4a45-9daf-2aaf83a760fc.png",
+        "rawSha256": "67004da9ce22827915d91fef7e36654dfc22cddedefe6ec065a7a57198aeccf9",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-weapon-lance-01",
+        "rawImage": "exec-e989c6e1-de49-4ced-8b99-c9733b00949c.png",
+        "rawSha256": "388834b351d1c03071982c6ab93f38cf40e47139e5af271ee720db37a1699a20",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-weapon-lance-01",
+        "rawImage": "exec-8d2cc35e-bf71-4b85-a8c9-9f956da40dff.png",
+        "rawSha256": "cbb636ef58725779d862cd22c87144dc8ccecc132f2e7d5d3a52a0b27fc501ef",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-weapon-staff-01",
+        "rawImage": "exec-9c7d0723-e778-4aa8-b359-94eb24a484ab.png",
+        "rawSha256": "a61aa1bcd18889ad9d3c47868e74ff0371909e34cb26f9e953c6c667a78c4453",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-weapon-staff-01",
+        "rawImage": "exec-80b6d63d-1253-41d4-becd-ef4897cfbc99.png",
+        "rawSha256": "73b4092228b2fe693faf38d92f2b5d5ca3dae8f0acba03055cadf6834b930d5f",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-offhand-book-01",
+        "rawImage": "exec-244d6d36-1579-4d33-a382-4142eadca0f3.png",
+        "rawSha256": "5c86c3e126adb97263154e5f0c9a49d40db4a917171208e98a1a388b1b6de4af",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-offhand-book-01",
+        "rawImage": "exec-108eb76d-6a81-41b0-af66-28fbf7e74a45.png",
+        "rawSha256": "4089df4c59c6dda8206b64a50901f17abff17dd25cde98e90505ad8c9195fa37",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-offhand-shield-01",
+        "rawImage": "exec-eaf93485-ebc7-478e-bcf7-b48215c94637.png",
+        "rawSha256": "163675ba0b3e7c83a6f33c03354e10e26896cd301ce22ab32d6e944056257f49",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-offhand-shield-01",
+        "rawImage": "exec-fa621136-e83a-4b0e-8777-409016703873.png",
+        "rawSha256": "09c16becade00f46bbe6c55bf7ffc8b262cd2899cf73337694922207c48c7462",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-weapon-dagger-01",
+        "rawImage": "exec-dce825fe-aa6c-4dad-82cf-4fdbeda894e5.png",
+        "rawSha256": "c019af4fb5e8910b2d66f8da0e0927f5b59697f850e63a5402408e32643d526f",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-weapon-dagger-01",
+        "rawImage": "exec-55f85208-36ca-4bd0-b386-b4e1af8e4910.png",
+        "rawSha256": "d01d9cd006c7699f8ed3363031e50742a401c4fb8f104f12561a802d5e6ba9d9",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-weapon-bow-01",
+        "rawImage": "exec-83c5131d-7fd0-44bb-affa-554561d67d14.png",
+        "rawSha256": "3f6f691d0ece232c1a815227c58dc9221378812c7e461e85e3ed259b76127deb",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-weapon-bow-01",
+        "rawImage": "exec-494afa6d-cd22-45cf-a194-f051410fde0b.png",
+        "rawSha256": "2a49db6dfb43d6057b4bafed372167c1d96d43c47f9d4f548d72ea3d532e297c",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-weapon-sword-01",
+        "rawImage": "exec-9d5b0c2d-b556-4875-84fb-af63a85d8307.png",
+        "rawSha256": "a4b9906f54a707d3e7b07043c4f434c787f34e635e0fd916049e4ff28c40f660",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-weapon-sword-01",
+        "rawImage": "exec-42ca4855-5685-4c20-8fa1-7ddc832c57c1.png",
+        "rawSha256": "cdb05754e218aefde709f15d617d36cfd598fdc2a898fecb67841cab9833e21a",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-weapon-sword-02",
+        "rawImage": "exec-15916ab0-241a-4e31-9e17-ef9eda256c80.png",
+        "rawSha256": "f1c64cd6650ebbfb8185aeb9095705a139bfa9f1ede7cd2ef3c56bd3bd932a6a",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-weapon-sword-02",
+        "rawImage": "exec-ef52b33d-319c-48c5-a5af-658128f29907.png",
+        "rawSha256": "4d5f6ad0af9836806ea57b1e211b3cf1d3f13d05069244d0f4f6e6179fbdafc0",
+        "surface": "overlay"
+      }
+    ],
+    "rejected": [
+      {
+        "batchId": "signature-mythic-armor-cloak-01",
+        "rawImage": "exec-006592c0-6381-43ae-866b-abc203f0df7b.png",
+        "rawSha256": "ac35a98cd327da2b67ce051863a03be002c700cfd4d94181c2176771734784e9",
+        "reason": "raw candidate is RGB with a baked checkerboard instead of true alpha, so strict source preparation cannot establish transparent cell padding",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-armor-cloak-01",
+        "rawImage": "exec-77d1b15c-76a9-4dc8-9653-df9823a6d587.png",
+        "rawSha256": "3f20b3ed50176743d73de01a8bd38f68c87a9badd80d143b9ffb998dac668b78",
+        "reason": "wearable silhouette crosses the top-left cell boundary, so strict source preparation cannot prove isolated cell padding",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-armor-cloak-01",
+        "rawImage": "exec-6fd67e8e-de6d-44ac-8a59-f594da8c9c42.png",
+        "rawSha256": "635d244ee7415e3f1d5bce5ed6971015f321e4164f5b3587de8958a343182a77",
+        "reason": "candidate draws opaque white grid lines across cell boundaries, so strict preparation cannot establish transparent boundary padding or blank trailing cells",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-armor-plate-01",
+        "rawImage": "prepared-signature-mythic-armor-plate-01-item-preclean.png",
+        "rawSha256": "b408340d59b9adb55506eb621dbc4f41c09a20650abf4bad9ff30c0e15b68cd9",
+        "reason": "default preparation left 324, 269, 240, and 235 strong chroma-green pixels in closed armor gaps; explicit reviewed enclosed-green cleanup was required",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-armor-plate-01",
+        "rawImage": "prepared-signature-mythic-armor-plate-01-overlay-preclean.png",
+        "rawSha256": "fb8892b18550328c0d189178a9094569527eeedb5a1e325dafc3fd98fab48ffe",
+        "reason": "default preparation left strong chroma-green pixels in three closed wearable gaps; explicit reviewed enclosed-green cleanup was required",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-armor-robe-01",
+        "rawImage": "exec-01da8541-eba7-47fb-b225-1c877e3b73d9.png",
+        "rawSha256": "28346c54b228064ecf6469d86f9abb05217628ae7345355aefc64fb019da325a",
+        "reason": "the right leaf sleeve crosses the top-left cell boundary, so strict preparation cannot establish isolated cell padding",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-armor-robe-01",
+        "rawImage": "exec-b12fa078-36af-46d6-9075-21429e81d596.png",
+        "rawSha256": "0112c1173f338b2ca73c77a3f25750636434e5d87aa2474840192d392453680f",
+        "reason": "the wearable leaf sleeves extend across the top-left cell boundary, so strict preparation cannot prove an isolated overlay layer",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-armor-robe-01",
+        "rawImage": "exec-2a0bc175-0b17-43ce-b886-76437bd0f5a1.png",
+        "rawSha256": "48ec1487895b47e87141f590aea32cc9790eb6c202b2ff0bc0209042386ee4b1",
+        "reason": "the edited wearable still crosses the top-left right boundary, so strict preparation continues to reject the candidate",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-armor-robe-01",
+        "rawImage": "prepared-signature-mythic-armor-robe-01-item-preclean.png",
+        "rawSha256": "327bf320b2268393dc8b63b12eed3d84ce5e27c008799e65fc0d5e3bff1e7394",
+        "reason": "geometry-valid preparation retained a continuous exterior magenta fringe; explicit reviewed exterior-magenta cleanup was required",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-armor-robe-01",
+        "rawImage": "prepared-signature-mythic-armor-robe-01-overlay-preclean.png",
+        "rawSha256": "faeb898f274f06806c2cf0eb0b02cec26883920700b5fd60920a72b5d8aec856",
+        "reason": "geometry-valid preparation retained an exterior magenta halo and one large trapped torso background component; explicit reviewed cleanup was required",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-weapon-dagger-01",
+        "rawImage": "prepared-signature-mythic-weapon-dagger-01-item-split.png",
+        "rawSha256": "82582a1349b2e6b4f0c219a4575d0eeebe279e5c49ef6eba2d68c95a5a406eb4",
+        "reason": "column-crop preparation split the first dagger hilt into the second cell; the candidate was rejected until the complete connected silhouettes were normalized independently",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-weapon-sword-01",
+        "rawImage": "prepared-signature-mythic-weapon-sword-01-item-preclean.png",
+        "rawSha256": "a6bcdab6e5583994a26cb6f119a768c14bd380c2a73a0de3ad8f3bfd5e36a6b0",
+        "reason": "strict preparation retained a detached white sparkle in the frost-crown cell; explicit reviewed tiny-island cleanup was required",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-armor-cloak-01",
+        "rawImage": "prepared-signature-mythic-armor-cloak-01-item-preclean.png",
+        "rawSha256": "c2a19692dea2f185061a6669512c4f6309ba6a6e0df3e46ab7e4309d8fcc93f0",
+        "reason": "canonical combined dry-run found 18 fully opaque non-semantic chroma-green pixels at the lower-right hem; explicit reviewed cleanup was required",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-armor-cloak-01",
+        "rawImage": "prepared-signature-mythic-armor-cloak-01-overlay-preclean.png",
+        "rawSha256": "e383851c1f628ce22571d9a404f29180909b97b606749b57d9444f346bfdb043",
+        "reason": "canonical combined dry-run found 52 non-semantic chroma-green pixels along the lower wearable hem; explicit reviewed cleanup was required",
+        "surface": "overlay"
+      },
+      {
+        "batchId": "signature-mythic-weapon-staff-01",
+        "rawImage": "exec-645ad069-11f3-49ee-afd4-b544236782cd.png",
+        "rawSha256": "83dd3c00ce2daf111f868476e538cb179eb1afff48bb43265961ffdfd3bcee80",
+        "reason": "blind identity review swapped 신전 도시의 지팡이 and 천벌의 지팡이; approved source 95d0ee45eb86bba9112b5603a69209b350b630616280fb8d635fbdf99d803548 was superseded by a silhouette-specific revision",
+        "surface": "item"
+      },
+      {
+        "batchId": "signature-mythic-weapon-staff-01",
+        "rawImage": "exec-989cd985-5799-4c10-84ca-a5d8d0dc5bf7.png",
+        "rawSha256": "361c7b184e062ca19eb37fe828247811dfd0908c7f650ed0affe92c23ede21b3",
+        "reason": "blind identity review swapped 신전 도시의 지팡이 and 천벌의 지팡이; approved source 43e446848e24d79acf366ee2f6b27336c7b69430d918dd1cb2d44dff7071ae48 was superseded by a silhouette-specific revision",
+        "surface": "overlay"
+      }
+    ],
+    "tool": "OpenAI built-in image_gen imagegen with paired strict source preparation and original-size 160px/72px visual review"
+  },
+  "registrySha256": "779f6e4df4b606c7ca7ec3041fd111d2ee861cb1530fce2fcd74a56da435e667",
+  "version": 1
+}

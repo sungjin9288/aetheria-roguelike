@@ -32,7 +32,9 @@ test('first-play surfaces use player-facing Korean labels', async () => {
     assert.match(controlPanel, /testId: 'control-class'[^]*label: '전직'/);
     assert.match(controlPanel, /testId: 'control-quests'[^]*label: '임무'/);
     assert.match(controlPanel, /testId: 'control-craft'[^]*label: '제작'/);
-    assert.match(dashboard, /<span>초기화<\/span>/);
+    assert.match(dashboard, /<span>다시 시작<\/span>/);
+    assert.match(dashboard, /<span>현재 여정 다시 시작<\/span>/);
+    assert.match(dashboard, /그대로 보존: 영구 성장 · 직업 여정 · 설정 · 도감과 누적 기록/);
     assert.match(dashboard, /<span>취소<\/span>/);
 
     assert.match(mapNavigator, /세계 지도/);

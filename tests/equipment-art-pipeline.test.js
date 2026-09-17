@@ -12,11 +12,6 @@ import { getItemIconAssetSrc } from '../src/utils/itemVisuals.js';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 
-// Wave 3 Track K1: byte-exact art reproducibility is bound to the original generation
-// platform (Pillow build/OS) which is unrecorded — see docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md §7.
-// Opt in locally on that platform with AETHERIA_ART_REPRO=1; every other art test still runs unconditionally.
-const ART_REPRO_SKIP = process.env.AETHERIA_ART_REPRO !== '1'
-    && 'byte-exact reproducibility requires the original generation platform; set AETHERIA_ART_REPRO=1';
 const DUMP_SCRIPT = resolve(REPO_ROOT, 'scripts/dump-equipment-catalog.mjs');
 const PROMPT_SCRIPT = resolve(REPO_ROOT, 'scripts/generate_equipment_art_prompts.mjs');
 const SOURCE_PREPARER_SCRIPT = resolve(REPO_ROOT, 'scripts/prepare_equipment_source_sheet.py');
@@ -205,7 +200,7 @@ test('equipment manifest sync preserves canonical generation review pins for act
     ];
 
     for (const [cohort, provenancePath, sourceDir] of cohorts) {
-        await context.test(cohort, { skip: ART_REPRO_SKIP }, async () => {
+        await context.test(cohort, async () => {
             const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-generation-review-sync-'));
             const catalogPath = join(directory, 'catalog.json');
             const outputPath = join(directory, 'synced-manifest.json');
@@ -1600,7 +1595,7 @@ test('armor processor rejects visible chroma-green residual before writes', asyn
     }
 });
 
-test('armor processor preserves reviewed nature accents but rejects a large chroma-key region without writes', { skip: ART_REPRO_SKIP }, async () => {
+test('armor processor preserves reviewed nature accents but rejects a large chroma-key region without writes', async () => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-armor-nature-chroma-'));
     const catalogPath = join(directory, 'catalog.json');
     const sourcePath = join(directory, 'armor-cloak-01.png');
@@ -1691,7 +1686,115 @@ test('equipment batch processor treats an exact batch replay as a no-op without 
     }
 });
 
-test('equipment batch processor validates finalized generation review before an exact armor replay', { skip: ART_REPRO_SKIP }, async (context) => {
+test('equipment batch replacement is explicit, dry-run safe and replayable', async () => {
+    const fixture = await createProcessorFixture();
+    try {
+        assert.equal(runBatchProcessor(processorArgs(fixture)).status, 0);
+        const paths = [...runtimeOutputPaths(fixture), fixture.provenancePath];
+        const before = await readByteSnapshot(paths);
+        createSourceSheet(fixture.sourceSheetPath, { colorOffset: 1 });
+        assert.notEqual(runBatchProcessor(processorArgs(fixture)).status, 0);
+        assert.deepEqual(await readByteSnapshot(paths), before);
+        const dry = runBatchProcessor(processorArgs(fixture, ['--replace-existing', '--dry-run']));
+        assert.equal(dry.status, 0, dry.stderr);
+        assert.deepEqual(await readByteSnapshot(paths), before);
+        const replaced = runBatchProcessor(processorArgs(fixture, ['--replace-existing']));
+        assert.equal(replaced.status, 0, replaced.stderr);
+        const after = await readByteSnapshot(paths);
+        assert.notDeepEqual(after, before);
+        assert.equal(JSON.parse(after.at(-1)).batches.length, 1);
+        const replay = runBatchProcessor(processorArgs(fixture, ['--replace-existing']));
+        assert.equal(replay.status, 0, replay.stderr);
+        assert.deepEqual(await readByteSnapshot(paths), after);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('equipment batch replacement refuses missing batches and drifted existing output', async () => {
+    const fixture = await createProcessorFixture();
+    try {
+        const missing = runBatchProcessor(processorArgs(fixture, ['--replace-existing']));
+        assert.notEqual(missing.status, 0);
+        assert.match(missing.stderr, /Replacement batch does not exist/);
+        assert.equal(runBatchProcessor(processorArgs(fixture)).status, 0);
+        createSourceSheet(fixture.sourceSheetPath, { colorOffset: 1 });
+        const paths = [...runtimeOutputPaths(fixture), fixture.provenancePath];
+        await writeFile(paths[0], 'unexpected output drift');
+        const before = await readByteSnapshot(paths);
+        const drift = runBatchProcessor(processorArgs(fixture, ['--replace-existing']));
+        assert.notEqual(drift.status, 0);
+        assert.match(drift.stderr, /output does not match provenance/);
+        assert.deepEqual(await readByteSnapshot(paths), before);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('equipment batch replacement preserves historical review and rejects identity or source collisions', async () => {
+    const fixture = await createProcessorFixture();
+    try {
+        assert.equal(runBatchProcessor(processorArgs(fixture)).status, 0);
+        const paths = [...runtimeOutputPaths(fixture), fixture.provenancePath];
+        const before = await readByteSnapshot(paths);
+        const script = `
+import copy, importlib.util, json
+from pathlib import Path
+spec = importlib.util.spec_from_file_location("processor", ${JSON.stringify(BATCH_PROCESSOR_SCRIPT)})
+module = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(module)
+provenance = json.loads(Path(${JSON.stringify(fixture.provenancePath)}).read_bytes())
+original = provenance["batches"][0]
+record = copy.deepcopy(original)
+record["sourceSheetSha256"] = "a" * 64
+record["replayKey"] = "b" * 64
+outputs = [(None, Path(path), b"replacement", "c" * 64) for path in ${JSON.stringify(runtimeOutputPaths(fixture))}]
+provenance["generationReview"] = {"historical": ["keep original pin"]}
+unchanged = copy.deepcopy(provenance)
+replay, payload = module.prepare_next_provenance(provenance, record, outputs, True)
+assert not replay
+assert json.loads(payload)["generationReview"] == unchanged["generationReview"]
+assert provenance == unchanged
+for field in ("batchId", "cohort", "catalogSha256", "catalogRowsSha256", "sourceSheet", "identityNames"):
+    altered = copy.deepcopy(record)
+    altered[field] = ["different identity"] if field == "identityNames" else "different"
+    try:
+        module.prepare_next_provenance(provenance, altered, outputs, True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("allowed identity drift: " + field)
+for field in ("cell", "name", "runtimePath"):
+    altered = copy.deepcopy(record)
+    altered["exports"][0][field] = "different"
+    try:
+        module.prepare_next_provenance(provenance, altered, outputs, True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("allowed export drift: " + field)
+for field in ("sourceSheet", "sourceSheetSha256"):
+    prior = copy.deepcopy(original)
+    prior["batchId"] = "other-batch"
+    prior[field] = record[field]
+    collision = {**provenance, "batches": [original, prior]}
+    try:
+        module.prepare_next_provenance(collision, record, outputs, True)
+    except ValueError:
+        pass
+    else:
+        raise AssertionError("allowed source collision: " + field)
+assert provenance == unchanged
+`;
+        const result = spawnSync('python3', ['-c', script], { encoding: 'utf8' });
+        assert.equal(result.status, 0, result.stderr);
+        assert.deepEqual(await readByteSnapshot(paths), before);
+    } finally {
+        await fixture.dispose();
+    }
+});
+
+test('equipment batch processor validates finalized generation review before an exact armor replay', async (context) => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-finalized-replay-'));
     const catalogPath = join(directory, 'catalog.json');
     const declarationPath = join(directory, 'source-declaration.json');

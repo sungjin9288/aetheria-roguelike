@@ -1,5 +1,11 @@
-import { setDoc, doc } from 'firebase/firestore';
+import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import { BALANCE } from '../data/constants';
+
+type FirestoreOperations = {
+    doc?: (db: any, ...pathSegments: string[]) => any;
+    setDoc?: (reference: any, data: Record<string, any>, options: { merge: true }) => Promise<unknown> | unknown;
+    serverTimestamp?: () => any;
+};
 
 // --- TOKEN QUOTA MANAGER (v3.6) ---
 // Limits AI calls per user per day to control costs
@@ -39,15 +45,18 @@ export const TokenQuotaManager = {
     },
 
     // Sync quota to Firestore for cross-device tracking
-    async syncToFirestore(uid: any, db: any) {
+    async syncToFirestore(uid: any, db: any, firestoreOperations: FirestoreOperations = {}) {
         if (!uid || !db) return;
         try {
             const quota = this.getQuotaData();
-            await setDoc(doc(db, 'user_quotas', uid), {
+            const makeDoc = firestoreOperations.doc || doc;
+            const writeDoc = firestoreOperations.setDoc || setDoc;
+            const makeServerTimestamp = firestoreOperations.serverTimestamp || serverTimestamp;
+            await writeDoc(makeDoc(db, 'artifacts', 'aetheria-rpg', 'users', uid, 'quota', 'daily-ai'), {
                 date: quota.date,
                 used: quota.used,
                 limit: this.DAILY_LIMIT,
-                updatedAt: new Date()
+                updatedAt: makeServerTimestamp(),
             }, { merge: true });
         } catch (e: any) {
             console.warn('Quota sync failed:', e.message);

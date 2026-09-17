@@ -8,6 +8,7 @@ import { getDailyDeals, getShopMaxTier, getWeeklySpecial } from '../utils/shopRo
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
+import { getConsumableDescription } from '../utils/consumablePresentation';
 import type { FullStats, Player } from '../types/index.js';
 
 // cycle 488: 모바일 포커스 prop 인터페이스 제거 — cycle 486 paired completion
@@ -79,6 +80,7 @@ const getCompactComparisonText = (comparison: any) => (
 );
 
 const getCompactItemSummary = (item: any) => {
+    if (['hp', 'mp', 'cure', 'buff'].includes(item?.type)) return getConsumableDescription(item);
     const summary = getCompactText(getItemStatText(item) || item.desc || '');
     if (!isWeapon(item)) return summary;
     return summary.replace(/^(한손|양손) 무기\s·\s/, '');
@@ -99,7 +101,7 @@ const ShopEquipmentDecisionStrip = ({ player, item, scope }: any) => {
                 {decision.recommendation}
             </span>
             <span className={`font-bold ${decision.primaryDelta.value > 0 ? 'text-emerald-200' : decision.primaryDelta.value < 0 ? 'text-rose-200' : 'text-slate-300/78'}`}>
-                {decision.primaryDelta.text}
+                {!decision.equipable && '가정 비교 · '}{decision.primaryDelta.text}
             </span>
             <span
                 data-testid={`shop-set-contribution-${scope}-${item.id || item.name}`}

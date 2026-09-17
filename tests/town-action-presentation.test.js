@@ -2,6 +2,28 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { getTownActionPresentation } from '../src/utils/townActionPresentation.js';
+import { DB } from '../src/data/db.ts';
+
+test('왕국 도시는 회복 안내 중에도 선택형 조사를 노출하고 시설을 보존한다', () => {
+    const result = getTownActionPresentation(baseContext({
+        player: basePlayer({ loc: '황금 왕국', level: 58, hp: 30 }),
+        mapData: DB.MAPS['황금 왕국'],
+        guidance: { primaryAction: { kind: 'rest' } },
+    }));
+    assert.equal(result.primary.kind, 'rest');
+    assert.ok(result.quickKeys.includes('explore'));
+    assert.ok(result.quickKeys.includes('move'));
+    assert.ok(result.facilityKeys.includes('market'));
+});
+
+test('조우 없는 안전 지역에는 도시 조사를 노출하지 않는다', () => {
+    for (const [loc, mapData] of Object.entries(DB.MAPS).filter(([, map]) => map.type === 'safe')) {
+        const result = getTownActionPresentation(baseContext({
+            player: basePlayer({ loc }), mapData: { ...mapData, monsters: [] },
+        }));
+        assert.ok(!result.quickKeys.includes('explore'), loc);
+    }
+});
 
 const basePlayer = (overrides = {}) => ({
     job: '모험가',

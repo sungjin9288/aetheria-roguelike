@@ -1,0 +1,33 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "abyss-guardian": "4af7fad8c1875f363615cf2fee4e44e611a18f223b8706359602248f646489bc",
+    "arcane-watcher": "9d41e67858b242bf5b8bb28f08cd40cc3272edd60b8334ca245a374947e145ef",
+    "crystal-keeper": "4be62e638c3dac9dc88e626f5f9f4522b1508ec1e1c6ed5d2d80fb577a3b69c6",
+    "darkness-guardian": "dcb8de3797f3bf611f0e676ab0f0dec6a95f3a20d5cb3243032d19f27560fe34",
+    "laboratory-guardian": "3041c2d718c7b37a4fba9defc1d56b97432666d616137ec5de4b6ac54d89cdee",
+    "last-guardian": "e451e182b2c7bec65ebf41ed973d6895e85ea6ef884396bbad3743d30d6ddd54",
+    "outpost-watchman": "4560cd7bc7ea059395accaeff071db78e0fa110019080c5c397d1b2cfbb0f446",
+    "rift-sentinel": "fa78c283a8c5d1bf22d55e1507fb368766f9b52cdf5ec46cd2365b29fe768c61",
+    "storm-guardian": "9752bf958f6206bca03301acdd7cb40349574b73527c1b8c1b259ba3ad986ca8",
+    "temple-guard": "4586fec7b343d1000adb24f544ebbc6729bcbf1090cd1f9bf5b09671da1232ef",
+    "tower-guardian": "4f3a7d86a55ffab79392c0c5cdf62e331783c8c00320224f485bb5d7fcc0dc21",
+    "trap-guardian": "67b5f277a8fda175f64442fc59ab5628985fd8b4840f98b128804d4c077fda62"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "abyss-guardian": "d095a0a4d6b7a6226c8ebe9e2d8ff2e739a8a2c425a9bf7aa944706b6d840b66",
+    "arcane-watcher": "9d86ec93b76cebf214231c82277a5f3369b1b087484c97203f4225c360757b2a",
+    "crystal-keeper": "7a65096ef6692f3d5c4f01e4ce8c333d7c5b1de207ed99dfefec12984b880458",
+    "darkness-guardian": "78b97039e5c9677754b15e49a4d80eccc7fc23c123067baaa438cc66e39f748b",
+    "laboratory-guardian": "cc1ec6143dc8fada44a5ca5aa5e8fe76073a8bdad2052e550d17b9e7f514518d",
+    "last-guardian": "8a4a0b9e903c136a4616881dc456d0078423a33a479ced6ce9f38ef654c496f6",
+    "outpost-watchman": "8deeac56eb928f1e8492afbe19a0ea87be0aaa8329e5d660e07af5552a97761d",
+    "rift-sentinel": "68cd3fb3282869b5970032d9388f362c3dff67da8979140a18cd91b518740825",
+    "storm-guardian": "16a8284a41ed452e4cb26b142f274775ad4abfd68629ab1eba619757fb28a5e8",
+    "temple-guard": "ff50be378f595cb68e03c25ce82659c4c015cbac1daf2bbaef28a2c30aa9a1e5",
+    "tower-guardian": "b0a800a30a74f8564a4373d6d699a75ddce1fbc9c600e2fde9b14e29f79e2c36",
+    "trap-guardian": "3c5c6049e819967e1313629239c98bd7c20417cc2f1f2bd95daa647366094aba"
+  }
+}

@@ -1,6 +1,7 @@
 import { motion as Motion } from 'framer-motion';
 import { Zap, X } from 'lucide-react';
 import { GS } from '../reducers/gameStates';
+import { getConsumableCompactLabel, getConsumableDescription } from '../utils/consumablePresentation';
 
 /**
  * QuickSlot — 빠른 소모품 슬롯 (Feature #8)
@@ -38,8 +39,9 @@ const QuickSlot = ({ slots, onUse, gameState }: QuickSlotProps) => {
                         data-testid={`quick-slot-${i}`}
                         whileTap={item && canUse ? { scale: 0.9 } : {}}
                         onClick={() => item && canUse && onUse?.(item, i)}
-                        title={item ? `${item.name} — 빠른 사용 (슬롯 ${i + 1})` : `퀵슬롯 ${i + 1} (인벤에서 할당)`}
-                        className={`relative flex items-center justify-center rounded-[0.95rem] border text-center text-xs font-fira transition-all backdrop-blur-md h-10 w-10
+                        title={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 빠른 사용 (슬롯 ${i + 1})` : `퀵슬롯 ${i + 1} (인벤에서 할당)`}
+                        aria-label={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 슬롯 ${i + 1}` : `퀵슬롯 ${i + 1} (인벤에서 할당)`}
+                        className={`relative flex min-h-[40px] min-w-[40px] items-center justify-center rounded-[0.95rem] border text-center text-xs font-fira transition-all backdrop-blur-md h-10 w-10
                             ${item
                                 ? canUse
                                     ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10 text-[#dff7f5] shadow-[0_12px_22px_rgba(125,212,216,0.1)] cursor-pointer hover:border-[#d5b180]/22 hover:bg-[#d5b180]/10'
@@ -49,8 +51,8 @@ const QuickSlot = ({ slots, onUse, gameState }: QuickSlotProps) => {
                     >
                         {item ? (
                             <>
-                                <span className="text-[10px] leading-tight text-center break-all">
-                                    {item.name.slice(0, 3)}
+                                <span className="text-[10px] leading-tight text-center">
+                                    {getConsumableCompactLabel(item)}
                                 </span>
                                 {/* Slot number badge */}
                                 <span className="absolute rounded-full border border-white/10 bg-[rgba(9,12,18,0.95)] text-slate-400 -left-1 -top-1 px-1 py-0 text-[8px]">

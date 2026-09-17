@@ -1,0 +1,29 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "aether-absorber": "784d8b369e934d1f19c921776268751c2f71fce0cb5c7b3e360d07178e9c89f0",
+    "aether-residue": "3cfd5bae3bf15c0462f9ed3e51ea0af141e3772a88f75211bdba609510171c43",
+    "current-tracker": "e4292e5ac50443056c272a885ff5bd91d6ac77b64a8e8596bef09dd50e5b39fc",
+    "dark-priest": "0c9e4b66cb7509ed1f7224e37ade42a9ce129cc9d41c1bf278a7bdaa4cd4b7ba",
+    "dead-priest": "b52a86e4a9bba8f0fa82e7d4904efc9f5a9e0d3ad697d740bf6c488fadec135c",
+    "fire-lizard": "a15525d3680135d1537bd9017c2bc4b8c91c09924cfa10fc421fd8d58ed503ee",
+    "flame-lizard": "824664050ffccb4088600e31ec7c07c9668b6ac5c8746852a4a6a9b4dace8e2a",
+    "mutant-specimen": "e6477ef44d982954e8bf86877dd671c32a242a4ad08318f0f2e88c02b8664f7c",
+    "undead-mage": "ef84b206e041a4051b14c73875256b8b67f701f8991a38c9aeb0624319830047",
+    "volcanic-lizard": "23d19083e3ce056003488b5697c4ea6b891a348f391ab57382a7bb065d2ae811"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "aether-absorber": "e95b5885e41f65e5e6b9de6485b7188cbb041dde16e27fb517bb966a38327c9b",
+    "aether-residue": "041b145fb928f71f501a221f2875074691687196f892f69dda89aca14cd72f71",
+    "current-tracker": "0b804aca4fd08b20bb019ea6b304e99b5ee88ffb8bb6e926acd888e48adba332",
+    "dark-priest": "253a5bf32786fecf4f0c4f7b6412e63bbbdb8e97fa4132fe8c72a7485a07381d",
+    "dead-priest": "d15b243fda0aa09e674431ef78c7999a8ee398de140c66216fe38df51544169b",
+    "fire-lizard": "8d571d1e08ed5754679f7daa423e831b0fb641e5ebbab0c50753e3fee4bd2664",
+    "flame-lizard": "861a1b2696f47817820165332ab196e5d5f6ba0a03b875d21b7d22e817e4f2f2",
+    "mutant-specimen": "830112072e131f9ef96d6c4c7dde72487186246b735ec2ef1b187bfe1b1efdd1",
+    "undead-mage": "47ba74a1fd55f8c03769f5afc4994c0edc446ec947d93a3e66ec9a2918686f27",
+    "volcanic-lizard": "7094ec1860420253003f698438a1475cc316248b2813f1d563777e41615b6c3c"
+  }
+}

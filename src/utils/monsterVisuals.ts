@@ -1,4 +1,6 @@
-export type RegionVisualKey = 'forest' | 'plains' | 'ruins' | 'fire';
+import monsterArtManifest from '../data/monsterArtManifest.json' with { type: 'json' };
+
+export type RegionVisualKey = string;
 
 export interface MonsterVisual {
     key: string;
@@ -6,37 +8,20 @@ export interface MonsterVisual {
     src: string;
 }
 
-const monster = (regionKey: RegionVisualKey, key: string): MonsterVisual => ({
-    key,
-    regionKey,
-    src: `/assets/monsters/${regionKey}/${key}.png`,
-});
-
-const MONSTER_VISUALS: Record<string, MonsterVisual> = {
-    슬라임: monster('forest', 'slime'),
-    늑대: monster('forest', 'wolf'),
-    '숲의 정령': monster('forest', 'forest-spirit'),
-    거미떼: monster('forest', 'spider-swarm'),
-    독버섯: monster('forest', 'poison-mushroom'),
-    '거대 사슴벌레': monster('forest', 'stag-beetle'),
-    '숲 요정': monster('forest', 'forest-fairy'),
-    멧돼지: monster('plains', 'boar'),
-    들개: monster('plains', 'wild-dog'),
-    코볼트: monster('plains', 'kobold'),
-    초록슬라임: monster('plains', 'green-slime'),
-    '평원 도적': monster('plains', 'plains-bandit'),
-    '해골 병사': monster('ruins', 'skeleton-soldier'),
-    고블린: monster('ruins', 'goblin'),
-    '석상 가디언': monster('ruins', 'stone-guardian'),
-    '유령 기사': monster('ruins', 'ghost-knight'),
-    '폐허 구울': monster('ruins', 'ruins-ghoul'),
-    '화염 정령': monster('fire', 'fire-spirit'),
-    '용암 골렘': monster('fire', 'lava-golem'),
-    파이어뱃: monster('fire', 'fire-bat'),
-    '화염 도마뱀': monster('fire', 'fire-lizard'),
-    '화염의 군주': monster('fire', 'fire-lord'),
-    '레드 드래곤': monster('fire', 'red-dragon'),
+type MonsterArtEntry = {
+    key: string;
+    runtimePath: string;
+    regionKey: string;
 };
+
+const MONSTER_ART_ENTRIES = monsterArtManifest.entries as Record<string, MonsterArtEntry>;
+const MONSTER_VISUALS: Record<string, MonsterVisual> = Object.fromEntries(
+    Object.entries(MONSTER_ART_ENTRIES).map(([name, entry]) => [name, {
+        key: entry.key,
+        regionKey: entry.regionKey,
+        src: entry.runtimePath,
+    }]),
+);
 
 const MONSTER_ALIASES = Object.keys(MONSTER_VISUALS).sort((left, right) => right.length - left.length);
 

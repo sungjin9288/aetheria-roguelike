@@ -7,6 +7,10 @@ import { shouldTriggerScout, buildScoutEvent } from '../src/utils/scoutEvents.ts
 import { createEventActions } from '../src/hooks/gameActions/eventActions.js';
 import { applyScoutGuaranteedRelic, buildPassiveBonusWithScout } from '../src/hooks/combatActions/_helpers.js';
 import { MAX_RELICS_PER_RUN } from '../src/data/relics.js';
+import { DB } from '../src/data/db.js';
+import { AT } from '../src/reducers/actionTypes.js';
+import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
+import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.js';
 
 /**
  * 탐험 스카우팅 (2026-07 감사 (b)): "정보 없는 단일 버튼 탐험" 갭 대응.
@@ -129,6 +133,121 @@ const makeDeps = (currentEvent, overrides = {}) => {
 
 const findDispatch = (dispatches, type) => [...dispatches].reverse().find((d) => d.type === type);
 
+const getScoutAccountingSnapshot = (player) => ({
+    explores: player.stats.explores,
+    exploresByLocation: player.stats.exploresByLocation,
+    dailyProtocol: player.stats.dailyProtocol,
+    weeklyProtocol: player.weeklyProtocol,
+    seasonPass: player.seasonPass,
+    quests: player.quests,
+    bossGauge: player.stats.bossGauge,
+    exploreState: player.stats.exploreState,
+});
+
+const runReducerScoutChoice = (choiceIndex, rng = () => 0.99, scoutRng = () => 0.99) => {
+    let state = {
+        ...INITIAL_STATE,
+        player: {
+            ...structuredClone(INITIAL_STATE.player),
+            loc: '신성한 호수',
+            quests: [{ id: 80, progress: 0, startExploreCount: 0 }],
+            stats: {
+                ...structuredClone(INITIAL_STATE.player.stats),
+                dailyProtocol: null,
+                explores: 0,
+                exploresByLocation: {},
+                bossGauge: {},
+            },
+        },
+        logs: [],
+        syncStatus: 'synced',
+    };
+    const dispatches = [];
+    const dispatch = (action) => {
+        dispatches.push(action);
+        state = gameReducer(state, action);
+    };
+    const addLog = (type, text) => dispatch({
+        type: AT.ADD_LOG,
+        payload: { type, text, id: `scout-${state.logs.length}` },
+    });
+    const mapData = DB.MAPS[state.player.loc];
+    const scoutEvent = buildScoutEvent(state.player, mapData, scoutRng);
+    const shared = makeSharedHelpers({ player: state.player, dispatch, addLog });
+
+    // This is the real opening-time settlement performed by exploreActions.ts.
+    shared.commitExploreOutcome('narrative_event', null, mapData);
+    const openingPlayer = structuredClone(state.player);
+    const actions = createEventActions({
+        player: state.player,
+        currentEvent: scoutEvent,
+        dispatch,
+        addLog,
+        addStoryLog: () => {},
+        getFullStats: () => ({ maxHp: state.player.maxHp, maxMp: state.player.maxMp }),
+        rng,
+    }, shared);
+
+    actions.handleEventChoice(choiceIndex);
+    return { state, openingPlayer, dispatches };
+};
+
+test('opening settlement is counted once when Scout combat resolves', () => {
+    const { state, openingPlayer } = runReducerScoutChoice(0);
+
+    assert.deepEqual(
+        getScoutAccountingSnapshot(state.player),
+        getScoutAccountingSnapshot(openingPlayer),
+        'Scout choice must not settle exploration accounting a second time',
+    );
+});
+
+test('Scout combat keeps the production battle-start transform and branch state without re-accounting', () => {
+    const { state, openingPlayer } = runReducerScoutChoice(0);
+
+    assert.deepEqual(getScoutAccountingSnapshot(state.player), getScoutAccountingSnapshot(openingPlayer));
+    assert.equal(state.gameState, 'combat');
+    assert.equal(state.enemy?.scoutRewardBonus, BALANCE.SCOUT_COMBAT_REWARD_BONUS);
+});
+
+test('Scout elite keeps the guaranteed relic branch and opening accounting unchanged', () => {
+    const { state, openingPlayer } = runReducerScoutChoice(2, () => 0.99, () => 0);
+
+    assert.deepEqual(getScoutAccountingSnapshot(state.player), getScoutAccountingSnapshot(openingPlayer));
+    assert.equal(state.gameState, 'combat');
+    assert.equal(state.enemy?.isElite, true);
+    assert.equal(state.enemy?.scoutGuaranteedRelic, true);
+});
+
+test('Scout anomaly applies rollExplorationEvent effects without re-accounting', () => {
+    const probe = BALANCE.ANOMALY_BASE_CHANCE * 1.2;
+    const { state, openingPlayer } = runReducerScoutChoice(1, () => probe);
+
+    assert.deepEqual(getScoutAccountingSnapshot(state.player), getScoutAccountingSnapshot(openingPlayer));
+    assert.equal(state.gameState, 'idle');
+    assert.ok(state.player.status.includes('poison'), 'anomaly effect must come from rollExplorationEvent');
+    assert.equal(state.enemy, null);
+});
+
+test('Scout unknown reuses quiet-roll combat with a transform-only adapter', () => {
+    const { state, openingPlayer } = runReducerScoutChoice(2);
+
+    assert.deepEqual(getScoutAccountingSnapshot(state.player), getScoutAccountingSnapshot(openingPlayer));
+    assert.equal(state.gameState, 'combat');
+    assert.ok(state.enemy, 'unknown branch must retain the existing quiet-roll combat result');
+});
+
+test('Invalid and stale Scout choices have no accounting or branch effect', () => {
+    const invalid = runReducerScoutChoice(99);
+    assert.deepEqual(getScoutAccountingSnapshot(invalid.state.player), getScoutAccountingSnapshot(invalid.openingPlayer));
+    assert.equal(invalid.state.enemy, null);
+    assert.equal(invalid.state.pendingRelics, null);
+
+    const stale = makeDeps(null);
+    stale.actions.handleEventChoice(0);
+    assert.equal(stale.dispatches.length, 0);
+});
+
 test('전투의 기척 선택 → 전투 확정 스폰 (SET_ENEMY + GS.COMBAT)', () => {
     const ev = buildScoutEvent({ stats: {} }, { type: 'dungeon' }, () => 0.99);
     const mapData = { type: 'dungeon', level: 1, monsters: ['슬라임'] };
@@ -174,18 +293,21 @@ test('짙은 안개 선택 → 이벤트 상태 해제 (기존 롤로 위임, �
     assert.equal(setEvent.payload, null, '짙은 안개는 이벤트를 닫아 기존 explore 롤로 위임');
 });
 
-test('짙은 안개 선택 → 같은 턴 안에서 기존 롤 파이프가 즉시 재실행되어 결과가 나옴 (quiet 롤 성공 시나리오)', () => {
-    // quiet 롤이 확실히 뜨도록 quietChance가 항상 통과하는 상황을 만들 순 없으므로(내부 Math.random),
-    // 대신 "무언가 dispatch가 일어났다"(전투/유물/quiet 중 하나)를 확인한다 — 빈 방치가 아님을 검증.
+test('짙은 안개의 quiet 결과는 재정산 없이 같은 턴을 idle로 마감한다', () => {
+    let rngCall = 0;
+    const rng = () => (rngCall++ === 0 ? 0 : 0.99);
     const ev = buildScoutEvent({ stats: {} }, { type: 'dungeon' }, () => 0.99);
-    const { actions, dispatches } = makeDeps(ev, { player: { loc: '고요한 숲' } });
+    const { actions, dispatches } = makeDeps(ev, {
+        player: { loc: '고요한 숲' },
+        deps: { rng },
+    });
 
     actions.handleEventChoice(2);
 
-    const meaningfulDispatch = dispatches.some((d) => (
-        d.type === 'SET_ENEMY' || d.type === 'SET_PENDING_RELICS' || d.type === 'COMMIT_EXPLORE_OUTCOME'
-    ));
-    assert.ok(meaningfulDispatch, '짙은 안개는 같은 턴에 quiet/유물/전투 중 하나의 결과를 즉시 만들어야 함');
+    assert.equal(findDispatch(dispatches, 'SET_GAME_STATE')?.payload, 'idle');
+    assert.equal(findDispatch(dispatches, 'SET_ENEMY'), undefined);
+    assert.equal(findDispatch(dispatches, 'SET_PENDING_RELICS'), undefined);
+    assert.equal(findDispatch(dispatches, 'COMMIT_EXPLORE_OUTCOME'), undefined);
 });
 
 test('정예의 흔적 선택 → 정예 확정 스폰 + 유물 보장 플래그', () => {

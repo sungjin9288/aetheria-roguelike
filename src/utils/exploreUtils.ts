@@ -15,6 +15,7 @@ import { GS } from '../reducers/gameStates.js';
 import { MSG } from '../data/messages.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { findItemByName } from './gameUtils.js';
+import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { applyDynamicDifficulty } from '../systems/DifficultyManager';
 import { CombatEngine } from '../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../data/progressionProfiles';
@@ -23,6 +24,8 @@ import { FIRST_VISIT_REWARDS } from '../data/firstVisitRewards.js';
 import { getBossSignatureDrops } from './bossSignatureHint';
 import { getSignaturePityMultiplier } from './signaturePity';
 import { resolveAbyssDailyDive } from './abyssDailyDive';
+import { activateDevourBonus } from './adventureRelicBonuses.js';
+import { calculateFullStats } from './statsCalculator.js';
 import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
 import {
     createDailyProtocol,
@@ -338,15 +341,15 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
 export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog, rng = Math.random }: any) => {
-    const combatStartPlayer = {
-        ...player,
+    const activatedPlayer = activateDevourBonus(player);
+    if (activatedPlayer !== player) fullStats = calculateFullStats(activatedPlayer);
+    const combatStartPlayer: any = {
+        ...activatedPlayer,
         combatFlags: {
             comboCount: 0,
             deathSaveUsed: false,
             voidHeartUsed: Boolean(player.combatFlags?.voidHeartUsed),
             voidHeartArmed: Boolean(player.combatFlags?.voidHeartArmed),
-            // cycle 158: 'kill_stack_atk' (허공의 왕좌) — 전투 내 ATK 누적은 매 전투 시작 시 0으로 리셋.
-            killStackAtkBonus: 0,
             // cycle 158: 'phoenix_revive' (cycle 157) — 부활 1회는 매 전투마다 새로 사용 가능.
             phoenixUsed: false,
             // cycle 159: 'entropy_tick' / 'entropy_brand' — turnCount는 매 전투 시작 시 0으로 리셋.
@@ -598,7 +601,10 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
                     // 만 사용해 확장된 인벤(25칸)에서도 20칸 기준으로 reward skip 가능했음.
                     const invCap = (updated.maxInv as number) || (BALANCE.INV_MAX_SIZE || 20);
                     if (itemData && (updated.inv || []).length < invCap) {
-                        updated.inv = [...(updated.inv || []), { ...itemData, id: `disc_${Date.now()}` }];
+                        updated.inv = [...(updated.inv || []), withCanonicalEquipmentBaseIdentity({
+                            ...itemData,
+                            id: `disc_${Date.now()}`,
+                        })];
                     }
                 }
                 updated.stats = {

@@ -1,11 +1,63 @@
 /**
  * CombatEngine 루팅 로직 유닛 테스트
  *
- * CombatEngine.loot.js는 db.js/loot.js/dropTables.js 의존으로
- * Node.js 직접 임포트 불가. 인라인 미러 패턴으로 핵심 알고리즘 검증.
+ * Bonus tier는 production processLoot로 검증한다.
+ * 아래 일부 오래된 확률/이름 helper 미러는 통합 검증을 대체하지 않는다.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { processLoot } from '../src/systems/CombatEngine.loot.ts';
+import { DROP_TABLES } from '../src/data/dropTables.ts';
+import { LOOT_TABLE } from '../src/data/loot.ts';
+import { MSG } from '../src/data/messages.ts';
+import { getStrongestNumericRelicValue } from '../src/systems/CombatEngine.actions.ts';
+
+function controlledRandom(rolls) {
+    let calls = 0;
+    const random = () => {
+        if (calls >= rolls.length) {
+            throw new Error(`controlled RNG exhausted at call ${calls}`);
+        }
+        const roll = rolls[calls];
+        calls += 1;
+        return roll;
+    };
+    Object.defineProperty(random, 'calls', { get: () => calls });
+    return random;
+}
+
+function withTemporaryTableEntry(table, key, value, run) {
+    const previous = table[key];
+    table[key] = value;
+    try {
+        return run();
+    } finally {
+        if (previous === undefined) delete table[key];
+        else table[key] = previous;
+    }
+}
+
+function assertLootCandidateContract(result) {
+    assert.deepEqual(result.items, result.candidates.map(({ item }) => item));
+    assert.deepEqual(result.logs, result.candidates.flatMap(({ logs }) => logs));
+    assert.equal(result.candidates.length, result.items.length);
+    assert.ok(result.candidates.every(({ item, logs }) => item && Array.isArray(logs)));
+}
+
+function runLootFixtureTwice(enemy, player, rolls, expectedCalls) {
+    const baselineRng = controlledRandom(rolls);
+    const baseline = processLoot(enemy, player, 1, baselineRng, () => 1_700_000_000_000);
+    const replayRng = controlledRandom(rolls);
+    const result = processLoot(enemy, player, 1, replayRng, () => 1_700_000_000_000);
+
+    assert.deepEqual(result, baseline);
+    assert.deepEqual(result.items, baseline.items);
+    assert.deepEqual(result.logs, baseline.logs);
+    assert.equal(baselineRng.calls, expectedCalls);
+    assert.equal(replayRng.calls, baselineRng.calls);
+    assertLootCandidateContract(result);
+    return result;
+}
 
 // ── resolveEnemyBaseName 미러 ───────────────────────────────────────────────
 
@@ -22,17 +74,6 @@ function resolveEnemyBaseName(enemy, lootTable = new Set()) {
     if (lootTable.has(enemy.name)) return enemy.name;
     const parts = String(enemy.name || '').split(' ');
     return parts.length > 1 ? parts.slice(1).join(' ') : (enemy.name || '');
-}
-
-/**
- * 고레벨 몬스터 보너스 장비 드랍 — 레벨 추정 + 티어 결정 로직 미러
- */
-function inferLevelAndBonusTier(enemy) {
-    const inferredLevel = Math.max(1, Math.floor(((enemy.exp || 10) - 10) / 5));
-    if (inferredLevel < 30) return { inferredLevel, bonusTier: null, eligible: false };
-    const bonusTier = inferredLevel >= 50 ? 6 : inferredLevel >= 40 ? 5 : 4;
-    const bonusChance = enemy.isBoss ? 0.25 : 0.06;
-    return { inferredLevel, bonusTier, bonusChance, eligible: true };
 }
 
 // ── resolveEnemyBaseName 테스트 ─────────────────────────────────────────────
@@ -77,60 +118,21 @@ test('resolveEnemyBaseName: baseName이 빈 문자열 → 빈 문자열 반환 (
     assert.equal(resolveEnemyBaseName(enemy), '슬라임');
 });
 
-// ── 고레벨 보너스 드랍 로직 테스트 ──────────────────────────────────────────
-
-test('inferLevelAndBonusTier: exp=10 → inferredLevel=1, 보너스 없음', () => {
-    const result = inferLevelAndBonusTier({ exp: 10 });
-    assert.equal(result.inferredLevel, 1);
-    assert.equal(result.eligible, false);
-});
-
-test('inferLevelAndBonusTier: exp 없음 → fallback 10 → level=1', () => {
-    const result = inferLevelAndBonusTier({});
-    assert.equal(result.inferredLevel, 1);
-    assert.equal(result.eligible, false);
-});
-
-test('inferLevelAndBonusTier: exp=160 → level=30, tier=4', () => {
-    // (160-10)/5 = 30
-    const result = inferLevelAndBonusTier({ exp: 160 });
-    assert.equal(result.inferredLevel, 30);
-    assert.equal(result.bonusTier, 4);
-    assert.equal(result.eligible, true);
-});
-
-test('inferLevelAndBonusTier: exp=210 → level=40, tier=5', () => {
-    // (210-10)/5 = 40
-    const result = inferLevelAndBonusTier({ exp: 210 });
-    assert.equal(result.inferredLevel, 40);
-    assert.equal(result.bonusTier, 5);
-});
-
-test('inferLevelAndBonusTier: exp=260 → level=50, tier=6', () => {
-    // (260-10)/5 = 50
-    const result = inferLevelAndBonusTier({ exp: 260 });
-    assert.equal(result.inferredLevel, 50);
-    assert.equal(result.bonusTier, 6);
-});
-
-test('inferLevelAndBonusTier: 보스 → bonusChance=0.25', () => {
-    const result = inferLevelAndBonusTier({ exp: 200, isBoss: true });
-    assert.equal(result.bonusChance, 0.25);
-});
-
-test('inferLevelAndBonusTier: 일반 → bonusChance=0.06', () => {
-    const result = inferLevelAndBonusTier({ exp: 200, isBoss: false });
-    assert.equal(result.bonusChance, 0.06);
-});
-
-test('inferLevelAndBonusTier: level 29 → 보너스 미해당', () => {
-    // (155-10)/5 = 29
-    const result = inferLevelAndBonusTier({ exp: 155 });
-    assert.equal(result.inferredLevel, 29);
-    assert.equal(result.eligible, false);
-});
-
-// ── 드랍 확률 계산 로직 미러 테스트 ─────────────────────────────────────────
+// Excluded legacy enemies have no trustworthy level/map provenance.
+for (const [exp, tier] of [[undefined,null],[10,null],[155,null],[160,4],[210,5],[260,6]]) {
+    test(`production legacy bonus: exp=${exp}, tier=${tier}`, () => {
+        const result = processLoot({ name: 'legacy bonus fixture', baseName: 'legacy bonus fixture', exp }, null, 1, () => 0, () => 1);
+        assert.equal(result.items.length, tier === null ? 0 : 1);
+        if (tier !== null) assert.equal(result.items[0].tier, tier);
+    });
+}
+for (const [isBoss, chance] of [[false,0.06],[true,0.25]]) {
+    test(`production legacy bonus chance boundary: boss=${isBoss}`, () => {
+        const enemy = { name: 'legacy bonus fixture', baseName: 'legacy bonus fixture', exp: 200, isBoss };
+        assert.equal(processLoot(enemy, null, 1, () => chance, () => 1).items.length, 0);
+        assert.equal(processLoot(enemy, null, 1, () => chance - 0.000001, () => 1).items.length, 1);
+    });
+}
 
 /**
  * 단일 아이템 드랍 확률 계산 (DROP_TABLES 경로)
@@ -196,27 +198,124 @@ test('calcQty: qty=[2,5] → 2~5 범위', () => {
     assert.ok(results.size >= 3, `다양한 수량이 나와야 합니다 (${results.size}종)`);
 });
 
-// ── 유물 드랍률 배율 계산 테스트 ────────────────────────────────────────────
+// ── per-item loot provenance contract ──────────────────────────────────────
 
-/**
- * 유물 기반 드랍률 배율 계산 미러
- */
-function calcDropRateMult(relics) {
-    return 1 + (relics.find((relic) => relic.effect === 'drop_rate')?.val || 0);
-}
+test('processLoot candidate provenance: enriched drops keep each item\'s logs', () => {
+    const enemy = { name: '__loot_provenance_enriched__', dropMod: 1 };
+    const rolls = [0, 0.25, 0, 0, 0, 0.5, 0.99];
+
+    withTemporaryTableEntry(DROP_TABLES, enemy.name, [
+        { item: '용살자의창', rate: 1 },
+        { item: '대마법사로브', rate: 1 },
+    ], () => {
+        const result = runLootFixtureTwice(enemy, null, rolls, 7);
+        const [prefixed, plain] = result.candidates;
+
+        assert.equal(prefixed.item.prefixed, true);
+        assert.deepEqual(prefixed.logs, [
+            { type: 'success', text: MSG.LOOT_GET(prefixed.item.name) },
+            { type: 'event', text: MSG.LOOT_PREFIX(prefixed.item.prefixName) },
+        ]);
+        assert.deepEqual(plain.logs, [
+            { type: 'success', text: MSG.LOOT_GET(plain.item.name) },
+        ]);
+    });
+});
+
+test('processLoot candidate provenance: legacy drops keep each item\'s logs', () => {
+    const enemy = { name: '__loot_provenance_legacy__', dropMod: 1 };
+    const rolls = [0, 0.25, 0, 0, 0, 0.5, 0.99];
+
+    withTemporaryTableEntry(LOOT_TABLE, enemy.name, [
+        '용살자의창',
+        '대마법사로브',
+    ], () => {
+        const result = runLootFixtureTwice(enemy, null, rolls, 7);
+        const [prefixed, plain] = result.candidates;
+
+        assert.equal(prefixed.item.prefixed, true);
+        assert.deepEqual(prefixed.logs, [
+            { type: 'success', text: MSG.LOOT_GET(prefixed.item.name) },
+            { type: 'event', text: MSG.LOOT_PREFIX(prefixed.item.prefixName) },
+        ]);
+        assert.deepEqual(plain.logs, [
+            { type: 'success', text: MSG.LOOT_GET(plain.item.name) },
+        ]);
+    });
+});
+
+test('processLoot candidate provenance: high-level bonus keeps its item log', () => {
+    const enemy = { name: '__loot_provenance_high_level__', exp: 160, dropMod: 1 };
+    const result = runLootFixtureTwice(enemy, null, [0, 0.25, 0.5, 0.99], 4);
+    const [candidate] = result.candidates;
+
+    assert.deepEqual(candidate.logs, [
+        { type: 'success', text: MSG.LOOT_GET(candidate.item.name) },
+    ]);
+});
+
+test('processLoot candidate provenance: prestige drop keeps rare-drop log separate', () => {
+    const enemy = { name: '__loot_provenance_prestige__', isBoss: true, dropMod: 1 };
+    const player = { meta: { prestigeRank: 3 } };
+    const rolls = [0, 0.25, 0.99, 0, 0.5, 0.99];
+
+    withTemporaryTableEntry(DROP_TABLES, enemy.name, [
+        { item: '슬라임 젤리', rate: 1 },
+    ], () => {
+        const result = runLootFixtureTwice(enemy, player, rolls, 6);
+        const [prestige, normal] = result.candidates;
+
+        assert.deepEqual(prestige.logs, [
+            { type: 'event', text: MSG.PRESTIGE_RARE_DROP(prestige.item.name) },
+        ]);
+        assert.deepEqual(normal.logs, [
+            { type: 'success', text: MSG.LOOT_GET(normal.item.name) },
+        ]);
+    });
+});
+
+// ── 유물 드랍률 배율 계산 테스트 ────────────────────────────────────────────
 
 function calcBossDropMult(relics, isBoss) {
     if (!isBoss) return 1;
     return 1 + (relics.find((relic) => relic.effect === 'boss_hunter')?.val?.drop || 0);
 }
 
-test('calcDropRateMult: 유물 없음 → 1', () => {
-    assert.equal(calcDropRateMult([]), 1);
+const luckyCoin = {
+    id: 'lucky_coin',
+    effect: 'drop_rate',
+    val: 0.5,
+};
+
+const fortuneRelic = {
+    id: 'fortune_relic',
+    effect: 'drop_rate',
+    val: 1.0,
+};
+
+test('production processLoot resolves drop_rate independently of relic inventory order', () => {
+    const enemy = { name: '__drop_rate_controlled_enriched__', dropMod: 1 };
+    DROP_TABLES[enemy.name] = [{ item: '슬라임 젤리', rate: 0.4 }];
+    try {
+        const roll = () => 0.7;
+        const firstWeak = processLoot(enemy, { relics: [luckyCoin, fortuneRelic] }, 1, roll, () => 1);
+        const firstStrong = processLoot(enemy, { relics: [fortuneRelic, luckyCoin] }, 1, roll, () => 1);
+
+        assert.equal(firstStrong.items.length, 1);
+        assert.equal(firstWeak.items.length, firstStrong.items.length);
+        assert.deepEqual(firstWeak, firstStrong);
+    } finally {
+        delete DROP_TABLES[enemy.name];
+    }
 });
 
-test('calcDropRateMult: drop_rate 유물 → 1 + val', () => {
-    const relics = [{ effect: 'drop_rate', val: 0.3 }];
-    assert.ok(Math.abs(calcDropRateMult(relics) - 1.3) < 0.001);
+test('drop_rate: shared strongest selector has no matching relic → 0', () => {
+    assert.equal(getStrongestNumericRelicValue([], 'drop_rate'), 0);
+});
+
+test('drop_rate: shared strongest selector chooses the greater matching value', () => {
+    assert.equal(getStrongestNumericRelicValue([luckyCoin, fortuneRelic], 'drop_rate'), 1);
+    assert.equal(getStrongestNumericRelicValue([fortuneRelic, luckyCoin], 'drop_rate'), 1);
 });
 
 test('calcBossDropMult: 보스 아님 → 1', () => {

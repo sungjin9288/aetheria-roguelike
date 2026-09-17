@@ -1,0 +1,128 @@
+{
+  "status": "visually-reviewed-five-ready-for-runtime-adoption",
+  "promptSha256": "2a76c166cb15970d141374fa609df1e715eaebc880afdf6ab749274d89a91a7b",
+  "preimageManifestSha256": "57ff9aa344d5881ce979689616e4234840c01840bb34ca0a324f8c3cb13ebef0",
+  "entries": [
+    {
+      "name": "공허의 신",
+      "key": "monster-4c0a057e31f9",
+      "masterPath": "scripts/art_sources/monsters/v5/masters/monster-4c0a057e31f9-broad.png",
+      "masterSha256": "2abacc628a5184f856958810b37140fd9e358e45eaa9ac93072d88355f0aa69e",
+      "exportPath": "scripts/art_sources/monsters/v5/exports/monster-4c0a057e31f9-broad.png",
+      "exportSha256": "c8a6f07f4089fec09d3bb04428d1caf028ea0f8c7a33020fbbe3fa67178aa01c",
+      "previousPath": "scripts/art_sources/monsters/v5/previous/monster-4c0a057e31f9.png",
+      "previousSha256": "4ccd555bb46b1c207c81e649d14893e7080bfe6cb9adcc0185fb5bb9371b2201",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 149,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 149,
+          "left": 21,
+          "right": 148,
+          "top": 10
+        }
+      }
+    },
+    {
+      "name": "시간의 파수꾼",
+      "key": "monster-687373df58bf",
+      "masterPath": "scripts/art_sources/monsters/v5/masters/monster-687373df58bf.png",
+      "masterSha256": "5e0d1492a4c0ba1a4624eb63941ff0d6520e66f891f6370f4cfc41e1628d224e",
+      "exportPath": "scripts/art_sources/monsters/v5/exports/monster-687373df58bf.png",
+      "exportSha256": "bd00b7b234544bd9f4aaa6c4056a0d620dc45c2f8ca26523f51fba2fce7f40dc",
+      "previousPath": "scripts/art_sources/monsters/v5/previous/monster-687373df58bf.png",
+      "previousSha256": "33361416482764e8c352ff96d1f015003cb86523a56e1e23e9e18b23f45eb287",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 144,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 144,
+          "left": 41,
+          "right": 143,
+          "top": 14
+        }
+      }
+    },
+    {
+      "name": "영겁의 수문장",
+      "key": "monster-6efd5aa36605",
+      "masterPath": "scripts/art_sources/monsters/v5/masters/monster-6efd5aa36605.png",
+      "masterSha256": "6793f91861982eb8668ae385473bedd6e161e1e5def84ac55e25d13ffefe7fdb",
+      "exportPath": "scripts/art_sources/monsters/v5/exports/monster-6efd5aa36605.png",
+      "exportSha256": "b53a487fddd9b8075360e3f237fdd32708abb0b1def0dd851a5a9a9affc49635",
+      "previousPath": "scripts/art_sources/monsters/v5/previous/monster-6efd5aa36605.png",
+      "previousSha256": "fba53fc50a554224c4ae8485175688688bc177b435d479a71fdf4ae6e403d466",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 149,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 149,
+          "left": 10,
+          "right": 149,
+          "top": 9
+        }
+      }
+    },
+    {
+      "name": "타락한 세계수 영혼",
+      "key": "monster-c6ec225b8f23",
+      "masterPath": "scripts/art_sources/monsters/v5/masters/monster-c6ec225b8f23.png",
+      "masterSha256": "511afa36c402220b793cc4c6658ea55ecbf695a35cd26de18e3c9818641f99cf",
+      "exportPath": "scripts/art_sources/monsters/v5/exports/monster-c6ec225b8f23.png",
+      "exportSha256": "e79805cd38a15bff62788d7c9a1c429e8bf24f4e76db6a9d42f83b4a26d69faf",
+      "previousPath": "scripts/art_sources/monsters/v5/previous/monster-c6ec225b8f23.png",
+      "previousSha256": "c5d3872b170d12b6fd00624c49b43e0f875724164a9f3df1148699a3ebaab4be",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 149,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 149,
+          "left": 25,
+          "right": 133,
+          "top": 9
+        }
+      }
+    },
+    {
+      "name": "고대 호수의 수호신",
+      "key": "monster-7a1b900ab404",
+      "masterPath": "scripts/art_sources/monsters/v5/masters/monster-7a1b900ab404.png",
+      "masterSha256": "6871f62b5aefe7709f32a00be5ca12acffa6717908331c90dcd99f38c85f3e89",
+      "exportPath": "scripts/art_sources/monsters/v5/exports/monster-7a1b900ab404.png",
+      "exportSha256": "5ce2810c727a0f49471765f7c099c948aad099b0cd323359a1e0e67bc3a00e04",
+      "previousPath": "scripts/art_sources/monsters/v5/previous/monster-7a1b900ab404.png",
+      "previousSha256": "f420dafe1a6ba6711e0e8dc1a7782ff0f64ae8793cbfe5c278f6a78dab4a3b32",
+      "pixel": {
+        "boundsWithinMargin": true,
+        "footBaseline": 145,
+        "footBaselineMatches": true,
+        "hasAlpha": true,
+        "hasTransparentPixels": true,
+        "opaqueBounds": {
+          "bottom": 145,
+          "left": 12,
+          "right": 129,
+          "top": 21
+        }
+      }
+    }
+  ],
+  "review": {
+    "critical": 0,
+    "important": 0,
+    "scope": "all five candidates and Void broad32/46px re-review",
+    "screenshot": "output/playwright/completion-20260907/void-broad-160-46-32.png"
+  }
+}

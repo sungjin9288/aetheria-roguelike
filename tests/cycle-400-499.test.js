@@ -68,8 +68,7 @@ import { readFile, readdir } from 'node:fs/promises';
       const ifaceEnd = source.indexOf('}', ifaceStart);
       const ifaceBlock = source.slice(ifaceStart, ifaceEnd);
       const activeFields = ['player', 'grave', 'sideTab', 'setSideTab', 'actions',
-          'stats', 'quickSlots', 'runtime', 'inventorySpotlight',
-          'onClearInventorySpotlight', 'onReturnToLog'];
+          'stats', 'quickSlots', 'runtime', 'onReturnToLog'];
       for (const field of activeFields) {
           const re = new RegExp(`${field}[?:]`);
           assert.ok(re.test(ifaceBlock), `${field} 필드 보존`);
@@ -2444,8 +2443,12 @@ import { readFile, readdir } from 'node:fs/promises';
           'confirmMenuReset state 정의 보존');
       assert.ok(/sideTab === 'system'/.test(source), '설정 탭 조건 보존');
       assert.ok(/data-testid="system-reset-section"/.test(source), '설정 초기화 구역 보존');
-      const directCaller = source.match(/onClick={\(\) => setConfirmMenuReset\(true\)}/);
-      assert.ok(directCaller, '초기화 확인 caller 보존');
+      assert.ok(/setConfirmMenuReset\(\(open\) => !open\)/.test(source),
+          '초기화 확인 toggle caller 보존');
+      assert.ok(/aria-expanded={confirmMenuReset}/.test(source),
+          '초기화 확인 상태 공개');
+      assert.ok(/data-testid="menu-reset-confirmation"[\s\S]*role="alertdialog"/.test(source),
+          '초기화 확인 영역 노출');
   });
 
   test('cycle 443 회귀 가드: getRunBuildProfile primary.score 0건', async () => {
@@ -4080,8 +4083,8 @@ import { readFile, readdir } from 'node:fs/promises';
    * - visibleFiltered → filtered 직접 사용.
    *
    * 회귀 가드:
-   * - player / actions / quickSlots / onAssignQuickSlot / spotlight /
-   *   onClearSpotlight prop 보존.
+   * - player / actions / quickSlots / onAssignQuickSlot prop 보존.
+   * - release-complete core에서 always-null spotlight cascade는 제거됨.
    * - 본체 inventory list / FILTERS / signature / 추천 장착 / 일괄 정리 그대로.
    */
 
@@ -4129,7 +4132,7 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(!/\bcompact\b/.test(jsx), 'Dashboard <SmartInventory> compact 전달 0건');
   });
 
-  test('cycle 482: player / actions / quickSlots / spotlight 핵심 로직 보존', async () => {
+  test('cycle 482: player / actions / quickSlots 핵심 로직 보존', async () => {
       const source = await readSrc('src/components/SmartInventory.tsx');
       assert.ok(/FILTERS/.test(source), 'FILTERS 보존');
       assert.ok(/QuickSlotAssigner/.test(source), 'QuickSlotAssigner 보존');
@@ -4138,7 +4141,7 @@ import { readFile, readdir } from 'node:fs/promises';
       const sig = source.slice(fnIdx, fnEnd);
       assert.ok(/\bplayer\b/.test(sig), 'player prop 보존');
       assert.ok(/quickSlots/.test(sig), 'quickSlots prop 보존');
-      assert.ok(/spotlight/.test(sig), 'spotlight prop 보존');
+      assert.ok(!/spotlight/.test(sig), 'always-null spotlight prop 제거');
   });
 
   test('cycle 482: cycle 471 cascade 완료 — Dashboard 11 panel 모두 cascade 정리됨', async () => {

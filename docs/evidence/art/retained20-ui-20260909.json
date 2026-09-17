@@ -1,0 +1,293 @@
+{
+  "schemaVersion": 1,
+  "classification": "production-levelled canonical spawn fixtures; UI verification not natural encounters",
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "actualDeviceClaim": false,
+  "naturalEncounterClaim": false,
+  "errors": [],
+  "results": [
+    {
+      "name": "거대 사슴벌레",
+      "portrait": {
+        "src": "/assets/monsters/catalog/stag-beetle.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 110,
+      "afterHP": 82,
+      "screenshot": "output/playwright/retained20-baseline-1-390x844.png",
+      "screenshotSHA256": "e8f1f0159ad1f6a478f645954780093e12690ccedb93e0d30acbb745610627c7"
+    },
+    {
+      "name": "거미떼",
+      "portrait": {
+        "src": "/assets/monsters/catalog/spider-swarm.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 86,
+      "afterHP": 70,
+      "screenshot": "output/playwright/retained20-baseline-2-390x844.png",
+      "screenshotSHA256": "5b64ec234a6a3ffcaa8f169bce8667f4818f6542ef753e804092ab18a36f9b76"
+    },
+    {
+      "name": "광산 박쥐",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-50bf083fb88d.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 326,
+      "afterHP": 290,
+      "screenshot": "output/playwright/retained20-baseline-3-390x844.png",
+      "screenshotSHA256": "c7ea88175fc45ce879814777afa2080c7e92ff840e168ed1867615f8e5385263"
+    },
+    {
+      "name": "늑대",
+      "portrait": {
+        "src": "/assets/monsters/catalog/wolf.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 102,
+      "afterHP": 89,
+      "screenshot": "output/playwright/retained20-baseline-4-390x844.png",
+      "screenshotSHA256": "d7b61a9de44ae15eb7cba153d1d48a2fac4a211fc68df3c707865a0ce8f7c033"
+    },
+    {
+      "name": "독버섯",
+      "portrait": {
+        "src": "/assets/monsters/catalog/poison-mushroom.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 102,
+      "afterHP": 87,
+      "screenshot": "output/playwright/retained20-baseline-5-390x844.png",
+      "screenshotSHA256": "a0e5c1df382cb9b171c3ca7cf267f32f5867aa9cd7ab206f9438255f10577b95"
+    },
+    {
+      "name": "독안개 요정",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-d38fa32f7eff.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 390,
+      "afterHP": 290,
+      "screenshot": "output/playwright/retained20-baseline-6-390x844.png",
+      "screenshotSHA256": "5ffd7b2bf30e5a7975efc111ff263f95c66b06254ed828999847c37becdedfa1"
+    },
+    {
+      "name": "동굴 박쥐",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-fa568995b479.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 385,
+      "afterHP": 329,
+      "screenshot": "output/playwright/retained20-baseline-7-390x844.png",
+      "screenshotSHA256": "df60af2ed88e647dafb9a6bab44234ff59e286e579ce68bcbbbeca5ff9e8e254"
+    },
+    {
+      "name": "들개",
+      "portrait": {
+        "src": "/assets/monsters/catalog/wild-dog.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 166,
+      "afterHP": 127,
+      "screenshot": "output/playwright/retained20-baseline-8-390x844.png",
+      "screenshotSHA256": "5ff2062942905ebeffc97885fcf95a4dc83b4fb8eb69bf393bc92446cf0ef1be"
+    },
+    {
+      "name": "멧돼지",
+      "portrait": {
+        "src": "/assets/monsters/catalog/boar.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 190,
+      "afterHP": 171,
+      "screenshot": "output/playwright/retained20-baseline-9-390x844.png",
+      "screenshotSHA256": "1322005646e7202c1fcd7fa70efcbe644a16abb14140d7136fe39727a1d898c3"
+    },
+    {
+      "name": "묘지 구울",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-15a7cd6394ff.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 984,
+      "afterHP": 862,
+      "screenshot": "output/playwright/retained20-baseline-10-390x844.png",
+      "screenshotSHA256": "de00960427e65c2afbcba709fa7aed27c4f1c44b504e233eacb33966446605f9"
+    },
+    {
+      "name": "봄의 정령",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-38c4135d8a55.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 195,
+      "afterHP": 169,
+      "screenshot": "output/playwright/retained20-baseline-11-390x844.png",
+      "screenshotSHA256": "52cedbc84b7da75e62e6178ae856da54a33b7d3683daa8283ae98e72619e7392"
+    },
+    {
+      "name": "수련 님프",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-70b7adba43b9.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 230,
+      "afterHP": 205,
+      "screenshot": "output/playwright/retained20-baseline-12-390x844.png",
+      "screenshotSHA256": "af3dea4576a188400a805a64fd693e0c92929d5b38d5c839101313f0a29dbe0b"
+    },
+    {
+      "name": "숲 요정",
+      "portrait": {
+        "src": "/assets/monsters/catalog/forest-fairy.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 102,
+      "afterHP": 74,
+      "screenshot": "output/playwright/retained20-baseline-13-390x844.png",
+      "screenshotSHA256": "49e450d1c70814e104719a1c1ee4b289acf9ed6af695120c50fc692b761fc576"
+    },
+    {
+      "name": "숲의 정령",
+      "portrait": {
+        "src": "/assets/monsters/catalog/forest-spirit.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 102,
+      "afterHP": 76,
+      "screenshot": "output/playwright/retained20-baseline-14-390x844.png",
+      "screenshotSHA256": "1e38699f76e89bbaff67910c7f1277566b3962c2c4afc4195788565993f75fc7"
+    },
+    {
+      "name": "슬라임",
+      "portrait": {
+        "src": "/assets/monsters/catalog/slime.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 81,
+      "afterHP": 67,
+      "screenshot": "output/playwright/retained20-baseline-15-390x844.png",
+      "screenshotSHA256": "1b386dda5524cf8b97a8c3b338c25ff3af90652e050741a9fd495b4e3b7a14ac"
+    },
+    {
+      "name": "자연의 정령",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-059235ee38aa.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 1093,
+      "afterHP": 965,
+      "screenshot": "output/playwright/retained20-baseline-16-390x844.png",
+      "screenshotSHA256": "626ac8d1b001ec545362eb35f6fc0b140d5742345948a2749f8ad96d3e085c19"
+    },
+    {
+      "name": "정원 요정",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-9b3e645c6403.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 195,
+      "afterHP": 135,
+      "screenshot": "output/playwright/retained20-baseline-17-390x844.png",
+      "screenshotSHA256": "ed2a8d097f49fd292e9c5dfd54dc8d68654a3772555692f2544a0b5c9241135f"
+    },
+    {
+      "name": "평원 도적",
+      "portrait": {
+        "src": "/assets/monsters/catalog/plains-bandit.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 166,
+      "afterHP": 144,
+      "screenshot": "output/playwright/retained20-baseline-18-390x844.png",
+      "screenshotSHA256": "14d731fda0ee79515c30f75c6a7f23fc2e3e1d3364b84854cf2c46df11b06276"
+    },
+    {
+      "name": "폐허 구울",
+      "portrait": {
+        "src": "/assets/monsters/catalog/ruins-ghoul.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 230,
+      "afterHP": 205,
+      "screenshot": "output/playwright/retained20-baseline-19-390x844.png",
+      "screenshotSHA256": "dd10754183c8f152cb3e283c630490373bed355aa9bda851ea097c19cedf3a21"
+    },
+    {
+      "name": "해골 병사",
+      "portrait": {
+        "src": "/assets/monsters/catalog/skeleton-soldier.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHP": 230,
+      "afterHP": 205,
+      "screenshot": "output/playwright/retained20-baseline-20-390x844.png",
+      "screenshotSHA256": "57041dfc54f726ce5e81e793001e7b3753d7dc395961186e1ad89d8a870767d7"
+    }
+  ]
+}

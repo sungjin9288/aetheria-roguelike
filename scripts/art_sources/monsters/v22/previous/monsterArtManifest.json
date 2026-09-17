@@ -1,0 +1,2299 @@
+{
+  "version": 1,
+  "catalogSha256": "e1dec7b90a28206ea0c0f2147984aa903c6a8feb9550fc1cef8602bf95944578",
+  "art": {
+    "width": 160,
+    "height": 160,
+    "margin": 8,
+    "assetRoot": "/assets/monsters/catalog/",
+    "styleVersion": 2
+  },
+  "entries": {
+    "감옥 골렘": {
+      "key": "monster-cc4ebe19fd23",
+      "runtimePath": "/assets/monsters/catalog/monster-cc4ebe19fd23.png",
+      "regionKey": "dark-dungeon",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/stone-guardian.png",
+      "sha256": "962cc0aa358bab06cabc31ae434bbe19ffd160ac615397c1b780d13a1eee744d"
+    },
+    "강의 요괴": {
+      "key": "monster-f11406bcaf00",
+      "runtimePath": "/assets/monsters/catalog/monster-f11406bcaf00.png",
+      "regionKey": "river-of-souls",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/kobold.png",
+      "sha256": "fad74101e3af977a6bed8dc885566dc783e6b973c400fcb71e4c364e2e5b46da"
+    },
+    "강철 자동인형": {
+      "key": "monster-89fb5c7e37b7",
+      "runtimePath": "/assets/monsters/catalog/monster-89fb5c7e37b7.png",
+      "regionKey": "machine-ruins",
+      "archetype": "machine",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-89fb5c7e37b7.png",
+      "sha256": "93d1eb580e1dced22766290e60eedf743883cfc196774ab27fd221e0a2f49630"
+    },
+    "거대 거북": {
+      "key": "monster-aedb97862864",
+      "runtimePath": "/assets/monsters/catalog/monster-aedb97862864.png",
+      "regionKey": "lake-temple",
+      "archetype": "reptile",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-aedb97862864.png",
+      "sha256": "094d00af71e40261095050ab3d04357c57ebe14308abf6516d13166ccf1042d6"
+    },
+    "거대 사슴벌레": {
+      "key": "stag-beetle",
+      "runtimePath": "/assets/monsters/catalog/stag-beetle.png",
+      "regionKey": "forest",
+      "archetype": "insect",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/stag-beetle.png",
+      "sha256": "fb89655374548c1d90dc2665c145cd40c19d422e0ddfc109e80e693c1f3c9b79"
+    },
+    "거대 지네": {
+      "key": "monster-82e2857d4305",
+      "runtimePath": "/assets/monsters/catalog/monster-82e2857d4305.png",
+      "regionKey": "abandoned-mine",
+      "archetype": "insect",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-82e2857d4305.png",
+      "sha256": "42cb0e9924cba98ee1a8e4ef99d91dc0a75913b8cd48499e919092a6a49c6d7b"
+    },
+    "거대 지렁이": {
+      "key": "monster-228caa618079",
+      "runtimePath": "/assets/monsters/catalog/monster-228caa618079.png",
+      "regionKey": "abandoned-mine",
+      "archetype": "insect",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-228caa618079.png",
+      "sha256": "afa991d35110cf75da6f45f9260bf7f44f1cfe08bd95e9617c6afd2a43506601"
+    },
+    "거미떼": {
+      "key": "spider-swarm",
+      "runtimePath": "/assets/monsters/catalog/spider-swarm.png",
+      "regionKey": "forest",
+      "archetype": "insect",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/spider-swarm.png",
+      "sha256": "2f6234322b0f584545dd74a9910f23a806033ee30708aa1694b7ca7621acf441"
+    },
+    "결정 정령": {
+      "key": "monster-a59df9668da4",
+      "runtimePath": "/assets/monsters/catalog/monster-a59df9668da4.png",
+      "regionKey": "crystal-cave",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a59df9668da4.png",
+      "sha256": "f0c4efbda38544e0e9567268a97fa9b60633aae525913eacdecaa1b9aef1fe41"
+    },
+    "고대 마법사": {
+      "key": "monster-c57d91c545f3",
+      "runtimePath": "/assets/monsters/catalog/monster-c57d91c545f3.png",
+      "regionKey": "ancient-magic-tower",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "59df76641b7ec106fa1fd0faf1b6751b683ef1a5a2f2be28ec508c56bc50540a"
+    },
+    "고대 호수의 수호신": {
+      "key": "monster-7a1b900ab404",
+      "runtimePath": "/assets/monsters/catalog/monster-7a1b900ab404.png",
+      "regionKey": "sacred-lake",
+      "archetype": "divine",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7a1b900ab404.png",
+      "sha256": "5ce2810c727a0f49471765f7c099c948aad099b0cd323359a1e0e67bc3a00e04"
+    },
+    "고목 골렘": {
+      "key": "monster-fd35ea13c616",
+      "runtimePath": "/assets/monsters/catalog/monster-fd35ea13c616.png",
+      "regionKey": "world-tree-forest",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-fd35ea13c616.png",
+      "sha256": "2ad775ffc08a2e8ccf6f61e6bcdddd2b63566c4522eac67ebbd6d31e42ead3ae"
+    },
+    "고문관": {
+      "key": "monster-c3228e069463",
+      "runtimePath": "/assets/monsters/catalog/monster-c3228e069463.png",
+      "regionKey": "dark-dungeon",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "3043ba821bd78b1968a24b3be6630d478a4f9242ee791e622fea7657e3f46c1c"
+    },
+    "고블린": {
+      "key": "goblin",
+      "runtimePath": "/assets/monsters/catalog/goblin.png",
+      "regionKey": "ruins",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/goblin.png",
+      "sha256": "cfea21976743d58fb7aa316284284ed845d83681a270e796e8db995e23e8052c"
+    },
+    "고원 그리핀": {
+      "key": "monster-a9965770730f",
+      "runtimePath": "/assets/monsters/catalog/monster-a9965770730f.png",
+      "regionKey": "wind-highland",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a9965770730f.png",
+      "sha256": "15ce06db6b997050cdcfc0a02b0c3fae6366f707de03a76dc91d794d8e72da39"
+    },
+    "공간 파괴자": {
+      "key": "monster-a984d4c1b5b4",
+      "runtimePath": "/assets/monsters/catalog/monster-a984d4c1b5b4.png",
+      "regionKey": "collapsed-magic-fortress",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/kobold.png",
+      "sha256": "d4b18f28f82758a825d8ccf3216d960f9fc49756a7f7771b2d85e417541f525d"
+    },
+    "공허 감시병": {
+      "key": "monster-2ed4807481db",
+      "runtimePath": "/assets/monsters/catalog/monster-2ed4807481db.png",
+      "regionKey": "aether-ruins",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "2f82037ca07acfac468f2811d859ff51f5bc9fe1c88a7ff6d21282d3c4236596"
+    },
+    "공허 마법사": {
+      "key": "monster-35fdb47080ad",
+      "runtimePath": "/assets/monsters/catalog/monster-35fdb47080ad.png",
+      "regionKey": "void-corridor",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "fb5c8592631a65d5beb300697c78726fafbbf8fb33f6bd9b662de569a291b662"
+    },
+    "공허 집행관": {
+      "key": "monster-5e30c9234993",
+      "runtimePath": "/assets/monsters/catalog/monster-5e30c9234993.png",
+      "regionKey": "aether-gate",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "b94e060371a95ece3ba228845d88ef4e08512bbe809040aad5bb15c85f61ad57"
+    },
+    "공허 포격수": {
+      "key": "monster-70eca38ea027",
+      "runtimePath": "/assets/monsters/catalog/monster-70eca38ea027.png",
+      "regionKey": "rift-outpost",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-70eca38ea027.png",
+      "sha256": "529fef5ea423a847fab9754dbfdbfa15aeadbe0843358dbcb01f01b77ffef1a6"
+    },
+    "공허의 감시자": {
+      "key": "monster-a6b8ca9961a9",
+      "runtimePath": "/assets/monsters/catalog/monster-a6b8ca9961a9.png",
+      "regionKey": "void-corridor",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "ce033ec0114ea252a29916105b142f6f56c3e70d1216e0e8bf04b2ad096e9737"
+    },
+    "공허의 군주": {
+      "key": "monster-fa81d9588f47",
+      "runtimePath": "/assets/monsters/catalog/monster-fa81d9588f47.png",
+      "regionKey": "forbidden-library",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "2d9793910f84d3ab39ff454740d404ce2de2fd68a8ddba58dee0988e65b755a2"
+    },
+    "공허의 대행자": {
+      "key": "monster-2cabe3dd4b34",
+      "runtimePath": "/assets/monsters/catalog/monster-2cabe3dd4b34.png",
+      "regionKey": "void-corridor",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-2cabe3dd4b34.png",
+      "sha256": "a72693a6c229825bb29c0016733952f1a204b2d43a394f8fedb392de58ad3ecc"
+    },
+    "공허의 신": {
+      "key": "monster-4c0a057e31f9",
+      "runtimePath": "/assets/monsters/catalog/monster-4c0a057e31f9.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-4c0a057e31f9.png",
+      "sha256": "c8a6f07f4089fec09d3bb04428d1caf028ea0f8c7a33020fbbe3fa67178aa01c"
+    },
+    "공허의 심판자": {
+      "key": "monster-fd6d7651e0af",
+      "runtimePath": "/assets/monsters/catalog/monster-fd6d7651e0af.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-fd6d7651e0af.png",
+      "sha256": "e74f6a127afe970a0112eb7f7c1a8d63d3f634399b67f783963961b0bce5da26"
+    },
+    "공허의 짐승": {
+      "key": "monster-95f3dd312dfa",
+      "runtimePath": "/assets/monsters/catalog/monster-95f3dd312dfa.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-95f3dd312dfa.png",
+      "sha256": "e294e51a29ee141beae7e1c0915b77b16b23bb5919589034b18a3b37b983cb51"
+    },
+    "공허의 파편": {
+      "key": "monster-6d8a68e4891e",
+      "runtimePath": "/assets/monsters/catalog/monster-6d8a68e4891e.png",
+      "regionKey": "void-corridor",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-6d8a68e4891e.png",
+      "sha256": "3e0c712042f1726c46d5286d64cdc27401202688f1d9e9a0863fc113070b0b37"
+    },
+    "과부하 포격기": {
+      "key": "monster-5a21f496f3dc",
+      "runtimePath": "/assets/monsters/catalog/monster-5a21f496f3dc.png",
+      "regionKey": "machine-ruins",
+      "archetype": "machine",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-5a21f496f3dc.png",
+      "sha256": "331d3393247414791db259b4357b1ef5aeded411db3f3229756640b26b390862"
+    },
+    "광물 지네": {
+      "key": "monster-5d862ec7cd8b",
+      "runtimePath": "/assets/monsters/catalog/monster-5d862ec7cd8b.png",
+      "regionKey": "crystal-cave",
+      "archetype": "insect",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-5d862ec7cd8b.png",
+      "sha256": "6998365f8cb4ef4d4a5ff36d4a3753d519bbc357b07435740a9d16bed85cb0a6"
+    },
+    "광산 박쥐": {
+      "key": "monster-50bf083fb88d",
+      "runtimePath": "/assets/monsters/catalog/monster-50bf083fb88d.png",
+      "regionKey": "abandoned-mine",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-bat.png",
+      "sha256": "31d78defca7b2b4b6014208ea4d130cdf50c74e0e270fd0f542d3cea486a04df"
+    },
+    "광석골렘": {
+      "key": "monster-b022bd831287",
+      "runtimePath": "/assets/monsters/catalog/monster-b022bd831287.png",
+      "regionKey": "abandoned-mine",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/stone-guardian.png",
+      "sha256": "4ed9b0fd96ccc6057cc40f79fd657fa679878916d485041f1498e49d785f01dd"
+    },
+    "광풍의 원소": {
+      "key": "monster-57e2ea4a579b",
+      "runtimePath": "/assets/monsters/catalog/monster-57e2ea4a579b.png",
+      "regionKey": "storm-highland",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-57e2ea4a579b.png",
+      "sha256": "9bd3aaff9402d25dbd7947a2b4d0416005880cd4c2cc9bd343cd4a8c9910fa79"
+    },
+    "광풍의 하피": {
+      "key": "monster-f70adffeac61",
+      "runtimePath": "/assets/monsters/catalog/monster-f70adffeac61.png",
+      "regionKey": "wind-highland",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-f70adffeac61.png",
+      "sha256": "649095e032b17d9234dcfd7a75373cf121a095158e8ff1cf23c523478e4923f2"
+    },
+    "구름 정령": {
+      "key": "monster-6b166f3da88c",
+      "runtimePath": "/assets/monsters/catalog/monster-6b166f3da88c.png",
+      "regionKey": "sky-temple",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-6b166f3da88c.png",
+      "sha256": "9c3127730e41ea6af4c4bd1c6b8fc5323176798c7f1d5d1aacf8ff652c9d713b"
+    },
+    "균열 감시자": {
+      "key": "monster-5d275b27b1fa",
+      "runtimePath": "/assets/monsters/catalog/monster-5d275b27b1fa.png",
+      "regionKey": "rift-outpost",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/kobold.png",
+      "sha256": "d12f792f21ba07a8c8c03a2f0215c5371ce1af37da2b1b971d6811609dc02422"
+    },
+    "균열의 사령관": {
+      "key": "monster-b7d4a076cb5c",
+      "runtimePath": "/assets/monsters/catalog/monster-b7d4a076cb5c.png",
+      "regionKey": "rift-outpost",
+      "archetype": "spectral",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-b7d4a076cb5c.png",
+      "sha256": "e4df408d10e0d0809052d3d9180b67a68f14c26fc2a9d3369418f782645a40e4"
+    },
+    "그림자 사냥꾼": {
+      "key": "monster-ddeab7aaf35c",
+      "runtimePath": "/assets/monsters/catalog/monster-ddeab7aaf35c.png",
+      "regionKey": "underground-labyrinth",
+      "archetype": "rogue",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/goblin.png",
+      "sha256": "09a4b72e1e52c6bb2ea32e8ee8ddb95b4382fef553253c6d32e45485c367bdf8"
+    },
+    "기계 장군": {
+      "key": "monster-88fa34d8f196",
+      "runtimePath": "/assets/monsters/catalog/monster-88fa34d8f196.png",
+      "regionKey": "machine-ruins",
+      "archetype": "machine",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-88fa34d8f196.png",
+      "sha256": "adfd5062d1cec50bd5908774865ce7074e817d0fc6a0b8899be35117cfdf3dab"
+    },
+    "꽃 골렘": {
+      "key": "monster-bdd1e31b4df4",
+      "runtimePath": "/assets/monsters/catalog/monster-bdd1e31b4df4.png",
+      "regionKey": "spring-garden",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-bdd1e31b4df4.png",
+      "sha256": "8d2761d74cbc88e6b809cdabb27a215b9c7da97e858500b0904b11ebac4bba44"
+    },
+    "꽃잎 슬라임": {
+      "key": "monster-00683765f209",
+      "runtimePath": "/assets/monsters/catalog/monster-00683765f209.png",
+      "regionKey": "spring-garden",
+      "archetype": "slime",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/slime.png",
+      "sha256": "37f20170008a06526ae3b49e75237c151701e37a88e9a0cd3014dd40a1cb68ca"
+    },
+    "뇌운 와이번": {
+      "key": "monster-6e2f6db6bdca",
+      "runtimePath": "/assets/monsters/catalog/monster-6e2f6db6bdca.png",
+      "regionKey": "storm-highland",
+      "archetype": "dragon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/red-dragon.png",
+      "sha256": "96c34483612f46d7e7fbb0f45eb4bf09ae45d0f96ae6359bfdcfd5aff3710959"
+    },
+    "뇌운의 사냥꾼": {
+      "key": "monster-63ae5e408f3b",
+      "runtimePath": "/assets/monsters/catalog/monster-63ae5e408f3b.png",
+      "regionKey": "storm-highland",
+      "archetype": "rogue",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "f476e3839d38bd847b07bfb0f5a28337bb19eefb4c4671e62bf018e828038b0c"
+    },
+    "눈보라 정령": {
+      "key": "monster-adbbab114586",
+      "runtimePath": "/assets/monsters/catalog/monster-adbbab114586.png",
+      "regionKey": "northern-snowfield",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-adbbab114586.png",
+      "sha256": "bd74e5262095bf1d1ad5bc263a3dad64623cc3ce1c8016db239d3b01ccca5942"
+    },
+    "늑대": {
+      "key": "wolf",
+      "runtimePath": "/assets/monsters/catalog/wolf.png",
+      "regionKey": "forest",
+      "archetype": "beast",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/wolf.png",
+      "sha256": "e66498600cb462ce02f8123a79ee7b308cdbf190041033097e71198ca2b02e48"
+    },
+    "다크 엘프": {
+      "key": "monster-63bddf1692bc",
+      "runtimePath": "/assets/monsters/catalog/monster-63bddf1692bc.png",
+      "regionKey": "dark-cave",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-63bddf1692bc.png",
+      "sha256": "8277564a2a9cc81effdea08a838c6fd3cbb7aabdaad6bc46ff3463079a8d1c74"
+    },
+    "데스나이트": {
+      "key": "monster-faf6ab94ed58",
+      "runtimePath": "/assets/monsters/catalog/monster-faf6ab94ed58.png",
+      "regionKey": "dark-castle",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "01548cbdf8cdb616bff7a454332f115926811e81cd90250982043c4b7b69e10b"
+    },
+    "독 지네": {
+      "key": "monster-e0e66a896235",
+      "runtimePath": "/assets/monsters/catalog/monster-e0e66a896235.png",
+      "regionKey": "underground-labyrinth",
+      "archetype": "insect",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e0e66a896235.png",
+      "sha256": "b71a9c1516df0c8262cd917282342f05290fd2efb5ffd46a14cbff96d2a9a4e0"
+    },
+    "독버섯": {
+      "key": "poison-mushroom",
+      "runtimePath": "/assets/monsters/catalog/poison-mushroom.png",
+      "regionKey": "forest",
+      "archetype": "fungus",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/poison-mushroom.png",
+      "sha256": "cc7b424053b913d2f4d3c7338d999602a0043f115b0121b1e5603b4f0d4fbf9a"
+    },
+    "독안개 요정": {
+      "key": "monster-d38fa32f7eff",
+      "runtimePath": "/assets/monsters/catalog/monster-d38fa32f7eff.png",
+      "regionKey": "ancient-sewer",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/forest-fairy.png",
+      "sha256": "530b263182374ebecd41d0f39ccda961706417a4a061d2cded7ed306a2faaba9"
+    },
+    "돌 거인": {
+      "key": "monster-883e52c1a0c0",
+      "runtimePath": "/assets/monsters/catalog/monster-883e52c1a0c0.png",
+      "regionKey": "underground-labyrinth",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/stone-guardian.png",
+      "sha256": "733a2ecbb01cba675cfdc2021c9a2e303dd8835c7d5aad5d46e8af4cb4727ba2"
+    },
+    "동굴 박쥐": {
+      "key": "monster-fa568995b479",
+      "runtimePath": "/assets/monsters/catalog/monster-fa568995b479.png",
+      "regionKey": "crystal-cave",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-bat.png",
+      "sha256": "e90e7ce3ede4dccdbaf4c22d64ec0f261b4e7ae2026de4b716887bcb840cb862"
+    },
+    "동굴 트롤": {
+      "key": "monster-55ed31434fe6",
+      "runtimePath": "/assets/monsters/catalog/monster-55ed31434fe6.png",
+      "regionKey": "dark-cave",
+      "archetype": "beast",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-55ed31434fe6.png",
+      "sha256": "eef7af1d90cd7817623d1cc57fdf13a4e5b23c251e7638b95af38af78c27b643"
+    },
+    "드래곤 나이트": {
+      "key": "monster-b4eab5883617",
+      "runtimePath": "/assets/monsters/catalog/monster-b4eab5883617.png",
+      "regionKey": "dragon-nest",
+      "archetype": "dragon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-b4eab5883617.png",
+      "sha256": "52c8d5e6c84832c9e84954a7cec470e54721514c1f5830864f9c1944e4e3603a"
+    },
+    "들개": {
+      "key": "wild-dog",
+      "runtimePath": "/assets/monsters/catalog/wild-dog.png",
+      "regionKey": "plains",
+      "archetype": "beast",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/wild-dog.png",
+      "sha256": "87218b474fc4287d181f4ec1185af695c26847fb3d22c0e6a49d40c959ea0369"
+    },
+    "레드 드래곤": {
+      "key": "red-dragon",
+      "runtimePath": "/assets/monsters/catalog/red-dragon.png",
+      "regionKey": "dragon-nest",
+      "archetype": "dragon",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/red-dragon.png",
+      "sha256": "4d5ce5c4c791d00677bda40d8c630d071c83511690447bfac496f2b31d8e2ac4"
+    },
+    "리치": {
+      "key": "monster-46235b2ece70",
+      "runtimePath": "/assets/monsters/catalog/monster-46235b2ece70.png",
+      "regionKey": "dark-castle",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-46235b2ece70.png",
+      "sha256": "eb0221a3325b9a5f3e844cee450d8a7c3b36989ec16dc83227e67b2190235e26"
+    },
+    "마그마 슬라임": {
+      "key": "monster-08a49ce6bd76",
+      "runtimePath": "/assets/monsters/catalog/monster-08a49ce6bd76.png",
+      "regionKey": "lava-zone",
+      "archetype": "slime",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-08a49ce6bd76.png",
+      "sha256": "ef42d4ea13ef2bacaa35ee46c01a7c95cc934f3114b9fae876446303fbf0eb4c"
+    },
+    "마그마 정령": {
+      "key": "monster-b2498aa058e1",
+      "runtimePath": "/assets/monsters/catalog/monster-b2498aa058e1.png",
+      "regionKey": "lava-zone",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-b2498aa058e1.png",
+      "sha256": "d3b0dad9cbb175a32821bde17d082655f58a15fefb367bea49a9d42b71a9dec2"
+    },
+    "마력 결정체": {
+      "key": "monster-9e71859d733f",
+      "runtimePath": "/assets/monsters/catalog/monster-9e71859d733f.png",
+      "regionKey": "ancient-magic-tower",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-9e71859d733f.png",
+      "sha256": "5f7156a41b0e82321f12311531862beedac03cfa43e2adb87b3ab78db2962d84"
+    },
+    "마법 감시자": {
+      "key": "monster-6e9b6ee6df6b",
+      "runtimePath": "/assets/monsters/catalog/monster-6e9b6ee6df6b.png",
+      "regionKey": "collapsed-magic-fortress",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/goblin.png",
+      "sha256": "cd4776063b7ada15d06024fabb0f62877001fe0d46db6fa40ae76807270351f7"
+    },
+    "마법 구체": {
+      "key": "monster-7cd01b628a4c",
+      "runtimePath": "/assets/monsters/catalog/monster-7cd01b628a4c.png",
+      "regionKey": "ancient-magic-tower",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7cd01b628a4c.png",
+      "sha256": "89519106386377d35b0c521d64962e313a2d0b9f62f92b4b375fab5970118c06"
+    },
+    "마법 인형": {
+      "key": "monster-c171681ba8bc",
+      "runtimePath": "/assets/monsters/catalog/monster-c171681ba8bc.png",
+      "regionKey": "ancient-magic-tower",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-c171681ba8bc.png",
+      "sha256": "42de3c46716305779f76acb92222f25d84ed05cb33fcace58368c71e4ce43683"
+    },
+    "마왕": {
+      "key": "monster-a28ab1165cdf",
+      "runtimePath": "/assets/monsters/catalog/monster-a28ab1165cdf.png",
+      "regionKey": "demon-king-castle",
+      "archetype": "demon",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "7c9016162db51a4557ddf4f5e12a717ece3dffb27af2decc82af0cfe4836e051"
+    },
+    "마왕의 사도": {
+      "key": "monster-5824e6788227",
+      "runtimePath": "/assets/monsters/catalog/monster-5824e6788227.png",
+      "regionKey": "demon-king-castle",
+      "archetype": "demon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "1b1c3d76c5e88a7d11bac14da8ca1c00fb30337175d073a8a09c7ea896d2e81b"
+    },
+    "망각의 나가": {
+      "key": "monster-3c3af718b4e5",
+      "runtimePath": "/assets/monsters/catalog/monster-3c3af718b4e5.png",
+      "regionKey": "deep-sea-corridor",
+      "archetype": "aquatic",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-3c3af718b4e5.png",
+      "sha256": "57d2399f646734abd922529f85cb1aa61a0a7c94c6155738647465b9b55ccd16"
+    },
+    "망령 기사": {
+      "key": "monster-08e2662c6c6d",
+      "runtimePath": "/assets/monsters/catalog/monster-08e2662c6c6d.png",
+      "regionKey": "cursed-graveyard",
+      "archetype": "spectral",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "cc6723737ef495360fe37abbe2c51b7a91bd81df3282deb4392c6d2fca426bab"
+    },
+    "망령 기사단장": {
+      "key": "monster-7fba3260adaa",
+      "runtimePath": "/assets/monsters/catalog/monster-7fba3260adaa.png",
+      "regionKey": "ancient-temple-city",
+      "archetype": "spectral",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "dc4f812b0a3c39f7f697a052d1b78684336eab72315a04d21f3cbd2a87330cc0"
+    },
+    "망자의 사제": {
+      "key": "monster-411b4ac30c1e",
+      "runtimePath": "/assets/monsters/catalog/monster-411b4ac30c1e.png",
+      "regionKey": "cursed-graveyard",
+      "archetype": "spectral",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "954f821ef6208b831d2c2d6e6a70b1b9056879d70cdb4c85450d6e63f7a9f3d4"
+    },
+    "머맨": {
+      "key": "monster-6a26c6325796",
+      "runtimePath": "/assets/monsters/catalog/monster-6a26c6325796.png",
+      "regionKey": "lake-temple",
+      "archetype": "aquatic",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-6a26c6325796.png",
+      "sha256": "590e1b1fa900ce114f86722090967eb13eef575a9441a02e75d21b00366a3179"
+    },
+    "멧돼지": {
+      "key": "boar",
+      "runtimePath": "/assets/monsters/catalog/boar.png",
+      "regionKey": "plains",
+      "archetype": "beast",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/boar.png",
+      "sha256": "f92e7a3723aac095061d245de88b7ae0f3eca76d7a0e332e9bac275e6ad87e6a"
+    },
+    "멸절의 사도": {
+      "key": "monster-ad2db6c8d5ea",
+      "runtimePath": "/assets/monsters/catalog/monster-ad2db6c8d5ea.png",
+      "regionKey": "aether-ruins",
+      "archetype": "demon",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-ad2db6c8d5ea.png",
+      "sha256": "f0318d6706a8cc0da38c1f33cbe4be7c390b5933a9ac9cd0643dbd7db62a3136"
+    },
+    "묘지 구울": {
+      "key": "monster-15a7cd6394ff",
+      "runtimePath": "/assets/monsters/catalog/monster-15a7cd6394ff.png",
+      "regionKey": "cursed-graveyard",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ruins-ghoul.png",
+      "sha256": "006c8fd6a8305f4a33ffc376741e58545825dcc34ef2a4af8f286e5b61e8c4aa"
+    },
+    "묘지기 네크론": {
+      "key": "monster-386ff5484904",
+      "runtimePath": "/assets/monsters/catalog/monster-386ff5484904.png",
+      "regionKey": "cursed-graveyard",
+      "archetype": "caster",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-386ff5484904.png",
+      "sha256": "10931ab74fa35f4a1d6d527dc27c8b6403f931bd6d11c562df464474549f4998"
+    },
+    "무한의 화신": {
+      "key": "monster-f2822ad5182d",
+      "runtimePath": "/assets/monsters/catalog/monster-f2822ad5182d.png",
+      "regionKey": "aether-gate",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-f2822ad5182d.png",
+      "sha256": "9e562012192e0e4de782d9f95471d0eda0c210368dc9a496ec88d27fa7ede072"
+    },
+    "물의 정령": {
+      "key": "monster-704c2dec5dd8",
+      "runtimePath": "/assets/monsters/catalog/monster-704c2dec5dd8.png",
+      "regionKey": "lake-temple",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-704c2dec5dd8.png",
+      "sha256": "f6cfc9c5a77a89b65d910a29d25486719c16f611939a7e6a1497f8b82bf82d0c"
+    },
+    "미궁의 마왕": {
+      "key": "monster-f7a73b5eee06",
+      "runtimePath": "/assets/monsters/catalog/monster-f7a73b5eee06.png",
+      "regionKey": "underground-labyrinth",
+      "archetype": "demon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "0b43816a2948370d50b59b6c8b05809b4dd1bf23a47c68bebb2f7b242a539b8e"
+    },
+    "미라": {
+      "key": "monster-4236ae06d677",
+      "runtimePath": "/assets/monsters/catalog/monster-4236ae06d677.png",
+      "regionKey": "pyramid",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-4236ae06d677.png",
+      "sha256": "c0b412c534f533c2cf786860dc804d2249ab42215cddacab63348878632ea84a"
+    },
+    "미믹": {
+      "key": "monster-885e652191d9",
+      "runtimePath": "/assets/monsters/catalog/monster-885e652191d9.png",
+      "regionKey": "ancient-vault",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-885e652191d9.png",
+      "sha256": "0210923da5ffcbe2998975567f2240497c0c429902e38f49ae757fde179a73d9"
+    },
+    "바람 드레이크": {
+      "key": "monster-b9e2ceed0c47",
+      "runtimePath": "/assets/monsters/catalog/monster-b9e2ceed0c47.png",
+      "regionKey": "sky-temple",
+      "archetype": "dragon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/red-dragon.png",
+      "sha256": "b2b3824dd7f109903521ef10de98b5d42313bd16d339a6cd9f3c63220568e074"
+    },
+    "바람 정령": {
+      "key": "monster-d41324bc0c39",
+      "runtimePath": "/assets/monsters/catalog/monster-d41324bc0c39.png",
+      "regionKey": "storm-highland",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-d41324bc0c39.png",
+      "sha256": "ad5ec7730df950acbd3f65ec68600cd96d26336e3da7c7e7c6e5fc14fbfebb27"
+    },
+    "바람 추적자": {
+      "key": "monster-6651720e2aa5",
+      "runtimePath": "/assets/monsters/catalog/monster-6651720e2aa5.png",
+      "regionKey": "storm-highland",
+      "archetype": "rogue",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "4b7b0131a4fd2bd8db97c9024f41ebea802ab482520ee3100104bbe7af7b4b1d"
+    },
+    "박쥐 떼": {
+      "key": "monster-a0ce67504415",
+      "runtimePath": "/assets/monsters/catalog/monster-a0ce67504415.png",
+      "regionKey": "dark-cave",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a0ce67504415.png",
+      "sha256": "0cd3d8cdaf49e3a0092fb5d7bc92b0203a8dcbffa2bd6a8dd094bb58884756e4"
+    },
+    "뱀파이어": {
+      "key": "monster-0f6b7d2dbef4",
+      "runtimePath": "/assets/monsters/catalog/monster-0f6b7d2dbef4.png",
+      "regionKey": "dark-castle",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-0f6b7d2dbef4.png",
+      "sha256": "b84638cbfee9f6ffca5f0b796b8ef6d6c36cadd158967a342df167b671adfe56"
+    },
+    "번개 골렘": {
+      "key": "monster-afc1ba2a24bc",
+      "runtimePath": "/assets/monsters/catalog/monster-afc1ba2a24bc.png",
+      "regionKey": "sky-temple",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/stone-guardian.png",
+      "sha256": "6929a6077fc8ce85c3eaef48f1359142281a8561a9652beea62b63a5b2cdefdf"
+    },
+    "번개 정령": {
+      "key": "monster-dcc2d3af8f46",
+      "runtimePath": "/assets/monsters/catalog/monster-dcc2d3af8f46.png",
+      "regionKey": "storm-highland",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-dcc2d3af8f46.png",
+      "sha256": "a6fc825f4635ad72b4968600ceca6c83183c2203ef4847d1c97bd2a1574c5a6a"
+    },
+    "변이 실험체": {
+      "key": "monster-9da39d1152ff",
+      "runtimePath": "/assets/monsters/catalog/monster-9da39d1152ff.png",
+      "regionKey": "abandoned-laboratory",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/kobold.png",
+      "sha256": "4d144be0789b02beadcf0746001b792c9c10f049b7eeb1a0ef2a7d45096b28db"
+    },
+    "보물사냥꾼": {
+      "key": "monster-5d7ee3a7e436",
+      "runtimePath": "/assets/monsters/catalog/monster-5d7ee3a7e436.png",
+      "regionKey": "ancient-vault",
+      "archetype": "rogue",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "b4358d2dd6a0229fb2e02c40c72d3ac36043ea4717afd9f11e46ac030f2048f4"
+    },
+    "봄의 여왕": {
+      "key": "monster-a5a7bc6c49af",
+      "runtimePath": "/assets/monsters/catalog/monster-a5a7bc6c49af.png",
+      "regionKey": "spring-garden",
+      "archetype": "divine",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a5a7bc6c49af.png",
+      "sha256": "0bb2e5273caa2fbb857b7f3e6bda586acb1f55cd6dfb1e8c1a0f3806c833b375"
+    },
+    "봄의 정령": {
+      "key": "monster-38c4135d8a55",
+      "runtimePath": "/assets/monsters/catalog/monster-38c4135d8a55.png",
+      "regionKey": "spring-garden",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/forest-spirit.png",
+      "sha256": "f438e7327e399615543289f11c2ad0e98949765b9d958c21f9e0bc7d404322b3"
+    },
+    "부식된 골렘": {
+      "key": "monster-3c859cb03bef",
+      "runtimePath": "/assets/monsters/catalog/monster-3c859cb03bef.png",
+      "regionKey": "machine-ruins",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/stone-guardian.png",
+      "sha256": "7714bc01d8522fb8c0d231d6ae76aa4bc6be803aa1c35b3b113c4be896eda0e7"
+    },
+    "부식된 기계병": {
+      "key": "monster-261c7f0c7ecc",
+      "runtimePath": "/assets/monsters/catalog/monster-261c7f0c7ecc.png",
+      "regionKey": "ancient-sewer",
+      "archetype": "machine",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-261c7f0c7ecc.png",
+      "sha256": "a6092c45b3baa20bd68246a428368d69da8a3f51f4220c1f08b20a13e1c28807"
+    },
+    "분노한 마구스": {
+      "key": "monster-7a8c8edb79d5",
+      "runtimePath": "/assets/monsters/catalog/monster-7a8c8edb79d5.png",
+      "regionKey": "collapsed-magic-fortress",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "e0dff54bbd0ce04443ea3b66d30a31cb49a631c1b471d24c8d43f4de24220808"
+    },
+    "불꽃 도마뱀": {
+      "key": "monster-02c52111756b",
+      "runtimePath": "/assets/monsters/catalog/monster-02c52111756b.png",
+      "regionKey": "fire-temple",
+      "archetype": "reptile",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lizard.png",
+      "sha256": "e1166168da6677e61fc1b65077ec27165d41ae17704c39ff3a35b4f2e4c169d8"
+    },
+    "붕괴된 수호자": {
+      "key": "monster-e94839263e67",
+      "runtimePath": "/assets/monsters/catalog/monster-e94839263e67.png",
+      "regionKey": "aether-ruins",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/skeleton-soldier.png",
+      "sha256": "d2952af68dae06c8073c6504bb7009ab0a398dbc8a617d5268110791a0415648"
+    },
+    "붕괴한 수호자": {
+      "key": "monster-3174ce5ddbfa",
+      "runtimePath": "/assets/monsters/catalog/monster-3174ce5ddbfa.png",
+      "regionKey": "aether-ruins",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "7e5c4cd537226807bb01f6a94a5c4d591e07a16917672d67162624d7e8989687"
+    },
+    "빙결의 마녀": {
+      "key": "monster-6ccedb57c965",
+      "runtimePath": "/assets/monsters/catalog/monster-6ccedb57c965.png",
+      "regionKey": "glacial-abyss",
+      "archetype": "caster",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-6ccedb57c965.png",
+      "sha256": "a1c0b0546ea81384688ee24784c8b1ae44b249ff155de429a9ed2179e1660a2b"
+    },
+    "빛결 수정체": {
+      "key": "monster-735dac0f894d",
+      "runtimePath": "/assets/monsters/catalog/monster-735dac0f894d.png",
+      "regionKey": "sky-garden",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-735dac0f894d.png",
+      "sha256": "3bf87a1adcec7f794b2777e3de487c4e5488ba56d83d0946fb528f86e2de6e6d"
+    },
+    "뼈 수집가": {
+      "key": "monster-fa714d155fff",
+      "runtimePath": "/assets/monsters/catalog/monster-fa714d155fff.png",
+      "regionKey": "cursed-graveyard",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/goblin.png",
+      "sha256": "ee9726007f4456828f42a24d5d70d6c201d6b1bf34e8634b2c6f24ca7dc30a5b"
+    },
+    "뿌리 포식자": {
+      "key": "monster-774ae1973572",
+      "runtimePath": "/assets/monsters/catalog/monster-774ae1973572.png",
+      "regionKey": "world-tree-forest",
+      "archetype": "beast",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lizard.png",
+      "sha256": "37d70d436dfcf001f05ce25fbe278240bcdcd6ed226a4e9b80d9d470f8cf9b07"
+    },
+    "사기꾼 마법사": {
+      "key": "monster-652f9135dd4e",
+      "runtimePath": "/assets/monsters/catalog/monster-652f9135dd4e.png",
+      "regionKey": "golden-kingdom",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "4aad6b470d89ff81e700abd39c250e4f31a99f62fff33e74e2bae8ab45fd3da2"
+    },
+    "사막도적": {
+      "key": "monster-e3d186c7c1ce",
+      "runtimePath": "/assets/monsters/catalog/monster-e3d186c7c1ce.png",
+      "regionKey": "pyramid",
+      "archetype": "rogue",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/goblin.png",
+      "sha256": "ab75ef0a29d96c65b27250d4802fb20ca82649f6841e765c22cb34b4c981d91d"
+    },
+    "사슬 마왕": {
+      "key": "monster-851e30898746",
+      "runtimePath": "/assets/monsters/catalog/monster-851e30898746.png",
+      "regionKey": "dark-dungeon",
+      "archetype": "demon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "64853c036aaa9b2c0dcf3700a61b66b4f108170a5cb1a4298a786c0eee01d332"
+    },
+    "살아있는 마법서": {
+      "key": "monster-2ec2e48a6b4e",
+      "runtimePath": "/assets/monsters/catalog/monster-2ec2e48a6b4e.png",
+      "regionKey": "forbidden-library",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-2ec2e48a6b4e.png",
+      "sha256": "f72140c46ea8b468999e2f0adf91bcc9252c8a1dbae3f576f13fa9aa4703d204"
+    },
+    "생체 병기": {
+      "key": "monster-cf0ab0cbcb7b",
+      "runtimePath": "/assets/monsters/catalog/monster-cf0ab0cbcb7b.png",
+      "regionKey": "abandoned-laboratory",
+      "archetype": "beast",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-cf0ab0cbcb7b.png",
+      "sha256": "6c2ccb4d6fd03e9239736ed780fc17f59872be16fc21817160916c013565b017"
+    },
+    "서리 골렘": {
+      "key": "monster-92d8395845cf",
+      "runtimePath": "/assets/monsters/catalog/monster-92d8395845cf.png",
+      "regionKey": "frost-storm-ruins",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-92d8395845cf.png",
+      "sha256": "c5b318a8297b7cf78ad0bf5dacf6861f253315f581af1d2105199ea7ff8982a5"
+    },
+    "서리 군주": {
+      "key": "monster-34852baa4124",
+      "runtimePath": "/assets/monsters/catalog/monster-34852baa4124.png",
+      "regionKey": "frost-storm-ruins",
+      "archetype": "humanoid",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-34852baa4124.png",
+      "sha256": "073baf8ae6646b78a83ad31c565a7e8a5bada620796f124dbf6178166f6b6a0f"
+    },
+    "서리 늑대": {
+      "key": "monster-f2603ddfa05f",
+      "runtimePath": "/assets/monsters/catalog/monster-f2603ddfa05f.png",
+      "regionKey": "northern-snowfield",
+      "archetype": "beast",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/wolf.png",
+      "sha256": "5dae0a3795561814a053cac3ab574aaa4dc17004afca045cb0d50363c03f1f12"
+    },
+    "서리 마법사": {
+      "key": "monster-e896ab373c1a",
+      "runtimePath": "/assets/monsters/catalog/monster-e896ab373c1a.png",
+      "regionKey": "frost-storm-ruins",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e896ab373c1a.png",
+      "sha256": "abcce0adcdb3aadf2d165e85aa20268eb886140952272b6bfa5ff44652885f96"
+    },
+    "서리 정령": {
+      "key": "monster-724b029c5907",
+      "runtimePath": "/assets/monsters/catalog/monster-724b029c5907.png",
+      "regionKey": "glacial-abyss",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-724b029c5907.png",
+      "sha256": "0e35901614316e1144b82f5e0e9f00c6c9c83ad84945d6b209ae48bc38a618a5"
+    },
+    "석상 가디언": {
+      "key": "stone-guardian",
+      "runtimePath": "/assets/monsters/catalog/stone-guardian.png",
+      "regionKey": "ruins",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/stone-guardian.png",
+      "sha256": "dff4f5a5ab51675aebc3d44b0590b0882e5a9c34ffe3cdbb10eaaedd1def06d7"
+    },
+    "설원 거인": {
+      "key": "monster-160fddb37d43",
+      "runtimePath": "/assets/monsters/catalog/monster-160fddb37d43.png",
+      "regionKey": "northern-snowfield",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-160fddb37d43.png",
+      "sha256": "a698f822c73a5ff96fed58b3c978ed398abf5cad3b465dbccba532a920692708"
+    },
+    "설인": {
+      "key": "monster-19d905cef932",
+      "runtimePath": "/assets/monsters/catalog/monster-19d905cef932.png",
+      "regionKey": "northern-snowfield",
+      "archetype": "beast",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-19d905cef932.png",
+      "sha256": "44422de870ac26eaffa09e37d458bb9528619497bde8f7ad06e828458e2de799"
+    },
+    "성스러운 물고기": {
+      "key": "monster-858705ee7367",
+      "runtimePath": "/assets/monsters/catalog/monster-858705ee7367.png",
+      "regionKey": "sacred-lake",
+      "archetype": "aquatic",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-858705ee7367.png",
+      "sha256": "281000321c668c9f239d7a1b68c47692ede1f2dd5e0a487d11c7255fb9db4b81"
+    },
+    "성운 감시자": {
+      "key": "monster-37d94f499032",
+      "runtimePath": "/assets/monsters/catalog/monster-37d94f499032.png",
+      "regionKey": "sky-garden",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-37d94f499032.png",
+      "sha256": "d4fca2d3c5df53248e556c26ee3cfcffb7c8d88ade144f7e030dca3cbc1bfdf7"
+    },
+    "세계수 수호자": {
+      "key": "monster-0d8cf742b8e9",
+      "runtimePath": "/assets/monsters/catalog/monster-0d8cf742b8e9.png",
+      "regionKey": "world-tree-forest",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "9556355a713e82fe28bfd3ae26cd43f7f98606695ee1abbb6d27c141de3a938d"
+    },
+    "수련 님프": {
+      "key": "monster-70b7adba43b9",
+      "runtimePath": "/assets/monsters/catalog/monster-70b7adba43b9.png",
+      "regionKey": "lake-temple",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/forest-fairy.png",
+      "sha256": "0b0e3d1bf8f7fa0562cdeea4c5ac3b3c1205fa0a2a06afb5911a7b18fd051de4"
+    },
+    "수정 골렘": {
+      "key": "monster-00b1ff34598b",
+      "runtimePath": "/assets/monsters/catalog/monster-00b1ff34598b.png",
+      "regionKey": "crystal-cave",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-00b1ff34598b.png",
+      "sha256": "52539fd8c69ae0c420a6c39d0c5d58ffdb00ef5a464e1a5c7abe8382d0d54a12"
+    },
+    "수정 지킴이": {
+      "key": "monster-75fce693d5c1",
+      "runtimePath": "/assets/monsters/catalog/monster-75fce693d5c1.png",
+      "regionKey": "crystal-cave",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/kobold.png",
+      "sha256": "986b7a27cad80c3a44aba6c83eb33bda93fdb46df3d381cb39c8e5502b96b2f9"
+    },
+    "수호신의 사도": {
+      "key": "monster-21889c93ef23",
+      "runtimePath": "/assets/monsters/catalog/monster-21889c93ef23.png",
+      "regionKey": "ancient-temple-city",
+      "archetype": "divine",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-21889c93ef23.png",
+      "sha256": "b57d8251d18e220e072999f24d6110ccd59bd328e6356a0a68b43839d291dd83"
+    },
+    "숲 요정": {
+      "key": "forest-fairy",
+      "runtimePath": "/assets/monsters/catalog/forest-fairy.png",
+      "regionKey": "forest",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/forest-fairy.png",
+      "sha256": "0f20cd4272e929f941c439e05090f88cf07b9b16cec8aca3c6d100334be752e2"
+    },
+    "숲의 정령": {
+      "key": "forest-spirit",
+      "runtimePath": "/assets/monsters/catalog/forest-spirit.png",
+      "regionKey": "forest",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/forest-spirit.png",
+      "sha256": "9735ea3876a856fa4d33766515819e9076b976d08075f7d313f5cc47951665e7"
+    },
+    "스노우 울프": {
+      "key": "monster-3ba063383d00",
+      "runtimePath": "/assets/monsters/catalog/monster-3ba063383d00.png",
+      "regionKey": "ice-citadel",
+      "archetype": "beast",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-3ba063383d00.png",
+      "sha256": "cc3c37eef321cf65ddbccda634b3697bf70d4d0799c0a47b24a70523c7b407d2"
+    },
+    "스핑크스": {
+      "key": "monster-1a287740b890",
+      "runtimePath": "/assets/monsters/catalog/monster-1a287740b890.png",
+      "regionKey": "pyramid",
+      "archetype": "divine",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-1a287740b890.png",
+      "sha256": "d9686c5a25cfd735d216cc43ee4b1a36ad5f5a4f051e0c4810b04356a43adf88"
+    },
+    "슬라임": {
+      "key": "slime",
+      "runtimePath": "/assets/monsters/catalog/slime.png",
+      "regionKey": "forest",
+      "archetype": "slime",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/slime.png",
+      "sha256": "67dbc2f1c06a67e25c96bca831095b9d3623675a60329b77927561daf68e0f43"
+    },
+    "시간 파편체": {
+      "key": "monster-ead93e2bc219",
+      "runtimePath": "/assets/monsters/catalog/monster-ead93e2bc219.png",
+      "regionKey": "ancient-temple-city",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-ead93e2bc219.png",
+      "sha256": "664c7a776b1eaecdac1f9569b4ca071b3a1a85f90b5a8da626c6e1618c9c47cf"
+    },
+    "시간의 파수꾼": {
+      "key": "monster-687373df58bf",
+      "runtimePath": "/assets/monsters/catalog/monster-687373df58bf.png",
+      "regionKey": "sky-temple",
+      "archetype": "warrior",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-687373df58bf.png",
+      "sha256": "bd00b7b234544bd9f4aaa6c4056a0d620dc45c2f8ca26523f51fba2fce7f40dc"
+    },
+    "신성한 제관": {
+      "key": "monster-9d7c9e12039d",
+      "runtimePath": "/assets/monsters/catalog/monster-9d7c9e12039d.png",
+      "regionKey": "ancient-temple-city",
+      "archetype": "divine",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-9d7c9e12039d.png",
+      "sha256": "bd55407f9dfac7e4990f9868d3bebbaa8e11cf2fa440521a19f95ee791b2496d"
+    },
+    "신전 경비병": {
+      "key": "monster-48615837f73c",
+      "runtimePath": "/assets/monsters/catalog/monster-48615837f73c.png",
+      "regionKey": "ancient-temple-city",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "ae058244a69d5a4465babae967618c2b904a5f4c7f07751d14379844036314c9"
+    },
+    "실험실 수호자": {
+      "key": "monster-258dc3a004e1",
+      "runtimePath": "/assets/monsters/catalog/monster-258dc3a004e1.png",
+      "regionKey": "abandoned-laboratory",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "af1b6dafe66fa5100b44134e4c108adcebde6accfd57a98375fada5b410d3306"
+    },
+    "심연 크라켄": {
+      "key": "monster-10a5124e4c85",
+      "runtimePath": "/assets/monsters/catalog/monster-10a5124e4c85.png",
+      "regionKey": "deep-sea-corridor",
+      "archetype": "aquatic",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-10a5124e4c85.png",
+      "sha256": "dfec965238f9c07906969ca3ef920a8b4b6041b0b5d0fc46ca8d0c1d2ebef68b"
+    },
+    "심연의 눈": {
+      "key": "monster-63449f49b704",
+      "runtimePath": "/assets/monsters/catalog/monster-63449f49b704.png",
+      "regionKey": "void-corridor",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-63449f49b704.png",
+      "sha256": "462761a11702442140fcf8d0b9808185aa12dd6076e0aae68ec51c6d13e10f39"
+    },
+    "심연의 수호자": {
+      "key": "monster-fe85533f05a9",
+      "runtimePath": "/assets/monsters/catalog/monster-fe85533f05a9.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/skeleton-soldier.png",
+      "sha256": "df4028d15af38ba39552df80220591e37441c4f45a3b68b4f221b6e4e7285a39"
+    },
+    "심연의 크라켄": {
+      "key": "monster-05ad7cddbc9b",
+      "runtimePath": "/assets/monsters/catalog/monster-05ad7cddbc9b.png",
+      "regionKey": "deep-sea-corridor",
+      "archetype": "aquatic",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-05ad7cddbc9b.png",
+      "sha256": "29ba0e6b6f009b409675c89718d20faeee8a508d031bf30269bceda0fc8a1cad"
+    },
+    "심연의 파수꾼": {
+      "key": "monster-c4a31b0363b2",
+      "runtimePath": "/assets/monsters/catalog/monster-c4a31b0363b2.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "warrior",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-c4a31b0363b2.png",
+      "sha256": "6736442210e158c885a9fe72a3c7c51c2daa1e5807b741f2fd7f35d0b4698472"
+    },
+    "심해 기도사": {
+      "key": "monster-44fb1b6be751",
+      "runtimePath": "/assets/monsters/catalog/monster-44fb1b6be751.png",
+      "regionKey": "deep-sea-corridor",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-44fb1b6be751.png",
+      "sha256": "c9ce01ac7f4f0648a3934b0e8f6b960e15570f75f1cc0733569907623825e6d4"
+    },
+    "아누비스 수호자": {
+      "key": "monster-fd146ff0ec8a",
+      "runtimePath": "/assets/monsters/catalog/monster-fd146ff0ec8a.png",
+      "regionKey": "pyramid",
+      "archetype": "divine",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-fd146ff0ec8a.png",
+      "sha256": "bd7d2de38371f0a1518a2da875048f2c76c0ef938aad1255791515b16e9d6f3b"
+    },
+    "아이스 골렘": {
+      "key": "monster-4ce0c528fb1a",
+      "runtimePath": "/assets/monsters/catalog/monster-4ce0c528fb1a.png",
+      "regionKey": "ice-citadel",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-4ce0c528fb1a.png",
+      "sha256": "2a971cc508a40f462bd5553000d433ea08cf8ac66eb1698e2602be1c222e5fd0"
+    },
+    "아이스 드래곤": {
+      "key": "monster-474123cd699b",
+      "runtimePath": "/assets/monsters/catalog/monster-474123cd699b.png",
+      "regionKey": "glacial-abyss",
+      "archetype": "dragon",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-474123cd699b.png",
+      "sha256": "0907f678ae6d8b5d625b1474f2b39fc261d460d4919c4f9248b967ca966a8e10"
+    },
+    "암흑 마법사": {
+      "key": "monster-7a96730f4730",
+      "runtimePath": "/assets/monsters/catalog/monster-7a96730f4730.png",
+      "regionKey": "abandoned-mine",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7a96730f4730.png",
+      "sha256": "88973a659a070c0203d622b60acc6eecad3622d65e7fbbf6cc07361000aac585"
+    },
+    "암흑 사제": {
+      "key": "monster-1138655832ae",
+      "runtimePath": "/assets/monsters/catalog/monster-1138655832ae.png",
+      "regionKey": "dark-castle",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "61356f74f31ec5fa3a566fe86263bfaf7ac58f20eb6b93cd36206da35d7abc8c"
+    },
+    "야생 그리핀": {
+      "key": "monster-e62c4d927262",
+      "runtimePath": "/assets/monsters/catalog/monster-e62c4d927262.png",
+      "regionKey": "world-tree-forest",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e62c4d927262.png",
+      "sha256": "234ba9dc62fb043b2bd54f4fdf8ad465d9821d4c1dae7a8ede23e9f0a69e70d9"
+    },
+    "어둠 수호자": {
+      "key": "monster-5ceaba4f9dcf",
+      "runtimePath": "/assets/monsters/catalog/monster-5ceaba4f9dcf.png",
+      "regionKey": "dark-dungeon",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/skeleton-soldier.png",
+      "sha256": "229fa91d574d2248e926318a3a44275f22ed9ecefefd09356e08168cc4232928"
+    },
+    "어비스 리바이어던": {
+      "key": "monster-1abc00bd9cc6",
+      "runtimePath": "/assets/monsters/catalog/monster-1abc00bd9cc6.png",
+      "regionKey": "deep-sea-corridor",
+      "archetype": "aquatic",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-1abc00bd9cc6.png",
+      "sha256": "2871e1fe46b6046b1391fb96a47d448e5c2907ed282cc18ae8a9760e633b19f8"
+    },
+    "언데드 마법사": {
+      "key": "monster-90af280d7002",
+      "runtimePath": "/assets/monsters/catalog/monster-90af280d7002.png",
+      "regionKey": "cursed-graveyard",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "4fb124f9d55c78dbf4f7cafab7ac55e98b17f34d4fe1d6532295dbdab1e6fd55"
+    },
+    "얼음 거인": {
+      "key": "monster-93aa8b402482",
+      "runtimePath": "/assets/monsters/catalog/monster-93aa8b402482.png",
+      "regionKey": "ice-citadel",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-93aa8b402482.png",
+      "sha256": "974b9a8c66186b4c8f6f1b5b2f702fd83ff80f2f3a2074d254a7710bdc6402f9"
+    },
+    "얼음 기사": {
+      "key": "monster-b7be84912986",
+      "runtimePath": "/assets/monsters/catalog/monster-b7be84912986.png",
+      "regionKey": "frost-storm-ruins",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "b2b3bdaa62e85bee0f350392a19d3fc21eebd4cd241be01379c95707ec36577d"
+    },
+    "얼음 정령": {
+      "key": "monster-c26eb4f9bae8",
+      "runtimePath": "/assets/monsters/catalog/monster-c26eb4f9bae8.png",
+      "regionKey": "northern-snowfield",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-c26eb4f9bae8.png",
+      "sha256": "4270d5208a70e45e13fb845999b09ac3a03091d7112702a0b1b4ac21b5f7a66b"
+    },
+    "에테르 거인": {
+      "key": "monster-561b4c4ced14",
+      "runtimePath": "/assets/monsters/catalog/monster-561b4c4ced14.png",
+      "regionKey": "collapsed-magic-fortress",
+      "archetype": "construct",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-561b4c4ced14.png",
+      "sha256": "55516fd5d50ce0796e12419bd86d3216745a15b6088d54c938d410d0940c1e43"
+    },
+    "에테르 군주": {
+      "key": "monster-7962c91f33b2",
+      "runtimePath": "/assets/monsters/catalog/monster-7962c91f33b2.png",
+      "regionKey": "aether-gate",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "0007a7f644f867a5902def2c68565425e86fd80d23329eb7f91c673d92111160"
+    },
+    "에테르 돌격대": {
+      "key": "monster-893cd68e4faf",
+      "runtimePath": "/assets/monsters/catalog/monster-893cd68e4faf.png",
+      "regionKey": "rift-outpost",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-spirit.png",
+      "sha256": "1939f9ae978464f736353d173ee32330f92a1925c01314fd021ed59e16289f07"
+    },
+    "에테르 드래곤": {
+      "key": "monster-c1ac6c0735d5",
+      "runtimePath": "/assets/monsters/catalog/monster-c1ac6c0735d5.png",
+      "regionKey": "aether-gate",
+      "archetype": "dragon",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/red-dragon.png",
+      "sha256": "34c6a01de9229e10d92e1c6767136824c5d183966eb375e92546e67154680bfe"
+    },
+    "에테르 방랑자": {
+      "key": "monster-145074084603",
+      "runtimePath": "/assets/monsters/catalog/monster-145074084603.png",
+      "regionKey": "aether-ruins",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-spirit.png",
+      "sha256": "b874bf921d6f1da92684cbe646e7363522da26d6e86fd4712f3461a43ca82d70"
+    },
+    "에테르 심판자": {
+      "key": "monster-26d12fff7775",
+      "runtimePath": "/assets/monsters/catalog/monster-26d12fff7775.png",
+      "regionKey": "aether-ruins",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-26d12fff7775.png",
+      "sha256": "24902f76796079c5e56c0d774cd35ae7a7e2f03cd986488ca7b205cc732e458a"
+    },
+    "에테르 잔류체": {
+      "key": "monster-4b17248f8de5",
+      "runtimePath": "/assets/monsters/catalog/monster-4b17248f8de5.png",
+      "regionKey": "aether-ruins",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/forest-spirit.png",
+      "sha256": "8dc9ce87da03895a918e55fbc58e6a0bab1013efe35c4030cd39d94742231236"
+    },
+    "에테르 파편체": {
+      "key": "monster-4a550bbb4db0",
+      "runtimePath": "/assets/monsters/catalog/monster-4a550bbb4db0.png",
+      "regionKey": "aether-gate",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-4a550bbb4db0.png",
+      "sha256": "554608d15b7a827f72f5b6b06eff99e9cee9a0cbd4d0e60955d3bc253d7ac77a"
+    },
+    "에테르 흡수체": {
+      "key": "monster-960af22a3197",
+      "runtimePath": "/assets/monsters/catalog/monster-960af22a3197.png",
+      "regionKey": "aether-ruins",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/forest-spirit.png",
+      "sha256": "b6c367eb942c67d659b17ba201e1b1977e23511d9b3d7c287650420fa8337ee2"
+    },
+    "엔트로피 군주": {
+      "key": "monster-4e9327e3b013",
+      "runtimePath": "/assets/monsters/catalog/monster-4e9327e3b013.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "382290607d008f1dc0dd6db1fc09153df30a6d07a30f30a20fe9ddcc551ec7af"
+    },
+    "영겁의 수문장": {
+      "key": "monster-6efd5aa36605",
+      "runtimePath": "/assets/monsters/catalog/monster-6efd5aa36605.png",
+      "regionKey": "aether-gate",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-6efd5aa36605.png",
+      "sha256": "b53a487fddd9b8075360e3f237fdd32708abb0b1def0dd851a5a9a9affc49635"
+    },
+    "영겁의 수호신상": {
+      "key": "monster-83c9752e1606",
+      "runtimePath": "/assets/monsters/catalog/monster-83c9752e1606.png",
+      "regionKey": "ancient-temple-city",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/stone-guardian.png",
+      "sha256": "893501b7cf06cb802cc6ff2435945ee430d64f072177157b45d9f4dde8223032"
+    },
+    "오염된 연구원": {
+      "key": "monster-5731714ce0b3",
+      "runtimePath": "/assets/monsters/catalog/monster-5731714ce0b3.png",
+      "regionKey": "abandoned-laboratory",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-5731714ce0b3.png",
+      "sha256": "2afdde3742f4bdb742eedac0f3c6c0063c85148939d024edfbab0ba18a299f2e"
+    },
+    "오작동 로봇": {
+      "key": "monster-97f98262af85",
+      "runtimePath": "/assets/monsters/catalog/monster-97f98262af85.png",
+      "regionKey": "machine-ruins",
+      "archetype": "machine",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-97f98262af85.png",
+      "sha256": "c56f231830a40d653f2f9089f2919eb1658e36aefc12bae4501c73d2905b071e"
+    },
+    "왕국 기사": {
+      "key": "monster-8426add1da12",
+      "runtimePath": "/assets/monsters/catalog/monster-8426add1da12.png",
+      "regionKey": "golden-kingdom",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-8426add1da12.png",
+      "sha256": "b0f46554bb6b06bac77dd2477babcc67f843744c9b3c745e86a3133aae68c1dc"
+    },
+    "용병 전사": {
+      "key": "monster-e387fcc22327",
+      "runtimePath": "/assets/monsters/catalog/monster-e387fcc22327.png",
+      "regionKey": "golden-kingdom",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e387fcc22327.png",
+      "sha256": "d51f85ca7f039b98232167968699a35d9c2a63bf0978ea5e12df12e2d756b2ba"
+    },
+    "용암 거북": {
+      "key": "monster-7761c9b478d8",
+      "runtimePath": "/assets/monsters/catalog/monster-7761c9b478d8.png",
+      "regionKey": "lava-zone",
+      "archetype": "reptile",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7761c9b478d8.png",
+      "sha256": "8ee3e3c86022aa85c0184c8dc5641fefee20850e2185b1fb63a27ec675408f6e"
+    },
+    "용암 거인": {
+      "key": "monster-7962486e2c30",
+      "runtimePath": "/assets/monsters/catalog/monster-7962486e2c30.png",
+      "regionKey": "lava-zone",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7962486e2c30.png",
+      "sha256": "3c1a8fd317fe2950a7d1b177e9bdbce11cd914e27c85edf616359ec4b50e9f3e"
+    },
+    "용암 골렘": {
+      "key": "lava-golem",
+      "runtimePath": "/assets/monsters/catalog/lava-golem.png",
+      "regionKey": "fire",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/lava-golem.png",
+      "sha256": "0ac7a9f9ebf05eb9c0b5a1cc702e65c4bb37342811d037a1b1629cc8a2076b4f"
+    },
+    "용암 정령": {
+      "key": "monster-06bde63a8fa5",
+      "runtimePath": "/assets/monsters/catalog/monster-06bde63a8fa5.png",
+      "regionKey": "fire-temple",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-06bde63a8fa5.png",
+      "sha256": "c692a029af97daac6da4ee84364f597089e11a6eefe20665b028579c86907711"
+    },
+    "원시의 신": {
+      "key": "monster-e1b8a03dea25",
+      "runtimePath": "/assets/monsters/catalog/monster-e1b8a03dea25.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "divine",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e1b8a03dea25.png",
+      "sha256": "f5b2c1931b1d09e3f4388643a7e7ef0c887084d568078c44f53b995f61cd3574"
+    },
+    "원한의 용사": {
+      "key": "monster-5179c340c8aa",
+      "runtimePath": "/assets/monsters/catalog/monster-5179c340c8aa.png",
+      "regionKey": "underground-labyrinth",
+      "archetype": "warrior",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-5179c340c8aa.png",
+      "sha256": "d93588e8d3c8b2b08ce6e05be1d31d3bc3585dc526f7e2190c70471f35ae6049"
+    },
+    "유령 군단": {
+      "key": "monster-010f6f79d86a",
+      "runtimePath": "/assets/monsters/catalog/monster-010f6f79d86a.png",
+      "regionKey": "cursed-graveyard",
+      "archetype": "spectral",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-010f6f79d86a.png",
+      "sha256": "7ab81bdef201a53e630d1a721888d22ff7b97cd9b2ce8a0f47460a16cc43dbf4"
+    },
+    "유령 기사": {
+      "key": "ghost-knight",
+      "runtimePath": "/assets/monsters/catalog/ghost-knight.png",
+      "regionKey": "ruins",
+      "archetype": "spectral",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "9fb82724a323852bcbf8704339864ba2e3477169d14e2369209e787540f69681"
+    },
+    "익사한 기사": {
+      "key": "monster-2592649153a9",
+      "runtimePath": "/assets/monsters/catalog/monster-2592649153a9.png",
+      "regionKey": "river-of-souls",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "e3df684b6b6ac7947cd750ec801a81e821fea7c8e68916e1c4ed4e7dc3836d57"
+    },
+    "잉크 슬라임": {
+      "key": "monster-029ec992daac",
+      "runtimePath": "/assets/monsters/catalog/monster-029ec992daac.png",
+      "regionKey": "forbidden-library",
+      "archetype": "slime",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/slime.png",
+      "sha256": "4548e64d318f8a33640ca3cb747edf3dc0113cdcceb522a6dc6796f2fc4bce8f"
+    },
+    "자연의 정령": {
+      "key": "monster-059235ee38aa",
+      "runtimePath": "/assets/monsters/catalog/monster-059235ee38aa.png",
+      "regionKey": "world-tree-forest",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/forest-spirit.png",
+      "sha256": "2adec108b50b5197af976cbee1c9234533f5b621a9ecf7db155c7cc45eadb8f5"
+    },
+    "저주받은 기사": {
+      "key": "monster-efab04dd43a3",
+      "runtimePath": "/assets/monsters/catalog/monster-efab04dd43a3.png",
+      "regionKey": "cursed-graveyard",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "59473c3013404f451a00a49f69bb536be84f8ea5f89f982d3aa59752b9012899"
+    },
+    "저주받은 어부": {
+      "key": "monster-7950c7898939",
+      "runtimePath": "/assets/monsters/catalog/monster-7950c7898939.png",
+      "regionKey": "river-of-souls",
+      "archetype": "rogue",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/kobold.png",
+      "sha256": "fea1ea985b2a66e191a35b525184143987433491fdb2a91a603ec69f51748fc5"
+    },
+    "전류 추적자": {
+      "key": "monster-60f43416e1e9",
+      "runtimePath": "/assets/monsters/catalog/monster-60f43416e1e9.png",
+      "regionKey": "machine-ruins",
+      "archetype": "rogue",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "a84d012c26f3b0ee7b0c47036047a9afef65bbb738c2271d88b2ef63ab69dea1"
+    },
+    "전초기지 사령관": {
+      "key": "monster-9e224a9ffcde",
+      "runtimePath": "/assets/monsters/catalog/monster-9e224a9ffcde.png",
+      "regionKey": "fallen-outpost",
+      "archetype": "spectral",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-9e224a9ffcde.png",
+      "sha256": "291f501ddca60dcce530586f4925cd4373d1f01c7e27edbc406c273d2d607455"
+    },
+    "전초기지 파수꾼": {
+      "key": "monster-efd0b660adf9",
+      "runtimePath": "/assets/monsters/catalog/monster-efd0b660adf9.png",
+      "regionKey": "fallen-outpost",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/skeleton-soldier.png",
+      "sha256": "658e4c9dc5e06be73d08b2b7f884e262c2e4a4f47539ae8aaec1d369306e3d11"
+    },
+    "정원 요정": {
+      "key": "monster-9b3e645c6403",
+      "runtimePath": "/assets/monsters/catalog/monster-9b3e645c6403.png",
+      "regionKey": "spring-garden",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/forest/forest-fairy.png",
+      "sha256": "1834f32b7ebe6a4edb2b02a2e76540435a87be9cc2b6d30bfa5ee7beda75a64e"
+    },
+    "종말의 기사": {
+      "key": "monster-ce8cda2c6928",
+      "runtimePath": "/assets/monsters/catalog/monster-ce8cda2c6928.png",
+      "regionKey": "apocalypse-battlefield",
+      "archetype": "warrior",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-ce8cda2c6928.png",
+      "sha256": "70c835a381fded7bd38b6344cf5129d4a11ae233fcf8328363810348b86d945f"
+    },
+    "종말의 마법사": {
+      "key": "monster-41d1e9efbd61",
+      "runtimePath": "/assets/monsters/catalog/monster-41d1e9efbd61.png",
+      "regionKey": "apocalypse-battlefield",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "8d1b1c1cb92792563e16ea5582cc6d9b2ada5cca64f007103471c0d5ff9fb1f0"
+    },
+    "종말의 전령": {
+      "key": "monster-d7d53aa25e90",
+      "runtimePath": "/assets/monsters/catalog/monster-d7d53aa25e90.png",
+      "regionKey": "apocalypse-battlefield",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "49e60f7e6807b7b3baad50602c499c04a83f6953fba157be9cb8d40e2b41a93f"
+    },
+    "증기 골렘": {
+      "key": "monster-390a7a20c1c4",
+      "runtimePath": "/assets/monsters/catalog/monster-390a7a20c1c4.png",
+      "regionKey": "machine-ruins",
+      "archetype": "machine",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-390a7a20c1c4.png",
+      "sha256": "6201dbc3ae761ae9afb4f2399cf26450232171effcdedcaa15ea4bc674e2a2e1"
+    },
+    "지옥의 문지기": {
+      "key": "monster-4797ce51f6a4",
+      "runtimePath": "/assets/monsters/catalog/monster-4797ce51f6a4.png",
+      "regionKey": "demon-king-castle",
+      "archetype": "demon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "0ee4e022f29381301914cc4f424d75b2bdbd06b22cd556fb0e29d63504a71e0b"
+    },
+    "차원 균열체": {
+      "key": "monster-b1f60f91bfff",
+      "runtimePath": "/assets/monsters/catalog/monster-b1f60f91bfff.png",
+      "regionKey": "dimensional-rift",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-b1f60f91bfff.png",
+      "sha256": "62fd84970e7a084ebbb86c8483b4cc6b3efa5fe896aa8366b1e868f1300fbaaa"
+    },
+    "차원 마왕": {
+      "key": "monster-420df549dbef",
+      "runtimePath": "/assets/monsters/catalog/monster-420df549dbef.png",
+      "regionKey": "dimensional-rift",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "6319cb2638d92d0b8e060272e719a5315943bf51cf96158ba8467e4c5226eddd"
+    },
+    "차원 방랑자": {
+      "key": "monster-85b8c25fd5f9",
+      "runtimePath": "/assets/monsters/catalog/monster-85b8c25fd5f9.png",
+      "regionKey": "aether-ruins",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "2d9772a6383c6c2094d23cb9cfa563205880ec9ab81611449db7e5aa3590ec69"
+    },
+    "차원 보병": {
+      "key": "monster-cc41c70e8174",
+      "runtimePath": "/assets/monsters/catalog/monster-cc41c70e8174.png",
+      "regionKey": "rift-outpost",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-cc41c70e8174.png",
+      "sha256": "86d6aa14934018db7a2c4624aaee513b061ea82e0bf97aa751681d8f77fbfd23"
+    },
+    "차원 분열자": {
+      "key": "monster-61e263ac793e",
+      "runtimePath": "/assets/monsters/catalog/monster-61e263ac793e.png",
+      "regionKey": "collapsed-magic-fortress",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-61e263ac793e.png",
+      "sha256": "52a53c65023045c70f0a303b2210689bb04f1775384862510d477b52d749addd"
+    },
+    "차원 분열체": {
+      "key": "monster-714afeb259e9",
+      "runtimePath": "/assets/monsters/catalog/monster-714afeb259e9.png",
+      "regionKey": "collapsed-magic-fortress",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-spirit.png",
+      "sha256": "ef64e84f10797721763163adf44093860cd9652caef9cca3b789f54ff1fd631c"
+    },
+    "차원 사령관": {
+      "key": "monster-d091985e1cca",
+      "runtimePath": "/assets/monsters/catalog/monster-d091985e1cca.png",
+      "regionKey": "rift-outpost",
+      "archetype": "spectral",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "a281bcafe48eb72bfae00726f3ca30c5a61a94eb4e3c0f4f297e8bbd26dbd45d"
+    },
+    "차원 파쇄자": {
+      "key": "monster-33e00c5fa59c",
+      "runtimePath": "/assets/monsters/catalog/monster-33e00c5fa59c.png",
+      "regionKey": "aether-gate",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-33e00c5fa59c.png",
+      "sha256": "816a54d75d282c7dbe400215cf64771b553188bcab2ac5003c6871a841dfb3f5"
+    },
+    "차원 포식자": {
+      "key": "monster-660242f15f1c",
+      "runtimePath": "/assets/monsters/catalog/monster-660242f15f1c.png",
+      "regionKey": "dimensional-rift",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-660242f15f1c.png",
+      "sha256": "15064ce5ba615eab4519b246b0964f3255dabd390092c1412469682b21e4d12d"
+    },
+    "차원의 포식자": {
+      "key": "monster-fd653771c4ae",
+      "runtimePath": "/assets/monsters/catalog/monster-fd653771c4ae.png",
+      "regionKey": "void-corridor",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "db82f9babc67bbd3cd67b4e029368522196b021fadd4b186b0cd09922ef35753"
+    },
+    "책의 정령": {
+      "key": "monster-4a24c4cca0bc",
+      "runtimePath": "/assets/monsters/catalog/monster-4a24c4cca0bc.png",
+      "regionKey": "collapsed-magic-fortress",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-4a24c4cca0bc.png",
+      "sha256": "558661a700902c465b224df058fa40948f7100308cfc98c0309e3100923115fe"
+    },
+    "천공 수호조": {
+      "key": "monster-d4edd07203c8",
+      "runtimePath": "/assets/monsters/catalog/monster-d4edd07203c8.png",
+      "regionKey": "sky-garden",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-d4edd07203c8.png",
+      "sha256": "d7e5f991c97ea96aac5e36f152234a69afb661da456a5296433f210956b9264a"
+    },
+    "천둥새 제피로스": {
+      "key": "monster-4bb262cf570a",
+      "runtimePath": "/assets/monsters/catalog/monster-4bb262cf570a.png",
+      "regionKey": "storm-highland",
+      "archetype": "avian",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-4bb262cf570a.png",
+      "sha256": "4ae955ec18456b708fffbf3dcecae62db8a5f502c611af5c5ce633b168fd6bcb"
+    },
+    "초록슬라임": {
+      "key": "green-slime",
+      "runtimePath": "/assets/monsters/catalog/green-slime.png",
+      "regionKey": "plains",
+      "archetype": "slime",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/green-slime.png",
+      "sha256": "34163b7a91e9aab6d4e2d4e7248f52a483e451550d01534d9bd540244ff1c62c"
+    },
+    "최후의 수호자": {
+      "key": "monster-7b424a7d82ab",
+      "runtimePath": "/assets/monsters/catalog/monster-7b424a7d82ab.png",
+      "regionKey": "apocalypse-battlefield",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "018e02122f05c2d26709a88a4e5d90dc1fd101946e79af48fd5bb3f7cfa429dc"
+    },
+    "코볼트": {
+      "key": "kobold",
+      "runtimePath": "/assets/monsters/catalog/kobold.png",
+      "regionKey": "plains",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/kobold.png",
+      "sha256": "fe1edd2d84d6aae8ad77fbcbbeda1e7ec232d0a6ee8f40eac41d7d77fc4f7c77"
+    },
+    "코볼트 광부": {
+      "key": "monster-fbf5a83b3eea",
+      "runtimePath": "/assets/monsters/catalog/monster-fbf5a83b3eea.png",
+      "regionKey": "abandoned-mine",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-fbf5a83b3eea.png",
+      "sha256": "1a50dbdb830f6b1a2aefff6f7c210594b5692be91b3907c3e5e71da9ca51ad52"
+    },
+    "타락 기사": {
+      "key": "monster-2b45f134c404",
+      "runtimePath": "/assets/monsters/catalog/monster-2b45f134c404.png",
+      "regionKey": "dark-dungeon",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "615859faa5614213e68f9d4fb0161332f4e5876de911bc806be21921d4d8b100"
+    },
+    "타락한 세계수 수호자": {
+      "key": "monster-e33191d1f61f",
+      "runtimePath": "/assets/monsters/catalog/monster-e33191d1f61f.png",
+      "regionKey": "sky-garden",
+      "archetype": "warrior",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e33191d1f61f.png",
+      "sha256": "be31946fc7e4113a77266d2ed5b36b887c40cf6f54c1e51f44c904c37775f737"
+    },
+    "타락한 세계수 영혼": {
+      "key": "monster-c6ec225b8f23",
+      "runtimePath": "/assets/monsters/catalog/monster-c6ec225b8f23.png",
+      "regionKey": "world-tree-forest",
+      "archetype": "spectral",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-c6ec225b8f23.png",
+      "sha256": "e79805cd38a15bff62788d7c9a1c429e8bf24f4e76db6a9d42f83b4a26d69faf"
+    },
+    "타락한 용사": {
+      "key": "monster-940255120136",
+      "runtimePath": "/assets/monsters/catalog/monster-940255120136.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "f3de9e23aaa6ff07a3415bdea9ae57c1d32b94d94619102e0233418b1dff53a0"
+    },
+    "타락한 천사": {
+      "key": "monster-33283819c4b1",
+      "runtimePath": "/assets/monsters/catalog/monster-33283819c4b1.png",
+      "regionKey": "demon-king-castle",
+      "archetype": "demon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-33283819c4b1.png",
+      "sha256": "66ceffff1f788dc3e53d2548079f67e68ab3d874ea6affc76bb215a0ba0d4739"
+    },
+    "탐욕의 상인": {
+      "key": "monster-414b19731a40",
+      "runtimePath": "/assets/monsters/catalog/monster-414b19731a40.png",
+      "regionKey": "golden-kingdom",
+      "archetype": "rogue",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/goblin.png",
+      "sha256": "aa39be1b234daa385ca33023b20108b4aa4f992f576558839c58e3de49ddbb3c"
+    },
+    "탑 수호자": {
+      "key": "monster-f9b4b1ff135f",
+      "runtimePath": "/assets/monsters/catalog/monster-f9b4b1ff135f.png",
+      "regionKey": "ancient-magic-tower",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "df1bfa120a150fbb3803859d64ecb5dd018df6103ec123e3d36cc80e3f17bec3"
+    },
+    "파멸의 기사": {
+      "key": "monster-30e58c31e720",
+      "runtimePath": "/assets/monsters/catalog/monster-30e58c31e720.png",
+      "regionKey": "apocalypse-battlefield",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "97416670a4e0c77931ee5793ffdddc34853b02118e855032e5ef44eef4192666"
+    },
+    "파이어뱃": {
+      "key": "fire-bat",
+      "runtimePath": "/assets/monsters/catalog/fire-bat.png",
+      "regionKey": "fire",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/fire-bat.png",
+      "sha256": "aa81ca6b696b602f3bb8c15137edcda48e24435249c2f360f0b6a6cc0b59cbbe"
+    },
+    "평원 도적": {
+      "key": "plains-bandit",
+      "runtimePath": "/assets/monsters/catalog/plains-bandit.png",
+      "regionKey": "plains",
+      "archetype": "rogue",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "33e8aac62d96f2ca4abd14dc40a32cdf2d0790bfc68b95e675cb7cfb39593f01"
+    },
+    "폐허 구울": {
+      "key": "ruins-ghoul",
+      "runtimePath": "/assets/monsters/catalog/ruins-ghoul.png",
+      "regionKey": "ruins",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ruins-ghoul.png",
+      "sha256": "40f678fd5401e484d72fb1e9743f4fe8cbf18741f9d0a11f673beee4d9e8d289"
+    },
+    "폐회로 마도병": {
+      "key": "monster-e7fc6feb2ab9",
+      "runtimePath": "/assets/monsters/catalog/monster-e7fc6feb2ab9.png",
+      "regionKey": "machine-ruins",
+      "archetype": "machine",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e7fc6feb2ab9.png",
+      "sha256": "a5746d4643c5d98fcba6a40632043b3393981af90109ece9bc1e2a0ad69eb719"
+    },
+    "폭주 자동인형": {
+      "key": "monster-78428d074a53",
+      "runtimePath": "/assets/monsters/catalog/monster-78428d074a53.png",
+      "regionKey": "abandoned-laboratory",
+      "archetype": "machine",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-78428d074a53.png",
+      "sha256": "74bafeb532396a59a3414a15345182271b61c8520ff086a252a8494ba1f54710"
+    },
+    "폭풍 그리핀": {
+      "key": "monster-bbd8808afc36",
+      "runtimePath": "/assets/monsters/catalog/monster-bbd8808afc36.png",
+      "regionKey": "storm-highland",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-bbd8808afc36.png",
+      "sha256": "d8102570c19a0c09ab257ea08ab08421a4023a9215e141b0f6df32a35d166d7c"
+    },
+    "폭풍 매": {
+      "key": "monster-e031d34c6b86",
+      "runtimePath": "/assets/monsters/catalog/monster-e031d34c6b86.png",
+      "regionKey": "storm-highland",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e031d34c6b86.png",
+      "sha256": "93c38ba9d5db01d06d2c5136a8be2664bf330b73969829701ac1acef22207db6"
+    },
+    "폭풍 세이렌": {
+      "key": "monster-2ca7828456ee",
+      "runtimePath": "/assets/monsters/catalog/monster-2ca7828456ee.png",
+      "regionKey": "sky-garden",
+      "archetype": "avian",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-2ca7828456ee.png",
+      "sha256": "8478e1197c5255ad2fc5792444fc1753d3045368399c70653c98c7e1b58de810"
+    },
+    "폭풍 수호자": {
+      "key": "monster-5424972b69b1",
+      "runtimePath": "/assets/monsters/catalog/monster-5424972b69b1.png",
+      "regionKey": "sky-garden",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/plains/plains-bandit.png",
+      "sha256": "0806b28aabf2908273ca7e369905c6bacf4d1fe3d54eeda8a0e4089f5e33f9dc"
+    },
+    "프로스트 위치": {
+      "key": "monster-f436ce588b9d",
+      "runtimePath": "/assets/monsters/catalog/monster-f436ce588b9d.png",
+      "regionKey": "ice-citadel",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-f436ce588b9d.png",
+      "sha256": "9e3d361ae352cde22a6f7602b65fbaf01e5335892b2342dd4149a955f05e7654"
+    },
+    "프로토타입 제로": {
+      "key": "monster-a3a5a22ad41e",
+      "runtimePath": "/assets/monsters/catalog/monster-a3a5a22ad41e.png",
+      "regionKey": "machine-ruins",
+      "archetype": "machine",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a3a5a22ad41e.png",
+      "sha256": "46f85cdd2b4fe9c3728b16addc8d2d4d6c4becec84f2e841e33d1ce7a6bf1a55"
+    },
+    "하늘 정령": {
+      "key": "monster-df633d29c087",
+      "runtimePath": "/assets/monsters/catalog/monster-df633d29c087.png",
+      "regionKey": "sky-garden",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-df633d29c087.png",
+      "sha256": "0bdae57945e3abc77950359972e2820ab324574c07d7134846fb0ff46e3a9226"
+    },
+    "하수도 악어": {
+      "key": "monster-241c90a69cba",
+      "runtimePath": "/assets/monsters/catalog/monster-241c90a69cba.png",
+      "regionKey": "ancient-sewer",
+      "archetype": "reptile",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-241c90a69cba.png",
+      "sha256": "47765cb4d8458bef5644c462c9a2a797eceb46e5a3fe3c72d49589244c664400"
+    },
+    "하수도의 여왕": {
+      "key": "monster-7564c68cd541",
+      "runtimePath": "/assets/monsters/catalog/monster-7564c68cd541.png",
+      "regionKey": "ancient-sewer",
+      "archetype": "humanoid",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7564c68cd541.png",
+      "sha256": "0274128477a0c30b36ffecfce04b63f9f5292b63b1788b5aa563719e2886d62d"
+    },
+    "한 맺힌 망자": {
+      "key": "monster-f70c5593d86e",
+      "runtimePath": "/assets/monsters/catalog/monster-f70c5593d86e.png",
+      "regionKey": "river-of-souls",
+      "archetype": "spectral",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-f70c5593d86e.png",
+      "sha256": "662d90c35ea86bbf85b16d6e4a3bef43b60be185ea6a9f6b8da93ba32aad8d0a"
+    },
+    "함정 수호자": {
+      "key": "monster-43d39d4c3154",
+      "runtimePath": "/assets/monsters/catalog/monster-43d39d4c3154.png",
+      "regionKey": "underground-labyrinth",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "c6e15ad6fd51b9625938384e411d95c92a4cb822e17153735b92750c5f268ce5"
+    },
+    "해골 마법사": {
+      "key": "monster-5515ae7567f8",
+      "runtimePath": "/assets/monsters/catalog/monster-5515ae7567f8.png",
+      "regionKey": "cursed-graveyard",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-5515ae7567f8.png",
+      "sha256": "9d13c12d32af559137629dd4793e1013c3c70c06bb097351a474911d46aaf54a"
+    },
+    "해골 병사": {
+      "key": "skeleton-soldier",
+      "runtimePath": "/assets/monsters/catalog/skeleton-soldier.png",
+      "regionKey": "ruins",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/skeleton-soldier.png",
+      "sha256": "4acd0a141437d6af9b0b665327f9a66da27266d6490e12b79821e04fb9b0d0e9"
+    },
+    "해류 파수꾼": {
+      "key": "monster-611198ce96b6",
+      "runtimePath": "/assets/monsters/catalog/monster-611198ce96b6.png",
+      "regionKey": "deep-sea-corridor",
+      "archetype": "aquatic",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-611198ce96b6.png",
+      "sha256": "5b10df618d77046f0a67d0b98f92b3e987239230be0451a6ae07efb13213d004"
+    },
+    "허무 집행관": {
+      "key": "monster-561263eb4b4f",
+      "runtimePath": "/assets/monsters/catalog/monster-561263eb4b4f.png",
+      "regionKey": "void-corridor",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-spirit.png",
+      "sha256": "bdcc1184b53146263f3ceabf459bcfb5711ad79f1b28256a7f669edb2a109865"
+    },
+    "허무의 기사": {
+      "key": "monster-cae80cd860fa",
+      "runtimePath": "/assets/monsters/catalog/monster-cae80cd860fa.png",
+      "regionKey": "void-corridor",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "b96cc16b3b7b7bc74ee5a1da4e6d49857c4cc07fa9dff0c11e3c9128885004f8"
+    },
+    "허무의 전령": {
+      "key": "monster-c7792255980b",
+      "runtimePath": "/assets/monsters/catalog/monster-c7792255980b.png",
+      "regionKey": "void-corridor",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-c7792255980b.png",
+      "sha256": "6155265a517ed28d214d8a273c6f9ed1ed6814590fa693d96271f61b16474c9d"
+    },
+    "허무의 집행관": {
+      "key": "monster-f5d4fe6f0d28",
+      "runtimePath": "/assets/monsters/catalog/monster-f5d4fe6f0d28.png",
+      "regionKey": "dimensional-rift",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-spirit.png",
+      "sha256": "26c82bc8da624dc60680cea609971f685bf359f7c01971884fa5b266028d14f9"
+    },
+    "허무의 황제": {
+      "key": "monster-cbc9569630fd",
+      "runtimePath": "/assets/monsters/catalog/monster-cbc9569630fd.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "26c047bcedd298951b12bf4e6122681e93ec39fddb4f9237ae62dd04f259bcdc"
+    },
+    "혈월의 뱀파이어 로드": {
+      "key": "monster-17cab8794c8d",
+      "runtimePath": "/assets/monsters/catalog/monster-17cab8794c8d.png",
+      "regionKey": "dark-castle",
+      "archetype": "undead",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-17cab8794c8d.png",
+      "sha256": "6d7485b653c225f98bb3d52300d581059c501db8d426bd90fe94107df12bdbf3"
+    },
+    "호수 수호자": {
+      "key": "monster-8b0a61414b4b",
+      "runtimePath": "/assets/monsters/catalog/monster-8b0a61414b4b.png",
+      "regionKey": "sacred-lake",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/ghost-knight.png",
+      "sha256": "48d87f3a22c061a97ada8e64dd3a25ef4c1226667cbf4ccf82f0458776780830"
+    },
+    "혼돈의 수호자": {
+      "key": "monster-c94199b1017c",
+      "runtimePath": "/assets/monsters/catalog/monster-c94199b1017c.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "aberration",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-c94199b1017c.png",
+      "sha256": "56892e7e2b6fac4d758d45ac2cac7fd2f0055d789fdbd3dedb2270414dc1f4a8"
+    },
+    "혼돈의 추종자": {
+      "key": "monster-ef03e8604e21",
+      "runtimePath": "/assets/monsters/catalog/monster-ef03e8604e21.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-spirit.png",
+      "sha256": "b7e6aae7bff10d6376892ebe78a6f63f4804000eb1326240ff453abd3455448e"
+    },
+    "혼돈의 화신": {
+      "key": "monster-4d3e16765459",
+      "runtimePath": "/assets/monsters/catalog/monster-4d3e16765459.png",
+      "regionKey": "chaos-abyss",
+      "archetype": "aberration",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-spirit.png",
+      "sha256": "7e1405d1843dae07fc1a3d62e3b504d4189086b2ddc6c874834cdaf8b3379820"
+    },
+    "화산 도마뱀": {
+      "key": "monster-fa417fa9f7b8",
+      "runtimePath": "/assets/monsters/catalog/monster-fa417fa9f7b8.png",
+      "regionKey": "lava-zone",
+      "archetype": "reptile",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lizard.png",
+      "sha256": "3b8fc2e628e7fd4e3b1201624f5317a588efbb7e5701cd8fafeeefaa068a3580"
+    },
+    "화산 정령": {
+      "key": "monster-777be66d21c6",
+      "runtimePath": "/assets/monsters/catalog/monster-777be66d21c6.png",
+      "regionKey": "lava-zone",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-777be66d21c6.png",
+      "sha256": "15f2583c63b10c71175d2bd04f5b3496c72914ae084f339d4923ad1f4bb9d72a"
+    },
+    "화산재 골렘": {
+      "key": "monster-70fff0d39abb",
+      "runtimePath": "/assets/monsters/catalog/monster-70fff0d39abb.png",
+      "regionKey": "lava-zone",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/stone-guardian.png",
+      "sha256": "f16f7eea8f0d0a9a4d82af889247b64f147b72c7517d96e296a37d49c75ac5a9"
+    },
+    "화염 감시자": {
+      "key": "monster-c2d37747d557",
+      "runtimePath": "/assets/monsters/catalog/monster-c2d37747d557.png",
+      "regionKey": "fire-temple",
+      "archetype": "humanoid",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/goblin.png",
+      "sha256": "0a37668149d3165ddb60316ec4d99123204d44563d0b77265e62cfe825e97f9f"
+    },
+    "화염 골렘": {
+      "key": "monster-823db0b2b8eb",
+      "runtimePath": "/assets/monsters/catalog/monster-823db0b2b8eb.png",
+      "regionKey": "fire-temple",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-823db0b2b8eb.png",
+      "sha256": "47ef1f68c86d10ceab76c5c27acacee1711086128bd97b20fd7c92fb7eaf0018"
+    },
+    "화염 군주 이프리트": {
+      "key": "monster-4c526ed462f8",
+      "runtimePath": "/assets/monsters/catalog/monster-4c526ed462f8.png",
+      "regionKey": "lava-zone",
+      "archetype": "humanoid",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "585ce5366334be2a8b3904cc40d47b9cfb1415fdbc901f75232710adcea165ee"
+    },
+    "화염 도마뱀": {
+      "key": "fire-lizard",
+      "runtimePath": "/assets/monsters/catalog/fire-lizard.png",
+      "regionKey": "fire",
+      "archetype": "reptile",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lizard.png",
+      "sha256": "6ab97985aa55647f2c3dac3f4cc5cfe7c9c74e0097705f3c1e24bc903c41c159"
+    },
+    "화염 비룡": {
+      "key": "monster-2e2a633653f6",
+      "runtimePath": "/assets/monsters/catalog/monster-2e2a633653f6.png",
+      "regionKey": "lava-zone",
+      "archetype": "dragon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/red-dragon.png",
+      "sha256": "737739f08d33f0e9059026acb0f12928674cd3412a82fae44509b6487b3f516e"
+    },
+    "화염 사제": {
+      "key": "monster-41144233ecc0",
+      "runtimePath": "/assets/monsters/catalog/monster-41144233ecc0.png",
+      "regionKey": "fire-temple",
+      "archetype": "caster",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "0ee51a448d8a50f49f0239076d53b585faeb3ad2464a5dadd0ccbc745d9f7fd4"
+    },
+    "화염 와이번": {
+      "key": "monster-09881a8b21ed",
+      "runtimePath": "/assets/monsters/catalog/monster-09881a8b21ed.png",
+      "regionKey": "dragon-nest",
+      "archetype": "dragon",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/fire/red-dragon.png",
+      "sha256": "f9fee7dedd8e0c08d3b9500242fab82432fa865d55721f42c757112ff6c77ec0"
+    },
+    "화염 정령": {
+      "key": "fire-spirit",
+      "runtimePath": "/assets/monsters/catalog/fire-spirit.png",
+      "regionKey": "fire",
+      "archetype": "spirit",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/fire-spirit.png",
+      "sha256": "db997290c647750d85be442a46e16504aa5e85531a388c94d37db637f218c111"
+    },
+    "화염의 군주": {
+      "key": "fire-lord",
+      "runtimePath": "/assets/monsters/catalog/fire-lord.png",
+      "regionKey": "dragon-nest",
+      "archetype": "humanoid",
+      "isBoss": true,
+      "sourceRuntimePath": "/assets/monsters/fire/fire-lord.png",
+      "sha256": "757df2aa23917485f3fa4754a2a047c8d817f123a44efcc38088863b6f6bc783"
+    },
+    "황금 골렘": {
+      "key": "monster-5fb35c603abc",
+      "runtimePath": "/assets/monsters/catalog/monster-5fb35c603abc.png",
+      "regionKey": "ancient-vault",
+      "archetype": "construct",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/stone-guardian.png",
+      "sha256": "735c7559f7e0b4895cb286a2cfc80a54ac511b3b526341caffcbb4046d6dbef7"
+    },
+    "황금 왕국 수호자": {
+      "key": "monster-a4d68b34cf9e",
+      "runtimePath": "/assets/monsters/catalog/monster-a4d68b34cf9e.png",
+      "regionKey": "golden-kingdom",
+      "archetype": "warrior",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a4d68b34cf9e.png",
+      "sha256": "e8003f6569206cde882deac51a98315e758690894517613d4c6db47322d818bb"
+    },
+    "흡혼 해골": {
+      "key": "monster-5a11b2b511c4",
+      "runtimePath": "/assets/monsters/catalog/monster-5a11b2b511c4.png",
+      "regionKey": "river-of-souls",
+      "archetype": "undead",
+      "isBoss": false,
+      "sourceRuntimePath": "/assets/monsters/ruins/skeleton-soldier.png",
+      "sha256": "ebe2da7af45ee69c89529afaac746b249f9050255a9c9faba55a1ab295a8ccee"
+    }
+  }
+}

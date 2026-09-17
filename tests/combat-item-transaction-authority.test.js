@@ -6,6 +6,7 @@ import { AT } from '../src/reducers/actionTypes.js';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { makeCombatActionMap } from '../src/reducers/handlers/combatHandlers.js';
 import { resolveCombatItemTurn } from '../src/systems/combatItemTurn.js';
+import { startExpedition, finishExpedition } from '../src/utils/expeditionLedger.js';
 
 const potion = {
     id: 'combat-potion',
@@ -41,6 +42,47 @@ const makeState = (overrides = {}) => ({
 
 const actionMap = makeCombatActionMap(INITIAL_STATE.player);
 
+test('combat damage remains the expedition minimum after healing, victory and return', () => {
+    const state = makeState();
+    state.player = startExpedition({ ...state.player, hp: 100 }, '고요한 숲', 1000, []);
+    state.enemy = { ...state.enemy, hp: 1000, maxHp: 1000, atk: 30, pattern: { guardChance: 0, heavyChance: 0 } };
+    const attack = {
+        type: AT.RESOLVE_COMBAT_ACTION,
+        payload: { kind: 'attack', expectedTurn: 0, seed: 7, now: 2000 },
+    };
+    const damaged = actionMap.RESOLVE_COMBAT_ACTION(state, attack);
+    assert.equal(damaged.gameState, 'combat');
+    assert.ok(damaged.player.hp < 100);
+    assert.equal(damaged.player.activeExpedition.lowestHp, damaged.player.hp);
+    assert.equal(actionMap.RESOLVE_COMBAT_ACTION(damaged, attack), damaged);
+    const healed = actionMap.USE_COMBAT_ITEM({
+        ...damaged,
+        enemy: { ...damaged.enemy, pattern: { guardChance: 1, heavyChance: 0 } },
+    }, {
+        type: AT.USE_COMBAT_ITEM,
+        payload: { itemId: potion.id, expectedTurn: 1, seed: 1234, now: 3000 },
+    });
+    assert.ok(healed.player.hp > damaged.player.hp);
+    const won = actionMap.RESOLVE_COMBAT_ACTION({ ...healed, enemy: { ...healed.enemy, hp: 1 } }, {
+        type: AT.RESOLVE_COMBAT_ACTION,
+        payload: { kind: 'attack', expectedTurn: 2, seed: 7, now: 4000 },
+    });
+    assert.equal(won.gameState, 'idle');
+    assert.equal(finishExpedition(won.player, '시작의 마을', 5000, []).summary.lowestHp, damaged.player.hp);
+});
+
+test('a combat item enemy response records expedition damage without changing replay behavior', () => {
+    const state = makeState();
+    state.player = startExpedition({ ...state.player, hp: 100, inv: [{ ...potion, val: 1 }] }, '고요한 숲', 1000, []);
+    state.enemy = { ...state.enemy, atk: 30, pattern: { guardChance: 0, heavyChance: 0 } };
+    const action = { type: AT.USE_COMBAT_ITEM, payload: { itemId: potion.id, expectedTurn: 0, seed: 7, now: 2000 } };
+    const damaged = actionMap.USE_COMBAT_ITEM(state, action);
+    assert.ok(damaged.player.hp < 100);
+    assert.equal(damaged.player.activeExpedition.lowestHp, damaged.player.hp);
+    assert.equal(actionMap.USE_COMBAT_ITEM(damaged, action), damaged);
+    assert.equal(state.player.activeExpedition.lowestHp, 100);
+});
+
 test('combat item turn consumes one item and replay is an exact no-op', () => {
     const state = makeState();
     const action = {
@@ -53,6 +95,7 @@ test('combat item turn consumes one item and replay is an exact no-op', () => {
 
     assert.equal(consumed.player.inv.length, 0);
     assert.equal(consumed.player.hp, 90);
+    assert.equal(consumed.combatTurn, 1);
     assert.equal(consumed.quickSlots[0], null);
     assert.equal(consumed.gameState, 'combat');
     assert.equal(consumed.logs.filter((log) => log.text.includes('전투 회복 물약')).length, 1);
@@ -85,7 +128,7 @@ test('combat item turn commits defeat and grave data in the same state transitio
         player: {
             ...makeState().player,
             hp: 1,
-            inv: [{ ...potion, val: 0 }],
+            inv: [{ ...potion, val: 1 }],
         },
         enemy: {
             ...makeState().enemy,
@@ -149,6 +192,46 @@ test('combat item resolver is deterministic for the same identity, seed, and tim
     assert.deepEqual(resolveCombatItemTurn(input), resolveCombatItemTurn(input));
 });
 
+test('blocked combat consumables are exact no-ops and do not claim a combat turn', () => {
+    const blockedPotion = { ...potion, id: 'blocked-potion' };
+    const state = makeState({
+        player: { ...makeState().player, challengeModifiers: ['noPotion'], inv: [blockedPotion] },
+        quickSlots: [blockedPotion, null, null],
+    });
+    const action = {
+        type: AT.USE_COMBAT_ITEM,
+        payload: { itemId: blockedPotion.id, expectedTurn: 0, seed: 88, now: 1_700_000_000_700 },
+    };
+
+    const rejected = actionMap.USE_COMBAT_ITEM(state, action);
+
+    assert.equal(rejected, state);
+    assert.equal(rejected.combatTurn, 0);
+    assert.equal(rejected.enemy, state.enemy);
+    assert.equal(rejected.logs, state.logs);
+});
+
+test('stale combat turn and duplicate item IDs preserve state or remove only the selected instance', () => {
+    const first = { ...potion, id: 'duplicate-id', name: '첫 전투 물약' };
+    const second = { ...first, name: '둘째 전투 물약' };
+    const state = makeState({
+        player: { ...makeState().player, inv: [first, second] },
+        quickSlots: [first, null, null],
+    });
+    const stale = actionMap.USE_COMBAT_ITEM(state, {
+        type: AT.USE_COMBAT_ITEM,
+        payload: { itemId: first.id, expectedTurn: 1, seed: 89, now: 1_700_000_000_701 },
+    });
+    const consumed = actionMap.USE_COMBAT_ITEM(state, {
+        type: AT.USE_COMBAT_ITEM,
+        payload: { itemId: first.id, expectedTurn: 0, seed: 90, now: 1_700_000_000_702 },
+    });
+
+    assert.equal(stale, state);
+    assert.deepEqual(consumed.player.inv, [second]);
+    assert.equal(consumed.quickSlots[0], null);
+});
+
 test('combat hook sends identity and entropy once for rapid repeated input', () => {
     const state = makeState();
     const dispatched = [];
@@ -183,4 +266,30 @@ test('combat hook sends identity and entropy once for rapid repeated input', () 
     assert.equal(typeof dispatched[0].payload.seed, 'number');
     assert.equal(typeof dispatched[0].payload.now, 'number');
     assert.equal('player' in dispatched[0].payload, false);
+});
+
+test('combat hook previews a rejected consumable once without dispatching or claiming its turn', () => {
+    const blockedPotion = { ...potion, id: 'hook-blocked' };
+    const dispatched = [];
+    const logs = [];
+    let itemClaims = 0;
+    let turnClaims = 0;
+    const actions = createCombatActions({
+        player: { ...makeState().player, challengeModifiers: ['noPotion'], inv: [blockedPotion] },
+        gameState: 'combat',
+        enemy: makeState().enemy,
+        combatTurn: 0,
+        dispatch: (action) => dispatched.push(action),
+        addLog: (type, text) => logs.push({ type, text }),
+        claimCombatItem: () => { itemClaims += 1; return true; },
+        claimCombatAction: () => { turnClaims += 1; return true; },
+        clearPendingCombat: () => {},
+    });
+
+    actions.combatUseItem(blockedPotion);
+
+    assert.equal(dispatched.length, 0);
+    assert.equal(itemClaims, 0);
+    assert.equal(turnClaims, 0);
+    assert.deepEqual(logs, [{ type: 'warn', text: '물약 없이: 회복과 보조 아이템을 사용할 수 없습니다.' }]);
 });

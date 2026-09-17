@@ -139,18 +139,18 @@ test('getSignatureSetProgress: 1 celestial equipped → nextTier=2, not active',
     assert.ok(result.missingMembers.includes('천공 성전'));
 });
 
-test('getSignatureSetProgress: 2 celestial equipped → active at tier 2, nextTier=3', () => {
+test('getSignatureSetProgress: celestial completed at tier 2 has no next reward', () => {
     const result = getSignatureSetProgress({
-        weapon: { name: '성검 에테르니아' },
-        offhand: { name: '천공 성전' },
+        weapon: { name: '신전 도시의 지팡이' },
+        offhand: null,
         armor: null,
     });
     assert.ok(result);
     assert.equal(result.equippedCount, 2);
     assert.equal(result.currentTier, 2);
-    assert.equal(result.nextTier, 3);
+    assert.equal(result.nextTier, null);
     assert.equal(result.isActive, true);
-    assert.ok(result.nextBonus);
+    assert.equal(result.nextBonus, null);
 });
 
 test('getSignatureSetProgress: shadow-lord 2-piece → active, no higher tier in some sets', () => {

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 import warnings
 from pathlib import Path
 
@@ -56,14 +57,34 @@ def inspect_png(path: Path, margin: int, foot_baseline: int | None) -> dict[str,
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Inspect PNG alpha and placement metadata.")
-    parser.add_argument("--path", required=True, type=Path)
-    parser.add_argument("--margin", required=True, type=int)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--path", type=Path)
+    mode.add_argument("--batch", action="store_true")
+    parser.add_argument("--margin", type=int)
     parser.add_argument("--foot-baseline", type=int)
     args = parser.parse_args()
 
-    if args.margin < 0:
-        parser.error("--margin must be zero or greater")
+    if args.batch:
+        requests = json.load(sys.stdin)
+        if not isinstance(requests, list):
+            parser.error("batch input must be a JSON array")
+        results = []
+        for request in requests:
+            if not isinstance(request, dict):
+                parser.error("each batch request must be an object")
+            path = request.get("path")
+            margin = request.get("margin")
+            foot_baseline = request.get("footBaseline")
+            if not isinstance(path, str) or not isinstance(margin, int) or margin < 0:
+                parser.error("each batch request requires a path and non-negative integer margin")
+            if foot_baseline is not None and not isinstance(foot_baseline, int):
+                parser.error("footBaseline must be an integer or null")
+            results.append(inspect_png(Path(path), margin, foot_baseline))
+        print(json.dumps(results, ensure_ascii=False, sort_keys=True))
+        return
 
+    if args.margin is None or args.margin < 0:
+        parser.error("--margin must be zero or greater")
     result = inspect_png(args.path, args.margin, args.foot_baseline)
     print(json.dumps(result, ensure_ascii=False, sort_keys=True))
 

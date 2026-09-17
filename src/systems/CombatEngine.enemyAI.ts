@@ -287,6 +287,7 @@ export const enemyAIMethods: any = {
             updatedEnemy: finalEnemy,
             damage: enemyDmg,
             isDead: protectedResult.isDead,
+            isEnemyDead: !protectedResult.isDead && (finalEnemy.hp ?? 0) <= 0,
             isCrit: heavyResolved,
             logs: [...logs, {
                 type: heavyResolved ? 'critical' : 'warning',

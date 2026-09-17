@@ -1,0 +1,15 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "flower-golem": "8d2761d74cbc88e6b809cdabb27a215b9c7da97e858500b0904b11ebac4bba44",
+    "oldwood-golem": "2ad775ffc08a2e8ccf6f61e6bcdddd2b63566c4522eac67ebbd6d31e42ead3ae",
+    "wild-griffin": "234ba9dc62fb043b2bd54f4fdf8ad465d9821d4c1dae7a8ede23e9f0a69e70d9"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "flower-golem": "0b3f3e9ff4f1e8a4884f825bffaef017b16644e0aa53b65ef9c9aef6512b30f7",
+    "oldwood-golem": "edd025e77e7ffdfd7fe8ad4974d0b576c674ad9f3229510081cb14897fba41f3",
+    "wild-griffin": "d4f39ae5c86676ad6e36627dd8618e8c656a62cede7bf9b3e25cbda883ac6461"
+  }
+}

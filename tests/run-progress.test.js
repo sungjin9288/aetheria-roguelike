@@ -127,6 +127,7 @@ test('migrateData preserves an existing run baseline and marks a missing baselin
 test('RESET_GAME keeps lifetime counters and starts a fresh complete run baseline', () => {
     const state = {
         ...INITIAL_STATE,
+        gameState: 'ascension',
         player: {
             ...INITIAL_STATE.player,
             stats: {
@@ -154,6 +155,7 @@ test('RESET_GAME keeps lifetime counters and starts a fresh complete run baselin
 test('ASCEND starts the next attempt from preserved lifetime counters', () => {
     const state = {
         ...INITIAL_STATE,
+        gameState: 'ascension',
         player: {
             ...INITIAL_STATE.player,
             stats: {
@@ -168,7 +170,7 @@ test('ASCEND starts the next attempt from preserved lifetime counters', () => {
     };
     const ascended = gameReducer(state, {
         type: AT.ASCEND,
-        payload: { meta: { ...state.player.meta, prestigeRank: 1 }, newTitle: '각성자' },
+        payload: { expectedPrestigeRank: 0, sourceReceiptKey: null },
     });
 
     assert.equal(ascended.player.stats.currentRun.complete, true);

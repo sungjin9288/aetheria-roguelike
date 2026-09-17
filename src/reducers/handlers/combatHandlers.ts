@@ -2,8 +2,10 @@ import { BALANCE } from '../../data/constants';
 import { DB } from '../../data/db';
 import { GS } from '../gameStates';
 import { resolveCombatItemTurn, type CombatItemTurnResult } from '../../systems/combatItemTurn';
+import { sanitizeConsumedQuickSlots } from '../../systems/consumableEffect';
 import { createSeededRandom } from '../../systems/combatItemTurn';
 import { resolveCombatActionTurn, type CombatActionTurnResult } from '../../systems/combatActionTurn';
+import { resolveEndgameVictory } from '../../systems/endgameSettlement';
 import { appendGrave } from '../../utils/graveUtils.js';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import { handleVictoryOutcome } from '../../hooks/combatActions/combatVictory';
@@ -14,6 +16,7 @@ import type { UseCombatItemPayload } from '../actionTypes';
 import { addNewTitles, sanitizeQuickSlots } from './helpers';
 import { applyPostCombatChoice, isPostCombatChoiceOffered, type PostCombatChoiceId } from '../../utils/postCombatChoice';
 import { calculateFullStats } from '../../utils/statsCalculator';
+import { activateDevourBonus } from '../../utils/adventureRelicBonuses';
 
 const appendCombatLogs = (
     currentLogs: any[],
@@ -44,6 +47,8 @@ const settleVictory = (
         random,
     }: any,
 ): GameState => {
+    const receiptKey = `${nextTurn}:${now}:${seed}`;
+    if (state.player.meta?.endgame?.lastEndgameReceiptKey === receiptKey) return state;
     let logIndex = 0;
     let draft: GameState = {
         ...state,
@@ -100,10 +105,6 @@ const settleVictory = (
             draft = { ...draft, postCombatResult: nestedAction.payload };
             return;
         }
-        if (nestedAction.type === 'TRIGGER_TRUE_ENDING') {
-            draft = { ...draft, gameState: 'true_ending', syncStatus: 'syncing' };
-            return;
-        }
         if (nestedAction.type === 'UPDATE_DAILY_PROTOCOL') {
             draft = protocolActionMap.UPDATE_DAILY_PROTOCOL(draft, nestedAction);
             return;
@@ -127,7 +128,7 @@ const settleVictory = (
         titleLogs.forEach((entry) => appendLog(entry.type, entry.text));
     };
 
-    handleVictoryOutcome({
+    const victoryOutcome = handleVictoryOutcome({
         playerAfterCombat: player,
         deadEnemy,
         stats,
@@ -141,10 +142,35 @@ const settleVictory = (
         now: () => now,
     });
 
+    // Codex dc308c2: 마왕/진 보스/진엔딩 정산은 reducer 안에서 단일 전이로 끝낸다
+    //   (승리 후처리의 dispatch가 아니라 여기서 gameState/enemy를 확정).
+    const endgameResult = resolveEndgameVictory({
+        player: draft.player,
+        deadEnemy,
+        receiptKey,
+        rng: random,
+        now,
+    });
+    if (endgameResult.outcome !== 'none' && endgameResult.outcome !== 'replay') {
+        const endgamePlayer = trackExpeditionVitals(endgameResult.gameState === GS.COMBAT
+            ? activateDevourBonus(endgameResult.player)
+            : endgameResult.player);
+        draft = {
+            ...draft,
+            player: endgamePlayer,
+            enemy: endgameResult.enemy,
+            gameState: endgameResult.gameState,
+            quickSlots: sanitizeQuickSlots(draft.quickSlots, endgamePlayer.inv),
+            syncStatus: 'syncing',
+        };
+        endgameResult.logs.forEach((entry) => appendLog(entry.type, entry.text));
+    }
+
     // 2026-09 D3: 전투 결과 카드 게이트 — 승리 후처리(combatVictory)가 넣은 결과 카드는
     //   "플레이어의 다음 판단이 대기 중이 아닐 때"만 남긴다. 트랜잭션이 끝난 실제 상태로
     //   판단하므로 combatVictory 내부 dispatch 순서(심연 층 유물은 카드보다 먼저, 정예의
-    //   흔적 유물은 카드보다 나중)와 무관하게 한 곳에서 결정된다.
+    //   흔적 유물은 카드보다 나중)와 무관하게 한 곳에서 결정된다. 엔드게임 정산 뒤에 두어야
+    //   승천/진엔딩/진보스 전이(gameState 변경)도 같은 규칙으로 걸린다.
     //   - pendingRelics: 유물 3(4)선택(z-50 전체 화면)이 카드(z-40)를 덮으므로 카드는 내린다.
     //   - gameState !== idle: 승천(마왕 격파) / 진엔딩 / 진보스 재교전 화면을 카드가 가리지 않는다.
     if (draft.postCombatResult && (draft.pendingRelics || draft.gameState !== GS.IDLE)) {
@@ -154,9 +180,10 @@ const settleVictory = (
     return {
         ...draft,
         combatReceipt: {
-            key: `${nextTurn}:${now}:${seed}`,
+            key: receiptKey,
             kind: 'victory',
             stories: storyEvents,
+            lootSettlement: victoryOutcome.lootSettlement,
         },
     };
 };
@@ -165,8 +192,9 @@ const settleVictory = (
  * H2 (Wave 3 감사): 승리가 아닌 전투 전이(계속 / 사망 / 도주)의 공통 정산.
  *
  * RESOLVE_COMBAT_ACTION과 USE_COMBAT_ITEM이 같은 20줄을 각각 들고 있었다. 두 곳의 차이는
- * 도주 분기(소모품 턴은 'escape'를 만들지 않는다)와 combatReceipt.stories 뿐이므로
- * stories만 호출부가 넘긴다 — 나머지 필드는 한 곳에서 계산한다.
+ * 도주 분기(소모품 턴은 'escape'를 만들지 않는다), combatReceipt.stories, 그리고 소모품 턴만
+ * 갖는 quick slot 소비 정산(consumedItem)뿐이므로 그 셋만 호출부가 넘긴다 —
+ * 나머지 필드는 한 곳에서 계산한다.
  */
 const settleNonVictory = (
     state: GameState,
@@ -176,18 +204,22 @@ const settleNonVictory = (
         seed,
         now,
         nextTurn,
+        consumedItem,
     }: {
         result: CombatActionTurnResult | CombatItemTurnResult;
         stories: Array<{ type: string; data: any }>;
         seed: number;
         now: number;
         nextTurn: number;
+        // 소모품 턴에서만 전달된다. 전달되면 "이번에 소비한 아이템" 기준으로 quick slot을 정산한다.
+        consumedItem?: any;
     },
 ): GameState => {
     const logs = [...result.logs];
-    const player = result.kind === 'defeat'
+    // Codex: 비승리 전이에서도 원정 생명 원장(trackExpeditionVitals)을 갱신한다.
+    const player = trackExpeditionVitals(result.kind === 'defeat'
         ? addNewTitles(result.player, logs)
-        : result.player;
+        : result.player);
 
     return {
         ...state,
@@ -203,7 +235,9 @@ const settleNonVictory = (
             : state.grave,
         runSummary: result.kind === 'defeat' ? result.runSummary : state.runSummary,
         logs: appendCombatLogs(state.logs, logs, now, seed),
-        quickSlots: sanitizeQuickSlots(state.quickSlots, player.inv),
+        quickSlots: consumedItem
+            ? sanitizeConsumedQuickSlots(state.quickSlots, consumedItem, player.inv || [])
+            : sanitizeQuickSlots(state.quickSlots, player.inv),
         visualEffect: result.visualEffect,
         combatTurn: nextTurn,
         combatReceipt: {
@@ -272,7 +306,7 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
         });
         const nextTurn = (state.combatTurn || 0) + 1;
         if (result.kind === 'victory') {
-            return settleVictory(state, {
+            const settled = settleVictory(state, {
                 player: result.player,
                 deadEnemy: result.deadEnemy || state.enemy,
                 stats: result.victoryStats,
@@ -284,6 +318,7 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
                 nextTurn,
                 random,
             });
+            return settled;
         }
 
         return settleNonVictory(state, {
@@ -307,7 +342,7 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
         if (!itemId || !Number.isFinite(seed) || !Number.isFinite(now)) return state;
 
         const item = (state.player.inv || []).find((entry: any) => entry.id === itemId);
-        if (!item || typeof item.type !== 'string' || !['hp', 'mp', 'cure', 'buff'].includes(item.type)) return state;
+        if (!item) return state;
 
         const random = createSeededRandom(seed);
         const result = resolveCombatItemTurn({
@@ -319,10 +354,11 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
             now,
             rng: random,
         });
+        if (result.kind === 'rejected') return state;
         const logs = [...result.logs];
         const nextTurn = (state.combatTurn || 0) + 1;
         if (result.kind === 'victory') {
-            return settleVictory(state, {
+            const settled = settleVictory(state, {
                 player: result.player,
                 deadEnemy: state.enemy,
                 stats: result.victoryStats,
@@ -334,6 +370,10 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
                 nextTurn,
                 random,
             });
+            return {
+                ...settled,
+                quickSlots: sanitizeConsumedQuickSlots(state.quickSlots, item, settled.player.inv || []),
+            };
         }
         // 소모품 턴은 'escape'를 만들지 않고, 사망 이야기는 턴 시작 시점의 player로 남긴다.
         return settleNonVictory(state, {
@@ -347,6 +387,7 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
             seed,
             now,
             nextTurn,
+            consumedItem: item,
         });
     },
 });

@@ -1,0 +1,31 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "cursed-knight": "d76c48dd51cb38c354efb815bdebf8726cf3ffd5b697ff280546b3c78adf30a8",
+    "death-knight": "540188378e8498d4efab4398c20c1aec8d825f6cfc1a7e9cf2119df931acb9f7",
+    "doom-knight": "67835f9a9fd101d5db116e4f1d9616696b34b726c471f58c6340d4a98be03b9b",
+    "drowned-knight": "e4baac3ef0b45a7279674ff8454b6d8c1efbabea20b9adf86b87f4a9fd0d41c1",
+    "fallen-champion": "aa576d5425b4c8f41c408a6d8bd43141a34fb5083e4cde43f8a5ec495c519d17",
+    "fallen-knight": "0e8f02bb9bc00349c21798dbec914434838354df90bb6dc4a8c6545a038fef21",
+    "ghost-knight": "6aed6f8bbd4d941b5a9910af4f8107b2ebe657135dbb6c923881b44e8fe0cf26",
+    "hell-gatekeeper": "8ea53ac0a0f98de1ef55597a683cdb5cdc6072e24ade7016aac887fc0857b026",
+    "void-knight": "77b4ec79c388bba7dabd47236191813d2f210374878954a26d6dc621cf95bcd3",
+    "wraith-commander": "4189360fbed5f8c6f3826861e3a4578076ecaf5f2aef0e095fb80bec93b50835",
+    "wraith-knight": "9f36a75b240a1e8eaa6a2738333e6661dbb8689de3ab70a7af66abe2f62a371b"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "cursed-knight": "9a9da893dc2d877c3397207edff40d5dc4cb42ff2b50ba908027f1b2984f0826",
+    "death-knight": "0e749953316a1fdfa10c4b7103b30f485262fb7764509881fa0685a0dd75003c",
+    "doom-knight": "ea3b689a6ccea9a740951051985c5ac7042f933ab7539c1c6db89291693c2b91",
+    "drowned-knight": "419a7b65421593eb998ad639bc5e661e7bcb96c15a74cc03390124e1d7b63494",
+    "fallen-champion": "1e2646b79802f74327f83245c83146b90c03772453cb66ca426ce0331d55a6ad",
+    "fallen-knight": "62dc9615dffd337b98dcfc339242cb201a3e44b701de6ed15989d5ab5dc705a1",
+    "ghost-knight": "82a9a50a48ccab07d00731e710ece75a554cc4516ed7bef8899cef08dd15beab",
+    "hell-gatekeeper": "9e040cbb538a9faa315c5852a6b688c064ec222faa2a3bd48d2b123c87c44c47",
+    "void-knight": "abf4d44118bbd7e50f0bbaeda16bc7bc7141fa3af025f65f443b9427eb6de438",
+    "wraith-commander": "b62c35675f7aa93a641ac045f77a259a5787df012e1a5298b431d1dbe39f768f",
+    "wraith-knight": "92aca73172845bf58643e71b4541729bc9abf99e62445950fd98dd06fef0b5e9"
+  }
+}

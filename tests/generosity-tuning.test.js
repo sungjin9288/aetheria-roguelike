@@ -172,7 +172,7 @@ test('rollExplorationEvent: anomalyMult 전달 시 anomaly 발생 확률이 그�
     }
 });
 
-test('handleScoutChoice: "이상 신호"(scoutEffect=anomaly) 선택 시 rollExplorationEvent에 SCOUT_SIGNAL_ANOMALY_MULT가 배선됨', () => {
+test('handleScoutChoice: "이상 신호"는 rollExplorationEvent 효과만 적용하고 exploration settlement를 재호출하지 않음', () => {
     const ev = buildScoutEvent({ stats: {} }, { type: 'dungeon' }, () => 0.99);
     const dispatches = [];
     const deps = {
@@ -198,9 +198,15 @@ test('handleScoutChoice: "이상 신호"(scoutEffect=anomaly) 선택 시 rollExp
     const actions = createEventActions({ ...deps, rng: () => probe }, shared);
     actions.handleEventChoice(1); // 이상 신호 카드 (choiceIndex 1)
 
-    const commit = [...dispatches].reverse().find((d) => d.type === 'COMMIT_EXPLORE_OUTCOME');
-    assert.ok(commit, 'COMMIT_EXPLORE_OUTCOME dispatch 존재');
-    assert.equal(commit.payload, 'anomaly', '가중된 anomalyMult 덕에 probe 지점에서 anomaly가 발동해야 함');
+    assert.equal(
+        dispatches.some((d) => d.type === 'COMMIT_EXPLORE_OUTCOME'),
+        false,
+        'Scout 선택은 이미 카드가 열린 시점의 exploration settlement를 다시 호출하면 안 됨',
+    );
+    assert.ok(
+        dispatches.some((d) => d.type === 'SET_PLAYER' && typeof d.payload === 'function'),
+        'anomaly 효과는 rollExplorationEvent의 functional SET_PLAYER로 적용되어야 함',
+    );
 });
 
 // ── ⑤ 이벤트 보상 상한 계약 (재발 방지 가드) ─────────────────────────────────

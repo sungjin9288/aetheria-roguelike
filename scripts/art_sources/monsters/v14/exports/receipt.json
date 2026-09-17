@@ -1,0 +1,15 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "magic-orb": "89519106386377d35b0c521d64962e313a2d0b9f62f92b4b375fab5970118c06",
+    "magic-puppet": "42de3c46716305779f76acb92222f25d84ed05cb33fcace58368c71e4ce43683",
+    "page-spirit": "558661a700902c465b224df058fa40948f7100308cfc98c0309e3100923115fe"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "magic-orb": "b282d62bcee6b5807f86e07937d0e2739c4ee8c20c4342804f87946cd39542f2",
+    "magic-puppet": "5f04f8d0cfdfd58b4294d07e004937cc0822e80d0579bcde03732d9ed9c25d6b",
+    "page-spirit": "c6ce10b9f8f7a904d234a47d2e90941011df5e332770dfcd55cdfbfcce77738e"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "abyss-eye": "462761a11702442140fcf8d0b9808185aa12dd6076e0aae68ec51c6d13e10f39",
+    "dimensional-infantry": "86d6aa14934018db7a2c4624aaee513b061ea82e0bf97aa751681d8f77fbfd23",
+    "dragon-knight": "52c8d5e6c84832c9e84954a7cec470e54721514c1f5830864f9c1944e4e3603a",
+    "fallen-angel": "66ceffff1f788dc3e53d2548079f67e68ab3d874ea6affc76bb215a0ba0d4739",
+    "void-beast": "e294e51a29ee141beae7e1c0915b77b16b23bb5919589034b18a3b37b983cb51",
+    "void-bombardier": "529fef5ea423a847fab9754dbfdbfa15aeadbe0843358dbcb01f01b77ffef1a6",
+    "void-fragment": "3e0c712042f1726c46d5286d64cdc27401202688f1d9e9a0863fc113070b0b37"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "abyss-eye": "d2901a0e758503b0a3ebd63f9dce441cd64317773849f7edb1deebd8d7f52847",
+    "dimensional-infantry": "d1054b42da5885e69ce2fda69bf592b3a0b7a37b9c34747eb442bd266319b9ce",
+    "dragon-knight": "43654f6bc667c3dc239b4a3210cad3ccd4e48dca9339aa989415940eeaf2aeae",
+    "fallen-angel": "d088f942bcff4f85476b4ea529a7f92ea1a19f3624fe43c7cedc028da3a7a4d3",
+    "void-beast": "3b10cf51ef593ec3f4316890041b62ae68d9bd7662718e713c5caf9f2ccaca9b",
+    "void-bombardier": "51af8e0af22f20adc2c8d7dc4012be1fb207aa602536e375d69df957c1335256",
+    "void-fragment": "f9d8edd75fa7a3d48586f9b72943e9c09689a5a0fbaac31c622f7cec20e8d848"
+  }
+}

@@ -106,13 +106,14 @@ const buildReplayKey = (batchId, sourceSheetSha256, identityNames) => hash(JSON.
     identityNames,
 }));
 
-const inspectTrackedSource = async ({ repoRoot, trackedBatchPath, source }) => {
+const inspectTrackedSource = async ({ repoRoot, trackedBatchPath, source, publicRoot }) => {
     const inspector = resolve(repoRoot, 'scripts/inspect_equipment_source_sheet.py');
     try {
         const { stdout } = await execFileAsync('python3', [
             inspector,
             '--batch', trackedBatchPath,
             '--source-sheet', source,
+            '--public-root', publicRoot,
         ], { maxBuffer: 1024 * 1024 });
         const exports = JSON.parse(stdout);
         if (!Array.isArray(exports)) throw new Error('invalid inspector output');
@@ -321,6 +322,7 @@ export const validateEquipmentArtEvidence = async ({
             repoRoot,
             trackedBatchPath,
             source,
+            publicRoot,
         });
         if (reconstructedExports.length !== exports.length) {
             throw new Error(`Equipment source export count mismatch: ${batchId}`);

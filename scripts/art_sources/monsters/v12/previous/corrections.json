@@ -1,0 +1,293 @@
+{
+  "version": 1,
+  "entries": {
+    "망각의 나가": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-3c3af718b4e5.png",
+      "sha256": "57d2399f646734abd922529f85cb1aa61a0a7c94c6155738647465b9b55ccd16"
+    },
+    "심연 크라켄": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-10a5124e4c85.png",
+      "sha256": "dfec965238f9c07906969ca3ef920a8b4b6041b0b5d0fc46ca8d0c1d2ebef68b"
+    },
+    "심해 기도사": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-44fb1b6be751.png",
+      "sha256": "c9ce01ac7f4f0648a3934b0e8f6b960e15570f75f1cc0733569907623825e6d4"
+    },
+    "어비스 리바이어던": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-1abc00bd9cc6.png",
+      "sha256": "2871e1fe46b6046b1391fb96a47d448e5c2907ed282cc18ae8a9760e633b19f8"
+    },
+    "한 맺힌 망자": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-f70c5593d86e.png",
+      "sha256": "662d90c35ea86bbf85b16d6e4a3bef43b60be185ea6a9f6b8da93ba32aad8d0a"
+    },
+    "해류 파수꾼": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-611198ce96b6.png",
+      "sha256": "5b10df618d77046f0a67d0b98f92b3e987239230be0451a6ae07efb13213d004"
+    },
+    "강철 자동인형": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-89fb5c7e37b7.png",
+      "sha256": "93d1eb580e1dced22766290e60eedf743883cfc196774ab27fd221e0a2f49630"
+    },
+    "과부하 포격기": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-5a21f496f3dc.png",
+      "sha256": "331d3393247414791db259b4357b1ef5aeded411db3f3229756640b26b390862"
+    },
+    "미라": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-4236ae06d677.png",
+      "sha256": "c0b412c534f533c2cf786860dc804d2249ab42215cddacab63348878632ea84a"
+    },
+    "생체 병기": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-cf0ab0cbcb7b.png",
+      "sha256": "6c2ccb4d6fd03e9239736ed780fc17f59872be16fc21817160916c013565b017"
+    },
+    "오염된 연구원": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-5731714ce0b3.png",
+      "sha256": "2afdde3742f4bdb742eedac0f3c6c0063c85148939d024edfbab0ba18a299f2e"
+    },
+    "오작동 로봇": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-97f98262af85.png",
+      "sha256": "c56f231830a40d653f2f9089f2919eb1658e36aefc12bae4501c73d2905b071e"
+    },
+    "증기 골렘": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-390a7a20c1c4.png",
+      "sha256": "6201dbc3ae761ae9afb4f2399cf26450232171effcdedcaa15ea4bc674e2a2e1"
+    },
+    "폐회로 마도병": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e7fc6feb2ab9.png",
+      "sha256": "a5746d4643c5d98fcba6a40632043b3393981af90109ece9bc1e2a0ad69eb719"
+    },
+    "폭주 자동인형": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-78428d074a53.png",
+      "sha256": "74bafeb532396a59a3414a15345182271b61c8520ff086a252a8494ba1f54710"
+    },
+    "마그마 슬라임": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-08a49ce6bd76.png",
+      "sha256": "ef42d4ea13ef2bacaa35ee46c01a7c95cc934f3114b9fae876446303fbf0eb4c"
+    },
+    "용암 거북": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7761c9b478d8.png",
+      "sha256": "8ee3e3c86022aa85c0184c8dc5641fefee20850e2185b1fb63a27ec675408f6e"
+    },
+    "파이어뱃": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/fire-bat.png",
+      "sha256": "aa81ca6b696b602f3bb8c15137edcda48e24435249c2f360f0b6a6cc0b59cbbe"
+    },
+    "화염 정령": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/fire-spirit.png",
+      "sha256": "db997290c647750d85be442a46e16504aa5e85531a388c94d37db637f218c111"
+    },
+    "마그마 정령": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-b2498aa058e1.png",
+      "sha256": "d3b0dad9cbb175a32821bde17d082655f58a15fefb367bea49a9d42b71a9dec2"
+    },
+    "용암 정령": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-06bde63a8fa5.png",
+      "sha256": "c692a029af97daac6da4ee84364f597089e11a6eefe20665b028579c86907711"
+    },
+    "화산 정령": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-777be66d21c6.png",
+      "sha256": "15f2583c63b10c71175d2bd04f5b3496c72914ae084f339d4923ad1f4bb9d72a"
+    },
+    "용암 거인": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7962486e2c30.png",
+      "sha256": "3c1a8fd317fe2950a7d1b177e9bdbce11cd914e27c85edf616359ec4b50e9f3e"
+    },
+    "용암 골렘": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/lava-golem.png",
+      "sha256": "0ac7a9f9ebf05eb9c0b5a1cc702e65c4bb37342811d037a1b1629cc8a2076b4f"
+    },
+    "화염 골렘": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-823db0b2b8eb.png",
+      "sha256": "47ef1f68c86d10ceab76c5c27acacee1711086128bd97b20fd7c92fb7eaf0018"
+    },
+    "결정 정령": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a59df9668da4.png",
+      "sha256": "f0c4efbda38544e0e9567268a97fa9b60633aae525913eacdecaa1b9aef1fe41"
+    },
+    "수정 골렘": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-00b1ff34598b.png",
+      "sha256": "52539fd8c69ae0c420a6c39d0c5d58ffdb00ef5a464e1a5c7abe8382d0d54a12"
+    },
+    "광물 지네": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-5d862ec7cd8b.png",
+      "sha256": "6998365f8cb4ef4d4a5ff36d4a3753d519bbc357b07435740a9d16bed85cb0a6"
+    },
+    "다크 엘프": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-63bddf1692bc.png",
+      "sha256": "8277564a2a9cc81effdea08a838c6fd3cbb7aabdaad6bc46ff3463079a8d1c74"
+    },
+    "동굴 트롤": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-55ed31434fe6.png",
+      "sha256": "eef7af1d90cd7817623d1cc57fdf13a4e5b23c251e7638b95af38af78c27b643"
+    },
+    "박쥐 떼": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a0ce67504415.png",
+      "sha256": "0cd3d8cdaf49e3a0092fb5d7bc92b0203a8dcbffa2bd6a8dd094bb58884756e4"
+    },
+    "얼음 정령": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-c26eb4f9bae8.png",
+      "sha256": "4270d5208a70e45e13fb845999b09ac3a03091d7112702a0b1b4ac21b5f7a66b"
+    },
+    "설원 거인": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-160fddb37d43.png",
+      "sha256": "a698f822c73a5ff96fed58b3c978ed398abf5cad3b465dbccba532a920692708"
+    },
+    "설인": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-19d905cef932.png",
+      "sha256": "44422de870ac26eaffa09e37d458bb9528619497bde8f7ad06e828458e2de799"
+    },
+    "거대 지네": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-82e2857d4305.png",
+      "sha256": "42cb0e9924cba98ee1a8e4ef99d91dc0a75913b8cd48499e919092a6a49c6d7b"
+    },
+    "광풍의 하피": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-f70adffeac61.png",
+      "sha256": "649095e032b17d9234dcfd7a75373cf121a095158e8ff1cf23c523478e4923f2"
+    },
+    "물의 정령": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-704c2dec5dd8.png",
+      "sha256": "f6cfc9c5a77a89b65d910a29d25486719c16f611939a7e6a1497f8b82bf82d0c"
+    },
+    "암흑 마법사": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7a96730f4730.png",
+      "sha256": "88973a659a070c0203d622b60acc6eecad3622d65e7fbbf6cc07361000aac585"
+    },
+    "코볼트 광부": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-fbf5a83b3eea.png",
+      "sha256": "1a50dbdb830f6b1a2aefff6f7c210594b5692be91b3907c3e5e71da9ca51ad52"
+    },
+    "고블린": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/goblin.png",
+      "sha256": "cfea21976743d58fb7aa316284284ed845d83681a270e796e8db995e23e8052c"
+    },
+    "코볼트": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/kobold.png",
+      "sha256": "fe1edd2d84d6aae8ad77fbcbbeda1e7ec232d0a6ee8f40eac41d7d77fc4f7c77"
+    },
+    "초록슬라임": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/green-slime.png",
+      "sha256": "34163b7a91e9aab6d4e2d4e7248f52a483e451550d01534d9bd540244ff1c62c"
+    },
+    "스노우 울프": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-3ba063383d00.png",
+      "sha256": "cc3c37eef321cf65ddbccda634b3697bf70d4d0799c0a47b24a70523c7b407d2"
+    },
+    "살아있는 마법서": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-2ec2e48a6b4e.png",
+      "sha256": "f72140c46ea8b468999e2f0adf91bcc9252c8a1dbae3f576f13fa9aa4703d204"
+    },
+    "미믹": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-885e652191d9.png",
+      "sha256": "0210923da5ffcbe2998975567f2240497c0c429902e38f49ae757fde179a73d9"
+    },
+    "프로토타입 제로": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a3a5a22ad41e.png",
+      "sha256": "46f85cdd2b4fe9c3728b16addc8d2d4d6c4becec84f2e841e33d1ce7a6bf1a55"
+    },
+    "천둥새 제피로스": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-4bb262cf570a.png",
+      "sha256": "4ae955ec18456b708fffbf3dcecae62db8a5f502c611af5c5ce633b168fd6bcb"
+    },
+    "아누비스 수호자": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-fd146ff0ec8a.png",
+      "sha256": "bd7d2de38371f0a1518a2da875048f2c76c0ef938aad1255791515b16e9d6f3b"
+    },
+    "성스러운 물고기": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-858705ee7367.png",
+      "sha256": "281000321c668c9f239d7a1b68c47692ede1f2dd5e0a487d11c7255fb9db4b81"
+    },
+    "거대 거북": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-aedb97862864.png",
+      "sha256": "094d00af71e40261095050ab3d04357c57ebe14308abf6516d13166ccf1042d6"
+    },
+    "눈보라 정령": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-adbbab114586.png",
+      "sha256": "bd74e5262095bf1d1ad5bc263a3dad64623cc3ce1c8016db239d3b01ccca5942"
+    },
+    "머맨": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-6a26c6325796.png",
+      "sha256": "590e1b1fa900ce114f86722090967eb13eef575a9441a02e75d21b00366a3179"
+    },
+    "스핑크스": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-1a287740b890.png",
+      "sha256": "d9686c5a25cfd735d216cc43ee4b1a36ad5f5a4f051e0c4810b04356a43adf88"
+    },
+    "심연의 크라켄": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-05ad7cddbc9b.png",
+      "sha256": "29ba0e6b6f009b409675c89718d20faeee8a508d031bf30269bceda0fc8a1cad"
+    },
+    "혈월의 뱀파이어 로드": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-17cab8794c8d.png",
+      "sha256": "6d7485b653c225f98bb3d52300d581059c501db8d426bd90fe94107df12bdbf3"
+    },
+    "거대 지렁이": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-228caa618079.png",
+      "sha256": "afa991d35110cf75da6f45f9260bf7f44f1cfe08bd95e9617c6afd2a43506601"
+    },
+    "묘지기 네크론": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-386ff5484904.png",
+      "sha256": "10931ab74fa35f4a1d6d527dc27c8b6403f931bd6d11c562df464474549f4998"
+    },
+    "아이스 드래곤": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-474123cd699b.png",
+      "sha256": "0907f678ae6d8b5d625b1474f2b39fc261d460d4919c4f9248b967ca966a8e10"
+    },
+    "빙결의 마녀": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-6ccedb57c965.png",
+      "sha256": "a1c0b0546ea81384688ee24784c8b1ae44b249ff155de429a9ed2179e1660a2b"
+    },
+    "기계 장군": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-88fa34d8f196.png",
+      "sha256": "adfd5062d1cec50bd5908774865ce7074e817d0fc6a0b8899be35117cfdf3dab"
+    },
+    "마력 결정체": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-9e71859d733f.png",
+      "sha256": "5f7156a41b0e82321f12311531862beedac03cfa43e2adb87b3ab78db2962d84"
+    },
+    "고원 그리핀": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-a9965770730f.png",
+      "sha256": "15ce06db6b997050cdcfc0a02b0c3fae6366f707de03a76dc91d794d8e72da39"
+    },
+    "서리 군주": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-34852baa4124.png",
+      "sha256": "073baf8ae6646b78a83ad31c565a7e8a5bada620796f124dbf6178166f6b6a0f"
+    },
+    "원시의 신": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e1b8a03dea25.png",
+      "sha256": "f5b2c1931b1d09e3f4388643a7e7ef0c887084d568078c44f53b995f61cd3574"
+    },
+    "차원 파쇄자": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-33e00c5fa59c.png",
+      "sha256": "816a54d75d282c7dbe400215cf64771b553188bcab2ac5003c6871a841dfb3f5"
+    },
+    "차원 포식자": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-660242f15f1c.png",
+      "sha256": "15064ce5ba615eab4519b246b0964f3255dabd390092c1412469682b21e4d12d"
+    },
+    "타락한 세계수 수호자": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-e33191d1f61f.png",
+      "sha256": "be31946fc7e4113a77266d2ed5b36b887c40cf6f54c1e51f44c904c37775f737"
+    },
+    "공허의 신": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-4c0a057e31f9.png",
+      "sha256": "c8a6f07f4089fec09d3bb04428d1caf028ea0f8c7a33020fbbe3fa67178aa01c"
+    },
+    "시간의 파수꾼": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-687373df58bf.png",
+      "sha256": "bd00b7b234544bd9f4aaa6c4056a0d620dc45c2f8ca26523f51fba2fce7f40dc"
+    },
+    "영겁의 수문장": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-6efd5aa36605.png",
+      "sha256": "b53a487fddd9b8075360e3f237fdd32708abb0b1def0dd851a5a9a9affc49635"
+    },
+    "타락한 세계수 영혼": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-c6ec225b8f23.png",
+      "sha256": "e79805cd38a15bff62788d7c9a1c429e8bf24f4e76db6a9d42f83b4a26d69faf"
+    },
+    "고대 호수의 수호신": {
+      "sourceRuntimePath": "/assets/monsters/authored/v1/monster-7a1b900ab404.png",
+      "sha256": "5ce2810c727a0f49471765f7c099c948aad099b0cd323359a1e0e67bc3a00e04"
+    }
+  }
+}

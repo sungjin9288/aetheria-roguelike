@@ -1,0 +1,27 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "abyss-sentinel": "6736442210e158c885a9fe72a3c7c51c2daa1e5807b741f2fd7f35d0b4698472",
+    "annihilation-apostle": "f0318d6706a8cc0da38c1f33cbe4be7c390b5933a9ac9cd0643dbd7db62a3136",
+    "dimension-splitter": "52a53c65023045c70f0a303b2210689bb04f1775384862510d477b52d749addd",
+    "doom-knight": "70c835a381fded7bd38b6344cf5129d4a11ae233fcf8328363810348b86d945f",
+    "outpost-commander": "291f501ddca60dcce530586f4925cd4373d1f01c7e27edbc406c273d2d607455",
+    "resentful-champion": "5ee5657dfd4a21eebe52bbb81311141aa5594346dd26cb4d256a094865a8ad51",
+    "rift-commander": "8ef061c0fd811136551a4c36094d2cb93a7cf2ada4ee44aaf88877ab33f78723",
+    "void-herald": "6155265a517ed28d214d8a273c6f9ed1ed6814590fa693d96271f61b16474c9d",
+    "void-judge": "e74f6a127afe970a0112eb7f7c1a8d63d3f634399b67f783963961b0bce5da26"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "abyss-sentinel": "cb4b512819d4a64ae2eb7b792760285c66af8c8de17f8c7673ac7346412e0b57",
+    "annihilation-apostle": "352aae12da93aafe640409043175ee0b20eccefbc840f6189e701b5b7c16cb2e",
+    "dimension-splitter": "57393882144fa27d94b1627109ce1a2357a3ddc1941605c2783f5afc51fcbfe5",
+    "doom-knight": "9a64cc02481e84c5de2fb4c8a107677b04d68cd63800e97b4ff5f2801183b5ce",
+    "outpost-commander": "da47802e1a4b00d4eb656fa4d3852abbe2ec2d588aa622fc991ad540bec3ba2b",
+    "resentful-champion": "3d1b1884f7a7c1724cc23b466d095248c71407a6c495c0aebe97f08f2f6c5a8b",
+    "rift-commander": "4aab05380e4ad8f2a536ee3d93106dc7260015dd9fb7514dcdbd786ac99b4fb7",
+    "void-herald": "0344e96d441c783f811612fcf35a2af7b1854dc981edff7ecdfa2b626a8e4446",
+    "void-judge": "1b7591fa6732636e10e182f5dda832f579516ea87bb6ace713c8fdeb19232f57"
+  }
+}

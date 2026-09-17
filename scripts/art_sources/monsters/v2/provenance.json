@@ -1,0 +1,72 @@
+{
+  "schemaVersion": 1,
+  "generator": "built-in imagegen",
+  "promptSha256": "de7d913f5015e458789029149c73b4b98104e289d443d43d0afac289c1b0ffda",
+  "preimageManifestSha256": "1fb0d961e6f0658d46a820377dda39b3d7a89c1187efec3a44f05bccec09b479",
+  "entries": [
+    {
+      "name": "거대 거북",
+      "key": "monster-aedb97862864",
+      "masterSha256": "72b17dcb80e555510139a515181906519b39d1d0768b4082d151759ca021f607",
+      "previousSha256": "fdf15622e676f1b9c96637b20d25a7421343a5895958b134851bd8174d3b5c81",
+      "exportSha256": "094d00af71e40261095050ab3d04357c57ebe14308abf6516d13166ccf1042d6",
+      "runtimePath": "/assets/monsters/catalog/monster-aedb97862864.png"
+    },
+    {
+      "name": "미믹",
+      "key": "monster-885e652191d9",
+      "masterSha256": "c6433bbda71101bb45cdc593f4b5dfc890bf313d47c27b5b6d0a29ed3d127c9e",
+      "previousSha256": "bd6c329ca196754dd0dff4c7d7d10c6370ecf5ab796a79f36a7e00b907229a81",
+      "exportSha256": "0210923da5ffcbe2998975567f2240497c0c429902e38f49ae757fde179a73d9",
+      "runtimePath": "/assets/monsters/catalog/monster-885e652191d9.png"
+    },
+    {
+      "name": "살아있는 마법서",
+      "key": "monster-2ec2e48a6b4e",
+      "masterSha256": "9e675be94c8a73e30f154f394e357da1a9b32058bb1e1993be0488c5a0490292",
+      "previousSha256": "575c28937513a96f4615940a66183303726fad8894d759cc0916e51752b4af3f",
+      "exportSha256": "f72140c46ea8b468999e2f0adf91bcc9252c8a1dbae3f576f13fa9aa4703d204",
+      "runtimePath": "/assets/monsters/catalog/monster-2ec2e48a6b4e.png"
+    },
+    {
+      "name": "성스러운 물고기",
+      "key": "monster-858705ee7367",
+      "masterSha256": "f6e19da837b5e6a98db2c511a3ea06e99b4c80eb2a49cad124094b4f1eb0f915",
+      "previousSha256": "e9ffbb2828745c515b5038247f331481074ea22a0c9399194d3aa6a93379ae38",
+      "exportSha256": "281000321c668c9f239d7a1b68c47692ede1f2dd5e0a487d11c7255fb9db4b81",
+      "runtimePath": "/assets/monsters/catalog/monster-858705ee7367.png"
+    },
+    {
+      "name": "스노우 울프",
+      "key": "monster-3ba063383d00",
+      "masterSha256": "d6dd1c2edbf361e64b569aeb08d1f8325487abb13b67121ffef331326718f5d2",
+      "previousSha256": "1b1620ff2b4e90c086d9ee7ebd81d27a0e3ee89c5eac99c49804c4e85eee3dbd",
+      "exportSha256": "cc3c37eef321cf65ddbccda634b3697bf70d4d0799c0a47b24a70523c7b407d2",
+      "runtimePath": "/assets/monsters/catalog/monster-3ba063383d00.png"
+    },
+    {
+      "name": "아누비스 수호자",
+      "key": "monster-fd146ff0ec8a",
+      "masterSha256": "383445be6303fec3bae2fcead1171e58621d1152bd27a71b03195a7e3d0e5968",
+      "previousSha256": "db6691e63cacc3a2578fb5269535b61957207308a2ad4362383b361c71cf09eb",
+      "exportSha256": "bd7d2de38371f0a1518a2da875048f2c76c0ef938aad1255791515b16e9d6f3b",
+      "runtimePath": "/assets/monsters/catalog/monster-fd146ff0ec8a.png"
+    },
+    {
+      "name": "천둥새 제피로스",
+      "key": "monster-4bb262cf570a",
+      "masterSha256": "25e3041c1363767e7bf082227957b1d92d498b01b2c5e56b451c224c732f1271",
+      "previousSha256": "cddaac90c0ffa05f3b78b5639994ee4e04e65e2792ad8fce000eeb3ad8e0cc48",
+      "exportSha256": "4ae955ec18456b708fffbf3dcecae62db8a5f502c611af5c5ce633b168fd6bcb",
+      "runtimePath": "/assets/monsters/catalog/monster-4bb262cf570a.png"
+    },
+    {
+      "name": "프로토타입 제로",
+      "key": "monster-a3a5a22ad41e",
+      "masterSha256": "41d13f535553178d0511b26f4a2fcc39881904469ef2bae205deca3cfe2297dd",
+      "previousSha256": "98f62f53dc3309b0dbc1ade15ae3c010e560c9f6f694d2d59184158fbc152738",
+      "exportSha256": "46f85cdd2b4fe9c3728b16addc8d2d4d6c4becec84f2e841e33d1ce7a6bf1a55",
+      "runtimePath": "/assets/monsters/catalog/monster-a3a5a22ad41e.png"
+    }
+  ]
+}

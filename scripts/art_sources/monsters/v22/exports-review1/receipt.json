@@ -1,0 +1,23 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "aether-dragon": "a231b3b0cfd39b5551f369f5e58d7e225e1d2f24d652b067eb0bed49ca4c39b4",
+    "aether-lord": "658f5172adfd6b80cbb8230cbc8ead3733f3b211a54ffb1adfcf426276176601",
+    "demon-king": "ae7690191439f0fa64a2e1c7658407322d83ff7e04e238acf222ee9a2ef140c3",
+    "dimension-demon": "229ce356c656a90c4e067f1fffa6f8b07e9ec4d55d4b5a1f863feca711692d7c",
+    "entropy-lord": "f3a0853eb0a734db9373a5d852ea7536aa9fa21e80e9eacc5e869f7079529e43",
+    "void-emperor": "1e9e114dc6196aeac843504a637a7fd89c2454ea5336f7c390f8071c31245d84",
+    "void-lord": "f33fa012a8a93e044970441364276a64137012917219d0376b1f1416432d5f67"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "aether-dragon": "3f12d993446300b8de6e23c5042c85560b99055cb7d8467013c2ca62b0cb0a46",
+    "aether-lord": "86222099b880c892b4d9990767b749f91bc523e11d3a33ea857b55f35cb0c71c",
+    "demon-king": "7094e1ce8e36a392cee02eae0b82eb5a9f988a5f2d1550d3afa622cca7e65c1c",
+    "dimension-demon": "1f2de5111b4479d09a185792fe6b0ca997afdc0f4e5b4d6fa0310cd4e6b9c64a",
+    "entropy-lord": "49fd26a2b43c26963244304904341a67ca0fdd49f5f248710b0daa641af40961",
+    "void-emperor": "3bb63abe3affbe0fd89e779ceb87f4ef4896964d89e447b4d9fd5d43a37b424d",
+    "void-lord": "f75145f2931029aaa812a6c1776b937bea5cabac4eaf9a5bc70cd98576ce5750"
+  }
+}

@@ -180,6 +180,14 @@ interface TempBuff {
     name?: string | null;
 }
 
+export interface EndgameProgress {
+    version: 1;
+    primalShards: number;
+    legacyInventoryMigrated: boolean;
+    lastEndgameReceiptKey: string | null;
+    trueEndingSeen: boolean;
+}
+
 interface PlayerMeta {
     essence?: number;
     // 2026-09 G2: 지금까지 *번* 정수의 총합(소비해도 줄지 않음). rank 산출 기준.
@@ -198,6 +206,7 @@ interface PlayerMeta {
         seen?: string[];
         pending?: string[];
     };
+    endgame?: EndgameProgress;
 }
 
 /**
@@ -265,18 +274,27 @@ export interface ExpeditionQuestCheckpoint {
     goal: number;
 }
 
+export interface ClassJourneyEncounterDiscovery {
+    encounterId: string;
+    encounterVersion: number;
+    choiceId: string;
+    family: string;
+    choiceLabel: string;
+}
+
 export interface ClassJourneyRecord {
     expeditionIds: string[];
     skillBranches: string[];
     signatureItems: string[];
     bossNames: string[];
     regions: string[];
+    encounterDiscoveries: ClassJourneyEncounterDiscovery[];
     representativeExpeditionId: string | null;
     lastPlayedAt: number | null;
 }
 
 export interface ClassJourneyLedger {
-    version: 1;
+    version: 2;
     sequence: number;
     byJob: Record<string, ClassJourneyRecord>;
 }
@@ -337,6 +355,7 @@ export interface ExpeditionSummary {
     equipmentNames?: string[];
     bossNames?: string[];
     signatureItems?: string[];
+    encounterDiscoveries: ClassJourneyEncounterDiscovery[];
     progressionProfile: ProgressionProfile;
 }
 
@@ -396,10 +415,14 @@ export interface Player {
     titles?: string[];
     activeTitle?: string | null;
     combatFlags?: CombatFlags;
+    adventureRelicBonuses?: {
+        killStackAtk?: number;
+        devour?: { phase: 'ready' | 'active'; amount: number };
+    };
     killStreak?: number;
     history?: any[];
-    archivedHistory?: any[];
     eventChainProgress?: Record<string, any>;
+    deferredEventChainSteps?: Record<string, number>;
     activeExpedition?: ExpeditionSnapshot | null;
     lastExpeditionSummary?: ExpeditionSummary | null;
     classJourney?: ClassJourneyLedger;

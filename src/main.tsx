@@ -12,7 +12,9 @@ import {
 import { createLocalErrorReporter } from './platform/localErrorReportStore';
 import { getRuntimeProductEventContext } from './platform/productEventContext';
 import { registerServiceWorker } from './pwa/registerServiceWorker';
+import { markPerfOnce } from './utils/performanceMarks';
 
+markPerfOnce('aetheria:app-mounted');
 registerServiceWorker();
 
 // 로컬 링버퍼 리포터를 전역 에러 핸들러 바인딩 전에 설치한다 — 백엔드 에러 수집

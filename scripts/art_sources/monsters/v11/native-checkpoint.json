@@ -1,0 +1,15 @@
+{
+  "classification": "local-debug-and-unsigned-build-not-installed",
+  "verifiedPathsPerPackage": 328,
+  "verifiedScope": "254 monster PNGs, 53 location PNGs, 18 character PNGs, 2 Earth Verdict PNGs, production main JS",
+  "apkPath": "android/app/build/outputs/apk/debug/app-debug.apk",
+  "apkBytes": 224589012,
+  "apkSha256": "3bbc5238c3845fd6a44891434739223c3df21066929cacbcb18333e82b0a3b45",
+  "iosApp": "/tmp/aetheria-v11-ios.FCccLf/Build/Products/Release-iphoneos/App.app",
+  "main": "assets/index-DJSvycOu.js",
+  "mainSha256": "f5aeb7d081577ee3e7eb1b35cfe9bb12c7505d00eda30b9cc31f3f84fedd4f59",
+  "trackedNativeDrift": 0,
+  "physicalAndroid": "excluded",
+  "iphoneInstallPerformed": false,
+  "existingArchiveChanged": false
+}

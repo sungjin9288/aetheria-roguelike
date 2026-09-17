@@ -233,5 +233,7 @@ test('⑤ 밀어붙이기 직후 다음 탐험의 모닥불 분기가 차단된�
     const source = await readFile(new URL('../src/hooks/gameActions/exploreActions.ts', import.meta.url), 'utf8');
 
     assert.match(source, /nextExploreCampfireBlocked/);
-    assert.match(source, /if \(!campfireBlocked && mapData\.type === 'dungeon'/);
+    // 병합(2026-09): Codex가 선택 카드 빈도 제한(canOfferOptionalExploreDecision)을 같은
+    //   조건식에 추가했다. "밀어붙이기 직후 1회 차단"이 선행 조건이라는 의도는 동일하다.
+    assert.match(source, /if \(!campfireBlocked && optionalDecisionAllowed && mapData\.type === 'dungeon'/);
 });

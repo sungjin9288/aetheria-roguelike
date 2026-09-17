@@ -77,12 +77,15 @@ const ExpeditionDebriefCard = ({
         >
             <div className="aether-overlay" />
             <Motion.section
-                initial={{ opacity: 0, y: 24, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 transition={{ duration: 0.3, ease: 'easeOut' }}
                 data-testid="expedition-debrief-card"
                 aria-label="원정 귀환 기록"
-                className="panel-noise aether-surface-strong relative z-10 flex max-h-full w-full max-w-[25rem] flex-col overflow-hidden rounded-[1.5rem] shadow-[0_32px_90px_rgba(1,6,14,0.68)]"
+                style={{
+                    maxHeight: 'calc(100dvh - max(var(--aether-safe-area-top), 0.5rem) - max(var(--aether-safe-area-bottom), 0.5rem))',
+                }}
+                className="panel-noise aether-surface-strong relative z-10 flex w-full max-w-[25rem] flex-col overflow-hidden rounded-[1.5rem] shadow-[0_32px_90px_rgba(1,6,14,0.68)]"
             >
                 <header className="relative border-b border-white/8 px-5 pb-4 pt-5">
                     <button
@@ -90,7 +93,7 @@ const ExpeditionDebriefCard = ({
                         data-testid="expedition-debrief-close-icon"
                         onClick={onClose}
                         aria-label="닫기"
-                        className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/8 hover:text-white"
+                        className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/8 hover:text-white"
                     >
                         <X size={17} />
                     </button>

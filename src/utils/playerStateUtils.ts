@@ -1,4 +1,5 @@
 import type { Player } from '../types/index.js';
+import { clearAdventureRelicBonuses } from './adventureRelicBonuses.js';
 /**
  * player.stats 필드를 immutable하게 업데이트합니다.
  * @param {Object} player
@@ -57,6 +58,8 @@ export const hasTemporaryAdventureState = (player: Player) => {
         || combatFlags.comboCount > 0
         || combatFlags.deathSaveUsed
         || player?.nextHitEvaded
+        || player?.adventureRelicBonuses
+        || player?.deferredEventChainSteps
     );
 };
 
@@ -66,7 +69,8 @@ export const hasTemporaryAdventureState = (player: Player) => {
  *   death save를 매번 리프레시 가능하던 회귀 fix. desc 'void_heart: 런당 1회'와 정합.
  */
 export const clearTemporaryAdventureState = (player: Player) => ({
-    ...player,
+    ...clearAdventureRelicBonuses(player),
+    deferredEventChainSteps: undefined,
     tempBuff: { ...EMPTY_TEMP_BUFF },
     status: [],
     combatFlags: {

@@ -5,7 +5,11 @@ import { fileURLToPath } from 'node:url';
 import { spawnSync } from 'node:child_process';
 import test from 'node:test';
 
-import { BASELINE_PROGRESSION_PROFILE } from '../src/data/progressionProfiles.ts';
+import {
+    BASELINE_PROGRESSION_PROFILE,
+    EXPLORATION_RHYTHM_PROFILE,
+    EXPLORATION_RHYTHM_V3_PROFILE,
+} from '../src/data/progressionProfiles.ts';
 import { DB } from '../src/data/db.ts';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { GS } from '../src/reducers/gameStates.ts';
@@ -30,7 +34,9 @@ const EXPECTED_JOB_NAMES = [
 // 추가로 인한 의도된 변경이라 새 값으로 갱신한다(첫 방문 보상 J2는
 // authorityUsage에 없어 이 해시에 영향 없음 — J2 단독 적용 시 해시는
 // 기존 값과 동일했음을 실측으로 확인).
-const EXPECTED_BASELINE_REPORT_SHA256 = '3d48ba685af01d699913b0d0d53c1e39e7423323c6602562b2f7c840acfc3104';
+// 병합(2026-09): J3가 드롭 테이블을 늘리며 갱신했던 해시를 Codex 값으로 되돌린다 —
+//   J3 데이터는 Codex의 normalBonusPool(레벨 티어 일반 장비) 경로와 충돌해 철회했다.
+const EXPECTED_BASELINE_REPORT_SHA256 = '2e4c0726be5d78bb7af5e8b3f6377976d1bc397613512c83dc8e2681dd699c43';
 const EXPECTED_JOB_LEVELS = [1, 5, 5, 5, 30, 30, 30, 30, 30, 30, 5, 60, 60, 60, 60, 12, 25, 60];
 
 test('baseline simulation keeps immutable snapshots and reports the exact class graph/checkpoints', () => {
@@ -94,6 +100,21 @@ test('event-axis candidate changes seeded narrative occurrences without changing
     assert.equal(boosted.totalModeledActions, baseline.totalModeledActions);
     assert.equal(boosted.totalModeledSeconds, baseline.totalModeledSeconds);
     assert.deepEqual(boosted.final, baseline.final);
+});
+
+test('v3 event candidate keeps EXP and loot multipliers unchanged from its registered v2 predecessor', () => {
+    const baseline = simulateProgression({ seed: 20_260_824 });
+    const v3 = simulateProgression({
+        seed: 20_260_824,
+        profile: EXPLORATION_RHYTHM_V3_PROFILE,
+        predecessorProfile: EXPLORATION_RHYTHM_PROFILE,
+        declaredAxis: 'event',
+    });
+    assert.deepEqual(v3.progressionProfile, EXPLORATION_RHYTHM_V3_PROFILE);
+    assert.equal(v3.progressionProfile.expMultiplier, 1);
+    assert.equal(v3.progressionProfile.lootMultiplier, 1);
+    assert.equal(v3.totalModeledActions, baseline.totalModeledActions);
+    assert.deepEqual(v3.final, baseline.final);
 });
 
 test('fixed-seed report and CLI SHA-256 envelope are byte-deterministic', () => {
@@ -253,6 +274,12 @@ test('explore action carries the injected RNG through AI fallback selection', as
             loc: '버려진 광산',
             history: [],
             eventChainProgress: {},
+            activeExpedition: { id: 'expedition-rng-test', explores: 0 },
+            stats: {
+                ...structuredClone(INITIAL_STATE.player.stats),
+                explores: 1,
+                exploreState: { ...structuredClone(INITIAL_STATE.player.stats.exploreState), sinceNarrativeEvent: 1 },
+            },
         };
         const draws = [0.99, 0.99, 0, 0.99, 0];
         let drawCount = 0;

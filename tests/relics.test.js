@@ -388,7 +388,9 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       const HERE = path.dirname(fileURLToPath(import.meta.url));
       const ROOT = path.join(HERE, '..');
       const calcSrc = await readFile(path.join(ROOT, 'src/utils/statsCalculator.ts'), 'utf8');
-      assert.match(calcSrc, /'hp_drain_atk'/);
+      const hpDrainResolverSrc = await readFile(path.join(ROOT, 'src/utils/hpDrainAtkRelic.ts'), 'utf8');
+      assert.match(hpDrainResolverSrc, /'hp_drain_atk'/);
+      assert.match(calcSrc, /resolveHpDrainAtkRelic/);
       assert.match(calcSrc, /'first_turn_evade'/);
   });
 }
@@ -638,7 +640,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       assert.notEqual(result.updatedPlayer.combatFlags.phoenixUsed, true);
   });
 
-  test("devour_hp (world_eater): handleVictory 시 enemy.maxHp * val 만큼 player maxHp 증가", () => {
+  test("devour_hp (world_eater): handleVictory 시 다음 전투 HP를 예약하고 base HP 보존", () => {
       const player = {
           name: 'tester', job: '모험가', level: 10,
           hp: 500, maxHp: 1000, mp: 50, maxMp: 50,
@@ -654,12 +656,9 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
       const result = CombatEngine.handleVictory(player, enemy, {}, {}); // cycle 624: explicit elimination
 
-      // val 0.1 * enemy.maxHp 200 = 20 HP 증가.
-      assert.equal(result.updatedPlayer.maxHp, 1020,
-          `expected maxHp 1020 (1000 + 20); got ${result.updatedPlayer.maxHp}`);
-      // hp도 같은 양만큼 증가 (현재 hp 500 + 20 = 520).
-      assert.equal(result.updatedPlayer.hp, 520,
-          `expected hp 520 (500 + 20); got ${result.updatedPlayer.hp}`);
+      assert.equal(result.updatedPlayer.maxHp, 1000);
+      assert.equal(result.updatedPlayer.hp, 500);
+      assert.deepEqual(result.updatedPlayer.adventureRelicBonuses.devour, { phase: 'ready', amount: 20 });
   });
 
   test("devour_hp: 미보유 시 maxHp 변화 없음 (회귀 가드)", () => {
@@ -731,7 +730,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
           `expected battle_start_buff atk ratio ~1.20; got ${ratio.toFixed(3)}`);
   });
 
-  test("kill_stack_atk (void_monarch): handleVictory가 combatFlags.killStackAtkBonus 증가", () => {
+  test("kill_stack_atk (void_monarch): handleVictory가 원정 공격력 누적 증가", () => {
       const player = {
           name: 'tester', job: '모험가', level: 10,
           hp: 500, maxHp: 1000, mp: 50, maxMp: 50,
@@ -746,11 +745,11 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       const enemy = { name: '슬라임', hp: 0, maxHp: 200, atk: 10, def: 5, exp: 50, gold: 30 };
 
       const result = CombatEngine.handleVictory(player, enemy, {}, {}); // cycle 624: explicit elimination
-      assert.equal(result.updatedPlayer.combatFlags.killStackAtkBonus, 0.05);
+      assert.equal(result.updatedPlayer.adventureRelicBonuses.killStackAtk, 0.05);
 
       // 두 번째 처치
       const result2 = CombatEngine.handleVictory(result.updatedPlayer, enemy, {}, {}); // cycle 624: explicit elimination
-      assert.equal(result2.updatedPlayer.combatFlags.killStackAtkBonus, 0.1);
+      assert.equal(result2.updatedPlayer.adventureRelicBonuses.killStackAtk, 0.1);
   });
 
   test("kill_stack_atk: max(0.5)에서 캡 — 누적이 max 초과 안 함", () => {
@@ -759,7 +758,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
           hp: 500, maxHp: 1000, mp: 50, maxMp: 50,
           atk: 100, def: 50, exp: 0, nextExp: 1000, gold: 0,
           relics: [{ effect: 'kill_stack_atk', val: { perKill: 0.2, max: 0.5 } }],
-          combatFlags: { killStackAtkBonus: 0.4 }, status: [],
+          adventureRelicBonuses: { killStackAtk: 0.4 }, combatFlags: {}, status: [],
           skillLoadout: { selected: 0, cooldowns: {} },
           meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
           stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 },
@@ -769,15 +768,15 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
       const result = CombatEngine.handleVictory(player, enemy, {}, {}); // cycle 624: explicit elimination
       // 0.4 + 0.2 = 0.6, but max 0.5 → 0.5
-      assert.equal(result.updatedPlayer.combatFlags.killStackAtkBonus, 0.5);
+      assert.equal(result.updatedPlayer.adventureRelicBonuses.killStackAtk, 0.5);
   });
 
-  test("kill_stack_atk: combatFlags.killStackAtkBonus가 finalAtk에 반영됨", () => {
+  test("kill_stack_atk: 원정 누적이 finalAtk에 반영됨", () => {
       const base = fakePlayer();
       base.relics = [{ effect: 'kill_stack_atk', val: { perKill: 0.05, max: 0.5 } }];
       const baseStats = calculateFullStats(base);
 
-      const withStack = { ...base, combatFlags: { killStackAtkBonus: 0.3 } };
+      const withStack = { ...base, adventureRelicBonuses: { killStackAtk: 0.3 } };
       const stackStats = calculateFullStats(withStack);
 
       const ratio = stackStats.atk / baseStats.atk;
@@ -785,11 +784,11 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
           `expected kill_stack_atk(0.3) atk ratio ~1.30; got ${ratio.toFixed(3)}`);
   });
 
-  test("applyBattleStartRelics: kill_stack_atk / phoenix 카운터 0으로 리셋", () => {
+  test("applyBattleStartRelics: 원정 공격력 유지, phoenix 초기화, voidHeart 보존", () => {
       const player = {
           ...fakePlayer(),
+          adventureRelicBonuses: { killStackAtk: 0.4 },
           combatFlags: {
-              killStackAtkBonus: 0.4,
               phoenixUsed: true,
               voidHeartUsed: true,  // 보존돼야 하는 플래그
               voidHeartArmed: true,
@@ -797,7 +796,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       };
       const result = applyBattleStartRelics(player, [], { maxHp: 1000 }, { addLog: () => {} });
 
-      assert.equal(result.combatFlags.killStackAtkBonus, 0);
+      assert.equal(result.adventureRelicBonuses.killStackAtk, 0.4);
       assert.equal(result.combatFlags.phoenixUsed, false);
       // void_heart 플래그는 보존 (run-wide)
       assert.equal(result.combatFlags.voidHeartUsed, true);
@@ -998,7 +997,10 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test("hp_drain_atk (혈맹의 반지): hpCost 0.03 — 매 턴 maxHp 3% 소모", () => {
       const player = fakePlayer({
-          relics: [{ effect: 'hp_drain_atk', val: { hpCost: 0.03, atkBonus: 0.35 } }],
+          relics: [{
+              id: 'blood_oath_ring', name: '혈맹의 반지',
+              effect: 'hp_drain_atk', val: { hpCost: 0.03, atkBonus: 0.35 },
+          }],
       });
       const result = CombatEngine.tickCombatState(player);
       // 1000 * 0.03 = 30 HP cost. 500 → 470.
@@ -1011,8 +1013,11 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       // hell_reaper 시너지 require: 심연의 계약 + 영혼 흡수
       const player = fakePlayer({
           relics: [
-              { name: '심연의 계약', effect: 'hp_drain_atk', val: { hpCost: 0.05, atkBonus: 0.6 } },
-              { name: '영혼 흡수', effect: 'skill_lifesteal', val: 0.1 },
+              {
+                  id: 'abyssal_contract', name: '심연의 계약',
+                  effect: 'hp_drain_atk', val: { hpCost: 0.05, atkBonus: 0.6 },
+              },
+              { id: 'soul_drain', name: '영혼 흡수', effect: 'skill_lifesteal', val: 0.1 },
           ],
       });
       const result = CombatEngine.tickCombatState(player);
@@ -1026,7 +1031,10 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
   test("hp_drain_atk: HP 1 미만으로 떨어지지 않음 (사망 방지 가드)", () => {
       const player = fakePlayer({
           hp: 5, maxHp: 1000,
-          relics: [{ effect: 'hp_drain_atk', val: { hpCost: 0.03, atkBonus: 0.35 } }],
+          relics: [{
+              id: 'blood_oath_ring', name: '혈맹의 반지',
+              effect: 'hp_drain_atk', val: { hpCost: 0.03, atkBonus: 0.35 },
+          }],
       });
       const result = CombatEngine.tickCombatState(player);
       // hp 5에서 30 차감 → 0이 되어야 하지만 max(1, ...)로 1 보장.

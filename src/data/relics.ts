@@ -102,7 +102,7 @@ export const RELICS: Relic[] = [
     {
         id: 'undying',
         name: '불사의 의지',
-        rarity: 'uncommon',
+        rarity: 'epic',
         desc: '전투마다 한 번, 생명이 1 아래로 내려가지 않음',
         effect: 'death_save',
         val: 1,
@@ -137,9 +137,9 @@ export const RELICS: Relic[] = [
         id: 'spell_echo',
         name: '주문 메아리',
         rarity: 'uncommon',
-        desc: '기술을 사용할 때 15% 확률로 기력을 소모하지 않음',
+        desc: '기술을 사용할 때 8% 확률로 기력을 소모하지 않음',
         effect: 'free_skill',
-        val: 0.15,
+        val: 0.08,
     },
     {
         id: 'arcane_surge',
@@ -163,9 +163,9 @@ export const RELICS: Relic[] = [
         id: 'ancient_map',
         name: '고대 지도',
         rarity: 'common',
-        desc: '이벤트 발생률 60% 증가',
+        desc: '이벤트 발생률 15% 증가',
         effect: 'event_chance',
-        val: 0.6,
+        val: 0.15,
     },
     {
         id: 'gold_magnet',
@@ -213,7 +213,7 @@ export const RELICS: Relic[] = [
         id: 'wanderer_charm',
         name: '방랑자의 부적',
         rarity: 'uncommon',
-        desc: '이벤트 발생률 30% 증가 (저비용 옵션)',
+        desc: '이벤트 발생률 30% 증가',
         effect: 'event_chance',
         val: 0.3,
     },
@@ -283,7 +283,7 @@ export const RELICS: Relic[] = [
     //   `executeAtkRelic.threshold || 0.25` fallback과 동일.
     { id: 'prophecy_stone',  name: '예언의 돌판',   rarity: 'epic',      desc: '보스 생명이 25% 이하이면 공격력 2배', effect: 'execute_atk', val: 2.0 },
     { id: 'curse_crystal',   name: '저주의 결정',   rarity: 'rare',      desc: '상태 이상 피해 50% 증가', effect: 'dot_mult', val: 1.5 },
-    { id: 'time_ring',       name: '시공의 반지',   rarity: 'epic',      desc: '기술을 사용할 때 15% 확률로 재사용 대기가 늘지 않음', effect: 'free_skill', val: 0.15 },
+    { id: 'time_ring',       name: '시공의 반지',   rarity: 'epic',      desc: '기술을 사용할 때 15% 확률로 기력을 소모하지 않음', effect: 'free_skill', val: 0.15 },
     { id: 'blood_moon',      name: '피의 달',       rarity: 'rare',      desc: '생명이 25% 이하이면 모든 피해 40% 증가', effect: 'low_hp_dmg', val: 1.4, threshold: 0.25 },
     { id: 'dragon_claw',     name: '드래곤 발톱',   rarity: 'epic',      desc: '치명타 피해 60% 증가', effect: 'crit_dmg', val: 1.6 },
     { id: 'phantom_core',    name: '환영 핵',       rarity: 'rare',      desc: '전투가 시작되면 공격력 15% 증가', effect: 'battle_start_atk', val: 0.15 },
@@ -326,7 +326,7 @@ export const RELICS: Relic[] = [
         id: 'void_monarch',
         name: '허공의 왕좌',
         rarity: 'legendary',
-        desc: '적을 처치할 때마다 공격력 5% 증가, 전투 중 최대 50% 누적',
+        desc: '적을 처치할 때마다 공격력 5% 증가, 원정 동안 최대 50% 누적. 안전 귀환 시 해제',
         effect: 'kill_stack_atk',
         val: { perKill: 0.05, max: 0.5 },
     },
@@ -366,7 +366,7 @@ export const RELICS: Relic[] = [
         id: 'world_eater',
         name: '세계 포식자',
         rarity: 'legendary',
-        desc: '적을 처치하면 적 최대 생명의 10%만큼 전투 중 자신의 최대 생명 증가',
+        desc: '마지막으로 처치한 적 최대 생명의 10%만큼 다음 전투 한 번의 기본 최대 생명과 현재 생명 증가. 누적되지 않으며 안전 귀환 시 해제',
         effect: 'devour_hp',
         val: 0.1,
     },
@@ -412,7 +412,9 @@ export const RELICS: Relic[] = [
 //   유물의 48%가 전체 가중치의 7.9%밖에 차지하지 못해 시너지 20개 중 12개가 사실상
 //   도달 불가였다. 꼬리를 평탄화해 epic+legendary 합계를 17.3%까지 끌어올린다
 //   (실측 분포는 tests/relics.test.js가 살아있는 RELICS 배열로 계산해 고정).
-const RELIC_WEIGHTS: Record<string, any> = Object.freeze({
+//   Codex의 개별 유물 등급 조정(예: undying uncommon→epic)과는 층위가 다르다 —
+//   여기는 "등급별 가중치", 저쪽은 "유물의 등급"이다. 둘 다 유지한다.
+const RELIC_WEIGHTS: Readonly<Record<string, number>> = Object.freeze({
     common: 40,
     uncommon: 30,
     rare: 18,
@@ -424,18 +426,88 @@ const RELIC_WEIGHTS: Record<string, any> = Object.freeze({
  * 희귀도 서열 (낮음→높음). RELIC_WEIGHTS / BALANCE.RARITY_COLORS와 동일한 순서를
  * 단일 source로 유지 — rarityCap 필터(pickWeightedRelics)가 참조하는 유일한 서열 정의.
  */
-const RARITY_ORDER: readonly string[] = Object.freeze(['common', 'uncommon', 'rare', 'epic', 'legendary']);
+const RARITY_ORDER = Object.freeze(['common', 'uncommon', 'rare', 'epic', 'legendary'] as const);
+type RelicRarity = (typeof RARITY_ORDER)[number];
 
 /**
  * 관대함 하향 (2026-07 밸런스 감사): pool에서 rarityCap 이하 등급만 남기는 순수 필터.
  * cap이 RARITY_ORDER에 없는 값이면 무필터(pool 그대로 반환) — 방어적 fallback.
  * 시작 부트(START_BOOT_RARITY_CAP: 'rare')에서 epic/legendary를 제외하는 데 사용.
  */
-const filterByRarityCap = (pool: Relic[], rarityCap?: string) => {
+const filterByRarityCap = (pool: readonly Relic[], rarityCap?: Relic['rarity']): readonly Relic[] => {
     if (!rarityCap) return pool;
-    const capIndex = RARITY_ORDER.indexOf(rarityCap);
+    const capIndex = RARITY_ORDER.indexOf(rarityCap as RelicRarity);
     if (capIndex < 0) return pool;
-    return pool.filter((r: any) => RARITY_ORDER.indexOf(r.rarity) <= capIndex);
+    return pool.filter((relic) => RARITY_ORDER.indexOf(relic.rarity as RelicRarity) <= capIndex);
+};
+
+/**
+ * 특정 유물이 base 가중치 3지선다에 포함될 정확한 확률을 반환한다.
+ * 시너지 pity는 의도적으로 제외하며, 동일 희귀도별 잔여 개수를 memoize해
+ * production weighted-without-replacement 추첨을 닫힌 형태로 계산한다.
+ */
+export const getBaseRelicOfferProbability = (
+    pool: readonly Relic[],
+    targetRelicId: string,
+    count: number,
+    options?: { rarityCap?: Relic['rarity'] },
+): number => {
+    if (!Array.isArray(pool)
+        || typeof targetRelicId !== 'string'
+        || targetRelicId.length === 0
+        || !Number.isSafeInteger(count)
+        || count < 0) {
+        throw new Error('INVALID_RELIC_OFFER_POOL');
+    }
+
+    const seenIds = new Set<string>();
+    for (const relic of pool) {
+        if (!relic
+            || typeof relic.id !== 'string'
+            || relic.id.length === 0
+            || seenIds.has(relic.id)
+            || !Object.prototype.hasOwnProperty.call(RELIC_WEIGHTS, relic.rarity)) {
+            throw new Error('INVALID_RELIC_OFFER_POOL');
+        }
+        seenIds.add(relic.id);
+    }
+
+    const target = pool.find((relic) => relic.id === targetRelicId);
+    if (!target) return 0;
+
+    const cappedPool = filterByRarityCap(pool, options?.rarityCap as Relic['rarity']);
+    if (!cappedPool.some((relic) => relic.id === targetRelicId)) return 0;
+    if (count === 0) return 0;
+    if (count >= cappedPool.length) return 1;
+
+    const remainingCounts = RARITY_ORDER.map((rarity) => (
+        cappedPool.filter((relic) => relic.id !== targetRelicId && relic.rarity === rarity).length
+    ));
+    const targetWeight = RELIC_WEIGHTS[target.rarity as RelicRarity];
+    const memo = new Map<string, number>();
+
+    const probabilityWithoutTarget = (counts: number[], drawsRemaining: number): number => {
+        if (drawsRemaining === 0) return 1;
+        const key = `${drawsRemaining}:${counts.join(',')}`;
+        const cached = memo.get(key);
+        if (cached !== undefined) return cached;
+
+        const totalWeight = targetWeight + counts.reduce((sum, rarityCount, index) => (
+            sum + rarityCount * RELIC_WEIGHTS[RARITY_ORDER[index]]
+        ), 0);
+        let probability = 0;
+        for (let index = 0; index < counts.length; index++) {
+            if (counts[index] === 0) continue;
+            const nextCounts = [...counts];
+            nextCounts[index] -= 1;
+            probability += (counts[index] * RELIC_WEIGHTS[RARITY_ORDER[index]] / totalWeight)
+                * probabilityWithoutTarget(nextCounts, drawsRemaining - 1);
+        }
+        memo.set(key, probability);
+        return probability;
+    };
+
+    return 1 - probabilityWithoutTarget(remainingCounts, count);
 };
 
 /** 한 모험에서 보유할 수 있는 최대 유물 수 */
@@ -503,7 +575,7 @@ export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
         label: '절멸자',
         requires: ['허공의 왕좌', '처형자의 날'],
         bonus: { effect: 'annihilator', executeThreshold: 0.35, killStack: 0.07 },
-        desc: '생명 35% 이하인 적에게 마무리 효과 발동, 처치 누적 7%로 증가',
+        desc: '생명 35% 이하인 적에게 마무리 효과 발동, 처치 공격력 누적에 7% 추가',
     },
     {
         label: '영원의 생명',
@@ -533,13 +605,13 @@ export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
         label: '무한 포식',
         requires: ['세계 포식자', '광전사의 분노'],
         bonus: { effect: 'infinite_devour', devour: 0.15, lowHpAtk: 0.6 },
-        desc: '적 처치 시 최대 생명 15% 증가, 생명이 낮을 때 공격력 60% 증가',
+        desc: '적 처치 시 최대 생명의 15%만큼 생명 회복, 생명이 낮을 때 공격력 60% 증가',
     },
     {
         label: '공허의 용',
         requires: ['허공의 왕좌', '드래곤 발톱'],
         bonus: { effect: 'void_dragon', killStack: 0.08, critDmg: 2.0 },
-        desc: '처치할 때마다 공격력 8% 증가, 치명타 추가 피해 두 배',
+        desc: '처치 공격력 누적에 8% 추가, 치명타 추가 피해 두 배',
     },
     {
         label: '절대 불사',
@@ -661,7 +733,7 @@ const findSynergyPityCandidates = (pool: Relic[], owned: Relic[] | undefined): R
 //   'rare'를 전달 — 일반 탐험 유물 발견(exploreUtils.ts)은 전달하지 않아 기존 확률 분포 불변.
 export const pickWeightedRelics = (pool: Relic[], count: number, options?: { owned?: Relic[]; rarityCap?: string; rng?: () => number }): Relic[] => {
     const random = typeof options?.rng === 'function' ? options.rng : Math.random;
-    const cappedPool = filterByRarityCap(pool, options?.rarityCap);
+    const cappedPool = filterByRarityCap(pool, options?.rarityCap as Relic['rarity']);
     if (cappedPool.length === 0) return [];
     const remaining = [...cappedPool];
     const needed = Math.min(count, remaining.length);

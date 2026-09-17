@@ -15,9 +15,14 @@ import type {
 } from '../types/player.js';
 import type { ProgressionProfile, ProgressionProfileRef } from '../types/progression.js';
 import { getActiveExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds } from './expeditionMissionFocus.js';
-import { recordClassJourneyExpedition } from './classJourney.js';
+import {
+    normalizeClassJourneyEncounterDiscoveries,
+    recordClassJourneyExpedition,
+} from './classJourney.js';
+import { projectBoundedEncounterDiscoveries } from './boundedEncounterDiscovery.js';
 import { queueMilestoneStoryBeat } from './milestoneStory.js';
 import { isSignatureName } from './signatureDiscovery.js';
+import { calculateFullStats } from './statsCalculator.js';
 
 const numberOr = (value: unknown, fallback = 0) => (
     Number.isFinite(Number(value)) ? Number(value) : fallback
@@ -257,6 +262,9 @@ export const normalizeExpeditionSummary = (value: unknown): ExpeditionSummary | 
         equipmentNames: uniqueNames(candidate.equipmentNames),
         bossNames: uniqueNames(candidate.bossNames),
         signatureItems: uniqueNames(candidate.signatureItems).filter(isSignatureName),
+        encounterDiscoveries: normalizeClassJourneyEncounterDiscoveries(
+            candidate.encounterDiscoveries,
+        ),
         progressionProfile: normalizeProgressionProfile(candidate.progressionProfile)
             || { ...BASELINE_PROGRESSION_PROFILE },
     };
@@ -294,7 +302,7 @@ export const startExpedition = (
         startNextExp: Math.max(1, nonNegative(player.nextExp, CONSTANTS.START_NEXT_EXP)),
         startGold: nonNegative(player.gold),
         startHp: hp,
-        maxHpAtStart: Math.max(1, nonNegative(player.maxHp, 1)),
+        maxHpAtStart: Math.max(1, nonNegative(calculateFullStats(player)?.maxHp, 1)),
         lowestHp: hp,
         kills: nonNegative(player.stats?.kills),
         bossKills: nonNegative(player.stats?.bossKills),
@@ -321,6 +329,10 @@ export const finishExpedition = (player: Player, returnLocation: string, now: nu
     const { newItems, lostItemCount } = itemDelta(snapshot.inventory, Array.isArray(player.inv) ? player.inv : []);
     const signatureItems = signatureDelta(snapshot, player);
     const lowestHp = Math.min(snapshot.lowestHp, nonNegative(player.hp, snapshot.lowestHp));
+    const encounterDiscoveries = projectBoundedEncounterDiscoveries(
+        player.eventChainProgress,
+        snapshot.id,
+    );
     const summary: ExpeditionSummary = {
         id: snapshot.id,
         startedAt: snapshot.startedAt,
@@ -344,13 +356,14 @@ export const finishExpedition = (player: Player, returnLocation: string, now: nu
         lowestHp,
         lowestHpPercent: Math.max(0, Math.min(100, Math.round((lowestHp / snapshot.maxHpAtStart) * 100))),
         returnHp: nonNegative(player.hp),
-        maxHpAtReturn: Math.max(1, nonNegative(player.maxHp, snapshot.maxHpAtStart)),
+        maxHpAtReturn: Math.max(1, nonNegative(calculateFullStats(player)?.maxHp, snapshot.maxHpAtStart)),
         reviewedAt: null,
         job: snapshot.job,
         skillChoices: snapshot.skillChoices,
         equipmentNames: equipmentNames(player),
         bossNames: snapshot.bossNames || [],
         signatureItems,
+        encounterDiscoveries,
         progressionProfile: { ...snapshot.progressionProfile },
     };
 
@@ -362,6 +375,7 @@ export const finishExpedition = (player: Player, returnLocation: string, now: nu
             signatureItems,
             bossNames: snapshot.bossNames,
             regions: [snapshot.destination, player.loc || snapshot.destination],
+            encounterDiscoveries,
             endedAt,
         })
         : player;

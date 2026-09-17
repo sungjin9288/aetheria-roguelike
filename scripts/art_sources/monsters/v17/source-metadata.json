@@ -1,0 +1,92 @@
+[
+  {
+    "name": "frost-golem",
+    "sha256": "78f2291d205475bd61382a174df8d132470a88d94e4986efdc79af8d3ea3068f",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      48,
+      24,
+      1207,
+      1218
+    ]
+  },
+  {
+    "name": "frost-mage",
+    "sha256": "c514273c976bd38262949ed414f526f67fea03328aef807d19bae7bc69ffdd0c",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      222,
+      34,
+      1031,
+      1205
+    ]
+  },
+  {
+    "name": "frost-spirit",
+    "sha256": "88208f68ae9b429bb30c93f7f7d6bf51fb1faae967437665220f86965d4ea356",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      244,
+      31,
+      1026,
+      1223
+    ]
+  },
+  {
+    "name": "frost-witch",
+    "sha256": "a334dc6b97501e340fc928dd19aa4515425cae8447786eb0fd9c0721bbf1634e",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      220,
+      70,
+      1040,
+      1185
+    ]
+  },
+  {
+    "name": "ice-giant",
+    "sha256": "9ece4e644f83835240bffe75f4620614b821355880e532964f57d860878a8288",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      263,
+      12,
+      998,
+      1238
+    ]
+  },
+  {
+    "name": "ice-golem",
+    "sha256": "34c90aceefd10e3375b3a2781169b21797a5b7be42145fa0f1303fa7b8a5577b",
+    "size": [
+      1254,
+      1254
+    ],
+    "mode": "RGBA",
+    "alpha128Bounds": [
+      60,
+      66,
+      1209,
+      1190
+    ]
+  }
+]

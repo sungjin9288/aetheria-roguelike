@@ -1,0 +1,207 @@
+{
+  "hashAlgorithm": "sha256",
+  "reportHash": "ddf2e9a1a65b11e795f2f48c69a88d3fbbcae3d25aa60c5818f57108ce72dffd",
+  "report": {
+    "schemaVersion": 1,
+    "predecessor": {
+      "spellEchoChance": 0.15,
+      "timeRingChance": 0.15
+    },
+    "candidate": {
+      "spellEchoChance": 0.08,
+      "timeRingChance": 0.15,
+      "bothOrdersChance": [
+        0.15,
+        0.15
+      ]
+    },
+    "synergy": {
+      "addedChance": 0.35,
+      "spellEchoCombined": 0.43,
+      "timeRingCombined": 0.5
+    },
+    "jobMatrix": [
+      {
+        "job": "그림자 주군",
+        "representativeSkill": "신의 일격",
+        "mpCost": 60,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 9,
+          "candidateUncommon": 4.8,
+          "epic": 9
+        }
+      },
+      {
+        "job": "나이트",
+        "representativeSkill": "실드배시",
+        "mpCost": 20,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 3,
+          "candidateUncommon": 1.6,
+          "epic": 3
+        }
+      },
+      {
+        "job": "대마법사",
+        "representativeSkill": "오메가 메테오",
+        "mpCost": 80,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 12,
+          "candidateUncommon": 6.4,
+          "epic": 12
+        }
+      },
+      {
+        "job": "도적",
+        "representativeSkill": "급소찌르기",
+        "mpCost": 15,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 2.25,
+          "candidateUncommon": 1.2,
+          "epic": 2.25
+        }
+      },
+      {
+        "job": "드래곤 나이트",
+        "representativeSkill": "용의 포효",
+        "mpCost": 50,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 7.5,
+          "candidateUncommon": 4,
+          "epic": 7.5
+        }
+      },
+      {
+        "job": "레인저",
+        "representativeSkill": "연속사격",
+        "mpCost": 35,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 5.25,
+          "candidateUncommon": 2.8000000000000003,
+          "epic": 5.25
+        }
+      },
+      {
+        "job": "마법사",
+        "representativeSkill": "화염구",
+        "mpCost": 20,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 3,
+          "candidateUncommon": 1.6,
+          "epic": 3
+        }
+      },
+      {
+        "job": "모험가",
+        "representativeSkill": "강타",
+        "mpCost": 10,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 1.5,
+          "candidateUncommon": 0.8,
+          "epic": 1.5
+        }
+      },
+      {
+        "job": "무당",
+        "representativeSkill": "저주의 낙인",
+        "mpCost": 25,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 3.75,
+          "candidateUncommon": 2,
+          "epic": 3.75
+        }
+      },
+      {
+        "job": "버서커",
+        "representativeSkill": "휠윈드",
+        "mpCost": 30,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 4.5,
+          "candidateUncommon": 2.4,
+          "epic": 4.5
+        }
+      },
+      {
+        "job": "사냥의 군주",
+        "representativeSkill": "신성 화살비",
+        "mpCost": 60,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 9,
+          "candidateUncommon": 4.8,
+          "epic": 9
+        }
+      },
+      {
+        "job": "성직자",
+        "representativeSkill": "신성 광선",
+        "mpCost": 20,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 3,
+          "candidateUncommon": 1.6,
+          "epic": 3
+        }
+      },
+      {
+        "job": "시간술사",
+        "representativeSkill": "시간 가속",
+        "mpCost": 40,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 6,
+          "candidateUncommon": 3.2,
+          "epic": 6
+        }
+      },
+      {
+        "job": "아크메이지",
+        "representativeSkill": "메테오",
+        "mpCost": 60,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 9,
+          "candidateUncommon": 4.8,
+          "epic": 9
+        }
+      },
+      {
+        "job": "어쌔신",
+        "representativeSkill": "암살",
+        "mpCost": 40,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 6,
+          "candidateUncommon": 3.2,
+          "epic": 6
+        }
+      },
+      {
+        "job": "전사",
+        "representativeSkill": "파워배시",
+        "mpCost": 15,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 2.25,
+          "candidateUncommon": 1.2,
+          "epic": 2.25
+        }
+      },
+      {
+        "job": "팔라딘",
+        "representativeSkill": "신성 강타",
+        "mpCost": 40,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 6,
+          "candidateUncommon": 3.2,
+          "epic": 6
+        }
+      },
+      {
+        "job": "흑마법사",
+        "representativeSkill": "다크메터",
+        "mpCost": 50,
+        "expectedMpSavedPerUse": {
+          "predecessorUncommon": 7.5,
+          "candidateUncommon": 4,
+          "epic": 7.5
+        }
+      }
+    ],
+    "errors": []
+  }
+}

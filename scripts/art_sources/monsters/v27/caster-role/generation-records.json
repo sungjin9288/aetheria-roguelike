@@ -1,0 +1,58 @@
+{
+  "mode": "built-in",
+  "runtimeAdopted": false,
+  "records": [
+    {
+      "slug": "ancient-mage",
+      "name": "고대 마법사",
+      "prompt": "Use case: stylized-concept. Asset: ONE enemy sprite for Aetheria mobile pixel-art RPG, clear at32px. Coarse crisp pixel-art, large coherent clusters, hard stepped edges, broad MID-VALUE forms, not fine stippling or painterly texture. Entire single figure and every prop within generous empty margins on all sides. Square, three-quarter front view. Genuine transparent RGBA background and holes, no checkerboard. No environment, floor, shadow, pedestal, text, logo, frame, floating particles or glow haze. Subject: ANCIENT MAGE: elderly robed spell scholar with a LONG BENT pointed hat drooping sideways, holds a WIDE unfurled parchment SCROLL across torso and a SHORT stout wooden staff at one side. Muted slate-blue broad robes with warm ivory parchment, wrinkled face and short gray beard, two small planted boots. Hat and scroll are major silhouette cues, not a giant staff. No fire crown, armor, floating runes, tiny readable lettering or book.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-8d242fc6-e6da-4e85-82b2-2e3aa502cb36.png"
+    },
+    {
+      "slug": "void-mage",
+      "name": "공허 마법사",
+      "prompt": "Use case: stylized-concept. Asset: ONE enemy sprite for Aetheria mobile pixel-art RPG, clear at32px. Coarse crisp pixel-art, large coherent clusters, hard stepped edges, broad MID-VALUE forms, not fine stippling or painterly texture. Entire single figure and every prop within generous empty margins on all sides. Square, three-quarter front view. Genuine transparent RGBA background and holes, no checkerboard. No environment, floor, shadow, pedestal, text, logo, frame, floating particles or glow haze. Subject: VOID MAGE: a robed caster drawing TWO VERY WIDE EMPTY SLEEVES inward to surround a single dark EMPTY RIFT at center of chest. Large hollow sleeve openings clearly show no hands, hood face dark and simple. Broad midvalue dusty purple-gray cloth planes, heavy arched folds forming a circular frame around central dark gap. Tall closed skirt tapering gently to hem. No visible eye, staff, book, cards, armor, smoky body or decorative flame.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-2446838c-edd7-4cbc-9b27-933ddfe077e3.png"
+    },
+    {
+      "slug": "enraged-magus",
+      "name": "분노한 마구스",
+      "prompt": "Use case: stylized-concept. Asset: ONE enemy sprite for Aetheria mobile pixel-art RPG, clear at32px. Coarse crisp pixel-art, large coherent clusters, hard stepped edges, broad MID-VALUE forms, not fine stippling or painterly texture. Entire single figure and every prop within generous empty margins on all sides. Square, three-quarter front view. Genuine transparent RGBA background and holes, no checkerboard. No environment, floor, shadow, pedestal, text, logo, frame, floating particles or glow haze. Subject: ENRAGED MAGUS: angry humanoid wizard LEANING head and upper body FORWARD, one broad open hand thrust strongly forward in a casting gesture, other hand grips a SHORT SPLIT-TOP wooden staff. VERY WIDE sleeves swing forward with motion, low bent legs, face readable with tense brow. Muted brick-red robe with large pale gray sleeve lining, no pointy wizard hat. Asymmetric forward thrust silhouette, not upright passive scholar. No fireball, particles, crown, eye monster or flames.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-004f8994-a07d-4779-a5ca-57180a752c6f.png"
+    },
+    {
+      "slug": "trickster-mage",
+      "name": "사기꾼 마법사",
+      "prompt": "Use case: stylized-concept. ONE TRICKSTER MAGE sprite for Aetheria pixel-art mobile RPG. Coarse crisp pixel-art, large solid color clusters, readable at32px. A sly humanoid standing sideways in a SHORT dusty teal coat, one LARGE FAN of five chunky blank ivory cards across upper torso and second hand hidden behind back. Small tilted cap and half-smiling human face. COMPACT SIX-HEAD-TALL RPG sprite proportions, NOT elongated fashion/anime proportions. One relaxed bent knee but both legs and boots are broad readable shapes. Trousers in MEDIUM WARM GRAY and stout boots in LIGHT BROWN with broad lit planes so lower body stays clear against dark navy. Short coat also has broad midvalue teal planes. Preserve slender street-magician identity, not a bulky fighter. Genuinely transparent RGBA background, entire figure centered square with at least10 percent EMPTY transparent border on all sides, cap and boots completely inside. No glow, flame, staff, armor, long robe, environment, floor shadow, checkerboard, text, tiny lettering or particles.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-00ff455f-3350-48fc-b877-826d1e6ad707.png"
+    },
+    {
+      "slug": "apocalypse-mage",
+      "name": "종말의 마법사",
+      "prompt": "Use case: stylized-concept. Asset: ONE enemy sprite for Aetheria mobile pixel-art RPG, clear at32px. Coarse crisp pixel-art, large coherent clusters, hard stepped edges, broad MID-VALUE forms, not fine stippling or painterly texture. Entire single figure and every prop within generous empty margins on all sides. Square, three-quarter front view. Genuine transparent RGBA background and holes, no checkerboard. No environment, floor, shadow, pedestal, text, logo, frame, floating particles or glow haze. Subject: APOCALYPSE MAGE: solemn hooded caster lifting a HUGE CLOSED rectangular spellbook vertically in front of body, book covers HALF the torso and is held with both arms. Thick pale gray book edges and dull dark plum cover, one broad simple metal clasp WITHOUT lettering. Short ragged shoulder overgarment over long muted gray-purple robes. Small hood head peers above book. Book is CLOSED and a major solid silhouette block, no open pages, staff, crown, floating signs or ornate tiny text.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-c35b4541-8b29-4850-9fcb-ad4c3556a3cc.png"
+    },
+    {
+      "slug": "doomsday-herald",
+      "name": "종말의 전령",
+      "prompt": "Use case: stylized-concept. Asset: ONE enemy sprite for Aetheria mobile pixel-art RPG, clear at32px. Coarse crisp pixel-art, large coherent clusters, hard stepped edges, broad MID-VALUE forms, not fine stippling or painterly texture. Entire single figure and every prop within generous empty margins on all sides. Square, three-quarter front view. Genuine transparent RGBA background and holes, no checkerboard. No environment, floor, shadow, pedestal, text, logo, frame, floating particles or glow haze. Subject: DOOMSDAY HERALD: tall narrow ritual herald with a LARGE long CURVED CEREMONIAL TRUMPET lifted to mouth, wide flared horn bell protrudes horizontally at shoulder height. Long pale bronze-gray robe, hood conceals most face, broad trailing sash ribbons attached to shoulders stream backward as two simple solid shapes. Long upright body and horn silhouette, two small boots beneath. No book, staff, sword, wings, letters, floating ribbons or particles.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-ae8e820a-3ca9-49b5-a187-9409052d5abe.png"
+    },
+    {
+      "slug": "flame-priest",
+      "name": "화염 사제",
+      "prompt": "Use case: stylized-concept. Asset: ONE enemy sprite for Aetheria mobile pixel-art RPG, clear at32px. Coarse crisp pixel-art, large coherent clusters, hard stepped edges, broad MID-VALUE forms, not fine stippling or painterly texture. Entire single figure and every prop within generous empty margins on all sides. Square, three-quarter front view. Genuine transparent RGBA background and holes, no checkerboard. No environment, floor, shadow, pedestal, text, logo, frame, floating particles or glow haze. Subject: FLAME PRIEST: humble wide-robed priest holding a SIMPLE WIDE fire BOWL in both hands before chest. One compact SOLID stylized flame rises directly from bowl, connected and contained, no detached sparks or haze. Broad warm terracotta robe with pale ivory mantle, plain uncovered head or simple cloth hood, gentle forward bowed posture. Bowl and sleeves form wide horizontal chest shape, two feet visible. No crown, armored ruler, huge fire halo, staff, throne or elaborate jewelry.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-c9093d5f-329f-4701-98b9-e7b0d3488905.png"
+    }
+  ],
+  "rejected": [
+    {
+      "slug": "trickster-mage",
+      "name": "사기꾼 마법사",
+      "prompt": "Use case: stylized-concept. Asset: ONE enemy sprite for Aetheria mobile pixel-art RPG, clear at32px. Coarse crisp pixel-art, large coherent clusters, hard stepped edges, broad MID-VALUE forms, not fine stippling or painterly texture. Entire single figure and every prop within generous empty margins on all sides. Square, three-quarter front view. Genuine transparent RGBA background and holes, no checkerboard. No environment, floor, shadow, pedestal, text, logo, frame, floating particles or glow haze. Subject: TRICKSTER MAGE: slim sly humanoid standing SIDEWAYS in a SHORT fitted coat, holds one LARGE FAN of exactly FIVE chunky blank playing cards across upper torso, second hand HIDDEN behind back. Small tilted cap, visible half-smiling human face, one knee relaxed. Dusty teal coat and cream card faces, big simple color fields without readable symbols. Broad card fan and short coat distinguish a street magician, not a flame lord or long-robed wizard. No staff, armor, fire, floating cards or tiny writing.",
+      "original": "/Users/sungjin/.codex/generated_images/019fd473-46d1-75e0-a08d-2e13e8e68ce5/exec-23db3276-44f4-42cc-a8b6-229ffebc14fd.png",
+      "preserved": "rejected/trickster-mage-thin-dark.png",
+      "reason": "Elongated dark legs disappear at dark32"
+    }
+  ]
+}

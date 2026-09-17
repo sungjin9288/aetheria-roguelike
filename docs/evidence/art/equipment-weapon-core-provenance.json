@@ -1,142 +1,4 @@
 {
-  "version": 1,
-  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
-  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
-  "cohort": "weapon-core",
-  "generationReview": {
-    "tool": "OpenAI built-in image_gen imagegen",
-    "accepted": [
-      {
-        "batchId": "weapon-core-sword-01",
-        "rawImage": "exec-470dbc00-9433-490b-bd19-e3127a3f36a0.png",
-        "rawSha256": "532d2cd9968a027c4a9f9141f98aed2a915678b229f5e0d9f204852bd8a854ff"
-      },
-      {
-        "batchId": "weapon-core-sword-02",
-        "rawImage": "exec-8fde823c-b436-4a57-82b3-a1bc0cf9640b.png",
-        "rawSha256": "485dc846bba0abfa411eca1629ab73e6dbc41684de2a5a6bb1f2c258fff7afa4"
-      },
-      {
-        "batchId": "weapon-core-sword-03",
-        "rawImage": "exec-bf4b5ca7-f04e-47f1-aff0-2e10526297e0.png",
-        "rawSha256": "47467a3f7cde3dc2173778eeb2d478067147a27fd619dd6e04d45e7d4a42ea9a"
-      },
-      {
-        "batchId": "weapon-core-dagger-01",
-        "rawImage": "exec-bd55f5fd-470e-42f8-9298-99a95577d5ea.png",
-        "rawSha256": "4c279e2568ce7061b9b83d1e48fa355c25da137ef82d29a6f7cdfb2d47df3728"
-      },
-      {
-        "batchId": "weapon-core-dagger-02",
-        "rawImage": "exec-e3c016b1-0bce-48ca-9cba-5b497ea09755.png",
-        "rawSha256": "36197502dca7272ddfa8fd1e5b82078ae75852b5fd997217914a6e2cd5292ea8"
-      },
-      {
-        "batchId": "weapon-core-dagger-03",
-        "rawImage": "exec-fd2cf43d-2f7d-4a75-8005-ed02b17a4c76.png",
-        "rawSha256": "e73a259abc1a84d8aecb05eb59acf89551dce3c8743b92fb27a2dfec5b91f2e0"
-      },
-      {
-        "batchId": "weapon-core-heavy-01",
-        "rawImage": "exec-aab9a4d4-7c9a-48ea-a864-df4d776d2638.png",
-        "rawSha256": "00f7ad8ed5333c967575e95e674740d8f9c08d47b2f43158fc2ad31cfe51b039"
-      },
-      {
-        "batchId": "weapon-core-heavy-02",
-        "rawImage": "exec-ff961ef8-7789-4b50-8689-445234310b38.png",
-        "rawSha256": "7669dad2c111ccfe65aa80f300dfd729f2b02a1355c784ec9dc3094a38799da9"
-      },
-      {
-        "batchId": "weapon-core-sword-04",
-        "rawImage": "exec-17c075f8-2d13-43bd-a37a-e453f1d287df.png",
-        "rawSha256": "f0dfc1d4c10e026d8abf10d83054bfb72dd4c216b5371131a7a9c9261bfa4061"
-      },
-      {
-        "batchId": "weapon-core-sword-05",
-        "rawImage": "exec-41c9c17d-a835-4d60-a179-bf2f194c64c6.png",
-        "rawSha256": "d5d9eb67c5ca9fa53050053ed194fbd939222d4293fcdcbde1d6f8678f05da91"
-      },
-      {
-        "batchId": "weapon-core-dagger-04",
-        "rawImage": "exec-b05e0c9d-3b04-4109-b1c2-80a28b85ad97.png",
-        "rawSha256": "af6324c5214e41e0533e7ed046f5f3e26a4b4c9b2518c7bcc3603d9e91b74fed"
-      }
-    ],
-    "rejected": [
-      {
-        "batchId": "weapon-core-sword-01",
-        "rawImage": "exec-8af1aa56-89fe-454d-ac82-e78c1a8bd216.png",
-        "rawSha256": "2933dd2687d6b379282ffeb003bc9f7ac63eaadf47c0802fa3281abe0517001d",
-        "reason": "cell 4 lacked transparent boundary padding"
-      },
-      {
-        "batchId": "weapon-core-sword-02",
-        "rawImage": "exec-ec70147d-ccdc-44a9-ba44-4ce6c4243f15.png",
-        "rawSha256": "ef46a9e8acebb6edcd348127febda29dfbb80e1d8232e62f8a35d35158519b0a",
-        "reason": "cell 3 crossed its declared boundary"
-      },
-      {
-        "batchId": "weapon-core-sword-03",
-        "rawImage": "exec-c88ed94d-9fcf-446e-8d44-1902ac72e769.png",
-        "rawSha256": "c2faf5a90111823bf86ec389d1faca4a7c39908f872f0d60d22a99fba16ae3ca",
-        "reason": "cell 1 lacked transparent boundary padding"
-      },
-      {
-        "batchId": "weapon-core-sword-03",
-        "rawImage": "exec-b50081f6-6b06-4015-a697-00c7fed79578.png",
-        "rawSha256": "eda0eedf6cd77bea2bd8989df7d872c7fa8428d2e3870ccb01e893ee5e8bf6bc",
-        "reason": "cell 3 crossed into an unused trailing cell"
-      },
-      {
-        "batchId": "weapon-core-heavy-01",
-        "rawImage": "exec-e219f1af-7f51-4589-a462-57fc2a47ccec.png",
-        "rawSha256": "eb30c224f8900c95ad93605ebae73bf469b97aa732bbfa6ffb00a1362292e004",
-        "reason": "cell 5 lacked transparent boundary padding"
-      },
-      {
-        "batchId": "weapon-core-heavy-01",
-        "rawImage": "exec-dda6c6e2-e5a3-4b88-8bee-344269f58c9e.png",
-        "rawSha256": "4eafd9acf88caf05ce3870ccb61e48365f18686e8b11f042d256bdbee1a5a8e8",
-        "reason": "cell 6 pommel crossed into cell 5"
-      },
-      {
-        "batchId": "weapon-core-dagger-01",
-        "rawImage": "exec-335ca309-b45d-4e8a-a98e-2f8f20e8868b.png",
-        "rawSha256": "a49d9f108df5fda8b3b2cc28fb1cc2350c240bf1e70f00198418878707d60a8e",
-        "reason": "superseded after classifier correction because the source included 독아 채찍 in the dagger family"
-      },
-      {
-        "batchId": "weapon-core-sword-04",
-        "rawImage": "exec-7208b490-6b17-4cd4-a6a5-0338e5848058.png",
-        "rawSha256": "3587109628eda71e0ab6811ebbc61e5304745b74edd00f0fa11ef224020c9b99",
-        "reason": "void and dark greatswords plus holy and judgment swords were insufficiently distinct"
-      },
-      {
-        "batchId": "weapon-core-sword-04",
-        "rawImage": "exec-dbec6ca8-e103-4642-8a8b-ec591d28aabe.png",
-        "rawSha256": "723dbee486257587e172e6c0eaeea8a5f46fe4231ec354d31a62deab32b37bb7",
-        "reason": "cells 2 and 5 touched the horizontal cell boundary before the accepted imagegen recenter edit"
-      },
-      {
-        "batchId": "weapon-core-sword-01",
-        "rawImage": "exec-aaf34ee2-1ce0-42ae-a749-2af5d064b1fc.png",
-        "rawSha256": "85d1b1168ec899b8196beac7ce3debdca5db7d9c59403bcd5c932f705f1fd0e6",
-        "reason": "weapon-core-sword-01 source was superseded because it included a non-canonical prefix identity"
-      },
-      {
-        "batchId": "weapon-core-sword-02",
-        "rawImage": "exec-afdb7279-bf24-4af3-aa97-46549a5c497e.png",
-        "rawSha256": "3bd5dc318693d679bce8c660dc47a4bb0810764a10324b347bd0a647b2a650f9",
-        "reason": "weapon-core-sword-02 source was superseded because it included a non-canonical prefix identity"
-      },
-      {
-        "batchId": "weapon-core-sword-01",
-        "rawImage": "exec-d7562137-3e55-4db6-8820-06987eb01623.png",
-        "rawSha256": "9c67ea8f921995241aeee7b8ea100ba33911b58cb9ba2cd71a665f34e5b7da09",
-        "reason": "checkerboard was baked into RGB pixels instead of true transparency"
-      }
-    ]
-  },
   "batches": [
     {
       "batchId": "weapon-core-sword-01",
@@ -561,7 +423,7 @@
         },
         {
           "cell": "bottom-center",
-          "exportSha256": "f7ba4e202df3c21da330971cfd9112c03b12eda59c1f834fb70db5f48672af6a",
+          "exportSha256": "2e1d2c19bdfd3b49b3381cee405653d844cbc05c9fef70cbb4a4b26f1e0b90e5",
           "name": "암흑의 대검",
           "runtimePath": "/assets/equipment-exact/auto/auto-4473919467f6.png"
         },
@@ -580,9 +442,9 @@
         "암흑의 대검",
         "에테르 검"
       ],
-      "replayKey": "3dd63e7a61405914a01312e36d11c20e50b734bfdf7387a639e8c0334ae040d5",
+      "replayKey": "19430cd82bce11d3c7bfb96b83d907ab144245cd16c6f494b45e30c14553c0d3",
       "sourceSheet": "weapon-core-sword-04.png",
-      "sourceSheetSha256": "b8de8917866933ac05976ee4573676e5b3cc379e23049e83ca1a46ccc706aacc"
+      "sourceSheetSha256": "f1dcefa9c5219f40775058c62d465a2c34a564f15f8163a8433fb10529e6f9c5"
     },
     {
       "batchId": "weapon-core-sword-05",
@@ -659,5 +521,143 @@
       "sourceSheet": "weapon-core-dagger-04.png",
       "sourceSheetSha256": "fe567ee92d0e9970282f56005e681e6f41bc788a99b59674d8ad7f5c4ff530bf"
     }
-  ]
+  ],
+  "catalogRowsSha256": "23f584c89b5a82d2ba110e695d3a566defdbff036400a61122f750ca8a86c5ed",
+  "catalogSha256": "c15c4e6fc7ad99e37c616cc4303821fe3ce58238d2f5d98d667c5b0cb83c3ad0",
+  "cohort": "weapon-core",
+  "generationReview": {
+    "accepted": [
+      {
+        "batchId": "weapon-core-sword-01",
+        "rawImage": "exec-470dbc00-9433-490b-bd19-e3127a3f36a0.png",
+        "rawSha256": "532d2cd9968a027c4a9f9141f98aed2a915678b229f5e0d9f204852bd8a854ff"
+      },
+      {
+        "batchId": "weapon-core-sword-02",
+        "rawImage": "exec-8fde823c-b436-4a57-82b3-a1bc0cf9640b.png",
+        "rawSha256": "485dc846bba0abfa411eca1629ab73e6dbc41684de2a5a6bb1f2c258fff7afa4"
+      },
+      {
+        "batchId": "weapon-core-sword-03",
+        "rawImage": "exec-bf4b5ca7-f04e-47f1-aff0-2e10526297e0.png",
+        "rawSha256": "47467a3f7cde3dc2173778eeb2d478067147a27fd619dd6e04d45e7d4a42ea9a"
+      },
+      {
+        "batchId": "weapon-core-dagger-01",
+        "rawImage": "exec-bd55f5fd-470e-42f8-9298-99a95577d5ea.png",
+        "rawSha256": "4c279e2568ce7061b9b83d1e48fa355c25da137ef82d29a6f7cdfb2d47df3728"
+      },
+      {
+        "batchId": "weapon-core-dagger-02",
+        "rawImage": "exec-e3c016b1-0bce-48ca-9cba-5b497ea09755.png",
+        "rawSha256": "36197502dca7272ddfa8fd1e5b82078ae75852b5fd997217914a6e2cd5292ea8"
+      },
+      {
+        "batchId": "weapon-core-dagger-03",
+        "rawImage": "exec-fd2cf43d-2f7d-4a75-8005-ed02b17a4c76.png",
+        "rawSha256": "e73a259abc1a84d8aecb05eb59acf89551dce3c8743b92fb27a2dfec5b91f2e0"
+      },
+      {
+        "batchId": "weapon-core-heavy-01",
+        "rawImage": "exec-aab9a4d4-7c9a-48ea-a864-df4d776d2638.png",
+        "rawSha256": "00f7ad8ed5333c967575e95e674740d8f9c08d47b2f43158fc2ad31cfe51b039"
+      },
+      {
+        "batchId": "weapon-core-heavy-02",
+        "rawImage": "exec-ff961ef8-7789-4b50-8689-445234310b38.png",
+        "rawSha256": "7669dad2c111ccfe65aa80f300dfd729f2b02a1355c784ec9dc3094a38799da9"
+      },
+      {
+        "batchId": "weapon-core-sword-04",
+        "rawImage": "exec-17c075f8-2d13-43bd-a37a-e453f1d287df.png",
+        "rawSha256": "f0dfc1d4c10e026d8abf10d83054bfb72dd4c216b5371131a7a9c9261bfa4061"
+      },
+      {
+        "batchId": "weapon-core-sword-05",
+        "rawImage": "exec-41c9c17d-a835-4d60-a179-bf2f194c64c6.png",
+        "rawSha256": "d5d9eb67c5ca9fa53050053ed194fbd939222d4293fcdcbde1d6f8678f05da91"
+      },
+      {
+        "batchId": "weapon-core-dagger-04",
+        "rawImage": "exec-b05e0c9d-3b04-4109-b1c2-80a28b85ad97.png",
+        "rawSha256": "af6324c5214e41e0533e7ed046f5f3e26a4b4c9b2518c7bcc3603d9e91b74fed"
+      }
+    ],
+    "rejected": [
+      {
+        "batchId": "weapon-core-sword-01",
+        "rawImage": "exec-8af1aa56-89fe-454d-ac82-e78c1a8bd216.png",
+        "rawSha256": "2933dd2687d6b379282ffeb003bc9f7ac63eaadf47c0802fa3281abe0517001d",
+        "reason": "cell 4 lacked transparent boundary padding"
+      },
+      {
+        "batchId": "weapon-core-sword-02",
+        "rawImage": "exec-ec70147d-ccdc-44a9-ba44-4ce6c4243f15.png",
+        "rawSha256": "ef46a9e8acebb6edcd348127febda29dfbb80e1d8232e62f8a35d35158519b0a",
+        "reason": "cell 3 crossed its declared boundary"
+      },
+      {
+        "batchId": "weapon-core-sword-03",
+        "rawImage": "exec-c88ed94d-9fcf-446e-8d44-1902ac72e769.png",
+        "rawSha256": "c2faf5a90111823bf86ec389d1faca4a7c39908f872f0d60d22a99fba16ae3ca",
+        "reason": "cell 1 lacked transparent boundary padding"
+      },
+      {
+        "batchId": "weapon-core-sword-03",
+        "rawImage": "exec-b50081f6-6b06-4015-a697-00c7fed79578.png",
+        "rawSha256": "eda0eedf6cd77bea2bd8989df7d872c7fa8428d2e3870ccb01e893ee5e8bf6bc",
+        "reason": "cell 3 crossed into an unused trailing cell"
+      },
+      {
+        "batchId": "weapon-core-heavy-01",
+        "rawImage": "exec-e219f1af-7f51-4589-a462-57fc2a47ccec.png",
+        "rawSha256": "eb30c224f8900c95ad93605ebae73bf469b97aa732bbfa6ffb00a1362292e004",
+        "reason": "cell 5 lacked transparent boundary padding"
+      },
+      {
+        "batchId": "weapon-core-heavy-01",
+        "rawImage": "exec-dda6c6e2-e5a3-4b88-8bee-344269f58c9e.png",
+        "rawSha256": "4eafd9acf88caf05ce3870ccb61e48365f18686e8b11f042d256bdbee1a5a8e8",
+        "reason": "cell 6 pommel crossed into cell 5"
+      },
+      {
+        "batchId": "weapon-core-dagger-01",
+        "rawImage": "exec-335ca309-b45d-4e8a-a98e-2f8f20e8868b.png",
+        "rawSha256": "a49d9f108df5fda8b3b2cc28fb1cc2350c240bf1e70f00198418878707d60a8e",
+        "reason": "superseded after classifier correction because the source included 독아 채찍 in the dagger family"
+      },
+      {
+        "batchId": "weapon-core-sword-04",
+        "rawImage": "exec-7208b490-6b17-4cd4-a6a5-0338e5848058.png",
+        "rawSha256": "3587109628eda71e0ab6811ebbc61e5304745b74edd00f0fa11ef224020c9b99",
+        "reason": "void and dark greatswords plus holy and judgment swords were insufficiently distinct"
+      },
+      {
+        "batchId": "weapon-core-sword-04",
+        "rawImage": "exec-dbec6ca8-e103-4642-8a8b-ec591d28aabe.png",
+        "rawSha256": "723dbee486257587e172e6c0eaeea8a5f46fe4231ec354d31a62deab32b37bb7",
+        "reason": "cells 2 and 5 touched the horizontal cell boundary before the accepted imagegen recenter edit"
+      },
+      {
+        "batchId": "weapon-core-sword-01",
+        "rawImage": "exec-aaf34ee2-1ce0-42ae-a749-2af5d064b1fc.png",
+        "rawSha256": "85d1b1168ec899b8196beac7ce3debdca5db7d9c59403bcd5c932f705f1fd0e6",
+        "reason": "weapon-core-sword-01 source was superseded because it included a non-canonical prefix identity"
+      },
+      {
+        "batchId": "weapon-core-sword-02",
+        "rawImage": "exec-afdb7279-bf24-4af3-aa97-46549a5c497e.png",
+        "rawSha256": "3bd5dc318693d679bce8c660dc47a4bb0810764a10324b347bd0a647b2a650f9",
+        "reason": "weapon-core-sword-02 source was superseded because it included a non-canonical prefix identity"
+      },
+      {
+        "batchId": "weapon-core-sword-01",
+        "rawImage": "exec-d7562137-3e55-4db6-8820-06987eb01623.png",
+        "rawSha256": "9c67ea8f921995241aeee7b8ea100ba33911b58cb9ba2cd71a665f34e5b7da09",
+        "reason": "checkerboard was baked into RGB pixels instead of true transparency"
+      }
+    ],
+    "tool": "OpenAI built-in image_gen imagegen"
+  },
+  "version": 1
 }

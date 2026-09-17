@@ -1,5 +1,7 @@
 import { BALANCE } from '../data/constants.js';
 import { FALLBACK_EVENT_POOL } from '../data/aiEventPools.js';
+import { getStructuredFallbackTransaction } from '../data/structuredFallbackEvents.js';
+import { findItemByName } from './gameUtils.js';
 
 const RECENT_HISTORY_LIMIT = 6;
 const RECENT_EVENT_LIMIT = 8;
@@ -367,6 +369,8 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
             if (!outcome || typeof outcome !== 'object') return;
             const choiceIndex = clamp(toInt(outcome.choiceIndex, idx), 0, Math.max(0, choices.length - 1));
             if (!choices[choiceIndex] || normalized.has(choiceIndex)) return;
+            const itemName = normalizeText(outcome.item);
+            if (itemName && !findItemByName(itemName)) return;
 
             normalized.set(choiceIndex, {
                 choiceIndex,
@@ -375,7 +379,7 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
                 exp: toInt(outcome.exp, 0),
                 hp: toInt(outcome.hp, 0),
                 mp: toInt(outcome.mp, 0),
-                ...(normalizeText(outcome.item) ? { item: normalizeText(outcome.item) } : {}),
+                ...(itemName ? { item: itemName } : {}),
                 ...normalizeOutcomeSpecials(outcome),
             });
         });
@@ -406,6 +410,11 @@ export interface EventPackage {
     /** aiService가 일일 한도 초과 폴백일 때만 덧붙인다. */
     fallbackReason?: 'quota';
     fallbackMessage?: string;
+    /**
+     * 로컬에서 선택된 canonical 폴백 이벤트에만 붙는 트랜잭션 신원(Codex dc308c2).
+     * 모델/외부 페이로드는 buildEventPackage의 허용 목록에서 떨어지므로 자칭할 수 없다.
+     */
+    fallbackTransactionId?: string;
 }
 
 export const buildEventPackage = (payload: any, context: any): EventPackage | null => {
@@ -428,8 +437,12 @@ export const buildEventPackage = (payload: any, context: any): EventPackage | nu
     //   최상위 필드를 그대로 넘기면 모델이 `isScout` / `isBossGaugeChallenge` / `_chainId` 같은
     //   라우팅 플래그를 실어 eventActions의 분기(정찰·보스 도전·체인 진행)를 탈취할 수 있다.
     //   그 플래그들은 exploreActions / bossGauge / scoutEvents가 직접 만드는 이벤트에만 존재한다.
+    //   이 허용 목록은 Codex의 예약어 차단(source/fallbackTransactionId/transactionId/cost/
+    //   payout/grossGold/netGold)을 포함한다 — 허용 목록에 없는 필드는 전부 떨어진다.
     return {
-        source: typeof raw.source === 'string' && raw.source ? raw.source : (context.source || 'ai'),
+        // source는 호출자(컨텍스트) 권한이다 — 모델/외부 페이로드가 'fallback'을 자칭해
+        //   폴백 전용 트랜잭션 권한을 주장할 수 없다 (Codex dc308c2).
+        source: context.source || 'ai',
         desc,
         choices,
         outcomes: normalizeOutcomes(raw.outcomes, choices, { ...context, desc })
@@ -440,7 +453,7 @@ export const buildEventPackage = (payload: any, context: any): EventPackage | nu
 // cycle 545: history / context defaults 제거 — 3 production caller (aiService
 //   :69/74/108) + 5 test caller 모두 3 args 명시이라 두 default 모두 도달
 //   불가. 청소 메가 시리즈 40번째 cross-file batch (cycle 502-544).
-export const pickFallbackEvent = (loc: string, history: any[], context: any, rng: () => number = Math.random) => {
+export const pickFallbackEvent = (loc: string, history: any[], context: any, rng: () => number = Math.random): EventPackage | null => {
     // cycle 425: 직접 loc lookup 분기 제거 — cycle 357 이후 FALLBACK_EVENT_POOL은
     //   English category 키만 (forest/ruins/cave/...). loc 파라미터는 항상 Korean
     //   지명이라 직접 매칭 0건이었음. getPoolKeyByLocation이 유일 path.
@@ -460,8 +473,12 @@ export const pickFallbackEvent = (loc: string, history: any[], context: any, rng
         ? withoutImmediateRepeat
         : (filteredPool.length > 0 ? filteredPool : pool);
     const picked = candidates[Math.floor(rng() * candidates.length)];
-    return buildEventPackage(
+    const packaged = buildEventPackage(
         { ...picked, source: 'fallback' },
         { ...context, location: loc, source: 'fallback' }
     );
+    const transaction = getStructuredFallbackTransaction(picked?.fallbackTransactionId);
+    return packaged && transaction
+        ? { ...packaged, fallbackTransactionId: transaction.id }
+        : packaged;
 };

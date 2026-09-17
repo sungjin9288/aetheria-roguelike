@@ -1,0 +1,13 @@
+{
+  "apk": "android/app/build/outputs/apk/debug/app-debug.apk",
+  "apkBytes": 222792009,
+  "apkSha256": "fca631c860dd9e6f8b4df5035bc5142bcbdc695ace334735d738630f406d8ae8",
+  "app": "/tmp/aetheria-required-five-ios.mBGlRE/Build/Products/Release-iphoneos/App.app",
+  "main": "assets/index-BTfu7xBI.js",
+  "mainSha256": "b26c485dc8b3462652a46742a02229fcd1faa112d56613c6e1bcd73bbd036000",
+  "verifiedAssetCount": 26,
+  "authoredPortraits": 25,
+  "classification": "local-package-byte-verification",
+  "installed": false,
+  "signedIos": false
+}

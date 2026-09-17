@@ -45,8 +45,26 @@ export const BASELINE_PROGRESSION_PROFILE: Readonly<ProgressionProfile> = Object
     eventMultiplier: 1,
 });
 
+export const EXPLORATION_RHYTHM_PROFILE: Readonly<ProgressionProfile> = Object.freeze({
+    id: 'exploration-rhythm',
+    version: 2,
+    expMultiplier: 1,
+    lootMultiplier: 1,
+    eventMultiplier: 0.8,
+});
+
+export const EXPLORATION_RHYTHM_V3_PROFILE: Readonly<ProgressionProfile> = Object.freeze({
+    id: 'exploration-rhythm',
+    version: 3,
+    expMultiplier: 1,
+    lootMultiplier: 1,
+    eventMultiplier: 0.64,
+});
+
 const PROFILE_REGISTRY: Readonly<Record<string, Readonly<ProgressionProfile>>> = Object.freeze({
     'baseline@1': BASELINE_PROGRESSION_PROFILE,
+    'exploration-rhythm@2': EXPLORATION_RHYTHM_PROFILE,
+    'exploration-rhythm@3': EXPLORATION_RHYTHM_V3_PROFILE,
 });
 
 export const resolveProgressionProfile = (reference: unknown): Readonly<ProgressionProfile> => {
@@ -80,6 +98,18 @@ export const getProgressionEventMultiplier = (player: unknown) => (
     getActiveProgressionProfile(player).eventMultiplier
 );
 
+export const getProgressionMinimumOrdinaryGap = (reference: unknown): 1 | 2 => {
+    if (!isPlainObject(reference)) return 1;
+    const profileReference = isPlainObject(reference.progressionProfile)
+        ? reference.progressionProfile
+        : reference;
+    const profile = resolveProgressionProfile(profileReference);
+    return profile.id === EXPLORATION_RHYTHM_V3_PROFILE.id
+        && profile.version === EXPLORATION_RHYTHM_V3_PROFILE.version
+        ? 2
+        : 1;
+};
+
 export const validateProgressionProfileTransition = (
     previousValue: unknown,
     candidateValue: unknown,
@@ -97,8 +127,8 @@ export const validateProgressionProfileTransition = (
     const ok = candidate.version === previous.version + 1
         && changedAxes.length === 1
         && changedAxes[0] === declaredAxis
-        && ratio >= 0.8
-        && ratio <= 1.2;
+        && ratio >= 0.8 - Number.EPSILON
+        && ratio <= 1.2 + Number.EPSILON;
     return { ok, changedAxis: ok ? declaredAxis : null } as const;
 };
 

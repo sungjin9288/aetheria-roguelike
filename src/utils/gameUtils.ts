@@ -11,6 +11,7 @@ import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyM
 import { AT } from '../reducers/actionTypes.js';
 import { MSG } from '../data/messages.js';
 import { getCurrentRunSnapshot } from './runProgress.js';
+import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import {
     countCompletedSignatureSets,
     countDiscoveredSignatures,
@@ -75,9 +76,9 @@ export const makeItem = (
     template: Item | null | undefined,
     rng: () => number = Math.random,
     now: () => number = Date.now,
-): Item => ({
+): Item => withCanonicalEquipmentBaseIdentity({
     ...template,
-    id: `${now()}_${rng().toString(16).slice(2, 8)}`
+    id: `${now()}_${rng().toString(16).slice(2, 8)}`,
 });
 
 /** 전체 DB 아이템 목록을 하나의 배열로 반환 */

@@ -1,0 +1,21 @@
+{
+  "alphaThreshold": 128,
+  "exportSha256": {
+    "frost-golem": "c5b318a8297b7cf78ad0bf5dacf6861f253315f581af1d2105199ea7ff8982a5",
+    "frost-mage": "abcce0adcdb3aadf2d165e85aa20268eb886140952272b6bfa5ff44652885f96",
+    "frost-spirit": "0e35901614316e1144b82f5e0e9f00c6c9c83ad84945d6b209ae48bc38a618a5",
+    "frost-witch": "9e3d361ae352cde22a6f7602b65fbaf01e5335892b2342dd4149a955f05e7654",
+    "ice-giant": "974b9a8c66186b4c8f6f1b5b2f702fd83ff80f2f3a2074d254a7710bdc6402f9",
+    "ice-golem": "2a971cc508a40f462bd5553000d433ea08cf8ac66eb1698e2602be1c222e5fd0"
+  },
+  "originalsUnchanged": true,
+  "runtimeAdopted": false,
+  "sourceSha256": {
+    "frost-golem": "78f2291d205475bd61382a174df8d132470a88d94e4986efdc79af8d3ea3068f",
+    "frost-mage": "c514273c976bd38262949ed414f526f67fea03328aef807d19bae7bc69ffdd0c",
+    "frost-spirit": "88208f68ae9b429bb30c93f7f7d6bf51fb1faae967437665220f86965d4ea356",
+    "frost-witch": "a334dc6b97501e340fc928dd19aa4515425cae8447786eb0fd9c0721bbf1634e",
+    "ice-giant": "9ece4e644f83835240bffe75f4620614b821355880e532964f57d860878a8288",
+    "ice-golem": "34c90aceefd10e3375b3a2781169b21797a5b7be42145fa0f1303fa7b8a5577b"
+  }
+}

@@ -2,9 +2,7 @@ import { useCallback, useEffect, useRef } from 'react';
 import {
     onSnapshot,
     doc,
-    collection,
     setDoc,
-    addDoc,
     serverTimestamp
 } from 'firebase/firestore';
 import { signInAnonymously } from 'firebase/auth';
@@ -28,6 +26,7 @@ import { importCloudRecordAuthority } from '../platform/cloudSaveAuthority';
 import { trackRuntimeProductEvent } from '../platform/productEventCoordinator';
 import { normalizeProductEventJob, type ProductEventName } from '../platform/productEvents';
 import { resolveOfflineBootstrapResult } from '../platform/persistenceTelemetry';
+import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
 import {
     resolveCloudBootstrapAuthority,
     type GameSaveRecord,
@@ -453,9 +452,7 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
         const flushCloudSave = createCloudAutosave({
             db,
             doc,
-            collection,
             setDoc,
-            addDoc,
             serverTimestamp,
             loadLocalRecord: () => getRuntimeGameStorage().load().catch(() => null),
             dispatch,
@@ -480,6 +477,7 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
 
     // --- Public Grave Upload on Death ---
     useEffect(() => {
+        if (!PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion) return;
         if (mockMode || !uid || !hasFirebaseConfig) return;
         if (gameState !== 'dead') return;
         const graveEntries = normalizeGraves(grave);

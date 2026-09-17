@@ -8,12 +8,12 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-test('mobile combat places decisions before recent history', async () => {
+test('mobile combat places recent history above decisions', async () => {
     const layout = await readSrc('src/components/app/MobileGameLayout.tsx');
 
     assert.match(layout, /const isCombat = engine\.gameState === GS\.COMBAT/);
-    assert.match(layout, /isCombat \? 'order-2 min-h-\[132px\]'/);
-    assert.match(layout, /isCombat \? 'order-1 shrink-0'/);
+    assert.match(layout, /isCombat \? 'order-1 min-h-\[132px\]'/);
+    assert.match(layout, /isCombat \? 'order-2 shrink-0'/);
 });
 
 test('combat status keeps player resources compact and enemy art prominent', async () => {

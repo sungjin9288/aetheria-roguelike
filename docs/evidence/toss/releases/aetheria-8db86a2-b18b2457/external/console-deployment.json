@@ -1,0 +1,10 @@
+{
+  "schemaVersion": 1,
+  "kind": "deployment",
+  "candidateId": "aetheria-8db86a2-b18b2457",
+  "artifactSha256": "b18b245710a3f2fad3c1442415b8cdb6f1429060704194cd4c1417d2dae6aa88",
+  "deploymentId": "019fec2f-5697-7998-a310-4efc0d25efe2",
+  "releaseId": "20260811-1",
+  "environment": "sandbox",
+  "uploadedAt": "2026-08-10T23:07:00.000Z"
+}

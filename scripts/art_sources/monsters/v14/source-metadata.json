@@ -1,0 +1,62 @@
+{
+  "runtimeAdopted": false,
+  "sources": [
+    {
+      "slug": "magic-orb",
+      "sha256": "b282d62bcee6b5807f86e07937d0e2739c4ee8c20c4342804f87946cd39542f2",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        198,
+        154,
+        1065,
+        1051
+      ]
+    },
+    {
+      "slug": "magic-puppet",
+      "sha256": "5f04f8d0cfdfd58b4294d07e004937cc0822e80d0579bcde03732d9ed9c25d6b",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        188,
+        12,
+        1077,
+        1242
+      ]
+    },
+    {
+      "slug": "page-spirit",
+      "sha256": "c6ce10b9f8f7a904d234a47d2e90941011df5e332770dfcd55cdfbfcce77738e",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        183,
+        30,
+        1089,
+        1218
+      ]
+    }
+  ]
+}

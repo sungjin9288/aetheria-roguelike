@@ -1,0 +1,1436 @@
+{
+  "classification": "actual390 UI using production-levelled canonical spawn fixtures; not natural encounters or device evidence",
+  "actualPlayClaim": false,
+  "viewport": {
+    "width": 390,
+    "height": 844
+  },
+  "count": 89,
+  "errors": [],
+  "results": [
+    {
+      "name": "감옥 골렘",
+      "slug": "monster-cc4ebe19fd23",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-cc4ebe19fd23.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1838,
+      "afterHp": 1714,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-cc4ebe19fd23-390x844.png",
+      "screenshotSha256": "0fc8e25c4cc0b6e201ceccd69f8b3d0d22aa46d9b2efd217ea0f55066f86c340"
+    },
+    {
+      "name": "강의 요괴",
+      "slug": "monster-f11406bcaf00",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-f11406bcaf00.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1473,
+      "afterHp": 1174,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-f11406bcaf00-390x844.png",
+      "screenshotSha256": "42afc618e89fb240cfa3db96e9fdf526afdd2329f6d0033e24b3283fce4be744"
+    },
+    {
+      "name": "거대 사슴벌레",
+      "slug": "stag-beetle",
+      "portrait": {
+        "src": "/assets/monsters/catalog/stag-beetle.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 110,
+      "afterHp": 97,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-stag-beetle-390x844.png",
+      "screenshotSha256": "12e04934728cabfd1c996ef4b4f001b13748bc13c0996c9483c60e38829512c3"
+    },
+    {
+      "name": "거미떼",
+      "slug": "spider-swarm",
+      "portrait": {
+        "src": "/assets/monsters/catalog/spider-swarm.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 86,
+      "afterHp": 71,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-spider-swarm-390x844.png",
+      "screenshotSha256": "c6e82de0a59c0c4ae390d4a91266e60aa1189e20007680dc896f02219c41dade"
+    },
+    {
+      "name": "고대 마법사",
+      "slug": "monster-c57d91c545f3",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-c57d91c545f3.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 870,
+      "afterHp": 778,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-c57d91c545f3-390x844.png",
+      "screenshotSha256": "a47f6be48183f1db0756629cfd4dac4d732108930a547501ca49f018b23b458b"
+    },
+    {
+      "name": "고문관",
+      "slug": "monster-c3228e069463",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-c3228e069463.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1414,
+      "afterHp": 1147,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-c3228e069463-390x844.png",
+      "screenshotSha256": "4639d8e09c884af827540a0964ebdc4ec2dd9a63c798d92bdbed1af11fafc5d3"
+    },
+    {
+      "name": "공간 파괴자",
+      "slug": "monster-a984d4c1b5b4",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-a984d4c1b5b4.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2464,
+      "afterHp": 2313,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-a984d4c1b5b4-390x844.png",
+      "screenshotSha256": "ba79514522d2c610add09157e4ec418d83d23f5b5d1b4e4050d2c8e59f130ad5"
+    },
+    {
+      "name": "공허 감시병",
+      "slug": "monster-2ed4807481db",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-2ed4807481db.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1892,
+      "afterHp": 1735,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-2ed4807481db-390x844.png",
+      "screenshotSha256": "81301fb61b1d93d0a2760b86a37fb86a9c8c3ba9b0d34bd5110faa6630087435"
+    },
+    {
+      "name": "공허 마법사",
+      "slug": "monster-35fdb47080ad",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-35fdb47080ad.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1963,
+      "afterHp": 1769,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-35fdb47080ad-390x844.png",
+      "screenshotSha256": "8541d598c57da85de4df6d4c9db9ce32474b4a2a89ef587caea9252820e09d63"
+    },
+    {
+      "name": "공허 집행관",
+      "slug": "monster-5e30c9234993",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-5e30c9234993.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2919,
+      "afterHp": 2744,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-5e30c9234993-390x844.png",
+      "screenshotSha256": "1e61368bb8bd65f43deb54eb0765474cfeb1f304cb4a2510afc3bdc739e195f4"
+    },
+    {
+      "name": "공허의 감시자",
+      "slug": "monster-a6b8ca9961a9",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-a6b8ca9961a9.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2541,
+      "afterHp": 2388,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-a6b8ca9961a9-390x844.png",
+      "screenshotSha256": "8d8c798be08ff0f8bc1cb1a27d73b3ac481a2e03ccc267ae3f0fd3bfc20e5e93"
+    },
+    {
+      "name": "광산 박쥐",
+      "slug": "monster-50bf083fb88d",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-50bf083fb88d.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 326,
+      "afterHp": 293,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-50bf083fb88d-390x844.png",
+      "screenshotSha256": "068913a498bada209d0acc8eb28c1fa1843ca9857d1d4010f627c974e6ce8cbf"
+    },
+    {
+      "name": "광석골렘",
+      "slug": "monster-b022bd831287",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-b022bd831287.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 391,
+      "afterHp": 355,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-b022bd831287-390x844.png",
+      "screenshotSha256": "e7796172cf6b97ef9c117419e378507fdf0f19e99402d5f56f5ede0fc48cc44b"
+    },
+    {
+      "name": "균열 감시자",
+      "slug": "monster-5d275b27b1fa",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-5d275b27b1fa.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2095,
+      "afterHp": 1941,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-5d275b27b1fa-390x844.png",
+      "screenshotSha256": "d054adb07c23978b4d75f17d15e4877947a9d234517152426924c4f63d14fde0"
+    },
+    {
+      "name": "그림자 사냥꾼",
+      "slug": "monster-ddeab7aaf35c",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-ddeab7aaf35c.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1256,
+      "afterHp": 972,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-ddeab7aaf35c-390x844.png",
+      "screenshotSha256": "5ad295a87e8436f511c87b05d312ace6858f6d5051879646f2c50ac5140596e4"
+    },
+    {
+      "name": "뇌운의 사냥꾼",
+      "slug": "monster-63ae5e408f3b",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-63ae5e408f3b.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1414,
+      "afterHp": 1290,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-63ae5e408f3b-390x844.png",
+      "screenshotSha256": "7959ee0bfafce84c3c3f55d4c72eda8f31422814b6177d5f3a6a96701e82de6a"
+    },
+    {
+      "name": "늑대",
+      "slug": "wolf",
+      "portrait": {
+        "src": "/assets/monsters/catalog/wolf.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 102,
+      "afterHp": 88,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-wolf-390x844.png",
+      "screenshotSha256": "eec38980c9efa58ef87e558bed26de7718ac7395c5c1b4008d33484d3a6d3142"
+    },
+    {
+      "name": "데스나이트",
+      "slug": "monster-faf6ab94ed58",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-faf6ab94ed58.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1332,
+      "afterHp": 1104,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-faf6ab94ed58-390x844.png",
+      "screenshotSha256": "3c7be9a59ac9b8d801f479708c2aed6affa53ac00c9294fff203137b25a96dc8"
+    },
+    {
+      "name": "독버섯",
+      "slug": "poison-mushroom",
+      "portrait": {
+        "src": "/assets/monsters/catalog/poison-mushroom.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 102,
+      "afterHp": 87,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-poison-mushroom-390x844.png",
+      "screenshotSha256": "6f916dee5c3e2e7788a159b454e5e822c158d2fba9b61e7d871555b7be1f1fec"
+    },
+    {
+      "name": "독안개 요정",
+      "slug": "monster-d38fa32f7eff",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-d38fa32f7eff.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 390,
+      "afterHp": 302,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-d38fa32f7eff-390x844.png",
+      "screenshotSha256": "4651075a2879016cb108c9a73c1be2e21cdbbcbba44e35db27745354dc29d1d9"
+    },
+    {
+      "name": "돌 거인",
+      "slug": "monster-883e52c1a0c0",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-883e52c1a0c0.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1625,
+      "afterHp": 1447,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-883e52c1a0c0-390x844.png",
+      "screenshotSha256": "bb678496e8222c94e93dc3ff9ac097323510b81c32fea1c7f366db0cf84b97c0"
+    },
+    {
+      "name": "동굴 박쥐",
+      "slug": "monster-fa568995b479",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-fa568995b479.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 385,
+      "afterHp": 271,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-fa568995b479-390x844.png",
+      "screenshotSha256": "f237bf03ea03a8a38f1eaf40b9debf0c55222aeed18435ffc71564865a334935"
+    },
+    {
+      "name": "들개",
+      "slug": "wild-dog",
+      "portrait": {
+        "src": "/assets/monsters/catalog/wild-dog.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 166,
+      "afterHp": 145,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-wild-dog-390x844.png",
+      "screenshotSha256": "4f2754f0f4e6a35727b583d073fd2db0354b21843d4c9d19a252e1b1036629fc"
+    },
+    {
+      "name": "레드 드래곤",
+      "slug": "red-dragon",
+      "portrait": {
+        "src": "/assets/monsters/catalog/red-dragon.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1305,
+      "afterHp": 1211,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-red-dragon-390x844.png",
+      "screenshotSha256": "641e2d08c48daf8cdc5a36a26296cca0c4204fb7c3965036236918a26521bf46"
+    },
+    {
+      "name": "마법 감시자",
+      "slug": "monster-6e9b6ee6df6b",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-6e9b6ee6df6b.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1745,
+      "afterHp": 1571,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-6e9b6ee6df6b-390x844.png",
+      "screenshotSha256": "3ba423e07e26d4e4be1c77a625963161476b25a0c5ed16b6d2dced8efd86d980"
+    },
+    {
+      "name": "마왕의 사도",
+      "slug": "monster-5824e6788227",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-5824e6788227.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1895,
+      "afterHp": 1751,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-5824e6788227-390x844.png",
+      "screenshotSha256": "6688e5eda9f22eedb1d4cc5083f857a3809d5d05b8073056b348690b72e6844a"
+    },
+    {
+      "name": "망령 기사",
+      "slug": "monster-08e2662c6c6d",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-08e2662c6c6d.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1076,
+      "afterHp": 971,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-08e2662c6c6d-390x844.png",
+      "screenshotSha256": "3cab8edc8fe1fedf05dc1c14e4817691e6685b13d590df94281ade77fe177738"
+    },
+    {
+      "name": "망령 기사단장",
+      "slug": "monster-7fba3260adaa",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-7fba3260adaa.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1786,
+      "afterHp": 1653,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-7fba3260adaa-390x844.png",
+      "screenshotSha256": "269a1a36a73bf47369bd1c22194ad216c71386799382ab9b67401ef591b7dac3"
+    },
+    {
+      "name": "멧돼지",
+      "slug": "boar",
+      "portrait": {
+        "src": "/assets/monsters/catalog/boar.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 190,
+      "afterHp": 170,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-boar-390x844.png",
+      "screenshotSha256": "92e9e93957e2dd391bc608108b32255000a7c7a60f078f3c52098b0be793b919"
+    },
+    {
+      "name": "묘지 구울",
+      "slug": "monster-15a7cd6394ff",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-15a7cd6394ff.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 984,
+      "afterHp": 881,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-15a7cd6394ff-390x844.png",
+      "screenshotSha256": "fc120ba0ac697892add1268676e675c49ddd0aa090ad1cef801a2522ea385253"
+    },
+    {
+      "name": "미궁의 마왕",
+      "slug": "monster-f7a73b5eee06",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-f7a73b5eee06.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1581,
+      "afterHp": 1461,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-f7a73b5eee06-390x844.png",
+      "screenshotSha256": "59c28503796acbb2b4ddac6b74e1a95538e712ec784cee7fb70e621f4dd600e8"
+    },
+    {
+      "name": "바람 추적자",
+      "slug": "monster-6651720e2aa5",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-6651720e2aa5.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1093,
+      "afterHp": 961,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-6651720e2aa5-390x844.png",
+      "screenshotSha256": "48db135a99629d969fc15c301e0e0be0839f8e801f8f339725c3e0e59bb5f64a"
+    },
+    {
+      "name": "보물사냥꾼",
+      "slug": "monster-5d7ee3a7e436",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-5d7ee3a7e436.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 870,
+      "afterHp": 786,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-5d7ee3a7e436-390x844.png",
+      "screenshotSha256": "1e85204a570aaa18afe2178697016e437a3287928a9f8aee3dab608cfa84ce09"
+    },
+    {
+      "name": "봄의 정령",
+      "slug": "monster-38c4135d8a55",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-38c4135d8a55.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 195,
+      "afterHp": 170,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-38c4135d8a55-390x844.png",
+      "screenshotSha256": "5f7341da953f4a05010f8efbcecc5265959abdebd6ab96d2772b5741cd882545"
+    },
+    {
+      "name": "분노한 마구스",
+      "slug": "monster-7a8c8edb79d5",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-7a8c8edb79d5.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1745,
+      "afterHp": 1565,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-7a8c8edb79d5-390x844.png",
+      "screenshotSha256": "1745b6cbd16eea044639f50be8f7d40053321c84b8a6b9f47f7639e3dcc371e7"
+    },
+    {
+      "name": "붕괴된 수호자",
+      "slug": "monster-e94839263e67",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-e94839263e67.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2580,
+      "afterHp": 2240,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-e94839263e67-390x844.png",
+      "screenshotSha256": "124a6bcb8df28c810127b89c346be99f1a7549225fbd4489d59ee29da6b33350"
+    },
+    {
+      "name": "붕괴한 수호자",
+      "slug": "monster-3174ce5ddbfa",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-3174ce5ddbfa.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2300,
+      "afterHp": 2147,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-3174ce5ddbfa-390x844.png",
+      "screenshotSha256": "d91bc983ad1183bbd19de62a3fecfffe346bcd77949d75ab3679ec1f76f84b31"
+    },
+    {
+      "name": "뼈 수집가",
+      "slug": "monster-fa714d155fff",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-fa714d155fff.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1331,
+      "afterHp": 1223,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-fa714d155fff-390x844.png",
+      "screenshotSha256": "66a1ace73339c8e850f96936d83d7a1ed35f081c0331505654cf374b5960a81f"
+    },
+    {
+      "name": "사기꾼 마법사",
+      "slug": "monster-652f9135dd4e",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-652f9135dd4e.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1637,
+      "afterHp": 1459,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-652f9135dd4e-390x844.png",
+      "screenshotSha256": "0c016e519222251ab07fec0a71bc2436136ab3ea0e0dfcb255be7ec4522ade70"
+    },
+    {
+      "name": "사막도적",
+      "slug": "monster-e3d186c7c1ce",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-e3d186c7c1ce.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 710,
+      "afterHp": 641,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-e3d186c7c1ce-390x844.png",
+      "screenshotSha256": "d68428dab4902b3752bacd87cd25614630c924ca3c2585dcd4799570521d8efc"
+    },
+    {
+      "name": "사슬 마왕",
+      "slug": "monster-851e30898746",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-851e30898746.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1626,
+      "afterHp": 1367,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-851e30898746-390x844.png",
+      "screenshotSha256": "1013e8219a6c5dad0bb55a30a8daa91096800c77bfc3757e3f91dbe9e6d79e0a"
+    },
+    {
+      "name": "석상 가디언",
+      "slug": "stone-guardian",
+      "portrait": {
+        "src": "/assets/monsters/catalog/stone-guardian.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 253,
+      "afterHp": 196,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-stone-guardian-390x844.png",
+      "screenshotSha256": "ee016fa691d473ecec828d4376a60925c60eea2424c3e6bcd3c53c2fde5791a0"
+    },
+    {
+      "name": "수련 님프",
+      "slug": "monster-70b7adba43b9",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-70b7adba43b9.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 230,
+      "afterHp": 205,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-70b7adba43b9-390x844.png",
+      "screenshotSha256": "8c84d2306a352fc7746440541a2a5cc22a95f3b663c0db348913e2831a5d56fc"
+    },
+    {
+      "name": "수정 지킴이",
+      "slug": "monster-75fce693d5c1",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-75fce693d5c1.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 508,
+      "afterHp": 461,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-75fce693d5c1-390x844.png",
+      "screenshotSha256": "d1cabec2301fcd01261ef5fcd5fbc7745222bc2e1a782e66682ea14fa2aa3aff"
+    },
+    {
+      "name": "숲 요정",
+      "slug": "forest-fairy",
+      "portrait": {
+        "src": "/assets/monsters/catalog/forest-fairy.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 102,
+      "afterHp": 76,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-forest-fairy-390x844.png",
+      "screenshotSha256": "8702f01f1ddc6a47fd5d58ba2886a48c22083d60fd90bd46b5597c0e77347a89"
+    },
+    {
+      "name": "숲의 정령",
+      "slug": "forest-spirit",
+      "portrait": {
+        "src": "/assets/monsters/catalog/forest-spirit.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 102,
+      "afterHp": 86,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-forest-spirit-390x844.png",
+      "screenshotSha256": "ae3f8ad6513b83770c5db8393fb199dde42a78a68c68e1348d09636ca7be29be"
+    },
+    {
+      "name": "슬라임",
+      "slug": "slime",
+      "portrait": {
+        "src": "/assets/monsters/catalog/slime.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 81,
+      "afterHp": 67,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-slime-390x844.png",
+      "screenshotSha256": "89bd9c086113800228e2f86b7297cb0b045b5970f009ea4924b3f91eea116523"
+    },
+    {
+      "name": "신전 경비병",
+      "slug": "monster-48615837f73c",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-48615837f73c.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1586,
+      "afterHp": 1314,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-48615837f73c-390x844.png",
+      "screenshotSha256": "bde984bc6f728f9379ef80b4010aae45fb8353f28245f0a40731004d8c1e98b0"
+    },
+    {
+      "name": "실험실 수호자",
+      "slug": "monster-258dc3a004e1",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-258dc3a004e1.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1203,
+      "afterHp": 1102,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-258dc3a004e1-390x844.png",
+      "screenshotSha256": "e070121317cf5d246b542e011b26479a6b8587afcbf44fa9c68e5c15faf51d46"
+    },
+    {
+      "name": "심연의 수호자",
+      "slug": "monster-fe85533f05a9",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-fe85533f05a9.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2118,
+      "afterHp": 1976,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-fe85533f05a9-390x844.png",
+      "screenshotSha256": "14c49ca038f742a44cf02f7d35f0fb7d03de525e30fa1b6419236e2b9f7a4af7"
+    },
+    {
+      "name": "어둠 수호자",
+      "slug": "monster-5ceaba4f9dcf",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-5ceaba4f9dcf.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1668,
+      "afterHp": 1423,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-5ceaba4f9dcf-390x844.png",
+      "screenshotSha256": "d07ad5259d94e42eabcc3bd1de6c2158cc357ef1194b7ffc21ae152d8de81659"
+    },
+    {
+      "name": "에테르 돌격대",
+      "slug": "monster-893cd68e4faf",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-893cd68e4faf.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1745,
+      "afterHp": 1592,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-893cd68e4faf-390x844.png",
+      "screenshotSha256": "4e15f9f40cbda7511032f1139b68898e000e5a4b3e6d85007eb5d646b67fb221"
+    },
+    {
+      "name": "에테르 방랑자",
+      "slug": "monster-145074084603",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-145074084603.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2365,
+      "afterHp": 2214,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-145074084603-390x844.png",
+      "screenshotSha256": "2b1823c6f7669f4ff9608bfbbfc7ac4d4c226391a9b213aa09d02921ba24774b"
+    },
+    {
+      "name": "영겁의 수호신상",
+      "slug": "monster-83c9752e1606",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-83c9752e1606.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1837,
+      "afterHp": 1700,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-83c9752e1606-390x844.png",
+      "screenshotSha256": "d6fe5ab7c4d1f4c5fe71944b7fa69f58c74de68fc1bd78bec8795499b58f1659"
+    },
+    {
+      "name": "유령 기사",
+      "slug": "ghost-knight",
+      "portrait": {
+        "src": "/assets/monsters/catalog/ghost-knight.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 257,
+      "afterHp": 232,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-ghost-knight-390x844.png",
+      "screenshotSha256": "cd8e699da7743ac0ca018c05337a547bd8c28c6aec819914cee1ce59de0db21b"
+    },
+    {
+      "name": "익사한 기사",
+      "slug": "monster-2592649153a9",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-2592649153a9.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1681,
+      "afterHp": 1556,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-2592649153a9-390x844.png",
+      "screenshotSha256": "fbcbdec24f231b74bb4d409da3e7b7c48ac03b73e744e082c6b1895decd6ce1f"
+    },
+    {
+      "name": "자연의 정령",
+      "slug": "monster-059235ee38aa",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-059235ee38aa.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1093,
+      "afterHp": 864,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-059235ee38aa-390x844.png",
+      "screenshotSha256": "5922fa51db4253bef96e68cc31c8b35f40ee626473281b64fa4bcf0aa5fa3549"
+    },
+    {
+      "name": "저주받은 기사",
+      "slug": "monster-efab04dd43a3",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-efab04dd43a3.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1239,
+      "afterHp": 1133,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-efab04dd43a3-390x844.png",
+      "screenshotSha256": "e1ba814f5e734ec47e53cdc157a47626562822341b7c80214994d172616103c8"
+    },
+    {
+      "name": "저주받은 어부",
+      "slug": "monster-7950c7898939",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-7950c7898939.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1473,
+      "afterHp": 1332,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-7950c7898939-390x844.png",
+      "screenshotSha256": "6a5839cadae6785db3d98c26793ceb149795edc037655d34269822e9be145668"
+    },
+    {
+      "name": "전초기지 파수꾼",
+      "slug": "monster-efd0b660adf9",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-efd0b660adf9.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 807,
+      "afterHp": 735,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-efd0b660adf9-390x844.png",
+      "screenshotSha256": "9238d00ee915e191fc18ffa59bfd801006cac9364254f11d601c8892acf8d5f2"
+    },
+    {
+      "name": "정원 요정",
+      "slug": "monster-9b3e645c6403",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-9b3e645c6403.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 195,
+      "afterHp": 168,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-9b3e645c6403-390x844.png",
+      "screenshotSha256": "0a0f7a9e0fc7893988ed307ca1144dfbf2ce3c3cdb114e6d8cdaceb9e23d8997"
+    },
+    {
+      "name": "종말의 마법사",
+      "slug": "monster-41d1e9efbd61",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-41d1e9efbd61.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2045,
+      "afterHp": 1863,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-41d1e9efbd61-390x844.png",
+      "screenshotSha256": "cbebd70e9fbbf630fafc9ca8ee0876085753a4ac6ce352efc871a204612ca554"
+    },
+    {
+      "name": "종말의 전령",
+      "slug": "monster-d7d53aa25e90",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-d7d53aa25e90.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2333,
+      "afterHp": 1961,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-d7d53aa25e90-390x844.png",
+      "screenshotSha256": "a0f6f235017d510da195b102538bf64baca230374dbd65e6db9923dff8d89cf5"
+    },
+    {
+      "name": "지옥의 문지기",
+      "slug": "monster-4797ce51f6a4",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-4797ce51f6a4.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2087,
+      "afterHp": 1961,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-4797ce51f6a4-390x844.png",
+      "screenshotSha256": "f189250b4e6be3fb15f3c757961934d446e60cbe810f097876b965f0045e5cbe"
+    },
+    {
+      "name": "차원 방랑자",
+      "slug": "monster-85b8c25fd5f9",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-85b8c25fd5f9.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1827,
+      "afterHp": 1645,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-85b8c25fd5f9-390x844.png",
+      "screenshotSha256": "c81f7f9aaea1946b34a0b6a050a472b935730823d72439212d6ec7f9d3b373a1"
+    },
+    {
+      "name": "차원 분열체",
+      "slug": "monster-714afeb259e9",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-714afeb259e9.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2567,
+      "afterHp": 2419,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-714afeb259e9-390x844.png",
+      "screenshotSha256": "b809aa8887742b3ea55cc06cf43a98a7a8c5eaf1cf77c05b5c99ff953911b139"
+    },
+    {
+      "name": "차원 사령관",
+      "slug": "monster-d091985e1cca",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-d091985e1cca.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2259,
+      "afterHp": 2122,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-d091985e1cca-390x844.png",
+      "screenshotSha256": "c49bd50fecce0ebc40b1b0b67c8de9c2fdef490cb8a20880bd18c4e4b80f95f1"
+    },
+    {
+      "name": "차원의 포식자",
+      "slug": "monster-fd653771c4ae",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-fd653771c4ae.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2310,
+      "afterHp": 1988,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-fd653771c4ae-390x844.png",
+      "screenshotSha256": "fcefc377584c5ca12554e47615473beea2e5a49e726d90ae959af52b766ecefc"
+    },
+    {
+      "name": "최후의 수호자",
+      "slug": "monster-7b424a7d82ab",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-7b424a7d82ab.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2646,
+      "afterHp": 2499,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-7b424a7d82ab-390x844.png",
+      "screenshotSha256": "313008fc314e337273bef46fd826c4826b73e16aec2da39a9b9f17d880bed6dd"
+    },
+    {
+      "name": "타락 기사",
+      "slug": "monster-2b45f134c404",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-2b45f134c404.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1696,
+      "afterHp": 1450,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-2b45f134c404-390x844.png",
+      "screenshotSha256": "d1b7f192915fea9a80d099d7f5874756d11cbc5ce8f313eb0fe9c95c4fec4749"
+    },
+    {
+      "name": "타락한 용사",
+      "slug": "monster-940255120136",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-940255120136.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1576,
+      "afterHp": 1428,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-940255120136-390x844.png",
+      "screenshotSha256": "a837328dcf02d596c89844d4df6c78be5ad6d6e76fca316c975e034512ac3e91"
+    },
+    {
+      "name": "탐욕의 상인",
+      "slug": "monster-414b19731a40",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-414b19731a40.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1637,
+      "afterHp": 1454,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-414b19731a40-390x844.png",
+      "screenshotSha256": "1e27a5a943c01e6d303dc041af0e94fff20b797b70dc0276859d0e8644416652"
+    },
+    {
+      "name": "탑 수호자",
+      "slug": "monster-f9b4b1ff135f",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-f9b4b1ff135f.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1000,
+      "afterHp": 918,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-f9b4b1ff135f-390x844.png",
+      "screenshotSha256": "fa0bdbc355f8a336022dd5d0005be4058dee263c328fc1c3e048fbd9bfa343fa"
+    },
+    {
+      "name": "파멸의 기사",
+      "slug": "monster-30e58c31e720",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-30e58c31e720.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2646,
+      "afterHp": 2497,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-30e58c31e720-390x844.png",
+      "screenshotSha256": "9bb390611f344b8c1b85968d3c6c1e61c1e4cddab01a99a5f9596c13c21ed922"
+    },
+    {
+      "name": "평원 도적",
+      "slug": "plains-bandit",
+      "portrait": {
+        "src": "/assets/monsters/catalog/plains-bandit.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 166,
+      "afterHp": 145,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-plains-bandit-390x844.png",
+      "screenshotSha256": "7c1f65abed110c751b7d06858440e05912062b249e09e8c7027757696f805568"
+    },
+    {
+      "name": "폐허 구울",
+      "slug": "ruins-ghoul",
+      "portrait": {
+        "src": "/assets/monsters/catalog/ruins-ghoul.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 230,
+      "afterHp": 202,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-ruins-ghoul-390x844.png",
+      "screenshotSha256": "e1bdfc5332264b4e71adf135ae6b99dca537e9b23b04a00fbdeccea35212f143"
+    },
+    {
+      "name": "폭풍 수호자",
+      "slug": "monster-5424972b69b1",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-5424972b69b1.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1188,
+      "afterHp": 1065,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-5424972b69b1-390x844.png",
+      "screenshotSha256": "870213bf3bad9730552ca5546e7fe662aef90b3d31404e19d7db2ce065185d67"
+    },
+    {
+      "name": "함정 수호자",
+      "slug": "monster-43d39d4c3154",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-43d39d4c3154.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1344,
+      "afterHp": 1233,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-43d39d4c3154-390x844.png",
+      "screenshotSha256": "52f8e018313ac3031b67da8eac6a0aba08bce90a34754a289a59313264a7eef9"
+    },
+    {
+      "name": "해골 병사",
+      "slug": "skeleton-soldier",
+      "portrait": {
+        "src": "/assets/monsters/catalog/skeleton-soldier.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 230,
+      "afterHp": 202,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-skeleton-soldier-390x844.png",
+      "screenshotSha256": "256d2f83736af0e5fc5c4ea4ba28aac73e740c34759099f1e7e56668c078e957"
+    },
+    {
+      "name": "허무 집행관",
+      "slug": "monster-561263eb4b4f",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-561263eb4b4f.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2541,
+      "afterHp": 2384,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-561263eb4b4f-390x844.png",
+      "screenshotSha256": "a1f4ed312d5894f08fff041d2a983e511f7cbb885158eba321a21748b04b6a68"
+    },
+    {
+      "name": "허무의 기사",
+      "slug": "monster-cae80cd860fa",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-cae80cd860fa.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2656,
+      "afterHp": 2476,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-cae80cd860fa-390x844.png",
+      "screenshotSha256": "50a1d17d142e192874b4f141cbaaec601eb3670abebf669c0db79f5799f58750"
+    },
+    {
+      "name": "허무의 집행관",
+      "slug": "monster-f5d4fe6f0d28",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-f5d4fe6f0d28.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 3211,
+      "afterHp": 3021,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-f5d4fe6f0d28-390x844.png",
+      "screenshotSha256": "cb6ace7f8bd799d2144eb05f51d149b577ff49548ec4a7f40e71b7125ce1d4b9"
+    },
+    {
+      "name": "혼돈의 추종자",
+      "slug": "monster-ef03e8604e21",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-ef03e8604e21.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1440,
+      "afterHp": 1290,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-ef03e8604e21-390x844.png",
+      "screenshotSha256": "65ff48086a0452747742adee08128e182d33638e9429e9718adad608c5eefe96"
+    },
+    {
+      "name": "혼돈의 화신",
+      "slug": "monster-4d3e16765459",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-4d3e16765459.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2457,
+      "afterHp": 2304,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-4d3e16765459-390x844.png",
+      "screenshotSha256": "16d7a23b0df48bb666ec9116c16bd146243caa91c1ae81df5993bfea56e045ac"
+    },
+    {
+      "name": "화염 군주 이프리트",
+      "slug": "monster-4c526ed462f8",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-4c526ed462f8.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 2444,
+      "afterHp": 2337,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-4c526ed462f8-390x844.png",
+      "screenshotSha256": "23ab658de133e99582c8322d91b15b59a2beacb406d4fe7cb302436c34bdbaff"
+    },
+    {
+      "name": "화염 사제",
+      "slug": "monster-41144233ecc0",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-41144233ecc0.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 646,
+      "afterHp": 578,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-41144233ecc0-390x844.png",
+      "screenshotSha256": "279af2eabdfb11d50a1d9b3e2aef1f2d77a001e97bf376db30227312b503ab84"
+    },
+    {
+      "name": "화염의 군주",
+      "slug": "fire-lord",
+      "portrait": {
+        "src": "/assets/monsters/catalog/fire-lord.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1174,
+      "afterHp": 1085,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-fire-lord-390x844.png",
+      "screenshotSha256": "ce5bbed23f44785c306af4c8feb91c192fad43c8f1ab96a14cbfc3f29c462228"
+    },
+    {
+      "name": "황금 골렘",
+      "slug": "monster-5fb35c603abc",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-5fb35c603abc.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1087,
+      "afterHp": 1005,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-5fb35c603abc-390x844.png",
+      "screenshotSha256": "be55007eb35c83e4411f37a309a2911383d80b988511c1b0657bb8de9be56e15"
+    },
+    {
+      "name": "흡혼 해골",
+      "slug": "monster-5a11b2b511c4",
+      "portrait": {
+        "src": "/assets/monsters/catalog/monster-5a11b2b511c4.png",
+        "decoded": 160,
+        "width": 46,
+        "height": 46,
+        "overflow": false
+      },
+      "beforeHp": 1473,
+      "afterHp": 1324,
+      "damaged": true,
+      "screenshot": "output/playwright/v27-monster-5a11b2b511c4-390x844.png",
+      "screenshotSha256": "590217f1ff546217faf749851c57443a50624e41d335c1359402a3dbf9f7c7a9"
+    }
+  ]
+}

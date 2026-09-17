@@ -70,11 +70,25 @@ interface ItemBase {
      * `getItemRarity`(utils/gameUtils.ts:71)가 tier 매핑보다 우선 읽으므로 optional로 유지.
      */
     rarity?: string;
+    /**
+     * 랜덤 접두사(applyItemPrefix)가 붙은 인스턴스 표식. 카탈로그 정의에는 없고
+     * 드롭/제작으로 생성된 인스턴스에만 존재한다.
+     */
+    prefixed?: boolean;
+    /** 접두사 이름 (`prefixed === true`일 때만). */
+    prefixName?: string;
+    /**
+     * 접두사가 붙기 전의 canonical 장비 이름 (equipmentBaseIdentity).
+     * 장비 3종에도 중복 선언돼 있으나, `Item` 유니온 전체에서 읽으려면 base에 필요하다.
+     */
+    baseItemName?: string;
 }
 
 // cycle 298: 4 type exports → private (외부 import 0건, 동일 파일 내 Item 유니온 구성용).
 interface WeaponItem extends ItemBase {
     type: 'weapon';
+    /** Canonical equipment base name persisted on item instances. */
+    baseItemName?: string;
     /** 1=한손, 2=양손. */
     hands?: 1 | 2;
     /** 기본 ATK. */
@@ -87,6 +101,8 @@ interface WeaponItem extends ItemBase {
 
 interface ArmorItem extends ItemBase {
     type: 'armor';
+    /** Canonical equipment base name persisted on item instances. */
+    baseItemName?: string;
     /** 기본 DEF. */
     val?: number;
     /** HP 보너스. */
@@ -95,6 +111,8 @@ interface ArmorItem extends ItemBase {
 
 interface ShieldItem extends ItemBase {
     type: 'shield';
+    /** Canonical equipment base name persisted on item instances. */
+    baseItemName?: string;
     val?: number;
     mp?: number;
     crit?: number;

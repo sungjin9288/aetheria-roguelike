@@ -1,0 +1,13 @@
+{
+  "apk": "android/app/build/outputs/apk/debug/app-debug.apk",
+  "apkBytes": 222612537,
+  "apkSha256": "d092d1dbb779c011d8e6330055d258e17b504cc141281bff47f4832b6e745000",
+  "app": "/tmp/aetheria-priority-nine-ios.0qjKW6/Build/Products/Release-iphoneos/App.app",
+  "main": "assets/index-Bp8SXodu.js",
+  "mainSha256": "c0c91c6f15396a2d5640ad0564c3944024828918c88df40ec227f6096f9d9b52",
+  "verifiedAssetCount": 21,
+  "authoredPortraits": 20,
+  "classification": "local-package-byte-verification",
+  "installed": false,
+  "signedIos": false
+}

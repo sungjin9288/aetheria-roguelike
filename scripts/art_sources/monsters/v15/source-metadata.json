@@ -1,0 +1,138 @@
+{
+  "runtimeAdopted": false,
+  "sources": [
+    {
+      "slug": "lich",
+      "sha256": "644a4a1d080a36dbdf5061ce9f6dd5a02b74f869523bb9c14aaddc60aac2fecf",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        133,
+        42,
+        1099,
+        1215
+      ]
+    },
+    {
+      "slug": "vampire",
+      "sha256": "1d9e3841ca5426bd45ece9553ee7b3edbfc7157c60300f280410a0e4568d3477",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        216,
+        20,
+        1040,
+        1230
+      ]
+    },
+    {
+      "slug": "skeleton-mage",
+      "sha256": "fc23f39527589358991d089a45c58f0ee8f9e7767f8877b835b6b3e73bd2bf9c",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        240,
+        40,
+        1037,
+        1203
+      ]
+    },
+    {
+      "slug": "ghost-legion",
+      "sha256": "3e403c91846f904fd19de4403f1c29fd470972c5432a90b2ffc9ecd08ae440bd",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        141,
+        33,
+        1112,
+        1215
+      ]
+    },
+    {
+      "slug": "poison-centipede",
+      "sha256": "dde6106aa1df6930157a35813ab113a727a30950fe9d5536629262b3aab635c5",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        28,
+        25,
+        1236,
+        1234
+      ]
+    },
+    {
+      "slug": "corroded-soldier",
+      "sha256": "d14e4fe9c289dcb73571c416060d783c0f04da2272cffccef3a0dc6641393ddd",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        85,
+        42,
+        1177,
+        1219
+      ]
+    },
+    {
+      "slug": "sewer-crocodile",
+      "sha256": "f6727368fdaea6c3393030a911acfb580340d27de3624b2e8baa9791615b441a",
+      "mode": "RGBA",
+      "size": [
+        1254,
+        1254
+      ],
+      "alphaExtrema": [
+        0,
+        255
+      ],
+      "bounds128": [
+        22,
+        308,
+        1233,
+        873
+      ]
+    }
+  ]
+}

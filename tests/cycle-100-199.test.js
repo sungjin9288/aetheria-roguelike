@@ -878,6 +878,7 @@ import { readFile, readdir } from 'node:fs/promises';
 
   const buildAscendState = (statsOverrides = {}) => ({
       ...INITIAL_STATE,
+      gameState: 'ascension',
       player: {
           ...INITIAL_STATE.player,
           name: '테스트',
@@ -887,7 +888,7 @@ import { readFile, readdir } from 'node:fs/promises';
           stats: {
               ...INITIAL_STATE.player.stats,
               kills: 200, bossKills: 5, deaths: 1, total_gold: 50000,
-              relicCount: 10, abyssFloor: 30, demonKingSlain: 0,
+              relicCount: 10, abyssFloor: 30, demonKingSlain: 4,
               bountiesCompleted: 8, crafts: 25,
               ...statsOverrides,
           },
@@ -897,8 +898,8 @@ import { readFile, readdir } from 'node:fs/promises';
   const ascend = (state) => gameReducer(state, {
       type: AT.ASCEND,
       payload: {
-          meta: { ...state.player.meta, prestigeRank: 1 },
-          newTitle: 'reborn',
+          expectedPrestigeRank: state.player.meta?.prestigeRank || 0,
+          sourceReceiptKey: state.player.meta?.endgame?.lastEndgameReceiptKey ?? null,
       },
   });
 
@@ -948,7 +949,7 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.equal(after.player.stats.total_gold, 50000);
       assert.equal(after.player.stats.relicCount, 10);
       assert.equal(after.player.stats.abyssFloor, 30);
-      assert.equal(after.player.stats.demonKingSlain, 1, 'demon king slain ++ on ascend');
+      assert.equal(after.player.stats.demonKingSlain, 4, 'accepted demon king count preserved');
       assert.equal(after.player.stats.bountiesCompleted, 8);
       assert.equal(after.player.stats.crafts, 25);
   });
@@ -1293,8 +1294,8 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.equal(typeof BALANCE.PRIMAL_SHARD_DROP_CHANCE, 'number');
   });
 
-  test('combatBossHandlers: 더 이상 CONSTANTS.PRIMAL_SHARD_DROP_CHANCE 잘못 참조 안 함', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatBossHandlers.ts');
+  test('endgameSettlement: 더 이상 CONSTANTS.PRIMAL_SHARD_DROP_CHANCE 잘못 참조 안 함', async () => {
+      const source = await readSrc('src/systems/endgameSettlement.ts');
       // CONSTANTS.PRIMAL_SHARD_DROP_CHANCE는 undefined여서 shard never drop 버그였음.
       // BALANCE.PRIMAL_SHARD_DROP_CHANCE로 교체되어야 함.
       assert.doesNotMatch(source, /CONSTANTS\.PRIMAL_SHARD_DROP_CHANCE/);
@@ -1309,14 +1310,14 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.match(source, /BALANCE\.DAILY_INVADE_LIMIT/);
   });
 
-  test('combatBossHandlers: PRIMAL_SHARD_REQUIRED 참조 코드 존재 (>= 1건)', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatBossHandlers.ts');
+  test('endgameSettlement: PRIMAL_SHARD_REQUIRED 참조 코드 존재 (>= 1건)', async () => {
+      const source = await readSrc('src/systems/endgameSettlement.ts');
       const matches = source.match(/PRIMAL_SHARD_REQUIRED/g) || [];
       assert.ok(matches.length >= 1, `expected >=1 reference, got ${matches.length}`);
   });
 
-  test('combatBossHandlers: hardcoded 3 shard 비교가 PRIMAL_SHARD_REQUIRED로 교체됨', async () => {
-      const source = await readSrc('src/hooks/combatActions/combatBossHandlers.ts');
+  test('endgameSettlement: hardcoded 3 shard 비교가 PRIMAL_SHARD_REQUIRED로 교체됨', async () => {
+      const source = await readSrc('src/systems/endgameSettlement.ts');
       // 더 이상 hardcoded `shardCount < 3` 패턴이 직접 등장하지 않음 (지역 상수로
       // alias하여 사용).
       assert.doesNotMatch(source, /shardCount\s*<\s*3\b/);

@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import { getProgressionMinimumOrdinaryGap } from '../data/progressionProfiles.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../systems/mirrorUpgrades';
 import type { GameMap, Player } from "../types/index.js";
@@ -27,6 +28,31 @@ const getExploreState = (stats: Player['stats']) => {
         quietStreak: Math.max(0, raw.quietStreak || 0),
         lastOutcome: raw.lastOutcome || DEFAULT_EXPLORE_STATE.lastOutcome,
     };
+};
+
+export const getExplorationPitySteps = (stats: any) => {
+    const exploreState = getExploreState(stats);
+    return {
+        narrative: Math.max(0, exploreState.sinceNarrativeEvent - 2),
+        discovery: Math.max(0, exploreState.sinceDiscovery - 2),
+        relic: Math.max(0, exploreState.sinceRelic - 2),
+    };
+};
+
+export const canOfferOptionalExploreDecision = (
+    stats: any,
+    activeExpedition?: { explores?: unknown } | null,
+): boolean => {
+    const minimumGap = getProgressionMinimumOrdinaryGap(activeExpedition);
+    if (getExploreState(stats).sinceNarrativeEvent < minimumGap) return false;
+    if (activeExpedition === undefined) return true;
+    if (!activeExpedition) return false;
+
+    const explores = Number(stats?.explores);
+    const startedWithExplores = Number(activeExpedition.explores);
+    return Number.isFinite(explores)
+        && Number.isFinite(startedWithExplores)
+        && explores > startedWithExplores;
 };
 
 // cycle 599: mapData default {} 제거 — 4 callsite (3 internal + 1
@@ -102,7 +128,6 @@ export const getNarrativeEventChance = (
     mapData: GameMap | null,
     progressionMultiplier?: number,
 ) => {
-    const exploreState = getExploreState(stats);
     const profile = getMapPacingProfile(mapData);
     const configuredMultiplier = Number.isFinite(progressionMultiplier) && Number(progressionMultiplier) > 0
         ? Number(progressionMultiplier)
@@ -115,7 +140,7 @@ export const getNarrativeEventChance = (
             * (1 + bonusMultiplier)
             * configuredMultiplier,
     );
-    const pitySteps = Math.max(0, exploreState.sinceNarrativeEvent - 2);
+    const pitySteps = getExplorationPitySteps(stats).narrative;
     const pity = pitySteps * BALANCE.SPECIAL_EVENT_PITY_PER_EXPLORE;
     return clamp(base + pity, 0, BALANCE.SPECIAL_EVENT_MAX_CHANCE);
 };
@@ -135,8 +160,9 @@ export const getQuietExplorationChance = (stats: Player['stats'], mapData: GameM
 export const getDiscoveryOdds = (player: Player, mapData: GameMap | null | undefined) => {
     const exploreState = getExploreState(player?.stats);
     const profile = getMapPacingProfile(mapData);
-    const pitySinceDiscovery = Math.max(0, exploreState.sinceDiscovery - 2);
-    const pitySinceRelic = Math.max(0, exploreState.sinceRelic - 2);
+    const pitySteps = getExplorationPitySteps(player?.stats);
+    const pitySinceDiscovery = pitySteps.discovery;
+    const pitySinceRelic = pitySteps.relic;
     // feat/prestige-rank-ladder: rank≥6 "잔향의 나침반" — 유물 발견 pity 누적 가속 ×1.5.
     //   기본 확률(RELIC_FIND_CHANCE)은 불변, pity 누적분에만 곱해 신규 플레이어(rank0) 곡선 보존.
     const relicPityMult = getPrestigeUnlocks(player?.meta?.prestigeRank).relicPityMult;
