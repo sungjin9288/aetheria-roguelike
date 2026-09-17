@@ -64,6 +64,10 @@ export default defineConfig([
       // 의식적으로 검토하도록 유지하되 lint를 실패시키지는 않음.
       'react-hooks/refs': 'warn',
       'react-hooks/set-state-in-effect': 'warn',
+      // Wave 4 Track P: exhaustive-deps는 recommended 기본값(warn)에서 error로 승격.
+      // 2026-09 Wave 4 시점 실측 0 warnings — 새로 추가되는 의존성 누락을 병합 전에
+      // 반드시 잡아내기 위해 경고가 아니라 실패로 취급한다.
+      'react-hooks/exhaustive-deps': 'error',
     },
   },
   {
