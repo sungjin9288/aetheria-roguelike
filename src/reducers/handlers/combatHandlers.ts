@@ -1,9 +1,9 @@
 import { BALANCE } from '../../data/constants';
 import { DB } from '../../data/db';
 import { GS } from '../gameStates';
-import { resolveCombatItemTurn } from '../../systems/combatItemTurn';
+import { resolveCombatItemTurn, type CombatItemTurnResult } from '../../systems/combatItemTurn';
 import { createSeededRandom } from '../../systems/combatItemTurn';
-import { resolveCombatActionTurn } from '../../systems/combatActionTurn';
+import { resolveCombatActionTurn, type CombatActionTurnResult } from '../../systems/combatActionTurn';
 import { appendGrave } from '../../utils/graveUtils.js';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import { handleVictoryOutcome } from '../../hooks/combatActions/combatVictory';
@@ -161,6 +161,60 @@ const settleVictory = (
     };
 };
 
+/**
+ * H2 (Wave 3 감사): 승리가 아닌 전투 전이(계속 / 사망 / 도주)의 공통 정산.
+ *
+ * RESOLVE_COMBAT_ACTION과 USE_COMBAT_ITEM이 같은 20줄을 각각 들고 있었다. 두 곳의 차이는
+ * 도주 분기(소모품 턴은 'escape'를 만들지 않는다)와 combatReceipt.stories 뿐이므로
+ * stories만 호출부가 넘긴다 — 나머지 필드는 한 곳에서 계산한다.
+ */
+const settleNonVictory = (
+    state: GameState,
+    {
+        result,
+        stories,
+        seed,
+        now,
+        nextTurn,
+    }: {
+        result: CombatActionTurnResult | CombatItemTurnResult;
+        stories: Array<{ type: string; data: any }>;
+        seed: number;
+        now: number;
+        nextTurn: number;
+    },
+): GameState => {
+    const logs = [...result.logs];
+    const player = result.kind === 'defeat'
+        ? addNewTitles(result.player, logs)
+        : result.player;
+
+    return {
+        ...state,
+        player,
+        enemy: result.enemy,
+        gameState: result.kind === 'defeat'
+            ? GS.DEAD
+            : result.kind === 'escape'
+                ? GS.IDLE
+                : state.gameState,
+        grave: result.kind === 'defeat'
+            ? appendGrave(state.grave, result.graveData)
+            : state.grave,
+        runSummary: result.kind === 'defeat' ? result.runSummary : state.runSummary,
+        logs: appendCombatLogs(state.logs, logs, now, seed),
+        quickSlots: sanitizeQuickSlots(state.quickSlots, player.inv),
+        visualEffect: result.visualEffect,
+        combatTurn: nextTurn,
+        combatReceipt: {
+            key: `${nextTurn}:${now}:${seed}`,
+            kind: result.kind,
+            stories,
+        },
+        syncStatus: 'syncing',
+    };
+};
+
 export const makeCombatActionMap = (initialPlayer: any) => ({
     /**
      * 2026-09 D2 — 전투 후 "밀어붙인다 / 숨을 고른다" 단일 전이.
@@ -232,34 +286,13 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
             });
         }
 
-        const logs = [...result.logs];
-        const player = result.kind === 'defeat'
-            ? addNewTitles(result.player, logs)
-            : result.player;
-        return {
-            ...state,
-            player,
-            enemy: result.enemy,
-            gameState: result.kind === 'defeat'
-                ? GS.DEAD
-                : result.kind === 'escape'
-                    ? GS.IDLE
-                    : state.gameState,
-            grave: result.kind === 'defeat'
-                ? appendGrave(state.grave, result.graveData)
-                : state.grave,
-            runSummary: result.kind === 'defeat' ? result.runSummary : state.runSummary,
-            logs: appendCombatLogs(state.logs, logs, now, seed),
-            quickSlots: sanitizeQuickSlots(state.quickSlots, player.inv),
-            visualEffect: result.visualEffect,
-            combatTurn: nextTurn,
-            combatReceipt: {
-                key: `${nextTurn}:${now}:${seed}`,
-                kind: result.kind,
-                stories: result.stories,
-            },
-            syncStatus: 'syncing',
-        };
+        return settleNonVictory(state, {
+            result,
+            stories: result.stories,
+            seed,
+            now,
+            nextTurn,
+        });
     },
     USE_COMBAT_ITEM: (state: GameState, action: GameAction): GameState => {
         if (state.gameState !== GS.COMBAT || !state.enemy) return state;
@@ -302,36 +335,18 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
                 random,
             });
         }
-        const player = result.kind === 'defeat'
-            ? addNewTitles(result.player, logs)
-            : result.player;
-
-        return {
-            ...state,
-            player,
-            enemy: result.enemy,
-            gameState: result.kind === 'defeat'
-                ? GS.DEAD
-                : state.gameState,
-            grave: result.kind === 'defeat'
-                ? appendGrave(state.grave, result.graveData)
-                : state.grave,
-            runSummary: result.kind === 'defeat' ? result.runSummary : state.runSummary,
-            logs: appendCombatLogs(state.logs, logs, now, seed),
-            quickSlots: sanitizeQuickSlots(state.quickSlots, player.inv),
-            visualEffect: result.visualEffect,
-            combatTurn: nextTurn,
-            combatReceipt: {
-                key: `${nextTurn}:${now}:${seed}`,
-                kind: result.kind,
-                stories: result.kind === 'defeat'
-                    ? [
-                        { type: 'death', data: { loc: state.player.loc } },
-                        { type: 'ruinRecap', data: { name: state.player.name, level: state.player.level } },
-                    ]
-                    : [],
-            },
-            syncStatus: 'syncing',
-        };
+        // 소모품 턴은 'escape'를 만들지 않고, 사망 이야기는 턴 시작 시점의 player로 남긴다.
+        return settleNonVictory(state, {
+            result,
+            stories: result.kind === 'defeat'
+                ? [
+                    { type: 'death', data: { loc: state.player.loc } },
+                    { type: 'ruinRecap', data: { name: state.player.name, level: state.player.level } },
+                ]
+                : [],
+            seed,
+            now,
+            nextTurn,
+        });
     },
 });
