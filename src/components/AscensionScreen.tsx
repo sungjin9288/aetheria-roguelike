@@ -110,7 +110,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                                 type="button"
                                 data-testid="ascension-open-mirror"
                                 onClick={onOpenMirror}
-                                className="mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-[#9a8ac0]/32 bg-[#9a8ac0]/12 px-3 text-[12px] font-readable font-bold text-[#e3dcff] transition-colors hover:bg-[#9a8ac0]/20"
+                                className="mt-2 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg border border-[#9a8ac0]/32 bg-[#9a8ac0]/12 px-3 text-[12px] font-readable font-bold text-[#e3dcff] transition-colors hover:bg-[#9a8ac0]/20"
                             >
                                 <Sparkles size={14} /> {MSG.MIRROR_CTA_LABEL}
                             </button>
