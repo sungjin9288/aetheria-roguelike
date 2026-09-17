@@ -1836,3 +1836,34 @@ test('cycle 387 회귀 가드: skillChoices / challengeModifiers 0건 보존', a
     assert.ok(!/^\s+target\.challengeModifiers = Array\.isArray/m.test(block),
         'cycle 387 challengeModifiers normalization 0건 보존');
 });
+
+// ─── W2 (Wave 5): player.status 레거시 스칼라 정규화 ───
+/**
+ * `Player.status`가 `any[]` → `StatusId[]`로 닫히면서, 배열이 아닌 구세이브를
+ * 로드 경계(migrateData)에서 한 번만 정규화한다.
+ *
+ * - 스칼라 문자열은 버리지 않고 1원소 배열로 승격한다(`consumableEffect`가 런타임에서
+ *   `[player.status]`로 감싸 주던 관용과 같은 해석).
+ * - 이미 배열이거나 아예 없는 경우는 손대지 않는다 — 직렬화 모양이 바뀜지 않으므로
+ *   DATA_VERSION bump 대상이 아니다.
+ */
+test('W2: migrateData가 status 레거시 스칼라를 StatusId[] 로 승격한다', () => {
+    const scalar = migrateData({ player: { name: 'legacy', job: '모험가', status: 'poison' } });
+    assert.deepEqual(scalar.player.status, ['poison'], '스칼라 문자열 → 1원소 배열');
+
+    const empty = migrateData({ player: { name: 'legacy', job: '모험가', status: '' } });
+    assert.deepEqual(empty.player.status, [], '빈 문자열 → 빈 배열');
+
+    const malformed = migrateData({ player: { name: 'legacy', job: '모험가', status: 0 } });
+    assert.deepEqual(malformed.player.status, [], '배열/문자열이 아닌 값 → 빈 배열');
+});
+
+test('W2: migrateData가 정상 status 배열과 미보유 세이브는 그대로 둔다', () => {
+    const arrayCase = migrateData({
+        player: { name: 'modern', job: '모험가', status: ['burn', 'curse'] },
+    });
+    assert.deepEqual(arrayCase.player.status, ['burn', 'curse'], '배열은 그대로 보존');
+
+    const absent = migrateData({ player: { name: 'modern', job: '모험가' } });
+    assert.ok(!('status' in absent.player), 'status 미보유 세이브에 필드를 추가하지 않는다');
+});

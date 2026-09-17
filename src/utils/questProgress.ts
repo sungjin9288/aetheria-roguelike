@@ -1,17 +1,19 @@
 import { QUESTS } from '../data/quests.js';
-import type { Player } from "../types/index.js";
+import type { Player, QuestProgressState } from "../types/index.js";
 import { getCumulativeQuestProgress } from './cumulativeQuestProgress.js';
 
 const findQuestDefinition = (quest: any, questCatalog: any = QUESTS) => (
     quest?.isBounty ? quest : questCatalog.find((entry: any) => entry.id === quest.id)
 );
 
-export const createQuestProgressState = (quest: any, player: Player) => {
+export const createQuestProgressState = (quest: any, player: Player): QuestProgressState => {
     const cumulativeProgress = getCumulativeQuestProgress(quest, player);
-    const progressState: Record<string, any> = {
+    const progressState: QuestProgressState = {
         id: quest.id,
+        // `?? 0` — Player.level은 타입상 optional이라 progress(number) 계약을 맞춘다.
+        //   소비자가 모두 `progress || 0`으로 읽어 왔으므로 동작은 동일하다.
         progress: cumulativeProgress === null
-            ? (quest.target === 'level' ? player.level : 0)
+            ? (quest.target === 'level' ? (player.level ?? 0) : 0)
             : cumulativeProgress,
     };
 
@@ -115,9 +117,14 @@ export const syncQuestProgress = (player: Player, enemyName: any, questCatalog: 
 
     const completedCount = updatedQuests.filter((quest: any) => {
         const questData = findQuestDefinition(quest, questCatalog);
+        // 직전 진행도 — 엔트리를 못 찾으면(도달 불가) 종전 `undefined < goal === false`와
+        //   동일하게 "이번에 완료된 것이 아님"으로 센다.
+        const priorProgress = (player.quests || [])
+            .find((activeQuest) => activeQuest.id === quest.id)?.progress;
         return questData
             && quest.progress >= questData.goal
-            && (player.quests || []).find((activeQuest: any) => activeQuest.id === quest.id)?.progress < questData.goal;
+            && priorProgress !== undefined
+            && priorProgress < questData.goal;
     }).length;
 
     return { updatedQuests, completedCount };

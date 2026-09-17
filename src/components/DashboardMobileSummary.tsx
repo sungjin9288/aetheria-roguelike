@@ -3,6 +3,7 @@ import { motion as Motion } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import type { Player } from '../types/index.js';
 import { getTraitProfile } from '../utils/runProfile';
+import { getActiveQuestEntries } from '../utils/gameUtils';
 import { isSignatureItem } from '../data/signatureItems.js';
 
 interface DashboardMobileSummaryProps {
@@ -23,8 +24,11 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
     const statusPills = useMemo(() => {
         if (!player) return [];
         const pills = [];
-        const activeQuests = player.quests?.filter((q: any) => !q.done)?.length || 0;
-        const completedQuests = player.quests?.filter((q: any) => q.done)?.length || 0;
+        // W2 (Wave 5): 기존엔 QuestProgressState에 없는 `done` 필드로 갈라서 완료 수가 항상
+        //   0이었다. 완료 판정은 진행도 ≥ 목표치이고, 그 계산은 getActiveQuestEntries가 소유한다.
+        const questEntries = getActiveQuestEntries(player);
+        const completedQuests = questEntries.filter((entry) => entry?.isComplete).length;
+        const activeQuests = questEntries.length - completedQuests;
         if (activeQuests > 0 || completedQuests > 0) {
             pills.push({ key: 'quest', label: `퀘스트 ${completedQuests}/${activeQuests + completedQuests}`, tone: completedQuests > 0 ? 'success' : 'neutral' });
         }

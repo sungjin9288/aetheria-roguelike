@@ -7,6 +7,7 @@
 
 // cycle 319: ConsumableItem 미사용 import 제거 — player.ts는 Item / EquipSlots만 참조.
 import type { EquipSlots, Item } from './item.js';
+import type { QuestReward } from './quest.js';
 import type { ProgressionProfile } from './progression.js';
 // 타입 전용 re-import — types/index.ts의 FullStats re-export와 동일 패턴(런타임 의존 0).
 //   단일 진실 원천을 중복 선언하지 않기 위해 계산/정규화 모듈의 타입을 그대로 쓴다.
@@ -369,6 +370,84 @@ export interface ReturnSupplyRewardLedger {
 }
 
 /**
+ * 플레이어 상태이상 id — `player.status` 배열의 원소 타입 (W2, Wave 5).
+ *
+ * 닫힌 집합인 근거(생산자 전수):
+ *  - `CombatEngine.enemyAI` 보스 phase2/phase3 `statusEffect` + 몬스터 `statusOnHit`
+ *    (`data/monsters.ts` 실측: bleed / burn / curse / freeze / poison / stun)
+ *  - `BALANCE.EVENT_STATUS_IDS` (poison / burn / bleed / curse) — AI·고정 이벤트 결과
+ *  - `exploreFlow` 이상현상 (poison / burn)
+ * 소비자(`StatusBar` / `adventureGuide`의 라벨 표, `CombatEngine.enemyAI` statusLabels)가
+ * 공통으로 아는 8종이 그대로 이 유니온이다. blind / fear는 유물·스킬이 적에게만 거는
+ * 상태지만 라벨 표에 이미 포함돼 있어 플레이어 쪽 확장 여지를 남겨 둔다.
+ *
+ * 해제 경로: `consumableEffect`의 cure 아이템(poison / burn / freeze / curse),
+ * 안전지대 휴식(`characterActions.rest` — 전체 초기화), `purify` 스킬,
+ * `CombatEngine.tickPlayerStatusDurations`의 턴 만료.
+ */
+export type StatusId =
+    | 'bleed'
+    | 'blind'
+    | 'burn'
+    | 'curse'
+    | 'fear'
+    | 'freeze'
+    | 'poison'
+    | 'stun';
+
+/**
+ * 진행 중인 퀘스트 1건의 저장 상태 — `player.quests` 배열의 원소 (W2, Wave 5).
+ *
+ * 생산자는 둘뿐이다.
+ *  1. `utils/questProgress.createQuestProgressState` — 카탈로그 퀘스트. `id`/`progress`만
+ *     쓰고, `explore_count` 계열만 `startExploreCount` 기준점을 함께 기록한다.
+ *     제목·목표·보상 같은 정의는 `DB.QUESTS`가 단일 진실 원천이라 복사하지 않는다.
+ *  2. `reducers/handlers/questHandlers.REQUEST_BOUNTY` — 현상수배는 런타임 생성이라
+ *     카탈로그에 없다. 그래서 정의 필드(`title`/`desc`/`target`/`goal`/`reward`)를
+ *     진행 상태와 함께 보관하고 `isBounty: true`로 표시한다. 아래 정의 필드는 전부
+ *     "현상수배 전용"이며 카탈로그 퀘스트에는 존재하지 않는다.
+ */
+export interface QuestProgressState {
+    id: number | string;
+    /** 현재 진행도. 목표치(`Quest.goal`)는 카탈로그(또는 현상수배의 `goal`)가 소유. */
+    progress: number;
+    /** `explore_count` 퀘스트 수락 시점의 지역 탐험 횟수 — 이후 증분만 진행도로 센다. */
+    startExploreCount?: number;
+    /** 현상수배 여부. true면 아래 정의 필드가 채워져 있고 카탈로그 조회를 건너뛴다. */
+    isBounty?: boolean;
+    /** 현상수배 전용 — 표시 제목. */
+    title?: string;
+    /** 현상수배 전용 — 표시 설명. */
+    desc?: string;
+    /** 현상수배 전용 — 처치 대상 몬스터 이름. */
+    target?: string;
+    /** 현상수배 전용 — 목표 처치 수. */
+    goal?: number;
+    /** 현상수배 전용 — 완료 보상. */
+    reward?: QuestReward;
+}
+
+/**
+ * AI 이벤트 컨텍스트용 최근 사건 기록 1건 — `player.history` 배열의 원소 (W2, Wave 5).
+ *
+ * 생산자는 `hooks/gameActions/eventActions`(AI 이벤트 선택 결과)와
+ * `reducers/handlers/fallbackEventHandlers`(오프라인 fallback) 둘뿐이고, 둘 다 최근
+ * 50건만 유지한다. 소비자는 `utils/aiEventUtils`의 `summarizeHistory` /
+ * `getRecentEventSet`과 `SystemTab`의 플레이 기록 내보내기다.
+ *
+ * `summarizeHistory`는 `desc`/`text`/`result` 같은 구형 별칭도 읽지만, 현재 코드가
+ * 기록하는 필드는 아래 셋뿐이라 타입은 셋만 선언한다(구형 별칭은 런타임 관용으로만 존속).
+ */
+export interface EventHistoryEntry {
+    /** 사건 본문 (이벤트 설명). */
+    event: string;
+    /** 플레이어가 고른 선택지. 선택지가 없는 이벤트에서는 비어 있다. */
+    choice?: string;
+    /** 선택의 결과 문구. */
+    outcome: string;
+}
+
+/**
  * Player 도메인 타입 — 모든 필드가 optional.
  *
  * 이유: 코드베이스 곳곳에서 player.X를 다양한 부분 형태로 사용해서
@@ -395,7 +474,7 @@ export interface Player {
     loc?: string;
     inv?: Item[];
     equip?: EquipSlots;
-    quests?: any[];
+    quests?: QuestProgressState[];
     expeditionFocusQuestIds?: Array<string | number>;
     achievements?: string[];
     stats?: PlayerStats;
@@ -405,7 +484,7 @@ export interface Player {
     skillChoices?: Record<string, string>;
     challengeModifiers?: string[];
     tempBuff?: TempBuff;
-    status?: any[];
+    status?: StatusId[];
     /** H1: 상태이상별 남은 턴 (status 배열과 짝 — CombatEngine.tickPlayerStatusDurations 소유) */
     statusTurns?: Record<string, number>;
     skillLoadout?: SkillLoadout;
@@ -420,7 +499,7 @@ export interface Player {
         devour?: { phase: 'ready' | 'active'; amount: number };
     };
     killStreak?: number;
-    history?: any[];
+    history?: EventHistoryEntry[];
     eventChainProgress?: Record<string, any>;
     deferredEventChainSteps?: Record<string, number>;
     activeExpedition?: ExpeditionSnapshot | null;

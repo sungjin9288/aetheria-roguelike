@@ -69,9 +69,12 @@ export const rewardActionMap = {
         const activeQuest = (state.player.quests || []).find((quest: any) => quest.id === questId);
         if (!activeQuest) return state;
 
-        const quest = activeQuest.isBounty
-            ? activeQuest
+        // W2 (Wave 5): 현상수배는 런타임 생성이라 자기 자신이 정의고, 카탈로그 퀘스트는
+        //   DB.QUESTS가 정의다. buildTag 같은 카탈로그 전용 필드는 catalogQuest로만 읽는다.
+        const catalogQuest = activeQuest.isBounty
+            ? null
             : DB.QUESTS.find((entry: any) => entry.id === questId);
+        const quest = activeQuest.isBounty ? activeQuest : catalogQuest;
         if (!quest || (activeQuest.progress || 0) < (quest.goal || 0)) return state;
 
         const claimedQuestIds = Array.isArray(state.player.stats?.claimedQuestIds)
@@ -125,7 +128,7 @@ export const rewardActionMap = {
             logs.push({ type: 'success', text: MSG.TITLE_UNLOCKED(quest.reward.title) });
         }
 
-        if (quest.buildTag && quest.reward?.gold) {
+        if (catalogQuest?.buildTag && quest.reward?.gold) {
             const fullStats = calculateFullStats(nextPlayer);
             const traitProfile = getTraitProfile(nextPlayer, {
                 ...fullStats,
@@ -157,7 +160,7 @@ export const rewardActionMap = {
             player: nextPlayer,
             logs: appendRewardLogs(state.logs, logs),
             visualEffect,
-            questClaimReceipt: { key: receiptKey, questId, title: quest.title },
+            questClaimReceipt: { key: receiptKey, questId, title: quest.title ?? '' },
             syncStatus: 'syncing',
         };
     },

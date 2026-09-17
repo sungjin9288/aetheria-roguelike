@@ -227,7 +227,9 @@ export const MSG = {
     CRAFT_DONE: (name: string) => `${name} 제작 완료`,
     QUEST_REWARD_ITEM: (name: string) => `보상 아이템: ${name}`,
     QUEST_TRAIT_BONUS: (title: string, gold: number) => `${title} 공명 보상 · 골드 +${gold}`,
-    QUEST_DONE: (title: string) => `퀘스트 완료: ${title}`,
+    // W2 (Wave 5): Quest.title은 타입상 optional이고 현상수배/카탈로그 양쪽을 받는
+    //   호출부가 있어 QUEST_ACCEPTED / QUEST_ABANDONED와 같은 시그니처로 맞춘다.
+    QUEST_DONE: (title: string | undefined) => `퀘스트 완료: ${title}`,
     ACH_REWARD_ITEM: (name: string) => `업적 보상 아이템: ${name}`,
     ACH_DONE: (title: string | undefined) => `업적 달성: ${title}`,
     PREMIUM_INSUFFICIENT: (name: string) => `${name}이(가) 부족합니다.`,
@@ -269,8 +271,8 @@ export const MSG = {
     EXPEDITION_FOCUS_TOWN_ONLY: '원정 임무 편성은 마을에서만 바꿀 수 있습니다.',
     EXPEDITION_FOCUS_LIMIT: '이번 원정에는 임무를 최대 3개까지 지정할 수 있습니다.',
     EXPEDITION_FOCUS_REQUIRED: '원정 임무를 최소 1개는 유지해야 합니다.',
-    EXPEDITION_FOCUS_ADDED: (title: string) => `이번 원정 임무 추가: ${title}`,
-    EXPEDITION_FOCUS_REMOVED: (title: string) => `이번 원정 임무 제외: ${title}`,
+    EXPEDITION_FOCUS_ADDED: (title: string | undefined) => `이번 원정 임무 추가: ${title}`,
+    EXPEDITION_FOCUS_REMOVED: (title: string | undefined) => `이번 원정 임무 제외: ${title}`,
     BOUNTY_TOWN_ONLY: '현상수배 수주는 마을 게시판에서만 가능합니다.',
     BOUNTY_ABANDONED: '현상수배 임무를 포기했습니다. 오늘은 새 현상수배를 받을 수 없습니다.',
     BOUNTY_DAILY_LIMIT: '오늘 현상수배는 이미 발급되었습니다. 내일 다시 요청하세요.',

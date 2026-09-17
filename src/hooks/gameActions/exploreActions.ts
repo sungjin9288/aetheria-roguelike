@@ -3,7 +3,7 @@ import { BALANCE, CONSTANTS } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { AI_SERVICE } from '../../services/aiService';
-import { toArray } from '../../utils/gameUtils';
+import { getActiveQuestEntries, toArray } from '../../utils/gameUtils';
 import { runQuietRollAndCombat } from './exploreFlow';
 import { canOfferOptionalExploreDecision, getMapPacingProfile, getNarrativeEventChance } from '../../utils/explorationPacing';
 import { getRunBuildProfile } from '../../utils/runProfileUtils';
@@ -86,7 +86,13 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
                 gold: player.gold, title: player.activeTitle || null,
                 relicCount: playerRelics.length,
                 status: toArray(player.status).slice(0, 4),
-                activeQuests: toArray(player.quests).filter((q: any) => !q.done).slice(0, 3).map((q: any) => q.title),
+                // W2 (Wave 5): 기존엔 `q.title`을 읽었는데 카탈로그 퀘스트의 저장 상태에는
+                //   id/progress밖에 없어 AI 컨텍스트에 undefined만 실려 나갔다(현상수배만 제목 보유).
+                //   제목은 카탈로그가 소유하므로 getActiveQuestEntries로 해석해서 넘긴다.
+                activeQuests: getActiveQuestEntries(player)
+                    .filter((entry) => entry && !entry.isComplete)
+                    .slice(0, 3)
+                    .map((entry) => entry?.quest.title),
                 buildProfile: getRunBuildProfile(player, fullStats).tags.map((tag: any) => tag.name).slice(0, 4)
             };
             const playerSnapshot = enrichSnapshotWithDifficulty(baseSnapshot, player);
