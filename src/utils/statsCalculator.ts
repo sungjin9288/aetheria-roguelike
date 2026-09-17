@@ -99,7 +99,9 @@ const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: 
 
     const defFlat = relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'glass_cannon') return acc + r.val.def;
-        if (r.effect === 'stone_skin' || r.effect === 'def_mult') return acc + r.val;
+        // L-TODO(types) 잠재 버그: 'def_mult' effect를 가진 유물은 RELICS 67종에 없다(죽은 분기).
+        //   RelicEffect 유니온화 이후 TS2367이 되므로 런타임 동등성 유지를 위해 string으로 비교한다.
+        if (r.effect === 'stone_skin' || (r.effect as string) === 'def_mult') return acc + r.val;
         if (r.effect === 'fortress') return acc + r.val.def;
         if (r.effect === 'omega') return acc + r.val;
         if (r.effect === 'triple_up') return acc + (r.defVal || 0);

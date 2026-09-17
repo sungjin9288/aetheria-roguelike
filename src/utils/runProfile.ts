@@ -1,4 +1,4 @@
-import type { Item, Monster } from '../types/index.js';
+import type { Item, Monster, MonsterPattern } from '../types/index.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import type { FullStats, Player } from "../types/index.js";
 // cycle 271: getDifficultyMults / calcPerformanceScore / getExploreState / CLASS_BUILD_IDENTITIES /
@@ -467,7 +467,7 @@ export const getEnemyTacticalProfile = (enemy: Monster, stats: FullStats | null 
     if (!enemy) return null;
     void stats; // cycle 270: stats 파라미터는 estimatedHit/estimatedHeavy 계산용이었으나 dead — 시그니처 호환 보존.
 
-    const pattern = enemy.pattern || {};
+    const pattern: Partial<MonsterPattern> = enemy.pattern || {};
     const guardChance = Math.max(0, Math.round((pattern.guardChance || 0) * 100));
     const heavyChance = Math.max(0, Math.round((pattern.heavyChance || 0) * 100));
     const bossBrief = enemy.isBoss ? BOSS_BRIEFS[(enemy.baseName || enemy.name) as string] : null;

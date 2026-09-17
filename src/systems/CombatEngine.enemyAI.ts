@@ -124,7 +124,7 @@ export const enemyAIMethods: any = {
         }
 
         if ((updatedEnemy.stunnedTurns || 0) > 0) {
-            updatedEnemy.stunnedTurns -= 1;
+            updatedEnemy.stunnedTurns! -= 1;
             return {
                 updatedPlayer,
                 updatedEnemy,
@@ -184,8 +184,8 @@ export const enemyAIMethods: any = {
         // 최소 피해량: 원래 공격력의 10% (DEF 스택으로 완전 무효화 방지, 고DEF 빌드 보상)
         const minEnemyDmg = Math.max(1, Math.floor(rawEnemyAtk * 0.10));
         let enemyDmg = Math.max(minEnemyDmg, Math.floor(rawEnemyAtk - stats.def));
-        if (enemyAtkMult < 1 && (updatedEnemy.blindTurns > 0 || updatedEnemy.fearTurns > 0 || updatedEnemy.cursedTurns > 0)) {
-            const statusName = updatedEnemy.blindTurns > 0 ? '실명' : updatedEnemy.fearTurns > 0 ? '공포' : '저주';
+        if (enemyAtkMult < 1 && ((updatedEnemy.blindTurns ?? 0) > 0 || (updatedEnemy.fearTurns ?? 0) > 0 || (updatedEnemy.cursedTurns ?? 0) > 0)) {
+            const statusName = (updatedEnemy.blindTurns ?? 0) > 0 ? '실명' : (updatedEnemy.fearTurns ?? 0) > 0 ? '공포' : '저주';
             logs.push({ type: 'info', text: `[${statusName}] ${updatedEnemy.name}의 공격력이 감소합니다!` });
         }
 

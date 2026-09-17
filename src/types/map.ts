@@ -3,20 +3,24 @@
  *
  * maps.ts의 42개 지역 + 무한 심연 정의를 망라.
  *
- * cycle 60: 모든 필드 optional + [key: string]: any 인덱스 시그니처.
- * 이유: maps.ts가 `level: number | 'infinite'`, `type: 'safe' | 'dungeon' | 'boss'`,
- * `boss`, `bossMonsters`, `eventChance` 등 다양한 형태로 데이터를 정의하며
- * exploreUtils / mapProgress 등 런타임에서 임의 필드(progressed 등)를 추가/조회한다.
+ * 2026-09 L stage 1: `[key: string]: any` 인덱스 시그니처 제거.
+ * MAPS 52개 엔트리가 실제로 쓰는 필드만 선언한다. `type`은 4종 리터럴 유니온.
  */
 
-// cycle 284: MapType type alias 제거 — string의 단순 alias라 직접 string 사용으로 충분.
+/** MAPS 데이터에 존재하는 지역 분류 (4종). */
+export type GameMapType = 'safe' | 'field' | 'dungeon' | 'boss';
 
 export interface GameMap {
     /** 지역 이름 (보통 MAPS 객체의 key지만 일부 시나리오에서 명시적 보유). */
     name?: string;
-    /** 지역 분류 ('safe' | 'dungeon' | 'boss' 등). */
-    type?: string;
-    /** 입장 가능 최소 레벨 (legacy alias: level). */
+    /** 지역 분류 — MAPS 52개가 쓰는 4종. */
+    type?: GameMapType;
+    /**
+     * 입장 가능 최소 레벨 (legacy alias: level).
+     * L-TODO(types) 잠재 버그: maps.ts 52개 중 `minLv`를 정의한 지역은 0개인데
+     * MapNavigator.tsx:38-39 와 gameActions/moveActions.ts:37 이 `minLv ?? level`
+     * 순으로 읽는다 — minLv 분기는 항상 미발동(죽은 우선순위). optional 유지.
+     */
     minLv?: number;
     /** 레벨 — 숫자 / [최소, 최대] 범위 / 'infinite'(무한 심연). */
     level?: number | number[] | 'infinite';
@@ -36,6 +40,8 @@ export interface GameMap {
     /** 시즌 이벤트 기간에만 접근 가능한 지역인지 여부. */
     seasonOnly?: boolean;
     // cycle 284: isSignatureZone 제거 — runtime access 0건.
-    /** 동적으로 추가되는 임의 필드 (런타임 확장 호환). */
-    [key: string]: any;
+    /** 묘비 드롭 보정 (maps.ts 실측 — '잊혀진 묘지' 1곳만 보유). */
+    graveDropBonus?: number;
+    /** 상점 가격 보정 (maps.ts 실측 — 1곳만 보유). */
+    shopBonus?: number;
 }

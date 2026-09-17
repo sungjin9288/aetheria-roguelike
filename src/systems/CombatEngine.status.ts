@@ -100,35 +100,35 @@ export const statusMethods = {
 
         // 상태 턴 감소 & 만료
         if ((updated.blindTurns ?? 0) > 0) {
-            if (updated.blindTurns - 1 <= 0) {
+            if (updated.blindTurns! - 1 <= 0) {
                 const { blindTurns: _b, atkMult: _a, ...rest } = updated;
                 updated = rest;
             } else {
-                updated = { ...updated, blindTurns: updated.blindTurns - 1 };
+                updated = { ...updated, blindTurns: updated.blindTurns! - 1 };
             }
         }
         if ((updated.fearTurns ?? 0) > 0) {
-            if (updated.fearTurns - 1 <= 0) {
+            if (updated.fearTurns! - 1 <= 0) {
                 const { fearTurns: _f, atkMult: _a, ...rest } = updated;
                 updated = rest;
             } else {
-                updated = { ...updated, fearTurns: updated.fearTurns - 1 };
+                updated = { ...updated, fearTurns: updated.fearTurns! - 1 };
             }
         }
         if ((updated.cursedTurns ?? 0) > 0) {
-            if (updated.cursedTurns - 1 <= 0) {
+            if (updated.cursedTurns! - 1 <= 0) {
                 const { cursedTurns: _c, atkMult: _a, ...rest } = updated;
                 updated = { ...rest, cursed: false };
             } else {
-                updated = { ...updated, cursedTurns: updated.cursedTurns - 1 };
+                updated = { ...updated, cursedTurns: updated.cursedTurns! - 1 };
             }
         }
         if ((updated.tauntTurns ?? 0) > 0) {
-            if (updated.tauntTurns - 1 <= 0) {
+            if (updated.tauntTurns! - 1 <= 0) {
                 const { tauntTurns: _t, ...rest } = updated;
                 updated = { ...rest, taunted: false };
             } else {
-                updated = { ...updated, tauntTurns: updated.tauntTurns - 1 };
+                updated = { ...updated, tauntTurns: updated.tauntTurns! - 1 };
             }
         }
 

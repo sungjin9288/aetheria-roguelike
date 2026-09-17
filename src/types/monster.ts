@@ -1,12 +1,44 @@
 /**
- * Monster domain types (cycle 58 phase 4 + cycle 60 phase D 완화).
+ * Monster domain types (cycle 58 phase 4 + cycle 60 phase D 완화
+ *   → 2026-09 Wave 3 L stage 1).
  *
- * monsters.js + dropTables.js + 보스 패턴을 통합한 인터페이스.
+ * monsters.ts의 템플릿(배율·패턴·페이즈)과 전투 중 스폰된 인스턴스(hp/atk/상태이상)를
+ * 같은 인터페이스로 담는다.
  *
- * cycle 60: 모든 필드 optional + [key: string]: any 인덱스 시그니처.
- * 이유: 런타임에 동적으로 추가되는 필드 (dots, phase2Triggered, blindTurns,
- * stunnedTurns, atkMult, defMult, weakness, resistance 등) 호환성.
+ * 2026-09 L stage 1: `[key: string]: any` 인덱스 시그니처 제거.
+ * 템플릿 필드(`hpMult`/`atkMult`/`pattern`/`phase2`…)와 런타임에 붙는 전투 상태 필드
+ * (`dots`/`stunnedTurns`/`guarding`…)를 전부 명시 선언했다. 이제 `enemy.오타`가 컴파일 에러다.
  */
+
+/** 속성 — monsters.ts의 weakness/resistance에 실제로 등장하는 값 전체. */
+export type ElementKey =
+    | '냉기'
+    | '대지'
+    | '물리'
+    | '바람'
+    | '빛'
+    | '어둠'
+    | '에테르'
+    | '자연'
+    | '화염';
+
+/**
+ * 적 행동 패턴 확률 (템플릿 / 보스 페이즈 공용).
+ * monsters.ts의 187개 pattern 전부가 두 확률을 모두 정의하므로 필수로 둔다.
+ */
+export interface MonsterPattern {
+    guardChance: number;
+    heavyChance: number;
+    /**
+     * L-TODO(types) 잠재 버그: `pattern.statusEffect` / `pattern.statusChance`를
+     * CombatEngine.enemyAI.ts:219 와 utils/combatForecast.ts:74 가 읽지만
+     * monsters.ts의 pattern 187개 중 이 두 키를 정의한 것은 0개다(죽은 분기).
+     * 살아 있는 경로는 몬스터 최상위 `statusOnHit`. 데이터 저작으로 살릴지
+     * 소비처를 걷어낼지 결정될 때까지 optional로 정직하게 선언한다.
+     */
+    statusEffect?: string;
+    statusChance?: number;
+}
 
 export interface MonsterBase {
     name?: string;
@@ -17,8 +49,10 @@ export interface MonsterBase {
     def?: number;
     exp?: number;
     gold?: number;
-    weakness?: string;
-    resistance?: string;
+    /** 스폰 시 부여되는 적 레벨 (보상/난이도 계산). */
+    level?: number;
+    weakness?: ElementKey;
+    resistance?: ElementKey;
     /** 보스 여부. */
     isBoss?: boolean;
     /** 엘리트 prefix 여부. */
@@ -31,8 +65,33 @@ export interface MonsterBase {
     statusOnHit?: string;
     // cycle 283: elem / dropTable / prefix / signatureDrops 4 dead 필드 제거 — runtime access 0건.
     //   prefix는 mStats.name 직접 string 합치기, signatureDrops는 local variable 사용.
-    /** 동적으로 추가되는 임의 필드 (런타임 확장 호환). */
-    [key: string]: any;
+
+    // --- monsters.ts 템플릿 필드 (스폰 시 기본 곡선에 곱해진다) ---
+    hpMult?: number;
+    atkMult?: number;
+    defMult?: number;
+    expMult?: number;
+    goldMult?: number;
+    /** 기본 행동 패턴 (미정의 시 BALANCE 기본값). */
+    pattern?: MonsterPattern;
+    /** 보스 2/3페이즈 정의 (isBoss 템플릿만 보유). */
+    phase2?: BossPhase;
+    phase3?: BossPhase;
+
+    // --- 전투 중 인스턴스에 붙는 상태 (CombatEngine.status / enemyAI) ---
+    /** 지속 피해 상태 키 목록 ('burn' | 'poison' | 'bleed'). */
+    dots?: string[];
+    blindTurns?: number;
+    fearTurns?: number;
+    cursedTurns?: number;
+    stunnedTurns?: number;
+    tauntTurns?: number;
+    cursed?: boolean;
+    taunted?: boolean;
+    /** 이번 턴 방어 태세 여부. */
+    guarding?: boolean;
+    phase2Triggered?: boolean;
+    phase3Triggered?: boolean;
 }
 
 // cycle 328: BossPhase export 제거 — phase2/phase3 필드 타입으로만 사용, 외부 import 0건.
@@ -42,10 +101,9 @@ interface BossPhase {
     // cycle 283: atkMult / defMult / skills 3 dead 필드 제거 — 활성은 atkBonus / defBonus(cycle 228).
     atkBonus?: number;
     defBonus?: number;
-    pattern?: { guardChance?: number; heavyChance?: number };
+    pattern?: MonsterPattern;
     log?: string;
     statusEffect?: string;
-    [key: string]: any;
 }
 
 // cycle 298: BossMonster export 제거 — Monster 유니온 구성용 internal type.

@@ -1,18 +1,18 @@
-import type { Achievement } from '../types/quest';
+import type { Achievement, AchievementTarget } from '../types/quest';
 
 export type AchievementCategoryId = 'battle' | 'adventure' | 'growth' | 'collection' | 'survival';
 
 export interface AchievementCategory {
     id: AchievementCategoryId;
     label: string;
-    targets: string[];
+    targets: AchievementTarget[];
 }
 
 export interface AchievementProgress extends Achievement {
     id: string;
     title: string;
     desc: string;
-    target: string;
+    target: AchievementTarget;
     goal: number;
     current: number;
     rewardText: string;
@@ -21,7 +21,7 @@ export interface AchievementProgress extends Achievement {
 }
 
 export interface AchievementJourney {
-    target: string;
+    target: AchievementTarget;
     label: string;
     category: AchievementCategoryId;
     milestones: AchievementProgress[];
@@ -58,7 +58,7 @@ export const ACHIEVEMENT_CATEGORIES: AchievementCategory[] = [
     },
 ];
 
-const JOURNEY_LABELS: Record<string, string> = {
+const JOURNEY_LABELS: Record<AchievementTarget, string> = {
     kills: '전투 승리',
     bossKills: '보스 토벌',
     total_gold: '골드 수집',
@@ -81,14 +81,14 @@ const JOURNEY_LABELS: Record<string, string> = {
     discoveryChains: '발견 여정',
 };
 
-const getCategoryForTarget = (target: string): AchievementCategoryId => (
+const getCategoryForTarget = (target: AchievementTarget): AchievementCategoryId => (
     ACHIEVEMENT_CATEGORIES.find((category) => category.targets.includes(target))?.id || 'growth'
 );
 
-export const getAchievementJourneyLabel = (target: string) => JOURNEY_LABELS[target] || '모험 기록';
+export const getAchievementJourneyLabel = (target: AchievementTarget) => JOURNEY_LABELS[target] || '모험 기록';
 
 export const buildAchievementJourneys = (achievements: AchievementProgress[]): AchievementJourney[] => {
-    const milestonesByTarget = new Map<string, AchievementProgress[]>();
+    const milestonesByTarget = new Map<AchievementTarget, AchievementProgress[]>();
 
     for (const achievement of achievements) {
         const milestones = milestonesByTarget.get(achievement.target) || [];

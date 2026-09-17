@@ -232,7 +232,8 @@ import { readFile } from 'node:fs/promises';
    * 회귀 가드:
    * - player.stats.signaturePity dispatch 동작 유지 (cycle 75 mercy 카운터).
    * - getSignaturePityMultiplier / SIGNATURE_PITY constant 동작 유지.
-   * - [key: string]: any index signature 유지로 동적 필드 호환.
+   * - [key: string]: any index signature는 2026-09 Wave 3 L stage 1에서 제거됨
+   *   (실측 필드 전수 선언 + tests/data-shape-types.test.js 계약 가드로 대체).
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));
