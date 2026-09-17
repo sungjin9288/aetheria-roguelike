@@ -1653,9 +1653,11 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 528: body filter/forEach/getWeaponEquipScore 호출 보존', async () => {
       const source = await readSrc('src/utils/equipmentUtils.ts');
-      assert.ok(/weapons\.filter\(\(weapon: any\) => isOneHandWeapon\(weapon\)\)/.test(source),
+      // Wave 5 W5-B: weapon/weapons 파라미터가 `Item | null | undefined` 계열로
+      //   타이핑되며 콜백의 `: any` 주석이 사라졌다 — 호출 자체는 그대로다.
+      assert.ok(/weapons\.filter\(\(weapon\) => isOneHandWeapon\(weapon\)\)/.test(source),
           'weapons.filter 보존');
-      assert.ok(/candidates\.forEach\(\(mainWeapon: any\)/.test(source),
+      assert.ok(/candidates\.forEach\(\(mainWeapon\)/.test(source),
           'candidates.forEach 보존');
       assert.ok(/getWeaponEquipScore\(mainWeapon, 'main'\)/.test(source),
           'getWeaponEquipScore main 호출 보존');

@@ -12,9 +12,17 @@ import type {
     ExpeditionSnapshot,
     ExpeditionSummary,
     Player,
+    QuestProgressState,
 } from '../types/player.js';
+import type { Item } from '../types/item.js';
+import type { Quest } from '../types/quest.js';
+import type { SkillBranchChoice } from '../types/class.js';
 import type { ProgressionProfile, ProgressionProfileRef } from '../types/progression.js';
-import { getActiveExpeditionFocusQuestIds, getPreparedExpeditionFocusQuestIds } from './expeditionMissionFocus.js';
+import {
+    getActiveExpeditionFocusQuestIds,
+    getPreparedExpeditionFocusQuestIds,
+    type ExpeditionQuestDefinition,
+} from './expeditionMissionFocus.js';
 import {
     normalizeClassJourneyEncounterDiscoveries,
     recordClassJourneyExpedition,
@@ -49,8 +57,8 @@ const skillChoicesForJob = (value: unknown, job: string | undefined) => {
     const branchSkills = CLASSES[job]?.skillBranches || {};
     return Object.fromEntries(Object.entries(value).flatMap(([skillName, choice]) => {
         const selectedChoice = typeof choice === 'string' ? choice.trim() : '';
-        const choices = branchSkills[skillName];
-        return Array.isArray(choices) && choices.some((branch: any) => branch.choice === selectedChoice)
+        const choices: SkillBranchChoice[] | undefined = branchSkills[skillName];
+        return Array.isArray(choices) && choices.some((branch) => branch.choice === selectedChoice)
             ? [[skillName, selectedChoice]]
             : [];
     }));
@@ -60,7 +68,7 @@ const equipmentNames = (player: Player) => equippedItems(player).flatMap((item) 
     typeof item.name === 'string' && item.name.trim() ? [item.name.trim()] : []
 ));
 
-const inventoryCheckpoint = (item: any): ExpeditionInventoryCheckpoint => {
+const inventoryCheckpoint = (item: Item | null | undefined): ExpeditionInventoryCheckpoint => {
     const name = typeof item?.name === 'string' && item.name.trim() ? item.name : '이름 없는 아이템';
     const fallbackKey = [name, item?.type || '', item?.prefixName || '', item?.enhance || 0].join('|');
     return {
@@ -69,13 +77,16 @@ const inventoryCheckpoint = (item: any): ExpeditionInventoryCheckpoint => {
     };
 };
 
-const getQuestDefinition = (quest: any, questCatalog: any[]) => (
-    quest?.isBounty ? quest : questCatalog.find((entry: any) => entry.id === quest?.id)
+const getQuestDefinition = (
+    quest: QuestProgressState | undefined,
+    questCatalog: Quest[],
+): ExpeditionQuestDefinition | undefined => (
+    quest?.isBounty ? quest : questCatalog.find((entry) => entry.id === quest?.id)
 );
 
-const questCheckpoints = (player: Player, questCatalog: any[]): ExpeditionQuestCheckpoint[] => (
+const questCheckpoints = (player: Player, questCatalog: Quest[]): ExpeditionQuestCheckpoint[] => (
     Array.isArray(player.quests) ? player.quests : []
-).flatMap((quest: any) => {
+).flatMap((quest): ExpeditionQuestCheckpoint[] => {
     const definition = getQuestDefinition(quest, questCatalog);
     if (!definition) return [];
     return [{
@@ -106,7 +117,7 @@ export const calculateExpeditionExpGain = (snapshot: ExpeditionSnapshot, player:
     return Math.max(0, gained + endExp);
 };
 
-const itemDelta = (before: ExpeditionInventoryCheckpoint[], currentInventory: any[]) => {
+const itemDelta = (before: ExpeditionInventoryCheckpoint[], currentInventory: Item[]) => {
     const remaining = new Map<string, number>();
     before.forEach((item) => remaining.set(item.key, (remaining.get(item.key) || 0) + 1));
 
@@ -126,9 +137,12 @@ const itemDelta = (before: ExpeditionInventoryCheckpoint[], currentInventory: an
     };
 };
 
-const canonicalSignatureName = (item: any) => {
-    const name = typeof item?.name === 'string' ? item.name.trim() : '';
-    if (isSignatureName(name)) return name;
+const canonicalSignatureName = (item: Item | null | undefined) => {
+    const rawName = typeof item?.name === 'string' ? item.name.trim() : '';
+    if (isSignatureName(rawName)) return rawName;
+    // isSignatureName의 `name is string` predicate가 이미 string 타입인 rawName을
+    // else 분기에서 never로 좁혀버리는 TS 특성 회피용 재바인딩 — 값/동작은 동일.
+    const name: string = rawName;
 
     const prefix = typeof item?.prefixName === 'string' ? item.prefixName.trim() : '';
     if (item?.prefixed !== true || !prefix || !name.startsWith(`${prefix} `)) return null;
@@ -152,13 +166,13 @@ const signatureDelta = (snapshot: ExpeditionSnapshot, player: Player) => {
     return ownedSignatureNames(player).filter((name) => !ownedBefore.has(name));
 };
 
-const completedQuestTitles = (snapshot: ExpeditionSnapshot, player: Player, questCatalog: any[]) => {
-    const current = new Map((Array.isArray(player.quests) ? player.quests : []).map((quest: any) => [String(quest.id), quest]));
+const completedQuestTitles = (snapshot: ExpeditionSnapshot, player: Player, questCatalog: Quest[]) => {
+    const current = new Map((Array.isArray(player.quests) ? player.quests : []).map((quest) => [String(quest.id), quest]));
     const claimed = new Set((Array.isArray(player.stats?.claimedQuestIds) ? player.stats.claimedQuestIds : []).map(String));
 
     return snapshot.quests.flatMap((checkpoint) => {
         if (checkpoint.progress >= checkpoint.goal) return [];
-        const activeQuest: any = current.get(String(checkpoint.id));
+        const activeQuest = current.get(String(checkpoint.id));
         const definition = activeQuest ? getQuestDefinition(activeQuest, questCatalog) : null;
         const goal = Math.max(1, nonNegative(definition?.goal, checkpoint.goal));
         const isComplete = claimed.has(String(checkpoint.id)) || nonNegative(activeQuest?.progress) >= goal;
@@ -189,12 +203,12 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
         kills: nonNegative(candidate.kills),
         bossKills: nonNegative(candidate.bossKills),
         explores: nonNegative(candidate.explores),
-        inventory: (Array.isArray(candidate.inventory) ? candidate.inventory : []).flatMap((item: any) => (
+        inventory: (Array.isArray(candidate.inventory) ? candidate.inventory : []).flatMap((item) => (
             typeof item?.key === 'string' && typeof item?.name === 'string'
                 ? [{ key: item.key, name: item.name }]
                 : []
         )),
-        quests: (Array.isArray(candidate.quests) ? candidate.quests : []).flatMap((quest: any) => (
+        quests: (Array.isArray(candidate.quests) ? candidate.quests : []).flatMap((quest) => (
             (typeof quest?.id === 'string' || typeof quest?.id === 'number')
                 ? [{
                     id: quest.id,
@@ -245,9 +259,9 @@ export const normalizeExpeditionSummary = (value: unknown): ExpeditionSummary | 
         battles: nonNegative(candidate.battles),
         bossBattles: nonNegative(candidate.bossBattles),
         explores: nonNegative(candidate.explores),
-        newItems: (Array.isArray(candidate.newItems) ? candidate.newItems : []).filter((name: any) => typeof name === 'string'),
+        newItems: (Array.isArray(candidate.newItems) ? candidate.newItems : []).filter((name) => typeof name === 'string'),
         lostItemCount: nonNegative(candidate.lostItemCount),
-        completedQuests: (Array.isArray(candidate.completedQuests) ? candidate.completedQuests : []).filter((title: any) => typeof title === 'string'),
+        completedQuests: (Array.isArray(candidate.completedQuests) ? candidate.completedQuests : []).filter((title) => typeof title === 'string'),
         lowestHp: nonNegative(candidate.lowestHp),
         lowestHpPercent: Math.min(100, nonNegative(candidate.lowestHpPercent)),
         returnHp: nonNegative(candidate.returnHp),
@@ -282,7 +296,7 @@ export const startExpedition = (
     player: Player,
     destination: string,
     now: number,
-    questCatalog: any[],
+    questCatalog: Quest[],
     progressionProfile: ProgressionProfile = { ...BASELINE_PROGRESSION_PROFILE },
 ) => {
     if (normalizeActiveExpedition(player.activeExpedition)) return player;
@@ -321,7 +335,7 @@ export const startExpedition = (
     return { ...player, expeditionSequence, activeExpedition: snapshot };
 };
 
-export const finishExpedition = (player: Player, returnLocation: string, now: number, questCatalog: any[]) => {
+export const finishExpedition = (player: Player, returnLocation: string, now: number, questCatalog: Quest[]) => {
     const snapshot = normalizeActiveExpedition(player.activeExpedition);
     if (!snapshot) return { player: { ...player, activeExpedition: null }, summary: null };
 
