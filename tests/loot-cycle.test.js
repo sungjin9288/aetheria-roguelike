@@ -44,8 +44,13 @@ import { readFile } from 'node:fs/promises';
       isBoss: false,
   });
 
-  // drop/loot 둘 다 없는 monster 이름 선택 — '폭풍 수호자' 등.
-  const NO_TABLE_MONSTER = '폭풍 수호자';
+  // drop/loot 둘 다 없는 monster 이름 선택.
+  // Track J3(2026-09): '폭풍 수호자'는 콘텐츠 패리티 작업으로 DROP_TABLES에
+  // 항목이 추가돼 더 이상 "테이블 없음" 픽스처로 쓸 수 없음 — 무한 심연
+  // ("혼돈의 심연", level: 'infinite') 전용 회전 보스 풀은 의도적으로 두
+  // 테이블 모두에서 제외돼 있으므로(exp 기반 티어 보너스 드랍에 위임,
+  // tests/track-j3-drop-table-coverage.test.js 참고) 이 중 하나로 교체.
+  const NO_TABLE_MONSTER = '혼돈의 수호자';
 
   test('cycle 171 RED→GREEN: drop/loot 없는 고레벨 enemy도 보너스 드랍 발동 가능', () => {
       // 보장: 이 monster가 정말 두 테이블 모두에 없음.
