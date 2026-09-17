@@ -114,7 +114,7 @@ src/
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
 tests/                # 단위 테스트 (Node.js built-in test, ~330 파일 / ~4,800 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준)
-                      #   + e2e/ (Playwright 31 스펙, iPhone 12 뷰포트) + device-qa/
+                      #   + e2e/ (Playwright 31 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 android/ ios/         # Capacitor 네이티브 프로젝트
 ```
