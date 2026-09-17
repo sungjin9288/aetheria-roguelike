@@ -102,7 +102,12 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: playwright-report
-          path: playwright-report/
+          # playwright.config.ts 의 reporter 는 `list` 뿐이라 playwright-report/ 는 생성되지 않는다.
+          # 실패 스크린샷·error-context.md·재시도 trace.zip 은 test-results/ 에 남으므로 함께 올린다
+          # (없으면 이 스텝은 "No files were found" 경고만 남기고 아무것도 보존하지 못한다).
+          path: |
+            playwright-report/
+            test-results/
           retention-days: 7
 
   perf:
