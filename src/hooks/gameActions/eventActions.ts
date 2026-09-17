@@ -85,7 +85,7 @@ export const createEventActions = (deps: any, shared: any) => {
                         }
                     }
                     if (rwd.type === 'combat_bonus') {
-                        updatedPlayer = { ...updatedPlayer, tempBuff: { atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: '기사의 혼령' } };
+                        updatedPlayer = { ...updatedPlayer, tempBuff: { atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: MSG.CHAIN_REWARD_COMBAT_BONUS_NAME } };
                         addLog('success', MSG.CHAIN_REWARD_COMBAT_BONUS(Math.round(((rwd.atkMult || 1.3) - 1) * 100), rwd.duration || 5));
                     }
                     // cycle 62: stat_bonus는 영구 ATK/DEF/HP 가산 — 기존 chain(rift_secret)에서
@@ -103,13 +103,13 @@ export const createEventActions = (deps: any, shared: any) => {
                             next.mp = Math.min(next.maxMp, (next.mp || 0) + rwd.mp);
                         }
                         updatedPlayer = next;
-                        const parts = [
-                            rwd.atk && `공격력 +${rwd.atk}`,
-                            rwd.def && `방어력 +${rwd.def}`,
-                            rwd.hp && `생명 +${rwd.hp}`,
-                            rwd.mp && `기력 +${rwd.mp}`,
-                        ].filter(Boolean).join(' · ');
-                        addLog('success', `이야기 보상 · ${parts}`);
+                        // I4 (2026-09 Wave 3): 하드코딩 한국어 → MSG 단일 원천 (출력 문구는 동일).
+                        const statLabels = MSG.CHAIN_REWARD_STAT_LABEL;
+                        const parts = (['atk', 'def', 'hp', 'mp'] as const)
+                            .filter((key) => rwd[key])
+                            .map((key) => `${statLabels[key]} +${rwd[key]}`)
+                            .join(' · ');
+                        addLog('success', MSG.CHAIN_REWARD_STAT_BONUS(parts));
                     }
                 }
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
@@ -253,7 +253,7 @@ const queueOutcomeRelics = (player: any, relic: any, { dispatch, addLog, rng }: 
  */
 const buildEliteStats = (rawStats: any, baseName: string) => ({
     ...rawStats,
-    name: rawStats.name?.startsWith('정예') ? rawStats.name : `정예 ${baseName}`,
+    name: rawStats.name?.startsWith(MSG.ELITE_ENEMY_PREFIX) ? rawStats.name : MSG.ELITE_ENEMY_NAME(baseName),
     baseName,
     isElite: true,
     hp: Math.floor(rawStats.hp * BALANCE.SCOUT_ELITE_HP_MULT),

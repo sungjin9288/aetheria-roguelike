@@ -512,4 +512,10 @@ export const MSG = {
         return `기세가 올랐습니다. 다음 전투 ${turns}턴 동안 ${parts}.`;
     },
     EVENT_ELITE_AMBUSH: '기척이 짙어집니다 — 정예가 앞을 막아섰습니다.',
+    // --- I4 (2026-09 Wave 3): eventActions 하드코딩 한국어 회수 (출력 문구는 모두 동일) ---
+    CHAIN_REWARD_STAT_LABEL: { atk: '공격력', def: '방어력', hp: '생명', mp: '기력' } as Record<string, string>,
+    CHAIN_REWARD_STAT_BONUS: (parts: string) => `이야기 보상 · ${parts}`,
+    CHAIN_REWARD_COMBAT_BONUS_NAME: '기사의 혼령',
+    ELITE_ENEMY_PREFIX: '정예',
+    ELITE_ENEMY_NAME: (baseName: string) => `정예 ${baseName}`,
 };

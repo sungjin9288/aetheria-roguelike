@@ -85,10 +85,11 @@ test('story-chain previews describe progression and reward type without exposing
 });
 
 test('event screen and result log keep the same natural player vocabulary', async () => {
-    const [panel, actions, smokeInjector] = await Promise.all([
+    const [panel, actions, smokeInjector, messages] = await Promise.all([
         readSrc('src/components/EventPanel.tsx'),
         readSrc('src/hooks/gameActions/eventActions.ts'),
         readSrc('src/hooks/useGameTestApi.ts'),
+        readSrc('src/data/messages.ts'),
     ]);
 
     for (const label of ['탐험 중 마주친 일', '지금 상황', '어떤 길을 택하시겠습니까?', '예상 결과']) {
@@ -98,7 +99,9 @@ test('event screen and result log keep the same natural player vocabulary', asyn
     assert.doesNotMatch(panel, /Decision Window|>Event<|>Prompt<|Choice \{idx \+ 1\}|>\s*Commit\s*</);
 
     assert.match(actions, /formatEventText\(selectedOutcome\.log/);
-    assert.match(actions, /이야기 보상 ·/);
+    // 2026-09 Wave 3 I4: 문구 자체는 MSG로 옮겼다 — 훅은 MSG를 부르고, 문장은 messages.ts에 있다.
+    assert.match(actions, /MSG\.CHAIN_REWARD_STAT_BONUS\(parts\)/);
+    assert.match(messages, /CHAIN_REWARD_STAT_BONUS: \(parts: string\) => `이야기 보상 · \$\{parts\}`/);
     assert.doesNotMatch(actions, /`ATK \+|`DEF \+|`HP \+|`MP \+|\[체인 보상\]/);
     assert.doesNotMatch(smokeInjector, /\[TEST EVENT\]/);
 });
