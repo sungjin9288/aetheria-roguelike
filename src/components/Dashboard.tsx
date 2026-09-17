@@ -17,6 +17,7 @@ import {
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
+import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { FullStats, Player } from '../types/index.js';
 import ArchiveTabButton from './ArchiveTabButton';
 import EquipmentPanel from './EquipmentPanel';
@@ -87,7 +88,10 @@ const Dashboard = ({
     const resetConfirmationRef = useRef<HTMLDivElement>(null);
     const resetConfirmButtonRef = useRef<HTMLButtonElement>(null);
     const isInSafeZone = DB.MAPS[player?.loc as string]?.type === 'safe';
-    const hasCompletableQuest = (player?.quests || []).some((quest: any) => quest.done && !quest.claimed);
+    // W2 (Wave 5): 기존 조건은 `quest.done && !quest.claimed`였는데 QuestProgressState에는
+    //   done / claimed 필드를 쓰는 생산자가 없어 배지가 영원히 뜨지 않았다. 청구 가능
+    //   판정의 단일 진실 원천(QuestBoardPanel과 동일)인 getClaimableQuestEntries로 교체.
+    const hasCompletableQuest = getClaimableQuestEntries(player).length > 0;
     const activeTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
     const ActiveTabIcon = activeTab.icon;
 

@@ -1,10 +1,13 @@
+import type { Dispatch } from 'react';
 import { ITEMS } from '../data/items.js';
-import type { CodexCategory, Item, Player, Achievement } from "../types/index.js";
+import type { CodexCategory, Item, Player, Achievement, Quest, QuestProgressState } from "../types/index.js";
+import type { QuestReward } from '../types/quest.js';
+import type { GameAction } from '../reducers/gameReducer.js';
 import { DB } from '../data/db.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { getWeaponMagicSkills } from './equipmentUtils.js';
 import { DEFAULT_EXPLORE_STATE } from './explorationPacing.js';
-import { TITLES, TITLE_PASSIVES } from '../data/titles.js';
+import { TITLES, TITLE_PASSIVES, type TitlePassive } from '../data/titles.js';
 import { PREMIUM_SHOP } from '../data/premiumShop.js';
 import { getRunBuildProfile, getTraitSkill } from './runProfileUtils.js';
 import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager.js';
@@ -20,13 +23,24 @@ import {
 
 export { countDiscoveredSignatures } from './signatureDiscovery.js';
 
+/** `TITLES` 배열 원소 — 칭호 정의(조건/색상)를 데이터에서 그대로 도출한 타입. */
+type TitleDef = (typeof TITLES)[number];
+
 // --- 공유 유틸리티 (Shared Utilities) ---
-/** 배열이 아닌 값을 빈 배열로 안전하게 변환 */
-export const toArray = (v: any) => (Array.isArray(v) ? v : []);
+/**
+ * 배열이 아닌 값을 빈 배열로 안전하게 변환.
+ * `= any` 기본값 — 이 모듈 안에서는 `player.quests`/`cls.skills`처럼 타입이 있는
+ * 인자로 호출해 제네릭이 그 원소 타입으로 추론되지만, 외부의 수많은 훅 팩토리
+ * (`hooks/gameActions/*` 등)는 deps 매개변수 자체가 `any` 타입이라 그 값을 그대로
+ * 넘긴다. 기본값 없이 `<T,>`만 쓰면 그 경로에서 T가 `unknown`으로 추론되어(진짜
+ * `any`가 아니다) 호출부의 이후 truthy 좁히기가 `{}`로 붕괴해 기존에 통과하던
+ * 속성 접근이 전부 컴파일 에러가 된다 — `= any`가 그 하위 호환 경로를 보존한다.
+ */
+export const toArray = <T = any,>(v: T[] | null | undefined): T[] => (Array.isArray(v) ? v : []);
 
 /** 플레이어의 직업 스킬 목록을 반환 (패시브 제외 — 전투용 액티브 스킬만) */
 export const getJobSkills = (player: Player) => {
-    const classSkills = toArray(DB.CLASSES[player?.job as string]?.skills).filter((s: any) => !s.passive);
+    const classSkills = toArray(DB.CLASSES[player?.job as string]?.skills).filter((s) => !s.passive);
     // cycle 631: equip || {} 명시 — explicit default-elimination caller-side
     //   conversion. player.equip undefined인 경우 getWeaponMagicSkills 내부
     //   default {} 의존이었으나 cycle 631에서 default 제거.
@@ -45,7 +59,7 @@ export const getPassiveSkillBonuses = (player: Player) => {
     const cls = DB.CLASSES[player?.job as string];
     const bonus = { hp: 0, mp: 0, atk: 0, def: 0, crit: 0, goldMult: 0, expMult: 0, lowHpAtkMult: 1 };
     if (!cls) return bonus;
-    toArray(cls.skills).filter((s: any) => s.passive).forEach((s: any) => {
+    toArray(cls.skills).filter((s) => s.passive).forEach((s) => {
         if (s.effect === 'hp_up')   bonus.hp   += (s.val || 0);
         if (s.effect === 'mp_up')   bonus.mp   += (s.val || 0);
         if (s.effect === 'atk_up')  bonus.atk  += (s.val || 0);
@@ -101,7 +115,7 @@ export const findItemByName = (name: string | undefined) => getAllItems().find((
  */
 // cycle 556: reward default {} 제거 — 3 callers (QuestBoardPanel/QuestTab/
 //   AchievementPanel) 모두 reward 명시 전달이라 default 도달 불가.
-export const formatRewardParts = (reward: any) => {
+export const formatRewardParts = (reward: QuestReward) => {
     const parts = [];
     if (reward.exp) parts.push(`경험 ${reward.exp}`);
     if (reward.gold) parts.push(`골드 ${reward.gold}`);
@@ -110,26 +124,29 @@ export const formatRewardParts = (reward: any) => {
     return parts;
 };
 
+/** 칭호 토큰 — 소비처(SystemTab/RunSummaryCard/statsCalculator 등)가 넘기는 `player.activeTitle`/`player.titles[i]` 형태. */
+type TitleToken = string | null | undefined;
+
 /** 칭호 메타데이터 조회 */
-export const getTitleDefinition = (token: any) => TITLES.find((title: any) => title.id === token) || null;
+export const getTitleDefinition = (token: TitleToken): TitleDef | null => TITLES.find((title) => title.id === token) || null;
 
 /** 칭호 표시 이름 반환 (ID 또는 문자열 모두 지원) */
-export const getTitleLabel = (token: any) => {
+export const getTitleLabel = (token: TitleToken) => {
     if (!token) return '';
     return getTitleDefinition(token)?.name || String(token);
 };
 
 /** 칭호 색상 반환 */
-export const getTitleColor = (token: any) => getTitleDefinition(token)?.color || 'text-cyber-purple';
+export const getTitleColor = (token: TitleToken) => getTitleDefinition(token)?.color || 'text-cyber-purple';
 
 /** 칭호 패시브 메타 조회 */
-export const getTitlePassive = (token: any) => {
+export const getTitlePassive = (token: TitleToken): TitlePassive | null => {
     if (!token) return null;
     return TITLE_PASSIVES[token] || null;
 };
 
 /** 칭호 패시브 표시 문구 */
-export const getTitlePassiveLabel = (token: any) => {
+export const getTitlePassiveLabel = (token: TitleToken) => {
     const passive = getTitlePassive(token);
     return passive?.label || '패시브 없음';
 };
@@ -138,7 +155,7 @@ export const getTitlePassiveLabel = (token: any) => {
  * 아이템/몬스터를 도감에 등록 (immutable — 새 player 반환)
  * 2026-09 B3: category를 CodexCategory로 좁힘 — JSDoc에만 있던 계약을 타입으로 옮겼다.
  */
-export const registerCodex = (player: Player, category: CodexCategory, name: any) => {
+export const registerCodex = (player: Player, category: CodexCategory, name: string | undefined) => {
     if (!name || !category) return player;
     const codex = player.stats?.codex || {};
     const cat = codex[category] || {};
@@ -162,11 +179,11 @@ export const registerCodex = (player: Player, category: CodexCategory, name: any
  * cycle 193: 신규 codex 등록 수 카운트 — SEASON_XP.codexDiscover dispatch 신호용.
  *   registerCodex/registerLootToCodex 호출 전후 codex 카테고리 사이즈 비교로 카운트.
  */
-const countCodexEntries = (player: Player) => {
-    const codex: any = player.stats?.codex || {};
+const countCodexEntries = (player: Player): number => {
+    const codex = player.stats?.codex || {};
     let total = 0;
     for (const cat of Object.values(codex)) {
-        if (cat && typeof cat === 'object') total += Object.keys(cat as any).length;
+        if (cat && typeof cat === 'object') total += Object.keys(cat).length;
     }
     return total;
 };
@@ -175,10 +192,10 @@ const countCodexEntries = (player: Player) => {
  * loot 아이템 배열을 codex에 일괄 등록
  * @returns updated player (caller가 prev player와 countCodexEntries 비교로 신규 수 판정).
  */
-export const registerLootToCodex = (player: Player, lootItems: any) => {
+export const registerLootToCodex = (player: Player, lootItems: Item[]): Player => {
     let p = player;
     for (const item of lootItems) {
-        const cat = item.type === 'weapon' ? 'weapons'
+        const cat: CodexCategory | null = item.type === 'weapon' ? 'weapons'
             : item.type === 'armor' ? 'armors'
             : item.type === 'shield' ? 'shields'
             : item.type === 'mat' ? 'materials' : null;
@@ -215,13 +232,22 @@ export const grantGold = (player: Player, amount: number) => {
     };
 };
 
+/** `getActiveQuestEntries()`가 만드는 진행 중 퀘스트 1건 — `quest`는 현상수배(`isBounty`)면 `QuestProgressState` 자체, 그 외엔 `DB.QUESTS` 카탈로그 원본. */
+interface ActiveQuestEntry {
+    id: QuestProgressState['id'];
+    quest: Quest;
+    progress: number;
+    isBounty: boolean;
+    isComplete: boolean;
+}
+
 /** 플레이어의 활성 퀘스트를 화면 렌더링용으로 정규화 */
-export const getActiveQuestEntries = (player: Player) => (
+export const getActiveQuestEntries = (player: Player): ActiveQuestEntry[] => (
     toArray(player?.quests)
-        .map((questState: any) => {
-            const quest = questState?.isBounty
+        .map((questState: QuestProgressState): ActiveQuestEntry | null => {
+            const quest: Quest | undefined = questState?.isBounty
                 ? questState
-                : DB.QUESTS.find((entry: any) => entry.id === questState?.id);
+                : DB.QUESTS.find((entry) => entry.id === questState?.id);
             if (!quest) return null;
 
             const progress = questState?.progress || 0;
@@ -233,7 +259,7 @@ export const getActiveQuestEntries = (player: Player) => (
                 isComplete: progress >= (quest.goal || 0),
             };
         })
-        .filter(Boolean)
+        .filter((entry): entry is ActiveQuestEntry => entry !== null)
 );
 
 /** 업적 진행값 계산 */
@@ -268,7 +294,7 @@ export const isAchievementUnlocked = (achievement: Achievement, player: Player) 
 );
 
 // Milestone Utility
-export const checkMilestones = (killRegistry: any, lastKillName: any) => {
+export const checkMilestones = (killRegistry: Record<string, number>, lastKillName: string) => {
     const rewards = [];
     const count = killRegistry[lastKillName] || 0;
 
@@ -297,9 +323,9 @@ export { migrateData } from './dataMigration.js';
  * @param {object} player
  * @returns {string[]} 새로 해금된 칭호 ID 목록
  */
-export const checkTitles = (player: Player) => {
+export const checkTitles = (player: Player): string[] => {
     const existing = new Set(player.titles || []);
-    return TITLES.filter((t: any) => {
+    return TITLES.filter((t) => {
         if (existing.has(t.id)) return false;
         const { type, val } = t.cond;
         if (type === 'kills')          return (player.stats?.kills         || 0) >= val;
@@ -318,7 +344,7 @@ export const checkTitles = (player: Player) => {
         //   선구자 / 정복자 / 마스터)을 정식 등록할 때 도입. CLAIM_SEASON_REWARD가 직접 grant하지만
         //   checkTitles에도 fallback handler를 추가해 복구 케이스(저장 손실 / migration 등) 보호.
         //   cycle 199 'prestigeRank' 회귀와 동일 패턴.
-        if (type === 'seasonTier')     return ((player as any).seasonPass?.tier || 0) >= val;
+        if (type === 'seasonTier')     return (player.seasonPass?.tier || 0) >= val;
         // cycle 260: 'questReward' cond.type — cycle 209 quest reward title grant 후 잔존
         //   누락. claimQuestReward가 직접 grant하지만 checkTitles에 fallback 없어 저장 손실 시
         //   영구 복구 불가하던 회귀. stats.claimedQuestIds 영구 ledger와 매칭. cycle 199 / 201
@@ -336,8 +362,8 @@ export const checkTitles = (player: Player) => {
                 ? player.stats.cosmeticTitles
                 : [];
             if (ownedEnglishIds.length === 0) return false;
-            const cosmeticDef = (PREMIUM_SHOP as any)?.cosmeticTitles?.find(
-                (c: any) => c?.name === t.id
+            const cosmeticDef = PREMIUM_SHOP.cosmeticTitles.find(
+                (c) => c?.name === t.id
             );
             return Boolean(cosmeticDef && ownedEnglishIds.includes(cosmeticDef.id));
         }
@@ -358,20 +384,20 @@ export const checkTitles = (player: Player) => {
         }
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
-        if (type === 'explores')       return ((player.stats as any)?.explores || 0) >= val;
+        if (type === 'explores')       return (player.stats?.explores || 0) >= val;
         // cycle 83: 'discoveries' 시맨틱 통일 — visitedMaps.length(맵 발견 수)로 교체.
         // cartographer("지도 제작자") 칭호가 stats.discoveries(이벤트 카운터)만으로 풀리던
         // 회귀 수정. achievement(target='discoveries') 정합성 기준선과 일치시킴.
-        if (type === 'discoveries')    return ((player.stats as any)?.visitedMaps || []).length >= val;
+        if (type === 'discoveries')    return (player.stats?.visitedMaps || []).length >= val;
         // cycle 77: 도주 카운터 기반 칭호 (cautious_explorer / survivor_instinct).
-        if (type === 'escapes')        return ((player.stats as any)?.escapes || 0) >= val;
+        if (type === 'escapes')        return (player.stats?.escapes || 0) >= val;
         if (type === 'signaturesDiscovered') {
             // cycle 75: codex 합집합 크기 근사 → SIGNATURE_REGISTRY 교집합 정확 카운트로 교체.
             // 기존 근사는 일반 weapon/armor/shield까지 포함되어 칭호가 의도보다 일찍 풀렸음.
             return countDiscoveredSignatures(player) >= val;
         }
         return false;
-    }).map((t: any) => t.id);
+    }).map((t) => t.id);
 };
 
 /**
@@ -379,13 +405,13 @@ export const checkTitles = (player: Player) => {
  * useCombatActions, useGameActions, useInventoryActions에서 동일하게 쓰이는 패턴을 통합합니다.
  * @param {Function} dispatch - Redux dispatch
  * @param {Function} addLog - 로그 출력 함수
- * @returns {Function} (updatedPlayer: any) => void
+ * @returns {Function} (updatedPlayer: Player) => void
  */
-export const makeEmitTitles = (dispatch: any, addLog: any) => (updatedPlayer: any) => {
+export const makeEmitTitles = (dispatch: Dispatch<GameAction>, addLog: (type: string, text: string) => void) => (updatedPlayer: Player) => {
     const newTitles = checkTitles(updatedPlayer);
     if (newTitles.length > 0) {
         dispatch({ type: AT.UNLOCK_TITLES, payload: newTitles });
-        newTitles.forEach((id: any) => addLog('system', MSG.TITLE_UNLOCKED(getTitleLabel(id))));
+        newTitles.forEach((id) => addLog('system', MSG.TITLE_UNLOCKED(getTitleLabel(id))));
     }
 };
 
@@ -395,15 +421,16 @@ export const makeEmitTitles = (dispatch: any, addLog: any) => (updatedPlayer: an
  * @param {object} player - 최종 플레이어 상태
  * @param {string} loc - 사망 위치 (player.loc).
  */
-export const buildRunSummary = (player: Player, loc: any) => {
+export const buildRunSummary = (player: Player, loc: string | undefined) => {
     const buildProfile = getRunBuildProfile(player, { maxHp: player.maxHp });
     const recentBattles = (player.stats?.recentBattles || []).slice(-20);
     const currentRun = getCurrentRunSnapshot(player.stats || {});
 
     // 이 런에서 획득한 signature — inventory + equip 합산, 중복 제거
     const signatureSet = new Set<string>();
-    const collectSignature = (item: any) => {
-        if (isSignatureName(item?.name)) signatureSet.add(item.name);
+    const collectSignature = (item: Item | null | undefined) => {
+        const name = item?.name;
+        if (isSignatureName(name)) signatureSet.add(name);
     };
     (player?.inv || []).forEach(collectSignature);
     collectSignature(player?.equip?.weapon);
@@ -426,7 +453,7 @@ export const buildRunSummary = (player: Player, loc: any) => {
         //   어디에서도 summary.buildTags read 0건이던 dead output.
         difficultyLabel: getDifficultyMults(calcPerformanceScore(player)).label,
         recentWinRate: recentBattles.length > 0
-            ? Math.round((recentBattles.filter((battle: any) => battle.result === 'win').length / recentBattles.length) * 100)
+            ? Math.round((recentBattles.filter((battle) => battle.result === 'win').length / recentBattles.length) * 100)
             : null,
         signaturesAcquired: signatureNames.length,
         signatureNames,

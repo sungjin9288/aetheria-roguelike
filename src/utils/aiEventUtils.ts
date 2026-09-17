@@ -6,15 +6,35 @@ import { findItemByName } from './gameUtils.js';
 const RECENT_HISTORY_LIMIT = 6;
 const RECENT_EVENT_LIMIT = 8;
 
-const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
+/**
+ * 최근 사건 기록 1건 — `player.history`(`EventHistoryEntry`, `event`/`choice`/`outcome`
+ * 3필드)가 정식 생산자지만, 이 모듈은 구형 별칭(`desc`/`text`/`result`)도 런타임
+ * 관용으로 읽는다(`types/player.ts`의 `EventHistoryEntry` 주석 참고). 그래서 셋 다
+ * optional인 완화된 로컬 타입을 쓴다 — 신뢰 경계 밖 데이터를 다루는 지점이라
+ * `Record<string, unknown>` 대신 실제 읽는 필드만 좁혀서 선언했다.
+ */
+interface HistoryEntryLike {
+    event?: string;
+    desc?: string;
+    text?: string;
+    choice?: string;
+    outcome?: string;
+    result?: string;
+}
+
+/** AI 모델 / 폴백 풀이 주는 선택지 원본 — 문자열 그대로거나 `{text}`/`{label}` 래핑. */
+type ChoiceLike = string | { text?: string; label?: string } | null | undefined;
+
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 // cycle 522: fallback default 0 제거 — 8 internal callsite 모두 fallback 명시
 //   (1/120/60/idx/0×4)이라 default 0 도달 불가. util default 청소 메가 시리즈
 //   19번째 (cycle 502-521).
-const toInt = (value: any, fallback: any) => (Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback);
+// value: unknown — 모델 출력/구형 세이브 등 신뢰할 수 없는 원본이 그대로 들어온다.
+const toInt = (value: unknown, fallback: number) => (Number.isFinite(Number(value)) ? Math.trunc(Number(value)) : fallback);
 // cycle 292: export 제거 — aiEventUtils 내부 14회 사용만, 외부 consumer 0건.
-const normalizeText = (value: any, fallback: any = '') => String(value || fallback).replace(/\s+/g, ' ').trim();
+const normalizeText = (value: unknown, fallback: string = '') => String(value || fallback).replace(/\s+/g, ' ').trim();
 
-const normalizeChoiceText = (choice: any, idx: any) => {
+const normalizeChoiceText = (choice: ChoiceLike, idx: number) => {
     const raw = typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`;
     return normalizeText(raw.replace(/^\d+\s*[.)-]?\s*/, ''), `선택지 ${idx + 1}`);
 };
@@ -22,9 +42,9 @@ const normalizeChoiceText = (choice: any, idx: any) => {
 // cycle 527: choices default [] 제거 — 1 internal callsite (line 251)
 //   dedupeChoices([...rawChoices, ...fallbackChoices])가 spread 배열 명시
 //   전달이라 default 도달 불가. util default 청소 메가 시리즈 24번째 batch.
-const dedupeChoices = (choices: any[]) => {
-    const seen = new Set();
-    return choices.filter((choice: any) => {
+const dedupeChoices = (choices: string[]) => {
+    const seen = new Set<string>();
+    return choices.filter((choice) => {
         const key = normalizeText(choice).toLowerCase();
         if (!key || seen.has(key)) return false;
         seen.add(key);
@@ -36,9 +56,9 @@ const dedupeChoices = (choices: any[]) => {
 //   모두 history 명시 전달이라 default 도달 불가. limit default 보존
 //   (모두 미전달 reachable, partial cleanup 8번째). body의 Array.isArray
 //   guard는 undefined 안전 처리.
-export const summarizeHistory = (history: any[], limit = RECENT_HISTORY_LIMIT) => (
+export const summarizeHistory = (history: HistoryEntryLike[] | undefined, limit = RECENT_HISTORY_LIMIT) => (
     Array.isArray(history)
-        ? history.slice(-limit).map((entry: any) => {
+        ? history.slice(-limit).map((entry) => {
             if (!entry || typeof entry !== 'object') return null;
             const event = normalizeText(entry.event || entry.desc || entry.text);
             const choice = normalizeText(entry.choice);
@@ -51,11 +71,11 @@ export const summarizeHistory = (history: any[], limit = RECENT_HISTORY_LIMIT) =
 // cycle 603: history default [] 제거 — 2 callers (aiService:81 + internal:545)
 //   모두 history 명시 전달이라 default 도달 불가. limit default 보존
 //   (reachable). body의 Array.isArray(history) guard는 undefined 안전 처리.
-export const getRecentEventSet = (history: any[], limit = RECENT_EVENT_LIMIT) => (
+export const getRecentEventSet = (history: HistoryEntryLike[] | undefined, limit = RECENT_EVENT_LIMIT) => (
     new Set(
         (Array.isArray(history) ? history : [])
             .slice(-limit)
-            .map((entry: any) => normalizeText(entry?.event || entry?.desc || entry?.text))
+            .map((entry) => normalizeText(entry?.event || entry?.desc || entry?.text))
             .filter(Boolean)
     )
 );
@@ -63,7 +83,7 @@ export const getRecentEventSet = (history: any[], limit = RECENT_EVENT_LIMIT) =>
 // cycle 525: value default '' 제거 — 1 callsite (line 130) hashString이
 //   template literal로 string 보장 후 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 22번째 batch (cycle 502-524).
-const hashString = (value: any) => {
+const hashString = (value: string) => {
     let hash = 0;
     for (let i = 0; i < value.length; i += 1) {
         hash = ((hash << 5) - hash) + value.charCodeAt(i);
@@ -73,7 +93,7 @@ const hashString = (value: any) => {
 };
 
 // cycle 318: export 제거 — aiEventUtils 내부 3회 사용만, 외부 호출 0건.
-const getPoolKeyByLocation = (loc: string) => {
+const getPoolKeyByLocation = (loc: string | undefined) => {
     const keyByKeyword = [
         { key: 'forest', words: ['숲'] },
         { key: 'ruins', words: ['폐허', '광산', '신전'] },
@@ -87,7 +107,7 @@ const getPoolKeyByLocation = (loc: string) => {
         { key: 'sky', words: ['천공', '공중 신전'] },
         { key: 'deepsea', words: ['심해'] },
         { key: 'gate', words: ['에테르', '관문'] },
-    ].find((entry: any) => entry.words.some((word: any) => String(loc || '').includes(word)));
+    ].find((entry) => entry.words.some((word) => String(loc || '').includes(word)));
 
     return keyByKeyword?.key || 'default';
 };
@@ -128,18 +148,21 @@ const SAFE_KEYWORDS = ['관찰', '해독', '조심', '우회', '분석', '기록
 const RETREAT_KEYWORDS = ['돌아', '되돌아', '후퇴', '철수', '포기', '무시', '지나친', '대기', '기다린다', '눈을 감는다', '도망'];
 const RISKY_KEYWORDS = ['만진다', '달린다', '강제로', '뛰어내', '기습', '정면 돌파', '직접 진입', '접촉', '전투 준비', '파괴', '돌파', '재가동', '강제 해제', '연다', '추적', '공명 강화'];
 
+/** 선택지 문구를 어휘 매칭으로 분류한 스타일 — `buildProceduralOutcome`의 절차적 결과 분기 키. */
+type ChoiceStyle = 'retreat' | 'risky' | 'safe' | 'balanced';
+
 // cycle 525: choiceText default '' 제거 — 1 internal callsite (line 131
 //   classifyChoice(choice)) + 4 test callsite 모두 string 명시이라 default
 //   도달 불가. body normalizeText(choiceText)가 자체 fallback 처리.
-export const classifyChoice = (choiceText: any) => {
+export const classifyChoice = (choiceText: unknown): ChoiceStyle => {
     const choice = normalizeText(choiceText);
-    if (RETREAT_KEYWORDS.some((keyword: any) => choice.includes(keyword))) return 'retreat';
-    if (RISKY_KEYWORDS.some((keyword: any) => choice.includes(keyword))) return 'risky';
-    if (SAFE_KEYWORDS.some((keyword: any) => choice.includes(keyword))) return 'safe';
+    if (RETREAT_KEYWORDS.some((keyword) => choice.includes(keyword))) return 'retreat';
+    if (RISKY_KEYWORDS.some((keyword) => choice.includes(keyword))) return 'risky';
+    if (SAFE_KEYWORDS.some((keyword) => choice.includes(keyword))) return 'safe';
     return 'balanced';
 };
 
-const pickRewardItem = (poolKey: any, seed: any, level: any) => {
+const pickRewardItem = (poolKey: string, seed: number, level: number) => {
     const pool = ITEM_REWARD_BY_POOL[poolKey] || ITEM_REWARD_BY_POOL.default;
     if (!pool || pool.length === 0) return null;
     const threshold = level >= 25 ? 3 : level >= 10 ? 4 : 5;
@@ -169,8 +192,29 @@ const pickSpecialKind = (seed: number) => {
     return kinds[kinds.length - 1];
 };
 
+/**
+ * AI/폴백 이벤트 컨텍스트 — `hooks/gameActions/exploreActions.ts`가 조립해 `AI_SERVICE`
+ * 경유로 이 모듈까지 전달한다. `playerSnapshot`/`mapSnapshot`은 스냅샷 소비 지점마다
+ * 읽는 필드가 달라 여기서는 실제로 읽는 부분집합만 선언한다(나머지는 조립부 전용).
+ */
+export interface EventContext {
+    location?: string;
+    source?: string;
+    /** normalizeOutcomes가 buildProceduralOutcome 호출 전 병합해 넣는 이벤트 본문. */
+    desc?: string;
+    playerSnapshot?: {
+        level?: number;
+        hp?: number;
+        maxHp?: number;
+        maxMp?: number;
+    };
+    mapSnapshot?: {
+        level?: number;
+    };
+}
+
 /** 생명이 바닥일 때 정예 조우로 밀어 넣지 않는다 — "부당한 죽음 금지" 규칙. */
-const isLowHp = (context: any) => {
+const isLowHp = (context: EventContext | undefined) => {
     const hp = Number(context?.playerSnapshot?.hp);
     const maxHp = Number(context?.playerSnapshot?.maxHp);
     if (!Number.isFinite(hp) || !Number.isFinite(maxHp) || maxHp <= 0) return false;
@@ -195,7 +239,7 @@ const buildSpecialPayload = (kind: string, seed: number) => {
 };
 
 /** "위험" 선택 — EVENT_RISKY_SPECIAL_CHANCE 확률로 특수 결과 1건만 얹는다. */
-const buildRiskySpecial = (seed: number, context: any) => {
+const buildRiskySpecial = (seed: number, context: EventContext | undefined) => {
     if (seedRoll('special', seed) >= BALANCE.EVENT_RISKY_SPECIAL_CHANCE) return null;
     const rolled = pickSpecialKind(seed);
     const kind = rolled === 'elite' && isLowHp(context) ? 'status' : rolled;
@@ -208,10 +252,17 @@ const buildBalancedSpecial = (seed: number) => {
     return { kind: 'buff', payload: buildSpecialPayload('buff', seed), logSuffix: SPECIAL_LOG_SUFFIX.buff };
 };
 
+interface ProceduralOutcomeInput {
+    desc: string;
+    choice: string;
+    choiceIndex: number;
+    context: EventContext;
+}
+
 // cycle 561: outer + inner context defaults 제거 — 1 internal callsite (line
 //   236)가 완전 object 명시 전달이라 두 default 모두 도달 불가. 청소 메가
 //   시리즈 54번째 batch (cycle 502-560).
-const buildProceduralOutcome = ({ desc, choice, choiceIndex, context }: any) => {
+const buildProceduralOutcome = ({ desc, choice, choiceIndex, context }: ProceduralOutcomeInput) => {
     const seed = hashString(`${context.location || ''}|${desc}|${choice}|${choiceIndex}`);
     const style = classifyChoice(choice);
     const level = Math.max(1, toInt(context?.playerSnapshot?.level || context?.mapSnapshot?.level || 1, 1));
@@ -296,20 +347,32 @@ const buildProceduralOutcome = ({ desc, choice, choiceIndex, context }: any) => 
 //   여기서 생명 감소 어휘를 새로 늘리지 않는 것으로 같이 지킨다.
 // ─────────────────────────────────────────────────────────────────────────────
 
+/**
+ * 확장 어휘 4종(relic/status/elite/buff)의 원본은 AI 모델 출력이거나 폴백 풀 저작
+ * 데이터라 신뢰할 수 없다 — `unknown`으로 받고 화이트리스트 검증 후에만 좁힌다.
+ * `Record<string, unknown>` 캐스트는 "object인지 확인한 다음 필드를 읽는다"는
+ * 동일 런타임 동작을 타입으로 표현한 것뿐, 검증 자체는 그대로다.
+ */
+const asRecord = (raw: unknown): Record<string, unknown> | null => (
+    raw && typeof raw === 'object' ? raw as Record<string, unknown> : null
+);
+
 /** relic: { count: 1..EVENT_RELIC_MAX_COUNT } — 유물 "선택지"를 여는 수. */
-const normalizeRelicOutcome = (raw: any) => {
+const normalizeRelicOutcome = (raw: unknown) => {
     if (raw === true) return { count: 1 };
-    if (!raw || typeof raw !== 'object') return null;
-    return { count: clamp(toInt(raw.count, 1), 1, BALANCE.EVENT_RELIC_MAX_COUNT) };
+    const obj = asRecord(raw);
+    if (!obj) return null;
+    return { count: clamp(toInt(obj.count, 1), 1, BALANCE.EVENT_RELIC_MAX_COUNT) };
 };
 
 /** status: { id: <BALANCE.EVENT_STATUS_IDS>, turns?: 1..EVENT_STATUS_MAX_TURNS }. */
-const normalizeStatusOutcome = (raw: any) => {
+const normalizeStatusOutcome = (raw: unknown) => {
     if (!raw) return null;
-    const id = normalizeText(typeof raw === 'string' ? raw : (raw.id || raw.effect));
+    const obj = typeof raw === 'string' ? null : asRecord(raw);
+    const id = normalizeText(typeof raw === 'string' ? raw : (obj?.id || obj?.effect));
     if (!BALANCE.EVENT_STATUS_IDS.includes(id)) return null;
     const turns = clamp(
-        toInt(typeof raw === 'string' ? BALANCE.EVENT_SPECIAL_STATUS_TURNS : raw.turns, BALANCE.EVENT_SPECIAL_STATUS_TURNS),
+        toInt(typeof raw === 'string' ? BALANCE.EVENT_SPECIAL_STATUS_TURNS : obj?.turns, BALANCE.EVENT_SPECIAL_STATUS_TURNS),
         1,
         BALANCE.EVENT_STATUS_MAX_TURNS,
     );
@@ -317,22 +380,23 @@ const normalizeStatusOutcome = (raw: any) => {
 };
 
 /** elite: true — 즉시 정예 조우. 문자열/숫자 truthy는 받지 않는다(오탐 방지). */
-const normalizeEliteOutcome = (raw: any) => (raw === true || raw === 'true' ? true : null);
+const normalizeEliteOutcome = (raw: unknown): true | null => (raw === true || raw === 'true' ? true : null);
 
 /** 버프 배율 — 1 이하(디버프/무효)는 드롭, 상한은 EVENT_BUFF_MAX_MULT. */
-const normalizeBuffMult = (raw: any) => {
+const normalizeBuffMult = (raw: unknown) => {
     const value = Number(raw);
     if (!Number.isFinite(value) || value <= 1) return 0;
     return Math.min(BALANCE.EVENT_BUFF_MAX_MULT, Math.round(value * 100) / 100);
 };
 
 /** buff: { atkMult?, defMult?, turns } — consumer가 tempBuff로 환산한다. */
-const normalizeBuffOutcome = (raw: any) => {
-    if (!raw || typeof raw !== 'object') return null;
-    const turns = clamp(toInt(raw.turns ?? raw.turn, 0), 0, BALANCE.EVENT_BUFF_MAX_TURNS);
+const normalizeBuffOutcome = (raw: unknown) => {
+    const obj = asRecord(raw);
+    if (!obj) return null;
+    const turns = clamp(toInt(obj.turns ?? obj.turn, 0), 0, BALANCE.EVENT_BUFF_MAX_TURNS);
     if (turns <= 0) return null;
-    const atkMult = normalizeBuffMult(raw.atkMult);
-    const defMult = normalizeBuffMult(raw.defMult);
+    const atkMult = normalizeBuffMult(obj.atkMult);
+    const defMult = normalizeBuffMult(obj.defMult);
     if (!atkMult && !defMult) return null;
     return {
         ...(atkMult ? { atkMult } : {}),
@@ -342,12 +406,13 @@ const normalizeBuffOutcome = (raw: any) => {
 };
 
 /** 확장 어휘 4종을 한 번에 검증해 존재하는 것만 담아 돌려준다. */
-export const normalizeOutcomeSpecials = (raw: any) => {
-    if (!raw || typeof raw !== 'object') return {};
-    const relic = normalizeRelicOutcome(raw.relic);
-    const status = normalizeStatusOutcome(raw.status);
-    const elite = normalizeEliteOutcome(raw.elite);
-    const buff = normalizeBuffOutcome(raw.buff);
+export const normalizeOutcomeSpecials = (raw: unknown) => {
+    const obj = asRecord(raw);
+    if (!obj) return {};
+    const relic = normalizeRelicOutcome(obj.relic);
+    const status = normalizeStatusOutcome(obj.status);
+    const elite = normalizeEliteOutcome(obj.elite);
+    const buff = normalizeBuffOutcome(obj.buff);
     return {
         ...(relic ? { relic } : {}),
         ...(status ? { status } : {}),
@@ -356,36 +421,53 @@ export const normalizeOutcomeSpecials = (raw: any) => {
     };
 };
 
+/** `normalizeOutcomes()`가 만드는 선택지 1건의 정규화된 결과 — 저작/AI/절차적 생성 3경로가 모두 이 형태로 수렴한다. */
+interface NormalizedOutcome {
+    choiceIndex: number;
+    log: string;
+    gold: number;
+    exp: number;
+    hp: number;
+    mp: number;
+    item?: string;
+    relic?: { count: number };
+    status?: { id: string; turns: number };
+    elite?: true;
+    buff?: { atkMult?: number; defMult?: number; turns: number };
+}
+
 // cycle 527: 3 defaults (rawOutcomes/choices/context) 제거 — 1 internal callsite
 //   (line 260) normalizeOutcomes(raw.outcomes, choices, { ...context, desc })
 //   3 args 명시. choices는 dedupeChoices() 결과(항상 배열), context는 spread
 //   object. body의 Array.isArray(rawOutcomes) 가드는 raw.outcomes가 undefined
 //   인 path 보존 (caller가 raw.outcomes를 그대로 전달).
-const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => {
-    const normalized = new Map();
+// rawOutcomes: unknown — 모델 출력이라 신뢰 불가. Array.isArray가 유일한 형태 보증이다.
+const normalizeOutcomes = (rawOutcomes: unknown, choices: string[], context: EventContext): NormalizedOutcome[] => {
+    const normalized = new Map<number, NormalizedOutcome>();
 
     if (Array.isArray(rawOutcomes)) {
-        rawOutcomes.forEach((outcome: any, idx: any) => {
-            if (!outcome || typeof outcome !== 'object') return;
-            const choiceIndex = clamp(toInt(outcome.choiceIndex, idx), 0, Math.max(0, choices.length - 1));
+        rawOutcomes.forEach((outcome: unknown, idx: number) => {
+            const obj = asRecord(outcome);
+            if (!obj) return;
+            const choiceIndex = clamp(toInt(obj.choiceIndex, idx), 0, Math.max(0, choices.length - 1));
             if (!choices[choiceIndex] || normalized.has(choiceIndex)) return;
-            const itemName = normalizeText(outcome.item);
+            const itemName = normalizeText(obj.item);
             if (itemName && !findItemByName(itemName)) return;
 
             normalized.set(choiceIndex, {
                 choiceIndex,
-                log: normalizeText(outcome.log || outcome.result || outcome.text, '선택의 결과가 반영되었습니다.'),
-                gold: toInt(outcome.gold, 0),
-                exp: toInt(outcome.exp, 0),
-                hp: toInt(outcome.hp, 0),
-                mp: toInt(outcome.mp, 0),
+                log: normalizeText(obj.log || obj.result || obj.text, '선택의 결과가 반영되었습니다.'),
+                gold: toInt(obj.gold, 0),
+                exp: toInt(obj.exp, 0),
+                hp: toInt(obj.hp, 0),
+                mp: toInt(obj.mp, 0),
                 ...(itemName ? { item: itemName } : {}),
-                ...normalizeOutcomeSpecials(outcome),
+                ...normalizeOutcomeSpecials(obj),
             });
         });
     }
 
-    choices.forEach((choice: any, idx: any) => {
+    choices.forEach((choice, idx) => {
         if (normalized.has(idx)) return;
         normalized.set(idx, buildProceduralOutcome({
             desc: context.desc || '',
@@ -395,7 +477,7 @@ const normalizeOutcomes = (rawOutcomes: any[], choices: any[], context: any) => 
         }));
     });
 
-    return [...normalized.values()].sort((a: any, b: any) => a.choiceIndex - b.choiceIndex);
+    return [...normalized.values()].sort((a, b) => a.choiceIndex - b.choiceIndex);
 };
 
 // cycle 561: context default {} 제거 — 3 callers (internal:548, aiService
@@ -406,7 +488,7 @@ export interface EventPackage {
     source: string;
     desc: string;
     choices: string[];
-    outcomes: ReturnType<typeof normalizeOutcomes>;
+    outcomes: NormalizedOutcome[];
     /** aiService가 일일 한도 초과 폴백일 때만 덧붙인다. */
     fallbackReason?: 'quota';
     fallbackMessage?: string;
@@ -417,9 +499,12 @@ export interface EventPackage {
     fallbackTransactionId?: string;
 }
 
-export const buildEventPackage = (payload: any, context: any): EventPackage | null => {
-    const raw = payload?.data || payload;
-    if (!raw || typeof raw !== 'object') return null;
+// payload/context는 AI 모델 응답·호출자 조립 객체라 신뢰 불가 — unknown으로 받고
+//   asRecord로 object 여부만 확인한 뒤 필드를 읽는다(검증 로직은 그대로).
+export const buildEventPackage = (payload: unknown, context: EventContext): EventPackage | null => {
+    const payloadObj = asRecord(payload);
+    const raw = asRecord((payloadObj && payloadObj.data) || payload);
+    if (!raw) return null;
 
     const desc = normalizeText(raw.desc || raw.text || raw.event || raw.message);
     if (!desc) return null;
@@ -427,7 +512,7 @@ export const buildEventPackage = (payload: any, context: any): EventPackage | nu
     const poolKey = getPoolKeyByLocation(context.location);
     const fallbackChoices = FALLBACK_CHOICE_SETS[poolKey] || FALLBACK_CHOICE_SETS.default;
     const rawChoices = Array.isArray(raw.choices)
-        ? raw.choices.map((choice: any, idx: any) => normalizeChoiceText(choice, idx))
+        ? raw.choices.map((choice: ChoiceLike, idx: number) => normalizeChoiceText(choice, idx))
         : [];
     const choices = dedupeChoices([...rawChoices, ...fallbackChoices]).slice(0, 3);
 
@@ -453,7 +538,7 @@ export const buildEventPackage = (payload: any, context: any): EventPackage | nu
 // cycle 545: history / context defaults 제거 — 3 production caller (aiService
 //   :69/74/108) + 5 test caller 모두 3 args 명시이라 두 default 모두 도달
 //   불가. 청소 메가 시리즈 40번째 cross-file batch (cycle 502-544).
-export const pickFallbackEvent = (loc: string, history: any[], context: any, rng: () => number = Math.random): EventPackage | null => {
+export const pickFallbackEvent = (loc: string, history: HistoryEntryLike[] | undefined, context: EventContext, rng: () => number = Math.random): EventPackage | null => {
     // cycle 425: 직접 loc lookup 분기 제거 — cycle 357 이후 FALLBACK_EVENT_POOL은
     //   English category 키만 (forest/ruins/cave/...). loc 파라미터는 항상 Korean
     //   지명이라 직접 매칭 0건이었음. getPoolKeyByLocation이 유일 path.
@@ -466,9 +551,9 @@ export const pickFallbackEvent = (loc: string, history: any[], context: any, rng
         : basePool;
     const recentEvents = getRecentEventSet(history);
     const lastEvent = normalizeText((Array.isArray(history) ? history[history.length - 1] : null)?.event);
-    const filteredPool = pool.filter((event: any) => !recentEvents.has(normalizeText(event?.desc)));
+    const filteredPool = pool.filter((event) => !recentEvents.has(normalizeText(event?.desc)));
     const withoutImmediateRepeat = (filteredPool.length > 0 ? filteredPool : pool)
-        .filter((event: any) => normalizeText(event?.desc) !== lastEvent);
+        .filter((event) => normalizeText(event?.desc) !== lastEvent);
     const candidates = withoutImmediateRepeat.length > 0
         ? withoutImmediateRepeat
         : (filteredPool.length > 0 ? filteredPool : pool);

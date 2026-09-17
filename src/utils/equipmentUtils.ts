@@ -27,7 +27,11 @@ export const isShield = (item: Item | null | undefined) => item?.type === 'shiel
 
 export const isFocusOffhand = (item: Item | null | undefined) => isShield(item) && item?.subtype === 'focus';
 
-export const isOneHandWeapon = (weapon: any) => isWeapon(weapon) && !isTwoHandWeapon(weapon);
+export const isOneHandWeapon = (weapon: Item | null | undefined) => isWeapon(weapon) && !isTwoHandWeapon(weapon);
+
+/** 무기 계열 함수 공용 슬롯 — 'weapon'/'armor'/'offhand'(`EquipmentEnhanceSlot`)와 달리
+ *  양손 배율 분기가 없는 main/offhand 2종만 다룬다. */
+type WeaponEquipSlot = 'main' | 'offhand';
 
 export const getWeaponStyleLabel = (item: Item | null | undefined) => {
     if (!item) return '미장착';
@@ -59,8 +63,8 @@ export const getItemEnhanceBonus = (
 
 // cycle 511: slot default 제거 — 모든 callsite 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 9번째 (cycle 502-510).
-export const getWeaponAttackValue = (weapon: any, slot: any) => {
-    if (!isWeapon(weapon)) return 0;
+export const getWeaponAttackValue = (weapon: Item | null | undefined, slot: WeaponEquipSlot) => {
+    if (!weapon || !isWeapon(weapon)) return 0;
     const baseVal = weapon.val || 0;
 
     if (isTwoHandWeapon(weapon)) {
@@ -86,7 +90,7 @@ const getEnhancedEquipmentStatValue = (
 };
 
 // cycle 511: slot default 제거 — 모든 callsite 명시 전달이라 default 도달 불가.
-export const getWeaponCritBonus = (weapon: any, slot: any) => {
+export const getWeaponCritBonus = (weapon: Item | null | undefined, slot: WeaponEquipSlot) => {
     if (!isOneHandWeapon(weapon)) return 0;
     if (typeof weapon?.crit === 'number') return weapon.crit;
     return slot === 'offhand' ? BALANCE.OFFHAND_ONE_HAND_CRIT_BONUS : BALANCE.ONE_HAND_CRIT_BONUS;
@@ -96,7 +100,7 @@ export const getWeaponCritBonus = (weapon: any, slot: any) => {
 // cycle 518: slot default 'main' 제거 — 2 internal callsite 모두 명시 전달
 //   (mainWeapon, 'main' / offhandWeapon, 'offhand')이라 default 도달 불가.
 //   util default 청소 메가 시리즈 16번째 (cycle 502-517).
-const getWeaponEquipScore = (weapon: any, slot: any) => (
+const getWeaponEquipScore = (weapon: Item | null | undefined, slot: WeaponEquipSlot) => (
     getWeaponAttackValue(weapon, slot)
     + getItemEnhanceBonus(weapon, weapon?.enhance || 0, slot === 'offhand' ? 'offhand' : 'weapon')
     + Math.round(getWeaponCritBonus(weapon, slot) * 100)
@@ -116,15 +120,12 @@ export const getOffhandMpBonus = (item: Item | null | undefined) => (isShield(it
 //   mpBonus가 silent dead config였음. 본 헬퍼로 양 필드 모두 처리 (shield의 mp 컨벤션 + 별도 mpBonus).
 const getItemMpContribution = (item: Item | null | undefined) => {
     if (!item) return 0;
-    return ((item as any)?.mpBonus || 0) + ((item as any)?.mp || 0);
+    return (item.mpBonus || 0) + (item.mp || 0);
 };
 
 // cycle 225: armor의 hpBonus 필드 합산. 2 armors(용암 판금갑 / 용비늘 갑주)가 desc_stat에
 //   'HP+N'을 표시하지만 코드가 hpBonus를 read 안 해 합계 +230 HP가 silent dead config였음.
-const getItemHpContribution = (item: Item | null | undefined) => {
-    if (!item) return 0;
-    return ((item as any)?.hpBonus || 0);
-};
+const getItemHpContribution = (item: Item | null | undefined) => (item?.hpBonus || 0);
 
 export const getEquipmentProfile = (equip: EquipSlots) => {
     const mainWeapon = isWeapon(equip.weapon) ? equip.weapon : null;
@@ -145,12 +146,12 @@ export const getEquipmentProfile = (equip: EquipSlots) => {
         //   기존엔 offhand shield의 mp만 처리해서 weapon/armor mpBonus 4종이 silent dead.
         mpBonus: getOffhandMpBonus(offhandItem)
             + getItemMpContribution(mainWeapon)
-            + getItemMpContribution(equip.armor as any),
+            + getItemMpContribution(equip.armor),
         // cycle 225: armor의 hpBonus 필드 합산 (cycle 224 mpBonus 패턴 동일).
         //   2 armors(용암 판금갑 / 용비늘 갑주) +230 HP가 dead config이던 회귀 fix.
         //   weapon/offhand도 미래 대비 합산 — 현재 hpBonus 정의된 weapon/offhand는 0건.
         hpBonus: getItemHpContribution(mainWeapon)
-            + getItemHpContribution(equip.armor as any)
+            + getItemHpContribution(equip.armor)
             + getItemHpContribution(offhandItem),
     };
 };
@@ -207,16 +208,21 @@ export const getEquipmentScore = ({ atk, def, crit, mp }: EquipmentStatDiff): nu
 //   (line 197) pickBestOneHandPair(filter(Boolean) array, item) 2 args 명시
 //   전달이라 두 default 모두 도달 불가. body의 requiredWeapon truthy 가드는
 //   별개 보존. util default 청소 메가 시리즈 25번째 (cycle 502-527).
-const pickBestOneHandPair = (weapons: any[], requiredWeapon: any) => {
-    const candidates = weapons.filter((weapon: any) => isOneHandWeapon(weapon));
+interface WeaponPair {
+    mainWeapon: Item | null | undefined;
+    offhandWeapon: Item | null | undefined;
+}
+
+const pickBestOneHandPair = (weapons: Array<Item | null | undefined>, requiredWeapon: Item | null | undefined): WeaponPair => {
+    const candidates = weapons.filter((weapon) => isOneHandWeapon(weapon));
     if (!candidates.length) return { mainWeapon: null, offhandWeapon: null };
     if (candidates.length === 1) return { mainWeapon: candidates[0], offhandWeapon: null };
 
-    let bestPair = { mainWeapon: candidates[0], offhandWeapon: candidates[1] };
+    let bestPair: WeaponPair = { mainWeapon: candidates[0], offhandWeapon: candidates[1] };
     let bestScore = Number.NEGATIVE_INFINITY;
 
-    candidates.forEach((mainWeapon: any) => {
-        candidates.forEach((offhandWeapon: any) => {
+    candidates.forEach((mainWeapon) => {
+        candidates.forEach((offhandWeapon) => {
             if (mainWeapon === offhandWeapon) return;
             if (requiredWeapon && mainWeapon !== requiredWeapon && offhandWeapon !== requiredWeapon) return;
 
@@ -440,34 +446,54 @@ export const getSellPrice = (item: Item | null | undefined) => (
     Math.floor((item?.price || 0) * BALANCE.SELL_PRICE_RATIO)
 );
 
-export const isMagicWeapon = (weapon: any) => {
-    if (!isWeapon(weapon)) return false;
+export const isMagicWeapon = (weapon: Item | null | undefined) => {
+    if (!weapon || !isWeapon(weapon)) return false;
     if (weapon.elem && weapon.elem !== '물리') return true;
 
     const name = String(weapon.name || '');
-    return MAGIC_WEAPON_KEYWORDS.some((keyword: any) => name.includes(keyword));
+    return MAGIC_WEAPON_KEYWORDS.some((keyword) => name.includes(keyword));
 };
 
-export const isCasterWeapon = (weapon: any) => {
-    if (!isWeapon(weapon)) return false;
+export const isCasterWeapon = (weapon: Item | null | undefined) => {
+    if (!weapon || !isWeapon(weapon)) return false;
     const name = String(weapon.name || '');
-    return MAGIC_WEAPON_KEYWORDS.some((keyword: any) => name.includes(keyword));
+    return MAGIC_WEAPON_KEYWORDS.some((keyword) => name.includes(keyword));
 };
 
-export const isRangedWeapon = (weapon: any) => {
-    if (!isWeapon(weapon)) return false;
+export const isRangedWeapon = (weapon: Item | null | undefined) => {
+    if (!weapon || !isWeapon(weapon)) return false;
     const name = String(weapon.name || '');
-    return RANGED_WEAPON_KEYWORDS.some((keyword: any) => name.includes(keyword));
+    return RANGED_WEAPON_KEYWORDS.some((keyword) => name.includes(keyword));
 };
 
-export const getEquippedWeapons = (equip: EquipSlots) => {
-    const list = [];
-    if (isWeapon(equip.weapon)) list.push({ slot: 'main', weapon: equip.weapon });
-    if (isWeapon(equip.offhand)) list.push({ slot: 'offhand', weapon: equip.offhand });
+interface EquippedWeaponEntry {
+    slot: WeaponEquipSlot;
+    weapon: Item;
+}
+
+export const getEquippedWeapons = (equip: EquipSlots): EquippedWeaponEntry[] => {
+    const list: EquippedWeaponEntry[] = [];
+    const mainWeapon = equip.weapon;
+    if (mainWeapon && isWeapon(mainWeapon)) list.push({ slot: 'main', weapon: mainWeapon });
+    const offhandWeapon = equip.offhand;
+    if (offhandWeapon && isWeapon(offhandWeapon)) list.push({ slot: 'offhand', weapon: offhandWeapon });
     return list;
 };
 
-const buildWeaponSkill = ({ slot, weapon }: any) => {
+interface WeaponMagicSkill {
+    name: string;
+    type: string;
+    effect: string | undefined;
+    mult: number;
+    mp: number;
+    cooldown: number;
+    fromWeapon: true;
+    weaponName: string | undefined;
+    slot: WeaponEquipSlot;
+    desc: string;
+}
+
+const buildWeaponSkill = ({ slot, weapon }: EquippedWeaponEntry): WeaponMagicSkill => {
     const elem = weapon.elem || '물리';
     const preset = WEAPON_SKILL_BY_ELEM[elem] || WEAPON_SKILL_BY_ELEM.물리;
     const slotLabel = slot === 'offhand' ? '좌수' : '우수';
@@ -489,11 +515,11 @@ const buildWeaponSkill = ({ slot, weapon }: any) => {
     };
 };
 
-export const getWeaponMagicSkills = (equip: EquipSlots) => {
-    const skills: any[] = [];
-    const seen = new Set();
+export const getWeaponMagicSkills = (equip: EquipSlots): WeaponMagicSkill[] => {
+    const skills: WeaponMagicSkill[] = [];
+    const seen = new Set<string>();
 
-    getEquippedWeapons(equip).forEach((entry: any) => {
+    getEquippedWeapons(equip).forEach((entry) => {
         if (!isMagicWeapon(entry.weapon)) return;
         const skill = buildWeaponSkill(entry);
         if (seen.has(skill.name)) return;

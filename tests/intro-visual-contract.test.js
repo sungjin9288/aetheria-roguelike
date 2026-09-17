@@ -33,6 +33,23 @@ test('intro uses one immersive scene and keeps advanced rules optional', async (
     assert.doesNotMatch(intro, /<details[^>]*open/);
 });
 
+test('intro root paints at full opacity immediately, only the background image fades', async () => {
+    const intro = await readSource('src/components/IntroScreen.tsx');
+
+    const rootTagMatch = intro.match(/<[A-Za-z.]+\s+data-testid="intro-screen"[\s\S]*?>/);
+    assert.ok(rootTagMatch, 'intro-screen root element not found');
+    assert.doesNotMatch(
+        rootTagMatch[0],
+        /initial=\{\{\s*opacity:\s*0/,
+        'root must not start at opacity:0 — Chromium will not count paints inside it toward FCP',
+    );
+
+    const backgroundTagMatch = intro.match(/<[A-Za-z.]+\s+data-testid="intro-background"[\s\S]*?\/?>/);
+    assert.ok(backgroundTagMatch, 'intro-background element not found');
+    assert.match(backgroundTagMatch[0], /initial=\{\{\s*opacity:\s*0/);
+    assert.match(backgroundTagMatch[0], /animate=\{\{\s*opacity:\s*1/);
+});
+
 test('performance guard keeps working after the visible terminal is removed', async () => {
     const perfGuard = await readSource('scripts/perf-guard.mjs');
 

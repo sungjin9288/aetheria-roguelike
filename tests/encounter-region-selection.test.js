@@ -11,6 +11,33 @@ import {
     selectEncounterRegions,
 } from '../scripts/select-bounded-encounter-regions.mjs';
 
+/**
+ * 원래 계약 (이 파일은 W3-A 대상 중 유일하게 이미 "행동 테스트"였다 — 소스를
+ * 텍스트로 읽어 정규식을 매치하는 게 아니라 `scripts/select-bounded-encounter-regions.mjs`의
+ * 실제 export(`selectEncounterRegions`/`buildEncounterRegionSelection`)를 import해서
+ * 직접 호출하고 반환값/throw를 검증한다):
+ *   1. selectEncounterRegions: accepted+human-observed+non-safe 액션만 카운트해
+ *      횟수·유니코드 타이브레이크로 지역을 고른다. rejected/synthetic(testMarker)/
+ *      미관측/중복 관측 시퀀스/후보 ID·소스 다이제스트 불일치/관측 지역 2개 미만/
+ *      신선한 관측 5개 미만은 모두 실패로 닫힌다(fail closed).
+ *   2. buildEncounterRegionSelection: 완전한 5개 관측 세션(candidate 바인딩·인간
+ *      관측·신선 상태·비동기 마커 아님·첫 화면/행동 타이밍·전투 도달·안전 귀환·
+ *      저장/복원·백그라운드 복원·(모바일이면 적용 가능한 뒤로가기 통과)·outcome pass)
+ *      이 모두 갖춰져야만 지역을 활성화하고, P0/차단 P1 이슈가 있으면 막는다.
+ *      비차단 P1/P2는 집계에는 들어가되 원문(note 등)은 금지한다. 고아 액션/이슈,
+ *      시퀀스 비연속도 fail closed. 결과는 schemaVersion/enabled/surfaceCounts/
+ *      issueCounts/selectedRegions/counts/observationDigestSha256를 담는다.
+ *   3. CLI(select-bounded-encounter-regions.mjs)는 증거가 부족하면 아무 출력도
+ *      남기지 않고 실패 종료하고(exit 1), 게이트를 통과했을 때만 표준 selection.json을
+ *      쓴다(exit 0).
+ *
+ * 이 파일의 모든 assertion은 이미 실제 함수 호출(1, 2) 또는 실제 CLI 프로세스
+ * 실행 + 파일시스템 검사(3, spawnSync + existsSync/readFile)로 검증되고 있어
+ * 변환이 필요 없다 — Wave 5 W3-A가 다른 8개 파일에 적용한 "renderStatic으로
+ * 옮기기" 패턴이 이미 여기서는 (렌더가 아니라 함수/프로세스 호출로) 달성되어 있다.
+ * 계약 문서화만 추가한다.
+ */
+
 const candidate = {
     candidateId: 'release-core-local-1',
     sourceTreeSha256: 'a'.repeat(64),

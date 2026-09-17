@@ -95,7 +95,9 @@ export const outcomeMethods: any = {
             : 1;
 
         // 유물 + 패시브 스킬: EXP/골드 배율 (cycle 265: liveConfig 곱셈 합류)
-        const expMult = (1 + (relics.find((r) => r.effect === 'exp_mult')?.val || 0) + (passiveBonus.expMult || 0))
+        // 2026-09 W4: gold_mult/drop_rate/dot_mult 과 같은 "최강값 1개" 정책 — 이전엔 relics.find 로
+        //   유물 보유 순서에 따라 EXP 배율이 달라졌다(같은 유물 조합인데 획득 순서가 결과를 바꿈).
+        const expMult = (1 + getStrongestNumericRelicValue(relics, 'exp_mult') + (passiveBonus.expMult || 0))
             * eventMult * seasonXpMult;
         const goldMult = (1 + getStrongestNumericRelicValue(relics, 'gold_mult') + (passiveBonus.goldMult || 0))
             * seasonGoldMult;

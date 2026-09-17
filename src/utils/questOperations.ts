@@ -1,12 +1,41 @@
 import { QUESTS } from '../data/quests.js';
 import type { Player } from "../types/index.js";
 import type { Quest } from '../types/quest.js';
+import type { QuestProgressState } from '../types/player.js';
 import type { GameMap } from '../types/map.js';
 import { MAPS } from '../data/maps.js';
 import { BALANCE } from '../data/constants.js';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 import type { TraitProfile } from './runProfile.js';
 import { getUnmetQuestPrerequisite } from './questPrerequisites.js';
+
+/**
+ * 게시판 UI 레인 분류 — `Quest.type`과 별개로 questOperations 전용 5분류
+ * (이야기/장비/성장/보스/토벌)다. `getQuestLane`이 유일 생산자.
+ */
+type QuestLane = 'story' | 'build' | 'growth' | 'boss' | 'hunt';
+
+/** `getTraitQuestResonance()` 반환 형태 (runProfile.ts) — 성향 공명 점수/라벨/요약. */
+type TraitQuestResonance = ReturnType<typeof getTraitQuestResonance>;
+
+/** `getOperationPlanSteps()`의 각 단계 (라벨 + 값). */
+interface OperationPlanStep {
+    label: string;
+    value: string;
+}
+
+/**
+ * `getActiveQuestEntries()`가 만드는 진행 중 퀘스트 1건.
+ * `quest`는 현상수배(`isBounty`)일 때는 `QuestProgressState` 자체(정의 필드 포함)이고,
+ * 그 외엔 `QUESTS` 카탈로그의 `Quest` 원본이다 — 둘 다 구조적으로 `Quest`에 대입 가능하다.
+ */
+interface ActiveQuestEntry {
+    id: QuestProgressState['id'];
+    quest: Quest;
+    progress: number;
+    isBounty: boolean;
+    isComplete: boolean;
+}
 
 // cycle 356: OPERATION_META 5 lane에서 summary 필드 제거 — QuestBoardPanel은
 //   entry.meta.label / .emphasis만 read. summary 외부 read 0건이던 dead config.
@@ -34,7 +63,7 @@ const OPERATION_META: Record<string, OperationMetaEntry> = {
     },
 };
 
-const FEATURED_LANE_ORDER = ['story', 'build', 'growth', 'boss', 'hunt'];
+const FEATURED_LANE_ORDER: QuestLane[] = ['story', 'build', 'growth', 'boss', 'hunt'];
 const RUN_PLAN_LOW_HP_RATIO = 0.5;
 const OPERATION_BRIEF_LOW_HP_RATIO = 0.45;
 const OPERATION_BRIEF_BOSS_HP_RATIO = 0.75;
@@ -47,20 +76,20 @@ const RUN_PLAN_PREP_BY_LANE: Record<string, string> = {
     hunt: '장비와 생명 점검',
 };
 
-const toArray = (value: any) => (Array.isArray(value) ? value : []);
+const toArray = <T,>(value: T[] | null | undefined): T[] => (Array.isArray(value) ? value : []);
 // cycle 523: playerLevel default 1 제거 — 1 internal callsite (line 116)
 //   getQuestLevelGap(quest, playerLevel) 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 20번째 (cycle 502-522). body의
 //   (playerLevel || 1) defensive 가드는 별개 (caller가 0/undefined 넘기는
 //   path 보존). cycle 519 getMapLevel 패턴과 동일.
-const getQuestLevelGap = (quest: Quest, playerLevel: any) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
+const getQuestLevelGap = (quest: Quest, playerLevel: number) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
 const isStoryQuest = (quest: Quest) => String(quest?.title || '').includes('[스토리]');
-const getActiveQuestEntries = (player: Player) => (
+const getActiveQuestEntries = (player: Player): ActiveQuestEntry[] => (
     toArray(player?.quests)
-        .map((questState: any) => {
-            const quest = questState?.isBounty
+        .map((questState: QuestProgressState): ActiveQuestEntry | null => {
+            const quest: Quest | undefined = questState?.isBounty
                 ? questState
-                : QUESTS.find((entry: any) => entry.id === questState?.id);
+                : QUESTS.find((entry) => entry.id === questState?.id);
             if (!quest) return null;
 
             const progress = questState?.progress || 0;
@@ -72,7 +101,7 @@ const getActiveQuestEntries = (player: Player) => (
                 isComplete: progress >= (quest.goal || 0),
             };
         })
-        .filter(Boolean)
+        .filter((entry): entry is ActiveQuestEntry => entry !== null)
 );
 
 // cycle 555: maps default MAPS 제거 (inner) — 2 callers (line 78/122)
@@ -97,9 +126,9 @@ const getQuestTargetMaps = (quest: Quest, maps: Record<string, GameMap>) => {
 
 const isBossQuest = (quest: Quest, maps: Record<string, GameMap>) => {
     if (String(quest?.title || '').includes('[보스]')) return true;
-    return getQuestTargetMaps(quest, maps).some((mapName: any) => {
+    return getQuestTargetMaps(quest, maps).some((mapName) => {
         const map = maps[mapName];
-        return map?.boss === quest?.target || toArray(map?.bossMonsters).includes(quest?.target);
+        return map?.boss === quest?.target || toArray(map?.bossMonsters).includes(quest?.target ?? '');
     });
 };
 
@@ -110,7 +139,7 @@ const getBeginnerQuestEffortScore = (quest: Quest, playerLevel: number) => {
     return -Math.min(18, (quest.goal - 5) * 3);
 };
 
-const getQuestLane = (quest: Quest, resonance: any, maps: Record<string, GameMap>) => {
+const getQuestLane = (quest: Quest, resonance: TraitQuestResonance, maps: Record<string, GameMap>): QuestLane => {
     if (isStoryQuest(quest)) return 'story';
     if (quest?.buildTag || quest?.type === 'build_victory' || (quest?.type === 'survive_low_hp' && resonance.score >= 3)) return 'build';
     if (quest?.target === 'level' || ['craft', 'combat_count', 'explore_count', 'discovery_count', 'bounty_count'].includes(quest?.type ?? '')) return 'growth';
@@ -121,7 +150,7 @@ const getQuestLane = (quest: Quest, resonance: any, maps: Record<string, GameMap
 // cycle 545: targetMaps default [] 제거 — 1 internal callsite (line 153)
 //   getQuestReason(quest, lane, resonance, targetMaps) 명시 전달이라
 //   default 도달 불가. cross-file batch와 동일 사이클.
-const getQuestReason = (quest: Quest, lane: any, resonance: any, targetMaps: string[]) => {
+const getQuestReason = (quest: Quest, lane: QuestLane, resonance: TraitQuestResonance, targetMaps: string[]) => {
     if (lane === 'story') {
         return `서사 진행을 당겨 ${quest.minLv || 1}레벨 구간의 다음 전개를 열어 주는 임무입니다.`;
     }
@@ -158,14 +187,14 @@ const getOperationPlanObjective = (quest: Quest, targetMaps: string[]) => {
     return '임무 목표 추적';
 };
 
-const getOperationPrepStep = (player: Player, lane: any) => {
+const getOperationPrepStep = (player: Player, lane: QuestLane) => {
     const hp = player?.hp || 0;
     const maxHp = player?.maxHp || 0;
     if (maxHp > 0 && hp / maxHp <= RUN_PLAN_LOW_HP_RATIO) return '휴식으로 회복 우선';
     return RUN_PLAN_PREP_BY_LANE[lane] || RUN_PLAN_PREP_BY_LANE.hunt;
 };
 
-const getOperationPlanSteps = (quest: Quest, player: Player, lane: any, targetMaps: string[]) => ([
+const getOperationPlanSteps = (quest: Quest, player: Player, lane: QuestLane, targetMaps: string[]): OperationPlanStep[] => ([
     { label: '수락', value: '게시판에서 임무 수락' },
     { label: '정비', value: getOperationPrepStep(player, lane) },
     { label: '목표', value: getOperationPlanObjective(quest, targetMaps) },
@@ -180,7 +209,7 @@ const getOperationRouteLabel = (quest: Quest, targetMaps: string[]) => {
     return '현재 권역';
 };
 
-const getOperationTargetLevel = (targetMaps: string[], maps: Record<string, GameMap>, playerLevel: any) => {
+const getOperationTargetLevel = (targetMaps: string[], maps: Record<string, GameMap>, playerLevel: number) => {
     const targetMap = maps?.[targetMaps[0]];
     if (!targetMap) return null;
     if (targetMap.level === 'infinite') return Math.max((playerLevel || 1) + 8, 50);
@@ -189,7 +218,7 @@ const getOperationTargetLevel = (targetMaps: string[], maps: Record<string, Game
     return null;
 };
 
-const getOperationRiskProfile = (quest: Quest, player: Player, lane: any, targetMaps: string[], maps: Record<string, GameMap>) => {
+const getOperationRiskProfile = (quest: Quest, player: Player, lane: QuestLane, targetMaps: string[], maps: Record<string, GameMap>) => {
     const hpRatio = (player?.hp || 0) / Math.max(1, player?.maxHp || 1);
     const playerLevel = player?.level || 1;
     const targetLevel = getOperationTargetLevel(targetMaps, maps, playerLevel);
@@ -242,7 +271,7 @@ const getOperationRiskProfile = (quest: Quest, player: Player, lane: any, target
     };
 };
 
-const getOperationPayoff = (quest: Quest, lane: any, resonance: any) => {
+const getOperationPayoff = (quest: Quest, lane: QuestLane, resonance: TraitQuestResonance) => {
     if (lane === 'story') return '서사 해금';
     if (lane === 'build' && resonance?.label) return `${resonance.label} 보상 고정`;
     if (lane === 'growth') return quest?.target === 'level' ? '다음 레벨 준비' : '성장 자원';
@@ -251,9 +280,9 @@ const getOperationPayoff = (quest: Quest, lane: any, resonance: any) => {
     return '골드와 경험 획득';
 };
 
-const getOperationExtractionRule = (quest: Quest, player: Player, lane: any, targetMaps: string[]) => {
+const getOperationExtractionRule = (quest: Quest, player: Player, lane: QuestLane, targetMaps: string[]) => {
     const hpRatio = (player?.hp || 0) / Math.max(1, player?.maxHp || 1);
-    const inventoryCap = (player as any)?.maxInv || BALANCE.INV_MAX_SIZE;
+    const inventoryCap = player?.maxInv || BALANCE.INV_MAX_SIZE;
     const inventoryCount = player?.inv?.length || 0;
 
     if (hpRatio <= OPERATION_BRIEF_LOW_HP_RATIO) return '수락 전 휴식으로 생명을 회복한 뒤 출발';
@@ -269,7 +298,7 @@ const getOperationExtractionRule = (quest: Quest, player: Player, lane: any, tar
     return '목표 달성 후 마을 회수';
 };
 
-const getOperationReturnTag = (extraction: string, lane: any) => {
+const getOperationReturnTag = (extraction: string, lane: QuestLane) => {
     if (extraction.includes('휴식')) return '회복';
     if (extraction.includes('75%')) return '생명 75%';
     if (extraction.includes('가방')) return '가방 정리';
@@ -277,7 +306,7 @@ const getOperationReturnTag = (extraction: string, lane: any) => {
     return '마을 귀환';
 };
 
-const getOperationBrief = (quest: Quest, player: Player, lane: any, resonance: any, targetMaps: string[], maps: Record<string, GameMap>) => {
+const getOperationBrief = (quest: Quest, player: Player, lane: QuestLane, resonance: TraitQuestResonance, targetMaps: string[], maps: Record<string, GameMap>) => {
     const risk = getOperationRiskProfile(quest, player, lane, targetMaps, maps);
     const route = getOperationRouteLabel(quest, targetMaps);
     const extraction = getOperationExtractionRule(quest, player, lane, targetMaps);
@@ -298,9 +327,24 @@ const getOperationBrief = (quest: Quest, player: Player, lane: any, resonance: a
     };
 };
 
-const enrichActiveQuestEntry = (entry: any, player: Player, traitProfile: TraitProfile | null | undefined, maps: Record<string, GameMap>) => {
+/** `getOperationBrief()` 반환 형태 — 임무 안내 카드(목적지/위험/보상/귀환 기준). */
+type OperationBrief = ReturnType<typeof getOperationBrief>;
+
+/** `enrichActiveQuestEntry()` / `scoreQuest()`가 공통으로 덧붙이는 게시판 표시 필드. */
+interface QuestBoardDisplayFields {
+    lane: QuestLane;
+    resonance: TraitQuestResonance;
+    targetMaps: string[];
+    meta: OperationMetaEntry;
+    planSteps: OperationPlanStep[];
+    brief: OperationBrief;
+}
+
+interface EnrichedQuestEntry extends ActiveQuestEntry, QuestBoardDisplayFields {}
+
+const enrichActiveQuestEntry = (entry: ActiveQuestEntry, player: Player, traitProfile: TraitProfile | null | undefined, maps: Record<string, GameMap>): EnrichedQuestEntry => {
     const resonance = getTraitQuestResonance(entry.quest, traitProfile);
-    const lane = entry.isBounty ? 'hunt' : getQuestLane(entry.quest, resonance, maps);
+    const lane: QuestLane = entry.isBounty ? 'hunt' : getQuestLane(entry.quest, resonance, maps);
     const targetMaps = getQuestTargetMaps(entry.quest, maps);
 
     return {
@@ -314,14 +358,20 @@ const enrichActiveQuestEntry = (entry: any, player: Player, traitProfile: TraitP
     };
 };
 
-const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | null | undefined, activeEntries: any, maps: Record<string, GameMap>) => {
+interface ScoredQuestEntry extends QuestBoardDisplayFields {
+    quest: Quest;
+    _sortKey: number;
+    reason: string;
+}
+
+const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | null | undefined, activeEntries: EnrichedQuestEntry[], maps: Record<string, GameMap>): ScoredQuestEntry => {
     const resonance = getTraitQuestResonance(quest, traitProfile);
     const lane = getQuestLane(quest, resonance, maps);
     const playerLevel = player?.level || 1;
     const targetMaps = getQuestTargetMaps(quest, maps);
-    const activeTargets = new Set(activeEntries.map((entry: any) => entry.quest?.target).filter(Boolean));
+    const activeTargets = new Set(activeEntries.map((entry) => entry.quest?.target).filter(Boolean));
     const levelGap = getQuestLevelGap(quest, playerLevel);
-    const hasNearbyTargetMap = targetMaps.some((mapName: any) => {
+    const hasNearbyTargetMap = targetMaps.some((mapName) => {
         const level = maps[mapName]?.level;
         return typeof level === 'number' && level <= playerLevel + 6 && level >= Math.max(1, playerLevel - 8);
     });
@@ -359,11 +409,16 @@ const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | n
     };
 };
 
+/** `getQuestBoardRecommendations()`의 `scoredAvailable`/`featured`/`backlog` 원소 — `_sortKey`는 정렬 후 제거된다. */
+type ExposedQuestEntry = Omit<ScoredQuestEntry, '_sortKey'>;
+
 export const getQuestBoardRecommendations = (player: Player, maps: Record<string, GameMap> = MAPS, questCatalog: Quest[] = QUESTS) => {
     const traitProfile = getTraitProfile(player, { maxHp: player?.maxHp, maxMp: player?.maxMp });
     const activeEntries = getActiveQuestEntries(player)
-        .map((entry: any) => enrichActiveQuestEntry(entry, player, traitProfile, maps));
-    const activeRegularQuestIds = new Set(activeEntries.filter((entry: any) => !entry.isBounty).map((entry: any) => entry.id));
+        .map((entry) => enrichActiveQuestEntry(entry, player, traitProfile, maps));
+    // Quest['id']로 명시 — 아래 claimedRegularQuestIds와 동일 이유(quest.id가 optional이라
+    //   Set<string | number>로 추론되면 has(quest.id) 호출이 막힌다).
+    const activeRegularQuestIds = new Set<Quest['id']>(activeEntries.filter((entry) => !entry.isBounty).map((entry) => entry.id));
     // Quest['id']로 명시 — quest.id가 optional(string | number | undefined)이라
     //   Set<string | number>로 추론되면 has(quest.id) 호출이 막힌다.
     const claimedRegularQuestIds = new Set<Quest['id']>(
@@ -386,17 +441,17 @@ export const getQuestBoardRecommendations = (player: Player, maps: Record<string
         ))
         .map((quest: Quest) => scoreQuest(quest, player, traitProfile, activeEntries, maps))
         // cycle 347: _sortKey로 정렬 후 strip (score 외부 노출 0건이므로).
-        .sort((left: any, right: any) => right._sortKey - left._sortKey || left.quest.title.localeCompare(right.quest.title, 'ko'))
-        .map((entry: any) => {
+        .sort((left, right) => right._sortKey - left._sortKey || (left.quest.title ?? '').localeCompare(right.quest.title ?? '', 'ko'))
+        .map((entry): ExposedQuestEntry => {
             const { _sortKey, ...exposed } = entry;
             void _sortKey;
             return exposed;
         });
 
-    const featured = [];
-    const usedIds = new Set();
-    FEATURED_LANE_ORDER.forEach((lane: any) => {
-        const match = scoredAvailable.find((entry: any) => entry.lane === lane && !usedIds.has(entry.quest.id));
+    const featured: ExposedQuestEntry[] = [];
+    const usedIds = new Set<Quest['id']>();
+    FEATURED_LANE_ORDER.forEach((lane) => {
+        const match = scoredAvailable.find((entry) => entry.lane === lane && !usedIds.has(entry.quest.id));
         if (!match || featured.length >= 3) return;
         featured.push(match);
         usedIds.add(match.quest.id);
@@ -409,14 +464,14 @@ export const getQuestBoardRecommendations = (player: Player, maps: Record<string
         usedIds.add(entry.quest.id);
     }
 
-    const backlog = scoredAvailable.filter((entry: any) => !usedIds.has(entry.quest.id));
+    const backlog = scoredAvailable.filter((entry) => !usedIds.has(entry.quest.id));
     const locked = questCatalog
         .filter((quest: Quest) => (
             !activeRegularQuestIds.has(quest.id)
             && !claimedRegularQuestIds.has(quest.id)
             && !isAvailable(quest)
         ))
-        .sort((left: any, right: any) => (left.minLv || 1) - (right.minLv || 1))
+        .sort((left, right) => (left.minLv || 1) - (right.minLv || 1))
         .slice(0, 6)
         .map((quest: Quest) => {
             const unmetPrerequisite = getUnmetQuestPrerequisite(quest, claimedQuestIds, questCatalog);

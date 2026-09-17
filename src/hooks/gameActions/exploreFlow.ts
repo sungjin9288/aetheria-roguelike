@@ -13,7 +13,7 @@
  * 이동 전/후 동치는 tests/explore-flow-equivalence.test.js가 시드 고정 트레이스로 고정한다.
  */
 import type { GameMap, Relic } from '../../types/index.js';
-import type { Player } from '../../types/index.js';
+import type { Player, StatusId } from '../../types/index.js';
 import { DB } from '../../data/db.js';
 import { BALANCE } from '../../data/constants.js';
 import { RELICS, pickWeightedRelics } from '../../data/relics.js';
@@ -103,7 +103,9 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
         BALANCE.ANOMALY_MAX_CHANCE
     );
     if (rng() < effectiveAnomalyChance && player.loc !== '고대 보물고') {
-        const anomalies = [
+        // W2 (Wave 5): effect를 StatusId | 'mana_regen'으로 닫아 두면 아래 else 분기에서
+        //   TS가 'mana_regen'을 제외한 StatusId로 좁혀 주고, 오타는 컴파일 에러가 된다.
+        const anomalies: Array<{ effect: StatusId | 'mana_regen'; desc: string }> = [
             { effect: 'poison',     desc: MSG.EXPLORE_ANOMALY_POISON },
             { effect: 'mana_regen', desc: MSG.EXPLORE_ANOMALY_MANA_REGEN },
             { effect: 'burn',       desc: MSG.EXPLORE_ANOMALY_BURN }
@@ -114,7 +116,8 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
             const stats = getFullStats();
             dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, mp: Math.min(stats.maxMp, p.mp! + Math.floor(stats.maxMp * BALANCE.ANOMALY_MANA_REGEN_RATIO)) }) });
         } else {
-            dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])]} ) });
+            const anomalyStatus: StatusId = anomaly.effect;
+            dispatch({ type: AT.SET_PLAYER, payload: (p: Player): Player => ({ ...p, status: [...new Set([...(p.status || []), anomalyStatus])] }) });
         }
         return 'anomaly';
     }

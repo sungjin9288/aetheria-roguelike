@@ -1,5 +1,5 @@
 import { BALANCE } from '../data/constants.js';
-import type { FullStats, GameMap, Player } from "../types/index.js";
+import type { FullStats, GameMap, Player, StatusId } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
@@ -9,14 +9,29 @@ import { getMapRequiredLevel, getNextMapTowardTarget } from './mapTopology.js';
 import {
     getExpeditionQuestTargetMaps,
     getFocusedExpeditionQuestEntries,
+    type ExpeditionQuestDefinition,
+    type ExpeditionQuestEntry,
 } from './expeditionMissionFocus.js';
 
-const clampPercent = (value: any) => Math.max(0, Math.min(100, Math.round(value * 100)));
+const clampPercent = (value: number) => Math.max(0, Math.min(100, Math.round(value * 100)));
 const ROUTE_PLAN_LOW_HP_RATIO = 0.35;
 const ROUTE_PLAN_BOSS_HP_RATIO = 0.75;
 const ROUTE_PLAN_INVENTORY_BUFFER = 2;
 
-const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRatio: number, inventoryCount: number, inventoryCap: number) => {
+interface RoutePlan {
+    approach: string;
+    exitRule: string;
+    returnLabel: string;
+}
+
+const getRoutePlan = (
+    targetMap: GameMap | null | undefined,
+    isSafeTarget: boolean,
+    badge: string,
+    hpRatio: number,
+    inventoryCount: number,
+    inventoryCap: number,
+): RoutePlan => {
     if (isSafeTarget) {
         return {
             approach: '마을 정비',
@@ -76,7 +91,7 @@ const getRoutePlan = (targetMap: any, isSafeTarget: boolean, badge: string, hpRa
 //   getMapLevel(targetMap, playerLevel) 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 17번째 (cycle 502-518). body의 (playerLevel
 //   || 1) defensive 가드는 별개 — caller가 0/undefined 넘기는 path 보존.
-const getMapLevel = (map: GameMap | null | undefined, playerLevel: any) => (
+const getMapLevel = (map: GameMap | null | undefined, playerLevel: number) => (
     map?.level === 'infinite'
         ? Math.max((playerLevel || 1) + 8, 50)
         // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
@@ -84,18 +99,18 @@ const getMapLevel = (map: GameMap | null | undefined, playerLevel: any) => (
 );
 const getVisitedMaps = (player: Player) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
 
-const getQuestProgressLabel = (entry: any) => {
+const getQuestProgressLabel = (entry: ExpeditionQuestEntry) => {
     if (!entry?.quest) return '';
     if (entry.quest.target === 'level') return `Lv.${entry.progress}/${entry.quest.goal}`;
     return `${entry.progress}/${entry.quest.goal}`;
 };
 
-const getQuestProgressPercent = (entry: any) => {
+const getQuestProgressPercent = (entry: ExpeditionQuestEntry) => {
     if (!entry?.quest?.goal) return 0;
     return Math.max(0, Math.min(100, Math.round(((entry.progress || 0) / Math.max(1, entry.quest.goal)) * 100)));
 };
 
-const getQuestRouteLabel = (quest: any, targetMaps: string[]) => {
+const getQuestRouteLabel = (quest: ExpeditionQuestDefinition | undefined, targetMaps: string[]) => {
     if (targetMaps.length > 0) return targetMaps[0];
     if (quest?.target === 'level') return '성장 루트';
     if (quest?.type === 'craft') return '제작소';
@@ -108,8 +123,8 @@ const getQuestRouteLabel = (quest: any, targetMaps: string[]) => {
     return quest?.target || '현재 권역';
 };
 
-const getQuestNextStep = (entry: any, targetMaps: string[]) => {
-    const quest = entry?.quest || {};
+const getQuestNextStep = (entry: ExpeditionQuestEntry, targetMaps: string[]) => {
+    const quest = entry.quest;
     const remaining = Math.max(0, (quest.goal || 0) - (entry?.progress || 0));
 
     if (entry?.isComplete) return '마을에서 보상 회수';
@@ -132,8 +147,8 @@ const getQuestNextStep = (entry: any, targetMaps: string[]) => {
     return `${quest.target || '목표'} ${remaining}회 진행`;
 };
 
-const getQuestReturnLabel = (entry: any, targetMaps: string[]) => {
-    const quest = entry?.quest || {};
+const getQuestReturnLabel = (entry: ExpeditionQuestEntry, targetMaps: string[]) => {
+    const quest = entry.quest;
     if (entry?.isComplete) return '보상 받기';
     if (quest.target === 'level') return '성장';
     if (targetMaps.length > 0) return '목표 지역';
@@ -145,7 +160,18 @@ const getQuestReturnLabel = (entry: any, targetMaps: string[]) => {
     return '계속 진행';
 };
 
-const buildQuestTrackerPayload = (entry: any, kind: string, progressLabel: string) => {
+interface QuestTrackerPayload {
+    kind: 'claimable' | 'bounty' | 'active';
+    title: string | undefined;
+    progressLabel: string;
+    questId: string | number;
+    progressPercent: number;
+    routeLabel: string;
+    nextStep: string;
+    returnLabel: string;
+}
+
+const buildQuestTrackerPayload = (entry: ExpeditionQuestEntry, kind: QuestTrackerPayload['kind'], progressLabel: string): QuestTrackerPayload => {
     const targetMaps = getExpeditionQuestTargetMaps(entry.quest);
     const routeLabel = getQuestRouteLabel(entry.quest, targetMaps);
     const nextStep = getQuestNextStep(entry, targetMaps);
@@ -164,14 +190,28 @@ const buildQuestTrackerPayload = (entry: any, kind: string, progressLabel: strin
     };
 };
 
-export const getQuestTracker = (player: Player) => {
+export interface QuestTrackerFocusQuest {
+    questId: string | number;
+    title: string | undefined;
+    progressLabel: string;
+    routeLabel: string;
+    nextStep: string;
+    isComplete: boolean;
+}
+
+export interface QuestTracker extends QuestTrackerPayload {
+    focusCount: number;
+    focusQuests: QuestTrackerFocusQuest[];
+}
+
+export const getQuestTracker = (player: Player): QuestTracker | null => {
     const entries = getFocusedExpeditionQuestEntries(player);
     if (!entries.length) return null;
 
-    const withFocusSummary = (payload: any) => ({
+    const withFocusSummary = (payload: QuestTrackerPayload): QuestTracker => ({
         ...payload,
         focusCount: entries.length,
-        focusQuests: entries.map((entry: any) => {
+        focusQuests: entries.map((entry) => {
             const summary = buildQuestTrackerPayload(
                 entry,
                 entry.isComplete ? 'claimable' : entry.isBounty ? 'bounty' : 'active',
@@ -189,24 +229,34 @@ export const getQuestTracker = (player: Player) => {
     });
 
     // cycle 334: detail 필드 제거 — getQuestTracker 외부 read 0건이던 dead field.
-    const claimable = entries.find((entry: any) => entry.isComplete);
+    const claimable = entries.find((entry) => entry.isComplete);
     if (claimable) {
         return withFocusSummary(buildQuestTrackerPayload(claimable, 'claimable', '보상 대기'));
     }
 
-    const ranked = [...entries].sort((left: any, right: any) => {
-        const leftScore = (left.isBounty ? 20 : 0) + ((left.progress || 0) / Math.max(1, left.quest.goal));
-        const rightScore = (right.isBounty ? 20 : 0) + ((right.progress || 0) / Math.max(1, right.quest.goal));
+    const ranked = [...entries].sort((left, right) => {
+        const leftScore = (left.isBounty ? 20 : 0) + ((left.progress || 0) / Math.max(1, left.quest.goal || 1));
+        const rightScore = (right.isBounty ? 20 : 0) + ((right.progress || 0) / Math.max(1, right.quest.goal || 1));
         return rightScore - leftScore;
     });
 
-    const focus: any = ranked[0];
+    const focus = ranked[0];
     return withFocusSummary(buildQuestTrackerPayload(focus, focus.isBounty ? 'bounty' : 'active', getQuestProgressLabel(focus)));
 };
 
+interface ExplorationChip {
+    label: string;
+    value: string;
+}
+
+interface ExplorationForecast {
+    mood: string;
+    chips: ExplorationChip[];
+}
+
 // cycle 334: description 필드 제거 — getExplorationForecast 외부 read 0건이던 dead field.
 //   mood / chips만 ControlPanel & test에서 사용.
-export const getExplorationForecast = (player: Player, mapData: any) => {
+export const getExplorationForecast = (player: Player, mapData: GameMap | null | undefined): ExplorationForecast => {
     if (!mapData) {
         return {
             mood: '기록 동기화 중',
@@ -243,7 +293,7 @@ export const getExplorationForecast = (player: Player, mapData: any) => {
         mood = '정적 구간';
     } else if (pacingProfile.id === 'volatile') {
         mood = '변칙 지대';
-    } else if (pacingProfile.id === 'hostile' || mapData.level >= 20) {
+    } else if (pacingProfile.id === 'hostile' || Number(mapData.level) >= 20) {
         mood = '고위험 교전';
     }
 
@@ -258,22 +308,45 @@ export const getExplorationForecast = (player: Player, mapData: any) => {
     };
 };
 
+interface MoveRecommendationCandidate {
+    name: string;
+    _sortKey: number;
+    _isLocked: boolean;
+    badge: string;
+    reason: string;
+    levelLabel: string;
+    chips: ExplorationChip[];
+    undiscoveredSignatureCount: number;
+    routePlan: RoutePlan;
+}
+
+export interface MoveRecommendation {
+    name: string;
+    badge: string;
+    reason: string;
+    levelLabel: string;
+    chips: ExplorationChip[];
+    undiscoveredSignatureCount: number;
+    routePlan: RoutePlan;
+    isRecommended: boolean;
+}
+
 // cycle 579: maps default {} 제거 — 2 production caller (MapNavigator:66,
 //   ControlPanel:58) + 8+ test caller 모두 maps 명시 (DB.MAPS / MAPS / object
 //   literal)이라 default 도달 불가. 청소 메가 시리즈 71번째.
-export const getMoveRecommendations = (player: Player, stats: FullStats | null | undefined, currentMap: GameMap | null | undefined, maps: Record<string, GameMap>) => {
+export const getMoveRecommendations = (player: Player, stats: FullStats | null | undefined, currentMap: GameMap | null | undefined, maps: Record<string, GameMap>): MoveRecommendation[] => {
     if (!currentMap?.exits?.length) return [];
 
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
     const mpRatio = (player?.mp || 0) / Math.max(1, stats?.maxMp || player?.maxMp || 1);
     const inventoryCount = player?.inv?.length || 0;
     // cycle 182: player.maxInv 확장 우선 — 기존 BALANCE.INV_MAX_SIZE 만 사용해 확장 인벤(25)에서도 20-2=18에 경고 발동.
-    const inventoryCap = (player as any)?.maxInv || BALANCE.INV_MAX_SIZE;
+    const inventoryCap = player?.maxInv || BALANCE.INV_MAX_SIZE;
     const playerLevel = player?.level || 1;
     const visitedMaps = getVisitedMaps(player);
 
     return currentMap.exits
-        .map((exitName: any) => {
+        .map((exitName): MoveRecommendationCandidate | null => {
             const targetMap = maps?.[exitName];
             if (!targetMap) return null;
 
@@ -285,7 +358,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
             const forecast = getExplorationForecast(player, targetMap);
             // collection-driven 신호: 미발견 signature가 있는 경로는 ✦N 칩으로 강조
             const undiscoveredSignatureCount = getMapUndiscoveredSignatures(exitName, player).length;
-            const chips = [
+            const chips: ExplorationChip[] = [
                 { label: 'LV', value: targetMap.level === 'infinite' ? 'Abyss' : `${targetLevel}` },
                 { label: 'STATE', value: isSafeTarget ? 'SAFE' : forecast.mood },
             ];
@@ -376,12 +449,12 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                 routePlan,
             };
         })
-        .filter(Boolean)
-        .sort((left: any, right: any) => (
+        .filter((entry): entry is MoveRecommendationCandidate => entry !== null)
+        .sort((left, right) => (
             Number(left._isLocked) - Number(right._isLocked)
             || right._sortKey - left._sortKey
         ))
-        .map((entry: any, index: any) => {
+        .map((entry, index): MoveRecommendation => {
             // 내부 정렬용 필드는 UI 계약에 노출하지 않는다.
             const { _sortKey, _isLocked, ...exposed } = entry;
             void _sortKey;
@@ -404,7 +477,7 @@ export const getExpeditionPreparation = (
     const missionStep = targetLocation
         ? getNextMapTowardTarget(maps, currentLocation, targetLocation)
         : null;
-    const departure = routes.find((route: any) => route.name === missionStep) || routes[0] || null;
+    const departure = routes.find((route) => route.name === missionStep) || routes[0] || null;
     const destinationMap = departure ? maps[departure.name] : null;
     const playerLevel = player?.level || 1;
     const hpPercent = Math.max(0, Math.min(100, Math.round(
@@ -460,13 +533,13 @@ export const getExpeditionPreparation = (
 // cycle 509: runtimeState default 제거 — 1 callsite (ControlPanel:57) 항상
 //   gameState 명시 전달이라 default 도달 불가. util default 청소 메가 시리즈
 //   8번째 (cycle 502-508).
-export const getAdventureGuidance = (player: Player, stats: FullStats | null | undefined, mapData: any, runtimeState: any) => {
+export const getAdventureGuidance = (player: Player, stats: FullStats | null | undefined, mapData: GameMap | null | undefined, runtimeState: string | null | undefined) => {
     const safe = mapData?.type === 'safe';
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
     // cycle 332: mpRatio 제거 — secondaryAction 'MP도 회복' 분기 외 read 0건이라 dead.
     const inventoryCount = player?.inv?.length || 0;
     // cycle 182: player.maxInv 확장 우선 — 확장 인벤(25)에서도 18칸 경고 발동 회귀 fix.
-    const inventoryCap = (player as any)?.maxInv || BALANCE.INV_MAX_SIZE;
+    const inventoryCap = player?.maxInv || BALANCE.INV_MAX_SIZE;
     const questTracker = getQuestTracker(player);
 
     if (runtimeState && runtimeState !== 'idle') {
@@ -530,9 +603,9 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
             freeze: '빙결', stun: '기절', curse: '저주',
             blind: '실명', fear: '공포',
         };
-        const activeDebuffs = player.status.filter((s: any) => DEBUFF_LABEL[s as string]);
+        const activeDebuffs = player.status.filter((s: StatusId) => DEBUFF_LABEL[s]);
         if (activeDebuffs.length > 0) {
-            const labels = activeDebuffs.map((s: any) => DEBUFF_LABEL[s as string]).join(', ');
+            const labels = activeDebuffs.map((s: StatusId) => DEBUFF_LABEL[s]).join(', ');
             return {
                 title: '디버프 정화 권장',
                 detail: `현재 활성 상태이상: ${labels}. 안전지대에서 휴식하면 모든 디버프가 해소됩니다.`,

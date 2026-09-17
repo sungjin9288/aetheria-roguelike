@@ -28,7 +28,7 @@ const selectedSkill = (player: Player, random: () => number) => {
     if (skills.length === 0) return { skill: null, log: null };
     if (player.challengeModifiers?.includes('randomSkills')) {
         const skill = skills[Math.floor(random() * skills.length)];
-        return { skill, log: { type: 'warn', text: MSG.COMBAT_CHAOS_SKILL(skill.name) } };
+        return { skill, log: { type: 'warn', text: MSG.COMBAT_CHAOS_SKILL(skill.name ?? '') } };
     }
     const selected = Number.isInteger(player.skillLoadout?.selected)
         ? player.skillLoadout!.selected as number

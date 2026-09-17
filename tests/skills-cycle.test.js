@@ -1951,7 +1951,10 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 631: body weapon iteration / WEAPON_SKILL_BY_ELEM 처리 보존', async () => {
       const source = await readSrc('src/utils/equipmentUtils.ts');
-      assert.ok(/if \(isWeapon\(equip\.weapon\)\) list\.push/.test(source),
+      // Wave 5 W5-B: `Item | null | undefined` 타이핑 도입으로 `isWeapon(equip.weapon)`
+      //   (non-predicate라 narrowing 불가)을 로컬 const 재바인딩 + truthy 가드로 대체했다.
+      //   무기 순회 자체(양쪽 슬롯 모두 push)는 그대로다.
+      assert.ok(/const mainWeapon = equip\.weapon;\s*\n\s*if \(mainWeapon && isWeapon\(mainWeapon\)\) list\.push/.test(source),
           'getEquippedWeapons weapon iteration 보존');
       assert.ok(/buildWeaponSkill\(entry\)/.test(source),
           'getWeaponMagicSkills buildWeaponSkill 호출 보존');

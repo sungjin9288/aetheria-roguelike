@@ -24,9 +24,11 @@
 | Node.js | — | >=18.0.0 |
 
 > **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
-> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` ~1,290건,
-> `as any` ~88곳 잔존 (2026-09-17 Wave 4 실측, `codex/release-complete-core` 병합 베이스 기준 — 병합으로 합류한
-> 코드만큼 절대치는 올랐고, `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다).
+> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` 1,301건,
+> `as any` 83곳 잔존 (2026-09-17 Wave 5 실측; `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다.
+> `Player`의 `quests/status/history`는 `QuestProgressState`/`StatusId[]`/`EventHistoryEntry`로 닫혔고,
+> utils 8파일(`aiEventUtils`·`questOperations`·`graveUtils`·`gameUtils`·`adventureGuide`·`expeditionMissionFocus`·
+> `expeditionLedger`·`equipmentUtils`)은 `: any` 0이다).
 > **`src/types/*`의 인덱스 시그니처는 0개, `Relic.val`은 effect 판별 유니온**이다 —
 > `Player`/`PlayerStats`/`PlayerMeta`/`CombatFlags`(B3)에 이어 `Relic`/`Item`/`Monster`/`GameMap`/
 > `Quest`/`Achievement`/`ClassDef`(L)까지 닫혔으므로 `relic.오타`·`enemy.오타`도 컴파일 에러다.
@@ -113,7 +115,8 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, ~330 파일 / ~4,800 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준)
+tests/                # 단위 테스트 (Node.js built-in test, ~335 파일 / ~4,810 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준,
+                      #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
                       #   + e2e/ (Playwright 31 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 android/ ios/         # Capacitor 네이티브 프로젝트

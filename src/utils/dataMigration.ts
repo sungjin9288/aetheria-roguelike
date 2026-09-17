@@ -114,6 +114,18 @@ export const migrateData = (rawData: any) => {
     // cycle 381: target.status / skillLoadout.selected normalizations 제거 (cycle 373-379
     //   동일 lens) — 모든 consumer가 이미 동일 패턴 (Array.isArray, Number.isInteger,
     //   `|| []`, toArray) 사용으로 undefined / 비정상 값 안전 처리.
+    // W2 (Wave 5): 단, `status`가 배열이 아닌 구세이브(스칼라 문자열)는 별개 문제다.
+    //   consumer의 `Array.isArray ? : []` / `toArray` 패턴은 그런 값을 조용히 버려서
+    //   걸려 있던 상태이상이 로드와 함께 증발한다(`consumableEffect`만 `[player.status]`로
+    //   감싸 관용 처리 중). `player.status: StatusId[]` 계약을 로드 시점에 한 번 세우되,
+    //   스칼라는 버리지 않고 1원소 배열로 승격한다. 배열이거나 아예 없으면 손대지 않으므로
+    //   직렬화 모양은 그대로다 — cycle 381이 지운 `= Array.isArray(...) ? ... : []`
+    //   (스칼라를 []로 날리는 형태)의 부활이 아니고, DATA_VERSION bump 대상도 아니다.
+    if (target.status !== undefined && !Array.isArray(target.status)) {
+        target.status = typeof target.status === 'string' && target.status
+            ? [target.status]
+            : [];
+    }
     target.skillLoadout = target.skillLoadout || { selected: 0, cooldowns: {} };
     target.skillLoadout.cooldowns = target.skillLoadout.cooldowns || {};
     // cycle 373: 5 sub-field fallback 제거 — 모든 consumer가 이미 `meta.X || 0`

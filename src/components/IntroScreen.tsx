@@ -55,19 +55,26 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
     };
 
     return (
-        <Motion.section
+        <section
             data-testid="intro-screen"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.35, ease: 'easeOut' }}
             className="relative isolate min-h-full w-full flex-1 overflow-y-auto bg-[#03070d] text-slate-100"
         >
-            <img
+            {/*
+              배경 이미지에만 페이드를 건다 — 루트가 opacity:0에서 시작하면
+              Chromium이 그 서브트리 안의 페인트를 first-contentful-paint로
+              집계하지 않는다(합성 전용 opacity 애니메이션도 별도 paint 이벤트가
+              없다). 텍스트/입력/버튼은 항상 opacity:1로 첫 프레임에 그려야
+              FCP/LCP가 정상 측정된다.
+            */}
+            <Motion.img
                 data-testid="intro-background"
                 src="/assets/intro/aetheria-starting-village.webp"
                 alt=""
                 aria-hidden="true"
                 fetchPriority="high"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ duration: 0.35, ease: 'easeOut' }}
                 className="pointer-events-none absolute inset-0 h-full w-full object-cover object-center"
             />
             <div
@@ -196,7 +203,7 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
                     </div>
                 </div>
             </div>
-        </Motion.section>
+        </section>
     );
 };
 

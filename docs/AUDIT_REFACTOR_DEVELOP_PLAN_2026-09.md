@@ -269,3 +269,39 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
   - CI의 Playwright 실패 아티팩트 업로드가 `playwright-report/`(reporter가 `list`뿐이라 생성 안 됨)만 가리켜 아무것도 보존하지 못하던 dead step → `test-results/`(스크린샷·error-context·trace) 추가(`8975117`).
   - **non-blocking perf guard 노이즈**: 앱 변경 없는 세 head(`e0a487a` 통과 → `8975117` desktop 실패 → `f6dc87f` mobile 실패)에서 `page.waitForFunction: Timeout 10000ms` 로만 갈렸다. 통과 실측은 boot-ready 87ms·FCP 572ms라 앱 마크가 늦는 게 아니라 `first-contentful-paint` 엔트리가 러너에서 늦거나 안 오는 쪽이 유력하지만, 세 조건을 한 대기에 묶고 무엇이 빠졌는지 남기지 않아 확정 불가였다 → 대기를 앱 마크(10s)·FCP(10s)로 분리하고 타임아웃 시 paint 엔트리·마크·visibilityState 를 출력(`e4de7c3`). 진단 결과(`e4de7c3` desktop): `first-paint@336`, boot-ready 162ms, intro-visible 162ms, visibility `visible`인데 `first-contentful-paint`만 10s 부재 — **Chromium 은 `opacity: 0` 서브트리의 페인트를 FCP 로 집계하지 않고 compositor 전용 opacity 애니메이션은 paint timing 을 만들지 않는다**(`IntroScreen` `initial={{ opacity: 0 }}` 0.35s fade-in). 통과 실행은 부팅 뒤 우연한 main-thread repaint 가 FCP 를 기록한 경우다. 회귀가 아니라 측정 공백이므로 guard 는 first-paint·앱 마크·visible 이 모두 갖춰진 경우에 한해 FCP 예산만 이 실행에서 제외하고(`metrics.fcpMeasurementGap` 기록, 경고 출력) 나머지 9개 예산은 그대로 검증한다. 예산 수치는 변경 없음.
   - **Wave 5 후보(제품)**: 인트로/루트 fade-in 은 실사용자 FCP·LCP 도 같은 이유로 늦게 잡히거나 누락되게 만든다(체감 첫 페인트 +0.35s). opacity 대신 측정에 잡히는 reveal(예: 배경만 fade, 텍스트는 즉시)로 바꾸면 FCP 예산을 다시 무조건 검증할 수 있다.
+
+---
+
+## 9. Wave 5 계획 (2026-09-17 착수, 베이스 `main` = `0205301` = PR #31 merge commit)
+
+**핵심**: Wave 1~4로 "저작된 콘텐츠가 발동하지 않는" 결함(G1~G11)은 닫혔다. 남은 것은 (a) 측정 불가능한 것을 측정 가능하게, (b) 타입 경계의 마지막 구멍(`Player`의 `any[]` 3개), (c) 리팩토링 때마다 깨지는 정적 가드를 행동 테스트로, (d) `: any` 밀집 구역 한 슬라이스다. 신규 콘텐츠는 넣지 않는다 — 판정표(§2) 기준 A(연결)·B(경제)는 소진됐고, 이번 Wave는 C(타입)·테스트 진실성·측정이다.
+
+**재검증으로 탈락한 후보**: `low_hp_atk` "미소비" — 오판. 61개 `RelicEffect`·28개 `ClassSkillEffect` 전부 systems/hooks/utils 소비처가 있다(`statsCalculator.ts:357 lowHpAtkMult`). 심연 데일리 다이브 HUD — Wave 4에서 `getAbyssDiveChip`로 이미 노출.
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **W1 인트로 reveal** | `IntroScreen` 루트 `initial={{ opacity: 0 }}` 제거 — 배경 이미지만 fade, 텍스트·입력·버튼은 첫 프레임부터 그린다 | Chromium/Safari 모두 FCP·LCP가 실제 첫 콘텐츠에 잡힘, 체감 첫 페인트 −0.35s, perf guard FCP 예산 무조건 검증 복귀 | 인트로 연출 미세 변화(배경만 서서히) | 루트가 아닌 자식 컨테이너에 opacity 0을 옮기면 같은 문제 재발 — 텍스트 조상 어디에도 opacity 0 금지 | sonnet |
+| **W2 `Player` any[] 3개** | `quests?: PlayerQuestProgress[]`(`{id, progress, startExploreCount?}`), `history?: PlayerEventHistoryEntry[]`(`{event, choice, outcome}`), `status?: StatusId[]`(상태이상 id 닫힌 집합) | `player.quests[i].오타`·history 필드 드리프트가 컴파일 에러, AI 이벤트 컨텍스트 계약 고정 | tsc 표면화 오류 수십 건 정리, 세이브 호환은 유지(형태 불변) | 레거시 세이브의 `status`가 배열이 아닌 문자열인 경로(`consumableEffect.ts:127`)를 타입으로 없애면 런타임 깨짐 → migrate에서 정규화하고 타입은 배열로 | opus |
+| **W3 정적 가드 → 행동 테스트** | 순수 소스 텍스트 정규식 가드 40파일 중 UI/행동 성격 ~18파일을 `tests/helpers/render.ts` 렌더 단언 또는 순수 함수 호출로 전환. 구조 불변식(dead plumbing 부재 등)은 유지하고 사유 기록 | 리팩토링(클래스명·마크업 변경)에 깨지지 않고 실제 회귀만 잡음 | 테스트 저작, 일부는 `data-testid` 추가 | 원래 가드가 지키던 계약을 놓치면 회귀가 통과 — 파일마다 "원 계약 → 새 단언" 대응표 필수 | sonnet ×2 |
+| **W4 `exp_mult` 일관성** | `CombatEngine.outcome.ts:98` `relics.find`(첫 번째) → `getStrongestNumericRelicValue`(gold_mult와 동일 정책) + 테스트 + 증빙 JSON 재생성 | 유물 순서에 따라 EXP 배율이 달라지는 비결정 제거 | 증빙 2건 재생성 | 스택(합산)으로 바꾸면 gold와 정책 불일치 — 최강값 1개 정책으로 통일 | 직접 |
+| **W5 `: any` utils 슬라이스** | W2 머지 후. `aiEventUtils`(35)·`questOperations`(27)·`graveUtils`(25)·`gameUtils`(24)·`adventureGuide`(22)·`expeditionMissionFocus`(18)·`expeditionLedger`(17)·`equipmentUtils`(17) ≈ 185건을 도메인 타입으로 | 퀘스트·무덤·상점 로직(실제 버그가 났던 영역)의 오타 컴파일 차단 | 기계적 작업, 래칫 재고정 | `as any`로 우회하면 무의미 — `as any` 신규 0 규칙, 래칫 `AS_ANY_BASELINE`은 내리기만 | sonnet ×2 |
+| **W6 문서** | CLAUDE.md 수치, `tasks/todo.md` 원장(PR #31 그린·머지·Wave 5), 이 문서 §9.1 결과 | — | — | — | 직접 |
+
+**순서**: W1·W2·W3·W4 병렬(파일 집합 분리: 컴포넌트 1개 / types+소비처 / tests / engine) → W2 머지 후 W5 → 전체 `npm run verify` + e2e(chromium) → W6 → PR.
+
+**게이트**: type-check 0 · lint 0 · unit 전량(skip 0) · `tests/debt-ratchet.test.js` 기준선 하향 재고정 · e2e 121/121 · perf guard FCP 실측(측정 공백 경고 0회가 W1의 완료 조건).
+
+### 9.1 Wave 5 실행 결과 (2026-09-17, branch `claude/funny-rubin-xdv43e`, 최종 head 아래 표 참조)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| W1 인트로 reveal | ✅ | 루트 `Motion.section` → 평범한 `<section>`(첫 프레임 opacity 1), 배경 `<img>`만 0.35s fade. perf guard desktop/mobile 각 3회 FCP 실측(552~684ms), 측정 공백 경고 0회. e2e intro 5/5. `intro-visual-contract`에 "루트 opacity 0 금지" 회귀 단언 추가. 콘텐츠 블록 transform 진입은 e2e 레이아웃 단정(`controlsBottom ≤ viewport+1`)과 경합할 수 있어 보류 |
+| W2 `Player` any[] 3개 | ✅ | `QuestProgressState`(카탈로그 진행 + 현상수배 전용 optional 필드) · `StatusId` 8종 리터럴 유니온(단일 정의 테이블이 없어 monsters `statusEffect`/`statusOnHit` + `BALANCE.EVENT_STATUS_IDS` + exploreFlow 이상기후의 합집합으로 도출, 라벨 테이블 3곳과 일치) · `EventHistoryEntry`. tsc 표면화 9건 정리(`MSG.QUEST_DONE` 등 3개 시그니처를 `string \| undefined`로 — 기존 `QUEST_ACCEPTED` 선례). 레거시 스칼라 `status`는 `migrateData`가 배열로 정규화(부재 시 무접촉 → `DATA_VERSION` 불변). **실제 dead-read 버그 3건 수정**: `Dashboard` 수령 가능 퀘스트 배지가 존재하지 않는 `done/claimed` 필드를 읽어 영구 false, `DashboardMobileSummary` "퀘스트 0/N" 고정, AI 이벤트 컨텍스트 `activeQuests`가 `[undefined, …]`(카탈로그 퀘스트 상태엔 title이 없음) |
+| W3 정적 가드 → 행동 테스트 | ✅ | 18파일(A 9 + B 9) → `renderStatic` 렌더 단언·순수 함수 호출로 전환(142 케이스), `src/` 무변경. 구조 불변식(dead plumbing 부재, `useMemo` deps, 포털 컴포넌트, DOM 게이트 effect, 셸/빌드 스크립트)은 "구조 불변식(소스 텍스트)" 라벨로 유지·사유 기록. 변이 테스트 4건(터치 타깃 44→36px, `status: []` 제거, 시그니처 배지 조건, testid 개명)으로 새 단언이 실제 회귀를 잡는 것 확인 |
+| W4 `exp_mult` | ✅ | `getStrongestNumericRelicValue` 정책, 순서 무관·합산 아님 테스트, 증빙 재생성 |
+| W5 utils 8파일 | ✅ | 8파일 모두 `: any`/`as any` 0 (185건 → 0). stale 캐스트 4건 제거(`Player.maxInv`·`seasonPass.tier`·`stats.explores/visitedMaps/escapes`·`PREMIUM_SHOP.cosmeticTitles` — 전부 이미 선언된 필드). `mapData.level >= 20`의 타입-런타임 불일치 1건을 `Number()`로 정정(의미 동일). 교차 tsc 오류 1건(`combatActionTurn` skill.name) 통합 시 정리. `toArray<T = any>`(gameUtils)는 `deps: any` 호출부 ~30곳을 위한 경계 기본값 — 리터럴 `: any`가 아니며 다음 슬라이스(hooks `deps`)에서 사라진다 |
+| 래칫 | ✅ | `: any` 1,581 → 1,301, `as any` 99 → 83 (하락만 허용 유지) |
+
+**최종 게이트** (head `76953b8e` 기준, 샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 problems · unit **4,813 / 4,813**(skip 0) · build:guard ok · e2e(chromium, iPhone 12 에뮬레이션) **121 / 121**(13.0분) · perf guard desktop/mobile ok — FCP 실측(측정 공백 경고 0회). 교훈 하나: 게이트를 병렬로 돌릴 때 `build:guard`가 자체 `npm run build`로 `dist/`를 덮어써 e2e 중반부터 테스트 API 없는 번들이 서빙됐다(51건 실패로 위장) — dist 를 공유하는 작업은 직렬로.
+
+**남은 후보 (Wave 6)**: hooks `deps: any` 주입 경계(`createXxxActions(deps: any)` → 명시 인터페이스, `toArray<T = any>` 기본값 제거), 컴포넌트 props `any`(`ShopPanel`·`QuestBoardPanel`·`ControlPanel` 등 ~350건), systems 한글 리터럴 260건 중 데이터 키(상태이상·원소) → `StatusId`/`ElementKey` 유니온, 순수 정적 가드 잔여 22파일(아트/네이티브/Toss 증빙 계약 — 전환 가치 낮음, 유지).
