@@ -19,7 +19,7 @@ const getQuestObjectiveText = (quest: any) => (
     quest?.objective
         ? quest.objective
         : (
-    quest?.target === 'Level'
+    quest?.target === 'level'
         ? `레벨 ${quest.goal} 달성`
         : `${quest.target} ${quest.goal}회 달성`
         )
@@ -29,7 +29,7 @@ const getQuestObjectiveText = (quest: any) => (
 //   helper duplication. 호출자가 모두 명시 전달이라 default 도달 불가.
 //   default 청소 메가 시리즈 36번째 cross-file 4-default batch.
 const getQuestProgressText = (quest: any, progress: any) => (
-    quest?.target === 'Level'
+    quest?.target === 'level'
         ? `레벨 ${progress}/${quest.goal}`
         : `${progress}/${quest.goal}`
 );

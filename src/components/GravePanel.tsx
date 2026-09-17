@@ -14,19 +14,21 @@ import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
 import { db, hasFirebaseConfig } from '../firebase';
 import { APP_ID, BALANCE } from '../data/constants';
 import { isSignatureItem } from '../data/signatureItems.js';
-import { calcInvasionChance, getGraveRecoveryGroups } from '../utils/graveUtils';
+import { calcInvasionChance, excludeOwnGraves, getGraveRecoveryGroups } from '../utils/graveUtils';
 import type { Player } from '../types/index.js';
 
 const GRAVES_LIMIT = 10;
 
 interface GravePanelProps {
     player: Player;
+    /** H5(a): 세션 uid(engine state.uid). 공개 목록에서 내 묘비를 제외하는 유일한 기준. */
+    uid?: string | null;
     grave?: any;
     actions?: any;
     onOpenMap?: () => void;
 }
 
-const GravePanel = ({ player, grave, actions, onOpenMap }: GravePanelProps) => {
+const GravePanel = ({ player, uid, grave, actions, onOpenMap }: GravePanelProps) => {
     const [view, setView] = useState<'mine' | 'public'>('mine');
     const [publicGraves, setPublicGraves] = useState<any[]>([]);
     const [publicLoaded, setPublicLoaded] = useState(false);
@@ -51,14 +53,11 @@ const GravePanel = ({ player, grave, actions, onOpenMap }: GravePanelProps) => {
             const snapshot = await getDocs(graveQuery);
             const fetched: any[] = [];
             snapshot.forEach((document: any) => {
-                const data = document.data();
-                // B3-TODO(2026-09): player.uid는 어디에서도 세팅되지 않는다 — 세션 uid는
-                //   engine state.uid에만 있다. 따라서 이 '내 묘비 제외' 필터는 항상 통과하고
-                //   공개 목록에 자기 묘비가 섞인다. 고치려면 GravePanel에 uid prop을 넘기는
-                //   런타임 수정이 필요하므로, 여기서는 기존 동작을 그대로 보존한다.
-                if (data.uid !== (player as { uid?: string } | undefined)?.uid) fetched.push({ ...data, uid: document.id });
+                fetched.push({ ...document.data(), uid: document.id });
             });
-            setPublicGraves(fetched);
+            // H5(a): 내 묘비 제외 — 이전에는 존재하지 않는 player.uid와 비교해 필터가 항상
+            //   통과했고 자기 묘비가 침공 후보로 노출됐다. 판정은 순수 함수가 소유한다.
+            setPublicGraves(excludeOwnGraves(fetched, uid));
             setPublicLoaded(true);
         } catch (error) {
             console.warn('Grave fetch failed', error);

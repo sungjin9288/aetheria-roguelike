@@ -128,7 +128,8 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
 
   // 시스템 stats (몬스터가 아닌 진행도 키)
   const SYSTEM_TARGETS = new Set([
-      'Level', 'level',
+      // H5(d): 레벨 목표 target은 소문자 'level'로 통일됐다(퀘스트·업적 공통).
+      'level',
       'abyssRecord', 'bossKills', 'bountiesCompleted', 'crafts',
       'deaths', 'demonKingSlain', 'discoveries', 'discoveryChains',
       'escapes', 'explores', 'kills', 'lowHpWins', 'maxKillStreak',
@@ -246,7 +247,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    */
 
   const SYSTEM_TARGETS = new Set([
-      'Level', 'level', 'kills', 'explores', 'deaths', 'rests', 'crafts', 'synths',
+      'level', 'kills', 'explores', 'deaths', 'rests', 'crafts', 'synths',
       'bossKills', 'bountiesCompleted', 'discoveries', 'discoveryChains',
       'maxKillStreak', 'prestige', 'relicCount', 'abyssRecord', 'demonKingSlain',
       'escapes', 'signaturesDiscovered', 'signatureSetsCompleted', 'total_gold',
@@ -1292,7 +1293,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    *
    * 회귀 가드:
    * - 4 internal callsite 동작 그대로.
-   * - body 'Level' ternary + Math.max(0, progress) defensive 보존.
+   * - body 'level' ternary + Math.max(0, progress) defensive 보존.
    */
 
   const HERE = path.dirname(fileURLToPath(import.meta.url));

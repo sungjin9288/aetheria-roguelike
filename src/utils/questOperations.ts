@@ -81,7 +81,7 @@ const getActiveQuestEntries = (player: Player) => (
 //   외부 1-arg caller가 reachable이라 보존, inner chain은 redundant 정리.
 const getQuestTargetMaps = (quest: Quest, maps: Record<string, GameMap>) => {
     if (quest?.location && maps[quest.location]) return [quest.location];
-    if (!quest?.target || quest.target === 'Level') return [];
+    if (!quest?.target || quest.target === 'level') return [];
 
     return (Object.entries(maps) as Array<[string, any]>)
         .filter(([, map]) => {
@@ -113,7 +113,7 @@ const getBeginnerQuestEffortScore = (quest: Quest, playerLevel: number) => {
 const getQuestLane = (quest: Quest, resonance: any, maps: Record<string, GameMap>) => {
     if (isStoryQuest(quest)) return 'story';
     if (quest?.buildTag || quest?.type === 'build_victory' || (quest?.type === 'survive_low_hp' && resonance.score >= 3)) return 'build';
-    if (quest?.target === 'Level' || ['craft', 'combat_count', 'explore_count', 'discovery_count', 'bounty_count'].includes(quest?.type ?? '')) return 'growth';
+    if (quest?.target === 'level' || ['craft', 'combat_count', 'explore_count', 'discovery_count', 'bounty_count'].includes(quest?.type ?? '')) return 'growth';
     if (isBossQuest(quest, maps)) return 'boss';
     return 'hunt';
 };
@@ -129,7 +129,7 @@ const getQuestReason = (quest: Quest, lane: any, resonance: any, targetMaps: str
         return `${resonance.summary}. 현재 장비 성장 방향을 보상으로 굳히기 좋습니다.`;
     }
     if (lane === 'growth') {
-        if (quest?.target === 'Level') return '전직이나 다음 권역 진입 전에 성장을 확실히 체감하게 해 줍니다.';
+        if (quest?.target === 'level') return '전직이나 다음 권역 진입 전에 성장을 확실히 체감하게 해 줍니다.';
         if (quest?.type === 'craft') return '제작을 열어 장비 성장과 보급을 함께 준비하게 해 줍니다.';
         return '누적 성장 목표를 밀어 모험의 중간 목표를 또렷하게 만드는 임무입니다.';
     }
@@ -146,7 +146,7 @@ const getQuestReason = (quest: Quest, lane: any, resonance: any, targetMaps: str
 
 const getOperationPlanObjective = (quest: Quest, targetMaps: string[]) => {
     if (targetMaps[0]) return `${targetMaps[0]} 진입`;
-    if (quest?.target === 'Level') return `레벨 ${quest.goal} 달성`;
+    if (quest?.target === 'level') return `레벨 ${quest.goal} 달성`;
     if (quest?.type === 'craft') return '제작 루프 가동';
     if (quest?.type === 'combat_count') {
         return quest.target === 'bossKills'
@@ -173,7 +173,7 @@ const getOperationPlanSteps = (quest: Quest, player: Player, lane: any, targetMa
 
 const getOperationRouteLabel = (quest: Quest, targetMaps: string[]) => {
     if (targetMaps[0]) return targetMaps[0];
-    if (quest?.target === 'Level') return '성장 루트';
+    if (quest?.target === 'level') return '성장 루트';
     if (quest?.type === 'craft') return '제작과 보급 경로';
     if (quest?.type === 'combat_count') return quest.target === 'bossKills' ? '보스 권역' : '모든 권역';
     if (['explore_count', 'discovery_count'].includes(quest?.type ?? '')) return '미답사 루트';
@@ -231,7 +231,7 @@ const getOperationRiskProfile = (quest: Quest, player: Player, lane: any, target
         return {
             label: '성장 안정',
             tone: 'upgrade',
-            detail: quest?.target === 'Level' ? '레벨업 목표' : '누적 성장 목표',
+            detail: quest?.target === 'level' ? '레벨업 목표' : '누적 성장 목표',
         };
     }
 
@@ -245,7 +245,7 @@ const getOperationRiskProfile = (quest: Quest, player: Player, lane: any, target
 const getOperationPayoff = (quest: Quest, lane: any, resonance: any) => {
     if (lane === 'story') return '서사 해금';
     if (lane === 'build' && resonance?.label) return `${resonance.label} 보상 고정`;
-    if (lane === 'growth') return quest?.target === 'Level' ? '다음 레벨 준비' : '성장 자원';
+    if (lane === 'growth') return quest?.target === 'level' ? '다음 레벨 준비' : '성장 자원';
     if (lane === 'boss') return '보스 전리품';
     if (quest?.reward?.item) return `${quest.reward.item} 확보`;
     return '골드와 경험 획득';
@@ -259,7 +259,7 @@ const getOperationExtractionRule = (quest: Quest, player: Player, lane: any, tar
     if (hpRatio <= OPERATION_BRIEF_LOW_HP_RATIO) return '수락 전 휴식으로 생명을 회복한 뒤 출발';
     if (inventoryCount >= inventoryCap - OPERATION_BRIEF_INVENTORY_BUFFER) return '가방 정리 후 출발';
     if (lane === 'boss') return '보스 조우 전 생명이 75% 미만이면 귀환';
-    if (quest?.target === 'Level') return `레벨 ${quest.goal} 달성 후 마을 귀환`;
+    if (quest?.target === 'level') return `레벨 ${quest.goal} 달성 후 마을 귀환`;
     if (quest?.type === 'combat_count') {
         const label = quest.target === 'bossKills' ? '보스 처치' : '누적 처치';
         return `${label} ${quest.goal}회 달성 후 마을 귀환`;
@@ -333,7 +333,7 @@ const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | n
 
     if (lane === 'story') score += 44;
     if (lane === 'build') score += resonance.score >= 6 ? 24 : 8;
-    if (lane === 'growth') score += quest?.target === 'Level' ? 18 : 12;
+    if (lane === 'growth') score += quest?.target === 'level' ? 18 : 12;
     if (lane === 'boss') score += 14;
     if (lane === 'hunt') score += 10;
 
@@ -341,7 +341,7 @@ const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | n
     if (isCurrentZoneTarget) score += 8;
 
     if (activeTargets.has(quest?.target)) score -= 16;
-    if (player?.job === '모험가' && quest?.target === 'Level') score += (playerLevel >= 5 ? 14 : 20);
+    if (player?.job === '모험가' && quest?.target === 'level') score += (playerLevel >= 5 ? 14 : 20);
     if (quest?.type === 'craft' && (player?.stats?.crafts || 0) === 0) score += 4;
     if (quest?.type === 'bounty_count' && (player?.stats?.bountiesCompleted || 0) === 0) score += 2;
 

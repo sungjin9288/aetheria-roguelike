@@ -266,6 +266,9 @@ export const useGameEngine = () => {
         gameState,
         logs,
         enemy,
+        // H5(a): 세션 uid는 state.uid에만 있다(player.uid는 어디에서도 쓰이지 않는다).
+        //   공개 묘비 목록에서 "내 묘비 제외"를 실제로 판정하려면 화면까지 내려가야 한다.
+        uid,
         actions,
         getFullStats,
         sideTab,

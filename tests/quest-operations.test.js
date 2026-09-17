@@ -43,7 +43,7 @@ const runQuestAction = (player, invoke) => {
 };
 
 const SYSTEM_QUEST_TARGETS = new Set([
-    'Level', 'level', 'kills', 'explores', 'deaths', 'rests', 'crafts', 'synths',
+    'level', 'kills', 'explores', 'deaths', 'rests', 'crafts', 'synths',
     'bossKills', 'bountiesCompleted', 'discoveries', 'discoveryChains',
     'maxKillStreak', 'prestige', 'relicCount', 'abyssRecord', 'demonKingSlain',
     'escapes', 'signaturesDiscovered', 'signatureSetsCompleted', 'total_gold',

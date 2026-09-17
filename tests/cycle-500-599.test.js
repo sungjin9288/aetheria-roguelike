@@ -3884,12 +3884,14 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 579: 정합성 가드 — 다수 callsite 보존', async () => {
+      // H5(c)(Wave 3): 가짜 {maxHp, maxMp} 폴백을 없애며 두 호출부가 한 줄로 바뀌었다.
+      //   이 가드의 의도(maps를 포함한 4 args 명시 전달)는 그대로 유지한다.
       const mn = await readSrc('src/components/MapNavigator.tsx');
-      assert.ok(/getMoveRecommendations\(\s*\n\s*player,\s*\n[\s\S]*?DB\.MAPS,\s*\n\s*\)/.test(mn),
+      assert.ok(/getMoveRecommendations\(player,\s*stats,\s*currentMap,\s*DB\.MAPS\)/.test(mn),
           'MapNavigator getMoveRecommendations 4-arg callsite 보존');
 
       const cp = await readSrc('src/components/ControlPanel.tsx');
-      assert.ok(/getMoveRecommendations\(player,\s*stats \|\| \{ maxHp: player\.maxHp, maxMp: player\.maxMp \},\s*mapData,\s*DB\.MAPS\)/.test(cp),
+      assert.ok(/getMoveRecommendations\(player,\s*stats,\s*mapData,\s*DB\.MAPS\)/.test(cp),
           'ControlPanel getMoveRecommendations callsite 보존');
   });
 

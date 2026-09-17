@@ -335,14 +335,11 @@ const ControlPanel = ({
   const currentLocation = player.loc || '';
   const playerLevel = player.level || 1;
   const questTracker = getQuestTracker(player);
-  const guidance = getAdventureGuidance(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, gameState);
-  const moveRecommendations = getMoveRecommendations(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }, mapData, DB.MAPS);
-  const expeditionPreparation = getExpeditionPreparation(
-    player,
-    stats || { maxHp: player.maxHp, maxMp: player.maxMp },
-    mapData,
-    DB.MAPS,
-  );
+  // H5(c): stats가 없을 때 가짜 {maxHp, maxMp}를 만들어 넘기던 폴백 제거 —
+  //   세 함수 모두 내부에서 `stats?.maxHp || player?.maxHp`로 이미 같은 값을 쓴다.
+  const guidance = getAdventureGuidance(player, stats, mapData, gameState);
+  const moveRecommendations = getMoveRecommendations(player, stats, mapData, DB.MAPS);
+  const expeditionPreparation = getExpeditionPreparation(player, stats, mapData, DB.MAPS);
   const questTargets = getExpeditionFocusRouteTargets(player).filter((target) => DB.MAPS[target]);
   const questNextSteps = new Set(questTargets.map((target) => getNextMapTowardTarget(DB.MAPS, currentLocation, target)).filter(Boolean));
   const routeTopologyEntries: RouteTopologyEntry[] = moveRecommendations.map((route: any) => {

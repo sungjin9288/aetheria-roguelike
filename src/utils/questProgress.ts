@@ -11,7 +11,7 @@ export const createQuestProgressState = (quest: any, player: Player) => {
     const progressState: Record<string, any> = {
         id: quest.id,
         progress: cumulativeProgress === null
-            ? (quest.target === 'Level' ? player.level : 0)
+            ? (quest.target === 'level' ? player.level : 0)
             : cumulativeProgress,
     };
 
@@ -64,7 +64,7 @@ export const syncQuestProgress = (player: Player, enemyName: any, questCatalog: 
             return { ...quest, progress: latch(quest.progress, cumulativeProgress, questData.goal) };
         }
 
-        if (questData.target === 'Level') {
+        if (questData.target === 'level') {
             return { ...quest, progress: Math.max(quest.progress || 0, player.level || 0) };
         }
 

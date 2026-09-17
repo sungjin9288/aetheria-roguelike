@@ -118,49 +118,54 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                 <SignalBadge tone="resonance" size="sm">레벨 {player?.level || 1}</SignalBadge>
             </header>
 
-            <section data-testid="stats-current-growth" className="border-y border-white/10 py-3">
-                <div className="flex items-center justify-between gap-3">
-                    <div className="flex min-w-0 items-center gap-2">
-                        <Sparkles size={14} className="shrink-0 text-[#f6e7a2]" />
-                        <div className="min-w-0">
-                            <div className="text-[11px] font-readable text-slate-400">현재 성장</div>
-                            <div className={`truncate text-[14px] font-readable font-bold ${trait!.accent}`}>{trait!.name}</div>
+            {/* H5(b): trait은 player/stats가 모두 없을 때 null이 될 수 있다 —
+                이전에는 trait! 단언으로 8곳을 무방비로 읽었다. 성향을 알 수 없으면
+                이 구획만 생략하고 누적 기록은 그대로 보여 준다. */}
+            {trait && (
+                <section data-testid="stats-current-growth" className="border-y border-white/10 py-3">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex min-w-0 items-center gap-2">
+                            <Sparkles size={14} className="shrink-0 text-[#f6e7a2]" />
+                            <div className="min-w-0">
+                                <div className="text-[11px] font-readable text-slate-400">현재 성장</div>
+                                <div className={`truncate text-[14px] font-readable font-bold ${trait.accent}`}>{trait.name}</div>
+                            </div>
                         </div>
+                        <SignalBadge tone="resonance" size="sm">{trait.title}</SignalBadge>
                     </div>
-                    <SignalBadge tone="resonance" size="sm">{trait!.title}</SignalBadge>
-                </div>
 
-                <div className="mt-3 grid grid-cols-2 gap-2">
-                    <div className="aether-panel-muted rounded-lg px-3 py-2.5">
-                        <div className="flex items-center gap-1 text-[11px] font-readable text-slate-400">
-                            <Zap size={11} /> 전용 기술
+                    <div className="mt-3 grid grid-cols-2 gap-2">
+                        <div className="aether-panel-muted rounded-lg px-3 py-2.5">
+                            <div className="flex items-center gap-1 text-[11px] font-readable text-slate-400">
+                                <Zap size={11} /> 전용 기술
+                            </div>
+                            <div className="mt-1 text-xs font-readable font-bold text-emerald-100">
+                                {trait.skill?.name || '없음'}
+                            </div>
                         </div>
-                        <div className="mt-1 text-xs font-readable font-bold text-emerald-100">
-                            {trait!.skill?.name || '없음'}
+                        <div className="aether-panel-muted rounded-lg px-3 py-2.5">
+                            <div className="flex items-center gap-1 text-[11px] font-readable text-slate-400">
+                                <Shield size={11} /> 패시브
+                            </div>
+                            <div className="mt-1 text-xs font-readable font-bold text-slate-100/90">
+                                {passiveParts.length > 0 ? passiveParts.join(' / ') : trait.passiveLabel}
+                            </div>
                         </div>
                     </div>
-                    <div className="aether-panel-muted rounded-lg px-3 py-2.5">
-                        <div className="flex items-center gap-1 text-[11px] font-readable text-slate-400">
-                            <Shield size={11} /> 패시브
-                        </div>
-                        <div className="mt-1 text-xs font-readable font-bold text-slate-100/90">
-                            {passiveParts.length > 0 ? passiveParts.join(' / ') : trait!.passiveLabel}
-                        </div>
-                    </div>
-                </div>
 
-                <p className="mt-3 text-xs font-readable leading-relaxed text-slate-300/82">{trait!.desc}</p>
-                <div className="mt-3 grid gap-2 border-t border-white/8 pt-3 text-[11px] font-readable">
-                    <div className="flex items-start gap-2">
-                        <span className="w-14 shrink-0 text-[#d5b180]">다음 성장</span>
-                        <span className="text-slate-200/84">{trait!.rewardFocus}</span>
+                    <p className="mt-3 text-xs font-readable leading-relaxed text-slate-300/82">{trait.desc}</p>
+                    <div className="mt-3 grid gap-2 border-t border-white/8 pt-3 text-[11px] font-readable">
+                        <div className="flex items-start gap-2">
+                            <span className="w-14 shrink-0 text-[#d5b180]">다음 성장</span>
+                            <span className="text-slate-200/84">{trait.rewardFocus}</span>
+                        </div>
+                        <div className="flex items-start gap-2">
+                            <span className="w-14 shrink-0 text-[#8fd6cf]">추천 임무</span>
+                            <span className="text-slate-200/84">{trait.questFocus}</span>
+                        </div>
                     </div>
-                    <div className="flex items-start gap-2">
-                        <span className="w-14 shrink-0 text-[#8fd6cf]">추천 임무</span>
-                        <span className="text-slate-200/84">{trait!.questFocus}</span>
-                    </div>
-                </div>
-            </section>
+                </section>
+            )}
 
             {activeSignatureSet && sigSetTone && (
                 <div

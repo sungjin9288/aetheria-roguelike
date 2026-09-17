@@ -10,7 +10,7 @@ const isStoryQuest = (quest: any) => String(quest?.title || '').includes('[ìŠ¤í†
 
 export const getExpeditionQuestTargetMaps = (quest: any, maps: Record<string, any> = MAPS) => {
     if (quest?.location && maps[quest.location]) return [quest.location];
-    if (!quest?.target || quest.target === 'Level') return [];
+    if (!quest?.target || quest.target === 'level') return [];
 
     return Object.entries(maps)
         .filter(([, map]: any) => [

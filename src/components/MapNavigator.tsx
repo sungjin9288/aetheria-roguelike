@@ -189,12 +189,8 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
     const currentMap = DB.MAPS[player.loc];
     const playerLevel = player.level || 1;
     const blindMap = player.challengeModifiers?.includes('blindMap') || false;
-    const moveRecommendations = getMoveRecommendations(
-        player,
-        stats || { maxHp: player.maxHp, maxMp: player.maxMp },
-        currentMap,
-        DB.MAPS,
-    );
+    // H5(c): 가짜 stats 폴백 제거 — getMoveRecommendations가 내부에서 player.maxHp/maxMp로 폴백한다.
+    const moveRecommendations = getMoveRecommendations(player, stats, currentMap, DB.MAPS);
     const focusedQuestEntries = getFocusedExpeditionQuestEntries(player);
     const questTargets = getExpeditionFocusRouteTargets(player).filter((target) => DB.MAPS[target]);
     const questNextSteps = new Set(questTargets

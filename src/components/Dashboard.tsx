@@ -42,6 +42,8 @@ const TabSpinner = () => (
 
 interface DashboardProps {
     player: Player;
+    /** H5(a): 세션 uid — 공개 묘비 목록에서 내 묘비를 제외하는 데 쓴다. */
+    uid?: string | null;
     grave?: any;
     sideTab?: string;
     setSideTab?: (tab: string) => void;
@@ -70,6 +72,7 @@ const TAB_ITEMS = [
 
 const Dashboard = ({
     player,
+    uid,
     grave,
     sideTab,
     setSideTab,
@@ -186,6 +189,7 @@ const Dashboard = ({
                 <Suspense fallback={<TabSpinner />}>
                     <GravePanel
                         player={player}
+                        uid={uid}
                         grave={grave}
                         actions={actions}
                         onOpenMap={() => selectTab('map')}
