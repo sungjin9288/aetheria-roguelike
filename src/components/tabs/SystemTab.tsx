@@ -670,7 +670,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                 data-testid="system-clear-error-reports"
                                 onClick={handleClearErrorReports}
                                 disabled={errorReports.length === 0}
-                                className="flex min-h-[36px] shrink-0 items-center gap-1 rounded-[0.55rem] border border-white/8 bg-black/20 px-2.5 py-1.5 font-readable text-[11px] font-semibold text-slate-300 transition-colors hover:bg-black/30 disabled:opacity-40"
+                                className="flex min-h-[44px] shrink-0 items-center gap-1 rounded-[0.55rem] border border-white/8 bg-black/20 px-2.5 py-1.5 font-readable text-[11px] font-semibold text-slate-300 transition-colors hover:bg-black/30 disabled:opacity-40"
                             >
                                 <Trash2 size={13} /> {MSG.ERROR_REPORT_CLEAR_BUTTON}
                             </button>
