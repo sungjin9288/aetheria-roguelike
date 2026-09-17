@@ -1,9 +1,19 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { spawnSync } from 'node:child_process';
 
 const root = new URL('../', import.meta.url);
+
+// Wave 3 Track K1: scripts/ios-archive.sh reads the export destination via the macOS-only
+// /usr/libexec/PlistBuddy before it ever reaches xcodebuild. Without it the script falls through
+// to xcodebuild (also absent off macOS, exit 127) instead of the upload-approval guard this test
+// asserts on — so the assertion can only hold on a host that actually has PlistBuddy.
+const PLIST_BUDDY_PATH = '/usr/libexec/PlistBuddy';
+const HAS_PLIST_BUDDY = process.platform === 'darwin' && existsSync(PLIST_BUDDY_PATH);
+const IOS_TOOLING_SKIP = !HAS_PLIST_BUDDY
+    && `${PLIST_BUDDY_PATH} is unavailable (process.platform=${process.platform}) — ios-archive.sh cannot reach its upload-approval guard without it; run on macOS to verify`;
 
 test('App Store export stays local while the upload profile remains explicit', async () => {
     const [localExport, uploadExport] = await Promise.all([
@@ -16,7 +26,7 @@ test('App Store export stays local while the upload profile remains explicit', a
     assert.match(uploadExport, /<key>destination<\/key>\s*<string>upload<\/string>/);
 });
 
-test('iOS archive refuses an App Store Connect upload without explicit approval', () => {
+test('iOS archive refuses an App Store Connect upload without explicit approval', { skip: IOS_TOOLING_SKIP }, () => {
     const result = spawnSync('bash', ['scripts/ios-archive.sh'], {
         cwd: root,
         encoding: 'utf8',

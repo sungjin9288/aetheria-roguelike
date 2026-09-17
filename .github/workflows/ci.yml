@@ -25,6 +25,18 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install art pipeline Python dependencies
+        # tests/art-asset-contract.test.js, tests/equipment-art-pipeline.test.js,
+        # tests/equipment-signature-art*.test.js shell out to Pillow-based scripts
+        # (scripts/*.py) — without this the unit job fails ~105 tests before any
+        # assertion about the game itself runs.
+        run: pip install -r requirements-art.txt
+
       - name: Lint
         run: npm run lint
 
@@ -32,6 +44,9 @@ jobs:
         run: npm run type-check
 
       - name: Unit tests
+        # 9 byte-exact art reproducibility checks stay opt-in (AETHERIA_ART_REPRO=1) —
+        # they depend on the original asset-generation platform, not just Pillow's version.
+        # See requirements-art.txt and docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md §7.
         run: npm run test:unit
 
       - name: Build

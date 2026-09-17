@@ -11,6 +11,12 @@ import { ITEMS } from '../src/data/items.js';
 import { getItemIconAssetSrc } from '../src/utils/itemVisuals.js';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+
+// Wave 3 Track K1: byte-exact art reproducibility is bound to the original generation
+// platform (Pillow build/OS) which is unrecorded — see docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md §7.
+// Opt in locally on that platform with AETHERIA_ART_REPRO=1; every other art test still runs unconditionally.
+const ART_REPRO_SKIP = process.env.AETHERIA_ART_REPRO !== '1'
+    && 'byte-exact reproducibility requires the original generation platform; set AETHERIA_ART_REPRO=1';
 const DUMP_SCRIPT = resolve(REPO_ROOT, 'scripts/dump-equipment-catalog.mjs');
 const PROMPT_SCRIPT = resolve(REPO_ROOT, 'scripts/generate_equipment_art_prompts.mjs');
 const SOURCE_PREPARER_SCRIPT = resolve(REPO_ROOT, 'scripts/prepare_equipment_source_sheet.py');
@@ -199,7 +205,7 @@ test('equipment manifest sync preserves canonical generation review pins for act
     ];
 
     for (const [cohort, provenancePath, sourceDir] of cohorts) {
-        await context.test(cohort, async () => {
+        await context.test(cohort, { skip: ART_REPRO_SKIP }, async () => {
             const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-generation-review-sync-'));
             const catalogPath = join(directory, 'catalog.json');
             const outputPath = join(directory, 'synced-manifest.json');
@@ -1594,7 +1600,7 @@ test('armor processor rejects visible chroma-green residual before writes', asyn
     }
 });
 
-test('armor processor preserves reviewed nature accents but rejects a large chroma-key region without writes', async () => {
+test('armor processor preserves reviewed nature accents but rejects a large chroma-key region without writes', { skip: ART_REPRO_SKIP }, async () => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-armor-nature-chroma-'));
     const catalogPath = join(directory, 'catalog.json');
     const sourcePath = join(directory, 'armor-cloak-01.png');
@@ -1685,7 +1691,7 @@ test('equipment batch processor treats an exact batch replay as a no-op without 
     }
 });
 
-test('equipment batch processor validates finalized generation review before an exact armor replay', async (context) => {
+test('equipment batch processor validates finalized generation review before an exact armor replay', { skip: ART_REPRO_SKIP }, async (context) => {
     const directory = await mkdtemp(join(tmpdir(), 'aetheria-equipment-finalized-replay-'));
     const catalogPath = join(directory, 'catalog.json');
     const declarationPath = join(directory, 'source-declaration.json');

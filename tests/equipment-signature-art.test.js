@@ -10,6 +10,12 @@ import { buildEquipmentCatalogRows } from '../scripts/dump-equipment-catalog.mjs
 import { verifyArtAssets } from '../scripts/verify-art-assets.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+
+// Wave 3 Track K1: byte-exact art reproducibility is bound to the original generation
+// platform (Pillow build/OS) which is unrecorded — see docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md §7.
+// Opt in locally on that platform with AETHERIA_ART_REPRO=1; every other art test still runs unconditionally.
+const ART_REPRO_SKIP = process.env.AETHERIA_ART_REPRO !== '1'
+    && 'byte-exact reproducibility requires the original generation platform; set AETHERIA_ART_REPRO=1';
 const MANIFEST_PATH = path.join(ROOT, 'src/data/equipmentArtManifest.json');
 const PROVENANCE_PATH = path.join(ROOT, 'docs/evidence/art/equipment-signature-mythic-provenance.json');
 const ANSWER_KEY_PATH = path.join(ROOT, 'docs/evidence/art/equipment-signature-mythic-contact-sheet-answer-key.json');
@@ -259,7 +265,7 @@ test('Task 8 named, anonymous, and corrected staff review sheets are determinist
     assert.equal(sha256(staff.bytes), '07eebdc19515cf234290662aca0602be1f33400524dec2527b4729d76e822556');
 });
 
-test('Task 8 full verifier includes families and signature overlays in the approved art report', async () => {
+test('Task 8 full verifier includes families and signature overlays in the approved art report', { skip: ART_REPRO_SKIP }, async () => {
     const report = await verifyArtAssets({ scope: 'all' });
     assert.deepEqual(report.verifiedSurfaces, ['characters', 'equipment', 'families', 'signature-overlays']);
     assert.equal(report.counts.equipment, 229);
