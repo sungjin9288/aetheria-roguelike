@@ -7,7 +7,8 @@ import { addItemByName } from '../../utils/inventoryUtils';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
-import { spawnEnemy, rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from '../../utils/exploreUtils';
+import { spawnEnemy } from '../../utils/exploreUtils';
+import { rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from './exploreFlow';
 import { BALANCE } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
@@ -218,7 +219,7 @@ export const createEventActions = (deps: any, shared: any) => {
                 if (selectedOutcome.buff) {
                     updatedPlayer = applyOutcomeBuff(updatedPlayer, selectedOutcome.buff, addLog);
                 }
-                // 상태이상 — 기상 이변(exploreUtils)과 동일하게 id 문자열만 중복 없이 누적한다.
+                // 상태이상 — 기상 이변(exploreFlow)과 동일하게 id 문자열만 중복 없이 누적한다.
                 if (selectedOutcome.status) {
                     updatedPlayer = applyOutcomeStatus(updatedPlayer, selectedOutcome.status, addLog);
                 }
@@ -290,7 +291,7 @@ const applyOutcomeBuff = (player: Player, buff: any, addLog: any) => {
 
 /**
  * 이벤트 outcome 상태이상 적용 (2026-09 Wave 3 I1).
- * exploreUtils의 기상 이변 경로와 같은 표현(문자열 id 중복 없는 누적)을 쓴다.
+ * exploreFlow의 기상 이변 경로와 같은 표현(문자열 id 중복 없는 누적)을 쓴다.
  * 화이트리스트는 aiEventUtils에서 이미 통과했지만, dispatch 직전에 한 번 더 확인한다.
  */
 const applyOutcomeStatus = (player: Player, status: any, addLog: any) => {
@@ -364,7 +365,7 @@ const startEliteEncounter = (player: Player, { dispatch, addLog, getFullStats, r
 
 /**
  * 스카우팅 카드 선택 처리 — 카드 4종(combat/anomaly/unknown/elite)을 같은 탐험 턴 안에서
- * 즉시 해소한다. exploreUtils.ts의 기존 파이프 함수들(spawnEnemy/rollExplorationEvent/
+ * 즉시 해소한다. 기존 파이프 함수들(exploreUtils.spawnEnemy / exploreFlow의 rollExplorationEvent/
  * applyBattleStartRelics/runQuietRollAndCombat)을 재호출/재배치하는 방식 — 신규 스폰
  * 로직을 만들지 않는다.
  */

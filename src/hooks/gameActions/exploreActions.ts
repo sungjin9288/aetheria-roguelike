@@ -4,7 +4,7 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { AI_SERVICE } from '../../services/aiService';
 import { toArray } from '../../utils/gameUtils';
-import { runQuietRollAndCombat } from '../../utils/exploreUtils';
+import { runQuietRollAndCombat } from './exploreFlow';
 import { canOfferOptionalExploreDecision, getMapPacingProfile, getNarrativeEventChance } from '../../utils/explorationPacing';
 import { getRunBuildProfile } from '../../utils/runProfileUtils';
 import { enrichSnapshotWithDifficulty } from '../../systems/DifficultyManager';
@@ -39,7 +39,7 @@ const takeHarnessExploreSeed = (): number | undefined => {
 /**
  * 캠프파이어/스카우팅 이후 AI 랜덤 이벤트 체크 (explore() 전용 — AI_SERVICE는 firebase에
  * 의존하므로 eventActions.ts의 스카우팅 "짙은 안개" 카드는 이 함수를 거치지 않고
- * runQuietRollAndCombat(exploreUtils.ts)만 재사용한다 — firebase-free 단위 테스트 유지).
+ * runQuietRollAndCombat(exploreFlow.ts)만 재사용한다 — firebase-free 단위 테스트 유지).
  * AI 이벤트가 발동하지 않으면 quiet 롤 이하 파이프(runQuietRollAndCombat)로 이어진다.
  */
 const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExploreOutcome }: any, optionalDecisionAllowed: boolean) => {

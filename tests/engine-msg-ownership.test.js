@@ -61,7 +61,8 @@ test('H4: 리듀서 귀환 보급 로그가 MSG를 참조한다', async () => {
 });
 
 test('H4: 탐험 이상기후 / 열쇠 / 유물 문구가 MSG를 참조한다', async () => {
-    const source = stripComments(await readSrc('src/utils/exploreUtils.ts'));
+    // Wave 4 N1: dispatch 소비 함수가 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+    const source = stripComments(await readSrc('src/hooks/gameActions/exploreFlow.ts'));
 
     assert.doesNotMatch(source, /'자욱한 독안개가 밀려옵니다!/);
     assert.doesNotMatch(source, /'강력한 마력의 폭풍이 붑니다\./);

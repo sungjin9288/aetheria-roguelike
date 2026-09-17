@@ -99,7 +99,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
         // 노출. killStreak 시스템 톤(red)과 매치. berserker 칭호 진행도 시각화.
         { label: '최대 연속 처치', value: player?.stats?.maxKillStreak || 0, icon: Flame, color: 'text-red-400' },
         // cycle 104: CHAINS — cycle 102/103 ach_chain_*/chain_master 칭호 진행도 가시화.
-        // chain_master 칭호 톤(indigo)과 매치. exploreUtils.checkDiscoveryChains에서 누적.
+        // chain_master 칭호 톤(indigo)과 매치. exploreFlow.checkDiscoveryChains에서 누적.
         { label: '완료한 발견 여정', value: (player?.stats?.discoveryChains || []).length, icon: Link2, color: 'text-indigo-300' },
     ];
     const coreRecordLabels = new Set(['레벨', '총 처치', '보스 처치', '최대 연속 처치']);

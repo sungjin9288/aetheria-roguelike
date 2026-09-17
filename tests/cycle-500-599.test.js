@@ -581,9 +581,10 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/getNarrativeEventChance\([^)]*,[^)]*,[^)]*,[^)]*\)/.test(exploreActions),
           'exploreActions getNarrativeEventChance 4 args 보존');
 
-      const exploreUtils = await readSrc('src/utils/exploreUtils.ts');
-      assert.ok(/getDiscoveryOdds\([^)]*,[^)]*\)/.test(exploreUtils),
-          'exploreUtils getDiscoveryOdds 2 args 보존 (quietChance 경유 호출)');
+      // Wave 4 N1: getDiscoveryOdds 호출부가 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const exploreFlow = await readSrc('src/hooks/gameActions/exploreFlow.ts');
+      assert.ok(/getDiscoveryOdds\([^)]*,[^)]*\)/.test(exploreFlow),
+          'exploreFlow getDiscoveryOdds 2 args 보존 (quietChance 경유 호출)');
 
       const pacing = await readSrc('src/utils/explorationPacing.ts');
       assert.ok(/getNarrativeEventChance\(mapData\?\.eventChance \|\| 0, 0, player\?\.stats, mapData(?: \?\? null)?\)/.test(pacing),

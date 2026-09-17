@@ -12,7 +12,7 @@ import {
     getBaseRelicOfferProbability,
 } from '../src/data/relics.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
-import { applyBattleStartRelics } from '../src/utils/exploreUtils.js';
+import { applyBattleStartRelics } from '../src/hooks/gameActions/exploreFlow.js';
 import { migrateData } from '../src/utils/gameUtils.js';
 import {
     buildRelicBalanceReport,

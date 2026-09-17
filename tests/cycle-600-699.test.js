@@ -823,7 +823,8 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 618: 정합성 가드 — caller new Date() 명시 추가', async () => {
-      const source = await readSrc('src/utils/exploreUtils.ts');
+      // Wave 4 N1: dispatch 소비 함수가 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const source = await readSrc('src/hooks/gameActions/exploreFlow.ts');
       assert.ok(/getCurrentWeeklyProtocol\(player\.weeklyProtocol,\s*new Date\(\)\)/.test(source),
           'resetWeeklyProtocolIfNeeded current cycle date 명시');
   });
@@ -1459,18 +1460,20 @@ import { readFile } from 'node:fs/promises';
       const exploreActionsNothing = (exploreActions.match(/commitExploreOutcome\('nothing',\s*null,\s*mapData\)/g) || []).length;
       assert.ok(exploreActionsNothing >= 1, `exploreActions 'nothing' callsite null+mapData 명시 1건 이상 (got ${exploreActionsNothing})`);
 
-      const exploreUtils = await readSrc('src/utils/exploreUtils.ts');
-      const exploreUtilsNothing = (exploreUtils.match(/commitExploreOutcome\('nothing',\s*null,\s*gaugeMapData\)/g) || []).length;
-      assert.ok(exploreUtilsNothing >= 1, `exploreUtils 'nothing' callsite null 명시 1건 이상 (got ${exploreUtilsNothing})`);
-      assert.ok(/commitExploreOutcome\(quietResult,\s*null,\s*gaugeMapData\)/.test(exploreUtils),
+      // Wave 4 N1: runQuietRollAndCombat이 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const exploreFlow = await readSrc('src/hooks/gameActions/exploreFlow.ts');
+      const exploreFlowNothing = (exploreFlow.match(/commitExploreOutcome\('nothing',\s*null,\s*gaugeMapData\)/g) || []).length;
+      assert.ok(exploreFlowNothing >= 1, `exploreFlow 'nothing' callsite null 명시 1건 이상 (got ${exploreFlowNothing})`);
+      assert.ok(/commitExploreOutcome\(quietResult,\s*null,\s*gaugeMapData\)/.test(exploreFlow),
           'quietResult callsite null 명시 보존 (gaugeMapData — skipBossGaugeAdvance 시 null)');
-      assert.ok(/commitExploreOutcome\('relic_found',\s*null,\s*gaugeMapData\)/.test(exploreUtils),
+      assert.ok(/commitExploreOutcome\('relic_found',\s*null,\s*gaugeMapData\)/.test(exploreFlow),
           "'relic_found' callsite null 명시 보존 (gaugeMapData)");
   });
 
   test('cycle 628: combat 2-arg callsite 보존 (line 168)', async () => {
-      // 탐험 스카우팅(2026-07): combat callsite가 exploreUtils.ts로 이동 — 경로만 갱신.
-      const source = await readSrc('src/utils/exploreUtils.ts');
+      // 탐험 스카우팅(2026-07): combat callsite가 exploreUtils.ts로 이동.
+      // Wave 4 N1: 다시 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const source = await readSrc('src/hooks/gameActions/exploreFlow.ts');
       assert.ok(/commitExploreOutcome\('combat',\s*\(nextPlayer:\s*any\)\s*=>/.test(source),
           "combat 2-arg callsite (applyBattleStartRelics callback) 보존");
   });

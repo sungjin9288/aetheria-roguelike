@@ -261,7 +261,7 @@ import { readFile } from 'node:fs/promises';
       const sources = await Promise.all([
           readSrc('src/utils/adventureGuide.ts'),
           readSrc('src/components/codex/LegendaryCodex.tsx'),
-          readSrc('src/utils/exploreUtils.ts'),
+          readSrc('src/hooks/gameActions/exploreFlow.ts'),
       ]);
       sources.forEach((src, i) => {
           assert.ok(/player[\?.]+stats[\?.]+signaturePity/.test(src),

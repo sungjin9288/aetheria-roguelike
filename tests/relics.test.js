@@ -8,7 +8,7 @@ import { BALANCE } from '../src/data/constants.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { DB } from '../src/data/db.js';
 import { RELICS, pickWeightedRelics } from '../src/data/relics.js';
-import { applyBattleStartRelics } from '../src/utils/exploreUtils.js';
+import { applyBattleStartRelics } from '../src/hooks/gameActions/exploreFlow.js';
 import { resolveDailyProtocolProgress } from '../src/reducers/handlers/helpers.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
 import { getAchievementCurrentValue, isAchievementUnlocked } from '../src/utils/gameUtils.js';
@@ -1937,13 +1937,15 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       assert.ok(/getActiveRelicSynergies\(relics\)/.test(sc),
           'statsCalculator getActiveRelicSynergies 보존');
 
-      const eu = await readSrc('src/utils/exploreUtils.ts');
+      // Wave 4 N1: 유물 추첨 callsite(rollExplorationEvent / runQuietRollAndCombat)가
+      //   hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신, 가드 의도는 동일.
+      const eu = await readSrc('src/hooks/gameActions/exploreFlow.ts');
       // PR #8: count 인자를 프레스티지 해금(relicUnlocks.relicChoices)으로 명시 전달
       //   — default 미의존(cycle 597 가드 의도) 보존. rank≥2면 3→4지선다.
       // feat/relic-synergy-pity: 3번째 인자로 { owned }를 추가해 시너지 소프트 pity
       //   배선 — count가 여전히 명시 전달되는 한 가드 의도(default 미의존) 위반 아님.
       assert.ok(/pickWeightedRelics\(available,\s*relicUnlocks\.relicChoices(,[^)]*)?\)/.test(eu),
-          'exploreUtils pickWeightedRelics 명시 count 전달 보존 (owned 옵션 인자 허용)');
+          'exploreFlow pickWeightedRelics 명시 count 전달 보존 (owned 옵션 인자 허용)');
 
       const ev = await readSrc('src/hooks/gameActions/eventActions.ts');
       // 2026-09 감사 G8: 체인 유물 보상의 pool을 "보유 유물"에서 "미보유 유물"로 고치고

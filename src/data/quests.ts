@@ -343,7 +343,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: 'ach_streak_20', title: '학살자',           desc: '20연속 처치 달성', target: 'maxKillStreak', goal: 20, reward: { gold: 12000, item: '영웅의 물약' } },
 
     // ── 발견 체인 업적 (cycle 102: BALANCE.DISCOVERY_CHAINS 5개 시스템 reflection) ─
-    // exploreUtils.checkDiscoveryChains가 즉시 보상은 부여했지만 영구 reflection /
+    // exploreFlow.checkDiscoveryChains가 즉시 보상은 부여했지만 영구 reflection /
     // achievement reward가 비어있던 자리. 5 chains: fire/frozen/void/ancient/demon.
     { id: 'ach_chain_1',   title: '체인 입문자',      desc: '발견 체인 1개 완료',  target: 'discoveryChains', goal: 1, reward: { gold: 2000 } },
     { id: 'ach_chain_3',   title: '체인 추적자',      desc: '발견 체인 3개 완료',  target: 'discoveryChains', goal: 3, reward: { gold: 8000, item: '엘릭서' } },

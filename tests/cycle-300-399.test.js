@@ -761,7 +761,8 @@ import { fileURLToPath } from 'node:url';
       // 탐험 스카우팅(2026-07): encounter 로그가 exploreUtils.ts의 runQuietRollAndCombat으로
       // 이동(exploreActions.ts와 eventActions.ts "짙은 안개" 카드 공유) — 경로만 갱신.
       const characterSrc = await readSrc('src/hooks/gameActions/characterActions.ts');
-      const exploreSrc = await readSrc('src/utils/exploreUtils.ts');
+      // Wave 4 N1: runQuietRollAndCombat이 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+      const exploreSrc = await readSrc('src/hooks/gameActions/exploreFlow.ts');
       const engineSrc = await readSrc('src/hooks/useGameEngine.ts');
       assert.ok(/addStoryLog\('rest'/.test(characterSrc),
           'characterActions addStoryLog rest 사용 보존');

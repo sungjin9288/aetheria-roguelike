@@ -54,7 +54,8 @@ test('H3: handleVictory 본문에 골드 스케일링 숫자가 inline으로 남
 });
 
 test('H3: 탐험 이상기후 마력 회복 비율이 inline으로 남지 않는다', async () => {
-    const source = await readSrc('src/utils/exploreUtils.ts');
+    // Wave 4 N1: dispatch 소비 함수가 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
+    const source = await readSrc('src/hooks/gameActions/exploreFlow.ts');
     const anomalyStart = source.indexOf('effectiveAnomalyChance');
     assert.ok(anomalyStart > -1);
     const block = source.slice(anomalyStart, anomalyStart + 2000);

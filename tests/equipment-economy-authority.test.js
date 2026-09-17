@@ -12,7 +12,7 @@ import {
 } from '../src/utils/equipmentBaseIdentity.js';
 import { makeItem } from '../src/utils/gameUtils.js';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
-import { checkDiscoveryChains } from '../src/utils/exploreUtils.ts';
+import { checkDiscoveryChains } from '../src/hooks/gameActions/exploreFlow.ts';
 import { BALANCE } from '../src/data/constants.ts';
 
 test('canonical equipment authority covers exactly 229 unique typed identities', () => {
