@@ -430,6 +430,25 @@ const RARITY_ORDER = Object.freeze(['common', 'uncommon', 'rare', 'epic', 'legen
 type RelicRarity = (typeof RARITY_ORDER)[number];
 
 /**
+ * 빌드 아키타입 → 그 빌드가 실제로 굴리는 유물 effect 5종 (앞이 더 핵심).
+ *
+ * Wave 4 O2: 원래 `utils/relicBuildFit.ts`에 있었으나, 추첨(`pickWeightedRelics`)이
+ * 이 표를 읽게 되면서 data 계층이 단일 원천이 됐다. `utils/relicBuildFit.ts`는 여기서
+ * re-export 하므로 기존 importer(BuildAdvicePanel / relicChoiceDecision / 테스트)는 무수정.
+ * data → utils 역방향 import를 만들지 않기 위한 배치다.
+ */
+export const RELIC_EFFECTS_BY_BUILD: Readonly<Record<string, readonly string[]>> = Object.freeze({
+    crusher:  ['double_strike', 'execute_bonus', 'ancient_power', 'combo_stack', 'low_hp_atk'],
+    dual:     ['double_strike', 'combo_stack', 'execute_bonus', 'armor_pen', 'ancient_power'],
+    fortress: ['fortress', 'reflect', 'stone_skin', 'battle_start_heal', 'crit_block'],
+    arcane:   ['skill_mult', 'free_skill', 'mp_regen_turn', 'skill_lifesteal', 'crit_mp_regen'],
+    explorer: ['drop_rate', 'gold_mult', 'event_chance', 'boss_hunter', 'exp_mult'],
+    risk:     ['low_hp_atk', 'execute_bonus', 'ancient_power', 'death_save', 'double_strike'],
+    status:   ['dot_mult', 'armor_pen', 'execute_bonus', 'skill_mult', 'ancient_power'],
+    balanced: ['battle_start_heal', 'stone_skin', 'gold_mult', 'exp_mult', 'ancient_power'],
+});
+
+/**
  * 관대함 하향 (2026-07 밸런스 감사): pool에서 rarityCap 이하 등급만 남기는 순수 필터.
  * cap이 RARITY_ORDER에 없는 값이면 무필터(pool 그대로 반환) — 방어적 fallback.
  * 시작 부트(START_BOOT_RARITY_CAP: 'rare')에서 epic/legendary를 제외하는 데 사용.
@@ -665,15 +684,35 @@ export const getActiveRelicSynergies = (relics: Relic[]): RelicSynergy[] => {
 };
 
 /**
+ * Wave 4 O2: buildId → 그 빌드가 굴리는 effect 집합. 미지정/미등록 빌드는 null —
+ * 이 경우 추첨 가중치는 기존과 완전히 동일(편향 없음)하다.
+ */
+const buildFitEffects = (buildId?: string): Set<string> | null => {
+    if (!buildId) return null;
+    const effects = RELIC_EFFECTS_BY_BUILD[buildId];
+    return effects && effects.length > 0 ? new Set(effects) : null;
+};
+
+/**
  * remaining 배열에서 가중치 기반으로 1개를 뽑아 반환 (remaining 자체는 변경하지 않음).
  * pickWeightedRelics의 일반 슬롯 / 시너지 pity 슬롯 추첨 로직에서 공용으로 사용.
+ *
+ * Wave 4 O2: buildEffects가 주어지면 해당 effect를 가진 유물의 가중치에만
+ * BALANCE.RELIC_BUILD_FIT_WEIGHT_MULT를 곱한다. buildEffects가 없으면 곱셈 자체를
+ * 하지 않아 기존 경로의 부동소수 결과가 비트 단위로 동일하게 유지된다.
  */
-const drawOneWeighted = (remaining: Relic[], random: () => number): Relic => {
-    const totalWeight = remaining.reduce((sum: number, r) => sum + (RELIC_WEIGHTS[r.rarity as string] || 1), 0);
+const drawOneWeighted = (remaining: Relic[], random: () => number, buildEffects?: Set<string> | null): Relic => {
+    const weightOf = (relic: Relic): number => {
+        const base = RELIC_WEIGHTS[relic.rarity as string] || 1;
+        return buildEffects && buildEffects.has(relic.effect as string)
+            ? base * (BALANCE.RELIC_BUILD_FIT_WEIGHT_MULT || 1)
+            : base;
+    };
+    const totalWeight = remaining.reduce((sum: number, r) => sum + weightOf(r), 0);
     let rand = random() * totalWeight;
     let chosen = remaining[remaining.length - 1]; // fallback
     for (let j = 0; j < remaining.length; j++) {
-        rand -= RELIC_WEIGHTS[remaining[j].rarity as string] || 1;
+        rand -= weightOf(remaining[j]);
         if (rand <= 0) { chosen = remaining[j]; break; }
     }
     return chosen;
@@ -731,8 +770,13 @@ const findSynergyPityCandidates = (pool: Relic[], owned: Relic[] | undefined): R
 // 관대함 하향 (2026-07 밸런스 감사): options.rarityCap을 넘기면 pool을 해당 등급 이하로만
 //   제한한 뒤 기존 로직(시너지 pity 포함)을 그대로 태운다. 시작 부트(characterActions.ts)만
 //   'rare'를 전달 — 일반 탐험 유물 발견(exploreUtils.ts)은 전달하지 않아 기존 확률 분포 불변.
-export const pickWeightedRelics = (pool: Relic[], count: number, options?: { owned?: Relic[]; rarityCap?: string; rng?: () => number }): Relic[] => {
+// Wave 4 O2 (빌드–유물 공명): options.buildId를 넘기면 RELIC_EFFECTS_BY_BUILD[buildId]에
+//   속한 effect의 유물만 가중치에 BALANCE.RELIC_BUILD_FIT_WEIGHT_MULT를 곱해 뽑힌다.
+//   buildId 미전달 시 가중치 계산은 기존과 완전히 동일하다(기존 호출부/분포 테스트 무영향).
+//   시너지 pity 슬롯은 편향 대상이 아니다 — pity 후보가 있으면 그 슬롯은 항상 pity가 가진다.
+export const pickWeightedRelics = (pool: Relic[], count: number, options?: { owned?: Relic[]; rarityCap?: string; rng?: () => number; buildId?: string }): Relic[] => {
     const random = typeof options?.rng === 'function' ? options.rng : Math.random;
+    const buildEffects = buildFitEffects(options?.buildId);
     const cappedPool = filterByRarityCap(pool, options?.rarityCap as Relic['rarity']);
     if (cappedPool.length === 0) return [];
     const remaining = [...cappedPool];
@@ -755,7 +799,7 @@ export const pickWeightedRelics = (pool: Relic[], count: number, options?: { own
 
     const remainingNeeded = needed - result.length;
     for (let i = 0; i < remainingNeeded; i++) {
-        const chosen = drawOneWeighted(remaining, random);
+        const chosen = drawOneWeighted(remaining, random, buildEffects);
         result.push(chosen);
         remaining.splice(remaining.indexOf(chosen), 1);
     }

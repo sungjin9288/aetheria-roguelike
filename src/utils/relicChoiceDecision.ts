@@ -1,5 +1,6 @@
 import { getRelicDisplayName } from './relicPresentation';
 import { getRelicBuildFit } from './relicBuildFit';
+import { MSG } from '../data/messages';
 
 const RARITY_SCORE: Record<string, number> = {
     common: 0,
@@ -47,7 +48,9 @@ const getReasonLabel = (relic: any, synergy: any, buildFit: any) => {
     if (buildFit.matched) return '현재 성장 보완';
     if (relic?.rarity === 'legendary') return '가장 높은 등급';
     if (relic?.rarity === 'epic') return '높은 등급';
-    return '현재 성장 보완';
+    // Wave 4 O2: 빌드에 맞지 않는 후보까지 '현재 성장 보완'으로 부르면, 빌드 공명 추첨으로
+    //   실제 맞는 유물이 올라왔을 때와 표기가 구분되지 않는다.
+    return MSG.RELIC_REASON_NEW_DIRECTION;
 };
 
 const getTone = (relic: any, synergy: any) => {

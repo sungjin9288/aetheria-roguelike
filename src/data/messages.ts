@@ -526,4 +526,8 @@ export const MSG = {
     CHAIN_REWARD_COMBAT_BONUS_NAME: '기사의 혼령',
     ELITE_ENEMY_PREFIX: '정예',
     ELITE_ENEMY_NAME: (baseName: string) => `정예 ${baseName}`,
+    // --- Wave 4 O2: 유물 선택 추천 사유 (빌드 공명 추첨과 표기를 맞춘다) ---
+    //   '현재 성장 보완'은 이제 실제로 현재 빌드가 굴리는 효과일 때만 쓴다.
+    //   빌드와 무관한 후보는 아래 문구로 구분해 "왜 추천됐는지"가 어긋나지 않게 한다.
+    RELIC_REASON_NEW_DIRECTION: '새로운 성장 방향',
 };

@@ -198,6 +198,12 @@ export const BALANCE: BalanceConfig = {
     //   시너지 잔여 유물이 pool에 있으면, 유물 3(4)지선다 중 이 슬롯 수만큼은 그
     //   잔여 유물 후보군에서 가중 추첨으로 보장한다 (pickWeightedRelics owned 옵션).
     SYNERGY_PITY_SLOT: 1,
+    // Wave 4 O2 (빌드–유물 공명): 현재 빌드 아키타입이 실제로 굴리는 유물 effect
+    //   (RELIC_EFFECTS_BY_BUILD 5종)에 곱해지는 추첨 가중치 배율. 1.0이면 편향 없음.
+    //   pickWeightedRelics에 buildId를 넘긴 호출부에만 적용되고, 시너지 pity 슬롯은
+    //   편향 대상이 아니다(pity가 항상 우선). 1.6은 "내 빌드 유물이 보통보다 눈에
+    //   띄게 자주 보이되, 다른 방향으로 갈아탈 선택지는 계속 남는" 수준.
+    RELIC_BUILD_FIT_WEIGHT_MULT: 1.6,
     PRESTIGE_ATK_BONUS: 5,          // 환생당 영구 ATK 증가
     PRESTIGE_HP_BONUS: 25,          // 환생당 영구 HP 증가
     PRESTIGE_MP_BONUS: 15,          // 환생당 영구 MP 증가

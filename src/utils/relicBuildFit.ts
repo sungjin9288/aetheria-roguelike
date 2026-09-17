@@ -1,15 +1,10 @@
 import type { Relic } from '../types/index.js';
+import { RELIC_EFFECTS_BY_BUILD } from '../data/relics.js';
 
-export const RELIC_EFFECTS_BY_BUILD: Readonly<Record<string, readonly string[]>> = Object.freeze({
-    crusher:  ['double_strike', 'execute_bonus', 'ancient_power', 'combo_stack', 'low_hp_atk'],
-    dual:     ['double_strike', 'combo_stack', 'execute_bonus', 'armor_pen', 'ancient_power'],
-    fortress: ['fortress', 'reflect', 'stone_skin', 'battle_start_heal', 'crit_block'],
-    arcane:   ['skill_mult', 'free_skill', 'mp_regen_turn', 'skill_lifesteal', 'crit_mp_regen'],
-    explorer: ['drop_rate', 'gold_mult', 'event_chance', 'boss_hunter', 'exp_mult'],
-    risk:     ['low_hp_atk', 'execute_bonus', 'ancient_power', 'death_save', 'double_strike'],
-    status:   ['dot_mult', 'armor_pen', 'execute_bonus', 'skill_mult', 'ancient_power'],
-    balanced: ['battle_start_heal', 'stone_skin', 'gold_mult', 'exp_mult', 'ancient_power'],
-});
+// Wave 4 O2: 정의는 `data/relics.ts`로 이동했다 — 추첨 가중치(pickWeightedRelics)와
+//   조언 UI가 같은 표를 읽어야 하고, data 계층이 utils를 import하면 계층 역전이 된다.
+//   기존 importer 호환을 위해 여기서 그대로 re-export 한다.
+export { RELIC_EFFECTS_BY_BUILD };
 
 const BUILD_FIT_SCORES = Object.freeze([40, 32, 24, 16, 10]);
 

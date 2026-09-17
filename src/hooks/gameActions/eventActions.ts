@@ -139,7 +139,12 @@ export const createEventActions = (deps: any, shared: any) => {
                         const availableRelics = RELICS.filter(
                             (r: any) => !ownedRelics.some((pr: any) => pr.id === r.id),
                         );
-                        const pickedRelics = pickWeightedRelics(availableRelics, 1, { owned: ownedRelics, rng });
+                        // Wave 4 O2: 체인 보상도 현재 빌드 아키타입에 공명시킨다 (pity 우선은 유지).
+                        const pickedRelics = pickWeightedRelics(availableRelics, 1, {
+                            owned: ownedRelics,
+                            rng,
+                            buildId: fullStats?.buildProfile?.primary?.id,
+                        });
                         if (pickedRelics.length > 0) {
                             updatedPlayer = { ...updatedPlayer, relics: [...(updatedPlayer.relics || []), pickedRelics[0]] };
                             addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name!));
@@ -250,7 +255,9 @@ export const createEventActions = (deps: any, shared: any) => {
             // 2026-09 Wave 3 I1: 유물 선택지를 먼저 큐잉하고 전투는 맨 마지막에 연다.
             //   순서를 뒤집으면 전투 전이가 나머지 보상 dispatch를 삼킨다.
             if (selectedOutcome?.relic) {
-                queueOutcomeRelics(updatedPlayer, selectedOutcome.relic, { dispatch, addLog, rng });
+                queueOutcomeRelics(updatedPlayer, selectedOutcome.relic, {
+                    dispatch, addLog, rng, buildId: fullStats?.buildProfile?.primary?.id,
+                });
             }
 
             if (selectedOutcome?.elite) {
@@ -303,13 +310,14 @@ const applyOutcomeStatus = (player: Player, status: any, addLog: any) => {
  * 체인 보상(위 handleEventChoice)과 같은 pickWeightedRelics(available, n, { owned, rng }) 경로를
  * 그대로 쓰고, 보유 한도를 넘는 경우에는 조용히 건너뛴다(탐험 중 유물 발견과 동일 규칙).
  */
-const queueOutcomeRelics = (player: Player, relic: any, { dispatch, addLog, rng }: any) => {
+const queueOutcomeRelics = (player: Player, relic: any, { dispatch, addLog, rng, buildId }: any) => {
     const ownedRelics = player.relics || [];
     if (ownedRelics.length >= getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics) return;
     const count = Math.max(1, Math.min(BALANCE.EVENT_RELIC_MAX_COUNT, Number(relic?.count) || 1));
     const available = RELICS.filter((r: any) => !ownedRelics.some((pr: any) => pr.id === r.id));
     if (available.length === 0) return;
-    const candidates = pickWeightedRelics(available, count, { owned: ownedRelics, rng });
+    // Wave 4 O2: 이벤트 outcome 유물 3택도 체인 보상과 같은 빌드 공명 규칙을 쓴다.
+    const candidates = pickWeightedRelics(available, count, { owned: ownedRelics, rng, buildId });
     if (candidates.length === 0) return;
     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
     addLog('event', MSG.EVENT_RELIC_CHOICE(candidates.length));

@@ -3,6 +3,7 @@ import { getEquipmentComparison } from '../../utils/equipmentUtils';
 import { MSG } from '../../data/messages';
 import { AT } from '../../reducers/actionTypes';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
+import { getRunBuildProfile } from '../../utils/runProfile';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import type { FullStats, Item, Player } from '../../types/index.js';
 
@@ -123,9 +124,12 @@ export const applyScoutGuaranteedRelic = (
     const available = RELICS.filter((r: any) => !ownedRelics.some((pr: any) => pr.id === r.id));
     if (available.length === 0) return;
 
+    // Wave 4 O2: 현재 빌드 아키타입을 추첨에 넘겨 빌드가 실제로 굴리는 effect를 더 자주 보여 준다.
+    //   승리 직후라 장비/유물은 최신 상태 — 파생 stats 없이 player만으로 판정해도 같은 결론이 나온다.
     const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, {
         owned: ownedRelics,
         rng,
+        buildId: getRunBuildProfile(updatedPlayer, null).primary.id,
     });
     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
     addLog('event', MSG.EXPLORE_RELIC_FOUND);
