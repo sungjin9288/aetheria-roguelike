@@ -18,6 +18,8 @@ import { findItemByName } from './gameUtils.js';
 import { applyDynamicDifficulty } from '../systems/DifficultyManager';
 import { CombatEngine } from '../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../data/progressionProfiles';
+// Track J1: FIRST_VISIT_REWARDS 테이블은 data/firstVisitRewards.ts로 분리됨.
+import { FIRST_VISIT_REWARDS } from '../data/firstVisitRewards.js';
 import { getBossSignatureDrops } from './bossSignatureHint';
 import { getSignaturePityMultiplier } from './signaturePity';
 import { resolveAbyssDailyDive } from './abyssDailyDive';
@@ -612,33 +614,8 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
 // ─────────────────────────────────────────────────────────────────────────
 // 5. 지역 최초 방문 보상 (Phase 2-C)
 // 처음 방문하는 지역에 고정 보상을 지급합니다.
+// Track J1 (2026-09): 테이블 본체는 data/firstVisitRewards.ts로 분리됨.
 // ─────────────────────────────────────────────────────────────────────────
-// slice 23: 초반(맵 Lv≤10) 5지역 첫 방문 EXP 절반 — 레벨 간격 감속 (학습
-//   구간 확보). 골드는 유지 (휴식/상점 경제 불변). 중후반 지역은 nextExp가
-//   충분히 커서 그대로.
-const FIRST_VISIT_REWARDS: Record<string, { gold: number; exp: number; msg: string }> = {
-    '고요한 숲':    { gold: 100,  exp: 25,  msg: '고요한 숲에 처음 발을 들였습니다. 골드 100 · 경험 25' },
-    '서쪽 평원':   { gold: 150,  exp: 30,  msg: '서쪽 평원에 처음 도착했습니다. 골드 150 · 경험 30' },
-    '호수의 신전': { gold: 200,  exp: 50,  msg: '호수의 신전을 처음 발견했습니다. 골드 200 · 경험 50' },
-    '잊혀진 폐허': { gold: 200,  exp: 60,  msg: '잊혀진 폐허에 처음 들어섰습니다. 골드 200 · 경험 60' },
-    '버려진 광산': { gold: 250,  exp: 80,  msg: '버려진 광산의 첫 탐색을 시작했습니다. 골드 250 · 경험 80' },
-    '어둠의 동굴': { gold: 300,  exp: 200, msg: '어둠의 동굴에 처음 들어섰습니다. 골드 300 · 경험 200' },
-    '화염의 협곡': { gold: 400,  exp: 300, msg: '화염의 협곡에 처음 도착했습니다. 골드 400 · 경험 300' },
-    '용의 둥지':   { gold: 500,  exp: 400, msg: '용의 둥지를 처음 발견했습니다. 골드 500 · 경험 400' },
-    '사막 오아시스':{ gold: 350, exp: 250, msg: '사막 오아시스에 처음 도착했습니다. 골드 350 · 경험 250' },
-    '피라미드':    { gold: 450,  exp: 350, msg: '피라미드에 처음 들어섰습니다. 골드 450 · 경험 350' },
-    '얼음 성채':   { gold: 400,  exp: 300, msg: '얼음 성채의 첫 탐색을 시작했습니다. 골드 400 · 경험 300' },
-    '빙하 심연':   { gold: 600,  exp: 500, msg: '빙하 심연을 처음 발견했습니다. 골드 600 · 경험 500' },
-    '북부 요새':   { gold: 350,  exp: 280, msg: '북부 요새에 처음 도착했습니다. 골드 350 · 경험 280' },
-    '기계 폐도':   { gold: 500,  exp: 400, msg: '기계 폐도의 첫 탐색을 시작했습니다. 골드 500 · 경험 400' },
-    '천공 정원':   { gold: 600,  exp: 500, msg: '천공 정원에 처음 들어섰습니다. 골드 600 · 경험 500' },
-    '심해 회랑':   { gold: 700,  exp: 600, msg: '심해 회랑을 처음 발견했습니다. 골드 700 · 경험 600' },
-    '에테르 관문': { gold: 800,  exp: 700, msg: '에테르 관문을 처음 열었습니다. 골드 800 · 경험 700' },
-    '암흑 성':     { gold: 500,  exp: 400, msg: '암흑 성에 처음 들어섰습니다. 골드 500 · 경험 400' },
-    '마왕성':      { gold: 1000, exp: 800, msg: '마왕성에 처음 도착했습니다. 운명이 기다립니다. 골드 1,000 · 경험 800' },
-    '혼돈의 심연': { gold: 500,  exp: 500, msg: '혼돈의 심연에 처음 들어섰습니다. 끝없는 싸움이 시작됩니다. 골드 500 · 경험 500' },
-    '고대 보물고': { gold: 300,  exp: 200, msg: '고대 보물고를 처음 발견했습니다. 골드 300 · 경험 200' },
-};
 
 /**
  * 지역 첫 방문 여부를 확인하고, 해당되면 보상 객체를 반환합니다.
