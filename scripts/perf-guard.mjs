@@ -65,9 +65,13 @@ async function launchBrowser() {
       executablePath,
     });
   } catch (error) {
-    if (process.env.PLAYWRIGHT_CHROME_PATH || executablePath === DEFAULT_CHROME_PATH) {
+    // 명시적 경로가 주어졌는데 실패하면 그대로 실패시킨다. 기본 경로(macOS Chrome)가
+    // 없는 환경(Linux CI 등)에서만 Playwright 번들 chromium으로 fallback한다.
+    // (기존 조건은 executablePath가 env 값 아니면 DEFAULT_CHROME_PATH라 항상 참 → fallback 도달 불가)
+    if (process.env.PLAYWRIGHT_CHROME_PATH) {
       throw error;
     }
+    console.warn(`[perf:${viewportLabel}] ${DEFAULT_CHROME_PATH} 실행 실패 — Playwright 번들 chromium으로 대체합니다.`);
     return chromium.launch({ headless: true });
   }
 }
