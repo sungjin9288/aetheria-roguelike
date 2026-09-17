@@ -17,24 +17,25 @@ import { endDevourBonus } from '../utils/adventureRelicBonuses.js';
  */
 export const outcomeMethods: any = {
     applyExpGain(player: Player, expGained: any) {
-        const p: any = { ...player, exp: (player.exp || 0) + expGained };
+        // 2026-09 N1: `p: any` → Player. INITIAL_STATE가 보장하는 수치 필드만 `!`로 좁힌다.
+        const p: Player = { ...player, exp: (player.exp || 0) + expGained };
         const logs = [];
         let levelUps = 0;
         let visualEffect = null;
 
-        while (p.level < CONSTANTS.MAX_LEVEL && p.exp >= p.nextExp) {
-            p.exp -= p.nextExp;
-            p.level += 1;
+        while (p.level! < CONSTANTS.MAX_LEVEL && p.exp! >= p.nextExp!) {
+            p.exp = p.exp! - p.nextExp!;
+            p.level = p.level! + 1;
             p.nextExp = Math.min(
-                Math.floor(p.nextExp * BALANCE.EXP_SCALE_RATE),
+                Math.floor(p.nextExp! * BALANCE.EXP_SCALE_RATE),
                 BALANCE.EXP_LEVEL_HARD_CAP
             );
-            p.maxHp += BALANCE.HP_PER_LEVEL;
-            p.maxMp += BALANCE.MP_PER_LEVEL;
-            p.hp = Math.min(p.hp + BALANCE.HP_PER_LEVEL, p.maxHp);
-            p.mp = Math.min(p.mp + BALANCE.MP_PER_LEVEL, p.maxMp);
-            p.atk += BALANCE.ATK_PER_LEVEL;
-            p.def += BALANCE.DEF_PER_LEVEL;
+            p.maxHp = p.maxHp! + BALANCE.HP_PER_LEVEL;
+            p.maxMp = p.maxMp! + BALANCE.MP_PER_LEVEL;
+            p.hp = Math.min(p.hp! + BALANCE.HP_PER_LEVEL, p.maxHp);
+            p.mp = Math.min(p.mp! + BALANCE.MP_PER_LEVEL, p.maxMp);
+            p.atk = p.atk! + BALANCE.ATK_PER_LEVEL;
+            p.def = p.def! + BALANCE.DEF_PER_LEVEL;
             levelUps += 1;
             visualEffect = 'levelUp';
             logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level, BALANCE.ATK_PER_LEVEL, BALANCE.HP_PER_LEVEL) });
@@ -46,11 +47,11 @@ export const outcomeMethods: any = {
                 const atkBonus = BALANCE.MILESTONE_STAT_ATK;
                 const hpBonus = BALANCE.MILESTONE_STAT_HP;
                 const mpBonus = BALANCE.MILESTONE_STAT_MP;
-                p.atk += atkBonus;
-                p.maxHp += hpBonus;
-                p.hp = Math.min(p.hp + hpBonus, p.maxHp);
-                p.maxMp += mpBonus;
-                p.mp = Math.min(p.mp + mpBonus, p.maxMp);
+                p.atk = p.atk! + atkBonus;
+                p.maxHp = p.maxHp! + hpBonus;
+                p.hp = Math.min(p.hp! + hpBonus, p.maxHp!);
+                p.maxMp = p.maxMp! + mpBonus;
+                p.mp = Math.min(p.mp! + mpBonus, p.maxMp!);
                 logs.push({ type: 'event', text: MSG.LEVEL_MAJOR_MILESTONE(p.level, atkBonus, hpBonus, mpBonus) });
             } else if (isMinor) {
                 const goldBonus = p.level * BALANCE.MILESTONE_GOLD_PER_LV;
@@ -59,8 +60,8 @@ export const outcomeMethods: any = {
             }
         }
 
-        if (p.level >= CONSTANTS.MAX_LEVEL) {
-            p.exp = Math.min(p.exp, Math.max(0, p.nextExp - 1));
+        if (p.level! >= CONSTANTS.MAX_LEVEL) {
+            p.exp = Math.min(p.exp!, Math.max(0, p.nextExp! - 1));
         }
 
         return {
@@ -73,7 +74,7 @@ export const outcomeMethods: any = {
     },
 
     handleVictory(player: Player, enemy: Monster, passiveBonus: any, liveConfig: any) {
-        const p: any = { ...endDevourBonus(player) };
+        const p: Player = { ...endDevourBonus(player) };
         const relics = p.relics || [];
         const baseName: string = this.resolveEnemyBaseName(enemy) || '';
         const previousBossClears = p.stats?.killRegistry?.[baseName] || 0;
@@ -130,7 +131,7 @@ export const outcomeMethods: any = {
             * (noGold ? BALANCE.NO_GOLD_MODIFIER_MULT : 1) * challengeRewardMult * eliteRewardMult;
         if (!Number.isFinite(rawGoldGained)) throw new Error('INVALID_RELIC_EFFECT_VALUE');
         const goldGained = Math.floor(rawGoldGained);
-        const currentGold = Number.isFinite(p.gold) ? p.gold : 0;
+        const currentGold = Number.isFinite(p.gold) ? p.gold! : 0;
         const nextGold = currentGold + goldGained;
         if (!Number.isFinite(nextGold) || (goldGained > 0 && nextGold <= currentGold)) {
             throw new Error('INVALID_RELIC_EFFECT_VALUE');
@@ -188,7 +189,7 @@ export const outcomeMethods: any = {
         const healRelic = relics.find((r: any) => r.effect === 'on_kill_heal');
         if (healRelic) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * healRelic.val);
-            p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
+            p.hp = Math.min(p.maxHp!, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: MSG.BLOOD_OATH_HEAL(heal) });
         }
 
@@ -225,14 +226,14 @@ export const outcomeMethods: any = {
             s.bonus.effect === 'immortal_warrior' || s.bonus.killHeal);
         if (killHealSyn) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (killHealSyn.bonus.killHeal ?? 0));
-            p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
+            p.hp = Math.min(p.maxHp!, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: MSG.IMMORTAL_WARRIOR_HEAL(heal) });
         }
         const devourSyn = victorySynergies.find((s: any) =>
             s.bonus.effect === 'infinite_devour' || s.bonus.devour);
         if (devourSyn) {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (devourSyn.bonus.devour ?? 0));
-            p.hp = Math.min(p.maxHp, (p.hp || 1) + heal);
+            p.hp = Math.min(p.maxHp!, (p.hp || 1) + heal);
             logs.push({ type: 'heal', text: MSG.INFINITE_DEVOUR_HEAL(heal) });
         }
 

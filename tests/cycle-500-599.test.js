@@ -1910,7 +1910,9 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/systems/CombatEngine.outcome.ts');
       assert.ok(/\(player\.exp \|\| 0\) \+ expGained/.test(source),
           '(player.exp || 0) + expGained defensive 보존');
-      assert.ok(/while \(p\.level < CONSTANTS\.MAX_LEVEL && p\.exp >= p\.nextExp\)/.test(source),
+      // Wave 4 N1: `p: any` → `Player`로 좁히면서 INITIAL_STATE가 보장하는 수치 필드에만
+      //   `!`를 붙였다. 루프 조건 자체(레벨 상한 · 누적 exp 소진)는 그대로다.
+      assert.ok(/while \(p\.level!? < CONSTANTS\.MAX_LEVEL && p\.exp!? >= p\.nextExp!?\)/.test(source),
           'level-up while loop 보존');
   });
 

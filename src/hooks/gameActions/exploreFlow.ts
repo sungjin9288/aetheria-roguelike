@@ -52,7 +52,7 @@ export const resetWeeklyProtocolIfNeeded = (player: Player, dispatch: any) => {
     if (player.weeklyProtocol?.lastResetWeek !== weeklyProtocol.lastResetWeek) {
         dispatch({
             type: AT.SET_PLAYER,
-            payload: (p: any) => ({
+            payload: (p: Player) => ({
                 ...p,
                 weeklyProtocol,
             }),
@@ -86,9 +86,9 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
     if (hasKey && (typeof mapData.level === 'number' && mapData.level >= 10) && rng() < discoveryOdds.keyEventChance) {
         dispatch({
             type: AT.SET_PLAYER,
-            payload: (p: any) => {
-                const keyIdx = p.inv.findIndex((i: any) => i.name === '잊혀진 열쇠');
-                const newInv = [...p.inv];
+            payload: (p: Player) => {
+                const keyIdx = p.inv!.findIndex((i: any) => i.name === '잊혀진 열쇠');
+                const newInv = [...p.inv!];
                 if (keyIdx > -1) newInv.splice(keyIdx, 1);
                 return { ...p, inv: newInv, loc: '고대 보물고' };
             }
@@ -112,9 +112,9 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
         addLog('warning', MSG.EXPLORE_ANOMALY(anomaly.desc));
         if (anomaly.effect === 'mana_regen') {
             const stats = getFullStats();
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * BALANCE.ANOMALY_MANA_REGEN_RATIO)) }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, mp: Math.min(stats.maxMp, p.mp! + Math.floor(stats.maxMp * BALANCE.ANOMALY_MANA_REGEN_RATIO)) }) });
         } else {
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])]} ) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])]} ) });
         }
         return 'anomaly';
     }
@@ -318,7 +318,7 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
         if (multiplierActive) {
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (p: any) => ({ ...p, stats: { ...(p.stats || {}), abyssDailyDive: nextAbyssDailyDive } }),
+                payload: (p: Player) => ({ ...p, stats: { ...(p.stats || {}), abyssDailyDive: nextAbyssDailyDive } }),
             });
             mStats = {
                 ...mStats,
@@ -377,8 +377,8 @@ export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLo
         addLog('success', `🏆 [발견 체인 완료] ${chain.label}! 보상: ${rewardParts.join(', ')}`);
         dispatch({
             type: AT.SET_PLAYER,
-            payload: (p: any) => {
-                const updated = { ...p };
+            payload: (p: Player) => {
+                const updated: Player = { ...p };
                 updated.gold = (updated.gold || 0) + (chain.reward.gold || 0);
                 const expResult = CombatEngine.applyExpGain(
                     updated,
