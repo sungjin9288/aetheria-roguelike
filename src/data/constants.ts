@@ -547,6 +547,20 @@ export const BALANCE: BalanceConfig = {
     //   1씩 감소시키고 0에서 해제한다. 해독제/정화/휴식은 종전대로 즉시 해제.
     PLAYER_STATUS_DURATION_TURNS: 3,
 
+    // H3 (Wave 3 감사) — handleVictory / 탐험 이상기후의 inline 숫자 정리(값 변경 없음).
+    //   레벨 차 골드 감쇠: 플레이어가 적보다 (GAP_THRESHOLD + 1)레벨 이상 높을 때부터
+    //   레벨당 SLOPE만큼 골드를 줄이되 FLOOR 아래로는 내려가지 않는다.
+    VICTORY_GOLD_LEVEL_GAP_THRESHOLD: 9,
+    VICTORY_GOLD_LEVEL_PENALTY_FLOOR: 0.3,
+    VICTORY_GOLD_LEVEL_PENALTY_SLOPE: 0.07,
+    //   'noGold' 도전 수정자의 골드 배율(0 아님 — 완전 차단이 아니라 반감).
+    NO_GOLD_MODIFIER_MULT: 0.5,
+    //   보스 초회 토벌 보너스 골드 = max(FLOOR, 획득 골드 × RATE).
+    FIRST_BOSS_BONUS_GOLD_FLOOR: 120,
+    FIRST_BOSS_BONUS_GOLD_RATE: 0.35,
+    //   탐험 기상 이변 '마력의 폭풍' 회복량 = 최대 기력 × RATIO.
+    ANOMALY_MANA_REGEN_RATIO: 0.3,
+
     // A2 (2026-09 감사 G4) — 경제/인벤 임계값 단일화.
     //   기존엔 ShopPanel(판매 목록) / economyHandlers(개별 판매·재료 일괄 판매) 3곳에
     //   `Math.floor((item.price || 0) * 0.5)`이 inline 되어 있었고, 재료 "잡템" 임계

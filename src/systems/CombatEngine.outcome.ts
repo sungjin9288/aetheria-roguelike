@@ -113,15 +113,18 @@ export const outcomeMethods: any = {
         // 레벨 차이 골드 스케일링: 플레이어가 몬스터보다 10레벨 이상 높으면 골드 감소 (최소 30%)
         const playerLevel = p.level || 1;
         const enemyLevel = enemy.level || 1;
-        const levelGap = Math.max(0, playerLevel - enemyLevel - 9);
-        const levelPenalty = Math.max(0.3, 1 - levelGap * 0.07);
+        const levelGap = Math.max(0, playerLevel - enemyLevel - BALANCE.VICTORY_GOLD_LEVEL_GAP_THRESHOLD);
+        const levelPenalty = Math.max(
+            BALANCE.VICTORY_GOLD_LEVEL_PENALTY_FLOOR,
+            1 - levelGap * BALANCE.VICTORY_GOLD_LEVEL_PENALTY_SLOPE,
+        );
         const rawExpGained = scaleProgressionExpReward(
             p,
             Math.floor((enemy.exp ?? 0) * expMult * killExpMult * challengeRewardMult * eliteRewardMult),
         );
         const expGained = getPacedCombatExp(p, rawExpGained);
         const noGold = p.challengeModifiers?.includes('noGold');
-        const goldGained = Math.floor((enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty * (noGold ? 0.5 : 1) * challengeRewardMult * eliteRewardMult);
+        const goldGained = Math.floor((enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty * (noGold ? BALANCE.NO_GOLD_MODIFIER_MULT : 1) * challengeRewardMult * eliteRewardMult);
 
         p.gold += goldGained;
 
@@ -144,7 +147,10 @@ export const outcomeMethods: any = {
         let bossClearBonus = null;
 
         if (enemy.isBoss && previousBossClears === 0) {
-            const bonusGold = Math.max(120, Math.floor(goldGained * 0.35));
+            const bonusGold = Math.max(
+                BALANCE.FIRST_BOSS_BONUS_GOLD_FLOOR,
+                Math.floor(goldGained * BALANCE.FIRST_BOSS_BONUS_GOLD_RATE),
+            );
             p.gold += bonusGold;
             p.stats.total_gold = (p.stats.total_gold || 0) + bonusGold;
             bossClearBonus = {

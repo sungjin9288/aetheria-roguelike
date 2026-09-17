@@ -122,7 +122,7 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
         addLog('warning', `[기상 이변] ${anomaly.desc}`);
         if (anomaly.effect === 'mana_regen') {
             const stats = getFullStats();
-            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * 0.3)) }) });
+            dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * BALANCE.ANOMALY_MANA_REGEN_RATIO)) }) });
         } else {
             dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, status: [...new Set([...(p.status || []), anomaly.effect])]} ) });
         }
