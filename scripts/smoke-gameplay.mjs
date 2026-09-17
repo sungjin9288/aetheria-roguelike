@@ -222,6 +222,30 @@ async function verifyActionReachable(locator, label, options = {}) {
   return metrics;
 }
 
+/**
+ * 적 초상(MonsterIcon)은 canonical 몬스터면 <img src="/assets/monsters/catalog/*.png">를
+ * 렌더한다. 이 PNG는 public/sw.js의 stale-while-revalidate 경로를 타므로 첫 조우에서는
+ * 항상 캐시 미스 → (서비스 워커 기동 + 네트워크) 왕복이 필요하고, DOM 삽입 시점과
+ * 디코드 완료 시점이 분리된다. 로드 완료를 기다리지 않고 naturalWidth를 읽으면
+ * 머신 부하에 따라 "portraitRendered:false"로 깜빡이는 위양성이 난다.
+ * 실루엣(svg path) fallback은 로드가 필요 없으므로 즉시 통과한다.
+ * 타임아웃은 삼키고 실제 단정은 verifyCombatForecast의 ensure가 하도록 둔다 —
+ * 아트가 진짜로 깨졌을 때(404/디코드 실패) 진단 가능한 메시지를 유지하기 위함이다.
+ */
+async function waitForEnemyPortraitArt(page, timeout = 10000) {
+  try {
+    await page.waitForFunction(() => {
+      const portrait = document.querySelector('[data-testid="enemy-portrait"]');
+      if (!portrait) return false;
+      const image = portrait.querySelector('img');
+      if (!image) return Boolean(portrait.querySelector('svg path')?.getAttribute('d'));
+      return image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+    }, undefined, { timeout });
+  } catch (error) {
+    console.warn(`[smoke:${viewportLabel}] enemy portrait art wait timed out: ${error.message}`);
+  }
+}
+
 async function verifyCombatForecast(page) {
   const forecast = page.locator('[data-testid="combat-forecast-strip"]');
   const enemyStatus = page.locator('[data-testid="enemy-status"]');
@@ -229,6 +253,7 @@ async function verifyCombatForecast(page) {
   await forecast.waitFor({ state: 'visible', timeout: 5000 });
   await enemyStatus.waitFor({ state: 'visible', timeout: 5000 });
   await enemyPortrait.waitFor({ state: 'visible', timeout: 5000 });
+  await waitForEnemyPortraitArt(page);
   const text = await forecast.innerText();
   const enemyText = await enemyStatus.innerText();
   const tone = await forecast.getAttribute('data-forecast-tone');
