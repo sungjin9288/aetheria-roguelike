@@ -305,3 +305,19 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 **최종 게이트** (head `76953b8e` 기준, 샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 problems · unit **4,813 / 4,813**(skip 0) · build:guard ok · e2e(chromium, iPhone 12 에뮬레이션) **121 / 121**(13.0분) · perf guard desktop/mobile ok — FCP 실측(측정 공백 경고 0회). 교훈 하나: 게이트를 병렬로 돌릴 때 `build:guard`가 자체 `npm run build`로 `dist/`를 덮어써 e2e 중반부터 테스트 API 없는 번들이 서빙됐다(51건 실패로 위장) — dist 를 공유하는 작업은 직렬로.
 
 **남은 후보 (Wave 6)**: hooks `deps: any` 주입 경계(`createXxxActions(deps: any)` → 명시 인터페이스, `toArray<T = any>` 기본값 제거), 컴포넌트 props `any`(`ShopPanel`·`QuestBoardPanel`·`ControlPanel` 등 ~350건), systems 한글 리터럴 260건 중 데이터 키(상태이상·원소) → `StatusId`/`ElementKey` 유니온, 순수 정적 가드 잔여 22파일(아트/네이티브/Toss 증빙 계약 — 전환 가치 낮음, 유지).
+
+---
+
+## 10. Wave 6 계획 (2026-09-17 착수, 베이스 `main` = `911d0172` = PR #32 merge commit)
+
+**핵심**: 남은 `: any` 1,301건 중 730건이 세 구역(hooks 272 · components 352 · reducers 104)에 몰려 있고, 셋 다 "주입 경계(`deps: any`, `actions?: any`, `payload: any`)"가 원인이다. 경계에 인터페이스를 세우면 그 아래 콜백 파라미터 `any`는 추론으로 사라진다. 동시에 systems 한글 리터럴 260건(대부분 로그 문구 + 상태이상 라벨 테이블 7중 복제, `poison`이 '독'/'중독'으로 드리프트)은 CLAUDE.md §5 MSG 규칙 위반이므로 소유권을 옮긴다.
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **X1 hooks deps 경계** | `useGameEngine`이 조립하는 deps 객체(player/gameState/uid/grave/currentEvent/isAiThinking/enemy/liveConfig/dispatch/addLog/addStoryLog/getFullStats + combat 확장)를 `GameActionDeps`/`CombatActionDeps`/`InventoryActionDeps`로 선언, 13개 팩토리·`makeSharedHelpers`·`buildClassVitals` 시그니처 교체, `GameActions` 타입 export, `toArray<T = any>` 기본값 제거 | 액션 팩토리 내부 `(p: any)` 콜백이 추론으로 소멸, 컴포넌트 `actions?: any`를 닫을 타입이 생김 | tsc 표면화 다수(실제 필드 드리프트가 드러날 수 있음 — Wave 5 W2에서 3건) | deps 타입을 `Record<string, any>`로 느슨하게 세우면 무의미 — 각 필드는 `GameState`의 실제 타입 또는 명시 인터페이스 | opus |
+| **X2 systems 한글 → MSG** | `src/systems/**` 로그 문구를 `MSG`로 이관(append-only), 상태이상 라벨 7중 테이블을 `MSG.STATUS_LABELS`/`MSG.DOT_LABELS`(`Record<StatusId, string>`)로 단일화 — 사용자 가시 문자열은 바이트 동일 유지(테스트가 문구를 고정) | 엔진 순수성(문구 소유는 데이터), 라벨 드리프트 컴파일 차단 | MSG 키 증가, 증빙 재생성 | 라벨 통일하며 '독'→'중독'처럼 문구를 바꾸면 e2e/유닛 문구 단정이 깨진다 — 이번 트랙은 이동만, 문구 변경 0 | sonnet |
+| **X4 reducers any** | 핸들러 8파일 104건: `state.player.inv.find((entry: any)…)` 류를 `Item`/`Player`/`Quest`로, 핸들러별 payload 인터페이스 — `GameAction.payload: any`는 전역 유지(전면 유니온화는 별도 wave) | 인벤/경제/장비 핸들러(실제 버그 이력 영역)의 오타 컴파일 차단 | — | payload 유니온을 이번에 강행하면 dispatch 호출부 수백 곳이 흔들림 — 경계 안쪽만 | sonnet |
+| **X3 components props** | X1 뒤. `QuestBoardPanel`(26)·`ShopPanel`(22)·`QuestTab`(19)·`ControlPanel`(18)·`RelicChoicePanel`(15)·`LegendaryCodex`(14)·`GravePanel`(14)·`EquipmentPanel`(14) = 142건을 `GameActions`·`Item`·`Player`·`Quest`로 | 렌더 경계의 오타 차단, props 계약 문서화 | — | `actions?: any`를 `Partial<GameActions>`로만 닫으면 호출부 `actions.x?.()` 체인이 그대로 — 필요한 액션만 Pick | sonnet ×2 |
+| **X5 문서·래칫** | CLAUDE.md 수치, 래칫 재고정(`: any`·`as any`·systems 한글), todo 원장, §10.1 | — | — | — | 직접 |
+
+**순서**: X1·X2·X4 병렬(파일 집합: hooks / systems+messages+라벨 소비 컴포넌트 2개 / reducers) → X3(X1 머지 후) → 증빙 일괄 재생성 → verify + e2e(chromium) → X5 → PR.
