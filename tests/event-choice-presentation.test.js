@@ -56,6 +56,23 @@ test('ordinary events reveal useful outcome categories without disclosing exact 
     assert.deepEqual(getEventChoicePreview(event, 3), { text: '결과는 선택 뒤에 드러남', tone: 'unknown' });
 });
 
+test('확장 어휘 결과(정예/상태이상/유물/버프)는 선택 전에 위험과 보상이 읽힌다', () => {
+    const event = {
+        choices: ['정면으로 맞선다', '실선을 끊는다', '봉인을 연다', '저울에 올라선다'],
+        outcomes: [
+            { choiceIndex: 0, elite: true },
+            { choiceIndex: 1, gold: 260, hp: -18, status: { id: 'bleed', turns: 2 } },
+            { choiceIndex: 2, gold: 180, relic: { count: 1 } },
+            { choiceIndex: 3, buff: { atkMult: 1.2, turns: 5 } },
+        ],
+    };
+
+    assert.deepEqual(getEventChoicePreview(event, 0), { text: '정예 전투로 이어짐', tone: 'danger' });
+    assert.deepEqual(getEventChoicePreview(event, 1), { text: '보상 가능 · 상태이상 위험', tone: 'danger' });
+    assert.deepEqual(getEventChoicePreview(event, 2), { text: '유물 선택지가 열림', tone: 'reward' });
+    assert.deepEqual(getEventChoicePreview(event, 3), { text: '다음 전투 강화', tone: 'reward' });
+});
+
 test('known campfire, scout, and boss rules are explained before commitment', () => {
     const campfire = buildCampfireEvent({ maxHp: 200, maxMp: 100 });
     assert.deepEqual(getEventChoicePreview(campfire, 0), { text: '생명 +80 · 기력 +40', tone: 'recovery' });
