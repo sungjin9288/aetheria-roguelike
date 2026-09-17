@@ -69,6 +69,8 @@ test('status outcome: 기상 이변과 동일하게 player.status에 id 문자�
     const { resolvedPlayer, logs } = makeHarness({ status: { id: 'poison', turns: 2 } });
 
     assert.deepEqual(resolvedPlayer.status, ['poison']);
+    // H1 연동: 이벤트가 준 지속 턴이 전투 틱(tickPlayerStatusDurations)이 읽는 statusTurns에 기록된다.
+    assert.equal(resolvedPlayer.statusTurns?.poison, 2);
     assert.ok(logs.some((log) => log.text.includes('중독')), '중독 라벨 로그가 남아야 함');
 });
 

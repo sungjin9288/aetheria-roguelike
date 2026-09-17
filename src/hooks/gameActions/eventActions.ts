@@ -227,7 +227,11 @@ const applyOutcomeStatus = (player: any, status: any, addLog: any) => {
     if (!BALANCE.EVENT_STATUS_IDS.includes(id)) return player;
     const turns = Math.max(1, Number(status?.turns) || 1);
     addLog('warning', MSG.EVENT_STATUS_APPLIED(id, turns));
-    return { ...player, status: [...new Set([...(player.status || []), id])] };
+    // H1 연동: 전투 중 tickPlayerStatusDurations가 읽는 statusTurns에 지속 턴을 기록한다.
+    //   이미 같은 상태가 더 길게 남아 있으면 줄이지 않는다(중첩 부여는 연장만 한다).
+    const prevTurns = (player.statusTurns || {}) as Record<string, number>;
+    const statusTurns = { ...prevTurns, [id]: Math.max(prevTurns[id] || 0, turns) };
+    return { ...player, status: [...new Set([...(player.status || []), id])], statusTurns };
 };
 
 /**

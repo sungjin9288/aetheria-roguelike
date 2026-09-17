@@ -499,9 +499,7 @@ export const MSG = {
             : effect === 'bleed' ? '출혈'
             : effect === 'curse' ? '저주'
             : effect;
-        // 지속 턴은 "최소" 표기 — 플레이어 상태이상 만료는 별도 트랙(H1)에서 도입되며,
-        //   그 전까지는 휴식/정화까지 남는다. 어느 쪽이든 문구가 거짓이 되지 않는다.
-        return `[${label}] 선택의 흔적이 몸에 남았습니다. 다음 전투에서 최소 ${turns}턴은 따라붙습니다.`;
+        return `[${label}] 선택의 흔적이 몸에 남았습니다. 다음 전투에서 ${turns}턴 동안 따라붙습니다.`;
     },
     EVENT_BUFF_NAME: '고조된 기세',
     EVENT_BUFF_APPLIED: (attackPercent: number, defensePercent: number, turns: number) => {
