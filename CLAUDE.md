@@ -24,11 +24,17 @@
 | Node.js | — | >=18.0.0 |
 
 > **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
-> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` ~1,256건,
-> `as any` ~77곳 잔존 (2026-09 실측). `Player`/`PlayerStats`/`PlayerMeta`/`CombatFlags`는 인덱스 시그니처를 제거해
-> `player.오타`가 컴파일 에러가 된다. `FullStats`(`statsCalculator.ts`)가 전투 수식의 표준 stats 타입.
-> 잔여 인덱스 시그니처 23개는 `types/{relic,item,monster,map,quest,class}.ts` — 다음 타입 슬라이스 대상.
-> hook/handler의 `p: any` 로컬은 아직 많으니 새 코드는 `Player`/`FullStats`를 명시할 것.
+> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` ~1,220건,
+> `as any` ~67곳 잔존 (2026-09 Wave 3 L 실측). **`src/types/*`의 인덱스 시그니처는 0개다** —
+> `Player`/`PlayerStats`/`PlayerMeta`/`CombatFlags`(B3)에 이어 `Relic`/`Item`/`Monster`/`GameMap`/
+> `Quest`/`Achievement`/`ClassDef`(L)까지 닫혔으므로 `relic.오타`·`enemy.오타`도 컴파일 에러다.
+> 데이터의 닫힌 집합은 리터럴 유니온(`RelicEffect` 61종, `ItemType` 9종, `ElementKey` 9종,
+> `QuestType` 9종, `AchievementTarget` 20종, `ClassSkillEffect` 30종 등)이고,
+> 데이터↔타입 계약은 `tests/data-shape-types.test.js`가 런타임으로 검증한다.
+> `FullStats`(`statsCalculator.ts`)가 전투 수식의 표준 stats 타입.
+> `src/hooks`·`src/reducers`의 소유자 로컬(`p`/`player`/`updatedPlayer`/`state`)은 `Player`/`GameState`로
+> 정리됐다 — 새 코드도 `Player`/`FullStats`/`GameState`를 명시할 것.
+> 남은 `: any`는 대부분 `deps: any` / `addLog: any` 같은 주입 경계와 컴포넌트 props다.
 
 ---
 

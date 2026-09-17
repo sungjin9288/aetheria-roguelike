@@ -45,7 +45,7 @@ interface PlayerStats {
     abyssFloor?: number;
     abyssRecord?: number;
     demonKingSlain?: number;
-    dailyProtocol?: any;
+    dailyProtocol?: DailyProtocol | null;
     claimedAchievements?: string[];
     /** cycle 260: 수령 완료 퀘스트 영구 ledger. quest.id는 숫자(DB.QUESTS)와 문자열(bounty) 혼용. */
     claimedQuestIds?: Array<string | number>;
@@ -101,6 +101,39 @@ export interface ExploreState {
     sinceRelic?: number;
     quietStreak?: number;
     lastOutcome?: string;
+}
+
+/**
+ * 오늘의 임무(일일 프로토콜) — 2026-09 Wave 3 L stage 3.
+ * 생산자는 `utils/protocolCycle.createDailyProtocol` 하나뿐이고 QA 시드
+ * (`useGameTestApi`)도 같은 모양을 쓴다. 소비처는 reducers/handlers/helpers.ts와
+ * SystemTab QA readout. `stats.dailyProtocol`은 INITIAL_STATE에서 null로 시작한다.
+ */
+export type DailyProtocolMissionType = 'kills' | 'explores' | 'goldSpend';
+
+/** 미션 1건의 보상 — 셋 중 하나만 채워진다. */
+export interface DailyProtocolMissionReward {
+    essence?: number;
+    item?: string;
+    relicShard?: number;
+}
+
+export interface DailyProtocolMission {
+    id: string;
+    type: DailyProtocolMissionType;
+    goal: number;
+    reward: DailyProtocolMissionReward;
+    progress: number;
+    done: boolean;
+}
+
+export interface DailyProtocol {
+    /** YYYY-MM-DD (`getProtocolDayKey`). 날짜가 바뀌면 새로 생성한다. */
+    date: string;
+    /** 유물 파편 누적 — 5개마다 유물 1개로 변환된다. */
+    relicShards: number;
+    /** 항상 3건 (kills / explores / goldSpend). */
+    missions: DailyProtocolMission[];
 }
 
 /** 심연 데일리 다이브 상태 — dailyProtocol과 동일한 날짜 문자열 판정 방식.

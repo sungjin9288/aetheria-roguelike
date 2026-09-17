@@ -7,7 +7,7 @@ import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { applyEssenceGain } from '../../systems/essenceLedger';
 import { getCurrentDailyProtocol } from '../../utils/protocolCycle';
 import { SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
-import type { Player } from '../../types/index.js';
+import type { DailyProtocolMissionType, Player } from '../../types/index.js';
 import type { Relic } from '../../types/relic.js';
 
 /**
@@ -82,12 +82,12 @@ const emptyDailyProtocolReward = (): DailyProtocolReward => ({
  */
 export const resolveDailyProtocolProgress = (
     player: Player,
-    type: any,
-    amount: any,
+    type: DailyProtocolMissionType,
+    amount: number,
     relicRoll?: number,
     itemEntropy?: DailyProtocolItemEntropy,
 ) => {
-    const dp = (player.stats as any)?.dailyProtocol;
+    const dp = player.stats?.dailyProtocol;
     if (!dp) return { player, reward: emptyDailyProtocolReward() };
 
     let essenceGain = 0;
@@ -96,7 +96,7 @@ export const resolveDailyProtocolProgress = (
     let newShards = dp.relicShards || 0;
     const itemRewards: string[] = [];
 
-    const updatedMissions = dp.missions.map((mission: any) => {
+    const updatedMissions = dp.missions.map((mission) => {
         if (mission.type !== type || mission.done) return mission;
 
         const progress = Math.min(mission.goal, (mission.progress || 0) + amount);
@@ -131,7 +131,7 @@ export const resolveDailyProtocolProgress = (
         }
     }
 
-    const nextPlayer: Record<string, any> = {
+    const nextPlayer: Player = {
         ...player,
         stats: {
             ...player.stats,
@@ -186,8 +186,8 @@ export const resolveDailyProtocolProgress = (
 
 export const advanceDailyProtocol = (
     player: Player,
-    type: any,
-    amount: any,
+    type: DailyProtocolMissionType,
+    amount: number,
     relicRoll?: number,
     now?: number,
     itemRng?: () => number,

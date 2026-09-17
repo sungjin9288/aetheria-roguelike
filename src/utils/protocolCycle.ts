@@ -1,5 +1,5 @@
 import { BALANCE } from '../data/constants.js';
-import type { Player } from '../types/player.js';
+import type { DailyProtocol, Player } from '../types/player.js';
 
 type WeeklyProtocol = NonNullable<Player['weeklyProtocol']>;
 
@@ -18,7 +18,7 @@ export const getProtocolWeekKey = (date: Date) => {
     return `${year}-W${pad(week)}`;
 };
 
-export const createDailyProtocol = (player: Player, date: Date) => {
+export const createDailyProtocol = (player: Player, date: Date): DailyProtocol => {
     const level = player.level || 1;
     const relicShards = player.stats?.dailyProtocol?.relicShards || 0;
     return {
@@ -32,7 +32,7 @@ export const createDailyProtocol = (player: Player, date: Date) => {
     };
 };
 
-export const getCurrentDailyProtocol = (player: Player, date: Date) => {
+export const getCurrentDailyProtocol = (player: Player, date: Date): DailyProtocol => {
     const protocol = player.stats?.dailyProtocol;
     if (protocol?.date === getProtocolDayKey(date) && protocol.missions?.length === 3) return protocol;
     return createDailyProtocol(player, date);

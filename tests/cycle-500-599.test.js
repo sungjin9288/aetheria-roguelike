@@ -2042,7 +2042,10 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 538: body 동작 보존', async () => {
       const source = await readSrc('src/reducers/handlers/helpers.ts');
-      assert.ok(/const dp = \(player\.stats as any\)\?\.dailyProtocol/.test(source),
+      // 2026-09 Wave 3 L stage 3 재고정: PlayerStats.dailyProtocol이 DailyProtocol로
+      //   타입화되면서 `as any` 우회가 사라졌다. 앵커의 의도(=dp 추출 보존)는 그대로 두고
+      //   캐스트 유무만 허용 범위로 넓힌다.
+      assert.ok(/const dp = (?:\(player\.stats as any\)|player\.stats)\?\.dailyProtocol/.test(source),
           'dp 추출 보존');
       assert.ok(/if \(!dp\) return \{ player, reward: emptyDailyProtocolReward\(\) \}/.test(source),
           'dp 가드와 빈 지급 결과 보존');
