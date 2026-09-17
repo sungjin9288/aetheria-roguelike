@@ -134,7 +134,21 @@ async function waitForBootSignals(page) {
       null,
       { timeout: FCP_ENTRY_TIMEOUT_MS },
     );
+    return { fcpMeasurementGap: null };
   } catch (error) {
+    const signals = await readBootSignals(page).catch(() => null);
+    const painted = Boolean(signals?.paintEntries?.some((entry) => entry.startsWith('first-paint@')));
+    const booted = Number.isFinite(signals?.bootReadyMs) && Number.isFinite(signals?.introVisibleMs);
+    if (painted && booted && signals?.visibilityState === 'visible') {
+      // 페이지는 그려졌고(first-paint) 앱도 부팅·인트로 가시 상태인데 FCP 엔트리만 없다.
+      // Chromium 은 opacity 0 서브트리의 페인트를 FCP 로 집계하지 않고, 이후 compositor 전용
+      // opacity 애니메이션(IntroScreen `initial={{ opacity: 0 }}` fade-in)은 paint timing 을
+      // 만들지 않는다 — 다음 main-thread repaint 가 우연히 있어야 FCP 가 기록된다
+      // (2026-09-17 CI: 통과 실행 FCP 572ms, 실패 실행은 first-paint@336 뒤 10s 동안 부재).
+      // 이건 회귀가 아니라 측정 공백이므로 FCP 예산만 이 실행에서 검증 불가로 기록하고 진행한다.
+      console.warn(`[perf:${viewportLabel}] first-contentful-paint entry withheld after ${FCP_ENTRY_TIMEOUT_MS}ms — ${JSON.stringify(signals)}; FCP 예산은 이 실행에서 검증하지 않는다(측정 공백, 회귀 아님)`);
+      return { fcpMeasurementGap: 'fcp-withheld-under-opacity-fade-in', signals };
+    }
     throw new Error(`first-contentful-paint entry missing after ${FCP_ENTRY_TIMEOUT_MS}ms: ${await describe('fcp')} (${error.message})`);
   }
 }
@@ -223,8 +237,11 @@ async function main() {
     await startButton.waitFor({ state: 'visible', timeout: 10000 });
     metrics.introReadyMs = Number((performance.now() - navigationStartedAt).toFixed(1));
 
-    await waitForBootSignals(page);
+    const bootSignals = await waitForBootSignals(page);
     Object.assign(metrics, await capturePerfMetrics(page));
+    if (bootSignals.fcpMeasurementGap) {
+      metrics.fcpMeasurementGap = bootSignals.fcpMeasurementGap;
+    }
     const initialAppPerf = await readAppPerfSnapshot(page);
     metrics.bootReadyMeasureMs = initialAppPerf['aetheria:boot-ready-ms'] ?? null;
     metrics.introVisibleMeasureMs = initialAppPerf['aetheria:intro-visible-ms'] ?? null;
@@ -284,7 +301,11 @@ async function main() {
       timeout: 60000,
     });
 
-    const failures = validatePerfMetrics(metrics, thresholds);
+    // FCP 측정 공백이면 그 예산만 뺀다 — 나머지(DCL·boot-ready·intro-visible·start-run·interaction·market)는 그대로.
+    const activeThresholds = metrics.fcpMeasurementGap
+      ? Object.fromEntries(Object.entries(thresholds).filter(([name]) => name !== 'firstContentfulPaintMs'))
+      : thresholds;
+    const failures = validatePerfMetrics(metrics, activeThresholds);
 
     logPerf(`metrics ${JSON.stringify(metrics)}`);
 

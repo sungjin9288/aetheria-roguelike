@@ -22,5 +22,7 @@ test('app start mark precedes React rendering and the guard waits for real initi
   const start = main.indexOf("markPerfOnce('aetheria:app-mounted')");
   assert.ok(start >= 0 && start < main.indexOf('createRoot(document'));
   assert.match(guard, /await page\.waitForFunction/);
-  assert.match(guard, /validatePerfMetrics\(metrics, thresholds\)/);
+  assert.match(guard, /validatePerfMetrics\(metrics, activeThresholds\)/);
+  // FCP 측정 공백(Chromium 이 opacity fade-in 아래 콘텐츠를 FCP 로 집계하지 않음)은 그 예산만 빼고 나머지는 검증한다.
+  assert.match(guard, /fcpMeasurementGap/);
 });
