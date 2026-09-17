@@ -133,8 +133,19 @@ const winCombatThroughVisibleAttacks = async (page: Page) => {
     }
 
     await expect(attack).toBeHidden({ timeout: 10_000 });
-    const continueButton = page.getByTestId('post-combat-continue');
-    if (await continueButton.isVisible().catch(() => false)) await continueButton.click();
+    // 2026-09 D3: 실제 승리에도 전투 결과 카드가 열린다(이전엔 QA 주입 전용이었다).
+    //   lazy 청크라 전투 종료보다 한 프레임 늦게 마운트되고, 닫기 전에는 하단 고정
+    //   오버레이가 다음 탐험 CTA의 포인터 이벤트를 가로챈다. '계속 탐험'은 추천이
+    //   인벤토리일 때만 렌더되므로, 항상 있는 닫기 아이콘으로 닫는다.
+    const postCombatCard = page.getByTestId('post-combat-card');
+    const cardAppeared = await postCombatCard
+        .waitFor({ state: 'visible', timeout: 3_000 })
+        .then(() => true)
+        .catch(() => false);
+    if (cardAppeared) {
+        await page.getByTestId('post-combat-close').click();
+        await expect(postCombatCard).toBeHidden({ timeout: 8_000 });
+    }
     await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 10_000 });
     return attackCount;
 };
