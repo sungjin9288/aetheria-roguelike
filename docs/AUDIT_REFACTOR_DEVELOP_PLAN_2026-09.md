@@ -255,4 +255,10 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 
 **최종 게이트** (문서 커밋 직전 HEAD `63f…`→ 최종 `dd6f578` 기준, main+118): type-check 0 · lint 0 problems · unit 4,786/4,787(실패 1 = `monster-catalog-art` macOS PNG 바이트) · build:guard ok · smoke desktop/mobile ok · e2e 119/121.
 
-**남은 후보 (Wave 5)**: `monster-catalog-art`를 Codex 자체 패턴(디코딩 픽셀 동일성)으로 전환, `natural-exploration-rhythm` e2e의 외부 요청 허용 목록, `system-settings-design:101` 서브픽셀 허용치, `Player.quests/status/history: any[]` 타입화, `low_hp_atk` 숫자 val 레거시 경로 정리, `exp_mult` 스택 정책 통일, 정적 가드 잔여 ~40파일, 잔여 `: any` ~1,290(주입 경계·콜백 파라미터).
+**남은 후보 (Wave 5)**: `natural-exploration-rhythm` e2e의 외부 요청 허용 목록, `system-settings-design:101` 서브픽셀 허용치, `Player.quests/status/history: any[]` 타입화, `low_hp_atk` 숫자 val 레거시 경로 정리, `exp_mult` 스택 정책 통일, 정적 가드 잔여 ~40파일, 잔여 `: any` ~1,290(주입 경계·콜백 파라미터).
+
+### 8.2 PR #31 CI 그린 작업 (2026-09-17)
+
+- `main`(`d8a111e`)의 CI는 이전부터 실패 상태였다(unit job에 브라우저가 없어 Codex의 렌더 검증 테스트 9건이 `chromium.launch()` 실패 + `monster-catalog-art` PNG 바이트 동일성 1건).
+- unit job에 `npx playwright install --with-deps chromium` 추가 → 9건 해소.
+- `monster-catalog-art` 재현성 판정을 사용자 승인 하에 **디코딩 RGBA 픽셀 동일성**으로 전환(manifest의 파일별 sha256 ↔ 추적 파일 바이트 결합은 그대로 검증, `entries[*].sha256`만 비교에서 제외). 장비/시그니처 아트의 `a2e9bbc` 계약과 동일한 방식.
