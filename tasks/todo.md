@@ -1064,3 +1064,4 @@ ART-LOCATION-01의12종 source-cell 오른쪽 경계를 교정해 runtime에 적
 ## 🔗 References
 - [Master Specification](../docs/Aetheria_Master_Specification.md)
 - [Lessons Learned](./lessons.md)
+- 2026-09-17 PR #31 CI 그린·머지(`main` = `0205301`, merge commit): GitHub CI가 E2E까지 완주한 첫 실행. unit 실패 10건은 베이스 동일(브라우저 미설치 9 + `monster-catalog-art` PNG 바이트 1) → unit job chromium 설치 + 디코딩 픽셀 판정(사용자 승인). E2E(Linux headless WebKit) 2건 실패는 둘 다 브랜치 회귀 아님 — `natural-exploration-rhythm`은 CI 더미 Firebase 키의 `getProjectConfig` 400을 앱 오류로 수집(Firebase/Google 호스트만 수집 제외), `progression-acceptance:56`은 WebKit rAF 정지 hang(업스트림 microsoft/playwright#33057, ubuntu-22.04 회피는 당일 deprecation) → e2e 엔진을 이름대로 chromium 고정(`defaultBrowserType`), 서브픽셀 1px 허용치. non-blocking perf guard의 통과/실패 요동은 Chromium이 `opacity:0` 루트 fade-in 아래 콘텐츠를 FCP로 집계하지 않는 측정 공백으로 진단·분류(예산 불변). CI 실패 아티팩트 dead step(`playwright-report/` 전용) → `test-results/` 추가. 최종 head `55c9637`: build/unit/E2E(121/121 ×3회)/perf 그린. 근거: 계획서 §8.2, PR #31 코멘트.
