@@ -114,7 +114,7 @@ export const createExploreActions = (deps: any, shared: any) => {
                     _chainId: chain.id,
                     _chainStep: step.step,
                 }});
-                addLog('event', `📜 [${chain.label}] ${step.event.desc}`);
+                addLog('event', MSG.EXPLORE_CHAIN_EVENT(chain.label, step.event.desc));
                 return;
             }
 

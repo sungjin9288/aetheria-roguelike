@@ -103,7 +103,7 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
                 return { ...p, inv: newInv, loc: '고대 보물고' };
             }
         });
-        addLog('event', '💎 [잊혀진 열쇠]가 빛나며 숨겨진 <고대 보물고> 입구가 열립니다!');
+        addLog('event', MSG.EXPLORE_KEY_EVENT);
         return 'key_event';
     }
 
@@ -114,12 +114,12 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
     );
     if (rng() < effectiveAnomalyChance && player.loc !== '고대 보물고') {
         const anomalies = [
-            { effect: 'poison',    desc: '자욱한 독안개가 밀려옵니다! (중독)' },
-            { effect: 'mana_regen', desc: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)' },
-            { effect: 'burn',      desc: '피부를 찌르는 산성비가 내립니다. (화상)' }
+            { effect: 'poison',     desc: MSG.EXPLORE_ANOMALY_POISON },
+            { effect: 'mana_regen', desc: MSG.EXPLORE_ANOMALY_MANA_REGEN },
+            { effect: 'burn',       desc: MSG.EXPLORE_ANOMALY_BURN }
         ];
         const anomaly = anomalies[Math.floor(rng() * anomalies.length)];
-        addLog('warning', `[기상 이변] ${anomaly.desc}`);
+        addLog('warning', MSG.EXPLORE_ANOMALY(anomaly.desc));
         if (anomaly.effect === 'mana_regen') {
             const stats = getFullStats();
             dispatch({ type: AT.SET_PLAYER, payload: (p: any) => ({ ...p, mp: Math.min(stats.maxMp, p.mp + Math.floor(stats.maxMp * BALANCE.ANOMALY_MANA_REGEN_RATIO)) }) });
@@ -136,7 +136,7 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
         if (available.length > 0) {
             const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-            addLog('event', '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.');
+            addLog('event', MSG.EXPLORE_RELIC_DISCOVERED);
             return 'relic_found';
         }
     }

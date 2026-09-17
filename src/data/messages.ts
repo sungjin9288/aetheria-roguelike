@@ -472,4 +472,17 @@ export const MSG = {
     POST_COMBAT_PUSH_LOG: (pct: number, turns: number) => `숨 돌릴 틈 없이 밀어붙입니다. 다음 전투 ${turns}턴 동안 공격력 +${pct}%.`,
     POST_COMBAT_PUSH_GAUGE_LOG: '거칠어진 발소리를 따라 보스의 기척이 한 걸음 가까워집니다.',
     POST_COMBAT_BREATHER_LOG: (health: number) => `자리를 잡고 숨을 고릅니다. 생명 +${health} 회복, 연속 처치는 여기서 끊깁니다.`,
+
+    // --- H4 (Wave 3 감사): 엔진/리듀서/탐험 계층의 하드코딩 한국어 회수 ---
+    //   문구는 이전과 한 글자도 다르지 않다 — 소유만 MSG로 옮긴다.
+    COMBAT_BLIND_MISS: '[실명] 공격이 빗나갔습니다!',
+    COMBAT_FEAR_FLINCH: '[공포] 두려움에 움츠립니다!',
+    RETURN_SUPPLY_DELIVERED: '귀환 보급 지급 · 하급 체력 물약 1개',
+    EXPLORE_KEY_EVENT: '💎 [잊혀진 열쇠]가 빛나며 숨겨진 <고대 보물고> 입구가 열립니다!',
+    EXPLORE_RELIC_DISCOVERED: '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.',
+    EXPLORE_ANOMALY: (desc: string) => `[기상 이변] ${desc}`,
+    EXPLORE_ANOMALY_POISON: '자욱한 독안개가 밀려옵니다! (중독)',
+    EXPLORE_ANOMALY_MANA_REGEN: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)',
+    EXPLORE_ANOMALY_BURN: '피부를 찌르는 산성비가 내립니다. (화상)',
+    EXPLORE_CHAIN_EVENT: (label: string, desc: string) => `📜 [${label}] ${desc}`,
 };

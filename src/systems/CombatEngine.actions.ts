@@ -35,7 +35,7 @@ export const actionMethods: any = {
             return {
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
-                logs: [{ type: 'warning', text: '[실명] 공격이 빗나갔습니다!' }],
+                logs: [{ type: 'warning', text: MSG.COMBAT_BLIND_MISS }],
                 isCrit: false,
                 isVictory: false,
             };
@@ -47,7 +47,7 @@ export const actionMethods: any = {
             return {
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
-                logs: [{ type: 'warning', text: '[공포] 두려움에 움츠립니다!' }],
+                logs: [{ type: 'warning', text: MSG.COMBAT_FEAR_FLINCH }],
                 isCrit: false,
                 isVictory: false,
             };
@@ -259,7 +259,7 @@ export const actionMethods: any = {
                 success: true,
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
-                logs: [{ type: 'warning', text: '[공포] 두려움에 움츠립니다!' }],
+                logs: [{ type: 'warning', text: MSG.COMBAT_FEAR_FLINCH }],
                 isCrit: false,
                 isVictory: false,
             };
