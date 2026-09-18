@@ -34,11 +34,12 @@ import {
 import { createCloudAutosave } from './createCloudAutosave';
 import { useLiveConfigAndLeaderboard } from './useLiveConfigAndLeaderboard';
 import type { Player } from '../types';
-import type { GameState } from '../reducers/gameReducer';
+import type { GameAction, GameState } from '../reducers/gameReducer';
+import type { Dispatch } from 'react';
 
 const BOOTSTRAP_TIMEOUT_MS = 6000;
 const AUTH_TIMEOUT_MS = 8000;
-const makeLogPayload = (type: any, text: any) => ({ type, text, id: `${Date.now()}_${Math.random()}` });
+const makeLogPayload = (type: string, text: string) => ({ type, text, id: `${Date.now()}_${Math.random()}` });
 
 const trackPersistenceResult = (
     player: Player,
@@ -89,7 +90,7 @@ const getDeviceQaBootstrapData = (scenario: string | null) => {
 /**
  * useFirebaseSync — Firebase 인증, 실시간 동기화, 리더보드, 자동 저장
  */
-export const useFirebaseSync = (state: GameState, dispatch: any) => {
+export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>) => {
     const mockMode = isMockRuntime();
     const deviceQaScenario = getDeviceQaScenario();
     const deviceQaMode = deviceQaScenario !== null;
@@ -197,7 +198,7 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
         let authResolved = false;
         let cancelled = false;
 
-        const fallbackAuthOffline = async (message: any) => {
+        const fallbackAuthOffline = async (message: string) => {
             if (authResolved) return;
             authResolved = true;
             const offlineResult = resolveOfflineBootstrapResult(await getOfflineBootstrapData());
@@ -228,7 +229,7 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
         }
 
         signInAnonymously(auth)
-            .then((cred: any) => {
+            .then((cred) => {
                 if (authResolved) return;
                 authResolved = true;
                 clearTimeout(authTimer);
@@ -236,11 +237,11 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
                 dispatch({ type: AT.SET_UID, payload: uid });
                 dispatch({ type: AT.SET_BOOT_STAGE, payload: 'config' });
                 // 크로스 디바이스 쿼터 동기화 (Dead Code → 활성화)
-                TokenQuotaManager.syncToFirestore(uid, db).catch((e: any) => {
+                TokenQuotaManager.syncToFirestore(uid, db).catch((e: unknown) => {
                     console.warn('Token quota sync failed', e);
                 });
             })
-            .catch((e: any) => {
+            .catch((e: unknown) => {
                 console.error('Auth Failed', e);
                 clearTimeout(authTimer);
                 void fallbackAuthOffline(MSG.SYNC_AUTH_FAIL);
@@ -268,7 +269,7 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
         let cancelled = false;
         let callbackSequence = 0;
 
-        const fallbackToOffline = async (message: any) => {
+        const fallbackToOffline = async (message: string) => {
             if (bootResolved) return;
             bootResolved = true;
             const offlineResult = resolveOfflineBootstrapResult(await getOfflineBootstrapData());
@@ -288,7 +289,7 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
             void fallbackToOffline(MSG.SYNC_TIMEOUT);
         }, BOOTSTRAP_TIMEOUT_MS);
 
-        const unsubscribe = onSnapshot(userDocRef, async (docSnap: any) => {
+        const unsubscribe = onSnapshot(userDocRef, async (docSnap) => {
             if (docSnap.metadata.hasPendingWrites) return;
             const sequence = ++callbackSequence;
 
@@ -399,7 +400,7 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
                 clearTimeout(bootstrapTimer);
                 await fallbackToOffline(MSG.SYNC_CONNECT_FAIL);
             }
-        }, (e: any) => {
+        }, (e: unknown) => {
             console.warn('User data subscribe failed', e);
             callbackSequence += 1;
             clearTimeout(bootstrapTimer);
@@ -481,8 +482,8 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
         if (mockMode || !uid || !hasFirebaseConfig) return;
         if (gameState !== 'dead') return;
         const graveEntries = normalizeGraves(grave);
-        const allItems = graveEntries.flatMap((g: any) => getGraveItems(g)).slice(0, 3);
-        const totalGold = graveEntries.reduce((sum: any, g: any) => sum + (g?.gold || 0), 0);
+        const allItems = graveEntries.flatMap((g) => getGraveItems(g)).slice(0, 3);
+        const totalGold = graveEntries.reduce((sum, g) => sum + (g?.gold || 0), 0);
         const graveDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'graves', uid);
         setDoc(graveDocRef, {
             playerName: player.name || '무명 용사',
@@ -493,7 +494,7 @@ export const useFirebaseSync = (state: GameState, dispatch: any) => {
             guardPower: player.atk || 10,
             createdAt: serverTimestamp(),
             uid,
-        }).catch((e: any) => console.warn('Public grave upload failed', e));
+        }).catch((e: unknown) => console.warn('Public grave upload failed', e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [gameState, uid]);
 

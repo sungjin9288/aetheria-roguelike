@@ -9,23 +9,40 @@ import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
 import { isSignatureItem } from '../data/signatureItems.js';
 import { getConsumableDescription } from '../utils/consumablePresentation';
-import type { FullStats, Player } from '../types/index.js';
+import type { GameActions } from '../hooks/actionDeps';
+import type { FullStats, Item, ItemType, Player } from '../types/index.js';
+
+/** ShopPanel이 실제로 호출하는 액션만 좁혀 받는다 (구매/판매/구매 영수증 해제). */
+type ShopPanelActions = Pick<GameActions, 'economyReceipt' | 'clearEconomyReceipt' | 'market'>;
+
+/** getComparisonMeta / getEquipmentDecision이 쓰는 비교 어조 — getToneClass 배색과 1:1. */
+type ComparisonTone = 'positive' | 'negative' | 'neutral';
+
+interface ComparisonMeta {
+    text: string;
+    tone: ComparisonTone;
+}
+
+const EQUIPMENT_ITEM_TYPES: ItemType[] = ['weapon', 'armor', 'shield'];
+const CONSUMABLE_ITEM_TYPES: ItemType[] = ['hp', 'mp', 'cure', 'buff'];
 
 // cycle 488: 모바일 포커스 prop 인터페이스 제거 — cycle 486 paired completion
 //   (ControlPanel cascade로 caller 0건이라 항상 truthy 전달이었음).
 interface ShopPanelProps {
     player: Player;
-    actions?: any;
-    shopItems?: any[];
+    actions?: ShopPanelActions;
+    shopItems?: Item[];
     setGameState?: (state: string) => void;
     stats?: FullStats | null;
-    onOpenArchiveConsole?: any;
+    onOpenArchiveConsole?: (target?: string) => void;
 }
 
-const isEquipmentItem = (item: any) => ['weapon', 'armor', 'shield'].includes(item?.type);
+const isEquipmentItem = (item: Item | null | undefined): boolean => (
+    Boolean(item?.type && EQUIPMENT_ITEM_TYPES.includes(item.type))
+);
 
-const getItemTags = (item: any) => {
-    const tags: any[] = [];
+const getItemTags = (item: Item): string[] => {
+    const tags: string[] = [];
     if (isWeapon(item)) tags.push(getWeaponStyleLabel(item));
     return tags;
 };
@@ -36,7 +53,7 @@ const getItemTags = (item: any) => {
 //   equipmentUtils.getEquipmentComparison(= getEquipmentDecision 기반, 강화 +N 반영)에 위임.
 //   기존 계산은 강화 보너스를 무시해 강화 장비 착용 시 업그레이드 폭을 과대 표시했다.
 //   표시 형식(라벨 · 순서 · ' / ' 구분자)은 동일하게 유지 — 라벨 원천만 MSG로 이동.
-const getComparisonMeta = (item: any, player: any) => {
+const getComparisonMeta = (item: Item | null | undefined, player: Player | null | undefined): ComparisonMeta | null => {
     if (!item) return null;
 
     if (item.type === 'armor' || item.type === 'shield' || item.type === 'weapon') {
@@ -58,13 +75,20 @@ const getComparisonMeta = (item: any, player: any) => {
     return null;
 };
 
-const getToneClass = (tone: any) => {
+const getToneClass = (tone: ComparisonTone): string => {
     if (tone === 'positive') return 'text-[#dff7f5] border-[#7dd4d8]/24 bg-[#7dd4d8]/10';
     if (tone === 'negative') return 'text-rose-100 border-rose-300/24 bg-rose-400/10';
     return 'text-slate-300 border-white/8 bg-white/[0.03]';
 };
 
-const getBuyBlockReason = ({ canStore, affordable, equipable, item }: any) => {
+interface BuyBlockContext {
+    canStore: boolean;
+    affordable: boolean;
+    equipable: boolean;
+    item: Item;
+}
+
+const getBuyBlockReason = ({ canStore, affordable, equipable, item }: BuyBlockContext): string => {
     if (!canStore) return '가방 가득';
     if (!affordable) return '골드 부족';
     if (!equipable && isEquipmentItem(item)) return '직업 제한';
@@ -73,22 +97,28 @@ const getBuyBlockReason = ({ canStore, affordable, equipable, item }: any) => {
 
 // cycle 531: value default '' 제거 — 3 callsite (line 90/94/372) 모두 string
 //   || fallback으로 string 보장 후 명시 전달이라 default 도달 불가.
-const getCompactText = (value: any) => value.replaceAll(' / ', ' · ');
+const getCompactText = (value: string): string => value.replaceAll(' / ', ' · ');
 
-const getCompactComparisonText = (comparison: any) => (
+const getCompactComparisonText = (comparison: ComparisonMeta | null): string => (
     getCompactText(comparison?.text || '').replace(MSG.EQUIP_DELTA_NONE, MSG.EQUIP_DELTA_NONE_COMPACT)
 );
 
-const getCompactItemSummary = (item: any) => {
-    if (['hp', 'mp', 'cure', 'buff'].includes(item?.type)) return getConsumableDescription(item);
+const getCompactItemSummary = (item: Item): string => {
+    if (item.type && CONSUMABLE_ITEM_TYPES.includes(item.type)) return getConsumableDescription(item);
     const summary = getCompactText(getItemStatText(item) || item.desc || '');
     if (!isWeapon(item)) return summary;
     return summary.replace(/^(한손|양손) 무기\s·\s/, '');
 };
 
-const formatGold = (value: any) => `${Number(value || 0).toLocaleString()} 골드`;
+const formatGold = (value: number | undefined): string => `${Number(value || 0).toLocaleString()} 골드`;
 
-const ShopEquipmentDecisionStrip = ({ player, item, scope }: any) => {
+interface ShopEquipmentDecisionStripProps {
+    player: Player;
+    item: Item;
+    scope: 'daily' | 'weekly' | 'list';
+}
+
+const ShopEquipmentDecisionStrip = ({ player, item, scope }: ShopEquipmentDecisionStripProps) => {
     const decision = getEquipmentDecision(player, item);
     if (!decision) return null;
 
@@ -120,7 +150,7 @@ const MOBILE_INITIAL_BUY_LIMIT = 12;
 //   청소 메가 시리즈 65번째.
 const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArchiveConsole }: ShopPanelProps) => {
     const [shopMode, setShopMode] = useState('buy');
-    const [sellConfirmId, setSellConfirmId] = useState<any>(null);
+    const [sellConfirmId, setSellConfirmId] = useState<string | null | undefined>(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
     const [detailOverride, setDetailOverride] = useState<boolean | null>(null);
     const disclosure = getEquipmentDisclosure(player);
@@ -143,16 +173,16 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     const purchaseReceipt = actions?.economyReceipt?.type === 'buy' ? actions.economyReceipt : null;
     useEffect(() => {
         if (!purchaseReceipt) return undefined;
-        const timer = window.setTimeout(() => actions.clearEconomyReceipt?.(), 1800);
+        const timer = window.setTimeout(() => actions?.clearEconomyReceipt?.(), 1800);
         return () => window.clearTimeout(timer);
     }, [actions, purchaseReceipt]);
 
     const buyItems = useMemo(() => {
         return (shopItems || [])
-            .filter((item: any) => (item.tier || 1) <= maxTier)
-            .map((item: any) => {
-                const affordable = currentGold >= item.price;
-                const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(currentJob);
+            .filter((item) => (item.tier || 1) <= maxTier)
+            .map((item) => {
+                const affordable = currentGold >= (item.price ?? Infinity);
+                const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(currentJob ?? '');
                 const resonance = getTraitItemResonance(item, traitProfile, { job: currentJob });
                 return {
                     item,
@@ -163,7 +193,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     resonanceScore: resonance.score,
                 };
             })
-            .sort((a: any, b: any) => (
+            .sort((a, b) => (
                 a.priorityScore - b.priorityScore
                 || b.resonanceScore - a.resonanceScore
                 || (a.item.price || 0) - (b.item.price || 0)
@@ -177,12 +207,18 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
 
     const sellItems = useMemo(() => (
         [...(player.inv || [])]
-            .filter((item: any) => !String(item.id).startsWith('starter_'))
-            .sort((a: any, b: any) => (a.price || 0) - (b.price || 0))
+            .filter((item) => !String(item.id).startsWith('starter_'))
+            .sort((a, b) => (a.price || 0) - (b.price || 0))
     ), [player.inv]);
 
-    const dailyDeals = useMemo(() => getDailyDeals(player.level || 1), [player.level]);
-    const weeklySpecial = useMemo(() => getWeeklySpecial(player.level || 1), [player.level]);
+    const dailyDeals = useMemo(
+        () => getDailyDeals(player.level || 1),
+        [player.level]
+    );
+    const weeklySpecial = useMemo(
+        () => getWeeklySpecial(player.level || 1),
+        [player.level]
+    );
 
     return (
         <div data-testid="shop-panel" className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3">
@@ -261,10 +297,10 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     <div className="mb-2 space-y-2 border-b border-white/8 pb-2">
                         <div className="aether-label text-[#f6e7c8]/70">오늘의 할인 · 10%</div>
                         <div className="grid grid-cols-1 gap-2">
-                            {dailyDeals.items.map((item: any) => {
+                            {dailyDeals.items.map((item) => {
                                 const canStore = inventoryHasRoom;
-                                const affordable = (player.gold ?? 0) >= item.price;
-                                const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job);
+                                const affordable = (player.gold ?? 0) >= (item.price ?? Infinity);
+                                const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(player.job ?? '');
                                 const canBuy = canStore && affordable && equipable;
                                 const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
                                 return (
@@ -283,7 +319,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             </div>
                                         </div>
                                         <button
-                                            onClick={() => actions.market('buy', item, 'daily')}
+                                            onClick={() => actions?.market('buy', item, 'daily')}
                                             disabled={!canBuy}
                                             title={!canBuy && reason ? reason : '구매'}
                                             className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-2.5 py-1 text-[10px] font-bold text-amber-100"
@@ -310,13 +346,13 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                 </div>
                                 {(() => {
                                     const canStore = inventoryHasRoom;
-                                    const affordable = (player.gold ?? 0) >= weeklySpecial.price;
-                                    const equipable = !isEquipmentItem(weeklySpecial) || !Array.isArray(weeklySpecial.jobs) || weeklySpecial.jobs.includes(player.job);
+                                    const affordable = (player.gold ?? 0) >= (weeklySpecial.price ?? Infinity);
+                                    const equipable = !isEquipmentItem(weeklySpecial) || !Array.isArray(weeklySpecial.jobs) || weeklySpecial.jobs.includes(player.job ?? '');
                                     const canBuy = canStore && affordable && equipable;
                                     const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
                                     return (
                                         <button
-                                            onClick={() => actions.market('buy', weeklySpecial, 'weekly')}
+                                            onClick={() => actions?.market('buy', weeklySpecial, 'weekly')}
                                             disabled={!canBuy}
                                             title={!canBuy && reason ? reason : '구매'}
                                             className="aether-disabled-action shrink-0 min-h-[44px] rounded-full border border-purple-400/30 px-4 py-1.5 text-xs font-bold text-purple-200 transition-all hover:bg-purple-400/10"
@@ -332,7 +368,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
 
                 {shopMode === 'buy' ? (
                     buyItems.length > 0 ? (
-                        visibleBuyItems.map(({ item, affordable, equipable, inventoryHasRoom: canStore }: any) => {
+                        visibleBuyItems.map(({ item, affordable, equipable, inventoryHasRoom: canStore }) => {
                             const canBuy = affordable && equipable && canStore;
                             const comparison = getComparisonMeta(item, player);
                             const typeTag = getItemTags(item)[0];
@@ -358,7 +394,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                             {typeTag}
                                                         </span>
                                                     )}
-                                                    {showDetails && Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
+                                                    {showDetails && Array.isArray(item.jobs) && item.jobs.includes(player.job ?? '') && isEquipmentItem(item) && (
                                                         <span
                                                             title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
                                                             className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-readable font-bold"
@@ -393,7 +429,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             <button
                                                 data-testid="shop-buy-inline"
                                                 onClick={() => {
-                                                    if (canBuy) actions.market('buy', item, 'stock');
+                                                    if (canBuy) actions?.market('buy', item, 'stock');
                                                 }}
                                                 disabled={!canBuy}
                                                 className="aether-disabled-action aether-cta-gold min-h-[44px] rounded-[0.75rem] px-2 py-1 text-[10px] font-bold text-[#f6e7c8]"
@@ -412,7 +448,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     )
                 ) : (
                     sellItems.length > 0 ? (
-                        sellItems.map((item: any) => {
+                        sellItems.map((item) => {
                             const isConfirming = sellConfirmId === item.id;
                             const sellPrice = getSellPrice(item);
                             const comparison = getComparisonMeta(item, player);
@@ -462,7 +498,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             onClick={() => {
                                                 if (isSignatureLocked) return;
                                                 if (isConfirming) {
-                                                    actions.market('sell', item);
+                                                    actions?.market('sell', item);
                                                     setSellConfirmId(null);
                                                     return;
                                                 }

@@ -16,17 +16,19 @@ import { getRestCost } from '../../utils/expeditionReturnFlow';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { endDevourBonus } from '../../utils/adventureRelicBonuses';
 import type { Player } from '../../types';
+import type { GameActionDeps } from '../actionDeps';
+import type { TitleSharedHelpers } from './_shared';
 
 const getStartingQuests = (player: Player) => {
     const quests = Array.isArray(player.quests) ? player.quests : [];
     const claimedQuestIds = Array.isArray(player.stats?.claimedQuestIds)
         ? player.stats.claimedQuestIds
         : [];
-    const firstStoryQuest = DB.QUESTS.find((quest: any) => quest.id === FIRST_STORY_QUEST_ID);
+    const firstStoryQuest = DB.QUESTS.find((quest) => quest.id === FIRST_STORY_QUEST_ID);
 
     if (!firstStoryQuest
         || claimedQuestIds.includes(FIRST_STORY_QUEST_ID)
-        || quests.some((quest: any) => quest.id === FIRST_STORY_QUEST_ID)) {
+        || quests.some((quest) => quest.id === FIRST_STORY_QUEST_ID)) {
         return quests;
     }
 
@@ -44,7 +46,7 @@ const hasPreviousRunExperience = (player: Player) => {
     ].some((value) => Number(value) > 0);
 };
 
-export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) => {
+export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitles }: TitleSharedHelpers) => {
     const { player, gameState, dispatch, addLog, addStoryLog, getFullStats } = deps;
     return {
         // cycle 566: gender / jobId / challengeModifiers 3 defaults 제거 —
@@ -52,7 +54,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
         //   '모험가', selectedChallenges)) 4 args 명시 전달이라 모든 default
         //   도달 불가. body의 Array.isArray(challengeModifiers) defensive
         //   guard 보존. 청소 메가 시리즈 59번째 single-cycle 3-default batch.
-        start: (name: any, gender: any, jobId: any, challengeModifiers: any) => {
+        start: (name: string, gender: string, jobId: string, challengeModifiers: string[]) => {
             const trimmedName = String(name || '').trim().slice(0, 16);
             if (!trimmedName) return;
             const vitals = buildClassVitals(1, jobId, player.meta || {});
@@ -84,7 +86,8 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
             addLog('system', MSG.START_JOURNEY(trimmedName));
             addLog('event', MSG.START_SKILL(cls.skills?.[0]?.name || '강타'));
             if (mods.length > 0) {
-                const labels = mods.map((id: any) => BALANCE.CHALLENGE_MODIFIERS.find((m: any) => m.id === id)?.label || id);
+                const labels = mods.map((id) => BALANCE.CHALLENGE_MODIFIERS
+                    .find((m: { id: string; label: string }) => m.id === id)?.label || id);
                 addLog('warn', MSG.CHALLENGE_START(labels));
             }
             if (hasPreviousRunExperience(player)) {
@@ -107,10 +110,10 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
         // cycle 535: dir default 1 제거 — 2 callsite (commandParser:80,
         //   CombatPanel:113) 모두 1 명시 전달이라 default 도달 불가. util
         //   /component/hook default 청소 메가 시리즈 31번째 (cycle 502-534).
-        cycleSkill: (dir: any) => {
+        cycleSkill: (dir: number) => {
             const skills = getJobSkills(player);
             if (!skills.length) return;
-            const current = Number.isInteger(player.skillLoadout?.selected) ? player.skillLoadout.selected : 0;
+            const current = Number.isInteger(player.skillLoadout?.selected) ? player.skillLoadout!.selected! : 0;
             const next = ((current + dir) % skills.length + skills.length) % skills.length;
             dispatch({
                 type: AT.SET_PLAYER,
@@ -119,10 +122,10 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
         },
 
         // cycle 56: 직접 skill 이름으로 선택 (UI에서 카드 탭 → 즉시 활성).
-        selectSkill: (skillName: any) => {
+        selectSkill: (skillName: string) => {
             const skills = getJobSkills(player);
             if (!skills.length) return;
-            const idx = skills.findIndex((s: any) => s.name === skillName);
+            const idx = skills.findIndex((s) => s.name === skillName);
             if (idx < 0) return;
             dispatch({
                 type: AT.SET_PLAYER,
@@ -132,11 +135,11 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
 
         rest: () => {
             if (gameState !== 'idle') return;
-            const mapData = DB.MAPS[player.loc];
+            const mapData = DB.MAPS[player.loc!];
             if (!mapData || mapData.type !== 'safe') return addLog('error', MSG.REST_SAFE_ONLY);
             // 2026-07 — 에테르 거울: rest_discount 노드가 휴식 비용에 배율로 적용.
             const restCost = getRestCost(player);
-            if (player.gold < restCost) return addLog('error', MSG.REST_GOLD_INSUFFICIENT(restCost));
+            if (player.gold! < restCost) return addLog('error', MSG.REST_GOLD_INSUFFICIENT(restCost));
             const stats = getFullStats();
             // cycle 112: rest 시 player.status 정리 — cycle 106-110에서 활성화된 5종 status
             // (bleed/freeze/stun/curse/blind/fear)를 안전지대 휴식으로 해소. 며칠간의 회복
@@ -144,7 +147,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
             // UX 안전망. tempBuff은 turn-based라 그대로 유지.
             const updatedPlayer: Record<string, any> = {
                 ...player,
-                gold: player.gold - restCost,
+                gold: player.gold! - restCost,
                 hp: stats.maxHp,
                 mp: stats.maxMp,
                 status: [],
@@ -157,19 +160,19 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
             addStoryLog('rest', { loc: player.loc });
         },
 
-        swapSkillChoice: (skillName: any, newChoice: any) => {
+        swapSkillChoice: (skillName: string, newChoice: string) => {
             if (gameState !== 'idle') return;
-            const mapData = DB.MAPS[player.loc];
+            const mapData = DB.MAPS[player.loc!];
             if (!mapData || mapData.type !== 'safe') return addLog('error', MSG.SKILL_SWAP_SAFE_ONLY);
             const cost = BALANCE.SKILL_SWAP_COST || 50;
             if ((player.gold || 0) < cost) return addLog('error', MSG.SKILL_SWAP_GOLD_INSUFFICIENT(cost));
-            const classData = CLASSES[player.job];
+            const classData = CLASSES[player.job!];
             const branches = classData?.skillBranches?.[skillName];
             if (!branches) return addLog('error', MSG.SKILL_NO_BRANCH);
-            const branch = branches.find((b: any) => b.choice === newChoice);
+            const branch = branches.find((b) => b.choice === newChoice);
             if (!branch) return addLog('error', MSG.SKILL_INVALID_BRANCH);
             const oldChoice = player.skillChoices?.[skillName];
-            const oldLabel = branches.find((entry: any) => entry.choice === oldChoice)?.label || '기본 성장';
+            const oldLabel = branches.find((entry) => entry.choice === oldChoice)?.label || '기본 성장';
             dispatch({
                 type: AT.SET_PLAYER,
                 payload: (p: Player) => ({
@@ -184,11 +187,11 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
 
         reset: () => dispatch({ type: AT.RESET_GAME }),
 
-        jobChange: (jobName: any) => {
-            const current = DB.CLASSES[player.job];
+        jobChange: (jobName: string) => {
+            const current = DB.CLASSES[player.job!];
             if (!current?.next?.includes(jobName)) return addLog('error', MSG.JOB_CHANGE_INVALID);
-            if (player.level < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', MSG.JOB_CHANGE_LEVEL);
-            const vitals = buildClassVitals(player.level, jobName, player.meta || {});
+            if (player.level! < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', MSG.JOB_CHANGE_LEVEL);
+            const vitals = buildClassVitals(player.level!, jobName, player.meta || {});
             const nextStats = getFullStats({
                 ...endDevourBonus(player),
                 job: jobName,
@@ -197,7 +200,7 @@ export const createCharacterActions = (deps: any, { emitUnlockedTitles }: any) =
             });
             dispatch({
                 type: AT.SET_PLAYER,
-                payload: (currentPlayer: any) => queueMilestoneStoryBeat({
+                payload: (currentPlayer: Player) => queueMilestoneStoryBeat({
                     ...endDevourBonus(currentPlayer),
                     job: jobName,
                     maxHp: vitals.maxHp,

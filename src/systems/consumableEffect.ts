@@ -97,7 +97,7 @@ export const resolveConsumableEffect = ({ player, item }: { player: any; item: a
 
     const inventory = Array.isArray(player.inv) ? player.inv : [];
     if (!inventory.some((entry: any) => entry === item || entry?.id === item.id)) return rejection(player, 'INVALID_ITEM');
-    const itemName = typeof item.name === 'string' && item.name ? item.name : '소모품';
+    const itemName = typeof item.name === 'string' && item.name ? item.name : MSG.CONSUMABLE_NAME_FALLBACK;
 
     if (RECOVERY_TYPES.has(item.type)) {
         if (!isFinitePositive(item.val)) return rejection(player, 'INVALID_ITEM');

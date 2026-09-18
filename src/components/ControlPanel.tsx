@@ -14,9 +14,11 @@ import {
   ScrollText,
   Binoculars,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../data/db';
 import { getAdventureGuidance, getExpeditionPreparation, getMoveRecommendations, getQuestTracker } from '../utils/adventureGuide';
+import type { MoveRecommendation, QuestTracker } from '../utils/adventureGuide';
 import ShopPanel from './ShopPanel';
 import EventPanel from './EventPanel';
 import { GS } from '../reducers/gameStates';
@@ -30,24 +32,38 @@ import JobChangePanel from './tabs/JobChangePanel';
 import QuestBoardPanel from './tabs/QuestBoardPanel';
 import CraftingPanel from './tabs/CraftingPanel';
 import { ACTION_KIND_TO_BUTTON } from './controlPanelConfig';
-import type { FullStats, Player, Monster } from '../types/index.js';
+import type { FullStats, GameMap, Item, Player, Monster } from '../types/index.js';
 import { getTownActionPresentation } from '../utils/townActionPresentation';
 import { getExpeditionFocusRouteTargets, MAX_EXPEDITION_FOCUS_QUESTS } from '../utils/expeditionMissionFocus';
 import { getScoutAvailability } from '../utils/scoutEvents';
 import { MSG } from '../data/messages';
+import type { GameState } from '../reducers/gameReducer';
+import type { GameActions } from '../hooks/actionDeps';
+
+/** 하단 액션 그리드/시설 목록에 렌더링되는 버튼 1건의 정적 서술(descriptor). */
+interface ControlButton {
+  key: string;
+  testId: string;
+  icon: LucideIcon;
+  label: string;
+  mobileLabel?: string;
+  onClick: () => void;
+  className: string;
+  disabled?: boolean;
+}
 
 interface ControlPanelProps {
   gameState?: string;
   player: Player;
   enemy?: Monster | null;
-  actions?: any;
+  actions?: GameActions;
   setGameState?: (state: string) => void;
-  shopItems?: any[];
-  grave?: any;
+  shopItems?: Item[];
+  grave?: GameState['grave'];
   isAiThinking?: boolean;
-  currentEvent?: any;
+  currentEvent?: GameState['currentEvent'];
   stats?: FullStats | null;
-  onOpenArchiveConsole?: any;
+  onOpenArchiveConsole?: (tab?: string) => void;
 }
 
 const missionTrackerTone: Record<string, string> = {
@@ -57,7 +73,7 @@ const missionTrackerTone: Record<string, string> = {
 };
 
 const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
-  tracker: any;
+  tracker: QuestTracker;
   canClaimReward: boolean;
   onClaimReward?: () => void;
 }) => {
@@ -98,7 +114,7 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
       </div>
       {showFocusOverview && (
         <div className="relative mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-3" data-testid="control-expedition-focus-list">
-          {focusQuests.map((quest: any) => (
+          {focusQuests.map((quest) => (
             <div key={quest.questId} className="aether-decision-cell flex min-h-[38px] min-w-0 items-center justify-between gap-2 rounded-[0.7rem] px-2 py-1.5">
               <div className="aether-type-meta min-w-0 break-words font-readable font-semibold text-slate-100/88">{quest.title}</div>
               <div className="aether-type-label shrink-0 font-readable text-slate-400">{quest.progressLabel}</div>
@@ -137,7 +153,7 @@ const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
   );
 };
 
-const townPrimaryIcons: Record<string, any> = {
+const townPrimaryIcons: Record<string, LucideIcon> = {
   claim_quest: ScrollText,
   explore: MapIcon,
   open_class: GraduationCap,
@@ -148,8 +164,8 @@ const townPrimaryIcons: Record<string, any> = {
 };
 
 const ExpeditionPrepStrip = ({ preparation, primary, onPrimaryAction, onEditFocus, onOpenArchive }: {
-  preparation: any;
-  primary: any;
+  preparation: ReturnType<typeof getExpeditionPreparation>;
+  primary: ReturnType<typeof getTownActionPresentation>['primary'];
   onPrimaryAction: () => void;
   onEditFocus: () => void;
   onOpenArchive?: () => void;
@@ -226,6 +242,15 @@ const ExpeditionPrepStrip = ({ preparation, primary, onPrimaryAction, onEditFocu
   );
 };
 
+interface MapSignalStripProps {
+  player: Player;
+  currentMap: GameMap;
+  routes: MoveRecommendation[];
+  setGameState?: (state: string) => void;
+  onOpenArchiveConsole?: (tab?: string) => void;
+  isAiThinking?: boolean;
+}
+
 const MapSignalStrip = ({
   player,
   currentMap,
@@ -233,7 +258,7 @@ const MapSignalStrip = ({
   setGameState,
   onOpenArchiveConsole,
   isAiThinking,
-}: any) => {
+}: MapSignalStripProps) => {
   const recommendedRoute = routes?.[0] || null;
   const blindMap = player?.challengeModifiers?.includes('blindMap');
   const currentName = blindMap ? '???' : player?.loc;
@@ -342,7 +367,7 @@ const ControlPanel = ({
   const expeditionPreparation = getExpeditionPreparation(player, stats, mapData, DB.MAPS);
   const questTargets = getExpeditionFocusRouteTargets(player).filter((target) => DB.MAPS[target]);
   const questNextSteps = new Set(questTargets.map((target) => getNextMapTowardTarget(DB.MAPS, currentLocation, target)).filter(Boolean));
-  const routeTopologyEntries: RouteTopologyEntry[] = moveRecommendations.map((route: any) => {
+  const routeTopologyEntries: RouteTopologyEntry[] = moveRecommendations.map((route) => {
     const targetMap = DB.MAPS[route.name];
     return {
       ...route,
@@ -351,7 +376,7 @@ const ControlPanel = ({
       isLocked: playerLevel < getMapRequiredLevel(targetMap, playerLevel),
     };
   });
-  const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind as any] || null;
+  const recommendedButton = ACTION_KIND_TO_BUTTON[guidance?.primaryAction?.kind ?? ''] || null;
   const isSafeZone = mapData.type === 'safe';
   // 2026-09 D1 — 정찰 버튼. exploreActions.scout()과 같은 순수 판정(getScoutAvailability)을
   //   써서 라벨에 적힌 비용과 실제 차감, 비활성 사유가 어긋나지 않게 한다 (lessons R33).
@@ -373,7 +398,7 @@ const ControlPanel = ({
   const actionButtonBase = 'aether-action-button relative min-h-[48px] overflow-hidden rounded-[1rem] px-2.5 flex items-center gap-2 text-left disabled:opacity-50 transition-all group';
   const actionLabelClass = 'aether-type-body font-readable font-bold uppercase tracking-normal text-left';
 
-  const getRecommendedClass = (buttonKey: any) => (
+  const getRecommendedClass = (buttonKey: string) => (
     recommendedButton === buttonKey
       ? 'ring-1 ring-cyan-300/45 shadow-[0_0_18px_rgba(34,211,238,0.18)]'
       : ''
@@ -383,7 +408,7 @@ const ControlPanel = ({
   //   3 callsite (line 284/285/286)에서 ('', {}) 명시 추가 후 outer defaults
   //   제거. inner destructure default `hideLabel = false`는 보존 (caller {}
   //   시 그대로 기본값 적용). explicit default-elimination paired batch 3번째.
-  const renderActionButton = (button: any, extraClass: any, { hideLabel = false }: any) => {
+  const renderActionButton = (button: ControlButton, extraClass: string, { hideLabel = false }: { hideLabel?: boolean }) => {
     const {
       key,
       testId,
@@ -480,7 +505,7 @@ const ControlPanel = ({
       testId: 'control-explore',
       icon: MapIcon,
       label: '탐험',
-      onClick: () => actions.explore(),
+      onClick: () => actions?.explore(),
       className: 'bg-[linear-gradient(180deg,rgba(18,34,41,0.82)_0%,rgba(8,14,18,0.96)_100%)] border border-[#7dd4d8]/20 text-[#dff7f5] hover:border-[#d5b180]/22 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(125,212,216,0.1)]',
     },
     {
@@ -494,20 +519,20 @@ const ControlPanel = ({
     },
   ];
 
-  const marketButton: Record<string, any> = {
+  const marketButton: ControlButton = {
     key: 'market',
     testId: 'control-market',
     icon: ShoppingBag,
     label: '상점',
     mobileLabel: '상점',
     onClick: () => {
-      actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
-      actions.setGameState(GS.SHOP);
+      actions?.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
+      actions?.setGameState(GS.SHOP);
     },
     className: 'bg-[linear-gradient(180deg,rgba(34,24,14,0.84)_0%,rgba(16,11,7,0.96)_100%)] border border-[#d5b180]/22 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30',
   };
 
-  const restButton: Record<string, any> = {
+  const restButton: ControlButton = {
     key: 'rest',
     testId: 'control-rest',
     icon: Moon,
@@ -517,7 +542,7 @@ const ControlPanel = ({
     className: 'bg-[linear-gradient(180deg,rgba(24,30,44,0.84)_0%,rgba(9,12,18,0.96)_100%)] border border-[#9a8ac0]/22 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/30',
   };
 
-  const questButton: Record<string, any> = {
+  const questButton: ControlButton = {
     key: 'quests',
     testId: 'control-quests',
     icon: ScrollText,
@@ -533,7 +558,7 @@ const ControlPanel = ({
     className: 'bg-[linear-gradient(180deg,rgba(16,32,37,0.84)_0%,rgba(7,13,17,0.96)_100%)] border border-[#7dd4d8]/22 text-[#dff7f5] hover:bg-[#7dd4d8]/10 hover:border-[#7dd4d8]/30',
   };
 
-  const classButton: Record<string, any> = {
+  const classButton: ControlButton = {
     key: 'class',
     testId: 'control-class',
     icon: GraduationCap,
@@ -543,7 +568,7 @@ const ControlPanel = ({
     className: 'bg-[linear-gradient(180deg,rgba(32,27,18,0.84)_0%,rgba(14,11,7,0.96)_100%)] border border-[#d5b180]/18 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/28',
   };
 
-  const craftButton: Record<string, any> = {
+  const craftButton: ControlButton = {
     key: 'craft',
     testId: 'control-craft',
     icon: Hammer,
@@ -555,7 +580,7 @@ const ControlPanel = ({
 
   const safeZoneButtons = [restButton, questButton, marketButton, classButton, craftButton];
 
-  const auxiliaryButtons: any[] = [];
+  const auxiliaryButtons: ControlButton[] = [];
   if (showGraveRecovery) {
     auxiliaryButtons.push({
       key: 'grave',
@@ -563,7 +588,7 @@ const ControlPanel = ({
       icon: Ghost,
       label: '회수',
       mobileLabel: '회수',
-      onClick: actions.lootGrave,
+      onClick: () => actions?.lootGrave?.(),
       className: 'bg-[linear-gradient(180deg,rgba(26,31,38,0.85)_0%,rgba(12,15,20,0.96)_100%)] border border-white/10 text-slate-200 hover:border-[#d5b180]/16 hover:bg-white/[0.04]',
     });
   }
@@ -574,15 +599,17 @@ const ControlPanel = ({
   const townQuickButtons = townPresentation.quickKeys
     .map((key) => buttonByKey.get(key))
     .map((button) => button?.key === 'explore' ? { ...button, label: '도시 조사 · 전투 가능' } : button)
-    .filter(Boolean);
+    .filter((button): button is ControlButton => Boolean(button));
   const townFacilityButtons = townPresentation.facilityKeys
     .map((key) => buttonByKey.get(key))
-    .filter(Boolean);
+    .filter((button): button is ControlButton => Boolean(button));
 
   const runTownPrimaryAction = () => {
     switch (townPresentation.primary.kind) {
       case 'claim_quest':
-        actions?.completeQuest?.(expeditionPreparation.tracker?.questId);
+        if (expeditionPreparation.tracker) {
+          actions?.completeQuest?.(expeditionPreparation.tracker.questId);
+        }
         return;
       case 'explore':
         actions?.explore?.();
@@ -650,7 +677,7 @@ const ControlPanel = ({
               currentName={currentLocation}
               routes={routeTopologyEntries}
               blindMap={player.challengeModifiers?.includes('blindMap')}
-              onSelect={(route) => actions.move(route.name)}
+              onSelect={(route) => actions?.move(route.name)}
               routeTestId={(route) => `control-route-option-${route.name}`}
             />
             {moveRecommendations[0] && (
@@ -737,7 +764,7 @@ const ControlPanel = ({
                 </button>
               )}
               <div data-testid="control-town-quick-actions" className={townQuickGridClass}>
-                {townQuickButtons.map((button: any) => renderActionButton(button, '', {}))}
+                {townQuickButtons.map((button) => renderActionButton(button, '', {}))}
               </div>
               {townFacilityButtons.length > 0 && (
                 <details
@@ -753,7 +780,7 @@ const ControlPanel = ({
                     <ChevronDown size={14} className="shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
                   </summary>
                   <div data-testid="control-town-facility-actions" className="grid grid-cols-2 gap-2 border-t border-white/8 p-2">
-                    {townFacilityButtons.map((button: any) => renderActionButton(button, '', {}))}
+                    {townFacilityButtons.map((button) => renderActionButton(button, '', {}))}
                   </div>
                 </details>
               )}
@@ -761,8 +788,8 @@ const ControlPanel = ({
           ) : (
             <>
               <div className={actionGridClass}>
-                {coreButtons.map((button: any) => renderActionButton(button, '', {}))}
-                {auxiliaryButtons.map((button: any) => renderActionButton(button, '', {}))}
+                {coreButtons.map((button) => renderActionButton(button, '', {}))}
+                {auxiliaryButtons.map((button) => renderActionButton(button, '', {}))}
               </div>
               <button
                 type="button"

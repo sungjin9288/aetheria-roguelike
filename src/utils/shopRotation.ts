@@ -11,7 +11,7 @@ import { DB } from '../data/db';
 // cycle 524: salt default 0 제거 — 2 callsite (line 63 dateHash(today, 42) +
 //   line 94 dateHash(weekKey, 777)) 모두 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 21번째 batch (cycle 502-523).
-const dateHash = (dateStr: any, salt: any) => {
+const dateHash = (dateStr: string, salt: number): number => {
     let hash = salt;
     for (let i = 0; i < dateStr.length; i++) {
         hash = ((hash << 5) - hash + dateStr.charCodeAt(i)) | 0;
@@ -21,8 +21,10 @@ const dateHash = (dateStr: any, salt: any) => {
 
 /**
  * 시드 기반 배열 셔플 (Fisher-Yates, deterministic)
+ * 입력 배열의 요소 타입을 그대로 보존한다 — 소비자(getDailyDeals/getWeeklySpecial/
+ * getCanonicalShopOffer → economyHandlers.ts)가 구체 Item으로 추론된다.
  */
-const seededShuffle = (arr: any, seed: any) => {
+const seededShuffle = <T>(arr: readonly T[], seed: number): T[] => {
     const result = [...arr];
     let s = seed;
     for (let i = result.length - 1; i > 0; i--) {
@@ -70,7 +72,7 @@ export const getShopCatalog = (location: string) => {
         ...(DB.ITEMS.consumables || []),
         ...(DB.ITEMS.weapons || []),
         ...(DB.ITEMS.armors || []),
-    ].filter((item: any) => (item.tier || 1) <= maxTier);
+    ].filter((item) => (item.tier || 1) <= maxTier);
 };
 
 /**
@@ -85,7 +87,7 @@ export const getShopCatalog = (location: string) => {
 // cycle 524: playerLevel default 1 제거 — 1 callsite (ShopPanel.tsx:161
 //   getDailyDeals(player.level || 1)) 명시 전달 + || 1 number 보장이라
 //   default 도달 불가.
-export const getDailyDeals = (playerLevel: any) => {
+export const getDailyDeals = (playerLevel: number) => {
     const today = getToday();
     const seed = dateHash(today, 42);
 
@@ -94,18 +96,18 @@ export const getDailyDeals = (playerLevel: any) => {
 
     const allItems = [
         ...(DB.ITEMS.weapons || []),
-        ...(DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor'),
+        ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
         ...(DB.ITEMS.consumables || []),
-    ].filter((item: any) => (item.tier || 1) <= maxTier);
+    ].filter((item) => (item.tier || 1) <= maxTier);
 
     // cycle 436: 일일 딜 마커 제거 — production read 0건이던 dead 출력
     //   (cycle 415 주간 특별 마커 정리 paired completion). cycle 355는 회귀
     //   가드로 보존했으나 그 가드 자체가 유일 read였음 (circular guard).
     const shuffled = seededShuffle(allItems, seed);
-    const items = shuffled.slice(0, 3).map((item: any) => ({
+    const items = shuffled.slice(0, 3).map((item) => ({
         ...item,
-        originalPrice: item.price,
-        price: Math.floor(item.price * 0.9),
+        originalPrice: item.price ?? 0,
+        price: Math.floor((item.price ?? 0) * 0.9),
     }));
 
     return { items };
@@ -119,7 +121,7 @@ export const getDailyDeals = (playerLevel: any) => {
 // cycle 524: playerLevel default 1 제거 — 1 callsite (ShopPanel.tsx:162
 //   getWeeklySpecial(player.level || 1)) 명시 전달 + || 1 number 보장이라
 //   default 도달 불가.
-export const getWeeklySpecial = (playerLevel: any) => {
+export const getWeeklySpecial = (playerLevel: number) => {
     const weekKey = getWeekKey();
     const seed = dateHash(weekKey, 777);
 
@@ -127,8 +129,8 @@ export const getWeeklySpecial = (playerLevel: any) => {
 
     const rareItems = [
         ...(DB.ITEMS.weapons || []),
-        ...(DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor'),
-    ].filter((item: any) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier);
+        ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
+    ].filter((item) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier);
 
     if (rareItems.length === 0) return null;
 
@@ -138,8 +140,8 @@ export const getWeeklySpecial = (playerLevel: any) => {
     //   originalPrice / price는 ShopPanel line-through 표시에 사용 보존.
     return {
         ...item,
-        originalPrice: item.price,
-        price: Math.floor(item.price * 0.85),
+        originalPrice: item.price ?? 0,
+        price: Math.floor((item.price ?? 0) * 0.85),
     };
 };
 
@@ -150,7 +152,7 @@ export const getCanonicalShopOffer = (
     location: string,
 ) => {
     if (source === 'daily') {
-        const deal = getDailyDeals(playerLevel).items.find((item: any) => item.name === itemName);
+        const deal = getDailyDeals(playerLevel).items.find((item) => item.name === itemName);
         if (!deal) return null;
         const { originalPrice, ...item } = deal;
         return { item: { ...item, price: originalPrice }, price: deal.price };
@@ -163,6 +165,6 @@ export const getCanonicalShopOffer = (
     }
     if (source !== 'stock') return null;
 
-    const item = getShopCatalog(location).find((entry: any) => entry.name === itemName);
+    const item = getShopCatalog(location).find((entry) => entry.name === itemName);
     return item ? { item, price: item.price || 0 } : null;
 };

@@ -8,6 +8,8 @@ import type { ResolveFallbackEventTransactionPayload } from '../actionTypes';
 import type { GameAction, GameState } from '../gameReducer';
 import { GS } from '../gameStates';
 import { addNewTitles } from './helpers';
+import type { Item } from '../../types';
+import type { LogEntry } from '../../types/session.js';
 
 const PAYLOAD_KEYS = ['choiceIndex', 'transactionId'];
 
@@ -43,24 +45,24 @@ const structurallyEqual = (left: unknown, right: unknown): boolean => {
         ));
 };
 
-const findCheapestHpRecovery = (inventory: any[]) => {
+const findCheapestHpRecovery = (inventory: Item[]) => {
     const canonicalByName = new Map(
         (DB.ITEMS.consumables || [])
-            .filter((item: any) => item?.type === 'hp')
-            .map((item: any) => [item.name, item]),
+            .filter((item) => item?.type === 'hp')
+            .map((item) => [item.name, item] as const),
     );
     return inventory
         .map((item, index) => ({ item, index, canonical: canonicalByName.get(item?.name) }))
         .filter((entry) => entry.canonical)
-        .sort((left: any, right: any) => (
-            (Number(left.canonical.price) - Number(right.canonical.price))
-            || (Number(left.canonical.val) - Number(right.canonical.val))
+        .sort((left, right) => (
+            (Number(left.canonical?.price) - Number(right.canonical?.price))
+            || (Number(left.canonical?.val) - Number(right.canonical?.val))
             || (left.index - right.index)
         ))[0] || null;
 };
 
 const appendRequirementError = (state: GameState, id: string, text: string) => {
-    if (state.logs.some((log: any) => log?.id === id)) return state;
+    if (state.logs.some((log) => log?.id === id)) return state;
     return {
         ...state,
         logs: [...state.logs, { id, type: 'error', text }].slice(-BALANCE.LOG_MAX_SIZE),
@@ -74,7 +76,8 @@ export const fallbackEventActionMap = {
         const { transactionId, choiceIndex } = action.payload;
         const transaction = getStructuredFallbackTransaction(transactionId);
         const event = state.currentEvent;
-        if (!transaction
+        if (!event
+            || !transaction
             || transaction.choiceIndex !== choiceIndex
             || event?.source !== 'fallback'
             || event?.fallbackTransactionId !== transactionId
@@ -98,11 +101,11 @@ export const fallbackEventActionMap = {
                     '체력 회복 물약이 필요합니다.',
                 );
             }
-            nextInventory = inventory.filter((_item: any, index: number) => index !== selected.index);
-            nextQuickSlots = (state.quickSlots || []).map((slot: any) => {
+            nextInventory = inventory.filter((_item, index) => index !== selected.index);
+            nextQuickSlots = (state.quickSlots || []).map((slot) => {
                 if (slot === selected.item) return null;
                 if (!selected.item?.id || slot?.id !== selected.item.id) return slot;
-                return nextInventory.some((item: any) => item?.id === selected.item.id) ? slot : null;
+                return nextInventory.some((item) => item?.id === selected.item.id) ? slot : null;
             });
         } else {
             if (!Number.isFinite(currentGold) || Number(currentGold) < transaction.cost.amount) {
@@ -117,7 +120,7 @@ export const fallbackEventActionMap = {
 
         const outcome = transaction.event.outcomes[choiceIndex] as Record<string, any>;
         const resultText = formatEventText(outcome.log);
-        const logs: Array<{ id?: string; type: string; text: string }> = [{
+        const logs: LogEntry[] = [{
             id: `fallback-transaction:${transactionId}:${choiceIndex}`,
             type: 'event',
             text: resultText,

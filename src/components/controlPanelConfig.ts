@@ -6,7 +6,7 @@
 // cycle 392: open_shop 매핑 제거 — adventureGuide.getAdventureGuidance가
 //   producer 0건이라 절대 lookup hit 안 됨. unreachable lookup entry
 //   (cycle 359/361 unreachable lens 회귀).
-export const ACTION_KIND_TO_BUTTON: Record<string, any> = {
+export const ACTION_KIND_TO_BUTTON: Record<string, string> = {
     explore: 'explore',
     open_move: 'move',
     rest: 'rest',

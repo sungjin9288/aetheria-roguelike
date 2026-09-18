@@ -1,8 +1,9 @@
 import { DB } from '../data/db';
 import { AT } from '../reducers/actionTypes';
-import type { Item } from '../types/index.js';
+import type { Item, ItemRecipeDef } from '../types/index.js';
+import type { InventoryActionCtx } from './actionDeps';
 
-const getRecipeInputIds = (inventory: Item[], recipe: any) => {
+const getRecipeInputIds = (inventory: Item[], recipe: ItemRecipeDef) => {
     const available = [...inventory];
     const inputIds: string[] = [];
     for (const input of recipe.inputs || []) {
@@ -17,11 +18,11 @@ const getRecipeInputIds = (inventory: Item[], recipe: any) => {
 };
 
 /** UI는 선택 식별자와 난수만 전달하고, 비용과 결과는 reducer가 최신 상태에서 확정한다. */
-export const createEconomyActions = (ctx: any) => {
+export const createEconomyActions = (ctx: InventoryActionCtx) => {
     const { player, gameState, dispatch } = ctx;
 
     return {
-        market: (type: any, item: Item, source?: string) => {
+        market: (type: string, item: Item, source?: string) => {
             if (gameState !== 'shop') return;
             if (type === 'sell') {
                 dispatch({
@@ -44,8 +45,8 @@ export const createEconomyActions = (ctx: any) => {
             });
         },
 
-        craft: (recipeId: any) => {
-            const recipe = DB.ITEMS.recipes?.find((entry: any) => entry.id === recipeId);
+        craft: (recipeId: string) => {
+            const recipe = DB.ITEMS.recipes?.find((entry) => entry.id === recipeId);
             if (!recipe) return;
             dispatch({
                 type: AT.CRAFT_RECIPE,
@@ -57,7 +58,7 @@ export const createEconomyActions = (ctx: any) => {
             });
         },
 
-        synthesize: (itemIds: any, useProtect: any) => {
+        synthesize: (itemIds: string[], useProtect: boolean) => {
             dispatch({
                 type: AT.SYNTHESIZE_ITEMS,
                 payload: {

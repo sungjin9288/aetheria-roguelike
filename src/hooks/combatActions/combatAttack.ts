@@ -3,6 +3,7 @@ import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { BALANCE } from '../../data/constants';
 import { resolveCombatActionSeed } from '../../utils/combatActionSeed';
+import type { CombatActionDeps, CombatPendingControl, CombatSharedHelpers } from '../actionDeps';
 
 const takeHarnessCombatSeed = (): number | undefined => {
     if (import.meta.env?.VITE_ENABLE_TEST_API !== '1' || typeof document === 'undefined') {
@@ -17,7 +18,11 @@ const takeHarnessCombatSeed = (): number | undefined => {
         : undefined;
 };
 
-export const createCombatAttackActions = (deps: any, _shared: any, pendingControl: any) => {
+export const createCombatAttackActions = (
+    deps: CombatActionDeps,
+    _shared: CombatSharedHelpers,
+    pendingControl: CombatPendingControl,
+) => {
     const {
         gameState,
         enemy,
@@ -28,7 +33,7 @@ export const createCombatAttackActions = (deps: any, _shared: any, pendingContro
     } = deps;
 
     return {
-        combat: (kind: any) => {
+        combat: (kind: string) => {
             pendingControl.clear();
             if (gameState !== GS.COMBAT || !enemy) {
                 addLog('error', MSG.COMBAT_NOT_IN_BATTLE);

@@ -169,14 +169,14 @@ export const actionMethods: any = {
         // slice 19: 치명타/약점/저항/연격을 본문 태그로 통합 — 기존엔 같은 정보가
         //   별도 로그 4건으로 중복 출력되어 한 턴 로그 burst의 주범이었음.
         const tags = [];
-        if (isCrit) tags.push('치명타');
-        if (enemy.guarding) tags.push('방어 격파');
-        if (elementMultiplier > 1) tags.push('속성 약점');
-        if (elementMultiplier < 1) tags.push('속성 저항');
-        if (dsRelic && secondHit > 0) tags.push(`연격 +${secondHit}`);
-        if (apRelic) tags.push('방어 무시');
-        if (comboTriggered) tags.push('연속 베기');
-        if (voidHeartTriggered) tags.push('허공 각성');
+        if (isCrit) tags.push(MSG.COMBAT_TAG_CRIT);
+        if (enemy.guarding) tags.push(MSG.COMBAT_TAG_GUARD_BREAK);
+        if (elementMultiplier > 1) tags.push(MSG.COMBAT_TAG_ELEMENT_WEAK);
+        if (elementMultiplier < 1) tags.push(MSG.COMBAT_TAG_ELEMENT_RESIST);
+        if (dsRelic && secondHit > 0) tags.push(MSG.COMBAT_TAG_DOUBLE_STRIKE(secondHit));
+        if (apRelic) tags.push(MSG.COMBAT_TAG_ARMOR_IGNORE);
+        if (comboTriggered) tags.push(MSG.COMBAT_TAG_COMBO);
+        if (voidHeartTriggered) tags.push(MSG.COMBAT_TAG_VOID_HEART);
 
         // cycle 229: 일반 공격 사용 시 spellStackCount 리셋 (연속 스킬 사용 깨짐).
         //   spell_stack 유물 보유 여부와 무관하게 reset (다음 사용 대비 깨끗한 상태).
@@ -196,8 +196,7 @@ export const actionMethods: any = {
             const steal = Math.floor(finalDamage * totalLifeSteal);
             if (steal > 0) {
                 updatedPlayer = { ...updatedPlayer, hp: Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + steal) };
-                const label = hellReaperSyn ? '지옥의 수확자' : '흡혈 군주';
-                logs.push({ type: 'heal', text: `[${label}] +${steal} HP 흡혈!` });
+                logs.push({ type: 'heal', text: MSG.RELIC_LIFESTEAL_PROC(Boolean(hellReaperSyn), steal) });
             }
         }
 
@@ -207,18 +206,18 @@ export const actionMethods: any = {
         });
         // slice 19: 치명타/약점/저항/연격 별도 로그 제거 — 본문 태그로 통합 완료.
         //   희귀 유물 proc 로그(처형/연속 베기/허공/예언/메아리)는 흥분 모먼트라 보존.
-        if (executeTriggered) logs.push({ type: 'event', text: `[처형자의 날] 처형 피해!` });
-        if (comboTriggered) logs.push({ type: 'event', text: '[연격의 반지] 축적된 연격이 폭발했습니다!' });
-        if (voidHeartTriggered) logs.push({ type: 'event', text: '[허공의 심장] 허공 각성 일격!' });
-        if (executeAtkTriggered) logs.push({ type: 'critical', text: '[예언의 돌판] 예언 처형! 피해 2배!' });
-        if (echoTriggered) logs.push({ type: 'event', text: '[공허의 메아리] 강화된 공격!' });
+        if (executeTriggered) logs.push({ type: 'event', text: MSG.RELIC_EXECUTE_PROC });
+        if (comboTriggered) logs.push({ type: 'event', text: MSG.RELIC_COMBO_PROC });
+        if (voidHeartTriggered) logs.push({ type: 'event', text: MSG.RELIC_VOID_HEART_PROC });
+        if (executeAtkTriggered) logs.push({ type: 'critical', text: MSG.RELIC_EXECUTE_ATK_PROC });
+        if (echoTriggered) logs.push({ type: 'event', text: MSG.RELIC_ECHO_ATK_PROC });
 
         // cycle 152: 'on_hit_freeze' (frost_anchor) — val 확률로 적 1턴 빙결.
         let postHitEnemy: any = { ...enemy, hp: newEnemyHp, guarding: false };
         const freezeRelic = relics.find((r) => r.effect === 'on_hit_freeze');
         if (freezeRelic && newEnemyHp > 0 && random() < (freezeRelic.val || 0)) {
             postHitEnemy = this.applyStatusEffectToEnemy(postHitEnemy, 'freeze');
-            logs.push({ type: 'event', text: `[동결의 닻] ${enemy.name} 빙결!` });
+            logs.push({ type: 'event', text: MSG.RELIC_FREEZE_ON_HIT(enemy.name) });
         }
 
         // cycle 159: entropy_tick / entropy_brand — 매 N턴 적 maxHp 비율 고정 피해.
@@ -268,7 +267,7 @@ export const actionMethods: any = {
                 success: true,
                 updatedPlayer: { ...player },
                 updatedEnemy: enemy,
-                logs: [{ type: 'warning', text: '[실명] 스킬이 빗나갔습니다!' }],
+                logs: [{ type: 'warning', text: MSG.SKILL_BLIND_MISS }],
                 isCrit: false,
                 isVictory: false,
             };
@@ -406,9 +405,9 @@ export const actionMethods: any = {
         // slice 19: 치명타/약점/저항을 본문 태그로 통합 (attack 경로와 동일 패턴) —
         //   별도 로그 burst 제거.
         const skillTags: string[] = [];
-        if (isCrit) skillTags.push('치명타');
-        if (elementMultiplier > 1) skillTags.push('속성 약점');
-        if (elementMultiplier < 1) skillTags.push('속성 저항');
+        if (isCrit) skillTags.push(MSG.COMBAT_TAG_CRIT);
+        if (elementMultiplier > 1) skillTags.push(MSG.COMBAT_TAG_ELEMENT_WEAK);
+        if (elementMultiplier < 1) skillTags.push(MSG.COMBAT_TAG_ELEMENT_RESIST);
         const logs: Array<{ type: string; text: string }> = [{
             type: isCrit ? 'critical' : 'combat',
             text: MSG.SKILL_USE(skill.name, totalDamage, enemy.name, Math.max(0, newEnemyHp), enemy.maxHp, skillTags)
@@ -418,7 +417,8 @@ export const actionMethods: any = {
         // stun/freeze/poison/burn/bleed/blind/fear/curse/taunt 통합 처리
         const STATUS_EFFECTS_TO_ENEMY = ['stun', 'freeze', 'poison', 'burn', 'bleed', 'blind', 'fear', 'curse', 'taunt'];
         let postEffectEnemy: Monster = { ...enemy, hp: newEnemyHp, guarding: false };
-        const effectLabels: Record<string, string> = { stun: '기절', freeze: '빙결', poison: '독', burn: '화상', bleed: '출혈', blind: '실명', fear: '공포', curse: '저주', taunt: '도발' };
+        // 2026-09 Wave 6 X2: DOT_LABELS(8종 StatusId)에 taunt('도발', StatusId 밖 전용 효과)만 더한다.
+        const effectLabels: Record<string, string> = { ...MSG.DOT_LABELS, taunt: '도발' };
         // cycle 239: skill.effectChance 게이트 — branch override의 확률적 status proc 처리.
         //   기존엔 100% 부여로 '20% 확률 기절 1턴' / '40% 확률 출혈' 같은 branch가 항상 trigger.
         //   effectChance 미정의 시 default 1.0 (100%) — 회귀 가드.
@@ -438,7 +438,7 @@ export const actionMethods: any = {
                 postEffectEnemy = { ...postEffectEnemy, cursedTurns: Math.max(postEffectEnemy.cursedTurns ?? 0, curseTurn) };
             }
             if (effectLabels[skill.effect]) {
-                logs.push({ type: 'event', text: `[${skill.name}] ${enemy.name}에게 [${effectLabels[skill.effect]}] 부여!` });
+                logs.push({ type: 'event', text: MSG.SKILL_ENEMY_STATUS_APPLIED(skill.name, enemy.name, effectLabels[skill.effect]) });
             }
         }
         // 분기 선택으로 추가된 2차 상태이상 (effectChance 동일 적용)
@@ -451,7 +451,7 @@ export const actionMethods: any = {
                 postEffectEnemy = { ...postEffectEnemy, cursedTurns: Math.max(postEffectEnemy.cursedTurns ?? 0, curseTurn) };
             }
             if (effectLabels[skill.secondEffect]) {
-                logs.push({ type: 'event', text: `[분기 효과] ${enemy.name}에게 [${effectLabels[skill.secondEffect]}] 추가 부여!` });
+                logs.push({ type: 'event', text: MSG.SKILL_BRANCH_STATUS_APPLIED(enemy.name, effectLabels[skill.secondEffect]) });
             }
         }
         const updatedEnemy = postEffectEnemy;
@@ -537,14 +537,14 @@ export const actionMethods: any = {
             const ratio = (typeof skill.drainRatio === 'number' && skill.drainRatio > 0) ? skill.drainRatio : 0.25;
             const drainHeal = Math.floor(totalDamage * ratio);
             updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + drainHeal);
-            logs.push({ type: 'heal', text: `[생명흡수] +${drainHeal} HP 흡수!` });
+            logs.push({ type: 'heal', text: MSG.SKILL_DRAIN_HEAL(drainHeal) });
         }
 
         // hp_regen: 즉시 HP 회복 (성직자 기적의 손길, 버서커 역경의 힘 등)
         if (skill.effect === 'hp_regen' && skill.val) {
             const healAmt = Math.max(1, Math.floor((updatedPlayer.maxHp || player.maxHp) * skill.val));
             updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + healAmt);
-            logs.push({ type: 'heal', text: `[${skill.name}] +${healAmt} HP 회복!` });
+            logs.push({ type: 'heal', text: MSG.SKILL_HP_REGEN_PROC(skill.name, healAmt) });
         }
 
         // mp_regen: 즉시 MP 회복 (마법사 마나 가속 등)
@@ -552,7 +552,7 @@ export const actionMethods: any = {
             const mpAmt = skill.val;
             const maxMp = this.getEffectiveMaxMp(updatedPlayer, relics);
             updatedPlayer.mp = Math.min(maxMp, (updatedPlayer.mp || player.mp) + mpAmt);
-            logs.push({ type: 'event', text: `[${skill.name}] +${mpAmt} MP 회복!` });
+            logs.push({ type: 'event', text: MSG.SKILL_MP_REGEN_PROC(skill.name, mpAmt) });
         }
 
         // purify: 플레이어 상태이상 전부 제거 + 로그 (#5)
@@ -560,14 +560,14 @@ export const actionMethods: any = {
             const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
             if (currentStatus.length > 0) {
                 updatedPlayer.status = [];
-                logs.push({ type: 'success', text: `[${skill.name}] 상태이상이 정화되었습니다!` });
+                logs.push({ type: 'success', text: MSG.SKILL_PURIFY_PROC(skill.name) });
             }
         }
 
         // stealth: 다음 적 공격 1회 회피 플래그 설정 (#5)
         if (skill.effect === 'stealth') {
             updatedPlayer.nextHitEvaded = true;
-            logs.push({ type: 'event', text: `[${skill.name}] 다음 적 공격을 회피합니다!` });
+            logs.push({ type: 'event', text: MSG.SKILL_STEALTH_PROC(skill.name) });
         }
 
         // extraTurn: 이번 스킬 사용 후 적 턴 스킵 → 플레이어 추가 행동 (Sprint 16 — 시간술사)
@@ -594,7 +594,7 @@ export const actionMethods: any = {
         const extraChance = (timeMasterSyn?.bonus.extraTurnChance || timeMasterSyn?.bonus.extraAction || 0);
         if (timeMasterSyn && !updatedPlayer.extraTurnGranted && random() < extraChance) {
             updatedPlayer.extraTurnGranted = true;
-            logs.push({ type: 'event', text: `[시간 지배자] 시간이 멈춥니다 — 추가 행동!` });
+            logs.push({ type: 'event', text: MSG.RELIC_TIME_MASTER_EXTRA_TURN });
         }
 
         // resetCooldowns: 모든 스킬 쿨타임을 0으로 초기화 (Sprint 16 — 시간술사)
@@ -608,7 +608,7 @@ export const actionMethods: any = {
         const echoRelicInSkill = relics.find((r) => r.effect === 'echo_atk');
         if (echoRelicInSkill) {
             updatedPlayer.combatFlags = { ...this.getCombatFlags(updatedPlayer), echoArmed: true };
-            logs.push({ type: 'event', text: `[공허의 메아리] 다음 공격이 강화됩니다!` });
+            logs.push({ type: 'event', text: MSG.RELIC_ECHO_ATK_ARMED });
         }
 
         // crit_cooldown: 크리티컬 시 모든 쿨타임 -1 (Sprint 16 — 인과율 조작)
@@ -620,7 +620,7 @@ export const actionMethods: any = {
                 if (cd > 0) reducedCds[k] = cd - 1;
             });
             updatedPlayer.skillLoadout = { ...cdLoadout, cooldowns: reducedCds };
-            logs.push({ type: 'event', text: `[인과율 조작] 치명타! 모든 쿨타임 -1.` });
+            logs.push({ type: 'event', text: MSG.SKILL_CRIT_COOLDOWN_RESET });
         }
 
 
@@ -629,14 +629,14 @@ export const actionMethods: any = {
         if (updatedPlayer.tempBuff?.name === skill.name) {
             logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(skill.name, updatedPlayer.tempBuff.turn) });
         }
-        if (actualMpCost === 0 && firstFreeAvailable) logs.push({ type: 'event', text: `[시간 군주의 왕관] 첫 스킬 MP 무소비!` });
-        else if (actualMpCost === 0 && hasFreeSkillRelic) logs.push({ type: 'event', text: `[주문 메아리] MP 소모 없음!` });
+        if (actualMpCost === 0 && firstFreeAvailable) logs.push({ type: 'event', text: MSG.RELIC_FIRST_SKILL_FREE });
+        else if (actualMpCost === 0 && hasFreeSkillRelic) logs.push({ type: 'event', text: MSG.RELIC_FREE_SKILL_PROC });
         if (slRelic) {
             const healAmt = Math.floor(totalDamage * slRelic.val);
-            if (healAmt > 0) logs.push({ type: 'heal', text: `[영혼 흡수] +${healAmt} HP` });
+            if (healAmt > 0) logs.push({ type: 'heal', text: MSG.RELIC_SKILL_LIFESTEAL_PROC(healAmt) });
         }
-        if (smRelic && smRelic.val > 0) logs.push({ type: 'event', text: `[정신 연소] 스킬 피해 강화!` });
-        if (hasDotMultRelic && extraDamage > 0) logs.push({ type: 'event', text: '[죽음의 낙인] 지속 피해가 증폭됩니다!' });
+        if (smRelic && smRelic.val > 0) logs.push({ type: 'event', text: MSG.RELIC_SKILL_MULT_PROC });
+        if (hasDotMultRelic && extraDamage > 0) logs.push({ type: 'event', text: MSG.RELIC_DOT_MULT_PROC });
 
         // cycle 159: entropy_tick / entropy_brand — 매 N턴 적 maxHp 비율 고정 피해 (스킬 사용 턴에도 적용).
         const entropyResult = this.applyEntropyTick(updatedPlayer, updatedEnemy, stats.activeSynergies || []);

@@ -15,6 +15,7 @@
 // 1. 성과 지표 계산
 // ─────────────────────────────────────────────────────────────────────────
 import { BALANCE } from '../data/constants.js';
+import { MSG } from '../data/messages.js';
 import type { Player } from '../types/index.js';
 
 const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
@@ -67,13 +68,13 @@ export const calcPerformanceScore = (player: Player) => {
 const DIFF_TABLE = [
     // { minScore, label, hpMult, atkMult, goldMult, expMult }
     // ── 상향: 적 강화 완만(성공 처벌 완화) + 보상 강화(숙련 보상) ──
-    { minScore: 0.85, label: '압도',   hpMult: 1.05, atkMult: 1.05, goldMult: 1.4,  expMult: 1.4  },
-    { minScore: 0.72, label: '우세',   hpMult: 1.03, atkMult: 1.03, goldMult: 1.2,  expMult: 1.2  },
-    { minScore: 0.55, label: '균형',   hpMult: 1.0,  atkMult: 1.0,  goldMult: 1.05, expMult: 1.05 },
+    { minScore: 0.85, label: MSG.DIFFICULTY_LABEL_OVERWHELM,     hpMult: 1.05, atkMult: 1.05, goldMult: 1.4,  expMult: 1.4  },
+    { minScore: 0.72, label: MSG.DIFFICULTY_LABEL_ADVANTAGE,     hpMult: 1.03, atkMult: 1.03, goldMult: 1.2,  expMult: 1.2  },
+    { minScore: 0.55, label: MSG.DIFFICULTY_LABEL_BALANCED,      hpMult: 1.0,  atkMult: 1.0,  goldMult: 1.05, expMult: 1.05 },
     // ── 하향: 안전망 보존(struggling → 적 약화) — 변경 없음 ──
-    { minScore: 0.40, label: '박빙',   hpMult: 0.96, atkMult: 0.96, goldMult: 1.0,  expMult: 1.0  },
-    { minScore: 0.25, label: '열세',   hpMult: 0.90, atkMult: 0.90, goldMult: 0.95, expMult: 0.95 },
-    { minScore: 0.00, label: '위기',   hpMult: 0.85, atkMult: 0.85, goldMult: 0.9,  expMult: 0.9  },
+    { minScore: 0.40, label: MSG.DIFFICULTY_LABEL_CLOSE,         hpMult: 0.96, atkMult: 0.96, goldMult: 1.0,  expMult: 1.0  },
+    { minScore: 0.25, label: MSG.DIFFICULTY_LABEL_DISADVANTAGE,  hpMult: 0.90, atkMult: 0.90, goldMult: 0.95, expMult: 0.95 },
+    { minScore: 0.00, label: MSG.DIFFICULTY_LABEL_CRISIS,        hpMult: 0.85, atkMult: 0.85, goldMult: 0.9,  expMult: 0.9  },
 ];
 
 /**
@@ -96,7 +97,7 @@ const applyBeginnerGrace = (diff: any, player: Player) => {
     const cap = BALANCE.BEGINNER_GRACE_ENEMY_MULT;
     return {
         ...diff,
-        label: '신입 보호',
+        label: MSG.DIFFICULTY_LABEL_BEGINNER_GRACE,
         hpMult: Math.min(diff.hpMult, cap),
         atkMult: Math.min(diff.atkMult, cap),
     };
@@ -117,11 +118,15 @@ export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any)
     const diff  = applyBeginnerGrace(getDifficultyMults(score), player);
 
     // 중립에 가까우면 로그 생략
-    const LABEL_VISIBLE = ['압도', '위기', '열세'];
+    const LABEL_VISIBLE = [
+        MSG.DIFFICULTY_LABEL_OVERWHELM,
+        MSG.DIFFICULTY_LABEL_CRISIS,
+        MSG.DIFFICULTY_LABEL_DISADVANTAGE,
+    ];
     const GM_PREFIX_MAP: Record<string, string> = {
-        '압도': '⚔️ [GM] 당신의 기세가 압도적입니다 — 약간의 긴장과 함께 보상이 크게 늘어납니다.',
-        '위기': '🛡️ [GM] 잠시 숨을 고를 시간입니다. 몬스터가 약해집니다.',
-        '열세': '🛡️ [GM] 어려운 상황이군요. 몬스터 강도를 낮춥니다.',
+        [MSG.DIFFICULTY_LABEL_OVERWHELM]: MSG.DIFFICULTY_GM_OVERWHELM,
+        [MSG.DIFFICULTY_LABEL_CRISIS]: MSG.DIFFICULTY_GM_CRISIS,
+        [MSG.DIFFICULTY_LABEL_DISADVANTAGE]: MSG.DIFFICULTY_GM_DISADVANTAGE,
     };
 
     if (LABEL_VISIBLE.includes(diff.label)) {

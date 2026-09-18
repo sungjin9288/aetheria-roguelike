@@ -13,26 +13,36 @@ import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import ItemIcon from './icons/ItemIcon';
 import EnhanceDecisionCard from './EnhanceDecisionCard';
-import type { FullStats, Player } from '../types/index.js';
+import type { GameActions } from '../hooks/actionDeps';
+import type { EquipSlots, FullStats, Item, Player } from '../types/index.js';
+
+/** EquipmentPanel이 실제로 호출하는 액션만 좁혀 받는다 (강화 실행). */
+type EquipmentPanelActions = Pick<GameActions, 'enhanceItem'>;
 
 // cycle 474: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 5 ternary 가지까지 정리 (cycle 472-473 paired).
 interface EquipmentPanelProps {
     player: Player;
     stats?: FullStats | null;
-    actions?: any;
+    actions?: EquipmentPanelActions;
 }
 
 // cycle 417: icon 출력 dead 정리 — slot.icon read 0건. render는 key/label만 사용.
-const SLOT_CONFIG = [
+const SLOT_CONFIG: Array<{ key: keyof EquipSlots; label: string }> = [
     { key: 'weapon', label: '주무기' },
     { key: 'armor', label: '방어구' },
     { key: 'offhand', label: '보조 장비' },
 ];
 
+interface SignatureSetTone {
+    border: string;
+    glow: string;
+    text: string;
+}
+
 // cycle 411: frost / arcane 제거 — signatureSets.json sets는 fire/holy/nature/shadow
 //   4 tone만 emit. activeSignatureSet.tone / setProgress.tone lookup 절대 hit 안 됨.
-const SIG_SET_TONE: any = Object.freeze({
+const SIG_SET_TONE: Record<string, SignatureSetTone> = Object.freeze({
     holy: { border: 'rgba(246,231,162,0.5)', glow: 'rgba(246,231,162,0.18)', text: '#f6e7a2' },
     fire: { border: 'rgba(255,180,138,0.5)', glow: 'rgba(255,180,138,0.18)', text: '#ffb48a' },
     shadow: { border: 'rgba(199,164,240,0.5)', glow: 'rgba(199,164,240,0.18)', text: '#c7a4f0' },
@@ -43,7 +53,7 @@ const SIG_SET_TONE: any = Object.freeze({
 const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     const [showSetCatalog, setShowSetCatalog] = useState(false);
     const [detailOverride, setDetailOverride] = useState<boolean | null>(null);
-    const [enhanceTarget, setEnhanceTarget] = useState<{ item: any; slot: EnhanceItemSlot; itemId: string } | null>(null);
+    const [enhanceTarget, setEnhanceTarget] = useState<{ item: Item; slot: EnhanceItemSlot; itemId: string } | null>(null);
     const disclosure = getEquipmentDisclosure(player);
     const showDetails = detailOverride ?? disclosure.showDetails;
     const equipProfile = useMemo(() => getEquipmentProfile(player?.equip || {}), [player?.equip]);
@@ -51,13 +61,13 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
     // 인벤토리 + 장착 중 보유 아이템 이름 set (카탈로그에서 ✓/💼 표시용)
     const ownedItemNames = useMemo(() => {
         const names = new Set<string>();
-        (player?.inv || []).forEach((it: any) => it?.name && names.add(it.name));
-        (Object.values(player?.equip || {}) as any[]).forEach((it: any) => it?.name && names.add(it.name));
+        (player?.inv || []).forEach((it) => it?.name && names.add(it.name));
+        Object.values(player?.equip || {}).forEach((it) => it?.name && names.add(it.name));
         return names;
     }, [player?.inv, player?.equip]);
     const equippedItemNames = useMemo(() => {
         const names = new Set<string>();
-        (Object.values(player?.equip || {}) as any[]).forEach((it: any) => it?.name && names.add(it.name));
+        Object.values(player?.equip || {}).forEach((it) => it?.name && names.add(it.name));
         return names;
     }, [player?.equip]);
     const appearance = useMemo(() => deriveCharacterAppearance(player), [player]);
@@ -66,9 +76,9 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
         [player?.inv]
     );
 
-    const slotEntries = useMemo(() => SLOT_CONFIG.map((slot: any) => {
-        const equipMap = (player?.equip || {}) as Record<string, any>;
-        const item = equipMap[slot.key] || null;
+    const slotEntries = useMemo(() => SLOT_CONFIG.map((slot) => {
+        const equip = player?.equip || {};
+        const item = equip[slot.key] || null;
         const preview = getEnhancePreview(item, player?.gold || 0, player?.inv || [], slot.key as EnhanceItemSlot);
         const isSignature = item ? isSignatureItem(item) : false;
 
@@ -165,7 +175,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                     name: twoHandSetCounted ? MSG.OUTFIT_SET_TWO_HAND_SLOT : offhandName,
                                     slot: stats?.jobAffinity?.slots?.offhand,
                                 },
-                            ].map((s: any) => (
+                            ].map((s) => (
                                 <div
                                     key={s.key}
                                     className={`flex min-w-0 items-center gap-2 rounded-[0.85rem] px-2.5 py-1.5 transition-colors ${s.slot ? 'border border-[#d5b180]/30 bg-[#d5b180]/8' : 'aether-panel-muted'}`}
@@ -187,7 +197,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                 aff.tier === 'partial2' ? { color: '#d5b180', border: 'rgba(213,177,128,0.42)', bg: 'rgba(213,177,128,0.10)' } :
                                 aff.tier === 'partial1' ? { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.10)' } :
                                 { color: '#94a3b8', border: 'rgba(148,163,184,0.32)', bg: 'rgba(148,163,184,0.06)' };
-                            const dots = [0, 1, 2].map((i: any) => i < matchCount ? '●' : '○').join('');
+                            const dots = [0, 1, 2].map((i) => i < matchCount ? '●' : '○').join('');
                             const nextHint = getJobOutfitNextHint(aff, player.job);
                             return (
                                 <div
@@ -227,7 +237,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                 <div className="rounded-[1rem] border border-white/8 bg-black/16 px-3 py-2.5">
                     <button
                         type="button"
-                        onClick={() => setShowSetCatalog((prev: any) => !prev)}
+                        onClick={() => setShowSetCatalog((prev) => !prev)}
                         data-testid="job-set-catalog-toggle"
                         className="flex w-full items-center justify-between gap-2 text-left"
                         aria-expanded={showSetCatalog}
@@ -249,9 +259,9 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                 { key: 'weapon', label: '주무기', list: setCatalog.weapon },
                                 { key: 'armor',  label: '방어구', list: setCatalog.armor },
                                 { key: 'offhand', label: '보조 장비', list: setCatalog.offhand },
-                            ].map((group: any) => {
+                            ].map((group) => {
                                 if (group.list.length === 0) return null;
-                                const ownedCount = group.list.filter((it: any) => ownedItemNames.has(it.name)).length;
+                                const ownedCount = group.list.filter((it) => ownedItemNames.has(it.name ?? '')).length;
                                 return (
                                     <div key={group.key}>
                                         <div className="flex items-center justify-between gap-2 mb-1.5">
@@ -259,9 +269,9 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                             <span className="text-[9px] font-fira text-slate-500">{ownedCount}/{group.list.length} 보유</span>
                                         </div>
                                         <div className="flex flex-wrap gap-1.5">
-                                            {group.list.map((it: any) => {
-                                                const isEquipped = equippedItemNames.has(it.name);
-                                                const isOwned = ownedItemNames.has(it.name);
+                                            {group.list.map((it) => {
+                                                const isEquipped = equippedItemNames.has(it.name ?? '');
+                                                const isOwned = ownedItemNames.has(it.name ?? '');
                                                 const baseCls = 'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-fira leading-tight';
                                                 const cls = isEquipped
                                                     ? `${baseCls} border-emerald-300/50 bg-emerald-300/10 text-emerald-100`
@@ -272,7 +282,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                                     <span
                                                         key={it.name}
                                                         className={cls}
-                                                        title={`${it.name} (등급 ${it.tier || 1}) · ${getItemStatText(it)}`}
+                                                        title={`${it.name} (등급 ${it.tier || 1}) · ${getItemStatText(it as Item)}`}
                                                         data-testid={`set-catalog-item-${it.name}`}
                                                     >
                                                         <span>{isEquipped ? '장착' : isOwned ? '보유' : '미발견'}</span>
@@ -386,7 +396,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
             )}
 
             {showDetails && <div className="space-y-1.5">
-                {slotEntries.map((slot: any) => {
+                {slotEntries.map((slot) => {
                     const item = slot.item;
                     const slotKey = slot.key;
                     const isSignature = slot.isSignature;

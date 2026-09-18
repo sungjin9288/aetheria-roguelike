@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import { MSG } from '../data/messages.js';
 import type { FullStats, GameMap, Player, StatusId } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
@@ -598,11 +599,8 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
     // 클리어하므로 자연스러운 actionable hint. cycle 106-110에서 활성화된 5종 status가
     // 영속할 경우 다음 탐험에 페널티 누적 — 안전지대 복귀 후 즉시 알림.
     if (safe && Array.isArray(player?.status) && player.status.length > 0) {
-        const DEBUFF_LABEL: Record<string, string> = {
-            bleed: '출혈', burn: '화상', poison: '중독',
-            freeze: '빙결', stun: '기절', curse: '저주',
-            blind: '실명', fear: '공포',
-        };
+        // 2026-09 Wave 6 X2: 인라인 DEBUFF_LABEL 제거 — MSG.STATUS_LABELS(공유 테이블) 재사용.
+        const DEBUFF_LABEL = MSG.STATUS_LABELS;
         const activeDebuffs = player.status.filter((s: StatusId) => DEBUFF_LABEL[s]);
         if (activeDebuffs.length > 0) {
             const labels = activeDebuffs.map((s: StatusId) => DEBUFF_LABEL[s]).join(', ');

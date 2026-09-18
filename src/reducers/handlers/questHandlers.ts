@@ -66,15 +66,15 @@ export const questActionMap = {
 
         const questId = action.payload?.questId;
         if (questId === undefined || questId === null) return state;
-        if ((state.player.quests || []).some((quest: any) => sameQuestId(quest.id, questId))) return state;
+        if ((state.player.quests || []).some((quest) => sameQuestId(quest.id, questId))) return state;
 
-        const quest = DB.QUESTS.find((entry: any) => sameQuestId(entry.id, questId));
+        const quest = DB.QUESTS.find((entry) => sameQuestId(entry.id, questId));
         if (!quest || quest.id === undefined) return state;
 
         const claimedQuestIds = Array.isArray(state.player.stats?.claimedQuestIds)
             ? state.player.stats.claimedQuestIds
             : [];
-        if (claimedQuestIds.some((id: any) => sameQuestId(id, quest.id))) {
+        if (claimedQuestIds.some((id) => sameQuestId(id, quest.id))) {
             return appendQuestLog(state, 'info', MSG.QUEST_ALREADY_COMPLETED);
         }
         if ((Number(state.player.level) || 1) < (quest.minLv || 1)) {
@@ -105,12 +105,12 @@ export const questActionMap = {
 
         const questId = action.payload?.questId;
         if (questId === undefined || questId === null) return state;
-        const activeQuest = (state.player.quests || []).find((quest: any) => sameQuestId(quest.id, questId));
+        const activeQuest = (state.player.quests || []).find((quest) => sameQuestId(quest.id, questId));
         if (!activeQuest) return state;
 
         const quest = activeQuest.isBounty
             ? activeQuest
-            : DB.QUESTS.find((entry: any) => sameQuestId(entry.id, questId));
+            : DB.QUESTS.find((entry) => sameQuestId(entry.id, questId));
         if (!quest) return state;
         if ((activeQuest.progress || 0) >= (quest.goal || 0)) {
             return appendQuestLog(state, 'info', MSG.QUEST_ABANDON_REWARD_PENDING);
@@ -118,7 +118,7 @@ export const questActionMap = {
 
         const player = removeExpeditionFocusQuest({
             ...state.player,
-            quests: (state.player.quests || []).filter((entry: any) => !sameQuestId(entry.id, questId)),
+            quests: (state.player.quests || []).filter((entry) => !sameQuestId(entry.id, questId)),
         }, questId);
         const message = activeQuest.isBounty
             ? MSG.BOUNTY_ABANDONED
@@ -134,7 +134,7 @@ export const questActionMap = {
 
     REQUEST_BOUNTY: (state: GameState, action: GameAction) => {
         if (!isSafeLocation(state)) return appendQuestLog(state, 'error', MSG.BOUNTY_TOWN_ONLY);
-        if ((state.player.quests || []).some((quest: any) => quest.isBounty)) return state;
+        if ((state.player.quests || []).some((quest) => quest.isBounty)) return state;
 
         const requestDate = getRequestDate(action.payload?.requestedAt);
         const dayKey = getProtocolDayKey(requestDate);
@@ -188,11 +188,11 @@ export const questActionMap = {
         const questId = action.payload?.questId;
         if (questId === undefined || questId === null) return state;
         const shouldSelect = action.payload?.selected === true;
-        const questState = (state.player.quests || []).find((quest: any) => sameQuestId(quest.id, questId));
+        const questState = (state.player.quests || []).find((quest) => sameQuestId(quest.id, questId));
         if (!questState) return state;
         const quest = questState.isBounty
             ? questState
-            : DB.QUESTS.find((entry: any) => sameQuestId(entry.id, questId));
+            : DB.QUESTS.find((entry) => sameQuestId(entry.id, questId));
         if (!quest) return state;
 
         const selected = getPreparedExpeditionFocusQuestIds(state.player);

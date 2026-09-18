@@ -3,7 +3,8 @@ import { AT } from '../reducers/actionTypes';
 import { buildCloudPlayerSnapshot } from '../platform/cloudPlayerSnapshot';
 import { type GameSaveRecord } from '../platform/gameStorage';
 import type { Player } from '../types';
-import type { GameAction } from '../reducers/gameReducer';
+import type { GameAction, GameState } from '../reducers/gameReducer';
+import type { Firestore, doc as firestoreDoc, serverTimestamp as firestoreServerTimestamp, setDoc as firestoreSetDoc } from 'firebase/firestore';
 
 interface MutableRef<T> {
     current: T;
@@ -24,11 +25,14 @@ export interface CloudAutosaveRefs {
 }
 
 export interface CloudAutosaveDeps {
-    /** Firestore 인스턴스 — 이 모듈은 firebase 를 직접 import 하지 않는다(테스트 주입 가능). */
-    db: any;
-    doc: (...args: any[]) => any;
-    setDoc: (ref: any, data: any, options?: any) => Promise<any>;
-    serverTimestamp: () => any;
+    /**
+     * Firestore 인스턴스 — 이 모듈은 firebase 를 런타임 import 하지 않는다(테스트 주입 가능).
+     * 시그니처는 firebase/firestore 의 실제 함수에서 `typeof` 로 가져오므로 타입 전용 import 뿐이다.
+     */
+    db: Firestore;
+    doc: typeof firestoreDoc;
+    setDoc: typeof firestoreSetDoc;
+    serverTimestamp: typeof firestoreServerTimestamp;
     /** 로컬 저장소에서 최신 레코드를 읽는다(실패 시 null). */
     loadLocalRecord: () => Promise<GameSaveRecord | null>;
     dispatch: (action: GameAction) => void;
@@ -39,11 +43,11 @@ export interface CloudAutosaveDeps {
 export interface CloudAutosaveSnapshot {
     uid: string;
     player: Player;
-    gameState: any;
-    enemy: any;
-    grave: any;
-    currentEvent: any;
-    quickSlots: any;
+    gameState: GameState['gameState'];
+    enemy: GameState['enemy'];
+    grave: GameState['grave'];
+    currentEvent: GameState['currentEvent'];
+    quickSlots: GameState['quickSlots'];
 }
 
 export type CloudAutosaveResult = 'synced' | 'offline';

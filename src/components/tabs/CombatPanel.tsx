@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Sword, Zap, ArrowRight, RotateCw, Sparkles, Backpack } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { buildCombatView } from '../../utils/combatView';
-import type { FullStats, Player, Monster } from '../../types/index.js';
+import { MSG } from '../../data/messages.js';
+import type { FullStats, Player, Monster, StatusId } from '../../types/index.js';
 
 // cycle 485: 컴팩트/조밀 모드 props 인터페이스 제거 — cycle 457이 callsite 명시
 //   false 제거 후 caller 0건. cascade로 14 ternary + 1 const + 1 conditional UI
@@ -215,9 +216,11 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
             if ((enemy?.cursedTurns || 0) > 0) debuffs.push(`저주 · ${enemy.cursedTurns}턴`);
             if ((enemy?.blindTurns || 0) > 0) debuffs.push(`실명 · ${enemy.blindTurns}턴`);
             if ((enemy?.fearTurns || 0) > 0) debuffs.push(`공포 · ${enemy.fearTurns}턴`);
-            const DOT_LABEL: Record<string, string> = { poison: '독', burn: '화상', bleed: '출혈' };
+            // 2026-09 Wave 6 X2: 인라인 DOT_LABEL 제거 — MSG.DOT_LABELS(공유 테이블) 재사용.
+            //   dots는 poison/burn/bleed만 담기므로 동작 동일(독/화상/출혈).
             for (const dot of dots) {
-              if (DOT_LABEL[dot]) debuffs.push(DOT_LABEL[dot]);
+              const label = MSG.DOT_LABELS[dot as StatusId];
+              if (label) debuffs.push(label);
             }
             if (debuffs.length === 0) return null;
             const headLabel = debuffs[0];

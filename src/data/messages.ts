@@ -1,5 +1,7 @@
 // cycle 321: unused DB import 제거 — messages.ts 어디에서도 DB 참조 0건.
 
+import type { StatusId } from '../types/index.js';
+
 /**
  * messages.js — 게임 내 모든 메시지를 한국어로 통합 관리합니다.
  * CombatEngine, hooks 등에서 참조하세요.
@@ -10,6 +12,42 @@
  * 리터럴 추론이 실제 함수 시그니처(파라미터/반환 타입)를 그대로 보존해
  * 소비처 33개 파일과의 호환성이 더 안전하다.
  */
+
+/**
+ * 2026-09 Wave 6 X2: 상태이상 라벨 단일 원천 — 7곳 이상 흩어져 있던 인라인
+ * `Record<string, string>` 테이블(StatusBar.tsx / adventureGuide.ts / CombatPanel.tsx /
+ * CombatEngine.actions·enemyAI·status.ts)을 이 두 테이블로 합친다.
+ *
+ * MSG 객체 리터럴 안에서 이 상수들을 그대로 재사용하기 위해 (자기 참조로 인한
+ * TS7022 순환 추론을 피하려고) MSG 바깥의 top-level const로 둔다 — `satisfies`로
+ * `Record<StatusId, string>` 형태만 검증하고 리터럴 타입은 그대로 보존한다
+ * (헤더 주석의 "MSG엔 명시적 타입 주석 없음" 원칙과 동일하게, 이 상수들에도 `:` 대신
+ * `satisfies`를 쓴다).
+ *
+ * 이미 프로덕션에 노출된 표기 drift가 있다 — poison만 다르다:
+ *   - STATUS_LABELS (칩/만료 안내용, 기존 StatusBar.tsx·adventureGuide.ts·
+ *     PLAYER_STATUS_EXPIRED 표기): poison → '중독'.
+ *   - DOT_LABELS (전투 로그/DoT 표기용, 기존 CombatPanel.tsx·CombatEngine.actions·
+ *     enemyAI·status.ts 표기): poison → '독'.
+ * 두 표기 모두 이미 유저에게 노출된 문구라 이번 이관에서는 통일하지 않고 각자의
+ * 원천 테이블로만 옮긴다 — 어느 쪽으로 통일할지는 별도 product 결정이 필요하다.
+ */
+const STATUS_LABELS = {
+    bleed: '출혈', blind: '실명', burn: '화상', curse: '저주',
+    fear: '공포', freeze: '빙결', poison: '중독', stun: '기절',
+} satisfies Record<StatusId, string>;
+
+const DOT_LABELS = {
+    bleed: '출혈', blind: '실명', burn: '화상', curse: '저주',
+    fear: '공포', freeze: '빙결', poison: '독', stun: '기절',
+} satisfies Record<StatusId, string>;
+
+// 2026-09 Wave 6 X2: RELIC_LIFESTEAL_PROC(아래)가 이 두 라벨을 재사용한다 — MSG 객체
+// 리터럴 안에서 MSG.HELL_REAPER_LABEL처럼 자기 자신을 참조하면 TS7022(순환 추론)가
+// 나므로, STATUS_LABELS/DOT_LABELS와 같은 이유로 top-level const로 둔다.
+const HELL_REAPER_LABEL = '지옥의 수확자';
+const VAMPIRE_LORD_LABEL = '흡혈 군주';
+
 export const MSG = {
     // --- 전투 (Combat) ---
     // cycle 116: COMBAT_ATTACK 제거 — COMBAT_ATTACK_DETAIL이 active.
@@ -104,23 +142,28 @@ export const MSG = {
     STATUS_DOT: (effect: string, dmg: number) => {
         // cycle 106: bleed → 출혈 라벨 추가. CombatEngine player DoT 분기에 bleed가
         // 누락돼 있던 회귀 fix와 함께 (enemy.dots 분기에선 이미 '출혈' 사용 중이라
-        // surface 일관성 회복).
-        const label = effect === 'poison' ? '중독'
-            : effect === 'burn' ? '화상'
-            : effect === 'bleed' ? '출혈'
+        // surface 일관성 회복). 2026-09 Wave 6 X2: 라벨 값을 STATUS_LABELS(공유
+        // 테이블)에서 가져오도록 소유만 옮겼다 — poison/burn/bleed 외 effect는
+        // 이전처럼 그대로 통과(라벨 미적용) 동작을 보존한다.
+        const label = effect === 'poison' ? STATUS_LABELS.poison
+            : effect === 'burn' ? STATUS_LABELS.burn
+            : effect === 'bleed' ? STATUS_LABELS.bleed
             : effect;
         return `[${label}] 상태이상 피해 ${dmg}`;
     },
 
     // H1 (Wave 3 감사): 플레이어 상태이상 만료 안내 — BALANCE.PLAYER_STATUS_DURATION_TURNS
     // 턴이 지나 CombatEngine.tickCombatState가 상태를 해제할 때의 로그.
+    // 2026-09 Wave 6 X2: 인라인 labels 테이블 제거 — STATUS_LABELS(공유 테이블) 재사용.
     PLAYER_STATUS_EXPIRED: (effect: string) => {
-        const labels: Record<string, string> = {
-            poison: '중독', burn: '화상', bleed: '출혈', freeze: '빙결',
-            stun: '기절', curse: '저주', blind: '실명', fear: '공포',
-        };
-        return `[${labels[effect] || effect}] 효과가 사라졌습니다.`;
+        const label = STATUS_LABELS[effect as StatusId] || effect;
+        return `[${label}] 효과가 사라졌습니다.`;
     },
+
+    // 2026-09 Wave 6 X2: 상태이상 라벨 단일 원천 (컴포넌트/CombatEngine 재사용).
+    // STATUS_LABELS/DOT_LABELS의 정의와 drift 기록은 위 top-level const 주석 참고.
+    STATUS_LABELS,
+    DOT_LABELS,
 
     // cycle 116: 데드 마일스톤 / 도감 메시지 키 제거 — MILESTONE_KILLS_*, MILESTONE_BOSS_*,
     // CODEX_DISCOVER/MILESTONE 등은 active 컴포넌트에서 inline 메시지로 대체되어 0건 사용.
@@ -532,4 +575,145 @@ export const MSG = {
     //   '현재 성장 보완'은 이제 실제로 현재 빌드가 굴리는 효과일 때만 쓴다.
     //   빌드와 무관한 후보는 아래 문구로 구분해 "왜 추천됐는지"가 어긋나지 않게 한다.
     RELIC_REASON_NEW_DIRECTION: '새로운 성장 방향',
+
+    // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.actions.ts.
+    // 문구는 이전과 한 글자도 다르지 않다 — 소유만 MSG로 옮긴다.
+    // COMBAT_TAG_CRIT('치명타', 태그용)은 기존 COMBAT_CRIT('치명타!', 단독 로그용)과
+    // 문구가 달라 재사용하지 않는다 — 느낌표 유무로 별개 문구.
+    COMBAT_TAG_CRIT: '치명타',
+    COMBAT_TAG_GUARD_BREAK: '방어 격파',
+    COMBAT_TAG_ELEMENT_WEAK: '속성 약점',
+    COMBAT_TAG_ELEMENT_RESIST: '속성 저항',
+    COMBAT_TAG_DOUBLE_STRIKE: (bonus: number) => `연격 +${bonus}`,
+    COMBAT_TAG_ARMOR_IGNORE: '방어 무시',
+    COMBAT_TAG_COMBO: '연속 베기',
+    COMBAT_TAG_VOID_HEART: '허공 각성',
+    HELL_REAPER_LABEL,
+    VAMPIRE_LORD_LABEL,
+    RELIC_LIFESTEAL_PROC: (isHellReaper: boolean, steal: number) => (
+        `[${isHellReaper ? HELL_REAPER_LABEL : VAMPIRE_LORD_LABEL}] +${steal} HP 흡혈!`
+    ),
+    RELIC_EXECUTE_PROC: '[처형자의 날] 처형 피해!',
+    RELIC_COMBO_PROC: '[연격의 반지] 축적된 연격이 폭발했습니다!',
+    RELIC_VOID_HEART_PROC: '[허공의 심장] 허공 각성 일격!',
+    RELIC_EXECUTE_ATK_PROC: '[예언의 돌판] 예언 처형! 피해 2배!',
+    RELIC_ECHO_ATK_PROC: '[공허의 메아리] 강화된 공격!',
+    RELIC_FREEZE_ON_HIT: (enemyName: string | undefined) => `[동결의 닻] ${enemyName} 빙결!`,
+    SKILL_BLIND_MISS: '[실명] 스킬이 빗나갔습니다!',
+    SKILL_ENEMY_STATUS_APPLIED: (skillName: string | undefined, enemyName: string | undefined, label: string) => (
+        `[${skillName}] ${enemyName}에게 [${label}] 부여!`
+    ),
+    SKILL_BRANCH_STATUS_APPLIED: (enemyName: string | undefined, label: string) => (
+        `[분기 효과] ${enemyName}에게 [${label}] 추가 부여!`
+    ),
+    SKILL_DRAIN_HEAL: (heal: number) => `[생명흡수] +${heal} HP 흡수!`,
+    SKILL_HP_REGEN_PROC: (skillName: string | undefined, heal: number) => `[${skillName}] +${heal} HP 회복!`,
+    SKILL_MP_REGEN_PROC: (skillName: string | undefined, amount: number) => `[${skillName}] +${amount} MP 회복!`,
+    SKILL_PURIFY_PROC: (skillName: string | undefined) => `[${skillName}] 상태이상이 정화되었습니다!`,
+    SKILL_STEALTH_PROC: (skillName: string | undefined) => `[${skillName}] 다음 적 공격을 회피합니다!`,
+    RELIC_TIME_MASTER_EXTRA_TURN: '[시간 지배자] 시간이 멈춥니다 — 추가 행동!',
+    RELIC_ECHO_ATK_ARMED: '[공허의 메아리] 다음 공격이 강화됩니다!',
+    SKILL_CRIT_COOLDOWN_RESET: '[인과율 조작] 치명타! 모든 쿨타임 -1.',
+    RELIC_FIRST_SKILL_FREE: '[시간 군주의 왕관] 첫 스킬 MP 무소비!',
+    RELIC_FREE_SKILL_PROC: '[주문 메아리] MP 소모 없음!',
+    RELIC_SKILL_LIFESTEAL_PROC: (heal: number) => `[영혼 흡수] +${heal} HP`,
+    RELIC_SKILL_MULT_PROC: '[정신 연소] 스킬 피해 강화!',
+    RELIC_DOT_MULT_PROC: '[죽음의 낙인] 지속 피해가 증폭됩니다!',
+
+    // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.enemyAI.ts.
+    STEALTH_EVADE_PROC: (enemyName: string | undefined) => `[은신] ${enemyName}의 공격을 회피했습니다!`,
+    ARMOR_EVADE_PROC: (enemyName: string | undefined) => `[회피] ${enemyName}의 공격을 회피했습니다!`,
+    ENEMY_PHASE_STATUS_APPLIED: (phase: number, label: string) => `[Phase ${phase}] [${label}] 상태이상 부여!`,
+    ANCIENT_SEAL_RESIST: '[고대의 봉인] 상태이상을 저항했습니다!',
+    CRIT_BLOCK_PROC: '[강철 의지] 강타를 흘려냈습니다!',
+    REFLECT_DAMAGE_PROC: (dmg: number) => `[반사] 반사 피해 ${dmg}!`,
+    ABSOLUTE_REFLECT_STUN_PROC: '[절대 반사] 반사 충격으로 적이 기절!',
+    ENEMY_ATK_REDUCED_STATUS: (label: string, enemyName: string | undefined) => (
+        `[${label}] ${enemyName}의 공격력이 감소합니다!`
+    ),
+    PLAYER_CURSE_DMG_AMP: (pct: number, before: number, after: number) => (
+        `[저주] 받는 피해 +${pct}% (${before} → ${after})`
+    ),
+    TITAN_CRIT_REDUCE_PROC: (pct: number, before: number, after: number) => (
+        `[타이탄의 허리띠] 강타 피해 -${pct}% (${before} → ${after})`
+    ),
+    ENEMY_HEAVY_STATUS_ON_HIT: (enemyName: string | undefined, label: string) => (
+        `[${enemyName}] 강타 — [${label}] 상태이상 부여!`
+    ),
+    PLAYER_COUNTER_PROC: (buffName: string, enemyName: string | undefined, dmg: number) => (
+        `[${buffName}] 반격! ${enemyName}에게 ${dmg} 피해!`
+    ),
+    ENEMY_TELEGRAPH_STUNNED: '기절 중 — 행동 불가',
+    ENEMY_TELEGRAPH_PHASE2_IMMINENT: (formName?: string) => `⚡ Phase 2 임박 — ${formName || '형태 변환'}`,
+    ENEMY_TELEGRAPH_GUARD_HIGH: (pct: number) => `방어 태세 (${pct}%)`,
+    ENEMY_TELEGRAPH_HEAVY_HIGH: (pct: number) => `맹공 준비 (${pct}%)`,
+    ENEMY_TELEGRAPH_GUARD_MED: (pct: number) => `방어 가능 (${pct}%)`,
+    ENEMY_TELEGRAPH_HEAVY_MED: (pct: number) => `맹공 주의 (${pct}%)`,
+    ENEMY_TELEGRAPH_NORMAL: '일반 공격 예상',
+
+    // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.status.ts.
+    ENEMY_DOT_TICK: (label: string, enemyName: string | undefined, dmg: number) => (
+        `[${label}] ${enemyName}에게 ${dmg} 지속 피해!`
+    ),
+    ENEMY_CURSE_DOT_TICK: (enemyName: string | undefined, dmg: number) => `[저주] ${enemyName}에게 ${dmg} 저주 피해!`,
+
+    // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.relics.ts.
+    RELIC_CRIT_MP_RESTORE: (amount: number) => `[피의 갈증] +${amount} MP`,
+    RELIC_HEAL_ON_SAVE_PROC: (bonus: number) => `[난공불락] 부활 시 +${bonus} HP 회복!`,
+    RELIC_DEATH_SAVE_REVIVE: (count: number) => `[절대 불사] ${count}회 부활!`,
+    RELIC_DEATH_SAVE_FIRST: '[불사의 의지] 치명상을 버텼습니다!',
+    RELIC_VOID_HEART_REVIVE: '[허공의 심장] 죽음을 거부했습니다. 다음 공격이 강화됩니다!',
+    RELIC_REVIVE_TOKEN_USED: '[에테르 부활석] 저장된 에테르가 생명과 기력을 절반까지 되돌렸습니다.',
+    RELIC_PHOENIX_REVIVE: (hp: number, atkPercent: number, duration: number) => (
+        `[불사조의 깃털] 재의 잿더미에서 부활! +${hp} HP, ATK +${atkPercent}% (${duration}턴)`
+    ),
+    ENTROPY_LABEL_GOD: '엔트로피의 신',
+    ENTROPY_LABEL_BRAND: '엔트로피 낙인',
+    ENTROPY_LABEL_ENGINE: '엔트로피 엔진',
+    ENTROPY_TICK_PROC: (label: string, enemyName: string | undefined, dmg: number) => (
+        `[${label}] 시간 무게 — ${enemyName} 고정 피해 ${dmg}!`
+    ),
+
+    // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.outcome.ts.
+    FIRST_BOSS_REWARD_HINT_FALLBACK: '초회 토벌 보너스를 확보했습니다.',
+    KILL_STACK_SOURCE_RELIC: '[허공의 왕좌]',
+    KILL_STACK_SOURCE_SYNERGY: '[시너지 처형 분노]',
+
+    // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.ts.
+    RELIC_TURN_MP_REGEN: (val: number) => `[비전 서지] +${val} MP`,
+    RELIC_TURN_HP_REGEN: (label: string | undefined, heal: number) => `[${label}] +${heal} HP 재생`,
+    RELIC_LABEL_EARTH_HEART: '대지의 심장',
+    RELIC_LABEL_ETERNAL_LIFE: '영원의 생명',
+    RELIC_LABEL_GENESIS_CORE: '창세의 핵',
+    RELIC_LABEL_ETERNAL_FORTRESS: '영원의 요새',
+    RELIC_HP_DRAIN_ATK_COST: (label: string | undefined, dmg: number) => `[${label}] HP 대가 -${dmg}`,
+
+    // 2026-09 Wave 6 X2: systems 이관 — DifficultyManager.ts.
+    // cycle 116에서 "0건 사용"으로 제거됐던 GM 톤 메시지를 다시 들인다 — DifficultyManager가
+    // 자체 inline string으로 처리하던 걸 MSG 소유로 옮기는 것뿐, 새 기능은 아니다.
+    DIFFICULTY_LABEL_OVERWHELM: '압도',
+    DIFFICULTY_LABEL_ADVANTAGE: '우세',
+    DIFFICULTY_LABEL_BALANCED: '균형',
+    DIFFICULTY_LABEL_CLOSE: '박빙',
+    DIFFICULTY_LABEL_DISADVANTAGE: '열세',
+    DIFFICULTY_LABEL_CRISIS: '위기',
+    DIFFICULTY_LABEL_BEGINNER_GRACE: '신입 보호',
+    DIFFICULTY_GM_OVERWHELM: '⚔️ [GM] 당신의 기세가 압도적입니다 — 약간의 긴장과 함께 보상이 크게 늘어납니다.',
+    DIFFICULTY_GM_CRISIS: '🛡️ [GM] 잠시 숨을 고를 시간입니다. 몬스터가 약해집니다.',
+    DIFFICULTY_GM_DISADVANTAGE: '🛡️ [GM] 어려운 상황이군요. 몬스터 강도를 낮춥니다.',
+
+    // 2026-09 Wave 6 X2: systems 이관 — combatActionTurn.ts / combatItemTurn.ts.
+    LOCATION_UNKNOWN_FALLBACK: '알 수 없는 곳',
+    ENEMY_NAME_FALLBACK: '적',
+
+    // 2026-09 Wave 6 X2: systems 이관 — FeedbackValidator.ts (피드백 폼 검증 메시지).
+    FEEDBACK_MIN_LENGTH: (min: number) => `최소 ${min}자 이상 입력해주세요.`,
+    FEEDBACK_MAX_LENGTH: (max: number) => `${max}자를 초과할 수 없습니다.`,
+    FEEDBACK_RATE_LIMITED: (waitSeconds: number) => `잠시 후 다시 시도해주세요. (${waitSeconds}초)`,
+
+    // 2026-09 Wave 6 X2: systems 이관 — TokenQuotaManager.ts (AI 이벤트 일일 한도 초과 안내).
+    AI_QUOTA_EXHAUSTED: '⚡ 에테르니아의 마력이 소진되었습니다. 내일 다시 시도해주세요.',
+
+    // 2026-09 Wave 6 X2: systems 이관 — consumableEffect.ts (아이템 이름 결손 시 표시용 폴백).
+    CONSUMABLE_NAME_FALLBACK: '소모품',
 };

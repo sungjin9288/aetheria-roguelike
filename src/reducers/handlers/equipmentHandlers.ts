@@ -18,7 +18,7 @@ import {
     sanitizeQuickSlots,
 } from './helpers';
 import { appendRewardLogs } from './rewardLog';
-import type { Player } from '../../types';
+import type { EquipSlots, Item, Player } from '../../types';
 
 type EquipmentLog = { type: string; text: string };
 type EquipmentSlot = 'weapon' | 'armor' | 'offhand' | null;
@@ -47,7 +47,7 @@ const rejectEquipmentTransaction = (
     logs: appendRewardLogs(state.logs, [{ type, text }]),
 });
 
-const getEquipFeedback = (currentEquip: any, nextEquip: any, item: any) => {
+const getEquipFeedback = (currentEquip: EquipSlots, nextEquip: EquipSlots, item: Item) => {
     if (item.type === 'shield' && currentEquip.offhand) return MSG.EQUIP_OFFHAND_REPLACE;
     if (item.type !== 'weapon') return null;
 
@@ -64,7 +64,7 @@ const getEquipFeedback = (currentEquip: any, nextEquip: any, item: any) => {
     return null;
 };
 
-const equipInventoryItem = (state: GameState, item: any): GameState => {
+const equipInventoryItem = (state: GameState, item: Item): GameState => {
     const currentEquip = { ...(state.player.equip || {}) };
     const validation = canEquip(item, state.player, currentEquip);
     if (!validation.ok) {
@@ -72,7 +72,7 @@ const equipInventoryItem = (state: GameState, item: any): GameState => {
             return rejectEquipmentTransaction(
                 state,
                 'error',
-                MSG.EQUIP_LEVEL_REQUIRED(item.name, validation.reqLevel),
+                MSG.EQUIP_LEVEL_REQUIRED(item.name || '', validation.reqLevel),
             );
         }
         if (validation.reason === 'job') {
@@ -90,19 +90,19 @@ const equipInventoryItem = (state: GameState, item: any): GameState => {
     const preservedKeys = new Set(
         [nextEquip.weapon, nextEquip.offhand, nextEquip.armor]
             .filter(Boolean)
-            .map((equippedItem: any) => getEquipmentIdentity(equippedItem)),
+            .map((equippedItem) => getEquipmentIdentity(equippedItem)),
     );
     const returnedItems = [currentEquip.weapon, currentEquip.offhand, currentEquip.armor]
-        .filter((equippedItem: any) => {
+        .filter((equippedItem): equippedItem is NonNullable<typeof equippedItem> => {
             if (!equippedItem) return false;
             const equippedKey = getEquipmentIdentity(equippedItem);
             if (equippedKey === itemKey || preservedKeys.has(equippedKey)) return false;
             if (equippedItem.id && equippedItem.id === item.id) return false;
             return equippedItem.name !== '맨손' && equippedItem.name !== '천옷';
         })
-        .map((equippedItem: any) => equippedItem.id ? equippedItem : makeItem(equippedItem));
+        .map((equippedItem) => equippedItem.id ? equippedItem : makeItem(equippedItem));
     const inventory = [
-        ...(state.player.inv || []).filter((entry: any) => entry.id !== item.id),
+        ...(state.player.inv || []).filter((entry) => entry.id !== item.id),
         ...returnedItems,
     ];
     if (inventory.length > (state.player.maxInv || BALANCE.INV_MAX_SIZE)) {
@@ -112,7 +112,7 @@ const equipInventoryItem = (state: GameState, item: any): GameState => {
     const logs: EquipmentLog[] = [];
     const feedback = getEquipFeedback(currentEquip, nextEquip, item);
     if (feedback) logs.push({ type: 'info', text: feedback });
-    logs.push({ type: 'success', text: MSG.EQUIP_DONE(item.name) });
+    logs.push({ type: 'success', text: MSG.EQUIP_DONE(item.name || '') });
 
     return completeEquipmentTransaction(state, {
         ...state.player,
@@ -121,7 +121,7 @@ const equipInventoryItem = (state: GameState, item: any): GameState => {
     }, logs);
 };
 
-const consumeInventoryItem = (state: GameState, item: any): GameState => {
+const consumeInventoryItem = (state: GameState, item: Item): GameState => {
     const result = resolveConsumableEffect({ player: state.player, item });
     if (!result.ok) return state;
     const completed = completeEquipmentTransaction(state, result.player, [result.log]);
@@ -134,7 +134,7 @@ const consumeInventoryItem = (state: GameState, item: any): GameState => {
 const useInventoryItem = (state: GameState, action: GameAction): GameState => {
     const itemId = typeof action.payload?.itemId === 'string' ? action.payload.itemId : '';
     if (!itemId) return state;
-    const item = (state.player.inv || []).find((entry: any) => entry.id === itemId);
+    const item = (state.player.inv || []).find((entry) => entry.id === itemId);
     if (!item) return state;
     if (typeof item.type === 'string' && ['weapon', 'armor', 'shield'].includes(item.type)) {
         return equipInventoryItem(state, item);
@@ -150,7 +150,7 @@ const getEnhanceTarget = (state: GameState, itemId: string) => {
     ) ? fallbackSlotName : null;
     const equippedSlot = (['weapon', 'armor', 'offhand'] as const).find((slot) => equip[slot]?.id === itemId);
     const slot = fallbackSlot || equippedSlot || null;
-    const item = (state.player.inv || []).find((entry: any) => entry.id === itemId)
+    const item = (state.player.inv || []).find((entry) => entry.id === itemId)
         || (slot ? equip[slot] : null)
         || null;
     return { item, slot: slot as EquipmentSlot };
@@ -202,7 +202,7 @@ const enhanceItem = (state: GameState, action: GameAction): GameState => {
 
     const success = roll < preview.successRate;
     const nextLevel = currentLevel + 1;
-    const inventory = inventoryAfterCost.map((inventoryItem: any) => (
+    const inventory = inventoryAfterCost.map((inventoryItem) => (
         success && inventoryItem.id === itemId
             ? { ...inventoryItem, enhance: nextLevel }
             : inventoryItem

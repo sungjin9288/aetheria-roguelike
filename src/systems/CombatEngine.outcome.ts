@@ -168,7 +168,7 @@ export const outcomeMethods: any = {
             p.stats.total_gold = (p.stats.total_gold || 0) + bonusGold;
             bossClearBonus = {
                 goldBonus: bonusGold,
-                rewardHint: bossBrief?.rewardHint || '초회 토벌 보너스를 확보했습니다.'
+                rewardHint: bossBrief?.rewardHint || MSG.FIRST_BOSS_REWARD_HINT_FALLBACK
             };
             logs.push({ type: 'event', text: MSG.FIRST_BOSS_GOLD(bonusGold) });
         }
@@ -205,7 +205,7 @@ export const outcomeMethods: any = {
             const maxStack = killStackRelic?.val?.max || 1;
             const next = Math.min(maxStack, (p.adventureRelicBonuses?.killStackAtk || 0) + perKill);
             p.adventureRelicBonuses = { ...p.adventureRelicBonuses, killStackAtk: next };
-            const sourceLabel = killStackRelic ? '[허공의 왕좌]' : '[시너지 처형 분노]';
+            const sourceLabel = killStackRelic ? MSG.KILL_STACK_SOURCE_RELIC : MSG.KILL_STACK_SOURCE_SYNERGY;
             logs.push({ type: 'event', text: MSG.KILL_STACK_ATTACK(sourceLabel, Math.round(next * 100)) });
         }
 

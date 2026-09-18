@@ -814,7 +814,8 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 315: createMoveActions 시그니처 (deps)만', async () => {
       const source = await readSrc('src/hooks/gameActions/moveActions.ts');
-      assert.ok(/createMoveActions\s*=\s*\(deps:\s*any\)\s*=>/.test(source),
+      // Wave 6 X1: deps 경계가 `GameActionDeps`로 닫혔다 — 계약은 여전히 "1-arg (deps)".
+      assert.ok(/createMoveActions\s*=\s*\(deps:\s*\w+\)\s*=>/.test(source),
           'createMoveActions(deps) 단일 파라미터');
       assert.ok(!/createMoveActions[^=]+_shared/.test(source),
           '_shared 파라미터 제거됨');
@@ -822,7 +823,8 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 315: createAscensionActions 시그니처 (deps)만', async () => {
       const source = await readSrc('src/hooks/gameActions/ascensionActions.ts');
-      assert.ok(/createAscensionActions\s*=\s*\(deps:\s*any\)\s*=>/.test(source),
+      // Wave 6 X1: deps 경계가 `GameActionDeps`로 닫혔다 — 계약은 여전히 "1-arg (deps)".
+      assert.ok(/createAscensionActions\s*=\s*\(deps:\s*\w+\)\s*=>/.test(source),
           'createAscensionActions(deps) 단일 파라미터');
       assert.ok(!/createAscensionActions[^=]+_shared/.test(source),
           '_shared 파라미터 제거됨');
@@ -909,9 +911,9 @@ import { fileURLToPath } from 'node:url';
   test('cycle 315 회귀 가드: moveActions / ascensionActions 1-arg 시그니처 유지', async () => {
       const moveSrc = await readSrc('src/hooks/gameActions/moveActions.ts');
       const asSrc = await readSrc('src/hooks/gameActions/ascensionActions.ts');
-      assert.ok(/createMoveActions\s*=\s*\(deps:\s*any\)\s*=>/.test(moveSrc),
+      assert.ok(/createMoveActions\s*=\s*\(deps:\s*\w+\)\s*=>/.test(moveSrc),
           'cycle 315 createMoveActions 1-arg 유지');
-      assert.ok(/createAscensionActions\s*=\s*\(deps:\s*any\)\s*=>/.test(asSrc),
+      assert.ok(/createAscensionActions\s*=\s*\(deps:\s*\w+\)\s*=>/.test(asSrc),
           'cycle 315 createAscensionActions 1-arg 유지');
   });
 }

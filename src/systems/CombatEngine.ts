@@ -161,7 +161,7 @@ export const CombatEngine = {
             const nextMp = Math.min(this.getEffectiveMaxMp(updated, relics), (updated.mp || 0) + mpRegenRelic.val);
             if (nextMp > (updated.mp || 0)) {
                 updated.mp = nextMp;
-                logs.push({ type: 'event', text: `[비전 서지] +${mpRegenRelic.val} MP` });
+                logs.push({ type: 'event', text: MSG.RELIC_TURN_MP_REGEN(mpRegenRelic.val) });
             }
         }
 
@@ -170,7 +170,7 @@ export const CombatEngine = {
         if (regenRelic && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (regenRelic.val || 0.05)));
             updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
-            logs.push({ type: 'heal', text: `[대지의 심장] +${heal} HP 재생` });
+            logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_EARTH_HEART, heal) });
         }
 
         // 시너지: 영원의 생명 (healPerTurn) — 매 턴 4% HP 재생
@@ -178,7 +178,7 @@ export const CombatEngine = {
         if (healPerTurnSyn && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (healPerTurnSyn.bonus.healPerTurn ?? 0)));
             updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
-            logs.push({ type: 'heal', text: `[영원의 생명] +${heal} HP 재생` });
+            logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_ETERNAL_LIFE, heal) });
         }
 
         // cycle 161: 'genesis' 유물 (창세의 핵) — val.healPerTurn 0.02 매 턴 HP 회복.
@@ -189,7 +189,7 @@ export const CombatEngine = {
             if (ratio > 0) {
                 const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * ratio));
                 updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
-                logs.push({ type: 'heal', text: `[창세의 핵] +${heal} HP 재생` });
+                logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_GENESIS_CORE, heal) });
             }
         }
 
@@ -202,7 +202,7 @@ export const CombatEngine = {
             if (ratio > 0) {
                 const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * ratio));
                 updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
-                logs.push({ type: 'heal', text: `[영원의 요새] +${heal} HP 재생` });
+                logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_ETERNAL_FORTRESS, heal) });
             }
         }
 
@@ -217,12 +217,12 @@ export const CombatEngine = {
             const reducedCost = hellReaperSyn?.bonus.hpCostReduction;
             if (typeof reducedCost === 'number' && Number.isFinite(reducedCost) && reducedCost >= 0) {
                 cost = reducedCost;
-                label = '지옥의 수확자';
+                label = MSG.HELL_REAPER_LABEL;
             }
             if (cost > 0) {
                 const dmg = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * cost));
                 updated.hp = Math.max(1, (updated.hp || 1) - dmg);
-                logs.push({ type: 'warning', text: `[${label}] HP 대가 -${dmg}` });
+                logs.push({ type: 'warning', text: MSG.RELIC_HP_DRAIN_ATK_COST(label, dmg) });
             }
         }
 

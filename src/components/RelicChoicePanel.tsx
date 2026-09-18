@@ -1,5 +1,7 @@
+import type { Dispatch } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { AT } from '../reducers/actionTypes';
+import type { GameAction } from '../reducers/gameReducer';
 import { RARITY_CLASSES } from '../data/constants';
 import { MSG } from '../data/messages';
 import { RELIC_SYNERGIES } from '../data/relics';
@@ -13,7 +15,7 @@ import type { FullStats, Player, Relic } from '../types/index.js';
 
 interface RelicChoicePanelProps {
     pendingRelics?: Relic[] | null;
-    dispatch: (action: any) => void;
+    dispatch: Dispatch<GameAction>;
     player?: Player | null;
     stats?: FullStats | null;
 }
@@ -48,29 +50,39 @@ const SYNERGY_MAP: Record<string, string[]> = {
     boss_hunter: ['drop_rate', 'execute_bonus', 'double_strike'],
 };
 
+/** `getRelicSynergyScore()`가 카드마다 계산하는 시너지 판정 결과. */
+interface RelicSynergyResult {
+    score: number;
+    label: string | null;
+    synergies: Array<string | undefined>;
+    legendaryHint?: string;
+    nearLegendary?: string | null;
+}
+
 // cycle 533: ownedRelics default [] 제거 — 1 internal callsite (line 153)
 //   getRelicSynergyScore(relic, ownedRelics) 명시 전달이라 default 도달 불가.
 //   util/component/hook default 청소 메가 시리즈 29번째 (cycle 502-532).
-const getRelicSynergyScore = (newRelic: any, ownedRelics: any): any => {
-    const ownedEffects = ownedRelics.map((r: any) => r.effect);
-    const ownedNames = new Set(ownedRelics.map((r: any) => r.name));
+const getRelicSynergyScore = (newRelic: Relic, ownedRelics: Relic[]): RelicSynergyResult => {
+    const ownedEffects = ownedRelics.map((r) => r.effect);
+    const ownedNames = new Set(ownedRelics.map((r) => r.name));
+    const newRelicName = newRelic.name ?? '';
 
     // 3피스 전설 시너지 확인 — 신규 유물이 마지막 피스인 경우
-    const legendarySyn = RELIC_SYNERGIES.find((syn: any) =>
+    const legendarySyn = RELIC_SYNERGIES.find((syn) =>
         syn.requires.length === 3 &&
-        syn.requires.includes(newRelic.name) &&
-        syn.requires.filter((name: any) => ownedNames.has(name)).length === 2
+        syn.requires.includes(newRelicName) &&
+        syn.requires.filter((name) => ownedNames.has(name)).length === 2
     );
     if (legendarySyn) {
-        const synergyNames = legendarySyn.requires.filter((n: any) => ownedNames.has(n));
+        const synergyNames = legendarySyn.requires.filter((n) => ownedNames.has(n));
         return { score: 120, label: '전설 조합 완성', synergies: synergyNames, legendaryHint: legendarySyn.label };
     }
 
     // 3피스 시너지 1개 남음 힌트 — 신규 유물이 첫 번째 피스인 경우
-    const nearLegendarySyn = RELIC_SYNERGIES.find((syn: any) =>
+    const nearLegendarySyn = RELIC_SYNERGIES.find((syn) =>
         syn.requires.length === 3 &&
-        syn.requires.includes(newRelic.name) &&
-        syn.requires.filter((name: any) => ownedNames.has(name)).length === 1
+        syn.requires.includes(newRelicName) &&
+        syn.requires.filter((name) => ownedNames.has(name)).length === 1
     );
 
     if (!ownedRelics.length) return nearLegendarySyn
@@ -78,8 +90,8 @@ const getRelicSynergyScore = (newRelic: any, ownedRelics: any): any => {
         : { score: 0, label: null, synergies: [] };
 
     const synergyEffects = SYNERGY_MAP[newRelic.effect] || [];
-    const matches = ownedEffects.filter((e: any) => synergyEffects.includes(e));
-    ownedEffects.forEach((e: any) => {
+    const matches = ownedEffects.filter((e) => synergyEffects.includes(e));
+    ownedEffects.forEach((e) => {
         if ((SYNERGY_MAP[e] || []).includes(newRelic.effect) && !matches.includes(e)) matches.push(e);
     });
 
@@ -89,7 +101,7 @@ const getRelicSynergyScore = (newRelic: any, ownedRelics: any): any => {
 
     const score = Math.min(100, matches.length * 40);
     const label = score >= 80 ? '강한 조합' : score >= 40 ? '좋은 조합' : '이어지는 조합';
-    const synergyNames = ownedRelics.filter((r: any) => matches.includes(r.effect)).map((r: any) => r.name);
+    const synergyNames = ownedRelics.filter((r) => matches.includes(r.effect)).map((r) => r.name);
     return { score, label, synergies: synergyNames, nearLegendary: nearLegendarySyn?.label || null };
 };
 
@@ -117,7 +129,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
     if (!pendingRelics || pendingRelics.length === 0) return null;
 
     const ownedRelics = player?.relics || [];
-    const relicCards = pendingRelics.map((relic: any, index: any) => ({
+    const relicCards = pendingRelics.map((relic, index) => ({
         relic,
         index,
         synergy: getRelicSynergyScore(relic, ownedRelics),
@@ -165,7 +177,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                     aria-label="유물 선택 추천 요약"
                     className="aether-relic-decision-strip relative mb-2 grid shrink-0 grid-cols-3 gap-1 rounded-[1rem] p-1"
                 >
-                    {relicDecision.cells.map((cell: any) => (
+                    {relicDecision.cells.map((cell) => (
                         <div
                             key={cell.label}
                             className="aether-relic-decision-cell min-h-[54px] rounded-lg px-2 py-1.5"
@@ -181,11 +193,12 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                 </div>
 
                 <div data-testid="relic-choice-options" className="relative min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-0.5">
-                    {relicCards.map(({ relic, index, synergy }: any) => {
+                    {relicCards.map(({ relic, index, synergy }) => {
                         const hasSynergy = synergy.score > 0;
                         const isLegendaryComplete = synergy.legendaryHint != null;
                         const hasNearLegendary = synergy.nearLegendary != null;
                         const isRecommended = relicDecision.recommendedIndex === index;
+                        const rarity = relic.rarity ?? 'common';
                         return (
                         <button
                             key={relic.id}
@@ -196,7 +209,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                             className={`
                                 group grid min-h-[82px] w-full grid-cols-[50px_minmax(0,1fr)_18px] items-center gap-2.5 rounded-[1rem] border p-2.5 text-left
                                 transition-all duration-150 hover:-translate-y-0.5 active:translate-y-0
-                                ${RARITY_CARD[relic.rarity] || RARITY_CARD.common}
+                                ${RARITY_CARD[rarity] || RARITY_CARD.common}
                                 ${isRecommended ? 'aether-relic-card-recommended' : ''}
                                 ${isLegendaryComplete ? 'shadow-[0_18px_40px_rgba(251,113,133,0.15)]' : hasSynergy ? 'shadow-[0_18px_34px_rgba(125,212,216,0.08)]' : 'shadow-[0_14px_26px_rgba(1,6,14,0.28)]'}
                             `}
@@ -206,15 +219,15 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                             <div className="min-w-0">
                                 <div className="flex flex-wrap items-center gap-1">
                                     {isRecommended && <SignalBadge tone="spotlight" size="sm">추천</SignalBadge>}
-                                    <SignalBadge tone={RARITY_BADGE_TONE[relic.rarity] || 'neutral'} size="sm">
-                                        {MSG.RARITY_LABEL[relic.rarity] || relic.rarity}
+                                    <SignalBadge tone={RARITY_BADGE_TONE[rarity] || 'neutral'} size="sm">
+                                        {MSG.RARITY_LABEL[rarity] || rarity}
                                     </SignalBadge>
                                     {isLegendaryComplete && <SignalBadge tone="danger" size="sm">전설 조합</SignalBadge>}
                                     {!isLegendaryComplete && hasSynergy && (
                                         <SignalBadge tone={synergy.score >= 80 ? 'success' : 'recommended'} size="sm">{synergy.label}</SignalBadge>
                                     )}
                                 </div>
-                                <div className={`mt-1 text-[13px] font-readable font-bold leading-tight ${RARITY_CLASSES[relic.rarity] || 'text-white'} group-hover:text-white`}>
+                                <div className={`mt-1 text-[13px] font-readable font-bold leading-tight ${RARITY_CLASSES[rarity] || 'text-white'} group-hover:text-white`}>
                                     {getRelicDisplayName(relic.name)}
                                 </div>
                                 <div className="mt-0.5 text-[11px] font-readable leading-snug text-slate-200/82">

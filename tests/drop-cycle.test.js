@@ -320,10 +320,11 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 563: body codexRef / queueRef / dispatch 처리 보존', async () => {
       const source = await readSrc('src/hooks/useLegendaryDropDetector.ts');
-      assert.ok(/const codexRef = useRef<any>\(codex\)/.test(source),
+      // Wave 6 X1: ref 제네릭이 any → 도메인 타입(Item[])으로 닫혔다 — ref 배관 자체는 동일.
+      assert.ok(/const codexRef = useRef\((codex|<[^>]+>\(codex)\)/.test(source),
           'codexRef useRef(codex) 보존');
-      assert.ok(/const queueRef = useRef<any\[\]>\(\[\]\)/.test(source),
-          'queueRef useRef<any[]>([]) 보존');
+      assert.ok(/const queueRef = useRef<[^>]+\[\]>\(\[\]\)/.test(source),
+          'queueRef useRef<Item[]>([]) 보존');
   });
 
   test('cycle 563: cycle 502-562 회귀 가드 — default 청소 시리즈 보존', async () => {

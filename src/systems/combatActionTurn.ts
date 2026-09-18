@@ -121,7 +121,7 @@ export const resolveCombatActionTurn = ({
             return resolveDefeat(
                 protectedResult.updatedPlayer,
                 initialPlayer,
-                player.loc || '알 수 없는 곳',
+                player.loc || MSG.LOCATION_UNKNOWN_FALLBACK,
                 logs,
                 random,
                 now,

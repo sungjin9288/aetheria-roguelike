@@ -6,6 +6,7 @@ import { makeItem } from '../../utils/gameUtils';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import type { Player } from '../../types';
+import type { AddLog, GameActionDeps } from '../actionDeps';
 export { resolveEndgameVictory } from '../../systems/endgameSettlement';
 
 /**
@@ -14,8 +15,8 @@ export { resolveEndgameVictory } from '../../systems/endgameSettlement';
  */
 export const applyAbyssFloorAdvance = (
     p: Player,
-    dispatch: any,
-    addLog: any,
+    dispatch: GameActionDeps['dispatch'],
+    addLog: AddLog,
     rng: () => number = Math.random,
     now: () => number = Date.now,
 ) => {
@@ -35,7 +36,7 @@ export const applyAbyssFloorAdvance = (
     if (milestone) {
         addLog('event', MSG.ABYSS_MILESTONE(newDepth));
         if (milestone.type === 'relic_choice') {
-            const available = RELICS.filter((r: any) => !(updated.relics || []).some((pr: any) => pr.id === r.id));
+            const available = RELICS.filter((r) => !(updated.relics || []).some((pr) => pr.id === r.id));
             // PR #8: 프레스티지 rank≥2면 선택지 4지선다.
             const choices = getPrestigeUnlocks(updated.meta?.prestigeRank).relicChoices;
             if (available.length > 0) {

@@ -9,8 +9,9 @@ import { makeCombatActionMap } from './combatHandlers';
 import { chainEventActionMap } from './chainEventHandlers';
 import { fallbackEventActionMap } from './fallbackEventHandlers';
 import { exploreActionMap } from './exploreHandlers';
+import type { Player } from '../../types';
 
-export const makeFeatureActionMap = (initialPlayer: any) => ({
+export const makeFeatureActionMap = (initialPlayer: Player) => ({
     ...protocolActionMap,
     ...rewardActionMap,
     ...questActionMap,

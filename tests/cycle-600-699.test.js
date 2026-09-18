@@ -297,7 +297,8 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 606: 정합성 가드 — exploreActions callsite 보존', async () => {
       const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
-      assert.ok(/AI_SERVICE\.generateEvent\(player\.loc,\s*player\.history,\s*uid,/.test(source),
+      // Wave 6 X1: history가 `EventHistoryEntry[] | undefined`로 닫히면서 `|| []`로 좁혀졌다.
+      assert.ok(/AI_SERVICE\.generateEvent\(player\.loc,\s*player\.history(\s*\|\|\s*\[\])?,\s*uid,/.test(source),
           'exploreActions AI_SERVICE.generateEvent 4-arg callsite 보존');
   });
 
@@ -1292,7 +1293,10 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 626: renderActionButton signature 파라미터 보존 (default 없이)', async () => {
       const source = await readSrc('src/components/ControlPanel.tsx');
-      assert.ok(/const renderActionButton = \(button: any, extraClass: any, \{ hideLabel = false \}: any\)/.test(source),
+      // Wave 6 X3-A: button/extraClass/{hideLabel} outer 파라미터가 `: any`에서 실제 도메인
+      //   타입(ControlButton/string/{hideLabel?:boolean})으로 닫혔다 — outer default 부재라는
+      //   본 테스트의 취지(cycle 626)는 그대로 보존.
+      assert.ok(/const renderActionButton = \(button: ControlButton, extraClass: string, \{ hideLabel = false \}: \{ hideLabel\?: boolean \}\)/.test(source),
           'renderActionButton 3-arg 시그니처 보존 (outer defaults 없이, inner hideLabel = false 보존)');
   });
 
@@ -1436,8 +1440,12 @@ import { readFile } from 'node:fs/promises';
       // advance해야 하기 때문(bossGauge.ts 참조). transformPlayer 자체는 여전히
       // default 없이 필수 인자 계약 유지 — 이 테스트가 원래 가드하던 "no default"
       // 계약은 그대로 보존, 3번째 인자 추가만 반영.
-      assert.ok(/commitExploreOutcome = \(outcome:\s*any,\s*transformPlayer:\s*any,\s*mapData\?:\s*any\)/.test(source),
-          'commitExploreOutcome transformPlayer 파라미터 보존 (default 없이) + mapData? 3번째 인자 추가');
+      // Wave 6 X1: 시그니처가 `CommitExploreOutcome` 타입 별칭으로 옮겨졌다 —
+      //   3-arg 구성(outcome, transformPlayer 필수, mapData? 옵셔널)과 "default 없음" 계약은 동일.
+      assert.ok(/commitExploreOutcome: CommitExploreOutcome = \(outcome,\s*transformPlayer,\s*mapData\)/.test(source),
+          'commitExploreOutcome 3-arg 구현 보존 (default 없이)');
+      assert.ok(/transformPlayer: \(\(p: Player\) => Player\) \| null,\s*\n\s*mapData\?:/.test(source),
+          'transformPlayer 필수 + mapData? 옵셔널 계약 보존');
   });
 
   test('cycle 628: 7 callsite null 명시 추가 (2026-07: 다수 callsite가 mapData 3번째 인자 추가로 갱신)', async () => {
@@ -1474,7 +1482,7 @@ import { readFile } from 'node:fs/promises';
       // 탐험 스카우팅(2026-07): combat callsite가 exploreUtils.ts로 이동.
       // Wave 4 N1: 다시 hooks/gameActions/exploreFlow.ts로 이동 — 경로만 갱신.
       const source = await readSrc('src/hooks/gameActions/exploreFlow.ts');
-      assert.ok(/commitExploreOutcome\('combat',\s*\(nextPlayer:\s*any\)\s*=>/.test(source),
+      assert.ok(/commitExploreOutcome\('combat',\s*\(nextPlayer:\s*Player\)\s*=>/.test(source),
           "combat 2-arg callsite (applyBattleStartRelics callback) 보존");
   });
 

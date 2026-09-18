@@ -8,6 +8,18 @@ import {
 } from '../../utils/protocolCycle';
 import type { GameState, GameAction } from '../gameReducer';
 
+/**
+ * `BALANCE.WEEKLY_MISSIONS` 원소 형태 — `BalanceConfig`가 `[key: string]: any` 인덱스
+ * 시그니처를 갖고 있어(constants.ts) `BALANCE.WEEKLY_MISSIONS` 자체는 `any`다.
+ * 이 파일에서만 실제 리터럴(`data/constants.ts` 실측 3건) 모양으로 좁혀 쓴다.
+ */
+interface WeeklyMissionDef {
+    id: string;
+    target: number;
+    reward: { gold?: number; premiumCurrency?: number };
+    label: string;
+}
+
 export const protocolActionMap = {
     // ── Daily Protocol ────────────────────────────────────────────────────
     SET_DAILY_PROTOCOL: (state: GameState, action: GameAction) => ({
@@ -63,7 +75,7 @@ export const protocolActionMap = {
 
     CLAIM_WEEKLY_MISSION: (state: GameState, action: GameAction) => {
         const missionId = action.payload?.missionId;
-        const mission = BALANCE.WEEKLY_MISSIONS.find((entry: any) => entry.id === missionId);
+        const mission = (BALANCE.WEEKLY_MISSIONS as WeeklyMissionDef[]).find((entry) => entry.id === missionId);
         const wp = getCurrentWeeklyProtocol(state.player.weeklyProtocol, new Date());
         if (!mission || (wp.claimed || []).includes(missionId)) return state;
         if (getWeeklyMissionProgress(wp, missionId) < mission.target) return state;

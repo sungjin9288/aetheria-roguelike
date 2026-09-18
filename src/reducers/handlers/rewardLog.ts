@@ -1,4 +1,5 @@
 import { BALANCE } from '../../data/constants';
+import type { LogEntry } from '../../types/session.js';
 
 type RewardLogEntry = string | { type?: string; text: string };
 
@@ -8,10 +9,10 @@ type RewardLogEntropy = {
 };
 
 export const appendRewardLogs = (
-    logs: any[],
+    logs: LogEntry[],
     entries: RewardLogEntry[],
     entropy?: RewardLogEntropy,
-) => {
+): LogEntry[] => {
     if (entries.length === 0) return logs;
 
     const createdAt = Number.isFinite(entropy?.now) ? entropy!.now as number : Date.now();

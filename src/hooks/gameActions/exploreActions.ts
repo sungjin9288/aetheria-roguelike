@@ -16,7 +16,9 @@ import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../../utils/scoutEvents';
 import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
-import type { Player } from '../../types';
+import type { GameMap, Player } from '../../types';
+import type { GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
+import type { SharedHelpers } from './_shared';
 import { resolveExploreActionRandom, resolveExploreActionSeed } from '../../utils/exploreActionSeed';
 import { BOUNDED_ENCOUNTER_PACK_ENABLED, BOUNDED_ENCOUNTERS } from '../../data/boundedEncounters';
 import { buildBoundedEncounterContext, selectBoundedEncounter } from '../../utils/boundedEncounterSelector';
@@ -42,7 +44,12 @@ const takeHarnessExploreSeed = (): number | undefined => {
  * runQuietRollAndCombat(exploreFlow.ts)만 재사용한다 — firebase-free 단위 테스트 유지).
  * AI 이벤트가 발동하지 않으면 quiet 롤 이하 파이프(runQuietRollAndCombat)로 이어진다.
  */
-const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExploreOutcome }: any, optionalDecisionAllowed: boolean) => {
+const runExplorePostDecisionRoll = async (
+    mapData: GameMap,
+    deps: GameActionDepsWithRng,
+    { commitExploreOutcome }: SharedHelpers,
+    optionalDecisionAllowed: boolean,
+) => {
     const { player, uid, dispatch, addLog, addStoryLog, getFullStats } = deps;
     const rng = typeof deps.rng === 'function' ? deps.rng : Math.random;
     const playerRelics = player.relics || [];
@@ -63,7 +70,7 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
         const receipt = typeof expeditionId === 'string'
             ? { expeditionId, occurrenceSequence }
             : null;
-        const context = receipt ? buildBoundedEncounterContext(player, player.loc) : null;
+        const context = receipt ? buildBoundedEncounterContext(player, player.loc!) : null;
         const encounter = receipt && context && BOUNDED_ENCOUNTER_PACK_ENABLED
             ? selectBoundedEncounter(BOUNDED_ENCOUNTERS, context, receipt, rng)
             : null;
@@ -93,10 +100,10 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
                     .filter((entry) => entry && !entry.isComplete)
                     .slice(0, 3)
                     .map((entry) => entry?.quest.title),
-                buildProfile: getRunBuildProfile(player, fullStats).tags.map((tag: any) => tag.name).slice(0, 4)
+                buildProfile: getRunBuildProfile(player, fullStats).tags.map((tag) => tag.name).slice(0, 4)
             };
             const playerSnapshot = enrichSnapshotWithDifficulty(baseSnapshot, player);
-            const eventData = await AI_SERVICE.generateEvent(player.loc, player.history, uid, {
+            const eventData = await AI_SERVICE.generateEvent(player.loc, player.history || [], uid, {
                 playerSnapshot,
                 mapSnapshot: {
                     name: player.loc, type: mapData.type, level: mapData.level,
@@ -109,9 +116,11 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
             if (eventData && eventData.desc) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 if (eventData.fallbackReason === 'quota' && eventData.fallbackMessage) addLog('info', eventData.fallbackMessage);
-                const normalizedChoices = toArray(eventData.choices)
-                    .map((choice: any, idx: any) => (typeof choice === 'string' ? choice : choice?.text || choice?.label || MSG.CHOICE_DEFAULT(idx + 1)))
-                    .slice(0, 3);
+                // X1(Wave 6): 예전엔 여기서 `choice.text / choice.label` 객체 형태도 문자열로
+                //   접었는데, aiService.generateEvent가 돌려주는 EventPackage.choices는
+                //   aiEventUtils.buildEventPackage(normalizeChoiceText)가 이미 문자열로
+                //   정규화한 값뿐이라 그 분기는 도달 불가였다(타입상 `never`).
+                const normalizedChoices = toArray(eventData.choices).slice(0, 3);
                 const normalized = { ...eventData, choices: normalizedChoices, outcomes: toArray(eventData.outcomes) };
                 dispatch({ type: AT.SET_EVENT, payload: normalized });
                 addLog('event', normalized.desc);
@@ -131,7 +140,7 @@ const runExplorePostDecisionRoll = async (mapData: any, deps: any, { commitExplo
     });
 };
 
-export const createExploreActions = (deps: any, shared: any) => {
+export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers) => {
     const { commitExploreOutcome } = shared;
     const { player, gameState, dispatch, addLog, getFullStats } = deps;
     const rng = typeof deps.rng === 'function' ? deps.rng : Math.random;
@@ -142,7 +151,7 @@ export const createExploreActions = (deps: any, shared: any) => {
 
             const actionRng = resolveExploreActionRandom(rng, takeHarnessExploreSeed());
 
-            const mapData = DB.MAPS[player.loc];
+            const mapData = DB.MAPS[player.loc!];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
             // 내러티브 이벤트 체인 체크 (AI 이벤트보다 우선)
             const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps);
@@ -198,7 +207,7 @@ export const createExploreActions = (deps: any, shared: any) => {
             //   서사적으로 앞서야 하고, 게이지가 만충인데 스카우팅 카드에 밀려 계속
             //   미뤄지면 "접근했는데 아무 일도 안 일어남"이 반복돼 게이지 시스템의
             //   존재감이 사라짐).
-            if (isAreaBossUndefeated(mapData, player) && isBossGaugeFull(player, player.loc)) {
+            if (isAreaBossUndefeated(mapData, player) && isBossGaugeFull(player, player.loc!)) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const bossName = getAreaBossName(mapData) as string;
                 const challengeEvent = buildBossChallengeEvent(bossName);
@@ -239,7 +248,7 @@ export const createExploreActions = (deps: any, shared: any) => {
          *   claimCombatAction과 같은 위험을 이 프로젝트 방식으로 막는다).
          */
         scout: () => {
-            const mapData = DB.MAPS[player.loc];
+            const mapData = DB.MAPS[player.loc!];
             const availability = getScoutAvailability(player, mapData, gameState === GS.IDLE);
             if (!availability.available) return addLog('error', availability.reason || MSG.SCOUT_BUSY);
 

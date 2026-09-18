@@ -1716,9 +1716,11 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
   test('cycle 533: body 분기 + ownedRelics.map 처리 보존', async () => {
       const source = await readSrc('src/components/RelicChoicePanel.tsx');
-      assert.ok(/const ownedEffects = ownedRelics\.map\(\(r: any\) => r\.effect\)/.test(source),
+      // Wave 6 X3-A: newRelic/ownedRelics가 `any`에서 `Relic`/`Relic[]`로 닫히면서
+      //   콜백 파라미터 `r`도 문맥으로 추론된다(더 이상 `: any` 불필요) — map 처리 자체는 그대로.
+      assert.ok(/const ownedEffects = ownedRelics\.map\(\(r\) => r\.effect\)/.test(source),
           'ownedRelics.map(r => r.effect) 보존');
-      assert.ok(/const ownedNames = new Set\(ownedRelics\.map\(\(r: any\) => r\.name\)\)/.test(source),
+      assert.ok(/const ownedNames = new Set\(ownedRelics\.map\(\(r\) => r\.name\)\)/.test(source),
           'new Set(ownedRelics.map(r => r.name)) 보존');
       assert.ok(/RELIC_SYNERGIES\.find/.test(source), 'RELIC_SYNERGIES.find 분기 보존');
   });

@@ -12,8 +12,28 @@
  *
  * 이동 전/후 동치는 tests/explore-flow-equivalence.test.js가 시드 고정 트레이스로 고정한다.
  */
-import type { GameMap, Relic } from '../../types/index.js';
+import type { FullStats, GameMap, Relic } from '../../types/index.js';
 import type { Player, StatusId } from '../../types/index.js';
+import type { Dispatch } from 'react';
+import type { GameAction } from '../../reducers/gameReducer.js';
+import type { AddLog, AddStoryLog, GameActionDeps } from '../actionDeps.js';
+import type { CommitExploreOutcome } from './_shared.js';
+
+/** 탐험 롤 계열이 공유하는 주입 조각 — 엔진 deps를 그대로 넘겨도 맞는다. */
+type ExploreRollDeps = Pick<GameActionDeps, 'dispatch' | 'addLog' | 'getFullStats'> & {
+    /** 부정 효과(아노말리) 확률 가중 — 정찰 "이상 신호" 카드만 1 이외의 값을 넘긴다. */
+    anomalyMult?: number;
+    rng?: () => number;
+};
+
+/** BALANCE.DISCOVERY_CHAINS 원소 (constants.ts는 인덱스 시그니처라 여기서 모양을 고정한다). */
+interface DiscoveryChain {
+    id: string;
+    label: string;
+    desc: string;
+    locations: string[];
+    reward: { gold?: number; exp?: number; item?: string; premiumCurrency?: number };
+}
 import { DB } from '../../data/db.js';
 import { BALANCE } from '../../data/constants.js';
 import { RELICS, pickWeightedRelics } from '../../data/relics.js';
@@ -42,12 +62,12 @@ import {
 
 // explorationPacing.ts의 clamp와 동일 구현 (해당 모듈은 export하지 않음) — 소규모 순수
 // 헬퍼는 모듈 간 공유보다 지역 복제가 이 코드베이스의 기존 관례(pacing/aiEventUtils 등).
-const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 // ─────────────────────────────────────────────────────────────────────────
 // 0.5. 주간 프로토콜 리셋
 // ─────────────────────────────────────────────────────────────────────────
-export const resetWeeklyProtocolIfNeeded = (player: Player, dispatch: any) => {
+export const resetWeeklyProtocolIfNeeded = (player: Player, dispatch: Dispatch<GameAction>) => {
     const weeklyProtocol = getCurrentWeeklyProtocol(player.weeklyProtocol, new Date());
     if (player.weeklyProtocol?.lastResetWeek !== weeklyProtocol.lastResetWeek) {
         dispatch({
@@ -63,7 +83,7 @@ export const resetWeeklyProtocolIfNeeded = (player: Player, dispatch: any) => {
 // ─────────────────────────────────────────────────────────────────────────
 // 1. 일일 프로토콜 리셋 & 카운트 업 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const resetDailyProtocolIfNeeded = (player: Player, dispatch: any) => {
+export const resetDailyProtocolIfNeeded = (player: Player, dispatch: Dispatch<GameAction>) => {
     const today = getProtocolDayKey(new Date());
     const dp = player.stats?.dailyProtocol;
     if (!dp || dp.date !== today) {
@@ -80,14 +100,19 @@ export const resetDailyProtocolIfNeeded = (player: Player, dispatch: any) => {
 //   BALANCE.SCOUT_SIGNAL_ANOMALY_MULT(1.5)를 전달 — 전투를 회피하는 "안전 버튼"이 부정
 //   효과(중독/화상) 확률까지 낮춰주지는 않도록 재조정. 일반 탐험 quiet 롤
 //   (runQuietRollAndCombat)은 anomalyMult 미전달 → 기존 확률 분포 완전 불변.
-export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRelics: Relic[], { dispatch, addLog, getFullStats, anomalyMult, rng = Math.random }: any) => {
+export const rollExplorationEvent = (
+    player: Player,
+    mapData: GameMap,
+    playerRelics: Relic[],
+    { dispatch, addLog, getFullStats, anomalyMult, rng = Math.random }: ExploreRollDeps,
+) => {
     const discoveryOdds = getDiscoveryOdds(player, mapData);
-    const hasKey = (player.inv || []).some((i: any) => i.name === '잊혀진 열쇠');
+    const hasKey = (player.inv || []).some((i) => i.name === '잊혀진 열쇠');
     if (hasKey && (typeof mapData.level === 'number' && mapData.level >= 10) && rng() < discoveryOdds.keyEventChance) {
         dispatch({
             type: AT.SET_PLAYER,
             payload: (p: Player) => {
-                const keyIdx = p.inv!.findIndex((i: any) => i.name === '잊혀진 열쇠');
+                const keyIdx = p.inv!.findIndex((i) => i.name === '잊혀진 열쇠');
                 const newInv = [...p.inv!];
                 if (keyIdx > -1) newInv.splice(keyIdx, 1);
                 return { ...p, inv: newInv, loc: '고대 보물고' };
@@ -140,10 +165,15 @@ export const rollExplorationEvent = (player: Player, mapData: GameMap, playerRel
 // ─────────────────────────────────────────────────────────────────────────
 // 4. 전투 시작 유물 효과 적용 (Phase 1-B)
 // ─────────────────────────────────────────────────────────────────────────
-export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fullStats: any, { addLog, rng = Math.random }: any) => {
+export const applyBattleStartRelics = (
+    player: Player,
+    playerRelics: Relic[],
+    fullStats: FullStats,
+    { addLog, rng = Math.random }: { addLog: AddLog; rng?: () => number },
+): Player => {
     const activatedPlayer = activateDevourBonus(player);
-    if (activatedPlayer !== player) fullStats = calculateFullStats(activatedPlayer);
-    const combatStartPlayer: any = {
+    if (activatedPlayer !== player) fullStats = calculateFullStats(activatedPlayer)!;
+    const combatStartPlayer: Player = {
         ...activatedPlayer,
         combatFlags: {
             comboCount: 0,
@@ -177,7 +207,7 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
     const startHealRelic = playerRelics.find((r) => r.effect === 'battle_start_heal');
     if (startHealRelic) {
         const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * startHealRelic.val));
-        combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp, (combatStartPlayer.hp || 0) + heal);
+        combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp!, (combatStartPlayer.hp || 0) + heal);
         addLog('heal', `[재생 코어] 전투 시작 회복 +${heal} HP`);
     }
 
@@ -194,7 +224,7 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
         const roll = Math.floor(rng() * 3);
         if (roll === 0) {
             const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * 0.1));
-            combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp, (combatStartPlayer.hp || 0) + heal);
+            combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp!, (combatStartPlayer.hp || 0) + heal);
             addLog('heal', `[혼돈의 심장] 혼돈의 기운 — HP +${heal} 회복!`);
         } else if (roll === 1) {
             const existing = combatStartPlayer.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
@@ -237,7 +267,20 @@ export const applyBattleStartRelics = (player: Player, playerRelics: Relic[], fu
 //   카드가 뜬 시점(같은 explore() 턴)에 게이지가 1회 누적됐으므로 중복 누적을 막기 위해
 //   deps.skipBossGaugeAdvance:true를 전달받으면 mapData를 넘기지 않는다.
 // ─────────────────────────────────────────────────────────────────────────
-export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome, skipBossGaugeAdvance, rng = Math.random }: any) => {
+export const runQuietRollAndCombat = (
+    player: Player,
+    mapData: GameMap,
+    {
+        dispatch, addLog, addStoryLog, getFullStats, commitExploreOutcome,
+        skipBossGaugeAdvance, rng = Math.random,
+    }: Pick<GameActionDeps, 'dispatch' | 'addLog' | 'getFullStats'> & {
+        addStoryLog?: AddStoryLog;
+        commitExploreOutcome: CommitExploreOutcome;
+        /** 같은 탐험 턴에서 이미 게이지를 누적했으면 true (정찰 "짙은 안개" 재호출). */
+        skipBossGaugeAdvance?: boolean;
+        rng?: () => number;
+    },
+) => {
     const playerRelics = player.relics || [];
     const quietChance = getDiscoveryOdds(player, mapData).quietChance;
     const gaugeMapData = skipBossGaugeAdvance ? null : mapData;
@@ -335,7 +378,7 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
     }
 
     const fullStats = getFullStats();
-    commitExploreOutcome('combat', (nextPlayer: any) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog, rng }), gaugeMapData);
+    commitExploreOutcome('combat', (nextPlayer: Player) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog, rng }), gaugeMapData);
     dispatch({ type: AT.SET_ENEMY, payload: mStats });
     dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
@@ -359,15 +402,19 @@ export const runQuietRollAndCombat = (player: Player, mapData: GameMap, { dispat
 // ─────────────────────────────────────────────────────────────────────────
 // 4.5. 발견 체인 체크 — 지역 조합 방문 시 보상 (Discovery Chains)
 // ─────────────────────────────────────────────────────────────────────────
-export const checkDiscoveryChains = (player: Player, loc: any, { dispatch, addLog }: any) => {
+export const checkDiscoveryChains = (
+    player: Player,
+    loc: string,
+    { dispatch, addLog }: Pick<GameActionDeps, 'dispatch' | 'addLog'>,
+) => {
     const chains = BALANCE.DISCOVERY_CHAINS;
     if (!chains) return;
     const visited = new Set([...(player.stats?.visitedMaps || []), loc]);
     const completed = player.stats?.discoveryChains || [];
 
-    chains.forEach((chain: any) => {
+    chains.forEach((chain: DiscoveryChain) => {
         if (completed.includes(chain.id)) return;
-        if (!chain.locations.every((l: any) => visited.has(l))) return;
+        if (!chain.locations.every((l) => visited.has(l))) return;
 
         // 체인 달성!
         const rewardParts = [];

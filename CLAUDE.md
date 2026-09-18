@@ -24,11 +24,15 @@
 | Node.js | — | >=18.0.0 |
 
 > **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
-> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` 1,301건,
-> `as any` 83곳 잔존 (2026-09-17 Wave 5 실측; `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다.
+> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` 819건,
+> `as any` 80곳 잔존 (2026-09-18 Wave 6 실측; `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다.
 > `Player`의 `quests/status/history`는 `QuestProgressState`/`StatusId[]`/`EventHistoryEntry`로 닫혔고,
 > utils 8파일(`aiEventUtils`·`questOperations`·`graveUtils`·`gameUtils`·`adventureGuide`·`expeditionMissionFocus`·
-> `expeditionLedger`·`equipmentUtils`)은 `: any` 0이다).
+> `expeditionLedger`·`equipmentUtils`)은 `: any` 0이다. **주입 경계는 `src/hooks/actionDeps.ts`가 소유한다** —
+> `GameActionDeps`/`CombatActionDeps`/`InventoryActionDeps`로 액션 팩토리 deps를 받고, 컴포넌트의 `actions` prop은
+> `Pick<GameActions, …>`로 필요한 액션만 받는다(`actions?: any` 금지). 세션 타입(`LogEntry`/`GameEvent`/`LiveConfig`)은
+> `src/types/session.ts`, reducers 핸들러는 `Item`/`Player`/`Quest` 도메인 타입을 쓴다(`GameAction.payload: any`만 경계로 남음).
+> systems 로그 문구·상태이상 라벨은 `MSG`(`MSG.STATUS_LABELS`/`MSG.DOT_LABELS`) 소유다).
 > **`src/types/*`의 인덱스 시그니처는 0개, `Relic.val`은 effect 판별 유니온**이다 —
 > `Player`/`PlayerStats`/`PlayerMeta`/`CombatFlags`(B3)에 이어 `Relic`/`Item`/`Monster`/`GameMap`/
 > `Quest`/`Achievement`/`ClassDef`(L)까지 닫혔으므로 `relic.오타`·`enemy.오타`도 컴파일 에러다.
@@ -38,7 +42,8 @@
 > `FullStats`(`statsCalculator.ts`)가 전투 수식의 표준 stats 타입.
 > `src/hooks`·`src/reducers`의 소유자 로컬(`p`/`player`/`updatedPlayer`/`state`)은 `Player`/`GameState`로
 > 정리됐다 — 새 코드도 `Player`/`FullStats`/`GameState`를 명시할 것.
-> 남은 `: any`는 대부분 `deps: any` / `addLog: any` 같은 주입 경계와 컴포넌트 props다.
+> 남은 `: any`는 utils 248·components 173·systems 162·`useGameTestApi` 54(QA 시드, 프로덕션 tree-shaken)에 분포하고,
+> `BalanceConfig`의 `[key: string]: any`(constants.ts)가 미선언 `BALANCE.X`를 `any`로 새게 하는 구조 부채가 남아 있다.
 
 ---
 

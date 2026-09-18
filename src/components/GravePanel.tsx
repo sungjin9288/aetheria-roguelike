@@ -10,25 +10,33 @@ import {
     Sparkles,
     Swords,
 } from 'lucide-react';
-import { collection, getDocs, limit, orderBy, query } from 'firebase/firestore';
+import { collection, getDocs, limit, orderBy, query, type DocumentData, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { db, hasFirebaseConfig } from '../firebase';
 import { APP_ID, BALANCE } from '../data/constants';
 import { isSignatureItem } from '../data/signatureItems.js';
-import { calcInvasionChance, excludeOwnGraves, getGraveRecoveryGroups } from '../utils/graveUtils';
+import { calcInvasionChance, excludeOwnGraves, getGraveRecoveryGroups, type GraveEntry } from '../utils/graveUtils';
 import {
     PRODUCTION_GAME_CAPABILITIES,
     type GameCapabilities,
 } from '../platform/gameCapabilities';
-import type { Player } from '../types/index.js';
+import type { GameActions } from '../hooks/actionDeps';
+import type { GameState } from '../reducers/gameReducer';
+import type { Item, Player } from '../types/index.js';
 
 const GRAVES_LIMIT = 10;
+
+/** 공개 묘비 침공 목록 1건 — Firestore 문서를 GraveEntry 모양으로 파싱한 것. */
+type PublicGraveEntry = GraveEntry;
+
+/** GravePanel이 실제로 호출하는 액션만 좁혀 받는다 (침공/이곳 유해 회수). */
+type GravePanelActions = Pick<GameActions, 'invadeGrave' | 'lootGrave'>;
 
 interface GravePanelProps {
     player: Player;
     /** H5(a): 세션 uid(engine state.uid). 공개 목록에서 내 묘비를 제외하는 유일한 기준. */
     uid?: string | null;
-    grave?: any;
-    actions?: any;
+    grave?: GameState['grave'];
+    actions?: GravePanelActions;
     onOpenMap?: () => void;
     capabilities?: Readonly<GameCapabilities>;
 }
@@ -42,14 +50,14 @@ const GravePanel = ({
     capabilities = PRODUCTION_GAME_CAPABILITIES,
 }: GravePanelProps) => {
     const [view, setView] = useState<'mine' | 'public'>('mine');
-    const [publicGraves, setPublicGraves] = useState<any[]>([]);
+    const [publicGraves, setPublicGraves] = useState<PublicGraveEntry[]>([]);
     const [publicLoaded, setPublicLoaded] = useState(false);
     const [loading, setLoading] = useState(false);
-    const [invadingUid, setInvadingUid] = useState<any>(null);
+    const [invadingUid, setInvadingUid] = useState<string | null | undefined>(null);
 
     const recoveryGroups = getGraveRecoveryGroups(grave, player?.loc);
-    const recoveryGold = recoveryGroups.reduce((sum: number, group: any) => sum + group.gold, 0);
-    const recoveryItems = recoveryGroups.reduce((sum: number, group: any) => sum + group.items.length, 0);
+    const recoveryGold = recoveryGroups.reduce((sum, group) => sum + group.gold, 0);
+    const recoveryItems = recoveryGroups.reduce((sum, group) => sum + group.items.length, 0);
     const playerAtk = player?.atk || 10;
     const today = new Date().toDateString();
     const lastDate = player?.stats?.lastInvadeDate;
@@ -63,8 +71,8 @@ const GravePanel = ({
             const gravesCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'graves');
             const graveQuery = query(gravesCol, orderBy('createdAt', 'desc'), limit(GRAVES_LIMIT));
             const snapshot = await getDocs(graveQuery);
-            const fetched: any[] = [];
-            snapshot.forEach((document: any) => {
+            const fetched: PublicGraveEntry[] = [];
+            snapshot.forEach((document: QueryDocumentSnapshot<DocumentData>) => {
                 fetched.push({ ...document.data(), uid: document.id });
             });
             // H5(a): 내 묘비 제외 — 이전에는 존재하지 않는 player.uid와 비교해 필터가 항상
@@ -85,15 +93,15 @@ const GravePanel = ({
         if (nextView === 'public' && !publicLoaded) void fetchGraves();
     };
 
-    const handleInvade = async (targetGrave: any) => {
+    const handleInvade = async (targetGrave: PublicGraveEntry) => {
         if (!capabilities.publicGraveInvasion || remainingInvades <= 0) return;
         setInvadingUid(targetGrave.uid);
         await actions?.invadeGrave?.(targetGrave);
-        setPublicGraves((current: any[]) => current.filter((entry: any) => entry.uid !== targetGrave.uid));
+        setPublicGraves((current) => current.filter((entry) => entry.uid !== targetGrave.uid));
         setTimeout(() => setInvadingUid(null), 600);
     };
 
-    const tierColor = (item: any) => {
+    const tierColor = (item: Item | null | undefined) => {
         if ((item?.tier || 1) >= 5) return 'text-yellow-200 border-yellow-200/24';
         if ((item?.tier || 1) >= 4) return 'text-fuchsia-200 border-fuchsia-200/22';
         if ((item?.tier || 1) >= 3) return 'text-sky-200 border-sky-200/22';
@@ -165,7 +173,7 @@ const GravePanel = ({
                             </div>
 
                             <div className="space-y-2">
-                                {recoveryGroups.map((group: any) => (
+                                {recoveryGroups.map((group) => (
                                     <article
                                         key={group.loc}
                                         data-testid={`grave-recovery-${group.loc}`}
@@ -202,7 +210,7 @@ const GravePanel = ({
 
                                         {group.items.length > 0 && (
                                             <div className="mt-2 flex flex-wrap gap-1.5">
-                                                {group.items.slice(0, 3).map((item: any, index: number) => (
+                                                {group.items.slice(0, 3).map((item, index) => (
                                                     <span
                                                         key={`${item.id || item.name}-${index}`}
                                                         className={`rounded-md border bg-black/18 px-2 py-1 text-[11px] font-readable ${tierColor(item)}`}
@@ -276,12 +284,12 @@ const GravePanel = ({
                         <div className="py-8 text-center text-[12px] font-readable text-slate-400">지금 침입할 수 있는 유해가 없습니다.</div>
                     )}
 
-                    {publicGraves.map((targetGrave: any) => {
+                    {publicGraves.map((targetGrave) => {
                         const chancePercent = Math.round(calcInvasionChance(playerAtk, targetGrave.guardPower || 10) * 100);
                         const isInvading = invadingUid === targetGrave.uid;
-                        const items = Array.isArray(targetGrave.items) ? targetGrave.items : [];
+                        const items: Item[] = Array.isArray(targetGrave.items) ? targetGrave.items : [];
                         const noItems = items.length === 0;
-                        const signatureItems = items.filter((item: any) => isSignatureItem(item));
+                        const signatureItems = items.filter((item) => isSignatureItem(item));
 
                         return (
                             <article
@@ -320,7 +328,7 @@ const GravePanel = ({
 
                                 {items.length > 0 && (
                                     <div className="mt-2 flex flex-wrap gap-1.5">
-                                        {items.map((item: any, index: number) => (
+                                        {items.map((item, index) => (
                                             <span
                                                 key={`${item.id || item.name}-${index}`}
                                                 data-is-signature={isSignatureItem(item) ? 'true' : 'false'}

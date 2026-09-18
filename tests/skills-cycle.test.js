@@ -1527,9 +1527,10 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 535: cycleSkill signature에서 dir default 0건', async () => {
       const source = await readSrc('src/hooks/gameActions/characterActions.ts');
-      assert.ok(!/cycleSkill:\s*\(dir:\s*any\s*=\s*1\)/.test(source),
+      assert.ok(!/cycleSkill:\s*\(dir:[^)]*=\s*1\)/.test(source),
           'cycleSkill dir default 1 제거');
-      assert.ok(/cycleSkill:\s*\(dir:\s*any\)/.test(source),
+      // Wave 6 X1: dir 파라미터가 number로 닫혔다 (계약은 "default 없는 1-arg" 그대로).
+      assert.ok(/cycleSkill:\s*\(dir:\s*number\)/.test(source),
           'cycleSkill 파라미터 자체는 보존');
   });
 

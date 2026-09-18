@@ -961,13 +961,16 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 415: getDailyDeals 0.9 할인 적용 보존 (cycle 436이 마커 제거)', async () => {
-      const source = await readSrc('src/utils/shopRotation.ts');
-      const fnStart = source.indexOf('export const getDailyDeals');
-      const fnEnd = source.indexOf('export const getWeeklySpecial', fnStart);
-      const fnBlock = source.slice(fnStart, fnEnd);
-      // cycle 436: 마커 제거 — 0.9 할인 multiplier 적용은 보존.
-      assert.ok(/Math\.floor\(item\.price \* 0\.9\)/.test(fnBlock),
-          '0.9 할인 적용 보존');
+      // Wave 6 X3: 소스 정규식(`Math.floor(item.price * 0.9)`) 가드 → 동작 단언.
+      //   seededShuffle 제네릭화로 표현식이 `(item.price ?? 0)`로 바뀌어도 할인 계약은 동일.
+      const { getDailyDeals } = await import('../src/utils/shopRotation.js');
+      const { items } = getDailyDeals(20);
+      assert.ok(items.length > 0, '일일 딜 항목 존재');
+      for (const item of items) {
+          assert.ok(typeof item.originalPrice === 'number', 'originalPrice 보존');
+          assert.equal(item.price, Math.floor(item.originalPrice * 0.9),
+              '0.9 할인 적용 보존');
+      }
   });
 
   test('cycle 415: getWeeklySpecial 동작 보존 (originalPrice / price)', async () => {

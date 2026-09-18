@@ -9,6 +9,8 @@ import { createRewardActions } from './useInventoryActions.rewards';
 import { createEquipmentActions } from './useInventoryActions.equipment';
 import { createEconomyActions } from './useInventoryActions.economy';
 import type { Player } from '../types';
+import type { GraveEntry } from '../utils/graveUtils';
+import type { InventoryActionCtx, InventoryActionDeps } from './actionDeps';
 import { createPremiumActions } from './useInventoryActions.premium';
 import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
 
@@ -25,7 +27,7 @@ export const createInventoryActions = ({
     addLog,
     addStoryLog,
     getFullStats,
-}: any) => {
+}: InventoryActionDeps) => {
     const emitUnlockedTitles = makeEmitTitles(dispatch, addLog);
 
     const syncLevelQuests = (updatedPlayer: Player) => {
@@ -35,7 +37,7 @@ export const createInventoryActions = ({
 
     // PR #4: 도메인별 sub-factory 조합. 공유 클로저 + deps를 ctx로 주입해
     //   각 도메인 파일이 동일 player 참조/헬퍼를 공유 (동작 보존).
-    const ctx = {
+    const ctx: InventoryActionCtx = {
         player,
         gameState,
         dispatch,
@@ -53,17 +55,17 @@ export const createInventoryActions = ({
         ...createEconomyActions(ctx),
         ...createPremiumActions(ctx),
 
-        chooseSkillBranch: (skillName: any, choice: any) => {
+        chooseSkillBranch: (skillName: string, choice: string) => {
             if (player.skillChoices?.[skillName]) {
                 return addLog('warn', MSG.SKILL_BRANCH_ALREADY_CHOSEN(skillName));
             }
-            const branch = CLASSES[player.job]?.skillBranches?.[skillName]?.find((entry: any) => entry.choice === choice);
+            const branch = CLASSES[player.job!]?.skillBranches?.[skillName]?.find((entry) => entry.choice === choice);
             if (!branch) return addLog('error', MSG.SKILL_INVALID_BRANCH);
             dispatch({ type: AT.CHOOSE_SKILL_BRANCH, payload: { skillName, choice } });
             addLog('system', MSG.SKILL_BRANCH_CHOSEN(skillName, branch.label || '선택한 성장'));
         },
 
-        ...(PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion ? { invadeGrave: (targetGrave: any) => {
+        ...(PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion ? { invadeGrave: (targetGrave: GraveEntry) => {
             const today = new Date().toDateString();
             const lastDate = player.stats?.lastInvadeDate;
             const count = lastDate === today ? (player.stats?.dailyInvadeCount || 0) : 0;

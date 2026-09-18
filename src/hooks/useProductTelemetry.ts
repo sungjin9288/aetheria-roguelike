@@ -56,7 +56,9 @@ export const createProductTelemetrySnapshot = (state: GameState): ProductTelemet
         expeditionExplores: asCount(expedition?.explores),
         kills: asCount(player.stats?.kills),
         bossKills: asCount(player.stats?.bossKills),
-        enemyKey: enemy ? String(enemy.id || enemy.baseName || enemy.name || 'enemy') : null,
+        // X1(Wave 6): `enemy.id`는 어떤 스폰 경로도 쓰지 않는 dead read였다 —
+        //   Monster 타입을 state.enemy에 적용하자 컴파일 에러로 드러났다.
+        enemyKey: enemy ? String(enemy.baseName || enemy.name || 'enemy') : null,
         enemyIsBoss: enemy?.isBoss === true,
         combatTurn: asCount(state?.combatTurn),
         combatReceiptKey: combatReceipt?.key ? String(combatReceipt.key) : null,

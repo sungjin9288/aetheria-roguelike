@@ -12,12 +12,14 @@ import {
 import { db } from '../firebase';
 import { APP_ID } from '../data/constants';
 import { AT } from '../reducers/actionTypes';
+import type { Dispatch } from 'react';
+import type { GameAction, GameState } from '../reducers/gameReducer';
 
 const LEADERBOARD_PAGE_SIZE = 50;
 
 interface UseLiveConfigAndLeaderboardOptions {
-    bootStage: any;
-    dispatch: any;
+    bootStage: GameState['bootStage'];
+    dispatch: Dispatch<GameAction>;
     mockMode: boolean;
 }
 
@@ -42,11 +44,11 @@ export const useLiveConfigAndLeaderboard = ({
         if (bootStage !== 'config') return;
 
         const configDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
-        const unsubConfig = onSnapshot(configDocRef, (snap: any) => {
+        const unsubConfig = onSnapshot(configDocRef, (snap) => {
             if (snap.exists() && snap.data().config) {
                 dispatch({ type: AT.SET_LIVE_CONFIG, payload: snap.data().config });
             }
-        }, (e: any) => {
+        }, (e: unknown) => {
             console.warn('Live config subscribe failed', e);
         });
 
@@ -55,7 +57,7 @@ export const useLiveConfigAndLeaderboard = ({
                 const lbRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard');
                 const q = query(lbRef, orderBy('totalKills', 'desc'), limit(LEADERBOARD_PAGE_SIZE));
                 const snap = await getDocs(q);
-                const data = snap.docs.map((d: any) => d.data());
+                const data = snap.docs.map((d) => d.data());
                 dispatch({ type: AT.SET_LEADERBOARD, payload: data });
             } catch (e) {
                 console.warn('Leaderboard fetch failed', e);

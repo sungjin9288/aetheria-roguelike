@@ -1331,8 +1331,12 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   });
 
   test('cycle 541: 정합성 가드 — 4 callsite 보존', async () => {
+      // Wave 6 X3-A: entry.quest.goal이 `Quest['goal']`(optional number)로 닫히면서
+      //   getQuestProgressPercent의 goal 파라미터가 `number`(non-optional)를 요구한다 —
+      //   호출부의 `!`는 실제 퀘스트 데이터엔 항상 goal이 있다는 순수 타입 단언(런타임 영향 0)
+      //   이라 callsite 보존이라는 본 테스트의 취지는 그대로다.
       const qt = await readSrc('src/components/tabs/QuestTab.tsx');
-      assert.ok(/getQuestProgressPercent\(entry\.progress,\s*entry\.quest\.goal\)/.test(qt),
+      assert.ok(/getQuestProgressPercent\(entry\.progress,\s*entry\.quest\.goal!?\)/.test(qt),
           'QuestTab getQuestProgressPercent callsite 보존');
       assert.ok(/getQuestProgressText\(entry\.quest,\s*entry\.progress\)/.test(qt),
           'QuestTab getQuestProgressText callsite 보존');
@@ -1340,7 +1344,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       const qb = await readSrc('src/components/tabs/QuestBoardPanel.tsx');
       assert.ok(/getQuestProgressText\(entry\.quest,\s*entry\.progress\)/.test(qb),
           'QuestBoardPanel getQuestProgressText callsite 보존');
-      assert.ok(/getQuestProgressPercent\(entry\.progress,\s*entry\.quest\.goal\)/.test(qb),
+      assert.ok(/getQuestProgressPercent\(entry\.progress,\s*entry\.quest\.goal!?\)/.test(qb),
           'QuestBoardPanel getQuestProgressPercent callsite 보존');
   });
 

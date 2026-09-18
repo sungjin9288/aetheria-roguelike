@@ -3,6 +3,7 @@ import SignalBadge from './SignalBadge';
 import MonsterIcon from './icons/MonsterIcon';
 import { useHitFlash } from '../hooks/useHitFlash';
 import { getExpeditionHudChips } from '../utils/expeditionHud';
+import { MSG } from '../data/messages.js';
 import type { FullStats, Player, Monster } from '../types/index.js';
 
 const METER_THEME: Record<string, { border: string; fill: string; label: string }> = {
@@ -243,11 +244,8 @@ const StatusBar = ({
                     나오고 스크롤되어 사라져 플레이어가 현재 디버프 상태를 알기 어려웠음.
                     rose 톤(위험)으로 단일화 — 모든 5종이 player에 부정적이라 통합. */}
                 {Array.isArray(player.status) && player.status.length > 0 && (() => {
-                  const DEBUFF_LABELS: Record<string, string> = {
-                    bleed: '출혈', burn: '화상', poison: '중독',
-                    freeze: '빙결', stun: '기절', curse: '저주',
-                    blind: '실명', fear: '공포',
-                  };
+                  // 2026-09 Wave 6 X2: 인라인 DEBUFF_LABELS 제거 — MSG.STATUS_LABELS(공유 테이블) 재사용.
+                  const DEBUFF_LABELS = MSG.STATUS_LABELS as Record<string, string>;
                   const debuffs = player.status.filter((s: any) => DEBUFF_LABELS[s as string]);
                   if (debuffs.length === 0) return null;
                   const headLabel = DEBUFF_LABELS[debuffs[0] as string] || debuffs[0];

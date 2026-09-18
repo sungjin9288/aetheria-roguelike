@@ -15,7 +15,7 @@ export const relicEffectMethods: any = {
 
         const nextMp = Math.min(this.getEffectiveMaxMp(player, relics), (player.mp || 0) + critMpRelic.val);
         if (nextMp > (player.mp || 0)) {
-            logs.push({ type: 'event', text: `[피의 갈증] +${nextMp - (player.mp || 0)} MP` });
+            logs.push({ type: 'event', text: MSG.RELIC_CRIT_MP_RESTORE(nextMp - (player.mp || 0)) });
         }
         return { ...player, mp: nextMp };
     },
@@ -57,9 +57,9 @@ export const relicEffectMethods: any = {
                 if (healOnSaveSyn) {
                     const bonus = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healOnSaveSyn.bonus.healOnSave);
                     nextHp = Math.min(player.maxHp || BALANCE.DEFAULT_MAX_HP, nextHp + bonus);
-                    logs.push({ type: 'heal', text: `[난공불락] 부활 시 +${bonus} HP 회복!` });
+                    logs.push({ type: 'heal', text: MSG.RELIC_HEAL_ON_SAVE_PROC(bonus) });
                 }
-                const reviveMsg = reviveUsedCount > 0 ? `[절대 불사] ${reviveUsedCount + 1}회 부활!` : '[불사의 의지] 치명상을 버텼습니다!';
+                const reviveMsg = reviveUsedCount > 0 ? MSG.RELIC_DEATH_SAVE_REVIVE(reviveUsedCount + 1) : MSG.RELIC_DEATH_SAVE_FIRST;
                 logs.push({ type: 'event', text: reviveMsg });
             } else {
                 const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
@@ -67,7 +67,7 @@ export const relicEffectMethods: any = {
                     nextHp = 1;
                     flags.voidHeartUsed = true;
                     flags.voidHeartArmed = true;
-                    logs.push({ type: 'event', text: '[허공의 심장] 죽음을 거부했습니다. 다음 공격이 강화됩니다!' });
+                    logs.push({ type: 'event', text: MSG.RELIC_VOID_HEART_REVIVE });
                 } else {
                     // cycle 186: 'reviveTokens' (PremiumShop revive) — HP 0 도달 시 token 1개 소비해 즉시 부활.
                     //   spec: 'HP/MP 50% 회복 후 즉시 부활'. token 음수 가드.
@@ -77,7 +77,7 @@ export const relicEffectMethods: any = {
                         nextHp = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * 0.5);
                         // reviveTokens 소비는 updatedPlayer 합류 시점에 처리 (return 직전).
                         flags.reviveTokenUsed = true;
-                        logs.push({ type: 'event', text: '[에테르 부활석] 저장된 에테르가 생명과 기력을 절반까지 되돌렸습니다.' });
+                        logs.push({ type: 'event', text: MSG.RELIC_REVIVE_TOKEN_USED });
                     } else {
                     // cycle 157: 'phoenix_revive' (불사조의 깃털) — HP 0 도달 시 1회 부활 (HP healRatio% 회복).
                     // cycle 162: atkBuff/duration tempBuff 적용 추가 — 부활 직후 N턴 동안 ATK 증폭.
@@ -96,7 +96,7 @@ export const relicEffectMethods: any = {
                                 name: 'phoenix_revive',
                             };
                         }
-                        logs.push({ type: 'event', text: `[불사조의 깃털] 재의 잿더미에서 부활! +${nextHp} HP, ATK +${Math.round(atkBuff * 100)}% (${duration}턴)` });
+                        logs.push({ type: 'event', text: MSG.RELIC_PHOENIX_REVIVE(nextHp, Math.round(atkBuff * 100), duration) });
                     } else {
                         // 2026-07 — 에테르 거울: revive 노드(에센스 소비 영구 업그레이드) — 런당 1회,
                         //   위 모든 유물/토큰 부활 수단이 없거나 이미 소진됐을 때의 마지막 안전망.
@@ -178,12 +178,12 @@ export const relicEffectMethods: any = {
         // cycle 236: fixedDmg fallback 추가 — entropy_god는 fixedDmg key 사용.
         const damage = brandSyn?.bonus.damage ?? brandSyn?.bonus.fixedDmg ?? tickRelic?.val?.damage ?? 0;
         const interval = brandSyn?.bonus.interval ?? tickRelic?.val?.interval ?? 0;
-        const label = brandSyn?.bonus.effect === 'entropy_god' ? '엔트로피의 신' : (brandSyn ? '엔트로피 낙인' : '엔트로피 엔진');
+        const label = brandSyn?.bonus.effect === 'entropy_god' ? MSG.ENTROPY_LABEL_GOD : (brandSyn ? MSG.ENTROPY_LABEL_BRAND : MSG.ENTROPY_LABEL_ENGINE);
 
         if (interval > 0 && damage > 0 && turnCount % interval === 0 && (enemy.hp ?? 0) > 0) {
             const fixedDmg = Math.max(1, Math.floor((enemy.maxHp || enemy.hp || 1) * damage));
             updatedEnemy = { ...enemy, hp: Math.max(0, (enemy.hp ?? 0) - fixedDmg) };
-            logs.push({ type: 'event', text: `[${label}] 시간 무게 — ${enemy.name} 고정 피해 ${fixedDmg}!` });
+            logs.push({ type: 'event', text: MSG.ENTROPY_TICK_PROC(label, enemy.name, fixedDmg) });
         }
 
         return { player: updatedPlayer, enemy: updatedEnemy, logs };

@@ -64,8 +64,19 @@ export const getWeeklyMissionProgress = (protocol: WeeklyProtocol, missionId: st
     return 0;
 };
 
+/**
+ * `BALANCE.WEEKLY_MISSIONS` 3건의 실측 형태 — `BalanceConfig`가 인덱스 시그니처로 `any`를
+ * 반환하는 필드라 여기서만 좁혀 캐스팅한다(constants.ts 자체는 건드리지 않는다).
+ */
+interface WeeklyMissionDef {
+    id: string;
+    target: number;
+    reward: { gold: number; premiumCurrency?: number };
+    label: string;
+}
+
 export const getWeeklyMissionRows = (protocol: WeeklyProtocol) => (
-    BALANCE.WEEKLY_MISSIONS.map((mission: any) => {
+    (BALANCE.WEEKLY_MISSIONS as WeeklyMissionDef[]).map((mission) => {
         const current = getWeeklyMissionProgress(protocol, mission.id);
         return {
             ...mission,

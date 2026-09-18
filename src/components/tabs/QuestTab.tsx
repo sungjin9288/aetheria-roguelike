@@ -13,9 +13,11 @@ import {
     getCurrentWeeklyProtocol,
     getWeeklyMissionRows,
 } from '../../utils/protocolCycle';
+import type { GameActions } from '../../hooks/actionDeps';
+import type { DailyProtocolMissionReward, Player, Quest, QuestReward } from '../../types/index.js';
 
 // ── 유틸 ──────────────────────────────────────────────
-const getQuestObjectiveText = (quest: any) => (
+const getQuestObjectiveText = (quest: Quest) => (
     quest?.objective
         ? quest.objective
         : (
@@ -28,19 +30,27 @@ const getQuestObjectiveText = (quest: any) => (
 // cycle 541: progress / goal defaults 제거 — QuestTab/QuestBoardPanel 양쪽
 //   helper duplication. 호출자가 모두 명시 전달이라 default 도달 불가.
 //   default 청소 메가 시리즈 36번째 cross-file 4-default batch.
-const getQuestProgressText = (quest: any, progress: any) => (
+const getQuestProgressText = (quest: Quest, progress: number) => (
     quest?.target === 'level'
         ? `레벨 ${progress}/${quest.goal}`
         : `${progress}/${quest.goal}`
 );
 
-const getQuestProgressPercent = (progress: any, goal: any) =>
+const getQuestProgressPercent = (progress: number, goal: number) =>
     Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
+
+/** `QuestRewardChips`가 표시하는 보상 강조색 — 완료/현상수배/일반 진행 3종. */
+type QuestRewardAccent = 'green' | 'amber' | 'blue';
+
+interface QuestRewardChipsProps {
+    reward: QuestReward;
+    accent: QuestRewardAccent;
+}
 
 // cycle 313: export 제거 — QuestTab 내부 1회 사용만, 외부 import 0건.
 // cycle 429: default accent 값 제거 — 호출자가 ternary로 명시 전달이라 default
 //   도달 불가 (cycle 428 QuestBoardPanel RewardChips paired completion).
-const QuestRewardChips = ({ reward, accent }: any) => {
+const QuestRewardChips = ({ reward, accent }: QuestRewardChipsProps) => {
     const rewards = formatRewardParts(reward);
     if (!rewards.length) return null;
     const accentClass = accent === 'green'
@@ -50,7 +60,7 @@ const QuestRewardChips = ({ reward, accent }: any) => {
             : 'border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue';
     return (
         <div className="mt-2 flex flex-wrap gap-1.5 text-xs font-fira">
-            {rewards.map((entry: any) => (
+            {rewards.map((entry) => (
                 <span key={`${accent}_${entry}`} className={`rounded border px-2 py-1 ${accentClass}`}>{entry}</span>
             ))}
         </div>
@@ -64,27 +74,42 @@ const QuestRewardChips = ({ reward, accent }: any) => {
  */
 const DAILY_TYPE_LABEL: Record<string, string> = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
 
-const getDailyRewardLabel = (reward: any) => {
+/**
+ * `BALANCE.DISCOVERY_CHAINS`(4건)의 실측 형태 — `BalanceConfig`가 인덱스 시그니처로 `any`를
+ * 반환하는 필드라 여기서만 좁혀 캐스팅한다(constants.ts 자체는 건드리지 않는다).
+ */
+interface DiscoveryChainDef {
+    id: string;
+    label: string;
+    locations: string[];
+    reward: QuestReward;
+    desc: string;
+}
+
+const getDailyRewardLabel = (reward: DailyProtocolMissionReward) => {
     if (reward?.essence) return `에센스 +${reward.essence}`;
     if (reward?.item) return reward.item;
     if (reward?.relicShard) return '유물 파편 +1';
     return '';
 };
 
+/** QuestTab이 실제로 호출하는 액션만 좁힌 부분집합. */
+type QuestTabActions = Pick<GameActions, 'setGameState' | 'completeQuest' | 'claimWeeklyMission'>;
+
 // cycle 481: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 토글 상태 + 33 ternary + summary 분기 일괄 정리
 //   (cycle 472-479 paired 9사이클 cascade의 마지막 panel).
 interface QuestTabProps {
-    player: any;
-    actions?: any;
+    player: Player;
+    actions?: QuestTabActions;
     isInSafeZone?: boolean;
 }
 
 const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
     const traitProfile = getTraitProfile(player, { maxHp: player.maxHp, maxMp: player.maxMp });
-    const activeQuestEntries = getActiveQuestEntries(player).map((entry: any, index: any) => {
+    const activeQuestEntries = getActiveQuestEntries(player).map((entry, index) => {
         const resonance = getTraitQuestResonance(entry.quest, traitProfile);
-        const progressPercent = getQuestProgressPercent(entry.progress, entry.quest.goal);
+        const progressPercent = getQuestProgressPercent(entry.progress, entry.quest.goal!);
         return {
             ...entry,
             resonance,
@@ -92,11 +117,11 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
             originalIndex: index,
         };
     });
-    const claimableQuestCount = activeQuestEntries.filter((e: any) => e.isComplete).length;
+    const claimableQuestCount = activeQuestEntries.filter((e) => e.isComplete).length;
     const chainJournalEntries = buildChainJournal(player.eventChainProgress);
     const dp = getCurrentDailyProtocol(player, new Date());
     const dpMissions = dp.missions;
-    const dpDoneCount = dpMissions.filter((m: any) => m.done).length;
+    const dpDoneCount = dpMissions.filter((m) => m.done).length;
 
     // 주간 임무 진행도
     const weeklyProtocol = getCurrentWeeklyProtocol(player.weeklyProtocol, new Date());
@@ -148,7 +173,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                             )}
                         </div>
                         <div className="flex flex-col gap-1.5">
-                            {dpMissions.map((mission: any) => {
+                            {dpMissions.map((mission) => {
                                 const pct = Math.min(100, (mission.progress / Math.max(1, mission.goal)) * 100);
                                 const rewardLabel = getDailyRewardLabel(mission.reward);
                                 return (
@@ -188,7 +213,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                             </span>
                         </div>
                         <div className="flex flex-col gap-1.5">
-                            {chainJournalEntries.map((entry: any) => {
+                            {chainJournalEntries.map((entry) => {
                                 const pct = Math.min(100, (entry.currentStep / Math.max(1, entry.totalSteps)) * 100);
                                 return (
                                     <div key={entry.chainId} className="rounded-[0.9rem] border border-white/8 bg-black/18 px-2.5 py-1.5">
@@ -211,7 +236,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
 
                 {/* 발견 체인 섹션 */}
                 {(() => {
-                    const chains = BALANCE.DISCOVERY_CHAINS || [];
+                    const chains = (BALANCE.DISCOVERY_CHAINS as DiscoveryChainDef[]) || [];
                     if (!chains.length) return null;
                     const visitedMaps = new Set(player.stats?.visitedMaps || []);
                     const completedChains = player.stats?.discoveryChains || [];
@@ -224,9 +249,9 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                 </span>
                             </div>
                             <div className="flex flex-col gap-1.5">
-                                {chains.map((chain: any) => {
+                                {chains.map((chain) => {
                                     const done = completedChains.includes(chain.id);
-                                    const visitedCount = chain.locations.filter((l: any) => visitedMaps.has(l)).length;
+                                    const visitedCount = chain.locations.filter((l) => visitedMaps.has(l)).length;
                                     const pct = Math.min(100, (visitedCount / chain.locations.length) * 100);
                                     return (
                                         <div key={chain.id} className={`rounded-[0.9rem] border px-2.5 py-1.5 ${done ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : 'border-white/8 bg-black/18'}`}>
@@ -256,12 +281,12 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                     <div className="rounded-[1rem] border border-[#d5b180]/20 bg-[#d5b180]/6 mb-3 px-3 py-2.5">
                         <div className="flex items-center justify-between mb-2">
                             <span className="text-[#f6e7c8] text-xs font-readable">주간 임무</span>
-                            <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${weeklyMissions.every((m: any) => m.claimed) ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8]'}`}>
-                                {weeklyMissions.filter((m: any) => m.claimed).length}/{weeklyMissions.length}
+                            <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${weeklyMissions.every((m) => m.claimed) ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8]'}`}>
+                                {weeklyMissions.filter((m) => m.claimed).length}/{weeklyMissions.length}
                             </span>
                         </div>
                         <div className="flex flex-col gap-1.5">
-                            {weeklyMissions.map((mission: any) => {
+                            {weeklyMissions.map((mission) => {
                                 const pct = Math.min(100, (mission.current / Math.max(1, mission.target)) * 100);
                                 return (
                                     <div
@@ -274,7 +299,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                             </span>
                                             {mission.done && !mission.claimed ? (
                                                 <button
-                                                    onClick={() => actions.claimWeeklyMission?.(mission.id)}
+                                                    onClick={() => actions?.claimWeeklyMission?.(mission.id)}
                                                     className="text-[11px] font-fira font-bold text-[#f6e7c8] bg-[#d5b180]/18 border border-[#d5b180]/30 rounded-full px-2 py-0.5 hover:bg-[#d5b180]/28 transition-colors"
                                                 >
                                                     수령
@@ -299,7 +324,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                 )}
 
                 {activeQuestEntries.length > 0 ? (
-                    activeQuestEntries.map((entry: any, i: any) => (
+                    activeQuestEntries.map((entry, i) => (
                         <Motion.div
                             initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                             key={entry.id}
@@ -328,7 +353,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                     {entry.resonance.summary && (
                                         <div className="mt-2 text-sm font-fira text-[#d9d0f3]/72">{entry.resonance.summary}</div>
                                     )}
-                                    <QuestRewardChips reward={entry.quest.reward} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} />
+                                    <QuestRewardChips reward={entry.quest.reward ?? {}} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} />
                                     <div className="mt-3">
                                         <div className="mb-1 flex justify-between text-xs font-fira">
                                             <span className={entry.isComplete ? 'text-emerald-100' : 'text-slate-300/74'}>{getQuestProgressText(entry.quest, entry.progress)}</span>
@@ -343,7 +368,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                     </div>
                                 </div>
                                 {entry.isComplete ? (
-                                    <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className="bg-emerald-300/12 hover:bg-emerald-300/18 text-emerald-100 font-bold rounded-full border border-emerald-300/24 shrink-0 min-h-[40px] px-4 py-2 text-sm">
+                                    <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions?.completeQuest(entry.id)} className="bg-emerald-300/12 hover:bg-emerald-300/18 text-emerald-100 font-bold rounded-full border border-emerald-300/24 shrink-0 min-h-[40px] px-4 py-2 text-sm">
                                         수령
                                     </Motion.button>
                                 ) : (

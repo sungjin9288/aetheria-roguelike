@@ -3,8 +3,12 @@ import { hasDedicatedSignatureArt } from '../data/signatureItems.js';
 import { MSG } from '../data/messages.js';
 import { AT } from '../reducers/actionTypes.js';
 import { SEASON_XP } from '../data/seasonPass.js';
+import type { Dispatch } from 'react';
+import type { CodexCategory, Item, Player } from '../types';
+import type { GameAction } from '../reducers/gameReducer';
 
-const CODEX_BUCKET_BY_TYPE: any = Object.freeze({
+/** 장비 타입 → 도감 버킷. 나머지 타입(소모품/소재 등)은 도감 자동 등록 대상이 아니다. */
+const CODEX_BUCKET_BY_TYPE: Readonly<Record<string, CodexCategory>> = Object.freeze({
     weapon: 'weapons',
     shield: 'shields',
     armor: 'armors',
@@ -24,10 +28,11 @@ const CODEX_BUCKET_BY_TYPE: any = Object.freeze({
 // cycle 614: inv default [] 제거 — explicit default-elimination pattern
 //   (cycle 608-613에 이은 6번째 적용). caller에 || [] defensive guard 명시
 //   추가 후 default unreachable.
-const getSignatureItemNames = (inv: any) => {
-    const names = [];
+const getSignatureItemNames = (inv: Item[]) => {
+    const names: string[] = [];
     for (const entry of inv) {
-        if (entry && hasDedicatedSignatureArt(entry)) {
+        // hasDedicatedSignatureArt는 레지스트리를 이름으로 조회하므로 name 없는 항목은 통과 못 한다.
+        if (entry?.name && hasDedicatedSignatureArt(entry)) {
             names.push(entry.name);
         }
     }
@@ -37,18 +42,22 @@ const getSignatureItemNames = (inv: any) => {
 // cycle 563: dispatch / codex defaults 제거 — 1 production caller (GameRoot
 //   :32) 3 args 명시 전달 (engine.dispatch, engine.player?.stats?.codex)이라
 //   두 default 모두 도달 불가. test caller 0건. 청소 메가 시리즈 56번째.
-export const useLegendaryDropDetector = (inv: any, dispatch: any, codex: any) => {
-    const seenRef = useRef<any>(null);
-    const queueRef = useRef<any[]>([]);
+export const useLegendaryDropDetector = (
+    inv: Item[] | undefined,
+    dispatch: Dispatch<GameAction>,
+    codex: NonNullable<Player['stats']>['codex'],
+) => {
+    const seenRef = useRef<Set<string> | null>(null);
+    const queueRef = useRef<Item[]>([]);
     // cycle 208: codex prop을 ref로 받아 effect deps 미포함 (re-trigger 방지).
     //   dispatch 시점에 latest codex로 alreadyInCodex 체크 → SEASON_XP 중복 award 가드.
     //   ref 갱신은 effect 내부에서 (render 단계 직접 mutation은 react-hooks/refs 룰 위반).
-    const codexRef = useRef<any>(codex);
+    const codexRef = useRef(codex);
     useEffect(() => { codexRef.current = codex; }, [codex]);
-    const [currentDrop, setCurrentDrop] = useState<any>(null);
+    const [currentDrop, setCurrentDrop] = useState<Item | null>(null);
 
     const dismiss = useCallback(() => {
-        setCurrentDrop((prev: any) => {
+        setCurrentDrop((prev) => {
             if (!prev) return null;
             const next = queueRef.current.shift() || null;
             return next;
@@ -68,7 +77,7 @@ export const useLegendaryDropDetector = (inv: any, dispatch: any, codex: any) =>
             return;
         }
 
-        const newlySeen = signatureNames.filter((name: any) => !seenRef.current.has(name));
+        const newlySeen = signatureNames.filter((name) => !seenRef.current!.has(name));
         if (newlySeen.length === 0) return;
 
         for (const name of newlySeen) {
@@ -83,8 +92,8 @@ export const useLegendaryDropDetector = (inv: any, dispatch: any, codex: any) =>
         //   codexRef로 'alreadyInCodex' 체크 → combatVictory가 먼저 처리한 경우 중복 award 방지.
         if (dispatch) {
             for (const name of newlySeen) {
-                const item = (inv || []).find((entry: any) => entry?.name === name);
-                const bucket = CODEX_BUCKET_BY_TYPE[item?.type];
+                const item = (inv || []).find((entry) => entry?.name === name);
+                const bucket = CODEX_BUCKET_BY_TYPE[String(item?.type)];
                 if (bucket) {
                     const alreadyInCodex = Boolean(codexRef.current?.[bucket]?.[name]);
                     dispatch({ type: AT.UPDATE_CODEX, payload: { category: bucket, name } });
@@ -103,14 +112,14 @@ export const useLegendaryDropDetector = (inv: any, dispatch: any, codex: any) =>
             }
         }
 
-        const firstItem = (inv || []).find((entry: any) => entry?.name === newlySeen[0] && hasDedicatedSignatureArt(entry));
+        const firstItem = (inv || []).find((entry) => entry?.name === newlySeen[0] && hasDedicatedSignatureArt(entry));
         if (!firstItem) return;
 
-        setCurrentDrop((prev: any) => {
+        setCurrentDrop((prev) => {
             if (!prev) return firstItem;
             // 이미 표시중이면 큐에 추가
             for (const name of newlySeen.slice(1)) {
-                const queuedItem = (inv || []).find((entry: any) => entry?.name === name && hasDedicatedSignatureArt(entry));
+                const queuedItem = (inv || []).find((entry) => entry?.name === name && hasDedicatedSignatureArt(entry));
                 if (queuedItem) queueRef.current.push(queuedItem);
             }
             return prev;
