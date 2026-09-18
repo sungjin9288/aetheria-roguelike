@@ -149,6 +149,15 @@ interface ErrorEventTarget {
     removeEventListener(name: string, listener: (event: unknown) => void): void;
 }
 
+/**
+ * `window`의 `error`/`unhandledrejection` 리스너가 받는 값은 실제로는
+ * `ErrorEvent`/`PromiseRejectionEvent`이지만, 이 모듈은 DOM lib에 의존하지 않고
+ * `unknown`으로만 받는다 — 필드 존재 여부를 `in`으로 좁혀 안전하게 읽는다.
+ */
+const hasField = <K extends PropertyKey>(value: unknown, field: K): value is Record<K, unknown> => (
+    typeof value === 'object' && value !== null && field in value
+);
+
 export const bindGlobalErrorReporter = ({
     target,
     context,
@@ -163,16 +172,16 @@ export const bindGlobalErrorReporter = ({
     const onWindowError = (event: unknown) => reporter.capture(createSanitizedErrorReport({
         code: 'window_error',
         source: 'window_error',
-        cause: (event as any)?.error,
-        filename: (event as any)?.filename,
-        line: (event as any)?.lineno,
-        column: (event as any)?.colno,
+        cause: hasField(event, 'error') ? event.error : undefined,
+        filename: hasField(event, 'filename') ? event.filename : undefined,
+        line: hasField(event, 'lineno') ? event.lineno : undefined,
+        column: hasField(event, 'colno') ? event.colno : undefined,
         knownScriptFilenames,
     }, context));
     const onUnhandledRejection = (event: unknown) => reporter.capture(createSanitizedErrorReport({
         code: 'unhandled_rejection',
         source: 'unhandled_rejection',
-        cause: (event as any)?.reason,
+        cause: hasField(event, 'reason') ? event.reason : undefined,
         knownScriptFilenames,
     }, context));
     target.addEventListener('error', onWindowError);

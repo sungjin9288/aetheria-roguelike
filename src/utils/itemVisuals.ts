@@ -1,4 +1,4 @@
-import type { Item } from '../types/index.js';
+import type { Item, ItemType, ItemDatabase, ItemPrefixDef, ItemSetDef, ItemRecipeDef } from '../types/index.js';
 import { ITEMS } from '../data/items.js';
 import signatureRegistrySource from '../data/signatureRegistry.json' with { type: 'json' };
 import equipmentArtManifest from '../data/equipmentArtManifest.json' with { type: 'json' };
@@ -8,15 +8,48 @@ import { isFocusOffhand, isShield, isTwoHandWeapon, isWeapon, isMagicWeapon } fr
 // slice 26: 장비 아이템별 고유 아트 매니페스트 — generate_equipment_item_art.py가
 //   family 실루엣 + elem/tier 톤 리컬러로 229종 전수 생성. family 공유 그림
 //   ('수련생의 검' == '강철 롱소드') 문제 해소. signature보다는 후순위.
+//   `entries`는 resolveJsonModule 추론으로도 이미 `Record<string, string>` 호환 — 캐스트 불필요.
 const AUTO_EQUIPMENT_ART_BY_NAME: Record<string, string> = Object.freeze(
-    (equipmentArtManifest as any).entries || {}
+    equipmentArtManifest.entries || {}
 );
 
 // slice 27: 비장비(소모품/재료) 아이템별 고유 아트 — 물약 14종이 전부 같은
 //   빨간 potion.png(마나 물약도 빨간 병)이던 문제 해소. 소모품은 type 기반
 //   톤(hp 적/mp 청/cure 녹/buff 금), 재료는 self-jitter 변주.
 const AUTO_NONEQUIP_ART_BY_NAME: Record<string, string> = Object.freeze(
-    (consumableArtManifest as any).entries || {}
+    consumableArtManifest.entries || {}
+);
+
+// cycle 58 phase 4: `ITEMS: ItemDatabase`는 index signature가 없어 `Object.values(ITEMS)`가
+//   (인덱스 시그니처 없는 타입엔 index-agnostic 오버로드가 선택돼 배열 원소가 느슨해진다)
+//   느슨한 타입으로 추론된다 — 실제 값의 union으로 명시해 `.flat()` 결과가 진짜 카탈로그 엔트리
+//   유니온(Item | 접두사/세트/레시피 정의)으로 좁혀지게 한다. weapons/armors/consumables/
+//   materials 외에 prefixes/sets/recipes도 포함 — cycle 424가 이 전체 iteration에 의존한다
+//   (recipes 등 `type` 없는 엔트리는 `EXACT_ICON_CATEGORY_BY_TYPE` lookup miss → 'misc' fallback).
+type CatalogEntry = Item | ItemPrefixDef | ItemSetDef | ItemRecipeDef;
+const ALL_CATALOG_ENTRIES: CatalogEntry[] = (
+    Object.values(ITEMS) as Array<ItemDatabase[keyof ItemDatabase]>
+).flat();
+
+/** 카탈로그 엔트리 4종 중 `name`이 있는 것만(sets는 없음) 안전하게 읽는다. */
+const catalogEntryName = (entry: CatalogEntry): string | undefined => (
+    'name' in entry ? entry.name : undefined
+);
+/** 카탈로그 엔트리 4종 중 `type`이 있는 것만(sets/recipes는 없음) 안전하게 읽는다. */
+const catalogEntryType = (entry: CatalogEntry): string | undefined => (
+    'type' in entry ? entry.type : undefined
+);
+
+const KNOWN_ITEM_TYPES = new Set<string>(['weapon', 'armor', 'shield', 'hp', 'mp', 'cure', 'buff', 'mat', 'key']);
+const isKnownItemType = (value: string | undefined): value is ItemType => (
+    typeof value === 'string' && KNOWN_ITEM_TYPES.has(value)
+);
+/** name과 실제 `ItemType`을 모두 갖춘 엔트리만 — weapons/armors/consumables/materials가
+ *  전부 여기 해당하고, prefixes는 `type`이 있어도 `ItemType`이 아닌 값('all')이 섞여 있어
+ *  대부분 걸러진다(우연히 'weapon'/'armor'와 값이 같은 접두사 몇 개는 구조적으로 `Item`과
+ *  호환이라 그대로 통과해도 무해 — 실제 아이템 이름과 겹치지 않아 lookup에서 안 쓰인다). */
+const isTypedCatalogItem = (entry: CatalogEntry): entry is Item & { name: string } => (
+    Boolean(catalogEntryName(entry)) && isKnownItemType(catalogEntryType(entry))
 );
 
 // Signature item sprite overrides (Tier S 고유 아트). family/SPECIAL fallback보다 우선.
@@ -113,16 +146,16 @@ const EXACT_ICON_CATEGORY_BY_TYPE: Record<string, string> = {
 const buildExactItemIconKeys = () => {
     const counters: Record<string, number> = {};
     const exactKeys: Record<string, string> = {};
-    const allItems = (Object.values(ITEMS).flat() as any[]).filter(Boolean);
 
-    for (const item of allItems) {
-        if (!item?.name) continue;
-        if (SPECIAL_ITEM_ICON_KEYS[item.name as string]) continue;
-        if (exactKeys[item.name]) continue;
+    for (const item of ALL_CATALOG_ENTRIES) {
+        const name = catalogEntryName(item);
+        if (!name) continue;
+        if (SPECIAL_ITEM_ICON_KEYS[name]) continue;
+        if (exactKeys[name]) continue;
 
-        const category = EXACT_ICON_CATEGORY_BY_TYPE[item.type] || 'misc';
+        const category = EXACT_ICON_CATEGORY_BY_TYPE[catalogEntryType(item) ?? ''] || 'misc';
         counters[category] = (counters[category] || 0) + 1;
-        exactKeys[item.name] = `item-${category}-${String(counters[category]).padStart(3, '0')}`;
+        exactKeys[name] = `item-${category}-${String(counters[category]).padStart(3, '0')}`;
     }
 
     return exactKeys;
@@ -304,11 +337,11 @@ const getMaterialVisualKey = (item: Item | null | undefined) => {
     return 'material';
 };
 
-const TYPED_CATALOG_ITEM_BY_NAME: Record<string, any> = Object.freeze(
+const TYPED_CATALOG_ITEM_BY_NAME: Record<string, Item> = Object.freeze(
     Object.fromEntries(
-        (Object.values(ITEMS).flat() as any[])
-            .filter((item) => item?.name && item?.type)
-            .map((item) => [item.name, item])
+        ALL_CATALOG_ENTRIES
+            .filter(isTypedCatalogItem)
+            .map((item) => [item.name, item] as const)
     )
 );
 
@@ -392,7 +425,9 @@ export const getNonEquipmentIllustrationFamilyKey = (item: Item | null | undefin
     if (!visualItem || ['weapon', 'armor', 'shield'].includes(visualItem.type as string)) return null;
     if (visualItem.type === 'hp' || visualItem.type === 'mp' || visualItem.type === 'cure' || visualItem.type === 'buff') return 'potion';
     if (visualItem.type === 'key') return 'key';
-    if (visualItem.type === 'all') return 'relic';
+    // `ItemType`엔 'all'이 없다(유물 접두사 전용 값) — 실제 카탈로그 Item은 절대 이 분기에
+    // 닿지 않지만, getTypedVisualItem의 폴백 경로를 보수적으로 그대로 유지한다.
+    if ((visualItem.type as string) === 'all') return 'relic';
     if (visualItem.type === 'mat') return getMaterialVisualKey(visualItem);
     return getMaterialVisualKey(visualItem);
 };

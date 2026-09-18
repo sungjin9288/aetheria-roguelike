@@ -1369,8 +1369,12 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 424: `|| misc` fallback 보존 → recipes 등 type 부재 아이템 동일 동작', async () => {
+      // Wave 9 A4: `item.type` 직접 접근 → `catalogEntryType(item)`(union 안전 접근자)로
+      //   교체 (any 제거, tests/debt-ratchet.test.js). `|| 'misc'` fallback 의미는 동일 —
+      //   `catalogEntryType`이 'type' 필드가 없는 엔트리(sets/recipes)에 undefined를
+      //   반환하면 `?? ''`로 lookup miss를 유도해 여전히 'misc'로 떨어진다.
       const source = await readSrc('src/utils/itemVisuals.ts');
-      assert.ok(/EXACT_ICON_CATEGORY_BY_TYPE\[item\.type\] \|\| 'misc'/.test(source),
+      assert.ok(/EXACT_ICON_CATEGORY_BY_TYPE\[catalogEntryType\(item\) \?\? ''\] \|\| 'misc'/.test(source),
           "fallback `|| 'misc'` 보존");
   });
 

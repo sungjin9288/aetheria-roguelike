@@ -28,12 +28,18 @@ export type CanEquipResult =
  * 그대로 보존 — 순서가 바뀌면 동시에 여러 조건을 위반하는 아이템의 로그 문구가 달라진다.
  */
 export const canEquip = (item: Item, player: Pick<Player, 'job' | 'level'>, currentEquip: EquipSlots): CanEquipResult => {
-    const reqLevel = (item as any).reqLevel ?? (BALANCE.TIER_REQ_LEVEL?.[(item as any).tier] ?? 1);
-    if (((player as any).level || 1) < reqLevel) {
+    // `reqLevel`은 Item 도메인 타입엔 없는 인스턴스 전용 오버라이드 필드(카탈로그 데이터
+    // 어디에도 없고 QA 시드 등에서만 붙는다) — `in`으로 존재를 좁혀 unknown으로 읽는다.
+    // 없으면 tier 기반 BALANCE.TIER_REQ_LEVEL로 폴백(tier 없는 아이템은 -1로 lookup miss
+    // 시켜 원래처럼 `?? 1` fallback을 그대로 유도).
+    const reqLevel = Number(
+        ('reqLevel' in item ? item.reqLevel : undefined) ?? (BALANCE.TIER_REQ_LEVEL?.[item.tier ?? -1] ?? 1)
+    );
+    if ((player.level || 1) < reqLevel) {
         return { ok: false, reason: 'level', reqLevel };
     }
 
-    if (Array.isArray((item as any).jobs) && !(item as any).jobs.includes(player.job)) {
+    if (Array.isArray(item.jobs) && !item.jobs.includes(player.job ?? '')) {
         return { ok: false, reason: 'job' };
     }
 

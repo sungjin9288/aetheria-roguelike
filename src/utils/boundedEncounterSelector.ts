@@ -14,6 +14,9 @@ import { calculateFullStats } from './statsCalculator.js';
 const SAFE_ID = /^[a-z0-9][a-z0-9._:-]{0,127}$/;
 const HP_BANDS = new Set(['critical', 'strained', 'healthy']);
 const BOUNDED_BUILD_TAGS = new Set(['arcane', 'fortress', 'crusher', 'dual']);
+/** DB.ITEMS의 고정 카테고리 4종 — 리터럴 튜플로 선언해야 `ItemDatabase`(인덱스 시그니처 0)를
+ *  문자열 키로 인덱싱하지 않고도 각 카테고리 값을 그대로 얻을 수 있다. */
+const ITEM_CATEGORY_KEYS = ['weapons', 'armors', 'consumables', 'materials'] as const;
 
 const isPlainObject = (value: unknown): value is Record<string, unknown> => (
     value !== null && typeof value === 'object' && !Array.isArray(value)
@@ -22,15 +25,15 @@ const isCopy = (value: unknown) => typeof value === 'string' && value.trim() ===
 const isNonNegative = (value: unknown) => Number.isFinite(value) && Number(value) >= 0;
 
 const canonicalItemNames = new Set(
-    ['weapons', 'armors', 'consumables', 'materials']
-        .flatMap((key) => Array.isArray((DB.ITEMS as any)[key]) ? (DB.ITEMS as any)[key] : [])
-        .map((item: any) => item?.name)
+    ITEM_CATEGORY_KEYS
+        .flatMap((key) => DB.ITEMS[key])
+        .map((item) => item?.name)
         .filter(isCopy),
 );
 
 const canonicalBossNames = new Set<string>();
 for (const [name, monster] of Object.entries(DB.MONSTERS)) {
-    if ((monster as any)?.isBoss) canonicalBossNames.add(name);
+    if (monster?.isBoss) canonicalBossNames.add(name);
 }
 for (const map of Object.values(DB.MAPS)) {
     if (typeof map.boss === 'string') canonicalBossNames.add(map.boss);
@@ -57,7 +60,8 @@ const validateBuff = (buff: unknown) => {
 
 const validateChoice = (choice: unknown, errors: string[]) => {
     if (!isPlainObject(choice) || !SAFE_ID.test(String(choice.id || ''))) {
-        errors.push(`CHOICE_SCHEMA_INVALID:${String((choice as any)?.id || 'unknown')}`);
+        const rawId = isPlainObject(choice) ? choice.id : undefined;
+        errors.push(`CHOICE_SCHEMA_INVALID:${String(rawId || 'unknown')}`);
         return;
     }
     const id = String(choice.id);
@@ -124,7 +128,8 @@ const validateEncounter = (encounter: unknown) => {
         encounter.choices.forEach((entry) => validateChoice(entry, errors));
         const choiceIds = new Set<string>();
         for (const entry of encounter.choices) {
-            const choiceId = String((entry as any)?.id || '');
+            const rawId = isPlainObject(entry) ? entry.id : undefined;
+            const choiceId = String(rawId || '');
             if (choiceIds.has(choiceId)) errors.push(`CHOICE_ID_DUPLICATE:${choiceId}`);
             choiceIds.add(choiceId);
         }
@@ -211,7 +216,7 @@ const effectiveVitalsFor = (player: Player) => {
         return {
             maxHp: Number(stats.maxHp),
             maxMp: Number(stats.maxMp),
-            buildTags: canonicalBuildTags(stats.buildProfile?.tags?.map((tag: any) => tag?.id)),
+            buildTags: canonicalBuildTags(stats.buildProfile.tags.map((tag) => tag.id)),
         };
     } catch {
         return fallback;
@@ -293,12 +298,12 @@ const jobLineageFor = (job: string) => {
 export const buildBoundedEncounterContext = (player: Player, region: string): BoundedEncounterContext | null => {
     const effectiveVitals = effectiveVitalsFor(player);
     if (!effectiveVitals) return null;
-    const journey = isPlainObject((player as any)?.classJourney) ? (player as any).classJourney : {};
-    const byJob = isPlainObject(journey.byJob) ? journey.byJob : {};
-    const bossNames = Object.values(byJob).flatMap((entry: any) => (
+    const journey: Record<string, unknown> = isPlainObject(player.classJourney) ? player.classJourney : {};
+    const byJob: Record<string, unknown> = isPlainObject(journey.byJob) ? journey.byJob : {};
+    const bossNames = Object.values(byJob).flatMap((entry) => (
         isPlainObject(entry) && Array.isArray(entry.bossNames) ? entry.bossNames : []
     )).filter((name): name is string => typeof name === 'string');
-    const progress = isPlainObject((player as any)?.eventChainProgress) ? (player as any).eventChainProgress : {};
+    const progress: Record<string, unknown> = isPlainObject(player.eventChainProgress) ? player.eventChainProgress : {};
     if (progress.boundedEncounterReceipts !== undefined
         && !isPlainObject(progress.boundedEncounterReceipts)) return null;
     const receipts = isPlainObject(progress.boundedEncounterReceipts)
@@ -306,8 +311,8 @@ export const buildBoundedEncounterContext = (player: Player, region: string): Bo
         : [];
     return {
         region,
-        jobLineage: jobLineageFor(String((player as any)?.job || '')),
-        hp: Number((player as any)?.hp || 0),
+        jobLineage: jobLineageFor(String(player.job || '')),
+        hp: Number(player.hp || 0),
         maxHp: effectiveVitals.maxHp,
         signatureNames: getDiscoveredSignatureNames(player),
         bossNames: [...new Set(bossNames)],
@@ -384,9 +389,9 @@ export const applyBoundedEncounterChoice = (
     nextPlayer = grantGold(nextPlayer, outcome.gold || 0);
     if (outcome.item) {
         const item = canonicalItemNames.has(outcome.item)
-            ? ['weapons', 'armors', 'consumables', 'materials']
-                .flatMap((key) => (DB.ITEMS as any)[key] || [])
-                .find((entry: any) => entry?.name === outcome.item)
+            ? ITEM_CATEGORY_KEYS
+                .flatMap((key) => DB.ITEMS[key])
+                .find((entry) => entry?.name === outcome.item)
             : null;
         if (!item) return settlementFailure(player, 'invalid_item', receiptKey);
         nextPlayer = {
