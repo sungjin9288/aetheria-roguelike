@@ -45,11 +45,11 @@ function listFiles(startDir, exts) {
 const rel = (absPath) => absPath.split(path.sep).join('/').slice(ROOT.split(path.sep).join('/').length + 1);
 
 /** 파일별 매치 개수를 세고, {total, perFile: [[relPath, count], ...] (내림차순)} 로 반환. */
-function countMatches(files, regex) {
+function countMatches(files, regex, preprocess = (source) => source) {
     let total = 0;
     const perFile = [];
     for (const file of files) {
-        const content = fs.readFileSync(file, 'utf8');
+        const content = preprocess(fs.readFileSync(file, 'utf8'));
         const matches = content.match(regex);
         if (matches && matches.length > 0) {
             total += matches.length;
@@ -107,11 +107,12 @@ function formatOffenders(perFile, limit = 20) {
 //   합류해 실측치가 올랐다(any 1466→1581, as any 71→99, systems 한글 144→260, reducers 24→26).
 //   병합 직후 HEAD 실측을 새 기준선으로 삼는다 — 이후로는 다시 "하락만 허용".
 // 2026-09-17 Wave 5(W2 Player any[] 3개 + W5 utils 8파일 슬라이스) 실측으로 재고정: 1581 → 1301.
-const ANY_BASELINE = 140;
+const ANY_BASELINE = 1;
 
 test(`debt-ratchet: 명시적 ": any" 개수는 ${ANY_BASELINE}건을 넘지 않는다 (하락만 허용)`, () => {
     const files = listFiles('src', ['.ts', '.tsx']);
-    const { total, perFile } = countMatches(files, /:\s*any\b/g);
+    // Wave 9 A5: 주석(`[key: string]: any` 제거 이력 문구 등)은 코드가 아니므로 제외한다.
+    const { total, perFile } = countMatches(files, /:\s*any\b/g, stripCommentLines);
 
     assert.ok(
         total <= ANY_BASELINE,
@@ -122,11 +123,11 @@ test(`debt-ratchet: 명시적 ": any" 개수는 ${ANY_BASELINE}건을 넘지 않
 
 // ── (b) `as any` ────────────────────────────────────────────────────────────
 // 2026-09-17 Wave 5 실측으로 재고정: 99 → 83 (stale 캐스트 제거분, 신규 as any 0).
-const AS_ANY_BASELINE = 46;
+const AS_ANY_BASELINE = 0;
 
 test(`debt-ratchet: "as any" 캐스트 개수는 ${AS_ANY_BASELINE}건을 넘지 않는다 (하락만 허용)`, () => {
     const files = listFiles('src', ['.ts', '.tsx']);
-    const { total, perFile } = countMatches(files, /\bas\s+any\b/g);
+    const { total, perFile } = countMatches(files, /\bas\s+any\b/g, stripCommentLines);
 
     assert.ok(
         total <= AS_ANY_BASELINE,

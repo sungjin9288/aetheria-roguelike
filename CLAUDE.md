@@ -24,8 +24,8 @@
 | Node.js | — | >=18.0.0 |
 
 > **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
-> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` 140건,
-> `as any` 46곳 잔존 (2026-09-18 Wave 8 실측; `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다.
+> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. **src의 명시 `any`는 0이다**(2026-09-18 Wave 9 완료 —
+> `@typescript-eslint/no-explicit-any`가 `error`, `tests/debt-ratchet.test.js`는 `: any` 1(문자열 리터럴)/`as any` 0 상한 이중 가드).
 > `Player`의 `quests/status/history`는 `QuestProgressState`/`StatusId[]`/`EventHistoryEntry`로 닫혔고,
 > utils 8파일(`aiEventUtils`·`questOperations`·`graveUtils`·`gameUtils`·`adventureGuide`·`expeditionMissionFocus`·
 > `expeditionLedger`·`equipmentUtils`)은 `: any` 0이다. **주입 경계는 `src/hooks/actionDeps.ts`가 소유한다** —
@@ -49,8 +49,10 @@
 > **`GameState.postCombatResult`는 `PostCombatResult`(types/combat.ts, 생산자 리터럴 도출)**, **`migrateData`는 `MigratedSave | null`**
 > (세이브 봉투 — `player?: Partial<Player>`; `hasMigratedPlayer` 술어로 좁힌다), **`GameEvent.outcomes`는 세션 정본 `EventOutcome[]`**
 > (eventActions/eventPresentation에 로컬 사본을 두지 말 것), **QA 시드 API는 `AetheriaTestApi`**(useGameTestApi.ts — e2e 스펙이 읽는
-> 계약이자 `window.__AETHERIA_TEST_API__`의 타입)다. 남은 `: any`는 utils 58·systems 24·data 19·types 12·hooks 2에 분포하고
-> components/reducers/services/platform은 0이다 — 마지막 구조적 원천은 `src/data/**`의 느슨한 테이블 타입(`BOSS_BRIEFS`/`LOOT_TABLE`/`getCodexProgress`)이다.
+> 계약이자 `window.__AETHERIA_TEST_API__`의 타입)다. **데이터 테이블(`BOSS_BRIEFS`/`LOOT_TABLE`/`DROP_TABLES`/codex 마일스톤/
+> 시그니처 레지스트리/팔레트)도 리터럴·JSON에서 도출된 타입**이고 열린 키 조회는 `getBossBrief`/`getLootTable` 같은 타입된 lookup을 쓴다.
+> `firebase.ts`의 `auth`/`db`는 config 부재 시 실제로 `null`이므로 `Auth | null`/`Firestore | null`이다 — 소비처는 `hasFirebaseConfig`/부트 단계
+> 가드와 함께 `!db` 가드를 둔다. 새 코드에서 `any`가 필요해 보이면 경계는 `unknown` + 좁히기, 데이터는 리터럴 도출, 액션은 `ActionPayloadMap`이 답이다.
 
 ---
 

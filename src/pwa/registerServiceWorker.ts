@@ -9,7 +9,7 @@ export function registerServiceWorker(environment: RuntimeEnvironment = getRunti
   if (!allowsServiceWorker(environment)) return;
 
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((error: any) => {
+    navigator.serviceWorker.register('/sw.js').catch((error: unknown) => {
       console.warn('[PWA] Service worker registration failed:', error);
     });
   });

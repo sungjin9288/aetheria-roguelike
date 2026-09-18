@@ -30,8 +30,8 @@ type TitleDef = (typeof TITLES)[number];
 /**
  * 배열이 아닌 값을 빈 배열로 안전하게 변환.
  *
- * 2026-09 Wave 6 X1: `= any` 기본값 제거. 그 기본값은 `deps: any`로 들어온 값을
- * 그대로 넘기던 훅 팩토리 호출부를 위한 하위 호환이었는데, 이제 그 경계가
+ * 2026-09 Wave 6 X1: `= any` 기본값 제거. 그 기본값은 `deps`가 any 타입으로 들어온
+ * 값을 그대로 넘기던 훅 팩토리 호출부를 위한 하위 호환이었는데, 이제 그 경계가
  * `GameActionDeps`로 닫혔다. 타입이 없는 값(예: 아직 any인 `currentEvent.outcomes`)을
  * 넘기는 호출부는 `toArray<EventOutcome>(…)`처럼 원소 타입을 명시한다.
  */
@@ -283,8 +283,9 @@ export const getAchievementCurrentValue = (achievement: Achievement, player: Pla
     if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
     // B3-TODO(2026-09): achievement.target은 data-driven 문자열이라 PlayerStats 키로
     //   좁히려면 quests.ts ACHIEVEMENTS의 target 리터럴 유니온화가 선행돼야 한다.
-    //   그때까지 이 한 곳만 동적 인덱스 캐스트를 유지한다(런타임 동작 동일).
-    return (stats as Record<string, any>)[target ?? ''] || 0;
+    //   그때까지 이 한 곳만 동적 인덱스 캐스트를 유지한다(Number()로 number 반환형 보존,
+    //   런타임 동작 동일 — PlayerStats 카운터는 항상 number|undefined다).
+    return Number((stats as Record<string, unknown>)[target ?? '']) || 0;
 };
 
 /** 업적 달성 여부 */

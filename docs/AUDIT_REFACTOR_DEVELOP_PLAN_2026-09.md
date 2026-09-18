@@ -408,3 +408,39 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 
 **남은 후보 (Wave 9)**: (1) `src/data/**`의 느슨한 테이블 타입 — `BOSS_BRIEFS: Record<string, any>`·`LOOT_TABLE: any`·`getCodexProgress`의 `any[]` 필드·`signatureItems`/`artPalette`(19건) → 리터럴 도출(`as const` + `typeof`, Wave 7 Y1 방식)로 닫으면 `MonsterCodex`/`Codex`/`EquipmentCodexCard`의 마지막 로컬 캐스트가 사라진다; (2) `src/types/player.ts` 4건(`[key]: any`류가 아니라 필드 타입 — 실제 생산자 확인 후 닫기) + `Item`에 없는 `atk/def` dead read 정리; (3) utils 58 · systems 24 잔여(파일당 ≤4 — 한 트랙으로 0); (4) `as any` 46건 전수(대부분 `process.env`·매니페스트 JSON·`ITEMS` flatten) → `unknown` + 좁히기; (5) 래칫 의미 전환: 0 도달 후 `: any`/`as any` 상한을 0으로 고정하고 lint 규칙(`@typescript-eslint/no-explicit-any`)으로 이관.
 
+
+---
+
+## 13. Wave 9 계획 (2026-09-18 착수, 베이스 `main` = `d69987d4` = PR #35 merge commit)
+
+**핵심**: 래칫 `: any` 140 / `as any` 46 중 실제 코드는 각각 ~126 / 46이다(`: any` 카운터가 주석의 `[key: string]: any` 이력 문구까지 세고 있어 types 12·hooks 2는 전부 주석). 남은 코드 `any`의 마지막 구조적 원천은 `src/data/**`의 느슨한 테이블(`BOSS_BRIEFS: Record<string, any>`·`LOOT_TABLE: any`·`getCodexProgress(codex: any)`·시그니처/팔레트 JSON 소비)이고, 이것이 Wave 8이 컴포넌트에 남긴 로컬 캐스트 3곳의 원인이다. 나머지는 utils 50·systems 24·`as any` 46(대부분 매니페스트 JSON·DOM/Capacitor·`ITEMS` flatten 경계)으로 파일당 ≤4 — 이 wave의 목표는 **코드 `any` 0**과 래칫의 의미 전환(카운터 → lint 규칙)이다.
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **A1 데이터 테이블** | `BOSS_BRIEFS`/`LOOT_TABLE`/`CODEX_MILESTONES`를 `as const` + `typeof` 도출(Wave 7 Y1 방식), 열린 키 조회는 타입된 lookup 함수, 시그니처 레지스트리·팔레트는 `resolveJsonModule`이 준 JSON 타입에서 도출, `getCodexProgress`는 `Player['codex']` 계약. `MonsterCodex`/`Codex`/`EquipmentCodexCard`의 로컬 캐스트 제거, `Item`에 없는 `atk/def` dead read 정리 | data `: any` 19 → 0, 컴포넌트 로컬 캐스트 0 | `EquipmentCodexCard`의 dead read 제거가 렌더 텍스트를 바꾸면 중단·보고 | 테이블 타입을 손으로 선언하면 Wave 7이 지운 드리프트가 되돌아온다 — 도출만 | opus |
+| **A2 utils 잔여** | 25파일 50건 | utils 0 | — | 주석의 `: any` 이력 문구는 가드 대상이면 유지 | sonnet |
+| **A3 systems 잔여** | 11파일 `: any` 24 + 감사/시뮬레이터 `as any` 10; `combatItemTurn`의 `runSummary/graveData/victoryStats: any` 생산자 타입화 | systems 0/0 | 감사 5파일 증빙 재생성 | 감사 report 내용이 바뀌면 캐스트가 실제 불일치를 가리고 있던 것 — 보고 | sonnet |
+| **A4 `as any` 경계** | `boundedEncounterSelector`(9)·`errorReporter`(5)·`itemVisuals`(4)·`equipmentValidation`(3)·기타 7 = 28: 매니페스트 JSON은 `typeof` 도출, DOM/Capacitor는 `unknown` + 좁히기, `ITEMS` flatten은 `Item` 유니온 + `type` 판별 | `as any` 46 → ≤18 | — | `as unknown as X`로 바꾸면 같은 탈출구의 개명 — 금지 | sonnet |
+| **A5 래칫 → lint** | (통합 후) `: any` 카운터를 주석 제외로 교정·재고정; 코드 `: any`/`as any`가 0이면 `@typescript-eslint/no-explicit-any`를 `error`로 켜고 래칫의 두 카운터는 0 상한으로 유지(이중 가드) | "하락만 허용"에서 "0 유지"로 의미 전환, 새 `any`는 lint에서 즉시 차단 | 0에 못 미치면 `warn`이 아니라 래칫 재고정만 — `warn`은 아무도 안 읽는다 | 규칙을 켜기 전에 `eslint .`이 0 problems인지 실측 | 직접 |
+
+**순서**: A1 · A2 · A3 · A4 병렬(파일 집합 분리 — 브리프에 A4 전용 utils 7파일을 명시) → 통합(교차 tsc) → 증빙(progression → pacing, equipment·relic) → A5 → 직렬 게이트 → §13.1 → PR → CI → merge commit.
+
+**판단 포인트**: 이번 wave가 끝나면 `any` 정리 시리즈(Wave 5~9)는 닫힌다. 다음 wave부터는 "타입 부채"가 아니라 CLAUDE.md §8이 말하는 실제 위험(전투 턴 authority·세이브 호환·Firebase boot race)에 대한 동작 계약 테스트와 성능 예산(perf guard CI 연동)으로 축을 옮긴다.
+
+### 13.1 Wave 9 실행 결과 (2026-09-18, branch `claude/funny-rubin-xdv43e`, 베이스 `main` = `d69987d4`)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| A1 데이터 테이블 | ✅ | `BOSS_BRIEFS`/`LOOT_TABLE`은 리터럴을 비공개 상수로 두고 `Readonly<typeof …> & Record<string, T>` 교차 타입 + 타입된 lookup(`getBossBrief`/`getLootTable`) — 다른 트랙 소비처의 `table[name]` 인덱싱을 무편집으로 유지. `as const`는 의도적으로 안 씀(22개 튜플 유니온으로 퇴화해 `.join` 등이 깨짐). codex 마일스톤 타입 6종을 `typeof CODEX_MILESTONES`에서 도출, `codexPresentation`·`WeaponCodex`의 사본 2개 제거. **발견**: `getCodexProgress().unclaimed` 원소는 `reached/claimed`가 없어 `Codex.tsx`의 옛 캐스트가 거짓이었음(반환형이 두 배열을 구분). `EquipmentCodexCard`의 `atk/def` dead read 제거(렌더 무변경 — `val` 행 추가는 UI 변경이라 보류). data `: any` 19 → 0 |
+| A2 utils | ✅ | 25파일 62건 → 0. `commandParser`의 `actions`는 컴포넌트 규칙대로 `Pick<GameActions, …>` |
+| A3 systems | ✅ | `: any` 24 → 1(문자열 리터럴 안의 회귀 가드 패턴 — 타입 아님), `as any` 10 → 0. `combatItemTurn` 결과 필드를 생산자 타입으로. **발견**: `relicDropRateAudit`의 `as any`가 `Monster`에 없는 `meta.prestigeRank` 픽스처 필드를 가리고 있었음(읽는 곳 없음 — 제거) |
+| A4 `as any` 경계 | ✅ | 33 → 0(실측이 계획의 28보다 많았음). 매니페스트 JSON 3건은 캐스트가 애초에 불필요(`resolveJsonModule` 추론이 이미 정확), DOM/Capacitor 6건은 `unknown` + `in`/`typeof` 술어, `ITEMS` flatten 20건은 실제 유니온 + `'x' in entry` 접근자. **발견**: `itemVisuals`의 카탈로그 인덱스가 접두사 항목(`type: 'all'`)까지 아이템으로 끌어들이고 있었음(실충돌은 없었으나 `'all'` 분기가 타입상 dead임을 드러냄) |
+| 직접(마지막 13건) | ✅ | `firebase.ts`의 `auth`/`db`를 실제대로 `\| null`로 — 소비처 8곳을 `hasFirebaseConfig`/부트 단계와 동치인 가드로 닫음(런타임 동일). `DROP_TABLES: Record<string, readonly DropTableEntry[]>`(엔트리 타입을 데이터로 이동, loot 엔진의 사본·캐스트 제거). `EventChainProgress`(number \| 'failed') 정본 |
+| A5 래칫 교정 | ✅ | 카운터가 주석의 `[key: string]: any` 이력 문구까지 세던 것을 `stripCommentLines`로 교정(한글 카운터와 동일 방식) → 코드 실측 `: any` 124 / `as any` 45에서 출발 |
+| A6 다른 any 표기 | ✅ | `Record<string, any>`·`any[]`·`<any>` 66건/28파일 → 0. 로컬 빌드 객체는 `Player`, 조회 테이블은 `Record<Union, string>`/`QuestReward`, 저장·외부 경계는 `Record<string, unknown>` + 술어, 감사 `any[]`는 행 빌더 타입. **발견**: `ActionPayloadMap[UPDATE_CODEX].category`가 `string`으로 실제(`CodexCategory`)보다 넓었음 → 좁힘. `Player.eventChainProgress`는 체인 id 키(`number \| 'failed'`) + 예약 키 `boundedEncounterReceipts`(영수증 레코드)의 의도된 이중 용도 — 유니온으로 정직하게 닫고 `exploreUtils`의 숨은 보스 판정을 `typeof` 가드로(결과 동일) |
+| 래칫 → lint | ✅ | src 명시 `any` **0**(코드 실측 `: any` 1은 `relicHpDrainAtkAudit`의 문자열 리터럴 안 회귀 가드 패턴 — 타입 아님, `as any` 0, 다른 표기 0). **`@typescript-eslint/no-explicit-any`를 `error`로 켬**(`eslint .` 0 problems) — 래칫 두 카운터는 1/0 상한 이중 가드로 유지. Wave 5 시작점 1,581 → 0 |
+
+**최종 게이트** (head `0c87cbbf` 기준, 샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 problems(`no-explicit-any: error` 포함) · unit **4,813 / 4,813**(skip 0) · build:guard ok · e2e(chromium, iPhone 12 에뮬레이션) **121 / 121**(61 + 60, 12.7분) · perf guard desktop ok(FCP 560ms) / mobile ok(FCP 508ms) · 증빙 verify 전부 ok(relic 7종·equipment·progression·pacing·content·event-reward). 증빙 재생성은 Wave 8 교훈대로 트랙별 바인딩을 미리 알고 했지만, 통합 중 내 직접 수정(`CombatEngine.loot`·`eventChains`·`monsters`)이 relic-drop-rate·relic-event-chance·아트 채택 해시 핀을 다시 stale하게 만들었다 — **다음부터는 통합자의 직접 수정도 하나의 트랙으로 간주해 마지막에 한 번만 증빙·핀을 갱신한다**
+
+**남은 후보 (Wave 10)**: `any` 시리즈(Wave 5~9) 종료. 축 이동 — (1) CLAUDE.md §8 실제 위험의 동작 계약 테스트: 전투 턴 authority(`combatTurn`/`expectedTurn` replay 거부 시나리오 매트릭스), 세이브 호환(`DATA_VERSION` 5.1 이하 각 버전 픽스처 → `migrateData` 왕복), Firebase boot race(`bootStage` 전이 순서 계약); (2) perf guard CI 연동(현재 non-blocking — 3회 실측 분산으로 예산 보정 후 blocking 전환); (3) 아트 채택 테스트의 소스 바이트 해시 핀(`monsters.ts` 등) → 데이터 값 해시로 전환(타입 주석 변경마다 재고정하는 비용 제거); (4) `Record<string, unknown>` 경계 8곳(gameStorage/localGameSnapshot)의 런타임 스키마 검증 통일
+

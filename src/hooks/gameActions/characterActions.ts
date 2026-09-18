@@ -145,7 +145,7 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             // (bleed/freeze/stun/curse/blind/fear)를 안전지대 휴식으로 해소. 며칠간의 회복
             // 자연스러운 의미 + cure item이 없는 status(bleed/blind/fear/stun)에 대한
             // UX 안전망. tempBuff은 turn-based라 그대로 유지.
-            const updatedPlayer: Record<string, any> = {
+            const updatedPlayer: Player = {
                 ...player,
                 gold: player.gold! - restCost,
                 hp: stats.maxHp,

@@ -42,9 +42,9 @@ const ELEMENT_COLOR_MAP: Record<string, string> = {
     대지: '#d6b38b',
 };
 
-const clampEnhance = (value: any) => Math.max(0, Math.min(9, Number(value) || 0));
+const clampEnhance = (value: number | undefined) => Math.max(0, Math.min(9, Number(value) || 0));
 
-const getOverlayTone = (slot: any, item: Item | null | undefined, fallback: any) => {
+const getOverlayTone = (slot: string, item: Item | null | undefined, fallback: string) => {
     if (!item) return fallback;
 
     if (slot === 'weapon') return '#d8c7a5';

@@ -17,7 +17,7 @@ import type { CurrentRunProgress } from '../utils/runProgress.js';
 /**
  * PlayerStats — `player.stats` 한 벌.
  *
- * 2026-09 B3 stage 1: `[key: string]: any` 인덱스 시그니처 제거.
+ * 2026-09 B3 stage 1: 임의 문자열 키를 허용하던 인덱스 시그니처 제거.
  *   이전엔 `player.stats.anyTypo`가 통과해서 INITIAL_STATE와의 drift를 컴파일러가
  *   잡지 못했다. 이제 새 카운터를 추가할 때 여기에 선언을 함께 넣어야 한다.
  *   (필드는 여전히 전부 optional — 구세이브에는 없는 필드가 많고, 모든 consumer가
@@ -155,7 +155,7 @@ export interface CodexEntry {
 /** 도감 카테고리 키 — registerCodex(player, category, name)의 category. */
 export type CodexCategory = 'weapons' | 'armors' | 'shields' | 'monsters' | 'recipes' | 'materials';
 
-// 2026-09 B3 stage 2: `[key: string]: any` 제거 — 카테고리는 이 6개가 전부다.
+// 2026-09 B3 stage 2: 임의 문자열 키를 허용하던 인덱스 시그니처 제거 — 카테고리는 이 6개가 전부다.
 //   (CodexCategory와 키 집합이 일치해야 한다 — registerCodex/UPDATE_CODEX가 둘을 잇는다.)
 interface PlayerCodex {
     weapons?: Record<string, CodexEntry>;
@@ -259,7 +259,7 @@ interface WeeklyProtocol {
     claimed?: string[];
 }
 
-// 2026-09 B3 stage 2: `[key: string]: any` 제거 — 설정 키는 이 2개가 전부다.
+// 2026-09 B3 stage 2: 임의 문자열 키를 허용하던 인덱스 시그니처 제거 — 설정 키는 이 2개가 전부다.
 interface PlayerSettings {
     readabilityMode?: 'standard' | 'high' | string;
     equipmentDetailMode?: 'auto' | 'summary' | 'full' | string;
@@ -301,6 +301,27 @@ export interface ClassJourneyLedger {
     sequence: number;
     byJob: Record<string, ClassJourneyRecord>;
 }
+
+/**
+ * eventChainProgress에 예외적으로 저장되는 "boundedEncounterReceipts" 키의 원소.
+ * boundedEncounterSelector.ts의 applyBoundedEncounterChoice가 쓰는 원본 영수증
+ * (post-processing 전) — ClassJourneyEncounterDiscovery보다 얇다.
+ */
+export interface EventChainBoundedEncounterReceipt {
+    encounterId: string;
+    choiceId: string;
+}
+
+/**
+ * player.eventChainProgress[key] 값의 실제 형태 — Wave 9 A6 실측.
+ * 대부분의 키(체인 id)는 진행 스텝(number) 또는 'failed'다. 예외적으로
+ * "boundedEncounterReceipts" 키 하나만 원정 영수증 레저(Record)를 담는다
+ * (boundedEncounterSelector.ts applyBoundedEncounterChoice가 같은 필드를
+ * 재사용해 기록) — 필드 하나가 두 용도를 겸하는 기존 설계를 그대로 반영한다.
+ */
+export type EventChainProgressValue = number | 'failed' | Record<string, EventChainBoundedEncounterReceipt>;
+
+export type EventChainProgress = Record<string, EventChainProgressValue>;
 
 export interface ExpeditionSnapshot {
     id: string;
@@ -456,8 +477,8 @@ export interface EventHistoryEntry {
  * 모든 필드를 optional로 두는 게 호환성 좋음. 점진 적용 — 향후 부분 인터페이스
  * (PlayerCore, PlayerCombat 등) 분화 가능.
  *
- * 2026-09 B3 stage 3: `[key: string]: any` 제거. 이제 `player.anyTypo`가 컴파일
- * 에러다. 새 최상위 필드를 쓰려면 여기에 선언을 함께 넣어야 한다.
+ * 2026-09 B3 stage 3: 임의 문자열 키를 허용하던 인덱스 시그니처 제거. 이제 `player.anyTypo`가
+ * 컴파일 에러다. 새 최상위 필드를 쓰려면 여기에 선언을 함께 넣어야 한다.
  */
 export interface Player {
     name?: string;
@@ -504,7 +525,7 @@ export interface Player {
     };
     killStreak?: number;
     history?: EventHistoryEntry[];
-    eventChainProgress?: Record<string, any>;
+    eventChainProgress?: EventChainProgress;
     deferredEventChainSteps?: Record<string, number>;
     activeExpedition?: ExpeditionSnapshot | null;
     lastExpeditionSummary?: ExpeditionSummary | null;
@@ -522,7 +543,7 @@ export interface Player {
     nextHitEvaded?: boolean;
     /**
      * 마지막 처치 시각(ms). killStreak 시간 감쇠(BALANCE.KILL_STREAK_DECAY_MS) 비교용.
-     * 2026-09 L stage 2: combatVictory가 쓰고 읽는데 미선언이라 `as any`로 우회하던 필드.
+     * 2026-09 L stage 2: combatVictory가 쓰고 읽는데 미선언이라 안전하지 않은 캐스트로 우회하던 필드.
      */
     lastKillAt?: number;
 }

@@ -42,7 +42,7 @@ export const getBossGaugeChip = (player: Player | null | undefined): ExpeditionH
     if (!loc) return null;
     if (player?.challengeModifiers?.includes('blindMap')) return null;
 
-    const mapData = (DB.MAPS as any)?.[loc];
+    const mapData = DB.MAPS[loc];
     if (!isAreaBossUndefeated(mapData, player)) return null;
 
     const bossName = getAreaBossName(mapData);

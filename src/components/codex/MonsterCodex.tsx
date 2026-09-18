@@ -1,8 +1,8 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, Compass, Crown, Target } from 'lucide-react';
 import { DB } from '../../data/db';
-import { LOOT_TABLE } from '../../data/loot';
-import { BOSS_BRIEFS, MONSTERS } from '../../data/monsters';
+import { getLootTable } from '../../data/loot';
+import { getBossBrief, MONSTERS, type BossBrief } from '../../data/monsters';
 import { MSG } from '../../data/messages';
 import MonsterIcon from '../icons/MonsterIcon';
 import SkillTypeIcon from '../icons/SkillTypeIcon';
@@ -17,18 +17,6 @@ const RESEARCH_STEPS = [
     { target: 50, label: '방어력 +1' },
     { target: 100, label: '공격력 +1' },
 ];
-
-/**
- * data/monsters.ts의 BOSS_BRIEFS 실제 런타임 모양 — 이 화면이 읽는 필드만 좁힌다.
- * 선언 자체는 `Record<string, any>`다(src/data/**, 이 트랙 범위 밖).
- */
-interface BossBrief {
-    signature?: string;
-    counterHint?: string;
-    phaseHint?: string;
-    warningChips?: string[];
-    recommendedBuilds?: string[];
-}
 
 /** allMonsters가 생산하는 코덱스 엔트리 1건. */
 interface MonsterCodexEntry {
@@ -66,7 +54,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                 name,
                 kills,
                 encountered: kills > 0,
-                drops: (LOOT_TABLE as Record<string, string[]>)[name] || [],
+                drops: getLootTable(name) || [],
                 location: Object.entries(DB.MAPS)
                     .filter(([, map]) => collectMapEncounters(map).includes(name))
                     .map(([location]) => location)
@@ -79,7 +67,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                 weakness: monsterMeta.weakness || null,
                 resistance: monsterMeta.resistance || null,
                 isBoss: Boolean(monsterMeta.isBoss),
-                bossBrief: (BOSS_BRIEFS as Record<string, BossBrief>)[name] || null,
+                bossBrief: getBossBrief(name),
             };
         });
     }, [player]);

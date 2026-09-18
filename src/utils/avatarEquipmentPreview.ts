@@ -181,7 +181,7 @@ export const getEquipmentPreviewStage = (
     }
 
     if (armorArt?.bodyStyle && armorArt.bodyStyle !== 'none') {
-        const armorStageMap: Record<string, any> = {
+        const armorStageMap: Record<string, Pick<EquipmentPreviewStage, 'scale' | 'translateX' | 'translateY'>> = {
             robe: { scale: 1.17, translateX: 0, translateY: 6 },
             plate: { scale: 1.14, translateX: 0, translateY: 5 },
             leather: { scale: 1.17, translateX: 0, translateY: 6 },

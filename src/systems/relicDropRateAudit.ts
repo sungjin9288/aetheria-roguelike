@@ -1,5 +1,6 @@
 import { RELICS } from '../data/relics.js';
 import type { Relic, RelicEffect } from '../types/relic.js';
+import type { Monster, Player } from '../types/index.js';
 import { migrateData } from '../utils/gameUtils.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
 import { processLoot } from './CombatEngine.loot.js';
@@ -132,10 +133,10 @@ const runLootOrder = ({
     rolls,
     player = {},
 }: {
-    enemy: Record<string, unknown>;
+    enemy: Monster;
     relics: readonly Relic[];
     rolls: readonly number[];
-    player?: Record<string, unknown>;
+    player?: Player;
 }): LootOrder => {
     let rngCalls = 0;
     const rng = () => {
@@ -143,12 +144,12 @@ const runLootOrder = ({
         rngCalls += 1;
         return roll;
     };
-    const result = processLoot(enemy as any, { ...player, relics } as any, 1, rng, () => 1);
+    const result = processLoot(enemy, { ...player, relics: [...relics] }, 1, rng, () => 1);
     return {
         relicIds: relics.map((relic) => relic.id || ''),
         multiplier: 1 + getStrongestNumericRelicValue(relics, 'drop_rate'),
-        itemNames: result.items.map((item: any) => item.name),
-        logTypes: result.logs.map((log: any) => log.type),
+        itemNames: result.items.map((item) => item.name || ''),
+        logTypes: result.logs.map((log) => log.type),
         rngCalls,
     };
 };
@@ -160,11 +161,13 @@ const captureFailClosedCase = ({
 }: {
     label: string;
     relic: Relic | MalformedRelic;
-    enemy: Record<string, unknown>;
+    enemy: Monster;
 }) => {
     let rngCalls = 0;
     try {
-        processLoot(enemy as any, { relics: [relic] } as any, 1, () => {
+        // relic은 의도적으로 `Relic` 계약 밖 값(MalformedRelic)일 수 있다 — fail-closed
+        // 음성 케이스 전용 캐스트(relicDotMultiplierAudit.ts의 runMalformedVector와 동일 패턴).
+        processLoot(enemy, { relics: [relic as Relic] }, 1, () => {
             rngCalls += 1;
             return 0;
         }, () => 1);
@@ -284,7 +287,9 @@ export const buildRelicDropRateReport = ({
     const malformedCases = malformedValues.map(([label, val]) => captureFailClosedCase({
         label,
         relic: { id: `invalid-${label}`, effect: 'drop_rate', val },
-        enemy: { name: '슬라임', isBoss: true, dropMod: 1, exp: 160, meta: { prestigeRank: 3 } },
+        // meta는 Monster 필드가 아니고(processLoot도 읽지 않음) — fail-closed 이전에
+        // rngCalls 0으로 끝나 progression/prestige 경로에 닿지 않는 vestigial 값이었다.
+        enemy: { name: '슬라임', isBoss: true, dropMod: 1, exp: 160 },
     }));
     malformedCases.push(captureFailClosedCase({
         label: 'unsafe-chance-arithmetic',

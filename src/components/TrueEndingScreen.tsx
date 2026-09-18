@@ -15,7 +15,7 @@ import {
     type TrueEndingRevealState,
 } from '../utils/trueEndingPresentation';
 import { getClaimableQuestEntries } from '../utils/questProgress';
-import type { Player } from '../types/index.js';
+import type { Player, QuestReward } from '../types/index.js';
 
 interface TrueEndingScreenProps {
     player: Player;
@@ -26,7 +26,7 @@ interface TrueEndingScreenProps {
     };
 }
 
-const formatQuestReward = (reward: Record<string, any> | undefined) => {
+const formatQuestReward = (reward: QuestReward | undefined) => {
     const parts = [
         Number(reward?.exp) > 0 ? `경험치 ${Number(reward?.exp).toLocaleString()}` : null,
         Number(reward?.gold) > 0 ? `골드 ${Number(reward?.gold).toLocaleString()}` : null,

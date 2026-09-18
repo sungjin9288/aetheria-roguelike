@@ -182,7 +182,7 @@ const completedQuestTitles = (snapshot: ExpeditionSnapshot, player: Player, ques
 
 export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | null => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-    const candidate = value as Record<string, any>;
+    const candidate = value as Record<string, unknown>;
     if (typeof candidate.id !== 'string' || !candidate.id) return null;
     if (typeof candidate.origin !== 'string' || typeof candidate.destination !== 'string') return null;
     if (!Number.isFinite(Number(candidate.startedAt))) return null;
@@ -199,7 +199,7 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
         startGold: nonNegative(candidate.startGold),
         startHp: nonNegative(candidate.startHp),
         maxHpAtStart: Math.max(1, nonNegative(candidate.maxHpAtStart, 1)),
-        lowestHp: nonNegative(candidate.lowestHp, candidate.startHp),
+        lowestHp: nonNegative(candidate.lowestHp, Number(candidate.startHp)),
         kills: nonNegative(candidate.kills),
         bossKills: nonNegative(candidate.bossKills),
         explores: nonNegative(candidate.explores),
@@ -236,7 +236,7 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
 
 export const normalizeExpeditionSummary = (value: unknown): ExpeditionSummary | null => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-    const candidate = value as Record<string, any>;
+    const candidate = value as Record<string, unknown>;
     if (typeof candidate.id !== 'string' || !candidate.id) return null;
     if (typeof candidate.destination !== 'string' || typeof candidate.returnLocation !== 'string') return null;
     if (!Number.isFinite(Number(candidate.startedAt)) || !Number.isFinite(Number(candidate.endedAt))) return null;

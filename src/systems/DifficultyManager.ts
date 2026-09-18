@@ -16,7 +16,16 @@
 // ─────────────────────────────────────────────────────────────────────────
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
-import type { Monster, Player } from '../types/index.js';
+import type { Player } from '../types/index.js';
+import type { SpawnedMonster } from '../utils/exploreUtils.js';
+
+/**
+ * applyDynamicDifficulty가 받고 돌려주는 mStats — spawnEnemy()가 만드는
+ * SpawnedMonster 그대로다(Monster로 느슨하게 받으면 hp/maxHp/atk/exp/gold/name이
+ * 전부 optional이라, exploreFlow.ts가 그 필드들을 optional 처리 없이 바로 산술/로그에
+ * 쓰는 곳이 새로 "possibly undefined"로 깨진다 — 이 트랙 범위 밖 파일).
+ */
+export type ScaledMonsterStats = SpawnedMonster;
 
 const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
 
@@ -117,7 +126,7 @@ const applyBeginnerGrace = (diff: DifficultyMults, player: Player) => {
  * @returns {{ mStats: object, diffLabel: string }}
  */
 export const applyDynamicDifficulty = (
-    mStats: Monster,
+    mStats: SpawnedMonster,
     player: Player,
     addLog: ((type: string, text: string) => void) | undefined,
 ) => {
@@ -144,9 +153,8 @@ export const applyDynamicDifficulty = (
     //   exploreActions:127는 { mStats }만 destructure하고 mStats._diff* 읽는 곳 0건.
     // Number() — Monster의 hp/maxHp/atk/exp/gold는 전부 optional이라 곱셈에는 number가
     //   필요하다. spawnEnemy가 항상 채워서 넘기므로 값 변화는 없다(순수 타입 캐스트).
-    // scaled 자체는 Record<string, any>로 유지 — Monster로 좁히면 exploreFlow.ts(비대상
-    //   파일)의 하위 소비처가 전부 "possibly undefined"로 새로 깨진다(이 트랙 범위 밖).
-    const scaled: Record<string, any> = {
+    // scaled는 ScaledMonsterStats(위 정의) — 5개 수치 필드만 필수로 좁힌 Monster.
+    const scaled: ScaledMonsterStats = {
         ...mStats,
         hp:    Math.floor(Number(mStats.hp)    * diff.hpMult),
         maxHp: Math.floor(Number(mStats.maxHp) * diff.hpMult),
@@ -210,8 +218,8 @@ export const countLowHpWins = (stats: Player['stats'], threshold: number) => {
  */
 // playerSnapshot은 AI_SERVICE.generateEvent 컨텍스트로 그대로 흘러가는 자유 형태
 // 페이로드다(actionDeps.ts의 StoryLogData와 동일한 열린 계약) — 호출부(exploreActions.ts)도
-// Record<string, any>로 만들어 넘긴다.
-export const enrichSnapshotWithDifficulty = (playerSnapshot: Record<string, any>, player: Player) => {
+// Record<string, unknown>으로 만들어 넘긴다(AiEventContext.playerSnapshot과 동일 타입).
+export const enrichSnapshotWithDifficulty = (playerSnapshot: Record<string, unknown>, player: Player) => {
     const score = calcPerformanceScore(player);
     const diff  = getDifficultyMults(score);
     return {

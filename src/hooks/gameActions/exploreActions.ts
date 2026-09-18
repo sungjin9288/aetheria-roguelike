@@ -87,7 +87,7 @@ const runExplorePostDecisionRoll = async (
         dispatch({ type: AT.SET_AI_THINKING, payload: true });
         try {
             const fullStats = getFullStats();
-            const baseSnapshot: Record<string, any> = {
+            const baseSnapshot: Record<string, unknown> = {
                 name: player.name, job: player.job, level: player.level,
                 hp: player.hp, maxHp: fullStats.maxHp, mp: player.mp, maxMp: fullStats.maxMp,
                 gold: player.gold, title: player.activeTitle || null,

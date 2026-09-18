@@ -12,7 +12,7 @@ export const DEFAULT_EXPLORE_STATE = Object.freeze({
     lastOutcome: 'start',
 });
 
-const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
 // cycle 297: export 제거 — explorationPacing 내부 4회 사용만 (getNarrativeEventChance/
 // getQuietExplorationChance/getDiscoveryOdds/advanceExploreState), 외부 consumer 0건.
@@ -30,7 +30,7 @@ const getExploreState = (stats: Player['stats']) => {
     };
 };
 
-export const getExplorationPitySteps = (stats: any) => {
+export const getExplorationPitySteps = (stats: Player['stats']) => {
     const exploreState = getExploreState(stats);
     return {
         narrative: Math.max(0, exploreState.sinceNarrativeEvent - 2),
@@ -40,7 +40,7 @@ export const getExplorationPitySteps = (stats: any) => {
 };
 
 export const canOfferOptionalExploreDecision = (
-    stats: any,
+    stats: Player['stats'],
     activeExpedition?: { explores?: unknown } | null,
 ): boolean => {
     const minimumGap = getProgressionMinimumOrdinaryGap(activeExpedition);

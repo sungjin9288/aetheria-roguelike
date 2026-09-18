@@ -11,7 +11,7 @@ import {
 import { buildClassVitals } from '../hooks/gameActions/_shared.js';
 import { INITIAL_STATE, type GameState } from '../reducers/gameReducer.js';
 import { makeCombatActionMap } from '../reducers/handlers/combatHandlers.js';
-import type { Item, Player, ProgressionAxis, ProgressionProfile } from '../types/index.js';
+import type { Item, Monster, Player, ProgressionAxis, ProgressionProfile } from '../types/index.js';
 import { canEquip } from '../utils/equipmentValidation.js';
 import { startExpedition } from '../utils/expeditionLedger.js';
 import { spawnEnemy } from '../utils/exploreUtils.js';
@@ -220,6 +220,10 @@ const assertFiniteProgression = (player: Player) => {
 
 const equipmentItems = () => [...DB.ITEMS.weapons, ...DB.ITEMS.armors];
 
+/** `reqLevel`은 `Item` 타입에 없는 필드다 — 실제 데이터에는 0건이지만(items.ts 실측),
+ *  방어적으로 남아있는 malformed-input 체크 대상이라 로컬 확장 타입으로만 좁힌다. */
+type ItemWithReqLevel = Item & { reqLevel?: unknown };
+
 const getCanonicalEquipmentReqLevel = (item: Item) => {
     const tier = item.tier;
     if (!Number.isSafeInteger(tier) || Number(tier) < 1) {
@@ -238,7 +242,7 @@ const getCanonicalEquipmentReqLevel = (item: Item) => {
         );
     }
     if (Object.hasOwn(item, 'reqLevel')) {
-        const declaredReqLevel = (item as any).reqLevel;
+        const declaredReqLevel = (item as ItemWithReqLevel).reqLevel;
         if (!Number.isSafeInteger(declaredReqLevel)
             || Number(declaredReqLevel) !== Number(canonicalReqLevel)) {
             throw new ProgressionSimulationError(
@@ -254,7 +258,7 @@ const validateEquipmentCatalog = () => {
     const knownJobs = new Set(Object.keys(DB.CLASSES));
     for (const item of equipmentItems()) {
         getCanonicalEquipmentReqLevel(item);
-        const jobs = (item as any).jobs;
+        const jobs = item.jobs;
         if (!Array.isArray(jobs)
             || jobs.length < 1
             || jobs.some((job) => typeof job !== 'string' || !knownJobs.has(job))
@@ -285,7 +289,7 @@ interface TierEquipMetrics {
 
 const applyModeledLoot = (
     player: Player,
-    enemy: any,
+    enemy: Monster,
     seed: number,
     action: number,
     metrics: TierEquipMetrics,
@@ -670,6 +674,22 @@ export interface ProgressionComparisonOptions {
     maxSteps?: number;
 }
 
+interface ProgressionCheckpoint {
+    targetLevel: number;
+    // assertFiniteProgression(player)이 매 액션 직후(체크포인트 push 이전)에 이미
+    // level/exp/nextExp가 유한 number임을 검증한다 — Player 필드 자체는 optional이지만
+    // 이 시점의 값은 항상 number.
+    reachedLevel: number;
+    currentExp: number;
+    nextExp: number;
+    modeledActions: number;
+    modeledSeconds: number;
+    reachableJobCount: number;
+    reachableJobs: string[];
+    highestEquippedTier: number;
+    prematureEquipCount: number;
+}
+
 const runProgressionSimulation = (
     options: ProgressionSimulationOptions = {},
     enforceEventDirection = true,
@@ -703,7 +723,7 @@ const runProgressionSimulation = (
     );
     assertFiniteProgression(player);
 
-    const checkpoints: any[] = [];
+    const checkpoints: ProgressionCheckpoint[] = [];
     const tierEquip: TierEquipMetrics = {
         attemptedEquipCount: 0,
         equippedCount: 0,
@@ -712,7 +732,7 @@ const runProgressionSimulation = (
         prematureEquipCount: 0,
         highestEquippedTier: Math.max(
             0,
-            ...Object.values(player.equip || {}).map((item: any) => Number(item?.tier || 0)),
+            ...Object.values(player.equip || {}).map((item) => Number(item?.tier || 0)),
         ),
     };
     let action = 0;
@@ -763,9 +783,9 @@ const runProgressionSimulation = (
             const reachableJobs = reachableJobsAtLevel(targetLevel);
             checkpoints.push({
                 targetLevel,
-                reachedLevel: player.level,
-                currentExp: player.exp,
-                nextExp: player.nextExp,
+                reachedLevel: finiteNumber(player.level, 'checkpoint.reachedLevel', 1),
+                currentExp: finiteNumber(player.exp, 'checkpoint.currentExp'),
+                nextExp: finiteNumber(player.nextExp, 'checkpoint.nextExp', 1),
                 modeledActions: action,
                 modeledSeconds: action * MODEL_POLICY.secondsPerAction,
                 reachableJobCount: reachableJobs.length,

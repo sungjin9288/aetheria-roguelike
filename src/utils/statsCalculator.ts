@@ -1,5 +1,5 @@
 import { CONSTANTS, BALANCE } from '../data/constants.js';
-import type { Player, Relic, RelicSynergy, RelicValByEffect } from "../types/index.js";
+import type { EquipSlots, Player, Relic, RelicSynergy, RelicValByEffect } from "../types/index.js";
 import { DB } from '../data/db.js';
 import { getActiveRelicSynergies, relicNumber } from '../data/relics.js';
 import { getEquipmentProfile, getItemEnhanceBonus, getWeaponHands, isMagicWeapon, isShield } from './equipmentUtils.js';
@@ -20,12 +20,12 @@ const MAGIC_JOBS = ['마법사', '아크메이지', '흑마법사', '성직자',
  * @param {object} equip
  * @returns {{ atkMult: number, defMult: number, hpMult: number, activeSet: object | null }}
  */
-const computeSetBonus = (equip: any) => {
+const computeSetBonus = (equip: EquipSlots) => {
     const prefixes = [
         equip.weapon?.prefixName,
         equip.armor?.prefixName,
         equip.offhand?.prefixName,
-    ].filter(Boolean);
+    ].filter(Boolean) as string[];
 
     if (prefixes.length < 2) {
         return { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
@@ -35,7 +35,7 @@ const computeSetBonus = (equip: any) => {
     const setName = Object.keys(counts).find((k) => counts[k] >= 2);
     if (!setName) return { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
 
-    const setData = DB.ITEMS.sets?.find((s: any) => s.prefix === setName);
+    const setData = DB.ITEMS.sets?.find((s) => s.prefix === setName);
     if (!setData?.setBonus) return { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
 
     return {
@@ -210,7 +210,7 @@ const computeKillStackAtkBonus = (relics: Relic[], totalKills: number) =>
  * @param {object} equip
  * @returns {{ atk: number, def: number }}
  */
-const computeEnhanceBonus = (equip: any) => {
+const computeEnhanceBonus = (equip: EquipSlots) => {
     const weaponEnhance = equip.weapon?.enhance || 0;
     const armorEnhance = equip.armor?.enhance || 0;
     const offhandEnhance = equip.offhand?.enhance || 0;
@@ -323,7 +323,7 @@ export const calculateFullStats = (player: Player) => {
     const prestigeStatMult = getPrestigeUnlocks(meta.prestigeRank).statMult;
     const titlePassive: Partial<TitlePassive> = getTitlePassive(player.activeTitle) || {};
 
-    const setBonus = computeSetBonus(player.equip);
+    const setBonus = computeSetBonus(player.equip || {});
     const signatureSetBonus = computeSignatureSetBonus(player.equip);
     const codexBonus = computeCodexBonus(player.stats);
     // cycle 45: outfit set bonus — 장비의 jobs[]가 player.job과 매칭되는 슬롯 카운트별 누적 보너스
@@ -344,7 +344,7 @@ export const calculateFullStats = (player: Player) => {
     const killStackAtkBonus = computeKillStackAtkBonus(relics, player.stats?.kills || 0);
 
     const passiveBonus = getPassiveSkillBonuses(player);
-    const enhanceBonus = computeEnhanceBonus(player.equip);
+    const enhanceBonus = computeEnhanceBonus(player.equip || {});
 
     const baseAtk =
         ((player.atk ?? 0) + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + (meta.bonusAtk || 0) * prestigeStatMult + passiveBonus.atk) *

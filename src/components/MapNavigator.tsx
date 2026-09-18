@@ -86,7 +86,7 @@ const getEncounterLabel = (map: GameMap, route: MoveRecommendation | undefined) 
 };
 
 /** 배지 id → SignalBadge tone. 목록 행과 선택 카드가 같은 표를 쓴다(색 의미 일관). */
-const BADGE_TONE: Record<string, any> = {
+const BADGE_TONE: Record<string, string> = {
     boss: 'danger',
     bossGauge: 'warning',
     shop: 'upgrade',

@@ -64,10 +64,10 @@ export function buildReturnBriefing(
         getCurrentWeeklyProtocol(player.weeklyProtocol, currentDate),
     );
     const claimableQuestCount = getActiveQuestEntries(player)
-        .filter((entry: any) => entry.isComplete)
+        .filter((entry) => entry.isComplete)
         .length;
     const claimableWeeklyCount = weeklyMissions
-        .filter((mission: any) => mission.done && !mission.claimed)
+        .filter((mission) => mission.done && !mission.claimed)
         .length;
     const activeChainCount = buildChainJournal(player.eventChainProgress).length;
 
@@ -80,7 +80,7 @@ export function buildReturnBriefing(
         level: player.level || 1,
         hp: player.hp ?? 0,
         maxHp,
-        dailyCompletedCount: dailyMissions.filter((mission: any) => mission.done).length,
+        dailyCompletedCount: dailyMissions.filter((mission) => mission.done).length,
         dailyMissionCount: dailyMissions.length,
         claimableRewardCount: claimableQuestCount + claimableWeeklyCount,
         activeChainCount,

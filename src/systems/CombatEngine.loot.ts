@@ -1,7 +1,7 @@
 import type { Item, Monster, Player } from '../types/index.js';
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
-import { DROP_TABLES } from '../data/dropTables.js';
+import { DROP_TABLES, type DropTableEntry } from '../data/dropTables.js';
 import { BALANCE } from '../data/constants.js';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
 import { withCanonicalEquipmentBaseIdentity } from '../utils/equipmentBaseIdentity.js';
@@ -19,17 +19,6 @@ export type LootResult = {
     items: Item[];
     logs: LootLog[];
 };
-
-/**
- * DROP_TABLES(dropTables.ts)/LOOT_TABLE(loot.ts) 엔트리 — 두 데이터 파일 모두
- * 타입 없이(loose) export되어(외부 파일이라 이 wave 범위 밖) 이 경계에서 타입을 좁힌다.
- * `qty`는 [min, max] 튜플로 실측(dropTables.ts) — 미정의 시 1개.
- */
-interface DropTableEntry {
-    item: string;
-    rate: number;
-    qty?: [number, number];
-}
 
 const normalBonusPool = (enemy: Monster, player: Player | null): Item[] | null => {
     const map = player?.loc ? DB.MAPS[player.loc] : undefined;
@@ -114,7 +103,7 @@ export const processLoot = (
     const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
     const progressionLootMult = getProgressionLootMultiplier(player);
     const enemyDropMult = enemy.dropMod || 1.0;
-    const enrichedList = (DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string]) as DropTableEntry[] | undefined;
+    const enrichedList: readonly DropTableEntry[] | undefined = DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string];
     const lootList = (LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string]) as string[] | undefined;
     const inferredLevel = Math.max(1, Math.floor(((enemy.exp || BALANCE.LOOT_BASE_EXP) - BALANCE.LOOT_BASE_EXP) / BALANCE.LOOT_EXP_LEVEL_DIVISOR));
 

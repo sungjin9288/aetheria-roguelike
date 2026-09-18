@@ -13,6 +13,22 @@ import {
     getDiscoveryOdds,
     getNarrativeEventChance,
 } from '../utils/explorationPacing.js';
+import type { ExploreState, GameMap, Player, Relic } from '../types/index.js';
+
+/** 시뮬레이터가 항상 완전히 채워 넣는 exploreState 뼈대 — ExploreState(player.stats
+ *  단일 진실 원천)의 5개 필드를 전부 필수로 좁힌다(시뮬레이터는 DEFAULT_EXPLORE_STATE와
+ *  동일한 모양을 항상 리터럴로 채워 넣는다). */
+type SimulatedExploreState = Required<ExploreState>;
+
+/**
+ * 이 시뮬레이션 전용 player 픽스처 — `relics`만 `Player`보다 좁혀(항상 배열) `.length`/`.push`에
+ * optional chaining 없이 접근한다. 리듬 게이팅은 유물 "개수"만 읽고 effect/val은 어디서도
+ * 읽지 않으므로(getDiscoveryOdds도 player.relics를 읽지 않음), 개수 채우기용 스텁도
+ * `Relic` 판별 유니온을 만족하는 최소 유효값(crit_dmg, val 무관)으로 채운다.
+ */
+export type RhythmPlayer = Player & { relics: Relic[] };
+
+export const makeRhythmRelicStub = (id: string): Relic => ({ id, effect: 'crit_dmg', val: 0 });
 
 export interface ExplorationRhythmPolicy {
     id: 'baseline' | 'exploration-rhythm';
@@ -168,9 +184,9 @@ export const resolveExplorationRhythmOutcomeStep = ({
     relicLimit,
     rng,
 }: {
-    map: any;
-    player: any;
-    exploreState: Record<string, any>;
+    map: GameMap;
+    player: RhythmPlayer;
+    exploreState: SimulatedExploreState;
     policy: ExplorationRhythmPolicy;
     eventChanceBonus: number;
     relicLimit: number;
@@ -222,11 +238,11 @@ const simulateSeed = (
     const gaps: number[] = [];
     let lastOptionalAt = 0;
     let exploreState = { sinceNarrativeEvent: 0, sinceDiscovery: 0, sinceRelic: 0, quietStreak: 0, lastOutcome: 'start' };
-    const player = {
+    const player: RhythmPlayer = {
         meta: { prestigeRank: 0, mirror: {} },
         relics: [],
         stats: { exploreState },
-    } as any;
+    };
     const relicLimit = getPrestigeUnlocks(0).maxRelics;
 
     for (let index = 0; index < EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED; index += 1) {
@@ -242,7 +258,7 @@ const simulateSeed = (
             rng,
         });
         if (outcome === 'relic') {
-            player.relics.push({ id: `rhythm-relic-${player.relics.length + 1}` });
+            player.relics.push(makeRhythmRelicStub(`rhythm-relic-${player.relics.length + 1}`));
         }
 
         outcomes.push(outcome);

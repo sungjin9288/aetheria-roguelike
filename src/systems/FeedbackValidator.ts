@@ -7,7 +7,7 @@ export const FeedbackValidator = {
     RATE_LIMIT_KEY: 'aetheria_feedback_ts',
     RATE_LIMIT_MS: 60000, // 1 minute
 
-    validate(content: any) {
+    validate(content: string) {
         if (!content || content.length < this.MIN_LENGTH) {
             return { valid: false, error: MSG.FEEDBACK_MIN_LENGTH(this.MIN_LENGTH) };
         }

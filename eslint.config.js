@@ -31,8 +31,9 @@ export default defineConfig([
   // src/는 .ts/.tsx만 남았으나 eslint config가 .js/.jsx만 보고 있어 lint가
   // 사실상 no-op이었음. 도메인 타입은 tsc가 잡고, 여기서는 unused vars /
   // imports / hooks dependency 같은 코드 위생을 잡는다.
-  // no-explicit-any는 cycle 60에서 도메인 타입이 [key: string]: any를 의도적으로
-  // 사용하므로 disable. no-unused-vars는 underscore prefix 무시 (catch error 등).
+  // no-explicit-any: Wave 5~9(2026-09)에서 src의 명시 any를 0으로 내렸으므로 error로 켠다 —
+  // 새 any는 여기서 즉시 막히고, tests/debt-ratchet.test.js는 0 상한 이중 가드로 남는다.
+  // no-unused-vars는 underscore prefix 무시 (catch error 등).
   {
     files: ['src/**/*.{ts,tsx}'],
     extends: [
@@ -57,7 +58,7 @@ export default defineConfig([
         argsIgnorePattern: '^_',
         caughtErrorsIgnorePattern: '^_|^e$|^err$|^error$',
       }],
-      '@typescript-eslint/no-explicit-any': 'off',
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-empty-object-type': 'off',
       // react-hooks 7+의 신규 strict 규칙은 기존 의도된 패턴(테스트 harness용 ref
       // sync, useEffect 안 setState 등)과 충돌하므로 warning으로 완화. 신규 추가 시

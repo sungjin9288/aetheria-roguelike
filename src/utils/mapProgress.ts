@@ -1,9 +1,13 @@
+import type { CodexEntry } from '../types/player.js';
 import type { GameMap, Player } from '../types/index.js';
+
+/** getMapCodexProgress()의 codex 인자 — Player.stats.codex의 구조적 부분집합. */
+type MapCodex = { monsters?: Record<string, CodexEntry> } | null | undefined;
 
 // cycle 607: values default [] 제거 — 1 internal callsite (line 5)
 //   uniqueList([...spread array]) 명시 전달이라 default 도달 불가.
 //   private (no export). cycle 577과 동일 모듈 paired cleanup.
-const uniqueList = (values: any) => [...new Set(values.filter(Boolean))];
+const uniqueList = (values: Array<string | null | undefined>): string[] => [...new Set(values.filter(Boolean))] as string[];
 
 export const getMapEncounterRoster = (map: GameMap | null | undefined) => uniqueList([
     ...(map?.monsters || []),
@@ -14,11 +18,11 @@ export const getMapEncounterRoster = (map: GameMap | null | undefined) => unique
 // cycle 577: codex default {} 제거 — 1 internal (line 28) + 1 test (map-progress
 //   :22) 모두 명시 전달이라 default 도달 불가. body의 codex?.monsters || {}
 //   defensive guard 보존. 청소 메가 시리즈 69번째.
-export const getMapCodexProgress = (mapName: any, maps: any, codex: any) => {
+export const getMapCodexProgress = (mapName: string, maps: Record<string, GameMap> | null | undefined, codex: MapCodex) => {
     const map = maps?.[mapName];
     const roster = getMapEncounterRoster(map);
     const discoveredSet = new Set(Object.keys(codex?.monsters || {}));
-    const discovered = roster.filter((monster: any) => discoveredSet.has(monster)).length;
+    const discovered = roster.filter((monster) => discoveredSet.has(monster)).length;
 
     return {
         total: roster.length,
@@ -27,7 +31,7 @@ export const getMapCodexProgress = (mapName: any, maps: any, codex: any) => {
     };
 };
 
-export const getMapProgressState = (mapName: any, player: Player | null | undefined, maps: any) => {
+export const getMapProgressState = (mapName: string, player: Player | null | undefined, maps: Record<string, GameMap> | null | undefined) => {
     const currentLoc = player?.loc;
     const visitedSet = new Set([...(player?.stats?.visitedMaps || []), currentLoc].filter(Boolean));
     const codex = player?.stats?.codex || {};

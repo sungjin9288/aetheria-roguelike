@@ -24,7 +24,7 @@ const getBrowserStorage = (): SnapshotStorage | null => {
 const readSnapshot = (
     key: string,
     storage: SnapshotStorage | null = getBrowserStorage(),
-): Record<string, any> | null => {
+): Record<string, unknown> | null => {
     if (!storage) return null;
 
     try {
@@ -40,7 +40,7 @@ const readSnapshot = (
 
 const writeSnapshot = (
     key: string,
-    snapshot: Record<string, any>,
+    snapshot: Record<string, unknown>,
     storage: SnapshotStorage | null = getBrowserStorage(),
 ) => {
     if (!storage || !snapshot?.player) return false;
@@ -71,7 +71,7 @@ export const readLocalGameSnapshot = (storage?: SnapshotStorage | null) => (
     readSnapshot(LOCAL_GAME_SNAPSHOT_KEY, storage)
 );
 
-export const writeLocalGameSnapshot = (snapshot: Record<string, any>, storage?: SnapshotStorage | null) => (
+export const writeLocalGameSnapshot = (snapshot: Record<string, unknown>, storage?: SnapshotStorage | null) => (
     writeSnapshot(LOCAL_GAME_SNAPSHOT_KEY, snapshot, storage)
 );
 
@@ -95,7 +95,7 @@ export const readDeviceQaSnapshot = (storage?: SnapshotStorage | null, scenario?
     readSnapshot(getDeviceQaSnapshotKey(scenario), storage)
 );
 
-export const writeDeviceQaSnapshot = (snapshot: Record<string, any>, storage?: SnapshotStorage | null, scenario?: string | null) => (
+export const writeDeviceQaSnapshot = (snapshot: Record<string, unknown>, storage?: SnapshotStorage | null, scenario?: string | null) => (
     writeSnapshot(getDeviceQaSnapshotKey(scenario), snapshot, storage)
 );
 

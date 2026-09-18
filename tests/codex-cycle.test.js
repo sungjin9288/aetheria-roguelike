@@ -684,11 +684,15 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 468: equipped 변수 / 비교 UI 보존', async () => {
       const source = await readSrc('src/components/codex/EquipmentCodexCard.tsx');
-      // W8-Z5: `const equipped =` → `const equipped: CodexDisplayItem | null | undefined =`
-      //   (item.atk/def가 카탈로그 타입에 없어 로컬 타입으로 좁힘) — 선언부에 타입 애노테이션이
+      // W8-Z5: `const equipped =` → 타입 애노테이션이 붙은 단일 선언 — 선언부에 애노테이션이
       //   생겨도 여전히 `const equipped`로 시작해 `=`로 끝나는 단일 선언이면 보존으로 본다.
+      // W9-A1: atk/def 비교는 카탈로그(items.ts는 `val`)에도 Player.equip에도 없는 필드를 읽던
+      //   dead read라 제거됐다(로컬 CodexDisplayItem 별칭도 함께 제거). 이 오타 수정이 지키려던
+      //   것은 "equipped가 실제로 비교에 쓰인다"이므로, 살아있는 compareValue(hp/mp)로 검증한다.
       assert.ok(/const equipped\s*(:[^=]+)?=/.test(source), 'equipped 선언 보존');
-      assert.ok(/equipped\?\.atk/.test(source), 'equipped?.atk 비교 보존');
+      assert.ok(!/equipped\?\.(?:atk|def)/.test(source), 'equipped?.atk / equipped?.def dead read 0건');
+      assert.ok(/equipped\?\.hp/.test(source), 'equipped?.hp 비교 보존');
+      assert.ok(/equipped\?\.mp/.test(source), 'equipped?.mp 비교 보존');
       assert.ok(/현재 \{equipped\.name\}과 비교/.test(source), '현재 장비와의 비교 텍스트 보존');
   });
 }

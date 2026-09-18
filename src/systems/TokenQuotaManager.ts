@@ -1,11 +1,14 @@
 import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
+import type { Firestore } from 'firebase/firestore';
 import { BALANCE } from '../data/constants';
 import { MSG } from '../data/messages.js';
 
+// 시그니처는 firebase/firestore 의 실제 함수에서 `typeof` 로 가져온다 — 테스트가
+// 주입하는 모킹 구현도 이 형태만 만족하면 된다(createCloudAutosave.ts와 같은 패턴).
 type FirestoreOperations = {
-    doc?: (db: any, ...pathSegments: string[]) => any;
-    setDoc?: (reference: any, data: Record<string, any>, options: { merge: true }) => Promise<unknown> | unknown;
-    serverTimestamp?: () => any;
+    doc?: typeof doc;
+    setDoc?: typeof setDoc;
+    serverTimestamp?: typeof serverTimestamp;
 };
 
 // --- TOKEN QUOTA MANAGER (v3.6) ---
@@ -46,7 +49,7 @@ export const TokenQuotaManager = {
     },
 
     // Sync quota to Firestore for cross-device tracking
-    async syncToFirestore(uid: any, db: any, firestoreOperations: FirestoreOperations = {}) {
+    async syncToFirestore(uid: string, db: Firestore | null, firestoreOperations: FirestoreOperations = {}) {
         if (!uid || !db) return;
         try {
             const quota = this.getQuotaData();
@@ -59,8 +62,8 @@ export const TokenQuotaManager = {
                 limit: this.DAILY_LIMIT,
                 updatedAt: makeServerTimestamp(),
             }, { merge: true });
-        } catch (e: any) {
-            console.warn('Quota sync failed:', e.message);
+        } catch (e: unknown) {
+            console.warn('Quota sync failed:', e instanceof Error ? e.message : String(e));
         }
     }
 };

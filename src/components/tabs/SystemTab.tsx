@@ -74,6 +74,15 @@ const EQUIPMENT_DETAIL_OPTIONS = [
 
 const getQaValueLabel = (value: unknown) => QA_VALUE_LABELS[String(value)] || String(value || '확인 안 됨');
 
+/**
+ * `navigator.userAgentData`(User-Agent Client Hints)는 DOM lib에 아직 없는 실험적 API라
+ * `Navigator`에 선언돼 있지 않다 — `in`으로 존재를 좁혀서 읽는다(미지원 브라우저는
+ * `navigator.platform` fallback으로 자연 진행).
+ */
+const hasUserAgentData = (
+    nav: Navigator,
+): nav is Navigator & { userAgentData: { platform?: string } } => 'userAgentData' in nav;
+
 interface SettingsDisclosureProps {
     testId: string;
     icon: LucideIcon;
@@ -171,7 +180,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
 
     const qaContext = useMemo(() => {
         const platform = typeof navigator !== 'undefined'
-            ? ((navigator as any).userAgentData?.platform || navigator.platform || 'unknown')
+            ? ((hasUserAgentData(navigator) ? navigator.userAgentData.platform : undefined) || navigator.platform || 'unknown')
             : 'unknown';
         const screen = typeof window !== 'undefined'
             ? `${window.innerWidth}x${window.innerHeight}`
@@ -294,6 +303,8 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     }, []);
 
     const updateLiveConfig = useCallback(async (partialConfig: Partial<LiveConfig>) => {
+        // Firebase config 부재 시 이전에도 doc(null, …)이 throw했다 — 같은 실패 경로를 명시한다.
+        if (!db) throw new Error('Firebase config missing');
         const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
         await setDoc(configRef, { config: partialConfig }, { merge: true });
     }, []);
@@ -354,6 +365,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         }
 
         try {
+            if (!db) throw new Error('Firebase config missing');
             const feedbackCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'feedback');
             await addDoc(feedbackCol, {
                 uid: actions?.getUid(),

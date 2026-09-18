@@ -100,7 +100,7 @@ export const createCloudAutosave = ({
         //   (buildCloudPlayerSnapshot — Codex d8a111e). 레거시 archivedHistory 배관은
         //   Codex가 죽은 배관으로 제거했다(tests/release-dead-plumbing.test.js).
         const playerPayload = buildCloudPlayerSnapshot(player, now());
-        const payload: Record<string, any> = {
+        const payload = {
             player: playerPayload,
             gameState,
             enemy,

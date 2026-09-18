@@ -6,14 +6,6 @@ import ItemIcon from '../icons/ItemIcon';
 import SignalBadge from '../SignalBadge';
 import type { Item, Player } from '../../types/index.js';
 
-/**
- * items.ts 카탈로그 실제 필드는 atk/def가 아니라 val(무기 ATK / 방어구 DEF)이다.
- * 이 카드가 읽는 atk/def는 카탈로그·Player.equip 어디에도 없어 항상 undefined인
- * 레거시 읽기 지점이다 — 로직은 보존(StatRow 미노출)하고 타입만 명시한다.
- * src/types/item.ts는 이 트랙 범위 밖이라 재선언하지 않는다.
- */
-type CodexDisplayItem = Item & { atk?: number; def?: number };
-
 type CornerPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
 const CORNER_POSITIONS: CornerPosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
@@ -84,7 +76,7 @@ const StatRow = ({ label, value, compareValue }: { label: string; value: number;
  * EquipmentCodexCard — 레어리티별 프레임 + 스탯 비교 레이아웃
  */
 interface EquipmentCodexCardProps {
-    item?: CodexDisplayItem;
+    item?: Item;
     player?: Player | null;
 }
 
@@ -101,7 +93,7 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
     //   되어 비교 UI ("vs xxx" / diff badge) 미렌더되던 silent UI 결손 fix.
     //   shield 슬롯은 Player 스키마상 offhand에 들어가는 케이스가 일반적이지만,
     //   이번 수정은 typo만 정정하고 슬롯 매핑은 보존.
-    const equipped: CodexDisplayItem | null | undefined = item.type === 'weapon'
+    const equipped: Item | null | undefined = item.type === 'weapon'
         ? player?.equip?.weapon
         : item.type === 'armor'
             ? player?.equip?.armor
@@ -145,12 +137,9 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
                     {MSG.EQUIP_STAT_COMPARE}
                     {equipped && <span className="ml-1.5 normal-case text-slate-600">현재 {equipped.name}과 비교</span>}
                 </div>
-                {item.atk != null && (
-                    <StatRow label="공격력" value={item.atk} compareValue={equipped?.atk} />
-                )}
-                {item.def != null && (
-                    <StatRow label="방어력" value={item.def} compareValue={equipped?.def} />
-                )}
+                {/* cycle W9-A1: atk / def 읽기 제거 — 카탈로그·Player.equip 어디에도 없는
+                    필드라 항상 undefined였고 StatRow가 렌더된 적이 없다. 장비의 ATK/DEF는
+                    `val`이며 목록 행(WeaponCodex)이 getItemStatText로 이미 보여준다. */}
                 {item.hp != null && (
                     <StatRow label="생명" value={item.hp} compareValue={equipped?.hp} />
                 )}

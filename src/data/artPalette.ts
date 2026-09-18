@@ -22,7 +22,10 @@ import paletteSource from './artPalette.json' with { type: 'json' };
 // cycle 446: 4 출력 dead 필드 (outline / mid / hi / material) 제거 — production
 //   read 0건. equipmentArt.tintPalette는 base / shade / accent / trim 만 read.
 //   raw 원본 (artPalette.json)은 무영향. base / accent는 mid / hi의 호환 alias.
-const buildRuntimePalette = (raw: any) => Object.freeze({
+/** artPalette.json의 tonePalettes 원본 엔트리 1건 — JSON 리터럴에서 도출. */
+type TonePaletteSource = (typeof paletteSource.tonePalettes)[keyof typeof paletteSource.tonePalettes];
+
+const buildRuntimePalette = (raw: TonePaletteSource) => Object.freeze({
     shade: raw.shade,
     trim: raw.trim,
     // 호환 레이어 — 기존 equipmentArt.js가 참조하는 키
@@ -30,21 +33,27 @@ const buildRuntimePalette = (raw: any) => Object.freeze({
     accent: raw.hi,
 });
 
-export const TONE_PALETTES: Record<string, any> = Object.freeze(
+/** 런타임 팔레트 1건 — buildRuntimePalette 산출물에서 도출. */
+export type TonePalette = ReturnType<typeof buildRuntimePalette>;
+
+/** elementToneKey / defaultToneKey의 값 타입 — JSON 리터럴에서 도출. */
+type ToneKey = (typeof paletteSource.defaultToneKey)[keyof typeof paletteSource.defaultToneKey];
+
+export const TONE_PALETTES: Record<string, TonePalette> = Object.freeze(
     Object.fromEntries(
-        Object.entries(paletteSource.tonePalettes).map(([key, value]: any) => [key, buildRuntimePalette(value)])
+        Object.entries(paletteSource.tonePalettes).map(([key, value]) => [key, buildRuntimePalette(value)] as const)
     )
 );
 
-export const ELEMENT_TONE_KEY: Record<string, any> = Object.freeze({ ...paletteSource.elementToneKey });
+export const ELEMENT_TONE_KEY: Record<string, ToneKey> = Object.freeze({ ...paletteSource.elementToneKey });
 
 // cycle 288: DEFAULT_TONE_KEY export 제거 (private const) — getDefaultToneKey 내부 사용만.
-const DEFAULT_TONE_KEY: Record<string, any> = Object.freeze({ ...paletteSource.defaultToneKey });
+const DEFAULT_TONE_KEY: Record<string, ToneKey> = Object.freeze({ ...paletteSource.defaultToneKey });
 
 // cycle 288: REFERENCE_ACCENTS dead export 제거 — runtime consumer 0건.
 
-export const getTonePalette = (toneKey: any) => TONE_PALETTES[toneKey] || TONE_PALETTES.steel;
+export const getTonePalette = (toneKey: string): TonePalette => TONE_PALETTES[toneKey] || TONE_PALETTES.steel;
 
-export const getElementToneKey = (elem: any) => ELEMENT_TONE_KEY[elem] || null;
+export const getElementToneKey = (elem: string): ToneKey | null => ELEMENT_TONE_KEY[elem] || null;
 
-export const getDefaultToneKey = (slot: any) => DEFAULT_TONE_KEY[slot] || 'steel';
+export const getDefaultToneKey = (slot: string): ToneKey => DEFAULT_TONE_KEY[slot] || 'steel';

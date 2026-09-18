@@ -1,5 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
+import type { FullStats } from './statsCalculator.js';
 
 /**
  * 캠프파이어 이벤트 객체 생성 (Phase 2, B+ 2026-06 — Slay the Spire 캠프파이어).
@@ -12,7 +13,7 @@ import { MSG } from '../data/messages.js';
  *
  * @param {{ maxHp: number, maxMp: number }} fullStats
  */
-export const buildCampfireEvent = (fullStats: any) => {
+export const buildCampfireEvent = (fullStats: Pick<FullStats, 'maxHp' | 'maxMp'> | null | undefined) => {
     const maxHp = Math.max(1, Number(fullStats?.maxHp) || 1);
     const maxMp = Math.max(0, Number(fullStats?.maxMp) || 0);
     const healHp = Math.floor(maxHp * BALANCE.CAMPFIRE_HEAL_RATIO);

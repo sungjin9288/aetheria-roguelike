@@ -6,6 +6,7 @@ import { getItemStatText } from '../../utils/equipmentUtils';
 import { getItemRarity } from '../../utils/gameUtils';
 import ItemIcon from '../icons/ItemIcon';
 import EquipmentCodexCard from './EquipmentCodexCard';
+import type { CodexMilestone } from '../../utils/codexPresentation';
 import type { CodexEntry, Item, Player } from '../../types/index.js';
 
 const RARITY_BORDER: Record<string, string> = {
@@ -31,21 +32,6 @@ const CATEGORY_TABS: Array<{ id: EquipmentCategory; label: string }> = [
     { id: 'armors', label: '방어구' },
     { id: 'shields', label: '방패' },
 ];
-
-/**
- * `getCodexProgress()`(data/codexRewards.ts)가 반환하는 마일스톤 1건 — 함수 선언
- * 반환형은 `any[]`다(data/**, 이 트랙에서 수정 금지) — 이 화면이 실제로 읽는
- * 모양(category/claimed/reached/label/count)만 로컬로 좁힌다.
- */
-interface CodexMilestone {
-    id: string;
-    category: string;
-    count: number;
-    reward: Record<string, number>;
-    label: string;
-    reached: boolean;
-    claimed: boolean;
-}
 
 interface WeaponCodexProps {
     codex?: Partial<Record<EquipmentCategory, Record<string, CodexEntry>>>;

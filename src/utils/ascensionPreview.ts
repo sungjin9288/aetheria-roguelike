@@ -1,6 +1,7 @@
 import { BALANCE } from '../data/constants';
 import { PRESTIGE_TITLES } from '../data/titles';
 import { getEssenceLifetime } from '../systems/essenceLedger';
+import type { Player } from '../types/player';
 
 export interface PrestigeMilestone {
     rank: number;
@@ -21,7 +22,7 @@ export const PRESTIGE_MILESTONES: readonly PrestigeMilestone[] = Object.freeze([
     { rank: 10, name: '에테르 초월', description: '영구 능력치 2배 · 에테르 관문의 숨겨진 보스 출현' },
 ]);
 
-type AscensionMeta = Record<string, any>;
+type AscensionMeta = NonNullable<Player['meta']>;
 
 export interface AscensionOutcome {
     currentRank: number;

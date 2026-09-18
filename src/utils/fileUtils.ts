@@ -1,5 +1,5 @@
 // Utility: JSON File Export
-export const exportToJson = (filename: any, data: any) => {
+export const exportToJson = (filename: string, data: unknown) => {
     const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');

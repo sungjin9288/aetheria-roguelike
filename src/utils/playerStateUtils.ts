@@ -7,7 +7,10 @@ import { clearAdventureRelicBonuses } from './adventureRelicBonuses.js';
  * @returns {Object} 새 player 객체
  */
 // cycle 291: export 제거 — incrementStat 내부 사용만 (외부 consumer 0건).
-const updateStats = (player: Player, statsUpdate: any): Player => ({
+// `PlayerStats`는 private(cycle 299, tests/cycle-300-399.test.js가 export 0건을 고정)이라
+// 여기서 import할 수 없다 — incrementStat이 실제로 넘기는 모양(동적 키 → 숫자 누적값)
+// 그대로 `Record<string, number>`로 좁힌다.
+const updateStats = (player: Player, statsUpdate: Record<string, number>): Player => ({
     ...player,
     stats: { ...(player.stats || {}), ...statsUpdate },
 });
@@ -21,8 +24,11 @@ const updateStats = (player: Player, statsUpdate: any): Player => ({
  * cycle 502: 누적량 파라미터 제거 — 3 callsite (useInventoryActions) 모두 2 args
  *   호출. default 1 도달 불가 → 정적 + 1 inline.
  */
+// player.stats는 알려진 필드만 선언된 닫힌 인터페이스라 임의 문자열 키로 인덱싱할 수 없다 —
+// 이 함수의 계약 자체가 "임의 stats 필드를 이름으로 누적"이라 여기서만 느슨한 레코드로
+// 좁혀 읽는다(대상은 항상 숫자 카운터 필드).
 export const incrementStat = (player: Player, field: string): Player =>
-    updateStats(player, { [field]: ((player.stats as any)?.[field] || 0) + 1 });
+    updateStats(player, { [field]: (Number((player.stats as Record<string, unknown> | undefined)?.[field]) || 0) + 1 });
 
 // cycle 317: export 제거 — playerStateUtils 내부 2회 사용만, 외부 consumer 0건.
 const EMPTY_TEMP_BUFF = {

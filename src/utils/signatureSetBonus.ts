@@ -1,10 +1,26 @@
 import type { EquipSlots, Item, Player } from '../types/index.js';
 import { CONSTANTS } from '../data/constants.js';
-import signatureRegistry from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSets from '../data/signatureSets.json' with { type: 'json' };
+import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { isTwoHandWeapon, getNextEquipmentState } from './equipmentUtils.js';
 import { canEquip } from './equipmentValidation.js';
 import { findItemByName } from './gameUtils.js';
+
+/** signatureSets.json 세트 정의 1건 — 티어별 보너스는 동적 문자열 키("2"/"3"…)로
+ *  조회하므로 Record<string, X>로 연다(값 모양은 JSON 실측). */
+interface SignatureSetBonusTier {
+    atkMult?: number;
+    defMult?: number;
+    hpMult?: number;
+    desc?: string;
+}
+
+interface SignatureSetDef {
+    name: string;
+    tone: string;
+    members: string[];
+    bonuses: Record<string, SignatureSetBonusTier>;
+}
 
 /**
  * Signature 세트 보너스 계산. prefix 기반 기존 setBonus와 병행 동작.
@@ -24,12 +40,11 @@ import { findItemByName } from './gameUtils.js';
  *   슬롯을 막아 2세트조차 발동 불가능했다.
  */
 
-const REGISTRY: Record<string, any> = signatureRegistry.entries || {};
-const SETS: Record<string, any> = signatureSets.sets || {};
+const SETS: Record<string, SignatureSetDef> = Object.fromEntries(Object.entries(signatureSets.sets || {}));
 
 const getRegistryEntry = (item: Item | null | undefined) => {
     if (!item?.name) return null;
-    return REGISTRY[item.name] || null;
+    return SIGNATURE_ITEM_REGISTRY[item.name] || null;
 };
 
 /**

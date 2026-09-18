@@ -4,7 +4,14 @@
  * rate: 개별 드롭 확률 (0~1), qty: [min, max] 수량 범위 (생략 시 1개)
  * 기존 LOOT_TABLE보다 우선 참조됨.
  */
-export const DROP_TABLES: any = {
+/** 몬스터 1종의 강화 드롭 1건 — `qty`는 [min, max] 튜플, 생략 시 1개. */
+export interface DropTableEntry {
+    item: string;
+    rate: number;
+    qty?: readonly [number, number];
+}
+
+export const DROP_TABLES: Record<string, readonly DropTableEntry[]> = {
     // ── 숲 지역 ──
     '슬라임': [
         { item: '슬라임 젤리', rate: 0.55, qty: [1, 3] },

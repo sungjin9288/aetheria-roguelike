@@ -149,9 +149,14 @@ test('코덱스 카드: 무기/방어구/방패, 생명/공격력/방어력, 비
     const monsterHtml = renderStatic(createElement(MonsterCodex, { player }));
     assert.match(monsterHtml, /생명[\s\S]*공격력[\s\S]*방어력/);
 
-    const equipmentCard = { name: '테스트 갑옷', type: 'armor', atk: 1, def: 5, hp: 20, mp: 5, desc: '테스트' };
+    // W9-A1: 이전 픽스처의 atk / def는 items.ts 카탈로그에도 Player.equip에도 없는 필드라
+    //   EquipmentCodexCard의 해당 StatRow는 실제 플레이에서 한 번도 렌더된 적이 없었다
+    //   (장비 ATK/DEF는 `val`이고, 목록 행 WeaponCodex가 getItemStatText로 이미 보여준다).
+    //   dead read를 제거했으므로 카드가 실제로 읽는 hp / mp만 픽스처와 단언에 남긴다.
+    //   공격력·방어력 라벨 렌더는 바로 위 MonsterCodex 단언이 계속 덮는다.
+    const equipmentCard = { name: '테스트 갑옷', type: 'armor', hp: 20, mp: 5, desc: '테스트' };
     const equipmentCardHtml = renderStatic(createElement(EquipmentCodexCard, { item: equipmentCard, player }));
-    assert.match(equipmentCardHtml, /공격력[\s\S]*방어력[\s\S]*생명[\s\S]*기력/);
+    assert.match(equipmentCardHtml, /생명[\s\S]*기력/);
     assert.ok(!/>\s*(?:ATK|DEF|HP|MP)\s*<\/|\}G/.test(equipmentCardHtml));
 
     const materialName = DB.ITEMS.materials[0].name;

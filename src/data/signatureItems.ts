@@ -23,7 +23,21 @@
  */
 
 import registrySource from './signatureRegistry.json' with { type: 'json' };
-import type { Player } from '../types/index.js';
+import type { Item, Player } from '../types/index.js';
+
+/**
+ * 레지스트리 모양은 signatureRegistry.json(resolveJsonModule로 타입이 잡힌다)에서 도출한다.
+ * `setGroup`은 일부 엔트리에만 있어 유니온에서 뽑아 선택 필드로 닫는다.
+ */
+type SignatureRegistrySource = typeof registrySource.entries;
+type SignatureEntrySource = SignatureRegistrySource[keyof SignatureRegistrySource];
+type SignatureSetGroup = Extract<SignatureEntrySource, { setGroup: string }>['setGroup'];
+
+/** signatureRegistry.json 엔트리 1건 — JSON 리터럴에서 도출. */
+export type SignatureItemMeta = Omit<SignatureEntrySource, 'setGroup'> & { setGroup?: SignatureSetGroup };
+
+/** 아이템 이름(열린 키)으로 조회하는 레지스트리. */
+export type SignatureItemRegistry = Record<string, SignatureItemMeta>;
 
 // NOTE: 이전 버전에서는 `../utils/itemVisuals.js`의 SPECIAL_ITEM_ICON_KEYS를 import했으나,
 // signatureItems는 src/data 소속(→ game-data 청크)이고 itemVisuals는 utils 소속(기본 청크)이라
@@ -40,9 +54,9 @@ import type { Player } from '../types/index.js';
  * - wearable overlay: /assets/equipment-wearable-exact/{spriteKey}.png
  * 에 배치된다.
  */
-export const SIGNATURE_ITEM_REGISTRY = Object.freeze(
+export const SIGNATURE_ITEM_REGISTRY: SignatureItemRegistry = Object.freeze(
     Object.fromEntries(
-        Object.entries(registrySource.entries).map(([name, meta]: any) => [name, Object.freeze({ ...meta })])
+        Object.entries(registrySource.entries).map(([name, meta]) => [name, Object.freeze({ ...meta })] as const)
     )
 );
 
@@ -86,24 +100,24 @@ export const SIGNATURE_CANDIDATES = Object.freeze([
 ]);
 
 /** 아이템이 dedicated signature인지 확인 (Tier S/A/B 고유 아트 보유). */
-export const isSignatureItem = (item: any) => (
+export const isSignatureItem = (item: Item | null | undefined): boolean => (
     Boolean(item?.name && SIGNATURE_ITEM_REGISTRY[item.name])
 );
 
 /** 아이템의 dedicated signature sprite key 반환 (없으면 null). */
-export const getSignatureSpriteKey = (item: any) => {
+export const getSignatureSpriteKey = (item: Item | null | undefined): string | null => {
     if (!item || !item.name) return null;
     const meta = SIGNATURE_ITEM_REGISTRY[item.name];
     return meta ? meta.spriteKey : null;
 };
 
 /** 진짜 고유 아트가 있는지 (tint 기반 named는 제외) — UI badge/effects에 사용. */
-export const hasDedicatedSignatureArt = (item: any) => (
+export const hasDedicatedSignatureArt = (item: Item | null | undefined): boolean => (
     Boolean(item?.name && SIGNATURE_ITEM_REGISTRY[item.name])
 );
 
 /** signature 메타데이터 반환 (tier, category, tone, artNote). 없으면 null. */
-export const getSignatureMetadata = (item: any) => {
+export const getSignatureMetadata = (item: Item | null | undefined): SignatureItemMeta | null => {
     if (!item?.name) return null;
     return SIGNATURE_ITEM_REGISTRY[item.name] || null;
 };

@@ -8,7 +8,7 @@ import type {
 
 export const RETURN_SUPPLY_REWARD_NAME = '하급 체력 물약';
 
-const canonicalReward = DB.ITEMS.consumables.find((item: any) => (
+const canonicalReward = DB.ITEMS.consumables.find((item) => (
     item.name === RETURN_SUPPLY_REWARD_NAME
 ));
 
@@ -32,7 +32,7 @@ export const normalizeReturnSupplyRewardLedger = (value: unknown): ReturnSupplyR
         : {};
     const receipts = Object.fromEntries(Object.entries(rawReceipts).flatMap(([rawId, rawReceipt]) => {
         const expeditionId = rawId.trim();
-        const status = (rawReceipt as any)?.status;
+        const status = rawReceipt?.status;
         if (!expeditionId || !['pending', 'delivered'].includes(status)) return [];
         return [[expeditionId, { status }]];
     }));
@@ -82,7 +82,7 @@ export const deliverPendingReturnSupplyRewards = (player: Player): {
 
     for (const expeditionId of pendingIds) {
         const itemId = `return-supply:${expeditionId}`;
-        const alreadyPresent = inventory.some((item: any) => item.id === itemId);
+        const alreadyPresent = inventory.some((item) => item.id === itemId);
         if (!alreadyPresent && inventory.length >= capacity) continue;
         if (!alreadyPresent) inventory.push({ ...canonicalReward, id: itemId });
         receipts[expeditionId] = { status: 'delivered' };

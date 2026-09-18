@@ -3,9 +3,12 @@ import { CombatEngine } from './CombatEngine';
 import { buildRunSummary } from '../utils/gameUtils';
 import { pushBattleRecord, makeBattleRecord } from './DifficultyManager';
 import { calculateFullStats } from '../utils/statsCalculator';
+import type { FullStats } from '../utils/statsCalculator';
 import type { Item, Monster, Player } from '../types/index.js';
 import { createSeededRandom } from '../utils/seededRandom.js';
 import { resolveConsumableEffect } from './consumableEffect';
+import type { GraveEntry } from '../utils/graveUtils';
+import type { RunSummary } from '../reducers/actionTypes';
 
 export { createSeededRandom } from '../utils/seededRandom.js';
 
@@ -15,9 +18,9 @@ export type CombatItemTurnResult = {
     enemy: Monster | null;
     logs: Array<{ type: string; text: string }>;
     visualEffect: string | null;
-    runSummary?: any;
-    graveData?: any;
-    victoryStats?: any;
+    runSummary?: RunSummary;
+    graveData?: GraveEntry;
+    victoryStats?: FullStats;
 };
 
 export const resolveCombatItemTurn = ({

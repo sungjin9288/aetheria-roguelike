@@ -6,7 +6,7 @@ import type { Player } from '../types/index.js';
  * getAvailableCommands — 현재 상황에서 사용 가능한 커맨드 목록
  * Fast-refresh 경고 방지를 위해 별도 파일로 분리
  */
-export const getAvailableCommands = (gameState: any, player: Player | null | undefined) => {
+export const getAvailableCommands = (gameState: string, player: Player | null | undefined) => {
     const isSafe = DB.MAPS[player?.loc as string]?.type === 'safe';
 
     const base = [
@@ -44,7 +44,7 @@ export const getAvailableCommands = (gameState: any, player: Player | null | und
     }
 
     const exits = DB.MAPS[player?.loc as string]?.exits || [];
-    exits.forEach((exitName: any) => {
+    exits.forEach((exitName) => {
         base.push({ cmd: exitName, desc: `→ ${exitName}으로 이동` });
     });
 

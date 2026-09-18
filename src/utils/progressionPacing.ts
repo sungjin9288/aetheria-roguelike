@@ -1,11 +1,12 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
+import type { Player } from '../types/index.js';
 
 const EARLY_QUEST_CLAIM_PACING_MAX_LEVEL = 10;
 const POST_LEVEL_EXP_FILL_RATIO = 0.85;
 const EARLY_COMBAT_EXP_PACING_MAX_LEVEL = 4;
 const EARLY_COMBAT_EXP_RATIO = 0.6;
 
-export const getPacedCombatExp = (player: any, rewardExp: any) => {
+export const getPacedCombatExp = (player: Player | null | undefined, rewardExp: number) => {
     const rawExp = Math.max(0, Math.floor(Number(rewardExp) || 0));
     const level = Math.max(1, Math.floor(Number(player?.level) || 1));
 
@@ -16,7 +17,7 @@ export const getPacedCombatExp = (player: any, rewardExp: any) => {
     return Math.max(1, Math.floor(rawExp * EARLY_COMBAT_EXP_RATIO));
 };
 
-export const getPacedQuestClaimExp = (player: any, rewardExp: any) => {
+export const getPacedQuestClaimExp = (player: Player | null | undefined, rewardExp: number) => {
     const rawExp = Math.max(0, Math.floor(Number(rewardExp) || 0));
     const level = Math.max(1, Math.floor(Number(player?.level) || 1));
 
