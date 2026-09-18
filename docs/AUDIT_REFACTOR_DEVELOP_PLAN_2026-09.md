@@ -334,7 +334,7 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 | 통합 | ✅ | X1↔X4 `gameReducer.ts` 충돌은 X4의 타입된 `GameState` 채택 + X1 중복 제거로 해소. 교차 tsc 오류 3건(`unknown[]`→`EventOutcome[]` 헬퍼, story `data: Record<string, unknown>`, `stats: FullStats`). 생산자 없는 `Monster.id?` 제거. 증빙 JSON 6건 재생성 |
 | 래칫 | ✅ | `: any` 1,301 → **819**, `as any` 83 → **80**, systems 한글 260 → 122, reducers 한글 26, index signature 0, systems `Math.random` 0 (전부 하락만 허용) |
 
-**최종 게이트** (샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 problems · 래칫 6/6 — unit/build:guard/e2e/perf 결과는 게이트 완주 후 이 줄에 기록한다
+**최종 게이트** (head `1b6ad862` 기준, 샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 problems · unit **4,813 / 4,813**(skip 0) · build:guard ok · e2e(chromium, iPhone 12 에뮬레이션) **121 / 121**(61 + 60, 13.1분) · perf guard desktop ok(FCP 572ms) / mobile ok(FCP 436ms) · 증빙 verify 7종 ok. 첫 unit 실행의 1건 실패는 X3가 바꾼 소스를 해시하는 progression 증빙이 stale해진 것 → `progression:diagnostic:write` 후 그 reportHash를 바인딩하는 exploration-rhythm 증빙까지 연쇄 재생성(`--seed-start 20260810 --seed-count 64`). 교훈: 증빙은 소스 해시뿐 아니라 **다른 증빙의 해시**도 바인딩하므로 재생성 순서가 있다(progression → pacing)
 
 **남은 후보 (Wave 7)**: `BalanceConfig`의 `[key: string]: any` 인덱스 시그니처(`constants.ts` — `BALANCE.X` 미선언 키가 전부 `any`로 새어 나가 `protocolCycle`에 로컬 캐스트를 남겼다; 선언 필드로 닫기), `GameAction.payload: any` → 핸들러별 payload 유니온(dispatch 호출부 수백 곳 — 핸들러 그룹 단위로), utils 잔여 `: any` 248건(`exploreUtils`·`combatView`·`runProfileUtils` 상위), systems 162건(`CombatEngine` mixin 경계), `useGameTestApi` 54건(QA 시드 API — 프로덕션 영향 0, 마지막), components 잔여 173건(`CraftingPanel`·`WeaponCodex`·`TerminalView`·`SmartInventory` 상위).
 
