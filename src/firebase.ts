@@ -1,6 +1,6 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
-import { getFirestore } from 'firebase/firestore';
+import { getAuth, type Auth } from 'firebase/auth';
+import { getFirestore, type Firestore } from 'firebase/firestore';
 
 const REQUIRED_FIREBASE_KEYS = ['apiKey', 'authDomain', 'projectId'];
 
@@ -25,17 +25,18 @@ const readEnvConfig = () => {
     }
 };
 
-const firebaseConfig = readInjectedConfig() || readEnvConfig() || {};
-const hasFirebaseConfig = REQUIRED_FIREBASE_KEYS.every(
-    (key: any) => typeof firebaseConfig[key] === 'string' && firebaseConfig[key].trim().length > 0
-);
+const firebaseConfig: Record<string, string | undefined> = readInjectedConfig() || readEnvConfig() || {};
+const hasFirebaseConfig = REQUIRED_FIREBASE_KEYS.every((key) => {
+    const value = firebaseConfig[key];
+    return typeof value === 'string' && value.trim().length > 0;
+});
 
 // hasFirebaseConfig가 false인 호출부는 항상 auth/db 사용 전에 가드하므로(useFirebaseSync.ts:78,
 // GravePanel.tsx:33) config 부재 시 getAuth/getFirestore를 건너뛰어도 런타임 동작은 동일하다.
 // 부재 상태에서 무조건 호출하면 invalid-api-key로 throw되어 테스트 환경(plain Node) import가 불가능했음.
 const app = initializeApp(firebaseConfig);
-const auth: any = hasFirebaseConfig ? getAuth(app) : null;
-const db: any = hasFirebaseConfig ? getFirestore(app) : null;
+const auth: Auth | null = hasFirebaseConfig ? getAuth(app) : null;
+const db: Firestore | null = hasFirebaseConfig ? getFirestore(app) : null;
 
 // cycle 324: `app` export 제거 — src/ 어디에서도 import 0건. auth / db / hasFirebaseConfig만 active.
 export { auth, db, hasFirebaseConfig };

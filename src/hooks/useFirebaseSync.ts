@@ -239,7 +239,8 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
             void fallbackAuthOffline(MSG.SYNC_AUTH_TIMEOUT);
         }, AUTH_TIMEOUT_MS);
 
-        if (!hasFirebaseConfig) {
+        // auth는 hasFirebaseConfig가 참일 때만 non-null(firebase.ts) — 타입 가드용 동치 검사.
+        if (!hasFirebaseConfig || !auth) {
             console.warn('[FIREBASE] Missing required config. Booting in offline mode.');
             clearTimeout(authTimer);
             void fallbackAuthOffline(MSG.SYNC_NO_CONFIG);
@@ -284,6 +285,9 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
     useEffect(() => {
         if (mockMode) return undefined;
         if (bootStage !== 'data' || !uid) return;
+        // config 부재(db null)면 부트가 'data' 단계에 오지 않는다(오프라인 폴백이 직접 'ready'로 간다).
+        // 이전엔 이 경로에서 doc(null, …)이 throw했을 것 — 타입 가드로 명시한다.
+        if (!db) return;
 
         const userDocRef = doc(db, 'artifacts', APP_ID, 'users', uid);
         let bootResolved = false;
@@ -490,6 +494,7 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
     useEffect(() => {
         if (mockMode) return undefined;
         if (syncStatus !== 'syncing' || !uid) return;
+        if (!db) return; // config 부재면 syncStatus가 'syncing'이 되지 않는다 — 타입 가드
 
         const flushCloudSave = createCloudAutosave({
             db,
@@ -520,7 +525,7 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
     // --- Public Grave Upload on Death ---
     useEffect(() => {
         if (!PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion) return;
-        if (mockMode || !uid || !hasFirebaseConfig) return;
+        if (mockMode || !uid || !hasFirebaseConfig || !db) return;
         if (gameState !== 'dead') return;
         const graveEntries = normalizeGraves(grave);
         const allItems = graveEntries.flatMap((g) => getGraveItems(g)).slice(0, 3);

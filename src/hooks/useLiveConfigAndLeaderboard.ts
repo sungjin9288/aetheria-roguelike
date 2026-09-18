@@ -42,8 +42,11 @@ export const useLiveConfigAndLeaderboard = ({
     useEffect(() => {
         if (mockMode) return undefined;
         if (bootStage !== 'config') return;
+        // 'config' 단계는 온라인 인증 경로에서만 도달한다(useFirebaseSync) — db는 그때 non-null. 타입 가드.
+        if (!db) return;
+        const firestore = db;
 
-        const configDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
+        const configDocRef = doc(firestore, 'artifacts', APP_ID, 'public', 'data');
         const unsubConfig = onSnapshot(configDocRef, (snap) => {
             if (snap.exists() && snap.data().config) {
                 dispatch({ type: AT.SET_LIVE_CONFIG, payload: snap.data().config });
@@ -54,7 +57,7 @@ export const useLiveConfigAndLeaderboard = ({
 
         const fetchLeaderboard = async () => {
             try {
-                const lbRef = collection(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard');
+                const lbRef = collection(firestore, 'artifacts', APP_ID, 'public', 'data', 'leaderboard');
                 const q = query(lbRef, orderBy('totalKills', 'desc'), limit(LEADERBOARD_PAGE_SIZE));
                 const snap = await getDocs(q);
                 const data = snap.docs.map((d) => d.data());

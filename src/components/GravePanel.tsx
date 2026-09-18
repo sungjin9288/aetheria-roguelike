@@ -65,7 +65,8 @@ const GravePanel = ({
     const remainingInvades = Math.max(0, BALANCE.DAILY_INVADE_LIMIT - usedCount);
 
     const fetchGraves = async () => {
-        if (!capabilities.publicGraveInvasion || !hasFirebaseConfig || loading) return;
+        // db는 hasFirebaseConfig가 참일 때만 non-null(firebase.ts) — 타입 가드용 동치 검사.
+        if (!capabilities.publicGraveInvasion || !hasFirebaseConfig || !db || loading) return;
         setLoading(true);
         try {
             const gravesCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'graves');

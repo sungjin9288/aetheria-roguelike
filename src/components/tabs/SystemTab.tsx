@@ -303,6 +303,8 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     }, []);
 
     const updateLiveConfig = useCallback(async (partialConfig: Partial<LiveConfig>) => {
+        // Firebase config 부재 시 이전에도 doc(null, …)이 throw했다 — 같은 실패 경로를 명시한다.
+        if (!db) throw new Error('Firebase config missing');
         const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
         await setDoc(configRef, { config: partialConfig }, { merge: true });
     }, []);
@@ -363,6 +365,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         }
 
         try {
+            if (!db) throw new Error('Firebase config missing');
             const feedbackCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'feedback');
             await addDoc(feedbackCol, {
                 uid: actions?.getUid(),

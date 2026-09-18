@@ -1,4 +1,5 @@
 import { useState, useRef, lazy, Suspense, useCallback, useEffect } from 'react';
+import type { Item } from './types';
 import { MotionConfig } from 'framer-motion';
 
 import { GS } from './reducers/gameStates';
@@ -147,8 +148,8 @@ function App() {
         && !engine.postCombatResult
         && engine.gameState !== GS.ASCENSION
     );
-    const handleQuickSlotUse = (item: any, index: any) => {
-        if (!(engine.player.inv || []).some((entry: any) => entry.id === item?.id)) {
+    const handleQuickSlotUse = (item: Item, index: number) => {
+        if (!(engine.player.inv || []).some((entry) => entry.id === item?.id)) {
             if (typeof index === 'number') engine.actions.setQuickSlot?.(index, null);
             return;
         }
