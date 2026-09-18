@@ -188,6 +188,16 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
     if (!Number.isFinite(Number(candidate.startedAt))) return null;
 
     const job = typeof candidate.job === 'string' && candidate.job.trim() ? candidate.job.trim() : undefined;
+    // W11-C2(B2): `lowestHp`는 원정 시작 HP에서 출발하는 최저 HP 워터마크다(startExpedition에서
+    // `lowestHp: hp`로 열린다). 폴백은 **정규화된** startHp여야 한다 — 예전에는 날것의
+    // `Number(candidate.startHp)`라서 lowestHp/startHp가 둘 다 없는 저장본에서 폴백 자체가 NaN이
+    // 되었고, 그 NaN이 `finishExpedition`(lowestHp/lowestHpPercent NaN → 디브리핑 카드에 NaN 표시)과
+    // `trackExpeditionVitals`(`Math.min(NaN, hp) === NaN`이 항상 false라 매 호출이 새 player를
+    // 만들고 워터마크가 영원히 수렴하지 않음)까지 번졌다. 값이 정의된 입력에서는 결과가 동일하다
+    // (finite 값은 폴백을 쓰지 않고, startHp가 finite면 nonNegative가 같은 값을 준다) — 달라지는 것은
+    // 폴백이 유한하지 않던 경우(NaN / Infinity)뿐이고, 그 입력에서 startHp는 이미 0으로 정규화되고
+    // 있었으므로 이제 두 필드가 같은 워터마크에서 출발한다.
+    const startHp = nonNegative(candidate.startHp);
     const normalized = {
         id: candidate.id,
         startedAt: nonNegative(candidate.startedAt),
@@ -197,9 +207,9 @@ export const normalizeActiveExpedition = (value: unknown): ExpeditionSnapshot | 
         startExp: nonNegative(candidate.startExp),
         startNextExp: Math.max(1, nonNegative(candidate.startNextExp, CONSTANTS.START_NEXT_EXP)),
         startGold: nonNegative(candidate.startGold),
-        startHp: nonNegative(candidate.startHp),
+        startHp,
         maxHpAtStart: Math.max(1, nonNegative(candidate.maxHpAtStart, 1)),
-        lowestHp: nonNegative(candidate.lowestHp, Number(candidate.startHp)),
+        lowestHp: nonNegative(candidate.lowestHp, startHp),
         kills: nonNegative(candidate.kills),
         bossKills: nonNegative(candidate.bossKills),
         explores: nonNegative(candidate.explores),

@@ -13,10 +13,17 @@ import type { OfflineBootstrapResult, OfflineRestoreOutcome } from './persistenc
  * 순수 전이표다 — React/firebase/타이머/저장소에 의존하지 않는다.
  *
  * - **입력(`BootEvent`)**: 훅이 관찰하는 사건들(config 유무, 인증 결과, 타임아웃,
- *   원격 스냅샷, 로컬 부트스트랩 결과, 취소).
+ *   원격 스냅샷, 로컬 부트스트랩 결과, 취소). 복원 payload를 만드는 IO(저장소 읽기,
+ *   `migrateData`, 클라우드 레코드 import)는 훅이 하고, **그 결과를 이벤트가 싣고 온다**
+ *   (`mock_mode`/`device_qa`/`local_record`/`restore_prepared`의 `data`/`record`).
  * - **출력(`BootStep`)**: 그 사건에 대한 결정 — 다음 상태, 그대로 dispatch 할
  *   `GameAction[]`, 훅이 실행할 `BootEffect[]`, 그리고 "이번 전이가 복원을
  *   승인했는가"(`restore`).
+ *
+ * Wave 11 C1: 복원 payload의 **dispatch까지** 이 파일이 소유한다 — `AT.LOAD_DATA`와
+ * 그 결정에 딸린 `AT.SET_SYNC_STATUS`(offline/syncing), 복원 텔레메트리(`trackRestore`),
+ * 안내 로그(`log`)가 전부 승인 전이 하나에서 같이 나온다. 그래서 "어떤 경로가 무엇을
+ * 복원하고 무엇을 남기는가"는 훅을 읽지 않고 이 전이표만으로 확인된다.
  *
  * §8-5 계약(CLAUDE.md): `bootStage`가 완료되기 전에 게임을 렌더링하지 않는다 —
  * 즉 `'ready'`(= `AT.LOAD_DATA` 처리 결과)는 **복원 결정을 정확히 한 번 거친 뒤에만**
@@ -27,9 +34,10 @@ import type { OfflineBootstrapResult, OfflineRestoreOutcome } from './persistenc
  *   · 원격 문서 변경으로 들어오는 복원(cross-device sync)은 부트 이후에도 계속 허용된다.
  *   · `cancelled` 이후의 모든 이벤트는 무시된다.
  *
- * 훅과의 분담: 이 파일은 **순서/가드/메시지 선택**을 소유하고, 훅은 firebase 호출,
- * 타이머, `onSnapshot` 배선, 저장소 IO, 텔레메트리, 로그 id 생성(`Date.now()`/`Math.random()`)
- * 같은 부수효과를 소유한다.
+ * 훅과의 분담: 이 파일은 **순서/가드/메시지 선택/복원 dispatch**를 소유하고, 훅은 firebase
+ * 호출, 타이머, `onSnapshot` 배선, 저장소 IO, 텔레메트리 전송, 로그 id
+ * 생성(`Date.now()`/`Math.random()`) 같은 부수효과 실행을 소유한다 — 무엇을 보낼지는
+ * `trackRestore`/`log` effect가 이미 정해서 넘긴다.
  */
 
 /** 훅이 `SET_BOOT_STAGE`로 내보내는 단계 + 복원 완료(`ready`). */
@@ -64,8 +72,8 @@ export interface RemoteBootDoc {
     readonly hasLocalRecord: boolean;
 }
 
-/** 로컬 부트스트랩 결과가 어떤 경로로 들어왔는가. */
-export type BootLocalRecordSource = 'fallback' | 'empty-remote-doc';
+/** 부트가 남기는 로그 종류 — 폴백 경고와 서버 복원 안내 두 가지뿐이다. */
+export type BootLogLevel = 'warning' | 'system';
 
 export type BootEvent =
     /** 모의 런타임(mock) 부팅 — 신규 캐릭터 기본값으로 즉시 복원한다. */
@@ -89,14 +97,39 @@ export type BootEvent =
         /** 훅의 `lastLoadedTimestampRef.current`(React state 파생) — 에코 판정 입력. */
         readonly lastLoadedMillis: number | null;
     }
-    /** 로컬 부트스트랩 결과 도착(`getOfflineBootstrapData()`의 반환). */
+    /**
+     * 오프라인 폴백이 읽어 온 로컬 부트스트랩 결과.
+     * `message`는 이 폴백을 지시한 `fallbackOffline` effect의 문구 그대로다 —
+     * 복원이 승인되면 같은 문구가 경고 로그로 나간다.
+     */
     | {
         readonly kind: 'local_record';
         readonly record: OfflineBootstrapResult | null;
-        readonly source: BootLocalRecordSource;
+        readonly source: 'fallback';
+        readonly message: string;
     }
-    /** 원격/로컬 스냅샷 payload 준비 완료 — 이제 복원을 승인받는다. */
-    | { readonly kind: 'restore_prepared'; readonly source: 'local-record' | 'remote-doc' }
+    /** 원격 문서 부재로 로컬 부트스트랩을 채택하는 경로(폴백 경고 없음). */
+    | {
+        readonly kind: 'local_record';
+        readonly record: OfflineBootstrapResult | null;
+        readonly source: 'empty-remote-doc';
+    }
+    /** 로컬 레코드 payload 준비 완료 — 이제 복원을 승인받는다. */
+    | {
+        readonly kind: 'restore_prepared';
+        readonly source: 'local-record';
+        readonly data: LoadDataPayload;
+    }
+    /** 원격 문서 payload 준비 완료(가져오기·리비전 정산까지 끝난 뒤). */
+    | {
+        readonly kind: 'restore_prepared';
+        readonly source: 'remote-doc';
+        readonly data: LoadDataPayload;
+        /** 클라우드 레코드의 로컬 미러 import가 실패했는가(`importCloudRecordAuthority`). */
+        readonly localImportFailed: boolean;
+        /** 훅의 `hasBootLogRef.current` — 이미 로그가 있으면 서버 복원 안내를 다시 내지 않는다. */
+        readonly hasBootLog: boolean;
+    }
     | { readonly kind: 'bootstrap_timeout' }
     /** `onSnapshot` 에러 콜백. */
     | { readonly kind: 'remote_error' }
@@ -125,7 +158,18 @@ export type BootEffect =
     /** 로컬 세이브가 권한을 이겼다: 로컬 레코드로 복원한다. */
     | { readonly kind: 'restoreFromLocalRecord' }
     /** 원격 문서를 채택한다(가져오기·리비전 정산 포함). */
-    | { readonly kind: 'restoreFromRemoteDoc' };
+    | { readonly kind: 'restoreFromRemoteDoc' }
+    /**
+     * 승인된 복원 1건을 제품 텔레메트리에 남긴다(`restore` 이벤트, receipt는 훅 소유).
+     * 훅이 outcome을 다시 고르지 않도록 전이표가 결정한 값을 그대로 싣는다.
+     */
+    | {
+        readonly kind: 'trackRestore';
+        readonly outcome: BootRestoreOutcome;
+        readonly player: LoadDataPayload['player'];
+    }
+    /** 로그 1건 — 문구/시점은 전이표가 고르고 id 생성(`Date.now`/`Math.random`)은 훅이 한다. */
+    | { readonly kind: 'log'; readonly level: BootLogLevel; readonly message: string };
 
 /** 복원 payload를 준비하라는 지시 3종 — 훅이 직접 실행한다(비동기·저장소 IO). */
 export type BootRestoreEffect = Extract<
@@ -227,16 +271,17 @@ export const nextBootStep = (state: BootState, event: BootEvent): BootStep => {
         case 'device_qa': {
             if (state.phase !== 'init') return idle(state);
             const isDeviceQa = event.kind === 'device_qa';
+            const outcome: BootRestoreOutcome = isDeviceQa && hasPlayerName(event.data.player)
+                ? 'local'
+                : 'fresh';
             return restored(
                 state,
-                {
-                    source: isDeviceQa ? 'device-qa' : 'mock',
-                    outcome: isDeviceQa && hasPlayerName(event.data.player) ? 'local' : 'fresh',
-                },
+                { source: isDeviceQa ? 'device-qa' : 'mock', outcome },
                 [
                     { type: AT.LOAD_DATA, payload: event.data },
                     { type: AT.SET_SYNC_STATUS, payload: 'offline' },
                 ],
+                [{ kind: 'trackRestore', outcome, player: event.data.player }],
             );
         }
 
@@ -344,27 +389,66 @@ export const nextBootStep = (state: BootState, event: BootEvent): BootStep => {
         case 'local_record': {
             if (state.phase !== 'auth' && !inDataStage(state)) return idle(state);
             if (!event.record) return idle(state);
+            const { data, outcome } = event.record;
             if (event.source === 'fallback') {
                 // §8-5 (a): 복원이 끝난 뒤에 도착한 폴백은 기본값으로 덮지 않는다.
                 if (state.phase === 'ready') return idle(state);
-                return restored(state, { source: 'offline-fallback', outcome: event.record.outcome });
+                return restored(
+                    state,
+                    { source: 'offline-fallback', outcome },
+                    [
+                        // 봉투(`{ data, outcome }`)가 아니라 그 안의 스냅샷을 싣는다.
+                        { type: AT.LOAD_DATA, payload: data },
+                        { type: AT.SET_SYNC_STATUS, payload: 'offline' },
+                    ],
+                    [
+                        { kind: 'trackRestore', outcome, player: data.player },
+                        { kind: 'log', level: 'warning', message: event.message },
+                    ],
+                );
             }
-            return restored(state, {
-                source: 'empty-remote-doc',
-                outcome: event.record.outcome,
-            }, [], [{ kind: 'clearTimers' }]);
-        }
-
-        case 'restore_prepared':
-            if (!inDataStage(state)) return idle(state);
+            const dispatch: GameAction[] = [{ type: AT.LOAD_DATA, payload: data }];
+            // 이름 있는 런만 클라우드로 승격한다(빈 원격 문서 → 로컬 런이 최초 스냅샷이 된다).
+            if (data.player?.name) dispatch.push({ type: AT.SET_SYNC_STATUS, payload: 'syncing' });
             return restored(
                 state,
-                event.source === 'local-record'
-                    ? { source: 'local-record', outcome: 'local' }
-                    : { source: 'remote-doc', outcome: 'cloud' },
-                [],
-                [{ kind: 'clearTimers' }],
+                { source: 'empty-remote-doc', outcome },
+                dispatch,
+                [{ kind: 'clearTimers' }, { kind: 'trackRestore', outcome, player: data.player }],
             );
+        }
+
+        case 'restore_prepared': {
+            if (!inDataStage(state)) return idle(state);
+            if (event.source === 'local-record') {
+                return restored(
+                    state,
+                    { source: 'local-record', outcome: 'local' },
+                    [
+                        { type: AT.LOAD_DATA, payload: event.data },
+                        { type: AT.SET_SYNC_STATUS, payload: 'syncing' },
+                    ],
+                    [
+                        { kind: 'clearTimers' },
+                        { kind: 'trackRestore', outcome: 'local', player: event.data.player },
+                    ],
+                );
+            }
+            const dispatch: GameAction[] = [{ type: AT.LOAD_DATA, payload: event.data }];
+            const effects: BootEffect[] = [
+                { kind: 'clearTimers' },
+                { kind: 'trackRestore', outcome: 'cloud', player: event.data.player },
+            ];
+            if (event.localImportFailed) {
+                // 클라우드는 채택했지만 로컬 미러가 실패했다 — 자동저장을 다시 켜지 않는다.
+                dispatch.push({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
+                effects.push({ kind: 'log', level: 'warning', message: MSG.SYNC_CONNECT_FAIL });
+            }
+            if (!event.hasBootLog) {
+                effects.push({ kind: 'log', level: 'system', message: MSG.SYNC_SERVER_LOADED });
+            }
+            return restored(state, { source: 'remote-doc', outcome: 'cloud' }, dispatch, effects);
+        }
 
         case 'bootstrap_timeout':
             if (!inDataStage(state) || state.bootResolved) return idle(state);

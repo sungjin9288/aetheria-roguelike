@@ -251,14 +251,31 @@ test('firebase sync promotes a local run only when the cloud document is absent'
     const autosaveSource = await readFile(new URL('../src/hooks/createCloudAutosave.ts', import.meta.url), 'utf8');
 
     assert.match(source, /if \(docSnap\.exists\(\)\)[\s\S]+?migrateData\(remoteData\)/);
-    assert.match(source, /resolveCloudBootstrapAuthority\(localRecord, remoteData\)[\s\S]+?payload: 'syncing'/);
+    // Wave 11 C1: 복원 dispatch(LOAD_DATA / SET_SYNC_STATUS)는 전이표가 낸다. 여기서는
+    // 훅이 소유한 것 — 권한 판정 호출과 "준비된 payload를 어떤 이벤트로 넣는가" — 만 본다.
+    // 'syncing'/'offline' 을 실제로 언제 켜는지는 boot-state-machine.test.js 의 C1 테스트.
+    assert.match(source, /resolveCloudBootstrapAuthority\(localRecord, remoteData\)/);
+    assert.match(
+        source,
+        /kind: 'restore_prepared',\s*source: 'local-record',\s*data: localData,/,
+    );
     assert.match(source, /else \{\s*const localResult = await getOfflineBootstrapData\(\)/);
-    assert.match(source, /if \(localResult\.data\.player\?\.name\)[\s\S]+?payload: 'syncing'/);
+    assert.match(
+        source,
+        /kind: 'local_record',\s*record: localResult,\s*source: 'empty-remote-doc',/,
+    );
     assert.match(autosaveSource, /saveSchemaVersion: localRecord\?\.saveVersion \?\? 1/);
     assert.match(autosaveSource, /saveRevision: localRecord\?\.revision \?\? 0/);
     assert.match(source, /importCloudRecordAuthority\([\s\S]+?getRuntimeGameStorage\(\)[\s\S]+?remoteRecord/);
     assert.match(source, /const importedRecord = importResult\.record[\s\S]+?activeData = migrateData\(importedRecord\.payload\)/);
-    assert.match(source, /localImportFailed[\s\S]+?LOAD_DATA, payload: activeData[\s\S]+?SET_SYNC_STATUS, payload: 'offline'/);
+    // 미러 import 실패는 훅이 관찰해 이벤트로 넘기고, 그때 'offline' + 경고 로그를 붙일지는
+    // 전이표가 정한다(boot-state-machine.test.js: "로컬 미러 실패 시에만 offline + 경고 로그").
+    assert.match(
+        source,
+        /source: 'remote-doc',\s*data: activeData,\s*localImportFailed,\s*hasBootLog: hasBootLogRef\.current,/,
+    );
+    // 복원 payload dispatch 는 더 이상 훅에 없다 — 이 절대 부재가 이관의 잠금장치다.
+    assert.doesNotMatch(source, /AT\.LOAD_DATA/);
     assert.match(source, /pendingCloudRecordRef/);
     assert.match(source, /cloudRevisionFloorRef/);
     assert.match(source, /cloudRevisionAdvanceRequiredRef/);

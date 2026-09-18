@@ -304,7 +304,10 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 606: body isMockRuntime / pickFallbackEvent 보존', async () => {
       const source = await readSrc('src/services/aiService.ts');
-      assert.ok(/if \(isMockRuntime\(\)\)/.test(source), 'isMockRuntime 가드 보존');
+      // W11-C3: mock 런타임 분기 자체는 platform/aiEventPolicy.ts(decideAiEventRequest)로
+      //   옮겼다 — 서비스에 남은 것은 관측(`isMockRuntime()` 호출)뿐이므로 가드도 그 지점을 본다.
+      //   판정 표(mock-runtime 폴백 + "mock에서는 쿼터를 읽지 않는다")는 ai-event-policy.test.js가 소유한다.
+      assert.ok(/mockRuntime: isMockRuntime\(\)/.test(source), 'isMockRuntime 관측 보존');
       assert.ok(/return pickFallbackEvent\(loc,\s*history,\s*context(?:\s+as\s+EventContext)?\)/.test(source),
           'pickFallbackEvent(loc, history, context) 호출 보존');
   });

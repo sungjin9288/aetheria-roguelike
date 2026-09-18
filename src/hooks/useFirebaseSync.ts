@@ -9,7 +9,6 @@ import { signInAnonymously } from 'firebase/auth';
 
 import { auth, db, hasFirebaseConfig } from '../firebase';
 import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
-import { MSG } from '../data/messages';
 import { migrateData } from '../utils/gameUtils';
 import { hasMigratedPlayer } from '../utils/dataMigration';
 import { normalizeGraves, getGraveItems } from '../utils/graveUtils';
@@ -219,20 +218,11 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
             return step;
         };
 
-        // 복원 승인(§8-5)은 전이표가, 실제 dispatch/텔레메트리는 여기서 한다.
+        // 복원 승인(§8-5)도 복원 dispatch/텔레메트리/로그 문구도 전이표가 소유한다 —
+        // 여기서는 로컬 부트스트랩을 읽어(IO) 이벤트로 넣을 뿐이다.
         const fallbackAuthOffline = async (message: string) => {
             const offlineResult = resolveOfflineBootstrapResult(await getOfflineBootstrapData());
-            const step = applyBoot({ kind: 'local_record', record: offlineResult, source: 'fallback' });
-            if (!step.restore) return;
-            dispatch({ type: AT.LOAD_DATA, payload: offlineResult.data });
-            trackPersistenceResult(
-                offlineResult.data.player,
-                'restore',
-                offlineResult.outcome,
-                'restore',
-            );
-            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
-            dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('warning', message) });
+            applyBoot({ kind: 'local_record', record: offlineResult, source: 'fallback', message });
         };
 
         const runBootEffect = (effect: BootEffect) => {
@@ -266,6 +256,14 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
                 case 'fallbackOffline':
                     void fallbackAuthOffline(effect.message);
                     break;
+                case 'trackRestore':
+                    trackPersistenceResult(effect.player, 'restore', effect.outcome, 'restore');
+                    break;
+                case 'log':
+                    // 서버 복원 안내는 부트당 1회 — 원본과 같은 지점에서 ref를 닫는다.
+                    if (effect.level === 'system') hasBootLogRef.current = true;
+                    dispatch({ type: AT.ADD_LOG, payload: makeLogPayload(effect.level, effect.message) });
+                    break;
                 default:
                     // 데이터 단계 전용 effect는 이 수명에서 나오지 않는다(전이표가 phase로 막는다).
                     break;
@@ -276,17 +274,9 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
             const deviceQaData = deviceQaMode
                 ? getDeviceQaBootstrapData(deviceQaScenario)
                 : { player: INITIAL_STATE.player };
-            const step = applyBoot(deviceQaScenario !== null
+            applyBoot(deviceQaScenario !== null
                 ? { kind: 'device_qa', scenario: deviceQaScenario, data: deviceQaData }
                 : { kind: 'mock_mode', data: deviceQaData });
-            if (step.restore) {
-                trackPersistenceResult(
-                    deviceQaData.player,
-                    'restore',
-                    step.restore.outcome,
-                    'restore',
-                );
-            }
             return undefined;
         }
 
@@ -336,17 +326,7 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
 
         const fallbackToOffline = async (message: string) => {
             const offlineResult = resolveOfflineBootstrapResult(await getOfflineBootstrapData());
-            const step = applyBoot({ kind: 'local_record', record: offlineResult, source: 'fallback' });
-            if (!step.restore) return;
-            dispatch({ type: AT.LOAD_DATA, payload: offlineResult.data });
-            trackPersistenceResult(
-                offlineResult.data.player,
-                'restore',
-                offlineResult.outcome,
-                'restore',
-            );
-            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
-            dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('warning', message) });
+            applyBoot({ kind: 'local_record', record: offlineResult, source: 'fallback', message });
         };
 
         const subscribeUserDoc = (subscribedUid: string) => {
@@ -384,10 +364,11 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
                             }
                             if (localData.gameState === 'combat' && !localData.enemy) localData.gameState = 'idle';
                             if (!localData.player.loc) localData.player.loc = CONSTANTS.START_LOCATION;
-                            if (!applyBoot({ kind: 'restore_prepared', source: 'local-record' }).restore) return;
-                            dispatch({ type: AT.LOAD_DATA, payload: localData });
-                            trackPersistenceResult(localData.player, 'restore', 'local', 'restore');
-                            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'syncing' });
+                            applyBoot({
+                                kind: 'restore_prepared',
+                                source: 'local-record',
+                                data: localData,
+                            });
                             return;
                         }
 
@@ -450,21 +431,16 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
                             }
                             if (isStale()) return;
 
-                            if (!applyBoot({ kind: 'restore_prepared', source: 'remote-doc' }).restore) return;
-                            dispatch({ type: AT.LOAD_DATA, payload: activeData });
-                            trackPersistenceResult(activeData.player, 'restore', 'cloud', 'restore');
-                            if (localImportFailed) {
-                                dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
-                                dispatch({
-                                    type: AT.ADD_LOG,
-                                    payload: makeLogPayload('warning', MSG.SYNC_CONNECT_FAIL),
-                                });
-                            }
+                            // 복원 payload·클라우드 미러 실패·첫 로그 여부를 넣으면 전이표가
+                            // LOAD_DATA / SET_SYNC_STATUS / 텔레메트리 / 안내 로그를 결정한다.
+                            if (!applyBoot({
+                                kind: 'restore_prepared',
+                                source: 'remote-doc',
+                                data: activeData,
+                                localImportFailed,
+                                hasBootLog: hasBootLogRef.current,
+                            }).restore) return;
                             lastLoadedTimestampRef.current = remoteData.lastActive?.toMillis() || Date.now();
-                            if (!hasBootLogRef.current) {
-                                hasBootLogRef.current = true;
-                                dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('system', MSG.SYNC_SERVER_LOADED) });
-                            }
                         }
                     } else {
                         const localResult = await getOfflineBootstrapData();
@@ -477,21 +453,11 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
                             authority: null,
                             lastLoadedMillis: lastLoadedTimestampRef.current || null,
                         }).effects)) return;
-                        if (!applyBoot({
+                        applyBoot({
                             kind: 'local_record',
                             record: localResult,
                             source: 'empty-remote-doc',
-                        }).restore) return;
-                        dispatch({ type: AT.LOAD_DATA, payload: localResult.data });
-                        trackPersistenceResult(
-                            localResult.data.player,
-                            'restore',
-                            localResult.outcome,
-                            'restore',
-                        );
-                        if (localResult.data.player?.name) {
-                            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'syncing' });
-                        }
+                        });
                     }
                 } catch (error) {
                     if (isStale()) return;
@@ -520,6 +486,14 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
                     break;
                 case 'fallbackOffline':
                     void fallbackToOffline(effect.message);
+                    break;
+                case 'trackRestore':
+                    trackPersistenceResult(effect.player, 'restore', effect.outcome, 'restore');
+                    break;
+                case 'log':
+                    // 서버 복원 안내는 부트당 1회 — 원본과 같은 지점에서 ref를 닫는다.
+                    if (effect.level === 'system') hasBootLogRef.current = true;
+                    dispatch({ type: AT.ADD_LOG, payload: makeLogPayload(effect.level, effect.message) });
                     break;
                 default:
                     // 복원 준비(restoreFrom*)는 스냅샷 콜백이 직접 await 하며 실행한다.

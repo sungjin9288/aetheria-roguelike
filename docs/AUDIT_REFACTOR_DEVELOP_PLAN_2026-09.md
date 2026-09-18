@@ -485,5 +485,58 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 
 **최종 게이트** (head `7f50bc75` 기준, 샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 problems · unit **4,965 / 4,965**(skip 0, Wave 9 대비 +152 — B1 27 · B2 왕복/골든/검증기 · B3 전이표 30) · build:guard ok · e2e(chromium, iPhone 12 에뮬레이션) **121 / 121**(61 + 60, 15.2분) · perf guard desktop ok(FCP 672ms) / mobile ok(FCP 572ms) · 증빙 verify 전부 ok. **e2e 121/121이 B3 부트 상태기계 추출의 최종 패리티 증명**이다(부트 스펙이 실브라우저에서 같은 순서를 통과). perf 수치는 Wave 9(560/508ms)보다 올랐지만 예산(2,200/2,500ms) 대비 3배 이상 여유이고 러너 부하 차이 범위다 — blocking 전환 후 첫 실측이므로 다음 wave에서 3회 분산을 본다
 
-**남은 후보 (Wave 11)**: (1) **B3 finding 5 해소** — 복원 payload dispatch 3경로가 아직 훅에 남아 있다. `local-game-snapshot`·`persistence-observability`의 소스 정규식 가드("오프라인 폴백 2곳" 개수 단언 포함)가 그 dispatch 텍스트를 고정하고 있어서인데, 그 가드를 실행 테스트로 바꾸면 dispatch까지 상태기계로 옮길 수 있다(전이표는 이미 `restore` 계획에 source/outcome을 담고 있다); (2) **B1 finding 해소** — 행동 턴 `expectedTurn` 가드를 소모품 턴과 같은 `typeof === 'number'`로 좁히고 매트릭스의 `acceptedByAction` 기대를 뒤집는다; (3) **B2 findings 해소** — `migrateData`의 `startedAt` 비결정론을 주입 가능한 `now`로, `activeExpedition.lowestHp` NaN 입력 정규화, `grave.item` → `items[]` 마이그레이션 시점 정규화 여부 판단(`DATA_VERSION` bump 동반); (4) **AI 이벤트 서비스 계약** — `aiService`의 타임아웃(9.5s)·할당량(50/일)·오프라인 폴백 전이를 B3와 같은 방식의 순수 상태기계로; (5) **남은 소스 정규식 가드 전수** — 아트/네이티브/Toss 증빙 계약 외에 남은 "cycle N" 가드를 행동 단언으로 마감(Wave 5 W3의 미완분); (6) perf 예산 재보정 — blocking 3회 실측 분산 확인 후 필요 시 예산 조정.
+**남은 후보 (Wave 11)**: (1) **B3 finding 5 해소** — 복원 payload dispatch 3경로가 아직 훅에 남아 있다. `local-game-snapshot`·`persistence-observability`의 소스 정규식 가드("오프라인 폴백 2곳" 개수 단언 포함)가 그 dispatch 텍스트를 고정하고 있어서인데, 그 가드를 실행 테스트로 바꾸면 dispatch까지 상태기계로 옮길 수 있다(전이표는 이미 `restore` 계획에 source/outcome을 담고 있다); (2) **B1 finding 해소** — 행동 턴 `expectedTurn` 가드를 소모품 턴과 같은 `typeof === 'number'`로 좁히고 매트릭스의 `acceptedByAction` 기대를 뒤집는다; (3) **B2 findings 해소** — `migrateData`의 `startedAt` 비결정론을 주입 가능한 `now`로, `activeExpedition.lowestHp` NaN 입력 정규화, `grave.item` → `items[]` 마이그레이션 시점 정규화 여부 판단(`DATA_VERSION` bump 동반); (4) **AI 이벤트 서비스 계약** — `aiService`의 타임아웃(9.5s)·할당량(50/일)·오프라인 폴백 전이를 B3와 같은 방식의 순수 상태기계로; (5) **남은 소스 정규식 가드** — Wave 11 실측으로 범위 정정(아래 §15 C4 참조): 전수 전환은 잘못된 목표다; (6) perf 예산 재보정 — blocking 3회 실측 분산 확인 후 필요 시 예산 조정.
 
+---
+
+## 15. Wave 11 계획 (2026-09-18 착수, 베이스 `main` = `d3418760` = PR #37 merge commit)
+
+**핵심**: Wave 10이 계약을 열거하며 남긴 **finding 6건을 실제로 닫는다**. 그리고 §14.1이 후보로 적었던 "소스 정규식 가드 전수 마감"은 실측이 반증했다 — `readSrc` 호출 1,745건(`cycle-*` 7파일에 1,081건), 그 위의 단언 ~1,836건 중 다수가 `assert.ok(!/X/.test(source))` 형태의 **부재 불변식**("cycle N이 지운 dead plumbing이 되살아나지 않았다")이다. 부재는 코드를 실행해서 증명할 수 없으므로 행동 테스트로 바꿀 대상이 아니다. 전수 전환을 목표로 잡으면 잡히지도 않고, 잡아도 가드가 약해진다. 따라서 이 wave는 **분류와 정책**을 만들고 실제로 깨지기 쉬운 부류만 전환한다.
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **C1 부트 복원 dispatch 이관** | B3 finding 5: `LOAD_DATA` 복원 dispatch 3경로가 아직 훅에 남아 있다(`useFirebaseSync` 227·341·388·454·485). 이를 막던 소스 정규식 가드(`local-game-snapshot`·`persistence-observability`의 "오프라인 폴백 2곳" 개수 단언)를 먼저 행동 단언으로 바꾼 뒤, 전이표가 이미 담고 있는 `restore.source`/`outcome`을 써서 dispatch까지 상태기계로 | 부트 복원의 **순서와 payload 선택**이 한 곳에 — §8-5 계약이 전이표만 읽으면 완결 | 훅 리팩토링 2회차 | 가드를 지우고 dispatch만 옮기면 "폴백 2곳" 같은 중복 방지 불변식이 사라진다 — 전이표 단언으로 **동치 이전** 후 이관 | opus |
+| **C2 전투·마이그레이션 finding 마감** | B1: 행동 턴 `expectedTurn` 가드를 소모품 턴과 같은 `typeof === 'number'`로 좁히고 매트릭스의 `acceptedByAction` 기대를 뒤집는다. B2: `createCurrentRunProgress`의 `startedAt` 기본값을 주입 가능한 `now`로(호출부가 이미 `now`를 들고 있는지 확인), `normalizeActiveExpedition`의 `lowestHp` NaN 입력 정규화 | 결정론 완성(골든 정규화 불필요), 가드 표면 통일 | `grave.item` → `items[]` 마이그레이션은 **판단만** 하고 실행은 보류 조건부(`DATA_VERSION` bump 동반이라 별도 결정) | `startedAt`을 주입으로 바꾸며 호출부가 `Date.now()`를 그대로 넘기면 아무것도 안 바뀐다 — 주입 경로에 실제 시각 소유자(reducer payload / 테스트)가 있어야 | opus |
+| **C3 aiService 상태기계** | 타임아웃(9.5s)·일일 할당량(50, `TokenQuotaManager`)·오프라인 폴백·`fallbackReason` 선택을 B3와 같은 방식의 순수 전이로 추출(`platform/aiEventPolicy.ts`), `aiService`는 fetch·시각·쿼터 IO만 | AI 이벤트 경로의 폴백 판정이 테스트 가능한 표로 — 현재는 9개 테스트가 서비스 주변만 친다 | 추출 리팩토링 | 쿼터 상태(`TokenQuotaManager`)를 전이표에 흡수하면 두 진실 원천 — 쿼터는 **입력 이벤트**로만 | opus |
+| **C4 소스 가드 분류·정책** | `readSrc` 단언 1,745건 전수를 (a) **부재 불변식**(dead plumbing 재발 방지 — 유지, 단 포맷이 아니라 식별자 기준으로 견고화) (b) **행동을 텍스트로 고정**(전환 대상) (c) **stale/공허**(삭제)로 분류하고 결과를 `docs/` 표로. 실제 전환은 **가장 깨지기 쉬운 1파일**(`cycle-500-599`, 332건)만. 분류 기준과 "새 가드는 (a)에만 허용" 정책을 CLAUDE.md §7에 명문화 | Wave 6~9에서 ~20회 발생한 "타입 주석 바꿨더니 가드가 깨짐"의 원인을 부류별로 제거, 다음 wave가 이어받을 지도 | 분류 자체가 큰 작업 | 전수 전환을 시도하면 부재 불변식을 잃는다 — (a)는 전환 금지가 이 트랙의 핵심 규칙 | sonnet |
+| **C5 perf 분산·문서** | blocking 전환 후 CI 3회 실측 수집(§14.1은 1회뿐), 분산이 예산의 절반을 넘으면 예산 재검토. §15.1, CLAUDE.md, todo | 예산 근거를 1회 관측이 아닌 분포로 | — | — | 직접 |
+
+**순서**: C1 · C2 · C3 · C4 병렬(파일 집합: hooks+platform 부트 / reducers+utils / services+platform / tests 분류) → 통합 → 증빙 → 직렬 게이트 → C5 → PR → CI → merge commit.
+
+**판단 포인트**: §14.1의 "전수 마감"을 그대로 실행하지 않은 이유를 남긴다 — 계획은 측정 전에 쓰였고 측정이 그것을 반증했다. 계획서의 이전 항목을 지우지 않고 정정 표시하는 이유도 같다: 무엇을 왜 바꿨는지가 다음 wave의 판단 재료다.
+
+### 15.1 Wave 11 실행 결과 (2026-09-18, branch `claude/funny-rubin-xdv43e`, 베이스 `main` = `d3418760`)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| C1 부트 복원 dispatch 이관 | ✅ `256a36dc` | 복원 dispatch 4경로(`LOAD_DATA` + `SET_SYNC_STATUS` + 경고 로그)와 복원 텔레메트리 6경로를 `bootStateMachine`으로. 순서가 핵심 — **막고 있던 소스 정규식 가드 6건을 먼저 행동 단언으로 동치 이전하고, 각각이 막던 결함을 실제로 되살려 새 단언이 잡는 것을 확인한 뒤** dispatch를 옮겼다(되돌리기 실험 6종, 실패 건수까지 기록). 훅에는 IO·타이머·로그 id 생성(`Date.now()`/`Math.random()`)·React ref·텔레메트리 전송만 |
+| C2 전투·마이그레이션 finding 마감 | ✅ `5316eded` | (a) `RESOLVE_COMBAT_ACTION`의 `Number(payload.expectedTurn)` 강제변환 → `typeof === 'number' && Number.isFinite`(소모품 턴과 동일). 생산자 4곳 전수 확인 후 좁힘. (b) `migrateData(raw, { now })` — 벽시계는 경계 1곳에만, 골든의 `startedAt` 정규화 제거(골든에 박힌 값 자체가 결정론의 증거). (c) `normalizeActiveExpedition`의 `lowestHp` 폴백을 날것 `Number(startHp)`에서 **정규화된** `startHp`로 — 20×20 매트릭스 실측으로 달라지는 30셀이 전부 비유한(NaN 25 / Infinity 5)임을 증명 |
+| — `grave.item` 판단 | ✅ `41135b81` | **마이그레이션하지 않는다.** 깨진 reader가 없는 모양을 고치려고 `DATA_VERSION`을 올리는 건 순수 위험이고 writer가 이미 두 모양을 함께 쓴다. 대신 남아 있던 직접 인덱싱 3곳(`resolveInvasion` · `invadeGrave` 가드 · `GravePanel` 공개 목록)을 `getGraveItems()` 경유로 돌려 §8-2를 **코드 불변식**으로 만들고, `tests/grave-item-reader-contract.test.js`로 고정(직접 인덱싱을 되돌리면 실패하는 것 확인) |
+| C3 aiService 상태기계 | ✅ `321ba854` | `src/platform/aiEventPolicy.ts` — 호출 여부·`fallbackReason` 선택·응답 채택을 React·firebase·fetch 없는 순수 전이로. `fallbackReason` 7종은 전부 기존 코드에서 도출(신규 0). 쿼터는 정책의 상태가 아니라 **입력**(진실 원천 1곳), 다만 mock 런타임이 쿼터를 읽지 않는 기존 동작 보존을 위해 `readQuota`는 값이 아니라 지연 호출로 전달. 결정표 13건 |
+| C4 소스 가드 분류·정책 | ✅ `d44a9727` | 68파일 3,226 assertion 전수 분류(acorn AST 1차 + (b)·(c) 전건 수동 검증): **(a) 부재 불변식 1,321 + (a-support) 57 · (b) 행동-텍스트 1,807 · (c) stale/공허 39 · OUT_OF_SCOPE 2**. 전환은 가장 큰 1파일(`cycle-500-599`, 686건)만 — 405건 행동 전환 · 1건 robustify · 2건 삭제 · 1건 보류(사유 기록). 분류표 `docs/SOURCE_GUARD_CLASSIFICATION_2026-09.md`, 신규 가드 정책 CLAUDE.md §7 |
+| C5 perf 분산 | ✅ | 아래 |
+
+**C5 — perf 예산은 유지가 맞다 (실측 3회)**
+
+| CI run | head | desktop FCP | desktop DCL | mobile FCP | mobile DCL |
+|---|---|---:|---:|---:|---:|
+| #211 (main) | `b654f4ab` | 456ms | 217.6ms | 376ms | 209.7ms |
+| #212 (PR) | `ee797b35` | 380ms | 199.0ms | 368ms | 189.2ms |
+| #213 (main) | `d3418760` | 324ms | 168.8ms | 292ms | 154.4ms |
+
+동일하거나 근접한 코드에서 러너만 바뀌어도 desktop FCP가 **324~456ms(1.41배)** 흔들린다. §14.1의 로컬 672ms와 ci.yml 주석의 544~572ms까지 합치면 7회 관측 범위가 324~572ms(1.77배)다. §15 C5의 재검토 기준은 "분산이 예산의 절반을 넘으면"이었고 실측 분산 132ms는 절반(1,100ms)의 12%다 — **예산 2,200/2,500ms 유지**.
+
+판단의 요점: 예산을 "현재+10%"(≈360ms)로 잡았다면 #211이 그대로 red였다. blocking 체크의 가치는 "회귀를 잡는 민감도"가 아니라 "red가 뜨면 진짜다"라는 신호 대 잡음비에 있다. 지금 예산은 최악 관측(572ms) 대비 3.8배 여유이므로 **4배 느려지는 부팅 회귀만** 잡는다 — 200ms→600ms 같은 점진적 악화는 놓친다. 그 감도가 필요해지면 예산이 아니라 **분포 기반 회귀 검출**(중앙값 대비 N σ)로 바꿔야 하고, 그건 러너별 baseline 저장이 선행 조건이다.
+
+**발견 (이 wave의 실제 산출물)**
+
+1. **Wave 10의 §8-5 계약 (a)는 공허참이었다 (C1)** — "복원 승인 없는 ready 금지"를 전이표가 단언했지만 dispatch는 여전히 훅이 소유했으므로, 전이표가 무엇을 승인하든 훅은 독립적으로 `LOAD_DATA`를 쏠 수 있었다. dispatch 이관 후 계약을 실제 폭으로 다시 썼다 — "ready 뒤 `LOAD_DATA`는 크로스 디바이스 경로에서만, 폴백·mock/device-QA는 무". **계약 테스트가 초록이라는 것과 계약이 성립한다는 것은 다르다**: 주장하는 쪽이 강제하는 쪽과 같은 모듈이어야 성립한다.
+2. **소스 정규식 가드는 개수 단언일 때 가장 약하다 (C1)** — `persistence-observability`의 "폴백 2곳" 개수 단언은 **훅의 호출 지점 2곳**을 셌다. 행동 단언으로 옮기니 같은 불변식이 "폴백을 만들 수 있는 전이 **6종 전부**"를 세게 됐고, 되돌리기 실험에서 2건이 아니라 6건이 실패했다. 텍스트 가드는 구현 위치를 세고 행동 가드는 의미 있는 경우를 센다 — 리팩터가 호출 지점을 합치면 전자는 조용히 약해진다.
+3. **전수 전환은 틀린 목표였다 (C4)** — 분류 결과 (a) 부재 불변식이 1,378건(42.7%)이다. "없는 것"은 실행으로 증명할 수 없으므로 행동 테스트로 바꾸면 **가드가 사라진다**. §14.1이 "전수 마감"을 후보로 적은 것은 측정 전이었고 §15가 이를 정정했다. 대신 남은 정책은 비대칭이다 — 기존 (b) 1,807건은 그대로 두고(전환 비용 > 이득), **신규 가드만 (a)에 한정**한다. 부채는 증가를 막는 것이 청산보다 싸다.
+4. **전환된 단언이 실제로 무는지 증명했다 (C4)** — `src` 스크래치 복사에 1라인 결함 5종(`incrementStat` +1→+2 · `grantGold` 누적 제거 · 장비 슬롯 main/offhand swap · 일일 프로토콜 임계값 5→50 · `ClassIcon` nullish 폴백 제거)을 주입해 5/5 실패를 확인. **전환의 리스크는 "커버리지를 잃고도 초록"이므로, 전환 작업은 결함 주입 검증 없이는 완료로 볼 수 없다.**
+5. **`lowestHp` NaN은 워터마크를 영구히 깨뜨리고 있었다 (C2)** — `Math.min(NaN, hp)`가 항상 `NaN`이라 `trackExpeditionVitals`가 매 호출마다 새 `player`를 만들면서 수렴하지 않았다. 타입은 `number`였으므로 tsc가 잡지 못한다 — **비유한 수는 타입 시스템의 사각지대**다.
+6. **쿼터 소모 시점이 이벤트/스토리에서 비대칭 (C3)** — 이벤트는 success 응답만으로 `recordCall`하고 패키지 빌드가 실패해도 되돌리지 않는 반면, 스토리는 narrative가 문자열로 확인된 뒤에만 기록한다. 동작 보존으로 두고 기록(할당량 50/일에서 실패한 이벤트 호출도 1건을 소모한다).
+
+**최종 게이트** (head `f812024d`, 샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 · unit **4,990 / 4,990**(skip 0, Wave 10 대비 +25 — C1 전이표/봉투 · C2 expectedTurn·결정론·워터마크 · C3 결정표 13 · 묘비 reader 계약 · C4 net −1) · build:guard ok · e2e(chromium, iPhone 12 에뮬레이션) **121 / 121**(61 + 60) · perf desktop ok(FCP 424ms) / mobile ok(FCP 460ms) · 증빙 11종 verify 전부 ok.
+
+**게이트 운용 교훈** — 1차 실행에서 unit 1건(`equipment-combat-power-audit`의 "무관한 Git HEAD 변경이 증빙 바이트를 바꾸지 않는다")과 e2e 1건(부트 `persistent-status-bar` 20s 미출현)이 실패했고, 둘 다 **게이트와 병행해 돌린 내 명령이 원인**이었다. 전자는 그 테스트가 워킹 트리의 증빙 파일을 실제로 `--write`하는 동안 같은 파일에 `--write`를 건 경합이고, 후자는 CPU 무거운 감사 스크립트 2회와 겹친 부팅 지연이다. 단독 재실행에서 각각 10/10, 해당 spec 9/9(6~8초, 타임아웃 30초), 샤드 1 전체 61/61로 재현되지 않았다. **이 게이트는 읽기 전용이 아니다** — 증빙 파일을 쓰는 테스트를 포함하므로 실행 중에는 저장소에 어떤 명령도 병행하지 않는다(문서 작업 포함).

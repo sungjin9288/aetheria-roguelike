@@ -11,6 +11,16 @@ import {
     type EventPackage,
 } from '../utils/aiEventUtils';
 import { isMockRuntime } from '../utils/runtimeMode';
+import {
+    decideAiEventRequest,
+    getEventFallbackAnnotation,
+    resolveAiEventPackage,
+    resolveAiEventResponse,
+    resolveAiStoryResponse,
+    type AiProxyTrack,
+    type AiQuotaState,
+    type AiRequestKind,
+} from '../platform/aiEventPolicy';
 
 /** `pickFallbackEvent`/`summarizeHistory`가 받는 history 배열 원소 — 비export(HistoryEntryLike)라 파라미터에서 도출한다. */
 type AiHistoryEntry = NonNullable<Parameters<typeof pickFallbackEvent>[1]>[number];
@@ -29,19 +39,50 @@ interface AiEventContext {
     mapSnapshot?: Record<string, unknown>;
 }
 
-/**
- * 이 프록시가 돌려주는 응답은 외부(AI 백엔드) 산출물이다 — 형태를 신뢰하지 않고
- * `unknown`으로 받아 이 경계에서만 좁힌다. `data`는 `buildEventPackage`(payload: unknown)로
- * 그대로 흘러가므로 더 좁힐 필요가 없고, story 경로만 `narrative` 존재를 확인한다.
- */
-interface AiProxyResult {
-    success?: boolean;
-    data?: unknown;
-}
+// W11-C3: 폴백 판정(호출할까 · 어떤 fallbackReason으로 접을까 · 응답을 채택할까)은
+//   `platform/aiEventPolicy.ts`가 소유한다. 이 파일에 남은 것은 IO뿐이다 —
+//   fetch / AbortController / 타이머 / firebase 토큰 / localStorage 쿼터 읽기·기록 /
+//   폴백 풀 선택(pickFallbackEvent)과 패키지 정규화(buildEventPackage) 호출.
+//   프록시 응답 봉투(`success`/`data`)를 좁히는 일도 정책 쪽 resolver가 한다.
 
-const asAiProxyResult = (value: unknown): AiProxyResult | null => (
-    value !== null && typeof value === 'object' ? (value as AiProxyResult) : null
-);
+/**
+ * 프록시 트랙 = [LatencyTracker 라벨, AbortController 타임아웃(ms)].
+ * LatencyTracker 라벨과 abort 타임아웃은 둘 다 이 파일이 실행하는 IO의 설정값이므로
+ * 여기(서비스)가 소유하고, 정책에는 입력으로 넘겨 `call` 결정에 그대로 실려 돌아온다
+ * — 결정 이후 다시 이 표를 뒤지지 않는다(진실 원천 1곳).
+ * 9500ms는 CLAUDE.md §6 "AI 이벤트 생성"의 9.5s 계약이다.
+ */
+const AI_PROXY_TRACKS: Record<AiRequestKind, AiProxyTrack> = {
+    event: [
+        'ai-event',
+        9500,
+    ],
+    story: [
+        'ai-story',
+        9500,
+    ],
+};
+
+/**
+ * 쿼터 관측 1회 — localStorage IO다. 정책은 이 값을 **입력**으로만 받고 사용량을
+ * 들고 있지 않는다(`TokenQuotaManager`가 단일 진실 원천).
+ */
+const readQuota = (): AiQuotaState => ({
+    exhausted: !TokenQuotaManager.canMakeAICall(),
+    exhaustedMessage: TokenQuotaManager.getExhaustedMessage(),
+});
+
+/**
+ * 요청 1건의 관측을 모아 정책에 넘긴다. `readQuota`를 값이 아니라 함수로 넘기는 이유는
+ * mock 런타임(smoke/e2e/device-QA)에서 쿼터를 읽지 않는 기존 동작을 보존하기 위함이다.
+ */
+const decideRequest = (requestKind: AiRequestKind) => decideAiEventRequest({
+    requestKind,
+    mockRuntime: isMockRuntime(),
+    proxyEnabled: CONSTANTS.USE_AI_PROXY,
+    readQuota,
+    track: AI_PROXY_TRACKS[requestKind],
+});
 
 /**
  * AI_SERVICE 내부 공용 프록시 호출 헬퍼 (DRY 적용)
@@ -50,10 +91,13 @@ const asAiProxyResult = (value: unknown): AiProxyResult | null => (
  * @param {number} timeoutMs - 타임아웃 (ms)
  * @returns {Promise<object|null>}
  */
-// cycle 539: trackLabel / timeoutMs defaults 제거 — 2 internal callsite (line
-//   80 'ai-event'/9500, line 133 'ai-story'/9500) 모두 명시 전달이라 두
-//   default 모두 도달 불가. util/component/hook/system/reducer/service default
-//   청소 메가 시리즈 35번째, services/ 진입.
+// cycle 539: trackLabel / timeoutMs defaults 제거 — 2 internal callsite (이벤트
+//   'ai-event'/9500, story 'ai-story'/9500) 모두 명시 전달이라 두 default 모두
+//   도달 불가. util/component/hook/system/reducer/service default 청소 메가
+//   시리즈 35번째, services/ 진입.
+// W11-C3: 두 값은 이제 AI_PROXY_TRACKS → 정책의 `call` 결정을 거쳐 들어온다.
+//   실패(fetch 예외·AbortError·!response.ok)는 예전처럼 전부 null로 접히고,
+//   그 null을 `resolveAiEventResponse`/`resolveAiStoryResponse`가 분류한다.
 const callProxy = async (body: unknown, trackLabel: string, timeoutMs: number): Promise<unknown> => {
     try {
         const token = await auth?.currentUser?.getIdToken?.();
@@ -144,45 +188,47 @@ export const AI_SERVICE = {
             if (typeof rng === 'function') return pickFallbackEvent(loc, history, context as EventContext, rng);
             return pickFallbackEvent(loc, history, context as EventContext);
         };
-        if (isMockRuntime()) {
-            return pickEventFallback();
-        }
 
-        if (!TokenQuotaManager.canMakeAICall()) {
-            const exhaustedFallback = pickEventFallback();
-            if (!exhaustedFallback) return null;
-            return {
-                ...exhaustedFallback,
-                fallbackReason: 'quota',
-                fallbackMessage: TokenQuotaManager.getExhaustedMessage()
-            };
+        // W11-C3: mock 런타임 / 쿼터 소진 / 프록시 비활성 3분기는 정책이 판정한다.
+        //   쿼터 소진만 폴백 이벤트에 표시(fallbackReason:'quota' + 안내 문구)를 남긴다.
+        const decision = decideRequest('event');
+        if (decision.kind === 'fallback') {
+            const fallbackEvent = pickEventFallback();
+            const annotation = getEventFallbackAnnotation(decision);
+            if (!annotation) return fallbackEvent;
+            if (!fallbackEvent) return null;
+            return { ...fallbackEvent, ...annotation };
         }
 
         const recentHistory = summarizeHistory(history);
         const recentEvents = getRecentEventSet(history);
 
-        if (CONSTANTS.USE_AI_PROXY) {
-            const result = asAiProxyResult(await callProxy(
-                {
-                    type: 'event',
-                    data: {
-                        location: loc,
-                        history: recentHistory,
-                        playerSnapshot: context.playerSnapshot || {},
-                        mapSnapshot: context.mapSnapshot || {},
-                        uid
-                    }
-                },
-                'ai-event',
-                9500
-            ));
-            if (result?.success) {
-                TokenQuotaManager.recordCall();
-                const normalized = buildEventPackage(result.data, { ...context, location: loc, source: 'ai' } as EventContext);
-                if (normalized && !recentEvents.has(normalized.desc)) {
-                    return normalized;
+        const result = resolveAiEventResponse(await callProxy(
+            {
+                type: 'event',
+                data: {
+                    location: loc,
+                    history: recentHistory,
+                    playerSnapshot: context.playerSnapshot || {},
+                    mapSnapshot: context.mapSnapshot || {},
+                    uid
                 }
-            }
+            },
+            decision.trackLabel,
+            decision.timeoutMs
+        ));
+        // 쿼터 소모 시점 보존: 이벤트 경로는 success 응답을 받은 순간 기록한다
+        //   (패키지가 아래 검증에서 떨어져도 되돌리지 않는다).
+        if (result.recordCall) TokenQuotaManager.recordCall();
+
+        if (result.kind === 'payload') {
+            const normalized = buildEventPackage(result.data, { ...context, location: loc, source: 'ai' } as EventContext);
+            const verdict = resolveAiEventPackage({
+                built: normalized !== null,
+                recentDuplicate: normalized !== null && recentEvents.has(normalized.desc),
+            });
+            // `accept`는 정의상 normalized !== null이지만, 타입을 좁히려면 여기서 한 번 더 본다.
+            if (verdict.kind === 'accept' && normalized) return normalized;
         }
 
         // Fallback: 오프라인 이벤트 풀 사용
@@ -190,13 +236,10 @@ export const AI_SERVICE = {
     },
 
     generateStory: async (type: string, data: AiFallbackData, uid: string | null) => {
-        if (isMockRuntime()) {
-            return AI_SERVICE.getFallback(type, data);
-        }
-
-        if (!TokenQuotaManager.canMakeAICall()) {
-            return AI_SERVICE.getFallback(type, data);
-        }
+        const decision = decideRequest('story');
+        // story 경로는 폴백 이유를 표면화하지 않는다 — 3분기 모두 같은 내러티브 템플릿이다
+        //   (쿼터 안내 문구는 이벤트 카드에만 실린다).
+        if (decision.kind === 'fallback') return AI_SERVICE.getFallback(type, data);
 
         const compactHistory = summarizeHistory(data?.history);
         const location = getNarrativeLocation(data);
@@ -215,29 +258,26 @@ export const AI_SERVICE = {
         // context 변수를 AI 프록시에 전달하여 문맥 품질 향상
         const resolvedContext = contextMap[data.storyType ?? ''] || contextMap[type] || (data.context || '모험');
 
-        if (CONSTANTS.USE_AI_PROXY) {
-            const result = asAiProxyResult(await callProxy(
-                {
-                    type: 'story',
-                    data: {
-                        storyType: type,
-                        ...data,
-                        context: resolvedContext,
-                        history: compactHistory,
-                        uid
-                    }
-                },
-                'ai-story',
-                9500
-            ));
-            // narrative는 AI 백엔드가 주는 외부 값 — 문자열임을 확인해야 신뢰할 수 있다
-            // (do not trust the shape). 진짜인 응답은 항상 문자열이므로 동작은 그대로다.
-            const narrative = (result?.data as { narrative?: unknown } | undefined)?.narrative;
-            if (result?.success && typeof narrative === 'string') {
-                TokenQuotaManager.recordCall();
-                return narrative;
-            }
-        }
+        // narrative는 AI 백엔드가 주는 외부 값 — 문자열임을 확인해야 신뢰할 수 있다
+        // (do not trust the shape). 그 확인은 resolveAiStoryResponse가 한다.
+        const result = resolveAiStoryResponse(await callProxy(
+            {
+                type: 'story',
+                data: {
+                    storyType: type,
+                    ...data,
+                    context: resolvedContext,
+                    history: compactHistory,
+                    uid
+                }
+            },
+            decision.trackLabel,
+            decision.timeoutMs
+        ));
+        // 쿼터 소모 시점 보존: story 경로는 내러티브가 문자열로 확인된 뒤에만 기록한다
+        //   (이벤트 경로와 비대칭 — aiEventPolicy.ts의 resolveAiStoryResponse 주석 참조).
+        if (result.recordCall) TokenQuotaManager.recordCall();
+        if (result.kind === 'narrative') return result.narrative;
 
         return AI_SERVICE.getFallback(type, data);
     },

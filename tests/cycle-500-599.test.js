@@ -4,6 +4,55 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { readFile, readdir } from 'node:fs/promises';
+import { createElement } from 'react';
+import { renderStatic, makePlayerFixture } from './helpers/render.ts';
+
+// W11 C4: 이 파일의 class-(b) 가드(소스 텍스트로 고정된 "동작") 전환에 쓰는 실제 모듈 import.
+// class-(a) 부재 불변식(각 cycle 블록의 readSrc 기반 `!/X/.test(source)`)은 그대로 소스 텍스트
+// 검증으로 남는다 — docs/SOURCE_GUARD_CLASSIFICATION_2026-09.md 참조.
+import SignalBadge from '../src/components/SignalBadge.tsx';
+import PixelCharacterAvatar from '../src/components/PixelCharacterAvatar.tsx';
+import ClassIcon from '../src/components/icons/ClassIcon.tsx';
+import QuickSlot from '../src/components/QuickSlot.tsx';
+import SmartInventory from '../src/components/SmartInventory.tsx';
+import CombatPanel from '../src/components/tabs/CombatPanel.tsx';
+import TerminalView from '../src/components/TerminalView.tsx';
+import ClassCard from '../src/components/ClassCard.tsx';
+import ItemIcon from '../src/components/icons/ItemIcon.tsx';
+import JobChangePanel from '../src/components/tabs/JobChangePanel.tsx';
+import CraftingPanel from '../src/components/tabs/CraftingPanel.tsx';
+import { incrementStat } from '../src/utils/playerStateUtils.ts';
+import { consumeInventoryItemByName, getEnhanceAvailability, getEnhancePreview, getEnhanceRequirement, countInventoryItemByName, getEnhanceMaterialCount } from '../src/utils/enhancementUtils.ts';
+import { grantGold } from '../src/utils/gameUtils.ts';
+import { getNarrativeEventChance, getQuietExplorationChance, advanceExploreState, getMapPacingProfile } from '../src/utils/explorationPacing.ts';
+import { getAdventureGuidance, getMoveRecommendations } from '../src/utils/adventureGuide.ts';
+import { getArmorStyleFromItem } from '../src/utils/itemVisuals.ts';
+import { getEquipmentArtProfile } from '../src/utils/equipmentArt.ts';
+import { getEquipmentPreviewStage, buildEquipmentPreviewAppearance } from '../src/utils/avatarEquipmentPreview.ts';
+import { getEquipmentProfile, getEquipmentComparison, getEquipmentDecision, formatEquipmentDelta, getNextEquipmentState, getWeaponAttackValue } from '../src/utils/equipmentUtils.ts';
+import { buildEventPackage, classifyChoice, pickFallbackEvent } from '../src/utils/aiEventUtils.ts';
+import { getQuestBoardRecommendations } from '../src/utils/questOperations.ts';
+import { CombatEngine } from '../src/systems/CombatEngine.ts';
+import { resolveDailyProtocolProgress, getDailyProtocolRewardLogs, sanitizeQuickSlots } from '../src/reducers/handlers/helpers.ts';
+import { formatRewardParts } from '../src/utils/gameUtils.ts';
+import { getPostCombatAnalysis, getRunSummaryAnalysis } from '../src/utils/outcomeAnalysis.ts';
+import { buildClassVitals } from '../src/hooks/gameActions/_shared.ts';
+import { createCharacterActions } from '../src/hooks/gameActions/characterActions.ts';
+import { CLASSES } from '../src/data/classes.ts';
+import { createEconomyActions } from '../src/hooks/useInventoryActions.economy.ts';
+import { addCombatDigestLogs } from '../src/hooks/combatActions/_helpers.ts';
+import { handleVictoryOutcome } from '../src/hooks/combatActions/combatVictory.ts';
+import { createRewardActions } from '../src/hooks/useInventoryActions.rewards.ts';
+import { getCodexProgress } from '../src/data/codexRewards.ts';
+import { getChainEventForLoc } from '../src/data/eventChains.ts';
+import { AT } from '../src/reducers/actionTypes.ts';
+import { validateSynthesis } from '../src/utils/synthesisUtils.ts';
+import { SIGNATURE_ITEM_REGISTRY } from '../src/data/signatureItems.ts';
+import { getProtocolDayKey } from '../src/utils/protocolCycle.ts';
+import { getTraitPassiveParts, getRunBuildProfile, getEnemyTacticalProfile, getTraitFeaturedItems } from '../src/utils/runProfile.ts';
+import { BALANCE, CONSTANTS } from '../src/data/constants.ts';
+import { MSG } from '../src/data/messages.ts';
+import { DB } from '../src/data/db.ts';
 
 /**
  * cycle 500-599 정리 가드 (audit #1 통합 62개)
@@ -79,23 +128,25 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.equal(withClassName, 0, `className 명시 전달 0건 (실제: ${withClassName})`);
   });
 
-  test('cycle 501: 핵심 props 보존 (tone / size / children / ...rest)', async () => {
-      const source = await readSrc('src/components/SignalBadge.tsx');
-      const fnIdx = source.indexOf('const SignalBadge =');
-      const fnEnd = source.indexOf('=>', fnIdx);
-      const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(/\btone\b/.test(sig), 'tone prop 보존');
-      assert.ok(/\bsize\b/.test(sig), 'size prop 보존');
-      assert.ok(/children/.test(sig), 'children prop 보존');
-      assert.ok(/\.\.\.rest/.test(sig), '...rest 보존');
+  test('cycle 501: 핵심 props 보존 (tone / size / children / ...rest)', () => {
+      // W11 C4: signature 텍스트가 아니라 실제 렌더 결과로 검증 — tone/size가 실제
+      // 클래스에 반영되고, children이 실제로 렌더되고, ...rest로 받은 임의 prop이
+      // 실제로 DOM에 스며나오는지(spread 동작)까지 확인한다.
+      const html = renderStatic(createElement(SignalBadge, {
+          tone: 'danger', size: 'sm', 'data-testid': 'rest-prop-spreads',
+      }, '유물 발견'));
+      assert.ok(html.includes('유물 발견'), 'children이 실제로 렌더된다');
+      assert.ok(html.includes('data-testid="rest-prop-spreads"'), '...rest로 받은 prop이 그대로 렌더된다 (spread 보존)');
+      assert.ok(/border-rose-300\/24/.test(html), 'tone prop이 TONE_CLASS.danger로 반영된다');
+      assert.ok(/min-h-\[24px\]/.test(html), 'size prop이 SIZE_CLASS.sm으로 반영된다');
   });
 
-  test('cycle 501: cycle 419 / 433 회귀 가드 — SIZE_CLASS / TONE_CLASS fallback 보존', async () => {
-      const source = await readSrc('src/components/SignalBadge.tsx');
-      // W8-Z5: tone/size가 `string | undefined`로 닫히면서 인덱싱 가드로 `?? ''`가
-      //   붙었다 — fallback 자체의 의도는 그대로다.
-      assert.ok(/SIZE_CLASS\[size(?:\s*\?\?\s*'')?\] \|\| SIZE_CLASS\.sm/.test(source), 'SIZE_CLASS fallback 보존');
-      assert.ok(/TONE_CLASS\[tone(?:\s*\?\?\s*'')?\] \|\| TONE_CLASS\.neutral/.test(source), 'TONE_CLASS fallback 보존');
+  test('cycle 501: cycle 419 / 433 회귀 가드 — SIZE_CLASS / TONE_CLASS fallback 보존', () => {
+      // tone/size를 아예 넘기지 않아도(cycle 419/433이 지운 건 "쓰이지 않는 default 값"이지
+      // fallback 로직 자체가 아니다) 실제 렌더에 SIZE_CLASS.sm / TONE_CLASS.neutral이 반영되는지.
+      const html = renderStatic(createElement(SignalBadge, {}, '기본값'));
+      assert.ok(/min-h-\[24px\]/.test(html), 'size 미전달 시 SIZE_CLASS.sm fallback이 실제로 적용된다');
+      assert.ok(/border-white\/8/.test(html), 'tone 미전달 시 TONE_CLASS.neutral fallback이 실제로 적용된다');
   });
 }
 
@@ -150,7 +201,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const fnEnd = source.indexOf(';', fnIdx);
       const block = source.slice(fnIdx, fnEnd);
       assert.ok(!/\bamount\b/.test(block), 'body amount 참조 0건');
-      assert.ok(/\+\s*1\b/.test(block), '+ 1 정적 inline 보존');
+      // W11 C4: "+ 1 정적 inline"은 실제로 incrementStat을 호출해 1씩만 증가하는지로 검증.
+      const base = makePlayerFixture({ stats: { crafts: 3 } });
+      const once = incrementStat(base, 'crafts');
+      assert.equal(once.stats.crafts, 4, 'incrementStat 호출 1회당 정확히 +1');
+      const twice = incrementStat(once, 'crafts');
+      assert.equal(twice.stats.crafts, 5, '연속 호출도 매번 +1 (2가 아님)');
   });
 
   test('cycle 502: 정합성 가드 — economy reducer callsite는 amount를 전달하지 않는다', async () => {
@@ -161,12 +217,23 @@ import { readFile, readdir } from 'node:fs/promises';
       // 즉 incrementStat(..., 'field_literal', <number>) 형태가 0건이어야 함
       assert.ok(!/incrementStat\([\s\S]+?,\s*'[^']+',\s*\d+\)/.test(source),
           '3 args (amount 전달) 호출 0건');
+      // 실제 economyHandlers의 두 callsite가 쓰는 필드('crafts' / 'syntheses')로 호출해도
+      // amount 인자 없이 여전히 +1만 되는지 (economyHandlers.ts:165,224와 동일한 호출 형태).
+      const p = makePlayerFixture({ stats: { crafts: 0, syntheses: 0 } });
+      assert.equal(incrementStat(p, 'crafts').stats.crafts, 1, 'craftItem 경로: crafts +1');
+      assert.equal(incrementStat(p, 'syntheses').stats.syntheses, 1, 'synthesizeItems 경로: syntheses +1');
   });
 
   test('cycle 502: updateStats 호출 / Player 타입 보존', async () => {
       const source = await readSrc('src/utils/playerStateUtils.ts');
       assert.ok(/updateStats\(player/.test(source), 'updateStats 호출 보존');
-      assert.ok(/Player/.test(source), 'Player 타입 보존');
+      // W11 C4: incrementStat 실제 호출이 updateStats를 거쳐 Player 셰이프(다른 필드
+      // 보존 + stats만 갱신)를 유지하는지 — 파일 안에 'Player'라는 글자가 있는지가
+      // 아니라 실제 반환값의 구조로 검증한다.
+      const before = makePlayerFixture({ name: '리베아', stats: { crafts: 0 } });
+      const after = incrementStat(before, 'crafts');
+      assert.equal(after.name, '리베아', 'updateStats가 다른 필드를 보존한다 (Player 셰이프 유지)');
+      assert.equal(after.stats.crafts, 1, 'stats.crafts만 갱신된다');
   });
 }
 
@@ -218,9 +285,16 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/reducers/handlers/equipmentHandlers.ts');
       const matches = source.match(/consumeInventoryItemByName\(/g) || [];
       assert.equal(matches.length, 1, 'consumeInventoryItemByName 호출 1건');
-      // 3 args 호출 (latest inventory, canonical material name/count)
-      assert.ok(/consumeInventoryItemByName\([^)]*?,[^)]*?,[^)]*?\)/.test(source),
-          '3 args 호출 보존');
+      // W11 C4: "3 args 호출"의 실제 의미는 count가 항상 명시된다는 것 — inventory/itemName/
+      // count를 3번째 인자까지 명시해 실제로 호출해도 정상 동작하는지로 검증한다.
+      const inv = [
+          { id: 'i1', name: '철 조각' }, { id: 'i2', name: '철 조각' },
+          { id: 'i3', name: '철 조각' }, { id: 'i4', name: '가죽' },
+      ];
+      const { nextInventory, removed } = consumeInventoryItemByName(inv, '철 조각', 2);
+      assert.equal(removed, 2, '요청한 count만큼만 소비된다');
+      assert.equal(nextInventory.length, 2, '소비된 개수만큼 인벤토리가 줄어든다');
+      assert.ok(nextInventory.some((it) => it.name === '가죽'), '무관한 아이템은 그대로 남는다');
   });
 
   test('cycle 503: body 동작 보존 (filter / removed / nextInventory)', async () => {
@@ -229,6 +303,11 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/nextInventory =/.test(source), 'nextInventory 변수 보존');
       assert.ok(/removed < count/.test(source), 'count 비교 보존');
       assert.ok(/return \{ nextInventory, removed \}/.test(source), '반환 구조 보존');
+      // count가 실제 보유량보다 많아도 초과 소비/에러 없이 있는 만큼만 제거하는지.
+      const inv = [{ id: 'i1', name: '철 조각' }];
+      const result = consumeInventoryItemByName(inv, '철 조각', 5);
+      assert.equal(result.removed, 1, '보유량을 넘는 count를 요청해도 실제 보유량만큼만 제거');
+      assert.deepEqual(result.nextInventory, [], '소비된 아이템은 결과 인벤토리에서 빠진다');
   });
 
   test('cycle 503: cycle 502 회귀 가드 — incrementStat amount 0건', async () => {
@@ -325,6 +404,25 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/reducers/handlers/helpers.ts');
       assert.ok(/mission\.progress.*\+ amount/.test(source), 'amount 사용 보존');
       assert.ok(/mission\.type !== type/.test(source), 'type 필터 보존');
+      // W11 C4: resolveDailyProtocolProgress를 실제로 호출해 amount만큼 progress가
+      // 오르고, type이 다른 미션은 건드리지 않는지 확인한다.
+      const day = getProtocolDayKey(new Date());
+      const player = makePlayerFixture({
+          stats: {
+              dailyProtocol: {
+                  date: day,
+                  relicShards: 0,
+                  missions: [
+                      { type: 'kills', goal: 5, progress: 1, done: false, reward: {} },
+                      { type: 'goldSpend', goal: 100, progress: 0, done: false, reward: {} },
+                  ],
+              },
+          },
+      });
+      const { player: after } = resolveDailyProtocolProgress(player, 'kills', 2);
+      const [kills, goldSpend] = after.stats.dailyProtocol.missions;
+      assert.equal(kills.progress, 3, 'amount(2)만큼 progress가 오른다 (1 + 2)');
+      assert.equal(goldSpend.progress, 0, 'type이 다른 미션은 그대로 (mission.type !== type 필터)');
   });
 }
 
@@ -386,6 +484,13 @@ import { readFile, readdir } from 'node:fs/promises';
       const block = source.slice(fnIdx, fnEnd);
       assert.ok(/if \(!amount\) return player/.test(block), 'defensive `if (!amount)` 가드 보존');
       assert.ok(/\(player\.gold \|\| 0\) \+ amount/.test(block), 'gold 누적 동작 보존');
+      // W11 C4: amount=0(혹은 falsy)이면 player를 그대로 반환(no-op)하고, amount>0이면
+      // 실제로 gold가 누적되는지 실제 호출로 확인한다.
+      const player = makePlayerFixture({ gold: 100, stats: {} });
+      assert.equal(grantGold(player, 0), player, 'amount 0이면 defensive guard로 동일 player 참조 반환 (no-op)');
+      const after = grantGold(player, 50);
+      assert.equal(after.gold, 150, 'amount>0이면 gold가 누적된다');
+      assert.equal(after.stats.total_gold, 50, 'total_gold 통계도 누적된다');
   });
 
   test('cycle 505: 정합성 가드 — 모든 grantGold 호출자가 2 args 전달', async () => {
@@ -495,6 +600,16 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/affordable: true/.test(source), 'affordable: true 분기 보존');
       assert.ok(/missing: 'gold'/.test(source), 'missing gold 분기 보존');
       assert.ok(/missing: 'material'/.test(source), 'missing material 분기 보존');
+      // W11 C4: gold/inventory default가 사라진 뒤에도 각 분기가 실제로 도달 가능한지.
+      const weapon = { type: 'weapon', enhance: 0 };
+      assert.equal(getEnhanceAvailability(weapon, 0, []).missing, 'gold', '골드 0이면 missing: gold');
+      const req = getEnhanceRequirement(0);
+      assert.equal(
+          getEnhanceAvailability(weapon, req.gold, []).missing,
+          'material',
+          '골드는 충분하지만 재료가 없으면 missing: material',
+      );
+      assert.equal(getEnhanceAvailability(null, 0, []).canEnhance, false, 'item 없으면 canEnhance: false');
   });
 
   test('cycle 506: cycle 502-505 회귀 가드 — 이전 default 정리 보존', async () => {
@@ -588,11 +703,16 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/getDiscoveryOdds\([^)]*,[^)]*\)/.test(exploreFlow),
           'exploreFlow getDiscoveryOdds 2 args 보존 (quietChance 경유 호출)');
 
-      const pacing = await readSrc('src/utils/explorationPacing.ts');
-      assert.ok(/getNarrativeEventChance\(mapData\?\.eventChance \|\| 0, 0, player\?\.stats, mapData(?: \?\? null)?\)/.test(pacing),
-          'getDiscoveryOdds 내부 getNarrativeEventChance 4 args 보존');
-      assert.ok(/getQuietExplorationChance\(player\?\.stats, mapData(?: \?\? null)?\)/.test(pacing),
-          'getDiscoveryOdds 내부 getQuietExplorationChance 2 args 보존');
+      // W11 C4: "4 args/2 args 명시 전달"의 실제 의미 — default 없이도 두 함수가 실제
+      // callsite 형태(getDiscoveryOdds가 쓰는 정확한 인자 수)로 호출되면 유효한 확률을
+      // 반환하는지. 인자를 하나라도 빠뜨리면(undefined) 결과가 달라지는지도 함께 확인.
+      const stats = { exploreState: { sinceNarrativeEvent: 2, sinceDiscovery: 1, sinceRelic: 0, quietStreak: 0 } };
+      const withAllArgs = getNarrativeEventChance(0.3, 0, stats, null);
+      assert.ok(withAllArgs >= 0 && withAllArgs <= BALANCE.SPECIAL_EVENT_MAX_CHANCE,
+          '4 args 호출 결과가 유효 확률 범위 안에 있다');
+      const quiet = getQuietExplorationChance(stats, null);
+      assert.ok(quiet >= BALANCE.MIN_NOTHING_CHANCE && quiet <= BALANCE.EVENT_CHANCE_NOTHING,
+          '2 args 호출 결과가 유효 확률 범위 안에 있다');
   });
 
   test('cycle 507: body 동작 보존', async () => {
@@ -600,6 +720,14 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/SPECIAL_EVENT_MAX_CHANCE/.test(source), 'BALANCE.SPECIAL_EVENT_MAX_CHANCE 보존');
       assert.ok(/QUIET_STREAK_NOTHING_REDUCTION/.test(source), 'QUIET_STREAK_NOTHING_REDUCTION 보존');
       assert.ok(/clamp\(/.test(source), 'clamp 호출 보존');
+      // W11 C4: clamp가 실제로 상한선을 강제하는지 — baseChance를 극단적으로 크게 줘도
+      // SPECIAL_EVENT_MAX_CHANCE를 넘지 않는지, quietStreak이 클수록 실제로 확률이 줄어드는지.
+      const stats = { exploreState: { sinceNarrativeEvent: 0, sinceDiscovery: 0, sinceRelic: 0, quietStreak: 0 } };
+      assert.equal(getNarrativeEventChance(999, 999, stats, null), BALANCE.SPECIAL_EVENT_MAX_CHANCE,
+          'clamp로 SPECIAL_EVENT_MAX_CHANCE를 초과하지 않는다');
+      const quietNoStreak = getQuietExplorationChance(stats, null);
+      const quietWithStreak = getQuietExplorationChance({ exploreState: { ...stats.exploreState, quietStreak: 5 } }, null);
+      assert.ok(quietWithStreak < quietNoStreak, 'quietStreak이 쌓일수록 QUIET_STREAK_NOTHING_REDUCTION만큼 확률이 줄어든다');
   });
 
   test('cycle 507: cycle 502-506 회귀 가드 — 이전 정리 보존', async () => {
@@ -667,6 +795,11 @@ import { readFile, readdir } from 'node:fs/promises';
       // 4 args 호출 — gameState가 마지막 args로 명시 전달되는지
       assert.ok(/getAdventureGuidance\([\s\S]+?, mapData, gameState\)/.test(source),
           '4 args 명시 전달 (mapData, gameState) 보존');
+      // W11 C4: ControlPanel이 실제로 넘기는 형태(4번째 args = 현재 gameState)로 호출하면
+      // "다른 패널 진행 중"으로 판단해 primaryAction이 비활성화되는지.
+      const player = makePlayerFixture({ hp: 50, maxHp: 100 });
+      const guidance = getAdventureGuidance(player, null, null, 'combat');
+      assert.equal(guidance.primaryAction, null, 'gameState가 idle이 아니면 primaryAction 없음');
   });
 
   test('cycle 509: body runtimeState 분기 보존', async () => {
@@ -674,6 +807,14 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/if \(runtimeState && runtimeState !== 'idle'\)/.test(source),
           'runtimeState !== idle 분기 보존');
       assert.ok(/runtimeState === 'combat'/.test(source), 'combat 분기 보존');
+      // W11 C4: runtimeState가 'idle'이면 이 분기를 타지 않고, 'combat'이면 전용 문구를
+      // 반환하는지 실제 호출로 확인.
+      const player = makePlayerFixture();
+      const combatGuidance = getAdventureGuidance(player, null, null, 'combat');
+      assert.equal(combatGuidance.title, '현재 상황 진행 중');
+      assert.equal(combatGuidance.detail, '전투 판단을 우선하세요.', 'combat 분기 전용 문구');
+      const idleGuidance = getAdventureGuidance(player, null, null, 'idle');
+      assert.notEqual(idleGuidance.title, '현재 상황 진행 중', "runtimeState 'idle'이면 이 분기를 건너뛴다");
   });
 
   test('cycle 509: cycle 502-508 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -749,6 +890,10 @@ import { readFile, readdir } from 'node:fs/promises';
           totalCalls += matches.length;
       }
       assert.ok(totalCalls >= 7, `getArmorStyleFromItem 호출 7건 이상 (실제: ${totalCalls})`);
+      // W11 C4: fallback을 명시 전달해도(default 없이) armor가 아니거나 없으면 그 fallback이
+      // 실제로 반환되는지 — 7개 callsite가 default 제거 후에도 여전히 안전한지의 핵심.
+      assert.equal(getArmorStyleFromItem(null, 'coat'), 'coat', 'armor가 없으면 fallback 그대로 반환');
+      assert.equal(getArmorStyleFromItem({ type: 'weapon' }, 'robe'), 'robe', 'armor 타입이 아니면 fallback 그대로 반환');
   });
 
   test('cycle 512: body keyword 분기 / fallback return 보존', async () => {
@@ -758,6 +903,13 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/return 'coat'/.test(source), 'coat 분기 보존');
       assert.ok(/return 'plate'/.test(source), 'plate 분기 보존');
       assert.ok(/return fallback/.test(source), 'fallback return 보존');
+      // 각 키워드 분기가 실제로 그 스타일을 반환하는지.
+      assert.equal(getArmorStyleFromItem({ type: 'armor', name: '수도사의 로브' }, 'coat'), 'robe');
+      assert.equal(getArmorStyleFromItem({ type: 'armor', name: '가죽 조끼' }, 'coat'), 'leather');
+      assert.equal(getArmorStyleFromItem({ type: 'armor', name: '방랑자의 외투' }, 'plate'), 'coat');
+      assert.equal(getArmorStyleFromItem({ type: 'armor', name: '기사의 흉갑' }, 'coat'), 'plate');
+      assert.equal(getArmorStyleFromItem({ type: 'armor', name: '낡은 천 조각' }, 'robe'), 'robe',
+          '키워드에 매칭되지 않으면 fallback을 그대로 반환');
   });
 
   test('cycle 512: cycle 502-511 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -824,6 +976,10 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.equal(matches.length, 1, 'advanceExploreState 호출 1건');
       assert.ok(/advanceExploreState\(currentPlayer\.stats,\s*outcome\)/.test(source),
           '2 args (currentPlayer.stats, outcome) 명시 전달 보존');
+      // W11 C4: _shared.ts가 실제로 넘기는 형태(player.stats, outcome 문자열)로 2 args를
+      // 명시 호출해도 여전히 정상 동작하는지.
+      const next = advanceExploreState(undefined, 'narrative_event');
+      assert.equal(next.sinceNarrativeEvent, 0, '2 args 명시 호출도 정상 동작 (undefined stats 안전)');
   });
 
   test('cycle 515: body switch outcome 분기 + getExploreState 호출 보존', async () => {
@@ -833,6 +989,15 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/case 'combat':\s*\n\s*default:/.test(source), 'combat/default 케이스 보존');
       assert.ok(/const current = getExploreState\(stats\)/.test(source),
           'getExploreState(stats) 호출 보존 (undefined 안전)');
+      // 실제 outcome별 분기가 서로 다른 카운터를 갱신하는지, undefined stats에서도
+      // 안전하게(getExploreState의 기본값으로) 동작하는지.
+      assert.doesNotThrow(() => advanceExploreState(undefined, 'combat'),
+          'stats가 undefined여도 getExploreState 기본값으로 안전하게 동작');
+      const seedStats = { exploreState: { sinceNarrativeEvent: 1, sinceDiscovery: 1, sinceRelic: 1, quietStreak: 1 } };
+      const nothing = advanceExploreState(seedStats, 'nothing');
+      assert.equal(nothing.quietStreak, 2, "'nothing' outcome은 quietStreak을 누적한다 (switch 분기 실효)");
+      const relic = advanceExploreState(seedStats, 'relic_found');
+      assert.equal(relic.sinceRelic, 0, "'relic_found' outcome은 sinceRelic을 리셋한다");
   });
 
   test('cycle 515: cycle 502-514 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -901,9 +1066,10 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/getEnhanceRequirement\(currentLevel\)/.test(source),
           'internal callsite 동작 보존');
 
-      const testSource = await readSrc('tests/enhancement-utils.test.js');
-      assert.ok(/getEnhanceRequirement\(0\)/.test(testSource), 'test callsite (0) 보존');
-      assert.ok(/getEnhanceRequirement\(7\)/.test(testSource), 'test callsite (7) 보존');
+      // W11 C4: "test callsite (0)/(7) 보존"의 실제 의미 — default 없이 currentLevel을
+      // 명시(0, 7)해도 BALANCE 테이블과 정확히 일치하는 값을 반환하는지.
+      assert.equal(getEnhanceRequirement(0).gold, BALANCE.ENHANCE_COSTS[0], 'currentLevel=0 명시 호출 (gold)');
+      assert.equal(getEnhanceRequirement(7).gold, BALANCE.ENHANCE_COSTS[7], 'currentLevel=7 명시 호출 (gold)');
   });
 
   test('cycle 516: body nullish fallback 보존', async () => {
@@ -912,6 +1078,11 @@ import { readFile, readdir } from 'node:fs/promises';
           'gold ?? 0 nullish fallback 보존');
       assert.ok(/BALANCE\.ENHANCE_MATERIAL_COSTS\[currentLevel\]\s*\?\?\s*1/.test(source),
           'materials ?? 1 nullish fallback 보존');
+      // 테이블 범위를 벗어난 currentLevel(배열 인덱스 초과)에서도 실제로 ?? fallback이
+      // 적용돼 undefined가 새지 않는지.
+      const outOfRange = getEnhanceRequirement(BALANCE.ENHANCE_COSTS.length + 5);
+      assert.equal(outOfRange.gold, 0, '테이블 범위 밖이면 gold ?? 0 fallback 적용');
+      assert.equal(outOfRange.materials, 1, '테이블 범위 밖이면 materials ?? 1 fallback 적용');
   });
 
   test('cycle 516: cycle 502-515 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -977,6 +1148,10 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/utils/equipmentArt.ts');
       assert.ok(/getArmorBodyStyle\(item,\s*fallbackArmorStyle\)/.test(source),
           'internal callsite (item, fallbackArmorStyle) 보존');
+      // W11 C4: getArmorBodyStyle은 private라 getEquipmentArtProfile을 통해 실제로
+      // 호출된다 — armor 아이템을 넘기면 bodyStyle이 실제로 채워지는지.
+      const profile = getEquipmentArtProfile({ type: 'armor', name: '기사의 갑주' }, 'armor');
+      assert.equal(profile.bodyStyle, 'plate', 'armor 아이템이면 실제로 getArmorBodyStyle이 호출된다');
   });
 
   test('cycle 517: body return fallback / getArmorStyleFromItem 호출 보존', async () => {
@@ -985,6 +1160,12 @@ import { readFile, readdir } from 'node:fs/promises';
           'early return fallback 보존');
       assert.ok(/getArmorStyleFromItem\(item,\s*fallback\)/.test(source),
           'getArmorStyleFromItem(item, fallback) 호출 보존');
+      // armor가 아닌 아이템을 armor 슬롯으로 넘기면(비정상 입력) early return fallback이
+      // bodyStyle에 그대로 반영되는지 — getEquipmentArtProfile은 item.type==='armor'일 때만
+      // getArmorBodyStyle을 부르므로, item.type을 armor로 유지한 채 이름이 어떤 키워드에도
+      // 안 걸리게 해 getArmorStyleFromItem 경로(마지막 fallback)로 떨어지게 한다.
+      const profile = getEquipmentArtProfile({ type: 'armor', name: '이름없는옷' }, 'armor', 'plate');
+      assert.equal(profile.bodyStyle, 'plate', '키워드 미매칭 시 getArmorStyleFromItem(item, fallback) 경로로 fallback이 반영된다');
   });
 
   test('cycle 517: 외부 wrapper getEquipmentArtProfile fallbackArmorStyle default 보존 (cycle 513)', async () => {
@@ -992,6 +1173,9 @@ import { readFile, readdir } from 'node:fs/promises';
       // Wave 7 Y3: any → string 타입화. default 'coat' 자체는 그대로 보존.
       assert.ok(/fallbackArmorStyle:\s*string\s*=\s*'coat'/.test(source),
           'wrapper getEquipmentArtProfile fallbackArmorStyle default 활성 보존');
+      // 3번째 args(fallbackArmorStyle)를 생략해도 실제로 'coat' 계열로 떨어지는지.
+      const profile = getEquipmentArtProfile({ type: 'armor', name: '이름없는옷' }, 'armor');
+      assert.equal(profile.bodyStyle, 'cloak', 'fallbackArmorStyle 미전달 시 default coat → getArmorStyleFromItem coat → cloak');
   });
 
   test('cycle 517: cycle 502-516 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1061,6 +1245,14 @@ import { readFile, readdir } from 'node:fs/promises';
           'main slot callsite 보존');
       assert.ok(/getWeaponEquipScore\(offhandWeapon,\s*'offhand'\)/.test(source),
           'offhand slot callsite 보존');
+      // W11 C4: getWeaponEquipScore는 private라 getNextEquipmentState(→ pickBestOneHandPair)를
+      // 통해 실제로 exercise한다. 두 한손무기 중 val이 큰 쪽이 ONE_HAND_ATK_RATIO(main, 0.44)가
+      // 더 큰 슬롯으로 배치되는지 — main/offhand 슬롯별로 다른 비율이 실제로 반영된다는 증거.
+      const weak = { id: 'w1', type: 'weapon', hands: 1, val: 30 };
+      const strong = { id: 'w2', type: 'weapon', hands: 1, val: 80 };
+      const next = getNextEquipmentState({ weapon: weak, offhand: null }, strong);
+      assert.equal(next.weapon.id, 'w2', '더 강한 무기가 ATK_RATIO가 더 높은 main 슬롯에 배치된다');
+      assert.equal(next.offhand.id, 'w1', '더 약한 무기가 offhand로 밀린다');
   });
 
   test('cycle 518: body getWeaponAttackValue / getWeaponCritBonus slot 전달 보존', async () => {
@@ -1069,6 +1261,9 @@ import { readFile, readdir } from 'node:fs/promises';
           'getWeaponAttackValue(weapon, slot) 보존');
       assert.ok(/getWeaponCritBonus\(weapon,\s*slot\)/.test(source),
           'getWeaponCritBonus(weapon, slot) 보존');
+      // getWeaponAttackValue 자체는 export이므로 직접 호출해 main/offhand 비율 차이를 확인.
+      assert.equal(getWeaponAttackValue({ type: 'weapon', val: 100 }, 'main'), Math.floor(100 * BALANCE.ONE_HAND_ATK_RATIO));
+      assert.equal(getWeaponAttackValue({ type: 'weapon', val: 100 }, 'offhand'), Math.floor(100 * BALANCE.OFFHAND_WEAPON_RATIO));
   });
 
   test('cycle 518: cycle 291 export downgrade 보존 (private const 유지)', async () => {
@@ -1140,6 +1335,16 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/utils/adventureGuide.ts');
       assert.ok(/getMapLevel\(targetMap,\s*playerLevel\)/.test(source),
           'internal callsite (targetMap, playerLevel) 보존');
+      // W11 C4: getMapLevel은 private라 getMoveRecommendations를 통해 실제로 exercise —
+      // 'infinite' 타겟 지역은 Math.max(playerLevel + 8, 50)으로 targetLevel이 계산되는지.
+      const currentMap = { exits: ['abyss'], type: 'normal' };
+      const maps = { abyss: { level: 'infinite', type: 'abyss', exits: [] } };
+      const player = makePlayerFixture({ level: 45, loc: 'start' });
+      const [rec] = getMoveRecommendations(player, null, currentMap, maps);
+      // targetLevel 자체는 UI 계약에 노출되지 않지만(cycle 333), isLocked 판정과
+      // "레벨 N부터 진입할 수 있습니다" 안내 문구에 그 값이 그대로 반영된다.
+      assert.equal(rec.badge, '잠김', "playerLevel(45) < targetLevel(53) → 잠김 판정");
+      assert.ok(rec.reason.includes('레벨 53'), "playerLevel + 8 = 53 (infinite 지역, getMapLevel 실제 반영)");
   });
 
   test('cycle 519: body (playerLevel || 1) defensive 가드 보존 (N3: minLv 체인은 제거)', async () => {
@@ -1151,6 +1356,19 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/typeof map\?\.level === 'number' \? map\.level : 1/.test(source),
           'level fallback chain 보존');
       assert.ok(!/map\?\.minLv/.test(source), 'minLv 리더는 제거됨 (주석 언급은 허용)');
+      // playerLevel이 0/undefined여도 (playerLevel || 1) + 8로 안전하게 50 하한이 걸리고,
+      // level이 숫자인 일반 지역은 그 level 값을 그대로 쓰는지.
+      const currentMap = { exits: ['abyss', 'plains'], type: 'normal' };
+      const maps = {
+          abyss: { level: 'infinite', type: 'abyss', exits: [] },
+          plains: { level: 12, type: 'normal', exits: [] },
+      };
+      const player = makePlayerFixture({ level: 0, loc: 'start' });
+      const recs = getMoveRecommendations(player, null, currentMap, maps);
+      assert.ok(recs.find((r) => r.name === 'abyss').reason.includes('레벨 50'),
+          'playerLevel 0이면 (0||1)+8=9 < 50이라 Math.max로 하한 50이 걸린다');
+      assert.equal(recs.find((r) => r.name === 'plains').levelLabel, '레벨 12',
+          '숫자 level은 그 값을 그대로 반영 (minLv 체인 없이)');
   });
 
   test('cycle 519: cycle 502-518 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1228,6 +1446,14 @@ import { readFile, readdir } from 'node:fs/promises';
       const mixCount = (source.match(/mixHex\(/g) || []).length;
       assert.equal(mixCount, 4, `mixHex 사용처 4건 보존: ${mixCount}건`);
       assert.ok(/const mixHex = \(left/.test(source), 'mixHex 정의 보존');
+      // W11 C4: hashText/mixHex는 private라 getEquipmentArtProfile(→ tintPalette)을 통해
+      // 실제로 exercise한다 — 아이템 이름이 다르면(hashText 값이 다르면) 실제로 팔레트
+      // hex 값도 달라지고, 같은 이름이면 항상 같은 색이 나오는지(결정론).
+      const a1 = getEquipmentArtProfile({ type: 'weapon', name: '녹슨 단검' }, 'weapon').palette;
+      const a2 = getEquipmentArtProfile({ type: 'weapon', name: '녹슨 단검' }, 'weapon').palette;
+      const b = getEquipmentArtProfile({ type: 'weapon', name: '서리한' }, 'weapon').palette;
+      assert.deepEqual(a1, a2, '같은 이름은 hashText/mixHex 결과가 결정론적으로 동일하다');
+      assert.notDeepEqual(a1, b, '다른 이름은 hashText offset이 달라져 mixHex 블렌딩 결과도 달라진다');
   });
 
   test('cycle 521: body 동작 보존', async () => {
@@ -1236,6 +1462,14 @@ import { readFile, readdir } from 'node:fs/promises';
           'hashText String(value) coercion 보존');
       assert.ok(/const l = hexToRgb\(left\)/.test(source),
           'mixHex hexToRgb(left) 호출 보존');
+      // item에 name이 없어도(item?.name || '' → hashText('')) 안전하게 팔레트를 반환하는지
+      // (String(value) coercion — 빈 문자열도 [...String(value)].reduce가 안전 처리).
+      assert.doesNotThrow(() => getEquipmentArtProfile({ type: 'weapon' }, 'weapon'),
+          'name 없는 item도 hashText(\'\')가 String coercion으로 안전 처리');
+      const palette = getEquipmentArtProfile({ type: 'weapon', name: '검' }, 'weapon').palette;
+      for (const hex of Object.values(palette)) {
+          assert.match(hex, /^#[0-9a-f]{6}$/, 'mixHex 결과가 유효한 hex 색상 문자열이다');
+      }
   });
 
   test('cycle 521: cycle 502-519 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1306,12 +1540,38 @@ import { readFile, readdir } from 'node:fs/promises';
       for (const call of calls) {
           assert.ok(call.includes(','), `fallback 인자 명시 필요: ${call}`);
       }
+      // W11 C4: toInt는 private라 buildEventPackage를 통해 실제로 exercise —
+      // outcomes[i].gold/exp/hp/mp를 생략해도 fallback(0)이, choiceIndex를 생략해도
+      // fallback(순서 idx)이 실제로 반영되는지.
+      const packaged = buildEventPackage({
+          desc: '낯선 제단이 발견됩니다.',
+          choices: ['제단을 살핀다', '그대로 지나간다'],
+          outcomes: [{ log: '제단에서 무언가를 얻었습니다.' }],
+      }, {
+          location: '폐허', playerSnapshot: { level: 9, maxHp: 180, maxMp: 90 }, mapSnapshot: { level: 5 },
+      });
+      assert.deepEqual(
+          { gold: packaged.outcomes[0].gold, exp: packaged.outcomes[0].exp, hp: packaged.outcomes[0].hp, mp: packaged.outcomes[0].mp },
+          { gold: 0, exp: 0, hp: 0, mp: 0 },
+          'gold/exp/hp/mp 생략 시 toInt fallback(0)이 그대로 반영된다',
+      );
+      assert.equal(packaged.outcomes[0].choiceIndex, 0, 'choiceIndex 생략 시 toInt fallback(idx)이 반영된다');
   });
 
   test('cycle 522: body ternary 처리 보존', async () => {
       const source = await readSrc('src/utils/aiEventUtils.ts');
       assert.ok(/Number\.isFinite\(Number\(value\)\)\s*\?\s*Math\.trunc\(Number\(value\)\)\s*:\s*fallback/.test(source),
           'Number.isFinite/Math.trunc/fallback ternary 보존');
+      // 소수/문자열 숫자도 Math.trunc로 정수화되고, 숫자가 아니면 fallback으로 떨어지는지.
+      const packaged = buildEventPackage({
+          desc: '보물함이 열립니다.',
+          choices: ['가져간다', '두고 간다'],
+          outcomes: [{ choiceIndex: 0, log: '보물을 얻었습니다.', gold: 12.9, exp: 'NaN이 아님' }],
+      }, {
+          location: '폐허', playerSnapshot: { level: 9, maxHp: 180, maxMp: 90 }, mapSnapshot: { level: 5 },
+      });
+      assert.equal(packaged.outcomes[0].gold, 12, 'gold 12.9는 Math.trunc로 12로 정수화된다');
+      assert.equal(packaged.outcomes[0].exp, 0, "숫자로 변환 불가한 값은 Number.isFinite 실패 → fallback(0)");
   });
 
   test('cycle 522: cycle 502-521 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1394,6 +1654,8 @@ import { readFile, readdir } from 'node:fs/promises';
       const testSrc = await readSrc('tests/ai-event-utils.test.js');
       assert.ok(/classifyChoice\('조심히 접근한다'\)/.test(testSrc),
           'classifyChoice test callsite 보존');
+      // W11 C4: classifyChoice는 export이므로 string 명시 호출로 직접 검증.
+      assert.equal(classifyChoice('조심히 접근한다'), 'safe', 'string 명시 호출도 정상 동작');
   });
 
   test('cycle 525: body 동작 보존', async () => {
@@ -1403,6 +1665,18 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/normalizeText\(choiceText\)/.test(source),
           'classifyChoice normalizeText(choiceText) 호출 보존');
       assert.ok(/RETREAT_KEYWORDS\.some/.test(source), 'retreat keyword 분기 보존');
+      // hashString은 private라 buildEventPackage의 절차적 outcome 합성(line 265)을 통해
+      // exercise한다 — 같은 desc/choices면 항상 같은 절차적 결과가 나오는지(결정론).
+      const args = [{
+          desc: '오래된 종이 조각이 바닥에 놓여 있습니다.',
+          choices: ['주워든다', '무시한다'],
+          outcomes: [],
+      }, {
+          location: '서고', playerSnapshot: { level: 4, maxHp: 100, maxMp: 40 }, mapSnapshot: { level: 4 },
+      }];
+      const first = buildEventPackage(...args);
+      const second = buildEventPackage(...args);
+      assert.deepEqual(first.outcomes, second.outcomes, 'hashString 기반 절차적 outcome이 결정론적으로 동일하다');
   });
 
   test('cycle 525: cycle 502-524 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1476,12 +1750,21 @@ import { readFile, readdir } from 'node:fs/promises';
           'DEF callsite 보존');
       assert.ok(/toPercent\(bonus\.critBonus \|\| 0\)/.test(source),
           'CRIT callsite 보존');
+      // W11 C4: toPercent는 private라 getTraitPassiveParts를 통해 실제로 exercise —
+      // 3 callsite(ATK/DEF/CRIT)가 각각 실제 퍼센트 문구를 만드는지.
+      const parts = getTraitPassiveParts({ bonus: { atkMult: 1.2, defMult: 1.1, critBonus: 0.08, mpFlat: 0 } });
+      assert.ok(parts.includes('공격력 +20%'), 'ATK callsite가 실제 퍼센트를 만든다');
+      assert.ok(parts.includes('방어력 +10%'), 'DEF callsite가 실제 퍼센트를 만든다');
+      assert.ok(parts.includes('치명타 +8%'), 'CRIT callsite가 실제 퍼센트를 만든다');
   });
 
   test('cycle 526: body Math.round/template 보존', async () => {
       const source = await readSrc('src/utils/runProfile.ts');
       assert.ok(/Math\.round\(value \* 100\)/.test(source),
           'Math.round(value * 100) 보존');
+      // 소수점이 있는 비율도 Math.round로 정수 %로 반올림되는지.
+      const parts = getTraitPassiveParts({ bonus: { atkMult: 1.205, defMult: 1, critBonus: 0, mpFlat: 0 } });
+      assert.ok(parts.includes('공격력 +21%'), 'Math.round(20.5%) → 21% 반올림');
   });
 
   test('cycle 526: cycle 502-525 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1569,6 +1852,19 @@ import { readFile, readdir } from 'node:fs/promises';
           'dedupeChoices spread + slice callsite 보존');
       assert.ok(/normalizeOutcomes\(raw\.outcomes,\s*choices,\s*\{ \.\.\.context,\s*desc \}\)/.test(source),
           'normalizeOutcomes 3 args callsite 보존');
+      // W11 C4: dedupeChoices/normalizeOutcomes는 private라 buildEventPackage를 통해
+      // exercise한다 — 중복 선택지가 실제로 하나로 합쳐지고 3개로 잘리는지(dedupeChoices),
+      // outcomes가 실제로 정규화되는지(normalizeOutcomes).
+      const packaged = buildEventPackage({
+          desc: '두 갈래 길이 나타납니다.',
+          choices: ['1. 왼쪽', '왼쪽', '오른쪽', '되돌아간다', '기다린다'],
+          outcomes: [{ choiceIndex: 0, log: '왼쪽으로 가서 보물을 찾았다.', gold: 10 }],
+      }, {
+          location: '갈림길', playerSnapshot: { level: 3, maxHp: 90, maxMp: 30 }, mapSnapshot: { level: 3 },
+      });
+      assert.equal(packaged.choices.length, 3, 'dedupeChoices가 중복 제거 후 최대 3개로 slice');
+      assert.deepEqual([...new Set(packaged.choices)], packaged.choices, '중복 선택지가 실제로 제거된다');
+      assert.equal(packaged.outcomes[0].gold, 10, 'normalizeOutcomes가 명시된 outcome 값을 그대로 보존');
   });
 
   test('cycle 527: body Array.isArray + forEach 가드 보존', async () => {
@@ -1579,6 +1875,18 @@ import { readFile, readdir } from 'node:fs/promises';
           'dedupeChoices filter 보존');
       assert.ok(/choices\.forEach\(\(choice, idx\)/.test(source),
           'normalizeOutcomes choices.forEach 보존');
+      // outcomes 필드가 비정상(배열 아님)이어도 Array.isArray 가드로 안전하게 절차적
+      // outcome을 만들어내는지.
+      const packaged = buildEventPackage({
+          desc: '갑자기 벽이 흔들립니다.',
+          choices: ['버틴다', '피한다'],
+          outcomes: 'not-an-array',
+      }, {
+          location: '동굴', playerSnapshot: { level: 6, maxHp: 110, maxMp: 40 }, mapSnapshot: { level: 6 },
+      });
+      // dedupeChoices가 부족한 선택지를 fallbackChoices로 3개까지 채우므로, outcomes도
+      // 그 3개 선택지 각각에 하나씩(Array.isArray 가드로 안전하게) 절차적으로 생성된다.
+      assert.equal(packaged.outcomes.length, packaged.choices.length, 'outcomes가 배열이 아니면 Array.isArray 가드로 선택지 수만큼 절차적 outcome 생성');
   });
 
   test('cycle 527: cycle 502-526 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1652,6 +1960,13 @@ import { readFile, readdir } from 'node:fs/promises';
           'pickBestOneHandPair callsite 보존');
       assert.ok(/\.filter\(Boolean\),\s*\n\s*item\s*\n\s*\)/.test(source),
           'filter(Boolean) + item 2 args 보존');
+      // W11 C4: pickBestOneHandPair는 private라 getNextEquipmentState를 통해 실제로
+      // exercise한다 (block 518과 동일 경로) — weapons=[] default가 사라져도 실제
+      // callsite가 만드는 필터된 배열로 정상 동작하는지.
+      const weak = { id: 'w1', type: 'weapon', hands: 1, val: 30 };
+      const strong = { id: 'w2', type: 'weapon', hands: 1, val: 80 };
+      const next = getNextEquipmentState({ weapon: weak, offhand: null }, strong);
+      assert.equal(next.weapon.id, 'w2', 'pickBestOneHandPair가 실제 callsite 인자로 정상 동작');
   });
 
   test('cycle 528: body filter/forEach/getWeaponEquipScore 호출 보존', async () => {
@@ -1664,6 +1979,14 @@ import { readFile, readdir } from 'node:fs/promises';
           'candidates.forEach 보존');
       assert.ok(/getWeaponEquipScore\(mainWeapon, 'main'\)/.test(source),
           'getWeaponEquipScore main 호출 보존');
+      // candidates.forEach의 이중 탐색이 3개 후보(main/offhand/새 item) 중 실제로
+      // 총점이 가장 높은 조합을 고르는지 — 가장 약한 후보(A)가 탈락하는지까지 확인.
+      const a = { id: 'a', type: 'weapon', hands: 1, val: 10 };
+      const b = { id: 'b', type: 'weapon', hands: 1, val: 20 };
+      const c = { id: 'c', type: 'weapon', hands: 1, val: 90 };
+      const best = getNextEquipmentState({ weapon: a, offhand: b }, c);
+      assert.equal(best.weapon.id, 'c', '가장 강한 무기가 main 슬롯 최적 조합으로 선택된다');
+      assert.equal(best.offhand.id, 'b', '두 번째로 강한 무기가 offhand로 선택된다');
   });
 
   test('cycle 528: cycle 502-527 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1733,6 +2056,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/PixelCharacterAvatar.tsx');
       assert.ok(/softenColor\(appearance\.palette\.glow \|\| appearance\.palette\.accent,\s*0\.28\)/.test(source),
           'softenColor(palette.glow || palette.accent, 0.28) callsite 보존');
+      // W11 C4: softenColor는 private라 PixelCharacterAvatar를 실제 렌더해 확인 —
+      // glow 점(dot)의 background-color에 alpha 0.28이 실제로 반영되는지.
+      const html = renderStatic(createElement(PixelCharacterAvatar, {
+          player: makePlayerFixture({ job: '나이트' }), size: 'sm', label: '캐릭터',
+      }));
+      assert.match(html, /rgba\(\s*\d+,\s*\d+,\s*\d+,\s*0\.28\s*\)/, 'callsite가 alpha 0.28을 실제로 명시 전달한다');
   });
 
   test('cycle 529: body hex 가드 + rgba template 보존', async () => {
@@ -1743,6 +2072,11 @@ import { readFile, readdir } from 'node:fs/promises';
           'fallback rgba template 보존');
       assert.ok(/return `rgba\(\$\{red\}, \$\{green\}, \$\{blue\}, \$\{alpha\}\)`/.test(source),
           'main rgba template 보존');
+      // 실제 렌더 결과가 유효한 rgba(...) 형식인지 (hex 파싱이 실제로 동작).
+      const html = renderStatic(createElement(PixelCharacterAvatar, {
+          player: makePlayerFixture({ job: '나이트' }), size: 'sm', label: '캐릭터',
+      }));
+      assert.match(html, /rgba\([\d\s,.]+\)/, 'softenColor가 실제로 유효한 rgba() 문자열을 만든다');
   });
 
   test('cycle 529: cycle 502-528 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1814,6 +2148,12 @@ import { readFile, readdir } from 'node:fs/promises';
       // Wave 6 X1: level 파라미터가 number로 닫히면서 호출부가 `player.level!`로 좁혀졌다.
       assert.ok(/buildClassVitals\(player\.level!?,\s*jobName,\s*player\.meta \|\| \{\}\)/.test(source),
           '2nd callsite (player.level, jobName, player.meta || {}) 보존');
+      // W11 C4: 두 callsite 모양(Lv1 신규 / player.level 기존)으로 직접 호출해도
+      // meta default {} 없이 실제 maxHp/maxMp가 계산되는지.
+      const fresh = buildClassVitals(1, '나이트', {});
+      assert.equal(fresh.maxHp, Math.floor(CONSTANTS.START_HP * CLASSES['나이트'].hpMod), '1st callsite: meta={} 명시로 신규 캐릭터 계산');
+      const existing = buildClassVitals(10, '나이트', { bonusHp: 20, bonusMp: 5 });
+      assert.ok(existing.maxHp > fresh.maxHp, '2nd callsite: level/meta 명시로 레벨·보너스가 실제로 반영된다');
   });
 
   test('cycle 532: body defensive guard 보존', async () => {
@@ -1824,6 +2164,12 @@ import { readFile, readdir } from 'node:fs/promises';
           '(meta.bonusMp || 0) defensive guard 보존');
       assert.ok(/CLASSES\[jobId\] \|\| CLASSES\[CONSTANTS\.DEFAULT_JOB\]/.test(source),
           'CLASSES jobId fallback 보존');
+      // meta.bonusHp/bonusMp가 없어도(undefined) 0으로 안전하게 fallback되는지,
+      // 알 수 없는 jobId면 CONSTANTS.DEFAULT_JOB 클래스로 fallback되는지.
+      assert.doesNotThrow(() => buildClassVitals(1, '나이트', {}), 'bonusHp/bonusMp 없어도 안전');
+      const unknownJob = buildClassVitals(1, '존재하지않는직업', {});
+      const defaultJob = buildClassVitals(1, CONSTANTS.DEFAULT_JOB, {});
+      assert.deepEqual(unknownJob, defaultJob, '알 수 없는 jobId는 DEFAULT_JOB fallback으로 동일 결과');
   });
 
   test('cycle 532: cycle 502-531 회귀 가드 — util default 청소 시리즈 보존', async () => {
@@ -1889,6 +2235,21 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(!/expGained:\s*any\s*=\s*0/.test(sig),
           'applyExpGain expGained default 0 제거');
       assert.ok(/\bexpGained\b/.test(sig), 'expGained 파라미터 자체는 보존');
+  });
+
+  test('cycle 536: applyExpGain 실제 호출 — expGained 명시 전달로 정상 동작', () => {
+      // W11 C4: CombatEngine.applyExpGain은 export된 실제 메서드 — 직접 호출해
+      // (player.exp || 0) + expGained과 level-up while loop가 실제로 동작하는지.
+      const player = makePlayerFixture({ level: 1, exp: 0, nextExp: CONSTANTS.START_NEXT_EXP, atk: 12, def: 5, maxHp: 100, maxMp: 50, hp: 100, mp: 50 });
+      const noLevelUp = CombatEngine.applyExpGain(player, 5);
+      assert.equal(noLevelUp.updatedPlayer.exp, 5, 'expGained이 그대로 누적된다 (레벨업 미달)');
+      assert.equal(noLevelUp.levelUps, 0, '레벨업 없음');
+
+      const gained = player.nextExp + 10;
+      const withLevelUp = CombatEngine.applyExpGain(player, gained);
+      assert.equal(withLevelUp.levelUps, 1, 'nextExp를 넘기면 실제로 레벨업이 발생한다');
+      assert.equal(withLevelUp.updatedPlayer.level, 2, '레벨이 실제로 오른다');
+      assert.equal(withLevelUp.updatedPlayer.exp, 10, '레벨업 후 남은 exp만 이월된다');
   });
 
   test('cycle 536: 정합성 가드 — 4 production callsite 보존', async () => {
@@ -2007,6 +2368,17 @@ import { readFile, readdir } from 'node:fs/promises';
           'elementMultiplier = 1 inner default 보존');
       assert.ok(/critChance = BALANCE\.CRIT_CHANCE/.test(source),
           'critChance = BALANCE.CRIT_CHANCE inner default 보존');
+      // W11 C4: options 자체의 default {}는 제거됐지만, options 안의 일부 필드만
+      // 넘겼을 때 destructuring inner default가 실제로 채워지는지(고정 rng로 결정론화).
+      const stats = { atk: 100 };
+      const bare = CombatEngine.calculateDamage(stats, { rng: () => 0 });
+      // rng()=0 → variance 0, isCrit = 0 < critChance(BALANCE.CRIT_CHANCE) → true 항상 crit.
+      assert.equal(bare.damage, Math.floor(100 * BALANCE.DAMAGE_BASE_RATIO) * 2,
+          'mult/guarding/elementMultiplier가 각각 inner default(1/false/1)로 채워진다');
+      const guardedNoCrit = CombatEngine.calculateDamage(stats, { guarding: true, rng: () => 0.999 });
+      assert.equal(guardedNoCrit.isCrit, false, 'rng 0.999 >= critChance(0.1)면 crit 아님');
+      assert.equal(guardedNoCrit.damage, Math.floor(100 * (BALANCE.DAMAGE_BASE_RATIO + 0.999 * BALANCE.DAMAGE_VARIANCE) * BALANCE.GUARD_DAMAGE_MULT),
+          'guarding=true를 명시하면 GUARD_DAMAGE_MULT가 실제로 곱해진다');
   });
 
   test('cycle 537: cycle 502-536 회귀 가드 — util/component/hook/system default 청소 시리즈 보존', async () => {
@@ -2050,6 +2422,22 @@ import { readFile, readdir } from 'node:fs/promises';
       const tt = await readSrc('tests/relics.test.js');
       const calls = (tt.match(/resolveDailyProtocolProgress\(/g) || []).length;
       assert.ok(calls >= 6, `test callsite 6건 이상 보존: ${calls}건`);
+      // W11 C4: amount default 1이 사라진 뒤에도, amount를 명시 전달하는 5-arg 호출
+      // (relicRoll 포함)이 실제로 정상 동작하는지 — relicShards가 5에 도달하면
+      // relicRoll로 결정론적 유물 전환까지 일어난다.
+      const player = makePlayerFixture({
+          relics: [],
+          stats: {
+              dailyProtocol: {
+                  date: getProtocolDayKey(new Date()),
+                  relicShards: 4,
+                  missions: [{ type: 'kills', goal: 3, progress: 0, done: false, reward: { relicShard: 1 } }],
+              },
+          },
+      });
+      const { reward } = resolveDailyProtocolProgress(player, 'kills', 3, 0);
+      assert.equal(reward.relicShards, 1, '5-arg 형태 호출로도 relicShard 지급이 정상 전달된다');
+      assert.ok(reward.convertedRelic, 'relicShards 4+1=5 도달 시 relicRoll로 결정론적 유물 전환이 일어난다');
   });
 
   test('cycle 538: body 동작 보존', async () => {
@@ -2129,6 +2517,13 @@ import { readFile, readdir } from 'node:fs/promises';
           "callProxy(body, 'ai-event', 9500) callsite 보존");
       assert.ok(/'ai-story',\s*\n\s*9500/.test(source),
           "callProxy(body, 'ai-story', 9500) callsite 보존");
+      // W11 C4 참고: callProxy(private)를 실제로 태우려면 CONSTANTS.USE_AI_PROXY=true가
+      // 필요한데, 그 값은 aiService.ts가 처음 로드될 때 process.env에서 한 번 읽어 굳는다
+      // (tests/ai-service.test.js 자체 주석 참조). 이 사이클 파일은 이미 상단에서
+      // `constants.ts`를 static import하므로(다른 60여개 사이클이 BALANCE/CONSTANTS를 쓴다),
+      // 그 시점에 이미 USE_AI_PROXY=false로 고정돼 있어 이 테스트 안에서 process.env를
+      // 바꿔도 되돌릴 수 없다 — 프록시 경로 전용 검증은 반드시 별도 파일(전용 프로세스)이
+      // 필요하므로 이 소스 텍스트 가드는 그대로 남긴다(대상 분류: 전환 불가 예외, 문서 참조).
   });
 
   test('cycle 539: body setTimeout / LatencyTracker.trackCall 처리 보존', async () => {
@@ -2137,6 +2532,26 @@ import { readFile, readdir } from 'node:fs/promises';
           'setTimeout(controller.abort, timeoutMs) 보존');
       assert.ok(/LatencyTracker\.trackCall\(/.test(source),
           'LatencyTracker.trackCall 호출 보존');
+      // LatencyTracker.trackCall 자체를 직접 호출해 pass-through(정상 결과 반환)와
+      // THRESHOLD_MS 초과 시 onSlowResponse가 실제로 호출되는지(performance.now를
+      // 일시적으로 스텁해 실제 대기 없이 "느린 응답"을 시뮬레이션).
+      const { LatencyTracker } = await import('../src/systems/LatencyTracker.ts');
+      const passThrough = await LatencyTracker.trackCall(async () => '결과값', 'ai-event');
+      assert.equal(passThrough, '결과값', 'trackCall은 asyncFn의 결과를 그대로 반환한다 (pass-through)');
+
+      const originalNow = performance.now;
+      let call = 0;
+      performance.now = () => (call++ === 0 ? 0 : LatencyTracker.THRESHOLD_MS + 500);
+      let slowCallType = null;
+      const originalOnSlow = LatencyTracker.onSlowResponse;
+      LatencyTracker.onSlowResponse = (type) => { slowCallType = type; };
+      try {
+          await LatencyTracker.trackCall(async () => 'ok', 'ai-event');
+      } finally {
+          performance.now = originalNow;
+          LatencyTracker.onSlowResponse = originalOnSlow;
+      }
+      assert.equal(slowCallType, 'ai-event', 'THRESHOLD_MS 초과 시 callType과 함께 onSlowResponse가 실제로 호출된다');
   });
 
   test('cycle 539: cycle 502-538 회귀 가드 — util/component/hook/system/reducer default 청소 시리즈 보존', async () => {
@@ -2207,14 +2622,11 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(!/=\s*''/.test(sig), "suffix default '' 없음");
   });
 
-  test('cycle 542 (A2 이관): 두 파라미터 모두 보존', async () => {
-      const source = await readSrc('src/utils/equipmentUtils.ts');
-      const fnIdx = source.indexOf('export const formatEquipmentDelta');
-      const fnEnd = source.indexOf('=>', fnIdx);
-      const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(/key:\s*EquipmentDeltaKey/.test(sig), 'key 파라미터 보존');
-      assert.ok(/value:\s*number/.test(sig), 'value 파라미터 보존');
-  });
+  // W11 C4: "두 파라미터 모두 보존" 테스트(key: EquipmentDeltaKey / value: number 타입
+  // 어노테이션 존재 확인)는 삭제됐다 — 타입은 런타임에 삭제(erase)되어 동작 테스트로도
+  // 부재 불변식으로도 표현할 수 없고, 두 파라미터가 실제로 잘 연결돼 있는지는 바로
+  // 아래 "body template literal 보존" 테스트가 formatEquipmentDelta를 실제 호출해서
+  // 이미 증명한다(둘 다 없으면 호출 자체가 실패한다). 상세: docs/SOURCE_GUARD_CLASSIFICATION_2026-09.md.
 
   test('cycle 542 (A2 이관): 정합성 가드 — 델타 조각 생성 callsite 보존', async () => {
       const source = await readSrc('src/utils/equipmentUtils.ts');
@@ -2228,12 +2640,25 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(!/const signedDelta/.test(shop), 'ShopPanel 자체 델타 포맷 재도입 금지');
       const helpers = await readSrc('src/hooks/combatActions/_helpers.ts');
       assert.ok(/getEquipmentComparison\(player,\s*item\)/.test(helpers), '_helpers 위임 보존');
+      // W11 C4: getEquipmentComparison을 실제로 호출해 segments/primaryDelta 텍스트가
+      // formatEquipmentDelta를 통해 실제로 만들어지는지 (양쪽 callsite 모두 실효).
+      const player = { job: '나이트', level: 10, equip: {} };
+      const item = { type: 'weapon', val: 50, hands: 1 };
+      const comparison = getEquipmentComparison(player, item);
+      assert.ok(comparison.segments.some((s) => s.text === formatEquipmentDelta(s.key, s.value)),
+          'getEquipmentComparison segment callsite가 formatEquipmentDelta로 실제 텍스트를 만든다');
+      assert.equal(comparison.primaryDelta.text, formatEquipmentDelta(comparison.primaryDelta.key, comparison.primaryDelta.value),
+          'getPrimaryEquipmentDelta callsite가 formatEquipmentDelta로 실제 텍스트를 만든다');
   });
 
   test('cycle 542 (A2 이관): body template literal 보존', async () => {
       const source = await readSrc('src/utils/equipmentUtils.ts');
       assert.ok(/\$\{value > 0 \? '\+' : ''\}\$\{value\}\$\{EQUIP_DELTA_SUFFIX\[key\]\}/.test(source),
           'template literal `${label} ${sign}${value}${suffix}` 보존');
+      // 실제 호출로 부호 표시(+/없음)와 접미사(%만 crit)가 정확히 나오는지.
+      assert.equal(formatEquipmentDelta('atk', 12), `${MSG.EQUIP_DELTA_LABEL.atk} +12`, '양수는 + 부호');
+      assert.equal(formatEquipmentDelta('atk', -5), `${MSG.EQUIP_DELTA_LABEL.atk} -5`, '음수는 부호 없이 그대로');
+      assert.equal(formatEquipmentDelta('crit', 3), `${MSG.EQUIP_DELTA_LABEL.crit} +3%`, 'crit는 % 접미사');
   });
 
   test('cycle 542: cycle 502-541 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2295,6 +2720,14 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/tabs/CraftingPanel.tsx');
       assert.ok(/actions\?\.synthesize\(selectedIds,\s*useProtect\)/.test(source),
           'actions.synthesize(selectedIds, useProtect) callsite 보존');
+      // W11 C4: createEconomyActions().synthesize를 실제로 호출해 useProtect가
+      // default 없이도 dispatch payload에 그대로 전달되는지.
+      let dispatched = null;
+      const actions = createEconomyActions({ player: makePlayerFixture(), gameState: 'crafting', dispatch: (action) => { dispatched = action; } });
+      actions.synthesize(['id1', 'id2'], true);
+      assert.equal(dispatched.type, AT.SYNTHESIZE_ITEMS, 'SYNTHESIZE_ITEMS가 실제로 dispatch된다');
+      assert.deepEqual(dispatched.payload.itemIds, ['id1', 'id2'], 'itemIds가 그대로 전달된다');
+      assert.equal(dispatched.payload.useProtect, true, 'useProtect가 default 없이 명시 전달된다');
   });
 
   test('cycle 543: body validation / signature guard 보존', async () => {
@@ -2302,6 +2735,17 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/validateSynthesis\(items,\s*state\.player\.gold\)/.test(source),
           'validateSynthesis 호출 보존');
       assert.ok(/SIGNATURE_INPUT/.test(source), 'SIGNATURE_INPUT 가드 보존');
+      // validateSynthesis를 실제로 호출해 signature 아이템이 섞이면 실제로 차단되는지.
+      const signatureName = Object.keys(SIGNATURE_ITEM_REGISTRY)[0];
+      const items = [
+          { type: 'weapon', tier: 1, name: signatureName },
+          { type: 'weapon', tier: 1, name: '평범한 검' },
+          { type: 'weapon', tier: 1, name: '평범한 검' },
+      ];
+      const result = validateSynthesis(items, 999999);
+      assert.equal(result.valid, false, 'signature 아이템이 섞이면 유효하지 않다');
+      assert.equal(result.reason, 'SIGNATURE_INPUT', 'SIGNATURE_INPUT 사유로 실제 차단된다');
+      assert.equal(result.signatureName, signatureName, '차단된 signature 아이템 이름이 실제로 반영된다');
   });
 
   test('cycle 543: cycle 502-542 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2377,6 +2821,13 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.equal(scoreTagCalls, 7, `scoreTag callsite 7건 보존: ${scoreTagCalls}건`);
       const hasAnyJobCalls = (source.match(/hasAnyJob\(/g) || []).length;
       assert.equal(hasAnyJobCalls, 8, `hasAnyJob callsite 8건 보존: ${hasAnyJobCalls}건`);
+      // W11 C4: scoreTag/hasAnyJob은 private라 getRunBuildProfile을 통해 실제로 exercise —
+      // 양손무기 착용 시 실제로 'crusher' 태그가 reasons를 담아 만들어지는지(scoreTag 호출).
+      const player = makePlayerFixture({ hp: 100, maxHp: 100, equip: { weapon: { type: 'weapon', hands: 2 } } });
+      const profile = getRunBuildProfile(player, { maxHp: 100 });
+      const crusher = profile.primary.id === 'crusher' ? profile.primary : profile.tags.find((t) => t.id === 'crusher');
+      assert.ok(crusher, 'scoreTag(\'crusher\', ...) 호출로 실제 태그가 생성된다');
+      assert.ok(crusher.reasons.includes('양손 무기'), 'reasons 인자가 명시 전달로 실제 반영된다');
   });
 
   test('cycle 544: body 동작 보존', async () => {
@@ -2386,6 +2837,11 @@ import { readFile, readdir } from 'node:fs/promises';
       // Wave 7 Y3: any → string/number/string[] 타입화. return shape(id/name/score/reasons)은 그대로.
       assert.ok(/const scoreTag = \(id: string, name: string, score: number, reasons: string\[\]\)[^{]*=> \(\{\s*\n\s*id,\s*\n\s*name,\s*\n\s*score,\s*\n\s*reasons,\s*\n\s*\}\)/.test(source),
           'scoreTag return shape 보존');
+      // hasAnyJob이 실제로 item.jobs 배열 유무에 안전하고, 매칭 여부로 결과가 갈리는지는
+      // getRunBuildProfile 결과(primary 태그의 존재/부재)로 간접 관찰한다.
+      const noWeapon = makePlayerFixture({ hp: 100, maxHp: 100, equip: {} });
+      const emptyProfile = getRunBuildProfile(noWeapon, { maxHp: 100 });
+      assert.ok(emptyProfile.primary, 'jobs 매칭 대상이 없어도(hasAnyJob 미사용 분기 포함) 항상 fallback primary가 존재한다');
   });
 
   test('cycle 544: cycle 502-543 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2473,6 +2929,17 @@ import { readFile, readdir } from 'node:fs/promises';
       const qo = await readSrc('src/utils/questOperations.ts');
       assert.ok(/getQuestReason\(quest,\s*lane,\s*resonance,\s*targetMaps\)/.test(qo),
           'getQuestReason callsite 보존');
+      // W11 C4: pickFallbackEvent(export)와 getQuestBoardRecommendations(→ getQuestReason
+      // private)를 실제 3/4 args 명시 호출로 exercise한다.
+      const event1 = pickFallbackEvent('시작의 마을', [], {}, () => 0);
+      const event2 = pickFallbackEvent('시작의 마을', [], {}, () => 0);
+      assert.deepEqual(event1, event2, 'history/context를 명시 전달해도 동일 rng면 결정론적으로 같은 결과');
+
+      const board = getQuestBoardRecommendations(makePlayerFixture({ level: 10 }));
+      const anyEntry = [...board.featured, ...board.backlog][0];
+      assert.ok(anyEntry, '실제 퀘스트 카탈로그로 최소 1건의 추천이 만들어진다');
+      assert.ok(typeof anyEntry.reason === 'string' && anyEntry.reason.length > 0,
+          'getQuestReason(quest, lane, resonance, targetMaps)가 실제 문구를 만든다');
   });
 
   test('cycle 545: body 동작 보존', async () => {
@@ -2484,6 +2951,14 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/if \(lane === 'story'\)/.test(qo), 'story lane 분기 보존');
       assert.ok(/if \(lane === 'build' && resonance\.summary\)/.test(qo),
           'build lane 분기 보존');
+      // lane별로 실제 다른 reason 문구가 나오는지 — 최소 두 lane 이상의 추천이 있으면
+      // reason이 서로 달라야 한다(같은 문구를 모든 lane에 재사용하는 회귀 방지).
+      const board = getQuestBoardRecommendations(makePlayerFixture({ level: 10 }));
+      const byLane = new Map([...board.featured, ...board.backlog].map((e) => [e.lane, e.reason]));
+      if (byLane.size >= 2) {
+          const reasons = [...byLane.values()];
+          assert.ok(new Set(reasons).size > 1, 'lane마다 실제로 다른 reason 문구를 만든다');
+      }
   });
 
   test('cycle 545: cycle 502-544 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2556,6 +3031,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const test1 = await readSrc('tests/relics.test.js');
       assert.ok(/CombatEngine\.applyEntropyTick\(player,\s*enemy,\s*\[\]\)/.test(test1),
           'test callsite (cycle 159) 보존');
+      // W11 C4: activeSynergies default []가 사라져도, []를 명시 전달하는 호출(위 test
+      // callsite와 동일 형태)이 실제로 안전하게 동작하는지.
+      const player = makePlayerFixture({ relics: [] });
+      const enemy = { hp: 100, maxHp: 100, name: '슬라임' };
+      const noSynergy = CombatEngine.applyEntropyTick(player, enemy, []);
+      assert.equal(noSynergy.enemy.hp, 100, 'entropy 유물/시너지 없이 []만 넘기면 변화 없음');
   });
 
   test('cycle 547: body turnCount / relics 처리 보존', async () => {
@@ -2567,6 +3048,12 @@ import { readFile, readdir } from 'node:fs/promises';
           'player?.relics || [] defensive 보존');
       assert.ok(/turnCount = \(flags\.turnCount \|\| 0\) \+ 1/.test(source),
           'turnCount 증가 보존');
+      // entropy_tick 유물을 실제로 보유하면 turnCount 조건에 맞춰 실제로 적 hp가 깎이는지.
+      const player = makePlayerFixture({ relics: [{ id: 'r1', effect: 'entropy_tick', val: { damage: 0.1, interval: 1 } }] });
+      const enemy = { hp: 100, maxHp: 100, name: '슬라임' };
+      const result = CombatEngine.applyEntropyTick(player, enemy, []);
+      assert.equal(result.enemy.hp, 90, 'entropy_tick 유물이 turnCount=1에서 실제로 10 피해를 준다 (100 * 0.1)');
+      assert.equal(result.player.combatFlags.turnCount, 1, 'turnCount가 실제로 1 증가한다');
   });
 
   test('cycle 547: cycle 502-546 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2633,6 +3120,11 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/systems/CombatEngine.actions.ts');
       const calls = (source.match(/this\.applyCritMpRestore\(/g) || []).length;
       assert.equal(calls, 2, `internal callsite 2건 보존: ${calls}건`);
+      // W11 C4: relics/logs default []가 사라져도 명시 전달(callsite와 동일 형태)로
+      // 실제 정상 동작하는지 — crit_mp_regen 유물이 없으면 player를 그대로 반환.
+      const player = makePlayerFixture({ mp: 10, maxMp: 50 });
+      const unchanged = CombatEngine.applyCritMpRestore(player, [], []);
+      assert.equal(unchanged, player, '유물 없이 []만 넘기면 player를 그대로 반환 (no-op)');
   });
 
   test('cycle 548: body crit_mp_regen 분기 + getEffectiveMaxMp 보존', async () => {
@@ -2643,6 +3135,13 @@ import { readFile, readdir } from 'node:fs/promises';
           'crit_mp_regen find 보존');
       assert.ok(/this\.getEffectiveMaxMp\(player, relics\)/.test(source),
           'getEffectiveMaxMp(player, relics) 호출 보존');
+      // crit_mp_regen 유물을 실제로 보유하면 mp가 실제로 회복되고, 로그가 실제로 쌓이는지.
+      const player = makePlayerFixture({ mp: 10, maxMp: 50 });
+      const relics = [{ id: 'r1', effect: 'crit_mp_regen', val: 8 }];
+      const logs = [];
+      const restored = CombatEngine.applyCritMpRestore(player, relics, logs);
+      assert.equal(restored.mp, 18, 'crit_mp_regen 유물의 val만큼 실제로 mp가 회복된다 (10 + 8)');
+      assert.equal(logs.length, 1, 'mp가 실제로 늘면 로그가 1건 쌓인다');
   });
 
   test('cycle 548: cycle 502-547 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2728,6 +3227,13 @@ import { readFile, readdir } from 'node:fs/promises';
       //   default [] 자체(=이 파라미터가 여전히 reachable)는 그대로 보존.
       assert.ok(/activeSynergies\s*=\s*\[\]/.test(sig),
           'applyFatalProtection activeSynergies default [] 보존 (combatAttack 4-arg caller가 reachable path)');
+      // 5번째 args를 아예 생략해도 default []로 안전하게 동작하는지 (undefined가 아니라
+      // 실제로 빈 배열이 들어가 activeSynergies.find가 에러 없이 동작해야 한다).
+      const player = makePlayerFixture({ hp: 0, maxHp: 100 });
+      assert.doesNotThrow(
+          () => CombatEngine.applyFatalProtection(player, [], 5, []),
+          'activeSynergies 생략 시 default []로 .find 호출이 안전하다',
+      );
   });
 
   test('cycle 553: 정합성 가드 — production + internal + test callsite 보존', async () => {
@@ -2744,6 +3250,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const test1 = await readSrc('tests/relics.test.js');
       assert.ok(/CombatEngine\.applyFatalProtection\(player,\s*player\.relics,\s*100,\s*\[\],\s*\[\]\)/.test(test1),
           'test 5-arg callsite (cycle 157) 보존');
+      // W11 C4: combatAttack의 4-arg 형태(activeSynergies 미전달)로 호출해도 default []가
+      // 실제로 채워져 death_save 로직이 정상 동작하는지.
+      const player = makePlayerFixture({ hp: 10, maxHp: 100 });
+      const { updatedPlayer, isDead } = CombatEngine.applyFatalProtection(player, [{ effect: 'death_save' }], 20, []);
+      assert.equal(isDead, false, '4-arg 호출도 death_save 유물로 실제 생존 처리된다');
+      assert.equal(updatedPlayer.hp, 1, 'activeSynergies default []로도 death_save 기본 부활 HP(1)가 반영된다');
   });
 
   test('cycle 553: cycle 502-552 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2819,6 +3331,11 @@ import { readFile, readdir } from 'node:fs/promises';
           'stats?.exploreState || {} 가드 보존');
       assert.ok(/Math\.max\(0,\s*raw\.sinceNarrativeEvent \|\| 0\)/.test(source),
           'sinceNarrativeEvent Math.max 보존');
+      // W11 C4: getExploreState는 private라 advanceExploreState를 통해 exercise한다 —
+      // stats가 undefined여도, 음수가 들어와도 Math.max(0, ...)로 안전하게 clamp되는지.
+      assert.doesNotThrow(() => advanceExploreState(undefined, 'combat'), 'stats undefined도 안전');
+      const withNegative = advanceExploreState({ exploreState: { sinceNarrativeEvent: -5 } }, 'combat');
+      assert.equal(withNegative.sinceNarrativeEvent, 1, 'raw.sinceNarrativeEvent=-5도 Math.max(0, -5)=0에서 시작해 +1이 된다 (음수가 새지 않는다)');
   });
 
   test('cycle 554: cycle 502-553 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2891,6 +3408,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const protocol = await readSrc('src/reducers/handlers/protocolHandlers.ts');
       assert.ok(/getDailyProtocolRewardLogs\(result\.reward\)/.test(protocol),
           'reducer 지급 결과 formatter 보존');
+      // W11 C4: 두 formatter를 실제 callsite 형태로 호출 — AchievementPanel의
+      // `|| {}` 안전망과 getDailyProtocolRewardLogs의 실제 완료 로그 생성을 확인.
+      assert.deepEqual(formatRewardParts(undefined || {}), [], 'AchievementPanel의 reward || {} fallback이 안전하게 빈 목록을 만든다');
+      const logs = getDailyProtocolRewardLogs({ essence: 5, items: ['철 조각'], relicShards: 0, completedCount: 1, convertedRelic: null });
+      assert.equal(logs.length, 1, 'completedCount > 0이면 실제로 완료 로그가 1건 생긴다');
+      assert.match(logs[0].text, /에센스 \+5/, '에센스 지급이 실제 로그 문구에 반영된다');
   });
 
   test('cycle 556: body exp/gold와 실제 essence/item 분기 보존', async () => {
@@ -2903,6 +3426,11 @@ import { readFile, readdir } from 'node:fs/promises';
       const helpers = await readSrc('src/reducers/handlers/helpers.ts');
       assert.ok(/reward\.essence > 0/.test(helpers), '실제 essence 분기 보존');
       assert.ok(/reward\.items\.forEach/.test(helpers), '실제 item 분기 보존');
+      // W11 C4: formatRewardParts를 실제로 호출해 reward default {} 없이도 각 분기가
+      // 실제로 텍스트를 만드는지 확인.
+      assert.deepEqual(formatRewardParts({ exp: 10, gold: 20 }), ['경험 10', '골드 20'],
+          'exp/gold 필드가 실제로 문구로 변환된다');
+      assert.deepEqual(formatRewardParts({}), [], 'reward가 빈 객체면 아무 문구도 생기지 않는다 (default 없이도 안전)');
   });
 
   test('cycle 556: cycle 502-555 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -2987,6 +3515,10 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/clampRatio\(result\.playerHp, result\.playerMaxHp\)/.test(source),
           'ratio fallback clampRatio 보존');
       assert.ok(/summary\.bossKills \|\| 0\) > 0/.test(source), 'bossKills 분기 보존');
+      // W11 C4: result/summary default {}가 사라져도, 명시 전달 호출로 실제 등급/headline이
+      // 정확히 계산되는지.
+      assert.equal(getPostCombatAnalysis({ hpLow: true }).grade, '붕괴 직전', 'hpLow flag가 grade에 실제 반영된다');
+      assert.equal(getRunSummaryAnalysis({ bossKills: 1 }).headline, '보스 구간까지 닿은 모험', 'bossKills가 headline에 실제 반영된다');
   });
 
   test('cycle 557: cycle 502-556 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3065,6 +3597,12 @@ import { readFile, readdir } from 'node:fs/promises';
           'void stats 시그니처 호환 보존');
       assert.ok(/cycle 270: stats 파라미터는 estimatedHit\/estimatedHeavy 계산용이었으나 dead/.test(source),
           'cycle 270 주석 보존');
+      // W11 C4: stats default {}가 사라져도, stats 값이 실제로 무시되고(dead) enemy만으로
+      // 프로필이 계산되는지 — {def:10}과 {def:9999999}를 명시 전달해도 결과가 같아야 한다.
+      const enemy = { name: '고블린', hp: 50, maxHp: 100, atk: 10 };
+      const a = getEnemyTacticalProfile(enemy, { def: 10 });
+      const b = getEnemyTacticalProfile(enemy, { def: 9999999 });
+      assert.deepEqual(a, b, 'stats 값과 무관하게 동일 결과 (stats는 실제로 dead)');
   });
 
   test('cycle 559: cycle 502-558 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3147,6 +3685,18 @@ import { readFile, readdir } from 'node:fs/promises';
       const ai = await readSrc('src/services/aiService.ts');
       assert.ok(/buildEventPackage\(result\.data, \{ \.\.\.context, location: loc, source: 'ai' \}(?:\s+as\s+EventContext)?\)/.test(ai),
           'aiService buildEventPackage callsite 보존');
+      // W11 C4: buildProceduralOutcome은 private라 buildEventPackage(내부 line 548 callsite)를
+      // 통해 exercise된다 — outcomes를 아예 비워도(내부 호출이 object literal로 명시 전달)
+      // 절차적 outcome이 실제로 만들어지는지.
+      const packaged = buildEventPackage({
+          desc: '낡은 문이 열립니다.',
+          choices: ['들어간다', '돌아선다'],
+          outcomes: [],
+      }, {
+          location: '유적', playerSnapshot: { level: 5, maxHp: 120, maxMp: 60 }, mapSnapshot: { level: 5 },
+      });
+      assert.ok(packaged.outcomes.every((o) => typeof o.log === 'string' && o.log.length > 0),
+          'buildProceduralOutcome이 실제로 각 선택지마다 log 문구를 만든다');
   });
 
   test('cycle 561: cycle 502-560 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3220,6 +3770,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const ui = await readSrc('src/reducers/handlers/uiHandlers.ts');
       assert.ok(/sanitizeQuickSlots\(state\.quickSlots,\s*mergedPlayer\.inv\)/.test(ui),
           'uiHandlers callsite 보존');
+      // W11 C4: 두 callsite 모양(quickSlots + inv)으로 명시 호출해도 실제로 유효한
+      // quick slot만 살아남는지.
+      const inv = [{ id: 'i1', name: '물약' }];
+      const result = sanitizeQuickSlots([{ id: 'i1', name: '물약' }, { id: 'ghost-id' }, null], inv);
+      assert.deepEqual(result, [{ id: 'i1', name: '물약' }, null, null],
+          '인벤에 없는 id/누락 슬롯은 null로, 실제 보유 아이템만 남는다');
   });
 
   test('cycle 562: body defensive guards 보존', async () => {
@@ -3228,6 +3784,9 @@ import { readFile, readdir } from 'node:fs/promises';
           '(inventory || []) defensive guard 보존');
       assert.ok(/Array\.isArray\(slots\) \? slots\[i\] : undefined/.test(source),
           'Array.isArray(slots) defensive guard 보존');
+      // slots/inventory가 배열이 아니어도(null 등) 실제로 안전하게 [null,null,null]을 반환하는지.
+      assert.deepEqual(sanitizeQuickSlots(null, null), [null, null, null],
+          'slots/inventory가 null이어도 defensive guard로 3칸짜리 null 배열을 반환한다');
   });
 
   test('cycle 562: cycle 502-561 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3289,6 +3848,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/utils/avatarEquipmentPreview.ts');
       const calls = (source.match(/\}, variant, \{/g) || []).length;
       assert.equal(calls, 10, `withVariant 3-arg callsite 10건 보존: ${calls}건`);
+      // W11 C4: withVariant는 private라 getEquipmentPreviewStage(export)를 통해
+      // exercise한다 — overrides default {} 없이도 variant별로 실제 다른 값이 나오는지.
+      const appearance = buildEquipmentPreviewAppearance(null);
+      const card = getEquipmentPreviewStage(null, appearance, 'card');
+      const basic = getEquipmentPreviewStage(null, appearance, 'default');
+      assert.notEqual(card.origin, basic.origin, "variant='card'와 기본 variant는 실제로 다른 origin fallback을 쓴다");
   });
 
   test('cycle 564: body variant ternary + nullish coalescing 보존', async () => {
@@ -3297,6 +3862,11 @@ import { readFile, readdir } from 'node:fs/promises';
           "variant === 'card' 분기 보존");
       assert.ok(/overrides\.scale \?\? Math\.round\(baseStage\.scale \* 118\) \/ 100/.test(source),
           'overrides.scale ?? nullish coalescing 보존');
+      // item 없음(base 분기)에서 card는 overrides.origin('50% 50%')을, 기본 variant는
+      // baseStage.origin('50% 52%')을 실제로 쓴다 (overrides ?? / || nullish 분기 실효).
+      const appearance = buildEquipmentPreviewAppearance(null);
+      assert.equal(getEquipmentPreviewStage(null, appearance, 'card').origin, '50% 50%');
+      assert.equal(getEquipmentPreviewStage(null, appearance, 'default').origin, '50% 52%');
   });
 
   test('cycle 564: cycle 502-563 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3366,6 +3936,23 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/IntroScreen.tsx');
       assert.ok(/onStart\?\.\(selectedName,\s*'male',\s*'모험가',\s*selectedChallenges\)/.test(source),
           "IntroScreen onStart?.(selectedName, 'male', '모험가', selectedChallenges) callsite 보존");
+      // W11 C4: IntroScreen과 동일한 4-arg 명시 호출로 실제 start를 실행해, gender/jobId/
+      // challengeModifiers가 default 없이도 SET_PLAYER payload에 그대로 반영되는지.
+      let dispatched = null;
+      const deps = {
+          player: makePlayerFixture(),
+          gameState: 'intro',
+          dispatch: (action) => { dispatched = action; },
+          addLog: () => {},
+          addStoryLog: () => {},
+          getFullStats: (p) => ({ maxHp: p.maxHp, maxMp: p.maxMp, atk: p.atk, def: p.def }),
+      };
+      const actions = createCharacterActions(deps, { emitUnlockedTitles: () => {} });
+      actions.start('리베아', 'male', '나이트', ['halfHp']);
+      assert.equal(dispatched.type, AT.SET_PLAYER, 'SET_PLAYER가 실제로 dispatch된다');
+      assert.equal(dispatched.payload.gender, 'male', 'gender가 default 없이 명시 전달된다');
+      assert.equal(dispatched.payload.job, '나이트', 'jobId가 default 없이 명시 전달된다');
+      assert.deepEqual(dispatched.payload.challengeModifiers, ['halfHp'], 'challengeModifiers가 default 없이 명시 전달된다');
   });
 
   test('cycle 566: body Array.isArray defensive guard 보존', async () => {
@@ -3376,6 +3963,22 @@ import { readFile, readdir } from 'node:fs/promises';
           'buildClassVitals 호출 보존 — 신규 캐릭터 Lv1 기준');
       assert.ok(/level:\s*1,\s*exp:\s*0,\s*nextExp:\s*CONSTANTS\.START_NEXT_EXP/.test(source),
           'start payload가 level/exp/nextExp 초기값을 명시');
+      // challengeModifiers가 배열이 아니어도(방어적 호출) 실제로 halfHp/noGold 분기 없이
+      // 안전하게 처리되는지, halfHp가 실제로 maxHp를 절반으로 깎는지.
+      let dispatched = null;
+      const deps = {
+          player: makePlayerFixture(),
+          gameState: 'intro',
+          dispatch: (action) => { dispatched = action; },
+          addLog: () => {}, addStoryLog: () => {},
+          getFullStats: (p) => ({ maxHp: p.maxHp, maxMp: p.maxMp }),
+      };
+      const actions = createCharacterActions(deps, { emitUnlockedTitles: () => {} });
+      const vitals = buildClassVitals(1, '나이트', {});
+      actions.start('리베아', 'male', '나이트', ['halfHp']);
+      assert.equal(dispatched.payload.maxHp, Math.max(50, Math.floor(vitals.maxHp * 0.5)),
+          'halfHp 챌린지가 실제로 maxHp를 절반으로 줄인다');
+      assert.equal(dispatched.payload.level, 1, 'level 초기값 1이 실제 payload에 반영된다');
   });
 
   test('cycle 566: cycle 502-565 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3464,6 +4067,10 @@ import { readFile, readdir } from 'node:fs/promises';
           'TIER_COLORS[tier] ?? TIER_COLORS[0] nullish fallback 보존');
       assert.ok(/CLASS_PATHS\[jobName\] \|\| CLASS_PATHS\['모험가'\]/.test(source),
           "CLASS_PATHS jobName fallback 보존");
+      // W11 C4: tier default 제거 후에도, tier 미전달/알 수 없는 jobName이 실제로
+      // fallback 색상(#9ca3af)/기본 경로로 렌더되는지.
+      const html = renderStatic(createElement(ClassIcon, { className: '알수없는직업', size: 28 }));
+      assert.ok(html.includes('#9ca3af'), 'tier 미전달 시 TIER_COLORS[0](#9ca3af) fallback이 실제 렌더된다');
   });
 
   test('cycle 568: cycle 502-567 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3549,6 +4156,11 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/<Dashboard/.test(source), 'Dashboard callsite 보존');
       assert.ok(!/mobileSection=/.test(source), 'mobileSection prop 0건');
       assert.ok(!/consoleExpanded/.test(source), 'consoleExpanded prop 0건');
+      // W11 C4 참고: onReturnToLog는 Dashboard로 그대로 전달되는 콜백이라 정적 렌더로는
+      // 호출 여부를 볼 수 없고, Dashboard/MobileGameLayout은 engine 전체(수십 개 파생
+      // 상태)를 필요로 해 이 파일에서 최소 mock으로 안전하게 렌더하기엔 배보다 배꼽이
+      // 크다 — ControlPanel(cycle 587)과 같은 이유로 소스 텍스트 그대로 둔다
+      // (분류: 전환 대상이지만 이 파일에서는 비용 대비 가치가 낮아 보류, 문서 참조).
       assert.ok(/onReturnToLog=\{/.test(source), 'onReturnToLog prop 보존');
   });
 
@@ -3621,6 +4233,16 @@ import { readFile, readdir } from 'node:fs/promises';
       const callsite = source.slice(start, end);
       assert.ok(/quickSlots=\{quickSlots\}/.test(callsite), 'quickSlots live prop 보존');
       assert.ok(!/spotlight|onClearSpotlight/.test(callsite), 'dead spotlight props 제거');
+      // W11 C4: Dashboard가 넘기는 형태(quickSlots + onAssignQuickSlot)로 SmartInventory를
+      // 직접 렌더해, quickSlots가 실제로 QuickSlotAssigner까지 전달되는지 확인.
+      const player = makePlayerFixture({
+          settings: { equipmentDetailMode: 'full' },
+          inv: [{ id: 'p1', name: '힐링 포션', type: 'hp' }],
+      });
+      const html = renderStatic(createElement(SmartInventory, {
+          player, quickSlots: [null, null, null], onAssignQuickSlot: () => {},
+      }));
+      assert.ok(html.includes('quick-slot-assign-0'), 'quickSlots + onAssignQuickSlot이 실제로 QuickSlotAssigner를 렌더한다');
   });
 
   test('release core: SmartInventory dead spotlight body is absent', async () => {
@@ -3692,6 +4314,13 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/ControlPanel.tsx');
       assert.ok(/<CombatPanel[\s\S]*?enemy=\{enemy\}[\s\S]*?stats=\{stats\}[\s\S]*?mobile/.test(source),
           'ControlPanel <CombatPanel> 6-prop callsite 보존');
+      // W11 C4: ControlPanel이 넘기는 형태(enemy/stats/mobile 명시)로 CombatPanel을
+      // 직접 렌더해, default 없이도 정상 렌더되는지 (enemy=null인 실제 상태 포함).
+      const player = makePlayerFixture();
+      assert.doesNotThrow(
+          () => renderStatic(createElement(CombatPanel, { player, actions: {}, enemy: null, stats: {}, isAiThinking: false, mobile: false })),
+          'enemy=null 명시 전달도 default 없이 안전하게 렌더된다',
+      );
   });
 
   test('cycle 575: body enemy 분기 보존', async () => {
@@ -3765,6 +4394,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/app/MobileGameLayout.tsx');
       assert.ok(/<TerminalView[\s\S]*?logs=\{engine\.logs\}/.test(source),
           'MobileGameLayout <TerminalView logs={engine.logs} /> callsite 보존');
+      // W11 C4: MobileGameLayout이 넘기는 형태(logs 배열 명시)로 TerminalView를 직접
+      // 렌더해, default 없이도 실제 로그 텍스트가 렌더되는지.
+      const html = renderStatic(createElement(TerminalView, {
+          logs: [{ type: 'system', text: '결계 소환 완료' }],
+      }));
+      assert.ok(html.includes('결계 소환 완료'), 'logs 명시 전달로 실제 로그 텍스트가 렌더된다');
   });
 
   test('cycle 576: cycle 502-575 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3842,12 +4477,19 @@ import { readFile, readdir } from 'node:fs/promises';
       const eu = await readSrc('src/utils/enhancementUtils.ts');
       assert.ok(/countInventoryItemByName\(inventory,\s*CONSTANTS\.ENHANCE_MATERIAL_NAME\)/.test(eu),
           'getEnhanceMaterialCount internal call 보존');
+      // W11 C4: 3개 export 함수를 inventory 명시 전달로 직접 호출해 default 없이도 정상 카운트되는지.
+      const inv = [{ id: 'm1', name: CONSTANTS.ENHANCE_MATERIAL_NAME }, { id: 'm2', name: CONSTANTS.ENHANCE_MATERIAL_NAME }];
+      assert.equal(countInventoryItemByName(inv, CONSTANTS.ENHANCE_MATERIAL_NAME), 2, 'countInventoryItemByName이 실제로 개수를 센다');
+      assert.equal(getEnhanceMaterialCount(inv), 2, 'getEnhanceMaterialCount가 내부적으로 동일 개수를 센다');
   });
 
   test('cycle 578: body defensive guards 보존', async () => {
       const source = await readSrc('src/utils/enhancementUtils.ts');
       const calls = (source.match(/\(inventory \|\| \[\]\)/g) || []).length;
       assert.ok(calls >= 2, `(inventory || []) defensive guards 보존: ${calls}건`);
+      // inventory가 null/undefined여도 defensive guard로 안전하게 0을 반환하는지.
+      assert.equal(countInventoryItemByName(null, CONSTANTS.ENHANCE_MATERIAL_NAME), 0, 'inventory null이어도 안전하게 0');
+      assert.equal(getEnhanceMaterialCount(undefined), 0, 'inventory undefined여도 안전하게 0');
   });
 
   test('cycle 578: cycle 502-577 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3856,7 +4498,11 @@ import { readFile, readdir } from 'node:fs/promises';
           'cycle 577 getMapCodexProgress codex default 0건');
 
       const tv = await readSrc('src/components/TerminalView.tsx');
-      assert.ok(!/const TerminalView = \(\{\s*\n\s*logs\s*=\s*\[\]/.test(tv),
+      // W11 C4: 원래 regex는 destructure의 개행/들여쓰기 형태(`{\n    logs = []`)까지
+      // 고정했다 — TerminalView 포맷팅이 바뀌면 logs default가 실제로는 없는데도
+      // 이 회귀 가드가 스스로 무력화(false negative)될 수 있었다. 식별자/기본값
+      // 형태만 보도록 좁힌다(레이아웃 무관).
+      assert.ok(!/logs\s*=\s*\[\]/.test(tv),
           'cycle 576 TerminalView logs default 0건');
   });
 }
@@ -3921,6 +4567,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const cp = await readSrc('src/components/ControlPanel.tsx');
       assert.ok(/getMoveRecommendations\(player,\s*stats,\s*mapData,\s*DB\.MAPS\)/.test(cp),
           'ControlPanel getMoveRecommendations callsite 보존');
+      // W11 C4: 두 callsite가 공통으로 쓰는 형태(DB.MAPS 명시)로 직접 호출해도
+      // maps default {} 없이 실제 추천이 계산되는지.
+      const player = makePlayerFixture({ level: 10, loc: '시작의 마을' });
+      const currentMap = DB.MAPS[player.loc];
+      const recs = getMoveRecommendations(player, null, currentMap, DB.MAPS);
+      assert.ok(recs.length > 0, 'DB.MAPS 명시 전달로 실제 지역 추천 목록이 만들어진다');
   });
 
   test('cycle 579: cycle 502-578 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3979,6 +4631,14 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/TerminalView.tsx');
       assert.ok(/<QuickSlot[\s\S]*?slots=\{quickSlots(?: \|\| \[\])?\}/.test(source),
           'TerminalView <QuickSlot slots={quickSlots} /> callsite 보존');
+      // W11 C4: TerminalView가 넘기는 형태(quickSlots 배열 명시)로 QuickSlot을 직접 렌더해,
+      // default 없이도 3개 슬롯이 실제로 각자의 아이템/빈칸으로 렌더되는지.
+      const html = renderStatic(createElement(QuickSlot, {
+          slots: [{ id: 'p1', name: '힐링 포션', type: 'hp' }, null, null],
+          gameState: 'idle',
+      }));
+      assert.ok(html.includes('quick-slot-0'), '슬롯 0이 실제로 렌더된다');
+      assert.ok(html.includes('quick-slot-2'), '슬롯 2(빈 슬롯)도 실제로 렌더된다');
   });
 
   test('cycle 581: cycle 502-580 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -4040,6 +4700,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/tabs/JobChangePanel.tsx');
       assert.ok(/<ClassCard[\s\S]*?disabled=\{level < \(DB\.CLASSES\[jobName\]\?\.reqLv \|\| 1\)\}/.test(source),
           'JobChangePanel <ClassCard disabled={...} /> callsite 보존');
+      // W11 C4: disabled를 명시 전달(true/false 둘 다)로 직접 렌더해, default 없이도
+      // data-locked 속성이 실제로 반영되는지.
+      const locked = renderStatic(createElement(ClassCard, { jobName: '나이트', onSelect: () => {}, disabled: true, selected: false }));
+      const unlocked = renderStatic(createElement(ClassCard, { jobName: '나이트', onSelect: () => {}, disabled: false, selected: false }));
+      assert.ok(locked.includes('data-locked="true"'), 'disabled=true가 실제로 data-locked="true"로 렌더된다');
+      assert.ok(unlocked.includes('data-locked="false"'), 'disabled=false가 실제로 data-locked="false"로 렌더된다');
   });
 
   test('cycle 582: cycle 502-581 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -4100,6 +4766,13 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/ControlPanel.tsx');
       assert.ok(/<JobChangePanel player=\{player\} actions=\{actions\} setGameState=\{setGameState\} onOpenArchiveConsole=\{onOpenArchiveConsole\}/.test(source),
           'ControlPanel <JobChangePanel> 4-prop callsite 보존');
+      // W11 C4: onOpenArchiveConsole은 하위로 그대로 전달되는 콜백이라 정적 렌더 결과로는
+      // 호출 여부를 관찰할 수 없다 — default 없이 명시 전달해도 렌더 트리 전체(하위
+      // ArchiveConsole 진입점까지)가 타입 에러 없이 안전하게 조립되는지로 검증한다.
+      assert.doesNotThrow(
+          () => renderStatic(createElement(JobChangePanel, { player: makePlayerFixture(), onOpenArchiveConsole: () => {} })),
+          'onOpenArchiveConsole 명시 전달로 전체 트리가 안전하게 렌더된다',
+      );
   });
 
   test('cycle 584: cycle 502-583 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -4181,6 +4854,12 @@ import { readFile, readdir } from 'node:fs/promises';
           "className default '' 보존 (다수 callers 미전달이라 reachable)");
       assert.ok(/hideSignatureBadge\s*=\s*false/.test(sig),
           'hideSignatureBadge default false 보존 (대부분 callers 미전달이라 reachable)');
+      // W11 C4: WeaponCodex 형태(size만 명시, 나머지 3개 생략)로 렌더해도 3개 default가
+      // 실제로 채워져 showBorder=true로 렌더한 것과는 다른 결과가 나오는지.
+      const item = { type: 'weapon', name: '녹슨 단검', val: 10 };
+      const withoutBorder = renderStatic(createElement(ItemIcon, { item, size: 28 }));
+      const withBorder = renderStatic(createElement(ItemIcon, { item, size: 28, showBorder: true }));
+      assert.notEqual(withoutBorder, withBorder, 'showBorder default false는 showBorder=true 렌더와 실제로 다르다');
   });
 
   test('cycle 585: 정합성 가드 — sample callsites 보존', async () => {
@@ -4191,6 +4870,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const sp = await readSrc('src/components/ShopPanel.tsx');
       assert.ok(/<ItemIcon item=\{item\} size=\{34\} showBorder/.test(sp),
           'ShopPanel callsite 보존');
+      // 두 callsite 형태(size only vs size+showBorder)로 직접 렌더해 size가 실제로
+      // 반영되는지(WeaponCodex 28px vs ShopPanel 34px).
+      const item = { type: 'weapon', name: '녹슨 단검', val: 10 };
+      const small = renderStatic(createElement(ItemIcon, { item, size: 28 }));
+      const large = renderStatic(createElement(ItemIcon, { item, size: 34, showBorder: true }));
+      assert.notEqual(small, large, 'size/showBorder 인자가 실제로 다른 렌더 결과를 만든다');
   });
 
   test('cycle 585: cycle 502-584 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -4254,6 +4939,10 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 587: 정합성 가드 — 2 MobileGameLayout callsite 보존', async () => {
+      // W11 C4 참고: ControlPanel은 게임 전체 navigation/action hub라 실제 렌더에는
+      // engine 전체(수십 개 파생 상태 + 6개 하위 패널)가 필요하다 — 이 파일에서 최소
+      // mock으로 안전하게 렌더하기엔 배보다 배꼽이 크므로(JobChangePanel/CraftingPanel
+      // 같은 leaf-level 콜백 전달과는 다름) 소스 텍스트 그대로 둔다(전환 보류, 문서 참조).
       const source = await readSrc('src/components/app/MobileGameLayout.tsx');
       const matches = source.match(/<ControlPanel[\s\S]*?\/>/g) || [];
       assert.equal(matches.length, 2, `<ControlPanel> 2 callsite 보존: ${matches.length}건`);
@@ -4322,6 +5011,12 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/ControlPanel.tsx');
       assert.ok(/<CraftingPanel player=\{player\} actions=\{actions\} setGameState=\{setGameState\} onOpenArchiveConsole=\{onOpenArchiveConsole\}/.test(source),
           'ControlPanel <CraftingPanel> 4-prop callsite 보존');
+      // W11 C4: onOpenArchiveConsole은 하위로 전달되는 콜백이라 정적 렌더로는 호출 여부를
+      // 볼 수 없다 — default 없이 명시 전달해도 전체 트리가 안전하게 조립되는지로 검증한다.
+      assert.doesNotThrow(
+          () => renderStatic(createElement(CraftingPanel, { player: makePlayerFixture(), onOpenArchiveConsole: () => {} })),
+          'onOpenArchiveConsole 명시 전달로 전체 트리가 안전하게 렌더된다',
+      );
   });
 
   test('cycle 588: cycle 502-587 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -4390,6 +5085,15 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/hooks/combatActions/combatVictory.ts');
       assert.ok(/addCombatDigestLogs\(\{[\s\S]*?bossClearBonus: victoryResult\.bossClearBonus\?\.goldBonus \|\| 0,/.test(source),
           'combatVictory addCombatDigestLogs callsite 8-props 명시 전달 보존');
+      // W11 C4: combatVictory와 동일하게 5개 default 파라미터를 모두 명시(빈 값 포함)
+      // 전달해도 실제로 안전하게 로그가 쌓이는지.
+      const logs = [];
+      addCombatDigestLogs({
+          addLog: (type, text) => logs.push({ type, text }),
+          enemyName: '슬라임', droppedItems: [], upgradeHint: null, traitHint: null,
+          bossRewardHint: null, bossClearBonus: 0,
+      });
+      assert.equal(logs.length, 1, '힌트 없이 명시 전달해도 digest 로그 1건이 실제로 쌓인다');
   });
 
   test('cycle 591: body summaryParts / MSG.COMBAT_DIGEST 처리 보존', async () => {
@@ -4400,6 +5104,13 @@ import { readFile, readdir } from 'node:fs/promises';
       // slice 24: 전리품 1건 중복 제거로 > 0 → > 1 (다중 드롭 요약일 때만 표기).
       assert.ok(/if \(droppedItems\.length > 1\)/.test(source),
           'droppedItems.length 처리 보존');
+      // droppedItems 1건은 요약에 안 나타나고, 2건 이상이면 실제로 나타나는지.
+      const logsOne = [];
+      addCombatDigestLogs({ addLog: (t, text) => logsOne.push(text), enemyName: '슬라임', droppedItems: ['가죽'], upgradeHint: null, traitHint: null, bossRewardHint: null, bossClearBonus: 0 });
+      const logsTwo = [];
+      addCombatDigestLogs({ addLog: (t, text) => logsTwo.push(text), enemyName: '슬라임', droppedItems: ['가죽', '뿔'], upgradeHint: null, traitHint: null, bossRewardHint: null, bossClearBonus: 0 });
+      assert.ok(!logsOne[0].includes('가죽'), '전리품 1건은 digest 요약에 중복 표기되지 않는다');
+      assert.ok(logsTwo[0].includes('가죽'), '전리품 2건 이상이면 digest 요약에 실제로 표기된다');
   });
 
   test('cycle 591: cycle 502-590 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -4472,6 +5183,17 @@ import { readFile, readdir } from 'node:fs/promises';
           'direct combat victory extendedChecks 전파 보존');
       const cafalse = (ca.match(/extendedChecks:\s*false/g) || []).length;
       assert.ok(cafalse >= 1, `combat item/DoT extendedChecks: false 명시 보존: ${cafalse}건`);
+      // W11 C4: extendedChecks/liveConfig를 명시 전달(default 없이)해 실제로 승리 처리가
+      // 끝까지 동작하는지 — addLog로 실제 승리 로그가 나가는지 확인.
+      const player = makePlayerFixture({ level: 5, hp: 50, maxHp: 50 });
+      const deadEnemy = { ...DB.MONSTERS['슬라임'], name: '슬라임', baseName: '슬라임', hp: 0, maxHp: 30, exp: 20, gold: 10, drop: [] };
+      const loggedTexts = [];
+      handleVictoryOutcome({
+          playerAfterCombat: player, deadEnemy, stats: { maxHp: 50, maxMp: 30 },
+          dispatch: () => {}, addLog: (type, text) => loggedTexts.push(text), addStoryLog: () => {}, emitUnlockedTitles: () => {},
+          extendedChecks: false, liveConfig: {},
+      });
+      assert.ok(loggedTexts.length > 0, 'extendedChecks=false, liveConfig={} 명시 전달로도 승리 로그가 실제로 쌓인다');
   });
 
   test('cycle 592: body CombatEngine.handleVictory liveConfig 전달 보존', async () => {
@@ -4616,17 +5338,13 @@ import { readFile, readdir } from 'node:fs/promises';
           'Window.advanceTime 타입 선언 제거');
   });
 
-  test('cycle 594: 활성 Window 타입 보존 (회귀 가드)', async () => {
-      const source = await readSrc('src/vite-env.d.ts');
-      // W8-Z6: render_game_to_text/__AETHERIA_TEST_API__의 `: any`를 닫았다 —
-      //   필드 자체(smoke/perf 스크립트가 쓰는 active 멤버)는 보존한다.
-      assert.ok(/render_game_to_text\?:\s*\(\)\s*=>\s*string/.test(source),
-          'render_game_to_text 타입 보존 (smoke/perf 스크립트 active)');
-      assert.ok(/__AETHERIA_TEST_API__\?:\s*import\('\.\/hooks\/useGameTestApi\.js'\)\.AetheriaTestApi/.test(source),
-          '__AETHERIA_TEST_API__ 타입 보존');
-      assert.ok(/__AETHERIA_PERF_REGISTRY__\?:\s*PerfRegistry/.test(source),
-          '__AETHERIA_PERF_REGISTRY__ 타입 보존');
-  });
+  // W11 C4: "cycle 594: 활성 Window 타입 보존" 테스트를 삭제했다 — 세 assertion
+  // (render_game_to_text/__AETHERIA_TEST_API__/__AETHERIA_PERF_REGISTRY__의 Window
+  // 인터페이스 타입 선언 존재 확인) 모두 class (c)다. 타입은 런타임에 삭제(erase)되어
+  // 동작 테스트로 표현할 수 없고, 세 필드 모두 실제로 `window.X = ...` 대입 사이트가
+  // src/에 있어(useGameTestApi.ts:583,2120 / performanceMarks.ts:4) 선언을 지우면
+  // 그 대입이 `tsc --noEmit`에서 즉시 타입 에러가 난다 — `npm run verify`가 이미
+  // 더 강하게 보장하므로 이 소스 정규식은 공허하다. 상세: docs/SOURCE_GUARD_CLASSIFICATION_2026-09.md.
 
   test('cycle 594: cycle 593 정의 제거 보존', async () => {
       const source = await readSrc('src/hooks/useGameTestApi.ts');
@@ -4699,6 +5417,13 @@ import { readFile, readdir } from 'node:fs/promises';
           'hook success predictor 제거');
       assert.ok(/logs: appendRewardLogs/.test(reducer),
           'reducer 확정 로그 보존');
+      // W11 C4: createRewardActions().claimSeasonReward(tier)를 실제로 호출해 tier만
+      // dispatch payload로 나가는지(예측 문구 없이) 확인.
+      let dispatched = null;
+      const actions = createRewardActions({ player: makePlayerFixture(), dispatch: (a) => { dispatched = a; } });
+      actions.claimSeasonReward(7);
+      assert.deepEqual(dispatched, { type: AT.CLAIM_SEASON_REWARD, payload: { tier: 7 } },
+          'claimSeasonReward(tier)가 tier만 담아 실제로 dispatch된다');
   });
 
   test('cycle 595: cycle 502-594 회귀 가드 — default/dead 청소 시리즈 보존', async () => {
@@ -4776,6 +5501,11 @@ import { readFile, readdir } from 'node:fs/promises';
       const test1 = await readSrc('tests/forgotten-commander-chain.test.js');
       assert.ok(/getChainEventForLoc\('잊혀진 폐허',\s*\{\}\)/.test(test1),
           'test forgotten_commander callsite 보존');
+      // W11 C4: 두 함수를 명시 인자로 직접 호출해 default 없이도 정상 동작하는지.
+      const progress = getCodexProgress({}, []);
+      assert.ok(Array.isArray(progress.unclaimed), 'getCodexProgress(codex, claimed) 명시 호출로 실제 진행 정보가 계산된다');
+      assert.equal(getChainEventForLoc('존재하지-않는-지역', {}), null,
+          'getChainEventForLoc(loc, progress) 명시 호출도 안전하게 동작한다 (매칭 체인 없으면 null)');
   });
 
   test('cycle 596: cycle 502-595 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -4844,6 +5574,15 @@ import { readFile, readdir } from 'node:fs/promises';
       const test1 = await readSrc('tests/run-profile-utils.test.js');
       assert.ok(/getTraitFeaturedItems\(loot,\s*trait,\s*player,\s*2\)/.test(test1),
           'test getTraitFeaturedItems(loot, trait, player, 2) 보존');
+      // W11 C4: 두 callsite가 쓰는 형태(limit 1/2 명시)로 직접 호출해도 default 없이
+      // 실제로 그 개수만큼만 잘리는지.
+      const items = [
+          { name: '양손 대검', type: 'weapon', hands: 2, price: 100 },
+          { name: '양손 도끼', type: 'weapon', hands: 2, price: 50 },
+      ];
+      const trait = { id: 'crusher' };
+      assert.equal(getTraitFeaturedItems(items, trait, null, 1).length, 1, 'limit=1 명시 호출로 실제 1개만 반환된다');
+      assert.equal(getTraitFeaturedItems(items, trait, null, 2).length, 2, 'limit=2 명시 호출로 실제 2개까지 반환된다');
   });
 
   test('cycle 598: body (items || []) defensive guard + sort 보존', async () => {
@@ -4852,6 +5591,13 @@ import { readFile, readdir } from 'node:fs/promises';
           '(items || []) defensive guard 보존');
       assert.ok(/getTraitItemResonance\(item,\s*traitProfile,\s*player\)/.test(source),
           'getTraitItemResonance 호출 보존');
+      // items가 undefined여도 안전하게 빈 배열을 반환하고, resonance.score < 3인
+      // 아이템(공명 없는 잡템)은 실제로 걸러지는지.
+      assert.deepEqual(getTraitFeaturedItems(undefined, { id: 'crusher' }, null, 3), [],
+          'items undefined여도 defensive guard로 안전하게 빈 배열 반환');
+      const junk = [{ name: '평범한 천', type: 'material', price: 1 }];
+      assert.deepEqual(getTraitFeaturedItems(junk, { id: 'crusher' }, null, 3), [],
+          'resonance score가 3 미만인 아이템은 실제로 걸러진다');
   });
 
   test('cycle 598: cycle 502-597 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -4919,12 +5665,21 @@ import { readFile, readdir } from 'node:fs/promises';
       const ea = await readSrc('src/hooks/gameActions/exploreActions.ts');
       assert.ok(/getMapPacingProfile\(mapData\)/.test(ea),
           'exploreActions getMapPacingProfile callsite 보존');
+      // W11 C4: 4 callsite가 공통으로 쓰는 형태(mapData 명시)로 직접 호출해도 default {}
+      // 없이 실제 프로필이 계산되는지 — safe 지역과 보스 지역이 실제로 다른 프로필을 낸다.
+      const safeProfile = getMapPacingProfile({ type: 'safe' });
+      const bossProfile = getMapPacingProfile({ type: 'normal', boss: '테스트보스' });
+      assert.equal(safeProfile.id, 'safe', 'mapData 명시 전달로 safe 지역 프로필이 실제 계산된다');
+      assert.equal(bossProfile.id, 'boss', 'mapData 명시 전달로 보스 지역 프로필이 실제 계산된다');
   });
 
   test('cycle 599: body !mapData guard 보존 (undefined 안전)', async () => {
       const source = await readSrc('src/utils/explorationPacing.ts');
       assert.ok(/if \(!mapData \|\| mapData\.type === 'safe'\)/.test(source),
           '!mapData || mapData.type === safe guard 보존');
+      // mapData가 undefined/null이어도 defensive guard로 safe 프로필로 안전하게 떨어지는지.
+      assert.equal(getMapPacingProfile(undefined).id, 'safe', 'mapData undefined여도 safe 프로필로 안전하게 fallback');
+      assert.equal(getMapPacingProfile(null).id, 'safe', 'mapData null이어도 safe 프로필로 안전하게 fallback');
   });
 
   test('cycle 599: cycle 502-598 회귀 가드 — default 청소 시리즈 보존', async () => {
