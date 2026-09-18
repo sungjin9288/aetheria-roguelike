@@ -27,20 +27,20 @@ const FANTASY_SUFFIXES = [
 
 const HANGUL_NAME_RE = /^[가-힣]{2,4}$/;
 
-const randomIndex = (length: any, rng: any) => Math.floor(rng() * length);
-const pick = (items: any, rng: any) => items[randomIndex(items.length, rng)];
+const randomIndex = (length: number, rng: () => number): number => Math.floor(rng() * length);
+const pick = (items: readonly string[], rng: () => number): string => items[randomIndex(items.length, rng)];
 
-const dedupeName = (name: any) => {
+const dedupeName = (name: string): string => {
     const chars = Array.from(name);
-    if (chars.length >= 2 && chars.every((char: any) => char === chars[0])) {
+    if (chars.length >= 2 && chars.every((char) => char === chars[0])) {
         return `${chars[0]}린`;
     }
     return name;
 };
 
-const trimToFourSyllables = (name: any) => Array.from(name).slice(0, 4).join('');
+const trimToFourSyllables = (name: string): string => Array.from(name).slice(0, 4).join('');
 
-const generateFromParts = (rng: any) => {
+const generateFromParts = (rng: () => number): string => {
     const roll = rng();
 
     if (roll < 0.5) {
@@ -55,7 +55,7 @@ const generateFromParts = (rng: any) => {
 // cycle 611: rng default Math.random 제거 — explicit default-elimination
 //   pattern (cycle 608/609 신규 lens 3번째 적용). IntroScreen 2 production
 //   caller에 Math.random 명시 추가 후 default unreachable.
-export const createRandomMobileName = (rng: any) => {
+export const createRandomMobileName = (rng: () => number): string => {
     const roll = rng();
     const name = roll < 0.62 ? pick(CURATED_FANTASY_NAMES, rng) : generateFromParts(rng);
     return HANGUL_NAME_RE.test(name) ? name : '아르덴';

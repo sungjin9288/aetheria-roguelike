@@ -9,19 +9,19 @@ const getRegistry = () => {
     return window.__AETHERIA_PERF_REGISTRY__;
 };
 
-const getLatestEntry = (name: any, type: any) => {
+const getLatestEntry = (name: string, type: string): PerformanceEntry | null => {
     if (typeof performance === 'undefined') return null;
     const entries = performance.getEntriesByName(name, type);
     return entries.length > 0 ? entries[entries.length - 1] : null;
 };
 
-export const markPerf = (name: any) => {
+export const markPerf = (name: string): PerformanceEntry | null => {
     if (typeof performance === 'undefined') return null;
     performance.mark(name);
     return getLatestEntry(name, 'mark');
 };
 
-export const markPerfOnce = (name: any) => {
+export const markPerfOnce = (name: string): PerformanceEntry | null => {
     const registry = getRegistry();
     if (!registry) return null;
     if (registry.marks.has(name)) return getLatestEntry(name, 'mark');
@@ -30,7 +30,7 @@ export const markPerfOnce = (name: any) => {
 };
 
 // cycle 303: export 제거 — measurePerfOnce 내부 1회만 사용, 외부 consumer 0건.
-const measurePerf = (name: any, startMark: any, endMark: any) => {
+const measurePerf = (name: string, startMark: string, endMark: string): PerformanceEntry | null => {
     if (typeof performance === 'undefined') return null;
     try {
         performance.measure(name, startMark, endMark);
@@ -40,7 +40,7 @@ const measurePerf = (name: any, startMark: any, endMark: any) => {
     return getLatestEntry(name, 'measure');
 };
 
-export const measurePerfOnce = (name: any, startMark: any, endMark: any) => {
+export const measurePerfOnce = (name: string, startMark: string, endMark: string): PerformanceEntry | null => {
     const registry = getRegistry();
     if (!registry) return null;
     if (registry.measures.has(name)) return getLatestEntry(name, 'measure');
@@ -49,19 +49,19 @@ export const measurePerfOnce = (name: any, startMark: any, endMark: any) => {
     return entry;
 };
 
-export const getPerfSnapshot = () => {
+export const getPerfSnapshot = (): Record<string, number> => {
     if (typeof performance === 'undefined') return {};
 
-    const snapshot: Record<string, any> = {};
+    const snapshot: Record<string, number> = {};
     performance.getEntriesByType('measure')
-        .filter((entry: any) => entry.name.startsWith('aetheria:'))
-        .forEach((entry: any) => {
+        .filter((entry: PerformanceEntry) => entry.name.startsWith('aetheria:'))
+        .forEach((entry: PerformanceEntry) => {
             snapshot[entry.name] = Number(entry.duration.toFixed(1));
         });
 
     performance.getEntriesByType('mark')
-        .filter((entry: any) => entry.name.startsWith('aetheria:'))
-        .forEach((entry: any) => {
+        .filter((entry: PerformanceEntry) => entry.name.startsWith('aetheria:'))
+        .forEach((entry: PerformanceEntry) => {
             snapshot[`${entry.name}:mark`] = Number(entry.startTime.toFixed(1));
         });
 

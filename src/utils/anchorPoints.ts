@@ -45,12 +45,41 @@ export const BACK_LAYER_OFFHAND_STYLES = Object.freeze(new Set([
 ]));
 
 // ──────────────────────────────────────────────────────────────────────────
+// Placement 타입 — anchor/layer/transform 3필드. AVATAR_ANCHORS 키만 anchor로
+// 허용되고, layer는 렌더 순서상 'front' | 'back' 둘뿐이다.
+// ──────────────────────────────────────────────────────────────────────────
+type AnchorKey = keyof typeof AVATAR_ANCHORS;
+type PlacementLayer = 'front' | 'back';
+
+interface PlacementTransform {
+    translateX: number;
+    translateY: number;
+    rotate?: number;
+    rotateX?: number;
+    rotateY?: number;
+    scale?: number;
+}
+
+interface Placement {
+    anchor: AnchorKey;
+    layer: PlacementLayer;
+    transform: PlacementTransform;
+}
+
+/** armor art profile 중 이 파일이 실제로 읽는 필드만 — equipmentArt.ts 산출물의 부분 형. */
+interface ArmorArtStyle {
+    isHeadgearOnly?: boolean;
+    headgearStyle?: string;
+    bodyStyle?: string;
+}
+
+// ──────────────────────────────────────────────────────────────────────────
 // Transform helpers
 //
 // 현재 렌더링은 SVG `<image>` 요소 위에 `transform` 문자열을 씌우는 방식.
 // placement 데이터에서 SVG transform 문자열을 생성한다.
 // ──────────────────────────────────────────────────────────────────────────
-const toTransformString = ({ translateX, translateY, rotate, rotateX, rotateY, scale }: any) => {
+const toTransformString = ({ translateX, translateY, rotate, rotateX, rotateY, scale }: PlacementTransform): string => {
     const parts = [`translate(${translateX} ${translateY})`];
     if (rotate) {
         parts.push(`rotate(${rotate} ${rotateX ?? 0} ${rotateY ?? 0})`);
@@ -61,7 +90,7 @@ const toTransformString = ({ translateX, translateY, rotate, rotateX, rotateY, s
     return parts.join(' ');
 };
 
-const placement = (anchor: any, layer: any, transform: any) => Object.freeze({ anchor, layer, transform: Object.freeze(transform) });
+const placement = (anchor: AnchorKey, layer: PlacementLayer, transform: PlacementTransform): Placement => Object.freeze({ anchor, layer, transform: Object.freeze(transform) });
 
 // ──────────────────────────────────────────────────────────────────────────
 // Weapon placements (main hand / front hand)
@@ -69,7 +98,7 @@ const placement = (anchor: any, layer: any, transform: any) => Object.freeze({ a
 // 값은 기존 getWeaponTransform()에서 일관되게 추출한 것 — visual output 동일.
 // ──────────────────────────────────────────────────────────────────────────
 // cycle 312: export 제거 — getWeaponPlacement / DEFAULT_WEAPON_PLACEMENT 내부 사용만, 외부 0건.
-const WEAPON_PLACEMENTS: Record<string, any> = Object.freeze({
+const WEAPON_PLACEMENTS: Record<string, Placement> = Object.freeze({
     sword: placement('hand_front', 'front', { translateX: 41, translateY: 34, rotate: 10, rotateX: 12, rotateY: 12, scale: 0.26 }),
     rapier: placement('hand_front', 'front', { translateX: 40, translateY: 34, rotate: 12, rotateX: 12, rotateY: 12, scale: 0.27 }),
     saber: placement('hand_front', 'front', { translateX: 40, translateY: 34, rotate: 12, rotateX: 12, rotateY: 12, scale: 0.27 }),
@@ -108,7 +137,7 @@ const DEFAULT_WEAPON_PLACEMENT = WEAPON_PLACEMENTS.sword;
 // Offhand placements (back hand)
 // ──────────────────────────────────────────────────────────────────────────
 // cycle 312: export 제거 — getOffhandPlacement 내부 사용만, 외부 0건.
-const OFFHAND_PLACEMENTS: Record<string, any> = Object.freeze({
+const OFFHAND_PLACEMENTS: Record<string, Placement> = Object.freeze({
     shield: placement('hand_back', 'back', { translateX: 11, translateY: 32, rotate: -12, rotateX: 12, rotateY: 12, scale: 0.27 }),
     'tower-shield': placement('hand_back', 'back', { translateX: 11, translateY: 31, rotate: -6, rotateX: 12, rotateY: 12, scale: 0.33 }),
     'kite-shield': placement('hand_back', 'back', { translateX: 11, translateY: 31, rotate: -6, rotateX: 12, rotateY: 12, scale: 0.33 }),
@@ -158,7 +187,7 @@ const DEFAULT_OFFHAND_PLACEMENT = placement('hand_back', 'back', {
 // ──────────────────────────────────────────────────────────────────────────
 // cycle 408: export 제거 — getHeadgearPlacement 내부 사용만, 외부 0건.
 //   cycle 312 WEAPON_PLACEMENTS / OFFHAND_PLACEMENTS private downgrade paired completion.
-const HEADGEAR_PLACEMENTS: Record<string, any> = Object.freeze({
+const HEADGEAR_PLACEMENTS: Record<string, Placement> = Object.freeze({
     'straw-hat': placement('head_top', 'front', { translateX: 12, translateY: 6, scale: 0.48 }),
     'wizard-hat': placement('head_top', 'front', { translateX: 10, translateY: 1, scale: 0.56 }),
     circlet: placement('head_center', 'front', { translateX: 15, translateY: 10, scale: 0.42 }),
@@ -176,7 +205,7 @@ const DEFAULT_HEADGEAR_PLACEMENT = placement('head_top', 'front', { translateX: 
 // ──────────────────────────────────────────────────────────────────────────
 // cycle 408: export 제거 — getBodyPlacement 내부 사용만, 외부 0건.
 //   cycle 312 paired completion.
-const BODY_PLACEMENTS: Record<string, any> = Object.freeze({
+const BODY_PLACEMENTS: Record<string, Placement> = Object.freeze({
     robe: placement('torso_center', 'front', { translateX: 8, translateY: 19, scale: 0.72 }),
     plate: placement('torso_center', 'front', { translateX: 8, translateY: 20, scale: 0.7 }),
     leather: placement('torso_center', 'front', { translateX: 9, translateY: 20, scale: 0.68 }),
@@ -191,16 +220,16 @@ const DEFAULT_BODY_PLACEMENT = placement('torso_center', 'front', { translateX: 
 // Public API
 // ──────────────────────────────────────────────────────────────────────────
 
-export const getWeaponPlacement = (style: any) => WEAPON_PLACEMENTS[style] || DEFAULT_WEAPON_PLACEMENT;
+export const getWeaponPlacement = (style: string | undefined): Placement => WEAPON_PLACEMENTS[style ?? ''] || DEFAULT_WEAPON_PLACEMENT;
 
-export const getOffhandPlacement = (style: any) => OFFHAND_PLACEMENTS[style] || DEFAULT_OFFHAND_PLACEMENT;
+export const getOffhandPlacement = (style: string | undefined): Placement => OFFHAND_PLACEMENTS[style ?? ''] || DEFAULT_OFFHAND_PLACEMENT;
 
-export const getHeadgearPlacement = (style: any) => {
+export const getHeadgearPlacement = (style: string | undefined): Placement | null => {
     if (!style || style === 'none') return null;
     return HEADGEAR_PLACEMENTS[style] || DEFAULT_HEADGEAR_PLACEMENT;
 };
 
-export const getBodyPlacement = (style: any) => {
+export const getBodyPlacement = (style: string | undefined): Placement | null => {
     if (!style || style === 'none') return null;
     return BODY_PLACEMENTS[style] || DEFAULT_BODY_PLACEMENT;
 };
@@ -210,7 +239,7 @@ export const getBodyPlacement = (style: any) => {
  * - headgear-only 장비는 headgear placement
  * - body 장비는 body placement (headgear도 있을 경우 별도로 합성)
  */
-export const getArmorPlacement = (armorArt: any) => {
+export const getArmorPlacement = (armorArt: ArmorArtStyle | null | undefined): Placement | null => {
     if (!armorArt) return null;
     if (armorArt.isHeadgearOnly && armorArt.headgearStyle && armorArt.headgearStyle !== 'none') {
         return getHeadgearPlacement(armorArt.headgearStyle);
@@ -224,6 +253,6 @@ export const getArmorPlacement = (armorArt: any) => {
     return null;
 };
 
-export const placementToTransform = (plc: any) => (plc ? toTransformString(plc.transform) : null);
+export const placementToTransform = (plc: Placement | null | undefined): string | null => (plc ? toTransformString(plc.transform) : null);
 
-export const placementLayer = (plc: any) => (plc && plc.layer === 'back' ? 'back' : 'front');
+export const placementLayer = (plc: Placement | null | undefined): PlacementLayer => (plc && plc.layer === 'back' ? 'back' : 'front');

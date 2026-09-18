@@ -1,4 +1,4 @@
-import type { FullStats, Monster, Player } from '../types/index.js';
+import type { FullStats, Item, Monster, Player } from '../types/index.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
 
 type ForecastTone = 'pressure' | 'advantage' | 'reward' | 'steady';
@@ -10,15 +10,34 @@ export interface CombatForecast {
     tone: ForecastTone;
 }
 
+/** `CombatEngine.predictEnemyNextAction()`(enemyAI)의 반환 모양 — 이 파일이 읽는 필드만. */
+interface EnemyTelegraph {
+    type?: string;
+    label?: string;
+    color?: string;
+}
+
+/**
+ * `getSelectedSkill()`(combatActions/_helpers)이 실제로 반환하는 값은
+ * `ClassSkill | WeaponMagicSkill | traitSkill` 셋 중 하나(무기 공명/성향 스킬은
+ * `type`/`effect`가 리터럴이 아닌 일반 문자열) — 이 파일이 읽는 공통 필드만 좁힌다.
+ */
+export interface SelectedSkillLike {
+    name?: string;
+    type?: string;
+    effect?: string;
+    mp?: number;
+}
+
 interface CombatForecastInput {
     player: Player;
     enemy?: Monster | null;
     stats?: FullStats | null;
-    selectedSkill?: any;
+    selectedSkill?: SelectedSkillLike | null;
     skillCooldown?: number;
-    enemyTelegraph?: any;
-    combatConsumables?: any[];
-    primarySignatureDrop?: any;
+    enemyTelegraph?: EnemyTelegraph | null;
+    combatConsumables?: Item[];
+    primarySignatureDrop?: unknown;
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -36,14 +55,14 @@ const DEFENSIVE_EFFECTS = new Set(['def_up', 'counter', 'stealth', 'hp_regen', '
 
 const clampRatio = (value: number) => Math.max(0, Math.min(1, value));
 
-const hasItemType = (items: any[], type: string) => items.some((item: any) => item?.type === type);
+const hasItemType = (items: readonly Item[], type: string) => items.some((item) => item?.type === type);
 
-const getStatusLabel = (status: any) => {
+const getStatusLabel = (status: string | undefined) => {
     if (!status) return null;
     return STATUS_LABELS[String(status)] || String(status);
 };
 
-const getSkillShortName = (skill: any) => {
+const getSkillShortName = (skill: SelectedSkillLike | null | undefined) => {
     if (!skill?.name) return '기술';
     return String(skill.name).replace(/\s+/g, '');
 };
@@ -70,7 +89,7 @@ export const getCombatForecast = ({
     const canUseSkill = skillReadiness.canUse;
     const skillName = getSkillShortName(selectedSkill);
     const skillHitsWeakness = Boolean(canUseSkill && selectedSkill?.type && enemy.weakness && selectedSkill.type === enemy.weakness);
-    const skillIsDefensive = Boolean(canUseSkill && (selectedSkill?.type === 'buff' || DEFENSIVE_EFFECTS.has(selectedSkill?.effect)));
+    const skillIsDefensive = Boolean(canUseSkill && (selectedSkill?.type === 'buff' || DEFENSIVE_EFFECTS.has(selectedSkill?.effect ?? '')));
     // 2026-09 N3: `enemy.pattern?.statusEffect ||` fallback 제거 — 정의한 pattern이 0개라
     //   항상 statusOnHit로 내려가던 죽은 우선순위였다.
     const statusThreat = getStatusLabel(enemy.statusOnHit);

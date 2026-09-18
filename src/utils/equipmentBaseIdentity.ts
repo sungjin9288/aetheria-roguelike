@@ -5,7 +5,7 @@ import { ITEMS } from '../data/items.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { LIBRARY_BONUS_LOOT } from '../data/libraryLoot.js';
 import { getShopCatalog } from './shopRotation.js';
-import type { Item } from '../types/item.js';
+import type { Item, ItemPrefixDef } from '../types/item.js';
 
 export const EQUIPMENT_TYPES = ['weapon', 'armor', 'shield'] as const;
 export type EquipmentType = typeof EQUIPMENT_TYPES[number];
@@ -19,10 +19,15 @@ type CanonicalEquipment = Item & {
     jobs: string[];
 };
 
+/** signatureRegistry.json 항목 중 이 파일이 실제로 읽는 필드만 — spriteKey 매칭용. */
+interface SignatureEntry {
+    spriteKey?: string;
+}
+
 type EquipmentCatalogOptions = {
     rows?: readonly Item[];
     artEntries?: Record<string, unknown>;
-    signatures?: Record<string, any>;
+    signatures?: Record<string, SignatureEntry>;
     shopRows?: readonly Item[];
 };
 
@@ -30,7 +35,7 @@ const isEquipmentType = (type: unknown): type is EquipmentType => (
     typeof type === 'string' && (EQUIPMENT_TYPES as readonly string[]).includes(type)
 );
 
-export const isEquipmentItem = (item: any): item is CanonicalEquipment => isEquipmentType(item?.type);
+export const isEquipmentItem = (item: Item | null | undefined): item is CanonicalEquipment => isEquipmentType(item?.type);
 
 export const getEquipmentIdentityKey = (type: EquipmentType, name: string) => `${type}\0${name}`;
 
@@ -66,9 +71,9 @@ const failClosed = (errors: string[]): never => {
 export const validateCanonicalEquipmentCatalog = (
     options: EquipmentCatalogOptions = {},
 ): CanonicalEquipment[] => {
-    const rows = [...(options.rows || getSourceRows())] as any[];
-    const artEntries = options.artEntries || (equipmentArtManifest as any).entries;
-    const signatures = options.signatures || SIGNATURE_ITEM_REGISTRY;
+    const rows: Item[] = [...(options.rows || getSourceRows())];
+    const artEntries = options.artEntries || (equipmentArtManifest as { entries: Record<string, unknown> }).entries;
+    const signatures: Record<string, SignatureEntry> = options.signatures || SIGNATURE_ITEM_REGISTRY;
     const errors: string[] = [];
 
     if (rows.length !== 229) errors.push(`expected 229 equipment rows, received ${rows.length}`);
@@ -93,26 +98,26 @@ export const validateCanonicalEquipmentCatalog = (
         names.add(row.name);
         counts[type] += 1;
 
-        if (!Number.isSafeInteger(row.tier) || row.tier < 1 || row.tier > 6) {
+        if (!Number.isSafeInteger(row.tier) || Number(row.tier) < 1 || Number(row.tier) > 6) {
             errors.push(`invalid tier for ${identity}`);
         }
-        if (!Number.isSafeInteger(row.price) || row.price <= 0) {
+        if (!Number.isSafeInteger(row.price) || Number(row.price) <= 0) {
             errors.push(`invalid price for ${identity}`);
         }
-        if (!Number.isFinite(row.val) || row.val <= 0) {
+        if (!Number.isFinite(row.val) || Number(row.val) <= 0) {
             errors.push(`invalid stat for ${identity}`);
         }
         if ((type === 'weapon' && row.hands !== undefined && row.hands !== 1 && row.hands !== 2)
             || (type !== 'weapon' && row.hands !== undefined)) {
             errors.push(`invalid hands for ${identity}`);
         }
-        for (const field of ['crit', 'mp', 'mpBonus', 'hp', 'hpBonus', 'evasion']) {
+        for (const field of ['crit', 'mp', 'mpBonus', 'hp', 'hpBonus', 'evasion'] as const) {
             if (row[field] !== undefined && !Number.isFinite(row[field])) {
                 errors.push(`invalid ${field} for ${identity}`);
             }
         }
         if (!Array.isArray(row.jobs) || row.jobs.length === 0
-            || row.jobs.some((job: any) => typeof job !== 'string' || job.length === 0)
+            || row.jobs.some((job) => typeof job !== 'string' || job.length === 0)
             || new Set(row.jobs).size !== row.jobs.length) {
             errors.push(`invalid job route for ${identity}`);
         } else {
@@ -151,16 +156,16 @@ export const validateCanonicalEquipmentCatalog = (
         const routes = (artEntries || {}) as Record<string, unknown>;
         for (const [name, signature] of Object.entries(signatures)) {
             const row = rows.find((item) => item.name === name);
-            const signatureType = getSignatureType((signature as any)?.spriteKey);
+            const signatureType = getSignatureType(signature?.spriteKey);
             if (!row || !signatureType || row.type !== signatureType
-                || routes[name] !== (signature as any).spriteKey) {
+                || routes[name] !== signature?.spriteKey) {
                 errors.push(`invalid signature route for ${name}`);
             }
         }
         for (const row of rows) {
-            const route = routes[row.name];
+            const route = routes[row.name ?? ''];
             if (typeof route === 'string' && route.startsWith('signature-')
-                && (signatures as Record<string, any>)[row.name]?.spriteKey !== route) {
+                && signatures[row.name ?? '']?.spriteKey !== route) {
                 errors.push(`missing signature metadata for ${row.name}`);
             }
         }
@@ -169,8 +174,8 @@ export const validateCanonicalEquipmentCatalog = (
     const shopRows = options.shopRows || getShopCatalog('황금 왕국');
     const shopIdentities = new Set(
         shopRows
-            .filter((row: any) => isEquipmentType(row?.type))
-            .map((row: any) => getEquipmentIdentityKey(row.type, row.name)),
+            .filter((row): row is Item & { type: EquipmentType } => isEquipmentType(row?.type))
+            .map((row) => getEquipmentIdentityKey(row.type, row.name ?? '')),
     );
     for (const row of rows) {
         if (!isEquipmentType(row?.type) || typeof row?.name !== 'string') continue;
@@ -198,7 +203,7 @@ export const validateCanonicalEquipmentCatalog = (
         }
     }
     if (errors.length > 0) failClosed(errors);
-    return rows.sort(compareEquipmentIdentity) as CanonicalEquipment[];
+    return (rows as CanonicalEquipment[]).sort(compareEquipmentIdentity);
 };
 
 export const CANONICAL_EQUIPMENT = Object.freeze(
@@ -208,20 +213,20 @@ export const CANONICAL_EQUIPMENT = Object.freeze(
 const EQUIPMENT_BY_IDENTITY = new Map(
     CANONICAL_EQUIPMENT.map((item) => [getEquipmentIdentityKey(item.type, item.name), item]),
 );
-const PREFIX_BY_NAME = new Map(
-    (ITEMS.prefixes || []).map((prefix: any) => [prefix.name, prefix]),
+const PREFIX_BY_NAME = new Map<string, ItemPrefixDef>(
+    (ITEMS.prefixes || []).map((prefix) => [prefix.name ?? '', prefix]),
 );
 
-const getCompatiblePrefix = (item: any) => {
+const getCompatiblePrefix = (item: Item | null | undefined): ItemPrefixDef | null => {
     if (!isEquipmentItem(item) || item?.prefixed !== true || typeof item?.prefixName !== 'string') return null;
     const prefix = PREFIX_BY_NAME.get(item.prefixName);
     const prefixTargetType = item.type === 'shield' ? 'armor' : item.type;
     if (!prefix || (prefix.type !== 'all' && prefix.type !== prefixTargetType)) return null;
-    if (!Number.isFinite(prefix.price) || prefix.price <= 0) return null;
+    if (!Number.isFinite(prefix.price) || Number(prefix.price) <= 0) return null;
     return prefix;
 };
 
-export const resolveEquipmentBaseIdentity = (item: any): CanonicalEquipment | null => {
+export const resolveEquipmentBaseIdentity = (item: Item | null | undefined): CanonicalEquipment | null => {
     if (!isEquipmentItem(item)) return null;
     if (item?.prefixed !== undefined && typeof item.prefixed !== 'boolean') return null;
     if (item?.prefixName !== undefined && item?.prefixed !== true) return null;
@@ -249,30 +254,30 @@ export const resolveEquipmentBaseIdentity = (item: any): CanonicalEquipment | nu
 };
 
 /** Add the optional identity tag only when an exact canonical equipment base exists. */
-export const withCanonicalEquipmentBaseIdentity = <T>(item: T): T => {
+export const withCanonicalEquipmentBaseIdentity = <T extends Item>(item: T): T => {
     const base = resolveEquipmentBaseIdentity(item);
-    if (!base || (item as any)?.baseItemName === base.name) return item;
-    return { ...(item as any), baseItemName: base.name } as T;
+    if (!base || item?.baseItemName === base.name) return item;
+    return { ...item, baseItemName: base.name } as T;
 };
 
-export const getCanonicalEquipmentPrice = (item: any): number | null => {
+export const getCanonicalEquipmentPrice = (item: Item | null | undefined): number | null => {
     const base = resolveEquipmentBaseIdentity(item);
     if (!base) return null;
     if (item?.prefixed !== true) return base.price;
     const prefix = getCompatiblePrefix(item);
-    return prefix ? Math.floor(base.price * prefix.price) : null;
+    return prefix ? Math.floor(base.price * Number(prefix.price)) : null;
 };
 
 /**
  * Price-only migration: known equipment gets its corrected canonical price and
  * persisted base identity; anything unresolved is returned byte-for-byte intact.
  */
-export const migrateEquipmentInstancePrice = <T>(item: T): T => {
+export const migrateEquipmentInstancePrice = <T extends Item>(item: T): T => {
     const base = resolveEquipmentBaseIdentity(item);
     const price = getCanonicalEquipmentPrice(item);
     if (!base || price === null) return item;
-    if ((item as any).baseItemName === base.name && (item as any).price === price) return item;
-    return { ...(item as any), baseItemName: base.name, price } as T;
+    if (item.baseItemName === base.name && item.price === price) return item;
+    return { ...item, baseItemName: base.name, price } as T;
 };
 
 export const migrateEquipmentPrice = migrateEquipmentInstancePrice;

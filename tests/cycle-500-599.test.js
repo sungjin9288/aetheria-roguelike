@@ -2984,7 +2984,7 @@ import { readFile, readdir } from 'node:fs/promises';
           'explicit hpLow flag 분기 보존');
       assert.ok(/clampRatio\(result\.playerHp, result\.playerMaxHp\)/.test(source),
           'ratio fallback clampRatio 보존');
-      assert.ok(/summary\.bossKills > 0/.test(source), 'bossKills 분기 보존');
+      assert.ok(/summary\.bossKills \|\| 0\) > 0/.test(source), 'bossKills 분기 보존');
   });
 
   test('cycle 557: cycle 502-556 회귀 가드 — default 청소 시리즈 보존', async () => {

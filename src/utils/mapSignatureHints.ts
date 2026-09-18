@@ -13,15 +13,14 @@ import { DROP_TABLES } from '../data/dropTables.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import type { Player } from '../types/index.js';
 
-/**
- * @typedef {{ name: string, rate: number }} MapSignatureDrop
- */
+interface MapSignatureDrop {
+    name: string;
+    rate: number;
+}
 
-/** @returns {Readonly<Record<string, ReadonlyArray<MapSignatureDrop>>>} */
-const buildMapIndex = () => {
-    /** @type {Record<string, MapSignatureDrop[]>} */
-    const index: Record<string, any> = {};
-    for (const [mapName, map] of Object.entries(MAPS) as Array<[string, any]>) {
+const buildMapIndex = (): Readonly<Record<string, readonly MapSignatureDrop[]>> => {
+    const index: Record<string, readonly MapSignatureDrop[]> = {};
+    for (const [mapName, map] of Object.entries(MAPS)) {
         const monsters = Array.isArray(map?.monsters) ? map.monsters : [];
         const bossMonsters = Array.isArray(map?.bossMonsters) ? map.bossMonsters : [];
         // cycle 69: map.boss 단일 필드도 포함 (신성한 호수의 고대 호수의 수호신처럼
@@ -29,7 +28,7 @@ const buildMapIndex = () => {
         const singleBoss = typeof map?.boss === 'string' ? [map.boss] : [];
         const allMonsters: string[] = [...monsters, ...bossMonsters, ...singleBoss];
         // signature name → best rate (동일 signature가 여러 몬스터에서 드롭 가능할 때 최고 rate만 남김)
-        const seen = new Map();
+        const seen = new Map<string, number>();
         for (const monsterName of allMonsters) {
             const drops = DROP_TABLES[monsterName];
             if (!Array.isArray(drops)) continue;
@@ -37,14 +36,14 @@ const buildMapIndex = () => {
                 const itemName = drop?.item;
                 if (!itemName || !SIGNATURE_ITEM_REGISTRY[itemName]) continue;
                 const rate = Number(drop.rate) || 0;
-                if (!seen.has(itemName) || seen.get(itemName) < rate) {
+                if (!seen.has(itemName) || (seen.get(itemName) ?? 0) < rate) {
                     seen.set(itemName, rate);
                 }
             }
         }
         const drops = [...seen.entries()]
-            .map(([name, rate]: any) => ({ name, rate }))
-            .sort((a: any, b: any) => b.rate - a.rate);
+            .map(([name, rate]) => ({ name, rate }))
+            .sort((a, b) => b.rate - a.rate);
         index[mapName] = Object.freeze(drops);
     }
     return Object.freeze(index);
@@ -58,7 +57,7 @@ const MAP_INDEX = buildMapIndex();
  * @param {string | null | undefined} mapName
  * @returns {ReadonlyArray<MapSignatureDrop>}
  */
-export const getMapSignatureDrops = (mapName: any) => {
+export const getMapSignatureDrops = (mapName: string | null | undefined) => {
     if (!mapName || typeof mapName !== 'string') return [];
     return MAP_INDEX[mapName] || [];
 };
@@ -70,12 +69,12 @@ export const getMapSignatureDrops = (mapName: any) => {
  * @param {{ stats?: { codex?: object } } | null | undefined} player
  * @returns {ReadonlyArray<MapSignatureDrop>}
  */
-export const getMapUndiscoveredSignatures = (mapName: any, player: Player | null | undefined) => {
+export const getMapUndiscoveredSignatures = (mapName: string | null | undefined, player: Player | null | undefined) => {
     const drops = getMapSignatureDrops(mapName);
     if (drops.length === 0) return [];
     const codex = player?.stats?.codex || {};
     const weapons = codex.weapons || {};
     const armors = codex.armors || {};
     const shields = codex.shields || {};
-    return drops.filter(({ name }: any) => !(weapons[name] || armors[name] || shields[name]));
+    return drops.filter(({ name }) => !(weapons[name] || armors[name] || shields[name]));
 };

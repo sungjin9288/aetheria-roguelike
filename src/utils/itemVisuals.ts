@@ -20,9 +20,9 @@ const AUTO_NONEQUIP_ART_BY_NAME: Record<string, string> = Object.freeze(
 );
 
 // Signature item sprite overrides (Tier S 고유 아트). family/SPECIAL fallback보다 우선.
-const SIGNATURE_SPRITE_KEY_BY_NAME: any = Object.freeze(
+const SIGNATURE_SPRITE_KEY_BY_NAME: Record<string, string> = Object.freeze(
     Object.fromEntries(
-        Object.entries(signatureRegistrySource.entries).map(([name, meta]: any) => [name, meta.spriteKey])
+        Object.entries(signatureRegistrySource.entries).map(([name, meta]: [string, { spriteKey: string }]) => [name, meta.spriteKey])
     )
 );
 
@@ -231,7 +231,7 @@ export const NON_EQUIPMENT_FAMILY_ITEM_ASSET_KEYS = [
 
 // cycle 512: fallback default 제거 — 7 callsite 모두 fallback 명시 전달이라
 //   default 'coat' 도달 불가. util default 청소 메가 시리즈 10번째 (cycle 502-511).
-export const getArmorStyleFromItem = (armor: any, fallback: any) => {
+export const getArmorStyleFromItem = (armor: Item | null | undefined, fallback: string) => {
     if (!armor || armor.type !== 'armor') return fallback;
     const name = String(armor.name || '');
 
@@ -244,8 +244,8 @@ export const getArmorStyleFromItem = (armor: any, fallback: any) => {
     return fallback;
 };
 
-export const getWeaponVisualKey = (weapon: any) => {
-    if (!isWeapon(weapon)) return 'none';
+export const getWeaponVisualKey = (weapon: Item | null | undefined) => {
+    if (!weapon || !isWeapon(weapon)) return 'none';
     const name = String(weapon.name || '');
     const description = String(weapon.desc || '');
 
@@ -443,7 +443,7 @@ const IMAGEGEN_ITEM_PNG_KEYS = new Set([
 ]);
 
 // cycle 294: export 제거 — getItemIconAssetSrc 내부 1회만 사용, 외부 consumer 0건.
-const getItemIconAssetExtension = (assetKey: any) => {
+const getItemIconAssetExtension = (assetKey: string) => {
     const k = String(assetKey || '');
     // chibi PNG 우선 로드 (cycle 40)
     if (IMAGEGEN_ITEM_PNG_KEYS.has(k)) return 'png';
@@ -504,7 +504,7 @@ export const getEquipmentOverlayAssetSrc = (item: Item | null | undefined) => {
     return null;
 };
 
-export const getAvatarLoadoutStyle = (weaponVisualKey: any, offhandVisualKey: any) => {
+export const getAvatarLoadoutStyle = (weaponVisualKey: string, offhandVisualKey: string) => {
     if (offhandVisualKey === 'shield') return 'guardian';
     if (weaponVisualKey === 'bow' || weaponVisualKey === 'longbow') return 'archer';
     if (weaponVisualKey === 'staff' || weaponVisualKey === 'rod' || weaponVisualKey === 'wand' || offhandVisualKey === 'book') return 'caster';

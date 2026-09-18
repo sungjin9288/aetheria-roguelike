@@ -135,8 +135,8 @@ export const processLoot = (
             const picked = pool[Math.floor(random() * pool.length)];
             const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
             const newItem = applyItemPrefix(baseItem, random);
-            const candidateLogs: LootLog[] = [{ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name) }];
-            if (newItem.prefixed) candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+            const candidateLogs: LootLog[] = [{ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name ?? '') }];
+            if (newItem.prefixed) candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName ?? '') });
             appendCandidate(newItem, candidateLogs);
         }
     }
@@ -162,9 +162,9 @@ export const processLoot = (
                 for (let q = 0; q < qty; q++) {
                     const baseItem = withCanonicalEquipmentBaseIdentity({ ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                     const newItem = applyItemPrefix(baseItem, random);
-                    const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name) }];
+                    const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name ?? '') }];
                     if (newItem.prefixed) {
-                        candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                        candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName ?? '') });
                     }
                     appendCandidate(newItem, candidateLogs);
                 }
@@ -193,9 +193,9 @@ export const processLoot = (
 
                 const baseItem = withCanonicalEquipmentBaseIdentity({ ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                 const newItem = applyItemPrefix(baseItem, random);
-                const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name) }];
+                const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name ?? '') }];
                 if (newItem.prefixed) {
-                    candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                    candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName ?? '') });
                 }
                 appendCandidate(newItem, candidateLogs);
             }
@@ -213,8 +213,8 @@ export const processLoot = (
                 const picked = tierPool[Math.floor(random() * tierPool.length)];
                 const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
                 const newItem = applyItemPrefix(baseItem, random);
-                const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name) }];
-                if (newItem.prefixed) candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName) });
+                const candidateLogs: LootLog[] = [{ type: 'success', text: MSG.LOOT_GET(newItem.name ?? '') }];
+                if (newItem.prefixed) candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName ?? '') });
                 appendCandidate(newItem, candidateLogs);
             }
         }
