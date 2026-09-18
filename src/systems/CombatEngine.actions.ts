@@ -517,7 +517,7 @@ export const actionMethods = {
         }
         const updatedEnemy = postEffectEnemy;
 
-        const updatedPlayer: Record<string, any> = {
+        const updatedPlayer: Player = {
             ...player,
             mp: (player.mp ?? 0) - actualMpCost,
             skillLoadout: { selected: loadout.selected || 0, cooldowns: { ...cooldowns } },
@@ -541,13 +541,14 @@ export const actionMethods = {
             s.bonus.effect === 'time_dominator' || s.bonus.cdReduction);
         const cdReduction = (cdRelic?.val?.cdReduction || 0) + (timeDomSyn?.bonus.cdReduction || 0);
         const baseCd = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
-        updatedPlayer.skillLoadout.cooldowns[String(skill.name)] = Math.max(0, baseCd - cdReduction);
+        // updatedPlayer.skillLoadout은 위 literal에서 항상 채워 넣었다(non-null 단언, 런타임 값 변화 없음).
+        updatedPlayer.skillLoadout!.cooldowns[String(skill.name)] = Math.max(0, baseCd - cdReduction);
 
         // 유물: 영혼 흡수 (skill_lifesteal) — 스킬 피해의 10% HP 흡수
         const slRelic = relics.find((r) => r.effect === 'skill_lifesteal');
         if (slRelic) {
             const heal = Math.floor(totalDamage * slRelic.val);
-            updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + heal);
+            updatedPlayer.hp = Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + heal);
         }
         if (isCrit) {
             const critLogs: LootLog[] = [];
@@ -597,14 +598,14 @@ export const actionMethods = {
         if (skill.effect === 'drain') {
             const ratio = (typeof skill.drainRatio === 'number' && skill.drainRatio > 0) ? skill.drainRatio : 0.25;
             const drainHeal = Math.floor(totalDamage * ratio);
-            updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + drainHeal);
+            updatedPlayer.hp = Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + drainHeal);
             logs.push({ type: 'heal', text: MSG.SKILL_DRAIN_HEAL(drainHeal) });
         }
 
         // hp_regen: 즉시 HP 회복 (성직자 기적의 손길, 버서커 역경의 힘 등)
         if (skill.effect === 'hp_regen' && skill.val) {
-            const healAmt = Math.max(1, Math.floor((updatedPlayer.maxHp || player.maxHp) * skill.val));
-            updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + healAmt);
+            const healAmt = Math.max(1, Math.floor(Number(updatedPlayer.maxHp || player.maxHp) * skill.val));
+            updatedPlayer.hp = Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + healAmt);
             logs.push({ type: 'heal', text: MSG.SKILL_HP_REGEN_PROC(skill.name, healAmt) });
         }
 
@@ -612,7 +613,7 @@ export const actionMethods = {
         if (skill.effect === 'mp_regen' && skill.val) {
             const mpAmt = skill.val;
             const maxMp = this.getEffectiveMaxMp(updatedPlayer, relics);
-            updatedPlayer.mp = Math.min(maxMp, (updatedPlayer.mp || player.mp) + mpAmt);
+            updatedPlayer.mp = Math.min(maxMp, Number(updatedPlayer.mp || player.mp) + mpAmt);
             logs.push({ type: 'event', text: MSG.SKILL_MP_REGEN_PROC(skill.name, mpAmt) });
         }
 
@@ -687,8 +688,9 @@ export const actionMethods = {
 
         // slice 19: 약점/저항 별도 로그 제거 — SKILL_USE 본문 태그로 통합 완료.
         if (extraDamage > 0) logs.push({ type: 'event', text: MSG.SKILL_STATUS_BONUS(String(skill.effect), extraDamage) });
-        if (updatedPlayer.tempBuff?.name === skill.name) {
-            logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(String(skill.name), updatedPlayer.tempBuff.turn) });
+        const activeTempBuff = updatedPlayer.tempBuff;
+        if (activeTempBuff && activeTempBuff.name === skill.name) {
+            logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(String(skill.name), Number(activeTempBuff.turn)) });
         }
         if (actualMpCost === 0 && firstFreeAvailable) logs.push({ type: 'event', text: MSG.RELIC_FIRST_SKILL_FREE });
         else if (actualMpCost === 0 && hasFreeSkillRelic) logs.push({ type: 'event', text: MSG.RELIC_FREE_SKILL_PROC });

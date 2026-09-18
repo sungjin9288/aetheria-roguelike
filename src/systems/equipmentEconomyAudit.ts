@@ -98,6 +98,10 @@ const compareIdentity = (left: { type: EquipmentType; name: string }, right: { t
     return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
 };
 
+/** 알려진 필드 목록 없이 동적 문자열 키로 EquipmentRow 등의 필드를 읽기 위한 narrowing —
+ *  `obj[key]`의 "Element implicitly has an 'any' type" 없이 `unknown`으로 좁힌다. */
+const hasField = <K extends string>(obj: object, key: K): obj is Record<K, unknown> => Object.hasOwn(obj, key);
+
 // 제네릭 <T> — 재귀적으로 "같은 모양, 키만 정렬"만 하는 순수 변환이라 입력과 출력이
 // 항상 같은 타입이다(equipmentCombatPowerAudit.ts의 stableCanonicalize와 동일 패턴).
 export const stableCanonicalize = <T,>(value: T): T => {
@@ -111,7 +115,7 @@ export const stableCanonicalize = <T,>(value: T): T => {
     ) as T;
 };
 
-const sortRows = (rows: readonly any[]) => [...rows]
+const sortRows = (rows: readonly EquipmentRow[]) => [...rows]
     .map(stableCanonicalize)
     .sort(compareIdentity);
 
@@ -153,8 +157,8 @@ const summarizeNumbers = (values: readonly unknown[]) => {
     };
 };
 
-const getCohortStatistics = (rows: readonly any[]) => {
-    const cohorts = new Map<string, any[]>();
+const getCohortStatistics = (rows: readonly EquipmentRow[]) => {
+    const cohorts = new Map<string, EquipmentRow[]>();
     for (const row of rows) {
         const key = `${row.type}:T${row.tier}`;
         const cohort = cohorts.get(key) || [];
@@ -207,10 +211,15 @@ const getSecondaryStats = (row: EquipmentRow) => stableCanonicalize(
     ),
 );
 
-const getShopIdentitySet = (shopRows: readonly any[]) => new Set(
+const getShopIdentitySet = (shopRows: readonly Item[]) => new Set(
     shopRows
-        .filter((row) => row && typeof row.type === 'string' && typeof row.name === 'string')
-        .map((row) => getEquipmentIdentityKey(row.type, row.name)),
+        .filter((row): row is Item & { type: string; name: string } => (
+            Boolean(row) && typeof row.type === 'string' && typeof row.name === 'string'
+        ))
+        // getEquipmentIdentityKey는 문자열 2개를 합치기만 하는 키 빌더라 비-장비 type
+        // 문자열(소비품 등)이 와도 그냥 매치 불가능한 키를 만들 뿐이다(기존 동작 그대로) —
+        // 이 필터는 장비 3종으로 좁히지 않고 원래도 "문자열인가"만 확인했다.
+        .map((row) => getEquipmentIdentityKey(row.type as EquipmentType, row.name)),
 );
 
 const rowReport = (row: EquipmentRow, shopIdentities: Set<string>, artEntries: Record<string, unknown>, signatures: Record<string, SignatureLookupEntry>) => {
@@ -241,8 +250,27 @@ const rowReport = (row: EquipmentRow, shopIdentities: Set<string>, artEntries: R
     };
 };
 
-const findDiscontinuities = (rows: readonly any[]) => {
-    const byCohort = new Map<string, any[]>();
+/** `findDiscontinuities()`가 각 이상치 행에 대해 만드는 보고 항목 1건. */
+const buildDiscontinuity = (
+    row: EquipmentRow,
+    cohort: string,
+    cohortMedian: number | null,
+    threshold: number,
+) => ({
+    type: row.type,
+    name: row.name,
+    tier: row.tier,
+    cohort,
+    price: row.price,
+    cohortMedian,
+    threshold,
+    classification: 'price_scale_discontinuity' as const,
+});
+
+type Discontinuity = ReturnType<typeof buildDiscontinuity>;
+
+const findDiscontinuities = (rows: readonly EquipmentRow[]) => {
+    const byCohort = new Map<string, EquipmentRow[]>();
     for (const row of rows) {
         if (row.tier !== 4 && row.tier !== 5) continue;
         const key = `${row.type}:T${row.tier}`;
@@ -250,23 +278,14 @@ const findDiscontinuities = (rows: readonly any[]) => {
         cohort.push(row);
         byCohort.set(key, cohort);
     }
-    const discontinuities: Array<any> = [];
+    const discontinuities: Discontinuity[] = [];
     for (const [cohort, cohortRows] of byCohort) {
         const priceStats = summarizeNumbers(cohortRows.map((row) => row.price));
         const threshold = priceStats.median === null ? null : priceStats.median * 0.35;
         if (threshold === null) continue;
         for (const row of cohortRows) {
             if (typeof row.price === 'number' && row.price < threshold) {
-                discontinuities.push({
-                    type: row.type,
-                    name: row.name,
-                    tier: row.tier,
-                    cohort,
-                    price: row.price,
-                    cohortMedian: priceStats.median,
-                    threshold,
-                    classification: 'price_scale_discontinuity',
-                });
+                discontinuities.push(buildDiscontinuity(row, cohort, priceStats.median, threshold));
             }
         }
     }
@@ -303,9 +322,13 @@ export const buildEquipmentEconomyReport = (options: AuditOptions = {}) => {
         const correction = correctionByIdentity.get(getEquipmentIdentityKey(row.type, row.name));
         const predecessor = sidegrade
             ? (() => {
-                const restored = { ...row };
+                // restored는 row(EquipmentRow)를 얕게 복사해 sidegrade.candidate가 덮어쓰는
+                // 필드만 동적으로 지우는 임시 뼈대라 Record<string, unknown>으로 다룬다 —
+                // 지워지는 키는 바로 아래에서 sidegrade.predecessor가 항상 다시 채우므로
+                // 최종 값은 여전히 EquipmentRow shape이다(런타임 값 변화 없음, 타입만 재확인).
+                const restored: Record<string, unknown> = { ...row };
                 for (const field of Object.keys(sidegrade.candidate)) delete restored[field];
-                return { ...restored, ...sidegrade.predecessor };
+                return { ...restored, ...sidegrade.predecessor } as EquipmentRow;
             })()
             : row;
         return correction ? stableCanonicalize({ ...predecessor, price: correction.predecessorPrice }) : predecessor;
@@ -327,11 +350,11 @@ export const buildEquipmentEconomyReport = (options: AuditOptions = {}) => {
         const candidateProjection = correction.candidate as Record<string, unknown>;
         const expectedCandidateFields = Object.keys(candidateProjection).sort();
         const candidateMatches = expectedCandidateFields.every((field) => (
-            Object.hasOwn(candidate, field) && candidate[field] === candidateProjection[field]
+            hasField(candidate, field) && candidate[field] === candidateProjection[field]
         ));
         if (!candidateMatches) errors.push(`sidegrade candidate mismatch for ${correction.type}\0${correction.name}`);
         const expectedSecondaryFields = expectedCandidateFields.filter((field) => field !== 'desc_stat').sort();
-        const actualSecondaryFields = SIDEGRADE_SECONDARY_FIELDS.filter((field) => candidate[field] !== undefined).sort();
+        const actualSecondaryFields = SIDEGRADE_SECONDARY_FIELDS.filter((field) => hasField(candidate, field) && candidate[field] !== undefined).sort();
         if (JSON.stringify(actualSecondaryFields) !== JSON.stringify(expectedSecondaryFields)) {
             errors.push(`unexpected sidegrade secondary fields for ${correction.type}\0${correction.name}`);
         }

@@ -15,7 +15,7 @@ export const parseCommand = (input: string, gameState: string, player: Player, a
   const command = (tokens[0] || '').toLowerCase();
   const args = tokens.slice(1).join(' ');
   const readOnlyCommands = new Set(['help', 'h', '?', 'status', 'stat', '상태', 'i', 'inventory', 'inv', '인벤', 'quest', 'quests', '퀘스트', 'map', '지도']);
-  const blockedStateMessages: Record<string, any> = {
+  const blockedStateMessages: Record<string, string> = {
     event: '이벤트 진행 중입니다. 1, 2, 3 중 하나를 선택하세요.',
     job_change: '전직 선택 중입니다. 화면에서 직업을 선택하거나 닫아 주세요.',
     quest_board: '퀘스트 보드가 열려 있습니다. 수락 또는 닫기를 먼저 완료하세요.',
@@ -25,7 +25,7 @@ export const parseCommand = (input: string, gameState: string, player: Player, a
     dead: '런이 종료되었습니다. 결과 화면에서 다시 시작하세요.',
   };
 
-  const locationMap: Record<string, any> = {
+  const locationMap: Record<string, string> = {
     town: '시작의 마을',
     forest: '고요한 숲',
     cave: '어둠의 동굴',

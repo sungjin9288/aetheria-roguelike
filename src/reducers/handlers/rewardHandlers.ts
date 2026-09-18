@@ -7,6 +7,7 @@ import {
 } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
 import { SEASON_TIER_XP, SEASON_REWARDS, SEASON_XP } from '../../data/seasonPass';
+import type { SeasonReward } from '../../data/seasonPass';
 import { getClaimableCodexMilestone } from '../../data/codexRewards';
 import { formatCodexRewardParts, type CodexReward } from '../../utils/codexPresentation';
 import { normalizeClaimedSeasonTiers, SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
@@ -20,7 +21,7 @@ import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 import { addNewTitles, addSeasonXp } from './helpers';
 import type { GameState, HandlerMap } from '../gameReducer';
-import type { Player } from '../../types';
+import type { CodexEntry, Player } from '../../types';
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
@@ -28,8 +29,8 @@ export const rewardActionMap = {
     // ── Codex ─────────────────────────────────────────────────────────────
     UPDATE_CODEX: (state, action) => {
         const { category, name } = action.payload;
-        const codex: Record<string, any> = state.player.stats?.codex || {};
-        const cat = codex[category] || {};
+        const codex: NonNullable<NonNullable<Player['stats']>['codex']> = state.player.stats?.codex || {};
+        const cat: Record<string, CodexEntry> = codex[category] || {};
         if (cat[name]) return state;
         return {
             ...state,
@@ -228,7 +229,8 @@ export const rewardActionMap = {
         if (claimedTiers.includes(claimTier)) return state;
         const rewardRow = SEASON_REWARDS.find((row) => row.tier === claimTier);
         if (!rewardRow) return state;
-        const tracks = [rewardRow.free, sp.isPremium ? rewardRow.premium : null].filter(Boolean);
+        const tracks = [rewardRow.free, sp.isPremium ? rewardRow.premium : null]
+            .filter((entry): entry is SeasonReward => Boolean(entry));
         let goldGain = 0;
         let premiumCurrencyGain = 0;
         const grantedItems: string[] = [];
@@ -237,7 +239,7 @@ export const rewardActionMap = {
             ...state.player,
             seasonPass: { ...sp, claimed: [...(sp.claimed || []), claimTier] },
         };
-        for (const track of tracks as Array<any>) {
+        for (const track of tracks) {
             if (track.gold) goldGain += track.gold;
             if (track.premiumCurrency) premiumCurrencyGain += track.premiumCurrency;
             if (track.title) {

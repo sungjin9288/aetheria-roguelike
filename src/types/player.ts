@@ -302,6 +302,27 @@ export interface ClassJourneyLedger {
     byJob: Record<string, ClassJourneyRecord>;
 }
 
+/**
+ * eventChainProgress에 예외적으로 저장되는 "boundedEncounterReceipts" 키의 원소.
+ * boundedEncounterSelector.ts의 applyBoundedEncounterChoice가 쓰는 원본 영수증
+ * (post-processing 전) — ClassJourneyEncounterDiscovery보다 얇다.
+ */
+export interface EventChainBoundedEncounterReceipt {
+    encounterId: string;
+    choiceId: string;
+}
+
+/**
+ * player.eventChainProgress[key] 값의 실제 형태 — Wave 9 A6 실측.
+ * 대부분의 키(체인 id)는 진행 스텝(number) 또는 'failed'다. 예외적으로
+ * "boundedEncounterReceipts" 키 하나만 원정 영수증 레저(Record)를 담는다
+ * (boundedEncounterSelector.ts applyBoundedEncounterChoice가 같은 필드를
+ * 재사용해 기록) — 필드 하나가 두 용도를 겸하는 기존 설계를 그대로 반영한다.
+ */
+export type EventChainProgressValue = number | 'failed' | Record<string, EventChainBoundedEncounterReceipt>;
+
+export type EventChainProgress = Record<string, EventChainProgressValue>;
+
 export interface ExpeditionSnapshot {
     id: string;
     startedAt: number;
@@ -504,7 +525,7 @@ export interface Player {
     };
     killStreak?: number;
     history?: EventHistoryEntry[];
-    eventChainProgress?: Record<string, any>;
+    eventChainProgress?: EventChainProgress;
     deferredEventChainSteps?: Record<string, number>;
     activeExpedition?: ExpeditionSnapshot | null;
     lastExpeditionSummary?: ExpeditionSummary | null;

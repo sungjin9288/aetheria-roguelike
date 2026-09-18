@@ -13,7 +13,12 @@ import {
     getDiscoveryOdds,
     getNarrativeEventChance,
 } from '../utils/explorationPacing.js';
-import type { GameMap, Player, Relic } from '../types/index.js';
+import type { ExploreState, GameMap, Player, Relic } from '../types/index.js';
+
+/** 시뮬레이터가 항상 완전히 채워 넣는 exploreState 뼈대 — ExploreState(player.stats
+ *  단일 진실 원천)의 5개 필드를 전부 필수로 좁힌다(시뮬레이터는 DEFAULT_EXPLORE_STATE와
+ *  동일한 모양을 항상 리터럴로 채워 넣는다). */
+type SimulatedExploreState = Required<ExploreState>;
 
 /**
  * 이 시뮬레이션 전용 player 픽스처 — `relics`만 `Player`보다 좁혀(항상 배열) `.length`/`.push`에
@@ -181,7 +186,7 @@ export const resolveExplorationRhythmOutcomeStep = ({
 }: {
     map: GameMap;
     player: RhythmPlayer;
-    exploreState: Record<string, any>;
+    exploreState: SimulatedExploreState;
     policy: ExplorationRhythmPolicy;
     eventChanceBonus: number;
     relicLimit: number;

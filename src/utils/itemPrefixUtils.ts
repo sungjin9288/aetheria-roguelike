@@ -39,14 +39,14 @@ const getPrefixCandidates = (item: Item | null | undefined) => {
 };
 
 const applyPrefixStats = (item: Item, prefix: ItemPrefixDef) => {
-    const next: Record<string, any> = { ...item };
+    const next: Item = { ...item };
     const normalizedType = normalizeItemType(next.type);
 
     if (prefix.stat === 'atk' && normalizedType === 'weapon') {
         next.val = Math.max(1, (next.val || 0) + (prefix.val || 0));
     } else if (prefix.stat === 'def' && normalizedType === 'armor') {
         next.val = Math.max(1, (next.val || 0) + (prefix.val || 0));
-    } else if (prefix.stat === 'hp' && ['hp', 'mp'].includes(next.type)) {
+    } else if (prefix.stat === 'hp' && (next.type === 'hp' || next.type === 'mp')) {
         next.val = Math.max(1, (next.val || 0) + (prefix.val || 0));
     } else if (prefix.stat === 'all' && typeof next.val === 'number') {
         next.val = Math.max(1, next.val + (prefix.val || 0));

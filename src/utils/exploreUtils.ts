@@ -1,5 +1,22 @@
 import type { GameMap, MonsterBase, Relic } from '../types/index.js';
 import type { Player } from '../types/index.js';
+
+/**
+ * spawnEnemy()가 실제로 만드는 몬스터 인스턴스 — Monster(전 필드 optional)보다
+ * 좁혀 스폰 시 항상 채우는 7개 필드를 필수로 선언한다. DifficultyManager.ts의
+ * applyDynamicDifficulty가 이 타입을 그대로 받아 산술한다(hp/maxHp/atk/exp/gold
+ * optional 처리 없이 바로 곱셈).
+ */
+export type SpawnedMonster = MonsterBase & {
+    name: string;
+    baseName: string;
+    hp: number;
+    maxHp: number;
+    atk: number;
+    def: number;
+    exp: number;
+    gold: number;
+};
 /**
  * exploreUtils.ts — 탐험 파이프의 순수 구간 (Phase 1-B → Wave 4 N1).
  *
@@ -55,7 +72,14 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         // 시간의 파수꾼: 시간술사 직업 + Lv 40+ (공중 신전)
         { boss: '시간의 파수꾼', loc: '공중 신전', check: () => player.job === '시간술사' && (player.level || 1) >= 40 },
         // 원한의 용사: "최후의 영웅" 체인 3단계 완료 (지하 미궁)
-        { boss: '원한의 용사', loc: '지하 미궁', check: () => (player.eventChainProgress?.last_hero || 0) >= 3 },
+        {
+            boss: '원한의 용사',
+            loc: '지하 미궁',
+            check: () => {
+                const lastHeroStep = player.eventChainProgress?.last_hero;
+                return (typeof lastHeroStep === 'number' ? lastHeroStep : 0) >= 3;
+            },
+        },
         // 공허의 군주: 무한 심연 100층 클리어 (금지된 도서관)
         { boss: '공허의 군주', loc: '금지된 도서관', check: () => (player.stats?.abyssFloor || 0) >= 100 },
         // PR #11: 에테르 군주 — 프레스티지 rank≥10 "에테르 초월" 해금 (에테르 관문)
@@ -107,7 +131,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // slice 19: HP 곡선 120+30L → BALANCE.MONSTER_HP_BASE(70)+L×32 — 초반 전투
     //   템포 가속 (Lv1 -32%, Lv50 +3%). 골드 base 10 → 16 (초반 휴식 경제).
     //   ATK/EXP 곡선은 불변 (quest pacing 가드 보존).
-    const mStats: MonsterBase & { name: string; hp: number; maxHp: number; atk: number; def: number; exp: number; gold: number } = {
+    const mStats: SpawnedMonster = {
         name: isInfinite ? `[${depth}층] ${baseName}` : baseName,
         baseName,
         level,

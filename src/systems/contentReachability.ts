@@ -111,12 +111,23 @@ interface ClassLike {
     next?: unknown[];
 }
 
+/** ITEMS 카테고리(weapons/armors/.../recipes) 원소 — 카테고리마다 모양이 달라
+ *  이 파일이 실제로 읽는 필드만 연다. itemCatalog()가 다루는 weapons/armors는
+ *  항상 name을 채우므로(장비 카탈로그 불변) 이 파일도 방어 없이 직접 읽는다
+ *  (QuestLike.id와 동일 패턴) — allItemNames()는 다른 카테고리(sets 등 name 없음)도
+ *  훑으므로 typeof 방어를 유지한다. */
+interface ItemLike {
+    name: string;
+    tier?: unknown;
+    reqLevel?: unknown;
+}
+
 type ContentSource = {
     MAPS: Record<string, MapLike>;
     MONSTERS: Record<string, unknown>;
     QUESTS: QuestLike[];
     CLASSES: Record<string, ClassLike>;
-    ITEMS: Record<string, any[]>;
+    ITEMS: Record<string, ItemLike[]>;
 };
 
 /**
@@ -287,7 +298,9 @@ const equipmentRouteReport = (source: ContentSource, maps: Record<string, MapLik
     for (const [region, map] of Object.entries(maps)) {
         if (map?.type !== 'safe') continue;
         shops.set(region, shopCatalogFor(source, region, map)
-            .filter((item) => equipment.some((entry) => entry.name === item.name))
+            .filter((item): item is { name: string } => (
+                typeof item.name === 'string' && equipment.some((entry) => entry.name === item.name)
+            ))
             .map((item) => item.name));
     }
     const dropSources = new Map<string, Set<string>>();
@@ -404,7 +417,7 @@ const questReport = (source: ContentSource, maps: Record<string, MapLike>, quest
 
 const signatureReport = (
     index: Readonly<Record<string, ReadonlyArray<{ monster: string }>>>,
-    monsters: Record<string, any>,
+    monsters: Record<string, unknown>,
 ) => {
     const invalidDropRoutes: string[] = [];
     const routes: Array<{ name: string; monsters: string[] }> = Object.keys(index)
@@ -426,7 +439,7 @@ const signatureReport = (
     };
 };
 
-const classSchemaErrors = (classes: Record<string, any>) => Object.entries(classes).flatMap(([job, value]) => {
+const classSchemaErrors = (classes: Record<string, ClassLike>) => Object.entries(classes).flatMap(([job, value]) => {
     const isRoot = job === '모험가';
     const reqLv = value?.reqLv;
     const tier = value?.tier;

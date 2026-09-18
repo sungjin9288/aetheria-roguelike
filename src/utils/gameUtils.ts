@@ -283,8 +283,9 @@ export const getAchievementCurrentValue = (achievement: Achievement, player: Pla
     if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
     // B3-TODO(2026-09): achievement.target은 data-driven 문자열이라 PlayerStats 키로
     //   좁히려면 quests.ts ACHIEVEMENTS의 target 리터럴 유니온화가 선행돼야 한다.
-    //   그때까지 이 한 곳만 동적 인덱스 캐스트를 유지한다(런타임 동작 동일).
-    return (stats as Record<string, any>)[target ?? ''] || 0;
+    //   그때까지 이 한 곳만 동적 인덱스 캐스트를 유지한다(Number()로 number 반환형 보존,
+    //   런타임 동작 동일 — PlayerStats 카운터는 항상 number|undefined다).
+    return Number((stats as Record<string, unknown>)[target ?? '']) || 0;
 };
 
 /** 업적 달성 여부 */

@@ -118,7 +118,7 @@ export const fallbackEventActionMap = {
             currentGold = Number(currentGold) - transaction.cost.amount;
         }
 
-        const outcome = transaction.event.outcomes[choiceIndex] as Record<string, any>;
+        const outcome = transaction.event.outcomes[choiceIndex];
         const resultText = formatEventText(outcome.log);
         const logs: LogEntry[] = [{
             id: `fallback-transaction:${transactionId}:${choiceIndex}`,

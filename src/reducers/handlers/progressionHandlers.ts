@@ -103,7 +103,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         const permanent = pickPermanentPlayerState(state.player, INITIAL_STATE.player);
         const permanentStats: NonNullable<Player['stats']> = permanent.stats || {};
         const prevTitles = permanent.titles || [];
-        const freshPlayer: Record<string, any> = {
+        const freshPlayer: Player = {
             ...INITIAL_STATE.player,
             ...permanent,
             name: state.player.name,

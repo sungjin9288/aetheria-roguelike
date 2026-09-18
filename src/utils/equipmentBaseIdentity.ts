@@ -24,7 +24,7 @@ interface SignatureEntry {
     spriteKey?: string;
 }
 
-type EquipmentCatalogOptions = {
+export type EquipmentCatalogOptions = {
     rows?: readonly Item[];
     artEntries?: Record<string, unknown>;
     signatures?: Record<string, SignatureEntry>;

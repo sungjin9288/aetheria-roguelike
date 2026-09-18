@@ -18,7 +18,7 @@ export interface GameSaveRecord {
     saveVersion: number;
     revision: number;
     savedAt: number;
-    payload: Record<string, any>;
+    payload: Record<string, unknown>;
 }
 
 interface GameSaveEnvelope {
@@ -62,11 +62,11 @@ const checksumInput = (envelope: Omit<GameSaveEnvelope, 'checksum'>) => [
     envelope.payloadJson,
 ].join('\n');
 
-const isGameSnapshot = (value: unknown): value is Record<string, any> => (
+const isGameSnapshot = (value: unknown): value is Record<string, unknown> => (
     value !== null
     && typeof value === 'object'
     && 'player' in value
-    && Boolean((value as Record<string, any>).player)
+    && Boolean((value as Record<string, unknown>).player)
 );
 
 const parseStoredEnvelope = async (
@@ -131,7 +131,7 @@ export const resolveSaveAuthority = (
 
 export const resolveCloudBootstrapAuthority = (
     local: GameSaveRecord | null,
-    remote: Record<string, any> | null,
+    remote: Record<string, unknown> | null,
 ): 'local' | 'remote' | 'none' => {
     if (!local && !remote?.player) return 'none';
     if (!remote?.player) return 'local';
@@ -238,7 +238,7 @@ export const createGameStorage = ({
         return record;
     };
 
-    const saveNow = async (payload: Record<string, any>): Promise<GameSaveRecord> => {
+    const saveNow = async (payload: Record<string, unknown>): Promise<GameSaveRecord> => {
         if (!isGameSnapshot(payload)) throw new Error('A game snapshot requires player data');
         const current = await load();
         return publishRecord({
@@ -249,7 +249,7 @@ export const createGameStorage = ({
         });
     };
 
-    const save = (payload: Record<string, any>) => {
+    const save = (payload: Record<string, unknown>) => {
         const operation = writeQueue.catch(() => undefined).then(() => saveNow(payload));
         writeQueue = operation;
         return operation;
@@ -291,7 +291,7 @@ export const createGameStorage = ({
     };
 
     const migrate = async (
-        migratePayload: (payload: Record<string, any>) => Record<string, any>,
+        migratePayload: (payload: Record<string, unknown>) => Record<string, unknown>,
     ): Promise<GameSaveRecord | null> => {
         const current = await load();
         if (current) return current;

@@ -2,6 +2,20 @@ import { BALANCE } from './constants.js';
 import { getStructuredFallbackPoolEvent } from './structuredFallbackEvents.js';
 
 /**
+ * 저작 이벤트 1건 — getStructuredFallbackPoolEvent()의 반환형과 동형으로 연다.
+ * outcomes의 확장 어휘(relic/status/elite/buff 등)는 이 파일이 강제하지 않고
+ * aiEventUtils.normalizeOutcomes의 화이트리스트가 검증한다(주석 참고) — 그래서
+ * outcomes 원소는 Record<string, unknown>으로 열어 둔다.
+ */
+interface FallbackEventEntry {
+    desc: string;
+    choices: readonly string[];
+    outcomes?: readonly Readonly<Record<string, unknown>>[];
+    /** getStructuredFallbackPoolEvent()가 붙이는 트랜잭션 식별자 (structured 풀 일부 항목만). */
+    fallbackTransactionId?: string;
+}
+
+/**
  * aiEventPools — 오프라인/큐레이션 폴백 이벤트 풀 (한국어 저작 데이터).
  *
  * aiEventUtils.pickFallbackEvent가 지역 카테고리 키(forest/ruins/.../gate)로 뽑아
@@ -20,7 +34,7 @@ import { getStructuredFallbackPoolEvent } from './structuredFallbackEvents.js';
 //   `if (player.loc === START_LOCATION) return` 조기 반환, AI_SERVICE.generateEvent
 //   진입 자체 차단. type='safe' / eventChance=0인 안전지대라 게임 디자인상 explore
 //   루프 비대상. 12 fallback events 모두 unreachable dead config.
-export const FALLBACK_EVENT_POOL: Record<string, any[]> = {
+export const FALLBACK_EVENT_POOL: Record<string, FallbackEventEntry[]> = {
     forest: [
         { desc: '나무 사이로 신비로운 빛이 흘러나옵니다.', choices: ['따라간다', '멀리서 관찰한다', '돌아선다'] },
         { desc: '오래된 석상이 덩굴에 감겨 있습니다.', choices: ['살펴본다', '정화한다', '지나친다'] },

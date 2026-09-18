@@ -6,6 +6,7 @@
  * 컴포넌트에는 로직을 넣지 않는다 (CLAUDE.md §5 DO).
  */
 import { EVENT_CHAINS } from '../data/eventChains.js';
+import type { EventChainProgress } from '../types/player.js';
 
 /** EVENT_CHAINS 원소 — 데이터 리터럴에서 도출(생산자 인덱스 접근, 손으로 다시 선언하지 않음). */
 type EventChain = (typeof EVENT_CHAINS)[number];
@@ -25,7 +26,7 @@ export interface JournalEntry {
  * 처리되었거나 아직 시작되지 않은(step 0/미존재) 체인은 제외한다.
  */
 export function buildChainJournal(
-    eventChainProgress: Record<string, number | 'failed'> | null | undefined,
+    eventChainProgress: EventChainProgress | null | undefined,
     chains: EventChain[] = EVENT_CHAINS,
 ): JournalEntry[] {
     const progress = eventChainProgress || {};

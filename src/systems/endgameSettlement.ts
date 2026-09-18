@@ -24,13 +24,13 @@ const isTrueBoss = (enemy: Monster) => {
     return name === '원시의 신' || name.includes('원초적 혼돈');
 };
 
-const validMultiplier = (value: unknown) => (
+const validMultiplier = (value: unknown): value is number => (
     typeof value === 'number' && Number.isFinite(value) && value > 0
 );
 
-const buildTrueBoss = (value: unknown): Monster | null => {
+const buildTrueBoss = (value: Monster | undefined): Monster | null => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return null;
-    const boss = value as Record<string, any>;
+    const boss = value;
     if (boss.isBoss !== true
         || !validMultiplier(boss.hpMult)
         || !validMultiplier(boss.atkMult)
@@ -74,7 +74,7 @@ export const resolveEndgameVictory = ({
     receiptKey: string;
     rng: () => number;
     now: number;
-    monsterCatalog?: Record<string, any>;
+    monsterCatalog?: Record<string, Monster>;
 }): EndgameSettlementResult => {
     const endgame = normalizeEndgameProgress(player.meta?.endgame);
     if (endgame.lastEndgameReceiptKey === receiptKey) {

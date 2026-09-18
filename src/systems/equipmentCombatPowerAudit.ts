@@ -2,13 +2,14 @@ import { BALANCE } from '../data/constants.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { buildClassVitals } from '../hooks/gameActions/_shared.js';
 import { calculateFullStats } from '../utils/statsCalculator.js';
+import type { EquipSlots, Item } from '../types/item.js';
 import type { Player } from '../types/index.js';
 import {
     CANONICAL_EQUIPMENT,
     getEquipmentIdentityKey,
     validateCanonicalEquipmentCatalog,
 } from '../utils/equipmentBaseIdentity.js';
-import type { EquipmentType } from '../utils/equipmentBaseIdentity.js';
+import type { EquipmentCatalogOptions, EquipmentType } from '../utils/equipmentBaseIdentity.js';
 
 /**
  * `validateCanonicalEquipmentCatalog()`가 돌려주는 검증된 장비 행 1건 — 그 함수의
@@ -19,12 +20,9 @@ type EquipmentRow = ReturnType<typeof validateCanonicalEquipmentCatalog>[number]
 export const EQUIPMENT_COMBAT_POWER_AUDIT_POLICY_VERSION = 'equipment-combat-power-audit@2';
 export const EQUIPMENT_COMBAT_POWER_FLOAT_TOLERANCE = 1e-9;
 
-export type EquipmentCombatPowerAuditOptions = {
-    rows?: readonly any[];
-    artEntries?: Record<string, unknown>;
-    signatures?: Record<string, any>;
-    shopRows?: readonly any[];
-};
+/** validateCanonicalEquipmentCatalog()에 그대로 넘기는 옵션이라 그 함수의
+ *  EquipmentCatalogOptions를 재사용한다(손으로 다시 선언하지 않음). */
+export type EquipmentCombatPowerAuditOptions = EquipmentCatalogOptions;
 
 const EQUIPMENT_TYPES = ['weapon', 'armor', 'shield'] as const;
 const NUMERIC_COMBAT_DIMENSIONS = ['primaryStat', 'effectiveAtk', 'effectiveDef', 'effectiveHp', 'effectiveMp', 'effectiveCrit', 'effectiveEvasion'] as const;
@@ -76,7 +74,7 @@ const summarize = (values: readonly number[]) => {
     };
 };
 
-const validationErrors = (options: EquipmentCombatPowerAuditOptions, rows: readonly any[]) => {
+const validationErrors = (options: EquipmentCombatPowerAuditOptions, rows: readonly Item[]) => {
     const errors: string[] = [];
     try {
         validateCanonicalEquipmentCatalog({
@@ -100,7 +98,7 @@ const validationErrors = (options: EquipmentCombatPowerAuditOptions, rows: reado
 const buildAuditPlayer = (job: string, tier: number, item: EquipmentRow | null = null): Player => {
     const level = BALANCE.TIER_REQ_LEVEL?.[tier];
     const vitals = buildClassVitals(level, job, { bonusHp: 0, bonusMp: 0, prestigeRank: 0 });
-    const equip = { weapon: null, armor: null, offhand: null } as Record<string, any>;
+    const equip: EquipSlots = { weapon: null, armor: null, offhand: null };
     if (item) equip[item.type === 'shield' ? 'offhand' : item.type] = item;
     return {
         name: 'equipment-combat-power-audit',
@@ -143,7 +141,7 @@ type EligibleJobDelta = ReturnType<typeof projectEligibleJob>;
 
 const projectionSummary = (deltas: readonly EligibleJobDelta[], field: Exclude<keyof EligibleJobDelta, 'job'>) => summarize(deltas.map((delta) => delta[field]));
 
-const rowDimensions = (row: EquipmentRow, deltas: readonly EligibleJobDelta[], signatures: Record<string, any>) => ({
+const rowDimensions = (row: EquipmentRow, deltas: readonly EligibleJobDelta[], signatures: Record<string, unknown>) => ({
     atk: {
         raw: row.type === 'weapon' ? row.val : 0,
         effective: projectionSummary(deltas, 'atk'),
@@ -186,7 +184,7 @@ const rowDimensions = (row: EquipmentRow, deltas: readonly EligibleJobDelta[], s
 const assumeNumeric = (value: number | null): number => value as number;
 
 /** `buildEquipmentCombatPowerReport()`가 각 검증된 행을 프로젝션한 결과 1건. */
-const buildProjectedRow = (source: EquipmentRow, signatures: Record<string, any>) => {
+const buildProjectedRow = (source: EquipmentRow, signatures: Record<string, unknown>) => {
     const eligibleJobDeltas = source.jobs.map((job) => projectEligibleJob(source, job));
     return {
         type: source.type,
@@ -201,6 +199,17 @@ const buildProjectedRow = (source: EquipmentRow, signatures: Record<string, any>
 
 type ProjectedRow = ReturnType<typeof buildProjectedRow>;
 
+/** `summarize()` 반환형 — median/min/max/q1/q3/corridor 묶음 1건. */
+type CorridorSummary = ReturnType<typeof summarize>;
+
+/** `getCohortPositions()`가 코호트별로 모으는 non-numeric 필드 — ProjectedRow.dimensions에서
+ *  그대로 도출해 손으로 다시 선언하지 않는다. */
+interface CohortCategorical {
+    hands: Array<ProjectedRow['dimensions']['hands']>;
+    elements: Array<ProjectedRow['dimensions']['element']>;
+    signatures: string[];
+}
+
 const numericRowValues = (row: ProjectedRow): Record<string, number> => ({
     primaryStat: row.type === 'weapon' ? row.dimensions.atk.raw : row.dimensions.def.raw,
     effectiveAtk: assumeNumeric(row.dimensions.atk.effective.median),
@@ -213,19 +222,19 @@ const numericRowValues = (row: ProjectedRow): Record<string, number> => ({
     jobBreadth: row.dimensions.jobBreadth,
 });
 
-const getCohortPositions = (rows: readonly any[]) => {
-    const groups = new Map<string, any[]>();
+const getCohortPositions = (rows: readonly ProjectedRow[]) => {
+    const groups = new Map<string, ProjectedRow[]>();
     for (const row of rows) {
         const cohort = `${row.type}:T${row.tier}`;
         const group = groups.get(cohort) || [];
         group.push(row);
         groups.set(cohort, group);
     }
-    const positions = new Map<any, any>();
+    const positions = new Map<ProjectedRow, CohortPosition & { categorical: CohortCategorical }>();
     const cohorts = [...groups.entries()]
         .sort(([left], [right]) => left < right ? -1 : left > right ? 1 : 0)
         .map(([cohort, group]) => {
-            const numeric: Record<string, any> = Object.fromEntries(
+            const numeric: Record<string, CorridorSummary> = Object.fromEntries(
                 [...NUMERIC_COMBAT_DIMENSIONS, 'price', 'jobBreadth'].map((dimension) => [
                     dimension,
                     summarize(group.map((row) => numericRowValues(row)[dimension])),
@@ -240,9 +249,9 @@ const getCohortPositions = (rows: readonly any[]) => {
                 const values = numericRowValues(row);
                 const outsideDimensions = NUMERIC_COMBAT_DIMENSIONS.filter((dimension) => {
                     const corridor = numeric[dimension].corridor;
-                    return values[dimension] < corridor.lower || values[dimension] > corridor.upper;
+                    return values[dimension] < assumeNumeric(corridor.lower) || values[dimension] > assumeNumeric(corridor.upper);
                 });
-                const priceOutside = values.price < numeric.price.corridor.lower || values.price > numeric.price.corridor.upper;
+                const priceOutside = values.price < assumeNumeric(numeric.price.corridor.lower) || values.price > assumeNumeric(numeric.price.corridor.upper);
                 positions.set(row, {
                     cohort,
                     numeric,
@@ -340,7 +349,7 @@ type HardDominanceComparison = NonNullable<ReturnType<typeof buildHardDominanceC
 /** `getCohortPositions()`가 각 행에 대해 기록하는 코호트 위치 — `classify()`가 읽는 필드만. */
 interface CohortPosition {
     cohort: string;
-    numeric: Record<string, any>;
+    numeric: Record<string, CorridorSummary>;
     outsideDimensions: readonly string[];
     priceOutside: boolean;
 }
@@ -371,7 +380,7 @@ const classify = (row: ProjectedRow, group: readonly ProjectedRow[], position: C
     }
 
     const values = numericRowValues(row);
-    const broadAccess = values.jobBreadth > position.numeric.jobBreadth.corridor.upper;
+    const broadAccess = values.jobBreadth > assumeNumeric(position.numeric.jobBreadth.corridor.upper);
     const tradeoffReasons = uniqueTradeoffReasons(row, group)
         .filter((reason) => !(broadAccess && reason === 'unique-job-route'));
     if (position.outsideDimensions.length > 0 && tradeoffReasons.length > 0) {
@@ -383,7 +392,7 @@ const classify = (row: ProjectedRow, group: readonly ProjectedRow[], position: C
         };
     }
 
-    const primaryMedian = position.numeric.primaryStat.median;
+    const primaryMedian = assumeNumeric(position.numeric.primaryStat.median);
     const rawTradeoff = values.primaryStat < primaryMedian;
     if (rawTradeoff && row.dimensions.signature) {
         return {
@@ -409,11 +418,11 @@ const classify = (row: ProjectedRow, group: readonly ProjectedRow[], position: C
     };
 };
 
-const countTypes = (rows: readonly any[]) => Object.fromEntries(
+const countTypes = (rows: readonly Item[]) => Object.fromEntries(
     [...EQUIPMENT_TYPES, 'total'].map((type) => [type, type === 'total' ? rows.length : rows.filter((row) => row.type === type).length]),
 );
 
-const countTiers = (rows: readonly any[]) => Object.fromEntries(
+const countTiers = (rows: readonly Item[]) => Object.fromEntries(
     EQUIPMENT_TYPES.map((type) => [type, Object.fromEntries(
         [1, 2, 3, 4, 5, 6].map((tier) => [tier, rows.filter((row) => row.type === type && row.tier === tier).length]),
     )]),
@@ -448,7 +457,9 @@ export const buildEquipmentCombatPowerReport = (options: EquipmentCombatPowerAud
     const projectedRows = rows.map((source) => buildProjectedRow(source, signatures));
     const positions = getCohortPositions(projectedRows);
     const classifiedRows = projectedRows.map((row) => {
-        const position: CohortPosition = positions.positions.get(row);
+        // getCohortPositions()가 projectedRows의 모든 행을 순회하며 채우므로
+        // (동일 배열로 얻은 row는 항상 대응 항목을 갖는다) — 존재 불변, non-null 단언.
+        const position: CohortPosition = positions.positions.get(row)!;
         const classification = classify(row, positions.groups.get(position.cohort) || [], position);
         return { ...row, cohortPosition: position, ...classification };
     }).sort(compareIdentity);

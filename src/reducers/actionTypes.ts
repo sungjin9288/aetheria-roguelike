@@ -8,7 +8,7 @@
  * 이 파일의 유일한 제약이다(`GameState`는 gameReducer 소유).
  */
 import type { Item, Monster, Player, PostCombatResult, Relic } from '../types';
-import type { DailyProtocol, DailyProtocolMissionType } from '../types/player.js';
+import type { CodexCategory, DailyProtocol, DailyProtocolMissionType } from '../types/player.js';
 import type { GameEvent, LeaderboardEntry, LiveConfig, LogEntry } from '../types/session.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
 import type { buildRunSummary } from '../utils/gameUtils.js';
@@ -344,7 +344,7 @@ export interface ActionPayloadMap {
     [AT.SET_RUN_SUMMARY]: RunSummary | null;
 
     // ── v4.1 — Codex & Synthesis ─────────────────────────────────────────
-    [AT.UPDATE_CODEX]: { category: string; name: string };
+    [AT.UPDATE_CODEX]: { category: CodexCategory; name: string };
 
     // ── v4.2 — Season Pass ───────────────────────────────────────────────
     [AT.ADD_SEASON_XP]: number;
