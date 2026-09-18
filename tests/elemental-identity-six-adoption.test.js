@@ -25,7 +25,7 @@ test('elemental six preserves approved monster and map gameplay sources', async 
         // W9-A1: 이 핀은 src/data/monsters.ts 파일 바이트 해시다. Wave 9 A1이 BOSS_BRIEFS의
         //   `Record<string, any>` 선언을 리터럴 도출 타입으로 바꾸면서(데이터 값 변경 0건,
         //   tests/data-shape-types.test.js 그린) 파일 해시가 바뀌어 핀을 재고정했다.
-        'src/data/monsters.ts': '0acfae6d317a4fae05faef9e59088b5dc1b039b7ecaadc073eba796523dedbba',
+        'src/data/monsters.ts': '930dc880a98672bc8cf7492dfa9c2533cb84fb0dc5c5859b9af6b403f28be70c',
         'src/data/maps.ts': 'bfa8b82d98a15eff56098a641d59f85a0f6a1bb613c6ac9602cae0689f004a72',
     })) assert.equal(sha(await readFile(new URL(path, root))), expected, path);
 });
