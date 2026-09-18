@@ -112,10 +112,10 @@ test('구조 불변식: 설정 화면의 상호작용은 실제 actions 콜백/F
     const source = await readFile(new URL('../src/components/tabs/SystemTab.tsx', import.meta.url), 'utf8');
 
     assert.match(source, /getTitlePassiveLabel\(player\.activeTitle\)/);
-    assert.match(source, /actions\.setReadabilityMode\?\./);
-    assert.match(source, /actions\.setEquipmentDetailMode\?\./);
-    assert.match(source, /actions\.setActiveTitle\?\./);
+    assert.match(source, /actions\?\.setReadabilityMode\?\./);
+    assert.match(source, /actions\?\.setEquipmentDetailMode\?\./);
+    assert.match(source, /actions\?\.setActiveTitle\?\./);
     assert.match(source, /await addDoc\(feedbackCol/);
     assert.match(source, /await setDoc\(configRef/);
-    assert.match(source, /actions\.isAdmin\(\)/);
+    assert.match(source, /actions\?\.isAdmin\(\)/);
 });

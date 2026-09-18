@@ -324,7 +324,7 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 307: SystemTab actions.leaderboard 경로 사용 보존', async () => {
       const source = await readSrc('src/components/tabs/SystemTab.tsx');
-      assert.ok(/actions\.leaderboard/.test(source),
+      assert.ok(/actions\?\.leaderboard/.test(source),
           'SystemTab actions.leaderboard 경로 보존');
   });
 

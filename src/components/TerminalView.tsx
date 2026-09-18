@@ -1,12 +1,13 @@
 import { useRef, useEffect, useMemo, useState } from 'react';
-import { Bot, AlertTriangle, CheckCircle, Sparkles, Terminal, ChevronUp, Filter } from 'lucide-react';
+import { Bot, AlertTriangle, CheckCircle, Sparkles, Terminal, ChevronUp, Filter, type LucideIcon } from 'lucide-react';
 import { motion as Motion, AnimatePresence } from 'framer-motion';
 import QuickSlot from './QuickSlot';
-import type { Player } from '../types/index.js';
+import type { Item, Player } from '../types/index.js';
+import type { LogEntry } from '../types/session.js';
 import { GS } from '../reducers/gameStates';
 import { getLocationVisual } from '../utils/locationVisuals';
 
-const LOG_STYLES: Record<string, { text: string; bg: string; icon: any }> = {
+const LOG_STYLES: Record<string, { text: string; bg: string; icon: LucideIcon | null }> = {
     combat: {
         text: 'text-rose-100 font-semibold',
         bg: 'border-l-2 border-rose-300/50 bg-rose-500/8',
@@ -79,7 +80,7 @@ const SUMMARY_LOG_COUNT = 3;
 //   본문보다 한 단계 밝고 굵게 렌더. "라벨보다 숫자가 먼저 읽혀야 한다"는
 //   readability 리서치 원칙의 로그 스트림 적용.
 const NUMBER_TOKEN_RE = /([+-]?\d[\d,.]*(?:\/\d[\d,.]*)?%?)/g;
-const renderLogText = (text: any) => {
+const renderLogText = (text: string) => {
     const parts = String(text ?? '').split(NUMBER_TOKEN_RE);
     if (parts.length === 1) return text;
     return parts.map((part: string, idx: number) => (
@@ -97,12 +98,12 @@ const renderLogText = (text: any) => {
 //   로 명시 전달, default true 도달 불가. cascade로 '/' 단축키 / 입력 푸터 /
 //   푸터 표시 플래그 / autoFocus attr 모두 dead.
 interface TerminalViewProps {
-    logs: any[];
+    logs: LogEntry[];
     gameState?: string;
     onCommand?: (cmd: string) => void;
     player?: Player | null;
-    quickSlots?: any[];
-    onQuickSlotUse?: (item: any, idx: number) => void;
+    quickSlots?: Array<Item | null>;
+    onQuickSlotUse?: (item: Item, idx: number) => void;
 }
 
 // cycle 576: logs default [] 제거 — 1 production caller (MobileGameLayout:85
@@ -116,7 +117,7 @@ const TerminalView = ({
     quickSlots,
     onQuickSlotUse,
 }: TerminalViewProps) => {
-    const logViewportRef = useRef<any>(null);
+    const logViewportRef = useRef<HTMLDivElement>(null);
     const [logExpanded, setLogExpanded] = useState(false); // #10: 전투 로그 요약/전체 토글
 
     // 전투 모드 전환 시 요약 모드로 초기화
@@ -128,9 +129,10 @@ const TerminalView = ({
 
     // Keyboard shortcuts
     useEffect(() => {
-        const handleKeyDown = (e: any) => {
+        const handleKeyDown = (e: KeyboardEvent) => {
             // Skip if typing in input
-            if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+            const target = e.target as HTMLElement | null;
+            if (target?.tagName === 'INPUT' || target?.tagName === 'TEXTAREA') return;
 
             // Combat shortcuts: 1=Attack, 2=Skill, 3=Escape
             if (gameState === GS.COMBAT) {
@@ -168,7 +170,7 @@ const TerminalView = ({
     const hasAnyQuickSlot = Array.isArray(quickSlots) && quickSlots.some(Boolean);
     const shouldCompactMobileLogs = !logExpanded && !isCombat;
     const displayLogs = isCombat && !logExpanded
-        ? logs.filter((l: any) => COMBAT_LOG_TYPES.has(l.type)).slice(-SUMMARY_LOG_COUNT)
+        ? logs.filter((l) => COMBAT_LOG_TYPES.has(l.type)).slice(-SUMMARY_LOG_COUNT)
         : shouldCompactMobileLogs
             ? logs.slice(-compactMobileLogCount)
             : logs;
@@ -216,7 +218,7 @@ const TerminalView = ({
                                 type="button"
                                 data-testid="combat-log-toggle"
                                 aria-expanded={logExpanded}
-                                onClick={() => setLogExpanded((open: any) => !open)}
+                                onClick={() => setLogExpanded((open) => !open)}
                                 className="inline-flex min-h-8 shrink-0 items-center rounded-lg border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-readable text-slate-200/78"
                             >
                                 {isCombat
@@ -238,7 +240,7 @@ const TerminalView = ({
                             </div>
                             <div>
                                 <div className="mb-0.5 text-[10px] font-readable text-[#dff7f5]/62">이야기 흐름</div>
-                                <p className="line-clamp-2 text-[10px] font-fira text-slate-100/82 italic leading-relaxed">{latestStory.text}</p>
+                                <p className="line-clamp-2 text-[10px] font-fira text-slate-100/82 italic leading-relaxed">{latestStory?.text}</p>
                             </div>
                         </div>
                     </div>
@@ -258,7 +260,7 @@ const TerminalView = ({
                     )}
 
                     <AnimatePresence initial={false}>
-                        {displayLogs.map((log: any) => {
+                        {displayLogs.map((log) => {
                             const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
                             const badge = MOBILE_LOG_BADGES[log.type];
                             const IconComp = style.icon;
@@ -323,7 +325,7 @@ const TerminalView = ({
                 <div className="mt-2 pt-2 border-t border-white/8 bg-transparent shrink-0 z-20">
                     <QuickSlot
                         slots={quickSlots || []}
-                        onUse={(item: any, idx: any) => onQuickSlotUse?.(item, idx)}
+                        onUse={(item, idx) => onQuickSlotUse?.(item, idx)}
                         gameState={gameState}
                     />
                 </div>

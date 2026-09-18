@@ -657,7 +657,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   test('SystemTab의 admin 액션은 별도 경로로 보존됨', async () => {
       const { readFile } = await import('node:fs/promises');
       const source = await readFile(path.join(ROOT, 'src/components/tabs/SystemTab.tsx'), 'utf8');
-      assert.match(source, /actions\.isAdmin\(\)/);
+      assert.match(source, /actions\?\.isAdmin\(\)/);
       assert.match(source, /handleSetMultiplier|SET MULTIPLIER/);
   });
 }

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
     ChevronDown,
     Copy,
@@ -15,9 +16,11 @@ import {
     Trash2,
     Trophy,
     Wrench,
+    type LucideIcon,
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
-import type { FullStats } from '../../types/index.js';
+import type { FullStats, Item, Player, Relic } from '../../types/index.js';
+import type { LeaderboardEntry, LiveConfig } from '../../types/session.js';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { APP_ID, CONSTANTS, RARITY_CLASSES } from '../../data/constants';
@@ -31,6 +34,7 @@ import { trackRuntimeProductEvent } from '../../platform/productEventCoordinator
 import { normalizeProductEventJob } from '../../platform/productEvents';
 import { MSG } from '../../data/messages';
 import RelicIcon from '../icons/RelicIcon';
+import type { GameActions } from '../../hooks/actionDeps';
 
 const SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
 
@@ -70,7 +74,15 @@ const EQUIPMENT_DETAIL_OPTIONS = [
 
 const getQaValueLabel = (value: unknown) => QA_VALUE_LABELS[String(value)] || String(value || '확인 안 됨');
 
-const SettingsDisclosure = ({ testId, icon: Icon, title, summary, children }: any) => (
+interface SettingsDisclosureProps {
+    testId: string;
+    icon: LucideIcon;
+    title: string;
+    summary: string;
+    children: ReactNode;
+}
+
+const SettingsDisclosure = ({ testId, icon: Icon, title, summary, children }: SettingsDisclosureProps) => (
     <details data-testid={testId} className="group border-b border-white/8 last:border-b-0">
         <summary className="flex min-h-[52px] cursor-pointer list-none items-center gap-3 px-1 py-2.5 text-left [&::-webkit-details-marker]:hidden">
             <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.65rem] border border-white/8 bg-white/[0.04] text-slate-200">
@@ -86,31 +98,56 @@ const SettingsDisclosure = ({ testId, icon: Icon, title, summary, children }: an
     </details>
 );
 
+/** SystemTab이 실제로 호출하는 액션만 좁혀 받는다 (설정/칭호/순위/관리자). */
+type SystemTabActions = Pick<GameActions,
+    'leaderboard' | 'setReadabilityMode' | 'setEquipmentDetailMode' | 'setActiveTitle' | 'liveConfig' | 'getUid' | 'isAdmin'
+>;
+
+/**
+ * MobileGameLayout이 만드는 런타임 컨텍스트 — SystemTab이 읽는 필드만 좁혀 받는다.
+ * 생산자(`components/app/MobileGameLayout.tsx`)는 이 외에도 필드를 더 얹지만 이 화면은
+ * viewport/gameState/syncStatus/isAiThinking/두 열림 콜백만 읽는다.
+ */
+export interface SystemTabRuntime {
+    viewport?: string;
+    gameState?: string;
+    syncStatus?: string;
+    isAiThinking?: boolean;
+    onOpenMirror?: () => void;
+    onOpenCrystalExchange?: () => void;
+}
+
+interface Notice {
+    type: 'success' | 'error';
+    text: string;
+}
+
 interface SystemTabProps {
-    player?: any;
-    actions?: any;
+    player: Player;
+    actions?: SystemTabActions;
     stats?: FullStats | null;
-    runtime?: any;
+    runtime?: SystemTabRuntime;
 }
 
 const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
-    const [notice, setNotice] = useState<any>(null);
+    const [notice, setNotice] = useState<Notice | null>(null);
     const [feedbackText, setFeedbackText] = useState('');
-    const [feedbackStatus, setFeedbackStatus] = useState<any>(null);
+    const [feedbackStatus, setFeedbackStatus] = useState<Notice | null>(null);
 
     const readabilityMode = player.settings?.readabilityMode === 'high' ? 'high' : 'standard';
-    const equipmentDetailMode = ['summary', 'full'].includes(player.settings?.equipmentDetailMode)
-        ? player.settings.equipmentDetailMode
+    const equipmentDetailPref = player.settings?.equipmentDetailMode;
+    const equipmentDetailMode = equipmentDetailPref === 'summary' || equipmentDetailPref === 'full'
+        ? equipmentDetailPref
         : 'auto';
     const titles = useMemo(() => player.titles || [], [player.titles]);
     const relics = useMemo(() => player.relics || [], [player.relics]);
     const relicCapacity = getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics;
-    const leaderboard = actions.leaderboard || [];
+    const leaderboard = actions?.leaderboard || [];
     const activeTitleLabel = player.activeTitle ? getTitleLabel(player.activeTitle) : '선택 안 함';
     const activeTitlePassive = player.activeTitle ? getTitlePassiveLabel(player.activeTitle) : '칭호를 선택하면 고유 효과가 적용됩니다.';
 
     const handleSetReadabilityMode = useCallback((mode: 'standard' | 'high') => {
-        actions.setReadabilityMode?.(mode);
+        actions?.setReadabilityMode?.(mode);
         setNotice({
             type: 'success',
             text: `화면을 ${mode === 'high' ? '선명하게' : '표준'} 표시로 바꿨습니다.`,
@@ -118,14 +155,14 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     }, [actions]);
 
     const handleSetEquipmentDetailMode = useCallback((mode: 'auto' | 'summary' | 'full') => {
-        actions.setEquipmentDetailMode?.(mode);
+        actions?.setEquipmentDetailMode?.(mode);
         const label = EQUIPMENT_DETAIL_OPTIONS.find((option) => option.value === mode)?.label || '자동';
         setNotice({ type: 'success', text: `장비 정보를 ${label} 표시로 바꿨습니다.` });
     }, [actions]);
 
     const handleSetActiveTitle = useCallback((id: string) => {
         const nextTitle = player.activeTitle === id ? null : id;
-        actions.setActiveTitle?.(nextTitle);
+        actions?.setActiveTitle?.(nextTitle);
         setNotice({
             type: 'success',
             text: nextTitle ? `[${getTitleLabel(nextTitle)}] 칭호를 적용했습니다.` : '칭호 적용을 해제했습니다.',
@@ -176,7 +213,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     ].join('\n'), [qaContext]);
 
     const qaSnapshot = useMemo(() => {
-        const inventoryCounts = (player.inv || []).reduce((counts: Record<string, number>, item: any) => {
+        const inventoryCounts = (player.inv || []).reduce((counts: Record<string, number>, item: Item) => {
             if (item?.name) counts[item.name] = (counts[item.name] || 0) + 1;
             return counts;
         }, {});
@@ -213,7 +250,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                 offhand: player.equip?.offhand?.name || null,
                 armor: player.equip?.armor?.name || null,
             },
-            relics: relics.map((relic: any) => ({ id: relic.id, name: relic.name, rarity: relic.rarity })),
+            relics: relics.map((relic: Relic) => ({ id: relic.id, name: relic.name, rarity: relic.rarity })),
             titles,
             inventoryCounts,
             meta: player.meta || null,
@@ -256,13 +293,13 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         setNotice({ type: 'success', text: MSG.ERROR_REPORT_CLEARED });
     }, []);
 
-    const updateLiveConfig = useCallback(async (partialConfig: any) => {
+    const updateLiveConfig = useCallback(async (partialConfig: Partial<LiveConfig>) => {
         const configRef = doc(db, 'artifacts', APP_ID, 'public', 'data');
         await setDoc(configRef, { config: partialConfig }, { merge: true });
     }, []);
 
     const handleSetMultiplier = useCallback(async () => {
-        const raw = window.prompt('이벤트 보상 배율을 입력하세요. (1-5)', String(actions.liveConfig?.eventMultiplier || 1));
+        const raw = window.prompt('이벤트 보상 배율을 입력하세요. (1-5)', String(actions?.liveConfig?.eventMultiplier || 1));
         if (raw === null) return;
 
         const value = Number.parseFloat(raw);
@@ -277,10 +314,10 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         } catch {
             setNotice({ type: 'error', text: '이벤트 보상 배율을 바꾸지 못했습니다.' });
         }
-    }, [actions.liveConfig, updateLiveConfig]);
+    }, [actions?.liveConfig, updateLiveConfig]);
 
     const handleBroadcast = useCallback(async () => {
-        const raw = window.prompt('공지 내용을 입력하세요. (최대 100자)', actions.liveConfig?.announcement || '');
+        const raw = window.prompt('공지 내용을 입력하세요. (최대 100자)', actions?.liveConfig?.announcement || '');
         if (raw === null) return;
 
         const announcement = raw.trim();
@@ -295,7 +332,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         } catch {
             setNotice({ type: 'error', text: '공지를 등록하지 못했습니다.' });
         }
-    }, [actions.liveConfig, updateLiveConfig]);
+    }, [actions?.liveConfig, updateLiveConfig]);
 
     const submitFeedback = useCallback(async () => {
         const trackFeedbackOutcome = (
@@ -312,14 +349,14 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         const validation = FeedbackValidator.validate(feedbackText);
         if (!validation.valid) {
             trackFeedbackOutcome('validation_failed');
-            setFeedbackStatus({ type: 'error', text: validation.error });
+            setFeedbackStatus({ type: 'error', text: validation.error ?? '' });
             return;
         }
 
         try {
             const feedbackCol = collection(db, 'artifacts', APP_ID, 'public', 'data', 'feedback');
             await addDoc(feedbackCol, {
-                uid: actions.getUid(),
+                uid: actions?.getUid(),
                 nickname: player.name,
                 message: feedbackText.trim(),
                 statsSummary: { level: player.level, job: player.job, kills: player.stats?.kills || 0 },
@@ -529,11 +566,11 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                         summary="현재 여정에서 얻은 유물과 효과를 확인합니다."
                     >
                         <div className="space-y-2">
-                            {relics.map((relic: any) => (
+                            {relics.map((relic: Relic) => (
                                 <div key={relic.id} className="flex items-center gap-2.5 border-b border-white/6 px-1 pb-2 last:border-b-0 last:pb-0">
                                     <RelicIcon relic={relic} size={42} />
                                     <div className="min-w-0 flex-1">
-                                        <div className={`font-readable text-xs font-bold ${RARITY_CLASSES[relic.rarity] || 'text-slate-200'}`}>
+                                        <div className={`font-readable text-xs font-bold ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-slate-200'}`}>
                                             {getRelicDisplayName(relic.name)}
                                         </div>
                                         <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">{formatRelicText(relic.desc)}</p>
@@ -559,7 +596,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                         summary="다른 모험가와 누적 처치 기록을 비교합니다."
                     >
                         <div className="space-y-1">
-                            {leaderboard.length > 0 ? leaderboard.map((ranker: any, index: number) => {
+                            {leaderboard.length > 0 ? leaderboard.map((ranker: LeaderboardEntry, index: number) => {
                                 const isMe = ranker.nickname === player.name;
                                 return (
                                     <div key={`${ranker.nickname}-${index}`} className={`flex min-h-[40px] items-center gap-2 border-b border-white/6 px-1 py-2 last:border-b-0 ${isMe ? 'bg-emerald-300/[0.05]' : ''}`}>
@@ -572,7 +609,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                             {isMe && <span className="ml-1 text-emerald-100">나</span>}
                                         </span>
                                         <span className="flex shrink-0 items-center gap-1 font-readable text-[11px] text-rose-200">
-                                            {ranker.prestigeRank > 0 && <span className="mr-1 text-[#d9d0f3]">계승 {ranker.prestigeRank}</span>}
+                                            {(ranker.prestigeRank ?? 0) > 0 && <span className="mr-1 text-[#d9d0f3]">계승 {ranker.prestigeRank}</span>}
                                             <Skull size={12} /> {(ranker.totalKills || 0).toLocaleString('ko-KR')}
                                         </span>
                                     </div>
@@ -679,7 +716,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                         <pre className="mt-3 whitespace-pre-wrap break-all font-fira text-[11px] leading-relaxed text-slate-500">{qaReadout}</pre>
                     </SettingsDisclosure>
 
-                    {actions.isAdmin() && (
+                    {actions?.isAdmin() && (
                         <SettingsDisclosure
                             testId="system-admin-tools"
                             icon={Shield}

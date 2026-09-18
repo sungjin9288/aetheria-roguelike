@@ -2290,7 +2290,7 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 543: 정합성 가드 — CraftingPanel callsite 보존', async () => {
       const source = await readSrc('src/components/tabs/CraftingPanel.tsx');
-      assert.ok(/actions\.synthesize\(selectedIds,\s*useProtect\)/.test(source),
+      assert.ok(/actions\?\.synthesize\(selectedIds,\s*useProtect\)/.test(source),
           'actions.synthesize(selectedIds, useProtect) callsite 보존');
   });
 
