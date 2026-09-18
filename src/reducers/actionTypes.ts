@@ -7,7 +7,7 @@
  * 런타임 의존(순환 포함)이 생기지 않는다 — `gameReducer.ts`에서 import 하지 않는 것이
  * 이 파일의 유일한 제약이다(`GameState`는 gameReducer 소유).
  */
-import type { Item, Monster, Player, Relic } from '../types';
+import type { Item, Monster, Player, PostCombatResult, Relic } from '../types';
 import type { DailyProtocol, DailyProtocolMissionType } from '../types/player.js';
 import type { GameEvent, LeaderboardEntry, LiveConfig, LogEntry } from '../types/session.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
@@ -313,11 +313,9 @@ export interface ActionPayloadMap {
 
     // ── Feature Additions ────────────────────────────────────────────────
     [AT.SET_QUICK_SLOT]: { index: number; item: Item | null };
-    // TODO(W7-Y2 slice 2): `GameState.postCombatResult`가 아직 `any`다(CLAUDE.md §2 —
-    //   생산자 combatVictory.ts가 레거시 별칭 필드를 섞어 읽는 그레이백 카드). 필드 계약이
-    //   닫히면 여기를 그 타입으로 교체한다. `any` 대신 "값이 unknown인 객체"로 둬서
-    //   호출부가 객체/null 외의 것을 넘기지 못하는 것만 지금 고정한다.
-    [AT.SET_POST_COMBAT_RESULT]: Record<string, unknown> | null;
+    // 2026-09 Wave 8 Z1: 생산자(combatVictory.ts) 리터럴에서 도출한 실제 계약으로 확정.
+    //   카드(PostCombatCard) · 상태(GameState.postCombatResult) · 이 payload가 같은 타입이다.
+    [AT.SET_POST_COMBAT_RESULT]: PostCombatResult | null;
     [AT.USE_INVENTORY_ITEM]: { itemId: string };
     [AT.BUY_SHOP_ITEM]: BuyShopItemPayload;
     [AT.SELL_INVENTORY_ITEM]: { itemId: string };

@@ -13,10 +13,19 @@ import {
     type PostCombatChoiceId,
 } from '../utils/postCombatChoice';
 import { MSG } from '../data/messages';
+import type { PostCombatResult } from '../types';
 import SignalBadge from './SignalBadge';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 
-const toneClassForSignal = (tone: any) => {
+/** 보상 신호 1건 — 보스 보상 / 장비 갱신 / 성향 공명 세 종류가 같은 모양을 쓴다. */
+interface RewardSignal {
+    title: string;
+    name: string | undefined;
+    summary: string;
+    tone: 'success' | 'amber' | 'purple';
+}
+
+const toneClassForSignal = (tone: RewardSignal['tone']) => {
     if (tone === 'amber') return 'text-[#f6e7c8] border-[#d5b180]/20 bg-[#d5b180]/10';
     if (tone === 'success') return 'text-emerald-100 border-emerald-300/20 bg-emerald-300/10';
     if (tone === 'purple') return 'text-[#e3dcff] border-[#9a8ac0]/24 bg-[#9a8ac0]/10';
@@ -24,7 +33,11 @@ const toneClassForSignal = (tone: any) => {
 };
 
 interface PostCombatCardProps {
-    result?: any;
+    /**
+     * 승리 정산 스냅샷 — 생산자(hooks/combatActions/combatVictory.ts)의 dispatch
+     * 리터럴에서 도출한 타입(2026-09 Wave 8 Z1). `null`은 카드를 닫은 상태다.
+     */
+    result?: PostCombatResult | null;
     onClose?: () => void;
     onOpenInventory?: () => void;
     /** 2026-09 D2 — "밀어붙인다 / 숨을 고른다" 선택을 reducer로 전달 (단일 전이). */
@@ -37,15 +50,16 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice }: P
 
     if (!result) return null;
 
+    // Wave 8 Z1: `result.loot` 별칭 분기 제거 — 생산자(combatVictory) · QA 시드
+    //   (useGameTestApi.injectPostCombatResult) · 테스트 픽스처 어디에도 `loot`를 쏘는
+    //   곳이 없어 도달 불가였다(dead read). `items`만이 전리품 이름 목록이다.
     const droppedItems = Array.isArray(result.items)
         ? result.items
-        : Array.isArray(result.loot)
-            ? result.loot
-            : [];
-    const signatureLoot = droppedItems.filter((name: any) => (
+        : [];
+    const signatureLoot = droppedItems.filter((name) => (
         typeof name === 'string' && isSignatureItem({ name })
     ));
-    const nonSignatureLoot = droppedItems.filter((name: any) => !(
+    const nonSignatureLoot = droppedItems.filter((name) => !(
         typeof name === 'string' && isSignatureItem({ name })
     ));
     const hasLevelUp = Boolean(result.leveledUp);
@@ -55,7 +69,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice }: P
     const traitHint = result.traitHint || null;
     const bossRewardHint = result.bossRewardHint || null;
     const bossClearBonus = result.bossClearBonus || 0;
-    const rewardSignals: any[] = [
+    const rewardSignalCandidates: Array<RewardSignal | null> = [
         bossRewardHint
             ? {
                 title: '보스 보상',
@@ -70,7 +84,8 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice }: P
         traitHint
             ? { title: '성향 공명', name: traitHint.name, summary: traitHint.summary, tone: 'purple' }
             : null,
-    ].filter(Boolean);
+    ];
+    const rewardSignals = rewardSignalCandidates.filter(Boolean);
     const primarySignal = rewardSignals[0] || null;
     const lootSummary = nonSignatureLoot.length > 0
         ? `${nonSignatureLoot.slice(0, 2).join(' · ')}${nonSignatureLoot.length > 2 ? ` 외 ${nonSignatureLoot.length - 2}` : ''}`

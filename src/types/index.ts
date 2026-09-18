@@ -14,6 +14,7 @@ export type * from './class.js';
 export type * from './quest.js';
 export type * from './progression.js';
 export type * from './session.js';
+export type * from './combat.js';
 
 /**
  * 파생 전투 스탯 — 계산식(`utils/statsCalculator.calculateFullStats`)이 곧 정의라
