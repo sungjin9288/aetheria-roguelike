@@ -8,7 +8,7 @@
 export const LatencyTracker = {
     THRESHOLD_MS: 3000, // 3 seconds threshold
 
-    async trackCall(asyncFn: any, callType: any) {
+    async trackCall<T>(asyncFn: () => Promise<T>, callType: string): Promise<T> {
         const startTime = performance.now();
         const result = await asyncFn();
         const latency = performance.now() - startTime;
@@ -22,7 +22,7 @@ export const LatencyTracker = {
         return result;
     },
 
-    onSlowResponse(type: any, latency: any) {
+    onSlowResponse(type: string, latency: number) {
         // Hook for custom alerting (can integrate with monitoring systems)
         // For now, just dispatch a custom event
         if (typeof window !== 'undefined') {

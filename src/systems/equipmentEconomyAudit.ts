@@ -4,9 +4,26 @@ import {
     resolveEquipmentBaseIdentity,
     validateCanonicalEquipmentCatalog,
 } from '../utils/equipmentBaseIdentity.js';
+import type { EquipmentType } from '../utils/equipmentBaseIdentity.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import equipmentArtManifest from '../data/equipmentArtManifest.json' with { type: 'json' };
 import { getShopCatalog } from '../utils/shopRotation.js';
+import type { Item } from '../types/item.js';
+
+/**
+ * `validateCanonicalEquipmentCatalog()`가 돌려주는 검증된 장비 행 1건 — private한
+ * `CanonicalEquipment` 타입을 다시 선언하지 않고 반환형에서 그대로 뽑는다
+ * (equipmentCombatPowerAudit.ts와 동일 패턴).
+ */
+type EquipmentRow = ReturnType<typeof validateCanonicalEquipmentCatalog>[number];
+
+/** signatureRegistry.json 항목 중 이 파일이 실제로 읽는 필드만 (equipmentBaseIdentity.ts의 SignatureEntry와 동형). */
+interface SignatureLookupEntry {
+    spriteKey?: string;
+}
+
+/** identitySamples로 넘어오는 최소 식별 정보 — resolveEquipmentBaseIdentity(Item)의 입력 서브셋. */
+type IdentitySample = Pick<Item, 'type' | 'name' | 'baseItemName'>;
 
 // These are SHA-256 values over the stable JSON projections below. Hashing is
 // deliberately performed only by the strict Node CLI via node:crypto.
@@ -67,28 +84,31 @@ export const APPROVED_EQUIPMENT_SIDEGRADE_CORRECTIONS = Object.freeze([
 type PriceCorrection = typeof APPROVED_EQUIPMENT_PRICE_CORRECTIONS[number];
 type SidegradeCorrection = typeof APPROVED_EQUIPMENT_SIDEGRADE_CORRECTIONS[number];
 type AuditOptions = {
-    rows?: readonly any[];
+    rows?: readonly EquipmentRow[];
     artEntries?: Record<string, unknown>;
-    signatures?: Record<string, any>;
-    shopRows?: readonly any[];
-    identitySamples?: readonly any[];
+    signatures?: Record<string, SignatureLookupEntry>;
+    // getShopCatalog()의 실제 반환형은 소비품까지 섞인 Item[] — 장비로 좁히지 않는다.
+    shopRows?: readonly Item[];
+    identitySamples?: readonly IdentitySample[];
 };
 
-const compareIdentity = (left: { type: string; name: string }, right: { type: string; name: string }) => {
-    const leftKey = getEquipmentIdentityKey(left.type as any, left.name);
-    const rightKey = getEquipmentIdentityKey(right.type as any, right.name);
+const compareIdentity = (left: { type: EquipmentType; name: string }, right: { type: EquipmentType; name: string }) => {
+    const leftKey = getEquipmentIdentityKey(left.type, left.name);
+    const rightKey = getEquipmentIdentityKey(right.type, right.name);
     return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
 };
 
-/** Stable UTF-16-key projection used as the CLI's hash preimage. */
-export const stableCanonicalize = (value: any): any => {
-    if (Array.isArray(value)) return value.map(stableCanonicalize);
+// 제네릭 <T> — 재귀적으로 "같은 모양, 키만 정렬"만 하는 순수 변환이라 입력과 출력이
+// 항상 같은 타입이다(equipmentCombatPowerAudit.ts의 stableCanonicalize와 동일 패턴).
+export const stableCanonicalize = <T,>(value: T): T => {
+    if (Array.isArray(value)) return value.map((item) => stableCanonicalize(item)) as T;
     if (!value || typeof value !== 'object') return value;
+    const record = value as Record<string, unknown>;
     return Object.fromEntries(
-        Object.keys(value)
+        Object.keys(record)
             .sort((left, right) => left < right ? -1 : left > right ? 1 : 0)
-            .map((key) => [key, stableCanonicalize(value[key])]),
-    );
+            .map((key) => [key, stableCanonicalize(record[key])]),
+    ) as T;
 };
 
 const sortRows = (rows: readonly any[]) => [...rows]
@@ -177,9 +197,11 @@ const getCohortStatistics = (rows: readonly any[]) => {
         });
 };
 
-const getSecondaryStats = (row: any) => stableCanonicalize(
+const SECONDARY_STAT_FIELDS: ReadonlyArray<keyof EquipmentRow> = ['crit', 'mp', 'mpBonus', 'hp', 'hpBonus', 'evasion', 'elem', 'subtype', 'desc_stat'];
+
+const getSecondaryStats = (row: EquipmentRow) => stableCanonicalize(
     Object.fromEntries(
-        ['crit', 'mp', 'mpBonus', 'hp', 'hpBonus', 'evasion', 'elem', 'subtype', 'desc_stat']
+        SECONDARY_STAT_FIELDS
             .filter((field) => row[field] !== undefined)
             .map((field) => [field, row[field]]),
     ),
@@ -191,7 +213,7 @@ const getShopIdentitySet = (shopRows: readonly any[]) => new Set(
         .map((row) => getEquipmentIdentityKey(row.type, row.name)),
 );
 
-const rowReport = (row: any, shopIdentities: Set<string>, artEntries: Record<string, unknown>, signatures: Record<string, any>) => {
+const rowReport = (row: EquipmentRow, shopIdentities: Set<string>, artEntries: Record<string, unknown>, signatures: Record<string, SignatureLookupEntry>) => {
     const resolution = resolveEquipmentBaseIdentity({ type: row.type, name: row.name });
     const signature = signatures[row.name];
     return {
@@ -271,7 +293,7 @@ const collectValidationErrors = (options: AuditOptions) => {
 
 export const buildEquipmentEconomyReport = (options: AuditOptions = {}) => {
     const suppliedRows = options.rows || CANONICAL_EQUIPMENT;
-    const artEntries = options.artEntries || (equipmentArtManifest as any).entries || {};
+    const artEntries = options.artEntries || (equipmentArtManifest as { entries: Record<string, unknown> }).entries || {};
     const signatures = options.signatures || SIGNATURE_ITEM_REGISTRY;
     const shopRows = options.shopRows || getShopCatalog('황금 왕국');
     const errors = collectValidationErrors(options);

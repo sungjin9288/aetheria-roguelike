@@ -183,7 +183,7 @@ test('TokenQuotaManager production contract keeps firebase doc/setDoc/serverTime
     const source = await readFile(new URL('../src/systems/TokenQuotaManager.ts', import.meta.url), 'utf8');
 
     assert.match(source, /import \{ setDoc, doc, serverTimestamp \} from 'firebase\/firestore'/);
-    assert.match(source, /syncToFirestore\(uid: any, db: any, firestoreOperations/);
+    assert.match(source, /syncToFirestore\(uid: string, db: Firestore \| null, firestoreOperations/);
     assert.match(source, /firestoreOperations\.doc \|\| doc/);
     assert.match(source, /firestoreOperations\.setDoc \|\| setDoc/);
     assert.match(source, /firestoreOperations\.serverTimestamp \|\| serverTimestamp/);

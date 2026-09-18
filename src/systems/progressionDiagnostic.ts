@@ -5,7 +5,7 @@ import { BOSS_MONSTERS } from '../data/monsters.js';
 import { buildClassVitals } from '../hooks/gameActions/_shared.js';
 import { INITIAL_STATE, type GameState } from '../reducers/gameReducer.js';
 import { makeCombatActionMap } from '../reducers/handlers/combatHandlers.js';
-import type { Item, Player } from '../types/index.js';
+import type { Item, Monster, Player } from '../types/index.js';
 import { getBossSignatureDrops } from '../utils/bossSignatureHint.js';
 import { canEquip } from '../utils/equipmentValidation.js';
 import { spawnEnemy } from '../utils/exploreUtils.js';
@@ -16,8 +16,10 @@ import { CombatEngine } from './CombatEngine.js';
 import {
     ACTIVE_EXPLORATION_RHYTHM,
     EXPLORATION_RHYTHM_OPPORTUNITIES_PER_SEED,
+    makeRhythmRelicStub,
     resolveExplorationRhythmOutcomeStep,
     type ExplorationRhythmOutcome,
+    type RhythmPlayer,
 } from './explorationRhythmSimulator.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks.js';
 
@@ -360,7 +362,7 @@ const victoryFixturePlayer = (
 
 const settleLootVictory = (
     player: Player,
-    enemy: any,
+    enemy: Monster,
     seed: number,
     hardErrors: string[],
     label: string,
@@ -742,9 +744,9 @@ const buildExplorationDiagnostic = (
             quietStreak: 0,
             lastOutcome: 'start',
         };
-        const player = {
+        const player: RhythmPlayer = {
             meta: { prestigeRank: 0, mirror: {} },
-            relics: [] as Array<{ id: string }>,
+            relics: [],
             stats: { exploreState },
         };
         let lastOptionalAt = 0;
@@ -802,7 +804,7 @@ const buildExplorationDiagnostic = (
             );
             if (outcome === 'relic') {
                 if (firstRelicPityReady) firstRelicPityActivations += 1;
-                player.relics.push({ id: `diagnostic-relic-${player.relics.length + 1}` });
+                player.relics.push(makeRhythmRelicStub(`diagnostic-relic-${player.relics.length + 1}`));
             }
 
             const optional = outcome === 'campfire'

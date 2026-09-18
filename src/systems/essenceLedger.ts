@@ -24,7 +24,6 @@ export interface EssenceMeta {
     bonusAtk?: number;
     bonusHp?: number;
     bonusMp?: number;
-    [key: string]: any;
 }
 
 const toNonNegative = (value: unknown): number => {

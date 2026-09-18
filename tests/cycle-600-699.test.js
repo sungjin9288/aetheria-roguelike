@@ -1006,9 +1006,9 @@ import { readFile } from 'node:fs/promises';
 
   test("cycle 622: trackCall signature에서 callType default 'ai' 0건", async () => {
       const source = await readSrc('src/systems/LatencyTracker.ts');
-      assert.ok(!/async trackCall\([^)]*callType:\s*any\s*=\s*'ai'\)/.test(source),
+      assert.ok(!/async trackCall<T>\([^)]*callType:\s*string\s*=\s*'ai'\)/.test(source),
           "trackCall callType default 'ai' 제거");
-      assert.ok(/async trackCall\(asyncFn: any, callType: any\)/.test(source),
+      assert.ok(/async trackCall<T>\(asyncFn: \(\) => Promise<T>, callType: string\)/.test(source),
           'trackCall callType 파라미터 보존 (default 없이)');
   });
 

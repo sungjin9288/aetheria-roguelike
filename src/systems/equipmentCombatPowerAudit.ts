@@ -8,6 +8,7 @@ import {
     getEquipmentIdentityKey,
     validateCanonicalEquipmentCatalog,
 } from '../utils/equipmentBaseIdentity.js';
+import type { EquipmentType } from '../utils/equipmentBaseIdentity.js';
 
 /**
  * `validateCanonicalEquipmentCatalog()`가 돌려주는 검증된 장비 행 1건 — 그 함수의
@@ -46,9 +47,9 @@ export const stableCanonicalize = <T,>(value: T): T => {
     ) as T;
 };
 
-const compareIdentity = (left: { type: string; name: string }, right: { type: string; name: string }) => {
-    const leftKey = getEquipmentIdentityKey(left.type as any, left.name);
-    const rightKey = getEquipmentIdentityKey(right.type as any, right.name);
+const compareIdentity = (left: { type: EquipmentType; name: string }, right: { type: EquipmentType; name: string }) => {
+    const leftKey = getEquipmentIdentityKey(left.type, left.name);
+    const rightKey = getEquipmentIdentityKey(right.type, right.name);
     return leftKey < rightKey ? -1 : leftKey > rightKey ? 1 : 0;
 };
 

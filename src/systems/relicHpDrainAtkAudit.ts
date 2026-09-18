@@ -115,7 +115,7 @@ const makePlayer = (relics: readonly Relic[], hp = 1000) => ({
 
 const settleTurn = (relics: readonly Relic[]) => {
     const result = CombatEngine.tickCombatState(makePlayer(relics));
-    const log = result.logs.find((entry: any) => entry.text.includes('HP 대가'));
+    const log = result.logs.find((entry) => entry.text.includes('HP 대가'));
     // W8-Z4: tickCombatState의 실제 반환 타입이 드러나며 updatedPlayer.hp가 Player['hp']
     //   (number | undefined)로 좁아졌다 — makePlayer가 항상 hp를 채우므로 폴백은 미도달.
     return { hp: result.updatedPlayer.hp ?? 0, label: log?.text.match(/^\[([^\]]+)\]/)?.[1] || '' };

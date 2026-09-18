@@ -36,7 +36,7 @@ const appendCombatLogs = (
 interface SettleVictoryParams {
     player: Player;
     deadEnemy: Monster;
-    /** CombatActionTurnResult/CombatItemTurnResult.victoryStats — systems 쪽도 any. */
+    /** CombatActionTurnResult/CombatItemTurnResult.victoryStats — 둘 다 FullStats(옵셔널)로 닫혔다. */
     stats: FullStats;
     logs: Array<{ type: string; text: string }>;
     stories: Array<{ type: string; data: Record<string, unknown> }>;
@@ -252,7 +252,9 @@ const settleNonVictory = (
         grave: result.kind === 'defeat'
             ? appendGrave(state.grave, result.graveData)
             : state.grave,
-        runSummary: result.kind === 'defeat' ? result.runSummary : state.runSummary,
+        // CombatActionTurnResult/CombatItemTurnResult.runSummary가 RunSummary(옵셔널)로 닫혔다 —
+        // kind === 'defeat' 분기는 늘 채워 반환한다(두 systems 전이 모두 defeat에서 buildRunSummary 호출).
+        runSummary: result.kind === 'defeat' ? result.runSummary! : state.runSummary,
         logs: appendCombatLogs(state.logs, logs, now, seed),
         quickSlots: consumedItem
             ? sanitizeConsumedQuickSlots(state.quickSlots, consumedItem, player.inv || [])
@@ -382,7 +384,10 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
             const settled = settleVictory(state, {
                 player: result.player,
                 deadEnemy: state.enemy,
-                stats: result.victoryStats,
+                // CombatItemTurnResult.victoryStats가 FullStats(옵셔널)로 닫혔다 — kind === 'victory'
+                // 분기는 늘 채워 반환한다(resolveCombatItemTurn 계약, RESOLVE_COMBAT_ACTION의
+                // victoryStats! 처리와 동일 패턴).
+                stats: result.victoryStats!,
                 logs,
                 stories: [],
                 extendedChecks: false,
