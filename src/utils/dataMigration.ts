@@ -156,15 +156,31 @@ export const normalizeEndgameProgress = (value: unknown): EndgameProgress => {
     };
 };
 
+export interface MigrateDataOptions {
+    /**
+     * 이 저장본을 읽는 시각(ms). `currentRun`이 없는 구형 세이브에 런을 새로 열 때
+     * `stats.currentRun.startedAt`이 된다 — 그 외 어떤 필드에도 쓰이지 않는다.
+     *
+     * W11-C2(B2): 이 인자가 생기기 전에는 `createCurrentRunProgress`가 `Date.now()`를
+     * 직접 읽어 `migrateData` 자체가 비결정적이었다(골든 하네스가 그 필드를 정규화해야
+     * 비교가 가능했다). 벽시계 기본값은 **이 경계 한 곳에만** 남는다 — 결정론이 필요한
+     * 호출자(골든 차등 하네스·테스트·감사 스크립트)는 고정 시각을 넘긴다.
+     */
+    now?: number;
+}
+
 /**
  * 저장 데이터 마이그레이션 — 입력은 Firestore/로컬 스냅샷의 임의 구형 모양(unknown)이다.
  * 여기서 도메인 타입(`Player`)을 강제하면 이 함수가 존재하는 이유인 "구형 저장 데이터와
  * 현재 타입의 drift"를 오히려 감춘다. 딥클론 이후의 동적 읽기/쓰기는 `unknown` 값을 가진
  * 레코드(`SaveRecord`)로 다루고, 필드별로 좁혀 읽는다 — 이후 300여 줄의 필드별 정규화가
  * 실질적인 "타입 좁히기"다. 반환 계약만 `MigratedSave`로 닫혀 있다.
+ *
+ * `options.now`를 주면 이 함수는 완전히 결정론적이다(그 외 벽시계 읽기가 없다).
  */
-export const migrateData = (rawData: unknown): MigratedSave | null => {
+export const migrateData = (rawData: unknown, options: MigrateDataOptions = {}): MigratedSave | null => {
     if (!rawData) return null;
+    const now = options.now ?? Date.now();
     // Deep clone to avoid mutating the Firestore snapshot directly
     // (`JSON.parse`의 선언 반환형 `any`를 여기서 `SaveRecord`로 받아 더 흘리지 않는다 —
     //  스칼라 스냅샷이면 예전처럼 아래 첫 필드 쓰기에서 TypeError가 난다. 새 검사 없음.)
@@ -389,7 +405,7 @@ export const migrateData = (rawData: unknown): MigratedSave | null => {
     target.stats.syntheses       = target.stats.syntheses       || 0;
     target.stats.maxKillStreak   = target.stats.maxKillStreak   || 0;
     target.stats.discoveryChains = Array.isArray(target.stats.discoveryChains) ? target.stats.discoveryChains : [];
-    target.stats.currentRun = normalizeCurrentRunProgress(target.stats);
+    target.stats.currentRun = normalizeCurrentRunProgress(target.stats, { now });
     // pendingRelics는 런타임 전용 — 저장 불필요, 로드 시 null로 초기화
     savedData.pendingRelics = null;
 

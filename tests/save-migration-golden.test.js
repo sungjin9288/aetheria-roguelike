@@ -17,15 +17,17 @@ import { migrateData } from '../src/utils/dataMigration.ts';
  * 커버리지를 우선했다. 각 항목의 `description`이 무엇을 실측하는지 밝힌다).
  *
  * `golden-outputs.json`은 **현재** migrateData가 각 입력에 대해 실제로 내는 값을
- * 그대로 굳힌 것이다(비결정적 필드 정규화 후) — 무엇이 옳은지 미리 정하지 않고,
- * "지금 이렇게 동작한다"를 고정해 향후 migrateData 변경이 이 파일을 의식적으로
- * 갱신하게 만드는 것이 목적이다. `SAVE_GOLDEN_WRITE=1`로 재생성한다.
+ * 그대로 굳힌 것이다 — 무엇이 옳은지 미리 정하지 않고, "지금 이렇게 동작한다"를 고정해
+ * 향후 migrateData 변경이 이 파일을 의식적으로 갱신하게 만드는 것이 목적이다.
+ * `SAVE_GOLDEN_WRITE=1`로 재생성한다.
  *
- * 비결정적 필드 실측(중요 발견): `stats.currentRun`이 없는 입력에서
- * `normalizeCurrentRunProgress` → `createCurrentRunProgress`가 `Date.now()`를
- * 기본 `startedAt`으로 쓴다(runProgress.ts) — migrateData 자신은 결정론적이라고
- * 어디에도 문서화돼 있지 않지만 실제로는 이 경로에서 비결정적이다. 골든 비교가
- * 영원히 깨지지 않도록 `player.stats.currentRun.startedAt`을 항상 정규화한다.
+ * W11-C2(B2) — 시각 주입으로 결정론화: Wave 10이 여기서 실측한 비결정 지점은
+ * `stats.currentRun`이 없는 입력에서 `normalizeCurrentRunProgress` →
+ * `createCurrentRunProgress`가 `Date.now()`를 기본 `startedAt`으로 쓰는 것이었고,
+ * 그래서 이 하네스가 `player.stats.currentRun.startedAt`을 매번 null로 정규화해야만
+ * 비교가 가능했다. 이제 `migrateData(raw, { now })`가 시각을 받으므로 고정 시각
+ * (`FIXED_NOW`)을 넘겨 **정규화 없이** 값 그대로 비교한다 — 골든에 박힌 startedAt이
+ * 곧 "그 경로가 결정론적이다"라는 증거다.
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -33,33 +35,22 @@ const FIXTURES_DIR = path.join(HERE, 'fixtures', 'saves');
 const INPUTS_PATH = path.join(FIXTURES_DIR, 'golden-inputs.json');
 const OUTPUTS_PATH = path.join(FIXTURES_DIR, 'golden-outputs.json');
 
-/** `slot.stats.currentRun.startedAt`이 있으면 null로 정규화한 새 slot을 돌려준다(없으면 원본 그대로). */
-const withNormalizedCurrentRun = (slot) => {
-    if (!slot || typeof slot !== 'object' || Array.isArray(slot)) return slot;
-    const stats = slot.stats;
-    if (!stats || typeof stats !== 'object' || Array.isArray(stats)) return slot;
-    const currentRun = stats.currentRun;
-    if (!currentRun || typeof currentRun !== 'object' || Array.isArray(currentRun)) return slot;
-    return { ...slot, stats: { ...stats, currentRun: { ...currentRun, startedAt: null } } };
-};
+/**
+ * 골든 비교에 쓰는 고정 시각 — `migrateData(raw, { now })`로 주입한다.
+ * 이 값이 `stats.currentRun.startedAt`(currentRun이 없던 입력)으로 골든에 박힌다.
+ */
+const FIXED_NOW = 1_700_000_000_000;
 
 /**
- * `stats.currentRun.startedAt`(Date.now() 기반, 비결정적)과 savedAt류를 정규화한다.
- * player 슬롯이 `clone.player`에 있는 일반적인 경우와, legacy flat 세이브처럼
- * `clone` 자신이 곧 player인 경우(§A 픽스처군) 둘 다 처리한다 — 후자를 놓치면
- * flat 세이브 golden 비교가 실행 시각에 따라 매번 깨진다(실측).
+ * 저장 시각(`savedAt`)만 떨어낸다 — 실제 세이브에서는 벽시계이고 migrateData가 만들지 않는
+ * 입력 유래 필드다. `stats.currentRun.startedAt` 정규화는 W11-C2(B2)에서 제거했다:
+ * 시각을 주입하므로 값 그대로 비교한다.
  */
 const normalizeVolatile = (value) => {
     if (value === null || typeof value !== 'object') return value;
     if (Array.isArray(value)) return [...value];
     const clone = { ...value };
     delete clone.savedAt;
-    if (clone.player && typeof clone.player === 'object' && !Array.isArray(clone.player)) {
-        clone.player = withNormalizedCurrentRun(clone.player);
-    } else {
-        // flat 세이브 — clone 자신이 player 슬롯이다.
-        return withNormalizedCurrentRun(clone);
-    }
     return clone;
 };
 
@@ -75,7 +66,7 @@ const normalizeVolatile = (value) => {
  */
 const computeGoldenResult = (input) => {
     try {
-        const output = JSON.parse(JSON.stringify(migrateData(input)));
+        const output = JSON.parse(JSON.stringify(migrateData(input, { now: FIXED_NOW })));
         return { threw: false, output: normalizeVolatile(output) };
     } catch (error) {
         return {
@@ -118,17 +109,13 @@ for (const { id, description, input } of inputs) {
 }
 
 /**
- * P21은 의도적으로 제외한다(TODO(B2 finding), 항목 자체의 description 참조) —
- * `normalizeActiveExpedition`이 `lowestHp`/`startHp` 둘 다 없는 입력에서 NaN을 내고,
- * 이 하네스의 golden 저장(JSON 왕복)이 NaN→null로 정규화하면서 재입력 시 다른 값(0)이
- * 나오게 만든다. 이건 하네스의 인공물이 아니라 normalizeActiveExpedition 자체의
- * 실제 비결정 지점을 드러낸 것이라 "고쳐서 통과시키기"보다 격리해 남겨둔다.
+ * W11-C2(B2): 제외 항목이 없다. Wave 10은 P21(`activeExpedition.lowestHp` NaN)을
+ * 격리해야 했다 — NaN이 골든 저장(JSON 왕복)에서 null로 죽고, 그 null을 다시 넣으면
+ * `Number(null)=0`이라 첫 결과와 달라졌기 때문이다. `normalizeActiveExpedition`이
+ * 폴백을 정규화된 startHp로 바꾼 뒤로는 그 입력도 그냥 멱등이다.
  */
-const IDEMPOTENCE_EXCLUDED_IDS = new Set(['P21-activeExpedition-lowestHp-nan-TODO-B2-finding']);
-
-test('golden: 멱등성 — 던지지 않은 모든 항목(P21 제외)은 결과를 다시 넣어도(정규화 후) 동일하다', () => {
+test('golden: 멱등성 — 던지지 않은 모든 항목은 결과를 다시 넣어도(정규화 후) 동일하다', () => {
     for (const { id, input } of inputs) {
-        if (IDEMPOTENCE_EXCLUDED_IDS.has(id)) continue;
         const first = computeGoldenResult(input);
         if (first.threw) continue;
         const second = computeGoldenResult(first.output);
@@ -136,13 +123,28 @@ test('golden: 멱등성 — 던지지 않은 모든 항목(P21 제외)은 결과
     }
 });
 
-test('golden[P21]: activeExpedition.lowestHp가 NaN이 되는 실제 비결정 지점 (TODO(B2 finding))', () => {
-    const entry = inputs.find((item) => item.id === 'P21-activeExpedition-lowestHp-nan-TODO-B2-finding');
+test('golden[P21]: activeExpedition.lowestHp는 startHp 워터마크로 정규화된다 (W11-C2 B2)', () => {
+    const entry = inputs.find((item) => item.id === 'P21-activeExpedition-lowestHp-normalized');
     const first = computeGoldenResult(entry.input);
     assert.equal(first.threw, false);
-    // JSON 직렬화 이전(raw) 값 자체를 다시 확인 — NaN이 실제로 발생함을 직접 실측한다.
-    const raw = migrateData(entry.input);
-    assert.equal(Number.isNaN(raw.player.activeExpedition.lowestHp), true);
-    // golden에 저장된 값은 JSON 왕복으로 NaN→null이 된 것이다(하네스의 인공물, 실제 값은 NaN).
-    assert.equal(first.output.player.activeExpedition.lowestHp, null);
+    // JSON 직렬화 이전(raw) 값 자체를 확인 — 더 이상 NaN이 아니다.
+    const raw = migrateData(entry.input, { now: FIXED_NOW });
+    assert.equal(Number.isNaN(raw.player.activeExpedition.lowestHp), false);
+    // lowestHp/startHp 둘 다 없는 입력 → 정규화된 startHp(0)가 워터마크 시작값이다.
+    assert.equal(raw.player.activeExpedition.startHp, 0);
+    assert.equal(raw.player.activeExpedition.lowestHp, 0);
+    assert.equal(first.output.player.activeExpedition.lowestHp, 0);
+});
+
+test('golden: migrateData는 주입한 시각만 쓴다 — 같은 입력 + 같은 now → 완전히 같은 출력', () => {
+    const entry = inputs.find((item) => item.id === 'P21-activeExpedition-lowestHp-normalized');
+    const first = JSON.parse(JSON.stringify(migrateData(entry.input, { now: 111 })));
+    const second = JSON.parse(JSON.stringify(migrateData(entry.input, { now: 111 })));
+    assert.deepEqual(second, first);
+    assert.equal(first.player.stats.currentRun.startedAt, 111);
+    // 다른 시각을 주면 그 필드만 달라진다(주입이 실제로 유일한 시각 소스라는 증거).
+    const later = JSON.parse(JSON.stringify(migrateData(entry.input, { now: 222 })));
+    assert.equal(later.player.stats.currentRun.startedAt, 222);
+    later.player.stats.currentRun.startedAt = 111;
+    assert.deepEqual(later, first);
 });

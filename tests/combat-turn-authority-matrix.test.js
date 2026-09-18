@@ -500,22 +500,23 @@ test('matrix: 페이즈가 없는 적은 페이즈 상태를 얻지 않는다 ×
 });
 
 /**
- * TODO(B1 finding): `expectedTurn` 타입 계약이 두 전이에서 다르다.
+ * W11-C2(B1): `expectedTurn` 타입 계약은 두 전이가 **같다**.
  *
- *   combatHandlers.RESOLVE_COMBAT_ACTION: `Number(action.payload?.expectedTurn)` + `Number.isFinite`
+ *   combatHandlers.RESOLVE_COMBAT_ACTION: `typeof expectedTurn !== 'number'` → 거부
  *   combatHandlers.USE_COMBAT_ITEM:       `typeof expectedTurn !== 'number'` → 거부
  *
- * 그래서 행동 턴은 **숫자가 아닌 payload**(`null` / `''` / `[]` / `false` / `'0'` — 모두
- * Number() 강제변환이 현재 턴과 같아진다)로도 턴을 claim할 수 있고, 소모품 턴은 전부 거부한다.
- * §8-1이 약속하는 "combatTurn/expectedTurn으로 replay를 거부한다"는 계약 자체는 깨지지 않는다
- * (턴은 여전히 한 번만 오르고 정산도 한 번이다) — 하지만 위조/손상 payload에 대한 두 전이의
- * 방어선이 다르다. 아래는 **현재 동작을 그대로 고정**한 문서화 칸이다. 행동 턴 가드를
- * `typeof === 'number'`로 좁히면 이 테스트의 `acceptedByAction` 기대값을 false로 바꾸면 된다.
+ * Wave 10에서는 행동 턴만 `Number(action.payload?.expectedTurn)`로 강제변환해, turn 0에서는
+ * **숫자가 아닌 payload**(`null` / `''` / `'0'` / `[]` / `false` — 모두 Number()가 0이 된다)로도
+ * 턴을 claim할 수 있었다. §8-1이 약속하는 "combatTurn/expectedTurn으로 replay를 거부한다"는
+ * 계약은 그때도 깨지지 않았지만(턴은 한 번만 오르고 정산도 한 번), 위조/손상 payload에 대한
+ * 방어선이 전이마다 달랐다. 이 칸은 그 비대칭이 사라졌다는 것 — 두 전이가 **진짜 숫자만**
+ * 수용한다는 것 — 을 고정한다.
  */
-test('matrix: expectedTurn 타입 계약 — 행동 턴은 강제변환, 소모품 턴은 엄격 (B1 finding)', () => {
+test('matrix: expectedTurn 타입 계약 — 행동 턴·소모품 턴 모두 숫자만 수용한다 (B1)', () => {
     const { enemy, loc } = ENEMY_KINDS.일반();
     const start = buildCombatState(makePlayer({ loc }), enemy);
 
+    // Number() 강제변환이면 현재 턴(0)과 같아지는 값들 — 이제 양쪽 모두 거부한다.
     const coercesToZero = [null, '', '0', [], false];
     coercesToZero.forEach((value) => {
         const viaAction = dispatchRaw(start, AT.RESOLVE_COMBAT_ACTION, {
@@ -525,9 +526,7 @@ test('matrix: expectedTurn 타입 계약 — 행동 턴은 강제변환, 소모�
             itemId: potion.id, expectedTurn: value, seed: 55, now: NOW + 110,
         });
 
-        // 현재 동작: 행동 턴은 받아들이고 (턴은 정확히 1회 소비), 소모품 턴은 거부한다.
-        assert.notEqual(viaAction, start, `행동 턴은 ${JSON.stringify(value)}를 현재 동작상 수용한다`);
-        assert.equal(viaAction.combatTurn, 1, '수용하더라도 턴은 정확히 한 번만 오른다');
+        assert.equal(viaAction, start, `행동 턴은 ${JSON.stringify(value)}를 거부한다`);
         assert.equal(viaItem, start, `소모품 턴은 ${JSON.stringify(value)}를 거부한다`);
     });
 
@@ -539,10 +538,13 @@ test('matrix: expectedTurn 타입 계약 — 행동 턴은 강제변환, 소모�
         itemId: potion.id, expectedTurn: 0, seed: 55, now: NOW + 111,
     }), start);
 
-    // 강제변환이 현재 턴과 다르면 양쪽 모두 거부한다 — replay 방어선 자체는 유지된다.
-    [true, '1', [1], 1].forEach((value) => {
+    // 숫자여도 현재 턴이 아니거나 유한하지 않으면 양쪽 모두 거부한다.
+    [true, '1', [1], 1, Number.NaN, Number.POSITIVE_INFINITY].forEach((value) => {
         assert.equal(dispatchRaw(start, AT.RESOLVE_COMBAT_ACTION, {
             kind: 'attack', expectedTurn: value, seed: 55, now: NOW + 112,
-        }), start, `turn 0에서 ${JSON.stringify(value)}는 거부된다`);
+        }), start, `turn 0에서 행동 턴은 ${String(value)}를 거부한다`);
+        assert.equal(dispatchRaw(start, AT.USE_COMBAT_ITEM, {
+            itemId: potion.id, expectedTurn: value, seed: 55, now: NOW + 112,
+        }), start, `turn 0에서 소모품 턴은 ${String(value)}를 거부한다`);
     });
 });

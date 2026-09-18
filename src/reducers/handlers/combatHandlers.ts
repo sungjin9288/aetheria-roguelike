@@ -308,11 +308,16 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
     RESOLVE_COMBAT_ACTION: (state, action): GameState => {
         if (state.gameState !== GS.COMBAT || !state.enemy) return state;
         const kind = action.payload?.kind;
-        const expectedTurn = Number(action.payload?.expectedTurn);
+        // W11-C2(B1): `expectedTurn`은 USE_COMBAT_ITEM과 **같은 강도**로 검사한다.
+        //   예전에는 `Number(payload?.expectedTurn)`로 강제변환해 turn 0에서 `null`/`''`/`'0'`/
+        //   `[]`/`false`가 턴을 claim할 수 있었다(정산은 여전히 1회였지만 두 전이의 방어선이
+        //   달랐다). 생산자는 모두 `ResolveCombatActionPayload['expectedTurn']`(number)를 넘긴다.
+        const expectedTurn = action.payload?.expectedTurn;
         const seed = Number(action.payload?.seed);
         const now = Number(action.payload?.now);
         if (!['attack', 'skill', 'escape'].includes(kind)) return state;
-        if (!Number.isFinite(expectedTurn) || expectedTurn !== (state.combatTurn || 0)) return state;
+        if (typeof expectedTurn !== 'number' || !Number.isFinite(expectedTurn)) return state;
+        if (expectedTurn !== (state.combatTurn || 0)) return state;
         if (!Number.isFinite(seed) || !Number.isFinite(now)) return state;
 
         const random = createSeededRandom(seed);

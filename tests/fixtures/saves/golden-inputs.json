@@ -1052,8 +1052,8 @@
     }
   },
   {
-    "id": "P21-activeExpedition-lowestHp-nan-TODO-B2-finding",
-    "description": "activeExpedition에 lowestHp/startHp 모두 없음 — normalizeActiveExpedition이 NaN을 낸다(TODO(B2 finding), expeditionLedger.ts:202의 nonNegative(candidate.lowestHp, Number(candidate.startHp)) 양쪽 모두 undefined면 폴백 자체가 NaN). 이 항목은 멱등성 루프에서 의도적으로 제외한다 — golden 저장이 JSON 왕복이라 NaN→null로 죽고, 그 null을 다시 넣으면 Number(null)=0(finite)이라 실제로 0이 나와 첫 결과(NaN)와 달라진다. 실제 non-idempotence는 이 테스트 하네스의 JSON 정규화 산물이 아니라, normalizeActiveExpedition 자체가 완전히 빈 activeExpedition에서 NaN을 만든다는 사실에 있다.",
+    "id": "P21-activeExpedition-lowestHp-normalized",
+    "description": "activeExpedition에 lowestHp/startHp 모두 없음 — normalizeActiveExpedition이 lowestHp 워터마크를 정규화된 startHp(0)로 연다(W11-C2 B2). 예전에는 폴백이 날것의 Number(candidate.startHp)라 둘 다 undefined면 lowestHp가 NaN이 되었고, 골든 저장의 JSON 왕복에서 NaN→null로 죽은 뒤 재입력 시 0이 나와 멱등성이 깨졌다. 이제 이 입력도 멱등성 루프에 포함된다.",
     "input": {
       "version": 5,
       "player": {

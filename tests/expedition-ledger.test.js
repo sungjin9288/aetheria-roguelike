@@ -13,7 +13,9 @@ import { applyBoundedEncounterChoice } from '../src/utils/boundedEncounterSelect
 import {
     calculateExpeditionExpGain,
     finishExpedition,
+    normalizeActiveExpedition,
     startExpedition,
+    trackExpeditionVitals,
 } from '../src/utils/expeditionLedger.js';
 
 const makePlayer = (overrides = {}) => ({
@@ -465,6 +467,37 @@ test('SET_PLAYER 중앙 경로가 원정 중 최저 HP만 단조 감소로 추�
     for (const field of ['job', 'skillChoices', 'equipmentNames', 'bossNames', 'signatureItems']) {
         assert.deepEqual(healed.player.activeExpedition[field], player.activeExpedition[field]);
     }
+});
+
+/**
+ * W11-C2(B2): `lowestHp`는 원정 시작 HP에서 출발하는 최저 HP 워터마크다. 폴백이 날것의
+ * `Number(candidate.startHp)`였을 때는 lowestHp/startHp가 둘 다 없는 스냅샷에서 NaN이 되었고,
+ * 그 NaN이 디브리핑 숫자(`lowestHp`/`lowestHpPercent`)와 워터마크 추적까지 오염시켰다
+ * (`Math.min(NaN, hp) === NaN`은 항상 false → 매 SET_PLAYER가 새 스냅샷을 만들고 영원히 수렴하지 않음).
+ */
+test('lowestHp 워터마크: 값이 있으면 그대로, 없으면 정규화된 startHp로 연다 (W11-C2 B2)', () => {
+    const base = { id: 'exp-legacy', origin: '시작의 마을', destination: '고요한 숲', startedAt: 1_000 };
+
+    // 이미 정의된 값은 그대로 — 폴백은 쓰이지 않는다.
+    assert.equal(normalizeActiveExpedition({ ...base, startHp: 120, lowestHp: 30 }).lowestHp, 30);
+    assert.equal(normalizeActiveExpedition({ ...base, startHp: 120 }).lowestHp, 120);
+    assert.equal(normalizeActiveExpedition({ ...base, startHp: '120' }).lowestHp, 120);
+
+    // 둘 다 없거나 숫자가 아니면 정규화된 startHp(0)에서 연다 — NaN이 아니다.
+    for (const candidate of [base, { ...base, startHp: 'abc' }, { ...base, startHp: null }]) {
+        const snapshot = normalizeActiveExpedition(candidate);
+        assert.equal(snapshot.startHp, 0, JSON.stringify(candidate));
+        assert.equal(snapshot.lowestHp, 0, JSON.stringify(candidate));
+    }
+
+    // 디브리핑 숫자가 NaN으로 새지 않는다.
+    const legacy = { ...makePlayer(), hp: 120, activeExpedition: { ...base } };
+    const { summary } = finishExpedition(legacy, '시작의 마을', 2_000, DB.QUESTS);
+    assert.equal(summary.lowestHp, 0);
+    assert.equal(summary.lowestHpPercent, 0);
+
+    // 워터마크 추적이 수렴한다 — 더 낮출 게 없으면 player를 그대로 돌려준다.
+    assert.equal(trackExpeditionVitals({ ...legacy, hp: 40 }).activeExpedition, legacy.activeExpedition);
 });
 
 test('migration은 구세이브 누락/손상 원정 상태를 null로 만들고 정상 요약을 보존한다', () => {
