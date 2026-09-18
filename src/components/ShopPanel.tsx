@@ -23,15 +23,6 @@ interface ComparisonMeta {
     tone: ComparisonTone;
 }
 
-/**
- * 할인 상품(오늘의 할인 / 주간 특별) 1건 — shopRotation.getDailyDeals/getWeeklySpecial가
- * DB 원본 Item에 originalPrice/price 오버라이드를 얹어 반환하는 실제 모양.
- * 두 함수의 선언 반환형은 `any`다(shopRotation.ts 주석 참고 — economyHandlers.ts의
- * getCanonicalShopOffer 소비 경로가 reducers/** 라 이 트랙에서 넓힐 수 없다);
- * 여기서는 이 화면이 실제로 읽는 모양만 로컬로 좁힌다.
- */
-type ShopDealItem = Item & { originalPrice: number };
-
 const EQUIPMENT_ITEM_TYPES: ItemType[] = ['weapon', 'armor', 'shield'];
 const CONSUMABLE_ITEM_TYPES: ItemType[] = ['hp', 'mp', 'cure', 'buff'];
 
@@ -220,16 +211,12 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
             .sort((a, b) => (a.price || 0) - (b.price || 0))
     ), [player.inv]);
 
-    // getDailyDeals/getWeeklySpecial 내부 seededShuffle은 economyHandlers.ts(reducers/**,
-    // 이 트랙에서 수정 금지)의 getCanonicalShopOffer 소비 경로 때문에 any[]를 반환한다
-    // (shopRotation.ts 주석 참고) — 여기서는 이 화면의 소비 지점에서만 실제 런타임 모양
-    // (Item + originalPrice/price 오버라이드)으로 좁힌다.
     const dailyDeals = useMemo(
-        () => getDailyDeals(player.level || 1) as { items: ShopDealItem[] },
+        () => getDailyDeals(player.level || 1),
         [player.level]
     );
     const weeklySpecial = useMemo(
-        () => getWeeklySpecial(player.level || 1) as ShopDealItem | null,
+        () => getWeeklySpecial(player.level || 1),
         [player.level]
     );
 

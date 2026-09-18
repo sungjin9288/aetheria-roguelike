@@ -74,7 +74,7 @@ const buyShopItem = (state: GameState, action: GameAction): GameState => {
     if (
         ['weapon', 'armor', 'shield'].includes(offer.item.type as string)
         && Array.isArray(offer.item.jobs)
-        && !offer.item.jobs.includes(state.player.job)
+        && (state.player.job === undefined || !offer.item.jobs.includes(state.player.job))
     ) {
         return rejectTransaction(state, 'error', MSG.EQUIP_JOB_RESTRICT(state.player.job, offer.item.name));
     }

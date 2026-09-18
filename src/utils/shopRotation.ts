@@ -21,17 +21,10 @@ const dateHash = (dateStr: string, salt: number): number => {
 
 /**
  * 시드 기반 배열 셔플 (Fisher-Yates, deterministic)
- *
- * // Wave 6 X3-B: 반환형을 arr 그대로 보존하는 제네릭으로 좁히면 getDailyDeals/
- * // getWeeklySpecial을 거쳐 getCanonicalShopOffer의 반환 item이 구체 Item으로
- * // 좁아지고, 그 결과가 economyHandlers.ts(reducers/**, 이 트랙에서 수정 금지)의
- * // `offer.item.jobs.includes(state.player.job)` (player.job: string|undefined)를
- * // 컴파일 에러로 만든다 — 그 union 브랜치(stock 경로)가 이미 실제 Item을 반환하지만
- * // 지금까지는 daily/weekly 브랜치의 any가 전체 union을 any로 흡수해 가려져 있었다.
- * // reducers를 건드리지 않고는 안전하게 못 넓히므로 any 그대로 유지 — ShopPanel.tsx는
- * // 자기 소비 지점에서만 로컬 타입으로 좁힌다.
+ * 입력 배열의 요소 타입을 그대로 보존한다 — 소비자(getDailyDeals/getWeeklySpecial/
+ * getCanonicalShopOffer → economyHandlers.ts)가 구체 Item으로 추론된다.
  */
-const seededShuffle = (arr: any, seed: number): any[] => {
+const seededShuffle = <T>(arr: readonly T[], seed: number): T[] => {
     const result = [...arr];
     let s = seed;
     for (let i = result.length - 1; i > 0; i--) {
@@ -79,7 +72,7 @@ export const getShopCatalog = (location: string) => {
         ...(DB.ITEMS.consumables || []),
         ...(DB.ITEMS.weapons || []),
         ...(DB.ITEMS.armors || []),
-    ].filter((item: any) => (item.tier || 1) <= maxTier);
+    ].filter((item) => (item.tier || 1) <= maxTier);
 };
 
 /**
@@ -103,9 +96,9 @@ export const getDailyDeals = (playerLevel: number) => {
 
     const allItems = [
         ...(DB.ITEMS.weapons || []),
-        ...(DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor'),
+        ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
         ...(DB.ITEMS.consumables || []),
-    ].filter((item: any) => (item.tier || 1) <= maxTier);
+    ].filter((item) => (item.tier || 1) <= maxTier);
 
     // cycle 436: 일일 딜 마커 제거 — production read 0건이던 dead 출력
     //   (cycle 415 주간 특별 마커 정리 paired completion). cycle 355는 회귀
@@ -113,8 +106,8 @@ export const getDailyDeals = (playerLevel: number) => {
     const shuffled = seededShuffle(allItems, seed);
     const items = shuffled.slice(0, 3).map((item) => ({
         ...item,
-        originalPrice: item.price,
-        price: Math.floor(item.price * 0.9),
+        originalPrice: item.price ?? 0,
+        price: Math.floor((item.price ?? 0) * 0.9),
     }));
 
     return { items };
@@ -136,8 +129,8 @@ export const getWeeklySpecial = (playerLevel: number) => {
 
     const rareItems = [
         ...(DB.ITEMS.weapons || []),
-        ...(DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor'),
-    ].filter((item: any) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier);
+        ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
+    ].filter((item) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier);
 
     if (rareItems.length === 0) return null;
 
@@ -147,8 +140,8 @@ export const getWeeklySpecial = (playerLevel: number) => {
     //   originalPrice / price는 ShopPanel line-through 표시에 사용 보존.
     return {
         ...item,
-        originalPrice: item.price,
-        price: Math.floor(item.price * 0.85),
+        originalPrice: item.price ?? 0,
+        price: Math.floor((item.price ?? 0) * 0.85),
     };
 };
 
@@ -159,7 +152,7 @@ export const getCanonicalShopOffer = (
     location: string,
 ) => {
     if (source === 'daily') {
-        const deal = getDailyDeals(playerLevel).items.find((item: any) => item.name === itemName);
+        const deal = getDailyDeals(playerLevel).items.find((item) => item.name === itemName);
         if (!deal) return null;
         const { originalPrice, ...item } = deal;
         return { item: { ...item, price: originalPrice }, price: deal.price };
@@ -172,6 +165,6 @@ export const getCanonicalShopOffer = (
     }
     if (source !== 'stock') return null;
 
-    const item = getShopCatalog(location).find((entry: any) => entry.name === itemName);
+    const item = getShopCatalog(location).find((entry) => entry.name === itemName);
     return item ? { item, price: item.price || 0 } : null;
 };
