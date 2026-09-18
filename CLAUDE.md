@@ -155,7 +155,7 @@ npm run lint              # ESLint 검사
 npm run test:unit         # 단위 테스트 (tests/*.test.js, tsx 로더)
 npm run test:smoke        # 스모크 게임플레이 테스트 (preview 서버 필요, 기본 127.0.0.1:4173)
 npm run test:e2e          # Playwright e2e (2 shard)
-npm run perf:guard        # FCP/DCL 예산 검사 (CI 미연동 — 수동 실행)
+npm run perf:guard        # FCP/DCL 예산 검사 (CI blocking — Wave 10 B4; 로컬은 preview 서버 필요)
 npm run progression:simulate  # 성장 곡선 시뮬레이션 (밸런스 변경 시 compare와 함께)
 
 # 모바일
