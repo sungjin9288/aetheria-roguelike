@@ -10,7 +10,6 @@ import {
     formatCodexRewardParts,
     getNextCodexGoals,
     type CodexCategoryId,
-    type CodexMilestone,
 } from '../utils/codexPresentation';
 import WeaponCodex from './codex/WeaponCodex';
 import MonsterCodex from './codex/MonsterCodex';
@@ -42,13 +41,10 @@ const Codex = ({ player, dispatch }: CodexProps) => {
     const [subTab, setSubTab] = useState<CodexTabId>('equip');
     const [discoveryEntry, setDiscoveryEntry] = useState<CodexDiscoveryEntry | null>(null);
     const dismissDiscovery = useCallback(() => setDiscoveryEntry(null), []);
-    // getCodexProgress(data/codexRewards.ts)의 선언 반환형은 milestones/unclaimed 모두
-    // any[]다(data/**, 이 트랙에서 수정 금지) — 실제 런타임 모양은 utils/codexPresentation.ts가
-    // 이미 export하는 CodexMilestone과 동일하므로 재선언 없이 그대로 좁힌다.
     const progress = useMemo(() => {
         const codex = player?.stats?.codex || {};
         const claimed = player?.stats?.codexClaimed || [];
-        return getCodexProgress(codex, claimed) as { milestones: CodexMilestone[]; unclaimed: CodexMilestone[] };
+        return getCodexProgress(codex, claimed);
     }, [player?.stats?.codex, player?.stats?.codexClaimed]);
 
     // 전체 도감 항목 수 계산

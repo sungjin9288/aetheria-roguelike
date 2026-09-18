@@ -46,7 +46,7 @@ const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) =>
     }, [item, onDismiss]);
 
     const meta = item ? getSignatureMetadata(item) : null;
-    const glow = TONE_GLOW[meta?.tone] || DEFAULT_GLOW;
+    const glow = TONE_GLOW[meta?.tone ?? ''] || DEFAULT_GLOW;
 
     return (
         <AnimatePresence>

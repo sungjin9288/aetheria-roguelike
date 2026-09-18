@@ -1,4 +1,8 @@
-export const LOOT_TABLE: any = {
+/**
+ * 레거시 전리품 테이블 — 리터럴이 단일 진실 원천이고 타입은 거기서 도출한다.
+ * (몬스터별 상세 확률/수량은 `dropTables.ts`의 DROP_TABLES가 우선 참조된다.)
+ */
+const LOOT_TABLE_ENTRIES = {
     // 숲 지역
     '슬라임': ['슬라임 젤리', '하급 체력 물약'],
     '늑대': ['멧돼지 가죽', '하급 체력 물약'],
@@ -135,3 +139,17 @@ export const LOOT_TABLE: any = {
     '에테르 거인': ['에테르 심장', '에테르 파편', '에테르 거인의 대검', '엘릭서'],
     '차원 마왕': ['차원 마왕 심장', '에테르 심장', '차원 마왕의 낫', '에테르 군주 로브', '엘릭서'],
 };
+
+/** 몬스터 1종의 레거시 전리품 목록 — 리터럴 값 타입에서 도출. */
+export type LootDropList = (typeof LOOT_TABLE_ENTRIES)[keyof typeof LOOT_TABLE_ENTRIES];
+
+/**
+ * 리터럴에서 도출한 테이블 타입. 소비처는 데이터에서 온 몬스터 이름(열린 키)으로
+ * 조회하므로 `Record<string, LootDropList>`를 교차해 string 인덱싱을 열어둔다.
+ */
+export type LootTable = typeof LOOT_TABLE_ENTRIES & Record<string, LootDropList>;
+
+export const LOOT_TABLE: LootTable = LOOT_TABLE_ENTRIES;
+
+/** 열린 키(몬스터 이름) 조회 — 미등록이면 null. */
+export const getLootTable = (name: string): LootDropList | null => LOOT_TABLE[name] || null;

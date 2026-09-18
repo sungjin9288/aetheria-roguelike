@@ -776,7 +776,11 @@ export const MONSTERS: Record<string, Monster> = {
     },
 };
 
-export const BOSS_BRIEFS: Record<string, any> = Object.freeze({
+/**
+ * 보스 브리핑 — 리터럴이 단일 진실 원천이고 타입은 거기서 도출한다.
+ * (BOSS_BRIEFS / BossBrief / BossBriefTable은 아래에서 `typeof`로 닫는다.)
+ */
+const BOSS_BRIEF_ENTRIES = {
     '화염의 군주': {
         signature: '광역 화상과 강타 연사',
         entryHint: '냉기 속성과 회복 슬롯을 먼저 준비한 뒤 진입하는 편이 안정적입니다.',
@@ -975,7 +979,21 @@ export const BOSS_BRIEFS: Record<string, any> = Object.freeze({
         warningChips: ['높은 가드', '빙결 누적'],
         recommendedBuilds: ['양손 파쇄', '비전 공명']
     }
-});
+};
+
+/** 보스 브리핑 1건 — 리터럴 값 타입에서 도출. */
+export type BossBrief = (typeof BOSS_BRIEF_ENTRIES)[keyof typeof BOSS_BRIEF_ENTRIES];
+
+/**
+ * 리터럴에서 도출한 테이블 타입. 소비처는 데이터에서 온 보스 이름(열린 키)으로
+ * 조회하므로 `Record<string, BossBrief>`를 교차해 string 인덱싱을 열어둔다.
+ */
+export type BossBriefTable = Readonly<typeof BOSS_BRIEF_ENTRIES> & Record<string, BossBrief>;
+
+export const BOSS_BRIEFS: BossBriefTable = Object.freeze(BOSS_BRIEF_ENTRIES);
+
+/** 열린 키(보스 이름) 조회 — 미등록이면 null. */
+export const getBossBrief = (name: string): BossBrief | null => BOSS_BRIEFS[name] || null;
 
 export const BOSS_MONSTERS = (Object.entries(MONSTERS) as Array<[string, any]>)
     .filter(([, data]) => Boolean(data?.isBoss))

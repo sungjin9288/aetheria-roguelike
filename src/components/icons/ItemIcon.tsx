@@ -79,7 +79,7 @@ const ItemIcon = ({ item, size, showBorder = false, className = '', hideSignatur
     const isDedicatedSignature = hasDedicatedSignatureArt(item);
     const useAvatarPreviewFirst = isEquipmentItem && !isDedicatedSignature && shouldUseAvatarPreviewItemIcon(item);
     const signatureRing = isDedicatedSignature
-        ? SIGNATURE_TONE_RING[getSignatureMetadata(item)?.tone] || SIGNATURE_TONE_RING.holy
+        ? SIGNATURE_TONE_RING[getSignatureMetadata(item)?.tone ?? ''] || SIGNATURE_TONE_RING.holy
         : null;
 
     // slice 25: 레어리티 플레이트 강화 — 보더/래디얼/글로우를 한 단계 올려

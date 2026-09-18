@@ -8,7 +8,7 @@ import {
 import { addItemByName } from '../../utils/inventoryUtils';
 import { SEASON_TIER_XP, SEASON_REWARDS, SEASON_XP } from '../../data/seasonPass';
 import { getClaimableCodexMilestone } from '../../data/codexRewards';
-import { formatCodexRewardParts } from '../../utils/codexPresentation';
+import { formatCodexRewardParts, type CodexReward } from '../../utils/codexPresentation';
 import { normalizeClaimedSeasonTiers, SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
 import { getPacedQuestClaimExp } from '../../utils/progressionPacing';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
@@ -291,7 +291,7 @@ export const rewardActionMap = {
         );
         if (!milestone) return state;
 
-        const reward = milestone.reward || {};
+        const reward: CodexReward = milestone.reward || {};
         let p = {
             ...state.player,
             stats: {

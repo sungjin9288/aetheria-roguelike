@@ -43,7 +43,7 @@ interface SignatureBadgeProps {
 const SignatureBadge = ({ item, size }: SignatureBadgeProps) => {
     if (!item || !hasDedicatedSignatureArt(item)) return null;
     const meta = getSignatureMetadata(item);
-    const toneColor = TONE_COLORS[meta?.tone] || DEFAULT_TONE_COLOR;
+    const toneColor = TONE_COLORS[meta?.tone ?? ''] || DEFAULT_TONE_COLOR;
     const label = `Signature · ${meta?.tier || 'legendary'} · ${meta?.category || ''}`;
 
     return (

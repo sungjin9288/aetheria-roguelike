@@ -1,9 +1,11 @@
 export const APP_ID = 'aetheria-rpg';
 // Vite env (test 환경에선 import.meta.env 부재 가능 — plain Node/tsx 실행 시 process.env로 폴백.
 // Vite/브라우저에선 import.meta.env가 항상 존재하므로 이 폴백은 실제 빌드 동작에 영향 없음).
-const ENV: ImportMetaEnv = (typeof import.meta !== 'undefined' && import.meta.env)
-    || (typeof process !== 'undefined' && process.env as any)
-    || ({} as ImportMetaEnv);
+// `process.env`(NodeJS.ProcessEnv)는 MODE/DEV/PROD 같은 Vite 전용 키를 갖지 않으므로
+// 읽는 쪽 계약은 "불완전할 수 있는 env" = Partial<ImportMetaEnv>로 좁힌다.
+const ENV: Partial<ImportMetaEnv> = (typeof import.meta !== 'undefined' && import.meta.env)
+    || (typeof process !== 'undefined' && process.env)
+    || {};
 // Admin UIDs — 환경변수에서 쉼표 구분으로 주입 (VITE_ADMIN_UIDS=uid1,uid2)
 export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
 

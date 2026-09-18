@@ -1,14 +1,15 @@
-export type CodexCategoryId = 'weapons' | 'armors' | 'shields' | 'monsters' | 'recipes' | 'materials';
+/**
+ * 마일스톤/카테고리/보상 타입의 정본은 리터럴이 사는 `data/codexRewards.ts`다.
+ * 여기서는 재선언하지 않고 그대로 통과시킨다 (사본 금지).
+ */
+import type {
+    CodexCategoryId,
+    CodexMilestone,
+    CodexMilestoneEntry,
+    CodexReward,
+} from '../data/codexRewards';
 
-export interface CodexMilestone {
-    id: string;
-    category: CodexCategoryId;
-    count: number;
-    label: string;
-    reward: Record<string, number>;
-    reached: boolean;
-    claimed: boolean;
-}
+export type { CodexCategoryId, CodexMilestone, CodexMilestoneEntry, CodexReward };
 
 export interface CodexGoal extends CodexMilestone {
     current: number;
@@ -24,7 +25,7 @@ export const CODEX_CATEGORY_LABELS: Record<CodexCategoryId, string> = {
     materials: '소재',
 };
 
-export const formatCodexRewardParts = (reward: Record<string, number>): string[] => {
+export const formatCodexRewardParts = (reward: CodexReward): string[] => {
     const parts: string[] = [];
     if (reward.atk) parts.push(`공격력 +${reward.atk}`);
     if (reward.def) parts.push(`방어력 +${reward.def}`);
