@@ -426,3 +426,21 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 **순서**: A1 · A2 · A3 · A4 병렬(파일 집합 분리 — 브리프에 A4 전용 utils 7파일을 명시) → 통합(교차 tsc) → 증빙(progression → pacing, equipment·relic) → A5 → 직렬 게이트 → §13.1 → PR → CI → merge commit.
 
 **판단 포인트**: 이번 wave가 끝나면 `any` 정리 시리즈(Wave 5~9)는 닫힌다. 다음 wave부터는 "타입 부채"가 아니라 CLAUDE.md §8이 말하는 실제 위험(전투 턴 authority·세이브 호환·Firebase boot race)에 대한 동작 계약 테스트와 성능 예산(perf guard CI 연동)으로 축을 옮긴다.
+
+### 13.1 Wave 9 실행 결과 (2026-09-18, branch `claude/funny-rubin-xdv43e`, 베이스 `main` = `d69987d4`)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| A1 데이터 테이블 | ✅ | `BOSS_BRIEFS`/`LOOT_TABLE`은 리터럴을 비공개 상수로 두고 `Readonly<typeof …> & Record<string, T>` 교차 타입 + 타입된 lookup(`getBossBrief`/`getLootTable`) — 다른 트랙 소비처의 `table[name]` 인덱싱을 무편집으로 유지. `as const`는 의도적으로 안 씀(22개 튜플 유니온으로 퇴화해 `.join` 등이 깨짐). codex 마일스톤 타입 6종을 `typeof CODEX_MILESTONES`에서 도출, `codexPresentation`·`WeaponCodex`의 사본 2개 제거. **발견**: `getCodexProgress().unclaimed` 원소는 `reached/claimed`가 없어 `Codex.tsx`의 옛 캐스트가 거짓이었음(반환형이 두 배열을 구분). `EquipmentCodexCard`의 `atk/def` dead read 제거(렌더 무변경 — `val` 행 추가는 UI 변경이라 보류). data `: any` 19 → 0 |
+| A2 utils | ✅ | 25파일 62건 → 0. `commandParser`의 `actions`는 컴포넌트 규칙대로 `Pick<GameActions, …>` |
+| A3 systems | ✅ | `: any` 24 → 1(문자열 리터럴 안의 회귀 가드 패턴 — 타입 아님), `as any` 10 → 0. `combatItemTurn` 결과 필드를 생산자 타입으로. **발견**: `relicDropRateAudit`의 `as any`가 `Monster`에 없는 `meta.prestigeRank` 픽스처 필드를 가리고 있었음(읽는 곳 없음 — 제거) |
+| A4 `as any` 경계 | ✅ | 33 → 0(실측이 계획의 28보다 많았음). 매니페스트 JSON 3건은 캐스트가 애초에 불필요(`resolveJsonModule` 추론이 이미 정확), DOM/Capacitor 6건은 `unknown` + `in`/`typeof` 술어, `ITEMS` flatten 20건은 실제 유니온 + `'x' in entry` 접근자. **발견**: `itemVisuals`의 카탈로그 인덱스가 접두사 항목(`type: 'all'`)까지 아이템으로 끌어들이고 있었음(실충돌은 없었으나 `'all'` 분기가 타입상 dead임을 드러냄) |
+| 직접(마지막 13건) | ✅ | `firebase.ts`의 `auth`/`db`를 실제대로 `\| null`로 — 소비처 8곳을 `hasFirebaseConfig`/부트 단계와 동치인 가드로 닫음(런타임 동일). `DROP_TABLES: Record<string, readonly DropTableEntry[]>`(엔트리 타입을 데이터로 이동, loot 엔진의 사본·캐스트 제거). `EventChainProgress`(number \| 'failed') 정본 |
+| A5 래칫 교정 | ✅ | 카운터가 주석의 `[key: string]: any` 이력 문구까지 세던 것을 `stripCommentLines`로 교정(한글 카운터와 동일 방식) → 코드 실측 `: any` 124 / `as any` 45에서 출발 |
+| A6 다른 any 표기 | ⏳ | `Record<string, any>`·`any[]` 66건 — 실행 중, 통합 후 갱신 |
+| 래칫 | ⏳ | 코드 실측 `: any` 1(문자열 리터럴) / `as any` 0 — A6 통합 후 lint 규칙 전환 판단 |
+
+**최종 게이트**: A6 통합 후 직렬 게이트 결과를 기록한다
+
+**남은 후보 (Wave 10)**: A6 결과와 함께 갱신
+
