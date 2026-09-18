@@ -124,7 +124,7 @@ export const getCrystalExchangeOffers = (player?: Player | null): CrystalExchang
         shortage: Math.max(0, offer.cost - crystals),
     }));
 
-    const titles = PREMIUM_SHOP.cosmeticTitles.map((title: any) => {
+    const titles = PREMIUM_SHOP.cosmeticTitles.map((title) => {
         const owned = ownedTitles.has(title.id);
         return {
             id: title.id,

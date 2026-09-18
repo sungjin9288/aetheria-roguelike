@@ -30,6 +30,6 @@ export const getBossSignatureDrops = (baseName: string | null | undefined) => {
         signatureDrops.push({ name: entry.item, rate: Number(entry.rate) || 0 });
     }
     // rate 내림차순 — 최고 확률 signature가 hint 헤드라인이 됨
-    signatureDrops.sort((a: any, b: any) => b.rate - a.rate);
+    signatureDrops.sort((a, b) => b.rate - a.rate);
     return signatureDrops;
 };

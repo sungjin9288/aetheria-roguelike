@@ -43,7 +43,7 @@ export const SIGNATURE_PITY = Object.freeze({
  * @param {number | null | undefined} pity - 직전 signature 획득 이후 보스 토벌 수
  * @returns {number} 1.0 ~ CAP 사이 배율
  */
-export const getSignaturePityMultiplier = (pity: any) => {
+export const getSignaturePityMultiplier = (pity: number | null | undefined) => {
     const safe = Math.max(0, Number(pity) || 0);
     if (safe < PITY_THRESHOLD) return 1.0;
     const steps = Math.floor(safe / PITY_THRESHOLD);

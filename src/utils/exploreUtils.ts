@@ -1,5 +1,4 @@
-// cycle 323: unused Monster type import 제거 — exploreUtils 어디에서도 Monster 참조 0건.
-import type { GameMap, Relic } from '../types/index.js';
+import type { GameMap, MonsterBase, Relic } from '../types/index.js';
 import type { Player } from '../types/index.js';
 /**
  * exploreUtils.ts — 탐험 파이프의 순수 구간 (Phase 1-B → Wave 4 N1).
@@ -21,11 +20,11 @@ const getActiveHuntTargets = (mapData: GameMap, player: Player) => {
     const mapMonsters = Array.isArray(mapData.monsters) ? mapData.monsters : [];
     if (mapMonsters.length === 0) return [];
 
-    const targets = getFocusedExpeditionQuestEntries(player).flatMap((entry: any) => {
+    const targets = getFocusedExpeditionQuestEntries(player).flatMap((entry) => {
         const quest = entry.quest;
         if (entry.isComplete) return [];
         if (quest.location && quest.location !== player.loc) return [];
-        return mapMonsters.includes(quest.target) ? [quest.target] : [];
+        return quest.target && mapMonsters.includes(quest.target) ? [quest.target] : [];
     });
 
     return [...new Set(targets)];
@@ -46,7 +45,7 @@ export const selectEncounterMonster = (encounterPool: string[], mapData: GameMap
 //   스폰한다. options 미전달 시 기존 동작(구역 보스는 encounterPool에서 제외, 일반
 //   풀에서만 스폰)과 동일 — 하위 호환.
 // ─────────────────────────────────────────────────────────────────────────
-export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic[], { addLog }: any, options: { forceAreaBoss?: boolean; rng?: () => number } = {}) => {
+export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic[], { addLog }: { addLog: (type: string, text: string) => void }, options: { forceAreaBoss?: boolean; rng?: () => number } = {}) => {
     const rng = options.rng || Math.random;
     const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
     let encounterPool = [...(mapData.monsters || [])];
@@ -65,7 +64,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // cycle 71: mapData.name은 MAPS dict에 저장될 때 설정되지 않으므로 항상 undefined.
     // hidden boss spawn이 영원히 트리거되지 않던 버그 수정 — player.loc로 비교.
     const currentLoc = player.loc;
-    hiddenBossChecks.forEach(({ boss, loc, check }: any) => {
+    hiddenBossChecks.forEach(({ boss, loc, check }) => {
         if (currentLoc === loc && check() && !encounterPool.includes(boss)) {
             encounterPool.push(boss);
         }
@@ -108,7 +107,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // slice 19: HP 곡선 120+30L → BALANCE.MONSTER_HP_BASE(70)+L×32 — 초반 전투
     //   템포 가속 (Lv1 -32%, Lv50 +3%). 골드 base 10 → 16 (초반 휴식 경제).
     //   ATK/EXP 곡선은 불변 (quest pacing 가드 보존).
-    const mStats: { [key: string]: any; name: string; hp: number; maxHp: number; atk: number; def: number; exp: number; gold: number } = {
+    const mStats: MonsterBase & { name: string; hp: number; maxHp: number; atk: number; def: number; exp: number; gold: number } = {
         name: isInfinite ? `[${depth}층] ${baseName}` : baseName,
         baseName,
         level,

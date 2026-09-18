@@ -1,7 +1,14 @@
 import { DB } from '../data/db';
 import type { Player } from '../types/index.js';
+import type { GameActions } from '../hooks/actionDeps.js';
 
-export const parseCommand = (input: any, gameState: any, player: Player, actions: any) => {
+type CommandParserActions = Pick<
+    GameActions,
+    'handleEventChoice' | 'move' | 'explore' | 'rest' | 'combat' | 'cycleSkill'
+    | 'setShopItems' | 'setGameState' | 'getFullStats' | 'setSideTab'
+>;
+
+export const parseCommand = (input: string, gameState: string, player: Player, actions: CommandParserActions) => {
   if (!input || !input.trim()) return;
 
   const tokens = input.trim().replace(/^\//, '').split(' ');

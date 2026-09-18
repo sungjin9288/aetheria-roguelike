@@ -357,7 +357,7 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/utils/mapProgress.ts');
       assert.ok(!/const uniqueList = \(values:\s*any\s*=\s*\[\]\)/.test(source),
           'uniqueList values default [] 제거');
-      assert.ok(/const uniqueList = \(values:\s*any\)/.test(source),
+      assert.ok(/const uniqueList = \(values:/.test(source),
           'uniqueList values 파라미터 자체는 보존');
   });
 

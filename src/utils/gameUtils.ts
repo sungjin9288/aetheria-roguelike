@@ -30,8 +30,8 @@ type TitleDef = (typeof TITLES)[number];
 /**
  * 배열이 아닌 값을 빈 배열로 안전하게 변환.
  *
- * 2026-09 Wave 6 X1: `= any` 기본값 제거. 그 기본값은 `deps: any`로 들어온 값을
- * 그대로 넘기던 훅 팩토리 호출부를 위한 하위 호환이었는데, 이제 그 경계가
+ * 2026-09 Wave 6 X1: `= any` 기본값 제거. 그 기본값은 `deps`가 any 타입으로 들어온
+ * 값을 그대로 넘기던 훅 팩토리 호출부를 위한 하위 호환이었는데, 이제 그 경계가
  * `GameActionDeps`로 닫혔다. 타입이 없는 값(예: 아직 any인 `currentEvent.outcomes`)을
  * 넘기는 호출부는 `toArray<EventOutcome>(…)`처럼 원소 타입을 명시한다.
  */

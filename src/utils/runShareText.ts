@@ -1,4 +1,5 @@
 import { getTitleLabel } from './gameUtils.js';
+import type { RunSummary } from '../reducers/actionTypes.js';
 
 /**
  * buildRunShareText — RunSummaryCard 클립보드 공유용 자랑 텍스트.
@@ -9,7 +10,7 @@ import { getTitleLabel } from './gameUtils.js';
  * @param {object} s - buildRunSummary가 만든 run summary 객체
  * @returns {string} 클립보드/공유용 멀티라인 텍스트
  */
-export const buildRunShareText = (s: any) => {
+export const buildRunShareText = (s: RunSummary | null | undefined) => {
     const titlePrefix = s?.activeTitle ? `[${getTitleLabel(s.activeTitle)}] ` : '';
     const job = s?.job ?? '';
     const level = s?.level ?? 0;
@@ -21,14 +22,14 @@ export const buildRunShareText = (s: any) => {
     const prestigeRank = s?.prestigeRank ?? 0;
 
     const signatureCount = s?.signaturesAcquired ?? 0;
-    const signatureNames = Array.isArray(s?.signatureNames) ? s.signatureNames : [];
+    const signatureNames = Array.isArray(s?.signatureNames) ? s?.signatureNames : [];
 
     // 전설 각인 라인 — 0개면 silent, >0이면 자랑 라인 추가
     let signatureLine = '';
     if (signatureCount > 0) {
         const head = `✦ 전설 각인: ${signatureCount}종 획득`;
         const detail = signatureNames.length > 0
-            ? `\n   ${signatureNames.map((n: any) => `✦ ${n}`).join(' · ')}`
+            ? `\n   ${signatureNames.map((n) => `✦ ${n}`).join(' · ')}`
             : '';
         signatureLine = `\n${head}${detail}`;
     }

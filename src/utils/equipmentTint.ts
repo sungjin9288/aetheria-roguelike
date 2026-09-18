@@ -72,7 +72,7 @@ const TIER_GLOW_BLUR: Record<number, number> = {
     6: 4.5,
 };
 
-const matchHint = (name: string, hints: string[]): boolean => hints.some((hint: any) => name.includes(hint));
+const matchHint = (name: string, hints: string[]): boolean => hints.some((hint) => name.includes(hint));
 
 /**
  * 아이템 → CSS filter 문자열 (없으면 null).

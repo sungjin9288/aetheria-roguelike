@@ -1,7 +1,7 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { advanceBossGauge, isAreaBossUndefeated } from './bossGauge.js';
-import type { GameMap, Player } from '../types/index.js';
+import type { GameMap, Player, PostCombatResult } from '../types/index.js';
 
 /**
  * postCombatChoice.ts — 전투 후 "밀어붙인다 / 숨을 고른다" 2선택 (2026-09 D2).
@@ -29,7 +29,7 @@ export interface PostCombatChoiceOption {
 }
 
 /** 보스 전투 결과인지 — 보스 격파는 원정을 마무리하는 지점이라 선택을 제시하지 않는다. */
-const isBossVictory = (result: any): boolean => Boolean(
+const isBossVictory = (result: PostCombatResult | null | undefined): boolean => Boolean(
     result?.isBoss === true
     || result?.enemyTier === 'BOSS'
     || result?.bossRewardHint
@@ -40,7 +40,7 @@ const isBossVictory = (result: any): boolean => Boolean(
  * 이 전투 결과에 선택을 제시할지. 승리 결과가 있고, 보스 격파가 아니며,
  * 아직 이번 카드에서 선택하지 않았을 때만 true.
  */
-export const isPostCombatChoiceOffered = (result: any): boolean => Boolean(
+export const isPostCombatChoiceOffered = (result: PostCombatResult | null | undefined): boolean => Boolean(
     result
     && !isBossVictory(result)
     && result.postCombatChoiceResolved !== true,

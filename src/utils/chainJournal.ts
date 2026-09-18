@@ -7,6 +7,9 @@
  */
 import { EVENT_CHAINS } from '../data/eventChains.js';
 
+/** EVENT_CHAINS 원소 — 데이터 리터럴에서 도출(생산자 인덱스 접근, 손으로 다시 선언하지 않음). */
+type EventChain = (typeof EVENT_CHAINS)[number];
+
 export interface JournalEntry {
     chainId: string;
     label: string;
@@ -23,11 +26,11 @@ export interface JournalEntry {
  */
 export function buildChainJournal(
     eventChainProgress: Record<string, number | 'failed'> | null | undefined,
-    chains: any[] = EVENT_CHAINS,
+    chains: EventChain[] = EVENT_CHAINS,
 ): JournalEntry[] {
     const progress = eventChainProgress || {};
 
-    return chains.reduce((entries: JournalEntry[], chain: any) => {
+    return chains.reduce((entries: JournalEntry[], chain: EventChain) => {
         const rawStep = progress[chain.id];
 
         if (rawStep === 'failed') return entries;

@@ -1,4 +1,5 @@
 import { DB } from '../data/db';
+import type { GameMap } from '../types/index.js';
 
 /**
  * shopRotation.js — 날짜 시드 기반 결정론적 상점 생성
@@ -55,7 +56,7 @@ const getWeekKey = () => {
 };
 
 export const getShopMaxTier = (location: string) => {
-    const mapData: any = DB.MAPS?.[location] || {};
+    const mapData: GameMap = DB.MAPS?.[location] || {};
     const mapLevel = typeof mapData.level === 'number' ? mapData.level : 1;
     const tierFromLevel = mapLevel < 10 ? 1 : mapLevel < 20 ? 2 : mapLevel < 30 ? 3 : mapLevel < 40 ? 4 : mapLevel < 50 ? 5 : 6;
     const safeBonus = mapData.type === 'safe' && mapLevel > 1 ? 1 : 0;

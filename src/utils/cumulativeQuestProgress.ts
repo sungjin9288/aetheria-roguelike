@@ -1,13 +1,14 @@
 import type { Player } from '../types/player.js';
+import type { Quest } from '../types/quest.js';
 import { countLowHpWins } from '../systems/DifficultyManager.js';
 import { countDiscoveredSignatures } from './signatureDiscovery.js';
 
-const capProgress = (quest: any, current: unknown) => {
-    const goal = Math.max(0, Number(quest.goal) || 0);
+const capProgress = (quest: Quest | undefined, current: unknown) => {
+    const goal = Math.max(0, Number(quest?.goal) || 0);
     return Math.min(goal, Math.max(0, Number(current) || 0));
 };
 
-export const getCumulativeQuestProgress = (quest: any, player: Player): number | null => {
+export const getCumulativeQuestProgress = (quest: Quest | undefined, player: Player): number | null => {
     const stats = player.stats || {};
     let current: unknown = null;
 
@@ -19,7 +20,7 @@ export const getCumulativeQuestProgress = (quest: any, player: Player): number |
         current = countLowHpWins(stats, quest.threshold || 0.2);
     }
     if (quest?.type === 'bounty_count' && quest.target === 'bountiesCompleted') current = stats.bountiesCompleted;
-    if (quest?.type === 'build_victory') current = stats.buildWins?.[quest.target];
+    if (quest?.type === 'build_victory') current = stats.buildWins?.[quest.target ?? ''];
     if (quest?.type === 'discovery_count' && quest.target === 'discoveries') current = stats.visitedMaps?.length;
     if (quest?.type === 'escape_count' && quest.target === 'escapes') current = stats.escapes;
     if (quest?.type === 'signature_collect' && quest.target === 'signaturesDiscovered') {
