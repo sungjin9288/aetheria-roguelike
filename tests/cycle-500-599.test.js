@@ -4387,7 +4387,8 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 591: body summaryParts / MSG.COMBAT_DIGEST 처리 보존', async () => {
       const source = await readSrc('src/hooks/combatActions/_helpers.ts');
-      assert.ok(/MSG\.COMBAT_DIGEST_KILL\(enemyName\)/.test(source),
+      // Wave 6 X1: enemyName이 `string | undefined`로 닫히면서 호출부가 좁혀졌다(`enemyName!`).
+      assert.ok(/MSG\.COMBAT_DIGEST_KILL\(enemyName!?\)/.test(source),
           'MSG.COMBAT_DIGEST_KILL 보존');
       // slice 24: 전리품 1건 중복 제거로 > 0 → > 1 (다중 드롭 요약일 때만 표기).
       assert.ok(/if \(droppedItems\.length > 1\)/.test(source),

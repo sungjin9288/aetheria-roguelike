@@ -11,11 +11,29 @@ import { useEffect, useRef, useState } from 'react';
  *
  * @returns { flash: boolean, amount: { value, meta } | null }
  */
-export const useHitFlash = (value: any, resetKey: any, meta: any = null) => {
+
+/** 타격 시점 스냅샷 — 현재 소비처(StatusBar)는 크리티컬 여부만 읽는다. */
+export interface HitFlashMeta {
+    crit?: boolean;
+}
+
+export interface HitFlashAmount {
+    /** 감소량(= 받은 피해, 양수). */
+    value: number;
+    meta: HitFlashMeta | null;
+    /** 같은 피해량이 연속으로 들어와도 연출을 다시 트리거하기 위한 키. */
+    key: string;
+}
+
+export const useHitFlash = (
+    value: number | undefined,
+    resetKey: string | number | undefined,
+    meta: HitFlashMeta | null = null,
+) => {
     const [flash, setFlash] = useState(false);
-    const [amount, setAmount] = useState<any>(null);
-    const prevRef = useRef<any>(value);
-    const keyRef = useRef<any>(resetKey);
+    const [amount, setAmount] = useState<HitFlashAmount | null>(null);
+    const prevRef = useRef<number | undefined>(value);
+    const keyRef = useRef(resetKey);
 
     useEffect(() => {
         // 추적 대상이 바뀌면(새 적) baseline 재설정 — flash 없음.
