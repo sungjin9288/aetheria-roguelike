@@ -408,3 +408,21 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 
 **남은 후보 (Wave 9)**: (1) `src/data/**`의 느슨한 테이블 타입 — `BOSS_BRIEFS: Record<string, any>`·`LOOT_TABLE: any`·`getCodexProgress`의 `any[]` 필드·`signatureItems`/`artPalette`(19건) → 리터럴 도출(`as const` + `typeof`, Wave 7 Y1 방식)로 닫으면 `MonsterCodex`/`Codex`/`EquipmentCodexCard`의 마지막 로컬 캐스트가 사라진다; (2) `src/types/player.ts` 4건(`[key]: any`류가 아니라 필드 타입 — 실제 생산자 확인 후 닫기) + `Item`에 없는 `atk/def` dead read 정리; (3) utils 58 · systems 24 잔여(파일당 ≤4 — 한 트랙으로 0); (4) `as any` 46건 전수(대부분 `process.env`·매니페스트 JSON·`ITEMS` flatten) → `unknown` + 좁히기; (5) 래칫 의미 전환: 0 도달 후 `: any`/`as any` 상한을 0으로 고정하고 lint 규칙(`@typescript-eslint/no-explicit-any`)으로 이관.
 
+
+---
+
+## 13. Wave 9 계획 (2026-09-18 착수, 베이스 `main` = `d69987d4` = PR #35 merge commit)
+
+**핵심**: 래칫 `: any` 140 / `as any` 46 중 실제 코드는 각각 ~126 / 46이다(`: any` 카운터가 주석의 `[key: string]: any` 이력 문구까지 세고 있어 types 12·hooks 2는 전부 주석). 남은 코드 `any`의 마지막 구조적 원천은 `src/data/**`의 느슨한 테이블(`BOSS_BRIEFS: Record<string, any>`·`LOOT_TABLE: any`·`getCodexProgress(codex: any)`·시그니처/팔레트 JSON 소비)이고, 이것이 Wave 8이 컴포넌트에 남긴 로컬 캐스트 3곳의 원인이다. 나머지는 utils 50·systems 24·`as any` 46(대부분 매니페스트 JSON·DOM/Capacitor·`ITEMS` flatten 경계)으로 파일당 ≤4 — 이 wave의 목표는 **코드 `any` 0**과 래칫의 의미 전환(카운터 → lint 규칙)이다.
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **A1 데이터 테이블** | `BOSS_BRIEFS`/`LOOT_TABLE`/`CODEX_MILESTONES`를 `as const` + `typeof` 도출(Wave 7 Y1 방식), 열린 키 조회는 타입된 lookup 함수, 시그니처 레지스트리·팔레트는 `resolveJsonModule`이 준 JSON 타입에서 도출, `getCodexProgress`는 `Player['codex']` 계약. `MonsterCodex`/`Codex`/`EquipmentCodexCard`의 로컬 캐스트 제거, `Item`에 없는 `atk/def` dead read 정리 | data `: any` 19 → 0, 컴포넌트 로컬 캐스트 0 | `EquipmentCodexCard`의 dead read 제거가 렌더 텍스트를 바꾸면 중단·보고 | 테이블 타입을 손으로 선언하면 Wave 7이 지운 드리프트가 되돌아온다 — 도출만 | opus |
+| **A2 utils 잔여** | 25파일 50건 | utils 0 | — | 주석의 `: any` 이력 문구는 가드 대상이면 유지 | sonnet |
+| **A3 systems 잔여** | 11파일 `: any` 24 + 감사/시뮬레이터 `as any` 10; `combatItemTurn`의 `runSummary/graveData/victoryStats: any` 생산자 타입화 | systems 0/0 | 감사 5파일 증빙 재생성 | 감사 report 내용이 바뀌면 캐스트가 실제 불일치를 가리고 있던 것 — 보고 | sonnet |
+| **A4 `as any` 경계** | `boundedEncounterSelector`(9)·`errorReporter`(5)·`itemVisuals`(4)·`equipmentValidation`(3)·기타 7 = 28: 매니페스트 JSON은 `typeof` 도출, DOM/Capacitor는 `unknown` + 좁히기, `ITEMS` flatten은 `Item` 유니온 + `type` 판별 | `as any` 46 → ≤18 | — | `as unknown as X`로 바꾸면 같은 탈출구의 개명 — 금지 | sonnet |
+| **A5 래칫 → lint** | (통합 후) `: any` 카운터를 주석 제외로 교정·재고정; 코드 `: any`/`as any`가 0이면 `@typescript-eslint/no-explicit-any`를 `error`로 켜고 래칫의 두 카운터는 0 상한으로 유지(이중 가드) | "하락만 허용"에서 "0 유지"로 의미 전환, 새 `any`는 lint에서 즉시 차단 | 0에 못 미치면 `warn`이 아니라 래칫 재고정만 — `warn`은 아무도 안 읽는다 | 규칙을 켜기 전에 `eslint .`이 0 problems인지 실측 | 직접 |
+
+**순서**: A1 · A2 · A3 · A4 병렬(파일 집합 분리 — 브리프에 A4 전용 utils 7파일을 명시) → 통합(교차 tsc) → 증빙(progression → pacing, equipment·relic) → A5 → 직렬 게이트 → §13.1 → PR → CI → merge commit.
+
+**판단 포인트**: 이번 wave가 끝나면 `any` 정리 시리즈(Wave 5~9)는 닫힌다. 다음 wave부터는 "타입 부채"가 아니라 CLAUDE.md §8이 말하는 실제 위험(전투 턴 authority·세이브 호환·Firebase boot race)에 대한 동작 계약 테스트와 성능 예산(perf guard CI 연동)으로 축을 옮긴다.
