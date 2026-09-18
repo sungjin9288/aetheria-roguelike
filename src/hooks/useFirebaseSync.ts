@@ -36,6 +36,14 @@ import {
     resolveCloudBootstrapAuthority,
     type GameSaveRecord,
 } from '../platform/gameStorage';
+import {
+    createBootState,
+    findRestoreEffect,
+    nextBootStep,
+    type BootEffect,
+    type BootEvent,
+    type BootStep,
+} from '../platform/bootStateMachine';
 import { createCloudAutosave } from './createCloudAutosave';
 import { useLiveConfigAndLeaderboard } from './useLiveConfigAndLeaderboard';
 import type { Player } from '../types';
@@ -196,34 +204,26 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
     }, [dispatch, mockMode, syncStatus]);
 
     // --- Auth ---
+    // 부트 순서('auth' → 'config', 오프라인 폴백은 두 단계를 건너뛴다)와 가드(authResolved/
+    // cancelled)는 platform/bootStateMachine.ts 전이표가 소유한다. 이 effect는 관찰한 사건을
+    // 이벤트로 넣고, 돌아온 step의 dispatch/effect를 실행할 뿐이다.
     useEffect(() => {
-        if (mockMode) {
-            const deviceQaData = deviceQaMode
-                ? getDeviceQaBootstrapData(deviceQaScenario)
-                : { player: INITIAL_STATE.player };
-            dispatch({
-                type: AT.LOAD_DATA,
-                payload: deviceQaData,
-            });
-            trackPersistenceResult(
-                deviceQaData.player,
-                'restore',
-                deviceQaMode && String(deviceQaData.player?.name || '').trim() ? 'local' : 'fresh',
-                'restore',
-            );
-            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
-            return undefined;
-        }
+        let bootState = createBootState();
+        let authTimer: ReturnType<typeof setTimeout> | undefined;
 
-        dispatch({ type: AT.SET_BOOT_STAGE, payload: 'auth' });
-        let authResolved = false;
-        let cancelled = false;
+        const applyBoot = (event: BootEvent): BootStep => {
+            const step = nextBootStep(bootState, event);
+            bootState = step.state;
+            step.dispatch.forEach((action) => dispatch(action));
+            step.effects.forEach((effect) => runBootEffect(effect));
+            return step;
+        };
 
+        // 복원 승인(§8-5)은 전이표가, 실제 dispatch/텔레메트리는 여기서 한다.
         const fallbackAuthOffline = async (message: string) => {
-            if (authResolved) return;
-            authResolved = true;
             const offlineResult = resolveOfflineBootstrapResult(await getOfflineBootstrapData());
-            if (cancelled) return;
+            const step = applyBoot({ kind: 'local_record', record: offlineResult, source: 'fallback' });
+            if (!step.restore) return;
             dispatch({ type: AT.LOAD_DATA, payload: offlineResult.data });
             trackPersistenceResult(
                 offlineResult.data.player,
@@ -235,42 +235,71 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
             dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('warning', message) });
         };
 
-        const authTimer = setTimeout(() => {
-            void fallbackAuthOffline(MSG.SYNC_AUTH_TIMEOUT);
-        }, AUTH_TIMEOUT_MS);
+        const runBootEffect = (effect: BootEffect) => {
+            switch (effect.kind) {
+                case 'startAuthTimer':
+                    authTimer = setTimeout(() => {
+                        applyBoot({ kind: 'auth_timeout' });
+                    }, AUTH_TIMEOUT_MS);
+                    break;
+                case 'clearTimers':
+                    clearTimeout(authTimer);
+                    break;
+                case 'signIn':
+                    // auth는 hasFirebaseConfig가 참일 때만 non-null(firebase.ts) — 타입 가드용 동치 검사.
+                    if (!auth) break;
+                    signInAnonymously(auth)
+                        .then((cred) => {
+                            applyBoot({ kind: 'auth_ok', uid: cred.user.uid });
+                        })
+                        .catch((e: unknown) => {
+                            console.error('Auth Failed', e);
+                            applyBoot({ kind: 'auth_error' });
+                        });
+                    break;
+                case 'syncTokenQuota':
+                    // 크로스 디바이스 쿼터 동기화 (Dead Code → 활성화)
+                    TokenQuotaManager.syncToFirestore(effect.uid, db).catch((e: unknown) => {
+                        console.warn('Token quota sync failed', e);
+                    });
+                    break;
+                case 'fallbackOffline':
+                    void fallbackAuthOffline(effect.message);
+                    break;
+                default:
+                    // 데이터 단계 전용 effect는 이 수명에서 나오지 않는다(전이표가 phase로 막는다).
+                    break;
+            }
+        };
+
+        if (mockMode) {
+            const deviceQaData = deviceQaMode
+                ? getDeviceQaBootstrapData(deviceQaScenario)
+                : { player: INITIAL_STATE.player };
+            const step = applyBoot(deviceQaScenario !== null
+                ? { kind: 'device_qa', scenario: deviceQaScenario, data: deviceQaData }
+                : { kind: 'mock_mode', data: deviceQaData });
+            if (step.restore) {
+                trackPersistenceResult(
+                    deviceQaData.player,
+                    'restore',
+                    step.restore.outcome,
+                    'restore',
+                );
+            }
+            return undefined;
+        }
 
         // auth는 hasFirebaseConfig가 참일 때만 non-null(firebase.ts) — 타입 가드용 동치 검사.
         if (!hasFirebaseConfig || !auth) {
             console.warn('[FIREBASE] Missing required config. Booting in offline mode.');
-            clearTimeout(authTimer);
-            void fallbackAuthOffline(MSG.SYNC_NO_CONFIG);
-            return () => {
-                cancelled = true;
-                clearTimeout(authTimer);
-            };
+            applyBoot({ kind: 'config_missing' });
+        } else {
+            applyBoot({ kind: 'config_present' });
         }
 
-        signInAnonymously(auth)
-            .then((cred) => {
-                if (authResolved) return;
-                authResolved = true;
-                clearTimeout(authTimer);
-                const uid = cred.user.uid;
-                dispatch({ type: AT.SET_UID, payload: uid });
-                dispatch({ type: AT.SET_BOOT_STAGE, payload: 'config' });
-                // 크로스 디바이스 쿼터 동기화 (Dead Code → 활성화)
-                TokenQuotaManager.syncToFirestore(uid, db).catch((e: unknown) => {
-                    console.warn('Token quota sync failed', e);
-                });
-            })
-            .catch((e: unknown) => {
-                console.error('Auth Failed', e);
-                clearTimeout(authTimer);
-                void fallbackAuthOffline(MSG.SYNC_AUTH_FAIL);
-            });
         return () => {
-            cancelled = true;
-            clearTimeout(authTimer);
+            applyBoot({ kind: 'cancelled' });
         };
     }, [deviceQaMode, deviceQaScenario, dispatch, mockMode]);
 
@@ -284,21 +313,31 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
     // --- User Data Listener ---
     useEffect(() => {
         if (mockMode) return undefined;
-        if (bootStage !== 'data' || !uid) return;
+        if (bootStage !== 'data') return undefined;
         // config 부재(db null)면 부트가 'data' 단계에 오지 않는다(오프라인 폴백이 직접 'ready'로 간다).
         // 이전엔 이 경로에서 doc(null, …)이 throw했을 것 — 타입 가드로 명시한다.
-        if (!db) return;
+        if (!db) return undefined;
+        const firestore = db;
 
-        const userDocRef = doc(db, 'artifacts', APP_ID, 'users', uid);
-        let bootResolved = false;
-        let cancelled = false;
+        // "uid 없이는 'data' 단계가 성립하지 않는다"는 가드도 전이표가 소유한다
+        // (uid가 없으면 step이 비어 있고, 구독/타이머가 시작되지 않는다).
+        let bootState = createBootState({ phase: 'config', uid, authResolved: true });
+        let bootstrapTimer: ReturnType<typeof setTimeout> | undefined;
+        let unsubscribe: (() => void) | null = null;
         let callbackSequence = 0;
 
+        const applyBoot = (event: BootEvent): BootStep => {
+            const step = nextBootStep(bootState, event);
+            bootState = step.state;
+            step.dispatch.forEach((action) => dispatch(action));
+            step.effects.forEach((effect) => runBootEffect(effect));
+            return step;
+        };
+
         const fallbackToOffline = async (message: string) => {
-            if (bootResolved) return;
-            bootResolved = true;
             const offlineResult = resolveOfflineBootstrapResult(await getOfflineBootstrapData());
-            if (cancelled) return;
+            const step = applyBoot({ kind: 'local_record', record: offlineResult, source: 'fallback' });
+            if (!step.restore) return;
             dispatch({ type: AT.LOAD_DATA, payload: offlineResult.data });
             trackPersistenceResult(
                 offlineResult.data.player,
@@ -310,152 +349,190 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
             dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('warning', message) });
         };
 
-        const bootstrapTimer = setTimeout(() => {
-            void fallbackToOffline(MSG.SYNC_TIMEOUT);
-        }, BOOTSTRAP_TIMEOUT_MS);
+        const subscribeUserDoc = (subscribedUid: string) => {
+            const userDocRef = doc(firestore, 'artifacts', APP_ID, 'users', subscribedUid);
+            return onSnapshot(userDocRef, async (docSnap) => {
+                if (docSnap.metadata.hasPendingWrites) return;
+                const sequence = ++callbackSequence;
+                // 콜백 경쟁(늦게 끝난 이전 콜백)은 여기서, 취소는 전이표(cancelled)가 막는다.
+                const isStale = () => bootState.cancelled || sequence !== callbackSequence;
 
-        const unsubscribe = onSnapshot(userDocRef, async (docSnap) => {
-            if (docSnap.metadata.hasPendingWrites) return;
-            const sequence = ++callbackSequence;
-
-            try {
-                if (docSnap.exists()) {
-                    const remoteData = docSnap.data();
-                    const localRecord = await getRuntimeGameStorage().load().catch(() => null);
-                    if (cancelled || sequence !== callbackSequence) return;
-                    if (resolveCloudBootstrapAuthority(localRecord, remoteData) === 'local' && localRecord) {
-                        const localData = migrateData(localRecord.payload);
-                        // 로컬 권한 판정(`resolveCloudBootstrapAuthority`)은 이미 끝났고
-                        // 여기서 분기를 바꾸지 않는다. player 없는 스냅샷은 이전에도
-                        // 바로 아래 `localData.player.loc`에서 TypeError로 아래 catch →
-                        // fallbackToOffline(SYNC_CONNECT_FAIL)로 갔다 — 같은 경로를 유지한다.
-                        if (!hasMigratedPlayer(localData)) {
-                            throw new Error('A restored local game snapshot requires player data');
+                try {
+                    if (docSnap.exists()) {
+                        const remoteData = docSnap.data();
+                        const localRecord = await getRuntimeGameStorage().load().catch(() => null);
+                        if (isStale()) return;
+                        const restoreEffect = findRestoreEffect(applyBoot({
+                            kind: 'remote_snapshot',
+                            doc: {
+                                lastActiveMillis: remoteData.lastActive?.toMillis() || null,
+                                hasLocalRecord: Boolean(localRecord),
+                            },
+                            authority: resolveCloudBootstrapAuthority(localRecord, remoteData),
+                            lastLoadedMillis: lastLoadedTimestampRef.current || null,
+                        }).effects);
+                        // 복원 지시가 없으면 내가 올린 저장의 에코다 — 전이표가 부트만 확정한다.
+                        if (!restoreEffect) return;
+                        if (restoreEffect.kind === 'restoreFromLocalRecord' && localRecord) {
+                            const localData = migrateData(localRecord.payload);
+                            // 로컬 권한 판정(`resolveCloudBootstrapAuthority`)은 이미 끝났고
+                            // 여기서 분기를 바꾸지 않는다. player 없는 스냅샷은 이전에도
+                            // 바로 아래 `localData.player.loc`에서 TypeError로 아래 catch →
+                            // fallbackToOffline(SYNC_CONNECT_FAIL)로 갔다 — 같은 경로를 유지한다.
+                            if (!hasMigratedPlayer(localData)) {
+                                throw new Error('A restored local game snapshot requires player data');
+                            }
+                            if (localData.gameState === 'combat' && !localData.enemy) localData.gameState = 'idle';
+                            if (!localData.player.loc) localData.player.loc = CONSTANTS.START_LOCATION;
+                            if (!applyBoot({ kind: 'restore_prepared', source: 'local-record' }).restore) return;
+                            dispatch({ type: AT.LOAD_DATA, payload: localData });
+                            trackPersistenceResult(localData.player, 'restore', 'local', 'restore');
+                            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'syncing' });
+                            return;
                         }
-                        if (localData.gameState === 'combat' && !localData.enemy) localData.gameState = 'idle';
-                        if (!localData.player.loc) localData.player.loc = CONSTANTS.START_LOCATION;
-                        bootResolved = true;
-                        clearTimeout(bootstrapTimer);
-                        dispatch({ type: AT.LOAD_DATA, payload: localData });
-                        trackPersistenceResult(localData.player, 'restore', 'local', 'restore');
-                        dispatch({ type: AT.SET_SYNC_STATUS, payload: 'syncing' });
-                        return;
-                    }
-                    if (lastLoadedTimestampRef.current && remoteData.lastActive?.toMillis() === lastLoadedTimestampRef.current) {
-                        bootResolved = true;
-                        clearTimeout(bootstrapTimer);
-                        return;
-                    }
 
-                    let activeData = migrateData(remoteData);
-                    if (activeData) {
-                        // 원격 문서가 존재하지만 player 필드가 없는 경우(권한 판정 'none' 등)
-                        // 이전에도 바로 아래 `activeData.player.loc`에서 TypeError가 나
-                        // 아래 catch → fallbackToOffline(SYNC_CONNECT_FAIL)로 갔다.
-                        // `if (activeData)` 바깥 분기는 그대로 두고 같은 경로만 유지한다.
-                        if (!hasMigratedPlayer(activeData)) {
-                            throw new Error('A restored cloud game snapshot requires player data');
-                        }
-                        if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
-                        if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
-
-                        const remoteSaveVersion = Number(remoteData.saveSchemaVersion);
-                        const remoteRevision = Number(remoteData.saveRevision);
-                        const remoteSavedAt = Number(remoteData.savedAt);
-                        let localImportFailed = false;
-                        if (
-                            Number.isSafeInteger(remoteSaveVersion)
-                            && remoteSaveVersion >= 0
-                            && Number.isSafeInteger(remoteRevision)
-                            && remoteRevision > 0
-                            && Number.isSafeInteger(remoteSavedAt)
-                            && remoteSavedAt >= 0
-                        ) {
-                            const remoteRecord: GameSaveRecord = {
-                                saveVersion: remoteSaveVersion,
-                                revision: remoteRevision,
-                                savedAt: remoteSavedAt,
-                                payload: activeData,
-                            };
-                            const importResult = await importCloudRecordAuthority(
-                                getRuntimeGameStorage(),
-                                remoteRecord,
-                            );
-                            const importedRecord = importResult.record;
-                            activeData = migrateData(importedRecord.payload);
-                            // importedRecord는 방금 올린 remoteRecord이거나 로컬이 이긴
-                            // 기존 레코드다. player 없는 payload는 이전에도 바로 아래
-                            // `activeData.player.loc`에서 TypeError → catch → fallback 이었다.
+                        let activeData = migrateData(remoteData);
+                        if (activeData) {
+                            // 원격 문서가 존재하지만 player 필드가 없는 경우(권한 판정 'none' 등)
+                            // 이전에도 바로 아래 `activeData.player.loc`에서 TypeError가 나
+                            // 아래 catch → fallbackToOffline(SYNC_CONNECT_FAIL)로 갔다.
+                            // `if (activeData)` 바깥 분기는 그대로 두고 같은 경로만 유지한다.
                             if (!hasMigratedPlayer(activeData)) {
-                                throw new Error('A re-imported game snapshot requires player data');
+                                throw new Error('A restored cloud game snapshot requires player data');
                             }
                             if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
                             if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
-                            cloudRevisionFloorRef.current = Math.max(
-                                cloudRevisionFloorRef.current,
-                                importedRecord.revision,
-                            );
-                            cloudRevisionAdvanceRequiredRef.current = true;
-                            if (!importResult.localImportFailed) {
-                                pendingCloudRecordRef.current = null;
-                            } else {
-                                localImportFailed = true;
-                                pendingCloudRecordRef.current = remoteRecord;
-                                console.warn('Cloud save local import failed', importResult.error);
+
+                            const remoteSaveVersion = Number(remoteData.saveSchemaVersion);
+                            const remoteRevision = Number(remoteData.saveRevision);
+                            const remoteSavedAt = Number(remoteData.savedAt);
+                            let localImportFailed = false;
+                            if (
+                                Number.isSafeInteger(remoteSaveVersion)
+                                && remoteSaveVersion >= 0
+                                && Number.isSafeInteger(remoteRevision)
+                                && remoteRevision > 0
+                                && Number.isSafeInteger(remoteSavedAt)
+                                && remoteSavedAt >= 0
+                            ) {
+                                const remoteRecord: GameSaveRecord = {
+                                    saveVersion: remoteSaveVersion,
+                                    revision: remoteRevision,
+                                    savedAt: remoteSavedAt,
+                                    payload: activeData,
+                                };
+                                const importResult = await importCloudRecordAuthority(
+                                    getRuntimeGameStorage(),
+                                    remoteRecord,
+                                );
+                                const importedRecord = importResult.record;
+                                activeData = migrateData(importedRecord.payload);
+                                // importedRecord는 방금 올린 remoteRecord이거나 로컬이 이긴
+                                // 기존 레코드다. player 없는 payload는 이전에도 바로 아래
+                                // `activeData.player.loc`에서 TypeError → catch → fallback 이었다.
+                                if (!hasMigratedPlayer(activeData)) {
+                                    throw new Error('A re-imported game snapshot requires player data');
+                                }
+                                if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
+                                if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
+                                cloudRevisionFloorRef.current = Math.max(
+                                    cloudRevisionFloorRef.current,
+                                    importedRecord.revision,
+                                );
+                                cloudRevisionAdvanceRequiredRef.current = true;
+                                if (!importResult.localImportFailed) {
+                                    pendingCloudRecordRef.current = null;
+                                } else {
+                                    localImportFailed = true;
+                                    pendingCloudRecordRef.current = remoteRecord;
+                                    console.warn('Cloud save local import failed', importResult.error);
+                                }
+                            }
+                            if (isStale()) return;
+
+                            if (!applyBoot({ kind: 'restore_prepared', source: 'remote-doc' }).restore) return;
+                            dispatch({ type: AT.LOAD_DATA, payload: activeData });
+                            trackPersistenceResult(activeData.player, 'restore', 'cloud', 'restore');
+                            if (localImportFailed) {
+                                dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
+                                dispatch({
+                                    type: AT.ADD_LOG,
+                                    payload: makeLogPayload('warning', MSG.SYNC_CONNECT_FAIL),
+                                });
+                            }
+                            lastLoadedTimestampRef.current = remoteData.lastActive?.toMillis() || Date.now();
+                            if (!hasBootLogRef.current) {
+                                hasBootLogRef.current = true;
+                                dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('system', MSG.SYNC_SERVER_LOADED) });
                             }
                         }
-                        if (cancelled || sequence !== callbackSequence) return;
-
-                        bootResolved = true;
-                        clearTimeout(bootstrapTimer);
-                        dispatch({ type: AT.LOAD_DATA, payload: activeData });
-                        trackPersistenceResult(activeData.player, 'restore', 'cloud', 'restore');
-                        if (localImportFailed) {
-                            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'offline' });
-                            dispatch({
-                                type: AT.ADD_LOG,
-                                payload: makeLogPayload('warning', MSG.SYNC_CONNECT_FAIL),
-                            });
-                        }
-                        lastLoadedTimestampRef.current = remoteData.lastActive?.toMillis() || Date.now();
-                        if (!hasBootLogRef.current) {
-                            hasBootLogRef.current = true;
-                            dispatch({ type: AT.ADD_LOG, payload: makeLogPayload('system', MSG.SYNC_SERVER_LOADED) });
+                    } else {
+                        const localResult = await getOfflineBootstrapData();
+                        if (isStale()) return;
+                        // 원격 문서 부재 — 전이표가 'restoreFromLocal'을 지시하면 방금 읽은
+                        // 로컬 부트스트랩 결과로 복원을 승인받는다.
+                        if (!findRestoreEffect(applyBoot({
+                            kind: 'remote_snapshot',
+                            doc: null,
+                            authority: null,
+                            lastLoadedMillis: lastLoadedTimestampRef.current || null,
+                        }).effects)) return;
+                        if (!applyBoot({
+                            kind: 'local_record',
+                            record: localResult,
+                            source: 'empty-remote-doc',
+                        }).restore) return;
+                        dispatch({ type: AT.LOAD_DATA, payload: localResult.data });
+                        trackPersistenceResult(
+                            localResult.data.player,
+                            'restore',
+                            localResult.outcome,
+                            'restore',
+                        );
+                        if (localResult.data.player?.name) {
+                            dispatch({ type: AT.SET_SYNC_STATUS, payload: 'syncing' });
                         }
                     }
-                } else {
-                    const localResult = await getOfflineBootstrapData();
-                    if (cancelled || sequence !== callbackSequence) return;
-                    bootResolved = true;
-                    clearTimeout(bootstrapTimer);
-                    dispatch({ type: AT.LOAD_DATA, payload: localResult.data });
-                    trackPersistenceResult(
-                        localResult.data.player,
-                        'restore',
-                        localResult.outcome,
-                        'restore',
-                    );
-                    if (localResult.data.player?.name) {
-                        dispatch({ type: AT.SET_SYNC_STATUS, payload: 'syncing' });
-                    }
+                } catch (error) {
+                    if (isStale()) return;
+                    console.warn('User data restore failed', error);
+                    applyBoot({ kind: 'restore_failed' });
                 }
-            } catch (error) {
-                if (cancelled || sequence !== callbackSequence) return;
-                console.warn('User data restore failed', error);
-                clearTimeout(bootstrapTimer);
-                await fallbackToOffline(MSG.SYNC_CONNECT_FAIL);
+            }, (e: unknown) => {
+                console.warn('User data subscribe failed', e);
+                callbackSequence += 1;
+                applyBoot({ kind: 'remote_error' });
+            });
+        };
+
+        const runBootEffect = (effect: BootEffect) => {
+            switch (effect.kind) {
+                case 'startBootstrapTimer':
+                    bootstrapTimer = setTimeout(() => {
+                        applyBoot({ kind: 'bootstrap_timeout' });
+                    }, BOOTSTRAP_TIMEOUT_MS);
+                    break;
+                case 'clearTimers':
+                    clearTimeout(bootstrapTimer);
+                    break;
+                case 'subscribeUserDoc':
+                    unsubscribe = subscribeUserDoc(effect.uid);
+                    break;
+                case 'fallbackOffline':
+                    void fallbackToOffline(effect.message);
+                    break;
+                default:
+                    // 복원 준비(restoreFrom*)는 스냅샷 콜백이 직접 await 하며 실행한다.
+                    break;
             }
-        }, (e: unknown) => {
-            console.warn('User data subscribe failed', e);
-            callbackSequence += 1;
-            clearTimeout(bootstrapTimer);
-            void fallbackToOffline(MSG.SYNC_CONNECT_FAIL);
-        });
+        };
+
+        // 전이표가 거부하면(uid 없음) 구독도 타이머도 시작되지 않는다.
+        if (!applyBoot({ kind: 'data_stage_entered', uid }).effects.length) return undefined;
 
         return () => {
-            cancelled = true;
-            clearTimeout(bootstrapTimer);
-            unsubscribe();
+            applyBoot({ kind: 'cancelled' });
+            unsubscribe?.();
         };
     }, [uid, bootStage, dispatch, mockMode]);
 
