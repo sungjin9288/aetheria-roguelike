@@ -24,8 +24,8 @@
 | Node.js | — | >=18.0.0 |
 
 > **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
-> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` 819건,
-> `as any` 80곳 잔존 (2026-09-18 Wave 6 실측; `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다.
+> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` 493건,
+> `as any` 69곳 잔존 (2026-09-18 Wave 7 실측; `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다.
 > `Player`의 `quests/status/history`는 `QuestProgressState`/`StatusId[]`/`EventHistoryEntry`로 닫혔고,
 > utils 8파일(`aiEventUtils`·`questOperations`·`graveUtils`·`gameUtils`·`adventureGuide`·`expeditionMissionFocus`·
 > `expeditionLedger`·`equipmentUtils`)은 `: any` 0이다. **주입 경계는 `src/hooks/actionDeps.ts`가 소유한다** —
@@ -42,8 +42,12 @@
 > `FullStats`(`statsCalculator.ts`)가 전투 수식의 표준 stats 타입.
 > `src/hooks`·`src/reducers`의 소유자 로컬(`p`/`player`/`updatedPlayer`/`state`)은 `Player`/`GameState`로
 > 정리됐다 — 새 코드도 `Player`/`FullStats`/`GameState`를 명시할 것.
-> 남은 `: any`는 utils 248·components 173·systems 162·`useGameTestApi` 54(QA 시드, 프로덕션 tree-shaken)에 분포하고,
-> `BalanceConfig`의 `[key: string]: any`(constants.ts)가 미선언 `BALANCE.X`를 `any`로 새게 하는 구조 부채가 남아 있다.
+> **`BALANCE`/`CONSTANTS`의 타입은 리터럴에서 도출된다**(`as const` + `typeof`, 인덱스 시그니처 0) — `BALANCE.오타`는 컴파일 에러이고,
+> 상수 모양을 소비처에서 손으로 다시 선언하지 말 것(같은 상수를 두 곳이 다르게 선언하던 드리프트를 Wave 7이 제거했다).
+> **`GameAction`은 `ActionPayloadMap`(actionTypes.ts)에서 도출된 판별 유니온**이다 — `AT`에 키를 추가하면 맵에도 payload 타입을
+> 넣어야 컴파일되고, 핸들러는 `HandlerMap`/`ActionOf<K>`로 payload를 자동으로 좁혀 받는다(`action.payload as X` 캐스트 금지).
+> 남은 `: any`는 utils 155·components 83·systems 78·`useGameTestApi` 54(QA 시드, 프로덕션 tree-shaken)에 분포하고,
+> `GameState.postCombatResult`(greyback 카드)와 `dataMigration`의 깊은 복사 로컬이 마지막 구조적 `any`다.
 
 ---
 

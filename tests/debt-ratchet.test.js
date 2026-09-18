@@ -107,7 +107,7 @@ function formatOffenders(perFile, limit = 20) {
 //   합류해 실측치가 올랐다(any 1466→1581, as any 71→99, systems 한글 144→260, reducers 24→26).
 //   병합 직후 HEAD 실측을 새 기준선으로 삼는다 — 이후로는 다시 "하락만 허용".
 // 2026-09-17 Wave 5(W2 Player any[] 3개 + W5 utils 8파일 슬라이스) 실측으로 재고정: 1581 → 1301.
-const ANY_BASELINE = 819;
+const ANY_BASELINE = 493;
 
 test(`debt-ratchet: 명시적 ": any" 개수는 ${ANY_BASELINE}건을 넘지 않는다 (하락만 허용)`, () => {
     const files = listFiles('src', ['.ts', '.tsx']);
@@ -122,7 +122,7 @@ test(`debt-ratchet: 명시적 ": any" 개수는 ${ANY_BASELINE}건을 넘지 않
 
 // ── (b) `as any` ────────────────────────────────────────────────────────────
 // 2026-09-17 Wave 5 실측으로 재고정: 99 → 83 (stale 캐스트 제거분, 신규 as any 0).
-const AS_ANY_BASELINE = 80;
+const AS_ANY_BASELINE = 69;
 
 test(`debt-ratchet: "as any" 캐스트 개수는 ${AS_ANY_BASELINE}건을 넘지 않는다 (하락만 허용)`, () => {
     const files = listFiles('src', ['.ts', '.tsx']);
