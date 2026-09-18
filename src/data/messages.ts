@@ -721,4 +721,26 @@ export const MSG = {
 
     // 2026-09 Wave 6 X2: systems 이관 — consumableEffect.ts (아이템 이름 결손 시 표시용 폴백).
     CONSUMABLE_NAME_FALLBACK: '소모품',
+
+    // 2026-09 Wave 12 D2: 시즌 여정 회전 (완주 → 다음 시즌).
+    SEASON_NAME: (ordinal: number) => `시즌 ${ordinal}`,
+    SEASON_SUBTITLE: '평소의 모험이 성장으로 이어집니다',
+    /** 완주 로그 — 리셋 직전에 남긴다. */
+    SEASON_ROTATED: (completedName: string, nextName: string, scale: string) => (
+        `${completedName} 완주! ${nextName}이 열렸습니다 · 보상 규모 ×${scale}`
+    ),
+    SEASON_ROTATION_TITLE: '시즌이 끝나면',
+    /** 완주 안내 — 남은 수령 수와 다음 시즌 보상 배율을 함께 보여준다. */
+    SEASON_ROTATION_NOTICE: (nextName: string, scale: string) => (
+        `30단계 보상을 모두 받으면 ${nextName}이 열립니다 · 숫자 보상 ×${scale}`
+    ),
+    SEASON_CLAIMS_REMAINING: (remaining: number) => `완주까지 남은 보상 ${remaining}개`,
+    SEASON_CLAIMS_READY: '마지막 보상을 받으면 다음 시즌이 시작됩니다',
+    SEASON_SCALE_BADGE: (scale: string) => `보상 ×${scale}`,
+    SEASON_ARCHIVE_TITLE: '지난 시즌 기록',
+    SEASON_ARCHIVE_EMPTY: '아직 완주한 시즌이 없습니다',
+    SEASON_ARCHIVE_SUMMARY: (count: number) => `완주 ${count}회`,
+    SEASON_ARCHIVE_ENTRY: (name: string, claimedCount: number) => (
+        `${name} · 보상 ${claimedCount}개 수령`
+    ),
 };

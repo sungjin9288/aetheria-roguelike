@@ -6,7 +6,7 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { applyEssenceGain } from '../../systems/essenceLedger';
 import { getCurrentDailyProtocol } from '../../utils/protocolCycle';
-import { SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
+import { createSeasonPassState, SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
 import type { DailyProtocolMissionType, Item, Player } from '../../types/index.js';
 import type { Relic } from '../../types/relic.js';
 
@@ -32,7 +32,9 @@ export const sanitizeQuickSlots = (
 
 export const addSeasonXp = (player: Player, amount: number): Player => {
     if (!Number.isFinite(amount) || amount <= 0) return player;
-    const seasonPass = player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
+    // 2026-09 Wave 12 D2: 'S1' 리터럴 대신 레지스트리 기반 기본값.
+    //   XP 상한(SEASON_MAX_XP)은 그대로다 — 상한을 넘기는 대신 완주가 시즌을 회전시킨다.
+    const seasonPass = player.seasonPass || createSeasonPassState();
     const currentXp = Math.max(0, Number(seasonPass.xp) || 0);
     const nextXp = Math.min(SEASON_MAX_XP, currentXp + amount);
     if (nextXp === currentXp) return player;
