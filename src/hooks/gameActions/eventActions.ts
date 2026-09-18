@@ -376,7 +376,7 @@ const applyOutcomeBuff = (player: Player, buff: OutcomeBuff, addLog: AddLog) => 
  * 화이트리스트는 aiEventUtils에서 이미 통과했지만, dispatch 직전에 한 번 더 확인한다.
  */
 /** BALANCE.EVENT_STATUS_IDS(= StatusId 화이트리스트) 통과 여부를 타입으로 옮긴다. */
-const isEventStatusId = (value: string): value is StatusId => BALANCE.EVENT_STATUS_IDS.includes(value);
+const isEventStatusId = (value: string): value is StatusId => BALANCE.EVENT_STATUS_IDS.some((id) => id === value);
 
 const applyOutcomeStatus = (player: Player, status: OutcomeStatus, addLog: AddLog): Player => {
     const id = String(status?.id || '');

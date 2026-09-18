@@ -8,22 +8,35 @@ const ENV: ImportMetaEnv = (typeof import.meta !== 'undefined' && import.meta.en
 export const ADMIN_UIDS = (ENV.VITE_ADMIN_UIDS || '').split(',').map((s: string) => s.trim()).filter(Boolean);
 
 /**
- * 게임 전역 상수. 1차 타입화 — 핵심 키는 명시 타입, 나머지는 인덱스 시그니처로
- * 점진 타입화(기존 접근 호환). 신규 키 추가 시 가능하면 명시 타입을 부여할 것.
+ * 몬스터 접두사 1건. `isElite`가 8건 중 2건(고대/재앙의)에만 있어 리터럴 추론으로는
+ * 선택 필드를 표현할 수 없으므로 여기만 원소 타입을 명시한다.
  */
-export interface GameConstants {
-    [key: string]: any;
-    DEFAULT_JOB: string;
-    START_LOCATION: string;
-    MAX_LEVEL: number;
-    START_HP: number;
-    START_MP: number;
-    START_GOLD: number;
-    START_NEXT_EXP: number;
-    DATA_VERSION: number;
+export interface MonsterPrefixDef {
+    name: string;
+    mod: number;
+    expMod: number;
+    dropMod: number;
+    /** 일부 접두사(고대/재앙의)에만 있다. */
+    isElite?: boolean;
 }
 
-export const CONSTANTS: GameConstants = {
+const MONSTER_PREFIXES: MonsterPrefixDef[] = [
+    { name: '허약한', mod: 0.7, expMod: 0.7, dropMod: 0.8 },
+    { name: '일반적인', mod: 1.0, expMod: 1.0, dropMod: 1.0 },
+    { name: '날렵한', mod: 1.1, expMod: 1.1, dropMod: 1.2 },
+    { name: '단단한', mod: 1.2, expMod: 1.2, dropMod: 1.2 },
+    { name: '광폭한', mod: 1.3, expMod: 1.4, dropMod: 1.5 },
+    { name: '거대', mod: 1.5, expMod: 1.6, dropMod: 2.0 },
+    { name: '고대', mod: 1.8, expMod: 2.0, dropMod: 3.0, isElite: true },
+    { name: '재앙의', mod: 2.5, expMod: 3.0, dropMod: 5.0, isElite: true },
+];
+
+/**
+ * 게임 전역 상수. 타입은 리터럴에서 도출한다(`typeof CONSTANTS`) — 선언 인터페이스를
+ * 따로 두지 않으므로 키 추가/삭제가 타입과 구조적으로 어긋날 수 없다.
+ * 값이 곧 계약이라 `CONSTANTS.오타`는 컴파일 에러다.
+ */
+export const CONSTANTS = {
     DEFAULT_JOB: '모험가',
     START_LOCATION: '시작의 마을',
     ABYSS_MAP_NAME: '혼돈의 심연',
@@ -46,93 +59,122 @@ export const CONSTANTS: GameConstants = {
     DATA_VERSION: 5.1,
     // cycle 309: REMOTE_CONFIG_ENABLED 제거 — RemoteConfigLoader.ts (dead module) 외
     //   read 0건. RemoteConfigLoader 자체가 import 0건이라 cascade dead.
-    MONSTER_PREFIXES: [
-        { name: '허약한', mod: 0.7, expMod: 0.7, dropMod: 0.8 },
-        { name: '일반적인', mod: 1.0, expMod: 1.0, dropMod: 1.0 },
-        { name: '날렵한', mod: 1.1, expMod: 1.1, dropMod: 1.2 },
-        { name: '단단한', mod: 1.2, expMod: 1.2, dropMod: 1.2 },
-        { name: '광폭한', mod: 1.3, expMod: 1.4, dropMod: 1.5 },
-        { name: '거대', mod: 1.5, expMod: 1.6, dropMod: 2.0 },
-        { name: '고대', mod: 1.8, expMod: 2.0, dropMod: 3.0, isElite: true },
-        { name: '재앙의', mod: 2.5, expMod: 3.0, dropMod: 5.0, isElite: true },
-    ]
+    MONSTER_PREFIXES,
+} as const;
+
+/** `CONSTANTS` 리터럴에서 도출한 전역 상수 타입 (수기 선언 금지 — 리터럴이 진실 원천). */
+export type GameConstants = typeof CONSTANTS;
+
+// ── BALANCE 서브구조 중 리터럴이 표현하지 못하는 것만 명시 타입을 갖는다 ─────────
+//   (1) 열린 레코드: 키가 아이템/층 데이터에서 오는 number·string이라 리터럴 키 집합으로
+//       색인할 수 없다(`BALANCE.TIER_REQ_LEVEL[item.tier]`).
+//   (2) 선택 필드: 항목마다 있고 없는 보상 종류(gold/exp/item/premiumCurrency).
+//   이 두 경우 외에는 전부 리터럴 도출이므로, 여기에 스칼라 키를 손으로 늘리지 말 것.
+
+/** 등급 → hex 색. 등급 문자열은 아이템/유물 데이터에서 온다(열린 키). */
+const RARITY_COLORS: Record<string, string> = { common: '#9ca3af', uncommon: '#22c55e', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b' };
+
+/** 합성 티어(= 아이템 tier) → 성공률 / 골드 비용. tier는 아이템 데이터의 number다. */
+const SYNTHESIS_SUCCESS_RATES: Record<number, number> = { 1: 1.0, 2: 0.95, 3: 0.85, 4: 0.7, 5: 0.5 };
+const SYNTHESIS_GOLD_COSTS: Record<number, number> = { 1: 150, 2: 600, 3: 2500, 4: 10000, 5: 40000 };
+
+/** 아이템 티어 → 장착 최소 레벨. */
+const TIER_REQ_LEVEL: Record<number, number> = { 1: 1, 2: 10, 3: 28, 4: 45, 5: 60, 6: 75 };
+
+/** 심연 마일스톤 보상 종류. */
+export interface AbyssMilestoneReward {
+    type: 'relic_choice' | 'legendary_item';
+}
+
+/** 심연 층(number) → 마일스톤 보상. */
+const ABYSS_MILESTONE_REWARDS: Record<number, AbyssMilestoneReward> = {
+    // cycle 194: 'prestige_points' reward type을 사용 가능한 보상으로 교체.
+    //   기존엔 player.prestigePoints 카운터가 어디에서도 소비/표시되지 않는 dead currency였음
+    //   (combatBossHandlers에서 +1만 하고 끝). UI/ASCEND/spend 시스템 미구현 상태에서 player가
+    //   abyss 75/200/500층 도달해도 visible 보상 0건이던 회귀.
+    //   대안: 75/500은 relic_choice (선택지 다양화), 200은 legendary_item (기존 패턴 일관).
+    10:  { type: 'relic_choice' },
+    25:  { type: 'relic_choice' },
+    50:  { type: 'legendary_item' },
+    75:  { type: 'relic_choice' },     // was prestige_points 1
+    100: { type: 'legendary_item' },
+    150: { type: 'relic_choice' },
+    200: { type: 'legendary_item' },   // was prestige_points 2
+    300: { type: 'legendary_item' },
+    500: { type: 'relic_choice' },     // was prestige_points 3 — 최종 마일스톤도 의미 있는 보상
 };
+
+/** 심연 보스 층(number) → 보스 이름. */
+const ABYSS_BOSS_NAMES: Record<number, string> = {
+    10: '혼돈의 수호자',
+    20: '심연의 파수꾼',
+    30: '차원 분열자',
+    40: '엔트로피 군주',
+    50: '무한의 화신',
+    60: '허무의 전령',
+    70: '멸절의 사도',
+    80: '공허의 심판자',
+    90: '허무의 황제',
+    100: '공허의 신',
+};
+
+/** 발견 체인 1건. 보상은 체인마다 구성이 달라(아이템형/크리스탈형) 전부 선택 필드다. */
+export interface DiscoveryChainDef {
+    id: string;
+    label: string;
+    locations: string[];
+    reward: { gold?: number; exp?: number; item?: string; premiumCurrency?: number };
+    desc: string;
+}
+
+const DISCOVERY_CHAINS: DiscoveryChainDef[] = [
+    {
+        id: 'fire_convergence',
+        label: '화염의 수렴',
+        locations: ['화염의 협곡', '화염의 사원', '용의 둥지'],
+        // cycle 177: '용의 숨결' items.ts 미등록 → '용의 화염' (tier 5 화염 무기).
+        reward: { gold: 3000, exp: 2000, item: '용의 화염' },
+        desc: '세 곳의 화염 지역을 탐험하니 고대 용의 기운이 하나로 수렴합니다.',
+    },
+    {
+        id: 'frozen_truth',
+        label: '동결된 진실',
+        locations: ['북부 설원', '얼음 성채', '빙하 심연'],
+        // cycle 177: '영원의 빙결정' items.ts 미등록 → '빙결의 왕관검' (tier 5 냉기 무기).
+        reward: { gold: 3000, exp: 2000, item: '빙결의 왕관검' },
+        desc: '얼어붙은 세계의 끝에서 잊혀진 진실을 찾아냅니다.',
+    },
+    {
+        id: 'void_resonance',
+        label: '공허의 공명',
+        locations: ['에테르 관문', '혼돈의 심연', '차원의 틈새'],
+        reward: { gold: 5000, exp: 3000, premiumCurrency: 10 },
+        desc: '차원의 경계가 공명하며 에테르의 비밀이 드러납니다.',
+    },
+    {
+        id: 'ancient_pilgrimage',
+        label: '고대 순례길',
+        locations: ['잊혀진 폐허', '피라미드', '고대 보물고', '금지된 도서관'],
+        reward: { gold: 8000, exp: 5000, premiumCurrency: 15 },
+        desc: '고대 문명의 네 거점을 순례하여 잃어버린 지식을 모았습니다.',
+    },
+    {
+        id: 'demon_trail',
+        label: '마왕의 흔적',
+        locations: ['암흑 성', '마왕성', '혼돈의 심연'],
+        // cycle 177: '마왕의 인장' items.ts 미등록 → '마왕의 대낫' (tier 5 어둠 무기 — 보스 흔적).
+        reward: { gold: 6000, exp: 4000, item: '마왕의 대낫' },
+        desc: '마왕의 세력 근거지를 모두 밟아, 그의 흔적을 추적합니다.',
+    },
+];
 
 // Game Balance Constants - Centralized magic numbers
 /**
- * 밸런스 상수. 1차 타입화 — 자주 참조되는 스칼라 키는 명시 타입, 나머지(배열/객체/
- * 레코드 등 이질 구조)는 인덱스 시그니처로 호환 유지. 새 밸런스 수치는 가능한 한
- * 명시 타입을 추가해 오타·단위 실수를 컴파일 타임에 차단할 것.
+ * 밸런스 상수. 타입은 리터럴에서 도출한다(`typeof BALANCE`) — 209키 전부가 실제 값의
+ * 모양 그대로 타입이 되고, 인덱스 시그니처가 없으므로 `BALANCE.오타`는 컴파일 에러다.
+ * 새 수치는 그냥 리터럴에 추가하면 된다(별도 선언 불필요).
  */
-export interface BalanceConfig {
-    [key: string]: any;
-    REST_COST: number;
-    SKILL_MP_COST: number;
-    CRIT_CHANCE: number;
-    DROP_CHANCE: number;
-    ESCAPE_CHANCE: number;
-    EVENT_CHANCE_NOTHING: number;
-    MAP_HIGH_EVENT_CHANCE_THRESHOLD: number;
-    EXP_SCALE_RATE: number;
-    EXP_LEVEL_HARD_CAP: number;
-    HP_PER_LEVEL: number;
-    MP_PER_LEVEL: number;
-    ATK_PER_LEVEL: number;
-    DEF_PER_LEVEL: number;
-    MONSTER_HP_BASE: number;
-    MONSTER_HP_PER_LEVEL: number;
-    MONSTER_DEF_BASE: number;
-    MONSTER_DEF_PER_LEVEL: number;
-    MONSTER_DEF_PER_DEPTH: number;
-    MONSTER_GOLD_BASE: number;
-    HUNT_TARGET_FOCUS_CHANCE: number;
-    FIRST_RELIC_PITY_EXPLORES: number;
-    BOSS_PHASE2_THRESHOLD: number;
-    EARLY_ELITE_LEVEL_CAP: number;
-    EARLY_ELITE_CHANCE: number;
-    EARLY_ELITE_MULT: number;
-    EARLY_ELITE_PHASE_ATK_BONUS: number;
-    EARLY_ELITE_PHASE_HEAVY_BONUS: number;
-    ELITE_PHASE_ATK_BONUS: number;
-    ELITE_PHASE_HEAVY_BONUS: number;
-    INV_MAX_SIZE: number;
-    STATUS_DOT_RATIO: number;
-    DAMAGE_BASE_RATIO: number;
-    DAMAGE_VARIANCE: number;
-    ENEMY_DEF_K: number;
-    GUARD_DAMAGE_MULT: number;
-    ELEMENT_WEAK_MULT: number;
-    ELEMENT_RESIST_MULT: number;
-    DEFAULT_MAX_HP: number;
-    RETURN_BRIEFING_HOURS: number;
-    ABYSS_DAILY_DIVE_MULT: number;
-    ABYSS_DAILY_DIVE_COMBAT_COUNT: number;
-    ERROR_REPORT_RING_SIZE: number;
-    SCOUT_GOLD_COST: number;
-    SCOUT_GOLD_COST_PER_MAP_LEVEL: number;
-    SCOUT_ELITE_PITY_THRESHOLD: number;
-    SCOUT_ELITE_PITY_PER_STEP: number;
-    SCOUT_ELITE_MAX_CARD_CHANCE: number;
-    SCOUT_LOW_HP_RATIO: number;
-    SCOUT_LOW_HP_ELITE_MULT: number;
-    MIRROR_FREE_SCOUT_PER_LEVEL: number;
-    POST_COMBAT_PUSH_ATK_BONUS: number;
-    POST_COMBAT_PUSH_TURNS: number;
-    POST_COMBAT_BREATHER_HEAL_RATIO: number;
-    EVENT_STATUS_IDS: string[];
-    EVENT_RELIC_MAX_COUNT: number;
-    EVENT_STATUS_MAX_TURNS: number;
-    EVENT_BUFF_MAX_MULT: number;
-    EVENT_BUFF_MAX_TURNS: number;
-    EVENT_RISKY_SPECIAL_CHANCE: number;
-    EVENT_SPECIAL_WEIGHTS: Record<string, number>;
-    EVENT_BALANCED_BUFF_CHANCE: number;
-    EVENT_SPECIAL_STATUS_TURNS: number;
-    EVENT_SPECIAL_BUFF_MULT: number;
-    EVENT_SPECIAL_BUFF_TURNS: number;
-}
-
-export const BALANCE: BalanceConfig = {
+export const BALANCE = {
     REST_COST: 60,              // 경제 완화 — Lv50 기준 1-2전투로 휴식 가능 (기존 80)
     SKILL_MP_COST: 10,
     CRIT_CHANCE: 0.1,
@@ -252,12 +294,12 @@ export const BALANCE: BalanceConfig = {
     // cycle 195: RARITY_TIERS / RARITY_SELL_MULT 제거 — UI 컴포넌트는 RARITY_CLASSES 사용,
     //   판매 multiplier는 ShopPanel 등이 별도 처리. 두 키 모두 dead config.
     // Hex 컬러 (인라인 스타일/아이콘/프레임용). Tailwind 클래스 버전은 RARITY_CLASSES 사용.
-    RARITY_COLORS: { common: '#9ca3af', uncommon: '#22c55e', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b' },
+    RARITY_COLORS,
 
     // v4.1 — 합성 시스템
     SYNTHESIS_INPUT_COUNT: 3,
-    SYNTHESIS_SUCCESS_RATES: { 1: 1.0, 2: 0.95, 3: 0.85, 4: 0.7, 5: 0.5 },
-    SYNTHESIS_GOLD_COSTS: { 1: 150, 2: 600, 3: 2500, 4: 10000, 5: 40000 }, // 합성 비용 전반 완화
+    SYNTHESIS_SUCCESS_RATES,
+    SYNTHESIS_GOLD_COSTS, // 합성 비용 전반 완화
     SYNTHESIS_FAIL_RETURN: 1,
     SYNTHESIS_PROTECT_COST: 30,
 
@@ -309,7 +351,7 @@ export const BALANCE: BalanceConfig = {
     MILESTONE_STAT_ATK: 4,          // 메이저 마일스톤 ATK 보너스
 
     // 아이템 티어별 장착 최소 레벨
-    TIER_REQ_LEVEL: { 1: 1, 2: 10, 3: 28, 4: 45, 5: 60, 6: 75 },
+    TIER_REQ_LEVEL,
 
     // 루팅 보너스 드랍
     LOOT_BONUS_MIN_LEVEL: 30,       // 보너스 장비 드랍 최소 추정 레벨
@@ -442,46 +484,7 @@ export const BALANCE: BalanceConfig = {
     DAILY_INVADE_LIMIT: 5,
 
     // 발견 체인 (Discovery Chains)
-    DISCOVERY_CHAINS: [
-        {
-            id: 'fire_convergence',
-            label: '화염의 수렴',
-            locations: ['화염의 협곡', '화염의 사원', '용의 둥지'],
-            // cycle 177: '용의 숨결' items.ts 미등록 → '용의 화염' (tier 5 화염 무기).
-            reward: { gold: 3000, exp: 2000, item: '용의 화염' },
-            desc: '세 곳의 화염 지역을 탐험하니 고대 용의 기운이 하나로 수렴합니다.',
-        },
-        {
-            id: 'frozen_truth',
-            label: '동결된 진실',
-            locations: ['북부 설원', '얼음 성채', '빙하 심연'],
-            // cycle 177: '영원의 빙결정' items.ts 미등록 → '빙결의 왕관검' (tier 5 냉기 무기).
-            reward: { gold: 3000, exp: 2000, item: '빙결의 왕관검' },
-            desc: '얼어붙은 세계의 끝에서 잊혀진 진실을 찾아냅니다.',
-        },
-        {
-            id: 'void_resonance',
-            label: '공허의 공명',
-            locations: ['에테르 관문', '혼돈의 심연', '차원의 틈새'],
-            reward: { gold: 5000, exp: 3000, premiumCurrency: 10 },
-            desc: '차원의 경계가 공명하며 에테르의 비밀이 드러납니다.',
-        },
-        {
-            id: 'ancient_pilgrimage',
-            label: '고대 순례길',
-            locations: ['잊혀진 폐허', '피라미드', '고대 보물고', '금지된 도서관'],
-            reward: { gold: 8000, exp: 5000, premiumCurrency: 15 },
-            desc: '고대 문명의 네 거점을 순례하여 잃어버린 지식을 모았습니다.',
-        },
-        {
-            id: 'demon_trail',
-            label: '마왕의 흔적',
-            locations: ['암흑 성', '마왕성', '혼돈의 심연'],
-            // cycle 177: '마왕의 인장' items.ts 미등록 → '마왕의 대낫' (tier 5 어둠 무기 — 보스 흔적).
-            reward: { gold: 6000, exp: 4000, item: '마왕의 대낫' },
-            desc: '마왕의 세력 근거지를 모두 밟아, 그의 흔적을 추적합니다.',
-        },
-    ],
+    DISCOVERY_CHAINS,
 
     // 스킬 교체 비용
     SKILL_SWAP_COST: 50,
@@ -494,35 +497,9 @@ export const BALANCE: BalanceConfig = {
     PRIMAL_SHARD_REQUIRED: 3,       // 진 보스 해금에 필요한 파편 수
 
     // v4.3 — 무한 심연 강화
-    ABYSS_MILESTONE_REWARDS: {
-        // cycle 194: 'prestige_points' reward type을 사용 가능한 보상으로 교체.
-        //   기존엔 player.prestigePoints 카운터가 어디에서도 소비/표시되지 않는 dead currency였음
-        //   (combatBossHandlers에서 +1만 하고 끝). UI/ASCEND/spend 시스템 미구현 상태에서 player가
-        //   abyss 75/200/500층 도달해도 visible 보상 0건이던 회귀.
-        //   대안: 75/500은 relic_choice (선택지 다양화), 200은 legendary_item (기존 패턴 일관).
-        10:  { type: 'relic_choice' },
-        25:  { type: 'relic_choice' },
-        50:  { type: 'legendary_item' },
-        75:  { type: 'relic_choice' },     // was prestige_points 1
-        100: { type: 'legendary_item' },
-        150: { type: 'relic_choice' },
-        200: { type: 'legendary_item' },   // was prestige_points 2
-        300: { type: 'legendary_item' },
-        500: { type: 'relic_choice' },     // was prestige_points 3 — 최종 마일스톤도 의미 있는 보상
-    },
+    ABYSS_MILESTONE_REWARDS,
     ABYSS_BOSS_FLOORS: [10, 20, 30, 40, 50, 60, 70, 80, 90, 100],
-    ABYSS_BOSS_NAMES: {
-        10: '혼돈의 수호자',
-        20: '심연의 파수꾼',
-        30: '차원 분열자',
-        40: '엔트로피 군주',
-        50: '무한의 화신',
-        60: '허무의 전령',
-        70: '멸절의 사도',
-        80: '공허의 심판자',
-        90: '허무의 황제',
-        100: '공허의 신',
-    },
+    ABYSS_BOSS_NAMES,
 
     // 연속 처치 (Kill Streak) 시스템
     KILL_STREAK_DECAY_MS: 30000,        // 30초 비전투 시 스트릭 초기화
@@ -631,7 +608,10 @@ export const BALANCE: BalanceConfig = {
     EVENT_SPECIAL_STATUS_TURNS: 2,
     EVENT_SPECIAL_BUFF_MULT: 1.15,
     EVENT_SPECIAL_BUFF_TURNS: 4,
-};
+} as const;
+
+/** `BALANCE` 리터럴에서 도출한 밸런스 타입 (수기 선언 금지 — 리터럴이 진실 원천). */
+export type BalanceConfig = typeof BALANCE;
 
 Object.freeze(CONSTANTS);
 Object.freeze(BALANCE);

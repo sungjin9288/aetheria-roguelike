@@ -172,7 +172,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
             ? { name: '정예', mod: BALANCE.EARLY_ELITE_MULT, expMod: BALANCE.EARLY_ELITE_MULT, dropMod: 2.0, isElite: true }
             : (() => {
                 const elitePrefixes = (forceElite || prestigeElite)
-                    ? CONSTANTS.MONSTER_PREFIXES.filter((p: any) => p.isElite)
+                    ? CONSTANTS.MONSTER_PREFIXES.filter((p) => p.isElite)
                     : CONSTANTS.MONSTER_PREFIXES;
                 const pool = elitePrefixes.length > 0 ? elitePrefixes : CONSTANTS.MONSTER_PREFIXES;
                 return pool[Math.floor(rng() * pool.length)];

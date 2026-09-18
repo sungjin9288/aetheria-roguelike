@@ -38,7 +38,7 @@ const TITLE_DESCRIPTIONS: Record<string, string> = {
     title_worldender: '세계의 끝까지 여정을 마친 모험가의 칭호',
 };
 
-const rewardRange = (entries: CrystalRewardEntry[]) => {
+const rewardRange = (entries: readonly CrystalRewardEntry[]) => {
     const rewards = entries
         .map((entry) => {
             const reward = entry.reward as { premiumCurrency?: unknown } | undefined;
