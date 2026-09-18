@@ -112,15 +112,15 @@ jobs:
           retention-days: 7
 
   perf:
-    name: Perf guard (FCP/DCL budgets, non-blocking)
+    name: Perf guard (FCP/DCL budgets)
     runs-on: ubuntu-latest
     needs: static-checks
-    # scripts/perf-guard.mjs asserts real FCP/DCL/interaction budgets but, until now, no
-    # workflow ever ran it — CI truthfulness gap called out in
-    # docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md §7 (Track K2). continue-on-error keeps
-    # this informational: a perf regression shows up red in the PR checks list without
-    # blocking merges, since the budgets are not yet calibrated against CI runner noise.
-    continue-on-error: true
+    # scripts/perf-guard.mjs asserts real FCP/DCL/interaction budgets. Wave 10 B4
+    # (docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md §14) turned this blocking: the job ran
+    # green on 4 consecutive CI runs (desktop FCP 544~572ms, mobile 436~508ms) against
+    # budgets of 2,200ms / 2,500ms — a ~4x margin, so a red here is a real regression and
+    # not runner noise. Budgets stay at the user-perceived threshold, NOT "current + 10%",
+    # precisely so that runner jitter cannot flip the check.
     steps:
       - uses: actions/checkout@v4
 

@@ -62,10 +62,24 @@ const checksumInput = (envelope: Omit<GameSaveEnvelope, 'checksum'>) => [
     envelope.payloadJson,
 ].join('\n');
 
-const isGameSnapshot = (value: unknown): value is Record<string, unknown> => (
+/**
+ * 세이브 페이로드가 최소한의 "세이브 봉투" 모양(= `player` 슬롯을 가진 레코드)인지 판정한다.
+ *
+ * W10-B2: `gameStorage.ts`/`localGameSnapshot.ts` 곳곳에 흩어져 있던 동일한 임시
+ * 판정(`isGameSnapshot`이었던 이 함수 자체, `resolveCloudBootstrapAuthority`의
+ * `remote?.player`, `localGameSnapshot.ts`의 `!parsed.player`/`!snapshot?.player`)을
+ * 이 술어 하나로 통일한다. 행동은 그대로다 — `tests/save-envelope-validator.test.js`가
+ * 26개 대표값에 대해 통일 전 4곳의 판정이 이미 전부 동일했음을 실측하고, 통일 후에도
+ * 그 표와 동일한 결과를 낸다는 것으로 무변경을 증명한다. `unknown`을 받는 것은
+ * `migrateData`(dataMigration.ts)와 같은 경계 원칙 — 값을 바꾸지 않고 모양만 좁힌다.
+ */
+export interface SaveEnvelope extends Record<string, unknown> {
+    player: Record<string, unknown>;
+}
+
+export const isSaveEnvelope = (value: unknown): value is SaveEnvelope => (
     value !== null
     && typeof value === 'object'
-    && 'player' in value
     && Boolean((value as Record<string, unknown>).player)
 );
 
@@ -98,7 +112,7 @@ const parseStoredEnvelope = async (
         if (expected !== envelope.checksum) return null;
 
         const payload = JSON.parse(envelope.payloadJson);
-        if (!isGameSnapshot(payload)) return null;
+        if (!isSaveEnvelope(payload)) return null;
         return {
             raw,
             record: {
@@ -133,8 +147,8 @@ export const resolveCloudBootstrapAuthority = (
     local: GameSaveRecord | null,
     remote: Record<string, unknown> | null,
 ): 'local' | 'remote' | 'none' => {
-    if (!local && !remote?.player) return 'none';
-    if (!remote?.player) return 'local';
+    if (!local && !isSaveEnvelope(remote)) return 'none';
+    if (!isSaveEnvelope(remote)) return 'local';
     if (!local) return 'remote';
 
     const remoteSchemaVersion = Number(remote.saveSchemaVersion);
@@ -221,7 +235,7 @@ export const createGameStorage = ({
     };
 
     const publishRecord = async (record: GameSaveRecord): Promise<GameSaveRecord> => {
-        if (!isGameSnapshot(record.payload)) throw new Error('A game snapshot requires player data');
+        if (!isSaveEnvelope(record.payload)) throw new Error('A game snapshot requires player data');
         const raw = await encodeRecord(record);
 
         await backend.setItem(GAME_SAVE_STAGED_KEY, raw);
@@ -239,7 +253,7 @@ export const createGameStorage = ({
     };
 
     const saveNow = async (payload: Record<string, unknown>): Promise<GameSaveRecord> => {
-        if (!isGameSnapshot(payload)) throw new Error('A game snapshot requires player data');
+        if (!isSaveEnvelope(payload)) throw new Error('A game snapshot requires player data');
         const current = await load();
         return publishRecord({
             saveVersion: Math.max(saveVersion, current?.saveVersion ?? 0),
@@ -276,7 +290,7 @@ export const createGameStorage = ({
             savedAt: finiteInteger(record.savedAt),
             payload: record.payload,
         };
-        if (!isGameSnapshot(normalized.payload)) throw new Error('A game snapshot requires player data');
+        if (!isSaveEnvelope(normalized.payload)) throw new Error('A game snapshot requires player data');
         if (normalized.revision < 1) throw new Error('Imported game snapshot requires a positive revision');
 
         const current = await load();
@@ -304,7 +318,7 @@ export const createGameStorage = ({
         } catch {
             return null;
         }
-        if (!isGameSnapshot(legacyPayload)) return null;
+        if (!isSaveEnvelope(legacyPayload)) return null;
 
         const migrated = await save(migratePayload(legacyPayload));
         await backend.removeItem(LEGACY_GAME_SNAPSHOT_KEY);

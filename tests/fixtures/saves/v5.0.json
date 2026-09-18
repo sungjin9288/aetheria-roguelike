@@ -1,0 +1,106 @@
+{
+    "_note": "재구성 — dataMigration.ts의 'v5.0 — 진 엔딩, 이벤트 체인, 시너지' 주석 블록(eventChainProgress 기본값)과 classJourney/activeExpedition/lastExpeditionSummary/expeditionSequence/returnSupplyRewards 정규화 호출부가 근거다. meta.mirror.start_gold=2, meta.essence=50을 넣어 v5.1 essenceLifetime 역산 백필을 결정론적으로 검증한다(getSpentMirrorEssence({start_gold:2}) = MIRROR_NODES 'start_gold'.costs[0]+costs[1] = 60+120 = 180 → essenceLifetime = 50+180 = 230, tests/mirror.ts costs 실측). quests에 id:90('몬스터 100격파', combat_count/kills, goal:100)을 progress:20으로 넣고 stats.kills=210으로 둬 getCumulativeQuestProgress가 progress를 20→100(=min(goal,kills))으로 끌어올리는 실제 동작을 노출한다. stats.codex를 이미 채워 넣어 '이미 있으면 부트스트랩을 건너뛴다'(!target.stats.codex 분기) 경로를 v4.0(비어있어 부트스트랩 실행)과 대비시킨다. relics/titles/activeTitle/killStreak/achievements를 명시적으로 채운 것은 실측이다 — migrateData는 이 5개 필드를 전혀 정규화하지 않는다(코드에 해당 대입문 없음, cycle 382/375/388 주석이 '제거'했다고만 밝힘). v1/v2/v2.7/v4.0/v5 픽스처는 이 필드들을 아예 빼서 '레거시 세이브엔 없을 수 있다'를 표현하고, v5.0/v5.1은 실제 최신 클라이언트가 항상 전체 player를 직렬화한다는 점(createCloudAutosave.ts)에 근거해 채워 넣었다 — migrateData 원시 출력만으로는 INITIAL_STATE.player 키 완전성이 보장되지 않고, LOAD_DATA reducer의 `{...state.player, ...payload.player}` 병합이 그 안전망이라는 것이 이 라운드트립 테스트의 핵심 발견이다. status/skillChoices/challengeModifiers도 같은 이유로 채워 넣었다 — 셋 다 migrateData가 전혀 손대지 않는 필드다(status는 스칼라일 때만 배열로 승격, 아예 없으면 방치).",
+    "version": 5.0,
+    "gameState": "idle",
+    "enemy": null,
+    "currentEvent": null,
+    "grave": null,
+    "quickSlots": [null, null, null],
+    "player": {
+        "name": "5.0세대 개척자",
+        "job": "레인저",
+        "gender": "female",
+        "level": 30,
+        "hp": 300,
+        "maxHp": 300,
+        "mp": 100,
+        "maxMp": 100,
+        "atk": 120,
+        "def": 45,
+        "exp": 40000,
+        "nextExp": 55000,
+        "gold": 25000,
+        "loc": "고요한 숲",
+        "inv": [
+            { "id": "inv-1", "name": "하급 체력 물약", "type": "hp", "enhance": 0 }
+        ],
+        "equip": {
+            "weapon": { "id": "equip-weapon-1", "name": "복합궁", "type": "weapon", "hands": 2, "val": 30, "tier": 2, "price": 480 },
+            "armor": { "id": "equip-armor-1", "name": "가죽 갑옷", "type": "armor", "val": 8, "tier": 1, "price": 120 },
+            "offhand": null
+        },
+        "quests": [
+            { "id": 90, "progress": 20 }
+        ],
+        "stats": {
+            "kills": 210,
+            "total_gold": 60000,
+            "deaths": 6,
+            "killRegistry": { "슬라임": 120, "고블린": 250, "숲의 군주": 4 },
+            "bossKills": 4,
+            "rests": 40,
+            "escapes": 6,
+            "syntheses": 8,
+            "maxKillStreak": 20,
+            "discoveryChains": ["forest-root"],
+            "claimedQuestIds": [1],
+            "visitedMaps": ["시작의 마을", "고요한 숲"],
+            "codex": {
+                "weapons": { "복합궁": { "discovered": true } },
+                "armors": {},
+                "shields": {},
+                "monsters": { "슬라임": { "discovered": true, "kills": 120 } },
+                "recipes": {},
+                "materials": {}
+            }
+        },
+        "history": [],
+        "status": [],
+        "skillChoices": { "질풍의 단검술": "A" },
+        "challengeModifiers": [],
+        "relics": [{ "id": "blood_pact", "name": "피의 서약", "rarity": "common", "desc": "적을 처치하면 최대 생명의 3% 회복", "effect": "on_kill_heal", "val": 0.03 }],
+        "titles": [],
+        "activeTitle": null,
+        "killStreak": 3,
+        "achievements": ["ach_first_blood"],
+        "meta": {
+            "essence": 50,
+            "rank": 2,
+            "bonusAtk": 5,
+            "bonusHp": 40,
+            "bonusMp": 10,
+            "mirror": { "start_gold": 2 }
+        },
+        "combatFlags": { "comboCount": 0, "deathSaveUsed": false, "voidHeartUsed": false, "voidHeartArmed": false },
+        "premiumCurrency": 20,
+        "seasonPass": { "xp": 1200, "tier": 8, "claimed": [1, 2, 3], "isPremium": true, "seasonId": "S1" },
+        "weeklyProtocol": { "kills": 55, "explores": 20, "bossKills": 2, "lastResetWeek": 6, "claimed": ["kills", "explores"] },
+        "eventChainProgress": {},
+        "classJourney": {
+            "version": 1,
+            "sequence": 1,
+            "byJob": {
+                "레인저": {
+                    "expeditionIds": ["expedition-500"],
+                    "skillBranches": [],
+                    "signatureItems": [],
+                    "bossNames": ["숲의 군주"],
+                    "regions": ["고요한 숲"],
+                    "representativeExpeditionId": "expedition-500",
+                    "lastPlayedAt": 5000
+                }
+            }
+        },
+        "activeExpedition": null,
+        "lastExpeditionSummary": {
+            "id": "expedition-500",
+            "startedAt": 4000,
+            "endedAt": 5000,
+            "destination": "고요한 숲",
+            "returnLocation": "시작의 마을",
+            "job": "레인저"
+        },
+        "expeditionSequence": 1,
+        "returnSupplyRewards": { "version": 1, "receipts": {} }
+    }
+}

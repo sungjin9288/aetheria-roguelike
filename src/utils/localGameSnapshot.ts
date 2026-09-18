@@ -1,3 +1,5 @@
+import { isSaveEnvelope } from '../platform/gameStorage';
+
 export const LOCAL_GAME_SNAPSHOT_KEY = 'aetheria.game.snapshot.v1';
 const DEVICE_QA_NAMESPACE = ['aetheria', 'device-qa'].join('.');
 const deviceQaSnapshotKey = (scenario: string) => `${DEVICE_QA_NAMESPACE}.${scenario}.snapshot.v1`;
@@ -31,7 +33,9 @@ const readSnapshot = (
         const raw = storage.getItem(key);
         if (!raw) return null;
         const parsed = JSON.parse(raw);
-        if (!parsed || typeof parsed !== 'object' || !parsed.player) return null;
+        // W10-B2: gameStorage.ts의 통일 판정을 재사용한다(행동은 이전과 동일 —
+        // tests/save-envelope-validator.test.js가 실측).
+        if (!isSaveEnvelope(parsed)) return null;
         return parsed;
     } catch {
         return null;
@@ -43,7 +47,7 @@ const writeSnapshot = (
     snapshot: Record<string, unknown>,
     storage: SnapshotStorage | null = getBrowserStorage(),
 ) => {
-    if (!storage || !snapshot?.player) return false;
+    if (!storage || !isSaveEnvelope(snapshot)) return false;
 
     try {
         storage.setItem(key, JSON.stringify(snapshot));

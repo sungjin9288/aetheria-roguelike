@@ -1,0 +1,113 @@
+{
+    "_note": "재구성 — CONSTANTS.DATA_VERSION=5.1(현행) + createCloudAutosave.ts/useFirebaseSync.ts가 실제로 쓰는 envelope 모양(player/gameState/enemy/grave/currentEvent/quickSlots/version/saveSchemaVersion/saveRevision/savedAt)을 그대로 따른 '현재 세대' 세이브다. meta.essenceLifetime을 이미 채워 넣어 v5.1 백필 분기(typeof !== 'number' 가드)가 건너뛰어지는(=이미 있는 값 보존) 경로를 노출한다. grave는 신형 복수 `items[]` 포맷(§8-2 후자)으로 v2 픽스처(구형 단수 `item`)와 대비시킨다. quickSlots[0]은 inv에 없는 id('stale-quickslot-item')를 참조하는 오래된 참조 — migrateData 자신은 quickSlots를 3칸으로만 패딩/절단하고 인벤 존재 여부는 검사하지 않으므로(sanitizeQuickSlots는 reducer LOAD_DATA 경로 소유), 이 픽스처의 quickSlots 새니타이즈 검증은 gameReducer를 통해서만 성립한다. relics/titles/activeTitle/killStreak/achievements/status/skillChoices/challengeModifiers를 채운 근거는 v5.0 _note와 동일(migrateData는 이 필드들을 정규화하지 않으므로, 실제 최신 세이브가 이미 채워서 보낸다고 가정). status는 이미 배열(['poison'])이라 스칼라 승격 분기를 타지 않고 그대로 보존된다 — v2(스칼라 'poison' → 승격)와 대비된다.",
+    "version": 5.1,
+    "gameState": "idle",
+    "enemy": null,
+    "currentEvent": null,
+    "saveSchemaVersion": 1,
+    "saveRevision": 42,
+    "savedAt": 1758000000000,
+    "grave": { "loc": "심연의 어귀", "items": [{ "id": "grave-item-2", "name": "수호자의 방패", "type": "shield" }], "gold": 400, "timestamp": 1757999000000 },
+    "quickSlots": [
+        { "id": "stale-quickslot-item", "name": "하급 체력 물약", "type": "hp" },
+        null,
+        null
+    ],
+    "player": {
+        "name": "현행세대 계승자",
+        "job": "아크메이지",
+        "gender": "male",
+        "level": 45,
+        "hp": 620,
+        "maxHp": 620,
+        "mp": 320,
+        "maxMp": 320,
+        "atk": 260,
+        "def": 90,
+        "exp": 220000,
+        "nextExp": 280000,
+        "gold": 90000,
+        "loc": "고요한 숲",
+        "inv": [
+            { "id": "inv-1", "name": "하급 체력 물약", "type": "hp", "enhance": 0 }
+        ],
+        "equip": {
+            "weapon": { "id": "equip-weapon-1", "name": "마법지팡이", "type": "weapon", "hands": 2, "val": 20, "tier": 2, "price": 500 },
+            "armor": { "id": "equip-armor-1", "name": "수호자의 방패", "type": "armor", "val": 24, "tier": 3, "price": 980 },
+            "offhand": null
+        },
+        "quests": [],
+        "stats": {
+            "kills": 1500,
+            "total_gold": 400000,
+            "deaths": 9,
+            "killRegistry": { "슬라임": 300, "고블린": 500, "숲의 군주": 10 },
+            "bossKills": 10,
+            "rests": 90,
+            "escapes": 12,
+            "syntheses": 20,
+            "maxKillStreak": 40,
+            "discoveryChains": ["forest-root"],
+            "claimedQuestIds": [1, 90],
+            "visitedMaps": ["시작의 마을", "고요한 숲"],
+            "synthProtects": 3,
+            "cosmeticTitles": ["초심자"],
+            "codex": {
+                "weapons": { "마법지팡이": { "discovered": true } },
+                "armors": { "수호자의 방패": { "discovered": true } },
+                "shields": {},
+                "monsters": { "슬라임": { "discovered": true, "kills": 300 } },
+                "recipes": {},
+                "materials": {}
+            },
+            "codexClaimed": ["weapons_5"]
+        },
+        "history": [],
+        "status": ["poison"],
+        "skillChoices": { "질풍의 단검술": "A" },
+        "challengeModifiers": [],
+        "relics": [
+            { "id": "blood_pact", "name": "피의 서약", "rarity": "common", "desc": "적을 처치하면 최대 생명의 3% 회복", "effect": "on_kill_heal", "val": 0.03 },
+            { "id": "void_shard", "name": "허공의 파편", "rarity": "common", "desc": "공격력 20% 증가, 방어력 15% 감소", "effect": "glass_cannon", "val": { "atk": 0.2, "def": -0.15 } }
+        ],
+        "titles": ["도전자"],
+        "activeTitle": "도전자",
+        "killStreak": 5,
+        "achievements": ["ach_first_blood", "ach_kill_10"],
+        "meta": {
+            "essence": 500,
+            "essenceLifetime": 680,
+            "rank": 3,
+            "bonusAtk": 10,
+            "bonusHp": 80,
+            "bonusMp": 20,
+            "mirror": { "start_gold": 2, "revive": 1 },
+            "storyMilestones": { "seen": ["first_safe_return"], "pending": [] },
+            "endgame": { "version": 1, "primalShards": 3, "legacyInventoryMigrated": true, "lastEndgameReceiptKey": null, "trueEndingSeen": false }
+        },
+        "combatFlags": { "comboCount": 0, "deathSaveUsed": false, "voidHeartUsed": false, "voidHeartArmed": false },
+        "premiumCurrency": 50,
+        "seasonPass": { "xp": 4000, "tier": 20, "claimed": [1, 2, 3, 4, 5], "isPremium": true, "seasonId": "S1" },
+        "weeklyProtocol": { "kills": 80, "explores": 30, "bossKills": 3, "lastResetWeek": 9, "claimed": ["kills", "explores", "bossKills"] },
+        "eventChainProgress": { "forest-root-resonance": { "step": 3, "done": true } },
+        "classJourney": {
+            "version": 1,
+            "sequence": 2,
+            "byJob": {
+                "아크메이지": {
+                    "expeditionIds": ["expedition-900"],
+                    "skillBranches": ["파워배시:A"],
+                    "signatureItems": [],
+                    "bossNames": ["마왕"],
+                    "regions": ["고요한 숲"],
+                    "representativeExpeditionId": "expedition-900",
+                    "lastPlayedAt": 9000
+                }
+            }
+        },
+        "activeExpedition": null,
+        "lastExpeditionSummary": null,
+        "expeditionSequence": 2,
+        "returnSupplyRewards": { "version": 1, "receipts": {} }
+    }
+}

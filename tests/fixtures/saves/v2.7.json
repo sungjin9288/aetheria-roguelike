@@ -1,0 +1,36 @@
+{
+    "_note": "재구성(추정) — `Number(savedData.version) < 2.7` 경계값을 정확히 겨냥한다: version이 정확히 2.7이면 그 블록이 재실행되지 않으므로(멱등 경계) mp/maxMp/history/stats.killRegistry 등이 '이미 있는 값'으로 보존돼야 한다. 존재 근거는 코드 분기뿐 — tests/data-migration.test.js의 다수 fixture가 version:5.0을 즐겨 쓰는 것과 달리 2.7 리터럴을 쓰는 기존 테스트는 못 찾았다(직접 추정). equip은 이미 정규화된 아이템 객체 형태 — 'v4.0 신규 필드'(combatFlags/meta/stats.codex 등) 이전 시기로 간주해 그 필드들은 입력에 없다(무조건 정규화라 실제로는 영향 없음, 실측 형태를 흉내내기 위한 표기).",
+    "version": 2.7,
+    "gameState": "idle",
+    "enemy": null,
+    "currentEvent": null,
+    "grave": null,
+    "quickSlots": [null, null, null],
+    "player": {
+        "name": "안정화된 세이브",
+        "job": "마법사",
+        "gender": "male",
+        "level": 8,
+        "hp": 70,
+        "maxHp": 70,
+        "mp": 90,
+        "maxMp": 90,
+        "atk": 28,
+        "def": 11,
+        "exp": 900,
+        "nextExp": 1500,
+        "gold": 1500,
+        "loc": "고요한 숲",
+        "inv": [
+            { "id": "inv-1", "name": "하급 체력 물약", "type": "hp" },
+            { "id": "inv-2", "name": "강철 롱소드", "type": "weapon", "val": 25, "tier": 2, "price": 400 }
+        ],
+        "equip": {
+            "weapon": { "id": "equip-weapon-1", "name": "나무지팡이", "type": "weapon", "hands": 2, "val": 12, "tier": 1, "price": 80 },
+            "armor": { "id": "equip-armor-1", "name": "수련복", "type": "armor", "val": 5, "tier": 1, "price": 80 },
+            "offhand": null
+        },
+        "stats": { "kills": 40, "total_gold": 1500, "deaths": 1, "killRegistry": { "슬라임": 20, "고블린": 20 }, "bossKills": 0, "rests": 3 },
+        "history": []
+    }
+}
