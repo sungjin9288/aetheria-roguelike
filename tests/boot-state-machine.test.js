@@ -16,13 +16,22 @@ import { MSG } from '../src/data/messages.ts';
  * 단위 테스트가 불가능하다. 그래서 부트 순서·가드만 `platform/bootStateMachine.ts`로 떼어냈고,
  * 여기서 전이표 전체(모든 상태 × 모든 이벤트)와 CLAUDE.md §8-5 계약을 실행으로 고정한다.
  *
- * 훅은 이 전이표가 돌려준 dispatch/effect를 실행만 한다 — 온라인 복원 경로의 payload
- * dispatch(LOAD_DATA)는 훅이 갖되, "복원해도 되는가"는 전부 `step.restore`가 승인한다.
+ * 훅은 이 전이표가 돌려준 dispatch/effect를 실행만 한다 — Wave 11 C1부터는 복원 payload
+ * dispatch(LOAD_DATA)와 거기 딸린 SET_SYNC_STATUS/텔레메트리/로그까지 전이표가 낸다.
+ * 훅이 갖는 것은 payload를 만드는 IO(저장소 읽기·migrate·클라우드 import)뿐이고,
+ * 그 결과는 이벤트(`data`/`record`)로 들어온다.
  */
 
 const UID = 'uid-1';
 const NAMED_RECORD = { data: { player: { name: '이리엘' } }, outcome: 'local' };
 const FRESH_RECORD = { data: { player: {} }, outcome: 'fresh' };
+const REMOTE_DATA = { player: { name: '이리엘', loc: '고요한 숲' }, gameState: 'idle' };
+const LOCAL_DATA = { player: { name: '루비아', loc: '폐허' }, gameState: 'idle' };
+
+/** 이번 전이가 낸 액션 중 `type`인 것만. */
+const actionsOf = (step, type) => step.dispatch.filter((action) => action.type === type);
+/** 이번 전이가 낸 effect 중 `kind`인 것만. */
+const effectsOf = (step, kind) => step.effects.filter((effect) => effect.kind === kind);
 
 const initState = () => createBootState();
 const authState = (over = {}) => createBootState({ phase: 'auth', ...over });
@@ -52,10 +61,16 @@ const EVENT_SAMPLES = [
         authority: 'remote',
         lastLoadedMillis: null,
     },
-    { kind: 'local_record', record: NAMED_RECORD, source: 'fallback' },
+    { kind: 'local_record', record: NAMED_RECORD, source: 'fallback', message: MSG.SYNC_TIMEOUT },
     { kind: 'local_record', record: NAMED_RECORD, source: 'empty-remote-doc' },
-    { kind: 'restore_prepared', source: 'remote-doc' },
-    { kind: 'restore_prepared', source: 'local-record' },
+    {
+        kind: 'restore_prepared',
+        source: 'remote-doc',
+        data: REMOTE_DATA,
+        localImportFailed: false,
+        hasBootLog: false,
+    },
+    { kind: 'restore_prepared', source: 'local-record', data: LOCAL_DATA },
     { kind: 'bootstrap_timeout' },
     { kind: 'remote_error' },
     { kind: 'restore_failed' },
@@ -75,7 +90,7 @@ const ALL_STATES = [
 const KNOWN_EFFECTS = new Set([
     'startAuthTimer', 'signIn', 'syncTokenQuota', 'clearTimers', 'startBootstrapTimer',
     'subscribeUserDoc', 'fallbackOffline', 'restoreFromLocal', 'restoreFromLocalRecord',
-    'restoreFromRemoteDoc',
+    'restoreFromRemoteDoc', 'trackRestore', 'log',
 ]);
 
 const AT_VALUES = new Set(Object.values(AT));
@@ -147,9 +162,11 @@ test('원격 문서 + 로컬 권한 승 → restoreFromLocalRecord, 승인 시 l
     assert.equal(snapshot.restore, null);
     assert.equal(snapshot.state.phase, 'data');
 
-    const prepared = nextBootStep(snapshot.state, { kind: 'restore_prepared', source: 'local-record' });
+    const prepared = nextBootStep(snapshot.state, {
+        kind: 'restore_prepared', source: 'local-record', data: LOCAL_DATA,
+    });
     assert.deepEqual(prepared.restore, { source: 'local-record', outcome: 'local' });
-    assert.deepEqual(kinds(prepared.effects), ['clearTimers']);
+    assert.deepEqual(kinds(prepared.effects), ['clearTimers', 'trackRestore']);
     assert.equal(prepared.state.phase, 'ready');
     assert.equal(prepared.state.bootResolved, true);
     assert.equal(prepared.state.restores, 1);
@@ -175,7 +192,13 @@ test('원격 문서 채택 → restore_prepared 가 cloud 복원을 승인한다
     });
     assert.deepEqual(kinds(snapshot.effects), ['restoreFromRemoteDoc']);
 
-    const prepared = nextBootStep(snapshot.state, { kind: 'restore_prepared', source: 'remote-doc' });
+    const prepared = nextBootStep(snapshot.state, {
+        kind: 'restore_prepared',
+        source: 'remote-doc',
+        data: REMOTE_DATA,
+        localImportFailed: false,
+        hasBootLog: true,
+    });
     assert.deepEqual(prepared.restore, { source: 'remote-doc', outcome: 'cloud' });
     assert.equal(prepared.state.phase, 'ready');
 });
@@ -217,7 +240,7 @@ test('원격 문서 부재 → restoreFromLocal, 로컬 결과로 empty-remote-d
         kind: 'local_record', record: NAMED_RECORD, source: 'empty-remote-doc',
     });
     assert.deepEqual(restored.restore, { source: 'empty-remote-doc', outcome: 'local' });
-    assert.deepEqual(kinds(restored.effects), ['clearTimers']);
+    assert.deepEqual(kinds(restored.effects), ['clearTimers', 'trackRestore']);
     assert.equal(restored.state.phase, 'ready');
 });
 
@@ -237,7 +260,7 @@ test("(c) config_missing 은 MSG.SYNC_NO_CONFIG 오프라인 경로로 가고 'c
 
     // 이어지는 복원까지, 이 경로의 어떤 전이도 'config'/'data' 를 dispatch 하지 않는다.
     const restored = nextBootStep(step.state, {
-        kind: 'local_record', record: NAMED_RECORD, source: 'fallback',
+        kind: 'local_record', record: NAMED_RECORD, source: 'fallback', message: MSG.SYNC_NO_CONFIG,
     });
     const stages = [...step.dispatch, ...restored.dispatch]
         .filter((action) => action.type === AT.SET_BOOT_STAGE)
@@ -294,19 +317,24 @@ test('remote_error / restore_failed → 타이머 해제 + MSG.SYNC_CONNECT_FAIL
 test('local_record 는 로컬 결과의 outcome(local/fresh/failure)을 그대로 복원 계획에 싣는다', () => {
     for (const record of [NAMED_RECORD, FRESH_RECORD, { data: { player: {} }, outcome: 'failure' }]) {
         const step = nextBootStep(authState({ authResolved: true }), {
-            kind: 'local_record', record, source: 'fallback',
+            kind: 'local_record', record, source: 'fallback', message: MSG.SYNC_AUTH_FAIL,
         });
         assert.deepEqual(step.restore, { source: 'offline-fallback', outcome: record.outcome });
+        // 텔레메트리 outcome 도 같은 값이다 — 복원 결과가 두 곳에서 갈라지지 않는다.
+        assert.deepEqual(effectsOf(step, 'trackRestore'), [
+            { kind: 'trackRestore', outcome: record.outcome, player: record.data.player },
+        ]);
     }
 });
 
 test('로컬 부트스트랩 결과가 없으면 복원하지 않는다', () => {
     const step = nextBootStep(authState({ authResolved: true }), {
-        kind: 'local_record', record: null, source: 'fallback',
+        kind: 'local_record', record: null, source: 'fallback', message: MSG.SYNC_AUTH_FAIL,
     });
 
     assert.equal(step.restore, null);
     assert.deepEqual(step.dispatch, []);
+    assert.deepEqual(step.effects, []);
     assert.equal(step.state.phase, 'auth');
 });
 
@@ -349,12 +377,30 @@ test('mock/device_qa 부트 이벤트는 init 에서만 받는다', () => {
 
 // ── §8-5 계약 ───────────────────────────────────────────────────────────────
 
-test('(a) ready 이후에는 어떤 이벤트도 LOAD_DATA/SET_PLAYER 를 만들지 않는다', () => {
+test('(a) ready 이후의 LOAD_DATA 는 크로스 디바이스 복원 경로에서만 나온다', () => {
+    // Wave 10에서는 훅이 payload를 dispatch 했으므로 "전이표는 LOAD_DATA 를 내지 않는다"가
+    // 그대로 성립했다. Wave 11 C1으로 dispatch가 전이표로 들어왔으니, 계약을 실제 폭으로
+    // 다시 쓴다 — 부트 이후에도 허용되는 것은 원격 문서발 복원(cross-device sync)뿐이고,
+    // 오프라인 폴백·mock/device-QA 재진입은 여전히 아무것도 dispatch 하지 않는다.
+    const crossDevice = new Set(['restore_prepared', 'local_record']);
     for (const event of EVENT_SAMPLES) {
         const step = nextBootStep(readyState(), event);
         const emitted = types(step.dispatch);
-        assert.ok(!emitted.includes(AT.LOAD_DATA), `${event.kind} → LOAD_DATA`);
         assert.ok(!emitted.includes(AT.SET_PLAYER), `${event.kind} → SET_PLAYER`);
+        if (!emitted.includes(AT.LOAD_DATA)) continue;
+        assert.ok(crossDevice.has(event.kind), `${event.kind} → LOAD_DATA`);
+        assert.notEqual(event.source, 'fallback', '오프라인 폴백은 ready 뒤 복원하지 않는다');
+        assert.ok(step.restore, `${event.kind}: LOAD_DATA 는 복원 승인과 함께만`);
+    }
+
+    // mock/device-QA 재진입은 ready 에서 완전히 무시된다(위 루프의 continue 를 보강).
+    for (const event of [
+        { kind: 'mock_mode', data: { player: {} } },
+        { kind: 'device_qa', scenario: 'fresh-run', data: { player: { name: '이리엘' } } },
+    ]) {
+        const step = nextBootStep(readyState(), event);
+        assert.deepEqual(step.dispatch, [], event.kind);
+        assert.deepEqual(step.effects, [], event.kind);
     }
 });
 
@@ -362,15 +408,20 @@ test('(a) 복원이 끝난 뒤 도착한 오프라인 폴백은 기본값으로 
     // 부트 타임아웃이 먼저 발화해 로컬을 읽는 사이에 클라우드 복원이 끝난 경우.
     const timedOut = nextBootStep(dataState(), { kind: 'bootstrap_timeout' });
     const restoredFromCloud = nextBootStep(timedOut.state, {
-        kind: 'restore_prepared', source: 'remote-doc',
+        kind: 'restore_prepared',
+        source: 'remote-doc',
+        data: REMOTE_DATA,
+        localImportFailed: false,
+        hasBootLog: true,
     });
     assert.equal(restoredFromCloud.state.phase, 'ready');
 
     const late = nextBootStep(restoredFromCloud.state, {
-        kind: 'local_record', record: FRESH_RECORD, source: 'fallback',
+        kind: 'local_record', record: FRESH_RECORD, source: 'fallback', message: MSG.SYNC_TIMEOUT,
     });
     assert.equal(late.restore, null);
     assert.deepEqual(late.dispatch, []);
+    assert.deepEqual(late.effects, []);
     assert.equal(late.state.restores, 1);
 });
 
@@ -436,6 +487,193 @@ test('(e) cancelled 는 타이머를 끄고 이후 모든 전이를 억제한다
     }
 });
 
+// ── 복원 dispatch 이관 (Wave 11 C1) ─────────────────────────────────────────
+//
+// 아래 6개는 그동안 `local-game-snapshot` / `persistence-observability` 의 소스 정규식이
+// 훅 본문 텍스트로 붙잡고 있던 계약을, 전이표 실행으로 다시 쓴 것이다. 각 테스트의
+// 주석에 대체한 정규식을 적어 둔다 — 회귀 시 어떤 계약이 깨졌는지 바로 보이게.
+
+test('C1: 오프라인 폴백 복원은 봉투가 아니라 그 안의 스냅샷을 LOAD_DATA 로 싣는다', () => {
+    // 대체: persistence-observability 의 /LOAD_DATA, payload: offlineResult\.data/ 2회 +
+    //       doesNotMatch(/LOAD_DATA, payload: offlineData\b/)
+    const step = nextBootStep(authState({ authResolved: true }), {
+        kind: 'local_record', record: NAMED_RECORD, source: 'fallback', message: MSG.SYNC_AUTH_FAIL,
+    });
+
+    assert.deepEqual(step.dispatch, [
+        { type: AT.LOAD_DATA, payload: NAMED_RECORD.data },
+        { type: AT.SET_SYNC_STATUS, payload: 'offline' },
+    ]);
+    // payload 는 훅 IO가 만든 그 스냅샷 자체다(복사본도, `{ data, outcome }` 봉투도 아니다).
+    const [loadData] = actionsOf(step, AT.LOAD_DATA);
+    assert.equal(loadData.payload, NAMED_RECORD.data);
+    assert.equal(Object.hasOwn(loadData.payload, 'outcome'), false);
+    assert.equal(Object.hasOwn(loadData.payload, 'data'), false);
+    assert.deepEqual(step.effects, [
+        { kind: 'trackRestore', outcome: 'local', player: NAMED_RECORD.data.player },
+        { kind: 'log', level: 'warning', message: MSG.SYNC_AUTH_FAIL },
+    ]);
+});
+
+test('C1: 폴백을 지시하는 5개 전이 전부가 복원 1건 + 텔레메트리 1건으로만 끝난다', () => {
+    // 대체: persistence-observability 의 "오프라인 폴백 2곳" 개수 단언
+    //       (훅의 호출 지점 2곳이 아니라, 폴백을 만들 수 있는 전이 전부를 센다).
+    const producers = [
+        { state: initState(), event: { kind: 'config_missing' }, message: MSG.SYNC_NO_CONFIG },
+        { state: authState(), event: { kind: 'auth_timeout' }, message: MSG.SYNC_AUTH_TIMEOUT },
+        { state: authState(), event: { kind: 'auth_error' }, message: MSG.SYNC_AUTH_FAIL },
+        { state: dataState(), event: { kind: 'bootstrap_timeout' }, message: MSG.SYNC_TIMEOUT },
+        { state: dataState(), event: { kind: 'remote_error' }, message: MSG.SYNC_CONNECT_FAIL },
+        { state: dataState(), event: { kind: 'restore_failed' }, message: MSG.SYNC_CONNECT_FAIL },
+    ];
+
+    for (const { state, event, message } of producers) {
+        const requested = nextBootStep(state, event);
+        const fallbacks = effectsOf(requested, 'fallbackOffline');
+        assert.deepEqual(fallbacks, [{ kind: 'fallbackOffline', message }], event.kind);
+
+        // 훅이 로컬을 읽어(IO) 같은 문구와 함께 돌려주면 — 복원은 정확히 한 번이다.
+        const restored = nextBootStep(requested.state, {
+            kind: 'local_record',
+            record: FRESH_RECORD,
+            source: 'fallback',
+            message: fallbacks[0].message,
+        });
+        assert.deepEqual(restored.restore, { source: 'offline-fallback', outcome: 'fresh' }, event.kind);
+        assert.equal(actionsOf(restored, AT.LOAD_DATA).length, 1, event.kind);
+        assert.equal(effectsOf(restored, 'trackRestore').length, 1, event.kind);
+        assert.deepEqual(effectsOf(restored, 'log'), [
+            { kind: 'log', level: 'warning', message },
+        ], event.kind);
+
+        // 같은 폴백이 두 번 도착해도(타이머+에러 동시 발화) 두 번째는 아무것도 내지 않는다.
+        const duplicate = nextBootStep(restored.state, {
+            kind: 'local_record', record: FRESH_RECORD, source: 'fallback', message,
+        });
+        assert.equal(duplicate.restore, null, event.kind);
+        assert.deepEqual(duplicate.dispatch, [], event.kind);
+        assert.deepEqual(duplicate.effects, [], event.kind);
+    }
+});
+
+test('C1: 빈 원격 문서 복원은 이름 있는 런만 syncing 으로 승격한다', () => {
+    // 대체: local-game-snapshot 의 /if \(localResult\.data\.player\?\.name\)[…]payload: 'syncing'/
+    const named = nextBootStep(dataState(), {
+        kind: 'local_record', record: NAMED_RECORD, source: 'empty-remote-doc',
+    });
+    assert.deepEqual(named.dispatch, [
+        { type: AT.LOAD_DATA, payload: NAMED_RECORD.data },
+        { type: AT.SET_SYNC_STATUS, payload: 'syncing' },
+    ]);
+    assert.deepEqual(effectsOf(named, 'trackRestore'), [
+        { kind: 'trackRestore', outcome: 'local', player: NAMED_RECORD.data.player },
+    ]);
+
+    const anonymous = nextBootStep(dataState(), {
+        kind: 'local_record', record: FRESH_RECORD, source: 'empty-remote-doc',
+    });
+    assert.deepEqual(anonymous.dispatch, [{ type: AT.LOAD_DATA, payload: FRESH_RECORD.data }]);
+    assert.deepEqual(effectsOf(anonymous, 'trackRestore'), [
+        { kind: 'trackRestore', outcome: 'fresh', player: FRESH_RECORD.data.player },
+    ]);
+});
+
+test('C1: 로컬 권한 복원은 LOAD_DATA 뒤에 syncing 을 켠다', () => {
+    // 대체: local-game-snapshot 의 /resolveCloudBootstrapAuthority\(…\)[…]payload: 'syncing'/
+    const snapshot = nextBootStep(dataState(), {
+        kind: 'remote_snapshot',
+        doc: { lastActiveMillis: 1_700, hasLocalRecord: true },
+        authority: 'local',
+        lastLoadedMillis: null,
+    });
+    assert.deepEqual(kinds(snapshot.effects), ['restoreFromLocalRecord']);
+    assert.deepEqual(snapshot.dispatch, []);
+
+    const prepared = nextBootStep(snapshot.state, {
+        kind: 'restore_prepared', source: 'local-record', data: LOCAL_DATA,
+    });
+    assert.deepEqual(prepared.dispatch, [
+        { type: AT.LOAD_DATA, payload: LOCAL_DATA },
+        { type: AT.SET_SYNC_STATUS, payload: 'syncing' },
+    ]);
+    assert.deepEqual(prepared.effects, [
+        { kind: 'clearTimers' },
+        { kind: 'trackRestore', outcome: 'local', player: LOCAL_DATA.player },
+    ]);
+});
+
+test('C1: 클라우드 복원은 로컬 미러 실패 시에만 offline + 경고 로그를 붙인다', () => {
+    // 대체: local-game-snapshot 의 /localImportFailed[…]LOAD_DATA, payload: activeData[…]'offline'/
+    const ok = nextBootStep(dataState(), {
+        kind: 'restore_prepared',
+        source: 'remote-doc',
+        data: REMOTE_DATA,
+        localImportFailed: false,
+        hasBootLog: true,
+    });
+    assert.deepEqual(ok.dispatch, [{ type: AT.LOAD_DATA, payload: REMOTE_DATA }]);
+    assert.deepEqual(ok.effects, [
+        { kind: 'clearTimers' },
+        { kind: 'trackRestore', outcome: 'cloud', player: REMOTE_DATA.player },
+    ]);
+
+    const failed = nextBootStep(dataState(), {
+        kind: 'restore_prepared',
+        source: 'remote-doc',
+        data: REMOTE_DATA,
+        localImportFailed: true,
+        hasBootLog: true,
+    });
+    assert.deepEqual(failed.dispatch, [
+        { type: AT.LOAD_DATA, payload: REMOTE_DATA },
+        { type: AT.SET_SYNC_STATUS, payload: 'offline' },
+    ]);
+    assert.deepEqual(effectsOf(failed, 'log'), [
+        { kind: 'log', level: 'warning', message: MSG.SYNC_CONNECT_FAIL },
+    ]);
+});
+
+test('C1: 서버 복원 안내 로그는 아직 로그가 없을 때만 1회 나간다', () => {
+    const first = nextBootStep(dataState(), {
+        kind: 'restore_prepared',
+        source: 'remote-doc',
+        data: REMOTE_DATA,
+        localImportFailed: false,
+        hasBootLog: false,
+    });
+    assert.deepEqual(effectsOf(first, 'log'), [
+        { kind: 'log', level: 'system', message: MSG.SYNC_SERVER_LOADED },
+    ]);
+
+    // 미러 실패까지 겹치면 경고 → 안내 순서다(원본 훅의 dispatch 순서 그대로).
+    const both = nextBootStep(dataState(), {
+        kind: 'restore_prepared',
+        source: 'remote-doc',
+        data: REMOTE_DATA,
+        localImportFailed: true,
+        hasBootLog: false,
+    });
+    assert.deepEqual(effectsOf(both, 'log'), [
+        { kind: 'log', level: 'warning', message: MSG.SYNC_CONNECT_FAIL },
+        { kind: 'log', level: 'system', message: MSG.SYNC_SERVER_LOADED },
+    ]);
+});
+
+test('C1: mock/device-QA 복원도 같은 전이에서 텔레메트리를 낸다', () => {
+    const data = { player: { name: '이리엘' } };
+    const mock = nextBootStep(initState(), { kind: 'mock_mode', data });
+    assert.deepEqual(mock.effects, [
+        { kind: 'trackRestore', outcome: 'fresh', player: data.player },
+    ]);
+
+    const qa = nextBootStep(initState(), {
+        kind: 'device_qa', scenario: 'true-ending-journey', data,
+    });
+    assert.deepEqual(qa.effects, [
+        { kind: 'trackRestore', outcome: 'local', player: data.player },
+    ]);
+});
+
 // ── 전이표 전수 점검 ────────────────────────────────────────────────────────
 
 test('전이표: 모든 상태 × 모든 이벤트가 유효한 step 을 만든다 (순수/불변)', () => {
@@ -464,6 +702,38 @@ test('전이표: 모든 상태 × 모든 이벤트가 유효한 step 을 만든�
     }
     assert.equal(pairs, ALL_STATES.length * EVENT_SAMPLES.length);
     assert.ok(pairs >= 100, `전이 조합 ${pairs}건`);
+});
+
+test('전이표: 승인된 복원은 LOAD_DATA 1건 + 텔레메트리 1건, 그 payload 는 이벤트가 실어 온 스냅샷이다', () => {
+    // §8-5 "정확히 한 번"을 dispatch 층까지 확장한다 — 승인 없이는 LOAD_DATA도
+    // 텔레메트리도 없고, 승인되면 둘 다 정확히 하나씩, payload 는 훅 IO의 결과 그대로다.
+    const payloadOf = (event) => (event.kind === 'local_record' ? event.record?.data : event.data);
+    let approvals = 0;
+
+    for (const state of ALL_STATES) {
+        for (const event of EVENT_SAMPLES) {
+            const step = nextBootStep(state, event);
+            const label = `${state.phase}/${event.kind}/${event.source ?? '-'}`;
+            const loads = actionsOf(step, AT.LOAD_DATA);
+            const tracks = effectsOf(step, 'trackRestore');
+
+            if (!step.restore) {
+                assert.equal(loads.length, 0, `${label}: 승인 없이 LOAD_DATA 금지`);
+                assert.equal(tracks.length, 0, `${label}: 승인 없이 텔레메트리 금지`);
+                continue;
+            }
+            approvals += 1;
+            assert.equal(loads.length, 1, `${label}: LOAD_DATA 는 정확히 1건`);
+            assert.equal(loads[0].payload, payloadOf(event), `${label}: payload 출처는 이벤트`);
+            assert.deepEqual(tracks, [{
+                kind: 'trackRestore',
+                outcome: step.restore.outcome,
+                player: payloadOf(event).player,
+            }], `${label}: 텔레메트리는 복원 계획의 outcome 을 그대로 쓴다`);
+        }
+    }
+    // mock/device_qa/fallback/empty-remote-doc/local-record/remote-doc 6경로가 실제로 돈다.
+    assert.ok(approvals >= 6, `복원 승인 ${approvals}건`);
 });
 
 test('전이표: 복원 준비 effect 는 데이터 단계에서만, 인증 effect 는 init/auth 에서만 나온다', () => {
