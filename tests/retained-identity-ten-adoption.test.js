@@ -5,6 +5,7 @@ import { createHash } from 'node:crypto';
 
 import { buildMonsterArtCatalog } from '../scripts/monsterArtCatalog.mjs';
 import { getMonsterVisual } from '../src/utils/monsterVisuals.js';
+import { hashMonsters, hashMaps } from './helpers/dataHash.ts';
 
 const base = new URL('../scripts/art_sources/monsters/v26/', import.meta.url);
 const root = new URL('../', import.meta.url);
@@ -23,15 +24,21 @@ const portraits = {
     "화산 도마뱀": "volcanic-lizard"
 };
 
-test('retained ten preserves approved monster and map gameplay sources', async () => {
-    for (const [path, expected] of Object.entries({
-        // W9-A1: 이 핀은 src/data/monsters.ts 파일 바이트 해시다. Wave 9 A1이 BOSS_BRIEFS의
-        //   `Record<string, any>` 선언을 리터럴 도출 타입으로 바꾸면서(데이터 값 변경 0건,
-        //   tests/data-shape-types.test.js 그린) 파일 해시가 바뀌어 핀을 재고정했다.
-        'src/data/monsters.ts': '930dc880a98672bc8cf7492dfa9c2533cb84fb0dc5c5859b9af6b403f28be70c',
-        'public/assets/monsters/fire/fire-lizard.png': '7a1246fe5c2952bf042436978249ca2db1a81fbbb0dc27e1198842568458dbe1',
-        'src/data/maps.ts': 'bfa8b82d98a15eff56098a641d59f85a0f6a1bb613c6ac9602cae0689f004a72',
-    })) assert.equal(sha(await readFile(new URL(path, root))), expected, path);
+test('retained ten preserves approved monster and map gameplay data', async () => {
+    // W10-B5: monsters.ts/maps.ts 핀은 "게임플레이 데이터 값" 해시다(파일 바이트 해시가
+    //   아니다) — tests/helpers/dataHash.ts의 hashGameplayData가 MONSTERS/BOSS_MONSTERS/
+    //   MAPS를 정규화(키 재귀 정렬, undefined 드롭, 배열 순서 유지)해서 해시하므로, 값이
+    //   그대로면 타입 어노테이션·주석·공백 편집으로는 재고정이 필요 없다. Wave 9 A1의
+    //   BOSS_BRIEFS `Record<string, any>` → 리터럴 도출 타입 전환(데이터 값 변경 0건)이
+    //   바로 그런 편집이었는데, 이전엔 파일 바이트가 바뀌어 이 핀을 재고정해야 했다.
+    //   fire-lizard.png는 아트 산출물이므로 그대로 파일 바이트 해시로 남긴다.
+    assert.equal(hashMonsters(), 'e1fcef50109f3011d8dab5ad8e18aaa81b62ee0ccb4e3eddcf04a9918566b2d7', 'src/data/monsters.ts gameplay data');
+    assert.equal(hashMaps(), '34f3eccb41468ff5e4f6069757bd5a5f6f09b6ca3c7db1463a00757396999cd4', 'src/data/maps.ts gameplay data');
+    assert.equal(
+        sha(await readFile(new URL('public/assets/monsters/fire/fire-lizard.png', root))),
+        '7a1246fe5c2952bf042436978249ca2db1a81fbbb0dc27e1198842568458dbe1',
+        'public/assets/monsters/fire/fire-lizard.png',
+    );
 });
 
 test('ten retained portraits resolve to approved v26 bytes through authored registry and runtime', async () => {
