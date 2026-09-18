@@ -1075,7 +1075,9 @@ import { readFile } from 'node:fs/promises';
   test('cycle 283: MonsterBase 4 dead 필드 제거 (elem/dropTable/prefix/signatureDrops)', async () => {
       const source = await readSrc('src/types/monster.ts');
       const baseBlock = source.match(/export interface MonsterBase \{[\s\S]+?\n\}/);
-      assert.ok(baseBlock, 'MonsterBase interface 발견');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "MonsterBase interface 발견" 단독 assert는
+      // type-only라 tsc --noEmit이 더 강하게 재증명한다 — MonsterBase는 exploreUtils.ts의
+      // SpawnedMonster(`MonsterBase &`)에서 실사용되는 export된 타입이다.
       assert.ok(!/elem\?:\s*string;/.test(baseBlock[0]), 'elem 제거됨');
       assert.ok(!/dropTable\?:\s*string;/.test(baseBlock[0]), 'dropTable 제거됨');
       assert.ok(!/prefix\?:\s*string;/.test(baseBlock[0]), 'prefix 제거됨');
@@ -1086,7 +1088,10 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/types/monster.ts');
       // cycle 328: BossPhase export → private (외부 import 0건). 정의는 유지.
       const phaseBlock = source.match(/(?:export )?interface BossPhase \{[\s\S]+?\n\}/);
-      assert.ok(phaseBlock, 'BossPhase interface 발견');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "BossPhase interface 발견" 단독 assert는
+      // type-only라 tsc --noEmit이 더 강하게 재증명한다 — monster.ts:74-75/109-110의
+      // phase2?/phase3? 필드 타입 + CombatEngine.enemyAI.ts의 .threshold/.name 등 광범위한
+      // 실사용 consumer가 있다.
       assert.ok(!/atkMult\?:\s*number;/.test(phaseBlock[0]), 'atkMult 제거됨');
       assert.ok(!/defMult\?:\s*number;/.test(phaseBlock[0]), 'defMult 제거됨');
       assert.ok(!/skills\?:\s*string\[\];/.test(phaseBlock[0]), 'skills 제거됨');
@@ -1096,7 +1101,9 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/types/monster.ts');
       // cycle 298: BossMonster export 제거 (private downgrade) → 정의 자체는 유지.
       const bossBlock = source.match(/(?:export )?interface BossMonster[\s\S]+?\n\}/);
-      assert.ok(bossBlock, 'BossMonster interface 발견');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "BossMonster interface 발견" 단독 assert는
+      // type-only라 tsc --noEmit이 더 강하게 재증명한다 — monster.ts:113 `Monster =
+      // MonsterBase | BossMonster` 유니온의 실사용 consumer이다.
       assert.ok(!/phases\?:\s*BossPhase\[\];/.test(bossBlock[0]), 'phases (array) 제거됨');
       assert.ok(!/onDeath\?:\s*string;/.test(bossBlock[0]), 'onDeath 제거됨');
   });

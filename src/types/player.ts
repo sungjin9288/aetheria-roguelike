@@ -243,12 +243,40 @@ interface CombatFlags {
     echoArmed?: boolean;
 }
 
+/**
+ * 완주하고 넘어간 시즌 1건의 기록 (2026-09 Wave 12 D2).
+ * 회전은 `claimed`를 비우므로, 비우기 전의 수령 기록을 여기에 그대로 옮긴다 —
+ * 티어 보상은 칭호를 주고 칭호는 업적을 먹이므로 기록을 그냥 버리면 퇴행이다.
+ * 벽시계는 담지 않는다(Wave 11 C2가 마이그레이션에서 제거한 비결정론을 되살리지 않는다).
+ */
+export interface SeasonArchiveEntry {
+    seasonId: string;
+    ordinal: number;
+    /** 완주 시점 티어 — 항상 SEASON_MAX_TIER. */
+    tier: number;
+    /** 완주 시점 누적 시즌 경험. */
+    xp: number;
+    /** 정규화된(1~30) 수령 티어 목록. */
+    claimed: number[];
+}
+
+// cycle 299: SeasonPassState는 private 유지 (Player composition 전용) — 외부에서 이 모양이
+//   필요하면 `NonNullable<Player['seasonPass']>`로 파생한다(정본은 언제나 이 선언 하나).
 interface SeasonPassState {
     xp?: number;
     tier?: number;
     claimed?: Array<number | string>;
     isPremium?: boolean;
     seasonId?: string;
+    /**
+     * 현재 시즌 서수. 구세이브에는 없으므로 읽는 쪽이 `seasonId`에서 파생한다
+     * (`resolveSeasonOrdinal`) — 기본값 있는 선택 필드라 DATA_VERSION bump가 필요 없다.
+     */
+    ordinal?: number;
+    /** 완주한 시즌 수. 회전마다 +1이며 감소하지 않는다. */
+    completedSeasons?: number;
+    /** 직전 시즌 기록 (최근 `BALANCE.SEASON_ARCHIVE_LIMIT`개). */
+    archive?: SeasonArchiveEntry[];
 }
 
 interface WeeklyProtocol {

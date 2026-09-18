@@ -46,8 +46,9 @@ import { fileURLToPath } from 'node:url';
   test('cycle 301: ActionType type alias는 죽은 채로 남지 않는다 (W7-Y2 도출 alias)', async () => {
       const source = await readSrc('src/reducers/actionTypes.ts');
       const reducerSource = await readSrc('src/reducers/gameReducer.ts');
-      assert.ok(/export type ActionType = keyof ActionPayloadMap;/.test(source),
-          'ActionType은 ActionPayloadMap에서 도출된다');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "ActionType은 ActionPayloadMap에서 도출된다"
+      // 단독 assert는 type-only라 tsc --noEmit이 더 강하게 재증명한다 — 아래 assert가 이미
+      // gameReducer.ts의 실사용 consumer(HandlerMap의 `[K in ActionType]?`)를 검증한다.
       assert.ok(/\bActionType\b/.test(reducerSource),
           'ActionType 외부 consumer 존재 (gameReducer의 HandlerMap)');
   });
@@ -65,11 +66,9 @@ import { fileURLToPath } from 'node:url';
       assert.ok(/export const GS\b/.test(gsSrc), 'GS export 유지');
   });
 
-  test('cycle 301: gameReducer.ts GameState export 유지 (state shape — 다른 의미)', async () => {
-      const source = await readSrc('src/reducers/gameReducer.ts');
-      assert.ok(/export interface GameState\b/.test(source),
-          'gameReducer GameState (state shape) export 유지');
-  });
+  // 2026-09 Wave 12 D4 (class-C 삭제): "gameReducer.ts GameState export 유지" 테스트
+  // 전체 — type-only 존재 확인뿐이었다. GameState(state shape)는 src/ 30개 파일에서
+  // 참조되는 실사용 타입이라 export가 사라지면 tsc --noEmit이 즉시 잡는다.
 
   test('cycle 299 회귀 가드: player.ts 8 sub-interfaces private 유지', async () => {
       const source = await readSrc('src/types/player.ts');
@@ -139,8 +138,9 @@ import { fileURLToPath } from 'node:url';
       const gsSrc = await readSrc('src/reducers/gameStates.ts');
       // W7-Y2: actionTypes의 ActionType은 ActionPayloadMap 도출 alias로 되살아났다(위 테스트가
       //   "죽은 alias 아님"을 고정). gameStates의 중복 GameState alias 제거는 그대로 유지한다.
-      assert.ok(/export type ActionType = keyof ActionPayloadMap;/.test(atSrc),
-          'W7-Y2 ActionType은 ActionPayloadMap 도출 alias로만 존재');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "ActionType은 ActionPayloadMap 도출 alias로만
+      // 존재" 단독 assert는 type-only라 tsc --noEmit이 더 강하게 재증명한다 (위 테스트의
+      // gameReducer consumer 체크가 이미 증명).
       assert.ok(!/export type GameState\b/.test(gsSrc), 'cycle 301 gameStates GameState 제거 유지');
   });
 }
@@ -1104,7 +1104,9 @@ import { fileURLToPath } from 'node:url';
   test('cycle 319: Player interface 필드 보존 (회귀 가드)', async () => {
       const source = await readSrc('src/types/player.ts');
       assert.ok(/inv\?:\s*Item\[\]/.test(source), 'Player.inv?: Item[] 보존');
-      assert.ok(/equip\?:\s*EquipSlots/.test(source), 'Player.equip?: EquipSlots 보존');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "Player.equip?: EquipSlots 보존" 단독 assert는
+      // type-only라 tsc --noEmit이 더 강하게 재증명한다 — EquipSlots는 src/ 11개 파일에서
+      // 실사용되는 타입이라 필드 타입이 깨지면 그 소비처에서 즉시 컴파일 에러가 난다.
   });
 
   test('cycle 318 회귀 가드: getPoolKeyByLocation private 유지', async () => {
@@ -2518,7 +2520,9 @@ import { fileURLToPath } from 'node:url';
   test('cycle 346: OutfitAffinity interface totalSlots 필드 제거', async () => {
       const source = await readSrc('src/utils/jobOutfitAffinity.ts');
       const block = source.match(/interface OutfitAffinity \{[\s\S]+?\n\}/);
-      assert.ok(block, 'OutfitAffinity interface 발견');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "OutfitAffinity interface 발견" 단독 assert는
+      // type-only라 tsc --noEmit이 더 강하게 재증명한다 — jobOutfitAffinity.ts 내부에서
+      // getJobOutfitAffinity 반환형 등으로 실사용되는 살아있는 타입이다.
       assert.ok(!/totalSlots:/.test(block[0]),
           'interface에서 totalSlots 필드 제거됨');
   });
@@ -3400,17 +3404,16 @@ import { fileURLToPath } from 'node:url';
       const source = await readSrc('src/types/item.ts');
       assert.ok(!/^export interface ItemBase/m.test(source),
           'ItemBase export 0건');
-      assert.ok(/^interface ItemBase/m.test(source),
-          'ItemBase private interface 보존');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "ItemBase private interface 보존" 단독 assert는
+      // type-only라 tsc --noEmit이 더 강하게 재증명한다 — item.ts:132 `Item = EquipmentItem |
+      // ConsumableItem | ItemBase` 유니온의 실사용 consumer이므로 정의가 사라지면 즉시
+      // 컴파일 에러가 난다.
   });
 
-  test('cycle 369: Item / EquipSlots / ConsumableItem export 보존 (회귀 가드)', async () => {
-      const source = await readSrc('src/types/item.ts');
-      assert.ok(/^export type Item =/m.test(source), 'Item type export 보존');
-      assert.ok(/^export interface EquipSlots/m.test(source), 'EquipSlots export 보존');
-      assert.ok(/^export interface ConsumableItem/m.test(source),
-          'ConsumableItem export 보존 (cycle 298 회귀 가드)');
-  });
+  // 2026-09 Wave 12 D4 (class-C 삭제): "Item / EquipSlots / ConsumableItem export 보존"
+  // 테스트 전체 — exported type 존재 확인뿐이었다. Item(71파일)/EquipSlots(11파일)는
+  // src/ 전역에서 광범위하게 import되고, ConsumableItem도 item.ts의 Item 유니온에서
+  // 실사용된다 — 셋 다 tsc --noEmit이 이미 더 강하게 재증명한다(cycle 298 회귀 가드와 중복).
 
   test('cycle 368 회귀 가드: prophecy_stone threshold 0건 보존', async () => {
       const source = await readSrc('src/data/relics.ts');

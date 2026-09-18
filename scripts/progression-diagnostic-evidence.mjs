@@ -114,9 +114,35 @@ const buildSourceManifest = async () => {
     })));
 };
 
+/**
+ * Wave 12 D1: 비용 축(모델 초/시간)이 증빙에서 빠지거나 액션 수와 어긋나면 하드 게이트로 막는다.
+ * 이 축은 모델 정책 산술이므로 액션 × secondsPerAction 과 정확히 일치해야 한다.
+ */
+const assertCostAxis = (rewardProgression) => {
+    const { secondsPerAction, secondsPerHour } = rewardProgression.costPolicy;
+    if (!Number.isSafeInteger(secondsPerAction) || secondsPerAction < 1
+        || !Number.isSafeInteger(secondsPerHour) || secondsPerHour < 1
+        || rewardProgression.costPolicy.actualPlayClaim !== false) {
+        throw new Error('PROGRESSION_DIAGNOSTIC_COST_POLICY_INVALID');
+    }
+    for (const checkpoint of rewardProgression.checkpoints) {
+        for (const percentile of ['p10', 'p50', 'p90']) {
+            const actions = checkpoint.modeledActions[percentile];
+            const seconds = checkpoint.modeledSeconds[percentile];
+            const hours = checkpoint.modeledHours[percentile];
+            if (!Number.isSafeInteger(actions)
+                || seconds !== actions * secondsPerAction
+                || hours !== Math.round((seconds * 100) / secondsPerHour) / 100) {
+                throw new Error('PROGRESSION_DIAGNOSTIC_COST_AXIS_MISMATCH');
+            }
+        }
+    }
+};
+
 const assertReport = (report) => {
     const combatCohorts = report.combat.jobs.flatMap(({ cohorts }) => cohorts);
-    if (report.schemaVersion !== 2
+    assertCostAxis(report.rewardProgression);
+    if (report.schemaVersion !== 3
         || report.actualPlayClaim
         || report.activationReady
         || report.hardErrors.length > 0
@@ -150,6 +176,9 @@ export const buildProgressionDiagnosticEvidence = async () => {
         throw new Error('SOURCE_MANIFEST_CHANGED_DURING_DIAGNOSTIC');
     }
     return canonicalize({
+        // 봉투(hashAlgorithm/reportHash/sources/seedPolicy/v1Baseline)의 모양은 그대로다 —
+        // Wave 12 D1이 바꾼 것은 리포트 스키마라 `report.schemaVersion`만 2 → 3으로 올린다
+        // (equipment-combat-power 증빙도 봉투 3 / 리포트 2로 두 버전을 따로 센다).
         schemaVersion: 2,
         classification: 'deterministic-production-path-diagnostic',
         hashAlgorithm: HASH_ALGORITHM,

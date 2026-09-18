@@ -6,11 +6,20 @@ import {
     makeItem,
 } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
-import { SEASON_TIER_XP, SEASON_REWARDS, SEASON_XP } from '../../data/seasonPass';
+import { SEASON_TIER_XP, SEASON_XP } from '../../data/seasonPass';
 import type { SeasonReward } from '../../data/seasonPass';
 import { getClaimableCodexMilestone } from '../../data/codexRewards';
 import { formatCodexRewardParts, type CodexReward } from '../../utils/codexPresentation';
-import { normalizeClaimedSeasonTiers, SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
+import {
+    advanceSeasonIfComplete,
+    createSeasonPassState,
+    formatSeasonScale,
+    getActiveSeason,
+    getActiveSeasonRewards,
+    normalizeClaimedSeasonTiers,
+    SEASON_MAX_TIER,
+    SEASON_MAX_XP,
+} from '../../utils/seasonPassPresentation';
 import { getPacedQuestClaimExp } from '../../utils/progressionPacing';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
 import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
@@ -51,7 +60,7 @@ export const rewardActionMap = {
 
     // ── Season Pass ───────────────────────────────────────────────────────
     ADD_SEASON_XP: (state, action) => {
-        const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
+        const sp = state.player.seasonPass || createSeasonPassState();
         const earnedXp = Number(action.payload);
         if (!Number.isFinite(earnedXp) || earnedXp <= 0) return state;
 
@@ -218,7 +227,7 @@ export const rewardActionMap = {
 
     CLAIM_SEASON_REWARD: (state, action) => {
         const claimTier = Number(action.payload?.tier);
-        const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
+        const sp = state.player.seasonPass || createSeasonPassState();
         const unlockedTier = Math.min(SEASON_MAX_TIER, Math.max(
             0,
             Math.floor(Number(sp.tier) || 0),
@@ -227,7 +236,9 @@ export const rewardActionMap = {
         const claimedTiers = normalizeClaimedSeasonTiers(sp.claimed);
         if (!Number.isInteger(claimTier) || claimTier < 1 || claimTier > unlockedTier) return state;
         if (claimedTiers.includes(claimTier)) return state;
-        const rewardRow = SEASON_REWARDS.find((row) => row.tier === claimTier);
+        // 2026-09 Wave 12 D2: 보상 테이블은 현재 시즌에서 도출된다 — 시즌 1은
+        //   SEASON_REWARDS 그 자체(배율 1)이고, 이후 시즌만 숫자 보상이 스케일된다.
+        const rewardRow = getActiveSeasonRewards(sp).find((row) => row.tier === claimTier);
         if (!rewardRow) return state;
         const tracks = [rewardRow.free, sp.isPremium ? rewardRow.premium : null]
             .filter((entry): entry is SeasonReward => Boolean(entry));
@@ -235,7 +246,7 @@ export const rewardActionMap = {
         let premiumCurrencyGain = 0;
         const grantedItems: string[] = [];
         const grantedTitles: string[] = [];
-        let nextPlayer = {
+        let nextPlayer: Player = {
             ...state.player,
             seasonPass: { ...sp, claimed: [...(sp.claimed || []), claimTier] },
         };
@@ -272,12 +283,37 @@ export const rewardActionMap = {
             ...grantedTitles.map((title) => `칭호 ${title}`),
         ].filter((part): part is string => Boolean(part));
 
+        const claimLogs: Array<{ type: string; text: string }> = [{
+            type: 'success',
+            text: `시즌 ${claimTier}단계 보상 · ${rewardParts.join(' · ') || '수령 완료'}`,
+        }];
+
+        // 2026-09 Wave 12 D2 — 완주 회전.
+        //   트리거는 벽시계가 아니라 **마지막 티어 보상 수령**이다(수령이 곧 지급이므로
+        //   XP 상한 도달에서 회전시키면 미수령 보상이 통째로 사라진다).
+        //   리셋 직전에 checkTitles를 한 번 돌린다 — 'seasonTier' 칭호의 복구 폴백은
+        //   살아 있는 seasonPass.tier를 읽으므로(gameUtils.checkTitles), 티어가 최대인
+        //   이 순간에 확정해두지 않으면 리셋 뒤에 되찾을 수 없다.
+        const rotated = advanceSeasonIfComplete(nextPlayer.seasonPass);
+        if (rotated) {
+            nextPlayer = addNewTitles(nextPlayer, claimLogs);
+            const completedSeason = getActiveSeason(nextPlayer.seasonPass);
+            const nextSeason = getActiveSeason(rotated);
+            nextPlayer = { ...nextPlayer, seasonPass: rotated };
+            claimLogs.push({
+                type: 'success',
+                text: MSG.SEASON_ROTATED(
+                    MSG.SEASON_NAME(completedSeason.ordinal),
+                    MSG.SEASON_NAME(nextSeason.ordinal),
+                    formatSeasonScale(nextSeason.rewardScale),
+                ),
+            });
+        }
+
         return {
             ...state,
             player: nextPlayer,
-            logs: appendRewardLogs(state.logs, [
-                `시즌 ${claimTier}단계 보상 · ${rewardParts.join(' · ') || '수령 완료'}`,
-            ]),
+            logs: appendRewardLogs(state.logs, claimLogs),
             syncStatus: 'syncing',
         };
     },

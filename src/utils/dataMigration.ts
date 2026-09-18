@@ -12,6 +12,7 @@ import { normalizeClassJourneyLedger } from './classJourney.js';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward.js';
 import { getSpentMirrorEssence, type MirrorLevels } from '../systems/mirrorUpgrades.js';
 import { migrateEquipmentInstancePrice } from './equipmentBaseIdentity.js';
+import { advanceSeasonIfComplete, createSeasonPassState } from './seasonPassPresentation.js';
 import { BALANCE } from '../data/constants.js';
 import type { EndgameProgress, Player } from '../types/player.js';
 import type { Item } from '../types/item.js';
@@ -460,9 +461,21 @@ export const migrateData = (rawData: unknown, options: MigrateDataOptions = {}):
     target.stats.cosmeticTitles = Array.isArray(target.stats.cosmeticTitles) ? target.stats.cosmeticTitles : [];
 
     // v4.2 — 시즌 패스
+    // 2026-09 Wave 12 D2: 'S1' 리터럴이 아니라 레지스트리의 첫 시즌을 쓴다(값은 동일 —
+    //   골든/왕복 출력이 한 바이트도 바뀌지 않는다). 회전으로 생긴 선택 필드
+    //   (`ordinal`/`completedSeasons`/`archive`)는 **여기서 채우지 않는다**:
+    //   기본값이 읽는 쪽(`resolveSeasonOrdinal`/`getSeasonArchive`)에 있으므로
+    //   구세이브는 그대로 시즌 1로 굴러 들어가고 DATA_VERSION bump가 필요 없다.
     if (!target.seasonPass) {
-        target.seasonPass = { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
+        target.seasonPass = createSeasonPassState();
     }
+    // 회전 도입 **이전에** 30단계를 전부 수령하고 멈춰 버린 세이브를 한 번 굴려준다.
+    //   그 상태는 이제 어떤 액션으로도 벗어날 수 없다 — 남은 수령이 0이라
+    //   CLAIM_SEASON_REWARD가 즉시 거부되고, 회전을 여는 유일한 문이 그 액션이기 때문이다.
+    //   판정은 회전 트리거와 **같은 함수**를 쓰고 완주 여부만 본다(벽시계 무관 → 결정론 유지).
+    //   시즌 칭호 3종은 그 30번의 수령에서 이미 지급됐으므로 여기서 퇴행하는 것은 없다.
+    const rolledSeason = advanceSeasonIfComplete(target.seasonPass as Player['seasonPass']);
+    if (rolledSeason) target.seasonPass = rolledSeason;
 
     // v4.3 — 강화, 주간 미션, 챌린지, 스킬 분기, 묘비 침략
     if (!target.weeklyProtocol) {

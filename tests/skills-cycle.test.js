@@ -1709,12 +1709,11 @@ import { readFile } from 'node:fs/promises';
           'Dashboard <SkillTreePreview> callsite 보존');
   });
 
-  test('cycle 565: SkillTreePreviewProps typed actions interface 보존', async () => {
-      const source = await readSrc('src/components/SkillTreePreview.tsx');
-      assert.ok(/interface SkillActions/.test(source), 'SkillActions interface 보존');
-      assert.ok(/actions\?:\s*SkillActions/.test(source),
-          'SkillTreePreviewProps actions typed contract 보존');
-  });
+  // 2026-09 Wave 12 D4 (class-C 삭제): "SkillTreePreviewProps typed actions interface 보존"
+  // 테스트 전체 — SkillActions interface 존재 + `actions?: SkillActions` 필드 타입 확인
+  // 둘 다 type-only였다. SkillActions는 SkillTreePreview.tsx 내부에서 실사용되는
+  // (private) 타입(line 19 선언 → line 27 필드 타입)이라 tsc --noEmit이 이미 더 강하게
+  // 재증명한다.
 
   test('cycle 565: cycle 502-564 회귀 가드 — default 청소 시리즈 보존', async () => {
       const ap = await readSrc('src/utils/avatarEquipmentPreview.ts');

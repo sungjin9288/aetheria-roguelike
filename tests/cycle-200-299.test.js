@@ -3161,7 +3161,9 @@ import { readFile } from 'node:fs/promises';
       // Stats interface 블록 (line 1-41) 내부의 comboCount만 검사.
       // cycle 299: PlayerStats export 제거 (private downgrade) → 정의는 유지.
       const statsBlockMatch = source.match(/(?:export )?interface PlayerStats[\s\S]+?\n\}/);
-      assert.ok(statsBlockMatch, 'PlayerStats interface 발견');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "PlayerStats interface 발견" 자체는 type-only라
+      // tsc --noEmit이 더 강하게 재증명한다 — player.ts:531 `stats?: PlayerStats;`가 실사용
+      // consumer이므로 정의가 사라지면 그 필드 타입에서 즉시 컴파일 에러가 난다.
       assert.ok(!/comboCount\?:\s*number;/.test(statsBlockMatch[0]),
           'PlayerStats interface에서 comboCount 제거 (CombatFlags의 active comboCount는 별도)');
   });
@@ -3242,7 +3244,9 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/types/player.ts');
       // cycle 299: PlayerMeta export 제거 (private) → 정의 유지.
       const metaBlock = source.match(/(?:export )?interface PlayerMeta[\s\S]+?\n\}/);
-      assert.ok(metaBlock, 'PlayerMeta interface 발견');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "PlayerMeta interface 발견"은 type-only라
+      // tsc --noEmit이 더 강하게 재증명한다 — player.ts:545 `meta?: PlayerMeta;`가 실사용
+      // consumer이므로 정의가 사라지면 즉시 컴파일 에러가 난다.
       assert.ok(!/totalPrestigeAtk\?:/.test(metaBlock[0]), 'totalPrestigeAtk 제거됨');
   });
 
@@ -3250,7 +3254,7 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/types/player.ts');
       // cycle 299: PlayerMeta export 제거 (private) → 정의 유지.
       const metaBlock = source.match(/(?:export )?interface PlayerMeta[\s\S]+?\n\}/);
-      assert.ok(metaBlock);
+      // 2026-09 Wave 12 D4 (class-C 삭제): 위와 동일 이유로 "메타블록 발견" 단독 assert 제거.
       assert.ok(!/totalPrestigeHp\?:/.test(metaBlock[0]), 'totalPrestigeHp 제거됨');
       assert.ok(!/totalPrestigeMp\?:/.test(metaBlock[0]), 'totalPrestigeMp 제거됨');
   });
@@ -3259,7 +3263,7 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/types/player.ts');
       // cycle 299: PlayerMeta export 제거 (private) → 정의 유지.
       const metaBlock = source.match(/(?:export )?interface PlayerMeta[\s\S]+?\n\}/);
-      assert.ok(metaBlock);
+      // 2026-09 Wave 12 D4 (class-C 삭제): 위와 동일 이유로 "메타블록 발견" 단독 assert 제거.
       const requiredFields = ['essence', 'rank', 'bonusAtk', 'bonusHp', 'bonusMp', 'prestigeRank'];
       requiredFields.forEach((field) => {
           const re = new RegExp(`${field}\\?:\\s*number`);
@@ -3321,7 +3325,10 @@ import { readFile } from 'node:fs/promises';
       assert.ok(!/export type ItemType\s*=\s*string\s*;/.test(source),
           'ItemType은 string의 단순 alias가 아니어야 한다 (cycle 284 의도)');
       const union = source.match(/export type ItemType\s*=([\s\S]+?);/);
-      assert.ok(union, 'ItemType 리터럴 유니온 선언 유지');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "ItemType 리터럴 유니온 선언 유지" 단독 assert는
+      // type-only라 tsc --noEmit이 더 강하게 재증명한다 — ItemType은 ShopPanel/CraftingPanel/
+      // useGameTestApi 등 9개 파일 + item.ts:33 `type?: ItemType;`의 실사용 consumer라
+      // 선언이 사라지면 즉시 컴파일 에러가 난다.
       assert.ok(/'weapon'/.test(union[1]) && /'armor'/.test(union[1]) && /'mat'/.test(union[1]),
           'items.ts 실측 리터럴 유니온 유지 (L stage 1)');
   });
@@ -3934,13 +3941,12 @@ import { readFile } from 'node:fs/promises';
       assert.ok(!/export interface ItemLike\b/.test(source), 'ItemLike export 제거');
   });
 
-  test('cycle 295: 4 type 정의 자체는 유지 (private)', async () => {
-      const source = await readSrc('src/utils/jobOutfitAffinity.ts');
-      assert.ok(/type AffinityTier\b/.test(source), 'AffinityTier 정의 유지');
-      assert.ok(/interface AffinityBonus\b/.test(source), 'AffinityBonus 정의 유지');
-      assert.ok(/interface OutfitAffinity\b/.test(source), 'OutfitAffinity 정의 유지');
-      assert.ok(/interface ItemLike\b/.test(source), 'ItemLike 정의 유지');
-  });
+  // 2026-09 Wave 12 D4 (class-C 삭제): "4 type 정의 자체는 유지 (private)" 테스트 전체 —
+  // AffinityTier/AffinityBonus/OutfitAffinity/ItemLike 4개 모두 type-only 존재 확인이었다.
+  // 넷 다 jobOutfitAffinity.ts 내부에서 실사용되는 살아있는 타입이다(AffinityTier →
+  // buildAffinityLabel 매개변수, AffinityBonus → FULL_OUTFIT_BONUS 등 3개 상수 + getJobOutfitAffinity
+  // 지역변수, OutfitAffinity → getJobOutfitAffinity 반환형, ItemLike → matchesJob/byTier/ItemsDb) —
+  // 정의가 사라지면 그 사용처에서 tsc --noEmit이 즉시 잡는다.
 
   test('cycle 295: getJobOutfitAffinity / getJobSetCatalog active export 유지', async () => {
       const source = await readSrc('src/utils/jobOutfitAffinity.ts');
@@ -4129,23 +4135,17 @@ import { readFile } from 'node:fs/promises';
   test('cycle 298: monster.ts BossMonster export 제거 (private)', async () => {
       const source = await readSrc('src/types/monster.ts');
       assert.ok(!/export interface BossMonster\b/.test(source), 'BossMonster export 제거');
-      assert.ok(/interface BossMonster\b/.test(source), 'BossMonster 정의 유지');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "BossMonster 정의 유지" 단독 assert는 type-only라
+      // tsc --noEmit이 더 강하게 재증명한다 — monster.ts:113 `Monster = MonsterBase | BossMonster`
+      // 유니온의 실사용 consumer라 정의가 사라지면 즉시 컴파일 에러가 난다.
   });
 
-  test('cycle 298: Item / Monster 유니온 정의 유지', async () => {
-      const itemSrc = await readSrc('src/types/item.ts');
-      const monsterSrc = await readSrc('src/types/monster.ts');
-      assert.ok(/export type Item =/.test(itemSrc), 'Item 유니온 export 유지');
-      assert.ok(/export type Monster =/.test(monsterSrc), 'Monster 유니온 export 유지');
-  });
-
-  test('cycle 298: ConsumableItem / EquipSlots / MonsterBase active export 유지', async () => {
-      const itemSrc = await readSrc('src/types/item.ts');
-      const monsterSrc = await readSrc('src/types/monster.ts');
-      assert.ok(/export interface ConsumableItem\b/.test(itemSrc), 'ConsumableItem 유지');
-      assert.ok(/export interface EquipSlots\b/.test(itemSrc), 'EquipSlots 유지');
-      assert.ok(/export interface MonsterBase\b/.test(monsterSrc), 'MonsterBase 유지');
-  });
+  // 2026-09 Wave 12 D4 (class-C 삭제): "Item / Monster 유니온 정의 유지"와
+  // "ConsumableItem / EquipSlots / MonsterBase active export 유지" 테스트 전체 —
+  // 5개 모두 exported type 존재 확인뿐이었다. Item(71파일)/Monster(37파일)/EquipSlots(11파일)는
+  // src/ 전역에서 광범위하게 import되고, ConsumableItem/MonsterBase도 각각 item.ts의 Item
+  // 유니온·exploreUtils.ts의 SpawnedMonster(`MonsterBase &`)에서 실사용된다 — 다섯 다
+  // tsc --noEmit이 이미 더 강하게 재증명한다.
 
   test('cycle 297 회귀 가드: getExploreState private 유지', async () => {
       const source = await readSrc('src/utils/explorationPacing.ts');
@@ -4196,11 +4196,9 @@ import { readFile } from 'node:fs/promises';
       });
   });
 
-  test('cycle 299: Player active export 유지', async () => {
-      const source = await readSrc('src/types/player.ts');
-      assert.ok(/export interface Player\b/.test(source),
-          'Player export 유지 (모든 hook/util/component import)');
-  });
+  // 2026-09 Wave 12 D4 (class-C 삭제): "Player active export 유지" 테스트 전체 —
+  // type-only 존재 확인뿐이었다. Player는 src/ 146개 파일에서 import되는 도메인 핵심
+  // 타입이라 export가 사라지면 tsc --noEmit이 즉시, 훨씬 광범위하게 잡는다.
 
   test('cycle 298 회귀 가드: 5 type private 유지', async () => {
       const itemSrc = await readSrc('src/types/item.ts');

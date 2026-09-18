@@ -7,6 +7,9 @@ import { AT } from '../src/reducers/actionTypes.js';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { migrateData } from '../src/utils/gameUtils.js';
 import { recordClassJourneyExpedition } from '../src/utils/classJourney.js';
+import { CONSTANTS } from '../src/data/constants.js';
+import { FIRST_SEASON } from '../src/data/seasonPass.js';
+import { getSeasonArchive, resolveSeasonOrdinal } from '../src/utils/seasonPassPresentation.js';
 
 /**
  * 저장 데이터 마이그레이션 (migrateData / dataMigration.ts) 테스트 — 통합본.
@@ -1866,4 +1869,94 @@ test('W2: migrateData가 정상 status 배열과 미보유 세이브는 그대�
 
     const absent = migrateData({ player: { name: 'modern', job: '모험가' } });
     assert.ok(!('status' in absent.player), 'status 미보유 세이브에 필드를 추가하지 않는다');
+});
+
+/**
+ * W12-D2 — 시즌 회전과 마이그레이션 경계.
+ *
+ * 회전은 `seasonPass`에 선택 필드를 더했지만 `DATA_VERSION`을 올리지 않는다.
+ * 그 조건은 "마이그레이션이 새 필드를 쓰지 않는다"이며(기본값 소유자는 읽는 쪽 하나),
+ * `status` 승격 블록과 같은 판단이다 — 직렬화 모양이 바뀌지 않으면 bump 대상이 아니다.
+ */
+test('W12-D2: migrateData의 시즌 기본값은 레지스트리의 첫 시즌이고 값이 바뀌지 않는다', () => {
+    const migrated = migrateData({ player: { name: 'legacy', job: '모험가' } });
+
+    assert.deepEqual(migrated.player.seasonPass, {
+        xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: FIRST_SEASON.id,
+    });
+    assert.equal(FIRST_SEASON.id, 'S1', '구세이브가 들어가던 시즌 식별자 그대로');
+    assert.equal(resolveSeasonOrdinal(migrated.player.seasonPass), 1);
+});
+
+test('W12-D2: migrateData는 회전 선택 필드를 추가하지 않는다 (DATA_VERSION bump 불필요 조건)', () => {
+    const migrated = migrateData({ player: { name: 'legacy', job: '모험가' } });
+    ['ordinal', 'completedSeasons', 'archive'].forEach((key) => {
+        assert.ok(!(key in migrated.player.seasonPass), `${key}를 마이그레이션이 썼다`);
+    });
+    assert.equal(CONSTANTS.DATA_VERSION, 5.1, 'D2는 DATA_VERSION을 올리지 않는다');
+});
+
+test('W12-D2: 이미 회전한 세이브의 선택 필드는 마이그레이션을 그대로 통과한다', () => {
+    const seasonPass = {
+        xp: 40,
+        tier: 0,
+        claimed: [],
+        isPremium: true,
+        seasonId: 'S4',
+        ordinal: 4,
+        completedSeasons: 3,
+        archive: [{ seasonId: 'S3', ordinal: 3, tier: 30, xp: 6000, claimed: [1, 2] }],
+    };
+    const migrated = migrateData({ player: { name: 'rotated', job: '모험가', seasonPass } });
+
+    assert.deepEqual(migrated.player.seasonPass, seasonPass);
+    assert.equal(resolveSeasonOrdinal(migrated.player.seasonPass), 4);
+
+    // LOAD_DATA를 태워도 보존된다.
+    const state = gameReducer(INITIAL_STATE, {
+        type: AT.LOAD_DATA,
+        payload: { player: migrated.player, quickSlots: migrated.quickSlots },
+    });
+    assert.deepEqual(state.player.seasonPass, seasonPass);
+});
+
+test('W12-D2: 회전 이전에 30단계를 전부 수령하고 멈춰 있던 세이브는 로드 시 한 번 굴러간다', () => {
+    // 회전이 없던 시절 실제로 도달 가능했던 종착 상태: xp 상한 + 30수령.
+    // 이 상태에서는 남은 수령이 0이라 CLAIM_SEASON_REWARD가 즉시 거부되고,
+    // 회전을 여는 유일한 문이 그 액션이므로 마이그레이션이 굴려주지 않으면 영구히 멈춘다.
+    const stuck = {
+        xp: 6000,
+        tier: 30,
+        claimed: Array.from({ length: 30 }, (_, i) => i + 1),
+        isPremium: false,
+        seasonId: 'S1',
+    };
+    const migrated = migrateData({ player: { name: 'maxed', job: '모험가', seasonPass: stuck } });
+
+    assert.equal(migrated.player.seasonPass.seasonId, 'S2');
+    assert.equal(migrated.player.seasonPass.xp, 0);
+    assert.equal(migrated.player.seasonPass.tier, 0);
+    assert.deepEqual(migrated.player.seasonPass.claimed, []);
+    assert.equal(migrated.player.seasonPass.completedSeasons, 1);
+    // 비우기 전 수령 기록은 아카이브가 전량 보존한다.
+    assert.deepEqual(migrated.player.seasonPass.archive, [{
+        seasonId: 'S1', ordinal: 1, tier: 30, xp: 6000, claimed: stuck.claimed,
+    }]);
+
+    // 멱등 — 두 번째 로드는 또 굴리지 않는다(새 시즌은 완주 상태가 아니다).
+    const again = migrateData(migrated);
+    assert.equal(again.player.seasonPass.seasonId, 'S2');
+    assert.equal(again.player.seasonPass.completedSeasons, 1);
+    assert.equal(getSeasonArchive(again.player.seasonPass).length, 1);
+});
+
+test('W12-D2: 미수령 보상이 남은 상한 세이브는 로드 시 굴러가지 않는다 (보상이 증발하지 않는다)', () => {
+    // 상한에 닿았지만 아직 안 받은 보상이 있으면 그대로 둬야 한다 — 굴리면 30장이 증발한다.
+    const maxedUnclaimed = {
+        xp: 6000, tier: 30, claimed: [1, 2], isPremium: false, seasonId: 'S1',
+    };
+    const migrated = migrateData({
+        player: { name: 'unclaimed', job: '모험가', seasonPass: maxedUnclaimed },
+    });
+    assert.deepEqual(migrated.player.seasonPass, maxedUnclaimed);
 });

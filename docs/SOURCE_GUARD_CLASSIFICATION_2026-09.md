@@ -59,17 +59,30 @@
    B로 잡혔던 2개 whole-test가 수동 리뷰로 class-C로 재확정되어 삭제됐다(§5) — 표에는
    최종(수동 확정) 값을 싣는다.
 
-## 3. 파일별 분류 (68개 파일, 전체 3,226 assertion)
+## 3. 파일별 분류 (68개 파일, 전체 3,226 assertion → Wave 12 D4 이후 3,190)
 
 `cycle-*.test.js` 7개 파일은 굵게 표시했다 — 이 트랙에서 **전환 대상은 `cycle-500-599`뿐**이고
 나머지 6개는 분류만 하고 그대로 둔다(§15 C4 규칙: "전수 전환을 시도하면 부재 불변식을
 잃는다 — (a)는 전환 금지가 이 트랙의 핵심 규칙").
 
+**2026-09 Wave 12 D4 갱신**: class-(c) 39건(`boss-cycle` 5 · `cycle-200-299` 16 ·
+`cycle-300-399` 9 · `monsters-cycle` 3 · `player-language-readability` 3 · `signature-cycle` 1 ·
+`skills-cycle` 2)을 "실제 consumer가 있는가"로 재검토했다. 36건은 살아있는 consumer가 확인돼
+`tsc --noEmit`이 이미 더 강하게 재증명하므로 삭제했다(§8 삭제 로그). `player-language-readability.test.js`의
+3건은 재검토 결과 원 표기가 정정 대상으로 판단된다 — 이 파일의 readSrc 스코프 77건을 전수
+재검토했으나 "타입 선언이 존재한다"류의 class-C 패턴(나머지 6개 파일에서 확인된 유일한 C
+패턴 모양)이 발견되지 않았다. 가장 근접한 후보(`messages.ts`의 `COMBAT_CHAOS_SKILL` 함수
+시그니처에 포함된 `(name: string)` 타입 표기)조차 검사의 핵심이 런타임에 호출되는 실제
+메시지 템플릿이라 class-B에 더 부합한다. 아래 표는 물리적으로 삭제한 36건만 반영했고,
+`player-language-readability.test.js` 행은 원값(C=3)을 그대로 두고 이 각주로 정정 사유를
+남긴다 — 세부 재분류(어느 3건이 A/B인지)는 이 트랙의 범위 밖이다(삭제 여부 판단이 목적이며,
+삭제 기준을 충족하는 후보가 없으므로 아무것도 지우지 않았다).
+
 | 파일 | A (부재 불변식) | A-support (검증용 보조) | B (행동 전환 대상) | C (stale/공허) | OUT_OF_SCOPE | 합계 |
 |---|---:|---:|---:|---:|---:|---:|
 | `avatar-cycle.test.js` | 11 | 0 | 16 | 0 | 0 | 27 |
 | `balance-inline-literals.test.js` | 7 | 1 | 7 | 0 | 0 | 15 |
-| `boss-cycle.test.js` | 5 | 2 | 5 | 5 | 0 | 17 |
+| `boss-cycle.test.js` | 5 | 2 | 5 | 0 | 0 | 12 |
 | `codex-cycle.test.js` | 20 | 4 | 24 | 0 | 0 | 48 |
 | `codex-progression-design.test.js` | 2 | 0 | 7 | 0 | 0 | 9 |
 | `combat-focus-mode.test.js` | 0 | 0 | 5 | 0 | 0 | 5 |
@@ -77,8 +90,8 @@
 | `core-hud-language-readability.test.js` | 0 | 0 | 18 | 0 | 0 | 18 |
 | `cycle-067-099.test.js` **(cycle-\*)** | 14 | 1 | 22 | 0 | 0 | 37 |
 | `cycle-100-199.test.js` **(cycle-\*)** | 15 | 5 | 50 | 0 | 0 | 70 |
-| `cycle-200-299.test.js` **(cycle-\*)** | 78 | 2 | 91 | 16 | 0 | 187 |
-| `cycle-300-399.test.js` **(cycle-\*)** | 153 | 4 | 119 | 9 | 0 | 285 |
+| `cycle-200-299.test.js` **(cycle-\*)** | 78 | 2 | 91 | 0 | 0 | 171 |
+| `cycle-300-399.test.js` **(cycle-\*)** | 153 | 4 | 119 | 0 | 0 | 276 |
 | `cycle-400-499.test.js` **(cycle-\*)** | 255 | 9 | 202 | 0 | 0 | 466 |
 | `cycle-500-599.test.js` **(cycle-\*)** | 267 | 14 | 405 | 0 | 0 | 686 |
 | `cycle-600-699.test.js` **(cycle-\*)** | 77 | 3 | 73 | 0 | 0 | 153 |
@@ -97,9 +110,9 @@
 | `map-signature-hints.test.js` | 0 | 0 | 4 | 0 | 0 | 4 |
 | `mobile-focus-panel-contrast.test.js` | 0 | 0 | 8 | 0 | 0 | 8 |
 | `mobile-overlay-cta-reachability.test.js` | 2 | 0 | 20 | 0 | 0 | 22 |
-| `monsters-cycle.test.js` | 24 | 1 | 32 | 3 | 0 | 60 |
+| `monsters-cycle.test.js` | 24 | 1 | 32 | 0 | 0 | 57 |
 | `onboarding-first-session.test.js` | 1 | 0 | 6 | 0 | 0 | 7 |
-| `player-language-readability.test.js` | 21 | 0 | 53 | 3 | 0 | 77 |
+| `player-language-readability.test.js` | 21 | 0 | 53 | 3† | 0 | 77 |
 | `player-surface-language-readability.test.js` | 0 | 0 | 4 | 0 | 0 | 4 |
 | `post-combat-decision-readability.test.js` | 2 | 0 | 17 | 0 | 0 | 19 |
 | `premium-cycle.test.js` | 2 | 0 | 6 | 0 | 0 | 8 |
@@ -113,7 +126,7 @@
 | `shop-cycle.test.js` | 27 | 1 | 22 | 0 | 0 | 50 |
 | `signature-adventure-guide-pity.test.js` | 0 | 0 | 1 | 0 | 0 | 1 |
 | `signature-boss-hint.test.js` | 0 | 0 | 6 | 0 | 0 | 6 |
-| `signature-cycle.test.js` | 28 | 2 | 39 | 1 | 0 | 70 |
+| `signature-cycle.test.js` | 28 | 2 | 39 | 0 | 0 | 69 |
 | `signature-drop-log.test.js` | 0 | 0 | 7 | 0 | 0 | 7 |
 | `signature-drop-sources.test.js` | 0 | 0 | 3 | 0 | 0 | 3 |
 | `signature-grave-highlight.test.js` | 0 | 0 | 5 | 0 | 0 | 5 |
@@ -126,7 +139,7 @@
 | `signature-set-two-hand.test.js` | 0 | 0 | 3 | 0 | 0 | 3 |
 | `signature-synthesis-protection.test.js` | 0 | 0 | 2 | 0 | 0 | 2 |
 | `skill-growth-design.test.js` | 4 | 0 | 11 | 0 | 0 | 15 |
-| `skills-cycle.test.js` | 39 | 0 | 34 | 2 | 0 | 75 |
+| `skills-cycle.test.js` | 39 | 0 | 34 | 0 | 0 | 73 |
 | `slice-25-item-art-cohesion.test.js` | 0 | 1 | 9 | 0 | 2 | 12 |
 | `slice-28-design-system.test.js` | 2 | 0 | 9 | 0 | 0 | 11 |
 | `slice-29-feedback-juice.test.js` | 0 | 0 | 13 | 0 | 0 | 13 |
@@ -135,7 +148,11 @@
 | `status-cycle.test.js` | 20 | 0 | 8 | 0 | 0 | 28 |
 | `synergies-cycle.test.js` | 2 | 0 | 15 | 0 | 0 | 17 |
 | `temporary-sound-disable.test.js` | 6 | 0 | 1 | 0 | 0 | 7 |
-| **합계 (68 files)** | **1321** | **57** | **1807** | **39** | **2** | **3226** |
+| **합계 (68 files)** | **1321** | **57** | **1807** | **3†** | **2** | **3190** |
+
+† `player-language-readability.test.js`의 C=3은 Wave 12 D4 재검토 결과 정정 대상 — 위
+각주 참조. 삭제 기준(살아있는 consumer + tsc 재증명)을 충족하는 후보가 발견되지 않아
+물리적으로 삭제하지 않았고, 합계에는 여전히 이 3건이 남아 있다.
 
 ## 4. `cycle-500-599.test.js` 전환 결과
 
@@ -1200,3 +1217,81 @@ class-C로 재확정된 whole-test 2개를 삭제해 net -1).
 | 1550 | cycle 632: 3 callsite 명시 보존 | B×3 | positive check on a call/value/lookup/template/class that is exercised at runtime |
 | 1562 | cycle 632: body switch 처리 보존 | B×2 | hand-reviewed: bare identifier/attribute/label that is rendered or invoked at runtime |
 | 1571 | cycle 632: cycle 502-631 회귀 가드 — default 청소 시리즈 보존 | A×2 | negation/absence syntactic pattern |
+
+## 8. Wave 12 D4 — class-(c) 39건 재검토 및 삭제 로그
+
+§0-§7이 분류한 class-(c) 39건을 "삭제해도 `tsc --noEmit`이 같은 사실을 더 강하게
+재증명하는가"로 재검토했다. 기준은 라벨이 아니라 **살아있는 consumer 존재 여부** —
+consumer가 있으면 그 consumer의 타입 체크가 이미 이 가드보다 강한 증거이므로 삭제하고,
+consumer가 0건이면 `tsc`가 재증명할 대상이 없으므로 보존한다. 7개 파일에서 39건 중
+**36건을 삭제**했다(모두 consumer 확인됨). 나머지 3건(`player-language-readability.test.js`)은
+재검토 결과 class-(c) 패턴 자체가 성립하지 않는 것으로 판단해 — 즉 "consumer 0건이라
+보존"이 아니라 "애초에 이 트랙이 삭제 대상으로 삼는 '타입 선언 존재 확인' 모양이 아니다"로
+정정한다(§3 각주 참조). 아래는 실제로 삭제한 36건의 근거다.
+
+### `tests/boss-cycle.test.js` (5건 전부 삭제)
+
+| 원 테스트 (수정 후 라인) | 삭제한 assertion | consumer |
+|---|---|---|
+| cycle 328: BossPhase export 제거 (private) | `assert.ok(/interface BossPhase\b/...)` | `src/types/monster.ts:74-75,109-110` `phase2?/phase3?: BossPhase` 필드 |
+| cycle 328: phase2 / phase3 필드 타입 보존 (테스트 전체 삭제) | `phase2\?:\s*BossPhase` / `phase3\?:\s*BossPhase` | 위와 동일 + `CombatEngine.enemyAI.ts`의 `.threshold`/`.name` 광범위 접근 |
+| cycle 328: monster.ts active export 유지 (테스트 전체 삭제) | `export interface MonsterBase` / `export type Monster` | `MonsterBase`: `src/utils/exploreUtils.ts` import; `Monster`: src/ 37개 파일 |
+
+### `tests/cycle-200-299.test.js` (16건 전부 삭제)
+
+| 원 테스트 | 삭제한 assertion | consumer |
+|---|---|---|
+| cycle 280: Stats 타입에서 comboCount 제거 | `statsBlockMatch` 발견 확인 | `src/types/player.ts:531` `stats?: PlayerStats;` |
+| cycle 281: PlayerMeta에서 totalPrestigeAtk 제거 | `metaBlock` 발견 확인 | `src/types/player.ts:545` `meta?: PlayerMeta;` |
+| cycle 281: PlayerMeta에서 totalPrestigeHp/Mp 제거 | `metaBlock` 발견 확인 (중복) | 위와 동일 |
+| cycle 281: PlayerMeta active 필드 유지 | `metaBlock` 발견 확인 (중복) | 위와 동일 |
+| cycle 284: ItemType은 string 단순 alias가 아니다 | `union` 발견 확인 | `src/types/item.ts:33` `type?: ItemType;` + ShopPanel/CraftingPanel/useGameTestApi 등 9개 파일 |
+| cycle 295: 4 type 정의 자체는 유지 (테스트 전체 삭제) | AffinityTier/AffinityBonus/OutfitAffinity/ItemLike 존재 확인 4건 | `src/utils/jobOutfitAffinity.ts` 내부 전원 실사용(파라미터/상수/반환형) |
+| cycle 298: monster.ts BossMonster export 제거 | `interface BossMonster` 정의 확인 | `src/types/monster.ts:113` `Monster = MonsterBase \| BossMonster` |
+| cycle 298: Item / Monster 유니온 정의 유지 (테스트 전체 삭제) | `export type Item =` / `export type Monster =` | Item: 71개 파일, Monster: 37개 파일 |
+| cycle 298: ConsumableItem/EquipSlots/MonsterBase 유지 (테스트 전체 삭제) | 3개 export 존재 확인 | ConsumableItem: item.ts의 Item 유니온; EquipSlots: 11개 파일; MonsterBase: exploreUtils.ts |
+| cycle 299: Player active export 유지 (테스트 전체 삭제) | `export interface Player` 존재 확인 | src/ 146개 파일 |
+
+### `tests/cycle-300-399.test.js` (9건 전부 삭제)
+
+| 원 테스트 | 삭제한 assertion | consumer |
+|---|---|---|
+| cycle 301: ActionType type alias는 죽은 채로 남지 않는다 | `export type ActionType = keyof ActionPayloadMap;` 존재 확인 | `src/reducers/gameReducer.ts` `HandlerMap`의 `[K in ActionType]?` (같은 테스트의 다음 assert가 이미 검증) |
+| cycle 301: gameReducer.ts GameState export 유지 (테스트 전체 삭제) | `export interface GameState` 존재 확인 | src/ 30개 파일 |
+| cycle 301 회귀 가드: reducer type alias 정리 유지 | ActionType 존재 확인 (중복) | 위와 동일 |
+| cycle 319: Player interface 필드 보존 | `equip\?:\s*EquipSlots` 확인 | `EquipSlots`: 11개 파일 |
+| cycle 346: OutfitAffinity interface totalSlots 필드 제거 | `block` 발견 확인 | jobOutfitAffinity.ts 내부 실사용 |
+| cycle 369: ItemBase export → private downgrade | `interface ItemBase` 정의 확인 | `src/types/item.ts:132` `Item = EquipmentItem \| ConsumableItem \| ItemBase` |
+| cycle 369: Item/EquipSlots/ConsumableItem export 보존 (테스트 전체 삭제) | 3개 export 존재 확인 | Item: 71개 파일, EquipSlots: 11개 파일, ConsumableItem: item.ts Item 유니온 (cycle 298 가드와 중복) |
+
+### `tests/monsters-cycle.test.js` (3건 전부 삭제)
+
+세 테스트(cycle 283: MonsterBase/BossPhase/BossMonster 각 dead 필드 제거) 모두 "인터페이스
+블록을 찾았다"는 앵커 assert(`assert.ok(baseBlock/phaseBlock/bossBlock, ...)`)만 삭제했고,
+뒤따르는 필드-부재(class A) assertion은 그대로 둔다. consumer는 위 boss-cycle/cycle-200-299
+항목과 동일(MonsterBase → exploreUtils.ts, BossPhase → monster.ts 필드 + CombatEngine.enemyAI.ts,
+BossMonster → Monster 유니온).
+
+### `tests/signature-cycle.test.js` (1건 삭제)
+
+cycle 282: Player interface에서 signaturePity 제거 — `playerBlock` 발견 확인(`export interface
+Player` 매칭) 삭제. consumer: src/ 146개 파일.
+
+### `tests/skills-cycle.test.js` (2건 삭제, 테스트 전체)
+
+cycle 565: SkillTreePreviewProps typed actions interface 보존 — `SkillActions` interface 존재
++ `actions?: SkillActions` 필드 타입 확인 2건 모두 삭제(테스트 전체). consumer:
+`src/components/SkillTreePreview.tsx` 내부(line 19 선언 → line 27 필드 타입, private type).
+
+### 보류: `tests/player-language-readability.test.js` (3건, 삭제하지 않음)
+
+이 파일의 readSrc 스코프 77개 assertion(§0 기준 — `MSG.*`/`getFirstVisitReward` 실호출
+기반 2개 테스트는 스코프 밖) 전수를 재검토했다. 나머지 6개 파일의 class-(c)는 예외 없이
+"인터페이스/타입 선언이 소스에 존재한다"는 모양이었지만, 이 파일에는 그런 패턴이 전혀
+없다 — 모든 assertion이 실제 렌더되는/네게이션되는 한국어 UI 문구·testid·JSX 속성
+검사다. 가장 근접한 후보인 `messages.ts`의 `COMBAT_CHAOS_SKILL: (name: string) => ...`
+정규식(타입 표기 `(name: string)`을 문자 그대로 포함)조차, 검사의 실질은 런타임에
+호출되는 메시지 템플릿 문자열이라 class-B(행동 전환 대상)에 더 부합하고, 이마저 1건뿐이라
+3건에 못 미친다. **삭제 기준을 충족하는 candidate가 없어 아무것도 지우지 않았다** — 원
+분류표의 C=3은 이 트랙에서 정정 대상으로 보고하며(§3 각주), 정확한 A/B 재배분은 이
+트랙의 스코프(삭제 여부 판단) 밖이라 손대지 않았다.

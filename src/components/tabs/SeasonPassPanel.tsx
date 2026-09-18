@@ -1,16 +1,25 @@
 import type { Dispatch } from 'react';
-import { ChevronDown, CircleCheck, Compass, Gift, LockKeyhole, Sparkles, Star } from 'lucide-react';
+import { ChevronDown, CircleCheck, Compass, Gift, History, LockKeyhole, RefreshCw, Sparkles, Star } from 'lucide-react';
 import { AT } from '../../reducers/actionTypes';
-import { SEASON_REWARDS, SEASON_TIER_XP, type SeasonRewardRow } from '../../data/seasonPass';
+import { SEASON_TIER_XP, type SeasonRewardRow } from '../../data/seasonPass';
+import { MSG } from '../../data/messages';
 import type { Player } from '../../types';
 import type { GameAction } from '../../reducers/gameReducer';
 import {
     buildSeasonChapters,
+    createSeasonPassState,
     formatSeasonReward,
     formatSeasonRewardParts,
+    formatSeasonScale,
+    getActiveSeason,
+    getActiveSeasonRewards,
     getClaimableSeasonRewards,
+    getCompletedSeasonCount,
     getNextSeasonRewards,
+    getSeasonArchive,
+    getSeasonClaimsRemaining,
     getSeasonProgress,
+    getUpcomingSeason,
     normalizeClaimedSeasonTiers,
     SEASON_ACTIVITY_SOURCES,
 } from '../../utils/seasonPassPresentation';
@@ -22,29 +31,26 @@ interface SeasonPassPanelProps {
     onClaimSeasonReward?: (tier: number) => void;
 }
 
-const getSeasonName = (seasonId?: string) => {
-    const number = seasonId?.match(/\d+/)?.[0];
-    return number ? `시즌 ${number}` : '현재 시즌';
-};
-
 const getVisibleRewardParts = (row: SeasonRewardRow, isPremium: boolean) => [
     ...formatSeasonRewardParts(row.free),
     ...(isPremium ? formatSeasonRewardParts(row.premium).map((part) => `추가 ${part}`) : []),
 ];
 
 const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPanelProps) => {
-    const season = player?.seasonPass || {
-        xp: 0,
-        tier: 0,
-        claimed: [],
-        isPremium: false,
-        seasonId: 'S1',
-    };
+    const season = player?.seasonPass || createSeasonPassState();
+    // 2026-09 Wave 12 D2: 보상 표는 현재 시즌에서 도출된다 — 시즌 1은 SEASON_REWARDS 그대로,
+    //   이후 시즌은 숫자 보상만 배율이 붙는다. 회전은 완주(30단계 전부 수령)로만 일어난다.
+    const activeSeason = getActiveSeason(season);
+    const upcomingSeason = getUpcomingSeason(season);
+    const seasonRewards = getActiveSeasonRewards(season);
     const progress = getSeasonProgress(season.xp, season.tier);
     const claimedTiers = normalizeClaimedSeasonTiers(season.claimed);
-    const claimableRewards = getClaimableSeasonRewards(SEASON_REWARDS, progress.tier, season.claimed);
-    const nextRewards = getNextSeasonRewards(SEASON_REWARDS, progress.tier);
-    const chapters = buildSeasonChapters(SEASON_REWARDS);
+    const claimableRewards = getClaimableSeasonRewards(seasonRewards, progress.tier, season.claimed);
+    const nextRewards = getNextSeasonRewards(seasonRewards, progress.tier);
+    const chapters = buildSeasonChapters(seasonRewards);
+    const claimsRemaining = getSeasonClaimsRemaining(season);
+    const completedSeasons = getCompletedSeasonCount(season);
+    const archive = getSeasonArchive(season);
     const isPremium = Boolean(season.isPremium);
     const claimSeasonReward = onClaimSeasonReward;
 
@@ -68,13 +74,20 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
                     </div>
                     <div className="min-w-0 flex-1">
                         <h2 className="aether-type-title font-semibold text-slate-100">시즌 여정</h2>
-                        <p className="aether-type-body mt-0.5 text-slate-400/76">
-                            {getSeasonName(season.seasonId)} · 평소의 모험이 성장으로 이어집니다
+                        <p data-testid="season-name" className="aether-type-body mt-0.5 text-slate-400/76">
+                            {MSG.SEASON_NAME(activeSeason.ordinal)} · {MSG.SEASON_SUBTITLE}
                         </p>
                     </div>
-                    <SignalBadge tone={progress.completed ? 'success' : 'resonance'} size="sm">
-                        {progress.tier} / 30 단계
-                    </SignalBadge>
+                    <div className="flex shrink-0 flex-col items-end gap-1">
+                        <SignalBadge tone={progress.completed ? 'success' : 'resonance'} size="sm">
+                            {progress.tier} / 30 단계
+                        </SignalBadge>
+                        {activeSeason.rewardScale > 1 && (
+                            <span data-testid="season-scale-badge" className="aether-type-meta text-[#d5b180]">
+                                {MSG.SEASON_SCALE_BADGE(formatSeasonScale(activeSeason.rewardScale))}
+                            </span>
+                        )}
+                    </div>
                 </div>
 
                 <div className="mt-4">
@@ -181,6 +194,51 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
                         </div>
                     ))}
                 </div>
+            </section>
+
+            <section data-testid="season-rotation" className="border-b border-white/10 py-4">
+                <div className="flex items-center gap-2">
+                    <RefreshCw size={16} className="text-[#9ddfe2]" />
+                    <h3 className="aether-type-title font-semibold text-slate-100">{MSG.SEASON_ROTATION_TITLE}</h3>
+                </div>
+                <p data-testid="season-rotation-notice" className="aether-type-body mt-2 text-slate-300">
+                    {MSG.SEASON_ROTATION_NOTICE(
+                        MSG.SEASON_NAME(upcomingSeason.ordinal),
+                        formatSeasonScale(upcomingSeason.rewardScale),
+                    )}
+                </p>
+                <p data-testid="season-rotation-remaining" className="aether-type-meta mt-1 text-[#d5b180]">
+                    {claimsRemaining > 1
+                        ? MSG.SEASON_CLAIMS_REMAINING(claimsRemaining)
+                        : MSG.SEASON_CLAIMS_READY}
+                </p>
+            </section>
+
+            <section data-testid="season-archive" className="border-b border-white/10 py-4">
+                <div className="flex items-baseline justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                        <History size={16} className="text-slate-400" />
+                        <h3 className="aether-type-title font-semibold text-slate-100">{MSG.SEASON_ARCHIVE_TITLE}</h3>
+                    </div>
+                    <span className="aether-type-meta shrink-0 text-slate-400/76">
+                        {MSG.SEASON_ARCHIVE_SUMMARY(completedSeasons)}
+                    </span>
+                </div>
+                {archive.length > 0 ? (
+                    <div className="mt-2 divide-y divide-white/8">
+                        {archive.map((entry) => (
+                            <div
+                                key={entry.seasonId}
+                                data-testid={`season-archive-${entry.seasonId}`}
+                                className="aether-type-meta flex min-h-8 items-center py-2 text-slate-300"
+                            >
+                                {MSG.SEASON_ARCHIVE_ENTRY(MSG.SEASON_NAME(entry.ordinal), entry.claimed.length)}
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <p className="aether-type-meta mt-2 text-slate-400/76">{MSG.SEASON_ARCHIVE_EMPTY}</p>
+                )}
             </section>
 
             <section className="pt-4">

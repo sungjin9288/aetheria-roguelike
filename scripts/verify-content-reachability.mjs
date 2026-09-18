@@ -27,10 +27,63 @@ const hashReport = (report) => createHash('sha256')
     .update(JSON.stringify(canonicalizeContentReachability(report)))
     .digest('hex');
 
+const EXPECTED_SCHEMA_VERSION = 2;
+
+/**
+ * Wave 12 D1 하드 게이트 — 비용 축이 (1) 존재하고 (2) 앵커/보간을 구분하며
+ * (3) 보간 행이 리포트에 적힌 규칙으로 재현되는지 확인한다. 보간값을 모델 산출처럼
+ * 싣는 것이 이 트랙의 실패 모드라, 증빙을 쓰기 전에 여기서 막는다.
+ */
+const assertCostAxis = (report) => {
+    const cost = report.cost;
+    const { secondsPerAction, secondsPerHour } = cost.policy;
+    if (report.schemaVersion !== EXPECTED_SCHEMA_VERSION) throw new Error('CONTENT_COST_SCHEMA_VERSION_MISMATCH');
+    if (cost.anchors.length === 0
+        || cost.policy.actualPlayClaim !== false
+        || !Number.isSafeInteger(secondsPerAction)
+        || !Number.isSafeInteger(secondsPerHour)
+        || cost.malformedGates.length > 0
+        || cost.unresolvedEventChainTerminals.length > 0) {
+        throw new Error('CONTENT_COST_POLICY_INVALID');
+    }
+    const anchorLevels = new Set(cost.anchors.map((anchor) => anchor.level));
+    const rows = [
+        ...cost.gates.maps,
+        ...cost.gates.quests,
+        ...cost.gates.equipmentTiers,
+        ...cost.gates.jobs,
+        ...cost.gates.eventChainTerminals,
+    ].map(({ cost: modeled }) => modeled);
+    for (const row of rows) {
+        const anchored = anchorLevels.has(row.level);
+        if (anchored !== (row.basis === 'anchored')) throw new Error(`CONTENT_COST_BASIS_MISMATCH:${row.level}`);
+        if (row.basis === 'anchored' && row.interpolation !== null) {
+            throw new Error(`CONTENT_COST_ANCHOR_CARRIES_INTERPOLATION:${row.level}`);
+        }
+        if (row.basis === 'beyond-anchors' && row.modeledActions !== null) {
+            throw new Error(`CONTENT_COST_EXTRAPOLATED:${row.level}`);
+        }
+        if (row.basis !== 'interpolated') continue;
+        const span = row.interpolation.upperCumulativeExp - row.interpolation.lowerCumulativeExp;
+        const fraction = (row.cumulativeExp - row.interpolation.lowerCumulativeExp) / span;
+        const actions = Math.round(
+            row.interpolation.lowerModeledActions
+            + fraction * (row.interpolation.upperModeledActions - row.interpolation.lowerModeledActions),
+        );
+        if (fraction !== row.interpolation.expFraction
+            || actions !== row.modeledActions
+            || row.modeledSeconds !== actions * secondsPerAction
+            || row.modeledHours !== Math.round((row.modeledSeconds * 100) / secondsPerHour) / 100) {
+            throw new Error(`CONTENT_COST_INTERPOLATION_IRREPRODUCIBLE:${row.level}`);
+        }
+    }
+};
+
 const main = async () => {
     const target = parseArgs(process.argv.slice(2));
     const report = buildContentReachabilityReport();
     if (report.errors.length > 0) throw new Error(`content reachability has errors: ${report.errors.join(', ')}`);
+    assertCostAxis(report);
     const envelope = {
         hashAlgorithm: 'sha256',
         reportHash: hashReport(report),

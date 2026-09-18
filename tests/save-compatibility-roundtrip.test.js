@@ -8,6 +8,15 @@ import { migrateData, hasMigratedPlayer } from '../src/utils/dataMigration.ts';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { getGraveItems } from '../src/utils/graveUtils.ts';
+import { FIRST_SEASON, SEASON_REWARDS } from '../src/data/seasonPass.ts';
+import {
+    advanceSeasonIfComplete,
+    getActiveSeason,
+    getActiveSeasonRewards,
+    getCompletedSeasonCount,
+    getSeasonArchive,
+    resolveSeasonOrdinal,
+} from '../src/utils/seasonPassPresentation.ts';
 
 /**
  * W10-B2 — 세이브 호환 왕복.
@@ -245,4 +254,84 @@ test('migrateData: 멱등성 — 두 번째 호출은 첫 번째 결과와 (타�
         const migratedTwice = migrateData(migrated);
         assert.deepEqual(stripVolatile(migratedTwice), stripVolatile(migrated), `v${label}`);
     }
+});
+
+/**
+ * W12-D2 — 시즌 회전과 세이브 호환.
+ *
+ * 회전은 `seasonPass`에 선택 필드(`ordinal`/`completedSeasons`/`archive`)를 더했지만
+ * `CONSTANTS.DATA_VERSION`을 올리지 않는다. 그 주장을 세우는 조건은 두 가지이고,
+ * 아래 테스트가 각각을 픽스처 7종 전체로 확인한다.
+ *   (1) `migrateData`가 새 필드를 **쓰지 않는다** — 구세이브 출력 모양이 그대로다.
+ *   (2) 읽는 쪽이 기본값을 만들어 구세이브가 그냥 시즌 1로 굴러간다.
+ */
+
+test('season: 시즌 필드가 없던 구세이브도 마이그레이션 후 시즌 1로 들어간다 (DATA_VERSION bump 없이)', async () => {
+    for (const label of VERSION_LABELS) {
+        const migrated = migrateData(await readFixture(label));
+        const sp = migrated.player.seasonPass;
+
+        assert.ok(sp, `v${label}: seasonPass 누락`);
+        assert.equal(resolveSeasonOrdinal(sp), 1, `v${label}: 시즌 1이 아님`);
+        assert.equal(getActiveSeason(sp).id, FIRST_SEASON.id, `v${label}`);
+        // 시즌 1의 보상 테이블은 참조까지 동일하다 — 값이 하나도 바뀌지 않았다는 뜻.
+        assert.equal(getActiveSeasonRewards(sp), SEASON_REWARDS, `v${label}`);
+        // 아직 아무 시즌도 완주하지 않았다.
+        assert.deepEqual(getSeasonArchive(sp), [], `v${label}`);
+        assert.equal(getCompletedSeasonCount(sp), 0, `v${label}`);
+        assert.equal(advanceSeasonIfComplete(sp), null, `v${label}: 완주하지 않았는데 회전`);
+    }
+});
+
+test('season: migrateData는 회전이 만든 선택 필드를 스스로 쓰지 않는다 (구세이브 출력 모양 불변)', async () => {
+    // 기본값의 소유자는 읽는 쪽 하나뿐이다. 마이그레이션이 같은 기본값을 또 쓰면
+    // DATA_VERSION bump 없이 저장 모양이 바뀌고 골든이 통째로 재고정된다.
+    const ROTATION_FIELDS = ['ordinal', 'completedSeasons', 'archive'];
+    for (const label of VERSION_LABELS) {
+        const migrated = migrateData(await readFixture(label));
+        const present = ROTATION_FIELDS.filter((key) => migrated.player.seasonPass[key] !== undefined);
+        assert.deepEqual(present, [], `v${label}: migrateData가 ${present.join(', ')}를 썼다`);
+    }
+
+    // seasonPass 자체가 없던 세이브의 기본값도 정확히 5개 키다(= 기존 모양 그대로).
+    const bare = migrateData({ version: 5.1, player: { name: 'legacy' } });
+    assert.deepEqual(Object.keys(bare.player.seasonPass).sort(),
+        ['claimed', 'isPremium', 'seasonId', 'tier', 'xp']);
+    assert.deepEqual(bare.player.seasonPass,
+        { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' });
+});
+
+test('season: 회전한 세이브(선택 필드 있음)는 마이그레이션 왕복을 그대로 통과한다', async () => {
+    const fixture = await readFixture('5.1');
+    const rotatedSeason = {
+        xp: 120,
+        tier: 0,
+        claimed: [],
+        isPremium: false,
+        seasonId: 'S3',
+        ordinal: 3,
+        completedSeasons: 2,
+        archive: [
+            { seasonId: 'S1', ordinal: 1, tier: 30, xp: 6000, claimed: [1, 2, 3] },
+            { seasonId: 'S2', ordinal: 2, tier: 30, xp: 6000, claimed: [5] },
+        ],
+    };
+    const migrated = migrateData({
+        ...fixture,
+        player: { ...fixture.player, seasonPass: rotatedSeason },
+    });
+
+    assert.deepEqual(migrated.player.seasonPass, rotatedSeason);
+    assert.equal(resolveSeasonOrdinal(migrated.player.seasonPass), 3);
+    assert.equal(getCompletedSeasonCount(migrated.player.seasonPass), 2);
+
+    // LOAD_DATA를 거쳐도 선택 필드가 살아남는다(리듀서가 INITIAL_STATE로 덮지 않는다).
+    const state = dispatchLoadData(migrated);
+    assert.deepEqual(state.player.seasonPass, rotatedSeason);
+
+    // 멱등성 — 두 번 돌려도 같다.
+    assert.deepEqual(
+        stripVolatile(migrateData(migrated)).player.seasonPass,
+        rotatedSeason,
+    );
 });

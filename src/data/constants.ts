@@ -610,6 +610,16 @@ export const BALANCE = {
     EVENT_SPECIAL_STATUS_TURNS: 2,
     EVENT_SPECIAL_BUFF_MULT: 1.15,
     EVENT_SPECIAL_BUFF_TURNS: 4,
+
+    // ── 시즌 여정 회전 (2026-09 Wave 12 D2) ────────────────────────────────
+    //   시즌 상한(30티어 × SEASON_TIER_XP 200 = 6,000 XP)은 모델상 400액션(≈10시간)에
+    //   닿는다. 상한 자체를 올리는 대신 **완주가 다음 시즌을 여는** 구조로 바꿨고,
+    //   반복이 문자 그대로의 재탕이 되지 않도록 숫자 보상에 시즌 배율을 곱한다.
+    //   적립량(SEASON_XP)과 티어 비용(SEASON_TIER_XP)은 의도적으로 건드리지 않는다 —
+    //   Wave 12 D1이 고정하는 진행 비용 모델의 입력이기 때문이다.
+    SEASON_REWARD_SCALE_PER_SEASON: 1.35,  // 시즌이 하나 넘어갈 때마다 숫자 보상에 곱하는 배율
+    SEASON_REWARD_SCALE_MAX: 4,            // 누적 배율 상한 (S6에서 도달 — 무한 인플레 차단)
+    SEASON_ARCHIVE_LIMIT: 12,              // 세이브에 남기는 직전 시즌 기록 수 (완주 횟수는 별도 누적)
 } as const;
 
 /** `BALANCE` 리터럴에서 도출한 밸런스 타입 (수기 선언 금지 — 리터럴이 진실 원천). */

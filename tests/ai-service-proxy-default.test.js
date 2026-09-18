@@ -7,6 +7,7 @@ import assert from 'node:assert/strict';
 // 설정하므로, 기본값 검증은 별도 파일 — node --test는 파일 단위로 프로세스를 분리해 격리된다.)
 import { AI_SERVICE } from '../src/services/aiService.ts';
 import { CONSTANTS } from '../src/data/constants.ts';
+import { TokenQuotaManager } from '../src/systems/TokenQuotaManager.ts';
 
 const makeLocalStorageStub = () => {
     const store = new Map();
@@ -75,5 +76,27 @@ test('generateStory: USE_AI_PROXY가 false(기본값)면 fetch 없이 getFallbac
         const story = await AI_SERVICE.generateStory('victory', { name: '고블린' }, 'test-uid');
         assert.equal(story, AI_SERVICE.getFallback('victory', { name: '고블린' }));
         assert.equal(fetchCalled, false);
+    });
+});
+
+// W12-D3: 기본 빌드는 프록시가 꺼져 있으므로 **모든** 이벤트가 큐레이션 폴백이다.
+//   미터가 디스패치를 세는 이상 이 경로는 한 건도 태우면 안 된다 — 나간 요청이 없기 때문이다.
+//   (이 사실은 폴백 표면 판단의 근거이기도 하다: `proxy-disabled`를 표면화하면 기본 빌드의
+//   모든 이벤트에 "AI 아님" 표시가 붙어 정보가 아니라 잡음이 된다.)
+test('USE_AI_PROXY가 false면 쿼터 미터가 전혀 움직이지 않는다 (디스패치 0 = 비용 0)', async () => {
+    await withGlobalStub({
+        localStorage: makeLocalStorageStub(),
+        fetch: async () => { throw new Error('프록시가 꺼져 있으면 fetch를 부르면 안 된다'); },
+    }, async () => {
+        await AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', {
+            playerSnapshot: { level: 5, maxHp: 200, maxMp: 100 },
+            mapSnapshot: { level: 3 },
+        });
+        await AI_SERVICE.generateStory('victory', { name: '고블린', history: [] }, 'test-uid');
+
+        const ledger = TokenQuotaManager.getCallLedger();
+        assert.equal(ledger.dispatched, 0);
+        assert.deepEqual(ledger.byOutcome, {});
+        assert.equal(TokenQuotaManager.canMakeAICall(), true);
     });
 });

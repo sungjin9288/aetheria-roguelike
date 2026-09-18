@@ -34,6 +34,12 @@ export const pickPermanentPlayerState = (
         ...(player.maxInv !== undefined
             ? { maxInv: Math.max(20, numberOrZero(player.maxInv) || 20) }
             : {}),
+        // 2026-09 Wave 12 D2: 시즌 상태는 환생/사망을 넘어 그대로 이어진다 — 시즌은
+        //   런(run)이 아니라 계정 단위 사다리이기 때문이다. 회전이 생긴 뒤로는
+        //   `archive`/`completedSeasons`도 같은 clone에 실려 넘어가므로, 완주 기록이
+        //   승천으로 사라지지 않는다(tests/permanent-progress-copy.test.js가 고정).
+        //   구세이브 호환을 위해 **여기서 정규화하지 않는다** — 없는 선택 필드는
+        //   읽는 쪽이 채운다(`resolveSeasonOrdinal`).
         seasonPass: clone(player.seasonPass || initialPlayer.seasonPass),
         weeklyProtocol: clone(player.weeklyProtocol || initialPlayer.weeklyProtocol),
         settings: clone(player.settings || initialPlayer.settings),

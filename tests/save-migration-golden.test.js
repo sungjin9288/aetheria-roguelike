@@ -5,6 +5,8 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import { migrateData } from '../src/utils/dataMigration.ts';
+import { CONSTANTS } from '../src/data/constants.ts';
+import { FIRST_SEASON } from '../src/data/seasonPass.ts';
 
 /**
  * W10-B2 — 골든 차등(differential) 하네스.
@@ -147,4 +149,58 @@ test('golden: migrateData는 주입한 시각만 쓴다 — 같은 입력 + 같�
     assert.equal(later.player.stats.currentRun.startedAt, 222);
     later.player.stats.currentRun.startedAt = 111;
     assert.deepEqual(later, first);
+});
+
+/**
+ * W12-D2 — 시즌 회전은 골든을 한 줄도 움직이지 않는다.
+ *
+ * 회전이 더한 것은 `seasonPass`의 **선택 필드**뿐이고 기본값은 읽는 쪽이 만든다.
+ * 그래서 `migrateData`의 출력은 바뀔 이유가 없고, `DATA_VERSION`도 그대로다.
+ * 위의 74입력 골든이 전부 통과한다는 사실이 이미 그 증거지만, 시즌 경로만 따로
+ * 짚어 두면 회귀 시 어느 칸이 깨졌는지 즉시 보인다.
+ */
+
+test('golden: 시즌 기본값은 레지스트리의 첫 시즌이고 모양이 바뀌지 않았다 (DATA_VERSION 불변)', () => {
+    // 'S1' 리터럴을 레지스트리로 승격했지만 **값**은 동일해야 한다 — 다르면 골든 74건이
+    // 전부 stale해지고 구세이브가 없던 시즌으로 들어간다.
+    assert.equal(FIRST_SEASON.id, 'S1');
+
+    const migrated = migrateData({ version: 5.1, player: { name: 'golden' } }, { now: FIXED_NOW });
+    assert.deepEqual(migrated.player.seasonPass, {
+        xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1',
+    });
+    assert.equal(migrated.version, CONSTANTS.DATA_VERSION);
+    assert.equal(CONSTANTS.DATA_VERSION, 5.1, '이 트랙은 DATA_VERSION을 올리지 않는다');
+});
+
+test('golden: 시즌 필드가 없던 입력들도 기록된 출력과 동일하다 (회전 도입 전후 동치)', () => {
+    // 골든 입력 중 seasonPass를 아예 갖고 있지 않은 항목만 골라, 출력의 seasonPass가
+    // 기록된 골든과 같은지 다시 확인한다(위 루프의 부분집합을 명시적으로 재단언).
+    const seasonless = inputs.filter(({ input }) => (
+        input && typeof input === 'object' && !input?.player?.seasonPass && !input?.seasonPass
+    ));
+    assert.ok(seasonless.length > 0, '시즌 필드 없는 골든 입력이 하나도 없다 — 하네스가 stale');
+
+    for (const { id, input } of seasonless) {
+        const recorded = recordedById.get(id);
+        const actual = computeGoldenResult(input);
+        if (actual.threw) continue;
+        assert.deepEqual(
+            actual.output?.player?.seasonPass,
+            recorded.output?.player?.seasonPass,
+            `${id}: 시즌 기본값이 골든과 달라졌다`,
+        );
+    }
+});
+
+test('golden: migrateData는 시각을 시즌 상태에 쓰지 않는다 (회전 트리거는 벽시계가 아니다)', () => {
+    const raw = { version: 5.1, player: { name: 'clock' } };
+    const early = migrateData(raw, { now: 111 });
+    const late = migrateData(raw, { now: 999_999_999 });
+    assert.deepEqual(early.player.seasonPass, late.player.seasonPass);
+    assert.equal(
+        JSON.stringify(early.player.seasonPass).includes('At'),
+        false,
+        '시즌 상태에 타임스탬프 필드가 섞였다',
+    );
 });
