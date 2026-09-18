@@ -165,7 +165,8 @@ export const calcInvasionChance = (playerAtk: number, guardPower: number): numbe
 export const resolveInvasion = (targetGrave: GraveEntry, playerAtk: number) => {
     const chance = calcInvasionChance(playerAtk, targetGrave.guardPower || 10);
     const success = Math.random() < chance;
-    const items = targetGrave.items || [];
+    // W11: 묘비 아이템 읽기는 언제나 getGraveItems 경유 — 구형 save의 단수 `item`도 흡수한다(§8-2).
+    const items = getGraveItems(targetGrave);
     const reward = success && items.length > 0
         ? { ...items[Math.floor(Math.random() * items.length)], id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` }
         : null;

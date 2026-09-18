@@ -4,7 +4,7 @@ import { makeEmitTitles } from '../utils/gameUtils';
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
-import { resolveInvasion } from '../utils/graveUtils';
+import { getGraveItems, resolveInvasion } from '../utils/graveUtils';
 import { createRewardActions } from './useInventoryActions.rewards';
 import { createEquipmentActions } from './useInventoryActions.equipment';
 import { createEconomyActions } from './useInventoryActions.economy';
@@ -75,7 +75,7 @@ export const createInventoryActions = ({
             if (count >= BALANCE.DAILY_INVADE_LIMIT) {
                 return addLog('warn', MSG.INVADE_LIMIT);
             }
-            if (!targetGrave.items || targetGrave.items.length === 0) {
+            if (getGraveItems(targetGrave).length === 0) {
                 return addLog('warn', MSG.INVADE_NO_ITEMS);
             }
             const playerAtk = getFullStats?.()?.atk || player.atk || 10;

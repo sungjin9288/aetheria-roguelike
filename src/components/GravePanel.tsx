@@ -14,7 +14,7 @@ import { collection, getDocs, limit, orderBy, query, type DocumentData, type Que
 import { db, hasFirebaseConfig } from '../firebase';
 import { APP_ID, BALANCE } from '../data/constants';
 import { isSignatureItem } from '../data/signatureItems.js';
-import { calcInvasionChance, excludeOwnGraves, getGraveRecoveryGroups, type GraveEntry } from '../utils/graveUtils';
+import { calcInvasionChance, excludeOwnGraves, getGraveItems, getGraveRecoveryGroups, type GraveEntry } from '../utils/graveUtils';
 import {
     PRODUCTION_GAME_CAPABILITIES,
     type GameCapabilities,
@@ -288,7 +288,7 @@ const GravePanel = ({
                     {publicGraves.map((targetGrave) => {
                         const chancePercent = Math.round(calcInvasionChance(playerAtk, targetGrave.guardPower || 10) * 100);
                         const isInvading = invadingUid === targetGrave.uid;
-                        const items: Item[] = Array.isArray(targetGrave.items) ? targetGrave.items : [];
+                        const items: Item[] = getGraveItems(targetGrave);
                         const noItems = items.length === 0;
                         const signatureItems = items.filter((item) => isSignatureItem(item));
 
