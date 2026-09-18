@@ -208,7 +208,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                 </p>
                             </div>
                             <div className="flex min-w-0 flex-col gap-2">
-                                {claimableQuests.map((entry: any) => (
+                                {claimableQuests.map((entry) => (
                                     <div
                                         key={String(entry.id)}
                                         data-testid={`true-ending-pending-quest-${String(entry.id)}`}

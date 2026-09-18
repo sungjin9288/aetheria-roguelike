@@ -1,12 +1,35 @@
-const clampRatio = (current: any, max: any) => {
-    if (!Number.isFinite(current) || !Number.isFinite(max) || max <= 0) return 0;
-    return Math.max(0, Math.min(1, current / max));
+import type { PostCombatResult } from '../types/combat.js';
+import type { RunSummary } from '../reducers/actionTypes.js';
+/**
+ * `getPostCombatAnalysis`/`getPostCombatRecommendation`/`getPostCombatDecisionStrip`가
+ * 공유하는 전투 결과 모양 — CombatEngine 승리 판정 산출물 중 이 파일이 읽는 필드만
+ * 좁힌 로컬 뷰(canonical 타입은 `GameState.postCombatResult`, 별도 트랙 소유).
+ */
+/**
+ * 전투 결과 카드 분석 입력 — 생산자 타입 `PostCombatResult`(types/combat.ts)의 부분 집합.
+ * 테스트 픽스처와 QA 시드가 부분 객체를 넘기므로 Partial로 받고, `difficultyLabel`은
+ * buildRunSummary 필드(전투 생산자는 내지 않음 — 테스트만 전달)라 optional로 덧붙인다.
+ * `loot` 별칭 폴백은 생산자가 없어(W8-Z1 확인) 제거했다.
+ */
+type PostCombatResultLike = Partial<PostCombatResult> & { difficultyLabel?: string };
+
+/** `getPostCombatRecommendation`/`getPostCombatDecisionStrip`의 loot 집계 컨텍스트. */
+interface PostCombatDecisionContext {
+    nonSignatureLootCount?: number;
+    signatureLootCount?: number;
+}
+
+const clampRatio = (current: number | undefined, max: number | undefined) => {
+    const currentNum = Number(current);
+    const maxNum = Number(max);
+    if (!Number.isFinite(currentNum) || !Number.isFinite(maxNum) || maxNum <= 0) return 0;
+    return Math.max(0, Math.min(1, currentNum / maxNum));
 };
 
 // cycle 557: result default {} 제거 — 1 production (PostCombatCard:59) +
 //   N test (outcome-analysis, cycle-336) 모두 명시 전달이라 default 도달 불가.
 //   outcomeAnalysis.ts 같은 모듈 batch (cycle 502-556 default 청소 51번째).
-export const getPostCombatAnalysis = (result: any) => {
+export const getPostCombatAnalysis = (result: PostCombatResultLike) => {
     const hpRatio = typeof result.hpLow === 'boolean'
         ? result.hpLow ? 0.2 : 1
         : clampRatio(result.playerHp, result.playerMaxHp);
@@ -59,7 +82,7 @@ export const getPostCombatAnalysis = (result: any) => {
     };
 };
 
-export const getPostCombatRecommendation = (result: any, context: any = {}) => {
+export const getPostCombatRecommendation = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}) => {
     const hpLow = typeof result.hpLow === 'boolean'
         ? result.hpLow
         : clampRatio(result.playerHp, result.playerMaxHp) <= 0.35;
@@ -68,16 +91,12 @@ export const getPostCombatRecommendation = (result: any, context: any = {}) => {
         : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3;
     const invFull = typeof result.invFull === 'boolean' ? result.invFull : false;
     const enemyTier = result.enemyTier || 'NORMAL';
-    const droppedItems = Array.isArray(result.items)
-        ? result.items
-        : Array.isArray(result.loot)
-            ? result.loot
-            : [];
+    const droppedItems = Array.isArray(result.items) ? result.items : [];
     const nonSignatureLootCount = Number.isFinite(context.nonSignatureLootCount)
-        ? context.nonSignatureLootCount
+        ? Number(context.nonSignatureLootCount)
         : droppedItems.length;
     const signatureLootCount = Number.isFinite(context.signatureLootCount)
-        ? context.signatureLootCount
+        ? Number(context.signatureLootCount)
         : 0;
     const hasUpgradeHint = Boolean(result.upgradeHint);
     const hasTraitHint = Boolean(result.traitHint);
@@ -95,7 +114,7 @@ export const getPostCombatRecommendation = (result: any, context: any = {}) => {
     return { target: 'continue', label: '계속 탐험' };
 };
 
-export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
+export const getPostCombatDecisionStrip = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}) => {
     const hpLow = typeof result.hpLow === 'boolean'
         ? result.hpLow
         : clampRatio(result.playerHp, result.playerMaxHp) <= 0.35;
@@ -104,16 +123,12 @@ export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
         : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3;
     const invFull = typeof result.invFull === 'boolean' ? result.invFull : false;
     const enemyTier = result.enemyTier || 'NORMAL';
-    const droppedItems = Array.isArray(result.items)
-        ? result.items
-        : Array.isArray(result.loot)
-            ? result.loot
-            : [];
+    const droppedItems = Array.isArray(result.items) ? result.items : [];
     const nonSignatureLootCount = Number.isFinite(context.nonSignatureLootCount)
-        ? context.nonSignatureLootCount
+        ? Number(context.nonSignatureLootCount)
         : droppedItems.length;
     const signatureLootCount = Number.isFinite(context.signatureLootCount)
-        ? context.signatureLootCount
+        ? Number(context.signatureLootCount)
         : 0;
     const hasUpgradeHint = Boolean(result.upgradeHint);
     const hasTraitHint = Boolean(result.traitHint);
@@ -148,23 +163,29 @@ export const getPostCombatDecisionStrip = (result: any, context: any = {}) => {
     };
 };
 
+/**
+ * 런 요약 분석 입력 — 생산자 `buildRunSummary`(gameUtils)의 반환형 부분 집합.
+ * 테스트 픽스처가 부분 객체를 넘기므로 Partial로 받는다(손으로 쓴 필드 목록은 W8 통합에서 제거).
+ */
+type RunSummaryLike = Partial<RunSummary>;
+
 // cycle 557: summary default {} 제거 — 1 production (RunSummaryCard:25) +
 //   N test (cycle-87/97) 모두 summary 명시 전달이라 default 도달 불가.
-export const getRunSummaryAnalysis = (summary: any) => {
-    const headline = summary.bossKills > 0
+export const getRunSummaryAnalysis = (summary: RunSummaryLike) => {
+    const headline = (summary.bossKills || 0) > 0
         ? '보스 구간까지 닿은 모험'
-        : summary.level >= 20
+        : (summary.level || 0) >= 20
             ? '중후반까지 이어진 모험'
-            : summary.level >= 10
+            : (summary.level || 0) >= 10
                 ? '성장 방향을 잡은 모험'
                 : '초반 안정화가 필요한 모험';
 
-    const notes = [];
+    const notes: string[] = [];
     if (summary.primaryBuild) notes.push(`성장 방향: ${summary.primaryBuild}`);
     if (summary.difficultyLabel) notes.push(`모험 난이도: ${summary.difficultyLabel}`);
     if (Number.isFinite(summary.recentWinRate)) notes.push(`최근 승률: ${summary.recentWinRate}%`);
 
-    const focus = [];
+    const focus: string[] = [];
     if ((summary.relicsFound || 0) <= 1) focus.push('얻은 유물이 적었습니다. 탐험 중 새로운 사건을 더 찾아보세요.');
     if ((summary.bossKills || 0) === 0 && (summary.level || 0) >= 12) focus.push('보스에 들어가기 전 방어 장비와 회복 수단을 더 준비하면 한 단계 더 올라갈 수 있습니다.');
     if ((summary.kills || 0) < 30) focus.push('초반 교전 수가 적었습니다. 첫 두 지역을 더 살펴 성장 기회를 확보하세요.');
@@ -199,15 +220,18 @@ export const getRunSummaryAnalysis = (summary: any) => {
     };
 };
 
-export const getRunSummaryReflectionStrip = (summary: any, analysis: any) => {
-    const level = Number.isFinite(summary.level) ? summary.level : 0;
-    const kills = Number.isFinite(summary.kills) ? summary.kills : 0;
-    const bossKills = Number.isFinite(summary.bossKills) ? summary.bossKills : 0;
-    const relicsFound = Number.isFinite(summary.relicsFound) ? summary.relicsFound : 0;
-    const totalGold = Number.isFinite(summary.totalGold) ? summary.totalGold : 0;
-    const escapes = Number.isFinite(summary.escapes) ? summary.escapes : 0;
-    const discoveries = Number.isFinite(summary.discoveries) ? summary.discoveries : 0;
-    const maxKillStreak = Number.isFinite(summary.maxKillStreak) ? summary.maxKillStreak : 0;
+export const getRunSummaryReflectionStrip = (
+    summary: RunSummaryLike,
+    analysis: ReturnType<typeof getRunSummaryAnalysis> | null | undefined,
+) => {
+    const level = Number.isFinite(summary.level) ? Number(summary.level) : 0;
+    const kills = Number.isFinite(summary.kills) ? Number(summary.kills) : 0;
+    const bossKills = Number.isFinite(summary.bossKills) ? Number(summary.bossKills) : 0;
+    const relicsFound = Number.isFinite(summary.relicsFound) ? Number(summary.relicsFound) : 0;
+    const totalGold = Number.isFinite(summary.totalGold) ? Number(summary.totalGold) : 0;
+    const escapes = Number.isFinite(summary.escapes) ? Number(summary.escapes) : 0;
+    const discoveries = Number.isFinite(summary.discoveries) ? Number(summary.discoveries) : 0;
+    const maxKillStreak = Number.isFinite(summary.maxKillStreak) ? Number(summary.maxKillStreak) : 0;
     const focusText = Array.isArray(analysis?.focus) ? analysis.focus.join(' ') : '';
 
     const highEscapes = escapes >= 3 && bossKills <= 1;

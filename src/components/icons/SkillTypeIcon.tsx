@@ -40,7 +40,13 @@ const TYPE_COLORS: Record<string, string> = {
 //   MonsterCodex×3) 모두 size 명시 전달이라 default 도달 불가. className은
 //   MonsterCodex:155/161 미전달이라 default '' REACHABLE 보존. 청소 메가
 //   시리즈 62번째 partial cleanup pattern (cycle 542 재적용).
-const SkillTypeIcon = ({ type, size, className = '' }: any) => {
+interface SkillTypeIconProps {
+    type: string;
+    size?: number;
+    className?: string;
+}
+
+const SkillTypeIcon = ({ type, size, className = '' }: SkillTypeIconProps) => {
     const path = TYPE_PATHS[type];
     if (!path) return null;
     const color = TYPE_COLORS[type] || '#e2e8f0';

@@ -1,6 +1,39 @@
 import { getRelicDisplayName } from './relicPresentation';
 import { getRelicBuildFit } from './relicBuildFit';
 import { MSG } from '../data/messages';
+import type { Relic } from '../types/index.js';
+
+/** `RelicChoicePanel.getRelicSynergyScore()`가 카드마다 계산하는 결과 중 이 파일이 읽는 필드만. */
+interface RelicSynergyInfo {
+    score?: number;
+    legendaryHint?: string;
+    nearLegendary?: string | null;
+}
+
+/** `RelicChoicePanel`이 만드는 유물 3~4택 카드 1개. */
+interface RelicChoiceCard {
+    relic?: Relic;
+    index: number;
+    synergy?: RelicSynergyInfo;
+}
+
+interface RankedRelicChoiceCard extends RelicChoiceCard {
+    score: number;
+    reason: string;
+    build: string;
+}
+
+interface RelicChoiceDecisionCell {
+    label: string;
+    value: string;
+}
+
+interface RelicChoiceDecision {
+    tone: string;
+    recommendedIndex: number;
+    recommendedId: string | null;
+    cells: RelicChoiceDecisionCell[];
+}
 
 const RARITY_SCORE: Record<string, number> = {
     common: 0,
@@ -37,9 +70,9 @@ const EFFECT_BUILD_LABEL: Record<string, string> = {
     event_chance: '이벤트 탐색',
 };
 
-const getBuildLabel = (effect: any) => EFFECT_BUILD_LABEL[effect] || '균형 성장';
+const getBuildLabel = (effect: string | undefined) => EFFECT_BUILD_LABEL[effect ?? ''] || '균형 성장';
 
-const getReasonLabel = (relic: any, synergy: any, buildFit: any) => {
+const getReasonLabel = (relic: Relic | undefined, synergy: RelicSynergyInfo, buildFit: ReturnType<typeof getRelicBuildFit>) => {
     if (synergy?.legendaryHint) return '전설 조합 완성';
     if ((synergy?.score || 0) >= 80) return '현재 유물과 잘 맞음';
     if ((synergy?.score || 0) > 0) return '현재 유물과 이어짐';
@@ -53,20 +86,20 @@ const getReasonLabel = (relic: any, synergy: any, buildFit: any) => {
     return MSG.RELIC_REASON_NEW_DIRECTION;
 };
 
-const getTone = (relic: any, synergy: any) => {
+const getTone = (relic: Relic | undefined, synergy: RelicSynergyInfo) => {
     if (synergy?.legendaryHint || relic?.rarity === 'legendary') return 'legendary';
     if ((synergy?.score || 0) > 0) return 'synergy';
     if (synergy?.nearLegendary) return 'potential';
     return 'steady';
 };
 
-const getSynergyScore = (synergy: any) => {
+const getSynergyScore = (synergy: RelicSynergyInfo) => {
     if (synergy.legendaryHint) return 160;
     if ((synergy.score || 0) >= 80) return 110;
     return synergy.score || 0;
 };
 
-export const getRelicChoiceDecisionStrip = (cards: any[], buildId: string) => {
+export const getRelicChoiceDecisionStrip = (cards: RelicChoiceCard[], buildId: string): RelicChoiceDecision => {
     if (!Array.isArray(cards) || cards.length === 0) {
         return {
             tone: 'steady',
@@ -80,33 +113,33 @@ export const getRelicChoiceDecisionStrip = (cards: any[], buildId: string) => {
         };
     }
 
-    const ranked = cards.map((card: any) => {
-        const relic = card.relic || {};
+    const ranked: RankedRelicChoiceCard[] = cards.map((card) => {
+        const relic = card.relic;
         const synergy = card.synergy || {};
-        const rarityScore = RARITY_SCORE[relic.rarity] || 0;
+        const rarityScore = RARITY_SCORE[relic?.rarity ?? ''] || 0;
         const synergyScore = getSynergyScore(synergy);
         const nearLegendaryScore = synergy.nearLegendary ? 18 : 0;
-        const buildFit = getRelicBuildFit(buildId, relic.effect);
+        const buildFit = getRelicBuildFit(buildId, relic?.effect);
         return {
             ...card,
             score: synergyScore + nearLegendaryScore + rarityScore + buildFit.score,
             reason: getReasonLabel(relic, synergy, buildFit),
-            build: getBuildLabel(relic.effect),
+            build: getBuildLabel(relic?.effect),
         };
-    }).sort((a: any, b: any) => {
+    }).sort((a, b) => {
         if (b.score !== a.score) return b.score - a.score;
         return (a.index || 0) - (b.index || 0);
     });
 
     const best = ranked[0];
-    const bestRelic = best.relic || {};
+    const bestRelic = best.relic;
 
     return {
         tone: getTone(bestRelic, best.synergy || {}),
         recommendedIndex: best.index,
-        recommendedId: bestRelic.id || null,
+        recommendedId: bestRelic?.id || null,
         cells: [
-            { label: '추천', value: getRelicDisplayName(bestRelic.name) || '추천 유물' },
+            { label: '추천', value: getRelicDisplayName(bestRelic?.name) || '추천 유물' },
             { label: '이유', value: best.reason },
             { label: '성장 방향', value: best.build },
         ],

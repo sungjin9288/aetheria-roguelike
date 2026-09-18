@@ -72,8 +72,8 @@ test.describe('Combat focus mode', () => {
             return {
                 hp: rendered.player?.hp,
                 maxHp: rendered.player?.maxHp,
-                itemCount: testApi?.getAscensionSnapshot?.().inventoryIds
-                    .filter((id: string) => id === 'smoke-combat-heal').length,
+                itemCount: testApi?.getAscensionSnapshot?.()?.inventoryIds
+                    ?.filter((id) => id === 'smoke-combat-heal').length,
             };
         });
         expect(before.hp).toBeLessThan(before.maxHp);
@@ -95,8 +95,8 @@ test.describe('Combat focus mode', () => {
                 const testApi = window.__AETHERIA_TEST_API__;
                 return {
                     gameState: rendered.gameState,
-                    itemCount: testApi?.getAscensionSnapshot?.().inventoryIds
-                        .filter((id: string) => id === 'smoke-combat-heal').length,
+                    itemCount: testApi?.getAscensionSnapshot?.()?.inventoryIds
+                        ?.filter((id) => id === 'smoke-combat-heal').length,
                     successLogCount: rendered.logTail.filter((log: { type: string; text: string }) => (
                         log.type === 'success' && log.text === '회복 물약 사용.'
                     )).length,

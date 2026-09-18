@@ -44,7 +44,7 @@ test.describe('Shop panel', () => {
         const priceMatch = priceText.match(/([\d,]+) 골드/);
         expect(priceMatch).not.toBeNull();
         const price = Number(priceMatch?.[1].replaceAll(',', ''));
-        const before = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.());
+        const before = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.()))!;
 
         await buyButton.evaluate((button: HTMLButtonElement) => {
             button.click();
@@ -57,7 +57,7 @@ test.describe('Shop panel', () => {
         )).toMatchObject({
             gold: before.gold - price,
         });
-        const after = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.());
+        const after = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.()))!;
         expect(after.inventory).toHaveLength(before.inventory.length + 1);
 
         const snapshot = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));

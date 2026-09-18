@@ -32,9 +32,9 @@ const winCurrentCombat = async (page: Page) => {
                 || after?.enemy?.hp !== before?.enemy?.hp;
         }, { timeout: 5_000 }).toBe(true);
     }
-    const finished = await page.evaluate(() => (
+    const finished = (await page.evaluate(() => (
         window.__AETHERIA_TEST_API__?.getTrueEndingJourneySnapshot?.()
-    ));
+    )))!;
     expect(finished.gameState).not.toBe('combat');
     expect(finished.gameState).not.toBe('dead');
 };
@@ -140,9 +140,9 @@ test.describe('release-complete player journey', () => {
         await page.getByTestId('archive-tab-skills').click();
         await page.getByTestId('skill-branch-choice-파워배시-B').click();
         await page.getByTestId('skill-growth-confirm-파워배시').click();
-        const finalGrowth = await page.evaluate(() => (
+        const finalGrowth = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getProgressionAcceptanceSnapshot?.()
-        ));
+        )))!;
         expect(finalGrowth.job).toBe('전사');
         expect(finalGrowth.skillChoices.파워배시).toBe('B');
     });
@@ -153,21 +153,21 @@ test.describe('release-complete player journey', () => {
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.());
         await expect(page.getByTestId('ascension-screen')).toBeVisible({ timeout: 8_000 });
 
-        const beforeCancel = await page.evaluate(() => (
+        const beforeCancel = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()
-        ));
+        )))!;
         await page.getByTestId('ascension-cancel').click();
-        const cancelled = await page.evaluate(() => (
+        const cancelled = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()
-        ));
+        )))!;
         expect(cancelled.level).toBe(beforeCancel.level);
         expect(cancelled.prestigeRank).toBe(beforeCancel.prestigeRank);
 
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.());
         await page.getByTestId('ascension-confirm').click();
-        const confirmed = await page.evaluate(() => (
+        const confirmed = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()
-        ));
+        )))!;
         expect(confirmed.level).toBe(1);
         expect(confirmed.prestigeRank).toBe(beforeCancel.prestigeRank + 1);
     });

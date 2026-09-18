@@ -7,6 +7,7 @@ import { migrateData } from '../utils/dataMigration.js';
 import type { Relic } from '../types/relic.js';
 import { CombatEngine } from './CombatEngine.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
+import { calculateFullStats, type FullStats } from '../utils/statsCalculator.js';
 
 // `Relic`이 effect 판별 유니온이 된 뒤로는 유니온 전체에 Pick을 걸면 effect/val이
 // 다시 넓어져 Relic에 대입할 수 없다. dot_mult 분기만 뽑아 Pick한다.
@@ -96,16 +97,28 @@ const compareText = (left: string, right: string) => (
 
 const sameJson = (left: unknown, right: unknown) => JSON.stringify(left) === JSON.stringify(right);
 
-const asDotRelic = (relic: any): DotRelic => ({
-    id: relic?.id,
-    name: relic?.name,
-    rarity: relic?.rarity,
-    desc: relic?.desc,
-    effect: relic?.effect,
-    val: relic?.val,
+/** `relics.filter(...)`가 `dot_mult` 변형으로 좁히도록 하는 타입 술어. */
+const isDotMultRelic = (relic: Relic): relic is Extract<Relic, { effect: 'dot_mult' }> => (
+    relic.effect === 'dot_mult'
+);
+
+const asDotRelic = (relic: Extract<Relic, { effect: 'dot_mult' }>): DotRelic => ({
+    id: relic.id,
+    name: relic.name,
+    rarity: relic.rarity,
+    desc: relic.desc,
+    effect: relic.effect,
+    val: relic.val,
 });
 
-const makePlayer = (relics: any[]) => ({
+/**
+ * 런타임 가드 음성 케이스 전용 — `Relic.val` 타입 계약 밖의 값(문자열/NaN/누락)을
+ * 일부러 넣어 fail-closed를 확인한다(relicGoldMultiplierAudit.ts의 MalformedRelic과 동일 패턴).
+ * 정상 경로는 언제나 `Relic`을 쓴다.
+ */
+type MalformedRelic = { id: string; effect: 'dot_mult'; val?: unknown };
+
+const makePlayer = (relics: Relic[]) => ({
     name: 'dot-audit',
     job: '모험가',
     hp: 100,
@@ -117,6 +130,9 @@ const makePlayer = (relics: any[]) => ({
     skillChoices: {},
     skillLoadout: { selected: 0, cooldowns: {} },
     combatFlags: { firstSkillUsed: true },
+    // calculateFullStats(buildStats 경계)가 player.equip을 fallback 없이 읽는다 — 빈
+    // 장비로 채워 크래시를 피한다(실제 장비 보너스는 이 감사 대상이 아님).
+    equip: {},
 });
 
 const makeEnemy = (def = 50) => ({
@@ -127,6 +143,22 @@ const makeEnemy = (def = 50) => ({
     def,
 });
 
+/**
+ * 이 감사가 고정하는 6개 필드(atk/def/elem/critChance/relics/activeSynergies)만 override하고
+ * 나머지 `FullStats` 필드는 `calculateFullStats`가 채운다 — performSkill이 실제로 읽는 필드는
+ * 이 6개뿐이라(activeSynergies/elem/critChance/atk/relics) 나머지 값은 결과에 영향을 주지 않는다.
+ * `FullStats`를 손으로 다시 선언하지 않는다(CLAUDE.md: FullStats가 표준 stats 타입).
+ */
+const buildStats = (relics: Relic[] | MalformedRelic[], critChance = 0): FullStats => ({
+    ...calculateFullStats(makePlayer(relics as Relic[]))!,
+    atk: 10,
+    def: 0,
+    elem: 'physical',
+    critChance,
+    relics: relics as Relic[],
+    activeSynergies: [],
+});
+
 const runProductionSkill = ({
     name,
     relics,
@@ -135,7 +167,7 @@ const runProductionSkill = ({
     enemyDef = 50,
 }: {
     name: string;
-    relics: any[];
+    relics: Relic[];
     effect?: string;
     critChance?: number;
     enemyDef?: number;
@@ -147,27 +179,31 @@ const runProductionSkill = ({
     const result = CombatEngine.performSkill(
         player,
         enemy,
-        { atk: 10, def: 0, elem: 'physical', critChance, relics, activeSynergies: [] },
+        buildStats(relics, critChance),
         { name: '화상 시험', mp: 10, mult: 1, cooldown: 1, effect },
         () => rolls[rngDraws++] ?? 0,
     );
+    // performSkill의 거부 분기(no-skill/cooldown/no-mp)는 이 감사의 고정 입력
+    // (mp 10, cooldown 1, 소지 mp 100)에서 도달 불가 — updatedPlayer/updatedEnemy 존재로
+    // 성공 분기를 좁힌다(success는 리터럴로 추론되지 않아 판별자로 쓸 수 없다).
+    if (!result.updatedPlayer || !result.updatedEnemy) throw new Error('UNEXPECTED_SKILL_REJECTION');
     return {
         name,
-        mp: result.updatedPlayer.mp,
-        enemyHp: result.updatedEnemy.hp,
+        mp: result.updatedPlayer.mp ?? 0,
+        enemyHp: result.updatedEnemy.hp ?? 0,
         enemyDots: Array.isArray(result.updatedEnemy.dots) ? [...result.updatedEnemy.dots] : [],
-        cooldown: result.updatedPlayer.skillLoadout.cooldowns['화상 시험'],
-        isCrit: result.isCrit,
+        cooldown: result.updatedPlayer.skillLoadout?.cooldowns['화상 시험'] ?? 0,
+        isCrit: result.isCrit ?? false,
         rngDraws,
-        logTexts: result.logs.map((entry: any) => entry.text),
+        logTexts: result.logs.map((entry) => entry.text),
     };
 };
 
 const runMalformedVector = (name: string, val: unknown): MalformedVector => {
-    const relic = val === undefined
+    const relic: MalformedRelic = val === undefined
         ? { id: `malformed-${name}`, effect: 'dot_mult' }
         : { id: `malformed-${name}`, effect: 'dot_mult', val };
-    const player = makePlayer([relic]);
+    const player = makePlayer([relic as Relic]);
     const enemy = makeEnemy();
     const beforePlayer = structuredClone(player);
     const beforeEnemy = structuredClone(enemy);
@@ -177,7 +213,7 @@ const runMalformedVector = (name: string, val: unknown): MalformedVector => {
         CombatEngine.performSkill(
             player,
             enemy,
-            { atk: 10, def: 0, elem: 'physical', critChance: 0, relics: [relic], activeSynergies: [] },
+            buildStats([relic]),
             { name: '화상 시험', mp: 10, mult: 1, cooldown: 1, effect: 'burn' },
             () => {
                 rngDraws += 1;
@@ -224,7 +260,7 @@ const buildMigrationVector = () => {
 };
 
 const buildReplayVector = () => {
-    const state: any = structuredClone(INITIAL_STATE);
+    const state = structuredClone(INITIAL_STATE);
     state.player = {
         ...state.player,
         name: 'dot-replay',
@@ -252,6 +288,7 @@ const buildReplayVector = () => {
     };
     state.combatTurn = 0;
     state.combatReceipt = null;
+    const initialEnemyHp = state.enemy.hp ?? 0;
     const action: ActionOf<typeof AT.RESOLVE_COMBAT_ACTION> = {
         type: AT.RESOLVE_COMBAT_ACTION,
         payload: { kind: 'skill', expectedTurn: 0, seed: 20260817, now: 1_700_000_000_000 },
@@ -265,7 +302,7 @@ const buildReplayVector = () => {
     return {
         receiptKey: settled.combatReceipt?.key || '',
         settledOnce: settled.combatTurn === 1 && settledMp < (state.player.mp ?? 0)
-            && settledEnemyHp !== null && settledEnemyHp < state.enemy.hp
+            && settledEnemyHp !== null && settledEnemyHp < initialEnemyHp
             && settledEnemyDots.includes('burn'),
         replayIsSameObject: replayed === settled,
         mp: settledMp,
@@ -308,7 +345,7 @@ export const buildRelicDotMultiplierReport = ({
     relics?: readonly Relic[];
 } = {}): RelicDotMultiplierReport => {
     const errors = new Set<string>();
-    const catalog = relics.filter((relic) => relic.effect === 'dot_mult').map(asDotRelic);
+    const catalog = relics.filter(isDotMultRelic).map(asDotRelic);
     const deathMark = catalog.find((relic) => relic.id === 'death_mark');
     const curseCrystal = catalog.find((relic) => relic.id === 'curse_crystal');
     if (!sameJson(catalog, EXPECTED_CATALOG)) errors.add('DOT_MULT_CATALOG_POLICY_MISMATCH');

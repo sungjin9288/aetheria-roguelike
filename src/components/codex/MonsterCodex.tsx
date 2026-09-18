@@ -6,7 +6,7 @@ import { BOSS_BRIEFS, MONSTERS } from '../../data/monsters';
 import { MSG } from '../../data/messages';
 import MonsterIcon from '../icons/MonsterIcon';
 import SkillTypeIcon from '../icons/SkillTypeIcon';
-import type { Player } from '../../types/index.js';
+import type { ElementKey, GameMap, Player } from '../../types/index.js';
 
 interface MonsterCodexProps {
     player?: Player | null;
@@ -18,30 +18,56 @@ const RESEARCH_STEPS = [
     { target: 100, label: '공격력 +1' },
 ];
 
+/**
+ * data/monsters.ts의 BOSS_BRIEFS 실제 런타임 모양 — 이 화면이 읽는 필드만 좁힌다.
+ * 선언 자체는 `Record<string, any>`다(src/data/**, 이 트랙 범위 밖).
+ */
+interface BossBrief {
+    signature?: string;
+    counterHint?: string;
+    phaseHint?: string;
+    warningChips?: string[];
+    recommendedBuilds?: string[];
+}
+
+/** allMonsters가 생산하는 코덱스 엔트리 1건. */
+interface MonsterCodexEntry {
+    name: string;
+    kills: number;
+    encountered: boolean;
+    drops: string[];
+    location: string;
+    bonuses: { hp: number; def: number; atk: number };
+    weakness: ElementKey | null;
+    resistance: ElementKey | null;
+    isBoss: boolean;
+    bossBrief: BossBrief | null;
+}
+
 const MonsterCodex = ({ player }: MonsterCodexProps) => {
     const [selectedMonster, setSelectedMonster] = useState<string | null>(null);
 
-    const allMonsters = useMemo(() => {
+    const allMonsters = useMemo<MonsterCodexEntry[]>(() => {
         const registry = player?.stats?.killRegistry || {};
-        const collectMapEncounters = (map: any): string[] => [
+        const collectMapEncounters = (map: GameMap): string[] => [
             ...(Array.isArray(map?.monsters) ? map.monsters : []),
             ...(Array.isArray(map?.bossMonsters) ? map.bossMonsters : []),
             ...(typeof map?.boss === 'string' ? [map.boss] : []),
         ];
         const monsters = new Set<string>();
-        for (const map of Object.values(DB.MAPS) as any[]) {
+        for (const map of Object.values(DB.MAPS)) {
             collectMapEncounters(map).forEach((name) => monsters.add(name));
         }
 
         return [...monsters].map((name) => {
             const kills = registry[name] || 0;
-            const monsterMeta = (MONSTERS as any)[name] || {};
+            const monsterMeta = MONSTERS[name] || {};
             return {
                 name,
                 kills,
                 encountered: kills > 0,
-                drops: (LOOT_TABLE as any)[name] || [],
-                location: (Object.entries(DB.MAPS) as Array<[string, any]>)
+                drops: (LOOT_TABLE as Record<string, string[]>)[name] || [],
+                location: Object.entries(DB.MAPS)
                     .filter(([, map]) => collectMapEncounters(map).includes(name))
                     .map(([location]) => location)
                     .join(', '),
@@ -53,7 +79,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                 weakness: monsterMeta.weakness || null,
                 resistance: monsterMeta.resistance || null,
                 isBoss: Boolean(monsterMeta.isBoss),
-                bossBrief: (BOSS_BRIEFS as any)[name] || null,
+                bossBrief: (BOSS_BRIEFS as Record<string, BossBrief>)[name] || null,
             };
         });
     }, [player]);
@@ -67,9 +93,9 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
             const step = RESEARCH_STEPS.find((entry) => monster.kills < entry.target);
             return step ? { monster, step, remaining: step.target - monster.kills } : null;
         })
-        .filter(Boolean)
-        .sort((left: any, right: any) => left.remaining - right.remaining)
-        .slice(0, 3) as Array<{ monster: any; step: typeof RESEARCH_STEPS[number]; remaining: number }>;
+        .filter((entry): entry is { monster: MonsterCodexEntry; step: typeof RESEARCH_STEPS[number]; remaining: number } => entry !== null)
+        .sort((left, right) => left.remaining - right.remaining)
+        .slice(0, 3);
 
     const earnedBonuses = allMonsters.reduce((totalBonus, monster) => ({
         hp: totalBonus.hp + monster.bonuses.hp,
@@ -77,7 +103,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
         def: totalBonus.def + monster.bonuses.def,
     }), { hp: 0, atk: 0, def: 0 });
 
-    const renderDetail = (monster: any) => (
+    const renderDetail = (monster: MonsterCodexEntry) => (
         <div data-testid={`codex-monster-detail-${monster.name}`} className="border-t border-white/8 px-2 py-3">
             <div className="flex items-center justify-between gap-2">
                 <div className="flex min-w-0 items-center gap-2">
@@ -143,7 +169,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
         </div>
     );
 
-    const renderGroup = (label: string, monsters: any[], icon: typeof Compass) => {
+    const renderGroup = (label: string, monsters: MonsterCodexEntry[], icon: typeof Compass) => {
         if (monsters.length === 0) return null;
         const Icon = icon;
         return (

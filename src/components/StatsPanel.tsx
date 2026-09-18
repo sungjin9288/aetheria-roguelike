@@ -20,7 +20,7 @@ interface StatsPanelProps {
 // cycle 411: frost / arcane 제거 — signatureSets.json sets는 fire/holy/nature/shadow
 //   4 tone만 emit. activeSignatureSet.tone / setProgress.tone 모두 동일 데이터 source라
 //   frost / arcane lookup 절대 hit 안 됨 (cycle 358 steel 동일 lens).
-const SIG_SET_TONE: any = Object.freeze({
+const SIG_SET_TONE: Record<string, { border: string; glow: string; text: string }> = Object.freeze({
     holy: { border: 'rgba(246,231,162,0.5)', glow: 'rgba(246,231,162,0.18)', text: '#f6e7a2' },
     fire: { border: 'rgba(255,180,138,0.5)', glow: 'rgba(255,180,138,0.18)', text: '#ffb48a' },
     shadow: { border: 'rgba(199,164,240,0.5)', glow: 'rgba(199,164,240,0.18)', text: '#c7a4f0' },
@@ -32,7 +32,7 @@ const SIG_SET_TONE: any = Object.freeze({
  * @param {number} mult
  * @returns {string}
  */
-const formatMultDelta = (mult: any) => {
+const formatMultDelta = (mult: number) => {
     if (!Number.isFinite(mult) || Math.abs(mult - 1) < 0.005) return '—';
     const delta = Math.round((mult - 1) * 100);
     return `${delta >= 0 ? '+' : ''}${delta}%`;
@@ -271,7 +271,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                     <Activity size={13} className="text-[#8fd6cf]" /> 핵심 기록
                 </div>
                 <div className="grid grid-cols-2 gap-2">
-                    {coreRecordEntries.map((entry: any) => {
+                    {coreRecordEntries.map((entry) => {
                         const Icon = entry.icon;
                         return (
                             <div key={entry.label} className="aether-panel-muted rounded-lg px-3 py-2.5">
@@ -294,7 +294,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                         <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
                     </summary>
                     <div className="grid grid-cols-2 gap-2 pb-3">
-                        {detailRecordEntries.map((entry: any) => {
+                        {detailRecordEntries.map((entry) => {
                             const Icon = entry.icon;
                             return (
                                 <div key={entry.label} className="aether-panel-muted rounded-lg px-3 py-2.5">

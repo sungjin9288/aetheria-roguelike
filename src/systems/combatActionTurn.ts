@@ -2,12 +2,30 @@ import { MSG } from '../data/messages';
 import { CombatEngine } from './CombatEngine';
 import { buildRunSummary, getJobSkills } from '../utils/gameUtils';
 import { pushBattleRecord, makeBattleRecord } from './DifficultyManager';
-import { calculateFullStats } from '../utils/statsCalculator';
+import { calculateFullStats, type FullStats } from '../utils/statsCalculator';
 import { endDevourBonus } from '../utils/adventureRelicBonuses';
 import { createSeededRandom } from './combatItemTurn';
 import type { Monster, Player } from '../types/index.js';
+import type { GraveEntry } from '../utils/graveUtils.js';
 
 export type CombatActionKind = 'attack' | 'skill' | 'escape';
+
+/**
+ * 이 전이가 실제로 반환하는 `attack`/`performSkill`(CombatEngine.actions.ts) 결과 병합형.
+ * `attack`은 `success`/`forceEscape` 필드가 없고, `performSkill`의 거부 분기(쿨다운/MP 부족/
+ * 스킬 없음)는 `updatedPlayer`/`updatedEnemy`/`isCrit`/`isVictory`가 없다 — 두 생산자를
+ * 하나의 로컬 변수로 받는 이 파일만의 병합 형태라 optional로 넓힌다(실제 값은 분기마다
+ * 항상 채워짐 — `!`는 그 실제 보장을 표현).
+ */
+interface CombatActionOutcome {
+    success?: boolean;
+    forceEscape?: boolean;
+    updatedPlayer?: Player;
+    updatedEnemy?: Monster;
+    logs?: Array<{ type: string; text: string }>;
+    isCrit?: boolean;
+    isVictory?: boolean;
+}
 
 export type CombatActionTurnResult = {
     kind: 'continue' | 'victory' | 'defeat' | 'escape' | 'rejected';
@@ -15,12 +33,12 @@ export type CombatActionTurnResult = {
     enemy: Monster | null;
     logs: Array<{ type: string; text: string }>;
     visualEffect: string | null;
-    victoryStats?: any;
+    victoryStats?: FullStats;
     deadEnemy?: Monster;
     extendedVictoryChecks?: boolean;
-    graveData?: any;
-    runSummary?: any;
-    stories: Array<{ type: string; data: any }>;
+    graveData?: GraveEntry;
+    runSummary?: ReturnType<typeof buildRunSummary>;
+    stories: Array<{ type: string; data: Record<string, unknown> }>;
 };
 
 const selectedSkill = (player: Player, random: () => number) => {
@@ -87,7 +105,10 @@ export const resolveCombatActionTurn = ({
     rng?: () => number;
 }): CombatActionTurnResult => {
     const random = rng || createSeededRandom(seed);
-    const stats = calculateFullStats(player);
+    // calculateFullStats(player)는 `!player`일 때만 null을 반환한다 — 이 전이는 항상
+    // 실제 Player를 받으므로 non-null(W8-Z4: outcome/enemyAI 타이핑으로 CombatEngine의
+    // 실제 반환 타입이 드러나면서 이 호출부의 느슨한 any 전파가 끝났다).
+    const stats = calculateFullStats(player)!;
 
     if (kind === 'escape') {
         const escapeResult = CombatEngine.attemptEscape(enemy, stats, random);
@@ -137,7 +158,7 @@ export const resolveCombatActionTurn = ({
         };
     }
 
-    let actionResult: any;
+    let actionResult: CombatActionOutcome;
     const logs: Array<{ type: string; text: string }> = [];
     if (kind === 'skill') {
         const selected = selectedSkill(player, random);
@@ -159,7 +180,7 @@ export const resolveCombatActionTurn = ({
     logs.push(...(actionResult.logs || []));
 
     if (actionResult.forceEscape) {
-        const escapedPlayer = endDevourBonus(actionResult.updatedPlayer);
+        const escapedPlayer = endDevourBonus(actionResult.updatedPlayer!);
         const hpRatio = (escapedPlayer.hp || 0) / Math.max(1, escapedPlayer.maxHp || 1);
         return {
             kind: 'escape',
@@ -180,7 +201,7 @@ export const resolveCombatActionTurn = ({
     if (actionResult.isVictory) {
         return {
             kind: 'victory',
-            player: actionResult.updatedPlayer,
+            player: actionResult.updatedPlayer!,
             enemy: null,
             logs,
             visualEffect: null,
@@ -191,23 +212,23 @@ export const resolveCombatActionTurn = ({
         };
     }
 
-    if (actionResult.updatedPlayer.extraTurnGranted) {
+    if (actionResult.updatedPlayer!.extraTurnGranted) {
         return {
             kind: 'continue',
-            player: { ...actionResult.updatedPlayer, extraTurnGranted: false },
-            enemy: actionResult.updatedEnemy,
+            player: { ...actionResult.updatedPlayer!, extraTurnGranted: false },
+            enemy: actionResult.updatedEnemy!,
             logs,
             visualEffect: null,
             stories: [],
         };
     }
 
-    const turnTick = CombatEngine.tickCombatState(actionResult.updatedPlayer);
+    const turnTick = CombatEngine.tickCombatState(actionResult.updatedPlayer!);
     const playerForEnemyTurn = turnTick.updatedPlayer;
-    const counterStats = calculateFullStats(playerForEnemyTurn);
+    const counterStats = calculateFullStats(playerForEnemyTurn)!;
     const counterResult = CombatEngine.enemyAttack(
         playerForEnemyTurn,
-        actionResult.updatedEnemy,
+        actionResult.updatedEnemy!,
         counterStats,
         random,
     );
@@ -225,8 +246,8 @@ export const resolveCombatActionTurn = ({
             logs: [
                 ...turnLogs,
                 { type: 'success', text: counterResult.damage > 0
-                    ? MSG.COMBAT_COUNTER_KILL(actionResult.updatedEnemy?.name)
-                    : MSG.COMBAT_DOT_KILL(actionResult.updatedEnemy?.name) },
+                    ? MSG.COMBAT_COUNTER_KILL(String(actionResult.updatedEnemy?.name))
+                    : MSG.COMBAT_DOT_KILL(String(actionResult.updatedEnemy?.name)) },
             ],
             visualEffect: null,
             victoryStats: counterStats,
@@ -240,7 +261,7 @@ export const resolveCombatActionTurn = ({
         const defeated = resolveDefeat(
             counterResult.updatedPlayer,
             initialPlayer,
-            playerForEnemyTurn.loc,
+            playerForEnemyTurn.loc || MSG.LOCATION_UNKNOWN_FALLBACK,
             turnLogs,
             random,
             now,

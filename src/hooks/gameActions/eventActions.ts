@@ -14,85 +14,17 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
 import type { Player, StatusId } from '../../types';
+import type { EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
 import type { GameState } from '../../reducers/gameReducer';
 import type { AddLog, GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
 import type { CommitExploreOutcome, TitleSharedHelpers } from './_shared';
 
-/**
- * 이벤트 카드 1개의 선택 결과(outcome). AI 이벤트·체인·정찰·보스 게이지·구조화 폴백이
- * 같은 배열에 실려 오므로, 각 경로가 읽는 필드를 여기 한 곳에 모아 optional로 선언한다
- * (`currentEvent` 자체는 아직 `GameState['currentEvent']` = any — reducer 핸들러 소유).
- */
-interface EventOutcome {
-    choiceIndex?: number;
-    /** 구조화 조우(boundedEncounter) 전용 선택 식별자. */
-    choiceId?: string;
-    type?: string;
-    log?: string;
-    reward?: EventReward;
-    gold?: number;
-    exp?: number;
-    hp?: number;
-    mp?: number;
-    item?: string;
-    buff?: OutcomeBuff;
-    status?: OutcomeStatus;
-    relic?: OutcomeRelic;
-    elite?: boolean;
-    /** 정찰 카드 전용 — 'combat' | 'elite' | 'anomaly' | 'unknown'. */
-    scoutEffect?: string;
-    /** 정찰 "전투의 기척" 전용 — 처치 보상 배율 가산. */
-    rewardBonus?: number;
-    /** 보스 게이지 카드 전용 — 'avoid' | (도전). */
-    gaugeEffect?: string;
-}
-
-/**
- * `GameEvent.outcomes`는 생산자(AI/체인/정찰/보스 게이지/한정 조우)마다 원소 모양이 달라
- * 세션 타입(`types/session.ts`)에서는 `unknown[]`로 열어 둔다. 이 훅은 자기 생산자
- * (AI/폴백 이벤트 + 체인 스텝)의 `EventOutcome` 모양만 읽으므로 여기서 한 번 좁힌다.
- */
-const eventOutcomes = (event: GameState['currentEvent']): EventOutcome[] =>
-    toArray(event?.outcomes) as EventOutcome[];
-
-/** 체인 이벤트 outcome의 보상 블록 (eventChains.ts의 reward 스키마 합집합). */
-interface EventReward {
-    type?: string;
-    amount?: number;
-    text?: string;
-    name?: string;
-    atkMult?: number;
-    duration?: number;
-    atk?: number;
-    def?: number;
-    hp?: number;
-    mp?: number;
-}
+/** `currentEvent.outcomes`(세션 정본 `EventOutcome[]`)를 배열로 정규화한다. */
+const eventOutcomes = (event: GameState['currentEvent']): EventOutcome[] => toArray(event?.outcomes);
 
 /** exploreUtils.spawnEnemy가 만들어 내는 적 인스턴스 스탯. */
 type SpawnedEnemyStats = ReturnType<typeof spawnEnemy>['mStats'];
 
-/** 이벤트 outcome이 실어 보내는 버프 — 신규 배율 스키마와 캠프파이어 스키마 양쪽. */
-interface OutcomeBuff {
-    atkMult?: number;
-    defMult?: number;
-    turns?: number;
-    atk?: number;
-    def?: number;
-    turn?: number;
-    name?: string | null;
-}
-
-/** 이벤트 outcome 상태이상 지정자. */
-interface OutcomeStatus {
-    id?: string;
-    turns?: number;
-}
-
-/** 이벤트 outcome 유물 보상 지정자. */
-interface OutcomeRelic {
-    count?: number;
-}
 import {
     STRUCTURED_FALLBACK_TRANSACTIONS,
     getStructuredFallbackTransaction,

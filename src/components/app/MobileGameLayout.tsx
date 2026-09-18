@@ -3,6 +3,8 @@ import { motion as Motion } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
 import TerminalView from '../TerminalView';
 import ControlPanel from '../ControlPanel';
+import type { FullStats, Item } from '../../types/index.js';
+import type { useGameEngine } from '../../hooks/useGameEngine';
 
 const Dashboard = lazy(() => import('../Dashboard'));
 
@@ -13,6 +15,23 @@ const DashboardFallback = () => (
     />
 );
 
+/** `useGameEngine`이 반환하는 실제 모양 — type-only import라 훅 모듈이 로드되지 않는다. */
+type GameEngine = ReturnType<typeof useGameEngine>;
+
+interface MobileGameLayoutProps {
+    engine: GameEngine;
+    fullStats: FullStats;
+    isPanelFocusState: boolean;
+    mobileArchiveDockVisible: boolean;
+    handleQuickSlotUse: (item: Item, idx: number) => void;
+    damageFlash: boolean;
+    healFlash: boolean;
+    mobileConsoleMode: string;
+    setMobileConsoleMode: (mode: string) => void;
+    onOpenMirror: () => void;
+    onOpenCrystalExchange: () => void;
+}
+
 const MobileGameLayout = ({
     engine, fullStats,
     isPanelFocusState, mobileArchiveDockVisible,
@@ -22,7 +41,7 @@ const MobileGameLayout = ({
     setMobileConsoleMode,
     onOpenMirror,
     onOpenCrystalExchange,
-}: any) => {
+}: MobileGameLayoutProps) => {
     const isCombat = engine.gameState === GS.COMBAT;
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     // Dashboard.runtime(SystemTabRuntime)이 읽지 않는 mobileArchiveDockVisible도 실어 보낸다 —
@@ -37,7 +56,7 @@ const MobileGameLayout = ({
         onOpenCrystalExchange,
     };
     const showArchiveConsole = archiveAvailable && mobileConsoleMode === 'archive';
-    const openArchiveConsole = (tab: any) => {
+    const openArchiveConsole = (tab?: string) => {
         // onClick 등에서 이벤트 객체를 그대로 전달하는 것을 방지 (기본값이 event 객체로 덮이면 안 됨)
         const target = typeof tab === 'string' ? tab : 'inventory';
         engine.actions.setSideTab?.(target);

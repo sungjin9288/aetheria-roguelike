@@ -328,7 +328,9 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
             const settled = settleVictory(state, {
                 player: result.player,
                 deadEnemy: result.deadEnemy || state.enemy,
-                stats: result.victoryStats,
+                // W8-Z4: CombatActionTurnResult.victoryStats가 FullStats(옵셔널)로 닫혔다 —
+                //   kind === 'victory' 분기는 늘 채워 반환한다(resolveCombatActionTurn 계약).
+                stats: result.victoryStats!,
                 logs: result.logs,
                 stories: result.stories,
                 extendedChecks: result.extendedVictoryChecks === true,

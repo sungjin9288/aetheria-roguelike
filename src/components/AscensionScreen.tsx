@@ -11,10 +11,11 @@ import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import { MSG } from '../data/messages.js';
 import type { Player } from '../types/index.js';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
+import type { GameActions } from '../hooks/actionDeps';
 
 interface AscensionScreenProps {
     player: Player;
-    actions?: any;
+    actions?: Pick<GameActions, 'cancelAscension' | 'confirmAscension'>;
     /** 2026-09 G3: 승천 화면에서 곧바로 에테르 거울로 — SystemTab과 같은 진입점을 재사용. */
     onOpenMirror?: () => void;
 }

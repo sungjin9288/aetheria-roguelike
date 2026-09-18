@@ -1,23 +1,23 @@
 import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
 import { getItemStatText } from './equipmentUtils';
-import type { Item } from '../types/index.js';
+import type { Item, ItemPrefixDef } from '../types/index.js';
 import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 
-const normalizeItemType = (type: any) => {
+const normalizeItemType = (type: string | undefined) => {
     if (type === 'shield') return 'armor';
     return type;
 };
 
-const supportsPrefixStat = (normalizedType: any, prefixStat: any) => {
+const supportsPrefixStat = (normalizedType: string | undefined, prefixStat: string | undefined) => {
     if (prefixStat === 'atk') return normalizedType === 'weapon';
     if (prefixStat === 'def') return normalizedType === 'armor';
-    if (prefixStat === 'hp') return ['hp', 'mp'].includes(normalizedType);
-    if (prefixStat === 'all') return ['weapon', 'armor', 'hp', 'mp'].includes(normalizedType);
+    if (prefixStat === 'hp') return ['hp', 'mp'].includes(normalizedType ?? '');
+    if (prefixStat === 'all') return ['weapon', 'armor', 'hp', 'mp'].includes(normalizedType ?? '');
     return false;
 };
 
-const formatStatText = (item: Item, normalizedType: any) => {
+const formatStatText = (item: Item, normalizedType: string | undefined) => {
     if (normalizedType === 'weapon' || normalizedType === 'armor') return getItemStatText(item);
     if (normalizedType === 'hp') return `HP+${item.val}`;
     if (normalizedType === 'mp') return `MP+${item.val}`;
@@ -27,10 +27,10 @@ const formatStatText = (item: Item, normalizedType: any) => {
 const getPrefixCandidates = (item: Item | null | undefined) => {
     const normalizedType = normalizeItemType(item?.type);
     const supportedTypes = ['weapon', 'armor', 'hp', 'mp'];
-    if (!supportedTypes.includes(normalizedType)) return [];
+    if (!supportedTypes.includes(normalizedType ?? '')) return [];
     const prefixes = Array.isArray(DB.ITEMS?.prefixes) ? DB.ITEMS.prefixes : [];
 
-    return prefixes.filter((prefix: any) => {
+    return prefixes.filter((prefix: ItemPrefixDef) => {
         if (!prefix?.type) return false;
         const typeMatch = prefix.type === 'all' || prefix.type === normalizedType;
         if (!typeMatch) return false;
@@ -38,7 +38,7 @@ const getPrefixCandidates = (item: Item | null | undefined) => {
     });
 };
 
-const applyPrefixStats = (item: Item, prefix: any) => {
+const applyPrefixStats = (item: Item, prefix: ItemPrefixDef) => {
     const next: Record<string, any> = { ...item };
     const normalizedType = normalizeItemType(next.type);
 
@@ -58,7 +58,7 @@ const applyPrefixStats = (item: Item, prefix: any) => {
     return next;
 };
 
-export const applyItemPrefix = (item: any, rng?: () => number): any => {
+export const applyItemPrefix = <T extends Item | null | undefined>(item: T, rng?: () => number): T | Item => {
     const random = typeof rng === 'function' ? rng : Math.random;
     if (!item) return item;
     if (item.prefixed) return withCanonicalEquipmentBaseIdentity(item);

@@ -1,7 +1,9 @@
+import type { Dispatch } from 'react';
 import { ChevronDown, CircleCheck, Compass, Gift, LockKeyhole, Sparkles, Star } from 'lucide-react';
 import { AT } from '../../reducers/actionTypes';
 import { SEASON_REWARDS, SEASON_TIER_XP, type SeasonRewardRow } from '../../data/seasonPass';
 import type { Player } from '../../types';
+import type { GameAction } from '../../reducers/gameReducer';
 import {
     buildSeasonChapters,
     formatSeasonReward,
@@ -16,7 +18,7 @@ import SignalBadge from '../SignalBadge';
 
 interface SeasonPassPanelProps {
     player?: Player;
-    dispatch?: (action: any) => void;
+    dispatch?: Dispatch<GameAction>;
     onClaimSeasonReward?: (tier: number) => void;
 }
 

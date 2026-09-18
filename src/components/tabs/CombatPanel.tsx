@@ -9,19 +9,6 @@ import type { GameActions } from '../../hooks/actionDeps';
 /** CombatPanel이 실제로 호출하는 액션만 좁혀 받는다 (공격/기술/아이템/스킬 순환). */
 type CombatPanelActions = Pick<GameActions, 'combat' | 'combatUseItem' | 'useItem' | 'cycleSkill' | 'getSelectedSkill'>;
 
-/**
- * buildCombatView()가 반환하는 전투 소모품 1건 — DB 원본 Item에 `count`를 얹은 실제
- * 런타임 모양. 함수 선언 반환형은 `player: any`에서 흘러나온 `any[]`다
- * (utils/combatView.ts, 이 트랙에서 수정 금지) — 이 화면이 실제로 읽는 모양만 좁힌다.
- */
-type CombatConsumableItem = Item & { count: number };
-
-/** buildCombatView()의 `comboRelic` — 연격 계열 유물만 골라 쓰는 실제 모양(같은 이유로 any). */
-interface ComboRelicView {
-    effect?: string;
-    val?: { stack?: number; bonus?: number };
-}
-
 // cycle 485: 컴팩트/조밀 모드 props 인터페이스 제거 — cycle 457이 callsite 명시
 //   false 제거 후 caller 0건. cascade로 14 ternary + 1 const + 1 conditional UI
 //   블록 일괄 정리. cycle 471-482 cascade 패턴 + cycle 457 paired completion.
@@ -89,12 +76,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
     mobileCombatSignals,
     skillReadiness,
   } = combatView;
-  // buildCombatView의 player 인자가 `any`라 아래 3개 필드는 그 any가 그대로 새어나온다
-  // (utils/combatView.ts, 이 트랙에서 수정 금지) — 소비 지점에서만 실제 모양으로 좁힌다.
-  const combatConsumables = combatView.combatConsumables as CombatConsumableItem[];
-  const comboRelic = combatView.comboRelic as ComboRelicView | undefined;
-  const comboCount = combatView.comboCount as number;
-  const comboStack = combatView.comboStack as number;
+  const { combatConsumables, comboRelic, comboCount, comboStack } = combatView;
 
   const handleAction = (key: string) => {
     if (key === 'attack') {

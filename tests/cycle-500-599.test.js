@@ -92,8 +92,10 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 501: cycle 419 / 433 회귀 가드 — SIZE_CLASS / TONE_CLASS fallback 보존', async () => {
       const source = await readSrc('src/components/SignalBadge.tsx');
-      assert.ok(/SIZE_CLASS\[size\] \|\| SIZE_CLASS\.sm/.test(source), 'SIZE_CLASS fallback 보존');
-      assert.ok(/TONE_CLASS\[tone\] \|\| TONE_CLASS\.neutral/.test(source), 'TONE_CLASS fallback 보존');
+      // W8-Z5: tone/size가 `string | undefined`로 닫히면서 인덱싱 가드로 `?? ''`가
+      //   붙었다 — fallback 자체의 의도는 그대로다.
+      assert.ok(/SIZE_CLASS\[size(?:\s*\?\?\s*'')?\] \|\| SIZE_CLASS\.sm/.test(source), 'SIZE_CLASS fallback 보존');
+      assert.ok(/TONE_CLASS\[tone(?:\s*\?\?\s*'')?\] \|\| TONE_CLASS\.neutral/.test(source), 'TONE_CLASS fallback 보존');
   });
 }
 
@@ -2460,11 +2462,11 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 545: 정합성 가드 — pickFallbackEvent RNG + getQuestReason callsite 보존', async () => {
       const ai = await readSrc('src/services/aiService.ts');
       assert.ok(
-          /typeof rng === 'function'\) return pickFallbackEvent\(loc,\s*history,\s*context,\s*rng\)/.test(ai),
+          /typeof rng === 'function'\) return pickFallbackEvent\(loc,\s*history,\s*context(?:\s+as\s+EventContext)?,\s*rng\)/.test(ai),
           'aiService seeded pickFallbackEvent callsite 보존',
       );
       assert.ok(
-          /return pickFallbackEvent\(loc,\s*history,\s*context\)/.test(ai),
+          /return pickFallbackEvent\(loc,\s*history,\s*context(?:\s+as\s+EventContext)?\)/.test(ai),
           'aiService default pickFallbackEvent behavior 보존',
       );
 
@@ -2984,7 +2986,7 @@ import { readFile, readdir } from 'node:fs/promises';
           'explicit hpLow flag 분기 보존');
       assert.ok(/clampRatio\(result\.playerHp, result\.playerMaxHp\)/.test(source),
           'ratio fallback clampRatio 보존');
-      assert.ok(/summary\.bossKills > 0/.test(source), 'bossKills 분기 보존');
+      assert.ok(/summary\.bossKills \|\| 0\) > 0/.test(source), 'bossKills 분기 보존');
   });
 
   test('cycle 557: cycle 502-556 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -3143,7 +3145,7 @@ import { readFile, readdir } from 'node:fs/promises';
           'buildEventPackage 정의 보존');
 
       const ai = await readSrc('src/services/aiService.ts');
-      assert.ok(/buildEventPackage\(result\.data, \{ \.\.\.context, location: loc, source: 'ai' \}\)/.test(ai),
+      assert.ok(/buildEventPackage\(result\.data, \{ \.\.\.context, location: loc, source: 'ai' \}(?:\s+as\s+EventContext)?\)/.test(ai),
           'aiService buildEventPackage callsite 보존');
   });
 
@@ -4616,9 +4618,11 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 594: 활성 Window 타입 보존 (회귀 가드)', async () => {
       const source = await readSrc('src/vite-env.d.ts');
-      assert.ok(/render_game_to_text\?:\s*any/.test(source),
+      // W8-Z6: render_game_to_text/__AETHERIA_TEST_API__의 `: any`를 닫았다 —
+      //   필드 자체(smoke/perf 스크립트가 쓰는 active 멤버)는 보존한다.
+      assert.ok(/render_game_to_text\?:\s*\(\)\s*=>\s*string/.test(source),
           'render_game_to_text 타입 보존 (smoke/perf 스크립트 active)');
-      assert.ok(/__AETHERIA_TEST_API__\?:\s*any/.test(source),
+      assert.ok(/__AETHERIA_TEST_API__\?:\s*import\('\.\/hooks\/useGameTestApi\.js'\)\.AetheriaTestApi/.test(source),
           '__AETHERIA_TEST_API__ 타입 보존');
       assert.ok(/__AETHERIA_PERF_REGISTRY__\?:\s*PerfRegistry/.test(source),
           '__AETHERIA_PERF_REGISTRY__ 타입 보존');

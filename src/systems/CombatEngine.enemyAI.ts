@@ -1,25 +1,71 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
-import type { FullStats, Monster, Player } from '../types/index.js';
+import type { FullStats, Monster, Player, Relic, RelicSynergy, StatusId } from '../types/index.js';
+import type { LootLog } from './CombatEngine.loot.js';
+
+interface EnemyAttackResult {
+    updatedPlayer: Player;
+    updatedEnemy: Monster;
+    damage: number;
+    isDead: boolean;
+    isEnemyDead?: boolean;
+    isCrit?: boolean;
+    logs: LootLog[];
+}
+
+interface EscapeResult {
+    success: boolean;
+    damage?: number;
+    logs: LootLog[];
+}
+
+interface EnemyTelegraph {
+    type: string;
+    label: string;
+    color: string;
+}
+
+/**
+ * 이 mixin의 메서드가 `this`로 교차호출하는 CombatEngine 멤버.
+ * CombatEngine.status/.relics 패턴과 동일 — 실제로 호출하는 2개만 최소 인터페이스로 선언한다.
+ */
+interface EnemyAIMixinContext {
+    tickEnemyStatus(enemy: Monster, logs: LootLog[], curseAmpMult: number, synergyDotMult: number): { updatedEnemy: Monster; logs: LootLog[] };
+    applyFatalProtection(
+        player: Player,
+        relics: Relic[],
+        incomingDamage: number,
+        logs: LootLog[],
+        activeSynergies?: RelicSynergy[],
+    ): { updatedPlayer: Player; isDead: boolean };
+}
+
+/** 이 mixin이 CombatEngine에 spread하는 메서드 시그니처. */
+interface EnemyAIMixin {
+    enemyAttack(player: Player, enemy: Monster, stats: FullStats, rng?: () => number): EnemyAttackResult;
+    attemptEscape(enemy: Monster, stats: FullStats, rng?: () => number): EscapeResult;
+    predictEnemyNextAction(enemy: Monster): EnemyTelegraph | null;
+}
 
 /**
  * CombatEngine 적 행동/예측 메서드 (enemyAttack / attemptEscape / predictEnemyNextAction)
  * — mixin으로 CombatEngine에 spread. CombatEngine.ts 분리(행동 보존).
- * this 교차호출(tickEnemyStatus / applyFatalProtection)은 호출 시점 바인딩 → 객체 any.
+ * this 교차호출(tickEnemyStatus / applyFatalProtection)은 위 EnemyAIMixinContext로 명시하고,
+ * 실제 바인딩은 CombatEngine.ts가 이 mixin을 spread하는 시점에 이뤄진다(ThisType 마커).
  */
-export const enemyAIMethods: any = {
-    enemyAttack(player: Player, enemy: Monster, stats: FullStats, rng?: () => number) {
+export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
+    enemyAttack(player, enemy, stats, rng) {
         const random = typeof rng === 'function' ? rng : Math.random;
-        let updatedEnemy = { ...enemy };
-        let updatedPlayer: any = { ...player };
-        const logs: any[] = [];
+        let updatedEnemy: Monster = { ...enemy };
+        let updatedPlayer: Player = { ...player };
+        const logs: LootLog[] = [];
         // relics 선언을 함수 상단으로 (Phase 전환 블록에서 use-before-declaration 방지).
         const relics = stats.relics || [];
 
         // ── 적 상태이상 틱 처리 (#5) ──────────────────────────────────────
         // curse_amp 패시브: 무당/시간술사 직업 보너스
-        const curseAmpPassive = CLASSES[player.job as string]?.skills?.find((s: any) => s.passive && s.effect === 'curse_amp');
+        const curseAmpPassive = CLASSES[player.job as string]?.skills?.find((s) => s.passive && s.effect === 'curse_amp');
         const curseAmpMult = curseAmpPassive ? (curseAmpPassive.val || 1) : 1;
         // cycle 153: 시너지 'death_oracle' — dotMult DoT 피해 증폭.
         const activeSynergies = stats.activeSynergies || [];
@@ -30,7 +76,7 @@ export const enemyAIMethods: any = {
             1);
         const enemyTickResult = this.tickEnemyStatus(updatedEnemy, [], curseAmpMult, synergyDotMult);
         updatedEnemy = enemyTickResult.updatedEnemy;
-        enemyTickResult.logs.forEach((l: any) => logs.push(l));
+        enemyTickResult.logs.forEach((l) => logs.push(l));
         // DoT로 인해 이미 사망한 경우
         if ((updatedEnemy.hp ?? 0) <= 0) {
             return { updatedPlayer, updatedEnemy, damage: 0, isDead: false, isEnemyDead: true, logs };
@@ -49,7 +95,7 @@ export const enemyAIMethods: any = {
         //   desc_stat에 '회피+N%'를 표시하지만 dispatch path 0건이던 silent dead config fix.
         //   stealth(skill) 후순위로 평가 — 은신은 명시적 발동, evasion은 passive armor 효과.
         //   cycle 222-225 silent dead config 시리즈 마지막 합류.
-        const armorEvasion = (updatedPlayer.equip?.armor as any)?.evasion || 0;
+        const armorEvasion = updatedPlayer.equip?.armor?.evasion || 0;
         if (armorEvasion > 0 && random() < armorEvasion) {
             return {
                 updatedPlayer, updatedEnemy, damage: 0, isDead: false,
@@ -89,9 +135,12 @@ export const enemyAIMethods: any = {
                     if (p3.statusEffect) {
                         const resistRelic = relics.find((r) => r.effect === 'status_resist');
                         const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
-                        const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-                        if (!currentStatus.includes(p3.statusEffect) && random() >= resistChance) {
-                            updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p3.statusEffect] };
+                        const currentStatus: StatusId[] = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
+                        // p3.statusEffect: string(데이터 실측은 StatusId 부분집합 — BossPhase가 도메인
+                        //   전체를 아는 monsters.ts 밖 좁은 타입이라 string으로 남는다).
+                        const p3Status = p3.statusEffect as StatusId;
+                        if (!currentStatus.includes(p3Status) && random() >= resistChance) {
+                            updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p3Status] };
                             logs.push({ type: 'warning', text: MSG.ENEMY_PHASE_STATUS_APPLIED(3, statusLabels[p3.statusEffect] || p3.statusEffect) });
                         } else if (resistRelic && random() < resistChance) {
                             logs.push({ type: 'success', text: MSG.ANCIENT_SEAL_RESIST });
@@ -118,9 +167,10 @@ export const enemyAIMethods: any = {
                     if (p2.statusEffect) {
                         const resistRelic2 = relics.find((r) => r.effect === 'status_resist');
                         const resistChance2 = resistRelic2 ? (resistRelic2.val || 0) : 0;
-                        const currentStatus = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-                        if (!currentStatus.includes(p2.statusEffect) && random() >= resistChance2) {
-                            updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p2.statusEffect] };
+                        const currentStatus: StatusId[] = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
+                        const p2Status = p2.statusEffect as StatusId;
+                        if (!currentStatus.includes(p2Status) && random() >= resistChance2) {
+                            updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p2Status] };
                             logs.push({ type: 'warning', text: MSG.ENEMY_PHASE_STATUS_APPLIED(2, statusLabels[p2.statusEffect] || p2.statusEffect) });
                         } else if (resistRelic2 && random() < resistChance2) {
                             logs.push({ type: 'success', text: MSG.ANCIENT_SEAL_RESIST });
@@ -199,7 +249,7 @@ export const enemyAIMethods: any = {
         // cycle 108: 플레이어 curse 상태이상 — 받는 피해 증폭 (BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT).
         // MSG.SKILL_CURSE_AMPLIFY 의도 구현. 보스 phase / heavy attack에 의한 curse 부여
         // 위협이 actually 작동하도록. 적의 cursedTurns(공격력 감소)와 짝을 이루는 player-side 페널티.
-        const playerStatusList = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
+        const playerStatusList: StatusId[] = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
         if (playerStatusList.includes('curse')) {
             const ampMult = BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT || 1.3;
             const before = enemyDmg;
@@ -234,11 +284,14 @@ export const enemyAIMethods: any = {
         //   burn/freeze) but no handler. Heavy hit + 미보유 시 status 부여 (cycle 106 phase
         //   pattern과 정합). 일반 hit은 영향 없음 (모든 hit마다 적용은 너무 강함).
         //   status_resist relic 확률로 저항.
-        const enemyStatusOnHit = (updatedEnemy as any).statusOnHit;
+        const enemyStatusOnHit = updatedEnemy.statusOnHit;
         if (heavyResolved && enemyStatusOnHit && !protectedResult.isDead) {
             const resistRelic = relics.find((r) => r.effect === 'status_resist');
             const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
-            const currentStatus = Array.isArray(protectedResult.updatedPlayer.status) ? protectedResult.updatedPlayer.status : [];
+            const currentStatus: StatusId[] = Array.isArray(protectedResult.updatedPlayer.status) ? protectedResult.updatedPlayer.status : [];
+            // statusOnHit: string(Monster 실측은 StatusId 부분집합 — monsters.ts 27종은 poison/
+            //   curse/burn/freeze만 정의하지만 필드 자체는 도메인을 좁히지 않는다).
+            const hitStatus = enemyStatusOnHit as StatusId;
             // A1 (2026-09 감사 G1) 밸런스 가드: spawnEnemy가 statusOnHit을 전파하기 전에는
             //   이 분기가 런타임에서 한 번도 실행되지 않았다(=프로파일 필드가 사장). 전파를
             //   복구하면서 "강타 적중 = 100% 상태이상"이 되면 초반 정예 조우가 과도해진다
@@ -247,12 +300,12 @@ export const enemyAIMethods: any = {
             //   tickCombatState에서 해제되므로 누적 부담이 유한하다. 그래도 강타마다 100%는
             //   과하므로 BALANCE.MONSTER_STATUS_ON_HIT_CHANCE로 발동 확률을 게이팅한다.
             //   저항 유물(status_resist)은 발동 이후 단계 그대로.
-            if (!currentStatus.includes(enemyStatusOnHit) && random() < BALANCE.MONSTER_STATUS_ON_HIT_CHANCE) {
+            if (!currentStatus.includes(hitStatus) && random() < BALANCE.MONSTER_STATUS_ON_HIT_CHANCE) {
                 if (random() >= resistChance) {
                     const statusLabels = MSG.DOT_LABELS;
                     protectedResult.updatedPlayer = {
                         ...protectedResult.updatedPlayer,
-                        status: [...currentStatus, enemyStatusOnHit],
+                        status: [...currentStatus, hitStatus],
                     };
                     logs.push({
                         type: 'warning',
@@ -266,15 +319,16 @@ export const enemyAIMethods: any = {
 
         // cycle 172: 'counter' (반격 자세) 스킬 — 피격 시 buff.counterChance 확률로 적에게 반격 추가타.
         //   tempBuff에 counterChance 필드가 있고 turn > 0이며 player가 살아있고 적도 살아있을 때만.
-        let finalEnemy: any = { ...updatedEnemy, guarding: false };
-        const playerBuff = (protectedResult.updatedPlayer as any).tempBuff;
-        if (playerBuff?.counterChance > 0 && playerBuff.turn > 0
+        let finalEnemy: Monster = { ...updatedEnemy, guarding: false };
+        const playerBuff = protectedResult.updatedPlayer.tempBuff;
+        if ((playerBuff?.counterChance ?? 0) > 0 && (playerBuff?.turn ?? 0) > 0
             && !protectedResult.isDead
             && (finalEnemy.hp ?? 0) > 0
-            && random() < playerBuff.counterChance) {
+            && random() < (playerBuff?.counterChance ?? 0)) {
             const counterDmg = Math.max(1, Math.floor(stats.atk));
             finalEnemy = { ...finalEnemy, hp: Math.max(0, (finalEnemy.hp ?? 0) - counterDmg) };
-            logs.push({ type: 'event', text: MSG.PLAYER_COUNTER_PROC(playerBuff.name, finalEnemy.name, counterDmg) });
+            // playerBuff는 위 조건(counterChance > 0)이 참일 때만 여기 도달 — 실존 보장.
+            logs.push({ type: 'event', text: MSG.PLAYER_COUNTER_PROC(String(playerBuff!.name), finalEnemy.name, counterDmg) });
         }
 
         return {

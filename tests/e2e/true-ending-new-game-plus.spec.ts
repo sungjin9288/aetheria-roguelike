@@ -1,4 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
+import type { TrueEndingJourneySnapshot } from '../../src/hooks/useGameTestApi';
 
 const TRUE_ENDING_URL = '/?e2e=1&deviceQa=true-ending-journey';
 const PRODUCTION_SAVE_SENTINELS = Object.freeze({
@@ -7,9 +8,13 @@ const PRODUCTION_SAVE_SENTINELS = Object.freeze({
     'aetheria.game.snapshot.v2.staged': 'release-complete-v2-staged-sentinel',
 });
 
-const snapshot = (page: Page) => page.evaluate(() => (
+// W8-Z6: window.__AETHERIA_TEST_API__?.getTrueEndingJourneySnapshot?.()의 반환은
+//   `TrueEndingJourneySnapshot | undefined`(옵셔널 체이닝) — e2e 실행 중엔 항상
+//   존재하므로 이 헬퍼 한 곳에서만 non-null로 좁혀, 모든 호출부가 직접 필드를
+//   읽을 수 있게 한다(개별 호출부를 고치지 않는다).
+const snapshot = (page: Page): Promise<TrueEndingJourneySnapshot> => page.evaluate(() => (
     window.__AETHERIA_TEST_API__?.getTrueEndingJourneySnapshot?.()
-));
+)) as Promise<TrueEndingJourneySnapshot>;
 
 const bootTrueEndingJourney = async (page: Page) => {
     await page.addInitScript((sentinels) => {
@@ -170,15 +175,17 @@ test.describe('True Ending → New Game+ production journey', () => {
         await page.setViewportSize(viewport);
         await bootTrueEndingJourney(page);
         const initial = await snapshot(page);
+        // 이 시나리오는 항상 classJourney를 시드하므로(seedTrueEndingJourneyScenario) null이 아니다.
+        const initialClassJourney = initial.classJourney!;
         const migratedClassJourney = {
-            ...initial.classJourney,
+            ...initialClassJourney,
             version: 2,
-            byJob: Object.fromEntries(Object.entries(initial.classJourney.byJob).map(([job, record]) => [
+            byJob: Object.fromEntries(Object.entries(initialClassJourney.byJob).map(([job, record]) => [
                 job,
                 { ...(record as object), encounterDiscoveries: [] },
             ])),
         };
-        expect(initial.classJourney.version).toBe(1);
+        expect(initialClassJourney.version).toBe(1);
 
         await defeatDemonKing(page);
         await flushJourney(page);

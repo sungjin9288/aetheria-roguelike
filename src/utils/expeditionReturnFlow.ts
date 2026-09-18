@@ -1,6 +1,7 @@
 import { BALANCE } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import type { ExpeditionSummary, Player } from '../types/player.js';
+import type { Item, ItemRecipeDef } from '../types/item.js';
 import { getEquipmentDecision } from './equipmentUtils.js';
 import { getExpeditionQuestEntries } from './expeditionMissionFocus.js';
 import { getMirrorEffects } from '../systems/mirrorUpgrades.js';
@@ -22,7 +23,7 @@ export interface ExpeditionReturnAction {
     itemName?: string;
 }
 
-const countItems = (items: any[]) => {
+const countItems = (items: Item[]) => {
     const counts = new Map<string, number>();
     items.forEach((item) => {
         if (item?.name) counts.set(item.name, (counts.get(item.name) || 0) + 1);
@@ -32,10 +33,10 @@ const countItems = (items: any[]) => {
 
 const canCraft = (player: Player) => {
     const counts = countItems(player.inv || []);
-    return (DB.ITEMS.recipes || []).some((recipe: any) => (
+    return (DB.ITEMS.recipes || []).some((recipe: ItemRecipeDef) => (
         (player.gold || 0) >= (recipe.gold || 0)
-        && (recipe.inputs || []).every((input: any) => (
-            (counts.get(input.name) || 0) >= (input.qty || 0)
+        && (recipe.inputs || []).every((input) => (
+            (counts.get(input.name ?? '') || 0) >= (input.qty || 0)
         ))
     ));
 };
@@ -43,8 +44,8 @@ const canCraft = (player: Player) => {
 const getNewEquipmentUpgrade = (player: Player, summary: ExpeditionSummary) => {
     const newItemNames = new Set(summary.newItems);
     return (player.inv || [])
-        .filter((item: any) => newItemNames.has(item?.name))
-        .map((item: any) => ({ item, decision: getEquipmentDecision(player, item) }))
+        .filter((item) => newItemNames.has(item?.name ?? ''))
+        .map((item) => ({ item, decision: getEquipmentDecision(player, item) }))
         .filter(({ decision }) => decision?.equipable && decision.score > 0)
         .sort((left, right) => (right.decision?.score || 0) - (left.decision?.score || 0))[0] || null;
 };
@@ -87,7 +88,7 @@ export const getExpeditionReturnAction = (
             };
         }
 
-        const recoveryItem = (player.inv || []).find((item: any) => ['hp', 'mp', 'cure'].includes(item?.type));
+        const recoveryItem = (player.inv || []).find((item) => ['hp', 'mp', 'cure'].includes(item?.type ?? ''));
         if (recoveryItem) {
             return {
                 kind: 'open_inventory',
@@ -96,8 +97,8 @@ export const getExpeditionReturnAction = (
             };
         }
 
-        const affordableSupply = (DB.ITEMS.consumables || []).find((item: any) => (
-            ['hp', 'mp', 'cure'].includes(item?.type) && (item.price || 0) <= (player.gold || 0)
+        const affordableSupply = (DB.ITEMS.consumables || []).find((item) => (
+            ['hp', 'mp', 'cure'].includes(item?.type ?? '') && (item.price || 0) <= (player.gold || 0)
         ));
         if (affordableSupply) {
             return {

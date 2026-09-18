@@ -65,9 +65,9 @@ test('390x844 event-chance relic curve is readable and stacks through the real r
     expect(layout.panelBounds.bottom).toBeLessThanOrEqual(layout.viewportHeight);
     expect(layout.minimumTouchHeight).toBeGreaterThanOrEqual(44);
 
-    const before = await page.evaluate(() => (
+    const before = (await page.evaluate(() => (
         window.__AETHERIA_TEST_API__?.getCanonicalEventChanceRelicChoiceSnapshot?.()
-    ));
+    )))!;
     expect(before).toMatchObject({
         pendingIds: ['ancient_map', 'wanderer_charm', 'mana_crystal'],
         ownedAncientMapCount: 0,
@@ -90,9 +90,9 @@ test('390x844 event-chance relic curve is readable and stacks through the real r
     await expect(panel).toBeVisible();
     await ancientMapCard.click();
     await expect(panel).toBeHidden();
-    const afterMap = await page.evaluate(() => (
+    const afterMap = (await page.evaluate(() => (
         window.__AETHERIA_TEST_API__?.getCanonicalEventChanceRelicChoiceSnapshot?.()
-    ));
+    )))!;
     expect(afterMap).toMatchObject({
         pendingIds: [],
         ownedAncientMapCount: 1,

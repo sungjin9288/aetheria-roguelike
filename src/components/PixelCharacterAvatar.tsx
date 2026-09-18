@@ -1,6 +1,10 @@
 import { useMemo, useState } from 'react';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getAvatarSpriteCandidates } from '../utils/avatarSpriteCandidates';
+import type { Player } from '../types/index.js';
+
+/** deriveCharacterAppearance의 실제 반환 모양 — 재선언 없이 producer의 ReturnType을 그대로 쓴다. */
+type CharacterAppearance = ReturnType<typeof deriveCharacterAppearance>;
 
 const SIZE_MAP: Record<string, { frame: string; inner: string; badge: string }> = {
     sm: {
@@ -33,7 +37,7 @@ const FRAME_TONE_CLASS: Record<string, string> = {
 //   softenColor(palette.glow || palette.accent, 0.28) 명시 전달이라 default
 //   도달 불가. components/ private helper로 lens 확장 (cycle 502-528 utils
 //   메가 시리즈 26번째).
-const softenColor = (hex: any, alpha: any) => {
+const softenColor = (hex: string | null | undefined, alpha: number) => {
     if (!hex || typeof hex !== 'string' || !hex.startsWith('#') || hex.length !== 7) {
         return `rgba(255,255,255,${alpha})`;
     }
@@ -48,6 +52,18 @@ const softenColor = (hex: any, alpha: any) => {
 //   도달 불가 (player / size / className / dataTestId / label). 활성 default
 //   보존: providedAppearance / onClick / interactive / showEnhanceBadge (호출자
 //   부분 누락 path). cycle 451-452/467 패턴 회귀.
+interface PixelCharacterAvatarProps {
+    player: Player;
+    appearance?: Partial<CharacterAppearance> | null;
+    size: 'sm' | 'md' | 'lg';
+    className?: string;
+    onClick?: (() => void) | null;
+    interactive?: boolean;
+    showEnhanceBadge?: boolean;
+    dataTestId?: string;
+    label: string;
+}
+
 const PixelCharacterAvatar = ({
     player,
     appearance: providedAppearance = null,
@@ -58,7 +74,7 @@ const PixelCharacterAvatar = ({
     showEnhanceBadge = true,
     dataTestId,
     label,
-}: any) => {
+}: PixelCharacterAvatarProps) => {
     const appearance = useMemo(() => {
         const appearancePlayer = providedAppearance?.job
             ? { ...player, job: providedAppearance.job }
@@ -79,7 +95,7 @@ const PixelCharacterAvatar = ({
 
     const sizeConfig = SIZE_MAP[size] || SIZE_MAP.sm;
     const totalEnhance = (appearance.weapon?.enhance || 0) + (appearance.offhand?.enhance || 0) + (appearance.armor?.enhance || 0);
-    const frameToneClass = FRAME_TONE_CLASS[appearance.frameTone]
+    const frameToneClass = FRAME_TONE_CLASS[appearance.frameTone ?? '']
         || 'border-white/10 bg-[radial-gradient(circle_at_76%_16%,rgba(125,212,216,0.16),transparent_28%),linear-gradient(180deg,rgba(18,24,32,0.98)_0%,rgba(8,12,18,1)_100%)]';
 
     const spriteCandidates = useMemo(
@@ -113,7 +129,7 @@ const PixelCharacterAvatar = ({
                     aria-hidden="true"
                     className="h-full w-full scale-[1.04] object-contain pixelated drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
                     onError={() => {
-                        setSpriteState((current: any) => {
+                        setSpriteState((current) => {
                             const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
                             return {
                                 signature: spriteSignature,

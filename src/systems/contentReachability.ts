@@ -73,11 +73,49 @@ export interface ContentReachabilityReport {
     errors: string[];
 }
 
+/**
+ * 이 파일은 `DB`(프로덕션)와 테스트 목업 소스를 동일한 함수로 받는다(ContentSource가
+ * 그 공통 계약) — 그래서 필드는 실제 도메인 타입(GameMap/Quest/ClassDef)이 아니라 이
+ * 파일이 실제로 읽는 필드만의 최소 형태로 선언한다.
+ */
+interface MapLike {
+    type?: string;
+    exits?: unknown[];
+    seasonOnly?: boolean;
+    level?: number;
+    shopBonus?: unknown;
+    monsters?: string[];
+    bossMonsters?: string[];
+    boss?: string;
+}
+
+interface QuestRewardLike {
+    item?: string;
+    exp?: unknown;
+    gold?: unknown;
+}
+
+interface QuestLike {
+    /** 실측 DB.QUESTS는 항상 id를 채운다 — 이 파일도 quest.id를 방어 없이 직접 읽는다. */
+    id: string | number;
+    prerequisiteQuestId?: string | number | null;
+    location?: string;
+    target?: string;
+    minLv?: unknown;
+    reward?: QuestRewardLike | null;
+}
+
+interface ClassLike {
+    reqLv?: unknown;
+    tier?: unknown;
+    next?: unknown[];
+}
+
 type ContentSource = {
-    MAPS: Record<string, any>;
-    MONSTERS: Record<string, any>;
-    QUESTS: any[];
-    CLASSES: Record<string, any>;
+    MAPS: Record<string, MapLike>;
+    MONSTERS: Record<string, unknown>;
+    QUESTS: QuestLike[];
+    CLASSES: Record<string, ClassLike>;
     ITEMS: Record<string, any[]>;
 };
 
@@ -127,13 +165,13 @@ const allItemNames = (source: ContentSource) => new Set(
         : []),
 );
 
-const mapMonsterNames = (map: any) => [
+const mapMonsterNames = (map: MapLike | undefined) => [
     ...(Array.isArray(map?.monsters) ? map.monsters : []),
     ...(Array.isArray(map?.bossMonsters) ? map.bossMonsters : []),
     ...(typeof map?.boss === 'string' ? [map.boss] : []),
 ].filter((name): name is string => typeof name === 'string');
 
-const mapMonsterRoutes = (maps: Record<string, any>) => {
+const mapMonsterRoutes = (maps: Record<string, MapLike>) => {
     const routes = new Map<string, Set<string>>();
     for (const [region, map] of Object.entries(maps)) {
         if (map.type === 'safe' && !canInvestigateTown(region, map)) continue;
@@ -145,7 +183,7 @@ const mapMonsterRoutes = (maps: Record<string, any>) => {
     return routes;
 };
 
-const reachableFrom = (start: string, maps: Record<string, any>) => {
+const reachableFrom = (start: string, maps: Record<string, MapLike>) => {
     const reachable = new Set<string>();
     const queue = [start];
     while (queue.length > 0) {
@@ -163,13 +201,13 @@ const reachableFrom = (start: string, maps: Record<string, any>) => {
     return sorted(reachable);
 };
 
-const findInvalidExits = (maps: Record<string, any>) => Object.entries(maps)
+const findInvalidExits = (maps: Record<string, MapLike>) => Object.entries(maps)
     .flatMap(([region, map]) => (Array.isArray(map?.exits) ? map.exits : [])
         .filter((exit: unknown) => typeof exit !== 'string' || !Object.hasOwn(maps, exit))
         .map((exit: unknown) => `${region}→${String(exit)}`))
     .sort(codePointCompare);
 
-const classGraph = (classes: Record<string, any>) => {
+const classGraph = (classes: Record<string, ClassLike>) => {
     const reachable = new Set<string>();
     const queue = ['모험가'];
     while (queue.length > 0) {
@@ -177,7 +215,8 @@ const classGraph = (classes: Record<string, any>) => {
         if (!job || reachable.has(job)) continue;
         if (!Object.hasOwn(classes, job)) continue;
         reachable.add(job);
-        queue.push(...(Array.isArray(classes[job].next) ? classes[job].next : []));
+        const next: unknown[] = Array.isArray(classes[job].next) ? classes[job].next : [];
+        queue.push(...next.filter((entry): entry is string => typeof entry === 'string'));
     }
 
     const terminalLineages: string[][] = [];
@@ -200,7 +239,7 @@ const classGraph = (classes: Record<string, any>) => {
     };
 };
 
-const prerequisiteCycles = (quests: any[]) => {
+const prerequisiteCycles = (quests: QuestLike[]) => {
     const byId = new Map(quests.map((quest) => [String(quest?.id), quest]));
     const cycles: Array<Array<string | number>> = [];
     const visiting = new Set<string>();
@@ -229,19 +268,19 @@ const prerequisiteCycles = (quests: any[]) => {
     return cycles.sort((left, right) => JSON.stringify(left).localeCompare(JSON.stringify(right)));
 };
 
-const maxShopTier = (map: any) => {
+const maxShopTier = (map: MapLike | undefined) => {
     const level = typeof map?.level === 'number' ? map.level : 1;
     const tier = level < 10 ? 1 : level < 20 ? 2 : level < 30 ? 3 : level < 40 ? 4 : level < 50 ? 5 : 6;
     return Math.min(6, tier + (map?.type === 'safe' && level > 1 ? 1 : 0) + (map?.shopBonus ? 1 : 0));
 };
 
-const shopCatalogFor = (source: ContentSource, region: string, map: any) => (
+const shopCatalogFor = (source: ContentSource, region: string, map: MapLike | undefined) => (
     source === DB_SOURCE
         ? getShopCatalog(region)
         : itemCatalog(source).filter((item) => Number(item?.tier || 1) <= maxShopTier(map))
 );
 
-const equipmentRouteReport = (source: ContentSource, maps: Record<string, any>, quests: any[]) => {
+const equipmentRouteReport = (source: ContentSource, maps: Record<string, MapLike>, quests: QuestLike[]) => {
     const names = allItemNames(source);
     const equipment = itemCatalog(source);
     const shops = new Map<string, string[]>();
@@ -330,7 +369,7 @@ const equipmentRouteReport = (source: ContentSource, maps: Record<string, any>, 
     };
 };
 
-const questReport = (source: ContentSource, maps: Record<string, any>, quests: any[]) => {
+const questReport = (source: ContentSource, maps: Record<string, MapLike>, quests: QuestLike[]) => {
     const routes = mapMonsterRoutes(maps);
     const itemNames = allItemNames(source);
     const byId = new Map(quests.map((quest) => [String(quest?.id), quest]));
@@ -513,8 +552,18 @@ export const buildContentReachabilityReport = (
     return Object.freeze(report);
 };
 
-const reportErrorKeys = ({ catalog, maps, monsters, questsResult, graph, equipment, signatures }: any) => [
-    ...Object.entries(EXPECTED_CATALOG_COUNTS).flatMap(([key, expected]) => (
+interface ReportErrorKeysInput {
+    catalog: ContentReachabilityReport['catalog'];
+    maps: { reachable: string[]; invalidExits: string[]; total: number };
+    monsters: { missingRoutes: string[] };
+    questsResult: ReturnType<typeof questReport>;
+    graph: ReturnType<typeof classGraph>;
+    equipment: ReturnType<typeof equipmentRouteReport>;
+    signatures: ReturnType<typeof signatureReport>;
+}
+
+const reportErrorKeys = ({ catalog, maps, monsters, questsResult, graph, equipment, signatures }: ReportErrorKeysInput) => [
+    ...(Object.entries(EXPECTED_CATALOG_COUNTS) as Array<[keyof typeof EXPECTED_CATALOG_COUNTS, number]>).flatMap(([key, expected]) => (
         catalog[key] === expected ? [] : [`CATALOG_COUNT_MISMATCH:${key}:${String(catalog[key])}:${expected}`]
     )),
     ...(maps.invalidExits.length > 0 ? maps.invalidExits.map((entry: string) => `INVALID_MAP_EXIT:${entry}`) : []),

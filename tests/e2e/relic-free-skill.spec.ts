@@ -64,16 +64,16 @@ test('390x844 free-skill relic progression is readable, contained, and grants th
     expect(layout.panelBounds.bottom).toBeLessThanOrEqual(layout.viewportHeight);
     expect(layout.minimumTouchHeight).toBeGreaterThanOrEqual(44);
 
-    const before = await page.evaluate(() => (
+    const before = (await page.evaluate(() => (
         window.__AETHERIA_TEST_API__?.getCanonicalFreeSkillRelicChoiceSnapshot?.()
-    ));
+    )))!;
     expect(before.pendingIds).toEqual(['spell_echo', 'time_ring', 'mana_crystal']);
     await spellEchoCard.click();
     await expect(panel).toBeHidden();
     await page.waitForTimeout(700);
-    const after = await page.evaluate(() => (
+    const after = (await page.evaluate(() => (
         window.__AETHERIA_TEST_API__?.getCanonicalFreeSkillRelicChoiceSnapshot?.()
-    ));
+    )))!;
     expect(after.pendingIds).toEqual([]);
     expect(after.ownedSpellEchoCount).toBe(before.ownedSpellEchoCount + 1);
     expect(after.ownedRelicCount).toBe(before.ownedRelicCount + 1);

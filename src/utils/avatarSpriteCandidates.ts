@@ -76,9 +76,9 @@ const AVAILABLE_AVATAR_KEYS = new Set([
     'warrior-plate-sword',
 ]);
 
-const buildCandidatePaths = (orderedKeys: any) => (
-    [...new Set(orderedKeys.filter((key: any) => key && AVAILABLE_AVATAR_KEYS.has(key)))]
-        .map((key: any) => `/assets/avatars/${key}.png`)
+const buildCandidatePaths = (orderedKeys: string[]) => (
+    [...new Set(orderedKeys.filter((key) => key && AVAILABLE_AVATAR_KEYS.has(key)))]
+        .map((key) => `/assets/avatars/${key}.png`)
 );
 
 type CharacterArtEntry = {
@@ -96,9 +96,18 @@ const CANONICAL_ENTRY_BY_NORMALIZED_JOB = Object.freeze(
     ) as Record<string, CharacterArtEntry>
 );
 
-const resolveAppearanceKeys = (appearance: any) => {
+/** 아바타 스프라이트 후보 조합에 필요한 필드만 좁힌 로컬 뷰 — 캐릭터/장비 프리뷰 어피어런스 공용. */
+interface AvatarAppearanceLike {
+    job?: string;
+    armorStyle?: string;
+    loadoutStyle?: string;
+    weapon?: unknown;
+    offhand?: unknown;
+}
+
+const resolveAppearanceKeys = (appearance: AvatarAppearanceLike | null | undefined) => {
     const normalizedJob = String(appearance?.job || '모험가').replace(/\s+/g, '');
-    const jobSlug = JOB_SPRITE_SLUG_MAP[normalizedJob] || JOB_SPRITE_SLUG_MAP[appearance?.job] || 'adventurer';
+    const jobSlug = JOB_SPRITE_SLUG_MAP[normalizedJob] || JOB_SPRITE_SLUG_MAP[appearance?.job ?? ''] || 'adventurer';
     const armorStyle = appearance?.armorStyle || 'coat';
     const loadoutStyle = appearance?.loadoutStyle || 'sword';
 
@@ -112,7 +121,7 @@ const resolveAppearanceKeys = (appearance: any) => {
 //   getAvatarSpriteCandidates 내부 사용도 0건. cycle 43-46 시점 outfit affinity 표시용으로
 //   보존했으나 그 dispatch path는 끝내 미구현. 테스트만이 유일한 consumer였음 (paired remove).
 
-export const getAvatarSpriteCandidates = (appearance: any) => {
+export const getAvatarSpriteCandidates = (appearance: AvatarAppearanceLike | null | undefined) => {
     const normalizedJob = String(appearance?.job || '모험가').replace(/\s+/g, '');
     const canonicalEntry = CANONICAL_ENTRY_BY_NORMALIZED_JOB[normalizedJob];
     if (canonicalEntry) return [canonicalEntry.runtimePath];
@@ -121,7 +130,7 @@ export const getAvatarSpriteCandidates = (appearance: any) => {
     return ['/assets/avatars/canonical/adventurer.png'];
 };
 
-export const getAvatarEquipmentPreviewCandidates = (appearance: any) => {
+export const getAvatarEquipmentPreviewCandidates = (appearance: AvatarAppearanceLike | null | undefined) => {
     const { jobSlug, armorStyle, loadoutStyle } = resolveAppearanceKeys(appearance);
     const emphasizesLoadout = Boolean(appearance?.weapon || appearance?.offhand);
 

@@ -24,8 +24,8 @@
 | Node.js | — | >=18.0.0 |
 
 > **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
-> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` 493건,
-> `as any` 69곳 잔존 (2026-09-18 Wave 7 실측; `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다.
+> `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. 단 **타입 안전성은 진행형** — 명시적 `: any` 140건,
+> `as any` 46곳 잔존 (2026-09-18 Wave 8 실측; `tests/debt-ratchet.test.js`가 이 값 이하로만 움직이도록 고정한다.
 > `Player`의 `quests/status/history`는 `QuestProgressState`/`StatusId[]`/`EventHistoryEntry`로 닫혔고,
 > utils 8파일(`aiEventUtils`·`questOperations`·`graveUtils`·`gameUtils`·`adventureGuide`·`expeditionMissionFocus`·
 > `expeditionLedger`·`equipmentUtils`)은 `: any` 0이다. **주입 경계는 `src/hooks/actionDeps.ts`가 소유한다** —
@@ -46,8 +46,11 @@
 > 상수 모양을 소비처에서 손으로 다시 선언하지 말 것(같은 상수를 두 곳이 다르게 선언하던 드리프트를 Wave 7이 제거했다).
 > **`GameAction`은 `ActionPayloadMap`(actionTypes.ts)에서 도출된 판별 유니온**이다 — `AT`에 키를 추가하면 맵에도 payload 타입을
 > 넣어야 컴파일되고, 핸들러는 `HandlerMap`/`ActionOf<K>`로 payload를 자동으로 좁혀 받는다(`action.payload as X` 캐스트 금지).
-> 남은 `: any`는 utils 155·components 83·systems 78·`useGameTestApi` 54(QA 시드, 프로덕션 tree-shaken)에 분포하고,
-> `GameState.postCombatResult`(greyback 카드)와 `dataMigration`의 깊은 복사 로컬이 마지막 구조적 `any`다.
+> **`GameState.postCombatResult`는 `PostCombatResult`(types/combat.ts, 생산자 리터럴 도출)**, **`migrateData`는 `MigratedSave | null`**
+> (세이브 봉투 — `player?: Partial<Player>`; `hasMigratedPlayer` 술어로 좁힌다), **`GameEvent.outcomes`는 세션 정본 `EventOutcome[]`**
+> (eventActions/eventPresentation에 로컬 사본을 두지 말 것), **QA 시드 API는 `AetheriaTestApi`**(useGameTestApi.ts — e2e 스펙이 읽는
+> 계약이자 `window.__AETHERIA_TEST_API__`의 타입)다. 남은 `: any`는 utils 58·systems 24·data 19·types 12·hooks 2에 분포하고
+> components/reducers/services/platform은 0이다 — 마지막 구조적 원천은 `src/data/**`의 느슨한 테이블 타입(`BOSS_BRIEFS`/`LOOT_TABLE`/`getCodexProgress`)이다.
 
 ---
 

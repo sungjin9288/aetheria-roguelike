@@ -1,7 +1,8 @@
 import { getStructuredFallbackTransaction } from '../data/structuredFallbackEvents';
+import type { EventChoiceTone, EventOutcome } from '../types/session.js';
 import { RELICS } from '../data/relics';
 
-export type EventChoiceTone = 'reward' | 'recovery' | 'danger' | 'story' | 'unknown';
+export type { EventChoiceTone };
 
 export interface EventChoicePreview {
     text: string;
@@ -11,6 +12,24 @@ export interface EventChoicePreview {
 export interface EventPanelCopy {
     title: string;
     kind: string;
+}
+
+/**
+ * `GameEvent`(session.ts)가 공유 필드만 담기 때문에, 이 파일이 실제로 읽는 생산자별
+ * 전용 필드(모닥불 `isCampfire`, 보스 게이지 `bossName`)까지 더한 로컬 뷰.
+ */
+interface PresentationEvent {
+    title?: string;
+    desc?: string;
+    isCampfire?: boolean;
+    isScout?: boolean;
+    isBossGaugeChallenge?: boolean;
+    isBoundedEncounter?: boolean;
+    _chainId?: string;
+    bossName?: string;
+    source?: string;
+    fallbackTransactionId?: string;
+    outcomes?: EventOutcome[];
 }
 
 const unitLabels: Record<string, string> = {
@@ -32,7 +51,7 @@ export const formatEventText = (value: unknown) => String(value || '')
     .replace(/\s+/g, ' ')
     .trim();
 
-export const getEventPanelCopy = (event: any): EventPanelCopy => {
+export const getEventPanelCopy = (event: PresentationEvent | null | undefined): EventPanelCopy => {
     if (event?.isCampfire) return { title: '모닥불 앞에서', kind: '휴식처' };
     if (event?.isScout) return { title: '앞길 정찰', kind: '정찰' };
     if (event?.isBossGaugeChallenge) return { title: `${event.bossName || '구역 보스'}의 흔적`, kind: '보스' };
@@ -41,13 +60,13 @@ export const getEventPanelCopy = (event: any): EventPanelCopy => {
     return { title: formatEventText(event?.title) || '뜻밖의 조우', kind: '조우' };
 };
 
-const findOutcome = (event: any, choiceIndex: number) => {
+const findOutcome = (event: PresentationEvent | null | undefined, choiceIndex: number): EventOutcome | null => {
     const outcomes = Array.isArray(event?.outcomes) ? event.outcomes : [];
     if (event?._chainId) return outcomes[choiceIndex] || null;
-    return outcomes.find((outcome: any) => outcome?.choiceIndex === choiceIndex) || outcomes[choiceIndex] || null;
+    return outcomes.find((outcome: EventOutcome) => outcome?.choiceIndex === choiceIndex) || outcomes[choiceIndex] || null;
 };
 
-const formatCampfirePreview = (outcome: any): EventChoicePreview => {
+const formatCampfirePreview = (outcome: EventOutcome | null): EventChoicePreview => {
     if (outcome?.buff) {
         const attackPercent = Math.round((Number(outcome.buff.atk) || 0) * 100);
         const turns = Number(outcome.buff.turn) || 0;
@@ -58,8 +77,8 @@ const formatCampfirePreview = (outcome: any): EventChoicePreview => {
     }
 
     const recovery = [
-        Number(outcome?.hp) > 0 && `생명 +${outcome.hp}`,
-        Number(outcome?.mp) > 0 && `기력 +${outcome.mp}`,
+        Number(outcome?.hp) > 0 && `생명 +${outcome?.hp}`,
+        Number(outcome?.mp) > 0 && `기력 +${outcome?.mp}`,
     ].filter(Boolean).join(' · ');
     return recovery
         ? { text: recovery, tone: 'recovery' }
@@ -73,7 +92,7 @@ const scoutPreview: Record<string, EventChoicePreview> = {
     elite: { text: '정예 전투 확정 · 승리 시 유물', tone: 'danger' },
 };
 
-const getChainPreview = (outcome: any): EventChoicePreview => {
+const getChainPreview = (outcome: EventOutcome | null): EventChoicePreview => {
     const rewardType = outcome?.reward?.type;
     const rewardAmount = Number(outcome?.reward?.amount);
     if (rewardType === 'gold' && Number.isFinite(rewardAmount) && rewardAmount < 0) {
@@ -97,7 +116,7 @@ const getChainPreview = (outcome: any): EventChoicePreview => {
     return { text: '결과는 선택 뒤에 드러남', tone: 'unknown' };
 };
 
-const getGeneralPreview = (outcome: any): EventChoicePreview => {
+const getGeneralPreview = (outcome: EventOutcome | null): EventChoicePreview => {
     if (!outcome) return { text: '결과는 선택 뒤에 드러남', tone: 'unknown' };
 
     // 2026-09 Wave 3 I1: 확장 어휘(정예/상태이상/유물/버프)는 숫자 보상보다 먼저 읽힌다 —
@@ -124,7 +143,7 @@ const getGeneralPreview = (outcome: any): EventChoicePreview => {
     return { text: '결과는 선택 뒤에 드러남', tone: 'unknown' };
 };
 
-const getBoundedPreview = (outcome: any): EventChoicePreview => {
+const getBoundedPreview = (outcome: EventOutcome | null): EventChoicePreview => {
     const text = formatEventText(outcome?.tradeoff) || '결과는 선택 뒤에 드러남';
     const tone = outcome?.tone;
     return tone === 'reward' || tone === 'danger' || tone === 'story'
@@ -132,7 +151,7 @@ const getBoundedPreview = (outcome: any): EventChoicePreview => {
         : { text, tone: 'unknown' };
 };
 
-export const getEventChoicePreview = (event: any, choiceIndex: number): EventChoicePreview => {
+export const getEventChoicePreview = (event: PresentationEvent | null | undefined, choiceIndex: number): EventChoicePreview => {
     const outcome = findOutcome(event, choiceIndex);
     const fallbackTransaction = event?.source === 'fallback'
         ? getStructuredFallbackTransaction(event?.fallbackTransactionId)
@@ -141,7 +160,7 @@ export const getEventChoicePreview = (event: any, choiceIndex: number): EventCho
         return { text: fallbackTransaction.preview, tone: 'danger' };
     }
     if (event?.isCampfire) return formatCampfirePreview(outcome);
-    if (event?.isScout) return scoutPreview[outcome?.scoutEffect] || scoutPreview.unknown;
+    if (event?.isScout) return scoutPreview[outcome?.scoutEffect ?? ''] || scoutPreview.unknown;
     if (event?.isBossGaugeChallenge) {
         return outcome?.gaugeEffect === 'challenge'
             ? { text: `${event.bossName || '구역 보스'} 전투 시작`, tone: 'danger' }

@@ -2472,7 +2472,13 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 265 회귀 가드: seasonEvent 배너 동작 유지', async () => {
       const source = await readSrc('src/components/app/GameRoot.tsx');
-      assert.ok(/liveConfig\?\.seasonEvent\?\.active/.test(source),
+      // W8-Z5: `engine.liveConfig?.seasonEvent?.active` 인라인 반복 접근을 `const seasonEvent =
+      //   engine.liveConfig?.seasonEvent ?? null;` 로 추출(narrowing 필요 — endsAt/bonusMap
+      //   타입이 unknown/optional로 닫혔다) 후 `seasonEvent?.active`로 게이트한다. 여전히
+      //   liveConfig.seasonEvent에서 파생된 값으로 active를 게이트하는 동작은 동일하다.
+      assert.ok(/const seasonEvent = engine\.liveConfig\?\.seasonEvent/.test(source),
+          'cycle 265 seasonEvent 추출 유지');
+      assert.ok(/seasonEvent\?\.active/.test(source),
           'cycle 265 seasonEvent 배너 조건 유지');
       assert.ok(/시즌 이벤트 배너/.test(source),
           'cycle 265 seasonEvent 배너 주석 유지');

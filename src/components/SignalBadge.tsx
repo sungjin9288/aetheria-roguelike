@@ -1,3 +1,4 @@
+import type { ComponentPropsWithoutRef } from 'react';
 
 // cycle 419: md / lg 제거 — SignalBadge 73 호출 사이트 모두 size="sm" 명시.
 //   default param도 'sm'로 변경 + fallback도 SIZE_CLASS.sm.
@@ -25,9 +26,14 @@ const TONE_CLASS: Record<string, string> = {
 //   fallback `|| ...sm/.neutral`은 방어용 + cycle 419 회귀 가드로 보존.
 // cycle 501: 외부 보조 클래스 prop 제거 — 77 호출자 모두 전달 0건이라 보간 결과
 //   ''만 추가되는 unreachable. cycle 463/465/466/493/495/496/498 lens 회귀.
-const SignalBadge = ({ tone, size, children, ...rest }: any) => (
+interface SignalBadgeProps extends ComponentPropsWithoutRef<'span'> {
+    tone?: string;
+    size?: string;
+}
+
+const SignalBadge = ({ tone, size, children, ...rest }: SignalBadgeProps) => (
     <span
-        className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size] || SIZE_CLASS.sm} ${TONE_CLASS[tone] || TONE_CLASS.neutral}`}
+        className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size ?? ''] || SIZE_CLASS.sm} ${TONE_CLASS[tone ?? ''] || TONE_CLASS.neutral}`}
         {...rest}
     >
         {children}

@@ -6,7 +6,7 @@ import { bootstrapActionMap } from './handlers/bootstrapHandlers';
 import { uiActionMap, entityActionMap } from './handlers/uiHandlers';
 import { makeProgressionActionMap } from './handlers/progressionHandlers';
 import { makeFeatureActionMap } from './handlers/featureHandlers';
-import type { Player, Item, Monster, Relic } from '../types';
+import type { Player, Item, Monster, PostCombatResult, Relic } from '../types';
 import type { LogEntry, GameEvent, LiveConfig, LeaderboardEntry } from '../types/session.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
 import type { buildRunSummary } from '../utils/gameUtils.js';
@@ -20,9 +20,11 @@ import type { ActionOf, ActionType, GameAction } from './actionTypes';
  * Game state shape — cycle 60 phase D Player 적용 + 2026-09 Wave 6 X4에서
  * enemy/currentEvent/grave/shopItems/logs/leaderboard/liveConfig/quickSlots/
  * pendingRelics/runSummary/visualEffect까지 도메인 타입으로 닫았다.
- * `postCombatResult`만 남는다 — 생산자(hooks/combatActions/combatVictory.ts)가
- * 레거시 별칭 필드(`loot` 등)를 섞어 읽는 그레이백 카드라 여기서 안전하게 좁힐
- * 실측 계약이 없다(any 유지, 다른 트랙이 hooks를 정리할 때 함께 닫을 후보).
+ * 2026-09 Wave 8 Z1에서 마지막 구조적 `any`였던 `postCombatResult`도 닫혔다 —
+ * 생산자(hooks/combatActions/combatVictory.ts)의 dispatch 리터럴에서 도출한
+ * `PostCombatResult`(types/combat.ts)가 카드·QA 주입·액션 payload의 단일 계약이다.
+ * 소비자가 가정하던 별칭 `loot`는 생산자가 없어 dead read였고 카드에서 제거했다
+ * (QA 시드만 쓰는 `hpLow`/`mpLow`는 타입에 optional로 기록).
  * 훅 주입 경계(`hooks/actionDeps.ts`, Wave 6 X1)는 이 필드들을 `GameState['x']`로 참조하므로
  * 여기가 단일 원천이다 — 세션 형태 타입은 `types/session.ts`에 둔다.
  */
@@ -49,7 +51,7 @@ export interface GameState {
     lastLoadedTimestamp: number;
     presentationEpoch: number;
     quickSlots: Array<Item | null>;
-    postCombatResult: any;
+    postCombatResult: PostCombatResult | null;
     pendingRelics: Relic[] | null;
     runSummary: ReturnType<typeof buildRunSummary> | null;
     expeditionDebriefOpen: boolean;

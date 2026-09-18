@@ -298,14 +298,14 @@ import { readFile } from 'node:fs/promises';
   test('cycle 606: 정합성 가드 — exploreActions callsite 보존', async () => {
       const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
       // Wave 6 X1: history가 `EventHistoryEntry[] | undefined`로 닫히면서 `|| []`로 좁혀졌다.
-      assert.ok(/AI_SERVICE\.generateEvent\(player\.loc,\s*player\.history(\s*\|\|\s*\[\])?,\s*uid,/.test(source),
+      assert.ok(/AI_SERVICE\.generateEvent\(player\.loc(\s*\|\|\s*'')?,\s*player\.history(\s*\|\|\s*\[\])?,\s*uid,/.test(source),
           'exploreActions AI_SERVICE.generateEvent 4-arg callsite 보존');
   });
 
   test('cycle 606: body isMockRuntime / pickFallbackEvent 보존', async () => {
       const source = await readSrc('src/services/aiService.ts');
       assert.ok(/if \(isMockRuntime\(\)\)/.test(source), 'isMockRuntime 가드 보존');
-      assert.ok(/return pickFallbackEvent\(loc,\s*history,\s*context\)/.test(source),
+      assert.ok(/return pickFallbackEvent\(loc,\s*history,\s*context(?:\s+as\s+EventContext)?\)/.test(source),
           'pickFallbackEvent(loc, history, context) 호출 보존');
   });
 
@@ -634,8 +634,11 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/hooks/useGameTestApi.ts');
       assert.ok(/sanitizeValue\(entry,\s*depth \+ 1\)/.test(source),
           'recursion sanitizeValue(entry, depth + 1) 보존');
-      assert.ok(/sanitizeValue\(value\[key\],\s*depth \+ 1\)/.test(source),
-          'recursion sanitizeValue(value[key], depth + 1) 보존');
+      // W8-Z6: value: unknown이 된 뒤 `object`로는 인덱싱할 수 없어 `record[key]`로
+      //   이름을 바꿨다(같은 `value`를 `as Record<string, unknown>`로만 다시 본 것 —
+      //   재귀 자체의 동작은 그대로다).
+      assert.ok(/sanitizeValue\(record\[key\],\s*depth \+ 1\)/.test(source),
+          'recursion sanitizeValue(record[key], depth + 1) 보존');
   });
 
   test('cycle 615: cycle 502-614 회귀 가드 — default 청소 시리즈 보존', async () => {
@@ -1149,7 +1152,7 @@ import { readFile } from 'node:fs/promises';
           'handleVictory passiveBonus default {} 제거');
       assert.ok(!/handleVictory\([^)]*liveConfig:\s*any\s*=\s*\{\}/.test(source),
           'handleVictory liveConfig default {} 제거');
-      assert.ok(/handleVictory\(player: Player, enemy: Monster, passiveBonus: any, liveConfig: any\)/.test(source),
+      assert.ok(/handleVictory\(player,\s*enemy,\s*passiveBonus,\s*liveConfig\)/.test(source),
           'handleVictory 시그니처 4-arg 보존 (default 없이)');
   });
 
@@ -1215,7 +1218,7 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/services/aiService.ts');
       assert.ok(!/generateStory:\s*async\s*\([^)]*uid:\s*any\s*=\s*'anonymous'\)/.test(source),
           "generateStory uid default 'anonymous' 제거");
-      assert.ok(/generateStory:\s*async\s*\(type:\s*any,\s*data:\s*any,\s*uid:\s*any\)/.test(source),
+      assert.ok(/generateStory:\s*async\s*\(type:\s*string,\s*data:\s*AiFallbackData,\s*uid:\s*string\s*\|\s*null\)/.test(source),
           'generateStory uid 파라미터 보존 (default 없이)');
   });
 

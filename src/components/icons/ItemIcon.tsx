@@ -5,11 +5,12 @@ import { getEquipmentVisualKey, getItemIconAssetSrc, shouldUseAvatarPreviewItemI
 import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signatureItems.js';
 import EquipmentAvatarPreview from './EquipmentAvatarPreview.jsx';
 import SignatureBadge from './SignatureBadge.jsx';
+import type { Item } from '../../types/index.js';
 
 // cycle 412: steel 제거 — signatureRegistry.json은 8 tone (arcane/earth/fire/
 //   frost/holy/nature/rust/shadow)만 emit. SIGNATURE_TONE_RING.steel lookup 절대
 //   hit 안 됨 (cycle 358 LegendaryDropOverlay/LegendaryCodex paired completion).
-const SIGNATURE_TONE_RING: any = Object.freeze({
+const SIGNATURE_TONE_RING: Record<string, { border: string; glow: string }> = Object.freeze({
     holy: { border: '#f6e7a2', glow: 'rgba(246,231,162,0.45)' },
     fire: { border: '#ffb48a', glow: 'rgba(255,180,138,0.45)' },
     frost: { border: '#cce8f5', glow: 'rgba(204,232,245,0.4)' },
@@ -57,12 +58,20 @@ const ICON_PATHS: Record<string, string> = {
 //   미전달 callers (WeaponCodex/LegendaryCodex/EquipmentCodexCard 등) 존재이라
 //   reachable 보존. partial cleanup pattern 6번째 적용 (cycle 542). 청소
 //   메가 시리즈 76번째.
-const ItemIcon = ({ item, size, showBorder = false, className = '', hideSignatureBadge = false }: any) => {
+interface ItemIconProps {
+    item?: Item | null;
+    size: number;
+    showBorder?: boolean;
+    className?: string;
+    hideSignatureBadge?: boolean;
+}
+
+const ItemIcon = ({ item, size, showBorder = false, className = '', hideSignatureBadge = false }: ItemIconProps) => {
     const iconKey = getEquipmentVisualKey(item);
     const path = ICON_PATHS[iconKey] || ICON_PATHS.material;
     const rarity = item ? getItemRarity(item) : 'common';
     const color = BALANCE.RARITY_COLORS[rarity] || '#9ca3af';
-    const isEquipmentItem = ['weapon', 'armor', 'shield'].includes(item?.type);
+    const isEquipmentItem = ['weapon', 'armor', 'shield'].includes(item?.type ?? '');
     const assetSrc = useMemo(() => getItemIconAssetSrc(item), [item]);
     const [assetState, setAssetState] = useState({ key: iconKey, failed: false });
     const activeAssetState = assetState.key === iconKey ? assetState : { key: iconKey, failed: false };

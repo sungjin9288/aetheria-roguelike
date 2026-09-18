@@ -32,7 +32,16 @@ const METER_THEME: Record<string, { border: string; fill: string; label: string 
 // cycle 583: variant default 'hp' 제거 — 3 internal callsite (line 236-238)
 //   모두 variant 명시 (hp/mp/exp). default 도달 불가. body의 METER_THEME[variant]
 //   || METER_THEME.hp nullish fallback은 별개 보존. 청소 메가 시리즈 74번째.
-const StatusMetric = ({ label, value, max, variant }: any) => {
+type MeterVariant = 'hp' | 'mp' | 'exp';
+
+interface StatusMetricProps {
+  label: string;
+  value?: number;
+  max?: number;
+  variant: MeterVariant;
+}
+
+const StatusMetric = ({ label, value, max, variant }: StatusMetricProps) => {
   const theme = METER_THEME[variant] || METER_THEME.hp;
   const safeMax = Math.max(1, max || 1);
   const safeValue = Math.max(0, value || 0);
@@ -59,8 +68,13 @@ const StatusMetric = ({ label, value, max, variant }: any) => {
   );
 };
 
+interface EnemyStatusProps {
+  enemy?: Monster | null;
+  enemyHitCrit?: boolean;
+}
+
 // 적이 피해를 받으면 생명력 막대와 피해 숫자를 함께 강조한다.
-const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
+const EnemyStatus = ({ enemy, enemyHitCrit }: EnemyStatusProps) => {
   const { flash, amount } = useHitFlash(enemy?.hp, enemy?.name, { crit: !!enemyHitCrit });
   if (!enemy) return null;
 
@@ -105,7 +119,7 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: any) => {
             aria-hidden="true"
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-rose-200/18 bg-black/24 text-rose-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
           >
-            <MonsterIcon name={enemy.name} discovered isBoss={enemy.isBoss} size={46} />
+            <MonsterIcon name={enemy.name || ''} discovered isBoss={Boolean(enemy.isBoss)} size={46} />
           </div>
           <div className="min-w-0">
             <div data-testid="enemy-status-label" className="text-[10px] font-readable text-rose-100/66">
@@ -246,7 +260,7 @@ const StatusBar = ({
                 {Array.isArray(player.status) && player.status.length > 0 && (() => {
                   // 2026-09 Wave 6 X2: 인라인 DEBUFF_LABELS 제거 — MSG.STATUS_LABELS(공유 테이블) 재사용.
                   const DEBUFF_LABELS = MSG.STATUS_LABELS as Record<string, string>;
-                  const debuffs = player.status.filter((s: any) => DEBUFF_LABELS[s as string]);
+                  const debuffs = player.status.filter((s) => DEBUFF_LABELS[s]);
                   if (debuffs.length === 0) return null;
                   const headLabel = DEBUFF_LABELS[debuffs[0] as string] || debuffs[0];
                   const showCount = debuffs.length > 1;
@@ -255,7 +269,7 @@ const StatusBar = ({
                       data-testid="status-debuff-chip"
                       data-debuff-count={debuffs.length}
                       className="shrink-0 rounded-full border border-rose-400/40 bg-rose-500/16 px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal text-rose-200"
-                      aria-label={`디버프 ${debuffs.length}개: ${debuffs.map((d: any) => DEBUFF_LABELS[d as string] || d).join(', ')}`}
+                      aria-label={`디버프 ${debuffs.length}개: ${debuffs.map((d) => DEBUFF_LABELS[d] || d).join(', ')}`}
                     >
                       {headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}
                     </span>

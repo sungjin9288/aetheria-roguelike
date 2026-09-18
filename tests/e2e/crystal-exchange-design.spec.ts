@@ -77,7 +77,7 @@ test.describe('에테르 교환소', () => {
         await expect(page.getByTestId('crystal-exchange-balance')).toContainText('30');
         await expect(page.getByTestId('crystal-current-state')).toHaveText('30칸');
         await expect(page.getByTestId('crystal-next-state')).toHaveText('35칸');
-        const afterExchange = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getCrystalExchangeSnapshot?.());
+        const afterExchange = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getCrystalExchangeSnapshot?.()))!;
         expect(afterExchange.premiumCurrency).toBe(30);
         expect(afterExchange.maxInv).toBe(30);
         const renderSnapshot = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
@@ -98,7 +98,7 @@ test.describe('에테르 교환소', () => {
         await page.getByTestId('crystal-category-titles').click();
         await page.getByTestId('premium-title-buy-title_stargazer').click();
 
-        const before = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getCrystalExchangeSnapshot?.());
+        const before = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getCrystalExchangeSnapshot?.()))!;
         expect(before.premiumCurrency).toBe(180);
         expect(before.cosmeticTitles).toEqual([]);
 
@@ -106,7 +106,7 @@ test.describe('에테르 교환소', () => {
         await expect(page.getByTestId('crystal-exchange-confirm')).toBeDisabled();
         await expect(page.getByTestId('crystal-exchange-confirm')).toContainText('이미 보유한 칭호입니다');
 
-        const after = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getCrystalExchangeSnapshot?.());
+        const after = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getCrystalExchangeSnapshot?.()))!;
         expect(after.premiumCurrency).toBe(80);
         expect(after.cosmeticTitles).toEqual(['title_stargazer']);
         expect(after.titles).toContain('별을 보는 자');

@@ -6,11 +6,13 @@ import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { getRegionTheme } from '../../utils/regionTheme';
 import { buildReturnBriefing } from '../../utils/returnBriefing';
 import { getExpeditionReturnAction } from '../../utils/expeditionReturnFlow';
-import { getPendingMilestoneStoryBeat } from '../../utils/milestoneStory';
+import { getPendingMilestoneStoryBeat, type MilestoneStoryBeat } from '../../utils/milestoneStory';
 import { DB } from '../../data/db';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
-import type { ExpeditionSummary, Player } from '../../types/index.js';
+import type { ExpeditionSummary, FullStats, Item, Player } from '../../types/index.js';
+import type { useGameEngine } from '../../hooks/useGameEngine';
+import type { useDamageFlash } from '../../hooks/useDamageFlash';
 import MainLayout from '../MainLayout';
 import StatusBar from '../StatusBar';
 import DamageNumber from '../DamageNumber';
@@ -31,6 +33,21 @@ const PremiumShop      = lazy(() => import('../PremiumShop'));
 const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
 const MilestoneStoryCard = lazy(() => import('../MilestoneStoryCard'));
+
+/**
+ * liveConfig.seasonEvent.endsAt(`types/session.ts`)는 Firestore Timestamp | 문자열 | 숫자가
+ * 섞여 온다(`unknown`) — 표시 시점에만 Date로 정규화한다. 파싱 실패 시 null(호출부가
+ * "지금"으로 fallback해 이전의 `new Date(weirdValue)` → NaN → "D-NaN" 표시보다 안전하다).
+ */
+const toSeasonEventEndDate = (value: unknown): Date | null => {
+    if (value instanceof Date) return value;
+    if (typeof value === 'string' || typeof value === 'number') return new Date(value);
+    if (value && typeof value === 'object' && 'toDate' in value) {
+        const toDate = (value as { toDate?: () => Date }).toDate;
+        if (typeof toDate === 'function') return toDate();
+    }
+    return null;
+};
 
 const resolveExpeditionJob = (player: Player, summary: ExpeditionSummary | null) => {
     if (summary?.job) return summary.job;
@@ -68,6 +85,26 @@ const ReturnBriefingGate = ({
     );
 };
 
+/** `useGameEngine`이 반환하는 실제 모양 — type-only import라 훅 모듈이 로드되지 않는다. */
+type GameEngine = ReturnType<typeof useGameEngine>;
+/** `useDamageFlash`가 반환하는 데미지/회복 피드백 상태. */
+type DamageFlashState = ReturnType<typeof useDamageFlash>;
+
+interface GameRootProps {
+    engine: GameEngine;
+    fullStats: FullStats;
+    isPanelFocusState: boolean;
+    mobileArchiveDockVisible: boolean;
+    premiumShopOpen: boolean;
+    setPremiumShopOpen: (open: boolean) => void;
+    mirrorPanelOpen: boolean;
+    setMirrorPanelOpen: (open: boolean) => void;
+    handleQuickSlotUse: (item: Item, idx: number) => void;
+    damageFlash: DamageFlashState['damageFlash'];
+    healFlash: DamageFlashState['healFlash'];
+    damageAmount: DamageFlashState['damageAmount'];
+}
+
 const GameRoot = ({
     engine, fullStats,
     isPanelFocusState, mobileArchiveDockVisible,
@@ -75,7 +112,7 @@ const GameRoot = ({
     mirrorPanelOpen, setMirrorPanelOpen,
     handleQuickSlotUse,
     damageFlash, healFlash, damageAmount,
-}: any) => {
+}: GameRootProps) => {
     const [mobileConsoleMode, setMobileConsoleMode] = useState(
         import.meta.env.VITE_DEVICE_QA_SCENARIO === 'system-settings'
         || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'progression-acceptance'
@@ -111,7 +148,7 @@ const GameRoot = ({
     );
     const readabilityMode = engine.player?.settings?.readabilityMode === 'high' ? 'high' : 'standard';
     // slice 21: 지역별 ambient 팔레트 — 위치 기반 accent/wash CSS 변수.
-    const regionTheme = getRegionTheme(engine.player?.loc, DB.MAPS?.[engine.player?.loc]);
+    const regionTheme = getRegionTheme(engine.player?.loc, DB.MAPS?.[engine.player?.loc ?? '']);
     // cycle 208: codex prop 전달 — useLegendaryDropDetector가 SEASON_XP 중복 award 방지용
     //   alreadyInCodex 체크에 활용.
     const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch, engine.player?.stats?.codex);
@@ -139,7 +176,7 @@ const GameRoot = ({
     //   ~1.8s 자동 해제. visualEffect 'levelUp'은 연속 레벨업에서 값이 안 바뀌어
     //   재트리거 못 하므로 실제 level 변화를 watch (정확한 새 레벨 표시).
     const [levelUpBanner, setLevelUpBanner] = useState<number | null>(null);
-    const prevLevelRef = useRef<any>(engine.player?.level);
+    const prevLevelRef = useRef<number | undefined>(engine.player?.level);
     useEffect(() => {
         const lv = engine.player?.level;
         if (typeof lv !== 'number') return undefined;
@@ -154,7 +191,7 @@ const GameRoot = ({
     // slice 31: 치명타 스크린 펄스 — 새 'critical' 로그 id 감지 시 잠깐 활성.
     //   (플레이어 크리 본문 로그 + 보스 페이즈 reveal이 critical 타입)
     const [critPulse, setCritPulse] = useState(false);
-    const lastCritLogIdRef = useRef<any>(null);
+    const lastCritLogIdRef = useRef<string | null>(null);
     useEffect(() => {
         const logs = engine.logs;
         const last = logs?.[logs.length - 1];
@@ -179,8 +216,8 @@ const GameRoot = ({
         const p3 = !!e.phase3Triggered;
         const prev = prevPhaseRef.current;
         let banner: { n: number; name: string } | null = null;
-        if (p3 && !prev.p3) banner = { n: 3, name: e.name };
-        else if (p2 && !prev.p2) banner = { n: 2, name: e.name };
+        if (p3 && !prev.p3) banner = { n: 3, name: e.name || '' };
+        else if (p2 && !prev.p2) banner = { n: 2, name: e.name || '' };
         prevPhaseRef.current = { p2, p3 };
         if (banner) setPhaseBanner(banner);
     }, [engine.enemy]);
@@ -202,7 +239,7 @@ const GameRoot = ({
     const closeMobileArchive = useCallback(() => setMobileConsoleMode('log'), []);
     usePlatformBackHandler(mobileConsoleMode === 'archive', closeMobileArchive, 30);
 
-    const acknowledgeStoryBeat = (storyBeat: any) => {
+    const acknowledgeStoryBeat = (storyBeat: MilestoneStoryBeat | null) => {
         if (storyBeat?.id) engine.actions.acknowledgeMilestoneStoryBeat?.(storyBeat.id);
     };
 
@@ -216,7 +253,7 @@ const GameRoot = ({
 
         switch (expeditionReturnAction.kind) {
             case 'claim_quest':
-                engine.actions.completeQuest?.(expeditionReturnAction.questId);
+                if (expeditionReturnAction.questId != null) engine.actions.completeQuest?.(expeditionReturnAction.questId);
                 break;
             case 'rest':
                 engine.actions.rest?.();
@@ -254,6 +291,9 @@ const GameRoot = ({
             || (phaseBanner.n === 3 && engine.enemy.phase3Triggered))
         ? phaseBanner
         : null;
+
+    const seasonEvent = engine.liveConfig?.seasonEvent ?? null;
+    const seasonEventEndDate = seasonEvent?.endsAt ? toSeasonEventEndDate(seasonEvent.endsAt) : null;
 
     return (
     <MotionConfig reducedMotion="user">
@@ -294,18 +334,18 @@ const GameRoot = ({
                 )}
 
                 {/* 시즌 이벤트 배너 */}
-                {engine.liveConfig?.seasonEvent?.active && (
+                {seasonEvent?.active && (
                     <div className="flex items-center justify-between gap-2 rounded-[0.9rem] border border-[#d5b180]/28 bg-[#d5b180]/10 px-3 py-2 text-[11px] font-fira">
                         <span className="text-[#f4e6c8]">
-                            ⚡ {engine.liveConfig.seasonEvent.name || '시즌 이벤트'} 진행 중
-                            {engine.liveConfig.seasonEvent.endsAt ? ` — D-${Math.max(0, Math.ceil(((engine.liveConfig.seasonEvent.endsAt.toDate?.() || new Date(engine.liveConfig.seasonEvent.endsAt)) as any - (new Date() as any)) / 86400000))}` : ''}
-                            {engine.liveConfig.seasonEvent.goldMultiplier > 1 ? ` | 골드+${Math.round((engine.liveConfig.seasonEvent.goldMultiplier - 1) * 100)}%` : ''}
-                            {engine.liveConfig.seasonEvent.xpMultiplier > 1 ? ` XP+${Math.round((engine.liveConfig.seasonEvent.xpMultiplier - 1) * 100)}%` : ''}
+                            ⚡ {seasonEvent.name || '시즌 이벤트'} 진행 중
+                            {seasonEventEndDate ? ` — D-${Math.max(0, Math.ceil((seasonEventEndDate.getTime() - new Date().getTime()) / 86400000))}` : ''}
+                            {(seasonEvent.goldMultiplier ?? 1) > 1 ? ` | 골드+${Math.round(((seasonEvent.goldMultiplier ?? 1) - 1) * 100)}%` : ''}
+                            {(seasonEvent.xpMultiplier ?? 1) > 1 ? ` XP+${Math.round(((seasonEvent.xpMultiplier ?? 1) - 1) * 100)}%` : ''}
                         </span>
-                        {engine.liveConfig.seasonEvent.bonusMap && (
+                        {seasonEvent.bonusMap && (
                             <button
                                 type="button"
-                                onClick={() => engine.actions.move(engine.liveConfig.seasonEvent.bonusMap)}
+                                onClick={() => { if (seasonEvent.bonusMap) engine.actions.move(seasonEvent.bonusMap); }}
                                 className="shrink-0 rounded-full border border-[#d5b180]/28 bg-[#d5b180]/16 px-2 py-0.5 text-[10px] font-fira text-[#f4e6c8] uppercase tracking-[0.14em] hover:bg-[#d5b180]/24"
                             >
                                 이동
@@ -322,7 +362,7 @@ const GameRoot = ({
                             onExpandInventory={() => { engine.actions.expandInventory?.(); }}
                             onPurchaseSynthProtect={() => { engine.actions.purchaseSynthProtect?.(); }}
                             onPurchaseRevive={() => { engine.actions.purchaseRevive?.(); }}
-                            onPurchaseTitle={(id: any, name: any, cost: any) => { engine.actions.purchaseCosmeticTitle?.(id, name, cost); }}
+                            onPurchaseTitle={(id) => { engine.actions.purchaseCosmeticTitle?.(id); }}
                         />
                     </Suspense>
                 )}
@@ -432,7 +472,7 @@ const GameRoot = ({
                     <MirrorPanel
                         player={engine.player}
                         onClose={() => setMirrorPanelOpen(false)}
-                        onPurchase={(nodeId: any) => { engine.actions.purchaseMirrorNode?.(nodeId); }}
+                        onPurchase={(nodeId) => { engine.actions.purchaseMirrorNode?.(nodeId); }}
                     />
                 </Suspense>
             )}

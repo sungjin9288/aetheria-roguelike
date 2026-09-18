@@ -1,4 +1,20 @@
+import type { ReactNode } from 'react';
 import { ChevronLeft, Package } from 'lucide-react';
+
+interface FocusPanelHeaderProps {
+  eyebrow?: string;
+  title: string;
+  meta?: string;
+  onBack?: (() => void) | null;
+  backLabel?: string;
+  backTestId?: string | null;
+  rightSlot?: ReactNode | null;
+  onOpenArchive?: (() => void) | null;
+  archiveLabel?: string;
+  archiveTestId?: string | null;
+  titleClassName?: string;
+  bleedClassName?: string;
+}
 
 // cycle 441: default backLabel 값 제거 — 5 호출자 모두 명시 전달이라 default
 //   '뒤로' 도달 불가.
@@ -18,7 +34,7 @@ const FocusPanelHeader = ({
   archiveTestId = null,
   titleClassName = '',
   bleedClassName = '-mx-3 px-3',
-}: any) => (
+}: FocusPanelHeaderProps) => (
   <div
     className={`sticky top-0 z-10 mb-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] pb-2.5 pt-1 ${bleedClassName}`.trim()}
   >

@@ -73,7 +73,7 @@ test.describe('에테르 거울 영구 성장', () => {
 
         await expect(page.getByTestId('mirror-current-effect')).toHaveText('시작 골드 +200');
         await expect(page.getByTestId('mirror-confirm')).toContainText('계승 정수 140 부족');
-        const afterPurchase = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getMirrorSnapshot?.());
+        const afterPurchase = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getMirrorSnapshot?.()))!;
         expect(afterPurchase.essence).toBe(100);
         expect(afterPurchase.mirror.start_gold).toBe(2);
         expect(afterPurchase.mirror.campfire_rate).toBe(1);

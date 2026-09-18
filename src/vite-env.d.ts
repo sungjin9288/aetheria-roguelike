@@ -30,8 +30,11 @@ interface Window {
     __AETHERIA_PERF_REGISTRY__?: PerfRegistry;
     __firebase_config?: string;
     __initial_auth_token?: string;
-    __AETHERIA_TEST_API__?: any;
-    render_game_to_text?: any;
+    // W8-Z6: `AetheriaTestApi`(hooks/useGameTestApi.ts)가 이 global의 문서화된 계약이다 —
+    //   `import(...)` 타입 참조로 값 없이(런타임 의존 0) 가져온다. tests/e2e/**가
+    //   `window.__AETHERIA_TEST_API__?.멤버?.(...)` 형태로 이 타입을 통해 컴파일 검증된다.
+    __AETHERIA_TEST_API__?: import('./hooks/useGameTestApi.js').AetheriaTestApi;
+    render_game_to_text?: () => string;
     // cycle 594: advanceTime 타입 cascade 제거 — cycle 593에서 실제 정의/cleanup
     //   제거된 후 잔존 dead type. paired completion.
 }
