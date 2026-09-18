@@ -2,7 +2,7 @@
 
 ## 1. 프로젝트 개요
 
-사이버펑크 판타지 배경의 텍스트 기반 roguelike RPG. Prestige 시스템, AI 생성 이벤트, Firebase 클라우드 세이브, Capacitor 기반 iOS/Android 지원, 완전 한국어 UI를 포함한다.
+하이 판타지 배경의 텍스트 기반 roguelike RPG(에테르·마법·용·신 — 실측: `src/data/*.ts`에 사이버·해킹·안드로이드·나노·전자·네트워크 어휘 각 0건, 에테르 232 / 기계 75). Prestige 시스템, AI 생성 이벤트, Firebase 클라우드 세이브, Capacitor 기반 iOS/Android 지원, 완전 한국어 UI를 포함한다.
 
 ---
 
@@ -244,11 +244,13 @@ useGameEngine (useReducer)
 - **온라인**: 위치/최근 전투 이력/플레이어 상태를 컨텍스트로 AI 호출 (9.5s timeout)
 - **오프라인/할당량 초과**: 사전 제작된 큐레이션 fallback 이벤트 풀에서 랜덤 선택
 - **일일 한도**: 50회 (TokenQuotaManager)
+- **쿼터는 "디스패치 비용 미터"다** (Wave 12 D3) — `dispatched(day) ≤ BALANCE.DAILY_AI_LIMIT`. 프록시에 실제로 보낸 요청을 세고, 응답을 채택했는지는 세지 않는다. 채택 기준으로 바꾸면 게이트(`canMakeAICall`)가 디스패치를 막는데 미터는 그 부분집합만 세게 되어 구조적으로 못 문다 — 서버(`functions/api/ai-proxy.js`)는 40req/60s 슬라이딩 윈도우일 뿐 일일 상한이 없으므로 이 미터가 **유일한 일일 비용 통제**다. `recordCall`은 요청 결정 한 곳에서만 일어나고(`dispatchProxyCall`), 응답 해석기는 `outcome` 5종(`adopted` + 미채택 4종)을 반환한다 — `dispatched = adopted + unadopted + unsettled`. 미채택 건수는 `TokenQuotaManager.getCallLedger()`로 관측한다.
 - **판정은 `src/platform/aiEventPolicy.ts` 소유** (Wave 11 C3) — "호출할지 · 어떤 `fallbackReason`으로 접을지 · 응답을 채택할지"는 React·firebase·fetch 없는 순수 전이다. `aiService.ts`에는 IO(fetch/AbortController/타이머/LatencyTracker/firebase 토큰)만 남는다. `fallbackReason` 7종(`mock-runtime`/`quota`/`proxy-disabled`/`proxy-unavailable`/`proxy-rejected`/`malformed-response`/`recent-duplicate`) 중 UI로 표면화되는 건 `quota` 하나뿐. **쿼터는 정책의 상태가 아니라 입력**이다 — `TokenQuotaManager`가 유일한 진실 원천이고 정책에는 `readQuota` 지연 호출로 전달한다(mock 런타임이 쿼터를 읽지 않는 동작 보존).
 
 ### 저장 데이터 버전 관리
 - `CONSTANTS.DATA_VERSION = 5.1` (5.1: `meta.essenceLifetime` 역산 backfill — `dataMigration.ts`)
 - save 구조 변경 시: 버전 bump → `gameUtils.migrateData()` 업데이트 필수
+- **시즌 회전은 완주 트리거이지 벽시계가 아니다** (Wave 12 D2) — 30번째 티어 보상 claim이 다음 시즌을 연다(XP 상한이 아니다: claim이 곧 지급이라 상한 시점에 미수령 보상 30개가 남아 있을 수 있다). 회전 시 `claimed[]`는 `SeasonArchiveEntry`로 보존하고, **리셋 직전에 `addNewTitles`를 한 번 돌린다** — `checkTitles`가 시즌 칭호를 live `seasonPass.tier`에서 복구하므로 순서가 바뀌면 그 칭호는 영구 복구 불가다. `ordinal`/`completedSeasons`/`archive`는 기본값 있는 선택 필드라 `DATA_VERSION` bump 없이 구세이브가 시즌 1로 로드된다.
 - `migrateData(raw, { now })`는 **시각 주입 가능**(Wave 11 C2) — 벽시계(`Date.now()`) 기본값은 이 경계 한 곳에만 있다. 골든(`save-migration-golden.test.js`)은 고정 시각을 주입하므로 `startedAt` 정규화 없이 값 자체가 결정론의 증거다. 마이그레이션에 새 시각 의존을 넣을 때는 `Date.now()`를 직접 부르지 말고 이 `now`를 내려보낼 것
 
 ---
@@ -275,6 +277,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 - `boot-state-machine.test.js` — §8-5 부트 전이표(`platform/bootStateMachine.ts`). 복원 **dispatch까지** 전이표 소유(Wave 11 C1)이므로 계약은 "ready 뒤 `LOAD_DATA`는 크로스 디바이스 복원 경로에서만, 폴백·mock/device-QA는 무(無)". Wave 10의 "복원 승인 없는 ready 금지"는 dispatch를 훅이 소유하던 동안 **공허참**이었다 — 주장하는 쪽과 강제하는 쪽이 같은 모듈이어야 계약이 성립한다
 - `ai-event-policy.test.js` — AI 폴백 결정표 (Wave 11 C3)
 - `grave-item-reader-contract.test.js` — §8-2 "묘비 아이템은 `getGraveItems()` 경유로만 읽는다" 부재 가드 + 단수/복수/빈배열/null 읽기 동치 (Wave 11)
+- `content-reachability.test.js` — **접근 비용 축** (Wave 12 D1). "도달 가능한가"가 아니라 "몇 모델 액션·몇 모델 시간 뒤인가"를 검증한다. `basis`가 `anchored`(모델 산출)인지 `interpolated`(누적 EXP 비례)인지 `beyond-anchors`(외삽 금지 — 비용 `null`)인지를 구분하고, 보간 행은 자기 입력을 들고 있어 재계산 가능하다. **맵 게이트는 선언 `level`이 아니라 실제 이동 경로로 매긴다** — 52개 중 10개가 다르다(`cost.mapGateDivergence`)
 
 **테스트 방침**: 외부 mock 프레임워크 없이 Node.js built-in `test` 사용. Pure function이므로 별도 DI 없이 직접 import 후 assert.
 데이터 보존 가드는 소스 바이트 해시가 아니라 **값 해시**(`tests/helpers/dataHash.ts`)를 쓴다 — 타입 주석 변경에 재고정이 필요 없다.
