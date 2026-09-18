@@ -444,3 +444,22 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 
 **남은 후보 (Wave 10)**: `any` 시리즈(Wave 5~9) 종료. 축 이동 — (1) CLAUDE.md §8 실제 위험의 동작 계약 테스트: 전투 턴 authority(`combatTurn`/`expectedTurn` replay 거부 시나리오 매트릭스), 세이브 호환(`DATA_VERSION` 5.1 이하 각 버전 픽스처 → `migrateData` 왕복), Firebase boot race(`bootStage` 전이 순서 계약); (2) perf guard CI 연동(현재 non-blocking — 3회 실측 분산으로 예산 보정 후 blocking 전환); (3) 아트 채택 테스트의 소스 바이트 해시 핀(`monsters.ts` 등) → 데이터 값 해시로 전환(타입 주석 변경마다 재고정하는 비용 제거); (4) `Record<string, unknown>` 경계 8곳(gameStorage/localGameSnapshot)의 런타임 스키마 검증 통일
 
+
+---
+
+## 14. Wave 10 계획 (2026-09-18 착수, 베이스 `main` = `b654f4ab` = PR #36 merge commit)
+
+**핵심**: `any` 시리즈가 닫혔으니 축을 "타입 부채"에서 **CLAUDE.md §8이 실제 위험이라고 적어 둔 것**으로 옮긴다. 실측: 전투 턴 authority(`combatTurn`/`expectedTurn`)를 언급하는 테스트 41파일이 있지만 전이 매트릭스(어떤 입력이 거부되고 어떤 입력이 정확히 한 번만 정산되는가)를 한 곳에서 열거하는 계약 테스트는 없다. 세이브 마이그레이션 픽스처는 `version: 5.0` 20건에 편중(1·2·4.0·9·99는 1~3건)이고 Wave 8 Z2가 만든 70입력 차등 하네스는 커밋되지 않았다. `bootStage` 전이(auth → config → data → ready + 오프라인 폴백)는 `useFirebaseSync` 훅 안에 dispatch 시퀀스로만 존재해 순수 함수로 테스트할 수 없다. perf guard는 CI에서 4회 연속 그린(FCP 544~572ms desktop / 436~508ms mobile, 예산 2,200/2,500ms — 4배 여유)인데 아직 non-blocking이다. 아트 채택 테스트 23파일은 `monsters.ts`(6)·`maps.ts`(3)·`titles.ts`(1)의 **소스 바이트** 해시를 핀해서 타입 주석 한 줄에도 재고정이 필요하다(Wave 9에서 2회).
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **B1 전투 턴 계약 매트릭스** | 기존 41파일의 단언을 인벤토리한 뒤 빠진 셀만 채우는 `tests/combat-turn-authority-matrix.test.js`: (stale `expectedTurn` 거부 · 같은 seed 동일 결과 · 연타 dispatch 2회 중 1회만 정산 · 행동 턴/소모품 턴 교차 · 승리/패배 정산 1회성 · 도주 성공/실패 후 turn 카운터) × (일반/엘리트/보스) | 리듀서 단일 전이의 계약이 한 파일에 열거 — 회귀 시 어떤 셀이 깨졌는지 즉시 보임 | 기존 커버리지 중복 위험 — 인벤토리 먼저, 중복 셀은 기존 파일 참조로 대체 | `Math.random` 우회나 timer로 시나리오를 만들면 결정론이 깨진다 — action seed 스트림만 사용 | opus |
+| **B2 세이브 호환 왕복** | `DATA_VERSION` 1·2·2.7·4.0·5·5.0·5.1 픽스처(각 버전 실제 세이브 모양) → `migrateData` 불변식(`quickSlots` 3·`status` 배열·`version` 상향·`essenceLifetime` backfill) + 멱등성(`migrate(migrate(x)) ≡ migrate(x)`) + Z2의 70입력 차등 하네스를 골든 파일로 커밋. `gameStorage`/`localGameSnapshot`의 `Record<string, unknown>` 술어 11곳을 하나의 `isSaveEnvelope` 검증기로 통일 | 세이브 손실 경로의 계약이 픽스처로 고정 — `DATA_VERSION` bump 시 무엇을 더 써야 하는지 테스트가 알려줌 | 골든 파일 유지비 | 픽스처를 현재 `Player` 타입으로 만들면 레거시 모양을 못 재현한다 — 각 버전의 **당시 모양**을 git 이력/마이그레이션 코드에서 복원 | sonnet |
+| **B3 부트 상태기계 추출** | `useFirebaseSync`의 dispatch 시퀀스를 `platform/bootStateMachine.ts`의 순수 전이 `nextBootStep(state, event)`로 추출(auth 성공/실패/타임아웃, config 유무, 로컬/원격 권한 판정, 오프라인 폴백) — 훅은 이벤트를 넣고 결과 dispatch만 수행. 전이표 테스트 + "ready 이전 렌더 금지" 계약 | §8-5 race(저장 로드 전 기본값 덮어쓰기)를 순수 함수 수준에서 재현·차단 | 훅 리팩토링 — 동작 동치는 기존 firebase 테스트 42파일 + e2e 부트 스펙으로 증명 | 권한 판정(`cloudSaveAuthority`)을 상태기계에 흡수하면 두 진실 원천 — 판정은 호출만, 결과만 상태로 | opus |
+| **B4 perf guard blocking** | CI `perf` job의 non-blocking(`continue-on-error`) 해제. 예산은 현행 유지(4배 여유), 실패 시 아티팩트에 metrics JSON 첨부 | perf 회귀가 머지를 막음 | 러너 노이즈로 가끔 빨강 — 예산이 4배라 FCP 2.2s를 넘는 건 노이즈가 아니라 회귀 | 예산을 "현재 실측 + 10%"로 조이면 첫 노이즈에서 깨진다 — 예산은 사용자 체감 기준(2.2s) 유지 | 직접 |
+| **B5 아트 채택 핀 → 데이터 값 해시** | 23파일의 `sha256(src/data/monsters.ts 바이트)` 핀을 `sha256(JSON.stringify(MONSTERS 정렬))` 같은 **값 해시**로 교체(`maps`·`titles` 동일). 값 해시 헬퍼 1개(`tests/helpers/dataHash.ts`) | 타입 주석·주석 변경에 재고정 불필요, "게임플레이 데이터 보존" 의도는 그대로 | 값 해시는 필드 순서에 민감 — 정렬 직렬화 | 값 해시가 함수(몬스터 AI 콜백)를 못 담으면 그 부분은 소스 핀 유지 — 데이터/코드 분리선을 명시 | sonnet |
+| **B6 문서** | §14.1, CLAUDE.md §7 테스트 목록에 계약 테스트 3종 추가, todo | — | — | — | 직접 |
+
+**순서**: B1 · B2 · B3 · B5 병렬(파일 집합: tests 신규 / tests+platform 술어 / hooks+platform 상태기계 / tests 아트 23파일) + B4 직접 → 통합 → 증빙(전 소스 바인딩 → progression → pacing) → 직렬 게이트 → B6 → PR → CI(perf blocking 첫 적용) → merge commit.
+
+**판단 포인트**: 이 wave의 산출물은 "테스트 개수"가 아니라 **계약의 열거**다. B1의 매트릭스에서 빈 셀이 나오면 그건 테스트 누락이 아니라 설계가 정하지 않은 동작이고, 그때 CLAUDE.md §8에 규칙을 추가하는 것이 정답이다.
