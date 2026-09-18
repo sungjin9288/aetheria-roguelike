@@ -463,3 +463,27 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 **순서**: B1 · B2 · B3 · B5 병렬(파일 집합: tests 신규 / tests+platform 술어 / hooks+platform 상태기계 / tests 아트 23파일) + B4 직접 → 통합 → 증빙(전 소스 바인딩 → progression → pacing) → 직렬 게이트 → B6 → PR → CI(perf blocking 첫 적용) → merge commit.
 
 **판단 포인트**: 이 wave의 산출물은 "테스트 개수"가 아니라 **계약의 열거**다. B1의 매트릭스에서 빈 셀이 나오면 그건 테스트 누락이 아니라 설계가 정하지 않은 동작이고, 그때 CLAUDE.md §8에 규칙을 추가하는 것이 정답이다.
+
+### 14.1 Wave 10 실행 결과 (2026-09-18, branch `claude/funny-rubin-xdv43e`, 베이스 `main` = `b654f4ab`)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| B1 전투 턴 계약 매트릭스 | ✅ | `tests/combat-turn-authority-matrix.test.js` 27셀(행 9종 × 적 3종: 일반/정예/보스). 기존 41파일의 커버 범위를 헤더 표로 인벤토리하고 **빠진 셀만** 추가 — 특히 `continue` 분기 replay(기존엔 승리만), 정예 승리 정산, 도주·사망 후 replay 거부. 상태는 실데이터(`spawnEnemy` + `DB.MAPS`)로 dispatch해 만들고, **모든 reducer 호출을 `Math.random` throw 가드 안에서 실행** — 시드 스트림이 완전함을 증명. 0.6~0.9초 |
+| B2 세이브 호환 왕복 | ✅ | `DATA_VERSION` 픽스처 7종(v1~v5.1, 각 `_note`에 복원 근거) + 불변식(`quickSlots` 3·`version ≥ 2.7`·`essenceLifetime` 역산값 정확·`LOAD_DATA` 후 `INITIAL_STATE.player` 키 완비) + 멱등성 + **골든 차등 74입력**(`SAVE_GOLDEN_WRITE=1`로 재생성). 세이브 봉투 검증기 `isSaveEnvelope` 1개로 4곳 통일 — 26행 표로 기존 4개 술어가 이미 동치였음을 먼저 증명하고 교체 |
+| B3 부트 상태기계 | ✅ | `src/platform/bootStateMachine.ts`(React·firebase 비의존, 이벤트 15종 → 효과 10종 + `BootRestorePlan`), `useFirebaseSync`는 이벤트 입력·효과 실행만. 전이표 테스트 30건 + §8-5 계약 5종 |
+| B4 perf guard blocking | ✅ | `continue-on-error` 해제. 4회 연속 CI 그린(desktop FCP 544~572ms / mobile 436~508ms vs 예산 2,200/2,500ms — 약 4배 여유), 예산 수치는 사용자 체감 기준 유지 |
+| B5 아트 핀 → 값 해시 | ✅ | `tests/helpers/dataHash.ts`(키 정렬·배열 순서 보존·`undefined` 제거·함수는 arity만·NaN/Infinity 태그·순환 가드) + `hashMonsters`/`hashMaps`/`hashTitles`. 소스 바이트 핀 6건(monsters 3 · maps 3)을 값 해시로 교체. 실측 정정: 브리프의 "monsters 6 · maps 3 · titles 1"은 실제로 **monsters 3 · maps 3 · titles 0**(titles는 이미 타겟 정규식). 실험 (a) 주석 한 줄 추가 → 값 해시 불변, (b) `hpMult` 0.8→0.81 → 3파일 전부 실패 |
+
+**발견 (이 wave의 실제 산출물)**
+
+1. **§8-5 race가 실재했다 (B3)** — `fallbackToOffline`은 `bootResolved`를 await 이전에 세팅하지만 스냅샷 복원 경로는 그 플래그를 보지 않는다. 부트 타임아웃(6s)이 로컬을 읽는 동안 클라우드 복원이 끝나면 **늦게 도착한 폴백이 `LOAD_DATA`를 한 번 더 쏴 실제 세이브를 기본값으로 덮을 수 있었다**. 전이표가 "복원 승인 이후의 폴백 복원"을 거부하도록 고쳤다. 원격 스냅샷 복원(cross-device sync)은 부트 이후에도 허용 — 계약 (a)를 "모든 복원 금지"로 읽으면 라이브 동기화가 죽는다.
+2. **cleanup 이후 인증 dispatch (B3)** — `signInAnonymously().then()`이 `authResolved`만 보고 `cancelled`는 보지 않아 언마운트 후에도 `SET_UID`/`SET_BOOT_STAGE`를 쐈다. 전이표가 억제한다.
+3. **`expectedTurn` 가드 표면 비대칭 (B1)** — 행동 턴은 `Number(payload.expectedTurn)` 강제변환, 소모품 턴은 `typeof === 'number'` 엄격. `combatTurn === 0`에서 `null`/`''`/`'0'`/`[]`/`false`가 행동 턴에는 통과한다. **정산은 여전히 1회**(턴이 정확히 한 번 증가)라 replay 구멍은 아니고 가드 표면 차이 — 현재 동작을 핀으로 고정하고 `TODO(B1 finding)`으로 기록
+4. **마이그레이션 완비성은 `migrateData` 단독으로는 성립하지 않는다 (B2)** — `achievements`/`skillChoices`/`status`/`relics` 등 8필드를 건드리지 않아, `INITIAL_STATE.player` 완비는 `LOAD_DATA`의 병합 이후에만 참이다. `grave.item`(레거시 단수)도 정규화되지 않고 `graveUtils.getGraveItems()` 읽기 시점 호환에만 의존한다. 둘 다 현재 동작으로 고정하고 기록
+5. **`migrateData`는 완전 결정론이 아니다 (B2)** — `currentRun` 부재 시 `startedAt`이 `Date.now()`. 골든 비교에서 정규화. `activeExpedition.lowestHp`가 `NaN`이 되는 입력 1건도 별도 테스트로 문서화
+6. **최상위 원시값 입력은 throw (B2)** — `migrateData(5)`/`('str')`/`(true)`는 strict-mode ESM에서 `TypeError`. 소스 주석이 이미 예상한 동작이라 골든이 `{threw:true}`로 기록
+
+**최종 게이트**: 증빙 재생성 후 직렬 게이트 결과를 기록한다
+
+**남은 후보 (Wave 11)**: 게이트 완주 후 갱신
+

@@ -267,7 +267,13 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 - `ai-event-utils.test.js` — AI 이벤트 패키지 빌드
 - `outcome-analysis.test.js` — 전투 후 분석
 
+**계약 테스트 (Wave 10)** — 설계 규칙을 한 파일에 열거해, 회귀 시 어떤 셀이 깨졌는지 즉시 보이게 한다:
+- `combat-turn-authority-matrix.test.js` — §8-1 전투 턴 authority 27셀(replay 거부 · seed 결정론 · 정산 1회성 · 적 3종), 모든 reducer 호출이 `Math.random` throw 가드 안에서 실행된다
+- `save-compatibility-roundtrip.test.js` + `save-migration-golden.test.js` — `DATA_VERSION` 픽스처 7종(`tests/fixtures/saves/`) 왕복 불변식 · 멱등성 · 골든 차등 74입력(`SAVE_GOLDEN_WRITE=1`로 재생성)
+- `boot-state-machine.test.js` — §8-5 부트 전이표(`platform/bootStateMachine.ts`)와 "복원 승인 없는 ready 금지" 계약
+
 **테스트 방침**: 외부 mock 프레임워크 없이 Node.js built-in `test` 사용. Pure function이므로 별도 DI 없이 직접 import 후 assert.
+데이터 보존 가드는 소스 바이트 해시가 아니라 **값 해시**(`tests/helpers/dataHash.ts`)를 쓴다 — 타입 주석 변경에 재고정이 필요 없다.
 
 ---
 
