@@ -18,6 +18,7 @@ import { applyPostCombatChoice, isPostCombatChoiceOffered, type PostCombatChoice
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { activateDevourBonus } from '../../utils/adventureRelicBonuses';
 import type { Item, LogEntry, Player, Monster } from '../../types';
+import type { FullStats } from '../../utils/statsCalculator.js';
 
 const appendCombatLogs = (
     currentLogs: LogEntry[],
@@ -37,9 +38,9 @@ interface SettleVictoryParams {
     player: Player;
     deadEnemy: Monster;
     /** CombatActionTurnResult/CombatItemTurnResult.victoryStats — systems 쪽도 any. */
-    stats: unknown;
+    stats: FullStats;
     logs: Array<{ type: string; text: string }>;
-    stories: Array<{ type: string; data: unknown }>;
+    stories: Array<{ type: string; data: Record<string, unknown> }>;
     extendedChecks: boolean;
     seed: number;
     now: number;
@@ -149,7 +150,7 @@ const settleVictory = (
         stats,
         dispatch,
         addLog: appendLog,
-        addStoryLog: (type: string, data: unknown) => storyEvents.push({ type, data }),
+        addStoryLog: (type: string, data: Record<string, unknown>) => storyEvents.push({ type, data }),
         emitUnlockedTitles,
         extendedChecks,
         liveConfig: state.liveConfig,
@@ -222,7 +223,7 @@ const settleNonVictory = (
         consumedItem,
     }: {
         result: CombatActionTurnResult | CombatItemTurnResult;
-        stories: Array<{ type: string; data: unknown }>;
+        stories: Array<{ type: string; data: Record<string, unknown> }>;
         seed: number;
         now: number;
         nextTurn: number;

@@ -37,13 +37,6 @@ export interface MonsterPattern {
 }
 
 export interface MonsterBase {
-    /**
-     * 전투 인스턴스 고유 id. 2026-09 Wave 6 X4: 생산자 0개(`utils/exploreUtils.spawnEnemy`의
-     * `mStats`는 이 필드를 채우지 않는다) — `hooks/useProductTelemetry`가 `enemyKey` 폴백
-     * 체인의 첫 항목으로 방어적으로 읽기만 한다. 실측상 항상 undefined라 baseName/name으로
-     * 넘어가지만, 컨슈머가 실제로 존재해 타입에서 제거하지 않는다.
-     */
-    id?: string;
     name?: string;
     baseName?: string;
     hp?: number;

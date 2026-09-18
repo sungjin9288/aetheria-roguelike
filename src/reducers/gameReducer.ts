@@ -58,7 +58,7 @@ export interface GameState {
     combatReceipt: {
         key: string;
         kind: 'continue' | 'victory' | 'defeat' | 'escape' | 'rejected';
-        stories: Array<{ type: string; data: unknown }>;
+        stories: Array<{ type: string; data: Record<string, unknown> }>;
         lootSettlement?: LootSettlementReceipt;
     } | null;
     // cycle 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건,

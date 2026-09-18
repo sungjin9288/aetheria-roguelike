@@ -47,6 +47,14 @@ interface EventOutcome {
     gaugeEffect?: string;
 }
 
+/**
+ * `GameEvent.outcomes`는 생산자(AI/체인/정찰/보스 게이지/한정 조우)마다 원소 모양이 달라
+ * 세션 타입(`types/session.ts`)에서는 `unknown[]`로 열어 둔다. 이 훅은 자기 생산자
+ * (AI/폴백 이벤트 + 체인 스텝)의 `EventOutcome` 모양만 읽으므로 여기서 한 번 좁힌다.
+ */
+const eventOutcomes = (event: GameState['currentEvent']): EventOutcome[] =>
+    toArray(event?.outcomes) as EventOutcome[];
+
 /** 체인 이벤트 outcome의 보상 블록 (eventChains.ts의 reward 스키마 합집합). */
 interface EventReward {
     type?: string;
@@ -99,7 +107,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             if (!currentEvent) return;
 
             if (currentEvent.isBoundedEncounter) {
-                const outcome = toArray<EventOutcome>(currentEvent.outcomes)[idx];
+                const outcome = eventOutcomes(currentEvent)[idx];
                 if (!outcome) return;
                 dispatch({
                     type: AT.RESOLVE_BOUNDED_ENCOUNTER_CHOICE,
@@ -127,8 +135,8 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
 
             const isChainEvent = Boolean(currentEvent._chainId);
             const selectedOutcome: EventOutcome | null = isChainEvent
-                ? (toArray<EventOutcome>(currentEvent.outcomes)[idx] || null)
-                : (toArray<EventOutcome>(currentEvent.outcomes).find((o) => o.choiceIndex === idx) || null);
+                ? (eventOutcomes(currentEvent)[idx] || null)
+                : (eventOutcomes(currentEvent).find((o) => o.choiceIndex === idx) || null);
             if (isChainEvent && selectedOutcome?.type === 'nothing') {
                 dispatch({ type: AT.DEFER_CHAIN_EVENT, payload: {
                     chainId: currentEvent._chainId, step: currentEvent._chainStep, choiceIndex: idx,
@@ -459,7 +467,7 @@ const startEliteEncounter = (
  */
 const handleScoutChoice = (idx: number, currentEvent: GameState['currentEvent'], deps: GameActionDepsWithRng) => {
     const { player, dispatch, addLog, getFullStats, rng = Math.random } = deps;
-    const outcome = toArray<EventOutcome>(currentEvent.outcomes).find((o) => o.choiceIndex === idx) || null;
+    const outcome = eventOutcomes(currentEvent).find((o) => o.choiceIndex === idx) || null;
     if (!outcome) {
         dispatch({ type: AT.SET_EVENT, payload: null });
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
@@ -552,7 +560,7 @@ const handleScoutChoice = (idx: number, currentEvent: GameState['currentEvent'],
  */
 const handleBossGaugeChoice = (idx: number, currentEvent: GameState['currentEvent'], deps: GameActionDepsWithRng) => {
     const { player, dispatch, addLog, getFullStats, rng = Math.random } = deps;
-    const outcome = toArray<EventOutcome>(currentEvent.outcomes).find((o) => o.choiceIndex === idx) || null;
+    const outcome = eventOutcomes(currentEvent).find((o) => o.choiceIndex === idx) || null;
     dispatch({ type: AT.SET_EVENT, payload: null });
 
     if (!outcome) {
