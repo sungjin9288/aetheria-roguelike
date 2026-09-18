@@ -1293,7 +1293,10 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 626: renderActionButton signature 파라미터 보존 (default 없이)', async () => {
       const source = await readSrc('src/components/ControlPanel.tsx');
-      assert.ok(/const renderActionButton = \(button: any, extraClass: any, \{ hideLabel = false \}: any\)/.test(source),
+      // Wave 6 X3-A: button/extraClass/{hideLabel} outer 파라미터가 `: any`에서 실제 도메인
+      //   타입(ControlButton/string/{hideLabel?:boolean})으로 닫혔다 — outer default 부재라는
+      //   본 테스트의 취지(cycle 626)는 그대로 보존.
+      assert.ok(/const renderActionButton = \(button: ControlButton, extraClass: string, \{ hideLabel = false \}: \{ hideLabel\?: boolean \}\)/.test(source),
           'renderActionButton 3-arg 시그니처 보존 (outer defaults 없이, inner hideLabel = false 보존)');
   });
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import type { ReactNode } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ChevronDown, ScrollText, Target } from 'lucide-react';
 import { formatRewardParts } from '../../utils/gameUtils';
@@ -8,8 +9,44 @@ import SignalBadge from '../SignalBadge';
 import FocusPanelHeader from '../FocusPanelHeader';
 import { getPreparedExpeditionFocusQuestIds, MAX_EXPEDITION_FOCUS_QUESTS } from '../../utils/expeditionMissionFocus.js';
 import { getProtocolDayKey } from '../../utils/protocolCycle.js';
+import type { GameActions } from '../../hooks/actionDeps';
+import type { Player, Quest, QuestReward } from '../../types/index.js';
 
-const getQuestObjectiveText = (quest: any) => {
+/** `getQuestBoardRecommendations()`의 반환 형태 — 이 파일의 카드 타입은 모두 여기서 인덱스 접근으로 뽑는다. */
+type QuestBoardRecommendations = ReturnType<typeof getQuestBoardRecommendations>;
+/** 추천/백로그 임무 카드 1건 (`.featured`/`.backlog` 원소 — `quest`/`meta`/`resonance`/`brief`/`reason` 포함). */
+type FeaturedQuestEntry = QuestBoardRecommendations['featured'][number];
+/** 진행 중 임무 1건 (`.activeEntries` 원소). */
+type ActiveBoardQuestEntry = QuestBoardRecommendations['activeEntries'][number];
+/** 잠긴 임무 1건 — `Quest` + 잠금 안내 필드(`.locked` 원소). */
+type LockedBoardQuestEntry = QuestBoardRecommendations['locked'][number];
+
+/**
+ * 잠긴 임무를 추천 레인에 미리보기로 끼워 넣을 때 쓰는 합성 카드.
+ * `FeaturedQuestEntry`와 같은 자리(`quest`/`meta`/`reason`/`resonance`/`brief`)를 채우지만
+ * 출처가 달라 구조가 다르다 — `isLockedPreview: true`가 판별자.
+ */
+interface LockedPreviewOperation {
+    quest: LockedBoardQuestEntry;
+    isLockedPreview: true;
+    meta: { label: string; emphasis: string };
+    reason: string;
+    resonance: { label: string | null; score: number };
+    brief: {
+        label: string;
+        route: string;
+        riskLabel: string;
+        riskTone?: string;
+        riskDetail: string;
+        payoff: string;
+        extraction: string;
+    };
+}
+
+/** 추천 레인에 렌더링되는 카드 — 실제 추천 임무 또는 잠긴 임무 미리보기(판별자: `isLockedPreview`). */
+type FeaturedDisplayOperation = (FeaturedQuestEntry & { isLockedPreview?: false }) | LockedPreviewOperation;
+
+const getQuestObjectiveText = (quest: Quest) => {
   if (quest?.objective) return quest.objective;
   if (quest?.desc) return quest.desc;
   return quest?.target === 'level'
@@ -20,17 +57,36 @@ const getQuestObjectiveText = (quest: any) => {
 // cycle 541: progress / goal defaults 제거 — QuestTab/QuestBoardPanel 양쪽
 //   helper duplication. 호출자가 모두 명시 전달이라 default 도달 불가.
 //   default 청소 메가 시리즈 36번째 cross-file 4-default batch.
-const getQuestProgressText = (quest: any, progress: any) => (
+const getQuestProgressText = (quest: Quest, progress: number) => (
   quest?.target === 'level'
     ? `레벨 ${progress}/${quest.goal}`
     : `${progress}/${quest.goal}`
 );
 
-const getQuestProgressPercent = (progress: any, goal: any) => Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
+const getQuestProgressPercent = (progress: number, goal: number) => Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
 
-const getRewardSummary = (reward: any) => formatRewardParts(reward).join(' · ') || '보상 확인';
+const getRewardSummary = (reward: QuestReward | undefined) => formatRewardParts(reward ?? {}).join(' · ') || '보상 확인';
 
-const OperationBriefRows = ({ brief, reward, progress, goal }: any) => {
+/** `OperationBriefRows`가 실제로 읽는 브리핑 필드 — `getQuestBoardRecommendations().*.brief`와
+ *  `LockedPreviewOperation.brief` 양쪽 모두 구조적으로 호환된다(`riskTone`/`tags`는 후자에 없어 optional). */
+interface OperationBriefView {
+    label: string;
+    route: string;
+    riskLabel: string;
+    riskTone?: string;
+    riskDetail: string;
+    payoff: string;
+    extraction: string;
+}
+
+interface OperationBriefRowsProps {
+    brief?: OperationBriefView | null;
+    reward?: QuestReward;
+    progress?: number;
+    goal?: number;
+}
+
+const OperationBriefRows = ({ brief, reward, progress, goal }: OperationBriefRowsProps) => {
   if (!brief) return null;
   const hasProgress = Number.isFinite(Number(progress)) && Number.isFinite(Number(goal));
 
@@ -48,7 +104,7 @@ const OperationBriefRows = ({ brief, reward, progress, goal }: any) => {
         <SignalBadge tone={brief.riskTone || 'neutral'} size="sm">{brief.riskLabel}</SignalBadge>
       </div>
       <div className="grid grid-cols-2 overflow-hidden rounded-[0.95rem] border border-white/8 bg-black/12">
-        {rows.map((row: any) => (
+        {rows.map((row) => (
           <div key={`${brief.route}_${row.label}`} className="aether-choice-cell px-2.5 py-2">
             <div className="flex items-center gap-2">
               <div className="aether-label">{row.label}</div>
@@ -66,13 +122,19 @@ const OperationBriefRows = ({ brief, reward, progress, goal }: any) => {
   );
 };
 
-const QuestObjectiveLine = ({ children }: any) => (
+const QuestObjectiveLine = ({ children }: { children: ReactNode }) => (
   <div className="aether-type-body font-readable text-slate-100/92">
     {children}
   </div>
 );
 
-const QuestRowShell = ({ children, kind, testId }: any) => (
+interface QuestRowShellProps {
+    children: ReactNode;
+    kind: string;
+    testId: string;
+}
+
+const QuestRowShell = ({ children, kind, testId }: QuestRowShellProps) => (
   <div
     data-testid={testId}
     data-quest-row-kind={kind}
@@ -82,22 +144,30 @@ const QuestRowShell = ({ children, kind, testId }: any) => (
   </div>
 );
 
-const isBasicHuntQuest = (quest: any) => (
+const isBasicHuntQuest = (quest: Quest) => (
   !quest?.type
   && quest?.target
   && quest.target !== 'level'
   && Number.isFinite(Number(quest.goal))
 );
 
-const getRecommendationTitle = (quest: any) => (
+const getRecommendationTitle = (quest: Quest) => (
   isBasicHuntQuest(quest) ? `${quest.title} (0/${quest.goal})` : quest.title
 );
 
-const getRecommendationBadge = (entry: any, index: number) => (
+const getRecommendationBadge = (entry: FeaturedDisplayOperation, index: number) => (
   entry.isLockedPreview ? '잠금' : index === 0 ? '추천' : '임무'
 );
 
-const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept }: any) => (
+interface CompactMissionRowProps {
+    entry: FeaturedDisplayOperation;
+    index: number;
+    expanded: boolean;
+    onToggle: () => void;
+    onAccept: () => void;
+}
+
+const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept }: CompactMissionRowProps) => (
   <QuestRowShell kind={entry.isLockedPreview ? 'locked-preview' : 'featured'} testId="quest-decision-row">
     <div className="grid grid-cols-[minmax(0,1fr)_72px] gap-2">
       <button
@@ -151,11 +221,16 @@ const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept }: any) 
  */
 // cycle 487: 모바일 포커스 prop 인터페이스 제거 — cycle 486 paired completion
 //   (ControlPanel cascade로 caller 0건이라 항상 truthy 전달이었음).
+/** QuestBoardPanel이 실제로 호출하는 액션만 좁힌 부분집합. */
+type QuestBoardActions = Pick<GameActions,
+    'acceptQuest' | 'toggleExpeditionFocusQuest' | 'completeQuest' | 'abandonQuest' | 'requestBounty'
+>;
+
 interface QuestBoardPanelProps {
-    player: any;
-    actions?: any;
+    player: Player;
+    actions?: QuestBoardActions;
     setGameState?: (state: string) => void;
-    onOpenArchiveConsole?: any;
+    onOpenArchiveConsole?: () => void;
 }
 
 // cycle 589: onOpenArchiveConsole default null 제거 — 1 production caller
@@ -171,13 +246,13 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
     backlog: backlogQuestEntries,
     locked: lockedQuestEntries,
   } = getQuestBoardRecommendations(player);
-  const claimableQuestCount = activeQuestEntries.filter((e: any) => e.isComplete).length;
+  const claimableQuestCount = activeQuestEntries.filter((e) => e.isComplete).length;
   const focusedQuestIds = getPreparedExpeditionFocusQuestIds(player);
   const isFocusedQuest = (questId: string | number) => focusedQuestIds.some((id) => String(id) === String(questId));
   const focusLimitReached = focusedQuestIds.length >= MAX_EXPEDITION_FOCUS_QUESTS;
 
   const today = getProtocolDayKey(new Date());
-  const hasActiveBounty = activeQuestEntries.some((e: any) => e.isBounty);
+  const hasActiveBounty = activeQuestEntries.some((e) => e.isBounty);
   const bountyIssuedToday = player?.stats?.bountyDate === today && player?.stats?.bountyIssued;
   const canRequestBounty = !hasActiveBounty && !bountyIssuedToday;
   // slice 22: 결정 CTA 한국어화 — 헤더/라벨의 콘솔 무드는 보존하되,
@@ -188,7 +263,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
     : bountyIssuedToday
       ? '오늘 현상수배는 이미 발급되었습니다.'
       : '현재 레벨 기준 토벌 의뢰를 즉시 발급합니다.';
-  const lockedPreviewOperations = lockedQuestEntries.map((quest: any) => ({
+  const lockedPreviewOperations: LockedPreviewOperation[] = lockedQuestEntries.map((quest) => ({
     quest,
     isLockedPreview: true,
     meta: { label: '곳 열림', emphasis: '잠금' },
@@ -203,17 +278,17 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
       extraction: quest.lockDetail,
     },
   }));
-  const featuredDisplayOperations = [...featuredOperations, ...lockedPreviewOperations].slice(0, 3);
+  const featuredDisplayOperations: FeaturedDisplayOperation[] = [...featuredOperations, ...lockedPreviewOperations].slice(0, 3);
   const previewedLockedQuestIds = new Set(
-    featuredDisplayOperations.filter((entry: any) => entry.isLockedPreview).map((entry: any) => entry.quest.id),
+    featuredDisplayOperations.filter((entry) => entry.isLockedPreview).map((entry) => entry.quest.id),
   );
   const remainingLockedQuestEntries = lockedQuestEntries.filter(
-    (quest: any) => !previewedLockedQuestIds.has(quest.id),
+    (quest) => !previewedLockedQuestIds.has(quest.id),
   );
-  const selectedOperation = featuredDisplayOperations.find((entry: any) => entry.quest.id === selectedQuestId) || null;
+  const selectedOperation = featuredDisplayOperations.find((entry) => entry.quest.id === selectedQuestId) || null;
 
-  const acceptFeaturedMission = (questId: any) => {
-    actions.acceptQuest(questId);
+  const acceptFeaturedMission = (questId: string | number) => {
+    actions?.acceptQuest(questId);
     setGameState?.('idle');
   };
 
@@ -248,15 +323,15 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
               <span className="aether-label">진행 {activeQuestEntries.length} · 보상 {claimableQuestCount}</span>
             </div>
             <div className="grid gap-1.5">
-              {featuredDisplayOperations.map((entry: any, index: any) => (
+              {featuredDisplayOperations.map((entry, index) => (
                 <CompactMissionRow
                   key={`featured_${entry.quest.id}`}
                   entry={entry}
                   index={index}
                   expanded={selectedQuestId === entry.quest.id}
-                  onToggle={() => setSelectedQuestId(selectedQuestId === entry.quest.id ? null : entry.quest.id)}
+                  onToggle={() => setSelectedQuestId(selectedQuestId === entry.quest.id ? null : (entry.quest.id ?? null))}
                   onAccept={() => {
-                    if (!entry.isLockedPreview) acceptFeaturedMission(entry.quest.id);
+                    if (!entry.isLockedPreview) acceptFeaturedMission(entry.quest.id!);
                   }}
                 />
               ))}
@@ -299,7 +374,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
               </SignalBadge>
             </div>
           )}
-          {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry: any) => (
+          {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry) => (
             <QuestRowShell key={`active_${entry.id}`} kind={entry.isComplete ? 'reward' : entry.isBounty ? 'bounty' : 'active'} testId="quest-active-row">
               <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
@@ -324,7 +399,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   <OperationBriefRows brief={entry.brief} reward={entry.quest.reward} progress={entry.progress} goal={entry.quest.goal} />
                   <div className="mt-2">
                     <div className="h-1.5 overflow-hidden rounded-full bg-black/36">
-                      <div className={`h-full rounded-full transition-all ${entry.isComplete ? 'bg-emerald-300' : entry.isBounty ? 'bg-[#d5b180]' : 'bg-[#7dd4d8]'}`} style={{ width: `${getQuestProgressPercent(entry.progress, entry.quest.goal)}%` }} />
+                      <div className={`h-full rounded-full transition-all ${entry.isComplete ? 'bg-emerald-300' : entry.isBounty ? 'bg-[#d5b180]' : 'bg-[#7dd4d8]'}`} style={{ width: `${getQuestProgressPercent(entry.progress, entry.quest.goal!)}%` }} />
                     </div>
                   </div>
                 </div>
@@ -337,12 +412,12 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                       title={isFocusedQuest(entry.id) ? '이번 원정에서 제외' : '이번 원정에 추가'}
                       whileTap={{ scale: 0.97 }}
                       disabled={!isFocusedQuest(entry.id) && focusLimitReached}
-                      onClick={() => actions.toggleExpeditionFocusQuest(entry.id)}
+                      onClick={() => actions?.toggleExpeditionFocusQuest(entry.id)}
                       className="aether-disabled-action flex min-h-[44px] items-center justify-center gap-1.5 border border-[#7dd4d8]/24 bg-[#7dd4d8]/8 px-3 text-xs font-bold text-[#dff7f5]"
                     >
                       <Target size={13} />{isFocusedQuest(entry.id) ? '원정 제외' : '원정 추가'}
                     </Motion.button>
-                    <Motion.button data-testid="quest-board-claim-reward" whileTap={{ scale: 0.95 }} onClick={() => actions.completeQuest(entry.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-emerald-300/35 bg-emerald-300/16 px-4 py-3 text-xs font-bold text-emerald-100 transition-all hover:bg-emerald-300/22">
+                    <Motion.button data-testid="quest-board-claim-reward" whileTap={{ scale: 0.95 }} onClick={() => actions?.completeQuest(entry.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-emerald-300/35 bg-emerald-300/16 px-4 py-3 text-xs font-bold text-emerald-100 transition-all hover:bg-emerald-300/22">
                       보상 받기
                     </Motion.button>
                   </div>
@@ -365,7 +440,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                         data-testid="quest-board-abandon-confirm"
                         whileTap={{ scale: 0.97 }}
                         onClick={() => {
-                          actions.abandonQuest(entry.id);
+                          actions?.abandonQuest(entry.id);
                           setConfirmAbandonQuestId(null);
                         }}
                         className="min-h-[44px] rounded-[0.85rem] border border-rose-300/28 bg-rose-300/12 px-3 py-2 text-xs font-bold text-rose-100"
@@ -383,7 +458,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                       title={isFocusedQuest(entry.id) ? '이번 원정에서 제외' : '이번 원정에 추가'}
                       whileTap={{ scale: 0.97 }}
                       disabled={!isFocusedQuest(entry.id) && focusLimitReached}
-                      onClick={() => actions.toggleExpeditionFocusQuest(entry.id)}
+                      onClick={() => actions?.toggleExpeditionFocusQuest(entry.id)}
                       className="aether-disabled-action flex min-h-[44px] items-center gap-1.5 border border-[#7dd4d8]/24 bg-[#7dd4d8]/8 px-3 text-xs font-bold text-[#dff7f5]"
                     >
                       <Target size={13} />{isFocusedQuest(entry.id) ? '원정 제외' : '원정 추가'}
@@ -422,7 +497,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
               </div>
               <Motion.button
                 whileTap={{ scale: 0.95 }}
-                onClick={() => actions.requestBounty()}
+                onClick={() => actions?.requestBounty()}
                 disabled={!canRequestBounty}
                 className="aether-disabled-action aether-type-body min-h-[44px] shrink-0 border border-[#d5b180]/28 bg-[#d5b180]/12 px-3 py-2 font-bold text-[#f6e7c8] transition-all hover:bg-[#d5b180]/16"
               >
@@ -438,7 +513,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
               <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">다른 임무</h3>
               <span className="aether-label">추천 목록 제외</span>
             </div>
-            {backlogQuestEntries.map((entry: any) => {
+            {backlogQuestEntries.map((entry) => {
               const quest = entry.quest;
               const resonance = entry.resonance.label ? entry.resonance : getTraitQuestResonance(quest, traitProfile);
               return (
@@ -465,7 +540,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                       <div className="mt-2 font-readable text-[12px] leading-[1.42] text-slate-300/82">{entry.reason}</div>
                       <OperationBriefRows brief={entry.brief} reward={quest.reward} />
                     </div>
-                    <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions.acceptQuest(quest.id)} className="aether-cta-primary min-h-[44px] shrink-0 rounded-[0.9rem] px-5 py-3 text-xs font-bold text-[#dff7f5]">
+                    <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions?.acceptQuest(quest.id!)} className="aether-cta-primary min-h-[44px] shrink-0 rounded-[0.9rem] px-5 py-3 text-xs font-bold text-[#dff7f5]">
                       임무 수락
                     </Motion.button>
                   </div>
@@ -478,7 +553,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
         {remainingLockedQuestEntries.length > 0 && (
           <section data-testid="quest-board-locked" className="space-y-3">
             <h3 className="border-b border-white/8 pb-2 font-readable text-sm font-semibold text-[#ece5ff]">곧 열릴 임무</h3>
-            {remainingLockedQuestEntries.map((quest: any) => (
+            {remainingLockedQuestEntries.map((quest) => (
               <div key={`locked_${quest.id}`} className="aether-locked-row rounded-[1.05rem] px-3 py-3">
                 <div className="flex flex-col gap-3">
                   <div className="flex-1 min-w-0">
