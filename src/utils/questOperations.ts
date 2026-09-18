@@ -112,14 +112,15 @@ const getQuestTargetMaps = (quest: Quest, maps: Record<string, GameMap>) => {
     if (quest?.location && maps[quest.location]) return [quest.location];
     if (!quest?.target || quest.target === 'level') return [];
 
-    return (Object.entries(maps) as Array<[string, any]>)
+    return Object.entries(maps)
         .filter(([, map]) => {
             const pool = [
                 ...toArray(map?.monsters),
                 ...toArray(map?.bossMonsters),
                 ...(map?.boss ? [map.boss] : []),
             ];
-            return pool.includes(quest.target);
+            // map.boss는 `string | true`라 pool이 (string | true)[] — includes 대신 동치 비교(결과 동일)
+            return pool.some((entry) => entry === quest.target);
         })
         .map(([name]) => name);
 };

@@ -9,6 +9,7 @@
  */
 
 import { BALANCE } from './constants';
+import type { EventChainProgress } from '../types/player.js';
 
 const PRIMAL_SHARD_DROP_PERCENT = Math.round(BALANCE.PRIMAL_SHARD_DROP_CHANCE * 100);
 
@@ -667,15 +668,17 @@ export function normalizeDeferredEventChainSteps(value: unknown, progress: Recor
     return Object.keys(deferred).length > 0 ? deferred : undefined;
 }
 
-/** 체인별 진행 값 — 스텝 번호 또는 '실패' 마커(UPDATE_EVENT_CHAIN이 쓰는 두 모양). */
-export type EventChainProgress = Readonly<Record<string, number | 'failed' | undefined>>;
-
+/**
+ * 체인별 진행 값은 `Player.eventChainProgress`(types/player.ts)가 정본이다 — 체인 id 키는
+ * 스텝 번호 또는 '실패' 마커, 예약 키 `boundedEncounterReceipts`만 영수증 레코드를 담는다.
+ */
 export function getChainEventForLoc(loc: string | undefined, progress: EventChainProgress | null | undefined, deferredSteps?: Record<string, number>) {
     for (const chain of EVENT_CHAINS) {
         const rawStep = progress?.[chain.id];
         // '실패(fail)' 체인 스킵 — 원래는 완료 검사 뒤에 있었지만 'failed' >= n 은 항상 false라 순서 무관
         if (rawStep === 'failed') continue;
-        const currentStep = rawStep ?? 0;
+        // 체인 id 키에는 숫자만 온다(레코드는 예약 키 전용) — `?? 0`과 동치
+        const currentStep = typeof rawStep === 'number' ? rawStep : 0;
         // 이미 완료된 체인 스킵
         if (currentStep >= chain.steps.length) continue;
         if (deferredSteps?.[chain.id] === currentStep) continue;

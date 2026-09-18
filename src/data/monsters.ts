@@ -995,6 +995,6 @@ export const BOSS_BRIEFS: BossBriefTable = Object.freeze(BOSS_BRIEF_ENTRIES);
 /** 열린 키(보스 이름) 조회 — 미등록이면 null. */
 export const getBossBrief = (name: string): BossBrief | null => BOSS_BRIEFS[name] || null;
 
-export const BOSS_MONSTERS = (Object.entries(MONSTERS) as Array<[string, any]>)
+export const BOSS_MONSTERS = Object.entries(MONSTERS)
     .filter(([, data]) => Boolean(data?.isBoss))
     .map(([name]) => name);
