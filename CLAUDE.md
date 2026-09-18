@@ -244,10 +244,12 @@ useGameEngine (useReducer)
 - **온라인**: 위치/최근 전투 이력/플레이어 상태를 컨텍스트로 AI 호출 (9.5s timeout)
 - **오프라인/할당량 초과**: 사전 제작된 큐레이션 fallback 이벤트 풀에서 랜덤 선택
 - **일일 한도**: 50회 (TokenQuotaManager)
+- **판정은 `src/platform/aiEventPolicy.ts` 소유** (Wave 11 C3) — "호출할지 · 어떤 `fallbackReason`으로 접을지 · 응답을 채택할지"는 React·firebase·fetch 없는 순수 전이다. `aiService.ts`에는 IO(fetch/AbortController/타이머/LatencyTracker/firebase 토큰)만 남는다. `fallbackReason` 7종(`mock-runtime`/`quota`/`proxy-disabled`/`proxy-unavailable`/`proxy-rejected`/`malformed-response`/`recent-duplicate`) 중 UI로 표면화되는 건 `quota` 하나뿐. **쿼터는 정책의 상태가 아니라 입력**이다 — `TokenQuotaManager`가 유일한 진실 원천이고 정책에는 `readQuota` 지연 호출로 전달한다(mock 런타임이 쿼터를 읽지 않는 동작 보존).
 
 ### 저장 데이터 버전 관리
 - `CONSTANTS.DATA_VERSION = 5.1` (5.1: `meta.essenceLifetime` 역산 backfill — `dataMigration.ts`)
 - save 구조 변경 시: 버전 bump → `gameUtils.migrateData()` 업데이트 필수
+- `migrateData(raw, { now })`는 **시각 주입 가능**(Wave 11 C2) — 벽시계(`Date.now()`) 기본값은 이 경계 한 곳에만 있다. 골든(`save-migration-golden.test.js`)은 고정 시각을 주입하므로 `startedAt` 정규화 없이 값 자체가 결정론의 증거다. 마이그레이션에 새 시각 의존을 넣을 때는 `Date.now()`를 직접 부르지 말고 이 `now`를 내려보낼 것
 
 ---
 
@@ -270,7 +272,9 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 **계약 테스트 (Wave 10)** — 설계 규칙을 한 파일에 열거해, 회귀 시 어떤 셀이 깨졌는지 즉시 보이게 한다:
 - `combat-turn-authority-matrix.test.js` — §8-1 전투 턴 authority 27셀(replay 거부 · seed 결정론 · 정산 1회성 · 적 3종), 모든 reducer 호출이 `Math.random` throw 가드 안에서 실행된다
 - `save-compatibility-roundtrip.test.js` + `save-migration-golden.test.js` — `DATA_VERSION` 픽스처 7종(`tests/fixtures/saves/`) 왕복 불변식 · 멱등성 · 골든 차등 74입력(`SAVE_GOLDEN_WRITE=1`로 재생성)
-- `boot-state-machine.test.js` — §8-5 부트 전이표(`platform/bootStateMachine.ts`)와 "복원 승인 없는 ready 금지" 계약
+- `boot-state-machine.test.js` — §8-5 부트 전이표(`platform/bootStateMachine.ts`). 복원 **dispatch까지** 전이표 소유(Wave 11 C1)이므로 계약은 "ready 뒤 `LOAD_DATA`는 크로스 디바이스 복원 경로에서만, 폴백·mock/device-QA는 무(無)". Wave 10의 "복원 승인 없는 ready 금지"는 dispatch를 훅이 소유하던 동안 **공허참**이었다 — 주장하는 쪽과 강제하는 쪽이 같은 모듈이어야 계약이 성립한다
+- `ai-event-policy.test.js` — AI 폴백 결정표 (Wave 11 C3)
+- `grave-item-reader-contract.test.js` — §8-2 "묘비 아이템은 `getGraveItems()` 경유로만 읽는다" 부재 가드 + 단수/복수/빈배열/null 읽기 동치 (Wave 11)
 
 **테스트 방침**: 외부 mock 프레임워크 없이 Node.js built-in `test` 사용. Pure function이므로 별도 DI 없이 직접 import 후 assert.
 데이터 보존 가드는 소스 바이트 해시가 아니라 **값 해시**(`tests/helpers/dataHash.ts`)를 쓴다 — 타입 주석 변경에 재고정이 필요 없다.
@@ -302,7 +306,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 적 반격은 더 이상 timer가 아니라 reducer 내부에서 동기 해석된다(`combatHandlers.ts` → `combatActionTurn.ts`). 플레이어 행동·적 반격·승패 정산·보상은 한 action에서 끝나며 `combatTurn`/`expectedTurn`으로 replay를 거부한다. 새 전투 액션을 추가할 때는 이 전이 안에 넣고, RNG는 action의 seed 스트림을 써야 한다(`Math.random` 직접 호출 금지 — 결정론 테스트가 깨진다). `useGameEngine.ts`의 `combatPendingRef`는 시각 효과 해제 타이머만 관리한다.
 
 **2. grave 호환성**
-구형 save에는 `grave.item` (단수), 신형에는 `grave.items[]` (복수). `graveUtils.ts` 수정 시 양쪽 포맷 모두 처리 필요.
+구형 save에는 `grave.item` (단수), 신형에는 `grave.items[]` (복수). **마이그레이션으로 정규화하지 않는다** — 깨진 reader가 없는 모양을 고치려고 `DATA_VERSION`을 올리는 건 순수 위험이고, writer(`buildGraveData`)가 이미 두 모양을 함께 쓴다. 대신 **묘비 아이템 읽기는 언제나 `getGraveItems()` 경유**가 코드 불변식이다(Wave 11) — `grave.items[0]`/`grave.items.length` 같은 직접 인덱싱은 구형 save에서 빈 목록을 보게 되므로 금지이고, `tests/grave-item-reader-contract.test.js`가 되돌리기를 잡는다.
 
 **3. Quick Slot 검증**
 앱 부팅 시 quick slot이 더 이상 인벤에 없는 아이템을 참조할 수 있음. 로드 시 sanitize 로직 유지.
@@ -312,6 +316,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 
 **5. Firebase 익명 인증**
 앱 부팅 시 자동 초기화. `bootStage`가 완료되기 전에 게임 렌더링 금지 (저장 데이터 로드 전 기본값으로 덮어씌워지는 race condition 주의).
+**부트 순서·복원 payload 선택·복원 텔레메트리는 `src/platform/bootStateMachine.ts`가 소유한다**(Wave 10 B3 + Wave 11 C1). `useFirebaseSync.ts`에는 IO(저장소·Firestore·`migrateData`·`cloudSaveAuthority`)·타이머/구독 배선·로그 id 생성·React ref 갱신·텔레메트리 전송만 남는다 — 훅에서 `AT.LOAD_DATA`를 직접 dispatch하면 전이표 밖에 두 번째 부트 경로가 생기므로 금지이고(테스트가 소스에서 잡는다), 새 부트 분기는 이벤트 + 효과로 전이표에 넣을 것.
 
 **6. 청크 분리 설정**
 `vite.config.js`의 `manualChunks` 설정이 성능에 직결. vendor-react / vendor-motion / vendor-firebase / game-data 등으로 분리되어 있으며, 대형 라이브러리 추가 시 청크에 포함 여부 검토 필요.
