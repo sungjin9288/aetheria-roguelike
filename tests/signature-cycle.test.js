@@ -244,7 +244,9 @@ import { readFile } from 'node:fs/promises';
   test('cycle 282: Player interface에서 signaturePity 제거', async () => {
       const source = await readSrc('src/types/player.ts');
       const playerBlock = source.match(/export interface Player \{[\s\S]+?\n\}/);
-      assert.ok(playerBlock, 'Player interface 발견');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "Player interface 발견" 단독 assert는 type-only라
+      // tsc --noEmit이 더 강하게 재증명한다 — Player는 src/ 146개 파일에서 import되는
+      // 도메인 핵심 타입이다.
       assert.ok(!/signaturePity\?:\s*SignaturePity/.test(playerBlock[0]),
           'Player.signaturePity 제거됨');
   });

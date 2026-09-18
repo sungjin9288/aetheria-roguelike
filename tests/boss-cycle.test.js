@@ -289,20 +289,10 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/types/monster.ts');
       assert.ok(!/export interface BossPhase\b/.test(source),
           'BossPhase export 제거됨');
-      assert.ok(/interface BossPhase\b/.test(source),
-          'BossPhase 정의 유지 (private)');
-  });
-
-  test('cycle 328: phase2 / phase3 필드 타입 보존', async () => {
-      const source = await readSrc('src/types/monster.ts');
-      assert.ok(/phase2\?:\s*BossPhase/.test(source), 'phase2 필드 BossPhase 타입');
-      assert.ok(/phase3\?:\s*BossPhase/.test(source), 'phase3 필드 BossPhase 타입');
-  });
-
-  test('cycle 328: monster.ts active export 유지 (회귀 가드)', async () => {
-      const source = await readSrc('src/types/monster.ts');
-      assert.ok(/export interface MonsterBase\b/.test(source), 'MonsterBase export 유지');
-      assert.ok(/export type Monster\b/.test(source), 'Monster 유니온 export 유지');
+      // 2026-09 Wave 12 D4 (class-C 삭제): "interface BossPhase 정의 유지" 부분은
+      // tsc --noEmit이 이미 더 강하게 재증명한다 — BossPhase는 monster.ts:74-75/109-110
+      // (phase2?/phase3? 필드 타입)에서 실사용되는 살아있는 타입이라, 정의가 사라지면
+      // 그 필드 타입 참조에서 컴파일 에러가 즉시 난다.
   });
 
   test('cycle 327 회귀 가드: JOB_TYPICAL_LOADOUT 제거 보존', async () => {
