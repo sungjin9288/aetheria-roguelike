@@ -230,7 +230,7 @@
       },
       {
         "path": "src/systems/CombatEngine.loot.ts",
-        "sha256": "c0b7c2931c77a491b437ea1c42dd1c7d20bb8708eebb55943da5d4b1b2da84eb"
+        "sha256": "dee501dddcea9cd92aea8c946b559e02738e28daff38d5ed835d0dd4f490ffe5"
       },
       {
         "path": "src/systems/relicDropRateAudit.ts",

@@ -3,10 +3,10 @@
   "reportHash": "b123dee8e47f7b405584470bc03087f6e81fbbb98aecfd0ee1bb10068068a204",
   "sourceHashes": {
     "src/data/relics.ts": "cc6f41c48cd70385c30db73d9e83db7cb4567b6c6a4749c1a4b5b472a251aa72",
-    "src/systems/CombatEngine.actions.ts": "121c52b6f9ff081d01335d6d74072fba13f0e726afde064bace6d9b07dc2b977",
-    "src/systems/relicDotMultiplierAudit.ts": "5bcc990ff6a5c4ee673894218174537b2625b4492b2d4a16a0320bcbfbec4183",
-    "src/utils/dataMigration.ts": "641009ebc16fc1ad31820a3b48b4341e8b097caf3ce56f63da955882ab66cfd3",
-    "src/reducers/handlers/combatHandlers.ts": "71e1fbff06f25c312acf83a309af0ef58b7a9e07a292622253ee206b81880090",
+    "src/systems/CombatEngine.actions.ts": "ab3df4099458971ea9447ebf0990fa22854e52a628cde1fed80b02061986af92",
+    "src/systems/relicDotMultiplierAudit.ts": "030ba8f22b7f41adff7ee7bb04d10cd1511febfe1e96d838a1f9a6559da2db77",
+    "src/utils/dataMigration.ts": "b868df560a4b4a161d6fa0c67ee163cbfb9aa39e14bb9623c626f2c8551f3e6d",
+    "src/reducers/handlers/combatHandlers.ts": "8d34f5b272c174c6c8ff1883fcb5fce7a349f058d949b1256835e8911e7af87a",
     "tests/relic-dot-multiplier-coherence.test.js": "8cd65cfa561bb915d9e9b878b7b01b7f75e576b0748ea3ffce423c54d50ed807",
     "scripts/verify-relic-dot-multiplier.mjs": "55ddc162ca69d4e999b0d01f708543e3f3556bdb61f0488e14d65dc6a8a0d02e",
     "docs/superpowers/plans/2026-08-17-aetheria-relic-dot-multiplier-plan.md": "25530503725c3ebf739a9e4a70ff3c2fcf9affb8959d6a7429789a9818dd19e9"
