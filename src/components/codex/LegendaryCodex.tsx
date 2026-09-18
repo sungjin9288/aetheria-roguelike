@@ -6,6 +6,7 @@ import { getSignatureSetDefinitions } from '../../utils/signatureSetBonus.js';
 import { getSignatureDropSources } from '../../utils/signatureDropSources.js';
 import { getSignaturePityMultiplier, SIGNATURE_PITY } from '../../utils/signaturePity.js';
 import ItemIcon from '../icons/ItemIcon.jsx';
+import type { Item, Player } from '../../types/index.js';
 
 /**
  * 전설 도감 — dedicated signature art를 가진 20종 레전더리 아이템 컬렉션.
@@ -14,9 +15,45 @@ import ItemIcon from '../icons/ItemIcon.jsx';
  * family codex와 동일한 룰로 잠금/잠금해제 표시.
  */
 
+/** signatureRegistry.json entries의 런타임 모양 — tone/category/artNote만 이 화면에서 읽는다. */
+interface SignatureMeta {
+    spriteKey?: string;
+    tier?: string;
+    category?: string;
+    tone?: string;
+    setGroup?: string;
+    artNote?: string;
+}
+
+interface ToneAccent {
+    border: string;
+    glow: string;
+    label: string;
+}
+
+/** signatureSets.json의 세트 정의 — getSignatureSetDefinitions()가 반환하는 SETS의 값 모양. */
+interface SignatureSetBonusTier {
+    atkMult?: number;
+    defMult?: number;
+    hpMult?: number;
+    desc: string;
+}
+
+interface SignatureSetDef {
+    name: string;
+    tone: string;
+    members: string[];
+    bonuses: Record<string, SignatureSetBonusTier>;
+}
+
+interface LegendaryEntry {
+    item: Item;
+    meta: SignatureMeta;
+}
+
 // cycle 358: steel 톤 제거 — signatureRegistry.json / signatureSets.json 어디에도
 //   tone='steel' 엔트리 0건이라 unreachable. fallback은 DEFAULT_TONE_ACCENT (= holy).
-const TONE_ACCENT: any = Object.freeze({
+const TONE_ACCENT: Record<string, ToneAccent> = Object.freeze({
     holy: { border: 'rgba(246,231,162,0.6)', glow: 'rgba(246,231,162,0.18)', label: '빛' },
     fire: { border: 'rgba(255,180,138,0.6)', glow: 'rgba(255,180,138,0.18)', label: '화염' },
     frost: { border: 'rgba(204,232,245,0.55)', glow: 'rgba(204,232,245,0.16)', label: '냉기' },
@@ -27,7 +64,7 @@ const TONE_ACCENT: any = Object.freeze({
     rust: { border: 'rgba(217,165,108,0.5)', glow: 'rgba(217,165,108,0.14)', label: '광란' },
 });
 
-const CATEGORY_LABEL: any = Object.freeze({
+const CATEGORY_LABEL: Record<string, string> = Object.freeze({
     'unique-weapon': '고유 무기',
     'boss-drop': '보스 전리품',
     'set-core': '세트 핵심',
@@ -35,39 +72,39 @@ const CATEGORY_LABEL: any = Object.freeze({
 
 const DEFAULT_TONE_ACCENT = TONE_ACCENT.holy;
 
-const resolveDiscoveryBucket = (item: any) => {
+const resolveDiscoveryBucket = (item: Item): 'weapons' | 'shields' | 'armors' | null => {
     if (item.type === 'weapon') return 'weapons';
     if (item.type === 'shield') return 'shields';
     if (item.type === 'armor') return 'armors';
     return null;
 };
 
-const buildEntries = () => {
+const buildEntries = (): LegendaryEntry[] => {
     const all = [
         ...(DB.ITEMS.weapons || []),
         ...(DB.ITEMS.armors || []),
     ];
-    const byName = Object.fromEntries(all.map((item: any) => [item.name, item]));
-    return Object.entries(SIGNATURE_ITEM_REGISTRY)
-        .map(([name, meta]: any) => {
+    const byName = Object.fromEntries(all.map((item): [string, Item] => [String(item.name), item]));
+    return (Object.entries(SIGNATURE_ITEM_REGISTRY) as Array<[string, SignatureMeta]>)
+        .map(([name, meta]): LegendaryEntry | null => {
             const item = byName[name];
             if (!item) return null;
             return { item, meta };
         })
-        .filter(Boolean);
+        .filter((entry): entry is LegendaryEntry => entry !== null);
 };
 
 interface LegendaryCodexProps {
-    player?: any;
+    player?: Player | null;
 }
 
 const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
-    const [selected, setSelected] = useState<any>(null);
+    const [selected, setSelected] = useState<string | null>(null);
     const codex = useMemo(() => player?.stats?.codex || {}, [player?.stats?.codex]);
     const entries = useMemo(() => buildEntries(), []);
-    const discoveredCount = entries.filter((entry: any) => {
+    const discoveredCount = entries.filter((entry) => {
         const bucket = resolveDiscoveryBucket(entry.item);
-        return bucket && codex[bucket]?.[entry.item.name];
+        return bucket && codex[bucket]?.[entry.item.name ?? ''];
     }).length;
 
     const pity = Math.max(0, Number(player?.stats?.signaturePity) || 0);
@@ -78,17 +115,17 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
     const pityCapped = pityMult >= SIGNATURE_PITY.CAP;
 
     const selectedEntry = selected
-        ? entries.find((entry: any) => entry.item.name === selected)
+        ? entries.find((entry) => entry.item.name === selected)
         : null;
 
     const setSummary = useMemo(() => {
-        const sets = getSignatureSetDefinitions();
-        return (Object.entries(sets) as Array<[string, any]>).map(([key, def]: any) => {
+        const sets = getSignatureSetDefinitions() as Record<string, SignatureSetDef>;
+        return Object.entries(sets).map(([key, def]) => {
             const discovered = def.members.filter((memberName: string) => {
-                const entry = entries.find((e: any) => e.item.name === memberName);
+                const entry = entries.find((e) => e.item.name === memberName);
                 if (!entry) return false;
                 const bucket = resolveDiscoveryBucket(entry.item);
-                return bucket && codex[bucket]?.[entry.item.name];
+                return bucket && codex[bucket]?.[entry.item.name ?? ''];
             }).length;
             const equipped = def.members.filter((memberName: string) => {
                 const equip = player?.equip;
@@ -153,10 +190,10 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                         <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
                     </summary>
                     <div className="grid grid-cols-1 gap-1.5 pb-3">
-                        {setSummary.map(({ key, def, total, discovered, equipped }: any) => {
+                        {setSummary.map(({ key, def, total, discovered, equipped }) => {
                             const accent = TONE_ACCENT[def.tone] || DEFAULT_TONE_ACCENT;
                             const activeBonus = equipped >= 2
-                                ? def.bonuses[String([...Object.keys(def.bonuses)].map(Number).filter((n: any) => n <= equipped).sort((a: any, b: any) => b - a)[0])]
+                                ? def.bonuses[String([...Object.keys(def.bonuses)].map(Number).filter((n) => n <= equipped).sort((a, b) => b - a)[0])]
                                 : null;
                             return (
                                 <div
@@ -215,17 +252,17 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                     <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
                 </summary>
                 <div className="grid grid-cols-2 gap-1.5 pb-3">
-                {entries.map(({ item, meta }: any) => {
+                {entries.map(({ item, meta }) => {
                     const bucket = resolveDiscoveryBucket(item);
-                    const found = bucket ? Boolean(codex[bucket]?.[item.name]) : false;
-                    const accent = TONE_ACCENT[meta.tone] || DEFAULT_TONE_ACCENT;
+                    const found = bucket ? Boolean(codex[bucket]?.[item.name ?? '']) : false;
+                    const accent = TONE_ACCENT[meta.tone ?? ''] || DEFAULT_TONE_ACCENT;
                     const isSelected = selected === item.name;
 
                     return (
                         <button
                             key={item.name}
                             type="button"
-                            onClick={() => found && setSelected(isSelected ? null : item.name)}
+                            onClick={() => found && setSelected(isSelected ? null : item.name ?? null)}
                             className={`relative min-h-16 rounded-lg p-2.5 text-left text-[11px] transition-all ${found ? 'hover:brightness-125' : 'cursor-default'} ${isSelected ? 'ring-1 ring-amber-300/60' : ''}`}
                             style={{
                                 border: `1px solid ${found ? accent.border : 'rgba(255,255,255,0.08)'}`,
@@ -241,7 +278,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                                     <div className="min-w-0">
                                         <div className="truncate text-sm font-semibold text-white">{item.name}</div>
                                         <div className="mt-0.5 text-[11px] text-amber-200/80">
-                                            {CATEGORY_LABEL[meta.category] || '전설'} · {accent.label}
+                                            {CATEGORY_LABEL[meta.category ?? ''] || '전설'} · {accent.label}
                                         </div>
                                     </div>
                                 </div>
@@ -262,7 +299,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                 <div
                     className="rounded-lg p-3 text-[11px]"
                     style={{
-                        border: `1px solid ${(TONE_ACCENT[selectedEntry.meta.tone] || DEFAULT_TONE_ACCENT).border}`,
+                        border: `1px solid ${(TONE_ACCENT[selectedEntry.meta.tone ?? ''] || DEFAULT_TONE_ACCENT).border}`,
                         background: `linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(10,12,16,1) 100%)`,
                     }}
                 >
@@ -271,9 +308,9 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                         <div className="min-w-0 flex-1">
                             <div className="font-rajdhani font-bold text-white text-[13px]">{selectedEntry.item.name}</div>
                             <div className="mt-0.5 text-[11px] text-amber-200/80">
-                                {CATEGORY_LABEL[selectedEntry.meta.category] || '전설'}
+                                {CATEGORY_LABEL[selectedEntry.meta.category ?? ''] || '전설'}
                                 <span className="mx-1 text-slate-600">·</span>
-                                {(TONE_ACCENT[selectedEntry.meta.tone] || DEFAULT_TONE_ACCENT).label}
+                                {(TONE_ACCENT[selectedEntry.meta.tone ?? ''] || DEFAULT_TONE_ACCENT).label}
                                 {selectedEntry.item.desc_stat ? (
                                     <>
                                         <span className="mx-1 text-slate-600">·</span>
@@ -298,7 +335,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                                             획득처
                                         </div>
                                         <div className="flex flex-wrap gap-1">
-                                            {sources.map(({ monster, rate }: any) => (
+                                            {sources.map(({ monster, rate }) => (
                                                 <span
                                                     key={monster}
                                                     className="inline-flex min-h-7 items-center gap-1 rounded-lg border border-amber-300/25 bg-amber-300/5 px-2 text-[11px] text-amber-100/90"

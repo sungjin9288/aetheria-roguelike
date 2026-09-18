@@ -11,7 +11,7 @@ import { DB } from '../data/db';
 // cycle 524: salt default 0 제거 — 2 callsite (line 63 dateHash(today, 42) +
 //   line 94 dateHash(weekKey, 777)) 모두 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 21번째 batch (cycle 502-523).
-const dateHash = (dateStr: any, salt: any) => {
+const dateHash = (dateStr: string, salt: number): number => {
     let hash = salt;
     for (let i = 0; i < dateStr.length; i++) {
         hash = ((hash << 5) - hash + dateStr.charCodeAt(i)) | 0;
@@ -21,8 +21,17 @@ const dateHash = (dateStr: any, salt: any) => {
 
 /**
  * 시드 기반 배열 셔플 (Fisher-Yates, deterministic)
+ *
+ * // Wave 6 X3-B: 반환형을 arr 그대로 보존하는 제네릭으로 좁히면 getDailyDeals/
+ * // getWeeklySpecial을 거쳐 getCanonicalShopOffer의 반환 item이 구체 Item으로
+ * // 좁아지고, 그 결과가 economyHandlers.ts(reducers/**, 이 트랙에서 수정 금지)의
+ * // `offer.item.jobs.includes(state.player.job)` (player.job: string|undefined)를
+ * // 컴파일 에러로 만든다 — 그 union 브랜치(stock 경로)가 이미 실제 Item을 반환하지만
+ * // 지금까지는 daily/weekly 브랜치의 any가 전체 union을 any로 흡수해 가려져 있었다.
+ * // reducers를 건드리지 않고는 안전하게 못 넓히므로 any 그대로 유지 — ShopPanel.tsx는
+ * // 자기 소비 지점에서만 로컬 타입으로 좁힌다.
  */
-const seededShuffle = (arr: any, seed: any) => {
+const seededShuffle = (arr: any, seed: number): any[] => {
     const result = [...arr];
     let s = seed;
     for (let i = result.length - 1; i > 0; i--) {
@@ -85,7 +94,7 @@ export const getShopCatalog = (location: string) => {
 // cycle 524: playerLevel default 1 제거 — 1 callsite (ShopPanel.tsx:161
 //   getDailyDeals(player.level || 1)) 명시 전달 + || 1 number 보장이라
 //   default 도달 불가.
-export const getDailyDeals = (playerLevel: any) => {
+export const getDailyDeals = (playerLevel: number) => {
     const today = getToday();
     const seed = dateHash(today, 42);
 
@@ -102,7 +111,7 @@ export const getDailyDeals = (playerLevel: any) => {
     //   (cycle 415 주간 특별 마커 정리 paired completion). cycle 355는 회귀
     //   가드로 보존했으나 그 가드 자체가 유일 read였음 (circular guard).
     const shuffled = seededShuffle(allItems, seed);
-    const items = shuffled.slice(0, 3).map((item: any) => ({
+    const items = shuffled.slice(0, 3).map((item) => ({
         ...item,
         originalPrice: item.price,
         price: Math.floor(item.price * 0.9),
@@ -119,7 +128,7 @@ export const getDailyDeals = (playerLevel: any) => {
 // cycle 524: playerLevel default 1 제거 — 1 callsite (ShopPanel.tsx:162
 //   getWeeklySpecial(player.level || 1)) 명시 전달 + || 1 number 보장이라
 //   default 도달 불가.
-export const getWeeklySpecial = (playerLevel: any) => {
+export const getWeeklySpecial = (playerLevel: number) => {
     const weekKey = getWeekKey();
     const seed = dateHash(weekKey, 777);
 

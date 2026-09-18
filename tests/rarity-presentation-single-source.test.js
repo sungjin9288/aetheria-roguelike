@@ -90,7 +90,7 @@ test('A3: GravePanel의 tierColor는 희귀도가 아니라 tier 기반이므로
     // 의도적 예외 — item.tier(1~5) 사다리이고 테두리 클래스까지 함께 반환한다.
     // 희귀도 맵과 개념이 다르므로 통합 대상이 아니다.
     const source = await readSrc('src/components/GravePanel.tsx');
-    assert.match(source, /const tierColor = \(item: any\) => \{/);
+    assert.match(source, /const tierColor = \(item: Item \| null \| undefined\) => \{/);
     assert.match(source, /item\?\.tier \|\| 1\) >= 5/);
     assert.doesNotMatch(source, /rarity/,
         'tierColor는 rarity를 참조하지 않는다 (tier 전용)');
