@@ -1,0 +1,25 @@
+{
+    "_note": "재구성(추정) — dataMigration.ts의 `if (!savedData.version || Number(savedData.version) < 2.7)` 블록이 유일한 코드 증거다. 이 리포의 git 히스토리는 45a94ba7 병합 커밋에서 이전 이력이 스쿼시되어, v1 시절 원본 세이브 파일은 남아있지 않다. 그래서 '이 블록이 무엇을 백필하는가'를 뒤집어 v1 세이브에는 그 필드들(mp/maxMp/history/stats.killRegistry·bossKills·rests)이 전혀 없었다고 재구성했다. equip은 완전히 비워 target.equip = {} 이후의 기본 무기/방어구 배정 분기(ITEMS.weapons[0]/armors.find)를 노출한다. meta/tempBuff/skillLoadout/combatFlags/seasonPass/weeklyProtocol/eventChainProgress 등은 모두 무조건 정규화되는 필드라 입력에 없어도 안전하지만, 실제로도 이 시기엔 존재하지 않았을 것으로 추정한다.",
+    "version": 1,
+    "gameState": "idle",
+    "enemy": null,
+    "currentEvent": null,
+    "grave": null,
+    "player": {
+        "name": "옛날 여행자",
+        "job": "모험가",
+        "gender": "male",
+        "level": 3,
+        "hp": 40,
+        "maxHp": 40,
+        "atk": 18,
+        "def": 7,
+        "exp": 120,
+        "nextExp": 300,
+        "gold": 340,
+        "loc": "시작의 마을",
+        "inv": [
+            { "id": "legacy-1", "name": "하급 체력 물약", "type": "hp" }
+        ]
+    }
+}

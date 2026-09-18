@@ -1,0 +1,1070 @@
+[
+  {
+    "id": "A1-flat-minimal",
+    "description": "legacy flat save: 최소 필드만 최상위에 (player 래퍼 없음)",
+    "input": {
+      "name": "플랫 세이브",
+      "hp": 40,
+      "maxHp": 40,
+      "level": 3,
+      "gold": 100,
+      "loc": "시작의 마을"
+    }
+  },
+  {
+    "id": "A2-flat-string-equip",
+    "description": "legacy flat save + equip 문자열 이름",
+    "input": {
+      "name": "플랫 전사",
+      "hp": 60,
+      "maxHp": 60,
+      "level": 5,
+      "gold": 500,
+      "loc": "고요한 숲",
+      "equip": {
+        "weapon": "강철 롱소드",
+        "armor": "가죽 갑옷",
+        "offhand": null
+      }
+    }
+  },
+  {
+    "id": "A3-flat-no-version-no-stats",
+    "description": "legacy flat save: version/stats 모두 없음",
+    "input": {
+      "name": "무버전 플랫",
+      "hp": 10,
+      "maxHp": 10
+    }
+  },
+  {
+    "id": "A4-flat-quests-with-null",
+    "description": "legacy flat save: quests 배열에 null 원소 혼입",
+    "input": {
+      "name": "퀘스트 손상",
+      "quests": [
+        null,
+        {
+          "id": 1,
+          "progress": 1
+        },
+        null
+      ]
+    }
+  },
+  {
+    "id": "A5-flat-negative-gold",
+    "description": "legacy flat save: gold 음수(클램프 없음 실측)",
+    "input": {
+      "name": "음수 골드",
+      "gold": -50
+    }
+  },
+  {
+    "id": "B1-scalar-stats",
+    "description": "player.stats가 문자열 스칼라 — killRegistry 대입 시 크래시 여부 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "stats스칼라",
+        "stats": "corrupt-stats"
+      }
+    }
+  },
+  {
+    "id": "B2-scalar-meta",
+    "description": "player.meta가 숫자 스칼라 — meta.mirror 대입 시 크래시 여부 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "meta스칼라",
+        "meta": 5
+      }
+    }
+  },
+  {
+    "id": "B3-scalar-equip-true",
+    "description": "player.equip가 boolean(true) 스칼라 — equip.weapon 대입 시 크래시 여부 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "equip스칼라",
+        "equip": true
+      }
+    }
+  },
+  {
+    "id": "B4-scalar-skillLoadout",
+    "description": "player.skillLoadout가 문자열 스칼라 — cooldowns 대입 시 크래시 여부 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "loadout스칼라",
+        "skillLoadout": "loadout-str"
+      }
+    }
+  },
+  {
+    "id": "B5-array-tempBuff",
+    "description": "player.tempBuff가 배열(진짜 tempBuff 모양 아님) — truthy라 그대로 통과하는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "tempBuff배열",
+        "tempBuff": [
+          1,
+          2,
+          3
+        ]
+      }
+    }
+  },
+  {
+    "id": "B6-falsy-equip-zero",
+    "description": "player.equip가 falsy 스칼라(0) — falsy라 {}로 정상 대체되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "equip제로",
+        "equip": 0
+      }
+    }
+  },
+  {
+    "id": "C1-status-number",
+    "description": "player.status가 숫자 스칼라(문자열 아님) — []로 눌리는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "status숫자",
+        "status": 42
+      }
+    }
+  },
+  {
+    "id": "C2-settings-string",
+    "description": "player.settings가 문자열 — 스프레드 시 인덱스 키로 새는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "settings문자열",
+        "settings": "str"
+      }
+    }
+  },
+  {
+    "id": "C3-combatFlags-string",
+    "description": "player.combatFlags가 문자열 — 무조건 재작성이라 크래시 없는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "flags문자열",
+        "combatFlags": "flags-str"
+      }
+    }
+  },
+  {
+    "id": "C4-killRegistry-string",
+    "description": "player.stats.killRegistry가 문자열 — codex 부트스트랩 Object.entries 동작 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "registry문자열",
+        "stats": {
+          "killRegistry": "reg-str"
+        }
+      }
+    }
+  },
+  {
+    "id": "D1-relics-non-array",
+    "description": "player.relics가 배열이 아님 — Array.isArray 가드로 그대로 방치되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "relics비배열",
+        "relics": "not-array"
+      }
+    }
+  },
+  {
+    "id": "D2-inv-non-array",
+    "description": "player.inv가 배열이 아님 — toArray로 []로 리셋되는지(내용 손실) 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "inv비배열",
+        "inv": "not-array"
+      }
+    }
+  },
+  {
+    "id": "D3-quests-non-array",
+    "description": "player.quests가 배열이 아님 — toArray로 []로 리셋되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "quests비배열",
+        "quests": "not-array"
+      }
+    }
+  },
+  {
+    "id": "E1-version-string-high",
+    "description": "version이 문자열 '5' (2.7 이상) — 숫자로 강제되지 않고 문자열로 남는지 실측",
+    "input": {
+      "version": "5",
+      "player": {
+        "name": "버전문자열"
+      }
+    }
+  },
+  {
+    "id": "E2-version-bool-true",
+    "description": "version이 boolean true — Number(true)=1<2.7이라 2.7로 올라가는지 실측",
+    "input": {
+      "version": true,
+      "player": {
+        "name": "버전불true"
+      }
+    }
+  },
+  {
+    "id": "E3-version-bool-false",
+    "description": "version이 boolean false — falsy라 2.7로 올라가는지 실측",
+    "input": {
+      "version": false,
+      "player": {
+        "name": "버전불false"
+      }
+    }
+  },
+  {
+    "id": "E4-version-empty-array",
+    "description": "version이 빈 배열 — Number([])=0<2.7이라 2.7로 올라가는지 실측",
+    "input": {
+      "version": [],
+      "player": {
+        "name": "버전빈배열"
+      }
+    }
+  },
+  {
+    "id": "E5-version-multi-array",
+    "description": "version이 다중원소 배열 — Number([5,6])=NaN이라 그대로 방치되는지 실측",
+    "input": {
+      "version": [
+        5,
+        6
+      ],
+      "player": {
+        "name": "버전배열"
+      }
+    }
+  },
+  {
+    "id": "E6-version-object",
+    "description": "version이 평범한 객체 — Number({})=NaN이라 그대로 방치되는지 실측",
+    "input": {
+      "version": {
+        "weird": true
+      },
+      "player": {
+        "name": "버전객체"
+      }
+    }
+  },
+  {
+    "id": "F1-quickslots-empty",
+    "description": "quickSlots가 빈 배열 — 3칸으로 패딩되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "퀵슬롯빈"
+      },
+      "quickSlots": []
+    }
+  },
+  {
+    "id": "F2-quickslots-overflow",
+    "description": "quickSlots가 5개 — 3개로 절단되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "퀵슬롯초과"
+      },
+      "quickSlots": [
+        {
+          "id": "a"
+        },
+        {
+          "id": "b"
+        },
+        {
+          "id": "c"
+        },
+        {
+          "id": "d"
+        },
+        {
+          "id": "e"
+        }
+      ]
+    }
+  },
+  {
+    "id": "F3-quickslots-scalar",
+    "description": "quickSlots가 스칼라 문자열 — [null,null,null]로 리셋되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "퀵슬롯스칼라"
+      },
+      "quickSlots": "not-array"
+    }
+  },
+  {
+    "id": "F4-quickslots-null",
+    "description": "quickSlots가 null — [null,null,null]로 리셋되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "퀵슬롯널"
+      },
+      "quickSlots": null
+    }
+  },
+  {
+    "id": "G1-inv-mixed-null",
+    "description": "inv에 null 원소가 유효 아이템과 섞여있음 — null이 보존되는지(필터링 안 됨) 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "인벤널혼입",
+        "inv": [
+          null,
+          {
+            "id": "ok-1",
+            "name": "하급 체력 물약",
+            "type": "hp"
+          },
+          null
+        ]
+      }
+    }
+  },
+  {
+    "id": "G2-inv-all-null",
+    "description": "inv가 전부 null — 크래시 없이 전부 보존되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "인벤전부널",
+        "inv": [
+          null,
+          null,
+          null
+        ]
+      }
+    }
+  },
+  {
+    "id": "H1-already-migrated-shape",
+    "description": "이미 v2.7 이후 정규화된 모양을 다시 넣음 — 추가 변화가 없는지 실측",
+    "input": {
+      "version": 2.7,
+      "player": {
+        "name": "이미정규화",
+        "mp": 50,
+        "maxMp": 50,
+        "history": [],
+        "stats": {
+          "kills": 0,
+          "total_gold": 0,
+          "deaths": 0,
+          "killRegistry": {},
+          "bossKills": 0,
+          "rests": 0,
+          "codex": {
+            "weapons": {},
+            "armors": {},
+            "shields": {},
+            "monsters": {},
+            "recipes": {},
+            "materials": {}
+          }
+        },
+        "equip": {
+          "weapon": null,
+          "armor": null,
+          "offhand": null
+        },
+        "tempBuff": {
+          "atk": 0,
+          "def": 0,
+          "turn": 0,
+          "name": null
+        },
+        "status": [],
+        "skillLoadout": {
+          "selected": 0,
+          "cooldowns": {}
+        },
+        "settings": {
+          "readabilityMode": "standard",
+          "equipmentDetailMode": "auto"
+        },
+        "meta": {
+          "essence": 0,
+          "essenceLifetime": 0,
+          "rank": 0,
+          "bonusAtk": 0,
+          "bonusHp": 0,
+          "bonusMp": 0,
+          "mirror": {}
+        },
+        "combatFlags": {
+          "comboCount": 0,
+          "deathSaveUsed": false,
+          "voidHeartUsed": false,
+          "voidHeartArmed": false
+        },
+        "seasonPass": {
+          "xp": 0,
+          "tier": 0,
+          "claimed": [],
+          "isPremium": false,
+          "seasonId": "S1"
+        },
+        "weeklyProtocol": {
+          "kills": 0,
+          "explores": 0,
+          "bossKills": 0,
+          "lastResetWeek": 0,
+          "claimed": []
+        },
+        "eventChainProgress": {}
+      },
+      "quickSlots": [
+        null,
+        null,
+        null
+      ]
+    }
+  },
+  {
+    "id": "H2-double-migrated-v41",
+    "description": "v4.1 스타일 세이브를 두 번 통과시킬 셋업(단일 통과 입력) — 재통과 시 변화 없는지 실측",
+    "input": {
+      "version": 4.1,
+      "player": {
+        "name": "이중통과",
+        "stats": {
+          "codex": {
+            "weapons": {},
+            "armors": {},
+            "shields": {},
+            "monsters": {},
+            "recipes": {},
+            "materials": {}
+          }
+        },
+        "premiumCurrency": 30
+      }
+    }
+  },
+  {
+    "id": "I1-kitchen-sink-legacy",
+    "description": "레거시 문자열 equip + 부분 stats + quickSlot 과다 + null 인벤 복합",
+    "input": {
+      "version": 1,
+      "quickSlots": [
+        {
+          "id": "x"
+        },
+        {
+          "id": "y"
+        },
+        {
+          "id": "z"
+        },
+        {
+          "id": "w"
+        }
+      ],
+      "player": {
+        "name": "복합손상1",
+        "equip": {
+          "weapon": "롱소드",
+          "armor": "여행자 튜닉",
+          "offhand": "목재 방패"
+        },
+        "stats": {
+          "kills": 1
+        },
+        "inv": [
+          null,
+          {
+            "id": "i1",
+            "name": "하급 체력 물약",
+            "type": "hp"
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "I2-kitchen-sink-modernish",
+    "description": "거의 최신이지만 codex/seasonPass 없음 + relics 비배열 + status 스칼라 복합",
+    "input": {
+      "version": 4.3,
+      "player": {
+        "name": "복합손상2",
+        "status": "poison",
+        "relics": "broken",
+        "stats": {
+          "kills": 300,
+          "killRegistry": {
+            "슬라임": 10
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "I3-kitchen-sink-endgame",
+    "description": "원시의 파편 3개(요구치 도달) + 기존 endgame 손상값 복합",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "복합손상3",
+        "inv": [
+          {
+            "id": "s1",
+            "name": "원시의 파편",
+            "type": "key"
+          },
+          {
+            "id": "s2",
+            "name": "원시의 파편",
+            "type": "key"
+          },
+          {
+            "id": "s3",
+            "name": "원시의 파편",
+            "type": "key"
+          }
+        ],
+        "meta": {
+          "endgame": {
+            "primalShards": 999999999,
+            "trueEndingSeen": "yes",
+            "lastEndgameReceiptKey": "../unsafe"
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "I4-kitchen-sink-expedition",
+    "description": "activeExpedition 필수 필드 누락 + lastExpeditionSummary 필수 필드 누락 + expeditionSequence 음수 복합",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "복합손상4",
+        "activeExpedition": {
+          "id": "exp-broken"
+        },
+        "lastExpeditionSummary": {
+          "id": "sum-broken"
+        },
+        "expeditionSequence": -7
+      }
+    }
+  },
+  {
+    "id": "J1-top-zero",
+    "description": "rawData 자체가 0(falsy) — null 반환 실측",
+    "input": 0
+  },
+  {
+    "id": "J2-top-empty-string",
+    "description": "rawData 자체가 '' (falsy) — null 반환 실측",
+    "input": ""
+  },
+  {
+    "id": "J3-top-false",
+    "description": "rawData 자체가 false — null 반환 실측",
+    "input": false
+  },
+  {
+    "id": "J4-top-null",
+    "description": "rawData 자체가 null — null 반환 실측",
+    "input": null
+  },
+  {
+    "id": "J5-top-positive-number",
+    "description": "rawData 자체가 truthy 숫자(5) — 첫 필드 쓰기에서 TypeError 실측(코드 주석이 예견한 동작)",
+    "input": 5
+  },
+  {
+    "id": "J6-top-nonempty-string",
+    "description": "rawData 자체가 truthy 문자열('flat-string-save') — TypeError 실측",
+    "input": "flat-string-save"
+  },
+  {
+    "id": "J7-top-true",
+    "description": "rawData 자체가 true — TypeError 실측",
+    "input": true
+  },
+  {
+    "id": "K1-equip-unknown-weapon-name",
+    "description": "알 수 없는 무기 이름 문자열 — ITEMS.weapons[0] 폴백 실측",
+    "input": {
+      "version": 2,
+      "player": {
+        "name": "K1",
+        "equip": {
+          "weapon": "존재하지않는무기",
+          "armor": null,
+          "offhand": null
+        }
+      }
+    }
+  },
+  {
+    "id": "K2-equip-unknown-armor-name",
+    "description": "알 수 없는 방어구 이름 문자열 — ITEMS.armors.find(armor) 폴백 실측",
+    "input": {
+      "version": 2,
+      "player": {
+        "name": "K2",
+        "equip": {
+          "weapon": null,
+          "armor": "존재하지않는방어구",
+          "offhand": null
+        }
+      }
+    }
+  },
+  {
+    "id": "K3-equip-unknown-offhand-name",
+    "description": "알 수 없는 보조무기 이름 문자열 — shield||weapon||null 폴백이 null로 떨어지는지 실측",
+    "input": {
+      "version": 2,
+      "player": {
+        "name": "K3",
+        "equip": {
+          "weapon": null,
+          "armor": null,
+          "offhand": "존재하지않는보조무기"
+        }
+      }
+    }
+  },
+  {
+    "id": "L1-twohand-nulls-offhand",
+    "description": "양손무기 장착 시 offhand가 강제로 null이 되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "L1",
+        "equip": {
+          "weapon": {
+            "id": "w1",
+            "name": "나무지팡이",
+            "type": "weapon",
+            "hands": 2,
+            "val": 12,
+            "tier": 1,
+            "price": 80
+          },
+          "armor": null,
+          "offhand": {
+            "id": "o1",
+            "name": "목재 방패",
+            "type": "shield",
+            "val": 7,
+            "tier": 1,
+            "price": 90
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "M1-onehand-keeps-shield-offhand",
+    "description": "한손무기 + 방패 보조무기 — offhand가 보존되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "M1",
+        "equip": {
+          "weapon": {
+            "id": "w1",
+            "name": "롱소드",
+            "type": "weapon",
+            "val": 15,
+            "tier": 1,
+            "price": 150
+          },
+          "armor": null,
+          "offhand": {
+            "id": "o1",
+            "name": "목재 방패",
+            "type": "shield",
+            "val": 7,
+            "tier": 1,
+            "price": 90
+          }
+        }
+      }
+    }
+  },
+  {
+    "id": "N1-settings-invalid-detail-mode",
+    "description": "equipmentDetailMode가 허용 목록 밖의 값('invalid') — 'auto'로 대체되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "N1",
+        "settings": {
+          "equipmentDetailMode": "invalid",
+          "readabilityMode": "weird"
+        }
+      }
+    }
+  },
+  {
+    "id": "N2-settings-valid-full-mode",
+    "description": "equipmentDetailMode가 유효한 값('full') — 그대로 보존되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "N2",
+        "settings": {
+          "equipmentDetailMode": "full",
+          "readabilityMode": "high"
+        }
+      }
+    }
+  },
+  {
+    "id": "O1-essenceLifetime-null",
+    "description": "essenceLifetime이 null(JSON은 Infinity를 표현 못해 null로 대체 — typeof!=='number'라 재역산되는지 실측)",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "O1",
+        "meta": {
+          "essence": 10,
+          "essenceLifetime": null,
+          "mirror": {}
+        }
+      }
+    }
+  },
+  {
+    "id": "O2-essenceLifetime-string-numeric",
+    "description": "essenceLifetime이 숫자형 문자열('120') — typeof!=='number'라 재역산되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "O2",
+        "meta": {
+          "essence": 10,
+          "essenceLifetime": "120",
+          "mirror": {}
+        }
+      }
+    }
+  },
+  {
+    "id": "O3-essenceLifetime-negative-preserved",
+    "description": "essenceLifetime이 유효한 음수(-5) — 클램프 없이 그대로 보존되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "O3",
+        "meta": {
+          "essence": 10,
+          "essenceLifetime": -5,
+          "mirror": {}
+        }
+      }
+    }
+  },
+  {
+    "id": "P1-eventChainProgress-array",
+    "description": "eventChainProgress가 배열(typeof는 object라 리셋 안 되는지 실측 — !Array.isArray 가드가 없는 분기)",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P1",
+        "eventChainProgress": []
+      }
+    }
+  },
+  {
+    "id": "P2-eventChainProgress-string",
+    "description": "eventChainProgress가 문자열 — typeof!=='object'라 {}로 리셋되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P2",
+        "eventChainProgress": "str"
+      }
+    }
+  },
+  {
+    "id": "P3-classJourney-scalar",
+    "description": "classJourney가 문자열 스칼라 — normalizeClassJourneyLedger 기본값(byJob:{}) 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P3",
+        "classJourney": "broken"
+      }
+    }
+  },
+  {
+    "id": "P4-activeExpedition-missing-id",
+    "description": "activeExpedition에 필수 id 없음 — null로 떨어지는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P4",
+        "activeExpedition": {
+          "origin": "a",
+          "destination": "b",
+          "startedAt": 1000
+        }
+      }
+    }
+  },
+  {
+    "id": "P5-activeExpedition-valid-minimal",
+    "description": "activeExpedition 필수 필드 충족(startHp 포함) — 정규화된 스냅샷으로 살아남는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P5",
+        "activeExpedition": {
+          "id": "exp-1",
+          "origin": "시작의 마을",
+          "destination": "고요한 숲",
+          "startedAt": 1000,
+          "startHp": 40
+        }
+      }
+    }
+  },
+  {
+    "id": "P6-lastExpeditionSummary-missing-fields",
+    "description": "lastExpeditionSummary에 필수 필드 없음 — null로 떨어지는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P6",
+        "lastExpeditionSummary": {
+          "id": "sum-1"
+        }
+      }
+    }
+  },
+  {
+    "id": "P7-expeditionSequence-negative",
+    "description": "expeditionSequence가 음수 — 0으로 폴백되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P7",
+        "expeditionSequence": -3
+      }
+    }
+  },
+  {
+    "id": "P8-expeditionSequence-noninteger",
+    "description": "expeditionSequence가 정수가 아님(3.5) — 0으로 폴백되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P8",
+        "expeditionSequence": 3.5
+      }
+    }
+  },
+  {
+    "id": "P9-returnSupplyRewards-scalar",
+    "description": "returnSupplyRewards가 숫자 스칼라 — 기본 ledger로 떨어지는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P9",
+        "returnSupplyRewards": 42
+      }
+    }
+  },
+  {
+    "id": "P10-visitedMaps-scalar",
+    "description": "stats.visitedMaps가 문자열 스칼라 — []로 폴백 후 현재 loc이 push되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P10",
+        "loc": "고요한 숲",
+        "stats": {
+          "visitedMaps": "broken"
+        }
+      }
+    }
+  },
+  {
+    "id": "P11-exploresByLocation-array",
+    "description": "stats.exploresByLocation이 배열(!Array.isArray 가드 있음 — {}로 리셋되는지 실측, P1과 대비)",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P11",
+        "stats": {
+          "exploresByLocation": []
+        }
+      }
+    }
+  },
+  {
+    "id": "P12-discoveryChains-scalar",
+    "description": "stats.discoveryChains가 문자열 스칼라 — []로 폴백되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P12",
+        "stats": {
+          "discoveryChains": "broken"
+        }
+      }
+    }
+  },
+  {
+    "id": "P13-premiumCurrency-negative",
+    "description": "premiumCurrency가 음수 — 클램프 없이 그대로 보존되는지 실측(truthy라 || 폴백 안 탐)",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P13",
+        "premiumCurrency": -10
+      }
+    }
+  },
+  {
+    "id": "P14-reviveTokens-negative",
+    "description": "reviveTokens가 음수 — Math.max(0,...)로 0에 클램프되는지 실측(P13과 대비)",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P14",
+        "reviveTokens": -10
+      }
+    }
+  },
+  {
+    "id": "P15-synthProtects-negative",
+    "description": "stats.synthProtects가 음수 — Math.max(0,...)로 0에 클램프되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P15",
+        "stats": {
+          "synthProtects": -3
+        }
+      }
+    }
+  },
+  {
+    "id": "P16-cosmeticTitles-scalar",
+    "description": "stats.cosmeticTitles가 문자열 스칼라 — []로 폴백되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P16",
+        "stats": {
+          "cosmeticTitles": "broken"
+        }
+      }
+    }
+  },
+  {
+    "id": "P17-codexClaimed-non-array-untouched",
+    "description": "stats.codexClaimed가 배열이 아님 — migrateData가 손대지 않고 그대로 방치하는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P17",
+        "stats": {
+          "codexClaimed": "broken"
+        }
+      }
+    }
+  },
+  {
+    "id": "P18-adventure-relic-desc-regen",
+    "description": "relics 배열에 kill_stack_atk 효과 유물이 있으면 desc가 재생성되는지 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P18",
+        "maxHp": 500,
+        "relics": [
+          {
+            "id": "x",
+            "name": "가상 유물",
+            "rarity": "rare",
+            "desc": "오래된 설명",
+            "effect": "kill_stack_atk",
+            "val": 0.01
+          }
+        ]
+      }
+    }
+  },
+  {
+    "id": "P19-deferredEventChainSteps-invalid",
+    "description": "deferredEventChainSteps가 유효하지 않은 모양 — 삭제되는지(delete) 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P19",
+        "deferredEventChainSteps": "broken",
+        "eventChainProgress": {}
+      }
+    }
+  },
+  {
+    "id": "P20-adventureRelicBonuses-invalid",
+    "description": "adventureRelicBonuses가 유효하지 않은 모양 — 삭제되는지(delete) 실측",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P20",
+        "adventureRelicBonuses": "broken",
+        "maxHp": 200
+      }
+    }
+  },
+  {
+    "id": "P21-activeExpedition-lowestHp-nan-TODO-B2-finding",
+    "description": "activeExpedition에 lowestHp/startHp 모두 없음 — normalizeActiveExpedition이 NaN을 낸다(TODO(B2 finding), expeditionLedger.ts:202의 nonNegative(candidate.lowestHp, Number(candidate.startHp)) 양쪽 모두 undefined면 폴백 자체가 NaN). 이 항목은 멱등성 루프에서 의도적으로 제외한다 — golden 저장이 JSON 왕복이라 NaN→null로 죽고, 그 null을 다시 넣으면 Number(null)=0(finite)이라 실제로 0이 나와 첫 결과(NaN)와 달라진다. 실제 non-idempotence는 이 테스트 하네스의 JSON 정규화 산물이 아니라, normalizeActiveExpedition 자체가 완전히 빈 activeExpedition에서 NaN을 만든다는 사실에 있다.",
+    "input": {
+      "version": 5,
+      "player": {
+        "name": "P21",
+        "activeExpedition": {
+          "id": "exp-nan",
+          "origin": "시작의 마을",
+          "destination": "고요한 숲",
+          "startedAt": 1000
+        }
+      }
+    }
+  }
+]

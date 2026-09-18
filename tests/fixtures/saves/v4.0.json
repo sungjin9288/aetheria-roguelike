@@ -1,0 +1,56 @@
+{
+    "_note": "재구성 — dataMigration.ts의 'v4.0 — 신규 필드 기본값 (기존 세이브 호환)' 주석 블록이 직접 근거다: meta(essence/rank/bonus*)와 stats.escapes/syntheses/maxKillStreak/discoveryChains, combatFlags가 이 시기에 생긴 필드로 추정된다. combatFlags.voidHeartUsed=true / comboCount=7 / deathSaveUsed=true를 넣어 '비-게이트 필드는 매번 재작성되지만(comboCount→0, deathSaveUsed→false) voidHeart* 두 플래그만 이전 값을 보존한다'는 분기(target.combatFlags = { comboCount: 0, deathSaveUsed: false, voidHeartUsed: Boolean(prior?.voidHeartUsed), voidHeartArmed: Boolean(prior?.voidHeartArmed) })를 실측한다. inv에 '원시의 파편' 2개를 남겨 meta.endgame이 없던 시절의 레거시 파편 역산 백필(v5.0 이전부터 존재하던 인벤 기반 파편 카운트)을 노출한다. stats.codex(v4.1)·seasonPass(v4.2)·weeklyProtocol(v4.3)·eventChainProgress(v5.0)·meta.essenceLifetime(v5.1)은 이 시점에 존재하지 않았다고 추정해 뺐다.",
+    "version": 4.0,
+    "gameState": "idle",
+    "enemy": null,
+    "currentEvent": null,
+    "grave": null,
+    "quickSlots": [null, null, null],
+    "player": {
+        "name": "4.0세대 모험가",
+        "job": "도적",
+        "gender": "female",
+        "level": 15,
+        "hp": 130,
+        "maxHp": 130,
+        "mp": 60,
+        "maxMp": 60,
+        "atk": 55,
+        "def": 20,
+        "exp": 4200,
+        "nextExp": 6000,
+        "gold": 3200,
+        "loc": "고요한 숲",
+        "inv": [
+            { "id": "inv-1", "name": "하급 체력 물약", "type": "hp" },
+            { "id": "shard-1", "name": "원시의 파편", "type": "key", "tier": 5, "price": 0 },
+            { "id": "shard-2", "name": "원시의 파편", "type": "key", "tier": 5, "price": 0 }
+        ],
+        "equip": {
+            "weapon": { "id": "equip-weapon-1", "name": "질풍의 단검", "type": "weapon", "val": 26, "tier": 2, "price": 420 },
+            "armor": { "id": "equip-armor-1", "name": "가죽 갑옷", "type": "armor", "val": 8, "tier": 1, "price": 120 },
+            "offhand": null
+        },
+        "stats": {
+            "kills": 210,
+            "total_gold": 9800,
+            "deaths": 3,
+            "killRegistry": { "슬라임": 60, "고블린": 90, "숲의 군주": 1 },
+            "bossKills": 1,
+            "rests": 12,
+            "escapes": 2,
+            "syntheses": 1,
+            "maxKillStreak": 9,
+            "discoveryChains": ["forest-root"]
+        },
+        "history": [],
+        "meta": {
+            "essence": 40,
+            "rank": 1,
+            "bonusAtk": 2,
+            "bonusHp": 20,
+            "bonusMp": 5
+        },
+        "combatFlags": { "comboCount": 7, "deathSaveUsed": true, "voidHeartUsed": true, "voidHeartArmed": false }
+    }
+}

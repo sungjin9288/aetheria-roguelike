@@ -1,0 +1,61 @@
+{
+    "_note": "불확실성 높음 — 'version: 5'와 'version: 5.0'은 JSON.parse 후 완전히 동일한 JS 숫자(5 === 5.0)이므로, 저장된 값만으로는 이 둘을 구분할 방법이 원래 없다. 이 픽스처는 과제가 요구한 'v5'와 'v5.0' 두 파일을 구조적으로 다른 두 시점으로 대응시키려는 해석적 선택이다: v5는 stats.codex(v4.1)·seasonPass(v4.2)·weeklyProtocol(v4.3)·인벤 enhance 필드까지는 있지만 eventChainProgress/classJourney/lastExpeditionSummary(v5.0)와 meta.essenceLifetime(v5.1)은 아직 없는 '4.x 롤아웃 중간' 지점으로 재구성했다. 실제로 이 중간 지점이 저장 데이터로 존재했다는 직접 증거(테스트 fixture·git 이력)는 없다 — tests/data-migration.test.js 등 기존 테스트가 'version: 5'와 'version: 5.0'을 뒤섞어 쓰는 것도 이 값이 구조적 마일스톤이 아니라 '충분히 최신'을 뜻하는 임의 리터럴이었을 가능성을 뒷받침한다.",
+    "version": 5,
+    "gameState": "idle",
+    "enemy": null,
+    "currentEvent": null,
+    "grave": null,
+    "quickSlots": [null, null, null],
+    "player": {
+        "name": "5세대 순례자",
+        "job": "성직자",
+        "gender": "male",
+        "level": 22,
+        "hp": 210,
+        "maxHp": 210,
+        "mp": 140,
+        "maxMp": 140,
+        "atk": 80,
+        "def": 34,
+        "exp": 15000,
+        "nextExp": 20000,
+        "gold": 12000,
+        "loc": "고요한 숲",
+        "inv": [
+            { "id": "inv-1", "name": "하급 체력 물약", "type": "hp", "enhance": 0 },
+            { "id": "inv-2", "name": "룬 마도서", "type": "shield", "subtype": "focus", "val": 4, "mp": 20, "crit": 0.04, "tier": 2, "price": 360, "enhance": 3 }
+        ],
+        "equip": {
+            "weapon": { "id": "equip-weapon-1", "name": "마법지팡이", "type": "weapon", "hands": 2, "val": 20, "tier": 2, "price": 500 },
+            "armor": { "id": "equip-armor-1", "name": "수련복", "type": "armor", "val": 5, "tier": 1, "price": 80 },
+            "offhand": null
+        },
+        "stats": {
+            "kills": 480,
+            "total_gold": 30000,
+            "deaths": 5,
+            "killRegistry": { "슬라임": 100, "고블린": 200, "숲의 군주": 3 },
+            "bossKills": 3,
+            "rests": 30,
+            "escapes": 4,
+            "syntheses": 5,
+            "maxKillStreak": 15,
+            "discoveryChains": ["forest-root"],
+            "claimedQuestIds": [1],
+            "visitedMaps": ["시작의 마을", "고요한 숲"]
+        },
+        "history": [],
+        "meta": {
+            "essence": 300,
+            "rank": 2,
+            "bonusAtk": 5,
+            "bonusHp": 40,
+            "bonusMp": 10,
+            "mirror": {}
+        },
+        "combatFlags": { "comboCount": 0, "deathSaveUsed": false, "voidHeartUsed": false, "voidHeartArmed": false },
+        "premiumCurrency": 15,
+        "seasonPass": { "xp": 800, "tier": 4, "claimed": [1, 2], "isPremium": false, "seasonId": "S1" },
+        "weeklyProtocol": { "kills": 30, "explores": 12, "bossKills": 1, "lastResetWeek": 3, "claimed": ["kills"] }
+    }
+}

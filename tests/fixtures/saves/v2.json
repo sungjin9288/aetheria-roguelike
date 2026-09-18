@@ -1,0 +1,31 @@
+{
+    "_note": "재구성(추정) — v1과 같은 근거(git 스쿼시로 원본 소실) + dataMigration.ts의 'Ensure equip is object not string (Old version compatibility)' 주석이 유일한 코드 증거인 legacy 문자열 equip 분기(ITEMS.weapons/armors.find(name===...)). stats는 kills/total_gold만 있고 killRegistry/bossKills/rests가 없는 상태로 구성해, target.stats가 이미 truthy라 `||` 통짜 교체는 안 일어나되 하위 필드별 `||` 백필은 여전히 도는 경로를 노출한다. grave는 구형 단수 `item` 포맷(§8-2) — migrateData가 grave를 건드리지 않는다는 사실(graveUtils.getGraveItems가 소비 시점에 단수/복수를 흡수)을 왕복 테스트에서 확인한다. quickSlots는 길이 1로 넣어 3칸 패딩을 노출한다. player.status를 스칼라 문자열('poison')로 넣어 W2(Wave 5) 주석이 말하는 '스칼라 status를 1원소 배열로 승격'(target.status = typeof target.status === 'string' && target.status ? [target.status] : []) 분기를 실측한다 — status가 아예 없는 세이브(v1/v2.7/v4.0/v5)는 이 분기가 전혀 실행되지 않아 undefined로 남는다(별도 발견, TODO(B2 finding) 참조).",
+    "version": 2,
+    "gameState": "idle",
+    "enemy": null,
+    "currentEvent": null,
+    "grave": { "loc": "고요한 숲", "item": { "id": "grave-item-1", "name": "가죽 갑옷", "type": "armor" }, "gold": 50, "timestamp": 12345 },
+    "quickSlots": [
+        { "id": "legacy-1", "name": "하급 체력 물약", "type": "hp" }
+    ],
+    "player": {
+        "name": "구세이브 전사",
+        "job": "전사",
+        "gender": "female",
+        "level": 5,
+        "hp": 60,
+        "maxHp": 60,
+        "atk": 22,
+        "def": 9,
+        "exp": 200,
+        "nextExp": 500,
+        "gold": 800,
+        "loc": "고요한 숲",
+        "inv": [
+            { "id": "legacy-1", "name": "하급 체력 물약", "type": "hp" }
+        ],
+        "equip": { "weapon": "강철 롱소드", "armor": "가죽 갑옷", "offhand": "목재 방패" },
+        "stats": { "kills": 5, "total_gold": 120 },
+        "status": "poison"
+    }
+}
