@@ -536,3 +536,7 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 4. **전환된 단언이 실제로 무는지 증명했다 (C4)** — `src` 스크래치 복사에 1라인 결함 5종(`incrementStat` +1→+2 · `grantGold` 누적 제거 · 장비 슬롯 main/offhand swap · 일일 프로토콜 임계값 5→50 · `ClassIcon` nullish 폴백 제거)을 주입해 5/5 실패를 확인. **전환의 리스크는 "커버리지를 잃고도 초록"이므로, 전환 작업은 결함 주입 검증 없이는 완료로 볼 수 없다.**
 5. **`lowestHp` NaN은 워터마크를 영구히 깨뜨리고 있었다 (C2)** — `Math.min(NaN, hp)`가 항상 `NaN`이라 `trackExpeditionVitals`가 매 호출마다 새 `player`를 만들면서 수렴하지 않았다. 타입은 `number`였으므로 tsc가 잡지 못한다 — **비유한 수는 타입 시스템의 사각지대**다.
 6. **쿼터 소모 시점이 이벤트/스토리에서 비대칭 (C3)** — 이벤트는 success 응답만으로 `recordCall`하고 패키지 빌드가 실패해도 되돌리지 않는 반면, 스토리는 narrative가 문자열로 확인된 뒤에만 기록한다. 동작 보존으로 두고 기록(할당량 50/일에서 실패한 이벤트 호출도 1건을 소모한다).
+
+**최종 게이트** (head `f812024d`, 샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 · unit **4,990 / 4,990**(skip 0, Wave 10 대비 +25 — C1 전이표/봉투 · C2 expectedTurn·결정론·워터마크 · C3 결정표 13 · 묘비 reader 계약 · C4 net −1) · build:guard ok · e2e(chromium, iPhone 12 에뮬레이션) **121 / 121**(61 + 60) · perf desktop ok(FCP 424ms) / mobile ok(FCP 460ms) · 증빙 11종 verify 전부 ok.
+
+**게이트 운용 교훈** — 1차 실행에서 unit 1건(`equipment-combat-power-audit`의 "무관한 Git HEAD 변경이 증빙 바이트를 바꾸지 않는다")과 e2e 1건(부트 `persistent-status-bar` 20s 미출현)이 실패했고, 둘 다 **게이트와 병행해 돌린 내 명령이 원인**이었다. 전자는 그 테스트가 워킹 트리의 증빙 파일을 실제로 `--write`하는 동안 같은 파일에 `--write`를 건 경합이고, 후자는 CPU 무거운 감사 스크립트 2회와 겹친 부팅 지연이다. 단독 재실행에서 각각 10/10, 해당 spec 9/9(6~8초, 타임아웃 30초), 샤드 1 전체 61/61로 재현되지 않았다. **이 게이트는 읽기 전용이 아니다** — 증빙 파일을 쓰는 테스트를 포함하므로 실행 중에는 저장소에 어떤 명령도 병행하지 않는다(문서 작업 포함).
