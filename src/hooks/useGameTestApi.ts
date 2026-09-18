@@ -39,7 +39,7 @@ import { getStructuredFallbackPoolEvent } from '../data/structuredFallbackEvents
 const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
 
 const getLevelExpRequirement = (level: number) => {
-    let requirement = CONSTANTS.START_NEXT_EXP;
+    let requirement: number = CONSTANTS.START_NEXT_EXP;
     for (let currentLevel = 1; currentLevel < level; currentLevel += 1) {
         requirement = Math.min(
             Math.floor(requirement * BALANCE.EXP_SCALE_RATE),

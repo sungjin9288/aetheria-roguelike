@@ -3,14 +3,31 @@ import { Sword, Zap, ArrowRight, RotateCw, Sparkles, Backpack } from 'lucide-rea
 import { motion as Motion } from 'framer-motion';
 import { buildCombatView } from '../../utils/combatView';
 import { MSG } from '../../data/messages.js';
-import type { FullStats, Player, Monster, StatusId } from '../../types/index.js';
+import type { FullStats, Item, Player, Monster, StatusId } from '../../types/index.js';
+import type { GameActions } from '../../hooks/actionDeps';
+
+/** CombatPanel이 실제로 호출하는 액션만 좁혀 받는다 (공격/기술/아이템/스킬 순환). */
+type CombatPanelActions = Pick<GameActions, 'combat' | 'combatUseItem' | 'useItem' | 'cycleSkill' | 'getSelectedSkill'>;
+
+/**
+ * buildCombatView()가 반환하는 전투 소모품 1건 — DB 원본 Item에 `count`를 얹은 실제
+ * 런타임 모양. 함수 선언 반환형은 `player: any`에서 흘러나온 `any[]`다
+ * (utils/combatView.ts, 이 트랙에서 수정 금지) — 이 화면이 실제로 읽는 모양만 좁힌다.
+ */
+type CombatConsumableItem = Item & { count: number };
+
+/** buildCombatView()의 `comboRelic` — 연격 계열 유물만 골라 쓰는 실제 모양(같은 이유로 any). */
+interface ComboRelicView {
+    effect?: string;
+    val?: { stack?: number; bonus?: number };
+}
 
 // cycle 485: 컴팩트/조밀 모드 props 인터페이스 제거 — cycle 457이 callsite 명시
 //   false 제거 후 caller 0건. cascade로 14 ternary + 1 const + 1 conditional UI
 //   블록 일괄 정리. cycle 471-482 cascade 패턴 + cycle 457 paired completion.
 interface CombatPanelProps {
     player: Player;
-    actions?: any;
+    actions?: CombatPanelActions;
     enemy?: Monster | null;
     stats?: FullStats | null;
     isAiThinking?: boolean;
@@ -57,33 +74,36 @@ const ACTION_BUTTONS = [
 //   청소 메가 시리즈 67번째 single-cycle 3-default batch.
 const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: CombatPanelProps) => {
   const [itemsOpen, setItemsOpen] = useState(false);
-  const selectedSkill = actions.getSelectedSkill ? actions.getSelectedSkill() : null;
-  const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name] || 0 : 0;
+  const selectedSkill = actions?.getSelectedSkill ? actions.getSelectedSkill() : null;
+  const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name ?? ''] || 0 : 0;
   // 전투 파생 데이터(전술 프로파일·텔레그래프·콤보·전투 예보) — 계산은 buildCombatView로 분리,
   //   여기서는 렌더링만 한다. (slice 20: 별도 예고 칩을 제거하고 판단 요약의 '적의 행동' 셀로 통일.)
+  const combatView = buildCombatView({ player, enemy, stats, selectedSkill, skillCooldown, mobile });
   const {
     tacticalProfile,
     bossBriefLine,
     signatureDropCandidates,
     primarySignatureDrop,
-    combatConsumables,
-    comboRelic,
-    comboCount,
-    comboStack,
     combatForecast,
     combatForecastCells,
     mobileCombatSignals,
     skillReadiness,
-  } = buildCombatView({ player, enemy, stats, selectedSkill, skillCooldown, mobile });
+  } = combatView;
+  // buildCombatView의 player 인자가 `any`라 아래 3개 필드는 그 any가 그대로 새어나온다
+  // (utils/combatView.ts, 이 트랙에서 수정 금지) — 소비 지점에서만 실제 모양으로 좁힌다.
+  const combatConsumables = combatView.combatConsumables as CombatConsumableItem[];
+  const comboRelic = combatView.comboRelic as ComboRelicView | undefined;
+  const comboCount = combatView.comboCount as number;
+  const comboStack = combatView.comboStack as number;
 
-  const handleAction = (key: any) => {
+  const handleAction = (key: string) => {
     if (key === 'attack') {
-      actions.combat('attack');
+      actions?.combat('attack');
       return;
     }
 
     if (key === 'skill') {
-      actions.combat('skill');
+      actions?.combat('skill');
       return;
     }
 
@@ -92,18 +112,18 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
       return;
     }
 
-    actions.combat('escape');
+    actions?.combat('escape');
   };
 
-  const handleConsumableUse = (item: any) => {
-    if (actions.combatUseItem) {
+  const handleConsumableUse = (item: Item) => {
+    if (actions?.combatUseItem) {
       actions.combatUseItem(item);
       return;
     }
-    actions.useItem?.(item);
+    actions?.useItem?.(item);
   };
 
-  const getConsumableTone = (type: any) => (({
+  const getConsumableTone = (type: string) => (({
     hp: 'border-emerald-500/25 bg-emerald-500/8 text-emerald-200 hover:bg-emerald-500/14',
     mp: 'border-cyber-blue/25 bg-cyber-blue/8 text-cyber-blue hover:bg-cyber-blue/14',
     cure: 'border-amber-400/25 bg-amber-500/8 text-amber-200 hover:bg-amber-500/14',
@@ -143,7 +163,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                 title="다음 기술"
                 aria-label="다음 기술"
                 disabled={isAiThinking}
-                onClick={() => actions.cycleSkill(1)}
+                onClick={() => actions?.cycleSkill(1)}
                 className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#9a8ac0]/24 bg-[#9a8ac0]/10 text-[#ece5ff] disabled:opacity-45"
               >
                 <RotateCw size={15} />
@@ -245,7 +265,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                 : 'border-cyber-pink/20 bg-cyber-pink/5 text-cyber-pink/60'
             }`}>
               <span>연속 공격 </span>
-              {Array.from({ length: comboStack }).map((_: any, i: any) => (
+              {Array.from({ length: comboStack }).map((_, i) => (
                 <span key={i} className={`mx-0.5 ${i < comboCount ? 'text-cyber-pink' : 'text-cyber-pink/25'}`}>◆</span>
               ))}
               {comboCount >= comboStack && <span className="ml-1 font-bold">준비 완료</span>}
@@ -253,7 +273,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
           )}
           {mobileCombatSignals.length > 0 && !enemy?.isBoss && (
             <div className="flex flex-wrap gap-1.5">
-              {mobileCombatSignals.map((signal: any) => (
+              {mobileCombatSignals.map((signal) => signal && (
                 <span
                   key={signal.key}
                   className={`aether-type-label inline-flex min-h-[28px] items-center rounded-full border px-2 py-0.5 font-fira uppercase tracking-normal ${signal.className}`}
@@ -288,7 +308,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
       </>
 
       <div className="grid grid-cols-2 gap-1.5">
-        {ACTION_BUTTONS.map((action: any) => {
+        {ACTION_BUTTONS.map((action) => {
           const Icon = action.icon;
           const isDisabled = isAiThinking
             || (action.key === 'skill' && !skillReadiness.canUse)
@@ -327,14 +347,14 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
             전투 소모품
           </div>
           <div className={`grid gap-2 ${mobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
-            {combatConsumables.map((item: any) => (
+            {combatConsumables.map((item) => (
               <Motion.button
                 key={`${item.type}:${item.name}`}
                 data-testid={`combat-consumable-${item.id}`}
                 whileTap={{ scale: 0.97 }}
                 disabled={isAiThinking}
                 onClick={() => handleConsumableUse(item)}
-                className={`min-h-11 rounded-lg border ${mobile ? 'px-3 py-2.5' : 'px-3 py-2'} text-left transition-all disabled:opacity-45 ${getConsumableTone(item.type)}`}
+                className={`min-h-11 rounded-lg border ${mobile ? 'px-3 py-2.5' : 'px-3 py-2'} text-left transition-all disabled:opacity-45 ${getConsumableTone(item.type ?? '')}`}
               >
                 <div className="flex items-start justify-between gap-2">
                   <span className="aether-type-body font-rajdhani font-bold">{item.name}</span>

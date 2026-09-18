@@ -14,11 +14,14 @@ import { getSpentMirrorEssence } from '../systems/mirrorUpgrades.js';
 import { migrateEquipmentInstancePrice } from './equipmentBaseIdentity.js';
 import { BALANCE } from '../data/constants.js';
 import type { EndgameProgress } from '../types/player.js';
+import type { Relic } from '../types/relic.js';
 import { normalizeAdventureRelicBonuses, getAdventureRelicDescription } from './adventureRelicState.js';
 
 // gameUtils.ts에서 분리 (저장 데이터 마이그레이션) — 행동 보존 리팩토링.
 //   순환 의존을 피하려 toArray(1줄 헬퍼)는 인라인.
-const toArray = (v: any) => (Array.isArray(v) ? v : []);
+// 입력은 저장 데이터의 임의 필드(unknown) — Array.isArray가 참인 분기에서
+// lib.es5의 `isArray(arg): arg is any[]` 타입 서술로 그대로 좁혀진다.
+const toArray = (v: unknown) => (Array.isArray(v) ? v : []);
 
 const ENDGAME_RECEIPT_KEY = /^[A-Za-z0-9:_-]{1,160}$/;
 
@@ -43,9 +46,21 @@ export const normalizeEndgameProgress = (value: unknown): EndgameProgress => {
     };
 };
 
-export const migrateData = (rawData: any) => {
+/**
+ * 저장 데이터 마이그레이션 — 입력은 Firestore/로컬 스냅샷의 임의 구형 모양(unknown)이다.
+ * 여기서 도메인 타입(`Player`)을 강제하면 이 함수가 존재하는 이유인 "구형 저장 데이터와
+ * 현재 타입의 drift"를 오히려 감춘다. 딥클론 이후의 동적 읽기/쓰기는 `Record<string, any>`
+ * (expeditionLedger.ts의 `value as Record<string, any>`와 동일한 관례)로 다루고,
+ * `unknown` 경계는 최소 truthy 체크로만 좁힌다 — 이후 300여 줄의 필드별 정규화가
+ * 실질적인 "타입 좁히기"다.
+ */
+export const migrateData = (rawData: unknown) => {
     if (!rawData) return null;
     // Deep clone to avoid mutating the Firestore snapshot directly
+    // (타입 미부여 — JSON.parse의 선언 반환형 `any`를 그대로 흘려 받는다. 여기 명시
+    //  타입을 붙이면 이 함수의 반환형이 `Record<...> | null` 로 굳어져, 지금까지
+    //  `any`로 뭉개져 있던 호출부(useFirebaseSync 등)의 "possibly null" 미가드가
+    //  전부 새 컴파일 에러로 터진다 — 그 가드 추가는 이 트랙 범위 밖의 별도 수정.)
     const savedData = JSON.parse(JSON.stringify(rawData));
 
     // Target the specific player object if clear structure exists
@@ -59,9 +74,13 @@ export const migrateData = (rawData: any) => {
     if (adventureRelicBonuses) target.adventureRelicBonuses = adventureRelicBonuses;
     else delete target.adventureRelicBonuses;
     if (Array.isArray(target.relics)) {
-        target.relics = target.relics.map((relic: any) =>
+        // Array.isArray가 target.relics(any)를 any[]로 좁혀 map 콜백 인자 추론이 끊긴다 —
+        // Record<string, any>로 명시(요소가 null/undefined일 수 있어 relic?.로 여전히 방어).
+        target.relics = target.relics.map((relic: Record<string, any>) =>
             relic?.effect === 'kill_stack_atk' || relic?.effect === 'devour_hp'
-                ? { ...relic, desc: getAdventureRelicDescription(relic) }
+                // 게이트를 통과했으면 이 시점의 relic은 실제로 Relic 모양이다(구세이브도
+                // effect 판별자는 항상 보유) — getAdventureRelicDescription의 Relic 계약과 연결.
+                ? { ...relic, desc: getAdventureRelicDescription(relic as Relic) }
                 : relic);
     }
 
@@ -83,21 +102,21 @@ export const migrateData = (rawData: any) => {
     // Ensure equip is object not string (Old version compatibility)
     target.equip = target.equip || {};
     if (typeof target.equip?.weapon === 'string') {
-        target.equip.weapon = ITEMS.weapons.find((w: any) => w.name === target.equip.weapon) || ITEMS.weapons[0];
+        target.equip.weapon = ITEMS.weapons.find((w) => w.name === target.equip.weapon) || ITEMS.weapons[0];
     }
     if (typeof target.equip?.armor === 'string') {
-        target.equip.armor = ITEMS.armors.find((a: any) => a.name === target.equip.armor) || ITEMS.armors[0];
+        target.equip.armor = ITEMS.armors.find((a) => a.name === target.equip.armor) || ITEMS.armors[0];
     }
     if (typeof target.equip?.offhand === 'string') {
-        const shield = ITEMS.armors.find((a: any) => a.type === 'shield' && a.name === target.equip.offhand);
-        const weapon = ITEMS.weapons.find((w: any) => w.name === target.equip.offhand);
+        const shield = ITEMS.armors.find((a) => a.type === 'shield' && a.name === target.equip.offhand);
+        const weapon = ITEMS.weapons.find((w) => w.name === target.equip.offhand);
         target.equip.offhand = shield || weapon || null;
     }
     if (!target.equip.weapon || !isWeapon(target.equip.weapon)) {
         target.equip.weapon = ITEMS.weapons[0];
     }
     if (!target.equip.armor || target.equip.armor.type !== 'armor') {
-        target.equip.armor = ITEMS.armors.find((a: any) => a.type === 'armor') || ITEMS.armors[0];
+        target.equip.armor = ITEMS.armors.find((a) => a.type === 'armor') || ITEMS.armors[0];
     }
     if (target.equip.offhand && !isShield(target.equip.offhand) && !isWeapon(target.equip.offhand)) {
         target.equip.offhand = null;
@@ -150,14 +169,14 @@ export const migrateData = (rawData: any) => {
     const inventory = toArray(target.inv);
     const legacyShardCount = legacyInventoryMigrated
         ? 0
-        : inventory.filter((item: any) => item?.name === '원시의 파편').length;
+        : inventory.filter((item) => item?.name === '원시의 파편').length;
     const requiredShards = Math.max(1, Number(BALANCE.PRIMAL_SHARD_REQUIRED) || 3);
     target.meta.endgame = {
         ...priorEndgame,
         primalShards: Math.min(requiredShards, priorEndgame.primalShards + legacyShardCount),
         legacyInventoryMigrated: true,
     };
-    target.inv = inventory.filter((item: any) => item?.name !== '원시의 파편');
+    target.inv = inventory.filter((item) => item?.name !== '원시의 파편');
     target.settings = {
         ...(target.settings || {}),
         readabilityMode: target.settings?.readabilityMode === 'high' ? 'high' : 'standard',
@@ -186,7 +205,7 @@ export const migrateData = (rawData: any) => {
         : {};
     target.stats.exploreState = { ...DEFAULT_EXPLORE_STATE, ...(target.stats.exploreState || {}) };
     const questCatalog = new Map(QUESTS.map((quest) => [quest.id, quest]));
-    target.quests = toArray(target.quests).map((questState: any) => {
+    target.quests = toArray(target.quests).map((questState) => {
         const quest = questCatalog.get(questState?.id);
         const cumulativeProgress = getCumulativeQuestProgress(quest, target);
         if (cumulativeProgress === null) return questState;
@@ -307,7 +326,7 @@ export const migrateData = (rawData: any) => {
     // 기존 저장 계약대로 모든 아이템 인스턴스에 enhance 기본값을 보장한다.
     // 뒤의 경제 마이그레이션은 canonical 장비의 baseItemName / price만 바꾼다.
     if (Array.isArray(target.inv)) {
-        target.inv = target.inv.map((item: any) => item ? { ...item, enhance: item.enhance || 0 } : item);
+        target.inv = target.inv.map((item: Record<string, any>) => item ? { ...item, enhance: item.enhance || 0 } : item);
     }
 
     // v5.0 — 진 엔딩, 이벤트 체인, 시너지

@@ -3,7 +3,8 @@ import { getMirrorNode } from '../../data/mirror';
 import { MSG } from '../../data/messages';
 import { PREMIUM_SHOP } from '../../data/premiumShop';
 import { purchaseMirrorNode } from '../../systems/mirrorUpgrades';
-import type { GameAction, GameState } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
+import { AT, type ActionOf } from '../actionTypes';
 import type { Player } from '../../types';
 import { appendRewardLogs } from './rewardLog';
 
@@ -18,7 +19,7 @@ const completePremiumTransaction = (
     syncStatus: 'syncing',
 });
 
-const hasExpectedCurrency = (state: GameState, action: GameAction) => {
+const hasExpectedCurrency = (state: GameState, action: ActionOf<typeof AT.PURCHASE_PREMIUM_OFFER>) => {
     const current = Math.max(0, Number(state.player.premiumCurrency) || 0);
     return Number(action.payload?.expectedCurrency) === current;
 };
@@ -93,7 +94,7 @@ const purchaseCosmeticTitle = (
     }, MSG.PREMIUM_PURCHASE(`칭호 [${title.name}]`, title.cost));
 };
 
-const purchasePremiumOffer = (state: GameState, action: GameAction): GameState => {
+const purchasePremiumOffer = (state: GameState, action: ActionOf<typeof AT.PURCHASE_PREMIUM_OFFER>): GameState => {
     const offerId = typeof action.payload?.offerId === 'string' ? action.payload.offerId : '';
     if (!offerId || !hasExpectedCurrency(state, action)) return state;
 
@@ -108,7 +109,7 @@ const purchasePremiumOffer = (state: GameState, action: GameAction): GameState =
     return purchaseCosmeticTitle(state, offerId);
 };
 
-const purchaseMirrorUpgrade = (state: GameState, action: GameAction): GameState => {
+const purchaseMirrorUpgrade = (state: GameState, action: ActionOf<typeof AT.PURCHASE_MIRROR_NODE>): GameState => {
     const nodeId = typeof action.payload?.nodeId === 'string' ? action.payload.nodeId : '';
     const node = getMirrorNode(nodeId);
     if (!node) return state;
@@ -139,4 +140,4 @@ const purchaseMirrorUpgrade = (state: GameState, action: GameAction): GameState 
 export const premiumActionMap = {
     PURCHASE_PREMIUM_OFFER: purchasePremiumOffer,
     PURCHASE_MIRROR_NODE: purchaseMirrorUpgrade,
-};
+} satisfies HandlerMap;

@@ -11,22 +11,32 @@ import { isSignatureItem } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 import ItemIcon from './icons/ItemIcon';
 import EnhanceDecisionCard from './EnhanceDecisionCard';
-import type { Player } from '../types/index.js';
+import type { GameActions } from '../hooks/actionDeps';
+import type { Item, Player } from '../types/index.js';
+
+/** SmartInventory가 실제로 호출하는 액션만 좁혀 받는다 (장착/강화/일괄 판매). */
+type SmartInventoryActions = Pick<GameActions, 'useItem' | 'enhanceItem' | 'autoSell'>;
+
+/** 인벤토리 그룹 1건 — 이름(+강화 단계) 기준으로 묶인 아이템과 개수. */
+interface GroupedInventoryEntry {
+    item: Item;
+    count: number;
+}
 
 // cycle 482: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 토글 상태 + 33 ternary + 5 const 일괄 정리
 //   (cycle 472-479/481 paired의 11번째 / 마지막 panel cleanup으로 cascade 완료).
 interface SmartInventoryProps {
     player: Player;
-    actions?: any;
-    quickSlots?: any[];
-    onAssignQuickSlot?: any;
+    actions?: SmartInventoryActions;
+    quickSlots?: Array<Item | null>;
+    onAssignQuickSlot?: (idx: number, item: Item | null) => void;
 }
 
 /**
  * 장비 교체 시 달라지는 능력치를 보여준다.
  */
-const StatDiff = ({ val, label, suffix }: any) => {
+const StatDiff = ({ val, label, suffix }: { val: number; label: string; suffix: string }) => {
     if (val === 0) return <span className="text-slate-500 text-xs">{label} ±0{suffix}</span>;
     const up = val > 0;
     return (
@@ -60,8 +70,8 @@ const ITEM_TYPE_TO_FILTER: Record<string, string> = {
     mat: 'material',
 };
 
-const getItemTags = (item: any) => {
-    const tags = [];
+const getItemTags = (item: Item): string[] => {
+    const tags: string[] = [];
     if (isWeapon(item) || item?.type === 'shield') tags.push(getWeaponStyleLabel(item));
     return tags;
 };
@@ -70,7 +80,7 @@ const getItemTags = (item: any) => {
 const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: SmartInventoryProps) => {
     const [activeFilter, setActiveFilter] = React.useState('all');
     const [detailOverride, setDetailOverride] = React.useState<boolean | null>(null);
-    const [enhanceTarget, setEnhanceTarget] = React.useState<{ item: any; slot: EnhanceItemSlot } | null>(null);
+    const [enhanceTarget, setEnhanceTarget] = React.useState<{ item: Item; slot: EnhanceItemSlot } | null>(null);
     const disclosure = getEquipmentDisclosure(player);
     const showDetails = detailOverride ?? disclosure.showDetails;
     const enhancePreview = useMemo(() => (
@@ -84,7 +94,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
     );
 
     const grouped = useMemo(() => {
-        const map: Record<string, any> = {};
+        const map: Record<string, GroupedInventoryEntry> = {};
         for (const item of (player.inv || [])) {
             // Enhanced items are unique — group by name+enhance; non-equipment groups by name only
             const enhance = item.enhance || 0;
@@ -98,8 +108,8 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
 
     const filtered = useMemo(() => {
         if (activeFilter === 'all') return grouped;
-        return grouped.filter(({ item }: any) => {
-            const f = ITEM_TYPE_TO_FILTER[item.type] || item.type;
+        return grouped.filter(({ item }) => {
+            const f = ITEM_TYPE_TO_FILTER[item.type ?? ''] || item.type;
             return f === activeFilter;
         });
     }, [grouped, activeFilter]);
@@ -111,7 +121,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
     const bestWeapon = useMemo(() => pickBestEquippable(player, 'weapon', { upgradesOnly: true }), [player]);
     const bestArmor = useMemo(() => pickBestEquippable(player, 'armor', { upgradesOnly: true }), [player]);
 
-    const isEquipUpgrade = useCallback((item: any) => {
+    const isEquipUpgrade = useCallback((item: Item) => {
         const decision = getEquipmentDecision(player, item);
         return Boolean(decision?.equipable && decision.score > 0);
     }, [player]);
@@ -125,14 +135,14 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
     };
 
     const handleSmartEquip = () => {
-        if (bestWeapon && isEquipUpgrade(bestWeapon)) actions.useItem(bestWeapon);
-        if (bestArmor && isEquipUpgrade(bestArmor)) actions.useItem(bestArmor);
+        if (bestWeapon && isEquipUpgrade(bestWeapon)) actions?.useItem(bestWeapon);
+        if (bestArmor && isEquipUpgrade(bestArmor)) actions?.useItem(bestArmor);
     };
 
     // 시나리오 2: 인벤토리 과밀 감지 (최대의 90%)
     const isInvNearFull = (player.inv || []).length >= BALANCE.INV_FULL_THRESHOLD;
     const sellableMatCount = useMemo(() =>
-        (player.inv || []).filter((i: any) => i.type === 'mat'
+        (player.inv || []).filter((i) => i.type === 'mat'
             && (i.price || 0) <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX).length,
         [player.inv]
     );
@@ -165,7 +175,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
             {/* Filter Bar */}
             <div className="rounded-[1rem] border border-white/8 bg-black/16 px-2 py-2">
                 <div className="flex flex-wrap items-center gap-1.5">
-                {FILTERS.map((f: any) => (
+                {FILTERS.map((f) => (
                     <button
                         key={f.id}
                         onClick={() => {
@@ -208,7 +218,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                     </div>
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
-                        onClick={() => actions.autoSell?.()}
+                        onClick={() => actions?.autoSell?.()}
                         className="flex items-center gap-1 font-rajdhani font-bold text-[#f6e7c8] bg-black/18 hover:bg-white/[0.04] border border-white/8 rounded-full transition-all shrink-0 ml-2 min-h-[30px] px-2.5 py-1 text-sm"
                     >
                         <Package size={11} /> 일괄 정리
@@ -265,7 +275,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                     <span
-                                        className={`text-sm font-fira ${isSignature ? '' : (item.tier >= 2 ? 'text-[#e3dcff]' : 'text-white/86')}`}
+                                        className={`text-sm font-fira ${isSignature ? '' : ((item.tier ?? 0) >= 2 ? 'text-[#e3dcff]' : 'text-white/86')}`}
                                         style={isSignature ? { color: '#f6e7a2' } : undefined}
                                     >
                                         {item.name}
@@ -289,7 +299,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                     )}
                                     {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
                                     {showDetails && resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
-                                    {showDetails && canEquip && Array.isArray(item.jobs) && item.jobs.includes(player.job) && ['weapon', 'armor', 'shield'].includes(item.type) && (
+                                    {showDetails && canEquip && Array.isArray(item.jobs) && item.jobs.includes(player.job ?? '') && ['weapon', 'armor', 'shield'].includes(item.type ?? '') && (
                                         <span
                                             data-testid={`inventory-job-affinity-${item.id || item.name}`}
                                             title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
@@ -353,7 +363,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                 )}
                                 {showDetails && getItemTags(item).length > 0 && (
                                     <div className="mt-1 flex flex-wrap gap-1">
-                                        {getItemTags(item).map((tag: any) => (
+                                        {getItemTags(item).map((tag) => (
                                             <SignalBadge key={`${item.name}_${tag}`} tone="neutral" size="sm">{tag}</SignalBadge>
                                         ))}
                                     </div>
@@ -367,7 +377,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                 )}
                             </div>
                             <div className="flex items-center gap-1 ml-2 shrink-0">
-                                {showDetails && enhanceState.canEnhance && actions.enhanceItem && (
+                                {showDetails && enhanceState.canEnhance && actions?.enhanceItem && (
                                     <Motion.button
                                         whileTap={{ scale: 0.95 }}
                                         data-testid={`inventory-enhance-${item.id || item.name}`}
@@ -382,10 +392,10 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                 <Motion.button
                                     whileTap={{ scale: 0.95 }}
                                     disabled={!canEquip}
-                                    onClick={() => actions.useItem(item)}
+                                    onClick={() => actions?.useItem(item)}
                                     className="bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold min-h-[38px] px-3 py-2 text-sm"
                                 >
-                                    {!canEquip ? '제한' : ['weapon', 'armor', 'shield'].includes(item.type) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
+                                    {!canEquip ? '제한' : ['weapon', 'armor', 'shield'].includes(item.type ?? '') ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
                                 </Motion.button>
                             </div>
                         </Motion.div>

@@ -338,3 +338,36 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 
 **남은 후보 (Wave 7)**: `BalanceConfig`의 `[key: string]: any` 인덱스 시그니처(`constants.ts` — `BALANCE.X` 미선언 키가 전부 `any`로 새어 나가 `protocolCycle`에 로컬 캐스트를 남겼다; 선언 필드로 닫기), `GameAction.payload: any` → 핸들러별 payload 유니온(dispatch 호출부 수백 곳 — 핸들러 그룹 단위로), utils 잔여 `: any` 248건(`exploreUtils`·`combatView`·`runProfileUtils` 상위), systems 162건(`CombatEngine` mixin 경계), `useGameTestApi` 54건(QA 시드 API — 프로덕션 영향 0, 마지막), components 잔여 173건(`CraftingPanel`·`WeaponCodex`·`TerminalView`·`SmartInventory` 상위).
 
+---
+
+## 11. Wave 7 계획 (2026-09-18 착수, 베이스 `main` = `e6df10fd` = PR #33 merge commit)
+
+**핵심**: Wave 6가 세 구역의 주입 경계를 닫고 나니, 남은 `any`의 최대 단일 원천은 **데이터 경계**다. `BalanceConfig`는 64개 필드만 선언하고 `[key: string]: any`로 나머지를 받는데, 실제 `BALANCE` 리터럴은 209키·소비 키 208개 중 **145개가 미선언** → 전부 `any`로 새어 나가 `protocolCycle`의 로컬 캐스트 같은 땜질을 만든다. 두 번째 원천은 `GameAction.payload: any`(dispatch 262곳 · AT 63종)로, Wave 6가 의도적으로 남긴 경계다. 셋째는 잔여 파일 내부 `any`(utils 248 · systems 162 · components 173)로, 이건 경계가 아니라 관성이다.
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **Y1 데이터 경계** | `BALANCE`/`CONSTANTS` 타입을 선언 인터페이스가 아니라 **리터럴에서 도출**(`export const BALANCE = {…} as const` 계열 + `export type BalanceConfig = typeof BALANCE`), `[key: string]: any` 2곳 제거. tsc가 드러내는 소비처 오류(미선언 키의 실제 모양 ↔ 소비 코드 가정 불일치)를 정리, `protocolCycle` 로컬 캐스트 제거 | `BALANCE.오타` 컴파일 에러, 145키의 실제 모양이 타입으로 문서화, 배열/객체 상수의 요소 타입 추론 | tsc 표면화 다수(소비처 30~80곳 예상). `as const`의 readonly 배열은 `.push`/mutable 시그니처와 충돌 | 리터럴 도출 대신 145개 필드를 손으로 선언하면 드리프트가 다시 생긴다 — 도출만 허용. readonly 충돌을 `as any`로 풀면 래칫 역행 — `readonly T[]` 파라미터로 받거나 spread 복사 | opus |
+| **Y2 action payload 유니온** | `ActionPayloadMap`(AT 키 → payload 타입)에서 `GameAction`을 판별 유니온으로 도출. 핸들러는 `action.payload`가 좁혀진 타입으로 들어오고, dispatch 호출부 262곳이 컴파일 검증된다. X4가 만든 핸들러별 payload 인터페이스를 맵으로 승격. 함수형 payload(`SET_PLAYER`의 `(p) => Player`)는 유니온 멤버로 표현 | reducer 경계의 마지막 `any` 제거, 잘못된 payload 모양 dispatch가 컴파일 에러 | 가장 큰 변경. hooks/components 전반의 dispatch 호출부를 건드리므로 **Y1·Y3·Y4 통합 후 단독 실행** | AT 63종 전부를 한 번에 맵으로 강제하면 미분류 액션의 payload가 `never`로 떨어져 통합이 막힌다 — 미분류는 `unknown`이 아니라 **명시 타입이 확정된 키만 맵에 넣고 나머지는 `payload?: any` 폴백 멤버로 남겨** 슬라이스 가능하게(래칫은 하락만 확인) | opus |
+| **Y3 utils·systems 잔여** | utils 상위(`synthesisUtils`·`runProfile`·`signatureSetBonus`·`equipmentArt`·`dataMigration`·`townActionPresentation`·`questProgress`·`avatarEquipmentPreview` = 92) + systems 상위(`consumableEffect`·`CombatEngine.actions`·`equipmentCombatPowerAudit`·`CombatEngine`·`DifficultyManager`·`CombatEngine.relics` = 84) | 전투 수식 경계(`CombatEngine.*`)의 `Player`/`Monster`/`FullStats` 명시 | `dataMigration`은 레거시 save 모양을 다루므로 `unknown` + 좁히기가 정답(도메인 타입 강제 금지) | `CombatEngine.ts` 함수 시그니처 변경은 CLAUDE.md §8 금지 — 파라미터 타입 주석만 추가(호출 호환 유지) | sonnet |
+| **Y4 components 잔여** | `CraftingPanel`·`WeaponCodex`·`TerminalView`·`SmartInventory`·`SystemTab`·`CombatPanel`·`QuickSlot`·`RecipeCodex`·`MapNavigator`·`Dashboard` = 91 | Wave 6 X3 규칙(`Pick<GameActions,…>`, producer `ReturnType`) 확장 | — | `dispatch: (action: any) => void` prop은 Y2 전이라 `React.Dispatch<GameAction>`으로만 닫는다(유니온화는 Y2) | sonnet |
+| **Y5 문서·래칫** | §11.1, CLAUDE.md, todo, 래칫 재고정, 증빙 재생성(progression → pacing 순서) | — | — | — | 직접 |
+
+**순서**: Phase A = Y1 · Y3 · Y4 병렬(파일 집합: constants+표면화 소비처 / utils+systems / components) → 통합(충돌은 Y1 우선) → Phase B = Y2 단독 → 통합 → 증빙 → 직렬 게이트 → Y5 → PR → CI → merge commit.
+
+**판단 포인트**: Y1은 "선언을 늘리는" 방향과 "도출하는" 방향 중 후자만 허용한다. 선언을 손으로 145개 추가하면 오늘은 맞아도 다음 키 추가 때 또 `[key: string]: any`가 유혹한다. `typeof BALANCE`는 리터럴이 진실 원천이라 드리프트가 구조적으로 불가능하다. 비용은 `as const`의 readonly 전파인데, 이건 실제로 상수를 변이하는 코드를 드러내는 것이므로 비용이 아니라 수익이다.
+
+### 11.1 Wave 7 실행 결과 (2026-09-18, branch `claude/funny-rubin-xdv43e`, 베이스 `main` = `e6df10fd`)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| Y1 데이터 경계 | ✅ | `BALANCE`/`CONSTANTS`를 `as const` 리터럴 + `typeof` 도출로 전환(기존 `Object.freeze` 유지, 런타임 값·키 순서·frozen 여부 deep-compare 동일). `[key: string]: any` 2곳 제거, 미선언 145키 타입화. 손으로 선언한 필드 0 — 리터럴이 표현 못 하는 곳만 서브 타입(열린 키 도메인 `Record<number, …>` 6곳, 행마다 다른 optional 필드 `MonsterPrefixDef`/`DiscoveryChainDef`). 표면화 25건/16파일: 열린 키 인덱싱 14(constants 쪽 서브 타입으로 해결, 소비처 무편집), readonly 튜플→mutable 6(캐스트 삭제·`readonly T[]`), 리터럴 유니온 `.includes` 4(`.some`으로 의미 동일), 튜플 이질 필드 1. **드리프트 실증**: 같은 `WEEKLY_MISSIONS`를 `protocolCycle`(gold required)과 `protocolHandlers`(gold optional)가 다르게 선언, 같은 `DISCOVERY_CHAINS`를 `QuestTab`(`QuestReward`)과 `exploreFlow`(optional 4필드)가 다르게 선언 — 4개 사본 삭제, 단일 원천화. 유령 키 읽기 0 |
+| Y3 utils·systems | ✅ | 14파일 `: any` 225 → 0(래칫 정규식 기준). `dataMigration`은 입력 `unknown` + 좁히기, 깊은 복사 로컬은 `JSON.parse`의 `any`를 암묵 상속(명시하면 `useFirebaseSync` 8곳이 흔들림 — 다음 슬라이스). `CombatEngine*` 시그니처 불변, 파라미터 타입만. 발견: `consumableEffect`의 스칼라 `status` 승격 분기는 `Player.status: StatusId[]`로 닫힌 뒤 타입상 dead(마이그레이션이 로드 시 배열화) — 로직 불변, 기록만. 정규식 가드 8건 갱신 |
+| Y4 components | ✅ | 10파일 95 → 0. `Dashboard.runtime`은 `SystemTabRuntime`(export)로, `MobileGameLayout`의 runtime 리터럴은 초과 속성 검사 때문에 로컬 const로 추출. `Codex.dispatch` required 계약은 테스트가 고정 → 호출부 폴백. 정규식 가드 6건 갱신 |
+| 교차 정리 | ✅ | Y3가 `getSynthesisGroups`를 `Item[]`로 닫자 Y4의 `player.inv` 호출부·로컬 `SynthesisGroup` 캐스트가 드러남 → `isSynthesizable`을 타입 술어(`item is Item & { type: ItemType }`)로 만들어 그룹 `type`의 `undefined`를 제거, 캐스트 삭제 |
+| Y2 payload 유니온 | ✅ | `ActionPayloadMap`(63/63 키, `any` 폴백 0) → `GameAction` 판별 유니온, `ActionOf<K>`, `HandlerMap`(핸들러 맵 17곳 `satisfies`). `AT`에 키를 추가하고 맵에 안 넣으면 컴파일 에러(`AssertNever` 소진 검사). 정직하게 넓힌 모양: `SET_PLAYER: PlayerPatch \| ((p) => PlayerPatch)`(부분 패치 병합이 실제 의미), `UPDATE_EVENT_CHAIN.step: number \| 'failed'`, `BuyShopItemPayload.expectedGold: Player['gold']`(reducer가 raw 비교 — 0 강제 시 골드 부족 경로가 뒤집힘). 유일한 캐스트 1건: `ACTION_MAP[action.type]` 조회(유니온 키 상관 불가). **표면화 12건/6파일 중 실제 버그 8건**: bounded-encounter를 원정 밖에서 해결하면 `expeditionId: undefined` 전송(가드), `_chainStep`/`_chainId` undefined로 `eventChainProgress["undefined"]` 저장 가능(별칭 조건 좁힘으로 해소), id 없는 아이템 판매 시 다른 id-없는 아이템이 매칭될 수 있음(가드), `claimAchievement(string \| number)` dead-wide, `combat(kind: string)` 미좁힘 → 타입 술어. 낙관적 체인 제거 0(비-nullable payload면 `a?.b`와 `a.b`의 타입이 같아 제거 불필요), 캐스트 3건 삭제. 정규식 가드 3건 갱신 |
+| 래칫 | ✅ | `: any` 819 → **493**(Phase A 495 → Y2 493), `as any` 80 → **69**. 분포: utils 155 · components 83 · systems 78 · hooks 56(`useGameTestApi` 54) · data 19 · types 12 · reducers 7 · services 6 · platform 1 |
+
+**최종 게이트** (head `86c145bd` 기준, 샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 problems · unit **4,813 / 4,813**(skip 0) · build:guard ok · e2e(chromium, iPhone 12 에뮬레이션) **121 / 121**(61 + 60, 12.7분) · perf guard desktop ok(FCP 544ms) / mobile ok(FCP 476ms) · 증빙 verify 전부 ok(relic 7종·equipment·progression·pacing·content·event-reward). 증빙 재생성 순서는 Wave 6 교훈대로 progression → pacing; 이번엔 pacing의 reportHash가 동일해 파일 무변경
+
+**남은 후보 (Wave 8)**: `GameState.postCombatResult: any`(greyback 카드 — `combatVictory`가 레거시 별칭 필드를 섞어 생산; 생산자 정리 후 `SET_POST_COMBAT_RESULT` 닫기) · `dataMigration`의 깊은 복사 로컬 `any` 상속 + `useFirebaseSync` 8곳(`migrateData` 반환형을 닫으면 함께 흔들림 — 한 슬라이스로) · utils 잔여 155(`performanceMarks`·`anchorPoints`·`eventPresentation`·`equipmentBaseIdentity` 상위) · systems 78(`CombatEngine.outcome`/`.loot`, 감사 3파일) · components 83 · `useGameTestApi` 54(마지막) · `consumableEffect`의 타입상 dead 스칼라 status 분기 제거(로직 변경이라 별도 판단)
+

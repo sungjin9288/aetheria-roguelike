@@ -6,6 +6,7 @@ import { getItemStatText } from '../../utils/equipmentUtils';
 import { getItemRarity } from '../../utils/gameUtils';
 import ItemIcon from '../icons/ItemIcon';
 import EquipmentCodexCard from './EquipmentCodexCard';
+import type { CodexEntry, Item, Player } from '../../types/index.js';
 
 const RARITY_BORDER: Record<string, string> = {
     common: 'border-slate-500/30',
@@ -31,12 +32,27 @@ const CATEGORY_TABS: Array<{ id: EquipmentCategory; label: string }> = [
     { id: 'shields', label: '방패' },
 ];
 
+/**
+ * `getCodexProgress()`(data/codexRewards.ts)가 반환하는 마일스톤 1건 — 함수 선언
+ * 반환형은 `any[]`다(data/**, 이 트랙에서 수정 금지) — 이 화면이 실제로 읽는
+ * 모양(category/claimed/reached/label/count)만 로컬로 좁힌다.
+ */
+interface CodexMilestone {
+    id: string;
+    category: string;
+    count: number;
+    reward: Record<string, number>;
+    label: string;
+    reached: boolean;
+    claimed: boolean;
+}
+
 interface WeaponCodexProps {
-    codex?: any;
-    totalCounts?: any;
-    discoveredCounts?: any;
-    progress?: any;
-    player?: any;
+    codex?: Partial<Record<EquipmentCategory, Record<string, CodexEntry>>>;
+    totalCounts?: Partial<Record<EquipmentCategory, number>>;
+    discoveredCounts?: Partial<Record<EquipmentCategory, number>>;
+    progress?: { milestones: CodexMilestone[] };
+    player?: Player | null;
 }
 
 const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, progress, player }: WeaponCodexProps) => {
@@ -45,13 +61,13 @@ const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, prog
 
     const items = useMemo(() => {
         if (category === 'weapons') return DB.ITEMS.weapons || [];
-        if (category === 'armors') return (DB.ITEMS.armors || []).filter((item: any) => item.type === 'armor');
-        return (DB.ITEMS.armors || []).filter((item: any) => item.type === 'shield');
+        if (category === 'armors') return (DB.ITEMS.armors || []).filter((item) => item.type === 'armor');
+        return (DB.ITEMS.armors || []).filter((item) => item.type === 'shield');
     }, [category]);
 
     const categoryCodex = codex[category] || {};
     const grouped = useMemo(() => {
-        const groups = new Map<number, any[]>();
+        const groups = new Map<number, Item[]>();
         for (const item of items) {
             const tier = item.tier || 1;
             groups.set(tier, [...(groups.get(tier) || []), item]);
@@ -59,9 +75,9 @@ const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, prog
         return [...groups.entries()].sort(([left], [right]) => left - right);
     }, [items]);
 
-    const milestones = (progress?.milestones || []).filter((milestone: any) => milestone.category === category);
-    const nextMilestone = milestones.find((milestone: any) => !milestone.claimed) || milestones[milestones.length - 1];
-    const selected = selectedItem ? items.find((item: any) => item.name === selectedItem) : null;
+    const milestones = (progress?.milestones || []).filter((milestone) => milestone.category === category);
+    const nextMilestone = milestones.find((milestone) => !milestone.claimed) || milestones[milestones.length - 1];
+    const selected = selectedItem ? items.find((item) => item.name === selectedItem) : null;
 
     return (
         <div data-testid="codex-equipment" className="space-y-4">
@@ -112,7 +128,7 @@ const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, prog
 
             <div className="divide-y divide-white/10 border-y border-white/10">
                 {grouped.map(([tier, tierItems]) => {
-                    const discovered = tierItems.filter((item) => categoryCodex[item.name]).length;
+                    const discovered = tierItems.filter((item) => categoryCodex[item.name ?? '']).length;
                     const tierPct = (discovered / Math.max(1, tierItems.length)) * 100;
 
                     return (
@@ -139,8 +155,8 @@ const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, prog
                             </summary>
 
                             <div className="grid grid-cols-2 gap-1.5 pb-3">
-                                {tierItems.map((item: any) => {
-                                    const found = Boolean(categoryCodex[item.name]);
+                                {tierItems.map((item) => {
+                                    const found = Boolean(categoryCodex[item.name ?? '']);
                                     const itemRarity = getItemRarity(item);
                                     const active = selectedItem === item.name;
                                     return (
@@ -149,7 +165,7 @@ const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, prog
                                             type="button"
                                             disabled={!found}
                                             data-testid={found ? `codex-equipment-item-${item.name}` : undefined}
-                                            onClick={() => setSelectedItem(active ? null : item.name)}
+                                            onClick={() => setSelectedItem(active ? null : (item.name ?? null))}
                                             className={`min-h-[60px] rounded-lg border p-2.5 text-left transition-colors ${
                                                 found
                                                     ? `${RARITY_BORDER[itemRarity]} ${RARITY_BG[itemRarity]} hover:brightness-125`
@@ -181,7 +197,7 @@ const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, prog
                 })}
             </div>
 
-            {milestones.length > 0 && milestones.every((milestone: any) => milestone.claimed) && (
+            {milestones.length > 0 && milestones.every((milestone) => milestone.claimed) && (
                 <div className="flex min-h-11 items-center gap-2 text-sm text-emerald-200">
                     <CircleCheck size={16} /> 모든 장비 수집 보상을 받았습니다
                 </div>

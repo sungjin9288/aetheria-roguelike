@@ -2,11 +2,18 @@ import { BALANCE } from '../data/constants.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { buildClassVitals } from '../hooks/gameActions/_shared.js';
 import { calculateFullStats } from '../utils/statsCalculator.js';
+import type { Player } from '../types/index.js';
 import {
     CANONICAL_EQUIPMENT,
     getEquipmentIdentityKey,
     validateCanonicalEquipmentCatalog,
 } from '../utils/equipmentBaseIdentity.js';
+
+/**
+ * `validateCanonicalEquipmentCatalog()`가 돌려주는 검증된 장비 행 1건 — 그 함수의
+ * private한 `CanonicalEquipment` 타입을 다시 선언하지 않고 반환형에서 그대로 뽑는다.
+ */
+type EquipmentRow = ReturnType<typeof validateCanonicalEquipmentCatalog>[number];
 
 export const EQUIPMENT_COMBAT_POWER_AUDIT_POLICY_VERSION = 'equipment-combat-power-audit@2';
 export const EQUIPMENT_COMBAT_POWER_FLOAT_TOLERANCE = 1e-9;
@@ -25,14 +32,18 @@ const FLOATING_DELTA_DIMENSIONS = new Set<string>(['crit', 'evasion']);
 const CLASSIFICATIONS = ['intentional', 'specialized-sidegrade', 'price-only-defect', 'combat-power-defect'] as const;
 const KNOWN_ELEMENTS = new Set(CANONICAL_EQUIPMENT.map((row) => row.elem).filter((element): element is string => typeof element === 'string'));
 
-export const stableCanonicalize = (value: any): any => {
-    if (Array.isArray(value)) return value.map(stableCanonicalize);
+// 제네릭 <T> — 재귀적으로 "같은 모양, 키만 정렬"만 하는 순수 변환이라 입력과 출력이
+// 항상 같은 타입이다. 내부의 Record<string, unknown> 캐스트는 object 분기로 좁혀진
+// 뒤 키 목록을 순회하기 위한 것으로, 런타임 동작(정렬/재귀)은 그대로다.
+export const stableCanonicalize = <T,>(value: T): T => {
+    if (Array.isArray(value)) return value.map((item) => stableCanonicalize(item)) as T;
     if (!value || typeof value !== 'object') return value;
+    const record = value as Record<string, unknown>;
     return Object.fromEntries(
-        Object.keys(value)
+        Object.keys(record)
             .sort((left, right) => left < right ? -1 : left > right ? 1 : 0)
-            .map((key) => [key, stableCanonicalize(value[key])]),
-    );
+            .map((key) => [key, stableCanonicalize(record[key])]),
+    ) as T;
 };
 
 const compareIdentity = (left: { type: string; name: string }, right: { type: string; name: string }) => {
@@ -85,7 +96,7 @@ const validationErrors = (options: EquipmentCombatPowerAuditOptions, rows: reado
     return [...new Set(errors)].sort();
 };
 
-const buildAuditPlayer = (job: string, tier: number, item: any = null) => {
+const buildAuditPlayer = (job: string, tier: number, item: EquipmentRow | null = null): Player => {
     const level = BALANCE.TIER_REQ_LEVEL?.[tier];
     const vitals = buildClassVitals(level, job, { bonusHp: 0, bonusMp: 0, prestigeRank: 0 });
     const equip = { weapon: null, armor: null, offhand: null } as Record<string, any>;
@@ -107,12 +118,12 @@ const buildAuditPlayer = (job: string, tier: number, item: any = null) => {
         skillChoices: {},
         titles: [],
         activeTitle: null,
-    } as any;
+    };
 };
 
-const projectEligibleJob = (row: any, job: string) => {
-    const baseline = calculateFullStats(buildAuditPlayer(job, row.tier)) as any;
-    const equipped = calculateFullStats(buildAuditPlayer(job, row.tier, row)) as any;
+const projectEligibleJob = (row: EquipmentRow, job: string) => {
+    const baseline = calculateFullStats(buildAuditPlayer(job, row.tier));
+    const equipped = calculateFullStats(buildAuditPlayer(job, row.tier, row));
     if (!baseline || !equipped) throw new Error(`unable to project ${row.type}\0${row.name} for ${job}`);
     return {
         job,
@@ -126,9 +137,12 @@ const projectEligibleJob = (row: any, job: string) => {
     };
 };
 
-const projectionSummary = (deltas: readonly any[], field: string) => summarize(deltas.map((delta) => delta[field]));
+/** `projectEligibleJob()` 반환 형태 — 직업별 장비 장착 전/후 스탯 델타 1건. */
+type EligibleJobDelta = ReturnType<typeof projectEligibleJob>;
 
-const rowDimensions = (row: any, deltas: readonly any[], signatures: Record<string, any>) => ({
+const projectionSummary = (deltas: readonly EligibleJobDelta[], field: Exclude<keyof EligibleJobDelta, 'job'>) => summarize(deltas.map((delta) => delta[field]));
+
+const rowDimensions = (row: EquipmentRow, deltas: readonly EligibleJobDelta[], signatures: Record<string, any>) => ({
     atk: {
         raw: row.type === 'weapon' ? row.val : 0,
         effective: projectionSummary(deltas, 'atk'),
@@ -161,14 +175,39 @@ const rowDimensions = (row: any, deltas: readonly any[], signatures: Record<stri
     price: row.price,
 });
 
-const numericRowValues = (row: any): Record<string, number> => ({
+/**
+ * `summarize()`의 median/min/max/q1/q3/corridor.lower·upper는 입력 배열이 빈 경우
+ * (count 0)에만 null이다. 이 파일에서 실제로 도달하는 배열은 전부 검증된
+ * EquipmentRow.jobs(항상 1개 이상)에서 파생되거나, 최소 1개 행을 포함하는 코호트
+ * group에서 파생되어 절대 비지 않는다 — 즉 여기 도달하는 값은 항상 number다.
+ * 런타임 값은 그대로 두고 타입만 좁힌다(no-op 캐스트).
+ */
+const assumeNumeric = (value: number | null): number => value as number;
+
+/** `buildEquipmentCombatPowerReport()`가 각 검증된 행을 프로젝션한 결과 1건. */
+const buildProjectedRow = (source: EquipmentRow, signatures: Record<string, any>) => {
+    const eligibleJobDeltas = source.jobs.map((job) => projectEligibleJob(source, job));
+    return {
+        type: source.type,
+        name: source.name,
+        tier: source.tier,
+        source: stableCanonicalize(source),
+        jobs: [...source.jobs],
+        eligibleJobDeltas,
+        dimensions: rowDimensions(source, eligibleJobDeltas, signatures),
+    };
+};
+
+type ProjectedRow = ReturnType<typeof buildProjectedRow>;
+
+const numericRowValues = (row: ProjectedRow): Record<string, number> => ({
     primaryStat: row.type === 'weapon' ? row.dimensions.atk.raw : row.dimensions.def.raw,
-    effectiveAtk: row.dimensions.atk.effective.median,
-    effectiveDef: row.dimensions.def.effective.median,
-    effectiveHp: row.dimensions.hp.effective.median,
-    effectiveMp: row.dimensions.mp.effective.median,
-    effectiveCrit: row.dimensions.crit.effective.median,
-    effectiveEvasion: row.dimensions.evasion.effective.median,
+    effectiveAtk: assumeNumeric(row.dimensions.atk.effective.median),
+    effectiveDef: assumeNumeric(row.dimensions.def.effective.median),
+    effectiveHp: assumeNumeric(row.dimensions.hp.effective.median),
+    effectiveMp: assumeNumeric(row.dimensions.mp.effective.median),
+    effectiveCrit: assumeNumeric(row.dimensions.crit.effective.median),
+    effectiveEvasion: assumeNumeric(row.dimensions.evasion.effective.median),
     price: row.dimensions.price,
     jobBreadth: row.dimensions.jobBreadth,
 });
@@ -199,7 +238,7 @@ const getCohortPositions = (rows: readonly any[]) => {
             for (const row of group) {
                 const values = numericRowValues(row);
                 const outsideDimensions = NUMERIC_COMBAT_DIMENSIONS.filter((dimension) => {
-                    const corridor: any = numeric[dimension].corridor;
+                    const corridor = numeric[dimension].corridor;
                     return values[dimension] < corridor.lower || values[dimension] > corridor.upper;
                 });
                 const priceOutside = values.price < numeric.price.corridor.lower || values.price > numeric.price.corridor.upper;
@@ -226,7 +265,7 @@ const compareProjectedValue = (dimension: string, candidateValue: number, domina
     return difference > 0 ? 'greater' : 'lower';
 };
 
-const buildHardDominanceComparison = (candidate: any, dominator: any) => {
+const buildHardDominanceComparison = (candidate: ProjectedRow, dominator: ProjectedRow) => {
     if (candidate.type !== dominator.type || candidate.tier !== dominator.tier) return null;
     if (candidate.dimensions.signature) return null;
     if (dominator.dimensions.price > candidate.dimensions.price) return null;
@@ -236,13 +275,16 @@ const buildHardDominanceComparison = (candidate: any, dominator: any) => {
     if (dominator.dimensions.element !== candidate.dimensions.element) return null;
 
     const dominatorJobs = new Map(
-        dominator.eligibleJobDeltas.map((delta: any) => [delta.job, delta]),
+        dominator.eligibleJobDeltas.map((delta) => [delta.job, delta] as const),
     );
     if (candidate.jobs.some((job: string) => !dominatorJobs.has(job))) return null;
 
     let hasStrictImprovement = false;
-    const perJobComparisons = candidate.eligibleJobDeltas.map((candidateDelta: any) => {
-        const dominatorDelta = dominatorJobs.get(candidateDelta.job) as any;
+    const perJobComparisons = candidate.eligibleJobDeltas.map((candidateDelta) => {
+        // dominatorJobs는 candidate.jobs의 모든 job을 키로 가짐이 위 some() 가드로
+        //   이미 확정됐다(candidateDelta.job은 candidate.jobs의 원소) — undefined 분기는
+        //   도달 불가이므로 단언으로 명시(런타임 값 변화 없음).
+        const dominatorDelta = dominatorJobs.get(candidateDelta.job) as EligibleJobDelta;
         const dimensions = Object.fromEntries(PRODUCTION_DELTA_DIMENSIONS.map((dimension) => {
             const relation = compareProjectedValue(
                 dimension,
@@ -258,7 +300,7 @@ const buildHardDominanceComparison = (candidate: any, dominator: any) => {
         }));
         return { job: candidateDelta.job, dimensions };
     });
-    if (perJobComparisons.some((comparison: any) => (
+    if (perJobComparisons.some((comparison) => (
         PRODUCTION_DELTA_DIMENSIONS.some((dimension) => comparison.dimensions[dimension].relation === 'lower')
     ))) return null;
     if (!hasStrictImprovement) return null;
@@ -271,16 +313,16 @@ const buildHardDominanceComparison = (candidate: any, dominator: any) => {
     });
 };
 
-const uniqueTradeoffReasons = (row: any, group: readonly any[]) => {
+const uniqueTradeoffReasons = (row: ProjectedRow, group: readonly ProjectedRow[]) => {
     const reasons: string[] = [];
-    const count = (predicate: (candidate: any) => boolean) => group.filter(predicate).length;
+    const count = (predicate: (candidate: ProjectedRow) => boolean) => group.filter(predicate).length;
     if (row.dimensions.element !== null && count((candidate) => candidate.dimensions.element === row.dimensions.element) === 1) {
         reasons.push(`unique-element:${row.dimensions.element}`);
     }
     if (row.dimensions.hands !== null && count((candidate) => candidate.dimensions.hands === row.dimensions.hands) === 1) {
         reasons.push(`unique-hands:${row.dimensions.hands}`);
     }
-    for (const field of ['hp', 'mp', 'crit', 'evasion']) {
+    for (const field of ['hp', 'mp', 'crit', 'evasion'] as const) {
         if (row.dimensions[field].raw > 0 && count((candidate) => candidate.dimensions[field].raw === row.dimensions[field].raw) === 1) {
             reasons.push(`unique-${field}`);
         }
@@ -291,17 +333,28 @@ const uniqueTradeoffReasons = (row: any, group: readonly any[]) => {
     return reasons.sort();
 };
 
-const classify = (row: any, group: readonly any[], position: any) => {
+/** `buildHardDominanceComparison()`가 null이 아닐 때 돌려주는 형태. */
+type HardDominanceComparison = NonNullable<ReturnType<typeof buildHardDominanceComparison>>;
+
+/** `getCohortPositions()`가 각 행에 대해 기록하는 코호트 위치 — `classify()`가 읽는 필드만. */
+interface CohortPosition {
+    cohort: string;
+    numeric: Record<string, any>;
+    outsideDimensions: readonly string[];
+    priceOutside: boolean;
+}
+
+const classify = (row: ProjectedRow, group: readonly ProjectedRow[], position: CohortPosition) => {
     const dominancePairs = group
         .filter((candidate) => candidate !== row)
         .sort(compareIdentity)
         .map((candidate) => buildHardDominanceComparison(row, candidate))
-        .filter(Boolean);
-    const strictDominators = dominancePairs.map((pair: any) => pair.dominator);
+        .filter((pair): pair is HardDominanceComparison => pair !== null);
+    const strictDominators = dominancePairs.map((pair) => pair.dominator);
     if (strictDominators.length > 0) {
         return {
             classification: 'combat-power-defect',
-            classificationReasons: strictDominators.map((dominator: any) => `dominated-by:${dominator.type}\0${dominator.name}`),
+            classificationReasons: strictDominators.map((dominator) => `dominated-by:${dominator.type}\0${dominator.name}`),
             strictDominators,
             dominancePairs,
         };
@@ -391,21 +444,10 @@ export const buildEquipmentCombatPowerReport = (options: EquipmentCombatPowerAud
         shopRows: options.shopRows,
     })].sort(compareIdentity);
     const signatures = options.signatures || SIGNATURE_ITEM_REGISTRY;
-    const projectedRows = rows.map((source) => {
-        const eligibleJobDeltas = source.jobs.map((job) => projectEligibleJob(source, job));
-        return {
-            type: source.type,
-            name: source.name,
-            tier: source.tier,
-            source: stableCanonicalize(source),
-            jobs: [...source.jobs],
-            eligibleJobDeltas,
-            dimensions: rowDimensions(source, eligibleJobDeltas, signatures),
-        };
-    });
+    const projectedRows = rows.map((source) => buildProjectedRow(source, signatures));
     const positions = getCohortPositions(projectedRows);
     const classifiedRows = projectedRows.map((row) => {
-        const position = positions.positions.get(row);
+        const position: CohortPosition = positions.positions.get(row);
         const classification = classify(row, positions.groups.get(position.cohort) || [], position);
         return { ...row, cohortPosition: position, ...classification };
     }).sort(compareIdentity);

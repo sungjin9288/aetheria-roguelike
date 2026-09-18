@@ -25,6 +25,17 @@ const MobileGameLayout = ({
 }: any) => {
     const isCombat = engine.gameState === GS.COMBAT;
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
+    // Dashboard.runtime(SystemTabRuntime)이 읽지 않는 mobileArchiveDockVisible도 실어 보낸다 —
+    //   변수에 먼저 담아 전달해 object literal 초과 속성 검사(엄격 리터럴 체크)를 피한다.
+    const dashboardRuntime = {
+        syncStatus: engine.syncStatus,
+        gameState: engine.gameState,
+        isAiThinking: engine.isAiThinking,
+        viewport: 'mobile',
+        mobileArchiveDockVisible,
+        onOpenMirror,
+        onOpenCrystalExchange,
+    };
     const showArchiveConsole = archiveAvailable && mobileConsoleMode === 'archive';
     const openArchiveConsole = (tab: any) => {
         // onClick 등에서 이벤트 객체를 그대로 전달하는 것을 방지 (기본값이 event 객체로 덮이면 안 됨)
@@ -54,15 +65,7 @@ const MobileGameLayout = ({
                             actions={engine.actions}
                             stats={fullStats}
                             quickSlots={engine.quickSlots}
-                            runtime={{
-                                syncStatus: engine.syncStatus,
-                                gameState: engine.gameState,
-                                isAiThinking: engine.isAiThinking,
-                                viewport: 'mobile',
-                                mobileArchiveDockVisible,
-                                onOpenMirror,
-                                onOpenCrystalExchange,
-                            }}
+                            runtime={dashboardRuntime}
                         />
                     </Suspense>
                 ) : (

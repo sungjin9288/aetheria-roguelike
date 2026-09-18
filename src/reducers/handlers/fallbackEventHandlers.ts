@@ -5,7 +5,7 @@ import { getStructuredFallbackTransaction } from '../../data/structuredFallbackE
 import { CombatEngine } from '../../systems/CombatEngine';
 import { formatEventText } from '../../utils/eventPresentation';
 import type { ResolveFallbackEventTransactionPayload } from '../actionTypes';
-import type { GameAction, GameState } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
 import { GS } from '../gameStates';
 import { addNewTitles } from './helpers';
 import type { Item } from '../../types';
@@ -70,7 +70,7 @@ const appendRequirementError = (state: GameState, id: string, text: string) => {
 };
 
 export const fallbackEventActionMap = {
-    RESOLVE_FALLBACK_EVENT_TRANSACTION: (state: GameState, action: GameAction) => {
+    RESOLVE_FALLBACK_EVENT_TRANSACTION: (state, action) => {
         if (state.gameState !== GS.EVENT || !isPayload(action.payload)) return state;
 
         const { transactionId, choiceIndex } = action.payload;
@@ -156,4 +156,4 @@ export const fallbackEventActionMap = {
             syncStatus: 'syncing',
         };
     },
-};
+} satisfies HandlerMap;

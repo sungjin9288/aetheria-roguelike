@@ -2,7 +2,8 @@ import type { Player, Relic } from '../types/index.js';
 import { RELICS } from '../data/relics.js';
 
 // Save normalization must stay independent of the combat/stat calculation graph.
-export const normalizeAdventureRelicBonuses = (value: unknown, maxHp: number): Player['adventureRelicBonuses'] => {
+// maxHp는 구형 save에서 비어 있을 수 있다 — 아래 Number.isFinite 가드가 undefined/NaN을 같은 값으로 처리한다.
+export const normalizeAdventureRelicBonuses = (value: unknown, maxHp: number | undefined): Player['adventureRelicBonuses'] => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
     const candidate = value as Record<string, unknown>;
     const normalized: NonNullable<Player['adventureRelicBonuses']> = {};
@@ -14,7 +15,7 @@ export const normalizeAdventureRelicBonuses = (value: unknown, maxHp: number): P
     const devour = candidate.devour as Record<string, unknown> | undefined;
     if (devour && (devour.phase === 'ready' || devour.phase === 'active')
         && typeof devour.amount === 'number' && Number.isSafeInteger(devour.amount) && devour.amount > 0
-        && (devour.phase !== 'active' || (Number.isFinite(maxHp) && devour.amount < maxHp))) {
+        && (devour.phase !== 'active' || (typeof maxHp === 'number' && Number.isFinite(maxHp) && devour.amount < maxHp))) {
         normalized.devour = { phase: devour.phase, amount: devour.amount };
     }
     return Object.keys(normalized).length ? normalized : undefined;

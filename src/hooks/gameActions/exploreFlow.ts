@@ -26,14 +26,6 @@ type ExploreRollDeps = Pick<GameActionDeps, 'dispatch' | 'addLog' | 'getFullStat
     rng?: () => number;
 };
 
-/** BALANCE.DISCOVERY_CHAINS 원소 (constants.ts는 인덱스 시그니처라 여기서 모양을 고정한다). */
-interface DiscoveryChain {
-    id: string;
-    label: string;
-    desc: string;
-    locations: string[];
-    reward: { gold?: number; exp?: number; item?: string; premiumCurrency?: number };
-}
 import { DB } from '../../data/db.js';
 import { BALANCE } from '../../data/constants.js';
 import { RELICS, pickWeightedRelics } from '../../data/relics.js';
@@ -329,7 +321,7 @@ export const runQuietRollAndCombat = (
             gold: Math.floor(mStats.gold * (1 + (floor - 1) * 0.1)),
             level: 50 + floor,
         };
-        if (BALANCE.ABYSS_BOSS_FLOORS.includes(floor)) {
+        if (BALANCE.ABYSS_BOSS_FLOORS.some((bossFloor) => bossFloor === floor)) {
             const bossName = BALANCE.ABYSS_BOSS_NAMES[floor] || '혼돈의 수호자';
             const bossProfile = DB.MONSTERS?.[bossName];
             mStats = {
@@ -412,7 +404,7 @@ export const checkDiscoveryChains = (
     const visited = new Set([...(player.stats?.visitedMaps || []), loc]);
     const completed = player.stats?.discoveryChains || [];
 
-    chains.forEach((chain: DiscoveryChain) => {
+    chains.forEach((chain) => {
         if (completed.includes(chain.id)) return;
         if (!chain.locations.every((l) => visited.has(l))) return;
 

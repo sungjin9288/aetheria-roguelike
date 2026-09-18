@@ -191,7 +191,7 @@ test('map navigator promotes current position and primary route above the route 
     assert.match(source, /data-testid="map-route-forecast"/);
     assert.match(source, /data-testid="map-move-selected"/);
     assert.match(source, /getNextMapTowardTarget/);
-    assert.match(source, /getDefaultMapSelection\(player\.loc, topologyRoutes\)/);
+    assert.match(source, /getDefaultMapSelection\(playerLoc, topologyRoutes\)/);
     assert.match(source, /const formatMapLevel/);
     assert.match(topology, /aether-route-topology-current/);
     assert.match(topology, /aether-route-topology-branches/);

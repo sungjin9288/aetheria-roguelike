@@ -11,7 +11,7 @@ import { getMapRequiredLevel } from '../../utils/mapTopology';
 import { getProtocolDayKey } from '../../utils/protocolCycle';
 import { createQuestProgressState } from '../../utils/questProgress';
 import { getUnmetQuestPrerequisite } from '../../utils/questPrerequisites';
-import type { GameAction, GameState } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
 import { appendRewardLogs } from './rewardLog';
 
 const sameQuestId = (left: unknown, right: unknown) => String(left) === String(right);
@@ -61,7 +61,7 @@ export const getBountyTargets = (level: number) => {
 };
 
 export const questActionMap = {
-    ACCEPT_QUEST: (state: GameState, action: GameAction) => {
+    ACCEPT_QUEST: (state, action) => {
         if (!isSafeLocation(state)) return appendQuestLog(state, 'error', MSG.QUEST_TOWN_ONLY);
 
         const questId = action.payload?.questId;
@@ -100,7 +100,7 @@ export const questActionMap = {
         };
     },
 
-    ABANDON_QUEST: (state: GameState, action: GameAction) => {
+    ABANDON_QUEST: (state, action) => {
         if (!isSafeLocation(state)) return appendQuestLog(state, 'error', MSG.QUEST_ABANDON_TOWN_ONLY);
 
         const questId = action.payload?.questId;
@@ -132,7 +132,7 @@ export const questActionMap = {
         };
     },
 
-    REQUEST_BOUNTY: (state: GameState, action: GameAction) => {
+    REQUEST_BOUNTY: (state, action) => {
         if (!isSafeLocation(state)) return appendQuestLog(state, 'error', MSG.BOUNTY_TOWN_ONLY);
         if ((state.player.quests || []).some((quest) => quest.isBounty)) return state;
 
@@ -180,7 +180,7 @@ export const questActionMap = {
         };
     },
 
-    UPDATE_EXPEDITION_FOCUS_QUEST: (state: GameState, action: GameAction) => {
+    UPDATE_EXPEDITION_FOCUS_QUEST: (state, action) => {
         if (!isSafeLocation(state) || state.player.activeExpedition) {
             return appendQuestLog(state, 'error', MSG.EXPEDITION_FOCUS_TOWN_ONLY);
         }
@@ -219,4 +219,4 @@ export const questActionMap = {
             syncStatus: 'syncing',
         };
     },
-};
+} satisfies HandlerMap;

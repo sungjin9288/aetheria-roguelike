@@ -74,18 +74,6 @@ const QuestRewardChips = ({ reward, accent }: QuestRewardChipsProps) => {
  */
 const DAILY_TYPE_LABEL: Record<string, string> = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
 
-/**
- * `BALANCE.DISCOVERY_CHAINS`(4건)의 실측 형태 — `BalanceConfig`가 인덱스 시그니처로 `any`를
- * 반환하는 필드라 여기서만 좁혀 캐스팅한다(constants.ts 자체는 건드리지 않는다).
- */
-interface DiscoveryChainDef {
-    id: string;
-    label: string;
-    locations: string[];
-    reward: QuestReward;
-    desc: string;
-}
-
 const getDailyRewardLabel = (reward: DailyProtocolMissionReward) => {
     if (reward?.essence) return `에센스 +${reward.essence}`;
     if (reward?.item) return reward.item;
@@ -236,7 +224,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
 
                 {/* 발견 체인 섹션 */}
                 {(() => {
-                    const chains = (BALANCE.DISCOVERY_CHAINS as DiscoveryChainDef[]) || [];
+                    const chains = BALANCE.DISCOVERY_CHAINS || [];
                     if (!chains.length) return null;
                     const visitedMaps = new Set(player.stats?.visitedMaps || []);
                     const completedChains = player.stats?.discoveryChains || [];

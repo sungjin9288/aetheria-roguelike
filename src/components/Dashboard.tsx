@@ -24,6 +24,9 @@ import EquipmentPanel from './EquipmentPanel';
 import SignalBadge from './SignalBadge';
 import SmartInventory from './SmartInventory';
 import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
+import type { GameActions } from '../hooks/actionDeps';
+import type { GameState } from '../reducers/gameReducer';
+import type { SystemTabRuntime } from './tabs/SystemTab';
 
 const AchievementPanel = lazy(() => import('./AchievementPanel'));
 const BuildAdvicePanel = lazy(() => import('./BuildAdvicePanel'));
@@ -46,14 +49,15 @@ interface DashboardProps {
     player: Player;
     /** H5(a): 세션 uid — 공개 묘비 목록에서 내 묘비를 제외하는 데 쓴다. */
     uid?: string | null;
-    grave?: any;
+    grave?: GameState['grave'];
     sideTab?: string;
     setSideTab?: (tab: string) => void;
-    actions?: any;
+    /** 각 탭 컴포넌트로 그대로 pass-through — 소비 지점마다 필요한 부분집합을 스스로 좁힌다. */
+    actions?: GameActions;
     stats?: FullStats | null;
-    quickSlots?: any[];
-    runtime?: any;
-    onReturnToLog?: any;
+    quickSlots?: GameState['quickSlots'];
+    runtime?: SystemTabRuntime;
+    onReturnToLog?: () => void;
 }
 
 const TAB_ITEMS = [
@@ -140,7 +144,7 @@ const Dashboard = ({
                     player={player}
                     actions={actions}
                     quickSlots={quickSlots}
-                    onAssignQuickSlot={(index: any, item: any) => actions.setQuickSlot?.(index, item)}
+                    onAssignQuickSlot={(index, item) => actions?.setQuickSlot?.(index, item)}
                 />
             )}
 
@@ -183,7 +187,7 @@ const Dashboard = ({
 
             {sideTab === 'codex' && (
                 <Suspense fallback={<TabSpinner />}>
-                    <Codex player={player} dispatch={actions?.dispatch} />
+                    <Codex player={player} dispatch={actions?.dispatch ?? (() => {})} />
                 </Suspense>
             )}
 
@@ -334,7 +338,7 @@ const Dashboard = ({
                                         data-testid="menu-reset-confirm"
                                         onClick={() => {
                                             setConfirmMenuReset(false);
-                                            actions.reset?.();
+                                            actions?.reset?.();
                                         }}
                                         className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.65rem] border border-rose-300/20 bg-rose-950/48 px-2 py-2 text-[11px] font-readable text-rose-100/88 transition-colors hover:border-rose-200/30 hover:bg-rose-900/54"
                                     >

@@ -109,14 +109,17 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             if (currentEvent.isBoundedEncounter) {
                 const outcome = eventOutcomes(currentEvent)[idx];
                 if (!outcome) return;
+                const encounterId = currentEvent.boundedEncounterId;
+                const choiceId = outcome.choiceId;
+                const expeditionId = player.activeExpedition?.id;
+                const occurrenceSequence = currentEvent.boundedOccurrenceSequence;
+                // 넷 중 하나라도 비면 boundedEncounterHandlers.isPayload가 거부해 no-op이던 조합 —
+                //   같은 판정을 dispatch 전에 끝낸다(원정 밖에서 카드가 열린 경우 등).
+                if (typeof encounterId !== 'string' || typeof choiceId !== 'string'
+                    || typeof expeditionId !== 'string' || typeof occurrenceSequence !== 'number') return;
                 dispatch({
                     type: AT.RESOLVE_BOUNDED_ENCOUNTER_CHOICE,
-                    payload: {
-                        encounterId: currentEvent.boundedEncounterId,
-                        choiceId: outcome.choiceId,
-                        expeditionId: player.activeExpedition?.id,
-                        occurrenceSequence: currentEvent.boundedOccurrenceSequence,
-                    },
+                    payload: { encounterId, choiceId, expeditionId, occurrenceSequence },
                 });
                 return;
             }
@@ -133,13 +136,19 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 return;
             }
 
-            const isChainEvent = Boolean(currentEvent._chainId);
+            const chainId = currentEvent._chainId;
+            const chainStep = currentEvent._chainStep;
+            // `Boolean(currentEvent._chainId)`와 같은 판정 — const 로컬로 바꿔 아래 블록에서
+            //   chainId가 string으로 좁혀지게 한다(TS aliased condition narrowing).
+            const isChainEvent = !!chainId;
             const selectedOutcome: EventOutcome | null = isChainEvent
                 ? (eventOutcomes(currentEvent)[idx] || null)
                 : (eventOutcomes(currentEvent).find((o) => o.choiceIndex === idx) || null);
             if (isChainEvent && selectedOutcome?.type === 'nothing') {
+                // step이 비면 chainEventHandlers.isDeferralPayload가 거부하던 조합.
+                if (typeof chainStep !== 'number') return;
                 dispatch({ type: AT.DEFER_CHAIN_EVENT, payload: {
-                    chainId: currentEvent._chainId, step: currentEvent._chainStep, choiceIndex: idx,
+                    chainId, step: chainStep, choiceIndex: idx,
                     expectedExploreCount: player.stats?.explores ?? 0,
                 } });
                 return;
@@ -164,13 +173,11 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             if (isChainEvent
                 && selectedOutcome?.reward?.type === 'gold'
                 && (selectedOutcome.reward.amount ?? 0) < 0) {
+                // step이 비면 chainEventHandlers.isPayload가 거부하던 조합.
+                if (typeof chainStep !== 'number') return;
                 dispatch({
                     type: AT.RESOLVE_CHAIN_GOLD_CHOICE,
-                    payload: {
-                        chainId: currentEvent._chainId,
-                        step: currentEvent._chainStep,
-                        choiceIndex: idx,
-                    },
+                    payload: { chainId, step: chainStep, choiceIndex: idx },
                 });
                 return;
             }
@@ -262,11 +269,11 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 }
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
                 if (outcome.type === 'chain_advance') {
-                    const nextStep = (currentEvent._chainStep ?? 0) + 1;
-                    dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId: currentEvent._chainId, step: nextStep } });
+                    const nextStep = (chainStep ?? 0) + 1;
+                    dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId, step: nextStep } });
                 }
                 if (outcome.type === 'chain_advance_fail') {
-                    dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId: currentEvent._chainId, step: 'failed' } });
+                    dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId, step: 'failed' } });
                 }
                 dispatch({ type: AT.SET_EVENT, payload: null });
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
@@ -376,7 +383,7 @@ const applyOutcomeBuff = (player: Player, buff: OutcomeBuff, addLog: AddLog) => 
  * 화이트리스트는 aiEventUtils에서 이미 통과했지만, dispatch 직전에 한 번 더 확인한다.
  */
 /** BALANCE.EVENT_STATUS_IDS(= StatusId 화이트리스트) 통과 여부를 타입으로 옮긴다. */
-const isEventStatusId = (value: string): value is StatusId => BALANCE.EVENT_STATUS_IDS.includes(value);
+const isEventStatusId = (value: string): value is StatusId => BALANCE.EVENT_STATUS_IDS.some((id) => id === value);
 
 const applyOutcomeStatus = (player: Player, status: OutcomeStatus, addLog: AddLog): Player => {
     const id = String(status?.id || '');

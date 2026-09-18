@@ -1,4 +1,4 @@
-import type { Item, Player } from '../types/index.js';
+import type { EquipSlots, Item, Player } from '../types/index.js';
 import { CONSTANTS } from '../data/constants.js';
 import signatureRegistry from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSets from '../data/signatureSets.json' with { type: 'json' };
@@ -59,15 +59,15 @@ const getSlotWeight = (slot: string, item: Item | null | undefined) => (
  *   activeSet: { key: string, name: string, tone: string, count: number, desc: string } | null
  * }}
  */
-export const computeSignatureSetBonus = (equip: any) => { // EquipSlots-like (런타임 동적 슬롯 호환).
+export const computeSignatureSetBonus = (equip: EquipSlots | null | undefined) => {
     const neutral = { atkMult: 1, defMult: 1, hpMult: 1, activeSet: null };
     if (!equip) return neutral;
 
     // slot별 setGroup + 가중치(2H 무기는 2) 수집. 2H 시그니처 무기 단독 장착 시에도
     // groups 물리 아이템 수는 1이지만 weight 합은 2가 되어 세트 발동 가능해야 한다.
-    const groups = [];
+    const groups: string[] = [];
     const counts: Record<string, number> = {};
-    for (const slot of ['weapon', 'armor', 'offhand']) {
+    for (const slot of ['weapon', 'armor', 'offhand'] as const) {
         const item = equip[slot];
         const meta = getRegistryEntry(item);
         if (!meta?.setGroup) continue;
@@ -92,9 +92,9 @@ export const computeSignatureSetBonus = (equip: any) => { // EquipSlots-like (�
 
     // 가능한 최고 tier 선택 (bestCount 이하 중 가장 높은 키)
     const availableTiers = Object.keys(setDef.bonuses)
-        .map((k: any) => Number(k))
-        .filter((n: any) => Number.isFinite(n) && n <= bestCount)
-        .sort((a: any, b: any) => b - a);
+        .map((k) => Number(k))
+        .filter((n) => Number.isFinite(n) && n <= bestCount)
+        .sort((a, b) => b - a);
     if (availableTiers.length === 0) return neutral;
 
     const bonus = setDef.bonuses[String(availableTiers[0])];
@@ -131,7 +131,7 @@ export const computeSignatureSetBonus = (equip: any) => { // EquipSlots-like (�
 export const getSignatureSetDefinitions = () => SETS;
 
 /** UI 도움용: 특정 setGroup의 정의. */
-export const getSignatureSet = (key: any) => SETS[key] || null;
+export const getSignatureSet = (key: string) => SETS[key] || null;
 
 /**
  * 현재 장착 구성에서 가장 "가까운" signature 세트의 진행도를 반환.
@@ -161,19 +161,19 @@ export const getSignatureSet = (key: any) => SETS[key] || null;
  *   isActive: boolean
  * } | null}
  */
-export const getSignatureSetProgress = (equip: any) => {
+export const getSignatureSetProgress = (equip: EquipSlots | null | undefined) => {
     if (!equip) return null;
 
     // group별 장착 아이템명 목록(표시용, 1회씩)과 count(2H 가중치 반영)를 분리 추적.
     const equippedByGroup = new Map<string, string[]>();
     const countByGroup = new Map<string, number>();
     let anyTwoHandCounted = false;
-    for (const slot of ['weapon', 'armor', 'offhand']) {
+    for (const slot of ['weapon', 'armor', 'offhand'] as const) {
         const item = equip[slot];
         const meta = getRegistryEntry(item);
         if (!meta?.setGroup) continue;
         const list = equippedByGroup.get(meta.setGroup) || [];
-        list.push(item.name);
+        list.push(item?.name || '');
         equippedByGroup.set(meta.setGroup, list);
 
         const weight = getSlotWeight(slot, item);
@@ -194,7 +194,7 @@ export const getSignatureSetProgress = (equip: any) => {
 
     // 최종 표시 대상 세트가 2H 가중치로 카운트를 얻었는지 여부 (해당 세트 한정).
     const bestGroupHasTwoHand = anyTwoHandCounted && (() => {
-        for (const slot of ['weapon', 'armor', 'offhand']) {
+        for (const slot of ['weapon', 'armor', 'offhand'] as const) {
             const item = equip[slot];
             const meta = getRegistryEntry(item);
             if (meta?.setGroup === bestKey && getSlotWeight(slot, item) > 1) return true;
@@ -206,17 +206,17 @@ export const getSignatureSetProgress = (equip: any) => {
     if (!setDef) return null;
 
     const tierNumbers = Object.keys(setDef.bonuses || {})
-        .map((k: any) => Number(k))
-        .filter((n: any) => Number.isFinite(n))
-        .sort((a: any, b: any) => a - b);
+        .map((k) => Number(k))
+        .filter((n) => Number.isFinite(n))
+        .sort((a, b) => a - b);
 
-    const currentTier = [...tierNumbers].reverse().find((n: any) => n <= bestCount) ?? null;
-    const nextTier = tierNumbers.find((n: any) => n > bestCount) ?? null;
+    const currentTier = [...tierNumbers].reverse().find((n) => n <= bestCount) ?? null;
+    const nextTier = tierNumbers.find((n) => n > bestCount) ?? null;
     const nextBonusRaw = nextTier != null ? setDef.bonuses[String(nextTier)] : null;
 
     const members = [...(setDef.members || [])];
     const equippedMembers = equippedByGroup.get(bestKey) || [];
-    const missingMembers = members.filter((name: any) => !equippedMembers.includes(name));
+    const missingMembers = members.filter((name) => !equippedMembers.includes(name));
 
     // cycle 349: members / equippedMembers 2 출력 dead 필드 제거 — 둘 다 외부 read 0건이라
     //   missingMembers 계산용 internal const로만 사용. currentTier / isActive는 test-active 보존.

@@ -6,23 +6,11 @@ import {
     getCurrentWeeklyProtocol,
     getWeeklyMissionProgress,
 } from '../../utils/protocolCycle';
-import type { GameState, GameAction } from '../gameReducer';
-
-/**
- * `BALANCE.WEEKLY_MISSIONS` 원소 형태 — `BalanceConfig`가 `[key: string]: any` 인덱스
- * 시그니처를 갖고 있어(constants.ts) `BALANCE.WEEKLY_MISSIONS` 자체는 `any`다.
- * 이 파일에서만 실제 리터럴(`data/constants.ts` 실측 3건) 모양으로 좁혀 쓴다.
- */
-interface WeeklyMissionDef {
-    id: string;
-    target: number;
-    reward: { gold?: number; premiumCurrency?: number };
-    label: string;
-}
+import type { HandlerMap } from '../gameReducer';
 
 export const protocolActionMap = {
     // ── Daily Protocol ────────────────────────────────────────────────────
-    SET_DAILY_PROTOCOL: (state: GameState, action: GameAction) => ({
+    SET_DAILY_PROTOCOL: (state, action) => ({
         ...state,
         player: {
             ...state.player,
@@ -31,7 +19,7 @@ export const protocolActionMap = {
         syncStatus: 'syncing',
     }),
 
-    UPDATE_DAILY_PROTOCOL: (state: GameState, action: GameAction) => {
+    UPDATE_DAILY_PROTOCOL: (state, action) => {
         const { type: dpType, amount: rawAmount = 0 } = action.payload || {};
         if (!['kills', 'explores', 'goldSpend'].includes(dpType)) return state;
         const amount = dpType === 'goldSpend' ? Math.max(0, Number(rawAmount) || 0) : 1;
@@ -57,7 +45,7 @@ export const protocolActionMap = {
     },
 
     // ── Weekly Protocol ───────────────────────────────────────────────────
-    UPDATE_WEEKLY_PROTOCOL: (state: GameState, action: GameAction) => {
+    UPDATE_WEEKLY_PROTOCOL: (state, action) => {
         const wpType = action.payload?.type;
         const requestedAt = Number(action.payload?.now);
         const wp = getCurrentWeeklyProtocol(
@@ -73,9 +61,9 @@ export const protocolActionMap = {
         };
     },
 
-    CLAIM_WEEKLY_MISSION: (state: GameState, action: GameAction) => {
+    CLAIM_WEEKLY_MISSION: (state, action) => {
         const missionId = action.payload?.missionId;
-        const mission = (BALANCE.WEEKLY_MISSIONS as WeeklyMissionDef[]).find((entry) => entry.id === missionId);
+        const mission = BALANCE.WEEKLY_MISSIONS.find((entry) => entry.id === missionId);
         const wp = getCurrentWeeklyProtocol(state.player.weeklyProtocol, new Date());
         if (!mission || (wp.claimed || []).includes(missionId)) return state;
         if (getWeeklyMissionProgress(wp, missionId) < mission.target) return state;
@@ -96,4 +84,4 @@ export const protocolActionMap = {
             syncStatus: 'syncing',
         };
     },
-};
+} satisfies HandlerMap;

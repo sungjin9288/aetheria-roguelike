@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { Check, ChevronDown, Hammer } from 'lucide-react';
 import { DB } from '../../data/db';
+import type { CodexEntry, ItemRecipeDef, Player } from '../../types/index.js';
 
 interface RecipeCodexProps {
-    codex?: any;
-    player?: any;
+    codex?: { recipes?: Record<string, CodexEntry> };
+    player?: Player | null;
 }
 
 const RecipeCodex = ({ codex = {}, player }: RecipeCodexProps) => {
@@ -13,19 +14,19 @@ const RecipeCodex = ({ codex = {}, player }: RecipeCodexProps) => {
     const recipeCodex = codex.recipes || {};
     const inventory = player?.inv || [];
 
-    const discoveredRecipes = recipes.map((recipe: any) => {
-        const found = Boolean(recipeCodex[recipe.id]);
-        const hasGold = (player?.gold || 0) >= recipe.gold;
-        const inputs = recipe.inputs.map((input: any) => {
-            const owned = inventory.filter((item: any) => item.name === input.name).length;
-            return { ...input, owned, enough: owned >= input.qty };
+    const discoveredRecipes = recipes.map((recipe: ItemRecipeDef) => {
+        const found = Boolean(recipeCodex[recipe.id ?? '']);
+        const hasGold = (player?.gold || 0) >= (recipe.gold ?? 0);
+        const inputs = (recipe.inputs || []).map((input) => {
+            const owned = inventory.filter((item) => item.name === input.name).length;
+            return { ...input, owned, enough: owned >= (input.qty ?? 0) };
         });
         return {
             recipe,
             found,
             hasGold,
             inputs,
-            canCraft: found && hasGold && inputs.every((input: any) => input.enough),
+            canCraft: found && hasGold && inputs.every((input) => input.enough),
         };
     }).filter((entry) => entry.found);
 
@@ -49,7 +50,7 @@ const RecipeCodex = ({ codex = {}, player }: RecipeCodexProps) => {
                             <div key={recipe.id}>
                                 <button
                                     type="button"
-                                    onClick={() => setSelected(active ? null : recipe.id)}
+                                    onClick={() => setSelected(active ? null : (recipe.id ?? null))}
                                     className="flex min-h-14 w-full items-center gap-2 px-2 text-left transition-colors hover:bg-white/[0.03]"
                                 >
                                     <Check size={16} className={canCraft ? 'text-emerald-200' : 'text-slate-500'} />
@@ -62,7 +63,7 @@ const RecipeCodex = ({ codex = {}, player }: RecipeCodexProps) => {
                                     <div data-testid={`codex-recipe-detail-${recipe.id}`} className="border-t border-white/8 px-10 py-3 text-[11px]">
                                         <div className="text-slate-400">필요 재료</div>
                                         <div className="mt-1.5 space-y-1">
-                                            {inputs.map((input: any) => (
+                                            {inputs.map((input) => (
                                                 <div key={input.name} className={input.enough ? 'text-emerald-200' : 'text-rose-200'}>
                                                     {input.name} · 필요 {input.qty}개 · 보유 {input.owned}개
                                                 </div>

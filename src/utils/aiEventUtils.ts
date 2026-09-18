@@ -181,15 +181,14 @@ const seedRoll = (salt: string, seed: number) => (hashString(`${salt}|${seed}`) 
 
 /** status 45% / elite 30% / relic 15% / buff 10% (BALANCE.EVENT_SPECIAL_WEIGHTS). */
 const pickSpecialKind = (seed: number) => {
-    const weights = BALANCE.EVENT_SPECIAL_WEIGHTS;
-    const kinds = Object.keys(weights);
-    const total = kinds.reduce((sum: number, kind: string) => sum + weights[kind], 0);
+    const weightEntries = Object.entries(BALANCE.EVENT_SPECIAL_WEIGHTS);
+    const total = weightEntries.reduce((sum: number, [, weight]) => sum + weight, 0);
     let ticket = hashString(`kind|${seed}`) % total;
-    for (const kind of kinds) {
-        ticket -= weights[kind];
+    for (const [kind, weight] of weightEntries) {
+        ticket -= weight;
         if (ticket < 0) return kind;
     }
-    return kinds[kinds.length - 1];
+    return weightEntries[weightEntries.length - 1][0];
 };
 
 /**
@@ -370,7 +369,7 @@ const normalizeStatusOutcome = (raw: unknown) => {
     if (!raw) return null;
     const obj = typeof raw === 'string' ? null : asRecord(raw);
     const id = normalizeText(typeof raw === 'string' ? raw : (obj?.id || obj?.effect));
-    if (!BALANCE.EVENT_STATUS_IDS.includes(id)) return null;
+    if (!BALANCE.EVENT_STATUS_IDS.some((statusId) => statusId === id)) return null;
     const turns = clamp(
         toInt(typeof raw === 'string' ? BALANCE.EVENT_SPECIAL_STATUS_TURNS : obj?.turns, BALANCE.EVENT_SPECIAL_STATUS_TURNS),
         1,

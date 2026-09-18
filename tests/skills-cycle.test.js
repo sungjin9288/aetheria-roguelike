@@ -1540,7 +1540,7 @@ import { readFile } from 'node:fs/promises';
           'commandParser cycleSkill?.(1) callsite 보존');
 
       const cp = await readSrc('src/components/tabs/CombatPanel.tsx');
-      assert.ok(/actions\.cycleSkill\(1\)/.test(cp),
+      assert.ok(/actions\?\.cycleSkill\(1\)/.test(cp),
           'CombatPanel cycleSkill(1) callsite 보존');
   });
 

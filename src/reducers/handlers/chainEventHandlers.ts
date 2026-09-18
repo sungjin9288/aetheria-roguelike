@@ -3,7 +3,7 @@ import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { formatEventText } from '../../utils/eventPresentation';
 import type { DeferChainEventPayload, ResolveChainGoldChoicePayload } from '../actionTypes';
-import type { GameAction, GameState } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
 import { GS } from '../gameStates';
 import { RELICS } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
@@ -60,7 +60,7 @@ const appendRequirementError = (state: GameState, id: string, text: string) => {
 };
 
 export const chainEventActionMap = {
-    DEFER_CHAIN_EVENT: (state: GameState, action: GameAction) => {
+    DEFER_CHAIN_EVENT: (state, action) => {
         if (state.gameState !== GS.EVENT || !isDeferralPayload(action.payload)) return state;
         const { chainId, step, choiceIndex, expectedExploreCount } = action.payload;
         if ((state.player.stats?.explores ?? 0) !== expectedExploreCount) return state;
@@ -93,7 +93,7 @@ export const chainEventActionMap = {
             syncStatus: 'syncing',
         };
     },
-    RESOLVE_CHAIN_GOLD_CHOICE: (state: GameState, action: GameAction) => {
+    RESOLVE_CHAIN_GOLD_CHOICE: (state, action) => {
         if (state.gameState !== GS.EVENT || !isPayload(action.payload)) return state;
 
         const { chainId, step, choiceIndex } = action.payload;
@@ -185,4 +185,4 @@ export const chainEventActionMap = {
             syncStatus: 'syncing',
         };
     },
-};
+} satisfies HandlerMap;

@@ -1,4 +1,4 @@
-import type { Item, Monster, MonsterPattern } from '../types/index.js';
+import type { Item, Monster, MonsterPattern, Quest } from '../types/index.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import type { FullStats, Player } from "../types/index.js";
 // cycle 271: getDifficultyMults / calcPerformanceScore / getExploreState / CLASS_BUILD_IDENTITIES /
@@ -32,24 +32,32 @@ export interface DerivedStatsView {
 // cycle 544: reasons default [] 제거 — 8 internal callsite 모두 reasons
 //   명시 전달이라 default 도달 불가. 청소 메가 시리즈 39번째 batch (cycle
 //   502-543), runProfile.ts 같은 모듈 hasAnyJob과 함께.
-const scoreTag = (id: any, name: any, score: any, reasons: any[]) => ({
+/** scoreTag 헬퍼가 만드는 빌드 아키타입 후보 1건 — score는 순위 산정 후 spread로 제거된다. */
+interface ScoreTag {
+    id: string;
+    name: string;
+    score: number;
+    reasons: string[];
+}
+
+const scoreTag = (id: string, name: string, score: number, reasons: string[]): ScoreTag => ({
     id,
     name,
     score,
     reasons,
 });
 
-const relicEffectsOf = (player: Player) => new Set((player?.relics || []).map((relic: any) => relic.effect));
-const labelTag = (id: any) => ARCHETYPE_LABELS[id] || id;
+const relicEffectsOf = (player: Player) => new Set((player?.relics || []).map((relic) => relic.effect));
+const labelTag = (id: string) => ARCHETYPE_LABELS[id] || id;
 // cycle 526: value default 0 제거 — 3 internal callsite 모두 명시 전달
 //   (각 caller가 || 1 / || 0 fallback으로 number 보장)이라 default 도달 불가.
 //   util default 청소 메가 시리즈 23번째 (cycle 502-525). 첫 시도는 cycle 508
 //   cascade로 findQuestDefinition QUESTS default 제거 시도였으나 16개 test
 //   callsite (syncQuestProgress 1 arg)가 default 활성 path였어 revert.
-const toPercent = (value: any) => `${Math.round(value * 100)}%`;
+const toPercent = (value: number) => `${Math.round(value * 100)}%`;
 // cycle 544: jobs default [] 제거 — 8 internal callsite 모두 jobs 명시
 //   배열 리터럴 전달이라 default 도달 불가.
-const hasAnyJob = (item: Item | null | undefined, jobs: any[]) => Array.isArray(item?.jobs) && jobs.some((job: any) => item?.jobs?.includes(job));
+const hasAnyJob = (item: Item | null | undefined, jobs: string[]) => Array.isArray(item?.jobs) && jobs.some((job) => item?.jobs?.includes(job));
 const isConsumableType = (item: Item | null | undefined) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type as string);
 const hasElement = (item: Item | null | undefined) => Boolean(item?.elem && item.elem !== '물리');
 
@@ -105,7 +113,7 @@ export const getRunBuildProfile = (player: Player, stats: DerivedStatsView | nul
     const shield = isShield(offhand) && !isFocusOffhand(offhand);
     const focus = isFocusOffhand(offhand);
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
-    const tags = [];
+    const tags: ScoreTag[] = [];
 
     if (twoHand || relicEffects.has('execute_bonus') || relicEffects.has('armor_pen')) {
         const reasons = [];
@@ -186,13 +194,13 @@ export const getRunBuildProfile = (player: Player, stats: DerivedStatsView | nul
     // cycle 443: score 출력 dead 정리 — sort/filter 후 외부 read 0건 (consumer는
     //   tag.name / tag.id / tag.reasons만 read). cycle 347 _sortKey strip 패턴.
     const ranked = tags
-        .filter((tag: any) => tag.score >= 3)
-        .sort((a: any, b: any) => (
+        .filter((tag) => tag.score >= 3)
+        .sort((a, b) => (
             b.score - a.score
             || getClassPreferenceRank(player?.job, a.id) - getClassPreferenceRank(player?.job, b.id)
             || a.name.localeCompare(b.name, 'ko')
         ))
-        .map(({ score: _score, ...rest }: any) => { void _score; return rest; });
+        .map(({ score: _score, ...rest }) => { void _score; return rest; });
 
     const primary = ranked[0] || getClassFallback(player?.job);
 
@@ -385,12 +393,12 @@ export const getTraitItemResonance = (item: Item | null | undefined, traitProfil
 //   불가. body의 (items || []) defensive guard 보존.
 export const getTraitFeaturedItems = (items: Item[], traitProfile: TraitProfile | null | undefined, player: Player | null, limit: number) => (
     (items || [])
-        .map((item: any) => ({
+        .map((item) => ({
             item,
             resonance: getTraitItemResonance(item, traitProfile, player),
         }))
-        .filter((entry: any) => entry.resonance.score >= 3)
-        .sort((left: any, right: any) => right.resonance.score - left.resonance.score || (left.item.price || 0) - (right.item.price || 0))
+        .filter((entry) => entry.resonance.score >= 3)
+        .sort((left, right) => right.resonance.score - left.resonance.score || (left.item.price || 0) - (right.item.price || 0))
         .slice(0, limit)
 );
 
@@ -410,13 +418,13 @@ export const getTraitLootHint = (items: Item[], traitProfile: TraitProfile | nul
     };
 };
 
-export const getTraitQuestResonance = (quest: any, traitProfile: TraitProfile | null | undefined) => {
+export const getTraitQuestResonance = (quest: Quest | null | undefined, traitProfile: TraitProfile | null | undefined) => {
     if (!quest) return { score: 0, label: null, summary: null };
 
     const buildTags = new Set([
         traitProfile?.id,
         traitProfile?.buildProfile?.primary?.id,
-        ...((traitProfile?.buildProfile?.tags || []).map((tag: any) => tag.id))
+        ...((traitProfile?.buildProfile?.tags || []).map((tag) => tag.id))
     ].filter(Boolean));
 
     let score = 0;

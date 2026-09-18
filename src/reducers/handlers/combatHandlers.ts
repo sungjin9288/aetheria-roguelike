@@ -11,10 +11,9 @@ import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import { handleVictoryOutcome } from '../../hooks/combatActions/combatVictory';
 import { protocolActionMap } from './protocolHandlers';
 import { rewardActionMap } from './rewardHandlers';
-import type { GameAction, GameState } from '../gameReducer';
-import type { UseCombatItemPayload } from '../actionTypes';
+import type { GameAction, GameState, HandlerMap } from '../gameReducer';
 import { addNewTitles, sanitizeQuickSlots } from './helpers';
-import { applyPostCombatChoice, isPostCombatChoiceOffered, type PostCombatChoiceId } from '../../utils/postCombatChoice';
+import { applyPostCombatChoice, isPostCombatChoiceOffered } from '../../utils/postCombatChoice';
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { activateDevourBonus } from '../../utils/adventureRelicBonuses';
 import type { Item, LogEntry, Player, Monster } from '../../types';
@@ -102,7 +101,11 @@ const settleVictory = (
             return;
         }
         if (nestedAction.type === 'SET_ENEMY') {
-            draft = { ...draft, enemy: nestedAction.payload, syncStatus: 'syncing' };
+            // entityActionMap.SET_ENEMY와 같은 규약 — payload는 값 또는 (enemy) => enemy.
+            const nextEnemy = typeof nestedAction.payload === 'function'
+                ? nestedAction.payload(draft.enemy)
+                : nestedAction.payload;
+            draft = { ...draft, enemy: nextEnemy, syncStatus: 'syncing' };
             return;
         }
         if (nestedAction.type === 'SET_GAME_STATE') {
@@ -273,8 +276,8 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
      * postCombatResult.postCombatChoiceResolved 플래그로 1회만 적용되므로 빠른 연타로
      * 버프·회복이 두 번 들어가지 않는다 (두 번째 dispatch는 같은 state를 그대로 반환).
      */
-    RESOLVE_POST_COMBAT_CHOICE: (state: GameState, action: GameAction): GameState => {
-        const choice = action.payload?.choice as PostCombatChoiceId | undefined;
+    RESOLVE_POST_COMBAT_CHOICE: (state, action): GameState => {
+        const choice = action.payload?.choice;
         if (choice !== 'push' && choice !== 'breather') return state;
 
         const result = state.postCombatResult;
@@ -300,7 +303,7 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
             syncStatus: 'syncing',
         };
     },
-    RESOLVE_COMBAT_ACTION: (state: GameState, action: GameAction): GameState => {
+    RESOLVE_COMBAT_ACTION: (state, action): GameState => {
         if (state.gameState !== GS.COMBAT || !state.enemy) return state;
         const kind = action.payload?.kind;
         const expectedTurn = Number(action.payload?.expectedTurn);
@@ -345,10 +348,10 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
             nextTurn,
         });
     },
-    USE_COMBAT_ITEM: (state: GameState, action: GameAction): GameState => {
+    USE_COMBAT_ITEM: (state, action): GameState => {
         if (state.gameState !== GS.COMBAT || !state.enemy) return state;
 
-        const payload = action.payload as Partial<UseCombatItemPayload> | undefined;
+        const payload = action.payload;
         const itemId = typeof payload?.itemId === 'string' ? payload.itemId : '';
         const seed = Number(payload?.seed);
         const now = Number(payload?.now);
@@ -406,4 +409,4 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
             consumedItem: item,
         });
     },
-});
+} satisfies HandlerMap);

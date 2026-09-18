@@ -1,9 +1,9 @@
 import { useMemo, useState } from 'react';
 import { ArrowRight, Check, Compass, LockKeyhole, Route, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
-import type { FullStats, GameMap } from '../types/index.js';
-import { getMoveRecommendations } from '../utils/adventureGuide';
-import { getGravesAtLoc } from '../utils/graveUtils';
+import type { FullStats, GameMap, Player } from '../types/index.js';
+import { getMoveRecommendations, type MoveRecommendation } from '../utils/adventureGuide';
+import { getGravesAtLoc, type GraveEntry } from '../utils/graveUtils';
 import { getExitBadges } from '../utils/mapBadges';
 import { getMapProgressState } from '../utils/mapProgress';
 import { getMapSignatureDrops, getMapUndiscoveredSignatures } from '../utils/mapSignatureHints';
@@ -11,6 +11,8 @@ import { getDefaultMapSelection, getMapRequiredLevel, getNextMapTowardTarget } f
 import RouteTopology, { type RouteTopologyEntry } from './RouteTopology';
 import SignalBadge from './SignalBadge';
 import { getExpeditionFocusRouteTargets, getFocusedExpeditionQuestEntries } from '../utils/expeditionMissionFocus';
+import type { GameActions } from '../hooks/actionDeps';
+import type { GameState } from '../reducers/gameReducer';
 
 type MapState = 'unexplored' | 'exploring' | 'completed';
 
@@ -19,17 +21,17 @@ interface MapEntry extends GameMap {
     state: MapState;
     isCurrent: boolean;
     progress: { discovered: number; total: number; remaining: number };
-    graves: any[];
+    graves: GraveEntry[];
     signatureDrops: Array<{ name: string; rate: number }>;
     undiscoveredSignatures: Array<{ name: string; rate: number }>;
     badges: Array<{ id: string; label: string }>;
 }
 
 interface MapNavigatorProps {
-    player: any;
-    grave: any;
+    player: Player;
+    grave: GameState['grave'] | undefined;
     stats: FullStats | null | undefined;
-    actions?: any;
+    actions?: Pick<GameActions, 'move'>;
 }
 
 const MAP_ORDER = Object.entries(DB.MAPS)
@@ -77,7 +79,7 @@ const getRiskLabel = (map: GameMap, playerLevel: number) => {
     return '적정';
 };
 
-const getEncounterLabel = (map: GameMap, route: any) => {
+const getEncounterLabel = (map: GameMap, route: MoveRecommendation | undefined) => {
     if (map.type === 'safe') return '정비';
     if (map.boss) return '보스 교전';
     return route?.routePlan?.approach || '일반 교전';
@@ -181,13 +183,14 @@ const WorldRouteList = ({
 );
 
 const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
+    const playerLoc = player.loc ?? '';
     const [selection, setSelection] = useState<{ origin: string; name: string | null }>({
-        origin: player.loc,
+        origin: playerLoc,
         name: null,
     });
-    const selectedMapName = selection.origin === player.loc ? selection.name : null;
-    const selectMap = (name: string) => setSelection({ origin: player.loc, name });
-    const currentMap = DB.MAPS[player.loc];
+    const selectedMapName = selection.origin === playerLoc ? selection.name : null;
+    const selectMap = (name: string) => setSelection({ origin: playerLoc, name });
+    const currentMap = DB.MAPS[playerLoc];
     const playerLevel = player.level || 1;
     const blindMap = player.challengeModifiers?.includes('blindMap') || false;
     // H5(c): 가짜 stats 폴백 제거 — getMoveRecommendations가 내부에서 player.maxHp/maxMp로 폴백한다.
@@ -195,7 +198,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
     const focusedQuestEntries = getFocusedExpeditionQuestEntries(player);
     const questTargets = getExpeditionFocusRouteTargets(player).filter((target) => DB.MAPS[target]);
     const questNextSteps = new Set(questTargets
-        .map((target) => getNextMapTowardTarget(DB.MAPS, player.loc, target))
+        .map((target) => getNextMapTowardTarget(DB.MAPS, playerLoc, target))
         .filter(Boolean));
     const areaBossDefeated = player.stats?.areaBossDefeated;
     const bossGauge = player.stats?.bossGauge;
@@ -217,7 +220,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
         [mapEntries],
     );
 
-    const topologyRoutes: RouteTopologyEntry[] = moveRecommendations.map((route: any) => {
+    const topologyRoutes: RouteTopologyEntry[] = moveRecommendations.map((route) => {
         const entry = entriesByName.get(route.name);
         return {
             ...route,
@@ -227,14 +230,14 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
         };
     });
 
-    const defaultSelection = getDefaultMapSelection(player.loc, topologyRoutes);
+    const defaultSelection = getDefaultMapSelection(playerLoc, topologyRoutes);
     const selectedName = selectedMapName || defaultSelection;
-    const selectedEntry = entriesByName.get(selectedName) || entriesByName.get(player.loc) || mapEntries[0];
-    const selectedRoute = moveRecommendations.find((route: any) => route.name === selectedEntry?.name);
+    const selectedEntry = entriesByName.get(selectedName) || entriesByName.get(playerLoc) || mapEntries[0];
+    const selectedRoute = moveRecommendations.find((route) => route.name === selectedEntry?.name);
     const selectedIsDirectExit = Boolean(selectedRoute);
     const selectedRequiredLevel = getMapRequiredLevel(selectedEntry, playerLevel);
     const selectedIsLocked = selectedIsDirectExit && playerLevel < selectedRequiredLevel;
-    const selectedIsCurrent = selectedEntry?.name === player.loc;
+    const selectedIsCurrent = selectedEntry?.name === playerLoc;
     const canMove = selectedIsDirectExit && !selectedIsLocked && typeof actions?.move === 'function';
     const selectedDisplayName = blindMap && selectedIsDirectExit ? '미확인 경로' : selectedEntry?.name;
     const selectedDescription = blindMap && selectedIsDirectExit
@@ -265,7 +268,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                 <div className="min-w-0">
                     <div className="aether-label">세계 지도</div>
                     <h2 className="aether-type-title mt-0.5 font-readable font-semibold text-white">
-                        {blindMap ? '현재 위치에서 이어진 길' : `${player.loc}에서 이어진 길`}
+                        {blindMap ? '현재 위치에서 이어진 길' : `${playerLoc}에서 이어진 길`}
                     </h2>
                 </div>
                 <div data-testid="map-progress-summary" className="grid shrink-0 grid-cols-3 gap-1" aria-label="지도 진행 요약">
@@ -286,7 +289,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                 testId="map-topology"
                 currentTestId="map-current-location-card"
                 connectorTestId="map-route-overview"
-                currentName={player.loc}
+                currentName={playerLoc}
                 routes={topologyRoutes}
                 selectedName={selectedEntry?.name}
                 blindMap={blindMap}

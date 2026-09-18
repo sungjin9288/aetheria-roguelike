@@ -1,9 +1,9 @@
-import type { GameState, GameAction } from '../gameReducer';
+import type { HandlerMap } from '../gameReducer';
 import { PRODUCTION_GAME_CAPABILITIES } from '../../platform/gameCapabilities';
 
 export const multiplayerActionMap = {
     // ── Skill Branch ──────────────────────────────────────────────────────
-    CHOOSE_SKILL_BRANCH: (state: GameState, action: GameAction) => {
+    CHOOSE_SKILL_BRANCH: (state, action) => {
         const { skillName, choice } = action.payload;
         if (state.player.skillChoices?.[skillName]) return state;
         return {
@@ -19,7 +19,7 @@ export const multiplayerActionMap = {
     // ── Grave PvP ─────────────────────────────────────────────────────────
     // cycle 305: publicGraves filter 제거 — state.publicGraves dead (항상 []),
     //   filter no-op. targetUid 인자도 현재 dispatch에서 미사용.
-    INVADE_GRAVE: (state: GameState, action: GameAction) => {
+    INVADE_GRAVE: (state, action) => {
         if (!PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion) return state;
         const { reward } = action.payload;
         const today = new Date().toDateString();
@@ -42,4 +42,4 @@ export const multiplayerActionMap = {
             syncStatus: 'syncing',
         };
     },
-};
+} satisfies HandlerMap;
