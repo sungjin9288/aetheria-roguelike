@@ -1808,7 +1808,8 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/hooks/gameActions/characterActions.ts');
       assert.ok(/buildClassVitals\(1,\s*jobId,\s*player\.meta \|\| \{\}\)/.test(source),
           '1st callsite (1, jobId, player.meta || {}) 보존 — 신규 캐릭터 Lv1 시작');
-      assert.ok(/buildClassVitals\(player\.level,\s*jobName,\s*player\.meta \|\| \{\}\)/.test(source),
+      // Wave 6 X1: level 파라미터가 number로 닫히면서 호출부가 `player.level!`로 좁혀졌다.
+      assert.ok(/buildClassVitals\(player\.level!?,\s*jobName,\s*player\.meta \|\| \{\}\)/.test(source),
           '2nd callsite (player.level, jobName, player.meta || {}) 보존');
   });
 
@@ -2280,9 +2281,10 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 543: synthesize signature에서 useProtect default 0건', async () => {
       const source = await readInventoryActionsSource();
-      assert.ok(!/synthesize:\s*\(itemIds:\s*any,\s*useProtect:\s*any\s*=\s*false\)/.test(source),
+      assert.ok(!/synthesize:\s*\(itemIds:[^)]*useProtect:[^)]*=\s*false\)/.test(source),
           'synthesize useProtect default false 제거');
-      assert.ok(/synthesize:\s*\(itemIds:\s*any,\s*useProtect:\s*any\)/.test(source),
+      // Wave 6 X1: 파라미터 타입이 any → string[] / boolean 으로 닫혔다 (계약은 2-arg 그대로).
+      assert.ok(/synthesize:\s*\(itemIds:\s*string\[\],\s*useProtect:\s*boolean\)/.test(source),
           'synthesize 파라미터 자체는 보존');
   });
 
@@ -4664,7 +4666,7 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 595 후속: claimSeasonReward는 보상 식별자인 tier만 전달한다', async () => {
       const source = await readInventoryActionsSource();
-      assert.ok(/claimSeasonReward:\s*\(tier:\s*any\)/.test(source),
+      assert.ok(/claimSeasonReward:\s*\(tier:\s*number\)/.test(source),
           'claimSeasonReward tier-only signature 보존');
       assert.ok(!/rewardLabel/.test(source),
           'hook의 예측 보상 문구 제거');

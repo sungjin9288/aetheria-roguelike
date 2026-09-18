@@ -1,15 +1,17 @@
 import { AT } from '../../reducers/actionTypes';
 import { getGravesAtLoc, removeGravesAtLoc, resolveGraveRecovery } from '../../utils/graveUtils.js';
 import { getPreparedExpeditionFocusQuestIds } from '../../utils/expeditionMissionFocus.js';
+import type { GameActionDeps } from '../actionDeps';
+import type { TitleSharedHelpers } from './_shared';
 
-export const createQuestActions = (deps: any, { emitUnlockedTitles }: any) => {
+export const createQuestActions = (deps: GameActionDeps, { emitUnlockedTitles }: TitleSharedHelpers) => {
     const { player, grave, dispatch, addLog } = deps;
     return {
-        acceptQuest: (qId: any) => {
+        acceptQuest: (qId: string | number) => {
             dispatch({ type: AT.ACCEPT_QUEST, payload: { questId: qId } });
         },
 
-        abandonQuest: (qId: any) => {
+        abandonQuest: (qId: string | number) => {
             dispatch({ type: AT.ABANDON_QUEST, payload: { questId: qId } });
         },
 

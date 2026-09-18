@@ -1,7 +1,10 @@
 import { AT } from '../reducers/actionTypes';
 import type { Player } from '../types';
+import type { GameAction, } from '../reducers/gameReducer';
+import type { Dispatch } from 'react';
+import type { InventoryActionCtx } from './actionDeps';
 
-const purchaseOffer = (player: Player, dispatch: any, offerId: string) => {
+const purchaseOffer = (player: Player, dispatch: Dispatch<GameAction>, offerId: string) => {
     dispatch({
         type: AT.PURCHASE_PREMIUM_OFFER,
         payload: {
@@ -12,7 +15,7 @@ const purchaseOffer = (player: Player, dispatch: any, offerId: string) => {
 };
 
 /** UI는 선택 대상과 현재 snapshot만 전달하고, 비용과 지급 결과는 reducer가 확정한다. */
-export const createPremiumActions = ({ player, dispatch }: any) => ({
+export const createPremiumActions = ({ player, dispatch }: InventoryActionCtx) => ({
     expandInventory: () => purchaseOffer(player, dispatch, 'inv_expand'),
     purchaseSynthProtect: () => purchaseOffer(player, dispatch, 'synth_protect'),
     purchaseRevive: () => purchaseOffer(player, dispatch, 'revive'),

@@ -22,6 +22,8 @@ import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
  * `postCombatResult`만 남는다 — 생산자(hooks/combatActions/combatVictory.ts)가
  * 레거시 별칭 필드(`loot` 등)를 섞어 읽는 그레이백 카드라 여기서 안전하게 좁힐
  * 실측 계약이 없다(any 유지, 다른 트랙이 hooks를 정리할 때 함께 닫을 후보).
+ * 훅 주입 경계(`hooks/actionDeps.ts`, Wave 6 X1)는 이 필드들을 `GameState['x']`로 참조하므로
+ * 여기가 단일 원천이다 — 세션 형태 타입은 `types/session.ts`에 둔다.
  */
 export interface GameState {
     bootStage: string;
@@ -62,6 +64,7 @@ export interface GameState {
     // cycle 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건,
     //   UI read 0건. INVADE_GRAVE 핸들러의 filter도 항상 [] 입력 → no-op.
 }
+
 
 export interface LootSettlementReceipt {
     rolledCount: number;

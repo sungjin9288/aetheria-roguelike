@@ -29,14 +29,13 @@ type TitleDef = (typeof TITLES)[number];
 // --- 공유 유틸리티 (Shared Utilities) ---
 /**
  * 배열이 아닌 값을 빈 배열로 안전하게 변환.
- * `= any` 기본값 — 이 모듈 안에서는 `player.quests`/`cls.skills`처럼 타입이 있는
- * 인자로 호출해 제네릭이 그 원소 타입으로 추론되지만, 외부의 수많은 훅 팩토리
- * (`hooks/gameActions/*` 등)는 deps 매개변수 자체가 `any` 타입이라 그 값을 그대로
- * 넘긴다. 기본값 없이 `<T,>`만 쓰면 그 경로에서 T가 `unknown`으로 추론되어(진짜
- * `any`가 아니다) 호출부의 이후 truthy 좁히기가 `{}`로 붕괴해 기존에 통과하던
- * 속성 접근이 전부 컴파일 에러가 된다 — `= any`가 그 하위 호환 경로를 보존한다.
+ *
+ * 2026-09 Wave 6 X1: `= any` 기본값 제거. 그 기본값은 `deps: any`로 들어온 값을
+ * 그대로 넘기던 훅 팩토리 호출부를 위한 하위 호환이었는데, 이제 그 경계가
+ * `GameActionDeps`로 닫혔다. 타입이 없는 값(예: 아직 any인 `currentEvent.outcomes`)을
+ * 넘기는 호출부는 `toArray<EventOutcome>(…)`처럼 원소 타입을 명시한다.
  */
-export const toArray = <T = any,>(v: T[] | null | undefined): T[] => (Array.isArray(v) ? v : []);
+export const toArray = <T,>(v: T[] | null | undefined): T[] => (Array.isArray(v) ? v : []);
 
 /** 플레이어의 직업 스킬 목록을 반환 (패시브 제외 — 전투용 액티브 스킬만) */
 export const getJobSkills = (player: Player) => {

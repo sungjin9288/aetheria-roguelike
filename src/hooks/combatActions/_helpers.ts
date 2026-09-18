@@ -5,7 +5,25 @@ import { AT } from '../../reducers/actionTypes';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { getRunBuildProfile } from '../../utils/runProfile';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
-import type { FullStats, Item, Player } from '../../types/index.js';
+import type { FullStats, Item, Monster, Player } from '../../types/index.js';
+import type { AddLog, GameActionDeps } from '../actionDeps';
+
+/**
+ * 처치된 적 — 몬스터 인스턴스에 탐험 정찰 카드가 붙인 "이 전투 한정" 보너스가 함께 실린다
+ * (scoutEvents/eventActions가 SET_ENEMY 직전에 덧붙인다).
+ */
+export type DefeatedEnemy = Monster & {
+    /** 정찰 "전투의 기척" — 처치 보상(EXP/골드) 배율 가산. */
+    scoutRewardBonus?: number;
+    /** 정찰 "정예의 흔적" — 승리 시 유물 발견 보장. */
+    scoutGuaranteedRelic?: boolean;
+};
+
+/** 전투 요약 로그가 쓰는 전리품 힌트 (장비 업그레이드 / 성향 공명 공통 모양). */
+export interface LootHint {
+    name: string | undefined;
+    summary: string;
+}
 
 /**
  * 현재 선택된 스킬 반환. 없으면 null.
@@ -34,15 +52,15 @@ export const getSelectedSkill = (player: Player) => {
 //   `atk + def + crit*2 + floor(mp/5)`를 inline 복제해 constants.ts의 장비 점수
 //   가중치(EQUIP_SCORE_CRIT_WEIGHT / EQUIP_SCORE_MP_DIVISOR)와 이중 관리 상태였다. 이제 상점/인벤/루팅 3표면이 동일한 델타를 보고한다.
 //   첫 인자가 equip에서 player로 바뀐 이유: 강화·직업 제한 판정에 player가 필요.
-export const getLootUpgradeHint = (player: Player, lootItems: Item[]): any => {
-    const equipmentDrops = (lootItems || []).filter((item: any) => ['weapon', 'armor', 'shield'].includes(item?.type));
+export const getLootUpgradeHint = (player: Player, lootItems: Item[]): LootHint | null => {
+    const equipmentDrops = (lootItems || []).filter((item) => ['weapon', 'armor', 'shield'].includes(String(item?.type)));
     if (!equipmentDrops.length) return null;
 
     // cycle 352: bestHint score 출력 dead 정리 — name / summary만 외부 read.
     //   score는 함수 내부 비교용으로만 사용 → 외부 노출 strip.
-    let bestHint: any = null;
+    let bestHint: LootHint | null = null;
     let bestScore = -Infinity;
-    equipmentDrops.forEach((item: any) => {
+    equipmentDrops.forEach((item) => {
         const comparison = getEquipmentComparison(player, item);
         if (!comparison) return;
         if (comparison.score <= 0) return;
@@ -62,16 +80,31 @@ export const getLootUpgradeHint = (player: Player, lootItems: Item[]): any => {
 //   81번째 single-cycle 5-default batch.
 // slice 20: victoryResult destructure 제거 — EXP/Gold 중복 파트 삭제로 body
 //   read 0건. callsite는 8 props 명시 전달 그대로 (cycle 591 가드 보존).
+export interface CombatDigestOptions {
+    addLog: AddLog;
+    enemyName: string | undefined;
+    droppedItems: Array<string | undefined>;
+    upgradeHint: LootHint | null;
+    traitHint: LootHint | null;
+    bossRewardHint: string | null;
+    bossClearBonus: number;
+    /**
+     * body가 읽지 않는 필드(slice 20에서 destructure 제거). 호출부의 8-props 명시 전달을
+     * tests/cycle-500-599.test.js(cycle 591)가 고정하고 있어 타입에서도 받아만 둔다.
+     */
+    victoryResult?: unknown;
+}
+
 export const addCombatDigestLogs = ({
     addLog, enemyName,
     droppedItems, upgradeHint, traitHint,
     bossRewardHint, bossClearBonus,
-}: any) => {
+}: CombatDigestOptions) => {
     // slice 20: 경험/골드 파트 제거 — 바로 위 MSG.VICTORY 로그
     //   ("승리했습니다. 경험 +N · 골드 +N")와 동일 수치가 2회 출력되던 중복. digest는 처치 + 전리품 요약
     //   + 후속 힌트 anchor 역할만 담당.
     const summaryParts = [
-        MSG.COMBAT_DIGEST_KILL(enemyName),
+        MSG.COMBAT_DIGEST_KILL(enemyName!),
     ];
     // slice 24: 전리품 1건은 LOOT_GET 개별 로그("전리품: X")가 이미 표시하므로
     //   digest에선 생략 — 동일 아이템명 2회 출력 중복 제거. 2건 이상일 때만
@@ -86,11 +119,11 @@ export const addCombatDigestLogs = ({
         return;
     }
     if (upgradeHint) {
-        addLog('info', MSG.COMBAT_DIGEST_EQUIP_UPGRADE(upgradeHint.name, upgradeHint.summary));
+        addLog('info', MSG.COMBAT_DIGEST_EQUIP_UPGRADE(upgradeHint.name!, upgradeHint.summary));
         return;
     }
     if (traitHint) {
-        addLog('info', MSG.COMBAT_DIGEST_TRAIT_HINT(traitHint.name, traitHint.summary));
+        addLog('info', MSG.COMBAT_DIGEST_TRAIT_HINT(traitHint.name!, traitHint.summary));
     }
 };
 
@@ -99,7 +132,7 @@ export const addCombatDigestLogs = ({
  * CombatEngine.handleVictory가 받는 passiveBonus 스키마(goldMult/expMult)에 합산한다 —
  * CombatEngine 시그니처는 그대로 유지(신규 파라미터 없음). 순수 함수.
  */
-export const buildPassiveBonusWithScout = (stats: FullStats, deadEnemy: any) => {
+export const buildPassiveBonusWithScout = (stats: FullStats, deadEnemy: DefeatedEnemy) => {
     const scoutRewardBonus = deadEnemy?.scoutRewardBonus || 0;
     return {
         goldMult: (stats?.passiveGoldMult || 0) + scoutRewardBonus,
@@ -113,15 +146,15 @@ export const buildPassiveBonusWithScout = (stats: FullStats, deadEnemy: any) => 
  * deadEnemy.scoutGuaranteedRelic이 없거나, 유물 슬롯이 가득 찼거나 후보가 없으면 무동작.
  */
 export const applyScoutGuaranteedRelic = (
-    deadEnemy: any,
+    deadEnemy: DefeatedEnemy,
     updatedPlayer: Player,
-    { dispatch, addLog, rng }: any,
+    { dispatch, addLog, rng }: Pick<GameActionDeps, 'dispatch' | 'addLog'> & { rng: () => number },
 ) => {
     if (!deadEnemy?.scoutGuaranteedRelic) return;
     const ownedRelics = updatedPlayer.relics || [];
     const relicUnlocks = getPrestigeUnlocks(updatedPlayer.meta?.prestigeRank);
     if (ownedRelics.length >= relicUnlocks.maxRelics) return;
-    const available = RELICS.filter((r: any) => !ownedRelics.some((pr: any) => pr.id === r.id));
+    const available = RELICS.filter((r) => !ownedRelics.some((pr) => pr.id === r.id));
     if (available.length === 0) return;
 
     // Wave 4 O2: 현재 빌드 아키타입을 추첨에 넘겨 빌드가 실제로 굴리는 effect를 더 자주 보여 준다.

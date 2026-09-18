@@ -4,10 +4,11 @@ import { MSG } from '../../data/messages';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { getAscensionOutcome } from '../../utils/ascensionPreview';
 import { getClaimableQuestEntries } from '../../utils/questProgress';
+import type { GameActionDeps } from '../actionDeps';
 
 // cycle 315: _shared?: any 미사용 2번째 파라미터 제거 — ascensionActions에서 shared 헬퍼 사용 0건.
 //   useGameActions에서 createAscensionActions(deps, shared) 호출하지만 extra arg는 무시되어 동작 동일.
-export const createAscensionActions = (deps: any) => {
+export const createAscensionActions = (deps: GameActionDeps) => {
     const { player, gameState, dispatch, addLog } = deps;
     let ascensionRequestInFlight = false;
     return {
@@ -32,7 +33,7 @@ export const createAscensionActions = (deps: any) => {
             });
             if (ascensionTitles.length > 0) {
                 dispatch({ type: AT.UNLOCK_TITLES, payload: ascensionTitles });
-                ascensionTitles.forEach((id: any) => addLog('system', MSG.TITLE_UNLOCKED(getTitleLabel(id))));
+                ascensionTitles.forEach((id) => addLog('system', MSG.TITLE_UNLOCKED(getTitleLabel(id))));
             }
             addLog('system', MSG.ASCEND_DONE(outcome.nextRank, outcome.title));
         },

@@ -5,12 +5,13 @@ import { createCharacterActions } from './gameActions/characterActions';
 import { createEventActions } from './gameActions/eventActions';
 import { createQuestActions } from './gameActions/questActions';
 import { createAscensionActions } from './gameActions/ascensionActions';
+import type { GameActionDeps } from './actionDeps';
 
 /**
  * useGameActions — 이동, 탐색, 휴식, 이벤트, 직업, 퀘스트 수락, 시작, 리셋
  * createGameActions는 팩토리 함수로, useGameEngine에서 useMemo로 호출됩니다.
  */
-export const createGameActions = (deps: any) => {
+export const createGameActions = (deps: GameActionDeps) => {
     const shared = makeSharedHelpers(deps);
     // cycle 315: createMoveActions / createAscensionActions는 shared를 사용하지 않아 1-arg로 호출.
     return {

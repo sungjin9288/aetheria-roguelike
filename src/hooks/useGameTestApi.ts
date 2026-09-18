@@ -771,7 +771,7 @@ export const useGameTestApi = (
                 const basePlayer = structuredClone(INITIAL_STATE.player);
                 const signatureWeapon = DB.ITEMS.weapons.find((item: any) => item.name === '성검 에테르니아');
                 if (!signatureWeapon) return false;
-                const meta = {
+                const meta: NonNullable<Player['meta']> = {
                     ...(basePlayer.meta || {}),
                     prestigeRank: 3,
                     essence: 640,

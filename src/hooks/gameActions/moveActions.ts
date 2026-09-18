@@ -12,24 +12,25 @@ import { isAreaBossUndefeated, getAreaBossName } from '../../utils/bossGauge';
 import { finishExpedition, normalizeActiveExpedition, startExpedition } from '../../utils/expeditionLedger';
 import { resolveProgressionProfile, scaleProgressionExpReward } from '../../data/progressionProfiles';
 import type { Player } from '../../types';
+import type { GameActionDeps } from '../actionDeps';
 
 // cycle 314: addStoryLog 미사용 dependency 제거 — moveActions 어디에서도 호출 0건.
 //   `void addStoryLog` 자가-suppress 라인도 함께 cleanup.
 // cycle 315: _shared?: any 미사용 2번째 파라미터 제거 — moveActions에서 shared 헬퍼 사용 0건.
 //   useGameActions에서 createMoveActions(deps, shared) 호출하지만 extra arg는 무시되어 동작 동일.
-export const createMoveActions = (deps: any) => {
+export const createMoveActions = (deps: GameActionDeps) => {
     const { player, gameState, grave, isAiThinking, liveConfig, dispatch, addLog } = deps;
     return {
         move: (loc: string) => {
             if (isAiThinking) return;
             if (!loc) {
-                const exits = DB.MAPS[player.loc]?.exits?.join(', ') || MSG.MOVE_NO_EXITS;
+                const exits = DB.MAPS[player.loc!]?.exits?.join(', ') || MSG.MOVE_NO_EXITS;
                 return addLog('info', MSG.MOVE_EXITS(exits));
             }
             if (!['idle', 'moving'].includes(gameState)) return addLog('error', MSG.MOVE_BLOCKED);
 
             const targetMap = DB.MAPS[loc];
-            const { reason, requiredLevel } = getMapAccess(DB.MAPS, player.loc, loc, player.level, Boolean(liveConfig?.seasonEvent?.active));
+            const { reason, requiredLevel } = getMapAccess(DB.MAPS, player.loc!, loc, player.level!, Boolean(liveConfig?.seasonEvent?.active));
             if (reason === 'missing') return addLog('error', MSG.MAP_NOT_FOUND);
             if (reason === 'season') {
                 return addLog('warn', MSG.MOVE_SEASON_ONLY);
@@ -38,7 +39,7 @@ export const createMoveActions = (deps: any) => {
             if (reason === 'exit') return addLog('error', MSG.MOVE_NO_EXIT);
 
             const firstVisit = !(player.stats?.visitedMaps || []).includes(loc);
-            const isSafeOrigin = DB.MAPS[player.loc]?.type === 'safe';
+            const isSafeOrigin = DB.MAPS[player.loc!]?.type === 'safe';
             const isSafeDestination = targetMap.type === 'safe';
             const activeExpedition = normalizeActiveExpedition(player.activeExpedition);
             const shouldStartExpedition = isSafeOrigin && !isSafeDestination && !activeExpedition;
@@ -104,7 +105,7 @@ export const createMoveActions = (deps: any) => {
                     });
                 }
             }
-            addLog('system', targetMap.desc);
+            addLog('system', targetMap.desc ?? '');
             if (firstVisit && targetMap.lore) addLog('event', targetMap.lore);
 
             // 원정 목표 배너 (2026-07 감사 축4 — 모바일 세션 정합): 미격파 구역 보스가 있는

@@ -16,8 +16,34 @@ import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 import { appendExpeditionBoss } from '../../utils/expeditionLedger';
 import { admitCombatLoot } from '../../systems/combatLootCapacity';
-import type { Player } from '../../types';
+import type { FullStats, Player } from '../../types';
 import type { LootSettlementReceipt } from '../../reducers/gameReducer';
+import type { AddLog, AddStoryLog, EmitUnlockedTitles, GameActionDeps } from '../actionDeps';
+import type { DefeatedEnemy } from './_helpers';
+
+/**
+ * 전투 승리 후처리의 주입 경계.
+ *
+ * 생산자는 reducer(`handlers/combatHandlers.settleVictory`) 하나다 — dispatch/addLog/
+ * addStoryLog/emitUnlockedTitles는 모두 "reducer draft에 누적하는 수집기"가 들어오고,
+ * rng/now는 action seed에서 파생된 결정론 함수가 들어온다(CLAUDE.md §8-1).
+ */
+export interface VictoryOutcomeOptions {
+    /** 직접 승리 시점의 player (CombatEngine 결과). */
+    playerAfterCombat: Player;
+    deadEnemy: DefeatedEnemy;
+    /** getFullStats() 결과. */
+    stats: FullStats;
+    dispatch: GameActionDeps['dispatch'];
+    addLog: AddLog;
+    addStoryLog: AddStoryLog;
+    emitUnlockedTitles: EmitUnlockedTitles;
+    /** attack/skill 직접 승리에만 true (시즌XP, 마왕, 진엔딩, story log). */
+    extendedChecks: boolean;
+    liveConfig: GameActionDeps['liveConfig'];
+    rng: () => number;
+    now: () => number;
+}
 
 /**
  * 전투 승리 공통 후처리.
@@ -40,14 +66,14 @@ export const handleVictoryOutcome = ({
     liveConfig,
     rng,
     now,
-}: any) => {
+}: VictoryOutcomeOptions) => {
     const random = typeof rng === 'function' ? rng : Math.random;
     const currentTime = typeof now === 'function' ? now : Date.now;
     // 탐험 스카우팅 "전투의 기척" 카드 — 해당 전투 한정 처치 보상(EXP/골드) 배율 보너스.
     const passiveBonus = buildPassiveBonusWithScout(stats, deadEnemy);
     const victoryResult = CombatEngine.handleVictory(playerAfterCombat, deadEnemy, passiveBonus, liveConfig);
     let updatedPlayer = victoryResult.updatedPlayer;
-    victoryResult.logs.forEach((log: any) => addLog(log.type, log.text));
+    victoryResult.logs.forEach((log: { type: string; text: string }) => addLog(log.type, log.text));
     if (victoryResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: victoryResult.visualEffect });
 
     // cycle 274: 레벨업 시 addStoryLog('levelUp', ...) — aiService 8 스토리 템플릿 dead 시리즈
@@ -86,7 +112,7 @@ export const handleVictoryOutcome = ({
     const blockedCandidates = lootAdmission.blocked;
     const admittedItems = admittedCandidates.map(({ item }) => item);
     const admittedLogs = admittedCandidates.flatMap(({ logs }) => logs);
-    admittedLogs.forEach((log: any) => addLog(log.type, log.text));
+    admittedLogs.forEach((log) => addLog(log.type, log.text));
     if (blockedCandidates.length > 0) {
         addLog('warn', MSG.COMBAT_LOOT_CAPACITY_BLOCKED(blockedCandidates.length));
     }
@@ -101,8 +127,8 @@ export const handleVictoryOutcome = ({
     //  - signature 하나라도 드롭 → pity = 0
     //  - 보스 토벌 + signature 미획득 → pity += 1
     //  - 일반 몹은 pity 영향 없음
-    const admittedSignatureCount = admittedItems.filter((item: any) => isSignatureItem(item)).length;
-    const blockedSignatureCount = blockedCandidates.filter(({ item }: any) => isSignatureItem(item)).length;
+    const admittedSignatureCount = admittedItems.filter((item) => isSignatureItem(item)).length;
+    const blockedSignatureCount = blockedCandidates.filter(({ item }) => isSignatureItem(item)).length;
     const signatureDropped = admittedSignatureCount > 0;
     const prevPity = updatedPlayer.stats?.signaturePity || 0;
     if (signatureDropped) {
@@ -122,7 +148,7 @@ export const handleVictoryOutcome = ({
         rolledCount: lootResult.candidates.length,
         admittedCount: admittedItems.length,
         blockedCount: blockedCandidates.length,
-        admittedItemIds: admittedItems.flatMap((item: any) => (
+        admittedItemIds: admittedItems.flatMap((item) => (
             typeof item.id === 'string' ? [item.id] : []
         )),
         admittedSignatureCount,
@@ -146,15 +172,18 @@ export const handleVictoryOutcome = ({
     if (extendedChecks) {
         const milestoneRewards = checkMilestones(updatedPlayer.stats?.killRegistry || {}, baseName);
         if (milestoneRewards.length > 0) {
-            milestoneRewards.forEach((reward: any) => {
+            // checkMilestones의 val은 type에 따라 number(gold) / string(item·title)이다 —
+            //   반환 타입이 판별 유니온이 아니라 각 분기에서 해당 형으로 좁혀 쓴다.
+            milestoneRewards.forEach((reward) => {
                 addLog('event', reward.msg);
-                if (reward.type === 'gold') updatedPlayer = grantGold(updatedPlayer, reward.val);
-                else if (reward.type === 'item') updatedPlayer = addItemByName(updatedPlayer, reward.val);
+                if (reward.type === 'gold') updatedPlayer = grantGold(updatedPlayer, Number(reward.val));
+                else if (reward.type === 'item') updatedPlayer = addItemByName(updatedPlayer, String(reward.val));
                 else if (reward.type === 'title') {
+                    const title = String(reward.val);
                     updatedPlayer = {
                         ...updatedPlayer,
-                        titles: [...new Set([...(updatedPlayer.titles || []), reward.val])],
-                        activeTitle: updatedPlayer.activeTitle || reward.val
+                        titles: [...new Set([...(updatedPlayer.titles || []), title])],
+                        activeTitle: updatedPlayer.activeTitle || title
                     };
                 }
             });
@@ -230,7 +259,7 @@ export const handleVictoryOutcome = ({
                             areaBossDefeated: {
                                 // INITIAL_STATE가 stats를 보장한다(비필수 선언은 구세이브 호환용).
                                 ...(p.stats!.areaBossDefeated || {}),
-                                [deadEnemy.baseName]: true,
+                                [deadEnemy.baseName!]: true,
                             },
                         },
                     };
@@ -275,7 +304,7 @@ export const handleVictoryOutcome = ({
         addStoryLog('victory', { name: deadEnemy.name });
     }
 
-    const droppedItems = admittedItems.map((i: any) => i.name);
+    const droppedItems = admittedItems.map((i) => i.name);
     const traitProfile = getTraitProfile(updatedPlayer, victoryStats);
     // A2(감사 G4): getLootUpgradeHint는 강화 수치를 반영하려고 player 전체를 받는다.
     //   대상 목록은 Codex의 수용량 정산을 통과한 admittedItems만이다(가방에 못 들어간 전리품은 힌트 대상 아님).

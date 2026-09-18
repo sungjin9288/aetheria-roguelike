@@ -3,11 +3,21 @@ import { ADMIN_UIDS } from '../data/constants';
 import { AI_SERVICE } from '../services/aiService';
 import { parseCommand } from '../utils/commandParser';
 import { gameReducer, INITIAL_STATE, type GameState } from '../reducers/gameReducer';
+import type {
+    AddLog,
+    AddStoryLog,
+    CombatActionDeps,
+    EngineStableActions,
+    GameActionDeps,
+    GameActions,
+    GetFullStats,
+} from './actionDeps';
+import type { Player } from '../types';
 import { AT } from '../reducers/actionTypes';
 import { GS } from '../reducers/gameStates';
 import { calculateFullStats } from '../utils/statsCalculator';
 import { getRunBuildProfile } from '../utils/runProfileUtils';
-import { acknowledgeMilestoneStoryBeat } from '../utils/milestoneStory';
+import { acknowledgeMilestoneStoryBeat, type MilestoneStoryBeatId } from '../utils/milestoneStory';
 
 import { useFirebaseSync } from './useFirebaseSync';
 import { useProductTelemetry } from './useProductTelemetry';
@@ -43,7 +53,8 @@ const storyLogSequence = { current: 0 };
 export const useGameEngine = () => {
     const [state, dispatch] = useReducer(gameReducer, INITIAL_STATE);
     useProductTelemetry(state);
-    const combatPendingRef = useRef<any>(null);
+    // 시각효과 해제 타이머 핸들만 담는다 — 전투 턴 해석은 reducer 소유(CLAUDE.md §8-1).
+    const combatPendingRef = useRef<ReturnType<typeof setTimeout> | null>(null);
     const combatItemLocksRef = useRef<Set<string>>(new Set());
     const combatActionLocksRef = useRef<Set<string>>(new Set());
     const clearPendingCombat = useCallback(() => {
@@ -105,18 +116,20 @@ export const useGameEngine = () => {
     useEffect(() => () => clearPendingCombat(), [clearPendingCombat]);
 
     // --- Shared Helpers ---
-    const addLog = useCallback(
-        (type: any, text: any) => dispatch({ type: AT.ADD_LOG, payload: { type, text, id: `${Date.now()}_${Math.random()}` } }),
+    const addLog: AddLog = useCallback(
+        (type: string, text: string) => dispatch({ type: AT.ADD_LOG, payload: { type, text, id: `${Date.now()}_${Math.random()}` } }),
         []
     );
 
-    const getFullStats = useCallback(
-        (targetPlayer: any = player) => calculateFullStats(targetPlayer ?? player),
+    // player는 INITIAL_STATE부터 항상 존재하므로(calculateFullStats의 null은 JS 호출부용
+    //   방어 분기) 파생 스탯은 non-null로 좁혀 내보낸다 — 소비처 전부가 `.maxHp`를 직접 읽는다.
+    const getFullStats: GetFullStats = useCallback(
+        (targetPlayer: Player = player) => calculateFullStats(targetPlayer ?? player)!,
         [player]
     );
 
-    const addStoryLog = useCallback(
-        async (type: any, data: any) => {
+    const addStoryLog: AddStoryLog = useCallback(
+        async (type: string, data: Record<string, unknown>) => {
             dispatch({ type: AT.SET_AI_THINKING, payload: true });
             const tempId = allocateStoryLogId(storyLogSequence);
             dispatch({ type: AT.ADD_LOG, payload: { type: 'loading', text: '...', id: tempId } });
@@ -138,7 +151,7 @@ export const useGameEngine = () => {
                         maxMp: player.maxMp,
                         title: player.activeTitle || null,
                         relicCount: (player.relics || []).length,
-                        buildProfile: buildProfile.tags.map((tag: any) => tag.name).slice(0, 4)
+                        buildProfile: buildProfile.tags.map((tag) => tag.name).slice(0, 4)
                     }
                 }, uid);
 
@@ -164,7 +177,7 @@ export const useGameEngine = () => {
             narratedCombatReceiptRef.current,
         );
         narratedCombatReceiptRef.current = consumption.consumedKey;
-        consumption.stories.forEach((story: any) => {
+        consumption.stories.forEach((story) => {
             void addStoryLog(story.type, story.data);
         });
     }, [addStoryLog, combatReceipt]);
@@ -176,29 +189,29 @@ export const useGameEngine = () => {
     const stableActions = useMemo(
         () => ({
             // UI State setters
-            setSideTab: (val: any) => dispatch({ type: AT.SET_SIDE_TAB, payload: val }),
-            setGameState: (val: any) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
-            setShopItems: (val: any) => dispatch({ type: AT.SET_SHOP_ITEMS, payload: val }),
-            acknowledgeMilestoneStoryBeat: (id: any) => dispatch({
+            setSideTab: (val: string) => dispatch({ type: AT.SET_SIDE_TAB, payload: val }),
+            setGameState: (val: string) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
+            setShopItems: (val: GameState['shopItems']) => dispatch({ type: AT.SET_SHOP_ITEMS, payload: val }),
+            acknowledgeMilestoneStoryBeat: (id: MilestoneStoryBeatId) => dispatch({
                 type: AT.SET_PLAYER,
-                payload: (currentPlayer: any) => acknowledgeMilestoneStoryBeat(currentPlayer, id),
+                payload: (currentPlayer: Player) => acknowledgeMilestoneStoryBeat(currentPlayer, id),
             }),
             openExpeditionDebrief: () => dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: true }),
             // cycle 406: setAiThinking 제거 — actions.setAiThinking 호출 0건이라 dead.
             //   AT.SET_AI_THINKING reducer handler는 보존 (다른 dispatch path 의존).
-            setActiveTitle: (val: any) => dispatch({ type: AT.SET_PLAYER, payload: { activeTitle: val } }),
-            setReadabilityMode: (val: any) => dispatch({
+            setActiveTitle: (val: string | null) => dispatch({ type: AT.SET_PLAYER, payload: { activeTitle: val } }),
+            setReadabilityMode: (val: string) => dispatch({
                 type: AT.SET_PLAYER,
-                payload: (currentPlayer: any) => ({
+                payload: (currentPlayer: Player) => ({
                     settings: {
                         ...(currentPlayer.settings || {}),
                         readabilityMode: val === 'high' ? 'high' : 'standard',
                     },
                 }),
             }),
-            setEquipmentDetailMode: (val: any) => dispatch({
+            setEquipmentDetailMode: (val: string) => dispatch({
                 type: AT.SET_PLAYER,
-                payload: (currentPlayer: any) => ({
+                payload: (currentPlayer: Player) => ({
                     settings: {
                         ...(currentPlayer.settings || {}),
                         equipmentDetailMode: ['summary', 'full'].includes(val) ? val : 'auto',
@@ -211,20 +224,20 @@ export const useGameEngine = () => {
             },
 
             // Feature Actions
-            setQuickSlot: (index: any, item: any) => dispatch({ type: AT.SET_QUICK_SLOT, payload: { index, item } }),
+            setQuickSlot: (index: number, item: GameState['quickSlots'][number]) => dispatch({ type: AT.SET_QUICK_SLOT, payload: { index, item } }),
             clearPostCombat: () => dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null }),
             clearEconomyReceipt: () => dispatch({ type: AT.CLEAR_ECONOMY_RECEIPT }),
 
             getUid: () => uid,
             isAdmin: () => ADMIN_UIDS.includes(uid ?? ''),
-        }),
+        } satisfies EngineStableActions),
         [uid]
     );
 
     // --- Compose Actions from Extracted Hooks ---
     const actions = useMemo(
         () => {
-            const deps = {
+            const deps: GameActionDeps = {
                 player,
                 gameState,
                 uid,
@@ -238,15 +251,16 @@ export const useGameEngine = () => {
                 addStoryLog,
                 getFullStats,
             };
-            const gameActions = createGameActions(deps);
-            const combatActions = createCombatActions({
+            const combatDeps: CombatActionDeps = {
                 ...deps,
                 clearPendingCombat,
                 schedulePendingCombat,
                 claimCombatItem,
                 claimCombatAction,
                 combatTurn,
-            });
+            };
+            const gameActions = createGameActions(deps);
+            const combatActions = createCombatActions(combatDeps);
             const inventoryActions = createInventoryActions(deps);
 
             return {
@@ -261,7 +275,7 @@ export const useGameEngine = () => {
                     if (summaryId) {
                         dispatch({
                             type: AT.SET_PLAYER,
-                            payload: (currentPlayer: any) => currentPlayer.lastExpeditionSummary?.id === summaryId
+                            payload: (currentPlayer: Player) => currentPlayer.lastExpeditionSummary?.id === summaryId
                                 ? {
                                     lastExpeditionSummary: {
                                         ...currentPlayer.lastExpeditionSummary,
@@ -279,12 +293,12 @@ export const useGameEngine = () => {
                 leaderboard,
                 getFullStats,
                 dispatch,
-            };
+            } satisfies GameActions;
         },
         [player, gameState, enemy, isAiThinking, uid, liveConfig, grave, currentEvent, addLog, addStoryLog, getFullStats, leaderboard, economyReceipt, clearPendingCombat, schedulePendingCombat, claimCombatItem, claimCombatAction, combatTurn, stableActions]
     );
 
-    const handleCommand = useCallback((text: any) => {
+    const handleCommand = useCallback((text: string) => {
         const result = parseCommand(text, gameState, player, actions);
         if (typeof result === 'string') addLog('system', result);
     }, [gameState, player, actions, addLog]);

@@ -2,6 +2,7 @@ import { AT } from '../reducers/actionTypes';
 import { getEquipmentIdentity } from '../utils/equipmentUtils';
 import { resolveConsumableEffect } from '../systems/consumableEffect';
 import type { EquipSlots, Item, Player } from '../types/index.js';
+import type { InventoryActionCtx } from './actionDeps';
 
 const findEnhanceTarget = (player: Player, itemId: string) => {
     // 'equip:<slot>' 형식의 id만 fallbackSlot을 갖는다 — 슬롯 키는 EquipSlots의 3종.
@@ -10,17 +11,17 @@ const findEnhanceTarget = (player: Player, itemId: string) => {
         player.equip?.[slot]?.id === itemId
     ));
     const slot = fallbackSlot || equippedSlot || null;
-    return (player.inv || []).find((entry: any) => entry.id === itemId)
+    return (player.inv || []).find((entry) => entry.id === itemId)
         || (slot ? player.equip?.[slot] : null)
         || null;
 };
 
 /** UI는 선택 대상과 난수만 전달하고, 장착·소비·강화 결과는 reducer가 확정한다. */
-export const createEquipmentActions = ({ player, dispatch, addLog }: any) => ({
+export const createEquipmentActions = ({ player, dispatch, addLog }: InventoryActionCtx) => ({
     useItem: (item: Item) => {
         if (!item?.id) return;
-        const inventoryItem = (player.inv || []).find((entry: any) => entry.id === item.id);
-        if (inventoryItem && ['hp', 'mp', 'cure', 'buff'].includes(inventoryItem.type)) {
+        const inventoryItem = (player.inv || []).find((entry) => entry.id === item.id);
+        if (inventoryItem && ['hp', 'mp', 'cure', 'buff'].includes(inventoryItem.type!)) {
             const preview = resolveConsumableEffect({ player, item: inventoryItem });
             if (!preview.ok) {
                 addLog?.('warn', preview.message);

@@ -372,8 +372,9 @@ test('exploreActions: 체인 → 캠프파이어 → 보스 도전 선택 → �
 
 test('exploreActions: 보스 도전 선택 분기가 isAreaBossUndefeated + isBossGaugeFull 조건으로 게이팅됨', async () => {
     const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
-    assert.ok(/isAreaBossUndefeated\(mapData,\s*player\)\s*&&\s*isBossGaugeFull\(mapData,\s*player\.loc\)/.test(source)
-        || /isAreaBossUndefeated\(mapData,\s*player\)\s*&&\s*isBossGaugeFull\(player,\s*player\.loc\)/.test(source),
+    // Wave 6 X1: loc 파라미터가 string으로 닫히면서 호출부가 `player.loc!`로 좁혀졌다.
+    assert.ok(/isAreaBossUndefeated\(mapData,\s*player\)\s*&&\s*isBossGaugeFull\(mapData,\s*player\.loc!?\)/.test(source)
+        || /isAreaBossUndefeated\(mapData,\s*player\)\s*&&\s*isBossGaugeFull\(player,\s*player\.loc!?\)/.test(source),
         '보스 도전 선택 카드는 미격파 + 게이지 만충일 때만 발동');
 });
 
