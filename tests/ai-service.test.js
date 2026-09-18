@@ -14,6 +14,7 @@ process.env.VITE_USE_AI_PROXY = 'true';
 const { AI_SERVICE } = await import('../src/services/aiService.ts');
 const { TokenQuotaManager } = await import('../src/systems/TokenQuotaManager.ts');
 const { BALANCE } = await import('../src/data/constants.ts');
+const { MSG } = await import('../src/data/messages.ts');
 
 /** localStorage 간이 스텁 — TokenQuotaManager가 사용하는 getItem/setItem만 구현. */
 const makeLocalStorageStub = () => {
@@ -358,6 +359,162 @@ test('narrative location: canonical priority and invalid input fallback agree at
         assert.equal(AI_SERVICE.getFallback('rest', input), `${expected}에서 편안히 쉬며 생명을 회복했습니다.`);
         assert.equal(AI_SERVICE.getFallback('encounter', { ...input, name: '슬라임' }), `${expected}의 어둠 속에서 슬라임의 기척이 나타났습니다.`);
     }
+});
+
+// ── 2026-09 Wave 12 D3: 쿼터 회계 — 두 경로가 같은 미터를 같은 방식으로 움직인다 ──
+
+/**
+ * 미터의 의미: **디스패치 1건 = 쿼터 1건**. 프록시로 나간 요청은 응답이 오지 않아도,
+ * 패키지가 깨져도, 최근 본 이야기와 겹쳐 버려져도 한 건을 쓴다. 채택 여부는 한도가 아니라
+ * `outcomes` 원장에 남고, 그래서 "나갔지만 채택되지 않은 호출"이 처음으로 숫자가 된다.
+ *
+ * 각 행: 라벨 · 프록시 fetch 스텁 · 호출 실행 · 기대 정산.
+ */
+const ACCOUNTING_TABLE = [
+    [
+        'event 채택: AI 이벤트가 그대로 실린다',
+        async () => ({ ok: true, json: async () => ({ success: true, data: { desc: '유적이 낮게 웅웅거린다.', choices: ['다가간다', '물러선다'] } }) }),
+        () => AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext),
+        { dispatched: 1, outcome: 'adopted' },
+    ],
+    [
+        'event 미채택(malformed): desc가 없어 패키지가 만들어지지 않는다',
+        async () => ({ ok: true, json: async () => ({ success: true, data: { choices: ['가', '나'] } }) }),
+        () => AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext),
+        { dispatched: 1, outcome: 'malformed-response' },
+    ],
+    [
+        'event 미채택(recent-duplicate): 최근에 본 이야기와 같다',
+        async () => ({ ok: true, json: async () => ({ success: true, data: { desc: '유적이 낮게 웅웅거린다.', choices: ['다가간다', '물러선다'] } }) }),
+        () => AI_SERVICE.generateEvent('잊혀진 폐허', [{ event: '유적이 낮게 웅웅거린다.' }], 'test-uid', basePlayerContext),
+        { dispatched: 1, outcome: 'recent-duplicate' },
+    ],
+    [
+        'event 미채택(proxy-unavailable): 응답이 오지 않았다',
+        async () => { throw new Error('network down'); },
+        () => AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext),
+        { dispatched: 1, outcome: 'proxy-unavailable' },
+    ],
+    [
+        'event 미채택(proxy-rejected): success:false',
+        async () => ({ ok: true, json: async () => ({ success: false }) }),
+        () => AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext),
+        { dispatched: 1, outcome: 'proxy-rejected' },
+    ],
+    [
+        'story 채택: narrative 문자열',
+        async () => ({ ok: true, json: async () => ({ success: true, data: { narrative: '용사가 결정타를 날렸다!' } }) }),
+        () => AI_SERVICE.generateStory('victory', { name: '고블린', history: [] }, 'test-uid'),
+        { dispatched: 1, outcome: 'adopted' },
+    ],
+    [
+        'story 미채택(malformed): narrative가 문자열이 아니다',
+        async () => ({ ok: true, json: async () => ({ success: true, data: { narrative: 7 } }) }),
+        () => AI_SERVICE.generateStory('victory', { name: '고블린', history: [] }, 'test-uid'),
+        { dispatched: 1, outcome: 'malformed-response' },
+    ],
+    [
+        'story 미채택(proxy-unavailable): 응답이 오지 않았다',
+        async () => { throw new Error('network down'); },
+        () => AI_SERVICE.generateStory('victory', { name: '고블린', history: [] }, 'test-uid'),
+        { dispatched: 1, outcome: 'proxy-unavailable' },
+    ],
+    [
+        'story 미채택(proxy-rejected): success:false',
+        async () => ({ ok: true, json: async () => ({ success: false }) }),
+        () => AI_SERVICE.generateStory('victory', { name: '고블린', history: [] }, 'test-uid'),
+        { dispatched: 1, outcome: 'proxy-rejected' },
+    ],
+];
+
+test(`쿼터 회계표 ${ACCOUNTING_TABLE.length}행 — 나간 요청은 채택되지 않아도 1건을 쓰고, 그 결과가 원장에 남는다`, async () => {
+    for (const [label, fetchStub, run, expected] of ACCOUNTING_TABLE) {
+        await withGlobalStub({ localStorage: makeLocalStorageStub(), fetch: fetchStub }, async () => {
+            await run();
+            const ledger = TokenQuotaManager.getCallLedger();
+            assert.equal(ledger.dispatched, expected.dispatched, `${label}: 디스패치`);
+            assert.deepEqual(ledger.byOutcome, { [expected.outcome]: 1 }, `${label}: 정산`);
+            assert.equal(ledger.unsettled, 0, `${label}: 미정산 0`);
+            assert.equal(
+                ledger.adopted + ledger.unadopted,
+                ledger.dispatched,
+                `${label}: 디스패치는 전부 정산된다`,
+            );
+        });
+    }
+});
+
+test('쿼터 회계 대칭: 같은 프록시 봉투에 이벤트/스토리가 같은 미터 움직임을 낸다', async () => {
+    // W11 발견 6의 그 봉투 — 예전에는 이벤트만 1건을 쓰고 스토리는 0건이었다.
+    const envelopes = [
+        ['응답 없음', async () => { throw new Error('network down'); }],
+        ['success:false', async () => ({ ok: true, json: async () => ({ success: false }) })],
+        ['success:true + 빈 data', async () => ({ ok: true, json: async () => ({ success: true, data: {} }) })],
+    ];
+
+    for (const [label, fetchStub] of envelopes) {
+        const readLedger = async (run) => {
+            let ledger;
+            await withGlobalStub({ localStorage: makeLocalStorageStub(), fetch: fetchStub }, async () => {
+                await run();
+                ledger = TokenQuotaManager.getCallLedger();
+            });
+            return ledger;
+        };
+
+        const eventLedger = await readLedger(() => AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext));
+        const storyLedger = await readLedger(() => AI_SERVICE.generateStory('victory', { name: '고블린', history: [] }, 'test-uid'));
+
+        assert.equal(eventLedger.dispatched, 1, `${label}: event 디스패치 1`);
+        assert.equal(storyLedger.dispatched, 1, `${label}: story 디스패치 1`);
+        assert.equal(eventLedger.adopted, storyLedger.adopted, `${label}: 채택 수 일치`);
+        assert.equal(eventLedger.unadopted, storyLedger.unadopted, `${label}: 미채택 수 일치`);
+        assert.deepEqual(eventLedger.byOutcome, storyLedger.byOutcome, `${label}: 정산 어휘 일치`);
+    }
+});
+
+test('디스패치 전 폴백 3종은 미터를 전혀 움직이지 않는다 (mock 런타임 / 쿼터 소진 / 프록시 비활성)', async () => {
+    // mock 런타임: localStorage를 아예 주지 않아도 통과해야 한다(쿼터를 읽지 않는다).
+    await withGlobalStub({
+        window: { location: { search: '?e2e=1' } },
+        fetch: async () => { throw new Error('mock 런타임은 프록시를 부르지 않는다'); },
+    }, async () => {
+        const event = await AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext);
+        assert.equal(event.source, 'fallback');
+    });
+
+    // 쿼터 소진: 이미 50건을 썼으므로 51번째 디스패치는 없다.
+    await withGlobalStub({
+        localStorage: makeLocalStorageStub(),
+        fetch: async () => { throw new Error('쿼터 소진 시 프록시를 부르면 안 된다'); },
+    }, async () => {
+        for (let i = 0; i < TokenQuotaManager.DAILY_LIMIT; i += 1) TokenQuotaManager.recordCall();
+        await AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext);
+        await AI_SERVICE.generateStory('victory', { name: '고블린', history: [] }, 'test-uid');
+        assert.equal(TokenQuotaManager.getCallLedger().dispatched, TokenQuotaManager.DAILY_LIMIT, '한도를 넘겨 세지 않는다');
+    });
+});
+
+test('한도 소진 안내가 "몇 번 보냈고 몇 번이 이야기가 됐는지"를 실어 폴백 이벤트에 붙는다', async () => {
+    await withGlobalStub({
+        localStorage: makeLocalStorageStub(),
+        fetch: async () => ({ ok: true, json: async () => ({ success: true, data: { choices: ['가', '나'] } }) }),
+    }, async () => {
+        // 한도 직전까지 미채택으로 태운 뒤, 마지막 1건으로 한도를 닫는다.
+        for (let i = 0; i < TokenQuotaManager.DAILY_LIMIT - 1; i += 1) {
+            TokenQuotaManager.recordCall();
+            TokenQuotaManager.recordOutcome('proxy-unavailable');
+        }
+        const burned = await AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext);
+        assert.equal(burned.source, 'fallback', '패키지가 깨졌으므로 폴백');
+        assert.equal(TokenQuotaManager.canMakeAICall(), false);
+
+        const exhausted = await AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext);
+        assert.equal(exhausted.fallbackReason, 'quota');
+        assert.equal(exhausted.fallbackMessage, MSG.AI_QUOTA_EXHAUSTED_LEDGER(0, TokenQuotaManager.DAILY_LIMIT));
+        assert.notEqual(exhausted.fallbackMessage, MSG.AI_QUOTA_EXHAUSTED,
+            '채택 0건인 하루에 기본 문구만 보여주면 안내가 거짓이 된다');
+    });
 });
 
 test('getFallback: 지원 타입 각각 고정 템플릿 문자열을 반환하고, 미지원 타입은 기본 문구로 대체된다', () => {

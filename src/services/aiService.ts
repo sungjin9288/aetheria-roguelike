@@ -17,6 +17,7 @@ import {
     resolveAiEventPackage,
     resolveAiEventResponse,
     resolveAiStoryResponse,
+    type AiCallDecision,
     type AiProxyTrack,
     type AiQuotaState,
     type AiRequestKind,
@@ -44,6 +45,11 @@ interface AiEventContext {
 //   fetch / AbortController / 타이머 / firebase 토큰 / localStorage 쿼터 읽기·기록 /
 //   폴백 풀 선택(pickFallbackEvent)과 패키지 정규화(buildEventPackage) 호출.
 //   프록시 응답 봉투(`success`/`data`)를 좁히는 일도 정책 쪽 resolver가 한다.
+//
+// W12-D3: 쿼터 소모 지점이 응답 해석 2곳에서 **디스패치 1곳**으로 올라왔다(`dispatchProxyCall`).
+//   이벤트/스토리가 같은 헬퍼를 지나므로 "이벤트는 success에서, 스토리는 narrative 확인 뒤"
+//   같은 비대칭이 다시 생길 자리가 없다. 응답 해석은 이제 소모 여부가 아니라 **이미 쓴 1건이
+//   어떻게 끝났는지**(`outcome`)만 돌려주고, 그 값을 `TokenQuotaManager.recordOutcome`이 적는다.
 
 /**
  * 프록시 트랙 = [LatencyTracker 라벨, AbortController 타임아웃(ms)].
@@ -83,6 +89,18 @@ const decideRequest = (requestKind: AiRequestKind) => decideAiEventRequest({
     readQuota,
     track: AI_PROXY_TRACKS[requestKind],
 });
+
+/**
+ * 디스패치 1건 = 쿼터 1건. 두 경로(이벤트/스토리)가 반드시 이 헬퍼를 지나므로 소모 지점이
+ * 하나다 — `recordCall`을 `await` **앞에서** 쓰는 것이 핵심이다. 응답을 본 뒤에 쓰면
+ * 응답이 오지 않는 호출(타임아웃·네트워크 예외·!ok)이 공짜가 되고, 그러면 프록시가
+ * 흔들리는 사용자가 로컬 카운터 0으로 백엔드를 계속 두드릴 수 있다(서버에는 일일 한도가
+ * 없다 — functions/api/ai-proxy.js:52-65는 60초 40건 uid+IP 버킷일 뿐이다).
+ */
+const dispatchProxyCall = async (decision: AiCallDecision, body: unknown): Promise<unknown> => {
+    if (decision.recordCall) TokenQuotaManager.recordCall();
+    return callProxy(body, decision.trackLabel, decision.timeoutMs);
+};
 
 /**
  * AI_SERVICE 내부 공용 프록시 호출 헬퍼 (DRY 적용)
@@ -203,23 +221,17 @@ export const AI_SERVICE = {
         const recentHistory = summarizeHistory(history);
         const recentEvents = getRecentEventSet(history);
 
-        const result = resolveAiEventResponse(await callProxy(
-            {
-                type: 'event',
-                data: {
-                    location: loc,
-                    history: recentHistory,
-                    playerSnapshot: context.playerSnapshot || {},
-                    mapSnapshot: context.mapSnapshot || {},
-                    uid
-                }
-            },
-            decision.trackLabel,
-            decision.timeoutMs
-        ));
-        // 쿼터 소모 시점 보존: 이벤트 경로는 success 응답을 받은 순간 기록한다
-        //   (패키지가 아래 검증에서 떨어져도 되돌리지 않는다).
-        if (result.recordCall) TokenQuotaManager.recordCall();
+        // 쿼터는 여기서 소모된다(디스패치 = 비용). 아래 해석은 그 1건의 정산만 남긴다.
+        const result = resolveAiEventResponse(await dispatchProxyCall(decision, {
+            type: 'event',
+            data: {
+                location: loc,
+                history: recentHistory,
+                playerSnapshot: context.playerSnapshot || {},
+                mapSnapshot: context.mapSnapshot || {},
+                uid
+            }
+        }));
 
         if (result.kind === 'payload') {
             const normalized = buildEventPackage(result.data, { ...context, location: loc, source: 'ai' } as EventContext);
@@ -227,8 +239,12 @@ export const AI_SERVICE = {
                 built: normalized !== null,
                 recentDuplicate: normalized !== null && recentEvents.has(normalized.desc),
             });
+            TokenQuotaManager.recordOutcome(verdict.outcome);
             // `accept`는 정의상 normalized !== null이지만, 타입을 좁히려면 여기서 한 번 더 본다.
             if (verdict.kind === 'accept' && normalized) return normalized;
+        } else {
+            // 응답 자체가 오지 않았거나 거절됐다 — 나간 1건은 이야기가 되지 못한 것으로 정산.
+            TokenQuotaManager.recordOutcome(result.outcome);
         }
 
         // Fallback: 오프라인 이벤트 풀 사용
@@ -260,23 +276,19 @@ export const AI_SERVICE = {
 
         // narrative는 AI 백엔드가 주는 외부 값 — 문자열임을 확인해야 신뢰할 수 있다
         // (do not trust the shape). 그 확인은 resolveAiStoryResponse가 한다.
-        const result = resolveAiStoryResponse(await callProxy(
-            {
-                type: 'story',
-                data: {
-                    storyType: type,
-                    ...data,
-                    context: resolvedContext,
-                    history: compactHistory,
-                    uid
-                }
-            },
-            decision.trackLabel,
-            decision.timeoutMs
-        ));
-        // 쿼터 소모 시점 보존: story 경로는 내러티브가 문자열로 확인된 뒤에만 기록한다
-        //   (이벤트 경로와 비대칭 — aiEventPolicy.ts의 resolveAiStoryResponse 주석 참조).
-        if (result.recordCall) TokenQuotaManager.recordCall();
+        // 이벤트 경로와 **같은** 헬퍼를 지난다 — 쿼터는 디스패치에서 소모되고, 아래에서는
+        //   그 1건의 정산(`outcome`)만 적는다.
+        const result = resolveAiStoryResponse(await dispatchProxyCall(decision, {
+            type: 'story',
+            data: {
+                storyType: type,
+                ...data,
+                context: resolvedContext,
+                history: compactHistory,
+                uid
+            }
+        }));
+        TokenQuotaManager.recordOutcome(result.outcome);
         if (result.kind === 'narrative') return result.narrative;
 
         return AI_SERVICE.getFallback(type, data);
