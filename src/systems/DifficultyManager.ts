@@ -16,7 +16,7 @@
 // ─────────────────────────────────────────────────────────────────────────
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
-import type { Player } from '../types/index.js';
+import type { Monster, Player } from '../types/index.js';
 
 const WINDOW = BALANCE.DIFFICULTY_BATTLE_WINDOW; // 최근 N 전투만 분석
 
@@ -28,9 +28,9 @@ export const calcPerformanceScore = (player: Player) => {
     const battles = (player.stats?.recentBattles || []).slice(-WINDOW);
     if (battles.length < 5) return 0.5; // 데이터 부족 → 중립
 
-    const wins    = battles.filter((b: any) => b.result === 'win').length;
-    const deaths  = battles.filter((b: any) => b.result === 'death').length;
-    const escapes = battles.filter((b: any) => b.result === 'escape').length;
+    const wins    = battles.filter((b) => b.result === 'win').length;
+    const deaths  = battles.filter((b) => b.result === 'death').length;
+    const escapes = battles.filter((b) => b.result === 'escape').length;
     const total   = battles.length;
 
     const winRate    = wins / total;          // 0~1
@@ -38,9 +38,9 @@ export const calcPerformanceScore = (player: Player) => {
     const escapeRate = escapes / total;       // 0~1
 
     // 평균 남은 HP 비율 (승리한 전투만)
-    const winBattles = battles.filter((b: any) => b.result === 'win');
+    const winBattles = battles.filter((b) => b.result === 'win');
     const avgHpRatio = winBattles.length > 0
-        ? winBattles.reduce((sum: any, b: any) => sum + (b.hpRatio || 0.5), 0) / winBattles.length
+        ? winBattles.reduce((sum, b) => sum + (b.hpRatio || 0.5), 0) / winBattles.length
         : 0.5;
 
     // 성과 점수 0~1: 높을수록 플레이어가 강함
@@ -81,11 +81,14 @@ const DIFF_TABLE = [
  * 성과 점수에서 난이도 배율 객체를 반환합니다.
  * @returns {{ label, hpMult, atkMult, goldMult, expMult }}
  */
-export const getDifficultyMults = (score: any) => {
-    return DIFF_TABLE.find((t: any) => score >= t.minScore) || DIFF_TABLE[DIFF_TABLE.length - 1];
+export const getDifficultyMults = (score: number) => {
+    return DIFF_TABLE.find((t) => score >= t.minScore) || DIFF_TABLE[DIFF_TABLE.length - 1];
 };
 
-const applyBeginnerGrace = (diff: any, player: Player) => {
+/** `getDifficultyMults()` 반환 형태 — DIFF_TABLE 엔트리 1건. */
+type DifficultyMults = ReturnType<typeof getDifficultyMults>;
+
+const applyBeginnerGrace = (diff: DifficultyMults, player: Player) => {
     const level = Number(player?.level || 1);
     const recentBattleCount = (player?.stats?.recentBattles || []).length;
     if (level > BALANCE.BEGINNER_GRACE_MAX_LEVEL || recentBattleCount >= BALANCE.BEGINNER_GRACE_BATTLES) {
@@ -113,7 +116,11 @@ const applyBeginnerGrace = (diff: any, player: Player) => {
  * @param {function} addLog 로그 출력 함수
  * @returns {{ mStats: object, diffLabel: string }}
  */
-export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any) => {
+export const applyDynamicDifficulty = (
+    mStats: Monster,
+    player: Player,
+    addLog: ((type: string, text: string) => void) | undefined,
+) => {
     const score = calcPerformanceScore(player);
     const diff  = applyBeginnerGrace(getDifficultyMults(score), player);
 
@@ -135,13 +142,17 @@ export const applyDynamicDifficulty = (mStats: any, player: Player, addLog: any)
 
     // cycle 343: _diffLabel / _diffScore / diffLabel return 3 dead 필드 정리.
     //   exploreActions:127는 { mStats }만 destructure하고 mStats._diff* 읽는 곳 0건.
+    // Number() — Monster의 hp/maxHp/atk/exp/gold는 전부 optional이라 곱셈에는 number가
+    //   필요하다. spawnEnemy가 항상 채워서 넘기므로 값 변화는 없다(순수 타입 캐스트).
+    // scaled 자체는 Record<string, any>로 유지 — Monster로 좁히면 exploreFlow.ts(비대상
+    //   파일)의 하위 소비처가 전부 "possibly undefined"로 새로 깨진다(이 트랙 범위 밖).
     const scaled: Record<string, any> = {
         ...mStats,
-        hp:    Math.floor(mStats.hp    * diff.hpMult),
-        maxHp: Math.floor(mStats.maxHp * diff.hpMult),
-        atk:   Math.floor(mStats.atk   * diff.atkMult),
-        exp:   Math.floor(mStats.exp   * diff.expMult),
-        gold:  Math.floor(mStats.gold  * diff.goldMult),
+        hp:    Math.floor(Number(mStats.hp)    * diff.hpMult),
+        maxHp: Math.floor(Number(mStats.maxHp) * diff.hpMult),
+        atk:   Math.floor(Number(mStats.atk)   * diff.atkMult),
+        exp:   Math.floor(Number(mStats.exp)   * diff.expMult),
+        gold:  Math.floor(Number(mStats.gold)  * diff.goldMult),
     };
 
     return { mStats: scaled };
@@ -197,7 +208,10 @@ export const countLowHpWins = (stats: Player['stats'], threshold: number) => {
 /**
  * AI_SERVICE.generateEvent() 호출 시 playerSnapshot에 난이도 정보를 추가합니다.
  */
-export const enrichSnapshotWithDifficulty = (playerSnapshot: any, player: Player) => {
+// playerSnapshot은 AI_SERVICE.generateEvent 컨텍스트로 그대로 흘러가는 자유 형태
+// 페이로드다(actionDeps.ts의 StoryLogData와 동일한 열린 계약) — 호출부(exploreActions.ts)도
+// Record<string, any>로 만들어 넘긴다.
+export const enrichSnapshotWithDifficulty = (playerSnapshot: Record<string, any>, player: Player) => {
     const score = calcPerformanceScore(player);
     const diff  = getDifficultyMults(score);
     return {
@@ -206,7 +220,7 @@ export const enrichSnapshotWithDifficulty = (playerSnapshot: any, player: Player
         difficultyLabel:  diff.label,
         recentWinRate:    (() => {
             const b = (player.stats?.recentBattles || []).slice(-WINDOW);
-            return b.length > 0 ? Math.round((b.filter((r: any) => r.result === 'win').length / b.length) * 100) : null;
+            return b.length > 0 ? Math.round((b.filter((r) => r.result === 'win').length / b.length) * 100) : null;
         })(),
     };
 };

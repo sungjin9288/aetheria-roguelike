@@ -19,6 +19,15 @@ import { pickPermanentPlayerState } from '../utils/permanentProgress.js';
 import { createCurrentRunProgress } from '../utils/runProgress.js';
 import { resolveHpDrainAtkRelic } from '../utils/hpDrainAtkRelic.js';
 
+/** `calculateDamage()` 옵션 — 호출부 2곳(공격/스킬) 모두 object literal로 명시 전달. */
+export interface CalculateDamageOptions {
+    mult?: number;
+    guarding?: boolean;
+    elementMultiplier?: number;
+    critChance?: number;
+    rng?: () => number;
+}
+
 /**
  * CombatEngine - Pure functions for combat calculations
  * All functions return new state without side effects.
@@ -27,7 +36,7 @@ import { resolveHpDrainAtkRelic } from '../utils/hpDrainAtkRelic.js';
 export const CombatEngine = {
     DEFAULT_SKILL_LOADOUT: { selected: 0, cooldowns: {} },
     DEFAULT_META: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
-    DEFAULT_COMBAT_FLAGS: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false, phoenixUsed: false } as any,
+    DEFAULT_COMBAT_FLAGS: { comboCount: 0, deathSaveUsed: false, voidHeartUsed: false, voidHeartArmed: false, phoenixUsed: false },
 
     resolveEnemyBaseName(enemy: Monster) {
         return _resolveEnemyBaseName(enemy);
@@ -37,7 +46,7 @@ export const CombatEngine = {
     //   + N test callsite 모두 명시 전달이라 default 도달 불가. body의
     //   (relics || []) defensive guard는 별개 보존 (caller가 null 넘기는 path
     //   활성). 청소 메가 시리즈 41번째 (cycle 502-545).
-    getElementMultiplier(elem: any, enemy: Monster, relics: Relic[]) {
+    getElementMultiplier(elem: string, enemy: Monster, relics: Relic[]) {
         if (!elem || elem === 'physical' || elem === 'none') return 1;
         if (enemy?.weakness && enemy.weakness === elem) {
             // cycle 151: 'elem_boost' (프리즘 핵) — 약점 적중 배율에 val 추가 (1.25 → 1.5).
@@ -53,7 +62,7 @@ export const CombatEngine = {
     //   모두 object literal 명시 전달이라 default 도달 불가. destructuring
     //   내부 default(mult/guarding/elementMultiplier/critChance)는 별개 보존.
     //   util/component/hook/system default 청소 메가 시리즈 33번째.
-    calculateDamage(stats: FullStats, options: any) {
+    calculateDamage(stats: FullStats, options: CalculateDamageOptions) {
         const {
             mult = 1,
             guarding = false,
@@ -115,7 +124,7 @@ export const CombatEngine = {
         const loadout = updated.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const nextCooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
 
-        Object.keys(nextCooldowns).forEach((key: any) => {
+        Object.keys(nextCooldowns).forEach((key) => {
             if (nextCooldowns[key] > 0) nextCooldowns[key] -= 1;
         });
 
@@ -144,7 +153,7 @@ export const CombatEngine = {
         // player에 부여할 수 있는데 player DoT 분기에 bleed가 빠져있어 표시만 되고
         // 실제 피해 0이었음 (적 enemy.dots 분기는 bleed 포함 정상 동작 — 비대칭 회귀).
         const DOT_STATUSES = ['poison', 'burn', 'bleed'];
-        updated.status.filter((s: any) => DOT_STATUSES.includes(s)).forEach((s: any) => {
+        updated.status.filter((s) => DOT_STATUSES.includes(s)).forEach((s) => {
             const dmg = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * BALANCE.STATUS_DOT_RATIO));
             updated.hp = Math.max(1, (updated.hp ?? 1) - dmg);
             logs.push({ type: 'warning', text: MSG.STATUS_DOT(s, dmg) });
@@ -174,7 +183,7 @@ export const CombatEngine = {
         }
 
         // 시너지: 영원의 생명 (healPerTurn) — 매 턴 4% HP 재생
-        const healPerTurnSyn = getActiveRelicSynergies(relics).find((s: any) => s.bonus.healPerTurn);
+        const healPerTurnSyn = getActiveRelicSynergies(relics).find((s) => s.bonus.healPerTurn);
         if (healPerTurnSyn && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (healPerTurnSyn.bonus.healPerTurn ?? 0)));
             updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
@@ -195,7 +204,7 @@ export const CombatEngine = {
 
         // cycle 161: 시너지 'eternal_fortress' (regenPerTurn 0.08) — 매 턴 8% HP 재생.
         //   cycle 154에서 defMult만 적용했고 regenPerTurn은 별도 사이클로 미뤘던 잔존.
-        const fortressRegenSyn = getActiveRelicSynergies(relics).find((s: any) =>
+        const fortressRegenSyn = getActiveRelicSynergies(relics).find((s) =>
             s.bonus.effect === 'eternal_fortress' || s.bonus.regenPerTurn);
         if (fortressRegenSyn && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const ratio = fortressRegenSyn.bonus.regenPerTurn || 0;
@@ -210,7 +219,7 @@ export const CombatEngine = {
             let cost = hpDrainAtkRelic.hpCost;
             let label = hpDrainAtkRelic.label;
             const hellReaperSyn = hpDrainAtkRelic.id === 'abyssal_contract'
-                ? getActiveRelicSynergies(relics).find((synergy: any) => (
+                ? getActiveRelicSynergies(relics).find((synergy) => (
                     synergy.bonus.effect === 'hell_reaper'
                 ))
                 : undefined;
@@ -231,7 +240,7 @@ export const CombatEngine = {
         if (cdMinusRelic) {
             const cds = { ...(updated.skillLoadout?.cooldowns || {}) };
             let reduced = false;
-            Object.keys(cds).forEach((k: any) => { if (cds[k] > 0) { cds[k] = Math.max(0, cds[k] - 1); reduced = true; } });
+            Object.keys(cds).forEach((k) => { if (cds[k] > 0) { cds[k] = Math.max(0, cds[k] - 1); reduced = true; } });
             if (reduced) updated.skillLoadout = { ...(updated.skillLoadout || {}), cooldowns: cds };
         }
 
@@ -247,7 +256,7 @@ export const CombatEngine = {
     //   util/component/hook default 청소 메가 시리즈 32번째, systems/ 진입.
     ...outcomeMethods,
 
-    updateQuestProgress(player: Player, enemyName: any) {
+    updateQuestProgress(player: Player, enemyName: string | undefined) {
         return syncQuestProgress(player, enemyName, DB.QUESTS);
     },
 
@@ -256,11 +265,11 @@ export const CombatEngine = {
     //   CombatEngine.loot.ts의 별개 export된 processLoot (1 arg 호출)이라
     //   별개. method의 두 default 모두 도달 불가. systems/CombatEngine method
     //   시리즈 6번째.
-    processLoot(enemy: Monster, player: any, signaturePityMult: any, rng?: () => number, now?: () => number) {
+    processLoot(enemy: Monster, player: Player | null, signaturePityMult: number, rng?: () => number, now?: () => number) {
         return _processLoot(enemy, player, signaturePityMult, rng, now);
     },
 
-    handleDefeat(player: Player, INITIAL_PLAYER: any, rng?: () => number, now?: () => number) {
+    handleDefeat(player: Player, INITIAL_PLAYER: Player, rng?: () => number, now?: () => number) {
         // cycle 609: buildGraveData에 Math.random / Date.now 명시 추가 — caller
         //   에 explicit args 추가하여 buildGraveData defaults reachable →
         //   unreachable conversion (cycle 608 explicit default-elimination
@@ -270,7 +279,7 @@ export const CombatEngine = {
             : buildGraveData(player, Math.random, Date.now);
 
         const permanent = pickPermanentPlayerState(player, INITIAL_PLAYER);
-        const starterState: any = { ...INITIAL_PLAYER, ...permanent };
+        const starterState: Player = { ...INITIAL_PLAYER, ...permanent };
         const meta = { ...this.DEFAULT_META, ...(permanent.meta || {}) };
         const prevStats = permanent.stats || starterState.stats || {};
 

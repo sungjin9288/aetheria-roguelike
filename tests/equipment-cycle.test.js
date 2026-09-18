@@ -939,7 +939,8 @@ import { readFile } from 'node:fs/promises';
       const fnIdx = source.indexOf('export const getEquipmentArtProfile');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(/fallbackArmorStyle:\s*any\s*=\s*'coat'/.test(sig),
+      // Wave 7 Y3: fallbackArmorStyle: any → string 타입화. default 'coat'는 그대로 보존.
+      assert.ok(/fallbackArmorStyle:\s*string\s*=\s*'coat'/.test(sig),
           "fallbackArmorStyle default 'coat' 보존");
   });
 

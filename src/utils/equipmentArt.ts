@@ -5,19 +5,25 @@ import { ELEMENT_TONE_KEY, TONE_PALETTES } from '../data/artPalette.js';
 
 const HEADGEAR_ONLY_PATTERN = /(모자|두건|후드|투구|헬름|왕관|관|면갑|복면)/;
 
-const clamp = (value: any, min: any, max: any) => Math.min(max, Math.max(min, value));
+const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 
-const containsAny = (name: any, patterns: any) => patterns.some((pattern: any) => name.includes(pattern));
+const containsAny = (name: string, patterns: string[]) => patterns.some((pattern) => name.includes(pattern));
 
 // cycle 521: value default '' 제거 — 1 callsite (line 41) hashText(item?.name
 //   || '')가 string 보장 후 명시 전달이라 default 도달 불가. util default
 //   청소 메가 시리즈 18번째 (cycle 502-519). String(value) coercion이 fallback
 //   역할 (정의역 가드).
-const hashText = (value: any) => (
-    [...String(value)].reduce((total: any, char: any, index: any) => ((total * 31) + (char.codePointAt(0) || 0) + index) % 9973, 17)
+const hashText = (value: string) => (
+    [...String(value)].reduce((total, char, index) => ((total * 31) + (char.codePointAt(0) || 0) + index) % 9973, 17)
 );
 
-const hexToRgb = (hex: any) => {
+interface RgbColor {
+    r: number;
+    g: number;
+    b: number;
+}
+
+const hexToRgb = (hex: string | undefined): RgbColor => {
     const normalized = String(hex || '').replace('#', '');
     if (normalized.length !== 6) return { r: 255, g: 255, b: 255 };
     return {
@@ -27,14 +33,14 @@ const hexToRgb = (hex: any) => {
     };
 };
 
-const rgbToHex = ({ r, g, b }: any) => (
-    `#${[r, g, b].map((channel: any) => clamp(Math.round(channel), 0, 255).toString(16).padStart(2, '0')).join('')}`
+const rgbToHex = ({ r, g, b }: RgbColor) => (
+    `#${[r, g, b].map((channel) => clamp(Math.round(channel), 0, 255).toString(16).padStart(2, '0')).join('')}`
 );
 
 // cycle 521: ratio default 0.5 제거 — 4 callsite (line 44-47) 모두 3 args
 //   (ratio * 0.2/0.35/0.08/0.16) 명시 전달이라 default 도달 불가. util default
 //   청소 메가 시리즈 18번째 (hashText와 batch).
-const mixHex = (left: any, right: any, ratio: any) => {
+const mixHex = (left: string | undefined, right: string, ratio: number) => {
     const l = hexToRgb(left);
     const r = hexToRgb(right);
     return rgbToHex({
@@ -44,7 +50,15 @@ const mixHex = (left: any, right: any, ratio: any) => {
     });
 };
 
-const tintPalette = (palette: any, item: Item | null | undefined) => {
+/** `data/artPalette.ts`의 `buildRuntimePalette()` 산출물 — hex 문자열 4종. */
+interface TonePalette {
+    base: string;
+    shade: string;
+    accent: string;
+    trim: string;
+}
+
+const tintPalette = (palette: TonePalette, item: Item | null | undefined) => {
     const offset = hashText(item?.name || '') % 11;
     const ratio = 0.06 + (offset * 0.012);
     return {
@@ -55,7 +69,7 @@ const tintPalette = (palette: any, item: Item | null | undefined) => {
     };
 };
 
-const getToneKey = (item: Item | null | undefined, slot: any) => {
+const getToneKey = (item: Item | null | undefined, slot: string | undefined) => {
     if (!item) {
         if (slot === 'armor') return 'cloth';
         if (slot === 'offhand') return 'wood';
@@ -100,7 +114,7 @@ const getArmorHeadgearStyle = (item: Item | null | undefined) => {
 //   getArmorBodyStyle(item, fallbackArmorStyle) 명시 전달이라 default 도달 불가.
 //   외부 wrapper getEquipmentArtProfile fallbackArmorStyle default 'coat' 유지
 //   (entry point, cycle 513). util default 청소 메가 시리즈 15번째.
-const getArmorBodyStyle = (item: Item | null | undefined, fallback: any) => {
+const getArmorBodyStyle = (item: Item | null | undefined, fallback: string) => {
     if (!item || item.type !== 'armor') return fallback;
     const name = String(item.name || '');
 
@@ -145,7 +159,7 @@ const getWeaponStyle = (item: Item | null | undefined) => {
 // cycle 513: slotHint default null 제거 — 4 callsite 모두 slotHint 명시 전달
 //   ('weapon' / 'offhand' / 'armor'). default 도달 불가. fallbackArmorStyle은
 //   3/4 caller가 default 'coat' 활용하므로 보존.
-export const getEquipmentArtProfile = (item: Item | null | undefined, slotHint: any, fallbackArmorStyle: any = 'coat') => {
+export const getEquipmentArtProfile = (item: Item | null | undefined, slotHint: string | undefined, fallbackArmorStyle: string = 'coat') => {
     // cycle 341: itemName / subtype / hands 3 dead 필드 제거 — 외부 read 0건.
     //   slot / key / toneKey / palette는 production 또는 tests에서 사용되므로 보존.
     if (!item) {

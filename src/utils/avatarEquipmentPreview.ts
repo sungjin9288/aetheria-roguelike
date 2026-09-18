@@ -15,7 +15,21 @@ const HEAVY_WEAPON_STYLES = new Set(['greatsword', 'greataxe', 'axe', 'hammer', 
 const DAGGER_WEAPON_STYLES = new Set(['dagger', 'fang-dagger', 'throwing-blade', 'twinblade']);
 const FOCUS_OFFHAND_STYLES = new Set(['grimoire', 'tome', 'tablet', 'scroll', 'book']);
 
-const resolvePreviewArmorStyle = (item: Item | null | undefined, profile: any) => {
+/**
+ * `getEquipmentArtProfile()`(equipmentArt.ts)가 만드는 슬롯별 모양 중 이 파일이
+ * 실제로 읽는 필드만 — armor 분기만 `bodyStyle`/`headgearStyle`/`isHeadgearOnly`를,
+ * weapon/shield 분기만 `style`을 채운다(equipmentArt.ts 참고). 전부 optional이라
+ * 어느 분기 결과든 그대로 대입된다.
+ */
+interface EquipmentArtStylingProfile {
+    slot?: string;
+    style?: string;
+    bodyStyle?: string;
+    headgearStyle?: string;
+    isHeadgearOnly?: boolean;
+}
+
+const resolvePreviewArmorStyle = (item: Item | null | undefined, profile: EquipmentArtStylingProfile | null | undefined) => {
     if (!item || item.type !== 'armor') return 'coat';
 
     if (profile?.bodyStyle === 'robe') return 'robe';
@@ -26,9 +40,9 @@ const resolvePreviewArmorStyle = (item: Item | null | undefined, profile: any) =
     return getArmorStyleFromItem(item, 'coat');
 };
 
-const containsAny = (text: any, patterns: any) => patterns.some((pattern: any) => text.includes(pattern));
+const containsAny = (text: string, patterns: string[]) => patterns.some((pattern) => text.includes(pattern));
 
-const resolvePreviewJobFromArmor = (item: Item | null | undefined, profile: any) => {
+const resolvePreviewJobFromArmor = (item: Item | null | undefined, profile: EquipmentArtStylingProfile | null | undefined) => {
     const name = String(item?.name || '');
     const tone = String(item?.elem || '');
 
@@ -55,7 +69,7 @@ const resolvePreviewJobFromArmor = (item: Item | null | undefined, profile: any)
     return '모험가';
 };
 
-const resolvePreviewJobFromWeapon = (item: Item | null | undefined, visualKey: any) => {
+const resolvePreviewJobFromWeapon = (item: Item | null | undefined, visualKey: string) => {
     const name = String(item?.name || '');
     const tone = String(item?.elem || '');
 
@@ -77,7 +91,7 @@ const resolvePreviewJobFromWeapon = (item: Item | null | undefined, visualKey: a
     return '모험가';
 };
 
-const resolvePreviewJobFromOffhand = (item: Item | null | undefined, visualKey: any) => {
+const resolvePreviewJobFromOffhand = (item: Item | null | undefined, visualKey: string) => {
     const name = String(item?.name || '');
     const tone = String(item?.elem || '');
 
@@ -92,16 +106,35 @@ const resolvePreviewJobFromOffhand = (item: Item | null | undefined, visualKey: 
     return resolvePreviewJobFromWeapon(item, visualKey);
 };
 
-export const getWeaponTransform = (profile: any) => placementToTransform(getWeaponPlacement(profile?.style));
+export const getWeaponTransform = (profile: EquipmentArtStylingProfile | null | undefined) => placementToTransform(getWeaponPlacement(profile?.style));
 
-export const getOffhandTransform = (profile: any) => placementToTransform(getOffhandPlacement(profile?.style));
+export const getOffhandTransform = (profile: EquipmentArtStylingProfile | null | undefined) => placementToTransform(getOffhandPlacement(profile?.style));
 
-export const getArmorTransform = (profile: any) => placementToTransform(getArmorPlacement(profile));
+export const getArmorTransform = (profile: EquipmentArtStylingProfile | null | undefined) => placementToTransform(getArmorPlacement(profile));
+
+/** `withVariant()`가 받는 기본 배치값 — 카드/기본 두 variant 공용 6필드. */
+interface EquipmentPreviewStage {
+    focus: string;
+    scale: number;
+    translateX: number;
+    translateY: number;
+    spotlight: string;
+    origin: string;
+}
+
+/** 'card' variant에서 baseStage를 덮어쓰는 값 — 전부 선택적(없으면 baseStage 유지). */
+interface EquipmentPreviewStageOverrides {
+    scale?: number;
+    translateX?: number;
+    translateY?: number;
+    spotlight?: string;
+    origin?: string;
+}
 
 // cycle 564: overrides default {} 제거 — 10 internal callsite (line 128부터)
 //   모두 3 args 명시 (object literal로 overrides 전달)이라 default 도달
 //   불가. private (no export). 청소 메가 시리즈 57번째.
-const withVariant = (baseStage: any, variant: any, overrides: any) => {
+const withVariant = (baseStage: EquipmentPreviewStage, variant: string | undefined, overrides: EquipmentPreviewStageOverrides) => {
     if (variant === 'card') {
         return {
             ...baseStage,
@@ -122,7 +155,11 @@ const withVariant = (baseStage: any, variant: any, overrides: any) => {
 // cycle 514: variant default 'default' 제거 — 1 callsite (EquipmentAvatarPreview
 //   :11) 항상 3 args (variant prop) 전달이라 default 도달 불가. util default
 //   청소 메가 시리즈 12번째 (cycle 502-513).
-export const getEquipmentPreviewStage = (item: Item | null | undefined, appearance: any, variant: any) => {
+export const getEquipmentPreviewStage = (
+    item: Item | null | undefined,
+    appearance: ReturnType<typeof buildEquipmentPreviewAppearance>,
+    variant: string | undefined,
+) => {
     const armorArt = appearance?.armor?.art || null;
     const weaponStyle = appearance?.weapon?.art?.style || appearance?.weapon?.visual || 'none';
     const offhandStyle = appearance?.offhand?.art?.style || appearance?.offhand?.visual || 'none';
@@ -299,8 +336,28 @@ export const getEquipmentPreviewStage = (item: Item | null | undefined, appearan
     });
 };
 
-export const buildEquipmentPreviewAppearance = (item: Item | null | undefined) => {
-    const preview: Record<string, any> = {
+/** 슬롯 1개(무기/보조/방어구)에 실제로 장착된 아이템의 미리보기 조각. */
+interface EquipmentPreviewSlotArt {
+    item: Item;
+    art: EquipmentArtStylingProfile;
+    type?: string;
+    visual: string;
+}
+
+/** `buildEquipmentPreviewAppearance()` 산출물 — 슬롯 3종(무기/보조/방어구) 중 실제
+ *  장착된 것만 채워지고 나머지는 null. */
+interface EquipmentPreviewAppearance {
+    job: string;
+    frameTone: string | null;
+    armorStyle: string;
+    loadoutStyle: string;
+    weapon: EquipmentPreviewSlotArt | null;
+    offhand: EquipmentPreviewSlotArt | null;
+    armor: EquipmentPreviewSlotArt | null;
+}
+
+export const buildEquipmentPreviewAppearance = (item: Item | null | undefined): EquipmentPreviewAppearance => {
+    const preview: EquipmentPreviewAppearance = {
         job: '모험가',
         frameTone: item?.elem || null,
         armorStyle: 'coat',

@@ -987,7 +987,8 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 517: 외부 wrapper getEquipmentArtProfile fallbackArmorStyle default 보존 (cycle 513)', async () => {
       const source = await readSrc('src/utils/equipmentArt.ts');
-      assert.ok(/fallbackArmorStyle:\s*any\s*=\s*'coat'/.test(source),
+      // Wave 7 Y3: any → string 타입화. default 'coat' 자체는 그대로 보존.
+      assert.ok(/fallbackArmorStyle:\s*string\s*=\s*'coat'/.test(source),
           'wrapper getEquipmentArtProfile fallbackArmorStyle default 활성 보존');
   });
 
@@ -2380,7 +2381,8 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/utils/runProfile.ts');
       assert.ok(/Array\.isArray\(item\?\.jobs\) && jobs\.some\(/.test(source),
           'hasAnyJob Array.isArray + .some 보존');
-      assert.ok(/const scoreTag = \(id: any, name: any, score: any, reasons: any\[\]\) => \(\{\s*\n\s*id,\s*\n\s*name,\s*\n\s*score,\s*\n\s*reasons,\s*\n\s*\}\)/.test(source),
+      // Wave 7 Y3: any → string/number/string[] 타입화. return shape(id/name/score/reasons)은 그대로.
+      assert.ok(/const scoreTag = \(id: string, name: string, score: number, reasons: string\[\]\)[^{]*=> \(\{\s*\n\s*id,\s*\n\s*name,\s*\n\s*score,\s*\n\s*reasons,\s*\n\s*\}\)/.test(source),
           'scoreTag return shape 보존');
   });
 
@@ -2719,7 +2721,10 @@ import { readFile, readdir } from 'node:fs/promises';
       const fnIdx = source.indexOf('applyFatalProtection(player');
       const fnEnd = source.indexOf(')', fnIdx) + 1;
       const sig = source.slice(fnIdx, fnEnd);
-      assert.ok(/activeSynergies:\s*any\[\]\s*=\s*\[\]/.test(sig),
+      // Wave 7 Y3: 구현부 시그니처가 ThisType/RelicEffectMixin 인터페이스로 타입을 옮겨
+      //   `activeSynergies: any[] = []` → `activeSynergies = []`(타입은 인터페이스가 소유).
+      //   default [] 자체(=이 파라미터가 여전히 reachable)는 그대로 보존.
+      assert.ok(/activeSynergies\s*=\s*\[\]/.test(sig),
           'applyFatalProtection activeSynergies default [] 보존 (combatAttack 4-arg caller가 reachable path)');
   });
 

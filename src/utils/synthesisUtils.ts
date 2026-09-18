@@ -2,14 +2,14 @@ import { BALANCE } from '../data/constants.js';
 import { DB } from '../data/db.js';
 // cycle 339: getItemRarity import 제거 — group.rarity 사용처 정리 후 cascade dead.
 import { isSignatureItem } from '../data/signatureItems.js';
-import type { Item } from '../types/index.js';
+import type { Item, ItemType } from '../types/index.js';
 
 /**
  * synthesisUtils.js — 아이템 합성 순수 함수
  * 같은 type + 같은 tier 장비 3개 → 상위 tier 장비 1개
  */
 
-const SYNTH_TYPES = ['weapon', 'armor', 'shield'];
+const SYNTH_TYPES: ItemType[] = ['weapon', 'armor', 'shield'];
 
 /**
  * 합성 가능한 아이템인지 확인
@@ -21,16 +21,16 @@ export const isSynthesizable = (item: Item | null | undefined) =>
  * 주어진 type + tier 조합의 상위 tier 결과 후보 목록
  */
 // cycle 296: export 제거 — validateSynthesis/performSynthesis 내부 2회만 사용, 외부 consumer 0건.
-const getSynthesisOutputs = (inputType: any, inputTier: any) => {
+const getSynthesisOutputs = (inputType: ItemType | undefined, inputTier: number) => {
     const nextTier = inputTier + 1;
     if (nextTier > 6) return [];
 
-    const pool =
+    const pool: Item[] =
         inputType === 'weapon' ? DB.ITEMS.weapons :
         inputType === 'armor'  ? DB.ITEMS.armors  :
         inputType === 'shield' ? DB.ITEMS.armors  : [];
 
-    return pool.filter((item: any) => item.type === inputType && item.tier === nextTier);
+    return pool.filter((item) => item.type === inputType && item.tier === nextTier);
 };
 
 /**
@@ -39,7 +39,7 @@ const getSynthesisOutputs = (inputType: any, inputTier: any) => {
  * @param {number} playerGold - 보유 골드
  * @returns {{ valid: boolean, reason?: string, tier?: number, type?: string, outputs?: Object[], goldCost?: number, successRate?: number }}
  */
-export const validateSynthesis = (items: Item[] | null | undefined, playerGold: any) => {
+export const validateSynthesis = (items: Item[] | null | undefined, playerGold: number | undefined) => {
     const required = BALANCE.SYNTHESIS_INPUT_COUNT;
 
     if (!items || items.length !== required) {
@@ -52,7 +52,7 @@ export const validateSynthesis = (items: Item[] | null | undefined, playerGold: 
     }
 
     // 전설 각인은 합성 재료로 절대 소비 금지 — picker 필터를 우회한 입력 차단
-    const signatureInput = items.find((item: any) => isSignatureItem(item));
+    const signatureInput = items.find((item) => isSignatureItem(item));
     if (signatureInput) {
         return { valid: false, reason: 'SIGNATURE_INPUT', signatureName: signatureInput.name };
     }
@@ -60,7 +60,7 @@ export const validateSynthesis = (items: Item[] | null | undefined, playerGold: 
     // 같은 type + tier인지
     const type = items[0].type;
     const tier = items[0].tier ?? 0;
-    if (!items.every((item: any) => item.type === type && (item.tier ?? 0) === tier)) {
+    if (!items.every((item) => item.type === type && (item.tier ?? 0) === tier)) {
         return { valid: false, reason: 'MISMATCH' };
     }
 
@@ -77,7 +77,7 @@ export const validateSynthesis = (items: Item[] | null | undefined, playerGold: 
 
     const successRate = BALANCE.SYNTHESIS_SUCCESS_RATES[tier] || 0.5;
     const preview = { tier, outputs, goldCost, successRate };
-    if (playerGold < goldCost) {
+    if (typeof playerGold === 'number' && playerGold < goldCost) {
         return { valid: false, reason: 'NO_GOLD', ...preview };
     }
 
@@ -97,14 +97,14 @@ export const validateSynthesis = (items: Item[] | null | undefined, playerGold: 
 //   (useInventoryActions:430 performSynthesis(items, null, useProtect)) 3 args
 //   명시 전달이라 두 default 모두 도달 불가. 600사이클 milestone 후 첫 cycle.
 export const resolveSynthesis = (
-    items: any,
-    selectedOutput: any,
-    useProtect: any,
+    items: Item[],
+    selectedOutput: Item | null,
+    useProtect: boolean,
     successRoll: number,
     outputRoll: number,
 ) => {
     const type = items[0].type;
-    const tier = items[0].tier;
+    const tier = items[0].tier ?? 0;
     const goldCost = BALANCE.SYNTHESIS_GOLD_COSTS[tier] || 0;
     const successRate = BALANCE.SYNTHESIS_SUCCESS_RATES[tier] || 0.5;
     const premiumSpent = useProtect ? BALANCE.SYNTHESIS_PROTECT_COST : 0;
@@ -113,14 +113,14 @@ export const resolveSynthesis = (
 
     if (success) {
         const outputs = getSynthesisOutputs(type, tier);
-        const output = selectedOutput && outputs.find((o: any) => o.name === selectedOutput.name)
+        const output = selectedOutput && outputs.find((o) => o.name === selectedOutput.name)
             ? selectedOutput
             : outputs[Math.floor(outputRoll * outputs.length)];
 
         return {
             success: true,
             outputItem: output,
-            returnedItems: [] as any[],
+            returnedItems: [] as Item[],
             goldSpent: goldCost,
             premiumSpent,
         };
@@ -132,14 +132,14 @@ export const resolveSynthesis = (
 
     return {
         success: false,
-        outputItem: null as any,
+        outputItem: null as Item | null,
         returnedItems,
         goldSpent: goldCost,
         premiumSpent,
     };
 };
 
-export const performSynthesis = (items: any, selectedOutput: any, useProtect: any) => (
+export const performSynthesis = (items: Item[], selectedOutput: Item | null, useProtect: boolean) => (
     resolveSynthesis(items, selectedOutput, useProtect, Math.random(), Math.random())
 );
 
@@ -148,25 +148,32 @@ export const performSynthesis = (items: any, selectedOutput: any, useProtect: an
  * @param {Object[]} inventory - player.inv
  * @returns {{ type: string, tier: number, rarity: string, items: Object[], count: number }[]}
  */
-export const getSynthesisGroups = (inventory: any) => {
-    const groups: Record<string, any> = {};
+interface SynthesisGroup {
+    type: ItemType | undefined;
+    tier: number;
+    items: Item[];
+    count: number;
+}
+
+export const getSynthesisGroups = (inventory: Item[]) => {
+    const groups: Record<string, SynthesisGroup> = {};
 
     for (const item of inventory) {
         if (!isSynthesizable(item)) continue;
-        if (item.tier >= 6) continue;
+        if ((item.tier ?? 0) >= 6) continue;
         // 전설 각인은 picker에서 아예 노출하지 않음 (실수 클릭 방지)
         if (isSignatureItem(item)) continue;
         const key = `${item.type}_${item.tier}`;
         if (!groups[key]) {
             // cycle 339: rarity 필드 제거 — group.rarity read 0건이던 dead output.
             //   CraftingPanel은 type / tier / count / items만 사용.
-            groups[key] = { type: item.type, tier: item.tier, items: [], count: 0 };
+            groups[key] = { type: item.type, tier: item.tier ?? 0, items: [], count: 0 };
         }
         groups[key].items.push(item);
         groups[key].count += 1;
     }
 
-    return (Object.values(groups) as any[])
-        .filter((g: any) => g.count >= BALANCE.SYNTHESIS_INPUT_COUNT)
-        .sort((a: any, b: any) => a.tier - b.tier || a.type.localeCompare(b.type));
+    return Object.values(groups)
+        .filter((g) => g.count >= BALANCE.SYNTHESIS_INPUT_COUNT)
+        .sort((a, b) => a.tier - b.tier || (a.type || '').localeCompare(b.type || ''));
 };

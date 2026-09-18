@@ -878,9 +878,10 @@ import { readFile } from 'node:fs/promises';
 
   test("cycle 619: getToneKey signature에서 slot default 'weapon' 0건", async () => {
       const source = await readSrc('src/utils/equipmentArt.ts');
-      assert.ok(!/const getToneKey = \(item:[^)]+slot:\s*any\s*=\s*'weapon'\)/.test(source),
+      // Wave 7 Y3: slot: any → slot: string | undefined 타입화. default 없음은 그대로.
+      assert.ok(!/const getToneKey = \(item:[^)]+slot:\s*(?:any|string \| undefined)\s*=\s*'weapon'\)/.test(source),
           "getToneKey slot default 'weapon' 제거");
-      assert.ok(/const getToneKey = \(item:[^)]+slot:\s*any\)/.test(source),
+      assert.ok(/const getToneKey = \(item:[^)]+slot:\s*(?:any|string \| undefined)\)/.test(source),
           'getToneKey slot 파라미터 보존 (default 없이)');
   });
 

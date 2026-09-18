@@ -1,7 +1,9 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
-import type { FullStats, Monster, NumericRelicEffect, Player, Relic } from '../types/index.js';
+import type { FullStats, Monster, NumericRelicEffect, Player, Relic, RelicSynergy } from '../types/index.js';
+import type { LootLog } from './CombatEngine.loot.js';
+import type { CalculateDamageOptions } from './CombatEngine.js';
 
 export function getStrongestNumericRelicValue(
     relics: readonly Relic[],
@@ -21,22 +23,66 @@ export function getStrongestNumericRelicValue(
 }
 
 /**
- * CombatEngine 플레이어 행동 메서드 (attack / performSkill) — mixin으로 CombatEngine에 spread.
- * CombatEngine.ts 분리(행동 보존). this 교차호출(calculateDamage / getCombatFlags /
- * getElementMultiplier / mitigateByEnemyDef / getEffectiveMaxMp / applyCritMpRestore /
- * applyStatusEffectToEnemy / applyEntropyTick / DEFAULT_SKILL_LOADOUT)은
- * 호출 시점 바인딩 → 객체 any.
+ * 이 mixin의 메서드가 `this`로 교차호출하는 CombatEngine 멤버.
+ * CombatEngine 전체 타입을 쓰면 CombatEngine.ts → actionMethods → CombatEngine.ts
+ * 순환 참조가 생긴다 — 실제로 호출하는 멤버만 최소 인터페이스로 선언한다(호출 시점 바인딩).
  */
-export const actionMethods: any = {
+interface ActionsMixinContext {
+    calculateDamage(stats: FullStats, options: CalculateDamageOptions): { damage: number; isCrit: boolean };
+    getCombatFlags(player: Player): NonNullable<Player['combatFlags']>;
+    getElementMultiplier(elem: string, enemy: Monster, relics: Relic[]): number;
+    mitigateByEnemyDef(rawDamage: number, enemyDef: number, relics: Relic[]): number;
+    getEffectiveMaxMp(player: Player, relics: Relic[]): number;
+    applyCritMpRestore(player: Player, relics: Relic[], logs: LootLog[]): Player;
+    applyStatusEffectToEnemy(enemy: Monster, effect: string): Monster;
+    applyEntropyTick(
+        player: Player,
+        enemy: Monster,
+        activeSynergies: RelicSynergy[],
+    ): { player: Player; enemy: Monster; logs: LootLog[] };
+    DEFAULT_SKILL_LOADOUT: { selected: number; cooldowns: Record<string, number> };
+}
+
+/**
+ * `performSkill()`이 받는 스킬 정의 — 생산자 3종(classes.ts의 ClassSkill,
+ * equipmentUtils.getWeaponMagicSkills의 WeaponMagicSkill, runProfile.getTraitSkill의
+ * TraitSkillDef 파생)이 조금씩 다른 필드 집합을 채운다. 여기서는 이 함수가 실제로
+ * 읽는 필드만 전부 optional로 선언해 세 생산자 모두를 그대로 받는다.
+ */
+interface Skill {
+    name?: string;
+    mp?: number;
+    type?: string;
+    mult?: number;
+    effect?: string;
+    val?: number;
+    turn?: number;
+    crit?: number;
+    drainRatio?: number;
+    cooldown?: number;
+    effectChance?: number;
+    secondEffect?: string;
+    stunTurn?: number;
+    curseTurn?: number;
+    defBonus?: number;
+    mpRestore?: number;
+}
+
+/**
+ * CombatEngine 플레이어 행동 메서드 (attack / performSkill) — mixin으로 CombatEngine에 spread.
+ * CombatEngine.ts 분리(행동 보존). this 교차호출은 위 ActionsMixinContext로 명시하고,
+ * 실제 바인딩은 CombatEngine.ts가 이 mixin을 spread하는 시점에 이뤄진다(ThisType 마커).
+ */
+export const actionMethods: ThisType<ActionsMixinContext> = {
     attack(player: Player, enemy: Monster, stats: FullStats, rng?: () => number) {
         const random = typeof rng === 'function' ? rng : Math.random;
         // cycle 107: freeze/stun 상태이상 턴 스킵 — 보스 phase 2/3가 부여하는
         // freeze/stun이 player 쪽에서 처리되지 않아 정상 공격되던 회귀 fix.
         // 적의 stunnedTurns 처리와 짝을 이룸 (one-turn effect — status 제거 후 진행).
         const incomingStatus = Array.isArray(player.status) ? player.status : [];
-        const blockingStatus = incomingStatus.find((s: any) => s === 'freeze' || s === 'stun');
+        const blockingStatus = incomingStatus.find((s) => s === 'freeze' || s === 'stun');
         if (blockingStatus) {
-            const newStatus = incomingStatus.filter((s: any) => s !== blockingStatus);
+            const newStatus = incomingStatus.filter((s) => s !== blockingStatus);
             return {
                 updatedPlayer: { ...player, status: newStatus },
                 updatedEnemy: enemy,
@@ -72,8 +118,8 @@ export const actionMethods: any = {
 
         const relics = stats.relics || [];
         const elementMultiplier = this.getElementMultiplier(stats.elem, enemy, relics);
-        const logs: any[] = [];
-        let updatedPlayer: any = { ...player, combatFlags: this.getCombatFlags(player) };
+        const logs: LootLog[] = [];
+        let updatedPlayer: Player = { ...player, combatFlags: this.getCombatFlags(player) };
         const flags = this.getCombatFlags(player);
 
         // 유물: 방어 무시 (armor_pen) — PR #3: 적 DEF 경감 단계(mitigateByEnemyDef)에서
@@ -195,7 +241,7 @@ export const actionMethods: any = {
         if (totalLifeSteal > 0) {
             const steal = Math.floor(finalDamage * totalLifeSteal);
             if (steal > 0) {
-                updatedPlayer = { ...updatedPlayer, hp: Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + steal) };
+                updatedPlayer = { ...updatedPlayer, hp: Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + steal) };
                 logs.push({ type: 'heal', text: MSG.RELIC_LIFESTEAL_PROC(Boolean(hellReaperSyn), steal) });
             }
         }
@@ -213,7 +259,7 @@ export const actionMethods: any = {
         if (echoTriggered) logs.push({ type: 'event', text: MSG.RELIC_ECHO_ATK_PROC });
 
         // cycle 152: 'on_hit_freeze' (frost_anchor) — val 확률로 적 1턴 빙결.
-        let postHitEnemy: any = { ...enemy, hp: newEnemyHp, guarding: false };
+        let postHitEnemy: Monster = { ...enemy, hp: newEnemyHp, guarding: false };
         const freezeRelic = relics.find((r) => r.effect === 'on_hit_freeze');
         if (freezeRelic && newEnemyHp > 0 && random() < (freezeRelic.val || 0)) {
             postHitEnemy = this.applyStatusEffectToEnemy(postHitEnemy, 'freeze');
@@ -224,7 +270,7 @@ export const actionMethods: any = {
         const entropyResult = this.applyEntropyTick(updatedPlayer, postHitEnemy, stats.activeSynergies || []);
         updatedPlayer = entropyResult.player;
         postHitEnemy = entropyResult.enemy;
-        entropyResult.logs.forEach((l: any) => logs.push(l));
+        entropyResult.logs.forEach((l) => logs.push(l));
 
         return {
             updatedPlayer,
@@ -235,11 +281,17 @@ export const actionMethods: any = {
         };
     },
 
-    performSkill(player: Player, enemy: Monster, stats: FullStats, skill: any, rng?: () => number) {
+    performSkill(player: Player, enemy: Monster, stats: FullStats, skillArg: Skill | null | undefined, rng?: () => number) {
         const random = typeof rng === 'function' ? rng : Math.random;
-        if (!skill) {
+        if (!skillArg) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NONE }] };
         }
+        // 아래에서 skill = {...skill, ...branch.override} 로 재대입한다 — 파라미터의
+        // 선언 타입이 `Skill | null | undefined`이면 중첩 블록 안의 재대입 이후
+        // TypeScript가 좁혀진 타입을 널 포함 선언 타입으로 되돌려 그 아래 90여 곳이
+        // 전부 "possibly null" 에러가 된다. non-null만 담는 지역 변수로 옮겨 회피한다
+        // (런타임 값/제어 흐름은 완전히 동일).
+        let skill: Skill = skillArg;
         const relics = stats.relics || [];
         const resolvedDotMult = getStrongestNumericRelicValue(relics, 'dot_mult');
         const hasDotMultRelic = relics.some((relic) => relic.effect === 'dot_mult');
@@ -248,9 +300,9 @@ export const actionMethods: any = {
         // cycle 107: freeze/stun 상태이상 턴 스킵 — attack()와 동일 처리.
         // 스킬 발동 자체가 막히고 MP는 소비되지 않음.
         const incomingStatusSkill = Array.isArray(player.status) ? player.status : [];
-        const blockingStatusSkill = incomingStatusSkill.find((s: any) => s === 'freeze' || s === 'stun');
+        const blockingStatusSkill = incomingStatusSkill.find((s) => s === 'freeze' || s === 'stun');
         if (blockingStatusSkill) {
-            const newStatus = incomingStatusSkill.filter((s: any) => s !== blockingStatusSkill);
+            const newStatus = incomingStatusSkill.filter((s) => s !== blockingStatusSkill);
             return {
                 success: true,
                 updatedPlayer: { ...player, status: newStatus },
@@ -286,12 +338,15 @@ export const actionMethods: any = {
         }
 
         // 스킬 분기 선택 적용
-        const skillChoiceKey = player.skillChoices?.[skill.name];
+        // String(skill.name) — skill.name은 optional(string | undefined)이라 인덱스
+        //   타입에는 string이 필요하다. 기존에도 player.skillChoices?.[undefined]는
+        //   ToPropertyKey 강제변환으로 "undefined" 문자열 키 조회와 동일했다(값 변화 없음).
+        const skillChoiceKey = player.skillChoices?.[String(skill.name)];
         if (skillChoiceKey) {
             const classData = CLASSES[player.job as string];
-            const branches = classData?.skillBranches?.[skill.name];
+            const branches = classData?.skillBranches?.[String(skill.name)];
             if (branches) {
-                const branch = branches.find((b: any) => b.choice === skillChoiceKey);
+                const branch = branches.find((b) => b.choice === skillChoiceKey);
                 if (branch?.override) {
                     skill = { ...skill, ...branch.override };
                 }
@@ -301,7 +356,7 @@ export const actionMethods: any = {
         const mpCost = skill.mp || BALANCE.SKILL_MP_COST;
         const loadout = player.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const cooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
-        const cooldown = cooldowns[skill.name] || 0;
+        const cooldown = cooldowns[String(skill.name)] || 0;
 
         // escape_100: 즉시 100% 전투 이탈 (무당 공허의 문 / 시간술사 순간 이동)
         if (skill.effect === 'escape_100') {
@@ -321,7 +376,7 @@ export const actionMethods: any = {
         }
 
         if (cooldown > 0) {
-            return { success: false, logs: [{ type: 'error', text: MSG.SKILL_ON_COOLDOWN(skill.name, cooldown) }] };
+            return { success: false, logs: [{ type: 'error', text: MSG.SKILL_ON_COOLDOWN(String(skill.name), cooldown) }] };
         }
         if ((player.mp ?? 0) < mpCost) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
@@ -336,7 +391,7 @@ export const actionMethods: any = {
         const freeChance = baseFreeSkillChance + (arcaneSingSyn?.bonus.freeSkillChance || 0);
         // cycle 163: 'cooldown_reduce' (시간 군주의 왕관) — val.firstFree=true면 전투 첫 스킬 MP 무소비.
         //   cycle 151에서 cdReduction만 적용 → firstFree 보조 메커니즘 추가.
-        const playerFlags: any = (player as any).combatFlags || {};
+        const playerFlags = player.combatFlags || {};
         const cdRelicForFree = relics.find((r) => r.effect === 'cooldown_reduce');
         const firstFreeAvailable = cdRelicForFree?.val?.firstFree && !playerFlags.firstSkillUsed;
         const actualMpCost = firstFreeAvailable
@@ -385,7 +440,7 @@ export const actionMethods: any = {
             }
         }
 
-        const extraDamage = ['burn', 'poison', 'bleed'].includes(skill.effect)
+        const extraDamage = ['burn', 'poison', 'bleed'].includes(String(skill.effect))
             ? Math.floor(damage * 0.2 * dotMult)
             : 0;
 
@@ -429,16 +484,16 @@ export const actionMethods: any = {
         // cycle 244: skill.curseTurn override — '지속 저주' branch B (curseTurn 3) 등 cursedTurns 카운터 override.
         //   미정의 시 default 3 (applyStatusEffectToEnemy curse case와 동일). max(prev, curseTurn) 단축 방지.
         const curseTurn = Math.max(1, Math.floor(skill.curseTurn || 3));
-        if (STATUS_EFFECTS_TO_ENEMY.includes(skill.effect) && random() < effectChance) {
-            postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.effect);
+        if (STATUS_EFFECTS_TO_ENEMY.includes(String(skill.effect)) && random() < effectChance) {
+            postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, String(skill.effect));
             if (skill.effect === 'stun' || skill.effect === 'freeze') {
                 postEffectEnemy = { ...postEffectEnemy, stunnedTurns: Math.max(postEffectEnemy.stunnedTurns ?? 0, stunTurn) };
             }
             if (skill.effect === 'curse') {
                 postEffectEnemy = { ...postEffectEnemy, cursedTurns: Math.max(postEffectEnemy.cursedTurns ?? 0, curseTurn) };
             }
-            if (effectLabels[skill.effect]) {
-                logs.push({ type: 'event', text: MSG.SKILL_ENEMY_STATUS_APPLIED(skill.name, enemy.name, effectLabels[skill.effect]) });
+            if (effectLabels[String(skill.effect)]) {
+                logs.push({ type: 'event', text: MSG.SKILL_ENEMY_STATUS_APPLIED(skill.name, enemy.name, effectLabels[String(skill.effect)]) });
             }
         }
         // 분기 선택으로 추가된 2차 상태이상 (effectChance 동일 적용)
@@ -480,7 +535,7 @@ export const actionMethods: any = {
             s.bonus.effect === 'time_dominator' || s.bonus.cdReduction);
         const cdReduction = (cdRelic?.val?.cdReduction || 0) + (timeDomSyn?.bonus.cdReduction || 0);
         const baseCd = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
-        updatedPlayer.skillLoadout.cooldowns[skill.name] = Math.max(0, baseCd - cdReduction);
+        updatedPlayer.skillLoadout.cooldowns[String(skill.name)] = Math.max(0, baseCd - cdReduction);
 
         // 유물: 영혼 흡수 (skill_lifesteal) — 스킬 피해의 10% HP 흡수
         const slRelic = relics.find((r) => r.effect === 'skill_lifesteal');
@@ -489,14 +544,14 @@ export const actionMethods: any = {
             updatedPlayer.hp = Math.min(updatedPlayer.maxHp || player.maxHp, (updatedPlayer.hp || player.hp) + heal);
         }
         if (isCrit) {
-            const critLogs: any[] = [];
+            const critLogs: LootLog[] = [];
             const restoredPlayer = this.applyCritMpRestore(updatedPlayer, relics, critLogs);
             updatedPlayer.mp = restoredPlayer.mp;
-            critLogs.forEach((entry: any) => logs.push(entry));
+            critLogs.forEach((entry) => logs.push(entry));
         }
 
-        if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(skill.effect)) {
-            const buff: { atk: number; def: number; turn: any; name: any; counterChance?: number } = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
+        if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(String(skill.effect))) {
+            const buff: { atk: number; def: number; turn: number; name: string | undefined; counterChance?: number } = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
             if (skill.effect === 'atk_up') buff.atk = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'def_up') buff.def = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'all_up') {
@@ -583,7 +638,7 @@ export const actionMethods: any = {
                 const effectiveMaxMp = this.getEffectiveMaxMp(player, relics);
                 updatedPlayer.mp = Math.min(effectiveMaxMp, (updatedPlayer.mp || 0) + skill.mpRestore);
             }
-            logs.push({ type: 'event', text: MSG.SKILL_EXTRA_TURN(skill.name) });
+            logs.push({ type: 'event', text: MSG.SKILL_EXTRA_TURN(String(skill.name)) });
         }
 
         // cycle 153: 시너지 'time_master' (extraTurnChance 0.1) / cycle 155: 'time_dominator' (extraAction 0.3) —
@@ -601,7 +656,7 @@ export const actionMethods: any = {
         if (skill.effect === 'resetCooldowns') {
             const resetLoadout = updatedPlayer.skillLoadout || { selected: 0, cooldowns: {} };
             updatedPlayer.skillLoadout = { ...resetLoadout, cooldowns: {} };
-            logs.push({ type: 'event', text: MSG.SKILL_RESET_COOLDOWNS(skill.name) });
+            logs.push({ type: 'event', text: MSG.SKILL_RESET_COOLDOWNS(String(skill.name)) });
         }
 
         // 유물: 공허의 메아리 (echo_atk) — 스킬 사용 후 다음 일반 공격 강화 플래그
@@ -615,7 +670,7 @@ export const actionMethods: any = {
         if (skill.effect === 'crit_cooldown' && isCrit) {
             const cdLoadout = updatedPlayer.skillLoadout || { selected: 0, cooldowns: {} };
             const reducedCds: Record<string, number> = {};
-            Object.entries(cdLoadout.cooldowns || {}).forEach(([k, v]: any) => {
+            Object.entries(cdLoadout.cooldowns || {}).forEach(([k, v]) => {
                 const cd = Number(v);
                 if (cd > 0) reducedCds[k] = cd - 1;
             });
@@ -625,9 +680,9 @@ export const actionMethods: any = {
 
 
         // slice 19: 약점/저항 별도 로그 제거 — SKILL_USE 본문 태그로 통합 완료.
-        if (extraDamage > 0) logs.push({ type: 'event', text: MSG.SKILL_STATUS_BONUS(skill.effect, extraDamage) });
+        if (extraDamage > 0) logs.push({ type: 'event', text: MSG.SKILL_STATUS_BONUS(String(skill.effect), extraDamage) });
         if (updatedPlayer.tempBuff?.name === skill.name) {
-            logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(skill.name, updatedPlayer.tempBuff.turn) });
+            logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(String(skill.name), updatedPlayer.tempBuff.turn) });
         }
         if (actualMpCost === 0 && firstFreeAvailable) logs.push({ type: 'event', text: MSG.RELIC_FIRST_SKILL_FREE });
         else if (actualMpCost === 0 && hasFreeSkillRelic) logs.push({ type: 'event', text: MSG.RELIC_FREE_SKILL_PROC });
@@ -642,7 +697,7 @@ export const actionMethods: any = {
         const entropyResult = this.applyEntropyTick(updatedPlayer, updatedEnemy, stats.activeSynergies || []);
         const finalPlayer = entropyResult.player;
         const finalEnemy = entropyResult.enemy;
-        entropyResult.logs.forEach((l: any) => logs.push(l));
+        entropyResult.logs.forEach((l) => logs.push(l));
 
         return {
             success: true,

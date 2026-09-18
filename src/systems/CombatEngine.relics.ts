@@ -1,15 +1,43 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { getMirrorEffects } from './mirrorUpgrades';
-import type { Player, Relic, Monster } from '../types/index.js';
+import type { Player, Relic, Monster, RelicSynergy } from '../types/index.js';
+import type { LootLog } from './CombatEngine.loot.js';
+
+/**
+ * 이 mixin의 메서드가 `this`로 교차호출하는 CombatEngine 멤버.
+ * CombatEngine 전체 타입을 쓰면 CombatEngine.ts → relicEffectMethods → CombatEngine.ts
+ * 순환 참조가 생긴다 — 실제로 호출하는 2개만 최소 인터페이스로 선언한다(호출 시점 바인딩).
+ */
+interface RelicEffectMixinContext {
+    getEffectiveMaxMp(player: Player, relics: Relic[]): number;
+    getCombatFlags(player: Player): NonNullable<Player['combatFlags']>;
+}
+
+/** 이 mixin이 CombatEngine에 spread하는 메서드 시그니처. */
+interface RelicEffectMixin {
+    applyCritMpRestore(player: Player, relics: Relic[], logs: LootLog[]): Player;
+    applyFatalProtection(
+        player: Player,
+        relics: Relic[],
+        incomingDamage: number,
+        logs: LootLog[],
+        activeSynergies?: RelicSynergy[],
+    ): { updatedPlayer: Player; isDead: boolean };
+    applyEntropyTick(
+        player: Player,
+        enemy: Monster,
+        activeSynergies: RelicSynergy[],
+    ): { player: Player; enemy: Monster; logs: LootLog[] };
+}
 
 /**
  * CombatEngine 유물 효과 메서드 — mixin으로 CombatEngine에 spread.
  * CombatEngine.ts 분리(행동 보존). this.getCombatFlags/getEffectiveMaxMp 교차호출은
- * 호출 시점 바인딩 → 객체 any. activeSynergies는 파라미터(주입).
+ * 호출 시점 바인딩이라 `ThisType`으로 그 경계만 명시한다. activeSynergies는 파라미터(주입).
  */
-export const relicEffectMethods: any = {
-    applyCritMpRestore(player: Player, relics: Relic[], logs: any[]) {
+export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinContext> = {
+    applyCritMpRestore(player, relics, logs) {
         const critMpRelic = relics.find((relic) => relic.effect === 'crit_mp_regen');
         if (!critMpRelic) return player;
 
@@ -25,37 +53,40 @@ export const relicEffectMethods: any = {
     //   activeSynergies는 combatAttack:189 4-arg caller가 미전달이라 default
     //   reachable 보존. partial cleanup pattern (cycle 542). systems/CombatEngine
     //   method 시리즈 7번째.
-    applyFatalProtection(player: Player, relics: Relic[], incomingDamage: any, logs: any[], activeSynergies: any[] = []) {
+    applyFatalProtection(player, relics, incomingDamage, logs, activeSynergies = []) {
         const flags = this.getCombatFlags(player);
         let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
         // cycle 162: phoenix_revive atkBuff tempBuff — 부활 분기에서 set, return에 합류.
-        let phoenixTempBuff: any = null;
+        let phoenixTempBuff: Player['tempBuff'] | null = null;
 
         if (nextHp <= 0) {
             const deathSaveRelic = relics.find((relic) => relic.effect === 'death_save');
             // cycle 153: 시너지 'absolute_immortal' — reviveCount 2회 부활. effect-name primary + bonus-key fallback.
-            const absoluteImmortalSyn = activeSynergies.find((s: any) =>
+            const absoluteImmortalSyn = activeSynergies.find((s) =>
                 s.bonus.effect === 'absolute_immortal' || s.bonus.reviveCount);
             const maxRevives = absoluteImmortalSyn ? (absoluteImmortalSyn.bonus.reviveCount || 1) : 1;
             const reviveUsedCount = flags.deathSaveUsedCount || 0;
 
             if (deathSaveRelic && reviveUsedCount < maxRevives) {
                 // cycle 153: 시너지 'absolute_immortal' / 'immortal_warrior' / 'blood_immortal' — reviveHeal 부활 시 HP 회복량 증가.
-                const reviveHealSyn = activeSynergies.find((s: any) =>
+                const reviveHealSyn = activeSynergies.find((s) =>
                     s.bonus.effect === 'absolute_immortal'
                     || s.bonus.effect === 'immortal_warrior'
                     || s.bonus.effect === 'blood_immortal'
                     || s.bonus.reviveHeal);
+                // Number() — RelicSynergyBonus.reviveHeal은 optional(number | undefined)이라
+                //   산술 연산엔 number가 필요하다. reviveHealSyn이 매칭된 이상 실측 데이터상
+                //   reviveHeal이 항상 존재하므로 값 변화 없음(Number(number)=그대로).
                 nextHp = reviveHealSyn
-                    ? Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * reviveHealSyn.bonus.reviveHeal)
+                    ? Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * Number(reviveHealSyn.bonus.reviveHeal))
                     : 1;
                 flags.deathSaveUsed = true;
                 flags.deathSaveUsedCount = reviveUsedCount + 1;
                 // cycle 153: 시너지 'unbreakable' — healOnSave 부활 시 추가 HP 회복.
-                const healOnSaveSyn = activeSynergies.find((s: any) =>
+                const healOnSaveSyn = activeSynergies.find((s) =>
                     s.bonus.effect === 'unbreakable' || s.bonus.healOnSave);
                 if (healOnSaveSyn) {
-                    const bonus = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healOnSaveSyn.bonus.healOnSave);
+                    const bonus = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * Number(healOnSaveSyn.bonus.healOnSave));
                     nextHp = Math.min(player.maxHp || BALANCE.DEFAULT_MAX_HP, nextHp + bonus);
                     logs.push({ type: 'heal', text: MSG.RELIC_HEAL_ON_SAVE_PROC(bonus) });
                 }
@@ -104,7 +135,7 @@ export const relicEffectMethods: any = {
                         //   판정하고 새 player를 반환 — CombatEngine에 side effect 없음.
                         //   플래그는 handleDefeat(새 런 시작)/ASCEND에서 자연 리셋(freshPlayer가
                         //   INITIAL_STATE.player 기반이라 별도 처리 불필요).
-                        const mirrorEffects = getMirrorEffects((player as any).meta);
+                        const mirrorEffects = getMirrorEffects(player.meta);
                         if (mirrorEffects.reviveEnabled && !player.mirrorReviveUsed) {
                             nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * mirrorEffects.reviveHpRatio));
                             flags.mirrorReviveUsed = true;
@@ -152,20 +183,20 @@ export const relicEffectMethods: any = {
     // cycle 547: activeSynergies default [] 제거 — 2 internal callsite (line 631,
     //   1037) + N test callsite (cycle 159/236/237) 모두 || [] 명시 전달이라
     //   default 도달 불가. 청소 메가 시리즈 42번째 (cycle 502-546).
-    applyEntropyTick(player: Player, enemy: Monster, activeSynergies: any[]) {
+    applyEntropyTick(player, enemy, activeSynergies) {
         const relics: Relic[] = player?.relics || [];
-        const flags = { ...((player as any).combatFlags || {}) };
+        const flags = { ...(player.combatFlags || {}) };
         const turnCount = (flags.turnCount || 0) + 1;
         flags.turnCount = turnCount;
 
         const updatedPlayer = { ...player, combatFlags: flags };
-        let updatedEnemy: any = enemy;
-        const logs: any[] = [];
+        let updatedEnemy: Monster = enemy;
+        const logs: LootLog[] = [];
 
         const tickRelic = relics.find((r) => r.effect === 'entropy_tick');
         // cycle 236: entropy_god 시너지의 fixedDmg + interval 패턴도 catch.
         //   기존엔 'damage && interval'만 잡아 entropy_god(fixedDmg 0.15)가 dispatch 0건이던 dead config.
-        const brandSyn = activeSynergies.find((s: any) =>
+        const brandSyn = activeSynergies.find((s) =>
             s.bonus.effect === 'entropy_brand'
             || s.bonus.effect === 'entropy_god'
             || (s.bonus.damage && s.bonus.interval)

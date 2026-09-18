@@ -1,6 +1,8 @@
-import type { Player } from '../types/index.js';
+import type { ClassDef, Item, Player } from '../types/index.js';
+import type { ItemRecipeDef } from '../types/item.js';
 import { FIRST_STORY_QUEST_ID } from '../data/quests.js';
 import { canInvestigateTown } from './townInvestigation';
+import type { getAdventureGuidance, getExpeditionPreparation } from './adventureGuide.js';
 
 export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'grave';
 
@@ -13,16 +15,21 @@ type TownPrimaryKind =
     | 'open_quest_board'
     | 'rest';
 
+/** `getAdventureGuidance()` 반환 형태 — adventureGuide.ts는 이미 명시 any가 없는 파일이라 그대로 재사용. */
+type AdventureGuidance = ReturnType<typeof getAdventureGuidance>;
+/** `getExpeditionPreparation()` 반환 형태 — ControlPanel.tsx도 동일하게 `ReturnType<typeof ...>`로 참조한다. */
+type ExpeditionPreparation = ReturnType<typeof getExpeditionPreparation>;
+
 interface TownActionContext {
     player: Player;
     mapData?: { type?: string; monsters?: readonly string[] };
     stats: { maxHp?: number; maxMp?: number };
-    guidance: any;
-    preparation: any;
+    guidance: AdventureGuidance;
+    preparation: ExpeditionPreparation;
     hasGrave: boolean;
-    classes: Record<string, any>;
-    recipes: any[];
-    consumables: any[];
+    classes: Record<string, ClassDef>;
+    recipes: ItemRecipeDef[];
+    consumables: Item[];
 }
 
 const FACILITY_KEYS: TownActionKey[] = ['rest', 'quests', 'market', 'class', 'craft'];
@@ -52,7 +59,7 @@ const PRIMARY_TEST_IDS: Record<TownPrimaryKind, string> = {
     rest: 'control-rest',
 };
 
-const countItems = (items: any[]) => {
+const countItems = (items: Item[]) => {
     const counts = new Map<string, number>();
     items.forEach((item) => {
         if (!item?.name) return;
@@ -61,18 +68,18 @@ const countItems = (items: any[]) => {
     return counts;
 };
 
-const canCraftRecipe = (player: Player, recipes: any[]) => {
+const canCraftRecipe = (player: Player, recipes: ItemRecipeDef[]) => {
     const inventory = player.inv || [];
     const counts = countItems(inventory);
     return recipes.some((recipe) => (
         (player.gold || 0) >= (recipe.gold || 0)
-        && (recipe.inputs || []).every((input: any) => (
-            (counts.get(input.name) || 0) >= (input.qty || 0)
+        && (recipe.inputs || []).every((input) => (
+            (counts.get(input.name || '') || 0) >= (input.qty || 0)
         ))
     ));
 };
 
-const getPrimaryKind = (guidance: any, preparation: any): TownPrimaryKind => {
+const getPrimaryKind = (guidance: AdventureGuidance, preparation: ExpeditionPreparation): TownPrimaryKind => {
     if (preparation?.isClaimable) return 'claim_quest';
 
     const guidedKind = guidance?.primaryAction?.kind as TownPrimaryKind | undefined;
@@ -81,12 +88,12 @@ const getPrimaryKind = (guidance: any, preparation: any): TownPrimaryKind => {
     return preparation?.tracker ? 'open_move' : 'open_quest_board';
 };
 
-const isFirstStoryDeparture = (guidance: any, preparation: any) => (
+const isFirstStoryDeparture = (guidance: AdventureGuidance, preparation: ExpeditionPreparation) => (
     (guidance?.title === '첫 원정 준비' || guidance?.primaryAction?.label === '첫 출발')
     && (!preparation?.tracker || preparation.tracker.questId === FIRST_STORY_QUEST_ID)
 );
 
-const getPrimaryLabel = (kind: TownPrimaryKind, guidance: any, preparation: any) => {
+const getPrimaryLabel = (kind: TownPrimaryKind, guidance: AdventureGuidance, preparation: ExpeditionPreparation) => {
     switch (kind) {
         case 'claim_quest':
             return '임무 보상 받기';

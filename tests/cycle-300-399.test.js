@@ -2422,9 +2422,11 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 345: scoreTag 시그니처에서 desc 제거', async () => {
       const source = await readSrc('src/utils/runProfile.ts');
-      assert.ok(/const scoreTag = \(id: any, name: any, score: any, reasons/.test(source),
+      // Wave 7 Y3: id/name/score/reasons가 any에서 실제 타입(string/number/string[])으로
+      //   좁혀졌다 — 이 가드가 확인하는 "4-arg, desc 없음"은 여전히 참이라 패턴만 갱신.
+      assert.ok(/const scoreTag = \(id: string, name: string, score: number, reasons/.test(source),
           'scoreTag 시그니처 4-arg (desc 제거)');
-      assert.ok(!/const scoreTag = \(id: any, name: any, _?desc/.test(source),
+      assert.ok(!/const scoreTag = \(id: (?:any|string), name: (?:any|string), _?desc/.test(source),
           'desc 매개변수 0건');
   });
 
@@ -2524,7 +2526,8 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 345 회귀 가드: scoreTag desc 매개변수 0건 보존', async () => {
       const source = await readSrc('src/utils/runProfile.ts');
-      assert.ok(/const scoreTag = \(id: any, name: any, score: any, reasons/.test(source),
+      // Wave 7 Y3: any → string/number/string[] 타입화. 4-arg·desc 없음 사실은 그대로.
+      assert.ok(/const scoreTag = \(id: string, name: string, score: number, reasons/.test(source),
           'cycle 345 scoreTag 4-arg 보존');
   });
 }
