@@ -2,11 +2,19 @@ import { useMemo, useState } from 'react';
 import { buildEquipmentPreviewAppearance, getEquipmentPreviewStage } from '../../utils/avatarEquipmentPreview.js';
 import { getAvatarEquipmentPreviewCandidates } from '../../utils/avatarSpriteCandidates.js';
 import AvatarEquipmentOverlay from './AvatarEquipmentOverlay.jsx';
+import type { Item } from '../../types/index.js';
+
+interface EquipmentAvatarPreviewProps {
+    item?: Item | null;
+    size: number;
+    className?: string;
+    variant?: string;
+}
 
 // cycle 434: 3 default 값 제거 — 1 호출자 (ItemIcon)가 size / variant / className
 //   모두 명시 전달이라 default 도달 불가. variant ternary ('card' / else) 분기는
 //   그대로 활성 (cycle 431-433에 이은 redundant default annotation 4-cycle 시리즈).
-const EquipmentAvatarPreview = ({ item, size, className, variant }: any) => {
+const EquipmentAvatarPreview = ({ item, size, className, variant }: EquipmentAvatarPreviewProps) => {
     const appearance = useMemo(() => buildEquipmentPreviewAppearance(item), [item]);
     const previewStage = useMemo(() => getEquipmentPreviewStage(item, appearance, variant), [item, appearance, variant]);
     const spriteCandidates = useMemo(
@@ -59,7 +67,7 @@ const EquipmentAvatarPreview = ({ item, size, className, variant }: any) => {
                             : 'brightness(0.95) saturate(0.94) contrast(1.05)',
                     }}
                     onError={() => {
-                        setSpriteState((current: any) => {
+                        setSpriteState((current) => {
                             const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
                             return {
                                 signature: spriteSignature,

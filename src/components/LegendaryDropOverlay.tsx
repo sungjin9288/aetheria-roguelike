@@ -3,6 +3,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import ItemIcon from './icons/ItemIcon.jsx';
 import { getSignatureMetadata } from '../data/signatureItems.js';
+import type { Item } from '../types/index.js';
 
 /**
  * LegendaryDropOverlay — dedicated signature 아이템을 획득한 순간
@@ -17,7 +18,7 @@ import { getSignatureMetadata } from '../data/signatureItems.js';
 // cycle 358: steel 톤 제거 — signatureRegistry.json / signatureSets.json 어디에도
 //   tone='steel' 엔트리 0건이라 unreachable. holy / fire / frost / shadow / arcane /
 //   nature / earth / rust 8종만 활성. fallback은 DEFAULT_GLOW (= TONE_GLOW.holy).
-const TONE_GLOW: any = Object.freeze({
+const TONE_GLOW: Record<string, { ring: string; radial: string; particle: string }> = Object.freeze({
     holy: { ring: 'rgba(246,231,162,0.6)', radial: 'rgba(246,231,162,0.35)', particle: '#f6e7a2' },
     fire: { ring: 'rgba(255,180,138,0.6)', radial: 'rgba(255,180,138,0.35)', particle: '#ffb48a' },
     frost: { ring: 'rgba(204,232,245,0.55)', radial: 'rgba(204,232,245,0.3)', particle: '#cce8f5' },
@@ -32,7 +33,12 @@ const DEFAULT_GLOW = TONE_GLOW.holy;
 
 const DROP_DURATION_MS = 3000;
 
-const LegendaryDropOverlay = ({ item, onDismiss }: any) => {
+interface LegendaryDropOverlayProps {
+    item?: Item | null;
+    onDismiss?: () => void;
+}
+
+const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) => {
     useEffect(() => {
         if (!item) return undefined;
         const timer = setTimeout(() => onDismiss?.(), DROP_DURATION_MS);
@@ -67,7 +73,7 @@ const LegendaryDropOverlay = ({ item, onDismiss }: any) => {
                     />
 
                     {/* 12방향 파티클 스파클 */}
-                    {Array.from({ length: 12 }).map((_: any, i: any) => {
+                    {Array.from({ length: 12 }).map((_, i) => {
                         const angle = (i / 12) * Math.PI * 2;
                         const dx = Math.cos(angle) * 110;
                         const dy = Math.sin(angle) * 110;

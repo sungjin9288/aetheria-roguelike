@@ -10,13 +10,14 @@ import {
     formatCodexRewardParts,
     getNextCodexGoals,
     type CodexCategoryId,
+    type CodexMilestone,
 } from '../utils/codexPresentation';
 import WeaponCodex from './codex/WeaponCodex';
 import MonsterCodex from './codex/MonsterCodex';
 import RecipeCodex from './codex/RecipeCodex';
 import MaterialCodex from './codex/MaterialCodex';
 import LegendaryCodex from './codex/LegendaryCodex';
-import CodexDiscoveryOverlay from './codex/CodexDiscoveryOverlay';
+import CodexDiscoveryOverlay, { type CodexDiscoveryEntry } from './codex/CodexDiscoveryOverlay';
 import type { Player } from '../types/index.js';
 import type { GameAction } from '../reducers/gameReducer';
 
@@ -39,24 +40,27 @@ const SUB_TABS: Array<{ id: CodexTabId; label: string; icon: typeof Sword }> = [
 
 const Codex = ({ player, dispatch }: CodexProps) => {
     const [subTab, setSubTab] = useState<CodexTabId>('equip');
-    const [discoveryEntry, setDiscoveryEntry] = useState<any>(null);
+    const [discoveryEntry, setDiscoveryEntry] = useState<CodexDiscoveryEntry | null>(null);
     const dismissDiscovery = useCallback(() => setDiscoveryEntry(null), []);
+    // getCodexProgress(data/codexRewards.ts)의 선언 반환형은 milestones/unclaimed 모두
+    // any[]다(data/**, 이 트랙에서 수정 금지) — 실제 런타임 모양은 utils/codexPresentation.ts가
+    // 이미 export하는 CodexMilestone과 동일하므로 재선언 없이 그대로 좁힌다.
     const progress = useMemo(() => {
         const codex = player?.stats?.codex || {};
         const claimed = player?.stats?.codexClaimed || [];
-        return getCodexProgress(codex, claimed);
+        return getCodexProgress(codex, claimed) as { milestones: CodexMilestone[]; unclaimed: CodexMilestone[] };
     }, [player?.stats?.codex, player?.stats?.codexClaimed]);
 
     // 전체 도감 항목 수 계산
     const totalCounts = useMemo(() => {
         const weapons = DB.ITEMS.weapons?.length || 0;
-        const armors = (DB.ITEMS.armors || []).filter((a: any) => a.type === 'armor').length;
-        const shields = (DB.ITEMS.armors || []).filter((a: any) => a.type === 'shield').length;
+        const armors = (DB.ITEMS.armors || []).filter((a) => a.type === 'armor').length;
+        const shields = (DB.ITEMS.armors || []).filter((a) => a.type === 'shield').length;
         // cycle 70: 몬스터 도감 totalCount에 boss / bossMonsters도 포함.
         const monsters = new Set<string>();
-        (Object.values(DB.MAPS) as any[]).forEach((map: any) => {
-            (map.monsters || []).forEach((m: string) => monsters.add(m));
-            (map.bossMonsters || []).forEach((m: string) => monsters.add(m));
+        Object.values(DB.MAPS).forEach((map) => {
+            (map.monsters || []).forEach((m) => monsters.add(m));
+            (map.bossMonsters || []).forEach((m) => monsters.add(m));
             if (typeof map.boss === 'string') monsters.add(map.boss);
         });
         const recipes = DB.ITEMS.recipes?.length || 0;
@@ -91,7 +95,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
             ...(DB.ITEMS.armors || []),
         ];
         for (const itemName of Object.keys(SIGNATURE_ITEM_REGISTRY)) {
-            const item = all.find((entry: any) => entry?.name === itemName);
+            const item = all.find((entry) => entry?.name === itemName);
             if (!item) continue;
             const bucket = item.type === 'weapon' ? 'weapons' : item.type === 'shield' ? 'shields' : 'armors';
             if (codex[bucket]?.[itemName]) discovered += 1;
@@ -150,7 +154,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                         <span className="aether-type-meta text-[#d5b180]">{progress.unclaimed.length}개</span>
                     </div>
                     <div className="mt-2 divide-y divide-white/8">
-                        {progress.unclaimed.map((milestone: any) => (
+                        {progress.unclaimed.map((milestone) => (
                             <div key={milestone.id} className="flex min-h-14 items-center gap-3 py-2">
                                 <div className="min-w-0 flex-1">
                                     <div className="aether-type-body font-semibold text-slate-100">{milestone.label}</div>

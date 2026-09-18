@@ -23,7 +23,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
 
     const statusPills = useMemo(() => {
         if (!player) return [];
-        const pills = [];
+        const pills: Array<{ key: string; label: string; tone: string }> = [];
         // W2 (Wave 5): 기존엔 QuestProgressState에 없는 `done` 필드로 갈라서 완료 수가 항상
         //   0이었다. 완료 판정은 진행도 ≥ 목표치이고, 그 계산은 getActiveQuestEntries가 소유한다.
         const questEntries = getActiveQuestEntries(player);
@@ -45,7 +45,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
         }
         const codex = player.stats?.codex;
         if (codex) {
-            const count: number = (Object.values(codex) as any[]).reduce((sum: number, cat: any) => sum + Object.keys(cat || {}).length, 0);
+            const count = Object.values(codex).reduce((sum, cat) => sum + Object.keys(cat || {}).length, 0);
             if (count > 0) pills.push({ key: 'codex', label: `도감 ${count}`, tone: 'neutral' });
         }
         const passTier = player.seasonPass?.tier || 0;
@@ -63,7 +63,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
         >
             {/* 장비 로드아웃 */}
             <div className="grid grid-cols-3 gap-1.5 rounded-[1.15rem] border border-white/8 bg-black/18 px-2 py-2 shadow-[inset_0_1px_0_rgba(255,255,255,0.02)]">
-                {loadoutEntries.map((entry: any) => {
+                {loadoutEntries.map((entry) => {
                     const isSignature = entry.item ? isSignatureItem(entry.item) : false;
                     const tileStyle = isSignature
                         ? {
@@ -98,7 +98,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
                                     {entry.item?.name || entry.fallback}
                                 </span>
                                 {(entry.item?.enhance || 0) > 0 && (
-                                    <span className="shrink-0 text-[11px] font-bold font-fira text-[#d5b180]">+{entry.item.enhance}</span>
+                                    <span className="shrink-0 text-[11px] font-bold font-fira text-[#d5b180]">+{entry.item?.enhance}</span>
                                 )}
                             </div>
                         </div>
@@ -109,7 +109,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
             {/* 진행 상태 pill 스트립 */}
             {statusPills.length > 0 && (
                 <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide">
-                    {statusPills.map((pill: any) => (
+                    {statusPills.map((pill) => (
                         <span
                             key={pill.key}
                             className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] backdrop-blur-md ${

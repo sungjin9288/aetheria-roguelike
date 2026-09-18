@@ -49,9 +49,15 @@ const TIER_COLORS: Record<number, string> = {
 //   /ClassTree/ClassCard/JobChangePanel) 모두 size + tier 명시 전달이라 두
 //   default 모두 도달 불가. body의 TIER_COLORS[tier] ?? TIER_COLORS[0] +
 //   CLASS_PATHS jobName fallback은 별개 보존. 청소 메가 시리즈 61번째.
-const ClassIcon = ({ className: jobName, size, tier }: any) => {
+interface ClassIconProps {
+    className: string;
+    size: number;
+    tier?: number;
+}
+
+const ClassIcon = ({ className: jobName, size, tier }: ClassIconProps) => {
     const path = CLASS_PATHS[jobName] || CLASS_PATHS['모험가'];
-    const color = TIER_COLORS[tier] ?? TIER_COLORS[0];
+    const color = TIER_COLORS[tier ?? 0] ?? TIER_COLORS[0];
 
     return (
         <div

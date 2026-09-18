@@ -684,7 +684,10 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 468: equipped 변수 / 비교 UI 보존', async () => {
       const source = await readSrc('src/components/codex/EquipmentCodexCard.tsx');
-      assert.ok(/const equipped =/.test(source), 'equipped 선언 보존');
+      // W8-Z5: `const equipped =` → `const equipped: CodexDisplayItem | null | undefined =`
+      //   (item.atk/def가 카탈로그 타입에 없어 로컬 타입으로 좁힘) — 선언부에 타입 애노테이션이
+      //   생겨도 여전히 `const equipped`로 시작해 `=`로 끝나는 단일 선언이면 보존으로 본다.
+      assert.ok(/const equipped\s*(:[^=]+)?=/.test(source), 'equipped 선언 보존');
       assert.ok(/equipped\?\.atk/.test(source), 'equipped?.atk 비교 보존');
       assert.ok(/현재 \{equipped\.name\}과 비교/.test(source), '현재 장비와의 비교 텍스트 보존');
   });

@@ -16,7 +16,7 @@ const SIZE_MAP: Record<string, { shell: string }> = {
 //   방어용 보존.
 // cycle 493: 외부 보조 클래스 prop 제거 — 2 호출자 모두 전달 0건이라 보간 결과
 //   ''만 추가되는 unreachable. cycle 463/465/466 icons/ paired 패턴 회귀.
-const AetherMark = ({ size }: any) => {
+const AetherMark = ({ size }: { size: 'md' | 'lg' }) => {
     const scale = SIZE_MAP[size] || SIZE_MAP.md;
 
     return (

@@ -1,4 +1,5 @@
 import { motion as Motion } from 'framer-motion';
+import type { LucideIcon } from 'lucide-react';
 
 /**
  * ArchiveTabButton — Dashboard 탭 선택 버튼 (모바일/데스크탑 공용)
@@ -7,7 +8,19 @@ import { motion as Motion } from 'framer-motion';
  *   Icon size / span tracking 분기 cascade 일괄 정리. cycle 458/459/461/463/464
  *   unreachable prop 패턴 회귀.
  */
-const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = false, rail = false, testId = null, badge = null, badgeTitle = null }: any) => {
+interface ArchiveTabButtonProps {
+    icon: LucideIcon;
+    label: string;
+    active?: boolean;
+    onClick?: () => void;
+    compact?: boolean;
+    rail?: boolean;
+    testId?: string | null;
+    badge?: string | number | null;
+    badgeTitle?: string | null;
+}
+
+const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = false, rail = false, testId = null, badge = null, badgeTitle = null }: ArchiveTabButtonProps) => {
     const Icon = icon;
     const frameClass = rail
         ? 'flex min-h-[44px] shrink-0 scroll-mx-3 items-center justify-center gap-1.5 rounded-full px-3 py-1.5'

@@ -10,6 +10,10 @@ import {
     placementLayer,
     placementToTransform,
 } from '../../utils/anchorPoints.js';
+import type { buildEquipmentPreviewAppearance } from '../../utils/avatarEquipmentPreview.js';
+
+/** buildEquipmentPreviewAppearance()의 실제 반환 모양 — 재선언 없이 producer의 ReturnType을 그대로 쓴다. */
+type EquipmentPreviewAppearance = ReturnType<typeof buildEquipmentPreviewAppearance>;
 
 /**
  * Layer 순서 (뒤→앞):
@@ -19,7 +23,7 @@ import {
 
 const OVERLAY_VIEWBOX = 72;
 
-const resolveOffhandLayer = (appearance: any) => {
+const resolveOffhandLayer = (appearance: EquipmentPreviewAppearance) => {
     const style = appearance?.offhand?.art?.style || appearance?.offhand?.visual || 'none';
     const placement = getOffhandPlacement(style);
     // BACK_LAYER_OFFHAND_STYLES로 일차 결정, 없으면 placement.layer 참조
@@ -27,7 +31,7 @@ const resolveOffhandLayer = (appearance: any) => {
     return placementLayer(placement);
 };
 
-const resolveArmorLayer = (appearance: any) => {
+const resolveArmorLayer = (appearance: EquipmentPreviewAppearance) => {
     const bodyStyle = appearance?.armor?.art?.bodyStyle || 'none';
     const headgearStyle = appearance?.armor?.art?.headgearStyle || 'none';
     if (BACK_LAYER_ARMOR_STYLES.has(bodyStyle)) return 'back';
@@ -39,7 +43,12 @@ const resolveArmorLayer = (appearance: any) => {
 //   front 레이어 분리 호출) 모두 명시 전달이라 default 도달 불가.
 // cycle 498: 외부 보조 클래스 / 테스트 ID 두 prop 제거 — 2 호출자 모두 전달 0건.
 //   보간 / data-testid attr 모두 dead. cycle 463/465/466/493/495/496 lens 회귀.
-const AvatarEquipmentOverlay = ({ appearance, layer }: any) => {
+interface AvatarEquipmentOverlayProps {
+    appearance: EquipmentPreviewAppearance;
+    layer: 'back' | 'front';
+}
+
+const AvatarEquipmentOverlay = ({ appearance, layer }: AvatarEquipmentOverlayProps) => {
     const offhandOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.offhand?.item);
     const weaponOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.weapon?.item);
     const armorOverlaySrc = getEquipmentOverlayAssetSrc(appearance?.armor?.item);

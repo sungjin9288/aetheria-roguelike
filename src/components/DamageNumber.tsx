@@ -1,3 +1,5 @@
+import type { useDamageFlash } from '../hooks/useDamageFlash';
+
 /**
  * DamageNumber — 데미지/회복 float 숫자 오버레이 (slice 29 개선).
  *
@@ -5,7 +7,12 @@
  * 컨테이너 상단 밖(-top-6)이라 잘 안 보였다. floatUp 키프레임을 index.css에
  * 정의하고, 전투 영역(상단 38%) 중앙에 크게 띄워 타격감을 살린다.
  */
-const DamageNumber = ({ amount }: any) => {
+interface DamageNumberProps {
+    /** `useDamageFlash`가 반환하는 damageAmount 그대로 — type-only import라 훅 모듈이 로드되지 않는다. */
+    amount?: ReturnType<typeof useDamageFlash>['damageAmount'];
+}
+
+const DamageNumber = ({ amount }: DamageNumberProps) => {
     if (!amount) return null;
 
     const isHeal = amount.isHeal;

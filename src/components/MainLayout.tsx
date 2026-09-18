@@ -1,7 +1,18 @@
+import type { ReactNode, UIEvent } from 'react';
+import type { RegionTheme } from '../utils/regionTheme.js';
+
+interface MainLayoutProps {
+  children: ReactNode;
+  visualEffect?: string | null;
+  readabilityMode?: string;
+  regionTheme?: RegionTheme | null;
+  immersive?: boolean;
+}
+
 // slice 21: regionTheme — 위치 기반 ambient 팔레트. accent/soft를 CSS 변수로
 //   내려보내고, 상단 radial wash 1개 레이어로 지역 분위기를 표현한다.
 //   시맨틱 컬러(행동/위험/보상)는 불변 — ambient 전용.
-const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, immersive = false }: any) => {
+const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, immersive = false }: MainLayoutProps) => {
   const normalizedReadabilityMode = readabilityMode === 'high' ? 'high' : 'standard';
   const shellSpacing = immersive
     ? ''
@@ -18,7 +29,7 @@ const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, imme
         '--region-soft': regionTheme?.soft || 'rgba(213, 177, 128, 0.10)',
       } as any}
       className={`relative flex h-[100dvh] w-full flex-col overflow-x-hidden overflow-y-auto bg-[#03070d] font-mono text-slate-200 ${shellSpacing} ${visualEffect === 'shake' ? 'animate-shake' : ''}`}
-      onScroll={(event: any) => {
+      onScroll={(event: UIEvent<HTMLDivElement>) => {
         if (event.currentTarget.scrollLeft !== 0) {
           event.currentTarget.scrollLeft = 0;
         }

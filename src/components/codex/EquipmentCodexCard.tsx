@@ -4,6 +4,18 @@ import { MSG } from '../../data/messages';
 import { getItemRarity } from '../../utils/gameUtils';
 import ItemIcon from '../icons/ItemIcon';
 import SignalBadge from '../SignalBadge';
+import type { Item, Player } from '../../types/index.js';
+
+/**
+ * items.ts 카탈로그 실제 필드는 atk/def가 아니라 val(무기 ATK / 방어구 DEF)이다.
+ * 이 카드가 읽는 atk/def는 카탈로그·Player.equip 어디에도 없어 항상 undefined인
+ * 레거시 읽기 지점이다 — 로직은 보존(StatRow 미노출)하고 타입만 명시한다.
+ * src/types/item.ts는 이 트랙 범위 밖이라 재선언하지 않는다.
+ */
+type CodexDisplayItem = Item & { atk?: number; def?: number };
+
+type CornerPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
+const CORNER_POSITIONS: CornerPosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 
 const RARITY_FRAME: Record<string, { border: string; glow: string; corner: boolean }> = {
     common: { border: '#9ca3af', glow: 'none', corner: false },
@@ -24,14 +36,14 @@ const RARITY_TONE: Record<string, string> = {
 /**
  * SVG 코너 장식
  */
-const CornerOrnament = ({ color, position }: any) => {
-    const transforms: Record<string, any> = {
+const CornerOrnament = ({ color, position }: { color: string; position: CornerPosition }) => {
+    const transforms: Record<CornerPosition, string> = {
         'top-left': '',
         'top-right': 'scale(-1,1) translate(-24,0)',
         'bottom-left': 'scale(1,-1) translate(0,-24)',
         'bottom-right': 'scale(-1,-1) translate(-24,-24)',
     };
-    const posClass: Record<string, any> = {
+    const posClass: Record<CornerPosition, string> = {
         'top-left': 'top-0 left-0',
         'top-right': 'top-0 right-0',
         'bottom-left': 'bottom-0 left-0',
@@ -51,7 +63,7 @@ const CornerOrnament = ({ color, position }: any) => {
     );
 };
 
-const StatRow = ({ label, value, compareValue }: any) => {
+const StatRow = ({ label, value, compareValue }: { label: string; value: number; compareValue?: number | null }) => {
     const diff = compareValue != null ? value - compareValue : null;
     return (
         <div className="flex items-center justify-between text-[11px]">
@@ -72,8 +84,8 @@ const StatRow = ({ label, value, compareValue }: any) => {
  * EquipmentCodexCard — 레어리티별 프레임 + 스탯 비교 레이아웃
  */
 interface EquipmentCodexCardProps {
-    item?: any;
-    player?: any;
+    item?: CodexDisplayItem;
+    player?: Player | null;
 }
 
 const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
@@ -89,7 +101,7 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
     //   되어 비교 UI ("vs xxx" / diff badge) 미렌더되던 silent UI 결손 fix.
     //   shield 슬롯은 Player 스키마상 offhand에 들어가는 케이스가 일반적이지만,
     //   이번 수정은 typo만 정정하고 슬롯 매핑은 보존.
-    const equipped = item.type === 'weapon'
+    const equipped: CodexDisplayItem | null | undefined = item.type === 'weapon'
         ? player?.equip?.weapon
         : item.type === 'armor'
             ? player?.equip?.armor
@@ -109,7 +121,7 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
             }}
         >
             {/* 코너 장식 */}
-            {frame.corner && ['top-left', 'top-right', 'bottom-left', 'bottom-right'].map((pos: any) => (
+            {frame.corner && CORNER_POSITIONS.map((pos) => (
                 <CornerOrnament key={pos} color={frame.border} position={pos} />
             ))}
 

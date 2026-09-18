@@ -92,8 +92,10 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 501: cycle 419 / 433 회귀 가드 — SIZE_CLASS / TONE_CLASS fallback 보존', async () => {
       const source = await readSrc('src/components/SignalBadge.tsx');
-      assert.ok(/SIZE_CLASS\[size\] \|\| SIZE_CLASS\.sm/.test(source), 'SIZE_CLASS fallback 보존');
-      assert.ok(/TONE_CLASS\[tone\] \|\| TONE_CLASS\.neutral/.test(source), 'TONE_CLASS fallback 보존');
+      // W8-Z5: tone/size가 `string | undefined`로 닫히면서 인덱싱 가드로 `?? ''`가
+      //   붙었다 — fallback 자체의 의도는 그대로다.
+      assert.ok(/SIZE_CLASS\[size(?:\s*\?\?\s*'')?\] \|\| SIZE_CLASS\.sm/.test(source), 'SIZE_CLASS fallback 보존');
+      assert.ok(/TONE_CLASS\[tone(?:\s*\?\?\s*'')?\] \|\| TONE_CLASS\.neutral/.test(source), 'TONE_CLASS fallback 보존');
   });
 }
 

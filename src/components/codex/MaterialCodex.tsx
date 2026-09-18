@@ -3,15 +3,16 @@ import { Leaf } from 'lucide-react';
 import { DB } from '../../data/db';
 import { LOOT_TABLE } from '../../data/loot';
 import ItemIcon from '../icons/ItemIcon';
+import type { CodexCategory, CodexEntry } from '../../types/index.js';
 
 interface MaterialCodexProps {
-    codex?: any;
+    codex?: Partial<Record<CodexCategory, Record<string, CodexEntry>>>;
 }
 
 const MaterialCodex = ({ codex = {} }: MaterialCodexProps) => {
     const materials = DB.ITEMS.materials || [];
     const materialCodex = codex.materials || {};
-    const discoveredMaterials = materials.filter((material: any) => materialCodex[material.name]);
+    const discoveredMaterials = materials.filter((material) => material.name && materialCodex[material.name]);
 
     const materialSources = useMemo(() => {
         const sources: Record<string, string[]> = {};
@@ -40,8 +41,8 @@ const MaterialCodex = ({ codex = {} }: MaterialCodexProps) => {
                 </div>
             ) : (
                 <div className="divide-y divide-white/8 border-y border-white/10">
-                    {discoveredMaterials.map((material: any) => {
-                        const sources = materialSources[material.name] || [];
+                    {discoveredMaterials.map((material) => {
+                        const sources = materialSources[material.name || ''] || [];
                         return (
                             <div key={material.name} className="flex min-h-16 items-center gap-3 py-2.5">
                                 <ItemIcon item={material} size={32} showBorder className="opacity-95" />

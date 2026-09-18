@@ -1,9 +1,11 @@
 import { motion as Motion } from 'framer-motion';
-import { ArrowRight, BookOpen, CircleHelp, Gift, HeartPulse, ShieldAlert } from 'lucide-react';
+import { ArrowRight, BookOpen, CircleHelp, Gift, HeartPulse, ShieldAlert, type LucideIcon } from 'lucide-react';
 import SignalBadge from './SignalBadge';
 import FocusPanelHeader from './FocusPanelHeader';
-import { formatEventText, getEventChoicePreview, getEventPanelCopy } from '../utils/eventPresentation';
+import { formatEventText, getEventChoicePreview, getEventPanelCopy, type EventChoiceTone } from '../utils/eventPresentation';
 import { getLocationVisual } from '../utils/locationVisuals';
+import type { GameActions } from '../hooks/actionDeps';
+import type { GameEvent } from '../types/session.js';
 
 /**
  * EventPanel - Dynamic event choice UI
@@ -12,8 +14,8 @@ import { getLocationVisual } from '../utils/locationVisuals';
 // cycle 489: 모바일 포커스 prop 인터페이스 제거 — cycle 486 cascade로 caller 0건
 //   이라 항상 truthy 전달이었음. fallback 분기 26줄 unreachable 함께 cleanup.
 interface EventPanelProps {
-    currentEvent?: any;
-    actions?: any;
+    currentEvent?: GameEvent | null;
+    actions?: Pick<GameActions, 'dismissEvent' | 'handleEventChoice'>;
     location?: string;
 }
 
@@ -24,7 +26,7 @@ const EventPanel = ({ currentEvent, actions, location }: EventPanelProps) => {
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
     const panelCopy = getEventPanelCopy(currentEvent);
     const locationVisual = location ? getLocationVisual(location) : null;
-    const previewStyle = {
+    const previewStyle: Record<EventChoiceTone, { icon: LucideIcon; className: string }> = {
         reward: { icon: Gift, className: 'text-[#f6e7c8]' },
         recovery: { icon: HeartPulse, className: 'text-emerald-200' },
         danger: { icon: ShieldAlert, className: 'text-rose-200' },
@@ -37,7 +39,7 @@ const EventPanel = ({ currentEvent, actions, location }: EventPanelProps) => {
                 eyebrow="탐험 중 마주친 일"
                 title={panelCopy.title}
                 titleClassName="text-[1.2rem]"
-                onBack={() => actions.dismissEvent?.()}
+                onBack={() => actions?.dismissEvent?.()}
                 backLabel="복귀"
                 backTestId="event-close"
                 rightSlot={<SignalBadge tone="resonance" size="sm">{panelCopy.kind}</SignalBadge>}
@@ -53,7 +55,7 @@ const EventPanel = ({ currentEvent, actions, location }: EventPanelProps) => {
 
             <div className="mt-3 shrink-0 font-readable text-[12px] text-slate-300/82">어떤 길을 택하시겠습니까?</div>
             <div data-testid="event-choice-list" className="mt-2 flex shrink-0 flex-col gap-2">
-                {choices.length > 0 ? choices.map((choice: any, idx: any) => {
+                {choices.length > 0 ? choices.map((choice, idx) => {
                     const preview = getEventChoicePreview(currentEvent, idx);
                     const PreviewIcon = previewStyle[preview.tone].icon;
                     return (
@@ -62,7 +64,7 @@ const EventPanel = ({ currentEvent, actions, location }: EventPanelProps) => {
                             data-testid={`event-choice-${idx}`}
                             onClick={(event) => {
                                 event.currentTarget.blur();
-                                actions.handleEventChoice(idx);
+                                actions?.handleEventChoice(idx);
                             }}
                             className="group min-h-[72px] rounded-[1rem] aether-event-choice px-3.5 py-3 text-left transition-all hover:border-[#d5b180]/28 hover:bg-[#d5b180]/10 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]"
                         >
@@ -87,7 +89,7 @@ const EventPanel = ({ currentEvent, actions, location }: EventPanelProps) => {
                 }) : (
                     <button
                         data-testid="event-dismiss"
-                        onClick={() => actions.dismissEvent?.()}
+                        onClick={() => actions?.dismissEvent?.()}
                         className="rounded-[1.2rem] aether-panel-muted px-4 py-4 text-left font-bold text-white transition-colors hover:bg-white/[0.04]"
                     >
                         이곳을 떠납니다.

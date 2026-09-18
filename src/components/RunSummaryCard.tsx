@@ -22,9 +22,10 @@ import { getRunSummaryAnalysis, getRunSummaryReflectionStrip } from '../utils/ou
 import { buildRunShareText } from '../utils/runShareText.js';
 import SignalBadge from './SignalBadge';
 import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
+import type { RunSummary } from '../reducers/actionTypes.js';
 
 interface RunSummaryCardProps {
-    runSummary?: any;
+    runSummary: RunSummary;
     storyBeat?: MilestoneStoryBeat | null;
     onRestart?: () => void;
 }
@@ -100,7 +101,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                         aria-label="모험 종료 원인과 다음 시도 요약"
                         className="aether-run-reflection-strip mt-4 grid grid-cols-3 gap-1.5 rounded-[0.9rem] p-1.5"
                     >
-                        {reflection.cells.map((cell: any) => (
+                        {reflection.cells.map((cell) => (
                             <div key={cell.label} className="aether-run-reflection-cell min-w-0 rounded-[0.65rem] px-2 py-2">
                                 <div className="aether-type-label font-readable font-bold text-slate-400/86">{cell.label}</div>
                                 <div className="mt-1 min-h-8 whitespace-normal break-keep font-rajdhani text-[0.79rem] font-bold leading-[1.15] text-white sm:text-[0.9rem]">

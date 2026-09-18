@@ -4,10 +4,19 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 
 /**
+ * 도감 신규 항목 발견 알림 1건 — 소비 지점(name/category 렌더)만 좁힌다.
+ * 생산자는 아직 없다(Codex.tsx의 discoveryEntry는 항상 null — 향후 발견 알림 연동용).
+ */
+export interface CodexDiscoveryEntry {
+    name?: string;
+    category?: string;
+}
+
+/**
  * CodexDiscoveryOverlay — 도감 신규 항목 발견 시 glow 애니메이션 오버레이
  * 2초 후 자동 해제
  */
-interface CodexDiscoveryOverlayProps { entry?: any; onDismiss?: () => void }
+interface CodexDiscoveryOverlayProps { entry?: CodexDiscoveryEntry | null; onDismiss?: () => void }
 
 const CodexDiscoveryOverlay = ({ entry, onDismiss }: CodexDiscoveryOverlayProps) => {
     useEffect(() => {
@@ -43,7 +52,7 @@ const CodexDiscoveryOverlay = ({ entry, onDismiss }: CodexDiscoveryOverlayProps)
                         className="relative flex flex-col items-center gap-2"
                     >
                         {/* 스파클 파티클 */}
-                        {[...Array(4)].map((_: any, i: any) => (
+                        {[...Array(4)].map((_, i) => (
                             <Motion.div
                                 key={i}
                                 initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}

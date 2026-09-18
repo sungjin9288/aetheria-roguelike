@@ -31,7 +31,7 @@ const BuildAdvicePanel = ({ player, stats }: BuildAdvicePanelProps) => {
     );
     const primaryId = profile?.primary?.id || 'balanced';
     const trait = TRAIT_DEFINITIONS[primaryId] || TRAIT_DEFINITIONS.balanced;
-    const ownedEffects = (player?.relics || []).map((r: any) => r.effect);
+    const ownedEffects = (player?.relics || []).map((r) => r.effect);
     const recommended = useMemo(
         () => getRecommendedRelicsForBuild(RELICS, primaryId, ownedEffects, 4),
         [primaryId, ownedEffects]
@@ -41,7 +41,7 @@ const BuildAdvicePanel = ({ player, stats }: BuildAdvicePanelProps) => {
         <div className="bg-black/18 border border-white/8 rounded-[1rem] overflow-hidden">
             {/* 헤더 토글 */}
             <button
-                onClick={() => setOpen((o: any) => !o)}
+                onClick={() => setOpen((o) => !o)}
                 className="w-full flex items-center justify-between font-fira text-slate-400/76 hover:text-slate-200 hover:bg-white/[0.03] transition-colors px-3 py-2.5 text-xs"
             >
                 <span className="flex items-center gap-2 tracking-widest uppercase">
@@ -82,13 +82,13 @@ const BuildAdvicePanel = ({ player, stats }: BuildAdvicePanelProps) => {
                             <div className="text-[10px] text-slate-500">현재 성장에 어울리는 유물을 모두 보유하고 있습니다.</div>
                         ) : (
                             <div className="space-y-1.5">
-                                {recommended.map((relic: any) => (
+                                {recommended.map((relic) => (
                                     <div key={relic.id} className="flex items-center gap-2.5 rounded-[0.95rem] border border-white/8 bg-black/18 px-2.5 py-2">
                                         <RelicIcon relic={relic} size={42} />
                                         <div className="min-w-0 flex-1">
                                             <div className="flex items-center justify-between gap-2">
-                                                <span className={`text-xs font-bold ${RARITY_CLASSES[relic.rarity] || 'text-slate-300'}`}>{getRelicDisplayName(relic.name)}</span>
-                                                <span className={`shrink-0 text-[9px] font-fira ${RARITY_CLASSES[relic.rarity] || 'text-slate-400'}`}>{MSG.RARITY_LABEL[relic.rarity]}</span>
+                                                <span className={`text-xs font-bold ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-slate-300'}`}>{getRelicDisplayName(relic.name)}</span>
+                                                <span className={`shrink-0 text-[9px] font-fira ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-slate-400'}`}>{MSG.RARITY_LABEL[relic.rarity ?? '']}</span>
                                             </div>
                                             <div className="mt-0.5 text-[10px] text-slate-400/72">{formatRelicText(relic.desc)}</div>
                                         </div>

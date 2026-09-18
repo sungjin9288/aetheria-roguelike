@@ -1,4 +1,5 @@
 import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signatureItems.js';
+import type { Item } from '../../types/index.js';
 
 /**
  * 레전더리 아이템 상단-우측 ✦ 배지.
@@ -16,7 +17,7 @@ import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signa
 // cycle 427: rust 엔트리 추가 — '광기의 갑주' (rust signature) 등이 등록돼 있는데
 //   SignatureBadge만 누락이라 fallback(holy gold)으로 표시되던 silent UI 결손 fix.
 //   다른 surface (LegendaryDropOverlay/LegendaryCodex/ItemIcon) 모두 rust 보유.
-const TONE_COLORS: any = Object.freeze({
+const TONE_COLORS: Record<string, { fill: string; glow: string; stroke: string }> = Object.freeze({
     holy: { fill: '#f6e7a2', glow: 'rgba(246,231,162,0.6)', stroke: '#5a4620' },
     fire: { fill: '#ffb48a', glow: 'rgba(255,180,138,0.6)', stroke: '#6a2e16' },
     frost: { fill: '#cce8f5', glow: 'rgba(204,232,245,0.6)', stroke: '#29455a' },
@@ -34,7 +35,12 @@ const DEFAULT_TONE_COLOR = TONE_COLORS.holy;
 // cycle 567: size default 10 제거 — 1 production caller (ItemIcon:129
 //   <SignatureBadge item={item} size={badgeSize} />) 명시 전달이라 default
 //   도달 불가. 청소 메가 시리즈 60번째.
-const SignatureBadge = ({ item, size }: any) => {
+interface SignatureBadgeProps {
+    item?: Item | null;
+    size: number;
+}
+
+const SignatureBadge = ({ item, size }: SignatureBadgeProps) => {
     if (!item || !hasDedicatedSignatureArt(item)) return null;
     const meta = getSignatureMetadata(item);
     const toneColor = TONE_COLORS[meta?.tone] || DEFAULT_TONE_COLOR;

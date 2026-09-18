@@ -1,7 +1,7 @@
 import { motion as Motion, MotionConfig } from 'framer-motion';
 import AetherMark from '../AetherMark';
 
-const BootScreen = ({ bootStage }: any) => (
+const BootScreen = ({ bootStage }: { bootStage: string }) => (
     <MotionConfig reducedMotion="user">
         <div className="flex h-[100dvh] w-full bg-cyber-black items-center justify-center text-cyber-blue font-rajdhani relative overflow-hidden">
             <div

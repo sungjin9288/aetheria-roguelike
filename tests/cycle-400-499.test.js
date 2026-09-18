@@ -1209,7 +1209,9 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/SignalBadge.tsx');
       // cycle 433: default `size`도 제거 (호출자 모두 명시 전달이라 도달 불가).
       //   해당 검증은 cycle-433 test가 대체.
-      assert.ok(/SIZE_CLASS\[size\] \|\| SIZE_CLASS\.sm/.test(source),
+      // W8-Z5: size가 `string | undefined`로 닫히면서 인덱싱 가드로 `size ?? ''`가
+      //   붙었다 — fallback 자체(`|| SIZE_CLASS.sm`)의 의도는 그대로다.
+      assert.ok(/SIZE_CLASS\[size(?:\s*\?\?\s*'')?\] \|\| SIZE_CLASS\.sm/.test(source),
           'fallback `|| SIZE_CLASS.sm` 보존 (방어용)');
   });
 
@@ -1681,9 +1683,11 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 433: SIZE_CLASS / TONE_CLASS fallback 방어용 보존', async () => {
       const source = await readSrc('src/components/SignalBadge.tsx');
-      assert.ok(/SIZE_CLASS\[size\] \|\| SIZE_CLASS\.sm/.test(source),
+      // W8-Z5: tone/size가 `string | undefined`로 닫히면서 인덱싱 가드로 `?? ''`가
+      //   붙었다 — fallback 자체의 의도는 그대로다.
+      assert.ok(/SIZE_CLASS\[size(?:\s*\?\?\s*'')?\] \|\| SIZE_CLASS\.sm/.test(source),
           'SIZE_CLASS fallback 보존');
-      assert.ok(/TONE_CLASS\[tone\] \|\| TONE_CLASS\.neutral/.test(source),
+      assert.ok(/TONE_CLASS\[tone(?:\s*\?\?\s*'')?\] \|\| TONE_CLASS\.neutral/.test(source),
           'TONE_CLASS fallback 보존');
   });
 

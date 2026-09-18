@@ -90,7 +90,7 @@ const renderLogText = (text: string) => {
     ));
 };
 
-// cycle 404: `stats?: any;` 제거 — 본체 destructure 미사용 + read 0건.
+// cycle 404: `stats` 옵셔널 열린 타입 필드 제거 — 본체 destructure 미사용 + read 0건.
 //   MobileGameLayout이 prop pass했으나 silent dropped (paired remove).
 // cycle 496: 외부 보조 클래스 / 좌측 도구 모음 props 제거 — 1 callsite 전달 0건
 //   이라 보간/렌더 결과 dead. cycle 463/465/466/493/495 lens 회귀.
