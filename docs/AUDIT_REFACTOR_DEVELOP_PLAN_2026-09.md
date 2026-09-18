@@ -371,3 +371,23 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 
 **남은 후보 (Wave 8)**: `GameState.postCombatResult: any`(greyback 카드 — `combatVictory`가 레거시 별칭 필드를 섞어 생산; 생산자 정리 후 `SET_POST_COMBAT_RESULT` 닫기) · `dataMigration`의 깊은 복사 로컬 `any` 상속 + `useFirebaseSync` 8곳(`migrateData` 반환형을 닫으면 함께 흔들림 — 한 슬라이스로) · utils 잔여 155(`performanceMarks`·`anchorPoints`·`eventPresentation`·`equipmentBaseIdentity` 상위) · systems 78(`CombatEngine.outcome`/`.loot`, 감사 3파일) · components 83 · `useGameTestApi` 54(마지막) · `consumableEffect`의 타입상 dead 스칼라 status 분기 제거(로직 변경이라 별도 판단)
 
+---
+
+## 12. Wave 8 계획 (2026-09-18 착수, 베이스 `main` = `98e98b6e` = PR #34 merge commit)
+
+**핵심**: 경계(주입·데이터·액션)는 다 닫혔다. 남은 493건은 두 종류다 — (a) **마지막 구조적 `any` 2개**: `GameState.postCombatResult`(greyback 카드, 생산자 `combatVictory`가 20필드 리터럴을 쏘고 소비자 4곳이 각자 모양을 가정)와 `migrateData`의 반환(`JSON.parse`의 `any`를 그대로 흘려 `useFirebaseSync` 6개 호출부가 그 느슨함에 기대는 구조), (b) **관성 `any`** 파일 내부 콜백/로컬 ~430건(utils 155 · components 83 · systems 78 · `useGameTestApi` 54). (a)는 판단이 필요하고 (b)는 손이 필요하다. 이 wave가 끝나면 `: any`는 세 자리 아래(목표 < 100)로 내려가고, 래칫은 "0을 향해 하락만"이 아니라 "0 근처 유지"로 의미가 바뀐다.
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **Z1 postCombatResult** | 생산자 리터럴(20필드)에서 `PostCombatResult` 인터페이스 도출 → `GameState.postCombatResult: PostCombatResult \| null`, `ActionPayloadMap[SET_POST_COMBAT_RESULT]` 확정(`Record<string, unknown>` 임시 → 실제 타입), 소비자 `PostCombatCard`(5)·`GameRoot`·`App`·QA 주입(`injectPostCombatResult`)이 같은 타입을 읽음 | 전투 결과 카드의 필드 오타·dead read가 컴파일 에러 | 생산자가 "레거시 별칭 필드"를 섞는다면 소비자별 가정이 갈릴 수 있음 — 그 경우 별칭을 지우지 말고 타입에 optional로 남기고 기록 | 소비자 가정에 맞춰 타입을 넓히면(`[key: string]: unknown`) 아무것도 못 잡는다 — 생산자 리터럴만이 진실 | opus |
+| **Z2 migrateData 반환형** | `migrateData(raw: unknown): MigratedSave`(= `Player` + `meta` + 세이브 envelope 필드)로 닫고, 깊은 복사 로컬(`savedData`/`target`)은 `unknown`→좁히기 또는 `Record<string, unknown>`으로, `useFirebaseSync` 호출부 6곳이 드러내는 "possibly null/undefined"를 실제 가드로 정리 | 세이브 로드 경로의 마지막 `any` 제거 — 클라우드/로컬 세이브 병합에서 필드 오타 차단 | `useFirebaseSync`는 실제 데이터 손실이 걸린 코드. 가드 추가는 되지만 **분기 순서·권한 판정(`cloudSaveAuthority`) 변경 금지** | 반환형을 `Player`로만 닫으면 envelope 필드(`revision`/`meta`)를 읽는 호출부가 깨진다 — 실제 반환 모양을 먼저 측정 | opus |
+| **Z3 utils 잔여** | `performanceMarks`·`anchorPoints`·`eventPresentation`·`equipmentBaseIdentity`·`relicChoiceDecision`·`nameGenerator`·`expeditionReturnFlow`·`combatForecast`·`outcomeAnalysis`·`itemVisuals`·`itemPrefixUtils`·`combatView`·`avatarSpriteCandidates`·`mapSignatureHints` = 97 | — | — | `combatView`는 `CombatPanel`(Y4에서 로컬 캐스트로 소비) 계약 — 반환형이 닫히면 그 캐스트도 제거 | sonnet |
+| **Z4 systems·services·chain** | `eventRewardCoherenceAudit`·`contentReachability`·`CombatEngine.outcome/.loot/.status/.enemyAI`·`relicDotMultiplierAudit`·`combatActionTurn` + `services/aiService`·`reducers/handlers/chainEventHandlers` = 66. `consumableEffect`의 타입상 dead 스칼라 `status` 분기는 **제거**(`Player.status: StatusId[] \| undefined`이므로 `player.status ?? []`가 타입상 동치, 마이그레이션이 로드 시 배열화) | 전투 수식 mixin 전부 `: any` 0 | 감사 3파일은 증빙 해시 바인딩 → 통합 시 재생성 | `combatActionTurn`은 reducer가 호출하는 단일 전이 — 시그니처 불변 | sonnet |
+| **Z5 components 잔여** | `PostCombatCard`(Z1 소유) 제외 전부 = 78 | — | — | Wave 6/7 규칙 동일 | sonnet |
+| **Z6 useGameTestApi** | Phase B(Z1 통합 후). 54건 — `engineRef`/`fullStatsRef`를 `EngineSnapshot`/`FullStats`로, `sanitizeValue(value: unknown)`, `testApi` 객체를 명시 인터페이스(`AetheriaTestApi`)로 — e2e 스펙(`tests/e2e/**`)이 읽는 필드 계약을 문서화 | QA 시드 API의 모양이 타입으로 고정 → e2e 스펙 드리프트 컴파일 차단 | 프로덕션 tree-shaken이라 런타임 위험 0 | `any`를 `unknown`으로 바꾸고 캐스트로 도망가면 e2e 계약이 문서화되지 않는다 — 명시 인터페이스 | sonnet |
+| **Z7 문서·래칫** | §12.1, CLAUDE.md, todo, 래칫 재고정, 증빙 재생성(progression → pacing) | — | — | — | 직접 |
+
+**순서**: Phase A = Z1 · Z2 · Z3 · Z4 · Z5 병렬(파일 집합 분리: combatVictory/PostCombatCard/GameRoot/App/gameReducer·actionTypes 해당 줄 — dataMigration/gameUtils/useFirebaseSync — utils 14 — systems 8+2 — components 나머지) → 통합 → Phase B = Z6 → 통합 → 증빙 → 직렬 게이트 → Z7 → PR → CI → merge commit.
+
+**판단 포인트**: Z2는 이 시리즈에서 처음으로 "데이터 손실이 걸린 경로"를 건드린다. 타입만 바꾸고 분기는 그대로 두는 것이 원칙이고, 가드를 추가할 때는 "이전에 throw/undefined 전파하던 경로가 지금 조기 반환한다"를 한 줄씩 기록해 PR 리스크 절에 올린다. 세이브 병합 순서와 권한 판정은 이 wave의 범위가 아니다.
+
