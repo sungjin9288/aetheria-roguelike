@@ -391,3 +391,20 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 
 **판단 포인트**: Z2는 이 시리즈에서 처음으로 "데이터 손실이 걸린 경로"를 건드린다. 타입만 바꾸고 분기는 그대로 두는 것이 원칙이고, 가드를 추가할 때는 "이전에 throw/undefined 전파하던 경로가 지금 조기 반환한다"를 한 줄씩 기록해 PR 리스크 절에 올린다. 세이브 병합 순서와 권한 판정은 이 wave의 범위가 아니다.
 
+### 12.1 Wave 8 실행 결과 (2026-09-18, branch `claude/funny-rubin-xdv43e`, 베이스 `main` = `98e98b6e`)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| Z1 postCombatResult | ✅ | `src/types/combat.ts`의 `PostCombatResult`(20필드, 생산자 리터럴에서 도출 — `items`는 `Item[]`이 아니라 이름 배열이었음) + 두 번째 생산자 `RESOLVE_POST_COMBAT_CHOICE`의 optional 2필드. `GameState.postCombatResult: PostCombatResult \| null`, `ActionPayloadMap` 엔트리 확정. **dead read 1건 제거**(`PostCombatCard`의 `result.loot` 폴백 — 생산자 없음), QA 시드 전용 별칭 `hpLow/mpLow`는 optional로 기록, `difficultyLabel`은 run-summary 필드라 타입에 넣지 않음 |
+| Z2 migrateData 반환형 | ✅ | 실측: 반환은 `Player`가 아니라 **세이브 봉투**(`player?: Partial<Player>` + `quickSlots`(항상 3) + `pendingRelics: null` + envelope 필드) → `MigratedSave \| null`, `hasMigratedPlayer` 술어. 입력은 `unknown`, 깊은 복사는 `Record<string, unknown>` + 값 보존 렌즈(`readFields`/`readItem` …), `Player` 단언은 이름 붙은 렌즈 1곳. `useFirebaseSync` 가드 5곳 — 전부 기존 catch/fallback과 **동일 결과**(이전엔 TypeError → 같은 catch). 권한 판정·분기 순서 불변. 에이전트 자체 차등 하네스 70 입력(레거시 flat/스칼라 슬롯/버전 변종/null 인벤) 출력·throw 동치 70/70 |
+| Z3 utils 14파일 | ✅ | 121 → 0(`as any` −9). 파생: `combatView` 반환형이 닫혀 `CombatPanel`의 Y4 로컬 캐스트 4건 제거. `CombatEngine.loot`의 `MSG.X(newItem.name)` 8곳은 `Item.name?`이라 `?? ''`(실데이터 항상 존재) |
+| Z4 systems·services·chain | ✅ | 77 → 0(`as any` −5). **발견**: `CombatEngine.outcome/.enemyAI`의 최상위 `: any`가 spread 합성된 `CombatEngine` 객체 전체를 `any`로 오염시키고 있었다 — 둘을 닫자 엔진의 실제 합성 타입이 처음 드러났고, `CombatEngine.actions`의 `ThisType` 단독 주석이 외부로 프로퍼티를 0개 노출하던 문제(`satisfies ThisType`로 교정), `TempBuff.counterChance`/`Player.extraTurnGranted`처럼 런타임에 읽고 쓰지만 타입에 없던 필드 2개가 표면화됐다. `consumableEffect`의 타입상 dead 스칼라 `status` 분기 제거(`player.status ?? []`) |
+| Z5 components | ✅ | 78 → 0(`as any` −8). 남은 로컬 캐스트는 전부 `src/data/**`(`BOSS_BRIEFS`/`LOOT_TABLE`/`getCodexProgress`)와 `Item`에 없는 `atk/def`(dead read 보존) 때문 — Wave 9 데이터 타입 후보. `GameRoot`의 `seasonEvent.endsAt` `as any` 2건은 Date/string/number/Timestamp 판별 헬퍼로 대체 |
+| 교차 정리 | ✅ | (1) `outcomeAnalysis`의 손으로 쓴 `PostCombatResultLike` → `Partial<PostCombatResult>`, dead `loot` 폴백 2곳 제거; (2) `isSynthesizable`… (Wave 7); (3) `equipmentBaseIdentity` 헬퍼 제네릭을 `T extends Item \| null \| undefined`로(인벤 null 슬롯은 마이그레이션 실측 입력); (4) **`GameEvent.outcomes: unknown[]` → 세션 정본 `EventOutcome[]`** — `eventActions`·`eventPresentation`이 같은 배열을 두 로컬 사본으로 읽던 드리프트 제거, `RunSummaryLike`도 `Partial<RunSummary>`로 도출(`recentWinRate: number \| null` 불일치 표면화) |
+| Z6 useGameTestApi | ⏳ | Phase B 실행 중 — 통합 후 갱신 |
+| 래칫 | ⏳ | Phase A 실측 `: any` 493 → 202, `as any` 69 → 46 (components·reducers·services·platform 0; 재고정은 Z6 통합 후) |
+
+**최종 게이트**: Z6 통합 후 직렬 게이트 결과를 기록한다
+
+**남은 후보 (Wave 9)**: Z6 결과와 함께 갱신
+
