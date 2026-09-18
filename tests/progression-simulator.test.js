@@ -16,11 +16,16 @@ import { GS } from '../src/reducers/gameStates.ts';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import { createExploreActions } from '../src/hooks/gameActions/exploreActions.ts';
 import {
+    MODEL_TIME_POLICY,
     PROGRESSION_CHECKPOINT_LEVELS,
+    PROGRESSION_EXP_LADDER_AUTHORITY,
     PROGRESSION_SIMULATOR_BASELINE,
     ProgressionSimulationError,
+    cumulativeExpToLevel,
     simulateProgression,
+    toModeledHours,
 } from '../src/systems/progressionSimulator.ts';
+import { BALANCE, CONSTANTS } from '../src/data/constants.ts';
 
 const EXPECTED_JOB_NAMES = [
     '모험가', '전사', '마법사', '도적', '나이트', '버서커', '아크메이지', '흑마법사', '어쌔신',
@@ -81,6 +86,55 @@ test('baseline simulation keeps immutable snapshots and reports the exact class 
         assert.equal(snapshot.combat.authority, 'CombatEngine.attack');
     }
     assert.equal(report.final.level >= 75, true);
+});
+
+// Wave 12 D1: 접근 비용 축의 보간 기준이 되는 누적 EXP 사다리.
+// 시뮬레이터는 CombatEngine.applyExpGain을 굴려서 만들고, 이 테스트는 BALANCE 곡선을
+// 독립 오라클로 다시 계산해 둘이 일치하는지 본다(사다리에 두 번째 곡선이 생기면 깨진다).
+test('cumulative EXP ladder matches the BALANCE curve and anchors the cost axis at level 1', () => {
+    assert.equal(PROGRESSION_EXP_LADDER_AUTHORITY, 'CombatEngine.applyExpGain');
+    assert.equal(cumulativeExpToLevel(1), 0);
+
+    let nextExp = Number(INITIAL_STATE.player.nextExp);
+    let expected = 0;
+    for (let level = 2; level <= CONSTANTS.MAX_LEVEL; level += 1) {
+        expected += nextExp;
+        nextExp = Math.min(
+            Math.floor(nextExp * BALANCE.EXP_SCALE_RATE),
+            BALANCE.EXP_LEVEL_HARD_CAP,
+        );
+        assert.equal(cumulativeExpToLevel(level), expected, `cumulative EXP to level ${level}`);
+    }
+
+    // 범위 밖 입력은 사다리 양 끝으로 클램프한다(호출자가 beyond-anchors로 따로 표기한다).
+    assert.equal(cumulativeExpToLevel(0), 0);
+    assert.equal(cumulativeExpToLevel(-5), 0);
+    assert.equal(cumulativeExpToLevel(Number.NaN), 0);
+    assert.equal(cumulativeExpToLevel(CONSTANTS.MAX_LEVEL + 50), cumulativeExpToLevel(CONSTANTS.MAX_LEVEL));
+    assert.ok(cumulativeExpToLevel(60) > cumulativeExpToLevel(45));
+});
+
+test('modeled hours conversion is exact integer arithmetic on the modeled seconds', () => {
+    assert.deepEqual({ ...MODEL_TIME_POLICY }, { secondsPerHour: 3_600, hoursPrecisionScale: 100 });
+    assert.equal(toModeledHours(0), 0);
+    assert.equal(toModeledHours(3_600), 1);
+    assert.equal(toModeledHours(472_140), 131.15);
+    assert.equal(toModeledHours(735_840), 204.4);
+    assert.equal(toModeledHours(14_760), 4.1);
+    assert.equal(toModeledHours(45), 0.01);
+});
+
+test('checkpoint modeled seconds are the exact action cost of the modeled time policy', () => {
+    const report = simulateProgression({ seed: 20_260_810 });
+    for (const checkpoint of report.checkpoints) {
+        assert.equal(
+            checkpoint.modeledSeconds,
+            checkpoint.modeledActions * report.modelPolicy.secondsPerAction,
+            `checkpoint ${checkpoint.targetLevel}`,
+        );
+    }
+    const actions = report.checkpoints.map((checkpoint) => checkpoint.modeledActions);
+    assert.deepEqual(actions, [...actions].sort((left, right) => left - right));
 });
 
 test('event-axis candidate changes seeded narrative occurrences without changing reward/time outcomes', () => {

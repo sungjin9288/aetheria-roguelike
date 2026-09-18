@@ -48,6 +48,23 @@ const MODEL_POLICY = Object.freeze({
     eventProbeOpportunities: 4_096,
 });
 
+/**
+ * Wave 12 D1 — 모델 시간 축의 단위 환산 소유자.
+ * `secondsPerHour`/`hoursPrecisionScale`은 밸런스 수치가 아니라 표기 단위라 `BALANCE`가 아닌
+ * 모델 정책에 둔다. `contentReachability`도 이 하나를 import해서 쓴다(같은 환산을 두 곳에서
+ * 다시 선언하면 Wave 7이 제거한 상수 드리프트가 되살아난다).
+ */
+export const MODEL_TIME_POLICY = Object.freeze({
+    secondsPerHour: 3_600,
+    hoursPrecisionScale: 100,
+});
+
+/** 모델 초 → 소수점 2자리 시간. 정수 산술을 먼저 해서 부동소수 잔차 없이 결정론적이다. */
+export const toModeledHours = (seconds: number) => (
+    Math.round((seconds * MODEL_TIME_POLICY.hoursPrecisionScale) / MODEL_TIME_POLICY.secondsPerHour)
+    / MODEL_TIME_POLICY.hoursPrecisionScale
+);
+
 type SimulationErrorCode =
     | 'INVALID_SEED'
     | 'INVALID_MAX_STEPS'
@@ -498,6 +515,52 @@ const buildPlayerAtLevel = (targetLevel: number) => {
         );
     }
     return player;
+};
+
+/**
+ * Wave 12 D1 — 레벨 1에서 각 레벨까지의 누적 EXP 사다리.
+ * EXP 곡선 수식을 다시 적지 않고 `CombatEngine.applyExpGain`을 그대로 굴려서 만든다
+ * (곡선의 진실 원천은 하나여야 한다 — 여기에 `nextExp * EXP_SCALE_RATE`를 다시 쓰면
+ * 두 번째 곡선이 생긴다). `ladder[level - 1]` = 그 레벨에 도달하기까지의 누적 EXP.
+ */
+const buildCumulativeExpLadder = () => {
+    const ladder = [0];
+    let player = structuredClone(PROGRESSION_SIMULATOR_BASELINE.player);
+    while (Number(player.level ?? 1) < CONSTANTS.MAX_LEVEL) {
+        const required = Number(player.nextExp) - Number(player.exp ?? 0);
+        if (!Number.isFinite(required) || required < 1) {
+            throw new ProgressionSimulationError(
+                'INVALID_REWARD_NUMBER',
+                `Invalid EXP boundary while building the cumulative ladder at level ${String(player.level)}`,
+            );
+        }
+        const previousLevel = Number(player.level ?? 1);
+        player = CombatEngine.applyExpGain(player, required).updatedPlayer;
+        if (Number(player.level ?? 1) !== previousLevel + 1) {
+            throw new ProgressionSimulationError(
+                'INVALID_REWARD_NUMBER',
+                `CombatEngine.applyExpGain skipped level ${previousLevel + 1} while building the cumulative ladder`,
+            );
+        }
+        ladder[Number(player.level) - 1] = ladder[previousLevel - 1] + required;
+    }
+    return ladder;
+};
+
+let cumulativeExpLadder: number[] | null = null;
+
+/** 누적 EXP 사다리의 권위 — 리포트 정책 문자열이 이 한 곳에서 나온다. */
+export const PROGRESSION_EXP_LADDER_AUTHORITY = 'CombatEngine.applyExpGain';
+
+/**
+ * 레벨 1 → `level` 누적 EXP. 1 미만/MAX_LEVEL 초과는 사다리 양 끝으로 클램프한다
+ * (앵커 밖 레벨은 호출자가 별도로 `beyond-anchors`로 표기하므로 여기서 던지지 않는다).
+ */
+export const cumulativeExpToLevel = (level: number) => {
+    cumulativeExpLadder ??= buildCumulativeExpLadder();
+    const ladder = cumulativeExpLadder;
+    const requested = Number.isFinite(level) ? Math.floor(level) : 1;
+    return ladder[Math.max(1, Math.min(requested, ladder.length)) - 1];
 };
 
 const snapshotNumber = (value: unknown, label: string, minimum: number) => {
@@ -1134,17 +1197,37 @@ export const buildProgressionDiagnostic = (options: ProgressionDiagnosticOptions
     const progressionRuns = comparisonSeeds.map((seed) => simulateProgression({ seed }));
     const rewardProgression = {
         authority: 'simulateProgression schema-v1 production reward settlement',
-        checkpoints: PROGRESSION_CHECKPOINT_LEVELS.map((targetLevel, index) => ({
-            targetLevel,
-            modeledActions: numericDistribution(
-                progressionRuns.map((run) => run.checkpoints[index].modeledActions),
-            ),
-        })),
+        // Wave 12 D1: 비용 축(액션 → 초 → 시간)을 증빙에 노출한다. `secondsPerAction`은
+        // 모델 정책 산술일 뿐 실제 플레이 시간 주장이 아니다(`actualPlayClaim: false`).
+        costPolicy: {
+            actionUnit: MODEL_POLICY.actionUnit,
+            secondsPerAction: MODEL_POLICY.secondsPerAction,
+            secondsPerHour: MODEL_TIME_POLICY.secondsPerHour,
+            actualPlayClaim: MODEL_POLICY.actualPlayClaim,
+            derivation: 'modeledSeconds = modeledActions × secondsPerAction; modeledHours = round(modeledSeconds × 100 / secondsPerHour) / 100',
+        },
+        checkpoints: PROGRESSION_CHECKPOINT_LEVELS.map((targetLevel, index) => {
+            const modeledSeconds = numericDistribution(
+                progressionRuns.map((run) => run.checkpoints[index].modeledSeconds),
+            );
+            return {
+                targetLevel,
+                modeledActions: numericDistribution(
+                    progressionRuns.map((run) => run.checkpoints[index].modeledActions),
+                ),
+                modeledSeconds,
+                modeledHours: {
+                    p10: toModeledHours(modeledSeconds.p10),
+                    p50: toModeledHours(modeledSeconds.p50),
+                    p90: toModeledHours(modeledSeconds.p90),
+                },
+            };
+        }),
     };
     const cohorts = runProgressionDiagnosticCohorts(focusedSeeds, comparisonSeeds, maxCombatTurns);
 
     return deepFreeze({
-        schemaVersion: 2,
+        schemaVersion: 3,
         classification: 'diagnostic-production-path',
         actualPlayClaim: false,
         activationReady: false,
@@ -1172,6 +1255,7 @@ export const buildProgressionDiagnostic = (options: ProgressionDiagnosticOptions
             'Diagnostic output is deterministic model evidence, not an actual-play or retention claim.',
             'Balance activation remains manual and requires matching fresh-session observation.',
             'Actual expedition count, elapsed play time, mandatory story, AI event, and retention metrics remain unavailable.',
+            'Modeled seconds and hours are policy arithmetic over modeled reward settlements; they are not observed session durations.',
         ],
     });
 };

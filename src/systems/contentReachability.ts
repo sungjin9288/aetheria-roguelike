@@ -1,10 +1,17 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { DROP_TABLES } from '../data/dropTables.js';
+import { EVENT_CHAINS } from '../data/eventChains.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { getAllSignatureDropSourceIndex } from '../utils/signatureDropSources.js';
 import { getShopCatalog } from '../utils/shopRotation.js';
-import { simulateProgression } from './progressionSimulator.js';
+import {
+    MODEL_TIME_POLICY,
+    PROGRESSION_EXP_LADDER_AUTHORITY,
+    cumulativeExpToLevel,
+    simulateProgression,
+    toModeledHours,
+} from './progressionSimulator.js';
 import { canInvestigateTown } from '../utils/townInvestigation';
 
 export type AcquisitionRouteKind =
@@ -14,8 +21,111 @@ export type AcquisitionRouteKind =
     | 'quest_reward'
     | 'high_level_bonus';
 
+/**
+ * Wave 12 D1 — 비용 축의 출처 표기.
+ * `anchored`    : progression 체크포인트(또는 시뮬레이션 시작점)에서 그대로 읽은 모델 산출값.
+ * `interpolated`: 체크포인트가 없는 레벨 — 앞뒤 앵커 사이를 누적 EXP 비율로 보간한 값(모델 직접 산출이 아니다).
+ * `beyond-anchors`: 앵커 범위 밖 레벨 — 외삽하지 않고 비용을 비워 둔다.
+ * `unavailable` : progression 권위가 없는 소스(테스트 목업) — 비용을 계산하지 않는다.
+ */
+export type ModeledCostBasis = 'anchored' | 'interpolated' | 'beyond-anchors' | 'unavailable';
+
+export interface ModeledCostInterpolation {
+    lowerLevel: number;
+    upperLevel: number;
+    lowerModeledActions: number;
+    upperModeledActions: number;
+    lowerCumulativeExp: number;
+    upperCumulativeExp: number;
+    expFraction: number;
+}
+
+export interface ModeledCost {
+    level: number;
+    basis: ModeledCostBasis;
+    modeledActions: number | null;
+    modeledSeconds: number | null;
+    modeledHours: number | null;
+    cumulativeExp: number;
+    interpolation: ModeledCostInterpolation | null;
+}
+
+export interface CostAnchor {
+    level: number;
+    source: 'simulation-origin' | 'checkpoint';
+    modeledActions: number;
+    modeledSeconds: number;
+    modeledHours: number;
+    cumulativeExp: number;
+}
+
+export interface CostBucket {
+    gateLevel: number;
+    count: number;
+    members: Array<string | number>;
+    cost: ModeledCost;
+}
+
+export interface EquipmentTierCost {
+    tier: number;
+    gateLevel: number;
+    count: number;
+    cost: ModeledCost;
+}
+
+export interface MapGateDivergence {
+    map: string;
+    declaredLevel: number | string | null;
+    routeGateLevel: number;
+}
+
+export interface CostBehindRow {
+    level: number;
+    basis: ModeledCostBasis;
+    modeledActions: number | null;
+    modeledHours: number | null;
+    maps: number;
+    quests: number;
+    equipment: number;
+    jobs: number;
+    eventChainTerminalSteps: number;
+}
+
+export interface ContentCostReport {
+    policy: {
+        modelAuthority: string | null;
+        anchorSeed: number | null;
+        anchorStatistic: 'single-seed';
+        actionUnit: string | null;
+        secondsPerAction: number | null;
+        secondsPerHour: number;
+        actualPlayClaim: false;
+        cumulativeExpAuthority: string;
+        mapGateAuthority: string;
+        interpolationRule: string;
+        limitations: string[];
+    };
+    anchors: CostAnchor[];
+    summary: {
+        eventChains: number;
+        eventChainSteps: number;
+        eventChainTerminalSteps: number;
+    };
+    gates: {
+        maps: CostBucket[];
+        quests: CostBucket[];
+        equipmentTiers: EquipmentTierCost[];
+        jobs: CostBucket[];
+        eventChainTerminals: CostBucket[];
+    };
+    mapGateDivergence: MapGateDivergence[];
+    unresolvedEventChainTerminals: string[];
+    malformedGates: string[];
+    behind: CostBehindRow[];
+}
+
 export interface ContentReachabilityReport {
-    schemaVersion: 1;
+    schemaVersion: 2;
     catalog: {
         maps: number;
         monsters: number;
@@ -70,6 +180,7 @@ export interface ContentReachabilityReport {
         missingDropRoutes: string[];
         invalidDropRoutes: string[];
     };
+    cost: ContentCostReport;
     errors: string[];
 }
 
@@ -82,7 +193,8 @@ interface MapLike {
     type?: string;
     exits?: unknown[];
     seasonOnly?: boolean;
-    level?: number;
+    /** MAPS 실측: 숫자 / [최소, 최대] 범위 / 'infinite'(무한 심연) 세 모양이 모두 존재한다. */
+    level?: number | number[] | string;
     shopBonus?: unknown;
     monsters?: string[];
     bossMonsters?: string[];
@@ -139,6 +251,13 @@ const DB_SOURCE = DB as unknown as ContentSource;
 
 const START_LOCATION = '시작의 마을';
 const CHECKPOINT_LEVELS = [2, 5, 10, 20, 45, 60, 75];
+const PROGRESSION_ANCHOR_SEED = 20_260_810;
+const ORIGIN_LEVEL = 1;
+const COST_INTERPOLATION_RULE = 'modeledActions(L) = round(lower.modeledActions + expFraction × (upper.modeledActions − lower.modeledActions)), '
+    + 'expFraction = (cumulativeExp(L) − cumulativeExp(lower)) / (cumulativeExp(upper) − cumulativeExp(lower)); '
+    + 'lower/upper are the nearest anchors below and above L. Anchored rows carry interpolation: null.';
+const MAP_GATE_AUTHORITY = 'getMapAccess level rule: range levels use level[0]; a non-finite level (infinite abyss) is ungated; '
+    + 'routeGateLevel is the lowest player level at which the map enters the report’s own reachability walk from the start location.';
 const EXPECTED_CATALOG_COUNTS = Object.freeze({
     maps: 52,
     monsters: 254,
@@ -194,12 +313,36 @@ const mapMonsterRoutes = (maps: Record<string, MapLike>) => {
     return routes;
 };
 
-const reachableFrom = (start: string, maps: Record<string, MapLike>) => {
+/**
+ * 지역의 입장 레벨 — `getMapAccess`와 같은 규칙으로 읽는다.
+ * 범위(`[min, max]`)는 첫 값이 입장선이고, 유한하지 않은 값('infinite')은 레벨 잠금이 없다
+ * (`getMapAccess`의 `level < Number('infinite')`는 항상 false다).
+ */
+const mapGateLevel = (map: MapLike | undefined) => {
+    const declared = Array.isArray(map?.level) ? map.level[0] : map?.level;
+    const numeric = Number(declared);
+    return Number.isFinite(numeric) ? numeric : ORIGIN_LEVEL;
+};
+
+/**
+ * `levelCap`을 주면 그 레벨에서 실제로 걸어 들어갈 수 있는 지역만 센다.
+ * 기본값(Infinity)에서는 레벨 게이트가 한 번도 걸리지 않으므로 기존 위상 전용 동작과 동일하다.
+ * `visited`를 별도로 두는 이유: 레벨로 막힌 노드는 `reachable`에 들어가지 않으므로,
+ * 방문 표시가 없으면 seasonOnly/고대 보물고 재투입 루프에서 큐가 무한히 자란다.
+ */
+const reachableFrom = (
+    start: string,
+    maps: Record<string, MapLike>,
+    levelCap = Number.POSITIVE_INFINITY,
+) => {
     const reachable = new Set<string>();
+    const visited = new Set<string>();
     const queue = [start];
     while (queue.length > 0) {
         const current = queue.shift();
-        if (!current || reachable.has(current) || !Object.hasOwn(maps, current)) continue;
+        if (!current || visited.has(current) || !Object.hasOwn(maps, current)) continue;
+        visited.add(current);
+        if (mapGateLevel(maps[current]) > levelCap) continue;
         reachable.add(current);
         const exits = Array.isArray(maps[current]?.exits) ? maps[current].exits : [];
         queue.push(...exits.filter((entry: unknown): entry is string => typeof entry === 'string'));
@@ -484,6 +627,297 @@ const progressionJobErrors = (
     return errors;
 };
 
+/** 각 지역이 열리는 최소 플레이어 레벨 — 이 리포트 자신의 도달성 보행에 레벨 상한을 씌워 구한다. */
+const mapRouteGateLevels = (start: string, maps: Record<string, MapLike>) => {
+    const gates = new Map<string, number>();
+    const total = Object.keys(maps).length;
+    for (let level = ORIGIN_LEVEL; level <= CONSTANTS.MAX_LEVEL; level += 1) {
+        for (const name of reachableFrom(start, maps, level)) {
+            if (!gates.has(name)) gates.set(name, level);
+        }
+        if (gates.size >= total) break;
+    }
+    return gates;
+};
+
+const isUsableGateLevel = (level: number) => (
+    Number.isSafeInteger(level) && level >= ORIGIN_LEVEL && level <= CONSTANTS.MAX_LEVEL
+);
+
+const buildCostAnchors = (
+    progression: ReturnType<typeof simulateProgression> | null,
+): CostAnchor[] => {
+    if (!progression) return [];
+    const origin: CostAnchor = {
+        level: ORIGIN_LEVEL,
+        source: 'simulation-origin',
+        modeledActions: 0,
+        modeledSeconds: 0,
+        modeledHours: 0,
+        cumulativeExp: cumulativeExpToLevel(ORIGIN_LEVEL),
+    };
+    const checkpoints: CostAnchor[] = progression.checkpoints.map((checkpoint) => ({
+        level: checkpoint.targetLevel,
+        source: 'checkpoint',
+        modeledActions: checkpoint.modeledActions,
+        modeledSeconds: checkpoint.modeledSeconds,
+        modeledHours: toModeledHours(checkpoint.modeledSeconds),
+        cumulativeExp: cumulativeExpToLevel(checkpoint.targetLevel),
+    }));
+    return [origin, ...checkpoints.filter((anchor) => anchor.level !== ORIGIN_LEVEL)]
+        .sort((left, right) => left.level - right.level);
+};
+
+/**
+ * 게이트 레벨 하나의 모델 비용. 앵커에 정확히 걸리면 모델 산출값 그대로(`anchored`),
+ * 사이면 누적 EXP 비율 보간(`interpolated`), 앵커 밖이면 외삽하지 않고 비운다(`beyond-anchors`).
+ */
+const buildModeledCost = (
+    level: number,
+    anchors: CostAnchor[],
+    secondsPerAction: number | null,
+): ModeledCost => {
+    const cumulativeExp = cumulativeExpToLevel(level);
+    const empty = {
+        level,
+        modeledActions: null,
+        modeledSeconds: null,
+        modeledHours: null,
+        cumulativeExp,
+        interpolation: null,
+    } as const;
+    if (anchors.length === 0 || secondsPerAction === null) return { ...empty, basis: 'unavailable' };
+
+    const exact = anchors.find((anchor) => anchor.level === level);
+    if (exact) {
+        return {
+            level,
+            basis: 'anchored',
+            modeledActions: exact.modeledActions,
+            modeledSeconds: exact.modeledSeconds,
+            modeledHours: exact.modeledHours,
+            cumulativeExp,
+            interpolation: null,
+        };
+    }
+
+    const lower = [...anchors].reverse().find((anchor) => anchor.level < level);
+    const upper = anchors.find((anchor) => anchor.level > level);
+    const expSpan = lower && upper ? upper.cumulativeExp - lower.cumulativeExp : 0;
+    if (!lower || !upper || !(expSpan > 0)) return { ...empty, basis: 'beyond-anchors' };
+
+    const expFraction = (cumulativeExp - lower.cumulativeExp) / expSpan;
+    const modeledActions = Math.round(
+        lower.modeledActions + expFraction * (upper.modeledActions - lower.modeledActions),
+    );
+    const modeledSeconds = modeledActions * secondsPerAction;
+    return {
+        level,
+        basis: 'interpolated',
+        modeledActions,
+        modeledSeconds,
+        modeledHours: toModeledHours(modeledSeconds),
+        cumulativeExp,
+        interpolation: {
+            lowerLevel: lower.level,
+            upperLevel: upper.level,
+            lowerModeledActions: lower.modeledActions,
+            upperModeledActions: upper.modeledActions,
+            lowerCumulativeExp: lower.cumulativeExp,
+            upperCumulativeExp: upper.cumulativeExp,
+            expFraction,
+        },
+    };
+};
+
+interface GateEntry {
+    member: string | number;
+    gateLevel: number;
+}
+
+const bucketGates = (
+    entries: GateEntry[],
+    anchors: CostAnchor[],
+    secondsPerAction: number | null,
+): CostBucket[] => {
+    const byLevel = new Map<number, Array<string | number>>();
+    for (const entry of entries) {
+        if (!byLevel.has(entry.gateLevel)) byLevel.set(entry.gateLevel, []);
+        byLevel.get(entry.gateLevel)?.push(entry.member);
+    }
+    return [...byLevel.entries()]
+        .sort((left, right) => left[0] - right[0])
+        .map(([gateLevel, members]) => ({
+            gateLevel,
+            count: members.length,
+            members: [...members].sort((left, right) => (
+                typeof left === 'number' && typeof right === 'number'
+                    ? left - right
+                    : codePointCompare(String(left), String(right))
+            )),
+            cost: buildModeledCost(gateLevel, anchors, secondsPerAction),
+        }));
+};
+
+const eventChainTerminalSteps = () => EVENT_CHAINS.map((chain) => ({
+    chain: chain.id,
+    loc: chain.steps.at(-1)?.loc ?? null,
+    steps: chain.steps.length,
+}));
+
+interface CostReportInput {
+    progression: ReturnType<typeof simulateProgression> | null;
+    maps: Record<string, MapLike>;
+    quests: QuestLike[];
+    classes: Record<string, ClassLike>;
+    equipment: ItemLike[];
+}
+
+const buildCostReport = ({ progression, maps, quests, classes, equipment }: CostReportInput): ContentCostReport => {
+    const anchors = buildCostAnchors(progression);
+    const secondsPerAction = progression?.modelPolicy.secondsPerAction ?? null;
+    const malformedGates: string[] = [];
+
+    const routeGates = mapRouteGateLevels(START_LOCATION, maps);
+    const mapEntries: GateEntry[] = [];
+    const mapGateDivergence: MapGateDivergence[] = [];
+    for (const name of Object.keys(maps).sort(codePointCompare)) {
+        const routeGateLevel = routeGates.get(name);
+        if (routeGateLevel === undefined || !isUsableGateLevel(routeGateLevel)) {
+            malformedGates.push(`map:${name}`);
+            continue;
+        }
+        mapEntries.push({ member: name, gateLevel: routeGateLevel });
+        const declared = maps[name]?.level;
+        if (mapGateLevel(maps[name]) !== routeGateLevel) {
+            mapGateDivergence.push({
+                map: name,
+                declaredLevel: Array.isArray(declared) ? Number(declared[0]) : declared ?? null,
+                routeGateLevel,
+            });
+        }
+    }
+
+    const questEntries: GateEntry[] = [];
+    for (const quest of quests) {
+        const gateLevel = Number(quest?.minLv);
+        if (!isUsableGateLevel(gateLevel)) {
+            malformedGates.push(`quest:${String(quest?.id)}`);
+            continue;
+        }
+        questEntries.push({ member: quest.id, gateLevel });
+    }
+
+    const jobEntries: GateEntry[] = [];
+    for (const [job, definition] of Object.entries(classes).sort(([left], [right]) => codePointCompare(left, right))) {
+        const gateLevel = definition?.reqLv === undefined || definition.reqLv === null
+            ? ORIGIN_LEVEL
+            : Number(definition.reqLv);
+        if (!isUsableGateLevel(gateLevel)) {
+            malformedGates.push(`job:${job}`);
+            continue;
+        }
+        jobEntries.push({ member: job, gateLevel });
+    }
+
+    const tierCounts = new Map<number, number>();
+    for (const item of equipment) {
+        const tier = Number(item?.tier);
+        const gateLevel = Number(BALANCE.TIER_REQ_LEVEL?.[tier as keyof typeof BALANCE.TIER_REQ_LEVEL]);
+        if (!Number.isSafeInteger(tier) || !isUsableGateLevel(gateLevel)) {
+            malformedGates.push(`equipment:${String(item?.name)}`);
+            continue;
+        }
+        tierCounts.set(tier, (tierCounts.get(tier) || 0) + 1);
+    }
+    const equipmentTiers: EquipmentTierCost[] = [...tierCounts.entries()]
+        .sort((left, right) => left[0] - right[0])
+        .map(([tier, count]) => {
+            const gateLevel = Number(BALANCE.TIER_REQ_LEVEL?.[tier as keyof typeof BALANCE.TIER_REQ_LEVEL]);
+            return { tier, gateLevel, count, cost: buildModeledCost(gateLevel, anchors, secondsPerAction) };
+        });
+
+    const terminals = eventChainTerminalSteps();
+    const terminalEntries: GateEntry[] = [];
+    const unresolvedEventChainTerminals: string[] = [];
+    for (const terminal of terminals) {
+        const gateLevel = terminal.loc === null ? undefined : routeGates.get(terminal.loc);
+        if (gateLevel === undefined || !isUsableGateLevel(gateLevel)) {
+            unresolvedEventChainTerminals.push(terminal.chain);
+            continue;
+        }
+        terminalEntries.push({ member: terminal.chain, gateLevel });
+    }
+
+    const gates = {
+        maps: bucketGates(mapEntries, anchors, secondsPerAction),
+        quests: bucketGates(questEntries, anchors, secondsPerAction),
+        equipmentTiers,
+        jobs: bucketGates(jobEntries, anchors, secondsPerAction),
+        eventChainTerminals: bucketGates(terminalEntries, anchors, secondsPerAction),
+    };
+
+    const behindLevels = [...new Set([
+        ...anchors.map((anchor) => anchor.level),
+        ...mapEntries.map((entry) => entry.gateLevel),
+        ...questEntries.map((entry) => entry.gateLevel),
+        ...jobEntries.map((entry) => entry.gateLevel),
+        ...equipmentTiers.map((entry) => entry.gateLevel),
+        ...terminalEntries.map((entry) => entry.gateLevel),
+    ])].sort((left, right) => left - right);
+    const countAtOrAbove = (entries: GateEntry[], level: number) => (
+        entries.filter((entry) => entry.gateLevel >= level).length
+    );
+    const behind: CostBehindRow[] = behindLevels.map((level) => {
+        const cost = buildModeledCost(level, anchors, secondsPerAction);
+        return {
+            level,
+            basis: cost.basis,
+            modeledActions: cost.modeledActions,
+            modeledHours: cost.modeledHours,
+            maps: countAtOrAbove(mapEntries, level),
+            quests: countAtOrAbove(questEntries, level),
+            equipment: equipmentTiers
+                .filter((tier) => tier.gateLevel >= level)
+                .reduce((sum, tier) => sum + tier.count, 0),
+            jobs: countAtOrAbove(jobEntries, level),
+            eventChainTerminalSteps: countAtOrAbove(terminalEntries, level),
+        };
+    });
+
+    return {
+        policy: {
+            modelAuthority: progression ? 'simulateProgression' : null,
+            anchorSeed: progression ? PROGRESSION_ANCHOR_SEED : null,
+            anchorStatistic: 'single-seed',
+            actionUnit: progression?.modelPolicy.actionUnit ?? null,
+            secondsPerAction,
+            secondsPerHour: MODEL_TIME_POLICY.secondsPerHour,
+            actualPlayClaim: false,
+            cumulativeExpAuthority: PROGRESSION_EXP_LADDER_AUTHORITY,
+            mapGateAuthority: MAP_GATE_AUTHORITY,
+            interpolationRule: COST_INTERPOLATION_RULE,
+            limitations: [
+                'Modeled actions and seconds are policy arithmetic over modeled reward settlements, not observed play time.',
+                'Anchors come from one deterministic seed; the p10/p50/p90 band across 1000 seeds lives in progression-diagnostic-v2.json.',
+                'Rows with basis "interpolated" are not model outputs — they are cumulative-EXP interpolations between the two named anchors.',
+                'Rows with basis "beyond-anchors" carry no modeled cost; the simulation stops at the highest checkpoint level.',
+            ],
+        },
+        anchors,
+        summary: {
+            eventChains: EVENT_CHAINS.length,
+            eventChainSteps: terminals.reduce((sum, terminal) => sum + terminal.steps, 0),
+            eventChainTerminalSteps: terminals.length,
+        },
+        gates,
+        mapGateDivergence,
+        unresolvedEventChainTerminals: unresolvedEventChainTerminals.sort(codePointCompare),
+        malformedGates: malformedGates.sort(codePointCompare),
+        behind,
+    };
+};
+
 export const buildContentReachabilityReport = (
     source: ContentSource = DB_SOURCE,
     signatureIndex: Readonly<Record<string, ReadonlyArray<{ monster: string }>>> = getAllSignatureDropSourceIndex(),
@@ -500,7 +934,7 @@ export const buildContentReachabilityReport = (
     const errors = [...equipment.errors, ...classSchemaErrors(source.CLASSES || {})];
     if (source === DB_SOURCE) {
         try {
-            progression = simulateProgression({ seed: 20_260_810 });
+            progression = simulateProgression({ seed: PROGRESSION_ANCHOR_SEED });
         } catch (error) {
             errors.push(`PROGRESSION_SIMULATION:${error instanceof Error ? error.message : String(error)}`);
         }
@@ -516,7 +950,7 @@ export const buildContentReachabilityReport = (
         signatures: signatures.routes.length,
     };
     const report: ContentReachabilityReport = {
-        schemaVersion: 1,
+        schemaVersion: 2,
         catalog,
         maps: {
             start: START_LOCATION,
@@ -549,6 +983,13 @@ export const buildContentReachabilityReport = (
             prematureEquipCount: progression?.tierEquip?.prematureEquipCount || 0,
         },
         signatures,
+        cost: buildCostReport({
+            progression,
+            maps,
+            quests,
+            classes: source.CLASSES || {},
+            equipment: itemCatalog(source),
+        }),
         errors: [...new Set([
             ...errors,
             ...reportErrorKeys({

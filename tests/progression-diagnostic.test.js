@@ -43,10 +43,10 @@ test('map selection oracle rejects a reachable but lower-level diagnostic fixtur
     assertHighestReachableMap({ job: '대마법사', level: 60, map: '심해 회랑' });
 });
 
-test('schema v2 keeps diagnostic claims honest and covers every production cohort', () => {
+test('schema v3 keeps diagnostic claims honest and covers every production cohort', () => {
     const report = buildProgressionDiagnostic(options);
 
-    assert.equal(report.schemaVersion, 2);
+    assert.equal(report.schemaVersion, 3);
     assert.equal(report.classification, 'diagnostic-production-path');
     assert.equal(report.actualPlayClaim, false);
     assert.equal(report.activationReady, false);
@@ -89,6 +89,42 @@ test('schema v2 keeps diagnostic claims honest and covers every production cohor
     assert.equal(Object.isFrozen(report), true);
     assert.equal(Object.isFrozen(report.combat.jobs), true);
     assert.equal(Object.isFrozen(report.rewardProgression.checkpoints), true);
+});
+
+// Wave 12 D1: 시간 축은 모델 안에만 있고 증빙에 나온 적이 없었다(14개 증빙 JSON에서
+// `modeledSeconds` 0건). 여기서 그 축을 체크포인트마다 고정한다 — 액션 수만으로는
+// "Lv60 = 5,258액션"은 있어도 "= 131시간"이 없다.
+test('schema v3 pins the cost axis: every checkpoint carries modeled seconds and hours', () => {
+    const report = buildProgressionDiagnostic(options);
+    const { costPolicy, checkpoints } = report.rewardProgression;
+
+    assert.equal(costPolicy.actionUnit, 'one modeled encounter reward settlement');
+    assert.equal(costPolicy.secondsPerAction, 90);
+    assert.equal(costPolicy.secondsPerHour, 3_600);
+    assert.equal(costPolicy.actualPlayClaim, false);
+    assert.equal(typeof costPolicy.derivation, 'string');
+    assert.ok(costPolicy.derivation.length > 0);
+
+    for (const checkpoint of checkpoints) {
+        for (const percentile of ['p10', 'p50', 'p90']) {
+            const actions = checkpoint.modeledActions[percentile];
+            const seconds = checkpoint.modeledSeconds[percentile];
+            assert.equal(Number.isSafeInteger(actions), true, `${checkpoint.targetLevel}.${percentile} actions`);
+            assert.equal(seconds, actions * costPolicy.secondsPerAction);
+            assert.equal(
+                checkpoint.modeledHours[percentile],
+                Math.round((seconds * 100) / costPolicy.secondsPerHour) / 100,
+            );
+        }
+        assert.ok(checkpoint.modeledSeconds.p10 <= checkpoint.modeledSeconds.p50);
+        assert.ok(checkpoint.modeledSeconds.p50 <= checkpoint.modeledSeconds.p90);
+    }
+
+    const ascending = checkpoints.map((checkpoint) => checkpoint.modeledSeconds.p50);
+    assert.deepEqual(ascending, [...ascending].sort((left, right) => left - right));
+    assert.ok(report.limitations.some((line) => line.includes('Modeled seconds and hours')));
+    // 모델 시간이 노출돼도 실제 플레이 시간 주장은 여전히 없다.
+    assert.ok(report.unavailableMetrics.includes('actual_play_time'));
 });
 
 test('diagnostic output is deterministic and canonicalizes seed order without mutating inputs', () => {
