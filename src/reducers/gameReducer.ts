@@ -14,6 +14,7 @@ import { createCurrentRunProgress } from '../utils/runProgress';
 import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
 import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
 import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
+import type { ActionOf, ActionType, GameAction } from './actionTypes';
 
 /**
  * Game state shape — cycle 60 phase D Player 적용 + 2026-09 Wave 6 X4에서
@@ -165,16 +166,23 @@ export const INITIAL_STATE: GameState = {
 };
 
 // --- REDUCER ---
-export interface GameAction {
-    type: string;
-    payload?: any;
-}
+/**
+ * 2026-09 Wave 7 Y2: `GameAction`은 `actionTypes.ts`의 `ActionPayloadMap`에서 도출된
+ * 판별 유니온이다. 기존 import 경로(`from '../gameReducer'`)를 유지하려고 여기서 재수출한다.
+ */
+export type { ActionOf, ActionType, GameAction } from './actionTypes';
 
-type ActionHandler = (state: GameState, action: GameAction) => GameState;
-type ActionMap = Record<string, ActionHandler>;
+/**
+ * 핸들러 맵 — 키는 action type 리터럴, 값은 **그 키로 좁혀진** action을 받는 핸들러다.
+ * 각 핸들러 맵은 `satisfies HandlerMap`으로 선언한다(키 집합은 리터럴로 남기면서
+ * `action.payload`가 캐스트 없이 좁혀지도록 컨텍스트 타입만 받는다).
+ */
+export type HandlerMap = {
+    [K in ActionType]?: (state: GameState, action: ActionOf<K>) => GameState;
+};
 
 // --- ACTION MAP ---
-const ACTION_MAP: ActionMap = {
+const ACTION_MAP = {
     ...bootstrapActionMap,
     ...uiActionMap,
     ...entityActionMap,
@@ -182,10 +190,16 @@ const ACTION_MAP: ActionMap = {
     ...makeFeatureActionMap(INITIAL_STATE.player),
     ...returnSupplyRewardActionMap,
     ...boundedEncounterActionMap,
-};
+} satisfies HandlerMap;
 
 export const gameReducer = (state: GameState, action: GameAction): GameState => {
-    const handler = ACTION_MAP[action.type];
+    // 맵을 유니온 키로 조회하면 handler의 파라미터도 유니온이 되어 TS가 "핸들러 K와 action K가
+    // 같은 멤버"임을 스스로 세우지 못한다. 그 상관관계를 이 한 줄에서만 못 박고
+    // (payload는 절대 넓히지 않는다 — action/handler 모두 동일한 `GameAction` 유니온),
+    // 개별 핸들러 안에서는 캐스트 없이 좁혀진 payload를 쓴다.
+    const handler = ACTION_MAP[action.type] as
+        | ((state: GameState, action: GameAction) => GameState)
+        | undefined;
     if (!handler) return state;
     const nextState = handler(state, action);
     if (nextState === state) return state;

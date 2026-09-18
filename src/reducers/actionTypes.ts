@@ -1,7 +1,19 @@
 /**
  * Game Action Type Constants
  * 모든 reducer action type을 상수로 관리하여 오타를 방지합니다.
+ *
+ * 2026-09 Wave 7 Y2: `AT` 바로 옆에 `ActionPayloadMap`(AT 키 → payload 타입)을 두고
+ * 거기서 `GameAction` 판별 유니온을 도출한다. 아래 import는 전부 `import type`이라
+ * 런타임 의존(순환 포함)이 생기지 않는다 — `gameReducer.ts`에서 import 하지 않는 것이
+ * 이 파일의 유일한 제약이다(`GameState`는 gameReducer 소유).
  */
+import type { Item, Monster, Player, Relic } from '../types';
+import type { DailyProtocol, DailyProtocolMissionType } from '../types/player.js';
+import type { GameEvent, LeaderboardEntry, LiveConfig, LogEntry } from '../types/session.js';
+import type { GraveEntry } from '../utils/graveUtils.js';
+import type { buildRunSummary } from '../utils/gameUtils.js';
+import type { PostCombatChoiceId } from '../utils/postCombatChoice.js';
+
 export type UseCombatItemPayload = {
     itemId: string;
     expectedTurn: number;
@@ -150,3 +162,241 @@ export const AT = Object.freeze({
 // cycle 210: dead duplicate GS / GameStateValue export 제거 — gameStates.ts의 GS export가
 //   유일한 정식 source. src/ 전체에서 GS는 항상 './reducers/gameStates'로부터 import.
 //   actionTypes.ts의 GS는 분리 후 정리되지 않은 잔해. cycle 195/206/207 dead cleanup 패턴.
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2026-09 Wave 7 Y2 — action payload 판별 유니온
+//
+// `ActionPayloadMap`이 "AT 키 → payload 타입"의 단일 원천이고, `GameAction`은 여기서
+// 기계적으로 도출된다. 따라서 (a) 핸들러는 `action.payload`를 캐스트 없이 좁혀진 타입으로
+// 받고, (b) 모든 `dispatch({ type: AT.X, payload })` 호출부가 이 맵에 대해 컴파일 검증된다.
+//
+// 슬라이스 규칙(계획서 §11): **핸들러와 모든 dispatch 호출부에서 모양을 확인한 키만**
+// 실타입으로 넣는다. 이번 패스에서 닫지 못한 키도 유니온이 AT 63종을 전부 덮도록
+// 맵에는 남긴다 — 빠뜨리면 그 키의 dispatch payload가 `never`로 떨어져 통합이 막힌다.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** `SET_PLAYER`/`LOAD_DATA`가 넘기는 부분 갱신 — reducer가 `{...state.player, ...patch}`로 병합한다. */
+export type PlayerPatch = Partial<Player>;
+
+/** 런 요약(`state.runSummary`) — 생산자 `gameUtils.buildRunSummary`가 곧 정의다. */
+export type RunSummary = ReturnType<typeof buildRunSummary>;
+
+/** `LOAD_DATA` — 클라우드/로컬 스냅샷을 `migrateData()`로 정규화한 결과(+ QA 시드). */
+export interface LoadDataPayload {
+    player: PlayerPatch;
+    gameState?: string;
+    enemy?: Monster | null;
+    grave?: GraveEntry | GraveEntry[] | null;
+    currentEvent?: GameEvent | null;
+    quickSlots?: Array<Item | null> | null;
+    /** Firestore Timestamp(`toMillis()`) 또는 ms 숫자. */
+    lastActive?: number | { toMillis?: () => number } | null;
+}
+
+/** `RESOLVE_COMBAT_ACTION` — 공격/기술/도주 1턴 (`systems/combatActionTurn.ts`). */
+export interface ResolveCombatActionPayload {
+    kind: 'attack' | 'skill' | 'escape';
+    expectedTurn: number;
+    seed: number;
+    now: number;
+}
+
+/** `UPDATE_DAILY_PROTOCOL` — 일일 임무 진척 1건. `itemRng`는 결정론 테스트 전용 주입구. */
+export interface UpdateDailyProtocolPayload {
+    type: DailyProtocolMissionType;
+    amount?: number;
+    relicRoll?: number;
+    now?: number;
+    logSeed?: number;
+    itemRng?: () => number;
+}
+
+/** `UPDATE_WEEKLY_PROTOCOL` — 주간 임무 진척 1건. */
+export interface UpdateWeeklyProtocolPayload {
+    type: 'kills' | 'explores' | 'bossKills';
+    now?: number;
+}
+
+/** `BUY_SHOP_ITEM` — UI는 선택 대상과 스냅샷만 넘기고 가격/지급은 reducer가 확정한다. */
+export interface BuyShopItemPayload {
+    source: string;
+    itemName: string;
+    /** `Player['gold']`와 같은 스냅샷 — reducer가 `state.player.gold !== expectedGold`로 그대로 비교한다. */
+    expectedGold: Player['gold'];
+    expectedInventorySize: number;
+    relicRoll?: number;
+}
+
+/** `CRAFT_RECIPE` — 소비할 재료 인스턴스 id까지 호출부가 확정해 넘긴다. */
+export interface CraftRecipePayload {
+    recipeId: string;
+    inputIds: string[];
+    relicRoll?: number;
+}
+
+/** `SYNTHESIZE_ITEMS` — 합성 롤은 호출부 seed, 판정은 reducer. */
+export interface SynthesizeItemsPayload {
+    itemIds: string[];
+    useProtect: boolean;
+    successRoll: number;
+    outputRoll: number;
+    relicRoll?: number;
+}
+
+/** `ENHANCE_ITEM` — expected* 는 rapid tap 재생(replay) 거부용 스냅샷. */
+export interface EnhanceItemPayload {
+    itemId: string;
+    /** `equipmentUtils.getEquipmentIdentity`의 반환형 — 식별 불가 장비는 null이다. */
+    expectedItemIdentity: string | null;
+    expectedLevel: number;
+    expectedGold: number;
+    roll: number;
+    relicRoll?: number;
+}
+
+/** `PURCHASE_PREMIUM_OFFER` — 프리미엄 상점 1건. */
+export interface PurchasePremiumOfferPayload {
+    offerId: string;
+    expectedCurrency: number;
+}
+
+/** `PURCHASE_MIRROR_NODE` — 에테르 거울 노드 1단계. */
+export interface PurchaseMirrorNodePayload {
+    nodeId: string;
+    expectedEssence: number;
+    expectedLevel: number;
+}
+
+/** 퀘스트/업적 id는 카탈로그(숫자)와 런타임 생성(현상수배 문자열)이 섞인다. */
+export type QuestId = string | number;
+
+/** AT 키 → payload 타입. `undefined`는 "payload 없는 액션"을 뜻한다. */
+export interface ActionPayloadMap {
+    // ── Boot / Auth ──────────────────────────────────────────────────────
+    [AT.SET_BOOT_STAGE]: string;
+    [AT.SET_UID]: string | null;
+
+    // ── Data Loading ─────────────────────────────────────────────────────
+    [AT.LOAD_DATA]: LoadDataPayload;
+    [AT.RESET_GAME]: undefined;
+
+    // ── Live State ───────────────────────────────────────────────────────
+    [AT.SET_LIVE_CONFIG]: Partial<LiveConfig>;
+    [AT.SET_LEADERBOARD]: LeaderboardEntry[];
+
+    // ── Game Flow ────────────────────────────────────────────────────────
+    [AT.SET_GAME_STATE]: string;
+    [AT.SET_SYNC_STATUS]: string;
+
+    // ── Entities ─────────────────────────────────────────────────────────
+    [AT.SET_PLAYER]: PlayerPatch | ((player: Player) => PlayerPatch);
+    [AT.ACCEPT_QUEST]: { questId: QuestId };
+    [AT.ABANDON_QUEST]: { questId: QuestId };
+    [AT.REQUEST_BOUNTY]: { requestedAt: number; seed: number };
+    [AT.UPDATE_EXPEDITION_FOCUS_QUEST]: { questId: QuestId; selected: boolean };
+    [AT.SET_ENEMY]: Monster | null | ((enemy: Monster | null) => Monster | null);
+    [AT.SET_EVENT]: GameEvent | null;
+    [AT.SET_GRAVE]: GraveEntry | GraveEntry[] | null;
+
+    // ── UI ───────────────────────────────────────────────────────────────
+    [AT.SET_AI_THINKING]: boolean;
+    [AT.SET_VISUAL_EFFECT]: string | null;
+    [AT.SET_SIDE_TAB]: string;
+    [AT.SET_SHOP_ITEMS]: Item[];
+    [AT.SET_EXPEDITION_DEBRIEF_OPEN]: boolean;
+    [AT.RECORD_RETURN_SUPPLY_REWARD]: { expeditionId: string };
+    [AT.CLEAR_ECONOMY_RECEIPT]: undefined;
+
+    // ── Logs ─────────────────────────────────────────────────────────────
+    [AT.ADD_LOG]: LogEntry;
+    [AT.UPDATE_LOG]: { id: string; log: LogEntry };
+
+    // ── Feature Additions ────────────────────────────────────────────────
+    [AT.SET_QUICK_SLOT]: { index: number; item: Item | null };
+    // TODO(W7-Y2 slice 2): `GameState.postCombatResult`가 아직 `any`다(CLAUDE.md §2 —
+    //   생산자 combatVictory.ts가 레거시 별칭 필드를 섞어 읽는 그레이백 카드). 필드 계약이
+    //   닫히면 여기를 그 타입으로 교체한다. `any` 대신 "값이 unknown인 객체"로 둬서
+    //   호출부가 객체/null 외의 것을 넘기지 못하는 것만 지금 고정한다.
+    [AT.SET_POST_COMBAT_RESULT]: Record<string, unknown> | null;
+    [AT.USE_INVENTORY_ITEM]: { itemId: string };
+    [AT.BUY_SHOP_ITEM]: BuyShopItemPayload;
+    [AT.SELL_INVENTORY_ITEM]: { itemId: string };
+    [AT.CRAFT_RECIPE]: CraftRecipePayload;
+    [AT.SYNTHESIZE_ITEMS]: SynthesizeItemsPayload;
+    [AT.AUTO_SELL_MATERIALS]: undefined;
+    [AT.PURCHASE_PREMIUM_OFFER]: PurchasePremiumOfferPayload;
+    [AT.USE_COMBAT_ITEM]: UseCombatItemPayload;
+    [AT.RESOLVE_COMBAT_ACTION]: ResolveCombatActionPayload;
+    [AT.RESOLVE_BOUNDED_ENCOUNTER_CHOICE]: ResolveBoundedEncounterChoicePayload;
+    [AT.RESOLVE_CHAIN_GOLD_CHOICE]: ResolveChainGoldChoicePayload;
+    [AT.DEFER_CHAIN_EVENT]: DeferChainEventPayload;
+    [AT.RESOLVE_FALLBACK_EVENT_TRANSACTION]: ResolveFallbackEventTransactionPayload;
+    [AT.RESOLVE_SCOUT]: ResolveScoutPayload;
+
+    // ── v4.0 — Relic / Prestige / Title / Daily ──────────────────────────
+    [AT.SET_PENDING_RELICS]: Relic[] | null;
+    [AT.ADD_RELIC]: Relic;
+    [AT.DECLINE_RELIC]: undefined;
+    [AT.ASCEND]: AscendPayload;
+    [AT.UNLOCK_TITLES]: string[];
+    [AT.SET_DAILY_PROTOCOL]: DailyProtocol | null;
+    [AT.UPDATE_DAILY_PROTOCOL]: UpdateDailyProtocolPayload;
+
+    // ── v5.0 ─────────────────────────────────────────────────────────────
+    [AT.SET_RUN_SUMMARY]: RunSummary | null;
+
+    // ── v4.1 — Codex & Synthesis ─────────────────────────────────────────
+    [AT.UPDATE_CODEX]: { category: string; name: string };
+
+    // ── v4.2 — Season Pass ───────────────────────────────────────────────
+    [AT.ADD_SEASON_XP]: number;
+    [AT.CLAIM_QUEST_REWARD]: { questId: QuestId };
+    // 업적 id는 카탈로그 전용(문자열) — 현상수배 같은 런타임 생성이 없다.
+    [AT.CLAIM_ACHIEVEMENT_REWARD]: { achievementId: string };
+    [AT.CLAIM_SEASON_REWARD]: { tier: number };
+    [AT.CLAIM_CODEX_REWARD]: { milestoneId: string };
+
+    // ── v4.3 — Enhancement + Weekly + Challenge + Skill Branch ───────────
+    [AT.ENHANCE_ITEM]: EnhanceItemPayload;
+    [AT.CLAIM_WEEKLY_MISSION]: { missionId: string };
+    [AT.UPDATE_WEEKLY_PROTOCOL]: UpdateWeeklyProtocolPayload;
+    [AT.CHOOSE_SKILL_BRANCH]: { skillName: string; choice: string };
+
+    // ── v4.3 — Grave PvP ─────────────────────────────────────────────────
+    [AT.INVADE_GRAVE]: { reward: Item | null; uid?: string };
+
+    // ── v5.0 — 내러티브 이벤트 체인 ───────────────────────────────────────
+    //   `step`은 다음 스텝 번호이거나, 실패 분기에서 'failed' 문자열이다.
+    [AT.UPDATE_EVENT_CHAIN]: { chainId: string; step: number | 'failed' };
+
+    // ── 2026-07 — 에테르 거울 ────────────────────────────────────────────
+    [AT.PURCHASE_MIRROR_NODE]: PurchaseMirrorNodePayload;
+
+    // ── 2026-09 — 전투 후 2선택 ──────────────────────────────────────────
+    [AT.RESOLVE_POST_COMBAT_CHOICE]: { choice: PostCombatChoiceId };
+}
+
+/** 모든 action type 리터럴의 유니온 — `AT`의 값 집합과 같다. */
+export type ActionType = keyof ActionPayloadMap;
+
+/**
+ * reducer가 받는 action — `ActionPayloadMap`에서 도출한 판별 유니온.
+ * payload 타입이 `undefined`인 키는 payload 자체를 생략한다.
+ */
+export type GameAction = {
+    [K in ActionType]: ActionPayloadMap[K] extends undefined
+        ? { type: K; payload?: undefined }
+        : { type: K; payload: ActionPayloadMap[K] };
+}[ActionType];
+
+/** 특정 action type 하나로 좁힌 action 멤버 — 핸들러 시그니처에 쓴다. */
+export type ActionOf<K extends ActionType> = Extract<GameAction, { type: K }>;
+
+type AssertNever<T extends never> = T;
+
+/**
+ * 컴파일 가드 — `AT`에 키를 추가하고 `ActionPayloadMap`에 빠뜨리면 여기서 에러가 난다.
+ * (맵에 없는 키는 dispatch payload가 `never`로 떨어져 조용히 호출부를 막는다.)
+ */
+export type ActionPayloadMapIsExhaustive =
+    AssertNever<Exclude<(typeof AT)[keyof typeof AT], ActionType>>;

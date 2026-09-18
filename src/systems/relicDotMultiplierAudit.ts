@@ -1,5 +1,6 @@
 import { RELICS } from '../data/relics.js';
 import { AT } from '../reducers/actionTypes.js';
+import type { ActionOf } from '../reducers/actionTypes.js';
 import { makeCombatActionMap } from '../reducers/handlers/combatHandlers.js';
 import { INITIAL_STATE } from '../reducers/gameReducer.js';
 import { migrateData } from '../utils/dataMigration.js';
@@ -251,7 +252,7 @@ const buildReplayVector = () => {
     };
     state.combatTurn = 0;
     state.combatReceipt = null;
-    const action = {
+    const action: ActionOf<typeof AT.RESOLVE_COMBAT_ACTION> = {
         type: AT.RESOLVE_COMBAT_ACTION,
         payload: { kind: 'skill', expectedTurn: 0, seed: 20260817, now: 1_700_000_000_000 },
     };

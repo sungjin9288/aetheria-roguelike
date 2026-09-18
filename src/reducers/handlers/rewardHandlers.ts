@@ -19,14 +19,14 @@ import { CombatEngine } from '../../systems/CombatEngine';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 import { addNewTitles, addSeasonXp } from './helpers';
-import type { GameState, GameAction } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
 import type { Player } from '../../types';
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
 export const rewardActionMap = {
     // ── Codex ─────────────────────────────────────────────────────────────
-    UPDATE_CODEX: (state: GameState, action: GameAction) => {
+    UPDATE_CODEX: (state, action) => {
         const { category, name } = action.payload;
         const codex: Record<string, any> = state.player.stats?.codex || {};
         const cat = codex[category] || {};
@@ -49,7 +49,7 @@ export const rewardActionMap = {
     },
 
     // ── Season Pass ───────────────────────────────────────────────────────
-    ADD_SEASON_XP: (state: GameState, action: GameAction) => {
+    ADD_SEASON_XP: (state, action) => {
         const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
         const earnedXp = Number(action.payload);
         if (!Number.isFinite(earnedXp) || earnedXp <= 0) return state;
@@ -65,7 +65,7 @@ export const rewardActionMap = {
         };
     },
 
-    CLAIM_QUEST_REWARD: (state: GameState, action: GameAction) => {
+    CLAIM_QUEST_REWARD: (state, action) => {
         const questId = action.payload?.questId;
         const activeQuest = (state.player.quests || []).find((quest) => quest.id === questId);
         if (!activeQuest) return state;
@@ -166,7 +166,7 @@ export const rewardActionMap = {
         };
     },
 
-    CLAIM_ACHIEVEMENT_REWARD: (state: GameState, action: GameAction) => {
+    CLAIM_ACHIEVEMENT_REWARD: (state, action) => {
         const achievementId = action.payload?.achievementId;
         const achievement = DB.ACHIEVEMENTS.find((entry) => entry.id === achievementId);
         if (!achievement || !isAchievementUnlocked(achievement, state.player)) return state;
@@ -215,7 +215,7 @@ export const rewardActionMap = {
         };
     },
 
-    CLAIM_SEASON_REWARD: (state: GameState, action: GameAction) => {
+    CLAIM_SEASON_REWARD: (state, action) => {
         const claimTier = Number(action.payload?.tier);
         const sp = state.player.seasonPass || { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' };
         const unlockedTier = Math.min(SEASON_MAX_TIER, Math.max(
@@ -280,7 +280,7 @@ export const rewardActionMap = {
         };
     },
 
-    CLAIM_CODEX_REWARD: (state: GameState, action: GameAction) => {
+    CLAIM_CODEX_REWARD: (state, action) => {
         const milestoneId = action.payload?.milestoneId;
         const prevClaimed = state.player.stats?.codexClaimed || [];
         if (prevClaimed.includes(milestoneId)) return state;
@@ -315,4 +315,4 @@ export const rewardActionMap = {
         };
     },
 
-};
+} satisfies HandlerMap;

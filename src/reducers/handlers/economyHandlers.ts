@@ -17,7 +17,8 @@ import { incrementStat } from '../../utils/playerStateUtils';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
 import { GS } from '../gameStates';
-import type { GameAction, GameState } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
+import { AT, type ActionOf } from '../actionTypes';
 import {
     addNewTitles,
     addSeasonXp,
@@ -26,7 +27,7 @@ import {
     sanitizeQuickSlots,
 } from './helpers';
 import { appendRewardLogs } from './rewardLog';
-import type { ItemRecipeDef, Player } from '../../types';
+import type { Item, ItemRecipeDef, Player } from '../../types';
 
 type EconomyLog = { type: string; text: string };
 
@@ -52,7 +53,7 @@ const rejectTransaction = (state: GameState, type: string, text: string): GameSt
     logs: appendRewardLogs(state.logs, [{ type, text }]),
 });
 
-const buyShopItem = (state: GameState, action: GameAction): GameState => {
+const buyShopItem = (state: GameState, action: ActionOf<typeof AT.BUY_SHOP_ITEM>): GameState => {
     if (state.gameState !== GS.SHOP) return state;
     const { source, itemName, expectedGold, expectedInventorySize, relicRoll } = action.payload || {};
     const inventory = state.player.inv || [];
@@ -101,7 +102,7 @@ const buyShopItem = (state: GameState, action: GameAction): GameState => {
     });
 };
 
-const sellInventoryItem = (state: GameState, action: GameAction): GameState => {
+const sellInventoryItem = (state: GameState, action: ActionOf<typeof AT.SELL_INVENTORY_ITEM>): GameState => {
     if (state.gameState !== GS.SHOP) return state;
     const item = (state.player.inv || []).find((entry) => entry.id === action.payload?.itemId);
     if (!item) return state;
@@ -135,7 +136,7 @@ const getRecipeInputIds = (player: Player, recipe: ItemRecipeDef) => {
     return inputIds;
 };
 
-const craftRecipe = (state: GameState, action: GameAction): GameState => {
+const craftRecipe = (state: GameState, action: ActionOf<typeof AT.CRAFT_RECIPE>): GameState => {
     if (state.gameState !== GS.CRAFTING) return state;
     const recipe = DB.ITEMS.recipes?.find((entry) => entry.id === action.payload?.recipeId);
     if (!recipe) return state;
@@ -158,7 +159,7 @@ const craftRecipe = (state: GameState, action: GameAction): GameState => {
     if (!preview.output) return rejectTransaction(state, 'error', MSG.ITEM_NOT_FOUND);
     if (!preview.hasGold) return rejectTransaction(state, 'error', MSG.GOLD_INSUFFICIENT);
 
-    const usedIds = new Set(inputIds);
+    const usedIds = new Set<Item['id']>(inputIds);
     const craftedItem = makeItem(preview.output.item);
     const codexBefore = countNewCodexEntries(state.player);
     let player = incrementStat({
@@ -181,14 +182,14 @@ const craftRecipe = (state: GameState, action: GameAction): GameState => {
     return completeTransaction(state, player, logs);
 };
 
-const synthesizeItems = (state: GameState, action: GameAction): GameState => {
+const synthesizeItems = (state: GameState, action: ActionOf<typeof AT.SYNTHESIZE_ITEMS>): GameState => {
     if (state.gameState !== GS.CRAFTING) return state;
     const itemIds = Array.isArray(action.payload?.itemIds) ? action.payload.itemIds : [];
     if (itemIds.length !== BALANCE.SYNTHESIS_INPUT_COUNT || new Set(itemIds).size !== itemIds.length) return state;
 
     const items = itemIds
         .map((id: string) => (state.player.inv || []).find((item) => item.id === id))
-        .filter(Boolean);
+        .filter((item): item is Item => Boolean(item));
     if (items.length !== itemIds.length) return state;
 
     const validation = validateSynthesis(items, state.player.gold);
@@ -217,7 +218,7 @@ const synthesizeItems = (state: GameState, action: GameAction): GameState => {
     }
 
     const result = resolveSynthesis(items, null, useProtect, successRoll, outputRoll);
-    const usedIds = new Set(itemIds);
+    const usedIds = new Set<Item['id']>(itemIds);
     const protectStats = useToken ? { synthProtects: ownedTokens - 1 } : {};
     const premiumSpent = useToken ? 0 : result.premiumSpent;
     let player = incrementStat({
@@ -280,4 +281,4 @@ export const economyActionMap = {
     CRAFT_RECIPE: craftRecipe,
     SYNTHESIZE_ITEMS: synthesizeItems,
     AUTO_SELL_MATERIALS: autoSellMaterials,
-};
+} satisfies HandlerMap;

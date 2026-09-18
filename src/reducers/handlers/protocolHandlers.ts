@@ -6,11 +6,11 @@ import {
     getCurrentWeeklyProtocol,
     getWeeklyMissionProgress,
 } from '../../utils/protocolCycle';
-import type { GameState, GameAction } from '../gameReducer';
+import type { HandlerMap } from '../gameReducer';
 
 export const protocolActionMap = {
     // ── Daily Protocol ────────────────────────────────────────────────────
-    SET_DAILY_PROTOCOL: (state: GameState, action: GameAction) => ({
+    SET_DAILY_PROTOCOL: (state, action) => ({
         ...state,
         player: {
             ...state.player,
@@ -19,7 +19,7 @@ export const protocolActionMap = {
         syncStatus: 'syncing',
     }),
 
-    UPDATE_DAILY_PROTOCOL: (state: GameState, action: GameAction) => {
+    UPDATE_DAILY_PROTOCOL: (state, action) => {
         const { type: dpType, amount: rawAmount = 0 } = action.payload || {};
         if (!['kills', 'explores', 'goldSpend'].includes(dpType)) return state;
         const amount = dpType === 'goldSpend' ? Math.max(0, Number(rawAmount) || 0) : 1;
@@ -45,7 +45,7 @@ export const protocolActionMap = {
     },
 
     // ── Weekly Protocol ───────────────────────────────────────────────────
-    UPDATE_WEEKLY_PROTOCOL: (state: GameState, action: GameAction) => {
+    UPDATE_WEEKLY_PROTOCOL: (state, action) => {
         const wpType = action.payload?.type;
         const requestedAt = Number(action.payload?.now);
         const wp = getCurrentWeeklyProtocol(
@@ -61,7 +61,7 @@ export const protocolActionMap = {
         };
     },
 
-    CLAIM_WEEKLY_MISSION: (state: GameState, action: GameAction) => {
+    CLAIM_WEEKLY_MISSION: (state, action) => {
         const missionId = action.payload?.missionId;
         const mission = BALANCE.WEEKLY_MISSIONS.find((entry) => entry.id === missionId);
         const wp = getCurrentWeeklyProtocol(state.player.weeklyProtocol, new Date());
@@ -84,4 +84,4 @@ export const protocolActionMap = {
             syncStatus: 'syncing',
         };
     },
-};
+} satisfies HandlerMap;

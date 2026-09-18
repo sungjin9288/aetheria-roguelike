@@ -15,7 +15,7 @@ export const createRewardActions = (ctx: InventoryActionCtx) => {
             dispatch({ type: AT.CLAIM_QUEST_REWARD, payload: { questId: qId } });
         },
 
-        claimAchievement: (achId: string | number) => {
+        claimAchievement: (achId: string) => {
             dispatch({ type: AT.CLAIM_ACHIEVEMENT_REWARD, payload: { achievementId: achId } });
         },
 

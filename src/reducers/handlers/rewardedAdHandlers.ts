@@ -1,8 +1,8 @@
-import type { GameAction, GameState } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
 import { recordReturnSupplyReward } from '../../utils/returnSupplyReward';
 
 export const returnSupplyRewardActionMap = {
-    RECORD_RETURN_SUPPLY_REWARD: (state: GameState, action: GameAction): GameState => {
+    RECORD_RETURN_SUPPLY_REWARD: (state, action): GameState => {
         const expeditionId = typeof action.payload?.expeditionId === 'string'
             ? action.payload.expeditionId
             : '';
@@ -10,4 +10,4 @@ export const returnSupplyRewardActionMap = {
         if (player === state.player) return state;
         return { ...state, player, syncStatus: 'syncing' };
     },
-};
+} satisfies HandlerMap;

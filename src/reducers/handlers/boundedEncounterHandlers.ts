@@ -4,7 +4,7 @@ import { applyBoundedEncounterChoice } from '../../utils/boundedEncounterSelecto
 import { buildBoundedEncounterEvent } from '../../utils/boundedEncounterEvent.js';
 import { GS } from '../gameStates.js';
 import type { ResolveBoundedEncounterChoicePayload } from '../actionTypes.js';
-import type { GameAction, GameState } from '../gameReducer.js';
+import type { HandlerMap } from '../gameReducer.js';
 
 const isPayload = (value: unknown): value is ResolveBoundedEncounterChoicePayload => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
@@ -50,7 +50,7 @@ const matchesCanonicalEvent = (
 };
 
 export const boundedEncounterActionMap = {
-    RESOLVE_BOUNDED_ENCOUNTER_CHOICE: (state: GameState, action: GameAction) => {
+    RESOLVE_BOUNDED_ENCOUNTER_CHOICE: (state, action) => {
         if (state.gameState !== GS.EVENT || !state.currentEvent?.isBoundedEncounter) return state;
         if (!isPayload(action.payload)) return state;
 
@@ -86,4 +86,4 @@ export const boundedEncounterActionMap = {
             syncStatus: 'syncing',
         };
     },
-};
+} satisfies HandlerMap;

@@ -2,8 +2,7 @@
  * progressionHandlers — 런 진행/환생/유물/칭호 관련 액션 핸들러
  * INITIAL_STATE를 참조하므로 gameReducer.js에서 주입받습니다.
  */
-import type { GameState, GameAction } from '../gameReducer';
-import type { AscendPayload } from '../actionTypes';
+import type { GameState, HandlerMap } from '../gameReducer';
 import type { Player } from '../../types';
 import { GS } from '../gameStates';
 import { createCurrentRunProgress } from '../../utils/runProgress';
@@ -27,7 +26,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
     //     buildWins / cosmeticTitles / synthProtects / claimedAchievements (multi-run 카운터/ledger)
     //   RUN 진행도(gold / inv / equip / relics / hp / mp / quests / skillLoadout)는
     //   INITIAL_STATE로 reset 유지.
-    RESET_GAME: (state: GameState) => {
+    RESET_GAME: (state) => {
         const permanent = pickPermanentPlayerState(state.player, INITIAL_STATE.player);
         const permanentStats: NonNullable<Player['stats']> = permanent.stats || {};
         return {
@@ -47,10 +46,10 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         };
     },
 
-    SET_RUN_SUMMARY: (state: GameState, action: GameAction) =>
+    SET_RUN_SUMMARY: (state, action) =>
         ({ ...state, runSummary: action.payload }),
 
-    UPDATE_EVENT_CHAIN: (state: GameState, action: GameAction) => {
+    UPDATE_EVENT_CHAIN: (state, action) => {
         const { chainId, step } = action.payload;
         return {
             ...state,
@@ -66,13 +65,13 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
 
     // 2026-09 D3: 유물 선택이 열리면 전투 결과 카드는 내린다 — 유물 패널(z-50 전체 화면)이
     //   카드(z-40)를 덮어 카드 CTA가 닿지 않는 상태로 남는 것을 막는다 (lessons R12).
-    SET_PENDING_RELICS: (state: GameState, action: GameAction) => ({
+    SET_PENDING_RELICS: (state, action) => ({
         ...state,
         pendingRelics: action.payload,
         postCombatResult: action.payload ? null : state.postCombatResult,
     }),
 
-    ADD_RELIC: (state: GameState, action: GameAction) => {
+    ADD_RELIC: (state, action) => {
         const relic = action.payload;
         return {
             ...state,
@@ -86,13 +85,13 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         };
     },
 
-    DECLINE_RELIC: (state: GameState) =>
+    DECLINE_RELIC: (state) =>
         ({ ...state, pendingRelics: null }),
 
-    ASCEND: (state: GameState, action: GameAction) => {
+    ASCEND: (state, action) => {
         if (state.gameState !== GS.ASCENSION && state.gameState !== GS.TRUE_ENDING) return state;
         if (state.gameState === GS.TRUE_ENDING && getClaimableQuestEntries(state.player).length > 0) return state;
-        const payload = action.payload as Partial<AscendPayload> | undefined;
+        const payload = action.payload;
         const expectedPrestigeRank = Number(payload?.expectedPrestigeRank);
         if (!Number.isSafeInteger(expectedPrestigeRank) || expectedPrestigeRank < 0) return state;
         const outcome = getAscensionOutcome(state.player.meta);
@@ -126,7 +125,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         };
     },
 
-    UNLOCK_TITLES: (state: GameState, action: GameAction) => {
+    UNLOCK_TITLES: (state, action) => {
         const newIds = action.payload;
         if (!newIds || newIds.length === 0) return state;
         const merged = [...new Set([...(state.player.titles || []), ...newIds])];
@@ -141,4 +140,4 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         };
     },
 
-});
+} satisfies HandlerMap);

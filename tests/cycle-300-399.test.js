@@ -39,10 +39,17 @@ import { fileURLToPath } from 'node:url';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 301: ActionType type alias 제거', async () => {
+  // 2026-09 Wave 7 Y2: `ActionType`은 다시 생겼지만 cycle 301이 지웠던 "죽은 alias"가 아니다 —
+  //   `ActionPayloadMap`에서 도출돼 `GameAction`/`ActionOf`/`HandlerMap`의 키 집합이 되고
+  //   gameReducer가 실제로 import 한다. 원래 의도(외부 consumer 0건인 alias 금지)를
+  //   "살아 있는(도출 + 실사용) alias인지"로 바꿔 유지한다.
+  test('cycle 301: ActionType type alias는 죽은 채로 남지 않는다 (W7-Y2 도출 alias)', async () => {
       const source = await readSrc('src/reducers/actionTypes.ts');
-      assert.ok(!/export type ActionType\b/.test(source),
-          'ActionType type alias 제거됨');
+      const reducerSource = await readSrc('src/reducers/gameReducer.ts');
+      assert.ok(/export type ActionType = keyof ActionPayloadMap;/.test(source),
+          'ActionType은 ActionPayloadMap에서 도출된다');
+      assert.ok(/\bActionType\b/.test(reducerSource),
+          'ActionType 외부 consumer 존재 (gameReducer의 HandlerMap)');
   });
 
   test('cycle 301: gameStates.ts GameState type alias 제거', async () => {
@@ -127,10 +134,13 @@ import { fileURLToPath } from 'node:url';
           'SkillTypeIcon default export 유지');
   });
 
-  test('cycle 301 회귀 가드: 2 reducer type alias 제거 유지', async () => {
+  test('cycle 301 회귀 가드: reducer type alias 정리 유지', async () => {
       const atSrc = await readSrc('src/reducers/actionTypes.ts');
       const gsSrc = await readSrc('src/reducers/gameStates.ts');
-      assert.ok(!/export type ActionType\b/.test(atSrc), 'cycle 301 ActionType 제거 유지');
+      // W7-Y2: actionTypes의 ActionType은 ActionPayloadMap 도출 alias로 되살아났다(위 테스트가
+      //   "죽은 alias 아님"을 고정). gameStates의 중복 GameState alias 제거는 그대로 유지한다.
+      assert.ok(/export type ActionType = keyof ActionPayloadMap;/.test(atSrc),
+          'W7-Y2 ActionType은 ActionPayloadMap 도출 alias로만 존재');
       assert.ok(!/export type GameState\b/.test(gsSrc), 'cycle 301 gameStates GameState 제거 유지');
   });
 }

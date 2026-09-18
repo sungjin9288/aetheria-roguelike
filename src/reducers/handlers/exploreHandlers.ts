@@ -6,7 +6,7 @@ import { buildScoutEvent, consumeScoutCharge, getScoutAvailability } from '../..
 import { createSeededRandom } from '../../utils/seededRandom';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import type { ResolveScoutPayload } from '../actionTypes';
-import type { GameAction, GameState } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
 import { GS } from '../gameStates';
 
 /**
@@ -41,7 +41,7 @@ const isPayload = (value: unknown): value is ResolveScoutPayload => {
 };
 
 export const exploreActionMap = {
-    RESOLVE_SCOUT: (state: GameState, action: GameAction): GameState => {
+    RESOLVE_SCOUT: (state, action): GameState => {
         if (!isPayload(action.payload)) return state;
 
         const mapData = DB.MAPS[state.player.loc ?? ''];
@@ -88,4 +88,4 @@ export const exploreActionMap = {
             syncStatus: 'syncing',
         };
     },
-};
+} satisfies HandlerMap;

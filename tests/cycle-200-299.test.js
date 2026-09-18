@@ -2116,7 +2116,11 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 261 후속: CLAIM_SEASON_REWARD reducer 권한 경계 보존', async () => {
       const source = await readSrc('src/reducers/handlers/rewardHandlers.ts');
-      assert.ok(/CLAIM_SEASON_REWARD: \(state: GameState, action: GameAction\) => \{/.test(source),
+      // 2026-09 Wave 7 Y2: 핸들러 파라미터는 `HandlerMap`의 컨텍스트 타입을 받으므로
+      //   `(state: GameState, action: GameAction)` 명시 애노테이션이 사라졌다(명시하면
+      //   payload가 유니온으로 남아 좁혀지지 않는다). 의도(수령 정산이 UI가 아니라 reducer
+      //   핸들러에 있다)는 그대로라, 같은 의도를 새 시그니처로 고정한다.
+      assert.ok(/CLAIM_SEASON_REWARD: \(state, action\) => \{/.test(source),
           'CLAIM_SEASON_REWARD handler 시그니처 유지');
   });
 }

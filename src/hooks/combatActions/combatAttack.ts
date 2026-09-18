@@ -1,4 +1,5 @@
 import { AT } from '../../reducers/actionTypes';
+import type { ResolveCombatActionPayload } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { BALANCE } from '../../data/constants';
@@ -17,6 +18,17 @@ const takeHarnessCombatSeed = (): number | undefined => {
         ? seed
         : undefined;
 };
+
+/**
+ * 2026-09 Wave 7 Y2: `combat(kind)`은 UI에서 문자열로 들어오므로 여기서
+ * `ResolveCombatActionPayload['kind']`로 좁혀야 dispatch가 컴파일 검증된다.
+ * 판정 집합은 기존 `['attack','skill','escape'].includes(kind)`와 같다.
+ */
+const COMBAT_ACTION_KINDS: ReadonlyArray<ResolveCombatActionPayload['kind']> = ['attack', 'skill', 'escape'];
+
+const isCombatActionKind = (kind: string): kind is ResolveCombatActionPayload['kind'] => (
+    COMBAT_ACTION_KINDS.some((candidate) => candidate === kind)
+);
 
 export const createCombatAttackActions = (
     deps: CombatActionDeps,
@@ -39,7 +51,7 @@ export const createCombatAttackActions = (
                 addLog('error', MSG.COMBAT_NOT_IN_BATTLE);
                 return;
             }
-            if (!['attack', 'skill', 'escape'].includes(kind)) return;
+            if (!isCombatActionKind(kind)) return;
 
             // useGameEngine.ts가 항상 claimCombatAction을 명시 전달하므로
             // (line 180) 자체 fallback Set 구현은 불필요.

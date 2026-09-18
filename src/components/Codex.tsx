@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react';
+import { useState, useMemo, useCallback, type Dispatch } from 'react';
 import { BookOpen, Bug, Gift, Hammer, Leaf, Sparkles, Sword } from 'lucide-react';
 // cycle 321: unused BALANCE / MSG imports 제거 — Codex.tsx 어디에서도 참조 0건.
 import { DB } from '../data/db';
@@ -18,12 +18,13 @@ import MaterialCodex from './codex/MaterialCodex';
 import LegendaryCodex from './codex/LegendaryCodex';
 import CodexDiscoveryOverlay from './codex/CodexDiscoveryOverlay';
 import type { Player } from '../types/index.js';
+import type { GameAction } from '../reducers/gameReducer';
 
 // cycle 405: `compact?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
 //   Dashboard가 prop pass했으나 silent dropped (paired remove).
 interface CodexProps {
     player?: Player | null;
-    dispatch: (action: any) => void;
+    dispatch: Dispatch<GameAction>;
 }
 
 type CodexTabId = 'equip' | 'monster' | 'recipe' | 'material' | 'legend';

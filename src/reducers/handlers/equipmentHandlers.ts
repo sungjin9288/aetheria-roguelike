@@ -10,7 +10,8 @@ import { canEquip } from '../../utils/equipmentValidation';
 import { consumeInventoryItemByName, getEnhancePreview } from '../../utils/enhancementUtils';
 import { makeItem } from '../../utils/gameUtils';
 import { resolveConsumableEffect, sanitizeConsumedQuickSlots } from '../../systems/consumableEffect';
-import type { GameAction, GameState } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
+import { AT, type ActionOf } from '../actionTypes';
 import {
     addNewTitles,
     advanceDailyProtocol,
@@ -131,7 +132,7 @@ const consumeInventoryItem = (state: GameState, item: Item): GameState => {
     };
 };
 
-const useInventoryItem = (state: GameState, action: GameAction): GameState => {
+const useInventoryItem = (state: GameState, action: ActionOf<typeof AT.USE_INVENTORY_ITEM>): GameState => {
     const itemId = typeof action.payload?.itemId === 'string' ? action.payload.itemId : '';
     if (!itemId) return state;
     const item = (state.player.inv || []).find((entry) => entry.id === itemId);
@@ -156,7 +157,7 @@ const getEnhanceTarget = (state: GameState, itemId: string) => {
     return { item, slot: slot as EquipmentSlot };
 };
 
-const enhanceItem = (state: GameState, action: GameAction): GameState => {
+const enhanceItem = (state: GameState, action: ActionOf<typeof AT.ENHANCE_ITEM>): GameState => {
     const itemId = typeof action.payload?.itemId === 'string' ? action.payload.itemId : '';
     if (!itemId) return state;
 
@@ -238,4 +239,4 @@ const enhanceItem = (state: GameState, action: GameAction): GameState => {
 export const equipmentActionMap = {
     USE_INVENTORY_ITEM: useInventoryItem,
     ENHANCE_ITEM: enhanceItem,
-};
+} satisfies HandlerMap;

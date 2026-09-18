@@ -25,6 +25,9 @@ export const createEconomyActions = (ctx: InventoryActionCtx) => {
         market: (type: string, item: Item, source?: string) => {
             if (gameState !== 'shop') return;
             if (type === 'sell') {
+                // id 없는 인스턴스는 reducer의 inv.find가 못 찾아 no-op이던 경로 —
+                //   `equipment.useItem`과 같은 가드로 dispatch 전에 끝낸다.
+                if (!item.id) return;
                 dispatch({
                     type: AT.SELL_INVENTORY_ITEM,
                     payload: { itemId: item.id },
@@ -32,6 +35,8 @@ export const createEconomyActions = (ctx: InventoryActionCtx) => {
                 return;
             }
             if (type !== 'buy') return;
+            // 이름 없는 제안은 getCanonicalShopOffer가 못 찾아 no-op이던 경로.
+            if (!item.name) return;
 
             dispatch({
                 type: AT.BUY_SHOP_ITEM,
