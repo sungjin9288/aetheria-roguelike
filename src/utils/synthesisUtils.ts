@@ -14,7 +14,7 @@ const SYNTH_TYPES: ItemType[] = ['weapon', 'armor', 'shield'];
 /**
  * 합성 가능한 아이템인지 확인
  */
-export const isSynthesizable = (item: Item | null | undefined) =>
+export const isSynthesizable = (item: Item | null | undefined): item is Item & { type: ItemType } =>
     Boolean(item && item.type && SYNTH_TYPES.includes(item.type) && (item.tier ?? 0) >= 1 && (item.tier ?? 0) <= 5);
 
 /**
@@ -149,7 +149,8 @@ export const performSynthesis = (items: Item[], selectedOutput: Item | null, use
  * @returns {{ type: string, tier: number, rarity: string, items: Object[], count: number }[]}
  */
 interface SynthesisGroup {
-    type: ItemType | undefined;
+    /** isSynthesizable 술어를 통과한 아이템만 묶이므로 type은 항상 존재한다. */
+    type: ItemType;
     tier: number;
     items: Item[];
     count: number;

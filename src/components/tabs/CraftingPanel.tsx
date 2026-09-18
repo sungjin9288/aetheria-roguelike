@@ -18,18 +18,6 @@ const TYPE_LABEL: Record<string, string> = { weapon: '무기', armor: '방어구
 /** CraftingPanel이 실제로 호출하는 액션만 좁혀 받는다 (제작/합성). */
 type CraftingPanelActions = Pick<GameActions, 'craft' | 'synthesize'>;
 
-/**
- * synthesisUtils.getSynthesisGroups가 반환하는 그룹 1건 — DB 원본 아이템을 type+tier로
- * 묶은 실제 런타임 모양. 함수 선언 반환형은 `any[]`다(synthesisUtils.ts, utils/**라 이
- * 트랙에서 수정 금지) — 여기서는 이 화면이 실제로 읽는 모양만 로컬로 좁힌다.
- */
-interface SynthesisGroup {
-  type: ItemType;
-  tier: number;
-  items: Item[];
-  count: number;
-}
-
 /** 제작법과 장비 합성을 한 흐름에서 다룬다. */
 // cycle 403: `mobileFocused?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
 //   ControlPanel이 prop pass했으나 silent dropped (paired remove).
@@ -50,7 +38,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
 
   const recipes = DB.ITEMS.recipes || [];
 
-  const synthGroups = useMemo(() => getSynthesisGroups(player.inv) as SynthesisGroup[], [player.inv]);
+  const synthGroups = useMemo(() => getSynthesisGroups(player.inv ?? []), [player.inv]);
 
   const toggleSlot = (itemId: string) => {
     setSelectedIds((prev) => {
