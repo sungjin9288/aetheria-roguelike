@@ -35,17 +35,17 @@ test.describe('물리 성장 acceptance 시나리오', () => {
         const claim = page.getByTestId('codex-claim-weapons_5');
         await expect(claim).toBeVisible();
 
-        const before = await page.evaluate(() => (
+        const before = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getProgressionAcceptanceSnapshot?.()
-        ));
+        )))!;
         expect(before.codexBonusAtk).toBe(0);
         expect(before.codexClaimed).toEqual([]);
 
         await claim.click();
         await expect(claim).toBeHidden();
-        const after = await page.evaluate(() => (
+        const after = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getProgressionAcceptanceSnapshot?.()
-        ));
+        )))!;
         expect(after.codexBonusAtk).toBe(2);
         expect(after.codexClaimed).toEqual(['weapons_5']);
         await expect.poll(async () => (
@@ -63,17 +63,17 @@ test.describe('물리 성장 acceptance 시나리오', () => {
 
         const magician = page.getByTestId('job-change-option').filter({ hasText: '마법사' });
         await magician.click();
-        const afterCandidate = await page.evaluate(() => (
+        const afterCandidate = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getProgressionAcceptanceSnapshot?.()
-        ));
+        )))!;
         expect(afterCandidate.job).toBe('모험가');
 
         const warrior = page.getByTestId('job-change-option').filter({ hasText: '전사' });
         await warrior.click();
         await page.getByTestId('job-change-confirm').click();
-        const afterJobChange = await page.evaluate(() => (
+        const afterJobChange = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getProgressionAcceptanceSnapshot?.()
-        ));
+        )))!;
         expect(afterJobChange.job).toBe('전사');
         expect(afterJobChange.hp).toBe(afterJobChange.maxHp);
         expect(afterJobChange.mp).toBe(afterJobChange.maxMp);
@@ -88,31 +88,31 @@ test.describe('물리 성장 acceptance 시나리오', () => {
         await page.getByTestId('archive-tab-skills').click();
         await page.getByTestId('skill-branch-choice-파워배시-B').click();
 
-        const freePreview = await page.evaluate(() => (
+        const freePreview = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getProgressionAcceptanceSnapshot?.()
-        ));
+        )))!;
         expect(freePreview.gold).toBe(400);
         expect(freePreview.skillChoices).toEqual({});
 
         await page.getByTestId('skill-growth-confirm-파워배시').click();
-        const freeConfirmed = await page.evaluate(() => (
+        const freeConfirmed = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getProgressionAcceptanceSnapshot?.()
-        ));
+        )))!;
         expect(freeConfirmed.gold).toBe(400);
         expect(freeConfirmed.skillChoices.파워배시).toBe('B');
 
         await page.getByTestId('skill-growth-change-파워배시').click();
         await page.getByTestId('skill-branch-choice-파워배시-A').click();
-        const paidPreview = await page.evaluate(() => (
+        const paidPreview = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getProgressionAcceptanceSnapshot?.()
-        ));
+        )))!;
         expect(paidPreview.gold).toBe(400);
         expect(paidPreview.skillChoices.파워배시).toBe('B');
 
         await page.getByTestId('skill-growth-confirm-파워배시').click();
-        const paidConfirmed = await page.evaluate(() => (
+        const paidConfirmed = (await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.getProgressionAcceptanceSnapshot?.()
-        ));
+        )))!;
         expect(paidConfirmed.gold).toBe(350);
         expect(paidConfirmed.skillChoices.파워배시).toBe('A');
     });

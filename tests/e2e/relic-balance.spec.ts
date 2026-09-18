@@ -59,16 +59,16 @@ test('390x844 canonical Undying choice is epic, contained, tappable, and grants 
     expect(layout.panelBounds.bottom).toBeLessThanOrEqual(layout.viewportHeight);
     expect(layout.touchHeight).toBeGreaterThanOrEqual(44);
 
-    const before = await page.evaluate(() => (
+    const before = (await page.evaluate(() => (
         window.__AETHERIA_TEST_API__?.getCanonicalUndyingRelicChoiceSnapshot?.()
-    ));
+    )))!;
     expect(before.pendingIds).toEqual(['undying', 'blood_pact', 'twin_blades']);
     await undyingCard.click();
     await expect(panel).toBeHidden();
     await page.waitForTimeout(700);
-    const after = await page.evaluate(() => (
+    const after = (await page.evaluate(() => (
         window.__AETHERIA_TEST_API__?.getCanonicalUndyingRelicChoiceSnapshot?.()
-    ));
+    )))!;
     expect(after.pendingIds).toEqual([]);
     expect(after.ownedUndyingCount).toBe(before.ownedUndyingCount + 1);
     expect(after.ownedRelicCount).toBe(before.ownedRelicCount + 1);

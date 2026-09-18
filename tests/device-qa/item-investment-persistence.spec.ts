@@ -11,7 +11,11 @@ type InvestmentSnapshot = {
 };
 
 const getSnapshot = (page: Page): Promise<InvestmentSnapshot> => (
-    page.evaluate(() => window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.())
+    // W8-Z6: window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.() 이제
+    //   AetheriaTestApi(hooks/useGameTestApi.ts)를 통해 타입 검증된다 — 반환은
+    //   `| undefined`(옵셔널 체이닝) + 필드가 optional인 상위 타입이라, 이 파일이
+    //   따로 선언한 필드-필수 로컬 shape로 좁혀 받는다(e2e 실행 중엔 항상 존재).
+    page.evaluate(() => window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.()) as Promise<InvestmentSnapshot>
 );
 
 test('강화·제작·합성의 소비와 결과가 재실행 뒤에도 유지된다', async ({ page }) => {

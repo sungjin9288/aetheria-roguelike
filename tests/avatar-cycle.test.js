@@ -206,9 +206,10 @@ import { readFile } from 'node:fs/promises';
 
   test("cycle 604: seedAvatarScenario signature에서 preset default 0건", async () => {
       const source = await readSrc('src/hooks/useGameTestApi.ts');
-      assert.ok(!/seedAvatarScenario:\s*\(preset:\s*any\s*=\s*'paladin-plate'\)/.test(source),
+      assert.ok(!/seedAvatarScenario:\s*\(preset:\s*(?:any|string)\s*=\s*'paladin-plate'\)/.test(source),
           "seedAvatarScenario preset default 'paladin-plate' 제거");
-      assert.ok(/seedAvatarScenario:\s*\(preset:\s*any\)/.test(source),
+      // W8-Z6: preset의 `: any`를 `: string`으로 닫았다 — 파라미터 자체는 보존.
+      assert.ok(/seedAvatarScenario:\s*\(preset:\s*string\)/.test(source),
           'seedAvatarScenario 파라미터 자체는 보존');
   });
 

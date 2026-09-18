@@ -160,7 +160,8 @@ test('smoke loop verifies relic choice decision strip with deterministic injecti
     assert.match(source, /relic-choice-decision-strip/);
     assert.match(source, /02e-relic-choice-decision-strip/);
     assert.match(testApiSource, /injectRelicChoice:[\s\S]*?job: '나이트'[\s\S]*?test_relic_build_weapon[\s\S]*?hands: 1[\s\S]*?offhand: null/);
-    assert.match(testApiSource, /RELICS\.find\(\(relic: any\) => relic\.effect === 'fortress'\)/);
+    // W8-Z6: RELICS는 이미 Relic[]로 타입돼 있어 콜백의 `: any`가 필요 없다(제거됨).
+    assert.match(testApiSource, /RELICS\.find\(\(relic\) => relic\.effect === 'fortress'\)/);
 });
 
 test('relic choice decision strip has high readability CSS coverage', async () => {

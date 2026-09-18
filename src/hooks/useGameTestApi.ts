@@ -1,9 +1,22 @@
-import { useEffect } from 'react';
-import type { Player } from '../types/index.js';
+import { useEffect, type RefObject } from 'react';
+import type { useGameEngine } from './useGameEngine';
+import type {
+    ClassJourneyLedger,
+    EndgameProgress,
+    EquipSlots,
+    GameEvent,
+    Item,
+    Monster,
+    Player,
+    PostCombatResult,
+    Relic,
+} from '../types/index.js';
+import type { FullStats } from '../utils/statsCalculator';
+import type { GraveEntry } from '../utils/graveUtils';
+import type { RunSummary } from '../reducers/actionTypes';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
 import { RELICS } from '../data/relics';
-import type { Relic } from '../types/relic';
 import { GS } from '../reducers/gameStates';
 import { AT } from '../reducers/actionTypes';
 import { INITIAL_STATE } from '../reducers/gameReducer';
@@ -38,6 +51,39 @@ import { getStructuredFallbackPoolEvent } from '../data/structuredFallbackEvents
 
 const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
 
+/**
+ * `useGameTestApi`가 받는 엔진 스냅샷 — `useGameEngine()`의 반환 모양이 곧 정의다
+ * (App.tsx 호출부: `engineRef = useRef(engine)`, `engine = useGameEngine()`).
+ * 손으로 병행 선언하지 않고 `ReturnType`으로 도출한다 — 엔진이 필드를 추가/변경하면
+ * 여기도 자동으로 따라간다.
+ */
+export type EngineSnapshot = ReturnType<typeof useGameEngine>;
+
+/**
+ * `sanitizeValue`가 만드는 JSON 안전 값 — 함수/심볼/순환 참조까지 문자열로 접는다.
+ * `undefined`도 그대로 허용한다 — `value == null`(null/undefined) 입력을 그대로
+ * 돌려주는 기존 동작(JSON.stringify가 object key는 생략하고 array 원소는 null로
+ * 접는 표준 동작에 맡긴다)을 유지하기 위함이다.
+ */
+export type SanitizedValue =
+    | string
+    | number
+    | boolean
+    | null
+    | undefined
+    | SanitizedValue[]
+    | { [key: string]: SanitizedValue };
+
+/** `avatarScenarioMap`(seedAvatarScenario) 프리셋 1건 — `Item`/`EquipSlots` 도메인 타입을 그대로 쓴다. */
+interface AvatarScenario {
+    name: string;
+    job: string;
+    level: number;
+    loc: string;
+    equip: EquipSlots;
+    inv?: Item[];
+}
+
 const getLevelExpRequirement = (level: number) => {
     let requirement: number = CONSTANTS.START_NEXT_EXP;
     for (let currentLevel = 1; currentLevel < level; currentLevel += 1) {
@@ -49,7 +95,7 @@ const getLevelExpRequirement = (level: number) => {
     return requirement;
 };
 
-const buildReturnBriefingScenarioPlayer = (player: Player, now: Date) => {
+const buildReturnBriefingScenarioPlayer = (player: Player, now: Date): Partial<Player> => {
     const yesterday = new Date(now);
     yesterday.setDate(yesterday.getDate() - 1);
     const weeklyMission = BALANCE.WEEKLY_MISSIONS[0];
@@ -92,13 +138,244 @@ const buildReturnBriefingScenarioPlayer = (player: Player, now: Date) => {
     };
 };
 
+/** getTrueEndingJourneySnapshot() 반환 모양. */
+export interface TrueEndingJourneySnapshot {
+    gameState: string;
+    combatTurn: number;
+    enemy: { name?: string; baseName?: string; hp?: number; maxHp?: number } | null;
+    name: string;
+    level: number;
+    prestigeRank: number;
+    primalShards: number;
+    trueEndingSeen: boolean;
+    endgameReceiptKey: string | null;
+    heartIds: Array<string | undefined>;
+    heartCount: number;
+    classJourney: ClassJourneyLedger | null;
+    settings: NonNullable<Player['settings']>;
+    titles: string[];
+    activeTitle: string | null;
+    demonKingSlain: number;
+    activeQuestIds: Array<string | number>;
+    claimedQuestIds: Array<string | number>;
+}
+
+/** getInvestmentSnapshot() 반환 모양. */
+export interface InvestmentSnapshot {
+    name: string;
+    gold: number;
+    weaponEnhance: number;
+    crafts: number;
+    syntheses: number;
+    synthProtects: number;
+    inventory: Array<{
+        id?: string;
+        name?: string;
+        type?: Item['type'];
+        tier: number;
+        enhance: number;
+    }>;
+}
+
+/** getAscensionSnapshot() 반환 모양. */
+export interface AscensionSnapshot {
+    gameState: string;
+    name: string;
+    level: number;
+    prestigeRank: number;
+    essence: number;
+    bonusAtk: number;
+    bonusHp: number;
+    bonusMp: number;
+    inventoryCount: number;
+    inventoryIds: Array<string | undefined>;
+    relicCount: number;
+}
+
+/** getMirrorSnapshot() 반환 모양. */
+export interface MirrorSnapshot {
+    essence: number;
+    mirror: Record<string, number>;
+}
+
+/** getCrystalExchangeSnapshot() 반환 모양. */
+export interface CrystalExchangeSnapshot {
+    premiumCurrency: number;
+    maxInv: number;
+    synthProtects: number;
+    reviveTokens: number;
+    cosmeticTitles: string[];
+    titles: string[];
+}
+
+/** getProgressionAcceptanceSnapshot() 반환 모양. */
+export interface ProgressionAcceptanceSnapshot {
+    job: string;
+    level: number;
+    hp: number;
+    maxHp: number;
+    mp: number;
+    maxMp: number;
+    gold: number;
+    skillChoices: Record<string, string>;
+    codexClaimed: string[];
+    codexBonusAtk: number;
+    signatureSet: string;
+    relicSynergies: string[];
+}
+
+/** getDomMetrics()의 `rect()` 헬퍼가 만드는 사각 경계값. */
+export interface DomBoundsSnapshot {
+    top: number;
+    bottom: number;
+    left: number;
+    right: number;
+    width: number;
+    height: number;
+}
+
+/** getDomMetrics() 반환 모양 — 모바일 터미널 패널의 레이아웃 계측값. */
+export interface DomMetricsSnapshot {
+    viewport: { width: number; height: number; documentWidth: number };
+    safeArea: { top: string; bottom: string };
+    panel: DomBoundsSnapshot | null;
+    scrollViewport: DomBoundsSnapshot | null;
+    archiveButton: DomBoundsSnapshot | null;
+    firstLog: DomBoundsSnapshot | null;
+    panelStyle: {
+        display: string;
+        flexDirection: string;
+        justifyContent: string;
+        alignItems: string;
+        paddingTop: string;
+        paddingBottom: string;
+    } | null;
+    scrollStyle: {
+        display: string;
+        flex: string;
+        alignSelf: string;
+        marginTop: string;
+        marginBottom: string;
+    } | null;
+    panelChildren: Array<{ tag: string; className: string; position: string } & Partial<DomBoundsSnapshot>>;
+    scrollTop: number | null;
+    scrollHeight: number | null;
+    clientHeight: number | null;
+}
+
+/** getGoldMultiplierCombatSnapshot() 반환 모양. */
+export interface GoldMultiplierCombatSnapshot {
+    gameState: string;
+    enemy: { name?: string; hp?: number; gold?: number } | null;
+    gold: number;
+    totalGold: number;
+    kills: number;
+    relicOrder: Array<string | undefined>;
+}
+
+/** getCanonicalUndyingRelicChoiceSnapshot() 반환 모양. */
+export interface CanonicalUndyingRelicChoiceSnapshot {
+    pendingIds: Array<string | undefined>;
+    ownedRelicCount: number;
+    ownedUndyingCount: number;
+}
+
+/** getCanonicalFreeSkillRelicChoiceSnapshot() 반환 모양. */
+export interface CanonicalFreeSkillRelicChoiceSnapshot {
+    pendingIds: Array<string | undefined>;
+    ownedRelicCount: number;
+    ownedSpellEchoCount: number;
+}
+
+/** getCanonicalEventChanceRelicChoiceSnapshot() 반환 모양. */
+export interface CanonicalEventChanceRelicChoiceSnapshot {
+    pendingIds: Array<string | undefined>;
+    ownedRelicCount: number;
+    ownedAncientMapCount: number;
+    ownedWandererCharmCount: number;
+    eventChanceBonus: number;
+}
+
+/**
+ * `window.__AETHERIA_TEST_API__`로 노출되는 e2e/스모크 계약 — 문서화된 전체 표면.
+ * `tests/e2e/**`·`scripts/smoke-gameplay.mjs`·`scripts/perf-guard.mjs`가 이 인터페이스를
+ * 통해서만 엔진을 조작·관측한다. 새 멤버를 추가하면 여기에도 시그니처를 추가할 것 —
+ * `const testApi: AetheriaTestApi = {...}`가 어긋난 멤버를 즉시 컴파일 에러로 잡는다.
+ */
+export interface AetheriaTestApi {
+    getTrueEndingJourneySnapshot: () => TrueEndingJourneySnapshot;
+    getInvestmentSnapshot: () => InvestmentSnapshot;
+    getAscensionSnapshot: () => AscensionSnapshot;
+    getMirrorSnapshot: () => MirrorSnapshot;
+    getCrystalExchangeSnapshot: () => CrystalExchangeSnapshot;
+    getProgressionAcceptanceSnapshot: () => ProgressionAcceptanceSnapshot;
+    getDomMetrics: () => DomMetricsSnapshot;
+    getPerfSnapshot: () => Record<string, number>;
+    markPerf: (name: string) => PerformanceEntry | null;
+    resetGame: () => void;
+    flushLocalSave: EngineSnapshot['flushLocalSave'];
+    triggerPlatformBack: () => boolean;
+    armNextCombatSeed: (seed: number) => boolean;
+    armNextExploreSeed: (seed: number) => boolean;
+    sendCommand: (command: string) => void;
+    setSideTab: (tab: string) => void;
+    seedEnhanceScenario: (params: { gold: number; materialCount: number; weaponEnhance: number }) => void;
+    seedItemInvestmentScenario: () => void;
+    seedSeasonJourneyScenario: () => void;
+    seedGraveRecoveryScenario: () => void;
+    seedAscensionJourneyScenario: () => void;
+    seedTrueEndingJourneyScenario: () => boolean;
+    weakenTrueBossForJourney: () => boolean;
+    seedMirrorJourneyScenario: () => void;
+    seedCrystalExchangeScenario: (balance: number) => void;
+    seedSystemSettingsScenario: () => void;
+    seedProgressionAcceptanceScenario: () => boolean;
+    seedClaimableQuestScenario: () => void;
+    seedPostFirstStoryScenario: () => void;
+    seedTownRecoveryScenario: () => void;
+    seedDailyMissionRewardScenario: () => boolean;
+    seedExpeditionDebriefScenario: () => boolean | undefined;
+    seedMilestoneStoryScenario: () => void;
+    seedClassJourneyScenario: () => boolean;
+    seedFirstDeathStoryScenario: () => void;
+    seedAbandonableQuestScenario: () => void;
+    seedActiveBountyPresentationScenario: () => void;
+    seedExpeditionMissionLoadoutScenario: () => void;
+    seedCombatFocusScenario: (bossMode: boolean) => boolean;
+    seedCombatSkillReadinessScenario: (mp: number) => boolean;
+    seedAvatarScenario: (preset: string) => boolean;
+    injectPostCombatResult: () => void;
+    injectRelicChoice: () => boolean | undefined;
+    injectUndyingRelicChoice: () => void;
+    getCanonicalUndyingRelicChoiceSnapshot: () => CanonicalUndyingRelicChoiceSnapshot;
+    injectFreeSkillRelicChoice: () => void;
+    getCanonicalFreeSkillRelicChoiceSnapshot: () => CanonicalFreeSkillRelicChoiceSnapshot;
+    injectGoldMultiplierCombat: (order: unknown) => boolean;
+    getGoldMultiplierCombatSnapshot: () => GoldMultiplierCombatSnapshot;
+    injectEventChanceRelicChoice: () => boolean;
+    injectStackedEventChanceRelicChoice: () => boolean;
+    getCanonicalEventChanceRelicChoiceSnapshot: () => CanonicalEventChanceRelicChoiceSnapshot;
+    injectRunSummary: () => void;
+    injectEvent: () => void;
+    seedFallbackWagerScenario: (mode: unknown) => boolean;
+    seedBoundedEncounterScenario: (region: string, encounterId: string) => boolean;
+    resolveBoundedEncounterChoice: (
+        encounterId: string,
+        choiceId: string,
+        expeditionId: string,
+        occurrenceSequence: number,
+    ) => void;
+    getBoundedEncounterReceiptKeys: () => string[];
+    showReturnBriefingScenario: () => void;
+}
+
 /**
  * smoke test / dev harness용 window API 등록.
  * engineRef와 fullStatsRef는 render 중 동기 갱신된 ref여야 한다.
  */
 export const useGameTestApi = (
-    engineRef: any,
-    fullStatsRef: any,
+    engineRef: RefObject<EngineSnapshot>,
+    fullStatsRef: RefObject<FullStats>,
     handlePlatformBack?: () => boolean,
 ) => {
     useEffect(() => {
@@ -106,7 +383,7 @@ export const useGameTestApi = (
 
         const deviceQaScenario = getDeviceQaScenario();
 
-        const avatarScenarioMap: Record<string, any> = {
+        const avatarScenarioMap: Record<string, AvatarScenario> = {
             'early-gear-choice': {
                 name: '첫 여정',
                 job: '모험가',
@@ -228,7 +505,7 @@ export const useGameTestApi = (
             choiceLabel: '결계의 흐름을 이어 둔다',
         };
 
-        const classJourneyScenario = (lastPlayedAt = Date.now()) => ({
+        const classJourneyScenario = (lastPlayedAt = Date.now()): ClassJourneyLedger => ({
             version: 2,
             sequence: 7,
             byJob: {
@@ -248,13 +525,14 @@ export const useGameTestApi = (
         // cycle 616: fallback default '' 제거 — explicit default-elimination
         //   pattern (cycle 608-615 lens 정착, 8번째 적용). 3 callers (line
         //   200/207/214)에 '' 명시 추가 후 default unreachable.
-        const safeText = (value: any, fallback: any) => {
+        const safeText = (value: unknown, fallback: string): string => {
             if (typeof value === 'string') return value;
             if (typeof value === 'number' || typeof value === 'boolean') return String(value);
             if (value && typeof value === 'object') {
+                const record = value as Record<string, unknown>;
                 for (const key of ['label', 'text', 'id', 'name', 'desc']) {
                     try {
-                        const candidate = value[key];
+                        const candidate = record[key];
                         if (typeof candidate === 'string') return candidate;
                         if (typeof candidate === 'number' || typeof candidate === 'boolean') return String(candidate);
                     } catch {
@@ -268,32 +546,33 @@ export const useGameTestApi = (
         // cycle 617: fallback default '[item]' 제거 — explicit default-elimination
         //   pattern (cycle 608-616 lens 정착, 9번째 적용). 2 callers (line 213/
         //   217)에 '[item]' 명시 추가 후 default unreachable.
-        const safeList = (items: any, fallback: any) => (
-            Array.isArray(items) ? items.map((item: any) => safeText(item, fallback)) : []
+        const safeList = (items: unknown, fallback: string): string[] => (
+            Array.isArray(items) ? items.map((item: unknown) => safeText(item, fallback)) : []
         );
         // cycle 615: depth default 0 제거 — explicit default-elimination
         //   pattern (cycle 608-614 lens 정착). top-level caller (line 164)에
         //   0 명시 추가 후 default unreachable.
-        const sanitizeValue = (value: any, depth: any): any => {
+        const sanitizeValue = (value: unknown, depth: number): SanitizedValue => {
             if (depth > 6) return '[max-depth]';
             if (value == null) return value;
             if (typeof value === 'string' || typeof value === 'number' || typeof value === 'boolean') return value;
             if (typeof value === 'function' || typeof value === 'symbol' || typeof value === 'bigint') return `[${typeof value}]`;
-            if (Array.isArray(value)) return value.map((entry: any) => sanitizeValue(entry, depth + 1));
+            if (Array.isArray(value)) return value.map((entry: unknown) => sanitizeValue(entry, depth + 1));
             if (typeof value !== 'object') return null;
 
             try {
                 const tag = Object.prototype.toString.call(value);
-                if (tag === '[object Date]') return value.toISOString();
+                if (tag === '[object Date]') return (value as Date).toISOString();
                 if (tag !== '[object Object]') return safeText(value, tag);
             } catch {
                 return '[unserializable]';
             }
 
-            const next: Record<string, any> = {};
+            const next: { [key: string]: SanitizedValue } = {};
+            const record = value as Record<string, unknown>;
             for (const key of Object.keys(value)) {
                 try {
-                    next[key] = sanitizeValue(value[key], depth + 1);
+                    next[key] = sanitizeValue(record[key], depth + 1);
                 } catch {
                     next[key] = '[unserializable]';
                 }
@@ -360,7 +639,7 @@ export const useGameTestApi = (
                         choices: safeList(e.currentEvent.choices, '[choice]'),
                     }
                     : null,
-                pendingRelics: Array.isArray(e.pendingRelics) ? e.pendingRelics.map((r: any) => r.name) : null,
+                pendingRelics: Array.isArray(e.pendingRelics) ? e.pendingRelics.map((r) => r.name) : null,
                 postCombatResult: e.postCombatResult
                     ? {
                         enemy: safeText(e.postCombatResult.enemy, ''),
@@ -384,7 +663,7 @@ export const useGameTestApi = (
                     }
                     : null,
                 sideTab: e.sideTab,
-                logTail: e.logs.slice(-6).map((log: any) => ({ type: log.type, text: log.text })),
+                logTail: e.logs.slice(-6).map((log) => ({ type: log.type, text: log.text })),
             // cycle 615: depth 0 명시 추가 — explicit default-elimination cascade.
             }, 0));
         };
@@ -395,7 +674,11 @@ export const useGameTestApi = (
         //   동일 lens 회귀.
         // cycle 329: getState / clearPostCombat / injectAscensionPreview 3 dead methods 제거.
         //   scripts/, tests/, docs 어디에서도 호출 0건. Playwright QA 훅 잔존이었던 것 정리.
-        const runSummaryScenario = {
+        // runTrackingComplete: 생산자(gameUtils.buildRunSummary)가 항상 채우는 필드지만
+        //   기존 시드엔 없었다(undefined) — RunSummaryCard는 `=== false`일 때만 경고를
+        //   보여주므로 undefined와 true는 동일하게 보인다. true를 명시해 동작을 그대로
+        //   유지하면서 RunSummary를 완전한 값으로 닫는다.
+        const runSummaryScenario: RunSummary = {
             level: 17, job: '모험가', loc: '북부 요새',
             kills: 142, bossKills: 3, relicsFound: 5,
             totalGold: 1842, prestigeRank: 2, activeTitle: 'veteran',
@@ -407,18 +690,24 @@ export const useGameTestApi = (
             maxKillStreak: 12,
             signaturesAcquired: 1,
             signatureNames: ['성검 에테르니아'],
+            runTrackingComplete: true,
         };
 
-        const testApi: any = {
+        const testApi: AetheriaTestApi = {
             getTrueEndingJourneySnapshot: () => {
                 const er = engineRef.current;
-                const endgame = er.player.meta?.endgame || {};
+                const endgame: Partial<EndgameProgress> = er.player.meta?.endgame || {};
                 const heartIds = (er.player.inv || [])
-                    .filter((item: any) => item?.name === '원시의 심장')
-                    .map((item: any) => item.id);
+                    .filter((item) => item?.name === '원시의 심장')
+                    .map((item) => item.id);
                 return {
                     gameState: er.gameState,
-                    combatTurn: er.combatTurn || 0,
+                    // cycle W8-Z6: `combatTurn`은 useGameEngine 반환 표면에 없다(reducer
+                    //   내부 replay-guard 전용, combatDeps로만 흘러간다) — `er.combatTurn`은
+                    //   항상 undefined였고 이 필드는 이미 항상 0이었다. 값을 그대로 굳혀
+                    //   존재하지 않는 필드 참조를 없앤다(true-ending 스펙의 progress 판정은
+                    //   OR로 엮인 enemy.hp 변화가 실질적으로 담당해 동작에 영향 없다).
+                    combatTurn: 0,
                     enemy: er.enemy ? {
                         name: er.enemy.name,
                         baseName: er.enemy.baseName || er.enemy.name,
@@ -438,7 +727,7 @@ export const useGameTestApi = (
                     titles: [...(er.player.titles || [])],
                     activeTitle: er.player.activeTitle || null,
                     demonKingSlain: er.player.stats?.demonKingSlain || 0,
-                    activeQuestIds: (er.player.quests || []).map((quest: any) => quest.id),
+                    activeQuestIds: (er.player.quests || []).map((quest) => quest.id),
                     claimedQuestIds: Array.isArray(er.player.stats?.claimedQuestIds)
                         ? [...er.player.stats.claimedQuestIds]
                         : [],
@@ -453,7 +742,7 @@ export const useGameTestApi = (
                     crafts: player.stats?.crafts || 0,
                     syntheses: player.stats?.syntheses || 0,
                     synthProtects: player.stats?.synthProtects || 0,
-                    inventory: (player.inv || []).map((item: any) => ({
+                    inventory: (player.inv || []).map((item) => ({
                         id: item.id,
                         name: item.name,
                         type: item.type,
@@ -474,7 +763,7 @@ export const useGameTestApi = (
                     bonusHp: er.player.meta?.bonusHp || 0,
                     bonusMp: er.player.meta?.bonusMp || 0,
                     inventoryCount: er.player.inv?.length || 0,
-                    inventoryIds: (er.player.inv || []).map((item: any) => item.id),
+                    inventoryIds: (er.player.inv || []).map((item) => item.id),
                     relicCount: er.player.relics?.length || 0,
                 };
             },
@@ -511,11 +800,11 @@ export const useGameTestApi = (
                     codexClaimed: [...(player.stats?.codexClaimed || [])],
                     codexBonusAtk: player.stats?.codexBonusAtk || 0,
                     signatureSet: fullStats?.activeSignatureSet?.name || '',
-                    relicSynergies: (fullStats?.activeSynergies || []).map((synergy: any) => synergy.label),
+                    relicSynergies: (fullStats?.activeSynergies || []).map((synergy) => synergy.label),
                 };
             },
             getDomMetrics: () => {
-                const rect = (node: any) => {
+                const rect = (node: Element | null | undefined): DomBoundsSnapshot | null => {
                     if (!(node instanceof HTMLElement)) return null;
                     const bounds = node.getBoundingClientRect();
                     return {
@@ -565,7 +854,7 @@ export const useGameTestApi = (
                         marginBottom: scrollStyle.marginBottom,
                     } : null,
                     panelChildren: panel instanceof HTMLElement
-                        ? Array.from(panel.children).map((child: any) => ({
+                        ? Array.from(panel.children).map((child) => ({
                             tag: child.tagName,
                             className: child.className,
                             position: window.getComputedStyle(child).position,
@@ -578,31 +867,35 @@ export const useGameTestApi = (
                 };
             },
             getPerfSnapshot: () => getPerfSnapshot(),
-            markPerf: (name: any) => markPerf(name),
+            markPerf: (name: string) => markPerf(name),
             resetGame: () => engineRef.current.actions.reset?.(),
             flushLocalSave: () => engineRef.current.flushLocalSave(),
             triggerPlatformBack: () => handlePlatformBack?.() ?? false,
-            armNextCombatSeed: (seed: any) => {
+            armNextCombatSeed: (seed: number) => {
                 if (!Number.isSafeInteger(seed) || seed < 0 || seed > 0xffffffff) return false;
                 document.documentElement.dataset.aetheriaCombatSeed = String(seed);
                 return true;
             },
-            armNextExploreSeed: (seed: any) => {
+            armNextExploreSeed: (seed: number) => {
                 if (!Number.isSafeInteger(seed) || seed < 0 || seed > 0xffffffff) return false;
                 document.documentElement.dataset.aetheriaExploreSeed = String(seed);
                 return true;
             },
-            sendCommand: (command: any) => engineRef.current.handleCommand(command),
-            setSideTab: (tab: any) => engineRef.current.actions.setSideTab?.(tab),
+            sendCommand: (command: string) => engineRef.current.handleCommand(command),
+            setSideTab: (tab: string) => engineRef.current.actions.setSideTab?.(tab),
             // cycle 605: 4 defaults batch 제거 (gold/materialCount/weaponEnhance
             //   inner + outer {}) — 3 production caller (smoke-gameplay:275/279/
             //   283) 모두 완전 object 명시 (3 fields 모두 전달)이라 outer/inner
             //   defaults 모두 도달 불가. cycle 561 buildProceduralOutcome 동일
             //   패턴 (outer + inner destructure defaults 동시 정리).
-            seedEnhanceScenario: ({ gold, materialCount, weaponEnhance }: any) => {
+            seedEnhanceScenario: ({ gold, materialCount, weaponEnhance }: {
+                gold: number;
+                materialCount: number;
+                weaponEnhance: number;
+            }) => {
                 const er = engineRef.current;
-                const preservedInventory = (er.player.inv || []).filter((item: any) => item?.name !== CONSTANTS.ENHANCE_MATERIAL_NAME);
-                const seededMaterials = Array.from({ length: materialCount }, (_: any, index: any) => ({
+                const preservedInventory = (er.player.inv || []).filter((item) => item?.name !== CONSTANTS.ENHANCE_MATERIAL_NAME);
+                const seededMaterials = Array.from({ length: materialCount }, (_, index): Item => ({
                     id: `smoke-enhance-material-${index}`,
                     name: CONSTANTS.ENHANCE_MATERIAL_NAME,
                     type: 'mat',
@@ -610,11 +903,14 @@ export const useGameTestApi = (
                     desc: '테스트용 강화 재료',
                     desc_stat: CONSTANTS.ENHANCE_MATERIAL_NAME,
                 }));
-                const nextWeapon = er.player.equip?.weapon || {
+                // cycle W8-Z6: fallback의 `atk`는 Item 도메인 필드가 아니다(무기 기본 공격력은
+                //   `val`) — er.player.equip.weapon이 항상 존재하는 실제 플로우에서는 이
+                //   분기가 도달되지 않지만, 타입을 닫으면서 실제 producer 필드(`val`)로 고쳤다.
+                const nextWeapon: Item = er.player.equip?.weapon || {
                     name: '테스트 검',
                     type: 'weapon',
                     tier: 1,
-                    atk: 4,
+                    val: 4,
                     enhance: 0,
                 };
 
@@ -633,23 +929,23 @@ export const useGameTestApi = (
             },
             seedItemInvestmentScenario: () => {
                 const er = engineRef.current;
-                const recipe = DB.ITEMS.recipes.find((entry: any) => entry.id === 'r1');
-                const recipeMaterials = (recipe?.inputs || []).flatMap((input: any) => (
-                    Array.from({ length: input.qty }, (_: any, index: number) => ({
+                const recipe = DB.ITEMS.recipes.find((entry) => entry.id === 'r1');
+                const recipeMaterials = (recipe?.inputs || []).flatMap((input) => (
+                    Array.from({ length: input.qty ?? 0 }, (_, index): Item => ({
                         id: `investment-${input.name}-${index}`,
                         name: input.name,
                         type: 'mat',
                     }))
                 ));
-                const enhanceMaterials = Array.from({ length: 5 }, (_: any, index: number) => ({
+                const enhanceMaterials = Array.from({ length: 5 }, (_, index): Item => ({
                     id: `investment-enhance-${index}`,
                     name: CONSTANTS.ENHANCE_MATERIAL_NAME,
                     type: 'mat',
                 }));
                 const synthesisItems = DB.ITEMS.weapons
-                    .filter((item: any) => item.tier === 2)
+                    .filter((item) => item.tier === 2)
                     .slice(0, 3)
-                    .map((item: any, index: number) => ({ ...item, id: `investment-synth-${index}` }));
+                    .map((item, index) => ({ ...item, id: `investment-synth-${index}` }));
 
                 er.dispatch({
                     type: AT.SET_PLAYER,
@@ -729,7 +1025,9 @@ export const useGameTestApi = (
                         {
                             loc: '시작의 마을',
                             gold: 24,
-                            items: [{ id: 'grave-smoke-ring', name: '여행자의 반지', type: 'accessory', tier: 2 }],
+                            // cycle W8-Z6: 'accessory'는 ItemType 9종에 없다(실제 데이터에도 0건) —
+                            //   가장 가까운 실제 카테고리인 'mat'로 고쳤다(회수 패널은 name만 읽는다).
+                            items: [{ id: 'grave-smoke-ring', name: '여행자의 반지', type: 'mat', tier: 2 }],
                             timestamp: now,
                         },
                     ],
@@ -752,7 +1050,9 @@ export const useGameTestApi = (
                             { id: 'ascension-smoke-blade', name: '성검 에테르니아', type: 'weapon', tier: 5 },
                             { id: 'ascension-smoke-potion', name: '대회복 물약', type: 'hp', tier: 3 },
                         ],
-                        relics: [{ id: 'ascension-smoke-relic', name: '용기의 문장', rarity: 'legendary' }],
+                        // effect: Relic은 판별 유니온이라 val 없는 유물도 effect가 필수다.
+                        //   전투에 쓰이지 않는 시나리오라 매개변수 없는 valueless effect로 채운다.
+                        relics: [{ id: 'ascension-smoke-relic', name: '용기의 문장', rarity: 'legendary', effect: 'mp_restore_battle' }],
                         meta: {
                             ...er.player.meta,
                             prestigeRank: 2,
@@ -769,7 +1069,7 @@ export const useGameTestApi = (
             seedTrueEndingJourneyScenario: () => {
                 const er = engineRef.current;
                 const basePlayer = structuredClone(INITIAL_STATE.player);
-                const signatureWeapon = DB.ITEMS.weapons.find((item: any) => item.name === '성검 에테르니아');
+                const signatureWeapon = DB.ITEMS.weapons.find((item) => item.name === '성검 에테르니아');
                 if (!signatureWeapon) return false;
                 const meta: NonNullable<Player['meta']> = {
                     ...(basePlayer.meta || {}),
@@ -789,8 +1089,17 @@ export const useGameTestApi = (
                 };
                 const level = 75;
                 const vitals = buildClassVitals(level, '전사', meta);
+                // 의도적인 구형(v1) classJourney 픽스처 — true-ending-new-game-plus.spec.ts가
+                //   이 원장을 시드해 마왕 처치 시 실제 마이그레이션 경로(utils/classJourney.ts,
+                //   버전 2 승격)가 정확히 동작하는지 검증한다(`expect(initial.classJourney
+                //   .version).toBe(1)`). `version`은 `number`로 넓혀 리터럴 유니온 충돌
+                //   (1 vs 2)을 캐스트가 통과하게 한다. `encounterDiscoveries: []`는 실제
+                //   v1 세이브엔 없던 필드지만, 생산자(normalizeClassJourneyEncounterDiscoveries)
+                //   가 없거나 빈 배열이나 동일하게 `[]`로 정규화하므로(있음/없음이 결과에
+                //   드러나지 않음) 캐스트를 통과시키는 목적으로만 명시했다 — 이 스펙의 어떤
+                //   단언도 두 표현을 구분하지 않는다.
                 const classJourney = {
-                    version: 1,
+                    version: 1 as number,
                     sequence: 3,
                     byJob: {
                         전사: {
@@ -799,11 +1108,12 @@ export const useGameTestApi = (
                             signatureItems: ['성검 에테르니아'],
                             bossNames: ['마왕'],
                             regions: ['마왕성'],
+                            encounterDiscoveries: [],
                             representativeExpeditionId: 'true-ending-expedition-1',
                             lastPlayedAt: 1_786_406_400_000,
                         },
                     },
-                };
+                } as ClassJourneyLedger;
                 const player = {
                     ...basePlayer,
                     name: '종언 검증',
@@ -867,7 +1177,7 @@ export const useGameTestApi = (
                 if (er.gameState !== GS.COMBAT || er.enemy?.baseName !== '원시의 신') return false;
                 er.dispatch({
                     type: AT.SET_ENEMY,
-                    payload: (enemy: any) => ({ ...enemy, hp: 1 }),
+                    payload: (enemy: Monster | null) => ({ ...enemy, hp: 1 }),
                 });
                 return true;
             },
@@ -893,7 +1203,7 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'system' });
             },
-            seedCrystalExchangeScenario: (balance: any) => {
+            seedCrystalExchangeScenario: (balance: number) => {
                 const er = engineRef.current;
                 const premiumCurrency = Math.max(0, Number(balance) || 0);
                 er.dispatch({
@@ -933,18 +1243,25 @@ export const useGameTestApi = (
                         },
                         titles: ['wanderer', 'cartographer', 'chain_master'],
                         activeTitle: 'cartographer',
+                        // effect/val: Relic은 effect가 판별자인 유니온이라 항상 필요하다.
+                        //   desc 문구에 맞춰 가장 가까운 실제 effect로 채웠다(SystemTab은
+                        //   desc 텍스트만 그대로 보여준다).
                         relics: [
                             {
                                 id: 'system-settings-smoke-compass',
                                 name: '길잡이의 나침반',
                                 rarity: 'rare',
                                 desc: '탐험 보상 +12%, 첫 이동 시 기력 8 회복',
+                                effect: 'drop_rate',
+                                val: 0.12,
                             },
                             {
                                 id: 'system-settings-smoke-feather',
                                 name: '바람깃 부적',
                                 rarity: 'uncommon',
                                 desc: '회피율 +4%',
+                                effect: 'first_turn_evade',
+                                val: 0.04,
                             },
                         ],
                         meta: {
@@ -959,17 +1276,26 @@ export const useGameTestApi = (
             },
             seedProgressionAcceptanceScenario: () => {
                 const er = engineRef.current;
-                const signatureWeapon = DB.ITEMS.weapons.find((item: any) => item.name === '마왕의 대낫');
-                const signatureArmor = DB.ITEMS.armors.find((item: any) => item.name === '암흑 군주의 망토');
+                const signatureWeapon = DB.ITEMS.weapons.find((item) => item.name === '마왕의 대낫');
+                const signatureArmor = DB.ITEMS.armors.find((item) => item.name === '암흑 군주의 망토');
                 if (!signatureWeapon || !signatureArmor) return false;
 
                 const discoveredWeapons = Object.fromEntries(
-                    DB.ITEMS.weapons.slice(0, 5).map((item: any) => [item.name, { discovered: true }]),
+                    DB.ITEMS.weapons.slice(0, 5).map((item) => [item.name, { discovered: true }]),
                 );
-                const relics = ['고대의 분노', '드래곤 발톱', '광전사의 분노'].map((name, index) => ({
+                // cycle W8-Z6: 3개 모두 실제 RELICS 항목이자 '원초의 분노' 시너지 요건
+                //   (requires 이름 3종 일치)이다 — 예전엔 {id,name,rarity:'legendary'}만
+                //   있는 가짜 객체였다(rarity도 실측과 다름: epic/epic/uncommon). Relic이
+                //   effect를 판별자로 하는 유니온이라 값을 손으로 다시 지어내지 않고
+                //   RELICS에서 그대로 찾아 쓴다(시너지는 이름 매칭이라 동작은 동일하다).
+                const relicNames = ['고대의 분노', '드래곤 발톱', '광전사의 분노'];
+                const foundRelics = relicNames
+                    .map((name) => RELICS.find((relic) => relic.name === name))
+                    .filter((relic): relic is Relic => relic !== undefined);
+                if (foundRelics.length !== relicNames.length) return false;
+                const relics = foundRelics.map((relic, index) => ({
+                    ...relic,
                     id: `progression-acceptance-relic-${index}`,
-                    name,
-                    rarity: 'legendary',
                 }));
 
                 er.dispatch({
@@ -1073,7 +1399,7 @@ export const useGameTestApi = (
                 const er = engineRef.current;
                 const dailyProtocol = createDailyProtocol(er.player, new Date());
                 dailyProtocol.relicShards = 4;
-                dailyProtocol.missions = dailyProtocol.missions.map((mission: any) => (
+                dailyProtocol.missions = dailyProtocol.missions.map((mission) => (
                     mission.type === 'goldSpend'
                         ? { ...mission, progress: mission.goal - 1 }
                         : mission
@@ -1096,8 +1422,8 @@ export const useGameTestApi = (
             seedExpeditionDebriefScenario: () => {
                 const er = engineRef.current;
                 const endedAt = Date.now();
-                const signatureWeapon = DB.ITEMS.weapons.find((item: any) => item.name === '성검 에테르니아');
-                const armor = DB.ITEMS.armors.find((item: any) => item.name === '기사의 흉갑');
+                const signatureWeapon = DB.ITEMS.weapons.find((item) => item.name === '성검 에테르니아');
+                const armor = DB.ITEMS.armors.find((item) => item.name === '기사의 흉갑');
                 if (!signatureWeapon || !armor) return false;
 
                 const level = 20;
@@ -1176,6 +1502,11 @@ export const useGameTestApi = (
                             bossNames: ['고대 호수의 수호신'],
                             signatureItems: ['성검 에테르니아'],
                             encounterDiscoveries: [encounterDiscoveryScenario],
+                            // ExpeditionSummary 필수 필드 — 생산자(startExpedition/endExpedition)는
+                            //   실제 진행 중이던 원정의 프로필을 싣는다. 이 시드는 원정을 거치지
+                            //   않고 결과만 직접 주입하므로, 이 파일이 이미 쓰는 기본 프로필을
+                            //   그대로 채운다(디브리핑 UI는 이 필드를 읽지 않는다).
+                            progressionProfile: EXPLORATION_RHYTHM_PROFILE,
                         },
                     },
                 });
@@ -1284,10 +1615,10 @@ export const useGameTestApi = (
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
-            seedCombatFocusScenario: (bossMode: any) => {
+            seedCombatFocusScenario: (bossMode: boolean) => {
                 const er = engineRef.current;
                 const isBoss = bossMode === true;
-                const testPotion = {
+                const testPotion: Item = {
                     id: 'smoke-combat-heal',
                     name: '회복 물약',
                     type: 'hp',
@@ -1295,7 +1626,7 @@ export const useGameTestApi = (
                     desc: '생명 50 회복',
                     desc_stat: '생명 50 회복',
                 };
-                const inv = (er.player.inv || []).some((item: any) => item.id === testPotion.id)
+                const inv = (er.player.inv || []).some((item) => item.id === testPotion.id)
                     ? er.player.inv
                     : [...(er.player.inv || []), testPotion];
                 const scenarioPatch = {
@@ -1345,7 +1676,7 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
                 return true;
             },
-            seedCombatSkillReadinessScenario: (mp: any) => {
+            seedCombatSkillReadinessScenario: (mp: number) => {
                 const er = engineRef.current;
                 if (er.gameState !== GS.COMBAT || !er.enemy) return false;
 
@@ -1359,7 +1690,7 @@ export const useGameTestApi = (
             //   caller (scripts/smoke-gameplay:305 seedAvatarScenario?.(preset.id))
             //   1 arg 명시 전달이라 default 도달 불가. cycle 593 dead exposure
             //   pivot에 이은 동일 모듈 default cleanup.
-            seedAvatarScenario: (preset: any) => {
+            seedAvatarScenario: (preset: string) => {
                 const er = engineRef.current;
                 const scenario = avatarScenarioMap[preset];
                 if (!scenario) return false;
@@ -1384,25 +1715,44 @@ export const useGameTestApi = (
                 return true;
             },
             injectPostCombatResult: () => {
+                // 생산자(combatVictory.ts)가 항상 채우는 필드 중 이 QA 시드가 원래
+                //   생략하던 부분의 기본값 — hpLow/mpLow를 seed가 명시하므로
+                //   getPostCombatAnalysis/Recommendation은 playerHp/playerMaxHp/
+                //   playerMp/playerMaxMp를 읽지 않는다(등급·추천 문구 동일 유지).
+                //   enemyTier/primaryBuild는 분석기의 `|| 기본값` 폴백과 같은 값이다.
+                const defaults = {
+                    enemyTier: 'NORMAL' as const,
+                    isBoss: false,
+                    playerHp: 100,
+                    playerMaxHp: 100,
+                    playerMp: 50,
+                    playerMaxMp: 50,
+                    primaryBuild: '균형 잡힌 성장',
+                    enemyWeakness: null,
+                    enemyResistance: null,
+                    bossRewardHint: null,
+                    bossClearBonus: 0,
+                };
+                const seed: Partial<PostCombatResult> = {
+                    enemy: '테스트 골렘',
+                    exp: 22,
+                    gold: 18,
+                    items: ['룬 마도서', '강철 롱소드'],
+                    leveledUp: false,
+                    hpLow: false,
+                    mpLow: false,
+                    invFull: false,
+                    upgradeHint: { name: '강철 롱소드', summary: '공격력 +4 / 방어력 +1' },
+                    traitHint: { name: '룬 마도서', summary: '비전 성향과 잘 맞는 전리품입니다.' },
+                };
                 engineRef.current.dispatch({
                     type: AT.SET_POST_COMBAT_RESULT,
-                    payload: {
-                        enemy: '테스트 골렘',
-                        exp: 22,
-                        gold: 18,
-                        items: ['룬 마도서', '강철 롱소드'],
-                        leveledUp: false,
-                        hpLow: false,
-                        mpLow: false,
-                        invFull: false,
-                        upgradeHint: { name: '강철 롱소드', summary: '공격력 +4 / 방어력 +1' },
-                        traitHint: { name: '룬 마도서', summary: '비전 성향과 잘 맞는 전리품입니다.' },
-                    },
+                    payload: { ...defaults, ...seed } as PostCombatResult,
                 });
             },
             injectRelicChoice: () => {
                 const er = engineRef.current;
-                const fortressRelic = RELICS.find((relic: any) => relic.effect === 'fortress');
+                const fortressRelic = RELICS.find((relic) => relic.effect === 'fortress');
                 if (!fortressRelic) return false;
                 er.dispatch({
                     type: AT.SET_PLAYER,
@@ -1425,16 +1775,20 @@ export const useGameTestApi = (
                 er.dispatch({
                     type: AT.SET_PENDING_RELICS,
                     payload: [
-                        { id: 'test_relic_amber', name: '황혼의 파편', desc: '치명타 확률 +3%, 휴식 비용 -10%', rarity: 'epic', effect: 'crit_mp_regen' },
+                        // val: NumericRelic은 effect가 판별자인 유니온이라 val이 필수다.
+                        //   실제 'bloodthirst'/'mind_burn'(같은 effect)의 val 크기와 맞췄다.
+                        { id: 'test_relic_amber', name: '황혼의 파편', desc: '치명타 확률 +3%, 휴식 비용 -10%', rarity: 'epic', effect: 'crit_mp_regen', val: 15 },
                         fortressRelic,
-                        { id: 'test_relic_violet', name: '균열의 서판', desc: '기술 피해 18% 증가', rarity: 'rare', effect: 'skill_mult' },
+                        { id: 'test_relic_violet', name: '균열의 서판', desc: '기술 피해 18% 증가', rarity: 'rare', effect: 'skill_mult', val: 0.18 },
                     ],
                 });
             },
             injectUndyingRelicChoice: () => {
-                const choices = ['undying', 'blood_pact', 'twin_blades']
-                    .map((id) => RELICS.find((relic) => relic.id === id));
-                if (choices.some((relic) => !relic)) return;
+                const ids = ['undying', 'blood_pact', 'twin_blades'];
+                const choices = ids
+                    .map((id) => RELICS.find((relic) => relic.id === id))
+                    .filter((relic): relic is Relic => relic !== undefined);
+                if (choices.length !== ids.length) return;
                 engineRef.current.dispatch({
                     type: AT.SET_PENDING_RELICS,
                     payload: choices,
@@ -1452,9 +1806,11 @@ export const useGameTestApi = (
                 };
             },
             injectFreeSkillRelicChoice: () => {
-                const choices = ['spell_echo', 'time_ring', 'mana_crystal']
-                    .map((id) => RELICS.find((relic) => relic.id === id));
-                if (choices.some((relic) => !relic)) return;
+                const ids = ['spell_echo', 'time_ring', 'mana_crystal'];
+                const choices = ids
+                    .map((id) => RELICS.find((relic) => relic.id === id))
+                    .filter((relic): relic is Relic => relic !== undefined);
+                if (choices.length !== ids.length) return;
                 engineRef.current.dispatch({
                     type: AT.SET_PENDING_RELICS,
                     payload: choices,
@@ -1471,7 +1827,7 @@ export const useGameTestApi = (
                         .filter((relic: Relic) => relic.id === 'spell_echo').length,
                 };
             },
-            injectGoldMultiplierCombat: (order: any) => {
+            injectGoldMultiplierCombat: (order: unknown) => {
                 if (order !== 'gold-magnet-first' && order !== 'merchant-seal-first') return false;
                 const goldMagnet = RELICS.find((relic) => relic.id === 'gold_magnet');
                 const merchantSeal = RELICS.find((relic) => relic.id === 'merchant_seal');
@@ -1538,9 +1894,11 @@ export const useGameTestApi = (
                 };
             },
             injectEventChanceRelicChoice: () => {
-                const choices = ['ancient_map', 'wanderer_charm', 'mana_crystal']
-                    .map((id) => RELICS.find((relic) => relic.id === id));
-                if (choices.some((relic) => !relic)) return false;
+                const ids = ['ancient_map', 'wanderer_charm', 'mana_crystal'];
+                const choices = ids
+                    .map((id) => RELICS.find((relic) => relic.id === id))
+                    .filter((relic): relic is Relic => relic !== undefined);
+                if (choices.length !== ids.length) return false;
                 const er = engineRef.current;
                 er.dispatch({
                     type: AT.SET_PLAYER,
@@ -1556,9 +1914,11 @@ export const useGameTestApi = (
                 const er = engineRef.current;
                 const hasWandererCharm = (er.player.relics || [])
                     .some((relic: Relic) => relic.id === 'wanderer_charm');
-                const choices = ['ancient_map', 'mana_crystal', 'stone_skin']
-                    .map((id) => RELICS.find((relic) => relic.id === id));
-                if (!hasWandererCharm || choices.some((relic) => !relic)) return false;
+                const ids = ['ancient_map', 'mana_crystal', 'stone_skin'];
+                const choices = ids
+                    .map((id) => RELICS.find((relic) => relic.id === id))
+                    .filter((relic): relic is Relic => relic !== undefined);
+                if (!hasWandererCharm || choices.length !== ids.length) return false;
                 er.dispatch({
                     type: AT.SET_PENDING_RELICS,
                     payload: choices,
@@ -1606,24 +1966,31 @@ export const useGameTestApi = (
                 const transactionId = 'fallback:suspicious-merchant-wager:v1';
                 er.dispatch({
                     type: AT.SET_PLAYER,
-                    payload: (player: any) => ({
+                    payload: (player: Player) => ({
                         ...player,
                         gold: mode === 'boundary' ? 500 : 499,
                     }),
                 });
+                const fallbackEvent = getStructuredFallbackPoolEvent(transactionId);
                 er.dispatch({
                     type: AT.SET_EVENT,
+                    // getStructuredFallbackPoolEvent(data/structuredFallbackEvents.ts, 이
+                    //   트랙 밖)가 Object.freeze로 감싸 돌려주는 값이라 choices/outcomes가
+                    //   readonly다 — 얕은 스프레드로 새 mutable 배열을 만들어 GameEvent에
+                    //   맞춘다(참조만 새로 만들 뿐 값은 동일해 동작은 그대로다).
                     payload: {
-                        ...getStructuredFallbackPoolEvent(transactionId),
+                        ...fallbackEvent,
+                        choices: [...fallbackEvent.choices],
+                        outcomes: [...fallbackEvent.outcomes] as GameEvent['outcomes'],
                         source: 'fallback',
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 return true;
             },
-            seedBoundedEncounterScenario: (region: any, encounterId: any) => {
+            seedBoundedEncounterScenario: (region: string, encounterId: string) => {
                 const er = engineRef.current;
-                const encounter = BOUNDED_ENCOUNTERS.find((entry: any) => (
+                const encounter = BOUNDED_ENCOUNTERS.find((entry) => (
                     entry.id === encounterId && entry.region === region
                 ));
                 if (!encounter) return false;
@@ -1636,7 +2003,10 @@ export const useGameTestApi = (
                         ...(basePlayer.stats?.codex || {}),
                         weapons: {
                             ...(basePlayer.stats?.codex?.weapons || {}),
-                            '성검 에테르니아': true,
+                            // CodexEntry 도메인 shape — 실제 producer(registerCodex)와
+                            //   같은 모양(discovered: true)으로 맞췄다(이전엔 boolean만
+                            //   직접 대입해 CodexEntry 타입과 맞지 않았다).
+                            '성검 에테르니아': { discovered: true },
                         },
                     }
                     : basePlayer.stats?.codex;
@@ -1644,22 +2014,22 @@ export const useGameTestApi = (
                     ? {
                         job: '전사',
                         equip: {
-                            weapon: DB.ITEMS.weapons.find((item: any) => item.name === '롱소드'),
+                            weapon: DB.ITEMS.weapons.find((item) => item.name === '롱소드'),
                             armor: null,
-                            offhand: DB.ITEMS.armors.find((item: any) => item.name === '목재 방패'),
+                            offhand: DB.ITEMS.armors.find((item) => item.name === '목재 방패'),
                         },
                     }
                     : encounter.id === 'plain-windpath-stance'
                         ? {
                             job: '전사',
                             equip: {
-                                weapon: DB.ITEMS.weapons.find((item: any) => item.name === '양손검'),
+                                weapon: DB.ITEMS.weapons.find((item) => item.name === '양손검'),
                                 armor: null,
                                 offhand: null,
                             },
                         }
                         : null;
-                const seededPlayer: any = {
+                const seededPlayer: Player = {
                     ...basePlayer,
                     name: '지역 사건 검증',
                     job: buildFixture?.job || encounter.eligibility.lineage?.[0] || '모험가',

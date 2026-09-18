@@ -634,8 +634,11 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/hooks/useGameTestApi.ts');
       assert.ok(/sanitizeValue\(entry,\s*depth \+ 1\)/.test(source),
           'recursion sanitizeValue(entry, depth + 1) 보존');
-      assert.ok(/sanitizeValue\(value\[key\],\s*depth \+ 1\)/.test(source),
-          'recursion sanitizeValue(value[key], depth + 1) 보존');
+      // W8-Z6: value: unknown이 된 뒤 `object`로는 인덱싱할 수 없어 `record[key]`로
+      //   이름을 바꿨다(같은 `value`를 `as Record<string, unknown>`로만 다시 본 것 —
+      //   재귀 자체의 동작은 그대로다).
+      assert.ok(/sanitizeValue\(record\[key\],\s*depth \+ 1\)/.test(source),
+          'recursion sanitizeValue(record[key], depth + 1) 보존');
   });
 
   test('cycle 615: cycle 502-614 회귀 가드 — default 청소 시리즈 보존', async () => {

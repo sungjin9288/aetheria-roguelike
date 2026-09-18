@@ -68,12 +68,14 @@ test.describe('계승과 다음 여정 화면', () => {
     });
 
     test('계승을 미루면 현재 여정과 성장 상태를 그대로 유지한다', async ({ page }) => {
-        const before = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.());
+        // W8-Z6: AetheriaTestApi 도입 후 getAscensionSnapshot()의 반환은 `| undefined`
+        //   (옵셔널 체이닝) — e2e 실행 중엔 항상 존재하므로 non-null로 좁혀 받는다.
+        const before = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()))!;
 
         await page.getByTestId('ascension-cancel').click();
         await expect(page.getByTestId('ascension-screen')).toBeHidden();
 
-        const after = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.());
+        const after = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()))!;
         expect(after.gameState).toBe('idle');
         expect(after.level).toBe(before.level);
         expect(after.prestigeRank).toBe(before.prestigeRank);
@@ -86,7 +88,7 @@ test.describe('계승과 다음 여정 화면', () => {
         await page.getByTestId('ascension-confirm').click();
         await expect(page.getByTestId('ascension-screen')).toBeHidden();
 
-        const after = await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.());
+        const after = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()))!;
         expect(after.gameState).toBe('idle');
         expect(after.name).toBe('리베아');
         expect(after.level).toBe(1);

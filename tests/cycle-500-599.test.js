@@ -4618,9 +4618,11 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 594: 활성 Window 타입 보존 (회귀 가드)', async () => {
       const source = await readSrc('src/vite-env.d.ts');
-      assert.ok(/render_game_to_text\?:\s*any/.test(source),
+      // W8-Z6: render_game_to_text/__AETHERIA_TEST_API__의 `: any`를 닫았다 —
+      //   필드 자체(smoke/perf 스크립트가 쓰는 active 멤버)는 보존한다.
+      assert.ok(/render_game_to_text\?:\s*\(\)\s*=>\s*string/.test(source),
           'render_game_to_text 타입 보존 (smoke/perf 스크립트 active)');
-      assert.ok(/__AETHERIA_TEST_API__\?:\s*any/.test(source),
+      assert.ok(/__AETHERIA_TEST_API__\?:\s*import\('\.\/hooks\/useGameTestApi\.js'\)\.AetheriaTestApi/.test(source),
           '__AETHERIA_TEST_API__ 타입 보존');
       assert.ok(/__AETHERIA_PERF_REGISTRY__\?:\s*PerfRegistry/.test(source),
           '__AETHERIA_PERF_REGISTRY__ 타입 보존');
