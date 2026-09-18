@@ -103,7 +103,9 @@ const runExplorePostDecisionRoll = async (
                 buildProfile: getRunBuildProfile(player, fullStats).tags.map((tag) => tag.name).slice(0, 4)
             };
             const playerSnapshot = enrichSnapshotWithDifficulty(baseSnapshot, player);
-            const eventData = await AI_SERVICE.generateEvent(player.loc, player.history || [], uid, {
+            // W8-Z4: generateEvent(aiService.ts)의 loc이 string(non-optional)으로 닫혔다 —
+            //   탐험 중엔 player.loc이 항상 채워져 있다.
+            const eventData = await AI_SERVICE.generateEvent(player.loc || '', player.history || [], uid, {
                 playerSnapshot,
                 mapSnapshot: {
                     name: player.loc, type: mapData.type, level: mapData.level,

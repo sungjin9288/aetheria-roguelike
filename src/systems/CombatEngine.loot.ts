@@ -20,6 +20,17 @@ export type LootResult = {
     logs: LootLog[];
 };
 
+/**
+ * DROP_TABLES(dropTables.ts)/LOOT_TABLE(loot.ts) 엔트리 — 두 데이터 파일 모두
+ * 타입 없이(loose) export되어(외부 파일이라 이 wave 범위 밖) 이 경계에서 타입을 좁힌다.
+ * `qty`는 [min, max] 튜플로 실측(dropTables.ts) — 미정의 시 1개.
+ */
+interface DropTableEntry {
+    item: string;
+    rate: number;
+    qty?: [number, number];
+}
+
 const normalBonusPool = (enemy: Monster, player: Player | null): Item[] | null => {
     const map = player?.loc ? DB.MAPS[player.loc] : undefined;
     const name = enemy.baseName || enemy.name;
@@ -86,7 +97,7 @@ export const resolveEnemyBaseName = (enemy: Monster) => {
 export const processLoot = (
     enemy: Monster,
     player: Player | null,
-    signaturePityMult: any,
+    signaturePityMult: number,
     rng?: () => number,
     now?: () => number,
 ): LootResult => {
@@ -103,13 +114,13 @@ export const processLoot = (
     const pityMult = Number.isFinite(signaturePityMult) && signaturePityMult > 0 ? signaturePityMult : 1.0;
     const progressionLootMult = getProgressionLootMultiplier(player);
     const enemyDropMult = enemy.dropMod || 1.0;
-    const enrichedList = DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string];
-    const lootList = LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string];
+    const enrichedList = (DROP_TABLES[lootKey as string] || DROP_TABLES[enemy.name as string]) as DropTableEntry[] | undefined;
+    const lootList = (LOOT_TABLE[lootKey as string] || LOOT_TABLE[enemy.name as string]) as string[] | undefined;
     const inferredLevel = Math.max(1, Math.floor(((enemy.exp || BALANCE.LOOT_BASE_EXP) - BALANCE.LOOT_BASE_EXP) / BALANCE.LOOT_EXP_LEVEL_DIVISOR));
 
     if (!Number.isFinite(dropRateMult)) throw new Error('INVALID_LOOT_DROP_CHANCE');
     if (enrichedList) {
-        enrichedList.forEach((entry: any) => {
+        enrichedList.forEach((entry) => {
             const entryPityMult = SIGNATURE_ITEM_REGISTRY[entry.item] ? pityMult : 1;
             calculateCappedLootChance(entry.rate, enemyDropMult, dropRateMult, bossDropMult, progressionLootMult, entryPityMult);
         });
@@ -130,7 +141,7 @@ export const processLoot = (
     if (enemy?.isBoss && getPrestigeUnlocks(player?.meta?.prestigeRank).guaranteedRareBossDrop) {
         const inferredLvl = Math.max(1, Math.floor(((enemy.exp || BALANCE.LOOT_BASE_EXP) - BALANCE.LOOT_BASE_EXP) / BALANCE.LOOT_EXP_LEVEL_DIVISOR));
         const rareTier = inferredLvl >= 50 ? 6 : inferredLvl >= 40 ? 5 : 4;
-        const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === rareTier);
+        const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i) => (i.tier || 1) === rareTier);
         if (pool.length > 0) {
             const picked = pool[Math.floor(random() * pool.length)];
             const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
@@ -143,7 +154,7 @@ export const processLoot = (
 
     // 강화 드롭 테이블 우선 참조
     if (enrichedList) {
-        enrichedList.forEach((entry: any) => {
+        enrichedList.forEach((entry) => {
             // Signature 아이템에만 pity 배율 적용 (일반 아이템 드롭률은 변동 없음)
             const isSignature = Boolean(SIGNATURE_ITEM_REGISTRY[entry.item]);
             const entryPityMult = isSignature ? pityMult : 1;
@@ -156,7 +167,7 @@ export const processLoot = (
                 entryPityMult,
             );
             if (random() < chance) {
-                const itemData = allItems.find((i: any) => i.name === entry.item);
+                const itemData = allItems.find((i) => i.name === entry.item);
                 if (!itemData) return;
                 const qty = entry.qty ? (entry.qty[0] + Math.floor(random() * (entry.qty[1] - entry.qty[0] + 1))) : 1;
                 for (let q = 0; q < qty; q++) {
@@ -179,7 +190,7 @@ export const processLoot = (
     // cycle 171: 기존에는 lootList 없으면 early return으로 보너스 드랍 로직까지 차단됐음.
     //   non-boss 104종(drop/loot 둘 다 없음)이 고레벨이어도 빈손 회귀 fix.
     if (lootList && lootList.length > 0) {
-        lootList.forEach((itemName: any) => {
+        lootList.forEach((itemName) => {
             const chance = calculateCappedLootChance(
                 BALANCE.DROP_CHANCE,
                 enemyDropMult,
@@ -188,7 +199,7 @@ export const processLoot = (
                 progressionLootMult,
             );
             if (random() < chance) {
-                const itemData = allItems.find((i: any) => i.name === itemName);
+                const itemData = allItems.find((i) => i.name === itemName);
                 if (!itemData) return;
 
                 const baseItem = withCanonicalEquipmentBaseIdentity({ ...itemData, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });
@@ -208,7 +219,7 @@ export const processLoot = (
         const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
         if (random() < calculateCappedLootChance(bonusChance, dropRateMult, bossDropMult, progressionLootMult)) {
             const tierPool = normalBonusPool(enemy, player)
-                ?? [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i: any) => (i.tier || 1) === bonusTier);
+                ?? [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i) => (i.tier || 1) === bonusTier);
             if (tierPool.length > 0) {
                 const picked = tierPool[Math.floor(random() * tierPool.length)];
                 const baseItem = withCanonicalEquipmentBaseIdentity({ ...picked, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` });

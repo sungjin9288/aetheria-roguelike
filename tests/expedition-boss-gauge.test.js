@@ -384,7 +384,7 @@ test('combatVictory: 구역 보스(mapData.boss 이름 일치) 격파 시 EXPEDI
     const source = await readSrc('src/hooks/combatActions/combatVictory.ts');
     assert.ok(/MSG\.EXPEDITION_CLEAR_RECAP/.test(source),
         'combatVictory.ts가 EXPEDITION_CLEAR_RECAP 메시지를 사용');
-    assert.ok(/DB\.MAPS\[updatedPlayer\.loc\]\?\.boss/.test(source),
+    assert.ok(/DB\.MAPS\[updatedPlayer\.loc(\s*\|\|\s*'')?\]\?\.boss/.test(source),
         '현재 맵의 boss 필드와 처치한 보스 이름을 비교해 구역 보스 여부 판정');
 });
 

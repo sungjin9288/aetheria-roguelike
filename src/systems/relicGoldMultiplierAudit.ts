@@ -49,7 +49,9 @@ const numericValue = (relic: Relic | undefined) => (
 const makePlayer = (relics: readonly Relic[]) => ({
     level: 1,
     gold: 0,
-    relics,
+    // W8-Z4: handleVictory(CombatEngine.outcome.ts)가 `Player.relics: Relic[]`(mutable)를
+    //   요구하게 됐다 — readonly 파라미터는 그대로 두고 호출 경계에서만 얕은 복사.
+    relics: [...relics],
     stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0 },
 });
 

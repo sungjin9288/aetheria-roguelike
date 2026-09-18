@@ -50,7 +50,9 @@ export const resolveCombatItemTurn = ({
     }
     const turnTick = CombatEngine.tickCombatState(consumed.player);
     const playerForEnemyTurn = turnTick.updatedPlayer;
-    const counterStats = calculateFullStats(playerForEnemyTurn);
+    // W8-Z4: enemyAttack(CombatEngine.enemyAI.ts)이 any 타입에서 벗어나 stats로 FullStats(non-null)를
+    //   요구하게 됐다 — calculateFullStats(player)는 `!player`일 때만 null이라 이 경로는 항상 non-null.
+    const counterStats = calculateFullStats(playerForEnemyTurn)!;
     const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, enemy, counterStats, random);
     const logs = [consumed.log, ...turnTick.logs, ...counterResult.logs];
 

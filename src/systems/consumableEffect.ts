@@ -141,11 +141,9 @@ export const resolveConsumableEffect = ({ player, item }: { player: Player; item
         //   Set.has()는 값 비교만 하고 타입 단언에 영향받지 않는다).
         const cureEffect = item.effect as StatusId;
         if (!CURE_EFFECTS.has(cureEffect)) return rejection(player, 'INVALID_ITEM');
-        // Player.status는 닫힌 StatusId[] 계약이지만, 이 스칼라 승격 분기는 그 계약 이전의
-        // 구형 저장 데이터(status가 배열이 아닌 문자열)를 방어한다 — dataMigration.ts의
-        // W2(cycle 381) 로드 시점 정규화가 이미 배열로 승격시키므로 오늘 기준 도달 불가에
-        // 가깝지만, 시그니처 호환을 위해 원래 방어 분기를 그대로 두고 결과만 캐스트한다.
-        const status = (Array.isArray(player.status) ? player.status : player.status ? [player.status] : []) as StatusId[];
+        // Player.status: StatusId[] | undefined로 닫혀 있고, dataMigration.ts가 로드 시점에
+        // 레거시 스칼라를 이미 배열로 승격시킨다 — `?? []`가 타입상 동치다.
+        const status: StatusId[] = player.status ?? [];
         if (!status.includes(cureEffect)) return rejection(player, 'STATUS_ABSENT');
         return {
             ok: true,

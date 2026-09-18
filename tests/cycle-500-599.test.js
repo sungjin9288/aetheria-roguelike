@@ -2462,11 +2462,11 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 545: 정합성 가드 — pickFallbackEvent RNG + getQuestReason callsite 보존', async () => {
       const ai = await readSrc('src/services/aiService.ts');
       assert.ok(
-          /typeof rng === 'function'\) return pickFallbackEvent\(loc,\s*history,\s*context,\s*rng\)/.test(ai),
+          /typeof rng === 'function'\) return pickFallbackEvent\(loc,\s*history,\s*context(?:\s+as\s+EventContext)?,\s*rng\)/.test(ai),
           'aiService seeded pickFallbackEvent callsite 보존',
       );
       assert.ok(
-          /return pickFallbackEvent\(loc,\s*history,\s*context\)/.test(ai),
+          /return pickFallbackEvent\(loc,\s*history,\s*context(?:\s+as\s+EventContext)?\)/.test(ai),
           'aiService default pickFallbackEvent behavior 보존',
       );
 
@@ -3145,7 +3145,7 @@ import { readFile, readdir } from 'node:fs/promises';
           'buildEventPackage 정의 보존');
 
       const ai = await readSrc('src/services/aiService.ts');
-      assert.ok(/buildEventPackage\(result\.data, \{ \.\.\.context, location: loc, source: 'ai' \}\)/.test(ai),
+      assert.ok(/buildEventPackage\(result\.data, \{ \.\.\.context, location: loc, source: 'ai' \}(?:\s+as\s+EventContext)?\)/.test(ai),
           'aiService buildEventPackage callsite 보존');
   });
 

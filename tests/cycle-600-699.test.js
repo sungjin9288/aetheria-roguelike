@@ -298,14 +298,14 @@ import { readFile } from 'node:fs/promises';
   test('cycle 606: 정합성 가드 — exploreActions callsite 보존', async () => {
       const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
       // Wave 6 X1: history가 `EventHistoryEntry[] | undefined`로 닫히면서 `|| []`로 좁혀졌다.
-      assert.ok(/AI_SERVICE\.generateEvent\(player\.loc,\s*player\.history(\s*\|\|\s*\[\])?,\s*uid,/.test(source),
+      assert.ok(/AI_SERVICE\.generateEvent\(player\.loc(\s*\|\|\s*'')?,\s*player\.history(\s*\|\|\s*\[\])?,\s*uid,/.test(source),
           'exploreActions AI_SERVICE.generateEvent 4-arg callsite 보존');
   });
 
   test('cycle 606: body isMockRuntime / pickFallbackEvent 보존', async () => {
       const source = await readSrc('src/services/aiService.ts');
       assert.ok(/if \(isMockRuntime\(\)\)/.test(source), 'isMockRuntime 가드 보존');
-      assert.ok(/return pickFallbackEvent\(loc,\s*history,\s*context\)/.test(source),
+      assert.ok(/return pickFallbackEvent\(loc,\s*history,\s*context(?:\s+as\s+EventContext)?\)/.test(source),
           'pickFallbackEvent(loc, history, context) 호출 보존');
   });
 
@@ -1149,7 +1149,7 @@ import { readFile } from 'node:fs/promises';
           'handleVictory passiveBonus default {} 제거');
       assert.ok(!/handleVictory\([^)]*liveConfig:\s*any\s*=\s*\{\}/.test(source),
           'handleVictory liveConfig default {} 제거');
-      assert.ok(/handleVictory\(player: Player, enemy: Monster, passiveBonus: any, liveConfig: any\)/.test(source),
+      assert.ok(/handleVictory\(player,\s*enemy,\s*passiveBonus,\s*liveConfig\)/.test(source),
           'handleVictory 시그니처 4-arg 보존 (default 없이)');
   });
 
@@ -1215,7 +1215,7 @@ import { readFile } from 'node:fs/promises';
       const source = await readSrc('src/services/aiService.ts');
       assert.ok(!/generateStory:\s*async\s*\([^)]*uid:\s*any\s*=\s*'anonymous'\)/.test(source),
           "generateStory uid default 'anonymous' 제거");
-      assert.ok(/generateStory:\s*async\s*\(type:\s*any,\s*data:\s*any,\s*uid:\s*any\)/.test(source),
+      assert.ok(/generateStory:\s*async\s*\(type:\s*string,\s*data:\s*AiFallbackData,\s*uid:\s*string\s*\|\s*null\)/.test(source),
           'generateStory uid 파라미터 보존 (default 없이)');
   });
 

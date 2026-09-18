@@ -16,11 +16,25 @@ const compareText = (left: string, right: string) => (
     left < right ? -1 : left > right ? 1 : 0
 );
 
-const itemCatalog = (items: any) => new Map(
+/**
+ * 이 감사가 받는 입력은 5개 데이터 파일(eventChains/boundedEncounters/
+ * structuredFallbackEvents/maps/items/relics) + 2개 빌더(campfireEvent/scoutEvent) 산출물이다.
+ * 전부 `Array.isArray`/`typeof`로 방어적으로 파싱하므로(런타임 계약이 곧 이 파일의 목적) 이 계약이
+ * 이 파일의 타입이다 — 리프 값은 `unknown`(검증 전이라 확정 불가), 컨테이너는 얕은 형태만 선언한다.
+ * (`Array.isArray(x) ? x : []`가 변수 어노테이션 없이는 표준 lib 타입상 전체가 `any`로
+ * 뭉개져 콜백 파라미터 noImplicitAny를 유발하므로, 아래 모든 그런 자리는 선언된 배열 타입을 갖는다.)
+ */
+interface ItemCatalogEntry {
+    name: string;
+    tier?: unknown;
+    [key: string]: unknown;
+}
+
+const itemCatalog = (items: Record<string, unknown> | undefined): Map<string, ItemCatalogEntry> => new Map(
     Object.values(items || {})
-        .flatMap((bucket) => Array.isArray(bucket) ? bucket : [])
-        .filter((item: any) => typeof item?.name === 'string')
-        .map((item: any) => [item.name, item]),
+        .flatMap((bucket): ItemCatalogEntry[] => Array.isArray(bucket) ? bucket : [])
+        .filter((item) => typeof item?.name === 'string')
+        .map((item): [string, ItemCatalogEntry] => [item.name, item]),
 );
 
 const highestAvailableTier = (level: number) => (
@@ -30,6 +44,84 @@ const highestAvailableTier = (level: number) => (
 );
 
 const isFiniteNumber = (value: unknown) => typeof value === 'number' && Number.isFinite(value);
+
+interface ChainRewardInput {
+    type?: string;
+    name?: string;
+    relicId?: string;
+    [field: string]: unknown;
+}
+
+interface ChainOutcomeInput {
+    type?: string;
+    reward?: ChainRewardInput | null;
+}
+
+interface ChainStepInput {
+    step?: number;
+    loc?: string;
+    event?: {
+        choices?: unknown[];
+        outcomes?: ChainOutcomeInput[];
+    };
+}
+
+interface EventChainInput {
+    id?: string;
+    steps?: ChainStepInput[];
+}
+
+interface MapEntryInput {
+    level?: unknown;
+    boss?: unknown;
+    monsters?: unknown;
+}
+
+interface BoundedChoiceInput {
+    id?: string;
+    cost?: Record<string, unknown>;
+    outcome?: { item?: string; gold?: unknown; buff?: unknown } & Record<string, unknown>;
+}
+
+interface BoundedEncounterInput {
+    id?: string;
+    region?: string;
+    choices?: BoundedChoiceInput[];
+}
+
+interface FallbackTransactionInput {
+    id?: unknown;
+    cost?: { type?: string; amount?: unknown };
+    grossGold?: unknown;
+    netGold?: unknown;
+}
+
+interface BuiltEventOutcome {
+    scoutEffect?: unknown;
+    buff?: unknown;
+}
+
+interface ChoiceOutcomeEvent {
+    choices?: unknown[];
+    outcomes?: BuiltEventOutcome[];
+}
+
+interface EventRewardCoherenceInput {
+    chains?: unknown;
+    boundedEncounters?: unknown;
+    fallbackTransactions?: unknown;
+    campfireEvent?: ChoiceOutcomeEvent | null;
+    scoutEvent?: ChoiceOutcomeEvent | null;
+    maps?: Record<string, MapEntryInput>;
+    items?: Record<string, unknown>;
+    relics?: unknown;
+    frequency?: {
+        scoutChance?: unknown;
+        campfireChance?: unknown;
+        eventMultiplier?: unknown;
+        minimumNarrativeGap?: unknown;
+    };
+}
 
 export interface EventRewardCoherenceReport {
     schemaVersion: 1;
@@ -75,14 +167,15 @@ export const buildEventRewardCoherenceReport = ({
     items,
     relics,
     frequency,
-}: any): EventRewardCoherenceReport => {
+}: EventRewardCoherenceInput): EventRewardCoherenceReport => {
     const errors = new Set<string>();
     const rows: Array<Record<string, unknown>> = [];
     const knownItems = itemCatalog(items);
-    const knownRelics = new Set((Array.isArray(relics) ? relics : []).map((relic) => relic?.id));
-    const chainList = Array.isArray(chains) ? chains : [];
-    const boundedList = Array.isArray(boundedEncounters) ? boundedEncounters : [];
-    const fallbackList = Array.isArray(fallbackTransactions) ? fallbackTransactions : [];
+    const relicList: Array<{ id?: string }> = Array.isArray(relics) ? relics : [];
+    const knownRelics = new Set(relicList.map((relic) => relic?.id));
+    const chainList: EventChainInput[] = Array.isArray(chains) ? chains : [];
+    const boundedList: BoundedEncounterInput[] = Array.isArray(boundedEncounters) ? boundedEncounters : [];
+    const fallbackList: FallbackTransactionInput[] = Array.isArray(fallbackTransactions) ? fallbackTransactions : [];
 
     let chainStepCount = 0;
     let chainOutcomeCount = 0;
@@ -91,28 +184,28 @@ export const buildEventRewardCoherenceReport = ({
         const chainId = typeof chain?.id === 'string' ? chain.id : '<invalid>';
         if (chainIds.has(chainId)) errors.add(`CHAIN_ID_DUPLICATE:${chainId}`);
         chainIds.add(chainId);
-        const steps = Array.isArray(chain?.steps) ? chain.steps : [];
+        const steps: ChainStepInput[] = Array.isArray(chain?.steps) ? chain.steps : [];
         chainStepCount += steps.length;
-        steps.forEach((stepData: any, stepIndex: number) => {
+        steps.forEach((stepData, stepIndex: number) => {
             const step = stepData?.step;
             if (step !== stepIndex) errors.add(`CHAIN_STEP_INVALID:${chainId}:${String(step)}`);
             const location = stepData?.loc;
-            const map = maps?.[location];
+            const map = maps?.[location ?? ''];
             if (!map) errors.add(`CHAIN_LOCATION_UNKNOWN:${chainId}:${String(step)}:${String(location)}`);
-            const choices = Array.isArray(stepData?.event?.choices) ? stepData.event.choices : [];
-            const outcomes = Array.isArray(stepData?.event?.outcomes) ? stepData.event.outcomes : [];
+            const choices: unknown[] = Array.isArray(stepData?.event?.choices) ? stepData.event.choices : [];
+            const outcomes: ChainOutcomeInput[] = Array.isArray(stepData?.event?.outcomes) ? stepData.event.outcomes : [];
             if (choices.length !== outcomes.length || choices.length < 2) {
                 errors.add(`CHAIN_CHOICE_OUTCOME_MISMATCH:${chainId}:${String(step)}`);
             }
             chainOutcomeCount += outcomes.length;
-            outcomes.forEach((outcome: any, choiceIndex: number) => {
+            outcomes.forEach((outcome, choiceIndex: number) => {
                 const id = `chain:${chainId}:${String(step)}:${choiceIndex}`;
                 const reward = outcome?.reward;
                 const rewardType = reward?.type ?? null;
-                if (!CHAIN_OUTCOME_TYPES.has(outcome?.type)) {
+                if (!CHAIN_OUTCOME_TYPES.has(String(outcome?.type))) {
                     errors.add(`CHAIN_OUTCOME_TYPE_INVALID:${chainId}:${String(step)}:${choiceIndex}`);
                 }
-                if (reward && !CHAIN_REWARD_TYPES.has(rewardType)) {
+                if (reward && !CHAIN_REWARD_TYPES.has(String(rewardType))) {
                     errors.add(`CHAIN_REWARD_TYPE_INVALID:${chainId}:${String(step)}:${choiceIndex}:${String(rewardType)}`);
                 }
                 if (reward) {
@@ -131,7 +224,7 @@ export const buildEventRewardCoherenceReport = ({
                     errors.add(`CHAIN_ITEM_UNKNOWN:${chainId}:${String(step)}:${choiceIndex}:${itemName}`);
                 }
                 if (item && Number.isFinite(Number(map?.level)) && Number.isFinite(Number(item.tier))) {
-                    const expectedMinimum = Math.max(1, highestAvailableTier(Number(map.level)) - 1);
+                    const expectedMinimum = Math.max(1, highestAvailableTier(Number(map?.level)) - 1);
                     if (Number(item.tier) < expectedMinimum) {
                         errors.add(
                             `CHAIN_ITEM_TIER_TOO_LOW:${chainId}:${String(step)}:${choiceIndex}:${itemName}:T${String(item.tier)}:MIN_T${expectedMinimum}`,
@@ -164,14 +257,18 @@ export const buildEventRewardCoherenceReport = ({
         const encounterId = typeof encounter?.id === 'string' ? encounter.id : '<invalid>';
         if (boundedIds.has(encounterId)) errors.add(`BOUNDED_ID_DUPLICATE:${encounterId}`);
         boundedIds.add(encounterId);
-        if (!maps?.[encounter?.region]) errors.add(`BOUNDED_LOCATION_UNKNOWN:${encounterId}:${String(encounter?.region)}`);
+        if (!maps?.[encounter?.region ?? '']) errors.add(`BOUNDED_LOCATION_UNKNOWN:${encounterId}:${String(encounter?.region)}`);
         const choices = Array.isArray(encounter?.choices) ? encounter.choices : [];
         boundedChoiceCount += choices.length;
         if (choices.length !== 2) errors.add(`BOUNDED_CHOICE_COUNT_INVALID:${encounterId}`);
         for (const choice of choices) {
             const choiceId = typeof choice?.id === 'string' ? choice.id : '<invalid>';
-            for (const section of ['cost', 'outcome']) {
-                for (const [field, value] of Object.entries(choice?.[section] || {})) {
+            const sections: Array<['cost' | 'outcome', Record<string, unknown> | undefined]> = [
+                ['cost', choice?.cost],
+                ['outcome', choice?.outcome],
+            ];
+            for (const [section, sectionValue] of sections) {
+                for (const [field, value] of Object.entries(sectionValue || {})) {
                     if (['gold', 'hp', 'mp'].includes(field) && !isFiniteNumber(value)) {
                         errors.add(`BOUNDED_NUMBER_INVALID:${encounterId}:${choiceId}:${section}.${field}`);
                     }
@@ -196,12 +293,14 @@ export const buildEventRewardCoherenceReport = ({
         const amount = transaction?.cost?.amount;
         const grossGold = transaction?.grossGold;
         const netGold = transaction?.netGold;
-        if (!Number.isSafeInteger(amount) || amount <= 0
-            || !Number.isSafeInteger(grossGold) || grossGold < 0
-            || !Number.isSafeInteger(netGold) || netGold < 0) {
+        // isSafeInteger가 true인 뒤에만 산술 비교가 실행되므로(||의 단락 평가) 이 지점에선
+        // 실제로 유한 정수임이 보장된다 — Number(...)는 그 사실을 타입에 반영하는 항등 변환.
+        if (!Number.isSafeInteger(amount) || Number(amount) <= 0
+            || !Number.isSafeInteger(grossGold) || Number(grossGold) < 0
+            || !Number.isSafeInteger(netGold) || Number(netGold) < 0) {
             errors.add(`FALLBACK_NUMBER_INVALID:${id}`);
         } else {
-            const expectedNet = transaction?.cost?.type === 'gold' ? grossGold - amount : grossGold;
+            const expectedNet = transaction?.cost?.type === 'gold' ? Number(grossGold) - Number(amount) : Number(grossGold);
             if (netGold !== expectedNet) errors.add(`FALLBACK_NET_MISMATCH:${id}`);
         }
         rows.push({
@@ -214,11 +313,11 @@ export const buildEventRewardCoherenceReport = ({
         });
     }
 
-    const addBuiltEventRows = (occurrenceClass: string, event: any) => {
+    const addBuiltEventRows = (occurrenceClass: string, event: ChoiceOutcomeEvent | null | undefined) => {
         const choices = Array.isArray(event?.choices) ? event.choices : [];
         const outcomes = Array.isArray(event?.outcomes) ? event.outcomes : [];
         if (choices.length !== outcomes.length) errors.add(`${occurrenceClass.toUpperCase()}_CHOICE_OUTCOME_MISMATCH`);
-        outcomes.forEach((outcome: any, choiceIndex: number) => {
+        outcomes.forEach((outcome, choiceIndex: number) => {
             rows.push({
                 id: `${occurrenceClass}:${choiceIndex}`,
                 occurrenceClass,
@@ -229,11 +328,13 @@ export const buildEventRewardCoherenceReport = ({
     addBuiltEventRows('campfire', campfireEvent);
     addBuiltEventRows('scout', scoutEvent);
 
-    const frequencySnapshot = {
-        scoutChance: frequency?.scoutChance,
-        campfireChance: frequency?.campfireChance,
-        eventMultiplier: frequency?.eventMultiplier,
-        minimumNarrativeGap: frequency?.minimumNarrativeGap,
+    // 리포트 스키마(EventRewardCoherenceReport.frequency)는 number로 닫혀 있다 — 검증은
+    // 아래 루프가 하고, 결과는(유효하든 아니든) 입력값을 그대로 투영한다.
+    const frequencySnapshot: EventRewardCoherenceReport['frequency'] = {
+        scoutChance: frequency?.scoutChance as number,
+        campfireChance: frequency?.campfireChance as number,
+        eventMultiplier: frequency?.eventMultiplier as number,
+        minimumNarrativeGap: frequency?.minimumNarrativeGap as number,
     };
     for (const [field, value] of Object.entries(frequencySnapshot)) {
         const isGap = field === 'minimumNarrativeGap';

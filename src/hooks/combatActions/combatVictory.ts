@@ -119,7 +119,9 @@ export const handleVictoryOutcome = ({
     // cycle 193: 신규 codex 등록 수 추적 — SEASON_XP.codexDiscover dispatch용.
     const codexBefore = countNewCodexEntries(updatedPlayer);
     if (admittedItems.length > 0) {
-        updatedPlayer = { ...updatedPlayer, inv: [...updatedPlayer.inv, ...admittedItems] };
+        // W8-Z4: handleVictory의 updatedPlayer가 실제 Player로 드러나며 inv(optional)의
+        //   possibly-undefined가 표면화됐다 — 원래도 항상 배열(INITIAL_STATE.player.inv)이었다.
+        updatedPlayer = { ...updatedPlayer, inv: [...(updatedPlayer.inv || []), ...admittedItems] };
         updatedPlayer = registerLootToCodex(updatedPlayer, admittedItems);
     }
 
@@ -202,9 +204,12 @@ export const handleVictoryOutcome = ({
     const prevStreak = decayed ? 0 : (updatedPlayer.killStreak || 0);
     const newStreak = prevStreak + 1;
     const tierThresholds = BALANCE.KILL_STREAK_TIERS;
-    const hitNewTier = tierThresholds.includes(newStreak);
+    // W8-Z4: handleVictory의 updatedPlayer.killStreak가 실제 number로 드러나며 KILL_STREAK_TIERS
+    //   (as const 리터럴 튜플 3|5|10|20)에 .includes/.indexOf로 넓은 number를 못 넣게 됐다 —
+    //   Wave 7 Y1과 같은 패턴(.some/수동 findIndex)으로 의미 동일하게 치환.
+    const hitNewTier = tierThresholds.some((tier) => tier === newStreak);
     if (hitNewTier) {
-        const tierIdx = tierThresholds.indexOf(newStreak);
+        const tierIdx = tierThresholds.findIndex((tier) => tier === newStreak);
         const atkPct = Math.round(BALANCE.KILL_STREAK_ATK_BONUS[tierIdx] * 100);
         addLog('event', MSG.KILL_STREAK_BONUS(newStreak, atkPct));
     }
@@ -247,7 +252,10 @@ export const handleVictoryOutcome = ({
 
     if (extendedChecks) {
         if (isBossKill && deadEnemy?.baseName) {
-            const currentMapBoss = DB.MAPS[updatedPlayer.loc]?.boss;
+            // W8-Z4: updatedPlayer.loc(Player['loc'])가 실제 string | undefined로 드러나며
+            //   DB.MAPS 인덱싱에 undefined를 못 넣게 됐다 — 미매칭 폴백 ''는 DB.MAPS['']가
+            //   없어 그대로 undefined로 단락(동작 동일).
+            const currentMapBoss = DB.MAPS[updatedPlayer.loc || '']?.boss;
             const isAreaBossKill = typeof currentMapBoss === 'string' && currentMapBoss === deadEnemy.baseName;
             dispatch({
                 type: AT.SET_PLAYER,

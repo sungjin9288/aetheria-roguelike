@@ -72,8 +72,14 @@ interface Skill {
  * CombatEngine 플레이어 행동 메서드 (attack / performSkill) — mixin으로 CombatEngine에 spread.
  * CombatEngine.ts 분리(행동 보존). this 교차호출은 위 ActionsMixinContext로 명시하고,
  * 실제 바인딩은 CombatEngine.ts가 이 mixin을 spread하는 시점에 이뤄진다(ThisType 마커).
+ *
+ * W8-Z4: `ThisType<...>` 단독 어노테이션은 변수 자체의 선언 타입을 그 마커(멤버 0개)로
+ *   좁혀 `attack`/`performSkill`이 외부에는 존재하지 않는 것처럼 보인다 — 지금까지는
+ *   CombatEngine.outcome/.enemyAI가 any 타입으로 spread되어 합성 객체 전체를 any로 오염시켜
+ *   이 간극을 가려 왔다(그 둘을 닫으면서 드러남). `satisfies`는 원본 리터럴의 추론 타입을
+ *   그대로 유지한 채 `this` 바인딩 계약만 검증한다 — 시그니처/동작 변경 없음.
  */
-export const actionMethods: ThisType<ActionsMixinContext> = {
+export const actionMethods = {
     attack(player: Player, enemy: Monster, stats: FullStats, rng?: () => number) {
         const random = typeof rng === 'function' ? rng : Math.random;
         // cycle 107: freeze/stun 상태이상 턴 스킵 — 보스 phase 2/3가 부여하는
@@ -708,4 +714,4 @@ export const actionMethods: ThisType<ActionsMixinContext> = {
             isVictory: (finalEnemy.hp ?? 0) <= 0
         };
     },
-};
+} satisfies ThisType<ActionsMixinContext>;

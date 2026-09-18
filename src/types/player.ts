@@ -179,6 +179,8 @@ interface TempBuff {
     def?: number;
     turn?: number;
     name?: string | null;
+    /** 'counter' 스킬(반격 자세)이 채우는 반격 확률 — CombatEngine.enemyAI.ts가 읽는다. */
+    counterChance?: number;
 }
 
 export interface EndgameProgress {
@@ -484,6 +486,8 @@ export interface Player {
     skillChoices?: Record<string, string>;
     challengeModifiers?: string[];
     tempBuff?: TempBuff;
+    /** 'extraTurn' 스킬 효과·time_master/time_dominator 시너지 proc — 다음 적 턴 스킵(1회성 플래그). */
+    extraTurnGranted?: boolean;
     status?: StatusId[];
     /** H1: 상태이상별 남은 턴 (status 배열과 짝 — CombatEngine.tickPlayerStatusDurations 소유) */
     statusTurns?: Record<string, number>;

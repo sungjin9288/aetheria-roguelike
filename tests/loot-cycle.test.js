@@ -412,7 +412,7 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 552: CombatEngine.loot.ts processLoot 시그니처 보존 (cycle 629 explicit elimination)', async () => {
       const source = await readSrc('src/systems/CombatEngine.loot.ts');
-      assert.ok(/export const processLoot = \([\s\S]{0,220}?enemy:\s*Monster,[\s\S]{0,80}?player:\s*Player \| null,[\s\S]{0,80}?signaturePityMult:\s*any,[\s\S]{0,80}?rng\?:[\s\S]{0,80}?now\?:/.test(source),
+      assert.ok(/export const processLoot = \([\s\S]{0,220}?enemy:\s*Monster,[\s\S]{0,80}?player:\s*Player \| null,[\s\S]{0,80}?signaturePityMult:\s*number,[\s\S]{0,80}?rng\?:[\s\S]{0,80}?now\?:/.test(source),
           'CombatEngine.loot.ts canonical args + optional entropy 시그니처 보존');
   });
 
@@ -543,7 +543,7 @@ import { readFile } from 'node:fs/promises';
           'processLoot player default null 제거');
       assert.ok(!/processLoot = \([^)]*signaturePityMult:\s*any\s*=\s*1\.0/.test(source),
           'processLoot signaturePityMult default 1.0 제거');
-      assert.ok(/processLoot = \([\s\S]{0,220}?enemy:\s*Monster,[\s\S]{0,80}?player:\s*Player\s*\|\s*null,[\s\S]{0,80}?signaturePityMult:\s*any,[\s\S]{0,80}?rng\?:[\s\S]{0,80}?now\?:/.test(source),
+      assert.ok(/processLoot = \([\s\S]{0,220}?enemy:\s*Monster,[\s\S]{0,80}?player:\s*Player\s*\|\s*null,[\s\S]{0,80}?signaturePityMult:\s*number,[\s\S]{0,80}?rng\?:[\s\S]{0,80}?now\?:/.test(source),
           'processLoot canonical args + optional entropy 시그니처 보존');
   });
 

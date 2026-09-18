@@ -1,13 +1,16 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
-import type { Monster, Player } from '../types/index.js';
+import type { Monster, Player, StatusId } from '../types/index.js';
+import type { LootLog } from './CombatEngine.loot.js';
 
 /**
  * CombatEngine 상태이상 메서드 — mixin으로 CombatEngine에 spread.
  * CombatEngine.ts 분리(행동 보존). 순수(BALANCE / MSG만 의존, this 미사용).
  */
 export const statusMethods = {
-    applyStatusEffectToEnemy(enemy: Monster, effect: any) {
+    // effect: string — actions.ts의 STATUS_EFFECTS_TO_ENEMY(taunt 포함 9종, StatusId 밖 1종)를
+    //   그대로 받는다. ActionsMixinContext가 이미 이 시그니처(effect: string)로 선언돼 있다.
+    applyStatusEffectToEnemy(enemy: Monster, effect: string) {
         if (!effect) return enemy;
         switch (effect) {
             case 'blind':
@@ -49,13 +52,13 @@ export const statusMethods = {
      * - status 배열에 없는 키는 결과에서 제거되므로 해독제/정화/휴식으로 즉시 해제된 상태가
      *   잔여 턴을 남기지 않는다(해제 경로는 종전 그대로 status만 비우면 된다).
      */
-    tickPlayerStatusDurations(player: Player, logs: any[]) {
-        const statusList = Array.isArray(player.status) ? player.status : [];
+    tickPlayerStatusDurations(player: Player, logs: LootLog[]) {
+        const statusList: StatusId[] = Array.isArray(player.status) ? player.status : [];
         const prevTurns: Record<string, number> = player.statusTurns || {};
-        const status: any[] = [];
+        const status: StatusId[] = [];
         const statusTurns: Record<string, number> = {};
 
-        statusList.forEach((entry: any) => {
+        statusList.forEach((entry) => {
             const key = String(entry);
             const stored = prevTurns[key];
             const current = typeof stored === 'number' && Number.isFinite(stored) && stored > 0
@@ -81,11 +84,11 @@ export const statusMethods = {
     //   1 internal callsite (line 1076) 4 args 모두 명시 전달이라 default 도달
     //   불가. 외부 caller 0건, test caller 0건. single-cycle 3-default batch
     //   (cycle 524/527 패턴). 청소 메가 시리즈 44번째.
-    tickEnemyStatus(enemy: Monster, logs: any[], curseAmpMult: any, synergyDotMult: any) {
+    tickEnemyStatus(enemy: Monster, logs: LootLog[], curseAmpMult: number, synergyDotMult: number) {
         let updated = { ...enemy };
 
         // DoT (burn / poison / bleed) — 시너지 죽음의 예언자 dotMult 반영
-        (updated.dots || []).forEach((dot: any) => {
+        (updated.dots || []).forEach((dot) => {
             const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * BALANCE.STATUS_DOT_RATIO * synergyDotMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
             // 2026-09 Wave 6 X2: DOT_LABELS 재사용 — burn/poison만 인식하고 나머지(bleed 등)는

@@ -10,6 +10,36 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 
 const PAYLOAD_KEYS = ['chainId', 'choiceIndex', 'step'];
 
+/**
+ * `EVENT_CHAINS`(eventChains.ts)는 any 애노테이션 없이 리터럴에서 추론되지만, 13개 체인 ×
+ * 3스텝의 `outcome.reward`가 체인마다 다른 모양(gold/relic/item/null)이라 실제 추론
+ * 타입은 거대한 유니온이다. 이 파일은 gold/relic 분기만 실제로 읽으므로, 그 필드만
+ * 선언한 최소 형태로 결과를 받는다(구조 자체는 real EVENT_CHAINS의 부분집합이라
+ * 캐스팅 없이도 대입 가능 — 필드 값 검증은 아래 구조 비교/타입 가드가 담당한다).
+ */
+interface ChainRewardData {
+    type?: string;
+    amount?: unknown;
+    relicId?: unknown;
+    name?: unknown;
+    [key: string]: unknown;
+}
+
+interface ChainOutcomeData {
+    type?: string;
+    log?: string;
+    reward?: ChainRewardData | null;
+}
+
+interface ChainStepData {
+    step?: number;
+    event?: {
+        outcomes?: ChainOutcomeData[];
+        [key: string]: unknown;
+    };
+    [key: string]: unknown;
+}
+
 const isPayload = (value: unknown): value is ResolveChainGoldChoicePayload => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
     const payload = value as Record<string, unknown>;
@@ -69,11 +99,10 @@ export const chainEventActionMap = {
         if ((state.player.eventChainProgress?.[chainId] ?? 0) !== step) return state;
         if (state.player.deferredEventChainSteps?.[chainId] === step) return state;
         const chain = EVENT_CHAINS.find((candidate) => candidate.id === chainId);
-        // 병합(2026-09): EVENT_CHAINS는 `: any` 애노테이션을 걷어내 리터럴에서 추론된다.
-        //   step/outcome은 체인마다 모양이 달라 40여 개 유니온이 되므로, 이 범용 접근자
-        //   경로에서만 로컬 `any`로 받는다(런타임 검증은 아래 구조 비교가 담당).
-        const stepData: any = chain?.steps.find((candidate) => candidate.step === step);
-        const outcome: any = stepData?.event?.outcomes?.[choiceIndex];
+        // W8-Z4: 위 ChainStepData/ChainOutcomeData(최소 형태)로 받는다 — 실제 EVENT_CHAINS는
+        //   체인마다 다른 거대한 유니온이지만 그 구조의 부분집합이라 캐스팅 없이 대입된다.
+        const stepData: ChainStepData | undefined = chain?.steps.find((candidate) => candidate.step === step);
+        const outcome: ChainOutcomeData | undefined = stepData?.event?.outcomes?.[choiceIndex];
         if (!stepData) return state;
         if (outcome?.type !== 'nothing' || outcome.reward) return state;
         if (!structurallyEqual(event, { ...stepData.event, _chainId: chainId, _chainStep: step })) return state;
@@ -102,15 +131,18 @@ export const chainEventActionMap = {
         if ((state.player.eventChainProgress?.[chainId] ?? 0) !== step) return state;
 
         const chain = EVENT_CHAINS.find((candidate) => candidate.id === chainId);
-        // 병합(2026-09): EVENT_CHAINS는 `: any` 애노테이션을 걷어내 리터럴에서 추론된다.
-        //   step/outcome은 체인마다 모양이 달라 40여 개 유니온이 되므로, 이 범용 접근자
-        //   경로에서만 로컬 `any`로 받는다(런타임 검증은 아래 구조 비교가 담당).
-        const stepData: any = chain?.steps.find((candidate) => candidate.step === step);
-        const outcome: any = stepData?.event?.outcomes?.[choiceIndex];
+        // W8-Z4: 위 ChainStepData/ChainOutcomeData(최소 형태)로 받는다 — 실제 EVENT_CHAINS는
+        //   체인마다 다른 거대한 유니온이지만 그 구조의 부분집합이라 캐스팅 없이 대입된다.
+        const stepData: ChainStepData | undefined = chain?.steps.find((candidate) => candidate.step === step);
+        const outcome: ChainOutcomeData | undefined = stepData?.event?.outcomes?.[choiceIndex];
         const amount = outcome?.reward?.amount;
+        // amount(unknown)는 isSafeInteger 통과 후에만 산술 비교가 실행되므로(||의 단락
+        // 평가) 이 지점에선 실제로 유한 정수임이 보장된다 — Number(...)는 그 사실을
+        // 타입에 반영하는 항등 변환.
         if (!stepData
+            || !outcome
             || !Number.isSafeInteger(amount)
-            || amount >= 0
+            || Number(amount) >= 0
             || outcome.reward?.type !== 'gold'
             || outcome.type !== 'chain_advance') return state;
 
@@ -122,7 +154,7 @@ export const chainEventActionMap = {
         if (!structurallyEqual(event, canonicalEvent)) return state;
 
         const gold = state.player.gold ?? Number.NaN;
-        const cost = -amount;
+        const cost = -Number(amount);
         if (!Number.isFinite(gold) || gold < cost) {
             const id = `chain-gold-insufficient:${chainId}:${step}:${choiceIndex}`;
             return appendRequirementError(state, id, MSG.GOLD_INSUFFICIENT);
