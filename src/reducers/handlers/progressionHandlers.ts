@@ -4,6 +4,7 @@
  */
 import type { GameState, GameAction } from '../gameReducer';
 import type { AscendPayload } from '../actionTypes';
+import type { Player } from '../../types';
 import { GS } from '../gameStates';
 import { createCurrentRunProgress } from '../../utils/runProgress';
 import { pickPermanentPlayerState } from '../../utils/permanentProgress';
@@ -14,7 +15,7 @@ import { getClaimableQuestEntries } from '../../utils/questProgress';
  * makeProgressionActionMap(INITIAL_STATE) → action map
  * 순환 참조 방지를 위해 팩토리 패턴 사용
  */
-export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
+export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
     // cycle 204: 사망 후 '다시 시작' 시 META 진행도 보존 — cycle 191(handleDefeat)와 정합.
     //   기존 동작은 ...INITIAL_STATE로 모든 META를 wipe해 cycle 191의 preserve를
     //   nullify(다시 시작 클릭 즉시 영구 자산 / 영구 카운터 사라짐).
@@ -28,7 +29,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
     //   INITIAL_STATE로 reset 유지.
     RESET_GAME: (state: GameState) => {
         const permanent = pickPermanentPlayerState(state.player, INITIAL_STATE.player);
-        const permanentStats: any = permanent.stats || {};
+        const permanentStats: NonNullable<Player['stats']> = permanent.stats || {};
         return {
             ...INITIAL_STATE,
             grave: state.grave,
@@ -101,7 +102,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: any) => ({
         const currentReceiptKey = state.player.meta?.endgame?.lastEndgameReceiptKey ?? null;
         if (sourceReceiptKey !== currentReceiptKey) return state;
         const permanent = pickPermanentPlayerState(state.player, INITIAL_STATE.player);
-        const permanentStats: any = permanent.stats || {};
+        const permanentStats: NonNullable<Player['stats']> = permanent.stats || {};
         const prevTitles = permanent.titles || [];
         const freshPlayer: Record<string, any> = {
             ...INITIAL_STATE.player,

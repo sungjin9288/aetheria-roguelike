@@ -7,21 +7,27 @@ import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { applyEssenceGain } from '../../systems/essenceLedger';
 import { getCurrentDailyProtocol } from '../../utils/protocolCycle';
 import { SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
-import type { DailyProtocolMissionType, Player } from '../../types/index.js';
+import type { DailyProtocolMissionType, Item, Player } from '../../types/index.js';
 import type { Relic } from '../../types/relic.js';
 
 /**
  * 퀵슬롯을 현재 인벤토리 기준으로 정리합니다.
  * 인벤에 없는 아이템 참조는 null로 교체합니다.
+ *
+ * `slots`는 세이브에서 그대로 올라올 수 있어(로드 경로) 실제 형태를 신뢰할 수 없다 —
+ * `unknown`으로 받고 `Array.isArray`로만 좁힌다. `inventory`는 항상 `player.inv`다.
  */
 // cycle 562: slots / inventory defaults 제거 — 2 production caller (bootstrap
 //   Handlers:20, uiHandlers:53) 모두 2 args 명시 전달이라 두 default 모두
 //   도달 불가. body의 (inventory || []) + Array.isArray(slots) defensive
 //   guards가 undefined/null 안전 처리. 청소 메가 시리즈 55번째.
-export const sanitizeQuickSlots = (slots: any, inventory: any) => {
-    const ids = new Set((inventory || []).map((item: any) => item?.id).filter(Boolean));
-    const normalized = Array.from({ length: 3 }, (_: any, i: any) => (Array.isArray(slots) ? slots[i] : undefined) ?? null);
-    return normalized.map((slot: any) => (slot?.id && ids.has(slot.id) ? slot : null));
+export const sanitizeQuickSlots = (
+    slots: unknown,
+    inventory: Item[] | null | undefined,
+): Array<Item | null> => {
+    const ids = new Set((inventory || []).map((item) => item?.id).filter(Boolean));
+    const normalized = Array.from({ length: 3 }, (_, i) => (Array.isArray(slots) ? slots[i] : undefined) ?? null);
+    return normalized.map((slot) => (slot?.id && ids.has(slot.id) ? slot : null));
 };
 
 export const addSeasonXp = (player: Player, amount: number): Player => {
@@ -119,8 +125,8 @@ export const resolveDailyProtocolProgress = (
     let convertedRelicAdded: Relic | null = null;
     let postConvertShards = newShards;
     if (newShards >= 5 && (player.relics || []).length < MAX_RELICS_PER_RUN) {
-        const ownedIds = new Set((player.relics || []).map((r: any) => r?.id));
-        const candidates = RELICS.filter((r: any) => !ownedIds.has(r.id));
+        const ownedIds = new Set((player.relics || []).map((r) => r?.id));
+        const candidates = RELICS.filter((r) => !ownedIds.has(r.id));
         if (candidates.length > 0) {
             const roll = Number.isFinite(relicRoll)
                 ? Math.min(0.999999, Math.max(0, relicRoll as number))
@@ -156,7 +162,7 @@ export const resolveDailyProtocolProgress = (
         // 지급처 간 일관성 (2026-07, 에테르 거울 후속): 전투/승천 경로
         // (CombatEngine.outcome.ts)와 동일하게 프레스티지 rank essenceMult ×
         // 거울 essence_flow 배율을 곱연산 적용 — 일일 프로토콜만 원액 지급하던 불일치 해소.
-        const baseMeta: Record<string, any> = nextPlayer.meta || {};
+        const baseMeta: NonNullable<Player['meta']> = nextPlayer.meta || {};
         const essenceMult = getPrestigeUnlocks(baseMeta.prestigeRank).essenceMult
             * getMirrorEffects(baseMeta).essenceFlowMult;
         grantedEssence = Math.max(1, Math.floor(essenceGain * essenceMult));
@@ -165,9 +171,9 @@ export const resolveDailyProtocolProgress = (
     }
 
     const rewardedItems = itemRewards
-        .map((name: any) => findItemByName(name))
+        .map((name) => findItemByName(name))
         .filter(Boolean)
-        .map((item: any) => makeItem(item, itemEntropy?.rng, itemEntropy?.now));
+        .map((item) => makeItem(item, itemEntropy?.rng, itemEntropy?.now));
     if (rewardedItems.length > 0) {
         nextPlayer.inv = [...(nextPlayer.inv || []), ...rewardedItems];
     }
@@ -177,7 +183,7 @@ export const resolveDailyProtocolProgress = (
         reward: {
             completedCount,
             essence: grantedEssence,
-            items: rewardedItems.map((item: any) => item.name),
+            items: rewardedItems.map((item) => item.name as string),
             relicShards: relicShardGain,
             convertedRelic: convertedRelicAdded,
         },

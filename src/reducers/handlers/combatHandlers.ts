@@ -17,13 +17,14 @@ import { addNewTitles, sanitizeQuickSlots } from './helpers';
 import { applyPostCombatChoice, isPostCombatChoiceOffered, type PostCombatChoiceId } from '../../utils/postCombatChoice';
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { activateDevourBonus } from '../../utils/adventureRelicBonuses';
+import type { Item, LogEntry, Player, Monster } from '../../types';
 
 const appendCombatLogs = (
-    currentLogs: any[],
+    currentLogs: LogEntry[],
     entries: Array<{ type: string; text: string }>,
     now: number,
     seed: number,
-) => [
+): LogEntry[] => [
     ...currentLogs,
     ...entries.map((entry, index) => ({
         id: `combat-item-${now}-${seed}-${index}`,
@@ -31,6 +32,20 @@ const appendCombatLogs = (
         text: entry.text,
     })),
 ].slice(-BALANCE.LOG_MAX_SIZE);
+
+interface SettleVictoryParams {
+    player: Player;
+    deadEnemy: Monster;
+    /** CombatActionTurnResult/CombatItemTurnResult.victoryStats — systems 쪽도 any. */
+    stats: unknown;
+    logs: Array<{ type: string; text: string }>;
+    stories: Array<{ type: string; data: unknown }>;
+    extendedChecks: boolean;
+    seed: number;
+    now: number;
+    nextTurn: number;
+    random: () => number;
+}
 
 const settleVictory = (
     state: GameState,
@@ -45,7 +60,7 @@ const settleVictory = (
         now,
         nextTurn,
         random,
-    }: any,
+    }: SettleVictoryParams,
 ): GameState => {
     const receiptKey = `${nextTurn}:${now}:${seed}`;
     if (state.player.meta?.endgame?.lastEndgameReceiptKey === receiptKey) return state;
@@ -117,7 +132,7 @@ const settleVictory = (
             draft = rewardActionMap.ADD_SEASON_XP(draft, nestedAction);
         }
     };
-    const emitUnlockedTitles = (candidate: any) => {
+    const emitUnlockedTitles = (candidate: Player) => {
         const titleLogs: Array<{ type: string; text: string }> = [];
         const titled = addNewTitles(candidate, titleLogs);
         if (titled === candidate) return;
@@ -134,7 +149,7 @@ const settleVictory = (
         stats,
         dispatch,
         addLog: appendLog,
-        addStoryLog: (type: string, data: any) => storyEvents.push({ type, data }),
+        addStoryLog: (type: string, data: unknown) => storyEvents.push({ type, data }),
         emitUnlockedTitles,
         extendedChecks,
         liveConfig: state.liveConfig,
@@ -207,12 +222,12 @@ const settleNonVictory = (
         consumedItem,
     }: {
         result: CombatActionTurnResult | CombatItemTurnResult;
-        stories: Array<{ type: string; data: any }>;
+        stories: Array<{ type: string; data: unknown }>;
         seed: number;
         now: number;
         nextTurn: number;
         // 소모품 턴에서만 전달된다. 전달되면 "이번에 소비한 아이템" 기준으로 quick slot을 정산한다.
-        consumedItem?: any;
+        consumedItem?: Item;
     },
 ): GameState => {
     const logs = [...result.logs];
@@ -249,7 +264,7 @@ const settleNonVictory = (
     };
 };
 
-export const makeCombatActionMap = (initialPlayer: any) => ({
+export const makeCombatActionMap = (initialPlayer: Player) => ({
     /**
      * 2026-09 D2 — 전투 후 "밀어붙인다 / 숨을 고른다" 단일 전이.
      *
@@ -341,7 +356,7 @@ export const makeCombatActionMap = (initialPlayer: any) => ({
         if (expectedTurn !== state.combatTurn) return state;
         if (!itemId || !Number.isFinite(seed) || !Number.isFinite(now)) return state;
 
-        const item = (state.player.inv || []).find((entry: any) => entry.id === itemId);
+        const item = (state.player.inv || []).find((entry) => entry.id === itemId);
         if (!item) return state;
 
         const random = createSeededRandom(seed);

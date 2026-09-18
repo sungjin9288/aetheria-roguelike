@@ -6,15 +6,22 @@ import { bootstrapActionMap } from './handlers/bootstrapHandlers';
 import { uiActionMap, entityActionMap } from './handlers/uiHandlers';
 import { makeProgressionActionMap } from './handlers/progressionHandlers';
 import { makeFeatureActionMap } from './handlers/featureHandlers';
-import type { Player } from '../types';
+import type { Player, Item, Monster, Relic } from '../types';
+import type { LogEntry, GameEvent, LiveConfig, LeaderboardEntry } from '../types/session.js';
+import type { GraveEntry } from '../utils/graveUtils.js';
+import type { buildRunSummary } from '../utils/gameUtils.js';
 import { createCurrentRunProgress } from '../utils/runProgress';
 import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
 import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
 import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
 
 /**
- * Game state shape — cycle 60 phase D — Player 도메인 타입 적용.
- * 다른 필드(enemy, grave, currentEvent 등)는 점진 적용 예정 — 현재는 any.
+ * Game state shape — cycle 60 phase D Player 적용 + 2026-09 Wave 6 X4에서
+ * enemy/currentEvent/grave/shopItems/logs/leaderboard/liveConfig/quickSlots/
+ * pendingRelics/runSummary/visualEffect까지 도메인 타입으로 닫았다.
+ * `postCombatResult`만 남는다 — 생산자(hooks/combatActions/combatVictory.ts)가
+ * 레거시 별칭 필드(`loot` 등)를 섞어 읽는 그레이백 카드라 여기서 안전하게 좁힐
+ * 실측 계약이 없다(any 유지, 다른 트랙이 hooks를 정리할 때 함께 닫을 후보).
  */
 export interface GameState {
     bootStage: string;
@@ -23,23 +30,25 @@ export interface GameState {
     // cycle 306: state.version dead 제거 — INITIAL_STATE 외 read/write 0건.
     //   Firebase sync는 매 save마다 CONSTANTS.DATA_VERSION 직접 기록.
     gameState: string;
-    logs: any[];
-    enemy: any;
-    currentEvent: any;
-    grave: any;
-    shopItems: any[];
+    logs: LogEntry[];
+    enemy: Monster | null;
+    currentEvent: GameEvent | null;
+    // 구형 save는 단일 GraveEntry, 신형(2026-07 다중 지역 묘비)은 GraveEntry[] — 둘 다
+    //   graveUtils.normalizeGraves()가 흡수한다(utils의 사설 GraveInput과 동형).
+    grave: GraveEntry | GraveEntry[] | null;
+    shopItems: Item[];
     sideTab: string;
     isAiThinking: boolean;
-    visualEffect: any;
+    visualEffect: string | null;
     syncStatus: string;
-    leaderboard: any[];
-    liveConfig: any;
+    leaderboard: LeaderboardEntry[];
+    liveConfig: LiveConfig;
     lastLoadedTimestamp: number;
     presentationEpoch: number;
-    quickSlots: any[];
+    quickSlots: Array<Item | null>;
     postCombatResult: any;
-    pendingRelics: any;
-    runSummary: any;
+    pendingRelics: Relic[] | null;
+    runSummary: ReturnType<typeof buildRunSummary> | null;
     expeditionDebriefOpen: boolean;
     questClaimReceipt: { key: string; questId: string | number; title: string } | null;
     economyReceipt: { key: string; type: 'buy'; itemName: string } | null;
@@ -47,7 +56,7 @@ export interface GameState {
     combatReceipt: {
         key: string;
         kind: 'continue' | 'victory' | 'defeat' | 'escape' | 'rejected';
-        stories: Array<{ type: string; data: any }>;
+        stories: Array<{ type: string; data: unknown }>;
         lootSettlement?: LootSettlementReceipt;
     } | null;
     // cycle 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건,

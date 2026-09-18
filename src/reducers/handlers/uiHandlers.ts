@@ -43,7 +43,7 @@ export const uiActionMap = {
 
     UPDATE_LOG: (state: GameState, action: GameAction) => ({
         ...state,
-        logs: state.logs.map((log: any) => log.id === action.payload.id ? action.payload.log : log)
+        logs: state.logs.map((log) => log.id === action.payload.id ? action.payload.log : log)
     }),
 
     SET_POST_COMBAT_RESULT: (state: GameState, action: GameAction) =>
@@ -51,7 +51,7 @@ export const uiActionMap = {
 
     SET_QUICK_SLOT: (state: GameState, action: GameAction) => {
         const candidate = action.payload.item;
-        if (candidate && !(state.player.inv || []).some((item: any) => item.id === candidate.id)) {
+        if (candidate && !(state.player.inv || []).some((item) => item.id === candidate.id)) {
             return state;
         }
         const next = [...state.quickSlots];

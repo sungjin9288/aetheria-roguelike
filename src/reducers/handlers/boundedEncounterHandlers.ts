@@ -34,8 +34,11 @@ const sameOutcome = (left: unknown, right: unknown) => {
     return expectedKeys.every((key) => leftRecord[key] === rightRecord[key]);
 };
 
-const matchesCanonicalEvent = (event: any, encounter: (typeof BOUNDED_ENCOUNTERS)[number]) => {
-    const canonical = buildBoundedEncounterEvent(encounter, event.boundedOccurrenceSequence);
+const matchesCanonicalEvent = (
+    event: { boundedOccurrenceSequence?: number; title?: string; desc?: string; choices?: string[]; outcomes?: unknown[] },
+    encounter: (typeof BOUNDED_ENCOUNTERS)[number],
+) => {
+    const canonical = buildBoundedEncounterEvent(encounter, event.boundedOccurrenceSequence ?? -1);
     return event.title === canonical.title
         && event.desc === canonical.desc
         && sameStringArray(event.choices, canonical.choices)
@@ -53,6 +56,7 @@ export const boundedEncounterActionMap = {
 
         const payload = action.payload;
         const event = state.currentEvent;
+        if (!event) return state;
         if (event.boundedEncounterId !== payload.encounterId
             || event.boundedOccurrenceSequence !== payload.occurrenceSequence) return state;
 

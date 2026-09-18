@@ -20,6 +20,7 @@ import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 import { addNewTitles, addSeasonXp } from './helpers';
 import type { GameState, GameAction } from '../gameReducer';
+import type { Player } from '../../types';
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
@@ -66,14 +67,14 @@ export const rewardActionMap = {
 
     CLAIM_QUEST_REWARD: (state: GameState, action: GameAction) => {
         const questId = action.payload?.questId;
-        const activeQuest = (state.player.quests || []).find((quest: any) => quest.id === questId);
+        const activeQuest = (state.player.quests || []).find((quest) => quest.id === questId);
         if (!activeQuest) return state;
 
         // W2 (Wave 5): 현상수배는 런타임 생성이라 자기 자신이 정의고, 카탈로그 퀘스트는
         //   DB.QUESTS가 정의다. buildTag 같은 카탈로그 전용 필드는 catalogQuest로만 읽는다.
         const catalogQuest = activeQuest.isBounty
             ? null
-            : DB.QUESTS.find((entry: any) => entry.id === questId);
+            : DB.QUESTS.find((entry) => entry.id === questId);
         const quest = activeQuest.isBounty ? activeQuest : catalogQuest;
         if (!quest || (activeQuest.progress || 0) < (quest.goal || 0)) return state;
 
@@ -83,9 +84,9 @@ export const rewardActionMap = {
         if (!activeQuest.isBounty && claimedQuestIds.includes(questId)) return state;
 
         const logs: Array<{ type: string; text: string }> = [];
-        let nextPlayer: any = removeExpeditionFocusQuest({
+        let nextPlayer: Player = removeExpeditionFocusQuest({
             ...state.player,
-            quests: (state.player.quests || []).filter((entry: any) => entry.id !== questId),
+            quests: (state.player.quests || []).filter((entry) => entry.id !== questId),
             stats: {
                 ...state.player.stats,
                 claimedQuestIds: activeQuest.isBounty
@@ -167,7 +168,7 @@ export const rewardActionMap = {
 
     CLAIM_ACHIEVEMENT_REWARD: (state: GameState, action: GameAction) => {
         const achievementId = action.payload?.achievementId;
-        const achievement = DB.ACHIEVEMENTS.find((entry: any) => entry.id === achievementId);
+        const achievement = DB.ACHIEVEMENTS.find((entry) => entry.id === achievementId);
         if (!achievement || !isAchievementUnlocked(achievement, state.player)) return state;
 
         const claimedAchievements = Array.isArray(state.player.stats?.claimedAchievements)
@@ -176,7 +177,7 @@ export const rewardActionMap = {
         if (claimedAchievements.includes(achievementId)) return state;
 
         const logs: Array<{ type: string; text: string }> = [];
-        let nextPlayer: any = {
+        let nextPlayer: Player = {
             ...state.player,
             stats: {
                 ...state.player.stats,

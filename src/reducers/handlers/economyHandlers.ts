@@ -103,7 +103,7 @@ const buyShopItem = (state: GameState, action: GameAction): GameState => {
 
 const sellInventoryItem = (state: GameState, action: GameAction): GameState => {
     if (state.gameState !== GS.SHOP) return state;
-    const item = (state.player.inv || []).find((entry: any) => entry.id === action.payload?.itemId);
+    const item = (state.player.inv || []).find((entry) => entry.id === action.payload?.itemId);
     if (!item) return state;
     if (isSignatureItem(item)) {
         return rejectTransaction(state, 'warning', MSG.SIGNATURE_SELL_BLOCKED(item.name));
@@ -113,7 +113,7 @@ const sellInventoryItem = (state: GameState, action: GameAction): GameState => {
     const logs: EconomyLog[] = [];
     let player = grantGold({
         ...state.player,
-        inv: (state.player.inv || []).filter((entry: any) => entry.id !== item.id),
+        inv: (state.player.inv || []).filter((entry) => entry.id !== item.id),
     }, sellPrice);
     player = addNewTitles(player, logs);
     logs.push({ type: 'success', text: MSG.SHOP_SELL_DONE(item.name, sellPrice) });
@@ -126,7 +126,7 @@ const getRecipeInputIds = (player: Player, recipe: ItemRecipeDef) => {
     for (const input of recipe.inputs || []) {
         const required = Math.max(0, input.qty || 0);
         for (let index = 0; index < required; index += 1) {
-            const matchIndex = available.findIndex((item: any) => item.name === input.name);
+            const matchIndex = available.findIndex((item) => item.name === input.name);
             if (matchIndex < 0) return inputIds;
             const [match] = available.splice(matchIndex, 1);
             if (match.id) inputIds.push(match.id);
@@ -137,12 +137,12 @@ const getRecipeInputIds = (player: Player, recipe: ItemRecipeDef) => {
 
 const craftRecipe = (state: GameState, action: GameAction): GameState => {
     if (state.gameState !== GS.CRAFTING) return state;
-    const recipe = DB.ITEMS.recipes?.find((entry: any) => entry.id === action.payload?.recipeId);
+    const recipe = DB.ITEMS.recipes?.find((entry) => entry.id === action.payload?.recipeId);
     if (!recipe) return state;
 
     const inputIds = Array.isArray(action.payload?.inputIds) ? action.payload.inputIds : [];
     const expectedIds = getRecipeInputIds(state.player, recipe);
-    const requiredCount = (recipe.inputs || []).reduce((total: number, input: any) => total + (input.qty || 0), 0);
+    const requiredCount = (recipe.inputs || []).reduce((total, input) => total + (input.qty || 0), 0);
     if (inputIds.length !== requiredCount) {
         const preview = getCraftingInvestmentPreview(state.player, recipe);
         const missingInput = preview.inputs.find((input) => !input.enough);
@@ -165,7 +165,7 @@ const craftRecipe = (state: GameState, action: GameAction): GameState => {
         ...state.player,
         gold: (state.player.gold || 0) - (recipe.gold || 0),
         inv: [
-            ...(state.player.inv || []).filter((item: any) => !usedIds.has(item.id)),
+            ...(state.player.inv || []).filter((item) => !usedIds.has(item.id)),
             craftedItem,
         ],
     }, 'crafts');
@@ -187,7 +187,7 @@ const synthesizeItems = (state: GameState, action: GameAction): GameState => {
     if (itemIds.length !== BALANCE.SYNTHESIS_INPUT_COUNT || new Set(itemIds).size !== itemIds.length) return state;
 
     const items = itemIds
-        .map((id: string) => (state.player.inv || []).find((item: any) => item.id === id))
+        .map((id: string) => (state.player.inv || []).find((item) => item.id === id))
         .filter(Boolean);
     if (items.length !== itemIds.length) return state;
 
@@ -225,7 +225,7 @@ const synthesizeItems = (state: GameState, action: GameAction): GameState => {
         gold: (state.player.gold || 0) - result.goldSpent,
         premiumCurrency: (state.player.premiumCurrency || 0) - premiumSpent,
         inv: [
-            ...(state.player.inv || []).filter((item: any) => !usedIds.has(item.id)),
+            ...(state.player.inv || []).filter((item) => !usedIds.has(item.id)),
             ...result.returnedItems,
         ],
         stats: { ...state.player.stats, ...protectStats },
@@ -255,19 +255,19 @@ const synthesizeItems = (state: GameState, action: GameAction): GameState => {
 
 const autoSellMaterials = (state: GameState): GameState => {
     const targets = (state.player.inv || []).filter(
-        (item: any) => item.type === 'mat' && (item.price || 0) <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX,
+        (item) => item.type === 'mat' && (item.price || 0) <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX,
     );
     if (targets.length === 0) return state;
 
-    const targetIds = new Set(targets.map((item: any) => item.id));
+    const targetIds = new Set(targets.map((item) => item.id));
     const totalGold = targets.reduce(
-        (total: number, item: any) => total + getSellPrice(item),
+        (total, item) => total + getSellPrice(item),
         0,
     );
     const logs: EconomyLog[] = [];
     let player = grantGold({
         ...state.player,
-        inv: (state.player.inv || []).filter((item: any) => !targetIds.has(item.id)),
+        inv: (state.player.inv || []).filter((item) => !targetIds.has(item.id)),
     }, totalGold);
     player = addNewTitles(player, logs);
     logs.push({ type: 'success', text: MSG.BULK_SELL_DONE(targets.length, totalGold) });

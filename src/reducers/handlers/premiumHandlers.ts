@@ -71,7 +71,7 @@ const purchaseCosmeticTitle = (
     state: GameState,
     offerId: string,
 ): GameState => {
-    const title = PREMIUM_SHOP.cosmeticTitles.find((entry: any) => entry.id === offerId);
+    const title = PREMIUM_SHOP.cosmeticTitles.find((entry) => entry.id === offerId);
     if (!title) return state;
 
     const player: Player = state.player;
