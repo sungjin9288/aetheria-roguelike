@@ -234,7 +234,7 @@
       },
       {
         "path": "src/systems/relicDropRateAudit.ts",
-        "sha256": "919455cb3d51493094697a279772c34d7a15b0237acbbcd833c5cea2ca315a31"
+        "sha256": "02d08540f29a5b1f72259fa69c23b8adf0a5e7eaac1d4b551abebb6a3aadb386"
       },
       {
         "path": "tests/combat-engine-loot.test.js",

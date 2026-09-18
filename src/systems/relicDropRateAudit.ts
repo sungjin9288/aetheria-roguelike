@@ -325,7 +325,7 @@ export const buildRelicDropRateReport = ({
         effect: 'drop_rate',
     }));
     const migrated = migrateData({ version: 6, player: { name: 'legacy', relics: legacyRelics } });
-    const migratedRelics = Array.isArray(migrated.player?.relics) ? migrated.player.relics : [];
+    const migratedRelics = Array.isArray(migrated?.player?.relics) ? migrated.player.relics : [];
     const legacySnapshot = {
         preserved: sameJson(migratedRelics, legacyRelics),
         relics: LEGACY_SNAPSHOTS.map((snapshot) => ({ ...snapshot })),

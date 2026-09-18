@@ -11,6 +11,7 @@ import { auth, db, hasFirebaseConfig } from '../firebase';
 import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
 import { migrateData } from '../utils/gameUtils';
+import { hasMigratedPlayer } from '../utils/dataMigration';
 import { normalizeGraves, getGraveItems } from '../utils/graveUtils';
 import { getDeviceQaScenario, isMockRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
@@ -25,7 +26,11 @@ import { getRuntimeGameStorage } from '../platform/gameStorageRuntime';
 import { importCloudRecordAuthority } from '../platform/cloudSaveAuthority';
 import { trackRuntimeProductEvent } from '../platform/productEventCoordinator';
 import { normalizeProductEventJob, type ProductEventName } from '../platform/productEvents';
-import { resolveOfflineBootstrapResult } from '../platform/persistenceTelemetry';
+import {
+    resolveOfflineBootstrapResult,
+    type OfflineBootstrapData,
+    type OfflineBootstrapResult,
+} from '../platform/persistenceTelemetry';
 import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
 import {
     resolveCloudBootstrapAuthority,
@@ -41,8 +46,11 @@ const BOOTSTRAP_TIMEOUT_MS = 6000;
 const AUTH_TIMEOUT_MS = 8000;
 const makeLogPayload = (type: string, text: string) => ({ type, text, id: `${Date.now()}_${Math.random()}` });
 
+// `player`가 `Partial<Player>`인 것은 복원 경로의 실제 폭이다 — `migrateData`는 알려진
+// 필드만 정규화하므로(`MigratedSave['player']`) 구세이브는 name/job/level이 비어 있을 수
+// 있다. 본문은 이미 `player?.name` / `Number(player?.level) || 1`로 그 경우를 다룬다.
 const trackPersistenceResult = (
-    player: Player,
+    player: Partial<Player>,
     name: Extract<ProductEventName, 'save' | 'restore'>,
     outcome: string,
     receipt: string,
@@ -56,7 +64,7 @@ const trackPersistenceResult = (
     },
 });
 
-const getOfflineBootstrapData = async () => {
+const getOfflineBootstrapData = async (): Promise<OfflineBootstrapResult> => {
     try {
         const localRecord = await getRuntimeGameStorage().migrate((payload) => payload);
         if (!localRecord) return {
@@ -65,6 +73,15 @@ const getOfflineBootstrapData = async () => {
         };
 
         const activeData = migrateData(localRecord.payload);
+        // 로컬 레코드의 payload는 gameStorage가 `isGameSnapshot`(= player 필드 존재)을
+        // 통과한 것만 저장/복원하지만, 그 보장은 저장 계층의 것이고 migrateData 반환형의
+        // 것이 아니다(구형 flat 세이브는 player 키 자체가 없다). 이전에는 바로 아래
+        // `activeData.player.loc`이 TypeError를 던져 catch가 'failure'로 내려보냈고,
+        // 여기서는 같은 결과를 조기 반환으로 낸다(차이: console.warn 한 줄이 없다).
+        if (!hasMigratedPlayer(activeData)) return {
+            data: { player: INITIAL_STATE.player },
+            outcome: 'failure' as const,
+        };
         if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
         if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
         return { data: activeData, outcome: 'local' as const };
@@ -77,11 +94,15 @@ const getOfflineBootstrapData = async () => {
     }
 };
 
-const getDeviceQaBootstrapData = (scenario: string | null) => {
+const getDeviceQaBootstrapData = (scenario: string | null): OfflineBootstrapData => {
     const localSnapshot = readDeviceQaSnapshot(undefined, scenario);
     if (!localSnapshot) return { player: INITIAL_STATE.player };
 
     const activeData = migrateData(localSnapshot);
+    // device-QA 스냅샷은 시나리오 파일이라 player가 빠질 수 있다. 이전에는 아래
+    // `activeData.player.loc`이 TypeError를 던져 부팅 effect가 그대로 터졌고,
+    // 여기서는 스냅샷이 없을 때와 같은 신규 캐릭터 기본값으로 조기 반환한다.
+    if (!hasMigratedPlayer(activeData)) return { player: INITIAL_STATE.player };
     if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
     if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
     return activeData;
@@ -300,6 +321,13 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
                     if (cancelled || sequence !== callbackSequence) return;
                     if (resolveCloudBootstrapAuthority(localRecord, remoteData) === 'local' && localRecord) {
                         const localData = migrateData(localRecord.payload);
+                        // 로컬 권한 판정(`resolveCloudBootstrapAuthority`)은 이미 끝났고
+                        // 여기서 분기를 바꾸지 않는다. player 없는 스냅샷은 이전에도
+                        // 바로 아래 `localData.player.loc`에서 TypeError로 아래 catch →
+                        // fallbackToOffline(SYNC_CONNECT_FAIL)로 갔다 — 같은 경로를 유지한다.
+                        if (!hasMigratedPlayer(localData)) {
+                            throw new Error('A restored local game snapshot requires player data');
+                        }
                         if (localData.gameState === 'combat' && !localData.enemy) localData.gameState = 'idle';
                         if (!localData.player.loc) localData.player.loc = CONSTANTS.START_LOCATION;
                         bootResolved = true;
@@ -317,6 +345,13 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
 
                     let activeData = migrateData(remoteData);
                     if (activeData) {
+                        // 원격 문서가 존재하지만 player 필드가 없는 경우(권한 판정 'none' 등)
+                        // 이전에도 바로 아래 `activeData.player.loc`에서 TypeError가 나
+                        // 아래 catch → fallbackToOffline(SYNC_CONNECT_FAIL)로 갔다.
+                        // `if (activeData)` 바깥 분기는 그대로 두고 같은 경로만 유지한다.
+                        if (!hasMigratedPlayer(activeData)) {
+                            throw new Error('A restored cloud game snapshot requires player data');
+                        }
                         if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
                         if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
 
@@ -344,6 +379,12 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
                             );
                             const importedRecord = importResult.record;
                             activeData = migrateData(importedRecord.payload);
+                            // importedRecord는 방금 올린 remoteRecord이거나 로컬이 이긴
+                            // 기존 레코드다. player 없는 payload는 이전에도 바로 아래
+                            // `activeData.player.loc`에서 TypeError → catch → fallback 이었다.
+                            if (!hasMigratedPlayer(activeData)) {
+                                throw new Error('A re-imported game snapshot requires player data');
+                            }
                             if (activeData.gameState === 'combat' && !activeData.enemy) activeData.gameState = 'idle';
                             if (!activeData.player.loc) activeData.player.loc = CONSTANTS.START_LOCATION;
                             cloudRevisionFloorRef.current = Math.max(
