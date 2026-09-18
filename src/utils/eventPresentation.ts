@@ -1,7 +1,8 @@
 import { getStructuredFallbackTransaction } from '../data/structuredFallbackEvents';
+import type { EventChoiceTone, EventOutcome } from '../types/session.js';
 import { RELICS } from '../data/relics';
 
-export type EventChoiceTone = 'reward' | 'recovery' | 'danger' | 'story' | 'unknown';
+export type { EventChoiceTone };
 
 export interface EventChoicePreview {
     text: string;
@@ -11,31 +12,6 @@ export interface EventChoicePreview {
 export interface EventPanelCopy {
     title: string;
     kind: string;
-}
-
-/**
- * `outcome` 원소 모양 — `GameEvent.outcomes`(session.ts)는 생산자마다 달라 `unknown[]`로
- * 열려 있고, 이 파일은 그중 자신이 실제로 읽는 필드만 좁혀 읽는다(campfire buff/회복,
- * 체인 reward, 한정 조우 tone/tradeoff, 정찰 scoutEffect, 보스 게이지 gaugeEffect 등).
- */
-interface EventOutcome {
-    choiceIndex?: number;
-    buff?: { atk?: number; turn?: number; turns?: number };
-    hp?: number;
-    mp?: number;
-    gold?: number;
-    exp?: number;
-    item?: unknown;
-    relic?: unknown;
-    elite?: boolean;
-    status?: unknown;
-    tradeoff?: string;
-    tone?: EventChoiceTone;
-    scoutEffect?: string;
-    gaugeEffect?: string;
-    type?: string;
-    reward?: { type?: string; amount?: number; relicId?: string };
-    log?: string;
 }
 
 /**

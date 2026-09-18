@@ -1,4 +1,5 @@
 import type { PostCombatResult } from '../types/combat.js';
+import type { RunSummary } from '../reducers/actionTypes.js';
 /**
  * `getPostCombatAnalysis`/`getPostCombatRecommendation`/`getPostCombatDecisionStrip`가
  * 공유하는 전투 결과 모양 — CombatEngine 승리 판정 산출물 중 이 파일이 읽는 필드만
@@ -162,20 +163,11 @@ export const getPostCombatDecisionStrip = (result: PostCombatResultLike, context
     };
 };
 
-/** `getRunSummaryAnalysis`/`getRunSummaryReflectionStrip`가 읽는 run summary 필드만 좁힌 로컬 뷰. */
-interface RunSummaryLike {
-    bossKills?: number;
-    level?: number;
-    primaryBuild?: string;
-    difficultyLabel?: string;
-    recentWinRate?: number;
-    relicsFound?: number;
-    kills?: number;
-    totalGold?: number;
-    escapes?: number;
-    discoveries?: number;
-    maxKillStreak?: number;
-}
+/**
+ * 런 요약 분석 입력 — 생산자 `buildRunSummary`(gameUtils)의 반환형 부분 집합.
+ * 테스트 픽스처가 부분 객체를 넘기므로 Partial로 받는다(손으로 쓴 필드 목록은 W8 통합에서 제거).
+ */
+type RunSummaryLike = Partial<RunSummary>;
 
 // cycle 557: summary default {} 제거 — 1 production (RunSummaryCard:25) +
 //   N test (cycle-87/97) 모두 summary 명시 전달이라 default 도달 불가.

@@ -35,7 +35,7 @@ export interface LogEntry {
 export interface GameEvent {
     desc: string;
     choices: string[];
-    outcomes: unknown[];
+    outcomes: EventOutcome[];
     title?: string;
     /** AI/오프라인 폴백 이벤트 전용 — 'ai' 또는 폴백 소스 이름. */
     source?: string;
@@ -88,4 +88,79 @@ export interface LeaderboardEntry {
     uid?: string;
     /** Firestore `serverTimestamp()` — 표시에 쓰이지 않는다. */
     updatedAt?: unknown;
+}
+
+// ---- 이벤트 outcome 정본 (Wave 8: eventActions·eventPresentation의 로컬 사본 2개를 단일화) ----
+/** 이벤트 선택지 톤 — eventPresentation의 카드 색/라벨 판정 키. */
+export type EventChoiceTone = 'reward' | 'recovery' | 'danger' | 'story' | 'unknown';
+
+/** 체인 이벤트 outcome의 보상 블록 (eventChains.ts의 reward 스키마 합집합). */
+export interface EventReward {
+    type?: string;
+    amount?: number;
+    text?: string;
+    name?: string;
+    atkMult?: number;
+    duration?: number;
+    atk?: number;
+    def?: number;
+    hp?: number;
+    mp?: number;
+    /** 체인 보상 유물 지정자 (eventPresentation이 읽는다). */
+    relicId?: string;
+}
+
+/** 이벤트 outcome이 실어 보내는 버프 — 신규 배율 스키마와 캠프파이어 스키마 양쪽. */
+export interface OutcomeBuff {
+    atkMult?: number;
+    defMult?: number;
+    turns?: number;
+    atk?: number;
+    def?: number;
+    turn?: number;
+    name?: string | null;
+}
+
+/** 이벤트 outcome 상태이상 지정자. */
+export interface OutcomeStatus {
+    id?: string;
+    turns?: number;
+}
+
+/** 이벤트 outcome 유물 보상 지정자. */
+export interface OutcomeRelic {
+    count?: number;
+}
+
+/**
+ * 이벤트 카드 1개의 선택 결과(outcome). AI 이벤트·체인·정찰·보스 게이지·구조화 폴백이
+ * 같은 배열에 실려 오므로, 각 경로가 읽는 필드를 여기 한 곳에 모아 optional로 선언한다
+ * (`currentEvent` 자체는 아직 `GameState['currentEvent']` = any — reducer 핸들러 소유).
+ */
+export interface EventOutcome {
+    choiceIndex?: number;
+    /** 구조화 조우(boundedEncounter) 전용 선택 식별자. */
+    choiceId?: string;
+    type?: string;
+    log?: string;
+    /** 체인 스텝 데이터(eventChains.ts)는 보상 없는 선택지를 `reward: null`로 표기한다. */
+    reward?: EventReward | null;
+    gold?: number;
+    exp?: number;
+    hp?: number;
+    mp?: number;
+    item?: string;
+    buff?: OutcomeBuff;
+    status?: OutcomeStatus;
+    relic?: OutcomeRelic;
+    elite?: boolean;
+    /** 정찰 카드 전용 — 'combat' | 'elite' | 'anomaly' | 'unknown'. */
+    scoutEffect?: string;
+    /** 정찰 "전투의 기척" 전용 — 처치 보상 배율 가산. */
+    rewardBonus?: number;
+    /** 보스 게이지 카드 전용 — 'avoid' | (도전). */
+    gaugeEffect?: string;
+    /** 한정 조우 카드 전용 — 선택지 톤/트레이드오프 문구 (eventPresentation이 읽는다). */
+    tradeoff?: string;
+    tone?: EventChoiceTone;
 }
