@@ -437,10 +437,10 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 | A4 `as any` 경계 | ✅ | 33 → 0(실측이 계획의 28보다 많았음). 매니페스트 JSON 3건은 캐스트가 애초에 불필요(`resolveJsonModule` 추론이 이미 정확), DOM/Capacitor 6건은 `unknown` + `in`/`typeof` 술어, `ITEMS` flatten 20건은 실제 유니온 + `'x' in entry` 접근자. **발견**: `itemVisuals`의 카탈로그 인덱스가 접두사 항목(`type: 'all'`)까지 아이템으로 끌어들이고 있었음(실충돌은 없었으나 `'all'` 분기가 타입상 dead임을 드러냄) |
 | 직접(마지막 13건) | ✅ | `firebase.ts`의 `auth`/`db`를 실제대로 `\| null`로 — 소비처 8곳을 `hasFirebaseConfig`/부트 단계와 동치인 가드로 닫음(런타임 동일). `DROP_TABLES: Record<string, readonly DropTableEntry[]>`(엔트리 타입을 데이터로 이동, loot 엔진의 사본·캐스트 제거). `EventChainProgress`(number \| 'failed') 정본 |
 | A5 래칫 교정 | ✅ | 카운터가 주석의 `[key: string]: any` 이력 문구까지 세던 것을 `stripCommentLines`로 교정(한글 카운터와 동일 방식) → 코드 실측 `: any` 124 / `as any` 45에서 출발 |
-| A6 다른 any 표기 | ⏳ | `Record<string, any>`·`any[]` 66건 — 실행 중, 통합 후 갱신 |
-| 래칫 | ⏳ | 코드 실측 `: any` 1(문자열 리터럴) / `as any` 0 — A6 통합 후 lint 규칙 전환 판단 |
+| A6 다른 any 표기 | ✅ | `Record<string, any>`·`any[]`·`<any>` 66건/28파일 → 0. 로컬 빌드 객체는 `Player`, 조회 테이블은 `Record<Union, string>`/`QuestReward`, 저장·외부 경계는 `Record<string, unknown>` + 술어, 감사 `any[]`는 행 빌더 타입. **발견**: `ActionPayloadMap[UPDATE_CODEX].category`가 `string`으로 실제(`CodexCategory`)보다 넓었음 → 좁힘. `Player.eventChainProgress`는 체인 id 키(`number \| 'failed'`) + 예약 키 `boundedEncounterReceipts`(영수증 레코드)의 의도된 이중 용도 — 유니온으로 정직하게 닫고 `exploreUtils`의 숨은 보스 판정을 `typeof` 가드로(결과 동일) |
+| 래칫 → lint | ✅ | src 명시 `any` **0**(코드 실측 `: any` 1은 `relicHpDrainAtkAudit`의 문자열 리터럴 안 회귀 가드 패턴 — 타입 아님, `as any` 0, 다른 표기 0). **`@typescript-eslint/no-explicit-any`를 `error`로 켬**(`eslint .` 0 problems) — 래칫 두 카운터는 1/0 상한 이중 가드로 유지. Wave 5 시작점 1,581 → 0 |
 
 **최종 게이트**: A6 통합 후 직렬 게이트 결과를 기록한다
 
-**남은 후보 (Wave 10)**: A6 결과와 함께 갱신
+**남은 후보 (Wave 10)**: `any` 시리즈(Wave 5~9) 종료. 축 이동 — (1) CLAUDE.md §8 실제 위험의 동작 계약 테스트: 전투 턴 authority(`combatTurn`/`expectedTurn` replay 거부 시나리오 매트릭스), 세이브 호환(`DATA_VERSION` 5.1 이하 각 버전 픽스처 → `migrateData` 왕복), Firebase boot race(`bootStage` 전이 순서 계약); (2) perf guard CI 연동(현재 non-blocking — 3회 실측 분산으로 예산 보정 후 blocking 전환); (3) 아트 채택 테스트의 소스 바이트 해시 핀(`monsters.ts` 등) → 데이터 값 해시로 전환(타입 주석 변경마다 재고정하는 비용 제거); (4) `Record<string, unknown>` 경계 8곳(gameStorage/localGameSnapshot)의 런타임 스키마 검증 통일
 
