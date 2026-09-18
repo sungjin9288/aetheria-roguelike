@@ -321,3 +321,20 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 | **X5 문서·래칫** | CLAUDE.md 수치, 래칫 재고정(`: any`·`as any`·systems 한글), todo 원장, §10.1 | — | — | — | 직접 |
 
 **순서**: X1·X2·X4 병렬(파일 집합: hooks / systems+messages+라벨 소비 컴포넌트 2개 / reducers) → X3(X1 머지 후) → 증빙 일괄 재생성 → verify + e2e(chromium) → X5 → PR.
+
+### 10.1 Wave 6 실행 결과 (2026-09-18, branch `claude/funny-rubin-xdv43e`, 베이스 `main` = `911d0172`)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| X1 hooks deps 경계 | ✅ | `src/hooks/actionDeps.ts` 신설(타입 전용): `GameActionDeps`/`CombatActionDeps`/`InventoryActionDeps`/`InventoryActionCtx`/`AddLog`/`AddStoryLog`/`GetFullStats`/`EngineStableActions`/`EngineOwnedActions`/**`GameActions`**. `useGameEngine`의 actions 리터럴은 `satisfies GameActions`로 고정. 세션 타입(`LogEntry`/`GameEvent`/`LiveConfig`/`LeaderboardEntry`)은 `src/types/session.ts`로 분리, `GameState`가 이를 참조. 13개 액션 팩토리 + `makeSharedHelpers`/`buildClassVitals` + 나머지 훅 5개 시그니처 교체. hooks `: any` 272 → 56(그중 54는 `useGameTestApi` QA 시드 API — 프로덕션 tree-shaken, 별도 슬라이스) |
+| X2 systems 한글 → MSG | ✅ | 로그 문구 이관 + 상태이상 라벨 7중 테이블 → `MSG.STATUS_LABELS`/`MSG.DOT_LABELS`(`Record<StatusId, string>`) 단일화. MSG 키 +94(append-only, `// Wave 6 X2` 구획). 가시 문자열 바이트 동일(poison '독'/'중독' 드리프트는 기록만, 문구 변경 0). systems 한글 리터럴 253 → 122 |
+| X4 reducers any | ✅ | 핸들러 8파일 `: any` 104 → 9. `GameState` 필드 타입화(`logs: LogEntry[]`, `enemy: Monster \| null`, `currentEvent: GameEvent \| null`, `grave`, `shopItems: Item[]`, `leaderboard`, `liveConfig`, `quickSlots`, `pendingRelics`, `runSummary`). `GameAction.payload: any`는 계획대로 유지(유니온화는 별도 wave) |
+| X3 컴포넌트 props | ✅ | 8파일 142건 → **0**: `actions?: any` → `Pick<GameActions, …>`(필요 액션만) 또는 `GameActions`(ControlPanel — 6개 자식에 통째 전달). 퀘스트/유물/버튼 행 타입은 producer의 `ReturnType`/indexed access로 도출(중복 선언 0). 부수: `signatureDropSources`·`shopRotation`·`protocolCycle`·`controlPanelConfig` 반환형 정리. 소스 텍스트를 고정하던 정규식 가드 5건은 새 시그니처/동작 단언으로 갱신 |
+| X3b+ 잠복 불일치 | ✅ | X3-B가 드러냄: `seededShuffle`의 `any[]`가 `getCanonicalShopOffer` 유니온 전체를 `any`로 흡수해 `economyHandlers`의 `offer.item.jobs.includes(state.player.job)`(`job: string \| undefined`) 타입 오류를 가리고 있었다. 제네릭화 + reducer의 job 미보유 분기 명시(`includes(undefined) === false` 진리표 유지) + 할인 계산 `item.price ?? 0`(풀 243종 전부 price 보유 — 런타임 동일). 이것이 Wave 6의 논지("경계에 타입을 세우면 그 아래가 드러난다")의 실증 |
+| 통합 | ✅ | X1↔X4 `gameReducer.ts` 충돌은 X4의 타입된 `GameState` 채택 + X1 중복 제거로 해소. 교차 tsc 오류 3건(`unknown[]`→`EventOutcome[]` 헬퍼, story `data: Record<string, unknown>`, `stats: FullStats`). 생산자 없는 `Monster.id?` 제거. 증빙 JSON 6건 재생성 |
+| 래칫 | ✅ | `: any` 1,301 → **819**, `as any` 83 → **80**, systems 한글 260 → 122, reducers 한글 26, index signature 0, systems `Math.random` 0 (전부 하락만 허용) |
+
+**최종 게이트** (샌드박스 로컬 = CI 동일 빌드 `VITE_ENABLE_TEST_API=1` + 더미 Firebase config): type-check 0 · lint 0 problems · 래칫 6/6 — unit/build:guard/e2e/perf 결과는 게이트 완주 후 이 줄에 기록한다
+
+**남은 후보 (Wave 7)**: `BalanceConfig`의 `[key: string]: any` 인덱스 시그니처(`constants.ts` — `BALANCE.X` 미선언 키가 전부 `any`로 새어 나가 `protocolCycle`에 로컬 캐스트를 남겼다; 선언 필드로 닫기), `GameAction.payload: any` → 핸들러별 payload 유니온(dispatch 호출부 수백 곳 — 핸들러 그룹 단위로), utils 잔여 `: any` 248건(`exploreUtils`·`combatView`·`runProfileUtils` 상위), systems 162건(`CombatEngine` mixin 경계), `useGameTestApi` 54건(QA 시드 API — 프로덕션 영향 0, 마지막), components 잔여 173건(`CraftingPanel`·`WeaponCodex`·`TerminalView`·`SmartInventory` 상위).
+
