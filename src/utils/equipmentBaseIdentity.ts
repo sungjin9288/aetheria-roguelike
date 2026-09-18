@@ -254,7 +254,7 @@ export const resolveEquipmentBaseIdentity = (item: Item | null | undefined): Can
 };
 
 /** Add the optional identity tag only when an exact canonical equipment base exists. */
-export const withCanonicalEquipmentBaseIdentity = <T extends Item>(item: T): T => {
+export const withCanonicalEquipmentBaseIdentity = <T extends Item | null | undefined>(item: T): T => {
     const base = resolveEquipmentBaseIdentity(item);
     if (!base || item?.baseItemName === base.name) return item;
     return { ...item, baseItemName: base.name } as T;
@@ -272,11 +272,11 @@ export const getCanonicalEquipmentPrice = (item: Item | null | undefined): numbe
  * Price-only migration: known equipment gets its corrected canonical price and
  * persisted base identity; anything unresolved is returned byte-for-byte intact.
  */
-export const migrateEquipmentInstancePrice = <T extends Item>(item: T): T => {
+export const migrateEquipmentInstancePrice = <T extends Item | null | undefined>(item: T): T => {
     const base = resolveEquipmentBaseIdentity(item);
     const price = getCanonicalEquipmentPrice(item);
     if (!base || price === null) return item;
-    if (item.baseItemName === base.name && item.price === price) return item;
+    if (item?.baseItemName === base.name && item?.price === price) return item;
     return { ...item, baseItemName: base.name, price } as T;
 };
 

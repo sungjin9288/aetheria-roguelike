@@ -491,12 +491,12 @@ export const migrateData = (rawData: unknown): MigratedSave | null => {
     // 추측하거나 삭제하지 않고 그대로 보존한다.
     if (Array.isArray(target.inv)) {
         const inv: unknown[] = target.inv;
-        target.inv = inv.map(migrateEquipmentInstancePrice);
+        target.inv = inv.map((entry) => migrateEquipmentInstancePrice(readItem(entry)));
     }
     if (target.equip) {
-        target.equip.weapon = migrateEquipmentInstancePrice(target.equip.weapon);
-        target.equip.armor = migrateEquipmentInstancePrice(target.equip.armor);
-        target.equip.offhand = migrateEquipmentInstancePrice(target.equip.offhand);
+        target.equip.weapon = migrateEquipmentInstancePrice(readItem(target.equip.weapon));
+        target.equip.armor = migrateEquipmentInstancePrice(readItem(target.equip.armor));
+        target.equip.offhand = migrateEquipmentInstancePrice(readItem(target.equip.offhand));
     }
 
     // 이 단언이 이 함수의 반환 계약이다 — 위 300여 줄이 세운 봉투 모양(`MigratedSave`)을

@@ -1,30 +1,16 @@
+import type { PostCombatResult } from '../types/combat.js';
 /**
  * `getPostCombatAnalysis`/`getPostCombatRecommendation`/`getPostCombatDecisionStrip`가
  * 공유하는 전투 결과 모양 — CombatEngine 승리 판정 산출물 중 이 파일이 읽는 필드만
  * 좁힌 로컬 뷰(canonical 타입은 `GameState.postCombatResult`, 별도 트랙 소유).
  */
-interface PostCombatResultLike {
-    hpLow?: boolean;
-    mpLow?: boolean;
-    invFull?: boolean;
-    playerHp?: number;
-    playerMaxHp?: number;
-    playerMp?: number;
-    playerMaxMp?: number;
-    enemyTier?: string;
-    enemy?: string;
-    primaryBuild?: string;
-    difficultyLabel?: string;
-    leveledUp?: boolean;
-    enemyWeakness?: string;
-    enemyResistance?: string;
-    items?: unknown[];
-    loot?: unknown[];
-    gold?: number;
-    exp?: number;
-    upgradeHint?: unknown;
-    traitHint?: unknown;
-}
+/**
+ * 전투 결과 카드 분석 입력 — 생산자 타입 `PostCombatResult`(types/combat.ts)의 부분 집합.
+ * 테스트 픽스처와 QA 시드가 부분 객체를 넘기므로 Partial로 받고, `difficultyLabel`은
+ * buildRunSummary 필드(전투 생산자는 내지 않음 — 테스트만 전달)라 optional로 덧붙인다.
+ * `loot` 별칭 폴백은 생산자가 없어(W8-Z1 확인) 제거했다.
+ */
+type PostCombatResultLike = Partial<PostCombatResult> & { difficultyLabel?: string };
 
 /** `getPostCombatRecommendation`/`getPostCombatDecisionStrip`의 loot 집계 컨텍스트. */
 interface PostCombatDecisionContext {
@@ -104,11 +90,7 @@ export const getPostCombatRecommendation = (result: PostCombatResultLike, contex
         : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3;
     const invFull = typeof result.invFull === 'boolean' ? result.invFull : false;
     const enemyTier = result.enemyTier || 'NORMAL';
-    const droppedItems = Array.isArray(result.items)
-        ? result.items
-        : Array.isArray(result.loot)
-            ? result.loot
-            : [];
+    const droppedItems = Array.isArray(result.items) ? result.items : [];
     const nonSignatureLootCount = Number.isFinite(context.nonSignatureLootCount)
         ? Number(context.nonSignatureLootCount)
         : droppedItems.length;
@@ -140,11 +122,7 @@ export const getPostCombatDecisionStrip = (result: PostCombatResultLike, context
         : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3;
     const invFull = typeof result.invFull === 'boolean' ? result.invFull : false;
     const enemyTier = result.enemyTier || 'NORMAL';
-    const droppedItems = Array.isArray(result.items)
-        ? result.items
-        : Array.isArray(result.loot)
-            ? result.loot
-            : [];
+    const droppedItems = Array.isArray(result.items) ? result.items : [];
     const nonSignatureLootCount = Number.isFinite(context.nonSignatureLootCount)
         ? Number(context.nonSignatureLootCount)
         : droppedItems.length;
