@@ -676,3 +676,75 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 **최종 게이트** (head `0b038940`, CI 동일 빌드): type-check 0 · lint 0 · unit **5,086 / 5,086**(skip 0, Wave 12 대비 +47) · build:guard ok · e2e **121 / 121**(61 + 60) · perf desktop ok(FCP 584ms) / mobile ok(FCP 324ms) · 증빙 12종 verify 전부 ok. 1차 실행 전 단계 그린.
 
 **남은 후보 (Wave 14)**: (1) **퀘스트 게이트 정렬** — 퀘스트 101의 `goal`/`minLv`를 45로 맞춘다. `cost.gates.quests`가 한 버킷 움직이므로 예고값을 먼저 기록하고 들어갈 것; (2) **tier-3 안의 25배 격차** — 시간술사 `reqLv: 25` vs 나머지 45. 같은 선언 티어가 서로 다른 시간대에 있다; (3) **성직자 갈래의 선택지 0개 구간** — `next`가 팔라딘 하나뿐이라 Lv5~45가 분기 없는 외길이다; (4) **`firestore.rules` 배포 자동화 + 에뮬레이터 검증** — 지금은 수동 배포에 semantics를 검증하는 것이 아무것도 없다(`@firebase/rules-unit-testing` + CI job, `package.json`·CI 수정 동반); (5) **`equipment-combat-power-audit` 테스트의 증빙 쓰기 부작용** — 정상 테스트 실행이 트래킹 파일을 덮어쓴다; (6) class-(b) 1,807건은 Wave 11 정책대로 계속 방치.
+
+## 18. Wave 14 계획 (2026-09-19 착수, 베이스 `main` = `636fc273` = PR #40 merge commit)
+
+**핵심**: Wave 13이 직업 게이트를 45로 내려 승천 앞에 13.90h 여유를 만들고 나니, 같은 리포트의 `cost.behind`가 **더 깊은 간극**을 가리킨다 — `level: 49` 행에서 `jobs`는 0이 됐지만 `eventChainTerminalSteps`는 여전히 **5 / 13**이고 그 다섯은 전부 에테르 관문(경로 Lv68 = 170.23h)이다. 승천 게이트(53.28h)와의 차는 **−116.95h**로 Wave 13이 닫은 −77.87h의 **1.50배**다. 그런데 이게 장비 65종·퀘스트 39개·맵 13개와 **같은 종류가 아니라는 것**이 이번 wave의 근거다: 그 셋은 §17이 "승천을 거절한 플레이어의 깊이"로 분류한, 애초에 **열리지 않는** 콘텐츠다. 체인은 **열렸다가 닫히지 않는다** — 실측으로 4개가 승천 이전에 열린다(`ancient_prophecy` 어둠의 동굴 Lv10 = 2.05h · `dragon_legacy` 화염의 협곡 Lv15 = 2.73h · `forgotten_god` 고대 마법 탑 Lv25 = 5.23h · `world_tree_corruption` 세계수 숲 Lv40 = 21.08h) 그리고 완주는 전부 170.23h다. 그 사이에 리셋이 있고, **`pickPermanentPlayerState`에 `eventChainProgress`가 없어서** `ASCEND`가 `...INITIAL_STATE.player`로 지운다 — `stats.discoveryChains`·`stats.visitedMaps`·`stats.codex`·`titles`가 전부 계승되는 **지식 축에서 이것 하나만** 리셋된다. 플레이어는 그걸 본다: `QuestTab`이 `buildChainJournal(player.eventChainProgress)`로 "진행 중" 목록을 그리고 `returnBriefing`이 `activeChainCount`를 센다. 게다가 **리포트가 그 게이트를 틀리게 매기고 있다** — `contentReachability.ts`의 `eventChainTerminalSteps()`가 `chain.steps.at(-1).loc` 하나만 보는데 `forgotten_god`은 고대 마법 탑(25) → **에테르 관문(68)** → 혼돈의 심연(48)로 스텝이 역전돼 있고 `chainEventHandlers.ts:99`가 스텝 순서를 강제하므로, 오늘의 `cost`는 이 체인을 48(53.28h)에 적으며 **116.95h 과소 계상**한다. Wave 12가 "맵 선언 레벨은 실제 게이트가 아니다"로 잡은 것과 같은 오류가 체인 축에 그대로 남아 있었다. 한편 §17.1이 남긴 나머지 후보들은 실측하면 크기가 달라진다 — tier 3 안의 격차는 25배가 아니라 **7.53배**(39.38h / 5.23h)이고, `tier`를 읽는 프로덕션 지점은 `ClassIcon`의 `TIER_COLORS[tier]`(색) **한 곳**뿐이며 `cost.gates.jobs`는 `reqLv`만 읽는다. 그래서 직업 사다리 후보 셋은 "tier를 비용 밴드로 만드는" 일이 아니라 **라벨이 자기가 가리키는 것과 어긋난 세 자리를 맞추는** 하나의 작은 트랙이다. 마지막으로, 이 wave는 계측기 자체의 구멍 둘을 함께 닫는다: `equipment-combat-power-audit.test.js`는 저장소에서 **유일하게** 정상 `test:unit` 중 tracked 증빙에 `--write` 성공을 실행하는 테스트이고, `firestore.rules`는 의미 검증이 0이라 **모든 플레이어에게 열린 기능 하나가 rules에 없는 경로로 쓰고 있다**.
+
+**실측 — 승천(Lv48 = 53.28h) 이후에 남는 것** (`cost.behind`의 `level: 49` 행)
+
+| | 남는 수 | 가장 깊은 게이트 | 승천 이전에 **열리는가** |
+|---|---:|---|---|
+| 직업 | **0 / 18** | — | — (Wave 13 E1이 닫음) |
+| 장비 | 65 / 229 | Lv75 = 204.40h | 아니다 — 열리지 않는다 |
+| 퀘스트 | 39 / 143 | Lv79 = **비용 없음**(`beyond-anchors`) | 아니다 |
+| 맵 | 13 / 52 | Lv75 = 204.40h | 아니다 |
+| **이벤트 체인 종착** | **5 / 13** | 경로 Lv68 = 170.23h | **4개가 2.05h~21.08h에 열린다** |
+
+**실측 — 체인 13개의 열림 / 완주 게이트** (경로 게이트 기준, `src/utils/mapRouteGate.ts` authority)
+
+| 체인 | 열림 | 완주(전 스텝 max) | 간격 | 오늘 리포트가 적는 값 |
+|---|---:|---:|---:|---|
+| `ancient_prophecy` | Lv10 = 2.05h | Lv68 = 170.23h | **168.18h** | 68 (맞음) |
+| `dragon_legacy` | Lv15 = 2.73h | Lv68 = 170.23h | **167.50h** | 68 (맞음) |
+| `forgotten_god` | Lv25 = 5.23h | Lv68 = 170.23h | **165.00h** | **48 — 116.95h 과소** |
+| `world_tree_corruption` | Lv40 = 21.08h | Lv68 = 170.23h | **149.15h** | 68 (맞음) |
+| `divine_apostle_trial` | Lv50 = 65.90h | Lv68 = 170.23h | 104.33h | 68 (맞음, 승천 뒤에 열린다) |
+| `rift_secret` | Lv68 = 170.23h | Lv68 = 170.23h | 0h | 68 (맞음) |
+| 나머지 7종 | Lv1~Lv48 | Lv23~Lv48 | — | 맞음 — 전부 루프 안에서 닫힌다 |
+
+**실측 — 직업 사다리의 세 라벨** (`tier` / 그래프 깊이 / `reqLv`)
+
+| | 실측 |
+|---|---|
+| `tier` == `모험가`로부터의 BFS 깊이 | **18개 중 17개 일치**. 유일한 불일치는 **성직자**(tier 1, 깊이 2 — `모험가→마법사→성직자`) |
+| `tier`를 읽는 곳 | 프로덕션 1곳(`ClassIcon`의 `TIER_COLORS[tier]` = 색), 테스트 1곳(`skill-branch-parity.test.js`의 `tier ≥ 2 ⇒ 분기 스킬 2개 이상`). `classSchemaErrors`는 0~3 **범위**만 본다 |
+| `cost.gates.jobs`가 읽는 것 | **`reqLv`뿐** — `tier`는 비용 축의 입력이 아니다 |
+| Lv5(1.30h)에 열려 있는 후속 직업 수 | 전사 **0** · 도적 **0** · 마법사 **1**(성직자, reqLv 5) |
+| 그 1을 집었을 때 | 되돌릴 수 없다(`characterActions.jobChange`는 `current.next.includes`만 본다). 무당(12)·아크메이지(30)·흑마법사(30)가 영구히 닫히고 capstone이 **5.23h(시간술사) → 39.38h(팔라딘)**, 7.53배. 성직자의 `next`는 팔라딘 하나뿐이라 그 뒤 **38.08h 동안 선택지 0개** |
+
+**실측 — 검증되지 않는 표면** (`firestore.rules` 11 match · 17 allow 중 Wave 13 E4의 텍스트 가드가 덮는 건 quota 블록 하나다)
+
+| 클라이언트 쓰기 지점 | 경로 | rules 판정 |
+|---|---|---|
+| `createCloudAutosave.ts:117` | `artifacts/aetheria-rpg/users/{uid}` | 통과(미검증) |
+| `createCloudAutosave.ts:122` | `…/public/data/leaderboard/{uid}` | 통과(미검증) |
+| `useFirebaseSync.ts:585` | `…/public/data/graves/{uid}` | 통과(미검증 — `gold ≤ 9,999,999` 상한을 클라이언트가 보장하지 않는다) |
+| `TokenQuotaManager.ts:211` | `…/users/{uid}/quota/daily-ai` | 통과(Wave 13 E4의 **텍스트** 가드만) |
+| `SystemTab.tsx:309` | `…/public/data` | **무조건 거부**(의도 — Console 전용) |
+| `SystemTab.tsx:370` | `…/public/data/feedback` | **무조건 거부** — rules에 `feedback` 0건, 앱 블록의 `match /{document=**} { allow read,write: if false }`가 받는다. UI는 게이트 없이 모든 플레이어에게 열려 있고 실패는 "의견을 보내지 못했습니다."로 삼켜진다 |
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **F1 증빙 베이스라인의 자기치유 제거** | `tests/equipment-combat-power-audit.test.js`는 저장소에서 **유일하게** 정상 실행 중 tracked 증빙에 `--write` 성공을 때린다(4곳). 형제 11종은 `--write <tracked>`를 **거부 목록에서만** 쓰고, `exploration-rhythm.test.js`는 실행 전후 바이트 동일까지 단언한다. 둘 중 하나의 선례를 따른다 — temp `cwd` + `node_modules` 심볼릭 링크로 CLI를 돌리거나, 쓰기 전후 바이트를 tracked와 **동일하다고 단언하고 finally에서 복원**하거나. **예고 증빙 델타: 없음** | `classes.ts`가 움직이는 순간 이 증빙이 **스스로 재베이스라인되고 `equipment:combat-power:verify`가 그 위에서 초록이 되는** 구멍이 닫힌다 | 테스트 1파일 | `--write` 호출을 그냥 지우면 **writer 경로의 커버리지가 사라진다** — 이번 wave의 증빙 재고정이 검증되지 않은 코드로 실행된다. 바이트 동일 단언 없이 temp로만 옮기는 것도 실패다 | sonnet |
+| **F2 체인 완주 게이트와 승천의 지우개** | (1) `eventChainTerminalSteps()`를 **전 스텝 max**로 — 완주 게이트는 종착 스텝의 게이트가 아니다. `cost.eventChainSpans` 13행 신설, `report.schemaVersion` 2→3 + `EXPECTED_SCHEMA_VERSION`. (2) `forgotten_god` 스텝 1의 `loc`을 경로 게이트 ≤48인 지역으로 — **역전 교정**이다(13개 중 완주 게이트가 종착 게이트보다 높은 유일한 체인). (3) `pickPermanentPlayerState`가 `eventChainProgress`의 **체인 id 키만** 이월. **예고 델타**: (i) 측정만 고쳤을 때 `gates.eventChainTerminals` **48:4→3 · 68:5→6**, `behind`의 체인 열 **5→6** @ 49·50·52·55·59·60·62·65·68. (ii) 스텝 이동 뒤 **48:4 / 68:5로 복귀**. `event-reward-coherence.json`은 `chain:forgotten_god:1:0`·`1:1` **2행만** 움직이고 `errors`·3개 카운트 불변. **불변**: `cost.anchors` 8행, `gates.{maps,quests,equipmentTiers,jobs}`, `mapGateDivergence` 10행 | 서사 축의 비용이 처음으로 정직해지고, 2.05h에 시작한 이야기가 승천마다 0으로 돌아가던 것이 멈춘다 | systems 1 + data 1 + utils 1 + 테스트 3(신규 1) + 스크립트 1 | `eventChainProgress`를 **통째로** 이월하면 실패다 — 이 필드는 용도가 둘이라 `boundedEncounterReceipts` 키가 원정 조우 영수증 레저를 겸한다. 통째로 넘기면 영수증이 승천을 넘어가 재획득을 막는다. 종착 3개(Lv68)를 이 트랙에서 같이 옮기는 것도 실패다 | opus |
+| **F3 `firestore.rules`를 실행해서 검증한다** | 에뮬레이터(`firebase.json`에 `emulators` 블록) + `@firebase/rules-unit-testing` + CI job. 테스트는 **rules가 아니라 클라이언트 쓰기 지점 6곳에서 쓴다** — 각 지점의 실제 페이로드를 그대로 태워 통과/거부를 실행으로 본다. 그 결과 강제되는 결정 하나: `…/public/data/feedback`에 match를 추가할지, 기능을 걷어낼지. **예고 델타**: `progression-diagnostic-v2.json`의 `sources`에 **`package.json`·`package-lock.json`이 있으므로** 게임 코드를 한 줄도 안 건드려도 이 증빙이 움직인다. `sources` 길이는 346 유지. 나머지 증빙 12종 불변 | 저장소의 보안 표면 전체(11 match · 17 allow)가 실행 가능해진다. 지금은 **모든 플레이어에게 열린 기능 하나가 100% 거부**되는데 저장소의 어떤 게이트도 그걸 못 본다 | `package.json`(+lock) · CI job 1 · rules 1 · 테스트 1 — **어떤 트랙도 건드린 적 없는 두 파일** | **rules에서 유도한 테스트를 쓰면 실패다** — 의견 보내기를 막는 오늘의 rules 위에서도 초록이다. 반드시 클라이언트 쓰기 지점에서 유도할 것. 에뮬레이터가 JDK를 요구한다(CI 러너의 JDK 유무는 첫 실행으로 확인하고 없으면 setup-java). `hasAll`을 넓히는 것은 여전히 금지(§17.1 발견 7) | opus |
+| **F4 직업·퀘스트 라벨 정렬** | 셋 다 "선언한 라벨이 자기가 가리키는 것과 어긋난다"의 같은 형태다. (1) `성직자` `tier: 1 → 2`(깊이와 일치). (2) `성직자` `reqLv: 5 → 12` — **기준은 "첫 되돌릴 수 없는 분기는 세 뿌리에서 같은 모양이어야 한다"**: 지금 Lv5에 열린 후속은 전사 0 / 도적 0 / 마법사 1이고, 그 1을 집으면 5.23h capstone이 영구히 닫힌다. (3) 퀘스트 101 `goal 60/minLv 59 → 45/44`, 문구를 `'전직의 자격 (3차)' / '레벨 45 달성하여 3차 전직'`로 되돌린다(100번과 같은 `minLv = goal − 1` 규칙). (4) 신규 불변식 `tier === 모험가로부터의 BFS 깊이`(18/18). **예고 델타**: `gates.jobs` → `[1:1, **5:3**, **12:2**, 25:1, 30:6, 45:5]`. `gates.quests` **`59:1` 소멸**, `44` 1→2. `behind` **45행 → 44행**, `jobs` +1 @ 6·7·8·10·12, `quests` −1 @ 45·48·49·50·52·55. `progression-simulator.test.js`의 `EXPECTED_JOB_LEVELS[10]` 5→12, `reachableJobCount` → `[1,4,4,6,18,18,18]`. `equipment-combat-power.json`은 `authority.classesHash`와 `sourceSnapshot` 한 줄만 — **`reportHash` 불변**. **불변**: `cost.anchors` 8행(모델 플레이어는 끝까지 `모험가`다) | 라벨 셋이 자기가 가리키는 것과 일치하고, Wave 13이 45로 내린 3차 전직에 **그 보상이 따라온다**. 첫 분기의 숨은 함정이 사라진다 | 데이터 2파일 + 핀 3파일 + 신규 테스트 1 | 핀 3종을 **전후 양쪽 깨끗한 트리에서 먼저 실측**해 기록할 것 — "테스트가 빨개서 고친" 핀이 하나라도 있으면 E1이 세운 기준을 잃는다. 시간술사를 45로 같이 올리는 것도 실패다(아래 기각 1). 골든 바이트 불변 확인할 것 | opus |
+| **F5 증빙 재고정·문서** | 통합 트리에서 F2·F4의 예고값 재현 확인 → 증빙 **5종** 재생성(순서 고정) → **13종** `*:verify` → §18.1, CLAUDE.md, `tasks/todo.md` | — | — | — | 직접 |
+
+**파일 집합** — F1: `tests/equipment-combat-power-audit.test.js`. F2: `src/systems/contentReachability.ts` · `src/data/eventChains.ts` · `src/utils/permanentProgress.ts` · `scripts/verify-content-reachability.mjs` · `tests/content-reachability.test.js` · `tests/permanent-progress-copy.test.js` · `tests/event-chain-cost.test.js`(신규). F3: `firestore.rules` · `firebase.json` · `package.json` · `package-lock.json` · `.github/workflows/ci.yml` · `tests/firestore-rules-semantics.test.js`(신규) · `tests/token-quota-firestore-contract.test.js` (+ 피드백 결정이 "기능 제거"면 `src/components/tabs/SystemTab.tsx`). F4: `src/data/classes.ts` · `src/data/quests.ts` · `tests/progression-simulator.test.js` · `tests/class-tier-depth.test.js`(신규) · `scripts/progression-diagnostic-evidence.mjs` · **`tests/content-reachability.test.js`(F2와 공유 — 이 wave의 유일한 교차)**. F5: `docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md` · `CLAUDE.md` · `tasks/todo.md` · 증빙 5종.
+
+**순서**: **F1 직렬 선행 — 나머지 세 트랙은 F1 커밋에서 분기한다.** 이유는 실측이다: F1 이전 트리에서 `src/data/classes.ts`를 만지는 F4의 워크트리는 `npm run test:unit` **한 번**에 `equipment-combat-power.json`을 스스로 새 `classesHash`로 덮어쓰고, 그러면 §17이 E1에 건 "워크트리에서 증빙을 `--write`하지 않는다"가 이 파일에 대해서만 강제 불가다 → **F2 · F3 병렬**(파일 집합 무교차) → 통합 → **F4 직렬**(F2가 `tests/content-reachability.test.js`를 다시 쓰므로) → **통합 트리에서 F2·F4의 예고값 재현 확인**(어긋나면 증빙을 만들기 전에 멈춘다) → **증빙 재고정은 통합자가 마지막에 한 번만, 순서 고정**: ① `PROGRESSION_V1_BASELINE_HASH` 갱신 확인 → ② content(`--write`) → ③ event-reward-coherence(`--write`) → ④ equipment-combat-power(`--write`) — **이번 wave부터 수동 단계다**(F1이 테스트의 자동 쓰기를 없앴다) → ⑤ pacing(`--write`, 4m30s) → ⑥ `progression:diagnostic:write`(1m59s, **346개 해시**를 실행 전후로 다시 읽으므로 **맨 마지막**이고 병행 명령 금지) → **13종** `*:verify` → 직렬 게이트 → F5 → PR → CI → merge commit.
+
+**판단 포인트**: 셋을 틀리면 이 wave는 측정을 쓰지 못하고 측정만 망친다. 첫째, **F2는 측정을 고치는 트랙이지 콘텐츠를 옮기는 트랙이 아니다 — 예외는 하나뿐이고 그건 취향이 아니다.** `forgotten_god`은 스텝 순서가 강제되는데 중간 스텝의 게이트(68)가 종착(48)보다 높다. 그런 체인은 13개 중 하나뿐이고, 그것만 고친다. 나머지 셋의 Lv68 종착을 같이 옮기고 싶어지는데, 그 순간 `eventRewardCoherenceAudit`의 tier 바닥과 장비 경제가 함께 움직이고, 무엇보다 **교정되지 않은 측정 위에서 콘텐츠를 옮기게 된다** — Wave 12→13의 순서를 뒤집는 것이다. 둘째, **rules 테스트는 rules에서 쓰면 안 되고 클라이언트 쓰기 지점에서 써야 한다.** rules 텍스트를 재현한 테스트는 의견 보내기를 막는 오늘의 rules 위에서도 초록이다. F3의 산출물은 "rules를 테스트로 옮겼다"가 아니라 **"6개 쓰기 지점의 실제 페이로드를 태워 통과/거부를 실행으로 봤다"**여야 하고, 거부가 정답인 지점(admin `public/data`)도 거부로 고정해야 한다. 셋째, **§17이 게이트 상태를 틀리게 적었다 — 정정한다.** `tests/progression-diagnostic-cli.test.js`는 `tests/*.test.js` glob에 잡히는 유닛 테스트이고 증빙 CLI를 `--verify`로 실행하며, 그 봉투는 `src/**` 332개 + 고정 14경로 = **346개 파일의 sha256**을 박는다. 그래서 `src/**`를 **한 글자라도** 고치면 `npm run verify`가 정확히 이 테스트 하나로 빨개지고, 그게 **정상 상태**다. 범인 좁히기의 유일한 판별자는 `content:verify`다. 그리고 §16·§17이 적은 "증빙 12종"은 **13종**이 맞다(JSON 14개 중 `observation-summary.json`만 verify가 없다).
+
+**하지 않기로 한 것** (나중 wave가 다시 논의하지 않도록 사유와 함께 남긴다)
+
+1. **`tier`를 비용 밴드로 만들기**(시간술사 `reqLv` 25→45, 무당 12→30). `tier`를 읽는 곳은 실측 두 곳뿐이고 둘 다 비용이 아니다. `cost.gates.jobs`는 `reqLv`만 읽는다. tier 3 안의 격차는 25배가 아니라 **7.53배**다(25.1배는 Wave 13 이전 값이고 §17.1의 후보 목록이 그 값을 들고 있었다). 시간술사를 45로 올리면 **40시간 미만의 유일한 capstone이 사라진다** — Wave 13이 만든 여유와 정반대 방향이다. `tier`는 앞으로도 **위상 라벨**이고 F4가 그것을 불변식으로 못 박는다.
+2. **Lv68 종착 3개를 루프 안으로 이동.** Wave 15. 교정된 측정(F2의 `cost.eventChainSpans`)이 입력이고, 이동은 `CHAIN_ITEM_TIER_TOO_LOW` 바닥과 장비 경제를 함께 끌고 들어온다.
+3. **성직자에게 두 번째 후속 직업 주기.** 콘텐츠 추가이고, F4의 `reqLv 5→12`가 "Lv5의 숨은 함정"이라는 실제 문제를 데이터 한 줄로 제거한다. 38.08h 외길 자체는 깊이-2 직업 전부가 `next` 1개인 구조와 같다.
+4. **곡선(`EXP_SCALE_RATE`)·프레스티지 이월.** §17이 실측으로 기각했다. 재측정 없이 다시 꺼내지 말 것.
+5. **맵 선언 레벨을 경로 게이트에 맞추기.** §17 실측: 방향이 반대다. E2가 "표시"로 해결했고 그게 맞는 형태다.
+6. **퀘스트 104(minLv 79)의 `beyond-anchors` 공백 메우기.** 앵커를 Lv80까지 늘리면 `cost.anchors`가 8행에서 9행이 되어 Wave 13이 남긴 "바이트 동일" 기준선이 사라진다. 값이 `null`인 것이 정직한 상태다.
+7. **`SystemTab`의 admin 도구를 동작하게 만들기.** `public/data` 쓰기를 rules가 막는 것은 의도다. F3은 "항상 거부된다"를 실행 테스트로 고정만 한다.
+8. **class-(b) 소스 가드 1,807건.** Wave 11 C4 정책대로 계속 방치.
