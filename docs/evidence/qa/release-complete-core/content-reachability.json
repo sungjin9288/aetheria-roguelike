@@ -1,8 +1,8 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "e786259ab126ed010a83d980660875d1b309339cd8fc6659fb4f97408612e627",
+  "reportHash": "79baa2b147553ae9031ebee87f898c945ca38d3c925da423530005f6e7be48f5",
   "report": {
-    "schemaVersion": 2,
+    "schemaVersion": 3,
     "catalog": {
       "maps": 52,
       "monsters": 254,
@@ -2129,25 +2129,23 @@
         {
           "targetLevel": 5,
           "reachedLevel": 5,
-          "reachableJobCount": 5,
+          "reachableJobCount": 4,
           "reachableJobs": [
             "모험가",
             "전사",
             "마법사",
-            "도적",
-            "성직자"
+            "도적"
           ]
         },
         {
           "targetLevel": 10,
           "reachedLevel": 10,
-          "reachableJobCount": 5,
+          "reachableJobCount": 4,
           "reachableJobs": [
             "모험가",
             "전사",
             "마법사",
-            "도적",
-            "성직자"
+            "도적"
           ]
         },
         {
@@ -7281,8 +7279,9 @@
           },
           {
             "gateLevel": 44,
-            "count": 1,
+            "count": 2,
             "members": [
+              101,
               126
             ],
             "cost": {
@@ -7430,30 +7429,6 @@
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.6444656816943912
-              }
-            }
-          },
-          {
-            "gateLevel": 59,
-            "count": 1,
-            "members": [
-              101
-            ],
-            "cost": {
-              "level": 59,
-              "basis": "interpolated",
-              "modeledActions": 4985,
-              "modeledSeconds": 448650,
-              "modeledHours": 124.63,
-              "cumulativeExp": 2571799,
-              "interpolation": {
-                "lowerLevel": 45,
-                "upperLevel": 60,
-                "lowerModeledActions": 1575,
-                "upperModeledActions": 5246,
-                "lowerCumulativeExp": 612298,
-                "upperCumulativeExp": 2721799,
-                "expFraction": 0.9288931363388783
               }
             }
           },
@@ -7780,11 +7755,10 @@
           },
           {
             "gateLevel": 5,
-            "count": 4,
+            "count": 3,
             "members": [
               "도적",
               "마법사",
-              "성직자",
               "전사"
             ],
             "cost": {
@@ -7799,9 +7773,10 @@
           },
           {
             "gateLevel": 12,
-            "count": 1,
+            "count": 2,
             "members": [
-              "무당"
+              "무당",
+              "성직자"
             ],
             "cost": {
               "level": 12,
@@ -8101,6 +8076,488 @@
           "routeGateLevel": 62
         }
       ],
+      "eventChainSpans": [
+        {
+          "chain": "ancient_prophecy",
+          "steps": 3,
+          "openGateLevel": 10,
+          "openCost": {
+            "level": 10,
+            "basis": "anchored",
+            "modeledActions": 82,
+            "modeledSeconds": 7380,
+            "modeledHours": 2.05,
+            "cumulativeExp": 3328,
+            "interpolation": null
+          },
+          "completionGateLevel": 68,
+          "completionCost": {
+            "level": 68,
+            "basis": "interpolated",
+            "modeledActions": 6809,
+            "modeledSeconds": 612810,
+            "modeledHours": 170.23,
+            "cumulativeExp": 3921799,
+            "interpolation": {
+              "lowerLevel": 60,
+              "upperLevel": 75,
+              "lowerModeledActions": 5246,
+              "upperModeledActions": 8176,
+              "lowerCumulativeExp": 2721799,
+              "upperCumulativeExp": 4971799,
+              "expFraction": 0.5333333333333333
+            }
+          }
+        },
+        {
+          "chain": "lost_wizard",
+          "steps": 3,
+          "openGateLevel": 1,
+          "openCost": {
+            "level": 1,
+            "basis": "anchored",
+            "modeledActions": 0,
+            "modeledSeconds": 0,
+            "modeledHours": 0,
+            "cumulativeExp": 0,
+            "interpolation": null
+          },
+          "completionGateLevel": 40,
+          "completionCost": {
+            "level": 40,
+            "basis": "interpolated",
+            "modeledActions": 843,
+            "modeledSeconds": 75870,
+            "modeledHours": 21.08,
+            "cumulativeExp": 303820,
+            "interpolation": {
+              "lowerLevel": 20,
+              "upperLevel": 45,
+              "lowerModeledActions": 164,
+              "upperModeledActions": 1575,
+              "lowerCumulativeExp": 17389,
+              "upperCumulativeExp": 612298,
+              "expFraction": 0.4814702752858
+            }
+          }
+        },
+        {
+          "chain": "last_hero",
+          "steps": 3,
+          "openGateLevel": 3,
+          "openCost": {
+            "level": 3,
+            "basis": "interpolated",
+            "modeledActions": 25,
+            "modeledSeconds": 2250,
+            "modeledHours": 0.63,
+            "cumulativeExp": 429,
+            "interpolation": {
+              "lowerLevel": 2,
+              "upperLevel": 5,
+              "lowerModeledActions": 14,
+              "upperModeledActions": 52,
+              "lowerCumulativeExp": 200,
+              "upperCumulativeExp": 994,
+              "expFraction": 0.2884130982367758
+            }
+          },
+          "completionGateLevel": 35,
+          "completionCost": {
+            "level": 35,
+            "basis": "interpolated",
+            "modeledActions": 480,
+            "modeledSeconds": 43200,
+            "modeledHours": 12,
+            "cumulativeExp": 150442,
+            "interpolation": {
+              "lowerLevel": 20,
+              "upperLevel": 45,
+              "lowerModeledActions": 164,
+              "upperModeledActions": 1575,
+              "lowerCumulativeExp": 17389,
+              "upperCumulativeExp": 612298,
+              "expFraction": 0.22365269310096167
+            }
+          }
+        },
+        {
+          "chain": "shadow_guild",
+          "steps": 3,
+          "openGateLevel": 5,
+          "openCost": {
+            "level": 5,
+            "basis": "anchored",
+            "modeledActions": 52,
+            "modeledSeconds": 4680,
+            "modeledHours": 1.3,
+            "cumulativeExp": 994,
+            "interpolation": null
+          },
+          "completionGateLevel": 48,
+          "completionCost": {
+            "level": 48,
+            "basis": "interpolated",
+            "modeledActions": 2131,
+            "modeledSeconds": 191790,
+            "modeledHours": 53.28,
+            "cumulativeExp": 931846,
+            "interpolation": {
+              "lowerLevel": 45,
+              "upperLevel": 60,
+              "lowerModeledActions": 1575,
+              "upperModeledActions": 5246,
+              "lowerCumulativeExp": 612298,
+              "upperCumulativeExp": 2721799,
+              "expFraction": 0.1514803737945609
+            }
+          }
+        },
+        {
+          "chain": "forgotten_god",
+          "steps": 3,
+          "openGateLevel": 25,
+          "openCost": {
+            "level": 25,
+            "basis": "interpolated",
+            "modeledActions": 209,
+            "modeledSeconds": 18810,
+            "modeledHours": 5.23,
+            "cumulativeExp": 36254,
+            "interpolation": {
+              "lowerLevel": 20,
+              "upperLevel": 45,
+              "lowerModeledActions": 164,
+              "upperModeledActions": 1575,
+              "lowerCumulativeExp": 17389,
+              "upperCumulativeExp": 612298,
+              "expFraction": 0.03171073222963512
+            }
+          },
+          "completionGateLevel": 48,
+          "completionCost": {
+            "level": 48,
+            "basis": "interpolated",
+            "modeledActions": 2131,
+            "modeledSeconds": 191790,
+            "modeledHours": 53.28,
+            "cumulativeExp": 931846,
+            "interpolation": {
+              "lowerLevel": 45,
+              "upperLevel": 60,
+              "lowerModeledActions": 1575,
+              "upperModeledActions": 5246,
+              "lowerCumulativeExp": 612298,
+              "upperCumulativeExp": 2721799,
+              "expFraction": 0.1514803737945609
+            }
+          }
+        },
+        {
+          "chain": "machine_uprising",
+          "steps": 3,
+          "openGateLevel": 32,
+          "openCost": {
+            "level": 32,
+            "basis": "interpolated",
+            "modeledActions": 356,
+            "modeledSeconds": 32040,
+            "modeledHours": 8.9,
+            "cumulativeExp": 98499,
+            "interpolation": {
+              "lowerLevel": 20,
+              "upperLevel": 45,
+              "lowerModeledActions": 164,
+              "upperModeledActions": 1575,
+              "lowerCumulativeExp": 17389,
+              "upperCumulativeExp": 612298,
+              "expFraction": 0.13634017975858492
+            }
+          },
+          "completionGateLevel": 32,
+          "completionCost": {
+            "level": 32,
+            "basis": "interpolated",
+            "modeledActions": 356,
+            "modeledSeconds": 32040,
+            "modeledHours": 8.9,
+            "cumulativeExp": 98499,
+            "interpolation": {
+              "lowerLevel": 20,
+              "upperLevel": 45,
+              "lowerModeledActions": 164,
+              "upperModeledActions": 1575,
+              "lowerCumulativeExp": 17389,
+              "upperCumulativeExp": 612298,
+              "expFraction": 0.13634017975858492
+            }
+          }
+        },
+        {
+          "chain": "dragon_legacy",
+          "steps": 3,
+          "openGateLevel": 15,
+          "openCost": {
+            "level": 15,
+            "basis": "interpolated",
+            "modeledActions": 109,
+            "modeledSeconds": 9810,
+            "modeledHours": 2.73,
+            "cumulativeExp": 8003,
+            "interpolation": {
+              "lowerLevel": 10,
+              "upperLevel": 20,
+              "lowerModeledActions": 82,
+              "upperModeledActions": 164,
+              "lowerCumulativeExp": 3328,
+              "upperCumulativeExp": 17389,
+              "expFraction": 0.33247990896806773
+            }
+          },
+          "completionGateLevel": 68,
+          "completionCost": {
+            "level": 68,
+            "basis": "interpolated",
+            "modeledActions": 6809,
+            "modeledSeconds": 612810,
+            "modeledHours": 170.23,
+            "cumulativeExp": 3921799,
+            "interpolation": {
+              "lowerLevel": 60,
+              "upperLevel": 75,
+              "lowerModeledActions": 5246,
+              "upperModeledActions": 8176,
+              "lowerCumulativeExp": 2721799,
+              "upperCumulativeExp": 4971799,
+              "expFraction": 0.5333333333333333
+            }
+          }
+        },
+        {
+          "chain": "abyss_signal",
+          "steps": 3,
+          "openGateLevel": 48,
+          "openCost": {
+            "level": 48,
+            "basis": "interpolated",
+            "modeledActions": 2131,
+            "modeledSeconds": 191790,
+            "modeledHours": 53.28,
+            "cumulativeExp": 931846,
+            "interpolation": {
+              "lowerLevel": 45,
+              "upperLevel": 60,
+              "lowerModeledActions": 1575,
+              "upperModeledActions": 5246,
+              "lowerCumulativeExp": 612298,
+              "upperCumulativeExp": 2721799,
+              "expFraction": 0.1514803737945609
+            }
+          },
+          "completionGateLevel": 48,
+          "completionCost": {
+            "level": 48,
+            "basis": "interpolated",
+            "modeledActions": 2131,
+            "modeledSeconds": 191790,
+            "modeledHours": 53.28,
+            "cumulativeExp": 931846,
+            "interpolation": {
+              "lowerLevel": 45,
+              "upperLevel": 60,
+              "lowerModeledActions": 1575,
+              "upperModeledActions": 5246,
+              "lowerCumulativeExp": 612298,
+              "upperCumulativeExp": 2721799,
+              "expFraction": 0.1514803737945609
+            }
+          }
+        },
+        {
+          "chain": "world_tree_corruption",
+          "steps": 3,
+          "openGateLevel": 40,
+          "openCost": {
+            "level": 40,
+            "basis": "interpolated",
+            "modeledActions": 843,
+            "modeledSeconds": 75870,
+            "modeledHours": 21.08,
+            "cumulativeExp": 303820,
+            "interpolation": {
+              "lowerLevel": 20,
+              "upperLevel": 45,
+              "lowerModeledActions": 164,
+              "upperModeledActions": 1575,
+              "lowerCumulativeExp": 17389,
+              "upperCumulativeExp": 612298,
+              "expFraction": 0.4814702752858
+            }
+          },
+          "completionGateLevel": 68,
+          "completionCost": {
+            "level": 68,
+            "basis": "interpolated",
+            "modeledActions": 6809,
+            "modeledSeconds": 612810,
+            "modeledHours": 170.23,
+            "cumulativeExp": 3921799,
+            "interpolation": {
+              "lowerLevel": 60,
+              "upperLevel": 75,
+              "lowerModeledActions": 5246,
+              "upperModeledActions": 8176,
+              "lowerCumulativeExp": 2721799,
+              "upperCumulativeExp": 4971799,
+              "expFraction": 0.5333333333333333
+            }
+          }
+        },
+        {
+          "chain": "divine_apostle_trial",
+          "steps": 3,
+          "openGateLevel": 50,
+          "openCost": {
+            "level": 50,
+            "basis": "interpolated",
+            "modeledActions": 2636,
+            "modeledSeconds": 237240,
+            "modeledHours": 65.9,
+            "cumulativeExp": 1221799,
+            "interpolation": {
+              "lowerLevel": 45,
+              "upperLevel": 60,
+              "lowerModeledActions": 1575,
+              "upperModeledActions": 5246,
+              "lowerCumulativeExp": 612298,
+              "upperCumulativeExp": 2721799,
+              "expFraction": 0.28893136338878245
+            }
+          },
+          "completionGateLevel": 68,
+          "completionCost": {
+            "level": 68,
+            "basis": "interpolated",
+            "modeledActions": 6809,
+            "modeledSeconds": 612810,
+            "modeledHours": 170.23,
+            "cumulativeExp": 3921799,
+            "interpolation": {
+              "lowerLevel": 60,
+              "upperLevel": 75,
+              "lowerModeledActions": 5246,
+              "upperModeledActions": 8176,
+              "lowerCumulativeExp": 2721799,
+              "upperCumulativeExp": 4971799,
+              "expFraction": 0.5333333333333333
+            }
+          }
+        },
+        {
+          "chain": "rift_secret",
+          "steps": 3,
+          "openGateLevel": 68,
+          "openCost": {
+            "level": 68,
+            "basis": "interpolated",
+            "modeledActions": 6809,
+            "modeledSeconds": 612810,
+            "modeledHours": 170.23,
+            "cumulativeExp": 3921799,
+            "interpolation": {
+              "lowerLevel": 60,
+              "upperLevel": 75,
+              "lowerModeledActions": 5246,
+              "upperModeledActions": 8176,
+              "lowerCumulativeExp": 2721799,
+              "upperCumulativeExp": 4971799,
+              "expFraction": 0.5333333333333333
+            }
+          },
+          "completionGateLevel": 68,
+          "completionCost": {
+            "level": 68,
+            "basis": "interpolated",
+            "modeledActions": 6809,
+            "modeledSeconds": 612810,
+            "modeledHours": 170.23,
+            "cumulativeExp": 3921799,
+            "interpolation": {
+              "lowerLevel": 60,
+              "upperLevel": 75,
+              "lowerModeledActions": 5246,
+              "upperModeledActions": 8176,
+              "lowerCumulativeExp": 2721799,
+              "upperCumulativeExp": 4971799,
+              "expFraction": 0.5333333333333333
+            }
+          }
+        },
+        {
+          "chain": "forgotten_commander",
+          "steps": 3,
+          "openGateLevel": 5,
+          "openCost": {
+            "level": 5,
+            "basis": "anchored",
+            "modeledActions": 52,
+            "modeledSeconds": 4680,
+            "modeledHours": 1.3,
+            "cumulativeExp": 994,
+            "interpolation": null
+          },
+          "completionGateLevel": 48,
+          "completionCost": {
+            "level": 48,
+            "basis": "interpolated",
+            "modeledActions": 2131,
+            "modeledSeconds": 191790,
+            "modeledHours": 53.28,
+            "cumulativeExp": 931846,
+            "interpolation": {
+              "lowerLevel": 45,
+              "upperLevel": 60,
+              "lowerModeledActions": 1575,
+              "upperModeledActions": 5246,
+              "lowerCumulativeExp": 612298,
+              "upperCumulativeExp": 2721799,
+              "expFraction": 0.1514803737945609
+            }
+          }
+        },
+        {
+          "chain": "water_apostle",
+          "steps": 3,
+          "openGateLevel": 5,
+          "openCost": {
+            "level": 5,
+            "basis": "anchored",
+            "modeledActions": 52,
+            "modeledSeconds": 4680,
+            "modeledHours": 1.3,
+            "cumulativeExp": 994,
+            "interpolation": null
+          },
+          "completionGateLevel": 23,
+          "completionCost": {
+            "level": 23,
+            "basis": "interpolated",
+            "modeledActions": 187,
+            "modeledSeconds": 16830,
+            "modeledHours": 4.68,
+            "cumulativeExp": 27106,
+            "interpolation": {
+              "lowerLevel": 20,
+              "upperLevel": 45,
+              "lowerModeledActions": 164,
+              "upperModeledActions": 1575,
+              "lowerCumulativeExp": 17389,
+              "upperCumulativeExp": 612298,
+              "expFraction": 0.016333590515524223
+            }
+          }
+        }
+      ],
       "unresolvedEventChainTerminals": [],
       "malformedGates": [],
       "behind": [
@@ -8167,7 +8624,7 @@
           "maps": 46,
           "quests": 120,
           "equipment": 193,
-          "jobs": 13,
+          "jobs": 14,
           "eventChainTerminalSteps": 13
         },
         {
@@ -8178,7 +8635,7 @@
           "maps": 46,
           "quests": 119,
           "equipment": 193,
-          "jobs": 13,
+          "jobs": 14,
           "eventChainTerminalSteps": 13
         },
         {
@@ -8189,7 +8646,7 @@
           "maps": 45,
           "quests": 118,
           "equipment": 193,
-          "jobs": 13,
+          "jobs": 14,
           "eventChainTerminalSteps": 13
         },
         {
@@ -8200,7 +8657,7 @@
           "maps": 44,
           "quests": 113,
           "equipment": 193,
-          "jobs": 13,
+          "jobs": 14,
           "eventChainTerminalSteps": 13
         },
         {
@@ -8211,7 +8668,7 @@
           "maps": 42,
           "quests": 103,
           "equipment": 150,
-          "jobs": 13,
+          "jobs": 14,
           "eventChainTerminalSteps": 13
         },
         {
@@ -8429,7 +8886,7 @@
           "modeledActions": 1575,
           "modeledHours": 39.38,
           "maps": 15,
-          "quests": 42,
+          "quests": 41,
           "equipment": 107,
           "jobs": 5,
           "eventChainTerminalSteps": 9
@@ -8440,7 +8897,7 @@
           "modeledActions": 2131,
           "modeledHours": 53.28,
           "maps": 15,
-          "quests": 42,
+          "quests": 41,
           "equipment": 65,
           "jobs": 0,
           "eventChainTerminalSteps": 9
@@ -8451,7 +8908,7 @@
           "modeledActions": 2375,
           "modeledHours": 59.38,
           "maps": 13,
-          "quests": 39,
+          "quests": 38,
           "equipment": 65,
           "jobs": 0,
           "eventChainTerminalSteps": 5
@@ -8462,7 +8919,7 @@
           "modeledActions": 2636,
           "modeledHours": 65.9,
           "maps": 13,
-          "quests": 38,
+          "quests": 37,
           "equipment": 65,
           "jobs": 0,
           "eventChainTerminalSteps": 5
@@ -8473,7 +8930,7 @@
           "modeledActions": 3158,
           "modeledHours": 78.95,
           "maps": 12,
-          "quests": 32,
+          "quests": 31,
           "equipment": 65,
           "jobs": 0,
           "eventChainTerminalSteps": 5
@@ -8484,18 +8941,7 @@
           "modeledActions": 3941,
           "modeledHours": 98.53,
           "maps": 9,
-          "quests": 30,
-          "equipment": 65,
-          "jobs": 0,
-          "eventChainTerminalSteps": 5
-        },
-        {
-          "level": 59,
-          "basis": "interpolated",
-          "modeledActions": 4985,
-          "modeledHours": 124.63,
-          "maps": 9,
-          "quests": 27,
+          "quests": 29,
           "equipment": 65,
           "jobs": 0,
           "eventChainTerminalSteps": 5

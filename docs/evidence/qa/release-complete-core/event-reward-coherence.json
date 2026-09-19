@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "0680a3f17affcd6e9301ab039f5810bb178eae598cd4ad78dcfd7e81547a8084",
+  "reportHash": "82513d3bb147dbcdcbfe75717447bd6cb04c90f193a8b2585925d2ef51439664",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -541,8 +541,8 @@
       {
         "id": "chain:forgotten_god:1:0",
         "occurrenceClass": "one-time-chain",
-        "location": "에테르 관문",
-        "mapLevel": 68,
+        "location": "지하 미궁",
+        "mapLevel": 44,
         "outcomeType": "chain_advance",
         "rewardType": "stat_bonus",
         "itemName": null,
@@ -552,8 +552,8 @@
       {
         "id": "chain:forgotten_god:1:1",
         "occurrenceClass": "one-time-chain",
-        "location": "에테르 관문",
-        "mapLevel": 68,
+        "location": "지하 미궁",
+        "mapLevel": 44,
         "outcomeType": "chain_advance_fail",
         "rewardType": null,
         "itemName": null,
