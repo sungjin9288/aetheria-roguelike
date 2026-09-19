@@ -638,3 +638,41 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 **순서**: E1 · E2 · E3 · E4 **병렬**(worktree 격리, 위 파일 집합은 서로 겹치지 않는다) → 통합 → **통합 트리에서 E1 예고값 4개 재현 확인**(여기서 어긋나면 증빙을 만들기 전에 멈춘다) → **증빙 재고정은 통합자가 마지막에 한 번만, 순서 고정**: ① `PROGRESSION_V1_BASELINE_HASH` 리터럴이 갱신돼 있는지 확인(안 되어 있으면 writer가 `PROGRESSION_SCHEMA_V1_BASELINE_DRIFT`로 **쓰기 자체를 거부**한다) → ② `verify-content-reachability.mjs --write`(0.85s) → ③ `compare-exploration-rhythm.mjs --seed-start 20260810 --seed-count 64 --write`(4m30s) → ④ `npm run progression:diagnostic:write`(1m59s, `src/**` + 고정 14경로 = **345개 소스 해시**를 굽고 실행 전후로 다시 읽어 `SOURCE_MANIFEST_CHANGED_DURING_DIAGNOSTIC`을 던지므로 **맨 마지막**이고 실행 중 저장소에 어떤 명령도 병행 금지, §15.1 규칙) → 12종 `*:verify` 재확인 → 직렬 게이트 → E5 → PR → CI → merge commit.
 
 **판단 포인트**: 두 가지를 틀리면 이 wave는 측정을 쓰지 못하고 측정만 망친다. 첫째, **E1은 `reqLv` 다섯 개만 만진다.** 131시간을 보면 `EXP_SCALE_RATE`나 `TIER_REQ_LEVEL`이나 맵 선언 레벨을 같이 고치고 싶어지는데, 이 트랙의 가치 전부가 "곡선이 안 움직였다는 것을 증빙이 증명한다"에 있다. 곡선 상수는 세 증빙의 모든 `modeledActions`를 움직이고, `TIER_REQ_LEVEL[5]`는 체크포인트는 남기되 `CombatEngine.loot.ts`의 드롭 티어 조회를 바꿔 증빙 4종을 더 끌고 들어오며, 맵 선언 레벨은 `selectModeledMap`을 통해 Lv60을 5,246→5,328로 **밀어 올린다**(방향이 반대다). 하나라도 섞이면 `cost.anchors` 바이트 동일이라는 문장을 쓸 수 없고, 그 문장이 없으면 Wave 14는 다시 측정 없는 상태에서 판단하게 된다. 둘째, **예고값이 재현되지 않으면 통합이 틀린 것이지 예고값이 틀린 게 아니다.** E1이 자기 워크트리에서 기록한 네 값은 통합 트리에서 그대로 나와야 한다. 다르면 E2·E3·E4 중 하나가 모델로 샌 것이고, 범인은 "각 워크트리에서 `npm run content:verify`가 초록이었는가"(0.85s)로 즉시 좁혀진다. 참고로 유닛 테스트는 증빙 바이트를 검증하지 않으므로 E1 워크트리의 `npm run verify`는 초록이고 `content:verify`/`pacing:verify`/`progression:diagnostic:verify`가 빨간 것이 **정상 상태**다. 그 셋이 초록이면 E1이 증빙을 먼저 덮어쓴 것이다.
+
+### 17.1 Wave 13 실행 결과 (2026-09-19, branch `claude/funny-rubin-xdv43e`, 베이스 `main` = `56d0a6ef`)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| E1 직업 게이트 60→45 | ✅ `d248fbd7` | 핀 5개 전부 **예고값과 정확히 일치**(불일치 0). E1이 깨끗한 트리에서 before 해시도 먼저 측정해 전후 양쪽을 고정했다 — "테스트가 빨개서 고친" 핀이 하나도 없다. 신규 불변식: 최심 직업 게이트 ≤ 마왕성 **경로** 게이트(48, 리터럴이 아니라 리포트에서 읽는다) |
+| E2 맵 경로 게이트 표시 | ✅ `355859f5` | `content:verify`가 베이스라인과 **같은 해시**(`8d9ec598…`)로 그린 — 추출이 리포트 값을 안 움직였다는 증명. 칩 숫자는 그대로 두고 갈라지는 10곳에만 배지를 덧붙였다(숫자를 바꿔 쓰면 화면과 권한이 어긋나 **새 거짓말**이 생긴다). 혼돈의 심연은 `declaredIsLocked: false`로 구분해 다른 문구 |
+| E3 시즌 회계 마감 | ✅ `3ebd1368` | 칭호 폴백을 `max(live, archive[].tier)`로, 상한 초과분을 회전 시 다음 시즌 시드로. `DATA_VERSION` 5.1 불변, 골든 바이트 불변 |
+| E4 AI 정산 미러링 | ✅ `dac6e918` | rules + 클라이언트 같은 커밋. 페이로드 6키(`unsettled`는 **저장하지 않고** `used − adopted − unadopted`로 도출) |
+| 통합 수정 | ✅ `4773afc4` | `ADD_SEASON_XP` 위임 + 퀘스트 101 문구 정정 |
+| 증빙 재고정 | ✅ `0b038940` | 3종이 아니라 **4종** |
+
+**성공 기준 — 전부 달성**
+
+| | 이전 | 이후 |
+|---|---:|---:|
+| 최심 직업 게이트 | Lv60 = 131.15h (`interpolated` 아님, anchored) | **Lv45 = 39.38h** (`anchored`) |
+| 승천(53.28h) − 최심 직업 게이트 | **−77.87h** | **+13.90h** |
+| `cost.behind` jobs @48·49·60 | 5 | **0** |
+| `cost.gates.jobs` | …, 60:5 | …, **45:5** |
+| `cost.anchors` 8행 | `0/14/52/82/164/1575/5246/8176` | **바이트 동일** |
+| `exploration-rhythm` 최상위 `reportHash` | `0818fb7a…` | **불변** |
+
+**발견 (이 wave의 실제 산출물)**
+
+1. **지배적 XP 경로가 E3의 수정을 못 받고 있었다 (통합 단계 발견).** E3가 자기 파일 집합 밖이라 보고만 하고 넘긴 것이 실은 가장 큰 구멍이었다 — `rewardHandlers.ts`의 `ADD_SEASON_XP`가 `helpers.addSeasonXp`와 같은 계산을 **독립 구현**하고 있었고, 전투 승리(kill/bossKill)·탐험·전설 드롭이 전부 그 경로다. 즉 이월 수정이 **퀘스트 보상에만** 적용되고 지배적 경로는 그대로 XP를 버리고 있었다. 위임으로 클램프의 자리를 한 곳으로 통일했다. **같은 계산의 두 번째 구현은 "중복"이 아니라 "절반만 고쳐지는 버그"다.**
+2. **곡선 완화는 이 데이터에서 간극을 넓힌다 (계획 단계 실측).** `EXP_LEVEL_HARD_CAP` 150,000이 Lv50부터 물려 Lv48→60의 92.2%가 평평하므로, `EXP_SCALE_RATE`를 낮추면 상한에 안 걸린 몸통이 걸린 꼬리보다 빨리 줄어 cum(60)/cum(48)이 2.921 → 3.937(@1.13)로 **벌어진다**. 오늘보다 나아지는 첫 값 1.09에서 전체 런이 오늘의 13.1%로 무너진다. 직관("곡선을 완화하면 뒤쪽이 가까워진다")이 거짓인 구간이 있고, 그걸 아는 방법은 계산뿐이다.
+3. **프레스티지는 문제를 겪는 사람에게 0을 준다.** 적 exp 배율 0.08/rank이므로 Lv60이 승천 예산에 닿는 것은 rank 19, 도달 비용 631.9h로 간극 77.87h의 8.1배다. 그리고 이 축이 부러진 것을 보는 사람은 **rank 0의 첫 런 플레이어**다. "장기적으로 해결된다"는 답이 단기에 겪는 사람을 못 돕는 전형이다.
+4. **§17의 게이트 상태 서술이 틀렸다 — E1·E2·E3·E4가 독립적으로 확인.** "유닛 테스트는 증빙 바이트를 검증하지 않으므로 E1 워크트리의 `npm run verify`는 초록"이라고 썼는데 거짓이다. `tests/progression-diagnostic-cli.test.js`는 `tests/*.test.js` glob에 잡히는 유닛 테스트이고 CLI로 증빙을 검증하며, 그 증빙은 `src/**` **파일 목록의 sha256**을 봉투에 박는다. 그래서 모델 값을 안 건드리는 **순수 추출조차** 이 테스트를 빨갛게 만든다(파일 수 345→346). 올바른 서술: `verify`는 **이 테스트 하나만** 빨갛고, 범인 좁히기의 판별자는 계획대로 `content:verify`(0.85s)뿐이다.
+5. **증빙은 3종이 아니라 4종이 움직인다.** `equipment-combat-power.json`이 `authority.classesHash`로 `classes.ts`를 묶는다. 게다가 `tests/equipment-combat-power-audit.test.js`는 정상 `test:unit` 중에 그 파일을 `--write`로 덮어써서 워크트리를 더럽힌다 — 통합자는 이 파일이 수정된 채로 나타나는 것을 예상해야 한다.
+6. **rules는 어떤 파이프라인도 배포하지 않는다 (E4).** `deploy.yml`의 `action-hosting-deploy`는 **호스팅만** 올린다. 그래서 "rules와 클라이언트를 같은 커밋에" 규칙은 필요조건이지 충분조건이 아니고, 배포 창이 무기한일 수 있다. E4가 `permission-denied` 시 4키로 1회 폴백하는 무상태 경로를 추가했다(rules가 올라가면 다음 동기화부터 자동 복구). **Firestore rules는 수동 배포가 필요하다.**
+7. **E4가 지시를 근거 있게 거부했다.** 계획은 `hasAll`/`hasOnly` 둘 다 넓히라고 했는데, Capacitor 앱이라 구버전 설치본이 영구히 4키를 보낸다 — `hasAll`을 넓히면 **갱신 불가능한 집단의 쓰기가 영구 거부**된다(계획이 경고한 바로 그 조용한 죽음). `hasOnly`만 넓혀 "새 rules는 구 클라이언트를 받고, 구 rules는 새 클라이언트를 거부"하는 비대칭을 만들었고, 그래서 배포 순서가 **rules 먼저**로 확정된다.
+8. **원장의 네 숫자는 자유도가 셋이다 (E4).** `unsettled = max(0, used − settled)`는 정산할 때마다 **감소**하므로 단조성을 걸 수도, 안 걸 수도 없다. 저장하지 않고 `adopted + adopted ≤ used`(= `unsettled ≥ 0`)만 rules에 걸어 항등식을 한 필드 적게 보존했다. 단조성 절을 실제로 써 보기 전에는 안 보이는 종류의 사실이다.
+9. **퀘스트 101이 거짓말이 됐고, 문구만 고쳤다.** `'전직의 자격 (3차) / 레벨 60 달성하여 3차 전직'`인데 3차 전직은 이제 Lv45다. `goal`/`minLv`를 45로 맞추면 `cost.gates.quests`가 움직여 E1의 불변 증명을 해치므로 문구만 바꾸고(`'극의 증명' / '레벨 60 달성'`), 모델 불변을 실측 확인했다. 게이트 정렬은 Wave 14 후보.
+
+**최종 게이트** (head `0b038940`, CI 동일 빌드): type-check 0 · lint 0 · unit **5,086 / 5,086**(skip 0, Wave 12 대비 +47) · build:guard ok · e2e **121 / 121**(61 + 60) · perf desktop ok(FCP 584ms) / mobile ok(FCP 324ms) · 증빙 12종 verify 전부 ok. 1차 실행 전 단계 그린.
+
+**남은 후보 (Wave 14)**: (1) **퀘스트 게이트 정렬** — 퀘스트 101의 `goal`/`minLv`를 45로 맞춘다. `cost.gates.quests`가 한 버킷 움직이므로 예고값을 먼저 기록하고 들어갈 것; (2) **tier-3 안의 25배 격차** — 시간술사 `reqLv: 25` vs 나머지 45. 같은 선언 티어가 서로 다른 시간대에 있다; (3) **성직자 갈래의 선택지 0개 구간** — `next`가 팔라딘 하나뿐이라 Lv5~45가 분기 없는 외길이다; (4) **`firestore.rules` 배포 자동화 + 에뮬레이터 검증** — 지금은 수동 배포에 semantics를 검증하는 것이 아무것도 없다(`@firebase/rules-unit-testing` + CI job, `package.json`·CI 수정 동반); (5) **`equipment-combat-power-audit` 테스트의 증빙 쓰기 부작용** — 정상 테스트 실행이 트래킹 파일을 덮어쓴다; (6) class-(b) 1,807건은 Wave 11 정책대로 계속 방치.
