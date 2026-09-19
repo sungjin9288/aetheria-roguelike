@@ -43,9 +43,11 @@ test('canonical content has the approved production catalog counts and routes', 
     assert.equal(report.jobs.terminalLineages.length, 8);
     assert.deepEqual(report.jobs.checkpointLevels, [2, 5, 10, 20, 45, 60, 75]);
     // Wave 13 E1: tier-3 5종이 Lv45 체크포인트로 내려와 그 칸이 13 → 18이 된다.
+    // Wave 14 F4: 성직자 `reqLv` 5 → 12이라 Lv5·Lv10 칸이 5 → 4다. Lv5의 후속 직업이 세 뿌리
+    //   모두 0이 됐고(첫 되돌릴 수 없는 분기가 같은 모양이 됐다), Lv20 칸에서 6으로 합류한다.
     assert.deepEqual(
         report.jobs.checkpointSnapshots.map((checkpoint) => checkpoint.reachableJobCount),
-        [1, 5, 5, 6, 18, 18, 18],
+        [1, 4, 4, 6, 18, 18, 18],
     );
     assert.deepEqual(
         report.jobs.checkpointSnapshots.at(-1).reachableJobs.toSorted(),
@@ -226,10 +228,15 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     // Wave 13 E1: tier-3 직업 5종은 Lv45 앵커에 앉는다 — 모델 액션 1,575 / 39.38h
     // (Lv60 5,246 / 131.15h에서 −91.77h). 45는 모델 체크포인트라 이 행은 `interpolated`가
     // 아니라 `anchored`다 — 게이트 비용이 보간이 아니라 시뮬레이터 산출이라는 뜻이다.
+    // Wave 14 F4: 성직자가 5 → 12 버킷으로 옮겨가 5:4 → 5:3, 12:1 → 12:2다. Lv5는 이제 세
+    //   뿌리(전사·마법사·도적)만 있고 그 어느 것도 후속을 열어두지 않는다 — 첫 되돌릴 수 없는
+    //   분기가 세 뿌리에서 같은 모양이 된다는 것이 이 버킷 이동의 기준이다.
     assert.deepEqual(
         cost.gates.jobs.map(({ gateLevel, count }) => [gateLevel, count]),
-        [[1, 1], [5, 4], [12, 1], [25, 1], [30, 6], [45, 5]],
+        [[1, 1], [5, 3], [12, 2], [25, 1], [30, 6], [45, 5]],
     );
+    assert.deepEqual(bucketAt(cost.gates.jobs, 5).members.toSorted(), ['도적', '마법사', '전사']);
+    assert.deepEqual(bucketAt(cost.gates.jobs, 12).members.toSorted(), ['무당', '성직자']);
     const tierThreeJobs = bucketAt(cost.gates.jobs, 45);
     assert.equal(tierThreeJobs.count, 5);
     assert.deepEqual(tierThreeJobs.members.toSorted(), [
@@ -252,6 +259,13 @@ test('the gate levels behind each content class carry their modeled cost', () =>
 
     assert.equal(cost.gates.quests.reduce((sum, bucket) => sum + bucket.count, 0), 143);
     assert.equal(cost.gates.maps.reduce((sum, bucket) => sum + bucket.count, 0), 52);
+
+    // Wave 14 F4: 퀘스트 101('전직의 자격 (3차)')이 가리키는 게이트를 되찾는다. Wave 13 E1이
+    //   3차 전직을 Lv60 → Lv45로 내렸는데 퀘스트는 `goal: 60 / minLv: 59`에 남아 있었고,
+    //   그래서 `59` 버킷은 **가리킬 것이 없어진 게이트** 하나만 들고 있었다. 이제 소멸하고
+    //   44 버킷이 1 → 2가 된다(126과 동거). 100번의 `minLv = goal − 1` 규칙 그대로다.
+    assert.equal(bucketAt(cost.gates.quests, 59), undefined);
+    assert.deepEqual(bucketAt(cost.gates.quests, 44).members.toSorted((a, b) => a - b), [101, 126]);
 
     // Wave 14 F2: 체인 버킷의 게이트는 **완주** 게이트(전 스텝 max)다 — 종착 스텝의
     // 게이트가 아니다. `forgotten_god`은 스텝이 25 → 68 → 48로 역전돼 있어서 종착(48)으로
@@ -285,13 +299,16 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         jobs: 18,
         eventChainTerminalSteps: 13,
     });
+    // Wave 14 F4: 퀘스트 101이 59 → 44로 내려와 45 이후의 모든 행에서 `quests`가 1씩 줄어든다
+    //   (45·48: 42 → 41, 49: 39 → 38, 50: 38 → 37, 52: 32 → 31, 55: 30 → 29). 같은 행의
+    //   modeledActions/modeledHours는 한 자리도 안 움직인다 — 움직인 건 `quests` 열뿐이다.
     assert.deepEqual(rowAt(45), {
         level: 45,
         basis: 'anchored',
         modeledActions: 1_575,
         modeledHours: 39.38,
         maps: 15,
-        quests: 42,
+        quests: 41,
         equipment: 107,
         jobs: 5,
         eventChainTerminalSteps: 9,
@@ -305,7 +322,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         modeledActions: 2_131,
         modeledHours: 53.28,
         maps: 15,
-        quests: 42,
+        quests: 41,
         equipment: 65,
         jobs: 0,
         eventChainTerminalSteps: 9,
@@ -317,7 +334,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         modeledActions: 2_375,
         modeledHours: 59.38,
         maps: 13,
-        quests: 39,
+        quests: 38,
         equipment: 65,
         jobs: 0,
         eventChainTerminalSteps: 5,
@@ -347,6 +364,18 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     const levels = cost.behind.map((row) => row.level);
     assert.deepEqual(levels, [...levels].sort((left, right) => left - right));
     assert.equal(new Set(levels).size, levels.length);
+
+    // Wave 14 F4: `behind` 행은 게이트 레벨의 합집합이라 행 하나가 통째로 사라진다 —
+    //   Lv59는 **퀘스트 101의 게이트 하나만으로** 존재하던 행이었고, 그 퀘스트가 44로
+    //   내려오면서 저장소의 어떤 콘텐츠도 59에 게이트를 두지 않게 됐다. 45 → 44행.
+    assert.equal(cost.behind.length, 44);
+    assert.equal(rowAt(59), undefined);
+
+    // 성직자가 5 → 12 버킷으로 가면서 "아직 남은 직업" 열이 그 구간에서만 1씩 늘어난다.
+    //   Lv5 행은 안 움직인다(게이트 5는 여전히 자기 행에서 '남은' 것으로 세어진다).
+    assert.equal(rowAt(5).jobs, 17);
+    for (const level of [6, 7, 8, 10, 12]) assert.equal(rowAt(level).jobs, 14, `behind[${level}].jobs`);
+    assert.equal(rowAt(14).jobs, 12);
 });
 
 // ── Wave 13 E1 불변식: 직업 사다리는 코어 루프의 리셋 지점 안에서 닫힌다 ──────────────

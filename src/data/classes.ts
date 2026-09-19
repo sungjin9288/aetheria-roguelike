@@ -281,9 +281,28 @@ export const CLASSES: Record<string, ClassDef> = {
         next: ['사냥의 군주']
     },
 
-    // ── 1차 전직: 성직자 ──────────────────────────────────────────────────────
+    // ── 1차 전직: 성직자 (마법사 분기 — `tier`는 깊이와 어긋나 있다, 아래 참고) ──────
+    // Wave 14 F4 (2026-09-19): `reqLv` 5 → 12(무당과 같은 값). 기준은 **"첫 되돌릴 수 없는
+    //   분기는 세 뿌리에서 같은 모양이어야 한다"**: Lv5에 열린 후속이 전사 0 / 도적 0 /
+    //   마법사 1(성직자)이었고, `characterActions.jobChange`가 `current.next.includes`만 보므로
+    //   그 1을 집는 순간 아크메이지·흑마법사·무당이 영구히 닫혀 capstone이 5.23h(시간술사) →
+    //   39.38h(팔라딘)로 7.53배가 됐다. 이제 Lv5는 세 뿌리 모두 0이고, Lv12에서 마법사가
+    //   2택(성직자·무당)을 받는다.
+    //
+    // **`tier: 1 → 2`는 이 트랙에서 하지 못했다 — 사유를 남긴다.** 성직자의 그래프 깊이는
+    //   2(`모험가→마법사→성직자`)이고 나머지 17개는 `tier == 깊이`다. 그런데 §18의 "`tier`를
+    //   읽는 곳" census가 한 곳을 빠뜨렸다: `scripts/artCatalog.mjs`의 `normalizeClasses`가
+    //   클래스를 `{ name, tier }`로 정규화해 **아트 카탈로그 identity 해시**에 넣는다. 그래서
+    //   `tier`를 고치면 `catalogSha256`이 c15c4e6f… → 2ef481ad…로 움직이고, 그 값을 박고 있는
+    //   **82개 파일**(그중 71개가 `scripts/art_sources/**`의 아트 생산 provenance 배치 기록)이
+    //   전부 재고정 대상이 된다 — F4의 파일 집합 밖이고, 게다가 그 기록은 "이 아트는 어느
+    //   카탈로그에 대해 생산됐다"는 **이력**이라 새 해시로 덮는 것이 정직한 갱신이 아니다.
+    //   `reqLv`는 identity에 없어서(행 키가 `name`/`tier` 둘뿐) 이 트랙의 다른 변경은 무해하다.
+    //   진짜 수정은 아트 identity에서 `tier`를 빼는 것이다(아트는 사다리 칸에 따라 달라지지
+    //   않는다) — `scripts/artCatalog.mjs` 소유이므로 별도 트랙이 필요하다.
+    //   `tests/class-tier-depth.test.js`가 이 어긋남을 **유일한 예외로 고정**해 새 드리프트를 막는다.
     '성직자': {
-        tier: 1, reqLv: 5, desc: '치유와 빛의 마법사 — 신의 대리인', hpMod: 1.0, mpMod: 1.6, atkMod: 1.3,
+        tier: 1, reqLv: 12, desc: '치유와 빛의 마법사 — 신의 대리인', hpMod: 1.0, mpMod: 1.6, atkMod: 1.3,
         skills: [
             { name: '신성 광선', mp: 20, type: '빛', mult: 1.8, desc: '빛 속성 집중 공격' },
             { name: '정화', mp: 30, type: '빛', mult: 1.5, effect: 'purify', desc: '상태이상 정화 + 추가 빛 피해' },

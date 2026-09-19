@@ -47,10 +47,21 @@ const EXPECTED_JOB_NAMES = [
 //   곡선은 한 글자도 안 건드렸다: 체크포인트 액션 14/52/82/164/1,575/5,246/8,176과
 //   `tierEquip`은 이 편집 전후로 바이트 동일하다(`cost.anchors` 8행 불변의 근거).
 //   이전 값: '2e4c0726be5d78bb7af5e8b3f6377976d1bc397613512c83dc8e2681dd699c43'.
-const EXPECTED_BASELINE_REPORT_SHA256 = '488c4c0166c913b2dceca6fe2946fcbf7ffb0cd56b7e499c57a81f55b014f96c';
+// Wave 14 F4 (2026-09-19): 성직자 `reqLv` 5 → 12. 시뮬레이터는 jobSnapshots를 각 직업의
+//   `reqLv`에서 찍으므로 성직자 한 칸의 스냅샷 레벨과 스탯이 움직이고, Lv5/Lv10 체크포인트의
+//   `reachableJobCount`가 5 → 4로 줄어든다. **편집 전 깨끗한 트리에서 실측한 예고값**이며
+//   곡선은 불변이다: 체크포인트 액션 14/52/82/164/1,575/5,246/8,176이 편집 전후 바이트
+//   동일하다(모델 플레이어는 끝까지 `모험가`라 `reqLv`가 곡선의 입력이 아니다 —
+//   `cost.anchors` 8행 불변의 근거).
+//   주의: `jobSnapshots[].tier`가 리포트에 실리므로 이 해시는 `reqLv`뿐 아니라 `tier`에도
+//   의존한다(실측: 성직자를 `tier: 2`로 고치면 9da28843…이 된다 — F4가 하지 못한 변경이고
+//   사유는 `src/data/classes.ts`의 성직자 주석과 `tests/class-tier-depth.test.js`에 있다).
+//   이전 값: '488c4c0166c913b2dceca6fe2946fcbf7ffb0cd56b7e499c57a81f55b014f96c'.
+const EXPECTED_BASELINE_REPORT_SHA256 = 'ac79428c434e341adb970625bf0171addac5dae67388a5e2a91a836a898c772d';
 // 순서는 EXPECTED_JOB_NAMES와 같다 — 45가 찍힌 다섯 칸이 tier-3 5종(팔라딘·드래곤 나이트·
 // 대마법사·그림자 주군·사냥의 군주)이고, 시간술사는 원래부터 tier 3 / reqLv 25다.
-const EXPECTED_JOB_LEVELS = [1, 5, 5, 5, 30, 30, 30, 30, 30, 30, 5, 45, 45, 45, 45, 12, 25, 45];
+// 11번째 칸(성직자)이 Wave 14 F4로 5 → 12 — 무당과 같은 값이라 마법사의 첫 분기가 2택이 된다.
+const EXPECTED_JOB_LEVELS = [1, 5, 5, 5, 30, 30, 30, 30, 30, 30, 12, 45, 45, 45, 45, 12, 25, 45];
 
 test('baseline simulation keeps immutable snapshots and reports the exact class graph/checkpoints', () => {
     const baselineBefore = structuredClone(PROGRESSION_SIMULATOR_BASELINE);
@@ -69,7 +80,9 @@ test('baseline simulation keeps immutable snapshots and reports the exact class 
     assert.deepEqual(PROGRESSION_CHECKPOINT_LEVELS, [2, 5, 10, 20, 45, 60, 75]);
     assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.targetLevel), [2, 5, 10, 20, 45, 60, 75]);
     // Wave 13 E1: Lv45 체크포인트에서 tier-3 5종이 함께 열려 13 → 18.
-    assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.reachableJobCount), [1, 5, 5, 6, 18, 18, 18]);
+    // Wave 14 F4: 성직자 `reqLv` 5 → 12이라 Lv5·Lv10 체크포인트가 5 → 4다 — Lv5의 후속 직업은
+    //   이제 세 뿌리(전사·마법사·도적) 모두 0개이고, Lv20에서 무당과 함께 다시 합류해 6으로 돌아온다.
+    assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.reachableJobCount), [1, 4, 4, 6, 18, 18, 18]);
     assert.deepEqual(report.jobReachability, {
         rootJob: '모험가',
         expectedJobCount: 18,
