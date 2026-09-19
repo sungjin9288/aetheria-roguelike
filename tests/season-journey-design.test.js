@@ -20,6 +20,7 @@ import { MSG } from '../src/data/messages.ts';
 import { checkTitles } from '../src/utils/gameUtils.ts';
 import { AT } from '../src/reducers/actionTypes.js';
 import { rewardActionMap } from '../src/reducers/handlers/rewardHandlers.js';
+import { addSeasonXp } from '../src/reducers/handlers/helpers.ts';
 import SeasonPassPanel from '../src/components/tabs/SeasonPassPanel.tsx';
 import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 import {
@@ -343,11 +344,95 @@ test('회전 직전에 칭호 복구 폴백을 한 번 돌린다 — tier 리셋
     ['시즌 선구자', '시즌 정복자', '시즌 마스터'].forEach((title) => {
         assert.ok(rotated.player.titles.includes(title), `${title}가 리셋에 삼켜졌다`);
     });
-    // 리셋 후에는 폴백이 더 이상 이 칭호들을 짚어낼 수 없다 — 그래서 리셋 "직전"이어야 한다.
+    // 2026-09 Wave 13 E3: checkTitles의 seasonTier 폴백이 lifetime max(live tier ⋁
+    // archive[].tier)로 바뀌었으므로, 리셋 뒤에 titles가 다시 비워져도(두 번째 저장
+    // 손실 등) archive[0].tier === 30 그대로 세 칭호를 되찾는다 — "직전"이 아니어도
+    // 복구가 성립한다. 그래도 즉시 지급(위 grant)은 archive를 안 거치는 빠른 경로라
+    // 계속 돌린다(중복 대입은 addNewTitles의 Set 중복 제거가 흡수한다).
     assert.deepEqual(
-        checkTitles({ ...rotated.player, titles: [] }).filter((id) => id.startsWith('시즌 ')),
-        [],
+        checkTitles({ ...rotated.player, titles: [] }).filter((id) => id.startsWith('시즌 ')).sort(),
+        ['시즌 마스터', '시즌 선구자', '시즌 정복자'],
     );
+});
+
+// ─── Wave 13 E3: 완주했는데 기록이 사라지는 두 구멍 ──────────────────────────
+//
+//   (1) checkTitles의 seasonTier 폴백이 live seasonPass.tier만 보던 시절엔, 회전이
+//       tier를 0으로 되돌린 뒤 titles가 다시 비워지면(두 번째 저장 손실) 세 칭호가
+//       영구 복구 불가였다. lifetime max(live ⋁ archive[].tier)로 바꿔 닫는다.
+//   (2) addSeasonXp/시즌 XP 적립이 SEASON_MAX_XP에서 초과분을 버렸다 — 30티어를
+//       전부 벌고 마지막 보상을 아직 수령하지 않은 채로 계속 플레이하면 그 사이
+//       번 XP가 증발했다. 회전(advanceSeasonIfComplete) 시점에 다음 시즌 xp의
+//       시드로 이월해 닫는다.
+
+test('회전으로 titles가 비워진 뒤에도 시즌 칭호 3종을 lifetime max로 다시 되찾는다', () => {
+    // "리셋 직전 grant"가 없었다고 가정 — addNewTitles를 호출하지 않고 rewardHandlers의
+    // 회전 결과에서 titles만 지운, 순수 checkTitles 폴백 단독 시나리오.
+    const completed = claimEveryTier(makeMaxedState());
+    const seasonPass = completed.player.seasonPass;
+    assert.equal(seasonPass.tier, 0, '회전 후 live tier는 0');
+    assert.equal(getSeasonArchive(seasonPass)[0]?.tier, SEASON_MAX_TIER, '아카이브는 완주 시점 티어를 그대로 든다');
+
+    const titleLossPlayer = { ...completed.player, seasonPass, titles: [] };
+    const recovered = checkTitles(titleLossPlayer);
+    assert.deepEqual(
+        recovered.filter((id) => id.startsWith('시즌 ')).sort(),
+        ['시즌 마스터', '시즌 선구자', '시즌 정복자'],
+    );
+});
+
+test('시즌 1(아카이브 0건)에서도 현재 진행으로 시즌 칭호를 되찾는다 — archive-only가 아니라 max다', () => {
+    // 아직 한 번도 완주하지 않은 플레이어 — archive만 봤다면 세 칭호 모두 미인식이어야
+    // 하지만 max(live, archive)이므로 live tier가 그대로 통과한다.
+    const player = {
+        titles: [],
+        seasonPass: { xp: 4000, tier: 20, claimed: [], isPremium: false, seasonId: FIRST_SEASON.id },
+    };
+    assert.deepEqual(getSeasonArchive(player.seasonPass), []);
+    const unlocked = checkTitles(player);
+    assert.ok(unlocked.includes('시즌 선구자'));
+    assert.ok(unlocked.includes('시즌 정복자'));
+    assert.ok(!unlocked.includes('시즌 마스터'), '아직 30단계에 닿지 않았다');
+});
+
+test('XP 적립은 상한에서 더 이상 자르지 않고, 완주 후 미수령 구간의 XP는 회전 시점에 다음 시즌으로 넘어간다', () => {
+    // 30티어를 전부 벌었지만(claimed 29개) 아직 마지막 보상을 수령하지 않은 플레이어가
+    // 계속 플레이해 임무/제작/합성/도감 발견(addSeasonXp 경로)으로 250 XP를 더 번다.
+    const almost = makeMaxedState({ claimed: Array.from({ length: 29 }, (_, i) => i + 1) });
+    const overEarned = addSeasonXp(almost.player, 250);
+    assert.equal(overEarned.seasonPass.xp, SEASON_MAX_XP + 250, '상한을 넘겨도 저장값은 잘리지 않는다');
+    assert.equal(overEarned.seasonPass.tier, SEASON_MAX_TIER, 'tier 자체는 여전히 30에서 잘린다');
+    // 상한을 넘긴 값도 표시 경계에서는 안전하게 클램프된다(§17 실패 시나리오 가드).
+    assert.deepEqual(getSeasonProgress(overEarned.seasonPass.xp, overEarned.seasonPass.tier), {
+        tier: SEASON_MAX_TIER,
+        totalXp: SEASON_MAX_XP,
+        currentXp: 200,
+        remainingXp: 0,
+        completed: true,
+        percent: 100,
+    });
+
+    const beforeLastClaim = { ...almost, player: overEarned };
+    const rotated = rewardActionMap.CLAIM_SEASON_REWARD(beforeLastClaim, {
+        type: AT.CLAIM_SEASON_REWARD,
+        payload: { tier: 30 },
+    });
+
+    // 이월 산술: 다음 시즌의 xp = max(0, 원본 xp − SEASON_MAX_XP) = 250. 증발 0.
+    assert.equal(rotated.player.seasonPass.seasonId, 'S2');
+    assert.equal(rotated.player.seasonPass.xp, 250);
+    assert.equal(rotated.player.seasonPass.tier, 0);
+    // 아카이브에 남는 완주 시점 기록은 여전히 정확히 상한이다 — 초과분은 다음 시즌 것이지
+    // 지난 시즌의 완주 기록을 부풀리지 않는다.
+    assert.equal(getSeasonArchive(rotated.player.seasonPass)[0].xp, SEASON_MAX_XP);
+    assert.equal(getSeasonArchive(rotated.player.seasonPass)[0].tier, SEASON_MAX_TIER);
+});
+
+test('정상 완주 경로(상한 초과 없음)는 이월 도입 이후에도 바이트 단위로 동일하다', () => {
+    // 기존 회귀 스위트가 고정한 xp:0 리셋 — 회전 시점에 원본 xp가 상한 이하였을 때는
+    // carryOverXp가 항상 0이라, 이월 도입이 기존 세이브/골든에 아무 흔적도 안 남긴다.
+    const completed = claimEveryTier(makeMaxedState());
+    assert.equal(completed.player.seasonPass.xp, 0);
 });
 
 test('회전 뒤 시즌 적립이 다시 살아난다 (상한에서 죽던 탭이 반복 루프가 된다)', () => {

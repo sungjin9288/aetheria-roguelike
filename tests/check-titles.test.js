@@ -121,3 +121,79 @@ test('checkTitles does not unlock survival titles below threshold', () => {
     assert.ok(!unlocked.includes('cautious_explorer'));
     assert.ok(!unlocked.includes('survivor_instinct'));
 });
+
+// ─── Wave 13 E3: seasonTier 폴백을 lifetime max(live ⋁ archive[].tier)로 ───────
+//
+// Wave 12 D2의 완주 회전은 live seasonPass.tier를 0으로 되돌린다. checkTitles가
+// 그 live 값만 읽는 동안은 회전 뒤 titles가 다시 비워지는 두 번째 저장 손실에서
+// 시즌 칭호 3종(시즌 선구자/정복자/마스터, val 10/20/30)이 영구 복구 불가였다.
+
+test('checkTitles unlocks seasonTier titles from live tier when there is no archive yet (season 1)', () => {
+    const player = {
+        titles: [],
+        seasonPass: { xp: 4000, tier: 20, claimed: [], isPremium: false, seasonId: 'S1' },
+    };
+    const unlocked = checkTitles(player);
+    assert.ok(unlocked.includes('시즌 선구자'), 'val 10 — live tier 20으로 충족');
+    assert.ok(unlocked.includes('시즌 정복자'), 'val 20 — live tier 20으로 충족');
+    assert.ok(!unlocked.includes('시즌 마스터'), 'val 30 — 아직 미달');
+});
+
+test('checkTitles re-derives all three seasonTier titles from archive after rotation zeroed live tier', () => {
+    // 회전 후 live tier=0이고 titles도 비워진 복구 시나리오 — 아카이브만이 유일한 증거.
+    const player = {
+        titles: [],
+        seasonPass: {
+            xp: 0,
+            tier: 0,
+            claimed: [],
+            isPremium: false,
+            seasonId: 'S2',
+            archive: [{ seasonId: 'S1', ordinal: 1, tier: 30, xp: 6000, claimed: [1] }],
+        },
+    };
+    const unlocked = checkTitles(player);
+    assert.ok(unlocked.includes('시즌 선구자'));
+    assert.ok(unlocked.includes('시즌 정복자'));
+    assert.ok(unlocked.includes('시즌 마스터'));
+});
+
+test('checkTitles takes the max of live tier and archive — archive-only would regress current-season progress', () => {
+    // 현재 시즌(live tier 20)이 지난 아카이브 기록(tier 10)보다 앞서 있다.
+    // archive-only 구현이었다면 시즌 정복자(val 20)를 놓친다.
+    const player = {
+        titles: [],
+        seasonPass: {
+            xp: 4000,
+            tier: 20,
+            claimed: [],
+            isPremium: false,
+            seasonId: 'S2',
+            archive: [{ seasonId: 'S1', ordinal: 1, tier: 10, xp: 2000, claimed: [1] }],
+        },
+    };
+    const unlocked = checkTitles(player);
+    assert.ok(unlocked.includes('시즌 선구자'));
+    assert.ok(unlocked.includes('시즌 정복자'), 'archive(10)만 봤다면 놓쳤을 값 — live(20)가 max를 이긴다');
+    assert.ok(!unlocked.includes('시즌 마스터'));
+});
+
+test('checkTitles ignores corrupted archive entries when computing the seasonTier lifetime max', () => {
+    const player = {
+        titles: [],
+        seasonPass: {
+            tier: 0,
+            archive: [null, 'S2', { seasonId: 'S3', ordinal: 3 }, { seasonId: 'S1', ordinal: 1, tier: 30, xp: 6000, claimed: [1] }],
+        },
+    };
+    const unlocked = checkTitles(player);
+    assert.ok(unlocked.includes('시즌 마스터'), '온전한 항목(tier 30)은 그대로 반영된다');
+});
+
+test('checkTitles handles missing seasonPass without crashing (legacy save)', () => {
+    const player = { titles: [] };
+    const unlocked = checkTitles(player);
+    assert.ok(!unlocked.includes('시즌 선구자'));
+    assert.ok(!unlocked.includes('시즌 정복자'));
+    assert.ok(!unlocked.includes('시즌 마스터'));
+});

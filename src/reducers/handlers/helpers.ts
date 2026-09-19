@@ -6,7 +6,7 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { applyEssenceGain } from '../../systems/essenceLedger';
 import { getCurrentDailyProtocol } from '../../utils/protocolCycle';
-import { createSeasonPassState, SEASON_MAX_TIER, SEASON_MAX_XP } from '../../utils/seasonPassPresentation';
+import { createSeasonPassState, SEASON_MAX_TIER } from '../../utils/seasonPassPresentation';
 import type { DailyProtocolMissionType, Item, Player } from '../../types/index.js';
 import type { Relic } from '../../types/relic.js';
 
@@ -33,11 +33,17 @@ export const sanitizeQuickSlots = (
 export const addSeasonXp = (player: Player, amount: number): Player => {
     if (!Number.isFinite(amount) || amount <= 0) return player;
     // 2026-09 Wave 12 D2: 'S1' 리터럴 대신 레지스트리 기반 기본값.
-    //   XP 상한(SEASON_MAX_XP)은 그대로다 — 상한을 넘기는 대신 완주가 시즌을 회전시킨다.
     const seasonPass = player.seasonPass || createSeasonPassState();
     const currentXp = Math.max(0, Number(seasonPass.xp) || 0);
-    const nextXp = Math.min(SEASON_MAX_XP, currentXp + amount);
-    if (nextXp === currentXp) return player;
+    // 2026-09 Wave 13 E3: 여기서는 더 이상 SEASON_MAX_XP로 자르지 않는다. 30티어를
+    //   전부 벌고 마지막 보상을 아직 수령하지 않은 플레이어가 그 사이 계속 버는 XP가
+    //   증발하던 회귀(§16.1 발견 4 / §17 finding 2) — 클램프가 여기 있으면 그 초과분이
+    //   기록될 자리가 없어 회전 시점에 이월할 것이 아무것도 안 남는다. 상한 클램프는
+    //   표시 경계(getSeasonProgress, 이 트랙이 손대지 않음)에 그대로 남고, 저장된 xp가
+    //   상한을 넘는 동안의 정산(완주 판정 · tier 계산 · UI 진행률)은 전부 그 경계에서
+    //   다시 클램프되므로 안전하다. 초과분은 회전(advanceSeasonIfComplete)이 다음
+    //   시즌의 시드로 넘긴다 — 클램프를 완전히 없앤 게 아니라 자르는 자리를 옮겼다.
+    const nextXp = currentXp + amount;
 
     return {
         ...player,

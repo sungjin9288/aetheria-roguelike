@@ -178,6 +178,16 @@ export const isSeasonComplete = (season?: SeasonPassState | null): boolean => (
  * 완주했으면 다음 시즌 상태를, 아니면 `null`을 돌려준다.
  * `xp`/`tier`/`claimed`만 리셋하고 `isPremium`과 그 밖의 필드는 보존하며,
  * 비우기 전의 수령 기록은 `archive`에 옮긴다.
+ *
+ * 2026-09 Wave 13 E3 — `xp`는 0으로 리셋하지 않고 **상한을 넘겨 저장된 초과분**을
+ * 다음 시즌의 시드로 이월한다. 30티어를 전부 벌고 마지막 보상을 아직 수령하지
+ * 않은 채로 계속 플레이하면 그 사이 번 XP가 상한에서 증발하던 회귀(§16.1 발견 4 /
+ * §17 finding 2)의 수신부다 — 그 초과분을 저장하는 쪽(`addSeasonXp`)이 더 이상
+ * `SEASON_MAX_XP`에서 자르지 않기 때문에 여기 도착하는 `season?.xp`가 상한보다
+ * 클 수 있다. 클램프를 없앤 게 아니라 자르는 자리를 **회전 시점 하나**로 옮긴 것 —
+ * 표시 경계(`getSeasonProgress`)는 그대로다: archive 기록의 `xp`/`tier`는 여전히
+ * `getSeasonProgress`가 돌려주는 클램프된 값(`progress.totalXp` ≤ `SEASON_MAX_XP`)을
+ * 쓰고, 이월 시드만 원본 `season?.xp`에서 상한을 뺀 나머지를 쓴다.
  */
 export const advanceSeasonIfComplete = (season?: SeasonPassState | null): SeasonPassState | null => {
     if (!isSeasonComplete(season)) return null;
@@ -192,12 +202,16 @@ export const advanceSeasonIfComplete = (season?: SeasonPassState | null): Season
         xp: progress.totalXp,
         claimed: normalizeClaimedSeasonTiers(season?.claimed),
     };
+    // 회전 시점에만 자른다 — 저장된 원본 xp(상한 이상일 수 있다)에서 상한을 뺀
+    // 나머지가 다음 시즌의 시드다. 상한 밑이었으면(정상 완주 경로) 0이라 기존
+    // 동작과 바이트 단위로 동일하다.
+    const carryOverXp = Math.max(0, (Math.max(0, Number(season?.xp) || 0)) - SEASON_MAX_XP);
 
     return {
         ...(season || {}),
         seasonId: next.id,
         ordinal: next.ordinal,
-        xp: 0,
+        xp: carryOverXp,
         tier: 0,
         claimed: [],
         completedSeasons: getCompletedSeasonCount(season) + 1,
