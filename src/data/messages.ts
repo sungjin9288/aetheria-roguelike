@@ -743,4 +743,17 @@ export const MSG = {
     SEASON_ARCHIVE_ENTRY: (name: string, claimedCount: number) => (
         `${name} · 보상 ${claimedCount}개 수령`
     ),
+
+    // 2026-09 Wave 13 E2: 지역의 선언 레벨과 실제 진입 레벨(경로 게이트)이 갈라지는 10곳.
+    //   선언 레벨은 그 지역 자신의 잠금(`getMapAccess`가 비교하는 값)이고, 경로 게이트는
+    //   시작의 마을에서 실제로 걸어 들어갈 수 있게 되는 레벨이다(`utils/mapRouteGate.ts`).
+    //   표시만 정직하게 하고 잠금 자체는 바꾸지 않는다 — 그래서 문구가 둘을 함께 말한다.
+    MAP_ROUTE_GATE_LEVEL: (routeLevel: number) => `실제 진입 레벨 ${routeLevel}`,
+    MAP_ROUTE_GATE_NOTE: (declaredLevel: number, routeLevel: number) => (
+        `이 지역의 잠금은 레벨 ${declaredLevel}이지만, 여기로 이어지는 모든 길이 더 높은 지역을 지나 실제 진입은 레벨 ${routeLevel}부터입니다.`
+    ),
+    /** 무한 심연 — `level: 'infinite'`은 NaN 비교라 지역 자체에는 레벨 잠금이 아예 없다. */
+    MAP_ROUTE_GATE_NOTE_UNGATED: (routeLevel: number) => (
+        `이 지역 자체에는 레벨 잠금이 없지만, 여기로 이어지는 모든 길이 더 높은 지역을 지나 실제 진입은 레벨 ${routeLevel}부터입니다.`
+    ),
 };
