@@ -126,16 +126,26 @@ test('해금된 시즌 보상은 한 번만 지급되고 기존 프리미엄 저
     ]);
 });
 
-test('시즌 경험은 양수만 반영하고 마지막 단계에서 고정된다', () => {
+// 2026-09 Wave 13 E3 통합: `ADD_SEASON_XP` 핸들러가 helpers.addSeasonXp와 같은 계산을
+//   독립 구현하고 있었고(전투 승리·탐험·전설 드롭이 전부 이 경로다), 그래서 지배적 XP
+//   경로만 E3의 이월 수정을 못 받고 있었다. 위임으로 통일하면서 이 칸의 기대도 뒤집는다 —
+//   상한에서 **참조 동일(no-op)** 이던 것이 이제 **산술적으로 계속 쌓인다**. 쌓인 초과분은
+//   회전(advanceSeasonIfComplete)이 다음 시즌 시드로 넘기고, 표시 경계
+//   (getSeasonProgress)는 여전히 상한 밖 값을 밖으로 내보내지 않는다.
+test('시즌 경험은 양수만 반영하고 상한 위로도 누적된다(초과분은 회전이 이월)', () => {
     const state = makeState({ tier: 29, xp: SEASON_MAX_XP - 10, claimed: [] });
     const invalid = rewardActionMap.ADD_SEASON_XP(state, { type: AT.ADD_SEASON_XP, payload: -50 });
     const completed = rewardActionMap.ADD_SEASON_XP(state, { type: AT.ADD_SEASON_XP, payload: 100 });
     const overflow = rewardActionMap.ADD_SEASON_XP(completed, { type: AT.ADD_SEASON_XP, payload: 100 });
 
     assert.equal(invalid, state);
-    assert.equal(completed.player.seasonPass.xp, SEASON_MAX_XP);
+    // 상한을 90 넘긴다 — 예전 클램프라면 여기서 SEASON_MAX_XP로 잘렸다.
+    assert.equal(completed.player.seasonPass.xp, SEASON_MAX_XP + 90);
     assert.equal(completed.player.seasonPass.tier, 30);
-    assert.equal(overflow, completed);
+    // 티어는 상한에서 고정되지만 xp는 계속 쌓인다(이월할 것이 남아야 한다).
+    assert.notEqual(overflow, completed);
+    assert.equal(overflow.player.seasonPass.xp, SEASON_MAX_XP + 190);
+    assert.equal(overflow.player.seasonPass.tier, 30);
     assert.deepEqual(getSeasonProgress(SEASON_MAX_XP + 500, 30), {
         tier: 30,
         totalXp: SEASON_MAX_XP,

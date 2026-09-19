@@ -59,20 +59,18 @@ export const rewardActionMap = {
     },
 
     // ── Season Pass ───────────────────────────────────────────────────────
+    // 2026-09 Wave 13 E3 통합: 이 핸들러가 helpers.addSeasonXp와 같은 계산을 독립
+    //   구현하고 있었고, 전투 승리(kill/bossKill)·탐험·전설 드롭이 전부 이 경로로
+    //   들어오므로 **지배적 XP 경로가 E3의 이월 수정을 받지 못했다**(퀘스트 보상만
+    //   helpers를 거쳤다). 위임으로 바꿔 상한 클램프의 자리를 한 곳으로 통일한다 —
+    //   두 구현이 갈라지면 "어느 경로로 번 XP인가"에 따라 이월 여부가 달라진다.
     ADD_SEASON_XP: (state, action) => {
-        const sp = state.player.seasonPass || createSeasonPassState();
         const earnedXp = Number(action.payload);
         if (!Number.isFinite(earnedXp) || earnedXp <= 0) return state;
 
-        const currentXp = Math.max(0, Number(sp.xp) || 0);
-        const newXp = Math.min(SEASON_MAX_XP, currentXp + earnedXp);
-        if (newXp === currentXp) return state;
-        const newTier = Math.min(SEASON_MAX_TIER, Math.floor(newXp / SEASON_TIER_XP));
-        return {
-            ...state,
-            player: { ...state.player, seasonPass: { ...sp, xp: newXp, tier: newTier } },
-            syncStatus: 'syncing',
-        };
+        const nextPlayer = addSeasonXp(state.player, earnedXp);
+        if (nextPlayer === state.player) return state;
+        return { ...state, player: nextPlayer, syncStatus: 'syncing' };
     },
 
     CLAIM_QUEST_REWARD: (state, action) => {
