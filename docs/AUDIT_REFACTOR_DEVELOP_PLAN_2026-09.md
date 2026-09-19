@@ -748,3 +748,42 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 6. **퀘스트 104(minLv 79)의 `beyond-anchors` 공백 메우기.** 앵커를 Lv80까지 늘리면 `cost.anchors`가 8행에서 9행이 되어 Wave 13이 남긴 "바이트 동일" 기준선이 사라진다. 값이 `null`인 것이 정직한 상태다.
 7. **`SystemTab`의 admin 도구를 동작하게 만들기.** `public/data` 쓰기를 rules가 막는 것은 의도다. F3은 "항상 거부된다"를 실행 테스트로 고정만 한다.
 8. **class-(b) 소스 가드 1,807건.** Wave 11 C4 정책대로 계속 방치.
+
+### 18.1 Wave 14 실행 결과 (2026-09-19, branch `claude/funny-rubin-xdv43e`, 베이스 `main` = `636fc273`)
+
+| 트랙 | 상태 | 결과 |
+|---|---|---|
+| F1 증빙 자기치유 제거 | ✅ `ac8ab3e6` | 바이트 동일 + `finally` 복원 선례를 택했다(temp-cwd 불가 — writer가 자식 프로세스를 띄우고 그 자식이 `./src/...`를 **자기 cwd 기준으로** 해석한다. 형제 `equipment-economy-audit`이 temp-cwd로 되는 건 그쪽 CLI가 리포트 빌더를 모듈 로드 시점에 정적 import하기 때문). 기존 `finally`의 미묘한 버그도 잡았다 — `baseline`을 **첫 `--write` 이후에** 캡처해 self-heal된 값으로 "복원"하고 있었다 |
+| F2 체인 완주 게이트 + 승천 이월 | ✅ stage i `f0d20a7a` / stage ii `2e25d8e5` | 완주 게이트를 `steps.at(-1)` → **전 스텝 max**로, `cost.eventChainSpans` 13행 신설, `schemaVersion` 2→3. 이월은 키를 **제외**하는 대신 `EVENT_CHAINS`를 순회해 **끌어와** 예약 키가 구조적으로 도달 불가능하다. stage ii(`forgotten_god` 역전 교정)는 F2가 파일 경계에서 멈추고 통합자가 마무리 |
+| F3 rules 실행 검증 | ✅ `5f1a50e2` | 에뮬레이터 + `@firebase/rules-unit-testing` + CI job. 쓰기 지점 6곳의 **실제 페이로드**로 17/17, 그리고 **네거티브 컨트롤** — 변경 전 rules에 같은 스위트를 돌려 정확히 피드백 수용 3건만 빨개짐을 확인(스위트가 공허하지 않다는 증명) |
+| F4 라벨 정렬 | ✅ `abd3bb80` | `성직자` `reqLv 5→12`, 퀘스트 101 `goal/minLv 45/44` + 문구 복원, `tier === BFS 깊이` 불변식. **`tier 1→2`는 보류** — 사유 아래 |
+| 증빙 재고정 | ✅ `65c21fad` | 예상 3종이 아니라 **5종** |
+
+**성공 기준 — 달성**
+
+| | 이전 | 이후 |
+|---|---:|---:|
+| `test:unit` 후 `docs/evidence/` 더티 | 매번 1파일 | **깨끗** |
+| `firestore.rules` 실행 검증 | 0건 | **17/17** (쓰기 지점 6곳) |
+| 의견 보내기 | rules에 경로 없음 → 100% 거부 | **통과**(rules 수동 배포 후 실제 동작) |
+| `forgotten_god` 완주 게이트 | 48로 적힘(실제 68, 116.95h 과소) | **48이 참이 됨**(역전 교정) |
+| 승천 걸친 체인 | 4개, 진행도 리셋 | **3개, 진행도 이월** |
+| Lv5 후속 직업(전사/도적/마법사) | 0 / 0 / **1** | **0 / 0 / 0** (Lv12에서 2택) |
+| `cost.anchors` 8행 | — | **바이트 동일** |
+
+**발견 (이 wave의 실제 산출물)**
+
+1. **§18의 `tier` reader census가 틀렸다 — 2곳이 아니라 4곳이고, 하나가 1,065개 파일에 핀돼 있다 (F4).** `scripts/artCatalog.mjs`의 `normalizeClasses`가 `{name, tier}`를 **아트 카탈로그 identity 해시**에 넣는다(실측: `tier` 변경 시 `catalogSha256` `c15c4e6f…`→`2ef481ad…`, `reqLv` 변경 시 불변). `c15c4e6f`를 핀하는 파일이 **1,065개**이고 그중 **65개가 `scripts/art_sources/**`의 아트 생산 provenance 기록**이다 — 그 기록은 "이 아트는 카탈로그 X에 대해 생산됐다"는 **역사**이고, 아트 스위트는 비활성 `catalogSha256`을 가진 기록이 **거부되는지**를 일부러 테스트한다. 덮어쓰는 건 증빙 재생성이 아니라 가드가 지키려는 역사를 다시 쓰는 것이다. 네 번째 reader는 `progressionSimulator`의 `jobSnapshots[].tier`(골든 해시에 들어간다). **census가 "한 곳"이라는 전제 아래 이 편집이 한 글자로 보였고, 그게 아니었다.**
+2. **`tier`를 아트 identity에서 빼는 "진짜 수리"도 공짜가 아니다 (통합 시 확인).** identity **모양**이 바뀌므로 같은 1,065개가 무효화된다. 즉 Wave 15의 질문은 "빼면 되나"가 아니라 **"provenance 역사를 재핀할 수 있나"**이고, 답이 아니라면 스키마 버전이나 문서화된 예외가 형태다. F4가 출하한 상태(괴리 집합 = 정확히 `['성직자']`, 늘어날 수 없음)는 그 결정까지 안정적으로 버티는 상태다.
+3. **Firestore rules의 `size()`는 바이트가 아니라 문자를 센다 (F3, 실행해야만 알 수 있다).** 한국어 500자는 UTF-8 1,500바이트다. 바이트였다면 `≤1000` 규칙이 **한국어 UI에서만** 거부를 일으켰을 것이고, 텍스트 가드로는 절대 못 잡는다.
+4. **이웃 블록의 패턴을 복제하지 않은 것이 F3의 핵심 판단이다.** `graves`가 `gold ≤ 9,999,999`를 클라이언트 보장 없이 캡하는데 그게 §18이 지적한 **조용히 거부되는 절벽**이다. 새 `feedback` 블록에 같은 패턴을 복제하면 이 트랙이 없애려는 버그 클래스를 새로 만든다 — `level`만 캡했고(`CONSTANTS.MAX_LEVEL`이 실제로 보장), `message` 한도는 `FeedbackValidator`에서 **도출**했다.
+5. **`firebase-tools`를 devDependency로 넣지 않았다 (F3).** 넣으면 락파일에 **566 패키지 / 약 265MB**가 들어가고 네 job의 `npm ci`가 전부 그 비용을 내며 무관한 전이 핀 2개가 움직인다. 버전 고정 `npx --yes firebase-tools@15.30.2`로 옮겨 락파일 증분이 **1 패키지**다.
+6. **F2가 파일 경계에서 멈춘 것이 옳았다.** `forgotten_god` 이동이 `tests/event-chain-failure.test.js`(자기 집합도, §18 F2 목록도 아님)를 깬다. 진행했으면 `verify`가 **두 개** 테스트로 빨개져 "정확히 하나만 빨간 것이 정상"이라는 판별 기준을 잃었다. 필요한 편집 4개를 열거해 넘겼고 통합자가 마무리했다.
+7. **위치를 옮기면 문구도 옮겨야 한다 (F2).** step 1 텍스트가 "관문 앞에서", "관문을 봉인한다"로 장소를 전제했다 — `loc`만 바꾸면 이 wave가 없애려는 "장소와 텍스트가 어긋난다"를 새로 만든다. 문구 4곳(title·desc·choice·log)을 함께 옮겼다. `지하 미궁`을 고른 근거는 로어다: *"원시의 신이 봉인되기 전 만들어진 미궁"*이고 step 2의 무대 `혼돈의 심연`의 보스가 **원시의 신**이다. 후보 4곳 모두 max 48이라 비용 델타는 동일하고 선택은 순전히 서사였다.
+8. **아트 스위트는 타겟 재실행이 거짓 초록을 준다 (F4).** `tier` 변경으로 실패한 70건을 파일 단위로 **단독 실행하면 통과한다** — 전체 스위트만 바뀐 `catalogSha256` 경로를 본다. 이 실패를 타겟 재실행으로 triage하면 잘못된 결론에 도달한다.
+9. **F1의 예고 델타 "없음"은 절반만 맞았다 (F1·F3 독립 확인).** F1은 증빙 바이트를 바꾸지 않지만 self-heal 마스킹을 제거해서 **기존 stale이 보이게** 만든다 — `equipment:combat-power:verify`가 F1 커밋 직후부터 빨갛고, F5의 재생성이 그걸 닫는다.
+10. **`package.json`에 선언만 하고 로컬 설치를 안 하면 테스트가 import 단계에서 죽는다 (통합 시).** F3가 graceful degradation(에뮬레이터 없으면 러너 존재를 단언)을 설계했지만 top-level import는 그보다 앞선다. CI는 `npm ci`로 설치하므로 무해하고, 로컬은 `npm install` 한 번으로 맞춰진다 — 다만 "degradation이 설계됐다"는 것과 "모든 부재 상황에서 degradation한다"는 다르다.
+
+**최종 게이트** (head `65c21fad` + 로컬 devDependency 설치, CI 동일 빌드): type-check 0 · lint 0 · unit **5,104 / 5,104**(skip 0, Wave 13 대비 +18) · build:guard ok · e2e **121 / 121**(61 + 60) · perf desktop ok(FCP 492ms) / mobile ok(FCP 396ms) · `release-complete-core` 증빙 **13종** verify 전부 ok · `test:unit` 후 `docs/evidence/` **깨끗**(F1의 산출물). 게이트 1차 실행의 unit 1건 실패는 `@firebase/rules-unit-testing` 로컬 미설치였고 설치 후 재현되지 않는다. `toss:evidence:verify`·`observation:host:verify`는 `main`에서도 빨갛다(이 세트 밖, 기존 실패).
+
+**남은 후보 (Wave 15)**: (1) **`tier`를 아트 identity에서 분리** — 발견 1·2. 빼는 것도 1,065개를 무효화하므로 "provenance 역사를 재핀할 수 있나"가 선행 질문이다. 그 답이 나오면 `성직자 tier 1→2`와 `KNOWN_TIER_DEPTH_DIVERGENCE` 비우기가 한 커밋이다(F4가 측정한 후속 핀: `EXPECTED_BASELINE_REPORT_SHA256 = 9da28843…`, `PROGRESSION_V1_BASELINE_HASH = 4a888aa0…`, pacing focused 해시는 양쪽 동일); (2) **Lv68 종착 3개를 루프 안으로** — 교정된 측정(`cost.eventChainSpans`)이 입력이고 `CHAIN_ITEM_TIER_TOO_LOW` 바닥·장비 경제를 함께 끌고 온다; (3) **`graves`의 `gold` 캡 절벽** — rules가 `≤ 9,999,999`를 캡하는데 클라이언트가 보장하지 않고 `.catch(console.warn)`이 삼킨다. F3가 새 블록에서 복제를 거부했으니 기존 블록도 같은 기준으로; (4) **`deploy.yml`의 rules 배포 자동화** — 지금은 수동이라 의견 보내기가 배포까지 안 열린다; (5) **`summary.eventChainTerminalSteps` 이름 정정** — 이제 체인 수를 세고 버킷은 완주 게이트다(F2가 스키마 churn을 피해 보류); (6) class-(b) 1,807건은 Wave 11 C4 정책대로 방치.

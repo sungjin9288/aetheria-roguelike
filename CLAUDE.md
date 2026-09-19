@@ -239,6 +239,7 @@ useGameEngine (useReducer)
 3. **마왕 격파** → Ascension 옵션 제공 (마왕성 경로 게이트 Lv48 ≈ 53.3 모델시간)
    - **직업 게이트는 이 리셋 지점을 넘지 않는다**(Wave 13 E1) — tier-3 5종이 `reqLv: 60`(131.2h)이던 동안 코어 루프를 그대로 타는 플레이어는 직업 5종을 영원히 못 봤다. 45로 내려 승천까지 13.90h 여유를 남겼고, `tests/content-reachability.test.js`가 "최심 직업 게이트 ≤ 마왕성 **경로** 게이트"를 단언한다(48은 리터럴이 아니라 리포트에서 읽는다)
 4. **프레스티지** → 레벨/장비/유물 초기화, 영구 보너스 적립
+   - **이벤트 체인 진행도는 이월된다**(Wave 14 F2) — 체인 3개가 2.05h~21.08h에 열리고 170.23h에 완주되므로 승천이 항상 그 사이에 놓인다. `pickPermanentPlayerState`는 `EVENT_CHAINS`를 순회해 **체인 id 키만** 끌어온다(제외가 아니라 화이트리스트) — `eventChainProgress`의 `boundedEncounterReceipts` 키는 원정 조우 영수증 레저를 겸하므로 통째로 넘기면 영수증이 승천을 넘어가 재획득을 막는다
 5. **묘비 시스템** → 사망 지점에 골드/아이템 보관, 재방문 시 회수
 
 ### AI 이벤트 생성
@@ -280,6 +281,9 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 - `boot-state-machine.test.js` — §8-5 부트 전이표(`platform/bootStateMachine.ts`). 복원 **dispatch까지** 전이표 소유(Wave 11 C1)이므로 계약은 "ready 뒤 `LOAD_DATA`는 크로스 디바이스 복원 경로에서만, 폴백·mock/device-QA는 무(無)". Wave 10의 "복원 승인 없는 ready 금지"는 dispatch를 훅이 소유하던 동안 **공허참**이었다 — 주장하는 쪽과 강제하는 쪽이 같은 모듈이어야 계약이 성립한다
 - `ai-event-policy.test.js` — AI 폴백 결정표 (Wave 11 C3)
 - `grave-item-reader-contract.test.js` — §8-2 "묘비 아이템은 `getGraveItems()` 경유로만 읽는다" 부재 가드 + 단수/복수/빈배열/null 읽기 동치 (Wave 11)
+- `event-chain-cost.test.js` — **체인의 열림→완주 구간** (Wave 14 F2). 완주 게이트는 종착 스텝의 게이트가 아니라 **전 스텝 max**다 — `chainEventHandlers`가 스텝 순서를 강제하므로 중간 스텝이 더 깊으면 그게 완주 비용이다. 스텝 지역 하나라도 못 읽으면 남은 스텝의 max가 아니라 **미상**(fail-closed)
+- `firestore-rules-semantics.test.js` — **rules를 에뮬레이터로 실행** (Wave 14 F3). 테스트는 rules가 아니라 **클라이언트 쓰기 지점 6곳의 실제 페이로드**에서 유도한다 — rules 텍스트를 재현한 테스트는 거부가 버그인 rules 위에서도 초록이다. `npm run test:rules`(JDK 필요, CI 별도 job). 에뮬레이터가 없으면 러너 존재를 단언한다(skip 0 유지)
+- `class-tier-depth.test.js` — **`tier`는 `모험가`로부터의 BFS 깊이다** (Wave 14 F4). 괴리는 정확히 `['성직자']` 하나이고 **늘어날 수 없다**. 그 하나를 못 고치는 이유는 `scripts/artCatalog.mjs`가 `tier`를 아트 카탈로그 identity 해시에 넣고 그 해시가 provenance 기록 포함 1,065개 파일에 핀돼 있기 때문이다(§18.1 발견 1·2)
 - `map-route-gate.test.js` — **맵의 실제 진입 레벨** (Wave 13 E2). `src/utils/mapRouteGate.ts`가 리포트와 UI의 공용 authority다. 52개 중 10개는 선언 `level`과 경로 게이트가 다르고(유일한 경로가 더 높은 지역을 지난다), `level: 'infinite'`는 잠금이 아니라 **잠금 없음**이다(`NaN` 비교). 이 트랙은 **표시이지 잠금이 아니다** — `getMapAccess`는 선언값 그대로이고 테스트가 그걸 고정한다
 - `content-reachability.test.js` — **접근 비용 축** (Wave 12 D1). "도달 가능한가"가 아니라 "몇 모델 액션·몇 모델 시간 뒤인가"를 검증한다. `basis`가 `anchored`(모델 산출)인지 `interpolated`(누적 EXP 비례)인지 `beyond-anchors`(외삽 금지 — 비용 `null`)인지를 구분하고, 보간 행은 자기 입력을 들고 있어 재계산 가능하다. **맵 게이트는 선언 `level`이 아니라 실제 이동 경로로 매긴다** — 52개 중 10개가 다르다(`cost.mapGateDivergence`)
 
@@ -325,8 +329,14 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 앱 부팅 시 자동 초기화. `bootStage`가 완료되기 전에 게임 렌더링 금지 (저장 데이터 로드 전 기본값으로 덮어씌워지는 race condition 주의).
 **부트 순서·복원 payload 선택·복원 텔레메트리는 `src/platform/bootStateMachine.ts`가 소유한다**(Wave 10 B3 + Wave 11 C1). `useFirebaseSync.ts`에는 IO(저장소·Firestore·`migrateData`·`cloudSaveAuthority`)·타이머/구독 배선·로그 id 생성·React ref 갱신·텔레메트리 전송만 남는다 — 훅에서 `AT.LOAD_DATA`를 직접 dispatch하면 전이표 밖에 두 번째 부트 경로가 생기므로 금지이고(테스트가 소스에서 잡는다), 새 부트 분기는 이벤트 + 효과로 전이표에 넣을 것.
 
-**6. 청크 분리 설정**
+**6. `firestore.rules`는 수동 배포다**
+`.github/workflows/deploy.yml`의 `action-hosting-deploy`는 **호스팅만** 올린다. rules를 바꾸면 사람이 배포해야 하고, 그때까지 새 경로 쓰기는 앱 블록의 `match /{document=**} { allow read, write: if false }`가 받아 거부한다(실패는 `.catch`가 삼킨다). `npm run test:rules`가 의미를 검증하지만 **배포를 보장하지 않는다**. 클라이언트와 rules를 같은 커밋에 두는 것은 필요조건이고 충분조건이 아니다 — 새 클라이언트 쓰기 지점은 `permission-denied` 시 degrade 경로를 함께 둘 것(Wave 13 E4의 4키 폴백이 선례).
+
+**7. `tier`는 비용 밴드가 아니라 위상 라벨이고, 아트 identity에 묶여 있다**
+`CLASSES[*].tier`를 읽는 곳은 4군데다 — `ClassIcon`의 `TIER_COLORS`(색), `skill-branch-parity`의 분기 의무, `progressionSimulator`의 `jobSnapshots[].tier`(골든 해시), 그리고 **`scripts/artCatalog.mjs`의 `normalizeClasses`가 아트 카탈로그 identity 해시**에 넣는다. 그 해시(`catalogSha256`)는 `scripts/art_sources/**`의 아트 생산 provenance 65개를 포함해 1,065개 파일에 핀돼 있고, 아트 스위트는 비활성 해시를 가진 기록이 **거부되는지**를 테스트한다. 즉 `tier` 한 글자를 바꾸면 유닛 70건이 red가 되고 그 복구는 증빙 재생성이 아니라 역사 재작성이다. 비용 게이트는 `reqLv`가 소유한다 — 밸런스를 만질 때 `tier`를 건드리지 말 것.
+
+**8. 청크 분리 설정**
 `vite.config.js`의 `manualChunks` 설정이 성능에 직결. vendor-react / vendor-motion / vendor-firebase / game-data 등으로 분리되어 있으며, 대형 라이브러리 추가 시 청크에 포함 여부 검토 필요.
 
-**7. 모바일 viewport**
+**9. 모바일 viewport**
 `100dvh` 사용 (100vh 아님). iOS Safari 하단 주소창 때문. `env(safe-area-inset-*)` CSS 변수도 MainLayout에서 이미 처리 중 — 중복 적용 주의.
