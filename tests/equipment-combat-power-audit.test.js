@@ -35,6 +35,18 @@ const SOURCE_SNAPSHOT_PATHS = Object.freeze([
     'src/utils/signatureSetBonus.ts',
 ].sort());
 
+// Writer-path policy (Wave 14 F1): every `--write` below still runs against the real, tracked
+// `EVIDENCE_PATH` — a temp-cwd redirect is impractical here because the CLI's report builder
+// re-spawns a `tsx` child process that resolves `./src/systems/...` relative to *its own* cwd
+// (unlike the sibling economy-audit CLI, which imports its report builder statically at module
+// load). Faithfully relocating that nested import graph would mean mirroring most of `src/` plus
+// `node_modules` into a scratch tree — far more fragile than the guarantee this test actually
+// needs. Instead, each test that mutates `EVIDENCE_PATH` captures the pristine tracked bytes
+// *before* its first write and restores them in a `finally`, then asserts byte-identity as its
+// last statement. That keeps `npm run test:unit` byte-clean on `docs/evidence/**` even when a
+// source input the report reads (e.g. `src/data/classes.ts`) has drifted mid-run — staleness is
+// still caught by the separate `npm run equipment:combat-power:verify`, which sees these restored
+// (never self-healed) bytes rather than a fresh rewrite this test produced and left behind.
 const sha256 = (bytes) => createHash('sha256').update(bytes).digest('hex');
 
 const cloneRows = () => CANONICAL_EQUIPMENT.map((row) => ({ ...row, jobs: [...row.jobs] }));
@@ -322,42 +334,49 @@ test('every live outlier has one stable classification and every other row stays
 });
 
 test('binds exact source bytes in a sorted, unique, evidence-independent snapshot', async () => {
-    assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
-    const envelope = JSON.parse(await readFile(EVIDENCE_PATH, 'utf8'));
+    const pristineEvidence = await readFile(EVIDENCE_PATH, 'utf8'); // restored in finally — see write-site policy note above
+    try {
+        assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
+        const envelope = JSON.parse(await readFile(EVIDENCE_PATH, 'utf8'));
 
-    assert.equal(envelope.schemaVersion, 3);
-    assert.equal(envelope.report.schemaVersion, 2);
-    assert.equal(envelope.policyVersion, 'equipment-combat-power-audit@2');
-    assert.equal(envelope.report.policyVersion, 'equipment-combat-power-audit@2');
-    assert.equal(envelope.reportHash, '3c9d79593d161f11a1e94fe8663f5d2a3fd54fc3d9f291a9228ff856896b682a');
-    assert.equal(envelope.rowsHash, '01c99d3cd4dcd35b821b950577bb54d71ed0f0916a4e2d47379eb332f9ec0c40');
-    assert.deepEqual(envelope.classificationCounts, {
-        'combat-power-defect': 0,
-        'in-corridor': 154,
-        intentional: 16,
-        'price-only-defect': 9,
-        'specialized-sidegrade': 50,
-    });
-    assert.equal(envelope.requiresReplan, false);
-    assert.deepEqual(Object.keys(envelope.sourceSnapshot).sort(), ['files', 'hashAlgorithm']);
-    assert.equal(envelope.sourceSnapshot.hashAlgorithm, 'sha256');
+        assert.equal(envelope.schemaVersion, 3);
+        assert.equal(envelope.report.schemaVersion, 2);
+        assert.equal(envelope.policyVersion, 'equipment-combat-power-audit@2');
+        assert.equal(envelope.report.policyVersion, 'equipment-combat-power-audit@2');
+        assert.equal(envelope.reportHash, '3c9d79593d161f11a1e94fe8663f5d2a3fd54fc3d9f291a9228ff856896b682a');
+        assert.equal(envelope.rowsHash, '01c99d3cd4dcd35b821b950577bb54d71ed0f0916a4e2d47379eb332f9ec0c40');
+        assert.deepEqual(envelope.classificationCounts, {
+            'combat-power-defect': 0,
+            'in-corridor': 154,
+            intentional: 16,
+            'price-only-defect': 9,
+            'specialized-sidegrade': 50,
+        });
+        assert.equal(envelope.requiresReplan, false);
+        assert.deepEqual(Object.keys(envelope.sourceSnapshot).sort(), ['files', 'hashAlgorithm']);
+        assert.equal(envelope.sourceSnapshot.hashAlgorithm, 'sha256');
 
-    const expectedFiles = await Promise.all(SOURCE_SNAPSHOT_PATHS.map(async (relativePath) => ({
-        path: relativePath,
-        sha256: sha256(await readFile(relativePath)),
-    })));
-    assert.deepEqual(envelope.sourceSnapshot.files, expectedFiles);
-    assert.equal(new Set(envelope.sourceSnapshot.files.map((file) => file.path)).size, SOURCE_SNAPSHOT_PATHS.length);
-    assert.equal(envelope.sourceSnapshot.files.some((file) => file.path === EVIDENCE_PATH), false);
-    assert.equal(Object.hasOwn(envelope.sourceSnapshot, 'head'), false);
+        const expectedFiles = await Promise.all(SOURCE_SNAPSHOT_PATHS.map(async (relativePath) => ({
+            path: relativePath,
+            sha256: sha256(await readFile(relativePath)),
+        })));
+        assert.deepEqual(envelope.sourceSnapshot.files, expectedFiles);
+        assert.equal(new Set(envelope.sourceSnapshot.files.map((file) => file.path)).size, SOURCE_SNAPSHOT_PATHS.length);
+        assert.equal(envelope.sourceSnapshot.files.some((file) => file.path === EVIDENCE_PATH), false);
+        assert.equal(Object.hasOwn(envelope.sourceSnapshot, 'head'), false);
+    } finally {
+        await writeFile(EVIDENCE_PATH, pristineEvidence);
+    }
+    assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), pristineEvidence);
 });
 
 test('unrelated Git HEAD changes do not alter evidence bytes or verification result', async () => {
-    assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
-    const baseline = await readFile(EVIDENCE_PATH, 'utf8');
+    const pristineEvidence = await readFile(EVIDENCE_PATH, 'utf8'); // restored in finally — see write-site policy note above
     const temporaryDirectory = await mkdtemp(path.join(tmpdir(), 'aetheria-equipment-fake-git-'));
     const fakeGitPath = path.join(temporaryDirectory, 'git');
     try {
+        assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
+        const baseline = await readFile(EVIDENCE_PATH, 'utf8');
         await writeFile(fakeGitPath, '#!/bin/sh\nprintf "%s\\n" "$FAKE_GIT_HEAD"\n');
         await chmod(fakeGitPath, 0o755);
         for (const fakeHead of ['1111111111111111111111111111111111111111', '2222222222222222222222222222222222222222']) {
@@ -370,95 +389,103 @@ test('unrelated Git HEAD changes do not alter evidence bytes or verification res
             assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), baseline);
         }
     } finally {
-        await writeFile(EVIDENCE_PATH, baseline);
+        await writeFile(EVIDENCE_PATH, pristineEvidence);
         await rm(temporaryDirectory, { recursive: true, force: true });
     }
+    assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), pristineEvidence);
 });
 
 test('writes and strictly verifies tamper-evident exact-byte evidence', async () => {
-    for (const args of [
-        [], ['--write'], ['--verify'], ['--write', EVIDENCE_PATH, 'extra'],
-        ['--write', '../equipment-combat-power.json'], ['--write', `/${EVIDENCE_PATH}`],
-        ['--write', 'docs\\evidence\\qa\\release-complete-core\\equipment-combat-power.json'],
-        ['--write', 'docs/./evidence/qa/release-complete-core/equipment-combat-power.json'],
-        ['--write', EVIDENCE_PATH, '--verify'], ['--other', EVIDENCE_PATH],
-    ]) {
-        assert.notEqual(cli(...args).status, 0, args.join(' '));
-    }
-
-    assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
-    const bytes = await readFile(EVIDENCE_PATH, 'utf8');
-    assert.equal(cli('--verify', EVIDENCE_PATH).status, 0);
-    assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), bytes);
-
-    const envelope = JSON.parse(bytes);
-    assert.equal(envelope.schemaVersion, 3);
-    assert.equal(envelope.policyVersion, 'equipment-combat-power-audit@2');
-    assert.equal(envelope.report.schemaVersion, 2);
-    assert.equal(envelope.report.rows.length, 229);
-    assert.deepEqual(envelope.classificationCounts, envelope.report.classificationCounts);
-    assert.deepEqual(envelope.combatPowerDefects, envelope.report.combatPowerDefects);
-    assert.deepEqual(envelope.dominancePairs, envelope.report.dominancePairs);
-    assert.deepEqual(envelope.strictDominators, envelope.report.rows.map((row) => ({
-        name: row.name,
-        strictDominators: row.strictDominators,
-        type: row.type,
-    })));
-    assert.equal(envelope.requiresReplan, envelope.report.requiresReplan);
-    assert.match(envelope.authority.signatureRegistryHash, /^[a-f0-9]{64}$/);
-    assert.match(envelope.authority.signatureSetHash, /^[a-f0-9]{64}$/);
-    assert.match(envelope.authority.strictDominatorsHash, /^[a-f0-9]{64}$/);
-    assert.match(envelope.authority.dominancePairsHash, /^[a-f0-9]{64}$/);
-    assert.deepEqual(Object.keys(envelope.authority.productionOwners).sort(), [
-        'buildClassVitals', 'calculateFullStats', 'enemyEvasion', 'equipmentProfile', 'signatureSetBonus',
-    ]);
-
-    const tamper = [
-        (value) => { value.schemaVersion = 2; },
-        (value) => { value.sourceSnapshot.hashAlgorithm = 'sha512'; },
-        (value) => { value.sourceSnapshot.files[0].sha256 = '0'.repeat(64); },
-        (value) => { value.sourceSnapshot.files[0].path = 'src/not-bound.ts'; },
-        (value) => { value.sourceSnapshot.files.reverse(); },
-        (value) => { value.sourceSnapshot.files.push({ ...value.sourceSnapshot.files[0] }); },
-        (value) => { value.sourceSnapshot.head = 'deadbeef'; },
-        (value) => { value.authority.catalogHash = '0'.repeat(64); },
-        (value) => { value.authority.signatureRegistryHash = '1'.repeat(64); },
-        (value) => { value.authority.signatureSetHash = '2'.repeat(64); },
-        (value) => { value.report.rows[0].dimensions.price += 1; },
-        (value) => { value.report.rows[0].eligibleJobDeltas[0].atk += 1; },
-        (value) => { value.report.rows[0].classification = 'intentional'; },
-        (value) => { value.strictDominators[0].strictDominators.push({ name: 'tamper', type: 'armor' }); },
-        (value) => { value.dominancePairs.push({ candidate: { name: 'tamper' } }); },
-        (value) => { value.report.dominancePairs.push({ dominator: { name: 'tamper' } }); },
-        (value) => { value.classificationCounts['in-corridor'] += 1; },
-        (value) => { value.reportHash = 'f'.repeat(64); },
-        (value) => { value.authority.productionOwners.calculateFullStats = 'e'.repeat(64); },
-    ];
-    for (const mutate of tamper) {
-        const value = JSON.parse(bytes);
-        mutate(value);
-        const tamperedBytes = `${JSON.stringify(value)}\n`;
-        await writeFile(EVIDENCE_PATH, tamperedBytes);
-        assert.notEqual(cli('--verify', EVIDENCE_PATH).status, 0);
-        assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), tamperedBytes);
-    }
-    await writeFile(EVIDENCE_PATH, `${bytes}\n`);
-    assert.notEqual(cli('--verify', EVIDENCE_PATH).status, 0);
-    assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), `${bytes}\n`);
-    assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
-    assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), bytes);
-
-    const temporaryDirectory = await mkdtemp(path.join(tmpdir(), 'aetheria-equipment-evidence-'));
-    const symlinkTarget = path.join(temporaryDirectory, 'target.json');
-    await writeFile(symlinkTarget, bytes);
-    await unlink(EVIDENCE_PATH);
+    const pristineEvidence = await readFile(EVIDENCE_PATH, 'utf8'); // restored in finally — see write-site policy note above
     try {
-        await symlink(symlinkTarget, EVIDENCE_PATH);
+        for (const args of [
+            [], ['--write'], ['--verify'], ['--write', EVIDENCE_PATH, 'extra'],
+            ['--write', '../equipment-combat-power.json'], ['--write', `/${EVIDENCE_PATH}`],
+            ['--write', 'docs\\evidence\\qa\\release-complete-core\\equipment-combat-power.json'],
+            ['--write', 'docs/./evidence/qa/release-complete-core/equipment-combat-power.json'],
+            ['--write', EVIDENCE_PATH, '--verify'], ['--other', EVIDENCE_PATH],
+        ]) {
+            assert.notEqual(cli(...args).status, 0, args.join(' '));
+        }
+
+        assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
+        const bytes = await readFile(EVIDENCE_PATH, 'utf8');
+        assert.equal(cli('--verify', EVIDENCE_PATH).status, 0);
+        assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), bytes);
+
+        const envelope = JSON.parse(bytes);
+        assert.equal(envelope.schemaVersion, 3);
+        assert.equal(envelope.policyVersion, 'equipment-combat-power-audit@2');
+        assert.equal(envelope.report.schemaVersion, 2);
+        assert.equal(envelope.report.rows.length, 229);
+        assert.deepEqual(envelope.classificationCounts, envelope.report.classificationCounts);
+        assert.deepEqual(envelope.combatPowerDefects, envelope.report.combatPowerDefects);
+        assert.deepEqual(envelope.dominancePairs, envelope.report.dominancePairs);
+        assert.deepEqual(envelope.strictDominators, envelope.report.rows.map((row) => ({
+            name: row.name,
+            strictDominators: row.strictDominators,
+            type: row.type,
+        })));
+        assert.equal(envelope.requiresReplan, envelope.report.requiresReplan);
+        assert.match(envelope.authority.signatureRegistryHash, /^[a-f0-9]{64}$/);
+        assert.match(envelope.authority.signatureSetHash, /^[a-f0-9]{64}$/);
+        assert.match(envelope.authority.strictDominatorsHash, /^[a-f0-9]{64}$/);
+        assert.match(envelope.authority.dominancePairsHash, /^[a-f0-9]{64}$/);
+        assert.deepEqual(Object.keys(envelope.authority.productionOwners).sort(), [
+            'buildClassVitals', 'calculateFullStats', 'enemyEvasion', 'equipmentProfile', 'signatureSetBonus',
+        ]);
+
+        const tamper = [
+            (value) => { value.schemaVersion = 2; },
+            (value) => { value.sourceSnapshot.hashAlgorithm = 'sha512'; },
+            (value) => { value.sourceSnapshot.files[0].sha256 = '0'.repeat(64); },
+            (value) => { value.sourceSnapshot.files[0].path = 'src/not-bound.ts'; },
+            (value) => { value.sourceSnapshot.files.reverse(); },
+            (value) => { value.sourceSnapshot.files.push({ ...value.sourceSnapshot.files[0] }); },
+            (value) => { value.sourceSnapshot.head = 'deadbeef'; },
+            (value) => { value.authority.catalogHash = '0'.repeat(64); },
+            (value) => { value.authority.signatureRegistryHash = '1'.repeat(64); },
+            (value) => { value.authority.signatureSetHash = '2'.repeat(64); },
+            (value) => { value.report.rows[0].dimensions.price += 1; },
+            (value) => { value.report.rows[0].eligibleJobDeltas[0].atk += 1; },
+            (value) => { value.report.rows[0].classification = 'intentional'; },
+            (value) => { value.strictDominators[0].strictDominators.push({ name: 'tamper', type: 'armor' }); },
+            (value) => { value.dominancePairs.push({ candidate: { name: 'tamper' } }); },
+            (value) => { value.report.dominancePairs.push({ dominator: { name: 'tamper' } }); },
+            (value) => { value.classificationCounts['in-corridor'] += 1; },
+            (value) => { value.reportHash = 'f'.repeat(64); },
+            (value) => { value.authority.productionOwners.calculateFullStats = 'e'.repeat(64); },
+        ];
+        for (const mutate of tamper) {
+            const value = JSON.parse(bytes);
+            mutate(value);
+            const tamperedBytes = `${JSON.stringify(value)}\n`;
+            await writeFile(EVIDENCE_PATH, tamperedBytes);
+            assert.notEqual(cli('--verify', EVIDENCE_PATH).status, 0);
+            assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), tamperedBytes);
+        }
+        await writeFile(EVIDENCE_PATH, `${bytes}\n`);
         assert.notEqual(cli('--verify', EVIDENCE_PATH).status, 0);
-        assert.equal(await readFile(symlinkTarget, 'utf8'), bytes);
+        assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), `${bytes}\n`);
+        assert.equal(cli('--write', EVIDENCE_PATH).status, 0);
+        assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), bytes);
+
+        const temporaryDirectory = await mkdtemp(path.join(tmpdir(), 'aetheria-equipment-evidence-'));
+        const symlinkTarget = path.join(temporaryDirectory, 'target.json');
+        await writeFile(symlinkTarget, bytes);
+        await unlink(EVIDENCE_PATH);
+        try {
+            await symlink(symlinkTarget, EVIDENCE_PATH);
+            assert.notEqual(cli('--verify', EVIDENCE_PATH).status, 0);
+            assert.equal(await readFile(symlinkTarget, 'utf8'), bytes);
+        } finally {
+            await unlink(EVIDENCE_PATH).catch(() => {});
+            await writeFile(EVIDENCE_PATH, bytes);
+            await rm(temporaryDirectory, { recursive: true, force: true });
+        }
     } finally {
         await unlink(EVIDENCE_PATH).catch(() => {});
-        await writeFile(EVIDENCE_PATH, bytes);
-        await rm(temporaryDirectory, { recursive: true, force: true });
+        await writeFile(EVIDENCE_PATH, pristineEvidence);
     }
+    assert.equal(await readFile(EVIDENCE_PATH, 'utf8'), pristineEvidence);
 });
