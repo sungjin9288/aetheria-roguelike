@@ -5,9 +5,15 @@ import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 
 import { BALANCE } from '../src/data/constants.ts';
+import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.ts';
 import { EVENT_CHAINS } from '../src/data/eventChains.ts';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.ts';
+import {
+    applyBoundedEncounterChoice,
+    buildBoundedEncounterContext,
+} from '../src/utils/boundedEncounterSelector.ts';
+import { buildChainJournal } from '../src/utils/chainJournal.ts';
 import { pickPermanentPlayerState } from '../src/utils/permanentProgress.ts';
 import {
     getCompletedSeasonCount,
@@ -127,4 +133,140 @@ test('ASCEND는 완주 기록을 지우지 않는다 (승천으로 시즌 이력
         getSeasonArchive(ascended.player.seasonPass).flatMap((entry) => entry.claimed),
         [1, 2, 3],
     );
+});
+
+// ─── Wave 14 F2: 이벤트 체인 진행도의 영구 이월 ──────────────────────────────
+//
+// 체인은 "열렸다가 닫히지 않는" 유일한 축이었다 — 4개가 승천(Lv48 ≈ 53.28h) 이전에
+// 열리는데(ancient_prophecy 2.05h · dragon_legacy 2.73h · forgotten_god 5.23h ·
+// world_tree_corruption 21.08h) 완주는 전부 그보다 깊고, `ASCEND`의
+// `...INITIAL_STATE.player`가 그 사이에서 진행도를 0으로 되돌렸다. 지식 축의 나머지
+// (stats.discoveryChains / visitedMaps / codex / titles)는 전부 계승되는데 이것만이었다.
+//
+// **함정**: `eventChainProgress`는 용도가 둘이다 — 예약 키 `boundedEncounterReceipts`가
+// 원정 조우 영수증 레저를 겸한다. 통째로 이월하면 그 영수증이 승천을 넘어가 같은
+// 조우의 재획득을 영구히 막는다. 아래 테스트는 **둘을 함께** 고정한다.
+
+const RECEIPT_LEDGER_KEY = 'boundedEncounterReceipts';
+
+const chainProgressFixture = () => ({
+    ancient_prophecy: 2,
+    dragon_legacy: 1,
+    forgotten_god: 'failed',
+    world_tree_corruption: 1,
+    [RECEIPT_LEDGER_KEY]: {
+        'expedition-1:forest-old-pillars:1': { encounterId: 'forest-old-pillars', choiceId: 'lift-stone' },
+    },
+});
+
+test('pickPermanentPlayerState는 체인 id 키만 이월하고 영수증 레저는 남긴다', () => {
+    const eventChainProgress = chainProgressFixture();
+    const permanent = pickPermanentPlayerState(
+        { ...INITIAL_STATE.player, eventChainProgress },
+        INITIAL_STATE.player,
+    );
+
+    assert.deepEqual(permanent.eventChainProgress, {
+        ancient_prophecy: 2,
+        dragon_legacy: 1,
+        forgotten_god: 'failed',
+        world_tree_corruption: 1,
+    });
+    // 예약 키는 체인 id가 아니므로 화이트리스트에 걸리지 않는다.
+    assert.equal(Object.hasOwn(permanent.eventChainProgress, RECEIPT_LEDGER_KEY), false);
+    // 이월본을 만져도 원본이 흔들리지 않는다.
+    assert.notEqual(permanent.eventChainProgress, eventChainProgress);
+});
+
+test('이월은 EVENT_CHAINS 화이트리스트다 — 정의에 없는 키와 레코드 값은 실리지 않는다', () => {
+    const permanent = pickPermanentPlayerState(
+        {
+            ...INITIAL_STATE.player,
+            eventChainProgress: {
+                lost_wizard: 3,
+                '없는_체인': 2,
+                // 체인 id 키에 레코드가 들어와도(형태 붕괴) 스텝 값이 아니므로 버린다.
+                last_hero: { forged: { encounterId: 'x', choiceId: 'y' } },
+                shadow_guild: -1,
+            },
+        },
+        INITIAL_STATE.player,
+    );
+
+    assert.deepEqual(permanent.eventChainProgress, { lost_wizard: 3 });
+    for (const key of Object.keys(permanent.eventChainProgress)) {
+        assert.ok(EVENT_CHAINS.some((chain) => chain.id === key), `${key}는 체인 id가 아니다`);
+    }
+});
+
+test('ASCEND는 체인 진행도를 이어가고 RESET_GAME도 같다', () => {
+    const eventChainProgress = chainProgressFixture();
+    const base = {
+        ...INITIAL_STATE,
+        player: { ...INITIAL_STATE.player, eventChainProgress },
+        uid: 'test-uid',
+    };
+
+    const ascended = gameReducer(
+        { ...base, gameState: 'ascension' },
+        { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: null } },
+    );
+    const restarted = gameReducer(base, { type: AT.RESET_GAME });
+
+    for (const next of [ascended, restarted]) {
+        assert.equal(next.player.eventChainProgress.ancient_prophecy, 2);
+        assert.equal(next.player.eventChainProgress.dragon_legacy, 1);
+        assert.equal(next.player.eventChainProgress.forgotten_god, 'failed');
+        assert.equal(next.player.eventChainProgress.world_tree_corruption, 1);
+        // 플레이어가 보는 곳: 진행 중 목록이 리셋으로 비지 않는다.
+        assert.deepEqual(
+            buildChainJournal(next.player.eventChainProgress).map((entry) => entry.chainId).toSorted(),
+            ['ancient_prophecy', 'dragon_legacy', 'world_tree_corruption'],
+        );
+    }
+});
+
+test('영수증은 승천을 넘지 않는다 — 같은 조우를 다시 정산할 수 있다', () => {
+    const encounter = BOUNDED_ENCOUNTERS[0];
+    const receipt = { expeditionId: 'expedition-1', occurrenceSequence: 1 };
+    const explorer = {
+        ...INITIAL_STATE.player,
+        hp: 200,
+        maxHp: 200,
+        mp: 80,
+        maxMp: 80,
+        gold: 1_000,
+        eventChainProgress: { ancient_prophecy: 1 },
+    };
+
+    const first = applyBoundedEncounterChoice(explorer, encounter, 'lift-stone', receipt);
+    assert.equal(first.applied, true);
+    // 같은 런 안에서는 재정산이 막힌다 — 영수증이 그 일을 한다.
+    assert.equal(
+        applyBoundedEncounterChoice(first.player, encounter, 'lift-stone', receipt).reason,
+        'already_applied',
+    );
+
+    const ascended = gameReducer(
+        { ...INITIAL_STATE, gameState: 'ascension', player: first.player, uid: 'test-uid' },
+        { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: null } },
+    );
+
+    // 체인은 남고 영수증은 사라진다.
+    assert.equal(ascended.player.eventChainProgress.ancient_prophecy, 1);
+    assert.equal(Object.hasOwn(ascended.player.eventChainProgress, RECEIPT_LEDGER_KEY), false);
+    assert.deepEqual(
+        buildBoundedEncounterContext({ ...ascended.player, hp: 200, maxHp: 200 }, encounter.region).receiptKeys,
+        [],
+    );
+
+    // 그래서 다음 런에서 같은 조우를 다시 얻을 수 있다 — 이월이 재획득을 막지 않는다.
+    const afterAscension = applyBoundedEncounterChoice(
+        { ...ascended.player, hp: 200, maxHp: 200, mp: 80, maxMp: 80, gold: 1_000 },
+        encounter,
+        'lift-stone',
+        receipt,
+    );
+    assert.equal(afterAscension.applied, true);
+    assert.equal(afterAscension.reason, 'applied');
 });

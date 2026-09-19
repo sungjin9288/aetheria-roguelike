@@ -1,4 +1,5 @@
-import type { Player } from '../types/player';
+import type { EventChainProgress, EventChainProgressValue, Player } from '../types/player';
+import { EVENT_CHAINS } from '../data/eventChains';
 import { normalizeClassJourneyLedger } from './classJourney';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward';
 
@@ -16,6 +17,34 @@ const clone = <T>(value: T): T => {
 const numberOrZero = (value: unknown) => {
     const numeric = Number(value);
     return Number.isFinite(numeric) ? numeric : 0;
+};
+
+/** 체인 진행 값의 실제 모양 — 스텝 번호이거나 실패 마커다(영수증 레코드는 아니다). */
+const isChainStepValue = (value: EventChainProgressValue): value is number | 'failed' => (
+    value === 'failed' || (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0)
+);
+
+/**
+ * 2026-09 Wave 14 F2: 이벤트 체인 진행도는 승천/사망을 넘어 이어진다 — 지식 축의
+ * 나머지(`stats.discoveryChains`·`stats.visitedMaps`·`stats.codex`·`titles`)가 전부
+ * 계승되는데 이것 하나만 리셋되고 있었다. 체인은 Lv10~40(2.05h~21.08h)에 열리고
+ * 완주는 그보다 훨씬 깊어서, 리셋 지점(승천 Lv48 ≈ 53.28h)이 **항상 그 사이에** 있다.
+ *
+ * **이월 대상은 `EVENT_CHAINS`의 체인 id 키뿐이다.** 이 필드는 용도가 둘이라
+ * 예약 키 `boundedEncounterReceipts`가 원정 조우 영수증 레저를 겸한다
+ * (`types/player.ts` · `boundedEncounterSelector.ts`). 통째로 넘기면 그 영수증이
+ * 승천을 넘어가 같은 조우의 재획득을 영구히 막는다 — 그래서 progress 쪽 키를
+ * 훑는 것이 아니라 **EVENT_CHAINS를 훑어 화이트리스트로** 고른다(정의에 없는
+ * 키는 구조적으로 실릴 수 없다).
+ */
+const pickEventChainProgress = (progress: EventChainProgress | undefined): EventChainProgress => {
+    const carried: EventChainProgress = {};
+    for (const chain of EVENT_CHAINS) {
+        const value = progress?.[chain.id];
+        if (value === undefined || !isChainStepValue(value)) continue;
+        carried[chain.id] = value;
+    }
+    return carried;
 };
 
 export const pickPermanentPlayerState = (
@@ -48,6 +77,7 @@ export const pickPermanentPlayerState = (
             ? player.expeditionSequence
             : 0,
         returnSupplyRewards: normalizeReturnSupplyRewardLedger(player.returnSupplyRewards),
+        eventChainProgress: pickEventChainProgress(player.eventChainProgress),
         stats: {
             ...clone(initialStats),
             kills: numberOrZero(stats.kills),

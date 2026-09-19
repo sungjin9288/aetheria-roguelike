@@ -20,7 +20,8 @@ test('안전 지역에 등록만 된 몬스터를 모바일 조우 가능으로 
 test('canonical content has the approved production catalog counts and routes', () => {
     const report = buildContentReachabilityReport();
 
-    assert.equal(report.schemaVersion, 2);
+    // Wave 14 F2: cost.eventChainSpans 신설 + 체인 게이트가 종착 → 완주(전 스텝 max)로.
+    assert.equal(report.schemaVersion, 3);
     assert.deepEqual(report.catalog, {
         maps: 52,
         monsters: 254,
@@ -252,14 +253,18 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     assert.equal(cost.gates.quests.reduce((sum, bucket) => sum + bucket.count, 0), 143);
     assert.equal(cost.gates.maps.reduce((sum, bucket) => sum + bucket.count, 0), 52);
 
-    // 이벤트 체인 종착 13개 중 5개가 같은 맵 하나(에테르 관문, route gate Lv68)에 몰려 있다.
+    // Wave 14 F2: 체인 버킷의 게이트는 **완주** 게이트(전 스텝 max)다 — 종착 스텝의
+    // 게이트가 아니다. `forgotten_god`은 스텝이 25 → 68 → 48로 역전돼 있어서 종착(48)으로
+    // 매기면 완주 비용을 116.95h 과소 계상한다. 그래서 에테르 관문(Lv68) 버킷은 6이다.
     assert.deepEqual(cost.summary, { eventChains: 13, eventChainSteps: 39, eventChainTerminalSteps: 13 });
     assert.equal(cost.gates.eventChainTerminals.reduce((sum, bucket) => sum + bucket.count, 0), 13);
     const etherGate = bucketAt(cost.gates.eventChainTerminals, 68);
-    assert.equal(etherGate.count, 5);
+    assert.equal(etherGate.count, 6);
+    assert.ok(etherGate.members.includes('forgotten_god'));
     assert.equal(etherGate.cost.basis, 'interpolated');
     assert.equal(etherGate.cost.modeledActions, 6_809);
     assert.equal(etherGate.cost.modeledHours, 170.23);
+    assert.equal(bucketAt(cost.gates.eventChainTerminals, 48).count, 3);
 });
 
 test('the behind-the-gate summary states how many hours of content sits past each level', () => {
@@ -312,7 +317,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 39,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 5,
+        eventChainTerminalSteps: 6,
     });
     assert.deepEqual(rowAt(60), {
         level: 60,
@@ -323,7 +328,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 26,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 5,
+        eventChainTerminalSteps: 6,
     });
     assert.deepEqual(rowAt(68), {
         level: 68,
@@ -334,7 +339,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 18,
         equipment: 20,
         jobs: 0,
-        eventChainTerminalSteps: 5,
+        eventChainTerminalSteps: 6,
     });
     const levels = cost.behind.map((row) => row.level);
     assert.deepEqual(levels, [...levels].sort((left, right) => left - right));
