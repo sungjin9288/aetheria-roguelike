@@ -85,7 +85,7 @@ test('cost.gates.eventChainTerminals는 전 스텝 max(완주 게이트)로 버�
 
     assert.deepEqual(
         cost.gates.eventChainTerminals.map(({ gateLevel, count }) => [gateLevel, count]),
-        [[23, 1], [32, 1], [35, 1], [40, 1], [48, 3], [68, 6]],
+        [[23, 1], [32, 1], [35, 1], [40, 1], [48, 4], [68, 5]],
     );
 });
 
@@ -106,7 +106,11 @@ test('완주 게이트는 종착 스텝의 게이트보다 낮을 수 없다', (
 // `rift_secret` 68→62→68)은 종착이 곧 max라 종착으로 매겨도 값이 같았다.
 // 그래서 Wave 14는 `forgotten_god` 하나만 교정 대상으로 다룬다.
 
-test('역전 스텝을 가진 체인은 3개이고, 그중 완주 게이트가 달라지는 것은 1개다', () => {
+// 2026-09 Wave 14 F2 stage(ii): forgotten_god의 스텝 역전을 교정해(에테르 관문 68 → 지하 미궁 44)
+//   역전은 3개 → 2개가 됐고, 그 둘은 종착 스텝이 이미 max라 완주 게이트가 종착 게이트와 같다.
+//   즉 "역전이 남아 있어도 전 스텝 max로 재면 정확하다"가 지금 고정하는 내용이다 — 역전 자체가
+//   결함이 아니라 '완주 게이트 ≠ 종착 게이트'가 결함이었다.
+test('역전 스텝을 가진 체인은 2개이고, 그중 완주 게이트가 달라지는 것은 0개다', () => {
     const gates = routeGates();
     const reversed = [];
     const gateChanging = [];
@@ -119,27 +123,33 @@ test('역전 스텝을 가진 체인은 3개이고, 그중 완주 게이트가 �
         if (Math.max(...levels) !== levels.at(-1)) gateChanging.push(chain.id);
     }
 
-    assert.deepEqual(reversed.toSorted(), ['forgotten_god', 'machine_uprising', 'rift_secret']);
-    assert.deepEqual(gateChanging, ['forgotten_god']);
+    assert.deepEqual(reversed.toSorted(), ['machine_uprising', 'rift_secret']);
+    assert.deepEqual(gateChanging, []);
 });
 
-test('forgotten_god의 과소 계상 폭은 종착 게이트와 완주 게이트의 비용 차다', () => {
+// 2026-09 Wave 14 F2 stage(ii): 이 칸은 원래 "과소 계상 폭 116.95h"를 고정했다 — 리포트가
+//   forgotten_god을 종착 게이트(48)로 적고 있었기 때문이다. 스텝 역전을 교정해 완주 게이트가
+//   48이 된 지금 그 폭은 0이고, 고정할 값이 바뀌었다: **체인이 루프 안에서 닫힌다**.
+//   측정만 고쳤을 때(stage i)의 68은 참이었지만 설계 의도가 아니었다 — 중간 스텝이 게임에서
+//   가장 깊은 맵에 있고 종착이 더 얕은 것은 데이터 입력 오류였다.
+test('forgotten_god은 승천 지점 안에서 닫힌다 — 열림 5.23h, 완주 53.28h', () => {
     const { cost } = buildContentReachabilityReport();
     const gates = routeGates();
     const chain = EVENT_CHAINS.find((candidate) => candidate.id === 'forgotten_god');
 
-    const terminalGate = Number(gates.get(chain.steps.at(-1).loc));
-    const span = cost.eventChainSpans.find((entry) => entry.chain === 'forgotten_god');
-    assert.equal(terminalGate, 48);
-    assert.equal(span.completionGateLevel, 68);
+    // 스텝 게이트가 단조 비감소다 — 중간 스텝이 종착보다 깊지 않다.
+    const levels = chain.steps.map((step) => Number(gates.get(step.loc)));
+    assert.deepEqual(levels, [25, 44, 48]);
 
-    const terminalCost = cost.gates.eventChainTerminals.find((entry) => entry.gateLevel === terminalGate);
-    const understatedHours = Math.round(
-        (span.completionCost.modeledHours - terminalCost.cost.modeledHours) * 100,
-    ) / 100;
-    assert.equal(terminalCost.cost.modeledHours, 53.28);
-    assert.equal(span.completionCost.modeledHours, 170.23);
-    assert.equal(understatedHours, 116.95);
+    const span = cost.eventChainSpans.find((entry) => entry.chain === 'forgotten_god');
+    assert.equal(span.completionGateLevel, Number(gates.get(chain.steps.at(-1).loc)));
+    assert.equal(span.completionGateLevel, 48);
+    assert.equal(span.openCost.modeledHours, 5.23);
+    assert.equal(span.completionCost.modeledHours, 53.28);
+
+    // 마왕성 경로 게이트(승천 지점)와 같은 칸이다 — 리셋이 완주를 가로막지 않는다.
+    const demonCastle = cost.gates.maps.find((bucket) => bucket.members.includes('마왕성'));
+    assert.equal(span.completionGateLevel, demonCastle.gateLevel);
 });
 
 // ── (3) cost.eventChainSpans — 열림과 완주 사이의 거리 ──────────────────────
@@ -173,7 +183,10 @@ test('cost.eventChainSpans는 체인 13개의 열림/완주를 비용과 함께 
     }
 });
 
-test('승천 이전에 열리고 그 뒤에 완주되는 체인 4개가 리포트에 드러난다', () => {
+// 2026-09 Wave 14 F2 stage(ii): forgotten_god의 스텝 역전을 교정해 완주가 승천 지점(48)
+//   '위'가 아니라 '같은 칸'이 됐다 — 걸쳐 있는 체인이 4개 → 3개다. 남은 셋은 여전히
+//   2.05h~21.08h에 열려 170.23h에 끝나므로 이월이 없으면 매 승천마다 0으로 돌아간다.
+test('승천 이전에 열리고 그 뒤에 완주되는 체인 3개가 리포트에 드러난다', () => {
     const { cost } = buildContentReachabilityReport();
     const ascensionGate = cost.gates.maps.find((bucket) => bucket.members.includes('마왕성'));
     assert.equal(ascensionGate.gateLevel, 48);
@@ -190,9 +203,11 @@ test('승천 이전에 열리고 그 뒤에 완주되는 체인 4개가 리포�
     assert.deepEqual(straddling, [
         ['ancient_prophecy', 2.05, 170.23],
         ['dragon_legacy', 2.73, 170.23],
-        ['forgotten_god', 5.23, 170.23],
         ['world_tree_corruption', 21.08, 170.23],
     ]);
+    // forgotten_god은 더 이상 걸쳐 있지 않다 — 열림 5.23h, 완주 53.28h로 승천과 같은 칸이다.
+    const forgottenGod = cost.eventChainSpans.find((span) => span.chain === 'forgotten_god');
+    assert.equal(forgottenGod.completionGateLevel, ascensionGate.gateLevel);
     // 전부 승천(53.28h)보다 일찍 열리고 전부 그보다 늦게 끝난다.
     for (const [, openHours, completionHours] of straddling) {
         assert.ok(openHours < ascensionGate.cost.modeledHours);
@@ -210,8 +225,12 @@ test('스텝 지역을 하나라도 못 읽으면 완주 게이트는 max가 아
     }
     const { cost } = buildContentReachabilityReport({ ...DB, MAPS: maps });
 
+    // 2026-09 Wave 14 F2 stage(ii): forgotten_god이 더 이상 에테르 관문을 쓰지 않으므로
+    //   같은 맵을 종착으로 쓰는 체인들로 이 불변식을 고정한다 — 어떤 체인이든 스텝 하나를
+    //   못 읽으면 남은 스텝의 max가 아니라 '미상'이어야 한다는 것이 요점이다.
     const unreachable = cost.unresolvedEventChainTerminals;
-    assert.ok(unreachable.includes('forgotten_god'), '중간 스텝이 사라진 체인이 미상으로 잡혀야 한다');
+    assert.ok(unreachable.length > 0, '스텝 지역이 사라진 체인이 미상으로 잡혀야 한다');
+    assert.ok(unreachable.includes('rift_secret'), '에테르 관문을 쓰는 체인이 미상이어야 한다');
     for (const chain of unreachable) {
         assert.equal(cost.eventChainSpans.some((span) => span.chain === chain), false);
         assert.equal(

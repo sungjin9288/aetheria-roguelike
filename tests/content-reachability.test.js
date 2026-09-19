@@ -258,13 +258,16 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     // 매기면 완주 비용을 116.95h 과소 계상한다. 그래서 에테르 관문(Lv68) 버킷은 6이다.
     assert.deepEqual(cost.summary, { eventChains: 13, eventChainSteps: 39, eventChainTerminalSteps: 13 });
     assert.equal(cost.gates.eventChainTerminals.reduce((sum, bucket) => sum + bucket.count, 0), 13);
+    // 2026-09 Wave 14 F2 stage(ii): forgotten_god의 스텝 역전을 교정해(에테르 관문 68 →
+    //   지하 미궁 44) 이 체인이 68 버킷에서 48 버킷으로 돌아왔다. stage(i)에서 68:6 / 48:3이던
+    //   것이 68:5 / 48:4로 — 즉 교정 전 리포트가 적던 숫자가 이제 **참이 됐다**.
     const etherGate = bucketAt(cost.gates.eventChainTerminals, 68);
-    assert.equal(etherGate.count, 6);
-    assert.ok(etherGate.members.includes('forgotten_god'));
+    assert.equal(etherGate.count, 5);
+    assert.equal(etherGate.members.includes('forgotten_god'), false);
     assert.equal(etherGate.cost.basis, 'interpolated');
     assert.equal(etherGate.cost.modeledActions, 6_809);
     assert.equal(etherGate.cost.modeledHours, 170.23);
-    assert.equal(bucketAt(cost.gates.eventChainTerminals, 48).count, 3);
+    assert.equal(bucketAt(cost.gates.eventChainTerminals, 48).count, 4);
 });
 
 test('the behind-the-gate summary states how many hours of content sits past each level', () => {
@@ -317,7 +320,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 39,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 6,
+        eventChainTerminalSteps: 5,
     });
     assert.deepEqual(rowAt(60), {
         level: 60,
@@ -328,7 +331,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 26,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 6,
+        eventChainTerminalSteps: 5,
     });
     assert.deepEqual(rowAt(68), {
         level: 68,
@@ -339,7 +342,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 18,
         equipment: 20,
         jobs: 0,
-        eventChainTerminalSteps: 6,
+        eventChainTerminalSteps: 5,
     });
     const levels = cost.behind.map((row) => row.level);
     assert.deepEqual(levels, [...levels].sort((left, right) => left - right));
