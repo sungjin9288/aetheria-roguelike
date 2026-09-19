@@ -11,7 +11,11 @@ import {
 const ROOT = process.cwd();
 const CODE_POINT_COMPARE = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 const HASH_ALGORITHM = 'sha256';
-const PROGRESSION_V1_BASELINE_HASH = 'd39dce20512a279d0525c403d99a5534345ca506aaa05e5fb2a0ae06eb09a17c';
+// Wave 13 E1 (2026-09-19): tier-3 직업 5종 `reqLv` 60 → 45로 jobSnapshots 5칸이 움직여
+// v1 baseline 해시가 바뀐다 — 예고값과 일치하는 **의도된 이동**이다(곡선 상수는 불변:
+// 체크포인트 액션 14/52/82/164/1,575/5,246/8,176이 편집 전후 바이트 동일).
+// 이전 값: 'd39dce20512a279d0525c403d99a5534345ca506aaa05e5fb2a0ae06eb09a17c'.
+const PROGRESSION_V1_BASELINE_HASH = '98085d39a8a5e899b4e69ead879c174f1123ad0714379a20ab097800b37aa2c7';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';

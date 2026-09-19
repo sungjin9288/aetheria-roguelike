@@ -41,9 +41,10 @@ test('canonical content has the approved production catalog counts and routes', 
     assert.equal(report.jobs.reachable.length, 18);
     assert.equal(report.jobs.terminalLineages.length, 8);
     assert.deepEqual(report.jobs.checkpointLevels, [2, 5, 10, 20, 45, 60, 75]);
+    // Wave 13 E1: tier-3 5종이 Lv45 체크포인트로 내려와 그 칸이 13 → 18이 된다.
     assert.deepEqual(
         report.jobs.checkpointSnapshots.map((checkpoint) => checkpoint.reachableJobCount),
-        [1, 5, 5, 6, 13, 18, 18],
+        [1, 5, 5, 6, 18, 18, 18],
     );
     assert.deepEqual(
         report.jobs.checkpointSnapshots.at(-1).reachableJobs.toSorted(),
@@ -221,12 +222,22 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     const { cost } = buildContentReachabilityReport();
     const bucketAt = (buckets, gateLevel) => buckets.find((bucket) => bucket.gateLevel === gateLevel);
 
-    // tier-3 직업 5종은 Lv60 앵커에 그대로 앉아 있다 — 모델 액션 5,246 / 131.15h.
-    const tierThreeJobs = bucketAt(cost.gates.jobs, 60);
+    // Wave 13 E1: tier-3 직업 5종은 Lv45 앵커에 앉는다 — 모델 액션 1,575 / 39.38h
+    // (Lv60 5,246 / 131.15h에서 −91.77h). 45는 모델 체크포인트라 이 행은 `interpolated`가
+    // 아니라 `anchored`다 — 게이트 비용이 보간이 아니라 시뮬레이터 산출이라는 뜻이다.
+    assert.deepEqual(
+        cost.gates.jobs.map(({ gateLevel, count }) => [gateLevel, count]),
+        [[1, 1], [5, 4], [12, 1], [25, 1], [30, 6], [45, 5]],
+    );
+    const tierThreeJobs = bucketAt(cost.gates.jobs, 45);
     assert.equal(tierThreeJobs.count, 5);
+    assert.deepEqual(tierThreeJobs.members.toSorted(), [
+        '그림자 주군', '대마법사', '드래곤 나이트', '사냥의 군주', '팔라딘',
+    ].toSorted());
     assert.equal(tierThreeJobs.cost.basis, 'anchored');
-    assert.equal(tierThreeJobs.cost.modeledActions, 5_246);
-    assert.equal(tierThreeJobs.cost.modeledHours, 131.15);
+    assert.equal(tierThreeJobs.cost.modeledActions, 1_575);
+    assert.equal(tierThreeJobs.cost.modeledHours, 39.38);
+    assert.equal(bucketAt(cost.gates.jobs, 60), undefined);
     assert.equal(cost.gates.jobs.reduce((sum, bucket) => sum + bucket.count, 0), 18);
 
     // 장비 tier 게이트는 BALANCE.TIER_REQ_LEVEL 그대로이고 합은 카탈로그 229종이다.
@@ -278,6 +289,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         eventChainTerminalSteps: 9,
     });
     // 승천(마왕성 Lv48)은 체크포인트가 없다 — 보간이고, 리포트가 그렇게 표기한다.
+    // Wave 13 E1: 승천 시점과 그 너머에 남는 직업이 5 → 0이다. 같은 행의
+    // modeledActions/modeledHours는 한 자리도 안 움직인다 — 움직인 건 `jobs` 열뿐이다.
     assert.deepEqual(rowAt(48), {
         level: 48,
         basis: 'interpolated',
@@ -286,8 +299,20 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         maps: 15,
         quests: 42,
         equipment: 65,
-        jobs: 5,
+        jobs: 0,
         eventChainTerminalSteps: 9,
+    });
+    // 승천 게이트를 실제로 넘어선 첫 행(= 게이트 레벨이 48보다 큰 콘텐츠).
+    assert.deepEqual(rowAt(49), {
+        level: 49,
+        basis: 'interpolated',
+        modeledActions: 2_375,
+        modeledHours: 59.38,
+        maps: 13,
+        quests: 39,
+        equipment: 65,
+        jobs: 0,
+        eventChainTerminalSteps: 5,
     });
     assert.deepEqual(rowAt(60), {
         level: 60,
@@ -297,7 +322,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         maps: 9,
         quests: 26,
         equipment: 65,
-        jobs: 5,
+        jobs: 0,
         eventChainTerminalSteps: 5,
     });
     assert.deepEqual(rowAt(68), {
@@ -314,6 +339,39 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     const levels = cost.behind.map((row) => row.level);
     assert.deepEqual(levels, [...levels].sort((left, right) => left - right));
     assert.equal(new Set(levels).size, levels.length);
+});
+
+// ── Wave 13 E1 불변식: 직업 사다리는 코어 루프의 리셋 지점 안에서 닫힌다 ──────────────
+// 마왕성은 코어 루프가 "승천(프레스티지)하라"고 가리키는 지점이다. 직업 게이트가 그보다
+// 깊으면 그 직업은 해금되는 순간이 곧 리셋 직전이라 **한 번도 굴려지지 않는다** — 도달
+// 가능(unreachable: [])하지만 플레이되지 않는, 비용 축이 없으면 안 보이는 결함이다.
+// 48은 리터럴이 아니라 리포트의 맵 경로 게이트에서 읽는다(선언 레벨이 아니라 경로다).
+test('직업 게이트 최대값은 마왕성 경로 게이트(승천 지점)를 넘지 않는다', () => {
+    const { cost } = buildContentReachabilityReport();
+
+    const demonCastleGate = cost.gates.maps.find((bucket) => bucket.members.includes('마왕성'));
+    assert.ok(demonCastleGate, '마왕성이 맵 게이트 버킷에 있어야 경로 게이트를 읽을 수 있다');
+    assert.equal(demonCastleGate.gateLevel, 48);
+
+    const deepestJobGate = Math.max(...cost.gates.jobs.map((bucket) => bucket.gateLevel));
+    assert.ok(
+        deepestJobGate <= demonCastleGate.gateLevel,
+        `가장 깊은 직업 게이트 Lv${deepestJobGate}가 마왕성 경로 게이트 Lv${demonCastleGate.gateLevel}보다 깊다`
+        + ' — 그 직업은 해금과 리셋이 같은 순간이라 한 번도 플레이되지 않는다',
+    );
+
+    // 해금만 되고 끝나지 않으려면 둘 사이에 실제로 시간이 남아야 한다.
+    const deepestJobCost = cost.gates.jobs.find((bucket) => bucket.gateLevel === deepestJobGate).cost;
+    const headroomHours = Math.round(
+        (demonCastleGate.cost.modeledHours - deepestJobCost.modeledHours) * 100,
+    ) / 100;
+    assert.ok(headroomHours > 0, `승천까지 남는 시간이 ${headroomHours}h다`);
+    assert.equal(deepestJobCost.modeledHours, 39.38);
+    assert.equal(demonCastleGate.cost.modeledHours, 53.28);
+    assert.equal(headroomHours, 13.9);
+
+    // 그래서 승천 시점에 남아 있는 직업은 0이다.
+    assert.equal(cost.behind.find((row) => row.level === demonCastleGate.gateLevel).jobs, 0);
 });
 
 test('map gate cost uses the route level, and divergence from the declared level is reported', () => {
