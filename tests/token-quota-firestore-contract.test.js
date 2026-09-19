@@ -219,7 +219,7 @@ test('syncToFirestore runtime keeps a rejected Firestore write non-blocking and 
     assert.equal(warnings.length, 1);
 });
 
-test('Firestore quota rules contract is scoped and deterministic (no emulator claim)', async () => {
+test('Firestore quota rules block keeps its shape (텍스트 — 의미는 에뮬레이터가 본다)', async () => {
     const block = await readQuotaRulesBlock();
 
     assert.match(block, /match \/users\/\{uid\}\/quota\/daily-ai/);
@@ -241,10 +241,17 @@ test('Firestore quota rules contract is scoped and deterministic (no emulator cl
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Wave 13 E4 — rules와 클라이언트는 **같은 커밋에서** 넓힌다.
-//   `firestore.rules`는 이 저장소에서 실행 가능한 검증이 없다(에뮬레이터 없음, rules
-//   린트 없음, deploy.yml은 hosting만 올린다). 그래서 아래 계약들은 rules 텍스트를
-//   클라이언트의 **실제 런타임 페이로드에서 도출해** 맞춘다 — 두 리터럴 목록을 각자
-//   손으로 적어두고 "같기를 바라는" 형태를 피한다.
+//   아래 계약들은 rules 텍스트를 클라이언트의 **실제 런타임 페이로드에서 도출해**
+//   맞춘다 — 두 리터럴 목록을 각자 손으로 적어두고 "같기를 바라는" 형태를 피한다.
+//
+//   **W14-F3에서 역할이 좁아졌다.** 이 블록은 이제 "rules가 실제로 무엇을 허용/거부하는가"를
+//   주장하지 않는다 — 그건 `tests/firestore-rules-semantics.test.js`가 에뮬레이터에서
+//   실행으로 본다(쿼터 지점은 `TokenQuotaManager.syncToFirestore`를 그대로 태운다).
+//   여기 남는 것은 **텍스트 수준의 커플링**뿐이다: 키 집합이 페이로드에서 도출되는가,
+//   `50` 리터럴이 `BALANCE.DAILY_AI_LIMIT`와 같은가, 단조 절이 모든 카운터에 걸렸는가,
+//   create/update가 같은 모양 함수를 부르는가. 이것들은 의미 테스트가 잡지 못하는 종류다
+//   (예: 단조 절을 한 카운터에서 빼도 그 카운터를 되감는 케이스를 안 쓰면 초록이다).
+//   배포는 여전히 수동이다 — deploy.yml은 hosting만 올린다(§17.1 발견 6).
 // ─────────────────────────────────────────────────────────────────────────────
 
 test('rules의 키 집합은 클라이언트 페이로드에서 도출된다 — 한쪽만 넓히면 여기가 깨진다', async () => {
