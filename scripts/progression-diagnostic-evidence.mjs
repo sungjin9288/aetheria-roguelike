@@ -15,7 +15,13 @@ const HASH_ALGORITHM = 'sha256';
 // v1 baseline 해시가 바뀐다 — 예고값과 일치하는 **의도된 이동**이다(곡선 상수는 불변:
 // 체크포인트 액션 14/52/82/164/1,575/5,246/8,176이 편집 전후 바이트 동일).
 // 이전 값: 'd39dce20512a279d0525c403d99a5534345ca506aaa05e5fb2a0ae06eb09a17c'.
-const PROGRESSION_V1_BASELINE_HASH = '98085d39a8a5e899b4e69ead879c174f1123ad0714379a20ab097800b37aa2c7';
+// Wave 14 F4 (2026-09-19): 성직자 `reqLv` 5 → 12로 jobSnapshots 한 칸이 움직여 v1 baseline
+// 해시가 바뀐다 — **편집 전 깨끗한 트리에서 실측한 예고값**이다(곡선 상수는 불변: 체크포인트
+// 액션 14/52/82/164/1,575/5,246/8,176이 편집 전후 바이트 동일). 이 상수는 테스트 핀이 아니라
+// writer 안의 하드 게이트라, 스테일하면 `progression:diagnostic:write`가
+// PROGRESSION_SCHEMA_V1_BASELINE_DRIFT로 아예 실행을 거부한다.
+// 이전 값: '98085d39a8a5e899b4e69ead879c174f1123ad0714379a20ab097800b37aa2c7'.
+const PROGRESSION_V1_BASELINE_HASH = '2573fa0f1d41326e3d799de9aa871cb33b11ba42f452772a9a86708aa2ca1a69';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';

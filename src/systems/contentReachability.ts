@@ -89,6 +89,20 @@ export interface MapGateDivergence {
     routeGateLevel: number;
 }
 
+/**
+ * Wave 14 F2 — 체인 하나가 **열리는 지점**과 **완주되는 지점**의 거리.
+ * 이 둘이 리셋(승천) 지점을 사이에 두고 갈라지면, 플레이어는 시작한 이야기를
+ * 끝내기 전에 진행도를 잃는다. 그 간극은 종착 게이트 하나로는 보이지 않는다.
+ */
+export interface EventChainSpan {
+    chain: string;
+    steps: number;
+    openGateLevel: number;
+    openCost: ModeledCost;
+    completionGateLevel: number;
+    completionCost: ModeledCost;
+}
+
 export interface CostBehindRow {
     level: number;
     basis: ModeledCostBasis;
@@ -129,13 +143,14 @@ export interface ContentCostReport {
         eventChainTerminals: CostBucket[];
     };
     mapGateDivergence: MapGateDivergence[];
+    eventChainSpans: EventChainSpan[];
     unresolvedEventChainTerminals: string[];
     malformedGates: string[];
     behind: CostBehindRow[];
 }
 
 export interface ContentReachabilityReport {
-    schemaVersion: 2;
+    schemaVersion: 3;
     catalog: {
         maps: number;
         monsters: number;
@@ -712,9 +727,20 @@ const bucketGates = (
         }));
 };
 
-const eventChainTerminalSteps = () => EVENT_CHAINS.map((chain) => ({
+/**
+ * Wave 14 F2 — 체인의 **완주** 게이트는 종착 스텝의 게이트가 아니라 전 스텝의 max다.
+ *
+ * `chainEventHandlers`가 `progress[chainId] !== step`인 이벤트를 무시하므로 스텝은
+ * 반드시 순서대로 처리된다 — 즉 완주하려면 **모든** 스텝의 지역을 지나야 하고,
+ * 중간 스텝이 종착보다 깊은 지역에 있으면 종착 게이트는 완주 비용을 과소 계상한다.
+ * (Wave 12가 맵 축에서 잡은 "선언 레벨은 실제 게이트가 아니다"와 같은 종류의 오류다.)
+ *
+ * 열림(`openLoc`)은 첫 스텝의 지역 — 체인이 플레이어에게 보이기 시작하는 지점이다.
+ */
+const eventChainStepLocations = () => EVENT_CHAINS.map((chain) => ({
     chain: chain.id,
-    loc: chain.steps.at(-1)?.loc ?? null,
+    openLoc: chain.steps[0]?.loc ?? null,
+    locs: chain.steps.map((step) => step.loc ?? null),
     steps: chain.steps.length,
 }));
 
@@ -790,16 +816,34 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
             return { tier, gateLevel, count, cost: buildModeledCost(gateLevel, anchors, secondsPerAction) };
         });
 
-    const terminals = eventChainTerminalSteps();
+    const terminals = eventChainStepLocations();
     const terminalEntries: GateEntry[] = [];
+    const eventChainSpans: EventChainSpan[] = [];
     const unresolvedEventChainTerminals: string[] = [];
+    const resolveLocGate = (loc: string | null) => {
+        if (loc === null) return null;
+        const gateLevel = routeGates.get(loc);
+        return gateLevel === undefined || !isUsableGateLevel(gateLevel) ? null : gateLevel;
+    };
     for (const terminal of terminals) {
-        const gateLevel = terminal.loc === null ? undefined : routeGates.get(terminal.loc);
-        if (gateLevel === undefined || !isUsableGateLevel(gateLevel)) {
+        const stepGates = terminal.locs.map(resolveLocGate);
+        const openGateLevel = resolveLocGate(terminal.openLoc);
+        // 스텝 하나라도 값을 매길 수 없으면 완주 게이트는 max가 아니라 **미상**이다 —
+        // 남은 스텝만으로 max를 취하면 비용을 조용히 과소 계상하게 된다.
+        if (openGateLevel === null || stepGates.some((gateLevel) => gateLevel === null)) {
             unresolvedEventChainTerminals.push(terminal.chain);
             continue;
         }
-        terminalEntries.push({ member: terminal.chain, gateLevel });
+        const completionGateLevel = Math.max(...stepGates.map((gateLevel) => Number(gateLevel)));
+        terminalEntries.push({ member: terminal.chain, gateLevel: completionGateLevel });
+        eventChainSpans.push({
+            chain: terminal.chain,
+            steps: terminal.steps,
+            openGateLevel,
+            openCost: buildModeledCost(openGateLevel, anchors, secondsPerAction),
+            completionGateLevel,
+            completionCost: buildModeledCost(completionGateLevel, anchors, secondsPerAction),
+        });
     }
 
     const gates = {
@@ -865,6 +909,7 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
         },
         gates,
         mapGateDivergence,
+        eventChainSpans,
         unresolvedEventChainTerminals: unresolvedEventChainTerminals.sort(codePointCompare),
         malformedGates: malformedGates.sort(codePointCompare),
         behind,
@@ -903,7 +948,7 @@ export const buildContentReachabilityReport = (
         signatures: signatures.routes.length,
     };
     const report: ContentReachabilityReport = {
-        schemaVersion: 2,
+        schemaVersion: 3,
         catalog,
         maps: {
             start: START_LOCATION,
