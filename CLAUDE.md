@@ -236,7 +236,8 @@ useGameEngine (useReducer)
 ### Roguelike 루프 구조
 1. **탐험** → 적/이벤트/유물 랜덤 발생 (pity counter로 드랍 보장)
 2. **유물 선택** → 3개 중 선택(프레스티지 rank≥2: 4개), 최대 5개 보유(rank≥2: 6개)
-3. **마왕 격파** → Ascension 옵션 제공
+3. **마왕 격파** → Ascension 옵션 제공 (마왕성 경로 게이트 Lv48 ≈ 53.3 모델시간)
+   - **직업 게이트는 이 리셋 지점을 넘지 않는다**(Wave 13 E1) — tier-3 5종이 `reqLv: 60`(131.2h)이던 동안 코어 루프를 그대로 타는 플레이어는 직업 5종을 영원히 못 봤다. 45로 내려 승천까지 13.90h 여유를 남겼고, `tests/content-reachability.test.js`가 "최심 직업 게이트 ≤ 마왕성 **경로** 게이트"를 단언한다(48은 리터럴이 아니라 리포트에서 읽는다)
 4. **프레스티지** → 레벨/장비/유물 초기화, 영구 보너스 적립
 5. **묘비 시스템** → 사망 지점에 골드/아이템 보관, 재방문 시 회수
 
@@ -250,6 +251,8 @@ useGameEngine (useReducer)
 ### 저장 데이터 버전 관리
 - `CONSTANTS.DATA_VERSION = 5.1` (5.1: `meta.essenceLifetime` 역산 backfill — `dataMigration.ts`)
 - save 구조 변경 시: 버전 bump → `gameUtils.migrateData()` 업데이트 필수
+- **시즌 XP 적립은 `helpers.addSeasonXp` 한 곳이 소유한다** (Wave 13) — `ADD_SEASON_XP` 핸들러가 같은 계산을 독립 구현하고 있었고 전투 승리·탐험·전설 드롭이 전부 그 경로였다. 즉 **지배적 경로만 이월 수정을 못 받는** 상태였다. 상한 클램프는 저장이 아니라 **표시 경계**(`getSeasonProgress`)에 있고, 초과분은 회전이 다음 시즌 시드로 넘긴다. 새 적립 경로를 추가할 때 계산을 다시 쓰지 말 것 — 두 구현이 갈라지면 "어느 경로로 번 XP인가"에 따라 이월 여부가 달라진다.
+- **시즌 칭호는 lifetime max로 복구한다** (Wave 13 E3) — `checkTitles`의 `seasonTier` 판정이 `max(live tier, archive[].tier)`다. live만 보면 회전 뒤 그 칭호가 영구 복구 불가였다(Wave 12 D2의 "리셋 직전 `addNewTitles`"는 여전히 유지되지만 이제 유일한 경로가 아니다).
 - **시즌 회전은 완주 트리거이지 벽시계가 아니다** (Wave 12 D2) — 30번째 티어 보상 claim이 다음 시즌을 연다(XP 상한이 아니다: claim이 곧 지급이라 상한 시점에 미수령 보상 30개가 남아 있을 수 있다). 회전 시 `claimed[]`는 `SeasonArchiveEntry`로 보존하고, **리셋 직전에 `addNewTitles`를 한 번 돌린다** — `checkTitles`가 시즌 칭호를 live `seasonPass.tier`에서 복구하므로 순서가 바뀌면 그 칭호는 영구 복구 불가다. `ordinal`/`completedSeasons`/`archive`는 기본값 있는 선택 필드라 `DATA_VERSION` bump 없이 구세이브가 시즌 1로 로드된다.
 - `migrateData(raw, { now })`는 **시각 주입 가능**(Wave 11 C2) — 벽시계(`Date.now()`) 기본값은 이 경계 한 곳에만 있다. 골든(`save-migration-golden.test.js`)은 고정 시각을 주입하므로 `startedAt` 정규화 없이 값 자체가 결정론의 증거다. 마이그레이션에 새 시각 의존을 넣을 때는 `Date.now()`를 직접 부르지 말고 이 `now`를 내려보낼 것
 
@@ -277,6 +280,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 - `boot-state-machine.test.js` — §8-5 부트 전이표(`platform/bootStateMachine.ts`). 복원 **dispatch까지** 전이표 소유(Wave 11 C1)이므로 계약은 "ready 뒤 `LOAD_DATA`는 크로스 디바이스 복원 경로에서만, 폴백·mock/device-QA는 무(無)". Wave 10의 "복원 승인 없는 ready 금지"는 dispatch를 훅이 소유하던 동안 **공허참**이었다 — 주장하는 쪽과 강제하는 쪽이 같은 모듈이어야 계약이 성립한다
 - `ai-event-policy.test.js` — AI 폴백 결정표 (Wave 11 C3)
 - `grave-item-reader-contract.test.js` — §8-2 "묘비 아이템은 `getGraveItems()` 경유로만 읽는다" 부재 가드 + 단수/복수/빈배열/null 읽기 동치 (Wave 11)
+- `map-route-gate.test.js` — **맵의 실제 진입 레벨** (Wave 13 E2). `src/utils/mapRouteGate.ts`가 리포트와 UI의 공용 authority다. 52개 중 10개는 선언 `level`과 경로 게이트가 다르고(유일한 경로가 더 높은 지역을 지난다), `level: 'infinite'`는 잠금이 아니라 **잠금 없음**이다(`NaN` 비교). 이 트랙은 **표시이지 잠금이 아니다** — `getMapAccess`는 선언값 그대로이고 테스트가 그걸 고정한다
 - `content-reachability.test.js` — **접근 비용 축** (Wave 12 D1). "도달 가능한가"가 아니라 "몇 모델 액션·몇 모델 시간 뒤인가"를 검증한다. `basis`가 `anchored`(모델 산출)인지 `interpolated`(누적 EXP 비례)인지 `beyond-anchors`(외삽 금지 — 비용 `null`)인지를 구분하고, 보간 행은 자기 입력을 들고 있어 재계산 가능하다. **맵 게이트는 선언 `level`이 아니라 실제 이동 경로로 매긴다** — 52개 중 10개가 다르다(`cost.mapGateDivergence`)
 
 **테스트 방침**: 외부 mock 프레임워크 없이 Node.js built-in `test` 사용. Pure function이므로 별도 DI 없이 직접 import 후 assert.

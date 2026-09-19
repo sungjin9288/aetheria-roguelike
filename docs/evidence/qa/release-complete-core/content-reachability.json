@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "8d9ec598fb71d185418932e7366f5ac932c5537d1dfa7ad4c129d873063ea9ee",
+  "reportHash": "e786259ab126ed010a83d980660875d1b309339cd8fc6659fb4f97408612e627",
   "report": {
     "schemaVersion": 2,
     "catalog": {
@@ -2166,7 +2166,7 @@
         {
           "targetLevel": 45,
           "reachedLevel": 45,
-          "reachableJobCount": 13,
+          "reachableJobCount": 18,
           "reachableJobs": [
             "모험가",
             "전사",
@@ -2179,8 +2179,13 @@
             "어쌔신",
             "레인저",
             "성직자",
+            "팔라딘",
+            "드래곤 나이트",
+            "대마법사",
+            "그림자 주군",
             "무당",
-            "시간술사"
+            "시간술사",
+            "사냥의 군주"
           ]
         },
         {
@@ -7870,7 +7875,7 @@
             }
           },
           {
-            "gateLevel": 60,
+            "gateLevel": 45,
             "count": 5,
             "members": [
               "그림자 주군",
@@ -7880,12 +7885,12 @@
               "팔라딘"
             ],
             "cost": {
-              "level": 60,
+              "level": 45,
               "basis": "anchored",
-              "modeledActions": 5246,
-              "modeledSeconds": 472140,
-              "modeledHours": 131.15,
-              "cumulativeExp": 2721799,
+              "modeledActions": 1575,
+              "modeledSeconds": 141750,
+              "modeledHours": 39.38,
+              "cumulativeExp": 612298,
               "interpolation": null
             }
           }
@@ -8437,7 +8442,7 @@
           "maps": 15,
           "quests": 42,
           "equipment": 65,
-          "jobs": 5,
+          "jobs": 0,
           "eventChainTerminalSteps": 9
         },
         {
@@ -8448,7 +8453,7 @@
           "maps": 13,
           "quests": 39,
           "equipment": 65,
-          "jobs": 5,
+          "jobs": 0,
           "eventChainTerminalSteps": 5
         },
         {
@@ -8459,7 +8464,7 @@
           "maps": 13,
           "quests": 38,
           "equipment": 65,
-          "jobs": 5,
+          "jobs": 0,
           "eventChainTerminalSteps": 5
         },
         {
@@ -8470,7 +8475,7 @@
           "maps": 12,
           "quests": 32,
           "equipment": 65,
-          "jobs": 5,
+          "jobs": 0,
           "eventChainTerminalSteps": 5
         },
         {
@@ -8481,7 +8486,7 @@
           "maps": 9,
           "quests": 30,
           "equipment": 65,
-          "jobs": 5,
+          "jobs": 0,
           "eventChainTerminalSteps": 5
         },
         {
@@ -8492,7 +8497,7 @@
           "maps": 9,
           "quests": 27,
           "equipment": 65,
-          "jobs": 5,
+          "jobs": 0,
           "eventChainTerminalSteps": 5
         },
         {
@@ -8503,7 +8508,7 @@
           "maps": 9,
           "quests": 26,
           "equipment": 65,
-          "jobs": 5,
+          "jobs": 0,
           "eventChainTerminalSteps": 5
         },
         {

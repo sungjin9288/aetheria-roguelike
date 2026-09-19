@@ -198,7 +198,7 @@ const RAW_QUESTS: Quest[] = [
 
     // ── 레벨 전직 퀘스트 ─────────────────────────────────────────────────────
     { id: 100, title: '전직의 자격 (2차)',  desc: '레벨 30 달성하여 2차 전직',   target: 'level', goal: 30, reward: { exp: 0, gold: 5000 }, minLv: 29 },
-    { id: 101, title: '전직의 자격 (3차)',  desc: '레벨 60 달성하여 3차 전직',   target: 'level', goal: 60, reward: { exp: 0, gold: 20000, item: '영웅의 물약' }, minLv: 59 },
+    { id: 101, title: '극의 증명',  desc: '레벨 60 달성',   target: 'level', goal: 60, reward: { exp: 0, gold: 20000, item: '영웅의 물약' }, minLv: 59 },
     { id: 102, title: '레벨 50 달성',       desc: '레벨 50 달성',                target: 'level', goal: 50, reward: { exp: 0, gold: 15000, item: '엘릭서' }, minLv: 49 },
     { id: 103, title: '레벨 70 달성',       desc: '레벨 70 달성 — 전설의 영역',  target: 'level', goal: 70, reward: { exp: 0, gold: 50000, item: '영웅의 물약' }, minLv: 69 },
     { id: 104, title: '레벨 80 달성',       desc: '레벨 80 달성 — 초월의 경지',  target: 'level', goal: 80, reward: { exp: 0, gold: 100000, item: '영웅의 물약' }, minLv: 79 },

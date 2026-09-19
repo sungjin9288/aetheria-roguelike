@@ -1,11 +1,13 @@
 import { useMemo, useState } from 'react';
 import { ArrowRight, Check, Compass, LockKeyhole, Route, Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
+import { MSG } from '../data/messages';
 import type { FullStats, GameMap, Player } from '../types/index.js';
 import { getMoveRecommendations, type MoveRecommendation } from '../utils/adventureGuide';
 import { getGravesAtLoc, type GraveEntry } from '../utils/graveUtils';
 import { getExitBadges } from '../utils/mapBadges';
 import { getMapProgressState } from '../utils/mapProgress';
+import { getMapRouteGate, type MapRouteGate } from '../utils/mapRouteGate';
 import { getMapSignatureDrops, getMapUndiscoveredSignatures } from '../utils/mapSignatureHints';
 import { getDefaultMapSelection, getMapRequiredLevel, getNextMapTowardTarget } from '../utils/mapTopology';
 import RouteTopology, { type RouteTopologyEntry } from './RouteTopology';
@@ -25,6 +27,7 @@ interface MapEntry extends GameMap {
     signatureDrops: Array<{ name: string; rate: number }>;
     undiscoveredSignatures: Array<{ name: string; rate: number }>;
     badges: Array<{ id: string; label: string }>;
+    routeGate: MapRouteGate | null;
 }
 
 interface MapNavigatorProps {
@@ -62,6 +65,23 @@ const MAP_STATE = {
 const formatMapLevel = (map: GameMap | null | undefined, playerLevel = 1) => (
     map?.level === 'infinite' ? '심연' : `레벨 ${getMapRequiredLevel(map, playerLevel)}`
 );
+
+/**
+ * 2026-09 Wave 13 E2: 카드가 보여주던 `formatMapLevel`은 그 지역 **자신의 잠금**이다
+ * (이동 권한도 그대로 이 값으로 판정된다 — `getMapAccess`). 하지만 52곳 중 10곳은
+ * 거기까지 가는 모든 길이 더 높은 지역을 지나 실제 진입선이 더 위에 있고,
+ * 무한 심연은 잠금이 아예 없어 숫자조차 없었다. 갈라지는 곳에서만 실제 진입 레벨을
+ * 덧붙인다 — 값은 `utils/mapRouteGate.ts`(증빙 리포트와 같은 authority), 문구는 MSG.
+ */
+const getRouteGateNotice = (routeGate: MapRouteGate | null | undefined) => {
+    if (!routeGate?.diverges || routeGate.routeGateLevel === null) return null;
+    return {
+        level: MSG.MAP_ROUTE_GATE_LEVEL(routeGate.routeGateLevel),
+        note: routeGate.declaredIsLocked
+            ? MSG.MAP_ROUTE_GATE_NOTE(routeGate.declaredGateLevel, routeGate.routeGateLevel)
+            : MSG.MAP_ROUTE_GATE_NOTE_UNGATED(routeGate.routeGateLevel),
+    };
+};
 
 const getBandIndex = (map: GameMap) => {
     const level = map.level === 'infinite' ? 999 : getMapRequiredLevel(map, 1);
@@ -140,6 +160,7 @@ const WorldRouteList = ({
                                 {bandEntries.map((entry) => {
                                     const state = MAP_STATE[entry.state];
                                     const selected = selectedName === entry.name;
+                                    const routeNotice = getRouteGateNotice(entry.routeGate);
 
                                     return (
                                         <button
@@ -160,9 +181,16 @@ const WorldRouteList = ({
                                                         : <LockKeyhole size={12} className="shrink-0 text-slate-600" aria-label="미탐험" />}
                                             </span>
                                             {/* 2026-09 G10: 배지를 선택 카드에서만 보여주던 것을 모든 행으로.
-                                                "갈 이유"를 목록에서 바로 비교할 수 있어야 한다. */}
-                                            {entry.badges.length > 0 && (
+                                                "갈 이유"를 목록에서 바로 비교할 수 있어야 한다.
+                                                2026-09 E2: 오른쪽 레벨 칩은 지역 자신의 잠금 그대로 두고,
+                                                실제 진입 레벨이 다른 곳만 배지 한 칸을 더 쓴다(행 폭을 안 건드린다). */}
+                                            {(entry.badges.length > 0 || routeNotice) && (
                                                 <span data-testid="map-row-badges" className="flex flex-wrap gap-1 pl-4">
+                                                    {routeNotice && (
+                                                        <SignalBadge data-testid="map-row-route-gate" tone="warning" size="sm">
+                                                            {routeNotice.level}
+                                                        </SignalBadge>
+                                                    )}
                                                     {entry.badges.map((badge) => (
                                                         <SignalBadge key={badge.id} tone={BADGE_TONE[badge.id] || 'recommended'} size="sm">
                                                             {badge.label}
@@ -212,6 +240,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
             signatureDrops: getMapSignatureDrops(map.name),
             undiscoveredSignatures: getMapUndiscoveredSignatures(map.name, player),
             badges: getExitBadges(map, areaBossDefeated, bossGauge),
+            routeGate: getMapRouteGate(DB.MAPS, map.name),
         } as MapEntry;
     }), [areaBossDefeated, bossGauge, grave, player]);
 
@@ -244,6 +273,10 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
         ? '이동하면 지역 정보가 드러납니다.'
         : selectedEntry?.desc;
     const selectedMissionCount = focusedQuestEntries.filter((entry) => entry.targetMaps.includes(selectedEntry?.name)).length;
+    // blindMap(도전 규칙)에서는 경로 정보를 감추므로 진입 레벨도 같이 감춘다.
+    const selectedRouteNotice = blindMap && selectedIsDirectExit
+        ? null
+        : getRouteGateNotice(selectedEntry?.routeGate);
     const statusCounts = mapEntries.reduce<Record<MapState, number>>((counts, entry) => {
         counts[entry.state] += 1;
         return counts;
@@ -316,9 +349,16 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                                 {selectedDescription}
                             </p>
                         </div>
-                        <span className="aether-type-meta shrink-0 font-readable font-semibold text-[#dff7f5]">
-                            {blindMap && selectedIsDirectExit ? '정보 없음' : formatMapLevel(selectedEntry, playerLevel)}
-                        </span>
+                        <div className="shrink-0 text-right">
+                            <span className="aether-type-meta font-readable font-semibold text-[#dff7f5]">
+                                {blindMap && selectedIsDirectExit ? '정보 없음' : formatMapLevel(selectedEntry, playerLevel)}
+                            </span>
+                            {selectedRouteNotice && (
+                                <div data-testid="map-route-gate-level" className="aether-type-label mt-0.5 font-readable text-amber-100/88">
+                                    {selectedRouteNotice.level}
+                                </div>
+                            )}
+                        </div>
                     </div>
 
                     <div className="mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-4" data-testid="map-route-forecast">
@@ -334,6 +374,14 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                             </div>
                         ))}
                     </div>
+
+                    {/* 위 칸의 '위험'/'레벨'이 선언 잠금 기준이므로, 갈라지는 지역에서는
+                        그 숫자가 왜 진입 레벨이 아닌지 바로 아래에서 말한다. */}
+                    {selectedRouteNotice && (
+                        <p data-testid="map-route-gate-note" className="aether-type-meta mt-2 font-readable text-amber-100/78">
+                            {selectedRouteNotice.note}
+                        </p>
+                    )}
 
                     {selectedRoute && !blindMap && (
                         <p className="aether-type-meta mt-2 font-readable text-slate-300/72">

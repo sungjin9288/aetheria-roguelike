@@ -48,6 +48,66 @@ const makeOperations = ({ onDoc, onSetDoc, onServerTimestamp, onGetDoc } = {}) =
     },
 });
 
+/** `firestore.rules`의 quota 문서 블록만 잘라 온다(함수 정의가 블록 안에 있으므로 함께 온다). */
+const readQuotaRulesBlock = async () => {
+    const source = await readFile(new URL('../firestore.rules', import.meta.url), 'utf8');
+    const start = source.indexOf('match /users/{uid}/quota/daily-ai');
+    const end = source.indexOf('// ── 공개 설정', start);
+    assert.ok(start >= 0, 'quota document match must exist');
+    assert.ok(end > start, 'quota rule block must close before public settings');
+    return source.slice(start, end);
+};
+
+/** 공백을 지운 형태 — 표현식의 **식별자**를 찾되 줄바꿈/들여쓰기 포맷에는 안 묶인다. */
+const squash = (text) => text.replace(/\s+/g, '');
+
+/** rules의 `hasAll([...])` / `hasOnly([...])` 키 목록을 그대로 읽는다. */
+const parseKeyList = (block, fnName) => {
+    const match = block.match(new RegExp(`${fnName}\\(\\[([^\\]]*)\\]\\)`));
+    assert.ok(match, `${fnName}(...) 키 목록이 rules에 있어야 한다`);
+    return match[1].split(',').map((key) => key.trim().replace(/^'|'$/g, '')).filter(Boolean);
+};
+
+/** 주어진 로컬 레코드로 실제 `syncToFirestore`를 돌려 나간 페이로드들을 잡는다. */
+const capturePayloads = async (record, { onSetDoc } = {}) => {
+    const localStorage = makeLocalStorageStub(record === undefined ? {} : {
+        [TokenQuotaManager.QUOTA_KEY]: JSON.stringify(record),
+    });
+    const payloads = [];
+    const operations = makeOperations({
+        onSetDoc: async (args) => {
+            payloads.push(args[1]);
+            if (onSetDoc) return onSetDoc(args);
+            return undefined;
+        },
+    });
+    await withLocalStorage(localStorage, async () => {
+        await TokenQuotaManager.syncToFirestore('user-123', { firestore: true }, operations);
+    });
+    return payloads;
+};
+
+const SETTLEMENT_PAYLOAD_KEYS = ['adopted', 'date', 'limit', 'unadopted', 'updatedAt', 'used'];
+const LEGACY_PAYLOAD_KEYS = ['date', 'limit', 'updatedAt', 'used'];
+
+/** rules 거부(배포 창)와 네트워크 실패를 구분하는 신호. */
+const rulesRejection = () => Object.assign(
+    new Error('Missing or insufficient permissions.'),
+    { code: 'permission-denied' },
+);
+
+const captureWarnings = async (fn) => {
+    const warnings = [];
+    const originalWarn = console.warn;
+    console.warn = (...args) => warnings.push(args.map((arg) => String(arg)).join(' '));
+    try {
+        await fn();
+    } finally {
+        console.warn = originalWarn;
+    }
+    return warnings;
+};
+
 test('syncToFirestore runtime writes the exact quota document and preserves local authority', async () => {
     const today = new Date().toDateString();
     const localStorage = makeLocalStorageStub({
@@ -84,9 +144,13 @@ test('syncToFirestore runtime writes the exact quota document and preserves loca
 
     const [reference, payload, options] = calls.setDoc[0];
     assert.deepEqual(reference.path, ['artifacts', 'aetheria-rpg', 'users', 'user-123', 'quota', 'daily-ai']);
-    assert.deepEqual(Object.keys(payload).sort(), ['date', 'limit', 'updatedAt', 'used']);
+    assert.deepEqual(Object.keys(payload).sort(), SETTLEMENT_PAYLOAD_KEYS);
     assert.equal(payload.date, today);
     assert.equal(payload.used, 7);
+    // 정산이 하나도 기록되지 않은 하루 — 두 카운터는 0이고 `unsettled`(7)는 도출된다.
+    assert.equal(payload.adopted, 0);
+    assert.equal(payload.unadopted, 0);
+    assert.equal(payload.used - payload.adopted - payload.unadopted, 7);
     assert.equal(payload.limit, BALANCE.DAILY_AI_LIMIT);
     assert.equal(payload.limit, TokenQuotaManager.DAILY_LIMIT);
     assert.equal(payload.updatedAt, sentinel);
@@ -110,6 +174,8 @@ test('syncToFirestore runtime rolls stale local quota to today with zero usage w
 
     assert.equal(payload.date, new Date().toDateString());
     assert.equal(payload.used, 0);
+    assert.equal(payload.adopted, 0);
+    assert.equal(payload.unadopted, 0);
     assert.equal(payload.limit, TokenQuotaManager.DAILY_LIMIT);
 });
 
@@ -154,12 +220,7 @@ test('syncToFirestore runtime keeps a rejected Firestore write non-blocking and 
 });
 
 test('Firestore quota rules contract is scoped and deterministic (no emulator claim)', async () => {
-    const source = await readFile(new URL('../firestore.rules', import.meta.url), 'utf8');
-    const start = source.indexOf('match /users/{uid}/quota/daily-ai');
-    const end = source.indexOf('// ── 공개 설정', start);
-    assert.ok(start >= 0, 'quota document match must exist');
-    assert.ok(end > start, 'quota rule block must close before public settings');
-    const block = source.slice(start, end);
+    const block = await readQuotaRulesBlock();
 
     assert.match(block, /match \/users\/\{uid\}\/quota\/daily-ai/);
     assert.match(block, /allow read: if false;/);
@@ -167,17 +228,100 @@ test('Firestore quota rules contract is scoped and deterministic (no emulator cl
     assert.doesNotMatch(block, /allow write:/);
     assert.match(block, /allow create: if isSelf\(uid\)/);
     assert.match(block, /allow update: if isSelf\(uid\)/);
-    assert.match(block, /keys\(\)\.hasAll\(\['date', 'used', 'limit', 'updatedAt'\]\)/);
-    assert.match(block, /keys\(\)\.hasOnly\(\['date', 'used', 'limit', 'updatedAt'\]\)/);
-    assert.match(block, /request\.resource\.data\.date is string/);
-    assert.match(block, /request\.resource\.data\.used is int/);
-    assert.match(block, /request\.resource\.data\.used >= 0/);
-    assert.match(block, /request\.resource\.data\.used <= 50/);
-    assert.match(block, /request\.resource\.data\.limit == 50/);
+    assert.match(block, /data\.date is string/);
+    assert.match(block, /data\.used is int/);
+    assert.match(block, /data\.used >= 0/);
+    assert.match(block, /data\.used <= 50/);
+    assert.match(block, /data\.limit == 50/);
     assert.match(block, /request\.resource\.data\.updatedAt == request\.time/);
     assert.match(block, /request\.resource\.data\.date == resource\.data\.date/);
     assert.match(block, /request\.resource\.data\.used >= resource\.data\.used/);
     assert.match(block, /request\.resource\.data\.used == 0/);
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Wave 13 E4 — rules와 클라이언트는 **같은 커밋에서** 넓힌다.
+//   `firestore.rules`는 이 저장소에서 실행 가능한 검증이 없다(에뮬레이터 없음, rules
+//   린트 없음, deploy.yml은 hosting만 올린다). 그래서 아래 계약들은 rules 텍스트를
+//   클라이언트의 **실제 런타임 페이로드에서 도출해** 맞춘다 — 두 리터럴 목록을 각자
+//   손으로 적어두고 "같기를 바라는" 형태를 피한다.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('rules의 키 집합은 클라이언트 페이로드에서 도출된다 — 한쪽만 넓히면 여기가 깨진다', async () => {
+    const block = await readQuotaRulesBlock();
+    const [payload] = await capturePayloads({
+        date: new Date().toDateString(), used: 5, outcomes: { adopted: 2, 'proxy-rejected': 1 },
+    });
+    const payloadKeys = Object.keys(payload).sort();
+
+    // hasOnly = 클라이언트가 실제로 보내는 키 집합과 **정확히** 같아야 한다.
+    // (클라이언트만 넓히면 모든 쓰기가 거부되고, catch가 console.warn이라 조용히 죽는다.)
+    assert.deepEqual(parseKeyList(block, 'hasOnly').sort(), payloadKeys);
+    assert.deepEqual(payloadKeys, SETTLEMENT_PAYLOAD_KEYS);
+
+    // hasAll(필수)은 그 **부분집합**이고 4키 그대로다 — 정산 키를 필수로 만들면
+    // 이미 설치된 구버전 클라이언트(4키만 아는 Capacitor 앱)의 쓰기가 전부 거부된다.
+    const required = parseKeyList(block, 'hasAll').sort();
+    assert.deepEqual(required, LEGACY_PAYLOAD_KEYS);
+    for (const key of required) {
+        assert.ok(payloadKeys.includes(key), `${key}: 클라이언트가 항상 보내는 키여야 한다`);
+    }
+});
+
+test('단조성은 rules에서 모든 카운터 키에 걸린다 — 페이로드에만 카운터를 늘리면 깨진다', async () => {
+    const block = squash(await readQuotaRulesBlock());
+    const [payload] = await capturePayloads({
+        date: new Date().toDateString(), used: 5, outcomes: { adopted: 2, 'proxy-rejected': 1 },
+    });
+    // 카운터 = 페이로드의 수치 필드에서 상한(limit)을 뺀 것.
+    const counters = Object.keys(payload)
+        .filter((key) => typeof payload[key] === 'number' && key !== 'limit')
+        .sort();
+    assert.deepEqual(counters, ['adopted', 'unadopted', 'used']);
+
+    for (const key of counters) {
+        // 필수 키는 직접 접근, 선택 키는 `tally(data, key)`(없으면 0)로 읽힌다.
+        const forms = [
+            { now: `request.resource.data.${key}`, was: `resource.data.${key}` },
+            { now: `tally(request.resource.data, '${key}')`, was: `tally(resource.data, '${key}')` },
+        ];
+        assert.ok(
+            forms.some((form) => block.includes(squash(`${form.now} >= ${form.was}`))),
+            `${key}: 같은 날짜면 감소 불가(>= 이전 값) 단언이 rules에 있어야 한다`,
+        );
+        assert.ok(
+            forms.some((form) => block.includes(squash(`${form.now} == 0`))),
+            `${key}: 날짜가 바뀌면 0으로 리셋되는 단언이 rules에 있어야 한다`,
+        );
+    }
+});
+
+test('정산 카운터는 리터럴이 아니라 used에 묶인다 — 50 커플링 표면이 넓어지지 않는다', async () => {
+    const block = await readQuotaRulesBlock();
+    const code = block.split('\n').filter((line) => !line.trim().startsWith('//')).join('\n');
+
+    // rules에 박힌 50 두 개는 BALANCE.DAILY_AI_LIMIT의 사본이다.
+    const usedCap = code.match(/data\.used <= (\d+)/);
+    const limitPin = code.match(/data\.limit == (\d+)/);
+    assert.ok(usedCap && limitPin, 'used 상한과 limit 고정이 rules에 있어야 한다');
+    assert.equal(Number(usedCap[1]), BALANCE.DAILY_AI_LIMIT);
+    assert.equal(Number(limitPin[1]), BALANCE.DAILY_AI_LIMIT);
+
+    // 정산 합계는 used에 **상대적으로** 묶인다 — 새 리터럴 상한을 만들지 않는다.
+    assert.ok(
+        squash(code).includes(squash("tally(data, 'adopted') + tally(data, 'unadopted') <= data.used")),
+        'adopted + unadopted <= used 가 rules에 있어야 한다(= unsettled >= 0 보장)',
+    );
+    const literals = code.match(new RegExp(`\\b${BALANCE.DAILY_AI_LIMIT}\\b`, 'g')) || [];
+    assert.equal(literals.length, 2, `DAILY_AI_LIMIT 리터럴은 rules에 2곳뿐이다(실제 ${literals.length})`);
+});
+
+test('create와 update는 같은 모양 검증을 부른다 — 복제된 rules는 드리프트를 검증할 방법이 없다', async () => {
+    const block = squash(await readQuotaRulesBlock());
+    assert.ok(block.includes(squash('allow create: if isSelf(uid) && quotaShapeOk(request.resource.data)')),
+        'create가 공용 모양 검증을 부른다');
+    assert.ok(block.includes(squash('allow update: if isSelf(uid) && quotaShapeOk(request.resource.data)')),
+        'update가 같은 공용 모양 검증을 부른다');
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -315,23 +459,104 @@ test('날짜가 바뀌면 디스패치와 정산이 함께 롤오버된다', asy
     });
 });
 
-test('Firestore 페이로드는 4키 그대로다 — 정산 내역은 firestore.rules의 hasOnly 때문에 올리지 않는다', async () => {
+const MIRROR_TABLE = [
+    // 라벨, 로컬 레코드, 기대 페이로드(used/adopted/unadopted)
+    ['정상 — 채택 2 + 미채택 3', { used: 5, outcomes: { adopted: 2, 'recent-duplicate': 3 } }, { used: 5, adopted: 2, unadopted: 3 }],
+    ['미정산 포함 — 9 중 3만 정산됨', { used: 9, outcomes: { adopted: 3 } }, { used: 9, adopted: 3, unadopted: 0 }],
+    ['구형 레코드(outcomes 없음)', { used: 4 }, { used: 4, adopted: 0, unadopted: 0 }],
+    // 파손: 정산이 디스패치보다 많다. 클램프하지 않으면 rules의
+    // `adopted + unadopted <= used`에 걸려 그 유저의 미러링이 날짜가 바뀔 때까지 전부 거부된다.
+    ['파손 — 정산 > 디스패치', { used: 1, outcomes: { adopted: 4, 'proxy-rejected': 4 } }, { used: 1, adopted: 1, unadopted: 0 }],
+    ['파손 — 디스패치 0인데 정산만 있음', { used: 0, outcomes: { adopted: 3 } }, { used: 0, adopted: 0, unadopted: 0 }],
+];
+
+test(`Firestore 페이로드는 원장의 미러다 — ${MIRROR_TABLE.length}행, 전부 rules 불변식을 만족한다`, async () => {
     const today = new Date().toDateString();
-    const localStorage = makeLocalStorageStub({
-        [TokenQuotaManager.QUOTA_KEY]: JSON.stringify({
-            date: today, used: 9, outcomes: { adopted: 3, 'malformed-response': 6 },
-        }),
-    });
-    let payload;
-    const operations = makeOperations({ onSetDoc: (args) => { payload = args[1]; } });
+    for (const [label, record, expected] of MIRROR_TABLE) {
+        const [payload] = await capturePayloads({ date: today, ...record });
+        assert.deepEqual(Object.keys(payload).sort(), SETTLEMENT_PAYLOAD_KEYS, `${label}: 키`);
+        assert.equal(payload.used, expected.used, `${label}: used(디스패치)`);
+        assert.equal(payload.adopted, expected.adopted, `${label}: adopted`);
+        assert.equal(payload.unadopted, expected.unadopted, `${label}: unadopted`);
+        // rules가 강제하는 모양 — 이걸 어기면 쓰기가 거부되고 조용히 죽는다.
+        assert.ok(payload.adopted >= 0 && payload.unadopted >= 0, `${label}: 음수 없음`);
+        assert.ok(payload.adopted + payload.unadopted <= payload.used, `${label}: adopted + unadopted <= used`);
+        assert.ok(payload.used <= BALANCE.DAILY_AI_LIMIT, `${label}: used <= 한도`);
+        assert.ok(Number.isSafeInteger(payload.used) && Number.isSafeInteger(payload.adopted)
+            && Number.isSafeInteger(payload.unadopted), `${label}: is int`);
+        // `unsettled`는 싣지 않는다 — 감소하는 값이라 단조 규칙을 걸 수 없다. 소비자가 도출한다.
+        assert.equal(payload.unsettled, undefined, `${label}: unsettled는 클라우드로 안 간다`);
+        assert.equal(payload.outcomes, undefined, `${label}: byOutcome도 안 간다`);
+    }
+});
 
-    await withLocalStorage(localStorage, async () => {
-        await TokenQuotaManager.syncToFirestore('user-123', { firestore: true }, operations);
+test('rules 거부(배포 창)는 4키로 접고 used 미러링을 살린다 — 상태를 안 들고 있어 저절로 낫는다', async () => {
+    const record = { date: new Date().toDateString(), used: 6, outcomes: { adopted: 2, 'malformed-response': 4 } };
+    let payloads = [];
+    const warnings = await captureWarnings(async () => {
+        payloads = await capturePayloads(record, {
+            onSetDoc: (args) => {
+                // 구버전 rules가 아직 살아 있는 창: 넓힌 키가 있으면 거부한다.
+                if ('adopted' in args[1]) throw rulesRejection();
+                return undefined;
+            },
+        });
     });
 
-    assert.deepEqual(Object.keys(payload).sort(), ['date', 'limit', 'updatedAt', 'used']);
-    assert.equal(payload.used, 9, '클라우드로 올라가는 used는 디스패치 수와 일치한다');
-    assert.equal(payload.outcomes, undefined);
+    assert.equal(payloads.length, 2, '거부되면 같은 호출 안에서 딱 한 번 접는다');
+    assert.deepEqual(Object.keys(payloads[0]).sort(), SETTLEMENT_PAYLOAD_KEYS);
+    assert.deepEqual(Object.keys(payloads[1]).sort(), LEGACY_PAYLOAD_KEYS);
+    assert.equal(payloads[1].used, 6, '정산은 못 올려도 비용(used)은 계속 올라간다');
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /firestore\.rules/, '원인을 지목하는 경고여야 한다(일반 실패 문구가 아니라)');
+
+    // 세션 플래그가 없다 — rules가 올라간 순간 다음 동기화가 다시 6키로 간다.
+    const next = await capturePayloads(record);
+    assert.equal(next.length, 1);
+    assert.deepEqual(Object.keys(next[0]).sort(), SETTLEMENT_PAYLOAD_KEYS);
+});
+
+test('rules 거부가 아닌 실패는 접지 않는다 — 폴백은 permission-denied에만 반응한다', async () => {
+    let payloads = [];
+    const warnings = await captureWarnings(async () => {
+        payloads = await capturePayloads({ date: new Date().toDateString(), used: 3 }, {
+            onSetDoc: () => { throw new Error('network unavailable'); },
+        });
+    });
+    assert.equal(payloads.length, 1, '네트워크 실패에 재시도를 만들지 않는다');
+    assert.equal(warnings.length, 1);
+    assert.match(warnings[0], /Quota sync failed/);
+});
+
+test('접은 4키 쓰기마저 실패해도 비블로킹이다', async () => {
+    let payloads = [];
+    const warnings = await captureWarnings(async () => {
+        await assert.doesNotReject(async () => {
+            payloads = await capturePayloads({ date: new Date().toDateString(), used: 2, outcomes: { adopted: 1 } }, {
+                onSetDoc: (args) => {
+                    if ('adopted' in args[1]) throw rulesRejection();
+                    throw new Error('network unavailable');
+                },
+            });
+        });
+    });
+    assert.equal(payloads.length, 2);
+    assert.equal(warnings.length, 2, 'rules 지목 1 + 최종 실패 1');
+    assert.match(warnings[1], /Quota sync failed/);
+});
+
+test('원장을 못 읽으면 쓰기를 만들지 않는다 — 파생치 실패가 예외로 번지지 않는다', async () => {
+    let writes = 0;
+    const operations = makeOperations({ onSetDoc: () => { writes += 1; } });
+    // localStorage 자체가 없는 런타임(getCallLedger → null).
+    await assert.doesNotReject(() => TokenQuotaManager.syncToFirestore('user-123', { firestore: true }, operations));
+    assert.equal(writes, 0);
+
+    // 레코드가 파손된 경우(JSON 파싱 실패)도 같다.
+    await withLocalStorage(makeLocalStorageStub({ [TokenQuotaManager.QUOTA_KEY]: '{not json' }), async () => {
+        await assert.doesNotReject(() => TokenQuotaManager.syncToFirestore('user-123', { firestore: true }, operations));
+    });
+    assert.equal(writes, 0);
 });
 
 test('TokenQuotaManager production contract keeps firebase doc/setDoc/serverTimestamp defaults and two required arguments', async () => {

@@ -15,6 +15,7 @@ import { AT } from '../reducers/actionTypes.js';
 import { MSG } from '../data/messages.js';
 import { getCurrentRunSnapshot } from './runProgress.js';
 import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
+import { getSeasonArchive } from './seasonPassPresentation.js';
 import {
     countCompletedSignatureSets,
     countDiscoveredSignatures,
@@ -344,7 +345,21 @@ export const checkTitles = (player: Player): string[] => {
         //   선구자 / 정복자 / 마스터)을 정식 등록할 때 도입. CLAIM_SEASON_REWARD가 직접 grant하지만
         //   checkTitles에도 fallback handler를 추가해 복구 케이스(저장 손실 / migration 등) 보호.
         //   cycle 199 'prestigeRank' 회귀와 동일 패턴.
-        if (type === 'seasonTier')     return (player.seasonPass?.tier || 0) >= val;
+        // 2026-09 Wave 13 E3: live seasonPass.tier 단독 폴백은 Wave 12 D2의 완주 회전이
+        //   tier를 0으로 되돌린 뒤에는 이 칭호 3종을 영구 복구 불가로 만든다 — 회전은
+        //   "리셋 직전 addNewTitles 1회"로 grant 경로는 지켰지만, titles가 그 뒤에 다시
+        //   비워지는 복구 시나리오(이 함수가 존재하는 이유 그 자체)는 못 지킨다. 그래서
+        //   **lifetime max** — live tier와 archive[].tier 중 큰 값 — 로 읽는다. archive만
+        //   보면 회전 전(아카이브 0건인 시즌 1) 플레이어의 현재 시즌 칭호가 사라지므로
+        //   max이지 archive-only가 아니다.
+        if (type === 'seasonTier') {
+            const liveTier = player.seasonPass?.tier || 0;
+            const archivedMaxTier = getSeasonArchive(player.seasonPass).reduce(
+                (max, entry) => Math.max(max, Number(entry?.tier) || 0),
+                0,
+            );
+            return Math.max(liveTier, archivedMaxTier) >= val;
+        }
         // cycle 260: 'questReward' cond.type — cycle 209 quest reward title grant 후 잔존
         //   누락. claimQuestReward가 직접 grant하지만 checkTitles에 fallback 없어 저장 손실 시
         //   영구 복구 불가하던 회귀. stats.claimedQuestIds 영구 ledger와 매칭. cycle 199 / 201

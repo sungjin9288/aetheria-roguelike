@@ -41,8 +41,16 @@ const EXPECTED_JOB_NAMES = [
 // 기존 값과 동일했음을 실측으로 확인).
 // 병합(2026-09): J3가 드롭 테이블을 늘리며 갱신했던 해시를 Codex 값으로 되돌린다 —
 //   J3 데이터는 Codex의 normalBonusPool(레벨 티어 일반 장비) 경로와 충돌해 철회했다.
-const EXPECTED_BASELINE_REPORT_SHA256 = '2e4c0726be5d78bb7af5e8b3f6377976d1bc397613512c83dc8e2681dd699c43';
-const EXPECTED_JOB_LEVELS = [1, 5, 5, 5, 30, 30, 30, 30, 30, 30, 5, 60, 60, 60, 60, 12, 25, 60];
+// Wave 13 E1 (2026-09-19): tier-3 직업 5종의 `reqLv`를 60 → 45로 내렸다. 시뮬레이터는
+//   jobSnapshots를 각 직업의 `reqLv`에서 찍으므로 그 5칸의 스냅샷 레벨과 스탯이 바뀌고,
+//   따라서 리포트 해시도 바뀐다 — **의도된 이동이며 예고값 `488c4c01…`과 일치해야 한다**.
+//   곡선은 한 글자도 안 건드렸다: 체크포인트 액션 14/52/82/164/1,575/5,246/8,176과
+//   `tierEquip`은 이 편집 전후로 바이트 동일하다(`cost.anchors` 8행 불변의 근거).
+//   이전 값: '2e4c0726be5d78bb7af5e8b3f6377976d1bc397613512c83dc8e2681dd699c43'.
+const EXPECTED_BASELINE_REPORT_SHA256 = '488c4c0166c913b2dceca6fe2946fcbf7ffb0cd56b7e499c57a81f55b014f96c';
+// 순서는 EXPECTED_JOB_NAMES와 같다 — 45가 찍힌 다섯 칸이 tier-3 5종(팔라딘·드래곤 나이트·
+// 대마법사·그림자 주군·사냥의 군주)이고, 시간술사는 원래부터 tier 3 / reqLv 25다.
+const EXPECTED_JOB_LEVELS = [1, 5, 5, 5, 30, 30, 30, 30, 30, 30, 5, 45, 45, 45, 45, 12, 25, 45];
 
 test('baseline simulation keeps immutable snapshots and reports the exact class graph/checkpoints', () => {
     const baselineBefore = structuredClone(PROGRESSION_SIMULATOR_BASELINE);
@@ -60,7 +68,8 @@ test('baseline simulation keeps immutable snapshots and reports the exact class 
 
     assert.deepEqual(PROGRESSION_CHECKPOINT_LEVELS, [2, 5, 10, 20, 45, 60, 75]);
     assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.targetLevel), [2, 5, 10, 20, 45, 60, 75]);
-    assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.reachableJobCount), [1, 5, 5, 6, 13, 18, 18]);
+    // Wave 13 E1: Lv45 체크포인트에서 tier-3 5종이 함께 열려 13 → 18.
+    assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.reachableJobCount), [1, 5, 5, 6, 18, 18, 18]);
     assert.deepEqual(report.jobReachability, {
         rootJob: '모험가',
         expectedJobCount: 18,

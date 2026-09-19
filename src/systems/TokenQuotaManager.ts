@@ -69,6 +69,33 @@ const sumTally = (tally: OutcomeTally): number => (
     Object.values(tally).reduce((total: number, count: number) => total + count, 0)
 );
 
+const describeError = (error: unknown): string => (
+    error instanceof Error ? error.message : String(error)
+);
+
+/**
+ * 규칙 거부인가(네트워크 실패가 아니라). `firestore.rules`가 아직 안 넓혀진 배포 창에서만
+ * 관측되는 신호다 — SDK 경로에 따라 `permission-denied` / `firestore/permission-denied`.
+ */
+const isRulesRejection = (error: unknown): boolean => {
+    const code = asRecord(error)?.code;
+    return typeof code === 'string' && code.endsWith('permission-denied');
+};
+
+/** rules가 `hasAll`로 요구하는 4키 — 구버전 클라이언트가 영원히 쓰는 모양이기도 하다. */
+interface LegacyQuotaDocument {
+    date: string;
+    used: number;
+    limit: number;
+    updatedAt: unknown;
+}
+
+/** 넓힌 모양 — 위 4키 + 정산 2키(`unsettled`는 도출된다, 아래 주석 참조). */
+interface QuotaDocument extends LegacyQuotaDocument {
+    adopted: number;
+    unadopted: number;
+}
+
 // --- TOKEN QUOTA MANAGER (v3.6) ---
 // Limits AI calls per user per day to control costs.
 //
@@ -160,27 +187,57 @@ export const TokenQuotaManager = {
 
     // Sync quota to Firestore for cross-device tracking
     //
-    // W12-D3: 페이로드 키는 date/used/limit/updatedAt 4개 그대로다 — `firestore.rules`가
-    //   `hasOnly(['date','used','limit','updatedAt'])`로 못박아 두었으므로 정산 내역을
-    //   여기 얹으면 규칙이 쓰기를 거부한다. 다만 `used`의 **의미**가 정확해졌다:
-    //   예전에는 "성공 응답을 받은 호출 수"라 실제 디스패치보다 적게 보고했고, 이제는
-    //   디스패치 수와 일치한다(클라우드 쪽 비용 집계가 과소 보고를 멈춘다).
-    //   정산 내역까지 클라우드로 올리려면 rules + 클라이언트를 한 PR에서 같이 바꿔야 한다.
+    // W13-E4: 페이로드는 `getCallLedger()`의 미러다 — 4키(date/used/limit/updatedAt)에
+    //   정산 2키(`adopted`/`unadopted`)가 붙어 6키다. `unsettled`는 **싣지 않는다**:
+    //   정산이 기록될수록 감소하므로 `firestore.rules`의 단조 규칙을 걸 수 없고, 걸지
+    //   않으면 롤백 쓰기가 정산을 되감는다. 소비자는 규칙이 보장하는
+    //   `unsettled = used - adopted - unadopted >= 0`으로 도출한다.
+    //   `byOutcome`(미채택 4종 분해)은 중첩 맵 단조성이 필요해 여기서 멈췄다 —
+    //   "50 중 몇 건이 이야기가 됐는가"는 두 카운터로 답해진다.
+    //
+    //   **배포 순서는 rules 먼저다.** 규칙의 `hasOnly`만 넓혔으므로 신규 rules는 구버전
+    //   클라이언트(4키)를 그대로 받지만, 구버전 rules는 6키를 거부한다. 같은 커밋이어도
+    //   배포는 두 파이프라인이라(.github/workflows/deploy.yml은 hosting만 올린다) 그 창이
+    //   실제로 존재하므로, 거부되면 **이번 호출 안에서 4키로 한 번 접는다** — 그 창에서
+    //   `used` 미러링까지 같이 죽지 않게. 상태를 안 들고 있으므로 rules가 올라간 순간
+    //   다음 동기화부터 저절로 6키로 돌아온다.
     async syncToFirestore(uid: string, db: Firestore | null, firestoreOperations: FirestoreOperations = {}) {
         if (!uid || !db) return;
         try {
-            const quota = this.getQuotaData();
+            const ledger = this.getCallLedger();
+            // 읽기 실패(저장소 없음/레코드 파손)는 미러링할 것이 없다는 뜻이다 — 던지지 않는다.
+            if (!ledger) return;
             const makeDoc = firestoreOperations.doc || doc;
             const writeDoc = firestoreOperations.setDoc || setDoc;
             const makeServerTimestamp = firestoreOperations.serverTimestamp || serverTimestamp;
-            await writeDoc(makeDoc(db, 'artifacts', 'aetheria-rpg', 'users', uid, 'quota', 'daily-ai'), {
-                date: quota.date,
-                used: quota.used,
+            const reference = makeDoc(db, 'artifacts', 'aetheria-rpg', 'users', uid, 'quota', 'daily-ai');
+
+            // 규칙 불변식 `adopted + unadopted <= used`에 맞춰 클램프한다. 파손된 로컬
+            // 레코드(정산이 디스패치보다 많음)를 그대로 올리면 그 유저의 미러링이 날짜가
+            // 바뀔 때까지 조용히 전부 거부된다 — 원장의 `unsettled`가 이미 같은 클램프다.
+            const used = ledger.dispatched;
+            const adopted = Math.min(ledger.adopted, used);
+            const unadopted = Math.min(ledger.unadopted, used - adopted);
+            const legacy: LegacyQuotaDocument = {
+                date: ledger.date,
+                used,
                 limit: this.DAILY_LIMIT,
                 updatedAt: makeServerTimestamp(),
-            }, { merge: true });
+            };
+            const payload: QuotaDocument = { ...legacy, adopted, unadopted };
+
+            try {
+                await writeDoc(reference, payload, { merge: true });
+            } catch (e: unknown) {
+                if (!isRulesRejection(e)) throw e;
+                console.warn(
+                    'Quota settlement mirroring rejected — deploy firestore.rules, falling back to legacy keys:',
+                    describeError(e),
+                );
+                await writeDoc(reference, legacy, { merge: true });
+            }
         } catch (e: unknown) {
-            console.warn('Quota sync failed:', e instanceof Error ? e.message : String(e));
+            console.warn('Quota sync failed:', describeError(e));
         }
     }
 };

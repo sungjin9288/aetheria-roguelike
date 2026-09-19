@@ -309,9 +309,9 @@ export const CLASSES: Record<string, ClassDef> = {
         next: ['팔라딘']
     },
 
-    // ── 3차 전직 (Lv 60+) ────────────────────────────────────────────────────
+    // ── 3차 전직 (Lv 45+) ────────────────────────────────────────────────────
     '팔라딘': {
-        tier: 3, reqLv: 60, desc: '빛의 수호자 — 치유와 방어의 정점', hpMod: 2.2, mpMod: 1.4, atkMod: 1.6,
+        tier: 3, reqLv: 45, desc: '빛의 수호자 — 치유와 방어의 정점', hpMod: 2.2, mpMod: 1.4, atkMod: 1.6,
         skills: [
             { name: '신성 강타', mp: 40, type: '빛', mult: 3.5, effect: 'stun', desc: '기절 + 신성 피해' },
             { name: '성스러운 방패', mp: 60, type: 'buff', effect: 'def_up', val: 2.5, turn: 5, desc: 'DEF 150% 상승 5턴' },
@@ -340,7 +340,7 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '드래곤 나이트': {
-        tier: 3, reqLv: 60, desc: '용의 힘을 계승한 광전사', hpMod: 1.9, mpMod: 0.7, atkMod: 2.5,
+        tier: 3, reqLv: 45, desc: '용의 힘을 계승한 광전사', hpMod: 1.9, mpMod: 0.7, atkMod: 2.5,
         skills: [
             { name: '용의 포효', mp: 50, type: '화염', mult: 4.5, effect: 'burn', desc: '화상 + 강력한 화염 피해' },
             { name: '혈룡 광란', mp: 80, type: 'buff', effect: 'berserk', val: 3.0, turn: 4, desc: 'ATK 200% / DEF 감소 4턴' },
@@ -368,7 +368,7 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '대마법사': {
-        tier: 3, reqLv: 60, desc: '모든 원소를 지배하는 자', hpMod: 0.85, mpMod: 3.0, atkMod: 2.8,
+        tier: 3, reqLv: 45, desc: '모든 원소를 지배하는 자', hpMod: 0.85, mpMod: 3.0, atkMod: 2.8,
         skills: [
             { name: '오메가 메테오', mp: 80, type: '화염', mult: 6.0, effect: 'burn', desc: '화상 + 거대 운석 소환' },
             { name: '시간 정지', mp: 100, type: 'debuff', effect: 'stun', turn: 3, desc: '시간을 정지시켜 3턴 기절' },
@@ -398,7 +398,7 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '그림자 주군': {
-        tier: 3, reqLv: 60, desc: '어둠과 일격의 절대자', hpMod: 1.2, mpMod: 1.5, atkMod: 2.3,
+        tier: 3, reqLv: 45, desc: '어둠과 일격의 절대자', hpMod: 1.2, mpMod: 1.5, atkMod: 2.3,
         skills: [
             { name: '신의 일격', mp: 60, mult: 7.0, crit: 0.9, desc: '90% 치명타 확률 신의 일격' },
             { name: '그림자 군주', mp: 80, type: 'buff', effect: 'stealth', val: 3.0, turn: 3, desc: '3턴간 강화 은신 + ATK 증가' },
@@ -488,7 +488,7 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '사냥의 군주': {
-        tier: 3, reqLv: 60, desc: '자연과 원거리의 지배자', hpMod: 1.4, mpMod: 1.8, atkMod: 2.1,
+        tier: 3, reqLv: 45, desc: '자연과 원거리의 지배자', hpMod: 1.4, mpMod: 1.8, atkMod: 2.1,
         skills: [
             { name: '신성 화살비', mp: 60, mult: 5.5, type: '빛', effect: 'stun', desc: '연속 화살 + 기절 부여' },
             { name: '자연의 가호', mp: 70, type: 'buff', effect: 'all_up', val: 2.0, turn: 4, desc: 'ATK/DEF 100% 상승 4턴' },

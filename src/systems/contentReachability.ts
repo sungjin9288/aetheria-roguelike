@@ -3,6 +3,16 @@ import { DB } from '../data/db.js';
 import { DROP_TABLES } from '../data/dropTables.js';
 import { EVENT_CHAINS } from '../data/eventChains.js';
 import { LOOT_TABLE } from '../data/loot.js';
+import {
+    // Wave 13 E2: 경로 게이트 보행은 `utils/mapRouteGate.ts`가 소유한다 — 이 리포트와
+    //   UI(MapNavigator)가 "실제 진입 레벨"을 같은 함수에서 읽어야 하기 때문이다.
+    //   원점 레벨/시작 지점은 그 보행의 정의에 속하므로 이 파일도 거기서 받는다.
+    MAP_ROUTE_ORIGIN_LEVEL as ORIGIN_LEVEL,
+    MAP_ROUTE_START_LOCATION as START_LOCATION,
+    mapGateLevel,
+    mapRouteGateLevels,
+    reachableMapsFrom,
+} from '../utils/mapRouteGate.js';
 import { getAllSignatureDropSourceIndex } from '../utils/signatureDropSources.js';
 import { getShopCatalog } from '../utils/shopRotation.js';
 import {
@@ -249,10 +259,8 @@ type ContentSource = {
  */
 const DB_SOURCE = DB as unknown as ContentSource;
 
-const START_LOCATION = '시작의 마을';
 const CHECKPOINT_LEVELS = [2, 5, 10, 20, 45, 60, 75];
 const PROGRESSION_ANCHOR_SEED = 20_260_810;
-const ORIGIN_LEVEL = 1;
 const COST_INTERPOLATION_RULE = 'modeledActions(L) = round(lower.modeledActions + expFraction × (upper.modeledActions − lower.modeledActions)), '
     + 'expFraction = (cumulativeExp(L) − cumulativeExp(lower)) / (cumulativeExp(upper) − cumulativeExp(lower)); '
     + 'lower/upper are the nearest anchors below and above L. Anchored rows carry interpolation: null.';
@@ -311,48 +319,6 @@ const mapMonsterRoutes = (maps: Record<string, MapLike>) => {
         }
     }
     return routes;
-};
-
-/**
- * 지역의 입장 레벨 — `getMapAccess`와 같은 규칙으로 읽는다.
- * 범위(`[min, max]`)는 첫 값이 입장선이고, 유한하지 않은 값('infinite')은 레벨 잠금이 없다
- * (`getMapAccess`의 `level < Number('infinite')`는 항상 false다).
- */
-const mapGateLevel = (map: MapLike | undefined) => {
-    const declared = Array.isArray(map?.level) ? map.level[0] : map?.level;
-    const numeric = Number(declared);
-    return Number.isFinite(numeric) ? numeric : ORIGIN_LEVEL;
-};
-
-/**
- * `levelCap`을 주면 그 레벨에서 실제로 걸어 들어갈 수 있는 지역만 센다.
- * 기본값(Infinity)에서는 레벨 게이트가 한 번도 걸리지 않으므로 기존 위상 전용 동작과 동일하다.
- * `visited`를 별도로 두는 이유: 레벨로 막힌 노드는 `reachable`에 들어가지 않으므로,
- * 방문 표시가 없으면 seasonOnly/고대 보물고 재투입 루프에서 큐가 무한히 자란다.
- */
-const reachableFrom = (
-    start: string,
-    maps: Record<string, MapLike>,
-    levelCap = Number.POSITIVE_INFINITY,
-) => {
-    const reachable = new Set<string>();
-    const visited = new Set<string>();
-    const queue = [start];
-    while (queue.length > 0) {
-        const current = queue.shift();
-        if (!current || visited.has(current) || !Object.hasOwn(maps, current)) continue;
-        visited.add(current);
-        if (mapGateLevel(maps[current]) > levelCap) continue;
-        reachable.add(current);
-        const exits = Array.isArray(maps[current]?.exits) ? maps[current].exits : [];
-        queue.push(...exits.filter((entry: unknown): entry is string => typeof entry === 'string'));
-        for (const [name, map] of Object.entries(maps)) {
-            if (!map?.seasonOnly && name !== '고대 보물고') continue;
-            const entryExits = Array.isArray(map?.exits) ? map.exits : [];
-            if (entryExits.some((exit: unknown) => typeof exit === 'string' && reachable.has(exit))) queue.push(name);
-        }
-    }
-    return sorted(reachable);
 };
 
 const findInvalidExits = (maps: Record<string, MapLike>) => Object.entries(maps)
@@ -625,19 +591,6 @@ const progressionJobErrors = (
         errors.push('PROGRESSION_JOB_SNAPSHOTS_MISMATCH');
     }
     return errors;
-};
-
-/** 각 지역이 열리는 최소 플레이어 레벨 — 이 리포트 자신의 도달성 보행에 레벨 상한을 씌워 구한다. */
-const mapRouteGateLevels = (start: string, maps: Record<string, MapLike>) => {
-    const gates = new Map<string, number>();
-    const total = Object.keys(maps).length;
-    for (let level = ORIGIN_LEVEL; level <= CONSTANTS.MAX_LEVEL; level += 1) {
-        for (const name of reachableFrom(start, maps, level)) {
-            if (!gates.has(name)) gates.set(name, level);
-        }
-        if (gates.size >= total) break;
-    }
-    return gates;
 };
 
 const isUsableGateLevel = (level: number) => (
@@ -940,7 +893,7 @@ export const buildContentReachabilityReport = (
         }
         errors.push(...progressionJobErrors(progression, graph));
     }
-    const reachableMaps = reachableFrom(START_LOCATION, maps);
+    const reachableMaps = reachableMapsFrom(START_LOCATION, maps);
     const catalog = {
         maps: Object.keys(maps).length,
         monsters: monsterNames.length,
