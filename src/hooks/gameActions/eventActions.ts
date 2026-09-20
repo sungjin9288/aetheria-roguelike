@@ -23,7 +23,9 @@ import type { CommitExploreOutcome, TitleSharedHelpers } from './_shared';
 const eventOutcomes = (event: GameState['currentEvent']): EventOutcome[] => toArray(event?.outcomes);
 
 /** exploreUtils.spawnEnemy가 만들어 내는 적 인스턴스 스탯. */
-type SpawnedEnemyStats = ReturnType<typeof spawnEnemy>['mStats'];
+// 2026-09 Wave 16 H1: spawnEnemy는 빈 몬스터 테이블에서 mStats: null을 돌려준다.
+//   이 별칭을 쓰는 곳은 전부 null을 이미 걸러낸 뒤이므로 NonNullable로 좁힌다.
+type SpawnedEnemyStats = NonNullable<ReturnType<typeof spawnEnemy>['mStats']>;
 
 import {
     STRUCTURED_FALLBACK_TRANSACTIONS,
@@ -386,6 +388,12 @@ const startEliteEncounter = (
         return;
     }
     const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, player.relics || [], { addLog }, { rng });
+    // 2026-09 Wave 16 H1: 몬스터 테이블이 빈 지역에서는 기습할 적도 없다.
+    if (rawStats === null || baseName === null) {
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+        addLog('info', MSG.EXPLORE_QUIET);
+        return;
+    }
     const fullStats = getFullStats();
     dispatch({
         type: AT.SET_PLAYER,
@@ -435,6 +443,12 @@ const handleScoutChoice = (idx: number, currentEvent: GameState['currentEvent'],
             { addLog },
             { rng },
         );
+        // 2026-09 Wave 16 H1: 빈 몬스터 테이블에서는 정찰 카드도 전투를 만들지 않는다.
+        if (rawStats === null || baseName === null) {
+            dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            addLog('info', MSG.EXPLORE_QUIET);
+            return;
+        }
         const isEliteCard = outcome.scoutEffect === 'elite';
         const mStats = isEliteCard
             ? { ...buildEliteStats(rawStats, baseName), scoutGuaranteedRelic: true }
@@ -525,6 +539,13 @@ const handleBossGaugeChoice = (idx: number, currentEvent: GameState['currentEven
         { addLog },
         { forceAreaBoss: true, rng },
     );
+    // 2026-09 Wave 16 H1: forceAreaBoss라 구역 보스 이름이 항상 잡히지만, 빈-풀 분기를
+    //   타입에 드러낸 이상 침묵하지 않는다 — 보스가 없으면 전투를 시작하지 않는다.
+    if (mStats === null) {
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+        addLog('info', MSG.EXPLORE_QUIET);
+        return;
+    }
 
     const fullStats = getFullStats();
     dispatch({

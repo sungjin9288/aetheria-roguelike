@@ -12,6 +12,7 @@ import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
+import { canInvestigateTown } from '../../utils/townInvestigation';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../../utils/scoutEvents';
 import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
@@ -149,7 +150,6 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
     return {
         explore: async () => {
             if (gameState !== GS.IDLE) return addLog('error', MSG.EXPLORE_BLOCKED);
-            if (player.loc === CONSTANTS.START_LOCATION) return addLog('info', MSG.TOWN_PEACEFUL);
 
             const actionRng = resolveExploreActionRandom(rng, takeHarnessExploreSeed());
 
@@ -168,6 +168,19 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
                 }});
                 addLog('event', MSG.EXPLORE_CHAIN_EVENT(chain.label, step.event.desc));
                 return;
+            }
+
+            // 2026-09 Wave 16 H2: 평화 가드는 `player.loc === CONSTANTS.START_LOCATION`이라는
+            //   **하드코딩된 한 지역**이었다. safe 맵 6곳 중 시작의 마을만 막히고 나머지
+            //   4곳(여행자의 쉼터·사막 오아시스·북부 요새·허공의 섬 — 전부 `monsters: []`)은
+            //   터미널 `탐색`으로 뚫려 이름 없는 적이 실제 스탯으로 스폰됐다(H1이 그 스폰을
+            //   닫았고, 여기서는 애초에 탐험이 성립하지 않음을 말한다).
+            //   권한은 `canInvestigateTown`이 이미 갖고 있다 — 사냥감이 있는 safe 지역
+            //   (황금 왕국)만 조사할 수 있고, 나머지 safe 지역은 평화롭다.
+            //   **체인 트리거 뒤에 둔다**: 대기 중인 체인 스텝은 지역 종류와 무관하게
+            //   발동해야 한다(엔진은 원래도 체인을 가장 먼저 검사했다).
+            if (mapData.type === 'safe' && !canInvestigateTown(player.loc, mapData)) {
+                return addLog('info', MSG.TOWN_PEACEFUL);
             }
 
             // 캠프파이어 노드 (Phase 2, B+): 던전에서 낮은 확률로 "휴식 vs 단련" 결정.

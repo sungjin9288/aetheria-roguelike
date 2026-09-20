@@ -2,9 +2,17 @@ import type { ClassDef, Item, Player } from '../types/index.js';
 import type { ItemRecipeDef } from '../types/item.js';
 import { FIRST_STORY_QUEST_ID } from '../data/quests.js';
 import { canInvestigateTown } from './townInvestigation';
+import { getChainEventForLoc } from '../data/eventChains.js';
 import type { getAdventureGuidance, getExpeditionPreparation } from './adventureGuide.js';
 
 export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'grave';
+
+/**
+ * safe 지역에서 explore 행동이 무엇을 의미하는지 — 라벨을 컴포넌트가 하드코딩하지 않게
+ * 소유권을 여기로 옮긴다(Wave 16 H3). `'investigate'`는 사냥감이 있는 도시 조사(전투 가능),
+ * `'chain'`은 이 지역에서 대기 중인 이야기 스텝, `null`은 explore 행동 자체가 없다는 뜻.
+ */
+export type TownExploreIntent = 'investigate' | 'chain' | null;
 
 type TownPrimaryKind =
     | 'claim_quest'
@@ -175,7 +183,19 @@ export const getTownActionPresentation = ({
     // 시작 마을의 explore action은 이벤트 없이 안내 로그만 남긴다. 실제 이동과
     // 구별되는 결과가 있는 행동만 첫 화면에 남겨 선택 비용을 줄인다.
     const quickKeys = [...contextualKeys.slice(0, 1), 'move'] as TownActionKey[];
-    if (canInvestigateTown(player.loc, mapData) && primaryKey !== 'explore') quickKeys.push('explore');
+    // 2026-09 Wave 16 H3: safe 지역에도 대기 중인 이벤트 체인 스텝이 놓일 수 있다
+    //   (`machine_uprising` 종착 = 북부 요새, `water_apostle:1` = 사막 오아시스).
+    //   안전지대에는 탐험 버튼이 없어서 이 둘은 **터미널에 `탐색`을 타이핑해야만**
+    //   진행됐다. 대기 스텝이 있으면 같은 explore 행동을 마을 행동으로 노출한다 —
+    //   explore()는 체인 트리거를 가장 먼저 검사하므로 이 버튼은 항상 그 분기로 간다.
+    const hasPendingChainStep = Boolean(
+        getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps),
+    );
+    const canInvestigate = canInvestigateTown(player.loc, mapData);
+    const exploreIntent: TownExploreIntent = hasPendingChainStep
+        ? 'chain'
+        : canInvestigate ? 'investigate' : null;
+    if (exploreIntent !== null && primaryKey !== 'explore') quickKeys.push('explore');
     const visibleKeys = new Set<TownActionKey>([...quickKeys, ...(primaryKey ? [primaryKey] : [])]);
     const facilityKeys = FACILITY_KEYS.filter((key) => !visibleKeys.has(key));
 
@@ -189,6 +209,7 @@ export const getTownActionPresentation = ({
             tone: primaryKind === 'claim_quest' ? 'reward' : 'primary',
         },
         quickKeys,
+        exploreIntent,
         facilityKeys,
         facilitySummary: facilityKeys.map((key) => FACILITY_LABELS[key]).join(' · '),
         facilityStatus: {

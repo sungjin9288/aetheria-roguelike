@@ -306,6 +306,14 @@ export const runQuietRollAndCombat = (
 
     // 몬스터 생성
     const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, playerRelics, { addLog }, { rng });
+    // 2026-09 Wave 16 H1: 몬스터 테이블이 빈 지역에서는 조우가 없다. 이전에는
+    //   `selectEncounterMonster`가 `undefined`를 돌려주고도 실제 스탯의 적이 만들어져
+    //   `'undefined 등장!'`로 전투가 시작됐다(safe 4곳에서 터미널 `탐색`으로 도달 가능).
+    if (rawStats === null) {
+        commitExploreOutcome('nothing', null, skipBossGaugeAdvance ? undefined : mapData);
+        addLog('info', MSG.EXPLORE_QUIET);
+        return;
+    }
     let { mStats } = applyDynamicDifficulty(rawStats, player, addLog);
 
     // 무한 심연 모드

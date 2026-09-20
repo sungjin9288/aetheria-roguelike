@@ -221,6 +221,18 @@ const selectModeledMap = (level: number, seed: number, action: number) => {
     return candidates[Math.floor(rng() * candidates.length)];
 };
 
+/**
+ * MODELED_MAPS는 `type !== 'safe' && monsters.length > 0`만 담으므로 `spawnEnemy`의
+ * 빈-풀 분기(Wave 16 H1)를 구조적으로 타지 않는다. 그 불변식을 침묵이 아니라 모델의
+ * 다른 불가능 상태와 같은 방식(ProgressionSimulationError)으로 적는다.
+ */
+const requireModeledSpawn = (spawned: ReturnType<typeof spawnEnemy>, label: string) => {
+    if (spawned.mStats === null) {
+        throw new ProgressionSimulationError('INVALID_REWARD_NUMBER', `Empty monster pool for ${label}`);
+    }
+    return spawned.mStats;
+};
+
 const finiteNumber = (value: unknown, label: string, minimum = 0) => {
     if (!Number.isFinite(value) || Number(value) < minimum) {
         throw new ProgressionSimulationError('INVALID_REWARD_NUMBER', `${label} must be finite and >= ${minimum}`);
@@ -604,13 +616,13 @@ const buildJobSnapshots = (seed: number) => Object.entries(DB.CLASSES).map(([job
         'job-snapshot-encounter',
         job,
     );
-    const { mStats: enemy } = spawnEnemy(
+    const enemy = requireModeledSpawn(spawnEnemy(
         mapEntry.map,
         { ...player, loc: mapEntry.name },
         [],
         { addLog: () => undefined },
         { rng: encounterRng },
-    );
+    ), `job-snapshot:${mapEntry.name}`);
     const enemyHp = snapshotNumber(enemy.hp, `${job}.enemy.hp`, 1);
     const enemyLevel = snapshotNumber(enemy.level, `${job}.enemy.level`, 1);
     const combatRng = createDomainRandom(
@@ -674,13 +686,13 @@ const runCombatMatrixSeed = (seed: number) => Object.entries(DB.CLASSES).map(([j
         'combat-matrix-encounter',
         job,
     );
-    const { mStats: enemy } = spawnEnemy(
+    const enemy = requireModeledSpawn(spawnEnemy(
         mapEntry.map,
         player,
         [],
         { addLog: () => undefined },
         { rng: encounterRng },
-    );
+    ), `job-combat:${mapEntry.name}`);
     let state: GameState = {
         ...structuredClone(INITIAL_STATE),
         player,
@@ -813,13 +825,13 @@ const runProgressionSimulation = (
         const priorExp = player.exp || 0;
         const modeledMap = selectModeledMap(priorLevel, seed, action);
         const encounterRng = createDomainRandom(seed, MODEL_POLICY.id, MODEL_POLICY.version, 'encounter', action);
-        const { mStats: enemy } = spawnEnemy(
+        const enemy = requireModeledSpawn(spawnEnemy(
             modeledMap.map,
             { ...player, loc: modeledMap.name },
             [],
             { addLog: () => undefined },
             { rng: encounterRng },
-        );
+        ), `action:${modeledMap.name}`);
 
         const rawExp = finiteNumber(enemy.exp, 'enemy.exp', 1);
         const scaledExp = finiteNumber(scaleProgressionExpReward(player, rawExp), 'scaledExp', 1);
