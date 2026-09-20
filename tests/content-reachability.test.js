@@ -268,20 +268,27 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     assert.deepEqual(bucketAt(cost.gates.quests, 44).members.toSorted((a, b) => a - b), [101, 126]);
 
     // Wave 14 F2: 체인 버킷의 게이트는 **완주** 게이트(전 스텝 max)다 — 종착 스텝의
-    // 게이트가 아니다. `forgotten_god`은 스텝이 25 → 68 → 48로 역전돼 있어서 종착(48)으로
-    // 매기면 완주 비용을 116.95h 과소 계상한다. 그래서 에테르 관문(Lv68) 버킷은 6이다.
+    // 게이트가 아니다. 스텝은 순서대로만 처리되므로 완주하려면 전 스텝의 지역을 지나야 한다.
+    // `summary.eventChainTerminalSteps`는 이름과 달리 체인 수를 센다 — G1이 종착 스텝을
+    // 넷 옮겨도 13에 붙박여 있는 것이 그 증거다(이름 정정은 별도 트랙).
     assert.deepEqual(cost.summary, { eventChains: 13, eventChainSteps: 39, eventChainTerminalSteps: 13 });
     assert.equal(cost.gates.eventChainTerminals.reduce((sum, bucket) => sum + bucket.count, 0), 13);
-    // 2026-09 Wave 14 F2 stage(ii): forgotten_god의 스텝 역전을 교정해(에테르 관문 68 →
-    //   지하 미궁 44) 이 체인이 68 버킷에서 48 버킷으로 돌아왔다. stage(i)에서 68:6 / 48:3이던
-    //   것이 68:5 / 48:4로 — 즉 교정 전 리포트가 적던 숫자가 이제 **참이 됐다**.
+    // 2026-09 Wave 15 G1: 승천(마왕성 경로 게이트 Lv48 = 53.28h)을 걸치던 스텝 4개를
+    //   루프 안으로 옮겼다 — ancient_prophecy:2 → 마왕성(48) · dragon_legacy:2 → 천공 정원(40)
+    //   · world_tree_corruption:1 → 천공 정원(40) · :2 → 세계수 숲(40). 68:5 / 48:4 / 40:1이던
+    //   것이 68:2 / 48:5 / 40:3이 됐고, 버킷 수는 6 그대로다(23·32·35 불변).
     const etherGate = bucketAt(cost.gates.eventChainTerminals, 68);
-    assert.equal(etherGate.count, 5);
-    assert.equal(etherGate.members.includes('forgotten_god'), false);
+    assert.equal(etherGate.count, 2);
+    // 68에 남는 둘은 승천 **뒤에** 열리는 체인이라 애초에 걸치지 않는다.
+    assert.deepEqual(etherGate.members, ['divine_apostle_trial', 'rift_secret']);
     assert.equal(etherGate.cost.basis, 'interpolated');
     assert.equal(etherGate.cost.modeledActions, 6_809);
     assert.equal(etherGate.cost.modeledHours, 170.23);
-    assert.equal(bucketAt(cost.gates.eventChainTerminals, 48).count, 4);
+    assert.equal(bucketAt(cost.gates.eventChainTerminals, 48).count, 5);
+    assert.equal(bucketAt(cost.gates.eventChainTerminals, 40).count, 3);
+    // 50 버킷은 생기지 않는다 — world_tree_corruption의 스텝 1(고대 신전 도시 50)까지
+    // 옮겼기 때문이다. 종착만 옮겼다면 완주가 50(65.90h)에 남아 승천보다 뒤였다.
+    assert.equal(bucketAt(cost.gates.eventChainTerminals, 50), undefined);
 });
 
 test('the behind-the-gate summary states how many hours of content sits past each level', () => {
@@ -311,7 +318,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 41,
         equipment: 107,
         jobs: 5,
-        eventChainTerminalSteps: 9,
+        eventChainTerminalSteps: 7,
     });
     // 승천(마왕성 Lv48)은 체크포인트가 없다 — 보간이고, 리포트가 그렇게 표기한다.
     // Wave 13 E1: 승천 시점과 그 너머에 남는 직업이 5 → 0이다. 같은 행의
@@ -325,7 +332,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 41,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 9,
+        eventChainTerminalSteps: 7,
     });
     // 승천 게이트를 실제로 넘어선 첫 행(= 게이트 레벨이 48보다 큰 콘텐츠).
     assert.deepEqual(rowAt(49), {
@@ -337,7 +344,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 38,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 5,
+        eventChainTerminalSteps: 2,
     });
     assert.deepEqual(rowAt(60), {
         level: 60,
@@ -348,7 +355,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 26,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 5,
+        eventChainTerminalSteps: 2,
     });
     assert.deepEqual(rowAt(68), {
         level: 68,
@@ -359,7 +366,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 18,
         equipment: 20,
         jobs: 0,
-        eventChainTerminalSteps: 5,
+        eventChainTerminalSteps: 2,
     });
     const levels = cost.behind.map((row) => row.level);
     assert.deepEqual(levels, [...levels].sort((left, right) => left - right));

@@ -10,7 +10,7 @@ const CHAINS = [
         steps: [
             { step: 0, loc: '어둠의 동굴', event: { title: '예언의 돌판' } },
             { step: 1, loc: '고대 마법 탑', event: { title: '예언 해독사' } },
-            { step: 2, loc: '에테르 관문', event: { title: '원시의 문' } },
+            { step: 2, loc: '마왕성', event: { title: '원시의 문' } },
         ],
     },
     {
