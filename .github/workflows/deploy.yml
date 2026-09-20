@@ -48,11 +48,158 @@ jobs:
           name: dist
           path: dist/
 
-  # Deploy to Dev (develop branch)
-  deploy-dev:
+  # Deploy Firestore security rules (develop -> dev project, main -> prod project)
+  #
+  # 왜 이 job이 hosting보다 **먼저** 도는가: rules와 클라이언트의 관계는 비대칭이다.
+  # 새 rules는 구 클라이언트를 받아주지만, 구 rules는 새 클라이언트를 거부한다
+  # (Wave 13 E4 / Wave 14 F3). 그래서 hosting job들은 이 job을 `needs`로 기다린다.
+  #
+  # 실패 모드 트레이드오프 (의도적 선택):
+  #   - 이 job이 실패하면 **run 전체가 빨개진다**(조용한 성공 경로 없음). 시크릿이
+  #     비어 있어도 마찬가지다 — "배포됐다고 믿는데 안 된 상태"가 이 job이 없애려는
+  #     바로 그 문제이므로, 부재는 skip이 아니라 명시적 실패다.
+  #   - 다만 hosting job은 `needs`로 **순서만** 받고 실행 여부는 `needs.build.result`로
+  #     판단한다. rules 실패가 hosting 릴리스를 막지 않는다. 근거: rules 배포가
+  #     실패한 상태 = 오늘의 상태(수동 배포)이고, 클라이언트에는 이미
+  #     `permission-denied` degrade 경로가 있다(Wave 13 E4). 반대로 hosting을 막으면
+  #     저장소 안에서 검증 불가능한 원인(서비스 계정의 rules 권한 등)으로 무관한
+  #     릴리스 전체가 정지한다.
+  #   - 그 대가: rules 실패 시 "rules가 먼저"라는 **순서 보장은 성공 경로에만** 남는다.
+  #     실패 시에는 새 클라이언트 + 구 rules 조합이 되고, 그건 이 job 도입 이전과 같다.
+  deploy-rules:
     needs: build
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/develop'
+    timeout-minutes: 15
+    # PR에는 배포하지 않는다. develop이 먼저 도는 것이 설계다 — prod 시크릿의
+    # 서비스 계정에 `firebaserules.releases.update`가 있는지는 저장소 안에서 확인할
+    # 수 없으므로, 같은 경로를 dev 프로젝트에서 먼저 태워 본다.
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    # hosting job들과 같은 environment로 들어간다 — 시크릿이 repo 스코프든 environment
+    # 스코프든 같은 이름이 보이게 하기 위해서다. 삼항의 양쪽이 문자열 리터럴이라
+    # 아래 시크릿 선택과 달리 "비어서 반대쪽으로 떨어지는" 경로가 없다. 해당
+    # environment에 승인 규칙이 걸려 있으면 이 job과 hosting job이 각각 한 번씩
+    # 승인을 기다린다(조용한 진행이 아니라 눈에 보이는 대기다).
+    environment:
+      name: ${{ github.ref == 'refs/heads/main' && 'production' || 'development' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        # 전역 NODE_VERSION(20)이 아니라 22다 — ci.yml의 firestore-rules job이 실측으로
+        # 고정한 런타임이다(firebase-tools 15.x의 전이 의존 17개가 >=22를 요구한다).
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Resolve credentials
+        # 시크릿 선택을 식 안의 "A && B || C" 삼항으로 쓰지 않는다: 그 형태는 B가 비어
+        # 있으면 조용히 C로 떨어져 **prod 푸시가 dev 프로젝트에 배포되고 초록으로
+        # 끝난다**. 두 쌍을 모두 env로 받아 셸에서 분기하고, 고른 쪽이 비었으면 죽는다.
+        env:
+          SERVICE_ACCOUNT_PROD: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_PROD }}
+          SERVICE_ACCOUNT_DEV: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_DEV }}
+          PROJECT_ID_PROD: ${{ secrets.FIREBASE_PROJECT_ID_PROD }}
+          PROJECT_ID_DEV: ${{ secrets.FIREBASE_PROJECT_ID_DEV }}
+          CREDENTIALS_PATH: ${{ runner.temp }}/firebase-service-account.json
+        run: |
+          set -euo pipefail
+
+          if [ "$GITHUB_REF" = 'refs/heads/main' ]; then
+            TARGET='PROD'
+            SERVICE_ACCOUNT="$SERVICE_ACCOUNT_PROD"
+            PROJECT_ID="$PROJECT_ID_PROD"
+          else
+            TARGET='DEV'
+            SERVICE_ACCOUNT="$SERVICE_ACCOUNT_DEV"
+            PROJECT_ID="$PROJECT_ID_DEV"
+          fi
+          echo "target=$TARGET"
+
+          fatal=0
+          if [ -z "$SERVICE_ACCOUNT" ]; then
+            echo "::error title=Firestore rules deploy::FIREBASE_SERVICE_ACCOUNT_${TARGET} 시크릿이 비어 있다. rules는 배포되지 않는다."
+            fatal=1
+          fi
+          if [ -z "$PROJECT_ID" ]; then
+            echo "::error title=Firestore rules deploy::FIREBASE_PROJECT_ID_${TARGET} 시크릿이 비어 있다. rules는 배포되지 않는다."
+            fatal=1
+          fi
+          [ "$fatal" -eq 0 ] || exit 1
+
+          # 프로젝트 ID 모양 검증 — 빈 값/공백/개행을 여기서 잡는다. 아래에서
+          # $GITHUB_ENV에 쓰므로 개행이 섞이면 env 주입이 된다.
+          case "$PROJECT_ID" in
+            *[!a-zA-Z0-9-]*)
+              echo "::error title=Firestore rules deploy::FIREBASE_PROJECT_ID_${TARGET}가 프로젝트 ID 형식이 아니다(값은 로그에 쓰지 않는다)."
+              exit 1
+              ;;
+          esac
+
+          # 시크릿 JSON은 파일로만 넘긴다 — `echo`로 찍지 않는다.
+          umask 077
+          printf '%s' "$SERVICE_ACCOUNT" > "$CREDENTIALS_PATH"
+          export PROJECT_ID
+
+          node -e '
+            const fs = require("node:fs");
+            let parsed;
+            try {
+              parsed = JSON.parse(fs.readFileSync(process.env.CREDENTIALS_PATH, "utf8"));
+            } catch {
+              console.log("::error title=Firestore rules deploy::서비스 계정 시크릿이 JSON으로 파싱되지 않는다.");
+              process.exit(1);
+            }
+            if (parsed.type !== "service_account" || !parsed.client_email) {
+              console.log("::error title=Firestore rules deploy::서비스 계정 JSON이 아니다(type/client_email 부재).");
+              process.exit(1);
+            }
+            if (parsed.project_id && parsed.project_id !== process.env.PROJECT_ID) {
+              // 교차 프로젝트 IAM이 가능하므로 실패가 아니라 경고다. 값은 찍지 않는다.
+              console.log("::warning title=Firestore rules deploy::서비스 계정의 project_id가 FIREBASE_PROJECT_ID_* 와 다르다 — 의도한 프로젝트가 맞는지 확인할 것.");
+            }
+          '
+
+          printf 'PROJECT_ID=%s\n' "$PROJECT_ID" >> "$GITHUB_ENV"
+          printf 'GOOGLE_APPLICATION_CREDENTIALS=%s\n' "$CREDENTIALS_PATH" >> "$GITHUB_ENV"
+
+      - name: Deploy firestore.rules
+        id: deploy
+        # firebase-tools 버전 리터럴은 package.json의 `firebase:cli` 한 곳에만 있다
+        # (`test:rules`도 같은 스크립트를 경유한다). `--only firestore:rules`는 실제
+        # 서브타겟이다 — 콜론 없는 `--only firestore`로 쓰면 선언도 않은 indexes까지
+        # 대상이 된다. 인증은 위 스텝이 쓴 GOOGLE_APPLICATION_CREDENTIALS다
+        # (`--token`은 deprecated).
+        run: npm run rules:deploy -- --project "$PROJECT_ID"
+
+      - name: Report outcome
+        if: always()
+        run: |
+          set -euo pipefail
+          if [ '${{ steps.deploy.outcome }}' = 'success' ]; then
+            echo "firestore.rules deploy: OK" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "::error title=Firestore rules deploy::firestore.rules가 배포되지 않았다. hosting은 이어서 배포되므로, 새 클라이언트의 새 경로 쓰기는 구 rules에 거부된다(= 이 job 도입 이전 상태). 서비스 계정의 firebaserules.releases.update 권한과 대상 프로젝트의 Firestore 존재를 먼저 확인할 것."
+            {
+              echo "firestore.rules deploy: FAILED"
+              echo ""
+              echo "- hosting 배포는 계속 진행된다(의도적: rules 실패가 릴리스를 막지 않는다)."
+              echo "- 그동안 새 경로 쓰기는 구 rules가 거부한다. 클라이언트 degrade 경로가 그걸 받는다."
+              echo "- 확인 순서: 서비스 계정 권한(firebaserules.releases.update) -> 대상 프로젝트의 Firestore 존재 -> 시크릿과 projectId가 같은 프로젝트인지."
+            } >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Remove service account credentials
+        if: always()
+        run: rm -f "${{ runner.temp }}/firebase-service-account.json"
+
+  # Deploy to Dev (develop branch)
+  deploy-dev:
+    # `needs`는 **순서**를 위한 것이고, 실행 여부는 아래 `if`가 정한다 —
+    # deploy-rules가 실패해도 hosting은 나간다(위 트레이드오프 주석 참고).
+    needs: [build, deploy-rules]
+    runs-on: ubuntu-latest
+    if: ${{ !cancelled() && needs.build.result == 'success' && github.ref == 'refs/heads/develop' }}
     environment:
       name: development
       # If your IDE flags 'development' as invalid, ensure this environment exists in your GitHub Repository Settings.
@@ -76,9 +223,12 @@ jobs:
 
   # Deploy to Prod (main branch)
   deploy-prod:
-    needs: build
+    # rules가 hosting보다 먼저다(비대칭: 새 rules는 구 클라이언트를 받고, 구 rules는
+    # 새 클라이언트를 거부한다). `needs`로 순서를 받되, rules 실패가 릴리스를 막지
+    # 않도록 실행 여부는 `needs.build.result`로만 판단한다.
+    needs: [build, deploy-rules]
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main'
+    if: ${{ !cancelled() && needs.build.result == 'success' && github.ref == 'refs/heads/main' }}
     environment:
       name: production
     steps:
@@ -110,3 +260,8 @@ jobs:
 #   FIREBASE_SERVICE_ACCOUNT_PROD - Firebase service account JSON for prod project
 #   FIREBASE_PROJECT_ID_PROD - Prod Firebase project ID
 #   GEMINI_API_KEY - Gemini API key (for serverless functions)
+#
+# deploy-rules는 위 네 시크릿을 그대로 쓴다(새 이름을 만들지 않았다). 다만 hosting
+# 배포에는 필요 없던 권한이 하나 더 필요하다: 서비스 계정에 **Firebase Rules Admin**
+# (`firebaserules.releases.update`). hosting 전용으로 발급된 계정이면 rules 배포는
+# PERMISSION_DENIED로 죽고, 그때 run은 빨갛지만 hosting 배포는 계속된다.

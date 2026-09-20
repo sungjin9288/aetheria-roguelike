@@ -49,6 +49,13 @@ export const CONSTANTS = {
     USE_AI_PROXY: ENV.VITE_USE_AI_PROXY === 'true' || false,
     AI_PROXY_URL: ENV.VITE_AI_PROXY_URL || '/api/ai-proxy',
     MAX_LEVEL: 99,
+    // Wave 15 G2 — `firestore.rules`의 공개 묘비(`graves.gold <= 9999999`) 리터럴 사본.
+    //   실측(§18/§19): 공개 묘비 문서 6개 필드 중 `gold`만 클라이언트가 값을 보장하지
+    //   않으면서 동시에 도달 가능했다 — `Σ floor(player.gold/2 × dropBonus)`이고 상한도
+    //   묘비 개수 제한도 없다. rules는 완화하지 않는다 — 완화는 공개 문서의 유일한 위조
+    //   경계를 없애고, rules는 수동 배포라 효력 시점도 불확실하다(CLAUDE.md §8-6). 대신
+    //   업로드 페이로드에서만(회수용 로컬 묘비는 그대로) 이 값으로 클램프한다.
+    MAX_PUBLIC_GRAVE_GOLD: 9_999_999,
     START_HP: 150,
     START_MP: 50,
     START_GOLD: 200,

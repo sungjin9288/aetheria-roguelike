@@ -27,7 +27,7 @@ const hashReport = (report) => createHash('sha256')
     .update(JSON.stringify(canonicalizeContentReachability(report)))
     .digest('hex');
 
-const EXPECTED_SCHEMA_VERSION = 3;
+const EXPECTED_SCHEMA_VERSION = 4;
 
 /**
  * Wave 12 D1 하드 게이트 — 비용 축이 (1) 존재하고 (2) 앵커/보간을 구분하며
@@ -43,7 +43,7 @@ const assertCostAxis = (report) => {
         || !Number.isSafeInteger(secondsPerAction)
         || !Number.isSafeInteger(secondsPerHour)
         || cost.malformedGates.length > 0
-        || cost.unresolvedEventChainTerminals.length > 0) {
+        || cost.unresolvedEventChainCompletions.length > 0) {
         throw new Error('CONTENT_COST_POLICY_INVALID');
     }
     const anchorLevels = new Set(cost.anchors.map((anchor) => anchor.level));
@@ -56,19 +56,19 @@ const assertCostAxis = (report) => {
             || span.openCost.level !== span.openGateLevel) {
             throw new Error(`CONTENT_COST_CHAIN_SPAN_INVALID:${span.chain}`);
         }
-        const bucket = cost.gates.eventChainTerminals.find((entry) => entry.members.includes(span.chain));
+        const bucket = cost.gates.eventChainCompletions.find((entry) => entry.members.includes(span.chain));
         if (!bucket || bucket.gateLevel !== span.completionGateLevel) {
             throw new Error(`CONTENT_COST_CHAIN_GATE_NOT_COMPLETION:${span.chain}`);
         }
     }
-    const chainsInBuckets = cost.gates.eventChainTerminals.reduce((sum, bucket) => sum + bucket.count, 0);
+    const chainsInBuckets = cost.gates.eventChainCompletions.reduce((sum, bucket) => sum + bucket.count, 0);
     if (chainsInBuckets !== cost.eventChainSpans.length) throw new Error('CONTENT_COST_CHAIN_SPAN_COUNT_MISMATCH');
     const rows = [
         ...cost.gates.maps,
         ...cost.gates.quests,
         ...cost.gates.equipmentTiers,
         ...cost.gates.jobs,
-        ...cost.gates.eventChainTerminals,
+        ...cost.gates.eventChainCompletions,
         ...cost.eventChainSpans.flatMap((span) => [{ cost: span.openCost }, { cost: span.completionCost }]),
     ].map(({ cost: modeled }) => modeled);
     for (const row of rows) {

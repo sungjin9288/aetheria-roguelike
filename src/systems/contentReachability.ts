@@ -112,7 +112,7 @@ export interface CostBehindRow {
     quests: number;
     equipment: number;
     jobs: number;
-    eventChainTerminalSteps: number;
+    eventChains: number;
 }
 
 export interface ContentCostReport {
@@ -133,24 +133,23 @@ export interface ContentCostReport {
     summary: {
         eventChains: number;
         eventChainSteps: number;
-        eventChainTerminalSteps: number;
     };
     gates: {
         maps: CostBucket[];
         quests: CostBucket[];
         equipmentTiers: EquipmentTierCost[];
         jobs: CostBucket[];
-        eventChainTerminals: CostBucket[];
+        eventChainCompletions: CostBucket[];
     };
     mapGateDivergence: MapGateDivergence[];
     eventChainSpans: EventChainSpan[];
-    unresolvedEventChainTerminals: string[];
+    unresolvedEventChainCompletions: string[];
     malformedGates: string[];
     behind: CostBehindRow[];
 }
 
 export interface ContentReachabilityReport {
-    schemaVersion: 3;
+    schemaVersion: 4;
     catalog: {
         maps: number;
         monsters: number;
@@ -819,7 +818,7 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
     const terminals = eventChainStepLocations();
     const terminalEntries: GateEntry[] = [];
     const eventChainSpans: EventChainSpan[] = [];
-    const unresolvedEventChainTerminals: string[] = [];
+    const unresolvedEventChainCompletions: string[] = [];
     const resolveLocGate = (loc: string | null) => {
         if (loc === null) return null;
         const gateLevel = routeGates.get(loc);
@@ -831,7 +830,7 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
         // 스텝 하나라도 값을 매길 수 없으면 완주 게이트는 max가 아니라 **미상**이다 —
         // 남은 스텝만으로 max를 취하면 비용을 조용히 과소 계상하게 된다.
         if (openGateLevel === null || stepGates.some((gateLevel) => gateLevel === null)) {
-            unresolvedEventChainTerminals.push(terminal.chain);
+            unresolvedEventChainCompletions.push(terminal.chain);
             continue;
         }
         const completionGateLevel = Math.max(...stepGates.map((gateLevel) => Number(gateLevel)));
@@ -851,7 +850,7 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
         quests: bucketGates(questEntries, anchors, secondsPerAction),
         equipmentTiers,
         jobs: bucketGates(jobEntries, anchors, secondsPerAction),
-        eventChainTerminals: bucketGates(terminalEntries, anchors, secondsPerAction),
+        eventChainCompletions: bucketGates(terminalEntries, anchors, secondsPerAction),
     };
 
     const behindLevels = [...new Set([
@@ -878,7 +877,7 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
                 .filter((tier) => tier.gateLevel >= level)
                 .reduce((sum, tier) => sum + tier.count, 0),
             jobs: countAtOrAbove(jobEntries, level),
-            eventChainTerminalSteps: countAtOrAbove(terminalEntries, level),
+            eventChains: countAtOrAbove(terminalEntries, level),
         };
     });
 
@@ -905,12 +904,11 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
         summary: {
             eventChains: EVENT_CHAINS.length,
             eventChainSteps: terminals.reduce((sum, terminal) => sum + terminal.steps, 0),
-            eventChainTerminalSteps: terminals.length,
         },
         gates,
         mapGateDivergence,
         eventChainSpans,
-        unresolvedEventChainTerminals: unresolvedEventChainTerminals.sort(codePointCompare),
+        unresolvedEventChainCompletions: unresolvedEventChainCompletions.sort(codePointCompare),
         malformedGates: malformedGates.sort(codePointCompare),
         behind,
     };
@@ -948,7 +946,7 @@ export const buildContentReachabilityReport = (
         signatures: signatures.routes.length,
     };
     const report: ContentReachabilityReport = {
-        schemaVersion: 3,
+        schemaVersion: 4,
         catalog,
         maps: {
             start: START_LOCATION,

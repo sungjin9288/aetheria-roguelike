@@ -37,6 +37,7 @@ import { APP_ID, CONSTANTS } from '../src/data/constants.js';
 import { FeedbackValidator } from '../src/systems/FeedbackValidator.ts';
 import { TokenQuotaManager } from '../src/systems/TokenQuotaManager.ts';
 import { createCloudAutosave } from '../src/hooks/createCloudAutosave.ts';
+import { clampPublicGraveGold } from '../src/utils/graveUtils.ts';
 import { makePlayerFixture } from './helpers/render.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -229,18 +230,24 @@ suite('site 2 — 리더보드는 본인 entry만, 닉네임 20자 상한이 실
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 쓰기 지점 3 — `useFirebaseSync.ts:585` (public/data/graves/{uid})
+// 쓰기 지점 3 — `useFirebaseSync.ts:588` (public/data/graves/{uid})
 //   훅 이펙트 안의 인라인 리터럴이라 함수로 뽑혀 있지 않다. 같은 입력에서 같은 식으로
-//   만든다(원본과 나란히 읽을 것).
+//   만든다(원본과 나란히 읽을 것). `gold` 필드만은 예외 — production과 같은 exported
+//   함수 `clampPublicGraveGold`를 그대로 호출한다(Wave 15 G2, 사본이 아니라 같은 함수).
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** useFirebaseSync.ts:585 의 페이로드 식을 그대로 옮긴 것. */
+/**
+ * useFirebaseSync.ts:589-598 의 페이로드 식을 그대로 옮긴 것 — `gold` 필드는 production과
+ * 똑같이 `clampPublicGraveGold`(`src/utils/graveUtils.ts`, Wave 15 G2)를 그대로 호출한다.
+ * 여기서 클램프를 빼거나 손으로 재구현하면 "site 3 실제 페이로드를 태운다"는 파일
+ * 전체의 전제가 production과 갈라진다.
+ */
 const buildGraveUploadPayload = ({ player, allItems, totalGold, uid }) => ({
     playerName: player.name || '무명 용사',
     level: player.level || 1,
     loc: player.loc || '알 수 없는 곳',
     items: allItems,
-    gold: totalGold,
+    gold: clampPublicGraveGold(totalGold),
     guardPower: player.atk || 10,
     createdAt: serverTimestamp(),
     uid,
@@ -265,17 +272,49 @@ suite('site 3 — 사망 시 공개 묘비 업로드가 통과한다', async () 
     ));
 });
 
-// rules가 거는 상한 중 **클라이언트가 보장하지 않는 것**을 실행으로 드러낸다.
-//   `grave.gold = floor(player.gold / 2 × dropBonus)`이고 `MAX_GOLD` 상수는 없다.
-//   즉 아래 거부는 가설이 아니라 도달 가능한 상태다 — 묘비 업로드는
-//   `.catch(console.warn)`이라 그 순간 조용히 사라진다.
-const GRAVE_UNGUARANTEED_CAPS = [
-    ['gold 상한 9,999,999', { totalGold: 10_000_000 }],
-    ['guardPower 상한 9,999', { player: { atk: 10_000 } }],
-    ['level 상한 99', { player: { level: 100 } }],
+// ─────────────────────────────────────────────────────────────────────────────
+// `level`과 `gold`는 이제 값 자체가 클라이언트로 보장된다 — `level`은 레벨업 로직이
+//   `CONSTANTS.MAX_LEVEL`에서 멈춰서(`CombatEngine.outcome.ts`), `gold`는 Wave 15 G2가
+//   업로드 페이로드에 건 `clampPublicGraveGold`(`src/utils/graveUtils.ts`,
+//   `useFirebaseSync.ts:594`가 호출)가 보장한다. 그래서 아래는 "미보장 상태를 실측"하는 게
+//   아니라 **네거티브 컨트롤**이다 — `buildGraveUploadPayload`가 만드는(=이미 상한 안쪽인)
+//   페이로드를 일부러 다시 덮어써 그 보장이 사라지거나 우회됐다고 가정했을 때도 rules가
+//   마지막 방어선으로 거부하는지를 실행으로 고정해 둔다.
+// ─────────────────────────────────────────────────────────────────────────────
+const GRAVE_NEGATIVE_CONTROLS = [
+    ['level 상한 99 초과 (CONSTANTS.MAX_LEVEL이 보장 — 도달 불가)', (payload) => ({ ...payload, level: 100 })],
+    ['gold 상한 9,999,999 초과 (CONSTANTS.MAX_PUBLIC_GRAVE_GOLD이 보장 — 도달 불가)', (payload) => ({ ...payload, gold: 10_000_000 })],
 ];
 
-suite(`site 3 — 묘비의 상한 ${GRAVE_UNGUARANTEED_CAPS.length}종은 클라이언트가 보장하지 않는다(도달 시 조용히 거부)`, async () => {
+suite(`site 3 — 묘비 네거티브 컨트롤 ${GRAVE_NEGATIVE_CONTROLS.length}종: 보장되는 값이므로 초과 페이로드는 rules가 거부해야 한다`, async () => {
+    const env = await getEnv();
+    await env.clearFirestore();
+    const db = await asPlayer();
+
+    for (const [label, override] of GRAVE_NEGATIVE_CONTROLS) {
+        const player = makePlayerFixture({ name: '테스트용사', level: 30, loc: '어둠의 동굴', atk: 120 });
+        const basePayload = buildGraveUploadPayload({
+            player, allItems: [], totalGold: 12_345, uid: PLAYER_UID,
+        });
+        await assertFails(setDoc(
+            doc(db, 'artifacts', APP_ID, 'public', 'data', 'graves', PLAYER_UID),
+            override(basePayload),
+        ), label);
+    }
+});
+
+// 남는 진짜 미보장은 `guardPower` 하나다 — rules 상한 9,999인데 `player.atk`에는
+//   업로드 시점 캡이 없다(`guardPower: player.atk || 10`). 도달 가능성 실측(§18/§19):
+//     base atk 12 (INITIAL_STATE)
+//   + 레벨업 성장 3 × 98회 (Lv1→`CONSTANTS.MAX_LEVEL` 99, `BALANCE.ATK_PER_LEVEL`) = 294
+//   + 그 외 flat 보너스(코덱스/프레스티지 등) 4 × 9 = 36
+//   + 이벤트 체인 `stat_bonus` atk 총합(`src/data/eventChains.ts`, 8건 합) = 125
+//   = 467 (상한 9,999의 4.7% — 21.4배 여유, 도달 불가). 미보장이지만 위협은 아니다.
+const GRAVE_UNGUARANTEED_CAPS = [
+    ['guardPower 상한 9,999 (도달 불가 — 한 런 최대 467, 상한의 4.7%)', { player: { atk: 10_000 } }],
+];
+
+suite(`site 3 — 묘비의 상한 중 클라이언트가 보장하지 않는 것은 ${GRAVE_UNGUARANTEED_CAPS.length}종(guardPower)뿐이다(도달 시 조용히 거부)`, async () => {
     const env = await getEnv();
     await env.clearFirestore();
     const db = await asPlayer();

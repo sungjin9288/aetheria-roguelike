@@ -11,7 +11,7 @@ import { auth, db, hasFirebaseConfig } from '../firebase';
 import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
 import { migrateData } from '../utils/gameUtils';
 import { hasMigratedPlayer } from '../utils/dataMigration';
-import { normalizeGraves, getGraveItems } from '../utils/graveUtils';
+import { normalizeGraves, getGraveItems, clampPublicGraveGold } from '../utils/graveUtils';
 import { getDeviceQaScenario, isMockRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
@@ -581,13 +581,17 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
         const graveEntries = normalizeGraves(grave);
         const allItems = graveEntries.flatMap((g) => getGraveItems(g)).slice(0, 3);
         const totalGold = graveEntries.reduce((sum, g) => sum + (g?.gold || 0), 0);
+        // Wave 15 G2 — `firestore.rules`의 `graves.gold <= 9,999,999` 상한을 이 합산만
+        // 보장하지 않았다(§18/§19 실측). 이 문서는 공개 침공 대상이라 클램프가 회수용
+        // 로컬 `grave`(위 graveEntries 원본, player.grave에 그대로 남는다)에는 절대
+        // 미치지 않는다 — `clampPublicGraveGold`는 이 업로드 페이로드에만 쓴다.
         const graveDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'graves', uid);
         setDoc(graveDocRef, {
             playerName: player.name || '무명 용사',
             level: player.level || 1,
             loc: player.loc || '알 수 없는 곳',
             items: allItems,
-            gold: totalGold,
+            gold: clampPublicGraveGold(totalGold),
             guardPower: player.atk || 10,
             createdAt: serverTimestamp(),
             uid,

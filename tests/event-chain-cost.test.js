@@ -69,12 +69,12 @@ test('체인 스텝은 순서대로만 진행된다 — 중간 스텝을 건너�
 
 // ── (2) 리포트의 체인 게이트는 완주 게이트다 ────────────────────────────────
 
-test('cost.gates.eventChainTerminals는 전 스텝 max(완주 게이트)로 버킷을 만든다', () => {
+test('cost.gates.eventChainCompletions는 전 스텝 max(완주 게이트)로 버킷을 만든다', () => {
     const { cost } = buildContentReachabilityReport();
     const gates = routeGates();
 
     for (const chain of EVENT_CHAINS) {
-        const bucket = cost.gates.eventChainTerminals.find((entry) => entry.members.includes(chain.id));
+        const bucket = cost.gates.eventChainCompletions.find((entry) => entry.members.includes(chain.id));
         assert.ok(bucket, `${chain.id}가 버킷에 없다`);
         assert.equal(
             bucket.gateLevel,
@@ -83,9 +83,19 @@ test('cost.gates.eventChainTerminals는 전 스텝 max(완주 게이트)로 버�
         );
     }
 
+    // 2026-09 Wave 15 G1: 승천을 걸치던 스텝 4개를 루프 안으로 옮겼다
+    //   (ancient_prophecy:2 → 마왕성 48 · dragon_legacy:2 → 천공 정원 40 ·
+    //    world_tree_corruption:1 → 천공 정원 40 · :2 → 세계수 숲 40).
+    //   버킷 수는 6 그대로이고 23·32·35도 그대로다 — 움직인 것은 40·48·68뿐이다.
     assert.deepEqual(
-        cost.gates.eventChainTerminals.map(({ gateLevel, count }) => [gateLevel, count]),
-        [[23, 1], [32, 1], [35, 1], [40, 1], [48, 4], [68, 5]],
+        cost.gates.eventChainCompletions.map(({ gateLevel, count }) => [gateLevel, count]),
+        [[23, 1], [32, 1], [35, 1], [40, 3], [48, 5], [68, 2]],
+    );
+    // 68에 남는 둘은 애초에 승천 **뒤에** 열리는 체인이다(열림 65.90h / 170.23h) —
+    // 걸치지 않으므로 옮기지 않는다. 이 둘이 68의 정상 상태다.
+    assert.deepEqual(
+        cost.gates.eventChainCompletions.find((bucket) => bucket.gateLevel === 68).members,
+        ['divine_apostle_trial', 'rift_secret'],
     );
 });
 
@@ -163,7 +173,7 @@ test('cost.eventChainSpans는 체인 13개의 열림/완주를 비용과 함께 
     assert.equal(cost.eventChainSpans.length, 13);
     assert.equal(
         cost.eventChainSpans.length,
-        cost.gates.eventChainTerminals.reduce((sum, bucket) => sum + bucket.count, 0),
+        cost.gates.eventChainCompletions.reduce((sum, bucket) => sum + bucket.count, 0),
     );
     assert.deepEqual(
         cost.eventChainSpans.map((span) => span.chain).toSorted(),
@@ -183,10 +193,13 @@ test('cost.eventChainSpans는 체인 13개의 열림/완주를 비용과 함께 
     }
 });
 
-// 2026-09 Wave 14 F2 stage(ii): forgotten_god의 스텝 역전을 교정해 완주가 승천 지점(48)
-//   '위'가 아니라 '같은 칸'이 됐다 — 걸쳐 있는 체인이 4개 → 3개다. 남은 셋은 여전히
-//   2.05h~21.08h에 열려 170.23h에 끝나므로 이월이 없으면 매 승천마다 0으로 돌아간다.
-test('승천 이전에 열리고 그 뒤에 완주되는 체인 3개가 리포트에 드러난다', () => {
+// 2026-09 Wave 15 G1: 걸쳐 있던 셋(`ancient_prophecy` 2.05h→170.23h · `dragon_legacy`
+//   2.73h→170.23h · `world_tree_corruption` 21.08h→170.23h)의 스텝 4개를 루프 안으로
+//   옮겨 **걸치는 체인이 0개**가 됐다. Wave 14 F2의 진행도 이월은 여전히 유효하지만
+//   (승천은 레벨 게이트가 아니라 플레이어가 고르는 시점이라 체인을 열어 둔 채 승천하는
+//   런은 여전히 가능하다 — `tests/permanent-progress-copy.test.js`가 고정한다),
+//   "자기 런 안에서 닫히는 이야기"가 0개에서 11개가 됐다.
+test('승천 지점을 걸치는 체인이 0개다 — 13개 전부 루프 안에서 닫히거나 승천 뒤에 열린다', () => {
     const { cost } = buildContentReachabilityReport();
     const ascensionGate = cost.gates.maps.find((bucket) => bucket.members.includes('마왕성'));
     assert.equal(ascensionGate.gateLevel, 48);
@@ -194,25 +207,35 @@ test('승천 이전에 열리고 그 뒤에 완주되는 체인 3개가 리포�
     const straddling = cost.eventChainSpans
         .filter((span) => span.openGateLevel < ascensionGate.gateLevel
             && span.completionGateLevel > ascensionGate.gateLevel)
-        .map((span) => [span.chain, span.openCost.modeledHours, span.completionCost.modeledHours])
-        .toSorted((left, right) => left[1] - right[1]);
+        .map((span) => span.chain);
+    assert.deepEqual(straddling, []);
 
-    // 이 넷은 리셋 지점의 양쪽에 걸쳐 있다 — 진행도를 이월하지 않으면
-    // 플레이어는 시작한 이야기를 끝내기 전에 매번 0으로 돌아간다
-    // (그 이월은 tests/permanent-progress-copy.test.js가 고정한다).
-    assert.deepEqual(straddling, [
-        ['ancient_prophecy', 2.05, 170.23],
-        ['dragon_legacy', 2.73, 170.23],
-        ['world_tree_corruption', 21.08, 170.23],
-    ]);
-    // forgotten_god은 더 이상 걸쳐 있지 않다 — 열림 5.23h, 완주 53.28h로 승천과 같은 칸이다.
-    const forgottenGod = cost.eventChainSpans.find((span) => span.chain === 'forgotten_god');
-    assert.equal(forgottenGod.completionGateLevel, ascensionGate.gateLevel);
-    // 전부 승천(53.28h)보다 일찍 열리고 전부 그보다 늦게 끝난다.
-    for (const [, openHours, completionHours] of straddling) {
-        assert.ok(openHours < ascensionGate.cost.modeledHours);
-        assert.ok(completionHours > ascensionGate.cost.modeledHours);
-    }
+    // 옮긴 셋은 승천 지점 **이하**에서 닫힌다 — 셋 다 열림 비용은 한 자리도 안 움직였다.
+    const spanOf = (chain) => cost.eventChainSpans.find((span) => span.chain === chain);
+    assert.deepEqual(
+        ['ancient_prophecy', 'dragon_legacy', 'world_tree_corruption'].map((chain) => {
+            const span = spanOf(chain);
+            return [chain, span.openCost.modeledHours, span.completionGateLevel, span.completionCost.modeledHours];
+        }),
+        [
+            ['ancient_prophecy', 2.05, 48, 53.28],
+            ['dragon_legacy', 2.73, 40, 21.08],
+            ['world_tree_corruption', 21.08, 40, 21.08],
+        ],
+    );
+
+    // 13개 전부가 같은 이분법에 들어간다: 승천 이하에서 닫히거나(11개),
+    // 애초에 승천 뒤에 열린다(2개 — divine_apostle_trial · rift_secret).
+    const closesInLoop = cost.eventChainSpans
+        .filter((span) => span.completionGateLevel <= ascensionGate.gateLevel)
+        .map((span) => span.chain);
+    const opensAfterAscension = cost.eventChainSpans
+        .filter((span) => span.openGateLevel > ascensionGate.gateLevel)
+        .map((span) => span.chain)
+        .toSorted();
+    assert.equal(closesInLoop.length, 11);
+    assert.deepEqual(opensAfterAscension, ['divine_apostle_trial', 'rift_secret']);
+    assert.equal(closesInLoop.length + opensAfterAscension.length, cost.eventChainSpans.length);
 });
 
 test('스텝 지역을 하나라도 못 읽으면 완주 게이트는 max가 아니라 미상이다', () => {
@@ -228,13 +251,13 @@ test('스텝 지역을 하나라도 못 읽으면 완주 게이트는 max가 아
     // 2026-09 Wave 14 F2 stage(ii): forgotten_god이 더 이상 에테르 관문을 쓰지 않으므로
     //   같은 맵을 종착으로 쓰는 체인들로 이 불변식을 고정한다 — 어떤 체인이든 스텝 하나를
     //   못 읽으면 남은 스텝의 max가 아니라 '미상'이어야 한다는 것이 요점이다.
-    const unreachable = cost.unresolvedEventChainTerminals;
+    const unreachable = cost.unresolvedEventChainCompletions;
     assert.ok(unreachable.length > 0, '스텝 지역이 사라진 체인이 미상으로 잡혀야 한다');
     assert.ok(unreachable.includes('rift_secret'), '에테르 관문을 쓰는 체인이 미상이어야 한다');
     for (const chain of unreachable) {
         assert.equal(cost.eventChainSpans.some((span) => span.chain === chain), false);
         assert.equal(
-            cost.gates.eventChainTerminals.some((bucket) => bucket.members.includes(chain)),
+            cost.gates.eventChainCompletions.some((bucket) => bucket.members.includes(chain)),
             false,
         );
     }

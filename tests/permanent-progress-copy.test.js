@@ -139,9 +139,16 @@ test('ASCEND는 완주 기록을 지우지 않는다 (승천으로 시즌 이력
 //
 // 체인은 "열렸다가 닫히지 않는" 유일한 축이었다 — 4개가 승천(Lv48 ≈ 53.28h) 이전에
 // 열리는데(ancient_prophecy 2.05h · dragon_legacy 2.73h · forgotten_god 5.23h ·
-// world_tree_corruption 21.08h) 완주는 전부 그보다 깊고, `ASCEND`의
+// world_tree_corruption 21.08h) 완주가 전부 승천보다 깊었고, `ASCEND`의
 // `...INITIAL_STATE.player`가 그 사이에서 진행도를 0으로 되돌렸다. 지식 축의 나머지
 // (stats.discoveryChains / visitedMaps / codex / titles)는 전부 계승되는데 이것만이었다.
+//
+// 2026-09 Wave 15 G1이 그 넷의 완주 게이트를 승천 지점 **이하**로 내렸다
+// (ancient_prophecy 48 · dragon_legacy 40 · forgotten_god 48 · world_tree_corruption 40 —
+// `tests/event-chain-cost.test.js`가 걸치는 체인 0개를 고정한다). 즉 "완주는 전부 그보다
+// 깊다"는 더 이상 참이 아니다. 그래도 이 이월은 남는다 — 승천은 레벨에 도달해야 하는
+// 게이트가 아니라 **플레이어가 고르는 시점**이라 체인을 열어 둔 채 승천하는 런은 여전히
+// 가능하고, 그때 진행도가 0으로 돌아가면 이야기가 끊긴다. 이월은 그 경우의 안전망이다.
 //
 // **함정**: `eventChainProgress`는 용도가 둘이다 — 예약 키 `boundedEncounterReceipts`가
 // 원정 조우 영수증 레저를 겸한다. 통째로 이월하면 그 영수증이 승천을 넘어가 같은

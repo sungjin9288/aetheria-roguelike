@@ -1,5 +1,6 @@
 import type { Item, Player } from '../types/index.js';
 import { MAPS } from '../data/maps.js';
+import { CONSTANTS } from '../data/constants.js';
 
 /**
  * 묘비(grave) 데이터 1건 — 로컬 세이브의 회수 대상과 공개 침공 대상 문서를 함께 표현한다.
@@ -71,6 +72,20 @@ export const buildGraveData = (player: Player, random: () => number, now: () => 
         timestamp: now()
     };
 };
+
+/**
+ * 공개 침공 대상 문서(Firestore `public/data/graves/{uid}`)에 올리는 `gold`에만 적용하는
+ * 클램프(Wave 15 G2) — `firestore.rules`의 `gold <= 9,999,999` 상한을 클라이언트가 보장
+ * 하지 않으면서 동시에 도달 가능했던 유일한 필드였다(§18/§19 실측: `Σ floor(player.gold/2
+ * × dropBonus)`, `MAX_GOLD` 상수 0건, 묘비 개수 상한 없음). **위 `buildGraveData`(회수용
+ * 로컬 묘비)에는 적용하지 않는다** — 그 값은 플레이어의 진짜 골드이고 클램프하면 사라진다.
+ * rules 자체는 완화하지 않는다(완화는 공개 문서의 유일한 위조 경계를 없애고, rules는
+ * 수동 배포라 효력 시점도 불확실하다 — CLAUDE.md §8-6). `useFirebaseSync.ts`의 업로드
+ * 페이로드에서만 호출한다.
+ */
+export const clampPublicGraveGold = (totalGold: number): number => (
+    Math.min(totalGold, CONSTANTS.MAX_PUBLIC_GRAVE_GOLD)
+);
 
 export const normalizeGraves = (grave: GraveInput): GraveEntry[] => {
     if (!grave) return [];

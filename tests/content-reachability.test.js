@@ -21,7 +21,7 @@ test('canonical content has the approved production catalog counts and routes', 
     const report = buildContentReachabilityReport();
 
     // Wave 14 F2: cost.eventChainSpans 신설 + 체인 게이트가 종착 → 완주(전 스텝 max)로.
-    assert.equal(report.schemaVersion, 3);
+    assert.equal(report.schemaVersion, 4);
     assert.deepEqual(report.catalog, {
         maps: 52,
         monsters: 254,
@@ -173,7 +173,7 @@ test('cost axis anchors come from the progression checkpoints plus the simulatio
     const actions = cost.anchors.map((anchor) => anchor.modeledActions);
     assert.deepEqual(actions, [...actions].sort((left, right) => left - right));
     assert.deepEqual(cost.malformedGates, []);
-    assert.deepEqual(cost.unresolvedEventChainTerminals, []);
+    assert.deepEqual(cost.unresolvedEventChainCompletions, []);
 });
 
 test('every cost row declares whether it is anchored or interpolated, and interpolation is reproducible', () => {
@@ -184,7 +184,7 @@ test('every cost row declares whether it is anchored or interpolated, and interp
         ...cost.gates.quests,
         ...cost.gates.equipmentTiers,
         ...cost.gates.jobs,
-        ...cost.gates.eventChainTerminals,
+        ...cost.gates.eventChainCompletions,
     ].map((bucket) => bucket.cost);
 
     assert.ok(rows.length > 0);
@@ -268,20 +268,29 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     assert.deepEqual(bucketAt(cost.gates.quests, 44).members.toSorted((a, b) => a - b), [101, 126]);
 
     // Wave 14 F2: 체인 버킷의 게이트는 **완주** 게이트(전 스텝 max)다 — 종착 스텝의
-    // 게이트가 아니다. `forgotten_god`은 스텝이 25 → 68 → 48로 역전돼 있어서 종착(48)으로
-    // 매기면 완주 비용을 116.95h 과소 계상한다. 그래서 에테르 관문(Lv68) 버킷은 6이다.
-    assert.deepEqual(cost.summary, { eventChains: 13, eventChainSteps: 39, eventChainTerminalSteps: 13 });
-    assert.equal(cost.gates.eventChainTerminals.reduce((sum, bucket) => sum + bucket.count, 0), 13);
-    // 2026-09 Wave 14 F2 stage(ii): forgotten_god의 스텝 역전을 교정해(에테르 관문 68 →
-    //   지하 미궁 44) 이 체인이 68 버킷에서 48 버킷으로 돌아왔다. stage(i)에서 68:6 / 48:3이던
-    //   것이 68:5 / 48:4로 — 즉 교정 전 리포트가 적던 숫자가 이제 **참이 됐다**.
-    const etherGate = bucketAt(cost.gates.eventChainTerminals, 68);
-    assert.equal(etherGate.count, 5);
-    assert.equal(etherGate.members.includes('forgotten_god'), false);
+    // 게이트가 아니다. 스텝은 순서대로만 처리되므로 완주하려면 전 스텝의 지역을 지나야 한다.
+    // 2026-09 Wave 15 G4: `summary`에 있던 `eventChainTerminalSteps`를 지웠다 — 그 값은
+    // `terminals.length`이고 `terminals`는 체인당 한 행이라 **언제나** `eventChains`와
+    // 같았다(G1이 종착 스텝을 넷 옮겨도 둘 다 13에 붙박여 있었던 것이 그 증거다).
+    // 같은 수를 두 이름으로 싣던 키이므로 삭제가 재측정이 아니라 중복 제거다.
+    assert.deepEqual(cost.summary, { eventChains: 13, eventChainSteps: 39 });
+    assert.equal(cost.gates.eventChainCompletions.reduce((sum, bucket) => sum + bucket.count, 0), 13);
+    // 2026-09 Wave 15 G1: 승천(마왕성 경로 게이트 Lv48 = 53.28h)을 걸치던 스텝 4개를
+    //   루프 안으로 옮겼다 — ancient_prophecy:2 → 마왕성(48) · dragon_legacy:2 → 천공 정원(40)
+    //   · world_tree_corruption:1 → 천공 정원(40) · :2 → 세계수 숲(40). 68:5 / 48:4 / 40:1이던
+    //   것이 68:2 / 48:5 / 40:3이 됐고, 버킷 수는 6 그대로다(23·32·35 불변).
+    const etherGate = bucketAt(cost.gates.eventChainCompletions, 68);
+    assert.equal(etherGate.count, 2);
+    // 68에 남는 둘은 승천 **뒤에** 열리는 체인이라 애초에 걸치지 않는다.
+    assert.deepEqual(etherGate.members, ['divine_apostle_trial', 'rift_secret']);
     assert.equal(etherGate.cost.basis, 'interpolated');
     assert.equal(etherGate.cost.modeledActions, 6_809);
     assert.equal(etherGate.cost.modeledHours, 170.23);
-    assert.equal(bucketAt(cost.gates.eventChainTerminals, 48).count, 4);
+    assert.equal(bucketAt(cost.gates.eventChainCompletions, 48).count, 5);
+    assert.equal(bucketAt(cost.gates.eventChainCompletions, 40).count, 3);
+    // 50 버킷은 생기지 않는다 — world_tree_corruption의 스텝 1(고대 신전 도시 50)까지
+    // 옮겼기 때문이다. 종착만 옮겼다면 완주가 50(65.90h)에 남아 승천보다 뒤였다.
+    assert.equal(bucketAt(cost.gates.eventChainCompletions, 50), undefined);
 });
 
 test('the behind-the-gate summary states how many hours of content sits past each level', () => {
@@ -297,7 +306,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 143,
         equipment: 229,
         jobs: 18,
-        eventChainTerminalSteps: 13,
+        eventChains: 13,
     });
     // Wave 14 F4: 퀘스트 101이 59 → 44로 내려와 45 이후의 모든 행에서 `quests`가 1씩 줄어든다
     //   (45·48: 42 → 41, 49: 39 → 38, 50: 38 → 37, 52: 32 → 31, 55: 30 → 29). 같은 행의
@@ -311,7 +320,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 41,
         equipment: 107,
         jobs: 5,
-        eventChainTerminalSteps: 9,
+        eventChains: 7,
     });
     // 승천(마왕성 Lv48)은 체크포인트가 없다 — 보간이고, 리포트가 그렇게 표기한다.
     // Wave 13 E1: 승천 시점과 그 너머에 남는 직업이 5 → 0이다. 같은 행의
@@ -325,7 +334,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 41,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 9,
+        eventChains: 7,
     });
     // 승천 게이트를 실제로 넘어선 첫 행(= 게이트 레벨이 48보다 큰 콘텐츠).
     assert.deepEqual(rowAt(49), {
@@ -337,7 +346,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 38,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 5,
+        eventChains: 2,
     });
     assert.deepEqual(rowAt(60), {
         level: 60,
@@ -348,7 +357,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 26,
         equipment: 65,
         jobs: 0,
-        eventChainTerminalSteps: 5,
+        eventChains: 2,
     });
     assert.deepEqual(rowAt(68), {
         level: 68,
@@ -359,7 +368,7 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 18,
         equipment: 20,
         jobs: 0,
-        eventChainTerminalSteps: 5,
+        eventChains: 2,
     });
     const levels = cost.behind.map((row) => row.level);
     assert.deepEqual(levels, [...levels].sort((left, right) => left - right));
@@ -447,7 +456,7 @@ test('cost axis is unavailable — not invented — when the source has no progr
         ...report.cost.gates.quests,
         ...report.cost.gates.equipmentTiers,
         ...report.cost.gates.jobs,
-        ...report.cost.gates.eventChainTerminals,
+        ...report.cost.gates.eventChainCompletions,
     ].map((bucket) => bucket.cost);
     assert.ok(rows.length > 0);
     for (const row of rows) {

@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "82513d3bb147dbcdcbfe75717447bd6cb04c90f193a8b2585925d2ef51439664",
+  "reportHash": "c617ce4d3621f237ffd954ffb7d9e9213efeb9969642c06715bddbd529e380af",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -266,8 +266,8 @@
       {
         "id": "chain:ancient_prophecy:2:0",
         "occurrenceClass": "one-time-chain",
-        "location": "에테르 관문",
-        "mapLevel": 68,
+        "location": "마왕성",
+        "mapLevel": 48,
         "outcomeType": "chain_advance",
         "rewardType": "relic",
         "itemName": null,
@@ -277,8 +277,8 @@
       {
         "id": "chain:ancient_prophecy:2:1",
         "occurrenceClass": "one-time-chain",
-        "location": "에테르 관문",
-        "mapLevel": 68,
+        "location": "마왕성",
+        "mapLevel": 48,
         "outcomeType": "chain_advance",
         "rewardType": "relic",
         "itemName": null,
@@ -420,8 +420,8 @@
       {
         "id": "chain:dragon_legacy:2:0",
         "occurrenceClass": "one-time-chain",
-        "location": "에테르 관문",
-        "mapLevel": 68,
+        "location": "천공 정원",
+        "mapLevel": 40,
         "outcomeType": "chain_advance",
         "rewardType": "relic",
         "itemName": null,
@@ -431,8 +431,8 @@
       {
         "id": "chain:dragon_legacy:2:1",
         "occurrenceClass": "one-time-chain",
-        "location": "에테르 관문",
-        "mapLevel": 68,
+        "location": "천공 정원",
+        "mapLevel": 40,
         "outcomeType": "chain_advance",
         "rewardType": "relic",
         "itemName": null,
@@ -1025,8 +1025,8 @@
       {
         "id": "chain:world_tree_corruption:1:0",
         "occurrenceClass": "one-time-chain",
-        "location": "고대 신전 도시",
-        "mapLevel": 50,
+        "location": "천공 정원",
+        "mapLevel": 40,
         "outcomeType": "chain_advance",
         "rewardType": "gold",
         "itemName": null,
@@ -1036,8 +1036,8 @@
       {
         "id": "chain:world_tree_corruption:1:1",
         "occurrenceClass": "one-time-chain",
-        "location": "고대 신전 도시",
-        "mapLevel": 50,
+        "location": "천공 정원",
+        "mapLevel": 40,
         "outcomeType": "chain_advance",
         "rewardType": "stat_bonus",
         "itemName": null,
@@ -1047,8 +1047,8 @@
       {
         "id": "chain:world_tree_corruption:2:0",
         "occurrenceClass": "one-time-chain",
-        "location": "에테르 관문",
-        "mapLevel": 68,
+        "location": "세계수 숲",
+        "mapLevel": 38,
         "outcomeType": "chain_advance",
         "rewardType": "item",
         "itemName": "세계수의 지팡이",
@@ -1058,8 +1058,8 @@
       {
         "id": "chain:world_tree_corruption:2:1",
         "occurrenceClass": "one-time-chain",
-        "location": "에테르 관문",
-        "mapLevel": 68,
+        "location": "세계수 숲",
+        "mapLevel": 38,
         "outcomeType": "chain_advance",
         "rewardType": "relic",
         "itemName": null,
