@@ -867,3 +867,50 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 7. **곡선(`EXP_SCALE_RATE`)·프레스티지 이월·맵 선언 레벨.** §17이 실측으로 기각했다(곡선은 간극을 **넓히고**, 프레스티지는 rank 19·631.9h, 맵은 방향이 반대다). 재측정 없이 다시 꺼내지 말 것.
 8. **퀘스트 104(minLv 79)의 `beyond-anchors` 공백.** 앵커를 Lv80까지 늘리면 `cost.anchors` 8행이 9행이 되어 Wave 13이 남긴 "바이트 동일" 기준선이 사라진다. `null`이 정직한 상태다.
 9. **class-(b) 소스 가드 1,807건.** Wave 11 C4 정책대로 계속 방치.
+
+### 19.1 Wave 15 실행 결과 (2026-09-20, base `main` = `56d30895`)
+
+**요약**: 계획한 5트랙을 전부 출하했다. G1이 승천 지점을 걸치던 체인 3개를 **0개**로 만들었고(스텝 4개 이동 + 문구 13곳), G2가 도달 가능한 유일한 묘비 상한 절벽을 클라이언트에서 닫았으며, G3이 `firestore.rules` 배포를 사람 손에서 파이프라인으로 옮겼고, G4가 증빙 필드 이름을 자기가 세는 것과 맞췄다(`schemaVersion` 3 → 4). **이번 wave의 성공 기준은 "예고값이 바뀐다"가 아니라 "모델 핀 3종이 안 바뀐다"였고, 셋 다 불변이다.**
+
+| 트랙 | 결과 | 커밋 |
+|---|---|---|
+| G1 체인 종착을 루프 안으로 | 스텝 4개 `loc` 이동 + 문구 13곳. 걸치는 체인 **3 → 0** | `893ef8e1` |
+| G2 묘비 gold 절벽 | `CONSTANTS.MAX_PUBLIC_GRAVE_GOLD` + `clampPublicGraveGold`(업로드 페이로드 전용). rules 불변 | `11376197` |
+| G3 rules 배포 자동화 | `deploy-rules` job(hosting 앞), 버전 리터럴 1곳, 시크릿 셸 분기 | `eb53e6b0` |
+| G4 증빙 필드 이름 정정 | 3키 rename + 1키 삭제 + `schemaVersion` 3 → 4. **값 이동 0** | `6a34a57c` |
+| G5 증빙·문서 | 증빙 4종 재고정, 13종 verify, §19.1 · CLAUDE.md · `tasks/todo.md` | `45512de9` 외 |
+
+**예고 대비 실제 — 한 자리도 어긋나지 않았다** (§19의 "예고 증빙 델타" 표와 대조)
+
+| 예고 | 실제 |
+|---|---|
+| `gates.eventChainCompletions` 40: 1 → 3 · 48: 4 → 5 · 68: 5 → 2, 버킷 6 유지 | **그대로**. 40 = `dragon_legacy`·`lost_wizard`·`world_tree_corruption`, 68 = `divine_apostle_trial`·`rift_secret` |
+| `eventChainSpans` 3행의 completion만 68(170.23h) → 48(53.28h)/40(21.08h)/40(21.08h), `openCost` 13행 불변 | **그대로** |
+| `behind` 44행의 체인 열만 — L42·44·45·48 9 → 7, L49~68 5 → 2 | **그대로**. 다른 열·`modeledActions`·`modeledHours` 바이트 동일 |
+| `cost.anchors` 8행 · `gates.{maps,quests,equipmentTiers,jobs}` · `mapGateDivergence` 10행 불변 | **그대로** |
+| `event-reward-coherence` 108행 중 8행의 `location`/`mapLevel`만 | **그대로**(`catalog` 8키·`frequency`·`errors: []` 불변, `itemTier: 5` 유지) |
+| `equipment-combat-power`의 `reportHash` 불변, `authority.tierHash`만 이동 | **그대로**: `3c9d7959…` 불변, `tierHash` `dbef84ec…` → `20999b0f…` 한 줄 |
+| `progression-diagnostic-v2` `reportHash`·`v1Baseline` 불변, `sources` 346 유지 | **그대로**: `f21dcf81…` / `2573fa0f…` / 346 |
+| 모델 핀 3종 불변 | **그대로**: `EXPECTED_BASELINE_REPORT_SHA256 ac79428c…`(테스트 12/12 초록) · `PROGRESSION_V1_BASELINE_HASH 2573fa0f…` · `exploration-rhythm 0818fb7a…`(`pacing:verify`를 `--write` 없이 돌려 확인) |
+
+예고를 먼저 적고 통합 트리에서 재현을 확인하는 이 규율은 Wave 13 E1 → Wave 14 F4 → Wave 15 G1으로 세 wave째다. **핀이 "테스트가 빨개져서" 바뀌면 그 기준은 사라진다** — 이번에는 다섯 번째 증빙(`exploration-rhythm`)이 바이트 동일한 것이 "모델을 안 건드렸다"의 증명 역할을 했다.
+
+**발견**
+
+1. **`world_tree_corruption`은 종착만 옮기면 아무것도 안 한 것이 된다.** 스텝 1이 `고대 신전 도시`(경로 게이트 **50** = 65.90h)라 종착을 48 아래로 내려도 완주는 50에 남고, `gates`에 **오늘 없는 50 버킷이 새로 생긴다**. §18이 이 작업을 "Lv68 종착 3개"로 적은 것은 교정된 자(완주 = 전 스텝 max)가 나오기 전의 표현이다. 실제 작업은 **스텝 4개 + 문구 13곳**이었다. 자를 고치는 wave와 그 자를 쓰는 wave를 나눈 값이 여기서 나온다 — 같은 wave였으면 이 오차를 못 봤다.
+2. **안전지대(`type: 'safe'`)에는 탐험 버튼이 없고, 거기에 체인 스텝이 이미 둘 있다.** `canInvestigateTown`은 황금 왕국에서만 true이고 `adventureGuide`는 `safe`에서 `kind: 'explore'`를 반환하지 않는다. `machine_uprising`의 **종착**(북부 요새)과 `water_apostle` 스텝 1(사막 오아시스)은 터미널에 `explore`/`look`/`탐색`을 **타이핑해야만** 진행된다. 목적지를 로어로만 골랐으면 `허공의 섬`(42 · safe)을 집어 "열렸다가 안 닫힌다"를 고치면서 "보이지 않는다"를 셋 새로 만들었을 것이다. 그래서 선정 기준에 `type !== 'safe'`가 들어갔다.
+3. **§18이 경고한 두 블로커는 실체가 없었다.** `CHAIN_ITEM_TIER_TOO_LOW`는 `max(1, highestAvailableTier(map.level) − 1)`의 **바닥**이라 목적지를 낮추면 구조적으로 발동하지 않는다(세계수의 지팡이 T5 @ 세계수 숲 38 → MIN_T2). "tier5가 얕은 맵에 떨어진다"는 이미 출시된 관행이다(`lost_wizard:2:0` T5 @ 천공 정원 40 · `machine_uprising:2:0` T5 @ 북부 요새 32). 게다가 종착 셋 중 **둘은 보상이 relic뿐**이라 아이템 티어 축과 접점이 0이고, 나머지 하나의 `세계수의 지팡이`는 퀘스트 142(minLv 38) 보상이자 `수련 님프`(Lv5·7) 3% / `봄의 여왕`(Lv[5,15]) 5% 드롭이라 이동 후 위치가 **기존 출처와 같은 레벨대**가 된다.
+4. **묘비에서 거부되는 것은 숫자가 아니라 문서 전체이고, 죽이는 쪽은 장식용 필드다.** 공개 문서의 상한 6개 중 다섯은 클라이언트가 보장한다(`level`은 `CONSTANTS.MAX_LEVEL`, `playerName`은 `maxLength={16}`, `loc`은 맵 이름 최장 11자, `items`는 `.slice(0, 3)`, `guardPower`는 한 런 최대 467 = 상한의 4.7%). `gold` 하나만 미보장이면서 도달 가능한데 — `resolveInvasion`은 골드를 주지 않는다. 즉 **침공 성공률의 입력(`guardPower`)과 보상(`items`)이 보상에 안 쓰이는 필드 때문에 같이 사라지고** `.catch(console.warn)`이 그걸 삼킨다. 그래서 고치는 쪽은 rules 완화가 아니라 클라이언트 클램프다(완화는 공개 문서의 유일한 위조 경계를 없애고, 효력도 배포에 달려 있다).
+5. **워크플로의 조용한 실패는 `continue-on-error`가 아니라 시크릿 삼항에서 나온다.** `${{ ref == 'main' && secrets.X_PROD || secrets.X_DEV }}`는 PROD가 비면 **DEV로 떨어져 prod 푸시가 dev 프로젝트에 배포되고 run이 초록으로 끝난다**. G3은 네 시크릿을 모두 env로 받아 셸에서 분기하고 고른 쪽이 비면 `::error` + `exit 1`이며, 그 6케이스를 스텝 스크립트를 추출해 **실제로 실행**해 고정했다(`main인데 PROD만 비었을 때 rc=1, dev 낙하 없음` 포함). 그리고 `needs`(순서)와 `if`(실행 여부)가 분리돼 있으므로 "rules가 hosting보다 먼저"와 "rules가 죽어도 릴리스는 안 막힌다"를 **동시에** 가질 수 있다 — 대가는 명시했다: 실패 시 순서 보장은 성공 경로에만 남는다.
+6. **`summary.eventChainTerminalSteps`는 측정이 아니라 중복이었다.** 그 값은 `terminals.length`이고 `terminals = eventChainStepLocations()`는 체인당 한 행을 내므로 **구조적으로** `summary.eventChains`와 항상 같다. G1이 종착 스텝을 넷 옮겨도 둘 다 13에 붙박여 있던 것이 그 증거다. 소비처는 4파일뿐이고(systems 1 · scripts 1 · tests 2) **UI·런타임 소비처는 0**이라 rename은 스키마 churn 외의 비용이 없었다.
+7. **운영 — 병렬 트랙 둘이 주간 API 한도로 동시에 죽었고, 작업은 워크트리에 남아 있었다.** G1(opus)·G2(sonnet)이 같은 순간 `429 weekly limit`로 종료됐는데 둘 다 **편집은 끝내고 커밋만 못 한 상태**였다. 워크트리에서 `git diff HEAD`로 패치를 떠 본 체크아웃에 적용하고, 검증(type-check · lint · 영향 테스트)과 커밋을 통합자가 직접 했다. 교훈: **서브에이전트의 산출물은 커밋이 아니라 워크트리의 작업 트리에 있다** — 에이전트가 실패로 끝나도 회수 가능하므로 재실행 전에 워크트리를 먼저 볼 것.
+
+**최종 게이트** (head `45512de9`, CI 동일 빌드): type-check 0 · lint 0 · unit **5,105 / 5,105**(skip 0, Wave 14 대비 +1) · build:guard ok · CI-env build ok(test-api 마커 확인) · e2e **121 / 121**(61 + 60) · perf desktop ok(FCP 452ms) / mobile ok(FCP 564ms) · `release-complete-core` 증빙 **13종** verify 전부 ok. 게이트 실행 중 저장소에 병행 명령 없음(§15.1). `toss:evidence:verify`·`observation:host:verify`는 이 세트 밖이고 `main`에서도 빨갛다(기존 실패).
+
+**남은 후보 (Wave 16)**
+
+1. **`tier`를 아트 identity에서 분리** — §18.1 발견 1·2 + §19 "하지 않기로 한 것" 1. 여전히 **미결이고, 측정이 없어서가 아니라 결정이 없어서다**: 빼는 것도 identity의 모양을 바꿔 같은 1,065개(아트 생산 provenance 65개 포함)를 무효화하므로 선행 질문은 **"아트 생산 provenance 역사를 다시 핀해도 되는가"**라는 소유자의 정책 판단이다. 답이 "된다"면 `성직자 tier 1→2`와 `KNOWN_TIER_DEPTH_DIVERGENCE` 비우기가 한 커밋이고, 후속 핀은 F4가 이미 실측해 뒀다(`EXPECTED_BASELINE_REPORT_SHA256 = 9da28843…`, `PROGRESSION_V1_BASELINE_HASH = 4a888aa0…`).
+2. **`firestore.rules` 배포의 첫 실행 결과를 읽기** — G3의 설계가 흡수할 수 없는 단 하나는 서비스 계정의 `firebaserules.releases.update` 권한이고, 그건 저장소 밖에서만 답이 나온다. develop이 먼저 도므로 prod 이전에 같은 실패가 드러난다. **첫 실패를 "설계가 틀렸다"로 읽지 말 것 — "IAM 역할이 hosting 전용이다"로 읽어야 한다.** 성공이 확인되면 CLAUDE.md §8-6에서 "충분조건이 아니다" 단서를 좁힐 수 있다.
+3. **안전지대에 놓인 체인 스텝 2개**(`machine_uprising` 종착 = 북부 요새 · `water_apostle:1` = 사막 오아시스) — 오늘도 터미널 타이핑으로만 진행된다. G1은 새로 만들지 않는 것까지만 했고 **기존 둘은 손대지 않았다**. 고치는 방법은 둘이다: 목적지를 dungeon으로 옮기거나(문구 동반), `safe`에서도 체인 스텝이 보이도록 `adventureGuide`를 여는 것. 후자가 범위가 넓으므로 먼저 측정할 것.
+4. **퀘스트 104(minLv 79)의 `beyond-anchors` 공백** — §19에서 기각한 그대로. 앵커를 Lv80까지 늘리면 `cost.anchors` 8행이 9행이 되어 Wave 13이 남긴 "바이트 동일" 기준선이 사라진다. `null`이 정직한 상태다.
+5. **class-(b) 소스 가드 1,807건** — Wave 11 C4 정책대로 계속 방치.
