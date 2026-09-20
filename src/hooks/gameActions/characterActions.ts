@@ -133,6 +133,30 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             });
         },
 
+        /**
+         * 상점 진입 — 소유자는 이 액션 하나다(2026-09 Wave 17 I1).
+         *
+         * 이전에는 `commandParser`와 `GameRoot`가 **각자** `setShopItems` + `setGameState('shop')`
+         * 3줄을 복제했고 공유 가드가 없었다. 그래서 파서는 `type === 'safe'`만 보고 상태를
+         * 안 봤는데, 전투가 가능한 safe 지역(`황금 왕국` — 유일하게 `monsters`를 가진 안전지대)
+         * 에서 전투 중 `shop`을 치면 `gameState`가 'shop'으로 넘어가고, 상점을 닫으면
+         * `ShopPanel`이 'idle'로 돌려놔 **도주 판정(ESCAPE_CHANCE 0.5) 없이 전투를 버릴 수**
+         * 있었다. `SET_GAME_STATE`는 `enemy`도 지우지 않는다.
+         *
+         * 입력 표면이 둘인데 가드가 한쪽에만 있으면 그 가드는 없는 것과 같다 — Wave 16의
+         * 안전지대 탐험과 같은 모양이다.
+         */
+        openShop: () => {
+            if (gameState !== 'idle') return addLog('error', MSG.SHOP_BLOCKED);
+            const mapData = DB.MAPS[player.loc!];
+            if (!mapData || mapData.type !== 'safe') return addLog('error', MSG.SHOP_SAFE_ONLY);
+            dispatch({ type: AT.SET_SHOP_ITEMS, payload: [
+                ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors,
+            ] });
+            dispatch({ type: AT.SET_GAME_STATE, payload: GS.SHOP });
+            return addLog('info', MSG.SHOP_ENTERED);
+        },
+
         rest: () => {
             if (gameState !== 'idle') return;
             const mapData = DB.MAPS[player.loc!];

@@ -5,7 +5,7 @@ import type { GameActions } from '../hooks/actionDeps.js';
 type CommandParserActions = Pick<
     GameActions,
     'handleEventChoice' | 'move' | 'explore' | 'rest' | 'combat' | 'cycleSkill'
-    | 'setShopItems' | 'setGameState' | 'getFullStats' | 'setSideTab'
+    | 'openShop' | 'getFullStats' | 'setSideTab'
 >;
 
 export const parseCommand = (input: string, gameState: string, player: Player, actions: CommandParserActions) => {
@@ -94,14 +94,13 @@ export const parseCommand = (input: string, gameState: string, player: Player, a
       actions.combat('escape');
       return;
 
+    // 2026-09 Wave 17 I1: 파서가 상점 진입 시퀀스를 직접 복제하면서 `type === 'safe'`만
+    //   보고 `gameState`를 안 봤다 — 전투가 가능한 안전지대(황금 왕국)에서 전투 중
+    //   `shop`을 치면 도주 판정 없이 전투를 버릴 수 있었다. 이제 액션 하나가 소유한다.
     case 'shop':
     case '상점':
-      if (DB.MAPS[player.loc as string]?.type === 'safe') {
-        actions.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
-        actions.setGameState('shop');
-        return '상점에 입장했습니다.';
-      }
-      return '상점은 안전 지역에서만 이용할 수 있습니다.';
+      actions.openShop();
+      return;
 
     case 'status':
     case 'stat':

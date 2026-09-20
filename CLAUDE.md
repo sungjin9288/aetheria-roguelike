@@ -129,9 +129,9 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, ~335 파일 / ~4,810 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 347 파일 / 5,123 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
-                      #   + e2e/ (Playwright 31 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
+                      #   + e2e/ (Playwright 44 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 android/ ios/         # Capacitor 네이티브 프로젝트
 ```
@@ -196,6 +196,7 @@ npm run mobile:doctor     # Capacitor 환경 점검
 - **한국어 문자열 하드코딩 금지**: `MSG.BATTLE_START` 처럼 `MSG` 객체 사용. 컴포넌트 JSX 안에 한국어 직접 입력 금지.
 - **`data/` 파일 직접 수정 시 주의**: `items.ts`, `monsters.ts`, `constants.ts` 변경 시 밸런스 전체에 영향. 반드시 테스트 후 반영.
 - **`CONSTANTS.DATA_VERSION` 무단 변경 금지**: save 구조 변경 시 반드시 버전 bump + `migrateData()` 업데이트 병행.
+- **`commandParser`에 게임 로직·상태 전이 작성 금지**: 터미널은 UI와 **평행한 두 번째 입력 표면**이다. 파서가 `setGameState`를 직접 부르면 UI에만 있는 가드를 우회한다 — 실제로 `shop`이 그랬고, 전투가 가능한 안전지대(황금 왕국)에서 전투 중 `shop`을 치면 **도주 판정 없이 전투를 버릴 수** 있었다(Wave 17). 새 명령은 **액션을 호출만** 하고, 게이트는 그 액션이 소유한다. `tests/command-surface-contract.test.js`가 되돌리기를 잡는다.
 - **전투 턴을 hook에서 해석 금지**: 공격/기술/도주/소모품은 `AT.RESOLVE_COMBAT_ACTION` 등 단일 reducer 전이(`systems/combatActionTurn.ts`)로만 해석. hook에서 `SET_PLAYER`/`SET_ENEMY`를 여러 번 쏘는 방식은 rapid tap 시 상태 분기를 만든다.
 
 ---
@@ -284,6 +285,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 - `event-chain-cost.test.js` — **체인의 열림→완주 구간**과 **승천 지점을 걸치는 체인이 0개임**을 고정한다 (Wave 14 F2 + Wave 15 G1). 완주 게이트는 종착 스텝의 게이트가 아니라 **전 스텝 max**다 — `chainEventHandlers`가 스텝 순서를 강제하므로 중간 스텝이 더 깊으면 그게 완주 비용이다. 스텝 지역 하나라도 못 읽으면 남은 스텝의 max가 아니라 **미상**(fail-closed)
 - `firestore-rules-semantics.test.js` — **rules를 에뮬레이터로 실행** (Wave 14 F3). 테스트는 rules가 아니라 **클라이언트 쓰기 지점 6곳의 실제 페이로드**에서 유도한다 — rules 텍스트를 재현한 테스트는 거부가 버그인 rules 위에서도 초록이다. `npm run test:rules`(JDK 필요, CI 별도 job). 에뮬레이터가 없으면 러너 존재를 단언한다(skip 0 유지)
 - `class-tier-depth.test.js` — **`tier`는 `모험가`로부터의 BFS 깊이다** (Wave 14 F4). 괴리는 정확히 `['성직자']` 하나이고 **늘어날 수 없다**. 그 하나를 못 고치는 이유는 `scripts/artCatalog.mjs`가 `tier`를 아트 카탈로그 identity 해시에 넣고 그 해시가 provenance 기록 포함 1,065개 파일에 핀돼 있기 때문이다(§18.1 발견 1·2)
+- `command-surface-contract.test.js` — **터미널은 UI와 평행한 두 번째 입력 표면이다** (Wave 17). 구조 계약: `commandParser`는 **어떤 명령에서도 `setGameState`/`setShopItems`를 직접 부르지 않는다**(명령 18 × 상태 9 전수). 게이트 계약: 상점 진입의 안전지대·상태 가드는 `openShop` 액션이 소유한다. 결함 주입 2종이 구조 계약과 행동 계약을 **각각** 깨뜨린다
 - `safe-zone-explore-contract.test.js` — **안전지대 탐험의 3겹 계약** (Wave 16). ① `spawnEnemy`는 빈 몬스터 테이블에서 `mStats`/`baseName` 모두 `null`이다 ② 몬스터 없는 safe 지역은 전부 평화롭고(전투 0건) 황금 왕국은 그대로 조우한다 ③ 대기 중인 체인 스텝은 safe 지역에서도 발동하고 UI에 노출된다. 세 겹은 서로를 가리지 않는다 — 결함 주입 2종이 각각 하나씩만 깨뜨리는 것으로 증명했다
 - `map-route-gate.test.js` — **맵의 실제 진입 레벨** (Wave 13 E2). `src/utils/mapRouteGate.ts`가 리포트와 UI의 공용 authority다. 52개 중 10개는 선언 `level`과 경로 게이트가 다르고(유일한 경로가 더 높은 지역을 지난다), `level: 'infinite'`는 잠금이 아니라 **잠금 없음**이다(`NaN` 비교). 이 트랙은 **표시이지 잠금이 아니다** — `getMapAccess`는 선언값 그대로이고 테스트가 그걸 고정한다
 - `content-reachability.test.js` — **접근 비용 축** (Wave 12 D1). "도달 가능한가"가 아니라 "몇 모델 액션·몇 모델 시간 뒤인가"를 검증한다. `basis`가 `anchored`(모델 산출)인지 `interpolated`(누적 EXP 비례)인지 `beyond-anchors`(외삽 금지 — 비용 `null`)인지를 구분하고, 보간 행은 자기 입력을 들고 있어 재계산 가능하다. **맵 게이트는 선언 `level`이 아니라 실제 이동 경로로 매긴다** — 52개 중 10개가 다르다(`cost.mapGateDivergence`). 리포트는 `schemaVersion: 4`이고 체인 키는 자기가 세는 것을 말한다(Wave 15 G4): `gates.eventChainCompletions`(버킷 키가 **완주** 게이트다) · `behind[].eventChains` · `unresolvedEventChainCompletions`. `summary`의 `eventChainTerminalSteps`는 삭제됐다 — 그 값은 `terminals.length`이고 `terminals`는 체인당 한 행이라 **구조적으로** `summary.eventChains`와 항상 같았다
@@ -343,7 +345,7 @@ Wave 15 G3이 `deploy.yml`에 `deploy-rules` job을 넣었다 — hosting **앞�
 `CLASSES[*].tier`를 읽는 곳은 4군데다 — `ClassIcon`의 `TIER_COLORS`(색), `skill-branch-parity`의 분기 의무, `progressionSimulator`의 `jobSnapshots[].tier`(골든 해시), 그리고 **`scripts/artCatalog.mjs`의 `normalizeClasses`가 아트 카탈로그 identity 해시**에 넣는다. 그 해시(`catalogSha256`)는 `scripts/art_sources/**`의 아트 생산 provenance 65개를 포함해 1,065개 파일에 핀돼 있고, 아트 스위트는 비활성 해시를 가진 기록이 **거부되는지**를 테스트한다. 즉 `tier` 한 글자를 바꾸면 유닛 70건이 red가 되고 그 복구는 증빙 재생성이 아니라 역사 재작성이다. 비용 게이트는 `reqLv`가 소유한다 — 밸런스를 만질 때 `tier`를 건드리지 말 것.
 
 **9. 청크 분리 설정**
-`vite.config.js`의 `manualChunks` 설정이 성능에 직결. vendor-react / vendor-motion / vendor-firebase / game-data 등으로 분리되어 있으며, 대형 라이브러리 추가 시 청크에 포함 여부 검토 필요.
+`vite.config.js`의 `manualChunks` 설정이 성능에 직결. 실측 청크는 vendor-react · vendor-motion · vendor-charts · **vendor-firebase-{firestore,auth,core}**(하나가 아니라 셋이다 — cycle 61에서 기능별로 쪼갰다) · game-data · game-combat · game-equipment다. 프로덕션 빌드 상위는 game-data 480K · index 464K · vendor-react 188K · vendor-firebase-firestore 180K 순(Wave 17 실측). 대형 라이브러리 추가 시 청크 포함 여부를 검토할 것 — 다만 **결과를 재는 것은 `npm run perf:guard`(FCP/DCL blocking)**이고 청크 구성 자체를 고정하는 가드는 없다.
 
 **10. 모바일 viewport**
 `100dvh` 사용 (100vh 아님). iOS Safari 하단 주소창 때문. `env(safe-area-inset-*)` CSS 변수도 MainLayout에서 이미 처리 중 — 중복 적용 주의.

@@ -265,12 +265,9 @@ const GameRoot = ({
                 handleOpenArchiveTab('inventory');
                 break;
             case 'open_shop':
-                engine.actions.setShopItems?.([
-                    ...DB.ITEMS.consumables,
-                    ...DB.ITEMS.weapons,
-                    ...DB.ITEMS.armors,
-                ]);
-                engine.actions.setGameState?.(GS.SHOP);
+                // Wave 17 I1: 상점 진입은 액션이 소유한다(가드 포함) — UI와 터미널이
+                //   같은 경로를 쓰게 해서 한쪽에만 가드가 있는 상태를 없앤다.
+                engine.actions.openShop?.();
                 break;
             case 'open_crafting':
                 engine.actions.setGameState?.(GS.CRAFTING);
