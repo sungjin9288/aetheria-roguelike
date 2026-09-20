@@ -47,12 +47,24 @@ const getActiveHuntTargets = (mapData: GameMap, player: Player) => {
     return [...new Set(targets)];
 };
 
-export const selectEncounterMonster = (encounterPool: string[], mapData: GameMap, player: Player, random: () => number) => {
+/**
+ * 조우할 몬스터 이름 — **풀이 비면 `null`이다**(2026-09 Wave 16 H1).
+ * 이전에는 `pool[Math.floor(rng() * 0)]` = `pool[0]` = `undefined`를 그대로 돌려줬고,
+ * `spawnEnemy`가 그 `undefined`를 이름으로 삼아 실제 HP/ATK를 가진 적을 만들었다
+ * (`'undefined 등장!'`). 빈 테이블에서는 조우가 **없어야** 하므로 fail-closed한다.
+ */
+export const selectEncounterMonster = (
+    encounterPool: string[],
+    mapData: GameMap,
+    player: Player,
+    random: () => number,
+): string | null => {
     const huntTargets = getActiveHuntTargets(mapData, player);
     if (huntTargets.length > 0 && random() < BALANCE.HUNT_TARGET_FOCUS_CHANCE) {
-        return huntTargets[Math.floor(random() * huntTargets.length)];
+        return huntTargets[Math.floor(random() * huntTargets.length)] ?? null;
     }
-    return encounterPool[Math.floor(random() * encounterPool.length)];
+    if (encounterPool.length === 0) return null;
+    return encounterPool[Math.floor(random() * encounterPool.length)] ?? null;
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -108,9 +120,15 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const spawnAreaBoss = areaBossName !== null
         && !(player.stats?.areaBossDefeated?.[areaBossName])
         && Boolean(options.forceAreaBoss);
-    const baseName: string = (spawnAreaBoss && areaBossName !== null)
+    const baseName: string | null = (spawnAreaBoss && areaBossName !== null)
         ? areaBossName
         : selectEncounterMonster(encounterPool, mapData, player, rng);
+    // 2026-09 Wave 16 H1: 몬스터 테이블이 빈 지역(safe 5곳이 전부 `monsters: []`)에서
+    //   이름 없는 적이 실제 스탯으로 스폰되던 결함을 여기서 닫는다. 호출처는 `mStats`가
+    //   `null`일 수 있음을 타입으로 강제받는다 — 모델(progressionSimulator/Diagnostic)은
+    //   맵 목록을 `type !== 'safe' && monsters.length > 0`으로 이미 거르므로 이 분기를
+    //   구조적으로 타지 않고, 그 불변식을 각자 명시적 throw로 적는다.
+    if (baseName === null) return { mStats: null, baseName: null };
     // 2026-07 타입화: GameMap.level은 number | number[] | 'infinite'. 이 함수의 스폰
     // 스탯 계산은 항상 단일 숫자 레벨을 가정했던 기존 동작 그대로 유지 — 시즌 전용
     // 범위형([min, max]) 맵은 도달 시 최솟값으로 취급 (array 케이스가 원래도 산술에

@@ -598,7 +598,14 @@ const ControlPanel = ({
   );
   const townQuickButtons = townPresentation.quickKeys
     .map((key) => buttonByKey.get(key))
-    .map((button) => button?.key === 'explore' ? { ...button, label: '도시 조사 · 전투 가능' } : button)
+    // 2026-09 Wave 16 H3: 라벨 소유권은 townActionPresentation의 exploreIntent다 —
+    //   'investigate'(사냥감 있는 도시 조사)와 'chain'(이 지역에 대기 중인 이야기 스텝)을
+    //   구분한다. 문구는 MSG 소유(컴포넌트 하드코딩 금지).
+    .map((button) => (button?.key === 'explore' && townPresentation.exploreIntent !== null
+      ? { ...button, label: townPresentation.exploreIntent === 'chain'
+          ? MSG.TOWN_EXPLORE_CHAIN
+          : MSG.TOWN_EXPLORE_INVESTIGATE }
+      : button))
     .filter((button): button is ControlButton => Boolean(button));
   const townFacilityButtons = townPresentation.facilityKeys
     .map((key) => buttonByKey.get(key))

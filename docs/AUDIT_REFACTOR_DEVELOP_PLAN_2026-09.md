@@ -914,3 +914,39 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 3. **안전지대에 놓인 체인 스텝 2개**(`machine_uprising` 종착 = 북부 요새 · `water_apostle:1` = 사막 오아시스) — 오늘도 터미널 타이핑으로만 진행된다. G1은 새로 만들지 않는 것까지만 했고 **기존 둘은 손대지 않았다**. 고치는 방법은 둘이다: 목적지를 dungeon으로 옮기거나(문구 동반), `safe`에서도 체인 스텝이 보이도록 `adventureGuide`를 여는 것. 후자가 범위가 넓으므로 먼저 측정할 것.
 4. **퀘스트 104(minLv 79)의 `beyond-anchors` 공백** — §19에서 기각한 그대로. 앵커를 Lv80까지 늘리면 `cost.anchors` 8행이 9행이 되어 Wave 13이 남긴 "바이트 동일" 기준선이 사라진다. `null`이 정직한 상태다.
 5. **class-(b) 소스 가드 1,807건** — Wave 11 C4 정책대로 계속 방치.
+
+---
+
+## 20. Wave 16 (2026-09-20, 베이스 `main` = `5db9b325` = PR #42 merge commit)
+
+**핵심**: Wave 15는 "안전지대에는 탐험 버튼이 없다"를 체인 목적지 선정 기준 ③으로 썼다. 그 전제를 **실행으로** 확인하다 실제 플레이어가 도달할 수 있는 결함을 찾았다 — safe 맵 6곳 중 시작의 마을을 뺀 4곳에서 터미널에 `탐색`을 치면 **`'undefined 등장!'`과 함께 실제 스탯의 적이 스폰되고 전투가 시작된다**(허공의 섬 기준 HP 1,357 / ATK 175). 즉 이 wave의 입력은 측정이 아니라 **전제 검증의 부산물**이다. 계획서가 근거로 삼은 문장을 실행해 보는 것이 그 자체로 감사였다.
+
+**실측 — safe 맵 6곳의 오늘 동작** (`createExploreActions(...).explore()`를 직접 호출해 관측)
+
+| 지역 | type | `monsters` | 경로 게이트 | 탐험 결과(수정 전) |
+|---|---|---:|---:|---|
+| 시작의 마을 | safe | 0 | 1 | `마을 주변은 평화롭습니다.` (유일하게 정상) |
+| 여행자의 쉼터 | safe | 0 | 15 | **`undefined 등장!`** HP 528 / ATK 72 |
+| 사막 오아시스 | safe | 0 | 23 | **`undefined 등장!`** HP 773 / ATK 102 |
+| 북부 요새 | safe | 0 | 32 | **`undefined 등장!`** HP 1,050 / ATK 137 |
+| 허공의 섬 | safe | 0 | 42 | **`undefined 등장!`** HP 1,357 / ATK 175 |
+| 황금 왕국 | safe | 5 | 62 | `용병 전사 등장!` (설계된 조사 — `canInvestigateTown`) |
+
+**원인이 둘 겹쳐 있었다.** (a) `selectEncounterMonster`가 빈 풀에서 `pool[Math.floor(rng() * 0)]` = `pool[0]` = `undefined`를 돌려주고, `spawnEnemy`가 그 `undefined`를 이름으로 삼아 실제 HP/ATK를 가진 적을 만들었다 — **빈 테이블에서 fail-closed가 아니었다**. (b) 평화 가드가 `player.loc === CONSTANTS.START_LOCATION`, 즉 **지역 종류가 아니라 하드코딩된 한 이름**이었다. 둘 중 하나만 있었으면 증상이 안 났다: (a)만 있으면 safe 맵이 애초에 막혔을 것이고, (b)만 있으면 빈 풀에서 조우가 없었을 것이다. `commandParser`의 `'탐색'` → `actions.explore()`에는 지역 종류 가드가 없으므로 도달 경로는 터미널 한 줄이다.
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 |
+|---|---|---|---|---|
+| **H1** 빈 풀 fail-closed | `spawnEnemy`가 `{ mStats: null, baseName: null }`을 반환한다. **타입으로 강제**했더니 컴파일러가 호출처 10곳을 전부 짚었다 — 게임 4곳은 `MSG.EXPLORE_QUIET`로 끝내고, 모델 6곳은 명시적 throw로 불변식을 적는다 | 이름 없는 적이 **어느 맵에서도** 만들어질 수 없다(safe 전용 수리가 아니라 클래스 수리) | `SpawnedMonster \| null` 전파 | 정산 outcome을 새로 만들면(`'quiet'` 같은) `advanceExploreState`의 `default`가 그걸 **전투로 취급해 `quietStreak`를 리셋**한다 — 기존 `'nothing'`을 써야 페이싱이 안 틀어진다. 모델 쪽을 `!`로 눌러 막으면 불변식이 침묵한다 |
+| **H2** 평화 가드의 권한 이전 | `loc === START_LOCATION` → `type === 'safe' && !canInvestigateTown(...)`. 권한은 이미 있던 `canInvestigateTown`이 갖는다. **체인 트리거 뒤에 둔다** | safe 맵이 이름이 아니라 종류로 판정된다 — 새 safe 지역을 추가해도 자동으로 덮인다 | 가드 1줄 + 순서 | 체인 트리거 **앞에** 두면 safe 지역의 대기 체인 스텝이 영원히 안 뜬다(오늘 북부 요새·사막 오아시스 둘이 거기 있다). 황금 왕국까지 막으면 설계된 도시 조사가 죽는다 |
+| **H3** 대기 체인 스텝의 UI 노출 | safe 지역에 대기 스텝이 있으면 explore를 마을 행동으로 노출한다. 라벨 소유권은 `townActionPresentation.exploreIntent`(`'investigate' \| 'chain' \| null`), 문구는 MSG | §19.1 Wave 16 후보 3이 닫힌다 — 두 스텝이 터미널 타이핑 없이 진행된다 | presentation 1 + MSG 2키 + 컴포넌트 1 | 라벨을 컴포넌트가 계속 하드코딩하면(오늘 `'도시 조사 · 전투 가능'`이 그랬다) 두 의도를 구분할 수 없고 CLAUDE.md §5 위반이 남는다 |
+
+**증빙 델타** — 이 wave는 모델 입력을 건드리지 않는다. `progressionSimulator`의 `MODELED_MAPS`와 `progressionDiagnostic`의 맵 목록이 **둘 다 이미 `type !== 'safe' && monsters.length > 0`으로 거르므로**, H1의 빈-풀 분기를 구조적으로 탈 수 없다. 그래서 예고는 "값이 바뀐다"가 아니라 **"모델 핀 3종이 안 바뀐다"**였고 셋 다 불변이다(`ac79428c…` · `2573fa0f…` · `exploration-rhythm 0818fb7a…`를 `--write` 없이 확인). `progression-diagnostic-v2`는 `reportHash`·`v1Baseline` 불변, `sources` 346 유지, 편집 경로의 sha256만 이동.
+
+**예고하지 않은 델타 1건 — 그리고 그게 왜 양성인가**: `relic-event-chance`가 stale이었다. 확인 결과 `report`는 **바이트 동일**, `reportHash` `424909de…`도 불변이고 `authorityHashes.eventReward`(= `src/hooks/gameActions/eventActions.ts`의 **소스 바이트** 핀) 하나만 움직였다 — H1의 null 가드가 그 파일을 건드렸기 때문이다. 유물 이벤트 확률의 의미는 바뀌지 않았다. 교훈: **소스 바이트 authority 핀은 의미가 안 바뀌어도 움직이므로 예고 표에 "편집한 파일을 핀하는 증빙"을 함께 적어야 한다** — 값 해시(`tests/helpers/dataHash.ts`)로 옮긴 데이터 가드와 달리 이쪽은 의도적으로 바이트 핀이다.
+
+**테스트**: `tests/safe-zone-explore-contract.test.js` 9건. 전부 실제 모듈을 import해 호출하는 **행동 테스트**다(CLAUDE.md §7 Wave 11 C4 정책 — 소스 정규식 금지). 결함 주입 2종으로 커버리지를 증명했다: H1을 되돌리면 `spawnEnemy` 계약이, H2를 되돌리면 탐험 경로가 **각각 하나씩** 깨진다 — 두 겹이 서로를 가리지 않는다는 뜻이다. 테스트가 "safe 지역에 체인 스텝이 존재한다"를 전제로 단언하는 덕에 `DB.EVENT_CHAINS`가 없다는 내 잘못된 가정이 **빈 목록 위 공허참으로 통과하지 않고** 드러났다.
+
+**하지 않기로 한 것**
+1. **safe 맵에 `monsters`를 채워 진짜 사냥터로 만들기.** 안전지대는 회복·정비 지점이라는 루프 역할이 있고, 채우면 원정 리듬(출발 → 소모 → 귀환)의 귀환 지점이 사라진다.
+2. **`탐색` 명령을 safe 맵에서 파싱 단계에서 거부하기.** 명령은 되는데 결과가 "평화롭다"인 것이 정상이다 — 파서에서 막으면 체인 스텝도 함께 막힌다(H2의 실패 시나리오와 같은 형태).
+3. **`spawnEnemy`를 throw로 바꾸기.** 게임 루프 한가운데서 던지면 조용한 스폰 대신 크래시가 된다. 모델 경로에서만 throw가 옳다(그쪽은 불가능 상태라 크래시가 정답이다).

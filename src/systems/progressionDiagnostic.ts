@@ -420,7 +420,19 @@ const spawnGeneralEnemy = (player: Player, map: ReturnType<typeof highestReachab
         'loot-general-spawn',
         String(player.job || ROOT_JOB),
     );
-    return spawnEnemy(map.map, player, [], { addLog: () => undefined }, { rng }).mStats;
+    return requireSpawn(spawnEnemy(map.map, player, [], { addLog: () => undefined }, { rng }), `general:${map.name}`);
+};
+
+/**
+ * 모델은 `type !== 'safe' && monsters.length > 0`인 맵만 고르므로(위 `maps` 필터,
+ * `signatureBossMap`은 보스 보유 맵) `spawnEnemy`의 빈-풀 분기를 구조적으로 타지 않는다.
+ * Wave 16 H1이 그 분기를 타입에 드러냈으니, 그 불변식을 침묵이 아니라 명시적 throw로 적는다.
+ */
+const requireSpawn = (spawned: ReturnType<typeof spawnEnemy>, label: string) => {
+    if (spawned.mStats === null) {
+        throw new Error(`diagnostic spawn pool empty: ${label}`);
+    }
+    return spawned.mStats;
 };
 
 const signatureBossMap = (boss: string) => {
@@ -439,13 +451,13 @@ const signatureBossMap = (boss: string) => {
 const spawnSignatureBoss = (boss: string, player: Player, seed: number) => {
     const map = signatureBossMap(boss);
     const rng = createDomainRandom(seed, 'progression-diagnostic-v2', 'loot-signature-spawn', boss);
-    return spawnEnemy(
+    return requireSpawn(spawnEnemy(
         map.map,
         { ...player, loc: map.name },
         [],
         { addLog: () => undefined },
         { forceAreaBoss: true, rng },
-    ).mStats;
+    ), `signature:${boss}`);
 };
 
 const isEquipment = (item: Item) => (
@@ -914,13 +926,13 @@ const runCombatEncounter = ({
     const player = buildCombatPlayer(job, selectedMap.name, loadout);
     const encounterPlayer = buildCombatPlayer(job, selectedMap.name, 'base');
     const encounterRandom = createDomainRandom(seed, 'progression-diagnostic-v2', 'encounter', job);
-    const { mStats: enemy } = spawnEnemy(
+    const enemy = requireSpawn(spawnEnemy(
         selectedMap.map,
         encounterPlayer,
         [],
         { addLog: () => undefined },
         { rng: encounterRandom },
-    );
+    ), `encounter:${selectedMap.name}`);
     let state: GameState = {
         ...structuredClone(INITIAL_STATE),
         player,

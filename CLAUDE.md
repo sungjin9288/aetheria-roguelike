@@ -284,6 +284,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 - `event-chain-cost.test.js` — **체인의 열림→완주 구간**과 **승천 지점을 걸치는 체인이 0개임**을 고정한다 (Wave 14 F2 + Wave 15 G1). 완주 게이트는 종착 스텝의 게이트가 아니라 **전 스텝 max**다 — `chainEventHandlers`가 스텝 순서를 강제하므로 중간 스텝이 더 깊으면 그게 완주 비용이다. 스텝 지역 하나라도 못 읽으면 남은 스텝의 max가 아니라 **미상**(fail-closed)
 - `firestore-rules-semantics.test.js` — **rules를 에뮬레이터로 실행** (Wave 14 F3). 테스트는 rules가 아니라 **클라이언트 쓰기 지점 6곳의 실제 페이로드**에서 유도한다 — rules 텍스트를 재현한 테스트는 거부가 버그인 rules 위에서도 초록이다. `npm run test:rules`(JDK 필요, CI 별도 job). 에뮬레이터가 없으면 러너 존재를 단언한다(skip 0 유지)
 - `class-tier-depth.test.js` — **`tier`는 `모험가`로부터의 BFS 깊이다** (Wave 14 F4). 괴리는 정확히 `['성직자']` 하나이고 **늘어날 수 없다**. 그 하나를 못 고치는 이유는 `scripts/artCatalog.mjs`가 `tier`를 아트 카탈로그 identity 해시에 넣고 그 해시가 provenance 기록 포함 1,065개 파일에 핀돼 있기 때문이다(§18.1 발견 1·2)
+- `safe-zone-explore-contract.test.js` — **안전지대 탐험의 3겹 계약** (Wave 16). ① `spawnEnemy`는 빈 몬스터 테이블에서 `mStats`/`baseName` 모두 `null`이다 ② 몬스터 없는 safe 지역은 전부 평화롭고(전투 0건) 황금 왕국은 그대로 조우한다 ③ 대기 중인 체인 스텝은 safe 지역에서도 발동하고 UI에 노출된다. 세 겹은 서로를 가리지 않는다 — 결함 주입 2종이 각각 하나씩만 깨뜨리는 것으로 증명했다
 - `map-route-gate.test.js` — **맵의 실제 진입 레벨** (Wave 13 E2). `src/utils/mapRouteGate.ts`가 리포트와 UI의 공용 authority다. 52개 중 10개는 선언 `level`과 경로 게이트가 다르고(유일한 경로가 더 높은 지역을 지난다), `level: 'infinite'`는 잠금이 아니라 **잠금 없음**이다(`NaN` 비교). 이 트랙은 **표시이지 잠금이 아니다** — `getMapAccess`는 선언값 그대로이고 테스트가 그걸 고정한다
 - `content-reachability.test.js` — **접근 비용 축** (Wave 12 D1). "도달 가능한가"가 아니라 "몇 모델 액션·몇 모델 시간 뒤인가"를 검증한다. `basis`가 `anchored`(모델 산출)인지 `interpolated`(누적 EXP 비례)인지 `beyond-anchors`(외삽 금지 — 비용 `null`)인지를 구분하고, 보간 행은 자기 입력을 들고 있어 재계산 가능하다. **맵 게이트는 선언 `level`이 아니라 실제 이동 경로로 매긴다** — 52개 중 10개가 다르다(`cost.mapGateDivergence`). 리포트는 `schemaVersion: 4`이고 체인 키는 자기가 세는 것을 말한다(Wave 15 G4): `gates.eventChainCompletions`(버킷 키가 **완주** 게이트다) · `behind[].eventChains` · `unresolvedEventChainCompletions`. `summary`의 `eventChainTerminalSteps`는 삭제됐다 — 그 값은 `terminals.length`이고 `terminals`는 체인당 한 행이라 **구조적으로** `summary.eventChains`와 항상 같았다
 
@@ -320,24 +321,29 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 구형 save에는 `grave.item` (단수), 신형에는 `grave.items[]` (복수). **마이그레이션으로 정규화하지 않는다** — 깨진 reader가 없는 모양을 고치려고 `DATA_VERSION`을 올리는 건 순수 위험이고, writer(`buildGraveData`)가 이미 두 모양을 함께 쓴다. 대신 **묘비 아이템 읽기는 언제나 `getGraveItems()` 경유**가 코드 불변식이다(Wave 11) — `grave.items[0]`/`grave.items.length` 같은 직접 인덱싱은 구형 save에서 빈 목록을 보게 되므로 금지이고, `tests/grave-item-reader-contract.test.js`가 되돌리기를 잡는다.
 **공개 침공 문서(`public/data/graves/{uid}`)의 상한은 클라이언트가 보장한다**(Wave 15 G2) — rules가 거는 6개 상한 중 `gold`만 보장이 없으면서 동시에 도달 가능했다(`Σ floor(player.gold/2 × dropBonus)`, 묘비 개수 상한 없음, 무한 심연 골드 배율 `1 + 0.1×(층−1)`에 상한 없음). 거부되는 것은 숫자가 아니라 **문서 전체**라 `gold` 하나가 넘치면 `guardPower`(침공 성공률의 입력)와 `items`(침공 보상)까지 사라지고 `.catch(console.warn)`이 삼킨다. `clampPublicGraveGold`(`CONSTANTS.MAX_PUBLIC_GRAVE_GOLD`)는 **업로드 페이로드에만** 건다 — 회수용 로컬 묘비에 걸면 플레이어 자기 골드가 사라진다. rules를 완화하는 방향으로 풀지 말 것(공개 문서의 유일한 위조 경계이고, 효력은 배포에 달려 있다).
 
-**3. Quick Slot 검증**
+**3. 안전지대는 지역 이름이 아니라 지역 종류로 판정한다**
+평화 가드는 `player.loc === CONSTANTS.START_LOCATION`이라는 **하드코딩된 한 지역**이었고, 그래서 safe 맵 6곳 중 4곳(여행자의 쉼터·사막 오아시스·북부 요새·허공의 섬 — 전부 `monsters: []`)이 터미널 `탐색`으로 뚫려 **이름 없는 적이 실제 스탯으로 스폰됐다**(Wave 16: 허공의 섬에서 HP 1,357 / ATK 175, 로그는 `'undefined 등장!'`). 이제 `type === 'safe' && !canInvestigateTown(...)`이고 권한은 `canInvestigateTown`이 소유한다(사냥감이 있는 황금 왕국만 조사 가능).
+**그 가드는 반드시 체인 트리거 뒤에 둔다** — 대기 중인 이벤트 체인 스텝은 지역 종류와 무관하게 발동해야 한다(`machine_uprising` 종착 = 북부 요새, `water_apostle:1` = 사막 오아시스가 safe 지역에 있다). 앞에 두면 그 둘이 영원히 안 뜬다.
+그리고 **`spawnEnemy`는 빈 몬스터 테이블에서 `mStats: null`이다** — `selectEncounterMonster`가 빈 풀에서 `pool[Math.floor(rng() * 0)]` = `undefined`를 돌려주던 것이 근본 원인이었다. 호출처는 `null`을 타입으로 강제받는다: 게임 경로는 `MSG.EXPLORE_QUIET`로 조용히 끝내고 정산 outcome은 **기존 `'nothing'`을 쓸 것**(새 종류를 만들면 `advanceExploreState`의 `default`가 전투로 취급해 `quietStreak`를 리셋한다), 모델 경로(`progressionSimulator`/`progressionDiagnostic`)는 맵을 이미 `type !== 'safe' && monsters.length > 0`으로 거르므로 그 분기가 불가능 상태다 — `!`로 누르지 말고 명시적 throw로 적을 것.
+
+**4. Quick Slot 검증**
 앱 부팅 시 quick slot이 더 이상 인벤에 없는 아이템을 참조할 수 있음. 로드 시 sanitize 로직 유지.
 
-**4. Daily Protocol 타이밍**
+**5. Daily Protocol 타이밍**
 탐험마다 reset하면 안 됨. 날짜(timestamp) 기반으로만 reset. `getDailyProtocolCompletions()` 로직 수정 시 주의.
 
-**5. Firebase 익명 인증**
+**6. Firebase 익명 인증**
 앱 부팅 시 자동 초기화. `bootStage`가 완료되기 전에 게임 렌더링 금지 (저장 데이터 로드 전 기본값으로 덮어씌워지는 race condition 주의).
 **부트 순서·복원 payload 선택·복원 텔레메트리는 `src/platform/bootStateMachine.ts`가 소유한다**(Wave 10 B3 + Wave 11 C1). `useFirebaseSync.ts`에는 IO(저장소·Firestore·`migrateData`·`cloudSaveAuthority`)·타이머/구독 배선·로그 id 생성·React ref 갱신·텔레메트리 전송만 남는다 — 훅에서 `AT.LOAD_DATA`를 직접 dispatch하면 전이표 밖에 두 번째 부트 경로가 생기므로 금지이고(테스트가 소스에서 잡는다), 새 부트 분기는 이벤트 + 효과로 전이표에 넣을 것.
 
-**6. `firestore.rules`는 파이프라인이 배포하지만, 배포 성공은 저장소가 보장하지 못한다**
+**7. `firestore.rules`는 파이프라인이 배포하지만, 배포 성공은 저장소가 보장하지 못한다**
 Wave 15 G3이 `deploy.yml`에 `deploy-rules` job을 넣었다 — hosting **앞에** 돌고(`deploy-prod`가 `needs: [build, deploy-rules]`), 버전 리터럴은 `package.json`의 `firebase:cli` 한 곳이며(`test:rules`와 같은 버전), 시크릿 선택은 식 안의 `A && B || C` 삼항이 **아니라** 셸 분기다(그 삼항은 PROD가 비면 조용히 DEV로 떨어져 **prod 푸시가 dev 프로젝트에 배포되고 초록으로 끝난다**). 그래도 **충분조건이 아니다**: 서비스 계정이 hosting 전용 역할이면 `firebaserules.releases.update`에서 `PERMISSION_DENIED`로 죽고, 그건 저장소 안에서 확인할 수 없다. 그 경우 job은 **빨갛게 죽지만 hosting은 나간다**(`continue-on-error`는 쓰지 않는다 — 초록은 "배포됐다고 믿는데 안 된 상태"를 다시 만든다). 즉 실패 시 "rules가 먼저"라는 보장은 **성공 경로에만** 남는다. 새 클라이언트 쓰기 지점은 여전히 `permission-denied` 시 degrade 경로를 함께 둘 것(Wave 13 E4의 4키 폴백이 선례).
 
-**7. `tier`는 비용 밴드가 아니라 위상 라벨이고, 아트 identity에 묶여 있다**
+**8. `tier`는 비용 밴드가 아니라 위상 라벨이고, 아트 identity에 묶여 있다**
 `CLASSES[*].tier`를 읽는 곳은 4군데다 — `ClassIcon`의 `TIER_COLORS`(색), `skill-branch-parity`의 분기 의무, `progressionSimulator`의 `jobSnapshots[].tier`(골든 해시), 그리고 **`scripts/artCatalog.mjs`의 `normalizeClasses`가 아트 카탈로그 identity 해시**에 넣는다. 그 해시(`catalogSha256`)는 `scripts/art_sources/**`의 아트 생산 provenance 65개를 포함해 1,065개 파일에 핀돼 있고, 아트 스위트는 비활성 해시를 가진 기록이 **거부되는지**를 테스트한다. 즉 `tier` 한 글자를 바꾸면 유닛 70건이 red가 되고 그 복구는 증빙 재생성이 아니라 역사 재작성이다. 비용 게이트는 `reqLv`가 소유한다 — 밸런스를 만질 때 `tier`를 건드리지 말 것.
 
-**8. 청크 분리 설정**
+**9. 청크 분리 설정**
 `vite.config.js`의 `manualChunks` 설정이 성능에 직결. vendor-react / vendor-motion / vendor-firebase / game-data 등으로 분리되어 있으며, 대형 라이브러리 추가 시 청크에 포함 여부 검토 필요.
 
-**9. 모바일 viewport**
+**10. 모바일 viewport**
 `100dvh` 사용 (100vh 아님). iOS Safari 하단 주소창 때문. `env(safe-area-inset-*)` CSS 변수도 MainLayout에서 이미 처리 중 — 중복 적용 주의.

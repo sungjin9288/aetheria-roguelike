@@ -290,6 +290,10 @@ export const MSG = {
     TOWN_BUFF_CLEAR: '마을에 돌아와 임시 강화 효과와 상태 이상을 정리했습니다.',
     EXPLORE_BLOCKED: '탐색할 수 없는 상태입니다.',
     TOWN_PEACEFUL: '마을 주변은 평화롭습니다.',
+    // 2026-09 Wave 16 H3: safe 지역의 explore 라벨 — ControlPanel이 하드코딩하던
+    //   한국어 문자열을 MSG로 옮기고, 이야기 스텝 대기 케이스를 새로 구분한다.
+    TOWN_EXPLORE_INVESTIGATE: '도시 조사 · 전투 가능',
+    TOWN_EXPLORE_CHAIN: '단서를 따라간다',
     MAP_UNKNOWN: '알 수 없는 위치입니다. 시작 마을로 이동하세요.',
     EXPLORE_NOTHING: '아무 일도 일어나지 않았습니다.',
     EXPLORE_QUIET: '주변이 조용합니다.',

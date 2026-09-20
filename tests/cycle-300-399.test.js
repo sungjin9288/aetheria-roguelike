@@ -2951,10 +2951,23 @@ import { fileURLToPath } from 'node:url';
       assert.deepEqual(Object.keys(FALLBACK_EVENT_POOL).sort(), [...expected].sort());
   });
 
-  test('cycle 357: explore 가드 회귀 보존 (START_LOCATION 차단)', async () => {
-      const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
-      assert.ok(/player\.loc === CONSTANTS\.START_LOCATION.+return addLog\('info'/.test(source),
-          'explore에서 START_LOCATION return 가드 보존');
+  // 2026-09 Wave 16 H2: 이 가드는 소스 정규식으로 **구현 문자열**
+  //   (`player.loc === CONSTANTS.START_LOCATION`)을 핀하고 있었다 — CLAUDE.md §7이
+  //   금지하는 class-(b) "동작을 텍스트로 확인하는 가드"다. 의도("마을에서는 탐험이
+  //   전투를 만들지 않는다")는 그대로지만 구현이 지역 **이름**에서 지역 **종류**
+  //   (`type === 'safe' && !canInvestigateTown(...)`)로 옮겨가면서 정규식만 깨졌다.
+  //   실제로 그 하드코딩이 결함이었다: safe 맵 6곳 중 시작의 마을만 막히고 나머지
+  //   4곳(전부 `monsters: []`)은 터미널 `탐색`으로 뚫려 이름 없는 적이 실제 스탯으로
+  //   스폰됐다. 즉 이 가드는 **고쳐야 할 코드를 고정하고 있었다**.
+  //   Wave 11 C4의 선례대로 동치 이전을 먼저 확인한 뒤(주입: 평화 가드를 지우면
+  //   새 테스트가 빨개진다) 행동 테스트로 이관한다 — 소유자는
+  //   `tests/safe-zone-explore-contract.test.js`이고, 거기서는 시작의 마을을 포함한
+  //   몬스터 없는 safe 지역 **전부**에 대해 `SET_ENEMY` 0건과 `MSG.TOWN_PEACEFUL`을
+  //   실제 `explore()` 호출로 단언한다(옛 가드보다 넓다).
+  test('cycle 357: explore 마을 가드는 행동 테스트가 소유한다 (Wave 16 이관)', async () => {
+      const source = await readSrc('tests/safe-zone-explore-contract.test.js');
+      assert.ok(/MONSTERLESS_SAFE_MAPS/.test(source),
+          '마을 탐험 가드의 소유자 테스트가 존재해야 한다');
   });
 
   test('cycle 356 회귀 가드: OPERATION_META summary 0건 보존', async () => {
