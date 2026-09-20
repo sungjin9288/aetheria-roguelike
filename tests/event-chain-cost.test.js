@@ -69,12 +69,12 @@ test('체인 스텝은 순서대로만 진행된다 — 중간 스텝을 건너�
 
 // ── (2) 리포트의 체인 게이트는 완주 게이트다 ────────────────────────────────
 
-test('cost.gates.eventChainTerminals는 전 스텝 max(완주 게이트)로 버킷을 만든다', () => {
+test('cost.gates.eventChainCompletions는 전 스텝 max(완주 게이트)로 버킷을 만든다', () => {
     const { cost } = buildContentReachabilityReport();
     const gates = routeGates();
 
     for (const chain of EVENT_CHAINS) {
-        const bucket = cost.gates.eventChainTerminals.find((entry) => entry.members.includes(chain.id));
+        const bucket = cost.gates.eventChainCompletions.find((entry) => entry.members.includes(chain.id));
         assert.ok(bucket, `${chain.id}가 버킷에 없다`);
         assert.equal(
             bucket.gateLevel,
@@ -88,13 +88,13 @@ test('cost.gates.eventChainTerminals는 전 스텝 max(완주 게이트)로 버�
     //    world_tree_corruption:1 → 천공 정원 40 · :2 → 세계수 숲 40).
     //   버킷 수는 6 그대로이고 23·32·35도 그대로다 — 움직인 것은 40·48·68뿐이다.
     assert.deepEqual(
-        cost.gates.eventChainTerminals.map(({ gateLevel, count }) => [gateLevel, count]),
+        cost.gates.eventChainCompletions.map(({ gateLevel, count }) => [gateLevel, count]),
         [[23, 1], [32, 1], [35, 1], [40, 3], [48, 5], [68, 2]],
     );
     // 68에 남는 둘은 애초에 승천 **뒤에** 열리는 체인이다(열림 65.90h / 170.23h) —
     // 걸치지 않으므로 옮기지 않는다. 이 둘이 68의 정상 상태다.
     assert.deepEqual(
-        cost.gates.eventChainTerminals.find((bucket) => bucket.gateLevel === 68).members,
+        cost.gates.eventChainCompletions.find((bucket) => bucket.gateLevel === 68).members,
         ['divine_apostle_trial', 'rift_secret'],
     );
 });
@@ -173,7 +173,7 @@ test('cost.eventChainSpans는 체인 13개의 열림/완주를 비용과 함께 
     assert.equal(cost.eventChainSpans.length, 13);
     assert.equal(
         cost.eventChainSpans.length,
-        cost.gates.eventChainTerminals.reduce((sum, bucket) => sum + bucket.count, 0),
+        cost.gates.eventChainCompletions.reduce((sum, bucket) => sum + bucket.count, 0),
     );
     assert.deepEqual(
         cost.eventChainSpans.map((span) => span.chain).toSorted(),
@@ -251,13 +251,13 @@ test('스텝 지역을 하나라도 못 읽으면 완주 게이트는 max가 아
     // 2026-09 Wave 14 F2 stage(ii): forgotten_god이 더 이상 에테르 관문을 쓰지 않으므로
     //   같은 맵을 종착으로 쓰는 체인들로 이 불변식을 고정한다 — 어떤 체인이든 스텝 하나를
     //   못 읽으면 남은 스텝의 max가 아니라 '미상'이어야 한다는 것이 요점이다.
-    const unreachable = cost.unresolvedEventChainTerminals;
+    const unreachable = cost.unresolvedEventChainCompletions;
     assert.ok(unreachable.length > 0, '스텝 지역이 사라진 체인이 미상으로 잡혀야 한다');
     assert.ok(unreachable.includes('rift_secret'), '에테르 관문을 쓰는 체인이 미상이어야 한다');
     for (const chain of unreachable) {
         assert.equal(cost.eventChainSpans.some((span) => span.chain === chain), false);
         assert.equal(
-            cost.gates.eventChainTerminals.some((bucket) => bucket.members.includes(chain)),
+            cost.gates.eventChainCompletions.some((bucket) => bucket.members.includes(chain)),
             false,
         );
     }
