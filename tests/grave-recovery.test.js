@@ -4,11 +4,14 @@ import assert from 'node:assert/strict';
 import {
     appendGrave,
     buildGraveData,
+    clampPublicGraveGold,
     getGraveRecoveryGroups,
     getGravesAtLoc,
+    normalizeGraves,
     removeGravesAtLoc,
     resolveGraveRecovery,
 } from '../src/utils/graveUtils.js';
+import { CONSTANTS } from '../src/data/constants.js';
 
 const BASE_PLAYER = {
     name: '',
@@ -156,4 +159,41 @@ test('grave recovery groups prioritize the current location and keep exact rewar
     assert.equal(groups[1].count, 2);
     assert.equal(groups[1].gold, 55);
     assert.deepEqual(groups[1].items.map((item) => item.name), ['숲길 사냥활', '초급 회복 물약']);
+});
+
+// Wave 15 G2 — `firestore.rules`의 공개 묘비 `gold <= 9,999,999` 상한을 클라이언트가
+// 보장하지 않던 유일한 필드였다(§18/§19 실측). 클램프는 `useFirebaseSync.ts`의 공개
+// 업로드 페이로드에만 걸었고, 회수용 로컬 묘비(`buildGraveData`/`resolveGraveRecovery`)는
+// 절대 건드리지 않는다 — 건드리면 플레이어 자기 골드가 사라진다(이 트랙의 가장 큰
+// 실패 모드). 소스 정규식이 아니라 실제 함수를 호출해 값으로 확인한다(CLAUDE.md §7).
+test('상한 초과 골드로 죽어도 공개 업로드만 클램프되고 로컬 회수 값은 그대로다 (Wave 15 G2)', () => {
+    // 상한(9,999,999)의 4배 이상을 들고 죽는 상황 — buildGraveData는 절반을 묘비에 담는다.
+    const dyingPlayer = { ...BASE_PLAYER, gold: 40_000_000, loc: '시작의 마을', inv: [] };
+    const localGrave = buildGraveData(dyingPlayer, () => 0.9, () => 99999);
+
+    // (b) 로컬 회수용 묘비는 원래 값 그대로다 — 클램프가 전혀 적용되지 않는다.
+    //     '시작의 마을'은 graveDropBonus가 없는 지역이라 dropBonus는 1.0이다.
+    const expectedLocalGold = Math.floor(dyingPlayer.gold / 2);
+    assert.equal(localGrave.gold, expectedLocalGold);
+    assert.ok(
+        localGrave.gold > CONSTANTS.MAX_PUBLIC_GRAVE_GOLD,
+        '테스트 전제: 로컬 묘비 골드가 공개 상한을 넘어야 클램프 차이를 검증할 수 있다',
+    );
+
+    // 회수 경로(resolveGraveRecovery)로 돌려받는 골드도 클램프 없는 원래 값이다 —
+    // 플레이어가 자기 골드를 잃지 않는다.
+    const recovered = resolveGraveRecovery({ ...BASE_PLAYER, gold: 0, inv: [] }, localGrave);
+    assert.equal(recovered.updatedPlayer.gold, expectedLocalGold);
+
+    // (a) 공개 업로드 페이로드는 정확히 CONSTANTS.MAX_PUBLIC_GRAVE_GOLD(9,999,999)에서
+    //     멈춘다 — useFirebaseSync.ts가 부르는 것과 같은 exported 함수를 그대로 호출한다
+    //     (사본을 손으로 다시 구현하지 않는다). 업로드 직전 합산도 production과 같은
+    //     `normalizeGraves` + reduce를 쓴다.
+    const totalGold = normalizeGraves(localGrave).reduce((sum, g) => sum + (g?.gold || 0), 0);
+    const uploadGold = clampPublicGraveGold(totalGold);
+    assert.equal(uploadGold, CONSTANTS.MAX_PUBLIC_GRAVE_GOLD);
+    assert.equal(uploadGold, 9_999_999);
+
+    // 클램프가 로컬 값을 in-place로 변형하지 않았는지도 확인한다(불변 업데이트 원칙).
+    assert.equal(localGrave.gold, expectedLocalGold);
 });
