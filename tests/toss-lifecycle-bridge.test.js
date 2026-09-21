@@ -131,6 +131,78 @@ test('missing Toss lifecycle constants fail open without preventing game boot', 
     }));
 });
 
+test('Capacitor lifecycle subscribes back only, and exits the app on an unhandled back event', async () => {
+    const documentTarget = makeDocument();
+    let subscribeCalls = 0;
+    let removeCalls = 0;
+    let exitCalls = 0;
+    let backListener;
+    let handled = true;
+    const cleanup = bindLifecycleBridge({
+        environment: 'capacitor',
+        documentTarget,
+        callbacks: {
+            onBack: () => handled,
+        },
+        capacitorBridge: {
+            subscribeBack: (listener) => {
+                subscribeCalls += 1;
+                backListener = listener;
+                return () => { removeCalls += 1; };
+            },
+            exitApp: () => { exitCalls += 1; },
+        },
+    });
+
+    assert.equal(subscribeCalls, 1);
+
+    backListener();
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(exitCalls, 0);
+
+    handled = false;
+    backListener();
+    await Promise.resolve();
+    await Promise.resolve();
+    assert.equal(exitCalls, 1);
+
+    cleanup();
+    assert.equal(removeCalls, 1);
+});
+
+for (const environment of ['web', 'toss', 'sandbox']) {
+    test(`${environment} lifecycle never touches the Capacitor bridge`, () => {
+        const documentTarget = makeDocument();
+        // subscribeBack/exitApp both count a touch before throwing, so a swallowed
+        // (try/catch'd) call is still observable — "does not throw" alone would pass
+        // even if the branch called the bridge, since bindLifecycleBridge catches errors.
+        let touches = 0;
+        const throwingCapacitorBridge = {
+            subscribeBack() { touches += 1; throw new Error('must not subscribe Capacitor back'); },
+            exitApp() { touches += 1; throw new Error('must not call Capacitor exitApp'); },
+        };
+        const tossBridge = environment === 'web' ? undefined : {
+            getSafeArea: () => ({ top: 0, right: 0, bottom: 0, left: 0 }),
+            subscribeSafeArea: () => () => {},
+            subscribeBack: () => () => {},
+            subscribeHome: () => () => {},
+            async close() {},
+        };
+
+        const cleanup = bindLifecycleBridge({
+            environment,
+            documentTarget,
+            callbacks: {},
+            tossBridge,
+            capacitorBridge: throwingCapacitorBridge,
+        });
+
+        assert.doesNotThrow(() => cleanup());
+        assert.equal(touches, 0);
+    });
+}
+
 test('platform back closes the nearest reversible game surface before the Toss screen', () => {
     assert.equal(resolvePlatformBackAction({ premiumShopOpen: true }), 'close-premium');
     assert.equal(resolvePlatformBackAction({ mirrorPanelOpen: true }), 'close-mirror');

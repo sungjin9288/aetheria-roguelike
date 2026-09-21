@@ -30,6 +30,11 @@ interface TossLifecycleBridge {
     close(): Promise<void>;
 }
 
+interface CapacitorLifecycleBridge {
+    subscribeBack(listener: () => void): () => void;
+    exitApp(): void;
+}
+
 interface LifecycleCallbacks {
     onBackground?: (source: LifecycleSource) => void;
     onForeground?: (source: LifecycleSource) => void;
@@ -42,6 +47,7 @@ interface BindLifecycleBridgeOptions {
     documentTarget?: DocumentTarget;
     callbacks: LifecycleCallbacks;
     tossBridge?: TossLifecycleBridge;
+    capacitorBridge?: CapacitorLifecycleBridge;
 }
 
 const defaultTossBridge: TossLifecycleBridge = {
@@ -50,6 +56,34 @@ const defaultTossBridge: TossLifecycleBridge = {
     subscribeBack: (listener) => graniteEvent.addEventListener('backEvent', { onEvent: listener }),
     subscribeHome: (listener) => graniteEvent.addEventListener('homeEvent', { onEvent: listener }),
     close: () => Screen.close(),
+};
+
+// @capacitor/app은 web/toss 번들에 들어가면 안 되므로 정적 import 금지 —
+// 이 default 구현 안에서만 동적 import 한다(environment === 'capacitor'일 때만 호출됨).
+type CapacitorAppModule = typeof import('@capacitor/app');
+
+const defaultCapacitorBridge: CapacitorLifecycleBridge = {
+    subscribeBack: (listener) => {
+        let cancelled = false;
+        let handle: { remove(): void } | null = null;
+        void import('@capacitor/app').then((mod: CapacitorAppModule) => {
+            if (cancelled) return;
+            void mod.App.addListener('backButton', () => listener()).then((added) => {
+                if (cancelled) {
+                    added.remove();
+                    return;
+                }
+                handle = added;
+            });
+        });
+        return () => {
+            cancelled = true;
+            handle?.remove();
+        };
+    },
+    exitApp: () => {
+        void import('@capacitor/app').then((mod: CapacitorAppModule) => mod.App.exitApp());
+    },
 };
 
 const normalizeInset = (value: unknown) => {
@@ -71,6 +105,7 @@ export const bindLifecycleBridge = ({
     documentTarget = document,
     callbacks,
     tossBridge = defaultTossBridge,
+    capacitorBridge = defaultCapacitorBridge,
 }: BindLifecycleBridgeOptions): (() => void) => {
     const cleanups: Array<() => void> = [];
     let lifecycleState = documentTarget.visibilityState === 'hidden' ? 'background' : 'foreground';
@@ -122,6 +157,29 @@ export const bindLifecycleBridge = ({
         }
         try {
             cleanups.push(tossBridge.subscribeHome(() => transition('background', 'home')));
+        } catch (error) {
+            callbacks.onError?.(error);
+        }
+    }
+
+    if (environment === 'capacitor') {
+        try {
+            cleanups.push(capacitorBridge.subscribeBack(() => {
+                void (async () => {
+                    let handled = false;
+                    try {
+                        handled = await callbacks.onBack?.() ?? false;
+                    } catch (error) {
+                        callbacks.onError?.(error);
+                    }
+                    if (handled) return;
+                    try {
+                        capacitorBridge.exitApp();
+                    } catch (error) {
+                        callbacks.onError?.(error);
+                    }
+                })();
+            }));
         } catch (error) {
             callbacks.onError?.(error);
         }
