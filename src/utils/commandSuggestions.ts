@@ -1,12 +1,13 @@
 import { DB } from '../data/db';
 import { GS } from '../reducers/gameStates';
+import type { GameMode } from '../reducers/gameStates';
 import type { Player } from '../types/index.js';
 
 /**
  * getAvailableCommands — 현재 상황에서 사용 가능한 커맨드 목록
  * Fast-refresh 경고 방지를 위해 별도 파일로 분리
  */
-export const getAvailableCommands = (gameState: string, player: Player | null | undefined) => {
+export const getAvailableCommands = (gameState: GameMode, player: Player | null | undefined) => {
     const isSafe = DB.MAPS[player?.loc as string]?.type === 'safe';
 
     const base = [

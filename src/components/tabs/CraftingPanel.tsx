@@ -12,6 +12,7 @@ import ItemIcon from '../icons/ItemIcon';
 import SignalBadge from '../SignalBadge';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { Item, ItemRecipeDef, ItemType, Player } from '../../types/index.js';
+import type { GameMode } from '../../reducers/gameStates';
 
 const TYPE_LABEL: Record<string, string> = { weapon: '무기', armor: '방어구', shield: '방패' };
 
@@ -24,7 +25,7 @@ type CraftingPanelActions = Pick<GameActions, 'craft' | 'synthesize'>;
 interface CraftingPanelProps {
     player: Player;
     actions?: CraftingPanelActions;
-    setGameState?: (state: string) => void;
+    setGameState?: (state: GameMode) => void;
     onOpenArchiveConsole?: (tab?: string) => void;
 }
 

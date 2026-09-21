@@ -21,6 +21,7 @@ import type { MilestoneStoryBeatId } from '../utils/milestoneStory';
 import type { createGameActions } from './useGameActions';
 import type { createCombatActions } from './useCombatActions';
 import type { createInventoryActions } from './useInventoryActions';
+import type { GameMode } from '../reducers/gameStates';
 
 /** 게임 로그 출력 — `useGameEngine.addLog` (AT.ADD_LOG 래퍼)의 시그니처. */
 export type AddLog = (type: string, text: string) => void;
@@ -132,7 +133,7 @@ export interface InventoryActionCtx extends Pick<
 export interface EngineStableActions {
     // --- UI 상태 setter ---
     setSideTab: (val: string) => void;
-    setGameState: (val: string) => void;
+    setGameState: (val: GameMode) => void;
     setShopItems: (val: GameState['shopItems']) => void;
     acknowledgeMilestoneStoryBeat: (id: MilestoneStoryBeatId) => void;
     openExpeditionDebrief: () => void;

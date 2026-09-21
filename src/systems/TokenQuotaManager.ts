@@ -237,7 +237,8 @@ export const TokenQuotaManager = {
     //
     //   **배포 순서는 rules 먼저다.** 규칙의 `hasOnly`만 넓혔으므로 신규 rules는 구버전
     //   클라이언트(4키)를 그대로 받지만, 구버전 rules는 6키를 거부한다. 같은 커밋이어도
-    //   배포는 두 파이프라인이라(.github/workflows/deploy.yml은 hosting만 올린다) 그 창이
+    //   배포는 두 파이프라인이라(.github/workflows/deploy.yml은 rules만 올리고, 웹 배포는
+    //   Cloudflare Pages가 별도로 담당한다 — Wave 20 L2) 그 창이
     //   실제로 존재하므로, 거부되면 **이번 호출 안에서 4키로 한 번 접는다** — 그 창에서
     //   `used` 미러링까지 같이 죽지 않게. 상태를 안 들고 있으므로 rules가 올라간 순간
     //   다음 동기화부터 저절로 6키로 돌아온다.

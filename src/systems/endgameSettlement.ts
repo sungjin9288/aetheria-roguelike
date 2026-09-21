@@ -3,11 +3,12 @@ import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import type { Monster, Player } from '../types/index.js';
 import { normalizeEndgameProgress } from '../utils/dataMigration';
+import type { GameMode } from '../reducers/gameStates';
 
 export interface EndgameSettlementResult {
     player: Player;
     enemy: Monster | null;
-    gameState: string;
+    gameState: GameMode;
     logs: Array<{ type: string; text: string }>;
     outcome: 'none' | 'ascension' | 'true_boss' | 'true_ending' | 'replay' | 'blocked';
 }

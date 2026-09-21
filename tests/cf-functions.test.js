@@ -19,6 +19,16 @@ test('hosting: Cloudflare is the only active web function surface', () => {
 
     assert.doesNotMatch(packageJson, /\bvercel\b/i);
     assert.doesNotMatch(workflow, /\bvercel\b/i);
+
+    // Wave 20 L2 — Firebase Hosting job(deploy-dev/deploy-prod)은 삭제됐다. 실제
+    // 프로덕션 웹 호스트는 Cloudflare Pages뿐이라는 이 계약의 제목을 워크플로/설정
+    // 수준에서도 고정한다: `deploy.yml`은 hosting 배포 액션을 다시 부르지 않고,
+    // `firebase.json`은 `hosting` 키를 다시 갖지 않는다(둘 다 부재 불변식 — 식별자
+    // 매칭이라 워크플로 포맷 변경에는 안 걸리고 되돌리기에만 걸린다).
+    assert.doesNotMatch(workflow, /\baction-hosting-deploy\b/);
+
+    const firebaseJson = JSON.parse(readFileSync(path.join(repoRoot, 'firebase.json'), 'utf8'));
+    assert.equal('hosting' in firebaseJson, false);
 });
 
 // Cloudflare Pages Functions의 handler contract(onRequestPost/onRequestOptions 존재,

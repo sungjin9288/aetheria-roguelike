@@ -125,3 +125,23 @@ test('폴드는 렌더 가능성만 바꾼다 — 세이브가 찍힌 상황에 
         + '(첫 조건이 폴드된 gameState를 읽으면 {killStackAtk: …}가 남는다 — 실측)',
     );
 });
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 2026-09 Wave 20 L1 — 봉투의 `gameState`는 `JSON.parse` 결과라 **모드가 아닐 수도**
+// 있다. 오늘까지 `restorableMode`의 else는 `true`라 미지의 문자열(`'formation'`)이
+// 그대로 복원됐다 — UI의 어느 트리도 그 값을 그리지 못하므로 조용한 벽돌이다.
+// 이제 `isGameMode`로 경계에서 좁히고, 모드가 아닌 값은 `idle`로 접는다.
+// ─────────────────────────────────────────────────────────────────────────────
+
+test('GS 밖 문자열은 복원되지 않는다 — 동반 상태가 있어도 idle로 접힌다', () => {
+    assert.equal(
+        restore({ gameState: 'formation' }).gameState, GS.IDLE,
+        '미지의 모드는 idle로 접힌다 (오늘의 else-true는 이 값을 그대로 복원한다)',
+    );
+    const withEnemy = restore({ gameState: 'formation', enemy: ENEMY });
+    assert.equal(
+        withEnemy.gameState, GS.IDLE,
+        '동반 상태가 우연히 함께 와도 미지의 모드는 복원되지 않는다',
+    );
+    assert.deepEqual(withEnemy.enemy, ENEMY, '봉투의 enemy 자체는 기존대로 실린다');
+});

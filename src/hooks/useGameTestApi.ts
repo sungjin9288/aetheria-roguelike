@@ -18,6 +18,7 @@ import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
 import { RELICS } from '../data/relics';
 import { GS } from '../reducers/gameStates';
+import type { GameMode } from '../reducers/gameStates';
 import { AT } from '../reducers/actionTypes';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { getPerfSnapshot, markPerf } from '../utils/performanceMarks';
@@ -140,7 +141,7 @@ const buildReturnBriefingScenarioPlayer = (player: Player, now: Date): Partial<P
 
 /** getTrueEndingJourneySnapshot() 반환 모양. */
 export interface TrueEndingJourneySnapshot {
-    gameState: string;
+    gameState: GameMode;
     combatTurn: number;
     enemy: { name?: string; baseName?: string; hp?: number; maxHp?: number } | null;
     name: string;
@@ -179,7 +180,7 @@ export interface InvestmentSnapshot {
 
 /** getAscensionSnapshot() 반환 모양. */
 export interface AscensionSnapshot {
-    gameState: string;
+    gameState: GameMode;
     name: string;
     level: number;
     prestigeRank: number;
@@ -265,7 +266,7 @@ export interface DomMetricsSnapshot {
 
 /** getGoldMultiplierCombatSnapshot() 반환 모양. */
 export interface GoldMultiplierCombatSnapshot {
-    gameState: string;
+    gameState: GameMode;
     enemy: { name?: string; hp?: number; gold?: number } | null;
     gold: number;
     totalGold: number;

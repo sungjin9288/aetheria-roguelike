@@ -5,6 +5,7 @@ import QuickSlot from './QuickSlot';
 import type { Item, Player } from '../types/index.js';
 import type { LogEntry } from '../types/session.js';
 import { GS } from '../reducers/gameStates';
+import type { GameMode } from '../reducers/gameStates';
 import { getLocationVisual } from '../utils/locationVisuals';
 
 const LOG_STYLES: Record<string, { text: string; bg: string; icon: LucideIcon | null }> = {
@@ -99,7 +100,7 @@ const renderLogText = (text: string) => {
 //   푸터 표시 플래그 / autoFocus attr 모두 dead.
 interface TerminalViewProps {
     logs: LogEntry[];
-    gameState?: string;
+    gameState?: GameMode;
     onCommand?: (cmd: string) => void;
     player?: Player | null;
     quickSlots?: Array<Item | null>;

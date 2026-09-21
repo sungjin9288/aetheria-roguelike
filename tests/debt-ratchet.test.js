@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import ts from 'typescript';
 
 /**
  * Wave 4 Track P — 부채 래칫(ratchet) 회귀 가드.
@@ -215,5 +216,118 @@ test('debt-ratchet: src/systems/** 안에서 Math.random(을 직접 호출하지
         SYSTEMS_MATH_RANDOM_BASELINE,
         `src/systems/** 에서 Math.random( 직접 호출 ${total}건 발견 — 0건이어야 한다. ` +
         `seed 스트림을 쓸 것. 상위 offender:\n${formatOffenders(perFile)}`,
+    );
+});
+
+// ── (f) src/** (src/data 제외) 디렉터리별 AST 기준 한글 노드 개수 ────────────
+// Wave 20 §24 실측 4: (d)의 정규식 카운터(`countKoreanStringLiterals`)는 따옴표로
+// 감싸인 문자열/템플릿 리터럴만 본다 — JSX 태그 사이의 텍스트 노드(`JsxText`,
+// 예: `<span>한국어</span>`)는 따옴표가 없으므로 **구조적으로 0으로 센다**.
+// AST 스캔(TypeScript compiler API)으로 재보면 src/components/**에만 JsxText
+// 한글 노드가 549개 있다 — 이것이 정확히 CLAUDE.md §5 DON'T "컴포넌트 JSX 안에
+// 한국어 직접 입력 금지"가 가리키는 대상이고, (d)는 이 클래스의 회귀를 못 잡는다.
+//
+// (f)는 `ts.createSourceFile`로 파일마다 파싱만 하고(타입체크 없음 — 빠르게 유지)
+// StringLiteral · NoSubstitutionTemplateLiteral · TemplateHead/Middle/Tail ·
+// JsxText 중 한글(자모+음절)을 포함한 노드를 센다. 주석은 애초에 이 노드 종류가
+// 아니므로 별도 처리 없이 제외된다.
+//
+// (d)는 손대지 않는다 — 카운팅 *방법*을 바꾸는 것은 래칫이 아니라 재고정이다.
+// (f)는 src/systems·src/reducers도 다시 세지만 값이 (d)와 다르다(AST 120/29 vs
+// 정규식 122/26) — 같은 디렉터리를 두 방법으로 재는 대조 자체가 "정규식이 JSX를
+// 놓친다"는 근거를 계약 안에 남긴다(§24 결함 주입 표: 같은 주입에 (d)는 초록,
+// (f)는 red).
+//
+// `typescript`는 이미 devDependency다(package.json) — 새 의존 추가 없음.
+
+const KOREAN_RE = /[ㄱ-ㆎ가-힣]/;
+const KOREAN_AST_NODE_KINDS = new Set([
+    ts.SyntaxKind.StringLiteral,
+    ts.SyntaxKind.NoSubstitutionTemplateLiteral,
+    ts.SyntaxKind.TemplateHead,
+    ts.SyntaxKind.TemplateMiddle,
+    ts.SyntaxKind.TemplateTail,
+    ts.SyntaxKind.JsxText,
+]);
+
+/** 파일 하나를 파싱해(타입체크 없음) 한글 포함 AST 노드 개수를 센다. */
+function countKoreanAstNodesInFile(file) {
+    const source = fs.readFileSync(file, 'utf8');
+    const scriptKind = file.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS;
+    const sourceFile = ts.createSourceFile(file, source, ts.ScriptTarget.Latest, false, scriptKind);
+    let count = 0;
+    const visit = (node) => {
+        if (KOREAN_AST_NODE_KINDS.has(node.kind) && KOREAN_RE.test(node.text ?? '')) {
+            count += 1;
+        }
+        ts.forEachChild(node, visit);
+    };
+    visit(sourceFile);
+    return count;
+}
+
+/** `src/<dir>/**` 전체(.ts/.tsx)를 스캔해 {total, perFile} 로 반환한다. */
+function countKoreanAstNodesInDir(dir) {
+    const files = listFiles(dir, ['.ts', '.tsx']);
+    let total = 0;
+    const perFile = [];
+    for (const file of files) {
+        const count = countKoreanAstNodesInFile(file);
+        if (count > 0) {
+            total += count;
+            perFile.push([rel(file), count]);
+        }
+    }
+    perFile.sort((a, b) => b[1] - a[1]);
+    return { total, perFile };
+}
+
+// 2026-09-21 Wave 20 L3 착수 시점(HEAD `49defbc9`, 이 워크트리) 실측값을 그대로
+// 상한으로 고정한다 — src/ 바로 아래의 모든 디렉터리(src/data 제외) 전수. 새
+// 디렉터리가 생기면 아래 테스트가 "상한 없음"으로 먼저 red가 되어 실측 없이
+// 조용히 빠지는 것을 막는다(§7 부재/상한 가드).
+const AST_KOREAN_CEILINGS = {
+    assets: 0,
+    components: 1319,
+    hooks: 285,
+    platform: 0,
+    pwa: 0,
+    reducers: 29,
+    services: 32,
+    systems: 120,
+    types: 16,
+    utils: 1979,
+};
+
+test('debt-ratchet: src/** (src/data 제외) 디렉터리별 AST 한글 노드 개수는 각 상한을 넘지 않는다 (하락만 허용, StringLiteral·템플릿 조각·JsxText 포함)', () => {
+    const srcAbs = path.join(ROOT, 'src');
+    const topDirs = fs.readdirSync(srcAbs, { withFileTypes: true })
+        .filter((entry) => entry.isDirectory() && entry.name !== 'data')
+        .map((entry) => entry.name)
+        .sort();
+
+    const missingBaseline = topDirs.filter((dir) => !(dir in AST_KOREAN_CEILINGS));
+    assert.deepEqual(
+        missingBaseline,
+        [],
+        `src/ 바로 아래에 상한이 없는 새 디렉터리가 있다: ${missingBaseline.join(', ')}. ` +
+        `실측해서 AST_KOREAN_CEILINGS에 상한을 추가할 것 — 데이터 없이 통과시키지 말 것.`,
+    );
+
+    const failures = [];
+    for (const dir of topDirs) {
+        const ceiling = AST_KOREAN_CEILINGS[dir];
+        const { total, perFile } = countKoreanAstNodesInDir(`src/${dir}`);
+        if (total > ceiling) {
+            failures.push(
+                `src/${dir}: ${total}건으로 기준선(${ceiling}건)을 초과했다. 상위 offender:\n` +
+                formatOffenders(perFile, 5),
+            );
+        }
+    }
+
+    assert.ok(
+        failures.length === 0,
+        `AST 기준 한글 노드(StringLiteral·템플릿 조각·JsxText)가 상한을 초과한 디렉터리가 있다:\n\n${failures.join('\n\n')}`,
     );
 });
