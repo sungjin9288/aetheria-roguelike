@@ -251,7 +251,8 @@ test('Firestore quota rules block keeps its shape (텍스트 — 의미는 에�
 //   `50` 리터럴이 `BALANCE.DAILY_AI_LIMIT`와 같은가, 단조 절이 모든 카운터에 걸렸는가,
 //   create/update가 같은 모양 함수를 부르는가. 이것들은 의미 테스트가 잡지 못하는 종류다
 //   (예: 단조 절을 한 카운터에서 빼도 그 카운터를 되감는 케이스를 안 쓰면 초록이다).
-//   배포는 여전히 수동이다 — deploy.yml은 hosting만 올린다(§17.1 발견 6).
+//   배포는 `deploy.yml`의 `deploy-rules` job이 담당한다(Wave 20 L2 — hosting job은
+//   삭제됐고, 웹 배포는 Cloudflare Pages가 별도로 담당한다).
 // ─────────────────────────────────────────────────────────────────────────────
 
 test('rules의 키 집합은 클라이언트 페이로드에서 도출된다 — 한쪽만 넓히면 여기가 깨진다', async () => {

@@ -1,6 +1,9 @@
 # Firebase 배포 설정 가이드
 
-GitHub Actions를 통해 Firebase Hosting에 자동 배포하려면 Firebase 프로젝트의 자격 증명(Service Account Key)을 GitHub Secrets에 등록해야 합니다.
+GitHub Actions를 통해 Firestore rules를 자동 배포하려면(`.github/workflows/deploy.yml`의 `deploy-rules` job)
+Firebase 프로젝트의 자격 증명(Service Account Key)을 GitHub Secrets에 등록해야 합니다. 웹 앱(Hosting)은
+이 저장소의 GitHub Actions가 배포하지 않는다 — 실제 프로덕션 웹 호스트는 Cloudflare Pages이고 그 배포는
+Cloudflare 프로젝트의 git 연동이 별도로 담당한다(Wave 20 L2, [DEPLOYMENT.md](./DEPLOYMENT.md) 참고).
 
 ## 1. Firebase Service Account Key 생성
 
