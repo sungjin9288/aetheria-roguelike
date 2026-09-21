@@ -987,6 +987,14 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 3. **`SET_GAME_STATE`에서 `enemy` 정리 추가.** 전이 하나에 정리 책임을 얹으면 다른 전이와 비대칭이 된다. 무료 이탈 자체를 막았으므로 버려진 적이 생기는 경로가 사라진다 — 원인을 닫는 쪽이 싸다.
 4. **`tier`/아트 identity(§18.1) · `deploy-rules` 첫 실행(§20).** 각각 소유자 결정과 외부 사건 대기로 이번 wave에서도 손대지 않는다.
 
+**머지 전 적대적 감사 — 내 주장 하나가 거짓이었다.** PR #44가 CI 그린이 된 뒤, 머지 전에 입력 표면을 5개 렌즈(터미널 파서 재감사 · QA 시드 API · 컴포넌트 직접 전이 · 네이티브 브릿지 · reducer 핸들러)로 독립 탐색하고 각 발견을 3관점(correctness/reachability/severity)으로 반증 시도했다. 결과:
+
+- **`ControlPanel`의 상점 버튼이 세 번째 표면이었다**(`ControlPanel.tsx:528`). 나는 커밋에 "파서와 `GameRoot` 둘 다 이 액션만 부른다"고 적었고 그 문장 자체는 참이지만, **표면이 셋인데 둘만 셌다.** 놓친 이유가 중요하다 — **구조 계약이 파서만 검사하고 있었다.** 그래서 이 PR에 (a) 그 버튼을 `openShop` 경유로 돌리고 (b) 계약을 "표면 열거"에서 **"`src/**` 어디에도 상점 진입 시퀀스를 복제하는 곳이 0곳"**(부재 불변식 — §7이 소스 정규식을 허용하는 범주)으로 바꿨다. 주입으로 확인: 되돌리면 새 계약이 그 파일을 지목한다. 현재는 `gameState === GS.COMBAT` 조기 반환이 상태 가드를 대신하지만 **그건 렌더 조건에 얹힌 가드**고, 실측하면 그 조기 반환 목록에 `dead`/`ascension`/`true_ending`이 없다.
+- **긍정 확인**: QA 시드 API는 프로덕션에서 닫혀 있다 — `isTestHarnessBuild()`가 상수 false로 접히고, 클린 프로덕션 빌드 + Playwright로 `?smoke=1`/`?e2e=1`/`?deviceQa=…` 5종을 실제로 띄워 `window.__AETHERIA_TEST_API__`가 전부 `undefined`임을 확인했다(대조군으로 하네스 빌드에서는 등장). 시드 API 등록 조건과 클라우드 쓰기 차단 조건이 **같은 술어(`isMockRuntime()`)**라 어긋날 수 없다. 플랫폼 뒤로가기도 `FOCUS_PANEL_STATES`에 `combat`이 없어 Wave 17식 이탈이 재현되지 않는다.
+- **Wave 18로 넘기는 발견 4건**(이 PR의 범위 밖, 전부 선재 결함): ① `gameState: 'dead'`로 복원되면 `ControlPanel`에 `dead` 조기 반환이 없어 이동 버튼이 렌더되고 `RESET_GAME` 없이 런이 계속된다(사망 페널티 우회) ② `lootGrave`(`questActions.ts:18`)에 `gameState` 가드가 0건이고 사망 상태에서 `control-recover`가 렌더돼 죽은 자리에서 자기 묘비를 즉시 회수한다(골드 복제) ③ `ReturnBriefingCard`가 전투 중에도 렌더되고 그 버튼이 `setGameState(IDLE)`로 **도주 판정 없이 전투를 버린다** — Wave 17이 shop에서 고친 것과 **정확히 같은 결함이 다른 표면에** 있다 ④ Capacitor(Android/iOS) 빌드에서 `platformBack` 배선이 Toss/sandbox 전용이라 뒤로가기 핸들러 9개가 전부 도달 불가. ①②③는 공통 전제가 "`dead`/`combat` 상태가 세이브로 영속되고 복원된다"이므로 **상태별 렌더 게이트를 한 축으로 묶어** 다루는 것이 맞다.
+
+**이 감사가 남기는 판단 기준**: 계약이 검사하는 **범위**가 주장의 범위보다 좁으면, 그 계약은 초록인데 주장은 거짓일 수 있다. 표면을 열거하는 계약은 열거한 것만 지킨다 — **부재 불변식으로 쓰면 범위가 `src/**` 전체가 된다.**
+
 **최종 게이트** (head `8008a4cd`, CI 동일 빌드): type-check 0 · lint 0 · unit **5,123 / 5,123**(skip 0, Wave 16 대비 +9) · build:guard ok · CI-env build ok · e2e **121 / 121**(61 + 60) · perf desktop ok(FCP 564ms) / mobile ok(FCP 436ms) · `release-complete-core` 증빙 **13종** verify 전부 ok.
 
 **남은 후보 (Wave 18)**: (1) **`tier`/아트 identity** — §18.1 발견 1·2, 여전히 소유자 정책 대기(“provenance 역사 1,065개 파일을 재핀해도 되는가”); (2) **`deploy-rules` 첫 실전 실행 결과** — §20 G3, develop 푸시라는 외부 사건 대기. 첫 실패는 “설계가 틀렸다”가 아니라 “IAM 역할이 hosting 전용이다”로 읽을 것; (3) **입력 표면 축의 나머지** — 이번 wave는 터미널만 전수했다. QA 시드 API(`useGameTestApi`)·네이티브 브릿지(`platformBack`/`lifecycleBridge`)·`GameRoot`의 다른 `open_*` 직접 전이가 같은 검사를 아직 안 받았다; (4) 퀘스트 104 `beyond-anchors` 공백(§19에서 기각, 재측정 없이 재논의 금지); (5) class-(b) 소스 가드 1,807건 — Wave 11 C4 정책대로 방치하되 **깨질 때 이관**이 실효 전략임이 Wave 16에서 확인됐다.

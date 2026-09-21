@@ -74,6 +74,48 @@ test('shop 명령은 openShop 액션 하나로만 나간다', () => {
     }
 });
 
+// ── 구조 계약 2: 상점 진입 표면은 **전부** openShop을 경유한다 ────────────────
+//
+// Wave 17의 첫 통합은 파서와 GameRoot만 고쳤고, 위 구조 계약도 **파서만** 검사했다.
+// 머지 전 감사가 `ControlPanel`의 상점 버튼이 여전히 시퀀스를 복제하고 있음을 찾았다 —
+// 즉 "입력 표면을 전수했다"는 주장이 거짓이었고, 그걸 놓친 이유는 **계약이 한 표면만
+// 보고 있었기 때문**이다. 그래서 여기서는 표면을 열거하지 않고 `src/**`에서 상점 진입
+// 시퀀스를 복제하는 곳이 **0곳**임을 확인한다(부재 불변식 — CLAUDE.md §7이 소스 정규식
+// 가드를 허용하는 바로 그 범주다).
+
+test('src/** 어디에도 상점 진입 시퀀스를 복제하는 곳이 없다 (openShop이 유일 소유자)', async () => {
+    const { readdir, readFile } = await import('node:fs/promises');
+    const path = await import('node:path');
+    const root = path.join(import.meta.dirname, '..', 'src');
+
+    const walk = async (dir) => {
+        const out = [];
+        for (const entry of await readdir(dir, { withFileTypes: true })) {
+            const full = path.join(dir, entry.name);
+            if (entry.isDirectory()) out.push(...await walk(full));
+            else if (/\.(ts|tsx)$/.test(entry.name)) out.push(full);
+        }
+        return out;
+    };
+
+    const OWNER = path.join(root, 'hooks', 'gameActions', 'characterActions.ts');
+    const offenders = [];
+    for (const file of await walk(root)) {
+        if (file === OWNER) continue;
+        const source = await readFile(file, 'utf8');
+        // 식별자를 매칭한다 — 포맷(줄바꿈/공백/인자 순서)이 아니라.
+        const setsShopItems = /\bSET_SHOP_ITEMS\b|\bsetShopItems\s*[(?]/.test(source);
+        const entersShopState = /setGameState\??\.?\(\s*GS\.SHOP|SET_GAME_STATE[\s\S]{0,80}GS\.SHOP|setGameState\s*\(\s*['"`]shop['"`]/.test(source);
+        if (setsShopItems && entersShopState) {
+            offenders.push(path.relative(root, file));
+        }
+    }
+    assert.deepEqual(
+        offenders, [],
+        `상점 진입 시퀀스를 복제하는 표면이 남아 있다 — openShop을 부를 것:\n  ${offenders.join('\n  ')}`,
+    );
+});
+
 // ── 게이트 계약: 상점 진입의 가드는 액션이 소유한다 ──────────────────────────
 
 const runOpenShop = (loc, gameState) => {
