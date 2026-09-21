@@ -1247,3 +1247,5 @@ restorableMode(mode):
 3. K3 iOS 델타(소유자 `ios:sync`) + Android 실기 뒤로가기 확인 — 단위 테스트가 못 보는 층.
 4. `tier`/아트 identity — 변동 없음(§19).
 
+
+**게이트** (head `bddcb078` 코드 동일, 직렬 실행 07:38~07:58): type-check 0 · lint 0 · unit **5,157 / 5,157**(350파일, skip 0, Wave 18 대비 +27) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **121 / 121**(61 + 60, chromium-mobile) · perf desktop FCP 504ms / mobile FCP 504ms · tracked 증빙 verify 15종 ok.
