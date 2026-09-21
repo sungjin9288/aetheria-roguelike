@@ -285,6 +285,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 - `event-chain-cost.test.js` — **체인의 열림→완주 구간**과 **승천 지점을 걸치는 체인이 0개임**을 고정한다 (Wave 14 F2 + Wave 15 G1). 완주 게이트는 종착 스텝의 게이트가 아니라 **전 스텝 max**다 — `chainEventHandlers`가 스텝 순서를 강제하므로 중간 스텝이 더 깊으면 그게 완주 비용이다. 스텝 지역 하나라도 못 읽으면 남은 스텝의 max가 아니라 **미상**(fail-closed)
 - `firestore-rules-semantics.test.js` — **rules를 에뮬레이터로 실행** (Wave 14 F3). 테스트는 rules가 아니라 **클라이언트 쓰기 지점 6곳의 실제 페이로드**에서 유도한다 — rules 텍스트를 재현한 테스트는 거부가 버그인 rules 위에서도 초록이다. `npm run test:rules`(JDK 필요, CI 별도 job). 에뮬레이터가 없으면 러너 존재를 단언한다(skip 0 유지)
 - `class-tier-depth.test.js` — **`tier`는 `모험가`로부터의 BFS 깊이다** (Wave 14 F4). 괴리는 정확히 `['성직자']` 하나이고 **늘어날 수 없다**. 그 하나를 못 고치는 이유는 `scripts/artCatalog.mjs`가 `tier`를 아트 카탈로그 identity 해시에 넣고 그 해시가 provenance 기록 포함 1,065개 파일에 핀돼 있기 때문이다(§18.1 발견 1·2)
+- `restorable-mode-contract.test.js` — **세이브 봉투에 없는 동반 상태를 요구하는 모드는 복원되지 않는다** (Wave 18). 모드 × 동반 상태 표를 고정한다: `combat`은 `enemy`, `event`는 `currentEvent`가 함께 와야 하고 `dead`는 언제나 `idle`로 접힌다. 결함 주입 3종(event 폴드 제거 / dead 폴드 제거 / 정리 조건을 폴드된 값으로 되돌리기)이 **각각** 걸린다 — 세 번째는 처음에 안 걸렸고, 내 픽스처가 가짜 모양이라 **공허참**이었다(진짜 모양으로 바꿔 판별 확보)
 - `command-surface-contract.test.js` — **터미널은 UI와 평행한 두 번째 입력 표면이다** (Wave 17). 구조 계약: `commandParser`는 **어떤 명령에서도 `setGameState`/`setShopItems`를 직접 부르지 않는다**(명령 18 × 상태 9 전수). 게이트 계약: 상점 진입의 안전지대·상태 가드는 `openShop` 액션이 소유한다. 결함 주입 2종이 구조 계약과 행동 계약을 **각각** 깨뜨린다
 - `safe-zone-explore-contract.test.js` — **안전지대 탐험의 3겹 계약** (Wave 16). ① `spawnEnemy`는 빈 몬스터 테이블에서 `mStats`/`baseName` 모두 `null`이다 ② 몬스터 없는 safe 지역은 전부 평화롭고(전투 0건) 황금 왕국은 그대로 조우한다 ③ 대기 중인 체인 스텝은 safe 지역에서도 발동하고 UI에 노출된다. 세 겹은 서로를 가리지 않는다 — 결함 주입 2종이 각각 하나씩만 깨뜨리는 것으로 증명했다
 - `map-route-gate.test.js` — **맵의 실제 진입 레벨** (Wave 13 E2). `src/utils/mapRouteGate.ts`가 리포트와 UI의 공용 authority다. 52개 중 10개는 선언 `level`과 경로 게이트가 다르고(유일한 경로가 더 높은 지역을 지난다), `level: 'infinite'`는 잠금이 아니라 **잠금 없음**이다(`NaN` 비교). 이 트랙은 **표시이지 잠금이 아니다** — `getMapAccess`는 선언값 그대로이고 테스트가 그걸 고정한다
@@ -334,18 +335,26 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 **5. Daily Protocol 타이밍**
 탐험마다 reset하면 안 됨. 날짜(timestamp) 기반으로만 reset. `getDailyProtocolCompletions()` 로직 수정 시 주의.
 
-**6. Firebase 익명 인증**
+**6. 복원할 수 없는 모드는 복원하지 않는다**
+세이브 봉투는 여섯 필드다 — `{player, gameState, enemy, grave, currentEvent, quickSlots}`(`useFirebaseSync.flushLocalSave`). **봉투 밖 런타임 상태를 화면 조건으로 쓰는 모드를 그대로 복원하면 그 화면을 띄울 조건이 영원히 거짓이 된다.** `LOAD_DATA`의 `restorableMode()`가 그 판정을 소유한다(Wave 18):
+- `combat` → `enemy`가 함께 와야 한다(기존 한 줄, 이 결함 종류의 첫 사례)
+- `event` → `currentEvent`가 함께 와야 한다. `exploreActions`가 AI 호출(9.5s) **전에** `GS.EVENT`를 세우고 저장 디바운스는 500ms라 `{event, currentEvent: null}` 세이브가 실재한다. 복원하면 `isAiThinking`이 비영속이라 false로 돌아오고 `EventPanel`이 `return null` → **웹/iOS 영구 벽돌**(TerminalView도 `FOCUS_PANEL_STATES`라 마운트되지 않는다)
+- `dead` → 언제나 접는다. `runSummary`는 전투 패배 순간에만 만들어지고 저장되지 않는데 사망 화면 조건이 `GS.DEAD && runSummary`다
+
+**새 모드를 봉투에 넣지 않은 채 영속시키려면 여기에 줄을 추가해야 한다.** 그리고 그 아래 두 정리 분기는 **서로 다른 값을 읽는다** — 모험 유물 정리는 `requestedMode`(폴드된 값으로 읽으면 사망 세이브의 정리가 건너뛰어진다), 포식 보너스 종료는 폴드된 `gameState`(`requestedMode`로 바꾸면 `adventure-relic-lifetime`의 "불완전 전투 정리"가 깨진다). 둘 다 실측으로 갈랐으니 바꾸지 말 것.
+
+**7. Firebase 익명 인증**
 앱 부팅 시 자동 초기화. `bootStage`가 완료되기 전에 게임 렌더링 금지 (저장 데이터 로드 전 기본값으로 덮어씌워지는 race condition 주의).
 **부트 순서·복원 payload 선택·복원 텔레메트리는 `src/platform/bootStateMachine.ts`가 소유한다**(Wave 10 B3 + Wave 11 C1). `useFirebaseSync.ts`에는 IO(저장소·Firestore·`migrateData`·`cloudSaveAuthority`)·타이머/구독 배선·로그 id 생성·React ref 갱신·텔레메트리 전송만 남는다 — 훅에서 `AT.LOAD_DATA`를 직접 dispatch하면 전이표 밖에 두 번째 부트 경로가 생기므로 금지이고(테스트가 소스에서 잡는다), 새 부트 분기는 이벤트 + 효과로 전이표에 넣을 것.
 
-**7. `firestore.rules`는 파이프라인이 배포하지만, 배포 성공은 저장소가 보장하지 못한다**
+**8. `firestore.rules`는 파이프라인이 배포하지만, 배포 성공은 저장소가 보장하지 못한다**
 Wave 15 G3이 `deploy.yml`에 `deploy-rules` job을 넣었다 — hosting **앞에** 돌고(`deploy-prod`가 `needs: [build, deploy-rules]`), 버전 리터럴은 `package.json`의 `firebase:cli` 한 곳이며(`test:rules`와 같은 버전), 시크릿 선택은 식 안의 `A && B || C` 삼항이 **아니라** 셸 분기다(그 삼항은 PROD가 비면 조용히 DEV로 떨어져 **prod 푸시가 dev 프로젝트에 배포되고 초록으로 끝난다**). 그래도 **충분조건이 아니다**: 서비스 계정이 hosting 전용 역할이면 `firebaserules.releases.update`에서 `PERMISSION_DENIED`로 죽고, 그건 저장소 안에서 확인할 수 없다. 그 경우 job은 **빨갛게 죽지만 hosting은 나간다**(`continue-on-error`는 쓰지 않는다 — 초록은 "배포됐다고 믿는데 안 된 상태"를 다시 만든다). 즉 실패 시 "rules가 먼저"라는 보장은 **성공 경로에만** 남는다. 새 클라이언트 쓰기 지점은 여전히 `permission-denied` 시 degrade 경로를 함께 둘 것(Wave 13 E4의 4키 폴백이 선례).
 
-**8. `tier`는 비용 밴드가 아니라 위상 라벨이고, 아트 identity에 묶여 있다**
+**9. `tier`는 비용 밴드가 아니라 위상 라벨이고, 아트 identity에 묶여 있다**
 `CLASSES[*].tier`를 읽는 곳은 4군데다 — `ClassIcon`의 `TIER_COLORS`(색), `skill-branch-parity`의 분기 의무, `progressionSimulator`의 `jobSnapshots[].tier`(골든 해시), 그리고 **`scripts/artCatalog.mjs`의 `normalizeClasses`가 아트 카탈로그 identity 해시**에 넣는다. 그 해시(`catalogSha256`)는 `scripts/art_sources/**`의 아트 생산 provenance 65개를 포함해 1,065개 파일에 핀돼 있고, 아트 스위트는 비활성 해시를 가진 기록이 **거부되는지**를 테스트한다. 즉 `tier` 한 글자를 바꾸면 유닛 70건이 red가 되고 그 복구는 증빙 재생성이 아니라 역사 재작성이다. 비용 게이트는 `reqLv`가 소유한다 — 밸런스를 만질 때 `tier`를 건드리지 말 것.
 
-**9. 청크 분리 설정**
+**10. 청크 분리 설정**
 `vite.config.js`의 `manualChunks` 설정이 성능에 직결. 실측 청크는 vendor-react · vendor-motion · vendor-charts · **vendor-firebase-{firestore,auth,core}**(하나가 아니라 셋이다 — cycle 61에서 기능별로 쪼갰다) · game-data · game-combat · game-equipment다. 프로덕션 빌드 상위는 game-data 480K · index 464K · vendor-react 188K · vendor-firebase-firestore 180K 순(Wave 17 실측). 대형 라이브러리 추가 시 청크 포함 여부를 검토할 것 — 다만 **결과를 재는 것은 `npm run perf:guard`(FCP/DCL blocking)**이고 청크 구성 자체를 고정하는 가드는 없다.
 
-**10. 모바일 viewport**
+**11. 모바일 viewport**
 `100dvh` 사용 (100vh 아님). iOS Safari 하단 주소창 때문. `env(safe-area-inset-*)` CSS 변수도 MainLayout에서 이미 처리 중 — 중복 적용 주의.
