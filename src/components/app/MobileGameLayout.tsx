@@ -56,12 +56,12 @@ const MobileGameLayout = ({
         onOpenCrystalExchange,
     };
     const showArchiveConsole = archiveAvailable && mobileConsoleMode === 'archive';
+    // Wave 19 K2: 게이트는 `openArchive` 액션이 소유한다 — 여기서 직접 dispatch하면
+    //   GameRoot의 같은 복제(Wave 17 I1의 "3줄이 두 곳" 모양)가 그대로 남는다.
     const openArchiveConsole = (tab?: string) => {
         // onClick 등에서 이벤트 객체를 그대로 전달하는 것을 방지 (기본값이 event 객체로 덮이면 안 됨)
         const target = typeof tab === 'string' ? tab : 'inventory';
-        engine.actions.setSideTab?.(target);
-        engine.actions.setGameState?.(GS.IDLE);
-        setMobileConsoleMode('archive');
+        if (engine.actions.openArchive(target)) setMobileConsoleMode('archive');
     };
 
     return (

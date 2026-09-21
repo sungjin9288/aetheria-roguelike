@@ -465,19 +465,23 @@ const ControlPanel = ({
     );
   }
 
-  if (gameState === GS.EVENT && isAiThinking) {
+  // 2026-09 Wave 19 K1: 준비 중 패널의 조건은 `EVENT && isAiThinking`이었다.
+  //   `isAiThinking`의 생산자는 둘이라(탐험의 AI 이벤트 + `addStoryLog`의 전투/퀘스트
+  //   내러티브) 내러티브 생성 중에 체인·캠프파이어 카드가 열리면 카드 대신 이 패널이
+  //   최대 9.5초 떴다. 이제 준비 중은 **모드 자체**이므로 플래그를 읽지 않는다.
+  if (gameState === GS.EVENT_PENDING) {
     return (
       <Motion.div
         initial={false}
         animate={{ opacity: 1 }}
         className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 items-center justify-center rounded-[1.5rem] border border-[#9a8ac0]/20 px-5 py-6 text-center text-[#ece5ff] shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-md"
       >
-        이야기를 준비하고 있습니다...
+        {MSG.AI_EVENT_PREPARING}
       </Motion.div>
     );
   }
 
-  if (gameState === GS.EVENT && !isAiThinking) {
+  if (gameState === GS.EVENT) {
     return <EventPanel currentEvent={currentEvent} actions={actions} location={player.loc} />;
   }
 

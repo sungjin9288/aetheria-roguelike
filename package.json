@@ -81,6 +81,7 @@
   "dependencies": {
     "@apps-in-toss/web-framework": "3.0.3",
     "@capacitor/android": "^8.1.0",
+    "@capacitor/app": "8.1.1",
     "@capacitor/cli": "^8.1.0",
     "@capacitor/core": "^8.1.0",
     "@capacitor/ios": "^8.1.0",

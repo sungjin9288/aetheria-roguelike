@@ -57,6 +57,16 @@ export interface ResolveScoutPayload {
     now: number;
 }
 
+/**
+ * 2026-09 Wave 19 K1 — AI 이벤트 응답 1건의 정산 페이로드.
+ * `event`가 있으면 카드를 열고, `null`이면 조용히 idle로 돌아간다(폴백도 못 고른 경우 ·
+ * `generateEvent`가 reject한 경우). **늦게 도착한 응답을 버리는 판정은 리듀서가 한다** —
+ * 페이로드에는 "무엇을 받았는가"만 있고 "지금 반영해도 되는가"는 상태가 답한다.
+ */
+export interface ResolveAiEventPayload {
+    event: GameEvent | null;
+}
+
 export const AT = Object.freeze({
     // Boot / Auth
     SET_BOOT_STAGE: 'SET_BOOT_STAGE',
@@ -115,6 +125,11 @@ export const AT = Object.freeze({
     RESOLVE_FALLBACK_EVENT_TRANSACTION: 'RESOLVE_FALLBACK_EVENT_TRANSACTION',
     // 2026-09 N1b — 정찰 1회를 단일 reducer 전이로 해소 (연타 이중 과금 차단)
     RESOLVE_SCOUT: 'RESOLVE_SCOUT',
+    // 2026-09 Wave 19 K1 — AI 이벤트 준비 → 정산 2전이. 훅이 EVENT를 먼저 세우고
+    //   응답을 기다리던 구조를 대체한다(준비 중은 EVENT_PENDING이고, 응답의 반영
+    //   권한은 리듀서 하나에 있다 — 늦게 도착한 응답은 상태 검사로 버려진다).
+    BEGIN_AI_EVENT: 'BEGIN_AI_EVENT',
+    RESOLVE_AI_EVENT: 'RESOLVE_AI_EVENT',
 
     // v4.0 — Relic / Prestige / Title / Daily
     SET_PENDING_RELICS: 'SET_PENDING_RELICS',
@@ -330,6 +345,8 @@ export interface ActionPayloadMap {
     [AT.DEFER_CHAIN_EVENT]: DeferChainEventPayload;
     [AT.RESOLVE_FALLBACK_EVENT_TRANSACTION]: ResolveFallbackEventTransactionPayload;
     [AT.RESOLVE_SCOUT]: ResolveScoutPayload;
+    [AT.BEGIN_AI_EVENT]: undefined;
+    [AT.RESOLVE_AI_EVENT]: ResolveAiEventPayload;
 
     // ── v4.0 — Relic / Prestige / Title / Daily ──────────────────────────
     [AT.SET_PENDING_RELICS]: Relic[] | null;

@@ -35,7 +35,10 @@ const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'toss-first-five';
 const useRuntimeGameTestApi = TEST_API_BUILD ? useGameTestApi : () => undefined;
 
-const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);
+// 2026-09 Wave 19 K1: `EVENT_PENDING`도 포커스 상태다 — 준비 중 패널이 결정 영역을
+//   차지하는 동안 터미널을 마운트하면 오늘의 UX가 바뀐다(예전 `EVENT && isAiThinking`
+//   창에서도 터미널은 없었다).
+const FOCUS_PANEL_STATES = new Set<string>([GS.EVENT, GS.EVENT_PENDING, GS.SHOP, GS.QUEST_BOARD, GS.JOB_CHANGE, GS.CRAFTING]);
 
 function App() {
     const engine = useGameEngine();

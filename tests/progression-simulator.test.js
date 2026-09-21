@@ -373,10 +373,13 @@ test('explore action carries the injected RNG through AI fallback selection', as
 
         await actions.explore();
 
-        const eventAction = dispatched.find((action) => action.type === AT.SET_EVENT);
+        // Wave 19 K1: AI 경로의 카드는 `SET_EVENT`가 아니라 `RESOLVE_AI_EVENT`의
+        //   payload로 온다(준비 중 모드의 정산 전이). 검증 대상은 그대로 —
+        //   주입된 rng가 폴백 선택까지 실려 같은 카드를 뽑는가.
+        const eventAction = dispatched.find((action) => action.type === AT.RESOLVE_AI_EVENT);
         assert.equal(drawCount, 5);
-        assert.equal(eventAction?.payload?.source, 'fallback');
-        assert.equal(eventAction?.payload?.desc, '벽면에서 고대 문자가 빛나기 시작합니다.');
+        assert.equal(eventAction?.payload?.event?.source, 'fallback');
+        assert.equal(eventAction?.payload?.event?.desc, '벽면에서 고대 문자가 빛나기 시작합니다.');
     } finally {
         if (hadWindow) globalThis.window = originalWindow;
         else delete globalThis.window;
