@@ -1251,3 +1251,175 @@ restorableMode(mode):
 **게이트** (head `bddcb078` 코드 동일, 직렬 실행 07:38~07:58): type-check 0 · lint 0 · unit **5,157 / 5,157**(350파일, skip 0, Wave 18 대비 +27) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **121 / 121**(61 + 60, chromium-mobile) · perf desktop FCP 504ms / mobile FCP 504ms · tracked 증빙 verify 15종 ok.
 
 **Q1 해소 (2026-09-21 08:23 UTC, run 351)**: IAM 실측 — 프로젝트의 SA는 `firebase-adminsdk-fbsvc` 하나뿐이었고(`github-action-…` 없음), run 349 로그에 project_id 불일치 경고가 없어 secret이 그 SA의 키임을 확정했다. `Service Usage Consumer` + `Firebase Rules Admin` 부여 → #46 머지 푸시의 `deploy-rules`가 `released rules firestore.rules to cloud.firestore`. **G3 도입 후 첫 성공.** `deploy-prod`는 같은 run에서 여전히 429 — Q2 대기.
+
+## 24. Wave 20 계획 (2026-09-21 착수, 베이스 `main` = `49defbc9` = PR #46 merge commit)
+
+**핵심**: §23.1의 후보 4개와 Wave 19 보고서의 관찰 3개를 **전부 실행으로 다시 쟀다**. 결과: 후보 1(`gameState: string` 닫기)은 §23.1이 기대한 것보다 **작고 정확하다** — 실제 타입을 in-memory로 좁혀 `tsc`를 돌리면(컴파일러 API로 파일을 안 건드리고) 오늘의 코드는 설계 전체를 적용해도 **에러 0**이고, 결함 4종을 주입하면 **4종 전부** 잡힌다. 다만 §23.1이 이 후보의 동기로 적은 "25번째 소비처가 `tests/`에 있었다"는 이 후보로 **닫히지 않는다** — `tsconfig.json`이 `tests/**/*`를 include하지만 `checkJs: false`라 `.test.js`는 애초에 타입 검사 대상이 아니다(실측 1-a). 즉 L1이 사는 것은 `src/**`의 미래 오타·누락(컴파일 시점)이지 테스트의 grep 의무가 아니다 — §5 DON'T의 "`tests/**`도 grep" 문장은 그대로 남는다. Q2는 착수 중 소유자가 **(a)로 결정**했고 콘솔 실측(Hosting은 기본 도메인 2개뿐, 현재 릴리스 `ec5cb6` = **2026-07-15 14:34** — §23이 Actions 목록에서 볼 수 있던 run 259/08-04보다 3주 앞선 시점부터 낡은 빌드를 서빙)이 §23의 "잔재" 판정을 확정했다. 관찰 3개 중 **둘은 트랙이 아니다**(`useFirebaseSync` 폴드 5중복 · `TokenQuotaManager` 재시도 — 둘 다 실행/추적으로 "얻는 것 0 또는 음수"), 하나는 **래칫만**이다(한국어 하드코딩 — `src/data` 밖 AST 기준 **3,802** 노드, 그중 컴포넌트 JSX 텍스트 549는 기존 래칫 정규식이 **구조적으로 0으로 센다**).
+
+### 실측 1 — 후보 1: `gameState: string`을 `GS` 리터럴 유니온으로 닫으면 실제로 무엇이 일어나는가
+
+| # | 실측 | 근거 |
+|---|---|---|
+| 1-a | **테스트는 컴파일러 밖이다.** `tsconfig.json`: `include: ["src/**/*", "tests/**/*"]`, `allowJs: true`, **`checkJs: false`** → `tests/*.test.js`는 프로그램에 들어가지만 진단이 안 난다. `tests/e2e/*.spec.ts`(TS)만 검사 대상이고 그 12곳의 `gameState` 읽기는 전부 `toBe('idle'/'combat'/'true_ending')`라 유니온 안이다. **§23.1 후보 1의 동기("tests의 25번째")는 이 후보로 안 닫힌다** | `tsconfig.json:9-10, 33` · grep `tests/e2e` |
+| 1-b | `gameState` 언급: `src/**` **227줄 / 48파일**, `tests/**` **413줄 / 96파일**. `string`으로 선언된 자리는 src에 **17곳**: `gameReducer.ts:37`(원천) · `actionTypes.ts:202`(`LoadDataPayload`) · `:303`(`SET_GAME_STATE` payload) · `dataMigration.ts:115`(`MigratedSave`) · `useProductTelemetry.ts:17` · `endgameSettlement.ts:10` · `platformBack.ts:15` · `commandParser.ts:12` · `commandSuggestions.ts:9` · `useGameTestApi.ts:143,182,268` · `ControlPanel.tsx:56` · `TerminalView.tsx:102` · `CommandAutocomplete.tsx:6` · `SystemTab.tsx:122` · `QuickSlot.tsx:22`. 함수형 `setGameState` 선언 **8곳**: `actionDeps.ts:135` · `useGameEngine.ts:193` · `ShopPanel.tsx:35` · `JobChangePanel.tsx:24` · `QuestBoardPanel.tsx:232` · `CraftingPanel.tsx:27` · `ControlPanel.tsx:60,249` | grep |
+| 1-c | `GS` 밖 **문자열 리터럴 비교**는 src에 **19줄**: `useFirebaseSync.ts:92,113,365,384,417`(combat 폴드 5) `:580`(`!== 'dead'`) · `useInventoryActions.economy.ts:26` · `characterActions.ts:160,198,225` · `platformBack.ts:27` · `progressionDiagnostic.ts:947,976,980` · `progressionSimulator.ts:705,725,730` · `bootstrapHandlers.ts:81` · `commandParser.ts:46`. 객체 리터럴 대입 10곳(`endgameSettlement.ts:84,120,130,167,184,201` · `progressionDiagnostic.ts:373,939` · `progressionSimulator.ts:699` · `gameReducer.ts:134`). **값은 8종 전부 `GS` 멤버다**(`ascension`·`combat`·`dead`·`event`·`event_pending`·`idle`·`shop`·`true_ending`) — 즉 오늘의 코드에 오타는 0이고, 타입을 닫아도 이 29곳은 **하나도 에러가 안 난다**(리터럴은 유니온 안이라 contextual typing으로 통과). 컴파일러의 이득은 전부 **미래형**이다 | grep + 1-g |
+| 1-d | 테스트의 리터럴은 10종이고 그중 **2종이 `GS` 밖**: `'IDLE'`(`readability-map-signal.test.js:137` · `core-hud-language-readability.test.js:130,148`, `TerminalView` 렌더 픽스처 — 단언이 모드와 무관) · `'intro'`(`cycle-500-599.test.js:3944,3971`, `createCharacterActions.start`의 deps — `start`는 `gameState`를 안 읽는다). 둘 다 `LOAD_DATA`를 안 지나므로 L1의 경계 술어(1-h)가 결과를 바꾸지 않는다 | 실행으로 확인(픽스처 경로 추적) |
+| 1-e | **V1** — `GameState.gameState`만 `GameMode`로: 진단 **5** — `gameReducer.ts:196`(satisfies 연쇄) · `bootstrapHandlers.ts:32`(`LOAD_DATA`가 `gameState: string`을 반환) · `combatHandlers.ts:112`(중첩 `SET_GAME_STATE` payload가 string) · `:181`(`endgameResult.gameState: string`) · `uiHandlers.ts:14`(`SET_GAME_STATE` payload). 즉 `string`은 **세 입구**로 들어온다: `SET_GAME_STATE` payload, `LOAD_DATA` payload, `EndgameSettlementResult` | TS compiler API in-memory 오버라이드(파일 무변경) |
+| 1-f | **V2** — + `ActionPayloadMap[SET_GAME_STATE]: GameMode`: 진단 **4**, `combatHandlers.ts:112` 소멸(payload가 좁혀져 핸들러가 저절로 맞는다). **V3** — + 1-b의 시그니처 전부: `combatHandlers.ts:181`도 소멸(`endgameSettlement`가 좁혀지면). **`combatHandlers.ts`는 편집이 필요 없다** — 이 파일은 `relic-dot-multiplier`가 바이트 핀한다(1-k) | 같은 방법 |
+| 1-g | **V4** — + `useGameEngine.ts:193`/`actionDeps.ts:135`의 `setGameState: (val: GameMode)` + `LOAD_DATA` 경계 술어(1-h): 진단 **2**, 둘 다 `MobileGameLayout.tsx:112,127` — `(val: GameMode) => void`를 `(state: string) => void` prop에 넘기는 **반변성** 에러. 6개 컴포넌트 prop 선언(1-b)을 좁히면 **V4b = 0**. 설계 전체가 오늘 코드 위에서 컴파일된다는 뜻 | 같은 방법 |
+| 1-h | 경계: `LoadDataPayload.gameState?: string`(`actionTypes.ts:202`)은 `migrateData`의 `MigratedSave.gameState?: string`(`dataMigration.ts:115`)에서 오고 그건 `JSON.parse`(localStorage/Firestore)의 결과다 — **신뢰 밖**. 모든 복원 경로가 `LOAD_DATA` 한 곳으로 모인다: `bootStateMachine.ts:281,401,410,428,437` + QA 시드 `useGameTestApi.ts:1168`. 오늘 `bootstrapHandlers.ts:41,62-69`는 미지의 문자열(`'formation'`)을 **그대로 복원**한다(`restorableMode`가 else에서 `true`) | 코드 추적 |
+| 1-i | **V5** — V4b 위에 결함 4종 주입: `platformBack.ts` `=== 'evnt'` → **TS2367**(no overlap) · `QuickSlot.tsx` `=== 'combat '` → **TS2367** · `dispatch({SET_GAME_STATE, payload: 'formation'})` → **TS2345** · `commandParser`의 `blockedStateMessages`를 `Record<GameMode, string \| null>`로 바꾸고 키 하나 누락 → **TS2741**(`'true_ending' is missing`). **4/4 검출**. 이것이 L1이 사는 것의 전부이고 정확한 목록이다 | 같은 방법 |
+| 1-j | `useProductTelemetry.ts:53`은 `String(state?.gameState \|\| '')`로 **의도적으로** string이다(아웃바운드 텔레메트리 모양). V3에서 이 필드까지 좁히면 진단 1이 **잡음**으로 남는다 → 좁히지 않는다. 같은 이유로 `AetheriaTestApi`의 3필드(`useGameTestApi.ts:143,182,268`)는 좁혀도 되고(V3에서 에러 0, e2e `toBe`는 유니온 안) 좁힌다 — e2e 스펙은 TS라 오타가 잡힌다 | 실행 |
+| 1-k | 바이트 핀 대조(verify 스크립트에서 경로를 추출): `relic-event-chance` = `progressionProfiles.ts`·`eventActions.ts`·**`exploreActions.ts`**·`CombatEngine.loot.ts`·`CombatEngine.outcome.ts` / `relic-dot-multiplier` = `relics.ts`·**`combatHandlers.ts`**·`CombatEngine.actions.ts`·`relicDotMultiplierAudit.ts`·**`dataMigration.ts`**·`tests/relic-dot-multiplier-coherence.test.js` / `relic-gold-multiplier` = `relics.ts`·`CombatEngine.actions.ts`·`CombatEngine.outcome.ts` / `relic-hp-drain-atk` = `relics.ts`·`CombatEngine.ts`·`relicHpDrainAtkAudit.ts`·`hpDrainAtkRelic.ts`·`statsCalculator.ts`·`tests/relic-hp-drain-atk-coherence.test.js` / `equipment-combat-power` = `classes.ts`·`constants.ts`·`signatureRegistry.json`·`signatureSets.json`·`_shared.ts`·`CombatEngine.enemyAI.ts`·`equipmentCombatPowerAudit.ts`·`equipmentUtils.ts`·`equipmentValidation.ts`·`signatureSetBonus.ts`·`statsCalculator.ts`·`tests/equipment-combat-power-audit.test.js` / `relic-drop-rate` = `CombatEngine.loot.ts`·`relicDropRateAudit.ts`·`tests/combat-engine-loot.test.js`·`tests/relic-drop-rate-coherence.test.js`. **L1의 편집 집합(아래 표) ∩ 이 목록 = ∅** — `combatHandlers`·`dataMigration`·`exploreActions` 셋은 "편집이 필요 없다"가 아니라 **"편집하면 안 된다"**로 적는다 | `scripts/verify-*.mjs` 6종 |
+
+**L1 파급 전수 — 편집하는 파일과 이유** (1-e~1-g의 컴파일러가 짚은 것 + 전수화 3곳)
+
+| 파일 | 오늘 | L1 뒤 | 근거 |
+|---|---|---|---|
+| `src/reducers/gameStates.ts` | `GS` 객체만 | `export type GameMode = typeof GS[keyof typeof GS]` + `isGameMode(value: string): value is GameMode`(`new Set<string>(Object.values(GS))`) | 유일한 정본(파일 주석 "cycle 301: GameState alias 제거 — 명칭 충돌"이라 이름은 `GameMode`, §8-6의 "모드" 어휘와 일치) |
+| `gameReducer.ts:37` | `string` | `GameMode` | 원천 |
+| `actionTypes.ts:303` | `[AT.SET_GAME_STATE]: string` | `GameMode` | 1-e 입구 ①. **`:202` `LoadDataPayload.gameState?: string`은 그대로**(경계) |
+| `handlers/bootstrapHandlers.ts:41,62-69` | `requestedMode = payload.gameState \|\| 'idle'`, `restorableMode(mode: string)` else-`true` | 아래 설계 — 술어로 좁히고 `switch`를 `never`로 닫는다 | 1-e 입구 ②, 1-h |
+| `hooks/useGameEngine.ts:193` · `hooks/actionDeps.ts:135` | `(val: string)` | `(val: GameMode)` | 1-g |
+| `ShopPanel:35` · `tabs/JobChangePanel:24` · `tabs/QuestBoardPanel:232` · `tabs/CraftingPanel:27` · `ControlPanel:56,60,249` | `(state: string) => void` / `gameState?: string` | `GameMode` | 1-g 반변성 — 빠뜨리면 `MobileGameLayout`이 2건 red |
+| `TerminalView:102` · `CommandAutocomplete:6` · `tabs/SystemTab:122` · `QuickSlot:22` · `platformBack.ts:15` · `commandParser.ts:12` · `commandSuggestions.ts:9` · `useGameTestApi.ts:143,182,268` · `endgameSettlement.ts:10` | `string` | `GameMode` | 1-b. `endgameSettlement`를 안 좁히면 `combatHandlers:181`이 red가 되고 그 파일은 못 건드린다(1-k) |
+| `platform/platformBack.ts:18,27-28` | `FOCUS_PANEL_STATES` Set + if 두 줄 | `const MODE_BACK_ACTION: Record<GameMode, PlatformBackAction>` 12행(event/event_pending→`dismiss-event`, shop/job_change/quest_board/crafting→`close-focus-panel`, 나머지 6→`close-app`), `return state.gameState ? MODE_BACK_ACTION[state.gameState] : 'close-app'` | K1 표의 "빠뜨리면 Toss 뒤로가기가 앱을 닫는다"가 **TS2741**이 된다. 11모드 결과 동일(테스트가 고정) |
+| `utils/commandParser.ts:19-30` | `Record<string, string>` 7키, 한국어 7 | `Record<GameMode, string \| null>` 12키(idle/combat/moving/true_ending = `null`), 값은 `MSG.CMD_BLOCKED_*` | K1 표의 "키 없음 → 액션 가드로 흘러감"이 **TS2741**이 된다. 같은 파일의 나머지 한국어 7자리(`:92` 스킬 전환 · `:114/121/127/133` 상태·인벤·퀘스트·지도 템플릿 · `:139` help · `:150` 알 수 없는 명령)도 `MSG.CMD_*`로 — **14자리**, 어떤 테스트도 그 문자열을 단언하지 않는다(grep 0) |
+| `data/messages.ts` | 끝 블록 = Wave 19 K1 | 끝에 `// Wave 20 L1` 블록 `CMD_BLOCKED_EVENT`… `CMD_UNKNOWN(command)` | Wave 19 규약(트랙별 끝 블록). 이번 wave에 MSG를 만지는 트랙은 L1뿐이라 충돌 없음 |
+| **편집 금지** | `combatHandlers.ts` · `dataMigration.ts` · `exploreActions.ts` · `useFirebaseSync.ts` · `progressionSimulator.ts` · `progressionDiagnostic.ts` · `App.tsx` | 그대로 | 앞 셋은 바이트 핀(1-k). 뒤 셋은 리터럴이 유니온 안이라 컴파일이 통과하고(1-c), 모델 둘은 핀 3종의 입력이다. `App.tsx:41`은 `new Set<string>`이라 통과 |
+
+**L1 봉투 경계 설계** (`as` 0 — `unknown`/`string` + 술어, CLAUDE.md §2):
+
+```ts
+// bootstrapHandlers.ts LOAD_DATA
+const requestedRaw = action.payload.gameState || GS.IDLE;          // string — 봉투는 신뢰 밖
+const requestedMode: GameMode = isGameMode(requestedRaw) ? requestedRaw : GS.IDLE;
+const restorableMode = (mode: GameMode): boolean => {
+    switch (mode) {
+        case GS.COMBAT:        return Boolean(enemy);
+        case GS.EVENT:         return Boolean(action.payload.currentEvent);
+        case GS.EVENT_PENDING: return false;
+        case GS.DEAD:          return false;
+        case GS.IDLE: case GS.MOVING: case GS.SHOP: case GS.JOB_CHANGE:
+        case GS.QUEST_BOARD: case GS.CRAFTING: case GS.ASCENSION: case GS.TRUE_ENDING:
+            return true;                                            // 오늘의 else-true를 모드별로 명시 — 행동 동일
+        default: { const exhaustive: never = mode; return exhaustive; }  // 새 GS 멤버 = 컴파일 에러
+    }
+};
+const gameState: GameMode = restorableMode(requestedMode) ? requestedMode : GS.IDLE;
+```
+
+행동 변화는 정확히 하나다: **미지의 문자열이 `idle`로 접힌다**(오늘은 그대로 복원 — UI가 어느 트리도 못 그리는 상태). `requestedMode === 'dead'`(정리 분기, `:78`)와 폴드된 `gameState`(`:81`)의 이중 읽기는 §8-6 그대로 유지. `assertNever` 헬퍼 파일은 만들지 않는다(src에 없다 — 새 파일은 `progression-diagnostic-v2`의 sources 346을 347로 만든다).
+
+### 실측 2 — 후보 2: Q2, 결정됨 = (a) Hosting job 삭제
+
+| 실측 | 근거 |
+|---|---|
+| **소유자 콘솔**: Firebase Hosting 도메인은 기본 2개뿐(`aetheria-rpg-90a2f.web.app` / `.firebaseapp.com`, 커스텀 없음). 현재 릴리스 `ec5cb6` = **2026-07-15 14:34**, 배포자 `firebase-adminsdk-fbsvc@…`, 직전 3건도 같은 날(13:47 · 13:54 · 14:23). 즉 Hosting은 **약 10주째 2026-07-15 빌드**를 서빙 중이고, §23이 Actions 목록에서 관측한 "run 259 / 2026-08-04부터 실패"보다 **3주 앞서** 이미 멈춰 있었다 | 소유자 보고(2026-09-21) |
+| `deploy-prod`/`deploy-dev`를 참조하는 곳은 **`deploy.yml` 자신뿐**(`:197`, `:225`, 각각 `needs: [build, deploy-rules]`). 다른 워크플로·스크립트·테스트에 0건. `dist` 아티팩트(`:45-49` Upload)의 소비자도 그 두 job뿐 → 업로드 스텝도 죽은 코드가 된다 | 저장소 전수 grep(단, `.claude/worktrees/**` 20개 사본이 grep에 잡힌다 — 아래 운영) |
+| `firebase.json:2-14` `hosting` 블록 — `rules:deploy`(`--only firestore:rules`)는 안 읽는다. 저장소 안 유일한 독자는 `tests/firestore-rules-semantics.test.js:662`이고 **`emulators` 키만** 읽는다 | 코드 |
+| `tests/cf-functions.test.js:12-23` "Cloudflare is the only active web function surface" — `vercel.json` 부재 + `deploy.yml`에 `vercel` 부재. **Hosting에 대해서는 침묵** — 되돌리기를 잡는 계약이 없다 | 코드 |
+| 문서 드리프트: `docs/DEPLOYMENT.md:3`은 Cloudflare Pages를 단일 source of truth로 선언하면서 `:14-33` 다이어그램(Deploy to DEV/PROD, Hosting·Functions 행) · `:82` `GEMINI_API_KEY`를 GitHub Secret 표에(`:84`가 바로 "Cloudflare 환경변수"라고 반박) · `:96-108` `*.web.app` 배포 흐름 · `:116-124` `firebase hosting:rollback`. `docs/FIREBASE_SETUP.md:3` "Firebase Hosting에 자동 배포하려면". CLAUDE.md `:357` "hosting 앞에 돌고(`deploy-prod`가 needs…)" · "빨갛게 죽지만 hosting은 나간다" · `:359` "남은 것은 `deploy-prod`뿐" | 읽음 |
+| **주석 드리프트 4곳** — "deploy.yml은 hosting만 올린다": `src/systems/TokenQuotaManager.ts:240` · `firestore.rules:59` · `firestore.rules:195`("hosting 전용") · `tests/token-quota-firestore-contract.test.js:254`. Wave 15 G3 이후 이미 거짓이었고 L2 뒤에는 정반대(rules**만** 올린다)가 된다 | grep |
+
+### 실측 3 — 후보 3: K3 iOS 델타 + Android 실기
+
+| 실측 | 근거 |
+|---|---|
+| `ios/App/CapApp-SPM/Package.swift`에 `CapacitorApp` **없음** — 의존은 `capacitor-swift-pm` 하나. iOS 절반은 §23.1대로 미완 | 파일 |
+| 예상 델타는 **정확히 2줄**: CLI 템플릿(`@capacitor/cli/dist/util/spm.js:121,133`)이 플러그인의 `Package.swift` product 이름(`node_modules/@capacitor/app/Package.swift` → `"CapacitorApp"`)으로 `dependencies`에 `.package(name: "CapacitorApp", path: "../../../node_modules/@capacitor/app")`, target에 `.product(name: "CapacitorApp", package: "CapacitorApp")`을 쓴다. `Package.resolved`는 path 패키지를 안 담으므로 **불변**이어야 한다. `App/App/public`·`capacitor.config.json`은 `ios/.gitignore` — 커밋은 **1파일**이 정상. `project.pbxproj`가 움직이면 멈추고 보고 | CLI 소스 · `ios/.gitignore` · tracked 23파일 |
+| Android 쪽은 K3가 이미 커밋: `capacitor.build.gradle` `implementation project(':capacitor-app')`, `capacitor.settings.gradle` `include ':capacitor-app'`(`5be25d21`) | git |
+| 실기가 봐야 할 층: `App.tsx:72-104` `handlePlatformBack`의 **7분기**(`close-premium`·`close-mirror`·`close-debrief`·`close-post-combat`·`dismiss-event`·`close-focus-panel`·`close-app`) + `platformBackRegistry.handleBack()`이 먼저 소비하는 **9개 `usePlatformBackHandler` 표면**(`EnhanceDecisionCard`·`ExpeditionDebriefCard`·`MilestoneStoryCard`·`MirrorPanel`·`PostCombatCard`·`PremiumShop`·`ReturnBriefingCard`·`TrueEndingScreen`·`GameRoot`) + `lifecycleBridge.ts:165-177`의 "false면 `exitApp`". 단위 테스트(`toss-lifecycle-bridge.test.js:134`)는 주입 브릿지로 카운터만 본다 — `@capacitor/app`의 실제 `backButton` 이벤트가 오는지는 기기만 안다 | 코드 |
+| 기록 위치의 선례: `docs/PLAYTEST_CHECKLIST.md §11`(iPhone/Android 5분 루틴, P0/P1/P2 분류) · `docs/MOBILE_RELEASE.md §0-2`. `docs/evidence/qa/release-complete-core/OBSERVATION_RUNBOOK.md`는 릴리스 후보 봉인용이라 이 용도가 아니다 | 문서 |
+
+### 실측 4 — 후보 4(tier) + Wave 19 관찰 3건
+
+| 항목 | 실측 | 결론 |
+|---|---|---|
+| `tier`/아트 identity | `tests/class-tier-depth.test.js:43` `KNOWN_TIER_DEPTH_DIVERGENCE = ['성직자']` 불변, 새 정보 0 | §19 결정 유지, **제외** |
+| `useFirebaseSync` combat 폴드 ×5 | 다섯 곳(`:92` 오프라인 로컬 · `:113` device-QA · `:365` local-record 복원 · `:384` 원격 · `:417` 재임포트)의 산출물은 전부 `applyBoot(...)` → `bootStateMachine.ts:281/401/410/428/437`의 **`LOAD_DATA`**로 끝나고 거기서 `restorableMode`가 같은 술어를 다시 건다. `persistenceTelemetry.ts`·`bootStateMachine.ts`·`cloudSaveAuthority.ts`의 `gameState` 읽기 **0건**. 훅을 import하는 테스트 **0건**(`from '../src/hooks/useFirebaseSync'` grep 0 — 언급 10파일은 주석/문자열). 유일한 관측 가능 차이: `:384`의 폴드는 `importCloudRecordAuthority`(`:396-408`)가 **로컬에 쓰는 payload**의 모양을 바꾼다(`{combat, enemy:null}` vs `{idle, enemy:null}`) — 다음 `LOAD_DATA`가 같은 `idle`로 접으므로 게임에서는 구별 불가 | 죽은 중복이 맞고, 제거해도 **어떤 테스트도 못 본다**(커버리지 0) — 즉 "실행으로 보여 줄 깨짐"이 없다. 얻는 것 5줄, 잃는 것은 단위 커버리지 0인 IO 훅을 만진다는 사실. **트랙 아님** |
+| 한국어 하드코딩 | AST 스캔(TS compiler API, 주석 제외, StringLiteral + NoSubstitutionTemplate + TemplateHead/Middle/Tail + **JsxText**): `src/**` **11,646** 노드, `src/data/**` 7,844, **밖 3,802** = components **1,319**(JsxText **549** · 문자열 616 · 템플릿 조각 154) / utils **2,001** / hooks **285**(`useGameTestApi.ts` 236) / systems 120 / services 32 / reducers 29 / types 16 / platform **0**. 기존 래칫 `tests/debt-ratchet.test.js:74-92` `countKoreanStringLiterals`는 **따옴표 리터럴 정규식**이라 같은 디렉터리를 components 725 / hooks 279 / utils 1,923 / services 19로 센다 — **JSX 텍스트 549개를 0으로** 센다. §5가 금지하는 것("컴포넌트 JSX 안에 한국어 직접 입력")이 정확히 그 549다 | 전수 스윕은 불가(3,802 — 대부분 `itemVisuals`·`nameGenerator`·`regionTheme` 같은 표현 테이블과 데이터 키). **AST 래칫**만 트랙(L3). `commandParser`의 14자리는 L1이 같은 객체를 다시 타이핑하므로 L1에 붙인다(K1이 `ControlPanel:475`를 그렇게 했다) |
+| `TokenQuotaManager` 쓰기 실패 플래그 | `quotaWriteHealthy`(`:134`)는 `writeQuota`(`:184-191`) 성공으로만 `true`, `canMakeAICall`(`:157-161`)이 `false`면 닫는다. 쓰기는 `recordCall`(`:166-169`)에서만, `recordCall`은 `aiService.ts:100-101` `dispatchProxyCall`이 호출하고 **반환값을 안 본다** → 저장소가 깨진 세션에서 **첫 호출 1건은 미터 없이 나간다**(쓰기 실패 → 플래그 false → 그래도 fetch), 그 뒤 리로드까지 0 | 아래 판단 |
+
+**TokenQuotaManager 판단** — 세 선택지를 실패 사례로 비교했다. 골랐다: **C(현행 유지)**.
+
+| 선택지 | 얻는 것 | 비용 | 실패 시나리오 |
+|---|---|---|---|
+| A. `canMakeAICall`에서 `!quotaWriteHealthy`면 현재 레코드를 **재기록 시도**(멱등)하고 성공 시 플래그 해제 | 리로드 없이 회복 | 읽기 안에 쓰기 부수효과 + 테스트 2 | 회복이 일어나는 유일한 경우는 저장소가 **간헐적으로** 실패할 때인데, 그때 "프로브 성공 → 게이트 열림 → `recordCall` 실패 → 미터 없는 디스패치 1 → 플래그 false → 다음 프로브 성공 → …"이 **반복**된다. 오늘은 세션당 ≤1인 미계량 디스패치가 **호출 빈도만큼** 열린다 — D3("미터를 못 세면 안 보낸다")를 정확히 위반하는 방향. 지속 실패(`SecurityError` 쿠키 차단·사설 모드 `QuotaExceededError`)에서는 어차피 회복이 없어 얻는 게 0 |
+| B. `recordCall(): boolean` + `dispatchProxyCall`이 false면 폴백 | 미계량 디스패치 **0** | `aiService`+`TokenQuotaManager`+`ai-event-pending-contract` ③ 확장 | "호출할지"는 `aiEventPolicy`(C3)가 소유한다 — IO 계층이 정책의 `kind: 'call'` 결정을 뒤집으면 진실 원천이 둘이 된다. 정책이 쓰기 결과를 입력으로 받게 고치면(`readQuota`가 예약을 겸함) C3 재구조화 — "싸다"가 아니다 |
+| **C. 현행** | — | — | 세션당 미계량 디스패치 **≤1**(깨짐 사건당). 서버 창(40req/60s)이 그 1건을 받는다. 이 상한을 §6에 **숫자로** 적는다(L5) |
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **L1 `gameState`를 `GameMode`로 닫기 + 봉투 경계 술어 + 소비처 3곳 전수화** | 위 "파급 전수" 표 그대로: `GameMode`/`isGameMode`(gameStates) → 원천·payload·시그니처 21파일 → `LOAD_DATA` 술어 + `restorableMode` `switch`/`never` → `platformBack` `Record<GameMode, PlatformBackAction>` → `commandParser` `Record<GameMode, string \| null>` + 한국어 14자리 `MSG.CMD_*` → 테스트(아래 표). **내부 직렬**(타입 → 경계 → 시그니처 → 전수화 → MSG → 테스트). 편집 금지 7파일 준수 | ① 미래의 오타 비교·잘못된 payload가 **컴파일 에러**(1-i, 4/4) ② K1이 손으로 채운 세 표(`platformBack`·`commandParser`·`restorableMode`)가 **새 `GS` 멤버에서 자동 red**(TS2741/never) ③ 미지 문자열 세이브가 `idle`로 접힌다(오늘은 그대로 복원) | src 21 + messages 1 + 테스트 3(신규 1) | (a) `combatHandlers`/`dataMigration`/`exploreActions`를 "정리" 명목으로 만지면 `relic-dot-multiplier`·`relic-event-chance`가 stale — 값은 안 바뀌어도 red다(§20의 교훈) (b) `LoadDataPayload.gameState`를 `GameMode`로 선언하면 캐스트 없는 거짓말 — `JSON.parse` 결과에 유니온을 붙이는 것이라 `as`와 같다 (c) 6개 컴포넌트 prop을 빠뜨리면 `MobileGameLayout` 2건 red(1-g) (d) `useProductTelemetry:53`을 좁히면 잡음 1(1-j) (e) 새 헬퍼 파일을 만들면 sources 347 — 예고와 어긋난다 | opus |
+| **L2 Q2(a) — Firebase Hosting job 삭제 + 문서/주석 드리프트 + 부재 계약** | `.github/workflows/deploy.yml`: `deploy-dev`(`:196-222`)·`deploy-prod`(`:224-250`) 삭제, `build`의 `Upload Build Artifacts`(`:45-49`) 삭제(소비자 0), `on:`·`build`·`deploy-rules`(+`if:`, `environment:`) **유지**. 주석 재작성: `:1-2` 헤더, `:51-68`(hosting 순서 근거 → "실패는 명시적, `continue-on-error` 없음"만 남김), `:73-81`(environment 문장), `:182-188` Report(“hosting은 이어서 배포되므로” 삭제), `:252-267` REQUIRED SECRETS(`GEMINI_API_KEY` 줄 삭제 — Cloudflare 변수, `:264-267` 재작성). `firebase.json` `hosting` 블록 삭제. `tests/cf-functions.test.js` 부재 계약 확장: `deploy.yml` ∌ `action-hosting-deploy`, `firebase.json` ∌ `"hosting"`. `docs/DEPLOYMENT.md` `:14-33`·`:82`·`:96-108`·`:116-124`, `docs/FIREBASE_SETUP.md:3`, CLAUDE.md §8-8(`:357` "hosting 앞에" 문장·"빨갛게 죽지만 hosting은 나간다"·`:359` 마지막 문장 → "해소 2: Hosting job 삭제(Wave 20), Hosting 마지막 릴리스 2026-07-15 `ec5cb6`"), 주석 4곳(`TokenQuotaManager.ts:240`·`firestore.rules:59,195`·`token-quota-firestore-contract.test.js:254`) | `deploy.yml`이 도입 이래 **처음으로 초록**이 될 수 있다(성공 기준). 문서가 다시 사실이 된다. 되돌리기를 테스트가 잡는다 | 워크플로 1 · `firebase.json` · 문서 3 · CLAUDE.md §8-8 · 주석 4 · 테스트 1 | `build` job까지 지우면 PR의 lint/build가 `ci.yml`에만 남는다(중복이지만 유지 — 소유자 지시). `deploy-rules`의 `environment:`를 지우면 environment 스코프 시크릿이 안 보인다. `firebase.json`에서 `emulators`까지 지우면 `test:rules`가 죽는다. **워크플로는 Linux 단위 테스트가 못 검증한다** — 머지 push의 run이 검증이다 | sonnet |
+| **L3 한국어 하드코딩 AST 래칫** | `tests/debt-ratchet.test.js`에 **(f)** 추가: `typescript` compiler API(이미 devDependency — 의존 추가 금지)로 StringLiteral·NoSubstitutionTemplate·TemplateHead/Middle/Tail·**JsxText** 중 한글 포함 노드를 세고 디렉터리별 상한 고정 — `src/components` **1,319** · `src/hooks` **285** · `src/utils` **2,001** · `src/services` **32** · `src/platform` **0**. 기존 (d)의 정규식 카운터·기준선(systems 122 / reducers 26)은 **손대지 않는다**(방법을 바꾸면 재고정이지 하락이 아니다). 통합 후 L5가 재측정해 **낮춘다**(L1이 `commandParser` 14자리를 옮기므로 utils가 내려간다) | 3,802가 **늘지 못한다**. 특히 JSX 텍스트 549가 처음으로 계약 안에 들어온다 — §7의 부재·상한 가드 범주 | 테스트 1파일(+1 import) | 정규식으로 쓰면 JSX 텍스트가 0으로 세어져 §5의 본문이 빠진다(실측 4). 기준선을 "여유 있게" 올려 잡으면 래칫이 아니다 — 실측값 그대로. `useGameTestApi.ts`(236)를 제외하면 hooks 상한이 49가 되지만 그 파일이 늘어나도 못 잡는다 — **포함**한다 | sonnet |
+| **L4 K3 마무리 기록 (소유자 측)** | (a) macOS: `npm run ios:sync` → 델타가 `Package.swift` **+2줄, 1파일**인지 확인(실측 3) → 커밋 `chore(W19 K3): iOS SPM — CapacitorApp`. (b) Android 실기: `docs/PLAYTEST_CHECKLIST.md §11`에 "뒤로가기 루틴(Android)" 추가 — 표 8행: idle(→ 앱 종료 확인 대화 없이 종료 = `close-app`/`exitApp`) · shop/quest_board/job_change/crafting(→ 패널 닫힘) · event(→ dismiss) · PostCombatCard 열림(→ 카드 닫힘) · PremiumShop/Mirror 열림(→ 닫힘) · 전투 중(→ 앱 종료 — **도주 판정이 아님**, 오늘 설계) — 각 행에 P0/P1/P2와 관측 결과. 결과는 §24.1 + `tasks/todo.md` | 단위 테스트가 못 보는 층(실제 `backButton` 이벤트 도달)을 **기록**으로 닫는다 | 소유자 시간 | 완료로 적지 말 것 — Wave 19가 §22의 실수를 반복하지 않은 이유다. `Package.swift` 외 파일이 움직이면(`pbxproj`) 커밋하지 말고 보고 | 직접 |
+| **L5 증빙·문서·정리 (통합자)** | 통합 트리에서 직렬 게이트 → `progression:diagnostic:write` **맨 마지막** → 15종 verify → `perf:guard` → L3 기준선 재측정·하향 → CLAUDE.md §2(`gameState`는 `GameMode`; `LoadDataPayload.gameState`는 `string`이고 `isGameMode`로 좁힌다) · §5 DON'T(“`GS` 멤버 추가 시 컴파일러가 `platformBack`/`commandParser`/`restorableMode`를 짚는다 — 단 `tests/**`는 `checkJs:false`라 여전히 grep”) · §6 AI 이벤트(TokenQuotaManager 상한 “세션당 ≤1”) · §7 테스트 목록(`game-mode-contract` · debt-ratchet (f)) · §8-6(술어 문장) · `tasks/todo.md` · §24.1 | — | — | `.claude/worktrees/` **20개** 잔존 워크트리(`git worktree list`)를 새 트랙 생성 **전에** `git worktree remove --force`로 정리하지 않으면 grep이 사본을 세고 디스크가 찬다(이번 실측의 Q2 grep이 실제로 잡혔다) | 직접 |
+
+**계약 테스트와 결함 주입** — 주입마다 "어느 단언이 왜 red인가"를 코드가 실제로 바꾸는 값으로 적었다(§23.1 #3: `SET_GAME_STATE`가 `enemy`를 안 건드려 `enemy` 단언이 공허했던 일).
+
+| 테스트 | 고정하는 것 | 주입 → 걸려야 하는 것 (red가 되는 단언과 이유) |
+|---|---|---|
+| `tests/game-mode-contract.test.js` (신규, L1) ① | `isGameMode`: `Object.values(GS)` 11종 → true; `'IDLE'`·`'intro'`·`'formation'`·`''` → false | 술어를 `=> true`로 → false 4행 red. 공허하지 않은 이유: 오늘 술어가 없으므로 RED가 먼저 확인된다(신규 함수라 "구현 전 red"가 곧 판별) |
+| `tests/restorable-mode-contract.test.js` (행 추가, L1) ② | `restore({gameState: 'formation'})` → `gameState === GS.IDLE`; `restore({gameState: 'formation', enemy: ENEMY})` → `IDLE`(동반 상태가 있어도 미지 모드는 접는다) | `requestedMode`를 raw로 되돌림 → **`gameState` 단언이 `'formation'`으로 red**. 오늘 핸들러(`:62-69`)는 else에서 `true`를 돌려 raw를 그대로 넣는다 — 실측(1-h)으로 확인했으니 `enemy`가 아니라 `gameState`가 판별자다 |
+| `tests/game-mode-contract.test.js` ③ | `resolvePlatformBackAction({gameState})` 11모드 표(오버레이 플래그 전부 false): event·event_pending→`dismiss-event`, shop·job_change·quest_board·crafting→`close-focus-panel`, idle·combat·moving·dead·ascension·true_ending→`close-app` | `MODE_BACK_ACTION.event_pending`을 `close-app`으로 → 그 1행 red(K1의 결함 모양). **컴파일 주입**: `GS`에 `FOO: 'foo'` 추가 → `platformBack` TS2741 · `commandParser` TS2741 · `restorableMode` `never` 대입 에러 — 트랙이 `tsc`로 한 번 보여 주고 되돌린다 |
+| `tests/game-mode-contract.test.js` ④ | `parseCommand('explore', mode, player, spy)`: 문자열 엔트리 모드(event·event_pending·shop·job_change·quest_board·crafting·ascension·dead)는 그 `MSG.CMD_BLOCKED_*`를 반환하고 `explore` **미호출**; `null` 엔트리(idle·combat·moving·true_ending)는 파서가 막지 않고 `explore` 호출 | `shop: null`로 → shop 행에서 `explore`가 호출돼 red(호출 카운터 — §23.1 K3의 "throw가 아니라 카운터" 교훈). 기존 `command-surface-contract.test.js`는 `setGameState` 누수만 보므로 겹치지 않는다 |
+| `tests/game-mode-contract.test.js` ⑤ 부재 불변식(§7 허용 범주) | `src/**`에서 `gameState\??:\s*string` 식별자 매칭 = 허용 목록 3파일(`actionTypes.ts` LoadDataPayload · `dataMigration.ts` MigratedSave · `useProductTelemetry.ts` 와이어)에서만 | `platformBack.ts:15`를 `string`으로 되돌림 → red. 컴파일러가 못 잡는 회귀 종류(새 `string` prop을 만들고 거기서 오타 비교)를 막는다 |
+| `tests/cf-functions.test.js` (확장, L2) | `deploy.yml` ∌ `FirebaseExtended/action-hosting-deploy`, `firebase.json` ∌ `hosting` 키(JSON 파싱 후 `'hosting' in json === false`) | hosting job 한 개 되살림 → 첫 단언 red; `firebase.json`에 `hosting` 복원 → 둘째 red. 텍스트 매칭이 계약인 특수 케이스(워크플로) — 액션 **식별자**를 매칭하므로 포맷 무관 |
+| `tests/debt-ratchet.test.js` (f) (L3) | 5 디렉터리 AST 상한 | 컴포넌트 하나에 `<span>한국어</span>` 추가 → components 1,320 > 1,319 red. **정규식 (d) 방식이었으면 이 주입은 초록**이다 — 트랙이 두 방식 모두로 돌려 그 차이를 §24.1에 적는다 |
+
+**증빙 델타 (먼저 적는다)** — 모델 입력(`data/*`·`progressionSimulator`·`progressionDiagnostic`·`explorationPacing`·`exploreFlow`·`_shared`)은 **한 파일도 안 건드린다**. 의존 추가 0(`typescript`는 이미 있다).
+
+| 증빙 | 예고 |
+|---|---|
+| `progression-diagnostic-v2` | **움직인다** — `sources` **346 유지**(332 src + 9 tests + 5 고정), 편집 경로의 sha256만: L1의 src 21 + `messages.ts` + L2의 `TokenQuotaManager.ts`(주석) = **23 엔트리**. L1의 테스트 3파일·L3의 `debt-ratchet`·L2의 `cf-functions`는 manifest 밖(9개 tests 엔트리는 loot/progression 계열뿐). `package.json`/`package-lock.json` **불변** — 움직이면 누군가 의존을 추가한 것. `reportHash f21dcf81…`·`v1Baseline 2573fa0f…` 불변 |
+| `relic-dot-multiplier` | **바이트 동일이어야 한다** — `combatHandlers.ts`·`dataMigration.ts` 미편집(1-f가 증명: 편집 없이 컴파일된다). 움직였으면 L1이 금지 파일을 건드린 것 |
+| `relic-event-chance` | **바이트 동일** — `exploreActions.ts`·`eventActions.ts`·`CombatEngine.loot/outcome`·`progressionProfiles` 미편집 |
+| `equipment-combat-power`·`relic-gold-multiplier`·`relic-hp-drain-atk`·`relic-drop-rate`·`content-reachability`·`event-reward-coherence`·`exploration-rhythm 0818fb7a…` | 바이트 동일 |
+| 모델 핀 3종 `ac79428c…`(progression-simulator test) · `2573fa0f…` · `0818fb7a…` | **불변** — L1이 만지는 `endgameSettlement.ts`는 타입 주석 1줄이고 리포트 값은 안 바뀐다. `tests/progression-simulator.test.js`가 증명한다 |
+| `perf:guard` | 타입은 지워지고 MSG 14자리가 `commandParser`(index)에서 `messages.ts`(game-data 청크)로 옮겨간다 — 청크 간 수백 바이트 이동. FCP 504ms/2,200ms — 재측정만 |
+
+**재생성 순서**: L1 ∥ L2 ∥ L3 통합 → `type-check · lint · unit · build:guard`(직렬) → `progression:diagnostic:write` **맨 마지막, 병행 명령 금지**(§15.1) → 15종 verify → `perf:guard` → L3 기준선 재측정·하향(L5) → CLAUDE.md/§24.1 → PR → CI → merge → **머지 push의 `deploy.yml` run 확인**(초록이어야 한다 — L2의 유일한 실전 검증).
+
+**순서·병렬성**: **L1 ∥ L2 ∥ L3** — 파일 교차 **0**. `messages.ts`는 L1만(끝 블록 `// Wave 20 L1`), `TokenQuotaManager.ts`는 L2만(주석), `tests/debt-ratchet.test.js`는 L3만, `CLAUDE.md`는 L2가 §8-8만 만지고 나머지 절은 L5가 통합 뒤 직렬로. L1은 내부 직렬(위). L4는 저장소 밖(소유자)이고 어느 트랙과도 독립.
+
+**트랙 프롬프트에 반드시 넣을 것**(§23.1 운영 발견): ① 계획 파일 경로 `/tmp/claude-0/-home-user-aetheria-roguelike/a8415c1b-4925-539c-8646-13225e01f454/scratchpad/wave20-plan.md` — 워크트리는 `origin/main`에서 갈라지므로 §24 커밋이 체크아웃에 **없다** ② 워크트리에는 `node_modules`가 없어 `tests/equipment-economy-audit.test.js`의 심링크 케이스가 `ERR_MODULE_NOT_FOUND`로, `build:guard`가 `vite` ENOENT로 죽는다 — **예상된 실패**, 통합자가 통합 트리에서 다시 돌린다 ③ 각 트랙의 편집 금지 목록(1-k) ④ 주입 테스트는 코드 수정 **전에** red를 먼저 찍고 기록할 것(§22 공허참).
+
+**판단 포인트** — L1의 설계 선택지 넷을 실행 결과(1-e~1-i)로 비교했다. 골랐다: **B**.
+
+| 선택지 | 얻는 것 | 비용 | 이 코드베이스에서 깨지는 것 |
+|---|---|---|---|
+| A. `GameState.gameState`만 좁힌다(V1) | 원천 1줄 | 진단 5(1-e) | 그 5개를 없애는 가장 짧은 길이 `as GameMode` 캐스트라 §2 위반이고, payload가 `string`인 채로 남아 잘못된 dispatch(1-i의 TS2345)를 못 잡는다 — 닫힌 척하는 타입 |
+| **B. 원천 + `SET_GAME_STATE` payload + 시그니처 전부 + `LOAD_DATA` 술어 + 전수 표 3곳**(채택) | 1-i의 4/4, K1 표 3곳의 자동 red | src 21파일 | 1-k 금지 파일을 안 건드려야 한다 — 그래서 목록을 트랙 프롬프트에 넣는다 |
+| C. B + `LoadDataPayload`/`MigratedSave`의 `gameState`도 `GameMode` | 술어 없이 "깨끗" | 선언 2줄 | `JSON.parse` 결과에 유니온을 선언하는 것은 `as`와 같다 — 구세이브·손상 세이브의 `'formation'`이 `GameMode`로 흘러 `restorableMode`의 `never`가 **런타임에** 거짓이 된다. §2 "경계는 `unknown` + 좁히기"의 정확한 반례 |
+| D. `enum`/브랜드 타입 | 명목 타입 | `GS` 소비 전면 교체 | `GS`는 `as const` 동결 객체이고 `BALANCE`/`AT`와 같은 리터럴 도출 패턴(§2)이다. 세이브 봉투에 값이 그대로 들어가므로 런타임 모양을 바꿀 이유가 0 |
+
+둘째, **L2는 소유자 결정을 실행하는 트랙이지 결정하는 트랙이 아니다** — (b)/(c)는 착수 중 소유자가 닫았다. 셋째, **L3는 정규식이 아니라 AST**여야 한다 — 실측 4의 549가 이유이고 그 하나로 충분하다.
+
+**하지 않기로 한 것**
+1. **`useFirebaseSync`의 combat 폴드 5중복 제거** — 실측 4: 커버리지 0, 게임에서 구별 불가, 얻는 것 5줄. §23 #5의 "관찰로만"을 **종결**로 바꾼다(다시 후보에 올리지 말 것).
+2. **`TokenQuotaManager` 재시도(A)·디스패치 거부(B)** — 위 판단표. 잔여 상한 "세션당 ≤1 미계량 디스패치"를 §6에 숫자로 적는다.
+3. **한국어 전수 스윕** — 3,802 중 대부분이 표현 테이블·데이터 키. 래칫만.
+4. **`tests/**`의 `'IDLE'`·`'intro'` 5곳 정리** — 행동 무관 픽스처(1-d). 고치면 좋지만 이 wave의 어떤 계약도 안 바뀐다 — 이월.
+5. **`ControlPanel`의 렌더 if-체인 전수화** — 700줄 컴포넌트를 `switch`로 바꾸는 리팩터. K1의 `=== EVENT_PENDING` 분기는 이미 명시적이고, 렌더 조건은 `never`로 닫히지 않는다.
+6. **`LoadDataPayload`·`MigratedSave`·`ProductTelemetrySnapshot`의 `gameState` 좁히기** — 선택지 C / 1-j.
+7. **모델 파일·`exploreActions`·`combatHandlers`·`dataMigration`·`useFirebaseSync`의 `'combat'` 리터럴을 `GS.COMBAT`로 바꾸기** — §5 DO에는 맞지만 바이트 핀 3종이 움직이고 컴파일러는 이미 통과한다(1-c). 의미 없는 핀 이동.
+8. **`deploy.yml`의 `build` job 삭제 / `ci.yml`과의 중복 해소** — 소유자 지시로 유지.
+9. **Firebase Hosting 사이트 자체 비활성화** — CLI/콘솔 작업(저장소 밖) — 아래 Q4.
+10. **`tier`/아트 identity** — §19 그대로. **퀘스트 104 `beyond-anchors` · class-(b) 가드 1,807건** — 이월.
+
+**소유자에게 넘기는 질문 (저장소가 답할 수 없는 것)**
+
+| 질문 | 선택지 | 비용 |
+|---|---|---|
+| ~~Q2~~ | **해소 — (a)**. L2가 실행한다 | — |
+| Q4. Hosting **사이트**는 2026-07-15 빌드를 계속 서빙한다 — job을 지워도 `aetheria-rpg-90a2f.web.app`은 살아 있다 | (a) `firebase hosting:disable --project <prod>`(콘솔 "사이트 사용 중지"와 같다) (b) 방치 | (a) 명령 1회 — 낡은 클라이언트가 현재 Firestore 프로젝트에 계속 쓰는 경로가 닫힌다(새 rules는 구 클라이언트를 **받아 주므로** 지금은 열려 있다) (b) URL을 아는 누구나 7월 빌드로 같은 계정 데이터에 쓴다 — `migrateData`가 앞으로는 올리지만 7월 빌드가 9월 세이브를 읽는 방향은 보장이 없다 |
+| Q5. L4 (a) iOS `ios:sync` 델타 커밋 · (b) Android 뒤로가기 실기 표 | 실측 3의 2줄/8행 | 소유자 시간. 델타가 1파일이 아니면 커밋 전에 보고 |
+| Q3. `tier` provenance 재핀 | §19 그대로 | 변동 없음 |
+
+**게이트 베이스라인** (착수 시, head `a8589b22` = `49defbc9` + 문서 1): `tsc --noEmit` 0(exit 0) · unit **5,157 / 5,157**(350파일, skip 0, 직렬 410.5s) · e2e 121 · 15종 verify ok(§23.1). **이 wave의 성공 기준**: 모델 핀 3종 불변 + `relic-dot-multiplier`·`relic-event-chance` 바이트 동일(= L1이 금지 파일을 안 건드렸다는 증명) + 주입 전부 red→green(컴파일 주입 3종 포함, 되돌린 뒤 `tsc` 0) + L3의 "정규식이면 초록, AST면 red" 대조 기록 + **머지 push의 `deploy.yml` run이 도입 이래 처음으로 초록**.
+
+---
+
+**통합자 조정 2건(착수 시)**: ① L2의 `firebase.json`은 `hosting` 키**만** 삭제 — `firestore`·`emulators`는 `test:rules`·`firestore-rules-semantics.test.js:662`가 읽는다. ② L3의 AST 래칫 (f)는 계획의 5개 디렉터리가 아니라 `src/data` 밖 **모든** 최상위 디렉터리(`systems`·`reducers`·`types` 포함)를 센다 — 기존 정규식 (d)와 이중 가드가 되며 기준선은 실측값 그대로.
