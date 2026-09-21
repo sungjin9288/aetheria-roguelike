@@ -1,4 +1,5 @@
 import { DB } from '../data/db';
+import { MSG } from '../data/messages';
 import type { Player } from '../types/index.js';
 import type { GameActions } from '../hooks/actionDeps.js';
 
@@ -17,6 +18,9 @@ export const parseCommand = (input: string, gameState: string, player: Player, a
   const readOnlyCommands = new Set(['help', 'h', '?', 'status', 'stat', '상태', 'i', 'inventory', 'inv', '인벤', 'quest', 'quests', '퀘스트', 'map', '지도']);
   const blockedStateMessages: Record<string, string> = {
     event: '이벤트 진행 중입니다. 1, 2, 3 중 하나를 선택하세요.',
+    // 2026-09 Wave 19 K1: 준비 중에는 아직 선택지가 없다 — 키가 없으면 명령이 각
+    //   액션 가드로 흘러가 문구가 제각각이 된다(explore/move/rest/shop이 서로 다른 에러).
+    event_pending: MSG.AI_EVENT_PREPARING_BLOCKED,
     job_change: '전직 선택 중입니다. 화면에서 직업을 선택하거나 닫아 주세요.',
     quest_board: '퀘스트 보드가 열려 있습니다. 수락 또는 닫기를 먼저 완료하세요.',
     shop: '상점 이용 중입니다. 다른 행동은 상점을 닫은 뒤 진행하세요.',

@@ -40,7 +40,45 @@ const isPayload = (value: unknown): value is ResolveScoutPayload => {
         && Number(payload.now) >= 0;
 };
 
+/**
+ * 2026-09 Wave 19 K1 — AI 이벤트 준비/정산.
+ *
+ * 예전 구조는 훅이 `GS.EVENT`를 **먼저** 세우고 최대 9.5초를 기다린 뒤 `SET_EVENT`를
+ * 쏘는 것이었다. 그 창의 상태는 `{gameState: 'event', currentEvent: null}`이고,
+ *  - `generateEvent`가 reject하면(예: `TokenQuotaManager`의 `JSON.parse` 예외)
+ *    `catch`가 없어 그 모양 그대로 남았다 — `EventPanel`은 `return null`, 터미널은
+ *    `FOCUS_PANEL_STATES`라 마운트되지 않는 **라이브 벽돌**.
+ *  - 기다리는 동안 dismiss/리로드가 일어나면 뒤늦은 `SET_EVENT`가 idle 위에 떨어져
+ *    고아 `currentEvent`가 남았다.
+ * 준비 중을 별도 모드(`EVENT_PENDING`)로 빼고, **응답을 반영해도 되는지의 판정을
+ * 리듀서가 소유한다** — `EVENT_PENDING`이 아니면 `state`를 그대로 돌려준다(동일 참조).
+ */
 export const exploreActionMap = {
+    BEGIN_AI_EVENT: (state): GameState => ({
+        ...state,
+        gameState: GS.EVENT_PENDING,
+        currentEvent: null,
+        isAiThinking: true,
+        // SET_GAME_STATE가 하던 정리를 그대로 유지 (uiHandlers.ts).
+        economyReceipt: null,
+        postCombatResult: null,
+        syncStatus: 'syncing',
+    }),
+
+    RESOLVE_AI_EVENT: (state, action): GameState => {
+        // 준비 중이 아니면 이 응답은 주인이 없는 것이다(dismiss·리로드·다른 전이가
+        // 이미 상태를 가져갔다). 버린다 — 동일 참조 반환이 곧 no-op이다.
+        if (state.gameState !== GS.EVENT_PENDING) return state;
+        const event = action.payload?.event ?? null;
+        return {
+            ...state,
+            gameState: event ? GS.EVENT : GS.IDLE,
+            currentEvent: event,
+            isAiThinking: false,
+            syncStatus: 'syncing',
+        };
+    },
+
     RESOLVE_SCOUT: (state, action): GameState => {
         if (!isPayload(action.payload)) return state;
 

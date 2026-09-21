@@ -84,8 +84,13 @@ const runExplorePostDecisionRoll = async (
             return;
         }
 
-        dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
-        dispatch({ type: AT.SET_AI_THINKING, payload: true });
+        // 2026-09 Wave 19 K1: 준비 중은 `EVENT`가 아니라 `EVENT_PENDING`이다.
+        //   예전에는 여기서 `SET_GAME_STATE EVENT` + `SET_AI_THINKING true`를 쏘고
+        //   최대 9.5초를 기다렸다 — 그 창은 `{event, currentEvent: null}`이라
+        //   저장·복원되면 `EventPanel`이 `return null`인 벽돌이었고, 아래 `try`에
+        //   `catch`가 없어 reject 한 번이면 리로드 없이도 같은 모양이 됐다.
+        //   상태 전이 권한은 리듀서 2전이(BEGIN/RESOLVE)가 가져갔다.
+        dispatch({ type: AT.BEGIN_AI_EVENT });
         try {
             const fullStats = getFullStats();
             const baseSnapshot: Record<string, unknown> = {
@@ -125,14 +130,28 @@ const runExplorePostDecisionRoll = async (
                 //   정규화한 값뿐이라 그 분기는 도달 불가였다(타입상 `never`).
                 const normalizedChoices = toArray(eventData.choices).slice(0, 3);
                 const normalized = { ...eventData, choices: normalizedChoices, outcomes: toArray(eventData.outcomes) };
-                dispatch({ type: AT.SET_EVENT, payload: normalized });
+                dispatch({ type: AT.RESOLVE_AI_EVENT, payload: { event: normalized } });
                 addLog('event', normalized.desc);
             } else {
                 commitExploreOutcome('nothing', null, mapData);
-                dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                dispatch({ type: AT.RESOLVE_AI_EVENT, payload: { event: null } });
                 addLog('info', MSG.EXPLORE_NOTHING);
             }
+        } catch {
+            // 응답이 오지 않는 것(타임아웃·네트워크)은 aiService가 폴백으로 접지만,
+            // **호출 자체가 던지는** 경로는 그 안쪽에 있다 — 예: `TokenQuotaManager`가
+            // 읽는 localStorage가 파손/차단된 경우. 예전에는 catch가 없어 그 예외가
+            // 준비 중 상태를 그대로 굳히고 `explore()`까지 reject시켰다.
+            // 여기서 탐험은 "아무 일도 없었다"로 닫힌다 — 정산은 위에서 이미 끝났거나
+            // 아예 일어나지 않았으므로 여기서 다시 커밋하지 않는다.
+            dispatch({ type: AT.RESOLVE_AI_EVENT, payload: { event: null } });
+            addLog('error', MSG.AI_EVENT_FAILED);
         } finally {
+            // 정산이 **버려졌을 때**(준비 중이 아니게 된 뒤 응답 도착 — dismiss/다른 전이)
+            //   리듀서는 state를 그대로 돌려주므로 `isAiThinking`도 그대로 true로 남는다.
+            //   그 플래그는 `move`의 가드 입력이라 남으면 이동이 영구히 막힌다.
+            //   렌더 조건은 더 이상 이 플래그를 읽지 않으므로(ControlPanel은
+            //   `EVENT_PENDING`만 본다) 여기서 한 번 더 내리는 것은 무해하다.
             dispatch({ type: AT.SET_AI_THINKING, payload: false });
         }
         return;

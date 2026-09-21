@@ -209,6 +209,9 @@ test('platform back closes the nearest reversible game surface before the Toss s
     assert.equal(resolvePlatformBackAction({ expeditionDebriefOpen: true }), 'close-debrief');
     assert.equal(resolvePlatformBackAction({ postCombatOpen: true }), 'close-post-combat');
     assert.equal(resolvePlatformBackAction({ gameState: 'event' }), 'dismiss-event');
+    // Wave 19 K1: 준비 중도 이벤트 표면이다 — 빠지면 기본값 'close-app'으로 떨어져
+    //   뒤로가기가 이야기를 기다리는 동안 앱을 닫는다.
+    assert.equal(resolvePlatformBackAction({ gameState: 'event_pending' }), 'dismiss-event');
     assert.equal(resolvePlatformBackAction({ gameState: 'shop' }), 'close-focus-panel');
     assert.equal(resolvePlatformBackAction({ gameState: 'idle' }), 'close-app');
 });

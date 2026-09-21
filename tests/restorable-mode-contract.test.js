@@ -60,6 +60,19 @@ test('event는 currentEvent 없이 복원되지 않는다 — AI 창 세이브�
     assert.equal(restored.currentEvent, null);
 });
 
+test('event_pending은 동반 상태와 무관하게 복원되지 않는다 — 진행 중 promise는 리로드를 못 넘는다', () => {
+    // Wave 19 K1: `event` 창을 별도 모드로 뺀 것이다. 동반 상태가 "없는" 것이 아니라
+    // **진행 중인 AI 호출**이고, 그건 리로드 뒤에 존재하지 않는다. 복원하면
+    // `ControlPanel`이 영원히 "준비 중" 패널을 그린다 — 스피너가 달린 같은 벽돌이다.
+    const bare = restore({ gameState: GS.EVENT_PENDING });
+    assert.equal(bare.gameState, GS.IDLE);
+    assert.equal(bare.currentEvent, null);
+
+    // 카드가 우연히 함께 와도 접는다 — 그 카드를 만든 호출은 이미 없다.
+    const withCard = restore({ gameState: GS.EVENT_PENDING, currentEvent: EVENT });
+    assert.equal(withCard.gameState, GS.IDLE, 'currentEvent가 있어도 준비 중으로는 복원되지 않는다');
+});
+
 test('dead는 복원되지 않는다 — runSummary가 봉투에 없어 사망 화면 조건이 영원히 거짓이다', () => {
     const restored = restore({ gameState: GS.DEAD });
     assert.equal(restored.gameState, GS.IDLE);
@@ -73,6 +86,8 @@ test('복원 가능한 모드 집합이 봉투의 동반 필드와 일치한다 
         [GS.COMBAT, { enemy: null }, GS.IDLE],
         [GS.EVENT, { currentEvent: EVENT }, GS.EVENT],
         [GS.EVENT, { currentEvent: null }, GS.IDLE],
+        [GS.EVENT_PENDING, {}, GS.IDLE],
+        [GS.EVENT_PENDING, { currentEvent: EVENT }, GS.IDLE],
         [GS.DEAD, {}, GS.IDLE],
         [GS.IDLE, {}, GS.IDLE],
     ];

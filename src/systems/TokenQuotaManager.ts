@@ -106,26 +106,58 @@ interface QuotaDocument extends LegacyQuotaDocument {
 //   상한이 여기다 — 과소 집계는 그 상한을 무력화한다.
 //   `recordCall()`은 디스패치 직전에 1건을 쓰고, `recordOutcome()`은 그 1건이 어떻게
 //   끝났는지를 같은 레코드에 적는다(진실 원천 1곳).
-export const TokenQuotaManager = {
-    get DAILY_LIMIT() { return BALANCE.DAILY_AI_LIMIT; },
-    QUOTA_KEY: 'aetheria_ai_quota',
-
-    getQuotaData(): QuotaRecord {
-        const today = new Date().toDateString();
-        const stored = localStorage.getItem(this.QUOTA_KEY);
+/**
+ * W19-K1 — 저장소 읽기는 신뢰 경계다.
+ *   `localStorage.getItem` + `JSON.parse`에는 가드가 없었고, 그 예외가 실제로
+ *   `AI_SERVICE.generateEvent`의 reject가 됐다(파손된 값 / 저장소 없는 런타임 /
+ *   쿠키 차단). 여기서 값으로 접고, 실패 여부(`ok`)를 판정자에게 넘긴다.
+ */
+const readQuota = (): { ok: boolean; record: QuotaRecord } => {
+    const today = new Date().toDateString();
+    const emptyDay: QuotaRecord = { date: today, used: 0, outcomes: {} };
+    try {
+        const stored = localStorage.getItem(TokenQuotaManager.QUOTA_KEY);
         if (stored) {
             const data = asRecord(JSON.parse(stored));
             // Reset if new day
             if (data && data.date === today) {
-                return { date: today, used: toCount(data.used), outcomes: normalizeOutcomes(data.outcomes) };
+                return { ok: true, record: { date: today, used: toCount(data.used), outcomes: normalizeOutcomes(data.outcomes) } };
             }
         }
-        return { date: today, used: 0, outcomes: {} };
+        return { ok: true, record: emptyDay };
+    } catch {
+        return { ok: false, record: emptyDay };
+    }
+};
+
+/** 마지막 쓰기가 성공했는가. false면 미터를 못 적는 상태이므로 게이트를 닫는다. */
+let quotaWriteHealthy = true;
+
+export const TokenQuotaManager = {
+    get DAILY_LIMIT() { return BALANCE.DAILY_AI_LIMIT; },
+    QUOTA_KEY: 'aetheria_ai_quota',
+
+    /**
+     * 오늘의 레코드. 읽기에 실패해도 **던지지 않는다** — 던지면 그 예외가
+     * `canMakeAICall` → `decideRequest` → `generateEvent`를 타고 올라가 호출자의
+     * `await`를 reject시킨다(Wave 19 K1 실측: `explore()`가 준비 중 상태를 굳힌 채
+     * 죽었다). 실패는 값으로 표현하고, 판정은 `canMakeAICall`이 한다.
+     */
+    getQuotaData(): QuotaRecord {
+        return readQuota().record;
     },
 
+    /**
+     * W19-K1 — **fail-closed**. 못 세면 보내지 않는다.
+     *   이 미터가 하루 비용의 유일한 상한이므로(위 W12-D3 주석), 읽기 실패나 쓰기
+     *   실패는 "한도를 모른다"가 아니라 "한도를 강제할 수 없다"다. 그 상태에서
+     *   디스패치를 허용하면 파손된 저장소 하나가 상한을 통째로 무력화한다.
+     *   실패 시 폴백 이벤트 풀로 접히므로 플레이어에게는 오프라인과 같은 경험이다.
+     */
     canMakeAICall() {
-        const quota = this.getQuotaData();
-        return quota.used < this.DAILY_LIMIT;
+        const { ok, record } = readQuota();
+        if (!ok || !quotaWriteHealthy) return false;
+        return record.used < this.DAILY_LIMIT;
     },
 
     // cycle 326: getRemainingCalls 메서드 제거 — 외부/내부 호출 0건이던 dead method.
@@ -147,8 +179,15 @@ export const TokenQuotaManager = {
         this.writeQuota({ ...quota, outcomes });
     },
 
+    /** 쓰기 실패(사설 모드 QuotaExceededError · 쿠키 차단 SecurityError)도 던지지 않는다 —
+     *  대신 미터가 고장났다는 사실을 남겨 다음 게이트가 닫히게 한다. */
     writeQuota(record: QuotaRecord) {
-        localStorage.setItem(this.QUOTA_KEY, JSON.stringify(record));
+        try {
+            localStorage.setItem(this.QUOTA_KEY, JSON.stringify(record));
+            quotaWriteHealthy = true;
+        } catch {
+            quotaWriteHealthy = false;
+        }
     },
 
     /**
@@ -157,7 +196,8 @@ export const TokenQuotaManager = {
      */
     getCallLedger(): AiCallLedger | null {
         try {
-            const quota = this.getQuotaData();
+            const { ok, record: quota } = readQuota();
+            if (!ok) return null;
             const settled = sumTally(quota.outcomes);
             const adopted = quota.outcomes.adopted ?? 0;
             return {

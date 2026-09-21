@@ -52,7 +52,9 @@ test('파서는 어떤 명령에서도 setGameState/setShopItems를 직접 부�
         'explore', 'look', '탐색', 'rest', '휴식', 'move 어둠의 동굴', '이동 고요한 숲',
         'attack', 'skill', 'sn', 'r', 'shop', '상점', 'status', 'inv', 'quest', 'map', 'help',
     ];
-    const STATES = ['idle', 'combat', 'event', 'shop', 'dead', 'ascension', 'quest_board', 'crafting', 'job_change'];
+    // Wave 19 K1: 하드코딩 9종이었다 — `GS`는 그때도 11종이었고(`moving`·`true_ending`이
+    //   빠져 있었다) 새 상태가 들어와도 행렬 밖이었다. 이제 `GS`에서 전수로 읽는다.
+    const STATES = Object.values(GS);
     const leaks = [];
     for (const command of COMMANDS) {
         for (const gameState of STATES) {
@@ -166,15 +168,24 @@ test('전투 중 던전에서도 마찬가지다 — 두 가드가 겹쳐도 상
 
 // ── 나머지 행동 명령의 상태 게이트는 각자 액션이 이미 소유한다 ────────────────
 
+test('준비 중(event_pending)은 선택지를 말하지 않는 자기 안내를 돌려준다', () => {
+    // Wave 19 K1: 키가 없으면 명령이 각 액션 가드로 흘러가 문구가 제각각이 되고
+    //   (explore/move/rest/shop이 서로 다른 에러), `1/2/3`은 아직 고를 것이 없다.
+    const { fired, message } = runParse('explore', GS.EVENT_PENDING);
+    assert.deepEqual(fired, []);
+    assert.equal(message, MSG.AI_EVENT_PREPARING_BLOCKED);
+    assert.deepEqual(runParse('1', GS.EVENT_PENDING).fired, [], '준비 중에는 선택 자체가 없다');
+});
+
 test('읽기 전용 명령은 차단 상태에서도 통과한다 (기존 계약 보존)', () => {
-    for (const gameState of ['event', 'shop', 'dead', 'crafting']) {
+    for (const gameState of [GS.EVENT, GS.EVENT_PENDING, 'shop', 'dead', 'crafting']) {
         const { message } = runParse('status', gameState);
         assert.ok(String(message).startsWith('[상태]'), `${gameState}에서 status는 읽혀야 한다`);
     }
 });
 
 test('차단 상태에서는 행동 명령이 액션을 부르지 않는다', () => {
-    for (const gameState of ['event', 'shop', 'dead', 'ascension', 'quest_board', 'crafting', 'job_change']) {
+    for (const gameState of [GS.EVENT, GS.EVENT_PENDING, 'shop', 'dead', 'ascension', 'quest_board', 'crafting', 'job_change']) {
         for (const command of ['explore', 'rest', 'shop', 'move 어둠의 동굴']) {
             const { fired, message } = runParse(command, gameState);
             assert.deepEqual(fired, [], `${command} @ ${gameState}`);

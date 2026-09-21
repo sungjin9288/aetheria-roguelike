@@ -53,10 +53,16 @@ export const bootstrapActionMap = {
         //     `App.tsx`의 사망 화면 조건은 `GS.DEAD && runSummary`라 복원 후 영원히 거짓.
         //     게다가 `characterActions.start`는 `gameState`를 건드리지 않으므로 새 캐릭터를
         //     만들어도 `dead`로 남아 대부분의 버튼이 에러 로그만 남긴다.
+        //   - `event_pending`(Wave 19 K1) — 위 `event` 창을 별도 모드로 뺀 것이다.
+        //     동반 상태가 "없는" 것이 아니라 **진행 중인 promise**이고, 그건 리로드를
+        //     넘지 못한다. 복원하면 `ControlPanel`이 영원히 "준비 중" 패널을 그린다 —
+        //     스피너가 달렸을 뿐 같은 벽돌이다. 그래서 `dead`처럼 **언제나** 접는다
+        //     (`currentEvent`가 우연히 함께 와도 마찬가지 — 그 카드를 만든 호출은 이미 없다).
         //   새 모드를 봉투에 넣지 않은 채 영속시키려면 여기에 줄을 추가해야 한다.
         const restorableMode = (mode: string) => {
             if (mode === 'combat' && !enemy) return false;
             if (mode === 'event' && !action.payload.currentEvent) return false;
+            if (mode === 'event_pending') return false;
             if (mode === 'dead') return false;
             return true;
         };
