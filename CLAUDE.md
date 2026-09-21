@@ -51,6 +51,9 @@
 > (eventActions/eventPresentation에 로컬 사본을 두지 말 것), **QA 시드 API는 `AetheriaTestApi`**(useGameTestApi.ts — e2e 스펙이 읽는
 > 계약이자 `window.__AETHERIA_TEST_API__`의 타입)다. **데이터 테이블(`BOSS_BRIEFS`/`LOOT_TABLE`/`DROP_TABLES`/codex 마일스톤/
 > 시그니처 레지스트리/팔레트)도 리터럴·JSON에서 도출된 타입**이고 열린 키 조회는 `getBossBrief`/`getLootTable` 같은 타입된 lookup을 쓴다.
+> **`GameState.gameState`는 `GameMode`**(= `typeof GS[keyof typeof GS]`, `gameStates.ts`)이고 `SET_GAME_STATE` payload도 `GameMode`다(Wave 20 L1) — `=== 'evnt'` 같은 오타 비교는 TS2367, 잘못된 payload는 TS2345다.
+> 세이브 봉투(`LoadDataPayload`/`MigratedSave`)의 `gameState`는 `JSON.parse` 결과라 **`string`으로 남기고** `LOAD_DATA`가 `isGameMode` 술어로 좁힌다(미지 문자열 → `idle`). 유니온을 봉투 타입에 선언하는 것은 `as`와 같다.
+> `useProductTelemetry`의 `gameState`는 아웃바운드 와이어라 `string`. 그 셋 밖에서 `gameState: string` 선언은 `tests/game-mode-contract.test.js`의 부재 불변식이 잡는다.
 > `firebase.ts`의 `auth`/`db`는 config 부재 시 실제로 `null`이므로 `Auth | null`/`Firestore | null`이다 — 소비처는 `hasFirebaseConfig`/부트 단계
 > 가드와 함께 `!db` 가드를 둔다. 새 코드에서 `any`가 필요해 보이면 경계는 `unknown` + 좁히기, 데이터는 리터럴 도출, 액션은 `ActionPayloadMap`이 답이다.
 
@@ -129,7 +132,7 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 350 파일 / 5,157 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 351 파일 / 5,167 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
                       #   + e2e/ (Playwright 44 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
@@ -197,7 +200,7 @@ npm run mobile:doctor     # Capacitor 환경 점검
 - **`data/` 파일 직접 수정 시 주의**: `items.ts`, `monsters.ts`, `constants.ts` 변경 시 밸런스 전체에 영향. 반드시 테스트 후 반영.
 - **`CONSTANTS.DATA_VERSION` 무단 변경 금지**: save 구조 변경 시 반드시 버전 bump + `migrateData()` 업데이트 병행.
 - **`commandParser`에 게임 로직·상태 전이 작성 금지**: 터미널은 UI와 **평행한 두 번째 입력 표면**이다. 파서가 `setGameState`를 직접 부르면 UI에만 있는 가드를 우회한다 — 실제로 `shop`이 그랬고, 전투가 가능한 안전지대(황금 왕국)에서 전투 중 `shop`을 치면 **도주 판정 없이 전투를 버릴 수** 있었다(Wave 17). 새 명령은 **액션을 호출만** 하고, 게이트는 그 액션이 소유한다. `tests/command-surface-contract.test.js`가 되돌리기를 잡는다.
-- **AI 이벤트 경로의 상태 전이를 hook에서 직접 쓰지 말 것**: `explore()`의 AI 경로는 `AT.BEGIN_AI_EVENT`(→ `GS.EVENT_PENDING`)와 `AT.RESOLVE_AI_EVENT`(`EVENT_PENDING`일 때만 적용, 아니면 **동일 참조**) 두 리듀서 전이가 소유한다(Wave 19 K1). hook이 응답 전에 `SET_GAME_STATE(EVENT)`를 세우면 (a) `try`에 `catch`가 없을 때 `generateEvent` reject가 **리로드 없는 라이브 벽돌**이 되고(Wave 18의 `LOAD_DATA` 폴드는 이 경로를 못 잡는다 — 실제로 `TokenQuotaManager`의 무방비 `JSON.parse`로 도달됐다) (b) dismiss/리로드 뒤 도착한 응답이 idle 위에 `SET_EVENT` 고아를 남긴다. `tests/ai-event-pending-contract.test.js`가 되돌리기를 잡는다. **`GS` 멤버를 추가할 때 `gameState`는 `string`이라 컴파일러가 소비처를 안 잡는다** — §23의 소비처 표처럼 `src/**`와 **`tests/**`** 둘 다 grep할 것(24곳을 표로 셌는데 25번째가 `tests/progression-simulator.test.js`에 있었다).
+- **AI 이벤트 경로의 상태 전이를 hook에서 직접 쓰지 말 것**: `explore()`의 AI 경로는 `AT.BEGIN_AI_EVENT`(→ `GS.EVENT_PENDING`)와 `AT.RESOLVE_AI_EVENT`(`EVENT_PENDING`일 때만 적용, 아니면 **동일 참조**) 두 리듀서 전이가 소유한다(Wave 19 K1). hook이 응답 전에 `SET_GAME_STATE(EVENT)`를 세우면 (a) `try`에 `catch`가 없을 때 `generateEvent` reject가 **리로드 없는 라이브 벽돌**이 되고(Wave 18의 `LOAD_DATA` 폴드는 이 경로를 못 잡는다 — 실제로 `TokenQuotaManager`의 무방비 `JSON.parse`로 도달됐다) (b) dismiss/리로드 뒤 도착한 응답이 idle 위에 `SET_EVENT` 고아를 남긴다. `tests/ai-event-pending-contract.test.js`가 되돌리기를 잡는다. **`GS` 멤버를 추가하면 컴파일러가 세 표를 짚는다**(Wave 20 L1): `platformBack`의 `Record<GameMode, PlatformBackAction>`(TS2741) · `commandParser`의 `Record<GameMode, string | null>`(TS2741) · `restorableMode`의 `never` default — K1이 손으로 채우던 표다. 단 **`tests/**`는 `tsconfig` `checkJs: false`라 타입 검사 밖**이므로 `tests/**` grep 의무는 그대로다(Wave 19에서 24곳을 표로 셌는데 25번째가 `tests/progression-simulator.test.js`에 있었다).
 - **컴포넌트에서 `setSideTab` + `setGameState` 쌍을 직접 부르지 말 것**: 아카이브 진입은 `characterActions.openArchive(tab)`이 소유한다(Wave 19 K2, 허용 상태는 **화이트리스트** — 새 `GS` 멤버는 자동 거부). `ReturnBriefingCard`의 보상 버튼이 전투 중 복원 세이브에서 그 쌍을 눌러 **도주 판정 없이 전투를 버릴 수** 있었다(`lastSeenAt`은 모든 저장이 찍으므로 카드는 전투에서도 뜬다 — 카드를 숨기면 브리핑이 영구 소실되니 가드는 액션에 둔다). `tests/archive-open-contract.test.js`의 부재 불변식이 `src/components/**`에서 그 쌍의 공존을 잡는다.
 - **전투 턴을 hook에서 해석 금지**: 공격/기술/도주/소모품은 `AT.RESOLVE_COMBAT_ACTION` 등 단일 reducer 전이(`systems/combatActionTurn.ts`)로만 해석. hook에서 `SET_PLAYER`/`SET_ENEMY`를 여러 번 쏘는 방식은 rapid tap 시 상태 분기를 만든다.
 
@@ -347,6 +350,8 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 - `event` → `currentEvent`가 함께 와야 한다. `exploreActions`가 AI 호출(9.5s) **전에** `GS.EVENT`를 세우고 저장 디바운스는 500ms라 `{event, currentEvent: null}` 세이브가 실재한다. 복원하면 `isAiThinking`이 비영속이라 false로 돌아오고 `EventPanel`이 `return null` → **웹/iOS 영구 벽돌**(TerminalView도 `FOCUS_PANEL_STATES`라 마운트되지 않는다). Wave 19 K1 이후 AI 경로는 `GS.EVENT`를 응답 **뒤에** 세우므로 이 세이브는 더 이상 생산되지 않는다 — 이 줄은 방어선으로 남는다
 - `event_pending` → 언제나 접는다(Wave 19 K1). 대기 중인 AI 응답 promise는 리로드를 못 넘으므로 동반 상태가 무엇이든 복원할 수 없다 — 복원하면 '준비 중' 패널이 영원히 뜬다
 - `dead` → 언제나 접는다. `runSummary`는 전투 패배 순간에만 만들어지고 저장되지 않는데 사망 화면 조건이 `GS.DEAD && runSummary`다
+
+봉투의 `gameState`는 `isGameMode`로 먼저 좁힌다 — **미지의 문자열(예: 구 `'formation'`)은 `idle`로 접힌다**(Wave 20 L1; 그 전에는 그대로 복원돼 어느 렌더 트리도 못 그리는 상태였다). `restorableMode`는 `GameMode` 전수 `switch`이고 default가 `never`라 **새 멤버는 여기에 줄을 추가하지 않으면 컴파일 에러**다.
 
 **새 모드를 봉투에 넣지 않은 채 영속시키려면 여기에 줄을 추가해야 한다.** 그리고 그 아래 두 정리 분기는 **서로 다른 값을 읽는다** — 모험 유물 정리는 `requestedMode`(폴드된 값으로 읽으면 사망 세이브의 정리가 건너뛰어진다), 포식 보너스 종료는 폴드된 `gameState`(`requestedMode`로 바꾸면 `adventure-relic-lifetime`의 "불완전 전투 정리"가 깨진다). 둘 다 실측으로 갈랐으니 바꾸지 말 것.
 

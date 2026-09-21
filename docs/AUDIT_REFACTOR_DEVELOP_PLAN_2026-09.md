@@ -1423,3 +1423,36 @@ const gameState: GameMode = restorableMode(requestedMode) ? requestedMode : GS.I
 ---
 
 **통합자 조정 2건(착수 시)**: ① L2의 `firebase.json`은 `hosting` 키**만** 삭제 — `firestore`·`emulators`는 `test:rules`·`firestore-rules-semantics.test.js:662`가 읽는다. ② L3의 AST 래칫 (f)는 계획의 5개 디렉터리가 아니라 `src/data` 밖 **모든** 최상위 디렉터리(`systems`·`reducers`·`types` 포함)를 센다 — 기존 정규식 (d)와 이중 가드가 되며 기준선은 실측값 그대로.
+
+### 24.1 Wave 20 실행 결과 (2026-09-21)
+
+**커밋**: `3d437013` §24 계획 · `fad18cb5` L3 · `194252b0` L2 · `3d297e20` §6/§7 문서 · `1d0c0613` L1 · `55cfc192` 래칫 하향 · `c28d7b52` 증빙. 트랙 3개 worktree 병렬(L1 opus / L2·L3 sonnet), 파일 교차 0 — 충돌은 CLAUDE.md §8-8 하나였고 그건 L2의 worktree 베이스(`origin/main` = `49defbc9`)에 제가 그 뒤 붙인 "해소" 단락(`a8589b22`)이 없어서였다(두 단락 다 살림).
+
+**예고 델타 적중**: 이동은 `progression-diagnostic-v2` 하나, 바뀐 키 `sources`뿐, 346 → 346, 이동 **22 = L1 src 21 + L2 `TokenQuotaManager.ts`(주석)**. `package.json`/락파일·`reportHash`·`v1Baseline` 불변, `content d2d37207…`·`exploration-rhythm 0818fb7a…` 불변, `relic-dot-multiplier`·`relic-event-chance` 바이트 동일 — L1이 `combatHandlers`/`dataMigration`/`exploreActions`를 한 바이트도 안 건드렸다는 증명(계획 1-f/1-k가 in-memory `tsc`로 예측한 그대로).
+
+**계획이 실측과 갈린 곳 — 셋, 전부 트랙이 잡았다**
+
+| # | §24의 기술 | 실측 | 결론 |
+|---|---|---|---|
+| 1 | 계약 테스트 ①·③ "11종/11모드" | `Object.values(GS).length === 12`(계획 표의 나열 자체가 2+4+6=12) | 계수 착오. 테스트가 `Object.keys(EXPECTED).sort() === [...GS].sort()`로 전수성을 스스로 단언한다 |
+| 2 | "`commandParser`의 14자리를 단언하는 테스트 grep 0" | `tests/command-surface-contract.test.js:183`이 status 응답의 `[상태]` 접두사를 읽는다 | `MSG.CMD_STATUS`가 접두사를 유지, `messages.ts`에 "바꾸지 말 것" 주석 |
+| 3 | `MSG.CMD_STATUS`/`CMD_MAP`를 함수로 | 원본 템플릿이 `Player`의 선택 필드를 그대로 보간 → 함수 인자에 `\| undefined` 필요(`COMBAT_ENEMY_HIT` 관례) | 출력 바이트 동일 유지(`undefined`가 찍히던 경우 포함) |
+
+L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets`·`pwa` 0도 상한 추가). L2는 이탈 0(`deploy-dev`/`deploy-prod`/`action-hosting-deploy`의 저장소 내 소비자 0 확인).
+
+**주입 판별 — 이번 wave의 핵심 증거 둘**
+- **컴파일 주입**(L1): `GS`에 `FOO: 'foo'` → `platformBack.ts` TS2741 · `commandParser.ts` TS2741 · `bootstrapHandlers.ts` TS2322(`never`) **셋 전부**; `=== 'evnt'` → TS2367; `payload: 'formation'` → TS2345. 되돌린 뒤 `tsc` 0. K1이 손으로 채우던 표 3곳이 컴파일러 의무가 됐다.
+- **방법 대조**(L3): 같은 `<span>한국어</span>` 주입에 (f) AST는 `1320 > 1319` red, (d) 정규식은 **725 그대로** — JSX 텍스트 549개가 정규식에 보이지 않는다는 실증. `utils` 기준선은 L1이 14자리(22노드)를 옮겨 **2,001 → 1,979로 하향** 고정.
+
+**행동 변화는 정확히 하나**: 미지의 `gameState` 문자열이 든 세이브(구 `'formation'` 등)가 `idle`로 접힌다 — 그 전에는 그대로 복원돼 어느 렌더 트리도 못 그렸다(`restorable-mode-contract` ②가 고정, 주입 시 판별자는 `enemy`가 아니라 `gameState` — §23.1 #3의 교훈 적용).
+
+**운영**: Plan 에이전트는 read-only라 계획 파일을 못 쓴다 — transcript JSONL에서 `## 24.` 블록을 스크립트로 추출해 파일로 만들었다(41.6KB, 재타이핑 0). 잔존 worktree 19개를 트랙 생성 **전에** 제거(계획이 grep 오염을 실측). 각 트랙 프롬프트에 계획 경로·금지 파일·worktree `node_modules` 부재를 직접 넣어 Wave 19의 §23 누락을 반복하지 않았다.
+
+**소유자 항목**: Q1 해소(§23.1) · Q2 (a) 실행 완료 · **Q4 열림** — Hosting 사이트는 job을 지워도 2026-07-15 `ec5cb6` 빌드를 기본 도메인 2개로 계속 서빙한다. 옛 클라이언트가 같은 Firestore에 쓰는 경로를 닫으려면 `npx firebase hosting:disable --project aetheria-rpg-90a2f`(무료, 되돌리기는 재배포 1회) · Q5 K3 마무리 — macOS `npm run ios:sync`(예상 델타 `Package.swift` +2줄 1파일; `pbxproj`가 움직이면 커밋 말고 보고) + Android 실기 뒤로가기 8행 표(`docs/PLAYTEST_CHECKLIST.md §11`).
+
+**Wave 21 후보**
+1. `tests/**`의 `GS` 밖 리터럴 5곳(`'IDLE'` 3 · `'intro'` 2) 정리 — 행동 무관 픽스처, 이월.
+2. 퀘스트 104 `beyond-anchors` · class-(b) 소스 정규식 가드 1,807건 — 이월(§19).
+3. **머지 push의 `deploy.yml` run이 도입 이래 처음 초록인지** — L2의 유일한 실전 검증. 빨가면 그게 Wave 21의 첫 실측.
+4. 종결 항목(다시 올리지 말 것): `useFirebaseSync` combat 폴드 5중복(커버리지 0·게임에서 구별 불가) · `TokenQuotaManager` 재시도/거부(§24 판단표) · `ControlPanel` 렌더 if-체인 전수화 · `tier`/아트 identity(§19).
+
