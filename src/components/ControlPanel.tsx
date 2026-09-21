@@ -525,10 +525,12 @@ const ControlPanel = ({
     icon: ShoppingBag,
     label: '상점',
     mobileLabel: '상점',
-    onClick: () => {
-      actions?.setShopItems([...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors]);
-      actions?.setGameState(GS.SHOP);
-    },
+    // 2026-09 Wave 17 I1 보정: 이 버튼이 **세 번째** 상점 진입 표면이었다. 파서와
+    //   GameRoot는 `openShop`으로 돌렸는데 여기만 시퀀스를 복제하고 있었다 — 지금은
+    //   위쪽 `gameState === GS.COMBAT` 조기 반환이 상태 가드를 대신하지만, 그건
+    //   **렌더 조건에 얹힌 가드**라 조기 반환 목록이 바뀌면 조용히 사라진다
+    //   (실측: 그 목록에 `dead`/`ascension`/`true_ending`이 없다). 가드는 액션이 갖는다.
+    onClick: () => actions?.openShop(),
     className: 'bg-[linear-gradient(180deg,rgba(34,24,14,0.84)_0%,rgba(16,11,7,0.96)_100%)] border border-[#d5b180]/22 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30',
   };
 

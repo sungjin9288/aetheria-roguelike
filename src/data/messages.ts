@@ -299,6 +299,11 @@ export const MSG = {
     EXPLORE_QUIET: '주변이 조용합니다.',
     EXPLORE_RELIC_FOUND: '✨ [유물 발견] 전투 직전, 고대의 유물이 눈에 들어옵니다!',
     REST_SAFE_ONLY: '휴식은 안전한 지역에서만 가능합니다.',
+    // 2026-09 Wave 17 I1: 상점 진입 문구 — commandParser가 하드코딩하던 한국어를
+    //   MSG로 옮긴다(CLAUDE.md §5). 전투 중 차단 문구는 새로 생긴 가드의 것이다.
+    SHOP_SAFE_ONLY: '상점은 안전 지역에서만 이용할 수 있습니다.',
+    SHOP_BLOCKED: '전투 중에는 상점을 이용할 수 없습니다.',
+    SHOP_ENTERED: '상점에 입장했습니다.',
     REST_GOLD_INSUFFICIENT: (cost: number) => `휴식할 골드가 부족합니다. 필요 골드: ${cost}`,
     // cycle 116: REST_DONE 제거 — REST_DONE_FULL이 active.
     SKILL_SWAP_SAFE_ONLY: '스킬 교체는 안전한 지역에서만 가능합니다.',

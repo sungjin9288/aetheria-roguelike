@@ -950,3 +950,51 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 1. **safe 맵에 `monsters`를 채워 진짜 사냥터로 만들기.** 안전지대는 회복·정비 지점이라는 루프 역할이 있고, 채우면 원정 리듬(출발 → 소모 → 귀환)의 귀환 지점이 사라진다.
 2. **`탐색` 명령을 safe 맵에서 파싱 단계에서 거부하기.** 명령은 되는데 결과가 "평화롭다"인 것이 정상이다 — 파서에서 막으면 체인 스텝도 함께 막힌다(H2의 실패 시나리오와 같은 형태).
 3. **`spawnEnemy`를 throw로 바꾸기.** 게임 루프 한가운데서 던지면 조용한 스폰 대신 크래시가 된다. 모델 경로에서만 throw가 옳다(그쪽은 불가능 상태라 크래시가 정답이다).
+
+---
+
+## 21. Wave 17 (2026-09-20, 베이스 `main` = `a8bb48db` = PR #43 merge commit)
+
+**핵심**: Wave 16의 성과는 "문서 주장을 확인했다"가 아니라 **"한 행동을 호출할 수 있는 입력 표면을 전부 세었다"**였다. UI는 막았는데 터미널은 안 막았던 것이 결함이었다. 이번 wave는 그 방법을 **명령 전체로** 확장한다.
+
+**먼저 한 일 — 방법을 잘못 고를 뻔했다.** 처음에는 "CLAUDE.md의 사실 주장을 전수 검증"으로 잡고 숫자 19종을 실측했다: `BALANCE` 8개(`CRIT_CHANCE` 0.1 · `ESCAPE_CHANCE` 0.5 · `EXP_SCALE_RATE` 1.15 · `RELIC_FIND_CHANCE` 0.08 · `BOSS_PHASE2_THRESHOLD` 0.5 · `TWO_HAND_ATK_BONUS` 1.55 · `EVENT_CHANCE_NOTHING` 0.2 · `STATUS_DOT_RATIO` 0.04), `DAILY_AI_LIMIT` 50, `DATA_VERSION` 5.1, `MAX_LEVEL` 99, 맵 52 · 직업 18 · 유물 67 · 시너지 20 · 체인 13(전부 3스텝) · 퀘스트 143 · 업적 73 — **19/19 참**이다. 즉 드리프트는 숫자에 없다. `manualChunks`도 파고들다 접었다: 청크 이름이 문서와 달랐지만(`vendor-firebase` 하나가 아니라 `-firestore`/`-auth`/`-core` 셋이고 `vendor-charts`는 문서에 없다) **결과(FCP/DCL)는 `perf:guard`가 이미 blocking으로 재고 있어** 수익이 낮았다. 문서만 실측값으로 고치고 축을 되돌렸다.
+
+**실측 — 명령 18종 × 상태 9종 행렬**. 파서는 `idle`과 `combat`을 **구분하지 않는다**(둘 다 `blockedStateMessages`에 없다). 그런데도 대부분의 칸이 무해한 이유는 액션이 각자 가드를 들고 있기 때문이다.
+
+| 명령 | 가드 소유자 | 가드 |
+|---|---|---|
+| `explore` | `exploreActions` | `gameState !== GS.IDLE` (+ Wave 16의 safe 가드) |
+| `move` | `moveActions` | `['idle','moving']` 아니면 차단, 그리고 **레벨 잠금은 `getMapAccess`가 따로 건다** |
+| `rest` | `characterActions` | `gameState !== 'idle'` |
+| `attack`/`skill`/`escape` | `combatAttack` | `gameState !== GS.COMBAT \|\| !enemy` |
+| **`shop`** | **없었다** | 파서가 직접 `setShopItems` + `setGameState('shop')`, 검사는 `type === 'safe'` 하나 |
+
+**유일한 누수가 `shop`이었고 이유는 구조적이다 — 파서가 액션을 경유하지 않는 유일한 명령이었다.** 그리고 전투가 가능한 안전지대가 실제로 존재한다: `황금 왕국`은 `type: 'safe'`인데 `monsters` 5종을 갖는 유일한 지역이고(Wave 16 실측), `canInvestigateTown`이 true인 설계된 "도시 조사" 구역이며 경로 게이트 62로 **가장 깊은 안전지대**다. 거기서 전투 중 `shop`을 치면 `gameState`가 'shop'으로 넘어가고, `ShopPanel`의 뒤로가기가 `setGameState('idle')`이므로 **도주 판정(`ESCAPE_CHANCE` 0.5) 없이 전투를 버릴 수 있었다.** `SET_GAME_STATE`는 `enemy`를 지우지 않으므로 버려진 적이 상태에 남은 채 idle로 돌아간다. 정규 도주는 50% 실패 시 적의 반격을 받는데, 이 경로는 비용이 0이다.
+
+덤으로 같은 3줄을 `GameRoot`의 `'open_shop'`도 복제하고 있었다 — **입력 표면이 둘인데 가드는 어느 쪽에도 온전히 없었다.**
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 |
+|---|---|---|---|---|
+| **I1** 상점 진입 소유권 이전 | `characterActions.openShop` 신설(상태 가드 + 안전지대 가드 + 목록 적재 + 진입 로그). 파서와 `GameRoot` 둘 다 이 액션만 부른다. 파서의 한국어 문자열 2개는 MSG로 | 무료 이탈이 닫히고, **입력 표면이 하나의 가드를 공유한다** | 액션 1 + 소비처 2 + MSG 3키 | 파서의 `blockedStateMessages`에 `'combat'`을 추가하는 방식은 **틀렸다** — `attack`이 `readOnlyCommands`에 없으므로 전투 명령 전체가 막힌다(실행으로 확인했다). 가드를 파서에 두면 `GameRoot` 경로가 여전히 맨몸이다 |
+| **I2** 계약 테스트 | 구조 계약(파서는 상태를 직접 전이하지 않는다 — 18 × 9 전수) + 게이트 계약(`openShop`의 세 분기) | 이 결함의 **클래스**가 막힌다. 새 명령이 상태를 직접 만지면 전수 루프가 잡는다 | 테스트 1파일 9건 | 게이트 계약만 쓰면 다음에 다른 명령이 같은 짓을 해도 못 잡는다 — 구조 계약이 본체다 |
+| **I3** 문서 드리프트 | 테스트 규모(파일 347 · 케이스 5,123 · e2e **44**, 문서는 ~335/~4,810/31이었다), 청크 목록 실측 정정, CLAUDE.md §5에 "파서에 상태 전이 금지" 규칙 | 문서가 다시 사실이 된다 | 문서 3곳 | — |
+
+**예고 증빙 델타 — Wave 16의 교훈을 처음 적용했고 맞았다.** §20이 남긴 규칙은 "**편집한 파일을 바이트로 핀하는 증빙**을 함께 예고할 것"이었다. 이번에 편집한 파일(`characterActions.ts`·`commandParser.ts`·`GameRoot.tsx`·`messages.ts`·`actionDeps.ts`) 중 authority 바이트 핀에 걸린 것은 **없다** — `relic-event-chance`가 핀하는 넷은 `CombatEngine.outcome.ts`·`CombatEngine.loot.ts`·`eventActions.ts`·`progressionProfiles.ts`이고 전부 미수정이다. 그래서 예고는 "**`progression-diagnostic-v2`의 sources만 움직인다**"였고, 13종 중 정확히 그 하나만 stale이었다. 재생성 후 `reportHash` `f21dcf81…` 불변, `v1Baseline` `2573fa0f…` 불변, `sources` 346 유지, 모델 핀 `ac79428c…`도 불변.
+
+**하지 않기로 한 것**
+1. **파서의 `blockedStateMessages`에 `'combat'` 추가.** 실행으로 기각했다 — `attack`/`skill`/`escape`가 `readOnlyCommands`에 없어 전투 명령 전체가 차단된다. "상태를 한 곳에서 막자"는 직관이 이 표에서는 틀린다.
+2. **`manualChunks` 구성 고정 가드 추가.** 결과(FCP/DCL)는 `perf:guard`가 이미 blocking으로 잰다. 구성을 고정하면 리팩터가 의미를 안 바꿔도 깨지고(§7 class-(b)의 실패 모드), 예산은 실측 FCP 452~580ms로 2,200ms의 21~26%다.
+3. **`SET_GAME_STATE`에서 `enemy` 정리 추가.** 전이 하나에 정리 책임을 얹으면 다른 전이와 비대칭이 된다. 무료 이탈 자체를 막았으므로 버려진 적이 생기는 경로가 사라진다 — 원인을 닫는 쪽이 싸다.
+4. **`tier`/아트 identity(§18.1) · `deploy-rules` 첫 실행(§20).** 각각 소유자 결정과 외부 사건 대기로 이번 wave에서도 손대지 않는다.
+
+**머지 전 적대적 감사 — 내 주장 하나가 거짓이었다.** PR #44가 CI 그린이 된 뒤, 머지 전에 입력 표면을 5개 렌즈(터미널 파서 재감사 · QA 시드 API · 컴포넌트 직접 전이 · 네이티브 브릿지 · reducer 핸들러)로 독립 탐색하고 각 발견을 3관점(correctness/reachability/severity)으로 반증 시도했다. 결과:
+
+- **`ControlPanel`의 상점 버튼이 세 번째 표면이었다**(`ControlPanel.tsx:528`). 나는 커밋에 "파서와 `GameRoot` 둘 다 이 액션만 부른다"고 적었고 그 문장 자체는 참이지만, **표면이 셋인데 둘만 셌다.** 놓친 이유가 중요하다 — **구조 계약이 파서만 검사하고 있었다.** 그래서 이 PR에 (a) 그 버튼을 `openShop` 경유로 돌리고 (b) 계약을 "표면 열거"에서 **"`src/**` 어디에도 상점 진입 시퀀스를 복제하는 곳이 0곳"**(부재 불변식 — §7이 소스 정규식을 허용하는 범주)으로 바꿨다. 주입으로 확인: 되돌리면 새 계약이 그 파일을 지목한다. 현재는 `gameState === GS.COMBAT` 조기 반환이 상태 가드를 대신하지만 **그건 렌더 조건에 얹힌 가드**고, 실측하면 그 조기 반환 목록에 `dead`/`ascension`/`true_ending`이 없다.
+- **긍정 확인**: QA 시드 API는 프로덕션에서 닫혀 있다 — `isTestHarnessBuild()`가 상수 false로 접히고, 클린 프로덕션 빌드 + Playwright로 `?smoke=1`/`?e2e=1`/`?deviceQa=…` 5종을 실제로 띄워 `window.__AETHERIA_TEST_API__`가 전부 `undefined`임을 확인했다(대조군으로 하네스 빌드에서는 등장). 시드 API 등록 조건과 클라우드 쓰기 차단 조건이 **같은 술어(`isMockRuntime()`)**라 어긋날 수 없다. 플랫폼 뒤로가기도 `FOCUS_PANEL_STATES`에 `combat`이 없어 Wave 17식 이탈이 재현되지 않는다.
+- **Wave 18로 넘기는 발견 4건**(이 PR의 범위 밖, 전부 선재 결함): ① `gameState: 'dead'`로 복원되면 `ControlPanel`에 `dead` 조기 반환이 없어 이동 버튼이 렌더되고 `RESET_GAME` 없이 런이 계속된다(사망 페널티 우회) ② `lootGrave`(`questActions.ts:18`)에 `gameState` 가드가 0건이고 사망 상태에서 `control-recover`가 렌더돼 죽은 자리에서 자기 묘비를 즉시 회수한다(골드 복제) ③ `ReturnBriefingCard`가 전투 중에도 렌더되고 그 버튼이 `setGameState(IDLE)`로 **도주 판정 없이 전투를 버린다** — Wave 17이 shop에서 고친 것과 **정확히 같은 결함이 다른 표면에** 있다 ④ Capacitor(Android/iOS) 빌드에서 `platformBack` 배선이 Toss/sandbox 전용이라 뒤로가기 핸들러 9개가 전부 도달 불가. ①②③는 공통 전제가 "`dead`/`combat` 상태가 세이브로 영속되고 복원된다"이므로 **상태별 렌더 게이트를 한 축으로 묶어** 다루는 것이 맞다.
+
+**이 감사가 남기는 판단 기준**: 계약이 검사하는 **범위**가 주장의 범위보다 좁으면, 그 계약은 초록인데 주장은 거짓일 수 있다. 표면을 열거하는 계약은 열거한 것만 지킨다 — **부재 불변식으로 쓰면 범위가 `src/**` 전체가 된다.**
+
+**최종 게이트** (head `8008a4cd`, CI 동일 빌드): type-check 0 · lint 0 · unit **5,123 / 5,123**(skip 0, Wave 16 대비 +9) · build:guard ok · CI-env build ok · e2e **121 / 121**(61 + 60) · perf desktop ok(FCP 564ms) / mobile ok(FCP 436ms) · `release-complete-core` 증빙 **13종** verify 전부 ok.
+
+**남은 후보 (Wave 18)**: (1) **`tier`/아트 identity** — §18.1 발견 1·2, 여전히 소유자 정책 대기(“provenance 역사 1,065개 파일을 재핀해도 되는가”); (2) **`deploy-rules` 첫 실전 실행 결과** — §20 G3, develop 푸시라는 외부 사건 대기. 첫 실패는 “설계가 틀렸다”가 아니라 “IAM 역할이 hosting 전용이다”로 읽을 것; (3) **입력 표면 축의 나머지** — 이번 wave는 터미널만 전수했다. QA 시드 API(`useGameTestApi`)·네이티브 브릿지(`platformBack`/`lifecycleBridge`)·`GameRoot`의 다른 `open_*` 직접 전이가 같은 검사를 아직 안 받았다; (4) 퀘스트 104 `beyond-anchors` 공백(§19에서 기각, 재측정 없이 재논의 금지); (5) class-(b) 소스 가드 1,807건 — Wave 11 C4 정책대로 방치하되 **깨질 때 이관**이 실효 전략임이 Wave 16에서 확인됐다.
