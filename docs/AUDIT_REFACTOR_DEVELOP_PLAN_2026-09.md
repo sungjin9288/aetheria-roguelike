@@ -1073,3 +1073,148 @@ restorableMode(mode):
 4. `tier`/아트 identity(§18.1) · `deploy-rules` 첫 실행(§20) — 각각 소유자 결정·외부 사건 대기로 여전히 미결.
 
 **최종 게이트** (head `a8f43394`, CI 동일 빌드): type-check 0 · lint 0 · unit **5,130 / 5,130**(skip 0, Wave 17 대비 +7) · build:guard ok · CI-env build ok · e2e **121 / 121**(61 + 60) · perf desktop ok(FCP 540ms) / mobile ok(FCP 408ms) · `release-complete-core` 증빙 **13종** verify 전부 ok.
+
+## 23. Wave 19 계획 (2026-09-21 착수, 베이스 `main` = `450bb2a0` = PR #45 merge commit)
+
+**핵심**: §22가 남긴 후보 4개를 **전부 실행으로 다시 쟀다**. 그 결과 넷 중 둘의 전제가 틀려 있었다. (1) "J3는 미확인"이었는데 — 리듀서로 돌리면 **재현된다**(세 출구 중 하나). (2) "`deploy-rules` 첫 실행은 외부 사건 대기"였는데 — **이미 네 번 돌았고 네 번 다 죽었다**. 그리고 그 옆에서 아무도 안 본 것이 하나 더 있다: `deploy-prod`(Firebase Hosting)는 **2026-08-04(run 259)부터 관측 가능한 40건 연속 failure**다. 마지막으로 후보 1("`GS.EVENT`를 AI 호출 전에 세우는 설계")은 §22가 적은 "9초 창"보다 더 나쁜 형태가 하나 있다 — `exploreActions.ts:89`의 `try`에 **`catch`가 없어서**, `generateEvent`가 reject하면 **재시작 없이 그 자리에서** `{event, currentEvent: null, isAiThinking: false}`가 된다. Wave 18의 폴드는 `LOAD_DATA`에만 있으므로 이 경로를 못 잡는다. 그리고 그 reject는 주입이 아니라 프로덕션 코드로 도달된다(아래 K1 실측).
+
+**이 wave의 입력은 후보가 아니라 실측이다.** §22의 규율("합성한 상태로 결론 내지 말 것")을 이번에는 착수 단계에 적용했다 — 각 전제를 `npx tsx`/`node --test`/GitHub Actions API로 실행해 확인한 뒤에야 트랙이 됐다.
+
+### 실측 1 — 후보 1: `GS.EVENT` 선행 세팅의 실제 위험 세 가지
+
+| # | 실측 | 근거 |
+|---|---|---|
+| 1-a | `explore()`는 `SET_GAME_STATE event` → `SET_AI_THINKING true` → `await generateEvent` 순서다. 9,500ms는 `AI_PROXY_TRACKS`의 리터럴 | `exploreActions.ts:87-88, 109` · `aiService.ts:64-71` |
+| 1-b | 그 `try`에 **`catch`가 없다** — `finally`가 `isAiThinking`만 되돌린다 | `exploreActions.ts:89-137` |
+| 1-c | **주입 실행**: `AI_SERVICE.generateEvent`를 reject로 바꾸고 `createExploreActions(...).explore()`를 호출하면 dispatch가 `SET_GAME_STATE=event \| SET_AI_THINKING=true \| SET_AI_THINKING=false`로 끝나고 `explore()` 자체가 reject한다. `IDLE`도 `SET_EVENT`도 없다 = `EventPanel`이 `return null`인 **라이브 벽돌** | `node --import tsx` 인라인 실행. 대조군(`→ null`)은 `COMMIT=nothing \| SET_GAME_STATE=idle`, (`→ event`)는 `COMMIT=narrative_event \| SET_EVENT` |
+| 1-d | **프로덕션 도달 경로**: `generateEvent` → `decideRequest` → `readQuota` → `TokenQuotaManager.getQuotaData` → `JSON.parse(localStorage.getItem(...))`에 try/catch가 없다. `localStorage`에 JSON이 아닌 값을 넣고 실행하면 `canMakeAICall()`이 `SyntaxError`를 던지고 **`AI_SERVICE.generateEvent`가 reject**한다(`USE_AI_PROXY=false`에서도 — 정책이 폴백 사유를 가리려고 쿼터를 읽는다). `writeQuota`의 `setItem`도 무방비(Safari 쿠키 차단 = `SecurityError`, 사설 모드 = `QuotaExceededError`) | `TokenQuotaManager.ts:113-124, 150-152` · `aiService.ts:84-87` · 실행으로 확인 |
+| 1-e | 봉투 6필드 + `lastSeenAt` 스탬프, 디바운스 500ms, 클라우드 업로드는 `gameState`를 **그대로** 올린다 | `useFirebaseSync.ts:145-160, 530-532, 566` · `constants.ts:227` |
+| 1-f | `isAiThinking`의 생산자는 **둘**이다 — `explore()`와 `addStoryLog`(전투/퀘스트 내러티브, 9.5s). `ControlPanel:468`은 `EVENT && isAiThinking`으로 "준비 중" 패널을 고르므로, 내러티브 생성 중에 체인/캠프파이어 이벤트가 열리면 카드 대신 "준비 중"이 최대 9.5초 뜬다 | `useGameEngine.ts:131-162` · `ControlPanel.tsx:468-482` |
+| 1-g | `gameState`는 **`string`**이다. `GS`에 멤버를 추가해도 컴파일러가 소비처를 짚지 않는다 — CLAUDE.md §8-3의 `'quiet'` 니어미스와 같은 모양이고, 그래서 아래 파급 전수는 grep 결과지 추정이 아니다 | `gameReducer.ts:37` · `actionTypes.ts:288` |
+
+### 실측 2 — 후보 2(J3): 재현됐다, 세 출구 중 하나에서
+
+| 단계 | 실측 |
+|---|---|
+| 카드 게이트 | `GameRoot.tsx:437` — `bootStage === 'ready' && player && !debrief && !story`. **`gameState` 조건 없음** |
+| 브리핑 조건 | `lastSeenAt`으로부터 `RETURN_BRIEFING_HOURS`(6h) 경과. `lastSeenAt`은 **모든 로컬 저장**이 찍는다(`useFirebaseSync.ts:151`) — 전투 중 저장도 찍는다 |
+| 출구 3개 | ① X 아이콘 → `onClose` = 로컬 `setBriefing(null)` **무해** ② 보상 없을 때 primary → `onClose` **무해** ③ **`claimableRewardCount > 0`일 때 primary → `onOpenGoals` → `handleOpenArchiveTab('quest')` = `setSideTab` + `setGameState(GS.IDLE)`** (`GameRoot.tsx:231-235`, `ReturnBriefingCard.tsx:20-26`) |
+| 실행 | `LOAD_DATA {combat, enemy}` 복원(Wave 18이 고정한 정상 복원) → `buildReturnBriefing(player, now)` = `{awayHours: 7, claimableRewardCount: 2}` → primary의 두 dispatch 적용 → **`gameState: idle`, `enemy: 숲 늑대` 잔존, `combatReceipt: null`, HP 그대로**. 도주 판정 없는 전투 이탈 — Wave 17 I1과 같은 결함 클래스 |
+| 같은 시퀀스의 복제 | `setSideTab` + `setGameState(IDLE)` 3줄이 `GameRoot.tsx:231-235`와 `MobileGameLayout.tsx:59-66` **두 곳**에 있다(Wave 17의 "3줄이 두 곳" 모양). 전투 중 도달 가능한 표면은 ReturnBriefingCard 하나뿐 — `ControlPanel`의 `openMap`은 `COMBAT` 조기 반환(455) 뒤의 idle 트리(751)에만 있고, `handleOpenEquipment`는 `GameRoot:319`가 전투에서 `null`로 막는다 |
+
+감사가 보고한 문장("그 버튼이 `setGameState(IDLE)`로 전투를 버린다")은 **버튼 셋 중 하나에서 참**이었다. 재현 없이 받았으면 셋 다 고쳤을 것이고, 재현 없이 버렸으면 하나를 놓쳤을 것이다.
+
+### 실측 3 — 후보 3: Capacitor Android는 "핸들러 9개가 죽은" 것이 아니라 "뒤로가기 = 앱 종료"다
+
+| 실측 | 근거 |
+|---|---|
+| `bindLifecycleBridge`는 `toss`/`sandbox`에서만 `subscribeBack` | `lifecycleBridge.ts:92` (`RuntimeEnvironment`에 `'capacitor'`가 **있다** — `runtimeEnvironment.ts:4`) |
+| `@capacitor/app` 미설치 — `node_modules/@capacitor` = android/cli/core/ios, 락파일 0건, `capacitor.build.gradle` dependencies 빈 블록 | 실측 |
+| `MainActivity extends BridgeActivity {}` — 오버라이드 0 | `MainActivity.java:5` |
+| **Capacitor Android 8.3.1 코어(`com/getcapacitor/*.java`)에 back 처리가 0건** — `onBackPressed`/`OnBackPressedCallback`/`KEYCODE_BACK` 전부 없음. `CapacitorWebView.dispatchKeyEvent`는 `ACTION_MULTIPLE`만 가로챈다 | `BridgeActivity.java` 218줄 전수 · `CapacitorWebView.java:50-56` |
+| 따라서 하드웨어 뒤로가기 = AndroidX 기본(액티비티 종료). 상점 안이든 전투 중이든 **앱이 닫힌다**. `usePlatformBackHandler` 9파일 + `handlePlatformBack`의 7분기가 전부 도달 불가 | `App.tsx:69-104` |
+| `@capacitor/app@8.1.1`: 73KB, peer는 `@capacitor/core >=8`뿐. 락파일 델타 = 패키지 1 | `npm view` |
+| iOS는 SPM(`ios/App/CapApp-SPM/Package.swift` 추적됨, Podfile 없음). `cap sync ios`는 macOS에서만 — **Linux에서 확인 불가**(Wave 15 G3의 "저장소 안에서 확인 불가능" 모양) | 실측 |
+
+### 실측 4 — 후보 4: 외부 사건은 이미 일어났고, 옆에 더 큰 것이 있었다
+
+| 실측 | 근거 |
+|---|---|
+| `deploy.yml`은 `main`/`develop` push에 돈다. `deploy-rules`는 PR #42·#43·#44·#45 머지에서 **4회 실행, 4회 failure** | GitHub Actions API |
+| #45(run 35563662111)의 실패 스텝 "Deploy firestore.rules": `Request to https://serviceusage.googleapis.com/v1/projects/***/services/firestore.googleapis.com had HTTP Error: 403, Permission denied to get service [firestore.googleapis.com]` — firebase-tools가 rules 배포 **전에** API 활성 여부를 조회하는데 서비스 계정에 `serviceusage.services.get`이 없다. **§19 G3이 예고한 그 실패 모드(IAM)**이고, 설계 실패가 아니다. "Resolve credentials"는 success — 시크릿 4종은 존재한다 | job 106221360675 로그 |
+| **같은 run의 `deploy-prod`도 failure**: `429 RESOURCE_EXHAUSTED — You have exceeded the Hosting storage quota for your Firebase project`. 그리고 이 job은 `deploy-rules`가 생기기 **전인** #36~#41에서도 failure였고, 페이지를 넘기면 run 259(2026-08-04)~288까지 30건 전부 failure다 — **최소 40건 연속** | job 106221476936 로그 · run 목록 2페이지 |
+| 실제 프로덕션 웹은 Firebase Hosting이 아니다 — `docs/QUICK_DEPLOY.md:44` `wrangler pages deploy`, `functions/api/`(Cloudflare Pages Functions), `tasks/todo.md`의 `*.pages.dev`. 즉 `deploy-prod`는 **7주째 빨간 잔재**이고, 그동안 §19~§22의 "CI 그린"은 `ci.yml`이었지 이 워크플로가 아니었다 | 실측 |
+| `tier`: `KNOWN_TIER_DEPTH_DIVERGENCE = ['성직자']` 유지. 새 정보 없음 | `class-tier-depth.test.js:43` |
+
+### K1 파급 전수 — `GS`에 멤버를 추가하면 읽는 곳 (grep, 주석 제외)
+
+`GS.EVENT` 참조 21곳 + 문자열 리터럴 `'event'` 2곳 + `FOCUS_PANEL_STATES` 1곳 = **24곳**. 각 소비처가 미지의 상태 `event_pending`을 만났을 때의 else-동작:
+
+| 소비처 | 오늘 | `event_pending`에서 (수정 없을 때) | K1 조치 |
+|---|---|---|---|
+| `exploreActions.ts:87` | EVENT 세팅 | — | **생산자 교체** → `BEGIN_AI_EVENT` |
+| `exploreActions.ts:128` `SET_EVENT` | 이미 EVENT라 상태 안 세움 | 상태가 pending인 채 `currentEvent`만 채워짐 | `RESOLVE_AI_EVENT`로 교체 |
+| `exploreActions.ts:132` null 경로 → IDLE | — | — | `RESOLVE_AI_EVENT null` |
+| `exploreActions.ts:81,163,212,229,241` (bounded/체인/캠프파이어/보스/스카우트) | 같은 tick에 EVENT + SET_EVENT | 창이 없다 | **불변** |
+| `ControlPanel.tsx:468` `EVENT && isAiThinking` | 준비 중 패널 | **idle 버튼으로 낙하** → "이동" 버튼이 `setGameState(MOVING)` → AI 응답이 MOVING 위에 떨어진다 | `=== EVENT_PENDING`으로; 475의 하드코딩 한국어는 MSG로 |
+| `ControlPanel.tsx:480` | EventPanel | — | `=== EVENT`만 |
+| `App.tsx:38` `FOCUS_PANEL_STATES` | EVENT 포함 → TerminalView 언마운트 | pending은 미포함 → 터미널 마운트. 명령은 각 액션 가드가 막지만(explore≠idle · move∉[idle,moving] · rest≠idle · shop≠idle) 문구가 제각각 | pending 추가(오늘 UX 유지) |
+| `App.tsx:146` 아카이브 독 | 숨김 | 숨김(동일) | 불변 |
+| `platformBack.ts:25-27` | `'event'` → dismiss-event | **`close-app`** → Toss에서 뒤로가기가 준비 중에 **앱을 닫는다** | `event_pending → dismiss-event` |
+| `commandParser.ts:18-26` `blockedStateMessages` | event 키 있음 | 키 없음 → 명령이 액션 가드로 흘러감 | pending 키 추가(MSG) |
+| `commandParser.ts:42` `1/2/3` | 이벤트 선택 | 미매칭 → 알 수 없는 명령 | 불변(선택지가 없다) |
+| `commandSuggestions.ts:38` | 1/2/3 제안 | 제안 없음 | 불변 |
+| `TerminalView.tsx:163` bgClass | — | 기본 배경 | 불변(장식) |
+| `useProductTelemetry.ts:130` explore outcome | `hasEvent \|\| EVENT` | commit·resolve가 같은 continuation에서 배치되므로 렌더 시점엔 EVENT | 불변 |
+| `chainEventHandlers.ts:94,126` · `boundedEncounterHandlers.ts:54` · `fallbackEventHandlers.ts:74` | `!== EVENT → state` | pending에 이벤트가 없으니 no-op이 맞다 | 불변 |
+| `exploreHandlers.ts:83` `RESOLVE_SCOUT` | EVENT | — | 불변 |
+| `bootstrapHandlers.ts:57-63` `restorableMode` | event → currentEvent 필요 | **pending으로 복원 → "준비 중" 패널이 영원히** — 스피너 달린 같은 벽돌 | `event_pending → 언제나 idle`(진행 중 promise는 리로드를 못 넘는다) |
+| `useFirebaseSync.ts:92,113,365,384,417` combat 폴드 ×5 | combat만 | 리듀서가 접는다 | 불변 |
+| `useGameTestApi.ts:1961,1988,2081` QA 시드 | EVENT + 이벤트 | — | 불변 |
+| `QuickSlot.tsx:29` | COMBAT/IDLE만 사용 가능 | 불가(오늘 EVENT와 동일) | 불변 |
+| `moveActions.ts:25` `isAiThinking` 가드 | — | 상태 가드가 먼저 막는다 | 불변 |
+| `tests/command-surface-contract.test.js:55` | **STATES 9종 하드코딩**(`GS`는 11종 — `moving`·`true_ending`이 빠져 있다) | 새 상태가 행렬 밖 | `event_pending` 추가(+ 빠진 둘도) |
+| `progressionSimulator`/`progressionDiagnostic`/`endgameSettlement` | `'combat'`/`'dead'` 리터럴 | 모델은 AI를 안 부른다 | 불변 → 모델 핀 불변의 근거 |
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **K1 AI 이벤트 준비를 별도 모드로 + 리듀서 소유 정산** | `GS.EVENT_PENDING` 신설. `AT.BEGIN_AI_EVENT`(→ `{gameState: EVENT_PENDING, isAiThinking: true, currentEvent: null}`)와 `AT.RESOLVE_AI_EVENT {event \| null}`(**`state.gameState === EVENT_PENDING`일 때만** 적용 — 이벤트면 `EVENT`+`currentEvent`, null이면 `IDLE`; 아니면 `state` 그대로) 두 전이를 `ActionPayloadMap`에 넣는다(N1b `RESOLVE_SCOUT` 선례). `explore()`는 `BEGIN` → `await` → `RESOLVE`이고 **`catch`가 `RESOLVE null` + `MSG` 에러 로그**를 낸다. `restorableMode`에 `event_pending → 불가` 한 줄. `platformBack`·`commandParser`·`App.FOCUS_PANEL_STATES`·`ControlPanel` 위 표대로. 그리고 `TokenQuotaManager.getQuotaData`/`writeQuota`를 **fail-closed**로(읽기 실패 = 오늘 한도 소진으로 취급 → 폴백 풀. 미터가 유일한 일일 비용 통제이므로 못 세면 안 보낸다 — §6 D3) | ① 라이브 벽돌(1-c/1-d)이 닫힌다 ② 준비 중에 dismiss/리로드된 뒤 도착한 응답이 **리듀서에서 무시**된다(오늘은 `SET_EVENT`가 idle 위에 떨어져 `currentEvent` 고아가 남는다 — `useGameEngine.ts:221-224` `dismissEvent` 뒤) ③ 렌더 조건에서 `isAiThinking`이 빠져 1-f의 이중 생산자 결합이 풀린다 ④ 복원 폴드가 "동반 상태 유무"가 아니라 **구조적**(pending은 동반 상태 자체가 없다) | `gameStates` 1 · `actionTypes` 2키 · 핸들러 1파일 · `exploreActions` · `ControlPanel` · `App.tsx` · `platformBack` · `commandParser` · `bootstrapHandlers` · `messages` · `TokenQuotaManager` · 테스트 5 | 위 표의 24곳 중 하나를 빼먹으면 **컴파일러가 침묵한다**(`gameState: string`). 특히 `restorableMode`를 빼면 스피너 달린 영구 벽돌, `platformBack`을 빼면 Toss 뒤로가기가 앱을 닫는다. `RESOLVE`의 상태 검사를 빼면 dismiss 뒤 응답이 idle을 EVENT로 되돌린다. `_shared.ts`(`commitExploreOutcome`)·`eventActions.ts`를 건드리면 바이트 핀 증빙 2종이 움직인다 — **건드릴 이유가 없고 건드리면 안 된다** | opus |
+| **K2 아카이브 진입 소유권 이전 (J3)** | `characterActions.openArchive(tab)` 신설: 허용 상태 = `{idle, moving, shop, job_change, quest_board, crafting}`(포커스 패널이 `onOpenArchiveConsole`로 정상 진입한다), 거부 = `{combat, event, event_pending, dead, ascension, true_ending}` → `MSG` 에러 로그 + `false`. 수락 시 `SET_SIDE_TAB` + `SET_GAME_STATE idle`. `GameRoot.handleOpenArchiveTab`과 `MobileGameLayout.openArchiveConsole`은 **이 액션만 부르고** 수락됐을 때만 `setMobileConsoleMode('archive')`. ReturnBriefingCard는 손대지 않는다 | 도주 판정 없는 전투 이탈 표면이 0이 된다. 3줄 복제 두 곳이 한 액션이 된다(Wave 17 I1의 정확한 반복) | 액션 1 + `actionDeps` + 소비처 2 + MSG 1 + 테스트 1파일 | **카드를 전투에서 안 띄우는 방식은 틀렸다** — `lastSeenAt`은 모든 저장이 찍으므로 전투가 끝나고 게이트가 다시 마운트되면 브리핑은 이미 `null`이다(보상 안내가 영구 소실). 가드는 카드가 아니라 액션에 둔다. 허용 집합에서 포커스 4종을 빼면 상점/퀘스트보드의 "아카이브" 버튼이 죽는다 | sonnet |
+| **K3 Capacitor 뒤로가기 배선** | `@capacitor/app@8.1.1` 추가. `lifecycleBridge`에 `environment === 'capacitor'` 분기 — `tossBridge`와 같은 DI 모양의 `capacitorBridge { subscribeBack, exitApp }`(기본 구현은 `App.addListener('backButton', …)` / `App.exitApp()`), `onBack`이 false면 `exitApp`. **정적 import 금지** — web/toss 빌드에 플러그인 프록시가 실리지 않도록 기본 브릿지는 lazy `import('@capacitor/app')`. `npm run build` 후 `npx cap sync android`로 `capacitor.build.gradle`·`capacitor.settings.gradle` 델타 커밋 | Android에서 뒤로가기가 앱 종료가 아니라 카드/패널 닫기가 된다. 죽어 있던 9핸들러 + 7분기가 산다 | 의존 1(+73KB, 락파일 +1) · `lifecycleBridge` · 네이티브 생성물 2 · 테스트 1 · `perf:guard` 재측정 | iOS `Package.swift`는 **macOS에서만** 갱신된다 — 이 wave에서는 "Linux에서 확인 불가"로 적고 소유자가 `npm run ios:sync` 후 커밋. 정적 import로 쓰면 `toss-lifecycle-bridge.test.js`의 web 케이스("Toss 브릿지를 만지지 않는다")와 같은 이유로 web 번들에 플러그인이 실린다. `manualChunks`는 `@capacitor/*`를 안 잡으므로 index로 간다 — 결과는 `perf:guard`가 잰다(§8-10) | sonnet |
+| **K4 배포 파이프라인 실측 기록 + 소유자 질문** | (a) CLAUDE.md §8-8을 실측으로 갱신: "첫 실행 결과 = `serviceusage.services.get` 403 (IAM)". (b) `deploy-prod` 40건 연속 failure와 실제 호스트(Cloudflare Pages)를 §23에 적는다. (c) 소유자 결정 2건을 아래 "질문"으로 넘긴다. **워크플로 파일은 이 wave에서 안 만진다** | 다음 wave가 "외부 사건 대기"를 다시 적지 않는다 | 문서 2 | 결정을 대신하면 실패다 — IAM과 호스팅은 저장소 밖이다 | 직접 |
+| **K5 증빙·문서** | 통합 트리에서 `progression:diagnostic:write`(맨 마지막, 병행 금지) → 13종 verify → CLAUDE.md(§5 DON'T에 "아카이브 진입은 `openArchive`" · §6 AI 이벤트에 pending 모드 · §7 테스트 목록 · §8-6 폴드 표에 `event_pending` 행 · §8-8) · `tasks/todo.md` | — | — | — | 직접 |
+
+**계약 테스트와 결함 주입** (Wave 18이 공허참을 출하한 뒤라, 주입이 안 걸리면 코드가 옳은 게 아니라 테스트가 안 보는 것이다)
+
+| 테스트 | 고정하는 것 | 주입 → 걸려야 하는 것 |
+|---|---|---|
+| `tests/ai-event-pending-contract.test.js` (신규) | ① `explore()` AI 경로 dispatch 열: `BEGIN_AI_EVENT` → (`generateEvent`→event) `RESOLVE_AI_EVENT {event}` / (→null) `RESOLVE null` / (→**reject**) `RESOLVE null` + error 로그, `explore()`는 reject하지 않는다. 열에 **`SET_GAME_STATE=event`가 없음**을 함께 단언 ② 리듀서: `RESOLVE_AI_EVENT`는 `EVENT_PENDING`에서만 적용 — `IDLE`/`EVENT`에서 dispatch하면 `state` 동일 참조 ③ `TokenQuotaManager`: `getItem`이 `'{corrupt'`/throw일 때 `canMakeAICall() === false`이고 `generateEvent`가 **resolve**(폴백)한다 | ①에서 `catch` 제거 → reject 케이스 red. 생산자를 `SET_GAME_STATE EVENT`로 되돌림 → "없음" 단언 red. ②에서 상태 검사 제거 → idle 케이스 red. ③에서 try/catch 제거 → throw |
+| `tests/restorable-mode-contract.test.js` (행 추가) | `[EVENT_PENDING, {}, IDLE]` + `[EVENT_PENDING, {currentEvent: EVENT}, IDLE]`(동반 상태가 있어도 접는다) | `restorableMode`의 pending 줄 제거 → red |
+| `tests/toss-lifecycle-bridge.test.js` (케이스 추가) 또는 `tests/platform-back-*.test.js` | `resolvePlatformBackAction({gameState: 'event_pending'}) === 'dismiss-event'`; `environment: 'capacitor'`에서 주입한 `capacitorBridge.subscribeBack`이 구독되고 `onBack` false면 `exitApp` 1회, true면 0회; `web`/`toss` 케이스는 capacitor 브릿지를 **만지지 않는다**(기존 web 케이스의 throw 스텁 패턴) | K3 분기 제거 → capacitor 케이스 red. web에서 capacitor 구독 → web 케이스 throw |
+| `tests/command-surface-contract.test.js:55` STATES | `event_pending`·`moving`·`true_ending` 추가 (11종 전수) | — (전수 루프의 범위 정정) |
+| `tests/archive-open-contract.test.js` (신규, K2) | ① `openArchive('quest')`를 `combat`(+enemy)에서 → `SET_GAME_STATE` 0건, error 로그 1건, 반환 false; `idle`·`shop`에서 → `SET_SIDE_TAB` + `SET_GAME_STATE idle` ② **J3 재현 고정**: `LOAD_DATA {combat, enemy, player.stats.lastSeenAt = now−7h, 완료 미수령 퀘스트}` → `buildReturnBriefing(...).claimableRewardCount > 0` → `openArchive('quest')` → `gameState === 'combat'`, `enemy` 동일 ③ 부재 불변식(§7 허용 범주): `src/components/**`에서 `setSideTab(` 호출과 `setGameState(` 호출이 **같은 파일에** 공존하는 곳 0(오늘 2파일 — 식별자 매칭, 포맷 무관) | ①에서 combat 거부 제거 → red ②는 ①의 주입과 **다른** 방식으로 죽어야 한다: 액션이 거부 대신 idle로 접도록 바꾸면 `enemy` 단언만 red(픽스처의 `enemy`가 진짜 모양인지 — Wave 18의 교훈 — `restorable-mode-contract`의 `ENEMY`를 재사용) ③ `GameRoot`에 3줄 되돌림 → red |
+| `tests/control-panel-*.test.js` (renderStatic, 추가) | `gameState: 'event_pending'` → MSG의 준비 중 문구; `'event'` + 이벤트 → EventPanel; `'event_pending'`에서 `control-explore`/`control-move` **미렌더** | `ControlPanel:468` 조건을 되돌림 → 미렌더 단언 red(idle 버튼 낙하) |
+
+**증빙 델타 (먼저 적는다)** — 이 wave는 모델 입력(`data/*`, `progressionSimulator`, `explorationPacing`, `exploreFlow`, `_shared`)을 **한 파일도 안 건드린다**. 성공 기준은 Wave 15~18과 같다: **모델 핀 3종 불변**(`EXPECTED_BASELINE_REPORT_SHA256 = ac79428c…` · `PROGRESSION_V1_BASELINE_HASH = 2573fa0f…` · `exploration-rhythm 0818fb7a…`).
+
+| 증빙 | 예고 |
+|---|---|
+| `progression-diagnostic-v2` | **움직인다** — `sources` 346 유지, 편집 경로의 sha256만. K3의 `package.json`/`package-lock.json`은 고정 14경로에 있으므로 K3만 통합돼도 `tests/progression-diagnostic-cli.test.js`는 red다(§19의 G3 사례와 같다). `reportHash` `f21dcf81…`·`v1Baseline` 불변 |
+| `relic-event-chance` (`eventActions.ts` 바이트 핀) | **불변이어야 한다** — K1은 `dismissEvent`가 `useGameEngine.ts`에 있으므로 `eventActions.ts`를 건드릴 이유가 없다. 움직였으면 K1이 범위를 넘은 것 |
+| `equipment-combat-power` (`_shared.ts`·`constants.ts`·`classes.ts`·`CombatEngine.*` 핀) | **불변이어야 한다** — `commitExploreOutcome`은 그대로 쓴다. K1이 상수를 추가하면 `tierHash`가 아니라 `sourceSnapshot` 한 줄이 움직이므로 상수는 추가하지 않는다(타임아웃 9,500은 이미 `aiService`가 소유) |
+| `content-reachability`·`event-reward-coherence`·나머지 | 바이트 동일 |
+| `perf:guard` | K3로 index 청크가 +수십 KB. 예산 2,200ms 대비 실측 FCP 408~564ms — 재측정만 |
+
+**순서**: **K1 ∥ K2 ∥ K3** (worktree 격리 — 파일 집합 교차는 `messages.ts` 키 추가뿐이라 통합자가 푼다; `App.tsx`는 K1만, `characterActions`/`GameRoot`/`MobileGameLayout`은 K2만, `lifecycleBridge`/`package*`는 K3만) → 통합 → 직렬 게이트(type-check · lint · unit · build:guard) → K3의 `cap sync android` 델타 확인 → `progression:diagnostic:write` **맨 마지막**(§15.1: 실행 중 병행 명령 금지) → 13종 verify → `perf:guard` → K4·K5 → PR → CI → merge. K1은 상태 기계라 **내부적으로 직렬**(생산자 교체 → 소비처 24곳 → 폴드 → 테스트 순)이고 다른 트랙과는 병렬이다.
+
+**판단 포인트** — 후보 1의 설계 선택지 네 개를 이 코드베이스의 실패 사례로 비교했다. 골랐다: **B**.
+
+| 선택지 | 얻는 것 | 비용 | 이 코드베이스에서 깨지는 것 |
+|---|---|---|---|
+| A. AI 응답 **뒤에** `GS.EVENT` (그동안 `IDLE` + `isAiThinking`) | 새 상태 없음 | IDLE 가드를 가진 액션 전부에 `isAiThinking` 가드 추가 | `explore` 가드는 `!== IDLE`뿐(152)이라 호출 중 **두 번째 탐험**이 가능하고 그게 전투를 열면 응답이 `COMBAT` 위에 떨어진다. 막으려면 `isAiThinking`을 가드로 써야 하는데 그 플래그의 **두 번째 생산자가 `addStoryLog`**(1-f)라 전투 승리 내러티브 9.5초 동안 탐험·휴식·상점이 전부 막힌다 — 새 회귀. `commandParser`는 `isAiThinking`을 입력으로 받지 않으므로 시그니처 변경 없이는 터미널이 못 막는다. `platformBack`은 idle을 `close-app`으로 풀어 Toss 뒤로가기가 호출 중 앱을 닫는다 |
+| **B. `GS.EVENT_PENDING` + 리듀서 정산** (채택) | 위 표의 ①~④ | 소비처 24곳 수동 전수(컴파일러 무보조) | 빼먹은 한 곳이 조용히 else로 떨어진다 — 그래서 전수를 표로 적고 주입 테스트를 소비처별로 둔다 |
+| C. `isAiThinking`을 봉투에 | — | `DATA_VERSION` 5.1→5.2 + `migrateData` + 픽스처 7 + 골든 재생성 | **복원된 `isAiThinking: true`에는 뜻이 없다** — 진행 중 promise는 리로드를 못 넘으므로 복원은 어차피 idle로 접어야 하고, 그 판정은 `!currentEvent`가 이미 한다. 스키마 변경만 남는 순비용 |
+| D. 쓰기 쪽 폴드(저장 시 `{event, null}`을 idle로) | 구 클라이언트 보호 | writer 2곳 + 술어 추출 | 보호 대상은 "새 writer + 구 reader" 쌍인데, 오늘 배포된 산출물(웹 09-10 · iPhone 09-14 · APK 09-10 local-only)은 **전부 구 클라이언트**라 그 쌍이 아직 없다. 새 빌드가 나가는 순간 같은 계정의 구 빌드를 대체한다. 라이브 벽돌(1-c)은 어차피 못 막는다 |
+
+둘째, **K2는 카드가 아니라 액션을 고친다** — 이유는 `lastSeenAt`이 모든 저장에 찍힌다는 실측 하나다. 셋째, **K3의 iOS 절반은 이 환경에서 끝나지 않는다** — 그걸 완료로 적으면 §22의 실수를 반복하는 것이다.
+
+**하지 않기로 한 것**
+1. **선택지 A·C·D** — 위 표.
+2. **`SET_GAME_STATE`에서 `enemy` 정리** — §21이 기각한 그대로. K2가 원인을 닫는다.
+3. **`ReturnBriefingGate`에 `gameState !== COMBAT` 조건** — 브리핑이 영구 소실된다(위).
+4. **동기 producer 5곳(체인/캠프파이어/보스/스카우트/bounded)까지 `EVENT_PENDING` 경유** — 창이 0이다. 바꾸면 소비처만 늘고 얻는 게 없다.
+5. **`useFirebaseSync`의 `combat && !enemy` 폴드 5중복 정리** — 리듀서가 이미 접으므로 죽은 중복이지만, 이번 wave의 상태 기계 변경과 같은 파일에 리팩터를 얹지 않는다. 관찰로만 남긴다.
+6. **`deploy.yml` 수정** — `deploy-prod` 40연속 failure의 처분(호스팅 잔재 삭제 / 스토리지 정리 / 방치)은 소유자 결정이다. 아래 질문.
+7. **`tier`/아트 identity** — 여전히 결정 대기. 핀은 F4가 재 둔 그대로(`9da28843…`/`4a888aa0…`).
+8. **퀘스트 104 `beyond-anchors` · class-(b) 가드 1,807건** — 이월.
+9. **`@capacitor/app`의 다른 기능**(`appStateChange`로 `visibilitychange` 대체 등) — 뒤로가기만.
+
+**소유자에게 넘기는 질문 (저장소가 답할 수 없는 것)**
+
+| 질문 | 선택지 | 비용 |
+|---|---|---|
+| Q1. `deploy-rules` 서비스 계정 IAM | (a) SA에 `roles/serviceusage.serviceUsageConsumer` + `roles/firebaserules.admin` 부여 (b) 방치 | (a) 콘솔 작업 1회, 이후 push마다 rules가 자동 배포되고 §8-8의 "충분조건이 아니다" 단서를 좁힐 수 있다 (b) 의견 보내기 등 새 경로가 계속 구 rules에 거부되고 job은 계속 빨갛다 |
+| Q2. Firebase Hosting `deploy-prod`/`deploy-dev` | (a) 두 job 삭제, `deploy-rules`만 남김(실제 호스트가 Cloudflare Pages이므로) (b) Hosting 스토리지 릴리스 보존 개수 설정으로 429 해소 (c) 방치 | (a) 워크플로 1 — `needs: [build, deploy-rules]`의 순서 보장 문장도 함께 지운다 (b) 콘솔 작업이지만 두 호스트를 계속 유지하는 비용 (c) 매 push마다 빨간 run — 7주째 그랬고 아무도 안 봤다 |
+| Q3. `tier` provenance 재핀 | §19 "하지 않기로 한 것" 1 그대로 | 변동 없음 |
+
+**게이트 베이스라인** (착수 시): unit 348파일 / 5,130 케이스(§22), e2e 121, 13종 verify ok. 이 wave의 성공 기준: 모델 핀 3종 불변 + 주입 테스트 전부 red→green 확인 + `deploy.yml`은 손대지 않았으므로 여전히 빨갛다(그건 Q1·Q2의 답이 정한다).
