@@ -1571,3 +1571,26 @@ L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets
 | Q4. Hosting 사이트 비활성화 · Q5. iOS `ios:sync` + Android 에뮬레이터 뒤로가기 8행(Codex 브리프 `docs/qa/CODEX_K3_BACK_BUTTON_QA.md`로 위임) | §24.1 그대로 | 변동 없음 |
 
 **게이트 베이스라인** (착수 시, head `fac8f5eb` = `8be7eacd` + 문서/픽스처 3): unit **5,168 / 5,168**(351파일, skip 0, 오늘 재실행 pass, 로컬 4코어 310s) · e2e 121(44 스펙) · 15종 verify ok · `npm run build` 12.0s, 프로덕션 dist test-api 마커 **0** · perf 10예산 전부 1~27%. **이 wave의 성공 기준**: 모델 핀 3종 불변 + 바이트 핀 9종 동일 + `progression-diagnostic-v2` sources 이동 정확히 2 + 주입 4종 전부 red→green(①은 fetch 카운터, ②는 프롬프트 길이, M2는 `grave`, M3는 121>120) + `feedback-validate` 참조가 `src/**`·`docs/**`·`functions/**`에서 0.
+
+### 25.1 Wave 21 실행 결과 (2026-09-21)
+
+**커밋**: `cad6aae8` §25 계획 · `cc2efd57` M3 · `907289ef` M1 · `7363e1cb` M2 · `8a118968` 증빙. 트랙 3개 worktree 병렬(M1·M2 opus / M3 sonnet), 파일 교차 0, 충돌 0(M3의 CLAUDE.md §2/§3/§6과 PR #48의 §4/§8-8은 영역이 다르다).
+
+**예고 델타 적중**: `progression-diagnostic-v2`만, 바뀐 키 `sources`뿐, 346 → 346, 이동 **정확히 2**(`progressionHandlers.ts`·`actionDeps.ts`). `reportHash`·`v1Baseline`·`package.json`/락파일 불변, 바이트 핀 9종 동일(M1은 `functions/`라 핀 밖). 모델 핀 3종 불변.
+
+**M1 실측 (통합 뒤 확인)**: 본문 상한은 바이트 정밀 — **16,384B → 200 · 16,385B → 413**, Gemini fetch 0. 실측 본문은 정상 145B · 실전 컨텍스트(히스토리 8·유물 6·빌드 4·지도) 1,095B — 상한은 실사용의 15배. 프롬프트 길이: 정상 745자, 테스트 ②(name 5,000 + 50×100 ×2 = 본문 15,917B) **1,383자**, ③(story context 5,000) 341자 — 수정 전에는 각각 26,137·5,050자였다. 주입 A(상한 제거)는 fetch 카운터로, B(`clampText` 항등)는 8,185·5,050자로, C(`details` 복원)는 키 존재로 각자 자기 테스트만 red. **정정 두 가지**: ① 주입 ④ red 문구의 `AIzaSy…`는 테스트 스텁이 상류 오류에 넣은 키 모양 문자열이다 — 실제 코드는 상류 **응답 본문**(`callGemini:314`)을 그대로 `details`로 전달했고 Gemini 오류 본문에 키 값이 실린다는 증거는 없다. 결함은 "상류 원문 무검열 전달"이고 테스트 ④가 그 클래스를 막는다 ② `details` 제거의 클라이언트 영향은 **0** — `aiService.callProxy`는 non-ok 응답의 본문을 읽지 않는다(`!ok → null` → `proxy-unavailable` 폴백). 413도 같은 경로로 폴백되며 쿼터 1건은 디스패치 시점에 이미 소모(D3, 불변). 부수 견고화: `relics`의 `null` 원소가 `r.name || r`에서 throw → 500이던 것이 `''`. **남긴 것(계획대로)**: `level`/`mp`/`gold`/`recentWinRate` 숫자형 보간은 원시 그대로 — 적대적 호출자에게는 문자열이지만 16KB 본문 상한이 묶는다(프롬프트 최악 ≈ 16~33KB). 필드 clamp 한 줄씩이면 닫히나 이 wave 범위 밖.
+
+**M2 실측**: 픽스처는 `buildGraveData(player, () => 0.9, () => 12_345)`가 낸 진짜 모양(`{loc, gold: 5000, item, items[2], timestamp}` — `item === items[0]`, §8-2의 두 모양 동시 기록)이고 다섯 번째 행이 그 모양 자체를 핀한다. **비공허 가드**: `ASCEND`에는 조기 `return state` 경로가 **5개**라 `assert.notEqual(ascended, base)` + `level === 1` 없이는 승천이 거부돼도 `grave` deepEqual이 공짜로 통과한다 — 계획에 없던 가드, 트랙이 넣었다. 수정 전 red는 예측대로 `+ null / - [{gold: 5000, …}]`(`RESET_GAME` 대칭 행은 수정 전에도 green — 결함을 판별하지 하네스를 판별하지 않는다). 계획 줄번호 오차(117-123 → 실제 119-125).
+
+**M3 실측**: CLAUDE.md:34 거짓 문장 교체 · §3 트리에 `functions/api/` · §6 프록시 상한 1줄 · `docs/DEPLOYMENT.md`·`QUICK_DEPLOY.md`의 `feedback-validate` 제거 · `actionDeps.ts:62` 주석 · 래칫 systems 122→120(주입 121 > 120 red). 추가 발견 `tasks/PROJECT_OVERVIEW.md:99`(같은 잔재) — 통합자가 제거. `tasks/todo.md:659`의 2026-09-04 Vercel 시대 기록은 역사라 그대로.
+
+**재감사 방법론 기록**: 첫 감사 축(타입·계약·상태 기계·복원·배포)이 소진된 뒤 다섯 축(플레이어 흐름·관측성·보안 경계·수치 부채·성능)을 실행으로 쟀고, 셋에서 "없음"이 측정으로 나왔다(흐름 벽돌 0 · rules 쓰기 지점 6 = F3 · tree-shaking 마커 0 · 문서 수치 16종 참 · perf 예산 1~27% · 유닛 지배 파일 = 증빙 계약). 결함 2건은 둘 다 **경계**(서버 입력 경계 · 리셋 두 경로의 비대칭)에서 나왔다 — 다음 감사도 "같은 일을 하는 두 경로가 같은 필드를 다루는가"(`RESET_GAME` vs `ASCEND` 류)와 "클라이언트가 자르는 값을 서버도 자르는가"(name 16 vs 프록시 무제한 류)를 먼저 볼 것.
+
+**소유자 항목**: Q4(Hosting 사이트 비활성화) · Q5(Codex 브리프 `docs/qa/CODEX_K3_BACK_BUTTON_QA.md`) · **Q6** 텔레메트리 목적지(18종 전부 NOOP) · **Q7** 프로덕션 Pages의 `/api/ai-proxy` 배포 여부(M1의 문구를 정한다) · **Q8** 카탈로그 퀘스트 계정당 1회.
+
+**Wave 22 후보**
+1. 프록시 숫자형 보간 4곳 clamp — 한 줄씩. 다음에 `ai-proxy.js`를 만질 때 끼운다(단독 wave 아님).
+2. Q6이 (b)/(c)면 텔레메트리 sink 트랙 · Q8이 (b)/(c)면 퀘스트 원장 트랙 — 소유자 답 종속.
+3. Codex 실기/시뮬레이터 결과가 오면 K3 런타임 검증 마감(§24.1) — 결과에 따라 트랙.
+4. 감사 축은 이제 둘 다 소진 — 다음 감사는 **플레이 데이터**(Q6 sink가 생기면)나 **기기 QA 결과**가 입력이어야 한다. 입력 없이 세 번째 정적 감사는 수확 체감.
+

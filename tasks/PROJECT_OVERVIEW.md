@@ -95,8 +95,7 @@ aetheria-rpg/
 │   └── main.jsx             # 엔트리 포인트
 │
 ├── functions/api/           # Cloudflare Pages Functions
-│   ├── ai-proxy.js              # Gemini AI 프록시
-│   └── feedback-validate.js     # 피드백 검증 API
+│   └── ai-proxy.js              # Gemini AI 프록시
 │
 ├── aws/                     # AWS 인프라
 │   ├── template.yaml            # SAM 템플릿
