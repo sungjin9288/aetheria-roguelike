@@ -10,6 +10,40 @@ const RATE_LIMIT_WINDOW_MS = 60_000;
 const RATE_LIMIT_MAX_REQUESTS = 40;
 const requestBuckets = new Map();
 
+// 2026-09 Wave 21 M1 — 입력 크기 상한.
+// 레이트리밋은 "몇 번"만 세고 "건당 얼마나 큰가"를 보지 않는다. 익명 인증 토큰은 방문자
+// 누구나 받으므로, 상한이 없으면 인증을 통과한 요청 한 건이 수 MB짜리 플레이어 문자열을
+// 그대로 Gemini 프롬프트에 실어 보낼 수 있었다(실측: 1MB `name` → 1,000,739자 프롬프트 · 200 OK).
+// 정상 본문은 2~3KB이므로 16KB는 여유가 크다.
+const MAX_REQUEST_BODY_BYTES = 16_384;
+const bodyTextEncoder = new TextEncoder();
+
+// 프롬프트에 그대로 보간되는 플레이어 제어 문자열의 개별 상한.
+// (`history`/`mapSnapshot`/`playerSnapshot` 직렬화는 이미 stringifyCompact가 자른다)
+const CLAMP_NAME = 32;
+const CLAMP_JOB = 24;
+const CLAMP_LOCATION = 40;
+const CLAMP_DIFFICULTY_LABEL = 16;
+const CLAMP_BUILD_TAG = 24;
+const MAX_BUILD_TAGS = 4;
+const CLAMP_RELIC_NAME = 24;
+const MAX_RELICS = 8;
+const CLAMP_STORY_CONTEXT = 300;
+const CLAMP_STORY_TYPE = 24;
+
+const clampText = (value, max) => {
+    if (value === null || value === undefined) return '';
+    const text = typeof value === 'string' ? value : String(value);
+    return text.length > max ? text.slice(0, max) : text;
+};
+
+const exceedsBodyLimit = (text) => {
+    // UTF-8은 문자당 최소 1바이트이므로 문자 수가 상한을 넘으면 바이트 수도 반드시 넘는다.
+    // 값싼 선행 검사로 두어 거대한 본문을 통째로 인코딩하지 않는다.
+    if (text.length > MAX_REQUEST_BODY_BYTES) return true;
+    return bodyTextEncoder.encode(text).length > MAX_REQUEST_BODY_BYTES;
+};
+
 const parseAllowedOrigins = (env) => {
     const configured = String(env.ALLOWED_ORIGINS || '')
         .split(',')
@@ -156,13 +190,18 @@ const buildGeminiPayload = (type, data, uid) => {
     if (type === 'event') {
         // 플레이어 스냅샷에서 핵심 컨텍스트 추출
         const ps = data.playerSnapshot || {};
-        const buildTags = Array.isArray(ps.buildProfile) ? ps.buildProfile.join(', ') : (ps.buildProfile || '없음');
-        const relicsHeld = Array.isArray(ps.relics) ? ps.relics.map(r => r.name || r).join(', ') : '없음';
-        const diffLabel = ps.difficultyLabel || '균형';
+        // buildTags/relicsHeld는 프롬프트에 두 번 보간되므로(본문 + 주의사항) 상한이 두 배로 효과가 있다.
+        const buildTags = Array.isArray(ps.buildProfile)
+            ? ps.buildProfile.slice(0, MAX_BUILD_TAGS).map((tag) => clampText(tag, CLAMP_BUILD_TAG)).join(', ')
+            : (clampText(ps.buildProfile, CLAMP_BUILD_TAG) || '없음');
+        const relicsHeld = Array.isArray(ps.relics)
+            ? ps.relics.slice(0, MAX_RELICS).map((r) => clampText(r?.name || r, CLAMP_RELIC_NAME)).join(', ')
+            : '없음';
+        const diffLabel = clampText(ps.difficultyLabel, CLAMP_DIFFICULTY_LABEL) || '균형';
         const winRate = ps.recentWinRate != null ? `${ps.recentWinRate}%` : '알 수 없음';
         const hpRatio = (ps.hp && ps.maxHp) ? Math.round((ps.hp / ps.maxHp) * 100) : null;
         const playerContext = [
-            `이름: ${ps.name || '모험가'} | 직업: ${ps.job || '알 수 없음'} | Lv.${ps.level || 1}`,
+            `이름: ${clampText(ps.name, CLAMP_NAME) || '모험가'} | 직업: ${clampText(ps.job, CLAMP_JOB) || '알 수 없음'} | Lv.${ps.level || 1}`,
             `HP: ${hpRatio != null ? hpRatio + '%' : '알 수 없음'} | MP: ${ps.mp || 0}/${ps.maxMp || 50}`,
             `빌드 성향: ${buildTags}`,
             `보유 유물: ${relicsHeld}`,
@@ -171,7 +210,7 @@ const buildGeminiPayload = (type, data, uid) => {
         ].join('\n');
 
         systemInstruction = "당신은 '에테리아(Aetheria)' 판타지 RPG의 게임 마스터입니다. 한국어로 1~2문장 분량의 짧고 선명한 현장 이벤트를 만드세요. 플레이어의 빌드 성향과 보유 유물, 현재 전투 상황을 반영하여 이벤트와 보상이 해당 빌드에 적합하도록 연출하세요. 최근 사건과 같은 소재를 반복하지 말고, 선택지는 반드시 서로 다르게 2~3개 제시하세요. 각 선택지에는 즉시 적용 가능한 결과를 붙이세요.";
-        prompt = `현재 위치: ${data.location || '알 수 없음'}
+        prompt = `현재 위치: ${clampText(data.location, CLAMP_LOCATION) || '알 수 없음'}
 지역 정보: ${stringifyCompact(data.mapSnapshot || {}, 300)}
 플레이어 상태:
 ${playerContext}
@@ -255,8 +294,9 @@ UID: ${uid}
             questComplete: '퀴스트 완료',
             ruinRecap: '사망 후회고',
         };
-        const label = storyTypeLabels[data.storyType] || data.storyType || '모험';
-        const context = data.context || `${data.location || data.loc || '알 수 없음'}에서 ${label}`;
+        const label = storyTypeLabels[data.storyType] || clampText(data.storyType, CLAMP_STORY_TYPE) || '모험';
+        const fallbackLoc = clampText(data.location || data.loc, CLAMP_LOCATION) || '알 수 없음';
+        const context = clampText(data.context || `${fallbackLoc}에서 ${label}`, CLAMP_STORY_CONTEXT);
 
         systemInstruction = "당신은 판타지 RPG 내레이터입니다. 주어진 상황을 한국어 1~2문장으로 묘사하되, 최근 사건과 어조를 반복하지 말고 현장감 있게 서술하세요. 보스 전환은 듀라운, 퀴스트 완료는 성취감, 사망 후회고는 비장미로 서술하세요.";
         prompt = `상황: ${context}
@@ -359,9 +399,28 @@ export async function onRequestPost(context) {
     }
 
     try {
+        // Wave 21 M1 — CORS/인증/레이트리밋을 통과한 뒤, 값비싼 작업(Gemini 호출) 전에
+        // 본문 크기를 먼저 본다. Content-Length는 있을 때만 믿을 수 있으므로(없거나
+        // 거짓일 수 있다) 실제로 읽은 텍스트의 바이트 길이도 함께 검사한다.
+        const declaredLength = Number(request.headers.get('content-length'));
+        if (Number.isFinite(declaredLength) && declaredLength > MAX_REQUEST_BODY_BYTES) {
+            return jsonResponse({ error: 'Request body too large' }, 413, corsHeaders);
+        }
+
+        let rawBody;
+        try {
+            rawBody = await request.text();
+        } catch {
+            return jsonResponse({ error: 'Invalid request body' }, 400, corsHeaders);
+        }
+
+        if (exceedsBodyLimit(rawBody)) {
+            return jsonResponse({ error: 'Request body too large' }, 413, corsHeaders);
+        }
+
         let body;
         try {
-            body = await request.json();
+            body = JSON.parse(rawBody);
         } catch {
             return jsonResponse({ error: 'Invalid request body' }, 400, corsHeaders);
         }
@@ -397,8 +456,10 @@ export async function onRequestPost(context) {
         const narrative = parsedJson?.narrative || '신비로운 기운이 느껴집니다.';
         return jsonResponse({ success: true, data: { narrative } }, 200, corsHeaders);
     } catch (error) {
+        // 상류(Gemini) 오류 원문은 서버 로그에만 남긴다 — 응답 본문으로 돌려주면
+        // API 키/프로젝트 식별자 같은 내부 정보가 클라이언트로 샌다(Wave 21 M1).
         console.error('Proxy error:', error);
-        return jsonResponse({ error: 'Internal server error', details: error.message }, 500, corsHeaders);
+        return jsonResponse({ error: 'Internal server error' }, 500, corsHeaders);
     }
 }
 

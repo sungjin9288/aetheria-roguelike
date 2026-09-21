@@ -14,6 +14,7 @@ import {
     buildBoundedEncounterContext,
 } from '../src/utils/boundedEncounterSelector.ts';
 import { buildChainJournal } from '../src/utils/chainJournal.ts';
+import { buildGraveData, getGraveRecoveryGroups } from '../src/utils/graveUtils.ts';
 import { pickPermanentPlayerState } from '../src/utils/permanentProgress.ts';
 import {
     getCompletedSeasonCount,
@@ -276,4 +277,105 @@ test('영수증은 승천을 넘지 않는다 — 같은 조우를 다시 정산
     );
     assert.equal(afterAscension.applied, true);
     assert.equal(afterAscension.reason, 'applied');
+});
+
+// ─── Wave 21 M2: 승천은 회수하지 못한 묘비를 버리지 않는다 ────────────────────
+//
+// `ASCEND`의 반환은 `{...INITIAL_STATE, player: freshPlayer}`였고 거기에 `grave`가
+// 없었다 — 같은 "런을 접는" 리셋인 `RESET_GAME`(사망 후 다시 시작)은 처음부터
+// `grave: state.grave`로 보존한다. 실측이 그 비대칭을 그대로 보여준다:
+// 승천 전 `[{고요한 숲, 5000G, 아이템 2}]` → 승천 후 `null`.
+//
+// 단순한 손실이 아니다 — 공개 침공 문서(`public/data/graves/{uid}`)는
+// `firestore.rules`가 `delete: false`라 그대로 남는다(§8-2). 즉 승천 한 번으로
+// "남들은 내 묘비를 털 수 있는데 나는 회수할 수 없는" 상태가 됐다.
+//
+// 픽스처는 writer(`graveUtils.buildGraveData`)가 실제로 내는 모양을 쓴다 —
+// 손으로 지어낸 모양 위의 단언은 통과해도 아무것도 말해주지 않는다(Wave 18 교훈).
+// 판별자는 `grave`이지 `gameState`가 아니다: `ASCEND`는 고치든 안 고치든 idle로
+// 가므로 `gameState` 단언은 공허하다. 대신 "액션이 실제로 적용됐다"는 비공허성
+// 가드를 함께 둔다 — `ASCEND`는 가드(상태/랭크/영수증)에 걸리면 `state`를 그대로
+// 돌려주고, 그때는 `grave` 동등이 공짜로 참이 된다.
+
+const graveFixture = () => {
+    const dyingPlayer = {
+        ...INITIAL_STATE.player,
+        name: '용사',
+        level: 48,
+        gold: 10_000,
+        loc: '고요한 숲',
+        inv: [
+            { id: 'starter_potion_1', name: '하급 체력 물약', type: 'consumable' },
+            { id: 'wand_1', name: '호신용 지팡이', type: 'weapon' },
+            { id: 'robe_1', name: '천 로브', type: 'armor' },
+        ],
+    };
+    return [buildGraveData(dyingPlayer, () => 0.9, () => 12_345)];
+};
+
+const ASCENSION_PAYLOAD = { expectedPrestigeRank: 0, sourceReceiptKey: null };
+
+const ascensionBaseState = (grave, gameState) => ({
+    ...INITIAL_STATE,
+    gameState,
+    player: { ...INITIAL_STATE.player, name: '용사', level: 48, gold: 100 },
+    grave,
+    uid: 'test-uid',
+});
+
+test('묘비 픽스처는 writer가 내는 모양 그대로다 (가짜 모양 위의 단언 금지)', () => {
+    const [grave] = graveFixture();
+
+    assert.deepEqual(Object.keys(grave).toSorted(), ['gold', 'item', 'items', 'loc', 'timestamp']);
+    assert.equal(grave.loc, '고요한 숲');
+    assert.equal(grave.gold, 5_000);
+    assert.equal(grave.items.length, 2);
+    // 구형 save의 단수 `item`도 writer가 함께 쓴다(§8-2) — 그 쌍까지가 픽스처다.
+    assert.equal(grave.item, grave.items[0]);
+    assert.equal(grave.timestamp, 12_345);
+    // 시작 지급품은 묘비에 실리지 않는다.
+    assert.equal(grave.items.some((item) => item.id.startsWith('starter_')), false);
+});
+
+test('ASCEND는 회수하지 못한 묘비를 보존한다', () => {
+    const grave = graveFixture();
+    const expected = structuredClone(grave);
+    const base = ascensionBaseState(grave, 'ascension');
+
+    const ascended = gameReducer(base, { type: AT.ASCEND, payload: ASCENSION_PAYLOAD });
+
+    // 비공허성: 승천이 실제로 적용됐다(가드에 걸려 같은 state가 돌아온 게 아니다).
+    assert.notEqual(ascended, base);
+    assert.equal(ascended.player.level, 1);
+
+    assert.deepEqual(ascended.grave, expected);
+    // 플레이어가 보는 곳: 다음 런에서 그 지역으로 돌아가면 회수 대상이 그대로 있다.
+    const [group] = getGraveRecoveryGroups(ascended.grave, '고요한 숲');
+    assert.equal(group.gold, 5_000);
+    assert.equal(group.items.length, 2);
+    assert.equal(group.atCurrentLocation, true);
+});
+
+test('RESET_GAME도 같은 픽스처를 보존한다 (두 리셋의 대칭)', () => {
+    const grave = graveFixture();
+    const expected = structuredClone(grave);
+    const base = ascensionBaseState(grave, 'dead');
+
+    const restarted = gameReducer(base, { type: AT.RESET_GAME });
+
+    assert.notEqual(restarted, base);
+    assert.equal(restarted.player.level, 1);
+    assert.deepEqual(restarted.grave, expected);
+});
+
+test('TRUE_ENDING 경유 ASCEND도 같은 핸들러이므로 묘비를 보존한다', () => {
+    const grave = graveFixture();
+    const expected = structuredClone(grave);
+    const base = ascensionBaseState(grave, 'true_ending');
+
+    const ascended = gameReducer(base, { type: AT.ASCEND, payload: ASCENSION_PAYLOAD });
+
+    assert.notEqual(ascended, base);
+    assert.equal(ascended.player.level, 1);
+    assert.deepEqual(ascended.grave, expected);
 });

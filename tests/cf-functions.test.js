@@ -14,6 +14,11 @@ test('hosting: Cloudflare is the only active web function surface', () => {
     assert.equal(existsSync(path.join(repoRoot, 'api', 'ai-proxy.js')), false);
     assert.equal(existsSync(path.join(repoRoot, 'api', 'feedback-validate.js')), false);
 
+    // Wave 21 M1 — `functions/api/feedback-validate.js`는 삭제됐다(부재 불변식).
+    // 피드백 쓰기는 `SystemTab.tsx`가 `addDoc`으로 직접 하고 검증은 firestore.rules가
+    // 소유한다 — 클라이언트 참조가 0인 함수는 배포되면 공격 표면일 뿐이다.
+    assert.equal(existsSync(path.join(repoRoot, 'functions', 'api', 'feedback-validate.js')), false);
+
     const packageJson = readFileSync(path.join(repoRoot, 'package.json'), 'utf8');
     const workflow = readFileSync(path.join(repoRoot, '.github', 'workflows', 'deploy.yml'), 'utf8');
 
@@ -164,114 +169,142 @@ test('ai-proxy: Origin not in ALLOWED_ORIGINS is rejected with 403', async () =>
     assert.equal(response.status, 403);
 });
 
-// feedback-validate.js는 firebase-admin(devDependencies에 미포함, 이번 마이그레이션에서도
-// 신규 의존성 추가 금지 조건 하에 그대로 유지)을 정적 import 하므로, 패키지가 설치되지
-// 않은 환경에서는 동적 import 자체가 실패한다.
-// 따라서 여기서는 소스 코드 정적 검사로 시그니처 변환(onRequestPost/onRequestOptions export,
-// Web Request/Response 사용, context.env 사용)만 확인한다.
-test('feedback-validate: source exports Cloudflare Pages Functions handlers', () => {
-    const source = readFileSync(
-        path.join(__dirname, '..', 'functions', 'api', 'feedback-validate.js'),
-        'utf-8'
-    );
+// ── Wave 21 M1: AI 프록시 입력 상한 ─────────────────────────────────────────
+// 익명 인증 토큰은 방문자 누구나 받으므로, 인증을 통과한 요청이 "건당 얼마나 큰 입력을
+// Gemini에 태울 수 있는가"가 남아 있던 유일한 비용 축이다 — 서버의 유일한 한도인
+// 40req/60s 레이트리밋은 건당 크기를 보지 않고, 클라이언트의 일일 미터(TokenQuotaManager)는
+// 브라우저 안에 있다. 아래 네 건은 실제 `onRequestPost`를 호출하고 fetch를 스텁해
+// (a) Gemini 호출이 일어났는지 (b) 실제로 전송된 프롬프트 길이가 얼마인지를 관측한다.
 
-    assert.match(source, /export async function onRequestPost\(context\)/);
-    assert.match(source, /export async function onRequestOptions/);
-    assert.match(source, /export async function onRequest\(context\)/);
-    assert.match(source, /new Response\(/);
-    assert.match(source, /context;/); // { request, env } = context 구조분해 패턴
-    assert.doesNotMatch(source, /\breq\.body\b/);
-    assert.doesNotMatch(source, /\bres\.status\(/);
-});
-
-// (제거됨) 'firebase-admin 부재로 import 실패' 문서화 테스트 — 해당 결함이
-// REST 검증 방식으로 해소되어(아래 재작성 블록) import가 정상 성립한다.
-
-// ── feedback-validate (2026-07 재작성: firebase-admin → REST 검증) ──────────
-// 원본은 firebase-admin을 import했지만 package.json에 존재한 적 없어 배포 시
-// 동작 불가였던 결함. ai-proxy와 동일한 REST 토큰 검증 + Firestore REST 쓰기로
-// 교체됐고, 토큰 없이 userId를 신뢰하던 보안 공백도 해소됐다.
-import * as feedbackValidate from '../functions/api/feedback-validate.js';
-
-const makeFeedbackRequest = ({ method = 'POST', headers = {}, body } = {}) => {
-    const init = { method, headers };
-    if (body !== undefined) {
-        init.body = JSON.stringify(body);
-        init.headers = { 'Content-Type': 'application/json', ...headers };
-    }
-    return new Request('https://example.pages.dev/api/feedback-validate', init);
+const GEMINI_HOST = 'generativelanguage.googleapis.com';
+const PROXY_ENV = { FIREBASE_WEB_API_KEY: 'test-key', GEMINI_API_KEY: 'test-key' };
+const EVENT_GEMINI_JSON = {
+    desc: '낡은 제단이 희미하게 빛난다.',
+    choices: ['조사한다', '지나친다'],
+    outcomes: [
+        { choiceIndex: 0, log: '작은 보석을 발견했다.', gold: 10 },
+        { choiceIndex: 1, log: '아무 일도 없었다.', gold: 0 }
+    ]
 };
 
-const FEEDBACK_ENV = { FIREBASE_WEB_API_KEY: 'test-key', FIREBASE_PROJECT_ID: 'test-project' };
+const runProxy = async ({ body, uid = 'uid-clamp', geminiStatus = 200, geminiErrorText = '', geminiJson = EVENT_GEMINI_JSON }) => {
+    const seen = { geminiCalls: 0, prompt: null };
+    const response = await withMockedFetch(
+        async (url, init) => {
+            const urlStr = String(url);
+            if (urlStr.includes('identitytoolkit.googleapis.com')) {
+                return new Response(JSON.stringify({ users: [{ localId: uid }] }), { status: 200 });
+            }
+            if (urlStr.includes(GEMINI_HOST)) {
+                seen.geminiCalls += 1;
+                seen.prompt = JSON.parse(init.body).contents[0].parts[0].text;
+                if (geminiStatus !== 200) {
+                    return new Response(geminiErrorText, { status: geminiStatus });
+                }
+                return new Response(JSON.stringify({
+                    candidates: [{ content: { parts: [{ text: JSON.stringify(geminiJson) }] } }]
+                }), { status: 200 });
+            }
+            throw new Error(`Unexpected fetch call: ${urlStr}`);
+        },
+        async () => aiProxy.onRequestPost({
+            request: makeRequest({ headers: { authorization: 'Bearer valid-token' }, body }),
+            env: PROXY_ENV
+        })
+    );
+    return { response, ...seen, bodyBytes: Buffer.byteLength(JSON.stringify(body), 'utf8') };
+};
 
-test('feedback-validate: onRequestPost/onRequestOptions/onRequest exported + firebase-admin 미사용', () => {
-    assert.equal(typeof feedbackValidate.onRequestPost, 'function');
-    assert.equal(typeof feedbackValidate.onRequestOptions, 'function');
-    assert.equal(typeof feedbackValidate.onRequest, 'function');
-    const src = readFileSync(path.join(__dirname, '../functions/api/feedback-validate.js'), 'utf8');
-    assert.ok(!/from 'firebase-admin/.test(src), 'firebase-admin import 제거됨 (설치된 적 없는 패키지)');
-});
+test('ai-proxy: 1MB 본문은 413이고 Gemini fetch는 0건 (Wave 21 M1)', async () => {
+    const oversized = 'A'.repeat(1_000_000);
+    const { response, geminiCalls, bodyBytes } = await runProxy({
+        uid: 'uid-oversized',
+        body: {
+            type: 'event',
+            data: {
+                location: '고요한 숲',
+                history: [],
+                playerSnapshot: { name: oversized, job: '모험가', level: 3 },
+                mapSnapshot: {}
+            }
+        }
+    });
 
-test('feedback-validate: missing bearer token → 401', async () => {
-    const request = makeFeedbackRequest({ body: { content: '충분히 긴 정상 피드백 내용입니다.' } });
-    const response = await feedbackValidate.onRequestPost({ request, env: FEEDBACK_ENV });
-    assert.equal(response.status, 401);
+    assert.ok(bodyBytes > 1_000_000, `본문이 실제로 1MB를 넘어야 한다 (실측 ${bodyBytes}B)`);
+    // 판별자는 상태 코드가 아니라 fetch 카운터다 — 비용(= 일일 쿼터가 세는 대상)은
+    // Gemini 호출에서만 발생하므로, 0건이면 쿼터도 무관하다.
+    assert.equal(geminiCalls, 0, '상한을 넘은 본문은 Gemini에 전달되지 않는다');
+    assert.equal(response.status, 413);
     const json = await response.json();
-    assert.match(json.error, /missing bearer token/);
+    assert.equal(json.success, undefined);
 });
 
-test('feedback-validate: invalid token (lookup 실패) → 401', async () => {
-    await withMockedFetch(async () => new Response('{}', { status: 400 }), async () => {
-        const request = makeFeedbackRequest({
-            headers: { Authorization: 'Bearer bad-token' },
-            body: { content: '충분히 긴 정상 피드백 내용입니다.' },
-        });
-        const response = await feedbackValidate.onRequestPost({ request, env: FEEDBACK_ENV });
-        assert.equal(response.status, 401);
-        const json = await response.json();
-        assert.match(json.error, /invalid token/);
+test('ai-proxy: 상한 안의 본문이라도 보간 문자열은 잘린다 (Wave 21 M1)', async () => {
+    const name = 'A'.repeat(5_000);
+    const { response, geminiCalls, prompt, bodyBytes } = await runProxy({
+        uid: 'uid-clamp-fields',
+        body: {
+            type: 'event',
+            data: {
+                location: '고요한 숲',
+                history: [],
+                playerSnapshot: {
+                    name,
+                    job: '모험가',
+                    level: 3,
+                    relics: Array.from({ length: 50 }, () => ({ name: 'R'.repeat(100) })),
+                    buildProfile: Array.from({ length: 50 }, () => 'B'.repeat(100))
+                },
+                mapSnapshot: {}
+            }
+        }
     });
+
+    assert.ok(bodyBytes < 16_384, `본문 상한 안이어야 한다 (실측 ${bodyBytes}B)`);
+    assert.equal(response.status, 200);
+    assert.equal(geminiCalls, 1);
+    assert.ok(prompt.length < 2_500, `프롬프트 길이 ${prompt.length}자`);
+    // 33번째 문자부터는 프롬프트에 없다(= name은 32자에서 잘린다).
+    assert.ok(!prompt.includes(name.slice(32)), 'name의 33번째 문자 이후가 프롬프트에 없다');
+    assert.ok(prompt.includes('A'.repeat(32)), 'name의 앞 32자는 남는다');
+    assert.ok(!prompt.includes('A'.repeat(33)), 'name은 정확히 32자에서 잘린다');
+    assert.ok(!prompt.includes('R'.repeat(25)), '유물 이름은 24자에서 잘린다');
+    assert.ok(!prompt.includes('B'.repeat(25)), '빌드 태그는 24자에서 잘린다');
 });
 
-test('feedback-validate: 유효 토큰 + 정상 내용 → 200 (uid는 토큰에서 유도)', async () => {
-    const calls = [];
-    await withMockedFetch(async (url, init) => {
-        calls.push({ url: String(url), init });
-        if (String(url).includes('identitytoolkit')) {
-            return new Response(JSON.stringify({ users: [{ localId: 'uid-from-token' }] }), { status: 200 });
+test('ai-proxy: story 경로의 context도 잘린다 (Wave 21 M1)', async () => {
+    const context = 'C'.repeat(5_000);
+    const { response, geminiCalls, prompt } = await runProxy({
+        uid: 'uid-clamp-story',
+        geminiJson: { narrative: '바람이 불었다.' },
+        body: {
+            type: 'story',
+            data: { storyType: 'victory', context, history: [], playerSnapshot: {} }
         }
-        if (String(url).includes('firestore.googleapis.com')) {
-            return new Response('{}', { status: 200 });
-        }
-        throw new Error(`unexpected fetch: ${url}`);
-    }, async () => {
-        const request = makeFeedbackRequest({
-            headers: { Authorization: 'Bearer good-token' },
-            body: { content: '충분히 긴 정상 피드백 내용입니다.', type: 'general' },
-        });
-        const response = await feedbackValidate.onRequestPost({ request, env: FEEDBACK_ENV });
-        assert.equal(response.status, 200);
-        const json = await response.json();
-        assert.equal(json.success, true);
-        const firestoreCall = calls.find((c) => c.url.includes('firestore.googleapis.com'));
-        assert.ok(firestoreCall, 'Firestore REST 쓰기 발생');
-        const fields = JSON.parse(firestoreCall.init.body).fields;
-        assert.equal(fields.userId.stringValue, 'uid-from-token', '클라이언트 제공 userId가 아닌 토큰 uid 사용');
     });
+
+    assert.equal(response.status, 200);
+    assert.equal(geminiCalls, 1);
+    assert.ok(prompt.length < 1_500, `프롬프트 길이 ${prompt.length}자`);
+    assert.ok(!prompt.includes('C'.repeat(301)), 'context는 300자에서 잘린다');
 });
 
-test('feedback-validate: 유효 토큰 + 짧은 내용 → 400', async () => {
-    await withMockedFetch(async (url) => {
-        if (String(url).includes('identitytoolkit')) {
-            return new Response(JSON.stringify({ users: [{ localId: 'uid-1' }] }), { status: 200 });
+test('ai-proxy: Gemini 5xx는 500으로 접히고 상류 오류 본문을 노출하지 않는다 (Wave 21 M1)', async () => {
+    const upstreamSecret = 'API key AIzaSyUPSTREAM-LEAK invalid for project 12345';
+    const { response } = await runProxy({
+        uid: 'uid-upstream-5xx',
+        geminiStatus: 503,
+        geminiErrorText: upstreamSecret,
+        body: {
+            type: 'event',
+            data: { location: '고요한 숲', history: [], playerSnapshot: { name: '용사' }, mapSnapshot: {} }
         }
-        throw new Error(`unexpected fetch: ${url}`);
-    }, async () => {
-        const request = makeFeedbackRequest({
-            headers: { Authorization: 'Bearer good-token' },
-            body: { content: '짧음' },
-        });
-        const response = await feedbackValidate.onRequestPost({ request, env: FEEDBACK_ENV });
-        assert.equal(response.status, 400);
     });
+
+    assert.equal(response.status, 500);
+    const raw = await response.text();
+    assert.ok(!raw.includes('AIzaSy'), '상류 오류 원문이 클라이언트로 새지 않는다');
+    const json = JSON.parse(raw);
+    assert.equal('details' in json, false, '500 응답에 details 키가 없다');
+    assert.equal(json.error, 'Internal server error');
 });

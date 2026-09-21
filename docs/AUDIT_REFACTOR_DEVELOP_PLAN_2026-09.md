@@ -1463,3 +1463,136 @@ L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets
 
 **L4 정적 검증 (2026-09-21, Android 실기기 부재)**: 소유자에게 Android 기기가 없어 실기 뒤로가기 검증은 **에뮬레이터**(Android Studio AVD + `adb shell input keyevent KEYCODE_BACK` — 하드웨어 back은 KeyEvent라 기기와 동일 경로)로 대체하거나 미검증으로 남긴다. 기기 없이 확인한 층 4단: ① `runtimeEnvironment.ts:39` `Capacitor.isNativePlatform()` → `'capacitor'` ② `App.tsx:111` `bindLifecycleBridge({environment: getRuntimeEnvironment()})` ③ `@capacitor/app` `AppPlugin.java:46-62` — 코어가 아니라 **플러그인이** AndroidX `OnBackPressedCallback`을 dispatcher에 등록한다(§23 K3의 "코어에 back 처리 0건"의 답). JS 리스너가 있으면 `backButton` 이벤트 + `document` `backbutton`, 없으면 `webView.goBack()` 또는 무동작(**종료가 아니다**); `exitApp` → `activity.finish()` ④ gradle 2파일 등록. **미검증으로 남는 것**: 빌드된 APK의 `capacitor.plugins.json`에 `AppPlugin`이 실제로 들어 있는지(= 빌드 절차), 첫 back 전에 `App.addListener`가 resolve하는지(동적 import + 비동기 등록 — 수십 ms). **운영 함정**: `scripts/android-gradle.sh`는 `gradlew`만 돌리고 `cap sync`를 하지 않는다 — `capacitor.plugins.json`은 gitignore된 생성물이라 sync 없이 빌드하면 플러그인이 컴파일만 되고 등록되지 않아 뒤로가기가 **조용히 앱 종료로 되돌아간다**. CLAUDE.md §4에 순서(`android:sync` → `android:debug`)를 박았다. 실기/에뮬레이터 결과가 오기 전까지 K3는 "정적 검증 완료 · 런타임 미검증"이다.
 
+
+## 25. Wave 21 계획 (2026-09-21 착수, 베이스 `main` = `8be7eacd` = PR #47 merge commit)
+
+**핵심**: 첫 감사의 축(타입·계약·상태 기계·복원·배포)은 §24.1이 적은 대로 소진됐다 — 후보 3은 run 353 초록으로 닫혔고 후보 1은 `fac8f5eb`로 끝났다. 그래서 이번에는 **다섯 축을 전부 실행으로 다시 쟀다**(리듀서 드라이버 · `onRequestPost` 직접 호출 · 프로덕션 빌드 산출물 grep · 유닛 5,168 재실행 · 증빙 JSON 파싱). 결과는 **wave급 결함 2건 + 문서/죽은 코드 정리 1건**이고, 나머지 축은 "없다"가 측정으로 증명된다. (1) **AI 프록시는 플레이어 문자열을 상한 없이 Gemini 프롬프트에 넣는다** — 1MB `name` 하나가 1,000,739자 프롬프트로 **200 OK**, `relics`+`buildProfile`은 프롬프트에 **두 번** 보간돼 2MB 본문이 4,001,518자가 된다(실행 실측). 익명 인증 토큰은 방문자 누구나 받으므로 이건 "인증된 남용"이고, 서버의 유일한 한도 40req/60s는 건당 크기를 안 본다. (2) **`ASCEND`는 묘비를 버린다** — `{...INITIAL_STATE}`에 `grave: state.grave`가 없다. 같은 리셋인 `RESET_GAME`(사망)은 보존한다. 실행으로 확인: 승천 전 `[{고요한 숲, 5000G}]` → 승천 후 `null`, 반면 `RESET_GAME`은 그대로. 공개 침공 문서는 rules `delete: false`라 남으므로 "남들은 내 묘비를 털 수 있는데 나는 회수할 수 없다"가 된다. (3) `functions/api/feedback-validate.js`(187줄, 테스트 6건)는 **클라이언트 참조 0건**인데 문서 세 곳이 "클라이언트가 호출한다"고 적고 있다 — `SystemTab.tsx:371`은 `addDoc`으로 Firestore에 직접 쓴다.
+
+첫 감사가 안 본 축 중 **텔레메트리는 파이프가 통째로 NOOP**이다(제품 이벤트 18종 전부 `NOOP_PRODUCT_EVENT_SINK`로, 구현체 0개). 이건 결함이 아니라 계획서 §… E1이 "외부 sink 없음"으로 적은 설계이고, 백엔드·프라이버시 결정이라 **소유자 질문**으로 넘긴다(Q6). 성능 예산은 실측의 1~27%라 회귀 검출기가 아니라 **벽돌 검출기**이고, 유지가 답이다.
+
+### 실측 A — 플레이어 흐름 (리듀서·액션 팩토리 직접 구동, `scratchpad/flow-driver2.mjs`·`flow-driver3.mjs`)
+
+| # | 구동 | 실측 | 판정 |
+|---|---|---|---|
+| A-1 | `start('용사','male','모험가',[])` → `ACCEPT_QUEST 1` → `openShop()` → `market('buy', 하급 체력 물약)` | Lv1 골드 200, 가장 싼 소모품 30G(`하급 체력 물약`) · 장비 30G(`짚 모자`) — 구매 성공(200→170, inv 3). 퀘스트 보드 Lv1 가용 = `1`·`110`·`80`(스토리) | 첫 상점 막힘 없음 |
+| A-2 | `move('고요한 숲')` | 첫 방문 보상 +100G/+25EXP 지급, `lost_wizard` 체인 스텝이 첫 탐험에 뜨고 `handleEventChoice(0)`로 `{lost_wizard:1}` 진행 | 지급됨 |
+| A-3 | 공격만·휴식/물약 없이 연속 탐험(rng 0.99 최악 / 0.5 중앙값) | 두 경우 모두 **4~5번째 전투에서 사망**(kills 3~4, Lv1 유지) | 벽돌 아님 — `rest`(`characterActions.ts:197`)·시작 물약 2개가 있고 `progression-diagnostic-v2`의 `attack-only` 코호트도 defeats를 기록한다(Lv44 cohort defeats 7). 모델 앵커 Lv2 = 14액션은 휴식 정책 포함 |
+| A-4 | 사망 → `RESET_GAME` → `start()` → `move` → `lootGrave()` | 사망 전이에서 골드 200·이름 `''`·`runSummary` 생성·묘비 `[{고요한 숲, 171G, 물약+젤리}]`; `RESET_GAME` 묘비 보존; 재시작 시 `deaths=2`·시작 유물 선택(`pendingRelics`) 제시; 회수 **+171G + 아이템 2** | 지급됨 (§22 정정 그대로) |
+| A-5 | `ASCEND`(ASCENSION 상태, 묘비 있음) vs `RESET_GAME` | **`ASCEND` → `grave: null`**, `RESET_GAME` → 보존 (`progressionHandlers.ts:91-127` vs `:30-48`) | **결함 → M2** |
+| A-6 | 퀘스트 원장 | `claimedQuestIds`는 영구(`permanentProgress.ts:122`); `ACCEPT_QUEST`는 `QUEST_ALREADY_COMPLETED`(`questHandlers.ts:74-79`); 보드는 숨김(`questOperations.ts:426-435`). 승천 뒤 2회차는 **카탈로그 퀘스트 재수행 불가**(현상수배만) | 설계이지 결함 아님 — 의도 확인은 Q8 |
+| A-7 | 시즌 claim → 회전 · 승천 이월 | `season-journey-design.test.js`·`permanent-progress-copy.test.js`가 고정, 오늘 5,168 그린. 회전은 `isPremium`을 `...(season\|\|{})`로 이월(`seasonPassPresentation.ts:211`) | 이미 핀됨 |
+| A-8 | `content-reachability.json` | `errors []`·`unresolvedEventChainCompletions []`·`quests.unreachableTargets []`. `beyond-anchors` 행은 **정확히 하나**: 퀘스트 104(`minLv 79`, `cost.gates.quests[39]`·`behind[43]`), 최상 앵커 75 = 204.4h. 누적 EXP 60→75 기울기로 외삽하면 Lv79 ≈ **223.9h**(정책상 금지 — 참고값). 체크포인트 80 추가는 모델 핀 3종 + 1000시드 진단을 움직인다 | 라벨이 맞다 — **트랙 아님** |
+
+### 실측 B — 관측성·실패 표면
+
+| 항목 | 실측 | 판정 |
+|---|---|---|
+| 제품 텔레메트리 목적지 | `getRuntimeProductEventCoordinator()`는 `useProductTelemetry.ts:187`·`FatalErrorBoundary.tsx:59` 두 곳 다 **sink 인자 없이** 호출 → 기본값 `NOOP_PRODUCT_EVENT_SINK`(`productEventCoordinator.ts:36`, `productEventSink.ts:13`). `ProductEventSink` 구현체는 platform 밖 **0개**. 18종 이벤트가 전부 버려진다. `scripts/productFunnel.mjs`는 `receivedAt`/`serverSequence`가 있는 서버 모양을 기대한다 — 그 서버는 없다 | 설계(E1 "외부 sink 없음") — **Q6** |
+| 크래시 리포트 | `main.tsx:22` `installRuntimeErrorReporter(createLocalErrorReporter())` → localStorage 링버퍼 20건(`BALANCE.ERROR_REPORT_RING_SIZE`, `constants.ts:530`), `SystemTab`에서 열람/삭제. `sanitizeFilename`은 알려진 스크립트 파일명만 통과, 쿼리/해시 제거 | 커버됨 |
+| AI 폴백 사유 7종 | UI 표면화 `quota` 하나(`exploreActions.ts:126`). `useProductTelemetry:128-132`의 `explore` outcome은 **상태에서 유도**되므로 사유가 실리지 않는다. Firestore 쿼터 문서엔 `adopted/unadopted` **건수만**. `LatencyTracker`는 `console.warn`뿐(`LatencyTracker.ts:7,18`) | 관측 불가가 맞다 — 목적지가 없으니 사유를 실을 곳도 없다(Q6 종속) |
+| 429/5xx를 클라이언트가 보는 방식 | `callProxy`가 `!ok`에서 `null`(`aiService.ts:139-140`) → `resolveAiEventResponse(null)` = `proxy-unavailable`, `{success:false}` = `proxy-rejected`(실행 확인) → 큐레이션 폴백, 안내 없음, **쿼터 1건 소모**(디스패치=비용, `:101`) | 플레이어에게 벽돌 없음 — 트랙 아님 |
+| 서버 오류 본문 | `ai-proxy.js:401` 500 응답에 `details: error.message`(Gemini 오류 원문 포함) | M1에 포함 |
+
+### 실측 C — 보안 경계 (F3/G2 밖)
+
+| 항목 | 실측 | 판정 |
+|---|---|---|
+| rules vs 클라이언트 쓰기 지점 | `setDoc/addDoc/updateDoc/writeBatch/runTransaction/deleteDoc` 호출 = `createCloudAutosave.ts:117,122` · `useFirebaseSync.ts:589` · `TokenQuotaManager.ts:252` · `SystemTab.tsx:310(관리자 live config — rules test site 5가 "거부가 정답"으로 고정)` · `SystemTab.tsx:371` = **6곳, F3와 동일**. Waves 15~20에 새 쓰기 지점 0 | 변동 없음 |
+| rules가 믿는 다른 클라이언트 필드 | 리더보드 `totalKills ≤ 100,000`: kills ≤ 모델 액션 8,176(Lv75, 204.4h) → 상한은 지평의 ~12배 밖. `nickname ≤ 20`: 클라이언트 16. 묘비 6상한은 G2 | 절벽 없음 |
+| **AI 프록시 입력 크기** (`scratchpad/proxy-abuse.mjs`, `onRequestPost` 직접 호출 + fetch 스텁) | 기준 프롬프트 741자. **`name` 1MB → 1,000,739자 · 200** / `location` 1MB → 1,000,735자 / `history` 1MB → 1,435자(`stringifyCompact` 700이 산다) / `relics` 100×10k + `buildProfile` 100×10k(본문 2,001,648B) → **4,001,518자**(`:159-160`과 `:183`에 각각 두 번 보간). `request.json()`(`:364`)에 크기 검사 없음, story 경로의 `data.context`(`:259`)도 무상한. 클라이언트는 `name` 16자(`IntroScreen.tsx:127`, `characterActions.ts:68`)·`buildProfile` 4개로 자르지만 프록시는 본문을 신뢰한다. 토큰은 익명 인증으로 누구나 받는다 | **결함 → M1** |
+| 프롬프트 인젝션 | `history`/`name`/`location`이 프롬프트에 그대로 들어가지만 Structured Output + 클라이언트 `normalizeOutcomes` 화이트리스트로 효과가 자기 게임에 갇힌다 | 트랙 아님 |
+| `feedback-validate.js` | `src/**`에 `feedback-validate` 참조 **0** — 피드백은 `addDoc` 직접(`SystemTab.tsx:371`), rules F3가 길이/모양 검증. 문서 3곳(`docs/DEPLOYMENT.md:5,40`·`docs/QUICK_DEPLOY.md:6`)이 "호출한다"고 적음. 함수는 배포되면 호출 가능한 표면이지만 사용자 토큰으로 rules 아래 쓴다(권한 상승 없음). 클라이언트 `FeedbackValidator`에 60s 쿨다운·길이 검사 있음 | 죽은 표면 → M1에 삭제 포함 |
+| `useGameTestApi` tree-shaking | `npm run build`(12.0s, `VITE_ENABLE_TEST_API` 미설정) 뒤 `dist/assets/*.js`에서 build-guard의 식별자 15종(`__AETHERIA_TEST_API__`·`seed*Scenario`·`armNext*Seed`·`*-smoke`) **0건**, `useGameTestApi`/`AetheriaTestApi` 문자열 0건 | 주장 참 |
+
+### 실측 D — 숫자 있는 잔여 부채
+
+| 항목 | 실측 | 판정 |
+|---|---|---|
+| class-(b) 소스 정규식 가드 | 기준 1,807/3,190(§C4). 오늘 `readSrc(` 파일 69(+`game-mode-contract`, (a)), 호출 1,730(−15). 저장소에 분류기(acorn 스캐너)가 없어 재분류 불가 — 델타는 Wave 16 이관 −1 | 정책 유지("깨질 때 이관") — 트랙 아님 |
+| `any` | 주석 제거 후 `: any` 1(=상한, 문자열 리터럴), `as any` 0. `actionTypes.ts`에 `any` 0 — **CLAUDE.md:34 "`GameAction.payload: any`만 경계로 남음"은 거짓**(`:47`이 스스로 반박). `actionDeps.ts:62` "(현재 any)"도 거짓(`GameState.currentEvent: GameEvent \| null`) | 문서 드리프트 → M3 |
+| debt-ratchet 상한 | AST (f) 10 디렉터리 **전부 실측 = 상한**(slack 0). 정규식 (d) `systems` 실측 120 vs 상한 122 — **slack 2**, `reducers` 26 tight | (d) systems 122→120 하향 → M3 |
+| e2e × `GameMode` 12 | 스펙 44 / 케이스 121. 키워드 도달: idle·combat 전부 · event 8 · quest_board 5 · job_change 4 · moving 4 · shop 2 · ascension 2 · dead 2 · crafting 1 · true_ending 1 · **event_pending 0** | pending은 e2e에서 구조적으로 관측 불가(mock 런타임에서도 promise 한 틱) — 유닛 계약 7주입이 덮는다. 트랙 아님 |
+| CLAUDE.md 숫자 재검증 | 맵 52·직업 18·퀘스트 143·업적 73·유물 67·시너지 20·체인 13·GS **12**·`DATA_VERSION` 5.1·`DAILY_AI_LIMIT` 50·`MAX_LEVEL` 99·유닛 351/5,168·e2e 44 스펙·청크(KiB) game-data 479.5·index 464.8·vendor-react 188.0·firestore 178.8 — **전부 참** | 드리프트는 위 두 문장 + §3 트리에 `functions/api/` 부재 + 문서 3곳의 `feedback-validate` |
+
+### 실측 E — 성능 실체
+
+| 항목 | 실측 | 판정 |
+|---|---|---|
+| `perf:guard` 10예산 (`playtest-artifacts/perf-*/perf-summary.json`, 2026-09-21 10:11 UTC) | desktop: DCL 347/2000(17%) · FCP 596/2200(27%) · bootReady 113/2500(5%) · introVisible 113(5%) · introReady 466(19%) · startRun 276(11%) · firstInteraction 10/1400(1%) · marketOpen 37(3%). mobile: FCP 484/2500(19%), 나머지 1~16% | 예산은 4~100배 여유 — **벽돌 검출기**다. 하향은 "한 번도 없었던 회귀"의 검출과 러너 편차 빨강(FCP withheld 공백이 이미 문서화)을 맞바꾼다. 유지 |
+| 번들 상위 | game-data 491kB · index 476kB · vendor-react 192kB · firestore 183kB · motion 126kB(vite kB). §8-10과 반올림 내 일치 | 드리프트 없음 |
+| 유닛 벽시계 | 로컬 **310s**(4코어, 파일 병렬), CPU 합 627.8s. 단일 최대 **131.8s = `progression-diagnostic-cli.test.js`**(346소스 봉투 `--verify` = 1000시드 재생) = CPU의 21%; 아트 증빙 테스트 11~24s × 8; 파일당 tsx 부트 0.43~0.69s × 351. CI 410s는 느린 vCPU로 설명 | 지배 파일은 증빙 계약 자체(§19의 tripwire). 트랙 아님 |
+
+| 트랙 | 내용 | 얻는 것 | 비용 | 실패 시나리오 | 모델 |
+|---|---|---|---|---|---|
+| **M1 AI 프록시 입력 상한 + 죽은 함수 삭제** | `functions/api/ai-proxy.js`: ① `onRequestPost`에서 `Content-Length`와 `text()` 길이로 본문 ≤ **16,384B**(초과 413, Gemini fetch 0) ② `buildGeminiPayload`에 `clampText`: `name` 32 · `job` 24 · `location` 40 · `difficultyLabel` 16 · `buildProfile` ≤4개×24자 · `relics` ≤8개×24자 · story `context` 300 · `storyType` 24 ③ `:401`의 `details: error.message` 삭제(안정 코드만). `functions/api/feedback-validate.js` 삭제 + `tests/cf-functions.test.js:172-280` 6건 삭제 + 새 테스트(아래 표) | 익명 토큰 하나로 건당 4M자 입력 토큰을 태우던 비용 남용이 닫힌다(40req/60s는 크기를 안 본다). 배포 표면 1개 감소 | 함수 1 + 삭제 1 + 테스트 1파일 | `history`/`mapSnapshot`의 `stringifyCompact`를 건드리면 정상 컨텍스트가 잘린다 — 새 상한은 **보간되는 원시 문자열에만**. 본문 상한을 4KB처럼 잡으면 정상 요청(요약 700 + 스냅샷 + 지도 300)이 413 — 실측 정상 본문은 ~2~3KB이므로 16KB. `x-forwarded-for` 폴백·레이트리밋 키는 손대지 않는다(isolate 한계는 문서화된 설계) | opus |
+| **M2 `ASCEND` 묘비 보존** | `progressionHandlers.ts:117-123` 반환에 `grave: state.grave` 1줄(`RESET_GAME :33`과 대칭). `TRUE_ENDING` 경유 `ASCEND`도 같은 핸들러 | 승천이 회수 못 한 골드/아이템을 지우지 않는다. 공개 침공 문서(영구)와 로컬 묘비가 다시 같은 세계를 가리킨다 | 리듀서 1줄 + 테스트 행 2 | 반대 방향(승천 시 공개 문서까지 삭제)은 rules `delete: false`라 클라이언트가 못 한다 — 그래서 "지운다"는 선택지가 애초에 반쪽이다. `INITIAL_STATE` 대신 `state` 스프레드로 바꾸면 `enemy`/`currentEvent`까지 이월돼 §8-6 폴드가 깨진다 — **한 필드만** | opus |
+| **M3 문서 드리프트 + 래칫 하향** | CLAUDE.md `:34` 문장 삭제("`GameAction.payload: any`만 경계") · §3 트리에 `functions/api/ai-proxy.js` · §6 AI 이벤트에 "프록시 입력 상한(본문 16KB·필드별)" 1줄 · `docs/DEPLOYMENT.md:5,40`·`docs/QUICK_DEPLOY.md:6`에서 `feedback-validate` 제거 · `src/hooks/actionDeps.ts:62` "(현재 any)" → `GameEvent \| null` · `tests/debt-ratchet.test.js:179` `SYSTEMS_KOREAN_STRING_BASELINE` 122→**120** · `tasks/todo.md`·§25.1 | 문서가 다시 사실이 된다, 래칫 slack 0 | 문서 3 + 주석 1 + 테스트 상수 1 | 래칫을 "여유 있게" 두면 래칫이 아니다 — 실측값 그대로. §6 문장은 M1 머지 뒤 통합자가 실제 상한 숫자와 대조 | sonnet |
+
+**계약 테스트와 결함 주입** (주입이 안 걸리면 코드가 옳은 게 아니라 테스트가 안 보는 것이다 — §22)
+
+| 테스트 | 고정하는 것 | 주입 → red가 되는 단언과 이유 |
+|---|---|---|
+| `tests/cf-functions.test.js` (M1, 신규 4건) | ① 본문 1MB(`name` 1MB) → **413**, Gemini fetch 카운터 **0**, 쿼터 무관 ② 본문 < 16KB이되 `name` 5,000자·`relics` 50×100자·`buildProfile` 50×100자 → 캡처한 Gemini 프롬프트 길이 **< 2,500자**이고 `name`의 33번째 문자부터의 부분열이 프롬프트에 **없다** ③ story `context` 5,000자 → 프롬프트 < 1,500자 ④ Gemini 5xx 스텁 → 500 본문에 `details` 키 **없음** | ①에서 본문 검사 제거 → 오늘처럼 200 + fetch 1 → red. ②에서 `clampText` 제거 → 오늘 실측 프롬프트 = 본문 + ~740자라 5,000자 name만으로 5,740자 > 2,500 → red(공허하지 않은 이유: **오늘 코드가 1,000,739자를 200으로 통과시켰다**). ④ `details` 복원 → 키 존재 red. 기존 8건(ai-proxy)은 그대로 초록이어야 한다(정상 본문 127B는 상한 안) |
+| `tests/permanent-progress-copy.test.js` (M2, 행 추가) | `ASCEND`(ASCENSION, `grave: [{고요한 숲, 5000}]`) → `after.grave` deepEqual `before.grave`; `RESET_GAME` 같은 픽스처 → deepEqual(대칭 행); `TRUE_ENDING` 경유 `ASCEND`도 동일. 픽스처는 `graveUtils.buildGraveData` 모양(`loc/gold/items/timestamp`) — 가짜 모양 금지(§22) | `grave: state.grave` 줄 제거 → `after.grave === null` → deepEqual red. 오늘 실측이 정확히 `null`이므로 판별자는 `grave`이지 `gameState`가 아니다(`ASCEND`는 idle로 간다 — 그 단언은 공허) |
+| `tests/debt-ratchet.test.js` (M3) | (d) systems 상한 120 | `src/systems`에 한글 리터럴 1개 추가 → 121 > 120 red(오늘 상한 122면 초록 — 그 2건 slack이 하향 근거) |
+
+**증빙 델타 (먼저 적는다)** — 모델 입력(`data/*`·`progressionSimulator`·`explorationPacing`·`exploreFlow`·`_shared`)은 한 파일도 안 건드린다. `ASCEND`는 모델 경로에 없다(`endgameSettlement.ts:198`은 로그 문구뿐, `progressionSimulator`에 `ASCEND`/`pickPermanentPlayerState` 참조 0).
+
+| 증빙 | 예고 |
+|---|---|
+| `progression-diagnostic-v2` | **움직인다** — `sources` **346 유지**, sha 이동 정확히 **2**: `src/reducers/handlers/progressionHandlers.ts`(M2) · `src/hooks/actionDeps.ts`(M3 주석). `functions/**`·`tests/cf-functions.test.js`·`tests/permanent-progress-copy.test.js`·`tests/debt-ratchet.test.js`는 manifest 밖(9개 tests 엔트리는 loot/progression 계열 — 실측 목록 확인). `package.json`/락파일 불변(의존 추가 0). `reportHash f21dcf81…`·`v1Baseline 2573fa0f…` 불변 |
+| `relic-dot-multiplier`·`relic-event-chance`·`equipment-combat-power`·`relic-gold-multiplier`·`relic-hp-drain-atk`·`relic-drop-rate`·`content-reachability`·`event-reward-coherence`·`exploration-rhythm` | **바이트 동일** — 편집 집합 ∩ 바이트 핀 목록(§24 1-k) = ∅. `verify-observation-host.mjs`는 `/api/ai-proxy` **URL 문자열**만 쓰고 파일을 핀하지 않는다(실측) |
+| 모델 핀 3종 `ac79428c…`·`2573fa0f…`·`0818fb7a…` | **불변** |
+| `perf:guard` | 프로덕션 번들 무변경(M1은 `functions/`, M2는 리듀서 1줄) — 재측정만 |
+| 프로덕션 dist test-api 마커 | 0 유지(build:guard) |
+
+**순서·병렬성**: **M1 ∥ M2 ∥ M3** — 파일 교차 **0**(M1 = `functions/api/*` + `tests/cf-functions.test.js`, M2 = `progressionHandlers.ts` + `permanent-progress-copy.test.js`, M3 = CLAUDE.md·docs 2·`actionDeps.ts` 주석·`debt-ratchet.test.js`·todo). 통합 → `type-check · lint · unit · build:guard`(직렬) → `progression:diagnostic:write` **맨 마지막, 병행 금지**(§15.1) → 15종 verify → `perf:guard` → M3의 §6 문장을 M1 실제 상한과 대조 → §25.1 → PR → CI → merge. **트랙 프롬프트 필수 항목**: ① 계획 파일 경로 `/tmp/claude-0/-home-user-aetheria-roguelike/a8415c1b-4925-539c-8646-13225e01f454/scratchpad/wave21-plan.md` — 워크트리는 `origin/main`(`8be7eacd`)에서 갈라지므로 브랜치의 3커밋(`882d06ec`·`b2bafc23`·`fac8f5eb`, PR #48)이 **없다** ② 워크트리엔 `node_modules`가 없어 `tests/equipment-economy-audit.test.js` 심링크 케이스와 `build:guard`(`vite` ENOENT)가 죽는다 — 예상된 실패 ③ 편집 금지: §24 1-k 바이트 핀 목록 전부 + 모델 파일 ④ 주입은 코드 수정 **전에** red를 먼저 찍고 기록 ⑤ 잔존 worktree 3개(`git worktree list`)를 트랙 생성 전에 `remove --force`.
+
+**하지 않기로 한 것**
+1. **텔레메트리 sink 구현** — 목적지·프라이버시·비용은 저장소 밖 결정(Q6). 로컬 링버퍼 sink는 탐험마다 localStorage 쓰기를 추가한다.
+2. **perf 예산 하향** — 실측 1~27%. §15.1이 3회 실측으로 "유지"를 냈고, 이번에 10예산 전부를 다시 재도 같은 답이다. 예산은 벽돌 검출기로 둔다.
+3. **유닛 벽시계** — 131.8s 테스트는 증빙 계약 그 자체(346소스 봉투 검증). 유닛에서 빼면 `npm run verify`의 tripwire(§19)가 사라진다.
+4. **퀘스트 104 체크포인트 80** — 모델 핀 3종 + 1000시드 진단 재생성으로 "올바르게 라벨된 행" 하나를 산다. `beyond-anchors`는 결함이 아니라 정책이다.
+5. **class-(b) 1,807 재분류** — 분류기가 저장소에 없다. 정책 그대로.
+6. **e2e `event_pending`** — 관측 불가.
+7. **리더보드 `totalKills` 상한** — 지평의 12배 밖.
+8. **프록시 레이트리밋을 Durable Objects/KV로** — isolate 근사는 문서화된 설계, M1의 크기 상한이 비용 축을 닫는다.
+9. **승천 시 공개 묘비 문서 삭제** — rules `delete: false`, Admin SDK 필요.
+10. **관리자 live config 쓰기(SystemTab:310) 살리기** — rules test site 5가 "거부가 정답"으로 고정(§18 기각). 다시 올리지 말 것.
+11. 종결 항목 유지: `useFirebaseSync` 폴드 5중복 · `TokenQuotaManager` 재시도/거부 · `ControlPanel` if-체인 · `tier`/아트 identity · Hosting job · `GS.EVENT` 선행 세팅.
+
+**소유자에게 넘기는 질문**
+
+| 질문 | 선택지 | 비용 |
+|---|---|---|
+| Q6. 제품 텔레메트리 18종·AI 폴백 사유 7종의 **목적지** — 오늘은 전부 NOOP | (a) 현행 유지(기기 안 크래시 링버퍼만) (b) 로컬 링버퍼 sink + SystemTab 내보내기(백엔드 없음) (c) Cloudflare Function `/api/events` + KV/D1 → `productFunnel.mjs`가 읽는 서버 모양 | (a) 0 — "플레이어가 어디서 막혔나"를 운영이 볼 수 없다 (b) 트랙 1(sonnet) + 탐험마다 localStorage 쓰기 (c) 함수 1 + 스토리지 + 개인정보 고지 문구 검토 |
+| Q7. 프로덕션 Pages 프로젝트에 `/api/ai-proxy`가 `GEMINI_API_KEY`와 함께 **배포돼 있는가**, 클라이언트 `VITE_USE_AI_PROXY`는 무엇인가(`tasks/todo.md`의 09-10 공유본은 "AI proxy false · Functions 없는 정적 배포") | (a) 배포됨 → M1은 **비용 사고 방지** (b) 미배포 → M1은 **배포 전 하드닝** | M1은 답과 무관하게 진행한다. 답은 우선순위와 §25.1의 문구만 정한다 |
+| Q8. 카탈로그 퀘스트가 **계정당 1회**(승천 뒤 2회차에 퀘스트 수입 0, 현상수배만) | (a) 유지(계정 사다리) (b) `ASCEND`에서만 `claimedQuestIds` 리셋(사망은 유지) (c) `prestigeRank`별 원장 | (a) 0 (b) `permanentProgress` 분기 1 + 테스트, 승천 보상 경제 재검토 (c) 타입·마이그레이션(`DATA_VERSION`) |
+| Q4. Hosting 사이트 비활성화 · Q5. iOS `ios:sync` + Android 에뮬레이터 뒤로가기 8행(Codex 브리프 `docs/qa/CODEX_K3_BACK_BUTTON_QA.md`로 위임) | §24.1 그대로 | 변동 없음 |
+
+**게이트 베이스라인** (착수 시, head `fac8f5eb` = `8be7eacd` + 문서/픽스처 3): unit **5,168 / 5,168**(351파일, skip 0, 오늘 재실행 pass, 로컬 4코어 310s) · e2e 121(44 스펙) · 15종 verify ok · `npm run build` 12.0s, 프로덕션 dist test-api 마커 **0** · perf 10예산 전부 1~27%. **이 wave의 성공 기준**: 모델 핀 3종 불변 + 바이트 핀 9종 동일 + `progression-diagnostic-v2` sources 이동 정확히 2 + 주입 4종 전부 red→green(①은 fetch 카운터, ②는 프롬프트 길이, M2는 `grave`, M3는 121>120) + `feedback-validate` 참조가 `src/**`·`docs/**`·`functions/**`에서 0.
+
+### 25.1 Wave 21 실행 결과 (2026-09-21)
+
+**커밋**: `cad6aae8` §25 계획 · `cc2efd57` M3 · `907289ef` M1 · `7363e1cb` M2 · `8a118968` 증빙. 트랙 3개 worktree 병렬(M1·M2 opus / M3 sonnet), 파일 교차 0, 충돌 0(M3의 CLAUDE.md §2/§3/§6과 PR #48의 §4/§8-8은 영역이 다르다).
+
+**예고 델타 적중**: `progression-diagnostic-v2`만, 바뀐 키 `sources`뿐, 346 → 346, 이동 **정확히 2**(`progressionHandlers.ts`·`actionDeps.ts`). `reportHash`·`v1Baseline`·`package.json`/락파일 불변, 바이트 핀 9종 동일(M1은 `functions/`라 핀 밖). 모델 핀 3종 불변.
+
+**M1 실측 (통합 뒤 확인)**: 본문 상한은 바이트 정밀 — **16,384B → 200 · 16,385B → 413**, Gemini fetch 0. 실측 본문은 정상 145B · 실전 컨텍스트(히스토리 8·유물 6·빌드 4·지도) 1,095B — 상한은 실사용의 15배. 프롬프트 길이: 정상 745자, 테스트 ②(name 5,000 + 50×100 ×2 = 본문 15,917B) **1,383자**, ③(story context 5,000) 341자 — 수정 전에는 각각 26,137·5,050자였다. 주입 A(상한 제거)는 fetch 카운터로, B(`clampText` 항등)는 8,185·5,050자로, C(`details` 복원)는 키 존재로 각자 자기 테스트만 red. **정정 두 가지**: ① 주입 ④ red 문구의 `AIzaSy…`는 테스트 스텁이 상류 오류에 넣은 키 모양 문자열이다 — 실제 코드는 상류 **응답 본문**(`callGemini:314`)을 그대로 `details`로 전달했고 Gemini 오류 본문에 키 값이 실린다는 증거는 없다. 결함은 "상류 원문 무검열 전달"이고 테스트 ④가 그 클래스를 막는다 ② `details` 제거의 클라이언트 영향은 **0** — `aiService.callProxy`는 non-ok 응답의 본문을 읽지 않는다(`!ok → null` → `proxy-unavailable` 폴백). 413도 같은 경로로 폴백되며 쿼터 1건은 디스패치 시점에 이미 소모(D3, 불변). 부수 견고화: `relics`의 `null` 원소가 `r.name || r`에서 throw → 500이던 것이 `''`. **남긴 것(계획대로)**: `level`/`mp`/`gold`/`recentWinRate` 숫자형 보간은 원시 그대로 — 적대적 호출자에게는 문자열이지만 16KB 본문 상한이 묶는다(프롬프트 최악 ≈ 16~33KB). 필드 clamp 한 줄씩이면 닫히나 이 wave 범위 밖.
+
+**M2 실측**: 픽스처는 `buildGraveData(player, () => 0.9, () => 12_345)`가 낸 진짜 모양(`{loc, gold: 5000, item, items[2], timestamp}` — `item === items[0]`, §8-2의 두 모양 동시 기록)이고 다섯 번째 행이 그 모양 자체를 핀한다. **비공허 가드**: `ASCEND`에는 조기 `return state` 경로가 **5개**라 `assert.notEqual(ascended, base)` + `level === 1` 없이는 승천이 거부돼도 `grave` deepEqual이 공짜로 통과한다 — 계획에 없던 가드, 트랙이 넣었다. 수정 전 red는 예측대로 `+ null / - [{gold: 5000, …}]`(`RESET_GAME` 대칭 행은 수정 전에도 green — 결함을 판별하지 하네스를 판별하지 않는다). 계획 줄번호 오차(117-123 → 실제 119-125).
+
+**M3 실측**: CLAUDE.md:34 거짓 문장 교체 · §3 트리에 `functions/api/` · §6 프록시 상한 1줄 · `docs/DEPLOYMENT.md`·`QUICK_DEPLOY.md`의 `feedback-validate` 제거 · `actionDeps.ts:62` 주석 · 래칫 systems 122→120(주입 121 > 120 red). 추가 발견 `tasks/PROJECT_OVERVIEW.md:99`(같은 잔재) — 통합자가 제거. `tasks/todo.md:659`의 2026-09-04 Vercel 시대 기록은 역사라 그대로.
+
+**재감사 방법론 기록**: 첫 감사 축(타입·계약·상태 기계·복원·배포)이 소진된 뒤 다섯 축(플레이어 흐름·관측성·보안 경계·수치 부채·성능)을 실행으로 쟀고, 셋에서 "없음"이 측정으로 나왔다(흐름 벽돌 0 · rules 쓰기 지점 6 = F3 · tree-shaking 마커 0 · 문서 수치 16종 참 · perf 예산 1~27% · 유닛 지배 파일 = 증빙 계약). 결함 2건은 둘 다 **경계**(서버 입력 경계 · 리셋 두 경로의 비대칭)에서 나왔다 — 다음 감사도 "같은 일을 하는 두 경로가 같은 필드를 다루는가"(`RESET_GAME` vs `ASCEND` 류)와 "클라이언트가 자르는 값을 서버도 자르는가"(name 16 vs 프록시 무제한 류)를 먼저 볼 것.
+
+**소유자 항목**: Q4(Hosting 사이트 비활성화) · Q5(Codex 브리프 `docs/qa/CODEX_K3_BACK_BUTTON_QA.md`) · **Q6** 텔레메트리 목적지(18종 전부 NOOP) · **Q7** 프로덕션 Pages의 `/api/ai-proxy` 배포 여부(M1의 문구를 정한다) · **Q8** 카탈로그 퀘스트 계정당 1회.
+
+**Wave 22 후보**
+1. 프록시 숫자형 보간 4곳 clamp — 한 줄씩. 다음에 `ai-proxy.js`를 만질 때 끼운다(단독 wave 아님).
+2. Q6이 (b)/(c)면 텔레메트리 sink 트랙 · Q8이 (b)/(c)면 퀘스트 원장 트랙 — 소유자 답 종속.
+3. Codex 실기/시뮬레이터 결과가 오면 K3 런타임 검증 마감(§24.1) — 결과에 따라 트랙.
+4. 감사 축은 이제 둘 다 소진 — 다음 감사는 **플레이 데이터**(Q6 sink가 생기면)나 **기기 QA 결과**가 입력이어야 한다. 입력 없이 세 번째 정적 감사는 수확 체감.
+
+
+**게이트** (head `74730aa2`, 직렬 실행 12:09~12:29): type-check 0 · lint 0 · unit **5,170 / 5,170**(351파일, skip 0, Wave 20 대비 +2 = M1 −6+4 · M2 +4) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **121 / 121**(61 + 60) · perf desktop FCP 576ms / mobile FCP 556ms · tracked 증빙 verify 15종 ok.

@@ -118,6 +118,13 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         };
         return {
             ...INITIAL_STATE,
+            // 2026-09 Wave 21 M2: 회수하지 못한 묘비는 승천을 넘긴다 — `RESET_GAME`(:34)과 대칭.
+            //   여기가 비어 있던 동안 승천은 묘비(골드+아이템)를 조용히 지웠는데, 공개 침공
+            //   문서(`public/data/graves/{uid}`)는 rules `delete: false`라 그대로 남는다(§8-2).
+            //   즉 "남들은 내 묘비를 털 수 있는데 나는 회수할 수 없는" 상태가 됐다.
+            //   `...state` 스프레드로 바꾸지 말 것 — `enemy`/`currentEvent`까지 이월돼
+            //   §8-6의 복원 폴드가 전제하는 "런이 접혔다"가 깨진다. 보존은 이 한 필드다.
+            grave: state.grave,
             uid: state.uid,
             bootStage: 'ready',
             player: freshPlayer,

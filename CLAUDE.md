@@ -31,7 +31,7 @@
 > `expeditionLedger`·`equipmentUtils`)은 `: any` 0이다. **주입 경계는 `src/hooks/actionDeps.ts`가 소유한다** —
 > `GameActionDeps`/`CombatActionDeps`/`InventoryActionDeps`로 액션 팩토리 deps를 받고, 컴포넌트의 `actions` prop은
 > `Pick<GameActions, …>`로 필요한 액션만 받는다(`actions?: any` 금지). 세션 타입(`LogEntry`/`GameEvent`/`LiveConfig`)은
-> `src/types/session.ts`, reducers 핸들러는 `Item`/`Player`/`Quest` 도메인 타입을 쓴다(`GameAction.payload: any`만 경계로 남음).
+> `src/types/session.ts`, reducers 핸들러는 `Item`/`Player`/`Quest` 도메인 타입을 쓴다(`GameAction`은 아래 `ActionPayloadMap` 판별 유니온이라 `any` 경계가 없다).
 > systems 로그 문구·상태이상 라벨은 `MSG`(`MSG.STATUS_LABELS`/`MSG.DOT_LABELS`) 소유다).
 > **`src/types/*`의 인덱스 시그니처는 0개, `Relic.val`은 effect 판별 유니온**이다 —
 > `Player`/`PlayerStats`/`PlayerMeta`/`CombatFlags`(B3)에 이어 `Relic`/`Item`/`Monster`/`GameMap`/
@@ -132,10 +132,11 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 351 파일 / 5,168 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 351 파일 / 5,170 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
                       #   + e2e/ (Playwright 44 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
+functions/api/        # Cloudflare Pages Functions (ai-proxy.js)
 android/ ios/         # Capacitor 네이티브 프로젝트
 ```
 
@@ -254,6 +255,7 @@ useGameEngine (useReducer)
 - **온라인**: 위치/최근 전투 이력/플레이어 상태를 컨텍스트로 AI 호출 (9.5s timeout)
 - **오프라인/할당량 초과**: 사전 제작된 큐레이션 fallback 이벤트 풀에서 랜덤 선택
 - **일일 한도**: 50회 (TokenQuotaManager)
+- **프록시 입력 상한(본문 16KB · 필드별 clamp — 정확한 숫자는 `functions/api/ai-proxy.js`가 정본)**: 서버가 Gemini 프롬프트에 보간하는 문자열(이름/위치/직업/유물/빌드 프로필 등) 크기를 제한한다.
 - **쿼터는 "디스패치 비용 미터"다** (Wave 12 D3) — `dispatched(day) ≤ BALANCE.DAILY_AI_LIMIT`. 프록시에 실제로 보낸 요청을 세고, 응답을 채택했는지는 세지 않는다. 채택 기준으로 바꾸면 게이트(`canMakeAICall`)가 디스패치를 막는데 미터는 그 부분집합만 세게 되어 구조적으로 못 문다 — 서버(`functions/api/ai-proxy.js`)는 40req/60s 슬라이딩 윈도우일 뿐 일일 상한이 없으므로 이 미터가 **유일한 일일 비용 통제**다. `recordCall`은 요청 결정 한 곳에서만 일어나고(`dispatchProxyCall`), 응답 해석기는 `outcome` 5종(`adopted` + 미채택 4종)을 반환한다 — `dispatched = adopted + unadopted + unsettled`. 미채택 건수는 `TokenQuotaManager.getCallLedger()`로 관측한다.
 - **판정은 `src/platform/aiEventPolicy.ts` 소유** (Wave 11 C3) — "호출할지 · 어떤 `fallbackReason`으로 접을지 · 응답을 채택할지"는 React·firebase·fetch 없는 순수 전이다. `aiService.ts`에는 IO(fetch/AbortController/타이머/LatencyTracker/firebase 토큰)만 남는다. `fallbackReason` 7종(`mock-runtime`/`quota`/`proxy-disabled`/`proxy-unavailable`/`proxy-rejected`/`malformed-response`/`recent-duplicate`) 중 UI로 표면화되는 건 `quota` 하나뿐. **쿼터는 정책의 상태가 아니라 입력**이다 — `TokenQuotaManager`가 유일한 진실 원천이고 정책에는 `readQuota` 지연 호출로 전달한다(mock 런타임이 쿼터를 읽지 않는 동작 보존).
 - **준비 중은 별도 모드다** (Wave 19 K1) — `GS.EVENT_PENDING`. `isAiThinking`은 렌더 조건에서 빠지고 이동 가드(`moveActions`)에만 남았다 — 생산자가 `explore`와 `addStoryLog` **둘**이라 렌더 조건으로 쓰면 승리 내러티브 생성 중 열린 체인/캠프파이어 카드가 최대 9.5초 '준비 중'으로 덮였다. `TokenQuotaManager`는 읽기·쓰기 **fail-closed**다: `localStorage`가 깨지면(`JSON.parse` 실패 · Safari 쿠키 차단 `SecurityError` · 사설 모드 `QuotaExceededError`) `canMakeAICall()`이 false이고 `generateEvent`는 reject하지 않는다. 쓰기 실패 플래그(`quotaWriteHealthy`)는 모듈 스코프이고 성공한 쓰기로만 풀리는데 쓰기는 `recordCall`(= 호출 뒤)에서만 일어나므로, 깨진 세션은 **리로드까지 폴백 풀만** 쓴다 — 미터를 못 세면 안 보낸다(D3)의 의도된 저하이지 벽돌이 아니다. 잔여 상한은 **세션당 미계량 디스패치 ≤1**(깨짐 사건당): `recordCall`은 `dispatchProxyCall`이 반환값을 안 보므로 첫 호출 한 건은 쓰기 실패와 무관하게 나가고, 그 뒤 플래그가 게이트를 닫는다. Wave 20 §24가 재시도(A: 간헐 실패에서 미계량 디스패치가 호출 빈도만큼 반복 — D3의 정확한 위반)와 디스패치 거부(B: IO 계층이 `aiEventPolicy`의 결정을 뒤집어 진실 원천이 둘)를 실패 사례로 비교해 **현행 유지**로 닫았다 — 다시 후보에 올리지 말 것.
