@@ -1249,3 +1249,5 @@ restorableMode(mode):
 
 
 **게이트** (head `bddcb078` 코드 동일, 직렬 실행 07:38~07:58): type-check 0 · lint 0 · unit **5,157 / 5,157**(350파일, skip 0, Wave 18 대비 +27) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **121 / 121**(61 + 60, chromium-mobile) · perf desktop FCP 504ms / mobile FCP 504ms · tracked 증빙 verify 15종 ok.
+
+**Q1 해소 (2026-09-21 08:23 UTC, run 351)**: IAM 실측 — 프로젝트의 SA는 `firebase-adminsdk-fbsvc` 하나뿐이었고(`github-action-…` 없음), run 349 로그에 project_id 불일치 경고가 없어 secret이 그 SA의 키임을 확정했다. `Service Usage Consumer` + `Firebase Rules Admin` 부여 → #46 머지 푸시의 `deploy-rules`가 `released rules firestore.rules to cloud.firestore`. **G3 도입 후 첫 성공.** `deploy-prod`는 같은 run에서 여전히 429 — Q2 대기.
