@@ -1456,3 +1456,5 @@ L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets
 3. **머지 push의 `deploy.yml` run이 도입 이래 처음 초록인지** — L2의 유일한 실전 검증. 빨가면 그게 Wave 21의 첫 실측.
 4. 종결 항목(다시 올리지 말 것): `useFirebaseSync` combat 폴드 5중복(커버리지 0·게임에서 구별 불가) · `TokenQuotaManager` 재시도/거부(§24 판단표) · `ControlPanel` 렌더 if-체인 전수화 · `tier`/아트 identity(§19).
 
+
+**게이트** (head `4c23161e` 코드 동일, 직렬 실행 09:53~10:12): type-check 0 · lint 0 · unit **5,168 / 5,168**(351파일, skip 0, Wave 19 대비 +11 = L1 10 + L3 1) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **121 / 121**(61 + 60) · perf desktop FCP 596ms / mobile FCP 484ms · tracked 증빙 verify 15종 ok.
