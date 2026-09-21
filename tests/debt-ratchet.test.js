@@ -296,7 +296,7 @@ const AST_KOREAN_CEILINGS = {
     services: 32,
     systems: 120,
     types: 16,
-    utils: 2001,
+    utils: 1979,
 };
 
 test('debt-ratchet: src/** (src/data 제외) 디렉터리별 AST 한글 노드 개수는 각 상한을 넘지 않는다 (하락만 허용, StringLiteral·템플릿 조각·JsxText 포함)', () => {
