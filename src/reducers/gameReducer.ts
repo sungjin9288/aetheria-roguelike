@@ -15,6 +15,7 @@ import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
 import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
 import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
 import type { ActionOf, ActionType, GameAction } from './actionTypes';
+import type { GameMode } from './gameStates';
 
 /**
  * Game state shape — cycle 60 phase D Player 적용 + 2026-09 Wave 6 X4에서
@@ -34,7 +35,9 @@ export interface GameState {
     player: Player;
     // cycle 306: state.version dead 제거 — INITIAL_STATE 외 read/write 0건.
     //   Firebase sync는 매 save마다 CONSTANTS.DATA_VERSION 직접 기록.
-    gameState: string;
+    // 2026-09 Wave 20 L1: `GS`의 값 유니온이다 — 오타 비교(TS2367)와 잘못된
+    //   `SET_GAME_STATE` payload(TS2345)를 컴파일러가 잡는다.
+    gameState: GameMode;
     logs: LogEntry[];
     enemy: Monster | null;
     currentEvent: GameEvent | null;

@@ -777,4 +777,39 @@ export const MSG = {
     AI_EVENT_PREPARING_BLOCKED: '이야기를 준비하는 중입니다. 잠시만 기다려 주세요.',
     /** 생성 호출 자체가 실패했을 때(폴백도 못 고른 경우) 남기는 로그. */
     AI_EVENT_FAILED: '이야기를 불러오지 못했습니다. 탐험을 다시 시도해 주세요.',
+
+    // Wave 20 L1 — 터미널(`utils/commandParser.ts`)의 한국어 14자리.
+    //   §5 DO("한국어 로그 메시지는 MSG 객체에서")가 유일하게 비어 있던 표면이다.
+    //   파서가 `Record<GameMode, string | null>`로 전수화되면서 같은 객체를 다시
+    //   타이핑하게 됐으므로 함께 옮긴다.
+
+    // ── 모드별 차단 안내 (`blockedStateMessages`) ────────────────────────────
+    //   `event_pending`은 위 `AI_EVENT_PREPARING_BLOCKED`가 이미 소유한다.
+    CMD_BLOCKED_EVENT: '이벤트 진행 중입니다. 1, 2, 3 중 하나를 선택하세요.',
+    CMD_BLOCKED_JOB_CHANGE: '전직 선택 중입니다. 화면에서 직업을 선택하거나 닫아 주세요.',
+    CMD_BLOCKED_QUEST_BOARD: '퀘스트 보드가 열려 있습니다. 수락 또는 닫기를 먼저 완료하세요.',
+    CMD_BLOCKED_SHOP: '상점 이용 중입니다. 다른 행동은 상점을 닫은 뒤 진행하세요.',
+    CMD_BLOCKED_CRAFTING: '제작 화면이 열려 있습니다. 제작을 완료하거나 닫아 주세요.',
+    CMD_BLOCKED_ASCENSION: '환생 여부를 먼저 결정해야 합니다.',
+    CMD_BLOCKED_DEAD: '런이 종료되었습니다. 결과 화면에서 다시 시작하세요.',
+
+    // ── 명령 응답 ────────────────────────────────────────────────────────────
+    CMD_SKILL_CYCLED: '스킬 슬롯을 전환했습니다.',
+    /** `[상태]` 접두사는 `command-surface-contract`가 읽는다 — 바꾸지 말 것. */
+    //   인자 대부분이 `| undefined`인 것은 기존 템플릿 리터럴의 동작을 그대로
+    //   보존하기 위해서다(`Player`에서 전부 선택 필드다 — MSG의 기존 관례와 같다).
+    CMD_STATUS: (
+        level: number | undefined, name: string | undefined, job: string | undefined,
+        hp: number | undefined, maxHp: number, mp: number | undefined,
+        maxMp: number | undefined, gold: number | undefined, loc: string | undefined,
+    ) => (
+        `[상태] 레벨 ${level} ${name} (${job}) | 생명: ${hp}/${maxHp} | 기력: ${mp}/${maxMp} | 골드: ${gold} | 위치: ${loc}`
+    ),
+    CMD_INVENTORY: (count: number) => `[인벤토리] ${count}개 아이템`,
+    CMD_QUEST: (count: number) => `[퀘스트] ${count}개 진행 중`,
+    CMD_MAP: (visited: number, total: number, loc: string | undefined) => (
+        `[월드맵] 탐험 ${visited}/${total} | 현재 위치: ${loc} | 이동은 move <지역> 명령으로 진행`
+    ),
+    CMD_HELP: '이동: move <지역>\n행동: explore, rest, shop\n전투: attack(a), skill(s), nextskill(sn), escape(r)\n정보: status, inventory, quest, map',
+    CMD_UNKNOWN: (command: string) => `알 수 없는 명령어: ${command} (/help)`,
 };

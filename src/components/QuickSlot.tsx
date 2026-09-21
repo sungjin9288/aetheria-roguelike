@@ -1,6 +1,7 @@
 import { motion as Motion } from 'framer-motion';
 import { Zap, X } from 'lucide-react';
 import { GS } from '../reducers/gameStates';
+import type { GameMode } from '../reducers/gameStates';
 import { getConsumableCompactLabel, getConsumableDescription } from '../utils/consumablePresentation';
 import type { Item } from '../types/index.js';
 
@@ -9,7 +10,7 @@ import type { Item } from '../types/index.js';
  * props:
  *   slots: [item | null, item | null, item | null]
  *   onUse: (item: Item) => void
- *   gameState: string
+ *   gameState: GameMode
  *
  * cycle 399: onAssign / onUnassign dead props 정리 — QuickSlot 본체
  *   destructure 미사용 + 외부 pass 0건. QuickSlotAssigner는 별개 컴포넌트로 onAssign 사용.
@@ -19,7 +20,7 @@ import type { Item } from '../types/index.js';
 interface QuickSlotProps {
     slots: Array<Item | null>;
     onUse?: (item: Item, idx: number) => void;
-    gameState?: string;
+    gameState?: GameMode;
 }
 
 // cycle 581: slots default [null, null, null] 제거 — 1 production caller

@@ -13,6 +13,7 @@ import type { GameEvent, LeaderboardEntry, LiveConfig, LogEntry } from '../types
 import type { GraveEntry } from '../utils/graveUtils.js';
 import type { buildRunSummary } from '../utils/gameUtils.js';
 import type { PostCombatChoiceId } from '../utils/postCombatChoice.js';
+import type { GameMode } from './gameStates';
 
 export type UseCombatItemPayload = {
     itemId: string;
@@ -199,6 +200,13 @@ export type RunSummary = ReturnType<typeof buildRunSummary>;
 /** `LOAD_DATA` — 클라우드/로컬 스냅샷을 `migrateData()`로 정규화한 결과(+ QA 시드). */
 export interface LoadDataPayload {
     player: PlayerPatch;
+    /**
+     * 2026-09 Wave 20 L1: 여기만 `string`으로 남는다 — 이 값은 `migrateData`를 거친
+     * `JSON.parse` 결과(localStorage/Firestore)라 **신뢰 밖**이다. `GameMode`로
+     * 선언하면 캐스트 없는 거짓말이 되고, 손상된 세이브의 `'formation'`이 유니온으로
+     * 흘러 `restorableMode`의 `never`가 런타임에 거짓이 된다.
+     * 좁히기는 `LOAD_DATA` 핸들러가 `isGameMode`로 한다.
+     */
     gameState?: string;
     enemy?: Monster | null;
     grave?: GraveEntry | GraveEntry[] | null;
@@ -300,7 +308,7 @@ export interface ActionPayloadMap {
     [AT.SET_LEADERBOARD]: LeaderboardEntry[];
 
     // ── Game Flow ────────────────────────────────────────────────────────
-    [AT.SET_GAME_STATE]: string;
+    [AT.SET_GAME_STATE]: GameMode;
     [AT.SET_SYNC_STATUS]: string;
 
     // ── Entities ─────────────────────────────────────────────────────────

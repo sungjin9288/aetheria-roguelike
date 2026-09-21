@@ -35,6 +35,7 @@ import { normalizeProductEventJob } from '../../platform/productEvents';
 import { MSG } from '../../data/messages';
 import RelicIcon from '../icons/RelicIcon';
 import type { GameActions } from '../../hooks/actionDeps';
+import type { GameMode } from '../../reducers/gameStates';
 
 const SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
 
@@ -119,7 +120,7 @@ type SystemTabActions = Pick<GameActions,
  */
 export interface SystemTabRuntime {
     viewport?: string;
-    gameState?: string;
+    gameState?: GameMode;
     syncStatus?: string;
     isAiThinking?: boolean;
     onOpenMirror?: () => void;

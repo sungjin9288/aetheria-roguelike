@@ -13,6 +13,7 @@ import ClassIcon from '../icons/ClassIcon';
 import FocusPanelHeader from '../FocusPanelHeader';
 import PixelCharacterAvatar from '../PixelCharacterAvatar';
 import ClassJourneySummary from '../ClassJourneySummary';
+import type { GameMode } from '../../reducers/gameStates';
 
 interface JobChangeActions {
   jobChange: (jobName: string) => void;
@@ -21,7 +22,7 @@ interface JobChangeActions {
 interface JobChangePanelProps {
   player: Player;
   actions?: JobChangeActions;
-  setGameState?: (state: string) => void;
+  setGameState?: (state: GameMode) => void;
   onOpenArchiveConsole?: () => void;
 }
 

@@ -11,6 +11,7 @@ import { isSignatureItem } from '../data/signatureItems.js';
 import { getConsumableDescription } from '../utils/consumablePresentation';
 import type { GameActions } from '../hooks/actionDeps';
 import type { FullStats, Item, ItemType, Player } from '../types/index.js';
+import type { GameMode } from '../reducers/gameStates';
 
 /** ShopPanel이 실제로 호출하는 액션만 좁혀 받는다 (구매/판매/구매 영수증 해제). */
 type ShopPanelActions = Pick<GameActions, 'economyReceipt' | 'clearEconomyReceipt' | 'market'>;
@@ -32,7 +33,7 @@ interface ShopPanelProps {
     player: Player;
     actions?: ShopPanelActions;
     shopItems?: Item[];
-    setGameState?: (state: string) => void;
+    setGameState?: (state: GameMode) => void;
     stats?: FullStats | null;
     onOpenArchiveConsole?: (target?: string) => void;
 }

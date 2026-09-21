@@ -22,6 +22,7 @@ import type { MoveRecommendation, QuestTracker } from '../utils/adventureGuide';
 import ShopPanel from './ShopPanel';
 import EventPanel from './EventPanel';
 import { GS } from '../reducers/gameStates';
+import type { GameMode } from '../reducers/gameStates';
 import SignalBadge from './SignalBadge';
 import { getGravesAtLoc } from '../utils/graveUtils';
 import { getMapRequiredLevel, getNextMapTowardTarget } from '../utils/mapTopology';
@@ -53,11 +54,11 @@ interface ControlButton {
 }
 
 interface ControlPanelProps {
-  gameState?: string;
+  gameState?: GameMode;
   player: Player;
   enemy?: Monster | null;
   actions?: GameActions;
-  setGameState?: (state: string) => void;
+  setGameState?: (state: GameMode) => void;
   shopItems?: Item[];
   grave?: GameState['grave'];
   isAiThinking?: boolean;
@@ -246,7 +247,7 @@ interface MapSignalStripProps {
   player: Player;
   currentMap: GameMap;
   routes: MoveRecommendation[];
-  setGameState?: (state: string) => void;
+  setGameState?: (state: GameMode) => void;
   onOpenArchiveConsole?: (tab?: string) => void;
   isAiThinking?: boolean;
 }

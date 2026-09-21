@@ -2,6 +2,8 @@ import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import type { Player } from '../types/index.js';
 import type { GameActions } from '../hooks/actionDeps.js';
+import { GS } from '../reducers/gameStates';
+import type { GameMode } from '../reducers/gameStates';
 
 type CommandParserActions = Pick<
     GameActions,
@@ -9,24 +11,32 @@ type CommandParserActions = Pick<
     | 'openShop' | 'getFullStats' | 'setSideTab'
 >;
 
-export const parseCommand = (input: string, gameState: string, player: Player, actions: CommandParserActions) => {
+export const parseCommand = (input: string, gameState: GameMode, player: Player, actions: CommandParserActions) => {
   if (!input || !input.trim()) return;
 
   const tokens = input.trim().replace(/^\//, '').split(' ');
   const command = (tokens[0] || '').toLowerCase();
   const args = tokens.slice(1).join(' ');
   const readOnlyCommands = new Set(['help', 'h', '?', 'status', 'stat', '상태', 'i', 'inventory', 'inv', '인벤', 'quest', 'quests', '퀘스트', 'map', '지도']);
-  const blockedStateMessages: Record<string, string> = {
-    event: '이벤트 진행 중입니다. 1, 2, 3 중 하나를 선택하세요.',
-    // 2026-09 Wave 19 K1: 준비 중에는 아직 선택지가 없다 — 키가 없으면 명령이 각
-    //   액션 가드로 흘러가 문구가 제각각이 된다(explore/move/rest/shop이 서로 다른 에러).
-    event_pending: MSG.AI_EVENT_PREPARING_BLOCKED,
-    job_change: '전직 선택 중입니다. 화면에서 직업을 선택하거나 닫아 주세요.',
-    quest_board: '퀘스트 보드가 열려 있습니다. 수락 또는 닫기를 먼저 완료하세요.',
-    shop: '상점 이용 중입니다. 다른 행동은 상점을 닫은 뒤 진행하세요.',
-    crafting: '제작 화면이 열려 있습니다. 제작을 완료하거나 닫아 주세요.',
-    ascension: '환생 여부를 먼저 결정해야 합니다.',
-    dead: '런이 종료되었습니다. 결과 화면에서 다시 시작하세요.',
+  // 모드별 차단 안내 **전수 표**. `null`은 "이 모드에서는 파서가 막지 않는다"이고,
+  //   문자열은 그 모드의 안내다.
+  // 2026-09 Wave 19 K1: 준비 중(`event_pending`)에는 아직 선택지가 없다 — 키가 없으면
+  //   명령이 각 액션 가드로 흘러가 문구가 제각각이 된다(explore/move/rest/shop이
+  //   서로 다른 에러). Wave 20 L1: `Record<GameMode, …>`라 그 누락이 **TS2741**이 된다.
+  const blockedStateMessages: Record<GameMode, string | null> = {
+    [GS.EVENT]: MSG.CMD_BLOCKED_EVENT,
+    [GS.EVENT_PENDING]: MSG.AI_EVENT_PREPARING_BLOCKED,
+    [GS.JOB_CHANGE]: MSG.CMD_BLOCKED_JOB_CHANGE,
+    [GS.QUEST_BOARD]: MSG.CMD_BLOCKED_QUEST_BOARD,
+    [GS.SHOP]: MSG.CMD_BLOCKED_SHOP,
+    [GS.CRAFTING]: MSG.CMD_BLOCKED_CRAFTING,
+    [GS.ASCENSION]: MSG.CMD_BLOCKED_ASCENSION,
+    [GS.DEAD]: MSG.CMD_BLOCKED_DEAD,
+    // 파서가 막지 않는 모드 — 게이트는 각 액션이 소유한다(§5 DON'T).
+    [GS.IDLE]: null,
+    [GS.COMBAT]: null,
+    [GS.MOVING]: null,
+    [GS.TRUE_ENDING]: null,
   };
 
   const locationMap: Record<string, string> = {
@@ -43,7 +53,7 @@ export const parseCommand = (input: string, gameState: string, player: Player, a
     동굴: '어둠의 동굴'
   };
 
-  if (gameState === 'event' && (command === '1' || command === '2' || command === '3')) {
+  if (gameState === GS.EVENT && (command === '1' || command === '2' || command === '3')) {
     actions.handleEventChoice(Number(command) - 1);
     return;
   }
@@ -89,7 +99,7 @@ export const parseCommand = (input: string, gameState: string, player: Player, a
     case 'sn':
     case '스킬변경':
       actions.cycleSkill?.(1);
-      return '스킬 슬롯을 전환했습니다.';
+      return MSG.CMD_SKILL_CYCLED;
 
     case 'run':
     case 'escape':
@@ -111,32 +121,35 @@ export const parseCommand = (input: string, gameState: string, player: Player, a
     case '상태':
     case 'i': {
       const stats = actions.getFullStats();
-      return `[상태] 레벨 ${player.level} ${player.name} (${player.job}) | 생명: ${player.hp}/${stats.maxHp} | 기력: ${player.mp}/${player.maxMp} | 골드: ${player.gold} | 위치: ${player.loc}`;
+      return MSG.CMD_STATUS(
+        player.level, player.name, player.job,
+        player.hp, stats.maxHp, player.mp, player.maxMp, player.gold, player.loc,
+      );
     }
 
     case 'inventory':
     case 'inv':
     case '인벤':
       actions.setSideTab('inventory');
-      return `[인벤토리] ${(player.inv || []).length}개 아이템`;
+      return MSG.CMD_INVENTORY((player.inv || []).length);
 
     case 'quest':
     case 'quests':
     case '퀘스트':
       actions.setSideTab('quest');
-      return `[퀘스트] ${(player.quests || []).length}개 진행 중`;
+      return MSG.CMD_QUEST((player.quests || []).length);
 
     case 'map':
     case '지도': {
       const visitedCount = new Set([...(player.stats?.visitedMaps || []), player.loc]).size;
       const totalCount = Object.keys(DB.MAPS).length;
-      return `[월드맵] 탐험 ${visitedCount}/${totalCount} | 현재 위치: ${player.loc} | 이동은 move <지역> 명령으로 진행`;
+      return MSG.CMD_MAP(visitedCount, totalCount, player.loc);
     }
 
     case 'help':
     case 'h':
     case '?':
-      return `이동: move <지역>\n행동: explore, rest, shop\n전투: attack(a), skill(s), nextskill(sn), escape(r)\n정보: status, inventory, quest, map`;
+      return MSG.CMD_HELP;
 
     default:
       if (locationMap[command]) {
@@ -147,6 +160,6 @@ export const parseCommand = (input: string, gameState: string, player: Player, a
         actions.move(command);
         return;
       }
-      return `알 수 없는 명령어: ${command} (/help)`;
+      return MSG.CMD_UNKNOWN(command);
   }
 };

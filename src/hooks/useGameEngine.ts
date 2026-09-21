@@ -15,6 +15,7 @@ import type {
 import type { Player } from '../types';
 import { AT } from '../reducers/actionTypes';
 import { GS } from '../reducers/gameStates';
+import type { GameMode } from '../reducers/gameStates';
 import { calculateFullStats } from '../utils/statsCalculator';
 import { getRunBuildProfile } from '../utils/runProfileUtils';
 import { acknowledgeMilestoneStoryBeat, type MilestoneStoryBeatId } from '../utils/milestoneStory';
@@ -190,7 +191,7 @@ export const useGameEngine = () => {
         () => ({
             // UI State setters
             setSideTab: (val: string) => dispatch({ type: AT.SET_SIDE_TAB, payload: val }),
-            setGameState: (val: string) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
+            setGameState: (val: GameMode) => dispatch({ type: AT.SET_GAME_STATE, payload: val }),
             setShopItems: (val: GameState['shopItems']) => dispatch({ type: AT.SET_SHOP_ITEMS, payload: val }),
             acknowledgeMilestoneStoryBeat: (id: MilestoneStoryBeatId) => dispatch({
                 type: AT.SET_PLAYER,

@@ -11,6 +11,7 @@ import { getPreparedExpeditionFocusQuestIds, MAX_EXPEDITION_FOCUS_QUESTS } from 
 import { getProtocolDayKey } from '../../utils/protocolCycle.js';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { Player, Quest, QuestReward } from '../../types/index.js';
+import type { GameMode } from '../../reducers/gameStates';
 
 /** `getQuestBoardRecommendations()`의 반환 형태 — 이 파일의 카드 타입은 모두 여기서 인덱스 접근으로 뽑는다. */
 type QuestBoardRecommendations = ReturnType<typeof getQuestBoardRecommendations>;
@@ -229,7 +230,7 @@ type QuestBoardActions = Pick<GameActions,
 interface QuestBoardPanelProps {
     player: Player;
     actions?: QuestBoardActions;
-    setGameState?: (state: string) => void;
+    setGameState?: (state: GameMode) => void;
     onOpenArchiveConsole?: () => void;
 }
 

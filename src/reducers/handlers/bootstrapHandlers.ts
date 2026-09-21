@@ -1,6 +1,8 @@
 import { sanitizeQuickSlots } from './helpers';
 import type { GameState, HandlerMap } from '../gameReducer';
 import type { LoadDataPayload } from '../actionTypes';
+import { GS, isGameMode } from '../gameStates';
+import type { GameMode } from '../gameStates';
 import type { Player } from '../../types';
 import { MSG } from '../../data/messages';
 import { DB } from '../../data/db';
@@ -38,7 +40,12 @@ export const bootstrapActionMap = {
                 action.payload.player?.adventureRelicBonuses, action.payload.player?.maxHp,
             ) };
         const enemy = action.payload.enemy || null;
-        const requestedMode = action.payload.gameState || 'idle';
+        // 2026-09 Wave 20 L1: 봉투의 `gameState`는 `JSON.parse` 결과라 모드가 아닐 수도
+        //   있다. 예전의 `restorableMode` else-`true`는 `'formation'` 같은 미지의
+        //   문자열을 **그대로 복원**했다 — UI의 어느 트리도 그 값을 그리지 못하는,
+        //   아래 세 줄과 같은 종류의 조용한 벽돌이다. 술어로 좁혀 idle로 접는다.
+        const requestedRaw = action.payload.gameState || GS.IDLE;
+        const requestedMode: GameMode = isGameMode(requestedRaw) ? requestedRaw : GS.IDLE;
         // 2026-09 Wave 18: **세이브 봉투에 없는 동반 상태를 요구하는 모드는 복원될 수 없다.**
         //   봉투는 {player, gameState, enemy, grave, currentEvent, quickSlots} 여섯뿐이라
         //   그 모드로 복원하면 화면을 띄울 조건이 영원히 거짓이 된다. 기존의
@@ -59,14 +66,21 @@ export const bootstrapActionMap = {
         //     스피너가 달렸을 뿐 같은 벽돌이다. 그래서 `dead`처럼 **언제나** 접는다
         //     (`currentEvent`가 우연히 함께 와도 마찬가지 — 그 카드를 만든 호출은 이미 없다).
         //   새 모드를 봉투에 넣지 않은 채 영속시키려면 여기에 줄을 추가해야 한다.
-        const restorableMode = (mode: string) => {
-            if (mode === 'combat' && !enemy) return false;
-            if (mode === 'event' && !action.payload.currentEvent) return false;
-            if (mode === 'event_pending') return false;
-            if (mode === 'dead') return false;
-            return true;
+        //   Wave 20 L1: `switch`가 `GameMode` 전수라 **새 `GS` 멤버는 컴파일 에러**다
+        //   (`default`의 `never` 대입) — 예전 if-체인은 모르는 모드를 조용히 통과시켰다.
+        const restorableMode = (mode: GameMode): boolean => {
+            switch (mode) {
+                case GS.COMBAT: return Boolean(enemy);
+                case GS.EVENT: return Boolean(action.payload.currentEvent);
+                case GS.EVENT_PENDING: return false;
+                case GS.DEAD: return false;
+                case GS.IDLE: case GS.MOVING: case GS.SHOP: case GS.JOB_CHANGE:
+                case GS.QUEST_BOARD: case GS.CRAFTING: case GS.ASCENSION: case GS.TRUE_ENDING:
+                    return true;
+                default: { const exhaustive: never = mode; return exhaustive; }
+            }
         };
-        const gameState = restorableMode(requestedMode) ? requestedMode : 'idle';
+        const gameState: GameMode = restorableMode(requestedMode) ? requestedMode : GS.IDLE;
         // 두 조건이 읽는 값이 다르다 — 의도가 다르기 때문이다.
         //   첫 조건은 "세이브가 **어떤 상황에서** 찍혔는가"를 묻는다 → `requestedMode`.
         //     `dead` 폴드(아래 restorableMode) 뒤에 `gameState`로 읽으면 사망 세이브의

@@ -1,9 +1,10 @@
 import { getAvailableCommands } from '../utils/commandSuggestions';
 import type { Player } from '../types/index.js';
+import type { GameMode } from '../reducers/gameStates';
 
 interface CommandAutocompleteProps {
     input: string;
-    gameState: string;
+    gameState: GameMode;
     player?: Player | null;
     onSelect: (cmd: string) => void;
 }
