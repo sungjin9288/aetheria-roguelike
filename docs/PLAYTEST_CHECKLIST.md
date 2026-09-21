@@ -339,6 +339,8 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 
 ### Android
 
+> 하드웨어 뒤로가기 런타임 검증(Wave 19 K3)은 실기기가 없어 미실행이다 — 절차·기대표·기록 위치는 `docs/qa/CODEX_K3_BACK_BUTTON_QA.md`. 빌드는 **반드시** `android:sync` → `android:debug` 순서(sync가 `capacitor.plugins.json`을 만든다).
+
 - [ ] 뒤로가기/앱 전환 후 복귀가 안정적이다
 - [ ] 저사양 기기에서도 전투/탭 전환이 과도하게 끊기지 않는다
 - [ ] 시스템 뒤로가기 입력이 의도치 않게 앱 종료나 상태 초기화를 일으키지 않는다

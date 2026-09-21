@@ -134,7 +134,7 @@ test('첫 화면 상태/로그 표면은 압축된 읽기 쉬운 CSS 클래스�
     assert.ok(statusHtml.includes('aether-status-metric'));
 
     const terminalHtml = renderStatic(createElement(TerminalView, {
-        logs: [{ id: 'l1', type: 'system', text: '테스트' }], gameState: 'IDLE',
+        logs: [{ id: 'l1', type: 'system', text: '테스트' }], gameState: GS.IDLE,
         onCommand: () => {}, player: null, quickSlots: [], onQuickSlotUse: () => {},
     }));
     assert.ok(terminalHtml.includes('aether-log-panel'));

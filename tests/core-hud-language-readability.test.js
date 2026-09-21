@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { GS } from '../src/reducers/gameStates.js';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import path from 'node:path';
@@ -127,7 +128,7 @@ test('TerminalView: 로그 타입 뱃지는 개발자 약어가 아니라 뜻이
     const expectedLabels = ['전투', '치명타', '이야기', '안내', '획득', '이벤트', '주의', '오류', '전설'];
     const logs = types.map((type, i) => ({ id: `l${i}`, type, text: `로그 ${type}` }));
     const html = renderStatic(createElement(TerminalView, {
-        logs, gameState: 'IDLE', onCommand: () => {}, player: null, quickSlots: [], onQuickSlotUse: () => {},
+        logs, gameState: GS.IDLE, onCommand: () => {}, player: null, quickSlots: [], onQuickSlotUse: () => {},
     }));
 
     assert.ok(html.includes('data-testid="log-type-badge"'));
@@ -145,7 +146,7 @@ test('TerminalView: 이야기 흐름/처리 중 문구는 한국어를 쓴다', 
     ));
     logs.push({ id: 'loading', type: 'loading', text: '' });
     const html = renderStatic(createElement(TerminalView, {
-        logs, gameState: 'IDLE', onCommand: () => {}, player: null, quickSlots: [], onQuickSlotUse: () => {},
+        logs, gameState: GS.IDLE, onCommand: () => {}, player: null, quickSlots: [], onQuickSlotUse: () => {},
     }));
     assert.ok(html.includes('이야기 흐름'));
     assert.ok(html.includes('이야기를 이어가는 중'));
