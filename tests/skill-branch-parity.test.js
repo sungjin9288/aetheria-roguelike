@@ -166,7 +166,15 @@ test('Wave 4 O1 신규 분기 desc는 플레이어 어휘만 사용하고 dead o
 
 // --- 신규 분기 통합 검증 (엔진이 실제로 override를 읽는지) --------------------
 
-const runSkill = (job, skillName, choice, { enemyHp = 4000 } = {}) => {
+/**
+ * 피해 분산은 `rng()`가 정한다(`DAMAGE_BASE_RATIO 0.9 + rng() × DAMAGE_VARIANCE 0.2`, 즉 ×0.9~1.1).
+ * `performSkill`의 5번째 인자를 비우면 `Math.random`이 들어가 A/B 비교가 확률 사건이 된다 —
+ * 배율비 1.2(13.2/11.0)는 분산비 최댓값 1.222(1.1/0.9)보다 작아 B가 A를 넘는 꼬리가 실재한다
+ * (CI run 35599900179 attempt 1: `A 피해(1432)가 B(1446)보다 커야 함`). 그래서 고정 rng를 넣는다.
+ */
+const FIXED_RNG = () => 0.5;
+
+const runSkill = (job, skillName, choice, { enemyHp = 4000, rng = FIXED_RNG } = {}) => {
     const def = CLASSES[job];
     const base = def.skills.find((skill) => skill.name === skillName);
     const branch = def.skillBranches[skillName].find((entry) => entry.choice === choice);
@@ -178,7 +186,7 @@ const runSkill = (job, skillName, choice, { enemyHp = 4000 } = {}) => {
     };
     const enemy = { name: '검증용 몬스터', hp: enemyHp, maxHp: enemyHp, def: 0, guarding: false };
     const stats = { atk: 60, relics: [], activeSynergies: [], maxMp: 400 };
-    return CombatEngine.performSkill(player, enemy, stats, { ...base, ...branch.override });
+    return CombatEngine.performSkill(player, enemy, stats, { ...base, ...branch.override }, rng);
 };
 
 test('팔라딘 "성스러운 방패" — A는 더 두꺼운 보호, B는 같은 보호 + 상태이상 정화', () => {
