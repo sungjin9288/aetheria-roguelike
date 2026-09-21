@@ -306,6 +306,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 
 **테스트 방침**: 외부 mock 프레임워크 없이 Node.js built-in `test` 사용. Pure function이므로 별도 DI 없이 직접 import 후 assert.
 데이터 보존 가드는 소스 바이트 해시가 아니라 **값 해시**(`tests/helpers/dataHash.ts`)를 쓴다 — 타입 주석 변경에 재고정이 필요 없다.
+**테스트에서 엔진을 부를 때는 `rng`를 주입한다** (Wave 21.1) — `CombatEngine.attack`/`performSkill`/`enemyAttack`/`attemptEscape`/`processLoot`/`handleDefeat`는 `rng`를 생략하면 `Math.random`이고, 피해 분산 ×0.9~1.1 위에서 두 피해를 부등식으로 비교하면 확률 사건이다(`skill-branch-parity`가 배율비 1.2로 **0.43%/run** 붉었다 — PR #49 attempt 1, 로컬은 5,170/5,170). 상수 `() => 0.5`가 기본이고, proc 판정(`effectChance` 0.2~0.4 분기 5개)을 함께 보려면 시퀀스 rng를 쓴다(0.5는 그 다섯을 결정론적으로 실패시킨다). 전역 `Math.random` 스텁을 새로 만들지 말 것 — 기존 스텁 뒤에 같은 모양의 부등식이 3곳 숨어 있다. 루프 분포 테스트(`cycle-200-299:1989` crit 1,000회, 꼬리 2.79e-9)는 시드화가 오히려 엔진 draw 수 변경에 취약해 미시드로 둔다. 미시드 128곳의 전수 분류는 계획서 §25.2.
 
 **소스 정규식 가드(`readSrc()` + regex) 신규 추가 정책 (Wave 11 C4)**: `src/**`를 텍스트로
 읽어 정규식으로 매칭하는 새 가드는 **부재 불변식(absence invariant)에만** 허용된다 —

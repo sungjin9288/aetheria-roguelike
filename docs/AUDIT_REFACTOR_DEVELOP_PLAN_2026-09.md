@@ -1596,3 +1596,31 @@ L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets
 
 
 **게이트** (head `74730aa2`, 직렬 실행 12:09~12:29): type-check 0 · lint 0 · unit **5,170 / 5,170**(351파일, skip 0, Wave 20 대비 +2 = M1 −6+4 · M2 +4) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **121 / 121**(61 + 60) · perf desktop FCP 576ms / mobile FCP 556ms · tracked 증빙 verify 15종 ok.
+
+### 25.2 Wave 21.1 — flaky 테스트 경화 (2026-09-21, 베이스 `main` = `e742bc26` = PR #49 merge)
+
+**계기**: PR #49 CI run 35599900179 attempt 1 — 유닛 5,170 중 **1 실패**, `tests/skill-branch-parity.test.js:203` `A 피해(1432)가 B(1446)보다 커야 함`. 로컬 게이트는 같은 코드에서 5,170/5,170이었다. 로그는 프록시가 blob URL을 막아 `get_job_logs` 6,000줄 tail을 파일로 받아 `not ok` 1건을 찾았다 — 200줄 tail에는 없었다(TAP은 파일 완료 순이라 실패가 중간에 묻힌다. 다음에 CI만 붉으면 tail을 키워 `not ok`를 grep할 것).
+
+**원인**: `runSkill`이 `performSkill(player, enemy, stats, skill)`의 5번째 `rng`를 비워 `Math.random`이 들어갔다. 피해 = `atk × (DAMAGE_BASE_RATIO 0.9 + rng × DAMAGE_VARIANCE 0.2) × mult`(`CombatEngine.ts:74`)이고 A/B 배율비 13.2/11.0 = **1.2 < 분산비 최댓값 1.1/0.9 = 1.222**. 해석 0.417%(∫₀^(1/12)(0.1 − 1.2a)da) · 엔진 직접 200,000회 866 = **0.433%/run** · 고정 rng 0.5에서 A 1,584 / B 1,320.
+
+**수정**: `f0afd4cd` — `FIXED_RNG = () => 0.5`를 `runSkill` 옵션 기본값으로 넣고 5번째 인자로 전달. 단언은 불변. 허용된 재실행 1회는 초록이었고 그 head로 #49를 머지했다 — flake 수정을 #49에 얹지 않은 이유: CI 15분 재소모 + §25.1 게이트 기록과 "Wave 21 = 재감사 결함 2건"이라는 범위가 흐려진다. 분리 비용은 머지 사이클 하나.
+
+**같은 클래스 전수(worktree 에이전트, 통합자 재검산)**: `rng?`를 받는 엔진 진입점 8종(`attack`/`performSkill`/`enemyAttack`/`attemptEscape`/`processLoot`/`handleDefeat`/`calculateDamage`/`applyItemPrefix`)의 호출을 **최상위 인자 개수**로 세어 미시드만 뽑았다 — grep 출현 횟수는 시드된 호출까지 세므로 계획의 "11파일 80곳"은 틀렸다(`relic-dot-multiplier-coherence`·`relic-free-skill-coherence`는 이미 `sequenceRng`/`() => roll`을 넘긴다). **미시드 128곳 = (1) rng 무관 79 · (2) 구성상 결정론 46 · (3) rng 의존 3**.
+- (1)의 근거는 추측이 아니라 엔진 경로다: freeze/stun/blind/fear 조기 반환은 draw 전에 `return` · `calculateDamage`와 `mitigateByEnemyDef`의 `Math.max(1, …)`로 피해는 항상 ≥1 · `guardChance: 0, heavyChance: 0`이면 `roll < 0` 불가 · MP/쿨다운/tempBuff/phase/`spellStackCount`는 rng가 안 건드린다 · `handleDefeat` 21곳의 rng는 `buildGraveData` 안에서만 쓰이고 묘비 내용을 단언하는 테스트가 0건.
+- (2) 46곳: `random() < 1.0`은 항상 참, `random() < 0`은 항상 거짓(`effectChance` 0/1.0 · `evasion` 1.0 · `critChance` 0/1.0 · `freeSkillChance` 1) 또는 기존 전역 `Math.random` 스텁(`() => 0.99` · `seededRandom(seed)`)으로 결정론.
+- (3)-A `skill-branch-parity:216` 0.433% → **수정**(위).
+- (3)-B `cycle-200-299:1989` 미시드 `attack` 1,000회의 crit 수 50~170 — 엔진 실측 crit율 0.09925(`BALANCE.CRIT_CHANCE` 0.1), 이항 정확 꼬리 **2.79e-9/run**(P(X<50) 2.787e-9 + P(X>170) 3.955e-12; 통합자 재계산 2.791e-9 일치) → **미수정**.
+- (3)-C `relics:1323` 50샘플 합 비교 `stack3 > stack0 × 1.3` — 평균비 1.5994, 경험분포 200,000 trial 실패 0, 최저 관측 1.5184, 임계까지 ≈16σ → **미수정**.
+- B·C를 안 고친 이유: 둘 다 루프(1,000회·50회)라 상수 rng로는 못 고치고 시드 PRNG가 필요한데, **시드 고정본은 엔진이 draw를 하나 더 넣는 순간 수열이 밀려 무관한 변경에 깨진다** — 현행 `Math.random` 판은 안 깨진다. 2.79e-9는 5,170 스위트 3.6억 회당 1회. 고치는 쪽이 취약성을 늘린다.
+- 교차 실증(스크래치, 커밋 안 함): `Math.random`을 시드 PRNG로 바꾸는 프리로드로 10파일 × 120시드 = **1,200회 실패 0** · 상수 rng(0/0.9999/0.5)에서 깨지는 건 B(분포 테스트)뿐 — "보통의 `Math.random` 결과에 기대어 통과"하는 테스트는 없다 · 부등식 단언 13종 각 200,000회 반복 실패 0(하네스는 `critChance 0.5` 주입으로 99,644/200,000 검출 확인 — 공허 아님).
+
+**잠복 관찰 4건(수정 안 함 — 깨지지 않은 것은 손대지 않는다, 규칙으로 남긴다)**:
+1. `enemy-def-mitigation.test.js:75-76` · `cycle-100-199.test.js:385-386, 400-401`은 #49와 **같은 모양**(두 피해의 부등식)인데 전역 `Math.random = () => 0.99` 스텁 덕에 결정론이다 — 스텁을 걷으면 되살아난다. 새 테스트는 전역 변이 대신 `rng` 인자로 같은 값을 넣을 것.
+2. `classes.ts`의 `effectChance` 0.2~0.4 분기 override 5개(기절 배시 ×2 · 혼란 찌르기 · 기절의 빛 · 표식의 화살비)는 미시드로 proc를 단언하면 60~80% flaky다. `FIXED_RNG 0.5`는 이 5개를 **결정론적으로 실패**시키므로 커버리지를 추가할 때는 시퀀스 rng(분산 0.5 → proc 0.0)를 쓸 것.
+3. `handleDefeat` 미시드 21곳은 `buildGraveData`의 묘비 개수 동전던지기(`graveUtils.ts:60`, `random() < 0.5 ? 1 : 2`)와 셔플을 돌린다 — 안전한 유일한 이유는 묘비 내용을 단언하는 테스트가 0건이라서다. `grave.items.length`를 단언하는 순간 50% flaky.
+4. `combat-engine-core.test.js`의 `calculateDamage` 12건은 엔진이 아니라 파일 안의 결정론 미러 구현을 호출한다 — 진짜 `CombatEngine.calculateDamage` 회귀를 못 잡는다(범위 밖, Wave 22 후보 5).
+
+**엔진 rng 결정 지점(기록)**: `CombatEngine.ts:74` 분산 · `:75` 크리 · `:279` `handleDefeat` 폴백 `buildGraveData(…, Math.random, Date.now)` / `CombatEngine.actions.ts:103·115·323·335` blind/fear · `:135·419` `calculateDamage` 2 draw · `:270` `on_hit_freeze` · `:405` `free_skill` · `:493·506` effect/secondEffect 게이트 · `:657` 추가 행동 / `CombatEngine.enemyAI.ts:99` 회피 · `:142~175` phase statusEffect/저항 + phase2 임계 지터(`:155`) · `:200` 패턴 roll · `:214` `crit_block` · `:232` `absolute_reflect` · `:303~304` `statusOnHit` · `:327` 반격 · `:344~345` 히트 문구 선택 · `:352` 도주 / `CombatEngine.loot.ts:135~215` 드롭·접두사. `outcome`/`relics`/`status`/`combatItemTurn`은 `Math.random` 0건. 리듀서 경로는 `combatHandlers.ts:316/365`가 `Number.isFinite(seed)`가 아니면 state를 그대로 돌려주므로 테스트가 리듀서로 `Math.random`에 닿는 길은 없다.
+
+**Wave 22 후보 추가**: 5. `combat-engine-core.test.js`의 미러 12건을 실제 엔진 호출로 교체(`rng` 주입) — 관찰 4.
+
