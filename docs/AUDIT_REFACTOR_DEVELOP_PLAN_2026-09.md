@@ -1458,3 +1458,6 @@ L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets
 
 
 **게이트** (head `4c23161e` 코드 동일, 직렬 실행 09:53~10:12): type-check 0 · lint 0 · unit **5,168 / 5,168**(351파일, skip 0, Wave 19 대비 +11 = L1 10 + L3 1) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **121 / 121**(61 + 60) · perf desktop FCP 596ms / mobile FCP 484ms · tracked 증빙 verify 15종 ok.
+
+**L2 실전 검증 (2026-09-21 10:38 UTC, run 353 = PR #47 머지 push)**: `deploy.yml` 전체 **conclusion: success** — `build`(lint+build 50s) · `deploy-rules`(`Deploy firestore.rules` 22s) 둘 다 초록. 도입 이래(관측 가능한 run 259 이후 40건+ 연속 failure) **첫 초록 run**. Wave 21 후보 3은 이것으로 닫힌다.
+
