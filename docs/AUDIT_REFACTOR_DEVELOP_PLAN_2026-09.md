@@ -1624,3 +1624,4 @@ L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets
 
 **Wave 22 후보 추가**: 5. `combat-engine-core.test.js`의 미러 12건을 실제 엔진 호출로 교체(`rng` 주입) — 관찰 4.
 
+**게이트** (head `cc69f5f9`, 코드 = `f0afd4cd`): type-check 0 · lint 0 · unit **5,170 / 5,170**(351파일, skip 0, 케이스 수 불변 — 수정은 단언이 아니라 rng 주입) · build:guard ok(`npm run verify`, 13:21~13:27 직렬; e2e/perf는 코드 변경이 테스트 1파일뿐이라 CI에 맡긴다).
