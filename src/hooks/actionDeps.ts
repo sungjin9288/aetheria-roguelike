@@ -59,7 +59,7 @@ export interface GameActionDeps {
     grave: GameState['grave'];
     /**
      * 진행 중인 이벤트 카드. AI 생성/체인/정찰/보스 게이지/구조화 폴백이 모두 같은
-     * 슬롯을 쓰는 열린 모양이라 `GameState['currentEvent']`(현재 any)를 그대로 따른다 —
+     * 슬롯을 쓰는 열린 모양이라 `GameState['currentEvent']`(`GameEvent | null`)를 그대로 따른다 —
      * 닫는 작업은 reducer 핸들러(chain/bounded/fallback) 소유라 이 트랙 범위 밖이다.
      */
     currentEvent: GameState['currentEvent'];

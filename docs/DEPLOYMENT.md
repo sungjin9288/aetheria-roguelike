@@ -2,7 +2,9 @@
 
 > 웹 배포와 서버 함수는 Cloudflare Pages 및 `functions/api/`를 단일 source of truth로 사용합니다.
 > 이전 호스팅 설정과 legacy serverless 사본은 제거됐습니다.
-> 클라이언트가 호출하는 상대 경로(`/api/ai-proxy`, `/api/feedback-validate`)는 변경 없음.
+> 클라이언트가 호출하는 상대 경로(`/api/ai-proxy`)는 변경 없음. 피드백은 클라이언트가
+> Firestore에 `addDoc`으로 직접 쓰고(`src/components/tabs/SystemTab.tsx`) rules(Wave 14 F3)가
+> 검증한다 — 별도 함수를 호출하지 않는다.
 > Firebase 프로젝트 분리(dev/prod) 전략 자체는 호스팅 플랫폼과 무관하게 그대로 유지됩니다
 > (Firestore/Auth만 해당 — Firebase Hosting은 사용하지 않습니다, Wave 20 L2).
 > `.github/workflows/deploy.yml`이 GitHub Actions로 배포하는 것은 **Firestore rules뿐**입니다.
@@ -37,7 +39,7 @@ Web app (Cloudflare Pages, independent of the above):
 ┌─────────────────────────────────────────────────────────────┐
 │  Cloudflare Pages git integration                            │
 │  ↓ (own push trigger, not GitHub Actions)                    │
-│  Static build + functions/api/ (ai-proxy, feedback-validate) │
+│  Static build + functions/api/ (ai-proxy)                    │
 └─────────────────────────────────────────────────────────────┘
 ```
 

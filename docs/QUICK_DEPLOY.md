@@ -3,8 +3,9 @@
 Aetheria RPG를 친구들이 인터넷으로 접속해서 할 수 있도록 가장 쉽고 빠른 배포 방법을 안내합니다.
 
 > **2026-07 업데이트**: 배포 플랫폼이 Vercel에서 **Cloudflare Pages**로 이전되었습니다.
-> 클라이언트 코드는 변경 없이 `/api/ai-proxy`, `/api/feedback-validate` 상대 경로를 그대로 호출하며,
-> 서버 로직은 `functions/api/`의 Cloudflare Pages Functions가 담당합니다.
+> 클라이언트 코드는 변경 없이 `/api/ai-proxy` 상대 경로를 그대로 호출하며,
+> 서버 로직은 `functions/api/`의 Cloudflare Pages Functions가 담당합니다. 피드백은 별도
+> 함수 없이 클라이언트가 Firestore에 직접 쓰고(rules가 검증) 전송됩니다.
 
 ## 준비물
 - GitHub 계정 (또는 Cloudflare 계정)
