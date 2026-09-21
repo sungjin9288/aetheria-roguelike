@@ -1594,3 +1594,5 @@ L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets
 3. Codex 실기/시뮬레이터 결과가 오면 K3 런타임 검증 마감(§24.1) — 결과에 따라 트랙.
 4. 감사 축은 이제 둘 다 소진 — 다음 감사는 **플레이 데이터**(Q6 sink가 생기면)나 **기기 QA 결과**가 입력이어야 한다. 입력 없이 세 번째 정적 감사는 수확 체감.
 
+
+**게이트** (head `74730aa2`, 직렬 실행 12:09~12:29): type-check 0 · lint 0 · unit **5,170 / 5,170**(351파일, skip 0, Wave 20 대비 +2 = M1 −6+4 · M2 +4) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **121 / 121**(61 + 60) · perf desktop FCP 576ms / mobile FCP 556ms · tracked 증빙 verify 15종 ok.
