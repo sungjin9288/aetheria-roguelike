@@ -998,3 +998,78 @@ Playwright 크로미움 미설치 9건(`damage-feedback-restore` 4 · `monster-s
 **최종 게이트** (head `8008a4cd`, CI 동일 빌드): type-check 0 · lint 0 · unit **5,123 / 5,123**(skip 0, Wave 16 대비 +9) · build:guard ok · CI-env build ok · e2e **121 / 121**(61 + 60) · perf desktop ok(FCP 564ms) / mobile ok(FCP 436ms) · `release-complete-core` 증빙 **13종** verify 전부 ok.
 
 **남은 후보 (Wave 18)**: (1) **`tier`/아트 identity** — §18.1 발견 1·2, 여전히 소유자 정책 대기(“provenance 역사 1,065개 파일을 재핀해도 되는가”); (2) **`deploy-rules` 첫 실전 실행 결과** — §20 G3, develop 푸시라는 외부 사건 대기. 첫 실패는 “설계가 틀렸다”가 아니라 “IAM 역할이 hosting 전용이다”로 읽을 것; (3) **입력 표면 축의 나머지** — 이번 wave는 터미널만 전수했다. QA 시드 API(`useGameTestApi`)·네이티브 브릿지(`platformBack`/`lifecycleBridge`)·`GameRoot`의 다른 `open_*` 직접 전이가 같은 검사를 아직 안 받았다; (4) 퀘스트 104 `beyond-anchors` 공백(§19에서 기각, 재측정 없이 재논의 금지); (5) class-(b) 소스 가드 1,807건 — Wave 11 C4 정책대로 방치하되 **깨질 때 이관**이 실효 전략임이 Wave 16에서 확인됐다.
+
+---
+
+## 22. Wave 18 (2026-09-21, 베이스 `main` = `4d049ff6` = PR #44 merge commit)
+
+**핵심**: 이 wave는 **내가 틀린 것을 기록으로 남기는 wave**다. 착수 시 내가 보고한 결함("골드 100,000으로 죽으면 복원 후 150,000이 되어 죽는 것이 이득")은 **사실이 아니었고**, 그 오류를 쫓는 과정에서 더 심각한 진짜 결함(`event` 영구 벽돌)이 드러났다.
+
+### 정정 — 내가 합성한 상태로 결론을 냈다
+
+착수 근거는 이랬다: `LOAD_DATA`에 골드 100,000을 가진 player + `gameState: 'dead'`를 넣고 복원한 뒤 `lootGrave()`를 부르면 150,000이 된다. **실행했고 그 숫자가 나왔다.** 그런데 그 상태를 **프로덕션이 만들 수 있는지**를 확인하지 않았다.
+
+진짜 전투 사망 경로를 리듀서로 돌린 결과:
+
+| | 사망 직전 | 사망 **같은 전이** 직후 |
+|---|---:|---:|
+| `player.gold` | 100,000 | **200** (`CONSTANTS.START_GOLD`) |
+| `player.name` | `'용사'` | **`''`** |
+| `player.level` | 20 | 1 |
+| `player.loc` | 고요한 숲 | 시작의 마을 |
+| 묘비 | — | 50,000 |
+
+`CombatEngine.handleDefeat`(`CombatEngine.ts:272-331`)가 `dead`를 세우는 **바로 그 전이에서** 페널티를 전부 적용한다. 세이브에 들어가는 값은 200이고, 정상 흐름(사망→리셋→회수 = 50,200)과 "버그" 흐름(사망→저장→복원→회수 = 50,200)의 **차이는 0**이다. 골드 복제는 없다. `name === ''`이라 복원 직후 렌더는 `App.tsx:184`의 IntroScreen이지 ControlPanel도 아니다.
+
+프로덕션의 `GS.DEAD` 생산자는 `combatHandlers.ts:248` **하나뿐**이고 항상 player를 함께 리셋한다. 리셋 없이 `dead`를 만드는 곳은 `useGameTestApi`의 QA 시드 둘뿐이다(프로덕션에서 tree-shaken — Wave 17 감사가 빌드 산출물로 확인). **즉 내가 본 150,000은 도달 불가능한 합성 상태다.**
+
+이 오류의 이름은 이 문서에 이미 있다 — §21이 "UI가 막는다는 관찰은 경로가 막힌다는 증명이 아니다"라고 적었고, Wave 16·17이 모두 "도달 가능성을 실행으로 확인"을 규율로 세웠다. **나는 그 규율을 남의 작업에 적용하면서 내 작업에는 적용하지 않았다.** `LOAD_DATA`를 직접 호출해 상태를 만든 것은 `useGameTestApi`가 하는 일과 같고, 그건 플레이어 경로가 아니다.
+
+### 드러난 진짜 결함 — `event` 영구 벽돌 (웹/iOS)
+
+| 단계 | 실측 |
+|---|---|
+| `explore()`가 AI 호출 **전에** `GS.EVENT`를 세운다 | `exploreActions.ts:87`, AI 타임아웃 9.5s(`aiService.ts:64`) |
+| 저장 디바운스 500ms(`BALANCE.DEBOUNCE_SAVE_MS`), 봉투 6필드에 `isAiThinking` **없음** | `{player, gameState, enemy, grave, currentEvent, quickSlots}` |
+| 그 ~9초 창에서 찍힌 세이브를 복원 | `{gameState: 'event', currentEvent: null, isAiThinking: false, syncStatus: 'synced'}` |
+| 화면 | `ControlPanel:480` → `<EventPanel currentEvent={null}>` → `EventPanel:25` `if (!currentEvent) return null` — **아무것도 안 그린다** |
+| 탈출구 | `MobileGameLayout:74`의 `{!isPanelFocusState && …}`가 `event`에서 TerminalView를 **마운트하지 않아** 터미널 `1`(handleEventChoice)에 도달 불가. explore/move/rest는 각자 액션 가드. `syncStatus: 'synced'`라 재저장도 없다 |
+
+**웹/iOS에서 영구 벽돌**이다. 유일한 탈출구인 안드로이드 `platformBack`은 — Wave 18에서 따로 실측한 바 — **Capacitor 빌드에서 배선조차 없다**(`lifecycleBridge.ts:91`이 `toss`/`sandbox`에서만 `subscribeBack`을 걸고, `@capacitor/app` 의존이 없으며, 네이티브 `onBackPressed` 오버라이드도 0건). 즉 Toss 런타임만 빠져나온다.
+
+같은 모양이 `dead`에도 있다: `runSummary`는 전투 패배 순간에만 만들어지고 저장되지 않는데 `App.tsx:162`의 사망 화면 조건이 `GS.DEAD && runSummary`다. 게다가 `characterActions.start`는 `gameState`를 건드리지 않아 새 캐릭터를 만들어도 `dead`로 남는다(explore/shop/rest/quests가 전부 에러 로그를 내고 이동 버튼만 우연히 치유한다).
+
+### 수정 — 이미 있던 한 줄을 일반 규칙으로
+
+`LOAD_DATA`에는 `combat && !enemy → idle`이 이미 있었다. 그게 이 결함 종류의 **첫 사례**였다. 일반화한다:
+
+```
+restorableMode(mode):
+  combat → enemy 필요
+  event  → currentEvent 필요
+  dead   → 언제나 불가 (runSummary가 봉투에 없다)
+```
+
+봉투도 `DATA_VERSION`도 안 건드린다. 확인: 픽스처 7종은 전부 `gameState: 'idle'`, `migrateData`는 `gameState`를 읽지도 쓰지도 않고(타입 선언 1건이 전부), `save-compatibility-roundtrip`은 `state.gameState`를 단언하지 않는다.
+
+**두 조건이 서로 다른 값을 읽는다 — 의도가 다르고, 실측으로 갈랐다.**
+
+| 조건 | 읽는 값 | 이유 (실측) |
+|---|---|---|
+| 모험 유물 정리 | `requestedMode` | 폴드된 `gameState`로 읽으면 사망 세이브의 정리가 건너뛰어져 `adventureRelicBonuses: {killStackAtk: 0.5}`가 **남는다** |
+| 포식 보너스 종료 | `gameState`(폴드됨) | `requestedMode`로 바꾸면 `adventure-relic-lifetime.test.js`의 "불완전 전투 정리" 한 칸이 **깨진다** |
+
+### 내 테스트 하나가 공허참이었다
+
+결함 주입 3종 중 세 번째("첫 조건을 `gameState`로 되돌리기")가 **안 걸렸다**. 원인: 내 픽스처가 `adventureRelicBonuses: {maxHp, sources}`였는데 실제 모양은 `{devour: {phase, amount}, killStackAtk}`라(`adventureRelicBonuses.ts:4-31`) `normalizeAdventureRelicBonuses`가 이미 `undefined`로 만들어 양쪽이 같은 값을 보고 있었다. 진짜 모양으로 바꾸니 판별된다.
+
+**이것도 이 문서에 이름이 있다** — Wave 10의 §8-5 계약이 "공허참"이었고 Wave 11 C1이 그걸 찾았다. 공허한 단언은 초록이라서 눈에 안 띈다. **주입이 안 걸리면 그건 코드가 옳다는 뜻이 아니라 테스트가 안 보고 있다는 뜻이다** — 주입을 세 번 다 돌린 것이 그걸 잡았다.
+
+### 남은 것 (Wave 19 후보)
+
+1. **`GS.EVENT`를 AI 호출 전에 세우는 설계 자체.** 이번 수정은 복원 경계에서 접는 것이라 **증상을 막지만 창 자체는 남는다**(그 9초 동안 다른 저장/동기화가 무엇을 보는지는 별개 질문). `isAiThinking`을 봉투에 넣을지, 아니면 이벤트 준비 상태를 `GS.EVENT`가 아닌 별도 모드로 뺄지가 설계 선택이다.
+2. **J3 `ReturnBriefingCard` 전투 이탈** — 머지 전 감사가 보고했으나 이번 wave에서 **실측으로 확인하지 못했다**(워크플로의 해당 probe 에이전트가 세션 한도로 실패). 확인 전에는 결함으로 취급하지 않는다.
+3. **J4 Capacitor 뒤로가기 배선** — 실측 완료(위). 수리에 `@capacitor/app` **새 의존**이 필요하고 락파일·청크 검토가 따라온다. 의존 추가 여부가 설계 결정이다.
+4. `tier`/아트 identity(§18.1) · `deploy-rules` 첫 실행(§20) — 각각 소유자 결정·외부 사건 대기로 여전히 미결.
+
+**최종 게이트** (head `a8f43394`, CI 동일 빌드): type-check 0 · lint 0 · unit **5,130 / 5,130**(skip 0, Wave 17 대비 +7) · build:guard ok · CI-env build ok · e2e **121 / 121**(61 + 60) · perf desktop ok(FCP 540ms) / mobile ok(FCP 408ms) · `release-complete-core` 증빙 **13종** verify 전부 ok.
