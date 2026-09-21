@@ -164,7 +164,9 @@ npm run progression:simulate  # 성장 곡선 시뮬레이션 (밸런스 변경 
 # 모바일
 npm run cap:sync          # Capacitor sync (iOS + Android 동시)
 npm run android:sync      # Android sync
-npm run android:debug     # Debug APK
+npm run android:debug     # Debug APK — gradlew만 돈다. 플러그인 런타임 등록 목록(capacitor.plugins.json, gitignore)은
+                          #   `android:sync`가 생성하므로 새 플러그인·새 클론 뒤에는 반드시 android:sync → android:debug 순서.
+                          #   sync 없이 빌드하면 @capacitor/app이 컴파일은 되되 등록되지 않아 뒤로가기가 조용히 '앱 종료'로 되돌아간다(Wave 20 L4)
 npm run android:release   # Release APK
 npm run ios:sync          # iOS sync
 npm run ios:build:device  # iOS 기기 빌드
