@@ -1,4 +1,5 @@
 import { readInventoryActionsSource } from "./helpers/inventoryActionsSource.mjs";
+import { GS } from '../src/reducers/gameStates.js';
 import assert from 'node:assert/strict';
 import path from 'node:path';
 import test from 'node:test';
@@ -3941,7 +3942,7 @@ import { DB } from '../src/data/db.ts';
       let dispatched = null;
       const deps = {
           player: makePlayerFixture(),
-          gameState: 'intro',
+          gameState: GS.IDLE,
           dispatch: (action) => { dispatched = action; },
           addLog: () => {},
           addStoryLog: () => {},
@@ -3968,7 +3969,7 @@ import { DB } from '../src/data/db.ts';
       let dispatched = null;
       const deps = {
           player: makePlayerFixture(),
-          gameState: 'intro',
+          gameState: GS.IDLE,
           dispatch: (action) => { dispatched = action; },
           addLog: () => {}, addStoryLog: () => {},
           getFullStats: (p) => ({ maxHp: p.maxHp, maxMp: p.maxMp }),
