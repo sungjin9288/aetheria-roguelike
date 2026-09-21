@@ -1218,3 +1218,32 @@ restorableMode(mode):
 | Q3. `tier` provenance 재핀 | §19 "하지 않기로 한 것" 1 그대로 | 변동 없음 |
 
 **게이트 베이스라인** (착수 시): unit 348파일 / 5,130 케이스(§22), e2e 121, 13종 verify ok. 이 wave의 성공 기준: 모델 핀 3종 불변 + 주입 테스트 전부 red→green 확인 + `deploy.yml`은 손대지 않았으므로 여전히 빨갛다(그건 Q1·Q2의 답이 정한다).
+
+### 23.1 Wave 19 실행 결과 (2026-09-21)
+
+**커밋**: `a0ad5da7` §23 계획 · `a30156f5` K4 §8-8 실측 · `5be25d21` K3 · `3b1ee925` K2 · `1eaf200d` K1 · `17321609` 증빙 재생성. 트랙 3개는 worktree 병렬(K1 opus / K2·K3 sonnet), 충돌은 `messages.ts` 끝 블록 하나(둘 다 유지).
+
+**예고 델타 적중**: 이동은 `progression-diagnostic-v2.json` 하나, 바뀐 키는 `sources`뿐(편집 경로 17 + 고정 경로 `package.json`/`package-lock.json`), 346 → 346, `reportHash`·`v1Baseline` 불변. `content d2d37207…` · `exploration-rhythm 0818fb7a…` 불변, `relic-event-chance`·`equipment-combat-power` 바이트 동일 — K1이 금지 파일 5종을 한 바이트도 안 건드렸다는 증명. 모델 핀 3종 불변. `tests/progression-simulator.test.js`도 sources에 있다 — 25번째 소비처 수정이 핀에 잡혔다.
+
+**계획과 실측이 갈린 곳 — 셋, 전부 실행이 잡았다**
+
+| # | §23의 예측 | 실측 | 결론 |
+|---|---|---|---|
+| 1 | K1 소비처 24곳(`src/**` grep) | **25곳** — `tests/progression-simulator.test.js:376`이 AI 경로 카드를 `AT.SET_EVENT`에서 읽고 있었다. 전 suite를 돌려 잡았다 | 표는 `src/**`만 봤으니 구조적으로 못 보는 종류. `GS` 멤버 추가 시 `tests/**`도 grep(CLAUDE.md §5 DON'T에 적음) |
+| 2 | K1 "렌더 조건에서 `isAiThinking` 제거" → `finally { SET_AI_THINKING false }`도 불필요 | **`finally` 유지가 맞다.** 리듀서가 늦은 응답을 버릴 때(`!== EVENT_PENDING` → 동일 참조) `isAiThinking`이 true로 굳고, 그 플래그는 `moveActions`의 첫 가드라 **이동이 영구 차단**된다. 렌더는 모드만 보므로 한 번 더 내리는 것은 무해 | AI 경로 dispatch 열은 3개: `BEGIN_AI_EVENT \| RESOLVE_AI_EVENT \| SET_AI_THINKING(false)` |
+| 3 | K2 주입 2(거부 대신 idle 폴드) → "`enemy` 단언**만** red" | `accepted`·`gameState`가 먼저 red, **`enemy`는 red가 아니다** — `SET_GAME_STATE` 핸들러가 `...state`만 하고 `enemy`를 안 건드리므로 dispatch만 하는 결함에서는 `enemy` 동일성이 항상 유지된다 | `enemy` 단독 단언이었으면 **Wave 18의 공허참을 재현**했을 것이다. 테스트는 셋을 함께 단언한다 |
+
+**K1 결정 하나 더**: `TokenQuotaManager`의 쓰기 실패 플래그(`quotaWriteHealthy`)는 모듈 스코프이고 성공한 쓰기로만 풀리는데, 쓰기는 `recordCall`(호출 **뒤**)에서만 일어나므로 저장소가 깨진 세션은 리로드까지 AI 호출 0(폴백 풀만). D3 "미터를 못 세면 안 보낸다"의 의도된 저하이고 벽돌이 아니다 — `getCallLedger()`는 읽기 실패 시 `null`(기존 계약 — `syncToFirestore`가 "못 읽으면 쓰지 않는다"에 의존; 빈 레코드를 돌려줬으면 `used: 0` 문서를 올렸을 것이다).
+
+**K3 실측**: 패키지 **1개** 추가(락파일 +10줄), `cap sync android` 델타는 gradle 2파일 3줄, 플러그인은 자체 lazy chunk(~1KB × 2)로 분리되고 `index` 청크 델타 **+0.61KB**(배선 코드뿐) → `manualChunks` 규칙 불필요. 테스트의 "미접촉" 단언은 `doesNotThrow`가 아니라 **호출 카운터**다 — 브릿지 호출이 전부 try/catch로 감싸져 있어 throw만으로는 판별이 안 된다(에이전트가 스스로 잡음). **iOS는 이 환경에서 끝나지 않았다**: SPM(`Package.swift`)은 macOS에서만 sync된다 — 소유자가 `npm run ios:sync` 후 델타 커밋. 완료로 적지 않는다(§22 반복 금지).
+
+**K4**: CLAUDE.md §8-8에 실측 붙임. `deploy-rules` 실패 지점은 예고(`firebaserules.releases.update`)보다 **한 단계 앞**(`serviceusage.services.get` 403)이라 IAM은 두 역할을 함께 줘야 한다. `deploy-prod`는 run 259(2026-08-04)부터 연속 failure이고 실제 호스트는 Cloudflare Pages. Q1·Q2는 소유자 결정 대기 — `deploy.yml` 미접촉.
+
+**운영 발견**: worktree에는 `node_modules`가 없어(부모에서 해석) `tests/equipment-economy-audit.test.js`의 심링크 케이스가 worktree에서만 `ERR_MODULE_NOT_FOUND`로 죽고 `build:guard`(`vite` ENOENT)도 못 돈다 — 통합 트리에서는 둘 다 통과. 그리고 worktree 베이스는 로컬 HEAD가 아니라 `origin/main`이라 계획 커밋(§23)이 worktree에 없었다 — 계획 파일을 스크래치패드 경로로 따로 넘겼다. 다음 wave부터 트랙 프롬프트에 **계획 파일 경로를 직접** 넣을 것.
+
+**Wave 20 후보**
+1. `gameState: string` → `typeof GS[keyof typeof GS]`로 닫기 — 이번 wave가 24+1 소비처를 손으로 센 이유가 이것이다. `platformBack.ts:25`·`commandParser.ts:42`의 리터럴 `'event'`처럼 `GS` 밖 문자열 비교가 몇 곳인지가 선행 실측.
+2. Q1/Q2 결정 반영(`deploy.yml` 정리 + `docs/DEPLOYMENT.md` 101~107·120~123행의 Hosting 잔재).
+3. K3 iOS 델타(소유자 `ios:sync`) + Android 실기 뒤로가기 확인 — 단위 테스트가 못 보는 층.
+4. `tier`/아트 identity — 변동 없음(§19).
+
