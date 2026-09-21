@@ -765,4 +765,8 @@ export const MSG = {
     MAP_ROUTE_GATE_NOTE_UNGATED: (routeLevel: number) => (
         `이 지역 자체에는 레벨 잠금이 없지만, 여기로 이어지는 모든 길이 더 높은 지역을 지나 실제 진입은 레벨 ${routeLevel}부터입니다.`
     ),
+
+    // Wave 19 K2
+    /** `openArchive`가 허용 상태 화이트리스트 밖에서 거부할 때(예: 전투 중 복귀 브리핑 버튼). */
+    ARCHIVE_BLOCKED: '지금 상태에서는 아카이브를 열 수 없습니다.',
 };

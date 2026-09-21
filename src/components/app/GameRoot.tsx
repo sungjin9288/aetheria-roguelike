@@ -228,10 +228,11 @@ const GameRoot = ({
         return () => window.clearTimeout(timer);
     }, [phaseBanner]);
 
+    // Wave 19 K2: 아카이브 진입 게이트는 `openArchive` 액션이 소유한다(§8-3/Wave 17 I1과
+    //   같은 모양) — 여기서 두 dispatch를 직접 부르면 UI에만 있는 가드가 되어 버린다.
+    //   콘솔 모드 전환도 액션이 수락했을 때만 한다(거부됐는데 화면이 바뀌면 안 된다).
     const handleOpenArchiveTab = useCallback((tab: string) => {
-        engine.actions.setSideTab?.(tab);
-        engine.actions.setGameState?.(GS.IDLE);
-        setMobileConsoleMode('archive');
+        if (engine.actions.openArchive(tab)) setMobileConsoleMode('archive');
     }, [engine.actions]);
     const handleOpenEquipment = useCallback(() => {
         handleOpenArchiveTab('equipment');

@@ -35,6 +35,16 @@ const getStartingQuests = (player: Player) => {
     return [...quests, createQuestProgressState(firstStoryQuest, player)];
 };
 
+/**
+ * 아카이브(사이드탭) 진입 허용 상태 — 화이트리스트(2026-09 Wave 19 K2).
+ *
+ * 덧붙일 새 `GS` 멤버(예: `event_pending`)는 여기 없으므로 자동으로 거부된다 —
+ * `openShop`의 부정목록(`!== 'idle'`)과 달리 이 목록은 "알려진 안전한 상태"만 적는다.
+ */
+const ARCHIVE_OPEN_STATES: ReadonlySet<string> = new Set([
+    GS.IDLE, GS.MOVING, GS.SHOP, GS.JOB_CHANGE, GS.QUEST_BOARD, GS.CRAFTING,
+]);
+
 const hasPreviousRunExperience = (player: Player) => {
     const stats = player.stats || {};
     return [
@@ -155,6 +165,33 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             ] });
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.SHOP });
             return addLog('info', MSG.SHOP_ENTERED);
+        },
+
+        /**
+         * 아카이브(사이드탭) 진입 — 소유자는 이 액션 하나다(2026-09 Wave 19 K2).
+         *
+         * 이전에는 `GameRoot.handleOpenArchiveTab`과 `MobileGameLayout.openArchiveConsole`이
+         * **각자** `setSideTab` + `setGameState(GS.IDLE)` 2줄을 복제했고 공유 가드가 없었다.
+         * `ReturnBriefingCard`의 primary 버튼이 `claimableRewardCount > 0`일 때 그 경로로
+         * 도달했는데, 카드 게이트(`GameRoot`)에는 `gameState` 조건이 없다 — 전투 중 복원된
+         * 세이브(`lastSeenAt`가 6시간+ 전이면 모든 저장이 찍는 타임스탬프라 전투 중에도 뜬다)에서
+         * 그 버튼을 누르면 `enemy`가 남은 채 `gameState`만 idle로 넘어가 **도주 판정
+         * (ESCAPE_CHANCE) 없이 전투를 버릴 수** 있었다(Wave 17 I1 `openShop`과 같은 결함
+         * 클래스). `ReturnBriefingCard`는 손대지 않는다 — `lastSeenAt`은 모든 저장이 찍으므로
+         * 카드를 전투에서 숨기면 그 브리핑은 전투가 끝난 뒤 영구 소실된다. 가드는 카드가
+         * 아니라 이 액션이 소유한다.
+         *
+         * 허용 상태는 **화이트리스트**다(`ARCHIVE_OPEN_STATES`) — 미래에 `GS` 멤버가 늘어나도
+         * 이 함수가 그 멤버를 몰라야 자동으로 거부된다.
+         */
+        openArchive: (tab: string): boolean => {
+            if (!ARCHIVE_OPEN_STATES.has(gameState)) {
+                addLog('error', MSG.ARCHIVE_BLOCKED);
+                return false;
+            }
+            dispatch({ type: AT.SET_SIDE_TAB, payload: tab });
+            dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            return true;
         },
 
         rest: () => {
