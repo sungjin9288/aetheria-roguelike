@@ -74,11 +74,14 @@ test.describe('System settings design', () => {
         const titleSection = page.getByTestId('system-title-section');
         await titleSection.scrollIntoViewIfNeeded();
         await expect(titleSection).toContainText('지도 제작자');
+        await expect(titleSection).toContainText('생명 +25 · 기력 +15');
+        await expect(titleSection).not.toContainText(/\b(?:ATK|DEF|HP|MP|CRIT)\b/);
 
         const picker = page.getByTestId('system-title-picker');
         await picker.locator('summary').click();
         await page.getByTestId('system-title-wanderer').click();
         await expect(titleSection).toContainText('방랑자');
+        await expect(titleSection).toContainText('기력 +10 · 생명 +10');
         await expect(page.getByTestId('system-title-wanderer')).toHaveAttribute('aria-pressed', 'true');
     });
 

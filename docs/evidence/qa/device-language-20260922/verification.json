@@ -1,0 +1,81 @@
+{
+  "date": "2026-09-22",
+  "base": "3acff734798af6f3173bd7b97ac4598795323053",
+  "issue": "W22-P1-01",
+  "contract": {
+    "baseline": {
+      "failed": 4
+    },
+    "mutants": [
+      {
+        "name": "LV display restored",
+        "failed": 2,
+        "passed": 2
+      },
+      {
+        "name": "raw title label restored",
+        "failed": 2,
+        "passed": 2
+      }
+    ],
+    "restored": {
+      "passed": 4
+    },
+    "relatedTestsPassed": 26
+  },
+  "evidence": {
+    "trackedVerifyPassed": 15,
+    "sourceHashChanges": [
+      "src/components/ExpeditionDebriefCard.tsx",
+      "src/data/messages.ts",
+      "src/utils/gameUtils.ts"
+    ],
+    "allNonSourceFieldsUnchanged": true
+  },
+  "native": {
+    "os": "Android 16 / API 36 emulator",
+    "avd": "Aetheria_QA_API_36_20260904",
+    "package": "com.aetheria.roguelike.wave23qa",
+    "apkSha256": "69985fff43e0f885403086f7de8c48d7df97d45ec44f02fdcfd5fe888feeca82",
+    "method": "Existing QA fixtures, real DOM handlers through Playwright Android WebView, adb screencap, screenshot inspection",
+    "scenarios": [
+      "seedExpeditionDebriefScenario",
+      "seedSystemSettingsScenario -> select chain_master"
+    ],
+    "status": "passed"
+  },
+  "limitations": [
+    "Dedicated QA fixture save only; no production save or physical device proof.",
+    "Full Android back table and timed 5-minute / 2-minute routines not rerun.",
+    "iOS 27 glyph observation remains unresolved; this native text pass covers Android only."
+  ],
+  "fullGate": {
+    "command": "AETHERIA_RUN_PERF=1 npm run verify:full",
+    "exitCode": 0,
+    "unitFiles": 352,
+    "unitPassed": 5174,
+    "unitSkipped": 0,
+    "e2ePassed": [
+      61,
+      60
+    ],
+    "smoke": [
+      "desktop",
+      "mobile"
+    ],
+    "perf": [
+      "desktop",
+      "mobile"
+    ],
+    "warning": "desktop smoke browser.close timeout handled by existing runner",
+    "logSha256": "48d347588df8f1ccbd66bbae41225f996dccf773efc317310961480b90aab5ad"
+  },
+  "remote": "not run; owner B inputs pending",
+  "productionNative": {
+    "capSync": "passed",
+    "androidDebug": "passed",
+    "AppPlugin": true,
+    "apkSha256": "942e97120dfbb732684979f7cd1677e5c1eca0f6b996a7707664e047f5ba33a1",
+    "mobileDoctor": "SDK36/Java21 ready; Android release signing and Apple Distribution identity absent"
+  }
+}

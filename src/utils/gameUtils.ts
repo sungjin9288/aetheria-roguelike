@@ -16,6 +16,7 @@ import { MSG } from '../data/messages.js';
 import { getCurrentRunSnapshot } from './runProgress.js';
 import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { getSeasonArchive } from './seasonPassPresentation.js';
+import { formatSkillText } from './skillPresentation.js';
 import {
     countCompletedSignatureSets,
     countDiscoveredSignatures,
@@ -148,7 +149,7 @@ export const getTitlePassive = (token: TitleToken): TitlePassive | null => {
 /** 칭호 패시브 표시 문구 */
 export const getTitlePassiveLabel = (token: TitleToken) => {
     const passive = getTitlePassive(token);
-    return passive?.label || '패시브 없음';
+    return passive?.label ? formatSkillText(passive.label) : '패시브 없음';
 };
 
 /**

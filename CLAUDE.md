@@ -282,6 +282,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 ```
 
 **테스트 파일 위치**: `tests/*.test.js`
+- `device-language-contract.test.js` — 귀환 성장/생명과 칭호 효과의 실제 한글 렌더, 모든 칭호 수치 보존. 영문 레벨/원본 칭호 라벨 재주입을 각각 거부한다.
 - `grave-recovery.test.js` — 묘비 생성/복구
 - `run-profile-utils.test.js` — 빌드 분석 로직
 - `player-state-utils.test.js` — 상태 전환

@@ -1770,3 +1770,31 @@ Capacitor core/ios/cli와 iOS SPM을8.5.0으로 맞추고, SceneDelegate가 연�
 **통합 gate 첫 실행 / 예고 델타:** type-check·lint 통과, unit5,169/5,170. `progression-diagnostic-cli`의 `EVIDENCE_BYTE_MISMATCH`이며 기존 manifest와 실제 파일을 대조한 변경 경로는 `package-lock.json`·`package.json` 두 곳뿐이다. 인수인계 §4 순서(content→event-reward→equipment:combat-power→pacing verify→progression diagnostic writer→tracked verify15종)로 갱신한다. 예고: `progression-diagnostic-v2.json.sources`의 두 sha256만 변경, `reportHash`·`v1Baseline`·나머지 내용 불변. 핀 소스 파일은 편집하지 않는다.
 
 **최종 통합 검증:** 고정 순서 재생성의 실제 변경은 예고한 `sources` 두 sha256뿐이다. `reportHash`·`v1Baseline`을 포함한 나머지 JSON과 앞선 세 증빙은 불변이며 tracked verify15종 모두 통과했다. 이후 `AETHERIA_RUN_PERF=1 npm run verify:full` exit0: type-check/lint/build:guard 통과, unit5,170/5,170·skip0, E2E61+60=121/121, desktop/mobile smoke·perf 통과. FCP는 desktop320ms/mobile360ms, DCL은207ms/214.2ms였다. desktop smoke 종료의 `browser.close timeout` 경고는 runner가 처리했으며 함께 보존한다. 검증 후 변경은 결과 문서·receipt만이며 제품 코드는 동일하다. PR·원격 CI·merge는 미실행이다.
+
+
+### 26.4 W22-P1-01 한글 표시 후속 — 로컬, 2026-09-22
+
+B 입력 대기 동안 기기에서 관측한 귀환 카드 LV/EXP/HP와 설정 칭호 ATK 노출을 `codex/device-language-qa`(base `3acff734`)에서 수정한다. 귀환 문구는 MSG를 사용하고, 칭호 표시 공용 함수는 기존 `formatSkillText` 변환을 재사용한다. TITLE_PASSIVES의 값·라벨 원본과 바이트 핀 소스는 변경하지 않는다. Q6/Q8 결정·Q7 PROD_URL은 아직 미입력이며 Q4·PR·원격 CI·merge는 미실행이다.
+
+새 실제 렌더/데이터 보존 계약4개는 기존 코드에서4실패를 확인했고, 수정 후 관련26개 통과했다. 정상 코드에 영문 레벨 표시/원본 칭호 라벨 반환을 각각 주입하면 동일 계약이 exit1로 실패하고, 원복 후4개 통과했다. 귀환 레벨 상승/유지 두 분기와 칭호 현재효과/목록을 검사한다.
+
+**증빙 예고 델타:** source manifest 대조 결과 변경은 `ExpeditionDebriefCard.tsx`·`messages.ts`·`gameUtils.ts` 세 파일이다. 고정 순서 writer를 실행하며 `progression-diagnostic-v2.json.sources`의 해당3 sha256만 이동하고 reportHash·v1Baseline·나머지 내용은 불변이어야 한다. 전체 gate·화면·native 확인은 진행 중이다.
+
+
+**최종 실행 결과:** 고정 순서 재생성은 예고한 sources3 sha256만 변경했고 나머지 JSON과 다른 증빙은 불변이다. tracked verify15종 통과. `AETHERIA_RUN_PERF=1 npm run verify:full` exit0: type-check·lint·build:guard, unit5,174/5,174(352파일·skip0), E2E61+60=121, desktop/mobile smoke·perf 통과. FCP desktop304ms/mobile224ms, DCL218.1ms/182.7ms. desktop smoke 종료의 기존 `browser.close timeout` 경고를 보존한다. 별도 읽기 전용 검토에서 확정 결함 추가 없음; 이를 원격 승인으로 취급하지 않는다.
+
+| §7-A 항목 | 결과 | 근거·한계 |
+|---|---|---|
+| Android sync/debug/AppPlugin | 통과 | QA sync→debug→install 후 production cap:sync/debug 복원. production APK의 AppPlugin 등록 확인 |
+| W22-P1-01 네이티브 표시 | 통과 | Android API36, 별도 QA package. 기존 fixture의 귀환 및 실제 칭호 선택 DOM handler·텍스트·가로 폭·원본 캡처 검사 |
+| iOS/전체8행/시간 루틴 | 이번 변경 미실행 | iOS sync는 수행했지만 문구 화면은 Android만 검사. iOS27 glyph 관측·실기기 수용 미해결 |
+| 전체 gate | 로컬 통과 | unit5,174·E2E121·양쪽 smoke/perf·tracked15. PR/원격CI/merge 미실행 |
+
+| Q | 결과 | 남은 조건 |
+|---|---|---|
+| Q4 | 미실행 | Hosting 종료 명시 실행 지시 없음 |
+| Q6 | 미결정 | 로컬 링버퍼+내보내기 권고에 대한 소유자 확정 대기 |
+| Q7 | 미실행 | 소유자 PROD_URL 미제공; 인증값·헤더 원문 기록 없음 |
+| Q8 | 미결정 | 계정당1회 유지 권고에 대한 소유자 확정 대기 |
+
+증빙은 `docs/evidence/qa/device-language-20260922/`에 보존했다. QA APK는 별도 applicationId에만 설치했으며 운영 세이브는 조작하지 않았다. 테스트 종료 후 이 작업에서 기동한 emulator만 종료했다. `mobile:doctor`는 SDK36/Java21 정상, Android release keystore·iOS Apple Distribution 미구성을 보고했다. B→C 통합 순서와 No-Go는 유지한다.

@@ -364,6 +364,8 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 | P2 / W22-P2-02 | 전투 기록에 `숲의 정령이(가)` 노출 | 조사 placeholder 관측, 코드 수정 없음 |
 | 미검증 | 초심자의 3초 판단·정확한 5분/2분 수용, 기력 부족 기술, 자연 아이템 드롭 후 spotlight, 저사양/OEM 키보드, 실기기 | 자동 조작·캡처를 인간 시간 수용 또는 실기기 증거로 대체하지 않음 |
 
+**W22-P1-01 후속 (2026-09-22, 로컬):** 귀환 `레벨·경험 획득·생명`, 칭호 `공격력·방어력·기력·치명타`를 표시 계층에서 한글화했다. Android API36의 별도 QA package에서 귀환 및 칭호 변경 후 실제 텍스트·가로 잘림 검사와 캡처 확인 통과. [귀환 캡처](evidence/qa/device-language-20260922/android-debrief.png), [칭호 캡처](evidence/qa/device-language-20260922/android-title.png), [receipt](evidence/qa/device-language-20260922/verification.json). 계약4개 baseline red·결함 주입2종 red, 수정 후 full gate(unit5,174·E2E121·양쪽 smoke/perf) 통과. 전체 back8행·strict5분/2분·iOS 문구 화면·실기기는 이번에 재실행하지 않았다. 원격 통합 전이며 iOS27 glyph 관측 및 서명/제출 gate는 남아 있다.
+
 **iOS 보충**: `ios:sync`는 `Package.swift` 순증2줄만, unsigned device/simulator build 통과. QA bundle `com.aetheria.roguelike.wave22qa`는 기존 앱과 분리했다. iOS 26.5의 부팅·60초 생존과 수집 로그에서 플러그인 오류 일치 항목 0을 확인했다. OS 로그에는 XPC/TextInput 메시지와 WebP decode 오류 1건이 있어 "로그 오류 전체 0"으로 보고하지 않는다. 확인한 제작 화면의 아이템 그림은 렌더됐으며 decode 오류의 자산 경로는 미확인이다. iOS 27.0 P0는 별도 호환성 결함으로 남긴다.
 
 **검증 한계·하네스 정정**: 첫 AVD 저장 snapshot은 user가 BOOTING에 머물러 cold boot(`-no-snapshot-load`, wipe 없음) 후 실행했다. 초기 back 관측 listener 누적 카운터는 전송 횟수 증거에서 제외하고 실제 화면/Activity 전이를 사용했다. 임시 재료 하네스의 제작 비용 가정 500을 실제 미리보기100으로 정정하고 기존 QA seed로 다시 검사했으며, 저장 키 삭제+reload는 unload 저장으로 복원되어 초기화 방법으로 사용하지 않았다. 앱 결함으로 집계하지 않는다.
