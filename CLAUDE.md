@@ -17,7 +17,7 @@
 | Icons | Lucide React | 0.563.0 |
 | Charts | Chart.js + react-chartjs-2 | 4.5.1 / 5.3.1 |
 | Backend | Firebase (Auth + Firestore) | 12.8.0 |
-| Mobile | Capacitor | 8.1.0 |
+| Mobile | Capacitor | core/ios/cli 8.5.0 · Android 8.3.1 · App 8.1.1 |
 | Language | **TypeScript** (`.ts`/`.tsx`, `strict: true`) | 5.x |
 | Test | Node.js built-in `test` (실행은 `tsx` 로더) | — |
 | Linter | ESLint | 9.39.1 |
@@ -174,6 +174,8 @@ npm run ios:build:device  # iOS 기기 빌드
 npm run ios:archive       # App Store 아카이브
 npm run mobile:doctor     # Capacitor 환경 점검
 ```
+
+**iOS scene:** Xcode 27 SDK 대응은 `SceneDelegate`가 단일 window/bridge를 생성하고 scene proxy로 URL·userActivity를 전달하는 경로다. Main storyboard 자동 생성과 중복시키지 않는다. native lifecycle 변경 시 [iOS scene QA](docs/qa/IOS_SCENE_LIFECYCLE_QA.md)의 결함 주입·양쪽 simulator 재실행 검증을 유지한다.
 
 ---
 

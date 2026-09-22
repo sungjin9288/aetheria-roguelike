@@ -1740,3 +1740,33 @@ PR #52는 merge commit `78fa259d2fc560ea73c58c8d7b3c5f0236d26db2`로 통합됐�
 증빙은 `docs/evidence/qa/local-product-events-20260922/`에 있다. Q4 미실행, Q7 URL 미제공. Android release keystore와 Apple Distribution identity 부재·실기기/서명/업로드 조건으로 No-Go를 유지한다. C의 로컬 두 commit은 아직 원격 미통합이다. PR/CI/merge는 해당 원격 revision의 기록을 정본으로 갱신한다.
 
 **문서 마감:** Android/iOS smoke 안내·한글 표기 관련46tests 통과, source manifest 전체 해시 일치·`git diff --check` 통과.
+
+### 26.3 iOS27 시작 P0 독립 수정 — 로컬, 2026-09-22
+
+A는 #52 merge `78fa259d`로 닫혔다. B 입력 대기 동안 정책 선택과 독립적인 W22-P0-01만 `codex/ios27-lifecycle` worktree에서 수정했다. B의 준비 기록 §26.2는 `codex/wave23-owner-decisions`에 미커밋 상태로 보존하며 단계별 원격 통합 순서는 유지한다.
+
+Capacitor core/ios/cli와 iOS SPM을8.5.0으로 맞추고, SceneDelegate가 연결마다 단일 window/bridge를 생성한다. manifest의 Main storyboard 자동 생성은 제거했다. AppPlugin8.1.1·Android8.3.1은 유지했으며 peer 범위는 호환되지만 sync의 버전 불일치 경고는 남는다. `src/**`와 바이트 핀 소스는 변경하지 않았다.
+
+| §7-A 항목 | 결과 | 근거·한계 |
+|---|---|---|
+| Android AppPlugin / hardware back | 통과 | 새 core/CLI로 sync→debug. QA package에서 crafting→idle, idle/combat→launcher3경로. 8행 전체 재실행은 아님 |
+| iOS sync·build·부팅 | 로컬 통과 | core/ios/cli·SPM8.5.0 + native scene 등록. production unsigned device build 및 동일 simulator binary의26.5/27 시작·복귀·60초·재실행 통과 |
+| 신규5분·재료2분 루틴 | 전체 재실행 미실행 | 이번 범위는 제작5,000→4,900 + 일반저장/장비·인벤토리·위치 복원. strict 시간·실기기 검증 대체 아님 |
+| 기기 관측 | 잔여 있음 | iOS27 foreground 캡처의 일부 glyph 누락. 재진입 캡처 별도 보존, 원인 미확인. 기존 W22 P1/P2 미수정 |
+| 통합 gate / 원격 | 로컬 통과 / 원격 미실행 | `AETHERIA_RUN_PERF=1 npm run verify:full`: unit 5,170/5,170, E2E 121/121, 양쪽 smoke·perf 통과. B 의사결정 전 C PR/merge 미실행 |
+
+| Q | 결과 | 남은 조건 |
+|---|---|---|
+| Q4 | 미실행 | Hosting disable의 명시 실행 승인 없음 |
+| Q6 | 미결정 | NOOP / 로컬 링버퍼+내보내기 / 서버 수집 중 소유자 선택 |
+| Q7 | 미실행 | 소유자 PROD_URL 미제공. 과거 URL 추정·인증정보 기록 없음 |
+| Q8 | 미결정 | 계정1회 유지 / ASCEND reset / rank 원장 중 소유자 선택 |
+
+계약 판별력: 창 생성이 없는 proxy-only SceneDelegate mutant에 최종 manifest를 적용한 별도 bundle은 실제 WebView가 없어 FAIL. 정상 binary는 각OS에서6checks PASS. 초기 inspector import·페이지발견·연결 재사용 오류와 Android System UI ANR은 검사/환경 오류로 구분했다. UIKit scene configuration과 inspector 조회가 얽힌 초기 검은 화면만으로 원인을 단정하지 않는다. 최종 exact-PID RPC 조회로 프로세스가 바뀐 강제재실행까지 확인했다.
+
+관측된 document pause→resume·App false→true·visibility hidden→visible은 실제 Settings 전환에서 수집했다. 일반 저장이 먼저 완료된 뒤 전환했으므로 background 즉시 flush 증거는 아니다. custom scheme/Associated Domains가 없어 실제 OS deep/universal-link 수신은 해당 없음이며 proxy 코드 검토만 수행했다. 스크립트·절차는 `docs/qa/IOS_SCENE_LIFECYCLE_QA.md`, 원본 receipt·미편집 캡처·해시는 `docs/evidence/qa/ios-scene-lifecycle-20260922/`.
+
+
+**통합 gate 첫 실행 / 예고 델타:** type-check·lint 통과, unit5,169/5,170. `progression-diagnostic-cli`의 `EVIDENCE_BYTE_MISMATCH`이며 기존 manifest와 실제 파일을 대조한 변경 경로는 `package-lock.json`·`package.json` 두 곳뿐이다. 인수인계 §4 순서(content→event-reward→equipment:combat-power→pacing verify→progression diagnostic writer→tracked verify15종)로 갱신한다. 예고: `progression-diagnostic-v2.json.sources`의 두 sha256만 변경, `reportHash`·`v1Baseline`·나머지 내용 불변. 핀 소스 파일은 편집하지 않는다.
+
+**최종 통합 검증:** 고정 순서 재생성의 실제 변경은 예고한 `sources` 두 sha256뿐이다. `reportHash`·`v1Baseline`을 포함한 나머지 JSON과 앞선 세 증빙은 불변이며 tracked verify15종 모두 통과했다. 이후 `AETHERIA_RUN_PERF=1 npm run verify:full` exit0: type-check/lint/build:guard 통과, unit5,170/5,170·skip0, E2E61+60=121/121, desktop/mobile smoke·perf 통과. FCP는 desktop320ms/mobile360ms, DCL은207ms/214.2ms였다. desktop smoke 종료의 `browser.close timeout` 경고는 runner가 처리했으며 함께 보존한다. 검증 후 변경은 결과 문서·receipt만이며 제품 코드는 동일하다. PR·원격 CI·merge는 미실행이다.

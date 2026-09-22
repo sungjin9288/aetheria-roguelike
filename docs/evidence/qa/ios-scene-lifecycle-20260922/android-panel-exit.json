@@ -1,0 +1,17 @@
+{
+  "at": "2026-09-22T04:37:42.147Z",
+  "package": "com.aetheria.roguelike.wave23qa",
+  "checks": [
+    {
+      "state": "crafting",
+      "actual": "idle; app remains active",
+      "passed": true
+    },
+    {
+      "state": "idle",
+      "actual": "activity exits to launcher",
+      "passed": true
+    }
+  ],
+  "status": "passed"
+}

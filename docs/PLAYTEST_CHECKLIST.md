@@ -443,3 +443,12 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 메모:
 - 
 ```
+
+
+### iOS27 P0 후속 로컬 검증 (2026-09-22)
+
+§11의 W22-P0-01을 입력으로 한 별도 native 변경이다. A의 관측 이력은 유지한다. core/ios/cli·SPM8.5.0 및 SceneDelegate 단일 window 경로로 iOS26.5/27 각각 시작·제작저장·실제 앱 전환·복귀입력·60초·강제재실행6checks 통과. 창 생성 제거 mutant FAIL. production unsigned device build 통과. Android는 AppPlugin과 crafting/idle/combat back3경로 회귀만 통과했으며8행 전체와 strict5분/2분은 다시 실행하지 않았다.
+
+P0 수정은 로컬이며 PR/CI/merge 전이다. iOS27 캡처 일부 glyph 누락 관측은 원인 미확인으로 남긴다. 일반 저장 복원은 background 즉시 flush·실기기 검증을 대체하지 않는다. 증거: [scene QA](qa/IOS_SCENE_LIFECYCLE_QA.md), [receipt](evidence/qa/ios-scene-lifecycle-20260922/ios27.json). B 결정·기존 P1·서명·스토어 gate가 남아 No-Go다.
+
+로컬 통합 검증: tracked verify15종 및 `AETHERIA_RUN_PERF=1 npm run verify:full` exit0(unit5,170/5,170·E2E121/121·양쪽 smoke/perf). 최초 증빙 해시 불일치는 package 두 파일의 sources sha256만 재생성해 해소했으며 진단 결과/기준은 불변이다. desktop smoke의 종료 timeout 경고는 보존한다.

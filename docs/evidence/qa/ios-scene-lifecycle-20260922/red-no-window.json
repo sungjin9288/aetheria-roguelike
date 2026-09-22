@@ -1,0 +1,26 @@
+{
+  "timestamp": "2026-09-22T04:34:14.893Z",
+  "udid": "98383CD6-BE0E-47AE-BBB8-D4774FC41646",
+  "platformVersion": "27.0",
+  "bundleId": "com.aetheria.roguelike.scene-faultqa",
+  "status": "failed",
+  "checks": {},
+  "launchPids": [
+    "17759"
+  ],
+  "debuggerApps": [
+    {
+      "id": "PID:16298",
+      "pages": [
+        {
+          "id": 1,
+          "url": "capacitor://localhost"
+        }
+      ]
+    },
+    {
+      "id": "PID:16417"
+    }
+  ],
+  "error": "Launched app did not expose a live bridge WebView"
+}
