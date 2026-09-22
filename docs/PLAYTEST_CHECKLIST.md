@@ -382,18 +382,18 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 | iOS build·시뮬레이터 부팅 | 일부 실패 | unsigned device/simulator build 성공. 같은 QA 앱이 iOS 26.5에서 부팅·60초 이상 생존, 수집 로그의 플러그인 오류 일치 항목 0. iOS 27.0은 UIScene lifecycle 요구로 시작 직후 SIGTRAP(P0) |
 | 실기기·서명·스토어 | 미실행 / No-Go | 양 플랫폼 실기기 루틴, Android release keystore, Apple Distribution identity, 내부 업로드·스토어 입력 미완료 |
 
-**인수인계 §7-B 결과**
+**인수인계 §7-B 결과 (Wave 23 갱신)**
 
 | Q | 결과 | 다음 조건 |
 |---|---|---|
 | Q4 Firebase Hosting 비활성화 | 미실행 | 소유자의 명시적 실행 지시 없음 |
-| Q6 텔레메트리 목적지 | 결정 대기 | NOOP 유지 / 로컬 링버퍼+내보내기 / Cloudflare events+KV·D1 중 소유자 선택 |
+| Q6 텔레메트리 목적지 | 로컬 링버퍼+내보내기 구현·로컬 검증 통과 | 제품18종·AI 폴백7사유, 200건/128KiB. 브라우저 다운로드·복사와 Android OS 복사/삭제 확인. release ID 부재 시 수집 비활성. 원장 §26.5 참조 |
 | Q7 프로덕션 ai-proxy | 미실행 | 소유자 PROD_URL 미제공. 토큰·키·헤더 값을 사용하거나 기록하지 않음 |
-| Q8 퀘스트 보상 원장 | 결정 대기 | 계정당 1회 유지 / ASCEND 리셋 / prestigeRank별 원장 중 소유자 선택 |
+| Q8 퀘스트 보상 원장 | 계정당 1회 유지 | 승천 리셋·랭크별 원장·반복 보상 경제 변경 없음 |
 
 
 
-**로컬 검증 (2026-09-22)**: `npm run verify` 통과(type-check/lint 오류0, unit5,170/5,170·skip0, build:guard ok), `test:device-qa:item-investment` 1/1, `bash scripts/local-playtest.sh` desktop/mobile smoke 통과. desktop 종료 단계의 `browser.close timeout` 경고는 기존 runner가 처리했으며 통과와 함께 보존한다. `android:device:smoke`는 material QA APK와 emulator 명시 옵션으로 install/launch/동일PID 60초 foreground를 확인했다. `mobile:doctor`, production `cap:sync`, unsigned `ios:build:device` 통과. 변경된 체크리스트를 읽는 관련 문서/기기 가드46/46 통과. 로컬 전체 e2e/perf는 src 무변경이므로 미실행이며 PR CI가 수행한다. 이는 iOS27 부팅 P0와 실기기/서명 gate를 대신하지 않는다.
+**Wave 22 로컬 검증 (2026-09-22)**: `npm run verify` 통과(type-check/lint 오류0, unit5,170/5,170·skip0, build:guard ok), `test:device-qa:item-investment` 1/1, `bash scripts/local-playtest.sh` desktop/mobile smoke 통과. desktop 종료 단계의 `browser.close timeout` 경고는 기존 runner가 처리했으며 통과와 함께 보존한다. `android:device:smoke`는 material QA APK와 emulator 명시 옵션으로 install/launch/동일PID 60초 foreground를 확인했다. `mobile:doctor`, production `cap:sync`, unsigned `ios:build:device` 통과. 변경된 체크리스트를 읽는 관련 문서/기기 가드46/46 통과. 로컬 전체 e2e/perf는 src 무변경이므로 미실행이며 PR CI가 수행한다. 이는 iOS27 부팅 P0와 실기기/서명 gate를 대신하지 않는다.
 
 - [ ] 뒤로가기/앱 전환 후 복귀가 안정적이다
 - [ ] 저사양 기기에서도 전투/탭 전환이 과도하게 끊기지 않는다
