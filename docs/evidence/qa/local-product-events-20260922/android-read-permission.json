@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-09-22T08:05:46.800Z",
+  "package": "com.aetheria.roguelike.wave23qa",
+  "kind": "Android API36 emulator",
+  "status": "failed",
+  "checks": [
+    {
+      "name": "native default sink",
+      "passed": true,
+      "eventCount": 5
+    }
+  ],
+  "error": "page.evaluate: NotAllowedError: Failed to execute 'readText' on 'Clipboard': Read permission denied."
+}

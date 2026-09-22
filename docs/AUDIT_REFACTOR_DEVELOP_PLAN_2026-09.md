@@ -1691,3 +1691,52 @@ iOS `ios:sync` 결과는 `Package.swift`의 CapacitorApp dependency/product 순�
 **로컬 검증 (2026-09-22)**: `npm run verify` 통과(type-check/lint 오류0, unit5,170/5,170·skip0, build:guard ok), `test:device-qa:item-investment` 1/1, `bash scripts/local-playtest.sh` desktop/mobile smoke 통과. desktop 종료 단계의 `browser.close timeout` 경고는 기존 runner가 처리했으며 통과와 함께 보존한다. `android:device:smoke`는 material QA APK와 emulator 명시 옵션으로 install/launch/동일PID 60초 foreground를 확인했다. `mobile:doctor`, production `cap:sync`, unsigned `ios:build:device` 통과. 변경된 체크리스트를 읽는 관련 문서/기기 가드46/46 통과. 로컬 전체 e2e/perf는 src 무변경이므로 미실행이며 PR CI가 수행한다. 이는 iOS27 부팅 P0와 실기기/서명 gate를 대신하지 않는다.
 
 **원격 추적**: [PR #52](https://github.com/sungjin9288/aetheria-roguelike/pull/52). 위 검증은 로컬 실행 결과이며 head별 CI와 실제 merge 상태는 해당 PR의 checks/merge 기록을 정본으로 확인한다.
+
+
+### 26.2 B 단계 준비 (2026-09-22, base `78fa259d`)
+
+PR #52는 merge commit `78fa259d2fc560ea73c58c8d7b3c5f0236d26db2`로 통합됐다. 해당 main revision의 [CI](https://github.com/sungjin9288/aetheria-roguelike/actions/runs/35674634798) 및 [Deploy workflow](https://github.com/sungjin9288/aetheria-roguelike/actions/runs/35674634997)는 모두 success이고 후자의 build·deploy-rules가 각각 success다. 이것은 Cloudflare Pages 배포 여부(Q7)의 증거가 아니다.
+
+다음 브랜치는 `codex/wave23-owner-decisions`다. Q6/Q8 선택과 Q7 URL을 요청했으며 아직 답은 없다. 아래 권고는 결정으로 취급하지 않는다. Q4는 명시 실행 지시가 없으므로 미실행한다.
+
+| Q | 현재 상태 | 검토 가능한 권고·구현 조건 |
+|---|---|---|
+| Q4 | 미실행 | 기존 Hosting 종료 명령은 명시 실행 지시 이후에만 수행 |
+| Q6 | 답변 대기 | 로컬 링버퍼+설정 내보내기 권고. 기존 `ProductEventSink`와 coordinator의 단일 초기화 경로에 연결하고, release ID 부재 시 수집하지 않는 계약을 보존·노출한다. 이름·원문 로그·세이브를 혼합하지 않는 허용 필드, 저장 크기 상한, 손상/용량 초과 격리, 사용자 내보내기/지우기를 검증한다 |
+| Q7 | 소유자 PROD_URL 대기 | 해당 origin의 `/api/ai-proxy`를 무인증 GET/POST로 확인해 상태 코드와 JSON/HTML 판정만 기록. 인증값·응답 헤더 원문·토큰을 기록하지 않음 |
+| Q8 | 답변 대기 | 이번 RC는 계정당 1회 유지 권고. 리셋/랭크별 원장을 선택하면 ASCEND의 반복 보상 경제·저장 호환 검증을 별도 포함 |
+
+**Q6 현재 코드 근거**: `productEventCoordinator.ts`는 첫 runtime coordinator를 캐시하므로 뒤늦게 sink를 주입하면 적용되지 않는다. `productEventContext.ts`는 유효한 release ID가 없으면 null이며, `productEvents.ts`의 기존 18종 구조는 캐릭터 이름·원문 이벤트를 담지 않는다. `localErrorReportStore.ts`는 저장소 오류를 게임과 격리하는 기존 패턴이다. SystemTab의 기존 QA export는 플레이어 이름·상태도 담으므로 새 이벤트 export와 무조건 합치지 않는다. `scripts/productFunnel.mjs`는 cohortId/receivedAt/serverSequence를 요구하므로 로컬 링버퍼를 서버 유지율·순서 authority의 증거로 사용하지 않는다.
+
+**C의 iOS27 후속 범위**: 앞서 확인한 공식 Capacitor 8.5 UIScene 이관 경로를 우선 검토한다. 설치된 iOS 8.3.1에는 SceneDelegateProxy가 없으므로 의존성 없이 새 template만 복사하지 않는다. package/lock·SPM·AppDelegate/Info.plist·SceneDelegate·Xcode Sources 등록이 예상 대상이며 `src/**` 및 지정 바이트 핀은 유지 가능한 범위다. 기존 SIGTRAP 재현을 시작점으로 27.0/26.5 부팅, Home10초·저장복원·강제 종료/재실행, cold/warm URL·적용되는 universal link, safe area와 native/full/perf를 검증한다. B 결정 전에 의존성·native source는 수정하지 않았다.
+
+**현재 검증**: main revision과 두 workflow 상태를 API로 조회했고, 위 코드 경로를 읽기 전용으로 대조했다. 이번 변경은 원장2곳의 상태·계획뿐이며 `git diff --check`로 확인한다. 실행 코드·APK·archive 변경 및 검증 재실행은 없다. B 답변이 들어오면 해당 선택을 구현/검증한 뒤 하나의 B PR로 마감하며, 현재 문서만으로 B 완료 PR을 만들지 않는다.
+
+**후속 로컬 실행 (2026-09-22):** 위 B 준비 이후, 정책 선택과 독립적인 iOS27 P0를 별도 worktree `/Users/sungjin/.codex/worktrees/aetheria-ios27-lifecycle/aetheria-roguelike`에서 수정·검증해 commit `3acff734798af6f3173bd7b97ac4598795323053`으로 보존했다. 이 원본 worktree에는 실행 코드를 적용하지 않았다. 해당 commit의 원장 §26.3·`docs/qa/IOS_SCENE_LIFECYCLE_QA.md`가 상세 근거다. iOS26.5/27 각6checks·window mutant red·Android back3경로, tracked verify15종·unit5,170·E2E121·양쪽 smoke/perf 및 문서 가드46 통과. 실제 background는 Settings 앱 전환이며 Home 버튼 검증과 구분하고 URL 미등록으로 실제 routing은 해당 없음이다. Q6/Q8/PROD_URL 미입력·Q4 미실행, PR/CI/merge 미실행. B→C 원격 통합 순서는 유지한다.
+
+**P1 후속 로컬 실행 (2026-09-22):** 같은 별도 worktree의 `codex/device-language-qa`, commit `25d66b85`에 W22-P1-01 표시 수정을 보존했다. 귀환 레벨/경험/생명·칭호 효과 한글화, 원본 수치 불변. baseline4red·결함 주입2종red→green 및 Android QA 캡처 검수 통과, tracked15·full gate(unit5,174·E2E121·양쪽 smoke/perf)·최종 문서 가드46 통과. 해당 commit 원장 §26.4와 `docs/evidence/qa/device-language-20260922/`가 상세 근거다. 이 원본 worktree에는 실행 코드를 적용하지 않았다. Q6/Q8/PROD_URL 답변 대기, Q4·PR·CI·merge 미실행 유지.
+
+
+### 26.5 B 결정 적용 — 로컬 활동 기록 (2026-09-22)
+
+직전 Q6(b)·Q8(a) 권고 뒤 소유자의 “좋아 이어서 다음 스텝 진행하자” 지시에 따라 구현한다. Q4 실행 지시는 없고 Q7 PROD_URL도 제공되지 않았다. §26.2의 답변 대기는 이 지시 전의 이력이다.
+
+| Q | 결과 | 구현·검증 경계 |
+|---|---|---|
+| Q4 | 미실행 | Hosting disable 명시 실행 지시 없음 |
+| Q6 | 로컬 링버퍼+설정 내보내기 로컬 검증 통과 | 제품18종의 기존9필드와 AI 폴백7사유의 전용7필드만 저장. 최근200건·128KiB 공통 상한, 버전/모양/값 검증, release ID 부재 시 수집 안 함. 다운로드 요청·클립보드 복사·삭제는 기존 세이브/플레이 기록 export와 분리. 원문·uid·토큰·세이브 제외, 외부 전송 없음 |
+| Q7 | 미실행 | 소유자 PROD_URL 미제공. 과거 공유 URL을 추정하지 않음 |
+| Q8 | 계정당1회 유지 | 퀘스트/승천/저장 schema·보상 수치 변경 없음 |
+
+**증빙 예고 델타:** 소스4곳(SystemTab·messages·productEventCoordinator·aiService) 변경과 새2곳(localProductEventStore·localAiFallback) 추가에 따라 progression v2의 sources만 갱신한다. report/reportHash/v1Baseline 및 나머지 tracked 증빙은 불변 예상이다. content→event-reward→equipment combat-power→pacing verify→progression writer→tracked15를 직렬 실행한다. 바이트 핀은 편집하지 않았다.
+
+**집중 검증:** 저장소/AI service/기존 관측 계약45tests 통과. VITE_RELEASE_ID=wave23-qa 브라우저4경로(실제 기본 sink, 최신 JSON 다운로드/clipboard, 삭제 실패/손상 거부, 쓰기 실패 격리) 통과. 초기 release 없는 브라우저3경로 통과, AI release 부재도 unit 실행. 결함 주입8종은 각각 exit1 확인 후 복원했다(허용 필드 유출, 보관 상한 제거, 잘못된 삭제 성공, NOOP 연결, release gate 제거, AI 연결 제거, UI 삭제 성공 오표시, 쓰기 실패 은폐). 정적 타입/집중 lint 초기 통과. 전체 gate·native·원격 검사는 다음 실행 결과로 갱신한다.
+
+
+**최종 로컬 검증:** `VITE_RELEASE_ID=wave23-qa AETHERIA_RUN_PERF=1 npm run verify:full` exit0. unit5,181/5,181(353파일, skip0), E2E125/125(63+62), type/lint/build guard·desktop/mobile smoke/perf 통과. FCP280/276ms. desktop `browser.close timeout` 경고는 기존 runner 처리와 함께 기록한다. 기본 coordinator의 sink 주입 없는 CI 계약도 추가해 mutation1종을 더 검출했으므로 총9종 red→복원, 신규 단위 계약11건 통과다. tracked15 전부 통과했고 예고한6sources만 이동, reportHash/v1Baseline 포함 nonSources 불변이다.
+
+**Android 실행:** release ID를 명시한 격리 QA APK(`/tmp/aetheria-q6-android-qa.apk`, `android-build.json` SHA 정본)로 실제 WebView 보관·OS 붙여넣기 JSON·341px 영역 무넘침/버튼44px·삭제4checks 통과. 직접 clipboard read는 권한 거부, Quick Boot는 System UI/키보드 startup ANR이었다. wipe 없이 cold boot 후 OS paste로 복사를 검증했으며 실패 관측·화면도 보존한다. 브라우저의 파일 다운로드/clipboard와 Android의 OS clipboard를 구분한다. Android 파일 다운로드 획득·iOS 내보내기·실기기 시간 루틴은 미실행이다. 일반 cap:sync/android:debug/mobile:doctor exit0, native tracked delta0·production APK AppPlugin/test API 부재 확인. 일반 빌드의 release ID는 미설정이므로 새 기록 수집 비활성이라는 기존 계약을 유지한다.
+
+증빙은 `docs/evidence/qa/local-product-events-20260922/`에 있다. Q4 미실행, Q7 URL 미제공. Android release keystore와 Apple Distribution identity 부재·실기기/서명/업로드 조건으로 No-Go를 유지한다. C의 로컬 두 commit은 아직 원격 미통합이다. PR/CI/merge는 해당 원격 revision의 기록을 정본으로 갱신한다.
+
+**문서 마감:** Android/iOS smoke 안내·한글 표기 관련46tests 통과, source manifest 전체 해시 일치·`git diff --check` 통과.

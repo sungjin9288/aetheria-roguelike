@@ -1,0 +1,9 @@
+{
+  "artifact": "/tmp/aetheria-q6-android-qa.apk",
+  "sha256": "d32fda8a218126d5fe26a97ac8792f6761a5bc4ace7791cbe1eb5d040158b8a8",
+  "bytes": 227744898,
+  "AppPlugin": true,
+  "releaseId": "wave23-qa",
+  "package": "com.aetheria.roguelike.wave23qa",
+  "testApi": true
+}

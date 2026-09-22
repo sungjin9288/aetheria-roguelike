@@ -1,0 +1,62 @@
+{
+  "date": "2026-09-22",
+  "baseCommit": "78fa259d2fc560ea73c58c8d7b3c5f0236d26db2",
+  "command": "VITE_RELEASE_ID=wave23-qa AETHERIA_RUN_PERF=1 npm run verify:full",
+  "exitCode": 0,
+  "unit": {
+    "files": 353,
+    "passed": 5181,
+    "failed": 0,
+    "skipped": 0
+  },
+  "e2e": {
+    "passed": 125,
+    "shards": [
+      63,
+      62
+    ]
+  },
+  "smoke": [
+    "desktop passed",
+    "mobile passed"
+  ],
+  "perf": {
+    "desktopFcpMs": 280,
+    "mobileFcpMs": 276,
+    "desktopPassed": true,
+    "mobilePassed": true
+  },
+  "trackedEvidenceVerify": 15,
+  "mutationsDetected": 9,
+  "nativeQaChecks": 4,
+  "productionNative": {
+    "capSync": 0,
+    "androidDebug": 0,
+    "mobileDoctor": 0,
+    "trackedNativeDelta": 0,
+    "apk": "android/app/build/outputs/apk/debug/app-debug.apk",
+    "sha256": "2622b3198c510582543681e1a839ba657abcce41794f37662096dbbbd26ae3ac",
+    "bytes": 227732614,
+    "AppPlugin": true,
+    "testApiAbsent": true,
+    "releaseIdConfigured": false
+  },
+  "warnings": [
+    "desktop browser.close timeout handled by existing smoke runner",
+    "Android direct clipboard read denied; OS paste verified after cold boot",
+    "Quick Boot System UI and keyboard startup ANR; cold boot without wipe recovered"
+  ],
+  "notRun": [
+    "physical device timed QA",
+    "iOS activity export",
+    "Android file download acquisition",
+    "Q4 Hosting disable",
+    "Q7 PROD_URL unavailable",
+    "release signing and store uploads",
+    "remote CI at receipt creation"
+  ],
+  "documentGuards": {
+    "passed": 46,
+    "failed": 0
+  }
+}

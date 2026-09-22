@@ -1,3 +1,4 @@
+import { recordLocalAiFallback } from '../platform/localAiFallback';
 import { auth } from '../firebase';
 import { CONSTANTS } from '../data/constants';
 import { TokenQuotaManager } from '../systems/TokenQuotaManager';
@@ -211,6 +212,7 @@ export const AI_SERVICE = {
         //   쿼터 소진만 폴백 이벤트에 표시(fallbackReason:'quota' + 안내 문구)를 남긴다.
         const decision = decideRequest('event');
         if (decision.kind === 'fallback') {
+            recordLocalAiFallback('event', decision.reason);
             const fallbackEvent = pickEventFallback();
             const annotation = getEventFallbackAnnotation(decision);
             if (!annotation) return fallbackEvent;
@@ -242,9 +244,11 @@ export const AI_SERVICE = {
             TokenQuotaManager.recordOutcome(verdict.outcome);
             // `accept`는 정의상 normalized !== null이지만, 타입을 좁히려면 여기서 한 번 더 본다.
             if (verdict.kind === 'accept' && normalized) return normalized;
+            if (verdict.kind === 'fallback') recordLocalAiFallback('event', verdict.reason);
         } else {
             // 응답 자체가 오지 않았거나 거절됐다 — 나간 1건은 이야기가 되지 못한 것으로 정산.
             TokenQuotaManager.recordOutcome(result.outcome);
+            recordLocalAiFallback('event', result.reason);
         }
 
         // Fallback: 오프라인 이벤트 풀 사용
@@ -255,7 +259,10 @@ export const AI_SERVICE = {
         const decision = decideRequest('story');
         // story 경로는 폴백 이유를 표면화하지 않는다 — 3분기 모두 같은 내러티브 템플릿이다
         //   (쿼터 안내 문구는 이벤트 카드에만 실린다).
-        if (decision.kind === 'fallback') return AI_SERVICE.getFallback(type, data);
+        if (decision.kind === 'fallback') {
+            recordLocalAiFallback('story', decision.reason);
+            return AI_SERVICE.getFallback(type, data);
+        }
 
         const compactHistory = summarizeHistory(data?.history);
         const location = getNarrativeLocation(data);
@@ -290,6 +297,7 @@ export const AI_SERVICE = {
         }));
         TokenQuotaManager.recordOutcome(result.outcome);
         if (result.kind === 'narrative') return result.narrative;
+        recordLocalAiFallback('story', result.reason);
 
         return AI_SERVICE.getFallback(type, data);
     },

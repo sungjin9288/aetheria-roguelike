@@ -1,9 +1,9 @@
 import { getRuntimeProductEventContext } from './productEventContext';
 import {
     createProductEventClient,
-    NOOP_PRODUCT_EVENT_SINK,
     type ProductEventSink,
 } from './productEventSink';
+import { LOCAL_PRODUCT_EVENT_SINK } from './localProductEventStore';
 import type { ProductEventFields, ProductEventName } from './productEvents';
 
 export interface ProductEventEmission {
@@ -33,7 +33,7 @@ export const createProductEventCoordinator = (client: ProductEventClientLike | n
 let runtimeCoordinator: ReturnType<typeof createProductEventCoordinator> | null = null;
 
 export const getRuntimeProductEventCoordinator = (
-    sink: ProductEventSink = NOOP_PRODUCT_EVENT_SINK,
+    sink: ProductEventSink = LOCAL_PRODUCT_EVENT_SINK,
 ) => {
     if (runtimeCoordinator) return runtimeCoordinator;
     const context = getRuntimeProductEventContext();

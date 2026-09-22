@@ -1,0 +1,29 @@
+{
+  "timestamp": "2026-09-22T08:10:46.267Z",
+  "package": "com.aetheria.roguelike.wave23qa",
+  "kind": "Android API36 emulator",
+  "status": "passed",
+  "checks": [
+    {
+      "name": "native default sink",
+      "passed": true,
+      "eventCount": 12
+    },
+    {
+      "name": "native clipboard OS paste JSON",
+      "passed": true,
+      "eventCount": 12
+    },
+    {
+      "name": "native layout",
+      "passed": true,
+      "width": 341,
+      "scrollWidth": 341,
+      "minButtonHeight": 44
+    },
+    {
+      "name": "native clear",
+      "passed": true
+    }
+  ]
+}
