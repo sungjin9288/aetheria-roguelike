@@ -1,0 +1,24 @@
+{
+  "manifestEntries": 254,
+  "authored": 234,
+  "retained": 20,
+  "uiEntries": 89,
+  "uniqueNames": 89,
+  "hpDecreases": 89,
+  "overflow": 0,
+  "errors": 0,
+  "actualPlayClaim": false,
+  "classification": "actual390 UI using production-levelled canonical spawn fixtures; not natural encounters or device evidence",
+  "manifestSha256": "518c3356462ddbadc31e67b0823a02b618ffb53fe0f49258048f03d768a9b314",
+  "uiReceiptSha256": "681aa4cb91dc82e70faf6e4ee8fadd723423a5f38e4dd3a0eb0d1a1a1d8525cb",
+  "artVerifyExitCode": 0,
+  "observedDate": "2026-09-22",
+  "documentationFinalizedDate": "2026-09-23",
+  "verify": {
+    "command": "npm run verify",
+    "exitCode": 0,
+    "unitPassed": 5192,
+    "unitSkipped": 0,
+    "logSha256": "b8c9345e900249742a715e516c89216015b7fb07da163d64a7f404fd340d3cf4"
+  }
+}

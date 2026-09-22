@@ -1,8 +1,8 @@
 # Aetheria RPG - Task Board
 
-**Last Updated:** 2026-09-22
+**Last Updated:** 2026-09-23
 
-**현재 checkpoint — Wave 24 / C 로컬 검증 완료:** B PR #53 merge `c5e89034` 기반으로 iOS27 시작·귀환/칭호 한글 표기·AI 숫자 보간 제한·실제 엔진 damage12건을 통합했다. exit0: unit5,192/5,192(354파일·skip0), E2E125/125(63+62), type/lint/build guard·desktop/mobile smoke/perf 통과. FCP356/320ms, DCL235.4/208.7ms. 결함 주입7종 red→복원·집중61건·tracked15 통과, sources5해시 외 진단 내용 불변. iOS26.5/27 각 lifecycle6건·한글/폭/기록, Android 기록6건·back3경로 통과. 최초 harness/clipboard-back 실패는 원본 증빙에 보존했다. 일반 cap:sync/debug/unsigned iOS/doctor 통과. npm audit 경고10건 유지(변경 경로 uuid의 실제 xcode 사용은 v4 확인). 원장 §26.6·code-residual-20260922 참고. PR/CI/merge 대기. Q4 미실행/Q7 URL 미제공, 실기기·서명/제출 No-Go 유지.
+**현재 checkpoint — Wave 25 / D 아트 판단 정합성:** C PR #54 merge `1307fd25` 통합 후 원장·계획·실제 manifest와 V27 receipt를 대조했다. 현재254=authored234/retained20, 교정69+유지20의 기존 scoped 검수 완료를 확인했다. 인수인계 §7-D의165/89 대기 표기를 최신 근거로 정정하고 원본 판단 이력은 보존한다. art:monsters:verify 통과; 이번 작업은 문서와 read-only 집계 기록뿐이다. 자연 플레이·실기기 수용을 추가로 주장하지 않는다. npm run verify exit0(unit5,192/skip0·type/lint/build guard). PR/CI/merge 대기. E는 물리 기기 연결/시간 루틴·서명·스토어 업로드와 입력 조건으로 No-Go, Q4 미실행/Q7 URL 미제공.
 
 **이전 checkpoint — Wave 23 / B 로컬 검증 완료:** Q6 로컬 링버퍼+설정 내보내기/복사/삭제, Q8 계정당1회 유지. 제품18종·AI 폴백7사유, 최근200건/128KiB, release ID 부재 시 비활성. 결함 주입9종 red→복원, tracked15·full gate(unit5,181/353파일·E2E125·양쪽 smoke/perf), Android4checks와 production cap/sync/debug/doctor 통과. Quick Boot System UI ANR·clipboard 직접 읽기 거부는 기록했고 cold boot/OS paste로 재검증했다. 상세는 원장 §26.5·Q6 증빙 폴더. Q4 미실행·Q7 PROD_URL 미제공·PR/CI/merge 대기. C의 두 local commit, iOS export·실기기·서명/제출은 미완료다. 아래 답변 대기는 당시 이력이다.
 
@@ -1112,3 +1112,5 @@ ART-LOCATION-01의12종 source-cell 오른쪽 경계를 교정해 runtime에 적
 - 2026-09-22 W22-P1-01 local: 귀환 LV/EXP/HP와 칭호 약어를 MSG/기존 표시 함수로 한글화. 원본 수치 불변, baseline4red·mutant2종red→green. Android 별도 QA 화면 통과, sources3해시만 갱신, tracked15·unit5,174·E2E121·양쪽 smoke/perf 통과. B 입력 대기·원격 미실행.
 
 - 2026-09-22 Wave24/C: iOS27·한글 P1·숫자 clamp·실제 엔진 테스트 통합. full unit5,192/E2E125·tracked15·native 통과; 원장 §26.6. 원격 통합 대기, 출시 No-Go.
+
+- 2026-09-23 Wave25/D: V27 아트 판단 완료 근거와254/234/20 집계를 재확인해 handoff 정정. 이미지/manifest/역사 receipt 불변, 원장 §26.7.

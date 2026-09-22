@@ -135,9 +135,11 @@ Waves 10~21.1이 결함을 찾고 회귀 0으로 닫은 절차다. 순서를 바
 2. `combat-engine-core.test.js`의 `calculateDamage` 12건은 엔진이 아니라 파일 안 미러 구현 → 실제 엔진 호출(`rng` 주입)로 교체.
 3. 원장 §25.2 관찰 1~3(전역 `Math.random` 스텁 뒤의 부등식 3곳 · `effectChance` 분기 5개 · `handleDefeat` 21곳)은 **규칙으로 닫혔다** — 새 테스트를 쓸 때만 해당.
 
-### D. 콘텐츠 잔여 (Codex 시대 Goal, 소유자 승인 종속)
-- 몬스터 아트 254 = authored 165 / retained 89. 89의 수용·교정 판단은 `docs/superpowers/plans/2026-09-05-aetheria-game-completion.md`와 `docs/evidence/art/retained89-disposition-20260909.json`이 정본. 승인 없이 이미지를 만들지 말 것(그 계획의 blocked 이력이 이유다).
-- 그 계획의 "실제 device/lifecycle 미완료"는 위 A와 같은 항목이다.
+### D. 콘텐츠 판단 — V27 완료 근거 확인 (2026-09-23 정정)
+- 현재 몬스터 아트 254 = authored 234 / retained 20. 기존 retained89 중69 교정·20 유지 판단과 runtime 채택은 이미 V27에서 완료했다. `docs/superpowers/plans/2026-09-05-aetheria-game-completion.md`의 2026-09-09 설계 승인 기록, `scripts/art_sources/monsters/v27/adoption-review.md`의 최종 절, `docs/evidence/qa/game-completion-final-audit-20260910.md`의 Monster254 항목을 따른다.
+- `docs/evidence/art/retained89-disposition-20260909.json`은 교정 전 판단 이력이며 덮어쓰지 않는다. 기존 165/89 숫자와 승인 대기 문장은 이후 V27 완료 기록으로 대체됐다. 새로운 이미지 제작·추가 교정 승인을 뜻하지 않는다.
+- V27 `ui-receipt.json`은 390×844의 canonical spawn fixture89종, HP 감소89건·overflow/error0을 기록한다. 범위별 구현/화면 검수이며 자연 성장 전체 플레이·실기기·사용자의 최종 제품 수용 증거로 확대하지 않는다.
+- D의 문서 정합성은 원장 §26.7에서 마감한다. 실제 device/lifecycle 및 출시 전체 완료는 A의 최신 기기 결과와 E의 Go/No-Go 조건을 별도로 따른다.
 
 ### E. 릴리스 (소유자 자산이 먼저)
 `docs/MOBILE_RELEASE.md` §1~§5와 `docs/STORE_SUBMISSION_GUIDE.md` 순서대로. 코드로 못 푸는 blocker 셋: Android release keystore · iOS `Apple Distribution` identity · TestFlight/Play 업로드 승인. 이 셋이 오기 전까지 RC-1 원칙(새 기능 금지, UI 구조 변경 금지, 실기기 P0/P1만 수정)을 유지한다.
