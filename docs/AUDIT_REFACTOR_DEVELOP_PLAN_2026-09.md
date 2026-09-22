@@ -1823,3 +1823,21 @@ Production cap:sync→android:debug→ios:build:device→mobile:doctor exit0. sy
 **의존성 범위 확인:** npm audit exit1, high5/moderate3/low2 경고가 남는다. 변경 경로 CLI8.5.0→xcode3.0.1→uuid7.0.3의 moderate3은 같은 [uuid advisory](https://github.com/uuidjs/uuid/security/advisories/GHSA-w5hq-g745-h8pq) 경로다. 영향 API는 caller buffer를 사용하는 v3/v5/v6이며 실제 xcode의 유일 호출은 v4다. 실제 프로젝트 parse 후 UUID100회 생성 시 v4호출100·caller buffer0·영향 메서드0·프로젝트 쓰기0을 확인했다. UIScene에 필요한8.5.0을 유지하며 audit fix/override는 하지 않았다. 경고 해소·전체 의존성 보안 완료는 미주장. `dependency-review.json`에 범위를 보존한다.
 
 **문서 마감:** Android/iOS smoke 안내·한글 표시 관련46tests 통과. 진단 sources348개 해시 일치·`git diff --check` 통과.
+
+
+### 26.7 D 아트 판단 기록 정합성 (2026-09-23)
+
+C PR #54는 head97337659의 static/E2E/perf/rules/build 통과 후 merge `1307fd25`로 통합했다(PR deploy-rules skipped). D는 새로운 이미지 작업이 아니라 이미 완료된 V27 판단과 오래된 인수인계 상태의 불일치를 정정한다.
+
+| 항목 | 결과 | 근거·한계 |
+|---|---|---|
+| 현재 몬스터 manifest | 일치 | 254종 = authored234 / retained20 |
+| 기존 retained89 판단 | scoped 완료 확인 | V27 교정69+유지20. 계획의2026-09-09 승인 기록과 adoption-review 최종 절, final-audit Monster254 항목을 연결 |
+| V27 화면 receipt | 기록 대조 통과 | 390×844 fixture89종/고유89/HP감소89/overflow0/errors0. actualPlayClaim=false 유지 |
+| art:monsters:verify | 통과 | 현재 source/runtime 자산 검증 exit0. manifest·이미지·기존 판단 receipt 변경0 |
+| 추가 이미지 제작·전체 자연 플레이 | 미실행 | 이번 문서 정정의 범위 밖. 기존 scoped 리뷰를 사용자의 최종 제품 수용으로 확대하지 않음 |
+| 실기기·서명·제출 | 미완료 / No-Go | A/C의 emulator/simulator 확인과 MOBILE_RELEASE §5 수용 조건을 구분 |
+
+집계·해시는 `docs/evidence/qa/art-status-20260922.json`에 보존한다. `retained89-disposition-20260909.json`을 갱신하지 않았다. 인수인계 §7-D의 과거165/89·승인 대기 상태만 최신 정본으로 연결했다. Q4 미실행·Q7 URL 미제공, Q6 로컬 기록·Q8 계정1회 결정은 유지한다. `npm run verify` exit0: unit5,192/5,192(skip0)·type-check·lint·build guard 통과. `git diff --check` 통과. 9월22일 집계 기록을 보존하고 9월23일 문서를 마감했다. C merge의 main CI run35715043844 및 Deploy run35715043920도 성공했다. D의 원격 검사·merge 상태는 [PR #55](https://github.com/sungjin9288/aetheria-roguelike/pull/55)가 정본이다.
+
+**다음 E의 입력 조건:** 9월23일 mobile:doctor와 read-only 기기 목록을 재확인했다. 물리 iPhone/Android 연결0, Android release signing·Apple Distribution identity 없음. doctor의 App Store export profile ok는 로컬 export options 파일 확인이며 provisioning profile 보유 증거가 아니다. Q7 URL 및 기기 사용 시간·서명 자산 입력을 기다리며, 실기기 조작·서명·업로드는 실행하지 않았다. Q4도 미실행이다.
