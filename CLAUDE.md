@@ -132,7 +132,7 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 351 파일 / 5,170 케이스, skip 0, Linux CI 그린 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 353 파일 / 5,181 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
                       #   + e2e/ (Playwright 44 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
@@ -271,6 +271,8 @@ useGameEngine (useReducer)
 ---
 
 ## 7. 테스트
+
+**로컬 활동 기록(Q6):** `localProductEventStore.ts`가 제품 이벤트9필드와 AI 폴백 전용7필드를 허용 목록으로 재구성한다. 최근200건/128KiB 한도는 게임 밸런스와 독립적인 기기 보관 정책이다. 런타임 coordinator의 최초 기본 sink에서 연결하며 release ID가 없으면 제품/AI 모두 수집하지 않는다. SystemTab 내보내기·복사·삭제는 플레이어 이름/세이브가 들어가는 기존 QA export와 분리한다. 저장소 실패를 게임으로 전파하지 않고, 삭제·복사 실패를 성공으로 표시하지 않는다. 로컬 기록은 서버 수신 시각·순서·유지율 증거가 아니다.
 
 ```bash
 npm run test:unit    # 단위 테스트 전체 실행

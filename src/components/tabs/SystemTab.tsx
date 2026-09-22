@@ -30,6 +30,8 @@ import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
 import { formatRelicText, getRelicDisplayName } from '../../utils/relicPresentation';
 import { clearErrorReports, readErrorReports } from '../../platform/localErrorReportStore';
+import { readProductEvents, clearProductEvents, didProductEventWriteFail } from '../../platform/localProductEventStore';
+import { getRuntimeProductEventContext } from '../../platform/productEventContext';
 import { trackRuntimeProductEvent } from '../../platform/productEventCoordinator';
 import { normalizeProductEventJob } from '../../platform/productEvents';
 import { MSG } from '../../data/messages';
@@ -302,6 +304,42 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         setErrorReports([]);
         setNotice({ type: 'success', text: MSG.ERROR_REPORT_CLEARED });
     }, []);
+
+    const [productEvents, setProductEvents] = useState(() => readProductEvents());
+    const [productEventWriteFailed, setProductEventWriteFailed] = useState(didProductEventWriteFail);
+    const productEventsActive = getRuntimeProductEventContext() !== null;
+    const refreshProductEvents = () => {
+        setProductEvents(readProductEvents());
+        setProductEventWriteFailed(didProductEventWriteFail());
+    };
+    const handleExportProductEvents = () => {
+        const latest = readProductEvents();
+        setProductEvents(latest);
+        try {
+            if (latest.status !== 'ready') throw new Error('Local records unavailable');
+            exportToJson(`aetheria_activity_${Date.now()}.json`, { version: 1, events: latest.events });
+            setNotice({ type: 'success', text: MSG.PRODUCT_EVENTS_EXPORTED });
+        } catch {
+            setNotice({ type: 'error', text: MSG.PRODUCT_EVENTS_EXPORT_FAILED });
+        }
+    };
+    const handleCopyProductEvents = async () => {
+        const latest = readProductEvents();
+        setProductEvents(latest);
+        try {
+            if (latest.status !== 'ready') throw new Error('Local records unavailable');
+            await navigator.clipboard.writeText(JSON.stringify({ version: 1, events: latest.events }, null, 2));
+            setNotice({ type: 'success', text: MSG.PRODUCT_EVENTS_COPIED });
+        } catch {
+            setNotice({ type: 'error', text: MSG.PRODUCT_EVENTS_EXPORT_FAILED });
+        }
+    };
+    const handleClearProductEvents = () => {
+        const cleared = clearProductEvents();
+        refreshProductEvents();
+        setNotice({ type: cleared ? 'success' : 'error', text: cleared
+            ? MSG.PRODUCT_EVENTS_CLEARED : MSG.PRODUCT_EVENTS_CLEAR_FAILED });
+    };
 
     const updateLiveConfig = useCallback(async (partialConfig: Partial<LiveConfig>) => {
         // Firebase config 부재 시 이전에도 doc(null, …)이 throw했다 — 같은 실패 경로를 명시한다.
@@ -725,6 +763,32 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                 <Trash2 size={13} /> {MSG.ERROR_REPORT_CLEAR_BUTTON}
                             </button>
                         </div>
+
+                        <section data-testid="system-product-events" onFocus={refreshProductEvents}
+                            className="mt-3 rounded-[0.65rem] border border-white/10 p-3 font-readable text-[11px] leading-relaxed text-slate-300">
+                            <h3 className="font-semibold text-slate-100">{MSG.PRODUCT_EVENTS_TITLE}</h3>
+                            <p>{MSG.PRODUCT_EVENTS_DESCRIPTION}</p>
+                            <p data-testid="system-product-events-mode">{productEventsActive
+                                ? MSG.PRODUCT_EVENTS_ACTIVE : MSG.PRODUCT_EVENTS_INACTIVE}</p>
+                            {productEventWriteFailed && <p role="alert">{MSG.PRODUCT_EVENTS_WRITE_FAILED}</p>}
+                            <p role="status" data-testid="system-product-events-status">{productEvents.status === 'ready'
+                                ? MSG.PRODUCT_EVENTS_COUNT(productEvents.events.length)
+                                : productEvents.status === 'invalid' ? MSG.PRODUCT_EVENTS_INVALID : MSG.PRODUCT_EVENTS_UNAVAILABLE}</p>
+                            <div className="mt-2 grid grid-cols-2 gap-2">
+                                <button type="button" data-testid="system-export-product-events" onClick={handleExportProductEvents}
+                                    className="min-h-[44px] rounded-lg border border-white/10 bg-black/20 px-2 py-2">
+                                    {MSG.PRODUCT_EVENTS_EXPORT}
+                                </button>
+                                <button type="button" data-testid="system-copy-product-events" onClick={handleCopyProductEvents}
+                                    className="min-h-[44px] rounded-lg border border-white/10 bg-black/20 px-2 py-2">
+                                    {MSG.PRODUCT_EVENTS_COPY}
+                                </button>
+                                <button type="button" data-testid="system-clear-product-events" onClick={handleClearProductEvents}
+                                    className="min-h-[44px] rounded-lg border border-white/10 bg-black/20 px-2 py-2">
+                                    {MSG.PRODUCT_EVENTS_CLEAR}
+                                </button>
+                            </div>
+                        </section>
 
                         <pre className="mt-3 whitespace-pre-wrap break-all font-fira text-[11px] leading-relaxed text-slate-500">{qaReadout}</pre>
                     </SettingsDisclosure>

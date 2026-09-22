@@ -1,0 +1,12 @@
+{
+  "changedSources": [
+    "src/components/tabs/SystemTab.tsx",
+    "src/data/messages.ts",
+    "src/platform/localAiFallback.ts",
+    "src/platform/localProductEventStore.ts",
+    "src/platform/productEventCoordinator.ts",
+    "src/services/aiService.ts"
+  ],
+  "reportHash": "f21dcf819808a624d2d7f9d30b28a7d4b1403b8b3806383089453ef2ff731620",
+  "nonSourcesUnchanged": true
+}

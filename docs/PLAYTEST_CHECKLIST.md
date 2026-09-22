@@ -252,6 +252,8 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 
 #### Android
 
+**Wave 23 / Q6 보충 검증 (2026-09-22):** 별도 QA package `com.aetheria.roguelike.wave23qa`, API36 에뮬레이터에서 실제 기본 sink 기록·OS 붙여넣기 JSON·가로 넘침 없음/버튼44px·활동 기록 삭제4checks 통과. `clipboard.readText()`는 WebView 권한으로 거부됐고 Quick Boot의 System UI/키보드 시작 ANR도 관측했다. wipe 없이 cold boot한 뒤 실제 복사 버튼→QA 입력란 OS 붙여넣기로 허용 필드 JSON을 검증했다. Android 파일 다운로드 획득과 iOS 내보내기는 미실행이며, 브라우저 다운로드/클립보드는 실행 검증했다. 증빙: [Q6 검증 기록](evidence/qa/local-product-events-20260922/verification.json), [Android 관측](evidence/qa/local-product-events-20260922/android.json), [화면](evidence/qa/local-product-events-20260922/android-records.png). 일반 cap:sync/android:debug 복원·AppPlugin·test API 부재 확인, native tracked delta0. 아래 Wave22 back8행·시간 루틴을 이번 Q6 검증으로 재실행했다고 표시하지 않는다.
+
 1. iPhone과 같은 신규 세이브 5분 루틴과 재료 보유 세이브 2분 정비 루틴을 수행한다.
 2. `탐험` 3회, `이동` 1회, `상점` 또는 `휴식` 1회를 오터치 없이 수행한다.
 3. 전투 결과에서 `장비 확인` 또는 `공명 확인`을 눌러 가방의 해당 항목이 바로 열리는지 확인한다.

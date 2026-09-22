@@ -1,0 +1,41 @@
+{
+  "mutations": [
+    {
+      "mutation": "extra-fields",
+      "exitCode": 1
+    },
+    {
+      "mutation": "unbounded-ring",
+      "exitCode": 1
+    },
+    {
+      "mutation": "false-clear",
+      "exitCode": 1
+    },
+    {
+      "mutation": "noop-runtime",
+      "exitCode": 1
+    },
+    {
+      "mutation": "release-gate",
+      "exitCode": 1
+    },
+    {
+      "mutation": "ai-disconnected",
+      "exitCode": 1
+    },
+    {
+      "mutation": "clear-ui-success",
+      "exitCode": 1
+    },
+    {
+      "mutation": "write-failure-hidden",
+      "exitCode": 1
+    },
+    {
+      "mutation": "ci-default-sink",
+      "exitCode": 1
+    }
+  ],
+  "restored": true
+}
