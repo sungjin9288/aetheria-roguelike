@@ -1,0 +1,21 @@
+{
+  "timestamp": "2026-09-22T09:16:20.297Z",
+  "udid": "E73B7A9D-2C19-40BD-B4DB-CF8210BE3DEF",
+  "platformVersion": "26.5",
+  "bundleId": "com.aetheria.roguelike.wave24qa",
+  "status": "passed",
+  "checks": {
+    "debriefLanguage": true,
+    "titleLanguage": true,
+    "layout": {
+      "viewport": 402,
+      "scroll": 402
+    },
+    "localEvents": {
+      "count": 39
+    }
+  },
+  "launchPids": [
+    "39297"
+  ]
+}

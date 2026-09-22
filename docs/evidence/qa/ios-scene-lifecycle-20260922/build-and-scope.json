@@ -1,0 +1,63 @@
+{
+  "date": "2026-09-22",
+  "base": "78fa259d2fc560ea73c58c8d7b3c5f0236d26db2",
+  "runtime": "Xcode 27.0 (27A266a), iOS 26.5 and 27.0, Android API 36 emulator",
+  "dependencies": {
+    "core": "8.5.0",
+    "ios": "8.5.0",
+    "cli": "8.5.0",
+    "android": "8.3.1",
+    "app": "8.1.1"
+  },
+  "sha256": {
+    "simulatorExecutable": "3119c3df334d4553c9dc743b6705dd7453a99334714a1d1bac7e62df6cbc61d6",
+    "simulatorDebugLibrary": "5427ea0e40812397a452c8476cd73bd47adc5751cf05d73906ed0f788418948f",
+    "simulatorInfo": "d956ca7a4d874956f4c4ab4140cbf48101991b1b7b22943675221ba4f12af090",
+    "mutantDebugLibrary": "7dc2c51f3cbdd8279ea9b21ce36f5aadb35c3858d1f16540f5130929677b9c85",
+    "mutantInfo": "0430b667d782f82630612b03aa16cfa773bb18de735ecbf3b26b9e30a8b91029",
+    "androidQaApk": "74d9c78e84e3ee91f5a12a6eb56ef0a6b1434242fdba1645579c429043be333c"
+  },
+  "limitations": [
+    "Simulator lifecycle and ordinary save persistence only; no physical device or signing proof.",
+    "Background uses Settings app activation; no synthetic lifecycle dispatch and no flushLocalSave call.",
+    "iOS 27 foreground screenshot has partial glyph loss; re-entry screenshot retained separately, cause unknown.",
+    "Android back subset: crafting, idle, combat; the full 8-row table remains the Wave 22 evidence.",
+    "Production URL absent; Q7 not run. Q4 not authorized. Q6 and Q8 undecided."
+  ],
+  "harnessCorrections": [
+    "Initial ESM import/boolean conversion/about:blank handling errors excluded from product findings.",
+    "Inspector connection retained across process relaunch; exact PID fresh listing replaces cache-only discovery.",
+    "Android System UI ANR dialog was dismissed with Wait before passing input runs.",
+    "Exit closes the old Android WebView; panel/idle and combat runs were separated."
+  ],
+  "validation": {
+    "trackedVerify": {
+      "passed": 15
+    },
+    "fullGate": {
+      "command": "AETHERIA_RUN_PERF=1 npm run verify:full",
+      "exitCode": 0,
+      "unitPassed": 5170,
+      "unitSkipped": 0,
+      "e2eShardsPassed": [
+        61,
+        60
+      ],
+      "smoke": [
+        "desktop",
+        "mobile"
+      ],
+      "perf": [
+        "desktop",
+        "mobile"
+      ],
+      "logSha256": "1fcca996273cf6c5c12771116b03cc3e576adb7d881584fb9aa1ef5de8262f7d"
+    },
+    "initialFailure": "progression-diagnostic-cli EVIDENCE_BYTE_MISMATCH; only package.json and package-lock.json sources sha256 changed. Fixed-order regeneration preserved reportHash, v1Baseline and all non-source fields.",
+    "warnings": [
+      "desktop smoke browser.close timeout handled by existing runner",
+      "Capacitor Android 8.3.1 / core 8.5.0 sync mismatch warning"
+    ],
+    "remote": "Not run; B owner decisions pending"
+  }
+}

@@ -2,7 +2,9 @@
 
 **Last Updated:** 2026-09-22
 
-**현재 checkpoint — Wave 23 / B 로컬 검증 완료:** Q6 로컬 링버퍼+설정 내보내기/복사/삭제, Q8 계정당1회 유지. 제품18종·AI 폴백7사유, 최근200건/128KiB, release ID 부재 시 비활성. 결함 주입9종 red→복원, tracked15·full gate(unit5,181/353파일·E2E125·양쪽 smoke/perf), Android4checks와 production cap/sync/debug/doctor 통과. Quick Boot System UI ANR·clipboard 직접 읽기 거부는 기록했고 cold boot/OS paste로 재검증했다. 상세는 원장 §26.5·Q6 증빙 폴더. Q4 미실행·Q7 PROD_URL 미제공·PR/CI/merge 대기. C의 두 local commit, iOS export·실기기·서명/제출은 미완료다. 아래 답변 대기는 당시 이력이다.
+**현재 checkpoint — Wave 24 / C 로컬 검증 완료:** B PR #53 merge `c5e89034` 기반으로 iOS27 시작·귀환/칭호 한글 표기·AI 숫자 보간 제한·실제 엔진 damage12건을 통합했다. exit0: unit5,192/5,192(354파일·skip0), E2E125/125(63+62), type/lint/build guard·desktop/mobile smoke/perf 통과. FCP356/320ms, DCL235.4/208.7ms. 결함 주입7종 red→복원·집중61건·tracked15 통과, sources5해시 외 진단 내용 불변. iOS26.5/27 각 lifecycle6건·한글/폭/기록, Android 기록6건·back3경로 통과. 최초 harness/clipboard-back 실패는 원본 증빙에 보존했다. 일반 cap:sync/debug/unsigned iOS/doctor 통과. npm audit 경고10건 유지(변경 경로 uuid의 실제 xcode 사용은 v4 확인). 원장 §26.6·code-residual-20260922 참고. PR/CI/merge 대기. Q4 미실행/Q7 URL 미제공, 실기기·서명/제출 No-Go 유지.
+
+**이전 checkpoint — Wave 23 / B 로컬 검증 완료:** Q6 로컬 링버퍼+설정 내보내기/복사/삭제, Q8 계정당1회 유지. 제품18종·AI 폴백7사유, 최근200건/128KiB, release ID 부재 시 비활성. 결함 주입9종 red→복원, tracked15·full gate(unit5,181/353파일·E2E125·양쪽 smoke/perf), Android4checks와 production cap/sync/debug/doctor 통과. Quick Boot System UI ANR·clipboard 직접 읽기 거부는 기록했고 cold boot/OS paste로 재검증했다. 상세는 원장 §26.5·Q6 증빙 폴더. Q4 미실행·Q7 PROD_URL 미제공·PR/CI/merge 대기. C의 두 local commit, iOS export·실기기·서명/제출은 미완료다. 아래 답변 대기는 당시 이력이다.
 
 **후속 로컬 checkpoint — W22-P1-01 표시 수정:** `codex/device-language-qa`의 commit `25d66b85`가 iOS27 수정 `3acff734` 뒤에 쌓여 있다. worktree: `/Users/sungjin/.codex/worktrees/aetheria-ios27-lifecycle/aetheria-roguelike`. 귀환 LV/EXP/HP와 칭호 능력치 약어를 한글화했고 데이터 수치는 유지했다. baseline4red·결함 주입2종red→green, Android QA 귀환·칭호 실제 화면 통과, tracked15·full gate(unit5,174·E2E121·양쪽 smoke/perf)·문서 가드46 통과. 상세는 해당 commit 원장 §26.4와 `docs/evidence/qa/device-language-20260922/`. Q6/Q8/PROD_URL 미입력·Q4/원격 통합 미실행. iOS 문구 화면·실기기·시간 루틴 및 서명/제출은 미완료다. 이 원본 worktree에는 실행 코드를 적용하지 않았다.
 
@@ -11,6 +13,12 @@
 **현재 checkpoint — Wave 23 / B 결정 준비:** PR #52 merge `78fa259d`와 해당 main의 CI·build·deploy-rules success 확인. `codex/wave23-owner-decisions`에서 Q6/Q8/PROD_URL 답변 대기. Q6 로컬 링버퍼·Q8 현행 유지 권고는 아직 미결정이며, Q4 미실행. 원장 §26.2에 sink 초기화/release ID/내보내기 경계와 iOS27 후속 수정 범위를 기록했다. 실행 코드·native 산출물 변경 없음. B가 닫힌 뒤 C로 진행하며 iOS27 P0·용어 P1·실기기/서명/제출 조건으로 No-Go 유지.
 
 **직전 완료 checkpoint — Wave 22 기기 QA (2026-09-22):** `codex/wave22-device-qa`, base `b98bdeec`. Android back8행/12상태·재료 소비/재실행 복원 통과, iOS SPM 순증2줄. `npm run verify` 5,170/5,170·양쪽 smoke·Android 60초 foreground 통과. **iOS27 시작 즉시 SIGTRAP(UIScene) P0**, 귀환/설정 영문 표기 P1, 7턴/조사 P2를 코드 수정 없이 기록했다. iOS26.5는 부팅·60초 생존. 상세는 [PLAYTEST_CHECKLIST §11](../docs/PLAYTEST_CHECKLIST.md)와 원장 §24.1/§26. 기기 QA 변경은 [PR #52](https://github.com/sungjin9288/aetheria-roguelike/pull/52)에서 추적하며 원격 검사·머지 상태는 해당 PR이 정본이다. 다음 B의 입력은 Q6/Q8/PROD_URL이며 Q4 미실행. 실기기·서명·업로드·스토어 gate 미완료로 **No-Go**. 아래 기존 checkpoint들은 이전 실행 이력이다.
+
+**현재 checkpoint — 기기 P1 한글 표시 로컬 검증 완료:** `codex/device-language-qa`(base `3acff734`)에서 귀환 LV/EXP/HP와 칭호 능력치 약어를 표시 계층에서 수정. 기존 데이터/바이트 핀 유지. 새 계약4개 baseline red, 결함 주입2종 red, 수정 후 관련26개 통과. 증빙 sources3해시만 변경·나머지 불변. tracked15 및 full gate(unit5,174·E2E121·양쪽 smoke/perf) 통과. Android QA 귀환/칭호 화면·선택·가로 폭 검사/캡처 통과, production cap sync/debug 복원. iOS 문구 화면·실기기·시간 루틴은 미실행. B 입력 대기·Q4/원격 작업 미실행. 원장 §26.4.
+
+**현재 checkpoint — iOS27 P0 독립 수정 (2026-09-22, 로컬):** `codex/ios27-lifecycle`, base `78fa259d`(#52 merge). B의 Q6/Q8/PROD_URL은 여전히 미입력이며 Q4 미실행. 별도 worktree에서 Capacitor core/ios/cli·SPM8.5.0 + UIScene 단일 window 경로를 수정했다. iOS26.5/27 동일 QA binary의 시작·제작/일반저장·실제 앱 전환·복귀 입력·60초 생존·강제 재실행 snapshot 6 checks씩 통과, window 생성 제거 mutant는 WebView 부재로 실패. Android AppPlugin 및 crafting/idle/combat 하드웨어 back3경로 통과. production build/cap sync와 unsigned iOS device build 통과. tracked verify15종 및 `AETHERIA_RUN_PERF=1 npm run verify:full` 통과(unit5,170·E2E121·양쪽 smoke/perf). 진단 증빙 첫 실패는 package 두 파일의 sources 해시만 갱신해 해소했다. PR/CI/merge 미실행. iOS27 일부 glyph 누락 관측, 기존 P1·실기기·서명·업로드는 미완료. B 머지 전 C PR을 앞서 머지하지 않는다. 상세: [scene QA](../docs/qa/IOS_SCENE_LIFECYCLE_QA.md), 원장 §26.3.
+
+**현재 checkpoint — Wave 22 기기 QA (2026-09-22):** `codex/wave22-device-qa`, base `b98bdeec`. Android back8행/12상태·재료 소비/재실행 복원 통과, iOS SPM 순증2줄. `npm run verify` 5,170/5,170·양쪽 smoke·Android 60초 foreground 통과. **iOS27 시작 즉시 SIGTRAP(UIScene) P0**, 귀환/설정 영문 표기 P1, 7턴/조사 P2를 코드 수정 없이 기록했다. iOS26.5는 부팅·60초 생존. 상세는 [PLAYTEST_CHECKLIST §11](../docs/PLAYTEST_CHECKLIST.md)와 원장 §24.1/§26. 기기 QA 변경은 [PR #52](https://github.com/sungjin9288/aetheria-roguelike/pull/52)에서 추적하며 원격 검사·머지 상태는 해당 PR이 정본이다. 다음 B의 입력은 Q6/Q8/PROD_URL이며 Q4 미실행. 실기기·서명·업로드·스토어 gate 미완료로 **No-Go**. 아래 기존 checkpoint들은 이전 실행 이력이다.
 
 **신뢰 후 최신 iPhone 실행·저장복원 확인 완료:** 사용자 개발자 신뢰 완료 후 launch47531 exit0/PID57951, 오늘 설치 container와 일치. 미러링에서 복귀창→시작마을 및 저장불러옴 안내 확인; Lv1/HP130·178/MP32·52/EXP37·200/골드318 보존. 복귀창 X만 닫고 보상·이동·초기화 없음. 인증지연 offline 안내로 cloud sync 성공은 미주장. 아래 신뢰 대기 해소; 상세는 같은 20260914 설치 증빙에 추가. 이번 변경은 기록만이며 전체 gameplay gate 재실행 없음.
 
@@ -1098,3 +1106,9 @@ ART-LOCATION-01의12종 source-cell 오른쪽 경계를 교정해 runtime에 적
 - 2026-09-22 Wave 22 진행(branch `codex/wave22-device-qa`, 베이스 `main`=`b98bdeec`): 인수인계 순서·원장·QA·출시 gate 대조 및 A→B→C→D→E 계획 확정(원장 §26). Android sync/debug 및 APK AppPlugin 확인 통과, iOS sync는 Package.swift 순증2줄만. 네이티브 back8행/12상태 일치, 재료 소비·재실행 복원 통과, 운영 세이브 해시 불변. 신규 루틴은 P1(영문 표기)1·P2(7턴/조사)2 관측, 시간 수용은 미검증. iOS unsigned build 통과·26.5 부팅 성공·27.0 UIScene 부팅 P0. 기본 verify 5,170/5,170·desktop/mobile smoke·Android 60초 foreground·체크리스트 관련46/46 통과. production cap:sync 복원 완료. 원격 검사·merge 결과는 PR #52에서 추적. Q6/Q8/PROD_URL 응답 대기; Q4 미실행. Android release keystore·iOS Distribution identity 미구성.
 
 - 2026-09-22 Wave 23 / B 로컬 완료(`codex/wave23-owner-decisions`): Q6 제품18종+AI사유7종 로컬 링버퍼/독립 export·copy·clear, Q8 현행 유지. 신규 단위11·결함 주입9·tracked15·full5,181/E2E125/양쪽 smoke·perf·Android4checks 통과. Q4 미실행/Q7 URL 미제공, 원격 PR/CI/merge는 후속 기록 참조. 근거: 원장 §26.5, `docs/evidence/qa/local-product-events-20260922/`.
+
+- 2026-09-22 iOS27 P0 local: UIScene/Capacitor8.5 migration, 양쪽 simulator lifecycle6checks 및 Android back3경로 검증. window mutant red. tracked verify15종·unit5,170·E2E121·양쪽 smoke/perf 통과. 진단 증빙 sources2해시만 변경, 기준/결과 불변. 로컬 완료·원격 미실행, B 입력 대기.
+
+- 2026-09-22 W22-P1-01 local: 귀환 LV/EXP/HP와 칭호 약어를 MSG/기존 표시 함수로 한글화. 원본 수치 불변, baseline4red·mutant2종red→green. Android 별도 QA 화면 통과, sources3해시만 갱신, tracked15·unit5,174·E2E121·양쪽 smoke/perf 통과. B 입력 대기·원격 미실행.
+
+- 2026-09-22 Wave24/C: iOS27·한글 P1·숫자 clamp·실제 엔진 테스트 통합. full unit5,192/E2E125·tracked15·native 통과; 원장 §26.6. 원격 통합 대기, 출시 No-Go.

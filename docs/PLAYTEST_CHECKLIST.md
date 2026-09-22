@@ -341,6 +341,29 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 
 ### Android
 
+**인수인계 §7-A 결과 — C 통합 재검증 (2026-09-22)**
+
+| 항목 | 결과 | 근거·미완료 |
+|---|---|---|
+| Android sync → debug → APK AppPlugin | 통과 | 통합 QA와 일반 debug APK 확인. 일반 APK의 test API 부재 확인 |
+| 하드웨어 뒤로가기 8행 | A 통과 유지 / C 3경로 통과 | C는 제작→idle·idle/combat→launcher를 별도 실행으로 확인. 8행 전체 재실행은 아님. clipboard 직후 back 대기 실패와 종료된 WebView 재사용 오류는 원본 receipt에 보존 |
+| 신규 세이브 5분 루틴 | 전체 재실행 미실행 | 귀환·칭호 한글 표시를 Android·iOS26.5/27에서 확인. 엄격한 시간·초심자 수용은 미검증 |
+| 재료 보유 2분 루틴 | 저장·복원 부분 재검증 통과 | iOS 양쪽에서 제작5,000→4,900·일반 저장·앱 전환·강제 재실행 snapshot 일치. 전체2분 루틴 재실행은 아님 |
+| iOS sync | 통과 | UIScene 구성·단일 window/bridge·core/ios/cli/SPM8.5.0. 일반 자산 복원 뒤 추가 native tracked delta0 |
+| iOS build·시뮬레이터 부팅 | 통과 | unsigned device build 및26.5/27 각 lifecycle6checks. 기존 P0 재검증 통과. 이전 glyph 누락은 이번 복귀 캡처에서 미재현이며 원인 해결은 미주장 |
+| 실기기·서명·스토어 | 미실행 / No-Go | 양 플랫폼 실기기 시간 루틴·Android release keystore·Apple Distribution identity·내부 업로드·스토어 입력 미완료 |
+
+**인수인계 §7-B 결과 (C 재검증)**
+
+| Q | 결과 | 다음 조건 |
+|---|---|---|
+| Q4 Firebase Hosting 비활성화 | 미실행 | 소유자의 명시적 실행 지시 없음 |
+| Q6 텔레메트리 목적지 | PR #53 통합 / C native 연결 확인 | 로컬 링버퍼+내보내기 유지. Android 보관·OS paste·삭제, iOS 양쪽 기록 생성 확인. iOS export·Android 파일 다운로드 획득은 미검증. release ID 부재 시 비활성 |
+| Q7 프로덕션 ai-proxy | 미실행 | 소유자 PROD_URL 미제공. 토큰·키·헤더 값을 사용하거나 기록하지 않음 |
+| Q8 퀘스트 보상 원장 | 계정당 1회 유지 | 승천 리셋·랭크별 원장·반복 보상 경제 변경 없음 |
+
+
+
 **Wave 22 관측 (2026-09-22, base `b98bdeec`)**: Android 16/API 36 에뮬레이터 `Aetheria_QA_API_36_20260904`, 화면 1080×2400 / WebView 412×867. `android:sync` → `android:debug` 후 production·QA APK의 `assets/capacitor.plugins.json`에서 AppPlugin 등록을 각각 확인했다. 자연 진입 1~7행과 fixture 진입 8행 모두 실제 `adb shell input keyevent KEYCODE_BACK`으로 검사했다. 앱 종료는 Activity 종료·Launcher 복귀를 뜻하며 프로세스 사멸을 주장하지 않는다.
 
 | # | 상태 | 진입 | 뒤로가기 기대 | 근거 | 관측 결과 (2026-09-22) |
@@ -363,6 +386,8 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 | P2 / W22-P2-01 | 첫 숲의 정령 전투가 일반 공격6 + 기술1 = 7턴 (체크리스트 약4~6턴) | 단일 자연 실행 관측. 생명178→98, 보상 후에도 레벨1. 밸런스 수정 없음 |
 | P2 / W22-P2-02 | 전투 기록에 `숲의 정령이(가)` 노출 | 조사 placeholder 관측, 코드 수정 없음 |
 | 미검증 | 초심자의 3초 판단·정확한 5분/2분 수용, 기력 부족 기술, 자연 아이템 드롭 후 spotlight, 저사양/OEM 키보드, 실기기 | 자동 조작·캡처를 인간 시간 수용 또는 실기기 증거로 대체하지 않음 |
+
+**W22-P1-01 후속 (2026-09-22, 로컬):** 귀환 `레벨·경험 획득·생명`, 칭호 `공격력·방어력·기력·치명타`를 표시 계층에서 한글화했다. Android API36의 별도 QA package에서 귀환 및 칭호 변경 후 실제 텍스트·가로 잘림 검사와 캡처 확인 통과. [귀환 캡처](evidence/qa/device-language-20260922/android-debrief.png), [칭호 캡처](evidence/qa/device-language-20260922/android-title.png), [receipt](evidence/qa/device-language-20260922/verification.json). 계약4개 baseline red·결함 주입2종 red, 수정 후 full gate(unit5,174·E2E121·양쪽 smoke/perf) 통과. 전체 back8행·strict5분/2분·iOS 문구 화면·실기기는 이번에 재실행하지 않았다. 원격 통합 전이며 iOS27 glyph 관측 및 서명/제출 gate는 남아 있다.
 
 **iOS 보충**: `ios:sync`는 `Package.swift` 순증2줄만, unsigned device/simulator build 통과. QA bundle `com.aetheria.roguelike.wave22qa`는 기존 앱과 분리했다. iOS 26.5의 부팅·60초 생존과 수집 로그에서 플러그인 오류 일치 항목 0을 확인했다. OS 로그에는 XPC/TextInput 메시지와 WebP decode 오류 1건이 있어 "로그 오류 전체 0"으로 보고하지 않는다. 확인한 제작 화면의 아이템 그림은 렌더됐으며 decode 오류의 자산 경로는 미확인이다. iOS 27.0 P0는 별도 호환성 결함으로 남긴다.
 
@@ -443,3 +468,12 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 메모:
 - 
 ```
+
+
+### iOS27 P0 후속 로컬 검증 (2026-09-22)
+
+§11의 W22-P0-01을 입력으로 한 별도 native 변경이다. A의 관측 이력은 유지한다. core/ios/cli·SPM8.5.0 및 SceneDelegate 단일 window 경로로 iOS26.5/27 각각 시작·제작저장·실제 앱 전환·복귀입력·60초·강제재실행6checks 통과. 창 생성 제거 mutant FAIL. production unsigned device build 통과. Android는 AppPlugin과 crafting/idle/combat back3경로 회귀만 통과했으며8행 전체와 strict5분/2분은 다시 실행하지 않았다.
+
+P0 수정은 로컬이며 PR/CI/merge 전이다. iOS27 캡처 일부 glyph 누락 관측은 원인 미확인으로 남긴다. 일반 저장 복원은 background 즉시 flush·실기기 검증을 대체하지 않는다. 증거: [scene QA](qa/IOS_SCENE_LIFECYCLE_QA.md), [receipt](evidence/qa/ios-scene-lifecycle-20260922/ios27.json). B 결정·기존 P1·서명·스토어 gate가 남아 No-Go다.
+
+로컬 통합 검증: tracked verify15종 및 `AETHERIA_RUN_PERF=1 npm run verify:full` exit0(unit5,170/5,170·E2E121/121·양쪽 smoke/perf). 최초 증빙 해시 불일치는 package 두 파일의 sources sha256만 재생성해 해소했으며 진단 결과/기준은 불변이다. desktop smoke의 종료 timeout 경고는 보존한다.

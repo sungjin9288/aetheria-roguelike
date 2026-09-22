@@ -18,6 +18,7 @@ import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
 import ClassJourneySummary from './ClassJourneySummary';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 import type { ReturnSupplyRewardViewModel } from '../hooks/useReturnSupplyRewardedAd';
+import { MSG } from '../data/messages';
 
 interface ExpeditionDebriefCardProps {
     summary: ExpeditionSummary;
@@ -59,13 +60,11 @@ const ExpeditionDebriefCard = ({
 }: ExpeditionDebriefCardProps) => {
     usePlatformBackHandler(true, onClose, 70);
     const itemLabels = summarizeItems(summary.newItems);
-    const levelLabel = summary.endLevel > summary.startLevel
-        ? `LV ${summary.startLevel} → ${summary.endLevel}`
-        : `LV ${summary.endLevel}`;
+    const levelLabel = MSG.EXPEDITION_RETURN_LEVEL(summary.startLevel, summary.endLevel);
     const metrics = [
         { label: '전투', value: `${summary.battles}회`, icon: Swords, tone: 'text-rose-200' },
         { label: '탐험', value: `${summary.explores}회`, icon: Compass, tone: 'text-[#b9f1ec]' },
-        { label: '성장 EXP', value: `+${summary.expGained.toLocaleString('ko-KR')}`, icon: Sparkles, tone: 'text-[#ece5ff]' },
+        { label: MSG.EXPEDITION_RETURN_EXP, value: `+${summary.expGained.toLocaleString('ko-KR')}`, icon: Sparkles, tone: 'text-[#ece5ff]' },
         { label: '골드 변화', value: signedNumber(summary.goldDelta), icon: Coins, tone: 'text-[#f6e7c8]' },
     ];
 
@@ -126,7 +125,7 @@ const ExpeditionDebriefCard = ({
                                 가장 위험했던 순간
                             </div>
                             <div className="font-rajdhani text-sm font-bold text-rose-100">
-                                HP {summary.lowestHp.toLocaleString('ko-KR')} · {summary.lowestHpPercent}%
+                                {MSG.EXPEDITION_RETURN_HP(summary.lowestHp, summary.lowestHpPercent)}
                             </div>
                         </div>
                         <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/35">

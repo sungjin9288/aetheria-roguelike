@@ -376,6 +376,9 @@ export const MSG = {
     EXPEDITION_CLEAR_RECAP: (bossName: string, kills: number, gold: number) => (
         `원정 완료 · ${bossName} 격파 · 적 ${kills}마리 처치 · 골드 +${gold}`
     ),
+    EXPEDITION_RETURN_LEVEL: (start: number, end: number) => end > start ? `레벨 ${start} → ${end}` : `레벨 ${end}`,
+    EXPEDITION_RETURN_EXP: '경험 획득',
+    EXPEDITION_RETURN_HP: (hp: number, percent: number) => `생명 ${hp.toLocaleString('ko-KR')} · ${percent}%`,
     EVENT_SUCCESS_GOLD: (gold: number) => `선택에 성공했습니다. 골드 +${gold}`,
     EVENT_FAIL_DAMAGE: (dmg: number) => `선택의 대가로 생명 ${dmg}을 잃었습니다.`,
     REST_DONE_FULL: (cost: number) => `휴식을 마치고 생명과 기력을 모두 회복했습니다. 골드 -${cost}`,

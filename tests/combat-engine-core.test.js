@@ -1,21 +1,20 @@
 /**
  * CombatEngine 핵심 로직 유닛 테스트
  *
- * CombatEngine.js는 JSX → db.js 의존성으로 Node.js 직접 임포트 불가.
- * 인라인 미러 패턴으로 핵심 순수 함수 알고리즘을 검증합니다.
+ * calculateDamage는 실제 엔진을 호출하고 결정론적 rng를 주입합니다.
+ * 나머지 함수의 기존 인라인 미러는 이 변경의 범위 밖입니다.
  */
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { CombatEngine } from '../src/systems/CombatEngine.ts';
+
+const MAX_ROLL = 1 - Number.EPSILON;
 
 // ── BALANCE 상수 미러 (src/data/constants.js 에서 복사) ───────────────────────
 const BALANCE = {
-    CRIT_CHANCE: 0.1,
     ESCAPE_CHANCE: 0.5,
     ELEMENT_WEAK_MULT: 1.25,
     ELEMENT_RESIST_MULT: 0.75,
-    GUARD_DAMAGE_MULT: 0.65,
-    DAMAGE_BASE_RATIO: 0.9,
-    DAMAGE_VARIANCE: 0.2,
     EXP_SCALE_RATE: 1.15,              // 실제값: 완화된 스케일 (1.20 → 1.15)
     EXP_LEVEL_HARD_CAP: 150000,        // 레벨당 최대 EXP 상한선 (300K → 150K)
     HP_PER_LEVEL: 20,
@@ -43,26 +42,20 @@ function getElementMultiplier(elem, enemy) {
     return 1;
 }
 
-/**
- * CombatEngine.calculateDamage 미러 (결정론적 버전: crit/random 주입)
- */
+/** 실제 엔진에 분산·치명타 순서의 rng 두 값을 주입한다. */
 function calculateDamage(stats, options = {}, rolls = {}) {
-    const {
-        mult = 1,
-        guarding = false,
-        elementMultiplier = 1,
-        critChance = BALANCE.CRIT_CHANCE,
-    } = options;
-    const { randomValue = 0, critRoll = 1 } = rolls;
-    const guardMult = guarding ? BALANCE.GUARD_DAMAGE_MULT : 1;
-    const baseDamage = Math.floor(
-        stats.atk * (BALANCE.DAMAGE_BASE_RATIO + randomValue * BALANCE.DAMAGE_VARIANCE) * mult * guardMult * elementMultiplier
-    );
-    const isCrit = critRoll < critChance;
-    return {
-        damage: Math.max(1, isCrit ? baseDamage * 2 : baseDamage),
-        isCrit,
-    };
+    const { randomValue = 0, critRoll = MAX_ROLL } = rolls;
+    const values = [randomValue, critRoll];
+    let draws = 0;
+    const result = CombatEngine.calculateDamage(stats, {
+        ...options,
+        rng: () => {
+            assert.ok(draws < values.length, '분산과 치명타 외의 rng 호출');
+            return values[draws++];
+        },
+    });
+    assert.equal(draws, 2, '분산 다음 치명타를 각각 한 번 판정');
+    return result;
 }
 
 /**
@@ -163,36 +156,41 @@ test('getElementMultiplier: enemy에 weakness/resistance 없음 → 1', () => {
 // ── calculateDamage 테스트 ──────────────────────────────────────────────────
 
 test('calculateDamage: 기본 (non-crit, 분산 0) → atk * 0.9', () => {
-    const result = calculateDamage({ atk: 100 }, {}, { randomValue: 0, critRoll: 1 });
-    assert.equal(result.damage, Math.floor(100 * 0.9));
+    const result = calculateDamage({ atk: 100 }, {}, { randomValue: 0, critRoll: MAX_ROLL });
+    assert.equal(result.damage, 90);
     assert.equal(result.isCrit, false);
 });
 
-test('calculateDamage: 분산 최대 (randomValue=1) → atk * (0.9 + 0.2)', () => {
-    const result = calculateDamage({ atk: 100 }, {}, { randomValue: 1, critRoll: 1 });
-    assert.equal(result.damage, Math.floor(100 * 1.1));
+test('calculateDamage: 분산 상한 직전 (rng < 1) → atk * (0.9 + 0.2)', () => {
+    const result = calculateDamage({ atk: 100 }, {}, { randomValue: MAX_ROLL, critRoll: MAX_ROLL });
+    assert.equal(result.damage, 110);
     assert.equal(result.isCrit, false);
 });
 
-test('calculateDamage: 크리티컬 → 데미지 2배', () => {
-    const result = calculateDamage({ atk: 100 }, {}, { randomValue: 0, critRoll: 0 });
-    assert.equal(result.damage, Math.floor(100 * 0.9) * 2);
-    assert.equal(result.isCrit, true);
+test('calculateDamage: 기본 치명타 확률 경계와 데미지 2배', () => {
+    for (const [critRoll, isCrit, damage] of [
+        [0, true, 180], [0.1 - Number.EPSILON, true, 180],
+        [0.1, false, 90], [MAX_ROLL, false, 90]
+    ]) {
+        const result = calculateDamage({ atk: 100 }, {}, { randomValue: 0, critRoll });
+        assert.equal(result.damage, damage);
+        assert.equal(result.isCrit, isCrit);
+    }
 });
 
 test('calculateDamage: guard → GUARD_DAMAGE_MULT (0.65) 적용', () => {
-    const result = calculateDamage({ atk: 100 }, { guarding: true }, { randomValue: 0, critRoll: 1 });
-    assert.equal(result.damage, Math.floor(100 * 0.9 * 0.65));
+    const result = calculateDamage({ atk: 100 }, { guarding: true }, { randomValue: 0, critRoll: MAX_ROLL });
+    assert.equal(result.damage, 58);
 });
 
 test('calculateDamage: 속성 배율 적용', () => {
-    const result = calculateDamage({ atk: 100 }, { elementMultiplier: 1.25 }, { randomValue: 0, critRoll: 1 });
-    assert.equal(result.damage, Math.floor(100 * 0.9 * 1.25));
+    const result = calculateDamage({ atk: 100 }, { elementMultiplier: 1.25 }, { randomValue: 0, critRoll: MAX_ROLL });
+    assert.equal(result.damage, 112);
 });
 
 test('calculateDamage: mult 배율 적용 (스킬 배율)', () => {
-    const result = calculateDamage({ atk: 100 }, { mult: 1.5 }, { randomValue: 0, critRoll: 1 });
-    assert.equal(result.damage, Math.floor(100 * 0.9 * 1.5));
+    const result = calculateDamage({ atk: 100 }, { mult: 1.5 }, { randomValue: 0, critRoll: MAX_ROLL });
+    assert.equal(result.damage, 135);
 });
 
 test('calculateDamage: 모든 배율 복합 (guard + element + mult + crit)', () => {
@@ -201,26 +199,25 @@ test('calculateDamage: 모든 배율 복합 (guard + element + mult + crit)', ()
         { guarding: true, elementMultiplier: 1.25, mult: 1.5 },
         { randomValue: 0, critRoll: 0 }
     );
-    const base = Math.floor(100 * 0.9 * 1.5 * 0.65 * 1.25);
-    assert.equal(result.damage, base * 2);
+    assert.equal(result.damage, 218);
     assert.equal(result.isCrit, true);
 });
 
 test('calculateDamage: 최소 데미지 1 보장 (atk=0)', () => {
-    const result = calculateDamage({ atk: 0 }, {}, { randomValue: 0, critRoll: 1 });
+    const result = calculateDamage({ atk: 0 }, {}, { randomValue: 0, critRoll: MAX_ROLL });
     assert.equal(result.damage, 1);
 });
 
 test('calculateDamage: critChance=0 → 절대 크리티컬 안 됨', () => {
-    for (let i = 0; i < 50; i++) {
-        const result = calculateDamage({ atk: 100 }, { critChance: 0 }, { randomValue: 0, critRoll: Math.random() });
+    for (const critRoll of [0, 0.1 - Number.EPSILON, 0.1, 0.5, MAX_ROLL]) {
+        const result = calculateDamage({ atk: 100 }, { critChance: 0 }, { randomValue: 0, critRoll });
         assert.equal(result.isCrit, false);
     }
 });
 
 test('calculateDamage: critChance=1 → 항상 크리티컬', () => {
-    for (let i = 0; i < 50; i++) {
-        const result = calculateDamage({ atk: 100 }, { critChance: 1 }, { randomValue: 0, critRoll: Math.random() });
+    for (const critRoll of [0, 0.1 - Number.EPSILON, 0.1, 0.5, MAX_ROLL]) {
+        const result = calculateDamage({ atk: 100 }, { critChance: 1 }, { randomValue: 0, critRoll });
         assert.equal(result.isCrit, true);
     }
 });
@@ -387,15 +384,15 @@ test('calculateDamage: guarding + 크리티컬 복합 시 guard 감소가 크리
     // baseDamage = floor(100 * 0.9 * 0.65) = floor(58.5) = 58
     // crit: 58 * 2 = 116
     const result = calculateDamage({ atk: 100 }, { guarding: true }, { randomValue: 0, critRoll: 0 });
-    const expectedBase = Math.floor(100 * BALANCE.DAMAGE_BASE_RATIO * BALANCE.GUARD_DAMAGE_MULT);
-    assert.equal(result.damage, expectedBase * 2);
+    assert.equal(result.damage, 116);
     assert.equal(result.isCrit, true);
 });
 
 test('calculateDamage: 속성 저항 적용 시 데미지가 일반보다 낮음', () => {
-    const normal = calculateDamage({ atk: 100 }, {}, { randomValue: 0, critRoll: 1 });
-    const resist = calculateDamage({ atk: 100 }, { elementMultiplier: BALANCE.ELEMENT_RESIST_MULT }, { randomValue: 0, critRoll: 1 });
-    assert.ok(resist.damage < normal.damage, `저항 데미지 ${resist.damage} < 일반 ${normal.damage}`);
+    const normal = calculateDamage({ atk: 100 }, {}, { randomValue: 0, critRoll: MAX_ROLL });
+    const resist = calculateDamage({ atk: 100 }, { elementMultiplier: BALANCE.ELEMENT_RESIST_MULT }, { randomValue: 0, critRoll: MAX_ROLL });
+    assert.equal(normal.damage, 90);
+    assert.equal(resist.damage, 67);
 });
 
 // ── getElementMultiplier 추가 엣지 케이스 ────────────────────────────────────

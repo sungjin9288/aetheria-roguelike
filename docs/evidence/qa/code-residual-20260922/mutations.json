@@ -1,0 +1,98 @@
+{
+  "numericBaseline": {
+    "tests": 19,
+    "pass": 14,
+    "fail": 5
+  },
+  "mutations": [
+    {
+      "mutation": "numeric-bounds-removed",
+      "exitCode": 1,
+      "failedTests": [
+        "not ok 10 - ai-proxy: 음수와 상한 초과 수치는 각 프롬프트 범위로 제한한다",
+        "not ok 12 - ai-proxy: 0 기력·기력 상한·골드·승률·생명은 유효한 값이다"
+      ]
+    },
+    {
+      "mutation": "numeric-type-coercion",
+      "exitCode": 1,
+      "failedTests": [
+        "not ok 9 - ai-proxy: 숫자 필드의 문자열·객체·배열·boolean·null은 기본값으로 접힌다"
+      ]
+    },
+    {
+      "mutation": "numeric-zero-lost",
+      "exitCode": 1,
+      "failedTests": [
+        "not ok 10 - ai-proxy: 음수와 상한 초과 수치는 각 프롬프트 범위로 제한한다",
+        "not ok 12 - ai-proxy: 0 기력·기력 상한·골드·승률·생명은 유효한 값이다"
+      ]
+    },
+    {
+      "mutation": "hp-ratio-unbounded",
+      "exitCode": 1,
+      "failedTests": [
+        "not ok 15 - ai-proxy: HP 비율의 잘못된 분모와 범위 이탈을 처리한다"
+      ]
+    },
+    {
+      "mutation": "damage-plus-one",
+      "exitCode": 1,
+      "failedTests": [
+        "not ok 1 - calculateDamage: 기본 (non-crit, 분산 0) → atk * 0.9",
+        "not ok 2 - calculateDamage: 분산 상한 직전 (rng < 1) → atk * (0.9 + 0.2)",
+        "not ok 3 - calculateDamage: 기본 치명타 확률 경계와 데미지 2배",
+        "not ok 4 - calculateDamage: guard → GUARD_DAMAGE_MULT (0.65) 적용",
+        "not ok 5 - calculateDamage: 속성 배율 적용",
+        "not ok 6 - calculateDamage: mult 배율 적용 (스킬 배율)",
+        "not ok 7 - calculateDamage: 모든 배율 복합 (guard + element + mult + crit)",
+        "not ok 8 - calculateDamage: 최소 데미지 1 보장 (atk=0)",
+        "not ok 11 - calculateDamage: guarding + 크리티컬 복합 시 guard 감소가 크리티컬 2배 적용 전에 처리됨",
+        "not ok 12 - calculateDamage: 속성 저항 적용 시 데미지가 일반보다 낮음"
+      ],
+      "mode": "isolated-process-memory-only"
+    },
+    {
+      "mutation": "crit-flag-flipped",
+      "exitCode": 1,
+      "failedTests": [
+        "not ok 1 - calculateDamage: 기본 (non-crit, 분산 0) → atk * 0.9",
+        "not ok 2 - calculateDamage: 분산 상한 직전 (rng < 1) → atk * (0.9 + 0.2)",
+        "not ok 3 - calculateDamage: 기본 치명타 확률 경계와 데미지 2배",
+        "not ok 7 - calculateDamage: 모든 배율 복합 (guard + element + mult + crit)",
+        "not ok 9 - calculateDamage: critChance=0 → 절대 크리티컬 안 됨",
+        "not ok 10 - calculateDamage: critChance=1 → 항상 크리티컬",
+        "not ok 11 - calculateDamage: guarding + 크리티컬 복합 시 guard 감소가 크리티컬 2배 적용 전에 처리됨"
+      ],
+      "mode": "isolated-process-memory-only"
+    },
+    {
+      "mutation": "rng-not-consumed",
+      "exitCode": 1,
+      "failedTests": [
+        "not ok 1 - calculateDamage: 기본 (non-crit, 분산 0) → atk * 0.9",
+        "not ok 2 - calculateDamage: 분산 상한 직전 (rng < 1) → atk * (0.9 + 0.2)",
+        "not ok 3 - calculateDamage: 기본 치명타 확률 경계와 데미지 2배",
+        "not ok 4 - calculateDamage: guard → GUARD_DAMAGE_MULT (0.65) 적용",
+        "not ok 5 - calculateDamage: 속성 배율 적용",
+        "not ok 6 - calculateDamage: mult 배율 적용 (스킬 배율)",
+        "not ok 7 - calculateDamage: 모든 배율 복합 (guard + element + mult + crit)",
+        "not ok 8 - calculateDamage: 최소 데미지 1 보장 (atk=0)",
+        "not ok 9 - calculateDamage: critChance=0 → 절대 크리티컬 안 됨",
+        "not ok 10 - calculateDamage: critChance=1 → 항상 크리티컬",
+        "not ok 11 - calculateDamage: guarding + 크리티컬 복합 시 guard 감소가 크리티컬 2배 적용 전에 처리됨",
+        "not ok 12 - calculateDamage: 속성 저항 적용 시 데미지가 일반보다 낮음"
+      ],
+      "mode": "isolated-process-memory-only"
+    }
+  ],
+  "engineByteHashesUnchanged": {
+    "src/systems/CombatEngine.ts": "cc6222a7659bee85b398b0f59573f3d4fd70cb6eaaa7be9d9f67afb28456542f",
+    "src/systems/CombatEngine.status.ts": "7523ece7ec2a8950b5cc8aef6c84ac75696a1323bb8e2278cbd930b68fe0d49f",
+    "src/systems/CombatEngine.loot.ts": "0fad3fa5903fa0dc078397d7d97444ed44d51cf3fb27d72e363fef443b435a95",
+    "src/systems/CombatEngine.relics.ts": "83724f5f5c41fd546dc81d02e3b9b142605eba867025db255dbdddfcde3655d6",
+    "src/systems/CombatEngine.enemyAI.ts": "b8110bdb8ebe3f96becb78168514a7d3c56b58e4e74197a9ef2dfc9fe8d4b5d2",
+    "src/systems/CombatEngine.outcome.ts": "a90468bd8eff8e7130d2fd924f0adb8d4469fbb04820a4aa50ea0a54f5969715",
+    "src/systems/CombatEngine.actions.ts": "ac47a1274928b767629500d886e275ab12c63a08a5bd6da38166c583ba504c7c"
+  }
+}

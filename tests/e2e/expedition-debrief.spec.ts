@@ -25,6 +25,10 @@ test.describe('Expedition return debrief', () => {
         await expect(debrief).toContainText('전투');
         await expect(debrief).toContainText('4회');
         await expect(debrief).toContainText('+185');
+        await expect(debrief).toContainText('레벨 19 → 20');
+        await expect(debrief).toContainText('경험 획득');
+        await expect(debrief).toContainText('생명');
+        await expect(debrief).not.toContainText(/\b(?:LV|EXP|HP)\b/);
         await expect(page.getByTestId('expedition-debrief-items')).toContainText('초급 회복 물약 x2');
         await expect(page.getByTestId('expedition-debrief-quests')).toContainText('첫 숲길 조사');
         await expect(page.getByTestId('expedition-debrief-story')).toContainText('돌아오는 것도 모험이다');

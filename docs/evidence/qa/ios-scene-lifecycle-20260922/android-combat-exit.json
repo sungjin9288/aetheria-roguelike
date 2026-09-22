@@ -1,0 +1,7 @@
+{
+  "timestamp": "2026-09-22T04:38:31.568Z",
+  "package": "com.aetheria.roguelike.wave23qa",
+  "status": "passed",
+  "before": "combat",
+  "activity": "topResumedActivity=ActivityRecord{64008468 u0 com.google.android.apps.nexuslauncher/.NexusLauncherActivity t2}"
+}

@@ -1,0 +1,47 @@
+{
+  "date": "2026-09-22",
+  "base": "c5e89034c1ab1ffae38e241adde1be5de30b9ee6",
+  "command": "VITE_RELEASE_ID=wave24-qa AETHERIA_RUN_PERF=1 npm run verify:full",
+  "exitCode": 0,
+  "unit": {
+    "passed": 5192,
+    "files": 354,
+    "skipped": 0
+  },
+  "e2e": {
+    "passed": 125,
+    "specFiles": 45
+  },
+  "smoke": [
+    "desktop",
+    "mobile"
+  ],
+  "perf": {
+    "desktopFcpMs": 356,
+    "mobileFcpMs": 320,
+    "desktopDclMs": 235.4,
+    "mobileDclMs": 208.7
+  },
+  "trackedEvidenceChecks": 15,
+  "fullLogSha256": "8a26415c48044d108ab540661fb99fc3f89f8cd25bd4ff8a9ef3275910d4b0c3",
+  "limits": [
+    "physical device timed play not run",
+    "Q7 owner URL missing",
+    "release signing and store uploads not run",
+    "Android clipboard-then-back timeout cause unconfirmed",
+    "npm audit warnings retained"
+  ],
+  "sourceHashes": {
+    "functions/api/ai-proxy.js": "45e4e5b082a0d3bd432d2e71e5eb18111c3d1e06978f4a2e7d996846a609aea5",
+    "tests/cf-functions.test.js": "794099231663bbe4c381c6bdfa30d184d98b0ad05c62790fc002d37643b1abe8",
+    "tests/combat-engine-core.test.js": "a81b303d07f4611cb247b46101f8a6fc369023e4136c4dbf92ad20b25adff27f"
+  },
+  "documentationGuards": {
+    "passed": 46,
+    "exitCode": 0
+  },
+  "sourceManifest": {
+    "entries": 348,
+    "mismatches": 0
+  }
+}
