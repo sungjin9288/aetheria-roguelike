@@ -1689,3 +1689,5 @@ iOS `ios:sync` 결과는 `Package.swift`의 CapacitorApp dependency/product 순�
 | Q8 퀘스트 보상 원장 | 결정 대기 | 계정당 1회 유지 / ASCEND 리셋 / prestigeRank별 원장 중 소유자 선택 |
 
 **로컬 검증 (2026-09-22)**: `npm run verify` 통과(type-check/lint 오류0, unit5,170/5,170·skip0, build:guard ok), `test:device-qa:item-investment` 1/1, `bash scripts/local-playtest.sh` desktop/mobile smoke 통과. desktop 종료 단계의 `browser.close timeout` 경고는 기존 runner가 처리했으며 통과와 함께 보존한다. `android:device:smoke`는 material QA APK와 emulator 명시 옵션으로 install/launch/동일PID 60초 foreground를 확인했다. `mobile:doctor`, production `cap:sync`, unsigned `ios:build:device` 통과. 변경된 체크리스트를 읽는 관련 문서/기기 가드46/46 통과. 로컬 전체 e2e/perf는 src 무변경이므로 미실행이며 PR CI가 수행한다. 이는 iOS27 부팅 P0와 실기기/서명 gate를 대신하지 않는다.
+
+**원격 추적**: [PR #52](https://github.com/sungjin9288/aetheria-roguelike/pull/52). 위 검증은 로컬 실행 결과이며 head별 CI와 실제 merge 상태는 해당 PR의 checks/merge 기록을 정본으로 확인한다.
