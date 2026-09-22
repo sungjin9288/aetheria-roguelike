@@ -1,0 +1,38 @@
+{
+  "timestamp": "2026-09-22T09:17:52.354Z",
+  "package": "com.aetheria.roguelike.wave24qa",
+  "kind": "Android API36 emulator",
+  "status": "failed",
+  "checks": [
+    {
+      "name": "debrief language",
+      "passed": true
+    },
+    {
+      "name": "title language",
+      "passed": true
+    },
+    {
+      "name": "native default sink",
+      "passed": true,
+      "eventCount": 8
+    },
+    {
+      "name": "native clipboard OS paste JSON",
+      "passed": true,
+      "eventCount": 8
+    },
+    {
+      "name": "native layout",
+      "passed": true,
+      "width": 341,
+      "scrollWidth": 341,
+      "minButtonHeight": 44
+    },
+    {
+      "name": "native clear",
+      "passed": true
+    }
+  ],
+  "error": "locator.waitFor: Timeout 15000ms exceeded.\nCall log:\n\u001b[2m  - waiting for getByTestId('crafting-panel') to be hidden\u001b[22m\n\u001b[2m    33 × locator resolved to visible <div data-testid=\"crafting-panel\" class=\"panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden border border-[#d5b180]/18 p-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]\">…</div>\u001b[22m\n"
+}

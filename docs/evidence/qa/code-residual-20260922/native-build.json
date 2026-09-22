@@ -1,0 +1,26 @@
+{
+  "androidQaApk": {
+    "path": "/tmp/aetheria-wave24-qa.apk",
+    "sha256": "413d1f00e02192ed38b5f57bc8d0762f14b6881935392e158a8703ba9d9b8057",
+    "bytes": 227744878,
+    "appPlugin": true
+  },
+  "simulatorApp": "/tmp/aetheria-wave24-simulator/Build/Products/Debug-iphonesimulator/App.app",
+  "productionAndroid": {
+    "path": "android/app/build/outputs/apk/debug/app-debug.apk",
+    "sha256": "d00268705dc997fa1e1dd0ef268f757f26552e8d57902ec1af90cddf62a579de",
+    "bytes": 227732662,
+    "appPlugin": true,
+    "testApiAbsent": true
+  },
+  "productionIosUnsigned": {
+    "path": "/tmp/aetheria-wave24-device-build/Build/Products/Release-iphoneos/App.app",
+    "exists": true
+  },
+  "commands": {
+    "npm run cap:sync": 0,
+    "npm run android:debug": 0,
+    "AETHERIA_IOS_DERIVED_DATA_PATH=/tmp/aetheria-wave24-device-build npm run ios:build:device": 0,
+    "npm run mobile:doctor": 0
+  }
+}

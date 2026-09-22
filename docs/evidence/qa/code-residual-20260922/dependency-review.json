@@ -1,0 +1,30 @@
+{
+  "auditExitCode": 1,
+  "counts": {
+    "info": 0,
+    "low": 2,
+    "moderate": 3,
+    "high": 5,
+    "critical": 0,
+    "total": 10
+  },
+  "changedDependencyPath": [
+    "@capacitor/cli@8.5.0",
+    "xcode@3.0.1",
+    "uuid@7.0.3"
+  ],
+  "advisory": "https://github.com/uuidjs/uuid/security/advisories/GHSA-w5hq-g745-h8pq",
+  "affectedMethods": [
+    "v3",
+    "v5",
+    "v6"
+  ],
+  "observedXcodeProbe": {
+    "generateUuidCalls": 100,
+    "v4Calls": 100,
+    "callerBuffers": 0,
+    "affectedMethodCalls": 0,
+    "projectWrites": 0
+  },
+  "disposition": "Keep required UIScene-capable CLI; advisory remains, affected methods absent from inspected xcode call path. No audit fix or dependency override."
+}

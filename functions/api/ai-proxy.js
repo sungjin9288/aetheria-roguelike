@@ -30,12 +30,19 @@ const CLAMP_RELIC_NAME = 24;
 const MAX_RELICS = 8;
 const CLAMP_STORY_CONTEXT = 300;
 const CLAMP_STORY_TYPE = 24;
+const MAX_PROMPT_LEVEL = 99;
 
 const clampText = (value, max) => {
     if (value === null || value === undefined) return '';
     const text = typeof value === 'string' ? value : String(value);
     return text.length > max ? text.slice(0, max) : text;
 };
+
+const clampNumber = (value, min, max, fallback) => (
+    typeof value === 'number' && Number.isFinite(value)
+        ? Math.min(max, Math.max(min, value))
+        : fallback
+);
 
 const exceedsBodyLimit = (text) => {
     // UTF-8은 문자당 최소 1바이트이므로 문자 수가 상한을 넘으면 바이트 수도 반드시 넘는다.
@@ -198,15 +205,18 @@ const buildGeminiPayload = (type, data, uid) => {
             ? ps.relics.slice(0, MAX_RELICS).map((r) => clampText(r?.name || r, CLAMP_RELIC_NAME)).join(', ')
             : '없음';
         const diffLabel = clampText(ps.difficultyLabel, CLAMP_DIFFICULTY_LABEL) || '균형';
-        const winRate = ps.recentWinRate != null ? `${ps.recentWinRate}%` : '알 수 없음';
-        const hpRatio = (ps.hp && ps.maxHp) ? Math.round((ps.hp / ps.maxHp) * 100) : null;
+        const recentWinRate = clampNumber(ps.recentWinRate, 0, 100, null);
+        const winRate = recentWinRate !== null ? `${recentWinRate}%` : '알 수 없음';
+        const hpRatio = Number.isFinite(ps.hp) && Number.isFinite(ps.maxHp) && ps.maxHp > 0
+            ? Math.round((Math.min(ps.maxHp, Math.max(0, ps.hp)) / ps.maxHp) * 100)
+            : null;
         const playerContext = [
-            `이름: ${clampText(ps.name, CLAMP_NAME) || '모험가'} | 직업: ${clampText(ps.job, CLAMP_JOB) || '알 수 없음'} | Lv.${ps.level || 1}`,
-            `HP: ${hpRatio != null ? hpRatio + '%' : '알 수 없음'} | MP: ${ps.mp || 0}/${ps.maxMp || 50}`,
+            `이름: ${clampText(ps.name, CLAMP_NAME) || '모험가'} | 직업: ${clampText(ps.job, CLAMP_JOB) || '알 수 없음'} | Lv.${clampNumber(ps.level, 1, MAX_PROMPT_LEVEL, 1)}`,
+            `HP: ${hpRatio != null ? hpRatio + '%' : '알 수 없음'} | MP: ${clampNumber(ps.mp, 0, Number.MAX_SAFE_INTEGER, 0)}/${clampNumber(ps.maxMp, 0, Number.MAX_SAFE_INTEGER, 50)}`,
             `빌드 성향: ${buildTags}`,
             `보유 유물: ${relicsHeld}`,
             `전투 난이도: ${diffLabel} (최근 승률 ${winRate})`,
-            `보유 골드: ${ps.gold || 0}G`,
+            `보유 골드: ${clampNumber(ps.gold, 0, Number.MAX_SAFE_INTEGER, 0)}G`,
         ].join('\n');
 
         systemInstruction = "당신은 '에테리아(Aetheria)' 판타지 RPG의 게임 마스터입니다. 한국어로 1~2문장 분량의 짧고 선명한 현장 이벤트를 만드세요. 플레이어의 빌드 성향과 보유 유물, 현재 전투 상황을 반영하여 이벤트와 보상이 해당 빌드에 적합하도록 연출하세요. 최근 사건과 같은 소재를 반복하지 말고, 선택지는 반드시 서로 다르게 2~3개 제시하세요. 각 선택지에는 즉시 적용 가능한 결과를 붙이세요.";

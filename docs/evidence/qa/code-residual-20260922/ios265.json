@@ -1,0 +1,307 @@
+{
+  "timestamp": "2026-09-22T09:09:17.646Z",
+  "udid": "E73B7A9D-2C19-40BD-B4DB-CF8210BE3DEF",
+  "platformVersion": "26.5",
+  "bundleId": "com.aetheria.roguelike.wave24qa",
+  "status": "passed",
+  "checks": {
+    "singleWebView": true,
+    "craftAndSave": true,
+    "backgroundForeground": true,
+    "foregroundInput": true,
+    "sixtySecondSurvival": true,
+    "forcedRelaunchPersistence": true
+  },
+  "launchPids": [
+    "36972",
+    "37345"
+  ],
+  "before": {
+    "investment": {
+      "name": "정비 검증",
+      "gold": 5000,
+      "weaponEnhance": 0,
+      "crafts": 0,
+      "syntheses": 0,
+      "synthProtects": 1,
+      "inventory": [
+        {
+          "id": "investment-철광석-0",
+          "name": "철광석",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-철광석-1",
+          "name": "철광석",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-철광석-2",
+          "name": "철광석",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-철광석-3",
+          "name": "철광석",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-철광석-4",
+          "name": "철광석",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-0",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-1",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-2",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-3",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-4",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-synth-0",
+          "name": "전투도끼",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        },
+        {
+          "id": "investment-synth-1",
+          "name": "마법지팡이",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        },
+        {
+          "id": "investment-synth-2",
+          "name": "강철 롱소드",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        }
+      ]
+    },
+    "location": "시작의 마을"
+  },
+  "afterCraft": {
+    "investment": {
+      "name": "정비 검증",
+      "gold": 4900,
+      "weaponEnhance": 0,
+      "crafts": 1,
+      "syntheses": 0,
+      "synthProtects": 1,
+      "inventory": [
+        {
+          "id": "investment-enhance-0",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-1",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-2",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-3",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-4",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-synth-0",
+          "name": "전투도끼",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        },
+        {
+          "id": "investment-synth-1",
+          "name": "마법지팡이",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        },
+        {
+          "id": "investment-synth-2",
+          "name": "강철 롱소드",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        },
+        {
+          "id": "1790068160203_943f66",
+          "name": "강철 롱소드",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        }
+      ]
+    },
+    "location": "시작의 마을"
+  },
+  "events": [
+    {
+      "type": "appStateChange",
+      "value": false,
+      "time": 1790068160929
+    },
+    {
+      "type": "document.pause",
+      "value": null,
+      "time": 1790068161955
+    },
+    {
+      "type": "visibility",
+      "value": "hidden",
+      "time": 1790068161970
+    },
+    {
+      "type": "visibility",
+      "value": "visible",
+      "time": 1790068171403
+    },
+    {
+      "type": "document.resume",
+      "value": null,
+      "time": 1790068171519
+    },
+    {
+      "type": "appStateChange",
+      "value": true,
+      "time": 1790068171717
+    }
+  ],
+  "afterRelaunch": {
+    "investment": {
+      "name": "정비 검증",
+      "gold": 4900,
+      "weaponEnhance": 0,
+      "crafts": 1,
+      "syntheses": 0,
+      "synthProtects": 1,
+      "inventory": [
+        {
+          "id": "investment-enhance-0",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-1",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-2",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-3",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-enhance-4",
+          "name": "강화 재료",
+          "type": "mat",
+          "tier": 0,
+          "enhance": 0
+        },
+        {
+          "id": "investment-synth-0",
+          "name": "전투도끼",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        },
+        {
+          "id": "investment-synth-1",
+          "name": "마법지팡이",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        },
+        {
+          "id": "investment-synth-2",
+          "name": "강철 롱소드",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        },
+        {
+          "id": "1790068160203_943f66",
+          "name": "강철 롱소드",
+          "type": "weapon",
+          "tier": 2,
+          "enhance": 0
+        }
+      ]
+    },
+    "location": "시작의 마을"
+  }
+}

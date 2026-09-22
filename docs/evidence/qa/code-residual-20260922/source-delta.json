@@ -1,0 +1,11 @@
+{
+  "changedSources": [
+    "package-lock.json",
+    "package.json",
+    "src/components/ExpeditionDebriefCard.tsx",
+    "src/data/messages.ts",
+    "src/utils/gameUtils.ts"
+  ],
+  "reportHash": "f21dcf819808a624d2d7f9d30b28a7d4b1403b8b3806383089453ef2ff731620",
+  "nonSourcesUnchanged": true
+}

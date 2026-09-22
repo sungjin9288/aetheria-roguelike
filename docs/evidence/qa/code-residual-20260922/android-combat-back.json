@@ -1,0 +1,12 @@
+{
+  "timestamp": "2026-09-22T09:19:43.776Z",
+  "package": "com.aetheria.roguelike.wave24qa",
+  "kind": "Android API36 emulator",
+  "status": "passed",
+  "checks": [
+    {
+      "name": "hardware back combat to launcher",
+      "passed": true
+    }
+  ]
+}

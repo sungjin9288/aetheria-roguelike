@@ -132,9 +132,9 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 353 파일 / 5,181 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 354 파일 / 5,192 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
-                      #   + e2e/ (Playwright 44 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
+                      #   + e2e/ (Playwright 45 스펙, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 functions/api/        # Cloudflare Pages Functions (ai-proxy.js)
 android/ ios/         # Capacitor 네이티브 프로젝트
@@ -282,6 +282,8 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 ```
 
 **테스트 파일 위치**: `tests/*.test.js`
+- `cf-functions.test.js` — 실제 proxy handler가 만드는 숫자 컨텍스트의 타입·유한성·범위·유효한0을 검증한다. 프롬프트 수치 제한은 게임 저장값을 바꾸지 않는다.
+- `combat-engine-core.test.js`의 damage12건은 실제 엔진+sequence rng를 사용한다. 엔진 바이트 핀은 변경하지 않고 결함 판별은 격리 프로세스의 메모리 override로 확인한다.
 - `device-language-contract.test.js` — 귀환 성장/생명과 칭호 효과의 실제 한글 렌더, 모든 칭호 수치 보존. 영문 레벨/원본 칭호 라벨 재주입을 각각 거부한다.
 - `grave-recovery.test.js` — 묘비 생성/복구
 - `run-profile-utils.test.js` — 빌드 분석 로직

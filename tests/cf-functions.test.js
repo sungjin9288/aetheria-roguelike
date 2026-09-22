@@ -51,10 +51,10 @@ const withMockedFetch = async (impl, run) => {
     }
 };
 
-const makeRequest = ({ method = 'POST', headers = {}, body } = {}) => {
+const makeRequest = ({ method = 'POST', headers = {}, body, rawBody } = {}) => {
     const init = { method, headers };
-    if (body !== undefined) {
-        init.body = JSON.stringify(body);
+    if (body !== undefined || rawBody !== undefined) {
+        init.body = rawBody ?? JSON.stringify(body);
         init.headers = { 'Content-Type': 'application/json', ...headers };
     }
     return new Request('https://example.pages.dev/api/ai-proxy', init);
@@ -187,7 +187,7 @@ const EVENT_GEMINI_JSON = {
     ]
 };
 
-const runProxy = async ({ body, uid = 'uid-clamp', geminiStatus = 200, geminiErrorText = '', geminiJson = EVENT_GEMINI_JSON }) => {
+const runProxy = async ({ body, rawBody, uid = 'uid-clamp', geminiStatus = 200, geminiErrorText = '', geminiJson = EVENT_GEMINI_JSON }) => {
     const seen = { geminiCalls: 0, prompt: null };
     const response = await withMockedFetch(
         async (url, init) => {
@@ -208,12 +208,87 @@ const runProxy = async ({ body, uid = 'uid-clamp', geminiStatus = 200, geminiErr
             throw new Error(`Unexpected fetch call: ${urlStr}`);
         },
         async () => aiProxy.onRequestPost({
-            request: makeRequest({ headers: { authorization: 'Bearer valid-token' }, body }),
+            request: makeRequest({ headers: { authorization: 'Bearer valid-token' }, body, rawBody }),
             env: PROXY_ENV
         })
     );
-    return { response, ...seen, bodyBytes: Buffer.byteLength(JSON.stringify(body), 'utf8') };
+    return { response, ...seen, bodyBytes: Buffer.byteLength(rawBody ?? JSON.stringify(body), 'utf8') };
 };
+
+const numericPrompt = async (playerSnapshot, uid) => {
+    const result = await runProxy({ uid, body: { type: 'event', data: { playerSnapshot } } });
+    assert.equal(result.response.status, 200);
+    assert.equal(result.geminiCalls, 1);
+    return result.prompt;
+};
+
+const assertNumericContext = (prompt, { level, mp, maxMp, gold, winRate, hp }) => {
+    assert.ok(prompt.includes(`| Lv.${level}\n`));
+    assert.ok(prompt.includes(`HP: ${hp} | MP: ${mp}/${maxMp}\n`));
+    assert.ok(prompt.includes(`(최근 승률 ${winRate})\n`));
+    assert.ok(prompt.includes(`보유 골드: ${gold}G\n`));
+};
+
+test('ai-proxy: 숫자 필드의 문자열·객체·배열·boolean·null은 기본값으로 접힌다', async () => {
+    for (const [index, value] of ['NUMERIC_SENTINEL'.repeat(100), { bad: true }, [123], true, null].entries()) {
+        const prompt = await numericPrompt(Object.fromEntries(
+            ['level', 'mp', 'maxMp', 'gold', 'recentWinRate', 'hp', 'maxHp'].map(key => [key, value])
+        ), `numeric-invalid-${index}`);
+        assertNumericContext(prompt, { level: 1, mp: 0, maxMp: 50, gold: 0, winRate: '알 수 없음', hp: '알 수 없음' });
+        assert.ok(!prompt.includes('NUMERIC_SENTINEL'));
+        assert.ok(!prompt.includes('[object Object]'));
+    }
+});
+
+test('ai-proxy: 음수와 상한 초과 수치는 각 프롬프트 범위로 제한한다', async () => {
+    for (const [index, value] of [-10, Number.MAX_VALUE].entries()) {
+        const prompt = await numericPrompt({ level: value, mp: value, maxMp: value, gold: value, recentWinRate: value }, `numeric-bounds-${index}`);
+        assertNumericContext(prompt, {
+            level: index === 0 ? 1 : 99,
+            mp: index === 0 ? 0 : Number.MAX_SAFE_INTEGER,
+            maxMp: index === 0 ? 0 : Number.MAX_SAFE_INTEGER,
+            gold: index === 0 ? 0 : Number.MAX_SAFE_INTEGER,
+            winRate: index === 0 ? '0%' : '100%', hp: '알 수 없음'
+        });
+    }
+});
+
+test('ai-proxy: 정상 숫자 컨텍스트는 보존한다', async () => {
+    const prompt = await numericPrompt({ level: 42, mp: 12, maxMp: 80, gold: 3456, recentWinRate: 62.5, hp: 25, maxHp: 100 }, 'numeric-normal');
+    assertNumericContext(prompt, { level: 42, mp: 12, maxMp: 80, gold: 3456, winRate: '62.5%', hp: '25%' });
+});
+
+test('ai-proxy: 0 기력·기력 상한·골드·승률·생명은 유효한 값이다', async () => {
+    const prompt = await numericPrompt({ level: 0, mp: 0, maxMp: 0, gold: 0, recentWinRate: 0, hp: 0, maxHp: 100 }, 'numeric-zero');
+    assertNumericContext(prompt, { level: 1, mp: 0, maxMp: 0, gold: 0, winRate: '0%', hp: '0%' });
+});
+
+test('ai-proxy: 숫자 필드 누락은 기존 기본 컨텍스트를 유지한다', async () => {
+    const prompt = await numericPrompt({}, 'numeric-missing');
+    assertNumericContext(prompt, { level: 1, mp: 0, maxMp: 50, gold: 0, winRate: '알 수 없음', hp: '알 수 없음' });
+});
+
+test('ai-proxy: JSON 숫자 overflow는 Infinity를 프롬프트에 남기지 않는다', async () => {
+    const { response, geminiCalls, prompt } = await runProxy({
+        uid: 'numeric-overflow',
+        rawBody: '{"type":"event","data":{"playerSnapshot":{"level":1e400,"mp":-1e400,"maxMp":1e400,"gold":1e400,"recentWinRate":1e400,"hp":1e400,"maxHp":1e400}}}'
+    });
+    assert.equal(response.status, 200);
+    assert.equal(geminiCalls, 1);
+    assertNumericContext(prompt, { level: 1, mp: 0, maxMp: 50, gold: 0, winRate: '알 수 없음', hp: '알 수 없음' });
+    assert.doesNotMatch(prompt, /Infinity|NaN/);
+});
+
+test('ai-proxy: HP 비율의 잘못된 분모와 범위 이탈을 처리한다', async () => {
+    for (const [index, [hp, maxHp, expected]] of [
+        [10, 0, '알 수 없음'], [10, -1, '알 수 없음'], [-10, 50, '0%'],
+        [Number.MAX_VALUE, Number.MIN_VALUE, '100%'], [50, 50, '100%']
+    ].entries()) {
+        const prompt = await numericPrompt({ hp, maxHp }, `numeric-hp-${index}`);
+        assertNumericContext(prompt, { level: 1, mp: 0, maxMp: 50, gold: 0, winRate: '알 수 없음', hp: expected });
+        assert.doesNotMatch(prompt, /Infinity|NaN/);
+    }
+});
 
 test('ai-proxy: 1MB 본문은 413이고 Gemini fetch는 0건 (Wave 21 M1)', async () => {
     const oversized = 'A'.repeat(1_000_000);

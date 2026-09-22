@@ -341,6 +341,29 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 
 ### Android
 
+**인수인계 §7-A 결과 — C 통합 재검증 (2026-09-22)**
+
+| 항목 | 결과 | 근거·미완료 |
+|---|---|---|
+| Android sync → debug → APK AppPlugin | 통과 | 통합 QA와 일반 debug APK 확인. 일반 APK의 test API 부재 확인 |
+| 하드웨어 뒤로가기 8행 | A 통과 유지 / C 3경로 통과 | C는 제작→idle·idle/combat→launcher를 별도 실행으로 확인. 8행 전체 재실행은 아님. clipboard 직후 back 대기 실패와 종료된 WebView 재사용 오류는 원본 receipt에 보존 |
+| 신규 세이브 5분 루틴 | 전체 재실행 미실행 | 귀환·칭호 한글 표시를 Android·iOS26.5/27에서 확인. 엄격한 시간·초심자 수용은 미검증 |
+| 재료 보유 2분 루틴 | 저장·복원 부분 재검증 통과 | iOS 양쪽에서 제작5,000→4,900·일반 저장·앱 전환·강제 재실행 snapshot 일치. 전체2분 루틴 재실행은 아님 |
+| iOS sync | 통과 | UIScene 구성·단일 window/bridge·core/ios/cli/SPM8.5.0. 일반 자산 복원 뒤 추가 native tracked delta0 |
+| iOS build·시뮬레이터 부팅 | 통과 | unsigned device build 및26.5/27 각 lifecycle6checks. 기존 P0 재검증 통과. 이전 glyph 누락은 이번 복귀 캡처에서 미재현이며 원인 해결은 미주장 |
+| 실기기·서명·스토어 | 미실행 / No-Go | 양 플랫폼 실기기 시간 루틴·Android release keystore·Apple Distribution identity·내부 업로드·스토어 입력 미완료 |
+
+**인수인계 §7-B 결과 (C 재검증)**
+
+| Q | 결과 | 다음 조건 |
+|---|---|---|
+| Q4 Firebase Hosting 비활성화 | 미실행 | 소유자의 명시적 실행 지시 없음 |
+| Q6 텔레메트리 목적지 | PR #53 통합 / C native 연결 확인 | 로컬 링버퍼+내보내기 유지. Android 보관·OS paste·삭제, iOS 양쪽 기록 생성 확인. iOS export·Android 파일 다운로드 획득은 미검증. release ID 부재 시 비활성 |
+| Q7 프로덕션 ai-proxy | 미실행 | 소유자 PROD_URL 미제공. 토큰·키·헤더 값을 사용하거나 기록하지 않음 |
+| Q8 퀘스트 보상 원장 | 계정당 1회 유지 | 승천 리셋·랭크별 원장·반복 보상 경제 변경 없음 |
+
+
+
 **Wave 22 관측 (2026-09-22, base `b98bdeec`)**: Android 16/API 36 에뮬레이터 `Aetheria_QA_API_36_20260904`, 화면 1080×2400 / WebView 412×867. `android:sync` → `android:debug` 후 production·QA APK의 `assets/capacitor.plugins.json`에서 AppPlugin 등록을 각각 확인했다. 자연 진입 1~7행과 fixture 진입 8행 모두 실제 `adb shell input keyevent KEYCODE_BACK`으로 검사했다. 앱 종료는 Activity 종료·Launcher 복귀를 뜻하며 프로세스 사멸을 주장하지 않는다.
 
 | # | 상태 | 진입 | 뒤로가기 기대 | 근거 | 관측 결과 (2026-09-22) |

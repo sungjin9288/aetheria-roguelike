@@ -1,0 +1,14 @@
+{
+  "timestamp": "2026-09-22T09:13:30.671Z",
+  "udid": "E73B7A9D-2C19-40BD-B4DB-CF8210BE3DEF",
+  "platformVersion": "26.5",
+  "bundleId": "com.aetheria.roguelike.wave24qa",
+  "status": "failed",
+  "checks": {
+    "debriefLanguage": true
+  },
+  "launchPids": [
+    "38256"
+  ],
+  "error": "Runtime condition not met: !!document.querySelector('[data-testid=\"system-title-picker\"]')"
+}

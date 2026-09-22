@@ -1798,3 +1798,28 @@ B 입력 대기 동안 기기에서 관측한 귀환 카드 LV/EXP/HP와 설정 
 | Q8 | 미결정 | 계정당1회 유지 권고에 대한 소유자 확정 대기 |
 
 증빙은 `docs/evidence/qa/device-language-20260922/`에 보존했다. QA APK는 별도 applicationId에만 설치했으며 운영 세이브는 조작하지 않았다. 테스트 종료 후 이 작업에서 기동한 emulator만 종료했다. `mobile:doctor`는 SDK36/Java21 정상, Android release keystore·iOS Apple Distribution 미구성을 보고했다. B→C 통합 순서와 No-Go는 유지한다.
+
+
+### 26.6 C 통합 — 기기 결함과 코드 잔여 (2026-09-22)
+
+B PR #53은 head `170e0f9d`의 CI run35705481168 static/E2E/perf/rules와 deploy build 통과 후 merge `c5e89034`로 통합했다. PR deploy-rules는 skipped다. 새 origin/main 기반 `codex/wave24-code-residual`에 §26.3/§26.4의 두 local commit을 가져왔다. 해당 절의 검증은 각각의 당시 snapshot이며 이번 통합 검증과 구분한다.
+
+**착수 재현:** 실제 ai-proxy handler + 로컬 fetch stub에서 문자열 level, 객체 mp, 음수 gold, 500% 승률, NaN HP 비율이 프롬프트에 그대로 들어가고 maxMp=0이50으로 바뀜을 확인했다(200, 외부 호출0). 숫자 보간4곳과 인접 HP 유한성만 수정한다. damage12건은 실제 엔진에 sequence rng를 주입하며 엔진 바이트는 유지한다.
+
+**예고 델타:** B의 최종 진단을 기준으로 package.json·package-lock.json·ExpeditionDebriefCard.tsx·messages.ts·gameUtils.ts의 sources5해시만 이동한다. 두 cherry-pick의 충돌 난 진단은 B 버전을 유지했으며, 최종 source freeze 뒤 content→event-reward→equipment combat-power→pacing verify→progression writer→tracked15 순서로 재생성한다. reportHash/v1Baseline 포함 nonSources와 바이트 핀은 불변 예상이다.
+
+
+**집중 검증:** numeric 계약7건 추가 전 기존 구현5red/19(정상·누락2건은 이미 green), 수정 후19/19. 숫자 상한 제거·타입 coercion·0값 누락·HP 비율 무제한4종, 별도 프로세스에서 실제 엔진의 damage+1·crit flag 반전·rng 미소비3종 모두 red. 엔진7파일 바이트 해시 불변, 복원 후 proxy/core/P1 합계61/61. 테스트의 미러 damage 수식은 제거했고 분산/crit 정확히2draw와 명시 기대값으로12건을 검증한다. 독립 읽기 전용 검토에서 추가 중요 결함 없음.
+
+**통합 native:** QA release `wave24-qa`와 별도 bundle/applicationId `com.aetheria.roguelike.wave24qa` 사용. iOS26.5/27 각각 lifecycle6checks, 귀환·칭호 한글/402px 무넘침/로컬 기록 생성 통과. 4개 한글 캡처 직접 확인. 최초 UI 검사2회는 귀환 카드 미닫힘·캐릭터 버튼이 장비 탭을 여는 순서 누락으로 실패했으며 receipt를 보존했다. 즉시 캡처에서 전환 전 화면이 잡혀3초 후 다시 캡처·검수했다. 이번27 복귀 캡처에서 이전 glyph 누락은 재현되지 않았지만 원인 해결로 판정하지 않는다.
+
+Android API36 cold boot에서 귀환·칭호/기록 보관/OS paste JSON/341px 무넘침·44px 버튼/삭제6checks 통과. 같은 연결에서 clipboard 뒤 제작 back 대기가 실패(직전 IME 상태 미수집으로 원인 미확정)했고, 새 실행의 제작→idle·idle→launcher2건은 통과했다. 종료된 WebView를 재사용한 검사 오류를 분리해 별도 연결의 combat→launcher도 통과. 초기 실패 receipt를 덮지 않고3경로의 독립 통과 receipt를 남겼다. 원래8행 전체/시간 루틴/실기기 검증을 대체하지 않는다.
+
+Production cap:sync→android:debug→ios:build:device→mobile:doctor exit0. sync 이후 추가 native tracked delta0. APK AppPlugin 등록·test API 부재 확인. unsigned iOS 산출물은 `/tmp/aetheria-wave24-device-build/Build/Products/Release-iphoneos/App.app`. Android release signing·Apple Distribution identity 부재는 지속. 전체 gate 결과는 아래 최종 검증을 따른다.
+
+
+**최종 통합 검증:** `VITE_RELEASE_ID=wave24-qa AETHERIA_RUN_PERF=1 npm run verify:full` exit0: unit5,192/5,192(354파일·skip0), E2E125/125(63+62), type/lint/build guard·desktop/mobile smoke/perf 통과. FCP356/320ms, DCL235.4/208.7ms. 고정 순서 재생성·tracked15 통과, 예고한 sources5해시만 변경했고 reportHash `f21dcf819808a624d2d7f9d30b28a7d4b1403b8b3806383089453ef2ff731620` 및 v1Baseline 포함 nonSources는 불변이다. 기존 desktop browser.close timeout 경고를 유지한다. 이후 수정은 결과 문서·receipt뿐이다. PR/CI/merge는 아직 미실행이다.
+
+**의존성 범위 확인:** npm audit exit1, high5/moderate3/low2 경고가 남는다. 변경 경로 CLI8.5.0→xcode3.0.1→uuid7.0.3의 moderate3은 같은 [uuid advisory](https://github.com/uuidjs/uuid/security/advisories/GHSA-w5hq-g745-h8pq) 경로다. 영향 API는 caller buffer를 사용하는 v3/v5/v6이며 실제 xcode의 유일 호출은 v4다. 실제 프로젝트 parse 후 UUID100회 생성 시 v4호출100·caller buffer0·영향 메서드0·프로젝트 쓰기0을 확인했다. UIScene에 필요한8.5.0을 유지하며 audit fix/override는 하지 않았다. 경고 해소·전체 의존성 보안 완료는 미주장. `dependency-review.json`에 범위를 보존한다.
+
+**문서 마감:** Android/iOS smoke 안내·한글 표시 관련46tests 통과. 진단 sources348개 해시 일치·`git diff --check` 통과.
