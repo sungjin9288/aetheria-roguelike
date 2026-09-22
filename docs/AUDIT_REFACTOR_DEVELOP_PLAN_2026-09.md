@@ -1464,6 +1464,26 @@ L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets
 **L4 정적 검증 (2026-09-21, Android 실기기 부재)**: 소유자에게 Android 기기가 없어 실기 뒤로가기 검증은 **에뮬레이터**(Android Studio AVD + `adb shell input keyevent KEYCODE_BACK` — 하드웨어 back은 KeyEvent라 기기와 동일 경로)로 대체하거나 미검증으로 남긴다. 기기 없이 확인한 층 4단: ① `runtimeEnvironment.ts:39` `Capacitor.isNativePlatform()` → `'capacitor'` ② `App.tsx:111` `bindLifecycleBridge({environment: getRuntimeEnvironment()})` ③ `@capacitor/app` `AppPlugin.java:46-62` — 코어가 아니라 **플러그인이** AndroidX `OnBackPressedCallback`을 dispatcher에 등록한다(§23 K3의 "코어에 back 처리 0건"의 답). JS 리스너가 있으면 `backButton` 이벤트 + `document` `backbutton`, 없으면 `webView.goBack()` 또는 무동작(**종료가 아니다**); `exitApp` → `activity.finish()` ④ gradle 2파일 등록. **미검증으로 남는 것**: 빌드된 APK의 `capacitor.plugins.json`에 `AppPlugin`이 실제로 들어 있는지(= 빌드 절차), 첫 back 전에 `App.addListener`가 resolve하는지(동적 import + 비동기 등록 — 수십 ms). **운영 함정**: `scripts/android-gradle.sh`는 `gradlew`만 돌리고 `cap sync`를 하지 않는다 — `capacitor.plugins.json`은 gitignore된 생성물이라 sync 없이 빌드하면 플러그인이 컴파일만 되고 등록되지 않아 뒤로가기가 **조용히 앱 종료로 되돌아간다**. CLAUDE.md §4에 순서(`android:sync` → `android:debug`)를 박았다. 실기/에뮬레이터 결과가 오기 전까지 K3는 "정적 검증 완료 · 런타임 미검증"이다.
 
 
+**L4 런타임 검증 (Codex, 2026-09-22)**
+
+`android:sync` → `android:debug` 후 APK AppPlugin 등록 및 Android 16/API 36의 native back을 확인했다. production APK SHA-256 `36c15e4cc250aa345c150e356eceb05e6f91f336eaf934d866c11514c0789649`, 신규 여정 QA `947484e4713a8099b664840c03cecfcca2c2ac0c26ddb005d1a1ddb41ecb4b66`, 재료 QA `07910aa6333d0607ac39593290879a1982f516ce080eb81017b4817bdc6928e0`.
+
+| # | 상태 | 진입 | 뒤로가기 기대 | 근거 | 관측 결과 (2026-09-22) |
+|---|---|---|---|---|---|
+| 1 | idle(시작의 마을) | 자연 플레이 후 마을 | 앱 종료, 확인 대화 없음 | `MODE_BACK_ACTION.idle = close-app` → `App.exitApp()` | 일치. Launcher로 이동, 재실행 시 캐릭터·골드·수령 원장 복원 |
+| 2 | shop | 상점 버튼 | 상점 닫힘, idle | `close-focus-panel` | 일치. shop → idle, 앱 유지 |
+| 3 | quest_board / job_change / crafting | 각 패널 버튼 | 패널 닫힘, idle | `close-focus-panel` | 세 패널 모두 일치. 각각 → idle |
+| 4 | event(카드 열림) | 자연 탐험 → 마법의 흔적 | 카드 dismiss, idle | `dismiss-event` | 일치. event → idle, 앱 유지 |
+| 5 | PostCombatCard 열림 | 자연 첫 전투 승리 | 카드 닫힘, 앱 유지 | `usePlatformBackHandler` 소비 | 일치. 결과 카드 닫힘, idle 유지 |
+| 6 | PremiumShop / MirrorPanel 열림 | 설정의 각 버튼 | 오버레이 닫힘 | `close-premium` / `close-mirror` | 두 오버레이 모두 일치. 설정 화면·앱 유지 |
+| 7 | combat(카드 없음) | 자연 탐험 → 숲의 정령 | 앱 종료, 도주 아님 | `combat = close-app` | 일치. Launcher로 이동. 재실행 시 동일 적 생명 96·전투 상태 복원 |
+| 8 | ReturnBriefingCard / TrueEndingScreen | 기존 test API fixture로 진입 | back 소비, 앱 유지 | 각 컴포넌트 `usePlatformBackHandler` 등록 | 둘 다 일치. 복귀 카드 닫힘; 진엔딩 화면과 true_ending 상태 유지 |
+
+iOS `ios:sync` 결과는 `Package.swift`의 CapacitorApp dependency/product 순증2줄(+4/-2), `project.pbxproj`·`Package.resolved` 변경 없음. unsigned device 및 simulator build는 성공했다. iOS 26.5 QA bundle 부팅·60초 이상 생존, 수집 로그에 플러그인 오류 일치 항목 0. 같은 빌드는 iOS 27.0에서 `UIScene life cycle is required for apps built with this SDK` + SIGTRAP으로 종료(**P0**). UIKit/XPC/WebP 진단은 플러그인 오류와 구분했으며 WebP 자산 경로는 미확인이다.
+
+신규 여정에서 귀환/설정 영문 표기 **P1 1건**, 첫 전투7턴·조사 `이(가)` **P2 2건**을 기록했다. 재료 취소 무소비, 강화150/제작100/합성600골드 소비와 재실행 복원, 운영 세이브3키 해시 불변. 5분/2분 인간 시간 수용·기력 부족·자연 드롭 spotlight·물리 기기는 미검증. `src/**`와 바이트 핀은 그대로다. 상세는 PLAYTEST_CHECKLIST §11 Android 및 [증빙 JSON](evidence/qa/wave22-device-qa-20260922.json). K3 Android 런타임은 통과했고, iOS 27 부팅 P0는 다음 수정 입력이며 릴리스는 No-Go다.
+
+
 ## 25. Wave 21 계획 (2026-09-21 착수, 베이스 `main` = `8be7eacd` = PR #47 merge commit)
 
 **핵심**: 첫 감사의 축(타입·계약·상태 기계·복원·배포)은 §24.1이 적은 대로 소진됐다 — 후보 3은 run 353 초록으로 닫혔고 후보 1은 `fac8f5eb`로 끝났다. 그래서 이번에는 **다섯 축을 전부 실행으로 다시 쟀다**(리듀서 드라이버 · `onRequestPost` 직접 호출 · 프로덕션 빌드 산출물 grep · 유닛 5,168 재실행 · 증빙 JSON 파싱). 결과는 **wave급 결함 2건 + 문서/죽은 코드 정리 1건**이고, 나머지 축은 "없다"가 측정으로 증명된다. (1) **AI 프록시는 플레이어 문자열을 상한 없이 Gemini 프롬프트에 넣는다** — 1MB `name` 하나가 1,000,739자 프롬프트로 **200 OK**, `relics`+`buildProfile`은 프롬프트에 **두 번** 보간돼 2MB 본문이 4,001,518자가 된다(실행 실측). 익명 인증 토큰은 방문자 누구나 받으므로 이건 "인증된 남용"이고, 서버의 유일한 한도 40req/60s는 건당 크기를 안 본다. (2) **`ASCEND`는 묘비를 버린다** — `{...INITIAL_STATE}`에 `grave: state.grave`가 없다. 같은 리셋인 `RESET_GAME`(사망)은 보존한다. 실행으로 확인: 승천 전 `[{고요한 숲, 5000G}]` → 승천 후 `null`, 반면 `RESET_GAME`은 그대로. 공개 침공 문서는 rules `delete: false`라 남으므로 "남들은 내 묘비를 털 수 있는데 나는 회수할 수 없다"가 된다. (3) `functions/api/feedback-validate.js`(187줄, 테스트 6건)는 **클라이언트 참조 0건**인데 문서 세 곳이 "클라이언트가 호출한다"고 적고 있다 — `SystemTab.tsx:371`은 `addDoc`으로 Firestore에 직접 쓴다.
@@ -1625,3 +1645,49 @@ L3의 실측은 계획과 **정확히 일치**(8 디렉터리 합 3,802; `assets
 **Wave 22 후보 추가**: 5. `combat-engine-core.test.js`의 미러 12건을 실제 엔진 호출로 교체(`rng` 주입) — 관찰 4.
 
 **게이트** (head `cc69f5f9`, 코드 = `f0afd4cd`): type-check 0 · lint 0 · unit **5,170 / 5,170**(351파일, skip 0, 케이스 수 불변 — 수정은 단언이 아니라 rng 주입) · build:guard ok(`npm run verify`, 13:21~13:27 직렬; e2e/perf는 코드 변경이 테스트 1파일뿐이라 CI에 맡긴다).
+
+
+## 26. 인수 이후 실행 계획 (2026-09-22, 베이스 `main` = `b98bdeec`)
+
+인수인계 §0 순서와 현재 문서·Git 상태를 대조했다. 첫 브랜치는 `codex/wave22-device-qa`이며 기존 untracked `.claude/skills/`는 범위 밖이다. 세 번째 정적 감사를 열지 않고 기기 관측을 다음 수정의 입력으로 사용한다.
+
+| 단계 | 범위 | 검증·종료 조건 |
+|---|---|---|
+| A / Wave 22 | Android sync → debug → APK AppPlugin → 뒤로가기 8행의 하위 상태 12개, 신규 5분·재료 2분 루틴; iOS sync | 관측 3곳 기록, src 변경 없음, 기본 verify와 관련 smoke/native 검증 → PR CI → merge commit. 불일치는 후속 수정 입력으로 보존 |
+| B | Q4·Q6·Q7·Q8의 답과 실제 확인 결과 | Q4 명시 실행 지시 전 미실행. Q7 소유자 제공 PROD_URL에서 무인증 판정만. Q6/Q8 변경 선택은 구현 범위 확정 후 진행 |
+| C | 기기에서 확인한 결함 및 관련 프록시 숫자 보간 4곳·엔진 미러 테스트 12건 | 계약은 결함 주입 red부터. rng 명시, 바이트 핀 불변. 코드 변경은 e2e와 desktop/mobile perf 포함 |
+| D | 최신 아트 정본과 수용 범위 정합성 | 최신 V27은 총 254 = authored 234 / retained 20. 이전 retained89 triage를 신규 미승인89로 다시 열지 않는다. 신규 생산은 별도 승인 종속 |
+| E | 양 플랫폼 물리 기기, release 서명, 내부 업로드, 스토어 입력 | MOBILE_RELEASE §5 전 항목 충족 전 No-Go. unsigned·emulator·merge를 출시 완료로 대체하지 않는다 |
+
+**예고 델타**: A의 tracked native 변경은 `ios/App/CapApp-SPM/Package.swift`의 CapacitorApp dependency/product 순증 2줄이다. `project.pbxproj`가 움직이면 커밋하지 않는다. `src/**`, 바이트 핀, 증빙 baseline은 편집·재생성하지 않는다. 결과 문서는 PLAYTEST_CHECKLIST §11 Android, 본 원장 §24.1, todo를 함께 갱신한다.
+
+**검증 실행 주의**: `verify:full`은 perf를 자동 활성화하지 않으므로 코드 변경 단계는 `AETHERIA_RUN_PERF=1 npm run verify:full` 또는 별도 양 viewport perf를 사용한다. 증빙 writer·빌드·게이트는 직렬 실행한다. 네이티브 back 검증은 `adb KEYCODE_BACK`이며 테스트 API의 synthetic back으로 대신하지 않는다.
+
+**착수 확인**: 원격 main 일치, 열린 PR 0. Android API 36 AVD와 Xcode 27 사용 가능. `mobile:doctor`는 Android release signing=no, iOS Distribution identity=no를 보고했다. Q6/Q8/PROD_URL은 소유자 응답 대기다.
+
+### 26.1 Wave 22 실행 결과
+
+**인수인계 §7-A 결과**
+
+| 항목 | 결과 | 근거·미완료 |
+|---|---|---|
+| Android sync → debug → APK AppPlugin | 통과 | production·신규 여정 QA·재료 QA APK 모두 `com.capacitorjs.plugins.app.AppPlugin` 등록 확인 |
+| 하드웨어 뒤로가기 8행 | 통과 | Android 16/API 36 에뮬레이터, 하위 상태 12개에서 실제 `KEYCODE_BACK`; 기대 동작과 불일치 0 |
+| 신규 세이브 5분 루틴 | 실행·부분 미검증 | 자연 시작·임무·탐험 4회·첫 전투·귀환·보상·휴식·4탭·진단 복사·Home 10초·재실행 수행. 첫 전투 7턴(P2), 영문 표기(P1). 캡처와 back QA를 병행해 시간 제한/초심자 3초 판단은 미검증 |
+| 재료 보유 2분 루틴 | 관측 항목 통과 | 취소 무소비; 강화 150골드/재료1, 제작 100골드/철광석5, 합성 600골드/장비3. 5,000 → 4,850 → 4,750 → 4,150골드. 강제 종료 후 강화+1·아이템·재화 일치, 운영 세이브 3키 해시 불변. 초심자 시간 수용은 미검증 |
+| iOS sync | 통과 | `Package.swift` dependency/product 순증2줄; `project.pbxproj`·`Package.resolved` 불변 |
+| iOS build·시뮬레이터 부팅 | 일부 실패 | unsigned device/simulator build 성공. 같은 QA 앱이 iOS 26.5에서 부팅·60초 이상 생존, 수집 로그의 플러그인 오류 일치 항목 0. iOS 27.0은 UIScene lifecycle 요구로 시작 직후 SIGTRAP(P0) |
+| 실기기·서명·스토어 | 미실행 / No-Go | 양 플랫폼 실기기 루틴, Android release keystore, Apple Distribution identity, 내부 업로드·스토어 입력 미완료 |
+
+**인수인계 §7-B 결과**
+
+| Q | 결과 | 다음 조건 |
+|---|---|---|
+| Q4 Firebase Hosting 비활성화 | 미실행 | 소유자의 명시적 실행 지시 없음 |
+| Q6 텔레메트리 목적지 | 결정 대기 | NOOP 유지 / 로컬 링버퍼+내보내기 / Cloudflare events+KV·D1 중 소유자 선택 |
+| Q7 프로덕션 ai-proxy | 미실행 | 소유자 PROD_URL 미제공. 토큰·키·헤더 값을 사용하거나 기록하지 않음 |
+| Q8 퀘스트 보상 원장 | 결정 대기 | 계정당 1회 유지 / ASCEND 리셋 / prestigeRank별 원장 중 소유자 선택 |
+
+**로컬 검증 (2026-09-22)**: `npm run verify` 통과(type-check/lint 오류0, unit5,170/5,170·skip0, build:guard ok), `test:device-qa:item-investment` 1/1, `bash scripts/local-playtest.sh` desktop/mobile smoke 통과. desktop 종료 단계의 `browser.close timeout` 경고는 기존 runner가 처리했으며 통과와 함께 보존한다. `android:device:smoke`는 material QA APK와 emulator 명시 옵션으로 install/launch/동일PID 60초 foreground를 확인했다. `mobile:doctor`, production `cap:sync`, unsigned `ios:build:device` 통과. 변경된 체크리스트를 읽는 관련 문서/기기 가드46/46 통과. 로컬 전체 e2e/perf는 src 무변경이므로 미실행이며 PR CI가 수행한다. 이는 iOS27 부팅 P0와 실기기/서명 gate를 대신하지 않는다.
+
+**원격 추적**: [PR #52](https://github.com/sungjin9288/aetheria-roguelike/pull/52). 위 검증은 로컬 실행 결과이며 head별 CI와 실제 merge 상태는 해당 PR의 checks/merge 기록을 정본으로 확인한다.
