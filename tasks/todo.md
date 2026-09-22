@@ -2,7 +2,7 @@
 
 **Last Updated:** 2026-09-23
 
-**현재 checkpoint — Wave 25 / D 아트 판단 정합성:** C PR #54 merge `1307fd25` 통합 후 원장·계획·실제 manifest와 V27 receipt를 대조했다. 현재254=authored234/retained20, 교정69+유지20의 기존 scoped 검수 완료를 확인했다. 인수인계 §7-D의165/89 대기 표기를 최신 근거로 정정하고 원본 판단 이력은 보존한다. art:monsters:verify 통과; 이번 작업은 문서와 read-only 집계 기록뿐이다. 자연 플레이·실기기 수용을 추가로 주장하지 않는다. npm run verify exit0(unit5,192/skip0·type/lint/build guard). PR/CI/merge 대기. E는 물리 기기 연결/시간 루틴·서명·스토어 업로드와 입력 조건으로 No-Go, Q4 미실행/Q7 URL 미제공.
+**현재 checkpoint — Wave 25 / D 아트 판단 정합성:** C PR #54 merge `1307fd25` 통합 후 원장·계획·실제 manifest와 V27 receipt를 대조했다. 현재254=authored234/retained20, 교정69+유지20의 기존 scoped 검수 완료를 확인했다. 인수인계 §7-D의165/89 대기 표기를 최신 근거로 정정하고 원본 판단 이력은 보존한다. art:monsters:verify 통과; 이번 작업은 문서와 read-only 집계 기록뿐이다. 자연 플레이·실기기 수용을 추가로 주장하지 않는다. npm run verify exit0(unit5,192/skip0·type/lint/build guard). 원격 통합 상태는 [PR #55](https://github.com/sungjin9288/aetheria-roguelike/pull/55)가 정본이다. E는9월23일 read-only 재확인에서도 물리 iPhone/Android 연결0·Android release signing 및 Apple Distribution identity 부재로 No-Go다. 시간 루틴·서명·스토어 업로드/입력이 남으며 Q4 미실행/Q7 URL 미제공.
 
 **이전 checkpoint — Wave 23 / B 로컬 검증 완료:** Q6 로컬 링버퍼+설정 내보내기/복사/삭제, Q8 계정당1회 유지. 제품18종·AI 폴백7사유, 최근200건/128KiB, release ID 부재 시 비활성. 결함 주입9종 red→복원, tracked15·full gate(unit5,181/353파일·E2E125·양쪽 smoke/perf), Android4checks와 production cap/sync/debug/doctor 통과. Quick Boot System UI ANR·clipboard 직접 읽기 거부는 기록했고 cold boot/OS paste로 재검증했다. 상세는 원장 §26.5·Q6 증빙 폴더. Q4 미실행·Q7 PROD_URL 미제공·PR/CI/merge 대기. C의 두 local commit, iOS export·실기기·서명/제출은 미완료다. 아래 답변 대기는 당시 이력이다.
 

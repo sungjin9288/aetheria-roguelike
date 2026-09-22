@@ -1838,4 +1838,6 @@ C PR #54는 head97337659의 static/E2E/perf/rules/build 통과 후 merge `1307fd
 | 추가 이미지 제작·전체 자연 플레이 | 미실행 | 이번 문서 정정의 범위 밖. 기존 scoped 리뷰를 사용자의 최종 제품 수용으로 확대하지 않음 |
 | 실기기·서명·제출 | 미완료 / No-Go | A/C의 emulator/simulator 확인과 MOBILE_RELEASE §5 수용 조건을 구분 |
 
-집계·해시는 `docs/evidence/qa/art-status-20260922.json`에 보존한다. `retained89-disposition-20260909.json`을 갱신하지 않았다. 인수인계 §7-D의 과거165/89·승인 대기 상태만 최신 정본으로 연결했다. Q4 미실행·Q7 URL 미제공, Q6 로컬 기록·Q8 계정1회 결정은 유지한다. `npm run verify` exit0: unit5,192/5,192(skip0)·type-check·lint·build guard 통과. `git diff --check` 통과. 9월22일 집계 기록을 보존하고 9월23일 문서를 마감했다. 원격 PR/CI/merge는 아직 미실행이다.
+집계·해시는 `docs/evidence/qa/art-status-20260922.json`에 보존한다. `retained89-disposition-20260909.json`을 갱신하지 않았다. 인수인계 §7-D의 과거165/89·승인 대기 상태만 최신 정본으로 연결했다. Q4 미실행·Q7 URL 미제공, Q6 로컬 기록·Q8 계정1회 결정은 유지한다. `npm run verify` exit0: unit5,192/5,192(skip0)·type-check·lint·build guard 통과. `git diff --check` 통과. 9월22일 집계 기록을 보존하고 9월23일 문서를 마감했다. C merge의 main CI run35715043844 및 Deploy run35715043920도 성공했다. D의 원격 검사·merge 상태는 [PR #55](https://github.com/sungjin9288/aetheria-roguelike/pull/55)가 정본이다.
+
+**다음 E의 입력 조건:** 9월23일 mobile:doctor와 read-only 기기 목록을 재확인했다. 물리 iPhone/Android 연결0, Android release signing·Apple Distribution identity 없음. doctor의 App Store export profile ok는 로컬 export options 파일 확인이며 provisioning profile 보유 증거가 아니다. Q7 URL 및 기기 사용 시간·서명 자산 입력을 기다리며, 실기기 조작·서명·업로드는 실행하지 않았다. Q4도 미실행이다.
