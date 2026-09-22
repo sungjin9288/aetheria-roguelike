@@ -339,7 +339,59 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 
 ### Android
 
-> 하드웨어 뒤로가기 런타임 검증(Wave 19 K3)은 실기기가 없어 미실행이다 — 절차·기대표·기록 위치는 `docs/qa/CODEX_K3_BACK_BUTTON_QA.md`. 빌드는 **반드시** `android:sync` → `android:debug` 순서(sync가 `capacitor.plugins.json`을 만든다).
+**Wave 22 관측 (2026-09-22, base `b98bdeec`)**: Android 16/API 36 에뮬레이터 `Aetheria_QA_API_36_20260904`, 화면 1080×2400 / WebView 412×867. `android:sync` → `android:debug` 후 production·QA APK의 `assets/capacitor.plugins.json`에서 AppPlugin 등록을 각각 확인했다. 자연 진입 1~7행과 fixture 진입 8행 모두 실제 `adb shell input keyevent KEYCODE_BACK`으로 검사했다. 앱 종료는 Activity 종료·Launcher 복귀를 뜻하며 프로세스 사멸을 주장하지 않는다.
+
+| # | 상태 | 진입 | 뒤로가기 기대 | 근거 | 관측 결과 (2026-09-22) |
+|---|---|---|---|---|---|
+| 1 | idle(시작의 마을) | 자연 플레이 후 마을 | 앱 종료, 확인 대화 없음 | `MODE_BACK_ACTION.idle = close-app` → `App.exitApp()` | 일치. Launcher로 이동, 재실행 시 캐릭터·골드·수령 원장 복원 |
+| 2 | shop | 상점 버튼 | 상점 닫힘, idle | `close-focus-panel` | 일치. shop → idle, 앱 유지 |
+| 3 | quest_board / job_change / crafting | 각 패널 버튼 | 패널 닫힘, idle | `close-focus-panel` | 세 패널 모두 일치. 각각 → idle |
+| 4 | event(카드 열림) | 자연 탐험 → 마법의 흔적 | 카드 dismiss, idle | `dismiss-event` | 일치. event → idle, 앱 유지 |
+| 5 | PostCombatCard 열림 | 자연 첫 전투 승리 | 카드 닫힘, 앱 유지 | `usePlatformBackHandler` 소비 | 일치. 결과 카드 닫힘, idle 유지 |
+| 6 | PremiumShop / MirrorPanel 열림 | 설정의 각 버튼 | 오버레이 닫힘 | `close-premium` / `close-mirror` | 두 오버레이 모두 일치. 설정 화면·앱 유지 |
+| 7 | combat(카드 없음) | 자연 탐험 → 숲의 정령 | 앱 종료, 도주 아님 | `combat = close-app` | 일치. Launcher로 이동. 재실행 시 동일 적 생명 96·전투 상태 복원 |
+| 8 | ReturnBriefingCard / TrueEndingScreen | 기존 test API fixture로 진입 | back 소비, 앱 유지 | 각 컴포넌트 `usePlatformBackHandler` 등록 | 둘 다 일치. 복귀 카드 닫힘; 진엔딩 화면과 true_ending 상태 유지 |
+
+신규 세이브는 `toss-first-five`, 재료 세이브는 `item-investment`의 별도 QA snapshot key를 사용했다. Android는 같은 앱 ID 내 저장 키 분리이며 별도 bundle로 표기하지 않는다. 전후 운영 snapshot 3키의 SHA-256이 같았다. `Home` 10초 뒤 위치·임무·장비·귀환 결과가 같았고 전투/idle back 종료 뒤에도 복원됐다. 재료 browser contract 1/1 통과 후 네이티브에서 취소·강화·제작·합성·강제 종료/재실행을 확인했다. 강화 표시 성공률은 90%, 합성은 95%였고 두 시도 모두 성공했다. 네이티브 시도에 RNG 강제값을 넣지 않았다.
+
+| 분류 | 관측 | 상태·근거 |
+|---|---|---|
+| P0 / W22-P0-01 | Xcode 27 빌드를 iOS 27.0에서 실행하면 UIScene lifecycle 요구로 즉시 종료 (`EXC_BREAKPOINT`, `SIGTRAP`) | 동일 빌드 iOS 26.5는 부팅. `src/**`·native lifecycle 코드 미수정, 후속 wave 입력 |
+| P1 / W22-P1-01 | 귀환 정리 `LV / EXP / HP`, 설정 칭호 보너스 `ATK+1`이 한글 용어 기준과 불일치 | [귀환 화면](evidence/qa/wave22-device-qa/09-town-return-native.png), [설정 화면](evidence/qa/wave22-device-qa/12-system-diagnostics-native.png) |
+| P2 / W22-P2-01 | 첫 숲의 정령 전투가 일반 공격6 + 기술1 = 7턴 (체크리스트 약4~6턴) | 단일 자연 실행 관측. 생명178→98, 보상 후에도 레벨1. 밸런스 수정 없음 |
+| P2 / W22-P2-02 | 전투 기록에 `숲의 정령이(가)` 노출 | 조사 placeholder 관측, 코드 수정 없음 |
+| 미검증 | 초심자의 3초 판단·정확한 5분/2분 수용, 기력 부족 기술, 자연 아이템 드롭 후 spotlight, 저사양/OEM 키보드, 실기기 | 자동 조작·캡처를 인간 시간 수용 또는 실기기 증거로 대체하지 않음 |
+
+**iOS 보충**: `ios:sync`는 `Package.swift` 순증2줄만, unsigned device/simulator build 통과. QA bundle `com.aetheria.roguelike.wave22qa`는 기존 앱과 분리했다. iOS 26.5의 부팅·60초 생존과 수집 로그에서 플러그인 오류 일치 항목 0을 확인했다. OS 로그에는 XPC/TextInput 메시지와 WebP decode 오류 1건이 있어 "로그 오류 전체 0"으로 보고하지 않는다. 확인한 제작 화면의 아이템 그림은 렌더됐으며 decode 오류의 자산 경로는 미확인이다. iOS 27.0 P0는 별도 호환성 결함으로 남긴다.
+
+**검증 한계·하네스 정정**: 첫 AVD 저장 snapshot은 user가 BOOTING에 머물러 cold boot(`-no-snapshot-load`, wipe 없음) 후 실행했다. 초기 back 관측 listener 누적 카운터는 전송 횟수 증거에서 제외하고 실제 화면/Activity 전이를 사용했다. 임시 재료 하네스의 제작 비용 가정 500을 실제 미리보기100으로 정정하고 기존 QA seed로 다시 검사했으며, 저장 키 삭제+reload는 unload 저장으로 복원되어 초기화 방법으로 사용하지 않았다. 앱 결함으로 집계하지 않는다.
+
+[기기 QA 증빙 JSON](evidence/qa/wave22-device-qa-20260922.json)에 APK SHA-256·하위 상태12개·재화 전후·iOS 결과를 기록했다. 원본 12개 back 전후 캡처와 APK는 gitignored `output/playwright/wave22-device-qa/`에 있다. 이 관측은 출시 Go 판정이 아니다.
+
+**인수인계 §7-A 결과**
+
+| 항목 | 결과 | 근거·미완료 |
+|---|---|---|
+| Android sync → debug → APK AppPlugin | 통과 | production·신규 여정 QA·재료 QA APK 모두 `com.capacitorjs.plugins.app.AppPlugin` 등록 확인 |
+| 하드웨어 뒤로가기 8행 | 통과 | Android 16/API 36 에뮬레이터, 하위 상태 12개에서 실제 `KEYCODE_BACK`; 기대 동작과 불일치 0 |
+| 신규 세이브 5분 루틴 | 실행·부분 미검증 | 자연 시작·임무·탐험 4회·첫 전투·귀환·보상·휴식·4탭·진단 복사·Home 10초·재실행 수행. 첫 전투 7턴(P2), 영문 표기(P1). 캡처와 back QA를 병행해 시간 제한/초심자 3초 판단은 미검증 |
+| 재료 보유 2분 루틴 | 관측 항목 통과 | 취소 무소비; 강화 150골드/재료1, 제작 100골드/철광석5, 합성 600골드/장비3. 5,000 → 4,850 → 4,750 → 4,150골드. 강제 종료 후 강화+1·아이템·재화 일치, 운영 세이브 3키 해시 불변. 초심자 시간 수용은 미검증 |
+| iOS sync | 통과 | `Package.swift` dependency/product 순증2줄; `project.pbxproj`·`Package.resolved` 불변 |
+| iOS build·시뮬레이터 부팅 | 일부 실패 | unsigned device/simulator build 성공. 같은 QA 앱이 iOS 26.5에서 부팅·60초 이상 생존, 수집 로그의 플러그인 오류 일치 항목 0. iOS 27.0은 UIScene lifecycle 요구로 시작 직후 SIGTRAP(P0) |
+| 실기기·서명·스토어 | 미실행 / No-Go | 양 플랫폼 실기기 루틴, Android release keystore, Apple Distribution identity, 내부 업로드·스토어 입력 미완료 |
+
+**인수인계 §7-B 결과**
+
+| Q | 결과 | 다음 조건 |
+|---|---|---|
+| Q4 Firebase Hosting 비활성화 | 미실행 | 소유자의 명시적 실행 지시 없음 |
+| Q6 텔레메트리 목적지 | 결정 대기 | NOOP 유지 / 로컬 링버퍼+내보내기 / Cloudflare events+KV·D1 중 소유자 선택 |
+| Q7 프로덕션 ai-proxy | 미실행 | 소유자 PROD_URL 미제공. 토큰·키·헤더 값을 사용하거나 기록하지 않음 |
+| Q8 퀘스트 보상 원장 | 결정 대기 | 계정당 1회 유지 / ASCEND 리셋 / prestigeRank별 원장 중 소유자 선택 |
+
+
+
+**로컬 검증 (2026-09-22)**: `npm run verify` 통과(type-check/lint 오류0, unit5,170/5,170·skip0, build:guard ok), `test:device-qa:item-investment` 1/1, `bash scripts/local-playtest.sh` desktop/mobile smoke 통과. desktop 종료 단계의 `browser.close timeout` 경고는 기존 runner가 처리했으며 통과와 함께 보존한다. `android:device:smoke`는 material QA APK와 emulator 명시 옵션으로 install/launch/동일PID 60초 foreground를 확인했다. `mobile:doctor`, production `cap:sync`, unsigned `ios:build:device` 통과. 변경된 체크리스트를 읽는 관련 문서/기기 가드46/46 통과. 로컬 전체 e2e/perf는 src 무변경이므로 미실행이며 PR CI가 수행한다. 이는 iOS27 부팅 P0와 실기기/서명 gate를 대신하지 않는다.
 
 - [ ] 뒤로가기/앱 전환 후 복귀가 안정적이다
 - [ ] 저사양 기기에서도 전투/탭 전환이 과도하게 끊기지 않는다
