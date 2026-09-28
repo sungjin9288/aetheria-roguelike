@@ -1,4 +1,5 @@
 import { CONSTANTS } from '../data/constants.js';
+import { getReachableMaps } from './mapAccess.js';
 
 /**
  * 맵의 **실제 진입 레벨**(경로 게이트) 단일 authority — Wave 13 E2에서
@@ -8,7 +9,20 @@ import { CONSTANTS } from '../data/constants.js';
  *   - **선언 레벨**(`map.level`) — 그 지역 자신의 잠금. `getMapAccess`가 실제로 비교하는 값이고
  *     이동 권한은 여전히 이것만으로 판정한다(이 모듈은 권한을 정하지 않는다).
  *   - **경로 게이트**(`routeGateLevel`) — 시작의 마을에서 실제로 걸어 들어갈 수 있게 되는 최소 레벨.
- *     유일한 경로가 더 높은 지역을 지나면 선언보다 높아진다(실측: 52개 중 10개).
+ *     유일한 경로가 더 높은 지역을 지나면 선언보다 높아진다(실측: 52개 중 16개).
+ *
+ * 2026-09 Wave 27 N3: 경로 게이트의 보행은 **실제 이동 규칙 그 자체**다 — `getReachableMaps`
+ * (`getMapAccess` 위의 BFS, `progressionDiagnostic`이 이미 쓰는 것)를 기본 설정(시즌 없음,
+ * `liveConfig.seasonEvent`의 기본값은 `null`)으로 부른다. 전에는 이 파일이 자기 보행을 따로 들고
+ * seasonOnly 지역을 "출구 하나만 닿으면 들어간다"로 재투입했는데, 실제 이동 규칙은 시즌이 없으면
+ * 시즌 지역을 `'season'`으로 거부한다. 서리 폭풍 유적(시즌)이 얼음 성채로 이어지므로 북부 권역 8곳이
+ * 20~34로 표시·보고됐고, 실제 첫 진입은 암흑 성(35) → 저주받은 묘지 → 얼음 성채로만 가능한 Lv35였다.
+ * 같은 재투입이 고대 보물고도 "출구(시작의 마을)가 닿으면 Lv25"로 셌지만, 어느 지역도 보물고로
+ * 출구가 없고 입장은 잊혀진 열쇠 이벤트(이동이 아니다)뿐이다.
+ *
+ * 그래서 **걸어서 못 들어가는 지역의 경로 게이트는 null**이다(시즌 지역 둘 · 고대 보물고).
+ * 시즌 중 게이트는 두지 않는다 — 읽는 곳이 없다(UI는 시즌 상태를 받지 않고, 리포트는 기본 설정의
+ * 보행을 가격 매긴다). 이 지역들이 **어떤 입구로** 들어가는지는 `nonWalkingEntryOf`가 말한다.
  *
  * 증빙 리포트와 UI가 같은 값을 읽어야 하므로 계산은 이 파일 하나에만 있다 —
  * 리포트(`contentReachability.ts`)도 UI(`components/MapNavigator.tsx`)도 여기서 읽는다.
@@ -30,7 +44,10 @@ export interface MapRouteGate {
     declaredLevel: number | number[] | string | null;
     /** 선언 레벨을 `getMapAccess`와 같은 규칙으로 읽은 값(잠금이 없으면 원점 레벨). */
     declaredGateLevel: number;
-    /** 시작의 마을에서 실제로 걸어 들어갈 수 있게 되는 최소 레벨. 끝내 못 걸으면 null. */
+    /**
+     * 시작의 마을에서 실제 이동 규칙(`getMapAccess`, 시즌 없음)으로 걸어 들어갈 수 있게 되는 최소 레벨.
+     * 끝내 못 걸으면 null — 시즌 지역과 고대 보물고가 그렇다(입구가 이동이 아니다).
+     */
     routeGateLevel: number | null;
     /**
      * 선언에 유한한 레벨 잠금이 있는가.
@@ -41,11 +58,18 @@ export interface MapRouteGate {
     diverges: boolean;
 }
 
+/**
+ * 걸어서는 못 들어가는 지역의 입구 종류.
+ *   - `season`    : seasonOnly — 시즌 이벤트 중에만 어디서든 이동할 수 있다(`getMapAccess`의 `'season'`).
+ *   - `vault-key` : 고대 보물고 — 잊혀진 열쇠를 든 탐험 이벤트가 옮겨 놓는다(`exploreFlow`). 출구로는 못 온다.
+ */
+export type NonWalkingEntry = 'season' | 'vault-key';
+
 export const MAP_ROUTE_START_LOCATION = '시작의 마을';
 export const MAP_ROUTE_ORIGIN_LEVEL = 1;
 
-/** seasonOnly 지역과 함께, 출구만으로 재투입되는 예외 노드(보행 큐 재투입 대상). */
-const REENTRY_REGION = '고대 보물고';
+/** 열쇠 이벤트로만 들어가는 지역 — 어느 지역도 이곳으로 출구를 두지 않는다. */
+const VAULT_KEY_REGION = '고대 보물고';
 
 const codePointCompare = (left: string, right: string) => (
     left < right ? -1 : left > right ? 1 : 0
@@ -72,16 +96,62 @@ export const mapGateLevel = (map: RouteGateMapLike | undefined) => (
     isDeclaredLevelLocked(map) ? Number(declaredLevelValue(map)) : MAP_ROUTE_ORIGIN_LEVEL
 );
 
+/** 걸어서는 못 들어가는 지역이 무엇으로 들어가는가 — 이동이 아닌 입구가 없으면 null. */
+export const nonWalkingEntryOf = (name: string, map: RouteGateMapLike | undefined): NonWalkingEntry | null => {
+    if (map?.seasonOnly) return 'season';
+    if (name === VAULT_KEY_REGION) return 'vault-key';
+    return null;
+};
+
+type MoveRuleMap = { level?: number | number[] | string; seasonOnly?: boolean; exits: string[] };
+
 /**
- * `levelCap`을 주면 그 레벨에서 실제로 걸어 들어갈 수 있는 지역만 센다.
- * 기본값(Infinity)에서는 레벨 게이트가 한 번도 걸리지 않으므로 기존 위상 전용 동작과 동일하다.
- * `visited`를 별도로 두는 이유: 레벨로 막힌 노드는 `reachable`에 들어가지 않으므로,
- * 방문 표시가 없으면 seasonOnly/고대 보물고 재투입 루프에서 큐가 무한히 자란다.
+ * `getMapAccess`가 읽는 모양으로 좁힌 사본 — 목업의 문자열 아닌 출구나 없는 지역을 가리키는 출구는
+ * (`findInvalidExits`가 따로 보고한다) 보행에서 뺀다. 같은 MAPS 객체에는 한 번만 만든다.
+ */
+const moveRuleViewCache = new WeakMap<object, Record<string, MoveRuleMap>>();
+
+const moveRuleView = (maps: Record<string, RouteGateMapLike>) => {
+    const cached = moveRuleViewCache.get(maps);
+    if (cached) return cached;
+    const view: Record<string, MoveRuleMap> = {};
+    for (const [name, map] of Object.entries(maps)) {
+        view[name] = {
+            level: map?.level,
+            seasonOnly: map?.seasonOnly,
+            exits: (Array.isArray(map?.exits) ? map.exits : [])
+                .filter((exit: unknown): exit is string => typeof exit === 'string' && Object.hasOwn(maps, exit)),
+        };
+    }
+    moveRuleViewCache.set(maps, view);
+    return view;
+};
+
+/**
+ * 그 레벨에서 시작점부터 **실제 이동 규칙**으로 걸어 들어갈 수 있는 지역 — `getReachableMaps`를
+ * 기본 설정(시즌 없음)으로 부른다. moveActions가 매 이동마다 부르는 `getMapAccess`와 같은 판정이다.
+ * `level`을 Infinity로 주면 레벨 잠금이 한 번도 걸리지 않는다(걷기로 닿는 지역의 상한).
+ */
+export const walkableMapsAt = (
+    start: string,
+    maps: Record<string, RouteGateMapLike>,
+    level: number,
+) => {
+    if (!Object.hasOwn(maps, start)) return [];
+    return sorted(getReachableMaps(moveRuleView(maps), start, level, false));
+};
+
+/**
+ * **위상** 도달성 — 레벨과 시즌을 무시하고 "어떤 입구로든 한 번은 들어갈 수 있는가"만 센다.
+ * 리포트의 `maps.reachable`/`UNREACHABLE_MAPS`(고아 지역 검출)가 쓰는 것이고 **게이트가 아니다** —
+ * 레벨이 붙은 진입선은 `walkableMapsAt`/`mapRouteGateLevels`가 소유한다(Wave 27 N3: 전에는 이 함수가
+ * 레벨 상한을 받아 게이트까지 매겼고, 그 때문에 시즌 재투입이 게이트로 샜다).
+ * 이동이 아닌 입구(`nonWalkingEntryOf`)를 가진 지역은 자기 출구 하나가 닿으면 도달 가능으로 센다.
+ * `visited`를 별도로 두는 이유: 방문 표시가 없으면 재투입 루프에서 큐가 무한히 자란다.
  */
 export const reachableMapsFrom = (
     start: string,
     maps: Record<string, RouteGateMapLike>,
-    levelCap = Number.POSITIVE_INFINITY,
 ) => {
     const reachable = new Set<string>();
     const visited = new Set<string>();
@@ -90,12 +160,11 @@ export const reachableMapsFrom = (
         const current = queue.shift();
         if (!current || visited.has(current) || !Object.hasOwn(maps, current)) continue;
         visited.add(current);
-        if (mapGateLevel(maps[current]) > levelCap) continue;
         reachable.add(current);
         const exits = Array.isArray(maps[current]?.exits) ? maps[current].exits : [];
         queue.push(...exits.filter((entry: unknown): entry is string => typeof entry === 'string'));
         for (const [name, map] of Object.entries(maps)) {
-            if (!map?.seasonOnly && name !== REENTRY_REGION) continue;
+            if (nonWalkingEntryOf(name, map) === null) continue;
             const entryExits = Array.isArray(map?.exits) ? map.exits : [];
             if (entryExits.some((exit: unknown) => typeof exit === 'string' && reachable.has(exit))) queue.push(name);
         }
@@ -103,15 +172,18 @@ export const reachableMapsFrom = (
     return sorted(reachable);
 };
 
-/** 각 지역이 열리는 최소 플레이어 레벨 — 도달성 보행에 레벨 상한을 씌워 구한다. */
+/**
+ * 각 지역을 실제 이동 규칙으로 처음 걸어 들어가는 최소 플레이어 레벨.
+ * 걸어서 못 들어가는 지역(시즌 · 고대 보물고 · 고아)은 표에 아예 없다.
+ */
 export const mapRouteGateLevels = (start: string, maps: Record<string, RouteGateMapLike>) => {
     const gates = new Map<string, number>();
-    const total = Object.keys(maps).length;
+    const ceiling = walkableMapsAt(start, maps, Number.POSITIVE_INFINITY).length;
     for (let level = MAP_ROUTE_ORIGIN_LEVEL; level <= CONSTANTS.MAX_LEVEL; level += 1) {
-        for (const name of reachableMapsFrom(start, maps, level)) {
+        for (const name of walkableMapsAt(start, maps, level)) {
             if (!gates.has(name)) gates.set(name, level);
         }
-        if (gates.size >= total) break;
+        if (gates.size >= ceiling) break;
     }
     return gates;
 };
