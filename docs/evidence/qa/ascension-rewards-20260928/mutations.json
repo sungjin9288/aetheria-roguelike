@@ -1,0 +1,22 @@
+[
+  {
+    "mutation": "reducer-pending-guard",
+    "exitCode": 1
+  },
+  {
+    "mutation": "hook-pending-guard",
+    "exitCode": 1
+  },
+  {
+    "mutation": "ui-confirm",
+    "exitCode": 1
+  },
+  {
+    "mutation": "stale-success",
+    "exitCode": 1
+  },
+  {
+    "mutation": "accepted-titles",
+    "exitCode": 1
+  }
+]

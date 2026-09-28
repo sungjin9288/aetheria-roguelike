@@ -372,28 +372,26 @@ test('ascension rejects stale rank, mismatched receipt, and forged outcome paylo
     assert.equal(forgedLegacyPayload, state);
 });
 
-test('rapid ascension confirmation emits one accepted request and one completion log', () => {
+test('rapid ascension confirmation emits one request and its accepted reducer emits one completion log', () => {
     const dispatched = [];
     const logs = [];
     const player = playerWithEndgame(0, 1);
+    let current = { ...structuredClone(INITIAL_STATE), player, gameState: 'ascension' };
     const actions = createAscensionActions({
-        player,
-        dispatch: (action) => dispatched.push(action),
+        player, gameState: current.gameState,
+        dispatch: (action) => { dispatched.push(action); current = gameReducer(current, action); },
         addLog: (type, text) => logs.push({ type, text }),
     });
-
     actions.confirmAscension();
-    const acceptedLogCount = logs.length;
+    const accepted = current;
     actions.confirmAscension();
-
-    const requests = dispatched.filter((action) => action.type === AT.ASCEND);
-    assert.equal(requests.length, 1);
-    assert.deepEqual(requests[0].payload, {
-        expectedPrestigeRank: 1,
-        sourceReceiptKey: null,
-    });
-    assert.ok(acceptedLogCount > 0);
-    assert.equal(logs.length, acceptedLogCount);
+    assert.equal(dispatched.length, 1);
+    assert.equal(dispatched[0].type, AT.ASCEND);
+    assert.deepEqual(dispatched[0].payload, { expectedPrestigeRank: 1, sourceReceiptKey: null });
+    assert.equal(current.player.meta.prestigeRank, 2);
+    assert.ok(current.logs.length > 0);
+    assert.equal(current, accepted);
+    assert.deepEqual(logs, []);
 });
 
 test('production GameStorage preserves endgame, journey, and settings through reload and New Game+', async () => {

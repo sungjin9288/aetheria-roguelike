@@ -1,0 +1,11 @@
+Touch /tmp/aetheria-ascension-rewards-ios-20260928/Build/Products/Release-iphoneos/App.app (in target 'App' from project 'App')
+    cd /Users/sungjin/dev/personal/aetheria-roguelike/ios/App
+    /usr/bin/touch -c /tmp/aetheria-ascension-rewards-ios-20260928/Build/Products/Release-iphoneos/App.app
+
+PruneExplicitPrecompiledModules /tmp/aetheria-ascension-rewards-ios-20260928/Build/Intermediates.noindex/SwiftExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/aetheria-ascension-rewards-ios-20260928/SDKExplicitPrecompiledModules
+
+PruneExplicitPrecompiledModules /tmp/aetheria-ascension-rewards-ios-20260928/Build/Intermediates.noindex/ExplicitPrecompiledModules
+
+** BUILD SUCCEEDED **

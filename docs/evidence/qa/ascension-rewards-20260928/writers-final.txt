@@ -1,0 +1,13 @@
+{"hashAlgorithm":"sha256","reportHash":"d2d37207a2fc705c9e6a03e28f5e47da11d8e789f3b7472a03dcca2849ff1878"}
+event-reward write ok: rows=108 errors=0 sha256=c617ce4d3621f237ffd954ffb7d9e9213efeb9969642c06715bddbd529e380af
+equipment combat-power evidence written: 92ad3671c957ede077781540e61275a02bcfa72d7edd93202e1ce3a3acc74fee
+
+> aetheria-rpg@0.0.0 pacing:verify
+> node --import tsx scripts/compare-exploration-rhythm.mjs --seed-start 20260810 --seed-count 64 --verify docs/evidence/qa/release-complete-core/exploration-rhythm.json
+
+{"hashAlgorithm":"sha256","reportHash":"0818fb7afb6b88a628076791a1ba255981df40a9b1310a4aeb3d527e8fb8424e"}
+
+> aetheria-rpg@0.0.0 progression:diagnostic:write
+> node --import tsx scripts/progression-diagnostic-evidence.mjs --write docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json
+
+progression diagnostic evidence written: 26a3492384260936fc3665c8f1b634625cf9b4daa3654ea693ed65d15894525a

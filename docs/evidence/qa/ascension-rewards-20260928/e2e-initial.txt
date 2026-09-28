@@ -1,0 +1,120 @@
+
+Running 8 tests using 1 worker
+
+(node:55648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:55648) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  1 [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:40:5 › 375: ordinary ending retains pending rewards through reload and one ascension (30.3s)
+(node:58543) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:58543) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✘  2 [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:40:5 › 390: ordinary ending retains pending rewards through reload and one ascension (28.1s)
+
+
+  1) [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:40:5 › 375: ordinary ending retains pending rewards through reload and one ascension
+
+    Test timeout of 30000ms exceeded.
+
+    Error: locator.click: Test timeout of 30000ms exceeded.
+    Call log:
+      - waiting for getByTestId('legendary-drop-overlay')
+        - locator resolved to <div role="alertdialog" aria-label="전설 획득: 마왕의 대낫" data-legendary-drop="마왕의 대낫" data-testid="legendary-drop-overlay" class="fixed inset-0 z-[60] flex items-center justify-center pointer-events-auto bg-black/20 backdrop-blur-[1px]">…</div>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <section data-testid="ascension-primary-reward" class="rounded-lg border border-[#d5b180]/26 bg-[#d5b180]/8 p-3.5">…</section> from <div data-testid="ascension-screen" class="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4">…</div> subtree intercepts pointer events
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <section data-testid="ascension-primary-reward" class="rounded-lg border border-[#d5b180]/26 bg-[#d5b180]/8 p-3.5">…</section> from <div data-testid="ascension-screen" class="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4">…</div> subtree intercepts pointer events
+        - retrying click action
+          - waiting 100ms
+        5 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <section data-testid="ascension-primary-reward" class="rounded-lg border border-[#d5b180]/26 bg-[#d5b180]/8 p-3.5">…</section> from <div data-testid="ascension-screen" class="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4">…</div> subtree intercepts pointer events
+        - retrying click action
+          - waiting 500ms
+        - waiting for element to be visible, enabled and stable
+      - element was detached from the DOM, retrying
+
+
+      32 |     await expect(page.getByTestId('ascension-screen')).toBeVisible();
+      33 |     const drop = page.getByTestId('legendary-drop-overlay');
+    > 34 |     if (await drop.isVisible()) await drop.click();
+         |                                            ^
+      35 |     await expect(page.getByTestId('ascension-claim-quest-87')).toBeVisible();
+      36 |     await expect(page.getByTestId('ascension-confirm')).toBeDisabled();
+      37 | }
+        at winOrdinaryEnding (/Users/sungjin/dev/personal/aetheria-roguelike/tests/e2e/ascension-pending-rewards.spec.ts:34:44)
+        at /Users/sungjin/dev/personal/aetheria-roguelike/tests/e2e/ascension-pending-rewards.spec.ts:42:9
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/ascension-pending-rewards--557e7-gh-reload-and-one-ascension-chromium-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/ascension-pending-rewards--557e7-gh-reload-and-one-ascension-chromium-mobile/error-context.md
+
+  2) [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:40:5 › 390: ordinary ending retains pending rewards through reload and one ascension
+
+    Test was interrupted.
+
+    Error: locator.click: Test ended.
+    Call log:
+      - waiting for getByTestId('legendary-drop-overlay')
+        - locator resolved to <div role="alertdialog" aria-label="전설 획득: 마왕의 대낫" data-legendary-drop="마왕의 대낫" data-testid="legendary-drop-overlay" class="fixed inset-0 z-[60] flex items-center justify-center pointer-events-auto bg-black/20 backdrop-blur-[1px]">…</div>
+      - attempting click action
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <p class="mt-1 text-[11px] font-readable leading-relaxed text-slate-300/82">에센스 획득 +10% · 마왕에게서 원시의 파편 발견</p> from <div data-testid="ascension-screen" class="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4">…</div> subtree intercepts pointer events
+        - retrying click action
+        - waiting 20ms
+        2 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <p class="mt-1 text-[11px] font-readable leading-relaxed text-slate-300/82">에센스 획득 +10% · 마왕에게서 원시의 파편 발견</p> from <div data-testid="ascension-screen" class="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4">…</div> subtree intercepts pointer events
+        - retrying click action
+          - waiting 100ms
+        5 × waiting for element to be visible, enabled and stable
+          - element is visible, enabled and stable
+          - scrolling into view if needed
+          - done scrolling
+          - <p class="mt-1 text-[11px] font-readable leading-relaxed text-slate-300/82">에센스 획득 +10% · 마왕에게서 원시의 파편 발견</p> from <div data-testid="ascension-screen" class="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4">…</div> subtree intercepts pointer events
+        - retrying click action
+          - waiting 500ms
+        - waiting for element to be visible, enabled and stable
+      - element was detached from the DOM, retrying
+
+
+      32 |     await expect(page.getByTestId('ascension-screen')).toBeVisible();
+      33 |     const drop = page.getByTestId('legendary-drop-overlay');
+    > 34 |     if (await drop.isVisible()) await drop.click();
+         |                                            ^
+      35 |     await expect(page.getByTestId('ascension-claim-quest-87')).toBeVisible();
+      36 |     await expect(page.getByTestId('ascension-confirm')).toBeDisabled();
+      37 | }
+        at winOrdinaryEnding (/Users/sungjin/dev/personal/aetheria-roguelike/tests/e2e/ascension-pending-rewards.spec.ts:34:44)
+        at /Users/sungjin/dev/personal/aetheria-roguelike/tests/e2e/ascension-pending-rewards.spec.ts:42:9
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/ascension-pending-rewards--58cef-gh-reload-and-one-ascension-chromium-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/ascension-pending-rewards--58cef-gh-reload-and-one-ascension-chromium-mobile/error-context.md
+
+  1 failed
+    [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:40:5 › 375: ordinary ending retains pending rewards through reload and one ascension
+  1 interrupted
+    [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:40:5 › 390: ordinary ending retains pending rewards through reload and one ascension
+  6 did not run

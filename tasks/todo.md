@@ -4,19 +4,21 @@
 
 **우선순위 정정 — 제품 완성도 우선 (2026-09-28 소유자 지시):** 소유자는 iPhone을 보유하며 Android 실기기는 없다. 이전 연결 가능0 기록은 당시 연결 상태일 뿐 보유 여부가 아니다. 아래 E 사전 확인은 이력으로 보존하고 서명·제출을 현재 선행 작업으로 취급하지 않는다. 디자인·기능·스토리 보완을 먼저 수행한다. 새 지시는 기존 RC의 출시 우선 순서보다 우선하며 전투 authority·바이트 핀·저장 호환성·Q4/Q7 경계는 유지한다.
 
-**로컬 검증 완료 — 여정 안내와 모바일 가독성:** `codex/product-journey-clarity`, base `b685e00b`. 지표 이름/긴 수치, 첫 출발 동기, 현재 계승·파편에 따른 마왕성 다음 행동 안내 구현. 예언/도감 경로 문구 정정, 저장/경제/전투 판정·바이트 핀 유지. 집중 unit44·E2E16, mutation4 RED→복원 GREEN, tracked15·full unit5,198/E2E132·양쪽 smoke/perf 통과. Production cap sync·debug APK·unsigned iOS와 web2,268파일 동일. 원장 §26.9 및 `docs/evidence/qa/journey-clarity-20260928/receipt.json`. PR/CI/merge는 현재 원격 진행 결과를 따른다.
+**최신 로컬 완료 — 일반 계승의 완료 보상 보호:** `codex/ascension-pending-rewards`, base `538ad2a9`(PR #57 CI 통과·merge 완료). 화면 수령/확정 차단, hook/reducer 보호 대칭화, 승인 전이의 칭호·성공 안내 구현. baseline5 RED, mutation5 RED→복원, 집중 unit33/보완242·E2E8, tracked15·full unit5,204/357파일(skip0)·E2E136(70+66)·양쪽 smoke/perf 통과. cap sync·Android debug·iOS unsigned·doctor exit0, 양쪽 web2,269파일 byte동일/native tracked delta0. 원장 §26.10 및 `docs/evidence/qa/ascension-rewards-20260928/receipt.json`. 원격 통합은 현재 PR 기록을 따른다. 사용자 소유 `.claude/skills/` 보존.
+
+**직전 통합 완료 — 여정 안내와 모바일 가독성:** `codex/product-journey-clarity`, base `b685e00b`. 지표 이름/긴 수치, 첫 출발 동기, 현재 계승·파편에 따른 마왕성 다음 행동 안내 구현. 예언/도감 경로 문구 정정, 저장/경제/전투 판정·바이트 핀 유지. 집중 unit44·E2E16, mutation4 RED→복원 GREEN, tracked15·full unit5,198/E2E132·양쪽 smoke/perf 통과. Production cap sync·debug APK·unsigned iOS와 web2,268파일 동일. 원장 §26.9 및 `docs/evidence/qa/journey-clarity-20260928/receipt.json`. PR/CI/merge는 현재 원격 진행 결과를 따른다.
 
 | 제품 작업 | 완료 기준 | 현재 상태 |
 |---|---|---|
 | 이야기·목표 전달 | 장별 수행 결과와 다음 조건을 읽고, 수령한 이야기를 다시 찾을 수 있음 | 8장 완료 서사/임무 기록 구현·로컬 검증 완료. 첫 선택 결과 browser RED→GREEN, 기록 재실행·375/390/430px 확인 |
 | 디자인·조작 | 시작·마을·전투·이벤트·장비·기록의 읽기 순서와 375/390/430px 조작 확인 | 첫 출발 동기·지표 표시 보완. 375/390/430×기본/고가독성, 긴 수치와 기존 마을/전투 동선 통과; 전체 디자인 수용은 별도 |
-| 핵심 기능·성장 | 탐험→선택→전투→보상→정비→새 지역의 실제 연결 및 손실/중복 없음 | 보상 수령/이야기 표시 실제 동선 통과. 최신 full unit5,198·E2E132·양쪽 smoke/perf 통과; 전체 자연 성장은 별도 |
-| 종장·반복 플레이 | 진엔딩 조건/진행과 다음 선택을 플레이어가 이해함 | 마왕성 경로의 파편·현재 계승 안내 구현·검증 완료. story86/87 자연 진행 순서는 후속 조사 대상 |
+| 핵심 기능·성장 | 탐험→선택→전투→보상→정비→새 지역의 실제 연결 및 손실/중복 없음 | 보상 수령/이야기 표시 실제 동선 통과. 최신 full unit5,204·E2E136·양쪽 smoke/perf 통과; 전체 자연 성장은 별도 |
+| 종장·반복 플레이 | 진엔딩 조건/진행과 다음 선택을 플레이어가 이해함 | 마왕성 경로의 파편·현재 계승 안내 구현·검증 완료. 일반 계승 미수령 보상 보호 구현·검증. 87 목표의 사도 오인식은 별도 수정 대상 |
 | 제품 통합 수용 | 최신 화면·회귀·대표 자연 플레이가 같은 소스에 연결됨 | 미완료. 그 뒤 iPhone 검증; Android 에뮬레이터와 실기기 수용은 분리 |
 
 **직전 checkpoint — 제품 이야기 전달 통합 완료:** tracked15·full unit5,194/355파일(skip0)·E2E128/45spec·desktop/mobile smoke/perf 통과. 신규 계약2종 결함 주입 red→복원, 실제 첫 임무 및 별도 저장 fixture 재실행 통과. cap:sync·Android debug·iOS unsigned build 통과, production web2,267파일이 양쪽 패키지와 byte동일. APK SHA256 `8f61124014e2d210d624de3f28d261d75744eb77961f4444f23fd2a95e42580c`; iOS `/tmp/aetheria-product-story-ios-20260928/Build/Products/Release-iphoneos/App.app`. Android 첫 실행은 Gradle metadata.bin 누락, 기존 스크립트의 새 캐시 재시도에서 성공. smoke/perf4회 browser.close timeout 경고는 검사 통과와 구분. PR #56 CI 통과 후 merge commit b685e00b로 통합 완료. 증빙: `docs/evidence/qa/product-story-20260928/receipt.json`, 원장 §26.8.
 
-이번 제품 묶음에서 좁은 상태바와 종장 진행 안내를 보완했다. 다음은 story86/87과 실제 지역·보스·임무 수령 순서의 자연 동선을 확인한다. 계승3/파편3은 마왕 토벌 뒤 연속 전투 경로의 조건이며 혼돈의 심연 구역 보스 경로와 구분한다.
+이번 제품 묶음에서 일반 계승의 완료 보상 손실과 거부된 요청의 성공 부작용을 막았다. 다음은 87번 임무가 마왕의 사도 처치로도 완료되는 이름 판정 결함을 별도 묶음으로 수정한다. 실제 RESOLVE_COMBAT_ACTION probe에서 사도 승리→87 progress1·idle·rank0을 확인했다. story86/87 전체 자연 성장 검증은 남는다. 계승3/파편3은 마왕 토벌 뒤 연속 전투 경로의 조건이며 혼돈의 심연 구역 보스 경로와 구분한다.
 
 첫 묶음의 이야기 결과 전달과 이번 여정 안내는 새 세이브 필드/보상/전투/맵 접근 수치를 바꾸지 않았다. 서명·스토어 자료 요청으로 제품 완성도 작업을 대체하지 않는다.
 

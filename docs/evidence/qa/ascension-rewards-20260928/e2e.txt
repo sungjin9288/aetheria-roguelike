@@ -1,0 +1,17 @@
+
+Running 8 tests using 1 worker
+
+(node:62612) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:62612) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:38:5 › 375: ordinary ending retains pending rewards through reload and one ascension (3.5s)
+  ✓  2 [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:38:5 › 390: ordinary ending retains pending rewards through reload and one ascension (3.4s)
+  ✓  3 [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:38:5 › 430: ordinary ending retains pending rewards through reload and one ascension (3.4s)
+  ✓  4 [chromium-mobile] › tests/e2e/ascension-pending-rewards.spec.ts:83:1 › another completed quest keeps ascension blocked and continuing preserves the current journey (2.7s)
+  ✓  5 [chromium-mobile] › tests/e2e/true-ending-new-game-plus.spec.ts:145:5 › True Ending → New Game+ production journey › completed quests have distinct accessible reward actions (4.2s)
+  ✓  6 [chromium-mobile] › tests/e2e/true-ending-new-game-plus.spec.ts:173:5 › True Ending → New Game+ production journey › 390x844: production combat, platform back, reload and duplicate confirmation stay atomic (5.8s)
+  ✓  7 [chromium-mobile] › tests/e2e/true-ending-new-game-plus.spec.ts:285:5 › True Ending → New Game+ production journey › 375x667: reduced motion reveals the complete ending without a forced wait (2.0s)
+  ✓  8 [chromium-mobile] › tests/e2e/true-ending-new-game-plus.spec.ts:314:5 › True Ending → New Game+ production journey › 430x932: first-frame skip exposes a reachable New Game+ action (3.3s)
+
+  8 passed (28.8s)

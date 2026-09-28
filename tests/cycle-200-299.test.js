@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import path from 'node:path';
 import test from 'node:test';
+import { createAscensionActions } from '../src/hooks/gameActions/ascensionActions.ts';
 import { AT } from '../src/reducers/actionTypes.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { DB } from '../src/data/db.js';
@@ -959,7 +960,8 @@ import { readFile } from 'node:fs/promises';
       };
       const ascended = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
       // cycle 191 META
-      assert.deepEqual(ascended.player.titles, ['warrior', '각성자']);
+      assert.deepEqual(ascended.player.titles, ['warrior', '각성자', 'first_blood', 'centurion', 'reborn'],
+          '기존 칭호를 보존하고 처치200/계승1의 칭호를 승인된 전이에서 함께 해금한다');
       assert.equal(ascended.player.premiumCurrency, 100);
       assert.equal(ascended.player.reviveTokens, 2);
       assert.equal(ascended.player.maxInv, 25);
@@ -2964,16 +2966,21 @@ import { readFile } from 'node:fs/promises';
       assert.ok(/bonusMp:\s*toNonNegativeNumber\(currentMeta\.bonusMp\)/.test(outcome), 'ASCEND bonusMp 누적 유지');
   });
 
-  test('cycle 277: ASCEND prestigeRank / essence / titles 동작 유지 (회귀 가드)', async () => {
-      const [action, outcome] = await Promise.all([
-          readSrc('src/hooks/gameActions/ascensionActions.ts'),
-          readSrc('src/utils/ascensionPreview.ts'),
-      ]);
-      assert.ok(/prestigeRank:\s*nextRank/.test(outcome), 'prestigeRank 누적 유지');
-      assert.ok(/essence:\s*toNonNegativeNumber\(currentMeta\.essence\)/.test(outcome), 'essence 누적 유지');
-      assert.ok(/expectedPrestigeRank:\s*outcome\.currentRank/.test(action), 'reducer recalculation rank contract 유지');
-      assert.ok(/sourceReceiptKey:/.test(action), 'accepted endgame receipt contract 유지');
-      assert.ok(/titles:\s*\[\.\.\./.test(action), 'titles unique merge 유지');
+  test('cycle 277: ASCEND prestigeRank / essence / titles 동작 유지 (회귀 가드)', () => {
+      const state = structuredClone(INITIAL_STATE);
+      state.gameState = GS.ASCENSION;
+      state.player.meta = { ...state.player.meta, prestigeRank: 0, essence: 120 };
+      state.player.titles = ['각성자', '각성자'];
+      const requests = [];
+      createAscensionActions({ player: state.player, gameState: state.gameState,
+          dispatch: (action) => requests.push(action), addLog: () => {} }).confirmAscension();
+      assert.equal(requests.length, 1);
+      assert.deepEqual(requests[0].payload, { expectedPrestigeRank: 0, sourceReceiptKey: null });
+      const next = gameReducer(state, requests[0]);
+      assert.equal(next.player.meta.prestigeRank, 1);
+      assert.equal(next.player.meta.essence, 320);
+      assert.deepEqual(next.player.titles, ['각성자', 'reborn']);
+      assert.equal(next.player.activeTitle, '각성자');
   });
 }
 

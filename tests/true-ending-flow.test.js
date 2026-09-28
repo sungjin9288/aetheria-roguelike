@@ -1,4 +1,7 @@
 import test from 'node:test';
+import { createElement } from 'react';
+import { renderStatic } from './helpers/render.ts';
+import PendingQuestRewardList from '../src/components/PendingQuestRewardList.tsx';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
@@ -168,7 +171,11 @@ test('true ending source exposes immediate skip, reduced-motion, safe-area and o
     assert.match(source, /--aether-safe-area-top/);
     assert.match(source, /--aether-safe-area-bottom/);
     assert.match(source, /true-ending-pending-quests/);
-    assert.match(source, /true-ending-claim-quest/);
+    const rewards = renderStatic(createElement(PendingQuestRewardList, {
+        entries: questProgress.getClaimableQuestEntries(makeTrueEndingQuestState().player), testIdPrefix: 'true-ending',
+    }));
+    assert.match(rewards, /data-testid="true-ending-claim-quest-87"/);
+    assert.match(rewards, /\[스토리\] 세계의 끝 보상 받기/);
     assert.match(source, /true-ending-continue/);
     assert.match(source, /completeQuest/);
     assert.match(source, /cancelAscension/);

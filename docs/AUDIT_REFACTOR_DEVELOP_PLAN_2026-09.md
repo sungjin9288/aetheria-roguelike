@@ -1876,3 +1876,22 @@ PR #56은 CI 통과 후 merge `b685e00b`로 통합했다. 다음 `codex/product-
 최종 예고 델타 일치: sources351→353, 기존7/새2/삭제0이며 reportHash `f21dcf819808a624d2d7f9d30b28a7d4b1403b8b3806383089453ef2ff731620` 및 v1Baseline 포함 nonSources 전체 불변. tracked verify15종 모두 exit0. `VITE_RELEASE_ID=journey-clarity-qa AETHERIA_RUN_PERF=1 npm run verify:full` exit0: unit5,198/356파일(skip0), E2E132/46spec(66+66), type/lint/build guard·desktop/mobile smoke/perf 통과. FCP344/328ms. Desktop smoke의 browser.close timeout1건은 assertion 통과와 분리한다.
 
 Production cap:sync·Android debug·iOS unsigned·mobile:doctor exit0. Android 기본 캐시 metadata.bin 누락 후 기존 스크립트의 새 캐시 재시도 성공. APK227759318bytes/SHA256 `0ab0a1a8e63fd9737d79e3b08f8755186cef454e3ad7ae43aaac21d60b6ab856`, AppPlugin 포함. iOS `/tmp/aetheria-journey-clarity-ios-20260928/Build/Products/Release-iphoneos/App.app`. 양쪽 패키지 web2,268파일 byte동일·native tracked delta0. Android release signing·Apple Distribution identity 부재 지속. 실기기·서명·제출 미실행, Q4 미실행/Q7 URL 미제공·Q6/Q8 유지. 전체 제품 수용·자연 성장 동선·MOBILE_RELEASE §5는 미완료다. 다음 제품 후보는 이야기86/87의 자연 진행 연결이며 경제/gate 변경 전에 실제 동선과 근거를 확인한다. PR/CI/merge는 원격 기록에서 확인한다. 상세 캡처·초기 실패·mutation·패키지 근거는 `docs/evidence/qa/journey-clarity-20260928/`에 보존한다.
+
+
+### 26.10 제품 완성도 — 일반 계승의 미수령 보상 보호 (2026-09-28)
+
+PR #57은 CI 통과 후 merge `538ad2a9`로 통합했다. 일반 마왕 전투 승리 뒤 완료87을 수령하지 않고 계승하면 임무가 초기화되어 다음 생 Lv50/마왕 재처치가 필요했다. `codex/ascension-pending-rewards`에서 실제 reducer 승리→수령→계승 경로로 baseline5 RED를 재현했다. 일반 계승 화면에 canonical 보상과 수령 action을 표시하고 화면/hook/reducer에서 완료 보상을 모두 받을 때까지 확정을 막는다. 현재 여정 계속은 허용하며 보상 장비·골드의 현행 초기화 정책을 안내한다. 진엔딩과 보상 행을 공유하고, 미완료 임무 초기화·계정당1회·경제/저장 schema는 유지한다.
+
+오래된 action의 ASCEND가 최신 상태에서 거부돼도 hook이 칭호·성공 로그를 남기던 경로를 승인된 reducer 전이 안으로 옮겼다. 집중 unit33 통과(신규6). 보상 경험치로 새 임무가 완료되는 경계도 재검사한다. reducer/hook/UI 차단 제거와 거부된 요청의 성공 안내 주입4종 각각 exit1 후 원본 복원 GREEN. 독립 소스 검토에서 중요한 결함0, 실행은 주관 검증과 구분한다.
+
+**증빙 예고 델타:** progression sources353→354, 기존4개(AscensionScreen, TrueEndingScreen, ascensionActions, progressionHandlers) sha256 변경과 새1개(PendingQuestRewardList) 추가. reportHash/v1Baseline 포함 nonSources와 다른 증빙 값은 불변이어야 한다. 고정 순서 writer→readonly15→full/perf→native 직렬 실행 예정이며 아직 전체 통과를 주장하지 않는다.
+
+Browser 집중 E2E8/8 통과: 375/390/430 ordinary 승리→미수령 reload→두번 수령→두번 계승→저장 reload, 완료 임무 복수/현재 여정 계속, 기존 진엔딩4. Safe-area47/34와48px 버튼·가로 overflow 확인,375 캡처 직접 검수. 첫 harness는 계승 화면 뒤의 전설 overlay를 클릭하려다 timeout; 해당 불필요 클릭을 제거했고 fixture의 endgame 필드와 가방 이름을 실제 schema로 정정했다. 게임 client는 처음 잘못된 scenario 이름으로 intro를 관측했으며 실제 ascension-journey 이름으로 재실행해 ready/ascension 및 화면을 확인했다. 종장 전투 조건은 격리 fixture로 구성했으며 Lv1부터 자연 성장·실기기 증거로 확대하지 않는다.
+
+첫 full gate는 unit5,201 PASS/3 FAIL(skip0)로 종료했다. 기존 두 검사가 hook에 남은 칭호 코드/이전 reducer 단독 결과를 전제해 실패했으므로 실제 action→reducer의 rank·essence·칭호 중복 제거 결과를 검증하도록 변경했다. 추가 칭호는 기존 hook에서 해금하던 처치200/계승1의 first_blood·centurion·reborn이며 영구 칭호 보존 검사는 유지한다. 신규 JSX 한글3문구가 components AST 상한1319를3초과해 messages.ts로 이관한다(상한 변경 없음). **예고 델타 정정:** 기존5개 변경(messages 추가)/새1개, sources353→354. nonSources 불변 조건은 유지한다.
+
+최종 교정 focused242/242, 승인 칭호 누락 mutation 추가1종 RED→복원(총5종). 최종 sources353→354, 기존5/새1/삭제0으로 정정 예고 일치, reportHash `f21dcf819808a624d2d7f9d30b28a7d4b1403b8b3806383089453ef2ff731620` 및 nonSources 전체 불변. tracked15 모두 exit0. `VITE_RELEASE_ID=ascension-rewards-qa AETHERIA_RUN_PERF=1 npm run verify:full` exit0: unit5,204/357파일(skip0), E2E136/47spec(70+66), type/lint/build guard·desktop/mobile smoke/perf 통과. FCP360/304ms. desktop/mobile smoke와 desktop perf 종료 timeout3건은 assertion 통과와 구분해 기록한다.
+
+Production cap:sync·Android debug·iOS unsigned·mobile:doctor exit0. 기존 정상 Gradle 캐시를 재사용해 이번 캐시 실패 없음. APK227759419bytes/SHA256 `7208299ee8ec6dc40fafe3efe2d3c6d8aa4662be1dde3324fd2965d5c715a200`, AppPlugin 포함. iOS `/tmp/aetheria-ascension-rewards-ios-20260928/Build/Products/Release-iphoneos/App.app`. 양쪽 web2,269파일 byte동일·native tracked delta0. release 서명 조건 미충족, 실기기·설치·서명·제출 미실행. Q4 미실행/Q7 URL 미제공·Q6/Q8 유지. 독립 소스 검토에서도 테스트 기준 완화/새 제품 결함0. 캡처·초기 실패·mutation·패키지 증빙은 `docs/evidence/qa/ascension-rewards-20260928/`에 보존한다.
+
+후속 별도 결함: `questProgress`의 substring 목표 판정 때문에87(target 마왕)을 수락한 상태에서 마왕성의 마왕의 사도를 처치해도 progress1이 된다. 실제 RESOLVE_COMBAT_ACTION probe(seed11/now1000/적HP1)에서87 progress1·gameState idle·prestigeRank0을 확인했다. 실제 마왕 승리 전 종장 임무가 완료되는 문제이며 이번 보상 보호 수정에 섞지 않았다. 다음 묶음은 story 처치 목표 identity 판정이며 실제 마왕·phase baseName·기존 변형 몬스터 처리와86을 함께 회귀 검증한다. 전체 자연 성장·디자인/서사 수용·MOBILE_RELEASE §5는 미완료다.
