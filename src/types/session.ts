@@ -52,6 +52,20 @@ export interface GameEvent {
     /** 내러티브 이벤트 체인 전용 — 진행 중인 체인 id/스텝. */
     _chainId?: string;
     _chainStep?: number;
+    /**
+     * 거부된 선택의 이유(Wave 27 N1) — 이벤트가 열린 채 남는 거부에서 리듀서만 쓴다.
+     * 이벤트 화면에는 로그(TerminalView)가 마운트되지 않으므로 `getEventChoicePreview`가
+     * 누른 선택지의 미리보기 줄로 이 문장을 보여 준다. 이벤트가 닫히면 함께 사라진다.
+     * 트랜잭션·한정 조우 검증기는 desc/choices/outcomes만 비교하므로 이 필드는 정본 판정에
+     * 들어가지 않는다 — 이벤트 **전체**를 구조 비교하는 체인 핸들러에는 쓰지 말 것.
+     */
+    choiceFeedback?: EventChoiceFeedback;
+}
+
+/** `GameEvent.choiceFeedback` — 거부된 선택지 인덱스와 플레이어에게 보일 문장(MSG). */
+export interface EventChoiceFeedback {
+    choiceIndex: number;
+    text: string;
 }
 
 /**

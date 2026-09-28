@@ -8,6 +8,7 @@ import type { ResolveFallbackEventTransactionPayload } from '../actionTypes';
 import type { GameState, HandlerMap } from '../gameReducer';
 import { GS } from '../gameStates';
 import { addNewTitles } from './helpers';
+import { rejectEventChoice } from './eventChoiceFeedback';
 import type { Item } from '../../types';
 import type { LogEntry } from '../../types/session.js';
 
@@ -61,14 +62,6 @@ const findCheapestHpRecovery = (inventory: Item[]) => {
         ))[0] || null;
 };
 
-const appendRequirementError = (state: GameState, id: string, text: string) => {
-    if (state.logs.some((log) => log?.id === id)) return state;
-    return {
-        ...state,
-        logs: [...state.logs, { id, type: 'error', text }].slice(-BALANCE.LOG_MAX_SIZE),
-    };
-};
-
 export const fallbackEventActionMap = {
     RESOLVE_FALLBACK_EVENT_TRANSACTION: (state, action) => {
         if (state.gameState !== GS.EVENT || !isPayload(action.payload)) return state;
@@ -76,14 +69,26 @@ export const fallbackEventActionMap = {
         const { transactionId, choiceIndex } = action.payload;
         const transaction = getStructuredFallbackTransaction(transactionId);
         const event = state.currentEvent;
+        // 신원 판정: 출처·id·선택 인덱스가 틀린 payload는 훅이 만들 수 없는 조합이다(훅은 열린
+        //   이벤트에서 이 셋을 읽어 보낸다) — 도달 불가 경로라 동일 참조가 정답이다.
         if (!event
             || !transaction
             || transaction.choiceIndex !== choiceIndex
             || event?.source !== 'fallback'
-            || event?.fallbackTransactionId !== transactionId
-            || event.desc !== transaction.event.desc
+            || event?.fallbackTransactionId !== transactionId) return state;
+        // 정본 판정(위조 방지): 원장(structuredFallbackEvents)이 모양의 유일한 소유자다 — 생산자
+        //   (pickFallbackEvent)는 원장 값을 그대로 내보내므로 정상 경로에서는 항상 통과한다.
+        //   통과하지 못하는 이벤트(변조된 지급액·문구, Wave 27 이전 세이브의 패딩 3선택지)는
+        //   지급하지 않되, 무반응 대신 "무효 제안"을 이벤트 화면에 보인다(2026-09 Wave 27 N1).
+        if (event.desc !== transaction.event.desc
             || !structurallyEqual(event.choices, transaction.event.choices)
-            || !structurallyEqual(event.outcomes, transaction.event.outcomes)) return state;
+            || !structurallyEqual(event.outcomes, transaction.event.outcomes)) {
+            return rejectEventChoice(state, {
+                logId: `fallback-offer-invalid:${transactionId}:${choiceIndex}`,
+                choiceIndex,
+                text: MSG.EVENT_CHOICE_OFFER_INVALID,
+            });
+        }
 
         const inventory = Array.isArray(state.player.inv) ? state.player.inv : [];
         let nextInventory = inventory;
@@ -95,11 +100,11 @@ export const fallbackEventActionMap = {
         if (transaction.cost.type === 'hp-recovery-consumable') {
             const selected = findCheapestHpRecovery(inventory);
             if (!selected) {
-                return appendRequirementError(
-                    state,
-                    `fallback-cost-insufficient:${transactionId}:${choiceIndex}`,
-                    '체력 회복 물약이 필요합니다.',
-                );
+                return rejectEventChoice(state, {
+                    logId: `fallback-cost-insufficient:${transactionId}:${choiceIndex}`,
+                    choiceIndex,
+                    text: MSG.FALLBACK_HP_POTION_REQUIRED,
+                });
             }
             nextInventory = inventory.filter((_item, index) => index !== selected.index);
             nextQuickSlots = (state.quickSlots || []).map((slot) => {
@@ -109,11 +114,11 @@ export const fallbackEventActionMap = {
             });
         } else {
             if (!Number.isFinite(currentGold) || Number(currentGold) < transaction.cost.amount) {
-                return appendRequirementError(
-                    state,
-                    `fallback-cost-insufficient:${transactionId}:${choiceIndex}`,
-                    MSG.GOLD_INSUFFICIENT,
-                );
+                return rejectEventChoice(state, {
+                    logId: `fallback-cost-insufficient:${transactionId}:${choiceIndex}`,
+                    choiceIndex,
+                    text: MSG.GOLD_INSUFFICIENT,
+                });
             }
             currentGold = Number(currentGold) - transaction.cost.amount;
         }
