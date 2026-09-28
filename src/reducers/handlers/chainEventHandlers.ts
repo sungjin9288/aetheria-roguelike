@@ -7,6 +7,8 @@ import type { GameState, HandlerMap } from '../gameReducer';
 import { GS } from '../gameStates';
 import { RELICS } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
+import { rejectEventChoice } from './eventChoiceFeedback';
+import type { GameEvent } from '../../types/session.js';
 
 const PAYLOAD_KEYS = ['chainId', 'choiceIndex', 'step'];
 
@@ -81,12 +83,14 @@ const isDeferralPayload = (value: unknown): value is DeferChainEventPayload => {
     return isPayload(choice) && Number.isSafeInteger(expectedExploreCount) && Number(expectedExploreCount) >= 0;
 };
 
-const appendRequirementError = (state: GameState, id: string, text: string) => {
-    if (state.logs.some((log) => log?.id === id)) return state;
-    return {
-        ...state,
-        logs: [...state.logs, { id, type: 'error', text }].slice(-BALANCE.LOG_MAX_SIZE),
-    };
+/**
+ * 정본 판정은 이벤트의 **이야기 모양**만 본다 — `choiceFeedback`은 거부 뒤 리듀서가 붙이는 표시용
+ * 필드라, 전체 비교에 넣으면 한 번 거부된 이벤트의 모든 선택지가 무반응이 된다(2026-09 Wave 27).
+ */
+const storyShape = (event: GameEvent | null) => {
+    if (!event) return event;
+    const { choiceFeedback: _feedback, ...story } = event;
+    return story;
 };
 
 export const chainEventActionMap = {
@@ -105,7 +109,7 @@ export const chainEventActionMap = {
         const outcome: ChainOutcomeData | undefined = stepData?.event?.outcomes?.[choiceIndex];
         if (!stepData) return state;
         if (outcome?.type !== 'nothing' || outcome.reward) return state;
-        if (!structurallyEqual(event, { ...stepData.event, _chainId: chainId, _chainStep: step })) return state;
+        if (!structurallyEqual(storyShape(event), { ...stepData.event, _chainId: chainId, _chainStep: step })) return state;
 
         return {
             ...state,
@@ -151,13 +155,18 @@ export const chainEventActionMap = {
             _chainId: chainId,
             _chainStep: step,
         };
-        if (!structurallyEqual(event, canonicalEvent)) return state;
+        if (!structurallyEqual(storyShape(event), canonicalEvent)) return state;
 
         const gold = state.player.gold ?? Number.NaN;
         const cost = -Number(amount);
+        // 거부 3종(골드 부족 · 유물 중복 · 슬롯 가득)은 이벤트를 열어 둔 채 그 선택지에 이유를 붙인다 —
+        //   이벤트 화면에는 TerminalView가 없어 오류 로그만으로는 무반응과 구별되지 않았다(2026-09 Wave 27).
         if (!Number.isFinite(gold) || gold < cost) {
-            const id = `chain-gold-insufficient:${chainId}:${step}:${choiceIndex}`;
-            return appendRequirementError(state, id, MSG.GOLD_INSUFFICIENT);
+            return rejectEventChoice(state, {
+                logId: `chain-gold-insufficient:${chainId}:${step}:${choiceIndex}`,
+                choiceIndex,
+                text: MSG.GOLD_INSUFFICIENT,
+            });
         }
 
         const relicId = outcome.reward?.relicId;
@@ -171,19 +180,19 @@ export const chainEventActionMap = {
         if (rewardRelic) {
             if (!Array.isArray(relics) || !Number.isSafeInteger(relicCount) || relicCount < 0) return state;
             if (relics.some((relic) => relic?.id === rewardRelic.id)) {
-                return appendRequirementError(
-                    state,
-                    `chain-relic-owned:${chainId}:${step}:${choiceIndex}`,
-                    MSG.CHAIN_RELIC_ALREADY_OWNED(String(rewardRelic.name || rewardRelic.id || relicId)),
-                );
+                return rejectEventChoice(state, {
+                    logId: `chain-relic-owned:${chainId}:${step}:${choiceIndex}`,
+                    choiceIndex,
+                    text: MSG.CHAIN_RELIC_ALREADY_OWNED(String(rewardRelic.name || rewardRelic.id || relicId)),
+                });
             }
             const maxRelics = getPrestigeUnlocks(state.player.meta?.prestigeRank).maxRelics;
             if (relics.length >= maxRelics) {
-                return appendRequirementError(
-                    state,
-                    `chain-relic-full:${chainId}:${step}:${choiceIndex}`,
-                    MSG.CHAIN_RELIC_SLOTS_FULL,
-                );
+                return rejectEventChoice(state, {
+                    logId: `chain-relic-full:${chainId}:${step}:${choiceIndex}`,
+                    choiceIndex,
+                    text: MSG.CHAIN_RELIC_SLOTS_FULL,
+                });
             }
         }
 

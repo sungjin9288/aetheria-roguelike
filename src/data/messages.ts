@@ -366,7 +366,7 @@ export const MSG = {
     EVENT_RESULT_DEFAULT: '선택의 결과가 반영되었습니다.',
     EVENT_REWARD_UNAVAILABLE: '이 선택의 보상 정보를 확인할 수 없습니다. 다른 선택을 골라주세요.',
     CHAIN_RELIC_ALREADY_OWNED: (name: string) => `${name}은 이미 보유하고 있습니다. 다른 선택을 골라주세요.`,
-    CHAIN_RELIC_SLOTS_FULL: '유물 슬롯이 가득 찼습니다. 자리를 마련한 뒤 다시 선택하세요.',
+    CHAIN_RELIC_SLOTS_FULL: '유물 슬롯이 가득 차 이 유물을 받을 수 없습니다. 다른 선택지를 고르세요.',
     // 캠프파이어 노드 (Phase 2, B+ 2026-06): 휴식 vs 단련 결정 (StS 캠프파이어).
     CAMPFIRE_DESC: '사그라드는 모닥불을 발견했습니다. 잠시 숨을 고를 수 있습니다. 무엇을 하시겠습니까?',
     CAMPFIRE_REST_CHOICE: '휴식 — 생명과 기력을 회복한다',

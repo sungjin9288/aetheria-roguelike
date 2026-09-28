@@ -28,10 +28,7 @@ const eventOutcomes = (event: GameState['currentEvent']): EventOutcome[] => toAr
 //   이 별칭을 쓰는 곳은 전부 null을 이미 걸러낸 뒤이므로 NonNullable로 좁힌다.
 type SpawnedEnemyStats = NonNullable<ReturnType<typeof spawnEnemy>['mStats']>;
 
-import {
-    STRUCTURED_FALLBACK_TRANSACTIONS,
-    getStructuredFallbackTransaction,
-} from '../../data/structuredFallbackEvents';
+import { STRUCTURED_FALLBACK_TRANSACTIONS } from '../../data/structuredFallbackEvents';
 
 export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelpers) => {
     const { emitUnlockedTitles } = shared;
@@ -91,19 +88,19 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             const reservedFallback = currentEvent.source === 'fallback'
                 ? STRUCTURED_FALLBACK_TRANSACTIONS.find((entry) => entry.event.desc === currentEvent.desc) || null
                 : null;
-            if (reservedFallback) {
-                const transaction = getStructuredFallbackTransaction(currentEvent.fallbackTransactionId);
-                if (!transaction || transaction.id !== reservedFallback.id) return;
-                if (idx === transaction.choiceIndex) {
-                    dispatch({
-                        type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION,
-                        payload: {
-                            transactionId: transaction.id,
-                            choiceIndex: idx,
-                        },
-                    });
-                    return;
-                }
+            // 원장 desc를 가진 폴백 이벤트의 비용 선택지는 언제나 리듀서가 정산한다 — 일반 경로로 흘리면
+            //   비용 없이 지급액만 받는다. 이벤트의 거래 id가 없거나 다른 거래를 가리키면(거래 id 도입 전
+            //   세이브 · 변조) 리듀서가 "무효 제안"으로 거부해 이유를 보인다. 여기서 모든 선택지를 조용히
+            //   삼키던 것이 무반응의 원인이었다 — 비용 없는 선택지는 id와 무관하게 일반 경로다(2026-09 Wave 27).
+            if (reservedFallback && idx === reservedFallback.choiceIndex) {
+                dispatch({
+                    type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION,
+                    payload: {
+                        transactionId: reservedFallback.id,
+                        choiceIndex: idx,
+                    },
+                });
+                return;
             }
             if (isChainEvent
                 && selectedOutcome?.reward?.type === 'gold'

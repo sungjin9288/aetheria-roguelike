@@ -8,6 +8,9 @@ import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
 import { MSG } from '../src/data/messages.ts';
 import { STRUCTURED_FALLBACK_TRANSACTIONS } from '../src/data/structuredFallbackEvents.ts';
 import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.ts';
+import { EVENT_CHAINS } from '../src/data/eventChains.ts';
+import { RELICS } from '../src/data/relics.ts';
+import { getPrestigeUnlocks } from '../src/systems/prestigeUnlocks.ts';
 import { buildEventPackage, pickFallbackEvent } from '../src/utils/aiEventUtils.ts';
 import { formatEventText, getEventChoicePreview } from '../src/utils/eventPresentation.ts';
 import { buildBoundedEncounterEvent } from '../src/utils/boundedEncounterEvent.ts';
@@ -360,4 +363,133 @@ test('[D9] 치를 수 있는 선택은 그대로 정산되고, 앞선 거부 안
     assert.equal(lifted.gameState, GS.IDLE, '거부 안내가 정본 판정을 오염시키지 않는다');
     assert.equal(lifted.player.gold, lowMp.player.gold + 60);
     assert.equal(lifted.player.hp, 72);
+});
+
+
+// ── 통합 후속: 구세이브 폴백 · 체인 비용 거부 ──────────────────────────────────
+
+/**
+ * N1이 남긴 두 무반응 경로. 둘 다 "로그는 남지만 이벤트 화면에는 아무것도 안 보인다"거나
+ * "아예 아무것도 안 일어난다"였다.
+ *
+ * ① 원장 desc를 가진 폴백 이벤트인데 `fallbackTransactionId`가 없거나 다른 거래를 가리키면
+ *    (거래 id 도입 전 세이브 · 변조) 훅이 **모든 선택지**에서 조용히 return했다 — 비용이 없는
+ *    선택지조차 눌리지 않았다.
+ * ② 체인 골드 선택(`RESOLVE_CHAIN_GOLD_CHOICE`)의 거부 3종(골드 부족 · 유물 중복 · 슬롯 가득)은
+ *    오류 로그만 남겼다. 이벤트 화면에는 TerminalView가 없으므로 플레이어에게는 무반응이다.
+ */
+
+for (const tx of STRUCTURED_FALLBACK_TRANSACTIONS) {
+    const other = STRUCTURED_FALLBACK_TRANSACTIONS.find((entry) => entry.id !== tx.id);
+    const identities = [
+        { label: '거래 id 없음(도입 전 세이브)', id: undefined },
+        ...(other ? [{ label: `다른 거래 id(${other.id})`, id: other.id }] : []),
+    ];
+    for (const identity of identities) {
+        test(`[구세이브 폴백] ${tx.id} · ${identity.label}: 모든 선택지가 보이는 결과를 내고 비용 선택지는 지급 없이 거부된다`, () => {
+            const event = { ...clone(tx.event), source: 'fallback' };
+            if (identity.id) event.fallbackTransactionId = identity.id;
+            const before = { ...clone(INITIAL_STATE), gameState: GS.EVENT, currentEvent: event, player: explorer(), logs: [] };
+            event.choices.forEach((_choice, choiceIndex) => {
+                const after = press(before, choiceIndex);
+                assert.notEqual(after, before, `선택 ${choiceIndex}가 무반응이면 안 된다`);
+                if (choiceIndex === tx.choiceIndex) {
+                    assert.equal(after.player.stats.total_gold, before.player.stats.total_gold, '비용 선택지는 정산되지 않는다');
+                    assertVisibleRejection(before, after, choiceIndex, MSG.EVENT_CHOICE_OFFER_INVALID);
+                } else {
+                    assert.equal(after.currentEvent, null, `선택 ${choiceIndex}는 이벤트를 닫는다`);
+                    assert.equal(after.gameState, GS.IDLE);
+                    assert.ok(after.logs.length > before.logs.length, `선택 ${choiceIndex}는 결과 로그를 남긴다`);
+                }
+            });
+        });
+    }
+}
+
+const chainStepData = (chainId, step) => EVENT_CHAINS
+    .find((chain) => chain.id === chainId)
+    .steps.find((candidate) => candidate.step === step);
+
+const chainState = (chainId, step, playerOverrides = {}) => {
+    const base = clone(INITIAL_STATE.player);
+    return {
+        ...clone(INITIAL_STATE),
+        gameState: GS.EVENT,
+        currentEvent: { ...clone(chainStepData(chainId, step).event), _chainId: chainId, _chainStep: step },
+        player: {
+            ...base,
+            loc: LOCATION,
+            gold: 5000,
+            relics: [],
+            stats: { ...base.stats, relicCount: 0 },
+            eventChainProgress: { [chainId]: step },
+            ...playerOverrides,
+        },
+        logs: [],
+    };
+};
+
+const SEAL = RELICS.find((relic) => relic.id === 'merchant_seal');
+const RANK0_CAP = getPrestigeUnlocks(0).maxRelics;
+const relicsAtCap = () => clone(RELICS.filter((relic) => relic.id !== SEAL.id).slice(0, RANK0_CAP));
+
+const CHAIN_REJECTIONS = [
+    { label: '마지막 영웅 · 골드 부족', chainId: 'last_hero', step: 0, choiceIndex: 0, player: { gold: 299 }, expected: () => MSG.GOLD_INSUFFICIENT },
+    { label: '그림자 길드 · 골드 부족', chainId: 'shadow_guild', step: 1, choiceIndex: 0, player: { gold: 1999 }, expected: () => MSG.GOLD_INSUFFICIENT },
+    {
+        label: '그림자 길드 · 인장 이미 보유',
+        chainId: 'shadow_guild', step: 1, choiceIndex: 0,
+        player: { relics: [clone(SEAL)], stats: { ...clone(INITIAL_STATE.player.stats), relicCount: 1 } },
+        expected: () => MSG.CHAIN_RELIC_ALREADY_OWNED(SEAL.name),
+    },
+    {
+        label: '그림자 길드 · 유물 슬롯 가득',
+        chainId: 'shadow_guild', step: 1, choiceIndex: 0,
+        player: { relics: relicsAtCap(), stats: { ...clone(INITIAL_STATE.player.stats), relicCount: RANK0_CAP } },
+        expected: () => MSG.CHAIN_RELIC_SLOTS_FULL,
+    },
+];
+
+for (const entry of CHAIN_REJECTIONS) {
+    test(`[체인 비용 거부] ${entry.label}: 이벤트 화면에 이유가 보이고, 다른 선택지는 그대로 진행된다`, () => {
+        const before = chainState(entry.chainId, entry.step, entry.player);
+        const after = press(before, entry.choiceIndex);
+        assert.equal(after.player.eventChainProgress[entry.chainId], entry.step, '진행하지 않는다');
+        assertVisibleRejection(before, after, entry.choiceIndex, entry.expected());
+
+        // 거부 안내가 붙은 이벤트에서 다른 선택지를 누르면 원래대로 해소된다.
+        const otherIndex = after.currentEvent.choices.findIndex((_choice, index) => index !== entry.choiceIndex);
+        const moved = press(after, otherIndex);
+        assert.equal(moved.currentEvent, null);
+        assert.equal(moved.gameState, GS.IDLE);
+        assert.notEqual(moved.player.eventChainProgress[entry.chainId], entry.step, '다른 선택지는 체인을 움직인다');
+    });
+}
+
+test('[체인 비용 거부 뒤 재시도] 거부 안내가 정본 판정을 오염시키지 않는다 — 비용을 갖추면 같은 선택이 정산된다', () => {
+    const rejected = press(chainState('shadow_guild', 1, { gold: 1999 }), 0);
+    assert.ok(rejected.currentEvent?.choiceFeedback, '먼저 거부 안내가 붙는다');
+    const funded = { ...rejected, player: { ...rejected.player, gold: 5000 } };
+    const settled = press(funded, 0);
+    assert.equal(settled.currentEvent, null);
+    assert.equal(settled.gameState, GS.IDLE);
+    assert.equal(settled.player.gold, 3000);
+    assert.ok(settled.player.relics.some((relic) => relic.id === SEAL.id));
+    assert.equal(settled.player.eventChainProgress.shadow_guild, 2);
+});
+
+test('[체인 미루기] 거부 안내가 붙은 체인 이벤트도 미루기 선택지는 그대로 미룬다', () => {
+    // 현재 데이터의 비용 스텝 두 곳에는 미루기 선택지가 없다 — 비용 스텝에 미루기가 생기거나
+    //   다른 거부가 체인 이벤트에 안내를 붙여도, 표시용 필드가 미루기의 정본 판정을 막지 않는다.
+    const opened = chainState('shadow_guild', 0);
+    const deferIndex = opened.currentEvent.outcomes.findIndex((outcome) => outcome.type === 'nothing');
+    assert.ok(deferIndex >= 0);
+    const flagged = {
+        ...opened,
+        currentEvent: { ...opened.currentEvent, choiceFeedback: { choiceIndex: 1 - deferIndex, text: MSG.GOLD_INSUFFICIENT } },
+    };
+    const deferred = press(flagged, deferIndex);
+    assert.equal(deferred.currentEvent, null);
+    assert.equal(deferred.gameState, GS.IDLE);
+    assert.equal(deferred.player.deferredEventChainSteps?.shadow_guild, 0);
 });
