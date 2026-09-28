@@ -68,9 +68,10 @@ const formatMapLevel = (map: GameMap | null | undefined, playerLevel = 1) => (
 
 /**
  * 2026-09 Wave 13 E2: 카드가 보여주던 `formatMapLevel`은 그 지역 **자신의 잠금**이다
- * (이동 권한도 그대로 이 값으로 판정된다 — `getMapAccess`). 하지만 52곳 중 10곳은
- * 거기까지 가는 모든 길이 더 높은 지역을 지나 실제 진입선이 더 위에 있고,
- * 무한 심연은 잠금이 아예 없어 숫자조차 없었다. 갈라지는 곳에서만 실제 진입 레벨을
+ * (이동 권한도 그대로 이 값으로 판정된다 — `getMapAccess`). 하지만 52곳 중 16곳은
+ * 거기까지 가는 모든 길이 더 높은 지역을 지나 실제 진입선이 더 위에 있고(Wave 27부터 시즌 없는
+ * 실제 이동 규칙으로 센다 — 도보 경로가 없는 3곳은 진입 레벨이 없다), 무한 심연은 잠금이
+ * 아예 없어 숫자조차 없었다. 갈라지는 곳에서만 실제 진입 레벨을
  * 덧붙인다 — 값은 `utils/mapRouteGate.ts`(증빙 리포트와 같은 authority), 문구는 MSG.
  */
 const getRouteGateNotice = (routeGate: MapRouteGate | null | undefined) => {
