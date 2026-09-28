@@ -13,6 +13,7 @@ import { BALANCE } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import type { Player, Relic, StatusId } from '../../types';
 import type { EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
 import type { GameState } from '../../reducers/gameReducer';
@@ -174,7 +175,11 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                             //   상한에서는 막지도(스텝은 아래에서 그대로 진행) 버리지도 않고, 기존 유물
                             //   선택 패널에 교체 제안으로 올린다 — 패널이 REPLACE_RELIC/DECLINE_RELIC을 준다.
                             if (ownedRelics.length < getPrestigeUnlocks(updatedPlayer.meta?.prestigeRank).maxRelics) {
-                                updatedPlayer = { ...updatedPlayer, relics: [...ownedRelics, pickedRelic] };
+                                // D8: 유물이 빌드 성향을 바꾸면 유효 최대 기력이 줄 수 있다.
+                                updatedPlayer = clampVitalsToEffectiveMax({
+                                    ...updatedPlayer,
+                                    relics: [...ownedRelics, pickedRelic],
+                                });
                                 addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelic.name!));
                             } else {
                                 relicReplaceOffer = pickedRelic;

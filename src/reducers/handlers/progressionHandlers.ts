@@ -10,6 +10,7 @@ import { pickPermanentPlayerState } from '../../utils/permanentProgress';
 import { getAscensionOutcome } from '../../utils/ascensionPreview';
 import { getClaimableQuestEntries } from '../../utils/questProgress';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
@@ -90,11 +91,12 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         return {
             ...state,
             pendingRelics: null,
-            player: {
+            // D8: 유물이 빌드 성향을 바꾸면 성향 보너스만큼 유효 최대 기력이 줄 수 있다.
+            player: clampVitalsToEffectiveMax({
                 ...state.player,
                 relics: [...relics, relic],
                 stats: { ...state.player.stats, relicCount: (state.player.stats?.relicCount || 0) + 1 },
-            },
+            }),
             syncStatus: 'syncing',
         };
     },
@@ -115,11 +117,12 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         return {
             ...state,
             pendingRelics: null,
-            player: {
+            // D8: 내려놓은 유물의 생명/기력 배율만큼 유효 최대치가 줄 수 있다.
+            player: clampVitalsToEffectiveMax({
                 ...state.player,
                 relics: relics.map((relic, index) => (index === releaseIndex ? offered : relic)),
                 stats: { ...state.player.stats, relicCount: (state.player.stats?.relicCount || 0) + 1 },
-            },
+            }),
             logs: appendRewardLogs(state.logs, [{
                 type: 'success',
                 text: MSG.RELIC_REPLACED(released.name || replaceRelicId, offered.name || relicId),

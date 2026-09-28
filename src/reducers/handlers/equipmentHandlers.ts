@@ -1,4 +1,5 @@
 import { MSG } from '../../data/messages';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import {
     getEquipmentIdentity,
@@ -118,11 +119,12 @@ const equipInventoryItem = (state: GameState, item: Item): GameState => {
     if (feedback) logs.push({ type: 'info', text: feedback });
     logs.push({ type: 'success', text: MSG.EQUIP_DONE(item.name || '') });
 
-    return completeEquipmentTransaction(state, {
+    // 2026-09 Wave 27 N2 (D8): 벗은 장비의 기력/생명 보너스만큼 유효 최대치가 줄 수 있다.
+    return completeEquipmentTransaction(state, clampVitalsToEffectiveMax({
         ...state.player,
         inv: inventory,
         equip: nextEquip,
-    }, logs);
+    }), logs);
 };
 
 const consumeInventoryItem = (state: GameState, item: Item): GameState => {
