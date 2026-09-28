@@ -1913,3 +1913,61 @@ Production cap:sync·Android debug·iOS unsigned·mobile:doctor exit0. 기존 �
 **게이트**(head `81a0fc66` 코드 = 이후 문서 커밋과 동일 코드, 직렬 07:00~07:22): type-check 0 · lint 0 · unit **5,211 / 5,211**(358파일, skip 0 — Codex 5,204 대비 +7 = 새 계약 7행) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **136 / 136**(shard 70 + 66) · perf desktop FCP 644ms / mobile 380ms · 증빙 tracked verify 15종 ok. 인접 스위트 18개 개별 실행 전부 초록(quest-progress 15 · quests-cycle 86 · cycle-067-099 73 · cycle-500-599 250 · ascension-pending-rewards 6 · true-ending-flow 7 · early-elite-spawn 4 · content-reachability 16 …).
 
 **증빙 예고 델타**: `progression-diagnostic-v2` `sources`만 — `src/**`를 디렉터리 순회로 모으므로 새 파일 `src/utils/enemyIdentity.ts`가 **+1**(354 → 355), 기존 `questProgress.ts`·`exploreUtils.ts` 2개 이동, 삭제 0. `reportHash`/`v1Baseline`/나머지 nonSources는 불변이어야 한다(시뮬레이터·진단은 `questProgress`를 import하지 않고, `spawnEnemy`의 산출 문자열은 동일하다). **실측 일치**(고정 순서 writer 5단계 직렬, 06:46~06:52): 바뀐 키 `sources`뿐, 354 → 355, 추가 1 = `src/utils/enemyIdentity.ts`, 이동 2 = `exploreUtils.ts`·`questProgress.ts`, 삭제 0, `reportHash` `f21dcf81…` · `v1Baseline` 불변. tracked verify 15종 전부 ok.
+
+## 27. Wave 27 — 스토리 경로 자연 플레이 감사와 결함 수정 (2026-09-28, 베이스 `main` = `1ad3fe8e` = PR #59 merge commit)
+
+### 27.1 감사 — 무엇을 어떻게 돌렸나
+
+Codex 백로그의 마지막 미결 행("스토리 경로 자연 플레이")을 실제 액션 팩토리(`createGameActions`·`createEventActions`·경제/퀘스트 액션) + 실제 `gameReducer`로 돌렸다. 테스트 API 시드나 상태 주입 없이 새 세이브 → 스토리 87 수령 → 계승까지 **16런**(드래곤 나이트 10 · 대마법사 3 · 사냥의 군주 3). 결과: 16/16 계승 도달 · 붕괴/소프트락 0 · 저장 봉투 왕복 **1,444회 diff 0** · 묘비 **41/41 회수** · PR #59 수정(임무 목표 정확 일치)이 진행 증가 701건 전부에서 유지.
+
+**찾은 결함 9종**(D1~D9). 코드로 닫은 것은 D1·D2·D3·D5·D6(authority)·D8·D9 + 감사 중 통합자가 찾은 경로 안내 결함이고, D4·D6(서사 공백)·D7은 소유자 결정으로 남긴다(§27.5).
+
+| id | 증상(실측) | 원인 |
+|----|-----------|------|
+| D1 | 폴백 비용 거래 3종의 비용 선택지가 **157/157 무반응** | 포장기가 원장의 2선택지를 3개로 채웠고, 검증기는 원장과 구조 동치를 요구 |
+| D2 | 보상으로 21/20이 된 가방에서 **순증 0 장비 교체까지 거부** | `equipmentHandlers`가 교체 뒤 크기만 봄 |
+| D3 | 체인 완주 유물로 rank 0에서 **6/5 · 7/5** | 훅 경로(`eventActions`)에만 상한 검사 없음 |
+| D5 | 북부 권역 8곳이 Lv20~34로 표시·보고, 실제 걷는 길은 **전부 Lv35** | `mapRouteGate` 자체 보행이 계절 지역을 통과 |
+| D6 | 종장 87 보고 **L50/65.9h**, 실측 첫 수락 중앙값 165h(Lv68) | 리포트 임무 게이트가 `minLv`만 봄 |
+| D8 | 기력 133/123 · 718/708(생명은 재현상 399/241) | 유효 최대치가 줄어도 현재값 유지 |
+| D9 | 치를 수 없는 한정 조우 선택이 이유 없이 무반응 | 거부가 `applied: false`뿐 |
+| 경로 안내 | 839쌍이 걸을 수 없는 경유지를 "다음 이동"으로 안내 | `findMapPath`가 출구 순서 최단 BFS |
+
+### 27.2 트랙과 결과 (파일 교차 0으로 병렬, 통합은 cherry-pick)
+
+- **경로 안내** (`f8e53db8`): `findMapPath` = 경유지 병목 진입 레벨 최소 → 최단, 계절 지역은 목적지가 아니면 경유지 불가(그 길밖에 없으면 그 길이라도). `tests/mission-route-walkable.test.js` 4행(실데이터 전수 >1,500쌍, 오라클 = `getReachableMaps`/`getMapAccess`), 수정 전 4/4 red. 계절 경유지 행은 실데이터에 계절 지역으로 들어가는 출구가 **0개**라 공허했다 — 합성 지도로 다시 썼고 주입(b)가 그제서야 red. 주입 3종이 각자 다른 행을 붉힌다.
+- **N1 — 이벤트 무반응** (`571706ea`): 생산자는 원장 event를 그대로 내보낸다(2선택지). 정본 아닌 이벤트는 지급 없이 `MSG.EVENT_CHOICE_OFFER_INVALID`. 거부 문장은 `currentEvent.choiceFeedback`(`rejectEventChoice`)에 싣고 `getEventChoicePreview`가 누른 선택지 줄로 그린다(EventPanel 무수정). D9는 `applyBoundedEncounterChoice`가 부족분(자원·필요·현재)을 돌려주고 리듀서가 MSG로 문장을 만든다. 계약 23행(수정 전 19 red), 주입 10종 red. 기존 `bounded-encounter-integration`의 가방 가득 행은 다른 조우에 `repair-cart`를 눌러 `invalid_choice`로 통과하던 **공허참**이었다.
+- **N3 — 경로 게이트·임무 게이트 authority** (`9d4208e4`): 보행을 `getReachableMaps`(시즌 없음)에 위임. 걸어서 못 들어가는 3곳(봄의 정원·서리 폭풍 유적 = 시즌, 고대 보물고 = 열쇠)은 게이트 `null` + `cost.mapsWithoutWalkingRoute`. 임무 게이트 = max(수락 게이트, 목표 지역 경로 게이트), 수락 게이트 = max(`minLv`, 선행 임무 목표 게이트). 괴리 지역 10 → **16**, 87 L50 → **L68/170.23h**, 84 L28 → L35, 체인 완주 버킷 `[[35,3],[40,3],[48,5],[68,2]]`(승천 전 완주 11/13 유지), `behind` 44 → 38행. `schemaVersion` 4 → 5. 계약 `route-gate-move-rule-contract` 7행(수정 전 7/7 red).
+- **N2 — 가방·유물·최대치** (`72438e96` D2 · `809908da` D3 · `35c5e62f` D8): ① 보상은 잃지 않는다(지급 쪽 상한 검사 없음) ② 상한은 증가만 막는다(`utils/inventoryCapacity.ts`) — 발견 체인이 가득 찬 가방에서 보상 아이템을 조용히 버리던 cycle 182 게이트도 제거. 유물은 상한에서 교체 제안(`AT.REPLACE_RELIC`, `RelicChoicePanel` 교체 버튼) — 스텝은 진행, 유물 수 불변, 보상 소실 없음. `ADD_RELIC`도 상한에서 거부. `clampVitalsToEffectiveMax`는 넘친 쪽만 내리고 올리지 않는다(장비 교체·`ADD_RELIC`·`REPLACE_RELIC`·체인 직접 지급·일일 파편 변환). 신규 28행.
+- **통합 후속** (`b81d6708`): N1이 남긴 두 무반응 경로. ① 원장 desc를 가진 폴백 이벤트의 거래 id가 없거나 다른 거래를 가리키면(거래 id 도입 전 세이브·변조) 훅이 **모든 선택지**를 삼켰다 → 비용 선택지는 원장 id로 리듀서에 보내 무효 제안으로 거부, 비용 없는 선택지는 일반 경로. ② 체인 골드 선택의 거부 3종(골드 부족·유물 중복·슬롯 가득)이 로그만 남겼다 → `rejectEventChoice`. 이때 체인 정본 판정(미루기·골드 선택)의 **전체 이벤트 구조 비교**가 `choiceFeedback`을 품으면 한 번 거부된 이벤트가 영구 무반응이 되므로 `storyShape`로 표시 필드를 빼고 비교한다. 슬롯 가득 문구는 "자리를 마련한 뒤" → "다른 선택지를 고르세요"(이벤트 중에는 유물을 비울 수 없다). 계약 12행(착수 12/12 red). 주입 5종: 훅 무반응 복원 → 6 red · 골드 선택 전체 비교 → 1 · 미루기 전체 비교 → 1 · 체인 거부 로그 전용 → 5 · 리듀서 id 불일치 동일 참조 → 6. 기존 `event-chain-gold-affordability` 3행은 "거부 = 같은 `currentEvent` 참조"로 **무반응을 고정**하고 있어 "이야기 불변 + 이유만 추가"로 갱신했다.
+
+### 27.3 증빙 델타 (고정 순서 writer 5단계 + `relic-event-chance --write`, 직렬 09:49~10:03)
+
+- `content-reachability`: `schemaVersion` 4 → 5, `reportHash` `d2d37207…` → **`822a7f4e…`** — N3가 격리 워크트리에서 예고한 값과 **본문까지 일치**.
+- `progression-diagnostic-v2`: 바뀐 키 `sources`뿐 — 355 → 358(추가 3 = `eventChoiceFeedback.ts`·`effectiveVitals.ts`·`inventoryCapacity.ts`), 이동 21, 삭제 0. `reportHash` `f21dcf81…`·`v1Baseline` 불변(시뮬레이터·진단 산출은 그대로).
+- `relic-event-chance`: `authorityHashes.eventReward`만 이동(`eventActions.ts`), `reportHash` `424909de…` 불변. N2 예고값(`1fb983ae…`)이 아니라 `7cac1f0c…`인 이유는 통합 후속이 같은 파일을 한 번 더 고쳤기 때문이다.
+- `event-reward-coherence`·`equipment-combat-power`: 재생성 결과 바이트 불변.
+- tracked verify **15/15 ok**.
+
+중간에 한 번 체인을 멈췄다: `MapNavigator.tsx`·`messages.ts`의 "괴리 10곳" 주석이 N3 이후 틀린 값이 됐는데, 두 파일 모두 소스 해시가 핀돼 있어 체인 도중에 고치면 방금 쓴 증빙이 stale이 된다. 주석을 먼저 고치고(`a811e15b`) 체인을 처음부터 다시 돌렸다.
+
+### 27.4 게이트 (head `74e17386`, 직렬 10:03~10:24)
+
+type-check 0 · lint 0 · unit **5,293 / 5,293**(364파일, skip 0 — §26.11의 5,211 대비 +82 = 신규 6파일 + 기존 파일 갱신) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **136 / 136**(shard 70 + 66) · perf desktop FCP 560ms / mobile 376ms · 증빙 tracked verify 15종 ok. 실기기 QA·출시 수용은 이 wave의 범위가 아니다.
+
+### 27.5 소유자 결정으로 남기는 것 (이번 wave에서 구현하지 않음)
+
+| 항목 | 실측 | 선택지와 대가 |
+|------|------|---------------|
+| D4 서명 아이템 가방 점유 | 판매·합성·장착·버리기 전부 불가. Lv50 이후 7~11칸 점유, 루팅의 80~92%가 용량에 막힘 | (a) 판매/분해 허용 — 공간을 얻고 수집 의미를 잃는다 (b) 가방 밖 보관함 — 수집을 지키고 세이브 필드·UI가 늘어난다(`DATA_VERSION` bump 검토) (c) 현행 |
+| D6 85 → 86 서사 공백 | 86 `minLv` 68, 스토리 없는 104~162 모델시간. 마왕 처치마다 계승 제안이 반복(런당 70~112회, 85 진행 중에도) | 86 게이트를 내리거나 중간 스토리를 넣는 것은 콘텐츠 결정. 계승 제안 빈도(런당 1회 / 87 이후)는 루프 결정 |
+| 목표 지역에 닿기 전 수락 가능한 임무 20개 | 2·12·26·27·28·38·39·84·105·109·122·123·124·135·140~142·146~148 (보물고 136·137은 별도) | 수락 게이트에 경로 게이트를 넣으면 보드가 정직해지고 수락 시점이 늦어진다. 지금은 리포트(`questGateDivergence`)에만 반영 |
+| D7 레벨 1~6 지역의 완전 정예 | 재앙의(2.5×)·고대(1.8×) 각 ~2.4%(Lv1), 감사 사망 41건 중 37건이 정예 | 접두어 등급을 지역 레벨로 제한하면 초반 사망이 줄고 `spawnEnemy`를 쓰는 성장 모델 해시가 움직인다(밸런스 변경) |
+
+### 27.6 잔여 (알고 남긴 것)
+
+- 칭호 전환(`SET_PLAYER` activeTitle)이 유효 최대치를 낮춰도 클램프하지 않는다 — D8과 같은 클래스, 전이 하나 남음.
+- `pendingRelics`는 세이브 봉투 밖이다 — 상한 교체 제안 중 리로드하면 제안이 사라진다(체인 스텝은 이미 진행). 기존 유물 발견 제안과 같은 클래스.
+- 일일 파편 변환의 유물 상한은 5 고정(프레스티지 rank 무시). 체인 직접 지급은 `stats.relicCount`를 올리지 않는다(골드 경로는 올린다).
+- 상인의 인장은 유물 상한에서 살 수 없다(거부 + 다른 선택지 안내). 골드 경로를 교체 제안으로 바꾸면 2000G를 낸 뒤 제안을 넘기면 골드만 잃는 선택이 생겨 거부를 유지했다.
+- 상한 교체 패널은 렌더 단언만 있고 e2e 스펙이 없다.

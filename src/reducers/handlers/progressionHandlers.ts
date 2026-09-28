@@ -10,6 +10,8 @@ import { pickPermanentPlayerState } from '../../utils/permanentProgress';
 import { getAscensionOutcome } from '../../utils/ascensionPreview';
 import { getClaimableQuestEntries } from '../../utils/questProgress';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
+import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 
@@ -76,14 +78,55 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
 
     ADD_RELIC: (state, action) => {
         const relic = action.payload;
+        const relics = state.player.relics || [];
+        // 2026-09 Wave 27 N2 (D3): 추가는 보유 상한을 넘지 못한다. 상한에서 열린 선택지
+        //   (체인 완주 보상 · 심연 마일스톤)는 REPLACE_RELIC 또는 DECLINE_RELIC으로 닫는다 —
+        //   제안(pendingRelics)은 남겨 두어 패널이 교체/넘기기를 계속 보여 준다.
+        if (relics.length >= getPrestigeUnlocks(state.player.meta?.prestigeRank).maxRelics) {
+            return {
+                ...state,
+                logs: appendRewardLogs(state.logs, [{ type: 'error', text: MSG.RELIC_SLOTS_FULL_REPLACE }]),
+            };
+        }
         return {
             ...state,
             pendingRelics: null,
-            player: {
+            // D8: 유물이 빌드 성향을 바꾸면 성향 보너스만큼 유효 최대 기력이 줄 수 있다.
+            player: clampVitalsToEffectiveMax({
                 ...state.player,
-                relics: [...(state.player.relics || []), relic],
+                relics: [...relics, relic],
                 stats: { ...state.player.stats, relicCount: (state.player.stats?.relicCount || 0) + 1 },
-            },
+            }),
+            syncStatus: 'syncing',
+        };
+    },
+
+    // 2026-09 Wave 27 N2 (D3): 제안 유물(pendingRelics)을 보유 유물 하나와 맞바꾼다 — 유물 수는
+    //   그대로라 상한 안팎 어디서든 늘지 않는다. 제안에 없는 유물 · 보유하지 않은 교체 대상 ·
+    //   이미 보유한 제안은 동일 참조로 무시한다(연타·늦은 클릭).
+    REPLACE_RELIC: (state, action) => {
+        const relicId = action.payload?.relicId;
+        const replaceRelicId = action.payload?.replaceRelicId;
+        if (typeof relicId !== 'string' || typeof replaceRelicId !== 'string') return state;
+        const offered = (state.pendingRelics || []).find((relic) => relic?.id === relicId);
+        if (!offered) return state;
+        const relics = state.player.relics || [];
+        const releaseIndex = relics.findIndex((relic) => relic?.id === replaceRelicId);
+        if (releaseIndex < 0 || relics.some((relic) => relic?.id === relicId)) return state;
+        const released = relics[releaseIndex];
+        return {
+            ...state,
+            pendingRelics: null,
+            // D8: 내려놓은 유물의 생명/기력 배율만큼 유효 최대치가 줄 수 있다.
+            player: clampVitalsToEffectiveMax({
+                ...state.player,
+                relics: relics.map((relic, index) => (index === releaseIndex ? offered : relic)),
+                stats: { ...state.player.stats, relicCount: (state.player.stats?.relicCount || 0) + 1 },
+            }),
+            logs: appendRewardLogs(state.logs, [{
+                type: 'success',
+                text: MSG.RELIC_REPLACED(released.name || replaceRelicId, offered.name || relicId),
+            }]),
             syncStatus: 'syncing',
         };
     },

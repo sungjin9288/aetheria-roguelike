@@ -135,6 +135,8 @@ export const AT = Object.freeze({
     // v4.0 — Relic / Prestige / Title / Daily
     SET_PENDING_RELICS: 'SET_PENDING_RELICS',
     ADD_RELIC: 'ADD_RELIC',
+    // 2026-09 Wave 27 N2 (D3): 보유 상한에서 제안 유물을 보유 유물 하나와 맞바꾼다.
+    REPLACE_RELIC: 'REPLACE_RELIC',
     DECLINE_RELIC: 'DECLINE_RELIC',
     ASCEND: 'ASCEND',
     UNLOCK_TITLES: 'UNLOCK_TITLES',
@@ -359,6 +361,8 @@ export interface ActionPayloadMap {
     // ── v4.0 — Relic / Prestige / Title / Daily ──────────────────────────
     [AT.SET_PENDING_RELICS]: Relic[] | null;
     [AT.ADD_RELIC]: Relic;
+    /** `relicId`는 `pendingRelics`의 제안, `replaceRelicId`는 내려놓을 보유 유물 — 둘 다 id로만 보낸다. */
+    [AT.REPLACE_RELIC]: { relicId: string; replaceRelicId: string };
     [AT.DECLINE_RELIC]: undefined;
     [AT.ASCEND]: AscendPayload;
     [AT.UNLOCK_TITLES]: string[];

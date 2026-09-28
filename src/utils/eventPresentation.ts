@@ -1,5 +1,5 @@
 import { getStructuredFallbackTransaction } from '../data/structuredFallbackEvents';
-import type { EventChoiceTone, EventOutcome } from '../types/session.js';
+import type { EventChoiceFeedback, EventChoiceTone, EventOutcome } from '../types/session.js';
 import { RELICS } from '../data/relics';
 
 export type { EventChoiceTone };
@@ -30,6 +30,7 @@ interface PresentationEvent {
     source?: string;
     fallbackTransactionId?: string;
     outcomes?: EventOutcome[];
+    choiceFeedback?: EventChoiceFeedback;
 }
 
 const unitLabels: Record<string, string> = {
@@ -152,6 +153,12 @@ const getBoundedPreview = (outcome: EventOutcome | null): EventChoicePreview => 
 };
 
 export const getEventChoicePreview = (event: PresentationEvent | null | undefined, choiceIndex: number): EventChoicePreview => {
+    // 2026-09 Wave 27 N1: 리듀서가 이 선택을 거부하고 이벤트를 열어 두었으면 그 이유가 먼저다 —
+    //   이벤트 화면에는 로그가 그려지지 않으므로 이 줄이 플레이어가 보는 유일한 응답이다.
+    const feedback = event?.choiceFeedback;
+    if (feedback?.choiceIndex === choiceIndex && typeof feedback.text === 'string' && feedback.text) {
+        return { text: feedback.text, tone: 'danger' };
+    }
     const outcome = findOutcome(event, choiceIndex);
     const fallbackTransaction = event?.source === 'fallback'
         ? getStructuredFallbackTransaction(event?.fallbackTransactionId)

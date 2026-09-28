@@ -1,6 +1,9 @@
 import { BALANCE } from '../data/constants.js';
 import { FALLBACK_EVENT_POOL } from '../data/aiEventPools.js';
-import { getStructuredFallbackTransaction } from '../data/structuredFallbackEvents.js';
+import {
+    getStructuredFallbackTransaction,
+    type StructuredFallbackTransaction,
+} from '../data/structuredFallbackEvents.js';
 import { findItemByName } from './gameUtils.js';
 
 const RECENT_HISTORY_LIMIT = 6;
@@ -534,6 +537,23 @@ export const buildEventPackage = (payload: unknown, context: EventContext): Even
 };
 
 
+// 2026-09 Wave 27 N1: 구조화 폴백 트랜잭션 이벤트는 원장(structuredFallbackEvents)의
+//   `event`를 **그대로** 복사해 내보낸다 — buildEventPackage를 거치지 않는다.
+//   거치면 dedupeChoices가 지역 선택지("살펴본다" 등)로 3개를 채우고 그 칸에 절차적 outcome이
+//   붙는데, 검증기(fallbackEventHandlers)는 원장과의 구조 동치를 요구하므로 비용 선택지가
+//   동일 참조로 무반응이었다(감사 16런 157/157). 게다가 채워진 3번째 칸은 절차적 보상(골드
+//   +40~76 · 경험 +58~90)이라 비용 거래 옆에 공짜 선택지가 놓였다. 모양의 소유자는 원장
+//   하나이고, 생산자와 검증기가 같은 값을 읽는다.
+//   신뢰 경계는 그대로다: 이 분기는 로컬 풀에서 뽑힌 항목의 트랜잭션 id로만 열리고,
+//   모델/외부 페이로드는 buildEventPackage의 허용 목록에서 id와 source를 잃는다.
+const packageStructuredFallbackTransaction = (transaction: StructuredFallbackTransaction): EventPackage => ({
+    source: 'fallback',
+    desc: transaction.event.desc,
+    choices: [...transaction.event.choices],
+    outcomes: transaction.event.outcomes.map((outcome) => ({ ...outcome })),
+    fallbackTransactionId: transaction.id,
+});
+
 // cycle 545: history / context defaults 제거 — 3 production caller (aiService
 //   :69/74/108) + 5 test caller 모두 3 args 명시이라 두 default 모두 도달
 //   불가. 청소 메가 시리즈 40번째 cross-file batch (cycle 502-544).
@@ -557,12 +577,10 @@ export const pickFallbackEvent = (loc: string, history: HistoryEntryLike[] | und
         ? withoutImmediateRepeat
         : (filteredPool.length > 0 ? filteredPool : pool);
     const picked = candidates[Math.floor(rng() * candidates.length)];
-    const packaged = buildEventPackage(
+    const transaction = getStructuredFallbackTransaction(picked?.fallbackTransactionId);
+    if (transaction) return packageStructuredFallbackTransaction(transaction);
+    return buildEventPackage(
         { ...picked, source: 'fallback' },
         { ...context, location: loc, source: 'fallback' }
     );
-    const transaction = getStructuredFallbackTransaction(picked?.fallbackTransactionId);
-    return packaged && transaction
-        ? { ...packaged, fallbackTransactionId: transaction.id }
-        : packaged;
 };

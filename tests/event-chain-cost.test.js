@@ -87,9 +87,17 @@ test('cost.gates.eventChainCompletions는 전 스텝 max(완주 게이트)로 �
     //   (ancient_prophecy:2 → 마왕성 48 · dragon_legacy:2 → 천공 정원 40 ·
     //    world_tree_corruption:1 → 천공 정원 40 · :2 → 세계수 숲 40).
     //   버킷 수는 6 그대로이고 23·32·35도 그대로다 — 움직인 것은 40·48·68뿐이다.
+    // 2026-09 Wave 27 N3: 경로 게이트가 실제 이동 규칙(시즌 없음)이 되자 북부 권역이 전부 Lv35다 —
+    //   water_apostle(호수의 신전 5 → 사막 오아시스 · 피라미드 23 → 35)과 machine_uprising(기계 폐도 ·
+    //   북부 요새 32 → 35)이 35 버킷으로 합류해 23·32 버킷이 사라지고 35가 1 → 3이 된다(6 → 4버킷).
+    //   40·48·68은 그대로다 — 셋 다 승천 지점(48) 이하라 걸치는 체인은 여전히 0개다.
     assert.deepEqual(
         cost.gates.eventChainCompletions.map(({ gateLevel, count }) => [gateLevel, count]),
-        [[23, 1], [32, 1], [35, 1], [40, 3], [48, 5], [68, 2]],
+        [[35, 3], [40, 3], [48, 5], [68, 2]],
+    );
+    assert.deepEqual(
+        cost.gates.eventChainCompletions.find((bucket) => bucket.gateLevel === 35).members,
+        ['last_hero', 'machine_uprising', 'water_apostle'],
     );
     // 68에 남는 둘은 애초에 승천 **뒤에** 열리는 체인이다(열림 65.90h / 170.23h) —
     // 걸치지 않으므로 옮기지 않는다. 이 둘이 68의 정상 상태다.
@@ -112,7 +120,7 @@ test('완주 게이트는 종착 스텝의 게이트보다 낮을 수 없다', (
 
 // ── 역전 인구조사 — 이 측정 오류가 실제로 몇 개를 잘못 매겼는가 ─────────────
 // 스텝 게이트가 단조 증가하지 않는 체인은 3개지만, 그중 **완주 게이트를 바꾸는**
-// 것은 1개(`forgotten_god`)뿐이다 — 나머지 둘(`machine_uprising` 32→18→32,
+// 것은 1개(`forgotten_god`)뿐이다 — 나머지 둘(`machine_uprising` 32→18→32 — Wave 27 N3 이후 35→18→35,
 // `rift_secret` 68→62→68)은 종착이 곧 max라 종착으로 매겨도 값이 같았다.
 // 그래서 Wave 14는 `forgotten_god` 하나만 교정 대상으로 다룬다.
 
@@ -236,6 +244,28 @@ test('승천 지점을 걸치는 체인이 0개다 — 13개 전부 루프 안�
     assert.equal(closesInLoop.length, 11);
     assert.deepEqual(opensAfterAscension, ['divine_apostle_trial', 'rift_secret']);
     assert.equal(closesInLoop.length + opensAfterAscension.length, cost.eventChainSpans.length);
+});
+
+// 2026-09 Wave 27 N3: 북부 권역을 지나는 두 체인의 구간 — 경로 게이트가 실제 이동 규칙(시즌 없음)이 되자
+//   machine_uprising은 8.9h → 12h에 열리고 닫히며, water_apostle은 열림(호수의 신전 5 · 1.3h)은 그대로이고
+//   완주가 4.68h(23) → 12h(35)로 늦어진다. 둘 다 승천 지점(48 · 53.28h) 안에서 닫힌다.
+test('북부 권역 체인 둘은 Lv35(12h)에 완주되고 여전히 승천 전에 닫힌다', () => {
+    const { cost } = buildContentReachabilityReport();
+    const spanOf = (chain) => cost.eventChainSpans.find((span) => span.chain === chain);
+    assert.deepEqual(
+        ['machine_uprising', 'water_apostle'].map((chain) => {
+            const span = spanOf(chain);
+            return [chain, span.openGateLevel, span.openCost.modeledHours, span.completionGateLevel, span.completionCost.modeledHours];
+        }),
+        [
+            ['machine_uprising', 35, 12, 35, 12],
+            ['water_apostle', 5, 1.3, 35, 12],
+        ],
+    );
+    // 기준 ②(종착이 곧 완주 게이트)는 그대로다 — machine_uprising 35 → 18 → 35의 종착이 max다.
+    const gates = routeGates();
+    const chain = EVENT_CHAINS.find((candidate) => candidate.id === 'machine_uprising');
+    assert.deepEqual(chain.steps.map((step) => gates.get(step.loc)), [35, 18, 35]);
 });
 
 test('스텝 지역을 하나라도 못 읽으면 완주 게이트는 max가 아니라 미상이다', () => {

@@ -321,12 +321,28 @@ export const buildBoundedEncounterContext = (player: Player, region: string): Bo
     };
 };
 
-const settlementFailure = (player: Player, reason: string, receiptKey: string | null = null) => ({
+/**
+ * `insufficient_resources` 거부에서 모자란 자원 — 판정과 같은 식에서 나온다(Wave 27 N1).
+ * 생명은 치른 뒤 1 이상 남아야 하므로 `required`가 비용 + 1이다.
+ */
+export interface BoundedResourceShortfall {
+    resource: 'hp' | 'mp' | 'gold';
+    required: number;
+    current: number;
+}
+
+const settlementFailure = (
+    player: Player,
+    reason: string,
+    receiptKey: string | null = null,
+    shortfall: BoundedResourceShortfall[] = [],
+) => ({
     applied: false as const,
     player,
     reason,
     receiptKey,
     result: null,
+    shortfall,
 });
 
 export const applyBoundedEncounterChoice = (
@@ -361,11 +377,14 @@ export const applyBoundedEncounterChoice = (
     const hp = Number(player.hp);
     const mp = Number(player.mp);
     const gold = Number(player.gold);
-    if (![hp, mp, gold].every(Number.isFinite)
-        || hp - (cost.hp || 0) < 1
-        || mp < (cost.mp || 0)
-        || gold < (cost.gold || 0)) {
-        return settlementFailure(player, 'insufficient_resources', receiptKey);
+    // 2026-09 Wave 27 N1: 거부 사유만 돌려주면 리듀서는 "무엇이 모자란지"를 다시 계산해야
+    //   했다(판정 두 벌). 판정 식이 그대로 모자란 자원 목록을 만든다.
+    const shortfall: BoundedResourceShortfall[] = [];
+    if (hp - (cost.hp || 0) < 1) shortfall.push({ resource: 'hp', required: (cost.hp || 0) + 1, current: hp });
+    if (mp < (cost.mp || 0)) shortfall.push({ resource: 'mp', required: cost.mp || 0, current: mp });
+    if (gold < (cost.gold || 0)) shortfall.push({ resource: 'gold', required: cost.gold || 0, current: gold });
+    if (![hp, mp, gold].every(Number.isFinite) || shortfall.length > 0) {
+        return settlementFailure(player, 'insufficient_resources', receiptKey, shortfall);
     }
     if (choice.outcome.item) {
         const capacity = Number.isSafeInteger(player.maxInv) && Number(player.maxInv) > 0

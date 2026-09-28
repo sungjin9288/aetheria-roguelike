@@ -1,8 +1,8 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "d2d37207a2fc705c9e6a03e28f5e47da11d8e789f3b7472a03dcca2849ff1878",
+  "reportHash": "822a7f4e02e8ecc22bda294e1da7ea4a8a80a52c31b7acdd1519ae925cdb6494",
   "report": {
-    "schemaVersion": 4,
+    "schemaVersion": 5,
     "catalog": {
       "maps": 52,
       "monsters": 254,
@@ -5879,7 +5879,8 @@
         "secondsPerHour": 3600,
         "actualPlayClaim": false,
         "cumulativeExpAuthority": "CombatEngine.applyExpGain",
-        "mapGateAuthority": "getMapAccess level rule: range levels use level[0]; a non-finite level (infinite abyss) is ungated; routeGateLevel is the lowest player level at which the map enters the report’s own reachability walk from the start location.",
+        "mapGateAuthority": "getMapAccess level rule: range levels use level[0]; a non-finite level (infinite abyss) is ungated; routeGateLevel is the lowest player level at which getReachableMaps (getMapAccess over exits with no season event, the default liveConfig) walks from the start location into the map. Maps with no walking route are not priced; mapsWithoutWalkingRoute lists them with their non-walking entry (season event or vault key).",
+        "questGateAuthority": "A quest is priced at its objective gate: max(acceptGateLevel, route gate of its objective map). acceptGateLevel = max(minLv, objective gate of the prerequisite quest), because ACCEPT_QUEST requires the prerequisite claimed. The objective map is the quest location, or for a location-less monster quest the earliest-gated map that spawns its target; system-counter quests have none. Goal counts are not priced. A quest whose objective map or prerequisite cannot be priced is listed in unresolvedQuestGates instead of a bucket.",
         "interpolationRule": "modeledActions(L) = round(lower.modeledActions + expFraction × (upper.modeledActions − lower.modeledActions)), expFraction = (cumulativeExp(L) − cumulativeExp(lower)) / (cumulativeExp(upper) − cumulativeExp(lower)); lower/upper are the nearest anchors below and above L. Anchored rows carry interpolation: null.",
         "limitations": [
           "Modeled actions and seconds are policy arithmetic over modeled reward settlements, not observed play time.",
@@ -6003,9 +6004,8 @@
           },
           {
             "gateLevel": 5,
-            "count": 3,
+            "count": 2,
             "members": [
-              "봄의 정원",
               "잊혀진 폐허",
               "호수의 신전"
             ],
@@ -6183,77 +6183,10 @@
             }
           },
           {
-            "gateLevel": 20,
-            "count": 2,
-            "members": [
-              "서리 폭풍 유적",
-              "얼음 성채"
-            ],
-            "cost": {
-              "level": 20,
-              "basis": "anchored",
-              "modeledActions": 164,
-              "modeledSeconds": 14760,
-              "modeledHours": 4.1,
-              "cumulativeExp": 17389,
-              "interpolation": null
-            }
-          },
-          {
-            "gateLevel": 22,
-            "count": 1,
-            "members": [
-              "북부 설원"
-            ],
-            "cost": {
-              "level": 22,
-              "basis": "interpolated",
-              "modeledActions": 178,
-              "modeledSeconds": 16020,
-              "modeledHours": 4.45,
-              "cumulativeExp": 23406,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.010114151912309277
-              }
-            }
-          },
-          {
-            "gateLevel": 23,
-            "count": 2,
-            "members": [
-              "사막 오아시스",
-              "피라미드"
-            ],
-            "cost": {
-              "level": 23,
-              "basis": "interpolated",
-              "modeledActions": 187,
-              "modeledSeconds": 16830,
-              "modeledHours": 4.68,
-              "cumulativeExp": 27106,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.016333590515524223
-              }
-            }
-          },
-          {
             "gateLevel": 25,
-            "count": 3,
+            "count": 2,
             "members": [
               "고대 마법 탑",
-              "고대 보물고",
               "용의 둥지"
             ],
             "cost": {
@@ -6275,61 +6208,19 @@
             }
           },
           {
-            "gateLevel": 32,
-            "count": 3,
+            "gateLevel": 35,
+            "count": 10,
             "members": [
               "기계 폐도",
+              "북부 설원",
               "북부 요새",
-              "폐기된 연구소"
-            ],
-            "cost": {
-              "level": 32,
-              "basis": "interpolated",
-              "modeledActions": 356,
-              "modeledSeconds": 32040,
-              "modeledHours": 8.9,
-              "cumulativeExp": 98499,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.13634017975858492
-              }
-            }
-          },
-          {
-            "gateLevel": 34,
-            "count": 1,
-            "members": [
-              "저주받은 묘지"
-            ],
-            "cost": {
-              "level": 34,
-              "basis": "interpolated",
-              "modeledActions": 433,
-              "modeledSeconds": 38970,
-              "modeledHours": 10.83,
-              "cumulativeExp": 130660,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.19040054865534056
-              }
-            }
-          },
-          {
-            "gateLevel": 35,
-            "count": 2,
-            "members": [
               "빙하 심연",
-              "암흑 성"
+              "사막 오아시스",
+              "암흑 성",
+              "얼음 성채",
+              "저주받은 묘지",
+              "폐기된 연구소",
+              "피라미드"
             ],
             "cost": {
               "level": 35,
@@ -6661,9 +6552,8 @@
           },
           {
             "gateLevel": 2,
-            "count": 3,
+            "count": 2,
             "members": [
-              2,
               8,
               14
             ],
@@ -6679,8 +6569,9 @@
           },
           {
             "gateLevel": 3,
-            "count": 5,
+            "count": 6,
             "members": [
+              2,
               3,
               4,
               9,
@@ -6964,11 +6855,8 @@
           },
           {
             "gateLevel": 20,
-            "count": 4,
+            "count": 1,
             "members": [
-              12,
-              26,
-              27,
               64
             ],
             "cost": {
@@ -6982,56 +6870,8 @@
             }
           },
           {
-            "gateLevel": 22,
-            "count": 1,
-            "members": [
-              28
-            ],
-            "cost": {
-              "level": 22,
-              "basis": "interpolated",
-              "modeledActions": 178,
-              "modeledSeconds": 16020,
-              "modeledHours": 4.45,
-              "cumulativeExp": 23406,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.010114151912309277
-              }
-            }
-          },
-          {
-            "gateLevel": 23,
-            "count": 1,
-            "members": [
-              135
-            ],
-            "cost": {
-              "level": 23,
-              "basis": "interpolated",
-              "modeledActions": 187,
-              "modeledSeconds": 16830,
-              "modeledHours": 4.68,
-              "cumulativeExp": 27106,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.016333590515524223
-              }
-            }
-          },
-          {
             "gateLevel": 25,
-            "count": 11,
+            "count": 8,
             "members": [
               29,
               31,
@@ -7040,9 +6880,6 @@
               67,
               91,
               93,
-              122,
-              123,
-              136,
               201
             ],
             "cost": {
@@ -7064,34 +6901,9 @@
             }
           },
           {
-            "gateLevel": 26,
+            "gateLevel": 28,
             "count": 1,
             "members": [
-              137
-            ],
-            "cost": {
-              "level": 26,
-              "basis": "interpolated",
-              "modeledActions": 222,
-              "modeledSeconds": 19980,
-              "modeledHours": 5.55,
-              "cumulativeExp": 41880,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.04116764076522628
-              }
-            }
-          },
-          {
-            "gateLevel": 28,
-            "count": 2,
-            "members": [
-              84,
               125
             ],
             "cost": {
@@ -7139,12 +6951,9 @@
           },
           {
             "gateLevel": 30,
-            "count": 4,
+            "count": 1,
             "members": [
-              38,
-              39,
-              74,
-              124
+              74
             ],
             "cost": {
               "level": 30,
@@ -7166,15 +6975,26 @@
           },
           {
             "gateLevel": 35,
-            "count": 8,
+            "count": 19,
             "members": [
+              12,
+              26,
+              27,
+              28,
               32,
               33,
               34,
               35,
+              38,
+              39,
               75,
               83,
+              84,
+              122,
+              123,
+              124,
               134,
+              135,
               206
             ],
             "cost": {
@@ -7196,40 +7016,17 @@
             }
           },
           {
-            "gateLevel": 38,
-            "count": 3,
-            "members": [
-              140,
-              141,
-              142
-            ],
-            "cost": {
-              "level": 38,
-              "basis": "interpolated",
-              "modeledActions": 667,
-              "modeledSeconds": 60030,
-              "modeledHours": 16.68,
-              "cumulativeExp": 229437,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.3564377072796007
-              }
-            }
-          },
-          {
             "gateLevel": 40,
-            "count": 6,
+            "count": 9,
             "members": [
               42,
               73,
               76,
               92,
               130,
+              140,
+              141,
+              142,
               202
             ],
             "cost": {
@@ -7353,9 +7150,8 @@
           },
           {
             "gateLevel": 50,
-            "count": 6,
+            "count": 5,
             "members": [
-              87,
               94,
               99,
               143,
@@ -7449,12 +7245,9 @@
           },
           {
             "gateLevel": 62,
-            "count": 4,
+            "count": 1,
             "members": [
-              128,
-              146,
-              147,
-              148
+              128
             ],
             "cost": {
               "level": 62,
@@ -7476,11 +7269,9 @@
           },
           {
             "gateLevel": 65,
-            "count": 3,
+            "count": 1,
             "members": [
-              95,
-              105,
-              109
+              95
             ],
             "cost": {
               "level": 65,
@@ -7502,12 +7293,18 @@
           },
           {
             "gateLevel": 68,
-            "count": 4,
+            "count": 10,
             "members": [
               44,
               45,
               46,
-              86
+              86,
+              87,
+              105,
+              109,
+              146,
+              147,
+              148
             ],
             "cost": {
               "level": 68,
@@ -7871,58 +7668,12 @@
         ],
         "eventChainCompletions": [
           {
-            "gateLevel": 23,
-            "count": 1,
-            "members": [
-              "water_apostle"
-            ],
-            "cost": {
-              "level": 23,
-              "basis": "interpolated",
-              "modeledActions": 187,
-              "modeledSeconds": 16830,
-              "modeledHours": 4.68,
-              "cumulativeExp": 27106,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.016333590515524223
-              }
-            }
-          },
-          {
-            "gateLevel": 32,
-            "count": 1,
-            "members": [
-              "machine_uprising"
-            ],
-            "cost": {
-              "level": 32,
-              "basis": "interpolated",
-              "modeledActions": 356,
-              "modeledSeconds": 32040,
-              "modeledHours": 8.9,
-              "cumulativeExp": 98499,
-              "interpolation": {
-                "lowerLevel": 20,
-                "upperLevel": 45,
-                "lowerModeledActions": 164,
-                "upperModeledActions": 1575,
-                "lowerCumulativeExp": 17389,
-                "upperCumulativeExp": 612298,
-                "expFraction": 0.13634017975858492
-              }
-            }
-          },
-          {
             "gateLevel": 35,
-            "count": 1,
+            "count": 3,
             "members": [
-              "last_hero"
+              "last_hero",
+              "machine_uprising",
+              "water_apostle"
             ],
             "cost": {
               "level": 35,
@@ -8037,7 +7788,22 @@
         {
           "map": "기계 폐도",
           "declaredLevel": 28,
-          "routeGateLevel": 32
+          "routeGateLevel": 35
+        },
+        {
+          "map": "북부 설원",
+          "declaredLevel": 22,
+          "routeGateLevel": 35
+        },
+        {
+          "map": "북부 요새",
+          "declaredLevel": 32,
+          "routeGateLevel": 35
+        },
+        {
+          "map": "사막 오아시스",
+          "declaredLevel": 23,
+          "routeGateLevel": 35
         },
         {
           "map": "세계수 숲",
@@ -8045,14 +7811,29 @@
           "routeGateLevel": 40
         },
         {
+          "map": "얼음 성채",
+          "declaredLevel": 20,
+          "routeGateLevel": 35
+        },
+        {
           "map": "에테르 폐허",
           "declaredLevel": 65,
           "routeGateLevel": 68
         },
         {
+          "map": "저주받은 묘지",
+          "declaredLevel": 34,
+          "routeGateLevel": 35
+        },
+        {
           "map": "차원의 균열 전초기지",
           "declaredLevel": 62,
           "routeGateLevel": 68
+        },
+        {
+          "map": "폐기된 연구소",
+          "declaredLevel": 32,
+          "routeGateLevel": 35
         },
         {
           "map": "폭풍의 고원",
@@ -8062,7 +7843,7 @@
         {
           "map": "피라미드",
           "declaredLevel": 20,
-          "routeGateLevel": 23
+          "routeGateLevel": 35
         },
         {
           "map": "혼돈의 심연",
@@ -8074,6 +7855,173 @@
           "declaredLevel": 58,
           "routeGateLevel": 62
         }
+      ],
+      "mapsWithoutWalkingRoute": [
+        {
+          "map": "고대 보물고",
+          "entry": "vault-key"
+        },
+        {
+          "map": "봄의 정원",
+          "entry": "season"
+        },
+        {
+          "map": "서리 폭풍 유적",
+          "entry": "season"
+        }
+      ],
+      "questGateDivergence": [
+        {
+          "quest": 2,
+          "minLv": 2,
+          "acceptGateLevel": 2,
+          "objectiveMap": "서쪽 평원",
+          "objectiveGateLevel": 3
+        },
+        {
+          "quest": 12,
+          "minLv": 20,
+          "acceptGateLevel": 20,
+          "objectiveMap": "피라미드",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 26,
+          "minLv": 20,
+          "acceptGateLevel": 20,
+          "objectiveMap": "피라미드",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 27,
+          "minLv": 20,
+          "acceptGateLevel": 20,
+          "objectiveMap": "빙하 심연",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 28,
+          "minLv": 22,
+          "acceptGateLevel": 22,
+          "objectiveMap": "북부 설원",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 38,
+          "minLv": 30,
+          "acceptGateLevel": 30,
+          "objectiveMap": "기계 폐도",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 39,
+          "minLv": 30,
+          "acceptGateLevel": 30,
+          "objectiveMap": "기계 폐도",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 84,
+          "minLv": 28,
+          "acceptGateLevel": 28,
+          "objectiveMap": "기계 폐도",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 87,
+          "minLv": 50,
+          "acceptGateLevel": 68,
+          "objectiveMap": "마왕성",
+          "objectiveGateLevel": 68
+        },
+        {
+          "quest": 105,
+          "minLv": 65,
+          "acceptGateLevel": 65,
+          "objectiveMap": "에테르 폐허",
+          "objectiveGateLevel": 68
+        },
+        {
+          "quest": 109,
+          "minLv": 65,
+          "acceptGateLevel": 65,
+          "objectiveMap": "에테르 폐허",
+          "objectiveGateLevel": 68
+        },
+        {
+          "quest": 122,
+          "minLv": 25,
+          "acceptGateLevel": 25,
+          "objectiveMap": "북부 설원",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 123,
+          "minLv": 25,
+          "acceptGateLevel": 25,
+          "objectiveMap": "피라미드",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 124,
+          "minLv": 30,
+          "acceptGateLevel": 30,
+          "objectiveMap": "기계 폐도",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 135,
+          "minLv": 23,
+          "acceptGateLevel": 23,
+          "objectiveMap": "피라미드",
+          "objectiveGateLevel": 35
+        },
+        {
+          "quest": 140,
+          "minLv": 38,
+          "acceptGateLevel": 38,
+          "objectiveMap": "세계수 숲",
+          "objectiveGateLevel": 40
+        },
+        {
+          "quest": 141,
+          "minLv": 38,
+          "acceptGateLevel": 38,
+          "objectiveMap": "세계수 숲",
+          "objectiveGateLevel": 40
+        },
+        {
+          "quest": 142,
+          "minLv": 38,
+          "acceptGateLevel": 38,
+          "objectiveMap": "세계수 숲",
+          "objectiveGateLevel": 40
+        },
+        {
+          "quest": 146,
+          "minLv": 62,
+          "acceptGateLevel": 62,
+          "objectiveMap": "차원의 균열 전초기지",
+          "objectiveGateLevel": 68
+        },
+        {
+          "quest": 147,
+          "minLv": 62,
+          "acceptGateLevel": 62,
+          "objectiveMap": "차원의 균열 전초기지",
+          "objectiveGateLevel": 68
+        },
+        {
+          "quest": 148,
+          "minLv": 62,
+          "acceptGateLevel": 62,
+          "objectiveMap": "차원의 균열 전초기지",
+          "objectiveGateLevel": 68
+        }
+      ],
+      "unresolvedQuestGates": [
+        136,
+        137
       ],
       "eventChainSpans": [
         {
@@ -8255,14 +8203,14 @@
         {
           "chain": "machine_uprising",
           "steps": 3,
-          "openGateLevel": 32,
+          "openGateLevel": 35,
           "openCost": {
-            "level": 32,
+            "level": 35,
             "basis": "interpolated",
-            "modeledActions": 356,
-            "modeledSeconds": 32040,
-            "modeledHours": 8.9,
-            "cumulativeExp": 98499,
+            "modeledActions": 480,
+            "modeledSeconds": 43200,
+            "modeledHours": 12,
+            "cumulativeExp": 150442,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
@@ -8270,17 +8218,17 @@
               "upperModeledActions": 1575,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
-              "expFraction": 0.13634017975858492
+              "expFraction": 0.22365269310096167
             }
           },
-          "completionGateLevel": 32,
+          "completionGateLevel": 35,
           "completionCost": {
-            "level": 32,
+            "level": 35,
             "basis": "interpolated",
-            "modeledActions": 356,
-            "modeledSeconds": 32040,
-            "modeledHours": 8.9,
-            "cumulativeExp": 98499,
+            "modeledActions": 480,
+            "modeledSeconds": 43200,
+            "modeledHours": 12,
+            "cumulativeExp": 150442,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
@@ -8288,7 +8236,7 @@
               "upperModeledActions": 1575,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
-              "expFraction": 0.13634017975858492
+              "expFraction": 0.22365269310096167
             }
           }
         },
@@ -8537,14 +8485,14 @@
             "cumulativeExp": 994,
             "interpolation": null
           },
-          "completionGateLevel": 23,
+          "completionGateLevel": 35,
           "completionCost": {
-            "level": 23,
+            "level": 35,
             "basis": "interpolated",
-            "modeledActions": 187,
-            "modeledSeconds": 16830,
-            "modeledHours": 4.68,
-            "cumulativeExp": 27106,
+            "modeledActions": 480,
+            "modeledSeconds": 43200,
+            "modeledHours": 12,
+            "cumulativeExp": 150442,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
@@ -8552,7 +8500,7 @@
               "upperModeledActions": 1575,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
-              "expFraction": 0.016333590515524223
+              "expFraction": 0.22365269310096167
             }
           }
         }
@@ -8565,8 +8513,8 @@
           "basis": "anchored",
           "modeledActions": 0,
           "modeledHours": 0,
-          "maps": 52,
-          "quests": 143,
+          "maps": 49,
+          "quests": 141,
           "equipment": 229,
           "jobs": 18,
           "eventChains": 13
@@ -8576,8 +8524,8 @@
           "basis": "anchored",
           "modeledActions": 14,
           "modeledHours": 0.35,
-          "maps": 50,
-          "quests": 140,
+          "maps": 47,
+          "quests": 138,
           "equipment": 193,
           "jobs": 17,
           "eventChains": 13
@@ -8587,8 +8535,8 @@
           "basis": "interpolated",
           "modeledActions": 25,
           "modeledHours": 0.63,
-          "maps": 50,
-          "quests": 137,
+          "maps": 47,
+          "quests": 136,
           "equipment": 193,
           "jobs": 17,
           "eventChains": 13
@@ -8598,8 +8546,8 @@
           "basis": "interpolated",
           "modeledActions": 38,
           "modeledHours": 0.95,
-          "maps": 49,
-          "quests": 132,
+          "maps": 46,
+          "quests": 130,
           "equipment": 193,
           "jobs": 17,
           "eventChains": 13
@@ -8609,8 +8557,8 @@
           "basis": "anchored",
           "modeledActions": 52,
           "modeledHours": 1.3,
-          "maps": 49,
-          "quests": 129,
+          "maps": 46,
+          "quests": 127,
           "equipment": 193,
           "jobs": 17,
           "eventChains": 13
@@ -8620,8 +8568,8 @@
           "basis": "interpolated",
           "modeledActions": 56,
           "modeledHours": 1.4,
-          "maps": 46,
-          "quests": 120,
+          "maps": 44,
+          "quests": 118,
           "equipment": 193,
           "jobs": 14,
           "eventChains": 13
@@ -8631,8 +8579,8 @@
           "basis": "interpolated",
           "modeledActions": 62,
           "modeledHours": 1.55,
-          "maps": 46,
-          "quests": 119,
+          "maps": 44,
+          "quests": 117,
           "equipment": 193,
           "jobs": 14,
           "eventChains": 13
@@ -8642,8 +8590,8 @@
           "basis": "interpolated",
           "modeledActions": 67,
           "modeledHours": 1.68,
-          "maps": 45,
-          "quests": 118,
+          "maps": 43,
+          "quests": 116,
           "equipment": 193,
           "jobs": 14,
           "eventChains": 13
@@ -8653,8 +8601,8 @@
           "basis": "anchored",
           "modeledActions": 82,
           "modeledHours": 2.05,
-          "maps": 44,
-          "quests": 113,
+          "maps": 42,
+          "quests": 111,
           "equipment": 193,
           "jobs": 14,
           "eventChains": 13
@@ -8664,8 +8612,8 @@
           "basis": "interpolated",
           "modeledActions": 91,
           "modeledHours": 2.28,
-          "maps": 42,
-          "quests": 103,
+          "maps": 40,
+          "quests": 101,
           "equipment": 150,
           "jobs": 14,
           "eventChains": 13
@@ -8675,8 +8623,8 @@
           "basis": "interpolated",
           "modeledActions": 102,
           "modeledHours": 2.55,
-          "maps": 41,
-          "quests": 98,
+          "maps": 39,
+          "quests": 96,
           "equipment": 150,
           "jobs": 12,
           "eventChains": 13
@@ -8686,8 +8634,8 @@
           "basis": "interpolated",
           "modeledActions": 109,
           "modeledHours": 2.73,
-          "maps": 40,
-          "quests": 96,
+          "maps": 38,
+          "quests": 94,
           "equipment": 150,
           "jobs": 12,
           "eventChains": 13
@@ -8697,8 +8645,8 @@
           "basis": "interpolated",
           "modeledActions": 137,
           "modeledHours": 3.43,
-          "maps": 38,
-          "quests": 91,
+          "maps": 36,
+          "quests": 89,
           "equipment": 150,
           "jobs": 12,
           "eventChains": 13
@@ -8708,30 +8656,8 @@
           "basis": "anchored",
           "modeledActions": 164,
           "modeledHours": 4.1,
-          "maps": 36,
-          "quests": 89,
-          "equipment": 150,
-          "jobs": 12,
-          "eventChains": 13
-        },
-        {
-          "level": 22,
-          "basis": "interpolated",
-          "modeledActions": 178,
-          "modeledHours": 4.45,
           "maps": 34,
-          "quests": 85,
-          "equipment": 150,
-          "jobs": 12,
-          "eventChains": 13
-        },
-        {
-          "level": 23,
-          "basis": "interpolated",
-          "modeledActions": 187,
-          "modeledHours": 4.68,
-          "maps": 33,
-          "quests": 84,
+          "quests": 87,
           "equipment": 150,
           "jobs": 12,
           "eventChains": 13
@@ -8741,88 +8667,55 @@
           "basis": "interpolated",
           "modeledActions": 209,
           "modeledHours": 5.23,
-          "maps": 31,
-          "quests": 83,
+          "maps": 34,
+          "quests": 86,
           "equipment": 150,
           "jobs": 12,
-          "eventChains": 12
-        },
-        {
-          "level": 26,
-          "basis": "interpolated",
-          "modeledActions": 222,
-          "modeledHours": 5.55,
-          "maps": 28,
-          "quests": 72,
-          "equipment": 150,
-          "jobs": 11,
-          "eventChains": 12
+          "eventChains": 13
         },
         {
           "level": 28,
           "basis": "interpolated",
           "modeledActions": 255,
           "modeledHours": 6.38,
-          "maps": 28,
-          "quests": 71,
+          "maps": 32,
+          "quests": 78,
           "equipment": 150,
           "jobs": 11,
-          "eventChains": 12
+          "eventChains": 13
         },
         {
           "level": 29,
           "basis": "interpolated",
           "modeledActions": 275,
           "modeledHours": 6.88,
-          "maps": 28,
-          "quests": 69,
+          "maps": 32,
+          "quests": 77,
           "equipment": 107,
           "jobs": 11,
-          "eventChains": 12
+          "eventChains": 13
         },
         {
           "level": 30,
           "basis": "interpolated",
           "modeledActions": 299,
           "modeledHours": 7.48,
-          "maps": 28,
-          "quests": 67,
+          "maps": 32,
+          "quests": 75,
           "equipment": 107,
           "jobs": 11,
-          "eventChains": 12
-        },
-        {
-          "level": 32,
-          "basis": "interpolated",
-          "modeledActions": 356,
-          "modeledHours": 8.9,
-          "maps": 28,
-          "quests": 63,
-          "equipment": 107,
-          "jobs": 5,
-          "eventChains": 12
-        },
-        {
-          "level": 34,
-          "basis": "interpolated",
-          "modeledActions": 433,
-          "modeledHours": 10.83,
-          "maps": 25,
-          "quests": 63,
-          "equipment": 107,
-          "jobs": 5,
-          "eventChains": 11
+          "eventChains": 13
         },
         {
           "level": 35,
           "basis": "interpolated",
           "modeledActions": 480,
           "modeledHours": 12,
-          "maps": 24,
-          "quests": 63,
+          "maps": 32,
+          "quests": 74,
           "equipment": 107,
           "jobs": 5,
-          "eventChains": 11
+          "eventChains": 13
         },
         {
           "level": 36,
@@ -8836,23 +8729,12 @@
           "eventChains": 10
         },
         {
-          "level": 38,
-          "basis": "interpolated",
-          "modeledActions": 667,
-          "modeledHours": 16.68,
-          "maps": 21,
-          "quests": 55,
-          "equipment": 107,
-          "jobs": 5,
-          "eventChains": 10
-        },
-        {
           "level": 40,
           "basis": "interpolated",
           "modeledActions": 843,
           "modeledHours": 21.08,
           "maps": 21,
-          "quests": 52,
+          "quests": 55,
           "equipment": 107,
           "jobs": 5,
           "eventChains": 10
@@ -8929,7 +8811,7 @@
           "modeledActions": 3158,
           "modeledHours": 78.95,
           "maps": 12,
-          "quests": 31,
+          "quests": 32,
           "equipment": 65,
           "jobs": 0,
           "eventChains": 2
@@ -8940,7 +8822,7 @@
           "modeledActions": 3941,
           "modeledHours": 98.53,
           "maps": 9,
-          "quests": 29,
+          "quests": 30,
           "equipment": 65,
           "jobs": 0,
           "eventChains": 2
@@ -8951,7 +8833,7 @@
           "modeledActions": 5246,
           "modeledHours": 131.15,
           "maps": 9,
-          "quests": 26,
+          "quests": 27,
           "equipment": 65,
           "jobs": 0,
           "eventChains": 2
@@ -8962,7 +8844,7 @@
           "modeledActions": 5637,
           "modeledHours": 140.93,
           "maps": 9,
-          "quests": 25,
+          "quests": 26,
           "equipment": 20,
           "jobs": 0,
           "eventChains": 2
@@ -8973,7 +8855,7 @@
           "modeledActions": 6223,
           "modeledHours": 155.58,
           "maps": 6,
-          "quests": 21,
+          "quests": 25,
           "equipment": 20,
           "jobs": 0,
           "eventChains": 2
@@ -8984,7 +8866,7 @@
           "modeledActions": 6809,
           "modeledHours": 170.23,
           "maps": 6,
-          "quests": 18,
+          "quests": 24,
           "equipment": 20,
           "jobs": 0,
           "eventChains": 2

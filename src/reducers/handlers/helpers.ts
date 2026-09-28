@@ -5,6 +5,7 @@ import { MSG } from '../../data/messages';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getMirrorEffects } from '../../systems/mirrorUpgrades';
 import { applyEssenceGain } from '../../systems/essenceLedger';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { getCurrentDailyProtocol } from '../../utils/protocolCycle';
 import { createSeasonPassState, SEASON_MAX_TIER } from '../../utils/seasonPassPresentation';
 import type { DailyProtocolMissionType, Item, Player } from '../../types/index.js';
@@ -187,7 +188,8 @@ export const resolveDailyProtocolProgress = (
     }
 
     return {
-        player: nextPlayer as Player,
+        // 2026-09 Wave 27 N2 (D8): 파편이 변환한 유물도 빌드 성향을 바꿔 유효 최대 기력을 낮출 수 있다.
+        player: convertedRelicAdded ? clampVitalsToEffectiveMax(nextPlayer) : nextPlayer,
         reward: {
             completedCount,
             essence: grantedEssence,

@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import { GS } from '../src/reducers/gameStates.ts';
+import { MSG } from '../src/data/messages.ts';
 import {
     STRUCTURED_FALLBACK_TRANSACTIONS,
     getStructuredFallbackTransaction,
@@ -189,9 +190,18 @@ test('fallback transaction payload and canonical event identity fail closed on s
         assert.equal(gameReducer(state, { type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION, payload }), state);
     }
 
+    // Wave 27 N1: 정본이 아닌 이벤트는 지급하지 않되 무반응(동일 참조)이 아니다 — 훅이 실제로
+    //   이 조합을 보낼 수 있으므로(변조·구 세이브의 패딩 3선택지) 이벤트 화면에 무효 제안을 보인다.
     const mutated = clone(state);
     mutated.currentEvent.outcomes[0].gold = 9999;
-    assert.equal(resolve(mutated, id), mutated);
+    const rejected = resolve(mutated, id);
+    assert.equal(rejected.player.gold, mutated.player.gold);
+    assert.equal(rejected.player.stats.total_gold, mutated.player.stats.total_gold);
+    assert.equal(rejected.gameState, GS.EVENT);
+    assert.equal(rejected.currentEvent?.fallbackTransactionId, id);
+    assert.deepEqual(rejected.currentEvent.choiceFeedback, { choiceIndex: 0, text: MSG.EVENT_CHOICE_OFFER_INVALID });
+    assert.equal(rejected.logs.at(-1).text, MSG.EVENT_CHOICE_OFFER_INVALID);
+    assert.equal(resolve(rejected, id), rejected);
 
     const aiSpoof = clone(state);
     aiSpoof.currentEvent.source = 'ai';
@@ -222,7 +232,16 @@ test('only locally selected canonical fallback events receive trusted transactio
     for (let index = 0; index < 1000; index += 1) {
         const draws = [0, (index + 0.5) / 1000];
         const event = pickFallbackEvent('고요한 숲', [], { level: 1 }, () => draws.shift() ?? 0.5);
-        if (event?.fallbackTransactionId) discovered.add(event.fallbackTransactionId);
+        if (!event?.fallbackTransactionId) continue;
+        discovered.add(event.fallbackTransactionId);
+        // Wave 27 N1: 뽑기만 하고 해소하지 않던 행이다(정본 2선택지만 해소해 파이프라인의
+        //   3선택지 무반응을 놓쳤다). 뽑힌 그 이벤트를 그대로 리듀서에 넣어 지급까지 본다.
+        const transaction = getStructuredFallbackTransaction(event.fallbackTransactionId);
+        const opened = { ...stateFor(transaction.id, { gold: 5000, inv: [{ name: '하급 체력 물약', type: 'hp', val: 50 }] }), currentEvent: event };
+        const settled = resolve(opened, transaction.id, transaction.choiceIndex);
+        assert.equal(settled.currentEvent, null, `${transaction.id}: 파이프라인 이벤트가 정산된다`);
+        const goldCost = transaction.cost.type === 'gold' ? transaction.cost.amount : 0;
+        assert.equal(settled.player.gold, 5000 - goldCost + transaction.grossGold);
     }
     assert.deepEqual([...discovered].sort(), STRUCTURED_FALLBACK_TRANSACTIONS.map((entry) => entry.id).sort());
 });

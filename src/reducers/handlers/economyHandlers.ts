@@ -13,6 +13,7 @@ import {
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import { getSellPrice } from '../../utils/equipmentUtils';
 import { getCraftingInvestmentPreview } from '../../utils/itemInvestmentPreview';
+import { growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
 import { incrementStat } from '../../utils/playerStateUtils';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
@@ -69,7 +70,8 @@ const buyShopItem = (state: GameState, action: ActionOf<typeof AT.BUY_SHOP_ITEM>
     if ((state.player.gold || 0) < offer.price) {
         return rejectTransaction(state, 'error', MSG.GOLD_INSUFFICIENT);
     }
-    if (inventory.length >= (state.player.maxInv || BALANCE.INV_MAX_SIZE)) {
+    // 구매는 언제나 +1 — 상한에서도, 보상이 상한을 넘긴 뒤에도 거부된다(Wave 27 N2 D2 규칙).
+    if (growsPastInventoryCapacity(state.player, inventory.length + 1)) {
         return rejectTransaction(state, 'error', MSG.INV_FULL);
     }
     if (

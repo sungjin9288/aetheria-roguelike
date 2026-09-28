@@ -366,7 +366,7 @@ export const MSG = {
     EVENT_RESULT_DEFAULT: '선택의 결과가 반영되었습니다.',
     EVENT_REWARD_UNAVAILABLE: '이 선택의 보상 정보를 확인할 수 없습니다. 다른 선택을 골라주세요.',
     CHAIN_RELIC_ALREADY_OWNED: (name: string) => `${name}은 이미 보유하고 있습니다. 다른 선택을 골라주세요.`,
-    CHAIN_RELIC_SLOTS_FULL: '유물 슬롯이 가득 찼습니다. 자리를 마련한 뒤 다시 선택하세요.',
+    CHAIN_RELIC_SLOTS_FULL: '유물 슬롯이 가득 차 이 유물을 받을 수 없습니다. 다른 선택지를 고르세요.',
     // 캠프파이어 노드 (Phase 2, B+ 2026-06): 휴식 vs 단련 결정 (StS 캠프파이어).
     CAMPFIRE_DESC: '사그라드는 모닥불을 발견했습니다. 잠시 숨을 고를 수 있습니다. 무엇을 하시겠습니까?',
     CAMPFIRE_REST_CHOICE: '휴식 — 생명과 기력을 회복한다',
@@ -792,7 +792,7 @@ export const MSG = {
         `${name} · 보상 ${claimedCount}개 수령`
     ),
 
-    // 2026-09 Wave 13 E2: 지역의 선언 레벨과 실제 진입 레벨(경로 게이트)이 갈라지는 10곳.
+    // 2026-09 Wave 13 E2: 지역의 선언 레벨과 실제 진입 레벨(경로 게이트)이 갈라지는 곳(Wave 27 실측 16곳).
     //   선언 레벨은 그 지역 자신의 잠금(`getMapAccess`가 비교하는 값)이고, 경로 게이트는
     //   시작의 마을에서 실제로 걸어 들어갈 수 있게 되는 레벨이다(`utils/mapRouteGate.ts`).
     //   표시만 정직하게 하고 잠금 자체는 바꾸지 않는다 — 그래서 문구가 둘을 함께 말한다.
@@ -851,4 +851,38 @@ export const MSG = {
     ),
     CMD_HELP: '이동: move <지역>\n행동: explore, rest, shop\n전투: attack(a), skill(s), nextskill(sn), escape(r)\n정보: status, inventory, quest, map',
     CMD_UNKNOWN: (command: string) => `알 수 없는 명령어: ${command} (/help)`,
+
+    // ── Wave 27 N1: 이벤트 선택 거부 안내 ────────────────────────────────────
+    //   선택이 거부돼 이벤트가 열린 채 남으면(비용 부족·가방 가득·무효 제안) 리듀서가 같은
+    //   문장을 오류 로그와 `currentEvent.choiceFeedback`에 싣는다 — 이벤트 화면은
+    //   FOCUS_PANEL_STATES라 TerminalView(로그)가 마운트되지 않으므로, 플레이어는 누른
+    //   선택지의 미리보기 줄에서 이 문장을 본다(eventPresentation.getEventChoicePreview).
+    EVENT_CHOICE_OFFER_INVALID: '이 제안은 더 이상 유효하지 않습니다. 다른 선택지를 고르거나 복귀하세요.',
+    EVENT_CHOICE_INVENTORY_FULL: '가방이 가득 차 보상을 받을 수 없습니다. 가방을 정리한 뒤 다시 고르세요.',
+    EVENT_CHOICE_RESOURCE_LABELS: { hp: '생명', mp: '기력', gold: '골드' },
+    EVENT_CHOICE_RESOURCE_SHORT: (label: string, required: number, current: number) => (
+        `${label} ${required} 필요 · 현재 ${current}`
+    ),
+    EVENT_CHOICE_COST_UNPAYABLE: (detail: string) => (
+        detail ? `지금은 대가를 치를 수 없습니다 (${detail})` : '지금은 대가를 치를 수 없습니다.'
+    ),
+    FALLBACK_HP_POTION_REQUIRED: '체력 회복 물약이 필요합니다.',
+
+    // Wave 27 N2 — 유물 보유 상한에서의 교체 흐름(D3).
+    //   상한에 닿은 뒤 들어온 유물(체인 완주 보상 · 심연 마일스톤 선택지)은 사라지지도,
+    //   상한을 넘지도 않는다 — 유물 선택 패널이 "보유 유물 하나와 교체"를 제안한다.
+    /** 체인 완주 보상 유물이 상한에서 교체 제안으로 바뀔 때의 로그. */
+    CHAIN_REWARD_RELIC_REPLACE_OFFER: (name: string) => (
+        `이야기 보상 · 유물 ${name} — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.`
+    ),
+    /** 상한에서 교체 없이 추가하려 할 때(`ADD_RELIC`) 남기는 거부 안내. */
+    RELIC_SLOTS_FULL_REPLACE: '유물 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 이번에는 고르지 마세요.',
+    RELIC_REPLACED: (released: string, gained: string) => `유물 교체 · ${released} → ${gained}`,
+    /** 유물 선택 패널 — 상한일 때만 보이는 안내 줄. */
+    RELIC_CHOICE_CAPACITY_FULL: (owned: number, capacity: number) => (
+        `유물 슬롯 ${owned}/${capacity} · 새 유물을 고르면 보유 유물 하나와 바꿉니다.`
+    ),
+    RELIC_REPLACE_PROMPT: (name: string) => `${name} 대신 내려놓을 유물을 고르세요.`,
+    RELIC_REPLACE_OPTION_LABEL: (released: string, gained: string) => `${released} 내려놓고 ${gained} 받기`,
+    RELIC_REPLACE_BACK: '다른 유물 보기',
 };

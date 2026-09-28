@@ -11,7 +11,9 @@ import {
     MAP_ROUTE_START_LOCATION as START_LOCATION,
     mapGateLevel,
     mapRouteGateLevels,
+    nonWalkingEntryOf,
     reachableMapsFrom,
+    type NonWalkingEntry,
 } from '../utils/mapRouteGate.js';
 import { getAllSignatureDropSourceIndex } from '../utils/signatureDropSources.js';
 import { getShopCatalog } from '../utils/shopRotation.js';
@@ -90,6 +92,31 @@ export interface MapGateDivergence {
 }
 
 /**
+ * Wave 27 N3 — 걸어서는 못 들어가는 지역. 경로 게이트가 없으므로 값을 매기지 않고(`gates.maps` 밖),
+ * 무엇으로 들어가는지만 적는다. 고아 지역(어떤 입구도 없음)은 여기가 아니라 `malformedGates`다.
+ */
+export interface MapWithoutWalkingRoute {
+    map: string;
+    entry: NonWalkingEntry;
+}
+
+/**
+ * Wave 27 N3 — 임무의 게이트가 `minLv`와 갈라지는 행. 수락과 목표는 다른 게이트다:
+ * `acceptGateLevel`은 ACCEPT_QUEST가 처음 통과하는 레벨(선행 임무는 **수령**돼 있어야 하므로 선행의
+ * 목표 게이트가 하한이다), `objectiveGateLevel`은 수락한 채로 목표 지역에 걸어 들어갈 수 있는 레벨이다.
+ * 둘이 다르면 그 임무는 목표 지역에 갈 수 없는 동안 수락만 되어 있다.
+ */
+export interface QuestGateDivergence {
+    quest: string | number;
+    minLv: number;
+    acceptGateLevel: number;
+    /** 목표 지역 — `location`, 없으면 목표 몬스터가 나오는 지역 중 가장 먼저 걸어 들어가는 곳. 시스템 목표면 null. */
+    objectiveMap: string | null;
+    /** 버킷(`gates.quests`)의 게이트 — max(acceptGateLevel, 목표 지역의 경로 게이트). */
+    objectiveGateLevel: number;
+}
+
+/**
  * Wave 14 F2 — 체인 하나가 **열리는 지점**과 **완주되는 지점**의 거리.
  * 이 둘이 리셋(승천) 지점을 사이에 두고 갈라지면, 플레이어는 시작한 이야기를
  * 끝내기 전에 진행도를 잃는다. 그 간극은 종착 게이트 하나로는 보이지 않는다.
@@ -126,6 +153,7 @@ export interface ContentCostReport {
         actualPlayClaim: false;
         cumulativeExpAuthority: string;
         mapGateAuthority: string;
+        questGateAuthority: string;
         interpolationRule: string;
         limitations: string[];
     };
@@ -142,6 +170,9 @@ export interface ContentCostReport {
         eventChainCompletions: CostBucket[];
     };
     mapGateDivergence: MapGateDivergence[];
+    mapsWithoutWalkingRoute: MapWithoutWalkingRoute[];
+    questGateDivergence: QuestGateDivergence[];
+    unresolvedQuestGates: Array<string | number>;
     eventChainSpans: EventChainSpan[];
     unresolvedEventChainCompletions: string[];
     malformedGates: string[];
@@ -149,7 +180,13 @@ export interface ContentCostReport {
 }
 
 export interface ContentReachabilityReport {
-    schemaVersion: 4;
+    /**
+     * Wave 27 N3: 4 → 5. 맵 게이트가 실제 이동 규칙(시즌 없음)으로 바뀌어 걷기 경로 없는 지역이
+     * `cost.mapsWithoutWalkingRoute`로 빠지고, 임무 게이트가 minLv에서 목표 게이트(선행 사슬 ·
+     * 목표 지역 경로 게이트의 max)로 바뀌며 `questGateDivergence`/`unresolvedQuestGates`/
+     * `policy.questGateAuthority`가 생겼다.
+     */
+    schemaVersion: 5;
     catalog: {
         maps: number;
         monsters: number;
@@ -279,7 +316,14 @@ const COST_INTERPOLATION_RULE = 'modeledActions(L) = round(lower.modeledActions 
     + 'expFraction = (cumulativeExp(L) − cumulativeExp(lower)) / (cumulativeExp(upper) − cumulativeExp(lower)); '
     + 'lower/upper are the nearest anchors below and above L. Anchored rows carry interpolation: null.';
 const MAP_GATE_AUTHORITY = 'getMapAccess level rule: range levels use level[0]; a non-finite level (infinite abyss) is ungated; '
-    + 'routeGateLevel is the lowest player level at which the map enters the report’s own reachability walk from the start location.';
+    + 'routeGateLevel is the lowest player level at which getReachableMaps (getMapAccess over exits with no season event, '
+    + 'the default liveConfig) walks from the start location into the map. Maps with no walking route are not priced; '
+    + 'mapsWithoutWalkingRoute lists them with their non-walking entry (season event or vault key).';
+const QUEST_GATE_AUTHORITY = 'A quest is priced at its objective gate: max(acceptGateLevel, route gate of its objective map). '
+    + 'acceptGateLevel = max(minLv, objective gate of the prerequisite quest), because ACCEPT_QUEST requires the prerequisite claimed. '
+    + 'The objective map is the quest location, or for a location-less monster quest the earliest-gated map that spawns its target; '
+    + 'system-counter quests have none. Goal counts are not priced. A quest whose objective map or prerequisite cannot be priced '
+    + 'is listed in unresolvedQuestGates instead of a bucket.';
 const EXPECTED_CATALOG_COUNTS = Object.freeze({
     maps: 52,
     monsters: 254,
@@ -743,6 +787,100 @@ const eventChainStepLocations = () => EVENT_CHAINS.map((chain) => ({
     steps: chain.steps.length,
 }));
 
+type QuestGateResolution =
+    | { kind: 'priced'; row: QuestGateDivergence }
+    | { kind: 'malformed' }
+    | { kind: 'unresolved' };
+
+/**
+ * Wave 27 N3 — 임무의 목표 지역 후보. `location`이 있으면 그곳뿐이고(진행은 그 지역의 처치·탐험만 센다),
+ * 없으면 목표 몬스터가 조우되는 지역 전부, 시스템 카운터 목표(level/explores/kills…)면 없다.
+ * 없는 지역을 가리키는 location이나 경로 없는 몬스터는 값을 매길 수 없다(null).
+ */
+const questObjectiveMaps = (
+    quest: QuestLike,
+    maps: Record<string, MapLike>,
+    monsterRoutes: ReturnType<typeof mapMonsterRoutes>,
+): string[] | null => {
+    if (quest.location) return Object.hasOwn(maps, String(quest.location)) ? [String(quest.location)] : null;
+    if (!quest.target || SYSTEM_QUEST_TARGETS.has(quest.target)) return [];
+    const regions = monsterRoutes.get(String(quest.target));
+    return regions && regions.size > 0 ? sorted(regions) : null;
+};
+
+/**
+ * Wave 27 N3 — 임무 게이트는 `minLv`가 아니다. 수락은 선행 임무의 **수령**을 요구하므로(questHandlers
+ * `getUnmetQuestPrerequisite`) 선행의 목표 게이트가 수락 게이트의 하한이고, 수락한 뒤에도 목표 지역에
+ * 걸어 들어갈 수 있어야 진행이 시작된다. 선행이 없거나 순환하거나 값을 매길 수 없으면 fail-closed(미상)다.
+ */
+const resolveQuestGates = (
+    quests: QuestLike[],
+    maps: Record<string, MapLike>,
+    routeGates: Map<string, number>,
+) => {
+    const monsterRoutes = mapMonsterRoutes(maps);
+    const byId = new Map(quests.map((quest) => [String(quest?.id), quest]));
+    const results = new Map<string, QuestGateResolution>();
+    const resolving = new Set<string>();
+
+    const compute = (quest: QuestLike): QuestGateResolution => {
+        const minLv = Number(quest?.minLv);
+        if (!isUsableGateLevel(minLv)) return { kind: 'malformed' };
+        let acceptGateLevel = minLv;
+        if (quest.prerequisiteQuestId !== undefined && quest.prerequisiteQuestId !== null) {
+            // 선행 사슬 재귀 — `resolve`는 아래에서 정의되지만 compute는 그 뒤에만 불린다.
+            const prerequisite = resolve(String(quest.prerequisiteQuestId));
+            if (prerequisite.kind !== 'priced') return { kind: 'unresolved' };
+            acceptGateLevel = Math.max(acceptGateLevel, prerequisite.row.objectiveGateLevel);
+        }
+        const candidates = questObjectiveMaps(quest, maps, monsterRoutes);
+        if (candidates === null) return { kind: 'unresolved' };
+        if (candidates.length === 0) {
+            return {
+                kind: 'priced',
+                row: { quest: quest.id, minLv, acceptGateLevel, objectiveMap: null, objectiveGateLevel: acceptGateLevel },
+            };
+        }
+        let objective: { map: string; gateLevel: number } | null = null;
+        for (const map of candidates) {
+            const gateLevel = routeGates.get(map);
+            if (gateLevel === undefined || !isUsableGateLevel(gateLevel)) continue;
+            if (!objective || gateLevel < objective.gateLevel) objective = { map, gateLevel };
+        }
+        if (!objective) return { kind: 'unresolved' };
+        return {
+            kind: 'priced',
+            row: {
+                quest: quest.id,
+                minLv,
+                acceptGateLevel,
+                objectiveMap: objective.map,
+                objectiveGateLevel: Math.max(acceptGateLevel, objective.gateLevel),
+            },
+        };
+    };
+
+    const resolve = (id: string): QuestGateResolution => {
+        const done = results.get(id);
+        if (done) return done;
+        const quest = byId.get(id);
+        if (!quest || resolving.has(id)) return { kind: 'unresolved' };
+        resolving.add(id);
+        const result = compute(quest);
+        resolving.delete(id);
+        results.set(id, result);
+        return result;
+    };
+
+    return quests.map((quest) => ({ quest, resolution: resolve(String(quest?.id)) }));
+};
+
+const compareQuestIds = (left: string | number, right: string | number) => (
+    typeof left === 'number' && typeof right === 'number'
+        ? left - right
+        : codePointCompare(String(left), String(right))
+);
+
 interface CostReportInput {
     progression: ReturnType<typeof simulateProgression> | null;
     maps: Record<string, MapLike>;
@@ -759,8 +897,16 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
     const routeGates = mapRouteGateLevels(START_LOCATION, maps);
     const mapEntries: GateEntry[] = [];
     const mapGateDivergence: MapGateDivergence[] = [];
+    const mapsWithoutWalkingRoute: MapWithoutWalkingRoute[] = [];
     for (const name of Object.keys(maps).sort(codePointCompare)) {
         const routeGateLevel = routeGates.get(name);
+        // Wave 27 N3: 걷기 경로가 없는 지역은 고장이 아니라 입구가 이동이 아닌 것이다(시즌 · 열쇠 보물고) —
+        //   값을 매기지 않고 입구 종류를 적는다. 그런 입구도 없으면 여전히 malformed(고아)다.
+        const entry = routeGateLevel === undefined ? nonWalkingEntryOf(name, maps[name]) : null;
+        if (entry !== null) {
+            mapsWithoutWalkingRoute.push({ map: name, entry });
+            continue;
+        }
         if (routeGateLevel === undefined || !isUsableGateLevel(routeGateLevel)) {
             malformedGates.push(`map:${name}`);
             continue;
@@ -776,14 +922,21 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
         }
     }
 
+    // Wave 27 N3: 버킷 게이트는 minLv가 아니라 목표 게이트다(QUEST_GATE_AUTHORITY).
     const questEntries: GateEntry[] = [];
-    for (const quest of quests) {
-        const gateLevel = Number(quest?.minLv);
-        if (!isUsableGateLevel(gateLevel)) {
+    const questGateDivergence: QuestGateDivergence[] = [];
+    const unresolvedQuestGates: Array<string | number> = [];
+    for (const { quest, resolution } of resolveQuestGates(quests, maps, routeGates)) {
+        if (resolution.kind === 'malformed') {
             malformedGates.push(`quest:${String(quest?.id)}`);
             continue;
         }
-        questEntries.push({ member: quest.id, gateLevel });
+        if (resolution.kind === 'unresolved') {
+            unresolvedQuestGates.push(quest.id);
+            continue;
+        }
+        questEntries.push({ member: quest.id, gateLevel: resolution.row.objectiveGateLevel });
+        if (resolution.row.objectiveGateLevel !== resolution.row.minLv) questGateDivergence.push(resolution.row);
     }
 
     const jobEntries: GateEntry[] = [];
@@ -892,6 +1045,7 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
             actualPlayClaim: false,
             cumulativeExpAuthority: PROGRESSION_EXP_LADDER_AUTHORITY,
             mapGateAuthority: MAP_GATE_AUTHORITY,
+            questGateAuthority: QUEST_GATE_AUTHORITY,
             interpolationRule: COST_INTERPOLATION_RULE,
             limitations: [
                 'Modeled actions and seconds are policy arithmetic over modeled reward settlements, not observed play time.',
@@ -907,6 +1061,9 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
         },
         gates,
         mapGateDivergence,
+        mapsWithoutWalkingRoute,
+        questGateDivergence: questGateDivergence.sort((left, right) => compareQuestIds(left.quest, right.quest)),
+        unresolvedQuestGates: unresolvedQuestGates.sort(compareQuestIds),
         eventChainSpans,
         unresolvedEventChainCompletions: unresolvedEventChainCompletions.sort(codePointCompare),
         malformedGates: malformedGates.sort(codePointCompare),
@@ -946,7 +1103,7 @@ export const buildContentReachabilityReport = (
         signatures: signatures.routes.length,
     };
     const report: ContentReachabilityReport = {
-        schemaVersion: 4,
+        schemaVersion: 5,
         catalog,
         maps: {
             start: START_LOCATION,

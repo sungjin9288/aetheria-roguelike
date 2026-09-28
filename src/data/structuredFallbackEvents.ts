@@ -4,6 +4,25 @@ export type StructuredFallbackCost =
     | { type: 'hp-recovery-consumable'; amount: 1 }
     | { type: 'gold'; amount: number };
 
+/**
+ * 트랜잭션 이벤트의 outcome 한 칸 — 모양이 닫혀 있다(Wave 27 N1).
+ *
+ * 이 원장(`event`)이 트랜잭션 이벤트 모양의 유일한 소유자다: 생산자
+ * (`aiEventUtils.pickFallbackEvent`)는 이 값을 그대로 복사해 내보내고, 검증기
+ * (`fallbackEventHandlers`)는 열린 이벤트가 이 값과 구조 동치인지 본다. 필드를 닫아 두어야
+ * 생산자가 캐스트 없이 이벤트 패키지(`NormalizedOutcome`의 수치 6필드)로 옮길 수 있다.
+ * `aiEventPools`의 열린 `Record<string, unknown>` 슬롯에 들어가야 하므로 interface가 아니라
+ * type 별칭이다(암묵 인덱스 시그니처).
+ */
+export type StructuredFallbackOutcome = {
+    readonly choiceIndex: number;
+    readonly log: string;
+    readonly gold: number;
+    readonly exp: number;
+    readonly hp: number;
+    readonly mp: number;
+};
+
 export interface StructuredFallbackTransaction {
     id: string;
     choiceIndex: number;
@@ -14,11 +33,11 @@ export interface StructuredFallbackTransaction {
     event: {
         desc: string;
         choices: readonly string[];
-        outcomes: readonly Readonly<Record<string, unknown>>[];
+        outcomes: readonly StructuredFallbackOutcome[];
     };
 }
 
-const outcome = (value: Record<string, unknown>) => Object.freeze({
+const outcome = (value: Partial<StructuredFallbackOutcome>): StructuredFallbackOutcome => Object.freeze({
     choiceIndex: 0,
     log: '',
     gold: 0,
@@ -31,7 +50,7 @@ const outcome = (value: Record<string, unknown>) => Object.freeze({
 const event = (
     desc: string,
     choices: string[],
-    outcomes: Array<Record<string, unknown>>,
+    outcomes: Array<Partial<StructuredFallbackOutcome>>,
 ) => Object.freeze({
     desc,
     choices: Object.freeze(choices),

@@ -131,8 +131,8 @@ test('getExitBadges: 다른 지역의 게이지 값은 영향 없음 (map.name �
 });
 
 // ── 실제 진입 레벨 표시 (2026-09 Wave 13 E2) ────────────────────────────────
-// 지도 행/카드가 보여주던 레벨은 그 지역 자신의 잠금이고, 52곳 중 10곳은 실제
-// 진입선이 더 위에 있다. 값은 `utils/mapRouteGate.ts`(증빙 리포트와 같은 authority),
+// 지도 행/카드가 보여주던 레벨은 그 지역 자신의 잠금이고, 52곳 중 16곳은 실제
+// 진입선이 더 위에 있다(Wave 27 N3: 실제 이동 규칙으로 걸으면 북부 권역 8곳이 Lv35라 10 → 16). 값은 `utils/mapRouteGate.ts`(증빙 리포트와 같은 authority),
 // 문구는 MSG — 여기서는 실제로 렌더해서 그 값이 화면에 나오는지 본다.
 
 const renderMap = (overrides = {}) => renderStatic(createElement(MapNavigator, {
@@ -144,10 +144,16 @@ const renderMap = (overrides = {}) => renderStatic(createElement(MapNavigator, {
 const mapRows = (html) => [...html.matchAll(/<button[^>]*data-testid="map-row"[^]*?<\/button>/g)].map((match) => match[0]);
 const rowFor = (html, name) => mapRows(html).find((row) => row.includes(`>${name}<`));
 
-test('지도 목록: 선언 레벨과 실제 진입 레벨이 다른 10곳에만 진입 레벨 배지가 붙는다', () => {
+test('지도 목록: 선언 레벨과 실제 진입 레벨이 다른 16곳에만 진입 레벨 배지가 붙는다', () => {
     const html = renderMap();
     const rowsWithGate = mapRows(html).filter((row) => row.includes('map-row-route-gate'));
-    assert.equal(rowsWithGate.length, 10, '실측 divergence 10건 = 배지 10건');
+    assert.equal(rowsWithGate.length, 16, '실측 divergence 16건 = 배지 16건');
+    // Wave 27 N3: 시즌 지역 너머의 얼음 성채는 선언 20이 아니라 걷는 길이 열리는 35를 말한다.
+    assert.ok(rowFor(html, '얼음 성채').includes(MSG.MAP_ROUTE_GATE_LEVEL(35)));
+    // 걷는 길이 없는 시즌 지역·보물고에는 쓸 수 없는 진입 레벨을 붙이지 않는다.
+    for (const name of ['봄의 정원', '서리 폭풍 유적', '고대 보물고']) {
+        assert.ok(!rowFor(html, name).includes('map-row-route-gate'), name);
+    }
 
     const temple = rowFor(html, '공중 신전');
     assert.ok(temple.includes('레벨 48'), '지역 자신의 잠금(48)은 그대로 보인다 — 권한이 읽는 값이다');
@@ -206,8 +212,20 @@ test('표시만 고친다: 경로 게이트를 권한으로 승격하지 않는�
     assert.equal(getMapAccess(DB.MAPS, from, '세계수 숲', 37).reason, 'level');
 });
 
+// 2026-09 Wave 27 N3: 이 칸은 원래 `얼음 성채 · Lv30`에서 선택 카드(= 현재 위치)에 진입 레벨 줄이
+//   없다고 단언했는데, 얼음 성채가 갈라지지 않던(20 = 20) 동안에는 감출 것이 없어 **공허참**이었다.
+//   얼음 성채가 20 → 35로 갈라지자 현재 위치 카드에 줄이 떴다 — blindMap이 감추는 것은 **직접 출구**
+//   카드('미확인 경로')이고 현재 위치가 아니다. 그래서 선택 카드가 갈라지는 직접 출구가 되도록
+//   임무 경로로 고정하고(저주받은 묘지 → 얼음 성채, 임무 84의 기계 폐도 방향), 같은 픽스처의 blindMap 없는
+//   렌더가 그 줄을 **실제로 그린다**는 대조군을 함께 둔다.
 test('도전 규칙(blindMap)에서는 선택 카드의 진입 레벨도 감춘다', () => {
-    const html = renderMap({ loc: '얼음 성채', level: 30, challengeModifiers: ['blindMap'] });
+    const fixture = { loc: '저주받은 묘지', level: 35, quests: [{ id: 84, progress: 0, goal: 10 }] };
+    const open = renderMap(fixture);
+    assert.ok(open.includes('얼음 성채(으)로 이동'), '선택 카드가 갈라지는 직접 출구(얼음 성채)다');
+    assert.ok(open.includes(MSG.MAP_ROUTE_GATE_NOTE(20, 35)), '대조군: blindMap이 없으면 진입 레벨 줄을 그린다');
+
+    const html = renderMap({ ...fixture, challengeModifiers: ['blindMap'] });
     assert.ok(html.includes('정보 없음'));
     assert.ok(!html.includes('data-testid="map-route-gate-note"'));
+    assert.ok(!html.includes('data-testid="map-route-gate-level"'));
 });

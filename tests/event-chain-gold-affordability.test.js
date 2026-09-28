@@ -111,7 +111,11 @@ for (const costCase of COST_CASES) {
 
         assert.equal(rejected.player.gold, costCase.cost - 1);
         assert.equal(rejected.player.eventChainProgress[costCase.chainId], costCase.step);
-        assert.strictEqual(rejected.currentEvent, state.currentEvent);
+        // 2026-09 Wave 27: 거부는 이벤트 이야기를 그대로 두고, 이벤트 화면이 그릴 이유만 붙인다.
+        assert.deepEqual(rejected.currentEvent, {
+            ...state.currentEvent,
+            choiceFeedback: { choiceIndex: costCase.choiceIndex, text: '골드가 부족합니다.' },
+        });
         assert.equal(rejected.gameState, GS.EVENT);
         assert.deepEqual(rejected.logs.slice(0, -1), state.logs);
         assert.deepEqual(rejected.logs.at(-1), {
@@ -253,7 +257,10 @@ test('shadow guild market keeps the event open when the relic is owned or slots 
     });
     const ownedRejected = resolve(owned, payloadFor(costCase));
     assert.equal(ownedRejected.player.gold, costCase.cost);
-    assert.strictEqual(ownedRejected.currentEvent, owned.currentEvent);
+    assert.deepEqual(ownedRejected.currentEvent, {
+        ...owned.currentEvent,
+        choiceFeedback: { choiceIndex: costCase.choiceIndex, text: ownedRejected.logs.at(-1).text },
+    });
     assert.match(ownedRejected.logs.at(-1).text, /이미 보유/);
     assert.strictEqual(resolve(ownedRejected, payloadFor(costCase)), ownedRejected);
 
@@ -268,7 +275,10 @@ test('shadow guild market keeps the event open when the relic is owned or slots 
     });
     const fullRejected = resolve(full, payloadFor(costCase));
     assert.equal(fullRejected.player.gold, costCase.cost);
-    assert.strictEqual(fullRejected.currentEvent, full.currentEvent);
+    assert.deepEqual(fullRejected.currentEvent, {
+        ...full.currentEvent,
+        choiceFeedback: { choiceIndex: costCase.choiceIndex, text: fullRejected.logs.at(-1).text },
+    });
     assert.match(fullRejected.logs.at(-1).text, /유물 슬롯/);
     assert.strictEqual(resolve(fullRejected, payloadFor(costCase)), fullRejected);
 });

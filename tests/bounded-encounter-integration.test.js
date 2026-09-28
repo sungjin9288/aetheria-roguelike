@@ -4,6 +4,8 @@ import assert from 'node:assert/strict';
 import { AT } from '../src/reducers/actionTypes.js';
 import { GS } from '../src/reducers/gameStates.js';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
+import { MSG } from '../src/data/messages.js';
+import { getEventChoicePreview } from '../src/utils/eventPresentation.js';
 import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.js';
 import { createExploreActions } from '../src/hooks/gameActions/exploreActions.js';
 import { createEventActions } from '../src/hooks/gameActions/eventActions.js';
@@ -51,6 +53,22 @@ const resolve = (state, choiceId = 'lift-stone', extra = {}) => gameReducer(stat
 });
 
 const encounterById = (id) => BOUNDED_ENCOUNTERS.find((entry) => entry.id === id);
+
+// 2026-09 Wave 27 N1: 플레이어가 고칠 수 있는 거부(자원 부족·가방 가득)는 동일 참조가 아니다 —
+//   이벤트 화면에는 로그가 그려지지 않으므로 리듀서가 이유를 `currentEvent.choiceFeedback`에
+//   싣고 미리보기가 그 문장을 그린다. 플레이어·이벤트 신원은 그대로이고 연타는 멱등이다.
+const assertVisibleRejection = (state, choiceId, text) => {
+    const choiceIndex = state.currentEvent.outcomes.findIndex((outcome) => outcome.choiceId === choiceId);
+    const rejected = resolve(state, choiceId);
+    assert.notStrictEqual(rejected, state);
+    assert.strictEqual(rejected.player, state.player);
+    assert.equal(rejected.gameState, GS.EVENT);
+    assert.equal(rejected.currentEvent.boundedEncounterId, state.currentEvent.boundedEncounterId);
+    assert.deepEqual(getEventChoicePreview(rejected.currentEvent, choiceIndex), { text, tone: 'danger' });
+    assert.deepEqual({ type: rejected.logs.at(-1).type, text: rejected.logs.at(-1).text }, { type: 'error', text });
+    assert.strictEqual(resolve(rejected, choiceId), rejected);
+    return rejected;
+};
 
 const stateForEncounter = (encounter, overrides = {}) => {
     const player = activePlayer({ loc: encounter.region, ...overrides });
@@ -268,13 +286,15 @@ test('new bounded reducer routes preserve stale, forged, tampered, resource, and
     };
     assert.strictEqual(resolve(tampered, 'align-engraving'), tampered);
     const lowMp = stateForEncounter(engraved, { mp: 0 });
-    assert.strictEqual(resolve(lowMp, 'align-engraving'), lowMp);
+    assertVisibleRejection(lowMp, 'align-engraving', MSG.EVENT_CHOICE_COST_UNPAYABLE(
+        MSG.EVENT_CHOICE_RESOURCE_SHORT(MSG.EVENT_CHOICE_RESOURCE_LABELS.mp, 10, 0),
+    ));
 
     const full = stateForEncounter(engraved, {
         maxInv: 1,
         inv: [{ id: 'only', name: '하급 체력 물약' }],
     });
-    assert.strictEqual(resolve(full, 'gather-engraving-shards'), full);
+    assertVisibleRejection(full, 'gather-engraving-shards', MSG.EVENT_CHOICE_INVENTORY_FULL);
 });
 
 test('bounded hook dispatches only the reducer settlement action', () => {
@@ -350,16 +370,20 @@ test('canonical persisted outcomes remain valid when object key order changes', 
 
 test('insufficient resources and full inventory keep the event visible without player mutation', () => {
     const lowMp = boundedState({ player: activePlayer({ mp: 0 }) });
-    assert.strictEqual(resolve(lowMp, 'read-runes'), lowMp);
-    assert.equal(lowMp.currentEvent.isBoundedEncounter, true);
+    assertVisibleRejection(lowMp, 'read-runes', MSG.EVENT_CHOICE_COST_UNPAYABLE(
+        MSG.EVENT_CHOICE_RESOURCE_SHORT(MSG.EVENT_CHOICE_RESOURCE_LABELS.mp, 10, 0),
+    ));
 
+    // Wave 27 N1: 이 행은 `BOUNDED_ENCOUNTERS[2]`(조우가 추가되며 forest-engraved-echo로 밀렸다)에
+    //   'repair-cart'를 눌러 `invalid_choice`로 거부되고 있었다 — 가방 가득을 검사하지 않는 공허참.
+    //   'repair-cart'의 주인인 plain-supply-cart로 고정한다.
     const fullInventory = boundedState({
         player: activePlayer({ maxInv: 1, inv: [{ id: 'only', name: '하급 체력 물약' }] }),
     });
     const plain = {
         ...fullInventory,
-        currentEvent: buildBoundedEncounterEvent(BOUNDED_ENCOUNTERS[2], 1),
+        currentEvent: buildBoundedEncounterEvent(encounterById('plain-supply-cart'), 1),
     };
-    assert.strictEqual(resolve(plain, 'repair-cart'), plain);
-    assert.equal(plain.player.gold, fullInventory.player.gold);
+    const rejected = assertVisibleRejection(plain, 'repair-cart', MSG.EVENT_CHOICE_INVENTORY_FULL);
+    assert.equal(rejected.player.gold, fullInventory.player.gold);
 });

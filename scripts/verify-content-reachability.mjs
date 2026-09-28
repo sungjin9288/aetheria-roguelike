@@ -27,7 +27,8 @@ const hashReport = (report) => createHash('sha256')
     .update(JSON.stringify(canonicalizeContentReachability(report)))
     .digest('hex');
 
-const EXPECTED_SCHEMA_VERSION = 4;
+// Wave 27 N3: 4 → 5 (cost.mapsWithoutWalkingRoute · questGateDivergence · unresolvedQuestGates · policy.questGateAuthority).
+const EXPECTED_SCHEMA_VERSION = 5;
 
 /**
  * Wave 12 D1 하드 게이트 — 비용 축이 (1) 존재하고 (2) 앵커/보간을 구분하며

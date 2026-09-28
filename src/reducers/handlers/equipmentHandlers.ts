@@ -1,5 +1,5 @@
-import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import {
     getEquipmentIdentity,
@@ -9,6 +9,7 @@ import {
 import { canEquip } from '../../utils/equipmentValidation';
 import { consumeInventoryItemByName, getEnhancePreview } from '../../utils/enhancementUtils';
 import { makeItem } from '../../utils/gameUtils';
+import { growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
 import { resolveConsumableEffect, sanitizeConsumedQuickSlots } from '../../systems/consumableEffect';
 import type { GameState, HandlerMap } from '../gameReducer';
 import { AT, type ActionOf } from '../actionTypes';
@@ -106,7 +107,10 @@ const equipInventoryItem = (state: GameState, item: Item): GameState => {
         ...(state.player.inv || []).filter((entry) => entry.id !== item.id),
         ...returnedItems,
     ];
-    if (inventory.length > (state.player.maxInv || BALANCE.INV_MAX_SIZE)) {
+    // 2026-09 Wave 27 N2 (D2): 상한은 **증가**만 막는다. 교체 뒤 크기만 보던 동안
+    //   보상(퀘스트·체인 등)이 만든 21/20 가방에서 순증 0 교체까지 전부 거부됐다.
+    //   양손 무기로 무기+방패를 둘 다 돌려받는 것처럼 가방을 키우는 교체는 여전히 거부한다.
+    if (growsPastInventoryCapacity(state.player, inventory.length)) {
         return rejectEquipmentTransaction(state, 'error', MSG.INV_FULL);
     }
 
@@ -115,11 +119,12 @@ const equipInventoryItem = (state: GameState, item: Item): GameState => {
     if (feedback) logs.push({ type: 'info', text: feedback });
     logs.push({ type: 'success', text: MSG.EQUIP_DONE(item.name || '') });
 
-    return completeEquipmentTransaction(state, {
+    // 2026-09 Wave 27 N2 (D8): 벗은 장비의 기력/생명 보너스만큼 유효 최대치가 줄 수 있다.
+    return completeEquipmentTransaction(state, clampVitalsToEffectiveMax({
         ...state.player,
         inv: inventory,
         equip: nextEquip,
-    }, logs);
+    }), logs);
 };
 
 const consumeInventoryItem = (state: GameState, item: Item): GameState => {

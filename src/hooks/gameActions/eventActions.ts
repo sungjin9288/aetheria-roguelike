@@ -13,7 +13,8 @@ import { BALANCE } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
-import type { Player, StatusId } from '../../types';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
+import type { Player, Relic, StatusId } from '../../types';
 import type { EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
 import type { GameState } from '../../reducers/gameReducer';
 import type { AddLog, GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -27,10 +28,7 @@ const eventOutcomes = (event: GameState['currentEvent']): EventOutcome[] => toAr
 //   이 별칭을 쓰는 곳은 전부 null을 이미 걸러낸 뒤이므로 NonNullable로 좁힌다.
 type SpawnedEnemyStats = NonNullable<ReturnType<typeof spawnEnemy>['mStats']>;
 
-import {
-    STRUCTURED_FALLBACK_TRANSACTIONS,
-    getStructuredFallbackTransaction,
-} from '../../data/structuredFallbackEvents';
+import { STRUCTURED_FALLBACK_TRANSACTIONS } from '../../data/structuredFallbackEvents';
 
 export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelpers) => {
     const { emitUnlockedTitles } = shared;
@@ -90,19 +88,19 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             const reservedFallback = currentEvent.source === 'fallback'
                 ? STRUCTURED_FALLBACK_TRANSACTIONS.find((entry) => entry.event.desc === currentEvent.desc) || null
                 : null;
-            if (reservedFallback) {
-                const transaction = getStructuredFallbackTransaction(currentEvent.fallbackTransactionId);
-                if (!transaction || transaction.id !== reservedFallback.id) return;
-                if (idx === transaction.choiceIndex) {
-                    dispatch({
-                        type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION,
-                        payload: {
-                            transactionId: transaction.id,
-                            choiceIndex: idx,
-                        },
-                    });
-                    return;
-                }
+            // 원장 desc를 가진 폴백 이벤트의 비용 선택지는 언제나 리듀서가 정산한다 — 일반 경로로 흘리면
+            //   비용 없이 지급액만 받는다. 이벤트의 거래 id가 없거나 다른 거래를 가리키면(거래 id 도입 전
+            //   세이브 · 변조) 리듀서가 "무효 제안"으로 거부해 이유를 보인다. 여기서 모든 선택지를 조용히
+            //   삼키던 것이 무반응의 원인이었다 — 비용 없는 선택지는 id와 무관하게 일반 경로다(2026-09 Wave 27).
+            if (reservedFallback && idx === reservedFallback.choiceIndex) {
+                dispatch({
+                    type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION,
+                    payload: {
+                        transactionId: reservedFallback.id,
+                        choiceIndex: idx,
+                    },
+                });
+                return;
             }
             if (isChainEvent
                 && selectedOutcome?.reward?.type === 'gold'
@@ -128,6 +126,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 const outcome = selectedOutcome;
                 addLog('event', formatEventText(outcome.log || ''));
                 const rwd = outcome.reward;
+                let relicReplaceOffer: Relic | null = null;
                 if (rwd) {
                     if (rwd.type === 'gold' && rwd.amount) {
                         updatedPlayer = grantGold(updatedPlayer, rwd.amount);
@@ -167,8 +166,22 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                             buildId: fullStats?.buildProfile?.primary?.id,
                         });
                         if (pickedRelics.length > 0) {
-                            updatedPlayer = { ...updatedPlayer, relics: [...(updatedPlayer.relics || []), pickedRelics[0]] };
-                            addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name!));
+                            const [pickedRelic] = pickedRelics;
+                            // 2026-09 Wave 27 N2 (D3): 완주 보상도 보유 상한을 지킨다. 여기만 검사가
+                            //   없어서 rank 0이 dragon_legacy로 6/5, forgotten_commander로 7/5가 됐다.
+                            //   상한에서는 막지도(스텝은 아래에서 그대로 진행) 버리지도 않고, 기존 유물
+                            //   선택 패널에 교체 제안으로 올린다 — 패널이 REPLACE_RELIC/DECLINE_RELIC을 준다.
+                            if (ownedRelics.length < getPrestigeUnlocks(updatedPlayer.meta?.prestigeRank).maxRelics) {
+                                // D8: 유물이 빌드 성향을 바꾸면 유효 최대 기력이 줄 수 있다.
+                                updatedPlayer = clampVitalsToEffectiveMax({
+                                    ...updatedPlayer,
+                                    relics: [...ownedRelics, pickedRelic],
+                                });
+                                addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelic.name!));
+                            } else {
+                                relicReplaceOffer = pickedRelic;
+                                addLog('event', MSG.CHAIN_REWARD_RELIC_REPLACE_OFFER(pickedRelic.name!));
+                            }
                         }
                     }
                     if (rwd.type === 'combat_bonus') {
@@ -202,6 +215,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                     }
                 }
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
+                if (relicReplaceOffer) dispatch({ type: AT.SET_PENDING_RELICS, payload: [relicReplaceOffer] });
                 if (outcome.type === 'chain_advance') {
                     const nextStep = (chainStep ?? 0) + 1;
                     dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId, step: nextStep } });
