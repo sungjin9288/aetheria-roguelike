@@ -151,8 +151,9 @@ test('역전 스텝을 가진 체인은 2개이고, 그중 완주 게이트가 �
 //   측정만 고쳤을 때(stage i)의 68은 참이었지만 설계 의도가 아니었다 — 중간 스텝이 게임에서
 //   가장 깊은 맵에 있고 종착이 더 얕은 것은 데이터 입력 오류였다.
 // Wave 28(D7): 초반 완전 정예가 빠져 성장 모델 앵커가 +2~5 액션 움직였다 — 아래 시간값은 그 뒤의 값이다
-//   (게이트 레벨과 체인 구조는 그대로다).
-test('forgotten_god은 승천 지점 안에서 닫힌다 — 열림 5.3h, 완주 53.38h', () => {
+//   (게이트 레벨과 체인 구조는 그대로다). Wave 29: 보스 필드 14곳의 일반 스폰이 보스가 아니게 되어 기준 시드의
+//   앵커가 한 번 더 움직였다(64시드 평균 ±0.1% — 기준 시드의 잡음, 원장 §29).
+test('forgotten_god은 승천 지점 안에서 닫힌다 — 열림 5.28h, 완주 53.78h', () => {
     const { cost } = buildContentReachabilityReport();
     const gates = routeGates();
     const chain = EVENT_CHAINS.find((candidate) => candidate.id === 'forgotten_god');
@@ -164,8 +165,8 @@ test('forgotten_god은 승천 지점 안에서 닫힌다 — 열림 5.3h, 완주
     const span = cost.eventChainSpans.find((entry) => entry.chain === 'forgotten_god');
     assert.equal(span.completionGateLevel, Number(gates.get(chain.steps.at(-1).loc)));
     assert.equal(span.completionGateLevel, 48);
-    assert.equal(span.openCost.modeledHours, 5.3);
-    assert.equal(span.completionCost.modeledHours, 53.38);
+    assert.equal(span.openCost.modeledHours, 5.28);
+    assert.equal(span.completionCost.modeledHours, 53.78);
 
     // 마왕성 경로 게이트(승천 지점)와 같은 칸이다 — 리셋이 완주를 가로막지 않는다.
     const demonCastle = cost.gates.maps.find((bucket) => bucket.members.includes('마왕성'));
@@ -228,9 +229,9 @@ test('승천 지점을 걸치는 체인이 0개다 — 13개 전부 루프 안�
             return [chain, span.openCost.modeledHours, span.completionGateLevel, span.completionCost.modeledHours];
         }),
         [
-            ['ancient_prophecy', 2.18, 48, 53.38],
-            ['dragon_legacy', 2.85, 40, 21.18],
-            ['world_tree_corruption', 21.18, 40, 21.18],
+            ['ancient_prophecy', 2.15, 48, 53.78],
+            ['dragon_legacy', 2.83, 40, 21.35],
+            ['world_tree_corruption', 21.35, 40, 21.35],
         ],
     );
 
@@ -260,8 +261,8 @@ test('북부 권역 체인 둘은 Lv35(12h)에 완주되고 여전히 승천 전
             return [chain, span.openGateLevel, span.openCost.modeledHours, span.completionGateLevel, span.completionCost.modeledHours];
         }),
         [
-            ['machine_uprising', 35, 12.08, 35, 12.08],
-            ['water_apostle', 5, 1.4, 35, 12.08],
+            ['machine_uprising', 35, 12.13, 35, 12.13],
+            ['water_apostle', 5, 1.4, 35, 12.13],
         ],
     );
     // 기준 ②(종착이 곧 완주 게이트)는 그대로다 — machine_uprising 35 → 18 → 35의 종착이 max다.
