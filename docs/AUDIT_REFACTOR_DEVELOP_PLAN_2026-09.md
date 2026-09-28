@@ -1997,3 +1997,15 @@ type-check 0 · lint 0 · unit **5,293 / 5,293**(364파일, skip 0 — §26.11�
 ### 28.4 새로 드러난 것 (소유자 결정 후보, 이번에 고치지 않음)
 
 - **`boss` 문자열만 있고 `bossMonsters`가 없는 지역 14곳은 모든 일반 스폰이 `isBoss`다** — `spawnEnemy`의 `(mapData.boss && mapBossMonsters.length === 0)` 분기(2026-08-04부터). 실측 300/300: 신성한 호수(7) · 고대 하수도(10) · 몰락한 전초기지(18) · 저주받은 묘지(34) · 암흑 성(35) · 용암 지대(36) · 세계수 숲(38) · 폭풍의 고원(38) · 천공 정원(40) · 고대 신전 도시(50) · 심해 회랑(52) · 붕괴된 마법 요새(62) · 차원의 균열 전초기지(62) · 종말의 전장(73). `isBoss`는 전리품(`CombatEngine.loot` 5곳) · 처치 기록 · 적 AI · 도주 · UI 등 20여 곳이 읽으므로, 이 지역들은 접두어·정예가 전혀 없고 일반 몬스터가 보스로 정산된다. 구역 보스가 게이지 도전으로만 스폰되도록 바뀐 2026-07 이후 이 분기의 전제가 깨진 것으로 보인다. 고치면 경제·성장 모델이 크게 움직이므로 소유자 결정이다.
+
+### 28.5 증빙 델타 (고정 순서 writer + 모델 기준선 갱신, 13:55~14:20)
+
+- `progression-diagnostic-v2`: **리포트가 움직였다**(D7) — reportHash `f21dcf81…` → `f5bc5285…`, 바뀐 키 `combat` · `loot` · `rewardProgression`. 64시드 전리품 굴림 2,258 → 2,243(초반 정예의 드롭 배율이 빠진 만큼), 가방 차단도 같은 폭 감소, 체크포인트 p10 +1 액션. writer의 하드 게이트 `PROGRESSION_V1_BASELINE_HASH`가 처음에 `PROGRESSION_SCHEMA_V1_BASELINE_DRIFT`로 쓰기를 거부했다 — 의도된 이동이라 D7 하나만 되돌려 이전 값 `2573fa0f…`이 재현되는 것을 확인한 뒤 `b89b9018…`로 갱신했다. sources 358 → 360(`signatureSale.ts` · `questObjectiveGate.ts`).
+- `exploration-rhythm`: 리듬 지표 불변, 내장한 성장 모델 리포트 해시 둘(focused · full)만 이동 — `pacing:verify`가 먼저 stale로 실패해 `--write`로 재생성했다.
+- `content-reachability`: reportHash → `34d3c817…` — 본편 86 · 87 게이트 48과 D7 앵커 이동. 게이트 레벨 · 체인 구조 불변.
+- `relic-event-chance` · `event-reward-coherence` · `equipment-combat-power`: 바이트 불변.
+- tracked verify **15/15 ok**.
+
+### 28.6 게이트 (head `54360d59`, 직렬 14:21~14:43)
+
+type-check 0 · lint 0 · unit **5,316 / 5,316**(367파일, skip 0 — Wave 27 5,293 대비 +23) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **136 / 136**(70 + 66) · perf desktop FCP 604ms / mobile 636ms · tracked verify 15/15. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.
