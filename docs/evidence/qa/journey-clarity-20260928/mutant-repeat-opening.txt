@@ -1,0 +1,32 @@
+✔ 마왕성 진행은 발견 전에는 숨기고 실제 예언 단계와 영구 기록으로 공개한다 (2.840208ms)
+✔ 현재 계승과 파편의 다음 행동은 실제 마왕 정산과 일치하고 마지막 획득도 안내한다 (2.291167ms)
+✔ 완주 기록은 진입 경로와 무관하게 우선 표시하고 파편 진행은 계승 뒤 보존한다 (2.821208ms)
+✖ 첫 출발 문구는 미탐험 첫 임무에만 보이고 예언과 도감은 실제 진입 경로를 구분한다 (4.526333ms)
+ℹ tests 4
+ℹ suites 0
+ℹ pass 3
+ℹ fail 1
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 941.594625
+
+✖ failing tests:
+
+test at tests/journey-clarity.test.js:65:1
+✖ 첫 출발 문구는 미탐험 첫 임무에만 보이고 예언과 도감은 실제 진입 경로를 구분한다 (4.526333ms)
+  AssertionError [ERR_ASSERTION]: false == true
+      at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/journey-clarity.test.js:70:16)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

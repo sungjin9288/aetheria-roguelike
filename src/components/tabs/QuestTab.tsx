@@ -6,6 +6,7 @@ import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileU
 import { buildChainJournal } from '../../utils/chainJournal';
 import SignalBadge from '../SignalBadge';
 import StoryJournal from '../StoryJournal';
+import EndgameJourney from '../EndgameJourney';
 import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { GS } from '../../reducers/gameStates';
@@ -146,6 +147,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
             {/* 퀘스트 목록과 오늘의 임무 */}
             <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
                 <StoryJournal claimedQuestIds={player.stats?.claimedQuestIds} />
+                <EndgameJourney player={player} />
                 {/* 오늘의 임무 */}
                 {dpMissions.length > 0 && (
                     <div className="mb-3 p-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8">

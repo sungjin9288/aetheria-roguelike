@@ -11,6 +11,7 @@ import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import { MSG } from '../data/messages.js';
 import type { Player } from '../types/index.js';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
+import EndgameJourney from './EndgameJourney';
 import type { GameActions } from '../hooks/actionDeps';
 
 interface AscensionScreenProps {
@@ -171,6 +172,8 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                             </p>
                         </div>
                     </section>
+
+                    <EndgameJourney player={player} />
 
                     {outcome.upcomingMilestone && (
                         <details data-testid="ascension-upcoming-unlock" className="rounded-lg border border-white/8 bg-black/16 px-3 py-2.5">

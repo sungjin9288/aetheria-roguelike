@@ -1,0 +1,120 @@
+{
+  "date": "2026-09-28",
+  "base": "b685e00b8a802f470b0e4f9d7e00dbfa91b89c24",
+  "scope": "Mobile HUD readability, first journey motivation and route-specific endgame guidance",
+  "fixtureBoundary": "Fresh start uses actual first exploration. Long numbers and endgame progress use isolated QA fixtures/bootstrap restore, not natural campaign or physical-device acceptance.",
+  "checks": {
+    "focusedUnitPassed": 44,
+    "focusedE2ePassed": 16,
+    "mutationRedCount": 4,
+    "full": {
+      "command": "VITE_RELEASE_ID=journey-clarity-qa AETHERIA_RUN_PERF=1 npm run verify:full",
+      "exitCode": 0,
+      "unitPassed": 5198,
+      "unitSkipped": 0,
+      "e2ePassed": 132,
+      "e2eShards": [
+        66,
+        66
+      ],
+      "trackedVerifyPassed": 15,
+      "smoke": [
+        "desktop",
+        "mobile"
+      ],
+      "perfFcpMs": {
+        "desktop": 344,
+        "mobile": 328
+      }
+    },
+    "widths": [
+      375,
+      390,
+      430
+    ],
+    "readabilityModes": [
+      "standard",
+      "high"
+    ],
+    "newUnitFiles": 1,
+    "newE2eFiles": 1,
+    "mutations": [
+      {
+        "name": "completed-as-incomplete",
+        "expectedExitCode": 1
+      },
+      {
+        "name": "rank-too-early",
+        "expectedExitCode": 1
+      },
+      {
+        "name": "repeat-opening",
+        "expectedExitCode": 1
+      },
+      {
+        "name": "unseen-ending-leak",
+        "expectedExitCode": 1
+      }
+    ]
+  },
+  "toolWarnings": [
+    "One desktop smoke browser.close timeout after assertions passed",
+    "Initial Android Gradle metadata.bin missing; repository clean-cache retry succeeded"
+  ],
+  "initialFailures": [
+    "HUD label wraps at375px; original new E2E3 red",
+    "Mawang field has character console, not town-only archive button; harness corrected",
+    "Live fixture write was overwritten on reload by save flush; bootstrap fixture injection corrected"
+  ],
+  "remaining": [
+    "Natural chapter86/87 progression and full campaign continuity",
+    "Overall product design and narrative acceptance",
+    "Physical iPhone QA; no owner physical Android",
+    "Release signing and submission"
+  ],
+  "native": {
+    "capSyncExitCode": 0,
+    "doctorExitCode": 0,
+    "androidDebugExitCode": 0,
+    "iosUnsignedExitCode": 0,
+    "apkSha256": "0ab0a1a8e63fd9737d79e3b08f8755186cef454e3ad7ae43aaac21d60b6ab856",
+    "apkBytes": 227759318,
+    "AppPlugin": true,
+    "iosApp": "/tmp/aetheria-journey-clarity-ios-20260928/Build/Products/Release-iphoneos/App.app",
+    "productionWebFilesComparedPerPlatform": 2268,
+    "byteMismatches": 0,
+    "trackedNativeChanges": 0,
+    "physicalDeviceRun": false,
+    "releaseSigned": false
+  },
+  "artifacts": [
+    {
+      "file": "ascension-progress-390.png",
+      "sha256": "918562e2ed368ff46cff2bfe06f1151481f9a5d4f69739ab03b8c42a488dd635"
+    },
+    {
+      "file": "first-town-375.png",
+      "sha256": "a58573daf91a82b850e1ec2519a45a77b27ab03f445a1bb186aaee0650c18c35"
+    },
+    {
+      "file": "hud-before-375.png",
+      "sha256": "2aceb6c9646c6fdd2944601fbef958271c2f3288b2af4a4e28c4164e7cf8d605"
+    },
+    {
+      "file": "hud-long-high-375.png",
+      "sha256": "cb49481ae48b22de6037a3f1a26ffd542e1e488da5b7c1e7cdb5236e20209c4a"
+    },
+    {
+      "file": "hud-long-standard-430.png",
+      "sha256": "daf4378622db9363c722ac503d427d0f36e8bf0958a6667847445ad2c73f826b"
+    },
+    {
+      "file": "hud-standard-375.png",
+      "sha256": "a2097d8134e79683a4f1afea2b38dcf69ebfe1df801f4193695f29f2688eb8dc"
+    },
+    {
+      "file": "quest-progress-390.png",
+      "sha256": "398243984bc7a77e2bceeb7ab1cd942100a654d59305a7ee829fbcecdb8aab34"
+    }
+  ]
+}

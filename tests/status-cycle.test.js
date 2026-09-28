@@ -154,12 +154,13 @@ test('StatusBar(StatusMetric): hp/mp/exp 3종이 각자 올바른 라벨·값·�
     ]) {
         const idx = html.indexOf(`data-testid="status-metric-${variant}"`);
         assert.ok(idx > -1, `status-metric-${variant}가 렌더된다`);
-        const block = html.slice(idx, idx + 700);
+        const nextMetric = html.indexOf('<div data-testid="status-metric-', idx + 1);
+        const block = html.slice(idx, nextMetric === -1 ? undefined : nextMetric);
         assert.ok(block.includes('aether-status-metric'), `${variant}: readability metric surface 클래스`);
         assert.ok(block.includes('px-2 py-1.5'), `${variant}: padding 클래스`);
         assert.ok(block.includes(label), `${variant}: "${label}" 라벨`);
-        assert.ok(block.includes(expected), `${variant}: 값 "${expected}"`);
-        assert.ok(block.includes('text-[10px]'), `${variant}: 라벨 폰트 크기`);
+        assert.ok(block.replace(/<[^>]*>/g, '').includes(expected), `${variant}: 값 "${expected}"`);
+        assert.ok(block.includes('text-[11px]'), `${variant}: 라벨 폰트 크기`);
         assert.ok(block.includes('text-[11px]'), `${variant}: 값 폰트 크기`);
         assert.ok(block.includes('mt-1 h-[3px]'), `${variant}: 바 크기`);
     }

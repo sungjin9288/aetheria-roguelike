@@ -4,19 +4,21 @@
 
 **우선순위 정정 — 제품 완성도 우선 (2026-09-28 소유자 지시):** 소유자는 iPhone을 보유하며 Android 실기기는 없다. 이전 연결 가능0 기록은 당시 연결 상태일 뿐 보유 여부가 아니다. 아래 E 사전 확인은 이력으로 보존하고 서명·제출을 현재 선행 작업으로 취급하지 않는다. 디자인·기능·스토리 보완을 먼저 수행한다. 새 지시는 기존 RC의 출시 우선 순서보다 우선하며 전투 authority·바이트 핀·저장 호환성·Q4/Q7 경계는 유지한다.
 
+**로컬 검증 완료 — 여정 안내와 모바일 가독성:** `codex/product-journey-clarity`, base `b685e00b`. 지표 이름/긴 수치, 첫 출발 동기, 현재 계승·파편에 따른 마왕성 다음 행동 안내 구현. 예언/도감 경로 문구 정정, 저장/경제/전투 판정·바이트 핀 유지. 집중 unit44·E2E16, mutation4 RED→복원 GREEN, tracked15·full unit5,198/E2E132·양쪽 smoke/perf 통과. Production cap sync·debug APK·unsigned iOS와 web2,268파일 동일. 원장 §26.9 및 `docs/evidence/qa/journey-clarity-20260928/receipt.json`. PR/CI/merge는 현재 원격 진행 결과를 따른다.
+
 | 제품 작업 | 완료 기준 | 현재 상태 |
 |---|---|---|
 | 이야기·목표 전달 | 장별 수행 결과와 다음 조건을 읽고, 수령한 이야기를 다시 찾을 수 있음 | 8장 완료 서사/임무 기록 구현·로컬 검증 완료. 첫 선택 결과 browser RED→GREEN, 기록 재실행·375/390/430px 확인 |
-| 디자인·조작 | 시작·마을·전투·이벤트·장비·기록의 읽기 순서와 375/390/430px 조작 확인 | 첫390 화면 직접 확인. 초반 동기 전달·정보 위계 후속 검수 필요; 기존 아트 완료를 전체 디자인 완료로 확대하지 않음 |
-| 핵심 기능·성장 | 탐험→선택→전투→보상→정비→새 지역의 실제 연결 및 손실/중복 없음 | 보상 수령/이야기 표시 실제 동선 통과. full unit5,194·E2E128·양쪽 smoke/perf 통과; 전체 자연 성장은 별도 |
-| 종장·반복 플레이 | 진엔딩 조건/진행과 다음 선택을 플레이어가 이해함 | 파편·계승 안내의 발견성 보완 후보. story86/87 레벨 순서는 조사 대상이며 즉시 경제/게이트 변경하지 않음 |
+| 디자인·조작 | 시작·마을·전투·이벤트·장비·기록의 읽기 순서와 375/390/430px 조작 확인 | 첫 출발 동기·지표 표시 보완. 375/390/430×기본/고가독성, 긴 수치와 기존 마을/전투 동선 통과; 전체 디자인 수용은 별도 |
+| 핵심 기능·성장 | 탐험→선택→전투→보상→정비→새 지역의 실제 연결 및 손실/중복 없음 | 보상 수령/이야기 표시 실제 동선 통과. 최신 full unit5,198·E2E132·양쪽 smoke/perf 통과; 전체 자연 성장은 별도 |
+| 종장·반복 플레이 | 진엔딩 조건/진행과 다음 선택을 플레이어가 이해함 | 마왕성 경로의 파편·현재 계승 안내 구현·검증 완료. story86/87 자연 진행 순서는 후속 조사 대상 |
 | 제품 통합 수용 | 최신 화면·회귀·대표 자연 플레이가 같은 소스에 연결됨 | 미완료. 그 뒤 iPhone 검증; Android 에뮬레이터와 실기기 수용은 분리 |
 
-**현재 checkpoint — 제품 이야기 전달 로컬 검증 완료:** tracked15·full unit5,194/355파일(skip0)·E2E128/45spec·desktop/mobile smoke/perf 통과. 신규 계약2종 결함 주입 red→복원, 실제 첫 임무 및 별도 저장 fixture 재실행 통과. cap:sync·Android debug·iOS unsigned build 통과, production web2,267파일이 양쪽 패키지와 byte동일. APK SHA256 `8f61124014e2d210d624de3f28d261d75744eb77961f4444f23fd2a95e42580c`; iOS `/tmp/aetheria-product-story-ios-20260928/Build/Products/Release-iphoneos/App.app`. Android 첫 실행은 Gradle metadata.bin 누락, 기존 스크립트의 새 캐시 재시도에서 성공. smoke/perf4회 browser.close timeout 경고는 검사 통과와 구분. 원격 PR/CI/merge는 아직 대기. 증빙: `docs/evidence/qa/product-story-20260928/receipt.json`, 원장 §26.8.
+**직전 checkpoint — 제품 이야기 전달 통합 완료:** tracked15·full unit5,194/355파일(skip0)·E2E128/45spec·desktop/mobile smoke/perf 통과. 신규 계약2종 결함 주입 red→복원, 실제 첫 임무 및 별도 저장 fixture 재실행 통과. cap:sync·Android debug·iOS unsigned build 통과, production web2,267파일이 양쪽 패키지와 byte동일. APK SHA256 `8f61124014e2d210d624de3f28d261d75744eb77961f4444f23fd2a95e42580c`; iOS `/tmp/aetheria-product-story-ios-20260928/Build/Products/Release-iphoneos/App.app`. Android 첫 실행은 Gradle metadata.bin 누락, 기존 스크립트의 새 캐시 재시도에서 성공. smoke/perf4회 browser.close timeout 경고는 검사 통과와 구분. PR #56 CI 통과 후 merge commit b685e00b로 통합 완료. 증빙: `docs/evidence/qa/product-story-20260928/receipt.json`, 원장 §26.8.
 
-다음 제품 묶음은 좁은 상태바의 label/수치 가독성과 종장 진행 안내다. 계승3/파편3은 마왕 토벌 뒤 연속 전투 경로의 조건이며 혼돈의 심연 구역 보스 경로와 구분한다. 수치·전투 판정 변경 없이 실제 다음 행동을 안내한다.
+이번 제품 묶음에서 좁은 상태바와 종장 진행 안내를 보완했다. 다음은 story86/87과 실제 지역·보스·임무 수령 순서의 자연 동선을 확인한다. 계승3/파편3은 마왕 토벌 뒤 연속 전투 경로의 조건이며 혼돈의 심연 구역 보스 경로와 구분한다.
 
-이번 첫 묶음은 이야기 결과 전달이다. 새 세이브 필드/보상/전투/맵 접근 수치를 바꾸지 않는다. 서명·스토어 자료 요청으로 제품 완성도 작업을 대체하지 않는다.
+첫 묶음의 이야기 결과 전달과 이번 여정 안내는 새 세이브 필드/보상/전투/맵 접근 수치를 바꾸지 않았다. 서명·스토어 자료 요청으로 제품 완성도 작업을 대체하지 않는다.
 
 **이전 checkpoint — Wave 26 / E 릴리스 사전 확인 (제품 우선 지시 이전 이력):** `codex/wave26-release-readiness`를 main `e7445523`에서 시작했다. D PR #55 merge와 해당 main CI run35796922389·Deploy run35796922386 success를 원격에서 확인했다. 아래 Wave 25는 직전 완료 checkpoint이며 E 전체 완료를 뜻하지 않는다.
 
@@ -1145,3 +1147,5 @@ ART-LOCATION-01의12종 source-cell 오른쪽 경계를 교정해 runtime에 적
 - 2026-09-22 Wave24/C: iOS27·한글 P1·숫자 clamp·실제 엔진 테스트 통합. full unit5,192/E2E125·tracked15·native 통과; 원장 §26.6. 원격 통합 대기, 출시 No-Go.
 
 - 2026-09-23 Wave25/D: V27 아트 판단 완료 근거와254/234/20 집계를 재확인해 handoff 정정. 이미지/manifest/역사 receipt 불변, 원장 §26.7.
+
+- 2026-09-28 여정 안내 local: 첫 출발 동기·HUD 지표·현재 계승/파편 안내 및 예언/도감 경로 정정. mutation4·focused44/E2E16·tracked15·full unit5,198/E2E132·native2,268파일 일치. 원장 §26.9; PR/CI는 원격 결과 참조, 자연 성장·실기기·출시 수용 미완료.
