@@ -1910,4 +1910,4 @@ Production cap:sync·Android debug·iOS unsigned·mobile:doctor exit0. 기존 �
 
 **Codex §26.10이 남긴 회귀 항목**: 실제 마왕 ✔(②) · phase baseName — `CombatEngine.enemyAI.ts`에 phase 전환 시 `name`/`baseName`을 바꾸는 코드가 **없다**(grep 0건)라 판정에 영향 없음 · 기존 변형 몬스터(접두어) ✔(⑤·⑥) · 86 ✔(⑦).
 
-**증빙 예고 델타**: `progression-diagnostic-v2` `sources`만 — `src/**`를 디렉터리 순회로 모으므로 새 파일 `src/utils/enemyIdentity.ts`가 **+1**(354 → 355), 기존 `questProgress.ts`·`exploreUtils.ts` 2개 이동, 삭제 0. `reportHash`/`v1Baseline`/나머지 nonSources는 불변이어야 한다(시뮬레이터·진단은 `questProgress`를 import하지 않고, `spawnEnemy`의 산출 문자열은 동일하다).
+**증빙 예고 델타**: `progression-diagnostic-v2` `sources`만 — `src/**`를 디렉터리 순회로 모으므로 새 파일 `src/utils/enemyIdentity.ts`가 **+1**(354 → 355), 기존 `questProgress.ts`·`exploreUtils.ts` 2개 이동, 삭제 0. `reportHash`/`v1Baseline`/나머지 nonSources는 불변이어야 한다(시뮬레이터·진단은 `questProgress`를 import하지 않고, `spawnEnemy`의 산출 문자열은 동일하다). **실측 일치**(고정 순서 writer 5단계 직렬, 06:46~06:52): 바뀐 키 `sources`뿐, 354 → 355, 추가 1 = `src/utils/enemyIdentity.ts`, 이동 2 = `exploreUtils.ts`·`questProgress.ts`, 삭제 0, `reportHash` `f21dcf81…` · `v1Baseline` 불변. tracked verify 15종 전부 ok.
