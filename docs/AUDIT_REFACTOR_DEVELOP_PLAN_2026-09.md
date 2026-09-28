@@ -1941,6 +1941,20 @@ Codex 백로그의 마지막 미결 행("스토리 경로 자연 플레이")을 
 - **N2 — 가방·유물·최대치** (`72438e96` D2 · `809908da` D3 · `35c5e62f` D8): ① 보상은 잃지 않는다(지급 쪽 상한 검사 없음) ② 상한은 증가만 막는다(`utils/inventoryCapacity.ts`) — 발견 체인이 가득 찬 가방에서 보상 아이템을 조용히 버리던 cycle 182 게이트도 제거. 유물은 상한에서 교체 제안(`AT.REPLACE_RELIC`, `RelicChoicePanel` 교체 버튼) — 스텝은 진행, 유물 수 불변, 보상 소실 없음. `ADD_RELIC`도 상한에서 거부. `clampVitalsToEffectiveMax`는 넘친 쪽만 내리고 올리지 않는다(장비 교체·`ADD_RELIC`·`REPLACE_RELIC`·체인 직접 지급·일일 파편 변환). 신규 28행.
 - **통합 후속** (`b81d6708`): N1이 남긴 두 무반응 경로. ① 원장 desc를 가진 폴백 이벤트의 거래 id가 없거나 다른 거래를 가리키면(거래 id 도입 전 세이브·변조) 훅이 **모든 선택지**를 삼켰다 → 비용 선택지는 원장 id로 리듀서에 보내 무효 제안으로 거부, 비용 없는 선택지는 일반 경로. ② 체인 골드 선택의 거부 3종(골드 부족·유물 중복·슬롯 가득)이 로그만 남겼다 → `rejectEventChoice`. 이때 체인 정본 판정(미루기·골드 선택)의 **전체 이벤트 구조 비교**가 `choiceFeedback`을 품으면 한 번 거부된 이벤트가 영구 무반응이 되므로 `storyShape`로 표시 필드를 빼고 비교한다. 슬롯 가득 문구는 "자리를 마련한 뒤" → "다른 선택지를 고르세요"(이벤트 중에는 유물을 비울 수 없다). 계약 12행(착수 12/12 red). 주입 5종: 훅 무반응 복원 → 6 red · 골드 선택 전체 비교 → 1 · 미루기 전체 비교 → 1 · 체인 거부 로그 전용 → 5 · 리듀서 id 불일치 동일 참조 → 6. 기존 `event-chain-gold-affordability` 3행은 "거부 = 같은 `currentEvent` 참조"로 **무반응을 고정**하고 있어 "이야기 불변 + 이유만 추가"로 갱신했다.
 
+### 27.3 증빙 델타 (고정 순서 writer 5단계 + `relic-event-chance --write`, 직렬 09:49~10:03)
+
+- `content-reachability`: `schemaVersion` 4 → 5, `reportHash` `d2d37207…` → **`822a7f4e…`** — N3가 격리 워크트리에서 예고한 값과 **본문까지 일치**.
+- `progression-diagnostic-v2`: 바뀐 키 `sources`뿐 — 355 → 358(추가 3 = `eventChoiceFeedback.ts`·`effectiveVitals.ts`·`inventoryCapacity.ts`), 이동 21, 삭제 0. `reportHash` `f21dcf81…`·`v1Baseline` 불변(시뮬레이터·진단 산출은 그대로).
+- `relic-event-chance`: `authorityHashes.eventReward`만 이동(`eventActions.ts`), `reportHash` `424909de…` 불변. N2 예고값(`1fb983ae…`)이 아니라 `7cac1f0c…`인 이유는 통합 후속이 같은 파일을 한 번 더 고쳤기 때문이다.
+- `event-reward-coherence`·`equipment-combat-power`: 재생성 결과 바이트 불변.
+- tracked verify **15/15 ok**.
+
+중간에 한 번 체인을 멈췄다: `MapNavigator.tsx`·`messages.ts`의 "괴리 10곳" 주석이 N3 이후 틀린 값이 됐는데, 두 파일 모두 소스 해시가 핀돼 있어 체인 도중에 고치면 방금 쓴 증빙이 stale이 된다. 주석을 먼저 고치고(`a811e15b`) 체인을 처음부터 다시 돌렸다.
+
+### 27.4 게이트 (head `74e17386`, 직렬 10:03~10:24)
+
+type-check 0 · lint 0 · unit **5,293 / 5,293**(364파일, skip 0 — §26.11의 5,211 대비 +82 = 신규 6파일 + 기존 파일 갱신) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **136 / 136**(shard 70 + 66) · perf desktop FCP 560ms / mobile 376ms · 증빙 tracked verify 15종 ok. 실기기 QA·출시 수용은 이 wave의 범위가 아니다.
+
 ### 27.5 소유자 결정으로 남기는 것 (이번 wave에서 구현하지 않음)
 
 | 항목 | 실측 | 선택지와 대가 |
