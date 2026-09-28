@@ -1,4 +1,4 @@
-import type { Dispatch } from 'react';
+import { useState, type Dispatch } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { AT } from '../reducers/actionTypes';
 import type { GameAction } from '../reducers/gameReducer';
@@ -126,6 +126,8 @@ const RARITY_BADGE_TONE: Record<string, string> = {
  * `pendingRelics` 가 null 이 아닐 때 ControlPanel 위에 표시됨
  */
 const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoicePanelProps) => {
+    // 2026-09 Wave 27 N2 (D3): 보유 상한에서 제안이 여러 개면 먼저 하나를 고른 뒤 교체 대상을 고른다.
+    const [selectedReplacementId, setSelectedReplacementId] = useState<string | null>(null);
     if (!pendingRelics || pendingRelics.length === 0) return null;
 
     const ownedRelics = player?.relics || [];
@@ -137,9 +139,30 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
     const buildId = (stats?.buildProfile || getRunBuildProfile(player || {}, stats || {})).primary.id;
     const relicDecision = getRelicChoiceDecisionStrip(relicCards, buildId);
     const relicCapacity = getPrestigeUnlocks(player?.meta?.prestigeRank).maxRelics;
+    // 2026-09 Wave 27 N2 (D3): 상한에서는 추가(ADD_RELIC)가 거부되므로 "보유 유물 하나와 교체"를
+    //   준다 — 체인 완주 보상 · 심연 마일스톤 선택지가 상한에서 열려도 보상이 사라지지 않는다.
+    //   상한 미만의 화면과 동작은 그대로다.
+    const isAtCapacity = ownedRelics.length >= relicCapacity;
+    const replacementRelic = !isAtCapacity
+        ? null
+        : pendingRelics.length === 1
+            ? pendingRelics[0]
+            : pendingRelics.find((relic) => relic.id === selectedReplacementId) || null;
 
     const handleSelect = (relic: Relic) => {
+        if (isAtCapacity) {
+            setSelectedReplacementId(relic.id ?? null);
+            return;
+        }
         dispatch({ type: AT.ADD_RELIC, payload: relic });
+    };
+
+    const handleReplace = (released: Relic) => {
+        if (!replacementRelic?.id || !released.id) return;
+        dispatch({
+            type: AT.REPLACE_RELIC,
+            payload: { relicId: replacementRelic.id, replaceRelicId: released.id },
+        });
     };
 
     const handleDecline = () => {
@@ -193,6 +216,14 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                 </div>
 
                 <div data-testid="relic-choice-options" className="relative min-h-0 flex-1 space-y-1.5 overflow-y-auto pr-0.5">
+                    {isAtCapacity && (
+                        <div
+                            data-testid="relic-choice-capacity-notice"
+                            className="rounded-[1rem] border border-[#d5b180]/24 bg-[#d5b180]/10 px-3 py-2 text-[11px] font-readable leading-snug text-[#f6e7c8]"
+                        >
+                            {MSG.RELIC_CHOICE_CAPACITY_FULL(ownedRelics.length, relicCapacity)}
+                        </div>
+                    )}
                     {relicCards.map(({ relic, index, synergy }) => {
                         const hasSynergy = synergy.score > 0;
                         const isLegendaryComplete = synergy.legendaryHint != null;
@@ -247,6 +278,44 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                             <ChevronRight size={17} aria-hidden="true" className="text-slate-500 transition-colors group-hover:text-white" />
                         </button>
                     );})}
+                    {replacementRelic && (
+                        <div data-testid="relic-replace-options" className="space-y-1.5">
+                            <div className="px-1 pt-1 text-[11px] font-readable font-semibold text-[#f6e7c8]">
+                                {MSG.RELIC_REPLACE_PROMPT(getRelicDisplayName(replacementRelic.name))}
+                            </div>
+                            {ownedRelics.map((owned, index) => (
+                                <button
+                                    key={owned.id ?? index}
+                                    data-testid={`relic-replace-${index}`}
+                                    onClick={() => handleReplace(owned)}
+                                    aria-label={MSG.RELIC_REPLACE_OPTION_LABEL(
+                                        getRelicDisplayName(owned.name),
+                                        getRelicDisplayName(replacementRelic.name),
+                                    )}
+                                    className="grid min-h-[56px] w-full grid-cols-[36px_minmax(0,1fr)] items-center gap-2 rounded-[1rem] border border-white/10 bg-black/18 p-2 text-left transition-colors hover:border-rose-300/30 hover:bg-rose-400/10"
+                                >
+                                    <RelicIcon relic={owned} size={36} />
+                                    <div className="min-w-0">
+                                        <div className="text-[12px] font-readable font-bold leading-tight text-slate-100">
+                                            {getRelicDisplayName(owned.name)}
+                                        </div>
+                                        <div className="mt-0.5 truncate text-[10px] font-readable text-slate-300/80">
+                                            {formatRelicText(owned.desc)}
+                                        </div>
+                                    </div>
+                                </button>
+                            ))}
+                            {pendingRelics.length > 1 && (
+                                <button
+                                    data-testid="relic-replace-back"
+                                    onClick={() => setSelectedReplacementId(null)}
+                                    className="min-h-[44px] w-full rounded-full border border-white/8 bg-black/18 px-4 text-[11px] font-readable text-slate-300/76 transition-colors hover:bg-white/[0.04] hover:text-white"
+                                >
+                                    {MSG.RELIC_REPLACE_BACK}
+                                </button>
+                            )}
+                        </div>
+                    )}
                 </div>
 
                 <div className="relative mt-2 shrink-0 border-t border-white/8 pt-2 text-center">

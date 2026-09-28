@@ -867,4 +867,22 @@ export const MSG = {
         detail ? `지금은 대가를 치를 수 없습니다 (${detail})` : '지금은 대가를 치를 수 없습니다.'
     ),
     FALLBACK_HP_POTION_REQUIRED: '체력 회복 물약이 필요합니다.',
+
+    // Wave 27 N2 — 유물 보유 상한에서의 교체 흐름(D3).
+    //   상한에 닿은 뒤 들어온 유물(체인 완주 보상 · 심연 마일스톤 선택지)은 사라지지도,
+    //   상한을 넘지도 않는다 — 유물 선택 패널이 "보유 유물 하나와 교체"를 제안한다.
+    /** 체인 완주 보상 유물이 상한에서 교체 제안으로 바뀔 때의 로그. */
+    CHAIN_REWARD_RELIC_REPLACE_OFFER: (name: string) => (
+        `이야기 보상 · 유물 ${name} — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.`
+    ),
+    /** 상한에서 교체 없이 추가하려 할 때(`ADD_RELIC`) 남기는 거부 안내. */
+    RELIC_SLOTS_FULL_REPLACE: '유물 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 이번에는 고르지 마세요.',
+    RELIC_REPLACED: (released: string, gained: string) => `유물 교체 · ${released} → ${gained}`,
+    /** 유물 선택 패널 — 상한일 때만 보이는 안내 줄. */
+    RELIC_CHOICE_CAPACITY_FULL: (owned: number, capacity: number) => (
+        `유물 슬롯 ${owned}/${capacity} · 새 유물을 고르면 보유 유물 하나와 바꿉니다.`
+    ),
+    RELIC_REPLACE_PROMPT: (name: string) => `${name} 대신 내려놓을 유물을 고르세요.`,
+    RELIC_REPLACE_OPTION_LABEL: (released: string, gained: string) => `${released} 내려놓고 ${gained} 받기`,
+    RELIC_REPLACE_BACK: '다른 유물 보기',
 };

@@ -13,7 +13,7 @@ import { BALANCE } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
-import type { Player, StatusId } from '../../types';
+import type { Player, Relic, StatusId } from '../../types';
 import type { EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
 import type { GameState } from '../../reducers/gameReducer';
 import type { AddLog, GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -128,6 +128,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 const outcome = selectedOutcome;
                 addLog('event', formatEventText(outcome.log || ''));
                 const rwd = outcome.reward;
+                let relicReplaceOffer: Relic | null = null;
                 if (rwd) {
                     if (rwd.type === 'gold' && rwd.amount) {
                         updatedPlayer = grantGold(updatedPlayer, rwd.amount);
@@ -167,8 +168,18 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                             buildId: fullStats?.buildProfile?.primary?.id,
                         });
                         if (pickedRelics.length > 0) {
-                            updatedPlayer = { ...updatedPlayer, relics: [...(updatedPlayer.relics || []), pickedRelics[0]] };
-                            addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelics[0].name!));
+                            const [pickedRelic] = pickedRelics;
+                            // 2026-09 Wave 27 N2 (D3): 완주 보상도 보유 상한을 지킨다. 여기만 검사가
+                            //   없어서 rank 0이 dragon_legacy로 6/5, forgotten_commander로 7/5가 됐다.
+                            //   상한에서는 막지도(스텝은 아래에서 그대로 진행) 버리지도 않고, 기존 유물
+                            //   선택 패널에 교체 제안으로 올린다 — 패널이 REPLACE_RELIC/DECLINE_RELIC을 준다.
+                            if (ownedRelics.length < getPrestigeUnlocks(updatedPlayer.meta?.prestigeRank).maxRelics) {
+                                updatedPlayer = { ...updatedPlayer, relics: [...ownedRelics, pickedRelic] };
+                                addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelic.name!));
+                            } else {
+                                relicReplaceOffer = pickedRelic;
+                                addLog('event', MSG.CHAIN_REWARD_RELIC_REPLACE_OFFER(pickedRelic.name!));
+                            }
                         }
                     }
                     if (rwd.type === 'combat_bonus') {
@@ -202,6 +213,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                     }
                 }
                 dispatch({ type: AT.SET_PLAYER, payload: updatedPlayer });
+                if (relicReplaceOffer) dispatch({ type: AT.SET_PENDING_RELICS, payload: [relicReplaceOffer] });
                 if (outcome.type === 'chain_advance') {
                     const nextStep = (chainStep ?? 0) + 1;
                     dispatch({ type: AT.UPDATE_EVENT_CHAIN, payload: { chainId, step: nextStep } });
