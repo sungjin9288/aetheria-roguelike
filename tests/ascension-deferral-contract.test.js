@@ -135,6 +135,17 @@ test('[D6 게이트] 미룬 적이 없거나 idle이 아니면 [계승하기]는
     const forged = idle({ ascensionOfferDeferred: true });
     assert.strictEqual(apply(forged, AT.REOPEN_ASCENSION), forged, '처치 영수증이 없으면 열지 않는다');
 
+    // 승천 뒤 새 런: 이전 런의 처치 영수증은 영구 meta에 남는다 — 미룸 표시 없이 영수증만으로는 열리면 안 된다
+    //   (마왕을 잡지 않고 계승하는 길이 된다).
+    const priorRunReceipt = idle({
+        meta: {
+            ...structuredClone(INITIAL_STATE.player.meta),
+            prestigeRank: 1,
+            endgame: { ...(structuredClone(INITIAL_STATE.player.meta).endgame || {}), lastEndgameReceiptKey: 'combat:previous-run' },
+        },
+    });
+    assert.strictEqual(apply(priorRunReceipt, AT.REOPEN_ASCENSION), priorRunReceipt, '이전 런 영수증만으로는 열지 않는다');
+
     assert.strictEqual(apply(fresh, AT.DEFER_ASCENSION), fresh, '계승 화면 밖에서의 미루기는 무시');
 });
 
