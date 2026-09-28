@@ -9,6 +9,9 @@ import { createCurrentRunProgress } from '../../utils/runProgress';
 import { pickPermanentPlayerState } from '../../utils/permanentProgress';
 import { getAscensionOutcome } from '../../utils/ascensionPreview';
 import { getClaimableQuestEntries } from '../../utils/questProgress';
+import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
+import { MSG } from '../../data/messages';
+import { appendRewardLogs } from './rewardLog';
 
 /**
  * makeProgressionActionMap(INITIAL_STATE) → action map
@@ -90,7 +93,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
 
     ASCEND: (state, action) => {
         if (state.gameState !== GS.ASCENSION && state.gameState !== GS.TRUE_ENDING) return state;
-        if (state.gameState === GS.TRUE_ENDING && getClaimableQuestEntries(state.player).length > 0) return state;
+        if (getClaimableQuestEntries(state.player).length > 0) return state;
         const payload = action.payload;
         const expectedPrestigeRank = Number(payload?.expectedPrestigeRank);
         if (!Number.isSafeInteger(expectedPrestigeRank) || expectedPrestigeRank < 0) return state;
@@ -116,8 +119,15 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
                 currentRun: createCurrentRunProgress(permanentStats),
             },
         };
+        const ascensionTitles = checkTitles({ ...state.player, meta: outcome.meta, titles: freshPlayer.titles, activeTitle: outcome.title });
+        freshPlayer.titles = [...new Set([...(freshPlayer.titles || []), ...ascensionTitles])];
+        const logs = appendRewardLogs(INITIAL_STATE.logs, [
+            ...ascensionTitles.map((id) => ({ type: 'system', text: MSG.TITLE_UNLOCKED(getTitleLabel(id)) })),
+            { type: 'system', text: MSG.ASCEND_DONE(outcome.nextRank, outcome.title) },
+        ]);
         return {
             ...INITIAL_STATE,
+            logs,
             // 2026-09 Wave 21 M2: 회수하지 못한 묘비는 승천을 넘긴다 — `RESET_GAME`(:34)과 대칭.
             //   여기가 비어 있던 동안 승천은 묘비(골드+아이템)를 조용히 지웠는데, 공개 침공
             //   문서(`public/data/graves/{uid}`)는 rules `delete: false`라 그대로 남는다(§8-2).

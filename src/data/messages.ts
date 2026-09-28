@@ -332,6 +332,9 @@ export const MSG = {
     BOUNTY_ABANDONED: '현상수배 임무를 포기했습니다. 오늘은 새 현상수배를 받을 수 없습니다.',
     BOUNTY_DAILY_LIMIT: '오늘 현상수배는 이미 발급되었습니다. 내일 다시 요청하세요.',
     // cycle 116: BOUNTY_ACCEPTED 제거 — BOUNTY_ACCEPTED_NEW가 active.
+    ASCEND_PENDING_QUESTS_TITLE: '먼저 받을 임무 보상',
+    ASCEND_PENDING_QUESTS_GUIDANCE: '수령 기록은 계승 후에도 남습니다. 보상 장비와 골드를 쓰려면 수령 후 이 여정을 계속하세요.',
+    ASCEND_PENDING_QUESTS_BLOCKED: '완료한 임무 보상을 모두 받은 뒤 계승할 수 있습니다.',
     ASCEND_CANCEL: '계승을 미루고 현재 여정을 계속합니다.',
 
     // --- 이동/탐험 동적 메시지 ---

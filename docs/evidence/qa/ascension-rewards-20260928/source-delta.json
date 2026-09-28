@@ -1,0 +1,17 @@
+{
+  "beforeCount": 353,
+  "afterCount": 354,
+  "changed": [
+    "src/components/AscensionScreen.tsx",
+    "src/components/TrueEndingScreen.tsx",
+    "src/data/messages.ts",
+    "src/hooks/gameActions/ascensionActions.ts",
+    "src/reducers/handlers/progressionHandlers.ts"
+  ],
+  "added": [
+    "src/components/PendingQuestRewardList.tsx"
+  ],
+  "removed": [],
+  "nonSourcesUnchanged": true,
+  "reportHash": "f21dcf819808a624d2d7f9d30b28a7d4b1403b8b3806383089453ef2ff731620"
+}

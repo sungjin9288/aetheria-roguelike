@@ -1,0 +1,21 @@
+
+> aetheria-rpg@0.0.0 mobile:doctor
+> bash scripts/mobile-doctor.sh
+
+Aetheria Mobile Doctor
+======================
+iOS bundle id: com.aetheria.roguelike
+iOS marketing version: 1.1.0
+iOS build number: 2
+iOS signing style: Automatic
+iOS team id: KS96VQMVHD
+Xcode: Xcode 27.0
+iOS local distribution signing: no
+A local App Store export needs an Apple Distribution identity and matching distribution profile.
+iOS local App Store export profile: ok
+
+Android SDK dir: /Users/sungjin/Library/Android/sdk
+Android SDK platform 36: ok
+Java: openjdk version "21.0.10" 2026-01-20
+Android release signing: no
+Android signing inputs missing. Configure android/key.properties or AETHERIA_ANDROID_KEYSTORE_* env vars.

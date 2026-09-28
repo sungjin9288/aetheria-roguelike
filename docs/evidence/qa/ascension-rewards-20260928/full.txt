@@ -1,0 +1,62 @@
+> aetheria-rpg@0.0.0 verify:full
+> npm run verify && AETHERIA_RUN_E2E=1 bash scripts/local-playtest.sh
+> aetheria-rpg@0.0.0 verify
+> npm run type-check && npm run lint && npm run test:unit && npm run build:guard
+> aetheria-rpg@0.0.0 type-check
+> tsc --noEmit
+> aetheria-rpg@0.0.0 lint
+> eslint .
+> aetheria-rpg@0.0.0 test:unit
+> node --import tsx --test tests/*.test.js
+ℹ tests 5204
+ℹ suites 0
+ℹ pass 5204
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 274497.310791
+> aetheria-rpg@0.0.0 build:guard
+> node scripts/build-guard.mjs
+[build-guard] ok
+[local-playtest] build
+> aetheria-rpg@0.0.0 build:guard
+> node scripts/build-guard.mjs
+[build-guard] ok
+[local-playtest] preview:start (http://127.0.0.1:4173/)
+[local-playtest] preview:ready
+[local-playtest] smoke:desktop
+[smoke:desktop] start
+[smoke:desktop] boot ready
+[smoke:desktop] field ready
+[smoke:desktop] core loop
+[smoke:desktop] post-combat card dismissed via post-combat-continue
+[smoke:desktop] tab verification
+[smoke:desktop] ok
+[smoke:desktop] browser.close skipped: browser.close timeout
+[local-playtest] smoke:mobile
+[smoke:mobile] start
+[smoke:mobile] boot ready
+[smoke:mobile] field ready
+[smoke:mobile] core loop
+[smoke:mobile] post-combat card dismissed via post-combat-continue
+[smoke:mobile] tab verification
+[smoke:mobile] ok
+[smoke:mobile] browser.close skipped: browser.close timeout
+[local-playtest] perf:desktop
+[perf:desktop] metrics {"introReadyMs":360.4,"domContentLoadedMs":252.10000002384186,"loadEventMs":252.30000007152557,"responseEndMs":16.899999976158142,"firstPaintMs":308,"firstContentfulPaintMs":360,"bootReadyMeasureMs":37.3,"introVisibleMeasureMs":37.1,"startRunMs":94,"startRunMeasureMs":59.6,"firstInteractionMs":20.4,"marketOpenMs":31.6,"marketOpenMeasureMs":9.2}
+[perf:desktop] ok
+[perf:desktop] browser.close skipped: browser.close timeout
+[local-playtest] perf:mobile
+[perf:mobile] metrics {"introReadyMs":304.9,"domContentLoadedMs":213.29999995231628,"loadEventMs":214.60000002384186,"responseEndMs":5.899999976158142,"firstPaintMs":256,"firstContentfulPaintMs":304,"bootReadyMeasureMs":76.7,"introVisibleMeasureMs":76.5,"startRunMs":77.4,"startRunMeasureMs":44.2,"firstInteractionMs":4.6,"marketOpenMs":22.7,"marketOpenMeasureMs":8.5}
+[perf:mobile] ok
+[local-playtest] e2e (preview http://127.0.0.1:4173/)
+> aetheria-rpg@0.0.0 test:e2e
+> npm run test:e2e:shard:1 && npm run test:e2e:shard:2
+> aetheria-rpg@0.0.0 test:e2e:shard:1
+> playwright test --shard=1/2
+  70 passed (6.8m)
+> aetheria-rpg@0.0.0 test:e2e:shard:2
+> playwright test --shard=2/2
+  66 passed (6.1m)
+[local-playtest] done

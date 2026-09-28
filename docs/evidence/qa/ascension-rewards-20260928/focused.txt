@@ -1,0 +1,41 @@
+✔ ascension outcome keeps existing meta and calculates the exact next permanent growth (1.080125ms)
+✔ ascension outcome compares current and next world difficulty with matching balance constants (0.100833ms)
+✔ ascension milestone ladder exposes only implemented ranks and the next long-term target (0.242125ms)
+✔ ascension preview and confirmation share one outcome model (7.13775ms)
+✔ ascension screen keeps irreversible controls outside the scroll region (0.612917ms)
+✔ 일반 마왕 승리의 완료 보상은 계승 전에 보호되고 수령 원장은 한 번만 남는다 (18.159416ms)
+✔ 일반 계승 action은 보상이 남으면 dispatch와 성공 로그를 만들지 않는다 (1.238917ms)
+✔ 여러 완료 임무와 현상수배는 모두 수령해야 하며 미완료 임무는 계승을 막지 않는다 (0.8955ms)
+✔ 계승 화면은 실제 보상과 수령 버튼을 보여주고 완료 보상이 있는 동안만 확정을 막는다 (9.420333ms)
+✔ 오래된 계승 action이 최신 미수령 상태에서 거부되면 칭호와 성공 안내도 남기지 않는다 (0.553916ms)
+✔ 보상 경험치로 새로 완료된 임무도 다시 계산해 계승 전에 수령한다 (0.571167ms)
+✔ endgame settlement exposes one pure resolver authority (0.414875ms)
+✔ rank three final shard roll spawns the true boss and consumes the canonical ledger (0.355959ms)
+✔ only the canonical Demon King identity advances the permanent endgame ledger (0.164833ms)
+✔ combat outcome reports Demon King victory only for the exact canonical identity (0.75ms)
+✔ malformed true boss data keeps the earned shards and fails closed (0.078791ms)
+✔ same endgame receipt replays as an exact player no-op (0.096167ms)
+✔ true boss victory records one permanent ending and one deterministic heart (0.085833ms)
+✔ combat reducer uses permanent shards and settles the true boss in the same transaction (5.638125ms)
+✔ combat item damage-over-time victory reaches the same endgame settlement authority (2.73325ms)
+✔ skill victory reaches the same endgame settlement authority (1.062667ms)
+✔ attack-turn damage-over-time victory cannot bypass endgame settlement (1.190917ms)
+✔ ascension preserves the accepted demon king count instead of incrementing it again (1.135292ms)
+✔ ascension rejects stale rank, mismatched receipt, and forged outcome payloads (0.224375ms)
+✔ rapid ascension confirmation emits one request and its accepted reducer emits one completion log (1.013583ms)
+✔ production GameStorage preserves endgame, journey, and settings through reload and New Game+ (23.822666ms)
+✔ true ending timed narrative advances deterministically into a complete surface (0.930958ms)
+✔ true ending star field is byte-stable and does not require global randomness (0.195417ms)
+✔ platform back reveals an incomplete ending and consumes a completed ending (0.041584ms)
+✔ true ending eligibility uses canonical quest metadata and claimed ids (0.446292ms)
+✔ true ending blocks ASCEND until the pending quest is claimed, then preserves the claim across New Game+ (11.7685ms)
+✔ true ending confirmation does not dispatch or log while a quest reward is pending (0.3455ms)
+✔ true ending source exposes immediate skip, reduced-motion, safe-area and one-shot controls (8.299083ms)
+ℹ tests 33
+ℹ suites 0
+ℹ pass 33
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 484.445625

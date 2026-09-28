@@ -1,0 +1,100 @@
+✔ J4: progressionSimulator authorityUsage에는 첫 방문 보상 경로가 없다 (미모델링 사실 자체를 회귀 가드) (599.271417ms)
+✔ true ending timed narrative advances deterministically into a complete surface (0.608459ms)
+✔ true ending star field is byte-stable and does not require global randomness (0.178333ms)
+✔ platform back reveals an incomplete ending and consumes a completed ending (0.039958ms)
+✔ true ending eligibility uses canonical quest metadata and claimed ids (0.318791ms)
+✔ true ending blocks ASCEND until the pending quest is claimed, then preserves the claim across New Game+ (19.686333ms)
+✔ true ending confirmation does not dispatch or log while a quest reward is pending (0.786458ms)
+✔ true ending source exposes immediate skip, reduced-motion, safe-area and one-shot controls (10.033875ms)
+✔ 구조 불변식: seedTrueEndingJourneyScenario는 production combat 경로(LOAD_DATA→SET_ENEMY→SET_GAME_STATE)로만 종언 시나리오를 심는다 (7.346ms)
+✔ 구조 불변식: 종언 여정 test API는 상태 스냅샷/보스 약화/저장/플랫폼 뒤로가기만 노출한다 (7.991541ms)
+✔ 종언 여정이 참조하는 몬스터/장비 이름이 실제 게임 데이터에 존재한다 (0.402667ms)
+✔ undead exports preserve eight originals and produce seven deterministic transparent sprites (4369.537708ms)
+✔ vampire extraction clears reviewed background gaps without recoloring or erasing skin and shirt highlights (1293.580041ms)
+✔ undead preparation rejects source drift and existing destinations without overwrites (69.389125ms)
+✔ void-chaos exports preserve originals and aspect ratio with deterministic bounded binary alpha (682.092292ms)
+✔ void-chaos preparation refuses existing output and source drift before creating files (69.515708ms)
+✔ ten volcanic exports preserve masters, aspect ratio, binary alpha and deterministic bytes (795.458416ms)
+✔ volcanic preparation refuses existing output and source drift before writing any output (64.32875ms)
+✔ water_apostle chain has 3 steps (0.372208ms)
+✔ water_apostle step 0 location is 호수의 신전 (0.199125ms)
+✔ water_apostle step 1 triggers at 사막 오아시스 after step 0 (0.084291ms)
+✔ water_apostle step 2 triggers at 피라미드 after step 1 (0.048458ms)
+✔ water_apostle outcomes use only supported reward types (0.060333ms)
+ℹ tests 5204
+ℹ suites 0
+ℹ pass 5201
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 132881.42575
+
+✖ failing tests:
+
+test at tests/cycle-200-299.test.js:945:3
+✖ cycle 191 / cycle 204 회귀 가드: 다른 META 보존 동시 유지 (19.437916ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+    [
+      'warrior',
+      '각성자',
+  +   'first_blood',
+  +   'centurion',
+  +   'reborn'
+    ]
+
+      at TestContext.<anonymous> (/Users/sungjin/dev/personal/aetheria-roguelike/tests/cycle-200-299.test.js:962:14)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ 'warrior', '각성자', 'first_blood', 'centurion', 'reborn' ],
+    expected: [ 'warrior', '각성자' ],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/cycle-200-299.test.js:2967:3
+✖ cycle 277: ASCEND prestigeRank / essence / titles 동작 유지 (회귀 가드) (0.837084ms)
+  AssertionError [ERR_ASSERTION]: titles unique merge 유지
+      at TestContext.<anonymous> (/Users/sungjin/dev/personal/aetheria-roguelike/tests/cycle-200-299.test.js:2976:14)
+      at async Test.run (node:internal/test_runner/test:1332:7)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }
+
+test at tests/debt-ratchet.test.js:304:1
+✖ debt-ratchet: src/** (src/data 제외) 디렉터리별 AST 한글 노드 개수는 각 상한을 넘지 않는다 (하락만 허용, StringLiteral·템플릿 조각·JsxText 포함) (1219.587917ms)
+  AssertionError [ERR_ASSERTION]: AST 기준 한글 노드(StringLiteral·템플릿 조각·JsxText)가 상한을 초과한 디렉터리가 있다:
+
+  src/components: 1322건으로 기준선(1319건)을 초과했다. 상위 offender:
+    src/components/tabs/SystemTab.tsx: 103
+    src/components/tabs/QuestBoardPanel.tsx: 76
+    src/components/MapNavigator.tsx: 64
+    src/components/EquipmentPanel.tsx: 60
+    src/components/ShopPanel.tsx: 56
+      at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/debt-ratchet.test.js:331:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: false,
+    expected: true,
+    operator: '==',
+    diff: 'simple'
+  }

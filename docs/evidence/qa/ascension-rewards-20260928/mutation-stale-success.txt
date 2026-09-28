@@ -1,0 +1,72 @@
+✔ 일반 마왕 승리의 완료 보상은 계승 전에 보호되고 수령 원장은 한 번만 남는다 (47.633042ms)
+✖ 일반 계승 action은 보상이 남으면 dispatch와 성공 로그를 만들지 않는다 (3.959458ms)
+✔ 여러 완료 임무와 현상수배는 모두 수령해야 하며 미완료 임무는 계승을 막지 않는다 (2.286875ms)
+✔ 계승 화면은 실제 보상과 수령 버튼을 보여주고 완료 보상이 있는 동안만 확정을 막는다 (29.284292ms)
+✖ 오래된 계승 action이 최신 미수령 상태에서 거부되면 칭호와 성공 안내도 남기지 않는다 (1.760209ms)
+✔ 보상 경험치로 새로 완료된 임무도 다시 계산해 계승 전에 수령한다 (2.270708ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 4
+ℹ fail 2
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 456.585084
+
+✖ failing tests:
+
+test at tests/ascension-pending-rewards.test.js:52:1
+✖ 일반 계승 action은 보상이 남으면 dispatch와 성공 로그를 만들지 않는다 (3.959458ms)
+  AssertionError [ERR_ASSERTION]: 성공 안내는 action의 예측이 아니라 승인된 reducer 전이에서 생성한다
+  + actual - expected
+
+  + [
+  +   {
+  +     text: '계승 성공',
+  +     type: 'system'
+  +   }
+  + ]
+  - []
+
+      at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/ascension-pending-rewards.test.js:65:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: [ { type: 'system', text: '계승 성공' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/ascension-pending-rewards.test.js:103:1
+✖ 오래된 계승 action이 최신 미수령 상태에서 거부되면 칭호와 성공 안내도 남기지 않는다 (1.760209ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + [
+  +   {
+  +     text: '계승 성공',
+  +     type: 'system'
+  +   }
+  + ]
+  - []
+
+      at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/ascension-pending-rewards.test.js:112:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { type: 'system', text: '계승 성공' } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }

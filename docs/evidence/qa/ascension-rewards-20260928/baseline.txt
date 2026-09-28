@@ -1,0 +1,1339 @@
+✖ 일반 마왕 승리의 완료 보상은 계승 전에 보호되고 수령 원장은 한 번만 남는다 (6.696791ms)
+✖ 일반 계승 action은 보상이 남으면 dispatch와 성공 로그를 만들지 않는다 (0.698042ms)
+✖ 여러 완료 임무와 현상수배는 모두 수령해야 하며 미완료 임무는 계승을 막지 않는다 (12.818208ms)
+✖ 계승 화면은 실제 보상과 수령 버튼을 보여주고 완료 보상이 있는 동안만 확정을 막는다 (5.703625ms)
+✖ 오래된 계승 action이 최신 미수령 상태에서 거부되면 칭호와 성공 안내도 남기지 않는다 (1.747ms)
+ℹ tests 5
+ℹ suites 0
+ℹ pass 0
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 354.834125
+
+✖ failing tests:
+
+test at tests/ascension-pending-rewards.test.js:30:1
+✖ 일반 마왕 승리의 완료 보상은 계승 전에 보호되고 수령 원장은 한 번만 남는다 (6.696791ms)
+  AssertionError [ERR_ASSERTION]: 미수령 완료 임무가 있으면 실제 ASCEND를 거부한다
+  + actual - expected
+  ... Skipped lines
+
+    {
+  +   bootStage: 'ready',
+  +   combatReceipt: null,
+  +   combatTurn: 0,
+  -   bootStage: 'init',
+  -   combatReceipt: {
+  -     key: '1:1000:11',
+  -     kind: 'victory',
+  -     lootSettlement: {
+  -       admittedCount: 0,
+  -       admittedItemIds: [],
+  -       admittedSignatureCount: 0,
+  -       blockedCount: 0,
+  -       blockedSignatureCount: 0,
+  -       pityAfter: 1,
+  -       pityBefore: 0,
+  -       rolledCount: 0
+  -     },
+  -     stories: [
+  -       {
+  -         data: {
+  -           name: '마왕'
+  -         },
+  -         type: 'victory'
+  -       }
+  -     ]
+  -   },
+  -   combatTurn: 1,
+      currentEvent: null,
+      economyReceipt: null,
+      enemy: null,
+      expeditionDebriefOpen: false,
+  +   gameState: 'idle',
+  -   gameState: 'ascension',
+      grave: null,
+      isAiThinking: false,
+      lastLoadedTimestamp: 0,
+      leaderboard: [],
+      liveConfig: {
+  ...
+      },
+  +   logs: [],
+  -   logs: [
+  -     {
+  -       id: 'reward-1790569043505-0.6535958786583144-0',
+  -       text: '퀘스트 수락: [스토리] 세계의 끝',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'combat-item-1000-11-0',
+  -       text: '마왕에게 119879 피해! (0/1)',
+  -       type: 'combat'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-0',
+  -       text: '승리했습니다. 경험 +0 · 골드 +0',
+  -       type: 'success'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-1',
+  -       text: '첫 보스 토벌 보상 · 골드 +120',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-2',
+  -       text: '계승 정수 +1',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-3',
+  -       text: '퀘스트 조건 달성: 1개',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-4',
+  -       text: '👑 [마왕] 최초 처치!',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-5',
+  -       text: '새 칭호를 얻었습니다. 첫 번째 사냥꾼',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-6',
+  -       text: '새 칭호를 얻었습니다. 용살자',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-7',
+  -       text: '새 칭호를 얻었습니다. 베테랑',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-8',
+  -       text: '새 칭호를 얻었습니다. 전설',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-9',
+  -       text: '전투 정리: 마왕 처치',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-10',
+  -       text: '보스 보상: 첫 토벌 골드 +120 · 최종 토벌 보상과 환생 루프가 이어지는 핵심 전투입니다.',
+  -       type: 'info'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-11',
+  -       text: '⚡ 마왕이 쓰러졌습니다. 에테르 환생의 문이 열렸습니다...',
+  -       type: 'system'
+  -     }
+  -   ],
+      pendingRelics: null,
+      player: {
+        achievements: [],
+        activeExpedition: null,
+  +     activeTitle: '각성자',
+  +     atk: 12,
+  -     activeTitle: '[마왕] 처치자',
+  -     atk: 100000,
+        challengeModifiers: [],
+  +     classJourney: {
+  +       byJob: {},
+  +       sequence: 0,
+  +       version: 2
+  +     },
+        combatFlags: {
+          comboCount: 0,
+          deathSaveUsed: false,
+  -       phoenixUsed: false,
+  -       spellStackCount: 0,
+  -       turnCount: 1,
+          voidHeartArmed: false,
+          voidHeartUsed: false
+        },
+        def: 5,
+        equip: {
+  ...
+        exp: 0,
+  +     expeditionFocusQuestIds: [],
+  -     expeditionFocusQuestIds: [
+  -       87
+  -     ],
+        expeditionSequence: 0,
+        gender: 'male',
+  +     gold: 200,
+  -     gold: 320,
+        history: [],
+        hp: 150,
+        inv: [
+          {
+            desc: 'HP 50 회복',
+  ...
+        job: '모험가',
+  +     killStreak: 0,
+  -     killStreak: 1,
+        lastExpeditionSummary: null,
+  +     level: 1,
+  +     loc: '시작의 마을',
+  -     lastKillAt: 1000,
+  -     level: 68,
+  -     loc: '마왕성',
+        maxHp: 150,
+        maxMp: 50,
+        meta: {
+  +       bonusAtk: 5,
+  +       bonusHp: 25,
+  +       bonusMp: 15,
+  -       bonusAtk: 0,
+  -       bonusHp: 0,
+  -       bonusMp: 0,
+          endgame: {
+            lastEndgameReceiptKey: '1:1000:11',
+            legacyInventoryMigrated: true,
+            primalShards: 0,
+            trueEndingSeen: false,
+            version: 1
+          },
+  +       essence: 201,
+  +       essenceLifetime: 201,
+  -       essence: 1,
+  -       essenceLifetime: 1,
+          mirror: {},
+  +       prestigeRank: 1,
+  -       prestigeRank: 0,
+          rank: 0,
+          storyMilestones: {
+            pending: [],
+            seen: []
+          }
+  ...
+        premiumCurrency: 0,
+  +     quests: [],
+  -     quests: [
+  -       {
+  -         id: 87,
+  -         progress: 1
+  -       }
+  -     ],
+        relics: [],
+        returnSupplyRewards: {
+          receipts: {},
+          version: 1
+        },
+  +     reviveTokens: 0,
+        seasonPass: {
+          claimed: [],
+          isPremium: false,
+          seasonId: 'S1',
+          tier: 0,
+  ...
+          abyssRecord: 0,
+  -       areaBossDefeated: {
+  -         '마왕': true
+  -       },
+          bossKills: 1,
+          bountiesCompleted: 0,
+          bountyDate: null,
+          bountyIssued: false,
+          buildWins: {
+  ...
+          },
+  +       codexBonusAtk: 0,
+  +       codexBonusDef: 0,
+  +       codexBonusHp: 0,
+          codexClaimed: [],
+  +       cosmeticTitles: [],
+          crafts: 0,
+          currentRun: {
+  +         bossKillsAtStart: 1,
+  -         bossKillsAtStart: 0,
+            complete: true,
+            escapesAtStart: 0,
+  +         killsAtStart: 1,
+  +         maxKillStreak: 0,
+  +         startedAt: 1790569043509,
+  +         totalGoldAtStart: 120,
+  -         killsAtStart: 0,
+  -         maxKillStreak: 1,
+  -         startedAt: 1790569043450,
+  -         totalGoldAtStart: 0,
+            visitedMapsAtStart: [
+              '시작의 마을'
+            ]
+          },
+  +       dailyInvadeCount: 0,
+          dailyProtocol: {
+            date: '1970-01-01',
+            missions: [
+              {
+                done: false,
+  ...
+          kills: 1,
+  +       lastInvadeDate: null,
+          lastSeenAt: null,
+          maxKillStreak: 1,
+  -       recentBattles: [
+  -         {
+  -           hpRatio: 1,
+  -           result: 'win'
+  -         }
+  -       ],
+          relicCount: 0,
+          rests: 0,
+          signaturePity: 1,
+  +       synthProtects: 0,
+          syntheses: 0,
+          total_gold: 120,
+          visitedMaps: [
+            '시작의 마을'
+          ]
+  ...
+          'legend',
+  +       '각성자'
+        ],
+        weeklyProtocol: {
+          bossKills: 1,
+          claimed: [],
+          explores: 0,
+
+      at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/ascension-pending-rewards.test.js:35:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.start (node:internal/test_runner/test:1191:17)
+      at startSubtestAfterBootstrap (node:internal/test_runner/harness:385:17) {
+    generatedMessage: false,
+    code: 'ERR_ASSERTION',
+    actual: { bootStage: 'ready', uid: null, player: { name: '종장 검증', job: '모험가', gender: 'male', level: 1, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 12, def: 5, exp: 0, nextExp: 200, gold: 200, loc: '시작의 마을', inv: [Array], equip: [Object], quests: [], achievements: [], expeditionFocusQuestIds: [], stats: [Object], premiumCurrency: 0, seasonPass: [Object], weeklyProtocol: [Object], skillChoices: {}, challengeModifiers: [], tempBuff: [Object], status: [], skillLoadout: [Object], settings: [Object], meta: [Object], relics: [], titles: [Array], activeTitle: '각성자', combatFlags: [Object], killStreak: 0, history: [], eventChainProgress: {}, activeExpedition: null, lastExpeditionSummary: null, expeditionSequence: 0, returnSupplyRewards: [Object], reviveTokens: 0, classJourney: [Object] }, gameState: 'idle', logs: [], enemy: null, currentEvent: null, grave: null, shopItems: [], sideTab: 'inventory', isAiThinking: false, visualEffect: null, syncStatus: 'syncing', leaderboard: [], liveConfig: { eventMultiplier: 1, progressionProfile: [Object], announcement: '', seasonEvent: null }, lastLoadedTimestamp: 0, presentationEpoch: 0, quickSlots: [ null, null, null ], postCombatResult: null, pendingRelics: null, runSummary: null, expeditionDebriefOpen: false, questClaimReceipt: null, economyReceipt: null, combatTurn: 0, combatReceipt: null },
+    expected: {
+      bootStage: 'init',
+      uid: null,
+      player: { name: '종장 검증', job: '모험가', gender: 'male', level: 68, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 100000, def: 5, exp: 0, nextExp: 200, gold: 320, loc: '마왕성', inv: [Array], equip: [Object], quests: [Array], achievements: [], expeditionFocusQuestIds: [Array], stats: [Object], premiumCurrency: 0, seasonPass: [Object], weeklyProtocol: [Object], skillChoices: {}, challengeModifiers: [], tempBuff: [Object], status: [], skillLoadout: [Object], settings: [Object], meta: [Object], relics: [], titles: [Array], activeTitle: '[마왕] 처치자', combatFlags: [Object], killStreak: 1, history: [], eventChainProgress: {}, activeExpedition: null, lastExpeditionSummary: null, expeditionSequence: 0, returnSupplyRewards: [Object], lastKillAt: 1000 },
+      gameState: 'ascension',
+      logs: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      enemy: null,
+      currentEvent: null,
+      grave: null,
+      shopItems: [],
+      sideTab: 'inventory',
+      isAiThinking: false,
+      visualEffect: null,
+      syncStatus: 'syncing',
+      leaderboard: [],
+      liveConfig: { eventMultiplier: 1, progressionProfile: [Object], announcement: '', seasonEvent: null },
+      lastLoadedTimestamp: 0,
+      presentationEpoch: 0,
+      quickSlots: [ null, null, null ],
+      postCombatResult: null,
+      pendingRelics: null,
+      runSummary: null,
+      expeditionDebriefOpen: false,
+      questClaimReceipt: null,
+      economyReceipt: null,
+      combatTurn: 1,
+      combatReceipt: { key: '1:1000:11', kind: 'victory', stories: [Array], lootSettlement: [Object] }
+    },
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/ascension-pending-rewards.test.js:51:1
+✖ 일반 계승 action은 보상이 남으면 dispatch와 성공 로그를 만들지 않는다 (0.698042ms)
+  AssertionError [ERR_ASSERTION]: Expected values to be strictly deep-equal:
+  + actual - expected
+
+  + [
+  +   {
+  +     payload: {
+  +       expectedPrestigeRank: 0,
+  +       sourceReceiptKey: '1:1000:11'
+  +     },
+  +     type: 'ASCEND'
+  +   },
+  +   {
+  +     payload: [
+  +       'reborn',
+  +       'demon_slayer',
+  +       'ironman'
+  +     ],
+  +     type: 'UNLOCK_TITLES'
+  +   }
+  + ]
+  - []
+
+      at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/ascension-pending-rewards.test.js:58:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async startSubtestAfterBootstrap (node:internal/test_runner/harness:385:3) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: [ { type: 'ASCEND', payload: [Object] }, { type: 'UNLOCK_TITLES', payload: [Array] } ],
+    expected: [],
+    operator: 'deepStrictEqual',
+    diff: 'simple'
+  }
+
+test at tests/ascension-pending-rewards.test.js:67:1
+✖ 여러 완료 임무와 현상수배는 모두 수령해야 하며 미완료 임무는 계승을 막지 않는다 (12.818208ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+  ... Skipped lines
+
+    {
+  +   bootStage: 'ready',
+  +   combatReceipt: null,
+  +   combatTurn: 0,
+  -   bootStage: 'init',
+  -   combatReceipt: {
+  -     key: '1:1000:11',
+  -     kind: 'victory',
+  -     lootSettlement: {
+  -       admittedCount: 0,
+  -       admittedItemIds: [],
+  -       admittedSignatureCount: 0,
+  -       blockedCount: 0,
+  -       blockedSignatureCount: 0,
+  -       pityAfter: 1,
+  -       pityBefore: 0,
+  -       rolledCount: 0
+  -     },
+  -     stories: [
+  -       {
+  -         data: {
+  -           name: '마왕'
+  -         },
+  -         type: 'victory'
+  -       }
+  -     ]
+  -   },
+  -   combatTurn: 1,
+      currentEvent: null,
+      economyReceipt: null,
+      enemy: null,
+      expeditionDebriefOpen: false,
+  +   gameState: 'idle',
+  -   gameState: 'ascension',
+      grave: null,
+      isAiThinking: false,
+      lastLoadedTimestamp: 0,
+      leaderboard: [],
+      liveConfig: {
+  ...
+      },
+  +   logs: [],
+  -   logs: [
+  -     {
+  -       id: 'combat-1000-11-5',
+  -       text: '새 칭호를 얻었습니다. 첫 번째 사냥꾼',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-6',
+  -       text: '새 칭호를 얻었습니다. 용살자',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-7',
+  -       text: '새 칭호를 얻었습니다. 베테랑',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-8',
+  -       text: '새 칭호를 얻었습니다. 전설',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-9',
+  -       text: '전투 정리: 마왕 처치',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-10',
+  -       text: '보스 보상: 첫 토벌 골드 +120 · 최종 토벌 보상과 환생 루프가 이어지는 핵심 전투입니다.',
+  -       type: 'info'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-11',
+  -       text: '⚡ 마왕이 쓰러졌습니다. 에테르 환생의 문이 열렸습니다...',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-0',
+  -       text: '레벨 69 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-1',
+  -       text: '레벨 70 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-2',
+  -       text: '레벨 70 성장 보너스 · 공격력 +4 · 생명 +25 · 기력 +12',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-3',
+  -       text: '레벨 71 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-4',
+  -       text: '레벨 72 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-5',
+  -       text: '레벨 73 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-6',
+  -       text: '레벨 74 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-7',
+  -       text: '레벨 75 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-8',
+  -       text: '레벨 75 달성 · 골드 4,500 획득',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-9',
+  -       text: '레벨 76 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-10',
+  -       text: '레벨 77 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-11',
+  -       text: '레벨 78 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-12',
+  -       text: '레벨 79 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-13',
+  -       text: '레벨 80 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-14',
+  -       text: '레벨 80 성장 보너스 · 공격력 +4 · 생명 +25 · 기력 +12',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-15',
+  -       text: '레벨 81 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-16',
+  -       text: '레벨 82 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-17',
+  -       text: '레벨 83 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-18',
+  -       text: '레벨 84 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-19',
+  -       text: '레벨 85 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-20',
+  -       text: '레벨 85 달성 · 골드 5,100 획득',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-21',
+  -       text: '레벨 86 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-22',
+  -       text: '레벨 87 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-23',
+  -       text: '레벨 88 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-24',
+  -       text: '레벨 89 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-25',
+  -       text: '레벨 90 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-26',
+  -       text: '레벨 90 성장 보너스 · 공격력 +4 · 생명 +25 · 기력 +12',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-27',
+  -       text: '레벨 91 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-28',
+  -       text: '레벨 92 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-29',
+  -       text: '레벨 93 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-30',
+  -       text: '레벨 94 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-31',
+  -       text: '레벨 95 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-32',
+  -       text: '레벨 95 달성 · 골드 5,700 획득',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-33',
+  -       text: '레벨 96 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-34',
+  -       text: '레벨 97 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-35',
+  -       text: '레벨 98 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-36',
+  -       text: '레벨 99 상승 · 공격력 +3 · 생명 +20',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-37',
+  -       text: '보상 아이템: 성검 에테르니아',
+  -       type: 'success'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-38',
+  -       text: '새 칭호를 얻었습니다. 상인',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-39',
+  -       text: '새 칭호를 얻었습니다. 재벌',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-40',
+  -       text: '새 칭호를 얻었습니다. 마왕 토벌자',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-41',
+  -       text: '새 칭호를 얻었습니다. 아이언맨',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'reward-1790569043520-0.20122361267442346-42',
+  -       text: '퀘스트 완료: [스토리] 세계의 끝',
+  -       type: 'success'
+  -     }
+  -   ],
+      pendingRelics: null,
+      player: {
+        achievements: [],
+        activeExpedition: null,
+  +     activeTitle: '각성자',
+  +     atk: 12,
+  -     activeTitle: '[마왕] 처치자',
+  -     atk: 100105,
+        challengeModifiers: [],
+  +     classJourney: {
+  +       byJob: {},
+  +       sequence: 0,
+  +       version: 2
+  +     },
+        combatFlags: {
+          comboCount: 0,
+          deathSaveUsed: false,
+  -       phoenixUsed: false,
+  -       spellStackCount: 0,
+  -       turnCount: 1,
+          voidHeartArmed: false,
+          voidHeartUsed: false
+        },
+  +     def: 5,
+  -     def: 36,
+        equip: {
+          armor: {
+            desc: '활동하기 편한 얇은 옷.',
+            desc_stat: 'DEF+2',
+            jobs: [
+  ...
+        eventChainProgress: {},
+  +     exp: 0,
+  -     exp: 1501,
+        expeditionFocusQuestIds: [],
+        expeditionSequence: 0,
+        gender: 'male',
+  +     gold: 200,
+  -     gold: 115620,
+        history: [],
+  +     hp: 150,
+  -     hp: 845,
+        inv: [
+          {
+            desc: 'HP 50 회복',
+            desc_stat: 'HP+50',
+            id: 'starter_1',
+  ...
+          },
+  -       {
+  -         baseItemName: '성검 에테르니아',
+  -         desc: '전설 속 영웅이 사용하던 검.',
+  -         desc_stat: 'ATK+200(빛)',
+  -         elem: '빛',
+  -         id: '1790569043520_f022c7',
+  -         jobs: [
+  -           '전사',
+  -           '모험가',
+  -           '나이트',
+  -           '드래곤 나이트',
+  -           '성직자'
+  -         ],
+  -         name: '성검 에테르니아',
+  -         price: 30000,
+  -         tier: 5,
+  -         type: 'weapon',
+  -         val: 200
+  -       }
+        ],
+        job: '모험가',
+  +     killStreak: 0,
+  -     killStreak: 1,
+        lastExpeditionSummary: null,
+  +     level: 1,
+  +     loc: '시작의 마을',
+  +     maxHp: 150,
+  +     maxMp: 50,
+  -     lastKillAt: 1000,
+  -     level: 99,
+  -     loc: '마왕성',
+  -     maxHp: 845,
+  -     maxMp: 396,
+        meta: {
+  +       bonusAtk: 5,
+  +       bonusHp: 25,
+  +       bonusMp: 15,
+  -       bonusAtk: 0,
+  -       bonusHp: 0,
+  -       bonusMp: 0,
+          endgame: {
+            lastEndgameReceiptKey: '1:1000:11',
+            legacyInventoryMigrated: true,
+            primalShards: 0,
+            trueEndingSeen: false,
+            version: 1
+          },
+  +       essence: 201,
+  +       essenceLifetime: 201,
+  -       essence: 1,
+  -       essenceLifetime: 1,
+          mirror: {},
+  +       prestigeRank: 1,
+  -       prestigeRank: 0,
+          rank: 0,
+          storyMilestones: {
+            pending: [],
+            seen: []
+          }
+        },
+  +     mp: 50,
+  -     mp: 396,
+        name: '종장 검증',
+  +     nextExp: 200,
+  -     nextExp: 14959,
+        premiumCurrency: 0,
+  +     quests: [],
+  -     quests: [
+  -       {
+  -         goal: 1,
+  -         id: 'bounty-final',
+  -         isBounty: true,
+  -         progress: 1,
+  -         reward: {
+  -           gold: 10
+  -         },
+  -         title: '최종 현상수배'
+  -       },
+  -       {
+  -         id: 1,
+  -         progress: 0
+  -       }
+  -     ],
+        relics: [],
+        returnSupplyRewards: {
+          receipts: {},
+          version: 1
+        },
+  +     reviveTokens: 0,
+        seasonPass: {
+          claimed: [],
+          isPremium: false,
+          seasonId: 'S1',
+          tier: 0,
+  ...
+          abyssRecord: 0,
+  -       areaBossDefeated: {
+  -         '마왕': true
+  -       },
+          bossKills: 1,
+          bountiesCompleted: 0,
+          bountyDate: null,
+          bountyIssued: false,
+          buildWins: {
+  ...
+          },
+  +       codexBonusAtk: 0,
+  +       codexBonusDef: 0,
+  +       codexBonusHp: 0,
+          codexClaimed: [],
+  +       cosmeticTitles: [],
+          crafts: 0,
+          currentRun: {
+  +         bossKillsAtStart: 1,
+  -         bossKillsAtStart: 0,
+            complete: true,
+            escapesAtStart: 0,
+  +         killsAtStart: 1,
+  +         maxKillStreak: 0,
+  +         startedAt: 1790569043520,
+  +         totalGoldAtStart: 100120,
+  -         killsAtStart: 0,
+  -         maxKillStreak: 1,
+  -         startedAt: 1790569043450,
+  -         totalGoldAtStart: 0,
+            visitedMapsAtStart: [
+              '시작의 마을'
+            ]
+          },
+  +       dailyInvadeCount: 0,
+          dailyProtocol: {
+            date: '1970-01-01',
+            missions: [
+              {
+                done: false,
+  ...
+          kills: 1,
+  +       lastInvadeDate: null,
+          lastSeenAt: null,
+          maxKillStreak: 1,
+  -       recentBattles: [
+  -         {
+  -           hpRatio: 1,
+  -           result: 'win'
+  -         }
+  -       ],
+          relicCount: 0,
+          rests: 0,
+          signaturePity: 1,
+  +       synthProtects: 0,
+          syntheses: 0,
+          total_gold: 100120,
+          visitedMaps: [
+            '시작의 마을'
+          ]
+  ...
+          'ironman',
+  +       '각성자'
+        ],
+        weeklyProtocol: {
+          bossKills: 1,
+          claimed: [],
+          explores: 0,
+  ...
+      presentationEpoch: 0,
+  +   questClaimReceipt: null,
+  -   questClaimReceipt: {
+  -     key: '87:8:0',
+  -     questId: 87,
+  -     title: '[스토리] 세계의 끝'
+  -   },
+      quickSlots: [
+        null,
+        null,
+        null
+      ],
+  ...
+      uid: null,
+  +   visualEffect: null
+  -   visualEffect: 'levelUp'
+    }
+
+      at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/ascension-pending-rewards.test.js:72:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { bootStage: 'ready', uid: null, player: { name: '종장 검증', job: '모험가', gender: 'male', level: 1, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 12, def: 5, exp: 0, nextExp: 200, gold: 200, loc: '시작의 마을', inv: [Array], equip: [Object], quests: [], achievements: [], expeditionFocusQuestIds: [], stats: [Object], premiumCurrency: 0, seasonPass: [Object], weeklyProtocol: [Object], skillChoices: {}, challengeModifiers: [], tempBuff: [Object], status: [], skillLoadout: [Object], settings: [Object], meta: [Object], relics: [], titles: [Array], activeTitle: '각성자', combatFlags: [Object], killStreak: 0, history: [], eventChainProgress: {}, activeExpedition: null, lastExpeditionSummary: null, expeditionSequence: 0, returnSupplyRewards: [Object], reviveTokens: 0, classJourney: [Object] }, gameState: 'idle', logs: [], enemy: null, currentEvent: null, grave: null, shopItems: [], sideTab: 'inventory', isAiThinking: false, visualEffect: null, syncStatus: 'syncing', leaderboard: [], liveConfig: { eventMultiplier: 1, progressionProfile: [Object], announcement: '', seasonEvent: null }, lastLoadedTimestamp: 0, presentationEpoch: 0, quickSlots: [ null, null, null ], postCombatResult: null, pendingRelics: null, runSummary: null, expeditionDebriefOpen: false, questClaimReceipt: null, economyReceipt: null, combatTurn: 0, combatReceipt: null },
+    expected: {
+      bootStage: 'init',
+      uid: null,
+      player: { name: '종장 검증', job: '모험가', gender: 'male', level: 99, hp: 845, maxHp: 845, mp: 396, maxMp: 396, atk: 100105, def: 36, exp: 1501, nextExp: 14959, gold: 115620, loc: '마왕성', inv: [Array], equip: [Object], quests: [Array], achievements: [], expeditionFocusQuestIds: [], stats: [Object], premiumCurrency: 0, seasonPass: [Object], weeklyProtocol: [Object], skillChoices: {}, challengeModifiers: [], tempBuff: [Object], status: [], skillLoadout: [Object], settings: [Object], meta: [Object], relics: [], titles: [Array], activeTitle: '[마왕] 처치자', combatFlags: [Object], killStreak: 1, history: [], eventChainProgress: {}, activeExpedition: null, lastExpeditionSummary: null, expeditionSequence: 0, returnSupplyRewards: [Object], lastKillAt: 1000 },
+      gameState: 'ascension',
+      logs: [
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object], [Object], [Object],
+        [Object], [Object]
+      ],
+      enemy: null,
+      currentEvent: null,
+      grave: null,
+      shopItems: [],
+      sideTab: 'inventory',
+      isAiThinking: false,
+      visualEffect: 'levelUp',
+      syncStatus: 'syncing',
+      leaderboard: [],
+      liveConfig: { eventMultiplier: 1, progressionProfile: [Object], announcement: '', seasonEvent: null },
+      lastLoadedTimestamp: 0,
+      presentationEpoch: 0,
+      quickSlots: [ null, null, null ],
+      postCombatResult: null,
+      pendingRelics: null,
+      runSummary: null,
+      expeditionDebriefOpen: false,
+      questClaimReceipt: { key: '87:8:0', questId: 87, title: '[스토리] 세계의 끝' },
+      economyReceipt: null,
+      combatTurn: 1,
+      combatReceipt: { key: '1:1000:11', kind: 'victory', stories: [Array], lootSettlement: [Object] }
+    },
+    operator: 'strictEqual',
+    diff: 'simple'
+  }
+
+test at tests/ascension-pending-rewards.test.js:83:1
+✖ 계승 화면은 실제 보상과 수령 버튼을 보여주고 완료 보상이 있는 동안만 확정을 막는다 (5.703625ms)
+  AssertionError [ERR_ASSERTION]: The input did not match the regular expression /\[스토리\] 세계의 끝 보상 받기/. Input:
+
+  '<div data-testid="ascension-screen" class="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4"><section class="panel-noise aether-surface-strong relative z-10 flex min-h-0 w-full max-w-[40rem] flex-col overflow-hidden border-white/10 sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl sm:border"><header class="shrink-0 border-b border-white/8 px-4 pb-3 pt-[max(var(--aether-safe-area-top),1rem)] sm:px-5 sm:pt-5"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="text-[11px] font-readable text-[#d5b180]">마왕을 쓰러뜨린 뒤</div><h1 class="mt-1 text-[22px] font-readable font-bold text-white">다음 여정으로 계승</h1><p class="mt-1 text-[12px] font-readable leading-relaxed text-slate-300/82">이번 여정을 마치고 더 강한 세계에서 다시 시작합니다.</p></div><div class="shrink-0 rounded-lg border border-[#9a8ac0]/30 bg-[#9a8ac0]/10 px-3 py-2 text-center"><div class="text-[11px] font-readable text-slate-300">계승 단계</div><div class="mt-0.5 text-[17px] font-readable font-bold text-[#e3dcff]">0 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right inline" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg> 1</div></div></div></header><main data-testid="ascension-scroll-region" class="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:px-5 sm:py-4"><section data-testid="ascension-primary-reward" class="rounded-lg border border-[#d5b180]/26 bg-[#d5b180]/8 p-3.5"><div class="flex items-start gap-3"><div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d5b180]/24 bg-black/22 text-[#f6e7c8]"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown" aria-hidden="true"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg></div><div class="min-w-0 flex-1"><div class="text-[11px] font-readable text-[#d5b180]">새 칭호</div><div class="mt-0.5 text-[18px] font-readable font-bold text-[#f6e7c8]">각성자</div><div data-testid="ascension-current-unlock" class="mt-2 border-t border-[#d5b180]/16 pt-2"><div class="flex items-center gap-1.5 text-[12px] font-readable font-bold text-white"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles text-[#d5b180]" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>에테르 각성</div><p class="mt-1 text-[11px] font-readable leading-relaxed text-slate-300/82">에센스 획득 +10% · 마왕에게서 원시의 파편 발견</p></div></div></div></section><section data-testid="ascension-permanent-growth"><h2 class="flex items-center gap-1.5 text-[12px] font-readable font-bold text-white"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles text-[#9a8ac0]" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>영구 성장</h2><div class="mt-2 grid grid-cols-2 gap-2"><div class="rounded-lg border border-white/8 bg-black/18 px-3 py-2.5"><div class="text-[11px] font-readable text-slate-400">공격력</div><div class="mt-1 flex items-center gap-1.5 text-[15px] font-readable font-bold text-rose-100"><span class="text-slate-400">+0</span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg><span>+5</span></div></div><div class="rounded-lg border border-white/8 bg-black/18 px-3 py-2.5"><div class="text-[11px] font-readable text-slate-400">생명</div><div class="mt-1 flex items-center gap-1.5 text-[15px] font-readable font-bold text-emerald-100"><span class="text-slate-400">+0</span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg><span>+25</span></div></div><div class="rounded-lg border border-white/8 bg-black/18 px-3 py-2.5"><div class="text-[11px] font-readable text-slate-400">기력</div><div class="mt-1 flex items-center gap-1.5 text-[15px] font-readable font-bold text-[#dff7f5]"><span class="text-slate-400">+0</span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg><span>+15</span></div></div><div class="rounded-lg border border-white/8 bg-black/18 px-3 py-2.5"><div class="text-[11px] font-readable text-slate-400">계승 정수</div><div class="mt-1 flex items-center gap-1.5 text-[15px] font-readable font-bold text-[#e3dcff]"><span class="text-slate-400">+1</span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg><span>+201</span></div></div></div><p class="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">계승 정수 1로 영구 성장을 새길 수 있습니다.</p></section><section data-testid="ascension-enemy-scaling" class="rounded-lg border border-amber-300/20 bg-amber-300/[0.06] p-3"><div class="flex items-start gap-2.5"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-swords mt-0.5 shrink-0 text-amber-100" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline><line x1="13" x2="19" y1="19" y2="13"></line><line x1="16" x2="20" y1="16" y2="20"></line><line x1="19" x2="21" y1="21" y2="19"></line><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"></polyline><line x1="5" x2="9" y1="14" y2="18"></line><line x1="7" x2="4" y1="17" y2="20"></line><line x1="3" x2="5" y1="19" y2="21"></line></svg><div class="min-w-0 flex-1"><h2 class="text-[12px] font-readable font-bold text-amber-50">다음 세계는 더 강하고 보상도 큽니다</h2><div class="mt-2 grid grid-cols-2 gap-2 text-[11px] font-readable"><div class="rounded-md bg-black/18 px-2.5 py-2 text-slate-300">적 능력치<div class="mt-0.5 font-bold text-white">+0% <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right inline" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg> +5%</div></div><div class="rounded-md bg-black/18 px-2.5 py-2 text-slate-300">처치 보상<div class="mt-0.5 font-bold text-emerald-100">+0% <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right inline" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg> +8%</div></div></div></div></div></section><section class="grid gap-2 sm:grid-cols-2"><div data-testid="ascension-preserved-summary" class="rounded-lg border border-emerald-300/18 bg-emerald-300/[0.06] p-3"><h2 class="flex items-center gap-1.5 text-[12px] font-readable font-bold text-emerald-100"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open-check" aria-hidden="true"><path d="M12 21V7"></path><path d="m16 12 2 2 4-4"></path><path d="M22 6V4a1 1 0 0 0-1-1h-5a4 4 0 0 0-4 4 4 4 0 0 0-4-4H3a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h6a3 3 0 0 1 3 3 3 3 0 0 1 3-3h6a1 1 0 0 0 1-1v-1.3"></path></svg> 그대로 남는 것</h2><p class="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">영구 능력 · 직업 여정 · 설정 · 도감 · 칭호 · 업적과 누적 기록 · 시즌 진행</p></div><div data-testid="ascension-reset-summary" class="rounded-lg border border-rose-300/18 bg-rose-300/[0.06] p-3"><h2 class="flex items-center gap-1.5 text-[12px] font-readable font-bold text-rose-100"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17'... 2754 more characters
+
+      at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/ascension-pending-rewards.test.js:88:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: '<div data-testid="ascension-screen" class="fixed inset-0 z-[200] flex h-[100dvh] items-stretch justify-center bg-[#070b11]/96 sm:items-center sm:p-4"><section class="panel-noise aether-surface-strong relative z-10 flex min-h-0 w-full max-w-[40rem] flex-col overflow-hidden border-white/10 sm:max-h-[calc(100dvh-2rem)] sm:rounded-2xl sm:border"><header class="shrink-0 border-b border-white/8 px-4 pb-3 pt-[max(var(--aether-safe-area-top),1rem)] sm:px-5 sm:pt-5"><div class="flex items-start justify-between gap-3"><div class="min-w-0"><div class="text-[11px] font-readable text-[#d5b180]">마왕을 쓰러뜨린 뒤</div><h1 class="mt-1 text-[22px] font-readable font-bold text-white">다음 여정으로 계승</h1><p class="mt-1 text-[12px] font-readable leading-relaxed text-slate-300/82">이번 여정을 마치고 더 강한 세계에서 다시 시작합니다.</p></div><div class="shrink-0 rounded-lg border border-[#9a8ac0]/30 bg-[#9a8ac0]/10 px-3 py-2 text-center"><div class="text-[11px] font-readable text-slate-300">계승 단계</div><div class="mt-0.5 text-[17px] font-readable font-bold text-[#e3dcff]">0 <svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right inline" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg> 1</div></div></div></header><main data-testid="ascension-scroll-region" class="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:px-5 sm:py-4"><section data-testid="ascension-primary-reward" class="rounded-lg border border-[#d5b180]/26 bg-[#d5b180]/8 p-3.5"><div class="flex items-start gap-3"><div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#d5b180]/24 bg-black/22 text-[#f6e7c8]"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-crown" aria-hidden="true"><path d="M11.562 3.266a.5.5 0 0 1 .876 0L15.39 8.87a1 1 0 0 0 1.516.294L21.183 5.5a.5.5 0 0 1 .798.519l-2.834 10.246a1 1 0 0 1-.956.734H5.81a1 1 0 0 1-.957-.734L2.02 6.02a.5.5 0 0 1 .798-.519l4.276 3.664a1 1 0 0 0 1.516-.294z"></path><path d="M5 21h14"></path></svg></div><div class="min-w-0 flex-1"><div class="text-[11px] font-readable text-[#d5b180]">새 칭호</div><div class="mt-0.5 text-[18px] font-readable font-bold text-[#f6e7c8]">각성자</div><div data-testid="ascension-current-unlock" class="mt-2 border-t border-[#d5b180]/16 pt-2"><div class="flex items-center gap-1.5 text-[12px] font-readable font-bold text-white"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles text-[#d5b180]" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>에테르 각성</div><p class="mt-1 text-[11px] font-readable leading-relaxed text-slate-300/82">에센스 획득 +10% · 마왕에게서 원시의 파편 발견</p></div></div></div></section><section data-testid="ascension-permanent-growth"><h2 class="flex items-center gap-1.5 text-[12px] font-readable font-bold text-white"><svg xmlns="http://www.w3.org/2000/svg" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-sparkles text-[#9a8ac0]" aria-hidden="true"><path d="M11.017 2.814a1 1 0 0 1 1.966 0l1.051 5.558a2 2 0 0 0 1.594 1.594l5.558 1.051a1 1 0 0 1 0 1.966l-5.558 1.051a2 2 0 0 0-1.594 1.594l-1.051 5.558a1 1 0 0 1-1.966 0l-1.051-5.558a2 2 0 0 0-1.594-1.594l-5.558-1.051a1 1 0 0 1 0-1.966l5.558-1.051a2 2 0 0 0 1.594-1.594z"></path><path d="M20 2v4"></path><path d="M22 4h-4"></path><circle cx="4" cy="20" r="2"></circle></svg>영구 성장</h2><div class="mt-2 grid grid-cols-2 gap-2"><div class="rounded-lg border border-white/8 bg-black/18 px-3 py-2.5"><div class="text-[11px] font-readable text-slate-400">공격력</div><div class="mt-1 flex items-center gap-1.5 text-[15px] font-readable font-bold text-rose-100"><span class="text-slate-400">+0</span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg><span>+5</span></div></div><div class="rounded-lg border border-white/8 bg-black/18 px-3 py-2.5"><div class="text-[11px] font-readable text-slate-400">생명</div><div class="mt-1 flex items-center gap-1.5 text-[15px] font-readable font-bold text-emerald-100"><span class="text-slate-400">+0</span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg><span>+25</span></div></div><div class="rounded-lg border border-white/8 bg-black/18 px-3 py-2.5"><div class="text-[11px] font-readable text-slate-400">기력</div><div class="mt-1 flex items-center gap-1.5 text-[15px] font-readable font-bold text-[#dff7f5]"><span class="text-slate-400">+0</span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg><span>+15</span></div></div><div class="rounded-lg border border-white/8 bg-black/18 px-3 py-2.5"><div class="text-[11px] font-readable text-slate-400">계승 정수</div><div class="mt-1 flex items-center gap-1.5 text-[15px] font-readable font-bold text-[#e3dcff]"><span class="text-slate-400">+1</span><svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg><span>+201</span></div></div></div><p class="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">계승 정수 1로 영구 성장을 새길 수 있습니다.</p></section><section data-testid="ascension-enemy-scaling" class="rounded-lg border border-amber-300/20 bg-amber-300/[0.06] p-3"><div class="flex items-start gap-2.5"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-swords mt-0.5 shrink-0 text-amber-100" aria-hidden="true"><polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"></polyline><line x1="13" x2="19" y1="19" y2="13"></line><line x1="16" x2="20" y1="16" y2="20"></line><line x1="19" x2="21" y1="21" y2="19"></line><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"></polyline><line x1="5" x2="9" y1="14" y2="18"></line><line x1="7" x2="4" y1="17" y2="20"></line><line x1="3" x2="5" y1="19" y2="21"></line></svg><div class="min-w-0 flex-1"><h2 class="text-[12px] font-readable font-bold text-amber-50">다음 세계는 더 강하고 보상도 큽니다</h2><div class="mt-2 grid grid-cols-2 gap-2 text-[11px] font-readable"><div class="rounded-md bg-black/18 px-2.5 py-2 text-slate-300">적 능력치<div class="mt-0.5 font-bold text-white">+0% <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right inline" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg> +5%</div></div><div class="rounded-md bg-black/18 px-2.5 py-2 text-slate-300">처치 보상<div class="mt-0.5 font-bold text-emerald-100">+0% <svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-arrow-right inline" aria-hidden="true"><path d="M5 12h14"></path><path d="m12 5 7 7-7 7"></path></svg> +8%</div></div></div></div></div></section><section class="grid gap-2 sm:grid-cols-2"><div data-testid="ascension-preserved-summary" class="rounded-lg border border-emerald-300/18 bg-emerald-300/[0.06] p-3"><h2 class="flex items-center gap-1.5 text-[12px] font-readable font-bold text-emerald-100"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-book-open-check" aria-hidden="true"><path d="M12 21V7"></path><path d="m16 12 2 2 4-4"></path><path d="M22 6V4a1 1 0 0 0-1-1h-5a4 4 0 0 0-4 4 4 4 0 0 0-4-4H3a1 1 0 0 0-1 1v13a1 1 0 0 0 1 1h6a3 3 0 0 1 3 3 3 3 0 0 1 3-3h6a1 1 0 0 0 1-1v-1.3"></path></svg> 그대로 남는 것</h2><p class="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">영구 능력 · 직업 여정 · 설정 · 도감 · 칭호 · 업적과 누적 기록 · 시즌 진행</p></div><div data-testid="ascension-reset-summary" class="rounded-lg border border-rose-300/18 bg-rose-300/[0.06] p-3"><h2 class="flex items-center gap-1.5 text-[12px] font-readable font-bold text-rose-100"><svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield-alert" aria-hidden="true"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17'... 2754 more characters,
+    expected: /\[스토리\] 세계의 끝 보상 받기/,
+    operator: 'match',
+    diff: 'simple'
+  }
+
+test at tests/ascension-pending-rewards.test.js:99:1
+✖ 오래된 계승 action이 최신 미수령 상태에서 거부되면 칭호와 성공 안내도 남기지 않는다 (1.747ms)
+  AssertionError [ERR_ASSERTION]: Expected "actual" to be reference-equal to "expected":
+  + actual - expected
+  ... Skipped lines
+
+    {
+  +   bootStage: 'ready',
+  +   combatReceipt: null,
+  +   combatTurn: 0,
+  -   bootStage: 'init',
+  -   combatReceipt: {
+  -     key: '1:1000:11',
+  -     kind: 'victory',
+  -     lootSettlement: {
+  -       admittedCount: 0,
+  -       admittedItemIds: [],
+  -       admittedSignatureCount: 0,
+  -       blockedCount: 0,
+  -       blockedSignatureCount: 0,
+  -       pityAfter: 1,
+  -       pityBefore: 0,
+  -       rolledCount: 0
+  -     },
+  -     stories: [
+  -       {
+  -         data: {
+  -           name: '마왕'
+  -         },
+  -         type: 'victory'
+  -       }
+  -     ]
+  -   },
+  -   combatTurn: 1,
+      currentEvent: null,
+      economyReceipt: null,
+      enemy: null,
+      expeditionDebriefOpen: false,
+  +   gameState: 'idle',
+  -   gameState: 'ascension',
+      grave: null,
+      isAiThinking: false,
+      lastLoadedTimestamp: 0,
+      leaderboard: [],
+      liveConfig: {
+  ...
+      },
+  +   logs: [],
+  -   logs: [
+  -     {
+  -       id: 'reward-1790569043530-0.01715350482075695-0',
+  -       text: '퀘스트 수락: [스토리] 세계의 끝',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'combat-item-1000-11-0',
+  -       text: '마왕에게 119879 피해! (0/1)',
+  -       type: 'combat'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-0',
+  -       text: '승리했습니다. 경험 +0 · 골드 +0',
+  -       type: 'success'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-1',
+  -       text: '첫 보스 토벌 보상 · 골드 +120',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-2',
+  -       text: '계승 정수 +1',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-3',
+  -       text: '퀘스트 조건 달성: 1개',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-4',
+  -       text: '👑 [마왕] 최초 처치!',
+  -       type: 'event'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-5',
+  -       text: '새 칭호를 얻었습니다. 첫 번째 사냥꾼',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-6',
+  -       text: '새 칭호를 얻었습니다. 용살자',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-7',
+  -       text: '새 칭호를 얻었습니다. 베테랑',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-8',
+  -       text: '새 칭호를 얻었습니다. 전설',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-9',
+  -       text: '전투 정리: 마왕 처치',
+  -       type: 'system'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-10',
+  -       text: '보스 보상: 첫 토벌 골드 +120 · 최종 토벌 보상과 환생 루프가 이어지는 핵심 전투입니다.',
+  -       type: 'info'
+  -     },
+  -     {
+  -       id: 'combat-1000-11-11',
+  -       text: '⚡ 마왕이 쓰러졌습니다. 에테르 환생의 문이 열렸습니다...',
+  -       type: 'system'
+  -     }
+  -   ],
+      pendingRelics: null,
+      player: {
+        achievements: [],
+        activeExpedition: null,
+  +     activeTitle: '각성자',
+  +     atk: 12,
+  -     activeTitle: '[마왕] 처치자',
+  -     atk: 100000,
+        challengeModifiers: [],
+  +     classJourney: {
+  +       byJob: {},
+  +       sequence: 0,
+  +       version: 2
+  +     },
+        combatFlags: {
+          comboCount: 0,
+          deathSaveUsed: false,
+  -       phoenixUsed: false,
+  -       spellStackCount: 0,
+  -       turnCount: 1,
+          voidHeartArmed: false,
+          voidHeartUsed: false
+        },
+        def: 5,
+        equip: {
+  ...
+        exp: 0,
+  +     expeditionFocusQuestIds: [],
+  -     expeditionFocusQuestIds: [
+  -       87
+  -     ],
+        expeditionSequence: 0,
+        gender: 'male',
+  +     gold: 200,
+  -     gold: 320,
+        history: [],
+        hp: 150,
+        inv: [
+          {
+            desc: 'HP 50 회복',
+  ...
+        job: '모험가',
+  +     killStreak: 0,
+  -     killStreak: 1,
+        lastExpeditionSummary: null,
+  +     level: 1,
+  +     loc: '시작의 마을',
+  -     lastKillAt: 1000,
+  -     level: 68,
+  -     loc: '마왕성',
+        maxHp: 150,
+        maxMp: 50,
+        meta: {
+  +       bonusAtk: 5,
+  +       bonusHp: 25,
+  +       bonusMp: 15,
+  -       bonusAtk: 0,
+  -       bonusHp: 0,
+  -       bonusMp: 0,
+          endgame: {
+            lastEndgameReceiptKey: '1:1000:11',
+            legacyInventoryMigrated: true,
+            primalShards: 0,
+            trueEndingSeen: false,
+            version: 1
+          },
+  +       essence: 201,
+  +       essenceLifetime: 201,
+  -       essence: 1,
+  -       essenceLifetime: 1,
+          mirror: {},
+  +       prestigeRank: 1,
+  -       prestigeRank: 0,
+          rank: 0,
+          storyMilestones: {
+            pending: [],
+            seen: []
+          }
+  ...
+        premiumCurrency: 0,
+  +     quests: [],
+  -     quests: [
+  -       {
+  -         id: 87,
+  -         progress: 1
+  -       }
+  -     ],
+        relics: [],
+        returnSupplyRewards: {
+          receipts: {},
+          version: 1
+        },
+  +     reviveTokens: 0,
+        seasonPass: {
+          claimed: [],
+          isPremium: false,
+          seasonId: 'S1',
+          tier: 0,
+  ...
+          abyssRecord: 0,
+  -       areaBossDefeated: {
+  -         '마왕': true
+  -       },
+          bossKills: 1,
+          bountiesCompleted: 0,
+          bountyDate: null,
+          bountyIssued: false,
+          buildWins: {
+  ...
+          },
+  +       codexBonusAtk: 0,
+  +       codexBonusDef: 0,
+  +       codexBonusHp: 0,
+          codexClaimed: [],
+  +       cosmeticTitles: [],
+          crafts: 0,
+          currentRun: {
+  +         bossKillsAtStart: 1,
+  -         bossKillsAtStart: 0,
+            complete: true,
+            escapesAtStart: 0,
+  +         killsAtStart: 1,
+  +         maxKillStreak: 0,
+  +         startedAt: 1790569043531,
+  +         totalGoldAtStart: 120,
+  -         killsAtStart: 0,
+  -         maxKillStreak: 1,
+  -         startedAt: 1790569043450,
+  -         totalGoldAtStart: 0,
+            visitedMapsAtStart: [
+              '시작의 마을'
+            ]
+          },
+  +       dailyInvadeCount: 0,
+          dailyProtocol: {
+            date: '1970-01-01',
+            missions: [
+              {
+                done: false,
+  ...
+          kills: 1,
+  +       lastInvadeDate: null,
+          lastSeenAt: null,
+          maxKillStreak: 1,
+  -       recentBattles: [
+  -         {
+  -           hpRatio: 1,
+  -           result: 'win'
+  -         }
+  -       ],
+          relicCount: 0,
+          rests: 0,
+          signaturePity: 1,
+  +       synthProtects: 0,
+          syntheses: 0,
+          total_gold: 120,
+          visitedMaps: [
+            '시작의 마을'
+          ]
+  ...
+          'legend',
+  +       '각성자',
+  +       'reborn',
+  +       'demon_slayer',
+  +       'ironman'
+        ],
+        weeklyProtocol: {
+          bossKills: 1,
+          claimed: [],
+          explores: 0,
+
+      at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/ascension-pending-rewards.test.js:107:12)
+      at Test.runInAsyncScope (node:async_hooks:227:14)
+      at Test.run (node:internal/test_runner/test:1325:25)
+      at Test.processPendingSubtests (node:internal/test_runner/test:911:18)
+      at Test.postRun (node:internal/test_runner/test:1465:19)
+      at Test.run (node:internal/test_runner/test:1390:12)
+      at async Test.processPendingSubtests (node:internal/test_runner/test:911:7) {
+    generatedMessage: true,
+    code: 'ERR_ASSERTION',
+    actual: { bootStage: 'ready', uid: null, player: { name: '종장 검증', job: '모험가', gender: 'male', level: 1, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 12, def: 5, exp: 0, nextExp: 200, gold: 200, loc: '시작의 마을', inv: [Array], equip: [Object], quests: [], achievements: [], expeditionFocusQuestIds: [], stats: [Object], premiumCurrency: 0, seasonPass: [Object], weeklyProtocol: [Object], skillChoices: {}, challengeModifiers: [], tempBuff: [Object], status: [], skillLoadout: [Object], settings: [Object], meta: [Object], relics: [], titles: [Array], activeTitle: '각성자', combatFlags: [Object], killStreak: 0, history: [], eventChainProgress: {}, activeExpedition: null, lastExpeditionSummary: null, expeditionSequence: 0, returnSupplyRewards: [Object], reviveTokens: 0, classJourney: [Object] }, gameState: 'idle', logs: [], enemy: null, currentEvent: null, grave: null, shopItems: [], sideTab: 'inventory', isAiThinking: false, visualEffect: null, syncStatus: 'syncing', leaderboard: [], liveConfig: { eventMultiplier: 1, progressionProfile: [Object], announcement: '', seasonEvent: null }, lastLoadedTimestamp: 0, presentationEpoch: 0, quickSlots: [ null, null, null ], postCombatResult: null, pendingRelics: null, runSummary: null, expeditionDebriefOpen: false, questClaimReceipt: null, economyReceipt: null, combatTurn: 0, combatReceipt: null },
+    expected: {
+      bootStage: 'init',
+      uid: null,
+      player: { name: '종장 검증', job: '모험가', gender: 'male', level: 68, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 100000, def: 5, exp: 0, nextExp: 200, gold: 320, loc: '마왕성', inv: [Array], equip: [Object], quests: [Array], achievements: [], expeditionFocusQuestIds: [Array], stats: [Object], premiumCurrency: 0, seasonPass: [Object], weeklyProtocol: [Object], skillChoices: {}, challengeModifiers: [], tempBuff: [Object], status: [], skillLoadout: [Object], settings: [Object], meta: [Object], relics: [], titles: [Array], activeTitle: '[마왕] 처치자', combatFlags: [Object], killStreak: 1, history: [], eventChainProgress: {}, activeExpedition: null, lastExpeditionSummary: null, expeditionSequence: 0, returnSupplyRewards: [Object], lastKillAt: 1000 },
+      gameState: 'ascension',
+      logs: [
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object],
+        [Object], [Object]
+      ],
+      enemy: null,
+      currentEvent: null,
+      grave: null,
+      shopItems: [],
+      sideTab: 'inventory',
+      isAiThinking: false,
+      visualEffect: null,
+      syncStatus: 'syncing',
+      leaderboard: [],
+      liveConfig: { eventMultiplier: 1, progressionProfile: [Object], announcement: '', seasonEvent: null },
+      lastLoadedTimestamp: 0,
+      presentationEpoch: 0,
+      quickSlots: [ null, null, null ],
+      postCombatResult: null,
+      pendingRelics: null,
+      runSummary: null,
+      expeditionDebriefOpen: false,
+      questClaimReceipt: null,
+      economyReceipt: null,
+      combatTurn: 1,
+      combatReceipt: { key: '1:1000:11', kind: 'victory', stories: [Array], lootSettlement: [Object] }
+    },
+    operator: 'strictEqual',
+    diff: 'simple'
+  }

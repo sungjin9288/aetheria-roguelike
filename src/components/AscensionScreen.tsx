@@ -12,16 +12,20 @@ import { MSG } from '../data/messages.js';
 import type { Player } from '../types/index.js';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
 import EndgameJourney from './EndgameJourney';
+import PendingQuestRewardList from './PendingQuestRewardList';
+import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { GameActions } from '../hooks/actionDeps';
 
 interface AscensionScreenProps {
     player: Player;
-    actions?: Pick<GameActions, 'cancelAscension' | 'confirmAscension'>;
+    actions?: Pick<GameActions, 'cancelAscension' | 'confirmAscension' | 'completeQuest'>;
     /** 2026-09 G3: 승천 화면에서 곧바로 에테르 거울로 — SystemTab과 같은 진입점을 재사용. */
     onOpenMirror?: () => void;
 }
 
 const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps) => {
+    const claimableQuests = getClaimableQuestEntries(player);
+    const hasPendingQuestRewards = claimableQuests.length > 0;
     const outcome = getAscensionOutcome(player.meta);
     const signatureProgress = getSignatureDiscoveryProgress(player);
     const statRows = [
@@ -59,6 +63,13 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                     data-testid="ascension-scroll-region"
                     className="custom-scrollbar min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3 sm:px-5 sm:py-4"
                 >
+                    {hasPendingQuestRewards && (
+                        <section data-testid="ascension-pending-quests" aria-labelledby="ascension-pending-quests-title" className="space-y-3 border-b border-amber-200/20 pb-4 font-readable">
+                            <h2 id="ascension-pending-quests-title" className="text-sm font-bold text-amber-100">{MSG.ASCEND_PENDING_QUESTS_TITLE}</h2>
+                            <p className="text-[13px] leading-6 text-slate-300">{MSG.ASCEND_PENDING_QUESTS_GUIDANCE}</p>
+                            <PendingQuestRewardList entries={claimableQuests} testIdPrefix="ascension" onClaim={actions?.completeQuest} />
+                        </section>
+                    )}
                     <section
                         data-testid="ascension-primary-reward"
                         className="rounded-lg border border-[#d5b180]/26 bg-[#d5b180]/8 p-3.5"
@@ -168,7 +179,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                                 <ShieldAlert size={14} /> 새로 시작하는 것
                             </h2>
                             <p className="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">
-                                레벨 · 장비와 가방 · 유물 · 임무 · 현재 원정과 유해
+                                레벨 · 장비와 가방 · 유물 · 진행 중 임무 · 현재 원정과 유해
                             </p>
                         </div>
                     </section>
@@ -188,6 +199,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                 </main>
 
                 <footer className="shrink-0 border-t border-white/8 bg-[#0a1018]/98 px-4 pb-[max(var(--aether-safe-area-bottom),0.75rem)] pt-3 sm:px-5">
+                    {hasPendingQuestRewards && <p className="mb-2 text-xs font-readable leading-5 text-amber-100">{MSG.ASCEND_PENDING_QUESTS_BLOCKED}</p>}
                     <div className="grid grid-cols-2 gap-2.5">
                         <button
                             type="button"
@@ -201,7 +213,9 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                             type="button"
                             data-testid="ascension-confirm"
                             onClick={() => actions?.confirmAscension?.()}
-                            className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-[#d5b180]/36 bg-[#d5b180]/14 px-3 text-[13px] font-readable font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/20"
+                            disabled={hasPendingQuestRewards}
+                            aria-describedby={hasPendingQuestRewards ? 'ascension-pending-quests-title' : undefined}
+                            className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-[#d5b180]/36 bg-[#d5b180]/14 px-3 text-[13px] font-readable font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/20 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                             <Crown size={15} /> 계승하고 새 여정
                         </button>

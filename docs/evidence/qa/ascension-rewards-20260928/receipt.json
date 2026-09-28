@@ -1,0 +1,83 @@
+{
+  "date": "2026-09-28",
+  "base": "538ad2a91b32bef2009cfc2e98c2611a52bc9501",
+  "scope": "Ordinary ascension protects completed unclaimed rewards and rejected requests produce no success effects",
+  "fixtureBoundary": "Isolated final-combat fixtures; not a natural full campaign or physical-device acceptance",
+  "checks": {
+    "baselineRed": 5,
+    "focusedUnitPassed": 33,
+    "repairFocusedUnitPassed": 242,
+    "focusedE2ePassed": 8,
+    "mutationRedCount": 5,
+    "full": {
+      "command": "VITE_RELEASE_ID=ascension-rewards-qa AETHERIA_RUN_PERF=1 npm run verify:full",
+      "exitCode": 0,
+      "unitPassed": 5204,
+      "unitFiles": 357,
+      "unitSkipped": 0,
+      "e2ePassed": 136,
+      "e2eShards": [
+        70,
+        66
+      ],
+      "trackedVerifyPassed": 15,
+      "smoke": [
+        "desktop",
+        "mobile"
+      ],
+      "perfFcpMs": {
+        "desktop": 360,
+        "mobile": 304
+      }
+    },
+    "widths": [
+      375,
+      390,
+      430
+    ]
+  },
+  "native": {
+    "capSyncExitCode": 0,
+    "doctorExitCode": 0,
+    "androidDebugExitCode": 0,
+    "iosUnsignedExitCode": 0,
+    "apkSha256": "7208299ee8ec6dc40fafe3efe2d3c6d8aa4662be1dde3324fd2965d5c715a200",
+    "apkBytes": 227759419,
+    "AppPlugin": true,
+    "iosApp": "/tmp/aetheria-ascension-rewards-ios-20260928/Build/Products/Release-iphoneos/App.app",
+    "productionWebFilesComparedPerPlatform": 2269,
+    "byteMismatches": 0,
+    "trackedNativeChanges": 0,
+    "physicalDeviceRun": false,
+    "releaseSigned": false
+  },
+  "initialFailures": [
+    "First full unit:5201 pass/3 fail; legacy title tests moved to accepted reducer behavior and three JSX messages moved to MSG without changing AST cap",
+    "Initial browser harness clicked a legendary overlay behind ascension; unnecessary click removed",
+    "Initial client scenario name was invalid; reran ascension-journey and inspected ready/ascension"
+  ],
+  "toolWarnings": [
+    "Desktop/mobile smoke and desktop perf browser.close timeout after assertions passed (3 total)"
+  ],
+  "remaining": [
+    "Quest87 counts mawang apostle as mawang: separate real reducer probe reproduced progress1/gameState idle/rank0; fix in next slice",
+    "Natural chapter86/87 progression and full campaign continuity",
+    "Overall product design and narrative acceptance",
+    "Physical iPhone QA; no owner physical Android",
+    "Release signing and submission"
+  ],
+  "artifacts": [
+    {
+      "file": "pending-375.png",
+      "sha256": "1818d5bea0f03f86837f8c73eea9e1984d00e25d25bccf59bf7647cd13e38e6e"
+    },
+    {
+      "file": "pending-390.png",
+      "sha256": "8c21f85eef464b74f00b1a0aee7b8bc6cc180cb11e2679b42c6bda5bb2d0398a"
+    },
+    {
+      "file": "pending-430.png",
+      "sha256": "6d750f35928ac72d4413379e8f0952e617be0e56cdfc73a197d04827f49a676f"
+    }
+  ]
+}

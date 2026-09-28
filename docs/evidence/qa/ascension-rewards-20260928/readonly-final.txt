@@ -1,0 +1,49 @@
+Command and result excerpt; complete local log: /tmp/aetheria-ascension-readonly-final.log
+SHA256: 32b6d5c014262db6b6c561e7f51a204f51fdb42c9582f8b5ba0c83eac1358d57
+> aetheria-rpg@0.0.0 art:monsters:verify
+> node --import tsx scripts/verify-art-assets.mjs --scope monsters
+  "ok": true,
+  "scope": "monsters",
+> aetheria-rpg@0.0.0 art:verify
+> node --import tsx scripts/verify-art-assets.mjs
+  "ok": true,
+  "scope": "all",
+> aetheria-rpg@0.0.0 content:verify
+> node --import tsx scripts/verify-content-reachability.mjs --verify docs/evidence/qa/release-complete-core/content-reachability.json
+{"hashAlgorithm":"sha256","reportHash":"d2d37207a2fc705c9e6a03e28f5e47da11d8e789f3b7472a03dcca2849ff1878"}
+> aetheria-rpg@0.0.0 equipment:combat-power:verify
+> node scripts/verify-equipment-combat-power.mjs --verify docs/evidence/qa/release-complete-core/equipment-combat-power.json
+equipment combat-power evidence verified: 92ad3671c957ede077781540e61275a02bcfa72d7edd93202e1ce3a3acc74fee
+> aetheria-rpg@0.0.0 equipment:economy:verify
+> node --import tsx scripts/verify-equipment-economy.mjs --verify docs/evidence/qa/release-complete-core/equipment-economy.json
+equipment economy evidence verified sha256=33558b95856f4a357940d165256b4587d2a66a9176ff2fa4b68f4649276a9f93
+> aetheria-rpg@0.0.0 event-reward:verify
+> node --import tsx scripts/verify-event-reward-coherence.mjs --verify docs/evidence/qa/release-complete-core/event-reward-coherence.json
+event-reward verify ok: rows=108 errors=0 sha256=c617ce4d3621f237ffd954ffb7d9e9213efeb9969642c06715bddbd529e380af
+> aetheria-rpg@0.0.0 pacing:verify
+> node --import tsx scripts/compare-exploration-rhythm.mjs --seed-start 20260810 --seed-count 64 --verify docs/evidence/qa/release-complete-core/exploration-rhythm.json
+{"hashAlgorithm":"sha256","reportHash":"0818fb7afb6b88a628076791a1ba255981df40a9b1310a4aeb3d527e8fb8424e"}
+> aetheria-rpg@0.0.0 progression:diagnostic:verify
+> node --import tsx scripts/progression-diagnostic-evidence.mjs --verify docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json
+progression diagnostic evidence verified: 26a3492384260936fc3665c8f1b634625cf9b4daa3654ea693ed65d15894525a
+> aetheria-rpg@0.0.0 relic:dot-multiplier:verify
+> node scripts/verify-relic-dot-multiplier.mjs --verify docs/evidence/qa/release-complete-core/relic-dot-multiplier.json
+relic-dot-multiplier verify ok: vectors=10 malformed=5 sha256=b123dee8e47f7b405584470bc03087f6e81fbbb98aecfd0ee1bb10068068a204 sources=8
+> aetheria-rpg@0.0.0 relic:drop-rate:verify
+> node scripts/verify-relic-drop-rate.mjs --verify docs/evidence/qa/release-complete-core/relic-drop-rate.json
+relic-drop-rate verify ok: vectors=3 errors=0 sha256=2ddf68f9dbcc2b942d4ae5429bf89dc92af5abaaaa92a702774ecde058899e60
+> aetheria-rpg@0.0.0 relic:event-chance:verify
+> node scripts/verify-relic-event-chance.mjs --verify docs/evidence/qa/release-complete-core/relic-event-chance.json
+relic-event-chance verify ok: seeds=64 errors=0 sha256=424909de42bc199747279d17e645b9360996912c2b669f637a7ccce9e4574597
+> aetheria-rpg@0.0.0 relic:free-skill:verify
+> node scripts/verify-relic-free-skill.mjs --verify docs/evidence/qa/release-complete-core/relic-free-skill.json
+relic-free-skill verify ok: jobs=18 errors=0 sha256=ddf2e9a1a65b11e795f2f48c69a88d3fbbcae3d25aa60c5818f57108ce72dffd
+> aetheria-rpg@0.0.0 relic:gold-multiplier:verify
+> node scripts/verify-relic-gold-multiplier.mjs --verify docs/evidence/qa/release-complete-core/relic-gold-multiplier.json
+relic-gold-multiplier verify ok: errors=0 sha256=16a7bcc710465bca277877e695145eb06c5a8b58af90b0a69894632c9809efa9
+> aetheria-rpg@0.0.0 relic:hp-drain-atk:verify
+> node scripts/verify-relic-hp-drain-atk.mjs --verify docs/evidence/qa/release-complete-core/relic-hp-drain-atk.json
+relic-hp-drain-atk verify ok: errors=0 sha256=7560ce01d64893c90909793047a53e1aaa0631597b5b2b3f7bb8464c75e05793
+> aetheria-rpg@0.0.0 relic:verify
+> node scripts/verify-relic-balance.mjs --verify docs/evidence/qa/release-complete-core/relic-balance.json
+relic-balance verify ok: relics=67 effects=61 synergies=20 errors=0 sha256=4e4246c52581e481d4031b07c9f410e1ef072a9ed30e1cc74628879b02a0dbe0

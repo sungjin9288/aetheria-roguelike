@@ -252,6 +252,8 @@ Aetheria Roguelike 플레이 검증용 체크리스트입니다.
 
 #### Android
 
+2026-09-28 일반 계승 보상 보호: production cap:sync/debug와 APK AppPlugin 확인 통과, unsigned iOS build 통과. 양쪽 패키지 web2,269파일 byte동일·native tracked delta0. Browser375/390/430 보상 수령→계승→저장 복원 및 full unit5,204/E2E136 통과. 이번 native 하드웨어 back8행·실기기 루틴은 미실행이며 기존 A 관측을 새 실행으로 간주하지 않는다. 소유자는 iPhone 보유/Android 실기기 미보유. 서명·설치·제출 미실행. 상세 `docs/evidence/qa/ascension-rewards-20260928/receipt.json`.
+
 **Wave 23 / Q6 보충 검증 (2026-09-22):** 별도 QA package `com.aetheria.roguelike.wave23qa`, API36 에뮬레이터에서 실제 기본 sink 기록·OS 붙여넣기 JSON·가로 넘침 없음/버튼44px·활동 기록 삭제4checks 통과. `clipboard.readText()`는 WebView 권한으로 거부됐고 Quick Boot의 System UI/키보드 시작 ANR도 관측했다. wipe 없이 cold boot한 뒤 실제 복사 버튼→QA 입력란 OS 붙여넣기로 허용 필드 JSON을 검증했다. Android 파일 다운로드 획득과 iOS 내보내기는 미실행이며, 브라우저 다운로드/클립보드는 실행 검증했다. 증빙: [Q6 검증 기록](evidence/qa/local-product-events-20260922/verification.json), [Android 관측](evidence/qa/local-product-events-20260922/android.json), [화면](evidence/qa/local-product-events-20260922/android-records.png). 일반 cap:sync/android:debug 복원·AppPlugin·test API 부재 확인, native tracked delta0. 아래 Wave22 back8행·시간 루틴을 이번 Q6 검증으로 재실행했다고 표시하지 않는다.
 
 1. iPhone과 같은 신규 세이브 5분 루틴과 재료 보유 세이브 2분 정비 루틴을 수행한다.
