@@ -13,10 +13,10 @@ Running 4 tests using 1 worker
 
   1) [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:82:1 › 긴 수치와 저장된 종장 진행은 재실행 뒤에도 읽을 수 있다 ─
 
-    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+    Error: expect(received).toBe(expected) // Object.is equality
 
-    Expected: [32m75[39m
-    Received: [31m18[39m
+    Expected: 75
+    Received: 18
 
     Call Log:
     - Timeout 5000ms exceeded while waiting on the predicate

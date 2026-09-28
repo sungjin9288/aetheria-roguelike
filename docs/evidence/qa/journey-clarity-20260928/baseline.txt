@@ -18,12 +18,12 @@ Running 3 tests using 1 worker
   ✘  3 [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:54:1 › 계승 화면과 임무 기록은 현재 단계로 마왕성의 다음 행동을 안내한다 (30.7s)
 
 
-  1) [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:4:1 › 좁은 상태바는 지표 이름과 수치를 겹치거나 잘라 표시하지 않는다 
+  1) [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:4:1 › 좁은 상태바는 지표 이름과 수치를 겹치거나 잘라 표시하지 않는다
 
-    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+    Error: expect(received).toBe(expected) // Object.is equality
 
-    Expected: [32m1[39m
-    Received: [31m2[39m
+    Expected: 1
+    Received: 2
 
       23 |             expect(geometry).toHaveLength(3);
       24 |             for (const metric of geometry) {
@@ -40,18 +40,18 @@ Running 3 tests using 1 worker
 
     Error Context: test-results/journey-clarity-좁은-상태바는-지표-이름과-수치를-겹치거나-잘라-표시하지-않는다-chromium-mobile/error-context.md
 
-  2) [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:35:1 › 첫 출발의 이유를 읽고 탐험하면 시작 안내가 반복되지 않는다 
+  2) [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:35:1 › 첫 출발의 이유를 읽고 탐험하면 시작 안내가 반복되지 않는다
 
-    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoContainText[2m([22m[32mexpected[39m[2m)[22m failed
+    Error: expect(locator).toContainText(expected) failed
 
     Locator: getByTestId('first-journey-context')
-    Expected substring: [32m"마법전쟁"[39m
+    Expected substring: "마법전쟁"
     Timeout: 5000ms
     Error: element(s) not found
 
     Call log:
-    [2m  - Expect "toContainText" with timeout 5000ms[22m
-    [2m  - waiting for getByTestId('first-journey-context')[22m
+      - Expect "toContainText" with timeout 5000ms
+      - waiting for getByTestId('first-journey-context')
 
 
       37 |     await startE2ERun(page);
@@ -69,13 +69,13 @@ Running 3 tests using 1 worker
 
     Error Context: test-results/journey-clarity-첫-출발의-이유를-읽고-탐험하면-시작-안내가-반복되지-않는다-chromium-mobile/error-context.md
 
-  3) [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:54:1 › 계승 화면과 임무 기록은 현재 단계로 마왕성의 다음 행동을 안내한다 
+  3) [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:54:1 › 계승 화면과 임무 기록은 현재 단계로 마왕성의 다음 행동을 안내한다
 
-    [31mTest timeout of 30000ms exceeded.[39m
+    Test timeout of 30000ms exceeded.
 
     Error: locator.scrollIntoViewIfNeeded: Test timeout of 30000ms exceeded.
     Call log:
-    [2m  - waiting for getByTestId('endgame-journey')[22m
+      - waiting for getByTestId('endgame-journey')
 
 
       58 |     await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario());
@@ -94,6 +94,6 @@ Running 3 tests using 1 worker
     Error Context: test-results/journey-clarity-계승-화면과-임무-기록은-현재-단계로-마왕성의-다음-행동을-안내한다-chromium-mobile/error-context.md
 
   3 failed
-    [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:4:1 › 좁은 상태바는 지표 이름과 수치를 겹치거나 잘라 표시하지 않는다 
+    [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:4:1 › 좁은 상태바는 지표 이름과 수치를 겹치거나 잘라 표시하지 않는다
     [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:35:1 › 첫 출발의 이유를 읽고 탐험하면 시작 안내가 반복되지 않는다 ─
-    [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:54:1 › 계승 화면과 임무 기록은 현재 단계로 마왕성의 다음 행동을 안내한다 
+    [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:54:1 › 계승 화면과 임무 기록은 현재 단계로 마왕성의 다음 행동을 안내한다

@@ -17,7 +17,7 @@ test at tests/journey-clarity.test.js:20:1
 ✖ 마왕성 진행은 발견 전에는 숨기고 실제 예언 단계와 영구 기록으로 공개한다 (1.216542ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
   + actual - expected
-  
+
   + {
   +   action: 'mutant',
   +   completed: false,
@@ -28,7 +28,7 @@ test at tests/journey-clarity.test.js:20:1
   +   shards: 0
   + }
   - null
-  
+
       at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/journey-clarity.test.js:23:16)
       at Test.runInAsyncScope (node:async_hooks:227:14)
       at Test.run (node:internal/test_runner/test:1325:25)

@@ -16,9 +16,9 @@
 test at tests/journey-clarity.test.js:31:1
 ✖ 현재 계승과 파편의 다음 행동은 실제 마왕 정산과 일치하고 마지막 획득도 안내한다 (2.343709ms)
   AssertionError [ERR_ASSERTION]: Expected values to be strictly equal:
-  
+
   true !== false
-  
+
       at TestContext.<anonymous> (file:///Users/sungjin/dev/personal/aetheria-roguelike/tests/journey-clarity.test.js:38:20)
       at Test.runInAsyncScope (node:async_hooks:227:14)
       at Test.run (node:internal/test_runner/test:1325:25)
