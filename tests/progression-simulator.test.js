@@ -57,7 +57,13 @@ const EXPECTED_JOB_NAMES = [
 //   의존한다(실측: 성직자를 `tier: 2`로 고치면 9da28843…이 된다 — F4가 하지 못한 변경이고
 //   사유는 `src/data/classes.ts`의 성직자 주석과 `tests/class-tier-depth.test.js`에 있다).
 //   이전 값: '488c4c0166c913b2dceca6fe2946fcbf7ffb0cd56b7e499c57a81f55b014f96c'.
-const EXPECTED_BASELINE_REPORT_SHA256 = 'ac79428c434e341adb970625bf0171addac5dae67388a5e2a91a836a898c772d';
+// Wave 28 D7 (2026-09-28): 맵 레벨 ≤ EARLY_ELITE_LEVEL_CAP에서 일반 접두어 풀이 완전 엘리트(재앙의·고대)를
+//   뽑지 않는다(소유자 결정). 모델 플레이어가 `spawnEnemy`로 조우하므로 **곡선이 움직인다** — 체크포인트 액션
+//   14/52/82/164/1,575/5,246/8,176 → 16/56/87/167/1,579/5,249/8,179. 초반 완전 정예의 2~3배 경험치가 빠진
+//   만큼 초반이 2~5 액션 느려지고 그 차이가 뒤로 이어진다. 이 편집 하나만 되돌리면 이전 값이 그대로 재현된다
+//   (실측 — 같은 wave의 다른 변경은 이 해시를 움직이지 않는다).
+//   이전 값: 'ac79428c434e341adb970625bf0171addac5dae67388a5e2a91a836a898c772d'.
+const EXPECTED_BASELINE_REPORT_SHA256 = '10e22d2984ced2ffe45767beb41dbb3185b651c6ebf13b3ff58cb32870e9fdda';
 // 순서는 EXPECTED_JOB_NAMES와 같다 — 45가 찍힌 다섯 칸이 tier-3 5종(팔라딘·드래곤 나이트·
 // 대마법사·그림자 주군·사냥의 군주)이고, 시간술사는 원래부터 tier 3 / reqLv 25다.
 // 11번째 칸(성직자)이 Wave 14 F4로 5 → 12 — 무당과 같은 값이라 마법사의 첫 분기가 2택이 된다.

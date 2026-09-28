@@ -168,10 +168,13 @@ test('85 어둠의 근원 · 86 에테르의 균열 — 정확한 종만 진행�
     const q85 = QUESTS.find((quest) => quest.id === 85);
     const q86 = QUESTS.find((quest) => quest.id === 86);
     assert.equal(q85.target, '마왕의 사도');
-    assert.equal(q86.target, '에테르 파편체');
+    // Wave 28 (D6): 86은 에테르 관문의 `에테르 파편체`에서 마왕성의 `지옥의 문지기`로 옮겼다.
+    assert.equal(q86.target, '지옥의 문지기');
     assert.equal(progressAfterKill(q85, '마왕의 사도'), 1);
     assert.equal(progressAfterKill(q85, `${EARLY_ELITE_PREFIX_NAME} 마왕의 사도`), 1);
     assert.equal(progressAfterKill(q85, '마왕'), 0, '마왕 처치는 사도 5명에 세지 않는다');
-    assert.equal(progressAfterKill(q86, '에테르 파편체'), 1);
-    assert.equal(progressAfterKill(q86, '에테르 군주'), 0);
+    assert.equal(progressAfterKill(q86, '지옥의 문지기'), 1);
+    assert.equal(progressAfterKill(q86, `${EARLY_ELITE_PREFIX_NAME} 지옥의 문지기`), 1);
+    assert.equal(progressAfterKill(q86, '에테르 파편체'), 0, '옛 목표는 더 이상 세지 않는다');
+    assert.equal(progressAfterKill(q86, '마왕의 사도'), 0);
 });

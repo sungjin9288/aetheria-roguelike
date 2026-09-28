@@ -13,6 +13,7 @@ import {
   History,
   ScrollText,
   Binoculars,
+  Sparkles,
 } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -736,6 +737,19 @@ const ControlPanel = ({
                 : undefined}
             />
           ) : null}
+          {/* 2026-09 Wave 28 (D6): 계승 화면을 한 번 미룬 런은 마왕 처치마다 다시 묻지 않는다 — 대신 여기서 연다.
+              허용 여부는 REOPEN_ASCENSION 리듀서가 판정한다(이 조건은 표시일 뿐이다). */}
+          {gameState === GS.IDLE && player.ascensionOfferDeferred === true && (
+            <button
+              type="button"
+              data-testid="control-reopen-ascension"
+              onClick={() => actions?.reopenAscension?.()}
+              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[1rem] border border-[#d5b180]/30 bg-[#d5b180]/10 px-3 py-2 font-readable text-sm font-semibold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/16"
+            >
+              <Sparkles size={15} className="shrink-0 text-[#f6e7a2]" />
+              {MSG.ASCENSION_REOPEN_LABEL}
+            </button>
+          )}
           {/* slice 22: 가이드 스트립 — getAdventureGuidance가 계산만 되고 추천 버튼
               하이라이트 외엔 렌더 0건이던 갭 해소. 퀘스트 트래커 부재 시(신규
               플레이어 포함) 다음 행동 제목+이유를 같은 자리에 노출. */}

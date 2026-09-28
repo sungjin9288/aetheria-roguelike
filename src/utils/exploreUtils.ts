@@ -201,8 +201,9 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // A-4 (B+ 2026-06): 초반 정예 — Lv ≤ cap에서 낮은 확률로 "정예" 개체 스폰.
     //   완전 엘리트(1.8~2.5x)는 Lv1에 불공정하므로 전용 완화 배율(EARLY_ELITE_MULT)로
     //   첫 위협은 남기되 시작 물약 2개를 모두 잃는 운 나쁜 전투는 제한한다.
+    const earlyBand = typeof level === 'number' && level <= BALANCE.EARLY_ELITE_LEVEL_CAP;
     const earlyElite = !mStats.isBoss && !forceElite
-        && typeof level === 'number' && level <= BALANCE.EARLY_ELITE_LEVEL_CAP
+        && earlyBand
         && rng() < BALANCE.EARLY_ELITE_CHANCE;
     // PR #8: 프레스티지 rank≥3 해금 — 엘리트 출현 확률 +25%. forceElite처럼 엘리트
     //   접두어를 강제한다(고승천 플레이어에게 더 잦은 정예 위협 = 광고된 "심연의 메아리").
@@ -213,10 +214,16 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         const prefix = earlyElite
             ? { name: EARLY_ELITE_PREFIX_NAME, mod: BALANCE.EARLY_ELITE_MULT, expMod: BALANCE.EARLY_ELITE_MULT, dropMod: 2.0, isElite: true }
             : (() => {
-                const elitePrefixes = (forceElite || prestigeElite)
+                // 2026-09 Wave 28 (D7): 위 A-4가 선언한 "완전 엘리트는 초반에 불공정"을 일반 접두어
+                //   경로도 지킨다. 초반 구간에서 이 풀은 재앙의(2.5×)·고대(1.8×)를 뽑고 있었다(각 ~2.4%,
+                //   자연 플레이 사망 41건 중 37건이 정예). 풀만 좁히고 롤 수는 그대로다. 플레이어가
+                //   고른 난이도(eliteOnly 도전 · 프레스티지 정예)는 초반에도 완전 엘리트를 유지한다.
+                const candidates = (forceElite || prestigeElite)
                     ? CONSTANTS.MONSTER_PREFIXES.filter((p) => p.isElite)
-                    : CONSTANTS.MONSTER_PREFIXES;
-                const pool = elitePrefixes.length > 0 ? elitePrefixes : CONSTANTS.MONSTER_PREFIXES;
+                    : earlyBand
+                        ? CONSTANTS.MONSTER_PREFIXES.filter((p) => !p.isElite)
+                        : CONSTANTS.MONSTER_PREFIXES;
+                const pool = candidates.length > 0 ? candidates : CONSTANTS.MONSTER_PREFIXES;
                 return pool[Math.floor(rng() * pool.length)];
             })();
         mStats.name = `${prefix.name} ${baseName}`;

@@ -4,6 +4,7 @@ import { motion as Motion } from 'framer-motion';
 import { formatRewardParts, getActiveQuestEntries } from '../../utils/gameUtils';
 import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
 import { buildChainJournal } from '../../utils/chainJournal';
+import { getQuestObjectiveGateNotice } from '../../utils/questObjectiveGate';
 import SignalBadge from '../SignalBadge';
 import StoryJournal from '../StoryJournal';
 import EndgameJourney from '../EndgameJourney';
@@ -342,6 +343,15 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                     </div>
                                     <div className="mt-1 text-xs text-slate-400/72 leading-snug">{entry.quest.desc}</div>
                                     <div className="mt-2 text-sm text-slate-300/86 font-fira">목표: {getQuestObjectiveText(entry.quest)}</div>
+                                    {/* Wave 28: 목표 지역에 아직 걸어 들어갈 수 없으면 실제 진입 레벨을 말한다. */}
+                                    {!entry.isComplete && (() => {
+                                        const gate = getQuestObjectiveGateNotice(entry.quest, player.level);
+                                        return gate ? (
+                                            <div data-testid="quest-objective-gate" className="mt-1 text-xs font-fira text-[#f6e7c8]">
+                                                {MSG.QUEST_OBJECTIVE_GATE_NOTICE(gate.map, gate.routeGateLevel)}
+                                            </div>
+                                        ) : null;
+                                    })()}
                                     {entry.resonance.summary && (
                                         <div className="mt-2 text-sm font-fira text-[#d9d0f3]/72">{entry.resonance.summary}</div>
                                     )}

@@ -195,11 +195,15 @@ export const resolveEndgameVictory = ({
     if (prestigeRank >= 1) {
         logs.push({ type: 'info', text: MSG.PRIMAL_SHARD_HINT(shardCount) });
     }
-    logs.push({ type: 'system', text: MSG.DEMON_KING_SLAIN_ASCEND });
+    // 2026-09 Wave 28 (D6): 이번 런에서 계승을 미뤘으면(DEFER_ASCENSION) 처치 정산은 같게 하되 계승 화면은
+    //   다시 열지 않는다 — 계승은 조작판의 "계승하기"(REOPEN_ASCENSION)로 연다. 시뮬레이터는 미루지 않으므로
+    //   이 분기를 타지 않는다.
+    const deferred = player.ascensionOfferDeferred === true;
+    logs.push({ type: 'system', text: deferred ? MSG.DEMON_KING_SLAIN_ASCEND_DEFERRED : MSG.DEMON_KING_SLAIN_ASCEND });
     return {
         player: acceptedPlayer,
         enemy: null,
-        gameState: 'ascension',
+        gameState: deferred ? 'idle' : 'ascension',
         logs,
         outcome: 'ascension',
     };

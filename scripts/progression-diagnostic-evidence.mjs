@@ -21,7 +21,11 @@ const HASH_ALGORITHM = 'sha256';
 // writer 안의 하드 게이트라, 스테일하면 `progression:diagnostic:write`가
 // PROGRESSION_SCHEMA_V1_BASELINE_DRIFT로 아예 실행을 거부한다.
 // 이전 값: '98085d39a8a5e899b4e69ead879c174f1123ad0714379a20ab097800b37aa2c7'.
-const PROGRESSION_V1_BASELINE_HASH = '2573fa0f1d41326e3d799de9aa871cb33b11ba42f452772a9a86708aa2ca1a69';
+// Wave 28 D7 (2026-09-28): 맵 레벨 ≤ EARLY_ELITE_LEVEL_CAP에서 일반 접두어 풀이 완전 엘리트를 뽑지 않는다
+// (소유자 결정). 이번에는 **곡선이 움직인다** — 체크포인트 액션 14/52/82/164/1,575/5,246/8,176 →
+// 16/56/87/167/1,579/5,249/8,179. 그 편집 하나만 되돌리면 이전 값 '2573fa0f…'이 그대로 재현된다(실측).
+// 이전 값: '2573fa0f1d41326e3d799de9aa871cb33b11ba42f452772a9a86708aa2ca1a69'.
+const PROGRESSION_V1_BASELINE_HASH = 'b89b9018e452f9f4d09da3c841b63da6963a593d19f9e91de25f6aad03768ac1';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';

@@ -534,6 +534,12 @@ export interface Player {
     weeklyProtocol?: WeeklyProtocol;
     skillChoices?: Record<string, string>;
     challengeModifiers?: string[];
+    /**
+     * 2026-09 Wave 28 (D6): 이번 런에서 계승 제안을 한 번 미뤘다. 이후 마왕 처치는 계승 화면을 다시 열지 않고
+     * 로그만 남기며, 계승은 `AT.REOPEN_ASCENSION`(조작판의 "계승하기")으로 연다. 런 범위 선택 필드라
+     * `pickPermanentPlayerState`가 싣지 않는다 — 승천·사망으로 새 런이 되면 저절로 사라진다(DATA_VERSION 불변).
+     */
+    ascensionOfferDeferred?: boolean;
     tempBuff?: TempBuff;
     /** 'extraTurn' 스킬 효과·time_master/time_dominator 시너지 proc — 다음 적 턴 스킵(1회성 플래그). */
     extraTurnGranted?: boolean;

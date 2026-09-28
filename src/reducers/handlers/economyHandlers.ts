@@ -2,7 +2,6 @@ import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { DB } from '../../data/db';
 import { SEASON_XP } from '../../data/seasonPass';
-import { isSignatureItem } from '../../data/signatureItems';
 import {
     countNewCodexEntries,
     grantGold,
@@ -17,6 +16,7 @@ import { growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
 import { incrementStat } from '../../utils/playerStateUtils';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
+import { getSignatureSaleVerdict } from '../../utils/signatureSale';
 import { GS } from '../gameStates';
 import type { GameState, HandlerMap } from '../gameReducer';
 import { AT, type ActionOf } from '../actionTypes';
@@ -108,7 +108,9 @@ const sellInventoryItem = (state: GameState, action: ActionOf<typeof AT.SELL_INV
     if (state.gameState !== GS.SHOP) return state;
     const item = (state.player.inv || []).find((entry) => entry.id === action.payload?.itemId);
     if (!item) return state;
-    if (isSignatureItem(item)) {
+    // Wave 28 (D4): 서명은 쓸 수 있는 유일한 사본만 보호한다 — 중복 사본과 전직 경로 밖 사본은 일반 판매가로 판다.
+    const signatureVerdict = getSignatureSaleVerdict(item, state.player);
+    if (signatureVerdict && !signatureVerdict.sellable) {
         return rejectTransaction(state, 'warning', MSG.SIGNATURE_SELL_BLOCKED(item.name));
     }
 

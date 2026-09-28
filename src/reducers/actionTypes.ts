@@ -139,6 +139,9 @@ export const AT = Object.freeze({
     REPLACE_RELIC: 'REPLACE_RELIC',
     DECLINE_RELIC: 'DECLINE_RELIC',
     ASCEND: 'ASCEND',
+    // 2026-09 Wave 28 (D6): 계승 제안 미루기 / 미룬 계승 다시 열기 — 둘 다 게이트는 리듀서가 소유한다.
+    DEFER_ASCENSION: 'DEFER_ASCENSION',
+    REOPEN_ASCENSION: 'REOPEN_ASCENSION',
     UNLOCK_TITLES: 'UNLOCK_TITLES',
     SET_DAILY_PROTOCOL: 'SET_DAILY_PROTOCOL',
     UPDATE_DAILY_PROTOCOL: 'UPDATE_DAILY_PROTOCOL',
@@ -365,6 +368,8 @@ export interface ActionPayloadMap {
     [AT.REPLACE_RELIC]: { relicId: string; replaceRelicId: string };
     [AT.DECLINE_RELIC]: undefined;
     [AT.ASCEND]: AscendPayload;
+    [AT.DEFER_ASCENSION]: undefined;
+    [AT.REOPEN_ASCENSION]: undefined;
     [AT.UNLOCK_TITLES]: string[];
     [AT.SET_DAILY_PROTOCOL]: DailyProtocol | null;
     [AT.UPDATE_DAILY_PROTOCOL]: UpdateDailyProtocolPayload;

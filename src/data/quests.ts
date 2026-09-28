@@ -176,8 +176,13 @@ const RAW_QUESTS: Quest[] = [
     { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙하 심연에서 빙결의 마녀를 처치해 저주의 정체를 밝힌다', target: '빙결의 마녀', location: '빙하 심연', goal: 1, reward: { exp: 8000, gold: 8000, item: '냉기의 결정' }, minLv: 35, prerequisiteQuestId: 84 },
     { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도에서 증기 골렘 10기를 쓰러뜨리고 진실을 밝힌다', target: '증기 골렘', location: '기계 폐도', goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 28, prerequisiteQuestId: 82 },
     { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕성에서 마왕의 사도 5명을 처치해 마왕의 계획을 알아낸다', target: '마왕의 사도', location: '마왕성', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 48, prerequisiteQuestId: 83 },
-    { id: 86, title: '[스토리] 에테르의 균열', desc: '에테르 관문에서 에테르 파편체 10개를 제거해 균열을 조사한다', target: '에테르 파편체', location: '에테르 관문', goal: 10, reward: { exp: 20000, gold: 25000, item: '마나 결정' }, minLv: 68, prerequisiteQuestId: 85 },
-    { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕성에서 마왕을 쓰러뜨리고 세계를 구한다', target: '마왕', location: '마왕성', goal: 1, reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 50, prerequisiteQuestId: 86 },
+    // 2026-09 Wave 28 (D6): 86은 에테르 관문(경로 게이트 68 = 170.23h)이었다 — 본편이 승천 지점(마왕성 48)을
+    //   걸쳐 87을 끝내기 전에 마왕 처치마다 계승 제안이 떴다. 체인에 적용한 Wave 15 G1과 같은 기준으로
+    //   마왕성(48)의 `지옥의 문지기`(다른 임무 목표와 겹치지 않는 비보스)로 옮겼다. 에테르 관문은 후일담으로 남는다.
+    { id: 86, title: '[스토리] 에테르의 균열', desc: '마왕성 깊은 곳에서 균열을 지키는 지옥의 문지기 10기를 쓰러뜨려 균열을 조사한다', target: '지옥의 문지기', location: '마왕성', goal: 10, reward: { exp: 20000, gold: 25000, item: '마나 결정' }, minLv: 48, prerequisiteQuestId: 85 },
+    // Wave 28 (D6): minLv 50 → 48 — 마왕성 경로 게이트(= 첫 마왕 처치·계승 제안 지점)와 같은 레벨. 50이던 동안에는
+    //   Lv48~49에 마왕을 잡아도 종장 크레딧 없이 계승 제안만 떴다.
+    { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕성에서 마왕을 쓰러뜨리고 세계를 구한다', target: '마왕', location: '마왕성', goal: 1, reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 48, prerequisiteQuestId: 86 },
 
     // ── 심연 퀘스트 라인 ─────────────────────────────────────────────────────
     { id: 88, title: '[심연] 심연으로의 첫 발걸음', desc: '혼돈의 심연에서 혼돈의 화신을 처치한다', target: '혼돈의 화신', location: '혼돈의 심연', goal: 1, reward: { exp: 30000, gold: 30000, item: '마나 결정' }, minLv: 55 },
