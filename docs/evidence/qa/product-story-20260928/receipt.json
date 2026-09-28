@@ -1,0 +1,98 @@
+{
+  "date": "2026-09-28",
+  "base": "e74455230d3ea3d0eef92e31729d89cfda3ed06c",
+  "scope": "Story quest completion and readable choice outcomes",
+  "fixtureBoundary": "First quest uses actual fresh UI actions; reload uses claimed80 fixture in isolated device-QA storage. Not physical-device or natural full-campaign acceptance.",
+  "checks": {
+    "shortChoiceResultBaseline": "failed viewport ratio0",
+    "shortChoiceResultFixed": "passed ratio1",
+    "firstQuestClaimAndJournal": "passed; two taps yield one canonical story",
+    "claimed80Reload": "passed",
+    "mobileWidths": [
+      375,
+      390,
+      430
+    ],
+    "focusedUnit": {
+      "passed": 43,
+      "failed": 0
+    },
+    "mutations": [
+      {
+        "name": "missing-canonical-story",
+        "exitCode": 1
+      },
+      {
+        "name": "unclaimed-story-leak",
+        "exitCode": 1
+      }
+    ],
+    "restoredNewUnit": {
+      "passed": 2,
+      "failed": 0
+    },
+    "full": {
+      "command": "VITE_RELEASE_ID=wave26-qa AETHERIA_RUN_PERF=1 npm run verify:full",
+      "exitCode": 0,
+      "unitPassed": 5194,
+      "unitSkipped": 0,
+      "e2ePassed": 128,
+      "smoke": [
+        "desktop",
+        "mobile"
+      ],
+      "perf": [
+        "desktop",
+        "mobile"
+      ],
+      "trackedVerifyPassed": 15
+    }
+  },
+  "initialHarnessFailures": [
+    "Exact text locator ignored the nested event badge; corrected to actual log row before reproducing viewport0.",
+    "System-settings fixture seeds player and side tab but does not automatically open the archive; waited for actual seed state instead."
+  ],
+  "remaining": [
+    "Overall product design and narrative acceptance",
+    "375px status bar life label wraps into two lines in the reload fixture",
+    "Endgame progression discoverability and natural chapter86/87 route",
+    "Physical iPhone QA; owner has no physical Android"
+  ],
+  "artifacts": [
+    {
+      "file": "before-choice-result.png",
+      "sha256": "3d4aa0b4c04ae6626f2bdbe4f8dc86405a2657b5df04690d6b643455a25446af"
+    },
+    {
+      "file": "story-journal-390.png",
+      "sha256": "1b48b90a5f12a3d66a8bff832eed8505c1c95b77be9745acb4101f0a1d7c3abf"
+    },
+    {
+      "file": "story-reload-375.png",
+      "sha256": "07fb659622d4f41d5c94793830a3ac4cdec0270dafe8bd82a6c2f414916e733f"
+    },
+    {
+      "file": "story-reload-430.png",
+      "sha256": "b222b5746474dd544a9faa0027b3c4373ea008c302d02a5ec288173ca46e029b"
+    }
+  ],
+  "toolWarnings": [
+    "Four smoke/perf browser.close timeouts after successful assertions",
+    "Initial Android Gradle metadata.bin missing; repository script clean-cache retry succeeded"
+  ],
+  "native": {
+    "capSyncExitCode": 0,
+    "doctorExitCode": 0,
+    "androidDebugExitCode": 0,
+    "iosUnsignedExitCode": 0,
+    "apkSha256": "8f61124014e2d210d624de3f28d261d75744eb77961f4444f23fd2a95e42580c",
+    "apkBytes": 227759206,
+    "AppPlugin": true,
+    "iosApp": "/tmp/aetheria-product-story-ios-20260928/Build/Products/Release-iphoneos/App.app",
+    "productionWebFilesComparedPerPlatform": 2267,
+    "byteMismatches": 0,
+    "trackedNativeChanges": 0,
+    "physicalDeviceRun": false,
+    "releaseSigned": false
+  }
+}
