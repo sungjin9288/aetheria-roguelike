@@ -1860,3 +1860,19 @@ C PR #54는 head97337659의 static/E2E/perf/rules/build 통과 후 merge `1307fd
 production `cap:sync`·Android debug·iOS unsigned build exit0. Android 최초 Gradle 캐시 metadata.bin 누락은 기존 스크립트의 새 임시 캐시 재시도로 해소했으며 소스/검사 완화 없음. APK227759206bytes/SHA256 `8f61124014e2d210d624de3f28d261d75744eb77961f4444f23fd2a95e42580c`, AppPlugin 포함. iOS `/tmp/aetheria-product-story-ios-20260928/Build/Products/Release-iphoneos/App.app`. production web2,267파일이 양쪽 패키지와 byte동일, native tracked delta0. mobile:doctor exit0이나 양 플랫폼 release 서명 조건 미충족은 유지. 실기기 실행·서명·설치·제출은 이번 묶음에서 미실행.
 
 후속 제품 조사: 375px 상태바에서 생명 label 줄바꿈을 직접 관측했다. 종장 파편/계승 조건은 마왕 토벌 뒤 연속 전투 경로에 적용되며, 혼돈의 심연 구역 보스 경로는 별도로 존재한다(`maps`→`exploreActions`→`eventActions`→`endgameSettlement`). 소스 연결 확인이며 자연 플레이 증거는 아니다. 후속 안내는 경로를 특정하고 전투 gate를 임의 강화하지 않는다. PR/CI/merge는 원격 기록으로 후속 확인한다.
+
+
+### 26.9 제품 완성도 — 여정 안내와 모바일 가독성 (2026-09-28)
+
+PR #56은 CI 통과 후 merge `b685e00b`로 통합했다. 다음 `codex/product-journey-clarity`는 375px 상태바의 생명 label 줄바꿈 실측을 입력으로 이름/수치를 위아래로 분리하고, 긴 수치는 분수 경계에서만 줄바꿈한다. 첫 임무80의 미탐험 마을 화면에는 마법전쟁 이후 숲을 조사하는 이유를 지역 그림과 함께 표시한다. 첫 탐험/보상 수령/계승 뒤에는 반복하지 않는다.
+
+임무·계승 화면의 마왕성 안내는 현재 계승 단계와 파편 수, 확률과 다음 행동을 실제 정산과 연결한다. 마지막 파편을 얻는 토벌에서 즉시 연속 전투가 시작될 수 있음을 명시한다. 예언의 마왕 세 번 표현을 계승3으로 정정하고, 도감에는 혼돈의 심연 구역 보스 경로도 구분했다. 새 저장 필드·경제/전투 수치·바이트 핀 변경 없음. 진엔딩 완료는 진입 경로와 무관하게 종장 기록으로 표시한다.
+
+집중 unit44/44, 계약 결함 주입4종(계승 문턱 하향/미발견 공개/완주 오표시/시작 안내 반복) 각각 exit1 후 복원 green. 기존 화면 baseline에서 신규 E2E3 red, 최종 관련 E2E16/16 통과. 375/390/430×기본/고가독성 모드의 지표 겹침/넘침 검사,375×667 첫 안내·출발 버튼,390 계승·임무 안내 캡처 직접 검수. 긴 수치 fixture는 격리 device-QA 저장을 부트 전에 주입해 복원했으며 자연 성장이나 신규 세이브 전체 지속성 증거가 아니다. 최초 fixture 주입은 reload 이전 저장 flush로 level18이 유지되어 실패했으며, 부트 전 주입으로 검사 준비를 교정했다. 마왕성에서 마을 전용 버튼을 기다린 harness 실패도 실제 캐릭터 콘솔 경로로 교정했다. 게임 client 실제 실행 exit0/ready·idle 확인, 캡처 직접 검수. 독립 소스 검토에서 확정 결함0; 실제 자연 종장 플레이는 미실행이다.
+
+**증빙 예고 델타:** progression sources351→353, 기존7개(StatusBar, TerminalView, AscensionScreen, QuestTab, messages, eventChains, monsters) sha256 변경과 새2개(EndgameJourney, endgameJourney) 추가. reportHash/v1Baseline 포함 nonSources 및 다른 증빙 값은 불변이어야 한다. 고정 순서 writer 종료 후 readonly15→full gate→native를 직렬 실행한다. 현재 전체 gate·새 native·원격 PR/CI/merge는 미실행이다.
+
+
+최종 예고 델타 일치: sources351→353, 기존7/새2/삭제0이며 reportHash `f21dcf819808a624d2d7f9d30b28a7d4b1403b8b3806383089453ef2ff731620` 및 v1Baseline 포함 nonSources 전체 불변. tracked verify15종 모두 exit0. `VITE_RELEASE_ID=journey-clarity-qa AETHERIA_RUN_PERF=1 npm run verify:full` exit0: unit5,198/356파일(skip0), E2E132/46spec(66+66), type/lint/build guard·desktop/mobile smoke/perf 통과. FCP344/328ms. Desktop smoke의 browser.close timeout1건은 assertion 통과와 분리한다.
+
+Production cap:sync·Android debug·iOS unsigned·mobile:doctor exit0. Android 기본 캐시 metadata.bin 누락 후 기존 스크립트의 새 캐시 재시도 성공. APK227759318bytes/SHA256 `0ab0a1a8e63fd9737d79e3b08f8755186cef454e3ad7ae43aaac21d60b6ab856`, AppPlugin 포함. iOS `/tmp/aetheria-journey-clarity-ios-20260928/Build/Products/Release-iphoneos/App.app`. 양쪽 패키지 web2,268파일 byte동일·native tracked delta0. Android release signing·Apple Distribution identity 부재 지속. 실기기·서명·제출 미실행, Q4 미실행/Q7 URL 미제공·Q6/Q8 유지. 전체 제품 수용·자연 성장 동선·MOBILE_RELEASE §5는 미완료다. 다음 제품 후보는 이야기86/87의 자연 진행 연결이며 경제/gate 변경 전에 실제 동선과 근거를 확인한다. PR/CI/merge는 원격 기록에서 확인한다. 상세 캡처·초기 실패·mutation·패키지 근거는 `docs/evidence/qa/journey-clarity-20260928/`에 보존한다.

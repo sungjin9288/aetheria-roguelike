@@ -7,6 +7,8 @@ import type { LogEntry } from '../types/session.js';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
 import { getLocationVisual } from '../utils/locationVisuals';
+import { FIRST_STORY_QUEST_ID } from '../data/quests';
+import { MSG } from '../data/messages';
 
 const LOG_STYLES: Record<string, { text: string; bg: string; icon: LucideIcon | null }> = {
     combat: {
@@ -185,6 +187,10 @@ const TerminalView = ({
     const showNarrativePulse = Boolean(latestStory) && gameState !== GS.COMBAT && (logExpanded || logs.length > compactMobileLogCount);
     const locationVisual = player?.loc ? getLocationVisual(player.loc) : null;
     const showLocationVisual = Boolean(gameState === GS.IDLE && locationVisual);
+    const showFirstJourney = gameState === GS.IDLE && player?.loc === '시작의 마을'
+        && !(player.meta?.prestigeRank || 0)
+        && !player.stats?.claimedQuestIds?.includes(FIRST_STORY_QUEST_ID)
+        && player.quests?.some((quest) => quest.id === FIRST_STORY_QUEST_ID && quest.progress === 0);
 
     useEffect(() => {
         const viewport = logViewportRef.current;
@@ -285,6 +291,15 @@ const TerminalView = ({
                         })}
                     </AnimatePresence>
 
+                    {showFirstJourney && (
+                        <section data-testid="first-journey-context" className="border-t border-[#d5b180]/20 px-1 pb-2 pt-4 font-readable">
+                            <div className="flex items-center gap-3">
+                                {locationVisual && <div data-testid="terminal-location-visual" data-location-visual={locationVisual.key} aria-hidden="true" className="shrink-0"><img src={locationVisual.src} alt="" className="h-16 w-16 object-contain [image-rendering:pixelated]" /></div>}
+                                <h2 className="text-sm font-semibold text-[#d5b180]">{MSG.FIRST_JOURNEY_TITLE}</h2>
+                            </div>
+                            <p className="mt-2 text-sm leading-6 text-slate-200">{MSG.FIRST_JOURNEY_REASON}</p>
+                        </section>
+                    )}
                     <AnimatePresence>
                         {logs.length > 0 && logs[logs.length - 1].type === 'loading' && (
                             <Motion.div
@@ -302,7 +317,7 @@ const TerminalView = ({
                     </AnimatePresence>
                 </div>
 
-                {showLocationVisual && locationVisual && (
+                {showLocationVisual && !showFirstJourney && locationVisual && (
                     <Motion.div
                         data-testid="terminal-location-visual"
                         data-location-visual={locationVisual.key}

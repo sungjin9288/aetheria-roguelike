@@ -52,9 +52,9 @@ const StatusMetric = ({ label, value, max, variant }: StatusMetricProps) => {
       data-testid={`status-metric-${variant}`}
       className="aether-status-metric relative overflow-hidden rounded-[0.8rem] px-2 py-1.5"
     >
-      <div className="flex items-baseline justify-between gap-1 font-readable text-[10px] leading-none">
-        <span data-testid="status-metric-label" className={theme.label}>{label}</span>
-        <span data-testid="status-metric-value" className="text-[11px] font-semibold text-white/82">{safeValue}/{safeMax}</span>
+      <div className="flex flex-col items-start gap-1 font-readable text-[11px] leading-tight">
+        <span data-testid="status-metric-label" className={`whitespace-nowrap ${theme.label}`}>{label}</span>
+        <span data-testid="status-metric-value" aria-label={`${safeValue}/${safeMax}`} className="text-[11px] font-semibold tabular-nums text-white/82"><span className="whitespace-nowrap">{safeValue}</span><wbr /><span className="whitespace-nowrap">/{safeMax}</span></span>
       </div>
       <div className={`mt-1 h-[3px] overflow-hidden rounded-full border bg-black/28 ${theme.border}`}>
         {/* slice 31: 바 fill 부드러운 tween — 기존엔 즉시 snap이라 데미지/EXP

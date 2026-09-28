@@ -11,6 +11,15 @@
 
 첫 묶음의 시각 방향은 기존 어두운 판타지·청록 행동색·금빛 이야기 강조를 유지하고, 임무 기록에 장별 본문과 다음 조건을 읽을 수 있는 여백을 제공하는 것이다. 최신 장은 펼쳐 보이고 이전 장만 접는다. 새 modal이나 추가 entrance motion 없이 기존 임무 화면에서 읽고 원래 행동으로 돌아간다. 완료 기준은 canonical 완료문, 미수령 장 비공개, 보상 중복 없음, 저장된 claimed IDs로 재구성, 실제 모바일 화면의 결과 가시성이다. 전체 게임 완성 판정은 이후 영역까지 검수한 뒤에 한다.
 
+### 여정 안내 화면 보완 — 2026-09-28
+
+실행 결과: 집중 unit44/E2E16·mutation4, tracked15·full unit5,198/E2E132·native 통과. 구현·실행 증거는 원장 §26.9와 `docs/evidence/qa/journey-clarity-20260928/receipt.json`. 자연 성장 전체 수용은 미완료.
+
+- 시각 방향: 어두운 판타지 화면과 기존 금빛 이야기/청록 행동색을 유지하며, 테두리 카드 추가 없이 문장과 지표의 읽기 순서를 정돈한다.
+- 내용 배치: 상태바는 label→현재/최대 수치, 첫 마을은 고요한 숲을 조사하는 이유→기존 출발 버튼, 임무/계승 화면은 발견한 마왕성 봉인의 현재 진행→다음 행동 순서다. 진엔딩 완료 기록은 파편 부족과 구분한다.
+- 조작/움직임: 기존 화면 이동과 meter 변화만 유지하고 새 강제 애니메이션/모달을 만들지 않는다. 첫 출발 안내는 기존 기록 스크롤 안에서 즉시 읽히며 이미 탐험한 캐릭터에는 반복하지 않는다. 계승 확정 footer는 계속 고정한다.
+- 수용: 375/390/430px·일반/선명하게 모드에서 label 분절·수치 겹침/클리핑·가로 overflow 없음, 첫 출발 CTA 유지, 미발견 종장 숨김, 현재 계승 단계/파편과 실제 정산 조건 일치, 계승/재실행 후 진행 보존.
+
 작성: 2026-09-05 · 실행 상태: **blocked: 기기 테스트 시간 확인 대기 — local 구현·full/native 완료, 실제 device/lifecycle 미완료** · 기준 HEAD: `38a3584`
 
 최신 완료: perf full55522exit0/unit4508/E2E118/양쪽smoke, readonly69154PASS, 독립 source/test/docs C0/I0. Cap8193/Android19521/unsigned iOS9641exit0/doctorPASS, `output/perf-fix-native-20260910.json`884 선택경로 byte동일/native tracked0. 실제 iPhone 확인은 남았다. 아래 perf 진행중 문단은 종료 전 이력이며 최신 산출물/한계는 `docs/evidence/qa/game-completion-final-audit-20260910.md` 최상단을 따른다.

@@ -1,0 +1,41 @@
+
+Running 4 tests using 1 worker
+
+(node:23320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+(node:23320) Warning: The 'NO_COLOR' env is ignored due to the 'FORCE_COLOR' env being set.
+(Use `node --trace-warnings ...` to show where the warning was created)
+  ✓  1 [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:19:1 › 좁은 상태바는 지표 이름과 수치를 겹치거나 잘라 표시하지 않는다 (9.7s)
+  ✓  2 [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:40:1 › 첫 출발의 이유를 읽고 탐험하면 시작 안내가 반복되지 않는다 (5.3s)
+  ✓  3 [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:59:1 › 계승 화면과 임무 기록은 현재 단계로 마왕성의 다음 행동을 안내한다 (9.4s)
+  ✘  4 [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:82:1 › 긴 수치와 저장된 종장 진행은 재실행 뒤에도 읽을 수 있다 (6.7s)
+
+
+  1) [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:82:1 › 긴 수치와 저장된 종장 진행은 재실행 뒤에도 읽을 수 있다 ─
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m75[39m
+    Received: [31m18[39m
+
+    Call Log:
+    - Timeout 5000ms exceeded while waiting on the predicate
+
+      91 |     }, key);
+      92 |     await page.reload();
+    > 93 |     await expect.poll(() => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player?.level)).toBe(75);
+         |     ^
+      94 |     for (const mode of ['standard', 'high']) {
+      95 |         if (mode === 'high') {
+      96 |             await page.getByTestId('status-character-chip').click();
+        at /Users/sungjin/dev/personal/aetheria-roguelike/tests/e2e/journey-clarity.spec.ts:93:5
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/journey-clarity-긴-수치와-저장된-종장-진행은-재실행-뒤에도-읽을-수-있다-chromium-mobile/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/journey-clarity-긴-수치와-저장된-종장-진행은-재실행-뒤에도-읽을-수-있다-chromium-mobile/error-context.md
+
+  1 failed
+    [chromium-mobile] › tests/e2e/journey-clarity.spec.ts:82:1 › 긴 수치와 저장된 종장 진행은 재실행 뒤에도 읽을 수 있다 ──
+  3 passed (32.2s)

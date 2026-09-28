@@ -1,0 +1,20 @@
+{
+  "sourcesBefore": 351,
+  "sourcesAfter": 353,
+  "changed": [
+    "src/components/AscensionScreen.tsx",
+    "src/components/StatusBar.tsx",
+    "src/components/TerminalView.tsx",
+    "src/components/tabs/QuestTab.tsx",
+    "src/data/eventChains.ts",
+    "src/data/messages.ts",
+    "src/data/monsters.ts"
+  ],
+  "added": [
+    "src/components/EndgameJourney.tsx",
+    "src/utils/endgameJourney.ts"
+  ],
+  "removed": [],
+  "nonSourcesEqual": true,
+  "reportHash": "f21dcf819808a624d2d7f9d30b28a7d4b1403b8b3806383089453ef2ff731620"
+}
