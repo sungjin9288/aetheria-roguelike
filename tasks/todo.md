@@ -1,6 +1,37 @@
 # Aetheria RPG - Task Board
 
-**Last Updated:** 2026-09-23
+**Last Updated:** 2026-09-28
+
+**우선순위 정정 — 제품 완성도 우선 (2026-09-28 소유자 지시):** 소유자는 iPhone을 보유하며 Android 실기기는 없다. 이전 연결 가능0 기록은 당시 연결 상태일 뿐 보유 여부가 아니다. 아래 E 사전 확인은 이력으로 보존하고 서명·제출을 현재 선행 작업으로 취급하지 않는다. 디자인·기능·스토리 보완을 먼저 수행한다. 새 지시는 기존 RC의 출시 우선 순서보다 우선하며 전투 authority·바이트 핀·저장 호환성·Q4/Q7 경계는 유지한다.
+
+| 제품 작업 | 완료 기준 | 현재 상태 |
+|---|---|---|
+| 이야기·목표 전달 | 장별 수행 결과와 다음 조건을 읽고, 수령한 이야기를 다시 찾을 수 있음 | 8장 완료 서사/임무 기록 구현·로컬 검증 완료. 첫 선택 결과 browser RED→GREEN, 기록 재실행·375/390/430px 확인 |
+| 디자인·조작 | 시작·마을·전투·이벤트·장비·기록의 읽기 순서와 375/390/430px 조작 확인 | 첫390 화면 직접 확인. 초반 동기 전달·정보 위계 후속 검수 필요; 기존 아트 완료를 전체 디자인 완료로 확대하지 않음 |
+| 핵심 기능·성장 | 탐험→선택→전투→보상→정비→새 지역의 실제 연결 및 손실/중복 없음 | 보상 수령/이야기 표시 실제 동선 통과. full unit5,194·E2E128·양쪽 smoke/perf 통과; 전체 자연 성장은 별도 |
+| 종장·반복 플레이 | 진엔딩 조건/진행과 다음 선택을 플레이어가 이해함 | 파편·계승 안내의 발견성 보완 후보. story86/87 레벨 순서는 조사 대상이며 즉시 경제/게이트 변경하지 않음 |
+| 제품 통합 수용 | 최신 화면·회귀·대표 자연 플레이가 같은 소스에 연결됨 | 미완료. 그 뒤 iPhone 검증; Android 에뮬레이터와 실기기 수용은 분리 |
+
+**현재 checkpoint — 제품 이야기 전달 로컬 검증 완료:** tracked15·full unit5,194/355파일(skip0)·E2E128/45spec·desktop/mobile smoke/perf 통과. 신규 계약2종 결함 주입 red→복원, 실제 첫 임무 및 별도 저장 fixture 재실행 통과. cap:sync·Android debug·iOS unsigned build 통과, production web2,267파일이 양쪽 패키지와 byte동일. APK SHA256 `8f61124014e2d210d624de3f28d261d75744eb77961f4444f23fd2a95e42580c`; iOS `/tmp/aetheria-product-story-ios-20260928/Build/Products/Release-iphoneos/App.app`. Android 첫 실행은 Gradle metadata.bin 누락, 기존 스크립트의 새 캐시 재시도에서 성공. smoke/perf4회 browser.close timeout 경고는 검사 통과와 구분. 원격 PR/CI/merge는 아직 대기. 증빙: `docs/evidence/qa/product-story-20260928/receipt.json`, 원장 §26.8.
+
+다음 제품 묶음은 좁은 상태바의 label/수치 가독성과 종장 진행 안내다. 계승3/파편3은 마왕 토벌 뒤 연속 전투 경로의 조건이며 혼돈의 심연 구역 보스 경로와 구분한다. 수치·전투 판정 변경 없이 실제 다음 행동을 안내한다.
+
+이번 첫 묶음은 이야기 결과 전달이다. 새 세이브 필드/보상/전투/맵 접근 수치를 바꾸지 않는다. 서명·스토어 자료 요청으로 제품 완성도 작업을 대체하지 않는다.
+
+**이전 checkpoint — Wave 26 / E 릴리스 사전 확인 (제품 우선 지시 이전 이력):** `codex/wave26-release-readiness`를 main `e7445523`에서 시작했다. D PR #55 merge와 해당 main CI run35796922389·Deploy run35796922386 success를 원격에서 확인했다. 아래 Wave 25는 직전 완료 checkpoint이며 E 전체 완료를 뜻하지 않는다.
+
+| 항목 | 결과 | 근거·남은 조건 |
+|---|---|---|
+| A 기기 검증 | 기존 emulator/simulator 검증 유지; 실기기 미실행 | 9월28일 devicectl에서 비시뮬레이션 iPhone/iPad 기록은 disconnected, 연결 가능한 실기기0. adb 물리 기기0. 연결·사용 시간 필요 |
+| B Q6 / Q8 | 기존 결정·구현 유지 | 로컬 링버퍼+내보내기 / 계정당1회. 다시 결정하지 않음 |
+| B Q7 | 미실행 | 소유자 PROD_URL 미제공. 과거 preview 주소로 대체하지 않음 |
+| B Q4 | 미실행 | Hosting 비활성화 명시 지시 없음 |
+| mobile:doctor | 실행 exit0; 서명 조건 미충족 | Android release signing no·Apple Distribution identity no. export profile ok는 export options 파일 확인이며 provisioning profile 보유 증거가 아님 |
+| 기존 native 산출물 | 보존 확인; 새 빌드 미실행 | debug APK 227732662bytes/SHA256 d00268705dc997fa1e1dd0ef268f757f26552e8d57902ec1af90cddf62a579de. `/tmp/aetheria-wave24-device-build/Build/Products/Release-iphoneos/App.app` 존재. signed 산출물로 간주하지 않음 |
+| 스토어 자료 | 일부 로컬 자산 확인; 제출 준비 미확인 | iOS AppIcon PNG1024×1024 존재. 저장소 검색에서 native 스토어 설명·개인정보/지원 URL 확정본을 확인하지 못함. 기존 QA/Toss 캡처를 native 제출용 검수로 대체하지 않음. 콘솔 입력·기존 제출 버전 미조회 |
+| MOBILE_RELEASE §5 | No-Go / E 진행 중 | 양 플랫폼 실기기 시간 루틴, signed archive/AAB, 업로드 승인과 실제 업로드, 스토어 입력 완료 필요 |
+
+이번 갱신은 read-only 상태 확인과 원장 기록이다. 제품 코드·서명 설정·native 산출물 변경 없음. 기존 full gate를 새 실행으로 보고하지 않는다. 서명 자산은 로컬 보안 설정으로만 준비하고 비밀값을 기록하지 않는다. 입력이 준비되면 실기기 루틴→필요한 P0/P1 수정·검증→서명 산출물 확인→업로드 승인/실행 순서로 이어간다. E 완료 전이므로 이 로컬 checkpoint만으로 단계 완료 PR을 만들지 않았다. 사용자 소유 `.claude/skills/`는 보존한다.
 
 **현재 checkpoint — Wave 25 / D 아트 판단 정합성:** C PR #54 merge `1307fd25` 통합 후 원장·계획·실제 manifest와 V27 receipt를 대조했다. 현재254=authored234/retained20, 교정69+유지20의 기존 scoped 검수 완료를 확인했다. 인수인계 §7-D의165/89 대기 표기를 최신 근거로 정정하고 원본 판단 이력은 보존한다. art:monsters:verify 통과; 이번 작업은 문서와 read-only 집계 기록뿐이다. 자연 플레이·실기기 수용을 추가로 주장하지 않는다. npm run verify exit0(unit5,192/skip0·type/lint/build guard). 원격 통합 상태는 [PR #55](https://github.com/sungjin9288/aetheria-roguelike/pull/55)가 정본이다. E는9월23일 read-only 재확인에서도 물리 iPhone/Android 연결0·Android release signing 및 Apple Distribution identity 부재로 No-Go다. 시간 루틴·서명·스토어 업로드/입력이 남으며 Q4 미실행/Q7 URL 미제공.
 

@@ -1,3 +1,7 @@
+# Current priority — 2026-09-28
+
+User correction: iPhone is owned; Android physical hardware is unavailable. Product design, functionality and story completion precede release/signing work. The current task board overrides the historical status below; no new Goal is created. First product slice: canonical completion narrative for eight story quests, claimed-story journal, and visible latest choice results. Browser reproduced latest result clipped outside log viewport (ratio0); fix passed that same check. Overall product acceptance remains open. Local validation passed: tracked15, unit5194/skip0, E2E128, desktop/mobile smoke and perf, production cap sync, debug Android and unsigned iOS. Both native packages match all2267 production web files. Remote integration pending. Next: narrow HUD legibility and path-specific endgame progress; do not portray the demon-king shard route as the only ending route.
+
 # Current status — 2026-09-10
 
 Goal blocked pending coordinated device-test window after three consecutive turns with the same unresolved condition. Local implementation/full/native verified; exact installed freshqa1.1.0/build2 read-only query68889exit0. Current package identity, foreground/PID and real visibility/save-resume remain unverified. Resume on user availability response, preserve save, no implicit install/sign authority. No duplicate test/build loop.

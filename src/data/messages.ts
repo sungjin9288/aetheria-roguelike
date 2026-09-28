@@ -273,6 +273,9 @@ export const MSG = {
     // W2 (Wave 5): Quest.title은 타입상 optional이고 현상수배/카탈로그 양쪽을 받는
     //   호출부가 있어 QUEST_ACCEPTED / QUEST_ABANDONED와 같은 시그니처로 맞춘다.
     QUEST_DONE: (title: string | undefined) => `퀘스트 완료: ${title}`,
+    STORY_JOURNAL_TITLE: '지금까지의 이야기',
+    STORY_JOURNAL_PREVIOUS: '앞선 이야기 다시 읽기',
+    STORY_JOURNAL_NEXT: (title: string | undefined, level: number | undefined) => `다음 이야기: ${title} · 수락 조건 레벨 ${level}. 마을 게시판에서 확인하세요.`,
     ACH_REWARD_ITEM: (name: string) => `업적 보상 아이템: ${name}`,
     ACH_DONE: (title: string | undefined) => `업적 달성: ${title}`,
     PREMIUM_INSUFFICIENT: (name: string) => `${name}이(가) 부족합니다.`,

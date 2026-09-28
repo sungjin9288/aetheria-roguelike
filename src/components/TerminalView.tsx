@@ -190,12 +190,11 @@ const TerminalView = ({
         const viewport = logViewportRef.current;
         if (!viewport) return;
 
-        const shouldFollowTail = isCombat || logExpanded || logs.length > compactMobileLogCount;
         viewport.scrollTo({
-            top: shouldFollowTail ? viewport.scrollHeight : 0,
+            top: viewport.scrollHeight,
             behavior: 'auto',
         });
-    }, [compactMobileLogCount, isCombat, logExpanded, logs.length]);
+    }, [isCombat, logExpanded, logs]);
 
     const showToolbar = showExpandToggle;
 

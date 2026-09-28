@@ -19,6 +19,7 @@ import type { GameMode } from '../reducers/gameStates';
 import { calculateFullStats } from '../utils/statsCalculator';
 import { getRunBuildProfile } from '../utils/runProfileUtils';
 import { acknowledgeMilestoneStoryBeat, type MilestoneStoryBeatId } from '../utils/milestoneStory';
+import { getQuestCompletionStory } from '../utils/storyJournal';
 
 import { useFirebaseSync } from './useFirebaseSync';
 import { useProductTelemetry } from './useProductTelemetry';
@@ -168,8 +169,10 @@ export const useGameEngine = () => {
     useEffect(() => {
         if (!questClaimReceipt || narratedQuestClaimRef.current === questClaimReceipt.key) return;
         narratedQuestClaimRef.current = questClaimReceipt.key;
-        void addStoryLog('questComplete', { questTitle: questClaimReceipt.title });
-    }, [addStoryLog, questClaimReceipt]);
+        const story = getQuestCompletionStory(questClaimReceipt.questId);
+        if (story) addLog('story', story);
+        else void addStoryLog('questComplete', { questTitle: questClaimReceipt.title });
+    }, [addLog, addStoryLog, questClaimReceipt]);
 
     const narratedCombatReceiptRef = useRef<string | null>(null);
     useEffect(() => {

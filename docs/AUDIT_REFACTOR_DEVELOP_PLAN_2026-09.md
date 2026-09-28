@@ -1841,3 +1841,22 @@ C PR #54는 head97337659의 static/E2E/perf/rules/build 통과 후 merge `1307fd
 집계·해시는 `docs/evidence/qa/art-status-20260922.json`에 보존한다. `retained89-disposition-20260909.json`을 갱신하지 않았다. 인수인계 §7-D의 과거165/89·승인 대기 상태만 최신 정본으로 연결했다. Q4 미실행·Q7 URL 미제공, Q6 로컬 기록·Q8 계정1회 결정은 유지한다. `npm run verify` exit0: unit5,192/5,192(skip0)·type-check·lint·build guard 통과. `git diff --check` 통과. 9월22일 집계 기록을 보존하고 9월23일 문서를 마감했다. C merge의 main CI run35715043844 및 Deploy run35715043920도 성공했다. D의 원격 검사·merge 상태는 [PR #55](https://github.com/sungjin9288/aetheria-roguelike/pull/55)가 정본이다.
 
 **다음 E의 입력 조건:** 9월23일 mobile:doctor와 read-only 기기 목록을 재확인했다. 물리 iPhone/Android 연결0, Android release signing·Apple Distribution identity 없음. doctor의 App Store export profile ok는 로컬 export options 파일 확인이며 provisioning profile 보유 증거가 아니다. Q7 URL 및 기기 사용 시간·서명 자산 입력을 기다리며, 실기기 조작·서명·업로드는 실행하지 않았다. Q4도 미실행이다.
+
+
+### 26.8 제품 완성도 우선 — 이야기 결과 전달 (2026-09-28, 로컬 검증 완료)
+
+소유자는 iPhone 보유·Android 실기기 미보유를 정정하고, 서명보다 디자인·기능·스토리 보완을 우선하도록 지시했다. `e7445523` 이후 첫 제품 묶음이다. 출시 자산 부재를 제품 개발 중단 사유로 사용하지 않는다. 전체 보완 순서와 수용 기준은 기존 게임 완성 계획의 2026-09-28 절과 tasks 최상단을 따른다.
+
+실제390 첫 플레이에서 선택 결과(수정 동굴 단서)가 로그 하단 밖에 가려졌고 viewport ratio0으로 재현했다. 12개 이하 기록을 top0으로 돌리던 분기를 제거해 최신 선택과 비동기 story 교체를 따라가도록 수정했다. E2E 초기 exact text locator 실패는 badge 포함 문구 선택 오류였으며, 실제 행 locator로 정정한 뒤 화면 밖 ratio0 RED를 확인했다.
+
+8개 story quest의 완료 표현은 title뿐인 generic AI/fallback 대신 accepted quest receipt ID로 고정 서사를 찾는다. 일반 임무는 기존 AI 경로 유지. 순서는80→81→82→84→83→85→86→87이며 지역 lore와 실제 목표·보상 소재를 따른다. 수령하지 않은 장은 공개하지 않고 기존 claimedQuestIds에서 기록을 재구성한다. 다음 임무 이름·수락 레벨은 DB에서 읽는다. 독립 검토에서 첫 장의 귀환 완료 전제를 지적해 장소 중립 문구로 교정했다. 새 save 필드/수치/전투 authority/바이트 핀 파일 변경 없음.
+
+집중 unit43/43, 신규 unit2/2, 새 E2E 선택 가시성·첫 임무 수령/두번탭/기록·저장재실행 통과. 재실행은 별도 device-QA 저장 namespace에 기존 완료80 fixture를 넣은 검사이며 자연 신규 세이브의 전체 저장 증거로 확대하지 않는다. 첫 persistence 검사에서 설정 탭이 자동으로 열릴 것을 잘못 가정해 실패했고 실제 seed 완료 레벨을 기다린 뒤 같은 저장/복원 검사를 통과했다. 신규2종 결함 주입(완료문 제거/미수령 장 공개) 각각 exit1 후 복원 green. 신규 browser 결과는 output/playwright/product-20260928/에 보존한다. 375/390/430 본문 viewport/가로 overflow 통과, 캡처 직접검수. 게임 client 기본desktop 실행도 수행했다. 초기 HMR의 effect deps 길이 변경 콘솔 경고는 cold E2E와 분리한다.
+
+증빙 예고 델타: progression sources 기존4개(TerminalView, QuestTab, messages, useGameEngine) 해시 변경과 새3개(StoryJournal, storyChapters, storyJournal) 추가,348→351. reportHash/v1Baseline 포함 nonSources와 나머지 증빙 값은 불변이어야 한다. 순차 writer 종료 뒤 readonly/full gate 실행. 당시 전체 통합·원격 PR/CI는 미실행이었으며 로컬 실행 결과는 아래에 기록한다. 진엔딩 진행 안내·초반 모험 동기/시각 구성·종장 자연 동선은 후속 제품 작업으로 남는다.
+
+예고 델타 실측 일치: sources348→351, 기존4변경/새3추가/삭제0. nonSources 전체 및 reportHash `f21dcf819808a624d2d7f9d30b28a7d4b1403b8b3806383089453ef2ff731620` 불변. 순차 writer 종료 후 tracked verify15 전부 exit0. `VITE_RELEASE_ID=wave26-qa AETHERIA_RUN_PERF=1 npm run verify:full` exit0: unit5,194/355파일(skip0), E2E128/45spec(66+62), desktop/mobile smoke·perf 및 type/lint/build guard 통과. FCP desktop456ms/mobile320ms. smoke/perf의 browser.close timeout 경고4건은 게임 assertion 통과와 분리해 기록한다.
+
+production `cap:sync`·Android debug·iOS unsigned build exit0. Android 최초 Gradle 캐시 metadata.bin 누락은 기존 스크립트의 새 임시 캐시 재시도로 해소했으며 소스/검사 완화 없음. APK227759206bytes/SHA256 `8f61124014e2d210d624de3f28d261d75744eb77961f4444f23fd2a95e42580c`, AppPlugin 포함. iOS `/tmp/aetheria-product-story-ios-20260928/Build/Products/Release-iphoneos/App.app`. production web2,267파일이 양쪽 패키지와 byte동일, native tracked delta0. mobile:doctor exit0이나 양 플랫폼 release 서명 조건 미충족은 유지. 실기기 실행·서명·설치·제출은 이번 묶음에서 미실행.
+
+후속 제품 조사: 375px 상태바에서 생명 label 줄바꿈을 직접 관측했다. 종장 파편/계승 조건은 마왕 토벌 뒤 연속 전투 경로에 적용되며, 혼돈의 심연 구역 보스 경로는 별도로 존재한다(`maps`→`exploreActions`→`eventActions`→`endgameSettlement`). 소스 연결 확인이며 자연 플레이 증거는 아니다. 후속 안내는 경로를 특정하고 전투 gate를 임의 강화하지 않는다. PR/CI/merge는 원격 기록으로 후속 확인한다.
