@@ -1,4 +1,3 @@
-import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import {
@@ -9,6 +8,7 @@ import {
 import { canEquip } from '../../utils/equipmentValidation';
 import { consumeInventoryItemByName, getEnhancePreview } from '../../utils/enhancementUtils';
 import { makeItem } from '../../utils/gameUtils';
+import { growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
 import { resolveConsumableEffect, sanitizeConsumedQuickSlots } from '../../systems/consumableEffect';
 import type { GameState, HandlerMap } from '../gameReducer';
 import { AT, type ActionOf } from '../actionTypes';
@@ -106,7 +106,10 @@ const equipInventoryItem = (state: GameState, item: Item): GameState => {
         ...(state.player.inv || []).filter((entry) => entry.id !== item.id),
         ...returnedItems,
     ];
-    if (inventory.length > (state.player.maxInv || BALANCE.INV_MAX_SIZE)) {
+    // 2026-09 Wave 27 N2 (D2): 상한은 **증가**만 막는다. 교체 뒤 크기만 보던 동안
+    //   보상(퀘스트·체인 등)이 만든 21/20 가방에서 순증 0 교체까지 전부 거부됐다.
+    //   양손 무기로 무기+방패를 둘 다 돌려받는 것처럼 가방을 키우는 교체는 여전히 거부한다.
+    if (growsPastInventoryCapacity(state.player, inventory.length)) {
         return rejectEquipmentTransaction(state, 'error', MSG.INV_FULL);
     }
 

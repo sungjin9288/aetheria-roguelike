@@ -444,10 +444,11 @@ export const checkDiscoveryChains = (
                     //   reward.item fix 후에도 chain reward 아이템이 silent 누락이던 회귀 fix.
                     //   gameUtils.findItemByName(getAllItems() lookup) 사용으로 정합.
                     const itemData = findItemByName(chain.reward.item);
-                    // cycle 182: player.maxInv (PremiumShop 확장)을 우선 — 기존엔 BALANCE.INV_MAX_SIZE
-                    // 만 사용해 확장된 인벤(25칸)에서도 20칸 기준으로 reward skip 가능했음.
-                    const invCap = (updated.maxInv as number) || (BALANCE.INV_MAX_SIZE || 20);
-                    if (itemData && (updated.inv || []).length < invCap) {
+                    // 2026-09 Wave 27 N2 (D2): 보상은 잃지 않는다. cycle 182의 상한 검사는 가방이
+                    //   가득 차면 이 아이템을 조용히 버렸고, 체인은 아래에서 완료로 기록돼 다시 받을
+                    //   길도 없었다. 상한은 구매·전리품 같은 **증가**만 막고(utils/inventoryCapacity.ts),
+                    //   보상 지급은 상한을 넘겨도 들어온다 — 퀘스트·체인·처치 마일스톤 보상과 같은 규칙.
+                    if (itemData) {
                         updated.inv = [...(updated.inv || []), withCanonicalEquipmentBaseIdentity({
                             ...itemData,
                             id: `disc_${Date.now()}`,

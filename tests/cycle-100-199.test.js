@@ -2089,11 +2089,14 @@ import { readFile, readdir } from 'node:fs/promises';
       return out;
   };
 
-  test('cycle 182: chain reward cap에 maxInv 우선 사용 (Wave 4 N1: exploreFlow.ts 소유)', async () => {
+  // 2026-09 Wave 27 N2 (D2): 발견 체인 보상은 더 이상 가방 상한을 보지 않는다 — cycle 182의
+  //   `invCap` 검사는 가득 찬 가방에서 보상 아이템을 조용히 버렸다(체인은 완료로 기록돼 재획득 불가).
+  //   "보상은 잃지 않는다" 정책의 행동 증명은 tests/inventory-capacity-growth-rule.test.js
+  //   (발견 체인 20/20 → 21/20)가 소유하고, 여기는 상한 게이트가 되돌아오지 않는다는 부재 불변식만 남긴다.
+  test('cycle 182 → Wave 27 N2: 발견 체인 보상 분기에 가방 상한 게이트가 없다 (exploreFlow.ts 소유)', async () => {
       const src = await readFile(path.join(SRC, 'hooks/gameActions/exploreFlow.ts'), 'utf8');
-      // chain reward 분기에 invCap 변수 또는 maxInv 폴백 패턴 명시.
-      assert.match(src, /maxInv/, 'exploreFlow.ts에 maxInv 참조 있어야 함');
-      assert.match(src, /invCap/, 'cycle 182 invCap 변수 도입 명시');
+      assert.doesNotMatch(src, /\binvCap\b/, 'cycle 182 invCap 상한 게이트 재도입 금지');
+      assert.doesNotMatch(src, /\bINV_MAX_SIZE\b/, '발견 체인 보상에 가방 상한 상수 재도입 금지');
   });
 
   test('cycle 182: src/utils/adventureGuide.ts inventoryCap 변수 도입', async () => {
