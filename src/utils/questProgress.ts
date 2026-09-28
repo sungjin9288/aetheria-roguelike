@@ -1,6 +1,7 @@
 import { QUESTS } from '../data/quests.js';
 import type { Player, Quest, QuestProgressState } from "../types/index.js";
 import { getCumulativeQuestProgress } from './cumulativeQuestProgress.js';
+import { matchesQuestTarget } from './enemyIdentity.js';
 
 // isBounty가 참이면 quest(QuestProgressState) 자신을 정의로 되돌린다 — 현상수배는
 // title/desc/target/goal/reward를 진행 상태와 함께 들고 있고, 그 필드들은 전부
@@ -116,14 +117,12 @@ export const syncQuestProgress = (player: Player, enemyName: string | undefined,
             return { ...quest, progress: Math.max(quest.progress || 0, player.level || 0) };
         }
 
-        const exactMatch = questData.target === normalizedEnemyName;
-        // String() — questData.target은 Quest.target(optional)이라 string | undefined.
-        //   기존에도 String.prototype.includes(undefined)는 ToString(undefined)="undefined"
-        //   경로였다(target 없는 정의는 이 몬스터 이름과 절대 일치하지 않는 문자열이 되어
-        //   사실상 false로 동작) — target||''(항상 true가 되어 버림)로 바꾸면 안 된다.
-        const prefixedMatch = normalizedEnemyName.includes(String(questData.target));
+        // 목표 판정은 종(baseName) 정확 일치다 — enemyIdentity.matchesQuestTarget이 장식(접두어 ·
+        //   `[N층]`)만 벗기고 비교한다. 이전의 `normalizedEnemyName.includes(target)`은 '마왕의 사도'를
+        //   '마왕'으로 읽어 종장 임무 87을 마왕 승리 전에 완료시켰다(원장 §26.11). target이 없는
+        //   정의는 matchesQuestTarget이 false를 돌려준다.
         const isTargetLocation = !questData.location || player.loc === questData.location;
-        if (isTargetLocation && (exactMatch || prefixedMatch)) {
+        if (isTargetLocation && matchesQuestTarget(normalizedEnemyName, questData.target)) {
             return { ...quest, progress: Math.min(Number(questData.goal), quest.progress + 1) };
         }
 

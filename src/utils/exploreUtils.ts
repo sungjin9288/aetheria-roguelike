@@ -32,6 +32,7 @@ import { BOSS_MONSTERS } from '../data/monsters.js';
 // Track J1: FIRST_VISIT_REWARDS 테이블은 data/firstVisitRewards.ts로 분리됨.
 import { FIRST_VISIT_REWARDS } from '../data/firstVisitRewards.js';
 import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
+import { EARLY_ELITE_PREFIX_NAME } from './enemyIdentity.js';
 
 const getActiveHuntTargets = (mapData: GameMap, player: Player) => {
     const mapMonsters = Array.isArray(mapData.monsters) ? mapData.monsters : [];
@@ -210,7 +211,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // 접두어 부여
     if (forceElite || earlyElite || prestigeElite || (rng() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES)) {
         const prefix = earlyElite
-            ? { name: '정예', mod: BALANCE.EARLY_ELITE_MULT, expMod: BALANCE.EARLY_ELITE_MULT, dropMod: 2.0, isElite: true }
+            ? { name: EARLY_ELITE_PREFIX_NAME, mod: BALANCE.EARLY_ELITE_MULT, expMod: BALANCE.EARLY_ELITE_MULT, dropMod: 2.0, isElite: true }
             : (() => {
                 const elitePrefixes = (forceElite || prestigeElite)
                     ? CONSTANTS.MONSTER_PREFIXES.filter((p) => p.isElite)

@@ -1151,3 +1151,4 @@ ART-LOCATION-01의12종 source-cell 오른쪽 경계를 교정해 runtime에 적
 - 2026-09-23 Wave25/D: V27 아트 판단 완료 근거와254/234/20 집계를 재확인해 handoff 정정. 이미지/manifest/역사 receipt 불변, 원장 §26.7.
 
 - 2026-09-28 여정 안내 local: 첫 출발 동기·HUD 지표·현재 계승/파편 안내 및 예언/도감 경로 정정. mutation4·focused44/E2E16·tracked15·full unit5,198/E2E132·native2,268파일 일치. 원장 §26.9; PR/CI는 원격 결과 참조, 자연 성장·실기기·출시 수용 미완료.
+- 2026-09-28 종장 임무87 목표 오인식(branch `claude/funny-rubin-xdv43e`, 베이스 `main`=`5fe9f222`): `questProgress`의 `includes` 판정이 마왕성의 `마왕의 사도` 처치를 87 progress 1·수령 가능으로 만들었다(실제 `RESOLVE_COMBAT_ACTION` 재현, §26.10 probe). 같은 규칙에 임무 7종(1·3·8·35·87·99·140)이 가족 이름에 반응. 수정: `utils/enemyIdentity.ts`(`matchesQuestTarget` = 종 정확 일치 + 접두어/`[N층]` 장식만 벗김, `EARLY_ELITE_PREFIX_NAME` 단일 원천) + `questProgress`·`spawnEnemy` 배선. 계약 `tests/quest-target-identity.test.js` 7행(전수 26,456쌍, RED ①③⑤ → GREEN). 근거: 원장 §26.11.
