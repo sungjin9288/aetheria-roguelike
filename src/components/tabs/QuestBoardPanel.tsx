@@ -9,6 +9,8 @@ import SignalBadge from '../SignalBadge';
 import FocusPanelHeader from '../FocusPanelHeader';
 import { getPreparedExpeditionFocusQuestIds, MAX_EXPEDITION_FOCUS_QUESTS } from '../../utils/expeditionMissionFocus.js';
 import { getProtocolDayKey } from '../../utils/protocolCycle.js';
+import { getQuestObjectiveGateNotice, type QuestObjectiveGate } from '../../utils/questObjectiveGate';
+import { MSG } from '../../data/messages';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { Player, Quest, QuestReward } from '../../types/index.js';
 import type { GameMode } from '../../reducers/gameStates';
@@ -129,6 +131,13 @@ const QuestObjectiveLine = ({ children }: { children: ReactNode }) => (
   </div>
 );
 
+/** Wave 28: 목표 지역에 아직 걸어 들어갈 수 없을 때만 실제 진입 레벨을 말한다(수락 규칙은 그대로). */
+const QuestObjectiveGateLine = ({ gate }: { gate: QuestObjectiveGate | null }) => (gate ? (
+  <div data-testid="quest-objective-gate" className="aether-type-meta mt-1 font-readable text-[#f6e7c8]">
+    {MSG.QUEST_OBJECTIVE_GATE_NOTICE(gate.map, gate.routeGateLevel)}
+  </div>
+) : null);
+
 interface QuestRowShellProps {
     children: ReactNode;
     kind: string;
@@ -166,9 +175,10 @@ interface CompactMissionRowProps {
     expanded: boolean;
     onToggle: () => void;
     onAccept: () => void;
+    objectiveGate: QuestObjectiveGate | null;
 }
 
-const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept }: CompactMissionRowProps) => (
+const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept, objectiveGate }: CompactMissionRowProps) => (
   <QuestRowShell kind={entry.isLockedPreview ? 'locked-preview' : 'featured'} testId="quest-decision-row">
     <div className="grid grid-cols-[minmax(0,1fr)_72px] gap-2">
       <button
@@ -202,6 +212,7 @@ const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept }: Compa
           <span className="break-words text-[#f6e7c8]">위험 · {entry.isLockedPreview ? entry.quest.lockLabel : (entry.brief?.riskLabel || '확인')}</span>
           <span className="col-span-2 break-words text-emerald-100">보상 · {getRewardSummary(entry.quest.reward)}</span>
         </div>
+        <QuestObjectiveGateLine gate={objectiveGate} />
       </button>
       <Motion.button
         data-testid="quest-board-start-operation"
@@ -334,6 +345,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   onAccept={() => {
                     if (!entry.isLockedPreview) acceptFeaturedMission(entry.quest.id!);
                   }}
+                  objectiveGate={getQuestObjectiveGateNotice(entry.quest, player.level)}
                 />
               ))}
             </div>
@@ -396,6 +408,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   </div>
                   {!entry.isBounty && <div className="mt-1">
                     <QuestObjectiveLine>{getQuestObjectiveText(entry.quest)}</QuestObjectiveLine>
+                    {!entry.isComplete && <QuestObjectiveGateLine gate={getQuestObjectiveGateNotice(entry.quest, player.level)} />}
                   </div>}
                   <OperationBriefRows brief={entry.brief} reward={entry.quest.reward} progress={entry.progress} goal={entry.quest.goal} />
                   <div className="mt-2">
@@ -537,6 +550,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                       </div>
                       <div className="mt-1">
                         <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
+                        <QuestObjectiveGateLine gate={getQuestObjectiveGateNotice(quest, player.level)} />
                       </div>
                       <div className="mt-2 font-readable text-[12px] leading-[1.42] text-slate-300/82">{entry.reason}</div>
                       <OperationBriefRows brief={entry.brief} reward={quest.reward} />

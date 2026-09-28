@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
 
 import { DB } from '../src/data/db.ts';
+import { FIRST_STORY_QUEST_ID } from '../src/data/quests.ts';
 import { buildContentReachabilityReport, canonicalizeContentReachability } from '../src/systems/contentReachability.ts';
 import { getShopCatalog } from '../src/utils/shopRotation.ts';
 import { getAllSignatureDropSourceIndex } from '../src/utils/signatureDropSources.ts';
@@ -227,8 +228,9 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     const { cost } = buildContentReachabilityReport();
     const bucketAt = (buckets, gateLevel) => buckets.find((bucket) => bucket.gateLevel === gateLevel);
 
-    // Wave 13 E1: tier-3 직업 5종은 Lv45 앵커에 앉는다 — 모델 액션 1,575 / 39.38h
-    // (Lv60 5,246 / 131.15h에서 −91.77h). 45는 모델 체크포인트라 이 행은 `interpolated`가
+    // Wave 13 E1: tier-3 직업 5종은 Lv45 앵커에 앉는다 — 모델 액션 1,579 / 39.48h
+    // (Lv60 5,249 / 131.23h에서 −91.75h). Wave 28(D7): 초반 구간에서 완전 정예가 빠져 앵커가 +2~5 액션
+    //   움직였다(Lv45 1,575 → 1,579) — 초반 정예의 2~3배 경험치가 사라진 만큼이다. 45는 모델 체크포인트라 이 행은 `interpolated`가
     // 아니라 `anchored`다 — 게이트 비용이 보간이 아니라 시뮬레이터 산출이라는 뜻이다.
     // Wave 14 F4: 성직자가 5 → 12 버킷으로 옮겨가 5:4 → 5:3, 12:1 → 12:2다. Lv5는 이제 세
     //   뿌리(전사·마법사·도적)만 있고 그 어느 것도 후속을 열어두지 않는다 — 첫 되돌릴 수 없는
@@ -245,8 +247,8 @@ test('the gate levels behind each content class carry their modeled cost', () =>
         '그림자 주군', '대마법사', '드래곤 나이트', '사냥의 군주', '팔라딘',
     ].toSorted());
     assert.equal(tierThreeJobs.cost.basis, 'anchored');
-    assert.equal(tierThreeJobs.cost.modeledActions, 1_575);
-    assert.equal(tierThreeJobs.cost.modeledHours, 39.38);
+    assert.equal(tierThreeJobs.cost.modeledActions, 1_579);
+    assert.equal(tierThreeJobs.cost.modeledHours, 39.48);
     assert.equal(bucketAt(cost.gates.jobs, 60), undefined);
     assert.equal(cost.gates.jobs.reduce((sum, bucket) => sum + bucket.count, 0), 18);
 
@@ -257,7 +259,7 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     );
     assert.equal(cost.gates.equipmentTiers.reduce((sum, tier) => sum + tier.count, 0), 229);
     assert.equal(bucketAt(cost.gates.equipmentTiers, 28).cost.basis, 'interpolated');
-    assert.equal(bucketAt(cost.gates.equipmentTiers, 60).cost.modeledActions, 5_246);
+    assert.equal(bucketAt(cost.gates.equipmentTiers, 60).cost.modeledActions, 5_249);
 
     // Wave 27 N3: 143 → 141 / 52 → 49. 걷는 길이 없는 지역 3곳(시즌 둘 · 고대 보물고)은 값을 매기지 않고
     //   `mapsWithoutWalkingRoute`로 빠진다. 그 보물고가 목표인 임무 둘(136 · 137)도 같은 이유로
@@ -295,8 +297,8 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     // 68에 남는 둘은 승천 **뒤에** 열리는 체인이라 애초에 걸치지 않는다.
     assert.deepEqual(etherGate.members, ['divine_apostle_trial', 'rift_secret']);
     assert.equal(etherGate.cost.basis, 'interpolated');
-    assert.equal(etherGate.cost.modeledActions, 6_809);
-    assert.equal(etherGate.cost.modeledHours, 170.23);
+    assert.equal(etherGate.cost.modeledActions, 6_812);
+    assert.equal(etherGate.cost.modeledHours, 170.3);
     assert.equal(bucketAt(cost.gates.eventChainCompletions, 48).count, 5);
     assert.equal(bucketAt(cost.gates.eventChainCompletions, 40).count, 3);
     // 50 버킷은 생기지 않는다 — world_tree_corruption의 스텝 1(고대 신전 도시 50)까지
@@ -326,8 +328,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     assert.deepEqual(rowAt(45), {
         level: 45,
         basis: 'anchored',
-        modeledActions: 1_575,
-        modeledHours: 39.38,
+        modeledActions: 1_579,
+        modeledHours: 39.48,
         maps: 15,
         quests: 41,
         equipment: 107,
@@ -340,8 +342,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     assert.deepEqual(rowAt(48), {
         level: 48,
         basis: 'interpolated',
-        modeledActions: 2_131,
-        modeledHours: 53.28,
+        modeledActions: 2_135,
+        modeledHours: 53.38,
         maps: 15,
         quests: 41,
         equipment: 65,
@@ -349,13 +351,14 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         eventChains: 7,
     });
     // 승천 게이트를 실제로 넘어선 첫 행(= 게이트 레벨이 48보다 큰 콘텐츠).
+    // Wave 28(D6): 본편 86 · 87이 48로 내려와 49 · 60 · 68 행의 `quests`가 2씩 준다(38 → 36 · 27 → 25 · 24 → 22).
     assert.deepEqual(rowAt(49), {
         level: 49,
         basis: 'interpolated',
-        modeledActions: 2_375,
-        modeledHours: 59.38,
+        modeledActions: 2_378,
+        modeledHours: 59.45,
         maps: 13,
-        quests: 38,
+        quests: 36,
         equipment: 65,
         jobs: 0,
         eventChains: 2,
@@ -367,10 +370,10 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     assert.deepEqual(rowAt(60), {
         level: 60,
         basis: 'anchored',
-        modeledActions: 5_246,
-        modeledHours: 131.15,
+        modeledActions: 5_249,
+        modeledHours: 131.23,
         maps: 9,
-        quests: 27,
+        quests: 25,
         equipment: 65,
         jobs: 0,
         eventChains: 2,
@@ -378,10 +381,10 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     assert.deepEqual(rowAt(68), {
         level: 68,
         basis: 'interpolated',
-        modeledActions: 6_809,
-        modeledHours: 170.23,
+        modeledActions: 6_812,
+        modeledHours: 170.3,
         maps: 6,
-        quests: 24,
+        quests: 22,
         equipment: 20,
         jobs: 0,
         eventChains: 2,
@@ -432,12 +435,42 @@ test('직업 게이트 최대값은 마왕성 경로 게이트(승천 지점)를
         (demonCastleGate.cost.modeledHours - deepestJobCost.modeledHours) * 100,
     ) / 100;
     assert.ok(headroomHours > 0, `승천까지 남는 시간이 ${headroomHours}h다`);
-    assert.equal(deepestJobCost.modeledHours, 39.38);
-    assert.equal(demonCastleGate.cost.modeledHours, 53.28);
+    // Wave 28(D7): 앵커가 둘 다 +0.1h 움직여 여유는 13.9h 그대로다.
+    assert.equal(deepestJobCost.modeledHours, 39.48);
+    assert.equal(demonCastleGate.cost.modeledHours, 53.38);
     assert.equal(headroomHours, 13.9);
 
     // 그래서 승천 시점에 남아 있는 직업은 0이다.
     assert.equal(cost.behind.find((row) => row.level === demonCastleGate.gateLevel).jobs, 0);
+});
+
+// ── Wave 28 (D6) 불변식: 본편 스토리 사슬도 승천 지점을 걸치지 않는다 ─────────────────────
+// Wave 15 G1이 이벤트 체인에 세운 기준을 본편에 적용한다. 86이 에테르 관문(68)에 있던 동안 사슬의 끝
+// 87은 170.23h였고, 그 전에 마왕을 잡을 때마다 계승 제안이 떴다 — 이야기를 끝내기 전에 리셋 지점이 왔다.
+// 사슬은 FIRST_STORY_QUEST_ID에서 prerequisiteQuestId를 거꾸로 따라 만든다(목록을 손으로 적지 않는다).
+test('본편 스토리 사슬의 모든 임무 게이트는 마왕성 경로 게이트 이하이고, 종장은 승천 지점과 같다', () => {
+    const { cost } = buildContentReachabilityReport();
+    const demonCastleGate = cost.gates.maps.find((bucket) => bucket.members.includes('마왕성')).gateLevel;
+    const gateOf = new Map(cost.gates.quests.flatMap((bucket) => bucket.members.map((id) => [id, bucket.gateLevel])));
+
+    const chain = [FIRST_STORY_QUEST_ID];
+    for (;;) {
+        const next = DB.QUESTS.find((quest) => quest.prerequisiteQuestId === chain.at(-1) && String(quest.title).startsWith('[스토리]'));
+        if (!next) break;
+        chain.push(next.id);
+    }
+    assert.deepEqual(chain, [80, 81, 82, 84, 83, 85, 86, 87], '본편 사슬');
+    for (const id of chain) {
+        assert.ok(gateOf.has(id), `quest ${id}: 게이트가 매겨져야 한다`);
+        assert.ok(gateOf.get(id) <= demonCastleGate, `quest ${id}: Lv${gateOf.get(id)} > 마왕성 Lv${demonCastleGate}`);
+    }
+    assert.equal(gateOf.get(chain.at(-1)), demonCastleGate, '종장은 첫 마왕 처치(= 계승 제안) 지점에서 닫힌다');
+
+    // 86의 목표는 그 지역에서 실제로 조우되는 비보스여야 한다 — 옮긴 목표가 공허하면 사슬이 끊긴다.
+    const q86 = DB.QUESTS.find((quest) => quest.id === 86);
+    const map86 = DB.MAPS[q86.location];
+    assert.ok(map86.monsters.includes(q86.target), `${q86.target} @ ${q86.location}`);
+    assert.equal((map86.bossMonsters || []).includes(q86.target), false);
 });
 
 test('map gate cost uses the route level, and divergence from the declared level is reported', () => {
@@ -496,18 +529,20 @@ test('임무 게이트 = max(수락 게이트, 목표 지역의 경로 게이트
     const rowOf = (id) => cost.questGateDivergence.find((row) => row.quest === id);
     // 84: 수락은 28이지만 기계 폐도에 걸어 들어가는 것은 35부터다.
     assert.deepEqual(rowOf(84), { quest: 84, minLv: 28, acceptGateLevel: 28, objectiveMap: '기계 폐도', objectiveGateLevel: 35 });
-    // 87: 선행 86(에테르 관문, minLv 68)을 수령해야 수락된다 — 목표 마왕성(48)보다 선행이 늦다.
-    assert.deepEqual(rowOf(87), { quest: 87, minLv: 50, acceptGateLevel: 68, objectiveMap: '마왕성', objectiveGateLevel: 68 });
+    // 87: Wave 27에서는 선행 86(에테르 관문, minLv 68) 때문에 L68이었다. Wave 28(D6)이 86을 마왕성(48)으로 옮기고
+    //   87 minLv를 48로 맞춰 사슬 전체가 승천 지점에서 닫힌다 — 더 이상 minLv와 갈라지지 않는다.
+    assert.equal(rowOf(87), undefined);
+    assert.equal(gateOf.get(87), 48);
     // 83: 선행 84(35)와 자기 위치 빙하 심연(35)이 minLv 35와 같아 움직이지 않는다.
     assert.equal(rowOf(83), undefined);
     assert.equal(gateOf.get(83), 35);
 
     const bucketOf = (id) => cost.gates.quests.find((bucket) => bucket.members.includes(id));
-    assert.equal(bucketOf(87).cost.modeledHours, 170.23, '87: 65.9h(L50) → 170.23h(L68)');
-    assert.equal(bucketOf(84).cost.modeledHours, 12, '84: 6.38h(L28) → 12h(L35)');
+    assert.equal(bucketOf(87).cost.modeledHours, 53.38, '87: 170.23h(L68, Wave 27) → 53.38h(L48, Wave 28)');
+    assert.equal(bucketOf(84).cost.modeledHours, 12.08, '84: 6.38h(L28) → 12h(L35), Wave 28 D7 앵커 이동으로 12.08h');
 });
 
-test('임무 게이트가 minLv와 갈라지는 21개와, 목표 지역에 가기 전에 수락되는 20개', () => {
+test('임무 게이트가 minLv와 갈라지는 20개는 전부 목표 지역에 가기 전에 수락되는 임무다', () => {
     const { cost } = buildContentReachabilityReport();
     assert.deepEqual(
         cost.questGateDivergence.map((row) => [row.quest, row.minLv, row.acceptGateLevel, row.objectiveMap, row.objectiveGateLevel]),
@@ -520,7 +555,6 @@ test('임무 게이트가 minLv와 갈라지는 21개와, 목표 지역에 가�
             [38, 30, 30, '기계 폐도', 35],
             [39, 30, 30, '기계 폐도', 35],
             [84, 28, 28, '기계 폐도', 35],
-            [87, 50, 68, '마왕성', 68],
             [105, 65, 65, '에테르 폐허', 68],
             [109, 65, 65, '에테르 폐허', 68],
             [122, 25, 25, '북부 설원', 35],
@@ -535,8 +569,8 @@ test('임무 게이트가 minLv와 갈라지는 21개와, 목표 지역에 가�
             [148, 62, 62, '차원의 균열 전초기지', 68],
         ],
     );
-    // 소유자 결정용 목록 — 데이터는 이 wave가 바꾸지 않는다. 87만 선행 때문에 갈라지고 나머지 20개는
-    // 수락 게이트보다 목표 지역의 경로 게이트가 늦다(수락만 된 채 갈 곳이 없는 구간이 생긴다).
+    // Wave 27의 소유자 결정 목록. Wave 28은 수락 규칙을 그대로 두고 보드에 목표 지역의 실제 진입 레벨을
+    // 보이는 쪽을 택했다 — 20개 모두 수락 게이트보다 목표 지역의 경로 게이트가 늦다(선행 때문에 갈라지는 행은 0).
     assert.deepEqual(
         cost.questGateDivergence.filter((row) => row.objectiveGateLevel > row.acceptGateLevel).map((row) => row.quest),
         [2, 12, 26, 27, 28, 38, 39, 84, 105, 109, 122, 123, 124, 135, 140, 141, 142, 146, 147, 148],

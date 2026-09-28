@@ -885,4 +885,21 @@ export const MSG = {
     RELIC_REPLACE_PROMPT: (name: string) => `${name} 대신 내려놓을 유물을 고르세요.`,
     RELIC_REPLACE_OPTION_LABEL: (released: string, gained: string) => `${released} 내려놓고 ${gained} 받기`,
     RELIC_REPLACE_BACK: '다른 유물 보기',
+
+    // ── Wave 28 P1 — 서명 사본 판매(D4) ──
+    //   쓸 수 있는 유일한 사본만 보호한다. 도감 기록은 획득 순간에 남으므로 판매해도 수집은 사라지지 않는다.
+    SIGNATURE_SELL_LOCKED: '전설 각인 — 판매 불가',
+    SIGNATURE_SELL_PROTECTED_BADGE: '✦ 보호됨',
+    SIGNATURE_SELL_DUPLICATE: '전설 각인 사본 — 한 점은 남습니다 · 도감 기록 유지',
+    SIGNATURE_SELL_OFF_PATH: '전설 각인 — 지금 직업과 앞으로의 전직으로는 착용 불가 · 도감 기록 유지',
+
+    // ── Wave 28 P3 — 계승 제안 미루기(D6) ──
+    //   한 번 미루면 이번 여정에서는 마왕을 다시 쓰러뜨려도 계승 화면이 뜨지 않는다. 조작판에서 다시 연다.
+    ASCENSION_DEFERRED_NOTICE: '이번 여정에서는 마왕을 다시 쓰러뜨려도 계승을 묻지 않습니다. 준비되면 조작판의 [계승하기]를 누르세요.',
+    DEMON_KING_SLAIN_ASCEND_DEFERRED: '⚡ 마왕이 쓰러졌습니다. 계승은 조작판의 [계승하기]에서 언제든 선택할 수 있습니다.',
+    ASCENSION_REOPEN_LABEL: '계승하기',
+
+    // ── Wave 28 P4 — 임무 목표 지역의 실제 진입 레벨 ──
+    //   수락 규칙은 그대로다. 지금 레벨로 아직 걸어 들어갈 수 없는 목표 지역일 때만 보인다.
+    QUEST_OBJECTIVE_GATE_NOTICE: (map: string, level: number) => `목표 지역 ${map} · 레벨 ${level}부터 걸어서 진입`,
 };

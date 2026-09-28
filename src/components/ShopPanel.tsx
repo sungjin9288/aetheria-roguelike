@@ -7,7 +7,7 @@ import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils
 import { getDailyDeals, getShopMaxTier, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
-import { isSignatureItem } from '../data/signatureItems.js';
+import { getSignatureSaleVerdict } from '../utils/signatureSale';
 import { getConsumableDescription } from '../utils/consumablePresentation';
 import type { GameActions } from '../hooks/actionDeps';
 import type { FullStats, Item, ItemType, Player } from '../types/index.js';
@@ -455,7 +455,12 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                             const comparison = getComparisonMeta(item, player);
                             const summary = getCompactItemSummary(item);
                             const comparisonText = comparison ? getCompactText(comparison.text) : '';
-                            const isSignatureLocked = isSignatureItem(item);
+                            // Wave 28 (D4): 쓸 수 있는 유일한 서명 사본만 잠근다 — 판정은 리듀서와 같은 유틸이 소유한다.
+                            const signatureVerdict = getSignatureSaleVerdict(item, player);
+                            const isSignatureLocked = Boolean(signatureVerdict && !signatureVerdict.sellable);
+                            const signatureSaleNote = signatureVerdict?.reason === 'duplicate'
+                                ? MSG.SIGNATURE_SELL_DUPLICATE
+                                : signatureVerdict?.reason === 'off-path' ? MSG.SIGNATURE_SELL_OFF_PATH : null;
 
                             return (
                                 <div
@@ -487,10 +492,13 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                     )}
 
                                     <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-2.5">
-                                        <div className="font-readable text-[10px] text-slate-300/74">
+                                        <div
+                                            className="font-readable text-[10px] text-slate-300/74"
+                                            data-testid={signatureSaleNote ? `shop-sell-signature-note-${item.id}` : undefined}
+                                        >
                                             {isSignatureLocked
-                                                ? '전설 각인 — 판매 불가'
-                                                : isConfirming ? '한 번 더 누르면 판매됩니다.' : '판매 대기'}
+                                                ? MSG.SIGNATURE_SELL_LOCKED
+                                                : isConfirming ? '한 번 더 누르면 판매됩니다.' : (signatureSaleNote || '판매 대기')}
                                         </div>
                                         <button
                                             type="button"
@@ -511,7 +519,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                     ? 'border-red-400 bg-red-600/20 text-red-200 hover:bg-red-600/30'
                                                     : 'border-red-500/40 text-red-300 hover:bg-red-500/10 hover:border-red-400'}`}
                                         >
-                                            {isSignatureLocked ? '✦ 보호됨' : isConfirming ? '정말 판매' : '판매'}
+                                            {isSignatureLocked ? MSG.SIGNATURE_SELL_PROTECTED_BADGE : isConfirming ? '정말 판매' : '판매'}
                                         </button>
                                     </div>
                                 </div>

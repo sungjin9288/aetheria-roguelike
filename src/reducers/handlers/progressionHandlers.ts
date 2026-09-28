@@ -134,6 +134,32 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
     DECLINE_RELIC: (state) =>
         ({ ...state, pendingRelics: null }),
 
+    // 2026-09 Wave 28 (D6): 계승 제안을 미룬다. 마왕을 쓰러뜨릴 때마다 계승 화면이 다시 떠서(자연 플레이 런당
+    //   70~112회) 85~87을 진행하는 동안 같은 결정을 반복해야 했다. 한 번 미루면 이번 런에서는 다시 묻지 않고
+    //   (endgameSettlement가 플래그를 읽는다) 조작판의 "계승하기"로 돌아온다. 진엔딩 화면의 취소는 다른 결정이라
+    //   이 전이를 쓰지 않는다 — 허용 상태는 ASCENSION 하나다.
+    DEFER_ASCENSION: (state) => {
+        if (state.gameState !== GS.ASCENSION) return state;
+        return {
+            ...state,
+            gameState: GS.IDLE,
+            player: { ...state.player, ascensionOfferDeferred: true },
+            logs: appendRewardLogs(state.logs, [
+                { type: 'info', text: MSG.ASCEND_CANCEL },
+                { type: 'system', text: MSG.ASCENSION_DEFERRED_NOTICE },
+            ]),
+            syncStatus: 'syncing',
+        };
+    },
+
+    // 미룬 계승을 다시 연다. 이번 런에서 미룬 적이 있을 때만 — 플래그는 계승 화면(= 이번 런의 마왕 처치)에서만
+    //   세워지므로 곧 "이번 런에 마왕을 쓰러뜨렸다"는 뜻이다. 실제 계승은 ASCEND가 처치 영수증으로 다시 검증한다.
+    REOPEN_ASCENSION: (state) => {
+        if (state.gameState !== GS.IDLE || state.player.ascensionOfferDeferred !== true) return state;
+        if (!state.player.meta?.endgame?.lastEndgameReceiptKey) return state;
+        return { ...state, gameState: GS.ASCENSION };
+    },
+
     ASCEND: (state, action) => {
         if (state.gameState !== GS.ASCENSION && state.gameState !== GS.TRUE_ENDING) return state;
         if (getClaimableQuestEntries(state.player).length > 0) return state;

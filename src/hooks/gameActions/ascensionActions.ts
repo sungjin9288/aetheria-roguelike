@@ -26,8 +26,19 @@ export const createAscensionActions = (deps: GameActionDeps) => {
         },
 
         cancelAscension: () => {
+            // 2026-09 Wave 28 (D6): 계승 화면의 "미루기"는 이번 런 동안 다시 묻지 않는 결정이다 — 리듀서가 소유한다.
+            //   진엔딩 화면의 취소는 계승 제안이 아니므로 이전 동작 그대로다.
+            if (gameState === GS.ASCENSION) {
+                dispatch({ type: AT.DEFER_ASCENSION });
+                return;
+            }
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             addLog('info', MSG.ASCEND_CANCEL);
+        },
+
+        /** 미룬 계승 화면을 다시 연다. 허용 여부(이번 런에 미뤘는가 · idle인가)는 리듀서가 판정한다. */
+        reopenAscension: () => {
+            dispatch({ type: AT.REOPEN_ASCENSION });
         },
     };
 };
