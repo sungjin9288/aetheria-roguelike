@@ -189,10 +189,13 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         if (profile.phase3)   mStats.phase3 = profile.phase3;
     }
 
+    // 2026-09 Wave 29: 보스 여부는 몬스터가 정한다(자기 프로필 · 지역 bossMonsters 목록). 지역의 `boss` 문자열은
+    //   구역 보스의 이름일 뿐이다 — `(mapData.boss && bossMonsters 없음)` 분기가 있던 동안 그 목록이 없는 14곳의
+    //   일반 스폰이 전부 보스로 정산됐다(보스 보너스 장비·첫 토벌 골드·보스 처치 수·시즌 XP·서명 pity). 구역 보스
+    //   14종은 전부 자기 프로필로 보스라 게이지 도전은 그대로다(tests/boss-field-normal-spawn.test.js).
     mStats.isBoss = Boolean(
         profile?.isBoss
         || mapBossMonsters.includes(baseName)
-        || (mapData.boss && mapBossMonsters.length === 0)
         || BOSS_MONSTERS.includes(baseName)
     );
 

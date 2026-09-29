@@ -25,7 +25,13 @@ const HASH_ALGORITHM = 'sha256';
 // (소유자 결정). 이번에는 **곡선이 움직인다** — 체크포인트 액션 14/52/82/164/1,575/5,246/8,176 →
 // 16/56/87/167/1,579/5,249/8,179. 그 편집 하나만 되돌리면 이전 값 '2573fa0f…'이 그대로 재현된다(실측).
 // 이전 값: '2573fa0f1d41326e3d799de9aa871cb33b11ba42f452772a9a86708aa2ca1a69'.
-const PROGRESSION_V1_BASELINE_HASH = 'b89b9018e452f9f4d09da3c841b63da6963a593d19f9e91de25f6aad03768ac1';
+// Wave 29 (2026-09-28): 보스 필드 14곳의 일반 스폰이 보스가 아니게 됐다(소유자 결정). 곡선은 **움직이지 않는다** —
+// 1,000시드 체크포인트 p50은 Lv45 1,601 → 1,603 · Lv60 5,260 → 5,262 · Lv75 8,183 → 8,181이다. 해시가 바뀌는 것은
+// (a) 이 지역의 장비 시도가 보스 보너스(0.25)에서 일반 보너스(0.06)로 줄고(`tierEquip`) (b) `spawnEnemy`가 보스가
+// 아닌 적에게만 굴리는 정예 판정 draw가 되살아나 같은 액션의 접두어 굴림이 밀리기 때문이다(체크포인트는 시드별 잡음).
+// 그 편집 하나만 되돌리면 이전 값 'b89b9018…'이 그대로 재현된다(실측).
+// 이전 값: 'b89b9018e452f9f4d09da3c841b63da6963a593d19f9e91de25f6aad03768ac1'.
+const PROGRESSION_V1_BASELINE_HASH = '696607d221a09541728eb231ed54ba3094967935fd6e7db2ca5678387af92958';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';
