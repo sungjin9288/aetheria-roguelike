@@ -2078,3 +2078,9 @@ type-check 0 · lint 0 · unit **5,321 / 5,321**(368파일, skip 0 — Wave 28 5
 ### 30.2 테스트와 결함 주입
 
 `tests/title-relic-leftover-contract.test.js` 8행이다. 칭호 3행 + 배선 부재 불변식 1행 · 파편 3행 · relicCount 1행. 수정 전 6 red였고, 나머지 2행(rank 0 5/5와 rank 2 6/6의 보존)은 기존 동작 가드다. 결함 주입 4종은 각자 자기 행에서만 red였다: 클램프 제거 → 칭호 2행, 상한 5 고정 → 파편 1행, 계수 증가 제거 → relicCount 1행, 훅을 `SET_PLAYER`로 되돌림 → 배선 1행. e2e는 `REPLACE_RELIC`이 교체 대신 추가하도록 주입했을 때 교체 행이 red였다(`보유 유물 5/5` 단언). 관련 기존 테스트 60파일 2,059건은 그대로 green이었다.
+
+### 30.3 증빙 델타
+
+- `progression-diagnostic-v2`: 리포트와 기준선이 바이트 동일하다(reportHash `bc21a0de…` · v1 `696607d2…` 그대로). 바뀐 것은 sources 360개 중 이번에 고친 6개 파일의 바이트 핀뿐이다.
+- `relic-event-chance`: 결과는 불변이다. 소스 핀 `eventReward`(= `eventActions.ts`)만 움직였다.
+- `content-reachability` · `event-reward-coherence` · `equipment-combat-power` · `exploration-rhythm`: 바이트 불변이다.
