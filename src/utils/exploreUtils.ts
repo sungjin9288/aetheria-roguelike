@@ -143,15 +143,19 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 
     if (level === 'infinite') {
         isInfinite = true;
-        depth = player.stats?.abyssFloor || 1;
+        // 2026-09 Wave 35: 지금 싸우는 층 = 돌파한 층 + 1 — `exploreFlow`의 스케일 · 보스 층 · 적 레벨과 같은 번호다.
+        //   `abyssFloor || 1`이던 동안 이름의 층 태그가 한 층 낮았다("[10층 보스]" 다음 적이 "[10층]").
+        depth = (player.stats?.abyssFloor || 0) + 1;
         level = 50 + Math.floor(depth / 2);
     }
+    // 심연의 층 태그 — 접두어가 붙어도 이 태그는 이름 앞에 남는다(Wave 35).
+    const depthTag = isInfinite ? `[${depth}층] ` : '';
 
     // slice 19: HP 곡선 120+30L → BALANCE.MONSTER_HP_BASE(70)+L×32 — 초반 전투
     //   템포 가속 (Lv1 -32%, Lv50 +3%). 골드 base 10 → 16 (초반 휴식 경제).
     //   ATK/EXP 곡선은 불변 (quest pacing 가드 보존).
     const mStats: SpawnedMonster = {
-        name: isInfinite ? `[${depth}층] ${baseName}` : baseName,
+        name: `${depthTag}${baseName}`,
         baseName,
         level,
         hp: BALANCE.MONSTER_HP_BASE + level * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
@@ -229,7 +233,8 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
                 const pool = candidates.length > 0 ? candidates : CONSTANTS.MONSTER_PREFIXES;
                 return pool[Math.floor(rng() * pool.length)];
             })();
-        mStats.name = `${prefix.name} ${baseName}`;
+        // 2026-09 Wave 35: 심연에서는 층 태그를 지킨다 — 접두어가 이름을 다시 쓰면서 태그가 사라졌다.
+        mStats.name = `${depthTag}${prefix.name} ${baseName}`;
         mStats.hp = Math.floor(mStats.hp * prefix.mod);
         mStats.maxHp = Math.floor(mStats.maxHp * prefix.mod);
         mStats.atk = Math.floor(mStats.atk * prefix.mod);
@@ -247,7 +252,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
                 ? BALANCE.EARLY_ELITE_PHASE_HEAVY_BONUS
                 : BALANCE.ELITE_PHASE_HEAVY_BONUS;
             mStats.phase2 = {
-                name: `격노한 ${baseName}`,
+                name: `${depthTag}격노한 ${baseName}`,
                 atkBonus: phaseAtkBonus,
                 pattern: {
                     guardChance: Math.max(0, (mStats.pattern?.guardChance || 0.12) - 0.05),

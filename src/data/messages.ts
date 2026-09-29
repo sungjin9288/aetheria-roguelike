@@ -478,7 +478,7 @@ export const MSG = {
     DEMON_KING_SLAIN_ASCEND: '⚡ 마왕이 쓰러졌습니다. 에테르 환생의 문이 열렸습니다...',
     TRUE_GOD_SLAIN: '🌟 원시의 신이 쓰러졌습니다. 세계의 진실이 밝혀집니다...',
     VOID_GOD_SLAIN: '💀 공허의 신이 쓰러졌습니다. 공허가 잠시 물러났습니다... 당신은 심연의 끝을 정복했습니다.',
-    ABYSS_RECORD: (floor: number) => `🏆 심연 최고 기록 경신! ${floor}층 도달`,
+    ABYSS_RECORD: (floor: number) => `🏆 심연 최고 기록 경신! ${floor}층 돌파`,
 
     // --- 전투 아이템/스킬 ---
     COMBAT_CHAOS_SKILL: (name: string) => `뒤섞인 기술: [${name}]이(가) 발동했습니다!`,
@@ -492,7 +492,7 @@ export const MSG = {
     KILL_STREAK_BONUS: (streak: number, atkPct: number) => `🔥 ${streak}연속 처치! 공격력 +${atkPct}% 보너스 발동`,
 
     // --- 심연 ---
-    ABYSS_DESCEND: (floor: number) => `심연의 더 깊은 곳으로 진입했습니다. (현재: ${floor}층)`,
+    ABYSS_DESCEND: (floor: number) => `심연 ${floor}층을 돌파했습니다. 다음은 ${floor + 1}층입니다.`,
     ABYSS_LEGENDARY_ITEM: (name: string | undefined) => `🏆 전설 아이템 획득: [${name}]`,
     // cycle 194: ABYSS_PRESTIGE_POINTS 제거 — abyss milestone 'prestige_points' reward type이
     //   dead config(player.prestigePoints가 spend/UI 미구현)였음. 보상 타입을 relic_choice/
