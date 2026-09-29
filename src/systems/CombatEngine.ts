@@ -285,7 +285,7 @@ export const CombatEngine = {
 
         // C-1 (B+ 2026-06): 첫 죽음에 영구 메타 보너스 — "죽어도 남는다"를 1회차에
         //   학습시켜 완전 리셋 페널티를 공정하게 완충. 메타는 RUN을 넘어 보존되어
-        //   아래 starterState.atk/maxHp 합산 + 다음 런 buildClassVitals에도 반영된다.
+        //   공격력은 calculateFullStats, 생명/기력은 아래 maxHp 합산 + 다음 런 buildClassVitals로 반영된다.
         const isFirstDeath = (prevStats.deaths || 0) === 0;
         if (isFirstDeath) {
             meta.bonusAtk = (meta.bonusAtk || 0) + BALANCE.FIRST_DEATH_BONUS_ATK;
@@ -309,7 +309,9 @@ export const CombatEngine = {
         starterState.skillLoadout = { selected: 0, cooldowns: {} };
         starterState.name = '';
         starterState.gold = CONSTANTS.START_GOLD;
-        starterState.atk = (starterState.atk || 10) + (meta.bonusAtk || 0);
+        // 2026-09 Wave 32: `meta.bonusAtk`는 여기서 `atk`에 굽지 않는다 — `calculateFullStats`가 전투 공격력에 더한다
+        //   (계승·새 게임과 같은 경로). 굽던 동안 사망 재시작만 영구 공격력을 두 번 받았다.
+        starterState.atk = starterState.atk || 10;
         starterState.maxHp = (starterState.maxHp || BALANCE.DEFAULT_MAX_HP) + (meta.bonusHp || 0);
         starterState.maxMp = (starterState.maxMp || 50) + (meta.bonusMp || 0);
         starterState.hp = starterState.maxHp;

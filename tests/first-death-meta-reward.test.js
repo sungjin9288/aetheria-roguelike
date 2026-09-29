@@ -5,6 +5,7 @@ import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { BALANCE } from '../src/data/constants.js';
 import { MSG } from '../src/data/messages.js';
+import { calculateFullStats } from '../src/utils/statsCalculator.js';
 
 /**
  * C-1 (B+ 2026-06): 첫 죽음 영구 메타 보상.
@@ -28,8 +29,13 @@ test('C-1: 첫 죽음(deaths 0) → 영구 메타 보너스 지급', () => {
 
     assert.equal(result.updatedPlayer.meta.bonusAtk, BALANCE.FIRST_DEATH_BONUS_ATK);
     assert.equal(result.updatedPlayer.meta.bonusHp, BALANCE.FIRST_DEATH_BONUS_HP);
-    // starter 스탯에 즉시 합산 (다음 런 시작이 강해짐)
-    assert.equal(result.updatedPlayer.atk, INITIAL_STATE.player.atk + BALANCE.FIRST_DEATH_BONUS_ATK);
+    // 다음 런 시작이 강해진다 — 전투 공격력(calculateFullStats)이 보너스만큼 오른다.
+    //   2026-09 Wave 32: 예전에는 `updatedPlayer.atk` 필드를 핀으로 고정했는데, 계산기도 `meta.bonusAtk`를 더하므로
+    //   필드에 굽는 것은 이중 가산이었다(아래 [사망 재시작] 행).
+    const withBonus = calculateFullStats(result.updatedPlayer).atk;
+    const withoutBonus = calculateFullStats({ ...result.updatedPlayer, meta: { ...result.updatedPlayer.meta, bonusAtk: 0 } }).atk;
+    assert.equal(result.updatedPlayer.atk, INITIAL_STATE.player.atk, '기본 공격력 필드에는 굽지 않는다');
+    assert.ok(withBonus > withoutBonus, '보너스가 전투 공격력에 반영된다');
 });
 
 test('C-1: 첫 죽음 로그에 각성 안내 포함', () => {
@@ -57,4 +63,17 @@ test('C-1: 첫 죽음도 deaths += 1 증가는 유지 (회귀 가드)', () => {
     const player = buildPlayer({ stats: { ...INITIAL_STATE.player.stats, deaths: 0 } });
     const result = CombatEngine.handleDefeat(player, INITIAL_STATE.player);
     assert.equal(result.updatedPlayer.stats.deaths, 1);
+});
+
+test('[사망 재시작] 영구 공격력(meta.bonusAtk)은 전투 공격력에 한 번만 더해진다', () => {
+    // 2026-09 Wave 32: `handleDefeat`가 `meta.bonusAtk`를 새 캐릭터의 `atk` 필드에 굽고, `calculateFullStats`가
+    //   같은 값을 다시 더했다. 정수 사다리로 bonusAtk가 1,000이면 사망 뒤 전투 공격력이 2,408, 같은 meta로
+    //   계승한 캐릭터는 1,212였다 — 죽으면 강해졌다. `start()`가 `atk`를 다시 쓰지 않으므로 다음 런 내내 유지됐다.
+    for (const bonusAtk of [5, 100, 1000]) {
+        const meta = { ...CombatEngine.DEFAULT_META, ...INITIAL_STATE.player.meta, bonusAtk, bonusHp: 50 };
+        const player = buildPlayer({ level: 30, atk: 60, meta, stats: { ...INITIAL_STATE.player.stats, deaths: 3 } });
+        const restarted = CombatEngine.handleDefeat(player, INITIAL_STATE.player, () => 0.5, () => 0).updatedPlayer;
+        const fresh = { ...INITIAL_STATE.player, name: '', meta: restarted.meta };
+        assert.equal(calculateFullStats(restarted).atk, calculateFullStats(fresh).atk, `bonusAtk ${bonusAtk}`);
+    }
 });
