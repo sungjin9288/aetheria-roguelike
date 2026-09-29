@@ -1660,7 +1660,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       assert.equal(quest.progress, 0, 'progress should be 0 when level is undefined');
   });
 
-  test('Level 퀘스트 진행도: player.level=7 → progress 7 (정상)', () => {
+  test('Level 퀘스트 진행도: player.level=7 → progress 5 (목표 5에서 멈춘다 — 2026-09 Wave 32)', () => {
       const player = {
           level: 7,
           job: '모험가',
@@ -1669,7 +1669,19 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       };
       const result = syncQuestProgress(player);
       const quest = result.updatedQuests.find((q) => q.id === 10);
-      assert.equal(quest.progress, 7);
+      assert.equal(quest.progress, 5);
+  });
+
+  test('Level 퀘스트 진행도: player.level=3 → progress 3 (목표 아래는 레벨 그대로)', () => {
+      const player = {
+          level: 3,
+          job: '모험가',
+          quests: [{ id: 10, progress: 0 }],
+          stats: { kills: 0 },
+      };
+      const result = syncQuestProgress(player);
+      const quest = result.updatedQuests.find((q) => q.id === 10);
+      assert.equal(quest.progress, 3);
   });
 
   test('Level 퀘스트 진행도: latch 동작 — 이미 progress 12에서 player.level=7 → progress 12 유지', () => {
