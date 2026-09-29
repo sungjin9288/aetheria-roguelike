@@ -5,6 +5,8 @@
  * 사망 재시작·계승에서 0으로 돌아간다(가방 내용물도 그때 비워진다). 크리스털 영구 확장(`maxInv`)과는 더해진다.
  * 단계는 순서대로만 만든다 — 다음 단계 재료는 그 단계가 열리는 구간(Lv1 · 8 · 12 · 22 · 28)의 지역에서 나온다.
  * 5단계 × 3칸 = 기본 20칸 → 35칸. Wave 31 감사에서 전리품 굴림의 54%가 가방 가득으로 막혔다(원장 §31.4).
+ * 재료는 쌓이지 않고 한 개가 한 칸이다 — 단계당 재료를 3~5칸으로 둔 이유다(처음 6~8칸이던 동안 자연 플레이 드라이버는
+ * 한 런 내내 1단계 재료를 다 모으지 못했다: 가죽 3/4에서 저레벨 지역을 떠났다. 원장 §33).
  *
  * 상한을 읽는 곳은 전부 `utils/inventoryCapacity.getInventoryCapacity`를 거친다 — `maxInv`를 직접 읽지 말 것.
  */
@@ -25,7 +27,7 @@ export const BAG_RECIPES: readonly BagRecipeDef[] = Object.freeze([
         name: '가죽 배낭',
         slots: 3,
         gold: 150,
-        inputs: [{ name: '멧돼지 가죽', qty: 4 }, { name: '벌레 껍질', qty: 2 }],
+        inputs: [{ name: '멧돼지 가죽', qty: 3 }, { name: '벌레 껍질', qty: 1 }],
         desc: '고요한 숲의 가죽을 겹쳐 꿰맨 첫 배낭',
     },
     {
@@ -33,7 +35,7 @@ export const BAG_RECIPES: readonly BagRecipeDef[] = Object.freeze([
         name: '광부의 배낭',
         slots: 3,
         gold: 600,
-        inputs: [{ name: '철광석', qty: 5 }, { name: '박쥐 날개', qty: 3 }],
+        inputs: [{ name: '철광석', qty: 3 }, { name: '박쥐 날개', qty: 2 }],
         desc: '철 테를 두르고 박쥐 날개막으로 방수한 광부용 배낭',
     },
     {
@@ -41,7 +43,7 @@ export const BAG_RECIPES: readonly BagRecipeDef[] = Object.freeze([
         name: '수정 주머니',
         slots: 3,
         gold: 1500,
-        inputs: [{ name: '수정 파편', qty: 4 }, { name: '트롤의 피', qty: 2 }],
+        inputs: [{ name: '수정 파편', qty: 3 }, { name: '트롤의 피', qty: 1 }],
         desc: '수정 조각으로 공간을 넓힌 마법 주머니',
     },
     {
@@ -49,7 +51,7 @@ export const BAG_RECIPES: readonly BagRecipeDef[] = Object.freeze([
         name: '설원 가죽 가방',
         slots: 3,
         gold: 4000,
-        inputs: [{ name: '서리 늑대 가죽', qty: 3 }, { name: '거인의 뼈', qty: 2 }],
+        inputs: [{ name: '서리 늑대 가죽', qty: 2 }, { name: '거인의 뼈', qty: 1 }],
         desc: '거인의 뼈대로 모양을 잡은 두툼한 설원 가방',
     },
     {
