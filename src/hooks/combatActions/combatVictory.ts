@@ -2,6 +2,7 @@ import { CombatEngine } from '../../systems/CombatEngine';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
 import { BALANCE } from '../../data/constants';
+import { getInventoryCapacity } from '../../utils/inventoryCapacity';
 import { DB } from '../../data/db';
 import { checkMilestones, grantGold, makeItem, registerCodex, registerLootToCodex, countNewCodexEntries } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
@@ -333,7 +334,7 @@ export const handleVictoryOutcome = ({
     //   승리 등급(완승/안정/아슬아슬/붕괴 직전)을 나누므로 불리언보다 정확하다.
     //   카드를 띄울지 말지의 최종 판단은 reducer(settleVictory)가 전투 트랜잭션이 끝난
     //   상태(유물 선택 대기 / 승천 / 진엔딩 / 진보스)를 보고 한 곳에서 결정한다.
-    const inventoryCap = updatedPlayer.maxInv || BALANCE.INV_MAX_SIZE;
+    const inventoryCap = getInventoryCapacity(updatedPlayer);
     dispatch({
         type: AT.SET_POST_COMBAT_RESULT,
         payload: {

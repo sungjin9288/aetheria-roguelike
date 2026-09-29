@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import { getInventoryCapacity } from './inventoryCapacity';
 import { DB } from '../data/db.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import type {
@@ -387,9 +388,7 @@ export const applyBoundedEncounterChoice = (
         return settlementFailure(player, 'insufficient_resources', receiptKey, shortfall);
     }
     if (choice.outcome.item) {
-        const capacity = Number.isSafeInteger(player.maxInv) && Number(player.maxInv) > 0
-            ? Number(player.maxInv)
-            : BALANCE.INV_MAX_SIZE;
+        const capacity = getInventoryCapacity(player);
         if ((player.inv || []).length >= capacity) {
             return settlementFailure(player, 'inventory_full', receiptKey);
         }

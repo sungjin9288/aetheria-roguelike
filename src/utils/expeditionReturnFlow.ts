@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import { getInventoryCapacity } from './inventoryCapacity';
 import { DB } from '../data/db.js';
 import type { ExpeditionSummary, Player } from '../types/player.js';
 import type { Item, ItemRecipeDef } from '../types/item.js';
@@ -119,7 +120,7 @@ export const getExpeditionReturnAction = (
         };
     }
 
-    const inventoryCap = player.maxInv || BALANCE.INV_MAX_SIZE;
+    const inventoryCap = getInventoryCapacity(player);
     if ((player.inv || []).length >= inventoryCap - 2) {
         return {
             kind: 'open_inventory',

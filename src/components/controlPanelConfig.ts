@@ -13,6 +13,7 @@ export const ACTION_KIND_TO_BUTTON: Record<string, string> = {
     open_class: 'class',
     open_quest_board: 'quests',
     claim_quest: 'quests',
+    open_crafting: 'craft',
 };
 
 // cycle 302: ACTION_PRESENTATION 제거 — 정의되어 있지만 src/ 어디에서도 read 0건.

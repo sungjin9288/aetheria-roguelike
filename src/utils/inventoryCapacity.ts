@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants';
+import { getBagSlotBonus } from '../data/bagRecipes';
 import type { Player } from '../types';
 
 /**
@@ -16,14 +17,23 @@ import type { Player } from '../types';
  *
  * 구매·전리품은 언제나 +1 이상이므로 ②가 그대로 막는다(상한에서도, 상한을 넘긴 뒤에도).
  */
-export const getInventoryCapacity = (player: Pick<Player, 'maxInv'>): number => (
+/** 영구 가방 크기 — 크리스털 확장(`maxInv`)이 있으면 그것, 없으면 기본값. */
+export const getBaseInventoryCapacity = (player: Pick<Player, 'maxInv'>): number => (
     Number.isSafeInteger(player.maxInv) && Number(player.maxInv) > 0
         ? Number(player.maxInv)
         : BALANCE.INV_MAX_SIZE
 );
 
+/**
+ * 지금 가방 상한 = 영구 크기 + 이번 런에 제작한 가방 단계의 칸(2026-09 Wave 33).
+ * 상한을 읽는 곳은 전부 이 함수를 거친다 — `maxInv`를 직접 읽으면 제작한 가방이 무시된다.
+ */
+export const getInventoryCapacity = (player: Pick<Player, 'maxInv' | 'bagTier'>): number => (
+    getBaseInventoryCapacity(player) + getBagSlotBonus(player.bagTier)
+);
+
 /** 조작 뒤 크기 `nextSize`가 상한과 현재 크기를 **둘 다** 넘으면 true(= 상한 거부). */
 export const growsPastInventoryCapacity = (
-    player: Pick<Player, 'maxInv' | 'inv'>,
+    player: Pick<Player, 'maxInv' | 'bagTier' | 'inv'>,
     nextSize: number,
 ): boolean => nextSize > getInventoryCapacity(player) && nextSize > (player.inv || []).length;

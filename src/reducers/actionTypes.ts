@@ -115,6 +115,7 @@ export const AT = Object.freeze({
     BUY_SHOP_ITEM: 'BUY_SHOP_ITEM',
     SELL_INVENTORY_ITEM: 'SELL_INVENTORY_ITEM',
     CRAFT_RECIPE: 'CRAFT_RECIPE',
+    CRAFT_BAG: 'CRAFT_BAG',
     SYNTHESIZE_ITEMS: 'SYNTHESIZE_ITEMS',
     AUTO_SELL_MATERIALS: 'AUTO_SELL_MATERIALS',
     PURCHASE_PREMIUM_OFFER: 'PURCHASE_PREMIUM_OFFER',
@@ -257,6 +258,13 @@ export interface BuyShopItemPayload {
     relicRoll?: number;
 }
 
+/** `CRAFT_BAG` — 만들 가방 단계와 소비할 재료 인스턴스 id(2026-09 Wave 33). 단계는 지금 단계 + 1이어야 한다. */
+export interface CraftBagPayload {
+    tier: number;
+    inputIds: string[];
+    relicRoll?: number;
+}
+
 /** `CRAFT_RECIPE` — 소비할 재료 인스턴스 id까지 호출부가 확정해 넘긴다. */
 export interface CraftRecipePayload {
     recipeId: string;
@@ -350,6 +358,7 @@ export interface ActionPayloadMap {
     [AT.BUY_SHOP_ITEM]: BuyShopItemPayload;
     [AT.SELL_INVENTORY_ITEM]: { itemId: string };
     [AT.CRAFT_RECIPE]: CraftRecipePayload;
+    [AT.CRAFT_BAG]: CraftBagPayload;
     [AT.SYNTHESIZE_ITEMS]: SynthesizeItemsPayload;
     [AT.AUTO_SELL_MATERIALS]: undefined;
     [AT.PURCHASE_PREMIUM_OFFER]: PurchasePremiumOfferPayload;

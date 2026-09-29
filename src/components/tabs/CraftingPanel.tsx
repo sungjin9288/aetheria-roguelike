@@ -9,6 +9,7 @@ import { getItemRarity } from '../../utils/gameUtils';
 import { getCraftingInvestmentPreview, getSynthesisOutcomePreviews } from '../../utils/itemInvestmentPreview';
 import FocusPanelHeader from '../FocusPanelHeader';
 import ItemIcon from '../icons/ItemIcon';
+import BagCraftingSection from './BagCraftingSection';
 import SignalBadge from '../SignalBadge';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { Item, ItemRecipeDef, ItemType, Player } from '../../types/index.js';
@@ -17,7 +18,7 @@ import type { GameMode } from '../../reducers/gameStates';
 const TYPE_LABEL: Record<string, string> = { weapon: '무기', armor: '방어구', shield: '방패' };
 
 /** CraftingPanel이 실제로 호출하는 액션만 좁혀 받는다 (제작/합성). */
-type CraftingPanelActions = Pick<GameActions, 'craft' | 'synthesize'>;
+type CraftingPanelActions = Pick<GameActions, 'craft' | 'craftBag' | 'synthesize'>;
 
 /** 제작법과 장비 합성을 한 흐름에서 다룬다. */
 // cycle 403: `mobileFocused?: boolean;` 제거 — 본체 destructure 미사용 + read 0건.
@@ -330,9 +331,9 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
     >
       <FocusPanelHeader
         eyebrow="장비 제작소"
-        title={mode === 'craft' ? '제작' : '장비 합성'}
+        title={mode === 'bag' ? MSG.BAG_PANEL_TITLE : mode === 'craft' ? '제작' : '장비 합성'}
         titleClassName="flex items-center gap-2 text-[1.05rem] text-orange-400"
-        meta={mode === 'craft' ? '제작 가능한 레시피와 재료 수량을 즉시 비교합니다.' : '동일 티어 장비를 골라 합성 결과를 확인합니다.'}
+        meta={mode === 'bag' ? MSG.BAG_PANEL_META : mode === 'craft' ? '제작 가능한 레시피와 재료 수량을 즉시 비교합니다.' : '동일 티어 장비를 골라 합성 결과를 확인합니다.'}
         onBack={() => setGameState?.('idle')}
         backLabel="복귀"
         backTestId="crafting-close"
@@ -345,6 +346,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
             {[
               { id: 'craft', label: '제작' },
               { id: 'synth', label: '합성' },
+              { id: 'bag', label: MSG.BAG_TAB_LABEL },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -356,9 +358,9 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                 }}
                 className={`min-h-[36px] px-4 py-2 text-xs font-readable font-bold transition-all
                   ${mode === tab.id
-                    ? tab.id === 'craft'
-                      ? 'bg-orange-500/20 text-orange-300'
-                      : 'bg-purple-500/20 text-purple-300'
+                    ? tab.id === 'synth'
+                      ? 'bg-purple-500/20 text-purple-300'
+                      : 'bg-orange-500/20 text-orange-300'
                     : 'text-slate-500 hover:text-slate-300'
                   }`}
               >
@@ -369,7 +371,9 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
         }
       />
 
-      {mode === 'craft' ? renderCraftMode() : renderSynthMode()}
+      {mode === 'bag'
+        ? <BagCraftingSection player={player} onCraftBag={() => actions?.craftBag()} />
+        : mode === 'craft' ? renderCraftMode() : renderSynthMode()}
     </Motion.div>
   );
 };
