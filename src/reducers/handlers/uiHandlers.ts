@@ -3,6 +3,7 @@ import { GS } from '../gameStates';
 import { sanitizeQuickSlots } from './helpers';
 import type { HandlerMap } from '../gameReducer';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 
 export const uiActionMap = {
     SET_SYNC_STATUS: (state, action) =>
@@ -71,6 +72,14 @@ export const entityActionMap = {
             syncStatus: 'syncing'
         };
     },
+
+    // 2026-09 Wave 30: 칭호 패시브(생명/기력 +N)는 유효 최대치의 입력이다. `SET_PLAYER {activeTitle}`로 바꾸던
+    //   동안 생명 칭호를 해제해도 현재 생명이 옛 최대치에 남았다(D8과 같은 클래스의 마지막 전이, 원장 §27.6).
+    SET_ACTIVE_TITLE: (state, action) => ({
+        ...state,
+        player: trackExpeditionVitals(clampVitalsToEffectiveMax({ ...state.player, activeTitle: action.payload })),
+        syncStatus: 'syncing',
+    }),
 
     SET_EVENT: (state, action) =>
         ({ ...state, currentEvent: action.payload, syncStatus: 'syncing' }),

@@ -1,5 +1,5 @@
 import { checkTitles, findItemByName, getTitleLabel, makeItem } from '../../utils/gameUtils';
-import { RELICS, MAX_RELICS_PER_RUN } from '../../data/relics';
+import { RELICS } from '../../data/relics';
 import { SEASON_TIER_XP } from '../../data/seasonPass';
 import { MSG } from '../../data/messages';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
@@ -133,7 +133,9 @@ export const resolveDailyProtocolProgress = (
     //   이던 dead reward chain. 5개 도달 시 1 random 유물 자동 변환 (cap 도달 시 보존).
     let convertedRelicAdded: Relic | null = null;
     let postConvertShards = newShards;
-    if (newShards >= 5 && (player.relics || []).length < MAX_RELICS_PER_RUN) {
+    // 2026-09 Wave 30: 상한은 프레스티지 rank가 정한다(rank ≥2는 6) — `MAX_RELICS_PER_RUN`(5) 고정이던 동안 rank 2의
+    //   여섯 번째 칸이 비어 있어도 파편이 변환되지 않고 쌓였다. 다른 지급 경로와 같은 `maxRelics`를 읽는다.
+    if (newShards >= 5 && (player.relics || []).length < getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics) {
         const ownedIds = new Set((player.relics || []).map((r) => r?.id));
         const candidates = RELICS.filter((r) => !ownedIds.has(r.id));
         if (candidates.length > 0) {

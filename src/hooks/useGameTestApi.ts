@@ -17,6 +17,7 @@ import type { RunSummary } from '../reducers/actionTypes';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
 import { RELICS } from '../data/relics';
+import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
 import { AT } from '../reducers/actionTypes';
@@ -274,6 +275,13 @@ export interface GoldMultiplierCombatSnapshot {
     relicOrder: Array<string | undefined>;
 }
 
+/** injectRelicReplaceChoice() 반환 모양 — e2e가 이름으로 단언한다. */
+export interface RelicReplaceChoiceSeed {
+    capacity: number;
+    ownedNames: string[];
+    offeredName: string;
+}
+
 /** getCanonicalUndyingRelicChoiceSnapshot() 반환 모양. */
 export interface CanonicalUndyingRelicChoiceSnapshot {
     pendingIds: Array<string | undefined>;
@@ -348,6 +356,8 @@ export interface AetheriaTestApi {
     injectPostCombatResult: () => void;
     injectRelicChoice: () => boolean | undefined;
     injectUndyingRelicChoice: () => void;
+    /** Wave 30: 유물 상한(현재 rank)을 채운 채 유물 하나를 제안한다 — 교체 패널 e2e 시드. */
+    injectRelicReplaceChoice: () => RelicReplaceChoiceSeed | false;
     getCanonicalUndyingRelicChoiceSnapshot: () => CanonicalUndyingRelicChoiceSnapshot;
     injectFreeSkillRelicChoice: () => void;
     getCanonicalFreeSkillRelicChoiceSnapshot: () => CanonicalFreeSkillRelicChoiceSnapshot;
@@ -1783,6 +1793,20 @@ export const useGameTestApi = (
                         { id: 'test_relic_violet', name: '균열의 서판', desc: '기술 피해 18% 증가', rarity: 'rare', effect: 'skill_mult', val: 0.18 },
                     ],
                 });
+            },
+            injectRelicReplaceChoice: () => {
+                const er = engineRef.current;
+                const capacity = getPrestigeUnlocks(er.player.meta?.prestigeRank).maxRelics;
+                const owned = RELICS.slice(0, capacity).map((relic) => ({ ...relic }));
+                const offered = RELICS.find((relic) => !owned.some((entry) => entry.id === relic.id));
+                if (!offered || owned.length < capacity) return false;
+                er.dispatch({ type: AT.SET_PLAYER, payload: { relics: owned } });
+                er.dispatch({ type: AT.SET_PENDING_RELICS, payload: [offered] });
+                return {
+                    capacity,
+                    ownedNames: owned.map((relic) => String(relic.name)),
+                    offeredName: String(offered.name),
+                };
             },
             injectUndyingRelicChoice: () => {
                 const ids = ['undying', 'blood_pact', 'twin_blades'];

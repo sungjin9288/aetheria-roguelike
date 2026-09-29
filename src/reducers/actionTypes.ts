@@ -143,6 +143,8 @@ export const AT = Object.freeze({
     DEFER_ASCENSION: 'DEFER_ASCENSION',
     REOPEN_ASCENSION: 'REOPEN_ASCENSION',
     UNLOCK_TITLES: 'UNLOCK_TITLES',
+    // 2026-09 Wave 30: 칭호 전환은 유효 최대치를 바꾸므로 클램프를 소유한 리듀서 전이다.
+    SET_ACTIVE_TITLE: 'SET_ACTIVE_TITLE',
     SET_DAILY_PROTOCOL: 'SET_DAILY_PROTOCOL',
     UPDATE_DAILY_PROTOCOL: 'UPDATE_DAILY_PROTOCOL',
 
@@ -371,6 +373,7 @@ export interface ActionPayloadMap {
     [AT.DEFER_ASCENSION]: undefined;
     [AT.REOPEN_ASCENSION]: undefined;
     [AT.UNLOCK_TITLES]: string[];
+    [AT.SET_ACTIVE_TITLE]: string | null;
     [AT.SET_DAILY_PROTOCOL]: DailyProtocol | null;
     [AT.UPDATE_DAILY_PROTOCOL]: UpdateDailyProtocolPayload;
 
