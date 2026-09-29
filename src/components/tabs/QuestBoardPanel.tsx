@@ -8,7 +8,6 @@ import { getQuestBoardRecommendations } from '../../utils/questOperations.js';
 import SignalBadge from '../SignalBadge';
 import FocusPanelHeader from '../FocusPanelHeader';
 import { getPreparedExpeditionFocusQuestIds, MAX_EXPEDITION_FOCUS_QUESTS } from '../../utils/expeditionMissionFocus.js';
-import { getProtocolDayKey } from '../../utils/protocolCycle.js';
 import { getQuestObjectiveGateNotice, type QuestObjectiveGate } from '../../utils/questObjectiveGate';
 import { MSG } from '../../data/messages';
 import type { GameActions } from '../../hooks/actionDeps';
@@ -263,18 +262,15 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
   const isFocusedQuest = (questId: string | number) => focusedQuestIds.some((id) => String(id) === String(questId));
   const focusLimitReached = focusedQuestIds.length >= MAX_EXPEDITION_FOCUS_QUESTS;
 
-  const today = getProtocolDayKey(new Date());
   const hasActiveBounty = activeQuestEntries.some((e) => e.isBounty);
-  const bountyIssuedToday = player?.stats?.bountyDate === today && player?.stats?.bountyIssued;
-  const canRequestBounty = !hasActiveBounty && !bountyIssuedToday;
+  // Wave 32: 하루 1회 제한 없음 — 진행 중인 현상수배가 없으면 언제든 발급한다.
+  const canRequestBounty = !hasActiveBounty;
   // slice 22: 결정 CTA 한국어화 — 헤더/라벨의 콘솔 무드는 보존하되,
   //   행동을 확정하는 버튼은 즉시 이해되는 한국어로.
-  const bountyButtonLabel = hasActiveBounty ? '현상수배 진행 중' : bountyIssuedToday ? '오늘 발급 완료' : '현상수배 발급';
+  const bountyButtonLabel = hasActiveBounty ? '현상수배 진행 중' : '현상수배 발급';
   const bountyHelperText = hasActiveBounty
     ? '진행 중인 현상수배를 완료해야 다음 수배를 받을 수 있습니다.'
-    : bountyIssuedToday
-      ? '오늘 현상수배는 이미 발급되었습니다.'
-      : '현재 레벨 기준 토벌 의뢰를 즉시 발급합니다.';
+    : '현재 레벨 기준 토벌 의뢰를 즉시 발급합니다.';
   const lockedPreviewOperations: LockedPreviewOperation[] = lockedQuestEntries.map((quest) => ({
     quest,
     isLockedPreview: true,
