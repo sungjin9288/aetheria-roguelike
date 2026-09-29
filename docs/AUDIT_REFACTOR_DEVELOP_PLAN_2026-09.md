@@ -2324,3 +2324,12 @@ tracked verify **15/15** · type-check 0 · lint 0 · unit **5,361/5,361**(373�
 - **기존 소스 가드 1건 갱신**: `cloud-autosave`의 `flushCloudSave` 인자 목록 검사에 `pendingRelics`를 더했다.
 - **rules 에뮬레이터**: 클라이언트 실제 페이로드에서 유도하는 18건이 그대로 통과했다(`npm run test:rules`).
 
+### 34.4 증빙 델타
+
+- `progression-diagnostic-v2`: 리포트·기준선 바이트 동일(reportHash · v1Baseline 그대로). 소스 핀이 363개에서 364개가 됐다. `pendingRelicsRestore.ts`가 추가됐고, 이번에 고친 5개(`createCloudAutosave.ts` · `useFirebaseSync.ts` · `actionTypes.ts` · `bootstrapHandlers.ts` · `dataMigration.ts`)가 움직였다.
+- `relic-dot-multiplier`: 결과 불변. `dataMigration.ts` 소스 핀 하나만 움직였다.
+- 나머지 증빙은 바이트 불변이다. tracked verify **15/15**.
+
+### 34.5 게이트 (직렬 08:30~09:02)
+
+tracked verify **15/15** · type-check 0 · lint 0 · unit **5,368/5,368**(374파일, skip 0 — Wave 33 대비 +7) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **140/140**(71 + 69, 새 스펙 `relic-choice-reload.spec.ts` 포함) · perf desktop FCP 752ms / mobile 456ms · rules 에뮬레이터 18/18. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.
