@@ -917,6 +917,9 @@ export const MSG = {
 
     // ── Wave 28 P3 — 계승 제안 미루기(D6) ──
     //   한 번 미루면 이번 여정에서는 마왕을 다시 쓰러뜨려도 계승 화면이 뜨지 않는다. 조작판에서 다시 연다.
+    // 2026-09 Wave 40: 계승 화면 — 다음 세계의 적 전투 레벨 가산과 영구 스탯 레벨 연동.
+    ASCENSION_ENEMY_LEVEL_BONUS: (current: number, next: number) => `적 전투 레벨 +${current} → +${next}`,
+    ASCENSION_META_RAMP: (level: number) => `영구 능력치는 레벨에 비례해 적용되고 Lv${level}에 전부 적용됩니다. 매 여정은 약하게 시작합니다.`,
     ASCENSION_DEFERRED_NOTICE: '이번 여정에서는 마왕을 다시 쓰러뜨려도 계승을 묻지 않습니다. 준비되면 조작판의 [계승하기]를 누르세요.',
     DEMON_KING_SLAIN_ASCEND_DEFERRED: '⚡ 마왕이 쓰러졌습니다. 계승은 조작판의 [계승하기]에서 언제든 선택할 수 있습니다.',
     ASCENSION_REOPEN_LABEL: '계승하기',

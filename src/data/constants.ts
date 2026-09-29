@@ -267,6 +267,14 @@ export const BALANCE = {
     //   부분 상쇄 → net firmer하되 공정. (prestige-enemy-scaling.test.js로 가드)
     PRESTIGE_ENEMY_STAT_PER_RANK: 0.05,   // 환생 rank당 적 hp/atk/def 증가율
     PRESTIGE_ENEMY_REWARD_PER_RANK: 0.08, // 환생 rank당 적 exp/gold 증가율 (난도 보상)
+    // 2026-09 Wave 40 (소유자 결정 "더 하드하게" — 연동 + 가산): 계승 rank마다 적의 전투 레벨(생명 · 공격력 · 방어력)이
+    //   오른다. 보상 · 표시 레벨은 그대로다. rank당 +2(상한 +6)는 영구 스탯 연동과 겹쳐 4회차에 시드 하나가 8~15번
+    //   죽었다(16시드 탐침) — +1 · 상한 +3에서 최악 시드가 런당 4번 이하였다.
+    PRESTIGE_ENEMY_LEVEL_PER_RANK: 1,
+    PRESTIGE_ENEMY_LEVEL_MAX: 3,
+    // 영구 스탯(정수 사다리 · 첫 죽음 · 계승 보상)은 이 레벨에 닿을 때까지 레벨에 비례해 적용된다(Wave 40). 계승 런이
+    //   Lv1부터 전부 받던 동안 2·3회차 사망이 16시드 모두 0이었다.
+    META_BONUS_FULL_LEVEL: 30,
     // PR #8 (2026-06) — 프레스티지 해금 효과(PRESTIGE_UNLOCKS). AscensionScreen이
     //   광고하던 rank별 해금이 대부분 dead display text였던 것을 실제 구현.
     //   getPrestigeUnlocks(rank)가 단일 진실 원천(systems/prestigeUnlocks.ts).

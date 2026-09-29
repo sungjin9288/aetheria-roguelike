@@ -8,6 +8,7 @@ import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import type { TitlePassive } from '../data/titles.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
+import { getRampedMetaAtk } from '../systems/metaBonusRamp.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
 import { resolveHpDrainAtkRelic } from './hpDrainAtkRelic.js';
 
@@ -347,7 +348,7 @@ export const calculateFullStats = (player: Player) => {
     const enhanceBonus = computeEnhanceBonus(player.equip || {});
 
     const baseAtk =
-        ((player.atk ?? 0) + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + (meta.bonusAtk || 0) * prestigeStatMult + passiveBonus.atk) *
+        ((player.atk ?? 0) + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + getRampedMetaAtk(meta, player.level) + passiveBonus.atk) *
         cls.atkMod! *
         (1 + (buff.atk || 0) + abyssBonus.atk) *
         setBonus.atkMult *

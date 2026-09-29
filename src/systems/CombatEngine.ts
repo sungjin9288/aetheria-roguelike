@@ -18,6 +18,7 @@ import { queueMilestoneStoryBeat } from '../utils/milestoneStory.js';
 import { pickPermanentPlayerState } from '../utils/permanentProgress.js';
 import { createCurrentRunProgress } from '../utils/runProgress.js';
 import { resolveHpDrainAtkRelic } from '../utils/hpDrainAtkRelic.js';
+import { getBakedMetaVitals, snapshotMetaVitals } from './metaBonusRamp.js';
 
 /** `calculateDamage()` 옵션 — 호출부 2곳(공격/스킬) 모두 object literal로 명시 전달. */
 export interface CalculateDamageOptions {
@@ -312,8 +313,12 @@ export const CombatEngine = {
         // 2026-09 Wave 32: `meta.bonusAtk`는 여기서 `atk`에 굽지 않는다 — `calculateFullStats`가 전투 공격력에 더한다
         //   (계승·새 게임과 같은 경로). 굽던 동안 사망 재시작만 영구 공격력을 두 번 받았다.
         starterState.atk = starterState.atk || 10;
-        starterState.maxHp = (starterState.maxHp || BALANCE.DEFAULT_MAX_HP) + (meta.bonusHp || 0);
-        starterState.maxMp = (starterState.maxMp || 50) + (meta.bonusMp || 0);
+        // 2026-09 Wave 40: 새 런은 Lv1이라 영구 생명 · 기력의 Lv1 연동 비율만 굽고, 전체량 스냅숏을 남긴다(레벨업이 나머지를 굽는다).
+        const metaVitalsSnapshot = snapshotMetaVitals(meta);
+        const bakedMeta = getBakedMetaVitals(metaVitalsSnapshot, 1);
+        starterState.metaVitalsSnapshot = metaVitalsSnapshot;
+        starterState.maxHp = (starterState.maxHp || BALANCE.DEFAULT_MAX_HP) + bakedMeta.hp;
+        starterState.maxMp = (starterState.maxMp || 50) + bakedMeta.mp;
         starterState.hp = starterState.maxHp;
         starterState.mp = starterState.maxMp;
         starterState.inv = [

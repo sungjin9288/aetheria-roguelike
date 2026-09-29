@@ -28,6 +28,7 @@ export type SpawnedMonster = MonsterBase & {
 import { DB } from '../data/db.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
+import { getPrestigeEnemyLevelBonus } from '../systems/metaBonusRamp.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 // Track J1: FIRST_VISIT_REWARDS 테이블은 data/firstVisitRewards.ts로 분리됨.
 import { FIRST_VISIT_REWARDS } from '../data/firstVisitRewards.js';
@@ -150,6 +151,8 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     }
     // 심연의 층 태그 — 접두어가 붙어도 이 태그는 이름 앞에 남는다(Wave 35).
     const depthTag = isInfinite ? `[${depth}층] ` : '';
+    // 2026-09 Wave 40: 계승 rank만큼 오른 전투 레벨 — 생명 · 공격력 · 방어력에만 쓴다. 표시 레벨 · 경험치 · 골드 · 행동 확률은 원래 레벨이다.
+    const combatLevel = level + getPrestigeEnemyLevelBonus(player.meta?.prestigeRank);
 
     // slice 19: HP 곡선 120+30L → BALANCE.MONSTER_HP_BASE(70)+L×32 — 초반 전투
     //   템포 가속 (Lv1 -32%, Lv50 +3%). 골드 base 10 → 16 (초반 휴식 경제).
@@ -158,13 +161,13 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         name: `${depthTag}${baseName}`,
         baseName,
         level,
-        hp: BALANCE.MONSTER_HP_BASE + level * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
-        maxHp: BALANCE.MONSTER_HP_BASE + level * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
-        atk: 15 + level * 4 + (depth * 3),
+        hp: BALANCE.MONSTER_HP_BASE + combatLevel * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
+        maxHp: BALANCE.MONSTER_HP_BASE + combatLevel * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
+        atk: 15 + combatLevel * 4 + (depth * 3),
         // PR #3: 적 DEF 곡선 — 이전엔 def 필드 자체가 없어 enemy.def는 항상 undefined였고
         //   calculateDamage도 무시 → 적 방어력 완전 dead. 이제 레벨 비례 def + 비율 경감(K=100)
         //   으로 중후반 firmer. profile.defMult로 탱키 아키타입 가중(아래 적용).
-        def: Math.floor(BALANCE.MONSTER_DEF_BASE + level * BALANCE.MONSTER_DEF_PER_LEVEL + depth * BALANCE.MONSTER_DEF_PER_DEPTH),
+        def: Math.floor(BALANCE.MONSTER_DEF_BASE + combatLevel * BALANCE.MONSTER_DEF_PER_LEVEL + depth * BALANCE.MONSTER_DEF_PER_DEPTH),
         exp: 10 + level * 10 + (depth * 4),
         gold: BALANCE.MONSTER_GOLD_BASE + level * 2 + (depth * 3),
         pattern: {

@@ -511,6 +511,12 @@ export interface EventHistoryEntry {
  * 2026-09 B3 stage 3: 임의 문자열 키를 허용하던 인덱스 시그니처 제거. 이제 `player.anyTypo`가
  * 컴파일 에러다. 새 최상위 필드를 쓰려면 여기에 선언을 함께 넣어야 한다.
  */
+/** 2026-09 Wave 40: 재구성 순간의 영구 생명 · 기력 전체량(에테르 초월 배율 포함). */
+export interface MetaVitalsSnapshot {
+    hp: number;
+    mp: number;
+}
+
 export interface Player {
     name?: string;
     job?: string;
@@ -574,6 +580,12 @@ export interface Player {
     maxInv?: number;
     /** 2026-09 Wave 33: 이번 런에 제작한 가방 단계(`data/bagRecipes.ts`). 영구 상태가 아니라 사망·계승에서 0으로 돌아간다. */
     bagTier?: number;
+    /**
+     * 2026-09 Wave 40: 이번 런의 재구성(새 게임 · 전직 · 사망 재시작) 때 잡은 영구 생명 · 기력 전체량. 저장된 `maxHp`/`maxMp`에는
+     * 이 값 × 레벨 연동 비율만 구워져 있고, 레벨업이 비율이 오른 만큼 더 굽는다(`systems/metaBonusRamp.ts`). 없으면 예전 세이브다.
+     * 런 범위라 `pickPermanentPlayerState`에 넣지 않는다.
+     */
+    metaVitalsSnapshot?: MetaVitalsSnapshot;
     /** cycle 186: PremiumShop 부활 토큰 보유 수 — 환생에도 보존되는 영구 자산. */
     reviveTokens?: number;
     /** 2026-07 에테르 거울 revive를 이 런에서 이미 썼는지. 새 런 시작 시 자연 리셋. */
