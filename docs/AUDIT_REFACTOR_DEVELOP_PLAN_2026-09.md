@@ -2286,3 +2286,7 @@ Wave 27(§27.1)은 새 세이브에서 첫 계승까지만 걸었다. 인계 문
 
 - `progression-diagnostic-v2`: 리포트·기준선 바이트 동일(성장 모델은 가방 단계를 두지 않는다). 소스 핀 360 → 363으로, 새 파일 3개(`bagRecipes.ts` · `bagCrafting.ts` · `BagCraftingSection.tsx`)가 추가되고 이번에 고친 18개가 움직였다.
 - 나머지 증빙은 바이트 불변이다. tracked verify **15/15**.
+
+### 33.6 게이트 (직렬 06:54~07:24)
+
+tracked verify **15/15** · type-check 0 · lint 0 · unit **5,361/5,361**(373파일, skip 0) · build:guard ok · CI-env build ok · e2e **139/139**(71 + 68, 새 스펙 `bag-crafting.spec.ts` 포함) · perf desktop FCP 792ms / mobile 584ms.
