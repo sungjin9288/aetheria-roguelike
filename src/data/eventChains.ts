@@ -299,7 +299,8 @@ export const EVENT_CHAINS = [
                     outcomes: [
                         // cycle 140: '기계 코어 갑옷' missing → tier 5 armor '천상의갑주'로 교체 (기계 자동인형 사절단의 최고급 의장).
                         { type: 'chain_advance', log: '기계 집단이 제작한 천상의갑주를 받았습니다!', reward: { type: 'item', name: '천상의갑주' } },
-                        { type: 'chain_advance', log: '거절했지만, 기계들이 당신의 배낭에 몰래 넣어뒀습니다. 강화 재료가 들어있습니다.', reward: { type: 'gold', amount: 8000 } },
+                        // 2026-09 Wave 39: 문구가 약속한 강화 재료를 준다(골드 8,000을 주던 동안 로그와 보상이 달랐다).
+                        { type: 'chain_advance', log: '거절했지만, 기계들이 당신의 배낭에 몰래 넣어뒀습니다. 강화 재료가 들어있습니다.', reward: { type: 'item', name: '강화 재료' } },
                     ],
                 },
             },
