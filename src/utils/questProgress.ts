@@ -19,8 +19,9 @@ export const createQuestProgressState = (quest: Quest, player: Player): QuestPro
         id: quest.id ?? '',
         // `?? 0` — Player.level은 타입상 optional이라 progress(number) 계약을 맞춘다.
         //   소비자가 모두 `progress || 0`으로 읽어 왔으므로 동작은 동일하다.
+        //   레벨 임무는 목표에서 멈춘다(2026-09 Wave 32) — 목표보다 높은 레벨에서 받으면 46/45였다.
         progress: cumulativeProgress === null
-            ? (quest.target === 'level' ? (player.level ?? 0) : 0)
+            ? (quest.target === 'level' ? Math.min(Number(quest.goal), player.level ?? 0) : 0)
             : cumulativeProgress,
     };
 
@@ -113,8 +114,10 @@ export const syncQuestProgress = (player: Player, enemyName: string | undefined,
             return { ...quest, progress: latch(quest.progress, cumulativeProgress, questData.goal) };
         }
 
+        // 레벨 임무도 다른 카운터와 같은 latch다(2026-09 Wave 32) — `max(progress, level)`이던 동안 목표를
+        //   넘겨 올랐다(자연 플레이 드라이버의 `questProgressOverGoal`, 원장 §32).
         if (questData.target === 'level') {
-            return { ...quest, progress: Math.max(quest.progress || 0, player.level || 0) };
+            return { ...quest, progress: latch(quest.progress, player.level || 0, questData.goal) };
         }
 
         // 목표 판정은 종(baseName) 정확 일치다 — enemyIdentity.matchesQuestTarget이 장식(접두어 ·

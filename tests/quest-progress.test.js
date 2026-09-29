@@ -15,9 +15,14 @@ test('quest progress starts from the current level or local exploration baseline
         createQuestProgressState(QUESTS.find((quest) => quest.id === 80), player),
         { id: 80, progress: 0, startExploreCount: 3 },
     );
+    // 10은 '레벨 5 달성'이다 — 목표보다 높은 레벨에서 받으면 목표에서 멈춘다(2026-09 Wave 32, 아래 누적 처치 행과 같은 규칙).
     assert.deepEqual(
         createQuestProgressState(QUESTS.find((quest) => quest.id === 10), player),
-        { id: 10, progress: 7 },
+        { id: 10, progress: 5 },
+    );
+    assert.deepEqual(
+        createQuestProgressState(QUESTS.find((quest) => quest.id === 10), { ...player, level: 3 }),
+        { id: 10, progress: 3 },
     );
 });
 

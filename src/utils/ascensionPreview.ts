@@ -1,6 +1,6 @@
 import { BALANCE } from '../data/constants';
 import { PRESTIGE_TITLES } from '../data/titles';
-import { getEssenceLifetime } from '../systems/essenceLedger';
+import { carryEssenceLadderOnAscension } from '../systems/essenceLedger';
 import type { Player } from '../types/player';
 
 export interface PrestigeMilestone {
@@ -35,6 +35,8 @@ export interface AscensionOutcome {
     nextEnemyStatPercent: number;
     currentEnemyRewardPercent: number;
     nextEnemyRewardPercent: number;
+    /** 2026-09 Wave 32: 정수 사다리 이월(계승 직전 단계 → 남는 단계). */
+    ladder: { rankBefore: number; rankKept: number };
 }
 
 const toNonNegativeNumber = (value: unknown) => {
@@ -47,6 +49,9 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
     const currentRank = Math.floor(toNonNegativeNumber(currentMeta.prestigeRank));
     const nextRank = currentRank + 1;
     const titleIndex = Math.min(nextRank - 1, PRESTIGE_TITLES.length - 1);
+    // 2026-09 Wave 32: 사다리 이월을 먼저 적용하고 그 위에 이번 계승의 보상을 얹는다.
+    const carried = carryEssenceLadderOnAscension(currentMeta);
+    const carriedMeta = carried.meta;
 
     return {
         currentRank,
@@ -54,13 +59,15 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
         title: PRESTIGE_TITLES[titleIndex],
         meta: {
             ...currentMeta,
+            ...carriedMeta,
             prestigeRank: nextRank,
-            essence: toNonNegativeNumber(currentMeta.essence) + BALANCE.PRESTIGE_ESSENCE_REWARD,
-            // 2026-09 G2: 승천 보상도 누적 원장에 함께 기록 (rank는 누적 기준으로 오른다).
-            essenceLifetime: getEssenceLifetime(currentMeta) + BALANCE.PRESTIGE_ESSENCE_REWARD,
-            bonusAtk: toNonNegativeNumber(currentMeta.bonusAtk) + BALANCE.PRESTIGE_ATK_BONUS,
-            bonusHp: toNonNegativeNumber(currentMeta.bonusHp) + BALANCE.PRESTIGE_HP_BONUS,
-            bonusMp: toNonNegativeNumber(currentMeta.bonusMp) + BALANCE.PRESTIGE_MP_BONUS,
+            essence: carriedMeta.essence + BALANCE.PRESTIGE_ESSENCE_REWARD,
+            // 2026-09 G2: 승천 보상도 누적 원장에 함께 기록 (rank는 사다리 기준으로 오른다).
+            essenceLifetime: carriedMeta.essenceLifetime + BALANCE.PRESTIGE_ESSENCE_REWARD,
+            essenceLadder: carriedMeta.essenceLadder + BALANCE.PRESTIGE_ESSENCE_REWARD,
+            bonusAtk: carriedMeta.bonusAtk + BALANCE.PRESTIGE_ATK_BONUS,
+            bonusHp: carriedMeta.bonusHp + BALANCE.PRESTIGE_HP_BONUS,
+            bonusMp: carriedMeta.bonusMp + BALANCE.PRESTIGE_MP_BONUS,
         },
         milestone: PRESTIGE_MILESTONES.find((entry) => entry.rank === nextRank) || null,
         upcomingMilestone: PRESTIGE_MILESTONES.find((entry) => entry.rank > nextRank) || null,
@@ -68,5 +75,6 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
         nextEnemyStatPercent: Math.round(nextRank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK * 100),
         currentEnemyRewardPercent: Math.round(currentRank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK * 100),
         nextEnemyRewardPercent: Math.round(nextRank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK * 100),
+        ladder: { rankBefore: carried.rankBefore, rankKept: carried.rankKept },
     };
 };

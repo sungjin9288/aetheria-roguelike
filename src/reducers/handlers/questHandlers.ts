@@ -136,11 +136,11 @@ export const questActionMap = {
         if (!isSafeLocation(state)) return appendQuestLog(state, 'error', MSG.BOUNTY_TOWN_ONLY);
         if ((state.player.quests || []).some((quest) => quest.isBounty)) return state;
 
+        // 2026-09 Wave 32 (소유자 결정): 하루 1회 제한을 없앴다 — 진행 중인 현상수배는 하나, 완료하면 바로 다음이다.
+        //   카탈로그 임무는 계정당 1회라(Q8) 계승 뒤 런에는 이것이 유일한 반복 게시판 콘텐츠다(원장 §31.2).
+        //   `bountyDate`/`bountyIssued`는 마지막 발급 기록으로만 남는다(게이트가 아니다).
         const requestDate = getRequestDate(action.payload?.requestedAt);
         const dayKey = getProtocolDayKey(requestDate);
-        if (state.player.stats?.bountyDate === dayKey && state.player.stats?.bountyIssued) {
-            return appendQuestLog(state, 'error', MSG.BOUNTY_DAILY_LIMIT);
-        }
 
         const level = Math.max(1, Number(state.player.level) || 1);
         const seed = normalizedSeed(action.payload?.seed);

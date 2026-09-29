@@ -196,6 +196,9 @@ interface PlayerMeta {
     // 2026-09 G2: 지금까지 *번* 정수의 총합(소비해도 줄지 않음). rank 산출 기준.
     //   단일 진실 원천은 systems/essenceLedger.ts.
     essenceLifetime?: number;
+    // 2026-09 Wave 32: rank를 매기는 사다리 원장. 계승 때 남긴 단계만큼으로 줄어든다(누적 정수는 그대로).
+    //   없으면 essenceLifetime으로 읽는다 — 구세이브는 계승 전까지 기존과 같다.
+    essenceLadder?: number;
     rank?: number;
     bonusAtk?: number;
     bonusHp?: number;

@@ -330,7 +330,6 @@ export const MSG = {
     EXPEDITION_FOCUS_REMOVED: (title: string | undefined) => `이번 원정 임무 제외: ${title}`,
     BOUNTY_TOWN_ONLY: '현상수배 수주는 마을 게시판에서만 가능합니다.',
     BOUNTY_ABANDONED: '현상수배 임무를 포기했습니다. 오늘은 새 현상수배를 받을 수 없습니다.',
-    BOUNTY_DAILY_LIMIT: '오늘 현상수배는 이미 발급되었습니다. 내일 다시 요청하세요.',
     // cycle 116: BOUNTY_ACCEPTED 제거 — BOUNTY_ACCEPTED_NEW가 active.
     ASCEND_PENDING_QUESTS_TITLE: '먼저 받을 임무 보상',
     ASCEND_PENDING_QUESTS_GUIDANCE: '수령 기록은 계승 후에도 남습니다. 보상 장비와 골드를 쓰려면 수령 후 이 여정을 계속하세요.',
@@ -553,6 +552,9 @@ export const MSG = {
     // --- 에테르 거울 진입 (2026-09 · 승천 화면 CTA) ---
     MIRROR_CTA_LABEL: '에테르 거울 열기',
     MIRROR_CTA_HINT: (essence: number) => `계승 정수 ${essence}로 영구 성장을 새길 수 있습니다.`,
+    // 2026-09 Wave 32: 계승 시 정수 사다리 이월(BALANCE.ESSENCE_LADDER_ASCEND_CARRY).
+    ASCEND_LADDER_CARRY: (before: number, kept: number, percent: number) =>
+        `정수 사다리 ${before}단계 중 ${kept}단계(${percent}%)만 다음 여정으로 이어집니다. 위 공격력·생명·기력에 반영돼 있고, 계승 정수는 그대로입니다.`,
     // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
     SCOUT_ACTION_LABEL: '정찰',
     SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
