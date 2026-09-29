@@ -2506,3 +2506,13 @@ Wave 27 · 31 · 35의 드라이버는 보상 수령 버튼을 누르지 않았�
 - **규모**: 무기·방어구·보조장비를 모두 올리면 약 265만 골드다. 레벨이 오르며 장비를 바꿀 때마다 다시 든다.
 - **결정은 그대로 유효하다**: 시즌 배율 상한 하향은 공급 쪽 조정이다. 다만 "소비처가 없다"는 전제는 틀렸다. 강화가 후반 골드를 실제로 얼마나 흡수하는지, 강화 재료가 충분히 나오는지는 다음 감사(강화 · 제작 · 합성 · 에테르 거울 소비 루프)가 잰다.
 
+### 37.5 증빙 델타
+
+- `progression-diagnostic-v2`: 리포트 · 기준선 바이트 동일. 소스 핀 364개 중 `constants.ts` · `essenceLedger.ts` 2개만 움직였다. 성장 모델은 무릎 아래 구간에 머문다.
+- `equipment-combat-power`: `constants.ts` 핀(tierHash) 하나만 움직였다.
+- 나머지 증빙은 바이트 불변이다. tracked verify **15/15**.
+
+### 37.6 게이트 (직렬 12:11~12:42)
+
+tracked verify **15/15** · type-check 0 · lint 0 · unit **5,382/5,382**(377파일, skip 0 — Wave 35 대비 +9) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **140/140**(71 + 69) · perf desktop FCP 992ms / mobile 628ms. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.
+
