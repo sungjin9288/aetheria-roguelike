@@ -2201,3 +2201,9 @@ Wave 27(§27.1)은 새 세이브에서 첫 계승까지만 걸었다. 인계 문
 - `equipment-combat-power`: `constants.ts` 핀(`tierHash`)만 이동.
 - `relic-hp-drain-atk`: `authorityHashes.combatEngine`만 이동. 이 증빙은 고정 순서 체인 스크립트에 빠져 있었다. 단위 테스트의 strict verifier가 잡아서 체인에 5c 단계로 넣었다(감사 도구 쪽).
 - 나머지는 바이트 불변. tracked verify **15/15**.
+
+### 32.6 게이트 (직렬 05:07~05:36, 단위는 수정 뒤 재실행)
+
+- **통과 항목**: type-check 0 · lint 0 · build:guard ok · CI-env build ok · e2e **138/138**(70 + 68) · perf desktop FCP 740ms / mobile 752ms.
+- **첫 단위 실행**: 5,343/5,344였다. 실패 1건은 `cycle-200-299`의 cycle 277 소스 정규식 가드였다. `ascensionPreview.ts`에 `bonusAtk: toNonNegativeNumber(currentMeta.bonusAtk)`라는 글자 모양이 있는지 보던 가드라, 사다리 이월 뒤 모양이 바뀌자 깨졌다. 의도("계승이 영구 보너스를 누적 유지한다")를 `getAscensionOutcome` 호출 단언으로 바꿨다(Wave 11 C4 정책: 동작 확인은 행동 테스트로).
+- **재실행 단위**: **5,344/5,344**(372파일, skip 0).
