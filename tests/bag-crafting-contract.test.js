@@ -18,6 +18,7 @@ import { getAscensionOutcome } from '../src/utils/ascensionPreview.ts';
 import { getAdventureGuidance } from '../src/utils/adventureGuide.ts';
 import { ACTION_KIND_TO_BUTTON } from '../src/components/controlPanelConfig.ts';
 import BagCraftingSection from '../src/components/tabs/BagCraftingSection.tsx';
+import SmartInventory from '../src/components/SmartInventory.tsx';
 import { renderStatic } from './helpers/render.ts';
 
 /**
@@ -203,6 +204,42 @@ test('[안내] 마을에서 가방이 거의 찼고 다음 가방을 만들 수 
     assert.equal(ACTION_KIND_TO_BUTTON[ready.primaryAction.kind], 'craft', '조작판의 제작소 버튼이 강조된다');
     const short = getAdventureGuidance({ ...base, inv: Array.from({ length: 19 }, (_, i) => material('슬라임 젤리', i)) }, null, DB.MAPS['시작의 마을'], 'idle');
     assert.notEqual(short.title, MSG.GUIDE_BAG_UPGRADE_TITLE, '재료가 없으면 기존 정리 안내');
+});
+
+// ── 일괄 판매 · 과밀 배너 ──────────────────────────────────────────────────
+
+const junkBag = () => [
+    ...Array.from({ length: 5 }, (_, i) => material('멧돼지 가죽', i)),
+    ...Array.from({ length: 3 }, (_, i) => material('벌레 껍질', i)),
+    ...Array.from({ length: 2 }, (_, i) => material('슬라임 젤리', i)),
+];
+
+test('[일괄 판매] 값싼 재료를 팔아도 다음 가방에 필요한 수량은 남는다', () => {
+    const recipe = BAG_RECIPES[0];
+    const state = { ...craftingState({ inv: junkBag() }), gameState: GS.IDLE };
+    const next = gameReducer(state, { type: AT.AUTO_SELL_MATERIALS });
+    const count = (name) => next.player.inv.filter((item) => item.name === name).length;
+    for (const input of recipe.inputs) assert.equal(count(input.name), input.qty, `${input.name} ${input.qty}개 보존`);
+    assert.equal(count('슬라임 젤리'), 0);
+    assert.equal(next.player.inv.length, recipe.inputs.reduce((sum, input) => sum + input.qty, 0));
+});
+
+test('[일괄 판매] 가방을 모두 만들었으면 예전처럼 전부 판다', () => {
+    const state = { ...craftingState({ bagTier: 5, inv: junkBag() }), gameState: GS.IDLE };
+    const next = gameReducer(state, { type: AT.AUTO_SELL_MATERIALS });
+    assert.equal(next.player.inv.length, 0);
+});
+
+test('[과밀 배너] 과밀 판정과 표시는 지금 상한을 따른다', () => {
+    const fill = (count) => [...junkBag(), ...Array.from({ length: count - 10 }, (_, i) => material('철광석', 200 + i))];
+    const render = (player) => renderStatic(createElement(SmartInventory, { player: { ...structuredClone(INITIAL_STATE.player), ...player }, quickSlots: [null, null, null], onAssignQuickSlot: () => {} }));
+    const base = render({ inv: fill(18) });
+    assert.ok(base.includes('data-testid="inventory-bulk-sell-banner"'), '기본 20칸: 18개에서 배너');
+    assert.ok(base.includes('18/20'));
+    const crafted = render({ inv: fill(18), bagTier: 2 });
+    assert.equal(crafted.includes('data-testid="inventory-bulk-sell-banner"'), false, '26칸: 18개는 과밀이 아니다');
+    const craftedFull = render({ inv: fill(24), bagTier: 2 });
+    assert.ok(craftedFull.includes('24/26'));
 });
 
 // ── 상한 단일 원천(부재 불변식) ─────────────────────────────────────────────

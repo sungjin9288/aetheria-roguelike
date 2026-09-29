@@ -213,7 +213,8 @@ import { DB } from '../src/data/db.ts';
   test('cycle 502: 정합성 가드 — economy reducer callsite는 amount를 전달하지 않는다', async () => {
       const source = await readSrc('src/reducers/handlers/economyHandlers.ts');
       const matches = source.match(/incrementStat\(/g) || [];
-      assert.equal(matches.length, 2, 'incrementStat 호출 정확히 2건');
+      // 2026-09 Wave 33: 가방 제작(craftBag)도 'crafts'를 +1 한다 — 레시피 제작 · 합성 · 가방 제작 3건.
+      assert.equal(matches.length, 3, 'incrementStat 호출 정확히 3건');
       // amount(3번째 인자로 숫자 리터럴)를 명시 전달하는 패턴 0건
       // 즉 incrementStat(..., 'field_literal', <number>) 형태가 0건이어야 함
       assert.ok(!/incrementStat\([\s\S]+?,\s*'[^']+',\s*\d+\)/.test(source),

@@ -1,6 +1,7 @@
+import { BALANCE } from '../data/constants';
 import { getNextBagRecipe, type BagRecipeDef } from '../data/bagRecipes';
 import { getInventoryCapacity } from './inventoryCapacity';
-import type { Player } from '../types';
+import type { Item, Player } from '../types';
 
 export interface BagCraftReadiness {
     recipe: BagRecipeDef;
@@ -34,4 +35,23 @@ export const getBagCraftReadiness = (player: Pick<Player, 'bagTier' | 'maxInv' |
         ready: hasMaterials && hasGold,
         nextCapacity: getInventoryCapacity(player) + recipe.slots,
     };
+};
+
+/**
+ * 일괄 판매(`AUTO_SELL_MATERIALS`) 대상 — 값싼 재료(`INVENTORY_JUNK_MATERIAL_PRICE_MAX` 이하) 중에서 **다음 가방 단계에
+ * 필요한 수량만큼은 남긴다**(2026-09 Wave 33). 가방 1·2단계 재료(멧돼지 가죽 · 벌레 껍질 · 철광석 · 박쥐 날개)가
+ * 전부 그 가격대라, 남기지 않으면 일괄 판매 한 번이 가방 재료를 팔아 버린다. 리듀서와 인벤토리 버튼 수치가 이 함수를 읽는다.
+ */
+export const getAutoSellMaterialTargets = (player: Pick<Player, 'inv' | 'bagTier'>): Item[] => {
+    const reserve = new Map<string, number>();
+    for (const input of getNextBagRecipe(player.bagTier)?.inputs || []) reserve.set(input.name, input.qty);
+    return (player.inv || []).filter((item) => {
+        if (item.type !== 'mat' || (item.price || 0) > BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX) return false;
+        const left = reserve.get(item.name || '') || 0;
+        if (left > 0) {
+            reserve.set(item.name || '', left - 1);
+            return false;
+        }
+        return true;
+    });
 };

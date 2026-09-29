@@ -14,6 +14,7 @@ import { getSellPrice } from '../../utils/equipmentUtils';
 import { getCraftingInvestmentPreview } from '../../utils/itemInvestmentPreview';
 import { getInventoryCapacity, growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
 import { getBagTier, getNextBagRecipe } from '../../data/bagRecipes';
+import { getAutoSellMaterialTargets } from '../../utils/bagCrafting';
 import { incrementStat } from '../../utils/playerStateUtils';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
@@ -298,9 +299,8 @@ const synthesizeItems = (state: GameState, action: ActionOf<typeof AT.SYNTHESIZE
 };
 
 const autoSellMaterials = (state: GameState): GameState => {
-    const targets = (state.player.inv || []).filter(
-        (item) => item.type === 'mat' && (item.price || 0) <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX,
-    );
+    // 2026-09 Wave 33: 다음 가방 단계에 필요한 재료는 그 수량만큼 남긴다(getAutoSellMaterialTargets).
+    const targets = getAutoSellMaterialTargets(state.player);
     if (targets.length === 0) return state;
 
     const targetIds = new Set(targets.map((item) => item.id));
