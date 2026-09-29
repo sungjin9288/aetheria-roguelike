@@ -12,7 +12,8 @@ import { BALANCE } from '../data/constants';
  *   - `meta.essenceLifetime` = 지금까지 *번* 정수의 총합 (소비해도, 계승해도 줄지 않음).
  *   - `meta.essenceLadder` = rank를 매기는 사다리 원장. 획득마다 오르고, 계승 때만 남긴 단계만큼으로 줄어든다
  *     (2026-09 Wave 32). 없으면 `essenceLifetime`으로 읽는다.
- *   - rank = `max(meta.rank, floor(essenceLadder / BALANCE.ESSENCE_PER_RANK))` — 획득·소비에서 단조.
+ *   - rank = `max(meta.rank, getLadderRank(essenceLadder))` — 획득·소비에서 단조. `ESSENCE_LADDER_SOFTCAP_RANK`까지는
+ *     단계당 `ESSENCE_PER_RANK`, 그 뒤로는 단계 비용이 늘어나는 체감형이다(2026-09 Wave 37).
  *     (기존 세이브의 rank가 더 높아도 절대 내려가지 않는다.) 내려가는 경로는 계승(`carryEssenceLadderOnAscension`) 하나다.
  *   - 정수 소비(거울 구매)는 `essence`만 줄이고 `essenceLifetime`·`essenceLadder`는 건드리지 않는다.
  *
@@ -61,10 +62,44 @@ export const getEssenceLadder = (meta: EssenceMeta | null | undefined): number =
     return getEssenceLifetime(meta);
 };
 
-/** 사다리 정수 → 계승 rank. 현재 rank 아래로는 절대 내려가지 않는다(단조). */
+/**
+ * 사다리 단계 `rank`까지 오르는 데 필요한 누적 사다리 정수 (2026-09 Wave 37, 소유자 결정 "체감형 사다리").
+ *
+ * `ESSENCE_LADDER_SOFTCAP_RANK`까지는 단계당 `ESSENCE_PER_RANK` 그대로다 — 1회차는 계승까지 800단계 안팎이라 이 구간
+ * 안에 있고, 계승 런은 10%만 넘겨받아 다시 이 구간에서 시작한다. 그 뒤 k번째 단계는 `ESSENCE_PER_RANK × (1 + k / SCALE)`
+ * 정수가 든다. 계승을 미룬 런에서 사다리가 1:1로 끝없이 쌓이던 것(225 모델시간에 4,200단계)을 줄인다.
+ */
+export const getLadderEssenceForRank = (rank: unknown): number => {
+    const target = Math.floor(toNonNegative(rank));
+    const knee = BALANCE.ESSENCE_LADDER_SOFTCAP_RANK;
+    const perRank = BALANCE.ESSENCE_PER_RANK;
+    if (target <= knee) return target * perRank;
+    const extra = target - knee;
+    return knee * perRank + perRank * (extra + (extra * (extra + 1)) / (2 * BALANCE.ESSENCE_LADDER_SOFTCAP_SCALE));
+};
+
+/** 사다리 정수 → 사다리 단계 (`getLadderEssenceForRank`의 역함수, 내림). */
+export const getLadderRank = (ladder: unknown): number => {
+    const essence = toNonNegative(ladder);
+    const knee = BALANCE.ESSENCE_LADDER_SOFTCAP_RANK;
+    const perRank = BALANCE.ESSENCE_PER_RANK;
+    if (essence <= knee * perRank) return Math.floor(essence / perRank);
+    // 무릎 뒤 n단계의 비용(단계 단위) = n + n(n+1)/(2S) → n²/(2S) + n(1 + 1/(2S)) − excess ≤ 0 의 양의 근.
+    const scale = BALANCE.ESSENCE_LADDER_SOFTCAP_SCALE;
+    const excess = (essence - knee * perRank) / perRank;
+    const a = 1 / (2 * scale);
+    const b = 1 + a;
+    let extra = Math.max(0, Math.floor((-b + Math.sqrt(b * b + 4 * a * excess)) / (2 * a)));
+    // 부동소수 경계 보정 — 정확히 비용과 같은 정수에서 단계가 오른다.
+    while (getLadderEssenceForRank(knee + extra + 1) <= essence) extra += 1;
+    while (extra > 0 && getLadderEssenceForRank(knee + extra) > essence) extra -= 1;
+    return knee + extra;
+};
+
+/** 사다리 정수 → 계승 rank. 현재 rank 아래로는 절대 내려가지 않는다(단조 — Wave 37 이전 선형 규칙으로 오른 단계도 유지). */
 export const getRankFromLifetime = (lifetime: unknown, currentRank: unknown = 0): number => Math.max(
     Math.floor(toNonNegative(currentRank)),
-    Math.floor(toNonNegative(lifetime) / BALANCE.ESSENCE_PER_RANK),
+    getLadderRank(lifetime),
 );
 
 /** applyEssenceGain이 반환하는 meta — 원장 필드가 전부 확정(number)된 형태. */
@@ -144,7 +179,7 @@ export const carryEssenceLadderOnAscension = (meta: EssenceMeta | null | undefin
             ...base,
             essence: toNonNegative(base.essence),
             essenceLifetime: getEssenceLifetime(base),
-            essenceLadder: rankKept * BALANCE.ESSENCE_PER_RANK,
+            essenceLadder: getLadderEssenceForRank(rankKept),
             rank: rankKept,
             bonusAtk: Math.max(0, toNonNegative(base.bonusAtk) - dropped * BALANCE.ESSENCE_RANK_ATK),
             bonusHp: Math.max(0, toNonNegative(base.bonusHp) - dropped * BALANCE.ESSENCE_RANK_HP),
