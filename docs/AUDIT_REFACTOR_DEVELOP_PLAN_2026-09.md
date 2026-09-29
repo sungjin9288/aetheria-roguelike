@@ -2058,3 +2058,8 @@ type-check 0 · lint 0 · unit **5,316 / 5,316**(367파일, skip 0 — Wave 27 5
 - `exploration-rhythm`: 리듬 지표는 불변이다. 내장한 성장 모델 리포트 해시 둘(focused · full)만 움직였다. `pacing:verify`가 먼저 stale로 실패해 `--write`로 재생성했다(Wave 28과 같은 순서).
 - `content-reachability`: reportHash `34d3c817…` → `7e9d6f3f…`. 앵커 시간만 움직였고 게이트 레벨 · 체인 구조 · 임무 괴리 목록은 불변이다.
 - `relic-event-chance` · `event-reward-coherence` · `equipment-combat-power`: 바이트 불변이다.
+- tracked verify **15/15 ok**.
+
+### 29.6 게이트 (head `201b6a03`, 직렬 23:54~00:34)
+
+type-check 0 · lint 0 · unit **5,321 / 5,321**(368파일, skip 0 — Wave 28 5,316 대비 +5) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **136 / 136**(70 + 66) · perf desktop FCP 556ms / mobile 592ms · tracked verify 15/15. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.
