@@ -2394,3 +2394,12 @@ Wave 27은 첫 계승까지, Wave 31은 계승 4회까지 걸었다. 아무도 �
   - 격노 태그 누락 → 격노 행
 - **기존 테스트 1건 갱신**: `quest-target-identity`가 돌파 12층의 태그를 `[12층]`으로 고정하고 있었다. 지금 싸우는 층인 `[13층]`으로 고쳤다.
 - **한국어 래칫**: 층 태그를 한 번만 만들어(`depthTag`) 두 이름에 재사용해, 한글 템플릿 조각 수를 그대로 유지했다.
+
+### 35.7 증빙 델타
+
+- `progression-diagnostic-v2`: 리포트 · 기준선 바이트 동일(reportHash · v1Baseline 그대로). 소스 핀 364개 중 이번에 고친 3개(`messages.ts` · `combatBossHandlers.ts` · `exploreUtils.ts`)만 움직였다.
+- 나머지 증빙은 바이트 불변이다. tracked verify **15/15**.
+
+### 35.8 게이트 (직렬 09:59~10:30)
+
+tracked verify **15/15** · type-check 0 · lint 0 · unit **5,373/5,373**(375파일, skip 0 — Wave 34 대비 +5) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **140/140**(71 + 69) · perf desktop FCP 764ms / mobile 652ms. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.
