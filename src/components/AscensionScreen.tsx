@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import { MSG } from '../data/messages.js';
+import { BALANCE } from '../data/constants.js';
 import type { Player } from '../types/index.js';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
 import EndgameJourney from './EndgameJourney';
@@ -115,6 +116,11 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                                 </div>
                             ))}
                         </div>
+                        {outcome.ladder.rankBefore > outcome.ladder.rankKept && (
+                            <p data-testid="ascension-ladder-carry" className="mt-2 text-[11px] font-readable leading-relaxed text-amber-100/80">
+                                {MSG.ASCEND_LADDER_CARRY(outcome.ladder.rankBefore, outcome.ladder.rankKept, Math.round(BALANCE.ESSENCE_LADDER_ASCEND_CARRY * 100))}
+                            </p>
+                        )}
                         <p className="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">
                             {MSG.MIRROR_CTA_HINT(player.meta?.essence || 0)}
                         </p>

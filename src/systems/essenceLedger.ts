@@ -9,10 +9,12 @@ import { BALANCE } from '../data/constants';
  *   CombatEngine.outcome.ts와 reducers/handlers/helpers.ts 두 곳에 복제돼 있었다.
  *
  * 계약:
- *   - `meta.essenceLifetime` = 지금까지 *번* 정수의 총합 (소비해도 줄지 않음).
- *   - rank = `max(meta.rank, floor(essenceLifetime / BALANCE.ESSENCE_PER_RANK))` — 단조.
- *     (기존 세이브의 rank가 더 높아도 절대 내려가지 않는다.)
- *   - 정수 소비(거울 구매)는 `essence`만 줄이고 `essenceLifetime`은 건드리지 않는다.
+ *   - `meta.essenceLifetime` = 지금까지 *번* 정수의 총합 (소비해도, 계승해도 줄지 않음).
+ *   - `meta.essenceLadder` = rank를 매기는 사다리 원장. 획득마다 오르고, 계승 때만 남긴 단계만큼으로 줄어든다
+ *     (2026-09 Wave 32). 없으면 `essenceLifetime`으로 읽는다.
+ *   - rank = `max(meta.rank, floor(essenceLadder / BALANCE.ESSENCE_PER_RANK))` — 획득·소비에서 단조.
+ *     (기존 세이브의 rank가 더 높아도 절대 내려가지 않는다.) 내려가는 경로는 계승(`carryEssenceLadderOnAscension`) 하나다.
+ *   - 정수 소비(거울 구매)는 `essence`만 줄이고 `essenceLifetime`·`essenceLadder`는 건드리지 않는다.
  *
  * 전부 순수 함수 — 입력 meta를 변이하지 않고 새 객체를 반환한다.
  */
@@ -20,6 +22,7 @@ import { BALANCE } from '../data/constants';
 export interface EssenceMeta {
     essence?: number;
     essenceLifetime?: number;
+    essenceLadder?: number;
     rank?: number;
     bonusAtk?: number;
     bonusHp?: number;
@@ -51,7 +54,14 @@ export const getEssenceLifetime = (meta: EssenceMeta | null | undefined): number
     );
 };
 
-/** 누적 정수 → 계승 rank. 현재 rank 아래로는 절대 내려가지 않는다(단조). */
+/** 사다리 원장. 기록이 없는 세이브(Wave 32 이전)는 누적 정수를 그대로 사다리로 읽는다. */
+export const getEssenceLadder = (meta: EssenceMeta | null | undefined): number => {
+    const recorded = Number(meta?.essenceLadder);
+    if (Number.isFinite(recorded) && recorded >= 0) return Math.floor(recorded);
+    return getEssenceLifetime(meta);
+};
+
+/** 사다리 정수 → 계승 rank. 현재 rank 아래로는 절대 내려가지 않는다(단조). */
 export const getRankFromLifetime = (lifetime: unknown, currentRank: unknown = 0): number => Math.max(
     Math.floor(toNonNegative(currentRank)),
     Math.floor(toNonNegative(lifetime) / BALANCE.ESSENCE_PER_RANK),
@@ -61,6 +71,7 @@ export const getRankFromLifetime = (lifetime: unknown, currentRank: unknown = 0)
 export type SettledEssenceMeta = EssenceMeta & {
     essence: number;
     essenceLifetime: number;
+    essenceLadder: number;
     rank: number;
     bonusAtk: number;
     bonusHp: number;
@@ -87,7 +98,8 @@ export const applyEssenceGain = (
     const amount = Math.max(0, Math.floor(toNonNegative(gain)));
     const prevRank = Math.floor(toNonNegative(base.rank));
     const lifetime = getEssenceLifetime(base) + amount;
-    const nextRank = getRankFromLifetime(lifetime, prevRank);
+    const ladder = getEssenceLadder(base) + amount;
+    const nextRank = getRankFromLifetime(ladder, prevRank);
     const rankGain = nextRank - prevRank;
 
     return {
@@ -95,6 +107,7 @@ export const applyEssenceGain = (
             ...base,
             essence: toNonNegative(base.essence) + amount,
             essenceLifetime: lifetime,
+            essenceLadder: ladder,
             rank: nextRank,
             bonusAtk: toNonNegative(base.bonusAtk) + rankGain * BALANCE.ESSENCE_RANK_ATK,
             bonusHp: toNonNegative(base.bonusHp) + rankGain * BALANCE.ESSENCE_RANK_HP,
@@ -102,5 +115,42 @@ export const applyEssenceGain = (
         },
         gain: amount,
         rankGain,
+    };
+};
+
+export interface EssenceLadderCarry {
+    meta: SettledEssenceMeta;
+    /** 계승 직전 사다리 단계 */
+    rankBefore: number;
+    /** 다음 런으로 넘어간 단계 */
+    rankKept: number;
+}
+
+/**
+ * 계승 시 사다리 이월 — 단계의 `BALANCE.ESSENCE_LADDER_ASCEND_CARRY`만 남기고(내림), 내려놓은 단계의 영구 스탯을 뺀다.
+ *
+ * 2026-09 Wave 32 (소유자 결정): 사다리는 한 런에 800단계 안팎(공격력 +800 · 생명 +4,000)을 쌓았고 그것이 통째로
+ *   넘어가 계승 런 48판 사망이 0이었다(원장 §31.4 · §32). 획득률을 낮추면 1회차가 23% 길어져서, 1회차를 그대로 두는
+ *   유일한 지점인 계승에서 줄인다. 첫 죽음·프레스티지 보너스는 사다리 몫이 아니므로 그대로다(빼는 양은 단계 × 단계당 값).
+ *   누적 정수·쓸 수 있는 정수는 건드리지 않는다. 사망 재시작은 이 함수를 부르지 않는다.
+ */
+export const carryEssenceLadderOnAscension = (meta: EssenceMeta | null | undefined): EssenceLadderCarry => {
+    const base = meta || {};
+    const rankBefore = Math.floor(toNonNegative(base.rank));
+    const rankKept = Math.floor(rankBefore * BALANCE.ESSENCE_LADDER_ASCEND_CARRY);
+    const dropped = rankBefore - rankKept;
+    return {
+        meta: {
+            ...base,
+            essence: toNonNegative(base.essence),
+            essenceLifetime: getEssenceLifetime(base),
+            essenceLadder: rankKept * BALANCE.ESSENCE_PER_RANK,
+            rank: rankKept,
+            bonusAtk: Math.max(0, toNonNegative(base.bonusAtk) - dropped * BALANCE.ESSENCE_RANK_ATK),
+            bonusHp: Math.max(0, toNonNegative(base.bonusHp) - dropped * BALANCE.ESSENCE_RANK_HP),
+            bonusMp: Math.max(0, toNonNegative(base.bonusMp) - dropped * BALANCE.ESSENCE_RANK_MP),
+        },
+        rankBefore,
+        rankKept,
     };
 };

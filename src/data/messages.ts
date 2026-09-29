@@ -552,6 +552,9 @@ export const MSG = {
     // --- 에테르 거울 진입 (2026-09 · 승천 화면 CTA) ---
     MIRROR_CTA_LABEL: '에테르 거울 열기',
     MIRROR_CTA_HINT: (essence: number) => `계승 정수 ${essence}로 영구 성장을 새길 수 있습니다.`,
+    // 2026-09 Wave 32: 계승 시 정수 사다리 이월(BALANCE.ESSENCE_LADDER_ASCEND_CARRY).
+    ASCEND_LADDER_CARRY: (before: number, kept: number, percent: number) =>
+        `정수 사다리 ${before}단계 중 ${kept}단계(${percent}%)만 다음 여정으로 이어집니다. 위 공격력·생명·기력에 반영돼 있고, 계승 정수는 그대로입니다.`,
     // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
     SCOUT_ACTION_LABEL: '정찰',
     SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
