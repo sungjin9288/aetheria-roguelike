@@ -2956,14 +2956,17 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 277: bonusAtk/Hp/Mp 활성 필드 유지 (회귀 가드)', async () => {
-      const [action, outcome] = await Promise.all([
-          readSrc('src/hooks/gameActions/ascensionActions.ts'),
-          readSrc('src/utils/ascensionPreview.ts'),
-      ]);
+      const action = await readSrc('src/hooks/gameActions/ascensionActions.ts');
       assert.ok(/getAscensionOutcome\(player\.meta\)/.test(action), 'ASCEND가 공용 outcome 사용');
-      assert.ok(/bonusAtk:\s*toNonNegativeNumber\(currentMeta\.bonusAtk\)/.test(outcome), 'ASCEND bonusAtk 누적 유지');
-      assert.ok(/bonusHp:\s*toNonNegativeNumber\(currentMeta\.bonusHp\)/.test(outcome), 'ASCEND bonusHp 누적 유지');
-      assert.ok(/bonusMp:\s*toNonNegativeNumber\(currentMeta\.bonusMp\)/.test(outcome), 'ASCEND bonusMp 누적 유지');
+      // 2026-09 Wave 32: 소스 모양(`bonusAtk: toNonNegativeNumber(currentMeta.bonusAtk)`) 대신 동작을 단언한다 —
+      //   계승은 사다리 이월(essence-ladder-ascension-carry)을 먼저 적용하므로 그 모양이 사라졌다. 사다리 단계가 없는
+      //   meta에서는 지난 영구 보너스가 그대로 누적되고 이번 계승 보상이 더해진다.
+      const { getAscensionOutcome } = await import('../src/utils/ascensionPreview.ts');
+      const { BALANCE } = await import('../src/data/constants.ts');
+      const outcome = getAscensionOutcome({ prestigeRank: 1, rank: 0, bonusAtk: 12, bonusHp: 70, bonusMp: 9 });
+      assert.equal(outcome.meta.bonusAtk, 12 + BALANCE.PRESTIGE_ATK_BONUS, 'ASCEND bonusAtk 누적 유지');
+      assert.equal(outcome.meta.bonusHp, 70 + BALANCE.PRESTIGE_HP_BONUS, 'ASCEND bonusHp 누적 유지');
+      assert.equal(outcome.meta.bonusMp, 9 + BALANCE.PRESTIGE_MP_BONUS, 'ASCEND bonusMp 누적 유지');
   });
 
   test('cycle 277: ASCEND prestigeRank / essence / titles 동작 유지 (회귀 가드)', () => {
