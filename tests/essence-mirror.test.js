@@ -610,7 +610,7 @@ test('⑦ CombatEngine.handleVictory: 전투 정수가 essenceLifetime에도 누
     const gained = nextMeta.essence - 40;
     assert.ok(gained > 0);
     assert.equal(nextMeta.essenceLifetime, 40 + gained, '누적 원장이 동일량만큼 증가');
-    assert.equal(gained, getEssenceGainFromExp(enemy.exp, 1), 'BALANCE.ESSENCE_EXP_ROOT_SCALE 기준 획득량');
+    assert.equal(gained, getEssenceGainFromExp(enemy.exp, 1), 'BALANCE.ESSENCE_EXP_DIVISOR 기준 획득량');
 });
 
 test('⑦ dataMigration v5.1: essenceLifetime을 잔여 정수 + 거울 구매 이력으로 정확 역산', async () => {

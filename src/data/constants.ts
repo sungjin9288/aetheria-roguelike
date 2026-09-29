@@ -574,7 +574,7 @@ export const BALANCE = {
     //   산출한다. 거울 구매가 영구 스탯 사다리를 갉아먹던 숨은 비용을 제거하는 계약이며,
     //   단일 진실 원천은 systems/essenceLedger.ts.
     ESSENCE_PER_RANK: 150,       // 누적 정수 이만큼마다 계승 rank +1
-    ESSENCE_EXP_ROOT_SCALE: 1,   // 전투 정수 획득 = floor(√enemy.exp × 이 값 × 획득 배율) — 2026-09 Wave 32: exp/8은 런당 정수 9만~18만(영구 공격력 +600~1,200)을 만들었다
+    ESSENCE_EXP_DIVISOR: 8,      // 전투 정수 획득 = floor(enemy.exp / 이 값 × 획득 배율)
     ESSENCE_RANK_ATK: 1,         // rank 1단계당 영구 공격력
     ESSENCE_RANK_HP: 5,          // rank 1단계당 영구 최대 생명
     ESSENCE_RANK_MP: 3,          // rank 1단계당 영구 최대 기력

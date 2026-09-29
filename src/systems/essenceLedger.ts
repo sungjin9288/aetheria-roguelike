@@ -31,16 +31,10 @@ const toNonNegative = (value: unknown): number => {
     return Number.isFinite(number) ? Math.max(0, number) : 0;
 };
 
-/**
- * 전투 보상 정수량. enemy.exp의 제곱근과 획득 배율(프레스티지 rank × 거울 essence_flow)로 계산.
- *
- * 2026-09 Wave 32: `exp / 8`이던 동안 처치당 정수가 적 exp(레벨에 거의 비례)를 따라 커졌고, 한 런의 전투
- *   1,500~1,900회가 곱해져 9만~18만이 됐다 — rank(150당 1)로 영구 공격력 +600~1,200. 제곱근은
- *   Lv5~10(exp 63~125 → 7~11)을 거의 그대로 두고 Lv48(exp 611 → 24)을 약 1/3로 줄인다. 원장 §32.
- */
+/** 전투 보상 정수량. enemy.exp와 획득 배율(프레스티지 rank × 거울 essence_flow)로 계산. */
 export const getEssenceGainFromExp = (exp: unknown, essenceMult: unknown = 1): number => {
     const mult = Number.isFinite(Number(essenceMult)) ? Number(essenceMult) : 1;
-    return Math.max(1, Math.floor(Math.sqrt(toNonNegative(exp)) * BALANCE.ESSENCE_EXP_ROOT_SCALE * mult));
+    return Math.max(1, Math.floor(toNonNegative(exp) / BALANCE.ESSENCE_EXP_DIVISOR * mult));
 };
 
 /**
