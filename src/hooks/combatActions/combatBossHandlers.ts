@@ -21,7 +21,9 @@ export const applyAbyssFloorAdvance = (
     now: () => number = Date.now,
 ) => {
     if (p.loc !== CONSTANTS.ABYSS_MAP_NAME) return p;
-    const newDepth = (p.stats?.abyssFloor || 1) + 1;
+    // 2026-09 Wave 35: `abyssFloor`는 돌파한 층 수다 — 지금 싸운 층(`abyssFloor + 1`)을 이기면 그 층을 돌파한다.
+    //   `|| 1`이던 동안 첫 돌파가 0 → 2였다(2층 전투가 없고 기록 · 칭호 · 유물 층 보너스가 한 층 앞섰다).
+    const newDepth = (p.stats?.abyssFloor || 0) + 1;
     const prevRecord = p.stats?.abyssRecord || 0;
     const newRecord = Math.max(prevRecord, newDepth);
     let updated = {

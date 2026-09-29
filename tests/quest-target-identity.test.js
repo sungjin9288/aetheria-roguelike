@@ -159,7 +159,8 @@ test('spawnEnemy의 초반 정예 접두어와 층 태그는 enemyIdentity가 �
     assert.ok(abyss, '무한 심연 맵이 존재한다');
     const deep = spawnEnemy(abyss[1], { level: 60, loc: abyss[0], stats: { abyssFloor: 12 }, meta: {}, quests: [] }, [], { addLog: () => {} }, { rng: () => 0.999999 });
     assert.ok(deep.mStats, '심연에서 적이 스폰된다');
-    assert.match(deep.mStats.name, /^\[12층\] /, 'rng≈1 → 접두어 없이 층 태그만');
+    // Wave 35: 층 태그는 지금 싸우는 층이다(돌파 12층 → 13층 전투). 예전 값 `[12층]`은 한 층 낮은 표기를 고정하고 있었다.
+    assert.match(deep.mStats.name, /^\[13층\] /, 'rng≈1 → 접두어 없이 층 태그만');
     assert.equal(matchesQuestTarget(deep.mStats.name, deep.baseName), true, '층 태그를 벗기면 종이다');
 });
 
