@@ -216,12 +216,15 @@ const junkBag = () => [
 
 test('[일괄 판매] 값싼 재료를 팔아도 다음 가방에 필요한 수량은 남는다', () => {
     const recipe = BAG_RECIPES[0];
+    const cheapInputs = recipe.inputs.filter((input) => material(input.name, 0).price <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX);
+    assert.ok(cheapInputs.some((input) => input.name === '멧돼지 가죽'), '전제: 1단계 재료에 판매 임계 이하 재료가 있다');
     const state = { ...craftingState({ inv: junkBag() }), gameState: GS.IDLE };
     const next = gameReducer(state, { type: AT.AUTO_SELL_MATERIALS });
     const count = (name) => next.player.inv.filter((item) => item.name === name).length;
-    for (const input of recipe.inputs) assert.equal(count(input.name), input.qty, `${input.name} ${input.qty}개 보존`);
+    for (const input of cheapInputs) assert.equal(count(input.name), input.qty, `${input.name} ${input.qty}개 보존`);
     assert.equal(count('슬라임 젤리'), 0);
-    assert.equal(next.player.inv.length, recipe.inputs.reduce((sum, input) => sum + input.qty, 0));
+    assert.equal(count('벌레 껍질'), 0, '가방 재료가 아닌 값싼 재료는 판다');
+    assert.equal(next.player.inv.length, cheapInputs.reduce((sum, input) => sum + input.qty, 0));
 });
 
 test('[일괄 판매] 가방을 모두 만들었으면 예전처럼 전부 판다', () => {
