@@ -203,7 +203,7 @@ export const useGameEngine = () => {
             openExpeditionDebrief: () => dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: true }),
             // cycle 406: setAiThinking 제거 — actions.setAiThinking 호출 0건이라 dead.
             //   AT.SET_AI_THINKING reducer handler는 보존 (다른 dispatch path 의존).
-            setActiveTitle: (val: string | null) => dispatch({ type: AT.SET_PLAYER, payload: { activeTitle: val } }),
+            setActiveTitle: (val: string | null) => dispatch({ type: AT.SET_ACTIVE_TITLE, payload: val }),
             setReadabilityMode: (val: string) => dispatch({
                 type: AT.SET_PLAYER,
                 payload: (currentPlayer: Player) => ({

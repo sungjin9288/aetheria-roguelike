@@ -1966,11 +1966,11 @@ type-check 0 · lint 0 · unit **5,293 / 5,293**(364파일, skip 0 — §26.11�
 
 ### 27.6 잔여 (알고 남긴 것)
 
-- 칭호 전환(`SET_PLAYER` activeTitle)이 유효 최대치를 낮춰도 클램프하지 않는다 — D8과 같은 클래스, 전이 하나 남음.
+- 칭호 전환(`SET_PLAYER` activeTitle)이 유효 최대치를 낮춰도 클램프하지 않는다 — D8과 같은 클래스, 전이 하나 남음. **→ 해소: §30**
 - `pendingRelics`는 세이브 봉투 밖이다 — 상한 교체 제안 중 리로드하면 제안이 사라진다(체인 스텝은 이미 진행). 기존 유물 발견 제안과 같은 클래스.
-- 일일 파편 변환의 유물 상한은 5 고정(프레스티지 rank 무시). 체인 직접 지급은 `stats.relicCount`를 올리지 않는다(골드 경로는 올린다).
+- 일일 파편 변환의 유물 상한은 5 고정(프레스티지 rank 무시). 체인 직접 지급은 `stats.relicCount`를 올리지 않는다(골드 경로는 올린다). **→ 해소: §30**
 - 상인의 인장은 유물 상한에서 살 수 없다(거부 + 다른 선택지 안내). 골드 경로를 교체 제안으로 바꾸면 2000G를 낸 뒤 제안을 넘기면 골드만 잃는 선택이 생겨 거부를 유지했다.
-- 상한 교체 패널은 렌더 단언만 있고 e2e 스펙이 없다.
+- 상한 교체 패널은 렌더 단언만 있고 e2e 스펙이 없다. **→ 해소: §30**
 
 ## 28. Wave 28 — 소유자 결정 4건 구현 (2026-09-28, 베이스 `main` = `e395fbee` = PR #60 merge commit)
 
@@ -2063,3 +2063,18 @@ type-check 0 · lint 0 · unit **5,316 / 5,316**(367파일, skip 0 — Wave 27 5
 ### 29.6 게이트 (head `201b6a03`, 직렬 23:54~00:34)
 
 type-check 0 · lint 0 · unit **5,321 / 5,321**(368파일, skip 0 — Wave 28 5,316 대비 +5) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **136 / 136**(70 + 66) · perf desktop FCP 556ms / mobile 592ms · tracked verify 15/15. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.
+
+## 30. Wave 30 — §27.6 잔여 결함 (2026-09-29, 베이스 `main` = `407fa667` = PR #62 merge commit)
+
+§27.6이 "알고 남긴 것"으로 적은 다섯 줄 중 셋은 고칠 수 있는 결함이고 하나는 테스트 공백이었다. 모두 소유자 결정 없이 정본 규칙(D8 클램프 · 유물 상한 · 지급 경로 일관성)을 나머지 경로에 적용하는 일이다. `pendingRelics`가 세이브 봉투 밖이라는 줄은 봉투 구조 변경이라 이번 범위가 아니다. 상인의 인장 거부는 의도된 동작이다.
+
+### 30.1 수정
+
+- **칭호 전환 클램프**: 칭호 패시브(생명/기력 +N)는 유효 최대치의 입력인데, 훅이 `SET_PLAYER {activeTitle}`로 바꾸고 있었다. legend(HP +40)를 해제해도 현재 생명이 옛 최대치에 남았다. 칭호 전환은 이제 리듀서 전이 `AT.SET_ACTIVE_TITLE`(`uiHandlers`)이다. `clampVitalsToEffectiveMax` → `trackExpeditionVitals` 순서로 끝나고(SET_PLAYER와 같은 원정 기록), 올리는 방향으로는 건드리지 않는다.
+- **일일 파편 변환 상한**: `resolveDailyProtocolProgress`가 `MAX_RELICS_PER_RUN`(5)을 읽고 있었다. 그래서 rank 2(상한 6) 플레이어가 유물 5개일 때 칸이 비어 있어도 파편이 변환되지 않고 쌓였다. 이제 다른 지급 경로처럼 `getPrestigeUnlocks(rank).maxRelics`를 읽는다.
+- **체인 완주 직접 지급의 `relicCount`**: 골드 선택 · 유물 선택(`ADD_RELIC`) · 교체(`REPLACE_RELIC`) · 파편 변환은 `stats.relicCount`를 올리는데, `eventActions`의 완주 보상 직접 지급만 빠져 있었다. 그만큼 유물 수집 업적(5 · 15 · 30)과 칭호(10 · 25)가 덜 셌다.
+- **교체 패널 e2e**: QA 시드 `injectRelicReplaceChoice()`(현재 rank 상한만큼 유물을 채우고 제안 하나)와 `tests/e2e/relic-replace.spec.ts` 2건(교체 → 수 불변 · 제안 유물 보유 · 내려놓은 유물 없음 / 넘기기 → 그대로)을 추가했다.
+
+### 30.2 테스트와 결함 주입
+
+`tests/title-relic-leftover-contract.test.js` 8행이다. 칭호 3행 + 배선 부재 불변식 1행 · 파편 3행 · relicCount 1행. 수정 전 6 red였고, 나머지 2행(rank 0 5/5와 rank 2 6/6의 보존)은 기존 동작 가드다. 결함 주입 4종은 각자 자기 행에서만 red였다: 클램프 제거 → 칭호 2행, 상한 5 고정 → 파편 1행, 계수 증가 제거 → relicCount 1행, 훅을 `SET_PLAYER`로 되돌림 → 배선 1행. e2e는 `REPLACE_RELIC`이 교체 대신 추가하도록 주입했을 때 교체 행이 red였다(`보유 유물 5/5` 단언). 관련 기존 테스트 60파일 2,059건은 그대로 green이었다.

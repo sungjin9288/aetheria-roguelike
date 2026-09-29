@@ -173,9 +173,15 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                             //   선택 패널에 교체 제안으로 올린다 — 패널이 REPLACE_RELIC/DECLINE_RELIC을 준다.
                             if (ownedRelics.length < getPrestigeUnlocks(updatedPlayer.meta?.prestigeRank).maxRelics) {
                                 // D8: 유물이 빌드 성향을 바꾸면 유효 최대 기력이 줄 수 있다.
+                                // Wave 30: 다른 지급 경로(골드 선택 · 유물 선택 · 교체 · 파편)처럼 유물 수집 계수도 올린다 —
+                                //   빠져 있던 동안 수집 업적(5 · 15 · 30)과 칭호(10 · 25)가 체인 보상만큼 덜 셌다.
                                 updatedPlayer = clampVitalsToEffectiveMax({
                                     ...updatedPlayer,
                                     relics: [...ownedRelics, pickedRelic],
+                                    stats: {
+                                        ...updatedPlayer.stats,
+                                        relicCount: (updatedPlayer.stats?.relicCount || 0) + 1,
+                                    },
                                 });
                                 addLog('success', MSG.CHAIN_REWARD_RELIC(pickedRelic.name!));
                             } else {
