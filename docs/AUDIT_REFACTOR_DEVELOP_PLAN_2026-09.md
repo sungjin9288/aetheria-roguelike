@@ -2084,3 +2084,7 @@ type-check 0 · lint 0 · unit **5,321 / 5,321**(368파일, skip 0 — Wave 28 5
 - `progression-diagnostic-v2`: 리포트와 기준선이 바이트 동일하다(reportHash `bc21a0de…` · v1 `696607d2…` 그대로). 바뀐 것은 sources 360개 중 이번에 고친 6개 파일의 바이트 핀뿐이다.
 - `relic-event-chance`: 결과는 불변이다. 소스 핀 `eventReward`(= `eventActions.ts`)만 움직였다.
 - `content-reachability` · `event-reward-coherence` · `equipment-combat-power` · `exploration-rhythm`: 바이트 불변이다.
+
+### 30.4 게이트 (head `6cb9a1e1`, 직렬 01:17~01:58)
+
+tracked verify **15/15** · type-check 0 · lint 0 · unit **5,329 / 5,329**(369파일, skip 0 — Wave 29 5,321 대비 +8) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **138 / 138**(70 + 68 — `relic-replace.spec.ts` +2) · perf desktop FCP 780ms / mobile 548ms. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.
