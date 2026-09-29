@@ -9,6 +9,7 @@ import { DB } from '../../data/db';
 import { clearAdventureRelicBonuses, endDevourBonus } from '../../utils/adventureRelicBonuses';
 import { normalizeAdventureRelicBonuses } from '../../utils/adventureRelicState';
 import { normalizeDeferredEventChainSteps } from '../../data/eventChains';
+import { restorePendingRelics } from '../../utils/pendingRelicsRestore';
 
 const getBootstrapLogs = (state: GameState, playerName: string) => {
     if (state.logs.length > 0 || !playerName.trim()) return state.logs;
@@ -103,6 +104,9 @@ export const bootstrapActionMap = {
             grave: action.payload.grave || null,
             currentEvent: action.payload.currentEvent || null,
             quickSlots: sanitizeQuickSlots(action.payload.quickSlots, loadedPlayer.inv),
+            // 2026-09 Wave 34: 유물 제안은 봉투에 실린다 — 선택 중 리로드해도 제안이 남는다. 사망 세이브는 런이 끝났으므로
+            //   버리고(dead는 언제나 idle로 접힌다), 이미 가진 유물은 뺀다.
+            pendingRelics: requestedMode === GS.DEAD ? null : restorePendingRelics(action.payload.pendingRelics, loadedPlayer),
             logs: getBootstrapLogs(state, loadedPlayer.name ?? ''),
             bootStage: 'ready',
             presentationEpoch: state.presentationEpoch + 1,

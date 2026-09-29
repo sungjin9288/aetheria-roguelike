@@ -253,7 +253,7 @@ test('useFirebaseSync 는 syncStatus 가 syncing 일 때만 디바운스 후 분
 
     assert.match(source, /if \(syncStatus !== 'syncing' \|\| !uid\) return;/);
     assert.match(source, /const flushCloudSave = createCloudAutosave\(\{/);
-    assert.match(source, /setTimeout\(\(\) => \{\s*void flushCloudSave\(\{ uid, player, gameState, enemy, grave, currentEvent, quickSlots \}\);\s*\}, BALANCE\.DEBOUNCE_SAVE_MS\);/);
+    assert.match(source, /setTimeout\(\(\) => \{\s*void flushCloudSave\(\{ uid, player, gameState, enemy, grave, currentEvent, quickSlots, pendingRelics \}\);\s*\}, BALANCE\.DEBOUNCE_SAVE_MS\);/);
 });
 
 test('리더보드/live-config 구독은 useFirebaseSync 가 아니라 전용 훅이 소유한다', async () => {

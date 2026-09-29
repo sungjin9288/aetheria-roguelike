@@ -129,6 +129,7 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
         grave,
         currentEvent,
         quickSlots,
+        pendingRelics,
         syncStatus,
         uid,
         bootStage
@@ -155,6 +156,8 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
             grave,
             currentEvent,
             quickSlots,
+            // 2026-09 Wave 34: 유물 제안도 봉투에 싣는다 — 선택 중 리로드해도 남는다(LOAD_DATA가 정본으로 되살린다).
+            pendingRelics: pendingRelics ?? null,
             version: CONSTANTS.DATA_VERSION,
             savedAt,
         };
@@ -193,6 +196,7 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
         gameState,
         grave,
         mockMode,
+        pendingRelics,
         player,
         quickSlots,
     ]);
@@ -563,10 +567,10 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
         });
 
         const timer = setTimeout(() => {
-            void flushCloudSave({ uid, player, gameState, enemy, grave, currentEvent, quickSlots });
+            void flushCloudSave({ uid, player, gameState, enemy, grave, currentEvent, quickSlots, pendingRelics });
         }, BALANCE.DEBOUNCE_SAVE_MS);
         return () => clearTimeout(timer);
-    }, [player, gameState, enemy, grave, currentEvent, quickSlots, syncStatus, uid, dispatch, mockMode]);
+    }, [player, gameState, enemy, grave, currentEvent, quickSlots, pendingRelics, syncStatus, uid, dispatch, mockMode]);
 
     // Update boot log ref
     useEffect(() => {
