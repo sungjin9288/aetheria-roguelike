@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { DB } from '../src/data/db.ts';
+import { BALANCE, CONSTANTS } from '../src/data/constants.ts';
 import { processLoot } from '../src/systems/CombatEngine.loot.ts';
 import { spawnEnemy } from '../src/utils/exploreUtils.ts';
 import { SIGNATURE_ITEM_REGISTRY } from '../src/data/signatureItems.ts';
@@ -13,8 +14,15 @@ const monsters = ['살아있는 마법서', '잉크 슬라임'];
 const names = ['아크스태프', '혼돈의 지팡이', '세이지 로드', '빙결 지팡이', '차원 균열 지팡이', '대마법사로브', '심연의 마도서', '상급 폭풍 로브'];
 const player = { job: '아크메이지', level: 62, loc: location, relics: [], meta: {}, stats: {} };
 const enemy = { name: monsters[0], baseName: monsters[0], level: 55, exp: 560, isBoss: false, isElite: false };
+// 2026-09 Wave 39: Lv25 이상 적은 마지막에 후반 강화 재료를 한 번 더 굴린다(여기서는 0.99로 실패시킨다). 보너스 장비
+//   선택은 그대로이므로 난수 소비만 그 한 번을 명시적으로 센다.
+const lateRolls = (level) => (typeof level === 'number' && Number.isFinite(level) && level >= BALANCE.ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL ? 1 : 0);
+const sameSelection = (left, right, extraRolls) => {
+  assert.deepEqual(left.result, right.result);
+  assert.equal(left.calls, right.calls + extraRolls);
+};
 const roll = (target = enemy, owner = player, selection = 0) => {
-  const draws = [0, selection, 0.5, 0.99];
+  const draws = [0, selection, 0.5, 0.99, 0.99];
   let calls = 0;
   const result = processLoot(target, owner, 1, () => {
     assert.ok(calls < draws.length, 'unexpected RNG consumption');
@@ -27,7 +35,7 @@ test('library exclusive species use the exact ordered eight Tier4 ordinary items
   for (const name of monsters) for (const level of [62, 74, 75]) {
     for (let index = 0; index < names.length; index += 1) {
       const { result, calls } = roll({ ...enemy, name, baseName: name }, { ...player, level }, (index + 0.5) / names.length);
-      assert.equal(calls, 4);
+      assert.equal(calls, 4 + lateRolls(enemy.level));
       assert.equal(result.items.length, 1);
       assert.equal(result.items[0].name, names[index]);
       assert.equal(result.items[0].tier, 4);
@@ -58,12 +66,12 @@ test('shared species, other tier and invalid provenance retain normal or legacy 
     [enemy, { ...player, loc: 'unknown' }], [enemy, { ...player, loc: '붕괴된 마법 요새' }],
     [enemy, { ...player, loc: '혼돈의 심연' }], [enemy, null],
     ...[undefined, 0, -1, 1.5, '55', NaN, Infinity].map(level => [{ ...enemy, level }, player]),
-  ]) assert.deepEqual(roll(target, owner), roll({ ...target, level: undefined }, owner));
+  ]) sameSelection(roll(target, owner), roll({ ...target, level: undefined }, owner), lateRolls(target.level));
 });
 
 test('the library does not increase bonus frequency or relax legacy eligibility', () => {
   assert.equal(processLoot(enemy, player, 1, () => 0.06, () => 1).items.length, 0);
-  assert.equal(processLoot({ ...enemy, exp: 10 }, player, 1, () => 0, () => 1).items.length, 0);
+  assert.equal(processLoot({ ...enemy, exp: 10 }, player, 1, () => 0, () => 1).items.filter(({ name }) => name !== CONSTANTS.ENHANCE_MATERIAL_NAME).length, 0);
 });
 
 test('library copy names its real target species without claiming a general rate bonus', () => {
