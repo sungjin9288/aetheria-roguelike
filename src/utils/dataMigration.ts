@@ -14,6 +14,7 @@ import { getSpentMirrorEssence, type MirrorLevels } from '../systems/mirrorUpgra
 import { migrateEquipmentInstancePrice } from './equipmentBaseIdentity.js';
 import { advanceSeasonIfComplete, createSeasonPassState } from './seasonPassPresentation.js';
 import { BALANCE } from '../data/constants.js';
+import { sanitizeSavedPendingRelics } from './pendingRelicsRestore.js';
 import type { EndgameProgress, Player } from '../types/player.js';
 import type { Item } from '../types/item.js';
 import type { Monster } from '../types/monster.js';
@@ -96,7 +97,7 @@ type MigrationPlayerSlot = SaveRecord & {
  * `migrateData`의 반환 모양 — 생산자가 곧 정의다(2026-09-18 Wave 8 Z2 실측).
  *
  * 반환값은 입력의 딥클론이고, 그 위에 이 함수가
- *   · `quickSlots`(3칸)와 `pendingRelics: null`을 **항상** 쓰고,
+ *   · `quickSlots`(3칸)와 `pendingRelics`(정본 유물로 되살린 배열 또는 null — Wave 34)를 **항상** 쓰고,
  *   · `version`은 없거나 2.7 미만일 때만 2.7로 올리며(그 외는 입력 값 보존),
  *   · 나머지 정규화는 전부 **player 슬롯**(`savedData.player`, 없으면 최상위 객체 자신)에 쓴다.
  *
@@ -118,8 +119,8 @@ export type MigratedSave = {
     currentEvent?: GameEvent | null;
     /** 항상 길이 3 — 모자라면 null로 채우고 넘치면 자른다. */
     quickSlots: Array<Item | null>;
-    /** 런타임 전용이라 로드 시 항상 null로 초기화된다. */
-    pendingRelics: null;
+    /** 저장된 유물 제안 — id만 믿고 `RELICS` 정의로 되살린다(없거나 전부 무효면 null). Wave 34. */
+    pendingRelics: Relic[] | null;
     /** 입력에 없거나 2.7 미만이면 2.7로 올라간다. */
     version?: number;
     savedAt?: number;
@@ -407,8 +408,9 @@ export const migrateData = (rawData: unknown, options: MigrateDataOptions = {}):
     target.stats.maxKillStreak   = target.stats.maxKillStreak   || 0;
     target.stats.discoveryChains = Array.isArray(target.stats.discoveryChains) ? target.stats.discoveryChains : [];
     target.stats.currentRun = normalizeCurrentRunProgress(target.stats, { now });
-    // pendingRelics는 런타임 전용 — 저장 불필요, 로드 시 null로 초기화
-    savedData.pendingRelics = null;
+    // 2026-09 Wave 34: 유물 제안은 봉투에 실린다(예전: "런타임 전용"이라 로드 때 무조건 null — 선택 중 리로드하면
+    //   제안을 만든 사건은 이미 저장돼 보상이 사라졌다). 로드 때는 id만 믿고 정본 유물로 되살린다.
+    savedData.pendingRelics = sanitizeSavedPendingRelics(savedData.pendingRelics);
 
     // v4.1 — 도감(Codex) + 프리미엄 재화
     if (!target.stats.codex) {

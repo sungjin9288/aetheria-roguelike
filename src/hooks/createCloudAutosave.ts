@@ -48,6 +48,8 @@ export interface CloudAutosaveSnapshot {
     grave: GameState['grave'];
     currentEvent: GameState['currentEvent'];
     quickSlots: GameState['quickSlots'];
+    /** 2026-09 Wave 34: 유물 제안도 봉투에 싣는다(선택 중 리로드해도 남는다). */
+    pendingRelics?: GameState['pendingRelics'];
 }
 
 export type CloudAutosaveResult = 'synced' | 'offline';
@@ -75,6 +77,7 @@ export const createCloudAutosave = ({
     grave,
     currentEvent,
     quickSlots,
+    pendingRelics,
 }: CloudAutosaveSnapshot): Promise<CloudAutosaveResult> => {
     try {
         const userDocRef = doc(db, 'artifacts', APP_ID, 'users', uid);
@@ -107,6 +110,8 @@ export const createCloudAutosave = ({
             grave,
             currentEvent,
             quickSlots,
+            // Firestore는 undefined를 거부한다 — 제안이 없으면 null.
+            pendingRelics: pendingRelics ?? null,
             version: CONSTANTS.DATA_VERSION,
             saveSchemaVersion: localRecord?.saveVersion ?? 1,
             saveRevision: localRecord?.revision ?? 0,

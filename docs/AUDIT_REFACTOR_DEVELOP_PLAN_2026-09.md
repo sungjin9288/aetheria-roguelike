@@ -1967,7 +1967,7 @@ type-check 0 · lint 0 · unit **5,293 / 5,293**(364파일, skip 0 — §26.11�
 ### 27.6 잔여 (알고 남긴 것)
 
 - 칭호 전환(`SET_PLAYER` activeTitle)이 유효 최대치를 낮춰도 클램프하지 않는다 — D8과 같은 클래스, 전이 하나 남음. **→ 해소: §30**
-- `pendingRelics`는 세이브 봉투 밖이다 — 상한 교체 제안 중 리로드하면 제안이 사라진다(체인 스텝은 이미 진행). 기존 유물 발견 제안과 같은 클래스.
+- `pendingRelics`는 세이브 봉투 밖이다 — 상한 교체 제안 중 리로드하면 제안이 사라진다(체인 스텝은 이미 진행). 기존 유물 발견 제안과 같은 클래스. **→ 해소: §34**
 - 일일 파편 변환의 유물 상한은 5 고정(프레스티지 rank 무시). 체인 직접 지급은 `stats.relicCount`를 올리지 않는다(골드 경로는 올린다). **→ 해소: §30**
 - 상인의 인장은 유물 상한에서 살 수 없다(거부 + 다른 선택지 안내). 골드 경로를 교체 제안으로 바꾸면 2000G를 낸 뒤 제안을 넘기면 골드만 잃는 선택이 생겨 거부를 유지했다.
 - 상한 교체 패널은 렌더 단언만 있고 e2e 스펙이 없다. **→ 해소: §30**
@@ -2290,3 +2290,46 @@ Wave 27(§27.1)은 새 세이브에서 첫 계승까지만 걸었다. 인계 문
 ### 33.6 게이트 (직렬 06:54~07:24)
 
 tracked verify **15/15** · type-check 0 · lint 0 · unit **5,361/5,361**(373파일, skip 0) · build:guard ok · CI-env build ok · e2e **139/139**(71 + 68, 새 스펙 `bag-crafting.spec.ts` 포함) · perf desktop FCP 792ms / mobile 584ms.
+
+## 34. Wave 34 — 유물 제안(`pendingRelics`)을 세이브 봉투에 싣는다 (2026-09-29, 베이스 `main` = `f942d779` = PR #66 merge commit)
+
+§27.6의 마지막 결함 줄이다. Wave 30은 이것을 "봉투 구조 변경이라 범위 밖"으로 남겼다. 봉투에 필드 하나를 더하는 일이라 소유자 결정은 필요 없고, 구세이브 호환만 확인하면 된다.
+
+### 34.1 결함
+
+- **증상**: 유물 선택 화면(발견 3택 · 시작 부트 · 체인 완주 보상 · 상한 교체 제안)이 떠 있는 동안 리로드하면 제안이 사라졌다.
+- **보상 소실인 이유**: 제안을 만든 사건(전투 승리 · 체인 스텝 진행)은 이미 저장돼 있어 다시 오지 않는다.
+- **원인 두 겹**
+  - 로컬 봉투(`flushLocalSave`)와 클라우드 봉투(`createCloudAutosave`) 어디에도 `pendingRelics`가 없었다.
+  - `migrateData`가 로드 때 `pendingRelics`를 무조건 `null`로 썼다(주석: "런타임 전용 — 저장 불필요").
+
+### 34.2 수정
+
+- **봉투**: 두 저장 경로가 `pendingRelics`를 싣는다. 없으면 `null`이다(Firestore는 `undefined`를 거부한다). 사용자 문서 rules는 `hasAll`만 검사하므로 rules 변경은 필요 없다.
+- **로드는 id만 믿는다**: `utils/pendingRelicsRestore.sanitizeSavedPendingRelics`가 세이브의 필드(이름 · 값)가 아니라 `RELICS` 정의를 되살린다. 모르는 id · 중복 · 배열이 아닌 값은 버리고, 남는 게 없으면 `null`이다.
+- **복원**: `LOAD_DATA`가 `restorePendingRelics`로 이미 가진 유물을 뺀다. 사망 세이브면 버린다(`dead`는 언제나 `idle`로 접히고 런이 끝났다).
+- **호환**: 구세이브(필드 없음)는 `null`이다. 골든 74입력 출력이 바이트 그대로라 `DATA_VERSION` bump가 필요 없다. `MigratedSave.pendingRelics`는 `null` 리터럴에서 `Relic[] | null`로 넓혔다.
+- CLAUDE.md §8-6의 봉투 문장을 "여섯 필드"에서 "일곱 필드"로 고쳤다.
+
+### 34.3 테스트와 결함 주입
+
+- **`tests/pending-relics-persistence.test.js` 7행**: 마이그레이션 2 · 복원 3 · 클라우드 저장 1 · 왕복 1. 수정 전 6행 red였다. 남은 1행은 사망 행이다. 수정 전에는 제안이 언제나 `null`이라 참이었고, 이제는 복원이 사망 세이브를 넘지 않는지 지킨다.
+- **결함 주입 5종**(별도 worktree에서 한 종씩, 이 파일만 실행)
+  - 로드 때 다시 `null` → 5행 red(마이그레이션 2 · 복원 2 · 왕복)
+  - 보유 유물 필터 제거 → 보유 행 1개만 red
+  - 사망 폐기 제거 → 사망 행 1개만 red
+  - 클라우드 봉투에서 누락 → 클라우드 저장 · 왕복 2행 red
+  - 세이브 필드 신뢰(정본 대신 저장된 객체) → 위조 이름 행 1개만 red
+- **e2e `relic-choice-reload.spec.ts`**: device-QA 시나리오로 실제 로컬 저장 → `migrateData` → `LOAD_DATA` 경로를 탄다. 실제 유물 3개 제안 → 봉투에 실릴 때까지 대기 → 리로드 → 같은 제안 3개가 다시 뜬다. 로드 `null` 주입 빌드에서 red(패널 미표시)였고, 되돌린 뒤 green이었다.
+- **기존 소스 가드 1건 갱신**: `cloud-autosave`의 `flushCloudSave` 인자 목록 검사에 `pendingRelics`를 더했다.
+- **rules 에뮬레이터**: 클라이언트 실제 페이로드에서 유도하는 18건이 그대로 통과했다(`npm run test:rules`).
+
+### 34.4 증빙 델타
+
+- `progression-diagnostic-v2`: 리포트·기준선 바이트 동일(reportHash · v1Baseline 그대로). 소스 핀이 363개에서 364개가 됐다. `pendingRelicsRestore.ts`가 추가됐고, 이번에 고친 5개(`createCloudAutosave.ts` · `useFirebaseSync.ts` · `actionTypes.ts` · `bootstrapHandlers.ts` · `dataMigration.ts`)가 움직였다.
+- `relic-dot-multiplier`: 결과 불변. `dataMigration.ts` 소스 핀 하나만 움직였다.
+- 나머지 증빙은 바이트 불변이다. tracked verify **15/15**.
+
+### 34.5 게이트 (직렬 08:30~09:02)
+
+tracked verify **15/15** · type-check 0 · lint 0 · unit **5,368/5,368**(374파일, skip 0 — Wave 33 대비 +7) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **140/140**(71 + 69, 새 스펙 `relic-choice-reload.spec.ts` 포함) · perf desktop FCP 752ms / mobile 456ms · rules 에뮬레이터 18/18. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.

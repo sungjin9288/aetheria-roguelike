@@ -220,6 +220,8 @@ export interface LoadDataPayload {
     grave?: GraveEntry | GraveEntry[] | null;
     currentEvent?: GameEvent | null;
     quickSlots?: Array<Item | null> | null;
+    /** 2026-09 Wave 34: 저장된 유물 제안. `LOAD_DATA`가 `restorePendingRelics`로 다시 좁힌다(신뢰 밖 입력). */
+    pendingRelics?: unknown;
     /** Firestore Timestamp(`toMillis()`) 또는 ms 숫자. */
     lastActive?: number | { toMillis?: () => number } | null;
 }

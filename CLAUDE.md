@@ -133,9 +133,9 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 373 파일 / 5,361 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 374 파일 / 5,368 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
-                      #   + e2e/ (Playwright 49 스펙 / 139 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
+                      #   + e2e/ (Playwright 50 스펙 / 140 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 functions/api/        # Cloudflare Pages Functions (ai-proxy.js)
 android/ ios/         # Capacitor 네이티브 프로젝트
@@ -372,7 +372,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 탐험마다 reset하면 안 됨. 날짜(timestamp) 기반으로만 reset. `getDailyProtocolCompletions()` 로직 수정 시 주의.
 
 **6. 복원할 수 없는 모드는 복원하지 않는다**
-세이브 봉투는 여섯 필드다 — `{player, gameState, enemy, grave, currentEvent, quickSlots}`(`useFirebaseSync.flushLocalSave`). **봉투 밖 런타임 상태를 화면 조건으로 쓰는 모드를 그대로 복원하면 그 화면을 띄울 조건이 영원히 거짓이 된다.** `LOAD_DATA`의 `restorableMode()`가 그 판정을 소유한다(Wave 18):
+세이브 봉투는 일곱 필드다 — `{player, gameState, enemy, grave, currentEvent, quickSlots, pendingRelics}`(`useFirebaseSync.flushLocalSave` · `createCloudAutosave` 두 곳이 같은 필드를 쓴다). **`pendingRelics`는 Wave 34에 들어왔다** — 유물 선택 중 리로드하면 제안이 사라졌다(제안을 만든 사건은 이미 저장돼 다시 오지 않는다). 로드 때는 id만 믿고 `RELICS` 정의로 되살리며(`utils/pendingRelicsRestore.ts`), `LOAD_DATA`가 이미 가진 유물을 빼고 사망 세이브면 버린다. 새 필드를 봉투에 넣을 때는 두 저장 경로를 **함께** 고칠 것(`tests/pending-relics-persistence.test.js` · e2e `relic-choice-reload.spec.ts`). **봉투 밖 런타임 상태를 화면 조건으로 쓰는 모드를 그대로 복원하면 그 화면을 띄울 조건이 영원히 거짓이 된다.** `LOAD_DATA`의 `restorableMode()`가 그 판정을 소유한다(Wave 18):
 - `combat` → `enemy`가 함께 와야 한다(기존 한 줄, 이 결함 종류의 첫 사례)
 - `event` → `currentEvent`가 함께 와야 한다. `exploreActions`가 AI 호출(9.5s) **전에** `GS.EVENT`를 세우고 저장 디바운스는 500ms라 `{event, currentEvent: null}` 세이브가 실재한다. 복원하면 `isAiThinking`이 비영속이라 false로 돌아오고 `EventPanel`이 `return null` → **웹/iOS 영구 벽돌**(TerminalView도 `FOCUS_PANEL_STATES`라 마운트되지 않는다). Wave 19 K1 이후 AI 경로는 `GS.EVENT`를 응답 **뒤에** 세우므로 이 세이브는 더 이상 생산되지 않는다 — 이 줄은 방어선으로 남는다
 - `event_pending` → 언제나 접는다(Wave 19 K1). 대기 중인 AI 응답 promise는 리로드를 못 넘으므로 동반 상태가 무엇이든 복원할 수 없다 — 복원하면 '준비 중' 패널이 영원히 뜬다
