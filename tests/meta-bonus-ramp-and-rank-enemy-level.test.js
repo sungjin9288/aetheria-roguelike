@@ -4,7 +4,8 @@ import { createElement } from 'react';
 
 import { BALANCE, CONSTANTS } from '../src/data/constants.ts';
 import { DB } from '../src/data/db.ts';
-import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
+import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
+import { AT } from '../src/reducers/actionTypes.ts';
 import { CombatEngine } from '../src/systems/CombatEngine.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 import { spawnEnemy } from '../src/utils/exploreUtils.ts';
@@ -25,10 +26,10 @@ import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 const FULL = BALANCE.META_BONUS_FULL_LEVEL;
 const RANK_META = { prestigeRank: 1, bonusAtk: 120, bonusHp: 600, bonusMp: 360 };
 
-test('[상수] 영구 스탯은 Lv30에 전부 적용되고, 적 레벨은 rank당 +1 · 상한 +3이다', () => {
+test('[상수] 영구 스탯은 Lv30에 전부 적용되고, 적 레벨은 rank당 +2 · 상한 +4이다', () => {
     assert.equal(FULL, 30);
-    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_PER_RANK, 1);
-    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_MAX, 3);
+    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_PER_RANK, 2);
+    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_MAX, 4);
 });
 
 test('[전투 공격력] 영구 공격력은 레벨에 비례해 더해지고 Lv30부터 전부다', () => {
@@ -99,6 +100,25 @@ test('[사망 재시작] 새 런은 Lv1 비율의 영구 생명으로 시작하�
     assert.equal(updatedPlayer.hp, updatedPlayer.maxHp);
 });
 
+test('[계승] 새 런은 Lv1 비율의 영구 생명 · 기력으로 시작하고 스냅숏을 남긴다 — 첫 전직까지 0이던 결함', () => {
+    // 계승은 이름을 남기므로 새 게임(start)을 다시 타지 않는다. 그래서 넘어온 영구 생명 · 기력이 첫 전직 전까지 0이었다.
+    const receipt = 'wave40-ascend';
+    const player = {
+        ...structuredClone(INITIAL_STATE.player), name: '용사', level: 50, job: '나이트', maxHp: 3000, hp: 3000, quests: [],
+        meta: { prestigeRank: 0, rank: 800, bonusAtk: 800, bonusHp: 4000, bonusMp: 2400, essenceLadder: 120000, essenceLifetime: 120000, endgame: { lastEndgameReceiptKey: receipt } },
+    };
+    const next = gameReducer({ ...structuredClone(INITIAL_STATE), gameState: 'ascension', player }, {
+        type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: receipt },
+    }).player;
+    assert.equal(next.level, 1);
+    const snapshot = { hp: next.meta.bonusHp, mp: next.meta.bonusMp };
+    assert.ok(snapshot.hp > 0, '전제: 넘어온 영구 생명');
+    assert.deepEqual(next.metaVitalsSnapshot, snapshot);
+    assert.equal(next.maxHp, INITIAL_STATE.player.maxHp + Math.floor(snapshot.hp / FULL));
+    assert.equal(next.maxMp, INITIAL_STATE.player.maxMp + Math.floor(snapshot.mp / FULL));
+    assert.equal(next.hp, next.maxHp);
+});
+
 test('[적 레벨 가산] 계승 rank만큼 적의 생명 · 공격력 · 방어력 레벨이 오르고, 보상 · 표시 레벨은 그대로다', () => {
     const map = DB.MAPS['용의 둥지'];
     const spawnAt = (rank, level = map.level) => spawnEnemy(
@@ -111,7 +131,7 @@ test('[적 레벨 가산] 계승 rank만큼 적의 생명 · 공격력 · 방어
     const statMult = (rank) => 1 + rank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK;
     const rewardMult = (rank) => 1 + rank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK;
     const base = spawnAt(0);
-    for (const [rank, bonus] of [[1, 1], [2, 2], [3, 3], [7, 3]]) {
+    for (const [rank, bonus] of [[1, 2], [2, 4], [3, 4], [7, 4]]) {
         const enemy = spawnAt(rank);
         const shifted = spawnAt(0, map.level + bonus);
         assert.equal(enemy.level, map.level, `rank ${rank}: 표시 레벨`);
@@ -125,8 +145,8 @@ test('[적 레벨 가산] 계승 rank만큼 적의 생명 · 공격력 · 방어
 
 test('[계승 화면] 다음 세계의 적 레벨 가산과 영구 스탯 연동을 알린다', () => {
     const outcome = getAscensionOutcome({ prestigeRank: 1 });
-    assert.equal(outcome.currentEnemyLevelBonus, 1);
-    assert.equal(outcome.nextEnemyLevelBonus, 2);
+    assert.equal(outcome.currentEnemyLevelBonus, 2);
+    assert.equal(outcome.nextEnemyLevelBonus, 4);
     assert.equal(outcome.metaBonusFullLevel, FULL);
     const html = renderStatic(createElement(AscensionScreen, { player: makePlayerFixture({ meta: { prestigeRank: 1 }, quests: [] }) }));
     assert.ok(html.includes('data-testid="ascension-enemy-level"'));
