@@ -369,6 +369,12 @@ export const BALANCE = {
     LOOT_BASE_EXP: 10,             // 레벨 추정 기본 EXP
     LOOT_EXP_LEVEL_DIVISOR: 5,     // 레벨 추정 EXP 나눗수
 
+    // 후반 강화 재료 드롭 (2026-09 Wave 39, 소유자 결정 "후반 드롭") — 초반 공급원(Lv3~18 지역의 코볼트 · 광석골렘)이
+    //   끝난 뒤에도 탐험이 강화 재료를 낸다. 드롭 표와 무관하게 적 레벨로 판정한다(표가 있는 적은 보너스 장비 판정을 건너뛴다).
+    ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL: 25,
+    ENHANCE_MATERIAL_LATE_DROP_CHANCE: 0.02,
+    ENHANCE_MATERIAL_LATE_BOSS_DROP_CHANCE: 0.5,
+
     // 난이도 매니저
     DIFFICULTY_BATTLE_WINDOW: 20,   // 최근 N 전투 분석
     // 신입 보호 (B+ 재설계 2026-06): 적을 "약화"시키지 않는다 — Lv1·첫 N전투에서

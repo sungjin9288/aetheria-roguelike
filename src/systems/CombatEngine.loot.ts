@@ -2,7 +2,7 @@ import type { Item, Monster, Player } from '../types/index.js';
 import { DB } from '../data/db.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import { DROP_TABLES, type DropTableEntry } from '../data/dropTables.js';
-import { BALANCE } from '../data/constants.js';
+import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { applyItemPrefix } from '../utils/itemPrefixUtils';
 import { withCanonicalEquipmentBaseIdentity } from '../utils/equipmentBaseIdentity.js';
 import { MSG } from '../data/messages.js';
@@ -59,6 +59,36 @@ const calculateCappedLootChance = (...factors: unknown[]) => {
     }
 
     return Math.min(1, chance);
+};
+
+/**
+ * 후반 강화 재료 드롭의 기본 확률(2026-09 Wave 39). 적 레벨(`enemy.level` — 스폰이 지역 레벨로, 심연은 층으로 채운다)이
+ * `ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL` 아래면 `null`이다 — 그 적은 난수를 더 쓰지 않으므로 초반 전리품과 그 뒤 난수 흐름이 그대로다.
+ */
+const getLateEnhanceMaterialChance = (enemy: Monster): number | null => {
+    const level = enemy.level;
+    if (typeof level !== 'number' || !Number.isFinite(level) || level < BALANCE.ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL) return null;
+    return enemy.isBoss ? BALANCE.ENHANCE_MATERIAL_LATE_BOSS_DROP_CHANCE : BALANCE.ENHANCE_MATERIAL_LATE_DROP_CHANCE;
+};
+
+/**
+ * 후반 강화 재료를 드롭 표와 무관하게 한 번 판정한다. 드롭 표에 줄을 넣지 않는 이유는 표가 있는 적이 고레벨 보너스 장비
+ * 판정을 건너뛰기 때문이다. 두 경로(드롭 표 · 레거시)의 맨 끝에서 부른다 — 그 앞의 판정 순서는 그대로다.
+ */
+const appendLateEnhanceMaterial = (
+    enemy: Monster,
+    random: () => number,
+    currentTime: () => number,
+    appendCandidate: (item: Item, logs: LootLog[]) => void,
+    dropMults: number[],
+) => {
+    const baseChance = getLateEnhanceMaterialChance(enemy);
+    if (baseChance === null) return;
+    if (random() >= calculateCappedLootChance(baseChance, ...dropMults)) return;
+    const material = DB.ITEMS.materials.find((item) => item.name === CONSTANTS.ENHANCE_MATERIAL_NAME);
+    if (!material) throw new Error('INVALID_ENHANCE_MATERIAL');
+    const item: Item = { ...material, id: `${currentTime()}_${random().toString(16).slice(2, 8)}` };
+    appendCandidate(item, [{ type: 'success', text: MSG.LOOT_GET(item.name ?? '') }]);
 };
 
 /**
@@ -121,6 +151,9 @@ export const processLoot = (
         const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
         calculateCappedLootChance(bonusChance, dropRateMult, bossDropMult, progressionLootMult);
     }
+    const lateMaterialMults = [enemyDropMult, dropRateMult, bossDropMult, progressionLootMult];
+    const lateMaterialChance = getLateEnhanceMaterialChance(enemy);
+    if (lateMaterialChance !== null) calculateCappedLootChance(lateMaterialChance, ...lateMaterialMults);
 
     const allItems = [...DB.ITEMS.materials, ...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors];
 
@@ -170,6 +203,7 @@ export const processLoot = (
                 }
             }
         });
+        appendLateEnhanceMaterial(enemy, random, currentTime, appendCandidate, lateMaterialMults);
         const items = candidates.map(({ item }) => item);
         const logs = candidates.flatMap(({ logs: candidateLogs }) => candidateLogs);
         return { candidates, items, logs };
@@ -220,6 +254,7 @@ export const processLoot = (
         }
     }
 
+    appendLateEnhanceMaterial(enemy, random, currentTime, appendCandidate, lateMaterialMults);
     const items = candidates.map(({ item }) => item);
     const logs = candidates.flatMap(({ logs: candidateLogs }) => candidateLogs);
     return { candidates, items, logs };

@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "c617ce4d3621f237ffd954ffb7d9e9213efeb9969642c06715bddbd529e380af",
+  "reportHash": "23a04fdd8abc62b0aee4fdaa361f2ecc60115f874af14b41be497575482fdae0",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -797,8 +797,8 @@
         "location": "북부 요새",
         "mapLevel": 32,
         "outcomeType": "chain_advance",
-        "rewardType": "gold",
-        "itemName": null,
+        "rewardType": "item",
+        "itemName": "강화 재료",
         "itemTier": null,
         "relicId": null
       },

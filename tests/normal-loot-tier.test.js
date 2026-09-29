@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import { DB } from '../src/data/db.ts';
-import { BALANCE } from '../src/data/constants.ts';
+import { BALANCE, CONSTANTS } from '../src/data/constants.ts';
 import { SIGNATURE_ITEM_REGISTRY } from '../src/data/signatureItems.ts';
 import { processLoot } from '../src/systems/CombatEngine.loot.ts';
 import { spawnEnemy } from '../src/utils/exploreUtils.ts';
@@ -15,11 +15,21 @@ import { LOOT_TABLE } from '../src/data/loot.ts';
 const player = { job: '아크메이지', level: 75, loc: '용암 지대', relics: [], meta: {}, stats: {} };
 const enemy = { name: '용암 거북', baseName: '용암 거북', level: 36, exp: 370, isBoss: false, isElite: false };
 const roll = (target, owner = player, value = 0) => processLoot(target, owner, 1, () => value, () => 1);
+// 2026-09 Wave 39: Lv25 이상 적은 드롭 표 · 보너스 장비 뒤에 후반 강화 재료를 한 번 더 굴린다. 이 파일은 보너스 장비 선택을
+//   고정하므로, 비교할 때는 그 강화 재료만 걷어내고 난수 소비는 그 한 번을 명시적으로 센다.
+const LATE_MATERIAL = CONSTANTS.ENHANCE_MATERIAL_NAME;
+const lateRolls = (level) => (typeof level === 'number' && Number.isFinite(level) && level >= BALANCE.ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL ? 1 : 0);
+const withoutLateMaterial = (result) => {
+  const candidates = result.candidates.filter(({ item }) => item.name !== LATE_MATERIAL);
+  return { candidates, items: candidates.map(({ item }) => item), logs: candidates.flatMap(({ logs }) => logs) };
+};
 
 test('normal bonus uses actual level tier boundaries, not EXP or player level', () => {
   for (const [level, tier] of [[9,1],[10,2],[27,2],[28,3],[44,3],[45,4],[59,4],[60,5],[74,5],[75,6]]) {
     for (const exp of [370, 1000]) {
-      const result = roll({ ...enemy, level, exp });
+      const rolled = roll({ ...enemy, level, exp });
+      assert.equal(rolled.items.filter(({ name }) => name === LATE_MATERIAL).length, lateRolls(level));
+      const result = withoutLateMaterial(rolled);
       assert.equal(result.items.length, 1);
       assert.equal(result.items[0].tier, tier);
       assert.ok(!SIGNATURE_ITEM_REGISTRY[result.items[0].baseName || result.items[0].name]);
@@ -45,13 +55,13 @@ test('excluded and unproven encounters preserve exact legacy results', () => {
     [enemy, null],
     ...[undefined, 0, -1, NaN, Infinity, '36', 1.5].map(level => [{ ...enemy, level }, player]),
   ]) {
-    assert.deepEqual(roll(target, owner), roll({ ...target, level: undefined }, owner));
+    assert.deepEqual(withoutLateMaterial(roll(target, owner)), roll({ ...target, level: undefined }, owner));
   }
 });
 
 test('normal tier selection does not add a bonus roll or relax eligibility', () => {
   assert.equal(roll(enemy, player, BALANCE.LOOT_NORMAL_BONUS_CHANCE).items.length, 0);
-  assert.equal(roll({ ...enemy, exp: 10 }).items.length, 0);
+  assert.equal(withoutLateMaterial(roll({ ...enemy, exp: 10 })).items.length, 0);
 });
 
 test('every ordinary pool member is reachable and signature members are excluded', () => {
@@ -60,13 +70,13 @@ test('every ordinary pool member is reachable and signature members are excluded
       .filter(item => item.tier === Number(tier) && !SIGNATURE_ITEM_REGISTRY[item.name]);
     const names = [];
     for (let index = 0; index < expected.length; index += 1) {
-      const values = [0, (index + 0.5) / expected.length, 0.5, 0.99];
+      const values = [0, (index + 0.5) / expected.length, 0.5, 0.99, 0.99];
       let calls = 0;
       const result = processLoot({ ...enemy, level }, player, 1, () => {
         assert.ok(calls < values.length, 'unexpected extra RNG draw');
         return values[calls++];
       }, () => 1);
-      assert.equal(calls, 4);
+      assert.equal(calls, 4 + lateRolls(level));
       assert.equal(result.items.length, 1);
       assert.equal(result.items[0].name, expected[index].name);
       assert.ok(!SIGNATURE_ITEM_REGISTRY[result.items[0].name]);
@@ -106,7 +116,7 @@ test('canonical infinite-map members retain legacy bonus selection', () => {
     delete DROP_TABLES[target.baseName];
     delete LOOT_TABLE[target.baseName];
     assert.equal(roll(target, owner).items[0].tier, 6);
-    assert.deepEqual(roll(target, owner), roll({ ...target, level: undefined }, owner));
+    assert.deepEqual(withoutLateMaterial(roll(target, owner)), roll({ ...target, level: undefined }, owner));
   } finally {
     if (enriched === undefined) delete DROP_TABLES[target.baseName];
     else DROP_TABLES[target.baseName] = enriched;

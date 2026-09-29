@@ -2,6 +2,8 @@ import { useMemo } from 'react';
 import { Leaf } from 'lucide-react';
 import { DB } from '../../data/db';
 import { LOOT_TABLE } from '../../data/loot';
+import { BALANCE, CONSTANTS } from '../../data/constants';
+import { MSG } from '../../data/messages';
 import ItemIcon from '../icons/ItemIcon';
 import type { CodexCategory, CodexEntry } from '../../types/index.js';
 
@@ -55,6 +57,11 @@ const MaterialCodex = ({ codex = {} }: MaterialCodexProps) => {
                                         획득처: {sources.length > 0 ? sources.slice(0, 4).join(' · ') : '탐험과 상점에서 확인'}
                                         {sources.length > 4 ? ` 외 ${sources.length - 4}곳` : ''}
                                     </div>
+                                    {material.name === CONSTANTS.ENHANCE_MATERIAL_NAME && (
+                                        <div data-testid="codex-material-late-source" className="mt-0.5 text-[11px] text-[#d5b180]/80">
+                                            {MSG.CODEX_ENHANCE_MATERIAL_LATE_SOURCE(BALANCE.ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL)}
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         );

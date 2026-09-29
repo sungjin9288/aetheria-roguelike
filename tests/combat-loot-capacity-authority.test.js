@@ -26,6 +26,7 @@ const TRAINING_PREFIX = 'Task3 capacity training prefix';
 const TRAINING_DOT = 'Task4 capacity training attack dot';
 const TRAINING_ITEM = 'Task4 capacity training combat item';
 const capacityBlockedMessage = (count) => MSG.COMBAT_LOOT_CAPACITY_BLOCKED(count);
+const LATE_MATERIAL_FREE_BOSS_LEVEL = BALANCE.ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL - 1;
 const combatDigestPrefix = MSG.COMBAT_DIGEST('').trimEnd();
 
 const originalDropTables = new Map();
@@ -59,7 +60,7 @@ const makePlayer = (overrides = {}) => ({
     ...overrides,
 });
 
-const makeCombatState = ({ enemyName, isBoss = false, inv, maxInv, signaturePity = 0, playerPatch = {} }) => {
+const makeCombatState = ({ enemyName, isBoss = false, level = isBoss ? 50 : 1, inv, maxInv, signaturePity = 0, playerPatch = {} }) => {
     const initial = structuredClone(INITIAL_STATE);
     const inventory = inv || structuredClone(initial.player.inv);
     const basePlayer = {
@@ -92,7 +93,7 @@ const makeCombatState = ({ enemyName, isBoss = false, inv, maxInv, signaturePity
         enemy: {
             name: enemyName,
             baseName: enemyName,
-            level: isBoss ? 50 : 1,
+            level,
             hp: 1,
             maxHp: 1,
             atk: 10,
@@ -465,6 +466,8 @@ test('a full boss inventory blocks its signature and increments pity once', () =
     const state = makeCombatState({
         enemyName: TRAINING_BOSS,
         isBoss: true,
+        // 서명 pity만 격리한다 — Lv25 이상 보스는 후반 강화 재료도 굴린다(2026-09 Wave 39, 아래 한 칸 경쟁 테스트가 그 상호작용을 덮는다).
+        level: LATE_MATERIAL_FREE_BOSS_LEVEL,
         inv: initialInventory,
         maxInv: initialInventory.length,
         signaturePity: 4,
@@ -503,6 +506,8 @@ test('a one-slot boss admission resets pity only after the signature is acquired
     const state = makeCombatState({
         enemyName: TRAINING_BOSS,
         isBoss: true,
+        // 서명 pity만 격리한다 — Lv25 이상 보스는 후반 강화 재료도 굴린다(2026-09 Wave 39, 아래 한 칸 경쟁 테스트가 그 상호작용을 덮는다).
+        level: LATE_MATERIAL_FREE_BOSS_LEVEL,
         inv: initialInventory,
         maxInv: initialInventory.length + 1,
         signaturePity: 4,
@@ -521,6 +526,39 @@ test('a one-slot boss admission resets pity only after the signature is acquired
         rolledCount: 1,
         admittedCount: 1,
         blockedCount: 0,
+        admittedItemIds: [admittedSignature.id],
+        admittedSignatureCount: 1,
+        blockedSignatureCount: 0,
+        pityBefore: 4,
+        pityAfter: 0,
+    });
+});
+
+test('a one-slot late boss gives the slot to its signature before the late enhancement material', () => {
+    // 2026-09 Wave 39: Lv25 이상 보스는 드롭 표 뒤에 강화 재료를 굴린다. 후보 순서가 표 → 강화 재료라
+    //   칸이 하나면 서명이 들어가고 강화 재료가 막힌다 — 서명 pity는 획득으로 풀린다.
+    installDropTable(TRAINING_BOSS, [{ item: SIGNATURE, rate: 1 }]);
+    const initialInventory = structuredClone(INITIAL_STATE.player.inv);
+    const state = makeCombatState({
+        enemyName: TRAINING_BOSS,
+        isBoss: true,
+        level: 50,
+        inv: initialInventory,
+        maxInv: initialInventory.length + 1,
+        signaturePity: 4,
+    });
+
+    const won = resolveAttackVictory(state, 1);
+
+    const admittedSignature = won.player.inv.find(({ name }) => name === SIGNATURE);
+    assert.ok(admittedSignature);
+    assert.ok(!won.player.inv.some(({ name }) => name === '강화 재료'));
+    assert.equal(won.player.stats.signaturePity, 0);
+    assert.equal(won.logs.filter(({ text }) => text === capacityBlockedMessage(1)).length, 1);
+    assertLootSettlement(won, {
+        rolledCount: 2,
+        admittedCount: 1,
+        blockedCount: 1,
         admittedItemIds: [admittedSignature.id],
         admittedSignatureCount: 1,
         blockedSignatureCount: 0,
