@@ -133,7 +133,7 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 375 파일 / 5,373 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 377 파일 / 5,382 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
                       #   + e2e/ (Playwright 50 스펙 / 140 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
@@ -266,6 +266,7 @@ useGameEngine (useReducer)
 4. **프레스티지** → 레벨/장비/유물 초기화, 영구 보너스 적립
    - **이벤트 체인은 승천 지점을 걸치지 않는다**(Wave 15 G1) — 체인 13개 중 11개가 루프 안에서 닫히고(완주 게이트 ≤ 48) 2개는 애초에 승천 **뒤에** 열린다(`divine_apostle_trial` 66.43h · `rift_secret` 170.83h — Wave 29 이후 값). Wave 14 F2가 자를 고친 직후에는 셋이 걸쳐 있었다(2.05h~21.08h에 열려 전부 170.23h에 완주 — 이월이 있어도 자기 런 안에서 끝나는 이야기가 0개였다). G1이 스텝 4개의 `loc`을 옮겨 닫았고, 목적지는 취향이 아니라 **세 기준의 교집합**이다: ① 경로 게이트 ≤ 48 ② 남은 스텝의 max 이상(종착이 곧 완주 게이트여야 한다 — `gateChanging === []`) ③ **`type !== 'safe'`**(안전지대에는 탐험 버튼이 없다 — `canInvestigateTown`은 황금 왕국에서만 true라 거기 놓인 스텝은 터미널에 `explore`를 타이핑해야만 진행된다. `machine_uprising` 종착과 `water_apostle:1`이 이미 그 상태다). **진행도 이월은 그대로 유지된다**(Wave 14 F2) — 승천은 레벨에 도달해야 열리는 게이트가 아니라 **플레이어가 고르는 시점**이라 체인을 열어 둔 채 승천하는 런이 여전히 가능하고, 그때의 안전망이다. `pickPermanentPlayerState`는 `EVENT_CHAINS`를 순회해 **체인 id 키만** 끌어온다(제외가 아니라 화이트리스트) — `eventChainProgress`의 `boundedEncounterReceipts` 키는 원정 조우 영수증 레저를 겸하므로 통째로 넘기면 영수증이 승천을 넘어가 재획득을 막는다
    - **정수 사다리는 계승 때 10%만 넘어간다**(Wave 32, 소유자 결정) — 처치당 정수(exp/8)가 150마다 공격력 +1 · 생명 +5 · 기력 +3을 올리는 사다리는 한 런에 800단계 안팎을 쌓는다. 통째로 넘어가던 동안 계승 런 48판 사망이 0이었다(rank당 적 강화를 +20%까지 올려도 0). **획득률을 건드리지 말 것** — 사다리는 1회차 후반 성장의 몫이라 √exp로 줄였을 때 1회차가 모델 시간 +23% · 사망 2배가 됐다(되돌림). rank를 매기는 원장은 `meta.essenceLadder`이고(없으면 `essenceLifetime`으로 읽는다) 줄어드는 경로는 `carryEssenceLadderOnAscension` 하나다 — 누적 정수 · 쓸 수 있는 정수 · 첫 죽음/프레스티지 보너스는 줄지 않고, 사망 재시작은 부르지 않는다. `tests/essence-ladder-ascension-carry.test.js`
+   - **사다리는 체감형이다**(Wave 37, 소유자 결정 "로그라이크의 느낌에 맞게") — `ESSENCE_LADDER_SOFTCAP_RANK`(1,000)까지는 단계당 150 정수 그대로이고(1회차는 계승까지 800단계 안팎), 그 뒤 k번째 단계는 `150 × (1 + k / ESSENCE_LADDER_SOFTCAP_SCALE)`이다. 단계↔정수 변환은 `getLadderEssenceForRank`/`getLadderRank` 한 쌍만 쓸 것(`/ ESSENCE_PER_RANK` 직접 나눗셈 금지). 계승을 미룬 런이 225 모델시간에 공격력 +4,200까지 1:1로 쌓이던 것이 +2,700이 됐고, 1회차는 16시드 중 15개가 바이트 동일했다. rank는 단조라 선형 규칙으로 오른 기존 단계는 그대로다. `tests/essence-ladder-softcap.test.js`
    - **영구 공격력(`meta.bonusAtk`)은 `atk` 필드에 굽지 않는다**(Wave 32) — `calculateFullStats`가 더한다. `handleDefeat`가 굽던 동안 사망 재시작만 두 번 받았다(bonusAtk 1,000 → 전투 공격력 2,408 vs 계승 캐릭터 1,212)
 5. **묘비 시스템** → 사망 지점에 골드/아이템 보관, 재방문 시 회수
 
@@ -283,7 +284,7 @@ useGameEngine (useReducer)
 - save 구조 변경 시: 버전 bump → `gameUtils.migrateData()` 업데이트 필수
 - **시즌 XP 적립은 `helpers.addSeasonXp` 한 곳이 소유한다** (Wave 13) — `ADD_SEASON_XP` 핸들러가 같은 계산을 독립 구현하고 있었고 전투 승리·탐험·전설 드롭이 전부 그 경로였다. 즉 **지배적 경로만 이월 수정을 못 받는** 상태였다. 상한 클램프는 저장이 아니라 **표시 경계**(`getSeasonProgress`)에 있고, 초과분은 회전이 다음 시즌 시드로 넘긴다. 새 적립 경로를 추가할 때 계산을 다시 쓰지 말 것 — 두 구현이 갈라지면 "어느 경로로 번 XP인가"에 따라 이월 여부가 달라진다.
 - **시즌 칭호는 lifetime max로 복구한다** (Wave 13 E3) — `checkTitles`의 `seasonTier` 판정이 `max(live tier, archive[].tier)`다. live만 보면 회전 뒤 그 칭호가 영구 복구 불가였다(Wave 12 D2의 "리셋 직전 `addNewTitles`"는 여전히 유지되지만 이제 유일한 경로가 아니다).
-- **시즌 회전은 완주 트리거이지 벽시계가 아니다** (Wave 12 D2) — 30번째 티어 보상 claim이 다음 시즌을 연다(XP 상한이 아니다: claim이 곧 지급이라 상한 시점에 미수령 보상 30개가 남아 있을 수 있다). 회전 시 `claimed[]`는 `SeasonArchiveEntry`로 보존하고, **리셋 직전에 `addNewTitles`를 한 번 돌린다** — `checkTitles`가 시즌 칭호를 live `seasonPass.tier`에서 복구하므로 순서가 바뀌면 그 칭호는 영구 복구 불가다. `ordinal`/`completedSeasons`/`archive`는 기본값 있는 선택 필드라 `DATA_VERSION` bump 없이 구세이브가 시즌 1로 로드된다.
+- **시즌 회전은 완주 트리거이지 벽시계가 아니다** (Wave 12 D2) — 30번째 티어 보상 claim이 다음 시즌을 연다(XP 상한이 아니다: claim이 곧 지급이라 상한 시점에 미수령 보상 30개가 남아 있을 수 있다). 회전 시 `claimed[]`는 `SeasonArchiveEntry`로 보존하고, **리셋 직전에 `addNewTitles`를 한 번 돌린다** — `checkTitles`가 시즌 칭호를 live `seasonPass.tier`에서 복구하므로 순서가 바뀌면 그 칭호는 영구 복구 불가다. `ordinal`/`completedSeasons`/`archive`는 기본값 있는 선택 필드라 `DATA_VERSION` bump 없이 구세이브가 시즌 1로 로드된다. **숫자 보상 배율 상한은 ×1.5다**(Wave 37 소유자 결정, S3에서 도달) — ×4이던 동안 시즌이 10 모델시간마다 돌아 무료 트랙만 225h에 약 632만 골드로 후반 골드의 주 공급원이었다(원장 §36.3). `tests/season-reward-scale-cap.test.js`
 - `migrateData(raw, { now })`는 **시각 주입 가능**(Wave 11 C2) — 벽시계(`Date.now()`) 기본값은 이 경계 한 곳에만 있다. 골든(`save-migration-golden.test.js`)은 고정 시각을 주입하므로 `startedAt` 정규화 없이 값 자체가 결정론의 증거다. 마이그레이션에 새 시각 의존을 넣을 때는 `Date.now()`를 직접 부르지 말고 이 `now`를 내려보낼 것
 
 ---
