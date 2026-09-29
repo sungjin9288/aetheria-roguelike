@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants';
+import { getInventoryCapacity } from './inventoryCapacity';
 import { DB } from '../data/db';
 import type {
     ExpeditionSummary,
@@ -78,7 +79,7 @@ export const deliverPendingReturnSupplyRewards = (player: Player): {
     const inventory = [...(Array.isArray(player.inv) ? player.inv : [])];
     const receipts = { ...ledger.receipts };
     const deliveredExpeditionIds: string[] = [];
-    const capacity = player.maxInv || BALANCE.INV_MAX_SIZE;
+    const capacity = getInventoryCapacity(player);
 
     for (const expeditionId of pendingIds) {
         const itemId = `return-supply:${expeditionId}`;

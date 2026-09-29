@@ -120,6 +120,7 @@ src/
 │   ├── dropTables.ts          # 강화 드롭 테이블 (몬스터별 확률/수량)
 │   ├── codexRewards.ts        # 도감 보상 정의 (26 마일스톤)
 │   ├── seasonPass.ts          # 시즌 패스 보상 정의 (30티어)
+│   ├── bagRecipes.ts          # 제작소 가방 5단계 (이번 런 한정, Wave 33)
 │   └── quests.ts              # 143개 퀘스트 + 73개 업적 (ACHIEVEMENTS 포함)
 └── utils/            # 공유 유틸리티 (~20개)
     ├── gameUtils.ts           # makeItem 등 공유 헬퍼 (migrateData는 dataMigration.ts로 분리)
@@ -132,9 +133,9 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 372 파일 / 5,344 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 373 파일 / 5,361 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
-                      #   + e2e/ (Playwright 48 스펙 / 138 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
+                      #   + e2e/ (Playwright 49 스펙 / 139 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 functions/api/        # Cloudflare Pages Functions (ai-proxy.js)
 android/ ios/         # Capacitor 네이티브 프로젝트
@@ -211,6 +212,7 @@ npm run mobile:doctor     # Capacitor 환경 점검
 - **임무 목표를 문자열 포함으로 판정하지 말 것**: 적의 identity는 `baseName`(종)이고 표시 `name`은 그 위의 장식(`CONSTANTS.MONSTER_PREFIXES`·`정예` 접두어, `[N층]` 태그)뿐이다 — 판정은 `utils/enemyIdentity.ts`의 `matchesQuestTarget`(정확 일치, 장식만 벗김)이 소유한다. `questProgress`가 `enemyName.includes(target)`이던 동안 종장 임무 87(target `마왕`)이 마왕성의 **`마왕의 사도` 처치로 완료·수령 가능**해졌고(실제 `RESOLVE_COMBAT_ACTION` 재현), 같은 규칙이 임무 7종(1·3·8·35·87·99·140)을 가족 이름(`초록슬라임`·`코볼트 광부`·`사슬 마왕`…)에 반응시켰다(원장 §26.11). 접두어 어휘는 `EARLY_ELITE_PREFIX_NAME` 한 곳이다 — `spawnEnemy`와 판정기가 같은 상수를 읽는다. `tests/quest-target-identity.test.js`가 몬스터 목표 임무 × 몬스터 이름 전수(2만 쌍 이상)로 되돌리기를 잡는다.
 - **이벤트 선택지 거부를 로그로만 남기지 말 것**: 이벤트 화면(`GS.EVENT`)은 `FOCUS_PANEL_STATES`라 TerminalView가 마운트되지 않는다 — 오류 로그만 남기는 거부는 플레이어에게 **무반응**이다. 거부는 `rejectEventChoice`(`reducers/handlers/eventChoiceFeedback.ts`)로 `currentEvent.choiceFeedback`에 싣고 `getEventChoicePreview`가 누른 선택지의 미리보기 줄로 그린다(폴백 트랜잭션 · 한정 조우 · 체인 골드 선택). 이벤트를 원장과 **구조 비교하는 정본 판정은 `choiceFeedback`을 빼고** 비교할 것 — 넣으면 한 번 거부된 이벤트의 모든 선택지가 무반응이 된다. 폴백 트랜잭션 이벤트의 모양은 원장(`structuredFallbackEvents`) 소유다 — 포장기가 선택지를 채우던 동안 비용 선택지는 자연 플레이 157/157 무반응이었다(Wave 27 N1). `tests/event-choice-response-contract.test.js`가 `explore()` 실경로 × 모든 선택지로 잡는다.
 - **가방 상한은 증가만 막는다, 유물 상한은 모든 지급 경로가 지킨다**: 보상 경로(퀘스트·체인·마일스톤·묘비)는 상한을 보지 않고 지급한다(보상 소실 금지) — 그래서 가방은 상한을 넘을 수 있고, 조작은 **결과가 상한과 현재 크기를 둘 다 넘을 때만** 거부한다(`utils/inventoryCapacity.ts`; 교체 뒤 크기만 보던 동안 21/20 가방에서 장비 교체가 전부 막혔다). 유물은 반대로 상한에서 **거부하거나 교체를 제안**한다(`AT.REPLACE_RELIC` + `RelicChoicePanel`) — 조용히 넘치거나(체인 완주 보상이 6/5·7/5를 만들었다) 버리지 말 것. 유효 최대치(`calculateFullStats`)를 낮추는 전이는 `clampVitalsToEffectiveMax`로 현재 생명/기력을 내린다(올리지는 않는다)(Wave 27 N2). 칭호 전환도 그런 전이라 리듀서 `AT.SET_ACTIVE_TITLE`이 소유한다 — `SET_PLAYER {activeTitle}`로 바꾸면 생명 칭호를 해제해도 생명이 옛 최대치에 남는다(Wave 30). 유물 상한은 어느 지급 경로든 `getPrestigeUnlocks(rank).maxRelics`다(일일 파편 변환이 `MAX_RELICS_PER_RUN` 5로 고정돼 rank 2의 여섯 번째 칸을 무시했다), 직접 지급도 `stats.relicCount`를 올린다(Wave 30). `tests/inventory-capacity-growth-rule.test.js` · `chain-relic-capacity.test.js` · `effective-vitals-clamp.test.js` · `title-relic-leftover-contract.test.js` · e2e `relic-replace.spec.ts`.
+- **가방 상한은 `getInventoryCapacity` 하나가 계산한다 — 영구 크기(`maxInv`, 크리스털 확장) + 이번 런에 제작한 가방 칸(`bagTier`)**(Wave 33, 소유자 결정 "가방을 제작요소로" · "런마다 다시 만드는 가방"). `maxInv || BALANCE.INV_MAX_SIZE`로 직접 읽던 9곳을 옮겼고 부재 불변식이 되돌리기를 잡는다(크리스털 교환 화면만 영구 확장 상품이라 `maxInv` 그대로). 가방 단계는 `data/bagRecipes.ts`(5단계 × 3칸, 20 → 35)이고 제작은 리듀서 `AT.CRAFT_BAG`(제작소에서만 · 지금 단계 + 1만)가 소유한다. **`bagTier`는 영구 상태가 아니다** — `pickPermanentPlayerState`에 넣지 말 것(사망·계승에서 0). 재료는 **넓은 레벨대에서 계속 나오는 것**만 쓴다: 구간 한정 재료를 쓰던 동안 그 구간을 지나친 드라이버 런은 다음 단계에서 영구히 막혔다(순서 제작이라 뒤 단계 전부). 일괄 판매(`getAutoSellMaterialTargets`)는 다음 가방 단계에 필요한 수량만큼은 팔지 않는다. `tests/bag-crafting-contract.test.js` · e2e `bag-crafting.spec.ts`.
 - **"다음 이동" 안내는 걸을 수 있는 길이어야 한다**: 지도·조작판·모험 가이드가 쓰는 `findMapPath`(`utils/mapTopology.ts`)는 경유지 진입 레벨의 **병목이 가장 낮은 길**을 고르고, 병목이 같으면 최단이다. 계절 지역은 목적지가 아닌 한 경유지가 아니다. 출구 순서 최단 BFS이던 동안 839쌍이 목적지에 처음 걸어서 닿는 레벨에 걸을 수 없는 경유지를 안내했다(84를 든 채 암흑 성 → 기계 폐도가 Lv44 지하 미궁을 가리켰다). `tests/mission-route-walkable.test.js`가 실데이터 전수를 이동 규칙(`getReachableMaps`/`getMapAccess`) 오라클로 잡는다.
 - **서명(전설 각인) 판매 판정은 `utils/signatureSale.ts` 한 곳이다**(Wave 28 D4): 쓸 수 있는 유일한 사본만 보호하고, 중복 사본과 현재+향후 전직 경로(`CLASSES[*].next` 전이 폐포)의 누구도 못 쓰는 사본은 판다. 도감은 획득 순간 기록되고 가방은 승천 때 비워지므로 판매가 수집을 지우지 않는다. 리듀서(`economyHandlers`)와 상점 UI가 같은 판정을 읽는다 — 한쪽에 `isSignatureItem` 차단을 다시 넣지 말 것. 합성은 여전히 서명을 재료로 쓰지 않는다(`tests/signature-sell-protection.test.js`).
 - **초반 구간의 일반 스폰은 완전 정예를 뽑지 않는다**(Wave 28 D7): 맵 레벨 ≤ `BALANCE.EARLY_ELITE_LEVEL_CAP`에서 일반 접두어 풀은 `isElite`(재앙의·고대)를 뺀다(롤 수 불변). `eliteOnly` 도전·프레스티지 정예·초반 전용 완화 정예는 유지한다. `spawnEnemy`는 성장 시뮬레이터의 입력이라 **여기를 바꾸면 모델 해시와 도달 비용 앵커가 움직인다** — 이번 변경은 체크포인트를 +2~5 액션 옮겼다(`tests/early-full-elite-band.test.js` · `progression-simulator` 골든).

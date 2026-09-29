@@ -146,10 +146,23 @@ test('A2: getSellPrice가 BALANCE.SELL_PRICE_RATIO 단일 원천을 쓴다', asy
 test('A2: 잡템 재료 임계가 BALANCE 단일 원천이다', async () => {
     assert.equal(BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX, 30);
 
+    // 2026-09 Wave 33: 임계는 일괄 판매 대상 함수(getAutoSellMaterialTargets) 한 곳이 소유하고, 인벤토리 배너와
+    //   reducer가 그 함수를 부른다. 임계 자체는 동작으로 확인한다(가방을 모두 만든 상태 — 보존 재료 없음).
     const inventory = await readSrc('src/components/SmartInventory.tsx');
     const economy = await readSrc('src/reducers/handlers/economyHandlers.ts');
-    assert.match(inventory, /BALANCE\.INVENTORY_JUNK_MATERIAL_PRICE_MAX/);
-    assert.match(economy, /BALANCE\.INVENTORY_JUNK_MATERIAL_PRICE_MAX/);
+    assert.match(inventory, /getAutoSellMaterialTargets\(/);
+    assert.match(economy, /getAutoSellMaterialTargets\(/);
     assert.doesNotMatch(inventory, /\(i\.price \|\| 0\) <= 30/, '임계 inline 하드코딩 금지');
     assert.doesNotMatch(economy, /\(item\.price \|\| 0\) <= 30/, '임계 inline 하드코딩 금지');
+    const { getAutoSellMaterialTargets } = await import('../src/utils/bagCrafting.ts');
+    const limit = BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX;
+    const targets = getAutoSellMaterialTargets({
+        bagTier: 5,
+        inv: [
+            { id: 'at', name: '임계 재료', type: 'mat', price: limit },
+            { id: 'over', name: '비싼 재료', type: 'mat', price: limit + 1 },
+            { id: 'gear', name: '장비', type: 'weapon', price: 1 },
+        ],
+    });
+    assert.deepEqual(targets.map((item) => item.id), ['at']);
 });

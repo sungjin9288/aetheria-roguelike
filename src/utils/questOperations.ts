@@ -5,6 +5,7 @@ import type { QuestProgressState } from '../types/player.js';
 import type { GameMap } from '../types/map.js';
 import { MAPS } from '../data/maps.js';
 import { BALANCE } from '../data/constants.js';
+import { getInventoryCapacity } from './inventoryCapacity';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 import type { TraitProfile } from './runProfile.js';
 import { getUnmetQuestPrerequisite } from './questPrerequisites.js';
@@ -283,7 +284,7 @@ const getOperationPayoff = (quest: Quest, lane: QuestLane, resonance: TraitQuest
 
 const getOperationExtractionRule = (quest: Quest, player: Player, lane: QuestLane, targetMaps: string[]) => {
     const hpRatio = (player?.hp || 0) / Math.max(1, player?.maxHp || 1);
-    const inventoryCap = player?.maxInv || BALANCE.INV_MAX_SIZE;
+    const inventoryCap = getInventoryCapacity(player || {});
     const inventoryCount = player?.inv?.length || 0;
 
     if (hpRatio <= OPERATION_BRIEF_LOW_HP_RATIO) return '수락 전 휴식으로 생명을 회복한 뒤 출발';

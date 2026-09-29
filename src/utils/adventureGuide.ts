@@ -1,4 +1,6 @@
 import { BALANCE } from '../data/constants.js';
+import { getInventoryCapacity } from './inventoryCapacity';
+import { getBagCraftReadiness } from './bagCrafting';
 import { MSG } from '../data/messages.js';
 import type { FullStats, GameMap, Player, StatusId } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
@@ -342,7 +344,8 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
     const mpRatio = (player?.mp || 0) / Math.max(1, stats?.maxMp || player?.maxMp || 1);
     const inventoryCount = player?.inv?.length || 0;
     // cycle 182: player.maxInv 확장 우선 — 기존 BALANCE.INV_MAX_SIZE 만 사용해 확장 인벤(25)에서도 20-2=18에 경고 발동.
-    const inventoryCap = player?.maxInv || BALANCE.INV_MAX_SIZE;
+    //   2026-09 Wave 33: 상한은 getInventoryCapacity(영구 크기 + 이번 런 가방 칸).
+    const inventoryCap = getInventoryCapacity(player || {});
     const playerLevel = player?.level || 1;
     const visitedMaps = getVisitedMaps(player);
 
@@ -540,7 +543,7 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
     // cycle 332: mpRatio 제거 — secondaryAction 'MP도 회복' 분기 외 read 0건이라 dead.
     const inventoryCount = player?.inv?.length || 0;
     // cycle 182: player.maxInv 확장 우선 — 확장 인벤(25)에서도 18칸 경고 발동 회귀 fix.
-    const inventoryCap = player?.maxInv || BALANCE.INV_MAX_SIZE;
+    const inventoryCap = getInventoryCapacity(player || {});
     const questTracker = getQuestTracker(player);
 
     if (runtimeState && runtimeState !== 'idle') {
@@ -610,6 +613,16 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
                 primaryAction: { kind: 'rest', label: '휴식으로 정화' },
             };
         }
+    }
+
+    // 2026-09 Wave 33: 가방이 찼는데 다음 가방을 바로 만들 수 있으면 정리보다 제작소를 먼저 가리킨다.
+    const bagReadiness = safe && inventoryCount >= inventoryCap - 2 && player ? getBagCraftReadiness(player) : null;
+    if (bagReadiness?.ready) {
+        return {
+            title: MSG.GUIDE_BAG_UPGRADE_TITLE,
+            detail: MSG.GUIDE_BAG_UPGRADE_DETAIL(bagReadiness.recipe.name, inventoryCount, inventoryCap, bagReadiness.nextCapacity),
+            primaryAction: { kind: 'open_crafting', label: MSG.GUIDE_BAG_UPGRADE_ACTION },
+        };
     }
 
     if (safe && inventoryCount >= inventoryCap - 2) {

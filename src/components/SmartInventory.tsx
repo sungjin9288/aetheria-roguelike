@@ -7,6 +7,8 @@ import { getEnhanceAvailability, getEnhancePreview, type EnhanceItemSlot } from 
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { MSG } from '../data/messages';
 import { BALANCE } from '../data/constants';
+import { getInventoryCapacity } from '../utils/inventoryCapacity';
+import { getAutoSellMaterialTargets } from '../utils/bagCrafting';
 import { isSignatureItem } from '../data/signatureItems.js';
 import SignalBadge from './SignalBadge';
 import ItemIcon from './icons/ItemIcon';
@@ -139,13 +141,12 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
         if (bestArmor && isEquipUpgrade(bestArmor)) actions?.useItem(bestArmor);
     };
 
-    // 시나리오 2: 인벤토리 과밀 감지 (최대의 90%)
-    const isInvNearFull = (player.inv || []).length >= BALANCE.INV_FULL_THRESHOLD;
-    const sellableMatCount = useMemo(() =>
-        (player.inv || []).filter((i) => i.type === 'mat'
-            && (i.price || 0) <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX).length,
-        [player.inv]
-    );
+    // 시나리오 2: 인벤토리 과밀 감지 — 기본 20칸에서 18(2칸 남음)이던 여유를 지금 상한에서 뺀다(2026-09 Wave 33:
+    //   제작한 가방·크리스털 확장을 따라간다).
+    const inventoryCapacity = getInventoryCapacity(player);
+    const isInvNearFull = (player.inv || []).length
+        >= inventoryCapacity - (BALANCE.INV_MAX_SIZE - BALANCE.INV_FULL_THRESHOLD);
+    const sellableMatCount = useMemo(() => getAutoSellMaterialTargets(player).length, [player]);
 
     return (
         <div className="space-y-3">
@@ -208,13 +209,14 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
             {/* 시나리오 2: 인벤토리 과밀 배너 + 일괄 판매 */}
             {isInvNearFull && sellableMatCount > 0 && (
                 <Motion.div
+                    data-testid="inventory-bulk-sell-banner"
                     initial={{ opacity: 0, y: -6 }}
                     animate={{ opacity: 1, y: 0 }}
                     className="flex items-center justify-between rounded-[1rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.14),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.22)_0%,rgba(18,13,8,0.1)_100%)] px-3 py-2"
                 >
                     <div className="flex items-center gap-2 text-[#f6e7c8] font-fira text-sm">
                         <AlertCircle size={13} className="shrink-0 animate-pulse" />
-                        <span>인벤토리 {(player.inv || []).length}/20 — 저가 재료 {sellableMatCount}개 정리 가능</span>
+                        <span>인벤토리 {(player.inv || []).length}/{inventoryCapacity} — 저가 재료 {sellableMatCount}개 정리 가능</span>
                     </div>
                     <Motion.button
                         whileTap={{ scale: 0.95 }}

@@ -12,7 +12,9 @@ import {
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import { getSellPrice } from '../../utils/equipmentUtils';
 import { getCraftingInvestmentPreview } from '../../utils/itemInvestmentPreview';
-import { growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
+import { getInventoryCapacity, growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
+import { getBagTier, getNextBagRecipe } from '../../data/bagRecipes';
+import { getAutoSellMaterialTargets } from '../../utils/bagCrafting';
 import { incrementStat } from '../../utils/playerStateUtils';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
@@ -125,7 +127,7 @@ const sellInventoryItem = (state: GameState, action: ActionOf<typeof AT.SELL_INV
     return completeTransaction(state, player, logs);
 };
 
-const getRecipeInputIds = (player: Player, recipe: ItemRecipeDef) => {
+const getRecipeInputIds = (player: Player, recipe: { inputs?: readonly { name?: string; qty?: number }[] }) => {
     const available = [...(player.inv || [])];
     const inputIds: string[] = [];
     for (const input of recipe.inputs || []) {
@@ -183,6 +185,44 @@ const craftRecipe = (state: GameState, action: ActionOf<typeof AT.CRAFT_RECIPE>)
     const logs = getDailyProtocolRewardLogs(daily.reward);
     player = addNewTitles(daily.player, logs);
     logs.push({ type: 'success', text: MSG.CRAFT_DONE(recipe.name || '') });
+    return completeTransaction(state, player, logs);
+};
+
+/**
+ * 가방 단계 제작(2026-09 Wave 33). 단계는 지금 단계 + 1만 받는다 — 건너뛰거나 다시 만드는 요청은 동일 참조다.
+ * 재료·골드가 모자라면 거부 로그만 남긴다. 결과는 이번 런의 `bagTier`이고 영구 상태가 아니다(사망·계승에서 0).
+ */
+const craftBag = (state: GameState, action: ActionOf<typeof AT.CRAFT_BAG>): GameState => {
+    if (state.gameState !== GS.CRAFTING) return state;
+    const recipe = getNextBagRecipe(state.player.bagTier);
+    if (!recipe || action.payload?.tier !== recipe.tier) return state;
+
+    const inputIds = Array.isArray(action.payload?.inputIds) ? action.payload.inputIds : [];
+    const expectedIds = getRecipeInputIds(state.player, recipe);
+    const requiredCount = recipe.inputs.reduce((total, input) => total + input.qty, 0);
+    if (expectedIds.length !== requiredCount) {
+        const inventory = state.player.inv || [];
+        const missing = recipe.inputs.find((input) => inventory.filter((item) => item.name === input.name).length < input.qty);
+        return missing ? rejectTransaction(state, 'error', MSG.CRAFT_MAT_INSUFFICIENT(missing.name)) : state;
+    }
+    if (inputIds.length !== requiredCount || inputIds.some((id: string, index: number) => id !== expectedIds[index])) {
+        return state;
+    }
+    if ((state.player.gold || 0) < recipe.gold) return rejectTransaction(state, 'error', MSG.GOLD_INSUFFICIENT);
+
+    const usedIds = new Set<Item['id']>(inputIds);
+    let player = incrementStat({
+        ...state.player,
+        gold: (state.player.gold || 0) - recipe.gold,
+        inv: (state.player.inv || []).filter((item) => !usedIds.has(item.id)),
+        bagTier: getBagTier(state.player.bagTier) + 1,
+    }, 'crafts');
+    player = addSeasonXp(player, SEASON_XP.craft);
+
+    const daily = advanceDailyProtocol(player, 'goldSpend', recipe.gold, action.payload?.relicRoll);
+    const logs = getDailyProtocolRewardLogs(daily.reward);
+    player = addNewTitles(daily.player, logs);
+    logs.push({ type: 'success', text: MSG.BAG_CRAFTED(recipe.name, getInventoryCapacity(player)) });
     return completeTransaction(state, player, logs);
 };
 
@@ -259,9 +299,8 @@ const synthesizeItems = (state: GameState, action: ActionOf<typeof AT.SYNTHESIZE
 };
 
 const autoSellMaterials = (state: GameState): GameState => {
-    const targets = (state.player.inv || []).filter(
-        (item) => item.type === 'mat' && (item.price || 0) <= BALANCE.INVENTORY_JUNK_MATERIAL_PRICE_MAX,
-    );
+    // 2026-09 Wave 33: 다음 가방 단계에 필요한 재료는 그 수량만큼 남긴다(getAutoSellMaterialTargets).
+    const targets = getAutoSellMaterialTargets(state.player);
     if (targets.length === 0) return state;
 
     const targetIds = new Set(targets.map((item) => item.id));
@@ -283,6 +322,7 @@ export const economyActionMap = {
     BUY_SHOP_ITEM: buyShopItem,
     SELL_INVENTORY_ITEM: sellInventoryItem,
     CRAFT_RECIPE: craftRecipe,
+    CRAFT_BAG: craftBag,
     SYNTHESIZE_ITEMS: synthesizeItems,
     AUTO_SELL_MATERIALS: autoSellMaterials,
 } satisfies HandlerMap;

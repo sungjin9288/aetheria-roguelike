@@ -572,6 +572,8 @@ export interface Player {
     // cycle 282: signaturePity top-level 필드 제거 — top-level access 0건.
     //   active dispatch는 player.stats.signaturePity (nested, number 형식).
     maxInv?: number;
+    /** 2026-09 Wave 33: 이번 런에 제작한 가방 단계(`data/bagRecipes.ts`). 영구 상태가 아니라 사망·계승에서 0으로 돌아간다. */
+    bagTier?: number;
     /** cycle 186: PremiumShop 부활 토큰 보유 수 — 환생에도 보존되는 영구 자산. */
     reviveTokens?: number;
     /** 2026-07 에테르 거울 revive를 이 런에서 이미 썼는지. 새 런 시작 시 자연 리셋. */

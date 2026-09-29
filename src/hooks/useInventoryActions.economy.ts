@@ -1,9 +1,10 @@
 import { DB } from '../data/db';
+import { getNextBagRecipe } from '../data/bagRecipes';
 import { AT } from '../reducers/actionTypes';
 import type { Item, ItemRecipeDef } from '../types/index.js';
 import type { InventoryActionCtx } from './actionDeps';
 
-const getRecipeInputIds = (inventory: Item[], recipe: ItemRecipeDef) => {
+const getRecipeInputIds = (inventory: Item[], recipe: { inputs?: ItemRecipeDef['inputs'] | readonly { name: string; qty: number }[] }) => {
     const available = [...inventory];
     const inputIds: string[] = [];
     for (const input of recipe.inputs || []) {
@@ -57,6 +58,20 @@ export const createEconomyActions = (ctx: InventoryActionCtx) => {
                 type: AT.CRAFT_RECIPE,
                 payload: {
                     recipeId,
+                    inputIds: getRecipeInputIds(player.inv || [], recipe),
+                    relicRoll: Math.random(),
+                },
+            });
+        },
+
+        // 2026-09 Wave 33: 다음 가방 단계만 만든다. 단계·재료·골드 판정은 reducer(`CRAFT_BAG`)가 최신 상태에서 한다.
+        craftBag: () => {
+            const recipe = getNextBagRecipe(player.bagTier);
+            if (!recipe) return;
+            dispatch({
+                type: AT.CRAFT_BAG,
+                payload: {
+                    tier: recipe.tier,
                     inputIds: getRecipeInputIds(player.inv || [], recipe),
                     relicRoll: Math.random(),
                 },

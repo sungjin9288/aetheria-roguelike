@@ -16,6 +16,8 @@ import type { GraveEntry } from '../utils/graveUtils';
 import type { RunSummary } from '../reducers/actionTypes';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
+import { BAG_RECIPES } from '../data/bagRecipes';
+import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { RELICS } from '../data/relics';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { GS } from '../reducers/gameStates';
@@ -275,6 +277,13 @@ export interface GoldMultiplierCombatSnapshot {
     relicOrder: Array<string | undefined>;
 }
 
+/** seedBagCraftingScenario() 반환 모양 — Wave 33 가방 제작 e2e가 이름·칸 수로 단언한다. */
+export interface BagCraftingSeed {
+    recipeName: string;
+    capacityBefore: number;
+    capacityAfter: number;
+}
+
 /** injectRelicReplaceChoice() 반환 모양 — e2e가 이름으로 단언한다. */
 export interface RelicReplaceChoiceSeed {
     capacity: number;
@@ -358,6 +367,8 @@ export interface AetheriaTestApi {
     injectUndyingRelicChoice: () => void;
     /** Wave 30: 유물 상한(현재 rank)을 채운 채 유물 하나를 제안한다 — 교체 패널 e2e 시드. */
     injectRelicReplaceChoice: () => RelicReplaceChoiceSeed | false;
+    /** Wave 33: 가방 1단계 재료와 골드를 채우고 제작소를 연다(가방 단계 0). */
+    seedBagCraftingScenario: () => BagCraftingSeed | false;
     getCanonicalUndyingRelicChoiceSnapshot: () => CanonicalUndyingRelicChoiceSnapshot;
     injectFreeSkillRelicChoice: () => void;
     getCanonicalFreeSkillRelicChoiceSnapshot: () => CanonicalFreeSkillRelicChoiceSnapshot;
@@ -1807,6 +1818,25 @@ export const useGameTestApi = (
                     ownedNames: owned.map((relic) => String(relic.name)),
                     offeredName: String(offered.name),
                 };
+            },
+            seedBagCraftingScenario: () => {
+                const er = engineRef.current;
+                const recipe = BAG_RECIPES[0];
+                if (!recipe) return false;
+                const materials = recipe.inputs.flatMap((input) => (
+                    Array.from({ length: input.qty }, (_, index): Item => ({
+                        ...(DB.ITEMS.materials.find((entry) => entry.name === input.name) || { name: input.name, type: 'mat' }),
+                        id: `bag-seed-${input.name}-${index}`,
+                    }))
+                ));
+                const seededPlayer = { ...er.player, bagTier: 0, inv: materials };
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: { loc: CONSTANTS.START_LOCATION, gold: recipe.gold + 1_000, bagTier: 0, inv: materials },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.CRAFTING });
+                const capacityBefore = getInventoryCapacity(seededPlayer);
+                return { recipeName: recipe.name, capacityBefore, capacityAfter: capacityBefore + recipe.slots };
             },
             injectUndyingRelicChoice: () => {
                 const ids = ['undying', 'blood_pact', 'twin_blades'];

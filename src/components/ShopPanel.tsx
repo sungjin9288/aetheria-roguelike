@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { BALANCE } from '../data/constants';
+import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { getEquipmentComparison, getEquipmentDecision, getEquipmentDisclosure, getItemStatText, getSellPrice, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
@@ -168,7 +169,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
 
     const currentJob = player.job;
     const currentGold = player.gold ?? 0;
-    const inventoryHasRoom = (player.inv?.length || 0) < (player.maxInv || BALANCE.INV_MAX_SIZE);
+    const inventoryHasRoom = (player.inv?.length || 0) < getInventoryCapacity(player);
     const buyItemsExpanded = buyItemsExpansion.key === expansionKey && buyItemsExpansion.expanded;
 
     const purchaseReceipt = actions?.economyReceipt?.type === 'buy' ? actions.economyReceipt : null;
@@ -227,7 +228,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                 eyebrow="마을 거래소"
                 title="마을 상점"
                 titleClassName="text-[1.1rem] leading-none"
-                meta={`판매 등급 ${maxTier} · 가방 ${(player.inv || []).length}/${player.maxInv || BALANCE.INV_MAX_SIZE}`}
+                meta={`판매 등급 ${maxTier} · 가방 ${(player.inv || []).length}/${getInventoryCapacity(player)}`}
                 onBack={() => setGameState?.('idle')}
                 backLabel="복귀"
                 backTestId="shop-close"
