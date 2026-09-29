@@ -152,7 +152,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // 심연의 층 태그 — 접두어가 붙어도 이 태그는 이름 앞에 남는다(Wave 35).
     const depthTag = isInfinite ? `[${depth}층] ` : '';
     // 2026-09 Wave 40: 계승 rank만큼 오른 전투 레벨 — 생명 · 공격력 · 방어력에만 쓴다. 표시 레벨 · 경험치 · 골드 · 행동 확률은 원래 레벨이다.
-    const combatLevel = level + getPrestigeEnemyLevelBonus(player.meta?.prestigeRank);
+    const combatLevel = level + getPrestigeEnemyLevelBonus(player.meta?.prestigeRank, level);
 
     // slice 19: HP 곡선 120+30L → BALANCE.MONSTER_HP_BASE(70)+L×32 — 초반 전투
     //   템포 가속 (Lv1 -32%, Lv50 +3%). 골드 base 10 → 16 (초반 휴식 경제).

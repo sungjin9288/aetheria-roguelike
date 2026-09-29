@@ -26,10 +26,10 @@ import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 const FULL = BALANCE.META_BONUS_FULL_LEVEL;
 const RANK_META = { prestigeRank: 1, bonusAtk: 120, bonusHp: 600, bonusMp: 360 };
 
-test('[상수] 영구 스탯은 Lv30에 전부 적용되고, 적 레벨은 rank당 +2 · 상한 +4이다', () => {
+test('[상수] 영구 스탯은 Lv30에 전부 적용되고, 적 전투 레벨은 rank당 +10% · 상한 +30%이다', () => {
     assert.equal(FULL, 30);
-    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_PER_RANK, 2);
-    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_MAX, 4);
+    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_PER_RANK, 0.1);
+    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_MAX, 0.3);
 });
 
 test('[전투 공격력] 영구 공격력은 레벨에 비례해 더해지고 Lv30부터 전부다', () => {
@@ -119,7 +119,7 @@ test('[계승] 새 런은 Lv1 비율의 영구 생명 · 기력으로 시작하�
     assert.equal(next.hp, next.maxHp);
 });
 
-test('[적 레벨 가산] 계승 rank만큼 적의 생명 · 공격력 · 방어력 레벨이 오르고, 보상 · 표시 레벨은 그대로다', () => {
+test('[적 레벨 가산] 계승 rank만큼 적의 생명 · 공격력 · 방어력 레벨이 그 레벨에 비례해 오르고, 보상 · 표시 레벨은 그대로다', () => {
     const map = DB.MAPS['용의 둥지'];
     const spawnAt = (rank, level = map.level) => spawnEnemy(
         { ...map, level, monsters: ['화염 와이번'], boss: false, bossMonsters: [] },
@@ -131,7 +131,8 @@ test('[적 레벨 가산] 계승 rank만큼 적의 생명 · 공격력 · 방어
     const statMult = (rank) => 1 + rank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK;
     const rewardMult = (rank) => 1 + rank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK;
     const base = spawnAt(0);
-    for (const [rank, bonus] of [[1, 2], [2, 4], [3, 4], [7, 4]]) {
+    // 용의 둥지 Lv25: rank 1 → +3(10%, 반올림), rank 2 → +5, rank 3 → +8, rank 7 → +8(상한 30%).
+    for (const [rank, bonus] of [[1, 3], [2, 5], [3, 8], [7, 8]]) {
         const enemy = spawnAt(rank);
         const shifted = spawnAt(0, map.level + bonus);
         assert.equal(enemy.level, map.level, `rank ${rank}: 표시 레벨`);
@@ -143,10 +144,20 @@ test('[적 레벨 가산] 계승 rank만큼 적의 생명 · 공격력 · 방어
     }
 });
 
+test('[초반 지역 보호] 비례 가산이라 Lv1~4 적은 rank 3에서도 전투 레벨이 거의 그대로다', () => {
+    // 고정 가산(rank당 +1~2레벨)은 Lv1 적을 몇 배로 만들어, 거울 없이 4회차에 시드 하나가 20~38번 죽는 사망 루프였다.
+    const map = DB.MAPS['고요한 숲'];
+    const spawn = (rank) => spawnEnemy(map, { level: 1, loc: '고요한 숲', relics: [], meta: { prestigeRank: rank }, stats: {} }, [], { addLog: () => {} }, { rng: () => 0.99 }).mStats;
+    const base = spawn(0);
+    const hardest = spawn(3);
+    assert.equal(map.level, 1);
+    assert.ok(hardest.atk <= Math.ceil(base.atk * (1 + 3 * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK)), `Lv1 공격력 ${base.atk} → ${hardest.atk}: 곱하는 적 강화 몫만`);
+});
+
 test('[계승 화면] 다음 세계의 적 레벨 가산과 영구 스탯 연동을 알린다', () => {
     const outcome = getAscensionOutcome({ prestigeRank: 1 });
-    assert.equal(outcome.currentEnemyLevelBonus, 2);
-    assert.equal(outcome.nextEnemyLevelBonus, 4);
+    assert.equal(outcome.currentEnemyLevelPercent, 10);
+    assert.equal(outcome.nextEnemyLevelPercent, 20);
     assert.equal(outcome.metaBonusFullLevel, FULL);
     const html = renderStatic(createElement(AscensionScreen, { player: makePlayerFixture({ meta: { prestigeRank: 1 }, quests: [] }) }));
     assert.ok(html.includes('data-testid="ascension-enemy-level"'));
