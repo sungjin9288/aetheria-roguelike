@@ -158,6 +158,12 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                                         </div>
                                     </div>
                                 </div>
+                                <p data-testid="ascension-enemy-level" className="mt-2 text-[11px] font-readable font-bold text-amber-50">
+                                    {MSG.ASCENSION_ENEMY_LEVEL_BONUS(outcome.currentEnemyLevelPercent, outcome.nextEnemyLevelPercent)}
+                                </p>
+                                <p data-testid="ascension-meta-ramp" className="mt-1 text-[11px] font-readable text-slate-300">
+                                    {MSG.ASCENSION_META_RAMP(outcome.metaBonusFullLevel)}
+                                </p>
                             </div>
                         </div>
                     </section>

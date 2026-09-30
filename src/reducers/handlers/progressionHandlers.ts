@@ -12,6 +12,7 @@ import { getClaimableQuestEntries } from '../../utils/questProgress';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
+import { getBakedMetaVitals, snapshotMetaVitals } from '../../systems/metaBonusRamp';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 
@@ -175,9 +176,20 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         const permanent = pickPermanentPlayerState(state.player, INITIAL_STATE.player);
         const permanentStats: NonNullable<Player['stats']> = permanent.stats || {};
         const prevTitles = permanent.titles || [];
+        // 2026-09 Wave 40: 계승은 이름을 남겨 새 게임(start)을 다시 타지 않는다 — 여기서 새 런의 영구 생명 · 기력을
+        //   Lv1 연동 비율만큼 굽고 스냅숏을 남긴다. 굽지 않던 동안 넘어온 영구 생명 · 기력이 첫 전직 전까지 0이었다.
+        const metaVitalsSnapshot = snapshotMetaVitals(outcome.meta);
+        const bakedMeta = getBakedMetaVitals(metaVitalsSnapshot, 1);
+        const freshMaxHp = (INITIAL_STATE.player.maxHp || 0) + bakedMeta.hp;
+        const freshMaxMp = (INITIAL_STATE.player.maxMp || 0) + bakedMeta.mp;
         const freshPlayer: Player = {
             ...INITIAL_STATE.player,
             ...permanent,
+            maxHp: freshMaxHp,
+            hp: freshMaxHp,
+            maxMp: freshMaxMp,
+            mp: freshMaxMp,
+            metaVitalsSnapshot,
             name: state.player.name,
             gender: state.player.gender,
             meta: outcome.meta,

@@ -1,6 +1,7 @@
 import { BALANCE } from '../data/constants';
 import { PRESTIGE_TITLES } from '../data/titles';
 import { carryEssenceLadderOnAscension } from '../systems/essenceLedger';
+import { getPrestigeEnemyLevelRate } from '../systems/metaBonusRamp';
 import type { Player } from '../types/player';
 
 export interface PrestigeMilestone {
@@ -35,6 +36,10 @@ export interface AscensionOutcome {
     nextEnemyStatPercent: number;
     currentEnemyRewardPercent: number;
     nextEnemyRewardPercent: number;
+    /** 2026-09 Wave 40: 계승 rank만큼 오르는 적 전투 레벨 비율(%, 상한 있음)과, 영구 스탯이 전부 적용되는 레벨. */
+    currentEnemyLevelPercent: number;
+    nextEnemyLevelPercent: number;
+    metaBonusFullLevel: number;
     /** 2026-09 Wave 32: 정수 사다리 이월(계승 직전 단계 → 남는 단계). */
     ladder: { rankBefore: number; rankKept: number };
 }
@@ -75,6 +80,9 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
         nextEnemyStatPercent: Math.round(nextRank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK * 100),
         currentEnemyRewardPercent: Math.round(currentRank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK * 100),
         nextEnemyRewardPercent: Math.round(nextRank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK * 100),
+        currentEnemyLevelPercent: Math.round(getPrestigeEnemyLevelRate(currentRank) * 100),
+        nextEnemyLevelPercent: Math.round(getPrestigeEnemyLevelRate(nextRank) * 100),
+        metaBonusFullLevel: BALANCE.META_BONUS_FULL_LEVEL,
         ladder: { rankBefore: carried.rankBefore, rankKept: carried.rankKept },
     };
 };

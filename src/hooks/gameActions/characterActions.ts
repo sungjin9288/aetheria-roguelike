@@ -86,6 +86,7 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
                 level: 1, exp: 0, nextExp: CONSTANTS.START_NEXT_EXP,
                 maxHp, hp: fullStartStats.maxHp,
                 maxMp: vitals.maxMp, mp: fullStartStats.maxMp,
+                metaVitalsSnapshot: vitals.metaVitalsSnapshot,
                 gold: startGold,
                 challengeModifiers: mods,
                 quests: startingQuests,
@@ -268,6 +269,7 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
                     hp: nextStats.maxHp,
                     maxMp: vitals.maxMp,
                     mp: nextStats.maxMp,
+                    metaVitalsSnapshot: vitals.metaVitalsSnapshot,
                     skillLoadout: { selected: 0, cooldowns: {} },
                 }, 'first_job_change'),
             });

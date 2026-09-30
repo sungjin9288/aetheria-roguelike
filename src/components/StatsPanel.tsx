@@ -5,6 +5,9 @@ import type { FullStats, Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import { formatRelicText } from '../utils/relicPresentation';
 import SignalBadge from './SignalBadge';
+import { MSG } from '../data/messages';
+import { BALANCE } from '../data/constants';
+import { getMetaBonusRamp } from '../systems/metaBonusRamp';
 
 // cycle 475: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 토글 상태 / 가지 ternary / 토글 버튼 일괄 정리.
@@ -366,6 +369,9 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                             <div className="text-[11px] text-slate-400">추가 생명</div>
                             <div className="mt-1 font-bold text-emerald-100">+{player?.meta?.bonusHp || 0}</div>
                         </div>
+                        <p data-testid="stats-meta-ramp" className="col-span-2 text-[11px] text-slate-400">
+                            {MSG.STATS_META_RAMP(Math.round(getMetaBonusRamp(player?.level) * 100), BALANCE.META_BONUS_FULL_LEVEL)}
+                        </p>
                     </div>
                 </details>
             </div>

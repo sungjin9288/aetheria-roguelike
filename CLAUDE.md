@@ -133,7 +133,7 @@ src/
     ├── expeditionLedger.ts    # 원정(구역 보스) 세션 원장 + bossGauge.ts / returnBriefing.ts
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 378 파일 / 5,392 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 379 파일 / 5,404 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
                       #   + e2e/ (Playwright 50 스펙 / 140 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
@@ -220,6 +220,7 @@ npm run mobile:doctor     # Capacitor 환경 점검
 - **임무 목표 지역의 진입 레벨 표시는 `utils/questObjectiveGate.ts`가 소유한다**(Wave 28): 수락 규칙은 그대로이고, 게시판·임무 탭은 지금 레벨로 아직 못 들어가는 목표 지역일 때만 실제 진입 레벨을 그린다. 규칙은 도달 비용 리포트(`contentReachability.questObjectiveMaps`)와 같아야 한다 — `tests/quest-objective-gate.test.js`가 괴리 임무 20개 전부를 대조한다.
 - **혼돈의 심연 층 번호는 하나다**(Wave 35): `stats.abyssFloor`는 **돌파한 층 수**이고 지금 싸우는 층은 `abyssFloor + 1`이다 — 스케일 · 보스 층 · 적 레벨(`exploreFlow`) · 이름의 `[N층]` 태그(`spawnEnemy`) · 돌파(`applyAbyssFloorAdvance`)가 같은 번호를 읽는다. `|| 1` 폴백이 두 곳에 있던 동안 첫 돌파가 0 → 2였고 일반 적 표시가 한 층 낮았다("[10층 보스]" 다음이 "[10층]"). 층 태그는 접두어 · 정예 격노 이름에도 남는다(`depthTag`). 마일스톤 · 칭호 · 유물 층 보너스는 돌파 층 수를 읽는다. `tests/abyss-floor-numbering.test.js`
 - **후반 강화 재료는 드롭 표가 아니라 적 레벨 규칙이 준다**(Wave 39, 소유자 결정 "후반 드롭"): `enemy.level` ≥ `BALANCE.ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL`(25)이면 `processLoot`가 두 경로(드롭 표 · 레거시)의 **맨 끝**에서 한 번 판정한다(일반 2% · 보스 50%, 다른 드롭과 같은 배율). 드롭 표에 강화 재료 줄을 넣지 말 것 — 표가 있는 적은 표를 돌린 뒤 곧바로 반환해 고레벨 보너스 장비를 건너뛴다(후반 적 상당수가 표 없이 보너스 장비만 떨어뜨린다). 기준 아래 적은 난수를 더 쓰지 않으므로 초반 전리품은 바이트 그대로이고, 기준 이상 적의 난수 소비를 고정한 핀 테스트는 그 마지막 추첨을 명시적으로 센다. 이전에는 공급원이 Lv3~18 네 지역뿐이라 225h에 16시드 중앙값 10개였다(원장 §38). `tests/enhance-material-late-drop.test.js`
+- **영구 스탯은 레벨에 비례해 적용되고, 계승 rank는 적 전투 레벨을 비례로 올린다**(Wave 40, 소유자 결정 "더 하드하게"): 영구 공격력 · 생명 · 기력은 `BALANCE.META_BONUS_FULL_LEVEL`(30)까지 레벨 비율만 적용된다(`systems/metaBonusRamp.ts`). 공격력은 `calculateFullStats`가 `getRampedMetaAtk`로 더한다. 생명 · 기력은 저장된 `maxHp`/`maxMp`가 정본으로 남으므로(직접 읽는 곳 148곳) 값을 저장 밖으로 빼지 말 것 — 재구성(새 게임 `start` · 전직 · 사망 재시작 `handleDefeat` · 계승 `ASCEND`)이 전체량 스냅숏 `player.metaVitalsSnapshot`(런 범위, `pickPermanentPlayerState`에 넣지 않는다)을 남기고 그 × 비율만 굽고, 레벨업(`applyExpGain`)이 비율이 오른 만큼 더 굽는다. 새 재구성 경로를 만들면 `buildClassVitals`/`snapshotMetaVitals`를 거칠 것 — 계승이 그 경로를 안 타던 동안 넘어온 영구 생명이 첫 전직까지 0이었다. 적 전투 레벨 = 레벨 + round(레벨 × min(rank × 10%, 30%))이고 생명 · 공격력 · 방어력에만 쓴다(표시 레벨 · 경험치 · 골드는 원래 레벨). **고정 가산으로 바꾸지 말 것** — rank당 +1~2레벨 고정은 Lv1~5 지역 적을 몇 배로 만들어 거울 없는 4회차에 시드 하나가 20~38번 죽는 사망 루프였다(원장 §40). `tests/meta-bonus-ramp-and-rank-enemy-level.test.js`
 - **임무 진행도는 목표에서 멈춘다 — 레벨 임무 포함**(Wave 32): 모든 유형이 `latch`(내려가지 않고 목표에서 멈춘다)다. 레벨 임무만 `player.level`을 그대로 쓰던 동안 101('레벨 45 달성')을 Lv46에서 받으면 46/45였다(자연 플레이 드라이버의 `questProgressOverGoal`). **현상수배는 "진행 중 하나, 완료하면 바로 다음"이다**(Wave 32 소유자 결정) — 카탈로그 임무가 계정당 1회라 계승 뒤 유일한 반복 게시판 콘텐츠다. `stats.bountyDate`/`bountyIssued`는 마지막 발급 기록이지 게이트가 아니다. `tests/level-quest-progress-cap.test.js` · `bounty-continuous-contract.test.js`
 
 ---
