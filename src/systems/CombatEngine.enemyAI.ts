@@ -3,6 +3,7 @@ import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
 import type { FullStats, Monster, Player, Relic, RelicSynergy, StatusId } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
+import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, isEnemyTauntActive } from './CombatEngine.status.js';
 
 interface EnemyAttackResult {
     updatedPlayer: Player;
@@ -74,6 +75,12 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
                 : syn.bonus.dotMult ? acc + syn.bonus.dotMult
                 : acc),
             1);
+        // 2026-09 Wave 44: 약화(실명 · 공포 · 저주 · 도발)는 틱 전 상태로 이번 행동에 적용한다 — "N턴"은
+        //   영향받는 적 행동 N번이다. 틱 뒤 상태로 읽던 동안 "3턴" 공포는 공격 2번, "2턴" 연막탄은 1번만 줄였다
+        //   (기절은 이미 N번 — 행동 판정에서 줄인다).
+        const debuffAtkMult = getEnemyDebuffAtkMult(enemy);
+        const debuffAtkLabel = getEnemyDebuffAtkLabel(enemy);
+        const tauntActive = isEnemyTauntActive(enemy);
         const enemyTickResult = this.tickEnemyStatus(updatedEnemy, [], curseAmpMult, synergyDotMult);
         updatedEnemy = enemyTickResult.updatedEnemy;
         enemyTickResult.logs.forEach((l) => logs.push(l));
@@ -192,7 +199,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         }
 
         // taunt: 적이 반드시 강타만 사용 (#5)
-        const effectivePattern = updatedEnemy.taunted
+        const effectivePattern = tauntActive
             ? { guardChance: 0, heavyChance: 1.0 }
             : (updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 });
 
@@ -235,15 +242,14 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             }
         }
 
-        // atkMult: blind / fear / curse에 의한 적 공격력 감소 (#5)
-        const enemyAtkMult = updatedEnemy.atkMult ?? 1;
+        // blind / fear / curse에 의한 적 공격력 감소 (#5) — 이번 행동 시작 때 걸려 있던 약화 중 가장 강한 것.
+        const enemyAtkMult = debuffAtkMult;
         const rawEnemyAtk = (updatedEnemy.atk ?? 0) * mult * enemyAtkMult;
         // 최소 피해량: 원래 공격력의 10% (DEF 스택으로 완전 무효화 방지, 고DEF 빌드 보상)
         const minEnemyDmg = Math.max(1, Math.floor(rawEnemyAtk * 0.10));
         let enemyDmg = Math.max(minEnemyDmg, Math.floor(rawEnemyAtk - stats.def));
-        if (enemyAtkMult < 1 && ((updatedEnemy.blindTurns ?? 0) > 0 || (updatedEnemy.fearTurns ?? 0) > 0 || (updatedEnemy.cursedTurns ?? 0) > 0)) {
-            const statusName = (updatedEnemy.blindTurns ?? 0) > 0 ? MSG.DOT_LABELS.blind : (updatedEnemy.fearTurns ?? 0) > 0 ? MSG.DOT_LABELS.fear : MSG.DOT_LABELS.curse;
-            logs.push({ type: 'info', text: MSG.ENEMY_ATK_REDUCED_STATUS(statusName, updatedEnemy.name) });
+        if (enemyAtkMult < 1 && debuffAtkLabel) {
+            logs.push({ type: 'info', text: MSG.ENEMY_ATK_REDUCED_STATUS(MSG.DOT_LABELS[debuffAtkLabel], updatedEnemy.name) });
         }
 
         // cycle 108: 플레이어 curse 상태이상 — 받는 피해 증폭 (BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT).
@@ -379,7 +385,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             return { type: 'phase2_imminent', label: MSG.ENEMY_TELEGRAPH_PHASE2_IMMINENT(enemy.phase2?.name), color: 'purple' };
         }
 
-        const pattern = enemy.taunted
+        const pattern = isEnemyTauntActive(enemy)
             ? { guardChance: 0, heavyChance: 1.0 }
             : (enemy.pattern || { guardChance: 0.2, heavyChance: 0.2 });
 

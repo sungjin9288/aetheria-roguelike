@@ -3,6 +3,7 @@ import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
 import type { FullStats, Monster, NumericRelicEffect, Player, Relic, RelicSynergy } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
+import { mergeFearAtkMult } from './CombatEngine.status.js';
 import type { CalculateDamageOptions } from './CombatEngine.js';
 
 export function getStrongestNumericRelicValue(
@@ -501,7 +502,7 @@ export const actionMethods = {
                 postEffectEnemy = {
                     ...postEffectEnemy,
                     fearTurns: debuffTurns > 0 ? debuffTurns : postEffectEnemy.fearTurns,
-                    atkMult: Math.min(preEffectEnemy.atkMult ?? 1, fearMult),
+                    fearAtkMult: mergeFearAtkMult(preEffectEnemy, fearMult),
                 };
             }
             if (skill.effect === 'blind' && debuffTurns > 0) postEffectEnemy = { ...postEffectEnemy, blindTurns: debuffTurns };

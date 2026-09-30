@@ -4,6 +4,7 @@ import assert from 'node:assert/strict';
 import { CLASSES } from '../src/data/classes.js';
 import { BALANCE } from '../src/data/constants.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
+import { getEnemyDebuffAtkMult } from '../src/systems/CombatEngine.status.js';
 
 /**
  * 2026-09 Wave 42 (소유자 결정 "직업별 강점 · 약점 강조") — 직업 기술이 광고한 효과가 실제로 작동한다.
@@ -83,15 +84,18 @@ test('공포 기술은 자기 지속 턴과 공격력 약화 폭을 쓴다', () 
         const skill = skillOf(job, name);
         const result = cast(job, name);
         assert.equal(result.updatedEnemy.fearTurns, skill.turn, `${job}/${name} 지속 ${skill.turn}턴`);
-        assert.equal(result.updatedEnemy.atkMult, skill.val, `${job}/${name} 공격력 ×${skill.val}`);
+        // Wave 44: 공포 배율은 공포 자기 필드에 둔다 — 공통 atkMult는 먼저 끝난 약화가 지웠다.
+        assert.equal(result.updatedEnemy.fearAtkMult, skill.val, `${job}/${name} 공격력 ×${skill.val}`);
+        assert.equal(getEnemyDebuffAtkMult(result.updatedEnemy), skill.val, `${job}/${name} 적 공격 배율`);
     }
     // 광고 문구와 같은 값이다(−25% · −35% · −30% · −30%).
     assert.deepEqual(FEAR_SKILLS.map(([job, name]) => skillOf(job, name).val), [0.75, 0.65, 0.7, 0.7]);
 });
 
 test('더 강한 약화가 이미 걸려 있으면 공포가 약화 폭을 되돌리지 않는다 (최솟값 유지)', () => {
-    const result = cast('전사', '전투 함성', {}, { atkMult: BALANCE.BLIND_ATK_MULT, blindTurns: 2 });
-    assert.equal(result.updatedEnemy.atkMult, BALANCE.BLIND_ATK_MULT);
+    const result = cast('전사', '전투 함성', {}, { blindTurns: 2 });
+    assert.equal(getEnemyDebuffAtkMult(result.updatedEnemy), BALANCE.BLIND_ATK_MULT);
+    assert.equal(result.updatedEnemy.fearAtkMult, 0.75, '공포는 자기 배율을 따로 들고 있어 실명이 끝나도 남는다');
     assert.equal(result.updatedEnemy.fearTurns, 3);
 });
 

@@ -64,6 +64,10 @@ export interface MonsterBase {
 
     // --- monsters.ts 템플릿 필드 (스폰 시 기본 곡선에 곱해진다) ---
     hpMult?: number;
+    /**
+     * 템플릿 공격력 배율 — 스폰 때 `atk`에 곱해지고 인스턴스에는 남지 않는다. Wave 44 이전에는
+     * 약화가 같은 이름을 런타임 배율로 썼다(구세이브의 전투 중 적에 남아 있을 수 있으나 읽지 않는다).
+     */
     atkMult?: number;
     defMult?: number;
     expMult?: number;
@@ -77,8 +81,15 @@ export interface MonsterBase {
     // --- 전투 중 인스턴스에 붙는 상태 (CombatEngine.status / enemyAI) ---
     /** 지속 피해 상태 키 목록 ('burn' | 'poison' | 'bleed'). */
     dots?: string[];
+    /**
+     * 약화 남은 턴 — 값은 "앞으로 영향받을 적 행동 수"다(Wave 44). 행동이 시작될 때 0보다 크면
+     * 그 행동에 적용되고, 행동 뒤 1 줄어든다. 공격력 배율은 저장하지 않고 걸려 있는 약화에서
+     * `getEnemyDebuffAtkMult`가 계산한다.
+     */
     blindTurns?: number;
     fearTurns?: number;
+    /** 공포의 공격력 배율 — 기술마다 다르다(Wave 42). 없으면 BALANCE.FEAR_ATK_MULT. */
+    fearAtkMult?: number;
     cursedTurns?: number;
     stunnedTurns?: number;
     tauntTurns?: number;
