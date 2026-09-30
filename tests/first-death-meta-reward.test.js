@@ -32,10 +32,11 @@ test('C-1: 첫 죽음(deaths 0) → 영구 메타 보너스 지급', () => {
     // 다음 런 시작이 강해진다 — 전투 공격력(calculateFullStats)이 보너스만큼 오른다.
     //   2026-09 Wave 32: 예전에는 `updatedPlayer.atk` 필드를 핀으로 고정했는데, 계산기도 `meta.bonusAtk`를 더하므로
     //   필드에 굽는 것은 이중 가산이었다(아래 [사망 재시작] 행).
-    const withBonus = calculateFullStats(result.updatedPlayer).atk;
-    const withoutBonus = calculateFullStats({ ...result.updatedPlayer, meta: { ...result.updatedPlayer.meta, bonusAtk: 0 } }).atk;
+    //   2026-09 Wave 40: 영구 스탯은 레벨 연동이라 새 런 Lv1에서는 1/`META_BONUS_FULL_LEVEL`이고 그 레벨에서 전부다.
+    const fullLevel = BALANCE.META_BONUS_FULL_LEVEL;
+    const atkAt = (bonusAtk) => calculateFullStats({ ...result.updatedPlayer, level: fullLevel, meta: { ...result.updatedPlayer.meta, bonusAtk } }).atk;
     assert.equal(result.updatedPlayer.atk, INITIAL_STATE.player.atk, '기본 공격력 필드에는 굽지 않는다');
-    assert.ok(withBonus > withoutBonus, '보너스가 전투 공격력에 반영된다');
+    assert.ok(atkAt(BALANCE.FIRST_DEATH_BONUS_ATK) > atkAt(0), '보너스가 전투 공격력에 반영된다(연동 완료 레벨)');
 });
 
 test('C-1: 첫 죽음 로그에 각성 안내 포함', () => {

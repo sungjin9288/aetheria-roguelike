@@ -2160,10 +2160,13 @@ import { DB } from '../src/data/db.ts';
 
   test('cycle 532: body defensive guard 보존', async () => {
       const source = await readSrc('src/hooks/gameActions/_shared.ts');
-      assert.ok(/\(meta\.bonusHp \|\| 0\)/.test(source),
-          '(meta.bonusHp || 0) defensive guard 보존');
-      assert.ok(/\(meta\.bonusMp \|\| 0\)/.test(source),
-          '(meta.bonusMp || 0) defensive guard 보존');
+      // 2026-09 Wave 40: 영구 생명 · 기력의 방어적 0 처리는 `systems/metaBonusRamp.ts`(snapshotMetaVitals)로 옮겨졌다 —
+      //   소스 텍스트 대신 동작으로 고정한다(없음 · null · 음수 · NaN은 모두 0).
+      for (const meta of [{}, { bonusHp: undefined, bonusMp: null }, { bonusHp: -5, bonusMp: Number.NaN }]) {
+          const vitals = buildClassVitals(1, '나이트', meta);
+          assert.deepEqual(vitals.metaVitalsSnapshot, { hp: 0, mp: 0 }, `defensive guard: ${JSON.stringify(meta)}`);
+          assert.equal(vitals.maxHp, buildClassVitals(1, '나이트', { bonusHp: 0, bonusMp: 0 }).maxHp);
+      }
       assert.ok(/CLASSES\[jobId\] \|\| CLASSES\[CONSTANTS\.DEFAULT_JOB\]/.test(source),
           'CLASSES jobId fallback 보존');
       // meta.bonusHp/bonusMp가 없어도(undefined) 0으로 안전하게 fallback되는지,

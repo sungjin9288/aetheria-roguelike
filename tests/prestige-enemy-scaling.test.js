@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 
 import { BALANCE } from '../src/data/constants.ts';
 import { spawnEnemy } from '../src/utils/exploreUtils.ts';
+import { getPrestigeEnemyLevelBonus } from '../src/systems/metaBonusRamp.ts';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 
@@ -42,7 +43,8 @@ test('prestige: rank0 → 스케일링 없음 (기본 곡선 불변)', () => {
 });
 
 test('prestige: rank5 → 적 hp/atk/def가 곱연산 스케일', () => {
-    const r0 = spawnAt(20, 0);
+    // 2026-09 Wave 40: 곱연산은 계승 rank만큼 오른 전투 레벨(레벨의 +10%/rank, 상한 +30%) 위에 걸린다.
+    const r0 = spawnAt(20 + getPrestigeEnemyLevelBonus(5, 20), 0);
     const r5 = spawnAt(20, 5);
     const m = 1 + 5 * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK;
     assert.equal(r5.hp, Math.floor(r0.hp * m), `hp ×${m}`);
