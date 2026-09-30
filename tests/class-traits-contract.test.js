@@ -1,8 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { createElement } from 'react';
+
+import JobChangePanel from '../src/components/tabs/JobChangePanel.tsx';
 import { CLASSES } from '../src/data/classes.js';
 import { MSG } from '../src/data/messages.js';
+import { getClassTraitLabels } from '../src/utils/classPresentation.ts';
+import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 
 /**
  * 2026-09 Wave 42 (소유자 결정 "직업별로 차별화된 강점 및 단점을 강조") — 직업의 강점 · 약점은
@@ -103,4 +108,23 @@ test('같은 뿌리의 Lv12 두 갈래(성직자 · 무당)는 서로 다른 강
         const kids = CLASSES[root].next.map((job) => CLASSES[job].traits.strengths.join('|'));
         assert.equal(new Set(kids).size, kids.length, `${root}의 후속 직업들은 강점 구성이 서로 다르다`);
     }
+});
+
+test('전직 화면은 고른 직업의 강점 · 약점을 라벨로 그린다', () => {
+    // 모험가 Lv5의 첫 선택지는 전사다(CLASSES['모험가'].next[0]).
+    const html = renderStatic(createElement(JobChangePanel, { player: makePlayerFixture({ job: '모험가', level: 5 }) }));
+    const first = CLASSES['모험가'].next[0];
+    const labels = getClassTraitLabels(CLASSES[first]);
+    assert.match(html, /data-testid="job-change-traits"/);
+    const strengths = html.split('data-testid="job-change-strengths"')[1].split('data-testid="job-change-weaknesses"')[0];
+    const weaknesses = html.split('data-testid="job-change-weaknesses"')[1];
+    for (const label of labels.strengths) assert.ok(strengths.includes(`>${label}<`), `강점 "${label}"`);
+    for (const label of labels.weaknesses) assert.ok(weaknesses.includes(`>${label}<`), `약점 "${label}"`);
+    assert.ok(strengths.includes(`>${MSG.CLASS_TRAIT_STRENGTHS}<`));
+    assert.ok(weaknesses.includes(`>${MSG.CLASS_TRAIT_WEAKNESSES}<`));
+});
+
+test('강점 · 약점 선언이 없는 직업은 그 줄을 그리지 않는다', () => {
+    assert.deepEqual(getClassTraitLabels(CLASSES['모험가']), { strengths: [], weaknesses: [] });
+    assert.deepEqual(getClassTraitLabels(undefined), { strengths: [], weaknesses: [] });
 });
