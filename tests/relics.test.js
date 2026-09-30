@@ -1698,8 +1698,10 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
    */
 
 
+  // 2026-09 Wave 47: getRelicSynergyScore는 RelicChoicePanel에서 utils/relicSynergyHint.ts로 옮겨졌다 —
+  //   가드는 함수가 사는 파일을 읽는다(컴포넌트 호출부 가드는 그대로 컴포넌트를 읽는다).
   test('cycle 533: getRelicSynergyScore signature에서 ownedRelics default 0건', async () => {
-      const source = await readSrc('src/components/RelicChoicePanel.tsx');
+      const source = await readSrc('src/utils/relicSynergyHint.ts');
       const fnIdx = source.indexOf('const getRelicSynergyScore');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);
@@ -1715,7 +1717,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
   });
 
   test('cycle 533: body 분기 + ownedRelics.map 처리 보존', async () => {
-      const source = await readSrc('src/components/RelicChoicePanel.tsx');
+      const source = await readSrc('src/utils/relicSynergyHint.ts');
       // Wave 6 X3-A: newRelic/ownedRelics가 `any`에서 `Relic`/`Relic[]`로 닫히면서
       //   콜백 파라미터 `r`도 문맥으로 추론된다(더 이상 `: any` 불필요) — map 처리 자체는 그대로.
       assert.ok(/const ownedEffects = ownedRelics\.map\(\(r\) => r\.effect\)/.test(source),
