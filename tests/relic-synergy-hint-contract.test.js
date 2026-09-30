@@ -126,26 +126,33 @@ const LEGACY_SYNERGY_MAP = {
 /**
  * 완성하지 않는 제안의 오라클. 세 조각 조합 진행(nearLegendary)과 짝 판정은 Wave 47 이전 그대로이고,
  * Wave 48(소유자 결정)에서 효과 짝의 점수(짝당 20 · 최대 40)와 이름("함께 쓰기 좋음")만 바뀌었다.
+ * Wave 49(소유자 결정 "측정 후 조건부 반영"): 진행이 아니면서 가진 조각이 하나도 없는 실제 조합의 조각이면
+ * 그 조합(데이터 순서의 첫 조합)을 `startsCombo`로 싣는다.
  */
 const expectedNonCompletionScore = (newRelic, ownedRelics) => {
     const ownedEffects = ownedRelics.map((r) => r.effect);
     const ownedNames = new Set(ownedRelics.map((r) => r.name));
     const near = RELIC_SYNERGIES.find((syn) => syn.requires.length === 3 && syn.requires.includes(newRelic.name)
         && syn.requires.filter((name) => ownedNames.has(name)).length === 1);
-    if (!ownedRelics.length) return near ? { score: 0, label: null, synergies: [], nearLegendary: near.label } : { score: 0, label: null, synergies: [] };
+    const start = near ? undefined : RELIC_SYNERGIES.find((syn) => syn.requires.includes(newRelic.name)
+        && syn.requires.every((name) => !ownedNames.has(name)));
+    const startField = start ? { startsCombo: start.label } : {};
+    const noPair = near ? { score: 0, label: null, synergies: [], nearLegendary: near.label } : { score: 0, label: null, synergies: [], ...startField };
+    if (!ownedRelics.length) return noPair;
     const synergyEffects = LEGACY_SYNERGY_MAP[newRelic.effect] || [];
     const matches = ownedEffects.filter((e) => synergyEffects.includes(e));
     ownedEffects.forEach((e) => { if ((LEGACY_SYNERGY_MAP[e] || []).includes(newRelic.effect) && !matches.includes(e)) matches.push(e); });
-    if (!matches.length) return near ? { score: 0, label: null, synergies: [], nearLegendary: near.label } : { score: 0, label: null, synergies: [] };
+    if (!matches.length) return noPair;
     return {
         score: Math.min(40, matches.length * 20),
         label: MSG.RELIC_EFFECT_PAIR_LABEL,
         synergies: ownedRelics.filter((r) => matches.includes(r.effect)).map((r) => r.name),
         nearLegendary: near?.label || null,
+        ...startField,
     };
 };
 
-test('조합을 완성하지 않는 제안: 조합 진행 판정은 그대로, 효과 짝은 "함께 쓰기 좋음"(짝당 20 · 최대 40) — 가진 유물 0~2개', () => {
+test('조합을 완성하지 않는 제안: 조합 진행 · 시작 판정, 효과 짝은 "함께 쓰기 좋음"(짝당 20 · 최대 40) — 가진 유물 0~2개', () => {
     let compared = 0;
     const ownedSets = [[], ...RELICS.map((relic) => [relic])];
     // 효과 짝 두 개가 걸리는 구성(최대 40)을 표본에 넣는다 — 서로 다른 효과의 두 유물.
@@ -199,6 +206,7 @@ const tierOf = (relic, owned) => {
     if (hint.legendaryHint) return 'legendary';
     if (hint.completesPair) return 'pair';
     if (hint.nearLegendary) return 'progress';
+    if (hint.startsCombo) return 'start';
     return 'plain';
 };
 
@@ -216,7 +224,8 @@ test('층 순서 2: 세 조각 조합 진행(2개째)은 어떤 일반 카드보
                 assert.equal(getRelicSynergyScore(progressPiece, owned).nearLegendary, syn.label, `${syn.label}: 진행 판정`);
                 covered.add(syn.label);
                 for (const rival of RELICS) {
-                    if (syn.requires.includes(rival.name) || tierOf(rival, owned) !== 'plain') continue;
+                    // 일반 카드와 조합 시작 카드(Wave 49) 모두 진행보다 아래다.
+                    if (syn.requires.includes(rival.name) || !['plain', 'start'].includes(tierOf(rival, owned))) continue;
                     for (const buildId of BUILD_IDS) {
                         assert.equal(recommend([rival, progressPiece], owned, buildId).recommendedIndex, 1, `${syn.label}: ${progressPiece.name} vs ${rival.name} (${buildId})`);
                         checked += 1;
@@ -257,4 +266,86 @@ test('층 순서 3: 조합 완성은 조합 진행보다, 전설 조합 완성�
     }
     assert.ok(progressVsPair > 100, `완성 vs 진행 ${progressVsPair}건`);
     assert.ok(pairVsLegendary > 100, `전설 완성 vs 두 조각 완성 ${pairVsLegendary}건`);
+});
+
+// 2026-09 Wave 49(소유자 결정 "측정 후 조건부 반영"): 가진 조각이 하나도 없는 실제 조합의 첫 조각은 진행 아래 · 일반 위 층이다.
+test('층 순서 4: 조합 시작 조각은 가장 강한 일반 카드보다 먼저 (가진 유물 0~1개 × 전 빌드)', () => {
+    const pieceNames = new Set(RELIC_SYNERGIES.flatMap((syn) => syn.requires));
+    // 아무것도 없을 때는 모든 조합 조각이 시작 조각이고, 어떤 조합에도 들지 않는 유물은 아니다.
+    for (const relic of RELICS) {
+        assert.equal(tierOf(relic, []) === 'start', pieceNames.has(relic.name), `${relic.name}: 빈 손 시작 판정`);
+    }
+    let checked = 0;
+    const startedLabels = new Set();
+    for (const owned of [[], ...RELICS.map((relic) => [relic])]) {
+        const ownedNames = new Set(owned.map((r) => r.name));
+        const offerable = RELICS.filter((relic) => !ownedNames.has(relic.name));
+        const starters = offerable.filter((relic) => tierOf(relic, owned) === 'start');
+        const plains = offerable.filter((relic) => tierOf(relic, owned) === 'plain');
+        if (!starters.length || !plains.length) continue;
+        for (const starter of starters) {
+            const label = getRelicSynergyScore(starter, owned).startsCombo;
+            const syn = RELIC_SYNERGIES.find((entry) => entry.label === label);
+            assert.ok(syn?.requires.includes(starter.name), `${starter.name}: ${label}의 조각`);
+            assert.ok(syn.requires.every((name) => !ownedNames.has(name)), `${starter.name}: ${label}의 조각을 가지고 있지 않다`);
+            startedLabels.add(label);
+        }
+        for (const buildId of BUILD_IDS) {
+            // 등급 · 빌드 적합 · 효과 짝으로 가장 강한 일반 카드가 경쟁자다 — 동점이면 앞 카드가 이기므로 앞에 둔다.
+            const strongest = plains[recommend(plains, owned, buildId).recommendedIndex];
+            for (const starter of starters) {
+                const decision = recommend([strongest, starter], owned, buildId);
+                assert.equal(decision.recommendedIndex, 1, `${starter.name} vs ${strongest.name} + [${[...ownedNames]}] (${buildId})`);
+                assert.equal(decision.cells[1].value, MSG.RELIC_REASON_COMBO_START);
+                checked += 1;
+            }
+        }
+    }
+    assert.ok(checked > 10000, `비교 ${checked}건`);
+    assert.ok(startedLabels.size >= 15, `시작 판정에 쓰인 조합 ${startedLabels.size}개`);
+});
+
+test('선택 화면: 카드 줄은 추천 층 순서를 따른다 — 진행 줄 > 시작 줄 > 효과 짝 줄', () => {
+    const render = (pendingRelics, relics) => renderStatic(React.createElement(RelicChoicePanel, {
+        pendingRelics, dispatch: () => {}, player: makePlayerFixture({ relics }), stats: null,
+    }));
+    // 시작: 빈 손에서 조합 조각을 제안받으면 조합 이름으로 첫 조각을 알린다.
+    for (const syn of RELIC_SYNERGIES) {
+        const piece = BY_NAME[syn.requires[0]];
+        const label = getRelicSynergyScore(piece, []).startsCombo;
+        const html = render([FILLERS[0], piece, FILLERS[1]], []);
+        assert.ok(html.includes('data-testid="relic-choice-1-start"'), `${piece.name}: 시작 줄`);
+        assert.ok(html.includes(MSG.RELIC_COMBO_START_LINE(label)), `${piece.name}: ${label} 첫 조각`);
+        assert.ok(!html.includes('data-testid="relic-choice-0-start"'), '일반 카드에는 시작 줄이 없다');
+    }
+    // 진행과 효과 짝이 겹치는 카드는 진행 줄을 그린다(추천 이유와 같은 층).
+    let overlaps = 0;
+    for (const syn of RELIC_SYNERGIES.filter((entry) => entry.requires.length === 3)) {
+        for (const ownedPiece of syn.requires.map((name) => BY_NAME[name])) {
+            for (const candidate of syn.requires.map((name) => BY_NAME[name])) {
+                if (candidate === ownedPiece) continue;
+                const hint = getRelicSynergyScore(candidate, [ownedPiece]);
+                if (!hint.nearLegendary || !(hint.score > 0) || hint.completesPair) continue;
+                const html = render([FILLERS[0], candidate], [ownedPiece]);
+                assert.ok(html.includes(`${hint.nearLegendary}까지 1개 남음`), `${candidate.name}: 진행 줄`);
+                assert.ok(!html.includes('함께 쓰기 · '), `${candidate.name}: 효과 짝 줄은 진행에 가려진다`);
+                overlaps += 1;
+            }
+        }
+    }
+    assert.ok(overlaps >= 1, `진행 · 효과 짝 겹침 ${overlaps}건`);
+    // 시작과 효과 짝이 겹치는 카드는 시작 줄을 그린다.
+    let startOverlaps = 0;
+    for (const ownedRelic of RELICS) {
+        for (const candidate of RELICS) {
+            if (candidate === ownedRelic) continue;
+            const hint = getRelicSynergyScore(candidate, [ownedRelic]);
+            if (!hint.startsCombo || !(hint.score > 0)) continue;
+            const html = render([FILLERS[0], candidate], [ownedRelic]);
+            assert.ok(html.includes(MSG.RELIC_COMBO_START_LINE(hint.startsCombo)), `${candidate.name}: 시작 줄`);
+            assert.ok(!html.includes('함께 쓰기 · '), `${candidate.name}: 효과 짝 줄은 시작에 가려진다`);
+            startOverlaps += 1;
+        }
+    }
+    assert.ok(startOverlaps >= 10, `시작 · 효과 짝 겹침 ${startOverlaps}건`);
 });

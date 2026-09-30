@@ -56,6 +56,11 @@ export interface RelicSynergyResult {
     completesPair?: string;
     /** 세 조각 전설 조합까지 이 유물을 더하면 1개 남는다 — 조합 이름. */
     nearLegendary?: string | null;
+    /**
+     * 아직 한 조각도 없는 실제 조합의 첫 조각이다 — 조합 이름(Wave 49). 완성 · 진행이 아닐 때만 채운다.
+     * 여러 조합의 조각이면 데이터 순서의 첫 조합이다.
+     */
+    startsCombo?: string;
 }
 
 /** 이 유물을 더하면 새로 켜지는 실제 조합 — 엔진과 같은 판정(`getActiveRelicSynergies`). */
@@ -102,9 +107,17 @@ export const getRelicSynergyScore = (newRelic: Relic, ownedRelics: Relic[]): Rel
         syn.requires.filter((name) => ownedNames.has(name)).length === 1
     );
 
+    // 2026-09 Wave 49(소유자 결정 "측정 후 조건부 반영"): 가진 조각이 하나도 없는 실제 조합의 첫 조각.
+    //   진행(nearLegendary)이 있으면 그쪽이 높은 층이라 채우지 않는다.
+    const startSyn = nearLegendarySyn ? undefined : RELIC_SYNERGIES.find((syn) =>
+        syn.requires.includes(newRelicName) &&
+        !syn.requires.some((name) => ownedNames.has(name))
+    );
+    const startsCombo = startSyn ? { startsCombo: startSyn.label } : {};
+
     if (!ownedRelics.length) return nearLegendarySyn
         ? { score: 0, label: null, synergies: [], nearLegendary: nearLegendarySyn.label }
-        : { score: 0, label: null, synergies: [] };
+        : { score: 0, label: null, synergies: [], ...startsCombo };
 
     const synergyEffects = SYNERGY_MAP[newRelic.effect] || [];
     const matches = ownedEffects.filter((e) => synergyEffects.includes(e));
@@ -114,10 +127,10 @@ export const getRelicSynergyScore = (newRelic: Relic, ownedRelics: Relic[]): Rel
 
     if (!matches.length) return nearLegendarySyn
         ? { score: 0, label: null, synergies: [], nearLegendary: nearLegendarySyn.label }
-        : { score: 0, label: null, synergies: [] };
+        : { score: 0, label: null, synergies: [], ...startsCombo };
 
     const score = Math.min(EFFECT_PAIR_SCORE_CAP, matches.length * EFFECT_PAIR_SCORE_PER_MATCH);
     const label = MSG.RELIC_EFFECT_PAIR_LABEL;
     const synergyNames = ownedRelics.filter((r) => matches.includes(r.effect)).map((r) => r.name);
-    return { score, label, synergies: synergyNames, nearLegendary: nearLegendarySyn?.label || null };
+    return { score, label, synergies: synergyNames, nearLegendary: nearLegendarySyn?.label || null, ...startsCombo };
 };
