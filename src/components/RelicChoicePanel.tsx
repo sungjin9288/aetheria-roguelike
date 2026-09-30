@@ -4,9 +4,9 @@ import { AT } from '../reducers/actionTypes';
 import type { GameAction } from '../reducers/gameReducer';
 import { RARITY_CLASSES } from '../data/constants';
 import { MSG } from '../data/messages';
-import { RELIC_SYNERGIES } from '../data/relics';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getRelicChoiceDecisionStrip } from '../utils/relicChoiceDecision';
+import { getRelicSynergyScore } from '../utils/relicSynergyHint';
 import { getRunBuildProfile } from '../utils/runProfile';
 import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
 import RelicIcon from './icons/RelicIcon';
@@ -19,91 +19,6 @@ interface RelicChoicePanelProps {
     player?: Player | null;
     stats?: FullStats | null;
 }
-
-/**
- * 유물 시너지 점수 계산 (0~100)
- * 현재 보유 유물과 새 유물의 effect 조합을 분석합니다.
- */
-const SYNERGY_MAP: Record<string, string[]> = {
-    // 공격 콤보
-    double_strike: ['execute_bonus', 'combo_stack', 'armor_pen', 'ancient_power'],
-    execute_bonus: ['double_strike', 'low_hp_atk', 'combo_stack'],
-    combo_stack: ['double_strike', 'execute_bonus', 'ancient_power'],
-    ancient_power: ['double_strike', 'combo_stack', 'execute_bonus'],
-    low_hp_atk: ['execute_bonus', 'death_save', 'void_heart'],
-    // 기술과 마법 조합
-    skill_lifesteal: ['skill_mult', 'free_skill', 'mp_regen_turn', 'crit_mp_regen'],
-    skill_mult: ['skill_lifesteal', 'free_skill', 'mp_regen_turn'],
-    free_skill: ['skill_mult', 'skill_lifesteal', 'mp_regen_turn', 'crit_mp_regen'],
-    mp_regen_turn: ['skill_mult', 'skill_lifesteal', 'free_skill', 'crit_mp_regen'],
-    crit_mp_regen: ['skill_mult', 'free_skill', 'mp_regen_turn', 'ancient_power'],
-    // 방어/생존 콤보
-    reflect: ['fortress', 'stone_skin', 'crit_block'],
-    fortress: ['reflect', 'stone_skin', 'battle_start_heal'],
-    death_save: ['void_heart', 'low_hp_atk', 'battle_start_heal'],
-    void_heart: ['death_save', 'low_hp_atk'],
-    // DoT 콤보
-    dot_mult: ['armor_pen', 'execute_bonus'],
-    // 탐색/범용
-    gold_mult: ['drop_rate', 'boss_hunter'],
-    drop_rate: ['gold_mult', 'boss_hunter', 'exp_mult'],
-    boss_hunter: ['drop_rate', 'execute_bonus', 'double_strike'],
-};
-
-/** `getRelicSynergyScore()`가 카드마다 계산하는 시너지 판정 결과. */
-interface RelicSynergyResult {
-    score: number;
-    label: string | null;
-    synergies: Array<string | undefined>;
-    legendaryHint?: string;
-    nearLegendary?: string | null;
-}
-
-// cycle 533: ownedRelics default [] 제거 — 1 internal callsite (line 153)
-//   getRelicSynergyScore(relic, ownedRelics) 명시 전달이라 default 도달 불가.
-//   util/component/hook default 청소 메가 시리즈 29번째 (cycle 502-532).
-const getRelicSynergyScore = (newRelic: Relic, ownedRelics: Relic[]): RelicSynergyResult => {
-    const ownedEffects = ownedRelics.map((r) => r.effect);
-    const ownedNames = new Set(ownedRelics.map((r) => r.name));
-    const newRelicName = newRelic.name ?? '';
-
-    // 3피스 전설 시너지 확인 — 신규 유물이 마지막 피스인 경우
-    const legendarySyn = RELIC_SYNERGIES.find((syn) =>
-        syn.requires.length === 3 &&
-        syn.requires.includes(newRelicName) &&
-        syn.requires.filter((name) => ownedNames.has(name)).length === 2
-    );
-    if (legendarySyn) {
-        const synergyNames = legendarySyn.requires.filter((n) => ownedNames.has(n));
-        return { score: 120, label: '전설 조합 완성', synergies: synergyNames, legendaryHint: legendarySyn.label };
-    }
-
-    // 3피스 시너지 1개 남음 힌트 — 신규 유물이 첫 번째 피스인 경우
-    const nearLegendarySyn = RELIC_SYNERGIES.find((syn) =>
-        syn.requires.length === 3 &&
-        syn.requires.includes(newRelicName) &&
-        syn.requires.filter((name) => ownedNames.has(name)).length === 1
-    );
-
-    if (!ownedRelics.length) return nearLegendarySyn
-        ? { score: 0, label: null, synergies: [], nearLegendary: nearLegendarySyn.label }
-        : { score: 0, label: null, synergies: [] };
-
-    const synergyEffects = SYNERGY_MAP[newRelic.effect] || [];
-    const matches = ownedEffects.filter((e) => synergyEffects.includes(e));
-    ownedEffects.forEach((e) => {
-        if ((SYNERGY_MAP[e] || []).includes(newRelic.effect) && !matches.includes(e)) matches.push(e);
-    });
-
-    if (!matches.length) return nearLegendarySyn
-        ? { score: 0, label: null, synergies: [], nearLegendary: nearLegendarySyn.label }
-        : { score: 0, label: null, synergies: [] };
-
-    const score = Math.min(100, matches.length * 40);
-    const label = score >= 80 ? '강한 조합' : score >= 40 ? '좋은 조합' : '이어지는 조합';
-    const synergyNames = ownedRelics.filter((r) => matches.includes(r.effect)).map((r) => r.name);
-    return { score, label, synergies: synergyNames, nearLegendary: nearLegendarySyn?.label || null };
-};
 
 const RARITY_CARD: Record<string, string> = {
     common:    'border-white/10 bg-black/18 hover:border-white/16 hover:bg-white/[0.045]',
@@ -227,6 +142,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                     {relicCards.map(({ relic, index, synergy }) => {
                         const hasSynergy = synergy.score > 0;
                         const isLegendaryComplete = synergy.legendaryHint != null;
+                        const completesPair = synergy.completesPair ?? null;
                         const hasNearLegendary = synergy.nearLegendary != null;
                         const isRecommended = relicDecision.recommendedIndex === index;
                         const rarity = relic.rarity ?? 'common';
@@ -254,7 +170,8 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                         {MSG.RARITY_LABEL[rarity] || rarity}
                                     </SignalBadge>
                                     {isLegendaryComplete && <SignalBadge tone="danger" size="sm">전설 조합</SignalBadge>}
-                                    {!isLegendaryComplete && hasSynergy && (
+                                    {!isLegendaryComplete && completesPair && <SignalBadge tone="success" size="sm">{MSG.RELIC_PAIR_COMPLETE_BADGE}</SignalBadge>}
+                                    {!isLegendaryComplete && !completesPair && hasSynergy && (
                                         <SignalBadge tone={synergy.score >= 80 ? 'success' : 'recommended'} size="sm">{synergy.label}</SignalBadge>
                                     )}
                                 </div>
@@ -266,6 +183,10 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                 </div>
                                 {isLegendaryComplete ? (
                                     <div className="mt-1 text-[10px] font-readable text-rose-100">{synergy.legendaryHint} 완성</div>
+                                ) : completesPair ? (
+                                    <div data-testid={`relic-choice-${index}-pair`} className="mt-1 text-[10px] font-readable text-[#dff7f5]">
+                                        {MSG.RELIC_SYNERGY_COMPLETE_LINE(completesPair)}
+                                    </div>
                                 ) : hasSynergy ? (
                                     <div className="mt-1 truncate text-[10px] font-readable text-[#dff7f5]">
                                         함께 쓰기 · {synergy.synergies.map(getRelicDisplayName).join(' · ')}
