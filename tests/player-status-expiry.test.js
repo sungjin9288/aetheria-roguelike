@@ -7,6 +7,7 @@ import { AT } from '../src/reducers/actionTypes.js';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { makeCombatActionMap } from '../src/reducers/handlers/combatHandlers.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
+import { getEnemyDebuffAtkMult } from '../src/systems/CombatEngine.status.js';
 
 /**
  * H1 (Wave 3 감사): 플레이어 상태이상 만료.
@@ -167,7 +168,6 @@ test('H1: 적 상태이상 모델은 그대로다 (턴 감소는 적 개체 필�
         hp: 100,
         maxHp: 100,
         blindTurns: 2,
-        atkMult: BALANCE.BLIND_ATK_MULT,
         dots: ['poison'],
     };
     const firstTick = CombatEngine.tickEnemyStatus(enemy, [], 1, 1);
@@ -176,7 +176,9 @@ test('H1: 적 상태이상 모델은 그대로다 (턴 감소는 적 개체 필�
     assert.equal(firstTick.updatedEnemy.statusTurns, undefined,
         '플레이어 전용 statusTurns를 적에 붙이지 않는다');
 
+    // Wave 44: 공격력 배율은 저장하지 않고 남은 약화에서 계산한다 — 필드가 사라지면 배율도 1이다.
+    assert.equal(getEnemyDebuffAtkMult(firstTick.updatedEnemy), BALANCE.BLIND_ATK_MULT, '남은 턴이 있으면 배율이 걸려 있다');
     const secondTick = CombatEngine.tickEnemyStatus(firstTick.updatedEnemy, [], 1, 1);
-    assert.equal(secondTick.updatedEnemy.blindTurns, undefined, '0이 되면 필드와 배율이 함께 제거된다');
-    assert.equal(secondTick.updatedEnemy.atkMult, undefined);
+    assert.equal(secondTick.updatedEnemy.blindTurns, undefined, '0이 되면 필드가 제거된다');
+    assert.equal(getEnemyDebuffAtkMult(secondTick.updatedEnemy), 1, '필드가 제거되면 배율도 사라진다');
 });

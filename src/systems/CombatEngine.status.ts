@@ -3,6 +3,37 @@ import { MSG } from '../data/messages.js';
 import type { Monster, Player, StatusId } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 
+const isActive = (turns: number | undefined) => (turns ?? 0) > 0;
+
+/**
+ * 적 약화(실명 · 공포 · 저주)가 이번 적 행동에 거는 공격력 배율 — 걸려 있는 약화 중 가장 강한 것.
+ * 2026-09 Wave 44: 배율을 적에 저장하지 않고 남은 턴에서 계산한다. 약화는 겹칠 수 있고 서로 다른 때
+ * 끝나므로, 하나의 저장 값은 먼저 끝난 약화가 지우거나(남은 약화 무효) 남겨 둘(끝난 약화 연장) 수밖에 없다.
+ */
+export function getEnemyDebuffAtkMult(enemy: Monster): number {
+    let mult = 1;
+    if (isActive(enemy.blindTurns)) mult = Math.min(mult, BALANCE.BLIND_ATK_MULT);
+    if (isActive(enemy.fearTurns)) mult = Math.min(mult, enemy.fearAtkMult ?? BALANCE.FEAR_ATK_MULT);
+    if (isActive(enemy.cursedTurns)) mult = Math.min(mult, BALANCE.CURSE_ATK_MULT);
+    return mult;
+}
+
+/** 공격력 감소 로그에 쓸 약화 — 실명 · 공포 · 저주 순으로 걸려 있는 첫 번째(기존 표기 순서). */
+export function getEnemyDebuffAtkLabel(enemy: Monster): StatusId | null {
+    if (isActive(enemy.blindTurns)) return 'blind';
+    if (isActive(enemy.fearTurns)) return 'fear';
+    if (isActive(enemy.cursedTurns)) return 'curse';
+    return null;
+}
+
+/** 도발은 남은 턴이 있을 때 이번 적 행동을 강타로 고정한다. */
+export const isEnemyTauntActive = (enemy: Monster) => isActive(enemy.tauntTurns);
+
+/** 공포가 이미 걸려 있으면 더 강한(낮은) 배율을 유지한다 — 약한 공포가 강한 공포를 덮어쓰지 않는다. */
+export function mergeFearAtkMult(enemy: Monster, fearMult: number): number {
+    return isActive(enemy.fearTurns) ? Math.min(enemy.fearAtkMult ?? BALANCE.FEAR_ATK_MULT, fearMult) : fearMult;
+}
+
 /**
  * CombatEngine 상태이상 메서드 — mixin으로 CombatEngine에 spread.
  * CombatEngine.ts 분리(행동 보존). 순수(BALANCE / MSG만 의존, this 미사용).
@@ -13,12 +44,14 @@ export const statusMethods = {
     applyStatusEffectToEnemy(enemy: Monster, effect: string) {
         if (!effect) return enemy;
         switch (effect) {
+            // 2026-09 Wave 44: 약화는 공격력 배율을 저장하지 않는다 — 걸려 있는 약화에서 매번 계산한다
+            //   (getEnemyDebuffAtkMult). 저장하던 동안 먼저 끝난 약화가 남은 약화의 감소까지 지웠다.
             case 'blind':
-                return { ...enemy, blindTurns: 2, atkMult: Math.min(enemy.atkMult ?? 1, BALANCE.BLIND_ATK_MULT) };
+                return { ...enemy, blindTurns: 2 };
             case 'fear':
-                return { ...enemy, fearTurns: 2, atkMult: Math.min(enemy.atkMult ?? 1, BALANCE.FEAR_ATK_MULT) };
+                return { ...enemy, fearTurns: 2, fearAtkMult: mergeFearAtkMult(enemy, BALANCE.FEAR_ATK_MULT) };
             case 'curse':
-                return { ...enemy, cursedTurns: 3, atkMult: Math.min(enemy.atkMult ?? 1, BALANCE.CURSE_ATK_MULT), cursed: true };
+                return { ...enemy, cursedTurns: 3, cursed: true };
             case 'taunt':
                 return { ...enemy, taunted: true, tauntTurns: 3 };
             case 'stun':
@@ -103,10 +136,12 @@ export const statusMethods = {
             logs.push({ type: 'event', text: MSG.ENEMY_CURSE_DOT_TICK(updated.name, dmg) });
         }
 
-        // 상태 턴 감소 & 만료
+        // 상태 턴 감소 & 만료 — 이번 적 행동은 감소 전 상태로 판정한다(enemyAttack이 틱 전에 읽는다).
+        //   2026-09 Wave 44: 만료는 자기 필드만 지운다. 공통 배율(atkMult)을 지우던 동안 먼저 끝난
+        //   약화가 남은 약화의 공격력 감소까지 없앴다(공포 1턴이 남았는데 저주 만료로 전량 피해).
         if ((updated.blindTurns ?? 0) > 0) {
             if (updated.blindTurns! - 1 <= 0) {
-                const { blindTurns: _b, atkMult: _a, ...rest } = updated;
+                const { blindTurns: _b, ...rest } = updated;
                 updated = rest;
             } else {
                 updated = { ...updated, blindTurns: updated.blindTurns! - 1 };
@@ -114,7 +149,7 @@ export const statusMethods = {
         }
         if ((updated.fearTurns ?? 0) > 0) {
             if (updated.fearTurns! - 1 <= 0) {
-                const { fearTurns: _f, atkMult: _a, ...rest } = updated;
+                const { fearTurns: _f, fearAtkMult: _m, ...rest } = updated;
                 updated = rest;
             } else {
                 updated = { ...updated, fearTurns: updated.fearTurns! - 1 };
@@ -122,7 +157,7 @@ export const statusMethods = {
         }
         if ((updated.cursedTurns ?? 0) > 0) {
             if (updated.cursedTurns! - 1 <= 0) {
-                const { cursedTurns: _c, atkMult: _a, ...rest } = updated;
+                const { cursedTurns: _c, ...rest } = updated;
                 updated = { ...rest, cursed: false };
             } else {
                 updated = { ...updated, cursedTurns: updated.cursedTurns! - 1 };
