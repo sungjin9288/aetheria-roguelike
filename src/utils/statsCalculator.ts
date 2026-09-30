@@ -7,7 +7,6 @@ import { getRunBuildProfile, getTraitBonus, getTraitProfile } from './runProfile
 import { getTitlePassive, getPassiveSkillBonuses } from './gameUtils.js';
 import type { TitlePassive } from '../data/titles.js';
 import { computeSignatureSetBonus } from './signatureSetBonus.js';
-import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import { getRampedMetaAtk } from '../systems/metaBonusRamp.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
 import { resolveHpDrainAtkRelic } from './hpDrainAtkRelic.js';
@@ -320,8 +319,6 @@ export const calculateFullStats = (player: Player) => {
     const armorVal = player.equip?.armor?.val || 0;
     const buff = player.tempBuff || {};
     const meta = player.meta || {};
-    // PR #8: 프레스티지 rank≥10 해금 "에테르 초월" — 영구 스탯 보너스 ×2.
-    const prestigeStatMult = getPrestigeUnlocks(meta.prestigeRank).statMult;
     const titlePassive: Partial<TitlePassive> = getTitlePassive(player.activeTitle) || {};
 
     const setBonus = computeSetBonus(player.equip || {});
