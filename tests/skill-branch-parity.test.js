@@ -205,7 +205,9 @@ test('성직자 "기적의 손길" — A는 회복량, B는 회복 + 방어 버�
     const b = runSkill('성직자', '기적의 손길', 'B');
     assert.ok(a.updatedPlayer.hp > b.updatedPlayer.hp, 'A 회복량이 더 커야 함');
     assert.ok(Math.abs(b.updatedPlayer.tempBuff.def - 0.4) < 1e-9, 'B는 방어력 40% 상승');
-    assert.equal(a.updatedPlayer.tempBuff.def, 0, 'A는 방어 버프 없음');
+    // Wave 42: 회복 기술은 강화 칸을 쓰지 않는다 — A는 방어 버프 없이 지속 회복만 얻는다.
+    assert.equal(a.updatedPlayer.tempBuff?.def ?? 0, 0, 'A는 방어 버프 없음');
+    assert.equal(a.updatedPlayer.skillRegen?.turns, 3, 'A는 3턴 지속 회복');
 });
 
 test('그림자 주군 "허무의 각" — A는 처형 화력, B는 회피 획득', () => {

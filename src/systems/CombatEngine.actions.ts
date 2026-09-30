@@ -491,7 +491,21 @@ export const actionMethods = {
         //   미정의 시 default 3 (applyStatusEffectToEnemy curse case와 동일). max(prev, curseTurn) 단축 방지.
         const curseTurn = Math.max(1, Math.floor(skill.curseTurn || 3));
         if (STATUS_EFFECTS_TO_ENEMY.includes(String(skill.effect)) && random() < effectChance) {
+            const preEffectEnemy = postEffectEnemy;
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, String(skill.effect));
+            // 2026-09 Wave 42: 약화 기술이 광고하는 지속 턴 · 약화 폭을 기술 데이터에서 읽는다. 이전에는
+            //   공포가 기술과 무관하게 2턴 · 공격력 −30%였다('군주의 위엄' 4턴 −35%, '전투 함성' 3턴 −25%).
+            const debuffTurns = Math.floor(skill.turn || 0);
+            if (skill.effect === 'fear') {
+                const fearMult = typeof skill.val === 'number' && skill.val > 0 && skill.val < 1 ? skill.val : BALANCE.FEAR_ATK_MULT;
+                postEffectEnemy = {
+                    ...postEffectEnemy,
+                    fearTurns: debuffTurns > 0 ? debuffTurns : postEffectEnemy.fearTurns,
+                    atkMult: Math.min(preEffectEnemy.atkMult ?? 1, fearMult),
+                };
+            }
+            if (skill.effect === 'blind' && debuffTurns > 0) postEffectEnemy = { ...postEffectEnemy, blindTurns: debuffTurns };
+            if (skill.effect === 'taunt' && debuffTurns > 0) postEffectEnemy = { ...postEffectEnemy, tauntTurns: debuffTurns };
             if (skill.effect === 'stun' || skill.effect === 'freeze') {
                 postEffectEnemy = { ...postEffectEnemy, stunnedTurns: Math.max(postEffectEnemy.stunnedTurns ?? 0, stunTurn) };
             }
@@ -557,7 +571,11 @@ export const actionMethods = {
             critLogs.forEach((entry) => logs.push(entry));
         }
 
-        if (skill.type === 'buff' || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(String(skill.effect))) {
+        // 2026-09 Wave 42: 회복 기술('hp_regen')은 type이 'buff'여도 강화 칸(tempBuff)을 쓰지 않는다 — 쓰면
+        //   빈 강화(공격 0 · 방어 0)가 켜져 있던 방어 강화를 지웠다(기적의 손길이 신성한 보호막을 끔).
+        //   defBonus가 있는 분기('수호의 손길')는 아래 else-if가 방어 강화를 그대로 준다.
+        const isRegenSkill = skill.effect === 'hp_regen';
+        if ((skill.type === 'buff' && !isRegenSkill) || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(String(skill.effect))) {
             const buff: { atk: number; def: number; turn: number; name: string | undefined; counterChance?: number } = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
             if (skill.effect === 'atk_up') buff.atk = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'def_up') buff.def = Math.max(0.15, (skill.val || 1.3) - 1);
@@ -607,6 +625,12 @@ export const actionMethods = {
             const healAmt = Math.max(1, Math.floor(Number(updatedPlayer.maxHp || player.maxHp) * skill.val));
             updatedPlayer.hp = Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + healAmt);
             logs.push({ type: 'heal', text: MSG.SKILL_HP_REGEN_PROC(skill.name, healAmt) });
+            // 2026-09 Wave 42: 광고한 "N턴 지속 회복" — 이후 `turn`턴 동안 턴마다 `val / turn`을 더 회복한다
+            //   (합계 2 × val). 이전에는 즉시 회복만 있었다. 틱은 tickCombatState가 소유한다.
+            const regenTurns = Math.max(0, Math.floor(skill.turn || 0));
+            if (regenTurns > 0) {
+                updatedPlayer.skillRegen = { ratio: skill.val / regenTurns, turns: regenTurns, name: String(skill.name) };
+            }
         }
 
         // mp_regen: 즉시 MP 회복 (마법사 마나 가속 등)

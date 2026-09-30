@@ -678,6 +678,7 @@ export const MSG = {
     ),
     SKILL_DRAIN_HEAL: (heal: number) => `[생명흡수] +${heal} HP 흡수!`,
     SKILL_HP_REGEN_PROC: (skillName: string | undefined, heal: number) => `[${skillName}] +${heal} HP 회복!`,
+    SKILL_REGEN_TICK: (skillName: string, heal: number) => `[${skillName}] 지속 회복 +${heal} HP`,
     SKILL_MP_REGEN_PROC: (skillName: string | undefined, amount: number) => `[${skillName}] +${amount} MP 회복!`,
     SKILL_PURIFY_PROC: (skillName: string | undefined) => `[${skillName}] 상태이상이 정화되었습니다!`,
     SKILL_STEALTH_PROC: (skillName: string | undefined) => `[${skillName}] 다음 적 공격을 회피합니다!`,

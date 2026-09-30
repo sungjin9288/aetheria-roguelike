@@ -27,7 +27,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '광폭화', mp: 30, type: 'buff', effect: 'atk_up', val: 1.5, turn: 3, desc: 'ATK 50% 상승 3턴' },
             { name: '출혈베기', mp: 25, mult: 1.8, effect: 'bleed', desc: '베인 상처에서 3턴간 지속 피해' },
             { name: '방패 전술', mp: 20, type: 'buff', effect: 'def_up', val: 1.4, turn: 2, desc: 'DEF 40% 상승 2턴' },
-            { name: '전투 함성', mp: 15, type: 'debuff', effect: 'fear', turn: 3, desc: '전투 함성으로 적 ATK 25% 감소 3턴' },
+            { name: '전투 함성', mp: 15, type: 'debuff', effect: 'fear', val: 0.75, turn: 3, desc: '전투 함성으로 적 ATK 25% 감소 3턴' },
             { name: '철벽 방어', mp: 35, type: 'buff', effect: 'def_up', val: 1.8, turn: 2, desc: 'DEF 80% 상승 2턴, 반격 자세 돌입' },
             // 패시브
             { name: '강인한 체력', passive: true, effect: 'hp_up', val: 80, desc: '최대 HP +80 (패시브)' },
@@ -120,7 +120,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '도발', mp: 30, type: 'debuff', effect: 'taunt', turn: 3, desc: '적 분노 유발, 집중 공격 3턴' },
             { name: '반격 자세', mp: 35, type: 'buff', effect: 'counter', val: 1.4, turn: 3, desc: '피격 시 반격 확률 상승 3턴' },
             { name: '성스러운 빛', mp: 40, type: '빛', mult: 3.0, effect: 'purify', desc: '빛으로 적 상태이상 제거 + 피해' },
-            { name: '군주의 위엄', mp: 25, type: 'debuff', effect: 'fear', turn: 4, desc: '위압으로 적 ATK 35% 감소 4턴' },
+            { name: '군주의 위엄', mp: 25, type: 'debuff', effect: 'fear', val: 0.65, turn: 4, desc: '위압으로 적 ATK 35% 감소 4턴' },
             // 패시브
             { name: '철갑 단련', passive: true, effect: 'def_up', val: 12, desc: 'DEF +12 (패시브)' },
             { name: '기사의 맹세', passive: true, effect: 'hp_up', val: 150, desc: '최대 HP +150 (패시브)' },
@@ -203,7 +203,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '다크메터', mp: 50, type: '어둠', mult: 4.0, effect: 'curse', desc: '암흑 에너지로 저주 부여' },
             { name: '생명흡수', mp: 40, mult: 3.0, effect: 'drain', desc: '적의 생명력을 흡수해 HP 회복' },
             { name: '영혼 파괴', mp: 100, type: '어둠', mult: 6.5, effect: 'curse', desc: '궁극기 — 영혼 분쇄 저주' },
-            { name: '공포', mp: 35, type: 'debuff', effect: 'fear', turn: 3, desc: '광기로 적 ATK 30% 감소 3턴' },
+            { name: '공포', mp: 35, type: 'debuff', effect: 'fear', val: 0.7, turn: 3, desc: '광기로 적 ATK 30% 감소 3턴' },
             { name: '어둠의 서약', mp: 55, type: 'buff', effect: 'atk_up', val: 1.8, turn: 4, desc: 'ATK 80% 상승, HP를 소모하는 계약' },
             { name: '죽음의 손길', mp: 70, type: '어둠', mult: 4.5, effect: 'poison', desc: '어둠 독을 부여, 매 턴 심각한 피해' },
             { name: '혼돈의 파동', mp: 45, type: '어둠', mult: 3.5, effect: 'curse', desc: '혼돈의 파동으로 저주 강화' },
@@ -306,7 +306,7 @@ export const CLASSES: Record<string, ClassDef> = {
         skills: [
             { name: '신성 광선', mp: 20, type: '빛', mult: 1.8, desc: '빛 속성 집중 공격' },
             { name: '정화', mp: 30, type: '빛', mult: 1.5, effect: 'purify', desc: '상태이상 정화 + 추가 빛 피해' },
-            { name: '공포 유발', mp: 25, type: 'debuff', effect: 'fear', turn: 2, desc: '적 ATK 30% 감소 2턴' },
+            { name: '공포 유발', mp: 25, type: 'debuff', effect: 'fear', val: 0.7, turn: 2, desc: '적 ATK 30% 감소 2턴' },
             { name: '신성한 보호막', mp: 35, type: 'buff', effect: 'def_up', val: 1.6, turn: 3, desc: '신성한 방어 DEF 60% 상승 3턴' },
             { name: '성스러운 빛', mp: 40, type: '빛', mult: 2.5, effect: 'purify', desc: '강화 빛 공격 + 정화' },
             { name: '기적의 손길', mp: 45, type: 'buff', effect: 'hp_regen', val: 0.15, turn: 3, desc: 'HP 15% 회복 + 3턴간 지속 회복' },
