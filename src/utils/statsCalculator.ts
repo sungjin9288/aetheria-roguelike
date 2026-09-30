@@ -274,6 +274,17 @@ const applySynergyBonuses = (synergies: RelicSynergy[], preBuildStats: { maxMp: 
 };
 
 /**
+ * 2026-09 Wave 50(소유자 결정 "조합에 단점을 붙인다"): 활성 조합의 대가를 곱으로 모은다 — 강하지만 위험한 조합.
+ * 공격력 · 방어력은 이 파일의 최종 값에, 받는 피해는 적 공격(`enemyAttack`) · 도주 실패(`attemptEscape`)가 곱한다.
+ */
+const applySynergyDrawbacks = (synergies: RelicSynergy[]) => synergies.reduce((acc, syn) => {
+    const { stat, pct } = syn.drawback;
+    if (stat === 'atk') return { ...acc, atkMult: acc.atkMult * (1 - pct) };
+    if (stat === 'def') return { ...acc, defMult: acc.defMult * (1 - pct) };
+    return { ...acc, damageTakenMult: acc.damageTakenMult * (1 + pct) };
+}, { atkMult: 1, defMult: 1, damageTakenMult: 1 });
+
+/**
  * @param {number} killStreak
  * @returns {{ atkBonus: number, critBonus: number }}
  */
@@ -392,6 +403,7 @@ export const calculateFullStats = (player: Player) => {
     const activeSynergies = getActiveRelicSynergies(relics);
     const hpRatio = (player.hp || 0) / Math.max(1, player.maxHp || 150);
     const synergyBonus = applySynergyBonuses(activeSynergies, preBuildStats, hpRatio);
+    const synergyDrawback = applySynergyDrawbacks(activeSynergies);
 
     const streak = computeKillStreakBonus(player.killStreak || 0);
 
@@ -401,10 +413,11 @@ export const calculateFullStats = (player: Player) => {
         synergyBonus.atkMult *
         synergyBonus.statMult *
         (1 + synergyBonus.lowHpAtk) *
-        (1 + streak.atkBonus)
+        (1 + streak.atkBonus) *
+        synergyDrawback.atkMult
     );
     // cycle 154: synergyBonus.defMult — 'eternal_fortress' 시너지 (defMult 0.8) 반영.
-    const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1) * synergyBonus.statMult * synergyBonus.defMult);
+    const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1) * synergyBonus.statMult * synergyBonus.defMult * synergyDrawback.defMult);
     const finalMaxHp = Math.floor(preBuildStats.maxHp * synergyBonus.statMult);
     const finalMaxMp = preBuildStats.maxMp + (traitBonus.mpFlat || 0) + synergyBonus.mpFlat;
     // cycle 237: synergyBonus.critBonus 합산 — primordial_wrath 등 시너지 critChance dead config fix.
@@ -427,6 +440,8 @@ export const calculateFullStats = (player: Player) => {
         buildProfile,
         traitProfile,
         activeSynergies,
+        /** 조합의 대가 중 받는 피해 배율(Wave 50) — 1이면 없음. */
+        damageTakenMult: synergyDrawback.damageTakenMult,
         // cycle 278: killStreakTier 필드 제거 — production consumer 0건. raw killStreak count는 dispatch 유지.
         killStreak: player.killStreak || 0,
         passiveGoldMult: passiveBonus.goldMult,

@@ -4,6 +4,7 @@ import { Activity, BarChart3, ChevronDown, Coins, Compass, Flame, FlaskConical, 
 import type { FullStats, Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import { formatRelicText } from '../utils/relicPresentation';
+import { formatSynergyDrawback } from '../utils/relicSynergyHint';
 import SignalBadge from './SignalBadge';
 import { MSG } from '../data/messages';
 import { BALANCE } from '../data/constants';
@@ -262,7 +263,12 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                         {stats!.activeSynergies.map((syn) => (
                             <div key={syn.label} className="flex items-start justify-between gap-3 rounded-lg bg-fuchsia-900/10 px-3 py-2">
                                 <span className="shrink-0 text-[11px] font-readable font-bold text-fuchsia-200/90">{syn.label}</span>
-                                <span className="text-right text-[11px] font-readable leading-relaxed text-fuchsia-100/70">{formatRelicText(syn.desc)}</span>
+                                <span className="text-right text-[11px] font-readable leading-relaxed text-fuchsia-100/70">
+                                    {formatRelicText(syn.desc)}
+                                    <span data-testid="stats-synergy-drawback" className="block text-rose-200/80">
+                                        {MSG.RELIC_SYNERGY_DRAWBACK_LINE(formatSynergyDrawback(syn))}
+                                    </span>
+                                </span>
                             </div>
                         ))}
                     </div>

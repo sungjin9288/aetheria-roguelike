@@ -567,36 +567,43 @@ export const MAX_RELICS_PER_RUN = 5;
  *   (statsCalculator + CombatEngine + 회귀 가드 cycle 153/154/236/237).
  *   syn.id read는 src/, tests/ 어디에도 0건. StatsPanel React key는 syn.name 사용.
  */
+// 2026-09 Wave 50(소유자 결정 "조합에 단점을 붙인다"): 모든 조합에 대가(`drawback`)가 있다 — 강하지만 위험한 조합.
+//   Wave 49에서 추천이 조합을 모으게 되자 추천을 따르는 플레이어의 사망이 첫 카드 정책의 절반이 됐다(원장 §49.5).
 export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
     {
         label: '흡혈 군주',
         requires: ['피의 서약', '영혼 흡수'],
         bonus: { effect: 'vampire_lord', atkMult: 0.2, lifeSteal: 0.5 },
         desc: '공격력 20% 증가, 모든 공격으로 준 피해의 50%만큼 생명 회복',
+        drawback: { stat: 'damageTaken', pct: 0.2 },
     },
     {
         label: '비전 파동',
         requires: ['마나 수정', '주문 메아리'],
         bonus: { effect: 'arcane_surge', mpMult: 0.3 },
         desc: '최대 기력 30% 증가, 기술이 기력을 소모하지 않을 확률 두 배',
+        drawback: { stat: 'def', pct: 0.15 },
     },
     {
         label: '난공불락',
         requires: ['강철 의지', '난공불락'],
         bonus: { effect: 'unbreakable', healOnSave: 0.3 },
         desc: '사망 방지가 발동하면 최대 생명의 30% 회복',
+        drawback: { stat: 'atk', pct: 0.1 },
     },
     {
         label: '시간 지배자',
         requires: ['시간의 파편', '시공의 반지'],
         bonus: { effect: 'time_master', extraTurnChance: 0.1 },
         desc: '기술 사용 후 10% 확률로 한 번 더 행동',
+        drawback: { stat: 'def', pct: 0.1 },
     },
     {
         label: '죽음의 예언자',
         requires: ['죽음의 낙인', '저주의 결정'],
         bonus: { effect: 'death_oracle', dotMult: 0.5 },
         desc: '모든 지속 피해 50% 증가',
+        drawback: { stat: 'atk', pct: 0.15 },
     },
     // ─── 신규 시너지 (10개) ──────────────────────────────────────────────────
     {
@@ -604,60 +611,70 @@ export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
         requires: ['불사조의 깃털', '피의 서약'],
         bonus: { effect: 'immortal_warrior', reviveHeal: 0.5, killHeal: 0.05 },
         desc: '부활할 때 생명 50% 회복, 적 처치 시 생명 5% 회복',
+        drawback: { stat: 'damageTaken', pct: 0.15 },
     },
     {
         label: '지옥의 수확자',
         requires: ['심연의 계약', '영혼 흡수'],
         bonus: { effect: 'hell_reaper', hpCostReduction: 0.02, lifeStealBonus: 0.5 },
         desc: '생명 소모가 3%로 줄고 흡혈 효과 50% 증가',
+        drawback: { stat: 'damageTaken', pct: 0.15 },
     },
     {
         label: '절멸자',
         requires: ['허공의 왕좌', '처형자의 날'],
         bonus: { effect: 'annihilator', executeThreshold: 0.35, killStack: 0.07 },
         desc: '생명 35% 이하인 적에게 마무리 효과 발동, 처치 공격력 누적에 7% 추가',
+        drawback: { stat: 'def', pct: 0.2 },
     },
     {
         label: '영원의 생명',
         requires: ['창세의 핵', '재생 코어'],
         bonus: { effect: 'eternal_life', healPerTurn: 0.04, statBonus: 0.2 },
         desc: '매 턴 생명 4% 회복, 모든 능력치 20% 증가',
+        drawback: { stat: 'atk', pct: 0.2 },
     },
     {
         label: '시간의 지배자 (강화)',
         requires: ['시간 군주의 왕관', '시간의 파편'],
         bonus: { effect: 'time_dominator', cdReduction: 2, extraAction: 0.3 },
         desc: '기술 재사용 대기 2턴 감소, 추가 행동 확률 30%',
+        drawback: { stat: 'damageTaken', pct: 0.15 },
     },
     {
         label: '절대 반사',
         requires: ['운명의 거울', '가시 갑옷'],
         bonus: { effect: 'absolute_reflect', reflect: 0.5, stunOnReflect: 0.25 },
         desc: '반사 피해가 50%로 증가하고, 반사할 때 25% 확률로 적을 기절시킴',
+        drawback: { stat: 'atk', pct: 0.2 },
     },
     {
         label: '엔트로피 낙인',
         requires: ['엔트로피 엔진', '죽음의 낙인'],
         bonus: { effect: 'entropy_brand', damage: 0.12, interval: 2 },
         desc: '고정 피해가 최대 생명의 12%로 증가하고 2턴마다 발동',
+        drawback: { stat: 'atk', pct: 0.15 },
     },
     {
         label: '무한 포식',
         requires: ['세계 포식자', '광전사의 분노'],
         bonus: { effect: 'infinite_devour', devour: 0.15, lowHpAtk: 0.6 },
         desc: '적 처치 시 최대 생명의 15%만큼 생명 회복, 생명이 낮을 때 공격력 60% 증가',
+        drawback: { stat: 'def', pct: 0.3 },
     },
     {
         label: '공허의 용',
         requires: ['허공의 왕좌', '드래곤 발톱'],
         bonus: { effect: 'void_dragon', killStack: 0.08, critDmg: 2.0 },
         desc: '처치 공격력 누적에 8% 추가, 치명타 추가 피해 두 배',
+        drawback: { stat: 'def', pct: 0.25 },
     },
     {
         label: '절대 불사',
         requires: ['불사조의 깃털', '불사의 의지'],
         bonus: { effect: 'absolute_immortal', reviveCount: 2, reviveHeal: 0.5 },
         desc: '두 번 부활할 수 있으며 부활할 때 생명 50% 회복',
+        drawback: { stat: 'damageTaken', pct: 0.2 },
     },
     // ─── 3피스 전설 시너지 (5개) ──────────────────────────────────────────
     {
@@ -665,30 +682,35 @@ export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
         requires: ['피의 서약', '영혼 흡수', '허공의 심장'],
         bonus: { effect: 'blood_immortal', lifeSteal: 1.0, reviveHeal: 0.5 },
         desc: '모든 공격으로 준 피해만큼 생명 회복, 부활할 때 생명 50% 회복',
+        drawback: { stat: 'damageTaken', pct: 0.3 },
     },
     {
         label: '비전 특이점',
         requires: ['마나 수정', '주문 메아리', '정신 연소'],
         bonus: { effect: 'arcane_singularity', freeSkillChance: 0.35, skillMult: 0.3 },
         desc: '기술이 기력을 소모하지 않을 확률 35%, 기술 피해 30% 증가',
+        drawback: { stat: 'damageTaken', pct: 0.2 },
     },
     {
         label: '원초의 분노',
         requires: ['고대의 분노', '드래곤 발톱', '광전사의 분노'],
         bonus: { effect: 'primordial_wrath', critChance: 0.25, critDmg: 2.5, lowHpAtk: 0.8 },
         desc: '치명타 확률 25% 증가, 치명타 피해 2.5배, 생명이 낮을 때 공격력 80% 증가',
+        drawback: { stat: 'damageTaken', pct: 0.25 },
     },
     {
         label: '영원의 요새',
         requires: ['난공불락', '암석 피부', '대지의 심장'],
         bonus: { effect: 'eternal_fortress', defMult: 0.8, regenPerTurn: 0.08 },
         desc: '방어력 80% 증가, 매 턴 생명 8% 회복',
+        drawback: { stat: 'atk', pct: 0.3 },
     },
     {
         label: '엔트로피의 신',
         requires: ['엔트로피 엔진', '죽음의 낙인', '혼돈의 보석'],
         bonus: { effect: 'entropy_god', fixedDmg: 0.15, interval: 1, chaosAtk: 0.5 },
         desc: '매 턴 적 최대 생명의 15%만큼 고정 피해, 공격력 50% 증가',
+        drawback: { stat: 'damageTaken', pct: 0.25 },
     },
 ]);
 

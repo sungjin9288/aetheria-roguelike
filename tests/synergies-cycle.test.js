@@ -154,9 +154,16 @@ import { readFile } from 'node:fs/promises';
       const baseStats = calculateFullStats(base);
       const synStats = calculateFullStats({ ...base, relics: owned });
 
-      // entropy_god trigger require에 entropy_brand도 포함될 수 있어 atk 합산 효과 — ratio >= 1.4 보수 검증.
+      // Wave 50: 엔트로피의 신 조각은 엔트로피 낙인도 켠다 — 낙인의 대가(공격력 감소)가 함께 걸린다.
+      //   기대 배율 = (1 + chaosAtk) × 활성 조합의 공격력 대가 곱.
+      const { getActiveRelicSynergies } = await import('../src/data/relics.js');
+      const active = getActiveRelicSynergies(owned);
+      const god = active.find((syn) => syn.bonus.effect === 'entropy_god');
+      const atkDrawback = active.filter((syn) => syn.drawback.stat === 'atk').reduce((mult, syn) => mult * (1 - syn.drawback.pct), 1);
+      assert.ok(atkDrawback < 1, '엔트로피 낙인의 공격력 대가가 함께 걸린다');
+      const expected = (1 + god.bonus.chaosAtk) * atkDrawback;
       const atkRatio = synStats.atk / baseStats.atk;
-      assert.ok(atkRatio >= 1.40, `expected entropy_god 트리거 후 atk ratio >= 1.40; got ${atkRatio.toFixed(3)}`);
+      assert.ok(Math.abs(atkRatio - expected) < 0.02, `expected entropy_god 트리거 후 atk ratio ≈ ${expected.toFixed(3)}; got ${atkRatio.toFixed(3)}`);
   });
 
   test("CombatEngine.actions.ts: void_dragon / primordial_wrath critDmg 곱셈 분기 명시", async () => {
