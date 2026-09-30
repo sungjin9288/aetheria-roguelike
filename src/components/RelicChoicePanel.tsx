@@ -199,6 +199,11 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                         함께 쓰기 · {synergy.synergies.map(getRelicDisplayName).join(' · ')}
                                     </div>
                                 ) : null}
+                                {(synergy.drawbacks?.length ?? 0) > 0 && (
+                                    <div data-testid={`relic-choice-${index}-drawback`} className="mt-0.5 text-[10px] font-readable text-rose-200/85">
+                                        {MSG.RELIC_SYNERGY_DRAWBACK_LINE(synergy.drawbacks!.join(' · '))}
+                                    </div>
+                                )}
                             </div>
 
                             <ChevronRight size={17} aria-hidden="true" className="text-slate-500 transition-colors group-hover:text-white" />

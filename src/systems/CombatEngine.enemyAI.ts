@@ -264,6 +264,10 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             logs.push({ type: 'warning', text: MSG.PLAYER_CURSE_DMG_AMP(pct, before, enemyDmg) });
         }
 
+        // 2026-09 Wave 50: 조합의 대가 — 받는 피해 증가(statsCalculator가 활성 조합에서 모은 배율). 난수를 쓰지 않는다.
+        const synergyDamageTakenMult = stats.damageTakenMult ?? 1;
+        if (synergyDamageTakenMult !== 1) enemyDmg = Math.max(1, Math.floor(enemyDmg * synergyDamageTakenMult));
+
         // cycle 162: 'titan' 유물 (타이탄의 허리띠) — val.critReduce 0.5 받는 치명타 피해 감소.
         //   cycle 149에서 hp 보너스만 적용했고 critReduce는 별도 사이클로 미뤘던 잔존.
         //   heavyResolved (heavy attack — boss/enemy의 강타) 상황을 enemy crit으로 해석.
@@ -360,7 +364,8 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             return { success: true, logs: [{ type: 'info', text: MSG.ESCAPE_SUCCESS }] };
         }
 
-        const enemyDmg = Math.max(1, (enemy.atk ?? 0) - stats.def);
+        // Wave 50: 도주 실패 피해도 적에게 받는 피해다 — 조합의 대가(받는 피해 증가)를 같이 받는다.
+        const enemyDmg = Math.max(1, Math.floor(Math.max(1, (enemy.atk ?? 0) - stats.def) * (stats.damageTakenMult ?? 1)));
         return {
             success: false,
             damage: enemyDmg,

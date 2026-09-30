@@ -201,10 +201,14 @@ test('Relic: dict effect별 val 키 집합이 RelicValByEffect 선언과 정확�
 
 test('RelicSynergy: bonus 필드/effect 유니온이 데이터와 일치한다', () => {
     const synergies = Object.values(RELIC_SYNERGIES);
-    assertDeclared('RELIC_SYNERGIES', synergies, ['label', 'requires', 'bonus', 'desc']);
+    assertDeclared('RELIC_SYNERGIES', synergies, ['label', 'requires', 'bonus', 'desc', 'drawback']);
     const bonuses = synergies.map((synergy) => synergy.bonus);
     assertDeclared('RELIC_SYNERGIES[].bonus', bonuses, SYNERGY_BONUS_FIELDS);
     assertUnionExact('RELIC_SYNERGIES[].bonus', bonuses, 'effect', SYNERGY_EFFECTS);
+    // Wave 50: 모든 조합에 대가가 있다 — 종류는 받는 피해 · 방어력 · 공격력 셋뿐이다.
+    const drawbacks = synergies.map((synergy) => synergy.drawback);
+    assertDeclared('RELIC_SYNERGIES[].drawback', drawbacks, ['stat', 'pct']);
+    assertUnionExact('RELIC_SYNERGIES[].drawback', drawbacks, 'stat', ['damageTaken', 'def', 'atk']);
 });
 
 // --- types/item.ts ---

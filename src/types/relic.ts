@@ -296,6 +296,19 @@ export interface RelicSynergyBonus {
     stunOnReflect?: number;
 }
 
+/**
+ * 조합의 대가(Wave 50, 소유자 결정 "조합에 단점을 붙인다" — 강하지만 위험한 조합).
+ * 세 종류뿐이다: 받는 피해 증가 · 방어력 감소 · 공격력 감소. 최대 생명은 쓰지 않는다 —
+ * 저장된 `maxHp`를 직접 읽는 회복 상한이 많아 효과 최대치만 낮추면 대가가 새어 나간다.
+ */
+export type RelicSynergyDrawbackStat = 'damageTaken' | 'def' | 'atk';
+
+export interface RelicSynergyDrawback {
+    stat: RelicSynergyDrawbackStat;
+    /** 0~1 비율 — `damageTaken`은 증가율, `def` · `atk`는 감소율. */
+    pct: number;
+}
+
 export interface RelicSynergy {
     /** UI 표시용 시너지 이름. */
     label: string;
@@ -303,4 +316,6 @@ export interface RelicSynergy {
     requires: string[];
     bonus: RelicSynergyBonus;
     desc: string;
+    /** 조합의 대가 — 문구는 데이터에서 만든다(`formatSynergyDrawback`). */
+    drawback: RelicSynergyDrawback;
 }

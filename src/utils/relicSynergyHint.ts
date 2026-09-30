@@ -1,6 +1,10 @@
 import { MSG } from '../data/messages';
 import { RELIC_SYNERGIES, getActiveRelicSynergies } from '../data/relics';
-import type { Relic } from '../types/index.js';
+import type { Relic, RelicSynergy } from '../types/index.js';
+
+/** 조합의 대가 문구(Wave 50) — 데이터(`drawback`)에서 만든다. */
+export const formatSynergyDrawback = (synergy: Pick<RelicSynergy, 'drawback'>) =>
+    MSG.RELIC_SYNERGY_DRAWBACK_TEXT[synergy.drawback.stat](Math.round(synergy.drawback.pct * 100));
 
 /**
  * 유물 선택 카드의 시너지 힌트 — RelicChoicePanel이 카드마다, 추천 줄(relicChoiceDecision)이 순위에 쓴다.
@@ -54,6 +58,8 @@ export interface RelicSynergyResult {
     legendaryHint?: string;
     /** 두 조각 조합을 이 유물이 완성한다 — 조합 이름(Wave 47). */
     completesPair?: string;
+    /** 이 유물로 새로 켜지는 조합의 대가 문구(Wave 50) — 완성할 때만 채운다. */
+    drawbacks?: string[];
     /** 세 조각 전설 조합까지 이 유물을 더하면 1개 남는다 — 조합 이름. */
     nearLegendary?: string | null;
     /**
@@ -89,6 +95,7 @@ export const getRelicSynergyScore = (newRelic: Relic, ownedRelics: Relic[]): Rel
             synergies: ownedPieces(legendarySyn.requires, ownedRelics),
             legendaryHint: legendarySyn.label,
             ...(pairSyn ? { completesPair: pairSyn.label } : {}),
+            drawbacks: newlyActive.map(formatSynergyDrawback),
         };
     }
     if (pairSyn) {
@@ -97,6 +104,7 @@ export const getRelicSynergyScore = (newRelic: Relic, ownedRelics: Relic[]): Rel
             label: MSG.RELIC_PAIR_COMPLETE_BADGE,
             synergies: ownedPieces(pairSyn.requires, ownedRelics),
             completesPair: pairSyn.label,
+            drawbacks: newlyActive.map(formatSynergyDrawback),
         };
     }
 

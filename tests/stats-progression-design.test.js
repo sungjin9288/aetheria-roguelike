@@ -4,6 +4,7 @@ import { createElement } from 'react';
 import { readFile } from 'node:fs/promises';
 
 import StatsPanel from '../src/components/StatsPanel.tsx';
+import { MSG } from '../src/data/messages.ts';
 import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
 /**
@@ -32,7 +33,7 @@ const buildStatsFixture = () => ({
         desc: '화염 피해를 강화한다', atkMult: 1.18, defMult: 1.0, hpMult: 0.9,
     },
     activeSet: { prefix: '불타는', desc: '불타는 세트 보너스' },
-    activeSynergies: [{ label: '조합 알파', desc: '전투 시 추가 확률 이벤트가 발생한다' }],
+    activeSynergies: [{ label: '조합 알파', desc: '전투 시 추가 확률 이벤트가 발생한다', drawback: { stat: 'damageTaken', pct: 0.2 } }],
 });
 
 const buildPlayerFixture = () => makePlayerFixture({
@@ -123,6 +124,8 @@ test('signature 세트 / prefix 세트 / 유물 조합 보너스가 실제 배�
 
     assert.ok(html.includes('조합 알파'), '유물 조합 라벨 노출');
     assert.ok(html.includes('전투 시 추가 확률 이벤트가 발생한다'), '유물 조합 설명 노출');
+    // Wave 50: 조합의 대가도 설명 아래에 보인다.
+    assert.ok(html.includes(MSG.RELIC_SYNERGY_DRAWBACK_LINE('받는 피해 20% 증가')), '유물 조합 대가 노출');
 });
 
 test('activeSignatureSet / activeSet / activeSynergies가 없으면 해당 블록은 렌더되지 않는다 (회귀 가드)', () => {

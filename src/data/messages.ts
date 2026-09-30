@@ -685,6 +685,13 @@ export const MSG = {
     // Wave 49(소유자 결정 "측정 후 조건부 반영"): 가진 조각이 없는 실제 조합의 첫 조각.
     RELIC_REASON_COMBO_START: '새 조합 시작',
     RELIC_COMBO_START_LINE: (label: string) => `${label} 조합의 첫 조각`,
+    // Wave 50(소유자 결정 "조합에 단점을 붙인다"): 조합의 대가 — 문구는 데이터(`drawback`)에서 만든다.
+    RELIC_SYNERGY_DRAWBACK_TEXT: {
+        damageTaken: (pct: number) => `받는 피해 ${pct}% 증가`,
+        def: (pct: number) => `방어력 ${pct}% 감소`,
+        atk: (pct: number) => `공격력 ${pct}% 감소`,
+    },
+    RELIC_SYNERGY_DRAWBACK_LINE: (text: string) => `대가 · ${text}`,
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.actions.ts.
     // 문구는 이전과 한 글자도 다르지 않다 — 소유만 MSG로 옮긴다.
