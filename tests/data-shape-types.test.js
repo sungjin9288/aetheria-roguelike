@@ -246,7 +246,7 @@ test('Item: ItemDatabase 카테고리가 7개로 고정되어 있다', () => {
 
 const MONSTER_TEMPLATE_FIELDS = [
     'name', 'baseName', 'hp', 'maxHp', 'atk', 'def', 'exp', 'gold', 'level',
-    'weakness', 'resistance', 'isBoss', 'isElite', 'dropMod', 'statusOnHit',
+    'weakness', 'resistance', 'isBoss', 'isElite', 'dropMod', 'statusOnHit', 'family',
     'hpMult', 'atkMult', 'defMult', 'expMult', 'goldMult', 'pattern', 'phase2', 'phase3',
     'dots', 'blindTurns', 'fearTurns', 'cursedTurns', 'stunnedTurns', 'tauntTurns',
     'cursed', 'taunted', 'guarding', 'phase2Triggered', 'phase3Triggered',
@@ -386,7 +386,7 @@ test('Achievement: 필드/target 유니온이 types/quest.ts 선언과 일치한
 const CLASS_FIELDS = ['tier', 'reqLv', 'desc', 'hpMod', 'mpMod', 'atkMod', 'skills', 'skillBranches', 'next', 'traits'];
 
 const CLASS_SKILL_FIELDS = [
-    'name', 'mp', 'type', 'mult', 'desc', 'passive', 'effect', 'val', 'turn', 'crit', 'drainRatio',
+    'name', 'mp', 'type', 'mult', 'desc', 'passive', 'effect', 'val', 'turn', 'crit', 'drainRatio', 'smite',
     'effectChance', 'secondEffect', 'stunTurn', 'curseTurn', 'defBonus', 'mpRestore',
     'cooldown', 'fromWeapon', 'weaponName', 'slot', 'fromTrait',
 ];
