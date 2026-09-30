@@ -7,6 +7,8 @@ import type { Relic } from '../types/index.js';
 interface RelicSynergyInfo {
     score?: number;
     legendaryHint?: string;
+    /** 두 조각 조합 완성(Wave 47, relicSynergyHint). */
+    completesPair?: string;
     nearLegendary?: string | null;
 }
 
@@ -74,6 +76,7 @@ const getBuildLabel = (effect: string | undefined) => EFFECT_BUILD_LABEL[effect 
 
 const getReasonLabel = (relic: Relic | undefined, synergy: RelicSynergyInfo, buildFit: ReturnType<typeof getRelicBuildFit>) => {
     if (synergy?.legendaryHint) return '전설 조합 완성';
+    if (synergy?.completesPair) return MSG.RELIC_REASON_PAIR_COMPLETE;
     if ((synergy?.score || 0) >= 80) return '현재 유물과 잘 맞음';
     if ((synergy?.score || 0) > 0) return '현재 유물과 이어짐';
     if (synergy?.nearLegendary) return '전설 조합에 가까움';
@@ -88,13 +91,15 @@ const getReasonLabel = (relic: Relic | undefined, synergy: RelicSynergyInfo, bui
 
 const getTone = (relic: Relic | undefined, synergy: RelicSynergyInfo) => {
     if (synergy?.legendaryHint || relic?.rarity === 'legendary') return 'legendary';
-    if ((synergy?.score || 0) > 0) return 'synergy';
+    if (synergy?.completesPair || (synergy?.score || 0) > 0) return 'synergy';
     if (synergy?.nearLegendary) return 'potential';
     return 'steady';
 };
 
 const getSynergyScore = (synergy: RelicSynergyInfo) => {
     if (synergy.legendaryHint) return 160;
+    // Wave 47: 두 조각 조합 완성은 실제 조합 보너스가 켜진다 — 효과 짝 표의 "강한 조합"(110)보다 위, 전설 조합 완성 아래.
+    if (synergy.completesPair) return 140;
     if ((synergy.score || 0) >= 80) return 110;
     return synergy.score || 0;
 };

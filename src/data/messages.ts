@@ -672,6 +672,15 @@ export const MSG = {
     //   '현재 성장 보완'은 이제 실제로 현재 빌드가 굴리는 효과일 때만 쓴다.
     //   빌드와 무관한 후보는 아래 문구로 구분해 "왜 추천됐는지"가 어긋나지 않게 한다.
     RELIC_REASON_NEW_DIRECTION: '새로운 성장 방향',
+    // 2026-09 Wave 47: 유물 선택 시너지 힌트 문구 — RelicChoicePanel에서 utils/relicSynergyHint.ts로 옮기며 MSG 소유로 이동.
+    //   앞의 넷은 기존 문구 그대로다. 두 조각 조합 완성(RELIC_REASON_PAIR_COMPLETE · RELIC_PAIR_COMPLETE_BADGE)은 새 문구다.
+    RELIC_SYNERGY_LEGENDARY_COMPLETE: '전설 조합 완성',
+    RELIC_SYNERGY_STRONG: '강한 조합',
+    RELIC_SYNERGY_GOOD: '좋은 조합',
+    RELIC_SYNERGY_LINKED: '이어지는 조합',
+    RELIC_REASON_PAIR_COMPLETE: '조합 효과 발동',
+    RELIC_PAIR_COMPLETE_BADGE: '조합 완성',
+    RELIC_SYNERGY_COMPLETE_LINE: (label: string) => `${label} 완성`,
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.actions.ts.
     // 문구는 이전과 한 글자도 다르지 않다 — 소유만 MSG로 옮긴다.
