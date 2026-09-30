@@ -3,10 +3,12 @@ import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { ArrowRight, Check, LockKeyhole, Sparkles } from 'lucide-react';
 import { DB } from '../../data/db';
 import type { Player } from '../../types/index.js';
+import { MSG } from '../../data/messages';
 import {
   getActiveClassSkillNames,
   getClassIdentity,
   getClassStatGrade,
+  getClassTraitLabels,
 } from '../../utils/classPresentation';
 import ClassCard from '../ClassCard';
 import ClassIcon from '../icons/ClassIcon';
@@ -35,6 +37,24 @@ const StatSummary = ({ label, value }: { label: string; value?: number }) => (
   </div>
 );
 
+const TraitRow = ({ label, traits, tone, testId }: { label: string; traits: string[]; tone: 'strength' | 'weakness'; testId: string }) => (
+  <div data-testid={testId} className="flex min-w-0 flex-wrap items-center gap-1.5">
+    <span className="aether-type-meta w-8 shrink-0 font-readable text-slate-400/76">{label}</span>
+    {traits.map((trait) => (
+      <span
+        key={trait}
+        className={`rounded border px-1.5 py-0.5 font-readable text-[11px] font-semibold ${
+          tone === 'strength'
+            ? 'border-emerald-300/24 bg-emerald-300/8 text-emerald-100'
+            : 'border-amber-300/24 bg-amber-300/8 text-amber-100'
+        }`}
+      >
+        {trait}
+      </span>
+    ))}
+  </div>
+);
+
 const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }: JobChangePanelProps) => {
   const currentJob = player.job || '모험가';
   const current = DB.CLASSES[currentJob];
@@ -47,6 +67,7 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
   const selectedIsLocked = level < requirement;
   const identity = getClassIdentity(selected?.desc);
   const featuredSkills = getActiveClassSkillNames(selected);
+  const traitLabels = getClassTraitLabels(selected);
   const readyCount = availableJobs.filter((jobName) => level >= (DB.CLASSES[jobName]?.reqLv || 1)).length;
   const nextLevel = availableJobs.length > 0
     ? Math.min(...availableJobs.map((jobName) => DB.CLASSES[jobName]?.reqLv || Number.POSITIVE_INFINITY))
@@ -163,6 +184,13 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
                     <StatSummary label="기력" value={selected.mpMod} />
                     <StatSummary label="공격력" value={selected.atkMod} />
                   </div>
+
+                  {(traitLabels.strengths.length > 0 || traitLabels.weaknesses.length > 0) && (
+                    <div data-testid="job-change-traits" className="mt-2.5 space-y-1.5">
+                      <TraitRow label={MSG.CLASS_TRAIT_STRENGTHS} traits={traitLabels.strengths} tone="strength" testId="job-change-strengths" />
+                      <TraitRow label={MSG.CLASS_TRAIT_WEAKNESSES} traits={traitLabels.weaknesses} tone="weakness" testId="job-change-weaknesses" />
+                    </div>
+                  )}
 
                   <div className="mt-3 space-y-2 font-readable">
                     <div>

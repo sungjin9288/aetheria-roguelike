@@ -379,7 +379,7 @@ test('Achievement: 필드/target 유니온이 types/quest.ts 선언과 일치한
 
 // --- types/class.ts ---
 
-const CLASS_FIELDS = ['tier', 'reqLv', 'desc', 'hpMod', 'mpMod', 'atkMod', 'skills', 'skillBranches', 'next'];
+const CLASS_FIELDS = ['tier', 'reqLv', 'desc', 'hpMod', 'mpMod', 'atkMod', 'skills', 'skillBranches', 'next', 'traits'];
 
 const CLASS_SKILL_FIELDS = [
     'name', 'mp', 'type', 'mult', 'desc', 'passive', 'effect', 'val', 'turn', 'crit', 'drainRatio',
