@@ -673,11 +673,12 @@ export const MSG = {
     //   빌드와 무관한 후보는 아래 문구로 구분해 "왜 추천됐는지"가 어긋나지 않게 한다.
     RELIC_REASON_NEW_DIRECTION: '새로운 성장 방향',
     // 2026-09 Wave 47: 유물 선택 시너지 힌트 문구 — RelicChoicePanel에서 utils/relicSynergyHint.ts로 옮기며 MSG 소유로 이동.
-    //   앞의 넷은 기존 문구 그대로다. 두 조각 조합 완성(RELIC_REASON_PAIR_COMPLETE · RELIC_PAIR_COMPLETE_BADGE)은 새 문구다.
+    //   두 조각 조합 완성(RELIC_REASON_PAIR_COMPLETE · RELIC_PAIR_COMPLETE_BADGE)은 새 문구다.
+    //   Wave 48(소유자 결정 "조합 진행 우선 + 효과 짝 문구 정리"): 조합 보너스가 없는 효과 짝은 '강한/좋은/이어지는 조합'이
+    //   아니라 '함께 쓰기 좋음'이다 — '조합'은 실제 조합(RELIC_SYNERGIES)만 부른다.
     RELIC_SYNERGY_LEGENDARY_COMPLETE: '전설 조합 완성',
-    RELIC_SYNERGY_STRONG: '강한 조합',
-    RELIC_SYNERGY_GOOD: '좋은 조합',
-    RELIC_SYNERGY_LINKED: '이어지는 조합',
+    RELIC_EFFECT_PAIR_LABEL: '함께 쓰기 좋음',
+    RELIC_REASON_EFFECT_PAIR: '현재 유물과 함께 쓰기 좋음',
     RELIC_REASON_PAIR_COMPLETE: '조합 효과 발동',
     RELIC_PAIR_COMPLETE_BADGE: '조합 완성',
     RELIC_SYNERGY_COMPLETE_LINE: (label: string) => `${label} 완성`,

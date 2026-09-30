@@ -12,9 +12,13 @@ import type { Relic } from '../types/index.js';
  */
 
 /**
- * 효과 짝 표 — 실제 조합 보너스가 아니라 함께 쓰면 서로를 살리는 효과 쌍이다("좋은 조합" 등 점수 힌트).
+ * 효과 짝 표 — 실제 조합 보너스가 아니라 함께 쓰면 서로를 살리는 효과 쌍이다("함께 쓰기 좋음" 힌트).
  * 실제 조합(`RELIC_SYNERGIES`) 완성은 이 표와 무관하게 위에서 먼저 판정한다.
+ * Wave 48(소유자 결정): 짝 하나당 20점, 최대 40점 — 등급 · 빌드 적합과 같은 급이고 실제 조합 진행(추천 줄의 층 점수)보다 아래다.
+ *   '강한/좋은 조합'으로 부르던 동안 이 짝이 실제 조합처럼 읽혔고 추천에서 조합 진행을 밀어냈다(원장 §47.4).
  */
+const EFFECT_PAIR_SCORE_PER_MATCH = 20;
+const EFFECT_PAIR_SCORE_CAP = 40;
 const SYNERGY_MAP: Record<string, string[]> = {
     // 공격 콤보
     double_strike: ['execute_bonus', 'combo_stack', 'armor_pen', 'ancient_power'],
@@ -112,8 +116,8 @@ export const getRelicSynergyScore = (newRelic: Relic, ownedRelics: Relic[]): Rel
         ? { score: 0, label: null, synergies: [], nearLegendary: nearLegendarySyn.label }
         : { score: 0, label: null, synergies: [] };
 
-    const score = Math.min(100, matches.length * 40);
-    const label = score >= 80 ? MSG.RELIC_SYNERGY_STRONG : score >= 40 ? MSG.RELIC_SYNERGY_GOOD : MSG.RELIC_SYNERGY_LINKED;
+    const score = Math.min(EFFECT_PAIR_SCORE_CAP, matches.length * EFFECT_PAIR_SCORE_PER_MATCH);
+    const label = MSG.RELIC_EFFECT_PAIR_LABEL;
     const synergyNames = ownedRelics.filter((r) => matches.includes(r.effect)).map((r) => r.name);
     return { score, label, synergies: synergyNames, nearLegendary: nearLegendarySyn?.label || null };
 };
