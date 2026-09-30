@@ -183,6 +183,17 @@ interface TempBuff {
     counterChance?: number;
 }
 
+/**
+ * 2026-09 Wave 42: 회복 기술('hp_regen')이 광고하는 "N턴 지속 회복". 기술은 즉시 `val`을 회복하고,
+ * 그 뒤 `turns`턴 동안 매 전투 턴 최대 생명의 `ratio`를 회복한다(`CombatEngine.tickCombatState` 소유).
+ * `tempBuff`와 따로 둔다 — 한 칸을 같이 쓰면 회복이 방어 강화를 지운다.
+ */
+export interface SkillRegen {
+    ratio: number;
+    turns: number;
+    name: string;
+}
+
 export interface EndgameProgress {
     version: 1;
     primalShards: number;
@@ -550,6 +561,7 @@ export interface Player {
      */
     ascensionOfferDeferred?: boolean;
     tempBuff?: TempBuff;
+    skillRegen?: SkillRegen;
     /** 'extraTurn' 스킬 효과·time_master/time_dominator 시너지 proc — 다음 적 턴 스킵(1회성 플래그). */
     extraTurnGranted?: boolean;
     status?: StatusId[];

@@ -115,6 +115,20 @@ export interface SkillBranchChoice {
 }
 
 /** 직업 정의 (CLASSES 객체의 값). */
+/**
+ * 2026-09 Wave 42 (소유자 결정 "직업별 강점 · 약점 강조"): 직업이 선언하는 강점 · 약점 어휘.
+ * 선언은 데이터가 하고, 각 특성이 실제 수치 · 기술로 뒷받침되는지는 `tests/class-traits-contract.test.js`가 검증한다.
+ */
+export type ClassStrength =
+    | 'toughness' | 'mana' | 'firepower' | 'control' | 'sustain' | 'crit' | 'evasion' | 'affliction'
+    | 'elements' | 'guard' | 'weaken' | 'escape' | 'tempo' | 'purify' | 'growth' | 'fortune';
+export type ClassWeakness = 'frail' | 'low_mana' | 'low_firepower' | 'no_sustain' | 'mono_element' | 'physical_only';
+export type ClassTraitId = ClassStrength | ClassWeakness;
+export interface ClassTraits {
+    strengths: ClassStrength[];
+    weaknesses: ClassWeakness[];
+}
+
 export interface ClassDef {
     tier?: number;
     reqLv?: number;
@@ -127,4 +141,6 @@ export interface ClassDef {
     skillBranches?: Record<string, SkillBranchChoice[]>;
     /** 전직 가능한 상위 직업 목록. */
     next?: string[];
+    /** 강점 · 약점 (Wave 42). 뿌리 직업(모험가)만 비어 있다. */
+    traits?: ClassTraits;
 }

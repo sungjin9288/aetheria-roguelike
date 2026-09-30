@@ -1,4 +1,5 @@
-import type { ClassDef } from '../types/class.js';
+import { MSG } from '../data/messages.js';
+import type { ClassDef, ClassTraitId } from '../types/class.js';
 
 export type ClassStatGrade = '낮음' | '보통' | '높음' | '매우 높음';
 
@@ -29,3 +30,12 @@ export const getActiveClassSkillNames = (classData?: ClassDef, limit = 3): strin
         .slice(0, limit)
         .map((skill) => skill.name as string)
 );
+
+/** Wave 42: 직업의 강점 · 약점 라벨 (선언 순서 그대로). 선언이 없는 직업(모험가)은 빈 목록. */
+export const getClassTraitLabels = (classData?: ClassDef): { strengths: string[]; weaknesses: string[] } => {
+    const label = (trait: ClassTraitId) => MSG.CLASS_TRAIT_LABELS[trait];
+    return {
+        strengths: (classData?.traits?.strengths ?? []).map(label),
+        weaknesses: (classData?.traits?.weaknesses ?? []).map(label),
+    };
+};

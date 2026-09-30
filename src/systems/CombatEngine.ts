@@ -175,6 +175,20 @@ export const CombatEngine = {
             }
         }
 
+        // 2026-09 Wave 42: 회복 기술의 지속 회복 — 남은 턴마다 최대 생명의 ratio를 회복하고 0턴에 사라진다.
+        if (updated.skillRegen && updated.skillRegen.turns > 0) {
+            const regen = updated.skillRegen;
+            const cap = updated.maxHp || BALANCE.DEFAULT_MAX_HP;
+            const heal = Math.max(1, Math.floor(cap * regen.ratio));
+            if ((updated.hp || 0) < cap) {
+                updated.hp = Math.min(cap, (updated.hp || 1) + heal);
+                logs.push({ type: 'heal', text: MSG.SKILL_REGEN_TICK(regen.name, heal) });
+            }
+            const turnsLeft = regen.turns - 1;
+            if (turnsLeft > 0) updated.skillRegen = { ...regen, turns: turnsLeft };
+            else delete updated.skillRegen;
+        }
+
         // 유물: 대지의 심장 (regen) — 매 턴 최대 HP의 5% 회복
         const regenRelic = relics.find((relic) => relic.effect === 'regen');
         if (regenRelic && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {

@@ -22,12 +22,13 @@ export const CLASSES: Record<string, ClassDef> = {
     // ── 1차 전직 ─────────────────────────────────────────────────────────────
     '전사': {
         tier: 1, reqLv: 5, desc: '체력/공격 특화 — 전선을 지키는 용사', hpMod: 1.4, mpMod: 0.6, atkMod: 1.3,
+        traits: { strengths: ['toughness', 'guard'], weaknesses: ['low_mana', 'physical_only'] },
         skills: [
             { name: '파워배시', mp: 15, mult: 2.0, desc: '강력한 내려찍기. 방패를 무시한다' },
             { name: '광폭화', mp: 30, type: 'buff', effect: 'atk_up', val: 1.5, turn: 3, desc: 'ATK 50% 상승 3턴' },
             { name: '출혈베기', mp: 25, mult: 1.8, effect: 'bleed', desc: '베인 상처에서 3턴간 지속 피해' },
             { name: '방패 전술', mp: 20, type: 'buff', effect: 'def_up', val: 1.4, turn: 2, desc: 'DEF 40% 상승 2턴' },
-            { name: '전투 함성', mp: 15, type: 'debuff', effect: 'fear', turn: 3, desc: '전투 함성으로 적 ATK 25% 감소 3턴' },
+            { name: '전투 함성', mp: 15, type: 'debuff', effect: 'fear', val: 0.75, turn: 3, desc: '전투 함성으로 적 ATK 25% 감소 3턴' },
             { name: '철벽 방어', mp: 35, type: 'buff', effect: 'def_up', val: 1.8, turn: 2, desc: 'DEF 80% 상승 2턴, 반격 자세 돌입' },
             // 패시브
             { name: '강인한 체력', passive: true, effect: 'hp_up', val: 80, desc: '최대 HP +80 (패시브)' },
@@ -52,6 +53,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '마법사': {
         tier: 1, reqLv: 5, desc: '마법 공격 특화 — 원소의 학도', hpMod: 0.7, mpMod: 1.8, atkMod: 1.6,
+        traits: { strengths: ['firepower', 'elements', 'control'], weaknesses: ['frail'] },
         skills: [
             { name: '화염구', mp: 20, type: '화염', mult: 2.2, effect: 'burn', desc: '화염 속성 + 화상 부여' },
             { name: '썬더볼트', mp: 45, type: '빛', mult: 3.5, effect: 'stun', desc: '번개로 적 기절 부여' },
@@ -82,6 +84,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '도적': {
         tier: 1, reqLv: 5, desc: '치명타/속도 — 어둠 속의 칼날', hpMod: 1.0, mpMod: 1.0, atkMod: 1.4,
+        traits: { strengths: ['crit', 'evasion', 'affliction'], weaknesses: ['no_sustain'] },
         skills: [
             { name: '급소찌르기', mp: 15, mult: 1.8, crit: 0.5, desc: '50% 치명타 확률 급소 공격' },
             { name: '독바르기', mp: 25, type: '자연', mult: 1.5, effect: 'poison', desc: '독 도포 + 자연 속성 피해' },
@@ -113,6 +116,7 @@ export const CLASSES: Record<string, ClassDef> = {
     // ── 2차 전직 ─────────────────────────────────────────────────────────────
     '나이트': {
         tier: 2, reqLv: 30, desc: '철벽의 방어 — 성채를 걷는 기사', hpMod: 2.0, mpMod: 0.8, atkMod: 1.5,
+        traits: { strengths: ['toughness', 'guard', 'weaken'], weaknesses: ['low_mana'] },
         skills: [
             { name: '실드배시', mp: 20, mult: 2.5, effect: 'stun', desc: '방패 일격 + 기절 부여' },
             { name: '절대방어', mp: 50, type: 'buff', effect: 'def_up', val: 2.0, turn: 5, desc: 'DEF 100% 상승 5턴' },
@@ -120,7 +124,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '도발', mp: 30, type: 'debuff', effect: 'taunt', turn: 3, desc: '적 분노 유발, 집중 공격 3턴' },
             { name: '반격 자세', mp: 35, type: 'buff', effect: 'counter', val: 1.4, turn: 3, desc: '피격 시 반격 확률 상승 3턴' },
             { name: '성스러운 빛', mp: 40, type: '빛', mult: 3.0, effect: 'purify', desc: '빛으로 적 상태이상 제거 + 피해' },
-            { name: '군주의 위엄', mp: 25, type: 'debuff', effect: 'fear', turn: 4, desc: '위압으로 적 ATK 35% 감소 4턴' },
+            { name: '군주의 위엄', mp: 25, type: 'debuff', effect: 'fear', val: 0.65, turn: 4, desc: '위압으로 적 ATK 35% 감소 4턴' },
             // 패시브
             { name: '철갑 단련', passive: true, effect: 'def_up', val: 12, desc: 'DEF +12 (패시브)' },
             { name: '기사의 맹세', passive: true, effect: 'hp_up', val: 150, desc: '최대 HP +150 (패시브)' },
@@ -141,6 +145,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '버서커': {
         tier: 2, reqLv: 30, desc: '광란의 공격 — 피를 마시는 전사', hpMod: 1.6, mpMod: 0.5, atkMod: 2.0,
+        traits: { strengths: ['firepower', 'toughness', 'sustain'], weaknesses: ['low_mana'] },
         skills: [
             { name: '휠윈드', mp: 30, mult: 3.0, desc: '회전 연속 공격' },
             { name: '피의갈망', mp: 60, type: 'buff', effect: 'berserk', val: 2.5, turn: 3, desc: 'ATK 150% / DEF 감소 3턴' },
@@ -169,6 +174,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '아크메이지': {
         tier: 2, reqLv: 30, desc: '원소의 지배자 — 세계를 태우는 마법사', hpMod: 0.8, mpMod: 2.5, atkMod: 2.2,
+        traits: { strengths: ['firepower', 'elements', 'control'], weaknesses: ['frail'] },
         skills: [
             { name: '메테오', mp: 60, type: '화염', mult: 4.5, effect: 'burn', desc: '하늘에서 운석을 소환, 화상 부여' },
             { name: '블리자드', mp: 60, type: '냉기', mult: 4.0, effect: 'freeze', desc: '얼음폭풍 + 빙결 부여' },
@@ -199,11 +205,12 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '흑마법사': {
         tier: 2, reqLv: 30, desc: '어둠의 계약 — 금단을 탐하는 자', hpMod: 0.9, mpMod: 2.0, atkMod: 2.0,
+        traits: { strengths: ['affliction', 'sustain', 'firepower'], weaknesses: ['frail'] },
         skills: [
             { name: '다크메터', mp: 50, type: '어둠', mult: 4.0, effect: 'curse', desc: '암흑 에너지로 저주 부여' },
             { name: '생명흡수', mp: 40, mult: 3.0, effect: 'drain', desc: '적의 생명력을 흡수해 HP 회복' },
             { name: '영혼 파괴', mp: 100, type: '어둠', mult: 6.5, effect: 'curse', desc: '궁극기 — 영혼 분쇄 저주' },
-            { name: '공포', mp: 35, type: 'debuff', effect: 'fear', turn: 3, desc: '광기로 적 ATK 30% 감소 3턴' },
+            { name: '공포', mp: 35, type: 'debuff', effect: 'fear', val: 0.7, turn: 3, desc: '광기로 적 ATK 30% 감소 3턴' },
             { name: '어둠의 서약', mp: 55, type: 'buff', effect: 'atk_up', val: 1.8, turn: 4, desc: 'ATK 80% 상승, HP를 소모하는 계약' },
             { name: '죽음의 손길', mp: 70, type: '어둠', mult: 4.5, effect: 'poison', desc: '어둠 독을 부여, 매 턴 심각한 피해' },
             { name: '혼돈의 파동', mp: 45, type: '어둠', mult: 3.5, effect: 'curse', desc: '혼돈의 파동으로 저주 강화' },
@@ -228,6 +235,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '어쌔신': {
         tier: 2, reqLv: 30, desc: '일격필살 — 그림자의 사형집행인', hpMod: 1.1, mpMod: 1.2, atkMod: 1.9,
+        traits: { strengths: ['crit', 'evasion'], weaknesses: ['no_sustain'] },
         skills: [
             { name: '암살', mp: 40, mult: 5.0, crit: 0.8, desc: '80% 치명타 확률 암살 일격' },
             { name: '은신', mp: 30, type: 'buff', effect: 'stealth', val: 2.0, turn: 2, desc: '완전 은신 + 회피 대폭 상승 2턴' },
@@ -256,6 +264,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '레인저': {
         tier: 2, reqLv: 30, desc: '원거리 명사수 — 바람의 추적자', hpMod: 1.2, mpMod: 1.5, atkMod: 1.7,
+        traits: { strengths: ['elements', 'control', 'fortune'], weaknesses: ['no_sustain'] },
         skills: [
             { name: '연속사격', mp: 35, mult: 3.5, desc: '빠른 연속 화살 3발 발사' },
             { name: '폭발화살', mp: 45, type: '화염', mult: 3.8, effect: 'burn', desc: '화염 화살 + 화상 부여' },
@@ -303,10 +312,11 @@ export const CLASSES: Record<string, ClassDef> = {
     //   `tests/class-tier-depth.test.js`가 이 어긋남을 **유일한 예외로 고정**해 새 드리프트를 막는다.
     '성직자': {
         tier: 1, reqLv: 12, desc: '치유와 빛의 마법사 — 신의 대리인', hpMod: 1.0, mpMod: 1.6, atkMod: 1.3,
+        traits: { strengths: ['sustain', 'purify', 'growth'], weaknesses: ['low_firepower', 'mono_element'] },
         skills: [
             { name: '신성 광선', mp: 20, type: '빛', mult: 1.8, desc: '빛 속성 집중 공격' },
             { name: '정화', mp: 30, type: '빛', mult: 1.5, effect: 'purify', desc: '상태이상 정화 + 추가 빛 피해' },
-            { name: '공포 유발', mp: 25, type: 'debuff', effect: 'fear', turn: 2, desc: '적 ATK 30% 감소 2턴' },
+            { name: '공포 유발', mp: 25, type: 'debuff', effect: 'fear', val: 0.7, turn: 2, desc: '적 ATK 30% 감소 2턴' },
             { name: '신성한 보호막', mp: 35, type: 'buff', effect: 'def_up', val: 1.6, turn: 3, desc: '신성한 방어 DEF 60% 상승 3턴' },
             { name: '성스러운 빛', mp: 40, type: '빛', mult: 2.5, effect: 'purify', desc: '강화 빛 공격 + 정화' },
             { name: '기적의 손길', mp: 45, type: 'buff', effect: 'hp_regen', val: 0.15, turn: 3, desc: 'HP 15% 회복 + 3턴간 지속 회복' },
@@ -331,6 +341,7 @@ export const CLASSES: Record<string, ClassDef> = {
     // ── 3차 전직 (Lv 45+) ────────────────────────────────────────────────────
     '팔라딘': {
         tier: 3, reqLv: 45, desc: '빛의 수호자 — 치유와 방어의 정점', hpMod: 2.2, mpMod: 1.4, atkMod: 1.6,
+        traits: { strengths: ['toughness', 'sustain', 'control'], weaknesses: ['mono_element'] },
         skills: [
             { name: '신성 강타', mp: 40, type: '빛', mult: 3.5, effect: 'stun', desc: '기절 + 신성 피해' },
             { name: '성스러운 방패', mp: 60, type: 'buff', effect: 'def_up', val: 2.5, turn: 5, desc: 'DEF 150% 상승 5턴' },
@@ -360,6 +371,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '드래곤 나이트': {
         tier: 3, reqLv: 45, desc: '용의 힘을 계승한 광전사', hpMod: 1.9, mpMod: 0.7, atkMod: 2.5,
+        traits: { strengths: ['firepower', 'toughness', 'affliction'], weaknesses: ['low_mana'] },
         skills: [
             { name: '용의 포효', mp: 50, type: '화염', mult: 4.5, effect: 'burn', desc: '화상 + 강력한 화염 피해' },
             { name: '혈룡 광란', mp: 80, type: 'buff', effect: 'berserk', val: 3.0, turn: 4, desc: 'ATK 200% / DEF 감소 4턴' },
@@ -388,6 +400,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '대마법사': {
         tier: 3, reqLv: 45, desc: '모든 원소를 지배하는 자', hpMod: 0.85, mpMod: 3.0, atkMod: 2.8,
+        traits: { strengths: ['firepower', 'elements', 'control'], weaknesses: ['frail'] },
         skills: [
             { name: '오메가 메테오', mp: 80, type: '화염', mult: 6.0, effect: 'burn', desc: '화상 + 거대 운석 소환' },
             { name: '시간 정지', mp: 100, type: 'debuff', effect: 'stun', turn: 3, desc: '시간을 정지시켜 3턴 기절' },
@@ -418,6 +431,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '그림자 주군': {
         tier: 3, reqLv: 45, desc: '어둠과 일격의 절대자', hpMod: 1.2, mpMod: 1.5, atkMod: 2.3,
+        traits: { strengths: ['crit', 'firepower', 'evasion'], weaknesses: ['no_sustain'] },
         skills: [
             { name: '신의 일격', mp: 60, mult: 7.0, crit: 0.9, desc: '90% 치명타 확률 신의 일격' },
             { name: '그림자 군주', mp: 80, type: 'buff', effect: 'stealth', val: 3.0, turn: 3, desc: '3턴간 강화 은신 + ATK 증가' },
@@ -447,6 +461,7 @@ export const CLASSES: Record<string, ClassDef> = {
     // ── Sprint 16 신규 직업 ────────────────────────────────────────────────
     '무당': {
         tier: 2, reqLv: 12, desc: '저주/독/소환 — 죽음에 가까울수록 강해지는 주술사', hpMod: 0.9, mpMod: 1.6, atkMod: 1.5,
+        traits: { strengths: ['affliction', 'sustain', 'escape'], weaknesses: ['frail', 'low_firepower'] },
         skills: [
             { name: '저주의 낙인', mp: 25, type: '어둠', mult: 1.6, effect: 'curse', desc: '강화된 저주 부여 — 적 피해 배율 증폭' },
             { name: '영혼 소환', mp: 35, mult: 2.0, effect: 'bleed', turn: 3, desc: '영혼을 소환해 3턴간 추가 피해' },
@@ -476,6 +491,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '시간술사': {
         tier: 3, reqLv: 25, desc: '시간 조작 — 턴을 지배하는 차원의 술사', hpMod: 1.0, mpMod: 2.2, atkMod: 1.9,
+        traits: { strengths: ['tempo', 'crit', 'escape'], weaknesses: ['no_sustain'] },
         skills: [
             { name: '시간 가속', mp: 40, type: 'buff', effect: 'extraTurn', val: 1.2, turn: 1, desc: '이번 턴 후 추가 행동 획득, ATK 20% 상승' },
             { name: '시간 역행', mp: 50, type: 'buff', effect: 'resetCooldowns', desc: '모든 스킬 쿨타임을 즉시 초기화' },
@@ -508,6 +524,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     '사냥의 군주': {
         tier: 3, reqLv: 45, desc: '자연과 원거리의 지배자', hpMod: 1.4, mpMod: 1.8, atkMod: 2.1,
+        traits: { strengths: ['control', 'fortune', 'toughness'], weaknesses: ['no_sustain'] },
         skills: [
             { name: '신성 화살비', mp: 60, mult: 5.5, type: '빛', effect: 'stun', desc: '연속 화살 + 기절 부여' },
             { name: '자연의 가호', mp: 70, type: 'buff', effect: 'all_up', val: 2.0, turn: 4, desc: 'ATK/DEF 100% 상승 4턴' },
