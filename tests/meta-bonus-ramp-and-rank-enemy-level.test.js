@@ -13,6 +13,7 @@ import { buildClassVitals } from '../src/hooks/gameActions/_shared.ts';
 import { createCharacterActions } from '../src/hooks/gameActions/characterActions.ts';
 import { getAscensionOutcome } from '../src/utils/ascensionPreview.ts';
 import AscensionScreen from '../src/components/AscensionScreen.tsx';
+import StatsPanel from '../src/components/StatsPanel.tsx';
 import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 
 /**
@@ -164,4 +165,15 @@ test('[계승 화면] 다음 세계의 적 레벨 가산과 영구 스탯 연동
     assert.ok(html.includes('data-testid="ascension-meta-ramp"'));
     assert.ok(html.includes(`Lv${FULL}`));
     assert.ok(CONSTANTS.MAX_LEVEL >= FULL);
+});
+
+test('[계승 기록] 상태 화면은 영구 보너스 전체량 옆에 지금 적용되는 비율을 보여 준다', () => {
+    const render = (level) => renderStatic(createElement(StatsPanel, {
+        player: makePlayerFixture({ level, meta: { essence: 0, rank: 80, bonusAtk: 85, bonusHp: 425 } }),
+        stats: { maxHp: 200, maxMp: 60 },
+    }));
+    assert.ok(render(10).includes('data-testid="stats-meta-ramp"'));
+    assert.ok(render(10).includes('33%'), 'Lv10은 1/3');
+    assert.ok(render(45).includes('100%'), 'Lv30 이후 전부');
+    assert.ok(render(10).includes(`Lv${FULL}`));
 });
