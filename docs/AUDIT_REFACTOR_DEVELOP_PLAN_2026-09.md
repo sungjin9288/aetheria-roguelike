@@ -3044,3 +3044,7 @@ tracked verify **15/15** · type-check 0 · lint 0 · unit **5,420/5,420**(381�
 
 - 소스 해시만 이동했다: 성장 진단 4개(`CombatEngine.actions` · `enemyAI` · `status` · `types/monster`) · 장비 전투력 3개 · 유물 `dot_mult` · `gold_mult` 각 1개. 리포트 값은 그대로다 — 성장 모델은 약화 기술을 쓰지 않는다.
 - 도달 비용 · 페이싱(`exploration-rhythm.json`)은 바이트 동일, 성장 시뮬레이터 기준 해시도 그대로다. tracked verify **15/15**.
+
+### 44.6 게이트 (직렬 08:27~08:49)
+
+tracked verify **15/15** · type-check 0 · lint 0 · unit **5,427/5,427**(382파일, skip 0) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **140/140**(71 + 69) · perf desktop FCP 352ms / mobile 500ms. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.
