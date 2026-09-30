@@ -10,6 +10,8 @@ interface RelicSynergyInfo {
     /** 두 조각 조합 완성(Wave 47, relicSynergyHint). */
     completesPair?: string;
     nearLegendary?: string | null;
+    /** 가진 조각이 없는 실제 조합의 첫 조각(Wave 49, relicSynergyHint). */
+    startsCombo?: string;
 }
 
 /** `RelicChoicePanel`이 만드는 유물 3~4택 카드 1개. */
@@ -78,6 +80,7 @@ const getReasonLabel = (relic: Relic | undefined, synergy: RelicSynergyInfo, bui
     if (synergy?.legendaryHint) return '전설 조합 완성';
     if (synergy?.completesPair) return MSG.RELIC_REASON_PAIR_COMPLETE;
     if (synergy?.nearLegendary) return '전설 조합에 가까움';
+    if (synergy?.startsCombo) return MSG.RELIC_REASON_COMBO_START;
     if ((synergy?.score || 0) > 0) return MSG.RELIC_REASON_EFFECT_PAIR;
     if (buildFit.rank >= 0 && buildFit.rank <= 1) return '현재 성장과 잘 맞음';
     if (buildFit.matched) return '현재 성장 보완';
@@ -91,7 +94,7 @@ const getReasonLabel = (relic: Relic | undefined, synergy: RelicSynergyInfo, bui
 const getTone = (relic: Relic | undefined, synergy: RelicSynergyInfo) => {
     if (synergy?.legendaryHint || relic?.rarity === 'legendary') return 'legendary';
     if (synergy?.completesPair) return 'synergy';
-    if (synergy?.nearLegendary) return 'potential';
+    if (synergy?.nearLegendary || synergy?.startsCombo) return 'potential';
     return 'steady';
 };
 
@@ -100,14 +103,19 @@ const getTone = (relic: Relic | undefined, synergy: RelicSynergyInfo) => {
  * 2026-09 Wave 48(소유자 결정 "조합 진행 우선"): 전설 조합 완성 > 두 조각 조합 완성 > 세 조각 조합 진행(2개째 — 제안 생성기의
  *   조합 보장 슬롯과 같은 기준) > 그 밖. 같은 층 안에서는 등급 · 빌드 적합 · 효과 짝이 가른다. 조합 진행이 +18뿐이던 동안
  *   추천을 따르는 플레이어는 첫 카드(보장 슬롯)만 고르는 플레이어보다 조합을 덜 모았다(원장 §47.4).
+ * 2026-09 Wave 49(소유자 결정 "측정 후 조건부 반영"): 진행 아래 · 그 밖 위에 "조합 시작"(가진 조각이 없는 실제 조합의
+ *   첫 조각) 층을 둔다 — 보장 슬롯이 없는 제안에서 추천이 등급을 고르던 몫이다(원장 §49).
  */
-const SYNERGY_TIER_SCORE = Object.freeze({ legendaryComplete: 1000, pairComplete: 800, progress: 400 });
+const SYNERGY_TIER_SCORE = Object.freeze({ legendaryComplete: 1000, pairComplete: 800, progress: 400, comboStart: 200 });
 
 const getSynergyScore = (synergy: RelicSynergyInfo) => {
     if (synergy.legendaryHint) return SYNERGY_TIER_SCORE.legendaryComplete;
     if (synergy.completesPair) return SYNERGY_TIER_SCORE.pairComplete;
     const effectPairScore = synergy.score || 0;
-    return (synergy.nearLegendary ? SYNERGY_TIER_SCORE.progress : 0) + effectPairScore;
+    const tier = synergy.nearLegendary
+        ? SYNERGY_TIER_SCORE.progress
+        : synergy.startsCombo ? SYNERGY_TIER_SCORE.comboStart : 0;
+    return tier + effectPairScore;
 };
 
 export const getRelicChoiceDecisionStrip = (cards: RelicChoiceCard[], buildId: string): RelicChoiceDecision => {

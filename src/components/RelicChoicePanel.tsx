@@ -144,6 +144,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                         const isLegendaryComplete = synergy.legendaryHint != null;
                         const completesPair = synergy.completesPair ?? null;
                         const hasNearLegendary = synergy.nearLegendary != null;
+                        const startsCombo = synergy.startsCombo ?? null;
                         const isRecommended = relicDecision.recommendedIndex === index;
                         const rarity = relic.rarity ?? 'common';
                         return (
@@ -187,12 +188,16 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                     <div data-testid={`relic-choice-${index}-pair`} className="mt-1 text-[10px] font-readable text-[#dff7f5]">
                                         {MSG.RELIC_SYNERGY_COMPLETE_LINE(completesPair)}
                                     </div>
+                                ) : hasNearLegendary ? (
+                                    <div className="mt-1 text-[10px] font-readable text-[#f6e7c8]">{synergy.nearLegendary}까지 1개 남음</div>
+                                ) : startsCombo ? (
+                                    <div data-testid={`relic-choice-${index}-start`} className="mt-1 text-[10px] font-readable text-[#f6e7c8]">
+                                        {MSG.RELIC_COMBO_START_LINE(startsCombo)}
+                                    </div>
                                 ) : hasSynergy ? (
                                     <div className="mt-1 truncate text-[10px] font-readable text-[#dff7f5]">
                                         함께 쓰기 · {synergy.synergies.map(getRelicDisplayName).join(' · ')}
                                     </div>
-                                ) : hasNearLegendary ? (
-                                    <div className="mt-1 text-[10px] font-readable text-[#f6e7c8]">{synergy.nearLegendary}까지 1개 남음</div>
                                 ) : null}
                             </div>
 

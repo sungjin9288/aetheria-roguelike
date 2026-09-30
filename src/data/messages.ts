@@ -682,6 +682,9 @@ export const MSG = {
     RELIC_REASON_PAIR_COMPLETE: '조합 효과 발동',
     RELIC_PAIR_COMPLETE_BADGE: '조합 완성',
     RELIC_SYNERGY_COMPLETE_LINE: (label: string) => `${label} 완성`,
+    // Wave 49(소유자 결정 "측정 후 조건부 반영"): 가진 조각이 없는 실제 조합의 첫 조각.
+    RELIC_REASON_COMBO_START: '새 조합 시작',
+    RELIC_COMBO_START_LINE: (label: string) => `${label} 조합의 첫 조각`,
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.actions.ts.
     // 문구는 이전과 한 글자도 다르지 않다 — 소유만 MSG로 옮긴다.
