@@ -84,8 +84,6 @@ export interface ClassSkill {
     stunTurn?: number;
     /** curse 지속 턴 override (미정의 시 3). */
     curseTurn?: number;
-    /** burn 지속 턴 override. */
-    burnTurn?: number;
     /** DEF 배율 버프 override (1.2 = DEF +20%). */
     defBonus?: number;
     /** 사용 시 회복하는 MP override. */

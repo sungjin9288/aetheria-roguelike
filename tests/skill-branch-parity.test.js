@@ -23,13 +23,13 @@ const ENGINE_READ_OVERRIDE_KEYS = new Set([
 ]);
 
 /**
- * 알려진 dead override 키 — 타입(`ClassSkill`)에는 선언돼 있지만 엔진에 read 경로가 없다.
- * `burnTurn`: 마법사 '화염구' B('지속 화염')만 사용. CombatEngine 어디에서도 읽지 않아
- *   광고한 "화상 3턴"이 발현하지 않는다 (stunTurn cycle 241 / curseTurn cycle 244와 달리
- *   burn은 dots 배열만 있고 턴 카운터가 없다). 신규 분기는 이 키를 쓰지 않는다 — 목록은
- *   줄이는 방향으로만 갱신할 것.
+ * 알려진 dead override 키 — 엔진에 read 경로가 없는 키. 지금은 비어 있다.
+ * 2026-09 Wave 45: 마지막 항목 `burnTurn`(마법사 '화염구' B '지속 화염')을 지웠다. burn은 턴 카운터 없이
+ *   전투 내내 지속되는 도트라 "화상 3턴"은 발현할 수 없었고, 그 분기는 기본 화염구와 같은 기술이었다.
+ *   소유자 결정으로 B는 "화상 + 출혈"(secondEffect bleed)이 됐고 `burnTurn`은 타입에서도 지웠다.
+ *   목록은 줄이는 방향으로만 갱신할 것 — 새 dead 키는 추가하지 말고 엔진 경로를 만들거나 키를 빼라.
  */
-const KNOWN_DEAD_OVERRIDE_KEYS = new Map([['burnTurn', ['마법사/화염구/B']]]);
+const KNOWN_DEAD_OVERRIDE_KEYS = new Map();
 
 /** types/class.ts `ClassSkillEffect` 30종 — data-shape-types.test.js와 동일 집합. */
 const CLASS_SKILL_EFFECTS = new Set([
@@ -103,7 +103,8 @@ test('분기 2택은 override 키 하나 이상에서 서로 다른 결과를 �
                         ...Object.keys(choices[i].override || {}),
                         ...Object.keys(choices[j].override || {}),
                     ]);
-                    const differing = [...keys].filter((key) => left[key] !== right[key]);
+                    // 엔진이 읽는 키만 센다 — 읽지 않는 키가 다르다고 두 선택이 다른 기술이 되지는 않는다.
+                    const differing = [...keys].filter((key) => ENGINE_READ_OVERRIDE_KEYS.has(key) && left[key] !== right[key]);
                     assert.ok(
                         differing.length >= 1,
                         `${job}/${skillName} ${choices[i].choice}·${choices[j].choice}가 동일한 스킬로 귀결 — 무의미한 2택`
@@ -112,6 +113,47 @@ test('분기 2택은 override 키 하나 이상에서 서로 다른 결과를 �
             }
         }
     }
+});
+
+test('모든 분기는 기본 기술과 엔진이 읽는 키 하나 이상에서 다르다 — 고르나 마나인 선택 금지 (Wave 45)', () => {
+    // 2택끼리만 비교하던 동안 화염구 B('지속 화염' — mult 2.2 = 기본값 + 엔진이 읽지 않는 burnTurn)는
+    //   A(mult 2.97)와 "달라서" 통과했지만 기본 화염구와 같은 기술이었다.
+    let branches = 0;
+    for (const [job, def] of entries()) {
+        for (const [skillName, choices] of Object.entries(def.skillBranches || {})) {
+            const base = (def.skills || []).find((skill) => skill.name === skillName) || {};
+            for (const choice of choices) {
+                const override = choice.override || {};
+                const differing = Object.keys(override).filter((key) => ENGINE_READ_OVERRIDE_KEYS.has(key) && override[key] !== base[key]);
+                assert.ok(differing.length >= 1, `${job}/${skillName}/${choice.choice}는 기본 기술과 같은 기술로 귀결된다`);
+                branches += 1;
+            }
+        }
+    }
+    assert.ok(branches > 0, '분기 표본이 비면 이 계약은 공허하다');
+});
+
+test('화염구 B(지속 화염)는 화상과 출혈을 함께 걸어 적 행동마다 지속 피해가 기본의 두 배다 (Wave 45)', () => {
+    const def = CLASSES['마법사'];
+    const base = def.skills.find((skill) => skill.name === '화염구');
+    const branchOf = (choice) => ({ ...base, ...def.skillBranches['화염구'].find((entry) => entry.choice === choice).override });
+    const rng = () => 0.5;
+    const player = { hp: 500, maxHp: 500, mp: 500, maxMp: 500, status: [], job: '마법사', skillLoadout: { selected: 0, cooldowns: {} } };
+    const enemy = { name: '표적', hp: 100000, maxHp: 100000, atk: 0, def: 0, pattern: { guardChance: 0, heavyChance: 0 } };
+    const stats = { atk: 50, def: 0, relics: [], activeSynergies: [], maxMp: 500 };
+    const castDots = (skill) => CombatEngine.performSkill(player, enemy, stats, skill, rng).updatedEnemy.dots || [];
+    assert.deepEqual(castDots(base), ['burn']);
+    assert.deepEqual(castDots(branchOf('A')), ['burn']);
+    assert.deepEqual(castDots(branchOf('B')), ['burn', 'bleed']);
+
+    // 적 행동 한 번의 지속 피해 — 도트는 적 행동 시작 때 적 최대 생명 × STATUS_DOT_RATIO씩 들어간다.
+    const dotDamage = (skill) => {
+        const hit = CombatEngine.performSkill(player, enemy, stats, skill, rng).updatedEnemy;
+        const after = CombatEngine.enemyAttack(player, hit, stats, rng).updatedEnemy;
+        return hit.hp - after.hp;
+    };
+    assert.equal(dotDamage(branchOf('B')), 2 * dotDamage(base), 'B의 적 행동당 지속 피해 = 화상 + 출혈');
+    assert.equal(dotDamage(branchOf('A')), dotDamage(base), 'A는 지속 피해가 아니라 순간 피해를 올린다');
 });
 
 test('분기 대상 스킬명이 해당 직업 skills 배열에 실존하고 패시브가 아니다', () => {

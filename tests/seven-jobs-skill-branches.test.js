@@ -17,7 +17,7 @@ const SEVEN_JOBS = [
 // 이 집합 밖의 키를 override에 넣으면 dead config(광고만 하고 미적용)가 된다.
 const ENGINE_ALLOWED_OVERRIDE_KEYS = new Set([
     'mult', 'effect', 'effectChance', 'val', 'defBonus', 'secondEffect',
-    'burnTurn', 'stunTurn', 'crit', 'drainRatio', 'curseTurn', 'mpRestore',
+    'stunTurn', 'crit', 'drainRatio', 'curseTurn', 'mpRestore',
 ]);
 
 /** 기존 11직업 25개 분기에서 추출한 밸런스 밴드. 새 분기도 이 범위 내여야 한다. */
