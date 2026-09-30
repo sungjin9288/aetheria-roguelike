@@ -383,7 +383,7 @@ const CLASS_FIELDS = ['tier', 'reqLv', 'desc', 'hpMod', 'mpMod', 'atkMod', 'skil
 
 const CLASS_SKILL_FIELDS = [
     'name', 'mp', 'type', 'mult', 'desc', 'passive', 'effect', 'val', 'turn', 'crit', 'drainRatio',
-    'effectChance', 'secondEffect', 'stunTurn', 'curseTurn', 'burnTurn', 'defBonus', 'mpRestore',
+    'effectChance', 'secondEffect', 'stunTurn', 'curseTurn', 'defBonus', 'mpRestore',
     'cooldown', 'fromWeapon', 'weaponName', 'slot', 'fromTrait',
 ];
 

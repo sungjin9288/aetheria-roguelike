@@ -68,7 +68,9 @@ export const CLASSES: Record<string, ClassDef> = {
         skillBranches: {
             '화염구': [
                 { choice: 'A', label: '폭발 화염', desc: '데미지 +35%', override: { mult: 2.97 } },
-                { choice: 'B', label: '지속 화염', desc: '화상 3턴 (1→3턴)', override: { mult: 2.2, burnTurn: 3 } },
+                // 2026-09 Wave 45 (소유자 결정 "화상 + 출혈"): 이전 B는 엔진이 읽지 않는 burnTurn만 가져 기본 화염구와
+                //   같은 기술이었다(화상은 원래 전투 내내 지속). A = 순간 피해, B = 지속 피해 두 번째 도트.
+                { choice: 'B', label: '지속 화염', desc: '화상 + 출혈 동시 부여 (지속 피해)', override: { mult: 2.2, secondEffect: 'bleed' } },
             ],
             '썬더볼트': [
                 { choice: 'A', label: '초전도', desc: '데미지 +25%', override: { mult: 4.375 } },
