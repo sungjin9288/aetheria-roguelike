@@ -2927,3 +2927,7 @@ tracked verify **15/15** · type-check 0 · lint 0 · unit **5,404/5,404**(379�
 - 소스 핀 8개만 움직였다(JobChangePanel · classes · messages · CombatEngine.actions · CombatEngine · types/class · types/player · classPresentation).
 - 성장 진단 리포트 해시 · 도달 비용 · 페이싱은 동일하다. 모델은 회복 · 공포 기술을 쓰지 않고 `traits`를 읽지 않는다.
 - tracked verify **15/15**.
+
+### 42.7 게이트 (직렬 04:51~05:12)
+
+tracked verify **15/15** · type-check 0 · lint 0 · unit **5,418/5,418**(381파일, skip 0 — Wave 40 대비 +14) · build:guard ok · CI-env build ok(test-api 마커 1) · e2e **140/140**(71 + 69) · perf desktop FCP 584ms / mobile 416ms. 실기기 QA · 출시 수용은 이 wave의 범위가 아니다.
