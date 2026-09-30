@@ -11,12 +11,15 @@ import {
 } from '../src/utils/relicBuildFit.ts';
 import { formatRelicText, getRelicDisplayName } from '../src/utils/relicPresentation.ts';
 import { RELICS, RELIC_SYNERGIES } from '../src/data/relics.ts';
+import { MSG } from '../src/data/messages.ts';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-test('relic choice decision strip favors strong synergy over rarity-only value', () => {
+// 2026-09 Wave 48(소유자 결정 "조합 진행 우선 + 효과 짝 문구 정리"): 조합 보너스가 없는 효과 짝은 최대 40점
+//   "함께 쓰기 좋음"이고, 실제 조합의 완성 · 진행은 등급 · 빌드 적합으로 뒤집히지 않는 층 점수다.
+test('effect pair is named "함께 쓰기 좋음" and edges a rarity-only pick without claiming a combo', () => {
     const decision = getRelicChoiceDecisionStrip([
         {
             index: 0,
@@ -26,24 +29,24 @@ test('relic choice decision strip favors strong synergy over rarity-only value',
         {
             index: 1,
             relic: { id: 'rare_skill', name: '균열의 서판', rarity: 'rare', effect: 'skill_mult' },
-            synergy: { score: 80, label: '완벽한 시너지', synergies: ['심해의 매듭'] },
+            synergy: { score: 40, label: MSG.RELIC_EFFECT_PAIR_LABEL, synergies: ['심해의 매듭'] },
         },
     ], 'balanced');
 
     assert.equal(decision.recommendedIndex, 1);
-    assert.equal(decision.tone, 'synergy');
+    assert.equal(decision.tone, 'steady', '효과 짝은 조합 톤이 아니다');
     assert.deepEqual(decision.cells.map((cell) => cell.label), ['추천', '이유', '성장 방향']);
     assert.equal(decision.cells[0].value, '균열의 서판');
-    assert.equal(decision.cells[1].value, '현재 유물과 잘 맞음');
+    assert.equal(decision.cells[1].value, MSG.RELIC_REASON_EFFECT_PAIR);
     assert.equal(decision.cells[2].value, '기술 공격');
 });
 
-test('strong synergy remains ahead of a legendary build fit', () => {
+test('a legendary build fit outranks an effect pair (effect pairs are not combos)', () => {
     const decision = getRelicChoiceDecisionStrip([
         {
             index: 0,
             relic: { id: 'common_synergy', name: '연결된 검', rarity: 'common', effect: 'on_kill_heal' },
-            synergy: { score: 80, label: '강한 조합', synergies: ['피의 서약'] },
+            synergy: { score: 40, label: MSG.RELIC_EFFECT_PAIR_LABEL, synergies: ['피의 서약'] },
         },
         {
             index: 1,
@@ -52,8 +55,27 @@ test('strong synergy remains ahead of a legendary build fit', () => {
         },
     ], 'fortress');
 
+    assert.equal(decision.recommendedIndex, 1);
+    assert.equal(decision.cells[1].value, '현재 성장과 잘 맞음');
+});
+
+test('real combo progress (3-piece set to 1 left) outranks a legendary build fit', () => {
+    const decision = getRelicChoiceDecisionStrip([
+        {
+            index: 0,
+            relic: { id: 'common_piece', name: '연결된 검', rarity: 'common', effect: 'on_kill_heal' },
+            synergy: { score: 0, synergies: [], nearLegendary: '혈맹 불사' },
+        },
+        {
+            index: 1,
+            relic: { id: 'legend_fit', name: '불멸의 성벽', rarity: 'legendary', effect: 'fortress' },
+            synergy: { score: 40, label: MSG.RELIC_EFFECT_PAIR_LABEL, synergies: ['돌 피부'] },
+        },
+    ], 'fortress');
+
     assert.equal(decision.recommendedIndex, 0);
-    assert.equal(decision.cells[1].value, '현재 유물과 잘 맞음');
+    assert.equal(decision.tone, 'potential');
+    assert.equal(decision.cells[1].value, '전설 조합에 가까움');
 });
 
 test('relic choice decision strip promotes legendary set completion first', () => {

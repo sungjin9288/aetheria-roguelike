@@ -172,7 +172,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                     {isLegendaryComplete && <SignalBadge tone="danger" size="sm">전설 조합</SignalBadge>}
                                     {!isLegendaryComplete && completesPair && <SignalBadge tone="success" size="sm">{MSG.RELIC_PAIR_COMPLETE_BADGE}</SignalBadge>}
                                     {!isLegendaryComplete && !completesPair && hasSynergy && (
-                                        <SignalBadge tone={synergy.score >= 80 ? 'success' : 'recommended'} size="sm">{synergy.label}</SignalBadge>
+                                        <SignalBadge tone="recommended" size="sm">{synergy.label}</SignalBadge>
                                     )}
                                 </div>
                                 <div className={`mt-1 text-[13px] font-readable font-bold leading-tight ${RARITY_CLASSES[rarity] || 'text-white'} group-hover:text-white`}>

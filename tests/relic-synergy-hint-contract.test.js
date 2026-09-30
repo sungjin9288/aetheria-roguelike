@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import React from 'react';
 
 import { MSG } from '../src/data/messages.js';
-import { RELICS, RELIC_SYNERGIES, getActiveRelicSynergies } from '../src/data/relics.js';
+import { RELICS, RELIC_EFFECTS_BY_BUILD, RELIC_SYNERGIES, getActiveRelicSynergies } from '../src/data/relics.js';
 import RelicChoicePanel from '../src/components/RelicChoicePanel.js';
 import { getRelicChoiceDecisionStrip } from '../src/utils/relicChoiceDecision.js';
 import { getRelicSynergyScore } from '../src/utils/relicSynergyHint.js';
@@ -102,7 +102,7 @@ test('선택 화면은 두 조각 조합 완성을 배지와 조합 이름으로
     }
 });
 
-/** Wave 47 이전 판정(RelicChoicePanel 안의 getRelicSynergyScore) — 완성이 없는 경우의 오라클. */
+/** Wave 47 이전 판정의 효과 짝 표 사본 — 짝 판정(어떤 효과끼리 짝인가)은 바뀌지 않았다. */
 const LEGACY_SYNERGY_MAP = {
     double_strike: ['execute_bonus', 'combo_stack', 'armor_pen', 'ancient_power'],
     execute_bonus: ['double_strike', 'low_hp_atk', 'combo_stack'],
@@ -123,7 +123,11 @@ const LEGACY_SYNERGY_MAP = {
     drop_rate: ['gold_mult', 'boss_hunter', 'exp_mult'],
     boss_hunter: ['drop_rate', 'execute_bonus', 'double_strike'],
 };
-const legacyNonCompletionScore = (newRelic, ownedRelics) => {
+/**
+ * 완성하지 않는 제안의 오라클. 세 조각 조합 진행(nearLegendary)과 짝 판정은 Wave 47 이전 그대로이고,
+ * Wave 48(소유자 결정)에서 효과 짝의 점수(짝당 20 · 최대 40)와 이름("함께 쓰기 좋음")만 바뀌었다.
+ */
+const expectedNonCompletionScore = (newRelic, ownedRelics) => {
     const ownedEffects = ownedRelics.map((r) => r.effect);
     const ownedNames = new Set(ownedRelics.map((r) => r.name));
     const near = RELIC_SYNERGIES.find((syn) => syn.requires.length === 3 && syn.requires.includes(newRelic.name)
@@ -133,48 +137,124 @@ const legacyNonCompletionScore = (newRelic, ownedRelics) => {
     const matches = ownedEffects.filter((e) => synergyEffects.includes(e));
     ownedEffects.forEach((e) => { if ((LEGACY_SYNERGY_MAP[e] || []).includes(newRelic.effect) && !matches.includes(e)) matches.push(e); });
     if (!matches.length) return near ? { score: 0, label: null, synergies: [], nearLegendary: near.label } : { score: 0, label: null, synergies: [] };
-    const score = Math.min(100, matches.length * 40);
-    const label = score >= 80 ? '강한 조합' : score >= 40 ? '좋은 조합' : '이어지는 조합';
-    return { score, label, synergies: ownedRelics.filter((r) => matches.includes(r.effect)).map((r) => r.name), nearLegendary: near?.label || null };
+    return {
+        score: Math.min(40, matches.length * 20),
+        label: MSG.RELIC_EFFECT_PAIR_LABEL,
+        synergies: ownedRelics.filter((r) => matches.includes(r.effect)).map((r) => r.name),
+        nearLegendary: near?.label || null,
+    };
 };
 
-test('조합을 완성하지 않는 제안의 판정은 Wave 47 이전과 같다 — 가진 유물 0~1개 전수', () => {
+test('조합을 완성하지 않는 제안: 조합 진행 판정은 그대로, 효과 짝은 "함께 쓰기 좋음"(짝당 20 · 최대 40) — 가진 유물 0~2개', () => {
     let compared = 0;
     const ownedSets = [[], ...RELICS.map((relic) => [relic])];
+    // 효과 짝 두 개가 걸리는 구성(최대 40)을 표본에 넣는다 — 서로 다른 효과의 두 유물.
+    for (const [effect, partners] of Object.entries(LEGACY_SYNERGY_MAP)) {
+        const a = RELICS.find((r) => r.effect === partners[0]);
+        const b = RELICS.find((r) => r.effect === partners[1]);
+        if (a && b && a.name !== b.name) ownedSets.push([a, b]);
+        assert.ok(RELICS.some((r) => r.effect === effect), `효과 ${effect}의 유물이 있다`);
+    }
     for (const owned of ownedSets) {
         for (const relic of RELICS) {
             if (owned.some((r) => r.name === relic.name)) continue;
             const hint = getRelicSynergyScore(relic, owned);
             if (hint.legendaryHint || hint.completesPair) continue;
-            assert.deepEqual(hint, legacyNonCompletionScore(relic, owned), `${relic.name} + [${owned.map((r) => r.name)}]`);
+            assert.deepEqual(hint, expectedNonCompletionScore(relic, owned), `${relic.name} + [${owned.map((r) => r.name)}]`);
+            if (hint.score > 0) assert.equal(hint.label, MSG.RELIC_EFFECT_PAIR_LABEL, '효과 짝은 "조합"으로 부르지 않는다');
             compared += 1;
         }
     }
     assert.ok(compared > 4000, `비교 ${compared}건`);
 });
 
-test('조합 완성은 효과 짝 표의 "강한 조합"보다 먼저 추천된다', () => {
-    // 가진 유물 = 두 조각 조합의 첫 조각 + 효과 짝 두 개. 제안 = 조합의 둘째 조각 vs 효과 짝 2개와 맞는 "강한 조합" 후보.
-    let found = 0;
+const BUILD_IDS = Object.keys(RELIC_EFFECTS_BY_BUILD);
+const recommend = (cards, owned, buildId) => getRelicChoiceDecisionStrip(
+    cards.map((relic, index) => ({ relic, index, synergy: getRelicSynergyScore(relic, owned) })),
+    buildId,
+);
+const isPlain = (relic, owned) => {
+    const hint = getRelicSynergyScore(relic, owned);
+    return !hint.legendaryHint && !hint.completesPair && !hint.nearLegendary;
+};
+
+test('층 순서 1: 두 조각 조합 완성은 등급 · 빌드 적합 · 효과 짝과 무관하게 어떤 일반 카드보다 먼저 (전 빌드 × 전 경쟁 유물)', () => {
+    let checked = 0;
     for (const syn of RELIC_SYNERGIES.filter((entry) => entry.requires.length === 2)) {
         const [first, second] = syn.requires.map((name) => BY_NAME[name]);
+        const owned = [first];
         for (const rival of RELICS) {
-            if (rival.name === first.name || rival.name === second.name) continue;
-            const partners = RELICS.filter((relic) => relic.name !== rival.name && relic.name !== first.name && relic.name !== second.name
-                && (LEGACY_SYNERGY_MAP[rival.effect] || []).includes(relic.effect));
-            if (partners.length < 2) continue;
-            const owned = [first, partners[0], partners[1]];
-            const rivalHint = getRelicSynergyScore(rival, owned);
-            const secondHint = getRelicSynergyScore(second, owned);
-            if (rivalHint.score < 80 || rivalHint.legendaryHint || rivalHint.completesPair || secondHint.legendaryHint) continue;
-            const cards = [rival, second].map((relic, index) => ({ relic, index, synergy: getRelicSynergyScore(relic, owned) }));
-            // 등급 점수 차이가 순위를 뒤집지 않는 경우만 본다 — 등급 차 최대(전설 52 − 일반 0)보다 점수 차(140 − 110 = 30)가 작을 수 있다.
-            const rarityGap = ({ common: 0, uncommon: 12, rare: 24, epic: 36, legendary: 52 })[rival.rarity] - ({ common: 0, uncommon: 12, rare: 24, epic: 36, legendary: 52 })[second.rarity];
-            if (rarityGap >= 30) continue;
-            assert.equal(getRelicChoiceDecisionStrip(cards, 'balanced').recommendedIndex, 1, `${syn.label}: ${second.name}(조합 완성) vs ${rival.name}(강한 조합)`);
-            found += 1;
-            break;
+            if (rival.name === first.name || rival.name === second.name || !isPlain(rival, owned)) continue;
+            for (const buildId of BUILD_IDS) {
+                assert.equal(recommend([rival, second], owned, buildId).recommendedIndex, 1, `${syn.label}: ${second.name} vs ${rival.name} (${buildId})`);
+                checked += 1;
+            }
         }
     }
-    assert.ok(found >= 3, `비교 구성 ${found}개`);
+    assert.ok(checked > 5000, `비교 ${checked}건`);
+});
+
+const tierOf = (relic, owned) => {
+    const hint = getRelicSynergyScore(relic, owned);
+    if (hint.legendaryHint) return 'legendary';
+    if (hint.completesPair) return 'pair';
+    if (hint.nearLegendary) return 'progress';
+    return 'plain';
+};
+
+test('층 순서 2: 세 조각 조합 진행(2개째)은 어떤 일반 카드보다 먼저 — 제안 생성기의 조합 보장 슬롯과 같은 기준', () => {
+    let checked = 0;
+    const covered = new Set();
+    for (const syn of RELIC_SYNERGIES.filter((entry) => entry.requires.length === 3)) {
+        const pieces = syn.requires.map((name) => BY_NAME[name]);
+        // 세 조각 조합이 두 조각 조합을 품으면(혈맹 불사 ⊃ 흡혈 군주) 그 두 조각의 순서는 "완성" 층이다 — 순수한 진행 순서만 본다.
+        for (const ownedPiece of pieces) {
+            for (const progressPiece of pieces) {
+                if (ownedPiece === progressPiece) continue;
+                const owned = [ownedPiece];
+                if (tierOf(progressPiece, owned) !== 'progress') continue;
+                assert.equal(getRelicSynergyScore(progressPiece, owned).nearLegendary, syn.label, `${syn.label}: 진행 판정`);
+                covered.add(syn.label);
+                for (const rival of RELICS) {
+                    if (syn.requires.includes(rival.name) || tierOf(rival, owned) !== 'plain') continue;
+                    for (const buildId of BUILD_IDS) {
+                        assert.equal(recommend([rival, progressPiece], owned, buildId).recommendedIndex, 1, `${syn.label}: ${progressPiece.name} vs ${rival.name} (${buildId})`);
+                        checked += 1;
+                    }
+                }
+            }
+        }
+    }
+    assert.equal(covered.size, 5, '세 조각 조합 5개 모두 순수한 진행 순서가 있다');
+    assert.ok(checked > 1000, `비교 ${checked}건`);
+});
+
+test('층 순서 3: 조합 완성은 조합 진행보다, 전설 조합 완성은 두 조각 완성보다 먼저', () => {
+    let progressVsPair = 0;
+    let pairVsLegendary = 0;
+    const pairs = RELIC_SYNERGIES.filter((entry) => entry.requires.length === 2);
+    const triples = RELIC_SYNERGIES.filter((entry) => entry.requires.length === 3);
+    for (const pair of pairs) {
+        const [p1, p2] = pair.requires.map((name) => BY_NAME[name]);
+        for (const triple of triples) {
+            if (triple.requires.some((name) => pair.requires.includes(name))) continue;
+            const pieces = triple.requires.map((name) => BY_NAME[name]);
+            for (const buildId of BUILD_IDS) {
+                for (const [t1, t2] of pieces.flatMap((a) => pieces.filter((b) => b !== a).map((b) => [a, b]))) {
+                    const owned = [p1, t1];
+                    if (tierOf(p2, owned) !== 'pair' || tierOf(t2, owned) !== 'progress') continue;
+                    assert.equal(recommend([t2, p2], owned, buildId).recommendedIndex, 1, `${pair.label} 완성 > ${triple.label} 진행 (${buildId})`);
+                    progressVsPair += 1;
+                }
+                const t3 = pieces[2];
+                const ownedForLegendary = [p1, pieces[0], pieces[1]];
+                if (tierOf(t3, ownedForLegendary) === 'legendary' && tierOf(p2, ownedForLegendary) === 'pair') {
+                    assert.equal(recommend([p2, t3], ownedForLegendary, buildId).recommendedIndex, 1, `${triple.label} 전설 완성 > ${pair.label} 완성 (${buildId})`);
+                    pairVsLegendary += 1;
+                }
+            }
+        }
+    }
+    assert.ok(progressVsPair > 100, `완성 vs 진행 ${progressVsPair}건`);
+    assert.ok(pairVsLegendary > 100, `전설 완성 vs 두 조각 완성 ${pairVsLegendary}건`);
 });
