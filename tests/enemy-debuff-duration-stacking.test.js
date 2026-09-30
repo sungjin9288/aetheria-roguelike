@@ -101,9 +101,10 @@ test('약화 기술의 "N턴"은 적 행동 N번에 작동하고, 남은 턴 표
 });
 
 test('겹친 약화는 각자 자기 턴만큼 작동한다 — 적 행동마다 걸려 있는 약화 중 가장 강한 배율', () => {
-    const FEAR_MULT = 0.65; // 군주의 위엄 — 실명(0.65)과 같고 저주(0.75)보다 강하다
+    // 공포 배율 셋: 실명보다 강한 0.6 · 군주의 위엄 0.65 · 저주보다 약한 0.8. 지금 데이터는 실명 ≤ 공포 ≤ 저주라
+    //   "먼저 걸린 순서대로 하나만 쓴다"는 결함도 0.65 하나로는 같은 값을 낸다 — 순서와 강도가 어긋나는 값을 함께 잰다.
     let cases = 0;
-    for (let blind = 0; blind <= 3; blind += 1) {
+    for (const FEAR_MULT of [0.6, 0.65, 0.8]) for (let blind = 0; blind <= 3; blind += 1) {
         for (let fear = 0; fear <= 3; fear += 1) {
             for (let curse = 0; curse <= 3; curse += 1) {
                 let enemy = makeEnemy({
@@ -120,14 +121,14 @@ test('겹친 약화는 각자 자기 턴만큼 작동한다 — 적 행동마다
                     ];
                     const expected = Math.floor(ENEMY_ATK * 1 * Math.min(1, ...active));
                     const act = enemyAct(player, enemy);
-                    assert.equal(act.damage, expected, `실명 ${blind} · 공포 ${fear} · 저주 ${curse} — ${action + 1}번째 행동`);
+                    assert.equal(act.damage, expected, `실명 ${blind} · 공포 ${fear}(×${FEAR_MULT}) · 저주 ${curse} — ${action + 1}번째 행동`);
                     enemy = act.enemy;
                     cases += 1;
                 }
             }
         }
     }
-    assert.equal(cases, 4 * 4 * 4 * 5);
+    assert.equal(cases, 3 * 4 * 4 * 4 * 5);
 });
 
 test('실경로 재현: 흑마법사 다크메터 → 공포 — 저주가 먼저 끝나도 공포의 감소는 남는다', () => {
