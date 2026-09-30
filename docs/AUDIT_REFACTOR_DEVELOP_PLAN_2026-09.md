@@ -2973,3 +2973,9 @@ tracked verify **15/15** · type-check 0 · lint 0 · unit **5,418/5,418**(381�
   - `scripts/progression-diagnostic-evidence.mjs`의 `PROGRESSION_V1_BASELINE_HASH` `696607d2…` → `404dafaa…`(writer 안의 하드 게이트라 갱신 전에는 `PROGRESSION_SCHEMA_V1_BASELINE_DRIFT`로 쓰기를 거부했다).
 - 증빙 재생성 순서는 §14의 절차 그대로다: 기준 해시 → 도달 비용 → 페이싱(`exploration-rhythm.json`, 참조 해시 2개만 이동) → 성장 진단(마지막) → 소스 핀.
 - 기존 값 핀 갱신: `skills-cycle`(cycle 257/258의 흡수 값 3개 — 설명 동기 단언을 함께 넣었다).
+
+### 43.5 결함 주입 7종 · 검증
+
+- 각자 자기 행에서 red였다: 마법사 생명 되돌림 · 전사 기력 되돌림 · 회복값만 되돌리고 설명 유지 · 설명 미갱신 · 무당 흡수 약화(0.3) · 버서커 회복 약화(0.05) · 분기 A 흡수 비례 미갱신.
+- 무당 흡수 약화는 계약 근거 행(자가 회복 크기 경계)에서도 red였다 — 강조 폭이 선언의 조건이 됐다.
+- tracked verify **15/15**.

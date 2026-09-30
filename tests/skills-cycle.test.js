@@ -1017,7 +1017,7 @@ import { readFile } from 'node:fs/promises';
           `drainRatio 미정의 시 default 0.25 (실제: ${actualHeal} == ${expectedHeal})`);
   });
 
-  test('cycle 257: 혼의 흡수 skill 데이터에 drainRatio: 0.30 정의', async () => {
+  test('cycle 257: 혼의 흡수 skill 데이터에 drainRatio 정의 (Wave 43: 0.30 → 0.45)', async () => {
       const { CLASSES } = await import('../src/data/classes.js');
       // '혼의 흡수' is in 무당 class skills.
       const shaman = CLASSES['무당'];
@@ -1029,7 +1029,7 @@ import { readFile } from 'node:fs/promises';
       assert.match(drainSkill.desc, /45%/);
   });
 
-  test('cycle 257: 흡혈의 낫 branch override에 drainRatio: 0.35 정의', async () => {
+  test('cycle 257: 흡혈의 낫 branch override에 drainRatio 정의 (Wave 43: 0.35 → 0.5)', async () => {
       const { CLASSES } = await import('../src/data/classes.js');
       // '죽음의 낫' branches in 무당 class.
       const shaman = CLASSES['무당'];
@@ -1084,7 +1084,7 @@ import { readFile } from 'node:fs/promises';
    * - drainRatio 미정의 시 default 0.25 (회귀 가드).
    */
 
-  test('cycle 258: 강화 흡수 branch A에 drainRatio: 0.325 정의', async () => {
+  test('cycle 258: 강화 흡수 branch A drainRatio = 기본 흡수 × 1.3 (Wave 43: 0.52)', async () => {
       const { CLASSES } = await import('../src/data/classes.js');
       // 흑마법사 '생명흡수' branches.
       const blackMage = CLASSES['흑마법사'];
