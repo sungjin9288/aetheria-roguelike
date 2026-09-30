@@ -29,13 +29,24 @@ const hasEffect = (def, ...effects) => active(def).some((skill) => effects.inclu
 const FIREPOWER_HIGH = { 1: 1.5, 2: 2.0, 3: 2.3 };
 const FIREPOWER_LOW = { 1: 1.3, 2: 1.7, 3: 1.9 };
 
+/**
+ * Wave 43 (소유자 결정 "B+C — 강점 · 약점을 수치로도 강조"): 자가 회복은 크기까지 요구한다(회복 기술 10% 이상 또는
+ * 흡수 40% 이상), 낮은 생명은 0.8 이하 · 적은 기력은 0.7 이하다. 경계를 되돌리면 선언이 다시 이름뿐이 된다.
+ */
+const SUSTAIN_MIN_HEAL = 0.1;
+const SUSTAIN_MIN_DRAIN = 0.4;
+const hasSubstantialSustain = (def) => active(def).some((skill) => (
+    (skill.effect === 'hp_regen' && (skill.val ?? 0) >= SUSTAIN_MIN_HEAL)
+    || (skill.effect === 'drain' && (skill.drainRatio ?? 0.25) >= SUSTAIN_MIN_DRAIN)
+));
+
 /** 특성 → 데이터 근거. 강점과 약점이 같은 어휘를 쓰되, 둘은 서로 반대 방향이다. */
 const TRAIT_EVIDENCE = {
     toughness: (def) => (def.hpMod ?? 1) >= 1.4,
     mana: (def) => (def.mpMod ?? 1) >= 1.8,
     firepower: (def) => (def.atkMod ?? 1) >= FIREPOWER_HIGH[def.tier],
     control: (def) => active(def).some((skill) => CC.has(skill.effect)),
-    sustain: (def) => hasEffect(def, 'hp_regen', 'drain'),
+    sustain: hasSubstantialSustain,
     crit: (def) => active(def).filter((skill) => skill.crit).length >= 2,
     evasion: (def) => hasEffect(def, 'stealth'),
     affliction: (def) => active(def).filter((skill) => DOT.has(skill.effect)).length >= 2,
@@ -47,8 +58,8 @@ const TRAIT_EVIDENCE = {
     purify: (def) => hasEffect(def, 'purify'),
     growth: (def) => passive(def).some((skill) => skill.effect === 'exp_up'),
     fortune: (def) => passive(def).some((skill) => skill.effect === 'gold_up'),
-    frail: (def) => (def.hpMod ?? 1) <= 0.9,
-    low_mana: (def) => (def.mpMod ?? 1) <= 0.8,
+    frail: (def) => (def.hpMod ?? 1) <= 0.8,
+    low_mana: (def) => (def.mpMod ?? 1) <= 0.7,
     low_firepower: (def) => (def.atkMod ?? 1) <= FIREPOWER_LOW[def.tier],
     no_sustain: (def) => !hasEffect(def, 'hp_regen', 'drain'),
     mono_element: (def) => damageElements(def).size === 1 && !damageElements(def).has('물리'),
@@ -127,4 +138,31 @@ test('전직 화면은 고른 직업의 강점 · 약점을 라벨로 그린다'
 test('강점 · 약점 선언이 없는 직업은 그 줄을 그리지 않는다', () => {
     assert.deepEqual(getClassTraitLabels(CLASSES['모험가']), { strengths: [], weaknesses: [] });
     assert.deepEqual(getClassTraitLabels(undefined), { strengths: [], weaknesses: [] });
+});
+
+test('Wave 43 강조 폭: 자가 회복형의 회복 · 흡수량과 약점 직업의 생명 · 기력 배율을 고정한다', () => {
+    const skill = (job, name) => CLASSES[job].skills.find((entry) => entry.name === name);
+    assert.deepEqual(
+        [skill('성직자', '기적의 손길').val, skill('팔라딘', '기적의 부활').val, skill('버서커', '역경의 힘').val],
+        [0.25, 0.4, 0.1],
+    );
+    assert.deepEqual([skill('흑마법사', '생명흡수').drainRatio, skill('무당', '혼의 흡수').drainRatio], [0.4, 0.45]);
+    const hp = Object.fromEntries(['마법사', '아크메이지', '흑마법사', '대마법사', '무당'].map((job) => [job, CLASSES[job].hpMod]));
+    assert.deepEqual(hp, { 마법사: 0.6, 아크메이지: 0.7, 흑마법사: 0.8, 대마법사: 0.75, 무당: 0.8 });
+    const mp = Object.fromEntries(['전사', '나이트', '버서커', '드래곤 나이트'].map((job) => [job, CLASSES[job].mpMod]));
+    assert.deepEqual(mp, { 전사: 0.5, 나이트: 0.7, 버서커: 0.4, '드래곤 나이트': 0.6 });
+});
+
+test('회복 · 흡수 기술 설명의 백분율은 데이터 값과 같다 (광고 = 동작)', () => {
+    for (const def of Object.values(CLASSES)) {
+        const choices = Object.entries(def.skillBranches ?? {}).flatMap(([name, list]) => list.map((choice) => ({
+            ...(def.skills ?? []).find((entry) => entry.name === name), ...choice.override, desc: choice.desc, name: `${name}/${choice.label}`,
+        })));
+        for (const skill of [...(def.skills ?? []), ...choices]) {
+            const ratio = skill.effect === 'hp_regen' ? skill.val : skill.effect === 'drain' ? skill.drainRatio : undefined;
+            if (ratio === undefined || !/%/.test(String(skill.desc)) || /\+\d+%/.test(String(skill.desc))) continue;
+            const pct = Math.round(ratio * 100);
+            assert.ok(String(skill.desc).includes(`${pct}%`), `${skill.name}: 설명 "${skill.desc}"에 ${pct}%가 없다`);
+        }
+    }
 });

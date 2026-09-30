@@ -21,7 +21,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     // ── 1차 전직 ─────────────────────────────────────────────────────────────
     '전사': {
-        tier: 1, reqLv: 5, desc: '체력/공격 특화 — 전선을 지키는 용사', hpMod: 1.4, mpMod: 0.6, atkMod: 1.3,
+        tier: 1, reqLv: 5, desc: '체력/공격 특화 — 전선을 지키는 용사', hpMod: 1.4, mpMod: 0.5, atkMod: 1.3,
         traits: { strengths: ['toughness', 'guard'], weaknesses: ['low_mana', 'physical_only'] },
         skills: [
             { name: '파워배시', mp: 15, mult: 2.0, desc: '강력한 내려찍기. 방패를 무시한다' },
@@ -52,7 +52,7 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '마법사': {
-        tier: 1, reqLv: 5, desc: '마법 공격 특화 — 원소의 학도', hpMod: 0.7, mpMod: 1.8, atkMod: 1.6,
+        tier: 1, reqLv: 5, desc: '마법 공격 특화 — 원소의 학도', hpMod: 0.6, mpMod: 1.8, atkMod: 1.6,
         traits: { strengths: ['firepower', 'elements', 'control'], weaknesses: ['frail'] },
         skills: [
             { name: '화염구', mp: 20, type: '화염', mult: 2.2, effect: 'burn', desc: '화염 속성 + 화상 부여' },
@@ -115,7 +115,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     // ── 2차 전직 ─────────────────────────────────────────────────────────────
     '나이트': {
-        tier: 2, reqLv: 30, desc: '철벽의 방어 — 성채를 걷는 기사', hpMod: 2.0, mpMod: 0.8, atkMod: 1.5,
+        tier: 2, reqLv: 30, desc: '철벽의 방어 — 성채를 걷는 기사', hpMod: 2.0, mpMod: 0.7, atkMod: 1.5,
         traits: { strengths: ['toughness', 'guard', 'weaken'], weaknesses: ['low_mana'] },
         skills: [
             { name: '실드배시', mp: 20, mult: 2.5, effect: 'stun', desc: '방패 일격 + 기절 부여' },
@@ -144,7 +144,7 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '버서커': {
-        tier: 2, reqLv: 30, desc: '광란의 공격 — 피를 마시는 전사', hpMod: 1.6, mpMod: 0.5, atkMod: 2.0,
+        tier: 2, reqLv: 30, desc: '광란의 공격 — 피를 마시는 전사', hpMod: 1.6, mpMod: 0.4, atkMod: 2.0,
         traits: { strengths: ['firepower', 'toughness', 'sustain'], weaknesses: ['low_mana'] },
         skills: [
             { name: '휠윈드', mp: 30, mult: 3.0, desc: '회전 연속 공격' },
@@ -153,7 +153,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '출혈 광란', mp: 50, mult: 3.5, effect: 'bleed', desc: '광란 상태 강력한 출혈 유발' },
             { name: '분노의 포효', mp: 25, type: 'buff', effect: 'atk_up', val: 2.0, turn: 2, desc: 'ATK 100% 상승 2턴 (DEF -30%)' },
             { name: '피의 강물', mp: 65, mult: 4.0, effect: 'bleed', desc: '광역 출혈 + 강대한 피해' },
-            { name: '역경의 힘', mp: 20, type: 'buff', effect: 'hp_regen', val: 0.05, turn: 3, desc: 'HP 낮을수록 강해짐, 3턴간 HP 회복' },
+            { name: '역경의 힘', mp: 20, type: 'buff', effect: 'hp_regen', val: 0.1, turn: 3, desc: 'HP 10% 회복 + 3턴간 지속 회복' },
             // 패시브
             { name: '무자비한 본능', passive: true, effect: 'atk_up', val: 15, desc: 'ATK +15 (패시브)' },
             { name: '전투 중독', passive: true, effect: 'hp_up', val: 60, desc: '최대 HP +60 (패시브)' },
@@ -173,7 +173,7 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '아크메이지': {
-        tier: 2, reqLv: 30, desc: '원소의 지배자 — 세계를 태우는 마법사', hpMod: 0.8, mpMod: 2.5, atkMod: 2.2,
+        tier: 2, reqLv: 30, desc: '원소의 지배자 — 세계를 태우는 마법사', hpMod: 0.7, mpMod: 2.5, atkMod: 2.2,
         traits: { strengths: ['firepower', 'elements', 'control'], weaknesses: ['frail'] },
         skills: [
             { name: '메테오', mp: 60, type: '화염', mult: 4.5, effect: 'burn', desc: '하늘에서 운석을 소환, 화상 부여' },
@@ -204,11 +204,11 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '흑마법사': {
-        tier: 2, reqLv: 30, desc: '어둠의 계약 — 금단을 탐하는 자', hpMod: 0.9, mpMod: 2.0, atkMod: 2.0,
+        tier: 2, reqLv: 30, desc: '어둠의 계약 — 금단을 탐하는 자', hpMod: 0.8, mpMod: 2.0, atkMod: 2.0,
         traits: { strengths: ['affliction', 'sustain', 'firepower'], weaknesses: ['frail'] },
         skills: [
             { name: '다크메터', mp: 50, type: '어둠', mult: 4.0, effect: 'curse', desc: '암흑 에너지로 저주 부여' },
-            { name: '생명흡수', mp: 40, mult: 3.0, effect: 'drain', desc: '적의 생명력을 흡수해 HP 회복' },
+            { name: '생명흡수', mp: 40, mult: 3.0, effect: 'drain', drainRatio: 0.4, desc: '적의 생명력을 흡수 — 피해의 40% HP 회복' },
             { name: '영혼 파괴', mp: 100, type: '어둠', mult: 6.5, effect: 'curse', desc: '궁극기 — 영혼 분쇄 저주' },
             { name: '공포', mp: 35, type: 'debuff', effect: 'fear', val: 0.7, turn: 3, desc: '광기로 적 ATK 30% 감소 3턴' },
             { name: '어둠의 서약', mp: 55, type: 'buff', effect: 'atk_up', val: 1.8, turn: 4, desc: 'ATK 80% 상승, HP를 소모하는 계약' },
@@ -224,8 +224,8 @@ export const CLASSES: Record<string, ClassDef> = {
                 { choice: 'B', label: '저주 연쇄', desc: '저주 + 독 동시 부여', override: { mult: 6.5, secondEffect: 'poison' } },
             ],
             '생명흡수': [
-                // cycle 258: drainRatio 0.325 추가 — desc "흡수량 +30%" 정합 (default 0.25 * 1.3 = 0.325).
-                { choice: 'A', label: '강화 흡수', desc: '데미지 및 흡수량 +30%', override: { mult: 3.9, drainRatio: 0.325 } },
+                // cycle 258: desc "흡수량 +30%" 정합 — Wave 43에서 기본 흡수가 0.4가 되어 0.4 × 1.3 = 0.52.
+                { choice: 'A', label: '강화 흡수', desc: '데미지 및 흡수량 +30%', override: { mult: 3.9, drainRatio: 0.52 } },
                 { choice: 'B', label: '저주 흡수', desc: '저주 부여 + 흡수', override: { mult: 3.0, secondEffect: 'curse' } },
             ],
         },
@@ -319,7 +319,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '공포 유발', mp: 25, type: 'debuff', effect: 'fear', val: 0.7, turn: 2, desc: '적 ATK 30% 감소 2턴' },
             { name: '신성한 보호막', mp: 35, type: 'buff', effect: 'def_up', val: 1.6, turn: 3, desc: '신성한 방어 DEF 60% 상승 3턴' },
             { name: '성스러운 빛', mp: 40, type: '빛', mult: 2.5, effect: 'purify', desc: '강화 빛 공격 + 정화' },
-            { name: '기적의 손길', mp: 45, type: 'buff', effect: 'hp_regen', val: 0.15, turn: 3, desc: 'HP 15% 회복 + 3턴간 지속 회복' },
+            { name: '기적의 손길', mp: 45, type: 'buff', effect: 'hp_regen', val: 0.25, turn: 3, desc: 'HP 25% 회복 + 3턴간 지속 회복' },
             // 패시브
             { name: '신의 은총', passive: true, effect: 'hp_up', val: 50, desc: '최대 HP +50 (패시브)' },
             { name: '신성한 학습', passive: true, effect: 'exp_up', val: 0.08, desc: '경험치 획득 +8% — 신의 가르침 (패시브)' },
@@ -331,8 +331,8 @@ export const CLASSES: Record<string, ClassDef> = {
             ],
             // Wave 4 O1: 두 번째 분기 — 회복 총량 vs 회복 + 보호. 성직자의 역할 선택.
             '기적의 손길': [
-                { choice: 'A', label: '충만한 손길', desc: '생명 회복 15%에서 22%로 상승', override: { effect: 'hp_regen', val: 0.22 } },
-                { choice: 'B', label: '수호의 손길', desc: '생명 15% 회복 + 방어력 40% 상승 3턴', override: { effect: 'hp_regen', val: 0.15, defBonus: 1.4 } },
+                { choice: 'A', label: '충만한 손길', desc: '생명 회복 25%에서 35%로 상승', override: { effect: 'hp_regen', val: 0.35 } },
+                { choice: 'B', label: '수호의 손길', desc: '생명 25% 회복 + 방어력 40% 상승 3턴', override: { effect: 'hp_regen', val: 0.25, defBonus: 1.4 } },
             ],
         },
         next: ['팔라딘']
@@ -349,7 +349,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '정화의 빛', mp: 50, type: '빛', mult: 2.5, effect: 'purify', desc: '상태이상 정화 + 강화 피해' },
             { name: '성스러운 폭풍', mp: 80, type: '빛', mult: 5.5, effect: 'stun', desc: '빛의 폭풍으로 기절 + 대피해' },
             { name: '빛의 장벽', mp: 70, type: 'buff', effect: 'def_up', val: 3.0, turn: 4, desc: 'DEF 200% 상승 4턴 — 신성 장벽' },
-            { name: '기적의 부활', mp: 90, type: 'buff', effect: 'hp_regen', val: 0.3, turn: 2, desc: 'HP 30% 즉시 회복 + 2턴 재생' },
+            { name: '기적의 부활', mp: 90, type: 'buff', effect: 'hp_regen', val: 0.4, turn: 2, desc: 'HP 40% 즉시 회복 + 2턴 재생' },
             { name: '천상의 포화', mp: 100, type: '빛', mult: 6.5, effect: 'purify', desc: '빛의 연속 공격 + 정화' },
             // 패시브
             { name: '팔라딘의 맹세', passive: true, effect: 'hp_up', val: 250, desc: '최대 HP +250 (패시브)' },
@@ -370,7 +370,7 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '드래곤 나이트': {
-        tier: 3, reqLv: 45, desc: '용의 힘을 계승한 광전사', hpMod: 1.9, mpMod: 0.7, atkMod: 2.5,
+        tier: 3, reqLv: 45, desc: '용의 힘을 계승한 광전사', hpMod: 1.9, mpMod: 0.6, atkMod: 2.5,
         traits: { strengths: ['firepower', 'toughness', 'affliction'], weaknesses: ['low_mana'] },
         skills: [
             { name: '용의 포효', mp: 50, type: '화염', mult: 4.5, effect: 'burn', desc: '화상 + 강력한 화염 피해' },
@@ -399,7 +399,7 @@ export const CLASSES: Record<string, ClassDef> = {
     },
 
     '대마법사': {
-        tier: 3, reqLv: 45, desc: '모든 원소를 지배하는 자', hpMod: 0.85, mpMod: 3.0, atkMod: 2.8,
+        tier: 3, reqLv: 45, desc: '모든 원소를 지배하는 자', hpMod: 0.75, mpMod: 3.0, atkMod: 2.8,
         traits: { strengths: ['firepower', 'elements', 'control'], weaknesses: ['frail'] },
         skills: [
             { name: '오메가 메테오', mp: 80, type: '화염', mult: 6.0, effect: 'burn', desc: '화상 + 거대 운석 소환' },
@@ -460,14 +460,14 @@ export const CLASSES: Record<string, ClassDef> = {
 
     // ── Sprint 16 신규 직업 ────────────────────────────────────────────────
     '무당': {
-        tier: 2, reqLv: 12, desc: '저주/독/소환 — 죽음에 가까울수록 강해지는 주술사', hpMod: 0.9, mpMod: 1.6, atkMod: 1.5,
+        tier: 2, reqLv: 12, desc: '저주/독/소환 — 죽음에 가까울수록 강해지는 주술사', hpMod: 0.8, mpMod: 1.6, atkMod: 1.5,
         traits: { strengths: ['affliction', 'sustain', 'escape'], weaknesses: ['frail', 'low_firepower'] },
         skills: [
             { name: '저주의 낙인', mp: 25, type: '어둠', mult: 1.6, effect: 'curse', desc: '강화된 저주 부여 — 적 피해 배율 증폭' },
             { name: '영혼 소환', mp: 35, mult: 2.0, effect: 'bleed', turn: 3, desc: '영혼을 소환해 3턴간 추가 피해' },
             { name: '역병의 안개', mp: 40, type: '자연', mult: 1.5, effect: 'poison', desc: '광역 독 — 모든 독 피해 강화' },
             // cycle 257: drainRatio 0.30 추가 — desc "30%" data-code 정합 (cycle 257 dispatch와 paired).
-            { name: '혼의 흡수', mp: 30, mult: 1.8, effect: 'drain', drainRatio: 0.30, desc: '생명 흡수 — 피해의 30% HP 회복' },
+            { name: '혼의 흡수', mp: 30, mult: 1.8, effect: 'drain', drainRatio: 0.45, desc: '생명 흡수 — 피해의 45% HP 회복' },
             { name: '죽음의 낫', mp: 50, type: '어둠', mult: 2.5, effect: 'curse', desc: 'HP 낮을수록 피해 증가, 저주 부여' },
             { name: '공허의 문', mp: 60, type: 'escape', effect: 'escape_100', desc: '100% 확률로 전투 이탈' },
             // 패시브
@@ -483,7 +483,7 @@ export const CLASSES: Record<string, ClassDef> = {
             '죽음의 낫': [
                 { choice: 'A', label: '처형의 낫', desc: '피해 배율 3.5배 (폭딜)', override: { mult: 3.5, effect: 'curse' } },
                 // cycle 257: drainRatio 0.35 추가 — desc "35%" data-code 정합.
-                { choice: 'B', label: '흡혈의 낫', desc: '피해의 35% HP 흡수', override: { mult: 2.5, effect: 'drain', drainRatio: 0.35 } },
+                { choice: 'B', label: '흡혈의 낫', desc: '피해의 50% HP 흡수', override: { mult: 2.5, effect: 'drain', drainRatio: 0.5 } },
             ],
         },
         next: ['시간술사']

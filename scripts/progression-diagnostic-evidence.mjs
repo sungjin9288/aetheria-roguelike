@@ -31,7 +31,11 @@ const HASH_ALGORITHM = 'sha256';
 // 아닌 적에게만 굴리는 정예 판정 draw가 되살아나 같은 액션의 접두어 굴림이 밀리기 때문이다(체크포인트는 시드별 잡음).
 // 그 편집 하나만 되돌리면 이전 값 'b89b9018…'이 그대로 재현된다(실측).
 // 이전 값: 'b89b9018e452f9f4d09da3c841b63da6963a593d19f9e91de25f6aad03768ac1'.
-const PROGRESSION_V1_BASELINE_HASH = '696607d221a09541728eb231ed54ba3094967935fd6e7db2ca5678387af92958';
+// Wave 43 (2026-09-30): 낮은 생명 직업 생명 −0.1 · 적은 기력 직업 기력 −0.1(소유자 결정 "B+C")로 jobSnapshots 9칸의
+// 생명 · 기력이 움직인다. 곡선은 **움직이지 않는다**(모델 플레이어는 끝까지 `모험가` — 바뀌는 키는 jobSnapshots 하나).
+// 그 편집 하나만 되돌리면 이전 값 '696607d2…'이 그대로 재현된다.
+// 이전 값: '696607d221a09541728eb231ed54ba3094967935fd6e7db2ca5678387af92958'.
+const PROGRESSION_V1_BASELINE_HASH = '404dafaaf607b74667ec2a4ad310d6acd15f39f3950e155d1fcf2b861481f8b2';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';

@@ -36,10 +36,11 @@ const HEAL_SKILLS = [['성직자', '기적의 손길'], ['버서커', '역경의
 test('회복 기술은 즉시 val을 회복하고, 이후 turn턴 동안 턴마다 val / turn을 더 회복한다', () => {
     for (const [job, name] of HEAL_SKILLS) {
         const skill = skillOf(job, name);
-        const result = cast(job, name);
+        // 생명 100에서 시작한다 — 즉시 + 지속 합계(2 × val, 최대 80%)가 최대 생명 1000을 넘지 않아 틱마다 온전히 잰다.
+        const result = cast(job, name, { hp: 100 });
         assert.equal(result.success, true, `${job}/${name} 사용 성공`);
         const immediate = Math.floor(1000 * skill.val);
-        assert.equal(result.updatedPlayer.hp, 400 + immediate, `${job}/${name} 즉시 회복`);
+        assert.equal(result.updatedPlayer.hp, 100 + immediate, `${job}/${name} 즉시 회복`);
         assert.deepEqual(result.updatedPlayer.skillRegen, { ratio: skill.val / skill.turn, turns: skill.turn, name }, `${job}/${name} 지속 회복 등록`);
 
         let player = result.updatedPlayer;

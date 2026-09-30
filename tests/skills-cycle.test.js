@@ -1017,25 +1017,29 @@ import { readFile } from 'node:fs/promises';
           `drainRatio 미정의 시 default 0.25 (실제: ${actualHeal} == ${expectedHeal})`);
   });
 
-  test('cycle 257: 혼의 흡수 skill 데이터에 drainRatio: 0.30 정의', async () => {
+  test('cycle 257: 혼의 흡수 skill 데이터에 drainRatio 정의 (Wave 43: 0.30 → 0.45)', async () => {
       const { CLASSES } = await import('../src/data/classes.js');
       // '혼의 흡수' is in 무당 class skills.
       const shaman = CLASSES['무당'];
       const drainSkill = shaman.skills.find((s) => s.name === '혼의 흡수');
       assert.ok(drainSkill, "'혼의 흡수' skill 존재");
-      assert.equal(drainSkill.drainRatio, 0.30,
-          `drainRatio 0.30 (desc "피해의 30% HP 회복" 정합, 실제: ${drainSkill.drainRatio})`);
+      // Wave 43 (소유자 결정 "강점 · 약점 수치 강조"): 0.30 → 0.45. 설명 문구도 같은 값으로 옮겼다.
+      assert.equal(drainSkill.drainRatio, 0.45,
+          `drainRatio 0.45 (desc "피해의 45% HP 회복" 정합, 실제: ${drainSkill.drainRatio})`);
+      assert.match(drainSkill.desc, /45%/);
   });
 
-  test('cycle 257: 흡혈의 낫 branch override에 drainRatio: 0.35 정의', async () => {
+  test('cycle 257: 흡혈의 낫 branch override에 drainRatio 정의 (Wave 43: 0.35 → 0.5)', async () => {
       const { CLASSES } = await import('../src/data/classes.js');
       // '죽음의 낫' branches in 무당 class.
       const shaman = CLASSES['무당'];
       const branchB = shaman.skillBranches['죽음의 낫'].find((b) => b.choice === 'B');
       assert.ok(branchB, "'흡혈의 낫' branch B 존재");
       assert.equal(branchB.label, '흡혈의 낫');
-      assert.equal(branchB.override.drainRatio, 0.35,
-          `branch override drainRatio 0.35 (desc "피해의 35% HP 흡수" 정합, 실제: ${branchB.override.drainRatio})`);
+      // Wave 43: 0.35 → 0.5 (설명 문구 동기).
+      assert.equal(branchB.override.drainRatio, 0.5,
+          `branch override drainRatio 0.5 (desc "피해의 50% HP 흡수" 정합, 실제: ${branchB.override.drainRatio})`);
+      assert.match(branchB.desc, /50%/);
   });
 
   test('cycle 257: 다른 effect (drain 외) 영향 없음 (회귀 가드)', () => {
@@ -1080,16 +1084,18 @@ import { readFile } from 'node:fs/promises';
    * - drainRatio 미정의 시 default 0.25 (회귀 가드).
    */
 
-  test('cycle 258: 강화 흡수 branch A에 drainRatio: 0.325 정의', async () => {
+  test('cycle 258: 강화 흡수 branch A drainRatio = 기본 흡수 × 1.3 (Wave 43: 0.52)', async () => {
       const { CLASSES } = await import('../src/data/classes.js');
       // 흑마법사 '생명흡수' branches.
       const blackMage = CLASSES['흑마법사'];
       const branchA = blackMage.skillBranches['생명흡수'].find((b) => b.choice === 'A');
       assert.ok(branchA, "'강화 흡수' branch A 존재");
       assert.equal(branchA.label, '강화 흡수');
-      // default 0.25 * 1.3 = 0.325 (desc "흡수량 +30%" 정합).
-      assert.ok(Math.abs(branchA.override.drainRatio - 0.325) < 0.001,
-          `branch override drainRatio 0.325 (desc "흡수량 +30%" 정합, 실제: ${branchA.override.drainRatio})`);
+      // Wave 43: 기본 흡수가 0.4가 되어 "흡수량 +30%"는 0.4 × 1.3 = 0.52다(이전 0.25 × 1.3 = 0.325).
+      const baseDrain = CLASSES['흑마법사'].skills.find((s) => s.name === '생명흡수').drainRatio;
+      assert.equal(baseDrain, 0.4);
+      assert.ok(Math.abs(branchA.override.drainRatio - baseDrain * 1.3) < 0.001,
+          `branch override drainRatio ${baseDrain * 1.3} (desc "흡수량 +30%" 정합, 실제: ${branchA.override.drainRatio})`);
       // damage scaling 보존.
       assert.equal(branchA.override.mult, 3.9, 'mult 3.9 (damage +30%) 회귀 가드');
   });
@@ -1132,10 +1138,10 @@ import { readFile } from 'node:fs/promises';
       const { CLASSES } = await import('../src/data/classes.js');
       const shaman = CLASSES['무당'];
       const drainSkill = shaman.skills.find((s) => s.name === '혼의 흡수');
-      assert.equal(drainSkill.drainRatio, 0.30, 'cycle 257 혼의 흡수 0.30 회귀 가드');
+      assert.equal(drainSkill.drainRatio, 0.45, 'cycle 257 혼의 흡수 (Wave 43: 0.30 → 0.45) 회귀 가드');
 
       const reaperBranchB = shaman.skillBranches['죽음의 낫'].find((b) => b.choice === 'B');
-      assert.equal(reaperBranchB.override.drainRatio, 0.35, 'cycle 257 흡혈의 낫 0.35 회귀 가드');
+      assert.equal(reaperBranchB.override.drainRatio, 0.5, 'cycle 257 흡혈의 낫 (Wave 43: 0.35 → 0.5) 회귀 가드');
   });
 }
 
