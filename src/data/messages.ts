@@ -254,6 +254,7 @@ export const MSG = {
         purify: '상태이상 정화',
         growth: '빠른 성장',
         fortune: '추가 골드',
+        exorcism: '퇴마',
         frail: '낮은 생명',
         low_mana: '적은 기력',
         low_firepower: '낮은 화력',
@@ -725,6 +726,8 @@ export const MSG = {
     ),
     SKILL_DRAIN_HEAL: (heal: number) => `[생명흡수] +${heal} HP 흡수!`,
     SKILL_HP_REGEN_PROC: (skillName: string | undefined, heal: number) => `[${skillName}] +${heal} HP 회복!`,
+    // Wave 51(소유자 결정 "성직자의 컨셉"): 회복의 빛이 언데드 · 마족을 태운다.
+    SKILL_HOLY_SMITE: (skillName: string | undefined, enemyName: string | undefined, dmg: number) => `[${skillName}] 신성한 빛이 ${enemyName}을(를) 태웁니다! ${dmg} 신성 피해`,
     SKILL_REGEN_TICK: (skillName: string, heal: number) => `[${skillName}] 지속 회복 +${heal} HP`,
     SKILL_MP_REGEN_PROC: (skillName: string | undefined, amount: number) => `[${skillName}] +${amount} MP 회복!`,
     SKILL_PURIFY_PROC: (skillName: string | undefined) => `[${skillName}] 상태이상이 정화되었습니다!`,

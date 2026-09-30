@@ -1,5 +1,6 @@
 import type { Monster } from '../types/monster.js';
 
+// 2026-09 Wave 51: `family`(언데드 22 · 마족 7)는 성직자 계열 회복 기술의 신성 피해 대상이다 — 이름으로 추론하지 말고 여기서 선언한다.
 export const MONSTERS: Record<string, Monster> = {
     슬라임: { weakness: '화염', resistance: '대지', hpMult: 0.8, pattern: { guardChance: 0.05, heavyChance: 0.1 }, statusOnHit: 'poison' },
     늑대: { weakness: '화염', resistance: '자연', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.35 } },
@@ -9,9 +10,9 @@ export const MONSTERS: Record<string, Monster> = {
     코볼트: { weakness: '빛', resistance: '대지', atkMult: 0.95, pattern: { guardChance: 0.1, heavyChance: 0.15 } },
     '물의 정령': { weakness: '대지', resistance: '냉기' },
     머맨: { weakness: '자연', resistance: '냉기' },
-    '해골 병사': { weakness: '빛', resistance: '어둠' },
+    '해골 병사': { family: 'undead', weakness: '빛', resistance: '어둠' },
     고블린: { weakness: '화염', resistance: '자연', atkMult: 0.9, pattern: { guardChance: 0.0, heavyChance: 0.2 } },
-    '유령 기사': { weakness: '빛', resistance: '어둠', hpMult: 1.12 },
+    '유령 기사': { family: 'undead', weakness: '빛', resistance: '어둠', hpMult: 1.12 },
     광석골렘: { weakness: '대지', resistance: '화염', hpMult: 1.2, atkMult: 0.9, pattern: { guardChance: 0.3, heavyChance: 0.15 } },
     '동굴 트롤': { weakness: '화염', resistance: '대지', hpMult: 1.18, atkMult: 1.1 },
     '암흑 마법사': { weakness: '빛', resistance: '어둠', atkMult: 1.08 },
@@ -76,9 +77,10 @@ export const MONSTERS: Record<string, Monster> = {
         goldMult: 1.3,
         phase2: { name: '저주받은 빙결의 마녀', atkBonus: 0.42, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '빙결의 마녀가 저주의 힘을 해방했습니다! 마법 에너지가 폭주합니다!', statusEffect: 'poison' },
     },
-    데스나이트: { weakness: '빛', resistance: '어둠', hpMult: 1.12, atkMult: 1.08 },
-    리치: { weakness: '빛', resistance: '어둠', hpMult: 1.2, atkMult: 1.12 },
+    데스나이트: { family: 'undead', weakness: '빛', resistance: '어둠', hpMult: 1.12, atkMult: 1.08 },
+    리치: { family: 'undead', weakness: '빛', resistance: '어둠', hpMult: 1.2, atkMult: 1.12 },
     마왕: {
+        family: 'demon',
         isBoss: true,
         weakness: '빛',
         resistance: '어둠',
@@ -173,7 +175,7 @@ export const MONSTERS: Record<string, Monster> = {
 
     // 잊혀진 폐허 +2
     '석상 가디언': { weakness: '대지', resistance: '빛', hpMult: 1.1 },
-    '폐허 구울': { weakness: '빛', resistance: '어둠', atkMult: 1.06 },
+    '폐허 구울': { family: 'undead', weakness: '빛', resistance: '어둠', atkMult: 1.06 },
 
     // 버려진 광산 +3
     '코볼트 광부': { weakness: '빛', resistance: '대지' },
@@ -194,7 +196,7 @@ export const MONSTERS: Record<string, Monster> = {
     '드래곤 나이트': { weakness: '냉기', resistance: '화염', hpMult: 1.2, atkMult: 1.12 },
 
     // 피라미드 +2
-    '미라': { weakness: '화염', resistance: '어둠', hpMult: 1.08 },
+    '미라': { family: 'undead', weakness: '화염', resistance: '어둠', hpMult: 1.08 },
     '사막도적': { weakness: '빛', resistance: '대지', atkMult: 1.06 },
 
     // 얼음 성채 +3
@@ -206,13 +208,13 @@ export const MONSTERS: Record<string, Monster> = {
     '서리 정령': { weakness: '화염', resistance: '냉기' },
 
     // 암흑 성 +2
-    '뱀파이어': { weakness: '빛', resistance: '어둠', hpMult: 1.15, atkMult: 1.1 },
+    '뱀파이어': { family: 'undead', weakness: '빛', resistance: '어둠', hpMult: 1.15, atkMult: 1.1 },
     '암흑 사제': { weakness: '빛', resistance: '어둠', atkMult: 1.08 },
 
     // 마왕성 +2
-    '마왕의 사도': { weakness: '빛', resistance: '어둠', hpMult: 1.18, atkMult: 1.12 },
-    '지옥의 문지기': { weakness: '빛', resistance: '화염', hpMult: 1.3, atkMult: 1.15 },
-    '타락한 천사': { weakness: '어둠', resistance: '빛', hpMult: 1.2, atkMult: 1.12 },
+    '마왕의 사도': { family: 'demon', weakness: '빛', resistance: '어둠', hpMult: 1.18, atkMult: 1.12 },
+    '지옥의 문지기': { family: 'demon', weakness: '빛', resistance: '화염', hpMult: 1.3, atkMult: 1.15 },
+    '타락한 천사': { family: 'demon', weakness: '어둠', resistance: '빛', hpMult: 1.2, atkMult: 1.12 },
 
     // 고대 보물고 +1
     '보물사냥꾼': { weakness: '화염', resistance: '대지', atkMult: 1.08 },
@@ -258,7 +260,7 @@ export const MONSTERS: Record<string, Monster> = {
 
     // 어둠의 지하 감옥
     '고문관': { weakness: '빛', resistance: '어둠', atkMult: 1.12 },
-    '사슬 마왕': { weakness: '빛', resistance: '어둠', hpMult: 1.15, atkMult: 1.1 },
+    '사슬 마왕': { family: 'demon', weakness: '빛', resistance: '어둠', hpMult: 1.15, atkMult: 1.1 },
     '타락 기사': { weakness: '빛', resistance: '어둠', hpMult: 1.2, atkMult: 1.12 },
     '어둠 수호자': { weakness: '빛', resistance: '어둠', hpMult: 1.18 },
     '감옥 골렘': { weakness: '대지', resistance: '빛', hpMult: 1.3 },
@@ -279,6 +281,7 @@ export const MONSTERS: Record<string, Monster> = {
     },
     '허무의 집행관': { weakness: '빛', resistance: '어둠', hpMult: 1.3, atkMult: 1.2 },
     '차원 마왕': {
+        family: 'demon',
         isBoss: true,
         weakness: '빛',
         resistance: '어둠',
@@ -312,11 +315,11 @@ export const MONSTERS: Record<string, Monster> = {
     '바람 드레이크':    { hpMult: 0.85, atkMult: 1.06, defMult: 0.72, weakness: '대지', resistance: '바람', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
     '구름 정령':        { hpMult: 0.85, atkMult: 0.92, defMult: 0.7, weakness: '화염', resistance: '바람', pattern: { guardChance: 0.05, heavyChance: 0.3 } },
     // 영혼의 강 (5종)
-    '한 맺힌 망자':     { hpMult: 0.85, atkMult: 0.94, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'curse' },
+    '한 맺힌 망자':     { family: 'undead', hpMult: 0.85, atkMult: 0.94, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'curse' },
     '강의 요괴':        { hpMult: 0.85, atkMult: 0.87, defMult: 0.98, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.2, heavyChance: 0.3 } },
-    '익사한 기사':      { hpMult: 0.97, atkMult: 0.96, defMult: 1.15, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.25, heavyChance: 0.35 } },
-    '흡혼 해골':        { hpMult: 0.85, atkMult: 1.03, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
-    '저주받은 어부':    { hpMult: 0.85, atkMult: 0.89, defMult: 0.79, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.15, heavyChance: 0.35 }, statusOnHit: 'poison' },
+    '익사한 기사':      { family: 'undead', hpMult: 0.97, atkMult: 0.96, defMult: 1.15, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.25, heavyChance: 0.35 } },
+    '흡혼 해골':        { family: 'undead', hpMult: 0.85, atkMult: 1.03, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
+    '저주받은 어부':    { family: 'undead', hpMult: 0.85, atkMult: 0.89, defMult: 0.79, weakness: '빛', resistance: '냉기', pattern: { guardChance: 0.15, heavyChance: 0.35 }, statusOnHit: 'poison' },
     // 금지된 도서관 (5종)
     '살아있는 마법서':  { hpMult: 0.85, atkMult: 1.12, defMult: 0.7, weakness: '화염', resistance: '에테르', pattern: { guardChance: 0.0, heavyChance: 0.55 } },
     '잉크 슬라임':      { hpMult: 0.93, atkMult: 0.71, defMult: 1.28, weakness: '화염', resistance: '냉기', pattern: { guardChance: 0.35, heavyChance: 0.15 } },
@@ -325,7 +328,7 @@ export const MONSTERS: Record<string, Monster> = {
     '책의 정령':        { hpMult: 0.85, atkMult: 1.08, defMult: 0.7, weakness: '화염', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
     // 지하 미궁 (5종)
     '함정 수호자':      { hpMult: 0.91, atkMult: 0.92, defMult: 1.15, weakness: '빛', resistance: '대지', pattern: { guardChance: 0.3, heavyChance: 0.3 } },
-    '미궁의 마왕':      { hpMult: 1.07, atkMult: 1.03, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
+    '미궁의 마왕':      { family: 'demon', hpMult: 1.07, atkMult: 1.03, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.4 } },
     '돌 거인':          { hpMult: 1.1, atkMult: 0.82, defMult: 1.28, weakness: '빛', resistance: '물리', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
     // cycle 253: resistance '독' → '자연' — items.ts에 elem '독' 없음, 자연 계열(독사의 송곳니/정령의 지팡이)이 elem '자연'.
     '독 지네':          { hpMult: 0.85, atkMult: 0.96, defMult: 0.7, weakness: '화염', resistance: '자연', pattern: { guardChance: 0.1, heavyChance: 0.4 }, statusOnHit: 'poison' },
@@ -372,7 +375,7 @@ export const MONSTERS: Record<string, Monster> = {
     '영겁의 수호신상':  { hpMult: 1.1, atkMult: 0.82, defMult: 1.28, weakness: '대지', resistance: '빛', pattern: { guardChance: 0.4, heavyChance: 0.2 } },
     '신성한 제관':      { hpMult: 0.85, atkMult: 1.06, defMult: 0.7, weakness: '어둠', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.45 } },
     '시간 파편체':      { hpMult: 0.85, atkMult: 1.03, defMult: 0.79, weakness: '자연', resistance: '빛', pattern: { guardChance: 0.1, heavyChance: 0.4 } },
-    '망령 기사단장':    { hpMult: 1.07, atkMult: 1.12, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.45 } },
+    '망령 기사단장':    { family: 'undead', hpMult: 1.07, atkMult: 1.12, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.25, heavyChance: 0.45 } },
 
     // cycle 165: maps.ts 참조 누락 monster profile 추가 — baseline 점진 정리.
     //   화염/얼음 테마 8종 batch. 모두 maps.ts monsters[]에 spawn 등록돼 있으나
@@ -392,11 +395,11 @@ export const MONSTERS: Record<string, Monster> = {
 
     // cycle 166: 언데드 / 폭풍 테마 8종 batch (cycle 165 화염/얼음 batch 연속).
     // 언데드 (5종) — weakness 빛, resistance 어둠.
-    '망자의 사제':      { hpMult: 0.85, atkMult: 1.03, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
-    '묘지 구울':        { hpMult: 0.85, atkMult: 0.92, defMult: 0.79, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.35 }, statusOnHit: 'poison' },
-    '유령 군단':        { hpMult: 0.88, atkMult: 0.96, defMult: 0.92, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.4 } },
-    '해골 마법사':      { hpMult: 0.85, atkMult: 1.13, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
-    '저주받은 기사':    { hpMult: 1.07, atkMult: 0.99, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.35 }, statusOnHit: 'curse' },
+    '망자의 사제':      { family: 'undead', hpMult: 0.85, atkMult: 1.03, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
+    '묘지 구울':        { family: 'undead', hpMult: 0.85, atkMult: 0.92, defMult: 0.79, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.1, heavyChance: 0.35 }, statusOnHit: 'poison' },
+    '유령 군단':        { family: 'undead', hpMult: 0.88, atkMult: 0.96, defMult: 0.92, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.15, heavyChance: 0.4 } },
+    '해골 마법사':      { family: 'undead', hpMult: 0.85, atkMult: 1.13, defMult: 0.7, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
+    '저주받은 기사':    { family: 'undead', hpMult: 1.07, atkMult: 0.99, defMult: 1.28, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.3, heavyChance: 0.35 }, statusOnHit: 'curse' },
 
     // 폭풍/번개 테마 (3종) — weakness 대지, resistance 자연.
     '뇌운 와이번':      { hpMult: 0.85, atkMult: 1.06, defMult: 0.85, weakness: '대지', resistance: '자연', pattern: { guardChance: 0.05, heavyChance: 0.5 } },
@@ -646,6 +649,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '폭주하는 기계 장군', atkBonus: 0.4, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '기계 장군이 제한장치를 해제합니다! 증기와 화염이 분출됩니다!', statusEffect: 'burn' },
     },
     '혈월의 뱀파이어 로드': {
+        family: 'undead',
         isBoss: true, weakness: '빛', resistance: '어둠',
         hpMult: 1.5, atkMult: 1.3, expMult: 1.45, goldMult: 1.45,
         phase2: { name: '진조 혈월의 군주', atkBonus: 0.42, pattern: { guardChance: 0.15, heavyChance: 0.5 }, log: '혈월의 군주가 진정한 흡혈의 힘을 해방합니다! 주변의 생명력이 빨려들어갑니다!', statusEffect: 'curse' },
@@ -680,10 +684,11 @@ export const MONSTERS: Record<string, Monster> = {
     },
 
     // 저주받은 묘지 (Lv34) — 3 regular + 1 boss
-    '망령 기사':       { hpMult: 0.93, atkMult: 0.7, defMult: 0.82, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
-    '언데드 마법사':   { weakness: '빛', resistance: '어둠', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
-    '뼈 수집가':       { weakness: '빛', resistance: '어둠', hpMult: 1.15, pattern: { guardChance: 0.25, heavyChance: 0.3 } },
+    '망령 기사':       { family: 'undead', hpMult: 0.93, atkMult: 0.7, defMult: 0.82, weakness: '빛', resistance: '어둠', pattern: { guardChance: 0.2, heavyChance: 0.35 } },
+    '언데드 마법사':   { family: 'undead', weakness: '빛', resistance: '어둠', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.45 }, statusOnHit: 'curse' },
+    '뼈 수집가':       { family: 'undead', weakness: '빛', resistance: '어둠', hpMult: 1.15, pattern: { guardChance: 0.25, heavyChance: 0.3 } },
     '묘지기 네크론': {
+        family: 'undead',
         isBoss: true, weakness: '빛', resistance: '어둠',
         hpMult: 1.9, atkMult: 1.38, expMult: 2.3, goldMult: 2.1, dropMod: 2.6,
         pattern: { guardChance: 0.1, heavyChance: 0.45 },
@@ -994,6 +999,12 @@ export const BOSS_BRIEFS: BossBriefTable = Object.freeze(BOSS_BRIEF_ENTRIES);
 
 /** 열린 키(보스 이름) 조회 — 미등록이면 null. */
 export const getBossBrief = (name: string): BossBrief | null => BOSS_BRIEFS[name] || null;
+
+/** 몬스터 계열(Wave 51) — 종(`baseName`)으로 조회한다. 표시 이름의 접두어 · 층 태그는 계열을 바꾸지 않는다. */
+export const getMonsterFamily = (enemy: { baseName?: string; name?: string } | null | undefined) => {
+    const key = enemy?.baseName || enemy?.name;
+    return (key && MONSTERS[key]?.family) || null;
+};
 
 export const BOSS_MONSTERS = Object.entries(MONSTERS)
     .filter(([, data]) => Boolean(data?.isBoss))

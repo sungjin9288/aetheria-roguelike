@@ -36,6 +36,13 @@ export interface MonsterPattern {
     heavyChance: number;
 }
 
+/**
+ * 몬스터 계열(2026-09 Wave 51, 소유자 결정 "성직자의 컨셉 — 언데드 · 마족에게 힐로 공격").
+ * 이름 문자열로 추론하지 않고 데이터(`monsters.ts`)가 선언한다. 애매한 종(아누비스 수호자 · 강의 요괴 ·
+ * 원한의 용사 · 공허/혼돈 계열)은 넣지 않았다. 판정은 종(`baseName`) 기준이다(`getMonsterFamily`).
+ */
+export type MonsterFamily = 'undead' | 'demon';
+
 export interface MonsterBase {
     name?: string;
     baseName?: string;
@@ -59,6 +66,8 @@ export interface MonsterBase {
      * 소비처: CombatEngine.enemyAI.ts:239, utils/combatForecast.ts:74.
      */
     statusOnHit?: string;
+    /** 몬스터 계열(Wave 51) — 성직자 계열 회복 기술의 신성 피해(`smite`) 대상. 없으면 일반. */
+    family?: MonsterFamily;
     // cycle 283: elem / dropTable / prefix / signatureDrops 4 dead 필드 제거 — runtime access 0건.
     //   prefix는 mStats.name 직접 string 합치기, signatureDrops는 local variable 사용.
 
