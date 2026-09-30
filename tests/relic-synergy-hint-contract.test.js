@@ -334,4 +334,18 @@ test('선택 화면: 카드 줄은 추천 층 순서를 따른다 — 진행 줄
         }
     }
     assert.ok(overlaps >= 1, `진행 · 효과 짝 겹침 ${overlaps}건`);
+    // 시작과 효과 짝이 겹치는 카드는 시작 줄을 그린다.
+    let startOverlaps = 0;
+    for (const ownedRelic of RELICS) {
+        for (const candidate of RELICS) {
+            if (candidate === ownedRelic) continue;
+            const hint = getRelicSynergyScore(candidate, [ownedRelic]);
+            if (!hint.startsCombo || !(hint.score > 0)) continue;
+            const html = render([FILLERS[0], candidate], [ownedRelic]);
+            assert.ok(html.includes(MSG.RELIC_COMBO_START_LINE(hint.startsCombo)), `${candidate.name}: 시작 줄`);
+            assert.ok(!html.includes('함께 쓰기 · '), `${candidate.name}: 효과 짝 줄은 시작에 가려진다`);
+            startOverlaps += 1;
+        }
+    }
+    assert.ok(startOverlaps >= 10, `시작 · 효과 짝 겹침 ${startOverlaps}건`);
 });
