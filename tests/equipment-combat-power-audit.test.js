@@ -343,8 +343,12 @@ test('binds exact source bytes in a sorted, unique, evidence-independent snapsho
         assert.equal(envelope.report.schemaVersion, 2);
         assert.equal(envelope.policyVersion, 'equipment-combat-power-audit@2');
         assert.equal(envelope.report.policyVersion, 'equipment-combat-power-audit@2');
-        assert.equal(envelope.reportHash, '3c9d79593d161f11a1e94fe8663f5d2a3fd54fc3d9f291a9228ff856896b682a');
-        assert.equal(envelope.rowsHash, '01c99d3cd4dcd35b821b950577bb54d71ed0f0916a4e2d47379eb332f9ec0c40');
+        // Wave 43 (소유자 결정 "강점 · 약점 수치 강조"): 직업 생명 · 기력 배율이 직업별 비교 행(코호트 · 이상치)의
+        //   값에 들어가 두 해시가 움직인다. 분류는 그대로다(in-corridor 154 · 결함 0 · 재계획 불필요).
+        //   이전 값: report '3c9d79593d161f11a1e94fe8663f5d2a3fd54fc3d9f291a9228ff856896b682a'
+        //            rows   '01c99d3cd4dcd35b821b950577bb54d71ed0f0916a4e2d47379eb332f9ec0c40'.
+        assert.equal(envelope.reportHash, '398d04eb2552a3ae5fb79d6cf6cce0e8e46be923fae51a17118d869ff29ef37e');
+        assert.equal(envelope.rowsHash, '4a45daf42d22d4e2bdbab58d892dc7ce40c92cdae97e5914e215b4f47b6c2d79');
         assert.deepEqual(envelope.classificationCounts, {
             'combat-power-defect': 0,
             'in-corridor': 154,

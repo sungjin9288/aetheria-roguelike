@@ -2973,6 +2973,7 @@ tracked verify **15/15** · type-check 0 · lint 0 · unit **5,418/5,418**(381�
   - `scripts/progression-diagnostic-evidence.mjs`의 `PROGRESSION_V1_BASELINE_HASH` `696607d2…` → `404dafaa…`(writer 안의 하드 게이트라 갱신 전에는 `PROGRESSION_SCHEMA_V1_BASELINE_DRIFT`로 쓰기를 거부했다).
 - 증빙 재생성 순서는 §14의 절차 그대로다: 기준 해시 → 도달 비용 → 페이싱(`exploration-rhythm.json`, 참조 해시 2개만 이동) → 성장 진단(마지막) → 소스 핀.
 - 기존 값 핀 갱신: `skills-cycle`(cycle 257/258의 흡수 값 3개 — 설명 동기 단언을 함께 넣었다).
+- 장비 전투력 감사(`equipment-combat-power-audit`)의 report · rows 해시: 직업 생명 · 기력 배율이 직업별 비교 행 445개 값에 들어가 움직였다. 분류는 그대로다(in-corridor 154 · 결함 0 · 재계획 불필요). 처음 전체 unit에서 이 실패를 증빙 소스 핀으로 잘못 분류해 게이트에서 다시 잡혔다.
 
 ### 43.5 결함 주입 7종 · 검증
 
