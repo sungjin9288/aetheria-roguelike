@@ -97,4 +97,12 @@ test('더 강한 약화가 이미 걸려 있으면 공포가 약화 폭을 되�
 test('실명 · 도발 기술도 자기 지속 턴을 쓴다', () => {
     assert.equal(cast('도적', '연막탄').updatedEnemy.blindTurns, skillOf('도적', '연막탄').turn);
     assert.equal(cast('나이트', '도발').updatedEnemy.tauntTurns, skillOf('나이트', '도발').turn);
+    // 실데이터의 턴(2 · 3)은 엔진 기본값과 같아 위 두 줄만으로는 "기술 턴을 읽는다"를 가르지 못한다 —
+    // 기본값과 다른 턴으로 읽기 경로 자체를 고정한다.
+    const withTurn = (job, name, turn) => CombatEngine.performSkill(
+        makePlayer(job), makeEnemy(), STATS, { ...skillOf(job, name), turn }, FIXED_RNG,
+    ).updatedEnemy;
+    assert.equal(withTurn('도적', '연막탄', 5).blindTurns, 5);
+    assert.equal(withTurn('나이트', '도발', 5).tauntTurns, 5);
+    assert.equal(withTurn('전사', '전투 함성', 5).fearTurns, 5);
 });
