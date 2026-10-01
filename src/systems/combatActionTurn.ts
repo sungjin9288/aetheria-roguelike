@@ -163,8 +163,10 @@ export const resolveCombatActionTurn = ({
 
     let actionResult: CombatActionOutcome;
     const logs: Array<{ type: string; text: string }> = [];
+    let ignoredGuard = false;
     if (kind === 'skill') {
         const selected = selectedSkill(player, random);
+        ignoredGuard = Boolean(selected.skill && 'ignoreGuard' in selected.skill && selected.skill.ignoreGuard);
         if (selected.log) logs.push(selected.log);
         actionResult = CombatEngine.performSkill(player, enemy, stats, selected.skill, random);
         if (!actionResult.success) {
@@ -215,27 +217,55 @@ export const resolveCombatActionTurn = ({
         };
     }
 
-    if (actionResult.updatedPlayer!.extraTurnGranted) {
+    // 2026-10 Wave 59: 보스의 반응 — 내 피해 행동은 소환된 망자 하나를 쓰러뜨리고(네크론 "망자 소환"), 방어 자세 중에 맞은
+    //   보스는 반격한다(아이스 드래곤 "강한 카운터" — 방어 무시 기술에는 반격하지 않는다). 피해를 못 준 행동(기절 · 빗나감)은 둘 다 없다.
+    let playerAfterAction = actionResult.updatedPlayer!;
+    let enemyAfterAction = actionResult.updatedEnemy!;
+    const enemyDamaged = (enemyAfterAction.hp ?? 0) < (enemy.hp ?? 0);
+    const summonsLeft = enemyAfterAction.summons ?? 0;
+    if (enemyDamaged && summonsLeft > 0) {
+        enemyAfterAction = { ...enemyAfterAction, summons: summonsLeft - 1 };
+        logs.push({ type: 'success', text: MSG.ENEMY_SUMMON_SLAIN(enemyAfterAction.mechanics?.summon?.name ?? '', summonsLeft - 1) });
+    }
+    if (enemy.guarding && enemyDamaged && !ignoredGuard) {
+        const counter = CombatEngine.resolveGuardCounter(playerAfterAction, enemyAfterAction, calculateFullStats(playerAfterAction)!);
+        if (counter) {
+            logs.push(...counter.logs);
+            playerAfterAction = counter.updatedPlayer;
+            if (counter.isDead) {
+                return resolveDefeat(
+                    playerAfterAction,
+                    initialPlayer,
+                    player.loc || MSG.LOCATION_UNKNOWN_FALLBACK,
+                    logs,
+                    random,
+                    now,
+                );
+            }
+        }
+    }
+
+    if (playerAfterAction.extraTurnGranted) {
         return {
             kind: 'continue',
-            player: { ...actionResult.updatedPlayer!, extraTurnGranted: false },
-            enemy: actionResult.updatedEnemy!,
+            player: { ...playerAfterAction, extraTurnGranted: false },
+            enemy: enemyAfterAction,
             logs,
             visualEffect: null,
             stories: [],
         };
     }
 
-    const turnTick = tickAfterAction(player, actionResult.updatedPlayer!);
+    const turnTick = tickAfterAction(player, playerAfterAction);
     const playerForEnemyTurn = turnTick.updatedPlayer;
     const counterStats = calculateFullStats(playerForEnemyTurn)!;
     const counterResult = CombatEngine.enemyAttack(
         playerForEnemyTurn,
-        actionResult.updatedEnemy!,
+        enemyAfterAction,
         counterStats,
         random,
     );
-    const stories = !actionResult.updatedEnemy?.phase2Triggered
+    const stories = !enemyAfterAction.phase2Triggered
         && counterResult.updatedEnemy?.phase2Triggered
         ? [{ type: 'bossPhase2', data: { bossName: counterResult.updatedEnemy.name } }]
         : [];
@@ -249,12 +279,12 @@ export const resolveCombatActionTurn = ({
             logs: [
                 ...turnLogs,
                 { type: 'success', text: counterResult.damage > 0
-                    ? MSG.COMBAT_COUNTER_KILL(String(actionResult.updatedEnemy?.name))
-                    : MSG.COMBAT_DOT_KILL(String(actionResult.updatedEnemy?.name)) },
+                    ? MSG.COMBAT_COUNTER_KILL(String(enemyAfterAction.name))
+                    : MSG.COMBAT_DOT_KILL(String(enemyAfterAction.name)) },
             ],
             visualEffect: null,
             victoryStats: counterStats,
-            deadEnemy: actionResult.updatedEnemy,
+            deadEnemy: enemyAfterAction,
             extendedVictoryChecks: false,
             stories,
         };

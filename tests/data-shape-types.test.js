@@ -250,6 +250,8 @@ const MONSTER_TEMPLATE_FIELDS = [
     'hpMult', 'atkMult', 'defMult', 'expMult', 'goldMult', 'pattern', 'phase2', 'phase3',
     'dots', 'blindTurns', 'fearTurns', 'cursedTurns', 'stunnedTurns', 'tauntTurns',
     'cursed', 'taunted', 'guarding', 'phase2Triggered', 'phase3Triggered',
+    // 2026-10 Wave 59: 보스 기믹 선언(BossMechanics).
+    'mechanics',
 ];
 
 const ELEMENT_KEYS = ['냉기', '대지', '물리', '바람', '빛', '어둠', '에테르', '자연', '화염'];
@@ -293,7 +295,16 @@ test('Monster: 보스 페이즈 필드가 BossPhase 선언 집합 안에 있다'
     const phases = Object.values(MONSTERS)
         .flatMap((monster) => [monster.phase2, monster.phase3])
         .filter(Boolean);
-    assertDeclared('MONSTERS phase', phases, ['threshold', 'name', 'atkBonus', 'defBonus', 'pattern', 'log', 'statusEffect']);
+    assertDeclared('MONSTERS phase', phases, ['threshold', 'name', 'atkBonus', 'defBonus', 'pattern', 'log', 'statusEffect', 'pierceResist']);
+});
+
+test('Monster: 보스 기믹 필드가 BossMechanics 선언 집합 안에 있다(Wave 59)', () => {
+    const mechanics = Object.values(MONSTERS).map((monster) => monster.mechanics).filter(Boolean);
+    assert.ok(mechanics.length > 0);
+    assertDeclared('MONSTERS mechanics', mechanics, [
+        'heavyStatus', 'guardCounter', 'guardHeal', 'breath', 'summon', 'longFightEnrage', 'longFightReward',
+        'firstClearBonusMult', 'relicReward', 'lootTheme',
+    ]);
 });
 
 // --- types/map.ts ---

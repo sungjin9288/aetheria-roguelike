@@ -199,6 +199,8 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         //   영구 미발동 상태였다.
         if (profile.statusOnHit) mStats.statusOnHit = profile.statusOnHit;
         if (profile.phase3)   mStats.phase3 = profile.phase3;
+        // 2026-10 Wave 59: 보스 기믹(누적 · 반격 · 소환 · 회복 · 브레스 · 장기전 · 보상) — 엔진이 인스턴스에서 읽는다.
+        if (profile.mechanics) mStats.mechanics = profile.mechanics;
     }
 
     // 2026-09 Wave 29: 보스 여부는 몬스터가 정한다(자기 프로필 · 지역 bossMonsters 목록). 지역의 `boss` 문자열은

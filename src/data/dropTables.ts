@@ -439,6 +439,9 @@ export const DROP_TABLES: Record<string, readonly DropTableEntry[]> = {
         { item: '마나 결정', rate: 0.5, qty: [1, 2] },
         { item: '엘릭서', rate: 0.18 },
         { item: '심해의 수호복', rate: 0.03 },
+        // 2026-10 Wave 59: 브리핑 "호수 계열 전리품 (자연/냉기 무기)" — 이전에는 무기가 0개였다. 이 구간(Lv7~)에 맞는 2등급.
+        { item: '얼음 지팡이', rate: 0.15 },
+        { item: '독침 단검', rate: 0.15 },
     ],
 
     // cycle 183: cycle 173에서 추가된 시즌 보스 2종 drop table.

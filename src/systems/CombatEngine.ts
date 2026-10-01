@@ -10,7 +10,7 @@ import { MSG } from '../data/messages.js';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 import { getActiveRelicSynergies, relicNumber } from '../data/relics.js';
 import { processLoot as _processLoot, resolveEnemyBaseName as _resolveEnemyBaseName } from './CombatEngine.loot.js';
-import { statusMethods } from './CombatEngine.status.js';
+import { getPlayerStatusStacks, getStatusStackMult, statusMethods } from './CombatEngine.status.js';
 import { outcomeMethods } from './CombatEngine.outcome.js';
 import { relicEffectMethods } from './CombatEngine.relics.js';
 import { actionMethods } from './CombatEngine.actions.js';
@@ -171,7 +171,9 @@ export const CombatEngine = {
         // 실제 피해 0이었음 (적 enemy.dots 분기는 bleed 포함 정상 동작 — 비대칭 회귀).
         const DOT_STATUSES = ['poison', 'burn', 'bleed'];
         updated.status.filter((s) => DOT_STATUSES.includes(s)).forEach((s) => {
-            const dmg = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * BALANCE.STATUS_DOT_RATIO));
+            // 2026-10 Wave 59: 보스 "누적" — 중첩마다 기본 피해의 STATUS_STACK_BONUS만큼 더한다(1중첩은 이전과 같다).
+            const stackMult = getStatusStackMult(getPlayerStatusStacks(updated, s));
+            const dmg = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * BALANCE.STATUS_DOT_RATIO * stackMult));
             updated.hp = Math.max(1, (updated.hp ?? 1) - dmg);
             logs.push({ type: 'warning', text: MSG.STATUS_DOT(s, dmg) });
         });
@@ -181,6 +183,8 @@ export const CombatEngine = {
         const statusTick = this.tickPlayerStatusDurations(updated, logs);
         updated.status = statusTick.status;
         updated.statusTurns = statusTick.statusTurns;
+        if (Object.keys(statusTick.statusStacks).length > 0) updated.statusStacks = statusTick.statusStacks;
+        else delete updated.statusStacks;
 
         const mpRegenRelic = relics.find((relic) => relic.effect === 'mp_regen_turn');
         if (mpRegenRelic) {
