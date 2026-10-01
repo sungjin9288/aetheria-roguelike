@@ -302,6 +302,20 @@ test('회복은 생명을 줄이지 않는다 — 처치 회복 상한은 실효
     assert.equal(leveled.updatedPlayer.hp - 1_100, leveled.updatedPlayer.maxHp - 1_000, '현재치가 최대치와 같은 양 오른다(실효 최대 위에서도)');
 });
 
+test('회복 상한은 전투 한정 보너스를 걷어 낸 뒤의 실효 최대 생명이다 — 세계 포식자 + 처치 회복이 생명을 실효 최대 위로 올리지 않는다', () => {
+    // 자연 플레이 드라이버가 잡은 회귀(`hpAboveFullMaxHp`): 승리 처리가 세계 포식자의 전투 한정 생명을 걷어 낸 뒤에도
+    //   처치 회복의 상한으로 전투 중 능력치를 쓰면 생명이 실효 최대를 넘었다.
+    const base = makePlayer(['세계 포식자', '피의 서약'], { hp: 900, maxHp: 1_000 });
+    const active = { ...base, maxHp: 1_300, hp: 1_200, adventureRelicBonuses: { devour: { phase: 'active', amount: 300 } } };
+    const combatStats = statsOf(active);
+    const after = CombatEngine.handleVictory(active, makeEnemy({ exp: 0, gold: 0 }), buildPassiveBonusWithScout(combatStats, makeEnemy()), {});
+    const effective = statsOf(after.updatedPlayer).maxHp;
+    assert.ok(after.updatedPlayer.hp <= effective, `생명 ${after.updatedPlayer.hp} ≤ 실효 최대 ${effective}`);
+    // 레벨업도 실효 최대를 넘기지 않는다.
+    const leveled = CombatEngine.applyExpGain({ ...base, hp: statsOf(base).maxHp, exp: 0, nextExp: 1, level: 5 }, 1).updatedPlayer;
+    assert.ok(leveled.hp <= statsOf(leveled).maxHp);
+});
+
 test('문구는 동작과 같다 — 하향 방향 4건은 문구를 동작에 맞췄다', () => {
     const desc = (name) => relic(name).desc;
     assert.match(desc('쌍검 각인'), /160%/);

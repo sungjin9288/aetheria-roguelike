@@ -7,8 +7,7 @@ import { BOSS_BRIEFS } from '../data/monsters.js';
 import { syncQuestProgress } from '../utils/questProgress.js';
 import { buildGraveData } from '../utils/graveUtils.js';
 import { MSG } from '../data/messages.js';
-import { calculateFullStats } from '../utils/statsCalculator.js';
-import { healWithinMax } from './vitals.js';
+import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 import { getActiveRelicSynergies, relicNumber } from '../data/relics.js';
 import { processLoot as _processLoot, resolveEnemyBaseName as _resolveEnemyBaseName } from './CombatEngine.loot.js';
 import { statusMethods } from './CombatEngine.status.js';
@@ -106,15 +105,9 @@ export const CombatEngine = {
     // 2026-10 Wave 56: 전투 중 기력 상한 = 실효 최대 기력(`calculateFullStats().maxMp` — 장비 · 유물 · 칭호 · 조합). 이전에는
     //   저장값 × (마나 수정 · 오메가)만 봐서 물약 · 휴식이 채운 기력을 치명타 회복 · 지속 회복이 오히려 깎았다(룬 왕관 240 → 200).
     //   계산할 수 없는 입력(최소 픽스처)은 이전 식으로 읽는다. 현재 기력이 더 높으면 그 값이 상한이다(회복이 깎지 않는다).
-    /** 2026-10 Wave 56: 실효 최대 생명(`calculateFullStats().maxHp`) — 계산할 수 없으면 저장값. 현재 생명보다 작게 돌려주지 않는다. */
+    /** 2026-10 Wave 56: 실효 최대 생명(`calculateFullStats().maxHp`, `systems/vitals.ts`) — 계산할 수 없으면 저장값. */
     getEffectiveMaxHp(player: Player) {
-        let full = 0;
-        try {
-            full = player ? calculateFullStats(player)?.maxHp || 0 : 0;
-        } catch {
-            full = 0;
-        }
-        return Math.max(player?.maxHp || BALANCE.DEFAULT_MAX_HP, full);
+        return getEffectiveMaxHp(player);
     },
 
     getEffectiveMaxMp(player: Player, relics: Relic[]) {
@@ -125,13 +118,8 @@ export const CombatEngine = {
             return acc;
         }, 0);
         const legacy = Math.floor((player?.maxMp || 50) * rmp);
-        let full = 0;
-        try {
-            full = player ? calculateFullStats({ ...player, relics })?.maxMp || 0 : 0;
-        } catch {
-            full = 0;
-        }
-        return Math.max(legacy, full, player?.mp || 0);
+        // 실효 최대(직업 약점 "적은 기력"이면 저장값보다 작다)가 상한이고, 현재 기력이 더 높으면 그 값이다(회복이 깎지 않는다).
+        return Math.max(getEffectiveMaxMpFull(player, relics, legacy), player?.mp || 0);
     },
 
     // cycle 548: relics / logs defaults 제거 — 2 internal callsite (line 592,

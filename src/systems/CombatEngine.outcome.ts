@@ -13,7 +13,7 @@ import type { LiveConfig } from '../types/session.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { scaleProgressionExpReward } from '../data/progressionProfiles.js';
 import { endDevourBonus } from '../utils/adventureRelicBonuses.js';
-import { healWithinMax } from './vitals.js';
+import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 
 /**
  * CombatEngine 결과(경험치/승리) 메서드 — mixin으로 CombatEngine에 spread.
@@ -41,9 +41,9 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             p.maxHp = p.maxHp! + BALANCE.HP_PER_LEVEL + metaDelta.hp;
             p.maxMp = p.maxMp! + BALANCE.MP_PER_LEVEL + metaDelta.mp;
             // 2026-10 Wave 56: 레벨업은 최대치와 현재치를 같은 양만큼 올린다 — 저장된 최대치로 자르던 동안 장비 · 유물로 늘어난
-            //   생명 · 기력이 레벨업에 깎였다(실효 최대 720에서 696 → 520). 현재치가 이전 저장 최대치 이하면 이전과 같다.
-            p.hp = Math.max(0, p.hp ?? 0) + BALANCE.HP_PER_LEVEL + metaDelta.hp;
-            p.mp = Math.max(0, p.mp ?? 0) + BALANCE.MP_PER_LEVEL + metaDelta.mp;
+            //   생명 · 기력이 레벨업에 깎였다(실효 최대 720에서 696 → 520). 상한은 실효 최대(직업 약점이면 저장값보다 작다).
+            p.hp = healWithinMax(p.hp, BALANCE.HP_PER_LEVEL + metaDelta.hp, getEffectiveMaxHp(p));
+            p.mp = healWithinMax(p.mp, BALANCE.MP_PER_LEVEL + metaDelta.mp, getEffectiveMaxMpFull(p, p.relics || [], p.maxMp));
             p.atk = p.atk! + BALANCE.ATK_PER_LEVEL;
             p.def = p.def! + BALANCE.DEF_PER_LEVEL;
             levelUps += 1;
@@ -59,9 +59,9 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
                 const mpBonus = BALANCE.MILESTONE_STAT_MP;
                 p.atk = p.atk! + atkBonus;
                 p.maxHp = p.maxHp! + hpBonus;
-                p.hp = Math.max(0, p.hp ?? 0) + hpBonus;
+                p.hp = healWithinMax(p.hp, hpBonus, getEffectiveMaxHp(p));
                 p.maxMp = p.maxMp! + mpBonus;
-                p.mp = Math.max(0, p.mp ?? 0) + mpBonus;
+                p.mp = healWithinMax(p.mp, mpBonus, getEffectiveMaxMpFull(p, p.relics || [], p.maxMp));
                 logs.push({ type: 'event', text: MSG.LEVEL_MAJOR_MILESTONE(p.level, atkBonus, hpBonus, mpBonus) });
             } else if (isMinor) {
                 const goldBonus = p.level * BALANCE.MILESTONE_GOLD_PER_LV;
@@ -198,7 +198,9 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         p.meta = granted.meta;
 
         // 2026-10 Wave 56: 처치 회복의 상한은 실효 최대 생명이다 — 저장값으로 걸던 동안 장비 · 유물로 늘린 생명을 깎았다.
-        const effectiveMaxHp = passiveBonus.maxHp || p.maxHp;
+        //   전투 중 능력치(`FullStats`)가 아니라 전투 한정 보너스(세계 포식자)를 걷어 낸 뒤의 값이다 — 전투 중 값을 쓰던
+        //   첫 구현은 회복이 생명을 실효 최대 위로 올렸다(자연 플레이 드라이버 `hpAboveFullMaxHp`).
+        const effectiveMaxHp = getEffectiveMaxHp(p);
         // 유물: 피의 서약 (on_kill_heal) — 처치 시 HP 회복
         const healRelic = relics.find((r) => r.effect === 'on_kill_heal');
         if (healRelic) {
@@ -261,7 +263,7 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         const starCoreRelic = relics.find((r) => r.effect === 'mp_restore_battle');
         if (starCoreRelic) {
             // 2026-10 Wave 56: "기력을 모두" — 실효 최대 기력까지(마나 수정 · 룬 왕관 등). 저장값까지만 채우던 동안 모자랐다.
-            p.mp = Math.max(p.mp || 0, passiveBonus.maxMp || p.maxMp || 50);
+            p.mp = Math.max(p.mp || 0, getEffectiveMaxMpFull(p, relics, p.maxMp || 50));
             logs.push({ type: 'heal', text: MSG.STAR_CORE_RESTORE });
         }
 
@@ -306,9 +308,6 @@ interface VictoryPassiveBonus {
     expMult?: number;
     goldMult?: number;
     activeSynergies?: RelicSynergy[];
-    /** 2026-10 Wave 56: 실효 최대 생명 · 기력(`FullStats`) — 처치 회복 · 별의 핵의 상한. 없으면 저장값. */
-    maxHp?: number;
-    maxMp?: number;
 }
 
 interface BossClearBonus {
