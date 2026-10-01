@@ -5,6 +5,7 @@ import { getMonsterFamily } from '../data/monsters.js';
 import type { FullStats, Monster, NumericRelicEffect, Player, Relic, RelicSynergy } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { mergeFearAtkMult } from './CombatEngine.status.js';
+import { isDamagingSkill } from './skillPower.js';
 import type { CalculateDamageOptions } from './CombatEngine.js';
 
 export function getStrongestNumericRelicValue(
@@ -420,13 +421,20 @@ export const actionMethods = {
         const skillCritChance = (typeof skill.crit === 'number')
             ? Math.max(0, Math.min(1, skill.crit))
             : (typeof stats.critChance === 'number' ? stats.critChance : undefined);
-        const { damage: rawSkillDmg, isCrit } = this.calculateDamage(stats, {
-            mult: (skill.mult || 1.5) + skillMultBonus,
-            guarding: !!enemy.guarding,
-            elementMultiplier,
-            rng: random,
-            ...(typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
-        });
+        // 2026-10 Wave 52(소유자 결정 "피해를 없앤다"): 보조 기술(위력 `mult` 없음 — 버프 · 약화 · 회복 · 템포)은
+        //   기본 피해를 주지 않는다. 이전에는 `mult || 1.5`로 설명에 없는 공격력 1.5배 피해를 줬다. 피해 판정
+        //   (분산 · 치명타 · 속성)도 굴리지 않으므로 보조 기술은 치명타 기력 회복 · 흡수 · 속성 태그를 만들지 않는다.
+        //   언데드 · 마족에 대한 신성 피해(`smite`)는 회복량에서 따로 계산한다.
+        const dealsDamage = isDamagingSkill(skill);
+        const { damage: rawSkillDmg, isCrit } = dealsDamage
+            ? this.calculateDamage(stats, {
+                mult: (skill.mult ?? 0) + skillMultBonus,
+                guarding: !!enemy.guarding,
+                elementMultiplier,
+                rng: random,
+                ...(typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
+            })
+            : { damage: 0, isCrit: false };
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
         const critDmgRelicSkill = relics.find((r) => r.effect === 'crit_dmg');
@@ -463,7 +471,7 @@ export const actionMethods = {
             ? (lowHpDmgRelicSkill.val || 1.4) : 1;
         // PR #3: 적 DEF 비율 경감 — 스킬 배율 전부 적용 후 최종 1회 (attack()과 동일 패턴).
         const rawTotalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
-        const totalDamage = this.mitigateByEnemyDef(rawTotalDamage, enemy.def ?? 0, relics);
+        const totalDamage = dealsDamage ? this.mitigateByEnemyDef(rawTotalDamage, enemy.def ?? 0, relics) : 0;
         const newEnemyHp = (enemy.hp ?? 0) - totalDamage;
 
         // logs 선언을 status effect 검사 이전으로 이동 (use-before-declaration 버그 수정).
@@ -473,10 +481,10 @@ export const actionMethods = {
         if (isCrit) skillTags.push(MSG.COMBAT_TAG_CRIT);
         if (elementMultiplier > 1) skillTags.push(MSG.COMBAT_TAG_ELEMENT_WEAK);
         if (elementMultiplier < 1) skillTags.push(MSG.COMBAT_TAG_ELEMENT_RESIST);
-        const logs: Array<{ type: string; text: string }> = [{
+        const logs: Array<{ type: string; text: string }> = [dealsDamage ? {
             type: isCrit ? 'critical' : 'combat',
             text: MSG.SKILL_USE(skill.name, totalDamage, enemy.name, Math.max(0, newEnemyHp), enemy.maxHp, skillTags)
-        }];
+        } : { type: 'combat', text: MSG.SKILL_USE_SUPPORT(skill.name) }];
 
         // 적에게 상태이상 부여 (#5)
         // stun/freeze/poison/burn/bleed/blind/fear/curse/taunt 통합 처리
@@ -733,7 +741,7 @@ export const actionMethods = {
             const healAmt = Math.floor(totalDamage * slRelic.val);
             if (healAmt > 0) logs.push({ type: 'heal', text: MSG.RELIC_SKILL_LIFESTEAL_PROC(healAmt) });
         }
-        if (smRelic && smRelic.val > 0) logs.push({ type: 'event', text: MSG.RELIC_SKILL_MULT_PROC });
+        if (dealsDamage && smRelic && smRelic.val > 0) logs.push({ type: 'event', text: MSG.RELIC_SKILL_MULT_PROC });
         if (hasDotMultRelic && extraDamage > 0) logs.push({ type: 'event', text: MSG.RELIC_DOT_MULT_PROC });
 
         // cycle 159: entropy_tick / entropy_brand — 매 N턴 적 maxHp 비율 고정 피해 (스킬 사용 턴에도 적용).

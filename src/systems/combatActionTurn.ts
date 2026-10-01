@@ -5,6 +5,7 @@ import { pushBattleRecord, makeBattleRecord } from './DifficultyManager';
 import { calculateFullStats, type FullStats } from '../utils/statsCalculator';
 import { endDevourBonus } from '../utils/adventureRelicBonuses';
 import { createSeededRandom } from './combatItemTurn';
+import { tickAfterAction } from './combatTurnTick';
 import type { Monster, Player } from '../types/index.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
 
@@ -223,7 +224,7 @@ export const resolveCombatActionTurn = ({
         };
     }
 
-    const turnTick = CombatEngine.tickCombatState(actionResult.updatedPlayer!);
+    const turnTick = tickAfterAction(player, actionResult.updatedPlayer!);
     const playerForEnemyTurn = turnTick.updatedPlayer;
     const counterStats = calculateFullStats(playerForEnemyTurn)!;
     const counterResult = CombatEngine.enemyAttack(
