@@ -202,13 +202,6 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         </div>
                     </section>
 
-                    <ChallengeModifierPicker
-                        testIdPrefix="ascension"
-                        selected={selectedChallenges}
-                        slots={challengeSlots}
-                        onToggle={(id) => setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots))}
-                    />
-
                     <EndgameJourney player={player} />
 
                     {outcome.upcomingMilestone && (
@@ -221,6 +214,14 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                             </p>
                         </details>
                     )}
+
+                    {/* 도전 규칙은 확정 버튼 바로 위 — 고른 뒤 확정한다(스크롤 영역의 다른 내용 배치는 그대로). */}
+                    <ChallengeModifierPicker
+                        testIdPrefix="ascension"
+                        selected={selectedChallenges}
+                        slots={challengeSlots}
+                        onToggle={(id) => setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots))}
+                    />
                 </main>
 
                 <footer className="shrink-0 border-t border-white/8 bg-[#0a1018]/98 px-4 pb-[max(var(--aether-safe-area-bottom),0.75rem)] pt-3 sm:px-5">
