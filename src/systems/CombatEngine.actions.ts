@@ -77,6 +77,11 @@ interface Skill {
     nextAttackMult?: number;
     atkBonus?: number;
     hpCost?: number;
+    /** Wave 54 — 연속 타격 · 방어 자세 무시 · 은신 중 치명 · 반격. */
+    hits?: number;
+    ignoreGuard?: boolean;
+    stealthCrit?: number;
+    counterChance?: number;
 }
 
 /**
@@ -432,31 +437,40 @@ export const actionMethods = {
         // cycle 242: skill.crit branch override 우선, fallback stats.critChance.
         //   도적 '치명 특화' (crit 0.7) / 어쌔신 '치명 암살' (crit 0.95) branch가 dispatch 0건이던 dead config.
         //   skill.crit 미정의 시 stats.critChance(equipment / relic / 시너지 / 칭호 합산) 사용.
-        const skillCritChance = (typeof skill.crit === 'number')
-            ? Math.max(0, Math.min(1, skill.crit))
-            : (typeof stats.critChance === 'number' ? stats.critChance : undefined);
+        // 2026-10 Wave 54: `stealthCrit` — 은신 중일 때만 그 치명 확률(등 찌르기 "은신 중 60% 치명타").
+        const stealthed = (player.combatFlags?.stealthHits ?? 0) > 0;
+        const skillCritChance = (typeof skill.stealthCrit === 'number' && stealthed)
+            ? Math.max(0, Math.min(1, skill.stealthCrit))
+            : (typeof skill.crit === 'number')
+                ? Math.max(0, Math.min(1, skill.crit))
+                : (typeof stats.critChance === 'number' ? stats.critChance : undefined);
         // 2026-10 Wave 52(소유자 결정 "피해를 없앤다"): 보조 기술(위력 `mult` 없음 — 버프 · 약화 · 회복 · 템포)은
         //   기본 피해를 주지 않는다. 이전에는 `mult || 1.5`로 설명에 없는 공격력 1.5배 피해를 줬다. 피해 판정
         //   (분산 · 치명타 · 속성)도 굴리지 않으므로 보조 기술은 치명타 기력 회복 · 흡수 · 속성 태그를 만들지 않는다.
         //   언데드 · 마족에 대한 신성 피해(`smite`)는 회복량에서 따로 계산한다.
         const dealsDamage = isDamagingSkill(skill);
-        const { damage: rawSkillDmg, isCrit } = dealsDamage
-            ? this.calculateDamage(stats, {
-                mult: (skill.mult ?? 0) + skillMultBonus,
-                guarding: !!enemy.guarding,
-                elementMultiplier,
-                rng: random,
-                ...(typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
-            })
-            : { damage: 0, isCrit: false };
-
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
         const critDmgRelicSkill = relics.find((r) => r.effect === 'crit_dmg');
         // cycle 154: 시너지 'void_dragon' / 'primordial_wrath' — 스킬 크리에도 bonus.critDmg 곱셈 적용.
         const critDmgSynSkill = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg);
-        const skillCritMult = (critDmgRelicSkill?.val || 1) * (isCrit && critDmgSynSkill ? (critDmgSynSkill.bonus.critDmg || 1) : 1);
-        let damage = (isCrit && (critDmgRelicSkill || critDmgSynSkill)) ? Math.floor(rawSkillDmg * skillCritMult) : rawSkillDmg;
+        // 2026-10 Wave 54: 연속 타격(`hits`) — 타격마다 피해 · 치명을 따로 굴린다(이중 자상 "두 번 연속 공격, 각 70% 치명타").
+        //   한 번 타격은 이전과 같은 난수 순서다. 적의 방어 자세는 `ignoreGuard`(파워배시)가 무시한다.
+        const hits = dealsDamage ? Math.max(1, Math.floor(skill.hits ?? 1)) : 0;
+        let damage = 0;
+        let isCrit = false;
+        for (let hit = 0; hit < hits; hit += 1) {
+            const roll = this.calculateDamage(stats, {
+                mult: (skill.mult ?? 0) + skillMultBonus,
+                guarding: !!enemy.guarding && !skill.ignoreGuard,
+                elementMultiplier,
+                rng: random,
+                ...(typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
+            });
+            const hitCritMult = (critDmgRelicSkill?.val || 1) * (roll.isCrit && critDmgSynSkill ? (critDmgSynSkill.bonus.critDmg || 1) : 1);
+            damage += (roll.isCrit && (critDmgRelicSkill || critDmgSynSkill)) ? Math.floor(roll.damage * hitCritMult) : roll.damage;
+            if (roll.isCrit) isCrit = true;
+        }
 
         // cycle 229: 'spell_stack' (주문 직조자 spell_weaver) — 스킬 연속 사용 시 데미지 +perStack% 누적,
         //   max로 cap. 일반 공격(attack)이 spellStackCount를 0으로 리셋. 이전엔 정의만 있고 dispatch
@@ -495,7 +509,9 @@ export const actionMethods = {
         // slice 19: 치명타/약점/저항을 본문 태그로 통합 (attack 경로와 동일 패턴) —
         //   별도 로그 burst 제거.
         const skillTags: string[] = [];
+        if (hits > 1) skillTags.push(MSG.COMBAT_TAG_HITS(hits));
         if (isCrit) skillTags.push(MSG.COMBAT_TAG_CRIT);
+        if (skill.ignoreGuard && enemy.guarding) skillTags.push(MSG.COMBAT_TAG_GUARD_BREAK);
         if (elementMultiplier > 1) skillTags.push(MSG.COMBAT_TAG_ELEMENT_WEAK);
         if (elementMultiplier < 1) skillTags.push(MSG.COMBAT_TAG_ELEMENT_RESIST);
         const logs: Array<{ type: string; text: string }> = [dealsDamage ? {
@@ -515,7 +531,11 @@ export const actionMethods = {
         const effectChance = skill.effectChance !== undefined ? Math.max(0, Math.min(1, skill.effectChance)) : 1;
         // cycle 241: skill.stunTurn override — branch B '마비 번개' (stunTurn 2) 등이 광고하던 다중 턴 stun을
         //   읽어주지 못해 영원히 1턴만 적용되던 silent dead config fix. stun/freeze는 stunnedTurns 카운터 공용.
-        const stunTurn = Math.max(1, Math.floor(skill.stunTurn || 1));
+        // 2026-10 Wave 54: 기절 · 빙결 기술의 `turn`도 지속 턴이다(시간 왜곡 2턴 · 시간 정지 3턴 · 시간 결빙 2턴) —
+        //   `stunTurn`만 읽던 동안 셋 다 1턴이었다. 분기의 `stunTurn`이 우선한다.
+        const stunTurn = Math.max(1, Math.floor(skill.stunTurn
+            || ((skill.effect === 'stun' || skill.effect === 'freeze') ? (skill.turn || 0) : 0)
+            || 1));
         // cycle 244: skill.curseTurn override — '지속 저주' branch B (curseTurn 3) 등 cursedTurns 카운터 override.
         //   미정의 시 default 3 (applyStatusEffectToEnemy curse case와 동일). max(prev, curseTurn) 단축 방지.
         const curseTurn = Math.max(1, Math.floor(skill.curseTurn || 3));
@@ -641,6 +661,10 @@ export const actionMethods = {
             if (skill.atkBonus !== undefined) {
                 buff.atk = Math.max(0, (skill.atkBonus || 1) - 1);
             }
+            // 2026-10 Wave 54: 강화와 함께 거는 반격(철벽 방어 "반격 자세 돌입").
+            if (skill.counterChance !== undefined) {
+                buff.counterChance = Math.max(0, Math.min(1, skill.counterChance));
+            }
             // 2026-10 Wave 53: 아무것도 올리지 않는 빈 강화는 강화 칸을 쓰지 않는다 — 쓰던 동안 은신 · 마나 가속 ·
             //   시간 역행이 걸려 있던 다른 강화(광폭화 · 물약)를 지웠다(Wave 42가 회복 기술에서 고친 것과 같은 모양).
             if (buff.atk !== 0 || buff.def !== 0 || buff.counterChance !== undefined) {
@@ -693,6 +717,11 @@ export const actionMethods = {
             const maxMp = this.getEffectiveMaxMp(updatedPlayer, relics);
             updatedPlayer.mp = Math.min(maxMp, Number(updatedPlayer.mp || player.mp) + mpAmt);
             logs.push({ type: 'event', text: MSG.SKILL_MP_REGEN_PROC(skill.name, mpAmt) });
+            // 2026-10 Wave 54: 광고한 "N턴간 추가 회복" — 턴마다 round(val / turn)(회복 기술과 같은 규칙).
+            const mpRegenTurns = Math.max(0, Math.floor(skill.turn || 0));
+            if (mpRegenTurns > 0) {
+                updatedPlayer.skillMpRegen = { amount: Math.round(skill.val / mpRegenTurns), turns: mpRegenTurns, name: String(skill.name) };
+            }
         }
 
         // purify: 플레이어 상태이상 전부 제거 + 로그 (#5)

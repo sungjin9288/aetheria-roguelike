@@ -189,6 +189,20 @@ export const CombatEngine = {
             else delete updated.skillRegen;
         }
 
+        // 2026-10 Wave 54: 기력 지속 회복(마나 가속 "3턴간 추가 회복") — 생명 지속 회복과 같은 틱.
+        if (updated.skillMpRegen && updated.skillMpRegen.turns > 0) {
+            const mpRegen = updated.skillMpRegen;
+            const mpCap = this.getEffectiveMaxMp(updated, relics);
+            if ((updated.mp || 0) < mpCap && mpRegen.amount > 0) {
+                const before = updated.mp || 0;
+                updated.mp = Math.min(mpCap, before + mpRegen.amount);
+                logs.push({ type: 'event', text: MSG.SKILL_MP_REGEN_TICK(mpRegen.name, updated.mp - before) });
+            }
+            const mpTurnsLeft = mpRegen.turns - 1;
+            if (mpTurnsLeft > 0) updated.skillMpRegen = { ...mpRegen, turns: mpTurnsLeft };
+            else delete updated.skillMpRegen;
+        }
+
         // 유물: 대지의 심장 (regen) — 매 턴 최대 HP의 5% 회복
         const regenRelic = relics.find((relic) => relic.effect === 'regen');
         if (regenRelic && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {

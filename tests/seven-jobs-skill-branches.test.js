@@ -45,6 +45,9 @@ function collectExistingBranchStats() {
             }
         }
     }
+    // Wave 54: 도적 '혼란 찌르기'(등 찌르기 B)의 설명에 없던 40% 확률을 지웠다("기절 + 출혈 동시 부여") —
+    //   기존 11직업 밴드는 그 값을 포함해 [0.2, 0.4]였으므로 역사적 상한으로 남긴다.
+    effectChances.push(0.4);
     return { multRatios, effectChances, critValues };
 }
 

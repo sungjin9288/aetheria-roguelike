@@ -194,6 +194,13 @@ export interface SkillRegen {
     name: string;
 }
 
+/** 기력 지속 회복(Wave 54 마나 가속) — `turns`턴 동안 턴마다 `amount`를 회복한다(`tickCombatState` 소유). */
+export interface SkillMpRegen {
+    amount: number;
+    turns: number;
+    name: string;
+}
+
 export interface EndgameProgress {
     version: 1;
     primalShards: number;
@@ -571,6 +578,7 @@ export interface Player {
     ascensionOfferDeferred?: boolean;
     tempBuff?: TempBuff;
     skillRegen?: SkillRegen;
+    skillMpRegen?: SkillMpRegen;
     /** 'extraTurn' 스킬 효과·time_master/time_dominator 시너지 proc — 다음 적 턴 스킵(1회성 플래그). */
     extraTurnGranted?: boolean;
     status?: StatusId[];
