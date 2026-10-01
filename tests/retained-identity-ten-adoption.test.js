@@ -34,7 +34,8 @@ test('retained ten preserves approved monster and map gameplay data', async () =
     //   fire-lizard.png는 아트 산출물이므로 그대로 파일 바이트 해시로 남긴다.
     // Wave 51(소유자 결정 "성직자의 컨셉"): 몬스터 계열 태그(family, 언데드 22 · 마족 7)를 더한 의도된 게임 데이터 변경 — 재고정.
     // Wave 59(소유자 결정 "보스 기믹 전부 설명대로"): 보스 기믹 선언(mechanics) · 페이즈 상태 · 2페이즈 패턴을 고친 의도된 게임 데이터 변경 — 재고정.
-    assert.equal(hashMonsters(), 'a4cc1efceeb7f88b784d1d5a7b8ab5f56fe16d48e5ce3178499f565799db669f', 'src/data/monsters.ts gameplay data');
+    // Wave 60(소유자 결정 "보스별 고정 생명 상향"): 브리핑 보스 22종 hpMult를 1:1 대결로 보정한 의도된 게임 데이터 변경 — 재고정.
+    assert.equal(hashMonsters(), 'fb70034911ffd1fa30908d7ee253e35f127bab634487bd772b3406ebed872dce', 'src/data/monsters.ts gameplay data');
     assert.equal(hashMaps(), '34f3eccb41468ff5e4f6069757bd5a5f6f09b6ca3c7db1463a00757396999cd4', 'src/data/maps.ts gameplay data');
     assert.equal(
         sha(await readFile(new URL('public/assets/monsters/fire/fire-lizard.png', root))),
