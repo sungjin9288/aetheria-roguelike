@@ -79,6 +79,19 @@ export interface ClassSkill {
      * 언데드 · 마족(`MonsterFamily`)에게 회복량 × 이 값의 피해를 방어 무시로 더한다. 성직자 계열 회복 기술만 갖는다.
      */
     smite?: number;
+    /**
+     * 은신(`stealth`)이 막는 적 공격 수(Wave 53, 소유자 결정 "설명대로 동작하게"). 첫 공격은 반드시 피하고,
+     * 그 뒤 공격은 `evadeChance` 확률로 피한다. 미정의 시 1(다음 적 공격 1회).
+     */
+    evadeHits?: number;
+    /** 은신의 두 번째 공격부터의 회피 확률(미정의 시 1 — 전부 회피). */
+    evadeChance?: number;
+    /** 다음 피해 행동(공격 · 위력 있는 기술) 1회의 피해 배율(Wave 53 그림자 이동). */
+    nextAttackMult?: number;
+    /** 공격력 강화 배율(1.5 = 공격력 +50%, `turn`턴) — 은신 기술이 강화 칸을 쓰는 유일한 경로(Wave 53). */
+    atkBonus?: number;
+    /** 사용할 때 현재 생명에서 소모하는 비율(Wave 53 어둠의 서약, 0.15 = 15%). 생명은 1 아래로 내려가지 않는다. */
+    hpCost?: number;
 
     // --- 이하 skillBranches override로만 주입되는 키 (CombatEngine.actions가 읽는다) ---
     /** 상태이상 발동 확률 게이트 (미정의 시 1.0). */

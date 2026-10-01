@@ -89,15 +89,6 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             return { updatedPlayer, updatedEnemy, damage: 0, isDead: false, isEnemyDead: true, logs };
         }
 
-        // ── stealth 회피 처리 (#5) ────────────────────────────────────────
-        if (updatedPlayer.nextHitEvaded) {
-            updatedPlayer = { ...updatedPlayer, nextHitEvaded: false };
-            return {
-                updatedPlayer, updatedEnemy, damage: 0, isDead: false,
-                logs: [...logs, { type: 'success', text: MSG.STEALTH_EVADE_PROC(enemy.name) }]
-            };
-        }
-
         // cycle 226: 장비 evasion roll — 2 armors(암영 망토 / 공허의 전투 외투)의 evasion 필드가
         //   desc_stat에 '회피+N%'를 표시하지만 dispatch path 0건이던 silent dead config fix.
         //   stealth(skill) 후순위로 평가 — 은신은 명시적 발동, evasion은 passive armor 효과.
@@ -212,6 +203,33 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
                 damage: 0,
                 isDead: false,
                 logs: [...logs, { type: 'warning', text: MSG.COMBAT_ENEMY_GUARD(updatedEnemy.name) }]
+            };
+        }
+
+        // ── 은신 회피 (Wave 53) ─────────────────────────────────────────────
+        // "적 공격 N번"은 실제 공격만 센다 — 기절 · 방어 자세 턴은 은신을 쓰지 않는다(이전에는 그 턴에도 회피가
+        //   소진됐다). 첫 공격은 반드시 피하고, 그 뒤는 `stealthChance` 확률이다(1이면 난수를 쓰지 않는다).
+        const playerFlags = updatedPlayer.combatFlags || {};
+        if ((playerFlags.stealthHits ?? 0) > 0) {
+            const chance = playerFlags.stealthChance ?? 1;
+            const evaded = playerFlags.stealthFirstPending !== false || chance >= 1 || random() < chance;
+            updatedPlayer = {
+                ...updatedPlayer,
+                combatFlags: { ...playerFlags, stealthHits: (playerFlags.stealthHits ?? 0) - 1, stealthFirstPending: false },
+            };
+            if (evaded) {
+                return {
+                    updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                    logs: [...logs, { type: 'success', text: MSG.STEALTH_EVADE_PROC(enemy.name) }]
+                };
+            }
+            logs.push({ type: 'warning', text: MSG.STEALTH_EVADE_MISS(enemy.name) });
+        } else if (updatedPlayer.nextHitEvaded) {
+            // 이전 저장(Wave 53 전)의 1회 회피 표시 — 새로 세우는 곳은 없다.
+            updatedPlayer = { ...updatedPlayer, nextHitEvaded: false };
+            return {
+                updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                logs: [...logs, { type: 'success', text: MSG.STEALTH_EVADE_PROC(enemy.name) }]
             };
         }
 
