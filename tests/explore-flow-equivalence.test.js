@@ -301,11 +301,13 @@ const CASES = [
         },
     },
     {
+        // 2026-10 Wave 57: 혼돈의 심장은 유물 하나를 빌리고(0.7 → 대지의 심장), 혼돈의 보석은 전투 내내(전투 플래그)다.
+        //   난수는 이전과 같이 두 번이다(심장 1 · 보석 1).
         name: 'applyBattleStartRelics / 혼돈 계열은 rng 분기를 그대로 탄다',
         expected: [
-            'log event :: [혼돈의 심장] 혼돈의 기운 — DEF +25% (3턴)!',
-            'log event :: [혼돈의 보석] ATK +30% 버프',
-            'return :: combatFlags.comboCount=0 | combatFlags.deathSaveUsed=false | combatFlags.firstSkillUsed=false | combatFlags.phoenixUsed=false | combatFlags.turnCount=0 | tempBuff={"atk":0.3,"def":0.25,"name":"혼돈의 보석","turn":3}',
+            'log event :: [혼돈의 심장] 이번 전투 동안 「대지의 심장」 — 매 턴 최대 생명의 5% 회복',
+            'log event :: [혼돈의 보석] 이번 전투 동안 공격력 +30%',
+            'return :: combatFlags.chaosGemStat="atk" | combatFlags.comboCount=0 | combatFlags.deathSaveUsed=false | combatFlags.firstSkillUsed=false | combatFlags.phoenixUsed=false | combatFlags.turnCount=0 | relics=[{"borrowed":true,"desc":"매 턴 최대 생명의 5% 회복","effect":"regen","id":"earth_heart","name":"대지의 심장","rarity":"epic","val":0.05}]',
         ],
         run: () => {
             const player = basePlayer();

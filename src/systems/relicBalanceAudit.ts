@@ -58,6 +58,8 @@ export const RELIC_RUNTIME_OWNER_PATHS = Object.freeze([
     // Wave 4 N1: 전투 시작 유물(battle_start_*/cursed_power/chaos_*) 해석이
     //   utils/exploreUtils.ts에서 hooks/gameActions/exploreFlow.ts로 이동했다.
     'src/hooks/gameActions/exploreFlow.ts',
+    // 2026-10 Wave 57: 혼돈의 심장(chaos_relic)의 빌릴 유물 선택이 systems/chaosHeart.ts로 옮겨 갔다.
+    'src/systems/chaosHeart.ts',
 ] as const);
 
 const RARITIES = Object.freeze(['common', 'uncommon', 'rare', 'epic', 'legendary'] as const);
@@ -93,6 +95,8 @@ const EFFECT_CATEGORIES: ReadonlyArray<{
             'echo_atk', 'status_resist', 'mp_restore_battle', 'regen', 'on_hit_freeze',
             'first_turn_evade', 'battle_start_buff', 'hp_drain_atk', 'cooldown_reduce',
             'devour_hp',
+            // 2026-10 Wave 57: 혼돈의 심장은 그 전투 동안 유물 하나를 빌린다 — 탐험 속도가 아니라 전투 효과다.
+            'chaos_relic',
         ],
     },
     {
@@ -101,7 +105,7 @@ const EFFECT_CATEGORIES: ReadonlyArray<{
     },
     {
         category: 'exploration-pacing',
-        effects: ['event_chance', 'boss_hunter', 'chaos_relic'],
+        effects: ['event_chance', 'boss_hunter'],
     },
     {
         category: 'failure-rule',

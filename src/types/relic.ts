@@ -173,6 +173,11 @@ interface RelicBase {
      * 죽음의 낙인 "독과 화상"은 `['poison', 'burn']`이다.
      */
     dotScope?: readonly RelicDotScope[];
+    /**
+     * 혼돈의 심장이 이번 전투에만 빌려 온 유물 인스턴스(Wave 57). 데이터에는 없고, 전투가 끝나는 모든 경로가
+     * `endCombatScopedRelics`로 걷어 낸다.
+     */
+    borrowed?: boolean;
 }
 
 /** `dot_mult` 유물의 적용 대상 — 적 지속 피해 셋과 저주 틱(Wave 56). */

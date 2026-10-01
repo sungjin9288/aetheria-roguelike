@@ -13,6 +13,8 @@ import type { LiveConfig } from '../types/session.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { scaleProgressionExpReward } from '../data/progressionProfiles.js';
 import { endDevourBonus } from '../utils/adventureRelicBonuses.js';
+import { endCombatScopedRelics } from '../utils/combatScopedRelics.js';
+import { isBorrowedRelic } from './chaosHeart.js';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 
 /**
@@ -84,8 +86,11 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
     },
 
     handleVictory(player, enemy, passiveBonus, liveConfig) {
-        const p: Player = { ...endDevourBonus(player) };
+        // 2026-10 Wave 57: 정산 전에 이번 전투 한정 효과(혼돈의 심장이 빌린 유물 · 혼돈의 보석)를 끝낸다 — 빌린 유물은
+        //   정산 효과(골드 · 경험 · 처치 회복 · 원정 누적)를 내지 않는다.
+        const p: Player = { ...endCombatScopedRelics(endDevourBonus(player)) };
         const relics = p.relics || [];
+        const returnedBorrowedRelic = (player.relics || []).some(isBorrowedRelic);
         const baseName: string = this.resolveEnemyBaseName(enemy) || '';
         const previousBossClears = p.stats?.killRegistry?.[baseName] || 0;
         const bossBrief = enemy.isBoss ? BOSS_BRIEFS[baseName] : null;
@@ -217,7 +222,10 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         // 처치 공격력은 원정 동안 유지하며 시너지는 처치당 증가량에 합산한다.
         // 2026-10 Wave 56: 실제 승리 경로가 켜진 조합을 넘기지 않아 절멸자 · 공허의 용의 누적이 0이었다 — 넘기지 않으면 유물에서 구한다.
         const killStackRelic = relics.find((r) => r.effect === 'kill_stack_atk');
-        const synergiesForKill = passiveBonus.activeSynergies ?? getActiveRelicSynergies(relics);
+        //   Wave 57: 빌린 유물을 돌려줬으면 전투 중 조합(빌린 유물이 켠 조합 포함)이 아니라 남은 유물로 다시 구한다.
+        const synergiesForKill = returnedBorrowedRelic
+            ? getActiveRelicSynergies(relics)
+            : (passiveBonus.activeSynergies ?? getActiveRelicSynergies(relics));
         const killStackSynergyBonus = synergiesForKill.reduce((acc: number, s) =>
             acc + (s.bonus?.killStack || 0), 0);
         if (killStackRelic || killStackSynergyBonus > 0) {

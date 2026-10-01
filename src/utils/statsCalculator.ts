@@ -10,6 +10,7 @@ import { computeSignatureSetBonus } from './signatureSetBonus.js';
 import { getRampedMetaAtk } from '../systems/metaBonusRamp.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
 import { resolveHpDrainAtkRelic } from './hpDrainAtkRelic.js';
+import { getEquipmentPassives } from './equipmentPassives.js';
 
 // cycle 449: 물리 elem 필터 제거 — items.ts elem 값에 '물리' / 'physical' 0건.
 //   weaponElem 있는 무기는 항상 magic elem이라 필터 redundant.
@@ -303,6 +304,18 @@ const computeKillStreakBonus = (killStreak: number) => {
 };
 
 /**
+ * 혼돈의 보석(Wave 57) — 전투 시작 때 고른 능력치(`combatFlags.chaosGemStat`)가 그 전투 내내 보석의 값만큼 오른다.
+ * 이전에는 강화 칸(`tempBuff`)에 3턴으로 걸려 설명("전투가 시작되면")보다 짧았고 기술 강화가 덮어썼다.
+ * 보석이 없으면(전투가 끝나 빌린 보석을 돌려준 뒤 포함) 표시가 남아 있어도 0이다.
+ */
+const computeChaosGemBonus = (player: Player, relics: Relic[]) => {
+    const stat = player.combatFlags?.chaosGemStat;
+    if (!stat) return { atk: 0, def: 0 };
+    const value = relicNumber(relics.find((relic) => relic.effect === 'chaos_buff'));
+    return stat === 'atk' ? { atk: value, def: 0 } : { atk: 0, def: value };
+};
+
+/**
  * Pure function that computes a player's full derived combat stats.
  * No side effects; identical input produces identical output.
  *
@@ -353,6 +366,8 @@ export const calculateFullStats = (player: Player) => {
     const relicBonus = computeRelicBonuses(relics, player, Boolean(offhandWeapon));
     const abyssBonus = computeAbyssRelicBonuses(relics, player.stats?.abyssFloor || 0);
     const killStackAtkBonus = computeKillStackAtkBonus(relics);
+    const chaosGemBonus = computeChaosGemBonus(player, relics);
+    const equipmentPassives = getEquipmentPassives(player.equip);
 
     const passiveBonus = getPassiveSkillBonuses(player);
     const enhanceBonus = computeEnhanceBonus(player.equip || {});
@@ -360,7 +375,7 @@ export const calculateFullStats = (player: Player) => {
     const baseAtk =
         ((player.atk ?? 0) + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + getRampedMetaAtk(meta, player.level) + passiveBonus.atk) *
         cls.atkMod! *
-        (1 + (buff.atk || 0) + abyssBonus.atk) *
+        (1 + (buff.atk || 0) + abyssBonus.atk + chaosGemBonus.atk) *
         setBonus.atkMult *
         signatureSetBonus.atkMult *
         dualWieldAtkMult *
@@ -369,7 +384,7 @@ export const calculateFullStats = (player: Player) => {
 
     const baseDef =
         ((player.def ?? 0) + armorVal + shieldDef + codexBonus.def + enhanceBonus.def + passiveBonus.def) *
-        (1 + (buff.def || 0) + abyssBonus.def) *
+        (1 + (buff.def || 0) + abyssBonus.def + chaosGemBonus.def) *
         setBonus.defMult *
         signatureSetBonus.defMult *
         dualWieldDefMult *
@@ -444,6 +459,10 @@ export const calculateFullStats = (player: Player) => {
         activeSynergies,
         /** 조합의 대가 중 받는 피해 배율(Wave 50) — 1이면 없음. */
         damageTakenMult: synergyDrawback.damageTakenMult,
+        /** 장비가 막는 원소(Wave 57) — 그 원소의 적 공격 피해 × `BALANCE.EQUIP_ELEMENT_RESIST_MULT`. */
+        elementResists: equipmentPassives.resist,
+        /** 장비의 행동마다 생명 재생 비율(Wave 57). */
+        equipRegenPerTurn: equipmentPassives.regenPerTurn,
         // cycle 278: killStreakTier 필드 제거 — production consumer 0건. raw killStreak count는 dispatch 유지.
         killStreak: player.killStreak || 0,
         passiveGoldMult: passiveBonus.goldMult,

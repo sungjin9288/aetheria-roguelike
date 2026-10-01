@@ -8,6 +8,7 @@ import type { Item, Monster, Player } from '../types/index.js';
 import { createSeededRandom } from '../utils/seededRandom.js';
 import { resolveConsumableEffect } from './consumableEffect';
 import { tickAfterAction } from './combatTurnTick';
+import { endCombatScopedRelics } from '../utils/combatScopedRelics';
 import type { GraveEntry } from '../utils/graveUtils';
 import type { RunSummary } from '../reducers/actionTypes';
 
@@ -74,7 +75,8 @@ export const resolveCombatItemTurn = ({
     }
 
     if (counterResult.isDead) {
-        const deadPlayer = { ...counterResult.updatedPlayer, killStreak: 0 };
+        // 2026-10 Wave 57: 빌린 유물은 기록(런 요약의 유물 수)에도 남기지 않는다.
+        const deadPlayer = { ...endCombatScopedRelics(counterResult.updatedPlayer), killStreak: 0 };
         const defeatResult = CombatEngine.handleDefeat(deadPlayer, initialPlayer, random, () => now);
         return {
             kind: 'defeat',

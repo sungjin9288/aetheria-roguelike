@@ -36,6 +36,7 @@ import { trackRuntimeProductEvent } from '../../platform/productEventCoordinator
 import { normalizeProductEventJob } from '../../platform/productEvents';
 import { MSG } from '../../data/messages';
 import RelicIcon from '../icons/RelicIcon';
+import { countOwnedRelics } from '../../systems/chaosHeart';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { GameMode } from '../../reducers/gameStates';
 
@@ -613,7 +614,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                     <SettingsDisclosure
                         testId="system-relic-list"
                         icon={Sparkles}
-                        title={`보유 유물 ${relics.length}/${relicCapacity}`}
+                        title={`보유 유물 ${countOwnedRelics(relics)}/${relicCapacity}`}
                         summary="현재 여정에서 얻은 유물과 효과를 확인합니다."
                     >
                         <div className="space-y-2">
@@ -623,6 +624,11 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                     <div className="min-w-0 flex-1">
                                         <div className={`font-readable text-xs font-bold ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-slate-200'}`}>
                                             {getRelicDisplayName(relic.name)}
+                                            {relic.borrowed && (
+                                                <span data-testid="system-relic-borrowed" className="ml-1.5 font-normal text-[10px] text-fuchsia-300/80">
+                                                    {MSG.CHAOS_HEART_BORROWED_TAG}
+                                                </span>
+                                            )}
                                         </div>
                                         <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">{formatRelicText(relic.desc)}</p>
                                     </div>

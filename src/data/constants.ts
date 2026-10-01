@@ -460,6 +460,9 @@ export const BALANCE = {
     // 전투 계산 — 속성 배율
     ELEMENT_WEAK_MULT: 1.25,        // 속성 약점 피해 배율
     ELEMENT_RESIST_MULT: 0.75,      // 속성 저항 피해 배율
+    // 2026-10 Wave 57: 원소 저항 장비(`data/equipmentPassives.ts`)가 그 원소의 적 공격 피해에 곱하는 배율 — "50% 감소"(소유자 결정).
+    //   적 공격의 원소는 적 자신의 원소(`resistance`)다. 같은 원소를 막는 장비가 둘이어도 한 번만 곱한다.
+    EQUIP_ELEMENT_RESIST_MULT: 0.5,
     // 전투 계산 — 기본 공식
     GUARD_DAMAGE_MULT: 0.65,        // 가드 중 받는 피해 배율
     DAMAGE_BASE_RATIO: 0.9,         // 데미지 최솟값 비율 (분산 하한)

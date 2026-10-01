@@ -5,6 +5,7 @@ import type { Player } from '../types/index.js';
 import { getTraitProfile } from '../utils/runProfile';
 import { getActiveQuestEntries } from '../utils/gameUtils';
 import { isSignatureItem } from '../data/signatureItems.js';
+import { countOwnedRelics } from '../systems/chaosHeart';
 
 interface DashboardMobileSummaryProps {
     player?: Player | null;
@@ -32,7 +33,8 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
         if (activeQuests > 0 || completedQuests > 0) {
             pills.push({ key: 'quest', label: `퀘스트 ${completedQuests}/${activeQuests + completedQuests}`, tone: completedQuests > 0 ? 'success' : 'neutral' });
         }
-        const relicCount = player.relics?.length || 0;
+        // 2026-10 Wave 57: 혼돈의 심장이 이번 전투에 빌린 유물은 보유 수에 세지 않는다.
+        const relicCount = countOwnedRelics(player.relics);
         if (relicCount > 0) {
             pills.push({ key: 'relic', label: `유물 ×${relicCount}`, tone: 'resonance' });
         }

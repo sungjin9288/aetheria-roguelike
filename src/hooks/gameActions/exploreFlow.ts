@@ -28,7 +28,7 @@ type ExploreRollDeps = Pick<GameActionDeps, 'dispatch' | 'addLog' | 'getFullStat
 
 import { DB } from '../../data/db.js';
 import { BALANCE } from '../../data/constants.js';
-import { RELICS, pickWeightedRelics } from '../../data/relics.js';
+import { RELICS, pickWeightedRelics, relicNumber } from '../../data/relics.js';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { AT } from '../../reducers/actionTypes.js';
 import { GS } from '../../reducers/gameStates.js';
@@ -43,6 +43,10 @@ import { getBossSignatureDrops } from '../../utils/bossSignatureHint';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { resolveAbyssDailyDive } from '../../utils/abyssDailyDive';
 import { activateDevourBonus } from '../../utils/adventureRelicBonuses.js';
+import { endCombatScopedRelics } from '../../utils/combatScopedRelics.js';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals.js';
+import { borrowChaosHeartRelic, isBorrowedRelic } from '../../systems/chaosHeart.js';
+import { formatSynergyDrawback } from '../../utils/relicSynergyHint.js';
 import { calculateFullStats } from '../../utils/statsCalculator.js';
 import { spawnEnemy } from '../../utils/exploreUtils.js';
 import {
@@ -169,7 +173,25 @@ export const applyBattleStartRelics = (
     fullStats: FullStats,
     { addLog, rng = Math.random }: { addLog: AddLog; rng?: () => number },
 ): Player => {
-    const activatedPlayer = activateDevourBonus(player);
+    // 2026-10 Wave 57: 끝나지 않은 채 남은 전투 한정 유물 효과(빌린 유물 · 혼돈의 보석)를 먼저 걷어 낸다.
+    let activatedPlayer = activateDevourBonus(endCombatScopedRelics(player));
+    playerRelics = playerRelics.filter((relic) => !isBorrowedRelic(relic));
+    // 2026-10 Wave 57: 혼돈의 심장 — 가지지 않은 유물 하나를 이번 전투 동안 빌린다. 다른 전투 시작 효과보다 먼저 빌려서
+    //   빌린 유물의 전투 시작 효과 · 그림자 망토 · 조합(대가 포함)이 이 전투에 그대로 걸린다(소유자 결정 "조합까지 켜지게").
+    const borrow = borrowChaosHeartRelic(playerRelics, rng);
+    if (borrow.relic) {
+        playerRelics = [...playerRelics, borrow.relic];
+        // 빌린 유물은 빌드 성향을 바꿔 실효 최대치를 낮출 수 있다(예: 무당 + 마나 수정이 허공의 파편을 빌리면 기력 197 → 187) —
+        //   최대치를 낮추는 전이라 현재치를 실효 최대로 내린다(Wave 27 N2 규칙, 올리지는 않는다).
+        activatedPlayer = clampVitalsToEffectiveMax({
+            ...activatedPlayer,
+            relics: [...(activatedPlayer.relics || []).filter((relic) => !isBorrowedRelic(relic)), borrow.relic],
+        });
+        addLog('event', MSG.CHAOS_HEART_BORROW(borrow.relic.name ?? '', borrow.relic.desc ?? ''));
+        borrow.completedSynergies.forEach((synergy) => {
+            addLog('event', MSG.CHAOS_HEART_SYNERGY(synergy.label, formatSynergyDrawback(synergy)));
+        });
+    }
     if (activatedPlayer !== player) fullStats = calculateFullStats(activatedPlayer)!;
     const combatStartPlayer: Player = {
         ...activatedPlayer,
@@ -218,38 +240,13 @@ export const applyBattleStartRelics = (
         addLog('warning', `[저주받은 반지] 전투 시작 대가 -${selfDamage} HP`);
     }
 
-    // 유물: 혼돈의 심장 (chaos_relic) — 전투 시작 시 랜덤 효과 발동
-    const chaosRelic = playerRelics.find((r) => r.effect === 'chaos_relic');
-    if (chaosRelic) {
-        const roll = Math.floor(rng() * 3);
-        if (roll === 0) {
-            const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * 0.1));
-            combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp!, (combatStartPlayer.hp || 0) + heal);
-            addLog('heal', `[혼돈의 심장] 혼돈의 기운 — HP +${heal} 회복!`);
-        } else if (roll === 1) {
-            const existing = combatStartPlayer.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
-            combatStartPlayer.tempBuff = { ...existing, atk: (existing.atk ?? 0) + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
-            addLog('event', `[혼돈의 심장] 혼돈의 기운 — ATK +25% (3턴)!`);
-        } else {
-            const existing = combatStartPlayer.tempBuff || { atk: 0, def: 0, turn: 0, name: null };
-            combatStartPlayer.tempBuff = { ...existing, def: (existing.def ?? 0) + 0.25, turn: Math.max(existing.turn || 0, 3), name: '혼돈의 심장' };
-            addLog('event', `[혼돈의 심장] 혼돈의 기운 — DEF +25% (3턴)!`);
-        }
-    }
-
+    // 혼돈의 보석 — 2026-10 Wave 57: 고른 능력치가 이번 전투 내내 오른다(전투 플래그 `chaosGemStat`, `statsCalculator`가 더한다).
+    //   이전에는 강화 칸(`tempBuff`)에 3턴이었다 — 설명("전투가 시작되면")보다 짧았고 기술 강화가 덮어썼다. 난수는 그대로 한 번이다.
     const chaosBuffRelic = playerRelics.find((r) => r.effect === 'chaos_buff');
     if (chaosBuffRelic) {
-        const existingBuff = { atk: 0, def: 0, turn: 0, name: null, ...(combatStartPlayer.tempBuff || {}) };
-        const rollAtk = rng() < 0.5;
-        const baseAtk = existingBuff.name === '혼돈의 보석' ? 0 : existingBuff.atk;
-        const baseDef = existingBuff.name === '혼돈의 보석' ? 0 : existingBuff.def;
-        combatStartPlayer.tempBuff = {
-            atk: baseAtk + (rollAtk ? chaosBuffRelic.val : 0),
-            def: baseDef + (rollAtk ? 0 : chaosBuffRelic.val),
-            turn: Math.max(existingBuff.turn || 0, 3),
-            name: '혼돈의 보석'
-        };
-        addLog('event', `[혼돈의 보석] ${rollAtk ? 'ATK' : 'DEF'} +${Math.round(chaosBuffRelic.val * 100)}% 버프`);
+        const gemStat = rng() < 0.5 ? 'atk' : 'def';
+        combatStartPlayer.combatFlags = { ...combatStartPlayer.combatFlags, chaosGemStat: gemStat };
+        addLog('event', MSG.CHAOS_GEM_PROC(gemStat, Math.round(relicNumber(chaosBuffRelic) * 100)));
     }
 
     return combatStartPlayer;

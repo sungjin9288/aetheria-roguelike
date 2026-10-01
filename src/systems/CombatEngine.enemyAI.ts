@@ -5,6 +5,7 @@ import type { FullStats, Monster, Player, Relic, RelicDotScope, RelicSynergy, St
 import { getRelicDotMult } from './CombatEngine.actions.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, isEnemyBlindActive, isEnemyTauntActive } from './CombatEngine.status.js';
+import { getEnemyAttackElement, getEquipmentResistMult } from '../utils/equipmentPassives.js';
 
 interface EnemyAttackResult {
     updatedPlayer: Player;
@@ -308,6 +309,17 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             logs.push({ type: 'info', text: MSG.ENEMY_ATK_REDUCED_STATUS(MSG.DOT_LABELS[debuffAtkLabel], updatedEnemy.name) });
         }
 
+        // 2026-10 Wave 57: 원소 저항 장비 — 적 공격의 원소는 적 자신의 원소다(소유자 결정). 그 원소를 막는 장비가 있으면
+        //   받는 피해 × BALANCE.EQUIP_ELEMENT_RESIST_MULT(50% 감소). 이전에는 장비 설명("불에 강한", "모든 원소를 저항")만 있었다.
+        //   난수를 쓰지 않는다.
+        const attackElement = getEnemyAttackElement(updatedEnemy);
+        const elementResistMult = getEquipmentResistMult(stats.elementResists, attackElement);
+        if (attackElement && elementResistMult < 1) {
+            const before = enemyDmg;
+            enemyDmg = Math.max(1, Math.floor(enemyDmg * elementResistMult));
+            logs.push({ type: 'success', text: MSG.EQUIP_ELEMENT_RESIST_PROC(attackElement, Math.round((1 - elementResistMult) * 100), before, enemyDmg) });
+        }
+
         // cycle 108: 플레이어 curse 상태이상 — 받는 피해 증폭 (BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT).
         // MSG.SKILL_CURSE_AMPLIFY 의도 구현. 보스 phase / heavy attack에 의한 curse 부여
         // 위협이 actually 작동하도록. 적의 cursedTurns(공격력 감소)와 짝을 이루는 player-side 페널티.
@@ -433,7 +445,9 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         }
 
         // Wave 50: 도주 실패 피해도 적에게 받는 피해다 — 조합의 대가(받는 피해 증가)를 같이 받는다.
-        const enemyDmg = Math.max(1, Math.floor(Math.max(1, (enemy.atk ?? 0) - stats.def) * (stats.damageTakenMult ?? 1)));
+        //   Wave 57: 같은 이유로 원소 저항 장비도 적용한다.
+        const resistMult = getEquipmentResistMult(stats.elementResists, getEnemyAttackElement(enemy));
+        const enemyDmg = Math.max(1, Math.floor(Math.max(1, (enemy.atk ?? 0) - stats.def) * (stats.damageTakenMult ?? 1) * resistMult));
         return {
             success: false,
             damage: enemyDmg,

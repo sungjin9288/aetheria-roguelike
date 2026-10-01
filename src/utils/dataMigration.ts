@@ -387,11 +387,15 @@ export const migrateData = (rawData: unknown, options: MigrateDataOptions = {}):
     // cycle 375: target.activeTitle = target.activeTitle || null 제거 — 모든 consumer가
     //   이미 fallback (`|| null`) 또는 truthy 체크로 undefined / null 안전하게 처리.
     const priorCombatFlags = readFields(target.combatFlags);
+    const priorChaosGemStat = priorCombatFlags?.chaosGemStat;
     target.combatFlags = {
         comboCount: 0,
         deathSaveUsed: false,
         voidHeartUsed: Boolean(priorCombatFlags?.voidHeartUsed),
         voidHeartArmed: Boolean(priorCombatFlags?.voidHeartArmed),
+        // 2026-10 Wave 57: 혼돈의 보석이 고른 능력치 — 전투로 복원하면 남고, 그 밖의 모드는 `LOAD_DATA`가 지운다
+        //   (빌린 유물과 같은 규칙. 빌린 유물은 `relics`에 실려 이미 남는다).
+        ...(priorChaosGemStat === 'atk' || priorChaosGemStat === 'def' ? { chaosGemStat: priorChaosGemStat } : {}),
     };
     // cycle 378: 8 sub-field fallback 일괄 제거 (cycle 373-377 동일 lens) —
     //   prestigeRank / relicCount / crafts / buildWins / abyssFloor / abyssRecord /

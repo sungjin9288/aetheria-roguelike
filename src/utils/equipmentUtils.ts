@@ -3,6 +3,8 @@ import type { EquipSlots, Item } from '../types/index.js';
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { canEquip, isWeapon, isTwoHandWeapon } from './equipmentValidation.js';
+import { getItemEquipmentPassive } from './equipmentPassives.js';
+import { ALL_RESIST_ELEMENTS } from '../data/equipmentPassives.js';
 export { isWeapon, getWeaponHands, isTwoHandWeapon } from './equipmentValidation.js';
 
 const MAGIC_WEAPON_KEYWORDS = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
@@ -530,6 +532,25 @@ export const getWeaponMagicSkills = (equip: EquipSlots): WeaponMagicSkill[] => {
     return skills;
 };
 
+/**
+ * 장비 상시 효과 문구(Wave 57) — 원소 저항 · 턴 재생. 표(`data/equipmentPassives.ts`)와 `BALANCE`에서 만든다.
+ */
+export const getEquipmentPassiveTexts = (item: Item | null | undefined): string[] => {
+    const passive = getItemEquipmentPassive(item);
+    if (!passive) return [];
+    const texts: string[] = [];
+    if (passive.resist?.length) {
+        const elements = passive.resist.length === ALL_RESIST_ELEMENTS.length
+            ? MSG.EQUIP_RESIST_ALL_ELEMENTS
+            : passive.resist.join(' · ');
+        texts.push(MSG.EQUIP_RESIST_STAT(elements, Math.round((1 - BALANCE.EQUIP_ELEMENT_RESIST_MULT) * 100)));
+    }
+    if (passive.regenPerTurn && passive.regenPerTurn > 0) {
+        texts.push(MSG.EQUIP_REGEN_STAT(Math.round(passive.regenPerTurn * 100)));
+    }
+    return texts;
+};
+
 export const getItemStatText = (item: Item | null | undefined) => {
     if (!item) return '';
 
@@ -548,11 +569,14 @@ export const getItemStatText = (item: Item | null | undefined) => {
         const parts = [`방어력 +${getEnhancedEquipmentStatValue(item, 'offhand')}${elemSuffix}`];
         if (typeof item.mp === 'number' && item.mp > 0) parts.push(`기력 +${item.mp}`);
         if (typeof item.crit === 'number' && item.crit > 0) parts.push(`치명타 +${Math.round(item.crit * 100)}%`);
+        parts.push(...getEquipmentPassiveTexts(item));
         parts.push(isFocusOffhand(item) ? '마력 보조 장비' : '방어 보조 장비');
         return parts.join(' · ');
     }
 
-    if (item.type === 'armor') return `방어력 +${getEnhancedEquipmentStatValue(item, 'armor')}${elemSuffix}`;
+    if (item.type === 'armor') {
+        return [`방어력 +${getEnhancedEquipmentStatValue(item, 'armor')}${elemSuffix}`, ...getEquipmentPassiveTexts(item)].join(' · ');
+    }
     if (item.type === 'hp') return `생명 +${item.val || 0}`;
     if (item.type === 'mp') return `기력 +${item.val || 0}`;
 
