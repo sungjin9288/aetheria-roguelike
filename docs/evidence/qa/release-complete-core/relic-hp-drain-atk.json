@@ -1,14 +1,14 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "7560ce01d64893c90909793047a53e1aaa0631597b5b2b3f7bb8464c75e05793",
+  "reportHash": "db4e560c4f618e7dd58f746b5705d45acebf267ef3c97e1cd43dca162b6aa25d",
   "authorityHashes": {
-    "catalog": "6701f1993327ef90b2d06b2f81e63e7b63c837c2b8fdd1513d841a7e5094368f",
+    "catalog": "77c50786c7cb8538edcaf2fd4051912ce93edeed10d3918860a2b21ff77d58f9",
     "resolver": "df171d5221128d47b8bf516fe4fad2cf916b5cfc8be0211720dd0197c2692b55",
-    "statsCalculator": "b49f22256fa0ce8abf60b0c1ab6f2ecf74de2e19e15f315138b4bc028fe80555",
-    "combatEngine": "2d85b6d6f6a27c2385e99c055b27477d7cda0bf0acfe91978f767e198f02de0b",
-    "audit": "0ac45a1d81b3602f1366a52bda78b5742a3cd8ff4f173d283464d81da9504c28",
+    "statsCalculator": "452178b4cb6ac7c0778ec924c153d5d693340f8670def1fb68221da2e4ef33ad",
+    "combatEngine": "2f018207cb44cf1a8dc72337fd8286023b0e8499054a30e8f2b661739ee0cd5b",
+    "audit": "d2754c1967a9823fce1d1205f3da538969c26f59b8c01f04c2a43aedc2acd9f0",
     "verifier": "e69920bf3143b989052fd8278ec8006d79412a8e3c58222f7c66cf22a5afbb0a",
-    "focusedTest": "593d3a13864be14065980bd4d7f0ff7a6c6034ed6aec415b1e6cbc0cf75f4003",
+    "focusedTest": "64b9269e0ba309e54ea8c30e995430722609456fa637271c8279b874afbc9eb9",
     "plan": "281c446f0f5b283c35474dd26b65c743eec076b3bb8bc51a2143f4476876bffc"
   },
   "report": {
@@ -114,11 +114,11 @@
       "hellReaper": {
         "bothOrders": [
           {
-            "hp": 980,
+            "hp": 970,
             "label": "지옥의 수확자"
           },
           {
-            "hp": 980,
+            "hp": 970,
             "label": "지옥의 수확자"
           }
         ]

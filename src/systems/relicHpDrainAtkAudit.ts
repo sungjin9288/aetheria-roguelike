@@ -266,7 +266,8 @@ export const buildRelicHpDrainAtkReport = ({
         || !normalTurn.bothOrders.every((turn) => turn.label === '심연의 계약' && turn.hp === 950)) {
         errors.add('NORMAL_TURN_LABEL_POLICY_MISMATCH');
     }
-    if (!hellReaperTurns.every((turn) => turn.label === '지옥의 수확자' && turn.hp === 980)) {
+    // 2026-10 Wave 56: 지옥의 수확자는 심연의 계약 5%에서 2%를 줄인다(3%, "생명 소모가 3%로") — 1,000 → 970.
+    if (!hellReaperTurns.every((turn) => turn.label === '지옥의 수확자' && turn.hp === 970)) {
         errors.add('HELL_REAPER_TURN_POLICY_MISMATCH');
     }
 

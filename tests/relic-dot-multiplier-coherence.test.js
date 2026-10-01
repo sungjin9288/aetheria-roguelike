@@ -27,6 +27,8 @@ const deathMark = {
     desc: '독과 화상으로 주는 피해가 3배로 증가',
     effect: 'dot_mult',
     val: 3.0,
+    // 2026-10 Wave 56: "독과 화상" — 대상이 데이터에 있다(출혈 · 저주 틱은 키우지 않는다).
+    dotScope: ['poison', 'burn'],
 };
 const curseCrystal = {
     id: 'curse_crystal',
@@ -310,8 +312,10 @@ test('audit uses production paths, binds every vector, and has no local stronges
     const actionsSource = readFileSync(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8');
     const auditSource = readFileSync(path.join(ROOT, 'src/systems/relicDotMultiplierAudit.ts'), 'utf8');
     assert.equal((actionsSource.match(/export function getStrongestNumericRelicValue/g) || []).length, 1);
-    assert.match(actionsSource, /const resolvedDotMult = getStrongestNumericRelicValue\(relics, 'dot_mult'\);/);
-    assert.match(actionsSource, /const dotMult = hasDotMultRelic \? resolvedDotMult : 1;/);
+    // 2026-10 Wave 56: 대상별 배율(getRelicDotMult)도 같은 최강값 판정을 거친다 — 값 검증은 난수 전에 한 번.
+    assert.match(actionsSource, /export function getRelicDotMult\(relics: readonly Relic\[\], target: RelicDotScope\): number \{/);
+    assert.match(actionsSource, /return inScope\.length > 0 \? getStrongestNumericRelicValue\(inScope, 'dot_mult'\) : 1;/);
+    assert.match(actionsSource, /const dotMult = skillDotTarget \? getRelicDotMult\(relics, skillDotTarget\) : 1;/);
     assert.doesNotMatch(actionsSource, /const dotRelic = relics\.find/);
     assert.match(auditSource, /import \{ getStrongestNumericRelicValue \} from '\.\/CombatEngine\.actions\.js';/);
     assert.doesNotMatch(auditSource, /function\s+\w*Strongest\w*/);

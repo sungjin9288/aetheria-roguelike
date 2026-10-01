@@ -135,13 +135,14 @@ export const buildRelicGoldMultiplierReport = ({
     if (family.length !== 2 || familyIds[0] !== 'gold_magnet' || familyIds[1] !== 'merchant_seal') {
         errors.add('GOLD_MULT_FAMILY_IDS_MISMATCH');
     }
+    // 2026-10 Wave 56: 설명이 실제 범위(전투 처치 보상)를 말하게 바꿨다 — 값은 그대로다.
     if (goldMagnet?.rarity !== 'common'
-        || goldMagnet?.desc !== '골드 획득 30% 증가'
+        || goldMagnet?.desc !== '전투 처치 골드 30% 증가'
         || goldMagnetValue !== 0.3) {
         errors.add('GOLD_MAGNET_POLICY_MISMATCH');
     }
     if (merchantSeal?.rarity !== 'rare'
-        || merchantSeal?.desc !== '골드 획득 60% 증가 (공허의 왕좌 다음 등급)'
+        || merchantSeal?.desc !== '전투 처치 골드 60% 증가'
         || merchantSealValue !== 0.6) {
         errors.add('MERCHANT_SEAL_POLICY_MISMATCH');
     }

@@ -1,7 +1,8 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
-import type { FullStats, Monster, Player, Relic, RelicSynergy, StatusId } from '../types/index.js';
+import type { FullStats, Monster, Player, Relic, RelicDotScope, RelicSynergy, StatusId } from '../types/index.js';
+import { getRelicDotMult } from './CombatEngine.actions.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, isEnemyBlindActive, isEnemyTauntActive } from './CombatEngine.status.js';
 
@@ -32,7 +33,7 @@ interface EnemyTelegraph {
  * CombatEngine.status/.relics 패턴과 동일 — 실제로 호출하는 2개만 최소 인터페이스로 선언한다.
  */
 interface EnemyAIMixinContext {
-    tickEnemyStatus(enemy: Monster, logs: LootLog[], curseAmpMult: number, synergyDotMult: number): { updatedEnemy: Monster; logs: LootLog[] };
+    tickEnemyStatus(enemy: Monster, logs: LootLog[], curseAmpMult: number, synergyDotMult: number, relicDotMults?: Partial<Record<RelicDotScope, number>>): { updatedEnemy: Monster; logs: LootLog[] };
     applyFatalProtection(
         player: Player,
         relics: Relic[],
@@ -82,7 +83,12 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         const debuffAtkLabel = getEnemyDebuffAtkLabel(enemy);
         const tauntActive = isEnemyTauntActive(enemy);
         const blindActive = isEnemyBlindActive(enemy);
-        const enemyTickResult = this.tickEnemyStatus(updatedEnemy, [], curseAmpMult, synergyDotMult);
+        // 2026-10 Wave 56: 지속 피해 유물은 틱에도 붙는다(대상별 — 죽음의 낙인은 독 · 화상만).
+        const relicDotMults = {
+            burn: getRelicDotMult(relics, 'burn'), poison: getRelicDotMult(relics, 'poison'),
+            bleed: getRelicDotMult(relics, 'bleed'), curse: getRelicDotMult(relics, 'curse'),
+        };
+        const enemyTickResult = this.tickEnemyStatus(updatedEnemy, [], curseAmpMult, synergyDotMult, relicDotMults);
         updatedEnemy = enemyTickResult.updatedEnemy;
         enemyTickResult.logs.forEach((l) => logs.push(l));
         // DoT로 인해 이미 사망한 경우
@@ -97,7 +103,10 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         //   2026-10 Wave 53: 은신은 적의 방어 자세 판정 뒤에서 실제 공격만 막는다 — 은신 중에는 여기서 장비 회피를
         //   굴리지 않고 은신 판정 뒤로 넘긴다(은신 우선 순서 유지). 은신이 아닐 때의 난수 순서는 그대로다.
         const armorEvasion = updatedPlayer.equip?.armor?.evasion || 0;
-        const stealthActive = (updatedPlayer.combatFlags?.stealthHits ?? 0) > 0 || Boolean(updatedPlayer.nextHitEvaded);
+        // 2026-10 Wave 56: 그림자 망토의 첫 공격 회피도 은신처럼 방어 자세 판정 뒤에서 확정 회피한다 — 그 앞의 장비 회피는 굴리지 않는다.
+        const cloakPending = Boolean(updatedPlayer.combatFlags?.cloakEvadePending)
+            && relics.some((relic) => relic.effect === 'first_turn_evade');
+        const stealthActive = (updatedPlayer.combatFlags?.stealthHits ?? 0) > 0 || Boolean(updatedPlayer.nextHitEvaded) || cloakPending;
         if (!stealthActive && armorEvasion > 0 && random() < armorEvasion) {
             return {
                 updatedPlayer, updatedEnemy, damage: 0, isDead: false,
@@ -207,6 +216,15 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
                 damage: 0,
                 isDead: false,
                 logs: [...logs, { type: 'warning', text: MSG.COMBAT_ENEMY_GUARD(updatedEnemy.name) }]
+            };
+        }
+
+        // ── 그림자 망토 (Wave 56) — 이번 전투의 첫 실제 공격을 반드시 피한다. 은신보다 먼저 쓴다(은신 횟수를 아낀다).
+        if (cloakPending) {
+            updatedPlayer = { ...updatedPlayer, combatFlags: { ...(updatedPlayer.combatFlags || {}), cloakEvadePending: false } };
+            return {
+                updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                logs: [...logs, { type: 'success', text: MSG.CLOAK_EVADE_PROC(enemy.name) }]
             };
         }
 
@@ -325,6 +343,18 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         //   `updatedEnemy.pattern?.statusEffect`에서 단락되어 random()도 소비하지 않았으므로
         //   시드 스트림에도 영향 없음). 일반 적의 상태이상 부여는 아래 statusOnHit 경로가
         //   유일한 살아 있는 구현이다.
+
+        // 2026-10 Wave 56: 운명의 거울 "받은 피해의 30%를 적에게" — 이전에는 읽는 곳이 없었다(치명타 확률만 동작).
+        //   절대 반사 조합(거울 + 가시 갑옷)의 "반사 피해 50%"는 두 반사 모두의 비율이다. 난수를 쓰지 않는다.
+        const mirrorRelic = relics.find((r) => r.effect === 'reflect_crit');
+        if (mirrorRelic && enemyDmg > 0 && (updatedEnemy.hp ?? 0) > 0) {
+            const mirrorRatio = absoluteReflectSyn ? (absoluteReflectSyn.bonus.reflect || mirrorRelic.val.reflect) : mirrorRelic.val.reflect;
+            const mirrorDmg = Math.floor(enemyDmg * mirrorRatio);
+            if (mirrorDmg > 0) {
+                updatedEnemy = { ...updatedEnemy, hp: Math.max(0, (updatedEnemy.hp ?? 0) - mirrorDmg) };
+                logs.push({ type: 'event', text: MSG.MIRROR_REFLECT_PROC(mirrorDmg) });
+            }
+        }
 
         const protectedResult = this.applyFatalProtection(updatedPlayer, relics, enemyDmg, logs, activeSynergies);
 

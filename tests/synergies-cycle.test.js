@@ -175,8 +175,9 @@ import { readFile } from 'node:fs/promises';
       // critDmg 곱셈 분기(attack/performSkill)는 CombatEngine.actions.ts로 분리됨 (mixin).
       const engineSrc = await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8');
       assert.match(engineSrc, /'void_dragon'/);
-      assert.match(engineSrc, /critDmgSyn/);
-      assert.match(engineSrc, /critDmgSynSkill/);
+      // 2026-10 Wave 56: 두 시너지가 함께 켜지면 큰 배율을 쓰는 공용 판정(getStrongestSynergyCritDmg)을 공격 · 기술이 같이 읽는다.
+      assert.match(engineSrc, /'primordial_wrath'/);
+      assert.equal((engineSrc.match(/getStrongestSynergyCritDmg\(stats\.activeSynergies\)/g) || []).length, 2);
   });
 
   test("statsCalculator.ts: synergyBonus.defMult가 finalDef 곱 인자로 사용됨", async () => {

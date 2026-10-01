@@ -138,8 +138,10 @@ test('마나 가속: MP 20 즉시 + 3턴간 턴마다 7 — 틱 세 번, 상한�
         mps.push(player.mp);
     }
     assert.deepEqual(mps, [37, 44, 51, 51]);
-    const nearCap = CombatEngine.tickCombatState({ ...accel.updatedPlayer, mp: 495 }).updatedPlayer;
-    assert.equal(nearCap.mp, 500, '상한');
+    // 상한은 실효 최대 기력이다(Wave 56 — 마법사 패시브 기력 포함).
+    const cap = CombatEngine.getEffectiveMaxMp({ ...accel.updatedPlayer, mp: 0 }, []);
+    const nearCap = CombatEngine.tickCombatState({ ...accel.updatedPlayer, mp: cap - 5 }).updatedPlayer;
+    assert.equal(nearCap.mp, cap, '상한');
     assert.ok(skillOf('마법사', '마나 가속').desc.includes('MP 7'));
 });
 

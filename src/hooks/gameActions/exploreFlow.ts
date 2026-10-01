@@ -133,6 +133,12 @@ export const rollExplorationEvent = (
             const stats = getFullStats();
             dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, mp: Math.min(stats.maxMp, p.mp! + Math.floor(stats.maxMp * BALANCE.ANOMALY_MANA_REGEN_RATIO)) }) });
         } else {
+            // 2026-10 Wave 56: 고대의 봉인이 탐험 이상 현상의 상태 이상도 막는다. 유물이 없으면 난수를 쓰지 않는다.
+            const resistRelic = playerRelics.find((r) => r.effect === 'status_resist');
+            if (resistRelic && rng() < (resistRelic.val || 0)) {
+                addLog('success', MSG.ANCIENT_SEAL_RESIST);
+                return 'anomaly';
+            }
             const anomalyStatus: StatusId = anomaly.effect;
             dispatch({ type: AT.SET_PLAYER, payload: (p: Player): Player => ({ ...p, status: [...new Set([...(p.status || []), anomalyStatus])] }) });
         }
@@ -178,6 +184,8 @@ export const applyBattleStartRelics = (
             turnCount: 0,
             // cycle 163: 'cooldown_reduce.firstFree' (시간 군주의 왕관) — 매 전투 첫 스킬 무료 가능.
             firstSkillUsed: false,
+            // 2026-10 Wave 56: 그림자 망토 — 이번 전투에서 처음 받는 적 공격을 반드시 피한다.
+            ...(playerRelics.some((r) => r.effect === 'first_turn_evade') ? { cloakEvadePending: true } : {}),
         }
     };
 

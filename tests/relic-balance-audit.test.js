@@ -106,14 +106,14 @@ test('canonical relic balance report is deterministic, complete, and owner-quote
     assert.deepEqual(report.errors, []);
     assert.equal(report.effects.length, 61);
     const effectsByCategory = Object.fromEntries([
-        'abyss-only', 'baseline-stat', 'combat-scaling', 'conditional-combat',
+        'abyss-progress', 'baseline-stat', 'combat-scaling', 'conditional-combat',
         'expedition-scaling', 'exploration-pacing', 'failure-rule', 'resource-economy', 'run-scaling',
     ].map((category) => [
         category,
         report.effects.filter((row) => row.category === category).map((row) => row.effect),
     ]));
     assert.deepEqual(effectsByCategory, {
-        'abyss-only': ['abyss_atk_scale', 'abyss_crit_scale', 'abyss_floor_power'],
+        'abyss-progress': ['abyss_atk_scale', 'abyss_crit_scale', 'abyss_floor_power'],
         'baseline-stat': [
             'ancient_power', 'armor_pen', 'battle_start_atk', 'crit_dmg', 'dual_crit',
             'elem_boost', 'fortress', 'genesis', 'glass_cannon', 'mp_mult', 'omega',

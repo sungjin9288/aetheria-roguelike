@@ -554,13 +554,16 @@ import { readFile } from 'node:fs/promises';
           skillLoadout: { selected: 0, cooldowns: {} },
       };
       const enemy = { name: '오크', hp: 100000, maxHp: 100000, atk: 50, def: 5 };
-      // 180 - 50 + 100 = 230 → cap 200.
-      const skill = { name: 'Test', mp: 50, mult: 1.0, effect: 'extraTurn', mpRestore: 100, cooldown: 0 };
+      // 180 - 50 + 200 = 330 → 실효 최대 기력에서 멈춘다(2026-10 Wave 56: 저장값이 아니라 calculateFullStats().maxMp —
+      //   시간술사 패시브 기력 포함).
+      const skill = { name: 'Test', mp: 50, mult: 1.0, effect: 'extraTurn', mpRestore: 200, cooldown: 0 };
       const stats = { atk: 200, def: 50, relics: [], activeSynergies: [], critChance: 0 };
+      const cap = CombatEngine.getEffectiveMaxMp(player, []);
+      assert.ok(cap >= 200 && cap < 330, `실효 최대 기력 ${cap}`);
 
       const r = CombatEngine.performSkill(player, enemy, stats, skill);
-      assert.equal(r.updatedPlayer.mp, 200,
-          `mpRestore 100 시 maxMp 200 cap (실제: ${r.updatedPlayer.mp})`);
+      assert.equal(r.updatedPlayer.mp, cap,
+          `mpRestore 200 시 실효 최대 기력 ${cap} cap (실제: ${r.updatedPlayer.mp})`);
   });
 
   test('cycle 243: extraTurn + val (ATK 보너스) 동작 회귀 가드', () => {

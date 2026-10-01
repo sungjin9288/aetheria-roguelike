@@ -108,10 +108,15 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         }
     });
 
+    // 2026-10 Wave 56: 허공의 눈 "보스 발견 확률 3배" = 조우 풀에 이미 있는 보스의 가중치 × 3. 이전에는 지역 보스 목록
+    //   전체를 풀에 넣어, 해금 조건이 있는 숨은 보스(시간의 파수꾼 · 원한의 용사 · 공허의 군주 · 에테르 군주)가 조건 없이
+    //   약 29% 나왔고 게이지로만 만나는 보스도 무작위 조우가 됐다. 이제 풀에 없는 보스는 넣지 않는다(해금된 숨은 보스는
+    //   위에서 풀에 들어온 뒤 가중치를 받는다).
     const bossHunterRelic = playerRelics.find((r) => r.effect === 'boss_hunter');
     if (bossHunterRelic && mapBossMonsters.length > 0) {
+        const bossEntries = encounterPool.filter((name) => mapBossMonsters.includes(name));
         for (let i = 1; i < Math.max(1, Math.floor(bossHunterRelic.val.spawn || 1)); i += 1) {
-            encounterPool = [...encounterPool, ...mapBossMonsters];
+            encounterPool = [...encounterPool, ...bossEntries];
         }
     }
 

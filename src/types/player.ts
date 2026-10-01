@@ -271,6 +271,8 @@ interface CombatFlags {
     stealthFirstPending?: boolean;
     /** 다음 피해 행동 1회의 피해 배율(Wave 53 그림자 이동). 쓰면 0으로 돌아간다. */
     nextAttackMult?: number;
+    /** 그림자 망토 — 이번 전투에서 처음 받는 적 공격을 반드시 피한다(Wave 56). 전투 시작 때 세우고 쓰면 false. */
+    cloakEvadePending?: boolean;
 }
 
 /**

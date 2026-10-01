@@ -1,10 +1,10 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "16a7bcc710465bca277877e695145eb06c5a8b58af90b0a69894632c9809efa9",
+  "reportHash": "40ed0a3e64d43377ba9fedf64c9b210b322faa41ad5e0803e2b243d6512bb69c",
   "authorityHashes": {
-    "catalog": "6701f1993327ef90b2d06b2f81e63e7b63c837c2b8fdd1513d841a7e5094368f",
-    "combatActions": "859be1d57e760f9eb5593c700b150a7b29c96e5c0e59bc3e7c7cd88f0db31135",
-    "combatOutcome": "a366fac1857ef58ff21e23a8a27818f8e1efe38ed4370d554653b022afc70e2a"
+    "catalog": "77c50786c7cb8538edcaf2fd4051912ce93edeed10d3918860a2b21ff77d58f9",
+    "combatActions": "efc84fd3fd4724d43b9af81b874a7c9848fac2c69da90a558f3778e40f774718",
+    "combatOutcome": "4a51ee8b7243a6bc2a53e15abb5340852a62f088ae5e4a4509d8c6af6fa85fa9"
   },
   "report": {
     "schemaVersion": 1,
@@ -24,12 +24,12 @@
     "catalog": {
       "goldMagnet": {
         "rarity": "common",
-        "desc": "골드 획득 30% 증가",
+        "desc": "전투 처치 골드 30% 증가",
         "value": 0.3
       },
       "merchantSeal": {
         "rarity": "rare",
-        "desc": "골드 획득 60% 증가 (공허의 왕좌 다음 등급)",
+        "desc": "전투 처치 골드 60% 증가",
         "value": 0.6
       }
     },

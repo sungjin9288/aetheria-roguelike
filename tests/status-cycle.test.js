@@ -270,8 +270,9 @@ test('구조 불변식(cycle 549): tickEnemyStatus 시그니처에 3 defaults가
     assert.ok(!/synergyDotMult\s*=\s*1/.test(sig), 'synergyDotMult default 1 제거');
 
     const enemyAI = await readSrc('src/systems/CombatEngine.enemyAI.ts');
-    assert.ok(/this\.tickEnemyStatus\(updatedEnemy,\s*\[\],\s*curseAmpMult,\s*synergyDotMult\)/.test(enemyAI),
-        '내부 callsite가 4 인자 모두 명시 전달한다');
+    // 2026-10 Wave 56: 다섯 번째 인자(지속 피해 유물 대상별 배율)가 붙었다 — 넷은 여전히 명시 전달한다.
+    assert.ok(/this\.tickEnemyStatus\(updatedEnemy,\s*\[\],\s*curseAmpMult,\s*synergyDotMult,\s*relicDotMults\)/.test(enemyAI),
+        '내부 callsite가 인자 모두 명시 전달한다');
 });
 
 // ─── cycle 583: StatusMetric variant default 'hp' 제거 + 3 callsite 보존 ───

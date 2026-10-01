@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "4e4246c52581e481d4031b07c9f410e1ef072a9ed30e1cc74628879b02a0dbe0",
+  "reportHash": "4485763d677714bd56fb579a8ca21d3525b20f74e3f4612623489015d84614e7",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -20,7 +20,7 @@
     "effects": [
       {
         "effect": "abyss_atk_scale",
-        "category": "abyss-only",
+        "category": "abyss-progress",
         "relicIds": [
           "abyss_resonance"
         ],
@@ -30,7 +30,7 @@
       },
       {
         "effect": "abyss_crit_scale",
-        "category": "abyss-only",
+        "category": "abyss-progress",
         "relicIds": [
           "void_crystal"
         ],
@@ -40,7 +40,7 @@
       },
       {
         "effect": "abyss_floor_power",
-        "category": "abyss-only",
+        "category": "abyss-progress",
         "relicIds": [
           "abyssal_dominion"
         ],
@@ -342,6 +342,8 @@
           "shadow_cloak"
         ],
         "runtimeOwners": [
+          "src/hooks/gameActions/exploreFlow.ts",
+          "src/systems/CombatEngine.enemyAI.ts",
           "src/utils/statsCalculator.ts"
         ]
       },
@@ -426,6 +428,7 @@
           "soul_collector"
         ],
         "runtimeOwners": [
+          "src/systems/CombatEngine.outcome.ts",
           "src/utils/statsCalculator.ts"
         ]
       },
@@ -551,6 +554,7 @@
           "mirror_of_fate"
         ],
         "runtimeOwners": [
+          "src/systems/CombatEngine.enemyAI.ts",
           "src/utils/statsCalculator.ts"
         ]
       },
@@ -601,6 +605,7 @@
           "ancient_seal"
         ],
         "runtimeOwners": [
+          "src/hooks/gameActions/exploreFlow.ts",
           "src/systems/CombatEngine.enemyAI.ts"
         ]
       },
@@ -632,6 +637,7 @@
           "rune_crown"
         ],
         "runtimeOwners": [
+          "src/systems/CombatEngine.ts",
           "src/utils/statsCalculator.ts"
         ]
       },

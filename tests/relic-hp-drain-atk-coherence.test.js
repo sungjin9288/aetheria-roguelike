@@ -155,7 +155,7 @@ test('normal settlements use the selected source label and paired HP cost in eit
     }
 });
 
-test('hell reaper retains abyssal attack, replaces only its cost with 0.02, and owns its narration', () => {
+test('hell reaper retains abyssal attack, reduces its cost by 0.02 (5% → 3%), and owns its narration', () => {
     const abyssalStats = calculateFullStats(makePlayer([abyssalContract]));
     for (const relics of [
         [bloodOathRing, abyssalContract, soulDrain],
@@ -163,7 +163,8 @@ test('hell reaper retains abyssal attack, replaces only its cost with 0.02, and 
     ]) {
         assert.equal(calculateFullStats(makePlayer(relics)).atk, abyssalStats.atk);
         const result = turnSettlement(relics);
-        assert.equal(result.hp, 980);
+        // 2026-10 Wave 56: "생명 소모가 3%로" — 줄이는 양 0.02를 빼서 3%다(이전에는 0.02를 새 비용으로 대입해 2%).
+        assert.equal(result.hp, 970);
         assert.equal(result.label, '지옥의 수확자');
     }
 });
