@@ -50,6 +50,26 @@ const normalBonusPool = (enemy: Monster, player: Player | null): Item[] | null =
     return pool;
 };
 
+/**
+ * 보스가 선언한 계열 장비 풀(2026-10 Wave 59, 브리핑 "화염 계열 장비" 등) — 원소 · 이름 · 직업 중 하나라도 맞고 `minTier` 이상인,
+ * 전설 각인이 아닌 무기 · 방어구다. 계열이 없는 보스는 null(기존 등급 무작위 풀). 이전에는 계열을 약속한 보스 8종도 6등급 20종에서
+ * 균등하게 뽑았다(바람 계열 0종). 빈 풀은 데이터 오류라 던진다(`tests/boss-mechanics-contract.test.js`가 지킨다).
+ */
+export const getBossThemedLootPool = (enemy: Monster): Item[] | null => {
+    const theme = enemy.mechanics?.lootTheme;
+    if (!theme) return null;
+    const pool = [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((item) => {
+        if (!item.name || SIGNATURE_ITEM_REGISTRY[item.name]) return false;
+        if ((item.tier || 1) < (theme.minTier ?? 1)) return false;
+        const elemMatch = Boolean(item.elem && theme.elems?.some((elem) => elem === item.elem));
+        const nameMatch = Boolean(theme.nameIncludes?.some((keyword) => item.name!.includes(keyword)));
+        const jobMatch = Boolean(theme.jobs?.some((job) => item.jobs?.includes(job)));
+        return elemMatch || nameMatch || jobMatch;
+    });
+    if (pool.length === 0) throw new Error('INVALID_BOSS_LOOT_THEME');
+    return pool;
+};
+
 const calculateCappedLootChance = (...factors: unknown[]) => {
     let chance = 1;
 
@@ -247,6 +267,7 @@ export const processLoot = (
         const bonusChance = enemy.isBoss ? BALANCE.LOOT_BOSS_BONUS_CHANCE : BALANCE.LOOT_NORMAL_BONUS_CHANCE;
         if (random() < calculateCappedLootChance(bonusChance, dropRateMult, bossDropMult, progressionLootMult)) {
             const tierPool = normalBonusPool(enemy, player)
+                ?? getBossThemedLootPool(enemy)
                 ?? [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((i) => (i.tier || 1) === bonusTier);
             if (tierPool.length > 0) {
                 const picked = tierPool[Math.floor(random() * tierPool.length)];

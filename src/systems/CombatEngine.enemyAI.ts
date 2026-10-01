@@ -4,8 +4,12 @@ import { CLASSES } from '../data/classes.js';
 import type { FullStats, Monster, Player, Relic, RelicDotScope, RelicSynergy, StatusId } from '../types/index.js';
 import { getRelicDotMult } from './CombatEngine.actions.js';
 import type { LootLog } from './CombatEngine.loot.js';
-import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, isEnemyBlindActive, isEnemyTauntActive } from './CombatEngine.status.js';
+import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, getPlayerStatusStacks, getStatusStackMult, isEnemyBlindActive, isEnemyTauntActive } from './CombatEngine.status.js';
 import { getEnemyAttackElement, getEquipmentResistMult } from '../utils/equipmentPassives.js';
+import {
+    getActiveHeavyStatus, getLongFightEnrageBonus, getPhase2Threshold, getPhase3Threshold, getPhaseStatuses,
+    isBreathAction, isBreathNext, isResistPierced,
+} from './bossMechanics.js';
 
 interface EnemyAttackResult {
     updatedPlayer: Player;
@@ -34,6 +38,7 @@ interface EnemyTelegraph {
  * CombatEngine.status/.relics 패턴과 동일 — 실제로 호출하는 2개만 최소 인터페이스로 선언한다.
  */
 interface EnemyAIMixinContext {
+    enemyAction(player: Player, enemy: Monster, stats: FullStats, random: () => number): EnemyAttackResult;
     tickEnemyStatus(enemy: Monster, logs: LootLog[], curseAmpMult: number, synergyDotMult: number, relicDotMults?: Partial<Record<RelicDotScope, number>>): { updatedEnemy: Monster; logs: LootLog[] };
     applyFatalProtection(
         player: Player,
@@ -47,9 +52,109 @@ interface EnemyAIMixinContext {
 /** 이 mixin이 CombatEngine에 spread하는 메서드 시그니처. */
 interface EnemyAIMixin {
     enemyAttack(player: Player, enemy: Monster, stats: FullStats, rng?: () => number): EnemyAttackResult;
+    /** 적 행동 1번(행동 수는 이미 센 적을 받는다) — 소환 하수인의 공격은 `enemyAttack`이 그 뒤에 붙인다. */
+    enemyAction(player: Player, enemy: Monster, stats: FullStats, random: () => number): EnemyAttackResult;
+    /** 방어 자세 중에 맞은 보스의 반격(Wave 59, `mechanics.guardCounter`). 반격이 없으면 null. */
+    resolveGuardCounter(player: Player, enemy: Monster, stats: FullStats): EnemyAttackResult | null;
     attemptEscape(enemy: Monster, stats: FullStats, rng?: () => number): EscapeResult;
     predictEnemyNextAction(enemy: Monster): EnemyTelegraph | null;
 }
+
+/** 적 공격 피해(방어 전 → 방어 뒤) — 최소 피해는 방어 전 피해의 ENEMY_MIN_DMG_RATIO(방어력으로 완전히 막지 못한다). */
+const enemyHitAfterDefense = (raw: number, def: number) => {
+    const minDmg = Math.max(1, Math.floor(raw * BALANCE.ENEMY_MIN_DMG_RATIO));
+    return Math.max(minDmg, Math.floor(raw - def));
+};
+
+/**
+ * 받는 피해 보정 — 원소 저항 장비(Wave 57) → 저주(Wave 59부터 중첩) → 조합의 대가(Wave 50) 순서. 적 공격 · 보스 반격 · 소환 공격이
+ * 같은 순서를 쓴다. 저항 무력화 페이즈(`isResistPierced`)에서는 원소 저항이 통하지 않는다. 난수를 쓰지 않는다.
+ */
+const applyIncomingDamageMods = (
+    damage: number,
+    enemy: Monster,
+    player: Player,
+    stats: FullStats,
+    logs: LootLog[],
+    { elemental = true, quiet = false }: { elemental?: boolean; quiet?: boolean } = {},
+) => {
+    let out = damage;
+    if (elemental) {
+        // 2026-10 Wave 57: 원소 저항 장비 — 적 공격의 원소는 적 자신의 원소다(소유자 결정). 그 원소를 막는 장비가 있으면
+        //   받는 피해 × BALANCE.EQUIP_ELEMENT_RESIST_MULT(50% 감소). 이전에는 장비 설명("불에 강한", "모든 원소를 저항")만 있었다.
+        const attackElement = getEnemyAttackElement(enemy);
+        const elementResistMult = isResistPierced(enemy) ? 1 : getEquipmentResistMult(stats.elementResists, attackElement);
+        if (attackElement && elementResistMult < 1) {
+            const before = out;
+            out = Math.max(1, Math.floor(out * elementResistMult));
+            logs.push({ type: 'success', text: MSG.EQUIP_ELEMENT_RESIST_PROC(attackElement, Math.round((1 - elementResistMult) * 100), before, out) });
+        }
+    }
+
+    // cycle 108: 플레이어 curse 상태이상 — 받는 피해 증폭 (BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT).
+    //   2026-10 Wave 59: 보스 "저주 중첩" — 중첩마다 증폭분이 STATUS_STACK_BONUS만큼 커진다(1중첩은 이전과 같은 +30%).
+    const curseStacks = getPlayerStatusStacks(player, 'curse');
+    if (curseStacks > 0) {
+        const ampMult = 1 + ((BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT || 1.3) - 1) * getStatusStackMult(curseStacks);
+        const before = out;
+        out = Math.floor(out * ampMult);
+        if (!quiet) logs.push({ type: 'warning', text: MSG.PLAYER_CURSE_DMG_AMP(Math.round((ampMult - 1) * 100), before, out) });
+    }
+
+    // 2026-09 Wave 50: 조합의 대가 — 받는 피해 증가(statsCalculator가 활성 조합에서 모은 배율). 난수를 쓰지 않는다.
+    const synergyDamageTakenMult = stats.damageTakenMult ?? 1;
+    if (synergyDamageTakenMult !== 1) out = Math.max(1, Math.floor(out * synergyDamageTakenMult));
+    return out;
+};
+
+/**
+ * 보스가 플레이어에게 상태를 건다(Wave 59) — 페이즈 전환 · 2페이즈 강타 · 브레스가 같은 규칙을 쓴다.
+ *  - 저항 유물(`resistChance` > 0)이 있을 때만 난수 1번으로 저항을 판정한다. 이전 페이즈 경로는 유물이 없어도 난수를 썼고,
+ *    이미 걸린 상태에서도 저항 로그를 따로 굴렸다.
+ *  - `maxStacks`가 없으면 걸려 있지 않을 때만 건다. 있으면 쌓는다 — 빙결은 냉기를 쌓아 그 수에 닿을 때 얼고,
+ *    지속 피해 · 저주는 중첩이 올라가며 지속 턴이 처음으로 돌아간다.
+ */
+const applyBossStatus = (
+    player: Player,
+    status: StatusId,
+    logs: LootLog[],
+    appliedText: (label: string) => string,
+    { resistChance, maxStacks, random }: { resistChance: number; maxStacks?: number; random: () => number },
+): Player => {
+    const label = MSG.DOT_LABELS[status] || status;
+    const list: StatusId[] = Array.isArray(player.status) ? player.status : [];
+    const present = list.includes(status);
+    const stackable = typeof maxStacks === 'number' && maxStacks > 1;
+    if (present && (!stackable || status === 'freeze')) return player;
+    if (resistChance > 0 && random() < resistChance) {
+        logs.push({ type: 'success', text: MSG.ANCIENT_SEAL_RESIST });
+        return player;
+    }
+    const statusTurns = { ...(player.statusTurns || {}), [status]: BALANCE.PLAYER_STATUS_DURATION_TURNS };
+    if (stackable && status === 'freeze') {
+        const frost = (player.combatFlags?.frostStacks ?? 0) + 1;
+        if (frost < maxStacks!) {
+            logs.push({ type: 'warning', text: MSG.PLAYER_FROST_BUILDUP(frost, maxStacks!) });
+            return { ...player, combatFlags: { ...(player.combatFlags || {}), frostStacks: frost } };
+        }
+        logs.push({ type: 'warning', text: MSG.PLAYER_FROZEN_BY_FROST });
+        return { ...player, status: [...list, status], statusTurns, combatFlags: { ...(player.combatFlags || {}), frostStacks: 0 } };
+    }
+    if (!present) {
+        logs.push({ type: 'warning', text: appliedText(label) });
+        const next: Player = { ...player, status: [...list, status], statusTurns };
+        if (player.statusStacks?.[status] !== undefined) {
+            const { [status]: _stale, ...rest } = player.statusStacks;
+            next.statusStacks = rest;
+        }
+        return next;
+    }
+    const current = getPlayerStatusStacks(player, status);
+    const stacks = Math.min(maxStacks!, current + 1);
+    // 최대 중첩이면 지속 턴만 처음으로 돌린다(세지지 않으니 알리지 않는다).
+    if (stacks > current) logs.push({ type: 'warning', text: MSG.PLAYER_STATUS_STACKED(label, stacks) });
+    return { ...player, statusTurns, statusStacks: { ...(player.statusStacks || {}), [status]: stacks } };
+};
 
 /**
  * CombatEngine 적 행동/예측 메서드 (enemyAttack / attemptEscape / predictEnemyNextAction)
@@ -60,6 +165,47 @@ interface EnemyAIMixin {
 export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
     enemyAttack(player, enemy, stats, rng) {
         const random = typeof rng === 'function' ? rng : Math.random;
+        // 2026-10 Wave 59: 이번 행동을 센다 — 브레스 주기 · 장기전이 읽는다(기절 · 방어 턴도 행동이다).
+        const actingEnemy: Monster = { ...enemy, actionCount: (enemy.actionCount ?? 0) + 1 };
+        const result = this.enemyAction(player, actingEnemy, stats, random);
+
+        // 소환된 하수인(망자)이 함께 친다 — 이번 행동 전에 있던 수만큼(이번 행동에 깨어난 하수인은 다음 행동부터).
+        const summons = Math.max(0, enemy.summons ?? 0);
+        const summon = result.updatedEnemy.mechanics?.summon;
+        if (!summon || summons === 0 || result.isDead || result.isEnemyDead) return result;
+        const logs = [...result.logs];
+        const perHit = enemyHitAfterDefense((result.updatedEnemy.atk ?? 0) * summon.hitMult, stats.def);
+        const total = applyIncomingDamageMods(perHit * summons, result.updatedEnemy, result.updatedPlayer, stats, logs, { elemental: false, quiet: true });
+        const protectedResult = this.applyFatalProtection(result.updatedPlayer, stats.relics || [], total, logs, stats.activeSynergies || []);
+        logs.push({ type: 'warning', text: MSG.ENEMY_SUMMON_HIT(summon.name, summons, total) });
+        return {
+            ...result,
+            updatedPlayer: protectedResult.updatedPlayer,
+            damage: result.damage + total,
+            isDead: protectedResult.isDead,
+            logs,
+        };
+    },
+
+    resolveGuardCounter(player, enemy, stats) {
+        const counter = enemy.mechanics?.guardCounter;
+        if (!counter || (enemy.hp ?? 0) <= 0) return null;
+        const logs: LootLog[] = [];
+        const raw = (enemy.atk ?? 0) * counter.mult * getEnemyDebuffAtkMult(enemy) * (1 + getLongFightEnrageBonus(enemy));
+        const damage = applyIncomingDamageMods(enemyHitAfterDefense(raw, stats.def), enemy, player, stats, logs);
+        const protectedResult = this.applyFatalProtection(player, stats.relics || [], damage, logs, stats.activeSynergies || []);
+        logs.push({ type: 'critical', text: MSG.ENEMY_GUARD_COUNTER_HIT(enemy.name, damage) });
+        return {
+            updatedPlayer: protectedResult.updatedPlayer,
+            updatedEnemy: enemy,
+            damage,
+            isDead: protectedResult.isDead,
+            isCrit: true,
+            logs,
+        };
+    },
+
+    enemyAction(player, enemy, stats, random) {
         let updatedEnemy: Monster = { ...enemy };
         let updatedPlayer: Player = { ...player };
         const logs: LootLog[] = [];
@@ -116,79 +262,60 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         }
 
         // ── Phase 전환 체크 (보스 + 엘리트 통합) ───────────────────
+        // 2026-10 Wave 59: 문턱은 데이터 값 그대로이고(2페이즈 기본 50% — 이전에는 적 행동마다 40~60%를 새로 뽑았다),
+        //   2페이즈를 먼저 · 3페이즈를 뒤에 적용한다 — 한 행동에 두 문턱을 함께 넘으면 3페이즈의 이름 · 패턴이 남는다(이전에는
+        //   3페이즈를 먼저 적용한 뒤 2페이즈가 덮어써 "종말의 마왕"이 "분노한 마왕"의 강타 확률로 싸웠다).
         if (updatedEnemy.isBoss || updatedEnemy.isElite) {
             const hpRatio = (updatedEnemy.hp ?? 0) / Math.max(1, updatedEnemy.maxHp || (updatedEnemy.hp ?? 1));
-            // 2026-09 Wave 6 X2: DOT_LABELS(8종 StatusId) 재사용 — 원래 이 4키만 인식하던
-            //   동작(stun/bleed/blind/fear는 fallback으로 원문 그대로 노출)을 그대로 보존한다.
-            //   p3/p2.statusEffect가 string(느슨한 타입)이라 statusLabels도 Record<string, string>
-            //   그대로 유지 — 값만 DOT_LABELS에서 가져온다.
-            const statusLabels: Record<string, string> = {
-                burn: MSG.DOT_LABELS.burn, poison: MSG.DOT_LABELS.poison,
-                freeze: MSG.DOT_LABELS.freeze, curse: MSG.DOT_LABELS.curse,
+            const relicResist = relics.find((r) => r.effect === 'status_resist')?.val || 0;
+            const applyPhaseStatuses = (phase: NonNullable<Monster['phase2']>, phaseNo: number) => {
+                getPhaseStatuses(phase).forEach((status) => {
+                    updatedPlayer = applyBossStatus(
+                        updatedPlayer,
+                        status,
+                        logs,
+                        (label) => MSG.ENEMY_PHASE_STATUS_APPLIED(phaseNo, label),
+                        { resistChance: phase.pierceResist ? 0 : relicResist, random },
+                    );
+                });
             };
 
-            // Phase 3 (원시의 신 등 3페이즈 보스, threshold 25%)
-            if (updatedEnemy.phase3 && !updatedEnemy.phase3Triggered) {
-                const threshold = updatedEnemy.phase3.threshold ?? 0.25;
-                if (hpRatio <= threshold) {
-                    const p3 = updatedEnemy.phase3;
-                    updatedEnemy = {
-                        ...updatedEnemy,
-                        name: p3.name,
-                        atk: Math.floor((updatedEnemy.atk ?? 0) * (1 + (p3.atkBonus ?? 0))),
-                        // cycle 228: 8 phase3 bosses(종말의 마왕 / 절대 공허 등)의 defBonus 10-40을
-                        //   적용. 기존엔 atkBonus만 적용되어 phase3 'last stand' 강화 의도 미반영.
-                        //   silent dead config 시리즈 7번째.
-                        def: ((updatedEnemy.def ?? 0) as number) + ((p3.defBonus ?? 0) as number),
-                        pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p3.pattern },
-                        phase3Triggered: true,
-                    };
-                    logs.push({ type: 'critical', text: `💀 ${p3.log}` });
-                    if (p3.statusEffect) {
-                        const resistRelic = relics.find((r) => r.effect === 'status_resist');
-                        const resistChance = resistRelic ? (resistRelic.val || 0) : 0;
-                        const currentStatus: StatusId[] = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-                        // p3.statusEffect: string(데이터 실측은 StatusId 부분집합 — BossPhase가 도메인
-                        //   전체를 아는 monsters.ts 밖 좁은 타입이라 string으로 남는다).
-                        const p3Status = p3.statusEffect as StatusId;
-                        if (!currentStatus.includes(p3Status) && random() >= resistChance) {
-                            updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p3Status] };
-                            logs.push({ type: 'warning', text: MSG.ENEMY_PHASE_STATUS_APPLIED(3, statusLabels[p3.statusEffect] || p3.statusEffect) });
-                        } else if (resistRelic && random() < resistChance) {
-                            logs.push({ type: 'success', text: MSG.ANCIENT_SEAL_RESIST });
-                        }
-                    }
+            if (updatedEnemy.phase2 && !updatedEnemy.phase2Triggered
+                && hpRatio <= getPhase2Threshold(updatedEnemy, BALANCE.BOSS_PHASE2_THRESHOLD)) {
+                const p2 = updatedEnemy.phase2;
+                updatedEnemy = {
+                    ...updatedEnemy,
+                    name: p2.name,
+                    atk: Math.floor((updatedEnemy.atk ?? 0) * (1 + (p2.atkBonus ?? 0))),
+                    pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p2.pattern },
+                    phase2Triggered: true,
+                };
+                logs.push({ type: 'warning', text: `⚡ ${p2.log}` });
+                // Wave 59 "망자 소환" — 2페이즈 전환 때 깨어나 다음 행동부터 함께 친다.
+                const summon = updatedEnemy.mechanics?.summon;
+                if (summon) {
+                    updatedEnemy = { ...updatedEnemy, summons: summon.count };
+                    logs.push({ type: 'critical', text: MSG.ENEMY_SUMMON(updatedEnemy.name, summon.name, summon.count) });
                 }
+                applyPhaseStatuses(p2, 2);
             }
 
-            // Phase 2 (threshold: BALANCE.BOSS_PHASE2_THRESHOLD ± 10% 랜덤)
-            if (updatedEnemy.phase2 && !updatedEnemy.phase2Triggered) {
-                const baseThreshold = updatedEnemy.phase2.threshold ?? BALANCE.BOSS_PHASE2_THRESHOLD;
-                const jitter = (random() - 0.5) * 0.2;
-                const threshold = Math.max(0.2, Math.min(0.7, baseThreshold + jitter));
-                if (hpRatio <= threshold) {
-                    const p2 = updatedEnemy.phase2;
-                    updatedEnemy = {
-                        ...updatedEnemy,
-                        name: p2.name,
-                        atk: Math.floor((updatedEnemy.atk ?? 0) * (1 + (p2.atkBonus ?? 0))),
-                        pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p2.pattern },
-                        phase2Triggered: true,
-                    };
-                    logs.push({ type: 'warning', text: `⚡ ${p2.log}` });
-                    if (p2.statusEffect) {
-                        const resistRelic2 = relics.find((r) => r.effect === 'status_resist');
-                        const resistChance2 = resistRelic2 ? (resistRelic2.val || 0) : 0;
-                        const currentStatus: StatusId[] = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-                        const p2Status = p2.statusEffect as StatusId;
-                        if (!currentStatus.includes(p2Status) && random() >= resistChance2) {
-                            updatedPlayer = { ...updatedPlayer, status: [...currentStatus, p2Status] };
-                            logs.push({ type: 'warning', text: MSG.ENEMY_PHASE_STATUS_APPLIED(2, statusLabels[p2.statusEffect] || p2.statusEffect) });
-                        } else if (resistRelic2 && random() < resistChance2) {
-                            logs.push({ type: 'success', text: MSG.ANCIENT_SEAL_RESIST });
-                        }
-                    }
-                }
+            // Phase 3 (원시의 신 등 3페이즈 보스, 기본 문턱 25%)
+            if (updatedEnemy.phase3 && !updatedEnemy.phase3Triggered && hpRatio <= getPhase3Threshold(updatedEnemy)) {
+                const p3 = updatedEnemy.phase3;
+                updatedEnemy = {
+                    ...updatedEnemy,
+                    name: p3.name,
+                    atk: Math.floor((updatedEnemy.atk ?? 0) * (1 + (p3.atkBonus ?? 0))),
+                    // cycle 228: 8 phase3 bosses(종말의 마왕 / 절대 공허 등)의 defBonus 10-40을
+                    //   적용. 기존엔 atkBonus만 적용되어 phase3 'last stand' 강화 의도 미반영.
+                    //   silent dead config 시리즈 7번째.
+                    def: ((updatedEnemy.def ?? 0) as number) + ((p3.defBonus ?? 0) as number),
+                    pattern: { ...(updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 }), ...p3.pattern },
+                    phase3Triggered: true,
+                };
+                logs.push({ type: 'critical', text: `💀 ${p3.log}` });
+                applyPhaseStatuses(p3, 3);
             }
         }
 
@@ -209,14 +336,34 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             : (updatedEnemy.pattern || { guardChance: 0.2, heavyChance: 0.2 });
 
         const pattern = effectivePattern;
+        const mechanics = updatedEnemy.mechanics;
+        // 2026-10 Wave 59 "브레스" — `every`번째 행동은 방어 판정 없이 브레스다(행동 판정 난수는 그대로 1번 쓴다).
+        const breathTurn = isBreathAction(updatedEnemy);
         const roll = random();
-        if (roll < pattern.guardChance) {
+        if (!breathTurn && roll < pattern.guardChance) {
+            let guardEnemy: Monster = { ...updatedEnemy, guarding: true };
+            const guardLogs: LootLog[] = [...logs, {
+                type: 'warning',
+                // Wave 59 "강한 카운터" — 반격하는 보스는 방어 자세가 곧 반격 자세다(지금 공격하면 반격당한다).
+                text: mechanics?.guardCounter
+                    ? MSG.ENEMY_GUARD_COUNTER_STANCE(updatedEnemy.name)
+                    : MSG.COMBAT_ENEMY_GUARD(updatedEnemy.name),
+            }];
+            // Wave 59 "회복 압박" — 방어 자세마다 최대 생명의 guardHeal만큼 회복한다.
+            const healRatio = mechanics?.guardHeal ?? 0;
+            const maxHp = guardEnemy.maxHp || guardEnemy.hp || 0;
+            if (healRatio > 0 && (guardEnemy.hp ?? 0) < maxHp) {
+                const before = guardEnemy.hp ?? 0;
+                const healed = Math.min(maxHp, before + Math.max(1, Math.floor(maxHp * healRatio)));
+                guardEnemy = { ...guardEnemy, hp: healed };
+                guardLogs.push({ type: 'warning', text: MSG.ENEMY_GUARD_HEAL(guardEnemy.name, healed - before) });
+            }
             return {
                 updatedPlayer,
-                updatedEnemy: { ...updatedEnemy, guarding: true },
+                updatedEnemy: guardEnemy,
                 damage: 0,
                 isDead: false,
-                logs: [...logs, { type: 'warning', text: MSG.COMBAT_ENEMY_GUARD(updatedEnemy.name) }]
+                logs: guardLogs,
             };
         }
 
@@ -272,8 +419,8 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             };
         }
 
-        const heavy = roll < pattern.guardChance + pattern.heavyChance;
-        let mult = heavy ? 1.4 : 1;
+        const heavy = breathTurn || roll < pattern.guardChance + pattern.heavyChance;
+        let mult = breathTurn ? (mechanics?.breath?.mult ?? 1.4) : heavy ? 1.4 : 1;
         const critBlockRelic = relics.find((relic) => relic.effect === 'crit_block');
         if (heavy && critBlockRelic && random() < critBlockRelic.val) {
             mult = 1;
@@ -301,40 +448,24 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
 
         // blind / fear / curse에 의한 적 공격력 감소 (#5) — 이번 행동 시작 때 걸려 있던 약화 중 가장 강한 것.
         const enemyAtkMult = debuffAtkMult;
-        const rawEnemyAtk = (updatedEnemy.atk ?? 0) * mult * enemyAtkMult;
+        // 2026-10 Wave 59 "장기전은 손해" — afterActions번째 행동 뒤로 행동마다 공격력이 오른다(시작할 때와 상한에 닿을 때 알린다).
+        const enrageBonus = getLongFightEnrageBonus(updatedEnemy);
+        if (enrageBonus > 0) {
+            const previousBonus = getLongFightEnrageBonus({ ...updatedEnemy, actionCount: (updatedEnemy.actionCount ?? 1) - 1 });
+            const enrageMax = mechanics?.longFightEnrage?.max ?? enrageBonus;
+            if (previousBonus === 0 || (enrageBonus >= enrageMax && previousBonus < enrageMax)) {
+                logs.push({ type: 'warning', text: MSG.ENEMY_LONG_FIGHT_ENRAGE(updatedEnemy.name, Math.round(enrageBonus * 100)) });
+            }
+        }
+        const rawEnemyAtk = (updatedEnemy.atk ?? 0) * mult * enemyAtkMult * (1 + enrageBonus);
         // 최소 피해량: 원래 공격력의 10% (DEF 스택으로 완전 무효화 방지, 고DEF 빌드 보상)
-        const minEnemyDmg = Math.max(1, Math.floor(rawEnemyAtk * 0.10));
-        let enemyDmg = Math.max(minEnemyDmg, Math.floor(rawEnemyAtk - stats.def));
+        let enemyDmg = enemyHitAfterDefense(rawEnemyAtk, stats.def);
         if (enemyAtkMult < 1 && debuffAtkLabel) {
             logs.push({ type: 'info', text: MSG.ENEMY_ATK_REDUCED_STATUS(MSG.DOT_LABELS[debuffAtkLabel], updatedEnemy.name) });
         }
 
-        // 2026-10 Wave 57: 원소 저항 장비 — 적 공격의 원소는 적 자신의 원소다(소유자 결정). 그 원소를 막는 장비가 있으면
-        //   받는 피해 × BALANCE.EQUIP_ELEMENT_RESIST_MULT(50% 감소). 이전에는 장비 설명("불에 강한", "모든 원소를 저항")만 있었다.
-        //   난수를 쓰지 않는다.
-        const attackElement = getEnemyAttackElement(updatedEnemy);
-        const elementResistMult = getEquipmentResistMult(stats.elementResists, attackElement);
-        if (attackElement && elementResistMult < 1) {
-            const before = enemyDmg;
-            enemyDmg = Math.max(1, Math.floor(enemyDmg * elementResistMult));
-            logs.push({ type: 'success', text: MSG.EQUIP_ELEMENT_RESIST_PROC(attackElement, Math.round((1 - elementResistMult) * 100), before, enemyDmg) });
-        }
-
-        // cycle 108: 플레이어 curse 상태이상 — 받는 피해 증폭 (BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT).
-        // MSG.SKILL_CURSE_AMPLIFY 의도 구현. 보스 phase / heavy attack에 의한 curse 부여
-        // 위협이 actually 작동하도록. 적의 cursedTurns(공격력 감소)와 짝을 이루는 player-side 페널티.
-        const playerStatusList: StatusId[] = Array.isArray(updatedPlayer.status) ? updatedPlayer.status : [];
-        if (playerStatusList.includes('curse')) {
-            const ampMult = BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT || 1.3;
-            const before = enemyDmg;
-            enemyDmg = Math.floor(enemyDmg * ampMult);
-            const pct = Math.round((ampMult - 1) * 100);
-            logs.push({ type: 'warning', text: MSG.PLAYER_CURSE_DMG_AMP(pct, before, enemyDmg) });
-        }
-
-        // 2026-09 Wave 50: 조합의 대가 — 받는 피해 증가(statsCalculator가 활성 조합에서 모은 배율). 난수를 쓰지 않는다.
-        const synergyDamageTakenMult = stats.damageTakenMult ?? 1;
-        if (synergyDamageTakenMult !== 1) enemyDmg = Math.max(1, Math.floor(enemyDmg * synergyDamageTakenMult));
+        // 원소 저항 장비 → 저주 → 조합의 대가(Wave 59에 보스 반격 · 소환 공격과 같은 함수로 묶었다 — 순서 · 로그는 그대로).
+        enemyDmg = applyIncomingDamageMods(enemyDmg, updatedEnemy, updatedPlayer, stats, logs);
 
         // cycle 162: 'titan' 유물 (타이탄의 허리띠) — val.critReduce 0.5 받는 치명타 피해 감소.
         //   cycle 149에서 hp 보너스만 적용했고 critReduce는 별도 사이클로 미뤘던 잔존.
@@ -407,6 +538,31 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             }
         }
 
+        // 2026-10 Wave 59: 보스의 2페이즈 강타가 거는 상태("누적 · 연속 기절 · 제어")와 브레스의 상태.
+        const pierced = isResistPierced(updatedEnemy);
+        const relicResistChance = pierced ? 0 : (relics.find((r) => r.effect === 'status_resist')?.val || 0);
+        const heavyStatus = getActiveHeavyStatus(updatedEnemy);
+        if (heavyResolved && heavyStatus && !protectedResult.isDead
+            && (heavyStatus.chance >= 1 || random() < heavyStatus.chance)) {
+            protectedResult.updatedPlayer = applyBossStatus(
+                protectedResult.updatedPlayer,
+                heavyStatus.status,
+                logs,
+                (label) => MSG.ENEMY_HEAVY_STATUS_ON_HIT(updatedEnemy.name, label),
+                { resistChance: relicResistChance, maxStacks: heavyStatus.maxStacks, random },
+            );
+        }
+        const breathStatus = breathTurn ? mechanics?.breath?.status : undefined;
+        if (breathStatus && !protectedResult.isDead) {
+            protectedResult.updatedPlayer = applyBossStatus(
+                protectedResult.updatedPlayer,
+                breathStatus,
+                logs,
+                (label) => MSG.ENEMY_HEAVY_STATUS_ON_HIT(updatedEnemy.name, label),
+                { resistChance: relicResistChance, random },
+            );
+        }
+
         // cycle 172: 'counter' (반격 자세) 스킬 — 피격 시 buff.counterChance 확률로 적에게 반격 추가타.
         //   tempBuff에 counterChance 필드가 있고 turn > 0이며 player가 살아있고 적도 살아있을 때만.
         let finalEnemy: Monster = { ...updatedEnemy, guarding: false };
@@ -429,10 +585,12 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             isEnemyDead: !protectedResult.isDead && (finalEnemy.hp ?? 0) <= 0,
             isCrit: heavyResolved,
             logs: [...logs, {
-                type: heavyResolved ? 'critical' : 'warning',
-                text: heavyResolved
-                    ? MSG.COMBAT_ENEMY_HEAVY_HIT(updatedEnemy.name, enemyDmg, random)
-                    : MSG.COMBAT_ENEMY_HIT(updatedEnemy.name, enemyDmg, random)
+                type: heavyResolved || breathTurn ? 'critical' : 'warning',
+                text: breathTurn
+                    ? MSG.ENEMY_BREATH_HIT(updatedEnemy.name, enemyDmg)
+                    : heavyResolved
+                        ? MSG.COMBAT_ENEMY_HEAVY_HIT(updatedEnemy.name, enemyDmg, random)
+                        : MSG.COMBAT_ENEMY_HIT(updatedEnemy.name, enemyDmg, random)
             }]
         };
     },
@@ -446,7 +604,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
 
         // Wave 50: 도주 실패 피해도 적에게 받는 피해다 — 조합의 대가(받는 피해 증가)를 같이 받는다.
         //   Wave 57: 같은 이유로 원소 저항 장비도 적용한다.
-        const resistMult = getEquipmentResistMult(stats.elementResists, getEnemyAttackElement(enemy));
+        const resistMult = isResistPierced(enemy) ? 1 : getEquipmentResistMult(stats.elementResists, getEnemyAttackElement(enemy));
         const enemyDmg = Math.max(1, Math.floor(Math.max(1, (enemy.atk ?? 0) - stats.def) * (stats.damageTakenMult ?? 1) * resistMult));
         return {
             success: false,
@@ -466,24 +624,41 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         if (!enemy || (enemy.hp ?? 0) <= 0) return null;
         if ((enemy.stunnedTurns || 0) > 0) return { type: 'stunned', label: MSG.ENEMY_TELEGRAPH_STUNNED, color: 'blue' };
 
-        // 보스 Phase 2 전환 임박 체크
+        // 보스 페이즈 전환 임박 — 문턱 + 10% 안이면 알린다. 다음 행동이 두 문턱을 함께 넘으면(또는 이미 2페이즈면) 3페이즈를 알린다
+        //   (Wave 59: 이전에는 3페이즈 문턱에서도 2페이즈 값을 보였는데 다음 행동은 3페이즈 값으로 굴렀다).
         const hpRatio = (enemy.hp ?? 0) / Math.max(1, enemy.maxHp || (enemy.hp ?? 1));
-        if (enemy.isBoss && !enemy.phase2Triggered && enemy.phase2 && hpRatio <= BALANCE.BOSS_PHASE2_THRESHOLD + 0.1) {
+        const phase2Pending = Boolean(enemy.phase2 && !enemy.phase2Triggered);
+        const phase3Pending = Boolean(enemy.phase3 && !enemy.phase3Triggered);
+        const phase3Threshold = getPhase3Threshold(enemy);
+        if (enemy.isBoss && phase3Pending && hpRatio <= phase3Threshold + 0.1 && (!phase2Pending || hpRatio <= phase3Threshold)) {
+            return { type: 'phase3_imminent', label: MSG.ENEMY_TELEGRAPH_PHASE3_IMMINENT(enemy.phase3?.name), color: 'purple' };
+        }
+        if (enemy.isBoss && phase2Pending && hpRatio <= getPhase2Threshold(enemy, BALANCE.BOSS_PHASE2_THRESHOLD) + 0.1) {
             return { type: 'phase2_imminent', label: MSG.ENEMY_TELEGRAPH_PHASE2_IMMINENT(enemy.phase2?.name), color: 'purple' };
         }
+
+        // Wave 59: 다음 행동이 브레스면 브레스를 알린다(행동 판정과 같은 `isBreathNext`).
+        if (isBreathNext(enemy)) return { type: 'breath', label: MSG.ENEMY_TELEGRAPH_BREATH, color: 'red' };
 
         const pattern = isEnemyTauntActive(enemy)
             ? { guardChance: 0, heavyChance: 1.0 }
             : (enemy.pattern || { guardChance: 0.2, heavyChance: 0.2 });
 
-        // 가장 높은 확률 행동을 예측
+        // 알릴 만한 행동(방어 ≥30% · 맹공 ≥25%) 가운데 확률이 높은 쪽을 예측한다 — 같으면 맹공.
         // slice 20: heavy 텔레그래프 라벨 '강타' → '맹공' — 플레이어 시작 스킬
         //   '강타'와 같은 화면에서 명칭이 충돌해 적 의도를 내 스킬 확률로 오독하던 문제.
         //   적 heavy hit 로그("맹렬하게 공격합니다")와 용어 통일.
-        if (pattern.guardChance >= 0.5) return { type: 'guard', label: MSG.ENEMY_TELEGRAPH_GUARD_HIGH(Math.round(pattern.guardChance * 100)), color: 'blue' };
-        if (pattern.heavyChance >= 0.4) return { type: 'heavy', label: MSG.ENEMY_TELEGRAPH_HEAVY_HIGH(Math.round(pattern.heavyChance * 100)), color: 'red' };
-        if (pattern.guardChance >= 0.3) return { type: 'guard', label: MSG.ENEMY_TELEGRAPH_GUARD_MED(Math.round(pattern.guardChance * 100)), color: 'blue' };
-        if (pattern.heavyChance >= 0.25) return { type: 'heavy', label: MSG.ENEMY_TELEGRAPH_HEAVY_MED(Math.round(pattern.heavyChance * 100)), color: 'orange' };
+        // 2026-10 Wave 59: 이전에는 방어(≥30%)를 맹공(25~40%)보다 먼저 봐서 방어 32% · 맹공 35%인 스핑크스가 "방어 가능 (32%)"였다.
+        const guardPct = Math.round(pattern.guardChance * 100);
+        const heavyPct = Math.round(pattern.heavyChance * 100);
+        const guardLabel = pattern.guardChance >= 0.5 ? MSG.ENEMY_TELEGRAPH_GUARD_HIGH(guardPct)
+            : pattern.guardChance >= 0.3 ? MSG.ENEMY_TELEGRAPH_GUARD_MED(guardPct) : null;
+        const heavyTelegraph = pattern.heavyChance >= 0.4 ? { label: MSG.ENEMY_TELEGRAPH_HEAVY_HIGH(heavyPct), color: 'red' }
+            : pattern.heavyChance >= 0.25 ? { label: MSG.ENEMY_TELEGRAPH_HEAVY_MED(heavyPct), color: 'orange' } : null;
+        if (heavyTelegraph && (!guardLabel || pattern.heavyChance >= pattern.guardChance)) {
+            return { type: 'heavy', label: heavyTelegraph.label, color: heavyTelegraph.color };
+        }
+        if (guardLabel) return { type: 'guard', label: guardLabel, color: 'blue' };
         return { type: 'normal', label: MSG.ENEMY_TELEGRAPH_NORMAL, color: 'gray' };
     },
 };

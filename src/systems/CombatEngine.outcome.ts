@@ -4,6 +4,7 @@ import { getActiveRelicSynergies } from '../data/relics.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getEssenceRewardMult } from './essenceRewardMult';
+import { getLongFightRewardBonus } from './bossMechanics.js';
 import { getMetaVitalsLevelUpDelta } from './metaBonusRamp.js';
 import { applyEssenceGain, getEssenceGainFromExp } from './essenceLedger';
 import { getPacedCombatExp } from '../utils/progressionPacing.js';
@@ -132,6 +133,9 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         // feat/prestige-rank-ladder: rank≥9 "심연 사냥꾼" — 정예(isElite) 처치 시 EXP/골드 +25%.
         //   보스는 별도 보상 체계(초회 토벌 보너스 등)가 있으므로 정예 한정, 비퇴행 순수 보너스.
         const eliteRewardMult = enemy.isElite ? getPrestigeUnlocks(p.meta?.prestigeRank).eliteRewardMult : 1;
+        // 2026-10 Wave 59 "장기전 보상"(영겁의 수문장) — 이 적이 한 행동 수만큼 처치 골드 · 경험치가 오른다(상한 있음).
+        const longFightRewardBonus = getLongFightRewardBonus(enemy);
+        const longFightRewardMult = 1 + longFightRewardBonus;
         // 레벨 차이 골드 스케일링: 플레이어가 몬스터보다 10레벨 이상 높으면 골드 감소 (최소 30%)
         const playerLevel = p.level || 1;
         const enemyLevel = enemy.level || 1;
@@ -142,12 +146,12 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         );
         const rawExpGained = scaleProgressionExpReward(
             p,
-            Math.floor((enemy.exp ?? 0) * expMult * killExpMult * challengeRewardMult * eliteRewardMult),
+            Math.floor((enemy.exp ?? 0) * expMult * killExpMult * challengeRewardMult * eliteRewardMult * longFightRewardMult),
         );
         const expGained = getPacedCombatExp(p, rawExpGained);
         const noGold = p.challengeModifiers?.includes('noGold');
         const rawGoldGained = (enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty
-            * (noGold ? BALANCE.NO_GOLD_MODIFIER_MULT : 1) * challengeRewardMult * eliteRewardMult;
+            * (noGold ? BALANCE.NO_GOLD_MODIFIER_MULT : 1) * challengeRewardMult * eliteRewardMult * longFightRewardMult;
         if (!Number.isFinite(rawGoldGained)) throw new Error('INVALID_RELIC_EFFECT_VALUE');
         const goldGained = Math.floor(rawGoldGained);
         const currentGold = Number.isFinite(p.gold) ? p.gold! : 0;
@@ -172,15 +176,19 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         if (enemy.isBoss) p.stats.bossKills = (p.stats.bossKills || 0) + 1;
 
         const logs = [{ type: 'success', text: MSG.VICTORY(expGained, goldGained) }];
+        if (longFightRewardBonus > 0) logs.push({ type: 'event', text: MSG.LONG_FIGHT_REWARD(Math.round(longFightRewardBonus * 100)) });
         let leveledUp = false;
         let visualEffect = null;
         let bossClearBonus = null;
 
         if (enemy.isBoss && previousBossClears === 0) {
-            const bonusGold = Math.max(
+            // 2026-10 Wave 59 "대량 초회 보상"(아이스 드래곤 · 에테르 드래곤 · 공허의 대행자) — 보스가 선언한 배율을 곱한다.
+            //   이전에는 모든 보스가 max(120, 처치 골드 × 35%)였다(그 셋은 120 · 120 · 163골드).
+            const firstClearMult = enemy.mechanics?.firstClearBonusMult ?? 1;
+            const bonusGold = Math.floor(Math.max(
                 BALANCE.FIRST_BOSS_BONUS_GOLD_FLOOR,
                 Math.floor(goldGained * BALANCE.FIRST_BOSS_BONUS_GOLD_RATE),
-            );
+            ) * firstClearMult);
             p.gold += bonusGold;
             p.stats.total_gold = (p.stats.total_gold || 0) + bonusGold;
             bossClearBonus = {

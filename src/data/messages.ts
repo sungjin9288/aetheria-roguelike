@@ -812,6 +812,26 @@ export const MSG = {
     ENEMY_TELEGRAPH_GUARD_MED: (pct: number) => `방어 가능 (${pct}%)`,
     ENEMY_TELEGRAPH_HEAVY_MED: (pct: number) => `맹공 주의 (${pct}%)`,
     ENEMY_TELEGRAPH_NORMAL: '일반 공격 예상',
+    // 2026-10 Wave 59: 보스 기믹(소유자 결정 "보스 기믹 전부 설명대로 구현").
+    ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `💀 Phase 3 임박 — ${formName || '최종 형태'}`,
+    ENEMY_TELEGRAPH_BREATH: '🔥 브레스 준비 — 다음 행동',
+    ENEMY_GUARD_COUNTER_STANCE: (enemyName: string | undefined) => (
+        `${enemyName}이(가) 반격 자세를 취했습니다. 지금 공격하면 반격당합니다.`
+    ),
+    ENEMY_GUARD_COUNTER_HIT: (enemyName: string | undefined, dmg: number) => `[반격] ${enemyName}의 반격! ${dmg} 피해를 받았습니다.`,
+    ENEMY_GUARD_HEAL: (enemyName: string | undefined, heal: number) => `${enemyName}이(가) 방어 자세로 생명을 ${heal} 회복했습니다.`,
+    ENEMY_BREATH_HIT: (enemyName: string | undefined, dmg: number) => `🔥 ${enemyName}의 브레스! ${dmg} 피해를 받았습니다.`,
+    ENEMY_SUMMON: (enemyName: string | undefined, summonName: string, count: number) => (
+        `${enemyName}이(가) ${summonName} ${count}체를 깨웠습니다! 공격할 때마다 하나씩 쓰러집니다.`
+    ),
+    ENEMY_SUMMON_HIT: (summonName: string, count: number, dmg: number) => `[${summonName} ${count}체] 함께 공격! ${dmg} 피해를 받았습니다.`,
+    ENEMY_SUMMON_SLAIN: (summonName: string, left: number) => `${summonName} 하나가 쓰러졌습니다. (남은 ${left}체)`,
+    ENEMY_LONG_FIGHT_ENRAGE: (enemyName: string | undefined, pct: number) => `[장기전] ${enemyName}의 공격력 +${pct}% — 길어질수록 강해집니다.`,
+    LONG_FIGHT_REWARD: (pct: number) => `[장기전 보상] 처치 골드 · 경험치 +${pct}%`,
+    PLAYER_STATUS_STACKED: (label: string, stacks: number) => `[${label}] ${stacks}중첩 — 효과가 강해집니다!`,
+    PLAYER_FROST_BUILDUP: (stacks: number, max: number) => `[냉기 누적] ${stacks}/${max} — ${max}에 닿으면 얼어붙습니다.`,
+    PLAYER_FROZEN_BY_FROST: '[빙결] 냉기가 쌓여 얼어붙었습니다!',
+    BOSS_RELIC_REWARD: (bossName: string) => `${bossName} 토벌 보상 · 유물 선택`,
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.status.ts.
     ENEMY_DOT_TICK: (label: string, enemyName: string | undefined, dmg: number) => (

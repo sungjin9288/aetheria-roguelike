@@ -30,7 +30,8 @@ test('elemental six preserves approved monster and map gameplay data', () => {
     //   도출 타입 전환(데이터 값 변경 0건)이 바로 그런 편집이었는데, 이전엔 파일
     //   바이트가 바뀌어 이 핀을 재고정해야 했다.
     // Wave 51(소유자 결정 "성직자의 컨셉"): 몬스터 계열 태그(family, 언데드 22 · 마족 7)를 더한 의도된 게임 데이터 변경 — 재고정.
-    assert.equal(hashMonsters(), 'bd11358075bede1cfb47954b3c35dc36fb97e138f7f8b6561ffeac592434787c', 'src/data/monsters.ts gameplay data');
+    // Wave 59(소유자 결정 "보스 기믹 전부 설명대로"): 보스 기믹 선언(mechanics) · 페이즈 상태 · 2페이즈 패턴을 고친 의도된 게임 데이터 변경 — 재고정.
+    assert.equal(hashMonsters(), 'a4cc1efceeb7f88b784d1d5a7b8ab5f56fe16d48e5ce3178499f565799db669f', 'src/data/monsters.ts gameplay data');
     assert.equal(hashMaps(), '34f3eccb41468ff5e4f6069757bd5a5f6f09b6ca3c7db1463a00757396999cd4', 'src/data/maps.ts gameplay data');
 });
 

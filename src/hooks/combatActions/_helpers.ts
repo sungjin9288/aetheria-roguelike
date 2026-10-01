@@ -5,6 +5,7 @@ import { AT } from '../../reducers/actionTypes';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { getRunBuildProfile } from '../../utils/runProfile';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
+import { pickBossRewardRelics } from '../../utils/bossRelicReward';
 import type { FullStats, Item, Monster, Player } from '../../types/index.js';
 import type { AddLog, GameActionDeps } from '../actionDeps';
 
@@ -168,4 +169,21 @@ export const applyScoutGuaranteedRelic = (
     });
     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
     addLog('event', MSG.EXPLORE_RELIC_FOUND);
+};
+
+/**
+ * 보스 처치 유물 보상(Wave 59) — 유물 드랍을 약속한 보스(`mechanics.relicReward`)는 처치 때 유물 선택을 1번 보장한다.
+ * 정찰 보장 유물과 달리 유물 칸이 가득 차도 제안한다(선택 화면이 교체 · 넘기기를 보인다). 후보가 없으면(전부 보유) 무동작.
+ */
+export const applyBossRelicReward = (
+    deadEnemy: DefeatedEnemy,
+    updatedPlayer: Player,
+    { dispatch, addLog, rng }: Pick<GameActionDeps, 'dispatch' | 'addLog'> & { rng: () => number },
+) => {
+    if (!deadEnemy?.isBoss || !deadEnemy.mechanics?.relicReward) return;
+    const relicUnlocks = getPrestigeUnlocks(updatedPlayer.meta?.prestigeRank);
+    const candidates = pickBossRewardRelics(updatedPlayer, deadEnemy, relicUnlocks.relicChoices, rng);
+    if (candidates.length === 0) return;
+    dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
+    addLog('event', MSG.BOSS_RELIC_REWARD(deadEnemy.baseName || deadEnemy.name || ''));
 };

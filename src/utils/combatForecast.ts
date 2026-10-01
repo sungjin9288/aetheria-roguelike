@@ -1,5 +1,6 @@
 import type { FullStats, Item, Monster, Player } from '../types/index.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
+import { getActiveHeavyStatus } from '../systems/bossMechanics';
 
 type ForecastTone = 'pressure' | 'advantage' | 'reward' | 'steady';
 
@@ -92,8 +93,12 @@ export const getCombatForecast = ({
     const skillIsDefensive = Boolean(canUseSkill && (selectedSkill?.type === 'buff' || DEFENSIVE_EFFECTS.has(selectedSkill?.effect ?? '')));
     // 2026-09 N3: `enemy.pattern?.statusEffect ||` fallback 제거 — 정의한 pattern이 0개라
     //   항상 statusOnHit로 내려가던 죽은 우선순위였다.
-    const statusThreat = getStatusLabel(enemy.statusOnHit);
-    const telegraphType = enemyTelegraph?.type || 'normal';
+    // 2026-10 Wave 59: 2페이즈 뒤 보스 강타가 거는 상태(누적 · 연속 기절)도 위협으로 보인다.
+    const statusThreat = getStatusLabel(enemy.statusOnHit || getActiveHeavyStatus(enemy)?.status);
+    const rawTelegraphType = enemyTelegraph?.type || 'normal';
+    // 3페이즈 임박은 2페이즈 임박과 같은 대응 · 칸을 쓰고, 브레스는 맹공과 같은 대응을 쓴다.
+    const phaseImminent = rawTelegraphType === 'phase2_imminent' || rawTelegraphType === 'phase3_imminent';
+    const telegraphType = phaseImminent ? 'phase2_imminent' : rawTelegraphType === 'breath' ? 'heavy' : rawTelegraphType;
 
     let intent = enemyTelegraph?.label || '일반 공격 예상';
     if (statusThreat && telegraphType !== 'stunned') {
@@ -132,11 +137,12 @@ export const getCombatForecast = ({
     }
 
     let window = '안정 교전';
-    if (enemyHpRatio <= 0.25) {
+    // Wave 59: 3페이즈 문턱(20 · 25%)은 마무리권 안이지만 다음 행동이 최종 형태라 '마무리권'이 아니다.
+    if (enemyHpRatio <= 0.25 && !phaseImminent) {
         window = '마무리권';
     } else if (playerHpRatio <= 0.35) {
         window = hasHpItem ? '회복 우선' : '탈출 검토';
-    } else if (telegraphType === 'phase2_imminent') {
+    } else if (phaseImminent) {
         window = '전환 직전';
     } else if (primarySignatureDrop) {
         window = '전설 보상';
@@ -151,7 +157,7 @@ export const getCombatForecast = ({
     let tone: ForecastTone = 'steady';
     if (playerHpRatio <= 0.35 || telegraphType === 'heavy' || telegraphType === 'phase2_imminent') {
         tone = 'pressure';
-    } else if (telegraphType === 'stunned' || enemyHpRatio <= 0.25 || skillHitsWeakness) {
+    } else if (telegraphType === 'stunned' || (enemyHpRatio <= 0.25 && !phaseImminent) || skillHitsWeakness) {
         tone = 'advantage';
     } else if (primarySignatureDrop) {
         tone = 'reward';

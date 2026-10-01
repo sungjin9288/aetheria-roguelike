@@ -31,6 +31,20 @@ export const isEnemyBlindActive = (enemy: Monster) => isActive(enemy.blindTurns)
 /** 도발은 남은 턴이 있을 때 이번 적 행동을 강타로 고정한다. */
 export const isEnemyTauntActive = (enemy: Monster) => isActive(enemy.tauntTurns);
 
+/**
+ * 플레이어 상태이상의 중첩 수(Wave 59 보스 "누적") — 걸려 있지 않으면 0, 걸려 있으면 최소 1이다.
+ * `statusStacks`는 status 배열에 있는 상태에 대해서만 읽는다(해제 경로가 status만 비워도 남은 중첩이 새지 않는다).
+ */
+export function getPlayerStatusStacks(player: Pick<Player, 'status' | 'statusStacks'>, status: StatusId): number {
+    const list = Array.isArray(player.status) ? player.status : [];
+    if (!list.includes(status)) return 0;
+    const stored = player.statusStacks?.[status];
+    return typeof stored === 'number' && Number.isFinite(stored) && stored > 1 ? Math.floor(stored) : 1;
+}
+
+/** 중첩 수 → 기본 효과 배율. 1중첩 = 1, 그 위로 중첩마다 `BALANCE.STATUS_STACK_BONUS`(3중첩 = 2). */
+export const getStatusStackMult = (stacks: number) => 1 + BALANCE.STATUS_STACK_BONUS * Math.max(0, stacks - 1);
+
 /** 공포가 이미 걸려 있으면 더 강한(낮은) 배율을 유지한다 — 약한 공포가 강한 공포를 덮어쓰지 않는다. */
 export function mergeFearAtkMult(enemy: Monster, fearMult: number): number {
     return isActive(enemy.fearTurns) ? Math.min(enemy.fearAtkMult ?? BALANCE.FEAR_ATK_MULT, fearMult) : fearMult;
@@ -92,6 +106,8 @@ export const statusMethods = {
         const prevTurns: Record<string, number> = player.statusTurns || {};
         const status: StatusId[] = [];
         const statusTurns: Record<string, number> = {};
+        // Wave 59: 남은 상태의 중첩만 넘긴다 — 만료된 상태의 중첩은 여기서 사라진다.
+        const statusStacks: Partial<Record<StatusId, number>> = {};
 
         statusList.forEach((entry) => {
             const key = String(entry);
@@ -103,12 +119,14 @@ export const statusMethods = {
             if (remaining > 0) {
                 status.push(entry);
                 statusTurns[key] = remaining;
+                const stacks = player.statusStacks?.[entry];
+                if (typeof stacks === 'number' && stacks > 1) statusStacks[entry] = stacks;
             } else {
                 logs.push({ type: 'info', text: MSG.PLAYER_STATUS_EXPIRED(key) });
             }
         });
 
-        return { status, statusTurns, logs };
+        return { status, statusTurns, statusStacks, logs };
     },
 
     /**

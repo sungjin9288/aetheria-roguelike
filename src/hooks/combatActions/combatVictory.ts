@@ -9,7 +9,7 @@ import { addItemByName } from '../../utils/inventoryUtils';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../../utils/runProfileUtils';
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
 import { SEASON_XP } from '../../data/seasonPass';
-import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, buildPassiveBonusWithScout } from './_helpers';
+import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, applyBossRelicReward, buildPassiveBonusWithScout } from './_helpers';
 import { applyAbyssFloorAdvance } from './combatBossHandlers';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
@@ -362,6 +362,7 @@ export const handleVictoryOutcome = ({
 
     // 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
     applyScoutGuaranteedRelic(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });
+    applyBossRelicReward(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });
 
     return { earlyReturn: false, lootSettlement };
 };

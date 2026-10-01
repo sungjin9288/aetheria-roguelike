@@ -569,6 +569,12 @@ export const BALANCE = {
     //   같은 모델을 플레이어에 적용해 CombatEngine.tickCombatState에서 매 플레이어 턴
     //   1씩 감소시키고 0에서 해제한다. 해독제/정화/휴식은 종전대로 즉시 해제.
     PLAYER_STATUS_DURATION_TURNS: 3,
+    // 2026-10 Wave 59 (소유자 결정 "보스 기믹 전부 설명대로") — 보스 "누적"의 중첩 1개당 추가 세기. 첫 중첩이 기본
+    //   효과(지속 피해 최대 생명 4% · 저주 받는 피해 +30%)이고 그 위로 중첩마다 기본 효과의 이 비율만큼 더한다(3중첩 = 2배).
+    STATUS_STACK_BONUS: 0.5,
+    // 적 공격의 최소 피해 = 방어 전 피해의 이 비율(방어력으로 완전히 막지 못한다). enemyAttack에 인라인이던 0.10을 이름 붙였다 —
+    //   보스 반격 · 브레스 · 소환 공격(Wave 59)이 같은 식을 쓴다.
+    ENEMY_MIN_DMG_RATIO: 0.1,
 
     // H3 (Wave 3 감사) — handleVictory / 탐험 이상기후의 inline 숫자 정리(값 변경 없음).
     //   레벨 차 골드 감쇠: 플레이어가 적보다 (GAP_THRESHOLD + 1)레벨 이상 높을 때부터

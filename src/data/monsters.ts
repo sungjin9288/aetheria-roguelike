@@ -26,6 +26,8 @@ export const MONSTERS: Record<string, Monster> = {
         expMult: 1.35,
         goldMult: 1.35,
         phase2: { name: '분노한 화염의 군주', atkBonus: 0.35, pattern: { guardChance: 0.0, heavyChance: 0.55 }, log: '화염의 군주가 핵심 불꽃을 해방했습니다! 모든 것이 불타오릅니다!', statusEffect: 'burn' },
+        // Wave 59: "화상 누적" — 2페이즈 강타가 화상을 겹쳐 건다.
+        mechanics: { heavyStatus: { status: 'burn', chance: 0.5, maxStacks: 3 } },
     },
     '레드 드래곤': {
         isBoss: true,
@@ -36,6 +38,8 @@ export const MONSTERS: Record<string, Monster> = {
         expMult: 1.45,
         goldMult: 1.4,
         phase2: { name: '격노한 레드 드래곤', atkBonus: 0.4, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '레드 드래곤이 진정한 화염의 분노를 해방했습니다! 대기가 불꽃으로 가득 찹니다!', statusEffect: 'burn' },
+        // Wave 59: "고화력 브레스" — 세 번째 행동마다 방어 없이 브레스(화상).
+        mechanics: { breath: { every: 3, mult: 1.6, status: 'burn' } },
     },
     스핑크스: {
         isBoss: true,
@@ -45,7 +49,13 @@ export const MONSTERS: Record<string, Monster> = {
         atkMult: 1.2,
         expMult: 1.32,
         goldMult: 1.3,
-        phase2: { name: '각성한 스핑크스', atkBonus: 0.35, pattern: { guardChance: 0.15, heavyChance: 0.45 }, log: '스핑크스가 태고의 수수께끼를 풀어냈습니다! 공간이 뒤틀립니다!', statusEffect: 'poison' },
+        // Wave 59: "각성 후 가드와 독이 섞이므로" — 각성 뒤 방어가 기본(Lv20 0.32)보다 늘어난다(이전 0.15).
+        phase2: { name: '각성한 스핑크스', atkBonus: 0.35, pattern: { guardChance: 0.4, heavyChance: 0.4 }, log: '스핑크스가 태고의 수수께끼를 풀어냈습니다! 공간이 뒤틀립니다!', statusEffect: 'poison' },
+        // "독 누적" · "장기전 운영은 피하는 편이 좋습니다".
+        mechanics: {
+            heavyStatus: { status: 'poison', chance: 0.5, maxStacks: 3 },
+            longFightEnrage: { afterActions: 8, perAction: 0.05, max: 0.5 },
+        },
     },
     '아누비스 수호자': {
         isBoss: true,
@@ -55,7 +65,7 @@ export const MONSTERS: Record<string, Monster> = {
         atkMult: 1.2,
         expMult: 1.34,
         goldMult: 1.34,
-        phase2: { name: '심판하는 아누비스', atkBonus: 0.38, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '아누비스가 저승의 심판을 내립니다! 영혼의 울부짖음이 들립니다!', statusEffect: 'poison' },
+        phase2: { name: '심판하는 아누비스', atkBonus: 0.38, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '아누비스가 저승의 심판을 내립니다! 영혼의 울부짖음이 들립니다!', statusEffect: 'curse' },
     },
     '아이스 드래곤': {
         isBoss: true,
@@ -65,7 +75,13 @@ export const MONSTERS: Record<string, Monster> = {
         atkMult: 1.22,
         expMult: 1.45,
         goldMult: 1.4,
-        phase2: { name: '빙하기의 아이스 드래곤', atkBonus: 0.38, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '아이스 드래곤이 절대 영도의 냉기를 해방했습니다! 모든 것이 얼어붙습니다!' },
+        phase2: { name: '빙하기의 아이스 드래곤', atkBonus: 0.38, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '아이스 드래곤이 절대 영도의 냉기를 해방했습니다! 모든 것이 얼어붙습니다!', statusEffect: 'freeze' },
+        // Wave 59: "빙결 누적과 강한 카운터" — 2페이즈 강타가 냉기를 쌓아 세 번째에 얼리고, 방어 자세 중에 맞으면 반격한다.
+        mechanics: {
+            heavyStatus: { status: 'freeze', chance: 1, maxStacks: 3 },
+            guardCounter: { mult: 1.4 },
+            firstClearBonusMult: 10,
+        },
     },
     '빙결의 마녀': {
         isBoss: true,
@@ -75,7 +91,7 @@ export const MONSTERS: Record<string, Monster> = {
         atkMult: 1.2,
         expMult: 1.3,
         goldMult: 1.3,
-        phase2: { name: '저주받은 빙결의 마녀', atkBonus: 0.42, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '빙결의 마녀가 저주의 힘을 해방했습니다! 마법 에너지가 폭주합니다!', statusEffect: 'poison' },
+        phase2: { name: '저주받은 빙결의 마녀', atkBonus: 0.42, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '빙결의 마녀가 저주의 힘을 해방했습니다! 마법 에너지가 폭주합니다!', statusEffect: ['freeze', 'curse'] },
     },
     데스나이트: { family: 'undead', weakness: '빛', resistance: '어둠', hpMult: 1.12, atkMult: 1.08 },
     리치: { family: 'undead', weakness: '빛', resistance: '어둠', hpMult: 1.2, atkMult: 1.12 },
@@ -119,7 +135,10 @@ export const MONSTERS: Record<string, Monster> = {
         expMult: 1.6,
         goldMult: 1.55,
         dropMod: 2.0,
-        phase2: { name: '완전 개방된 차원 파쇄자', atkBonus: 0.5, pattern: { guardChance: 0.3, heavyChance: 0.3 }, log: '차원의 균열이 극대화됩니다! 현실과 허상의 경계가 무너집니다!' },
+        // Wave 59: "완전 개방 후 가드 빈도가 높아집니다" — 기본(Lv68 0.40)보다 높다(이전 0.30으로 오히려 내려갔다).
+        phase2: { name: '완전 개방된 차원 파쇄자', atkBonus: 0.5, pattern: { guardChance: 0.5, heavyChance: 0.4 }, log: '차원의 균열이 극대화됩니다! 현실과 허상의 경계가 무너집니다!' },
+        // "긴 교전은 차원 왜곡 때문에 손해가 커집니다".
+        mechanics: { longFightEnrage: { afterActions: 8, perAction: 0.05, max: 0.5 } },
     },
     '영겁의 수문장': {
         isBoss: true,
@@ -130,7 +149,12 @@ export const MONSTERS: Record<string, Monster> = {
         expMult: 1.55,
         goldMult: 1.5,
         dropMod: 1.9,
-        phase2: { name: '해방된 영겁의 수문장', atkBonus: 0.45, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '영겁의 수문장이 시간의 족쇄를 끊었습니다! 모든 시간이 멈춥니다!', statusEffect: 'poison' },
+        phase2: { name: '해방된 영겁의 수문장', atkBonus: 0.45, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '영겁의 수문장이 시간의 족쇄를 끊었습니다! 모든 시간이 멈춥니다!', statusEffect: 'stun' },
+        // Wave 59: "해방 후 강타와 제어가 섞여" · "장기전 보상".
+        mechanics: {
+            heavyStatus: { status: 'stun', chance: 0.3 },
+            longFightReward: { perAction: 0.05, max: 1 },
+        },
     },
     '에테르 드래곤': {
         isBoss: true,
@@ -142,6 +166,8 @@ export const MONSTERS: Record<string, Monster> = {
         goldMult: 1.7,
         dropMod: 2.3,
         phase2: { name: '해방된 에테르 드래곤', atkBonus: 0.45, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '에테르의 흐름이 역전됩니다! 용이 에테르의 근원에 닿았습니다!', statusEffect: 'poison' },
+        // Wave 59: "대량 초회 보상".
+        mechanics: { firstClearBonusMult: 10 },
     },
 
     // 기계 폐도 추가 몬스터
@@ -346,12 +372,19 @@ export const MONSTERS: Record<string, Monster> = {
         hpMult: 1.8, atkMult: 1.5, expMult: 3.0, goldMult: 3.0, dropMod: 4.0,
         pattern: { guardChance: 0.05, heavyChance: 0.5 },
         phase2: { name: '분열하는 시간의 파수꾼', atkBonus: 0.6, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '시간이 뒤틀립니다! 파수꾼이 과거와 미래를 동시에 공격합니다!', statusEffect: 'stun' },
+        // Wave 59: "연속 기절 패턴" · "희귀 유물이 높은 확률로 드랍".
+        mechanics: {
+            heavyStatus: { status: 'stun', chance: 0.4 },
+            relicReward: { rarities: ['rare', 'epic', 'legendary'], preferNames: ['시간', '시공'] },
+        },
     },
     '원한의 용사': {
         isBoss: true, weakness: '빛', resistance: '어둠',
         hpMult: 1.9, atkMult: 1.6, expMult: 3.5, goldMult: 3.5, dropMod: 4.5,
         pattern: { guardChance: 0.1, heavyChance: 0.45 },
         phase2: { name: '절규하는 원한의 용사', atkBonus: 0.7, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '원한이 극에 달했습니다! 용사가 최후의 힘을 폭발시킵니다!', statusEffect: 'curse' },
+        // Wave 59: "기사 계열 전설 장비".
+        mechanics: { lootTheme: { jobs: ['나이트'], minTier: 5 } },
     },
     '공허의 군주': {
         isBoss: true, weakness: '빛', resistance: '어둠',
@@ -359,6 +392,8 @@ export const MONSTERS: Record<string, Monster> = {
         pattern: { guardChance: 0.05, heavyChance: 0.5 },
         phase2: { name: '해방된 공허의 군주', atkBonus: 0.8, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '공허가 세계를 집어삼킵니다! 군주가 진정한 힘을 드러냅니다!', statusEffect: 'burn' },
         phase3: { name: '공허의 심연', atkBonus: 1.2, pattern: { guardChance: 0.0, heavyChance: 0.8 }, log: '모든 것이 공허로 돌아갑니다!', statusEffect: 'curse' },
+        // Wave 59: "공허 계열 전설 유물이 드랍됩니다".
+        mechanics: { relicReward: { rarities: ['legendary'], preferNames: ['공허', '허공'] } },
     },
 
     // ── Sprint 21: 신규 지역 몬스터 ─────────────────────────────────────────
@@ -681,6 +716,8 @@ export const MONSTERS: Record<string, Monster> = {
         hpMult: 1.85, atkMult: 1.35, expMult: 2.2, goldMult: 2.0, dropMod: 2.5,
         pattern: { guardChance: 0.15, heavyChance: 0.4 },
         phase2: { name: '폭주하는 프로토타입 제로', atkBonus: 0.4, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '프로토타입 제로의 리미터가 해제됩니다! 파괴 프로토콜이 기동합니다!', statusEffect: 'burn' },
+        // Wave 59: "기계 계열 장비".
+        mechanics: { lootTheme: { nameIncludes: ['기계'] } },
     },
 
     // 저주받은 묘지 (Lv34) — 3 regular + 1 boss
@@ -693,6 +730,13 @@ export const MONSTERS: Record<string, Monster> = {
         hpMult: 1.9, atkMult: 1.38, expMult: 2.3, goldMult: 2.1, dropMod: 2.6,
         pattern: { guardChance: 0.1, heavyChance: 0.45 },
         phase2: { name: '각성한 묘지기 네크론', atkBonus: 0.42, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '네크론이 묘지의 모든 망자를 깨웁니다! 죽음의 기운이 폭발합니다!', statusEffect: 'curse' },
+        // Wave 59: "망자 소환" · "2페이즈에서 저주가 중첩".
+        mechanics: {
+            summon: { name: '망자', count: 2, hitMult: 0.5 },
+            heavyStatus: { status: 'curse', chance: 0.5, maxStacks: 3 },
+            // "어둠 계열 희귀 장비".
+            lootTheme: { elems: ['어둠'], minTier: 5 },
+        },
     },
 
     // 용암 지대 (Lv36) — 3 regular + 1 boss
@@ -704,6 +748,11 @@ export const MONSTERS: Record<string, Monster> = {
         hpMult: 2.0, atkMult: 1.42, expMult: 2.5, goldMult: 2.3, dropMod: 2.8,
         pattern: { guardChance: 0.1, heavyChance: 0.5 },
         phase2: { name: '진화한 화염 군주 이프리트', atkBonus: 0.45, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '이프리트가 용암의 심장을 해방합니다! 대지가 녹아내리기 시작합니다!', statusEffect: 'burn' },
+        // Wave 59: "화상 누적" · "화염 계열 상위 장비".
+        mechanics: {
+            heavyStatus: { status: 'burn', chance: 0.5, maxStacks: 3 },
+            lootTheme: { elems: ['화염'], minTier: 4 },
+        },
     },
 
     // 바람의 고원 (Lv38) — 3 regular + 1 boss
@@ -715,6 +764,11 @@ export const MONSTERS: Record<string, Monster> = {
         hpMult: 2.1, atkMult: 1.45, expMult: 2.6, goldMult: 2.4, dropMod: 3.0,
         pattern: { guardChance: 0.1, heavyChance: 0.45 },
         phase2: { name: '폭풍의 천둥새 제피로스', atkBonus: 0.48, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '제피로스가 폭풍의 눈을 해방합니다! 하늘 전체가 뇌광으로 뒤덮입니다!', statusEffect: 'stun' },
+        // Wave 59: "기절 연속 공격" · "바람 계열 상위 장비".
+        mechanics: {
+            heavyStatus: { status: 'stun', chance: 0.4 },
+            lootTheme: { elems: ['바람'], nameIncludes: ['바람', '폭풍'], minTier: 4 },
+        },
     },
 
     // ── 신규 맵 몬스터 (Lv 65-75) ───────────────────────────────────────────
@@ -728,7 +782,9 @@ export const MONSTERS: Record<string, Monster> = {
         hpMult: 2.2, atkMult: 1.55, expMult: 3.0, goldMult: 2.8, dropMod: 3.5,
         pattern: { guardChance: 0.1, heavyChance: 0.5 },
         phase2: { name: '각성한 에테르 심판자', atkBonus: 0.5, pattern: { guardChance: 0.05, heavyChance: 0.6 }, log: '에테르 심판자가 차원의 법칙을 재편합니다! 공간이 뒤틀리기 시작합니다!', statusEffect: 'burn' },
-        phase3: { name: '에테르의 절대 심판', atkBonus: 0.85, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '심판자가 에테르의 근원과 하나가 됩니다! 모든 저항이 무력화됩니다!', statusEffect: 'curse' },
+        phase3: { name: '에테르의 절대 심판', atkBonus: 0.85, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '심판자가 에테르의 근원과 하나가 됩니다! 모든 저항이 무력화됩니다!', statusEffect: 'curse', pierceResist: true },
+        // Wave 59: "에테르 계열 최상위 장비".
+        mechanics: { lootTheme: { elems: ['에테르'], nameIncludes: ['에테르'], minTier: 5 } },
     },
     // PR #11: 프레스티지 rank≥10 "에테르 초월" 숨겨진 보스 — 가장 강력한 3페이즈 hidden boss.
     //   에테르 관문(Lv68)에서 rank≥10일 때만 출현. 에테르 군주 로브를 떨군다.
@@ -750,6 +806,11 @@ export const MONSTERS: Record<string, Monster> = {
         pattern: { guardChance: 0.1, heavyChance: 0.5 },
         phase2: { name: '해방된 공허의 대행자', atkBonus: 0.55, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '공허의 대행자가 허무의 권능을 해방합니다! 존재의 경계가 희미해집니다!', statusEffect: 'curse' },
         phase3: { name: '절대 공허의 대행자', threshold: 0.2, atkBonus: 0.95, defBonus: 20, pattern: { guardChance: 0.0, heavyChance: 0.78 }, log: '대행자가 공허 그 자체와 합일합니다! 모든 것이 소멸로 향합니다!', statusEffect: 'burn' },
+        // Wave 59: "공허 계열 전설 장비와 대량 보상".
+        mechanics: {
+            firstClearBonusMult: 10,
+            lootTheme: { nameIncludes: ['공허', '허공'], minTier: 5 },
+        },
     },
 
     // 종말의 전장 (Lv73) — 1 boss only (3-phase)
@@ -758,7 +819,9 @@ export const MONSTERS: Record<string, Monster> = {
         hpMult: 2.5, atkMult: 1.8, expMult: 3.5, goldMult: 3.5, dropMod: 4.5,
         pattern: { guardChance: 0.1, heavyChance: 0.5 },
         phase2: { name: '분노한 종말의 기사', atkBonus: 0.6, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '종말의 기사가 파멸의 검을 뽑아듭니다! 전장 전체가 검은 화염에 휩싸입니다!', statusEffect: 'burn' },
-        phase3: { name: '종말의 화신', threshold: 0.2, atkBonus: 1.1, defBonus: 25, pattern: { guardChance: 0.0, heavyChance: 0.82 }, log: '기사가 종말 그 자체로 변모합니다! 이것이 최후의 전투입니다!', statusEffect: 'curse' },
+        phase3: { name: '종말의 화신', threshold: 0.2, atkBonus: 1.1, defBonus: 25, pattern: { guardChance: 0.0, heavyChance: 0.82 }, log: '기사가 종말 그 자체로 변모합니다! 이것이 최후의 전투입니다!', statusEffect: ['curse', 'burn'] },
+        // Wave 59: "종말 계열 전설 장비" — 종말(아포칼립스) · 파멸 · 절멸.
+        mechanics: { lootTheme: { nameIncludes: ['아포칼립스', '파멸', '절멸'], minTier: 5 } },
     },
     // cycle 68: 신성한 호수의 mid-game 보스. Lv 7~15 구간 진입자에게 보스 경험을
     // 일찍 제공해 cycle 67까지의 칭호/체인 흐름과 자연스러운 시너지.
@@ -770,7 +833,13 @@ export const MONSTERS: Record<string, Monster> = {
         atkMult: 1.18,
         expMult: 1.4,
         goldMult: 1.4,
-        pattern: { guardChance: 0.28, heavyChance: 0.18 },
+        // Wave 59: "높은 가드" — 가장 잦은 행동이 방어다(이전 0.28은 일반 공격 0.54보다 낮아 예고가 '일반 공격'이었다).
+        pattern: { guardChance: 0.45, heavyChance: 0.15 },
+        // "회복 압박" — 방어 자세마다 회복한다. "빙결 누적" — 2페이즈 강타가 냉기를 쌓아 세 번째에 얼린다.
+        mechanics: {
+            guardHeal: 0.06,
+            heavyStatus: { status: 'freeze', chance: 1, maxStacks: 3 },
+        },
         phase2: {
             name: '각성한 호수의 수호신',
             atkBonus: 0.32,
@@ -817,7 +886,7 @@ const BOSS_BRIEF_ENTRIES = {
         signature: '저주성 압박과 심판 강타',
         entryHint: '빛 속성 대응과 회복 루틴을 먼저 갖추고 장기전으로 가져가는 편이 좋습니다.',
         counterHint: '빛 속성과 안정적인 회복 루틴이 길어진 심판 턴을 버티는 핵심입니다.',
-        phaseHint: '2페이즈에서는 강타와 독성 압박이 동시에 들어오므로 방어형 빌드가 유리합니다.',
+        phaseHint: '2페이즈에서는 강타와 저주 압박이 동시에 들어오므로 방어형 빌드가 유리합니다.',
         rewardHint: '초회 심판 보너스와 성역형 장비를 노릴 수 있습니다.',
         warningChips: ['심판 강타', '저주 압박'],
         recommendedBuilds: ['방패 요새', '비전 공명']
@@ -883,7 +952,8 @@ const BOSS_BRIEF_ENTRIES = {
         phaseHint: '50% 이하에서 연속 기절 패턴으로 전환됩니다. 고속 마무리가 핵심입니다.',
         rewardHint: '시간 계열 전리품과 희귀 유물이 높은 확률로 드랍됩니다.',
         warningChips: ['2페이즈', '기절 연속', '시간 분열'],
-        recommendedBuilds: ['시간술사', '비전 공명']
+        // Wave 59: '시간술사'는 직업이지 빌드가 아니다 — 시간술사가 굴리는 빌드(상태이상)로 적는다.
+        recommendedBuilds: ['상태이상 집행자', '비전 공명']
     },
     '원한의 용사': {
         signature: '원한 강화와 2페이즈 저주 폭발',
@@ -901,7 +971,7 @@ const BOSS_BRIEF_ENTRIES = {
         phaseHint: '50% 이하에서 화상, 25% 이하에서 저주 + 전영역 압박으로 변신합니다.',
         rewardHint: '최상위 보상 및 공허 계열 전설 유물이 드랍됩니다.',
         warningChips: ['3페이즈', '화상+저주', '전영역 압박'],
-        recommendedBuilds: ['비전 공명', '양손 파쇄', '시간술사']
+        recommendedBuilds: ['비전 공명', '양손 파쇄']
     },
     '원시의 신': {
         signature: '존재 자체를 무너뜨리는 3페이즈 원초 파괴',

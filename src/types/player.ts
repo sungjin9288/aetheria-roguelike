@@ -283,6 +283,8 @@ interface CombatFlags {
      * (`endCombatScopedRelics`). 보석이 없으면 표시가 있어도 효과가 없다(`statsCalculator`).
      */
     chaosGemStat?: 'atk' | 'def';
+    /** 빙결 누적(Wave 59) — 보스 강타가 쌓고, 보스가 선언한 수에 닿으면 빙결이 걸리고 0으로 돌아간다. */
+    frostStacks?: number;
 }
 
 /**
@@ -596,6 +598,11 @@ export interface Player {
     status?: StatusId[];
     /** H1: 상태이상별 남은 턴 (status 배열과 짝 — CombatEngine.tickPlayerStatusDurations 소유) */
     statusTurns?: Record<string, number>;
+    /**
+     * 상태이상 중첩 수(Wave 59 보스 "누적") — status 배열에 있는 상태만 의미가 있고(없으면 1), 새로 걸릴 때 1에서 시작한다.
+     * 읽기는 `getPlayerStatusStacks`(CombatEngine.status)만 한다.
+     */
+    statusStacks?: Partial<Record<StatusId, number>>;
     skillLoadout?: SkillLoadout;
     settings?: PlayerSettings;
     meta?: PlayerMeta;

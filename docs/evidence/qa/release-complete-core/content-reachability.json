@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "7e9d6f3f6c21711483a3ac9ccd04846d1e06006cb6654f1601b7bc162068700d",
+  "reportHash": "5cbc59ed30508feb544546b3dc2a55acfbb129c0837136a234a287453ad280fe",
   "report": {
     "schemaVersion": 5,
     "catalog": {
@@ -2931,9 +2931,11 @@
           "name": "독침 단검",
           "tier": 2,
           "kinds": [
-            "shop"
+            "shop",
+            "drop_table"
           ],
           "sources": [
+            "고대 호수의 수호신",
             "북부 요새",
             "사막 오아시스",
             "여행자의 쉼터",
@@ -4512,6 +4514,7 @@
             "legacy_loot"
           ],
           "sources": [
+            "고대 호수의 수호신",
             "북부 요새",
             "사막 오아시스",
             "여행자의 쉼터",
