@@ -1410,10 +1410,13 @@ import { readFile } from 'node:fs/promises';
           status: [],
           nextHitEvaded: true,
       };
-      const enemy = { name: '오크', hp: 100, maxHp: 100, atk: 50, def: 5 };
+      // Wave 53: 은신은 실제 공격만 막는다(방어 자세 턴은 쓰지 않는다) — 방어 자세를 끄고, 장비 회피(8%)가
+      //   먼저 굴려졌다면 발동했을 난수(0.01)를 주입해 순서를 결정론적으로 본다. 미시드 Math.random이던 동안
+      //   기본 방어 자세 확률(20%)에서 이 테스트는 약 4번에 1번 붉었다.
+      const enemy = { name: '오크', hp: 100, maxHp: 100, atk: 50, def: 5, pattern: { guardChance: 0, heavyChance: 0 } };
       const stats = { atk: 100, def: 50, relics: [], activeSynergies: [], critChance: 0 };
 
-      const result = CombatEngine.enemyAttack(player, enemy, stats);
+      const result = CombatEngine.enemyAttack(player, enemy, stats, () => 0.01);
       assert.equal(result.damage, 0);
       // 은신 로그가 우선 emit되어야 함 (armor 회피 로그가 아님).
       assert.ok(result.logs.some((l) => l.text && l.text.includes('은신')),

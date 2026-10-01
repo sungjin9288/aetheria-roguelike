@@ -111,6 +111,22 @@ test('은신은 실제 공격만 센다 — 적이 방어 자세를 잡거나 �
     assert.equal(stunned.updatedPlayer.combatFlags.stealthHits, 2, '기절');
 });
 
+test('은신이 장비 회피보다 먼저다 — 은신 중에는 장비 회피를 먼저 굴리지 않고, 들킨 공격에만 장비 회피 기회가 있다', () => {
+    const cloak = { name: '암영 망토', type: 'armor', val: 35, evasion: 0.5 };
+    const step = cast('도적', '그림자 발걸음', { equip: { weapon: DB.ITEMS.weapons[0], armor: cloak, offhand: null } });
+    const stats = calculateFullStats(step.updatedPlayer);
+    // 첫 공격: 난수 0.01이면 장비 회피(50%)가 먼저 굴려졌을 때 발동했을 것 — 은신이 먼저 막는다.
+    const first = CombatEngine.enemyAttack(step.updatedPlayer, enemyOf(), stats, () => 0.01);
+    assert.equal(first.damage, 0);
+    assert.ok(first.logs.some((l) => l.text === MSG.STEALTH_EVADE_PROC('슬라임')), '은신 로그');
+    // 두 번째 공격: 은신 30% 판정 실패(0.4) 뒤 장비 회피(0.4 < 50%)가 막는다.
+    const second = CombatEngine.enemyAttack(first.updatedPlayer, enemyOf(), stats, () => 0.4);
+    assert.equal(second.damage, 0);
+    assert.ok(second.logs.some((l) => l.text === MSG.STEALTH_EVADE_MISS('슬라임')), '은신은 들켰다');
+    assert.ok(second.logs.some((l) => l.text === MSG.ARMOR_EVADE_PROC('슬라임')), '장비 회피');
+    assert.equal(second.updatedPlayer.combatFlags.stealthHits, 0);
+});
+
 test('그림자 이동: 다음 피해 행동 1회가 1.8배 — 일반 공격 · 위력 있는 기술 모두, 보조 기술은 쓰지 않는다', () => {
     const shift = cast('어쌔신', '그림자 이동');
     assert.equal(shift.updatedPlayer.combatFlags.nextAttackMult, 1.8);

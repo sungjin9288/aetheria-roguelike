@@ -93,8 +93,11 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         //   desc_stat에 '회피+N%'를 표시하지만 dispatch path 0건이던 silent dead config fix.
         //   stealth(skill) 후순위로 평가 — 은신은 명시적 발동, evasion은 passive armor 효과.
         //   cycle 222-225 silent dead config 시리즈 마지막 합류.
+        //   2026-10 Wave 53: 은신은 적의 방어 자세 판정 뒤에서 실제 공격만 막는다 — 은신 중에는 여기서 장비 회피를
+        //   굴리지 않고 은신 판정 뒤로 넘긴다(은신 우선 순서 유지). 은신이 아닐 때의 난수 순서는 그대로다.
         const armorEvasion = updatedPlayer.equip?.armor?.evasion || 0;
-        if (armorEvasion > 0 && random() < armorEvasion) {
+        const stealthActive = (updatedPlayer.combatFlags?.stealthHits ?? 0) > 0 || Boolean(updatedPlayer.nextHitEvaded);
+        if (!stealthActive && armorEvasion > 0 && random() < armorEvasion) {
             return {
                 updatedPlayer, updatedEnemy, damage: 0, isDead: false,
                 logs: [...logs, { type: 'success', text: MSG.ARMOR_EVADE_PROC(enemy.name) }]
@@ -224,6 +227,13 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
                 };
             }
             logs.push({ type: 'warning', text: MSG.STEALTH_EVADE_MISS(enemy.name) });
+            // 은신이 들킨 공격에도 장비 회피는 그대로 기회가 있다(은신 → 장비 순서).
+            if (armorEvasion > 0 && random() < armorEvasion) {
+                return {
+                    updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                    logs: [...logs, { type: 'success', text: MSG.ARMOR_EVADE_PROC(enemy.name) }]
+                };
+            }
         } else if (updatedPlayer.nextHitEvaded) {
             // 이전 저장(Wave 53 전)의 1회 회피 표시 — 새로 세우는 곳은 없다.
             updatedPlayer = { ...updatedPlayer, nextHitEvaded: false };
