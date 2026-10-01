@@ -58,6 +58,8 @@ const TRAIT_EVIDENCE = {
     purify: (def) => hasEffect(def, 'purify'),
     growth: (def) => passive(def).some((skill) => skill.effect === 'exp_up'),
     fortune: (def) => passive(def).some((skill) => skill.effect === 'gold_up'),
+    // Wave 51(소유자 결정 "성직자의 컨셉"): 퇴마 = 언데드 · 마족에게 신성 피해를 주는 회복 기술(smite)이 있다.
+    exorcism: (def) => active(def).some((skill) => skill.effect === 'hp_regen' && (skill.smite ?? 0) > 0),
     frail: (def) => (def.hpMod ?? 1) <= 0.8,
     low_mana: (def) => (def.mpMod ?? 1) <= 0.7,
     low_firepower: (def) => (def.atkMod ?? 1) <= FIREPOWER_LOW[def.tier],
@@ -65,7 +67,7 @@ const TRAIT_EVIDENCE = {
     mono_element: (def) => damageElements(def).size === 1 && !damageElements(def).has('물리'),
     physical_only: (def) => damageElements(def).size === 1 && damageElements(def).has('물리'),
 };
-const STRENGTHS = new Set(['toughness', 'mana', 'firepower', 'control', 'sustain', 'crit', 'evasion', 'affliction', 'elements', 'guard', 'weaken', 'escape', 'tempo', 'purify', 'growth', 'fortune']);
+const STRENGTHS = new Set(['toughness', 'mana', 'firepower', 'control', 'sustain', 'crit', 'evasion', 'affliction', 'elements', 'guard', 'weaken', 'escape', 'tempo', 'purify', 'growth', 'fortune', 'exorcism']);
 const WEAKNESSES = new Set(['frail', 'low_mana', 'low_firepower', 'no_sustain', 'mono_element', 'physical_only']);
 /** 서로 같은 축의 반대편 — 한 직업이 둘 다 가질 수 없다. */
 const OPPOSITES = [['toughness', 'frail'], ['mana', 'low_mana'], ['firepower', 'low_firepower'], ['sustain', 'no_sustain'], ['elements', 'mono_element'], ['elements', 'physical_only']];

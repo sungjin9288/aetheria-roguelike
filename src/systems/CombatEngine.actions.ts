@@ -1,6 +1,7 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
+import { getMonsterFamily } from '../data/monsters.js';
 import type { FullStats, Monster, NumericRelicEffect, Player, Relic, RelicSynergy } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { mergeFearAtkMult } from './CombatEngine.status.js';
@@ -67,6 +68,8 @@ interface Skill {
     curseTurn?: number;
     defBonus?: number;
     mpRestore?: number;
+    /** 회복의 신성 피해 비율(Wave 51) — 언데드 · 마족에게만. */
+    smite?: number;
 }
 
 /**
@@ -622,10 +625,17 @@ export const actionMethods = {
         }
 
         // hp_regen: 즉시 HP 회복 (성직자 기적의 손길, 버서커 역경의 힘 등)
+        let holySmiteDamage = 0;
         if (skill.effect === 'hp_regen' && skill.val) {
             const healAmt = Math.max(1, Math.floor(Number(updatedPlayer.maxHp || player.maxHp) * skill.val));
             updatedPlayer.hp = Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + healAmt);
             logs.push({ type: 'heal', text: MSG.SKILL_HP_REGEN_PROC(skill.name, healAmt) });
+            // 2026-09 Wave 51(소유자 결정 "성직자의 컨셉 — 언데드 · 마족에게 힐로 공격"): 회복의 빛이 언데드 · 마족을
+            //   태운다 — 회복량(생명이 가득해도 광고한 양) × smite를 방어 무시로 더한다. 난수를 쓰지 않는다.
+            if ((skill.smite ?? 0) > 0 && getMonsterFamily(updatedEnemy) && (updatedEnemy.hp ?? 0) > 0) {
+                holySmiteDamage = Math.max(1, Math.floor(healAmt * (skill.smite ?? 0)));
+                logs.push({ type: 'event', text: MSG.SKILL_HOLY_SMITE(skill.name, updatedEnemy.name, holySmiteDamage) });
+            }
             // 2026-09 Wave 42: 광고한 "N턴 지속 회복" — 이후 `turn`턴 동안 턴마다 `val / turn`을 더 회복한다
             //   (합계 2 × val). 이전에는 즉시 회복만 있었다. 틱은 tickCombatState가 소유한다.
             const regenTurns = Math.max(0, Math.floor(skill.turn || 0));
@@ -727,7 +737,10 @@ export const actionMethods = {
         if (hasDotMultRelic && extraDamage > 0) logs.push({ type: 'event', text: MSG.RELIC_DOT_MULT_PROC });
 
         // cycle 159: entropy_tick / entropy_brand — 매 N턴 적 maxHp 비율 고정 피해 (스킬 사용 턴에도 적용).
-        const entropyResult = this.applyEntropyTick(updatedPlayer, updatedEnemy, stats.activeSynergies || []);
+        const smitedEnemy: Monster = holySmiteDamage > 0
+            ? { ...updatedEnemy, hp: (updatedEnemy.hp ?? 0) - holySmiteDamage }
+            : updatedEnemy;
+        const entropyResult = this.applyEntropyTick(updatedPlayer, smitedEnemy, stats.activeSynergies || []);
         const finalPlayer = entropyResult.player;
         const finalEnemy = entropyResult.enemy;
         entropyResult.logs.forEach((l) => logs.push(l));

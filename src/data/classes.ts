@@ -314,14 +314,14 @@ export const CLASSES: Record<string, ClassDef> = {
     //   `tests/class-tier-depth.test.js`가 이 어긋남을 **유일한 예외로 고정**해 새 드리프트를 막는다.
     '성직자': {
         tier: 1, reqLv: 12, desc: '치유와 빛의 마법사 — 신의 대리인', hpMod: 1.0, mpMod: 1.6, atkMod: 1.3,
-        traits: { strengths: ['sustain', 'purify', 'growth'], weaknesses: ['low_firepower', 'mono_element'] },
+        traits: { strengths: ['sustain', 'purify', 'exorcism'], weaknesses: ['low_firepower', 'mono_element'] },
         skills: [
             { name: '신성 광선', mp: 20, type: '빛', mult: 1.8, desc: '빛 속성 집중 공격' },
             { name: '정화', mp: 30, type: '빛', mult: 1.5, effect: 'purify', desc: '상태이상 정화 + 추가 빛 피해' },
             { name: '공포 유발', mp: 25, type: 'debuff', effect: 'fear', val: 0.7, turn: 2, desc: '적 ATK 30% 감소 2턴' },
             { name: '신성한 보호막', mp: 35, type: 'buff', effect: 'def_up', val: 1.6, turn: 3, desc: '신성한 방어 DEF 60% 상승 3턴' },
             { name: '성스러운 빛', mp: 40, type: '빛', mult: 2.5, effect: 'purify', desc: '강화 빛 공격 + 정화' },
-            { name: '기적의 손길', mp: 45, type: 'buff', effect: 'hp_regen', val: 0.25, turn: 3, desc: 'HP 25% 회복 + 3턴간 지속 회복' },
+            { name: '기적의 손길', mp: 45, type: 'buff', effect: 'hp_regen', val: 0.25, turn: 3, smite: 1, desc: 'HP 25% 회복 + 3턴간 지속 회복 · 언데드 · 마족에게는 회복량만큼 신성 피해' },
             // 패시브
             { name: '신의 은총', passive: true, effect: 'hp_up', val: 50, desc: '최대 HP +50 (패시브)' },
             { name: '신성한 학습', passive: true, effect: 'exp_up', val: 0.08, desc: '경험치 획득 +8% — 신의 가르침 (패시브)' },
@@ -343,7 +343,7 @@ export const CLASSES: Record<string, ClassDef> = {
     // ── 3차 전직 (Lv 45+) ────────────────────────────────────────────────────
     '팔라딘': {
         tier: 3, reqLv: 45, desc: '빛의 수호자 — 치유와 방어의 정점', hpMod: 2.2, mpMod: 1.4, atkMod: 1.6,
-        traits: { strengths: ['toughness', 'sustain', 'control'], weaknesses: ['mono_element'] },
+        traits: { strengths: ['toughness', 'sustain', 'exorcism'], weaknesses: ['mono_element'] },
         skills: [
             { name: '신성 강타', mp: 40, type: '빛', mult: 3.5, effect: 'stun', desc: '기절 + 신성 피해' },
             { name: '성스러운 방패', mp: 60, type: 'buff', effect: 'def_up', val: 2.5, turn: 5, desc: 'DEF 150% 상승 5턴' },
@@ -351,7 +351,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '정화의 빛', mp: 50, type: '빛', mult: 2.5, effect: 'purify', desc: '상태이상 정화 + 강화 피해' },
             { name: '성스러운 폭풍', mp: 80, type: '빛', mult: 5.5, effect: 'stun', desc: '빛의 폭풍으로 기절 + 대피해' },
             { name: '빛의 장벽', mp: 70, type: 'buff', effect: 'def_up', val: 3.0, turn: 4, desc: 'DEF 200% 상승 4턴 — 신성 장벽' },
-            { name: '기적의 부활', mp: 90, type: 'buff', effect: 'hp_regen', val: 0.4, turn: 2, desc: 'HP 40% 즉시 회복 + 2턴 재생' },
+            { name: '기적의 부활', mp: 90, type: 'buff', effect: 'hp_regen', val: 0.4, turn: 2, smite: 1, desc: 'HP 40% 즉시 회복 + 2턴 재생 · 언데드 · 마족에게는 회복량만큼 신성 피해' },
             { name: '천상의 포화', mp: 100, type: '빛', mult: 6.5, effect: 'purify', desc: '빛의 연속 공격 + 정화' },
             // 패시브
             { name: '팔라딘의 맹세', passive: true, effect: 'hp_up', val: 250, desc: '최대 HP +250 (패시브)' },

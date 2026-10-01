@@ -74,6 +74,11 @@ export interface ClassSkill {
     crit?: number;
     /** 흡혈 비율 (`drain` 계열 — 미정의 시 CombatEngine 기본 0.25). */
     drainRatio?: number;
+    /**
+     * 신성 피해 비율(Wave 51, 소유자 결정 "성직자의 컨셉 — 언데드 · 마족에게 힐로 공격") — 회복 기술(`hp_regen`)이
+     * 언데드 · 마족(`MonsterFamily`)에게 회복량 × 이 값의 피해를 방어 무시로 더한다. 성직자 계열 회복 기술만 갖는다.
+     */
+    smite?: number;
 
     // --- 이하 skillBranches override로만 주입되는 키 (CombatEngine.actions가 읽는다) ---
     /** 상태이상 발동 확률 게이트 (미정의 시 1.0). */
@@ -119,7 +124,7 @@ export interface SkillBranchChoice {
  */
 export type ClassStrength =
     | 'toughness' | 'mana' | 'firepower' | 'control' | 'sustain' | 'crit' | 'evasion' | 'affliction'
-    | 'elements' | 'guard' | 'weaken' | 'escape' | 'tempo' | 'purify' | 'growth' | 'fortune';
+    | 'elements' | 'guard' | 'weaken' | 'escape' | 'tempo' | 'purify' | 'growth' | 'fortune' | 'exorcism';
 export type ClassWeakness = 'frail' | 'low_mana' | 'low_firepower' | 'no_sustain' | 'mono_element' | 'physical_only';
 export type ClassTraitId = ClassStrength | ClassWeakness;
 export interface ClassTraits {
