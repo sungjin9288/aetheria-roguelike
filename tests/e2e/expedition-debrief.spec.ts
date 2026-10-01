@@ -48,8 +48,9 @@ test.describe('Expedition return debrief', () => {
         const player = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player);
         expect(player.job).toBe('전사');
         expect(player.level).toBe(20);
-        expect(player.hp).toBe(703);
-        expect(player.maxHp).toBe(703);
+        // 2026-10 Wave 58: 전사 패시브 "최대 HP +80"은 직업 세트 배율 뒤에 더한다(703 → 699).
+        expect(player.hp).toBe(699);
+        expect(player.maxHp).toBe(699);
 
         const recommendation = page.getByTestId('expedition-return-recommendation');
         await expect(recommendation).toContainText('이어서 할 일');

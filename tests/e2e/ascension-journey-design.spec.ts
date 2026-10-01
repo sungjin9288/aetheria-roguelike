@@ -26,13 +26,17 @@ test.describe('계승과 다음 여정 화면', () => {
         await expect(page.getByTestId('ascension-reset-summary')).toContainText('장비와 가방');
         await expect(page.getByTestId('ascension-cancel')).toBeVisible();
         await expect(page.getByTestId('ascension-confirm')).toBeVisible();
+        // 2026-10 Wave 58: 계승 7단계 "도전 조건을 하나 더"를 고를 곳 — 인트로와 같은 선택기가 계승 화면에도 있다.
+        await expect(page.getByTestId('ascension-challenge-settings')).toBeVisible();
+        await expect(page.getByTestId('ascension-challenge-settings')).toContainText('도전 규칙');
 
         const geometry = await screen.evaluate((root) => {
             const scrollRegion = root.querySelector<HTMLElement>('[data-testid="ascension-scroll-region"]');
             const leaves = [...root.querySelectorAll<HTMLElement>('*')]
                 .filter((node) => node.children.length === 0 && (node.textContent || '').trim());
             const fontSizes = leaves.map((node) => parseFloat(getComputedStyle(node).fontSize));
-            const buttons = [...root.querySelectorAll<HTMLElement>('button')];
+            // 닫힌 <details>(도전 규칙 선택 — Wave 58) 안의 버튼은 렌더되지 않는다. 화면에 그려진 버튼만 잰다.
+            const buttons = [...root.querySelectorAll<HTMLElement>('button')].filter((node) => node.getClientRects().length > 0);
             const buttonHeights = buttons.map((node) => node.getBoundingClientRect().height);
             const visibleButtons = buttons.every((node) => {
                 const bounds = node.getBoundingClientRect();
