@@ -127,16 +127,18 @@ test('time ring and both ownership orders use the exact fifteen-percent threshol
     }
 });
 
-test('arcane singularity adds after the strongest base chance without duplicate stacking', () => {
+// 2026-10 Wave 56: 비전 특이점 "기력을 소모하지 않을 확률 35%" — 가장 강한 유물 확률에 35%를 더하던 것(43 · 50%)을
+//   "최소 35%"로 바꿨다(유물 확률이 더 높으면 그 값). 비전 파동의 두 배는 relic-description-delivery가 잰다.
+test('arcane singularity raises the chance to at least 35% without stacking on the strongest base chance', () => {
     const arcaneSingularity = [{
         id: 'arcane-singularity',
         bonus: { effect: 'arcane_singularity', freeSkillChance: 0.35 },
     }];
 
-    assert.equal(useSkill([spellEcho], 0.429999, arcaneSingularity).updatedPlayer.mp, 100);
-    assert.equal(useSkill([spellEcho], 0.430001, arcaneSingularity).updatedPlayer.mp, 60);
-    assert.equal(useSkill([spellEcho, timeRing], 0.499999, arcaneSingularity).updatedPlayer.mp, 100);
-    assert.equal(useSkill([timeRing, spellEcho], 0.500001, arcaneSingularity).updatedPlayer.mp, 60);
+    assert.equal(useSkill([spellEcho], 0.349999, arcaneSingularity).updatedPlayer.mp, 100);
+    assert.equal(useSkill([spellEcho], 0.350001, arcaneSingularity).updatedPlayer.mp, 60);
+    assert.equal(useSkill([spellEcho, timeRing], 0.349999, arcaneSingularity).updatedPlayer.mp, 100);
+    assert.equal(useSkill([timeRing, spellEcho], 0.350001, arcaneSingularity).updatedPlayer.mp, 60);
 });
 
 test('legacy active-run free_skill values remain authoritative snapshots', () => {

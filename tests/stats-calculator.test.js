@@ -180,15 +180,21 @@ test('calculateFullStats accumulates kill_stack relic atk bonus', () => {
         stackPer: 50,
         stackVal: 25,
     };
+    // 2026-10 Wave 56: 처치 수는 유물 인스턴스가 얻은 뒤 센 값(`kills`)이다 — 계정 평생 처치 수는 읽지 않는다.
     const noKills = calculateFullStats(makePlayer({
         relics: [killStackRelic],
         stats: { kills: 0, killRegistry: {}, abyssFloor: 0 },
     }));
     const manyKills = calculateFullStats(makePlayer({
+        relics: [{ ...killStackRelic, kills: 150 }],
+        stats: { kills: 150, killRegistry: {}, abyssFloor: 0 },
+    }));
+    const lifetimeOnly = calculateFullStats(makePlayer({
         relics: [killStackRelic],
         stats: { kills: 150, killRegistry: {}, abyssFloor: 0 },
     }));
     assert.ok(manyKills.atk > noKills.atk);
+    assert.equal(lifetimeOnly.atk, noKills.atk, '평생 처치 수만으로는 오르지 않는다');
 });
 
 test('calculateFullStats glass_cannon relic trades def for atk', () => {

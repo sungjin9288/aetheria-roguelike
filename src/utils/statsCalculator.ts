@@ -131,6 +131,8 @@ const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: 
     const mpMult = 1 + relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'mp_mult') return acc + r.val;
         if (r.effect === 'omega') return acc + r.val;
+        // 2026-10 Wave 56: 룬 왕관 "최대 기력 40% 증가" — 배율이다(이전에는 고정 +40).
+        if (r.effect === 'triple_up') return acc + (r.mpVal || 0);
         return acc;
     }, 0);
 
@@ -138,15 +140,13 @@ const computeRelicBonuses = (relics: Relic[], player: Player, hasOffhandWeapon: 
         if (r.effect === 'ancient_power') return acc + r.val.crit;
         if (r.effect === 'omega') return acc + r.val;
         if (r.effect === 'dual_crit' && hasOffhandWeapon) return acc + (r.val || 0);
-        // cycle 152: 'reflect_crit' (운명의 거울) — critBonus 부분 반영. reflect(피해 반사)는 별도 사이클.
+        // cycle 152: 'reflect_crit' (운명의 거울) — critBonus. 받은 피해 반사는 enemyAttack(Wave 56).
         if (r.effect === 'reflect_crit') return acc + (r.val?.critBonus || 0);
         return acc;
     }, 0);
 
-    const mpFlat = relics.reduce((acc: number, r: Relic) => {
-        if (r.effect === 'triple_up') return acc + (r.mpVal || 0);
-        return acc;
-    }, 0);
+    // 유물의 고정 기력 보정 — 룬 왕관이 배율로 옮겨 간 뒤로 지금은 없다(필드는 계약상 유지).
+    const mpFlat = 0;
 
     return {
         atkFlat: atkFlat + (hpDrainAtkRelic?.atkBonus || 0),
@@ -197,10 +197,12 @@ const computeAbyssRelicBonuses = (relics: Relic[], abyssFloor: number) => {
  * @param {number} totalKills
  * @returns {number}
  */
-const computeKillStackAtkBonus = (relics: Relic[], totalKills: number) =>
+// 2026-10 Wave 56: 영혼 수집가 "얻은 뒤 50마리마다" — 유물 인스턴스가 센 처치 수(`kills`)를 쓴다. 계정 평생 처치 수
+//   (`stats.kills`)를 쓰던 동안 오래된 계정은 줍자마자 공격력 수백을 얻었다(1,000킬 → 공격력 160 → 910).
+const computeKillStackAtkBonus = (relics: Relic[]) =>
     relics.reduce((acc: number, r: Relic) => {
         if (r.effect === 'kill_stack') {
-            const stacks = Math.floor(totalKills / (r.stackPer || 50));
+            const stacks = Math.floor((r.kills || 0) / (r.stackPer || 50));
             return acc + stacks * (r.stackVal || 25);
         }
         return acc;
@@ -350,7 +352,7 @@ export const calculateFullStats = (player: Player) => {
     const relics = player.relics || [];
     const relicBonus = computeRelicBonuses(relics, player, Boolean(offhandWeapon));
     const abyssBonus = computeAbyssRelicBonuses(relics, player.stats?.abyssFloor || 0);
-    const killStackAtkBonus = computeKillStackAtkBonus(relics, player.stats?.kills || 0);
+    const killStackAtkBonus = computeKillStackAtkBonus(relics);
 
     const passiveBonus = getPassiveSkillBonuses(player);
     const enhanceBonus = computeEnhanceBonus(player.equip || {});

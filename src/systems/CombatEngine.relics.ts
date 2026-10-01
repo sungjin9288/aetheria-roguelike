@@ -68,28 +68,9 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
             const reviveUsedCount = flags.deathSaveUsedCount || 0;
 
             if (deathSaveRelic && reviveUsedCount < maxRevives) {
-                // cycle 153: 시너지 'absolute_immortal' / 'immortal_warrior' / 'blood_immortal' — reviveHeal 부활 시 HP 회복량 증가.
-                const reviveHealSyn = activeSynergies.find((s) =>
-                    s.bonus.effect === 'absolute_immortal'
-                    || s.bonus.effect === 'immortal_warrior'
-                    || s.bonus.effect === 'blood_immortal'
-                    || s.bonus.reviveHeal);
-                // Number() — RelicSynergyBonus.reviveHeal은 optional(number | undefined)이라
-                //   산술 연산엔 number가 필요하다. reviveHealSyn이 매칭된 이상 실측 데이터상
-                //   reviveHeal이 항상 존재하므로 값 변화 없음(Number(number)=그대로).
-                nextHp = reviveHealSyn
-                    ? Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * Number(reviveHealSyn.bonus.reviveHeal))
-                    : 1;
+                nextHp = 1;
                 flags.deathSaveUsed = true;
                 flags.deathSaveUsedCount = reviveUsedCount + 1;
-                // cycle 153: 시너지 'unbreakable' — healOnSave 부활 시 추가 HP 회복.
-                const healOnSaveSyn = activeSynergies.find((s) =>
-                    s.bonus.effect === 'unbreakable' || s.bonus.healOnSave);
-                if (healOnSaveSyn) {
-                    const bonus = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * Number(healOnSaveSyn.bonus.healOnSave));
-                    nextHp = Math.min(player.maxHp || BALANCE.DEFAULT_MAX_HP, nextHp + bonus);
-                    logs.push({ type: 'heal', text: MSG.RELIC_HEAL_ON_SAVE_PROC(bonus) });
-                }
                 const reviveMsg = reviveUsedCount > 0 ? MSG.RELIC_DEATH_SAVE_REVIVE(reviveUsedCount + 1) : MSG.RELIC_DEATH_SAVE_FIRST;
                 logs.push({ type: 'event', text: reviveMsg });
             } else {
@@ -147,6 +128,31 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
             }
         }
 
+        // 2026-10 Wave 56: 부활 조합(불멸의 전사 · 절대 불사 · 혈맹 불사 "부활할 때 생명 50%")과 난공불락 조합
+        //   ("사망 방지가 발동하면 최대 생명의 30% 회복")은 어느 부활 수단이든 적용한다 — 불사의 의지 · 허공의 심장 ·
+        //   부활 토큰 · 불사조 · 에테르 거울. 이전에는 불사의 의지 분기 안에만 있어서, 그 유물이 없는 조합
+        //   (불멸의 전사 = 불사조 + 피의 서약, 혈맹 불사, 난공불락)에서는 발동하지 않았다. 부활 회복은 수단의 회복과 조합의
+        //   회복 중 큰 쪽이고, 난공불락은 그 위에 더한다(최대 생명까지).
+        const revived = (player.hp || 0) - Math.max(0, incomingDamage) <= 0 && nextHp > 0;
+        if (revived) {
+            const reviveMaxHp = player.maxHp || BALANCE.DEFAULT_MAX_HP;
+            // cycle 153: 'absolute_immortal' / 'immortal_warrior' / 'blood_immortal' — reviveHeal(가장 큰 값).
+            const reviveHeal = activeSynergies
+                .filter((s) => s.bonus.effect === 'absolute_immortal' || s.bonus.effect === 'immortal_warrior'
+                    || s.bonus.effect === 'blood_immortal' || s.bonus.reviveHeal)
+                .reduce((best: number, s) => Math.max(best, Number(s.bonus.reviveHeal) || 0), 0);
+            if (reviveHeal > 0) nextHp = Math.max(nextHp, Math.floor(reviveMaxHp * reviveHeal));
+            // cycle 153: 'unbreakable' — healOnSave(사망 방지 발동 시 추가 회복).
+            const healOnSave = activeSynergies
+                .filter((s) => s.bonus.effect === 'unbreakable' || s.bonus.healOnSave)
+                .reduce((best: number, s) => Math.max(best, Number(s.bonus.healOnSave) || 0), 0);
+            if (healOnSave > 0) {
+                const bonus = Math.floor(reviveMaxHp * healOnSave);
+                nextHp = Math.min(reviveMaxHp, nextHp + bonus);
+                logs.push({ type: 'heal', text: MSG.RELIC_HEAL_ON_SAVE_PROC(bonus) });
+            }
+        }
+
         const updatedPlayer: Player = { ...player, hp: nextHp, combatFlags: flags };
         if (phoenixTempBuff) updatedPlayer.tempBuff = phoenixTempBuff;
         // cycle 186: reviveTokens 소비 + MP 50% 회복 (token 사용 시).
@@ -196,11 +202,13 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
         const tickRelic = relics.find((r) => r.effect === 'entropy_tick');
         // cycle 236: entropy_god 시너지의 fixedDmg + interval 패턴도 catch.
         //   기존엔 'damage && interval'만 잡아 entropy_god(fixedDmg 0.15)가 dispatch 0건이던 dead config.
-        const brandSyn = activeSynergies.find((s) =>
-            s.bonus.effect === 'entropy_brand'
-            || s.bonus.effect === 'entropy_god'
-            || (s.bonus.damage && s.bonus.interval)
-            || (s.bonus.fixedDmg && s.bonus.interval));
+        // 2026-10 Wave 56: 엔트로피의 신(세 조각)이 켜지면 늘 함께 켜지는 엔트로피 낙인(두 조각)보다 먼저 쓴다 —
+        //   `find`가 앞에 정의된 낙인을 골라 신의 "매 턴 15%"가 한 번도 나가지 않았다.
+        const brandSyn = activeSynergies.find((s) => s.bonus.effect === 'entropy_god')
+            ?? activeSynergies.find((s) =>
+                s.bonus.effect === 'entropy_brand'
+                || (s.bonus.damage && s.bonus.interval)
+                || (s.bonus.fixedDmg && s.bonus.interval));
         if (!tickRelic && !brandSyn) {
             return { player: updatedPlayer, enemy: updatedEnemy, logs };
         }

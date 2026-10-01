@@ -313,7 +313,7 @@ export const ITEMS: ItemDatabase = {
         // 버프 물약
         { name: '분노의 물약', type: 'buff', effect: 'atk_up', val: 1.3, turn: 5, price: 200, desc: 'ATK 30% 증가 5턴', desc_stat: 'ATK↑' },
         { name: '수호의 물약', type: 'buff', effect: 'def_up', val: 1.3, turn: 5, price: 200, desc: 'DEF 30% 증가 5턴', desc_stat: 'DEF↑' },
-        { name: '영웅의 물약', type: 'buff', effect: 'all_up', val: 1.5, turn: 3, price: 500, desc: '모든 능력 50% 증가 3턴', desc_stat: 'ALL↑' }
+        { name: '영웅의 물약', type: 'buff', effect: 'all_up', val: 1.5, turn: 3, price: 500, desc: '공격력 · 방어력 50% 증가 3턴', desc_stat: 'ATK·DEF↑' }
     ],
     materials: [
         // 기본 재료
@@ -397,9 +397,9 @@ export const ITEMS: ItemDatabase = {
         { prefix: '불타는', setBonus: { atkMult: 1.1 }, desc: '화염의 결속 (2세트): ATK 10% 증가' },
         { prefix: '얼어붙은', setBonus: { defMult: 1.15 }, desc: '혹한의 방벽 (2세트): DEF 15% 증가' },
         { prefix: '맹독의', setBonus: { hpMult: 1.1 }, desc: '독사의 생명력 (2세트): 최대 HP 10% 증가' },
-        { prefix: '신성한', setBonus: { atkMult: 1.15, defMult: 1.15, hpMult: 1.15 }, desc: '신의 축복 (2세트): 전 스탯 15% 증가' },
+        { prefix: '신성한', setBonus: { atkMult: 1.15, defMult: 1.15, hpMult: 1.15 }, desc: '신의 축복 (2세트): 공격력 · 방어력 · 최대 생명 15% 증가' },
         { prefix: '저주받은', setBonus: { atkMult: 1.3, defMult: 0.8 }, desc: '어둠의 계약 (2세트): ATK 30% 증가, DEF 20% 감소' },
-        { prefix: '고대의', setBonus: { atkMult: 1.2, defMult: 1.2, hpMult: 1.2 }, desc: '고대인의 지혜 (2세트): 전 스탯 20% 증가' },
+        { prefix: '고대의', setBonus: { atkMult: 1.2, defMult: 1.2, hpMult: 1.2 }, desc: '고대인의 지혜 (2세트): 공격력 · 방어력 · 최대 생명 20% 증가' },
         { prefix: '수호의', setBonus: { defMult: 1.25 }, desc: '수호자의 결의 (2세트): DEF 25% 증가' }
     ],
     // 제작 레시피

@@ -137,6 +137,8 @@ export const buildPassiveBonusWithScout = (stats: FullStats, deadEnemy: Defeated
     return {
         goldMult: (stats?.passiveGoldMult || 0) + scoutRewardBonus,
         expMult: (stats?.passiveExpMult || 0) + scoutRewardBonus,
+        // 2026-10 Wave 56: 켜진 조합(절멸자 · 공허의 용 처치 누적) — 넘기지 않던 동안 누적 보너스가 0이었다.
+        activeSynergies: stats?.activeSynergies || [],
     };
 };
 

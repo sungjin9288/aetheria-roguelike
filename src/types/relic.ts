@@ -163,7 +163,20 @@ interface RelicBase {
     /** `kill_stack`(영혼 수집가) — 스택 간격 / 스택당 증가치. */
     stackPer?: number;
     stackVal?: number;
+    /**
+     * `kill_stack`(영혼 수집가)이 얻은 뒤 센 처치 수 — 유물 인스턴스 상태(Wave 56). 없으면 0.
+     * 계정 평생 처치 수(`stats.kills`)를 읽던 동안 오래된 계정은 줍자마자 공격력 수백을 얻었다.
+     */
+    kills?: number;
+    /**
+     * `dot_mult` 유물이 키우는 상태 이상 피해 — 없으면 전부(독 · 화상 · 출혈 · 저주, Wave 56).
+     * 죽음의 낙인 "독과 화상"은 `['poison', 'burn']`이다.
+     */
+    dotScope?: readonly RelicDotScope[];
 }
+
+/** `dot_mult` 유물의 적용 대상 — 적 지속 피해 셋과 저주 틱(Wave 56). */
+export type RelicDotScope = 'burn' | 'poison' | 'bleed' | 'curse';
 
 /** `RelicVal`에서 필요한 키만 골라 필수로 만드는 헬퍼 (키 이름/타입의 단일 출처는 `RelicVal`). */
 type RelicValOf<K extends keyof RelicVal> = Required<Pick<RelicVal, K>>;

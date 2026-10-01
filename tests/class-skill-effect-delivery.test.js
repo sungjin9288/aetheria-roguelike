@@ -70,9 +70,11 @@ test('회복 기술은 켜져 있던 방어 강화를 지우지 않는다 (신�
 });
 
 test('지속 회복은 최대 생명을 넘지 않고, 가득 찬 턴에는 로그를 남기지 않는다', () => {
-    const player = makePlayer('성직자', { hp: 1000, skillRegen: { ratio: 0.05, turns: 2, name: '기적의 손길' } });
+    // 2026-10 Wave 56: 상한은 실효 최대 생명(calculateFullStats — 성직자 패시브 생명 포함)이다.
+    const full = CombatEngine.getEffectiveMaxHp(makePlayer('성직자'));
+    const player = makePlayer('성직자', { hp: full, skillRegen: { ratio: 0.05, turns: 2, name: '기적의 손길' } });
     const tick = CombatEngine.tickCombatState(player);
-    assert.equal(tick.updatedPlayer.hp, 1000);
+    assert.equal(tick.updatedPlayer.hp, full);
     assert.equal(tick.updatedPlayer.skillRegen.turns, 1, '가득 차 있어도 턴은 줄어든다');
     assert.equal(tick.logs.some((log) => String(log.text).includes('지속 회복')), false);
 });

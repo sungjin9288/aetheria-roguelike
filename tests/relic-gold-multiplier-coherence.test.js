@@ -24,7 +24,7 @@ const goldMagnet = Object.freeze({
     id: 'gold_magnet',
     name: '황금 자석',
     rarity: 'common',
-    desc: '골드 획득 30% 증가',
+    desc: '전투 처치 골드 30% 증가',
     effect: 'gold_mult',
     val: 0.3,
 });
@@ -32,7 +32,7 @@ const merchantSeal = Object.freeze({
     id: 'merchant_seal',
     name: '상인의 인장',
     rarity: 'rare',
-    desc: '골드 획득 60% 증가 (공허의 왕좌 다음 등급)',
+    desc: '전투 처치 골드 60% 증가',
     effect: 'gold_mult',
     val: 0.6,
 });

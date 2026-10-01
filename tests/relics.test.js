@@ -1009,7 +1009,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       assert.ok(log);
   });
 
-  test("hp_drain_atk + hell_reaper 시너지: hpCostReduction 0.02 — cost가 0.02로 대체 (감소)", () => {
+  test("hp_drain_atk + hell_reaper 시너지: hpCostReduction 0.02 — cost 5% → 3% (Wave 56: 줄이는 양)", () => {
       // hell_reaper 시너지 require: 심연의 계약 + 영혼 흡수
       const player = fakePlayer({
           relics: [
@@ -1021,9 +1021,9 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
           ],
       });
       const result = CombatEngine.tickCombatState(player);
-      // 원래 cost 5% (50 HP), hell_reaper hpCostReduction 0.02 → cost 2% (20 HP).
-      // 500 → 480.
-      assert.equal(result.updatedPlayer.hp, 480);
+      // 원래 cost 5% (50 HP), hell_reaper hpCostReduction 0.02 → cost 3% (30 HP, "생명 소모가 3%로").
+      // 500 → 470.
+      assert.equal(result.updatedPlayer.hp, 470);
       const log = result.logs.find((l) => l.text.includes('지옥의 수확자'));
       assert.ok(log, 'hell_reaper 라벨 로그 — 감소된 cost임을 표시');
   });

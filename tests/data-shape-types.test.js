@@ -53,7 +53,7 @@ const assertUnionExact = (label, entries, key, union) => {
 
 const RELIC_FIELDS = [
     'id', 'name', 'rarity', 'desc', 'effect', 'val', 'threshold',
-    'atkVal', 'defVal', 'mpVal', 'stackPer', 'stackVal',
+    'atkVal', 'defVal', 'mpVal', 'stackPer', 'stackVal', 'kills', 'dotScope',
 ];
 
 const RELIC_RARITIES = ['common', 'uncommon', 'rare', 'epic', 'legendary'];

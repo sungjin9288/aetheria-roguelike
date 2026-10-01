@@ -263,7 +263,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 }
                 // 상태이상 — 기상 이변(exploreFlow)과 동일하게 id 문자열만 중복 없이 누적한다.
                 if (selectedOutcome.status) {
-                    updatedPlayer = applyOutcomeStatus(updatedPlayer, selectedOutcome.status, addLog);
+                    updatedPlayer = applyOutcomeStatus(updatedPlayer, selectedOutcome.status, addLog, rng);
                 }
                 resultText = formatEventText(selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT);
                 addLog('event', resultText);
@@ -339,9 +339,16 @@ const applyOutcomeBuff = (player: Player, buff: OutcomeBuff, addLog: AddLog) => 
 /** BALANCE.EVENT_STATUS_IDS(= StatusId 화이트리스트) 통과 여부를 타입으로 옮긴다. */
 const isEventStatusId = (value: string): value is StatusId => BALANCE.EVENT_STATUS_IDS.some((id) => id === value);
 
-const applyOutcomeStatus = (player: Player, status: OutcomeStatus, addLog: AddLog): Player => {
+const applyOutcomeStatus = (player: Player, status: OutcomeStatus, addLog: AddLog, rng: () => number): Player => {
     const id = String(status?.id || '');
     if (!isEventStatusId(id)) return player;
+    // 2026-10 Wave 56: 고대의 봉인 "적 · 사건이 거는 상태 이상을 40% 확률로 막음" — 사건 결과도 막는다(이전에는 적 강타 ·
+    //   보스 페이즈만). 유물이 없으면 난수를 쓰지 않는다.
+    const resistRelic = (player.relics || []).find((r) => r.effect === 'status_resist');
+    if (resistRelic && rng() < (resistRelic.val || 0)) {
+        addLog('success', MSG.ANCIENT_SEAL_RESIST);
+        return player;
+    }
     const turns = Math.max(1, Number(status?.turns) || 1);
     addLog('warning', MSG.EVENT_STATUS_APPLIED(id, turns));
     // H1 연동: 전투 중 tickPlayerStatusDurations가 읽는 statusTurns에 지속 턴을 기록한다.

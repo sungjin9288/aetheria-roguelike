@@ -7,6 +7,7 @@ import { BOSS_BRIEFS } from '../data/monsters.js';
 import { syncQuestProgress } from '../utils/questProgress.js';
 import { buildGraveData } from '../utils/graveUtils.js';
 import { MSG } from '../data/messages.js';
+import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 import { getActiveRelicSynergies, relicNumber } from '../data/relics.js';
 import { processLoot as _processLoot, resolveEnemyBaseName as _resolveEnemyBaseName } from './CombatEngine.loot.js';
 import { statusMethods } from './CombatEngine.status.js';
@@ -101,13 +102,24 @@ export const CombatEngine = {
     //   957/987) 모두 명시 전달이라 default 도달 불가. 외부 caller 0건, test
     //   caller 0건. systems/CombatEngine method 시리즈 5번째 (cycle 546-549에
     //   이은). 청소 메가 시리즈 45번째 (cycle 502-550).
+    // 2026-10 Wave 56: 전투 중 기력 상한 = 실효 최대 기력(`calculateFullStats().maxMp` — 장비 · 유물 · 칭호 · 조합). 이전에는
+    //   저장값 × (마나 수정 · 오메가)만 봐서 물약 · 휴식이 채운 기력을 치명타 회복 · 지속 회복이 오히려 깎았다(룬 왕관 240 → 200).
+    //   계산할 수 없는 입력(최소 픽스처)은 이전 식으로 읽는다. 현재 기력이 더 높으면 그 값이 상한이다(회복이 깎지 않는다).
+    /** 2026-10 Wave 56: 실효 최대 생명(`calculateFullStats().maxHp`, `systems/vitals.ts`) — 계산할 수 없으면 저장값. */
+    getEffectiveMaxHp(player: Player) {
+        return getEffectiveMaxHp(player);
+    },
+
     getEffectiveMaxMp(player: Player, relics: Relic[]) {
         const rmp = 1 + relics.reduce((acc: number, relic: Relic) => {
             if (relic.effect === 'mp_mult') return acc + relic.val;
             if (relic.effect === 'omega') return acc + relic.val;
+            if (relic.effect === 'triple_up') return acc + (relic.mpVal || 0);
             return acc;
         }, 0);
-        return Math.floor((player?.maxMp || 50) * rmp);
+        const legacy = Math.floor((player?.maxMp || 50) * rmp);
+        // 실효 최대(직업 약점 "적은 기력"이면 저장값보다 작다)가 상한이고, 현재 기력이 더 높으면 그 값이다(회복이 깎지 않는다).
+        return Math.max(getEffectiveMaxMpFull(player, relics, legacy), player?.mp || 0);
     },
 
     // cycle 548: relics / logs defaults 제거 — 2 internal callsite (line 592,
@@ -122,6 +134,9 @@ export const CombatEngine = {
         const hpDrainAtkRelic = resolveHpDrainAtkRelic(relics);
         const logs = [];
         const updated = { ...player };
+        // 2026-10 Wave 56: 턴마다 회복(지속 회복 · 재생 유물 · 조합)의 상한 = 실효 최대 생명. 저장값으로 걸던 동안 장비 · 유물로
+        //   늘린 생명을 회복 틱이 깎았다. 회복은 생명을 줄이지 않는다(`healWithinMax`).
+        const tickMaxHp = this.getEffectiveMaxHp(player);
         const loadout = updated.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const nextCooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
 
@@ -180,8 +195,8 @@ export const CombatEngine = {
             const regen = updated.skillRegen;
             const cap = updated.maxHp || BALANCE.DEFAULT_MAX_HP;
             const heal = Math.max(1, Math.floor(cap * regen.ratio));
-            if ((updated.hp || 0) < cap) {
-                updated.hp = Math.min(cap, (updated.hp || 1) + heal);
+            if ((updated.hp || 0) < tickMaxHp) {
+                updated.hp = healWithinMax(updated.hp || 1, heal, tickMaxHp);
                 logs.push({ type: 'heal', text: MSG.SKILL_REGEN_TICK(regen.name, heal) });
             }
             const turnsLeft = regen.turns - 1;
@@ -207,7 +222,7 @@ export const CombatEngine = {
         const regenRelic = relics.find((relic) => relic.effect === 'regen');
         if (regenRelic && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (regenRelic.val || 0.05)));
-            updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
+            updated.hp = healWithinMax(updated.hp || 1, heal, tickMaxHp);
             logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_EARTH_HEART, heal) });
         }
 
@@ -215,7 +230,7 @@ export const CombatEngine = {
         const healPerTurnSyn = getActiveRelicSynergies(relics).find((s) => s.bonus.healPerTurn);
         if (healPerTurnSyn && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
             const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (healPerTurnSyn.bonus.healPerTurn ?? 0)));
-            updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
+            updated.hp = healWithinMax(updated.hp || 1, heal, tickMaxHp);
             logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_ETERNAL_LIFE, heal) });
         }
 
@@ -226,7 +241,7 @@ export const CombatEngine = {
             const ratio = genesisRelic.val?.healPerTurn || 0;
             if (ratio > 0) {
                 const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * ratio));
-                updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
+                updated.hp = healWithinMax(updated.hp || 1, heal, tickMaxHp);
                 logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_GENESIS_CORE, heal) });
             }
         }
@@ -239,7 +254,7 @@ export const CombatEngine = {
             const ratio = fortressRegenSyn.bonus.regenPerTurn || 0;
             if (ratio > 0) {
                 const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * ratio));
-                updated.hp = Math.min(updated.maxHp || BALANCE.DEFAULT_MAX_HP, (updated.hp || 1) + heal);
+                updated.hp = healWithinMax(updated.hp || 1, heal, tickMaxHp);
                 logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_ETERNAL_FORTRESS, heal) });
             }
         }
@@ -252,9 +267,11 @@ export const CombatEngine = {
                     synergy.bonus.effect === 'hell_reaper'
                 ))
                 : undefined;
-            const reducedCost = hellReaperSyn?.bonus.hpCostReduction;
-            if (typeof reducedCost === 'number' && Number.isFinite(reducedCost) && reducedCost >= 0) {
-                cost = reducedCost;
+            // 2026-10 Wave 56: `hpCostReduction`은 줄이는 양이다(심연의 계약 5% − 2% = 3%, "생명 소모가 3%로"). 이전에는
+            //   줄이는 양을 새 비용으로 대입해 2%였다.
+            const reduction = hellReaperSyn?.bonus.hpCostReduction;
+            if (typeof reduction === 'number' && Number.isFinite(reduction) && reduction >= 0) {
+                cost = Math.max(0, cost - reduction);
                 label = MSG.HELL_REAPER_LABEL;
             }
             if (cost > 0) {

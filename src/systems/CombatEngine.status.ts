@@ -1,6 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
-import type { EnemyDotId, Monster, Player, StatusId } from '../types/index.js';
+import type { EnemyDotId, Monster, Player, RelicDotScope, StatusId } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 
 const isActive = (turns: number | undefined) => (turns ?? 0) > 0;
@@ -119,14 +119,17 @@ export const statusMethods = {
     //   1 internal callsite (line 1076) 4 args 모두 명시 전달이라 default 도달
     //   불가. 외부 caller 0건, test caller 0건. single-cycle 3-default batch
     //   (cycle 524/527 패턴). 청소 메가 시리즈 44번째.
-    tickEnemyStatus(enemy: Monster, logs: LootLog[], curseAmpMult: number, synergyDotMult: number) {
+    // 2026-10 Wave 56: `relicDotMults` — 지속 피해 유물(죽음의 낙인 독 · 화상 ×3, 저주의 결정 상태 이상 ×1.5)의 대상별
+    //   배율. 이전에는 기술 적중의 추가 타격(20%)에만 붙고 틱에는 없었다. 생략하면 1(기존 호출 · 테스트 그대로).
+    tickEnemyStatus(enemy: Monster, logs: LootLog[], curseAmpMult: number, synergyDotMult: number, relicDotMults?: Partial<Record<RelicDotScope, number>>) {
         let updated = { ...enemy };
 
         // DoT (burn / poison / bleed) — 시너지 죽음의 예언자 dotMult 반영
         (updated.dots || []).forEach((dot) => {
             // 2026-10 Wave 55: 기술이 실은 지속 피해 배율(심층 출혈 · 맹독 · 독 보강 · 역병의 안개 "+50%").
             const dotMult = updated.dotMults?.[dot as EnemyDotId] ?? 1;
-            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * BALANCE.STATUS_DOT_RATIO * synergyDotMult * dotMult));
+            const relicMult = relicDotMults?.[dot as RelicDotScope] ?? 1;
+            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * BALANCE.STATUS_DOT_RATIO * synergyDotMult * dotMult * relicMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
             // 2026-09 Wave 6 X2: DOT_LABELS 재사용 — burn/poison만 인식하고 나머지(bleed 등)는
             //   출혈로 처리하던 기존 3-분기 동작을 그대로 보존한다(라벨 값만 MSG 소유로 이동).
@@ -162,8 +165,10 @@ export const statusMethods = {
             };
         }
         // 저주 DoT (curse_amp 패시브 반영)
+        // 2026-10 Wave 56: 죽음의 예언자 "모든 지속 피해 50%"와 저주의 결정 "상태 이상 피해"가 저주 틱도 키운다.
         if (updated.cursed) {
-            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || BALANCE.DEFAULT_MAX_HP) * BALANCE.CURSE_DOT_RATIO * curseAmpMult));
+            const curseRelicMult = relicDotMults?.curse ?? 1;
+            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || BALANCE.DEFAULT_MAX_HP) * BALANCE.CURSE_DOT_RATIO * curseAmpMult * synergyDotMult * curseRelicMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
             logs.push({ type: 'event', text: MSG.ENEMY_CURSE_DOT_TICK(updated.name, dmg) });
         }

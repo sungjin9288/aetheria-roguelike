@@ -14,7 +14,7 @@ export type RelicBalanceCategory =
     | 'expedition-scaling'
     | 'run-scaling'
     | 'exploration-pacing'
-    | 'abyss-only';
+    | 'abyss-progress';
 
 export interface RelicBalanceReport {
     schemaVersion: 1;
@@ -67,7 +67,8 @@ const EFFECT_CATEGORIES: ReadonlyArray<{
     effects: readonly string[];
 }> = Object.freeze([
     {
-        category: 'abyss-only',
+        // 2026-10 Wave 56: 'abyss-only' → 'abyss-progress' — 돌파한 심연 층 수로 어디서나 적용된다(설명도 그렇게 고쳤다).
+        category: 'abyss-progress',
         effects: ['abyss_atk_scale', 'abyss_crit_scale', 'abyss_floor_power'],
     },
     {

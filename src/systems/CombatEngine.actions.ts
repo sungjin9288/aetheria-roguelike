@@ -2,10 +2,11 @@ import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
 import { getMonsterFamily } from '../data/monsters.js';
-import type { EnemyDotId, FullStats, Monster, NumericRelicEffect, Player, Relic, RelicSynergy } from '../types/index.js';
+import type { EnemyDotId, FullStats, Monster, NumericRelicEffect, Player, Relic, RelicDotScope, RelicSynergy } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { mergeFearAtkMult } from './CombatEngine.status.js';
 import { isDamagingSkill } from './skillPower.js';
+import { healWithinMax } from './vitals.js';
 import type { CalculateDamageOptions } from './CombatEngine.js';
 
 export function getStrongestNumericRelicValue(
@@ -24,6 +25,32 @@ export function getStrongestNumericRelicValue(
 
     return strongest;
 }
+
+/**
+ * 2026-10 Wave 56: 그 상태 이상 피해를 키우는 `dot_mult` 유물 중 가장 강한 배율(없으면 1) — 유물의 `dotScope`가
+ *   대상을 정한다(죽음의 낙인 "독과 화상", 저주의 결정 "상태 이상 피해" = 전부). 같은 효과 중복은 가장 강한 하나만
+ *   쓰는 정책(`getStrongestNumericRelicValue`)을 대상별로 적용한다 — 값 검증도 같다.
+ */
+export function getRelicDotMult(relics: readonly Relic[], target: RelicDotScope): number {
+    const inScope = relics.filter((relic) => relic.effect === 'dot_mult' && (!relic.dotScope || relic.dotScope.includes(target)));
+    getStrongestNumericRelicValue(relics, 'dot_mult');
+    return inScope.length > 0 ? getStrongestNumericRelicValue(inScope, 'dot_mult') : 1;
+}
+
+/** 2026-10 Wave 56: 켜진 조합 중 가장 큰 치명타 피해 배율(공허의 용 2.0 · 원초의 분노 2.5). 없으면 1. */
+export const getStrongestSynergyCritDmg = (synergies: readonly RelicSynergy[] | undefined): number =>
+    (synergies || [])
+        .filter((s) => s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg)
+        .reduce((best: number, s) => Math.max(best, s.bonus.critDmg || 1), 1);
+
+/**
+ * 2026-10 Wave 56: 켜진 조합 중 가장 큰 흡혈 비율(흡혈 군주 0.5 · 혈맹 불사 1.0) — "모든 공격으로 준 피해"라
+ *   일반 공격과 위력 있는 기술이 같이 읽는다. `find`가 먼저 나오는 흡혈 군주를 골라 혈맹 불사의 100%가 가려졌다.
+ */
+export const getStrongestSynergyLifeSteal = (synergies: readonly RelicSynergy[] | undefined): number =>
+    (synergies || [])
+        .filter((s) => s.bonus.effect === 'vampire_lord' || s.bonus.effect === 'blood_immortal' || s.bonus.lifeSteal)
+        .reduce((best: number, s) => Math.max(best, s.bonus.lifeSteal || 0), 0);
 
 /**
  * 이 mixin의 메서드가 `this`로 교차호출하는 CombatEngine 멤버.
@@ -164,10 +191,10 @@ export const actionMethods = {
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
         const critDmgRelic = relics.find((r) => r.effect === 'crit_dmg');
         // cycle 154: 시너지 'void_dragon' / 'primordial_wrath' — bonus.critDmg 곱셈 추가.
-        const critDmgSyn = (stats.activeSynergies || []).find((s) =>
-            s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg);
-        const critDmgMult = (critDmgRelic?.val || 1) * (isCrit && critDmgSyn ? (critDmgSyn.bonus.critDmg || 1) : 1);
-        const baseDmg = (isCrit && (critDmgRelic || critDmgSyn)) ? Math.floor(rawBaseDmg * critDmgMult) : rawBaseDmg;
+        // 2026-10 Wave 56: 두 시너지가 함께 켜지면 큰 배율(원초의 분노 2.5)을 쓴다 — `find`가 공허의 용(2.0)을 먼저 골랐다.
+        const synCritDmg = getStrongestSynergyCritDmg(stats.activeSynergies);
+        const critDmgMult = (critDmgRelic?.val || 1) * (isCrit && synCritDmg > 1 ? synCritDmg : 1);
+        const baseDmg = (isCrit && (critDmgRelic || synCritDmg > 1)) ? Math.floor(rawBaseDmg * critDmgMult) : rawBaseDmg;
 
         // 유물: 연격 (double_strike) — 두 번째 타격 추가
         const dsRelic = relics.find((r) => r.effect === 'double_strike');
@@ -262,17 +289,15 @@ export const actionMethods = {
             updatedPlayer = this.applyCritMpRestore(updatedPlayer, relics, logs);
         }
 
-        // cycle 153: 시너지 'vampire_lord' — lifeSteal 일반 공격 흡혈.
-        const vampireSyn = (stats.activeSynergies || []).find((s) =>
-            s.bonus.effect === 'vampire_lord' || s.bonus.lifeSteal);
-        // cycle 156: 시너지 'hell_reaper' — lifeStealBonus 0.5 추가 흡혈 (vampire_lord와 합산).
+        // cycle 153: 시너지 'vampire_lord' / 'blood_immortal' — 흡혈(가장 큰 비율, Wave 56).
+        // cycle 156: 시너지 'hell_reaper' — lifeStealBonus 0.5 추가 흡혈 (일반 공격만 — 설명 "일반 공격으로 준 피해").
         const hellReaperSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'hell_reaper' || s.bonus.lifeStealBonus);
-        const totalLifeSteal = (vampireSyn?.bonus.lifeSteal || 0) + (hellReaperSyn?.bonus.lifeStealBonus || 0);
+        const totalLifeSteal = getStrongestSynergyLifeSteal(stats.activeSynergies) + (hellReaperSyn?.bonus.lifeStealBonus || 0);
         if (totalLifeSteal > 0) {
             const steal = Math.floor(finalDamage * totalLifeSteal);
             if (steal > 0) {
-                updatedPlayer = { ...updatedPlayer, hp: Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + steal) };
+                updatedPlayer = { ...updatedPlayer, hp: healWithinMax(updatedPlayer.hp ?? player.hp, steal, stats.maxHp || updatedPlayer.maxHp || player.maxHp) };
                 logs.push({ type: 'heal', text: MSG.RELIC_LIFESTEAL_PROC(Boolean(hellReaperSyn), steal) });
             }
         }
@@ -325,9 +350,8 @@ export const actionMethods = {
         // (런타임 값/제어 흐름은 완전히 동일).
         let skill: Skill = skillArg;
         const relics = stats.relics || [];
-        const resolvedDotMult = getStrongestNumericRelicValue(relics, 'dot_mult');
-        const hasDotMultRelic = relics.some((relic) => relic.effect === 'dot_mult');
-        const dotMult = hasDotMultRelic ? resolvedDotMult : 1;
+        // 지속 피해 배율 유물 값 검증 — 잘못된 값은 난수를 쓰기 전에 거부한다(relic-dot-multiplier 증빙의 순서).
+        getStrongestNumericRelicValue(relics, 'dot_mult');
 
         // cycle 107: freeze/stun 상태이상 턴 스킵 — attack()와 동일 처리.
         // 스킬 발동 자체가 막히고 MP는 소비되지 않음.
@@ -417,10 +441,12 @@ export const actionMethods = {
         // 유물: 주문 메아리 (free_skill) — 확률 MP 무료. 중복 보유 시 최강값 1개만 적용(Codex 권한 정책).
         const baseFreeSkillChance = getStrongestNumericRelicValue(relics, 'free_skill');
         const hasFreeSkillRelic = baseFreeSkillChance > 0;
-        // cycle 155: 시너지 'arcane_singularity' — bonus.freeSkillChance 35% 추가. 유물과 합산.
-        const arcaneSingSyn = (stats.activeSynergies || []).find((s) =>
-            s.bonus.effect === 'arcane_singularity' || s.bonus.freeSkillChance);
-        const freeChance = baseFreeSkillChance + (arcaneSingSyn?.bonus.freeSkillChance || 0);
+        // 2026-10 Wave 56: 비전 파동 "기력을 소모하지 않을 확률 두 배"(이전에는 읽는 곳이 없었다) ·
+        //   비전 특이점 "확률 35%"(이전에는 유물 확률에 35%를 더해 43 · 50%였다 — 이제 최소 35%).
+        const activeSyns = stats.activeSynergies || [];
+        const arcaneSurge = activeSyns.some((s) => s.bonus.effect === 'arcane_surge');
+        const singularityChance = activeSyns.reduce((best: number, s) => Math.max(best, s.bonus.freeSkillChance || 0), 0);
+        const freeChance = Math.min(1, Math.max(baseFreeSkillChance * (arcaneSurge ? 2 : 1), singularityChance));
         // cycle 163: 'cooldown_reduce' (시간 군주의 왕관) — val.firstFree=true면 전투 첫 스킬 MP 무소비.
         //   cycle 151에서 cdReduction만 적용 → firstFree 보조 메커니즘 추가.
         const playerFlags = player.combatFlags || {};
@@ -432,10 +458,11 @@ export const actionMethods = {
 
         const skillElem = skill.type || stats.elem;
         const elementMultiplier = this.getElementMultiplier(skillElem, enemy, relics);
-        // cycle 155: 시너지 'arcane_singularity' — bonus.skillMult 0.3 스킬 피해 +30% (mult 합산).
+        // cycle 155: 시너지 'arcane_singularity' — bonus.skillMult 0.3 "기술 피해 30% 증가".
+        // 2026-10 Wave 56: 위력에 0.3을 더하던 것(위력 2 → +15%, 4 → +7%)을 피해 × 1.3으로 바꿨다.
         const skillMultSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'arcane_singularity' || s.bonus.skillMult);
-        const skillMultBonus = skillMultSyn?.bonus.skillMult || 0;
+        const skillDamageSynMult = 1 + (skillMultSyn?.bonus.skillMult || 0);
         // cycle 242: skill.crit branch override 우선, fallback stats.critChance.
         //   도적 '치명 특화' (crit 0.7) / 어쌔신 '치명 암살' (crit 0.95) branch가 dispatch 0건이던 dead config.
         //   skill.crit 미정의 시 stats.critChance(equipment / relic / 시너지 / 칭호 합산) 사용.
@@ -454,8 +481,7 @@ export const actionMethods = {
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
         const critDmgRelicSkill = relics.find((r) => r.effect === 'crit_dmg');
         // cycle 154: 시너지 'void_dragon' / 'primordial_wrath' — 스킬 크리에도 bonus.critDmg 곱셈 적용.
-        const critDmgSynSkill = (stats.activeSynergies || []).find((s) =>
-            s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg);
+        const synCritDmgSkill = getStrongestSynergyCritDmg(stats.activeSynergies);
         // 2026-10 Wave 54: 연속 타격(`hits`) — 타격마다 피해 · 치명을 따로 굴린다(이중 자상 "두 번 연속 공격, 각 70% 치명타").
         //   한 번 타격은 이전과 같은 난수 순서다. 적의 방어 자세는 `ignoreGuard`(파워배시)가 무시한다.
         const hits = dealsDamage ? Math.max(1, Math.floor(skill.hits ?? 1)) : 0;
@@ -463,14 +489,14 @@ export const actionMethods = {
         let isCrit = false;
         for (let hit = 0; hit < hits; hit += 1) {
             const roll = this.calculateDamage(stats, {
-                mult: (skill.mult ?? 0) + skillMultBonus,
+                mult: skill.mult ?? 0,
                 guarding: !!enemy.guarding && !skill.ignoreGuard,
                 elementMultiplier,
                 rng: random,
                 ...(typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
             });
-            const hitCritMult = (critDmgRelicSkill?.val || 1) * (roll.isCrit && critDmgSynSkill ? (critDmgSynSkill.bonus.critDmg || 1) : 1);
-            damage += (roll.isCrit && (critDmgRelicSkill || critDmgSynSkill)) ? Math.floor(roll.damage * hitCritMult) : roll.damage;
+            const hitCritMult = (critDmgRelicSkill?.val || 1) * (roll.isCrit && synCritDmgSkill > 1 ? synCritDmgSkill : 1);
+            damage += (roll.isCrit && (critDmgRelicSkill || synCritDmgSkill > 1)) ? Math.floor(roll.damage * hitCritMult) : roll.damage;
             if (roll.isCrit) isCrit = true;
         }
 
@@ -488,7 +514,12 @@ export const actionMethods = {
             }
         }
 
-        const extraDamage = ['burn', 'poison', 'bleed'].includes(String(skill.effect))
+        // 2026-10 Wave 56: 기술 지속 피해 추가 타격(20%)도 유물의 대상(`dotScope`)을 따른다 — 죽음의 낙인은 출혈을 키우지 않는다.
+        const skillDotTarget = (['burn', 'poison', 'bleed'] as const).find((dot) => dot === String(skill.effect));
+        const dotMult = skillDotTarget ? getRelicDotMult(relics, skillDotTarget) : 1;
+        const hasDotMultRelic = Boolean(skillDotTarget) && relics.some((relic) => relic.effect === 'dot_mult'
+            && (!relic.dotScope || relic.dotScope.includes(skillDotTarget!)));
+        const extraDamage = skillDotTarget
             ? Math.floor(damage * 0.2 * dotMult)
             : 0;
 
@@ -503,7 +534,35 @@ export const actionMethods = {
         // 2026-10 Wave 53: 그림자 이동이 걸어 둔 다음 공격 배율 — 위력 있는 기술도 "다음 공격"이다.
         const pendingStrikeMult = dealsDamage ? (player.combatFlags?.nextAttackMult ?? 0) : 0;
         const strikeMult = pendingStrikeMult > 1 ? pendingStrikeMult : 1;
-        const rawTotalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill * strikeMult);
+        // 2026-10 Wave 56: "공격" · "피해"라 말하는 유물은 위력 있는 기술에도 적용한다(소유자 결정 "설명대로 구현") —
+        //   처형자의 날 · 절멸자(적 생명이 임계 미만), 허공의 심장(다음 첫 공격 300%), 예언의 돌판(보스 생명 25% 미만 2배).
+        //   이전에는 일반 공격에서만 읽었다. 순서와 판정은 attack()과 같다.
+        let relicSkillMult = 1;
+        let skillExecuteTriggered = false;
+        let skillVoidHeartTriggered = false;
+        let skillProphecyTriggered = false;
+        if (dealsDamage) {
+            const exRelicSkill = relics.find((r) => r.effect === 'execute_bonus');
+            const annihilatorSkill = (stats.activeSynergies || []).find((s) =>
+                s.bonus.effect === 'annihilator' || s.bonus.executeThreshold);
+            const exThresholdSkill = Math.max(exRelicSkill?.val?.threshold || 0, annihilatorSkill?.bonus.executeThreshold || 0);
+            const enemyHpRatio = (enemy.hp ?? 0) / Math.max(1, enemy.maxHp || 1);
+            if ((exRelicSkill || annihilatorSkill) && enemyHpRatio < exThresholdSkill) {
+                relicSkillMult *= 1 + (exRelicSkill?.val?.mult || 0);
+                skillExecuteTriggered = true;
+            }
+            const voidHeartSkill = relics.find((r) => r.effect === 'void_heart');
+            if (voidHeartSkill && player.combatFlags?.voidHeartArmed) {
+                relicSkillMult *= voidHeartSkill.val.dmg_mult;
+                skillVoidHeartTriggered = true;
+            }
+            const prophecySkill = relics.find((r) => r.effect === 'execute_atk');
+            if (prophecySkill && enemy.isBoss && enemyHpRatio < (prophecySkill.threshold || 0.25)) {
+                relicSkillMult *= prophecySkill.val || 2.0;
+                skillProphecyTriggered = true;
+            }
+        }
+        const rawTotalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill * strikeMult * relicSkillMult * skillDamageSynMult);
         const totalDamage = dealsDamage ? this.mitigateByEnemyDef(rawTotalDamage, enemy.def ?? 0, relics) : 0;
         const newEnemyHp = (enemy.hp ?? 0) - totalDamage;
 
@@ -605,6 +664,12 @@ export const actionMethods = {
                 ...(Object.keys(mults).length ? { dotMults: mults } : {}),
             };
         }
+        // 2026-10 Wave 56: 동결의 닻 "공격 시" — 위력 있는 기술이 적중해도 빙결 판정을 굴린다(이전에는 일반 공격만).
+        const freezeRelicSkill = relics.find((r) => r.effect === 'on_hit_freeze');
+        if (freezeRelicSkill && totalDamage > 0 && (postEffectEnemy.hp ?? 0) > 0 && random() < (freezeRelicSkill.val || 0)) {
+            postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, 'freeze');
+            logs.push({ type: 'event', text: MSG.RELIC_FREEZE_ON_HIT(enemy.name) });
+        }
         const updatedEnemy = postEffectEnemy;
 
         const updatedPlayer: Player = {
@@ -623,9 +688,13 @@ export const actionMethods = {
                     ? Math.min((player.combatFlags?.spellStackCount || 0) + 1, 999)
                     : (player.combatFlags?.spellStackCount || 0),
                 ...(strikeMult > 1 ? { nextAttackMult: 0 } : {}),
+                ...(skillVoidHeartTriggered ? { voidHeartArmed: false } : {}),
             }
         };
         if (strikeMult > 1) logs.push({ type: 'event', text: MSG.NEXT_ATTACK_MULT_PROC(strikeMult) });
+        if (skillExecuteTriggered) logs.push({ type: 'event', text: MSG.RELIC_EXECUTE_PROC });
+        if (skillVoidHeartTriggered) logs.push({ type: 'event', text: MSG.RELIC_VOID_HEART_PROC });
+        if (skillProphecyTriggered) logs.push({ type: 'critical', text: MSG.RELIC_EXECUTE_ATK_PROC });
         // 2026-10 Wave 53: 생명을 바치는 기술(어둠의 서약) — 현재 생명의 `hpCost`. 1 아래로 내려가지 않는다.
         if ((skill.hpCost ?? 0) > 0) {
             const hpCost = Math.floor((player.hp ?? 0) * (skill.hpCost ?? 0));
@@ -645,10 +714,20 @@ export const actionMethods = {
         updatedPlayer.skillLoadout!.cooldowns[String(skill.name)] = Math.max(0, baseCd - cdReduction);
 
         // 유물: 영혼 흡수 (skill_lifesteal) — 스킬 피해의 10% HP 흡수
+        const effectiveMaxHp = stats.maxHp || updatedPlayer.maxHp || player.maxHp;
         const slRelic = relics.find((r) => r.effect === 'skill_lifesteal');
         if (slRelic) {
             const heal = Math.floor(totalDamage * slRelic.val);
-            updatedPlayer.hp = Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + heal);
+            updatedPlayer.hp = healWithinMax(updatedPlayer.hp ?? player.hp, heal, effectiveMaxHp);
+        }
+        // 2026-10 Wave 56: 흡혈 군주 · 혈맹 불사 "모든 공격으로 준 피해" — 위력 있는 기술의 피해도 흡혈한다.
+        const synLifeStealSkill = dealsDamage ? getStrongestSynergyLifeSteal(stats.activeSynergies) : 0;
+        if (synLifeStealSkill > 0 && totalDamage > 0) {
+            const steal = Math.floor(totalDamage * synLifeStealSkill);
+            if (steal > 0) {
+                updatedPlayer.hp = healWithinMax(updatedPlayer.hp ?? player.hp, steal, effectiveMaxHp);
+                logs.push({ type: 'heal', text: MSG.RELIC_LIFESTEAL_PROC(false, steal) });
+            }
         }
         if (isCrit) {
             const critLogs: LootLog[] = [];
@@ -714,7 +793,7 @@ export const actionMethods = {
         if (skill.effect === 'drain') {
             const ratio = (typeof skill.drainRatio === 'number' && skill.drainRatio > 0) ? skill.drainRatio : 0.25;
             const drainHeal = Math.floor(totalDamage * ratio);
-            updatedPlayer.hp = Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + drainHeal);
+            updatedPlayer.hp = healWithinMax(updatedPlayer.hp ?? player.hp, drainHeal, effectiveMaxHp);
             logs.push({ type: 'heal', text: MSG.SKILL_DRAIN_HEAL(drainHeal) });
         }
 
@@ -722,7 +801,7 @@ export const actionMethods = {
         let holySmiteDamage = 0;
         if (skill.effect === 'hp_regen' && skill.val) {
             const healAmt = Math.max(1, Math.floor(Number(updatedPlayer.maxHp || player.maxHp) * skill.val));
-            updatedPlayer.hp = Math.min(Number(updatedPlayer.maxHp || player.maxHp), Number(updatedPlayer.hp || player.hp) + healAmt);
+            updatedPlayer.hp = healWithinMax(updatedPlayer.hp ?? player.hp, healAmt, effectiveMaxHp);
             logs.push({ type: 'heal', text: MSG.SKILL_HP_REGEN_PROC(skill.name, healAmt) });
             // 2026-09 Wave 51(소유자 결정 "성직자의 컨셉 — 언데드 · 마족에게 힐로 공격"): 회복의 빛이 언데드 · 마족을
             //   태운다 — 회복량(생명이 가득해도 광고한 양) × smite를 방어 무시로 더한다. 난수를 쓰지 않는다.
@@ -800,11 +879,12 @@ export const actionMethods = {
 
         // cycle 153: 시너지 'time_master' (extraTurnChance 0.1) / cycle 155: 'time_dominator' (extraAction 0.3) —
         //   스킬 사용 후 확률로 추가 행동. 두 시너지 동시 보유 시 더 높은 확률 채택.
-        const timeMasterSyn = relics && (stats.activeSynergies || []).find((s) =>
-            s.bonus.effect === 'time_master' || s.bonus.effect === 'time_dominator'
-            || s.bonus.extraTurnChance || s.bonus.extraAction);
-        const extraChance = (timeMasterSyn?.bonus.extraTurnChance || timeMasterSyn?.bonus.extraAction || 0);
-        if (timeMasterSyn && !updatedPlayer.extraTurnGranted && random() < extraChance) {
+        // 2026-10 Wave 56: 주석대로 최댓값이다 — `find`가 먼저 나오는 시간 지배자(10%)를 골라 강화(30%)가 가려졌다.
+        const extraChance = (stats.activeSynergies || [])
+            .filter((s) => s.bonus.effect === 'time_master' || s.bonus.effect === 'time_dominator'
+                || s.bonus.extraTurnChance || s.bonus.extraAction)
+            .reduce((best: number, s) => Math.max(best, s.bonus.extraTurnChance || 0, s.bonus.extraAction || 0), 0);
+        if (extraChance > 0 && !updatedPlayer.extraTurnGranted && random() < extraChance) {
             updatedPlayer.extraTurnGranted = true;
             logs.push({ type: 'event', text: MSG.RELIC_TIME_MASTER_EXTRA_TURN });
         }
