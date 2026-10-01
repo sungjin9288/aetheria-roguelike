@@ -79,6 +79,10 @@ export const MSG = {
         `[${skillName}]: ${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
     // 2026-10 Wave 52: 위력이 없는 보조 기술은 피해 줄 대신 사용 줄을 남긴다(효과 줄은 뒤따른다).
     SKILL_USE_SUPPORT: (skillName: string | undefined) => `[${skillName}] 사용!`,
+    // 2026-10 Wave 53: 생명을 바치는 기술 · 다음 공격 강화 소진.
+    SKILL_HP_COST: (skillName: string, cost: number) => `[${skillName}] 계약의 대가로 생명 ${cost}을(를) 바쳤습니다.`,
+    SKILL_NEXT_ATTACK_ARMED: (skillName: string, mult: number) => `[${skillName}] 다음 공격의 피해가 ${mult}배가 됩니다.`,
+    NEXT_ATTACK_MULT_PROC: (mult: number) => `그림자 일격! 피해 ${mult}배`,
     SKILL_BUFF_ACTIVE: (name: string, turns: number) => `${name} 강화 효과가 ${turns}턴 동안 적용됩니다.`,
     SKILL_STATUS_BONUS: (effect: string, dmg: number) => `[${effect}] 추가 피해 +${dmg}`,
     SKILL_NO_MP: '기력이 부족합니다.',
@@ -734,6 +738,9 @@ export const MSG = {
     SKILL_MP_REGEN_PROC: (skillName: string | undefined, amount: number) => `[${skillName}] +${amount} MP 회복!`,
     SKILL_PURIFY_PROC: (skillName: string | undefined) => `[${skillName}] 상태이상이 정화되었습니다!`,
     SKILL_STEALTH_PROC: (skillName: string | undefined) => `[${skillName}] 다음 적 공격을 회피합니다!`,
+    // 2026-10 Wave 53: 여러 번 막는 은신 — 두 번째부터 확률이면 그 확률을 함께 말한다.
+    SKILL_STEALTH_HITS: (skillName: string | undefined, hits: number, laterChancePct: number | null) =>
+        `[${skillName}] 적 공격 ${hits}번을 회피합니다${laterChancePct === null ? '' : `(두 번째부터 ${laterChancePct}%)`}!`,
     RELIC_TIME_MASTER_EXTRA_TURN: '[시간 지배자] 시간이 멈춥니다 — 추가 행동!',
     RELIC_ECHO_ATK_ARMED: '[공허의 메아리] 다음 공격이 강화됩니다!',
     SKILL_CRIT_COOLDOWN_RESET: '[인과율 조작] 치명타! 모든 쿨타임 -1.',
@@ -745,6 +752,7 @@ export const MSG = {
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.enemyAI.ts.
     STEALTH_EVADE_PROC: (enemyName: string | undefined) => `[은신] ${enemyName}의 공격을 회피했습니다!`,
+    STEALTH_EVADE_MISS: (enemyName: string | undefined) => `[은신] ${enemyName}에게 들켰습니다!`,
     ARMOR_EVADE_PROC: (enemyName: string | undefined) => `[회피] ${enemyName}의 공격을 회피했습니다!`,
     ENEMY_PHASE_STATUS_APPLIED: (phase: number, label: string) => `[Phase ${phase}] [${label}] 상태이상 부여!`,
     ANCIENT_SEAL_RESIST: '[고대의 봉인] 상태이상을 저항했습니다!',

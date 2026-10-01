@@ -258,8 +258,9 @@ test('그림자 주군 "허무의 각" — A는 처형 화력, B는 회피 획�
     const aDamage = 4000 - a.updatedEnemy.hp;
     const bDamage = 4000 - b.updatedEnemy.hp;
     assert.ok(aDamage > bDamage, `A 피해(${aDamage})가 B(${bDamage})보다 커야 함`);
-    assert.equal(b.updatedPlayer.nextHitEvaded, true, 'B는 다음 적 공격 1회를 회피한다');
-    assert.notEqual(a.updatedPlayer.nextHitEvaded, true, 'A는 회피를 얻지 않는다');
+    // Wave 53: 은신은 전투 플래그(남은 막는 적 공격 수)로 옮겼다 — 이전 `nextHitEvaded`는 더 세우지 않는다.
+    assert.equal(b.updatedPlayer.combatFlags?.stealthHits, 1, 'B는 다음 적 공격 1회를 회피한다');
+    assert.ok(!((a.updatedPlayer.combatFlags?.stealthHits ?? 0) > 0), 'A는 회피를 얻지 않는다');
 });
 
 test('시간술사 "시간 역행" — A는 쿨타임 초기화 + 보호, B는 추가 행동', () => {

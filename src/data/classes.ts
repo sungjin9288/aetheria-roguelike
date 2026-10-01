@@ -91,7 +91,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '급소찌르기', mp: 15, mult: 1.8, crit: 0.5, desc: '50% 치명타 확률 급소 공격' },
             { name: '독바르기', mp: 25, type: '자연', mult: 1.5, effect: 'poison', desc: '독 도포 + 자연 속성 피해' },
             { name: '연막탄', mp: 20, type: 'debuff', effect: 'blind', turn: 2, desc: '연막으로 적 명중률 2턴 하락' },
-            { name: '그림자 발걸음', mp: 18, type: 'buff', effect: 'stealth', val: 1.3, turn: 2, desc: '은신 진입 + 회피 상승 2턴' },
+            { name: '그림자 발걸음', mp: 18, type: 'buff', effect: 'stealth', evadeHits: 2, evadeChance: 0.3, desc: '은신 진입 — 다음 적 공격 회피, 그다음 적 공격 30% 회피' },
             { name: '등 찌르기', mp: 30, mult: 2.5, crit: 0.6, desc: '은신 중 60% 치명타, 일반 시 강화 피해' },
             { name: '독 보강', mp: 22, type: '자연', mult: 1.6, effect: 'poison', desc: '기존 독 강화 + 추가 자연 피해' },
             // 패시브
@@ -213,7 +213,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '생명흡수', mp: 40, mult: 3.0, effect: 'drain', drainRatio: 0.4, desc: '적의 생명력을 흡수 — 피해의 40% HP 회복' },
             { name: '영혼 파괴', mp: 100, type: '어둠', mult: 6.5, effect: 'curse', desc: '궁극기 — 영혼 분쇄 저주' },
             { name: '공포', mp: 35, type: 'debuff', effect: 'fear', val: 0.7, turn: 3, desc: '광기로 적 ATK 30% 감소 3턴' },
-            { name: '어둠의 서약', mp: 55, type: 'buff', effect: 'atk_up', val: 1.8, turn: 4, desc: 'ATK 80% 상승, HP를 소모하는 계약' },
+            { name: '어둠의 서약', mp: 55, type: 'buff', effect: 'atk_up', val: 1.8, turn: 4, hpCost: 0.15, desc: 'ATK 80% 상승 4턴 — 현재 생명 15%를 바치는 계약' },
             { name: '죽음의 손길', mp: 70, type: '어둠', mult: 4.5, effect: 'poison', desc: '어둠 독을 부여, 매 턴 심각한 피해' },
             { name: '혼돈의 파동', mp: 45, type: '어둠', mult: 3.5, effect: 'curse', desc: '혼돈의 파동으로 저주 강화' },
             // 패시브
@@ -240,11 +240,11 @@ export const CLASSES: Record<string, ClassDef> = {
         traits: { strengths: ['crit', 'evasion'], weaknesses: ['no_sustain'] },
         skills: [
             { name: '암살', mp: 40, mult: 5.0, crit: 0.8, desc: '80% 치명타 확률 암살 일격' },
-            { name: '은신', mp: 30, type: 'buff', effect: 'stealth', val: 2.0, turn: 2, desc: '완전 은신 + 회피 대폭 상승 2턴' },
+            { name: '은신', mp: 30, type: 'buff', effect: 'stealth', evadeHits: 2, desc: '완전 은신 — 적 공격 2번 회피' },
             { name: '그림자 일섬', mp: 100, type: '어둠', mult: 7.0, crit: 1.0, desc: '궁극기 — 100% 치명타 어둠 일격' },
             { name: '치명 독', mp: 50, type: '자연', mult: 3.0, effect: 'poison', desc: '치명적인 독 도포 + 강화 피해' },
             { name: '이중 자상', mp: 35, mult: 2.0, crit: 0.7, desc: '두 번 연속 공격, 각 70% 치명타' },
-            { name: '그림자 이동', mp: 20, type: 'buff', effect: 'stealth', val: 1.8, turn: 3, desc: '순간 은신 + 다음 공격 강화 3턴' },
+            { name: '그림자 이동', mp: 20, type: 'buff', effect: 'stealth', nextAttackMult: 1.8, desc: '순간 은신(다음 적 공격 회피) + 다음 공격 피해 1.8배' },
             { name: '처형 판결', mp: 80, mult: 6.0, crit: 0.9, desc: '고배율 + 90% 치명타 처형기' },
             // 패시브
             { name: '암살자의 각인', passive: true, effect: 'atk_up', val: 10, desc: 'ATK +10 (패시브)' },
@@ -436,7 +436,7 @@ export const CLASSES: Record<string, ClassDef> = {
         traits: { strengths: ['crit', 'firepower', 'evasion'], weaknesses: ['no_sustain'] },
         skills: [
             { name: '신의 일격', mp: 60, mult: 7.0, crit: 0.9, desc: '90% 치명타 확률 신의 일격' },
-            { name: '그림자 군주', mp: 80, type: 'buff', effect: 'stealth', val: 3.0, turn: 3, desc: '3턴간 강화 은신 + ATK 증가' },
+            { name: '그림자 군주', mp: 80, type: 'buff', effect: 'stealth', evadeHits: 3, atkBonus: 3.0, turn: 3, desc: '강화 은신 — 적 공격 3번 회피 + ATK 200% 상승 3턴' },
             { name: '허무의 각', mp: 150, type: '어둠', mult: 11.0, crit: 1.0, desc: '궁극기 — 100% 치명타 어둠 일격' },
             { name: '독의 예술', mp: 60, type: '자연', mult: 4.5, effect: 'poison', desc: '예술적인 독 운용 — 강력한 독' },
             { name: '심연의 계단', mp: 70, type: '어둠', mult: 6.0, crit: 0.8, desc: '80% 치명타 심연 공격' },

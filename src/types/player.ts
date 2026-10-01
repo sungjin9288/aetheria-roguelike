@@ -255,6 +255,15 @@ interface CombatFlags {
     /** 2026-07 에테르 거울 revive 소진 신호 — 영속 값은 player.mirrorReviveUsed(top-level). */
     mirrorReviveUsed?: boolean;
     echoArmed?: boolean;
+    /**
+     * 은신(Wave 53): 남은 막는 적 공격 수 · 두 번째부터의 회피 확률 · 첫 공격(확정) 대기 여부.
+     * 전투 플래그라 전투 시작 때 비워진다(이전 `nextHitEvaded`는 전투를 넘어 남았다).
+     */
+    stealthHits?: number;
+    stealthChance?: number;
+    stealthFirstPending?: boolean;
+    /** 다음 피해 행동 1회의 피해 배율(Wave 53 그림자 이동). 쓰면 0으로 돌아간다. */
+    nextAttackMult?: number;
 }
 
 /**

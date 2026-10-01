@@ -71,6 +71,12 @@ interface Skill {
     mpRestore?: number;
     /** 회복의 신성 피해 비율(Wave 51) — 언데드 · 마족에게만. */
     smite?: number;
+    /** Wave 53 — 은신이 막는 적 공격 수 · 두 번째부터의 회피 확률 · 다음 공격 배율 · 공격력 강화 · 생명 소모. */
+    evadeHits?: number;
+    evadeChance?: number;
+    nextAttackMult?: number;
+    atkBonus?: number;
+    hpCost?: number;
 }
 
 /**
@@ -210,6 +216,13 @@ export const actionMethods = {
             echoTriggered = true;
         }
 
+        // 2026-10 Wave 53: 그림자 이동이 걸어 둔 다음 공격 배율 — 한 번 쓰면 사라진다.
+        const strikeMult = (flags.nextAttackMult ?? 0) > 1 ? (flags.nextAttackMult ?? 1) : 1;
+        if (strikeMult > 1) {
+            finalDamage = Math.floor(finalDamage * strikeMult);
+            flags.nextAttackMult = 0;
+        }
+
         // 유물: 피의 달 (low_hp_dmg) — HP 40% 이하 시 모든 피해 +40%
         const lowHpDmgRelic = relics.find((r) => r.effect === 'low_hp_dmg');
         if (lowHpDmgRelic) {
@@ -268,6 +281,7 @@ export const actionMethods = {
         if (voidHeartTriggered) logs.push({ type: 'event', text: MSG.RELIC_VOID_HEART_PROC });
         if (executeAtkTriggered) logs.push({ type: 'critical', text: MSG.RELIC_EXECUTE_ATK_PROC });
         if (echoTriggered) logs.push({ type: 'event', text: MSG.RELIC_ECHO_ATK_PROC });
+        if (strikeMult > 1) logs.push({ type: 'event', text: MSG.NEXT_ATTACK_MULT_PROC(strikeMult) });
 
         // cycle 152: 'on_hit_freeze' (frost_anchor) — val 확률로 적 1턴 빙결.
         let postHitEnemy: Monster = { ...enemy, hp: newEnemyHp, guarding: false };
@@ -470,7 +484,10 @@ export const actionMethods = {
         const lowHpMultSkill = (lowHpDmgRelicSkill && (player.hp ?? 0) / Math.max(1, player.maxHp || BALANCE.DEFAULT_MAX_HP) < (lowHpDmgRelicSkill.threshold || 0.4))
             ? (lowHpDmgRelicSkill.val || 1.4) : 1;
         // PR #3: 적 DEF 비율 경감 — 스킬 배율 전부 적용 후 최종 1회 (attack()과 동일 패턴).
-        const rawTotalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill);
+        // 2026-10 Wave 53: 그림자 이동이 걸어 둔 다음 공격 배율 — 위력 있는 기술도 "다음 공격"이다.
+        const pendingStrikeMult = dealsDamage ? (player.combatFlags?.nextAttackMult ?? 0) : 0;
+        const strikeMult = pendingStrikeMult > 1 ? pendingStrikeMult : 1;
+        const rawTotalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill * strikeMult);
         const totalDamage = dealsDamage ? this.mitigateByEnemyDef(rawTotalDamage, enemy.def ?? 0, relics) : 0;
         const newEnemyHp = (enemy.hp ?? 0) - totalDamage;
 
@@ -558,8 +575,18 @@ export const actionMethods = {
                 spellStackCount: spellStackRelic
                     ? Math.min((player.combatFlags?.spellStackCount || 0) + 1, 999)
                     : (player.combatFlags?.spellStackCount || 0),
+                ...(strikeMult > 1 ? { nextAttackMult: 0 } : {}),
             }
         };
+        if (strikeMult > 1) logs.push({ type: 'event', text: MSG.NEXT_ATTACK_MULT_PROC(strikeMult) });
+        // 2026-10 Wave 53: 생명을 바치는 기술(어둠의 서약) — 현재 생명의 `hpCost`. 1 아래로 내려가지 않는다.
+        if ((skill.hpCost ?? 0) > 0) {
+            const hpCost = Math.floor((player.hp ?? 0) * (skill.hpCost ?? 0));
+            if (hpCost > 0) {
+                updatedPlayer.hp = Math.max(1, (player.hp ?? 0) - hpCost);
+                logs.push({ type: 'warning', text: MSG.SKILL_HP_COST(String(skill.name), (player.hp ?? 0) - updatedPlayer.hp) });
+            }
+        }
         // cycle 151: 'cooldown_reduce' (시간 군주의 왕관) — 스킬 사용 시 초기 쿨다운 -val.cdReduction. firstFree는 별도 사이클.
         const cdRelic = relics.find((r) => r.effect === 'cooldown_reduce');
         // cycle 155: 시너지 'time_dominator' — bonus.cdReduction 2 추가. 유물과 합산.
@@ -587,7 +614,7 @@ export const actionMethods = {
         //   빈 강화(공격 0 · 방어 0)가 켜져 있던 방어 강화를 지웠다(기적의 손길이 신성한 보호막을 끔).
         //   defBonus가 있는 분기('수호의 손길')는 아래 else-if가 방어 강화를 그대로 준다.
         const isRegenSkill = skill.effect === 'hp_regen';
-        if ((skill.type === 'buff' && !isRegenSkill) || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(String(skill.effect))) {
+        if ((skill.type === 'buff' && !isRegenSkill) || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(String(skill.effect)) || skill.atkBonus !== undefined) {
             const buff: { atk: number; def: number; turn: number; name: string | undefined; counterChance?: number } = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
             if (skill.effect === 'atk_up') buff.atk = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'def_up') buff.def = Math.max(0.15, (skill.val || 1.3) - 1);
@@ -610,7 +637,15 @@ export const actionMethods = {
             if (skill.defBonus !== undefined) {
                 buff.def = (skill.defBonus || 1) - 1;
             }
-            updatedPlayer.tempBuff = buff;
+            // 2026-10 Wave 53: 공격력 강화 배율(그림자 군주) — defBonus와 짝.
+            if (skill.atkBonus !== undefined) {
+                buff.atk = Math.max(0, (skill.atkBonus || 1) - 1);
+            }
+            // 2026-10 Wave 53: 아무것도 올리지 않는 빈 강화는 강화 칸을 쓰지 않는다 — 쓰던 동안 은신 · 마나 가속 ·
+            //   시간 역행이 걸려 있던 다른 강화(광폭화 · 물약)를 지웠다(Wave 42가 회복 기술에서 고친 것과 같은 모양).
+            if (buff.atk !== 0 || buff.def !== 0 || buff.counterChance !== undefined) {
+                updatedPlayer.tempBuff = buff;
+            }
         } else if (skill.defBonus !== undefined) {
             // cycle 238: non-buff effect 스킬 ('철벽 배시' = stun 효과 + defBonus)도 buff 생성.
             //   stun 등 attack-type 스킬에 defBonus가 정의되어 있으면 별도로 buff 부여.
@@ -670,9 +705,25 @@ export const actionMethods = {
         }
 
         // stealth: 다음 적 공격 1회 회피 플래그 설정 (#5)
+        // 2026-10 Wave 53(소유자 결정 "설명대로 동작하게"): 은신은 실제 적 공격 `evadeHits`번을 막는다 — 첫 공격은
+        //   확정, 그 뒤는 `evadeChance`. 전투 플래그라 전투가 바뀌면 사라진다. 이전에는 기술과 무관하게 1회였다.
         if (skill.effect === 'stealth') {
-            updatedPlayer.nextHitEvaded = true;
-            logs.push({ type: 'event', text: MSG.SKILL_STEALTH_PROC(skill.name) });
+            const hits = Math.max(1, Math.floor(skill.evadeHits ?? 1));
+            const chance = Math.max(0, Math.min(1, skill.evadeChance ?? 1));
+            updatedPlayer.combatFlags = {
+                ...this.getCombatFlags(updatedPlayer),
+                stealthHits: hits,
+                stealthChance: chance,
+                stealthFirstPending: true,
+            };
+            logs.push({ type: 'event', text: hits > 1
+                ? MSG.SKILL_STEALTH_HITS(skill.name, hits, chance < 1 ? Math.round(chance * 100) : null)
+                : MSG.SKILL_STEALTH_PROC(skill.name) });
+        }
+        // 2026-10 Wave 53: 다음 피해 행동 1회 배율(그림자 이동).
+        if ((skill.nextAttackMult ?? 0) > 1) {
+            updatedPlayer.combatFlags = { ...this.getCombatFlags(updatedPlayer), nextAttackMult: skill.nextAttackMult };
+            logs.push({ type: 'event', text: MSG.SKILL_NEXT_ATTACK_ARMED(String(skill.name), skill.nextAttackMult ?? 1) });
         }
 
         // extraTurn: 이번 스킬 사용 후 적 턴 스킵 → 플레이어 추가 행동 (Sprint 16 — 시간술사)
