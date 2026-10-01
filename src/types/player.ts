@@ -273,6 +273,11 @@ interface CombatFlags {
     nextAttackMult?: number;
     /** 그림자 망토 — 이번 전투에서 처음 받는 적 공격을 반드시 피한다(Wave 56). 전투 시작 때 세우고 쓰면 false. */
     cloakEvadePending?: boolean;
+    /**
+     * 혼돈의 보석 — 이번 전투에서 오른 능력치(Wave 57). 전투 시작 때 세우고 전투가 끝나면 지운다
+     * (`endCombatScopedRelics`). 보석이 없으면 표시가 있어도 효과가 없다(`statsCalculator`).
+     */
+    chaosGemStat?: 'atk' | 'def';
 }
 
 /**

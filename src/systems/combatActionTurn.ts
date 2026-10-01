@@ -4,6 +4,7 @@ import { buildRunSummary, getJobSkills } from '../utils/gameUtils';
 import { pushBattleRecord, makeBattleRecord } from './DifficultyManager';
 import { calculateFullStats, type FullStats } from '../utils/statsCalculator';
 import { endDevourBonus } from '../utils/adventureRelicBonuses';
+import { endCombatScopedRelics } from '../utils/combatScopedRelics';
 import { createSeededRandom } from './combatItemTurn';
 import { tickAfterAction } from './combatTurnTick';
 import type { Monster, Player } from '../types/index.js';
@@ -64,7 +65,8 @@ const resolveDefeat = (
     random: () => number,
     now: number,
 ): CombatActionTurnResult => {
-    const deadPlayer = { ...player, killStreak: 0 };
+    // 2026-10 Wave 57: 빌린 유물은 기록(런 요약의 유물 수)에도 남기지 않는다.
+    const deadPlayer = { ...endCombatScopedRelics(player), killStreak: 0 };
     const defeatResult = CombatEngine.handleDefeat(deadPlayer, initialPlayer, random, () => now);
     const recordedPlayer = {
         ...defeatResult.updatedPlayer,
@@ -118,7 +120,7 @@ export const resolveCombatActionTurn = ({
             return {
                 kind: 'escape',
                 player: {
-                    ...endDevourBonus(player),
+                    ...endCombatScopedRelics(endDevourBonus(player)),
                     stats: {
                         ...pushBattleRecord(player.stats, makeBattleRecord('escape', hpRatio)),
                         escapes: (player.stats?.escapes || 0) + 1,
@@ -181,7 +183,7 @@ export const resolveCombatActionTurn = ({
     logs.push(...(actionResult.logs || []));
 
     if (actionResult.forceEscape) {
-        const escapedPlayer = endDevourBonus(actionResult.updatedPlayer!);
+        const escapedPlayer = endCombatScopedRelics(endDevourBonus(actionResult.updatedPlayer!));
         const hpRatio = (escapedPlayer.hp || 0) / Math.max(1, escapedPlayer.maxHp || 1);
         return {
             kind: 'escape',

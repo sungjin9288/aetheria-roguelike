@@ -19,6 +19,7 @@ import { queueMilestoneStoryBeat } from '../utils/milestoneStory.js';
 import { pickPermanentPlayerState } from '../utils/permanentProgress.js';
 import { createCurrentRunProgress } from '../utils/runProgress.js';
 import { resolveHpDrainAtkRelic } from '../utils/hpDrainAtkRelic.js';
+import { getEquipmentPassives } from '../utils/equipmentPassives.js';
 import { getBakedMetaVitals, snapshotMetaVitals } from './metaBonusRamp.js';
 
 /** `calculateDamage()` 옵션 — 호출부 2곳(공격/스킬) 모두 object literal로 명시 전달. */
@@ -224,6 +225,15 @@ export const CombatEngine = {
             const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (regenRelic.val || 0.05)));
             updated.hp = healWithinMax(updated.hp || 1, heal, tickMaxHp);
             logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_EARTH_HEART, heal) });
+        }
+
+        // 2026-10 Wave 57: 재생 장비(세계수 갑주 3% · 세계수 뿌리 갑옷 5%) — 대지의 심장과 같은 틱 · 같은 기준.
+        //   이전에는 설명("자연의 회복력", "무한한 재생력")만 있었다.
+        const equipmentPassives = getEquipmentPassives(updated.equip);
+        if (equipmentPassives.regenPerTurn > 0 && (updated.hp || 0) < tickMaxHp) {
+            const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * equipmentPassives.regenPerTurn));
+            updated.hp = healWithinMax(updated.hp || 1, heal, tickMaxHp);
+            logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(equipmentPassives.regenSource ?? undefined, heal) });
         }
 
         // 시너지: 영원의 생명 (healPerTurn) — 매 턴 4% HP 재생

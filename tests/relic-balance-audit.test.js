@@ -121,7 +121,7 @@ test('canonical relic balance report is deterministic, complete, and owner-quote
         ],
         'combat-scaling': ['combo_stack', 'entropy_tick', 'spell_stack'],
         'conditional-combat': [
-            'battle_start_buff', 'battle_start_heal', 'cd_minus', 'chaos_buff',
+            'battle_start_buff', 'battle_start_heal', 'cd_minus', 'chaos_buff', 'chaos_relic',
             'cooldown_reduce', 'crit_block', 'crit_mp_regen', 'cursed_power', 'devour_hp', 'dot_mult',
             'double_strike', 'echo_atk', 'execute_atk', 'execute_bonus', 'first_turn_evade',
             'free_skill', 'hp_drain_atk', 'low_hp_atk', 'low_hp_dmg', 'mp_regen_turn',
@@ -129,7 +129,8 @@ test('canonical relic balance report is deterministic, complete, and owner-quote
             'skill_lifesteal', 'status_resist',
         ],
         'expedition-scaling': ['kill_stack_atk'],
-        'exploration-pacing': ['boss_hunter', 'chaos_relic', 'event_chance'],
+        // 2026-10 Wave 57: 혼돈의 심장은 그 전투 동안 유물 하나를 빌린다 — 탐험 속도에서 조건부 전투로 옮겼다.
+        'exploration-pacing': ['boss_hunter', 'event_chance'],
         'failure-rule': ['death_save', 'phoenix_revive', 'void_heart'],
         'resource-economy': ['drop_rate', 'exp_mult', 'gold_mult', 'kill_bonus'],
         'run-scaling': ['kill_stack'],

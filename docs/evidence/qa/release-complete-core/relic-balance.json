@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "4485763d677714bd56fb579a8ca21d3525b20f74e3f4612623489015d84614e7",
+  "reportHash": "d626a91c5487f0e2749bdf7c6bf58cc120abf3d8dc5114ae87f2e3988b71706a",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -127,17 +127,18 @@
           "chaos_gem"
         ],
         "runtimeOwners": [
-          "src/hooks/gameActions/exploreFlow.ts"
+          "src/hooks/gameActions/exploreFlow.ts",
+          "src/utils/statsCalculator.ts"
         ]
       },
       {
         "effect": "chaos_relic",
-        "category": "exploration-pacing",
+        "category": "conditional-combat",
         "relicIds": [
           "chaos_heart"
         ],
         "runtimeOwners": [
-          "src/hooks/gameActions/exploreFlow.ts"
+          "src/systems/chaosHeart.ts"
         ]
       },
       {

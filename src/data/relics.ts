@@ -285,7 +285,7 @@ export const RELICS: Relic[] = [
         id: 'chaos_gem',
         name: '혼돈의 보석',
         rarity: 'epic',
-        desc: '전투가 시작되면 공격력 또는 방어력 30% 증가',
+        desc: '전투가 시작되면 그 전투 동안 공격력 또는 방어력 30% 증가',
         effect: 'chaos_buff',
         val: 0.3,
     },
@@ -300,7 +300,7 @@ export const RELICS: Relic[] = [
     // ── Sprint 19: 신규 유물 15종 ────────────────────────────────────────────
     { id: 'time_shard',      name: '시간의 파편',   rarity: 'epic',      desc: '모든 기술의 재사용 대기가 두 배 빨리 줄어듦', effect: 'cd_minus', val: 1 },
     { id: 'soul_collector',  name: '영혼 수집가',   rarity: 'legendary', desc: '얻은 뒤 적을 50마리 처치할 때마다 공격력 25 누적', effect: 'kill_stack', stackPer: 50, stackVal: 25 },
-    { id: 'chaos_heart',     name: '혼돈의 심장',   rarity: 'legendary', desc: '전투마다 무작위 유물 효과 발동', effect: 'chaos_relic' },
+    { id: 'chaos_heart',     name: '혼돈의 심장',   rarity: 'legendary', desc: '전투마다 가지지 않은 유물 하나를 무작위로 빌려 그 전투 동안 효과 발동 (조합 포함)', effect: 'chaos_relic' },
     // cycle 368: threshold: 0.25 redundant default 제거 — CombatEngine.ts:544
     //   `executeAtkRelic.threshold || 0.25` fallback과 동일.
     { id: 'prophecy_stone',  name: '예언의 돌판',   rarity: 'epic',      desc: '보스 생명이 25% 이하이면 공격력 2배', effect: 'execute_atk', val: 2.0 },

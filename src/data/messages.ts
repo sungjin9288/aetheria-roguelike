@@ -758,6 +758,19 @@ export const MSG = {
     // 2026-10 Wave 56: 그림자 망토 첫 공격 회피 · 운명의 거울 반사.
     CLOAK_EVADE_PROC: (enemyName: string | undefined) => `[그림자 망토] ${enemyName}의 첫 공격을 회피했습니다!`,
     MIRROR_REFLECT_PROC: (dmg: number) => `[운명의 거울] 받은 피해 반사 ${dmg}!`,
+    // 2026-10 Wave 57: 원소 저항 장비 · 혼돈의 심장(빌린 유물 · 켜진 조합) · 혼돈의 보석(전투 내내).
+    EQUIP_ELEMENT_RESIST_PROC: (element: string, pct: number, before: number, after: number) => (
+        `[${element} 저항] 받는 피해 -${pct}% (${before} → ${after})`
+    ),
+    EQUIP_RESIST_STAT: (elements: string, pct: number) => `${elements} 피해 -${pct}%`,
+    EQUIP_RESIST_ALL_ELEMENTS: '모든 원소',
+    EQUIP_REGEN_STAT: (pct: number) => `매 턴 생명 ${pct}% 회복`,
+    CHAOS_HEART_BORROW: (name: string, desc: string) => `[혼돈의 심장] 이번 전투 동안 「${name}」 — ${desc}`,
+    CHAOS_HEART_SYNERGY: (label: string, drawback: string) => `[혼돈의 심장] 조합 「${label}」이(가) 켜졌습니다 (대가: ${drawback})`,
+    CHAOS_HEART_BORROWED_TAG: '혼돈의 심장 · 이번 전투',
+    CHAOS_GEM_PROC: (stat: 'atk' | 'def', pct: number) => (
+        `[혼돈의 보석] 이번 전투 동안 ${stat === 'atk' ? '공격력' : '방어력'} +${pct}%`
+    ),
     STEALTH_EVADE_MISS: (enemyName: string | undefined) => `[은신] ${enemyName}에게 들켰습니다!`,
     // 2026-10 Wave 55: 실명 빗나감 · 지속 턴이 끝난 지속 피해.
     ENEMY_BLIND_MISS: (enemyName: string | undefined) => `[실명] ${enemyName}의 공격이 빗나갔습니다!`,
