@@ -353,14 +353,18 @@ test('binds exact source bytes in a sorted, unique, evidence-independent snapsho
         //   값에 들어가 두 해시가 움직인다. 분류는 그대로다(in-corridor 154 · 결함 0 · 재계획 불필요).
         //   이전 값: report '3c9d79593d161f11a1e94fe8663f5d2a3fd54fc3d9f291a9228ff856896b682a'
         //            rows   '01c99d3cd4dcd35b821b950577bb54d71ed0f0916a4e2d47379eb332f9ec0c40'.
-        assert.equal(envelope.reportHash, '398d04eb2552a3ae5fb79d6cf6cce0e8e46be923fae51a17118d869ff29ef37e');
-        assert.equal(envelope.rowsHash, '4a45daf42d22d4e2bdbab58d892dc7ce40c92cdae97e5914e215b4f47b6c2d79');
+        // Wave 58 (소유자 결정 "설명대로"): 직업 패시브 "+N"이 배율 뒤 고정 보너스가 되어 직업별 비교 행의 실효 값과
+        //   방어구 4종의 분류가 옮겼다(위 '분류 안정성' 테스트의 주석 참조). 결함 0 · 재계획 불필요는 그대로다.
+        //   이전 값: report '398d04eb2552a3ae5fb79d6cf6cce0e8e46be923fae51a17118d869ff29ef37e'
+        //            rows   '4a45daf42d22d4e2bdbab58d892dc7ce40c92cdae97e5914e215b4f47b6c2d79'.
+        assert.equal(envelope.reportHash, '5ba8590774116aa3cd4b7ae13d415a8f6180a8386a8e658364959f4128ec99db');
+        assert.equal(envelope.rowsHash, '0c7f0ea289fe117b52e4b612ac605df69ab62638e8c38cab5fe8d5e50150641e');
         assert.deepEqual(envelope.classificationCounts, {
             'combat-power-defect': 0,
-            'in-corridor': 154,
-            intentional: 16,
-            'price-only-defect': 9,
-            'specialized-sidegrade': 50,
+            'in-corridor': 153,
+            intentional: 17,
+            'price-only-defect': 10,
+            'specialized-sidegrade': 49,
         });
         assert.equal(envelope.requiresReplan, false);
         assert.deepEqual(Object.keys(envelope.sourceSnapshot).sort(), ['files', 'hashAlgorithm']);
