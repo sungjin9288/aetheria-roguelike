@@ -3,7 +3,7 @@ import { Sword, Zap, ArrowRight, RotateCw, Sparkles, Backpack } from 'lucide-rea
 import { motion as Motion } from 'framer-motion';
 import { buildCombatView } from '../../utils/combatView';
 import { MSG } from '../../data/messages.js';
-import type { FullStats, Item, Player, Monster, StatusId } from '../../types/index.js';
+import type { EnemyDotId, FullStats, Item, Player, Monster, StatusId } from '../../types/index.js';
 import type { GameActions } from '../../hooks/actionDeps';
 
 /** CombatPanel이 실제로 호출하는 액션만 좁혀 받는다 (공격/기술/아이템/스킬 순환). */
@@ -222,7 +222,9 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
             //   dots는 poison/burn/bleed만 담기므로 동작 동일(독/화상/출혈).
             for (const dot of dots) {
               const label = MSG.DOT_LABELS[dot as StatusId];
-              if (label) debuffs.push(label);
+              // 2026-10 Wave 55: 지속 턴이 있는 지속 피해(출혈베기 · 영혼 소환 "3턴간")는 남은 턴을 함께 보인다.
+              const dotTurns = enemy?.dotTurns?.[dot as EnemyDotId];
+              if (label) debuffs.push(dotTurns ? MSG.ENEMY_DOT_CHIP_TURNS(label, dotTurns) : label);
             }
             if (debuffs.length === 0) return null;
             const headLabel = debuffs[0];

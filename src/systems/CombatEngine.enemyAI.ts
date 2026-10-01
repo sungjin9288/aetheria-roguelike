@@ -3,7 +3,7 @@ import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
 import type { FullStats, Monster, Player, Relic, RelicSynergy, StatusId } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
-import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, isEnemyTauntActive } from './CombatEngine.status.js';
+import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, isEnemyBlindActive, isEnemyTauntActive } from './CombatEngine.status.js';
 
 interface EnemyAttackResult {
     updatedPlayer: Player;
@@ -81,6 +81,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         const debuffAtkMult = getEnemyDebuffAtkMult(enemy);
         const debuffAtkLabel = getEnemyDebuffAtkLabel(enemy);
         const tauntActive = isEnemyTauntActive(enemy);
+        const blindActive = isEnemyBlindActive(enemy);
         const enemyTickResult = this.tickEnemyStatus(updatedEnemy, [], curseAmpMult, synergyDotMult);
         updatedEnemy = enemyTickResult.updatedEnemy;
         enemyTickResult.logs.forEach((l) => logs.push(l));
@@ -240,6 +241,15 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             return {
                 updatedPlayer, updatedEnemy, damage: 0, isDead: false,
                 logs: [...logs, { type: 'success', text: MSG.STEALTH_EVADE_PROC(enemy.name) }]
+            };
+        }
+
+        // 2026-10 Wave 55: 실명은 명중률 하락이다 — 이번 공격이 BLIND_ENEMY_MISS_CHANCE 확률로 빗나간다(틱 전 상태로 판정).
+        //   이전에는 공격력 ×0.65였다(기대 피해는 같다). 방어 자세 · 은신 판정 뒤라 실제 공격에만 굴린다.
+        if (blindActive && random() < BALANCE.BLIND_ENEMY_MISS_CHANCE) {
+            return {
+                updatedPlayer, updatedEnemy, damage: 0, isDead: false,
+                logs: [...logs, { type: 'success', text: MSG.ENEMY_BLIND_MISS(enemy.name) }]
             };
         }
 

@@ -756,6 +756,10 @@ export const MSG = {
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.enemyAI.ts.
     STEALTH_EVADE_PROC: (enemyName: string | undefined) => `[은신] ${enemyName}의 공격을 회피했습니다!`,
     STEALTH_EVADE_MISS: (enemyName: string | undefined) => `[은신] ${enemyName}에게 들켰습니다!`,
+    // 2026-10 Wave 55: 실명 빗나감 · 지속 턴이 끝난 지속 피해.
+    ENEMY_BLIND_MISS: (enemyName: string | undefined) => `[실명] ${enemyName}의 공격이 빗나갔습니다!`,
+    ENEMY_DOT_EXPIRED: (label: string, enemyName: string | undefined) => `${enemyName}의 ${label}이(가) 사라졌습니다.`,
+    ENEMY_DOT_CHIP_TURNS: (label: string, turns: number) => `${label} · ${turns}턴`,
     ARMOR_EVADE_PROC: (enemyName: string | undefined) => `[회피] ${enemyName}의 공격을 회피했습니다!`,
     ENEMY_PHASE_STATUS_APPLIED: (phase: number, label: string) => `[Phase ${phase}] [${label}] 상태이상 부여!`,
     ANCIENT_SEAL_RESIST: '[고대의 봉인] 상태이상을 저항했습니다!',

@@ -100,6 +100,8 @@ export interface ClassSkill {
     stealthCrit?: number;
     /** 강화와 함께 거는 반격 확률(Wave 54 철벽 방어). 강화 지속 동안 피격 시 이 확률로 반격한다. */
     counterChance?: number;
+    /** 이 기술이 거는 지속 피해의 피해 배율(Wave 55, 1.5 = +50%). 같은 지속 피해에 이미 더 큰 배율이 있으면 그것을 둔다. */
+    dotDamageMult?: number;
 
     // --- 이하 skillBranches override로만 주입되는 키 (CombatEngine.actions가 읽는다) ---
     /** 상태이상 발동 확률 게이트 (미정의 시 1.0). */

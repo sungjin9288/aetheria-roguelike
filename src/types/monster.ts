@@ -31,6 +31,9 @@ export type ElementKey =
 //   heavy-hit 분기와 combatForecast의 fallback은 한 번도 실행되지 않는 죽은 리더였다.
 //   상태이상 부여의 살아 있는 경로는 몬스터 최상위 `statusOnHit`(+ 보스 페이즈의
 //   `phase2/phase3.statusEffect`)뿐이다 — tests/data-shape-types.test.js가 재도입을 막는다.
+/** 적에게 거는 지속 피해 종류(Wave 55). */
+export type EnemyDotId = 'burn' | 'poison' | 'bleed';
+
 export interface MonsterPattern {
     guardChance: number;
     heavyChance: number;
@@ -91,9 +94,16 @@ export interface MonsterBase {
     /** 지속 피해 상태 키 목록 ('burn' | 'poison' | 'bleed'). */
     dots?: string[];
     /**
+     * 지속 피해별 남은 틱(Wave 55, 설명이 "N턴간"이라고 말하는 기술 — 출혈베기 · 영혼 소환). 키가 없으면 전투 내내다.
+     * 적 행동마다 피해를 준 뒤 1 줄고, 0이면 그 지속 피해가 사라진다.
+     */
+    dotTurns?: Partial<Record<EnemyDotId, number>>;
+    /** 지속 피해별 피해 배율(Wave 55 — 출혈베기 A · 독바르기 A · 독 보강 · 역병의 안개 "+50%"). 없으면 1. */
+    dotMults?: Partial<Record<EnemyDotId, number>>;
+    /**
      * 약화 남은 턴 — 값은 "앞으로 영향받을 적 행동 수"다(Wave 44). 행동이 시작될 때 0보다 크면
      * 그 행동에 적용되고, 행동 뒤 1 줄어든다. 공격력 배율은 저장하지 않고 걸려 있는 약화에서
-     * `getEnemyDebuffAtkMult`가 계산한다.
+     * `getEnemyDebuffAtkMult`가 계산한다. 실명은 공격력이 아니라 빗나감 확률이다(Wave 55).
      */
     blindTurns?: number;
     fearTurns?: number;

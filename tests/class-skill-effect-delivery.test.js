@@ -2,7 +2,6 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { CLASSES } from '../src/data/classes.js';
-import { BALANCE } from '../src/data/constants.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { getEnemyDebuffAtkMult } from '../src/systems/CombatEngine.status.js';
 
@@ -93,10 +92,14 @@ test('공포 기술은 자기 지속 턴과 공격력 약화 폭을 쓴다', () 
 });
 
 test('더 강한 약화가 이미 걸려 있으면 공포가 약화 폭을 되돌리지 않는다 (최솟값 유지)', () => {
-    const result = cast('전사', '전투 함성', {}, { blindTurns: 2 });
-    assert.equal(getEnemyDebuffAtkMult(result.updatedEnemy), BALANCE.BLIND_ATK_MULT);
-    assert.equal(result.updatedEnemy.fearAtkMult, 0.75, '공포는 자기 배율을 따로 들고 있어 실명이 끝나도 남는다');
+    // Wave 55: 실명은 공격력을 줄이지 않는다(빗나감 확률) — 이제 공포보다 강한 약화는 더 강한 공포다.
+    const result = cast('전사', '전투 함성', {}, { fearTurns: 1, fearAtkMult: 0.65 });
+    assert.equal(getEnemyDebuffAtkMult(result.updatedEnemy), 0.65);
+    assert.equal(result.updatedEnemy.fearAtkMult, 0.65, '약한 공포가 강한 공포의 배율을 되돌리지 않는다');
     assert.equal(result.updatedEnemy.fearTurns, 3);
+    const blinded = cast('전사', '전투 함성', {}, { blindTurns: 2 });
+    assert.equal(getEnemyDebuffAtkMult(blinded.updatedEnemy), 0.75, '실명은 공격력 배율에 끼지 않는다');
+    assert.equal(blinded.updatedEnemy.blindTurns, 2, '실명은 그대로 남는다');
 });
 
 test('실명 · 도발 기술도 자기 지속 턴을 쓴다', () => {

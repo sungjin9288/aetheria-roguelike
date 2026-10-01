@@ -20,6 +20,8 @@ import { CombatEngine } from '../src/systems/CombatEngine.js';
 const ENGINE_READ_OVERRIDE_KEYS = new Set([
     'mult', 'effect', 'effectChance', 'secondEffect', 'val', 'turn', 'crit',
     'defBonus', 'stunTurn', 'curseTurn', 'drainRatio', 'mpRestore', 'mp', 'cooldown', 'type',
+    // Wave 55: 지속 피해 배율(출혈베기 A · 독바르기 A) — performSkill이 걸린 지속 피해에 싣는다.
+    'dotDamageMult',
 ]);
 
 /**
