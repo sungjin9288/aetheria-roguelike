@@ -735,6 +735,9 @@ export const MSG = {
     // Wave 51(소유자 결정 "성직자의 컨셉"): 회복의 빛이 언데드 · 마족을 태운다.
     SKILL_HOLY_SMITE: (skillName: string | undefined, enemyName: string | undefined, dmg: number) => `[${skillName}] 신성한 빛이 ${enemyName}을(를) 태웁니다! ${dmg} 신성 피해`,
     SKILL_REGEN_TICK: (skillName: string, heal: number) => `[${skillName}] 지속 회복 +${heal} HP`,
+    // 2026-10 Wave 54: 기력 지속 회복 · 연속 타격 태그.
+    SKILL_MP_REGEN_TICK: (skillName: string, amount: number) => `[${skillName}] 지속 회복 +${amount} MP`,
+    COMBAT_TAG_HITS: (hits: number) => `${hits}연타`,
     SKILL_MP_REGEN_PROC: (skillName: string | undefined, amount: number) => `[${skillName}] +${amount} MP 회복!`,
     SKILL_PURIFY_PROC: (skillName: string | undefined) => `[${skillName}] 상태이상이 정화되었습니다!`,
     SKILL_STEALTH_PROC: (skillName: string | undefined) => `[${skillName}] 다음 적 공격을 회피합니다!`,

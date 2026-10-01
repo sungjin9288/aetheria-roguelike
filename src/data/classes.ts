@@ -24,12 +24,12 @@ export const CLASSES: Record<string, ClassDef> = {
         tier: 1, reqLv: 5, desc: '체력/공격 특화 — 전선을 지키는 용사', hpMod: 1.4, mpMod: 0.5, atkMod: 1.3,
         traits: { strengths: ['toughness', 'guard'], weaknesses: ['low_mana', 'physical_only'] },
         skills: [
-            { name: '파워배시', mp: 15, mult: 2.0, desc: '강력한 내려찍기. 방패를 무시한다' },
+            { name: '파워배시', mp: 15, mult: 2.0, ignoreGuard: true, desc: '강력한 내려찍기 — 적의 방어 자세를 무시한다' },
             { name: '광폭화', mp: 30, type: 'buff', effect: 'atk_up', val: 1.5, turn: 3, desc: 'ATK 50% 상승 3턴' },
             { name: '출혈베기', mp: 25, mult: 1.8, effect: 'bleed', desc: '베인 상처에서 3턴간 지속 피해' },
             { name: '방패 전술', mp: 20, type: 'buff', effect: 'def_up', val: 1.4, turn: 2, desc: 'DEF 40% 상승 2턴' },
             { name: '전투 함성', mp: 15, type: 'debuff', effect: 'fear', val: 0.75, turn: 3, desc: '전투 함성으로 적 ATK 25% 감소 3턴' },
-            { name: '철벽 방어', mp: 35, type: 'buff', effect: 'def_up', val: 1.8, turn: 2, desc: 'DEF 80% 상승 2턴, 반격 자세 돌입' },
+            { name: '철벽 방어', mp: 35, type: 'buff', effect: 'def_up', val: 1.8, turn: 2, counterChance: 0.4, desc: 'DEF 80% 상승 2턴 + 반격 자세(피격 시 40% 반격)' },
             // 패시브
             { name: '강인한 체력', passive: true, effect: 'hp_up', val: 80, desc: '최대 HP +80 (패시브)' },
             { name: '근력 훈련', passive: true, effect: 'atk_up', val: 5, desc: 'ATK +5 (패시브)' },
@@ -59,7 +59,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '썬더볼트', mp: 45, type: '빛', mult: 3.5, effect: 'stun', desc: '번개로 적 기절 부여' },
             { name: '아이스볼트', mp: 25, type: '냉기', mult: 2.0, effect: 'freeze', desc: '냉기 속성 + 빙결 부여' },
             { name: '마법 방벽', mp: 30, type: 'buff', effect: 'def_up', val: 1.5, turn: 3, desc: '마법 방벽으로 DEF 50% 상승 3턴' },
-            { name: '마나 가속', mp: 0, type: 'buff', effect: 'mp_regen', val: 20, turn: 3, desc: 'MP 20 즉시 회복, 3턴간 추가 회복' },
+            { name: '마나 가속', mp: 0, type: 'buff', effect: 'mp_regen', val: 20, turn: 3, desc: 'MP 20 즉시 회복 + 3턴간 턴마다 MP 7 회복' },
             { name: '차원 분열', mp: 55, type: '어둠', mult: 3.8, effect: 'curse', desc: '공간을 찢어 저주와 대미지 부여' },
             // 패시브
             { name: '마력 집중', passive: true, effect: 'mp_up', val: 60, desc: '최대 MP +60 (패시브)' },
@@ -92,7 +92,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '독바르기', mp: 25, type: '자연', mult: 1.5, effect: 'poison', desc: '독 도포 + 자연 속성 피해' },
             { name: '연막탄', mp: 20, type: 'debuff', effect: 'blind', turn: 2, desc: '연막으로 적 명중률 2턴 하락' },
             { name: '그림자 발걸음', mp: 18, type: 'buff', effect: 'stealth', evadeHits: 2, evadeChance: 0.3, desc: '은신 진입 — 다음 적 공격 회피, 그다음 적 공격 30% 회피' },
-            { name: '등 찌르기', mp: 30, mult: 2.5, crit: 0.6, desc: '은신 중 60% 치명타, 일반 시 강화 피해' },
+            { name: '등 찌르기', mp: 30, mult: 2.5, stealthCrit: 0.6, desc: '은신 중 60% 치명타, 일반 시 강화 피해' },
             { name: '독 보강', mp: 22, type: '자연', mult: 1.6, effect: 'poison', desc: '기존 독 강화 + 추가 자연 피해' },
             // 패시브
             { name: '날카로운 감각', passive: true, effect: 'atk_up', val: 6, desc: 'ATK +6 (패시브)' },
@@ -105,7 +105,7 @@ export const CLASSES: Record<string, ClassDef> = {
             ],
             '등 찌르기': [
                 { choice: 'A', label: '심장 찌르기', desc: '데미지 +30%', override: { mult: 3.25 } },
-                { choice: 'B', label: '혼란 찌르기', desc: '기절 + 출혈 동시 부여', override: { mult: 2.5, secondEffect: 'bleed', effectChance: 0.4 } },
+                { choice: 'B', label: '혼란 찌르기', desc: '기절 + 출혈 동시 부여', override: { mult: 2.5, effect: 'stun', secondEffect: 'bleed' } },
             ],
             '독바르기': [
                 { choice: 'A', label: '맹독', desc: '독 피해 +50%', override: { mult: 2.25 } },
@@ -153,7 +153,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '피의갈망', mp: 60, type: 'buff', effect: 'berserk', val: 2.5, turn: 3, desc: 'ATK 150% / DEF 감소 3턴' },
             { name: '대지 분쇄', mp: 80, type: '대지', mult: 5.5, effect: 'stun', desc: '궁극기 — 기절 + 대지 분쇄' },
             { name: '출혈 광란', mp: 50, mult: 3.5, effect: 'bleed', desc: '광란 상태 강력한 출혈 유발' },
-            { name: '분노의 포효', mp: 25, type: 'buff', effect: 'atk_up', val: 2.0, turn: 2, desc: 'ATK 100% 상승 2턴 (DEF -30%)' },
+            { name: '분노의 포효', mp: 25, type: 'buff', effect: 'atk_up', val: 2.0, turn: 2, defBonus: 0.7, desc: 'ATK 100% 상승 2턴 (DEF -30%)' },
             { name: '피의 강물', mp: 65, mult: 4.0, effect: 'bleed', desc: '광역 출혈 + 강대한 피해' },
             { name: '역경의 힘', mp: 20, type: 'buff', effect: 'hp_regen', val: 0.1, turn: 3, desc: 'HP 10% 회복 + 3턴간 지속 회복' },
             // 패시브
@@ -182,7 +182,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '블리자드', mp: 60, type: '냉기', mult: 4.0, effect: 'freeze', desc: '얼음폭풍 + 빙결 부여' },
             { name: '천벌', mp: 100, type: '빛', mult: 6.0, effect: 'purify', desc: '궁극기 — 천상의 번개 강타' },
             { name: '마나 폭발', mp: 80, mult: 5.0, desc: '순수 마력을 폭발시켜 적을 강타' },
-            { name: '원소 폭풍', mp: 70, type: '화염', mult: 4.8, effect: 'burn', desc: '화염+냉기 복합 원소 폭풍' },
+            { name: '원소 폭풍', mp: 70, type: '화염', mult: 4.8, effect: 'burn', secondEffect: 'freeze', desc: '화염+냉기 복합 원소 폭풍 — 화상 + 빙결' },
             { name: '고위 마력 증폭', mp: 45, type: 'buff', effect: 'atk_up', val: 2.0, turn: 3, desc: '마력 증폭으로 ATK 100% 상승 3턴' },
             { name: '시간 왜곡', mp: 55, type: 'debuff', effect: 'stun', turn: 2, desc: '시간 왜곡으로 적 행동 중단 2턴' },
             // 패시브
@@ -243,7 +243,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '은신', mp: 30, type: 'buff', effect: 'stealth', evadeHits: 2, desc: '완전 은신 — 적 공격 2번 회피' },
             { name: '그림자 일섬', mp: 100, type: '어둠', mult: 7.0, crit: 1.0, desc: '궁극기 — 100% 치명타 어둠 일격' },
             { name: '치명 독', mp: 50, type: '자연', mult: 3.0, effect: 'poison', desc: '치명적인 독 도포 + 강화 피해' },
-            { name: '이중 자상', mp: 35, mult: 2.0, crit: 0.7, desc: '두 번 연속 공격, 각 70% 치명타' },
+            { name: '이중 자상', mp: 35, mult: 1.0, hits: 2, crit: 0.7, desc: '두 번 연속 공격, 각 70% 치명타' },
             { name: '그림자 이동', mp: 20, type: 'buff', effect: 'stealth', nextAttackMult: 1.8, desc: '순간 은신(다음 적 공격 회피) + 다음 공격 피해 1.8배' },
             { name: '처형 판결', mp: 80, mult: 6.0, crit: 0.9, desc: '고배율 + 90% 치명타 처형기' },
             // 패시브
@@ -257,7 +257,7 @@ export const CLASSES: Record<string, ClassDef> = {
             ],
             '그림자 일섬': [
                 { choice: 'A', label: '심연의 일섬', desc: '데미지 +20%', override: { mult: 8.4 } },
-                { choice: 'B', label: '저주 일섬', desc: '저주 + 출혈 동시 부여', override: { mult: 7.0, secondEffect: 'curse' } },
+                { choice: 'B', label: '저주 일섬', desc: '저주 + 출혈 동시 부여', override: { mult: 7.0, effect: 'bleed', secondEffect: 'curse' } },
             ],
         },
         // cycle 231: 어쌔신 → 그림자 주군 progression — T3 도달 가능 unlock.

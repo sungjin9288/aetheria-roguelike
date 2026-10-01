@@ -27,8 +27,8 @@ export const formatSkillText = (text: unknown): string => String(text || '')
     .replace(/데미지|대미지/g, '피해')
     .replace(/(\d+)→(\d+)턴/g, '$1턴에서 $2턴');
 
-export const formatSkillPower = (mult?: number): string | null => (
-    isDamagingSkill({ mult }) ? `위력 ${Math.round((mult ?? 0) * 100)}%` : null
+export const formatSkillPower = (mult?: number, hits = 1): string | null => (
+    isDamagingSkill({ mult }) ? `위력 ${Math.round((mult ?? 0) * 100)}%${hits > 1 ? ` × ${hits}` : ''}` : null
 );
 
 export const getSkillEffectLabel = (effect?: string): string | null => (
@@ -37,7 +37,7 @@ export const getSkillEffectLabel = (effect?: string): string | null => (
 
 export const getSkillMetrics = (skill: ClassSkill): string[] => {
     const metrics = [skill.mp ? `기력 ${skill.mp}` : '기력 소모 없음'];
-    const power = formatSkillPower(skill.mult);
+    const power = formatSkillPower(skill.mult, skill.hits ?? 1);
     const effect = getSkillEffectLabel(skill.effect);
 
     if (power) metrics.push(power);

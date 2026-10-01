@@ -92,6 +92,14 @@ export interface ClassSkill {
     atkBonus?: number;
     /** 사용할 때 현재 생명에서 소모하는 비율(Wave 53 어둠의 서약, 0.15 = 15%). 생명은 1 아래로 내려가지 않는다. */
     hpCost?: number;
+    /** 연속 타격 수(Wave 54 이중 자상). 타격마다 위력 `mult`로 피해 · 치명을 따로 굴린다. 미정의 시 1. */
+    hits?: number;
+    /** 적의 방어 자세를 무시한다(Wave 54 파워배시). */
+    ignoreGuard?: boolean;
+    /** 은신 중일 때만 쓰는 치명 확률(Wave 54 등 찌르기). 은신이 아니면 `crit` · 기본 치명 확률. */
+    stealthCrit?: number;
+    /** 강화와 함께 거는 반격 확률(Wave 54 철벽 방어). 강화 지속 동안 피격 시 이 확률로 반격한다. */
+    counterChance?: number;
 
     // --- 이하 skillBranches override로만 주입되는 키 (CombatEngine.actions가 읽는다) ---
     /** 상태이상 발동 확률 게이트 (미정의 시 1.0). */

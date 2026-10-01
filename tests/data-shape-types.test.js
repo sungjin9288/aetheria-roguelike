@@ -387,7 +387,7 @@ const CLASS_FIELDS = ['tier', 'reqLv', 'desc', 'hpMod', 'mpMod', 'atkMod', 'skil
 
 const CLASS_SKILL_FIELDS = [
     'name', 'mp', 'type', 'mult', 'desc', 'passive', 'effect', 'val', 'turn', 'crit', 'drainRatio', 'smite',
-    'evadeHits', 'evadeChance', 'nextAttackMult', 'atkBonus', 'hpCost',
+    'evadeHits', 'evadeChance', 'nextAttackMult', 'atkBonus', 'hpCost', 'hits', 'ignoreGuard', 'stealthCrit', 'counterChance',
     'effectChance', 'secondEffect', 'stunTurn', 'curseTurn', 'defBonus', 'mpRestore',
     'cooldown', 'fromWeapon', 'weaponName', 'slot', 'fromTrait',
 ];

@@ -47,7 +47,8 @@ const TRAIT_EVIDENCE = {
     firepower: (def) => (def.atkMod ?? 1) >= FIREPOWER_HIGH[def.tier],
     control: (def) => active(def).some((skill) => CC.has(skill.effect)),
     sustain: hasSubstantialSustain,
-    crit: (def) => active(def).filter((skill) => skill.crit).length >= 2,
+    // Wave 54: 은신 중 치명(`stealthCrit`, 등 찌르기)도 전용 치명 확률이다.
+    crit: (def) => active(def).filter((skill) => skill.crit || skill.stealthCrit).length >= 2,
     evasion: (def) => hasEffect(def, 'stealth'),
     affliction: (def) => active(def).filter((skill) => DOT.has(skill.effect)).length >= 2,
     elements: (def) => [...damageElements(def)].filter((element) => element !== '물리').length >= 3,

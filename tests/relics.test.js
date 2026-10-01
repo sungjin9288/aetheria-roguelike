@@ -1868,7 +1868,8 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
           + (await readSrc('src/systems/CombatEngine.relics.ts'))
           + (await readSrc('src/systems/CombatEngine.actions.ts'));
       const calls = (source.match(/this\.getEffectiveMaxMp\(/g) || []).length;
-      assert.equal(calls, 4, `internal callsite 4건 보존: ${calls}건`);
+      // Wave 54: 기력 지속 회복 틱(tickCombatState)이 상한을 읽는 다섯 번째 호출처다.
+      assert.equal(calls, 5, `internal callsite 5건 보존: ${calls}건`);
   });
 
   test('cycle 551: body mp_mult / omega effect 처리 보존', async () => {
