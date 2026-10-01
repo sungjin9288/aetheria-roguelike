@@ -1,4 +1,5 @@
 import type { ClassSkill } from '../types/class.js';
+import { isDamagingSkill } from '../systems/skillPower.js';
 
 const EFFECT_LABELS: Record<string, string> = {
     burn: '화상',
@@ -27,7 +28,7 @@ export const formatSkillText = (text: unknown): string => String(text || '')
     .replace(/(\d+)→(\d+)턴/g, '$1턴에서 $2턴');
 
 export const formatSkillPower = (mult?: number): string | null => (
-    typeof mult === 'number' && mult > 0 ? `위력 ${Math.round(mult * 100)}%` : null
+    isDamagingSkill({ mult }) ? `위력 ${Math.round((mult ?? 0) * 100)}%` : null
 );
 
 export const getSkillEffectLabel = (effect?: string): string | null => (

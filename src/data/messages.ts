@@ -77,6 +77,8 @@ export const MSG = {
     // slice 19: tags 추가 — 치명타/약점/저항을 본문에 통합 (COMBAT_ATTACK_DETAIL 동일 패턴)
     SKILL_USE: (skillName: string | undefined, dmg: number, name: string | undefined, cur: number, max: number | undefined, tags: string[]) =>
         `[${skillName}]: ${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
+    // 2026-10 Wave 52: 위력이 없는 보조 기술은 피해 줄 대신 사용 줄을 남긴다(효과 줄은 뒤따른다).
+    SKILL_USE_SUPPORT: (skillName: string | undefined) => `[${skillName}] 사용!`,
     SKILL_BUFF_ACTIVE: (name: string, turns: number) => `${name} 강화 효과가 ${turns}턴 동안 적용됩니다.`,
     SKILL_STATUS_BONUS: (effect: string, dmg: number) => `[${effect}] 추가 피해 +${dmg}`,
     SKILL_NO_MP: '기력이 부족합니다.',

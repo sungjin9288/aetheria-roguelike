@@ -7,6 +7,7 @@ import type { FullStats } from '../utils/statsCalculator';
 import type { Item, Monster, Player } from '../types/index.js';
 import { createSeededRandom } from '../utils/seededRandom.js';
 import { resolveConsumableEffect } from './consumableEffect';
+import { tickAfterAction } from './combatTurnTick';
 import type { GraveEntry } from '../utils/graveUtils';
 import type { RunSummary } from '../reducers/actionTypes';
 
@@ -51,7 +52,7 @@ export const resolveCombatItemTurn = ({
             visualEffect: null,
         };
     }
-    const turnTick = CombatEngine.tickCombatState(consumed.player);
+    const turnTick = tickAfterAction(player, consumed.player);
     const playerForEnemyTurn = turnTick.updatedPlayer;
     // W8-Z4: enemyAttack(CombatEngine.enemyAI.ts)이 any 타입에서 벗어나 stats로 FullStats(non-null)를
     //   요구하게 됐다 — calculateFullStats(player)는 `!player`일 때만 null이라 이 경로는 항상 non-null.
