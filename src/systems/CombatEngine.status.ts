@@ -1,30 +1,32 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
-import type { Monster, Player, StatusId } from '../types/index.js';
+import type { EnemyDotId, Monster, Player, StatusId } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 
 const isActive = (turns: number | undefined) => (turns ?? 0) > 0;
 
 /**
- * 적 약화(실명 · 공포 · 저주)가 이번 적 행동에 거는 공격력 배율 — 걸려 있는 약화 중 가장 강한 것.
+ * 적 약화(공포 · 저주)가 이번 적 행동에 거는 공격력 배율 — 걸려 있는 약화 중 가장 강한 것.
+ * 실명은 Wave 55부터 공격력이 아니라 명중률이다(`isEnemyBlindActive`).
  * 2026-09 Wave 44: 배율을 적에 저장하지 않고 남은 턴에서 계산한다. 약화는 겹칠 수 있고 서로 다른 때
  * 끝나므로, 하나의 저장 값은 먼저 끝난 약화가 지우거나(남은 약화 무효) 남겨 둘(끝난 약화 연장) 수밖에 없다.
  */
 export function getEnemyDebuffAtkMult(enemy: Monster): number {
     let mult = 1;
-    if (isActive(enemy.blindTurns)) mult = Math.min(mult, BALANCE.BLIND_ATK_MULT);
     if (isActive(enemy.fearTurns)) mult = Math.min(mult, enemy.fearAtkMult ?? BALANCE.FEAR_ATK_MULT);
     if (isActive(enemy.cursedTurns)) mult = Math.min(mult, BALANCE.CURSE_ATK_MULT);
     return mult;
 }
 
-/** 공격력 감소 로그에 쓸 약화 — 실명 · 공포 · 저주 순으로 걸려 있는 첫 번째(기존 표기 순서). */
+/** 공격력 감소 로그에 쓸 약화 — 공포 · 저주 순으로 걸려 있는 첫 번째(기존 표기 순서, 실명은 Wave 55에 빠졌다). */
 export function getEnemyDebuffAtkLabel(enemy: Monster): StatusId | null {
-    if (isActive(enemy.blindTurns)) return 'blind';
     if (isActive(enemy.fearTurns)) return 'fear';
     if (isActive(enemy.cursedTurns)) return 'curse';
     return null;
 }
+
+/** 2026-10 Wave 55: 실명은 남은 턴이 있을 때 이번 적 공격을 BLIND_ENEMY_MISS_CHANCE 확률로 빗나가게 한다. */
+export const isEnemyBlindActive = (enemy: Monster) => isActive(enemy.blindTurns);
 
 /** 도발은 남은 턴이 있을 때 이번 적 행동을 강타로 고정한다. */
 export const isEnemyTauntActive = (enemy: Monster) => isActive(enemy.tauntTurns);
@@ -122,13 +124,43 @@ export const statusMethods = {
 
         // DoT (burn / poison / bleed) — 시너지 죽음의 예언자 dotMult 반영
         (updated.dots || []).forEach((dot) => {
-            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * BALANCE.STATUS_DOT_RATIO * synergyDotMult));
+            // 2026-10 Wave 55: 기술이 실은 지속 피해 배율(심층 출혈 · 맹독 · 독 보강 · 역병의 안개 "+50%").
+            const dotMult = updated.dotMults?.[dot as EnemyDotId] ?? 1;
+            const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || 100) * BALANCE.STATUS_DOT_RATIO * synergyDotMult * dotMult));
             updated.hp = Math.max(0, (updated.hp ?? 0) - dmg);
             // 2026-09 Wave 6 X2: DOT_LABELS 재사용 — burn/poison만 인식하고 나머지(bleed 등)는
             //   출혈로 처리하던 기존 3-분기 동작을 그대로 보존한다(라벨 값만 MSG 소유로 이동).
             const dotKor = dot === 'burn' ? MSG.DOT_LABELS.burn : dot === 'poison' ? MSG.DOT_LABELS.poison : MSG.DOT_LABELS.bleed;
             logs.push({ type: 'event', text: MSG.ENEMY_DOT_TICK(dotKor, updated.name, dmg) });
         });
+        // 2026-10 Wave 55: 지속 턴이 있는 지속 피해("3턴간")는 피해를 준 뒤 1 줄고, 0이면 사라진다.
+        if (updated.dotTurns) {
+            const nextTurns: Partial<Record<EnemyDotId, number>> = { ...updated.dotTurns };
+            let nextDots = updated.dots || [];
+            let nextMults = updated.dotMults;
+            (Object.keys(nextTurns) as EnemyDotId[]).forEach((dot) => {
+                const left = (nextTurns[dot] ?? 0) - 1;
+                if (left > 0) {
+                    nextTurns[dot] = left;
+                    return;
+                }
+                delete nextTurns[dot];
+                nextDots = nextDots.filter((d) => d !== dot);
+                if (nextMults?.[dot] !== undefined) {
+                    nextMults = { ...nextMults };
+                    delete nextMults[dot];
+                }
+                const label = dot === 'burn' ? MSG.DOT_LABELS.burn : dot === 'poison' ? MSG.DOT_LABELS.poison : MSG.DOT_LABELS.bleed;
+                logs.push({ type: 'info', text: MSG.ENEMY_DOT_EXPIRED(label, updated.name) });
+            });
+            const { dotTurns: _previousTurns, dotMults: _previousMults, ...rest } = updated;
+            updated = {
+                ...rest,
+                dots: nextDots,
+                ...(Object.keys(nextTurns).length ? { dotTurns: nextTurns } : {}),
+                ...(nextMults && Object.keys(nextMults).length ? { dotMults: nextMults } : {}),
+            };
+        }
         // 저주 DoT (curse_amp 패시브 반영)
         if (updated.cursed) {
             const dmg = Math.max(1, Math.floor((updated.maxHp || updated.hp || BALANCE.DEFAULT_MAX_HP) * BALANCE.CURSE_DOT_RATIO * curseAmpMult));

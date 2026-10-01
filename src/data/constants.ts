@@ -467,7 +467,9 @@ export const BALANCE = {
     ENEMY_DEF_K: 100,               // 적 DEF 비율 경감 분모: mitigated = dmg × K/(K+def).
                                     //   def=K면 정확히 절반. flat 차감과 달리 스케일 붕괴 없음.
     // 상태이상 ATK 패널티 배율
-    BLIND_ATK_MULT: 0.65,
+    // 2026-10 Wave 55: 적 실명은 공격력 감소가 아니라 빗나감이다(연막탄 "적 명중률 하락", 소유자 결정 "전부 설명대로").
+    //   빗나감 확률은 이전 공격력 배율 BLIND_ATK_MULT(0.65, 이번에 제거 — 읽는 곳이 없다)와 기대 피해가 같다(1 − 0.65).
+    BLIND_ENEMY_MISS_CHANCE: 0.35,
     FEAR_ATK_MULT: 0.70,
     CURSE_ATK_MULT: 0.75,
     // 저주 DoT 비율 (maxHp 기준)
@@ -476,8 +478,8 @@ export const BALANCE = {
     // CURSE_ATK_MULT(0.75)로 적의 ATK를 줄이는 것과 짝을 이루는 player-side 페널티.
     // MSG.SKILL_CURSE_AMPLIFY("저주가 강화되어 피해가 증폭됩니다") 의도 구현.
     CURSE_PLAYER_DMG_TAKEN_MULT: 1.30,
-    // cycle 109: 플레이어가 blind 상태일 때 공격이 빗나갈 확률. 적의 BLIND_ATK_MULT(0.65)
-    // 처럼 적 ATK를 줄이는 것과 짝을 이루는 player-side 페널티. 다중 턴 효과 — 저주해제
+    // cycle 109: 플레이어가 blind 상태일 때 공격이 빗나갈 확률. 적의 BLIND_ENEMY_MISS_CHANCE(0.35, Wave 55 —
+    // 그 전에는 적 ATK ×0.65)와 짝을 이루는 player-side 페널티. 다중 턴 효과 — 저주해제
     // 주문서 / purify 스킬 / 휴식으로 해제될 때까지 매 행동마다 roll.
     BLIND_PLAYER_MISS_CHANCE: 0.30,
     // cycle 110: 플레이어가 fear 상태일 때 flinch(턴 무위) 확률. 적의 FEAR_ATK_MULT

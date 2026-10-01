@@ -7,7 +7,7 @@ import { AT } from '../src/reducers/actionTypes.js';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { makeCombatActionMap } from '../src/reducers/handlers/combatHandlers.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
-import { getEnemyDebuffAtkMult } from '../src/systems/CombatEngine.status.js';
+import { getEnemyDebuffAtkMult, isEnemyBlindActive } from '../src/systems/CombatEngine.status.js';
 
 /**
  * H1 (Wave 3 감사): 플레이어 상태이상 만료.
@@ -176,9 +176,11 @@ test('H1: 적 상태이상 모델은 그대로다 (턴 감소는 적 개체 필�
     assert.equal(firstTick.updatedEnemy.statusTurns, undefined,
         '플레이어 전용 statusTurns를 적에 붙이지 않는다');
 
-    // Wave 44: 공격력 배율은 저장하지 않고 남은 약화에서 계산한다 — 필드가 사라지면 배율도 1이다.
-    assert.equal(getEnemyDebuffAtkMult(firstTick.updatedEnemy), BALANCE.BLIND_ATK_MULT, '남은 턴이 있으면 배율이 걸려 있다');
+    // Wave 44: 약화 효과는 저장하지 않고 남은 턴에서 판정한다 — 필드가 사라지면 효과도 사라진다.
+    //   Wave 55: 실명은 공격력 배율이 아니라 빗나감 확률이라 배율은 언제나 1이다.
+    assert.equal(isEnemyBlindActive(firstTick.updatedEnemy), true, '남은 턴이 있으면 실명이 걸려 있다');
+    assert.equal(getEnemyDebuffAtkMult(firstTick.updatedEnemy), 1, '실명은 공격력을 줄이지 않는다');
     const secondTick = CombatEngine.tickEnemyStatus(firstTick.updatedEnemy, [], 1, 1);
     assert.equal(secondTick.updatedEnemy.blindTurns, undefined, '0이 되면 필드가 제거된다');
-    assert.equal(getEnemyDebuffAtkMult(secondTick.updatedEnemy), 1, '필드가 제거되면 배율도 사라진다');
+    assert.equal(isEnemyBlindActive(secondTick.updatedEnemy), false, '필드가 제거되면 실명도 사라진다');
 });

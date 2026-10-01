@@ -26,7 +26,7 @@ export const CLASSES: Record<string, ClassDef> = {
         skills: [
             { name: '파워배시', mp: 15, mult: 2.0, ignoreGuard: true, desc: '강력한 내려찍기 — 적의 방어 자세를 무시한다' },
             { name: '광폭화', mp: 30, type: 'buff', effect: 'atk_up', val: 1.5, turn: 3, desc: 'ATK 50% 상승 3턴' },
-            { name: '출혈베기', mp: 25, mult: 1.8, effect: 'bleed', desc: '베인 상처에서 3턴간 지속 피해' },
+            { name: '출혈베기', mp: 25, mult: 1.8, effect: 'bleed', turn: 3, desc: '베인 상처에서 3턴간 지속 피해' },
             { name: '방패 전술', mp: 20, type: 'buff', effect: 'def_up', val: 1.4, turn: 2, desc: 'DEF 40% 상승 2턴' },
             { name: '전투 함성', mp: 15, type: 'debuff', effect: 'fear', val: 0.75, turn: 3, desc: '전투 함성으로 적 ATK 25% 감소 3턴' },
             { name: '철벽 방어', mp: 35, type: 'buff', effect: 'def_up', val: 1.8, turn: 2, counterChance: 0.4, desc: 'DEF 80% 상승 2턴 + 반격 자세(피격 시 40% 반격)' },
@@ -44,7 +44,7 @@ export const CLASSES: Record<string, ClassDef> = {
                 { choice: 'B', label: '분노의 방패', desc: 'ATK +50% + DEF +20% 3턴', override: { val: 1.5, defBonus: 1.2 } },
             ],
             '출혈베기': [
-                { choice: 'A', label: '심층 출혈', desc: '출혈 피해 +50%', override: { mult: 2.5, effect: 'bleed' } },
+                { choice: 'A', label: '심층 출혈', desc: '출혈 피해 +50%', override: { effect: 'bleed', dotDamageMult: 1.5 } },
                 { choice: 'B', label: '이중 상처', desc: '출혈 + 독 동시 부여', override: { mult: 2.2, effect: 'bleed', secondEffect: 'poison' } },
             ],
         },
@@ -90,10 +90,10 @@ export const CLASSES: Record<string, ClassDef> = {
         skills: [
             { name: '급소찌르기', mp: 15, mult: 1.8, crit: 0.5, desc: '50% 치명타 확률 급소 공격' },
             { name: '독바르기', mp: 25, type: '자연', mult: 1.5, effect: 'poison', desc: '독 도포 + 자연 속성 피해' },
-            { name: '연막탄', mp: 20, type: 'debuff', effect: 'blind', turn: 2, desc: '연막으로 적 명중률 2턴 하락' },
+            { name: '연막탄', mp: 20, type: 'debuff', effect: 'blind', turn: 2, desc: '연막으로 적 명중률 2턴 하락 — 적 공격 35% 빗나감' },
             { name: '그림자 발걸음', mp: 18, type: 'buff', effect: 'stealth', evadeHits: 2, evadeChance: 0.3, desc: '은신 진입 — 다음 적 공격 회피, 그다음 적 공격 30% 회피' },
             { name: '등 찌르기', mp: 30, mult: 2.5, stealthCrit: 0.6, desc: '은신 중 60% 치명타, 일반 시 강화 피해' },
-            { name: '독 보강', mp: 22, type: '자연', mult: 1.6, effect: 'poison', desc: '기존 독 강화 + 추가 자연 피해' },
+            { name: '독 보강', mp: 22, type: '자연', mult: 1.6, effect: 'poison', dotDamageMult: 1.5, desc: '기존 독 강화(독 피해 +50%) + 추가 자연 피해' },
             // 패시브
             { name: '날카로운 감각', passive: true, effect: 'atk_up', val: 6, desc: 'ATK +6 (패시브)' },
             { name: '암살자의 눈', passive: true, effect: 'crit_up', val: 0.05, desc: '크리티컬 확률 +5% (패시브)' },
@@ -108,7 +108,7 @@ export const CLASSES: Record<string, ClassDef> = {
                 { choice: 'B', label: '혼란 찌르기', desc: '기절 + 출혈 동시 부여', override: { mult: 2.5, effect: 'stun', secondEffect: 'bleed' } },
             ],
             '독바르기': [
-                { choice: 'A', label: '맹독', desc: '독 피해 +50%', override: { mult: 2.25 } },
+                { choice: 'A', label: '맹독', desc: '독 피해 +50%', override: { dotDamageMult: 1.5 } },
                 { choice: 'B', label: '이중 독', desc: '독 + 출혈 동시 부여', override: { mult: 1.5, secondEffect: 'bleed' } },
             ],
         },
@@ -467,7 +467,7 @@ export const CLASSES: Record<string, ClassDef> = {
         skills: [
             { name: '저주의 낙인', mp: 25, type: '어둠', mult: 1.6, effect: 'curse', desc: '강화된 저주 부여 — 적 피해 배율 증폭' },
             { name: '영혼 소환', mp: 35, mult: 2.0, effect: 'bleed', turn: 3, desc: '영혼을 소환해 3턴간 추가 피해' },
-            { name: '역병의 안개', mp: 40, type: '자연', mult: 1.5, effect: 'poison', desc: '광역 독 — 모든 독 피해 강화' },
+            { name: '역병의 안개', mp: 40, type: '자연', mult: 1.5, effect: 'poison', dotDamageMult: 1.5, desc: '광역 독 — 모든 독 피해 +50%' },
             // cycle 257: drainRatio 0.30 추가 — desc "30%" data-code 정합 (cycle 257 dispatch와 paired).
             { name: '혼의 흡수', mp: 30, mult: 1.8, effect: 'drain', drainRatio: 0.45, desc: '생명 흡수 — 피해의 45% HP 회복' },
             { name: '죽음의 낫', mp: 50, type: '어둠', mult: 2.5, effect: 'curse', desc: 'HP 낮을수록 피해 증가, 저주 부여' },

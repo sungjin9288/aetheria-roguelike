@@ -2,7 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CLASSES } from '../data/classes.js';
 import { getMonsterFamily } from '../data/monsters.js';
-import type { FullStats, Monster, NumericRelicEffect, Player, Relic, RelicSynergy } from '../types/index.js';
+import type { EnemyDotId, FullStats, Monster, NumericRelicEffect, Player, Relic, RelicSynergy } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { mergeFearAtkMult } from './CombatEngine.status.js';
 import { isDamagingSkill } from './skillPower.js';
@@ -82,6 +82,8 @@ interface Skill {
     ignoreGuard?: boolean;
     stealthCrit?: number;
     counterChance?: number;
+    /** Wave 55 — 이 기술이 거는 지속 피해의 배율. */
+    dotDamageMult?: number;
 }
 
 /**
@@ -539,7 +541,9 @@ export const actionMethods = {
         // cycle 244: skill.curseTurn override — '지속 저주' branch B (curseTurn 3) 등 cursedTurns 카운터 override.
         //   미정의 시 default 3 (applyStatusEffectToEnemy curse case와 동일). max(prev, curseTurn) 단축 방지.
         const curseTurn = Math.max(1, Math.floor(skill.curseTurn || 3));
+        const appliedEffects: string[] = [];
         if (STATUS_EFFECTS_TO_ENEMY.includes(String(skill.effect)) && random() < effectChance) {
+            appliedEffects.push(String(skill.effect));
             const preEffectEnemy = postEffectEnemy;
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, String(skill.effect));
             // 2026-09 Wave 42: 약화 기술이 광고하는 지속 턴 · 약화 폭을 기술 데이터에서 읽는다. 이전에는
@@ -567,6 +571,7 @@ export const actionMethods = {
         }
         // 분기 선택으로 추가된 2차 상태이상 (effectChance 동일 적용)
         if (skill.secondEffect && STATUS_EFFECTS_TO_ENEMY.includes(skill.secondEffect) && random() < effectChance) {
+            appliedEffects.push(skill.secondEffect);
             postEffectEnemy = this.applyStatusEffectToEnemy(postEffectEnemy, skill.secondEffect);
             if (skill.secondEffect === 'stun' || skill.secondEffect === 'freeze') {
                 postEffectEnemy = { ...postEffectEnemy, stunnedTurns: Math.max(postEffectEnemy.stunnedTurns ?? 0, stunTurn) };
@@ -577,6 +582,28 @@ export const actionMethods = {
             if (effectLabels[skill.secondEffect]) {
                 logs.push({ type: 'event', text: MSG.SKILL_BRANCH_STATUS_APPLIED(enemy.name, effectLabels[skill.secondEffect]) });
             }
+        }
+        // 2026-10 Wave 55(소유자 결정 "전부 설명대로"): 이 기술이 건 지속 피해의 지속 턴 · 배율.
+        //   `turn`이 있는 지속 피해 기술(출혈베기 · 영혼 소환 "3턴간")은 그 턴만큼 적 행동마다 피해를 준다. 이미 전투 내내
+        //   걸려 있던 같은 지속 피해(턴 없음)는 짧게 덮지 않는다. `turn`이 없는 기술이 건 지속 피해는 전투 내내다(이전과 같다).
+        //   `dotDamageMult`(출혈베기 A · 독바르기 A · 독 보강 · 역병의 안개 "+50%")는 그 지속 피해의 틱 피해 배율이다.
+        const appliedDots = appliedEffects.filter((effect): effect is EnemyDotId => effect === 'burn' || effect === 'poison' || effect === 'bleed');
+        if (appliedDots.length > 0) {
+            const dotDuration = Math.max(0, Math.floor(skill.turn || 0));
+            const turns: Partial<Record<EnemyDotId, number>> = { ...(postEffectEnemy.dotTurns || {}) };
+            const mults: Partial<Record<EnemyDotId, number>> = { ...(postEffectEnemy.dotMults || {}) };
+            for (const dot of appliedDots) {
+                const permanentBefore = (enemy.dots || []).includes(dot) && enemy.dotTurns?.[dot] === undefined;
+                if (dotDuration > 0 && !permanentBefore) turns[dot] = Math.max(turns[dot] ?? 0, dotDuration);
+                if (dotDuration === 0) delete turns[dot];
+                if ((skill.dotDamageMult ?? 0) > 1) mults[dot] = Math.max(mults[dot] ?? 1, skill.dotDamageMult ?? 1);
+            }
+            const { dotTurns: _previousTurns, ...rest } = postEffectEnemy;
+            postEffectEnemy = {
+                ...rest,
+                ...(Object.keys(turns).length ? { dotTurns: turns } : {}),
+                ...(Object.keys(mults).length ? { dotMults: mults } : {}),
+            };
         }
         const updatedEnemy = postEffectEnemy;
 
