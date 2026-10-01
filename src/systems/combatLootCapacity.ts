@@ -20,15 +20,20 @@ export const admitCombatLoot = (
 
     const occupied = player.inv?.length ?? 0;
     const available = Math.max(0, capacity - occupied);
-    const signatures = candidates.filter(({ item }) => isSignatureItem(item));
-    const normals = candidates.filter(({ item }) => !isSignatureItem(item));
+    // 2026-10 Wave 58: 보장 보상은 상한과 무관하게 들어가고(가방은 상한을 넘을 수 있다 — 보상 경로와 같은 규칙),
+    //   남은 칸을 먼저 쓴다. 나머지는 이전처럼 서명 우선이다.
+    const guaranteed = candidates.filter((candidate) => candidate.guaranteed);
+    const rest = candidates.filter((candidate) => !candidate.guaranteed);
+    const signatures = rest.filter(({ item }) => isSignatureItem(item));
+    const normals = rest.filter(({ item }) => !isSignatureItem(item));
     const ordered = signatures.concat(normals);
+    const restSlots = Math.max(0, available - guaranteed.length);
 
     return {
         capacity,
         occupied,
         available,
-        admitted: ordered.slice(0, available),
-        blocked: ordered.slice(available),
+        admitted: guaranteed.concat(ordered.slice(0, restSlots)),
+        blocked: ordered.slice(restSlots),
     };
 };

@@ -5,6 +5,7 @@ import { advanceBossGauge, isAreaBossUndefeated } from '../../utils/bossGauge';
 import { buildScoutEvent, consumeScoutCharge, getScoutAvailability } from '../../utils/scoutEvents';
 import { createSeededRandom } from '../../utils/seededRandom';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
+import { advanceDailyProtocol, getDailyProtocolRewardLogs } from './helpers';
 import type { ResolveScoutPayload } from '../actionTypes';
 import type { GameState, HandlerMap } from '../gameReducer';
 import { GS } from '../gameStates';
@@ -93,7 +94,7 @@ export const exploreActionMap = {
             : (state.player.stats || {});
         const withGauge = advanceBossGauge({ ...state.player, stats: chargedStats }, mapData);
         // SET_PLAYER 경로와 동일한 정규화 — 원정 최저 HP 추적을 건너뛰지 않는다.
-        const player = trackExpeditionVitals({
+        const paidPlayer = trackExpeditionVitals({
             ...state.player,
             gold: Math.max(0, (state.player.gold || 0) - availability.cost),
             stats: withGauge,
@@ -111,8 +112,20 @@ export const exploreActionMap = {
             logs.push({ id: `scout:${now}:${seed}:time`, type: 'info', text: MSG.SCOUT_TIME_PASSES });
         }
 
-        const scoutEvent = buildScoutEvent(state.player, mapData, createSeededRandom(seed));
+        const rng = createSeededRandom(seed);
+        const scoutEvent = buildScoutEvent(state.player, mapData, rng);
         logs.push({ id: `scout:${now}:${seed}:card`, type: 'event', text: scoutEvent.desc });
+
+        // 2026-10 Wave 58: 유료 정찰도 골드 소비다 — 일일 임무 "골드 소비"가 상점 · 제작 · 강화 · 휴식만 세고 있었다.
+        //   카드가 먼저 난수를 쓰고 그 뒤 스트림으로 보상 추첨을 해, 같은 시드의 카드는 그대로다.
+        let player = paidPlayer;
+        if (availability.cost > 0) {
+            const daily = advanceDailyProtocol(paidPlayer, 'goldSpend', availability.cost, rng(), now, rng);
+            player = daily.player;
+            getDailyProtocolRewardLogs(daily.reward).forEach((log, index) => {
+                logs.push({ id: `scout:${now}:${seed}:daily:${index}`, type: log.type, text: log.text });
+            });
+        }
 
         return {
             ...state,

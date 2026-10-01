@@ -3,7 +3,7 @@ import { MSG } from '../data/messages.js';
 import { getActiveRelicSynergies } from '../data/relics.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
-import { getMirrorEffects } from './mirrorUpgrades';
+import { getEssenceRewardMult } from './essenceRewardMult';
 import { getMetaVitalsLevelUpDelta } from './metaBonusRamp.js';
 import { applyEssenceGain, getEssenceGainFromExp } from './essenceLedger';
 import { getPacedCombatExp } from '../utils/progressionPacing.js';
@@ -68,6 +68,8 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             } else if (isMinor) {
                 const goldBonus = p.level * BALANCE.MILESTONE_GOLD_PER_LV;
                 p.gold = (p.gold || 0) + goldBonus;
+                // 2026-10 Wave 58: 번 골드는 누적 골드(업적 "누적 골드 N달성")에도 들어간다.
+                p.stats = { ...(p.stats || {}), total_gold: (p.stats?.total_gold || 0) + goldBonus };
                 logs.push({ type: 'event', text: MSG.LEVEL_MILESTONE(p.level, goldBonus) });
             }
         }
@@ -191,7 +193,7 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         const meta = { ...this.DEFAULT_META, ...(p.meta || {}) };
         // PR #8: 프레스티지 rank≥1 해금 — 에센스 획득 +10% (essenceMult).
         // 2026-07 — 에테르 거울: essence_flow 노드(레벨당 +10%)를 rank 배율과 곱연산으로 누적.
-        const essenceMult = getPrestigeUnlocks(meta.prestigeRank).essenceMult * getMirrorEffects(meta).essenceFlowMult;
+        const essenceMult = getEssenceRewardMult(meta);
         const essenceGain = getEssenceGainFromExp(enemy.exp, essenceMult);
         logs.push({ type: 'event', text: MSG.LEGACY_ESSENCE(essenceGain) });
 

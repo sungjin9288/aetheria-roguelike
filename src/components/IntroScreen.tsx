@@ -1,14 +1,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import type { KeyboardEvent } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { ArrowRight, ChevronDown, Dices } from 'lucide-react';
+import { ArrowRight, Dices } from 'lucide-react';
 import AetherMark from './AetherMark';
 import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
-import { BALANCE } from '../data/constants';
 import { createRandomMobileName } from '../utils/nameGenerator';
-import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
-
-const CHALLENGE_REWARD_TEXT = ['', '+20% 보상', '+50% 보상', '+100% 보상', '+150% 보상'];
+import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
+import ChallengeModifierPicker from './ChallengeModifierPicker';
 
 interface IntroScreenProps {
     onStart?: (name: string, gender: 'male', job: '모험가', challenges: string[]) => void;
@@ -19,8 +17,7 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
     const [name, setName] = useState(() => createRandomMobileName(Math.random));
     const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
     const nameInputRef = useRef<HTMLInputElement>(null);
-    const challengeSlots = BALANCE.CHALLENGE_MODIFIER_SLOTS
-        + getPrestigeUnlocks(prestigeRank).challengeSlotBonus;
+    const challengeSlots = getChallengeSlotCount(prestigeRank);
 
     useEffect(() => {
         markPerfOnce('aetheria:intro-visible');
@@ -31,11 +28,7 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
     const canStart = selectedName.length > 0;
 
     const toggleChallenge = (id: string) => {
-        setSelectedChallenges((current) => (
-            current.includes(id)
-                ? current.filter((challengeId) => challengeId !== id)
-                : [...current, id].slice(0, challengeSlots)
-        ));
+        setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots));
     };
 
     const applyName = (nextName: string, dismissKeyboard: boolean) => {
@@ -140,55 +133,12 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
                         </div>
                         <div data-testid="intro-mobile-name" className="sr-only">{selectedName}</div>
 
-                        <details
-                            data-testid="intro-challenge-settings"
-                            className="group mt-3 border-y border-white/10 py-1 text-left"
-                        >
-                            <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-readable [&::-webkit-details-marker]:hidden">
-                                <span className="text-xs text-slate-300">
-                                    도전 규칙 <span className="text-slate-500">선택</span>
-                                </span>
-                                <span className="flex items-center gap-2 text-xs text-slate-400">
-                                    <span aria-live="polite">{selectedChallenges.length}/{challengeSlots}</span>
-                                    <ChevronDown size={16} className="transition-transform group-open:rotate-180" aria-hidden="true" />
-                                </span>
-                            </summary>
-                            <div className="pb-2 pt-1">
-                                <div className="mb-2 flex items-center justify-between gap-3 font-readable text-xs text-slate-400">
-                                    <span>더 어려운 규칙에는 더 큰 보상이 따릅니다.</span>
-                                    {selectedChallenges.length > 0 && (
-                                        <span className="shrink-0 text-[#d5b180]">
-                                            {CHALLENGE_REWARD_TEXT[selectedChallenges.length]}
-                                        </span>
-                                    )}
-                                </div>
-                                <div className="grid grid-cols-2 gap-2">
-                                    {BALANCE.CHALLENGE_MODIFIERS.map((modifier: { id: string; label: string; desc: string }) => {
-                                        const isSelected = selectedChallenges.includes(modifier.id);
-
-                                        return (
-                                            <button
-                                                key={modifier.id}
-                                                type="button"
-                                                data-testid={`intro-challenge-${modifier.id}`}
-                                                aria-pressed={isSelected}
-                                                onClick={() => toggleChallenge(modifier.id)}
-                                                className={`min-h-[4.75rem] rounded-md border px-3 py-2 text-left transition-colors ${
-                                                    isSelected
-                                                        ? 'border-[rgba(213,177,128,0.6)] bg-[rgba(213,177,128,0.14)] text-[#f6e7c8]'
-                                                        : 'border-white/20 bg-[rgba(10,17,25,0.9)] text-slate-300 hover:border-white/30'
-                                                }`}
-                                            >
-                                                <span className="block font-rajdhani text-sm font-bold">{modifier.label}</span>
-                                                <span className="mt-1 block font-readable text-xs leading-snug text-slate-400">
-                                                    {modifier.desc}
-                                                </span>
-                                            </button>
-                                        );
-                                    })}
-                                </div>
-                            </div>
-                        </details>
+                        <ChallengeModifierPicker
+                            testIdPrefix="intro"
+                            selected={selectedChallenges}
+                            slots={challengeSlots}
+                            onToggle={toggleChallenge}
+                        />
 
                         <Motion.button
                             data-testid="intro-start-button"

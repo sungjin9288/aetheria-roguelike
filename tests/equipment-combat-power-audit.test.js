@@ -192,7 +192,9 @@ test('hard dominance compares every candidate job while the ranger sidegrade pre
     assert.ok(candidate);
     assert.ok(dominator);
     assert.ok(dominator.jobs.length > candidate.jobs.length);
-    assert.ok(dominator.dimensions.atk.effective.median < candidate.dimensions.atk.effective.median);
+    // 지배 판정은 집단 중앙값이 아니라 후보 직업별 비교다 — 중앙값으로는 지배자가 더 강하지 않다.
+    //   (Wave 58 이후 두 방어구의 실효 공격력 기여는 같은 0이다 — 고정 패시브가 배율 밖으로 나갔다.)
+    assert.ok(dominator.dimensions.atk.effective.median <= candidate.dimensions.atk.effective.median);
     assert.equal(candidate.classification, 'combat-power-defect');
     assert.deepEqual(candidate.strictDominators, [
         { name: '강화가죽갑옷', type: 'armor' },
@@ -306,12 +308,16 @@ test('every live outlier has one stable classification and every other row stays
             assert.deepEqual(row.classificationReasons, [...row.classificationReasons].sort());
         }
     }
+    // 2026-10 Wave 58: 직업 패시브 "+N"이 배율 뒤 고정 보너스가 되면서, 방어구를 낄 때 오르는 직업 세트 배율이 패시브
+    //   공격력까지 곱하던 몫이 사라졌다(방어구의 실효 공격력 기여 2.5 → 0.5). 그 결과 분류 4건이 옮겼다 — 그림자 망토
+    //   (특화 → 범위 안), 암흑 로브(범위 안 → 특화), 정령의 로브(특화 → 의도), 축복받은 갑옷(범위 안 → 가격만 결함).
+    //   전투력 결함 0 · 재계획 불필요는 그대로다.
     assert.deepEqual(report.classificationCounts, {
         'combat-power-defect': 0,
-        'in-corridor': 154,
-        intentional: 16,
-        'price-only-defect': 9,
-        'specialized-sidegrade': 50,
+        'in-corridor': 153,
+        intentional: 17,
+        'price-only-defect': 10,
+        'specialized-sidegrade': 49,
     });
     assert.deepEqual(report.dominancePairs.map((pair) => [
         pair.candidate.name,
@@ -347,14 +353,18 @@ test('binds exact source bytes in a sorted, unique, evidence-independent snapsho
         //   값에 들어가 두 해시가 움직인다. 분류는 그대로다(in-corridor 154 · 결함 0 · 재계획 불필요).
         //   이전 값: report '3c9d79593d161f11a1e94fe8663f5d2a3fd54fc3d9f291a9228ff856896b682a'
         //            rows   '01c99d3cd4dcd35b821b950577bb54d71ed0f0916a4e2d47379eb332f9ec0c40'.
-        assert.equal(envelope.reportHash, '398d04eb2552a3ae5fb79d6cf6cce0e8e46be923fae51a17118d869ff29ef37e');
-        assert.equal(envelope.rowsHash, '4a45daf42d22d4e2bdbab58d892dc7ce40c92cdae97e5914e215b4f47b6c2d79');
+        // Wave 58 (소유자 결정 "설명대로"): 직업 패시브 "+N"이 배율 뒤 고정 보너스가 되어 직업별 비교 행의 실효 값과
+        //   방어구 4종의 분류가 옮겼다(위 '분류 안정성' 테스트의 주석 참조). 결함 0 · 재계획 불필요는 그대로다.
+        //   이전 값: report '398d04eb2552a3ae5fb79d6cf6cce0e8e46be923fae51a17118d869ff29ef37e'
+        //            rows   '4a45daf42d22d4e2bdbab58d892dc7ce40c92cdae97e5914e215b4f47b6c2d79'.
+        assert.equal(envelope.reportHash, '5ba8590774116aa3cd4b7ae13d415a8f6180a8386a8e658364959f4128ec99db');
+        assert.equal(envelope.rowsHash, '0c7f0ea289fe117b52e4b612ac605df69ab62638e8c38cab5fe8d5e50150641e');
         assert.deepEqual(envelope.classificationCounts, {
             'combat-power-defect': 0,
-            'in-corridor': 154,
-            intentional: 16,
-            'price-only-defect': 9,
-            'specialized-sidegrade': 50,
+            'in-corridor': 153,
+            intentional: 17,
+            'price-only-defect': 10,
+            'specialized-sidegrade': 49,
         });
         assert.equal(envelope.requiresReplan, false);
         assert.deepEqual(Object.keys(envelope.sourceSnapshot).sort(), ['files', 'hashAlgorithm']);

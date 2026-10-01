@@ -3,6 +3,9 @@ import assert from 'node:assert/strict';
 import { readFile, stat } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import IntroScreen from '../src/components/IntroScreen.tsx';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -29,8 +32,10 @@ test('intro uses one immersive scene and keeps advanced rules optional', async (
     assert.match(intro, /aetheria-starting-village\.webp/);
     assert.match(intro, /data-testid="intro-location"/);
     assert.match(intro, /시작의 마을/);
-    assert.match(intro, /data-testid="intro-challenge-settings"/);
-    assert.doesNotMatch(intro, /<details[^>]*open/);
+    // 2026-10 Wave 58: 도전 규칙 선택은 계승 화면과 함께 쓰는 ChallengeModifierPicker가 그린다 — 렌더 결과로 확인한다.
+    const html = renderToStaticMarkup(createElement(IntroScreen, { onStart: () => {} }));
+    assert.match(html, /data-testid="intro-challenge-settings"/);
+    assert.doesNotMatch(html, /<details[^>]*open/);
 });
 
 test('intro root paints at full opacity immediately, only the background image fades', async () => {

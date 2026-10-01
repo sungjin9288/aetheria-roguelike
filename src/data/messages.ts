@@ -122,6 +122,11 @@ export const MSG = {
     SIGNATURE_SET_TWO_HAND_HINT: '💡 양손 무기는 보조 슬롯을 함께 차지해 2피스로 계산됩니다.',
     OUTFIT_SET_TWO_HAND_SLOT: '양손 무기가 함께 사용',
     OUTFIT_SET_TWO_HAND_HINT: '양손 무기는 보조 장비 칸까지 2피스로 계산됩니다.',
+    // 2026-10 Wave 58: 직업 장비 세트 "다음 단계" 안내 — 문구를 보너스 표에서 만든다(생명 · 기력 보너스가 빠져 있었다).
+    OUTFIT_BONUS_LABELS: { atk: '공격력', def: '방어력', hp: '최대 생명', mp: '최대 기력' },
+    OUTFIT_NEXT_STEP_HINT: (stage: string, parts: string) => `1개 더 맞추면 ${stage} 효과 (${parts})`,
+    OUTFIT_STAGE_PARTIAL2: '2단계',
+    OUTFIT_STAGE_FULL: '풀세트',
     LEGACY_ESSENCE: (n: number) => `계승 정수 +${n}`,
     LEGACY_RANK: (n: number) => `계승 단계 ${n} 달성`,
     // 2026-07 — 에테르 거울: revive 노드(런당 1회 치명상 부활) 발동 로그.
@@ -598,6 +603,9 @@ export const MSG = {
     EQUIP_DELTA_NONE: '현재 장비와 동일한 효율',
     EQUIP_DELTA_NONE_COMPACT: '변화 없음',
     EQUIP_DELTA_OFFHAND_RELEASED: '보조손 해제',
+    // 2026-10 Wave 58: 쌍수 배율(공격력 ×DUAL_WIELD_ATK_BONUS · 방어력 ×DUAL_WIELD_DEF_MULT)을 비교 칩에 함께 적는다.
+    EQUIP_DUAL_WIELD_ON: (atkPct: number, defPct: number) => `쌍수 — 공격력 +${atkPct}% · 방어력 -${defPct}%`,
+    EQUIP_DUAL_WIELD_OFF: (atkPct: number, defPct: number) => `쌍수 해제 — 공격력 -${atkPct}% · 방어력 +${defPct}%`,
     // --- 상시 HUD 원정 신호 (2026-09 · 보스 접근 게이지 / 심연 데일리 다이브) ---
     HUD_BOSS_GAUGE: (ticks: number, total: number) => `보스 접근 ${ticks}/${total}`,
     HUD_BOSS_GAUGE_FULL: (bossName: string) => `${bossName} 조우 임박`,

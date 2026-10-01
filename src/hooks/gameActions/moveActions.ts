@@ -6,6 +6,7 @@ import { MSG } from '../../data/messages';
 import { getGravesAtLoc } from '../../utils/graveUtils.js';
 import { clearTemporaryAdventureState, hasTemporaryAdventureState } from '../../utils/playerStateUtils.js';
 import { getFirstVisitReward } from '../../utils/exploreUtils';
+import { grantGold } from '../../utils/gameUtils';
 import { checkDiscoveryChains } from './exploreFlow';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { isAreaBossUndefeated, getAreaBossName } from '../../utils/bossGauge';
@@ -95,7 +96,7 @@ export const createMoveActions = (deps: GameActionDeps) => {
                         type: AT.SET_PLAYER,
                         payload: (p: Player) => {
                             let updated = isSafeDestination ? clearTemporaryAdventureState(p) : { ...p };
-                            updated = { ...updated, gold: (updated.gold || 0) + visitReward.gold };
+                            updated = grantGold(updated, visitReward.gold);
                             const expResult = CombatEngine.applyExpGain(
                                 updated,
                                 scaleProgressionExpReward(updated, visitReward.exp),

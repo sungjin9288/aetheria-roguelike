@@ -11,7 +11,8 @@ export const createAscensionActions = (deps: GameActionDeps) => {
     const { player, gameState, dispatch, addLog } = deps;
     let ascensionRequestInFlight = false;
     return {
-        confirmAscension: () => {
+        /** 2026-10 Wave 58: 계승 화면에서 고른 새 여정의 도전 조건과 첫 유물 선택지 씨앗을 함께 보낸다(리듀서가 다시 거른다). */
+        confirmAscension: (challengeModifiers?: string[]) => {
             if ((gameState === GS.ASCENSION || gameState === GS.TRUE_ENDING) && getClaimableQuestEntries(player).length > 0) return;
             if (ascensionRequestInFlight) return;
             ascensionRequestInFlight = true;
@@ -21,6 +22,8 @@ export const createAscensionActions = (deps: GameActionDeps) => {
                 payload: {
                     expectedPrestigeRank: outcome.currentRank,
                     sourceReceiptKey: player.meta?.endgame?.lastEndgameReceiptKey ?? null,
+                    challengeModifiers: Array.isArray(challengeModifiers) ? challengeModifiers : [],
+                    seed: Math.floor(Math.random() * 2 ** 31),
                 },
             });
         },

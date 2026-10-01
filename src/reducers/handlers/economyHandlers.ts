@@ -265,7 +265,7 @@ const synthesizeItems = (state: GameState, action: ActionOf<typeof AT.SYNTHESIZE
     const usedIds = new Set<Item['id']>(itemIds);
     const protectStats = useToken ? { synthProtects: ownedTokens - 1 } : {};
     const premiumSpent = useToken ? 0 : result.premiumSpent;
-    let player = incrementStat({
+    const spentPlayer: Player = {
         ...state.player,
         gold: (state.player.gold || 0) - result.goldSpent,
         premiumCurrency: (state.player.premiumCurrency || 0) - premiumSpent,
@@ -274,7 +274,9 @@ const synthesizeItems = (state: GameState, action: ActionOf<typeof AT.SYNTHESIZE
             ...result.returnedItems,
         ],
         stats: { ...state.player.stats, ...protectStats },
-    }, 'syntheses');
+    };
+    // 업적 · 칭호는 "합성 N회 성공"이다 — 실패 · 보호된 실패는 세지 않는다(2026-10 Wave 58).
+    let player = result.success ? incrementStat(spentPlayer, 'syntheses') : spentPlayer;
 
     const logs: EconomyLog[] = [];
     const codexBefore = countNewCodexEntries(player);

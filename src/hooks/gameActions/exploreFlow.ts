@@ -34,7 +34,7 @@ import { AT } from '../../reducers/actionTypes.js';
 import { GS } from '../../reducers/gameStates.js';
 import { MSG } from '../../data/messages.js';
 import { getDiscoveryOdds } from '../../utils/explorationPacing.js';
-import { findItemByName } from '../../utils/gameUtils.js';
+import { findItemByName, grantGold } from '../../utils/gameUtils.js';
 import { withCanonicalEquipmentBaseIdentity } from '../../utils/equipmentBaseIdentity.js';
 import { applyDynamicDifficulty } from '../../systems/DifficultyManager';
 import { CombatEngine } from '../../systems/CombatEngine';
@@ -433,8 +433,7 @@ export const checkDiscoveryChains = (
         dispatch({
             type: AT.SET_PLAYER,
             payload: (p: Player) => {
-                const updated: Player = { ...p };
-                updated.gold = (updated.gold || 0) + (chain.reward.gold || 0);
+                const updated: Player = grantGold(p, chain.reward.gold || 0);
                 const expResult = CombatEngine.applyExpGain(
                     updated,
                     scaleProgressionExpReward(updated, chain.reward.exp || 0),

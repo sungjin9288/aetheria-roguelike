@@ -353,7 +353,8 @@ test('⑥ 리듀서 핸들러가 게이지·무료 횟수·카드 개방을 한 
         '훅 스냅샷이 아니라 리듀서 상태로 재판정한다');
     assert.match(source, /advanceBossGauge\(/, '정찰도 시간이 흐른 것으로 처리한다');
     assert.match(source, /consumeScoutCharge/);
-    assert.match(source, /buildScoutEvent\(state\.player, mapData, createSeededRandom\(seed\)\)/,
+    // 2026-10 Wave 58: 같은 seed 스트림이 카드를 먼저 뽑고, 그 뒤 일일 임무(골드 소비) 보상 추첨에 이어 쓰인다.
+    assert.match(source, /const rng = createSeededRandom\(seed\);\s*const scoutEvent = buildScoutEvent\(state\.player, mapData, rng\)/,
         '같은 카드 빌더를 seed 스트림으로 재사용한다');
     // 주석은 이 규칙을 설명하므로 코드 본문만 본다.
     const code = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '');

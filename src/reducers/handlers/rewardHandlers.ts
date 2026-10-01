@@ -266,7 +266,8 @@ export const rewardActionMap = {
                 }
             }
         }
-        if (goldGain > 0) nextPlayer = { ...nextPlayer, gold: (nextPlayer.gold || 0) + goldGain };
+        // 2026-10 Wave 58: 보상 골드도 누적 골드에 들어간다(`grantGold`) — 시즌 · 도감 · 주간 보상이 빠져 있었다.
+        if (goldGain > 0) nextPlayer = grantGold(nextPlayer, goldGain);
         if (premiumCurrencyGain > 0) {
             nextPlayer = {
                 ...nextPlayer,
@@ -328,7 +329,7 @@ export const rewardActionMap = {
         if (!milestone) return state;
 
         const reward: CodexReward = milestone.reward || {};
-        let p = {
+        let p: Player = {
             ...state.player,
             stats: {
                 ...state.player.stats,
@@ -338,7 +339,7 @@ export const rewardActionMap = {
                 codexBonusHp: (state.player.stats?.codexBonusHp || 0) + (reward.hp || 0),
             },
         };
-        if (reward.gold) p = { ...p, gold: (p.gold || 0) + reward.gold };
+        if (reward.gold) p = grantGold(p, reward.gold);
         if (reward.premiumCurrency) p = { ...p, premiumCurrency: (p.premiumCurrency || 0) + reward.premiumCurrency };
         const rewardText = formatCodexRewardParts(reward).join(' · ');
         return {

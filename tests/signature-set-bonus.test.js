@@ -130,7 +130,8 @@ test('getSignatureSetProgress: 1 celestial equipped → nextTier=2, not active',
     assert.ok(result);
     assert.equal(result.key, 'celestial');
     assert.equal(result.equippedCount, 1);
-    assert.equal(result.totalMembers, 4);
+    // 2026-10 Wave 58: 구성원은 레지스트리 setGroup과 같다 — 에테르 거인의 대검이 천공의 성좌에 들어갔다.
+    assert.equal(result.totalMembers, 5);
     assert.equal(result.currentTier, null);
     assert.equal(result.nextTier, 2);
     assert.ok(result.nextBonus);

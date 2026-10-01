@@ -10,6 +10,7 @@ import { applyEssenceGain, getEssenceLifetime } from '../src/systems/essenceLedg
 import { getAscensionOutcome } from '../src/utils/ascensionPreview.ts';
 import AscensionScreen from '../src/components/AscensionScreen.tsx';
 import { renderStatic } from './helpers/render.ts';
+import { scaleEssenceReward } from '../src/systems/essenceRewardMult.js';
 
 /**
  * 2026-09 Wave 32 (소유자 결정 "계승 시 정수 사다리 10% 이월").
@@ -48,8 +49,10 @@ test('[이월] 계승하면 사다리 단계의 10%만 남고, 사다리 몫이 
 test('[원장] 누적 정수와 쓸 수 있는 정수는 줄지 않고, 이후 획득은 남은 단계에서 이어 오른다', () => {
     const before = ladderMeta(812);
     const outcome = getAscensionOutcome(before);
-    assert.equal(outcome.meta.essence, before.essence + BALANCE.PRESTIGE_ESSENCE_REWARD);
-    assert.equal(getEssenceLifetime(outcome.meta), before.essenceLifetime + BALANCE.PRESTIGE_ESSENCE_REWARD);
+    // 2026-10 Wave 58: 계승 보상 정수에도 정수 배율(지금 단계 × 거울)이 곱해진다.
+    const reward = scaleEssenceReward(BALANCE.PRESTIGE_ESSENCE_REWARD, before);
+    assert.equal(outcome.meta.essence, before.essence + reward);
+    assert.equal(getEssenceLifetime(outcome.meta), before.essenceLifetime + reward);
     // 계승 보상 정수(200)는 예전처럼 사다리에도 들어간다 — 다음 획득에서 +1단계.
     const next = applyEssenceGain(outcome.meta, 1);
     assert.equal(next.meta.rank, 81 + Math.floor(BALANCE.PRESTIGE_ESSENCE_REWARD / BALANCE.ESSENCE_PER_RANK));

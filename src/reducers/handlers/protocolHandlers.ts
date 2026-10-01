@@ -2,11 +2,13 @@ import { advanceDailyProtocol, getDailyProtocolRewardLogs } from './helpers';
 import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
+import { grantGold } from '../../utils/gameUtils';
 import {
     getCurrentWeeklyProtocol,
     getWeeklyMissionProgress,
 } from '../../utils/protocolCycle';
 import type { HandlerMap } from '../gameReducer';
+import type { Player } from '../../types';
 
 export const protocolActionMap = {
     // ── Daily Protocol ────────────────────────────────────────────────────
@@ -69,11 +71,12 @@ export const protocolActionMap = {
         if (getWeeklyMissionProgress(wp, missionId) < mission.target) return state;
 
         const reward = mission.reward || {};
-        let p = {
+        let p: Player = {
             ...state.player,
             weeklyProtocol: { ...wp, claimed: [...(wp.claimed || []), missionId] },
         };
-        if (reward.gold) p = { ...p, gold: (p.gold || 0) + reward.gold };
+        // 2026-10 Wave 58: 주간 보상 골드도 누적 골드에 들어간다.
+        if (reward.gold) p = grantGold(p, reward.gold);
         if (reward.premiumCurrency) p = { ...p, premiumCurrency: (p.premiumCurrency || 0) + reward.premiumCurrency };
         return {
             ...state,

@@ -396,7 +396,7 @@ const CASES = [
         expected: [
             'log event :: 🔍 세 곳의 화염 지역을 탐험하니 고대 용의 기운이 하나로 수렴합니다.',
             'log success :: 🏆 [발견 체인 완료] 화염의 수렴! 보상: 3000G, 2000 EXP, 용의 화염',
-            'dispatch SET_PLAYER :: atk=43 | def=21 | exp=1000 | gold=3500 | hp=140 | inv=[{"baseItemName":"용의 화염","desc":"용의 화염을 담은 검.","desc_stat":"ATK+155(화) / 2H","elem":"화염","hands":2,"id":"disc_<now>","jobs":["전사","버서커"],"name":"용의 화염","price":25500,"tier":5,"type":"weapon","val":155}] | level=11 | maxHp=220 | maxMp=90 | mp=20 | nextExp=1150 | stats.discoveryChains=["fire_convergence"]',
+            'dispatch SET_PLAYER :: atk=43 | def=21 | exp=1000 | gold=3500 | hp=140 | inv=[{"baseItemName":"용의 화염","desc":"용의 화염을 담은 검.","desc_stat":"ATK+155(화) / 2H","elem":"화염","hands":2,"id":"disc_<now>","jobs":["전사","버서커"],"name":"용의 화염","price":25500,"tier":5,"type":"weapon","val":155}] | level=11 | maxHp=220 | maxMp=90 | mp=20 | nextExp=1150 | stats.discoveryChains=["fire_convergence"] | stats.total_gold=3000',
         ],
         run: () => {
             const player = basePlayer({

@@ -31,7 +31,14 @@ const CURE_EFFECTS = new Set<StatusId>(['poison', 'burn', 'freeze', 'curse']);
 const BUFF_EFFECTS = new Set(['atk_up', 'def_up', 'all_up']);
 
 const isFinitePositive = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
-const isCanonicalElixir = (item: Item | null | undefined) => item?.type === 'hp' && item?.name === '엘릭서';
+const ELIXIR_NAME = '엘릭서';
+// 2026-10 Wave 58: 접두어가 붙은 엘릭서("신성한 엘릭서")도 "HP 완전 회복"이다 — 이름 그대로만 보던 동안 그 사본은
+//   val(9999 + 접두어)만큼만 회복해 최대 생명이 그보다 큰 후반에는 완전 회복이 아니었다.
+const isCanonicalElixir = (item: Item | null | undefined) => {
+    if (item?.type !== 'hp' || typeof item.name !== 'string') return false;
+    if (item.name === ELIXIR_NAME) return true;
+    return item.prefixed === true && typeof item.prefixName === 'string' && item.name === `${item.prefixName} ${ELIXIR_NAME}`;
+};
 
 /** RECOVERY_TYPES.has()에 타입 서술을 씌운 것 — 반환 boolean은 동일, item.type을 좁혀 준다. */
 const isRecoveryItemType = (type: ItemType | undefined): type is 'hp' | 'mp' => RECOVERY_TYPES.has(type as 'hp' | 'mp');

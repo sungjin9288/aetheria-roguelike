@@ -1869,7 +1869,8 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
           + (await readSrc('src/systems/CombatEngine.actions.ts'));
       const calls = (source.match(/this\.getEffectiveMaxMp\(/g) || []).length;
       // Wave 54: 기력 지속 회복 틱(tickCombatState)이 상한을 읽는 다섯 번째 호출처다.
-      assert.equal(calls, 5, `internal callsite 5건 보존: ${calls}건`);
+      // Wave 58: 부활 토큰의 "기력 50% 회복"이 실효 최대 기력을 읽는 여섯 번째 호출처다.
+      assert.equal(calls, 6, `internal callsite 6건 보존: ${calls}건`);
   });
 
   test('cycle 551: body mp_mult / omega effect 처리 보존', async () => {

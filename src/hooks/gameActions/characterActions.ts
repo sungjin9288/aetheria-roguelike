@@ -8,8 +8,7 @@ import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getJobSkills } from '../../utils/gameUtils';
 import { buildClassVitals } from './_shared';
-import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
-import { getMirrorEffects } from '../../systems/mirrorUpgrades';
+import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, sanitizeChallengeModifiers } from '../../utils/runStart';
 import { createQuestProgressState } from '../../utils/questProgress';
 import { getDefaultExpeditionFocusQuestIds } from '../../utils/expeditionMissionFocus';
 import { getRestCost } from '../../utils/expeditionReturnFlow';
@@ -68,14 +67,11 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             const trimmedName = String(name || '').trim().slice(0, 16);
             if (!trimmedName) return;
             const vitals = buildClassVitals(1, jobId, player.meta || {});
-            let maxHp = vitals.maxHp;
-            // 2026-07 — 에테르 거울: start_gold 노드가 레벨당 시작 골드에 가산.
-            //   noGold 챌린지 모디파이어는 의도적 페널티이므로 거울 보너스도 함께 무효화.
-            const mirrorEffects = getMirrorEffects(player.meta);
-            let startGold = CONSTANTS.START_GOLD + mirrorEffects.startGoldBonus;
-            const mods = Array.isArray(challengeModifiers) ? challengeModifiers : [];
-            if (mods.includes('halfHp')) maxHp = Math.max(50, Math.floor(maxHp * 0.5));
-            if (mods.includes('noGold')) startGold = 0;
+            // 2026-07 — 에테르 거울: start_gold 노드가 레벨당 시작 골드에 가산(빈손의 시작은 거울 보너스도 무효화).
+            // 2026-10 Wave 58: 시작 조건 계산은 계승(ASCEND)과 함께 utils/runStart.ts가 소유한다. 도전 조건도 같은 규칙으로 거른다.
+            const mods = sanitizeChallengeModifiers(challengeModifiers, player.meta?.prestigeRank);
+            const maxHp = applyChallengeMaxHp(vitals.maxHp, mods);
+            const startGold = getRunStartGold(player.meta, mods);
             // Compute full starting HP/MP including passive skill bonuses for the chosen job
             const tempPlayer = { ...player, job: jobId, maxHp, maxMp: vitals.maxMp };
             const fullStartStats = getFullStats(tempPlayer);
@@ -102,8 +98,7 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
                 addLog('warn', MSG.CHALLENGE_START(labels));
             }
             if (hasPreviousRunExperience(player)) {
-                const startingRelicChoiceCount = getPrestigeUnlocks(player.meta?.prestigeRank).startBootChoices
-                    + mirrorEffects.startBootChoiceBonus;
+                const startingRelicChoiceCount = getStartBootChoiceCount(player.meta);
                 // Wave 4 O2: 시작 부트 후보도 직업 기본 성향(빌드 아키타입)에 공명시킨다.
                 //   신규 런은 장비/유물이 없어 buildProfile.primary가 직업 기본값으로 잡히므로,
                 //   "내 직업이 쓸 만한 유물"이 첫 선택지에 더 자주 올라온다.
@@ -243,6 +238,8 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
                     skillChoices: { ...(p.skillChoices || {}), [skillName]: newChoice },
                 }),
             });
+            // 2026-10 Wave 58: 기술 교체 비용도 골드 소비다(휴식과 같은 경로).
+            dispatch({ type: AT.UPDATE_DAILY_PROTOCOL, payload: { type: 'goldSpend', amount: cost } });
             addLog('success', MSG.SKILL_SWAP(skillName, oldLabel, branch.label || '선택한 성장'));
             addLog('info', MSG.SKILL_SWAP_COST(cost));
         },

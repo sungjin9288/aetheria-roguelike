@@ -372,8 +372,16 @@ export const calculateFullStats = (player: Player) => {
     const passiveBonus = getPassiveSkillBonuses(player);
     const enhanceBonus = computeEnhanceBonus(player.equip || {});
 
+    // 2026-10 Wave 58: "공격력 +N" · "방어력 +N" · "최대 생명 +N" · "최대 기력 +N"으로 광고하는 고정 보너스(직업 패시브 · 도감 ·
+    //   몬스터 도감 처치 이정표 · 칭호)는 모든 배율 뒤에 더한다 — 직업 배율 · 세트 · 조합 배율 앞에 더하던 동안 전사의
+    //   "근력 훈련 ATK +5"가 전투 공격력 +6.5 ~ +8로 들어갔다. 배율 안의 값은 장비 · 강화 · 기본 능력치 · 영구 공격력이다.
+    const flatAtk = codexBonus.atk + passiveBonus.atk + (titlePassive.atk || 0);
+    const flatDef = codexBonus.def + passiveBonus.def + (titlePassive.def || 0);
+    const flatHp = codexBonus.hp + passiveBonus.hp + (titlePassive.hp || 0);
+    const flatMp = passiveBonus.mp + (titlePassive.mp || 0);
+
     const baseAtk =
-        ((player.atk ?? 0) + mainAttack + offhandAttack + codexBonus.atk + enhanceBonus.atk + killStackAtkBonus + getRampedMetaAtk(meta, player.level) + passiveBonus.atk) *
+        ((player.atk ?? 0) + mainAttack + offhandAttack + enhanceBonus.atk + killStackAtkBonus + getRampedMetaAtk(meta, player.level)) *
         cls.atkMod! *
         (1 + (buff.atk || 0) + abyssBonus.atk + chaosGemBonus.atk) *
         setBonus.atkMult *
@@ -383,7 +391,7 @@ export const calculateFullStats = (player: Player) => {
         (passiveBonus.lowHpAtkMult || 1);
 
     const baseDef =
-        ((player.def ?? 0) + armorVal + shieldDef + codexBonus.def + enhanceBonus.def + passiveBonus.def) *
+        ((player.def ?? 0) + armorVal + shieldDef + enhanceBonus.def) *
         (1 + (buff.def || 0) + abyssBonus.def + chaosGemBonus.def) *
         setBonus.defMult *
         signatureSetBonus.defMult *
@@ -392,18 +400,25 @@ export const calculateFullStats = (player: Player) => {
 
     // cycle 225: equipmentHpBonus 합산 — armor의 hpBonus 필드 (용암 판금갑 / 용비늘 갑주) 적용.
     //   기존엔 dead config이라 +230 HP가 영원히 미적용이었음. cycle 224 mpBonus 패턴 동일.
-    const baseMaxHp = ((player.maxHp ?? 0) + codexBonus.hp + passiveBonus.hp + (equipmentHpBonus || 0)) * setBonus.hpMult * signatureSetBonus.hpMult * (1 + affinityHpBonus);
-    const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + relicBonus.mpFlat + passiveBonus.mp) * relicBonus.mpMult * (1 + affinityMpBonus);
+    const baseMaxHp = ((player.maxHp ?? 0) + (equipmentHpBonus || 0)) * setBonus.hpMult * signatureSetBonus.hpMult * (1 + affinityHpBonus);
+    const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + relicBonus.mpFlat) * relicBonus.mpMult * (1 + affinityMpBonus);
     const baseCritChance = Math.min(
         0.75,
         BALANCE.CRIT_CHANCE + equipmentCritBonus + relicBonus.critBonus + abyssBonus.crit + (titlePassive.crit || 0) + passiveBonus.crit
     );
 
+    // 배율이 걸리는 부분 — 마지막 배율 단계가 이 값에 곱하고, 고정 보너스는 그 뒤에 더한다.
+    const scaledAtk = Math.floor(baseAtk * (1 + relicBonus.atkFlat));
+    const scaledDef = Math.floor(baseDef * (1 + relicBonus.defFlat));
+    const scaledMaxHp = Math.floor(baseMaxHp * relicBonus.hpMult);
+    const scaledMaxMp = Math.floor(baseMaxMp);
+
+    // 빌드 성향 · 특성 · 조합 판정의 입력은 고정 보너스까지 더한 화면 값이다.
     const preBuildStats = {
-        atk: Math.floor(baseAtk * (1 + relicBonus.atkFlat) + (titlePassive.atk || 0)),
-        def: Math.floor(baseDef * (1 + relicBonus.defFlat) + (titlePassive.def || 0)),
-        maxHp: Math.floor(baseMaxHp * relicBonus.hpMult) + (titlePassive.hp || 0),
-        maxMp: Math.floor(baseMaxMp) + (titlePassive.mp || 0),
+        atk: scaledAtk + flatAtk,
+        def: scaledDef + flatDef,
+        maxHp: scaledMaxHp + flatHp,
+        maxMp: scaledMaxMp + flatMp,
         elem: mainWeapon?.elem || offhandWeapon?.elem || '물리',
         isMagic: isMagic || isMagicWeapon(mainWeapon) || isMagicWeapon(offhandWeapon) || Boolean(offhandShield?.elem && offhandShield?.elem !== '물리'),
         weaponHands: getWeaponHands(mainWeapon),
@@ -425,18 +440,18 @@ export const calculateFullStats = (player: Player) => {
     const streak = computeKillStreakBonus(player.killStreak || 0);
 
     const finalAtk = Math.floor(
-        preBuildStats.atk *
+        scaledAtk *
         (traitBonus.atkMult || 1) *
         synergyBonus.atkMult *
         synergyBonus.statMult *
         (1 + synergyBonus.lowHpAtk) *
         (1 + streak.atkBonus) *
         synergyDrawback.atkMult
-    );
+    ) + flatAtk;
     // cycle 154: synergyBonus.defMult — 'eternal_fortress' 시너지 (defMult 0.8) 반영.
-    const finalDef = Math.floor(preBuildStats.def * (traitBonus.defMult || 1) * synergyBonus.statMult * synergyBonus.defMult * synergyDrawback.defMult);
-    const finalMaxHp = Math.floor(preBuildStats.maxHp * synergyBonus.statMult);
-    const finalMaxMp = preBuildStats.maxMp + (traitBonus.mpFlat || 0) + synergyBonus.mpFlat;
+    const finalDef = Math.floor(scaledDef * (traitBonus.defMult || 1) * synergyBonus.statMult * synergyBonus.defMult * synergyDrawback.defMult) + flatDef;
+    const finalMaxHp = Math.floor(scaledMaxHp * synergyBonus.statMult) + flatHp;
+    const finalMaxMp = scaledMaxMp + flatMp + (traitBonus.mpFlat || 0) + synergyBonus.mpFlat;
     // cycle 237: synergyBonus.critBonus 합산 — primordial_wrath 등 시너지 critChance dead config fix.
     //   baseCritChance에서 제외 (preBuildStats 의존성 회피), finalCritChance에서 합산.
     const finalCritChance = Math.min(0.75, preBuildStats.critChance + (traitBonus.critBonus || 0) + streak.critBonus + (synergyBonus.critBonus || 0));

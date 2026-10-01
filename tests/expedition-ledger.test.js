@@ -184,8 +184,8 @@ test('정상 귀환은 전투/탐험/재화/아이템/임무/최저 HP delta를 
     assert.equal(summary.lostItemCount, 1);
     assert.deepEqual(summary.completedQuests, ['슬라임 소탕']);
     assert.equal(summary.lowestHp, 38);
-    // 기본 HP 180 + 모험가 패시브 20, 호환 장비 2피스 +5%.
-    assert.equal(started.activeExpedition.maxHpAtStart, 210);
+    // 기본 HP 180 × 호환 장비 2피스 +5% + 모험가 패시브 20(고정 보너스는 배율 뒤 — 2026-10 Wave 58).
+    assert.equal(started.activeExpedition.maxHpAtStart, Math.floor(180 * 1.05) + 20);
     assert.equal(summary.lowestHpPercent, 18);
     assert.equal(summary.reviewedAt, null);
     assert.deepEqual(summary.encounterDiscoveries, []);

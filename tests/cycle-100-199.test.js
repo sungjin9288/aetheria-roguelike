@@ -118,7 +118,7 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/StatsPanel.tsx');
       assert.match(source, /label:\s*['"]도주 횟수['"]/);
       assert.match(source, /label:\s*['"]제작 횟수['"]/);
-      assert.match(source, /label:\s*['"]합성 횟수['"]/);
+      assert.match(source, /label:\s*['"]합성 성공['"]/);
       assert.match(source, /label:\s*['"]최대 연속 처치['"]/);
   });
 }

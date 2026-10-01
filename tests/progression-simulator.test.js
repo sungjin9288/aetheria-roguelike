@@ -73,7 +73,11 @@ const EXPECTED_JOB_NAMES = [
 //   (+ 회복 · 흡수량 상향). 리포트에서 바뀌는 키는 `jobSnapshots` 하나다 — 해당 9개 직업의 스냅숏 생명 · 기력.
 //   곡선(체크포인트 액션)은 불변이다(모델 플레이어는 끝까지 `모험가`). 이 편집 하나만 되돌리면 이전 값이 재현된다.
 //   이전 값: '2ecb560d2919915954f725618bff645588a9058ec27d9697c5e1814013e5cf88'.
-const EXPECTED_BASELINE_REPORT_SHA256 = 'cfffe884adbd084dfae83f261d46fe550a51f63b5cb975b5eceb890aa94cb42e';
+// Wave 58 (2026-10-01, 소유자 결정 "설명대로"): 직업 패시브 "ATK +N"이 배율 뒤 고정 보너스가 됐다. 바뀌는 키는
+//   `jobSnapshots[*].combat.damage` 9칸(공격 패시브 직업, 37→36 · 42→37 · 213→200 · 207→196 · 191→183 · 165→160 ·
+//   282→262 · 274→255 · 276→262)뿐이고 곡선(체크포인트 액션)은 불변이다(모델 플레이어는 `모험가` — 생명 패시브만).
+//   이전 값: 'cfffe884adbd084dfae83f261d46fe550a51f63b5cb975b5eceb890aa94cb42e'.
+const EXPECTED_BASELINE_REPORT_SHA256 = '7993b0dd7e339d9324c195fa7caea53a48ddcd11e197454b007b8b3aedc10524';
 // 순서는 EXPECTED_JOB_NAMES와 같다 — 45가 찍힌 다섯 칸이 tier-3 5종(팔라딘·드래곤 나이트·
 // 대마법사·그림자 주군·사냥의 군주)이고, 시간술사는 원래부터 tier 3 / reqLv 25다.
 // 11번째 칸(성직자)이 Wave 14 F4로 5 → 12 — 무당과 같은 값이라 마법사의 첫 분기가 2택이 된다.

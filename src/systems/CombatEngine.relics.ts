@@ -1,6 +1,7 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { getMirrorEffects } from './mirrorUpgrades';
+import { getEffectiveMaxHp } from './vitals.js';
 import type { Player, Relic, Monster, RelicSynergy } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 
@@ -56,6 +57,14 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
     applyFatalProtection(player, relics, incomingDamage, logs, activeSynergies = []) {
         const flags = this.getCombatFlags(player);
         let nextHp = Math.max(0, (player.hp || 0) - Math.max(0, incomingDamage));
+        // 2026-10 Wave 58: 부활 회복의 "최대 생명"은 실효 최대다(장비 · 유물 보너스 포함) — 저장된 최대 생명으로 계산하던
+        //   동안 거울 에테르 수호 2단계 "생명 60%"가 실효 최대의 48% 남짓이었다(장비 생명 보너스만큼 덜 회복).
+        //   계산이 무거워 부활이 실제로 일어날 때만 읽는다.
+        let reviveMaxHpCache: number | null = null;
+        const getReviveMaxHp = () => {
+            if (reviveMaxHpCache === null) reviveMaxHpCache = getEffectiveMaxHp(player);
+            return reviveMaxHpCache;
+        };
         // cycle 162: phoenix_revive atkBuff tempBuff — 부활 분기에서 set, return에 합류.
         let phoenixTempBuff: Player['tempBuff'] | null = null;
 
@@ -86,7 +95,7 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
                     //   기존엔 token 구매되지만 소비 로직 없어 dead purchase 회귀.
                     const reviveTokens = Math.max(0, Number(player.reviveTokens) || 0);
                     if (reviveTokens > 0) {
-                        nextHp = Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * 0.5);
+                        nextHp = Math.floor(getReviveMaxHp() * 0.5);
                         // reviveTokens 소비는 updatedPlayer 합류 시점에 처리 (return 직전).
                         flags.reviveTokenUsed = true;
                         logs.push({ type: 'event', text: MSG.RELIC_REVIVE_TOKEN_USED });
@@ -96,7 +105,7 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
                     const phoenixRelic = relics.find((relic) => relic.effect === 'phoenix_revive');
                     if (phoenixRelic && !flags.phoenixUsed) {
                         const healRatio = phoenixRelic.val?.healRatio || 0.3;
-                        nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * healRatio));
+                        nextHp = Math.max(1, Math.floor(getReviveMaxHp() * healRatio));
                         flags.phoenixUsed = true;
                         const atkBuff = phoenixRelic.val?.atkBuff || 0;
                         const duration = phoenixRelic.val?.duration || 0;
@@ -118,7 +127,7 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
                         //   INITIAL_STATE.player 기반이라 별도 처리 불필요).
                         const mirrorEffects = getMirrorEffects(player.meta);
                         if (mirrorEffects.reviveEnabled && !player.mirrorReviveUsed) {
-                            nextHp = Math.max(1, Math.floor((player.maxHp || BALANCE.DEFAULT_MAX_HP) * mirrorEffects.reviveHpRatio));
+                            nextHp = Math.max(1, Math.floor(getReviveMaxHp() * mirrorEffects.reviveHpRatio));
                             flags.mirrorReviveUsed = true;
                             logs.push({ type: 'event', text: MSG.MIRROR_REVIVE });
                         }
@@ -135,7 +144,7 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
         //   회복 중 큰 쪽이고, 난공불락은 그 위에 더한다(최대 생명까지).
         const revived = (player.hp || 0) - Math.max(0, incomingDamage) <= 0 && nextHp > 0;
         if (revived) {
-            const reviveMaxHp = player.maxHp || BALANCE.DEFAULT_MAX_HP;
+            const reviveMaxHp = getReviveMaxHp();
             // cycle 153: 'absolute_immortal' / 'immortal_warrior' / 'blood_immortal' — reviveHeal(가장 큰 값).
             const reviveHeal = activeSynergies
                 .filter((s) => s.bonus.effect === 'absolute_immortal' || s.bonus.effect === 'immortal_warrior'
@@ -158,7 +167,9 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
         // cycle 186: reviveTokens 소비 + MP 50% 회복 (token 사용 시).
         if (flags.reviveTokenUsed) {
             updatedPlayer.reviveTokens = Math.max(0, Number(player.reviveTokens) || 0) - 1;
-            updatedPlayer.mp = Math.min(player.maxMp || 50, Math.floor((player.maxMp || 50) * 0.5));
+            // 2026-10 Wave 58: "기력 50% 회복" — 실효 최대 기준이고, 회복은 기력을 줄이지 않는다.
+            const reviveMaxMp = this.getEffectiveMaxMp(player, relics);
+            updatedPlayer.mp = Math.min(reviveMaxMp, Math.max(player.mp || 0, Math.floor(reviveMaxMp * 0.5)));
         }
         // 2026-07 — 에테르 거울: mirrorReviveUsed는 player 최상위 필드(combatFlags 아님) —
         //   handleDefeat/ASCEND의 freshPlayer 스프레드에서 자연 리셋되도록 top-level에 둔다

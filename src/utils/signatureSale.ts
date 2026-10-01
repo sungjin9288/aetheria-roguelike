@@ -12,7 +12,7 @@
  * 현재 직업을 알 수 없으면 ②는 성립하지 않는다(fail-closed — 모르면 보호한다).
  */
 import { CLASSES } from '../data/classes';
-import { isSignatureItem } from '../data/signatureItems';
+import { getSignatureBaseName } from '../data/signatureItems';
 import type { Item, Player } from '../types/index.js';
 
 export type SignatureSaleReason = 'duplicate' | 'off-path' | 'protected';
@@ -38,10 +38,12 @@ export const getJobPath = (job: string | null | undefined): Set<string> => {
     return path;
 };
 
-const countCopies = (player: Player, name: string) => {
-    const inBag = (player.inv || []).filter((entry) => entry?.name === name).length;
+// 2026-10 Wave 58: 사본은 전설 각인 바탕 이름으로 센다 — 접두어가 붙은 사본("날카로운 라그나로크")도 같은 전설 각인이다.
+const countCopies = (player: Player, baseName: string) => {
+    const isCopy = (entry: Item | null | undefined) => getSignatureBaseName(entry) === baseName;
+    const inBag = (player.inv || []).filter(isCopy).length;
     const equip = player.equip || {};
-    const equipped = [equip.weapon, equip.armor, equip.offhand].filter((entry) => entry?.name === name).length;
+    const equipped = [equip.weapon, equip.armor, equip.offhand].filter(isCopy).length;
     return inBag + equipped;
 };
 
@@ -50,8 +52,9 @@ export const getSignatureSaleVerdict = (
     item: Item | null | undefined,
     player: Player,
 ): SignatureSaleVerdict | null => {
-    if (!item || !isSignatureItem(item)) return null;
-    if (item.name && countCopies(player, item.name) >= 2) return { sellable: true, reason: 'duplicate' };
+    const baseName = getSignatureBaseName(item);
+    if (!item || !baseName) return null;
+    if (countCopies(player, baseName) >= 2) return { sellable: true, reason: 'duplicate' };
 
     const jobs = item.jobs;
     const path = getJobPath(player.job);

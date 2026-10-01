@@ -81,7 +81,7 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
    * 계약:
    *   1. INITIAL_STATE.player.stats에 syntheses: 0 선언
    *   2. StatsPanel statEntries에 '제작 횟수' 라벨 row 노출
-   *   3. StatsPanel statEntries에 '합성 횟수' 라벨 row 노출
+   *   3. StatsPanel statEntries에 '합성 성공' 라벨 row 노출
    *   4. 기존 '도주 횟수' row 회귀 보존
    */
 
@@ -105,11 +105,11 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       );
   });
 
-  test('StatsPanel: 합성 횟수 row 노출', async () => {
+  test('StatsPanel: 합성 성공 row 노출', async () => {
       const source = await readSrc('src/components/StatsPanel.tsx');
       assert.ok(
-          /label:\s*['"]합성 횟수['"]/.test(source),
-          'StatsPanel should expose 합성 횟수 row'
+          /label:\s*['"]합성 성공['"]/.test(source),
+          'StatsPanel should expose 합성 성공 row'
       );
   });
 

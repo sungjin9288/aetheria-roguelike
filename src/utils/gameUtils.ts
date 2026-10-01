@@ -1,9 +1,11 @@
 import type { Dispatch } from 'react';
 import { ITEMS } from '../data/items.js';
-import type { CodexCategory, Item, Player, Achievement, Quest, QuestProgressState } from "../types/index.js";
+import type { CodexCategory, Item, Player, Quest, QuestProgressState } from "../types/index.js";
 import type { QuestReward } from '../types/quest.js';
 import type { GameAction } from '../reducers/gameReducer.js';
 import { DB } from '../data/db.js';
+import { BALANCE } from '../data/constants.js';
+import { getSignatureBaseName } from '../data/signatureItems.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import { getWeaponMagicSkills } from './equipmentUtils.js';
 import { DEFAULT_EXPLORE_STATE } from './explorationPacing.js';
@@ -18,7 +20,6 @@ import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { getSeasonArchive } from './seasonPassPresentation.js';
 import { formatSkillText } from './skillPresentation.js';
 import {
-    countCompletedSignatureSets,
     countDiscoveredSignatures,
     isSignatureName,
 } from './signatureDiscovery.js';
@@ -72,9 +73,10 @@ export const getPassiveSkillBonuses = (player: Player) => {
         // exp_up: 경험치 획득량 배율 보너스 (성직자/팔라딘 계열)
         if (s.effect === 'exp_up')  bonus.expMult  += (s.val || 0);
         // low_hp_atk: HP 30% 이하 시 ATK 배율 (무당 죽음의 직관)
+        //   2026-10 Wave 58: "이하"는 경계를 포함한다(30%에서도 발동). `<`이던 동안 정확히 30%에서는 꺼져 있었다.
         if (s.effect === 'low_hp_atk' && s.val) {
             const hpRatio = (player.hp || 0) / Math.max(1, player.maxHp || 150);
-            if (hpRatio < 0.3) bonus.lowHpAtkMult = Math.max(bonus.lowHpAtkMult, s.val);
+            if (hpRatio <= BALANCE.LOW_HP_PASSIVE_THRESHOLD) bonus.lowHpAtkMult = Math.max(bonus.lowHpAtkMult, s.val);
         }
     });
     return bonus;
@@ -201,6 +203,9 @@ export const registerLootToCodex = (player: Player, lootItems: Item[]): Player =
             : item.type === 'shield' ? 'shields'
             : item.type === 'mat' ? 'materials' : null;
         if (cat) p = registerCodex(p, cat, item.name);
+        // 2026-10 Wave 58: 접두어가 붙은 전설 각인을 얻으면 그 전설 각인 자체도 발견한 것이다(전설 도감 · 수집 업적).
+        const signatureBase = cat ? getSignatureBaseName(item) : null;
+        if (cat && signatureBase && signatureBase !== item.name) p = registerCodex(p, cat, signatureBase);
     }
     return p;
 };
@@ -263,37 +268,8 @@ export const getActiveQuestEntries = (player: Player): ActiveQuestEntry[] => (
         .filter((entry): entry is ActiveQuestEntry => entry !== null)
 );
 
-/** 업적 진행값 계산 */
-export const getAchievementCurrentValue = (achievement: Achievement, player: Player) => {
-    const stats = player?.stats || {};
-    const target = achievement?.target;
-    if (target === 'level') return player?.level || 0;
-    if (target === 'prestige') return player?.meta?.prestigeRank || 0;
-    if (target === 'synths') return stats?.syntheses || 0;
-    if (target === 'discoveries') return Object.keys(stats?.visitedMaps || {}).length;
-    // cycle 95: 휘발성 killStreak는 매번 0으로 리셋되므로 max-ever 누적 카운터를 읽음.
-    if (target === 'maxKillStreak') return stats?.maxKillStreak || 0;
-    // cycle 101: stats.relicCount 단일 source of truth — ADD_RELIC handler가
-    // player.relics에 push와 stats.relicCount++ 둘 다 수행하므로, relics.length를
-    // 추가로 더하면 현재 런의 relic이 double count됨. 이전엔 ach_relic_5("유물 5개")
-    // 가 실제로 3개에서 풀리던 부풀림 회귀를 fix. checkTitles('relicCount')와도 정합.
-    if (target === 'relicCount') return stats?.relicCount || 0;
-    // cycle 102: 발견 체인(BALANCE.DISCOVERY_CHAINS) 완료 카운트 — exploreUtils
-    // checkDiscoveryChains가 stats.discoveryChains 배열에 완료 ID push.
-    if (target === 'discoveryChains') return Array.isArray(stats?.discoveryChains) ? stats.discoveryChains.length : 0;
-    if (target === 'signaturesDiscovered') return countDiscoveredSignatures(player);
-    if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
-    // B3-TODO(2026-09): achievement.target은 data-driven 문자열이라 PlayerStats 키로
-    //   좁히려면 quests.ts ACHIEVEMENTS의 target 리터럴 유니온화가 선행돼야 한다.
-    //   그때까지 이 한 곳만 동적 인덱스 캐스트를 유지한다(Number()로 number 반환형 보존,
-    //   런타임 동작 동일 — PlayerStats 카운터는 항상 number|undefined다).
-    return Number((stats as Record<string, unknown>)[target ?? '']) || 0;
-};
-
-/** 업적 달성 여부 */
-export const isAchievementUnlocked = (achievement: Achievement, player: Player) => (
-    getAchievementCurrentValue(achievement, player) >= (achievement?.goal || 0)
-);
+// 2026-10 Wave 58: 업적 진행값 · 달성 판정은 utils/achievementProgress.ts가 소유한다(계승 · 사망 경로의 달성 기록이 함께 읽는다).
+export { getAchievementCurrentValue, isAchievementUnlocked } from './achievementProgress.js';
 
 // Milestone Utility
 export const checkMilestones = (killRegistry: Record<string, number>, lastKillName: string) => {

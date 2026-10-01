@@ -4,6 +4,9 @@ import { readFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import path from 'node:path';
 import { MSG } from '../src/data/messages.js';
+import { createElement } from 'react';
+import { renderToStaticMarkup } from 'react-dom/server';
+import IntroScreen from '../src/components/IntroScreen.tsx';
 import { getFirstVisitReward } from '../src/utils/exploreUtils.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -77,10 +80,12 @@ test('menu, settings, and device playtest use one natural Korean vocabulary', as
         readSrc('docs/PLAYTEST_CHECKLIST.md'),
     ]);
 
+    // 2026-10 Wave 58: 도전 규칙 선택은 ChallengeModifierPicker(계승 화면과 공용)가 그린다 — 렌더 결과로 확인한다.
+    const introHtml = renderToStaticMarkup(createElement(IntroScreen, { onStart: () => {} }));
     for (const label of ['달빛 아래 펼쳐지는 모험', '첫 여정', '시작의 마을', '모험가의 이름', '도전 규칙', '모험 시작']) {
-        assert.match(intro, new RegExp(label));
+        assert.match(introHtml, new RegExp(label));
     }
-    assert.match(intro, /<details[\s\S]*data-testid="intro-challenge-settings"/);
+    assert.match(introHtml, /<details[\s\S]*data-testid="intro-challenge-settings"/);
     assert.doesNotMatch(intro, /MOONLIT FIELD LEDGER|Challenge Modifiers|Up to|기록 개시/);
     assert.match(constants, /label: '약한 생명력'/);
     assert.match(constants, /label: '빈손의 시작'/);

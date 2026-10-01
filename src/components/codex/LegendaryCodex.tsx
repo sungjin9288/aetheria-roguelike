@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { ChevronDown, Lock, Sparkles } from 'lucide-react';
 import { DB } from '../../data/db';
 import { SIGNATURE_ITEM_REGISTRY } from '../../data/signatureItems.js';
-import { getSignatureSetDefinitions } from '../../utils/signatureSetBonus.js';
+import { computeSignatureSetBonus, getSignatureSetDefinitions, getSignatureSetEquippedCounts } from '../../utils/signatureSetBonus.js';
 import { getSignatureDropSources } from '../../utils/signatureDropSources.js';
 import { getSignaturePityMultiplier, SIGNATURE_PITY } from '../../utils/signaturePity.js';
 import ItemIcon from '../icons/ItemIcon.jsx';
@@ -118,6 +118,9 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
         ? entries.find((entry) => entry.item.name === selected)
         : null;
 
+    const equippedCounts = useMemo(() => getSignatureSetEquippedCounts(player?.equip), [player?.equip]);
+    const activeSet = useMemo(() => computeSignatureSetBonus(player?.equip).activeSet, [player?.equip]);
+
     const setSummary = useMemo(() => {
         const sets = getSignatureSetDefinitions() as Record<string, SignatureSetDef>;
         return Object.entries(sets).map(([key, def]) => {
@@ -127,15 +130,12 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                 const bucket = resolveDiscoveryBucket(entry.item);
                 return bucket && codex[bucket]?.[entry.item.name ?? ''];
             }).length;
-            const equipped = def.members.filter((memberName: string) => {
-                const equip = player?.equip;
-                return equip?.weapon?.name === memberName
-                    || equip?.armor?.name === memberName
-                    || equip?.offhand?.name === memberName;
-            }).length;
-            return { key, def, total: def.members.length, discovered, equipped };
+            // 2026-10 Wave 58: 장착 수와 발동 단계는 엔진 계산 그대로다(2H 가중치 · 접두어 사본 포함, 발동은 가장 많이 낀 세트 하나).
+            const equipped = equippedCounts[key] || 0;
+            const activeBonus = activeSet?.key === key ? def.bonuses[String(activeSet.tier)] : undefined;
+            return { key, def, total: def.members.length, discovered, equipped, activeBonus };
         });
-    }, [codex, entries, player?.equip]);
+    }, [codex, entries, equippedCounts, activeSet]);
 
     return (
         <div data-testid="codex-legendary" className="space-y-4">
@@ -190,25 +190,23 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                         <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
                     </summary>
                     <div className="grid grid-cols-1 gap-1.5 pb-3">
-                        {setSummary.map(({ key, def, total, discovered, equipped }) => {
+                        {setSummary.map(({ key, def, total, discovered, equipped, activeBonus }) => {
                             const accent = TONE_ACCENT[def.tone] || DEFAULT_TONE_ACCENT;
-                            const activeBonus = equipped >= 2
-                                ? def.bonuses[String([...Object.keys(def.bonuses)].map(Number).filter((n) => n <= equipped).sort((a, b) => b - a)[0])]
-                                : null;
+                            const isActive = Boolean(activeBonus);
                             return (
                                 <div
                                     key={key}
                                     className="flex min-h-14 flex-col justify-center gap-0.5 rounded-lg px-3 py-2"
                                     style={{
-                                        border: `1px solid ${equipped >= 2 ? accent.border : 'rgba(255,255,255,0.08)'}`,
-                                        background: equipped >= 2
+                                        border: `1px solid ${isActive ? accent.border : 'rgba(255,255,255,0.08)'}`,
+                                        background: isActive
                                             ? `radial-gradient(circle at 18% 40%, ${accent.glow}, transparent 50%), linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(10,12,16,1) 100%)`
                                             : 'linear-gradient(180deg, rgba(14,17,22,0.9) 0%, rgba(8,10,14,1) 100%)',
                                     }}
                                 >
                                     <div className="flex items-center justify-between gap-3 text-[11px]">
                                         <span className="font-semibold text-white">{def.name}</span>
-                                        <span className={equipped >= 2 ? 'text-amber-200' : 'text-slate-500'}>
+                                        <span className={isActive ? 'text-amber-200' : 'text-slate-500'}>
                                             {equipped > 0 ? `장착 ${equipped}` : '미장착'} · 수집 {discovered}/{total}
                                         </span>
                                     </div>

@@ -16,6 +16,7 @@ import {
     getCurrentWeeklyProtocol,
     getWeeklyMissionRows,
 } from '../../utils/protocolCycle';
+import { scaleEssenceReward } from '../../systems/essenceRewardMult';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { DailyProtocolMissionReward, Player, Quest, QuestReward } from '../../types/index.js';
 
@@ -77,8 +78,9 @@ const QuestRewardChips = ({ reward, accent }: QuestRewardChipsProps) => {
  */
 const DAILY_TYPE_LABEL: Record<string, string> = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
 
-const getDailyRewardLabel = (reward: DailyProtocolMissionReward) => {
-    if (reward?.essence) return `에센스 +${reward.essence}`;
+// 2026-10 Wave 58: 정수 보상은 지급량(계승 단계 × 거울 배율)으로 보여 준다 — 원액을 보여 주던 동안 실제 지급보다 적게 보였다.
+const getDailyRewardLabel = (reward: DailyProtocolMissionReward, meta: Player['meta']) => {
+    if (reward?.essence) return `에센스 +${scaleEssenceReward(reward.essence, meta)}`;
     if (reward?.item) return reward.item;
     if (reward?.relicShard) return '유물 파편 +1';
     return '';
@@ -168,7 +170,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                         <div className="flex flex-col gap-1.5">
                             {dpMissions.map((mission) => {
                                 const pct = Math.min(100, (mission.progress / Math.max(1, mission.goal)) * 100);
-                                const rewardLabel = getDailyRewardLabel(mission.reward);
+                                const rewardLabel = getDailyRewardLabel(mission.reward, player.meta);
                                 return (
                                     <Motion.div
                                         key={mission.id}
