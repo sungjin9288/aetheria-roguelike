@@ -35,8 +35,8 @@ test.describe('계승과 다음 여정 화면', () => {
             const leaves = [...root.querySelectorAll<HTMLElement>('*')]
                 .filter((node) => node.children.length === 0 && (node.textContent || '').trim());
             const fontSizes = leaves.map((node) => parseFloat(getComputedStyle(node).fontSize));
-            // 닫힌 <details>(도전 규칙 선택 — Wave 58) 안의 버튼은 렌더되지 않는다. 화면에 그려진 버튼만 잰다.
-            const buttons = [...root.querySelectorAll<HTMLElement>('button')].filter((node) => node.getClientRects().length > 0);
+            // 닫힌 <details>(도전 규칙 선택 — Wave 58) 안의 버튼은 펼치기 전까지 보이지 않는다. 보이는 버튼만 잰다.
+            const buttons = [...root.querySelectorAll<HTMLElement>('button')].filter((node) => !node.closest('details:not([open])'));
             const buttonHeights = buttons.map((node) => node.getBoundingClientRect().height);
             const visibleButtons = buttons.every((node) => {
                 const bounds = node.getBoundingClientRect();
