@@ -2,10 +2,10 @@
   "hashAlgorithm": "sha256",
   "reportHash": "db4e560c4f618e7dd58f746b5705d45acebf267ef3c97e1cd43dca162b6aa25d",
   "authorityHashes": {
-    "catalog": "77c50786c7cb8538edcaf2fd4051912ce93edeed10d3918860a2b21ff77d58f9",
+    "catalog": "a20d9a0f532ac7f7488473cf2cdb9c7e96b47aa1a080ebe6ade19122670a6ee6",
     "resolver": "df171d5221128d47b8bf516fe4fad2cf916b5cfc8be0211720dd0197c2692b55",
-    "statsCalculator": "452178b4cb6ac7c0778ec924c153d5d693340f8670def1fb68221da2e4ef33ad",
-    "combatEngine": "3ff3fdd51d3d6388cd65f9aa70d9e2f8ce6a85f0b4d08c4aedb131e71801da29",
+    "statsCalculator": "0bc16d15e5c15e37c7f25fba9453ba4d115cdaa5912ab63a1e499c1a6a9e5113",
+    "combatEngine": "bae26199580f8b63eabd670ce2efaada435707265b8d4ddc477ef8b76bb1df3f",
     "audit": "d2754c1967a9823fce1d1205f3da538969c26f59b8c01f04c2a43aedc2acd9f0",
     "verifier": "e69920bf3143b989052fd8278ec8006d79412a8e3c58222f7c66cf22a5afbb0a",
     "focusedTest": "64b9269e0ba309e54ea8c30e995430722609456fa637271c8279b874afbc9eb9",

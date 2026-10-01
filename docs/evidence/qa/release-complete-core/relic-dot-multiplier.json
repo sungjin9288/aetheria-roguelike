@@ -2,10 +2,10 @@
   "hashAlgorithm": "sha256",
   "reportHash": "f1914c7741432ff1a95dbeb1cda5f3299f8d8c9ce18c8f6c15c74f9c23bbd134",
   "sourceHashes": {
-    "src/data/relics.ts": "77c50786c7cb8538edcaf2fd4051912ce93edeed10d3918860a2b21ff77d58f9",
+    "src/data/relics.ts": "a20d9a0f532ac7f7488473cf2cdb9c7e96b47aa1a080ebe6ade19122670a6ee6",
     "src/systems/CombatEngine.actions.ts": "efc84fd3fd4724d43b9af81b874a7c9848fac2c69da90a558f3778e40f774718",
     "src/systems/relicDotMultiplierAudit.ts": "030ba8f22b7f41adff7ee7bb04d10cd1511febfe1e96d838a1f9a6559da2db77",
-    "src/utils/dataMigration.ts": "47cbcbd4ecacc7750365c3c2acbce9343958b73f2eed13c47d70eb83102f781b",
+    "src/utils/dataMigration.ts": "d6bd850862ebbd62ab3a9e1e1f43f0876a679739eec0b3714ed9ca8b810f37c5",
     "src/reducers/handlers/combatHandlers.ts": "f137abb8a7491e54495fa9359ac02dbc8fada5fca00fbbd985ef2aa02164701d",
     "tests/relic-dot-multiplier-coherence.test.js": "301239a4cea1284b35a9802eecc2503bb8a047ec2a6d1c28212b2b4da6a89346",
     "scripts/verify-relic-dot-multiplier.mjs": "55ddc162ca69d4e999b0d01f708543e3f3556bdb61f0488e14d65dc6a8a0d02e",
