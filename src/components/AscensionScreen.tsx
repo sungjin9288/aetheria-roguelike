@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
     ArrowRight,
     BookOpenCheck,
@@ -16,6 +17,8 @@ import EndgameJourney from './EndgameJourney';
 import PendingQuestRewardList from './PendingQuestRewardList';
 import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { GameActions } from '../hooks/actionDeps';
+import ChallengeModifierPicker from './ChallengeModifierPicker';
+import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
 
 interface AscensionScreenProps {
     player: Player;
@@ -29,6 +32,9 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
     const hasPendingQuestRewards = claimableQuests.length > 0;
     const outcome = getAscensionOutcome(player.meta);
     const signatureProgress = getSignatureDiscoveryProgress(player);
+    // 2026-10 Wave 58: 새 여정의 도전 조건은 여기서 고른다 — 계승은 인트로를 다시 거치지 않는다. 슬롯은 새 단계 기준.
+    const challengeSlots = getChallengeSlotCount(outcome.nextRank);
+    const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
     const statRows = [
         { label: '공격력', before: player.meta?.bonusAtk || 0, after: outcome.meta.bonusAtk, tone: 'text-rose-100' },
         { label: '생명', before: player.meta?.bonusHp || 0, after: outcome.meta.bonusHp, tone: 'text-emerald-100' },
@@ -174,7 +180,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                                 <BookOpenCheck size={14} /> 그대로 남는 것
                             </h2>
                             <p className="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">
-                                영구 능력 · 직업 여정 · 설정 · 도감 · 칭호 · 업적과 누적 기록 · 시즌 진행
+                                영구 능력 · 직업 여정 · 설정 · 도감 · 칭호 · 업적과 누적 기록 · 시즌 진행 · 회수하지 못한 유해
                             </p>
                             {signatureProgress.discovered > 0 && (
                                 <p
@@ -191,10 +197,17 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                                 <ShieldAlert size={14} /> 새로 시작하는 것
                             </h2>
                             <p className="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">
-                                레벨 · 장비와 가방 · 유물 · 진행 중 임무 · 현재 원정과 유해
+                                레벨 · 장비와 가방 · 유물 · 진행 중 임무 · 현재 원정
                             </p>
                         </div>
                     </section>
+
+                    <ChallengeModifierPicker
+                        testIdPrefix="ascension"
+                        selected={selectedChallenges}
+                        slots={challengeSlots}
+                        onToggle={(id) => setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots))}
+                    />
 
                     <EndgameJourney player={player} />
 
@@ -224,7 +237,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         <button
                             type="button"
                             data-testid="ascension-confirm"
-                            onClick={() => actions?.confirmAscension?.()}
+                            onClick={() => actions?.confirmAscension?.(selectedChallenges)}
                             disabled={hasPendingQuestRewards}
                             aria-describedby={hasPendingQuestRewards ? 'ascension-pending-quests-title' : undefined}
                             className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-[#d5b180]/36 bg-[#d5b180]/14 px-3 text-[13px] font-readable font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/20 disabled:cursor-not-allowed disabled:opacity-50"

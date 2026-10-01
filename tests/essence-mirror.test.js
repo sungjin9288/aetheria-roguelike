@@ -9,6 +9,7 @@ import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
 import { AT } from '../src/reducers/actionTypes.js';
 import { getPrestigeUnlocks } from '../src/systems/prestigeUnlocks.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
+import { scaleEssenceReward } from '../src/systems/essenceRewardMult.js';
 
 /**
  * 2026-07 감사 — 장르 갭 (a): 에테르 거울 (에센스 소비 영구 업그레이드 트리).
@@ -661,8 +662,10 @@ test('⑦ CONSTANTS.DATA_VERSION은 essenceLifetime 도입과 함께 5.1로 bump
 test('⑦ 승천 미리보기도 essenceLifetime을 함께 누적한다', async () => {
     const { getAscensionOutcome } = await import('../src/utils/ascensionPreview.js');
     const outcome = getAscensionOutcome({ essence: 100, essenceLifetime: 900, prestigeRank: 1 });
-    assert.equal(outcome.meta.essence, 100 + BALANCE.PRESTIGE_ESSENCE_REWARD);
-    assert.equal(outcome.meta.essenceLifetime, 900 + BALANCE.PRESTIGE_ESSENCE_REWARD);
+    // 2026-10 Wave 58: 계승 1단계 "에센스 획득 +10%"가 계승 보상에도 곱해진다.
+    const reward = scaleEssenceReward(BALANCE.PRESTIGE_ESSENCE_REWARD, { prestigeRank: 1 });
+    assert.equal(outcome.meta.essence, 100 + reward);
+    assert.equal(outcome.meta.essenceLifetime, 900 + reward);
 });
 
 test('⑦ 승천 화면은 에테르 거울 진입 CTA를 제공한다 (MSG 사용)', async () => {

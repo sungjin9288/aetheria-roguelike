@@ -209,13 +209,15 @@ test('비전 파동 기력 무소모 확률 ×2 · 비전 특이점 최소 35% �
 test('부활 조합은 어느 부활 수단에도 — 불멸의 전사(불사조) 50%, 난공불락 조합은 사망 방지에 30%를 더한다', () => {
     const phoenixOnly = makePlayer(['불사조의 깃털'], { hp: 10 });
     const phoenix = CombatEngine.applyFatalProtection(phoenixOnly, phoenixOnly.relics, 9_999, [], getActiveRelicSynergies(phoenixOnly.relics));
-    assert.equal(phoenix.updatedPlayer.hp, 300, '불사조 단독 30%');
+    // 2026-10 Wave 58: 부활 회복의 "최대 생명"은 실효 최대다(패시브 · 장비 보너스 포함).
+    const maxOf = (p) => statsOf(p).maxHp;
+    assert.equal(phoenix.updatedPlayer.hp, Math.floor(maxOf(phoenixOnly) * 0.3), '불사조 단독 30%');
     const warrior = makePlayer(['불사조의 깃털', '피의 서약'], { hp: 10 });
     const revived = CombatEngine.applyFatalProtection(warrior, warrior.relics, 9_999, [], getActiveRelicSynergies(warrior.relics));
-    assert.equal(revived.updatedPlayer.hp, 500, '불멸의 전사 50%');
+    assert.equal(revived.updatedPlayer.hp, Math.floor(maxOf(warrior) * 0.5), '불멸의 전사 50%');
     const fortress = makePlayer(['강철 의지', '난공불락', '불사조의 깃털'], { hp: 10 });
     const saved = CombatEngine.applyFatalProtection(fortress, fortress.relics, 9_999, [], getActiveRelicSynergies(fortress.relics));
-    assert.equal(saved.updatedPlayer.hp, 600, '불사조 30% + 난공불락 30%');
+    assert.equal(saved.updatedPlayer.hp, Math.floor(maxOf(fortress) * 0.3) + Math.floor(maxOf(fortress) * 0.3), '불사조 30% + 난공불락 30%');
     // 부활하지 않은 피격에는 붙지 않는다.
     const alive = CombatEngine.applyFatalProtection(fortress, fortress.relics, 5, [], getActiveRelicSynergies(fortress.relics));
     assert.equal(alive.updatedPlayer.hp, 5);

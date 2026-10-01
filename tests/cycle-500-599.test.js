@@ -3962,8 +3962,11 @@ import { DB } from '../src/data/db.ts';
 
   test('cycle 566: body Array.isArray defensive guard 보존', async () => {
       const source = await readSrc('src/hooks/gameActions/characterActions.ts');
-      assert.ok(/Array\.isArray\(challengeModifiers\) \? challengeModifiers : \[\]/.test(source),
-          'Array.isArray(challengeModifiers) defensive guard 보존');
+      // 2026-10 Wave 58: 도전 조건 거르기는 계승(ASCEND)과 함께 utils/runStart.ts의 sanitizeChallengeModifiers가 소유한다.
+      const runStartSource = await readSrc('src/utils/runStart.ts');
+      assert.ok(/if \(!Array\.isArray\(value\)\) return \[\];/.test(runStartSource),
+          'Array.isArray(challengeModifiers) defensive guard 보존 (sanitizeChallengeModifiers)');
+      assert.ok(/sanitizeChallengeModifiers\(challengeModifiers,/.test(source), 'start가 같은 거르기를 쓴다');
       assert.ok(/buildClassVitals\(1,\s*jobId,\s*player\.meta \|\| \{\}\)/.test(source),
           'buildClassVitals 호출 보존 — 신규 캐릭터 Lv1 기준');
       assert.ok(/level:\s*1,\s*exp:\s*0,\s*nextExp:\s*CONSTANTS\.START_NEXT_EXP/.test(source),

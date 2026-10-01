@@ -218,6 +218,7 @@ export const BALANCE = {
     OFFHAND_WEAPON_RATIO: 0.34,
     TWO_HAND_ATK_BONUS: 1.55,
     DUAL_WIELD_ATK_BONUS: 1.05,
+    LOW_HP_PASSIVE_THRESHOLD: 0.3,      // 직업 패시브 "HP 30% 이하"(무당 죽음의 직관)의 경계 — 이하이므로 포함(Wave 58)
     DUAL_WIELD_DEF_MULT: 0.92,
     ONE_HAND_CRIT_BONUS: 0.08,
     OFFHAND_ONE_HAND_CRIT_BONUS: 0.05,

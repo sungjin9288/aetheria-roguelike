@@ -41,7 +41,9 @@ const SIDEGRADES = [
         value: 20,
         desc_stat: 'ATK+195(빛) / MP+20 / 2H',
         exact: { val: 195, price: 30500, hands: 2, elem: '빛', jobs: ['아크메이지', '흑마법사'] },
-        deltas: [{ job: '아크메이지', maxMp: 62 }, { job: '흑마법사', maxMp: 69 }],
+        // 2026-10 Wave 58: 직업 패시브 "최대 MP +N"이 배율 뒤 고정 보너스라, 직업 세트 배율(무기 장착으로 오른다)이 패시브
+        //   기력을 곱하던 몫이 델타에서 빠졌다(62 → 56, 69 → 65).
+        deltas: [{ job: '아크메이지', maxMp: 56 }, { job: '흑마법사', maxMp: 65 }],
     },
     {
         type: 'weapon',
@@ -51,7 +53,7 @@ const SIDEGRADES = [
         value: 10,
         desc_stat: 'ATK+56(빛) / MP+10 / 2H',
         exact: { val: 56, price: 1620, hands: 2, elem: '빛', jobs: ['마법사', '아크메이지'] },
-        deltas: [{ job: '마법사', maxMp: 31 }, { job: '아크메이지', maxMp: 36 }],
+        deltas: [{ job: '마법사', maxMp: 28 }, { job: '아크메이지', maxMp: 30 }],
     },
 ];
 
@@ -233,6 +235,7 @@ test('신전 도시의 지팡이 keeps its source identity and production effect
     );
     assert.deepEqual(
         signature.jobs.map((job) => ({ job, atk: projectProductionDelta(signature, job).atk })),
-        [{ job: '아크메이지', atk: 864 }, { job: '흑마법사', atk: 792 }],
+        // Wave 58: 흑마법사 패시브 "ATK +12"가 배율 뒤 고정 보너스가 되어 세트 배율 몫(7)이 빠졌다.
+        [{ job: '아크메이지', atk: 864 }, { job: '흑마법사', atk: 785 }],
     );
 });

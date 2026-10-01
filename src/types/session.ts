@@ -168,6 +168,8 @@ export interface EventOutcome {
     status?: OutcomeStatus;
     relic?: OutcomeRelic;
     elite?: boolean;
+    /** 모닥불 "휴식" 전용 — 휴식 횟수(업적 "N번 휴식")에 센다(2026-10 Wave 58). */
+    rest?: boolean;
     /** 정찰 카드 전용 — 'combat' | 'elite' | 'anomaly' | 'unknown'. */
     scoutEffect?: string;
     /** 정찰 "전투의 기척" 전용 — 처치 보상 배율 가산. */

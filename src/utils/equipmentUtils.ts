@@ -385,6 +385,19 @@ export interface EquipmentComparisonSegment {
     text: string;
 }
 
+/**
+ * 쌍수 배율 변화 — 비교 수치(diff)는 장비 자체의 합이라 쌍수의 공격력 ×1.05 · 방어력 ×0.92가 보이지 않았다
+ * (두 번째 한손 무기 칩이 "공격력 +1 / 치명타 +5%"인데 실제 방어력은 8% 줄었다, 2026-10 Wave 58).
+ */
+const getDualWieldNote = (equip: EquipSlots, item: Item): string | null => {
+    const before = Boolean(getEquipmentProfile(equip).offhandWeapon);
+    const after = Boolean(getEquipmentProfile(getNextEquipmentState(equip, item)).offhandWeapon);
+    if (before === after) return null;
+    const atkPct = Math.round((BALANCE.DUAL_WIELD_ATK_BONUS - 1) * 100);
+    const defPct = Math.round((1 - BALANCE.DUAL_WIELD_DEF_MULT) * 100);
+    return after ? MSG.EQUIP_DUAL_WIELD_ON(atkPct, defPct) : MSG.EQUIP_DUAL_WIELD_OFF(atkPct, defPct);
+};
+
 export const getEquipmentComparison = (
     player: EquipmentDecisionPlayer | null | undefined,
     item: Item | null | undefined
@@ -396,13 +409,17 @@ export const getEquipmentComparison = (
         .filter((key) => decision.diff[key] !== 0)
         .map((key) => ({ key, value: decision.diff[key], text: formatEquipmentDelta(key, decision.diff[key]) }));
     const upgrades = segments.filter((segment) => segment.value > 0);
+    const dualWieldNote = item ? getDualWieldNote(player?.equip || {}, item) : null;
+    const summaryParts = [...segments.map((segment) => segment.text), ...(dualWieldNote ? [dualWieldNote] : [])];
 
     return {
         ...decision,
         segments,
         upgrades,
+        /** 쌍수가 시작되거나 풀릴 때의 배율 변화 문구(그 밖에는 null). */
+        dualWieldNote,
         /** 모든 변화(증감)를 ' / '로 이은 문자열. 변화가 없으면 MSG.EQUIP_DELTA_NONE. */
-        summaryText: segments.length ? segments.map((segment) => segment.text).join(' / ') : MSG.EQUIP_DELTA_NONE,
+        summaryText: summaryParts.length ? summaryParts.join(' / ') : MSG.EQUIP_DELTA_NONE,
         /** 상승분만 ' / '로 이은 문자열 (전투 루팅 힌트용). 상승이 없으면 빈 문자열. */
         upgradeText: upgrades.map((segment) => segment.text).join(' / '),
     };
@@ -551,22 +568,31 @@ export const getEquipmentPassiveTexts = (item: Item | null | undefined): string[
     return texts;
 };
 
-export const getItemStatText = (item: Item | null | undefined) => {
+/**
+ * 장비 · 소모품 수치 문구. `slot`이 `'offhand'`이면 보조 손에 낀 한손 무기의 실제 기여(보조 손 비율 · 보조 손 치명타)를
+ * 그린다 — 주 손 수치를 그리던 동안 보조 손 칸이 엔진 기여(예: 60)의 두 배 가까운 값(112)을 보여 줬다(2026-10 Wave 58).
+ *
+ * 속성은 무기에만 붙인다. 방어구 · 방패의 `elem`은 공격 · 방어 원소가 아니고(원소 저항은 `getEquipmentPassiveTexts`가
+ * 그린다), "X 속성"이라고 쓰면 효과가 있는 것처럼 읽혔다(Wave 58 — 문구만 고침).
+ */
+export const getItemStatText = (item: Item | null | undefined, slot?: 'offhand') => {
     if (!item) return '';
 
-    const elemSuffix = item.elem ? ` · ${item.elem} 속성` : '';
-
     if (isWeapon(item)) {
-        const attack = getEnhancedEquipmentStatValue(item, 'weapon');
+        const elemSuffix = item.elem ? ` · ${item.elem} 속성` : '';
+        const weaponSlot = slot === 'offhand' && !isTwoHandWeapon(item) ? 'offhand' : 'main';
+        const attack = getEnhancedEquipmentStatValue(item, weaponSlot === 'offhand' ? 'offhand' : 'weapon');
         if (isTwoHandWeapon(item)) {
-            return `양손 무기 · 공격력 +${attack}${elemSuffix} · 강한 일격`;
+            // 2026-10 Wave 58: 양손 무기의 이점은 이미 공격력 수치(×TWO_HAND_ATK_BONUS)에 들어 있다 — "강한 일격"은 별도 효과처럼
+            //   읽혔다. 대가(보조 손을 함께 쓴다)를 적는다.
+            return `양손 무기 · 공격력 +${attack}${elemSuffix} · 보조 손 함께 사용`;
         }
 
-        return `한손 무기 · 공격력 +${attack}${elemSuffix} · 치명타 +${Math.round(getWeaponCritBonus(item, 'main') * 100)}%`;
+        return `한손 무기 · 공격력 +${attack}${elemSuffix} · 치명타 +${Math.round(getWeaponCritBonus(item, weaponSlot) * 100)}%`;
     }
 
     if (isShield(item)) {
-        const parts = [`방어력 +${getEnhancedEquipmentStatValue(item, 'offhand')}${elemSuffix}`];
+        const parts = [`방어력 +${getEnhancedEquipmentStatValue(item, 'offhand')}`];
         if (typeof item.mp === 'number' && item.mp > 0) parts.push(`기력 +${item.mp}`);
         if (typeof item.crit === 'number' && item.crit > 0) parts.push(`치명타 +${Math.round(item.crit * 100)}%`);
         parts.push(...getEquipmentPassiveTexts(item));
@@ -575,7 +601,7 @@ export const getItemStatText = (item: Item | null | undefined) => {
     }
 
     if (item.type === 'armor') {
-        return [`방어력 +${getEnhancedEquipmentStatValue(item, 'armor')}${elemSuffix}`, ...getEquipmentPassiveTexts(item)].join(' · ');
+        return [`방어력 +${getEnhancedEquipmentStatValue(item, 'armor')}`, ...getEquipmentPassiveTexts(item)].join(' · ');
     }
     if (item.type === 'hp') return `생명 +${item.val || 0}`;
     if (item.type === 'mp') return `기력 +${item.val || 0}`;

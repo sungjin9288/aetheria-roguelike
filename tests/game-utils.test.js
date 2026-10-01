@@ -110,7 +110,8 @@ test('getAchievementCurrentValue resolves based on the achievement target', () =
     const player = {
         level: 5,
         meta: { prestigeRank: 2 },
-        stats: { syntheses: 3, visitedMaps: { a: 1, b: 1 }, kills: 42, relicCount: 2 },
+        // 2026-10 Wave 58: visitedMaps는 배열이다(마이그레이션이 배열로 맞춘다) — 시작 마을은 "새 지역"으로 세지 않는다.
+        stats: { syntheses: 3, visitedMaps: ['시작의 마을', 'a', 'b'], kills: 42, relicCount: 2 },
         relics: [{ id: 'r1' }, { id: 'r2' }],
     };
 

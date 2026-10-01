@@ -465,7 +465,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                     </div>
                                     {item && (
                                         <>
-                                            <div className="mt-2 text-xs font-fira leading-[1.45] text-slate-300/80">{getItemStatText(item)}</div>
+                                            <div className="mt-2 text-xs font-fira leading-[1.45] text-slate-300/80">{getItemStatText(item, slot.key === 'offhand' ? 'offhand' : undefined)}</div>
                                             {slot.canEnhance && slot.requirement && (
                                                 <div className="mt-2 rounded-[0.9rem] border border-white/8 bg-black/16 px-2.5 py-2 space-y-0.5 text-[11px] font-fira">
                                                     <div className="text-slate-300/86">

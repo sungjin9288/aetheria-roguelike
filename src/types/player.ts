@@ -48,6 +48,11 @@ interface PlayerStats {
     demonKingSlain?: number;
     dailyProtocol?: DailyProtocol | null;
     claimedAchievements?: string[];
+    /**
+     * 2026-10 Wave 58: 달성했지만 아직 수령하지 않은 업적 — 계승 · 사망 재시작 직전에 남긴다(`pickPermanentPlayerState`).
+     * 레벨 · 방문 지역처럼 런마다 줄어드는 값이 수령 전 업적을 다시 잠그지 않게 한다.
+     */
+    achievedAchievements?: string[];
     /** cycle 260: 수령 완료 퀘스트 영구 ledger. quest.id는 숫자(DB.QUESTS)와 문자열(bounty) 혼용. */
     claimedQuestIds?: Array<string | number>;
     explores?: number;

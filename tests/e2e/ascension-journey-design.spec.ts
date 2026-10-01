@@ -16,7 +16,8 @@ test.describe('계승과 다음 여정 화면', () => {
         await expect(screen).toContainText('심연의 탐험가');
         await expect(page.getByTestId('ascension-current-unlock')).toContainText('심연의 메아리');
         await expect(page.getByTestId('ascension-permanent-growth')).toContainText('+180');
-        await expect(page.getByTestId('ascension-permanent-growth')).toContainText('+380');
+        // 2026-10 Wave 58: 계승 보상 정수에도 계승 단계 배율(2단계 +10%)이 곱해진다 — 180 + 220.
+        await expect(page.getByTestId('ascension-permanent-growth')).toContainText('+400');
         await expect(page.getByTestId('ascension-enemy-scaling')).toContainText('+10%');
         await expect(page.getByTestId('ascension-enemy-scaling')).toContainText('+15%');
         await expect(page.getByTestId('ascension-enemy-scaling')).toContainText('+16%');
@@ -93,7 +94,7 @@ test.describe('계승과 다음 여정 화면', () => {
         expect(after.name).toBe('리베아');
         expect(after.level).toBe(1);
         expect(after.prestigeRank).toBe(3);
-        expect(after.essence).toBe(380);
+        expect(after.essence).toBe(400);
         expect(after.bonusAtk).toBe(15);
         expect(after.bonusHp).toBe(75);
         expect(after.bonusMp).toBe(45);

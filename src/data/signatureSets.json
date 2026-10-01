@@ -1,11 +1,12 @@
 {
   "$comment": "Signature 아이템 세트 정의. signatureRegistry.json의 setGroup 필드와 key가 매칭된다. 기존 items.js의 prefix-based 세트와 병행 동작(중복 적용 가능).",
   "version": 1,
+  "$membersComment": "2026-10 Wave 58: members는 signatureRegistry.json의 setGroup과 같은 집합이다 — 엔진(세트 효과)은 setGroup을, 도감 · 세트 완성 업적은 members를 읽어서 에테르 거인의 대검 · 영혼 절단자가 효과는 켜는데 도감에는 없었다. tests/signature-set-membership.test.js가 대조한다.",
   "sets": {
     "celestial": {
       "name": "천공의 성좌",
       "tone": "holy",
-      "members": ["성검 에테르니아", "천공 성전", "성스러운 창", "신전 도시의 지팡이"],
+      "members": ["성검 에테르니아", "천공 성전", "성스러운 창", "신전 도시의 지팡이", "에테르 거인의 대검"],
       "$comment": "갑옷 멤버가 없고 양손무기는 보조 슬롯을 비운다. 합법적인 장착의 최대 기여도는 2이므로 2세트에서 완성된다. 직업 제한과 실제 inventory action으로 도달성을 검증한다.",
       "bonuses": {
         "2": { "atkMult": 1.1, "defMult": 1.05, "desc": "2세트: 모든 공격 +10%, 방어 +5%" }
@@ -40,7 +41,7 @@
     "shadow-lord": {
       "name": "암흑 군주의 계약",
       "tone": "shadow",
-      "members": ["암흑 군주의 망토", "그림자 절단기", "마왕의 대낫"],
+      "members": ["암흑 군주의 망토", "그림자 절단기", "마왕의 대낫", "영혼 절단자"],
       "bonuses": {
         "2": { "atkMult": 1.28, "defMult": 0.95, "desc": "2세트: 공격 +28%, 방어 -5%(어둠 계약)" },
         "3": { "atkMult": 1.45, "defMult": 0.9, "desc": "3세트: 공격 +45%, 방어 -10%(완전한 타락)" }

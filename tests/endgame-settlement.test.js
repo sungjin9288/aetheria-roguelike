@@ -387,7 +387,10 @@ test('rapid ascension confirmation emits one request and its accepted reducer em
     actions.confirmAscension();
     assert.equal(dispatched.length, 1);
     assert.equal(dispatched[0].type, AT.ASCEND);
-    assert.deepEqual(dispatched[0].payload, { expectedPrestigeRank: 1, sourceReceiptKey: null });
+    // 2026-10 Wave 58: 계승 화면의 도전 조건과 첫 유물 선택지 씨앗이 payload에 함께 실린다.
+    const { seed, ...ascendPayload } = dispatched[0].payload;
+    assert.ok(Number.isSafeInteger(seed));
+    assert.deepEqual(ascendPayload, { expectedPrestigeRank: 1, sourceReceiptKey: null, challengeModifiers: [] });
     assert.equal(current.player.meta.prestigeRank, 2);
     assert.ok(current.logs.length > 0);
     assert.equal(current, accepted);

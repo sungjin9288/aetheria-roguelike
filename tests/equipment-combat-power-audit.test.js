@@ -192,7 +192,9 @@ test('hard dominance compares every candidate job while the ranger sidegrade pre
     assert.ok(candidate);
     assert.ok(dominator);
     assert.ok(dominator.jobs.length > candidate.jobs.length);
-    assert.ok(dominator.dimensions.atk.effective.median < candidate.dimensions.atk.effective.median);
+    // 지배 판정은 집단 중앙값이 아니라 후보 직업별 비교다 — 중앙값으로는 지배자가 더 강하지 않다.
+    //   (Wave 58 이후 두 방어구의 실효 공격력 기여는 같은 0이다 — 고정 패시브가 배율 밖으로 나갔다.)
+    assert.ok(dominator.dimensions.atk.effective.median <= candidate.dimensions.atk.effective.median);
     assert.equal(candidate.classification, 'combat-power-defect');
     assert.deepEqual(candidate.strictDominators, [
         { name: '강화가죽갑옷', type: 'armor' },
@@ -306,12 +308,16 @@ test('every live outlier has one stable classification and every other row stays
             assert.deepEqual(row.classificationReasons, [...row.classificationReasons].sort());
         }
     }
+    // 2026-10 Wave 58: 직업 패시브 "+N"이 배율 뒤 고정 보너스가 되면서, 방어구를 낄 때 오르는 직업 세트 배율이 패시브
+    //   공격력까지 곱하던 몫이 사라졌다(방어구의 실효 공격력 기여 2.5 → 0.5). 그 결과 분류 4건이 옮겼다 — 그림자 망토
+    //   (특화 → 범위 안), 암흑 로브(범위 안 → 특화), 정령의 로브(특화 → 의도), 축복받은 갑옷(범위 안 → 가격만 결함).
+    //   전투력 결함 0 · 재계획 불필요는 그대로다.
     assert.deepEqual(report.classificationCounts, {
         'combat-power-defect': 0,
-        'in-corridor': 154,
-        intentional: 16,
-        'price-only-defect': 9,
-        'specialized-sidegrade': 50,
+        'in-corridor': 153,
+        intentional: 17,
+        'price-only-defect': 10,
+        'specialized-sidegrade': 49,
     });
     assert.deepEqual(report.dominancePairs.map((pair) => [
         pair.candidate.name,

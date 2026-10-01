@@ -39,7 +39,7 @@ const NOOP_ACTIONS = new Proxy({}, { get: () => () => undefined });
  *      오늘의 임무/발견 여정/주간 임무/임무 게시판 열기, 장비 제작소/제작/합성/가방/
  *      재료 확인/합성 시작)를 쓰고 MISSION GRID 같은 영문 잔재가 없다.
  *   2. StatsPanel/Codex/각 코덱스 카드는 상세 정보를 총 처치/사망/보스 처치/제작
- *      횟수/합성 횟수/최대 연속 처치/완료한 발견 여정, 모험 도감/장비/몬스터/제작법/
+ *      횟수/합성 성공/최대 연속 처치/완료한 발견 여정, 모험 도감/장비/몬스터/제작법/
  *      소재/전설, 무기·방어구·방패/생명·공격력·방어력/공격력·방어력·생명·기력/
  *      비용: 골드/획득처:/전설 수집 같은 한국어로 노출하고 TOTAL KILLS 같은 레거시
  *      약어가 없다.
@@ -123,7 +123,7 @@ test('StatsPanel: 상세 통계는 한국어 라벨을 쓰고 TOTAL KILLS 같은
     const stats = calculateFullStats(player);
     const html = renderStatic(createElement(StatsPanel, { player, stats }));
 
-    for (const label of ['모험 기록', '총 처치', '사망', '보스 처치', '제작 횟수', '합성 횟수', '최대 연속 처치', '완료한 발견 여정']) {
+    for (const label of ['모험 기록', '총 처치', '사망', '보스 처치', '제작 횟수', '합성 성공', '최대 연속 처치', '완료한 발견 여정']) {
         assert.ok(html.includes(label), `"${label}" 노출`);
     }
     assert.ok(!/label:\s*['"](?:TOTAL KILLS|DEATHS|BOSS KILLS|CRAFTS|SYNTHESES|MAX STREAK|CHAINS)['"]/.test(html));

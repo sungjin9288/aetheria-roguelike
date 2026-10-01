@@ -1,7 +1,7 @@
 import type { EquipSlots, Item, Player } from '../types/index.js';
 import { CONSTANTS } from '../data/constants.js';
 import signatureSets from '../data/signatureSets.json' with { type: 'json' };
-import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
+import { getSignatureBaseName, getSignatureMetadata } from '../data/signatureItems.js';
 import { isTwoHandWeapon, getNextEquipmentState } from './equipmentUtils.js';
 import { canEquip } from './equipmentValidation.js';
 import { findItemByName } from './gameUtils.js';
@@ -42,10 +42,8 @@ interface SignatureSetDef {
 
 const SETS: Record<string, SignatureSetDef> = Object.fromEntries(Object.entries(signatureSets.sets || {}));
 
-const getRegistryEntry = (item: Item | null | undefined) => {
-    if (!item?.name) return null;
-    return SIGNATURE_ITEM_REGISTRY[item.name] || null;
-};
+// 2026-10 Wave 58: 접두어가 붙은 전설 각인도 그 바탕의 세트에 속한다(`getSignatureMetadata`가 바탕 이름으로 읽는다).
+const getRegistryEntry = (item: Item | null | undefined) => getSignatureMetadata(item);
 
 /**
  * item이 2H 무기인지 판정. equip에 저장된 인스턴스(makeItem 산출물)는 보통 DB
@@ -66,6 +64,22 @@ const getSlotWeight = (slot: string, item: Item | null | undefined) => (
 );
 
 /**
+ * 세트별 장착 수(2H 가중치 포함) — 세트 효과 · 장비 화면 진행도 · 전설 도감 세트 줄이 함께 읽는다(2026-10 Wave 58).
+ * 도감이 이름 일치로 따로 세던 동안 2H 각인(가중치 2) · 접두어 사본 · 레지스트리에만 있던 구성원이 엔진과 다르게 보였다.
+ */
+export const getSignatureSetEquippedCounts = (equip: EquipSlots | null | undefined): Record<string, number> => {
+    const counts: Record<string, number> = {};
+    if (!equip) return counts;
+    for (const slot of ['weapon', 'armor', 'offhand'] as const) {
+        const item = equip[slot];
+        const meta = getRegistryEntry(item);
+        if (!meta?.setGroup) continue;
+        counts[meta.setGroup] = (counts[meta.setGroup] || 0) + getSlotWeight(slot, item);
+    }
+    return counts;
+};
+
+/**
  * @param {object} equip player.equip { weapon, armor, offhand }
  * @returns {{
  *   atkMult: number,
@@ -80,16 +94,8 @@ export const computeSignatureSetBonus = (equip: EquipSlots | null | undefined) =
 
     // slot별 setGroup + 가중치(2H 무기는 2) 수집. 2H 시그니처 무기 단독 장착 시에도
     // groups 물리 아이템 수는 1이지만 weight 합은 2가 되어 세트 발동 가능해야 한다.
-    const groups: string[] = [];
-    const counts: Record<string, number> = {};
-    for (const slot of ['weapon', 'armor', 'offhand'] as const) {
-        const item = equip[slot];
-        const meta = getRegistryEntry(item);
-        if (!meta?.setGroup) continue;
-        groups.push(meta.setGroup);
-        counts[meta.setGroup] = (counts[meta.setGroup] || 0) + getSlotWeight(slot, item);
-    }
-    if (groups.length === 0) return neutral;
+    const counts = getSignatureSetEquippedCounts(equip);
+    if (Object.keys(counts).length === 0) return neutral;
 
     // 가장 많이 착용된 세트 선택 (동률 시 첫 발견)
     let bestKey = null;
@@ -188,7 +194,8 @@ export const getSignatureSetProgress = (equip: EquipSlots | null | undefined) =>
         const meta = getRegistryEntry(item);
         if (!meta?.setGroup) continue;
         const list = equippedByGroup.get(meta.setGroup) || [];
-        list.push(item?.name || '');
+        // 2026-10 Wave 58: 접두어 사본도 그 구성원으로 센다 — 이름 그대로 넣던 동안 "빠진 구성원"에 남았다.
+        list.push(getSignatureBaseName(item) || item?.name || '');
         equippedByGroup.set(meta.setGroup, list);
 
         const weight = getSlotWeight(slot, item);

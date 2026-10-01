@@ -34,12 +34,13 @@ const SOURCE_PATHS = Object.freeze({
 });
 const EXPECTED_DOMINANCE_PAIRS = Object.freeze([]);
 const EXPECTED_REPLAN_COHORTS = Object.freeze([]);
+// 2026-10 Wave 58: 직업 패시브 "+N"이 배율 뒤 고정 보너스가 되어 방어구 4종의 분류가 옮겼다(tests/equipment-combat-power-audit.test.js).
 const EXPECTED_CLASSIFICATION_COUNTS = Object.freeze({
     'combat-power-defect': 0,
-    'in-corridor': 154,
-    intentional: 16,
-    'price-only-defect': 9,
-    'specialized-sidegrade': 50,
+    'in-corridor': 153,
+    intentional: 17,
+    'price-only-defect': 10,
+    'specialized-sidegrade': 49,
 });
 
 const stableCanonicalize = (value) => {

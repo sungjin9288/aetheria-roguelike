@@ -13,7 +13,10 @@ import { getProgressionLootMultiplier } from '../data/progressionProfiles.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
 
 export type LootLog = { type: string; text: string };
-export type LootCandidate = { item: Item; logs: LootLog[] };
+/**
+ * `guaranteed`: 보장 보상(계승 3단계 "보스 희귀 장비 보장") — 가방 상한을 보지 않고 들어간다(보상 소실 금지, Wave 58).
+ */
+export type LootCandidate = { item: Item; logs: LootLog[]; guaranteed?: boolean };
 export type LootResult = {
     candidates: LootCandidate[];
     items: Item[];
@@ -123,8 +126,8 @@ export const processLoot = (
     const random = typeof rng === 'function' ? rng : Math.random;
     const currentTime = typeof now === 'function' ? now : Date.now;
     const candidates: LootCandidate[] = [];
-    const appendCandidate = (item: Item, candidateLogs: LootLog[]) => {
-        candidates.push({ item, logs: candidateLogs });
+    const appendCandidate = (item: Item, candidateLogs: LootLog[], guaranteed = false) => {
+        candidates.push(guaranteed ? { item, logs: candidateLogs, guaranteed } : { item, logs: candidateLogs });
     };
     const lootKey = resolveEnemyBaseName(enemy) || enemy.name;
     const relics = player?.relics || [];
@@ -170,7 +173,9 @@ export const processLoot = (
             const newItem = applyItemPrefix(baseItem, random);
             const candidateLogs: LootLog[] = [{ type: 'event', text: MSG.PRESTIGE_RARE_DROP(newItem.name ?? '') }];
             if (newItem.prefixed) candidateLogs.push({ type: 'event', text: MSG.LOOT_PREFIX(newItem.prefixName ?? '') });
-            appendCandidate(newItem, candidateLogs);
+            // 2026-10 Wave 58: "보장"이므로 가방이 가득 차도 들어간다 — 일반 전리품과 같이 상한에서 막히던 동안 가득 찬
+            //   가방으로 보스를 잡으면 보장 장비가 사라졌다.
+            appendCandidate(newItem, candidateLogs, true);
         }
     }
 

@@ -47,6 +47,7 @@ interface ItemLike {
 // Player의 부분 인터페이스로 충분.
 import type { Player } from '../types/index.js';
 import { isTwoHandWeapon } from './equipmentUtils.js';
+import { MSG } from '../data/messages.js';
 
 interface ItemsDb {
     weapons?: ItemLike[];
@@ -64,14 +65,27 @@ const PARTIAL_2_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.15, defMult: 1
 const PARTIAL_1_BONUS: AffinityBonus = Object.freeze({ atkMult: 1.05 });
 export const OUTFIT_SLOT_COUNT = 3;
 
+const toPercent = (ratio: number) => Math.round(ratio * 100);
+
+/** 단계 보너스 문구 — 실제로 적용되는 보너스 표(공격 · 방어 배율, 생명 · 기력 비율)에서 만든다(2026-10 Wave 58). */
+export const formatOutfitBonus = (bonus: AffinityBonus): string => {
+    const labels = MSG.OUTFIT_BONUS_LABELS;
+    return [
+        bonus.atkMult && bonus.atkMult !== 1 ? `${labels.atk} +${toPercent(bonus.atkMult - 1)}%` : null,
+        bonus.defMult && bonus.defMult !== 1 ? `${labels.def} +${toPercent(bonus.defMult - 1)}%` : null,
+        bonus.hpBonus ? `${labels.hp} +${toPercent(bonus.hpBonus)}%` : null,
+        bonus.mpBonus ? `${labels.mp} +${toPercent(bonus.mpBonus)}%` : null,
+    ].filter(Boolean).join(', ');
+};
+
 export const getJobOutfitNextHint = (
     affinity: Pick<OutfitAffinity, 'matchCount'> & { twoHandCounted?: boolean },
     job: string | undefined,
 ): string => {
     const { matchCount, twoHandCounted } = affinity;
     if (matchCount === 0) return `같은 직업(${job}) 호환 장비 1개 장착 시 세트 효과 발동`;
-    if (matchCount === 1) return '1개 더 맞추면 2단계 효과 (공격력 +15%, 방어력 +10%)';
-    if (matchCount === 2) return '1개 더 맞추면 풀세트 효과 (공격력 +30%, 방어력 +20%)';
+    if (matchCount === 1) return MSG.OUTFIT_NEXT_STEP_HINT(MSG.OUTFIT_STAGE_PARTIAL2, formatOutfitBonus(PARTIAL_2_BONUS));
+    if (matchCount === 2) return MSG.OUTFIT_NEXT_STEP_HINT(MSG.OUTFIT_STAGE_FULL, formatOutfitBonus(FULL_OUTFIT_BONUS));
     return twoHandCounted
         ? '풀세트 발동 — 양손 무기 2피스와 방어구 매치 완료'
         : '풀세트 발동 — 모든 슬롯 매치 완료';

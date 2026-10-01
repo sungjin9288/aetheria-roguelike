@@ -2981,7 +2981,10 @@ import { readFile } from 'node:fs/promises';
       createAscensionActions({ player: state.player, gameState: state.gameState,
           dispatch: (action) => requests.push(action), addLog: () => {} }).confirmAscension();
       assert.equal(requests.length, 1);
-      assert.deepEqual(requests[0].payload, { expectedPrestigeRank: 0, sourceReceiptKey: null });
+      // 2026-10 Wave 58: 계승 화면의 도전 조건과 첫 유물 선택지 씨앗이 payload에 함께 실린다.
+      const { seed, ...ascendPayload } = requests[0].payload;
+      assert.ok(Number.isSafeInteger(seed));
+      assert.deepEqual(ascendPayload, { expectedPrestigeRank: 0, sourceReceiptKey: null, challengeModifiers: [] });
       const next = gameReducer(state, requests[0]);
       assert.equal(next.player.meta.prestigeRank, 1);
       assert.equal(next.player.meta.essence, 320);

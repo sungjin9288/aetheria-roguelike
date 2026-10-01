@@ -79,7 +79,7 @@ test('getWeaponStyleLabel returns contextual label by item type', () => {
 test('getItemStatText describes equipment with player-facing Korean terms', () => {
     assert.equal(
         getItemStatText({ type: 'weapon', hands: 2, val: 40, elem: '화염' }),
-        `양손 무기 · 공격력 +${Math.floor(40 * BALANCE.TWO_HAND_ATK_BONUS)} · 화염 속성 · 강한 일격`
+        `양손 무기 · 공격력 +${Math.floor(40 * BALANCE.TWO_HAND_ATK_BONUS)} · 화염 속성 · 보조 손 함께 사용`
     );
     assert.equal(
         getItemStatText({ type: 'shield', subtype: 'focus', val: 4, mp: 20, crit: 0.04 }),

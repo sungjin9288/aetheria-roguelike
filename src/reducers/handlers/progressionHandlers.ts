@@ -15,6 +15,11 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getBakedMetaVitals, snapshotMetaVitals } from '../../systems/metaBonusRamp';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
+import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, sanitizeChallengeModifiers } from '../../utils/runStart';
+import { calculateFullStats } from '../../utils/statsCalculator';
+import { createSeededRandom } from '../../utils/seededRandom';
+import { RELICS, pickWeightedRelics } from '../../data/relics';
+import { BALANCE } from '../../data/constants';
 
 /**
  * makeProgressionActionMap(INITIAL_STATE) → action map
@@ -180,7 +185,10 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         //   Lv1 연동 비율만큼 굽고 스냅숏을 남긴다. 굽지 않던 동안 넘어온 영구 생명 · 기력이 첫 전직 전까지 0이었다.
         const metaVitalsSnapshot = snapshotMetaVitals(outcome.meta);
         const bakedMeta = getBakedMetaVitals(metaVitalsSnapshot, 1);
-        const freshMaxHp = (INITIAL_STATE.player.maxHp || 0) + bakedMeta.hp;
+        // 2026-10 Wave 58: 새 여정의 시작 조건은 새 게임(start)과 같은 계산이다(utils/runStart.ts) — 계승 화면에서 고른
+        //   도전 조건(슬롯은 새 단계 기준) · 거울 시작 골드 · 첫 유물 선택지. 이전에는 사망 재시작에만 적용됐다.
+        const challengeModifiers = sanitizeChallengeModifiers(payload?.challengeModifiers, outcome.meta.prestigeRank);
+        const freshMaxHp = applyChallengeMaxHp((INITIAL_STATE.player.maxHp || 0) + bakedMeta.hp, challengeModifiers);
         const freshMaxMp = (INITIAL_STATE.player.maxMp || 0) + bakedMeta.mp;
         const freshPlayer: Player = {
             ...INITIAL_STATE.player,
@@ -192,6 +200,8 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
             metaVitalsSnapshot,
             name: state.player.name,
             gender: state.player.gender,
+            gold: getRunStartGold(outcome.meta, challengeModifiers),
+            challengeModifiers,
             meta: outcome.meta,
             titles: [...new Set([...prevTitles, outcome.title])],
             activeTitle: outcome.title,
@@ -202,9 +212,20 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         };
         const ascensionTitles = checkTitles({ ...state.player, meta: outcome.meta, titles: freshPlayer.titles, activeTitle: outcome.title });
         freshPlayer.titles = [...new Set([...(freshPlayer.titles || []), ...ascensionTitles])];
+        // 첫 유물 선택지(새 게임의 시작 부트와 같은 규칙 — 등급 상한 · 직업 기본 성향 공명). 난수는 payload 씨앗이다.
+        const seed = Number.isSafeInteger(payload?.seed) ? Number(payload?.seed) : 0;
+        const startingRelics = pickWeightedRelics(RELICS, getStartBootChoiceCount(outcome.meta), {
+            rarityCap: BALANCE.START_BOOT_RARITY_CAP,
+            buildId: calculateFullStats(freshPlayer)?.buildProfile?.primary?.id,
+            rng: createSeededRandom(seed),
+        });
+        const challengeLabels = challengeModifiers.map((id) => (
+            BALANCE.CHALLENGE_MODIFIERS.find((modifier) => modifier.id === id)?.label || id));
         const logs = appendRewardLogs(INITIAL_STATE.logs, [
             ...ascensionTitles.map((id) => ({ type: 'system', text: MSG.TITLE_UNLOCKED(getTitleLabel(id)) })),
             { type: 'system', text: MSG.ASCEND_DONE(outcome.nextRank, outcome.title) },
+            ...(challengeLabels.length > 0 ? [{ type: 'warn', text: MSG.CHALLENGE_START(challengeLabels) }] : []),
+            ...(startingRelics.length > 0 ? [{ type: 'event', text: MSG.START_BOOT_RELIC }] : []),
         ]);
         return {
             ...INITIAL_STATE,
@@ -219,6 +240,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
             uid: state.uid,
             bootStage: 'ready',
             player: freshPlayer,
+            pendingRelics: startingRelics.length > 0 ? startingRelics : null,
             syncStatus: 'syncing',
         };
     },

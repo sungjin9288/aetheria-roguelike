@@ -99,27 +99,41 @@ export const SIGNATURE_CANDIDATES = Object.freeze([
     { itemName: '세계수의 로브', slot: 'armor', reason: '자연 세트 핵심' },
 ]);
 
-/** 아이템이 dedicated signature인지 확인 (Tier S/A/B 고유 아트 보유). */
-export const isSignatureItem = (item: Item | null | undefined): boolean => (
-    Boolean(item?.name && SIGNATURE_ITEM_REGISTRY[item.name])
-);
+/**
+ * 아이템의 전설 각인 이름 — 등록된 이름 그대로이거나, 접두어가 붙은 사본이면 그 바탕 이름(2026-10 Wave 58).
+ *
+ * 전설 각인도 드롭 때 접두어를 받는다("날카로운 라그나로크"). 이름 그대로만 조회하던 동안 그 사본은 세트 효과 ·
+ * 판매 보호 · 서명 보정 · 전설 도감에서 빠졌다(라그나로크 + 드래곤로드 갑주 3세트가 접두어 하나로 꺼졌다).
+ * 바탕 이름은 `baseItemName`(장비 정체성 태그) 또는 `prefixName`을 벗긴 이름이고, 이름이 정확히
+ * "접두어 바탕"일 때만 인정한다.
+ */
+export const getSignatureBaseName = (item: Item | null | undefined): string | null => {
+    const name = item?.name;
+    if (typeof name !== 'string' || !name) return null;
+    if (SIGNATURE_ITEM_REGISTRY[name]) return name;
+    const prefixName = item?.prefixed === true && typeof item.prefixName === 'string' ? item.prefixName : null;
+    if (!prefixName || !name.startsWith(`${prefixName} `)) return null;
+    const baseName = name.slice(prefixName.length + 1);
+    if (typeof item?.baseItemName === 'string' && item.baseItemName !== baseName) return null;
+    return SIGNATURE_ITEM_REGISTRY[baseName] ? baseName : null;
+};
+
+/** 아이템이 dedicated signature인지 확인 (Tier S/A/B 고유 아트 보유) — 접두어가 붙은 사본 포함. */
+export const isSignatureItem = (item: Item | null | undefined): boolean => getSignatureBaseName(item) !== null;
 
 /** 아이템의 dedicated signature sprite key 반환 (없으면 null). */
 export const getSignatureSpriteKey = (item: Item | null | undefined): string | null => {
-    if (!item || !item.name) return null;
-    const meta = SIGNATURE_ITEM_REGISTRY[item.name];
-    return meta ? meta.spriteKey : null;
+    const baseName = getSignatureBaseName(item);
+    return baseName ? SIGNATURE_ITEM_REGISTRY[baseName].spriteKey : null;
 };
 
 /** 진짜 고유 아트가 있는지 (tint 기반 named는 제외) — UI badge/effects에 사용. */
-export const hasDedicatedSignatureArt = (item: Item | null | undefined): boolean => (
-    Boolean(item?.name && SIGNATURE_ITEM_REGISTRY[item.name])
-);
+export const hasDedicatedSignatureArt = (item: Item | null | undefined): boolean => isSignatureItem(item);
 
 /** signature 메타데이터 반환 (tier, category, tone, artNote). 없으면 null. */
 export const getSignatureMetadata = (item: Item | null | undefined): SignatureItemMeta | null => {
-    if (!item?.name) return null;
-    return SIGNATURE_ITEM_REGISTRY[item.name] || null;
+    const baseName = getSignatureBaseName(item);
+    return baseName ? SIGNATURE_ITEM_REGISTRY[baseName] : null;
 };
 
 /** 현재 dedicated signature를 가진 아이템 수 (telemetry용). */

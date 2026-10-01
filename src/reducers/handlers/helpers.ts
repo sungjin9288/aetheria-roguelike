@@ -3,7 +3,7 @@ import { RELICS } from '../../data/relics';
 import { SEASON_TIER_XP } from '../../data/seasonPass';
 import { MSG } from '../../data/messages';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
-import { getMirrorEffects } from '../../systems/mirrorUpgrades';
+import { scaleEssenceReward } from '../../systems/essenceRewardMult';
 import { applyEssenceGain } from '../../systems/essenceLedger';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { getCurrentDailyProtocol } from '../../utils/protocolCycle';
@@ -174,9 +174,7 @@ export const resolveDailyProtocolProgress = (
         // (CombatEngine.outcome.ts)와 동일하게 프레스티지 rank essenceMult ×
         // 거울 essence_flow 배율을 곱연산 적용 — 일일 프로토콜만 원액 지급하던 불일치 해소.
         const baseMeta: NonNullable<Player['meta']> = nextPlayer.meta || {};
-        const essenceMult = getPrestigeUnlocks(baseMeta.prestigeRank).essenceMult
-            * getMirrorEffects(baseMeta).essenceFlowMult;
-        grantedEssence = Math.max(1, Math.floor(essenceGain * essenceMult));
+        grantedEssence = scaleEssenceReward(essenceGain, baseMeta);
         // 2026-09 G2: rank 산출은 systems/essenceLedger.ts 단일 원천 — 누적 획득량 기준.
         nextPlayer.meta = applyEssenceGain(baseMeta, grantedEssence).meta;
     }

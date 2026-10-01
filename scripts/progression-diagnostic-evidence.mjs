@@ -35,7 +35,10 @@ const HASH_ALGORITHM = 'sha256';
 // 생명 · 기력이 움직인다. 곡선은 **움직이지 않는다**(모델 플레이어는 끝까지 `모험가` — 바뀌는 키는 jobSnapshots 하나).
 // 그 편집 하나만 되돌리면 이전 값 '696607d2…'이 그대로 재현된다.
 // 이전 값: '696607d221a09541728eb231ed54ba3094967935fd6e7db2ca5678387af92958'.
-const PROGRESSION_V1_BASELINE_HASH = '404dafaaf607b74667ec2a4ad310d6acd15f39f3950e155d1fcf2b861481f8b2';
+// Wave 58 (2026-10-01): 직업 패시브 "ATK +N"이 배율 뒤 고정 보너스가 됐다(소유자 결정 "설명대로"). 바뀌는 키는
+// jobSnapshots[*].combat.damage 9칸뿐이고 곡선은 **움직이지 않는다**(모델 플레이어는 `모험가` — 공격 패시브가 없다).
+// 이전 값: '404dafaaf607b74667ec2a4ad310d6acd15f39f3950e155d1fcf2b861481f8b2'.
+const PROGRESSION_V1_BASELINE_HASH = '04cbab226dfb4cd84c8f421364671678cdac34f28b4812b6b774fedd04e92730';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';

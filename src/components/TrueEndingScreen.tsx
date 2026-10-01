@@ -17,12 +17,15 @@ import {
 import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { Player } from '../types/index.js';
 import PendingQuestRewardList from './PendingQuestRewardList';
+import ChallengeModifierPicker from './ChallengeModifierPicker';
+import { getAscensionOutcome } from '../utils/ascensionPreview';
+import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
 
 interface TrueEndingScreenProps {
     player: Player;
     actions?: {
         completeQuest?: (questId: string | number) => void;
-        confirmAscension?: () => void;
+        confirmAscension?: (challengeModifiers?: string[]) => void;
         cancelAscension?: () => void;
     };
 }
@@ -79,13 +82,16 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
 
     const claimableQuests = getClaimableQuestEntries(player);
     const hasPendingQuestRewards = claimableQuests.length > 0;
+    // 2026-10 Wave 58: 새 여정의 도전 조건 — 계승 화면과 같다(슬롯은 새 단계 기준).
+    const challengeSlots = getChallengeSlotCount(getAscensionOutcome(player.meta).nextRank);
+    const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
 
     const confirmNewGamePlus = useCallback(() => {
         if (confirmationAcceptedRef.current) return;
         confirmationAcceptedRef.current = true;
         setConfirmationAccepted(true);
-        actions?.confirmAscension?.();
-    }, [actions]);
+        actions?.confirmAscension?.(selectedChallenges);
+    }, [actions, selectedChallenges]);
 
     const stats = [
         { label: '총 처치', value: (player?.stats?.kills || 0).toLocaleString() },
@@ -209,6 +215,14 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                             transition={{ duration: prefersReducedMotion ? 0 : 0.6 }}
                             className="flex min-w-0 flex-col items-center gap-3"
                         >
+                            <div className="w-full max-w-sm">
+                                <ChallengeModifierPicker
+                                    testIdPrefix="true-ending"
+                                    selected={selectedChallenges}
+                                    slots={challengeSlots}
+                                    onToggle={(id) => setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots))}
+                                />
+                            </div>
                             <button
                                 type="button"
                                 data-testid="true-ending-confirm"

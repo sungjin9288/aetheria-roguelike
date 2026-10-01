@@ -25,6 +25,10 @@ export type UseCombatItemPayload = {
 export type AscendPayload = {
     expectedPrestigeRank: number;
     sourceReceiptKey: string | null;
+    /** 2026-10 Wave 58: 계승 화면에서 고른 새 여정의 도전 조건(리듀서가 다시 거른다). 없으면 없음. */
+    challengeModifiers?: string[];
+    /** 2026-10 Wave 58: 새 여정의 첫 유물 선택지를 뽑는 난수 씨앗(리듀서는 순수해야 한다). 없으면 0. */
+    seed?: number;
 };
 
 export interface ResolveBoundedEncounterChoicePayload {

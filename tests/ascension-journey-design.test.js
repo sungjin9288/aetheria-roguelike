@@ -4,6 +4,7 @@ import { readFile } from 'node:fs/promises';
 
 import { BALANCE } from '../src/data/constants.ts';
 import { getAscensionOutcome, PRESTIGE_MILESTONES } from '../src/utils/ascensionPreview.ts';
+import { scaleEssenceReward } from '../src/systems/essenceRewardMult.js';
 
 test('ascension outcome keeps existing meta and calculates the exact next permanent growth', () => {
     const mirror = { start_gold: 2, revive: 1 };
@@ -21,7 +22,8 @@ test('ascension outcome keeps existing meta and calculates the exact next perman
     assert.equal(outcome.currentRank, 2);
     assert.equal(outcome.nextRank, 3);
     assert.equal(outcome.title, '심연의 탐험가');
-    assert.equal(outcome.meta.essence, 180 + BALANCE.PRESTIGE_ESSENCE_REWARD);
+    // 2026-10 Wave 58: 계승 보상 정수에도 정수 배율(지금 단계 × 거울)이 곱해진다.
+    assert.equal(outcome.meta.essence, 180 + scaleEssenceReward(BALANCE.PRESTIGE_ESSENCE_REWARD, { prestigeRank: 2, mirror }));
     assert.equal(outcome.meta.bonusAtk, 10 + BALANCE.PRESTIGE_ATK_BONUS);
     assert.equal(outcome.meta.bonusHp, 50 + BALANCE.PRESTIGE_HP_BONUS);
     assert.equal(outcome.meta.bonusMp, 30 + BALANCE.PRESTIGE_MP_BONUS);

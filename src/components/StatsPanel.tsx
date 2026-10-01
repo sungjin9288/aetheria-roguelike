@@ -98,7 +98,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
         // achievement 'synths'(target='synths' → stats.syntheses) 3종이 cycle 30+부터
         // 존재하던 갭을 가시화로 닫음. orange/amber 톤으로 제작 계열 묶음.
         { label: '제작 횟수', value: player?.stats?.crafts || 0, icon: Hammer, color: 'text-orange-300' },
-        { label: '합성 횟수', value: player?.stats?.syntheses || 0, icon: FlaskConical, color: 'text-amber-300' },
+        { label: '합성 성공', value: player?.stats?.syntheses || 0, icon: FlaskConical, color: 'text-amber-300' },
         // cycle 96: MAX STREAK — cycle 95에서 추가한 stats.maxKillStreak를 stats panel에도
         // 노출. killStreak 시스템 톤(red)과 매치. berserker 칭호 진행도 시각화.
         { label: '최대 연속 처치', value: player?.stats?.maxKillStreak || 0, icon: Flame, color: 'text-red-400' },

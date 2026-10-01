@@ -4,6 +4,7 @@ import { MSG } from '../../data/messages';
 import { DB } from '../../data/db';
 import { toArray, grantGold, findItemByName } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
+import { incrementStat } from '../../utils/playerStateUtils';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
@@ -254,6 +255,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                     updatedPlayer = { ...updatedPlayer, mp: Math.max(0, Math.min(fullStats.maxMp, updatedPlayer.mp! + selectedOutcome.mp)) };
                 }
                 if (selectedOutcome.item) updatedPlayer = addItemByName(updatedPlayer, selectedOutcome.item);
+                if (selectedOutcome.rest) updatedPlayer = incrementStat(updatedPlayer, 'rests');
                 // 캠프파이어 "단련" 등 — 다음 전투용 tempBuff 부여 (combatItem 물약과 동일 패턴).
                 //   turn-based라 전투 전까지 유지되며 다음 전투에서 소모된다.
                 //   2026-09 Wave 3 I1: 이벤트 outcome이 보내는 { atkMult/defMult/turns } 배율
@@ -372,8 +374,12 @@ const queueOutcomeRelics = (
     },
 ) => {
     const ownedRelics = player.relics || [];
-    if (ownedRelics.length >= getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics) return;
-    const count = Math.max(1, Math.min(BALANCE.EVENT_RELIC_MAX_COUNT, Number(relic?.count) || 1));
+    const unlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
+    if (ownedRelics.length >= unlocks.maxRelics) return;
+    // 2026-10 Wave 58: 계승 2단계 "유물 선택지 4개"는 이벤트가 여는 유물 선택에도 적용된다 — 탐험 발견 · 보스 · 심연
+    //   마일스톤만 4개이고 이벤트는 1 ~ 2개 그대로였다. 그 아래 단계에서는 이벤트가 정한 수를 쓴다.
+    const eventCount = Math.max(1, Math.min(BALANCE.EVENT_RELIC_MAX_COUNT, Number(relic?.count) || 1));
+    const count = unlocks.relicChoices > BALANCE.RELIC_CHOICE_BASE ? unlocks.relicChoices : eventCount;
     const available = RELICS.filter((r) => !ownedRelics.some((pr) => pr.id === r.id));
     if (available.length === 0) return;
     // Wave 4 O2: 이벤트 outcome 유물 3택도 체인 보상과 같은 빌드 공명 규칙을 쓴다.

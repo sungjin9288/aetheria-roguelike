@@ -2,6 +2,7 @@ import { BALANCE } from '../data/constants';
 import { PRESTIGE_TITLES } from '../data/titles';
 import { carryEssenceLadderOnAscension } from '../systems/essenceLedger';
 import { getPrestigeEnemyLevelRate } from '../systems/metaBonusRamp';
+import { scaleEssenceReward } from '../systems/essenceRewardMult';
 import type { Player } from '../types/player';
 
 export interface PrestigeMilestone {
@@ -57,6 +58,9 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
     // 2026-09 Wave 32: 사다리 이월을 먼저 적용하고 그 위에 이번 계승의 보상을 얹는다.
     const carried = carryEssenceLadderOnAscension(currentMeta);
     const carriedMeta = carried.meta;
+    // 2026-10 Wave 58: 거울 에센스 공명 "전투와 계승으로 얻는 계승 정수" · 계승 1단계 "에센스 획득 +10%" — 계승 보상에도
+    //   전투 · 오늘의 임무와 같은 배율(지금 단계 × 거울)을 곱한다. 이전에는 고정 +200이었다.
+    const essenceReward = scaleEssenceReward(BALANCE.PRESTIGE_ESSENCE_REWARD, currentMeta);
 
     return {
         currentRank,
@@ -66,10 +70,10 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
             ...currentMeta,
             ...carriedMeta,
             prestigeRank: nextRank,
-            essence: carriedMeta.essence + BALANCE.PRESTIGE_ESSENCE_REWARD,
+            essence: carriedMeta.essence + essenceReward,
             // 2026-09 G2: 승천 보상도 누적 원장에 함께 기록 (rank는 사다리 기준으로 오른다).
-            essenceLifetime: carriedMeta.essenceLifetime + BALANCE.PRESTIGE_ESSENCE_REWARD,
-            essenceLadder: carriedMeta.essenceLadder + BALANCE.PRESTIGE_ESSENCE_REWARD,
+            essenceLifetime: carriedMeta.essenceLifetime + essenceReward,
+            essenceLadder: carriedMeta.essenceLadder + essenceReward,
             bonusAtk: carriedMeta.bonusAtk + BALANCE.PRESTIGE_ATK_BONUS,
             bonusHp: carriedMeta.bonusHp + BALANCE.PRESTIGE_HP_BONUS,
             bonusMp: carriedMeta.bonusMp + BALANCE.PRESTIGE_MP_BONUS,

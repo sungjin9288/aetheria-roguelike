@@ -2,6 +2,7 @@ import type { EventChainProgress, EventChainProgressValue, Player } from '../typ
 import { EVENT_CHAINS } from '../data/eventChains';
 import { normalizeClassJourneyLedger } from './classJourney';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward';
+import { collectAchievedAchievementIds } from './achievementProgress';
 
 const clone = <T>(value: T): T => {
     if (Array.isArray(value)) return value.map((entry) => clone(entry)) as T;
@@ -119,6 +120,8 @@ export const pickPermanentPlayerState = (
             claimedAchievements: clone(
                 Array.isArray(stats.claimedAchievements) ? stats.claimedAchievements : [],
             ),
+            // 2026-10 Wave 58: 달성했지만 수령하지 않은 업적을 남긴다 — 이 선별이 계승 · 사망 재시작 · 다시 시작의 공통 지점이다.
+            achievedAchievements: collectAchievedAchievementIds(player),
             claimedQuestIds: clone(Array.isArray(stats.claimedQuestIds) ? stats.claimedQuestIds : []),
             codexBonusAtk: numberOrZero(stats.codexBonusAtk),
             codexBonusDef: numberOrZero(stats.codexBonusDef),

@@ -331,12 +331,14 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: 'ach_demon_king_5', title: '반복된 전설',    desc: '마왕 5회 처치',             target: 'demonKingSlain', goal: 5, reward: { gold: 100000, item: '영웅의 물약' } },
 
     // ── 전설 수집 업적 (signature 시스템) ────────────────────────────────────
-    { id: 'ach_sig_first',    title: '첫 번째 전설',      desc: 'dedicated signature 아이템 첫 발견',   target: 'signaturesDiscovered', goal: 1,  reward: { gold: 3000, item: '영웅의 물약' } },
-    { id: 'ach_sig_5',        title: '전설 수집가',       desc: 'dedicated signature 5종 발견',         target: 'signaturesDiscovered', goal: 5,  reward: { gold: 15000, item: '엘릭서' } },
-    { id: 'ach_sig_10',       title: '전설의 서사',       desc: 'dedicated signature 10종 발견',        target: 'signaturesDiscovered', goal: 10, reward: { gold: 40000, item: '영웅의 물약' } },
-    { id: 'ach_sig_20',       title: '모든 전설의 증인',  desc: 'dedicated signature 20종 전부 발견',   target: 'signaturesDiscovered', goal: 20, reward: { gold: 150000, item: '영웅의 물약', premiumCurrency: 30 } },
-    { id: 'ach_sig_set_1',    title: '세트의 완성',       desc: 'signature 세트 1개 완성(멤버 전원 수집)', target: 'signatureSetsCompleted', goal: 1, reward: { gold: 25000, item: '영웅의 물약' } },
-    { id: 'ach_sig_set_all',  title: '전설의 집대성',     desc: '모든 signature 세트 완성',              target: 'signatureSetsCompleted', goal: 5, reward: { gold: 250000, item: '어둠의 정수', premiumCurrency: 100 } },
+    // 2026-10 Wave 58: "전부 발견"의 목표는 등록된 전설 각인 수(25)다 — 20이던 동안 다섯 종을 남기고 "전부"가
+    //   풀렸다. id(`ach_sig_20`)는 세이브의 수령 기록 키라 그대로 둔다. tests/achievement-description-contract.test.js
+    { id: 'ach_sig_first',    title: '첫 번째 전설',      desc: '전설 각인 장비 첫 발견',            target: 'signaturesDiscovered', goal: 1,  reward: { gold: 3000, item: '영웅의 물약' } },
+    { id: 'ach_sig_5',        title: '전설 수집가',       desc: '전설 각인 장비 5종 발견',          target: 'signaturesDiscovered', goal: 5,  reward: { gold: 15000, item: '엘릭서' } },
+    { id: 'ach_sig_10',       title: '전설의 서사',       desc: '전설 각인 장비 10종 발견',         target: 'signaturesDiscovered', goal: 10, reward: { gold: 40000, item: '영웅의 물약' } },
+    { id: 'ach_sig_20',       title: '모든 전설의 증인',  desc: '전설 각인 장비 25종 전부 발견',    target: 'signaturesDiscovered', goal: 25, reward: { gold: 150000, item: '영웅의 물약', premiumCurrency: 30 } },
+    { id: 'ach_sig_set_1',    title: '세트의 완성',       desc: '전설 각인 세트 1개 완성(구성 장비 전부 발견)', target: 'signatureSetsCompleted', goal: 1, reward: { gold: 25000, item: '영웅의 물약' } },
+    { id: 'ach_sig_set_all',  title: '전설의 집대성',     desc: '모든 전설 각인 세트 완성',              target: 'signatureSetsCompleted', goal: 5, reward: { gold: 250000, item: '어둠의 정수', premiumCurrency: 100 } },
 
     // ── 도주 업적 (cycle 74: stats.escapes 신규 카운터) ───────────────────────
     // 도주는 "겁쟁이"가 아니라 "런 보존" — 위험 인지 + 자원 관리 지표로 인정.

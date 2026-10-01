@@ -25,7 +25,8 @@ export const buildCampfireEvent = (fullStats: Pick<FullStats, 'maxHp' | 'maxMp'>
         desc: MSG.CAMPFIRE_DESC,
         choices: [MSG.CAMPFIRE_REST_CHOICE, MSG.CAMPFIRE_FORGE_CHOICE],
         outcomes: [
-            { choiceIndex: 0, hp: healHp, mp: healMp, log: MSG.CAMPFIRE_REST_LOG(healHp, healMp) },
+            // 2026-10 Wave 58: 모닥불 휴식도 휴식이다 — 마을 휴식만 세던 동안 업적 "N번 휴식"이 모닥불을 무시했다.
+            { choiceIndex: 0, hp: healHp, mp: healMp, rest: true, log: MSG.CAMPFIRE_REST_LOG(healHp, healMp) },
             {
                 choiceIndex: 1,
                 buff: { atk: BALANCE.CAMPFIRE_FORGE_ATK, def: 0, turn: forgeTurns, name: '모닥불 단련' },
