@@ -208,7 +208,7 @@ export const BALANCE = {
     // 활성 토벌 임무의 목표 조우를 돕되 지역 몬스터 다양성은 절반가량 유지한다.
     // 목표가 7종 풀에 하나라면 실질 조우율은 약 53%(45% 집중 + 일반 풀 55%/7).
     HUNT_TARGET_FOCUS_CHANCE: 0.45,
-    MAP_HIGH_EVENT_CHANCE_THRESHOLD: 0.28,  // MapNavigator '이벤트↑' 배지 임계값 — 상위 지역군(eventChance 0.28+) 강조
+    MAP_HIGH_EVENT_CHANCE_THRESHOLD: 0.28,  // '이벤트↑' 배지 임계값 — 보정 없는 지역(×1)이 eventChance 0.28일 때의 실제 이야기 확률(× SPECIAL_EVENT_BASE_MULT)이 기준(Wave 61, mapBadges)
     PREFIX_CHANCE: 0.2,
     ITEM_PREFIX_CHANCE: 0.12,
     SPECIAL_EVENT_BASE_MULT: 0.25,

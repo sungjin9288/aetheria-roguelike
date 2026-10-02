@@ -47,7 +47,7 @@ const DOT_LABELS = {
 // 나므로, STATUS_LABELS/DOT_LABELS와 같은 이유로 top-level const로 둔다.
 const HELL_REAPER_LABEL = '지옥의 수확자';
 const VAMPIRE_LORD_LABEL = '흡혈 군주';
-// 2026-10 Wave 62 (B 감사 F12): 합성 보호 상품의 이름 하나 — 크리스털 교환 · 구매 로그 · 합성 화면이 "합성 보호권" ·
+// 2026-10 Wave 61 (원장 §61.3): 합성 보호 상품의 이름 하나 — 크리스털 교환 · 구매 로그 · 합성 화면이 "합성 보호권" ·
 // "합성 보호석" · "보호권" 세 이름을 쓰고 있었다. 아래 SYNTHESIS_PROTECT_TOKEN_COST가 재사용하므로 top-level const로 둔다.
 const SYNTHESIS_PROTECT_ITEM_NAME = '합성 보호권';
 
@@ -318,7 +318,7 @@ export const MSG = {
     CONSUMABLE_FULL_MP: '기력이 이미 가득합니다.',
     CONSUMABLE_STATUS_ABSENT: '해제할 상태이상이 없습니다.',
     CONSUMABLE_BUFF_DOMINATED: '더 강하거나 오래가는 강화 효과가 이미 적용 중입니다.',
-    // 2026-10 Wave 62 (B 감사 F2 · F8): 소모품 효과 문구 — 판정(엘릭서 · 소모품 종류)은 `systems/consumableRules.ts`가
+    // 2026-10 Wave 61 (원장 §61.3): 소모품 효과 문구 — 판정(엘릭서 · 소모품 종류)은 `systems/consumableRules.ts`가
     //   엔진과 함께 소유한다. 엘릭서(접두어 사본 포함)는 val과 무관하게 실효 최대 생명까지 회복하므로 수치를 그리지 않는다.
     CONSUMABLE_HP_FULL_RESTORE: '생명 완전 회복',
     CONSUMABLE_HP_RESTORE: (val: number) => `생명 ${val} 회복`,
@@ -1050,7 +1050,7 @@ export const MSG = {
     ),
     CMD_HELP: '이동: move <지역>\n행동: explore, rest, shop\n전투: attack(a), skill(s), nextskill(sn), escape(r)\n정보: status, inventory, quest, map',
     CMD_UNKNOWN: (command: string) => `알 수 없는 명령어: ${command} (/help)`,
-    /** 자동완성의 휴식 줄 — 실제 비용(`getRestCost`: 레벨 · 거울 반영)을 그린다. 고정 "100G"였다(Wave 62 B 감사 F6). */
+    /** 자동완성의 휴식 줄 — 실제 비용(`getRestCost`: 레벨 · 거울 반영)을 그린다. 고정 "100G"였다(Wave 61, 원장 §61.3). */
     CMD_SUGGEST_REST: (cost: number) => `휴식 (골드 ${cost})`,
 
     // ── Wave 27 N1: 이벤트 선택 거부 안내 ────────────────────────────────────

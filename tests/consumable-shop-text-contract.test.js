@@ -32,7 +32,7 @@ import PremiumShop from '../src/components/PremiumShop.tsx';
 import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 
 /**
- * Wave 62 (B 감사 — 엔진은 맞고 플레이어가 보는 문구가 틀렸다):
+ * Wave 61 (원장 §61.3 — 엔진은 맞고 플레이어가 보는 문구가 틀렸다):
  *   F2  엘릭서(접두어 사본 포함)는 엔진이 실효 최대 생명까지 회복한다 — 어느 표면도 9999 · 10006 같은 val을 그리지 않는다.
  *   F6  터미널 자동완성의 휴식 비용은 실제 휴식 비용(`getRestCost`)이다.
  *   F8  상점의 정화 아이템 줄에 원시 상태 id("poison 해제")가 없다.

@@ -422,7 +422,7 @@ test('T2 대조군: 처음 받는 계승 칭호는 새 칭호로 알린다', () 
         const next = ascend(state);
         assert.ok(next.logs.map((log) => log.text).includes(MSG.ASCEND_DONE(rank + 1, outcome.title)), `${rank + 1}단계`);
         const html = renderStatic(createElement(AscensionScreen, { player: state.player, actions: new Proxy({}, { get: () => noop }) }));
-        assert.ok(html.includes(`>${MSG.ASCEND_NEW_TITLE_LABEL}<`) || html.includes(`${MSG.ASCEND_NEW_TITLE_LABEL}</div>`), `${rank + 1}단계 화면`);
+        assert.ok(html.includes(`>${MSG.ASCEND_NEW_TITLE_LABEL}<`), `${rank + 1}단계 화면`);
     }
 });
 
