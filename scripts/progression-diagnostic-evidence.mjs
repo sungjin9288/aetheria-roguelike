@@ -38,7 +38,12 @@ const HASH_ALGORITHM = 'sha256';
 // Wave 58 (2026-10-01): 직업 패시브 "ATK +N"이 배율 뒤 고정 보너스가 됐다(소유자 결정 "설명대로"). 바뀌는 키는
 // jobSnapshots[*].combat.damage 9칸뿐이고 곡선은 **움직이지 않는다**(모델 플레이어는 `모험가` — 공격 패시브가 없다).
 // 이전 값: '404dafaaf607b74667ec2a4ad310d6acd15f39f3950e155d1fcf2b861481f8b2'.
-const PROGRESSION_V1_BASELINE_HASH = '04cbab226dfb4cd84c8f421364671678cdac34f28b4812b6b774fedd04e92730';
+// Wave 61 (2026-10-02): 보스 6종을 지역 조우 풀에 넣었다(소유자 결정 "지역 조우에 넣음"). 이번에는 **곡선이 움직인다** —
+// 이 시드의 체크포인트 액션 16/56/87/170/1,601/5,286/8,187 → 16/56/87/170/1,577/5,262/7,981(Lv20까지 바이트 동일).
+// 64시드 평균으로 Lv45 −1.1% · Lv60 −0.3% · Lv75 −2.9%이고 모든 시드가 움직였다 — 기계 폐도(Lv28) · 에테르 폐허 ·
+// 공허의 회랑 조우에 보스 경험치가 더해진 실제 이동이다(원장 §62). 그 편집(maps.ts) 하나만 되돌리면 이전 값이 재현된다(실측).
+// 이전 값: '04cbab226dfb4cd84c8f421364671678cdac34f28b4812b6b774fedd04e92730'.
+const PROGRESSION_V1_BASELINE_HASH = '76898ed3a728b3a0ff67b009a6b569f56f5d2279257924fdb74d29b0fa3a2b52';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';
