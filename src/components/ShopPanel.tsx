@@ -9,7 +9,7 @@ import { getDailyDeals, getShopMaxTier, getWeeklySpecial } from '../utils/shopRo
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
 import { getSignatureSaleVerdict } from '../utils/signatureSale';
-import { getConsumableDescription } from '../utils/consumablePresentation';
+import { getConsumableDescription, getConsumableEffectSummary } from '../utils/consumablePresentation';
 import type { GameActions } from '../hooks/actionDeps';
 import type { FullStats, Item, ItemType, Player } from '../types/index.js';
 import type { GameMode } from '../reducers/gameStates';
@@ -69,10 +69,10 @@ const getComparisonMeta = (item: Item | null | undefined, player: Player | null 
         };
     }
 
-    if (item.type === 'hp') return { text: `생명 ${item.val || 0} 회복`, tone: 'positive' };
-    if (item.type === 'mp') return { text: `기력 ${item.val || 0} 회복`, tone: 'positive' };
-    if (item.type === 'cure') return { text: `${item.effect || '상태이상'} 해제`, tone: 'neutral' };
-    if (item.type === 'buff') return { text: `${item.turn || 0}턴 버프`, tone: 'positive' };
+    // Wave 61 (원장 §61.3 소모품 · 상점): 소모품 효과 문구는 consumablePresentation이 엔진 판정으로 만든다 — 여기서 만들던 동안
+    //   엘릭서가 "생명 9999 회복", 정화가 "poison 해제"였다.
+    if (item.type === 'hp' || item.type === 'mp' || item.type === 'buff') return { text: getConsumableEffectSummary(item), tone: 'positive' };
+    if (item.type === 'cure') return { text: getConsumableEffectSummary(item), tone: 'neutral' };
 
     return null;
 };

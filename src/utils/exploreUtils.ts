@@ -29,11 +29,11 @@ import { DB } from '../data/db.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getPrestigeEnemyLevelBonus } from '../systems/metaBonusRamp.js';
-import { BOSS_MONSTERS } from '../data/monsters.js';
 // Track J1: FIRST_VISIT_REWARDS 테이블은 data/firstVisitRewards.ts로 분리됨.
 import { FIRST_VISIT_REWARDS } from '../data/firstVisitRewards.js';
 import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
 import { EARLY_ELITE_PREFIX_NAME } from './enemyIdentity.js';
+import { getUnlockedHiddenBosses, isEncounterBoss } from './bossPresence.js';
 
 const getActiveHuntTargets = (mapData: GameMap, player: Player) => {
     const mapMonsters = Array.isArray(mapData.monsters) ? mapData.monsters : [];
@@ -81,29 +81,12 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
     let encounterPool = [...(mapData.monsters || [])];
 
-    // Sprint 18: 숨겨진 보스 해금 조건 체크
-    const hiddenBossChecks = [
-        // 시간의 파수꾼: 시간술사 직업 + Lv 40+ (공중 신전)
-        { boss: '시간의 파수꾼', loc: '공중 신전', check: () => player.job === '시간술사' && (player.level || 1) >= 40 },
-        // 원한의 용사: "최후의 영웅" 체인 3단계 완료 (지하 미궁)
-        {
-            boss: '원한의 용사',
-            loc: '지하 미궁',
-            check: () => {
-                const lastHeroStep = player.eventChainProgress?.last_hero;
-                return (typeof lastHeroStep === 'number' ? lastHeroStep : 0) >= 3;
-            },
-        },
-        // 공허의 군주: 무한 심연 100층 클리어 (금지된 도서관)
-        { boss: '공허의 군주', loc: '금지된 도서관', check: () => (player.stats?.abyssFloor || 0) >= 100 },
-        // PR #11: 에테르 군주 — 프레스티지 rank≥10 "에테르 초월" 해금 (에테르 관문)
-        { boss: '에테르 군주', loc: '에테르 관문', check: () => (player.meta?.prestigeRank || 0) >= 10 },
-    ];
+    // Sprint 18: 숨겨진 보스 해금 조건 체크 — 해금 규칙은 `HIDDEN_BOSS_UNLOCKS`(bossPresence.ts) 하나다.
+    //   지도 · 모험 가이드의 보스 표시(`canBossAppearInMap`)가 같은 표를 읽는다(Wave 61).
     // cycle 71: mapData.name은 MAPS dict에 저장될 때 설정되지 않으므로 항상 undefined.
     // hidden boss spawn이 영원히 트리거되지 않던 버그 수정 — player.loc로 비교.
-    const currentLoc = player.loc;
-    hiddenBossChecks.forEach(({ boss, loc, check }) => {
-        if (currentLoc === loc && check() && !encounterPool.includes(boss)) {
+    getUnlockedHiddenBosses(player.loc, player).forEach((boss) => {
+        if (!encounterPool.includes(boss)) {
             encounterPool.push(boss);
         }
     });
@@ -207,11 +190,8 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     //   구역 보스의 이름일 뿐이다 — `(mapData.boss && bossMonsters 없음)` 분기가 있던 동안 그 목록이 없는 14곳의
     //   일반 스폰이 전부 보스로 정산됐다(보스 보너스 장비·첫 토벌 골드·보스 처치 수·시즌 XP·서명 pity). 구역 보스
     //   14종은 전부 자기 프로필로 보스라 게이지 도전은 그대로다(tests/boss-field-normal-spawn.test.js).
-    mStats.isBoss = Boolean(
-        profile?.isBoss
-        || mapBossMonsters.includes(baseName)
-        || BOSS_MONSTERS.includes(baseName)
-    );
+    //   판정은 `isEncounterBoss`(bossPresence.ts) 하나다 — 지도의 보스 표시도 같은 판정을 읽는다(Wave 61).
+    mStats.isBoss = isEncounterBoss(baseName, mapData);
 
     // eliteOnly 챌린지: 모든 적에게 엘리트 접두어 강제 부여
     const forceElite = player.challengeModifiers?.includes('eliteOnly') && !mStats.isBoss;

@@ -1,5 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
+import { DB } from '../data/db.js';
 import { advanceBossGauge, isAreaBossUndefeated } from './bossGauge.js';
 import type { GameMap, Player, PostCombatResult } from '../types/index.js';
 
@@ -46,14 +47,32 @@ export const isPostCombatChoiceOffered = (result: PostCombatResult | null | unde
     && result.postCombatChoiceResolved !== true,
 );
 
-/** 두 선택지의 표시 정보 — 수치는 전부 BALANCE, 문구는 전부 MSG. */
-export const getPostCombatChoiceOptions = (): PostCombatChoiceOption[] => [
+/**
+ * "밀어붙인다"가 보스 접근 게이지를 올리는지 — `applyPostCombatChoice`가 쓰는 판정 그대로다
+ * (미격파 구역 보스가 있는 지역에서만 오른다).
+ */
+export const doesPushAdvanceBossGauge = (
+    player: Player | null | undefined,
+    mapData: GameMap | null | undefined,
+): boolean => isAreaBossUndefeated(mapData, player);
+
+/**
+ * 두 선택지의 표시 정보 — 수치는 전부 BALANCE, 문구는 전부 MSG.
+ * 2026-10: "밀어붙인다" 설명은 늘 치르는 대가(다음 탐험의 모닥불 차단)를 말하고, 보스 게이지는 실제로 오를 때만
+ * 말한다 — `player`의 현재 지역(지도 데이터는 리듀서와 같은 `DB.MAPS[loc]`)으로 판정한다. 플레이어를 모르면
+ * 게이지를 약속하지 않는다.
+ */
+export const getPostCombatChoiceOptions = (
+    player?: Player | null,
+    mapData: GameMap | null | undefined = player?.loc ? DB.MAPS[player.loc] : null,
+): PostCombatChoiceOption[] => [
     {
         id: 'push',
         label: MSG.POST_COMBAT_PUSH_CHOICE,
         detail: MSG.POST_COMBAT_PUSH_DETAIL(
             Math.round(BALANCE.POST_COMBAT_PUSH_ATK_BONUS * 100),
             BALANCE.POST_COMBAT_PUSH_TURNS,
+            doesPushAdvanceBossGauge(player, mapData),
         ),
         testId: 'post-combat-choice-push',
     },
@@ -86,7 +105,7 @@ export const applyPostCombatChoice = (
 
     if (choice === 'push') {
         const pct = Math.round(BALANCE.POST_COMBAT_PUSH_ATK_BONUS * 100);
-        const gaugeAdvances = isAreaBossUndefeated(mapData, player);
+        const gaugeAdvances = doesPushAdvanceBossGauge(player, mapData);
         const nextStats = {
             ...(gaugeAdvances ? advanceBossGauge(player, mapData) : (player.stats || {})),
             nextExploreCampfireBlocked: true,

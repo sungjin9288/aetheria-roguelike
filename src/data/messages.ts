@@ -47,6 +47,9 @@ const DOT_LABELS = {
 // 나므로, STATUS_LABELS/DOT_LABELS와 같은 이유로 top-level const로 둔다.
 const HELL_REAPER_LABEL = '지옥의 수확자';
 const VAMPIRE_LORD_LABEL = '흡혈 군주';
+// 2026-10 Wave 61 (원장 §61.3): 합성 보호 상품의 이름 하나 — 크리스털 교환 · 구매 로그 · 합성 화면이 "합성 보호권" ·
+// "합성 보호석" · "보호권" 세 이름을 쓰고 있었다. 아래 SYNTHESIS_PROTECT_TOKEN_COST가 재사용하므로 top-level const로 둔다.
+const SYNTHESIS_PROTECT_ITEM_NAME = '합성 보호권';
 
 export const MSG = {
     // --- 전투 (Combat) ---
@@ -103,7 +106,7 @@ export const MSG = {
     INFINITE_DEVOUR_HEAL: (health: number) => `무한 포식 효과로 생명을 ${health}만큼 회복했습니다.`,
     STAR_CORE_RESTORE: '별의 핵이 기력을 모두 회복했습니다.',
     LOOT_GET: (name: string) => `전리품: ${name}`,
-    // 2026-09 Wave 39: 후반 강화 재료 드롭 — 도감 소재 기록의 획득처는 레거시 전리품 표만 읽으므로 이 규칙을 따로 알린다.
+    // 2026-09 Wave 39: 후반 강화 재료 드롭 — 도감 소재 기록의 획득처는 몬스터별 전리품 표만 읽으므로(적 레벨 규칙은 표 밖) 이 규칙을 따로 알린다.
     CODEX_ENHANCE_MATERIAL_LATE_SOURCE: (level: number) => `Lv${level} 이상 지역의 적에게서도 드물게 얻습니다 · 보스는 더 자주`,
     LOOT_PREFIX: (name: string) => `접두사 부여: [${name}]`,
     PRESTIGE_RARE_DROP: (name: string) => `✦ [심연의 메아리] 보스가 희귀 장비를 떨어뜨렸습니다: ${name}`,
@@ -188,6 +191,9 @@ export const MSG = {
     SYNTHESIS_SUCCESS: (name: string) => `✨ 합성 성공! [${name}] 획득!`,
     SYNTHESIS_FAIL: '합성 실패... 일부 재료가 소실되었습니다.',
     SYNTHESIS_PROTECTED: '합성 보호 활성화 — 재료가 보존되었습니다.',
+    SYNTHESIS_PROTECT_ITEM_NAME,
+    /** 합성 화면의 보호 비용 줄 — 보호권을 가지고 있을 때. */
+    SYNTHESIS_PROTECT_TOKEN_COST: (owned: number) => `${SYNTHESIS_PROTECT_ITEM_NAME} 1개 · 보유 ${owned}개`,
     SYNTHESIS_NOT_ENOUGH: '합성에 필요한 재료가 부족합니다.',
     SYNTHESIS_NOT_ENOUGH_GOLD: '합성에 필요한 골드가 부족합니다.',
 
@@ -282,6 +288,16 @@ export const MSG = {
     MONSTER_WEAKNESS: '약점',
     MONSTER_RESISTANCE: '내성',
     MONSTER_KILL_COUNT: (n: number) => `처치 ${n}회`,
+    // 2026-10 Wave 61: 몬스터 · 소재 기록 — 기록은 처치할 때 열리고, 전리품 · 획득처는 엔진과 같은 표를 읽는다(`utils/codexDropSources.ts`).
+    //   소재는 어느 상점에서도 팔지 않으므로 상점을 획득처로 말하지 않고, 가격은 판매가(`getSellPrice`)로 보인다.
+    CODEX_MONSTER_HEADER_HINT: '처치한 생물만 이름과 전투 정보가 기록됩니다',
+    CODEX_MONSTER_UNDISCOVERED_HINT: '이름 없는 칸을 나열하지 않고 처음 처치할 때 새 기록을 엽니다',
+    CODEX_MONSTER_DROPS_LABEL: '고유 전리품',
+    CODEX_MATERIAL_EMPTY_HINT: '몬스터 전리품 등으로 소재를 얻으면 이름과 획득처가 기록됩니다',
+    CODEX_MATERIAL_SOURCES: (sources: string) => `획득처: ${sources}`,
+    CODEX_MATERIAL_SOURCES_MORE: (count: number) => ` 외 ${count}종`,
+    CODEX_MATERIAL_SOURCE_SPECIAL: '몬스터 전리품이 아닌 특별한 경로로 얻습니다',
+    CODEX_MATERIAL_SELL_PRICE: (gold: number) => `판매가 ${gold.toLocaleString()} 골드`,
     EQUIP_STAT_COMPARE: '능력 비교',
     // cycle 116: EQUIP_EQUIPPED / UI_EQUIPPED 둘 다 '장착 중' 중복 정의였음. 둘 다 제거.
 
@@ -302,6 +318,15 @@ export const MSG = {
     CONSUMABLE_FULL_MP: '기력이 이미 가득합니다.',
     CONSUMABLE_STATUS_ABSENT: '해제할 상태이상이 없습니다.',
     CONSUMABLE_BUFF_DOMINATED: '더 강하거나 오래가는 강화 효과가 이미 적용 중입니다.',
+    // 2026-10 Wave 61 (원장 §61.3): 소모품 효과 문구 — 판정(엘릭서 · 소모품 종류)은 `systems/consumableRules.ts`가
+    //   엔진과 함께 소유한다. 엘릭서(접두어 사본 포함)는 val과 무관하게 실효 최대 생명까지 회복하므로 수치를 그리지 않는다.
+    CONSUMABLE_HP_FULL_RESTORE: '생명 완전 회복',
+    CONSUMABLE_HP_RESTORE: (val: number) => `생명 ${val} 회복`,
+    CONSUMABLE_MP_RESTORE: (val: number) => `기력 ${val} 회복`,
+    /** 정화 아이템 — 라벨은 상태 칩과 같은 `STATUS_LABELS`(원시 효과 id를 그리던 상점 줄: "poison 해제"). */
+    CONSUMABLE_CURE_STATUS: (label: string) => `${label} 해제`,
+    CONSUMABLE_CURE_ANY: '상태이상 해제',
+    CONSUMABLE_BUFF_TURNS: (turn: number) => `${turn}턴 버프`,
     ITEM_USE_BUFF: (name: string) => `${name}을 사용해 강화 효과를 얻었습니다.`,
     GOLD_INSUFFICIENT: '골드가 부족합니다.',
     INV_FULL: '가방이 가득 찼습니다.',
@@ -327,7 +352,11 @@ export const MSG = {
     GUIDE_BAG_UPGRADE_DETAIL: (name: string, count: number, capacity: number, nextCapacity: number) =>
         `가방이 ${count}/${capacity}입니다. 제작소에서 ${name}을(를) 만들면 ${nextCapacity}칸이 됩니다.`,
     GUIDE_BAG_UPGRADE_ACTION: '제작소 열기',
+    // 2026-10 Wave 61: 누적 처치 임무(`kills`)의 다음 단계 — 보스 처치도 함께 센다(CombatEngine.handleVictory).
+    QUEST_NEXT_STEP_KILLS: (remaining: number) => `몬스터 ${remaining}회 더 처치 (보스 포함)`,
     QUEST_REWARD_ITEM: (name: string) => `보상 아이템: ${name}`,
+    // 2026-10 임무 문구 감사: 칭호 보상 표시(formatRewardParts) — 수령하면 칭호가 지급되는데 보상 줄에서 빠져 있었다.
+    QUEST_REWARD_TITLE: (label: string) => `칭호 ${label}`,
     QUEST_TRAIT_BONUS: (title: string, gold: number) => `${title} 공명 보상 · 골드 +${gold}`,
     // W2 (Wave 5): Quest.title은 타입상 optional이고 현상수배/카탈로그 양쪽을 받는
     //   호출부가 있어 QUEST_ACCEPTED / QUEST_ABANDONED와 같은 시그니처로 맞춘다.
@@ -388,7 +417,9 @@ export const MSG = {
     EXPEDITION_FOCUS_ADDED: (title: string | undefined) => `이번 원정 임무 추가: ${title}`,
     EXPEDITION_FOCUS_REMOVED: (title: string | undefined) => `이번 원정 임무 제외: ${title}`,
     BOUNTY_TOWN_ONLY: '현상수배 수주는 마을 게시판에서만 가능합니다.',
-    BOUNTY_ABANDONED: '현상수배 임무를 포기했습니다. 오늘은 새 현상수배를 받을 수 없습니다.',
+    // Wave 32 이후 하루 1회 제한이 없다 — 진행 중인 현상수배가 없으면 바로 새로 발급된다(REQUEST_BOUNTY).
+    BOUNTY_ABANDONED: '현상수배 임무를 포기했습니다. 게시판에서 바로 새 현상수배를 받을 수 있습니다.',
+    BOUNTY_ABANDON_WARNING: '새 현상수배는 바로 받을 수 있지만 대상과 수량은 새로 정해집니다.',
     // cycle 116: BOUNTY_ACCEPTED 제거 — BOUNTY_ACCEPTED_NEW가 active.
     ASCEND_PENDING_QUESTS_TITLE: '먼저 받을 임무 보상',
     ASCEND_PENDING_QUESTS_GUIDANCE: '수령 기록은 계승 후에도 남습니다. 보상 장비와 골드를 쓰려면 수령 후 이 여정을 계속하세요.',
@@ -431,6 +462,12 @@ export const MSG = {
     CAMPFIRE_FORGE_CHOICE: '단련 — 무기를 손질해 다음 전투를 대비한다',
     CAMPFIRE_REST_LOG: (health: number, energy: number) => `불 곁에서 숨을 고르며 생명 +${health} · 기력 +${energy} 회복했습니다.`,
     CAMPFIRE_FORGE_LOG: (pct: number, turns: number) => `무기를 벼립니다. 다음 전투 ${turns}턴 동안 공격력 +${pct}%.`,
+    // 2026-10 U5: 회복이 실효 최대치에서 멈춰 적힌 양보다 적게 오른 한정 조우의 결과 줄 — 실제로 오른 양만 말한다
+    //   (적힌 양을 그대로 찍던 결함). 일반 · 모닥불 사건은 결과 문구 속 수치를 실제 양으로 고친다(eventPresentation).
+    EVENT_RECOVERY_CAPPED: (healed: { hp?: number; mp?: number }) => `이미 최대치에 가까워 ${[
+        healed.hp !== undefined ? `생명 +${healed.hp}` : '',
+        healed.mp !== undefined ? `기력 +${healed.mp}` : '',
+    ].filter(Boolean).join(' · ')}만 회복했습니다.`,
     // 탐험 스카우팅 (2026-07): 사전 정찰 카드 — 체인/캠프파이어 다음 우선순위 결정 노드.
     SCOUT_DESC: '앞길에서 낯선 기척이 느껴집니다. 어떻게 정찰하시겠습니까?',
     SCOUT_COMBAT_CHOICE: '전투의 기척 — 적과 맞서며 처치 보상을 더 받는다',
@@ -463,13 +500,20 @@ export const MSG = {
     JOB_CHANGE_DONE: (jobName: string) => `${jobName} 전직 완료!`,
     BOUNTY_ACCEPTED_NEW: (target: string, count: number) => `새로운 현상수배 수락: ${target} ${count}마리`,
     TITLE_UNLOCKED: (label: string) => `새 칭호를 얻었습니다. ${label}`,
-    ASCEND_DONE: (rank: number, title: string) => `에테르 계승 ${rank}단계에 도달했습니다. 새 칭호 '${title}'와 영구 성장이 다음 여정에 적용됩니다.`,
+    // 2026-10 Wave 61: 새 칭호는 아직 없는 칭호일 때만 알린다(`title` null) — 계승 11단계부터는 10단계의 '에테르의 신'이 다시 온다.
+    ASCEND_DONE: (rank: number, title: string | null) => (title
+        ? `에테르 계승 ${rank}단계에 도달했습니다. 새 칭호 '${title}'와 영구 성장이 다음 여정에 적용됩니다.`
+        : `에테르 계승 ${rank}단계에 도달했습니다. 영구 성장이 다음 여정에 적용됩니다.`),
+    ASCEND_NEW_TITLE_LABEL: '새 칭호',
+    ASCEND_TITLE_OWNED_LABEL: '칭호 (이미 보유)',
     DAILY_PROTOCOL_DONE: (count: number, reward: string) => (
         `${count > 1 ? `오늘의 임무 ${count}개 완료` : '오늘의 임무 완료'} · ${reward}`
     ),
     DAILY_PROTOCOL_RELIC_COMPLETE: (name: string) => `유물 파편 완성 · ${name} 획득`,
     CHAIN_REWARD_RELIC: (name: string) => `이야기 보상 · 유물 ${name}을 얻었습니다.`,
-    CHAIN_REWARD_COMBAT_BONUS: (attackPercent: number, turns: number) => `최후의 영웅이 합류해 ${turns}턴 동안 공격력이 ${attackPercent}% 오릅니다.`,
+    // 2026-10: 앞머리는 체인 보상의 `buffIntro`다(최후의 영웅 '최후의 영웅이 합류해' · 잊혀진 사령관 · 물의 사도) —
+    //   셋 모두 '최후의 영웅이 합류해'를 찍던 결함. 없으면 아래 일반 문구.
+    CHAIN_REWARD_COMBAT_BONUS: (attackPercent: number, turns: number, intro: string = '이야기의 힘이 깃들어') => `${intro} ${turns}턴 동안 공격력이 ${attackPercent}% 오릅니다.`,
 
     // --- 체인 저널 (Quest 탭) ---
     CHAIN_JOURNAL_TITLE: '진행 중인 이야기',
@@ -530,7 +574,8 @@ export const MSG = {
 
     // --- 전투 승리 ---
     QUEST_CONDITION_MET: (count: number) => `퀘스트 조건 달성: ${count}개`,
-    KILL_STREAK_BONUS: (streak: number, atkPct: number) => `🔥 ${streak}연속 처치! 공격력 +${atkPct}% 보너스 발동`,
+    // 2026-10 Wave 61: 연속 처치 단계는 공격력과 치명타 확률을 함께 올린다(BALANCE.KILL_STREAK_ATK_BONUS · KILL_STREAK_CRIT_BONUS).
+    KILL_STREAK_BONUS: (streak: number, atkPct: number, critPct: number) => `🔥 ${streak}연속 처치! 공격력 +${atkPct}% · 치명타 확률 +${critPct}%p 보너스 발동`,
 
     // --- 심연 ---
     ABYSS_DESCEND: (floor: number) => `심연 ${floor}층을 돌파했습니다. 다음은 ${floor + 1}층입니다.`,
@@ -634,7 +679,11 @@ export const MSG = {
     POST_COMBAT_PUSH_CHOICE: '밀어붙인다',
     POST_COMBAT_PUSH_BUFF_NAME: '맹공의 기세',
     POST_COMBAT_BREATHER_CHOICE: '숨을 고른다',
-    POST_COMBAT_PUSH_DETAIL: (pct: number, turns: number) => `다음 전투 ${turns}턴 공격력 +${pct}% · 보스가 더 빨리 다가옵니다`,
+    // 2026-10: 모닥불 차단은 늘 일어나고, 보스 게이지는 미격파 구역 보스가 있는 지역에서만 오른다
+    //   (applyPostCombatChoice와 같은 판정) — 늘 "보스가 더 빨리"라고만 말하던 결함.
+    POST_COMBAT_PUSH_DETAIL: (pct: number, turns: number, bossGaugeAdvances: boolean) => (
+        `다음 전투 ${turns}턴 공격력 +${pct}% · 다음 탐험엔 모닥불 없음${bossGaugeAdvances ? ' · 보스가 더 빨리 다가옵니다' : ''}`
+    ),
     POST_COMBAT_BREATHER_DETAIL: (pct: number) => `생명 ${pct}% 회복 · 연속 처치가 끊깁니다`,
     POST_COMBAT_PUSH_LOG: (pct: number, turns: number) => `숨 돌릴 틈 없이 밀어붙입니다. 다음 전투 ${turns}턴 동안 공격력 +${pct}%.`,
     POST_COMBAT_PUSH_GAUGE_LOG: '거칠어진 발소리를 따라 보스의 기척이 한 걸음 가까워집니다.',
@@ -680,7 +729,14 @@ export const MSG = {
     // --- I4 (2026-09 Wave 3): eventActions 하드코딩 한국어 회수 (출력 문구는 모두 동일) ---
     CHAIN_REWARD_STAT_LABEL: { atk: '공격력', def: '방어력', hp: '생명', mp: '기력' } as Record<string, string>,
     CHAIN_REWARD_STAT_BONUS: (parts: string) => `이야기 보상 · ${parts}`,
-    CHAIN_REWARD_COMBAT_BONUS_NAME: '기사의 혼령',
+    // 2026-10: 체인 보상의 `buffName`이 없을 때의 일반 이름 — '기사의 혼령'은 이제 최후의 영웅 데이터가 직접 든다.
+    CHAIN_REWARD_COMBAT_BONUS_NAME: '이야기의 가호',
+    // 2026-10: 이야기 선택지 미리보기 — 진행 머리말과, 체인을 영구히 닫는 선택(`chain_advance_fail`)의 표시.
+    //   실패 선택은 진행도를 'failed'로 고정하고 사망 · 계승도 넘어가므로 "달라질 수 있음"이 아니라 끝이다.
+    CHAIN_PREVIEW_PROGRESS: '이야기 진행',
+    CHAIN_PREVIEW_ENDS: '이야기가 여기서 끝남 · 다시 이어지지 않음',
+    // 2026-10: 일반 사건 미리보기 — 기력만 잃는 결과를 '생명 손실'로 말하던 결함.
+    EVENT_PREVIEW_MP_LOSS: '기력 손실 위험',
     ELITE_ENEMY_PREFIX: '정예',
     ELITE_ENEMY_NAME: (baseName: string) => `정예 ${baseName}`,
     // --- Wave 4 O2: 유물 선택 추천 사유 (빌드 공명 추첨과 표기를 맞춘다) ---
@@ -881,8 +937,9 @@ export const MSG = {
     DIFFICULTY_LABEL_CRISIS: '위기',
     DIFFICULTY_LABEL_BEGINNER_GRACE: '신입 보호',
     DIFFICULTY_GM_OVERWHELM: '⚔️ [GM] 당신의 기세가 압도적입니다 — 약간의 긴장과 함께 보상이 크게 늘어납니다.',
-    DIFFICULTY_GM_CRISIS: '🛡️ [GM] 잠시 숨을 고를 시간입니다. 몬스터가 약해집니다.',
-    DIFFICULTY_GM_DISADVANTAGE: '🛡️ [GM] 어려운 상황이군요. 몬스터 강도를 낮춥니다.',
+    // 2026-10 Wave 61: 하향 단계는 적만 약하게 하지 않는다 — 처치 골드 · 경험치도 낮춘다(DifficultyManager DIFF_TABLE의 goldMult · expMult < 1).
+    DIFFICULTY_GM_CRISIS: '🛡️ [GM] 잠시 숨을 고를 시간입니다. 몬스터가 약해지는 대신 얻는 골드와 경험치도 줄어듭니다.',
+    DIFFICULTY_GM_DISADVANTAGE: '🛡️ [GM] 어려운 상황이군요. 몬스터 강도를 낮추는 대신 얻는 골드와 경험치도 조금 줄어듭니다.',
 
     // 2026-09 Wave 6 X2: systems 이관 — combatActionTurn.ts / combatItemTurn.ts.
     LOCATION_UNKNOWN_FALLBACK: '알 수 없는 곳',
@@ -919,6 +976,9 @@ export const MSG = {
     SEASON_CLAIMS_REMAINING: (remaining: number) => `완주까지 남은 보상 ${remaining}개`,
     SEASON_CLAIMS_READY: '마지막 보상을 받으면 다음 시즌이 시작됩니다',
     SEASON_SCALE_BADGE: (scale: string) => `보상 ×${scale}`,
+    // 2026-10 Wave 61: 시즌 보상 줄의 칭호 — 이미 가진 칭호는 수령해도 다시 지급되지 않는다(CLAIM_SEASON_REWARD).
+    SEASON_REWARD_TITLE: (title: string) => `칭호 ${title}`,
+    SEASON_REWARD_TITLE_OWNED: (title: string) => `칭호 ${title} (보유 중)`,
     SEASON_ARCHIVE_TITLE: '지난 시즌 기록',
     SEASON_ARCHIVE_EMPTY: '아직 완주한 시즌이 없습니다',
     SEASON_ARCHIVE_SUMMARY: (count: number) => `완주 ${count}회`,
@@ -931,6 +991,11 @@ export const MSG = {
     //   시작의 마을에서 실제로 걸어 들어갈 수 있게 되는 레벨이다(`utils/mapRouteGate.ts`).
     //   표시만 정직하게 하고 잠금 자체는 바꾸지 않는다 — 그래서 문구가 둘을 함께 말한다.
     MAP_ROUTE_GATE_LEVEL: (routeLevel: number) => `실제 진입 레벨 ${routeLevel}`,
+    // 2026-10 Wave 61: 지도 목록 띠의 레벨 범위 — 그 띠에 실제로 놓인 지역의 최소 ~ 최대(MapNavigator가 센다).
+    MAP_BAND_LEVEL_RANGE: (minLevel: number, maxLevel: number) => (
+        minLevel === maxLevel ? `레벨 ${minLevel}` : `레벨 ${minLevel}~${maxLevel}`
+    ),
+    MAP_BAND_LEVEL_FROM: (minLevel: number) => `레벨 ${minLevel} 이상`,
     MAP_ROUTE_GATE_NOTE: (declaredLevel: number, routeLevel: number) => (
         `이 지역의 잠금은 레벨 ${declaredLevel}이지만, 여기로 이어지는 모든 길이 더 높은 지역을 지나 실제 진입은 레벨 ${routeLevel}부터입니다.`
     ),
@@ -985,6 +1050,8 @@ export const MSG = {
     ),
     CMD_HELP: '이동: move <지역>\n행동: explore, rest, shop\n전투: attack(a), skill(s), nextskill(sn), escape(r)\n정보: status, inventory, quest, map',
     CMD_UNKNOWN: (command: string) => `알 수 없는 명령어: ${command} (/help)`,
+    /** 자동완성의 휴식 줄 — 실제 비용(`getRestCost`: 레벨 · 거울 반영)을 그린다. 고정 "100G"였다(Wave 61, 원장 §61.3). */
+    CMD_SUGGEST_REST: (cost: number) => `휴식 (골드 ${cost})`,
 
     // ── Wave 27 N1: 이벤트 선택 거부 안내 ────────────────────────────────────
     //   선택이 거부돼 이벤트가 열린 채 남으면(비용 부족·가방 가득·무효 제안) 리듀서가 같은
@@ -1040,4 +1107,8 @@ export const MSG = {
     // ── Wave 28 P4 — 임무 목표 지역의 실제 진입 레벨 ──
     //   수락 규칙은 그대로다. 지금 레벨로 아직 걸어 들어갈 수 없는 목표 지역일 때만 보인다.
     QUEST_OBJECTIVE_GATE_NOTICE: (map: string, level: number) => `목표 지역 ${map} · 레벨 ${level}부터 걸어서 진입`,
+    // 2026-10 임무 문구 감사: 평생 누적 기록으로 진행도를 읽는 임무(`isLifetimeCounterQuest`) 표시.
+    //   수락 순간 이미 채워져 있을 수 있다 — 수락 뒤부터 세는 임무처럼 읽히지 않게 목표 줄 앞에 붙인다.
+    QUEST_LIFETIME_COUNTER_CHIP: '누적',
+    QUEST_LIFETIME_COUNTER_HINT: '수락하기 전의 기록도 함께 셉니다.',
 };

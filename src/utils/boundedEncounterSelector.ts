@@ -9,6 +9,8 @@ import type {
 } from '../types/encounter.js';
 import type { Player } from '../types/player.js';
 import { grantGold } from './gameUtils.js';
+import { MSG } from '../data/messages.js';
+import { healWithinMax } from '../systems/vitals.js';
 import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
 import { calculateFullStats } from './statsCalculator.js';
 
@@ -398,10 +400,24 @@ export const applyBoundedEncounterChoice = (
     if (!effectiveVitals) return settlementFailure(player, 'invalid_player_vitals', receiptKey);
     const { maxHp, maxMp } = effectiveVitals;
     const outcome = choice.outcome;
+    // 2026-10 U5: 회복은 `healWithinMax`로 올리고(실효 최대치에서 멈추고 생명을 줄이지 않는다), 상한에 걸려 적힌 양보다
+    //   덜 올랐으면 결과 줄이 실제로 오른 양을 말한다 — 데이터 문구("생명 18을 회복했습니다")를 그대로 찍던 결함.
+    const paidHp = hp - (cost.hp || 0);
+    const paidMp = mp - (cost.mp || 0);
+    const nextHp = outcome.hp ? healWithinMax(paidHp, outcome.hp, maxHp) : Math.min(maxHp, paidHp);
+    const nextMp = outcome.mp ? healWithinMax(paidMp, outcome.mp, maxMp) : Math.min(maxMp, paidMp);
+    const recoveryCapped = (Number(outcome.hp) > 0 && nextHp - paidHp < Number(outcome.hp))
+        || (Number(outcome.mp) > 0 && nextMp - paidMp < Number(outcome.mp));
+    const result = recoveryCapped
+        ? MSG.EVENT_RECOVERY_CAPPED({
+            ...(Number(outcome.hp) > 0 ? { hp: Math.max(0, nextHp - paidHp) } : {}),
+            ...(Number(outcome.mp) > 0 ? { mp: Math.max(0, nextMp - paidMp) } : {}),
+        })
+        : outcome.result;
     let nextPlayer: Player = {
         ...player,
-        hp: Math.min(maxHp, hp - (cost.hp || 0) + (outcome.hp || 0)),
-        mp: Math.min(maxMp, mp - (cost.mp || 0) + (outcome.mp || 0)),
+        hp: nextHp,
+        mp: nextMp,
         gold: gold - (cost.gold || 0),
     };
     nextPlayer = grantGold(nextPlayer, outcome.gold || 0);
@@ -433,6 +449,6 @@ export const applyBoundedEncounterChoice = (
         player: nextPlayer,
         reason: 'applied',
         receiptKey,
-        result: outcome.result,
+        result,
     };
 };

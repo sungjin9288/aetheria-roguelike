@@ -250,7 +250,13 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             const current = DB.CLASSES[player.job!];
             if (!current?.next?.includes(jobName)) return addLog('error', MSG.JOB_CHANGE_INVALID);
             if (player.level! < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', MSG.JOB_CHANGE_LEVEL);
-            const vitals = buildClassVitals(player.level!, jobName, player.meta || {});
+            const classVitals = buildClassVitals(player.level!, jobName, player.meta || {});
+            // 2026-10 Wave 61: 이번 런의 이야기 생명 · 기력 보상은 전직 재구성 뒤에도 남는다(지우던 결함 — 원장 §61 A13).
+            const vitals = {
+                ...classVitals,
+                maxHp: classVitals.maxHp + (player.storyStatBonus?.hp || 0),
+                maxMp: classVitals.maxMp + (player.storyStatBonus?.mp || 0),
+            };
             const nextStats = getFullStats({
                 ...endDevourBonus(player),
                 job: jobName,

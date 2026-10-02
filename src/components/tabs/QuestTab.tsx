@@ -5,6 +5,7 @@ import { formatRewardParts, getActiveQuestEntries } from '../../utils/gameUtils'
 import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
 import { buildChainJournal } from '../../utils/chainJournal';
 import { getQuestObjectiveGateNotice } from '../../utils/questObjectiveGate';
+import { isLifetimeCounterQuest } from '../../utils/cumulativeQuestProgress';
 import SignalBadge from '../SignalBadge';
 import StoryJournal from '../StoryJournal';
 import EndgameJourney from '../EndgameJourney';
@@ -336,6 +337,12 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                             {entry.quest.title}
                                         </div>
                                         {entry.isBounty && <span className="rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 text-xs font-fira text-[#f6e7c8]">현상수배</span>}
+                                        {/* 진행도를 평생 누적 기록에서 읽는 임무 — 판정은 진행도와 같은 표가 소유한다. */}
+                                        {isLifetimeCounterQuest(entry.quest) && (
+                                            <SignalBadge tone="neutral" size="sm" title={MSG.QUEST_LIFETIME_COUNTER_HINT} data-testid="quest-lifetime-counter-chip">
+                                                {MSG.QUEST_LIFETIME_COUNTER_CHIP}
+                                            </SignalBadge>
+                                        )}
                                         {entry.quest.buildTag && (
                                             <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
                                         )}

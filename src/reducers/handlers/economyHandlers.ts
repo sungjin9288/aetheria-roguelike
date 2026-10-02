@@ -16,6 +16,7 @@ import { getInventoryCapacity, growsPastInventoryCapacity } from '../../utils/in
 import { getBagTier, getNextBagRecipe } from '../../data/bagRecipes';
 import { getAutoSellMaterialTargets } from '../../utils/bagCrafting';
 import { incrementStat } from '../../utils/playerStateUtils';
+import { syncQuestProgress } from '../../utils/questProgress';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
 import { getSignatureSaleVerdict } from '../../utils/signatureSale';
@@ -184,6 +185,8 @@ const craftRecipe = (state: GameState, action: ActionOf<typeof AT.CRAFT_RECIPE>)
     const daily = advanceDailyProtocol(player, 'goldSpend', recipe.gold || 0, action.payload?.relicRoll);
     const logs = getDailyProtocolRewardLogs(daily.reward);
     player = addNewTitles(daily.player, logs);
+    // Wave 61: 제작 임무("아이템 N개 제작")는 제작한 그 자리에서 진행된다 — 다음 탐험 · 전투까지 수령 버튼이 없었다.
+    player = { ...player, quests: syncQuestProgress(player, '', DB.QUESTS).updatedQuests };
     logs.push({ type: 'success', text: MSG.CRAFT_DONE(recipe.name || '') });
     return completeTransaction(state, player, logs);
 };
@@ -247,7 +250,10 @@ const synthesizeItems = (state: GameState, action: ActionOf<typeof AT.SYNTHESIZE
         return rejectTransaction(state, 'error', MSG.SYNTHESIS_NOT_ENOUGH);
     }
 
-    const useProtect = action.payload?.useProtect === true;
+    // Wave 61: 보호는 실패할 수 있는 합성에만 의미가 있다 — 성공률 100%(보호 토글이 보이지 않는 단계)에서도 보호권 ·
+    //   크리스털을 차감하던 결함(원장 §61 A18). 화면이 이전 합성의 토글 상태를 그대로 보내도 여기서 거른다.
+    const canFail = 'successRate' in validation && Number(validation.successRate) < 1;
+    const useProtect = action.payload?.useProtect === true && canFail;
     const successRoll = Number(action.payload?.successRoll);
     const outputRoll = Number(action.payload?.outputRoll);
     if (

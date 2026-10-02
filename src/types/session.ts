@@ -122,6 +122,12 @@ export interface EventReward {
     mp?: number;
     /** 체인 보상 유물 지정자 (eventPresentation이 읽는다). */
     relicId?: string;
+    /**
+     * `combat_bonus` 전용 — 다음 전투 강화의 이름(`tempBuff.name`)과 로그 앞머리("…이 합류해").
+     * 체인마다 다르다(2026-10: 셋 모두 '최후의 영웅 · 기사의 혼령'을 말하던 결함). 없으면 MSG의 일반 문구.
+     */
+    buffName?: string;
+    buffIntro?: string;
 }
 
 /** 이벤트 outcome이 실어 보내는 버프 — 신규 배율 스키마와 캠프파이어 스키마 양쪽. */

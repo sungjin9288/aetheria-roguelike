@@ -127,7 +127,6 @@ test('공통 전투 승리 authority는 활성 원정의 canonical boss를 한 �
         addLog: () => {},
         addStoryLog: () => {},
         emitUnlockedTitles: () => {},
-        extendedChecks: false,
         liveConfig: { eventMultiplier: 1 },
         rng: () => 0.5,
         now: () => 1_500,

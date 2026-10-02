@@ -101,8 +101,9 @@ test('adventureGuide.getMoveRecommendations: levelLabel은 "레벨 N"/"심연"�
 
     // 무한 심연 지역이 있다면 levelLabel이 정확히 '심연'인지도 확인.
     const infiniteMap = Object.values(DB.MAPS).find((map) => map.level === 'infinite');
+    // 2026-10 Wave 61 A3: 무한 심연은 잠금이 없다(이동 규칙 `getMapAccess`와 같다) — 진입 레벨 1.
     if (infiniteMap) {
-        assert.equal(getMapRequiredLevel(infiniteMap, 10), Math.max(18, 50));
+        assert.equal(getMapRequiredLevel(infiniteMap, 10), 1);
     }
 });
 

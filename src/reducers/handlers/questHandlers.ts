@@ -8,6 +8,7 @@ import {
     removeExpeditionFocusQuest,
 } from '../../utils/expeditionMissionFocus';
 import { getMapRequiredLevel } from '../../utils/mapTopology';
+import { nonWalkingEntryOf } from '../../utils/mapRouteGate';
 import { getProtocolDayKey } from '../../utils/protocolCycle';
 import { createQuestProgressState } from '../../utils/questProgress';
 import { getUnmetQuestPrerequisite } from '../../utils/questPrerequisites';
@@ -42,11 +43,10 @@ const getRequestDate = (requestedAt: unknown) => {
 
 export const getBountyTargets = (level: number) => {
     const targets: string[] = [];
-    Object.values(DB.MAPS).forEach((map) => {
-        // 시즌 한정 지역(seasonOnly, level이 [min,max] 범위)은 시즌이 닫혀 있으면 갈 수 없으므로
-        //   현상수배 대상에서 명시적으로 제외한다. (이전에는 범위 배열이 NaN으로 비교돼 우연히
-        //   빠지고 있었다 — 결과는 같지만 의도를 코드로 고정한다.)
-        if (map.seasonOnly) return;
+    Object.entries(DB.MAPS).forEach(([name, map]) => {
+        // 걸어서 못 들어가는 지역(시즌 한정 · 열쇠로 여는 고대 보물고)의 몬스터는 현상수배 대상이 아니다.
+        //   Wave 61: 시즌만 빼던 동안 보물고 전용 몬스터(황금 골렘 · 보물사냥꾼 · 미믹)가 Lv35 대상 16종 중 3종이었다.
+        if (nonWalkingEntryOf(name, map)) return;
         const mapLevel = getMapRequiredLevel(map, level);
         if (
             map.level !== 'infinite'

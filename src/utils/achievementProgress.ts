@@ -2,6 +2,7 @@ import { CONSTANTS } from '../data/constants.js';
 import { ACHIEVEMENTS } from '../data/quests.js';
 import type { Achievement, Player } from '../types/index.js';
 import { countCompletedSignatureSets, countDiscoveredSignatures } from './signatureDiscovery.js';
+import { countDiscoveredMaps } from './discoveredMaps.js';
 
 /**
  * 업적 진행값 · 달성 판정(2026-10 Wave 58 — gameUtils에서 옮김).
@@ -19,10 +20,7 @@ const getRawAchievementValue = (achievement: Achievement, player: Player) => {
     // 2026-10 Wave 58: `stats.syntheses`는 성공한 합성만 센다(업적 "합성 N회 성공").
     if (target === 'synths') return stats?.syntheses || 0;
     // 2026-10 Wave 58: "새 지역 N곳 발견" — 시작 마을은 발견한 곳이 아니다(처음부터 방문 목록에 있다).
-    if (target === 'discoveries') {
-        return (Array.isArray(stats?.visitedMaps) ? stats.visitedMaps : [])
-            .filter((map) => map !== CONSTANTS.START_LOCATION).length;
-    }
+    if (target === 'discoveries') return countDiscoveredMaps(stats);
     // 2026-10 Wave 58: "혼돈의 심연 N층 도달" — `abyssRecord`는 돌파한 층 수이고(Wave 35) 돌파하면 다음 층에
     //   도달한다. 기록이 있으면 도달한 가장 깊은 층은 기록 + 1이다.
     if (target === 'abyssRecord') {

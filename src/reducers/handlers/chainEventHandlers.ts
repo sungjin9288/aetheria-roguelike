@@ -8,6 +8,7 @@ import { GS } from '../gameStates';
 import { RELICS } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { rejectEventChoice } from './eventChoiceFeedback';
+import { advanceDailyProtocol, getDailyProtocolRewardLogs } from './helpers';
 import type { GameEvent } from '../../types/session.js';
 
 const PAYLOAD_KEYS = ['chainId', 'choiceIndex', 'step'];
@@ -46,8 +47,11 @@ const isPayload = (value: unknown): value is ResolveChainGoldChoicePayload => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
     const payload = value as Record<string, unknown>;
     const keys = Reflect.ownKeys(payload);
-    return keys.length === PAYLOAD_KEYS.length
-        && keys.every((key) => typeof key === 'string' && PAYLOAD_KEYS.includes(key))
+    // Wave 61: `relicRoll`만 선택 키로 받는다(일일 '골드 소비' 보상 판정) — 나머지 키 집합은 그대로 엄격하다.
+    const hasRelicRoll = Object.prototype.hasOwnProperty.call(payload, 'relicRoll');
+    if (hasRelicRoll && !(typeof payload.relicRoll === 'number' && payload.relicRoll >= 0 && payload.relicRoll < 1)) return false;
+    return keys.length === PAYLOAD_KEYS.length + (hasRelicRoll ? 1 : 0)
+        && keys.every((key) => typeof key === 'string' && (PAYLOAD_KEYS.includes(key) || key === 'relicRoll'))
         && typeof payload.chainId === 'string'
         && payload.chainId.trim().length > 0
         && Number.isSafeInteger(payload.step)
@@ -196,23 +200,28 @@ export const chainEventActionMap = {
             }
         }
 
+        const paidPlayer = {
+            ...state.player,
+            gold: gold - cost,
+            ...(rewardRelic ? {
+                relics: [...(relics || []), rewardRelic],
+                stats: {
+                    ...(state.player.stats || {}),
+                    relicCount: relicCount + 1,
+                },
+            } : {}),
+            eventChainProgress: {
+                ...(state.player.eventChainProgress || {}),
+                [chainId]: step + 1,
+            },
+        };
+        // Wave 61: 이야기 골드 지불도 골드 소비다 — 일일 '골드 소비'에 더한다(휴식 · 기술 교체 · 정찰과 같은 경로, 원장 §61 A17).
+        //   지불 · 유물을 먼저 반영한 뒤 진행하므로 일일 보상의 유물 변환도 지금 유물 칸을 본다.
+        const daily = advanceDailyProtocol(paidPlayer, 'goldSpend', cost, action.payload.relicRoll);
+        const dailyLogs = getDailyProtocolRewardLogs(daily.reward);
         return {
             ...state,
-            player: {
-                ...state.player,
-                gold: gold - cost,
-                ...(rewardRelic ? {
-                    relics: [...(relics || []), rewardRelic],
-                    stats: {
-                        ...(state.player.stats || {}),
-                        relicCount: relicCount + 1,
-                    },
-                } : {}),
-                eventChainProgress: {
-                    ...(state.player.eventChainProgress || {}),
-                    [chainId]: step + 1,
-                },
-            },
+            player: daily.player,
             currentEvent: null,
             gameState: GS.IDLE,
             logs: [
@@ -222,6 +231,7 @@ export const chainEventActionMap = {
                     type: 'event',
                     text: formatEventText(outcome.log),
                 },
+                ...dailyLogs.map((entry, index) => ({ id: `chain-gold-daily:${chainId}:${step}:${choiceIndex}:${index}`, ...entry })),
             ].slice(-BALANCE.LOG_MAX_SIZE),
             syncStatus: 'syncing',
         };

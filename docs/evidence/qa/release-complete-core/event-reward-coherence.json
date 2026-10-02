@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "23a04fdd8abc62b0aee4fdaa361f2ecc60115f874af14b41be497575482fdae0",
+  "reportHash": "8401535d428c9f4045dcd14b0c78a197705dedcc1c37230f7f18199c15cb1049",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -401,8 +401,8 @@
         "location": "천공 정원",
         "mapLevel": 40,
         "outcomeType": "chain_advance",
-        "rewardType": null,
-        "itemName": null,
+        "rewardType": "item",
+        "itemName": "용의 비늘",
         "itemTier": null,
         "relicId": null
       },

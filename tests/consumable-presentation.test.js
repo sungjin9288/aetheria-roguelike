@@ -10,7 +10,8 @@ test('compact QuickSlot labels distinguish recovery cure and buff categories', (
     assert.equal(getConsumableCompactLabel({ type: 'cure', effect: 'poison' }), '해독');
     assert.equal(getConsumableCompactLabel({ type: 'cure', effect: 'freeze' }), '해빙');
     assert.equal(getConsumableCompactLabel({ type: 'buff', effect: 'atk_up' }), 'ATK');
-    assert.equal(getConsumableCompactLabel({ type: 'buff', effect: 'all_up' }), 'ALL');
+    // Wave 61 (원장 §61.3): all_up은 엔진이 공격력 · 방어력만 올린다 — "ALL"이 아니다.
+    assert.equal(getConsumableCompactLabel({ type: 'buff', effect: 'all_up' }), 'ATK·DEF');
 });
 
 test('presentation preserves full accessible detail and Korean cure copy without raw effect tokens', () => {

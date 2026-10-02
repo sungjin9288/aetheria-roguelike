@@ -18,7 +18,7 @@ test('마을에서 고른 원정 임무 3개가 출정 snapshot, 필드 tracker,
     await expect(board).toContainText('3/3');
 
     const selectedRow = page.getByTestId('quest-active-row').filter({ hasText: '멧돼지 사냥' });
-    const replacementRow = page.getByTestId('quest-active-row').filter({ hasText: '광산의 위협' });
+    const replacementRow = page.getByTestId('quest-active-row').filter({ hasText: '평원의 코볼트' });
     await expect(selectedRow.getByTestId('quest-board-toggle-expedition-focus')).toHaveAttribute('data-focus-selected', 'true');
     await expect(replacementRow.getByTestId('quest-board-toggle-expedition-focus')).toBeDisabled();
 
@@ -47,7 +47,7 @@ test('마을에서 고른 원정 임무 3개가 출정 snapshot, 필드 tracker,
 
     const tracker = page.getByTestId('control-mission-tracker');
     await expect(tracker).toContainText('이번 원정 · 3/3');
-    await expect(tracker.getByTestId('control-expedition-focus-list')).toContainText('광산의 위협');
+    await expect(tracker.getByTestId('control-expedition-focus-list')).toContainText('평원의 코볼트');
     await page.screenshot({ path: 'playtest-artifacts/expedition-mission-loadout/field-tracker.png' });
 
     await page.getByTestId('control-map-open').click();

@@ -39,8 +39,6 @@ export interface VictoryOutcomeOptions {
     addLog: AddLog;
     addStoryLog: AddStoryLog;
     emitUnlockedTitles: EmitUnlockedTitles;
-    /** attack/skill 직접 승리에만 true (시즌XP, 마왕, 진엔딩, story log). */
-    extendedChecks: boolean;
     liveConfig: GameActionDeps['liveConfig'];
     rng: () => number;
     now: () => number;
@@ -52,18 +50,16 @@ export interface VictoryOutcomeOptions {
  * @param {object} opts.playerAfterCombat - 직접 승리 시점의 player (CombatEngine 결과)
  * @param {object} opts.deadEnemy - 처치된 적
  * @param {object} opts.stats - getFullStats() 결과
- * @param {boolean} opts.extendedChecks - attack/skill 직접 승리 시 true (시즌XP, 마왕, 진엔딩, story log)
  * @returns {{ earlyReturn: boolean }} earlyReturn이 true이면 호출자가 즉시 return
  */
-// cycle 592: extendedChecks / liveConfig 2 defaults batch 제거 — 3 production
-//   caller (combatAttack:81/131, combatItem:67) 모두 명시 전달이라 두 default
-//   모두 도달 불가. cycle 265 liveConfig 4번째 인자 전달 보존. 청소 메가
-//   시리즈 82번째.
+// cycle 592: liveConfig default 제거 — 호출자가 명시 전달한다. cycle 265 liveConfig 4번째 인자 전달 보존.
+// 2026-10 Wave 61: 승리 후처리는 처치 방법과 무관하다. `extendedChecks`(공격 · 기술 직접 승리에만 true)가 있던 동안
+//   적 턴의 지속 피해 · 반격 처치와 전투 소모품 처치는 처치 수 마일스톤(정확히 N에서만 판정 — 영구 누락) · 구역 보스 처치 기록 ·
+//   시즌 XP · 전투 기록(낮은 생명 승리 임무) · 공허의 신 보상을 건너뛰었다(원장 §61 A4).
 export const handleVictoryOutcome = ({
     playerAfterCombat, deadEnemy, stats,
     dispatch, addLog, addStoryLog,
     emitUnlockedTitles,
-    extendedChecks,
     liveConfig,
     rng,
     now,
@@ -171,26 +167,24 @@ export const handleVictoryOutcome = ({
     const newCodexCount = codexAfter - codexBefore;
     const codexDiscoverXp = newCodexCount > 0 ? SEASON_XP.codexDiscover * newCodexCount : 0;
 
-    // milestone (attack/skill 직접 승리에만)
-    if (extendedChecks) {
-        const milestoneRewards = checkMilestones(updatedPlayer.stats?.killRegistry || {}, baseName);
-        if (milestoneRewards.length > 0) {
-            // checkMilestones의 val은 type에 따라 number(gold) / string(item·title)이다 —
-            //   반환 타입이 판별 유니온이 아니라 각 분기에서 해당 형으로 좁혀 쓴다.
-            milestoneRewards.forEach((reward) => {
-                addLog('event', reward.msg);
-                if (reward.type === 'gold') updatedPlayer = grantGold(updatedPlayer, Number(reward.val));
-                else if (reward.type === 'item') updatedPlayer = addItemByName(updatedPlayer, String(reward.val));
-                else if (reward.type === 'title') {
-                    const title = String(reward.val);
-                    updatedPlayer = {
-                        ...updatedPlayer,
-                        titles: [...new Set([...(updatedPlayer.titles || []), title])],
-                        activeTitle: updatedPlayer.activeTitle || title
-                    };
-                }
-            });
-        }
+    // milestone — 처치 방법과 무관하게 판정한다(Wave 61).
+    const milestoneRewards = checkMilestones(updatedPlayer.stats?.killRegistry || {}, baseName);
+    if (milestoneRewards.length > 0) {
+        // checkMilestones의 val은 type에 따라 number(gold) / string(item·title)이다 —
+        //   반환 타입이 판별 유니온이 아니라 각 분기에서 해당 형으로 좁혀 쓴다.
+        milestoneRewards.forEach((reward) => {
+            addLog('event', reward.msg);
+            if (reward.type === 'gold') updatedPlayer = grantGold(updatedPlayer, Number(reward.val));
+            else if (reward.type === 'item') updatedPlayer = addItemByName(updatedPlayer, String(reward.val));
+            else if (reward.type === 'title') {
+                const title = String(reward.val);
+                updatedPlayer = {
+                    ...updatedPlayer,
+                    titles: [...new Set([...(updatedPlayer.titles || []), title])],
+                    activeTitle: updatedPlayer.activeTitle || title
+                };
+            }
+        });
     }
 
     updatedPlayer = applyAbyssFloorAdvance(updatedPlayer, dispatch, addLog, random, currentTime);
@@ -212,7 +206,9 @@ export const handleVictoryOutcome = ({
     if (hitNewTier) {
         const tierIdx = tierThresholds.findIndex((tier) => tier === newStreak);
         const atkPct = Math.round(BALANCE.KILL_STREAK_ATK_BONUS[tierIdx] * 100);
-        addLog('event', MSG.KILL_STREAK_BONUS(newStreak, atkPct));
+        // 2026-10 Wave 61: 같은 단계가 치명타 확률도 올린다(statsCalculator computeKillStreakBonus) — 로그가 공격력만 말했다.
+        const critPct = Math.round(BALANCE.KILL_STREAK_CRIT_BONUS[tierIdx] * 100);
+        addLog('event', MSG.KILL_STREAK_BONUS(newStreak, atkPct, critPct));
     }
     // cycle 95: max-ever 연속 처치 누적 — killStreak는 비전투 30초 / 사망 / 도주 시
     // 0으로 리셋되는 휘발성 카운터라 reflection / 보상 surface에 잡히지 않음. 영구
@@ -251,67 +247,64 @@ export const handleVictoryOutcome = ({
         dispatch({ type: AT.UPDATE_WEEKLY_PROTOCOL, payload: { type: 'bossKills', now: resolvedAt } });
     }
 
-    if (extendedChecks) {
-        if (isBossKill && deadEnemy?.baseName) {
-            // W8-Z4: updatedPlayer.loc(Player['loc'])가 실제 string | undefined로 드러나며
-            //   DB.MAPS 인덱싱에 undefined를 못 넣게 됐다 — 미매칭 폴백 ''는 DB.MAPS['']가
-            //   없어 그대로 undefined로 단락(동작 동일).
-            const currentMapBoss = DB.MAPS[updatedPlayer.loc || '']?.boss;
-            const isAreaBossKill = typeof currentMapBoss === 'string' && currentMapBoss === deadEnemy.baseName;
-            dispatch({
-                type: AT.SET_PLAYER,
-                payload: (p: Player) => {
-                    const playerWithBossClear = {
-                        ...p,
-                        stats: {
-                            ...p.stats,
-                            areaBossDefeated: {
-                                // INITIAL_STATE가 stats를 보장한다(비필수 선언은 구세이브 호환용).
-                                ...(p.stats!.areaBossDefeated || {}),
-                                [deadEnemy.baseName!]: true,
-                            },
+    if (isBossKill && deadEnemy?.baseName) {
+        // W8-Z4: updatedPlayer.loc(Player['loc'])가 실제 string | undefined로 드러나며
+        //   DB.MAPS 인덱싱에 undefined를 못 넣게 됐다 — 미매칭 폴백 ''는 DB.MAPS['']가
+        //   없어 그대로 undefined로 단락(동작 동일).
+        const currentMapBoss = DB.MAPS[updatedPlayer.loc || '']?.boss;
+        const isAreaBossKill = typeof currentMapBoss === 'string' && currentMapBoss === deadEnemy.baseName;
+        dispatch({
+            type: AT.SET_PLAYER,
+            payload: (p: Player) => {
+                const playerWithBossClear = {
+                    ...p,
+                    stats: {
+                        ...p.stats,
+                        areaBossDefeated: {
+                            // INITIAL_STATE가 stats를 보장한다(비필수 선언은 구세이브 호환용).
+                            ...(p.stats!.areaBossDefeated || {}),
+                            [deadEnemy.baseName!]: true,
                         },
-                    };
-                    return isAreaBossKill
-                        ? queueMilestoneStoryBeat(playerWithBossClear, 'first_area_boss')
-                        : playerWithBossClear;
-                },
-            });
-            // 원정 완료 정산 리캡 (2026-07 감사 축4): 구역 보스(맵 데이터의 mapData.boss와
-            //   이름이 일치하는 보스) 격파 시 원정 완료 로그. 신규 추적 인프라를 만들지
-            //   않기 위해 이미 계산된 값만 조합 — killStreak(이번 원정 동안 죽지 않고 이어온
-            //   연속 처치 수, 위에서 갱신 완료)와 victoryResult.goldGained(이번 전투 획득
-            //   골드)만 사용.
-            if (isAreaBossKill) {
-                addLog('success', MSG.EXPEDITION_CLEAR_RECAP(deadEnemy.baseName, updatedPlayer.killStreak || 1, victoryResult.goldGained || 0));
-            }
+                    },
+                };
+                return isAreaBossKill
+                    ? queueMilestoneStoryBeat(playerWithBossClear, 'first_area_boss')
+                    : playerWithBossClear;
+            },
+        });
+        // 원정 완료 정산 리캡 (2026-07 감사 축4): 구역 보스(맵 데이터의 mapData.boss와
+        //   이름이 일치하는 보스) 격파 시 원정 완료 로그. 신규 추적 인프라를 만들지
+        //   않기 위해 이미 계산된 값만 조합 — killStreak(이번 원정 동안 죽지 않고 이어온
+        //   연속 처치 수, 위에서 갱신 완료)와 victoryResult.goldGained(이번 전투 획득
+        //   골드)만 사용.
+        if (isAreaBossKill) {
+            addLog('success', MSG.EXPEDITION_CLEAR_RECAP(deadEnemy.baseName, updatedPlayer.killStreak || 1, victoryResult.goldGained || 0));
         }
-        dispatch({ type: AT.ADD_SEASON_XP, payload: isBossKill ? SEASON_XP.bossKill : SEASON_XP.kill });
-        const winHpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
-        dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio)) }) });
     }
+    dispatch({ type: AT.ADD_SEASON_XP, payload: isBossKill ? SEASON_XP.bossKill : SEASON_XP.kill });
+    const winHpRatio = (updatedPlayer.hp || 0) / Math.max(1, updatedPlayer.maxHp || 1);
+    dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({ ...p, stats: pushBattleRecord(p.stats, makeBattleRecord('win', winHpRatio)) }) });
 
     emitUnlockedTitles(updatedPlayer);
 
-    if (extendedChecks) {
-        if (deadEnemy.baseName === '공허의 신' || deadEnemy.name?.includes('공허의 신') || deadEnemy.name?.includes('절대 공허')) {
-            const voidCore = makeItem(
-                { name: '공허의 핵심', type: 'key', price: 0, tier: 6, desc: '심연 100층을 정복한 자에게만 허락된 공허의 본질. 세상의 어떤 힘도 이것을 무너뜨릴 수 없다.' },
-                random,
-                currentTime,
-            );
-            dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({
-                ...p,
-                inv: [...(p.inv || []), voidCore],
-                titles: [...new Set([...(p.titles || []), '허무의 정복자'])],
-                activeTitle: p.activeTitle || '허무의 정복자',
-                stats: { ...(p.stats || {}), abyssRecord: Math.max(p.stats?.abyssRecord || 0, p.stats?.abyssFloor || 100) },
-            })});
-            addLog('critical', MSG.VOID_GOD_SLAIN);
-            return { earlyReturn: false, lootSettlement };
-        }
-        addStoryLog('victory', { name: deadEnemy.name });
+    if (deadEnemy.baseName === '공허의 신' || deadEnemy.name?.includes('공허의 신') || deadEnemy.name?.includes('절대 공허')) {
+        const voidCore = makeItem(
+            { name: '공허의 핵심', type: 'key', price: 0, tier: 6, desc: '심연 100층을 정복한 자에게만 허락된 공허의 본질. 세상의 어떤 힘도 이것을 무너뜨릴 수 없다.' },
+            random,
+            currentTime,
+        );
+        dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => ({
+            ...p,
+            inv: [...(p.inv || []), voidCore],
+            // Wave 61: 칭호는 id로 준다 — 이름 문자열('허무의 정복자')을 넣던 동안 효과 없는 같은 이름 칭호가 하나 더 붙었다.
+            titles: [...new Set([...(p.titles || []), 'void_conqueror'])],
+            activeTitle: p.activeTitle || 'void_conqueror',
+            stats: { ...(p.stats || {}), abyssRecord: Math.max(p.stats?.abyssRecord || 0, p.stats?.abyssFloor || 100) },
+        })});
+        addLog('critical', MSG.VOID_GOD_SLAIN);
+        return { earlyReturn: false, lootSettlement };
     }
+    addStoryLog('victory', { name: deadEnemy.name });
 
     const droppedItems = admittedItems.map((i) => i.name);
     const traitProfile = getTraitProfile(updatedPlayer, victoryStats);

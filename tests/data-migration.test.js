@@ -203,7 +203,7 @@ test('migrateData restores every accepted cumulative mission without advancing l
         62: 2,
         66: 4,
         68: 3,
-        72: 5,
+        72: 4, // Wave 61 A6: 시작 마을 제외
         81: 3,
         202: 3,
         203: 4,

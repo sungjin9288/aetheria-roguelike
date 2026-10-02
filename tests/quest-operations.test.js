@@ -382,7 +382,8 @@ test('active cumulative combat guidance names the remaining combat goal', () => 
     });
 
     assert.equal(killTracker.routeLabel, '모든 권역');
-    assert.equal(killTracker.nextStep, '일반 몬스터 363회 더 처치');
+    // 2026-10 Wave 61: `kills`는 보스 처치도 센다 — '일반 몬스터'라 부르던 문구를 MSG로 바로잡았다.
+    assert.equal(killTracker.nextStep, MSG.QUEST_NEXT_STEP_KILLS(363));
     assert.equal(killTracker.returnLabel, '누적 토벌');
     assert.equal(bossTracker.routeLabel, '보스 권역');
     assert.equal(bossTracker.nextStep, '보스 6회 더 처치');

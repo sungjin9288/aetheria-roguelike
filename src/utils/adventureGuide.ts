@@ -5,10 +5,12 @@ import { MSG } from '../data/messages.js';
 import type { FullStats, GameMap, Player, StatusId } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
+import { canBossAppearInMap } from './bossPresence.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
 import { getSignaturePityMultiplier } from './signaturePity.js';
 import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
 import { getMapRequiredLevel, getNextMapTowardTarget } from './mapTopology.js';
+import { getRestCost } from './expeditionReturnFlow.js';
 import {
     getExpeditionQuestTargetMaps,
     getFocusedExpeditionQuestEntries,
@@ -27,8 +29,10 @@ interface RoutePlan {
     returnLabel: string;
 }
 
+// 2026-10 Wave 61: 보스 경로 계획은 지역의 `boss` 필드가 아니라 실제 출현 판정(`canBossAppearInMap`)을 따른다 —
+//   해금 전의 숨은 보스 지역 · 구역 보스를 쓰러뜨린 지역에 '보스 진입'을 안내하지 않는다.
 const getRoutePlan = (
-    targetMap: GameMap | null | undefined,
+    bossCanAppear: boolean,
     isSafeTarget: boolean,
     badge: string,
     hpRatio: number,
@@ -43,7 +47,7 @@ const getRoutePlan = (
         };
     }
 
-    if (targetMap?.boss) {
+    if (bossCanAppear) {
         return {
             approach: hpRatio >= ROUTE_PLAN_BOSS_HP_RATIO ? '보스 진입' : '정비 후 진입',
             exitRule: 'HP 75% 미만이면 귀환',
@@ -94,12 +98,8 @@ const getRoutePlan = (
 //   getMapLevel(targetMap, playerLevel) 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 17번째 (cycle 502-518). body의 (playerLevel
 //   || 1) defensive 가드는 별개 — caller가 0/undefined 넘기는 path 보존.
-const getMapLevel = (map: GameMap | null | undefined, playerLevel: number) => (
-    map?.level === 'infinite'
-        ? Math.max((playerLevel || 1) + 8, 50)
-        // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
-        : (typeof map?.level === 'number' ? map.level : 1)
-);
+// 안내의 진입 레벨은 지도 · 조작판과 같은 판정이다(Wave 61 — 심연을 따로 "레벨 + 8"로 잠그던 사본을 지웠다).
+const getMapLevel = (map: GameMap | null | undefined, playerLevel: number) => getMapRequiredLevel(map, playerLevel);
 const getVisitedMaps = (player: Player) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
 
 const getQuestProgressLabel = (entry: ExpeditionQuestEntry) => {
@@ -138,9 +138,10 @@ const getQuestNextStep = (entry: ExpeditionQuestEntry, targetMaps: string[]) => 
     if (targetMaps.length > 0) return `${targetMaps[0]}에서 ${quest.target} 추적`;
     if (quest.type === 'craft') return `제작 ${remaining}회 진행`;
     if (quest.type === 'combat_count') {
+        // 2026-10 Wave 61: `kills`는 보스 처치도 센다(CombatEngine.handleVictory) — '일반 몬스터'라 부르지 않는다.
         return quest.target === 'bossKills'
             ? `보스 ${remaining}회 더 처치`
-            : `일반 몬스터 ${remaining}회 더 처치`;
+            : MSG.QUEST_NEXT_STEP_KILLS(remaining);
     }
     if (quest.type === 'bounty_count') return `현상금 ${remaining}건 완료`;
     if (quest.type === 'build_victory') return `${quest.buildLabel || '지정 빌드'} ${remaining}승`;
@@ -259,7 +260,12 @@ interface ExplorationForecast {
 
 // cycle 334: description 필드 제거 — getExplorationForecast 외부 read 0건이던 dead field.
 //   mood / chips만 ControlPanel & test에서 사용.
-export const getExplorationForecast = (player: Player, mapData: GameMap | null | undefined): ExplorationForecast => {
+export const getExplorationForecast = (
+    player: Player,
+    mapData: GameMap | null | undefined,
+    /** 숨은 보스 해금은 지역별이다 — `DB.MAPS`의 지역 데이터에는 `name`이 없으므로 호출처가 이름을 넘긴다. */
+    mapName: string | null | undefined = mapData?.name,
+): ExplorationForecast => {
     if (!mapData) {
         return {
             mood: '기록 동기화 중',
@@ -288,7 +294,7 @@ export const getExplorationForecast = (player: Player, mapData: GameMap | null |
 
     let mood = '교전 밀도 보통';
 
-    if (mapData.boss) {
+    if (canBossAppearInMap(mapName, mapData, player)) {
         mood = eventPct >= 8 ? '보스 전조' : '보스 권역';
     } else if (eventPct >= 10 || relicPct >= 12) {
         mood = '발견 상승';
@@ -359,7 +365,8 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
             const isLocked = targetLevel > playerLevel;
             const isSafeTarget = targetMap.type === 'safe';
             const isVisited = visitedMaps.has(exitName);
-            const forecast = getExplorationForecast(player, targetMap);
+            const forecast = getExplorationForecast(player, targetMap, exitName);
+            const bossCanAppear = canBossAppearInMap(exitName, targetMap, player);
             // collection-driven 신호: 미발견 signature가 있는 경로는 ✦N 칩으로 강조
             const undiscoveredSignatureCount = getMapUndiscoveredSignatures(exitName, player).length;
             const chips: ExplorationChip[] = [
@@ -389,7 +396,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                     reason = '휴식, 상점, 게시판을 바로 열 수 있는 안전 경로입니다.';
                 }
             } else {
-                if (targetMap.boss) {
+                if (bossCanAppear) {
                     badge = '보스';
                     if (hpRatio >= 0.85 && mpRatio >= 0.65) {
                         score += 28;
@@ -435,7 +442,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                 reason = `레벨 ${targetLevel}부터 진입할 수 있습니다. 현재 지역의 임무와 탐험을 먼저 진행하세요.`;
             }
 
-            const routePlan = getRoutePlan(targetMap, isSafeTarget, badge, hpRatio, inventoryCount, inventoryCap);
+            const routePlan = getRoutePlan(bossCanAppear, isSafeTarget, badge, hpRatio, inventoryCount, inventoryCap);
             chips.push({ label: 'RETURN', value: routePlan.returnLabel });
 
             // cycle 333: score / isSafeTarget / isVisited / isBoss 4 dead 필드 제거 —
@@ -590,7 +597,10 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
         };
     }
 
-    if (safe && hpRatio <= 0.65 && (player?.gold || 0) >= BALANCE.REST_COST) {
+    // Wave 61: 휴식 안내는 실제 휴식 비용(레벨 · 거울 반영, `getRestCost`)으로 판단한다 — 기본 비용 60으로 보던 동안
+    //   Lv40 · 골드 100에서 휴식을 추천하고 누르면 골드 부족으로 거부됐다(원장 §61 A19). 정화 안내도 같은 비용을 본다.
+    const canAffordRest = (player?.gold || 0) >= (player ? getRestCost(player) : BALANCE.REST_COST);
+    if (safe && hpRatio <= 0.65 && canAffordRest) {
         return {
             title: '정비 추천',
             detail: '체력이 충분히 회복되지 않았습니다. 다음 출발 전에 휴식으로 안정성을 확보하세요.',
@@ -601,7 +611,7 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
     // cycle 115: 안전지대에서 활성 debuff 인지 시 정화 권장 — cycle 112 rest가 status를
     // 클리어하므로 자연스러운 actionable hint. cycle 106-110에서 활성화된 5종 status가
     // 영속할 경우 다음 탐험에 페널티 누적 — 안전지대 복귀 후 즉시 알림.
-    if (safe && Array.isArray(player?.status) && player.status.length > 0) {
+    if (safe && canAffordRest && Array.isArray(player?.status) && player.status.length > 0) {
         // 2026-09 Wave 6 X2: 인라인 DEBUFF_LABEL 제거 — MSG.STATUS_LABELS(공유 테이블) 재사용.
         const DEBUFF_LABEL = MSG.STATUS_LABELS;
         const activeDebuffs = player.status.filter((s: StatusId) => DEBUFF_LABEL[s]);

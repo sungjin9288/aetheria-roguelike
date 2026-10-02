@@ -4,7 +4,7 @@
   "authorityHashes": {
     "catalog": "a20d9a0f532ac7f7488473cf2cdb9c7e96b47aa1a080ebe6ade19122670a6ee6",
     "resolver": "df171d5221128d47b8bf516fe4fad2cf916b5cfc8be0211720dd0197c2692b55",
-    "statsCalculator": "be67219f3cc95f47c6668c6863ae0eb46be9be63d954d4cbf3affdbc4b12555b",
+    "statsCalculator": "81ff18d382322fcf85b12abe5c50ab502c2013e8b40a1a1e1cc5108bc895a255",
     "combatEngine": "663ce87a3462d1dc13a9def1eedf47cd3e093963213d07f6909f7383383c37fa",
     "audit": "d2754c1967a9823fce1d1205f3da538969c26f59b8c01f04c2a43aedc2acd9f0",
     "verifier": "e69920bf3143b989052fd8278ec8006d79412a8e3c58222f7c66cf22a5afbb0a",

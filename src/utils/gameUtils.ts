@@ -19,6 +19,8 @@ import { getCurrentRunSnapshot } from './runProgress.js';
 import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { getSeasonArchive } from './seasonPassPresentation.js';
 import { formatSkillText } from './skillPresentation.js';
+import { countDiscoveredMaps } from './discoveredMaps.js';
+import { getCodexEntryName } from './codexIdentity.js';
 import {
     countDiscoveredSignatures,
     isSignatureName,
@@ -123,6 +125,8 @@ export const formatRewardParts = (reward: QuestReward) => {
     if (reward.exp) parts.push(`경험 ${reward.exp}`);
     if (reward.gold) parts.push(`골드 ${reward.gold}`);
     if (reward.item) parts.push(reward.item);
+    // 2026-10: 칭호 보상(임무 152·153·154·201·202)은 수령 때 지급되는데(rewardHandlers) 보상 줄에서 빠져 있었다.
+    if (reward.title) parts.push(MSG.QUEST_REWARD_TITLE(getTitleLabel(reward.title)));
     if (reward.premiumCurrency) parts.push(`에테르 크리스탈 ${reward.premiumCurrency}`);
     return parts;
 };
@@ -202,7 +206,8 @@ export const registerLootToCodex = (player: Player, lootItems: Item[]): Player =
             : item.type === 'armor' ? 'armors'
             : item.type === 'shield' ? 'shields'
             : item.type === 'mat' ? 'materials' : null;
-        if (cat) p = registerCodex(p, cat, item.name);
+        // 2026-10 Wave 61: 장비는 바탕 이름으로 등록한다(접두어 사본은 같은 도감 항목이다 — `utils/codexIdentity.ts`).
+        if (cat) p = registerCodex(p, cat, getCodexEntryName(cat, item));
         // 2026-10 Wave 58: 접두어가 붙은 전설 각인을 얻으면 그 전설 각인 자체도 발견한 것이다(전설 도감 · 수집 업적).
         const signatureBase = cat ? getSignatureBaseName(item) : null;
         if (cat && signatureBase && signatureBase !== item.name) p = registerCodex(p, cat, signatureBase);
@@ -380,7 +385,7 @@ export const checkTitles = (player: Player): string[] => {
         // cycle 83: 'discoveries' 시맨틱 통일 — visitedMaps.length(맵 발견 수)로 교체.
         // cartographer("지도 제작자") 칭호가 stats.discoveries(이벤트 카운터)만으로 풀리던
         // 회귀 수정. achievement(target='discoveries') 정합성 기준선과 일치시킴.
-        if (type === 'discoveries')    return (player.stats?.visitedMaps || []).length >= val;
+        if (type === 'discoveries')    return countDiscoveredMaps(player.stats) >= val;
         // cycle 77: 도주 카운터 기반 칭호 (cautious_explorer / survivor_instinct).
         if (type === 'escapes')        return (player.stats?.escapes || 0) >= val;
         if (type === 'signaturesDiscovered') {

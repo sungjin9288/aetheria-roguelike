@@ -195,7 +195,21 @@ export const pushBattleRecord = (stats: Player['stats'], record: BattleRecord) =
     return {
         ...stats,
         recentBattles: [...prev, record].slice(-50),
+        ...(record.result === 'win' ? { lowHpWinTotals: addLowHpWinTotals(stats, record) } : {}),
     };
+};
+
+const lowHpWinKey = (threshold: number) => String(threshold);
+
+// Wave 61: 낮은 생명 승리 누적 — 처음 쓰는 세이브는 지금 창에 남은 승리로 시작한다(창 밖으로 밀린 예전 승리는 알 수 없다).
+const addLowHpWinTotals = (stats: Player['stats'], record: BattleRecord) => {
+    const totals: Record<string, number> = { ...(stats?.lowHpWinTotals || {}) };
+    for (const threshold of BALANCE.LOW_HP_WIN_THRESHOLDS) {
+        const key = lowHpWinKey(threshold);
+        const base = Number.isFinite(totals[key]) ? totals[key] : countLowHpWins(stats, threshold);
+        totals[key] = base + (record.hpRatio <= threshold ? 1 : 0);
+    }
+    return totals;
 };
 
 export const countLowHpWins = (stats: Player['stats'], threshold: number) => {
@@ -208,6 +222,12 @@ export const countLowHpWins = (stats: Player['stats'], threshold: number) => {
         )).length;
     }
     return stats?.lowHpWins || 0;
+};
+
+/** 낮은 생명 승리의 누적 수(임무용). 경계가 누적 집계 밖이면 최근 50전 창으로 센다. */
+export const getLowHpWinTotal = (stats: Player['stats'], threshold: number) => {
+    const total = stats?.lowHpWinTotals?.[lowHpWinKey(threshold)];
+    return Math.max(Number.isFinite(total) ? Number(total) : 0, countLowHpWins(stats, threshold));
 };
 
 // ─────────────────────────────────────────────────────────────────────────

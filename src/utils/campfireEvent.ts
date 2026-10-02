@@ -26,6 +26,7 @@ export const buildCampfireEvent = (fullStats: Pick<FullStats, 'maxHp' | 'maxMp'>
         choices: [MSG.CAMPFIRE_REST_CHOICE, MSG.CAMPFIRE_FORGE_CHOICE],
         outcomes: [
             // 2026-10 Wave 58: 모닥불 휴식도 휴식이다 — 마을 휴식만 세던 동안 업적 "N번 휴식"이 모닥불을 무시했다.
+            //   로그의 회복량은 명목값이다 — 정산(eventActions)이 실효 최대치에서 멈춘 실제 회복량으로 고쳐 찍는다(U5).
             { choiceIndex: 0, hp: healHp, mp: healMp, rest: true, log: MSG.CAMPFIRE_REST_LOG(healHp, healMp) },
             {
                 choiceIndex: 1,

@@ -31,9 +31,9 @@ interface SeasonPassPanelProps {
     onClaimSeasonReward?: (tier: number) => void;
 }
 
-const getVisibleRewardParts = (row: SeasonRewardRow, isPremium: boolean) => [
-    ...formatSeasonRewardParts(row.free),
-    ...(isPremium ? formatSeasonRewardParts(row.premium).map((part) => `추가 ${part}`) : []),
+const getVisibleRewardParts = (row: SeasonRewardRow, isPremium: boolean, ownedTitles: readonly string[] | undefined) => [
+    ...formatSeasonRewardParts(row.free, ownedTitles),
+    ...(isPremium ? formatSeasonRewardParts(row.premium, ownedTitles).map((part) => `추가 ${part}`) : []),
 ];
 
 const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPanelProps) => {
@@ -52,6 +52,8 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
     const completedSeasons = getCompletedSeasonCount(season);
     const archive = getSeasonArchive(season);
     const isPremium = Boolean(season.isPremium);
+    // 2026-10 Wave 61: 이미 가진 칭호는 수령해도 다시 지급되지 않는다 — 보상 줄이 '보유 중'으로 말한다.
+    const ownedTitles = player?.titles;
     const claimSeasonReward = onClaimSeasonReward;
 
     const claimReward = (row: SeasonRewardRow) => {
@@ -121,7 +123,7 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
                                 <div className="min-w-0 flex-1">
                                     <div className="aether-type-body font-semibold text-slate-100">{row.tier}단계 보상</div>
                                     <div className="aether-type-meta mt-1 text-[#d5b180]">
-                                        {getVisibleRewardParts(row, isPremium).join(' · ')}
+                                        {getVisibleRewardParts(row, isPremium, ownedTitles).join(' · ')}
                                     </div>
                                 </div>
                                 <button
@@ -161,11 +163,11 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
                                 <div className="min-w-0 flex-1">
                                     <div className="aether-type-body font-semibold text-slate-100">{row.tier}단계</div>
                                     <div className="aether-type-meta mt-0.5 text-[#d5b180]">
-                                        {formatSeasonReward(row.free)}
+                                        {formatSeasonReward(row.free, ownedTitles)}
                                     </div>
                                     {isPremium && (
                                         <div className="aether-type-meta mt-0.5 text-[#9ddfe2]">
-                                            추가 보상 · {formatSeasonReward(row.premium)}
+                                            추가 보상 · {formatSeasonReward(row.premium, ownedTitles)}
                                         </div>
                                     )}
                                 </div>
@@ -297,11 +299,11 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
                                                         </span>
                                                     </div>
                                                     <div className="aether-type-meta mt-0.5 text-[#d5b180]">
-                                                        {formatSeasonReward(row.free)}
+                                                        {formatSeasonReward(row.free, ownedTitles)}
                                                     </div>
                                                     {isPremium && (
                                                         <div className="aether-type-meta mt-0.5 text-[#9ddfe2]">
-                                                            추가 보상 · {formatSeasonReward(row.premium)}
+                                                            추가 보상 · {formatSeasonReward(row.premium, ownedTitles)}
                                                         </div>
                                                     )}
                                                 </div>

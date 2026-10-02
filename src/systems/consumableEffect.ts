@@ -1,5 +1,6 @@
 import { MSG } from '../data/messages';
 import { calculateFullStats } from '../utils/statsCalculator';
+import { isConsumableItem, isFullRestoreElixir } from './consumableRules';
 import type { Item, ItemType, Player, StatusId } from '../types/index.js';
 
 type ConsumableReason =
@@ -31,14 +32,8 @@ const CURE_EFFECTS = new Set<StatusId>(['poison', 'burn', 'freeze', 'curse']);
 const BUFF_EFFECTS = new Set(['atk_up', 'def_up', 'all_up']);
 
 const isFinitePositive = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
-const ELIXIR_NAME = '엘릭서';
-// 2026-10 Wave 58: 접두어가 붙은 엘릭서("신성한 엘릭서")도 "HP 완전 회복"이다 — 이름 그대로만 보던 동안 그 사본은
-//   val(9999 + 접두어)만큼만 회복해 최대 생명이 그보다 큰 후반에는 완전 회복이 아니었다.
-const isCanonicalElixir = (item: Item | null | undefined) => {
-    if (item?.type !== 'hp' || typeof item.name !== 'string') return false;
-    if (item.name === ELIXIR_NAME) return true;
-    return item.prefixed === true && typeof item.prefixName === 'string' && item.name === `${item.prefixName} ${ELIXIR_NAME}`;
-};
+// 2026-10 Wave 58: 접두어가 붙은 엘릭서("신성한 엘릭서")도 "HP 완전 회복"이다. 판정(`isFullRestoreElixir`)은
+//   `consumableRules.ts`가 소유한다 — 인벤토리 · 상점 · 빠른 슬롯 · 전투 목록 문구가 같은 판정을 읽는다(Wave 61).
 
 /** RECOVERY_TYPES.has()에 타입 서술을 씌운 것 — 반환 boolean은 동일, item.type을 좁혀 준다. */
 const isRecoveryItemType = (type: ItemType | undefined): type is 'hp' | 'mp' => RECOVERY_TYPES.has(type as 'hp' | 'mp');
@@ -110,7 +105,7 @@ const isDominatedByCurrentBuff = (current: Player['tempBuff'], candidate: Return
  */
 export const resolveConsumableEffect = ({ player, item }: { player: Player; item: Item }): ConsumableEffectResult => {
     if (!player || !item || typeof item.type !== 'string') return rejection(player, 'INVALID_ITEM');
-    if (!['hp', 'mp', 'cure', 'buff'].includes(item.type)) return rejection(player, 'INVALID_ITEM');
+    if (!isConsumableItem(item)) return rejection(player, 'INVALID_ITEM');
     if (player.challengeModifiers?.includes('noPotion')) return rejection(player, 'NO_POTION');
 
     const inventory = Array.isArray(player.inv) ? player.inv : [];
@@ -126,7 +121,7 @@ export const resolveConsumableEffect = ({ player, item }: { player: Player; item
         if (current >= maximum) return rejection(player, item.type === 'hp' ? 'FULL_HP' : 'FULL_MP');
         // Number(item.val) — isFinitePositive(item.val) 확인을 이미 통과했으므로 실수치이지만,
         //   Item.val이 optional이라 산술 연산자에는 number 단언이 필요하다(값 변화 없음).
-        const restored = isCanonicalElixir(item)
+        const restored = isFullRestoreElixir(item)
             ? maximum
             : Math.min(maximum, current + Number(item.val));
         if (restored <= current) return rejection(player, item.type === 'hp' ? 'FULL_HP' : 'FULL_MP');

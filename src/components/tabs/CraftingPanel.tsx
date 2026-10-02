@@ -59,8 +59,11 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
 
   const handleSynthesize = () => {
     if (!validation?.valid) return;
-    actions?.synthesize(selectedIds, useProtect);
+    // 보호 토글은 실패할 수 있는 합성에서만 보인다 — 보이지 않을 때는 보호를 보내지 않고, 합성 뒤에는 끈다(Wave 61).
+    const protectable = 'successRate' in validation && Number(validation.successRate) < 1;
+    actions?.synthesize(selectedIds, useProtect && protectable);
     setSelectedIds([]);
+    setUseProtect(false);
   };
 
   const renderCraftMode = () => (
@@ -143,7 +146,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
     const protectionCurrency = player.premiumCurrency || 0;
     const canUseProtection = protectionTokens > 0 || protectionCurrency >= BALANCE.SYNTHESIS_PROTECT_COST;
     const protectionCost = protectionTokens > 0
-      ? `보호권 1개 · 보유 ${protectionTokens}개`
+      ? MSG.SYNTHESIS_PROTECT_TOKEN_COST(protectionTokens)
       : `${BALANCE.PREMIUM_CURRENCY_NAME} ${BALANCE.SYNTHESIS_PROTECT_COST}개 · 보유 ${protectionCurrency}개`;
     const canSynthesize = Boolean(validation?.valid) && (!useProtect || canUseProtection);
     const lockReason = validation?.reason === 'NO_GOLD' && synthesisPreview

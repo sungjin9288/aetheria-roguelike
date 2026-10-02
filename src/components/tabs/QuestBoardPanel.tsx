@@ -9,6 +9,7 @@ import SignalBadge from '../SignalBadge';
 import FocusPanelHeader from '../FocusPanelHeader';
 import { getPreparedExpeditionFocusQuestIds, MAX_EXPEDITION_FOCUS_QUESTS } from '../../utils/expeditionMissionFocus.js';
 import { getQuestObjectiveGateNotice, type QuestObjectiveGate } from '../../utils/questObjectiveGate';
+import { isLifetimeCounterQuest } from '../../utils/cumulativeQuestProgress';
 import { MSG } from '../../data/messages';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { Player, Quest, QuestReward } from '../../types/index.js';
@@ -137,6 +138,13 @@ const QuestObjectiveGateLine = ({ gate }: { gate: QuestObjectiveGate | null }) =
   </div>
 ) : null);
 
+/** 진행도를 평생 누적 기록에서 읽는 임무 표시 — 판정은 진행도와 같은 표(`isLifetimeCounterQuest`)가 소유한다. */
+const LifetimeCounterChip = ({ quest }: { quest: Quest }) => (isLifetimeCounterQuest(quest) ? (
+  <SignalBadge tone="neutral" size="sm" title={MSG.QUEST_LIFETIME_COUNTER_HINT} data-testid="quest-lifetime-counter-chip">
+    {MSG.QUEST_LIFETIME_COUNTER_CHIP}
+  </SignalBadge>
+) : null);
+
 interface QuestRowShellProps {
     children: ReactNode;
     kind: string;
@@ -196,6 +204,7 @@ const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept, objecti
             {getRecommendationBadge(entry, index)}
           </SignalBadge>
           <span className="aether-type-title min-w-0 font-readable font-semibold text-white">{getRecommendationTitle(entry.quest)}</span>
+          <LifetimeCounterChip quest={entry.quest} />
           <ChevronDown
             size={13}
             className={`ml-auto shrink-0 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
@@ -390,6 +399,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   <div className="flex flex-wrap items-center gap-2">
                     <div className={`font-readable text-base font-semibold ${entry.isComplete ? 'text-emerald-100' : 'text-white'}`}>{entry.quest.title}</div>
                     {entry.isBounty && <span className="aether-type-meta rounded-full border border-[#d5b180]/28 bg-[#d5b180]/10 px-2 py-0.5 font-readable text-[#f6e7c8]">현상수배</span>}
+                    <LifetimeCounterChip quest={entry.quest} />
                     {entry.isComplete && <span className="aether-type-meta rounded-full border border-emerald-300/24 bg-emerald-300/10 px-2 py-0.5 font-readable text-emerald-100">보상 수령 가능</span>}
                     {isFocusedQuest(entry.id) && <SignalBadge tone="recommended" size="sm">이번 원정</SignalBadge>}
                     {entry.quest.buildTag && (
@@ -435,7 +445,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   <div data-testid="quest-board-abandon-warning" className="border-t border-rose-300/18 pt-3">
                     <div className="font-readable text-[12px] leading-[1.45] text-rose-100/88">
                       지금까지의 진행도 {getQuestProgressText(entry.quest, entry.progress)}이 사라집니다.
-                      {entry.isBounty && ' 오늘은 새 현상수배를 다시 받을 수 없습니다.'}
+                      {entry.isBounty && ` ${MSG.BOUNTY_ABANDON_WARNING}`}
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-2">
                       <Motion.button
@@ -533,6 +543,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                       <div className="flex flex-wrap items-center gap-2">
                         <div className="font-readable text-base font-semibold text-white">{quest.title}</div>
                         <span className="aether-type-meta rounded-full border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 px-2 py-0.5 font-readable text-[#ece5ff]">레벨 {quest.minLv} 필요</span>
+                        <LifetimeCounterChip quest={quest} />
                         {quest.buildTag && (
                           <SignalBadge tone="neutral" size="sm">{quest.buildLabel || quest.buildTag}</SignalBadge>
                         )}
@@ -570,6 +581,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <div className="font-readable text-base font-semibold text-slate-100">{quest.title}</div>
+                      <LifetimeCounterChip quest={quest} />
                       <span className="aether-lock-note aether-type-meta rounded-full px-2 py-0.5 font-readable">잠금 · {quest.lockLabel}</span>
                     </div>
                     <div className="mt-1">

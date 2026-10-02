@@ -8,8 +8,10 @@ interface MapSelectionRoute {
     isLocked?: boolean;
 }
 
-export const getMapRequiredLevel = (map: GameMap | null | undefined, playerLevel: number) => {
-    if (map?.level === 'infinite') return Math.max(playerLevel + 8, 50);
+// Wave 61: 무한 심연은 잠금이 없다(`getMapAccess`의 `NaN` 비교 — 이동은 언제나 통과한다). `레벨 + 8`을 돌려주던 동안
+//   이동 버튼 · 경로 · 안내가 심연을 영원히 "잠김"으로 그렸고 터미널 `move`로만 들어갈 수 있었다(원장 §61 A3).
+export const getMapRequiredLevel = (map: GameMap | null | undefined, _playerLevel: number) => {
+    if (map?.level === 'infinite') return 1;
     // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
     if (Array.isArray(map?.level)) return Number(map.level[0] || 1);
     return typeof map?.level === 'number' ? map.level : 1;

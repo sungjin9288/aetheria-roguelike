@@ -102,11 +102,14 @@ test('exploration forecast marks boss zones clearly', () => {
         }
     };
 
+    // 2026-10 Wave 61: `boss: true`만으로는 보스가 나오지 않는다(canBossAppearInMap) — 조우 풀에 보스가 있는 지역으로 둔다.
     const forecast = getExplorationForecast(player, {
         type: 'dungeon',
         level: 30,
         eventChance: 0.28,
         boss: true,
+        monsters: ['레드 드래곤'],
+        bossMonsters: ['레드 드래곤'],
     });
 
     assert.equal(forecast.mood, '보스 전조');

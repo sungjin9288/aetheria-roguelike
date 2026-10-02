@@ -19,6 +19,7 @@ import type { LucideIcon } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { DB } from '../data/db';
 import { getAdventureGuidance, getExpeditionPreparation, getMoveRecommendations, getQuestTracker } from '../utils/adventureGuide';
+import { canBossAppearInMap } from '../utils/bossPresence';
 import type { MoveRecommendation, QuestTracker } from '../utils/adventureGuide';
 import ShopPanel from './ShopPanel';
 import EventPanel from './EventPanel';
@@ -267,7 +268,8 @@ const MapSignalStrip = ({
   const routeName = blindMap ? '미확인 경로' : (recommendedRoute?.name || '경로 없음');
   const mapState = currentMap?.type === 'safe'
     ? '안전지대'
-    : currentMap?.boss
+    // Wave 61 (원장 §61.3): 보스 표시는 이 플레이어가 실제로 보스를 만날 수 있을 때만(`canBossAppearInMap`).
+    : canBossAppearInMap(player?.loc, currentMap, player)
       ? '보스 권역'
       : '탐험 지역';
   const routeBadge = recommendedRoute?.isRecommended ? '추천' : (recommendedRoute?.badge || '대기');
@@ -374,7 +376,7 @@ const ControlPanel = ({
     return {
       ...route,
       isMissionRoute: questNextSteps.has(route.name),
-      isBoss: Boolean(targetMap?.boss),
+      isBoss: canBossAppearInMap(route.name, targetMap, player),
       isLocked: playerLevel < getMapRequiredLevel(targetMap, playerLevel),
     };
   });

@@ -178,7 +178,6 @@ test('실제 현재 지역의 첫 구역 보스 승리는 area boss story beat�
         addLog: () => {},
         addStoryLog: () => {},
         emitUnlockedTitles: () => {},
-        extendedChecks: true,
         liveConfig: { eventMultiplier: 1 },
     });
 

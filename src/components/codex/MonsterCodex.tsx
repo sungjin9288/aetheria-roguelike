@@ -1,15 +1,17 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, Compass, Crown, Target } from 'lucide-react';
 import { DB } from '../../data/db';
-import { getLootTable } from '../../data/loot';
 import { getBossBrief, MONSTERS, type BossBrief } from '../../data/monsters';
 import { MSG } from '../../data/messages';
+import { getMonsterCodexDrops } from '../../utils/codexDropSources';
 import MonsterIcon from '../icons/MonsterIcon';
 import SkillTypeIcon from '../icons/SkillTypeIcon';
 import type { ElementKey, GameMap, Player } from '../../types/index.js';
 
 interface MonsterCodexProps {
     player?: Player | null;
+    /** 처음 펼쳐 둘 기록(처치한 몬스터 이름) — 정적 렌더 검증용, 기본은 모두 접힘. */
+    initialSelectedMonster?: string | null;
 }
 
 const RESEARCH_STEPS = [
@@ -32,8 +34,8 @@ interface MonsterCodexEntry {
     bossBrief: BossBrief | null;
 }
 
-const MonsterCodex = ({ player }: MonsterCodexProps) => {
-    const [selectedMonster, setSelectedMonster] = useState<string | null>(null);
+const MonsterCodex = ({ player, initialSelectedMonster = null }: MonsterCodexProps) => {
+    const [selectedMonster, setSelectedMonster] = useState<string | null>(initialSelectedMonster);
 
     const allMonsters = useMemo<MonsterCodexEntry[]>(() => {
         const registry = player?.stats?.killRegistry || {};
@@ -54,7 +56,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
                 name,
                 kills,
                 encountered: kills > 0,
-                drops: getLootTable(name) || [],
+                drops: getMonsterCodexDrops(name),
                 location: Object.entries(DB.MAPS)
                     .filter(([, map]) => collectMapEncounters(map).includes(name))
                     .map(([location]) => location)
@@ -120,11 +122,11 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
             )}
 
             {monster.drops.length > 0 && (
-                <div className="mt-3">
-                    <div className="text-[11px] text-slate-400">획득 가능 아이템</div>
+                <div data-testid="codex-monster-drops" className="mt-3">
+                    <div className="text-[11px] text-slate-400">{MSG.CODEX_MONSTER_DROPS_LABEL}</div>
                     <div className="mt-1 flex flex-wrap gap-1.5">
                         {monster.drops.map((drop: string) => (
-                            <span key={drop} className="rounded-lg border border-white/8 bg-white/[0.03] px-2 py-1 text-[11px] text-[#f6e7c8]">
+                            <span key={drop} data-testid="codex-monster-drop" className="rounded-lg border border-white/8 bg-white/[0.03] px-2 py-1 text-[11px] text-[#f6e7c8]">
                                 {drop}
                             </span>
                         ))}
@@ -197,7 +199,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
             <div className="flex items-baseline justify-between gap-3">
                 <div>
                     <h3 className="aether-type-title font-semibold text-slate-100">몬스터 연구</h3>
-                    <p className="aether-type-meta mt-0.5 text-slate-400/76">조우한 생물만 이름과 전투 정보가 기록됩니다</p>
+                    <p className="aether-type-meta mt-0.5 text-slate-400/76">{MSG.CODEX_MONSTER_HEADER_HINT}</p>
                 </div>
                 <span className="aether-type-body shrink-0 text-[#dff7f5]">{encountered.length}/{total}</span>
             </div>
@@ -240,7 +242,7 @@ const MonsterCodex = ({ player }: MonsterCodexProps) => {
 
             <div data-testid="codex-monster-undiscovered" className="border-y border-white/10 py-3">
                 <div className="aether-type-body text-slate-300">미발견 기록 {total - encountered.length}종</div>
-                <div className="aether-type-meta mt-1 text-slate-500">이름 없는 칸을 나열하지 않고 실제 조우할 때 새 기록을 엽니다</div>
+                <div className="aether-type-meta mt-1 text-slate-500">{MSG.CODEX_MONSTER_UNDISCOVERED_HINT}</div>
             </div>
         </div>
     );

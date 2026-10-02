@@ -208,7 +208,7 @@ export const BALANCE = {
     // 활성 토벌 임무의 목표 조우를 돕되 지역 몬스터 다양성은 절반가량 유지한다.
     // 목표가 7종 풀에 하나라면 실질 조우율은 약 53%(45% 집중 + 일반 풀 55%/7).
     HUNT_TARGET_FOCUS_CHANCE: 0.45,
-    MAP_HIGH_EVENT_CHANCE_THRESHOLD: 0.28,  // MapNavigator '이벤트↑' 배지 임계값 — 상위 지역군(eventChance 0.28+) 강조
+    MAP_HIGH_EVENT_CHANCE_THRESHOLD: 0.28,  // '이벤트↑' 배지 임계값 — 보정 없는 지역(×1)이 eventChance 0.28일 때의 실제 이야기 확률(× SPECIAL_EVENT_BASE_MULT)이 기준(Wave 61, mapBadges)
     PREFIX_CHANCE: 0.2,
     ITEM_PREFIX_CHANCE: 0.12,
     SPECIAL_EVENT_BASE_MULT: 0.25,
@@ -218,6 +218,7 @@ export const BALANCE = {
     OFFHAND_WEAPON_RATIO: 0.34,
     TWO_HAND_ATK_BONUS: 1.55,
     DUAL_WIELD_ATK_BONUS: 1.05,
+    LOW_HP_WIN_THRESHOLDS: [0.2, 0.1, 0.05], // 낮은 생명 승리 임무(62 · 63 · 75)가 쓰는 경계 — 승리마다 누적 집계한다(Wave 61)
     LOW_HP_PASSIVE_THRESHOLD: 0.3,      // 직업 패시브 "HP 30% 이하"(무당 죽음의 직관)의 경계 — 이하이므로 포함(Wave 58)
     DUAL_WIELD_DEF_MULT: 0.92,
     ONE_HAND_CRIT_BONUS: 0.08,
@@ -505,7 +506,7 @@ export const BALANCE = {
         { id: 'halfHp', label: '약한 생명력', desc: '최대 생명력이 절반으로 줄어듭니다.' },
         { id: 'noGold', label: '빈손의 시작', desc: '시작 골드가 없고 얻는 골드도 절반으로 줄어듭니다.' },
         { id: 'randomSkills', label: '뒤섞인 기술', desc: '기술을 쓰면 다른 기술이 무작위로 발동합니다.' },
-        { id: 'eliteOnly', label: '강적의 길', desc: '만나는 적이 모두 정예 적으로 등장합니다.' },
+        { id: 'eliteOnly', label: '강적의 길', desc: '보스를 제외한 모든 적이 정예 적으로 등장합니다.' },
         { id: 'noPotion', label: '물약 없이', desc: '회복과 보조 아이템을 사용할 수 없습니다.' },
         { id: 'blindMap', label: '길 잃은 여행', desc: '현재 위치와 지도 정보가 숨겨집니다.' },
     ],

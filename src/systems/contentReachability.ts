@@ -479,8 +479,12 @@ const equipmentRouteReport = (source: ContentSource, maps: Record<string, MapLik
             dropSources.get(name)?.add(monster);
         }
     }
+    // 2026-10 Wave 61: 레거시 표는 드롭 표가 없는 몬스터에게만 쓰인다 — `processLoot`가 드롭 표를 돌린 뒤 곧바로 반환한다.
+    //   드롭 표가 있는 몬스터의 레거시 줄(거대 지네 → 독사의 송곳니 · 타락한 천사 → 천상의갑주 등)을 경로로 세던 동안
+    //   실제로 떨어지지 않는 장비가 '획득 가능'으로 보고됐다(도감 획득처와 같은 결함, 원장 §62).
     const legacySources = new Map<string, Set<string>>();
     for (const [monster, drops] of Object.entries(LOOT_TABLE)) {
+        if (Array.isArray(DROP_TABLES[monster]) && DROP_TABLES[monster].length > 0) continue;
         for (const drop of Array.isArray(drops) ? drops : []) {
             if (typeof drop !== 'string') continue;
             if (!legacySources.has(drop)) legacySources.set(drop, new Set());

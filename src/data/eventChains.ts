@@ -53,7 +53,7 @@ export const EVENT_CHAINS = [
                     choices: ['문을 경건히 살펴본다', '손을 댄다'],
                     outcomes: [
                         { type: 'chain_advance', log: '원시의 힘이 당신을 인정했습니다. 유물 하나가 발광하며 나타납니다.', reward: { type: 'relic' } },
-                        { type: 'chain_advance', log: '문에서 강렬한 충격이 느껴졌습니다. 하지만 무언가를 얻었습니다.', reward: { type: 'relic' } },
+                        { type: 'chain_advance', log: '손을 대자 문이 거세게 진동했지만 당신을 해치지는 않았습니다. 틈새에서 무언가가 모습을 드러냅니다.', reward: { type: 'relic' } },
                     ],
                 },
             },
@@ -143,10 +143,10 @@ export const EVENT_CHAINS = [
                 loc: '암흑 성',
                 event: {
                     title: '기사의 혼령',
-                    desc: '암흑 성 입구에서 기사의 혼령이 나타납니다. "당신이 나를 구해줬군요. 이번 싸움에서는 내가 당신을 돕겠습니다." 혼령이 당신과 합류합니다.',
+                    desc: '암흑 성 입구에서 기사의 혼령이 나타납니다. "당신이 나를 구해줬군요. 이제 내가 잠시 당신 곁에서 싸우겠습니다." 혼령이 당신과 합류합니다.',
                     choices: ['혼령을 받아들인다', '혼자 싸우겠다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '기사의 혼령이 합류! 이번 전투에서 추가 피해 보너스를 얻습니다.', reward: { type: 'combat_bonus', atkMult: 1.3, duration: 5 } },
+                        { type: 'chain_advance', log: '기사의 혼령이 합류! 혼령이 곁에 머무는 동안 공격이 더 강해집니다.', reward: { type: 'combat_bonus', atkMult: 1.3, duration: 5, buffName: '기사의 혼령', buffIntro: '최후의 영웅이 합류해' } },
                         { type: 'nothing', log: '혼령은 사라졌습니다.', reward: null },
                     ],
                 },
@@ -284,7 +284,7 @@ export const EVENT_CHAINS = [
                     choices: ['협력을 약속한다', '당국에 신고하겠다고 협박한다', '조용히 물러난다'],
                     outcomes: [
                         { type: 'chain_advance', log: '기계 집단과 동맹을 맺었습니다. 전투에서 도움을 받을 수 있게 됩니다.', reward: { type: 'gold', amount: 3000 } },
-                        { type: 'chain_advance_fail', log: '협박이 역효과를 냈습니다. 기계들이 적대적으로 돌아섰습니다.', reward: null },
+                        { type: 'chain_advance_fail', log: '협박이 역효과를 냈습니다. 기계들은 은신처를 버리고 자취를 감췄습니다. 다시는 그들을 만날 수 없을 것입니다.', reward: null },
                         { type: 'nothing', log: '아무 결정도 하지 않고 물러났습니다.', reward: null },
                     ],
                 },
@@ -335,7 +335,8 @@ export const EVENT_CHAINS = [
                     choices: ['시험을 받아들인다', '알을 돌려준다', '드래곤과 협상한다'],
                     outcomes: [
                         { type: 'chain_advance', log: '시험을 통과했습니다! 드래곤이 당신을 인정했습니다.', reward: { type: 'stat_bonus', atk: 20 } },
-                        { type: 'chain_advance', log: '알을 돌려주자 드래곤이 용의 비늘 하나를 감사의 표시로 줬습니다.', reward: null },
+                        // Wave 61: 문구가 약속한 용의 비늘을 준다(보상이 비어 있었다 — 원장 §61 A15).
+                        { type: 'chain_advance', log: '알을 돌려주자 드래곤이 용의 비늘 하나를 감사의 표시로 줬습니다.', reward: { type: 'item', name: '용의 비늘' } },
                         { type: 'chain_advance', log: '협상 끝에 드래곤과 동맹을 맺었습니다.', reward: null },
                     ],
                 },
@@ -396,7 +397,7 @@ export const EVENT_CHAINS = [
                     desc: '탐험가가 안내한 심연의 핵심에 도달했습니다. "이곳에 심연을 지배하는 고대의 힘이 잠들어 있습니다. 당신이라면 감당할 수 있을 것입니다."',
                     choices: ['고대의 힘을 흡수한다', '힘을 봉인한다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '심연의 힘을 흡수했습니다. 전설의 유물과 함께 강대한 힘을 얻었습니다!', reward: { type: 'relic' } },
+                        { type: 'chain_advance', log: '심연의 힘을 흡수했습니다. 그 힘이 전설의 유물로 응결됩니다!', reward: { type: 'relic' } },
                         { type: 'chain_advance', log: '심연의 힘을 봉인했습니다. 세계가 더 안전해졌습니다. 봉인의 대가로 보상이 내려집니다.', reward: { type: 'gold', amount: 15000 } },
                     ],
                 },
@@ -467,8 +468,8 @@ export const EVENT_CHAINS = [
                     desc: '고대 신전 도시 중심부에서 빛나는 제단을 발견했습니다. 신성한 목소리가 울립니다. "이방인이여, 네 가치를 증명하라. 세 가지 시험을 통과해야 신전의 축복을 받을 수 있다."',
                     choices: ['시험을 수락한다', '제단에서 성물을 가져간다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '시험을 수락했습니다. 첫 번째 시험은 차원의 균열에서 기다리고 있습니다.', reward: { type: 'gold', amount: 1000 } },
-                        { type: 'chain_advance', log: '제단에서 성물을 가져갔습니다. 신성한 파편이 어딘가에서 반응할 것입니다.', reward: { type: 'stat_bonus', hp: 80, def: 5 } },
+                        { type: 'chain_advance', log: '시험을 수락하자 제단이 당신의 각오를 비추고, 첫 번째 시험을 통과했습니다. 두 번째 시험은 차원의 균열에서 기다리고 있습니다.', reward: { type: 'gold', amount: 1000 } },
+                        { type: 'chain_advance', log: '제단에서 성물을 가져가자 그 가호가 몸에 스며들었습니다. 두 번째 시험은 차원의 균열에서 기다리고 있습니다.', reward: { type: 'stat_bonus', hp: 80, def: 5 } },
                     ],
                 },
             },
@@ -530,7 +531,7 @@ export const EVENT_CHAINS = [
                     choices: ['장치를 파괴한다', '장치를 역이용한다'],
                     outcomes: [
                         { type: 'chain_advance', log: '장치를 파괴했습니다! 균열의 에너지가 약해집니다. 마지막 진원지가 에테르 관문에 있습니다.', reward: { type: 'gold', amount: 10000 } },
-                        { type: 'chain_advance', log: '장치를 역이용해 균열 에너지를 흡수했습니다. 강대한 힘이 쌓이지만 위험도 증가합니다.', reward: { type: 'stat_bonus', atk: 25, hp: 100 } },
+                        { type: 'chain_advance', log: '장치를 역이용해 균열 에너지를 흡수했습니다. 균열의 힘이 몸에 쌓입니다. 마지막 진원지가 에테르 관문에 있습니다.', reward: { type: 'stat_bonus', atk: 25, hp: 100 } },
                     ],
                 },
             },
@@ -539,7 +540,7 @@ export const EVENT_CHAINS = [
                 loc: '에테르 관문',
                 event: {
                     title: '균열의 봉인',
-                    desc: '에테르 관문이 차원 균열의 최종 진원지였습니다. 균열 봉인석의 힘으로 이 관문을 완전히 봉인할 수 있습니다. "이 봉인이 세계를 구할 것입니다."',
+                    desc: '에테르 관문이 차원 균열의 최종 진원지였습니다. 지금이라면 이 관문의 균열을 완전히 봉인할 수 있습니다. "이 봉인이 세계를 구할 것입니다."',
                     choices: ['균열을 완전히 봉인한다', '균열의 힘을 자신에게 봉인한다'],
                     outcomes: [
                         // cycle 140: '균열 봉인석' missing → tier 4 균열 light shield '균열 차단 방패'로 교체.
@@ -577,10 +578,10 @@ export const EVENT_CHAINS = [
                 loc: '몰락한 전초기지',
                 event: {
                     title: '사령관의 일지',
-                    desc: '전초기지 지하 병기고에서 사령관의 일지를 발견했습니다. "...마왕성으로 떠난다. 돌아오지 못할 것이다. 누군가 이 일지를 발견하면, 부디 내 검을 찾아 마왕에게 닿게 해주오."',
+                    desc: '전초기지 지하 병기고에서 사령관의 일지를 발견했습니다. "...마왕성으로 떠난다. 돌아오지 못할 것이다. 누군가 이 일지를 발견하면, 부디 내 뜻을 이어 마왕에게 닿게 해주오."',
                     choices: ['일지의 부탁을 받아들인다', '위험을 무릅쓰지 않는다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '사령관의 의지를 이어받았습니다. 그의 검이 시간을 거슬러 빛을 내기 시작합니다.', reward: { type: 'combat_bonus', atkMult: 1.25, duration: 8 } },
+                        { type: 'chain_advance', log: '사령관의 의지를 이어받았습니다. 그의 의지가 시간을 거슬러 당신의 무기에 빛을 더합니다.', reward: { type: 'combat_bonus', atkMult: 1.25, duration: 8, buffName: '사령관의 의지', buffIntro: '사령관의 의지가 깃들어' } },
                         { type: 'chain_advance_fail', log: '일지를 그대로 두고 떠났습니다.', reward: null },
                     ],
                 },
@@ -590,7 +591,7 @@ export const EVENT_CHAINS = [
                 loc: '마왕성',
                 event: {
                     title: '사령관의 영혼',
-                    desc: '마왕성 입구에서 푸른 빛이 일렁입니다. 사령관의 영혼이 모습을 드러냅니다. "당신이 내 검을 들고 여기까지 왔구나... 마지막 한 번, 함께 싸워주겠소?"',
+                    desc: '마왕성 입구에서 푸른 빛이 일렁입니다. 사령관의 영혼이 모습을 드러냅니다. "당신이 내 뜻을 이어 여기까지 왔구나... 마지막 한 번, 함께 싸워주겠소?"',
                     choices: ['사령관의 영혼과 함께 싸운다', '영혼에게 안식을 권한다'],
                     outcomes: [
                         { type: 'chain_advance', log: '사령관의 영혼이 당신과 동행합니다. 그의 마지막 의지가 전설 유물로 응결됩니다.', reward: { type: 'relic' } },
@@ -630,7 +631,7 @@ export const EVENT_CHAINS = [
                     desc: '오아시스 가운데 메마른 우물 옆에 신관의 망토 조각이 걸려 있습니다. 망토 안쪽에는 "정수는 피라미드 심장부에 봉인됐다"는 메모가 새겨져 있습니다.',
                     choices: ['메모를 받아 피라미드로 향한다', '망토 조각만 챙기고 떠난다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '신관의 의지를 이어받아 피라미드 심장부로 향합니다. 마지막 봉인을 풀 수 있을지도 모릅니다.', reward: { type: 'combat_bonus', atkMult: 1.2, duration: 6 } },
+                        { type: 'chain_advance', log: '신관의 의지를 이어받아 피라미드 심장부로 향합니다. 마지막 봉인을 풀 수 있을지도 모릅니다.', reward: { type: 'combat_bonus', atkMult: 1.2, duration: 6, buffName: '신관의 의지', buffIntro: '신관의 의지가 깃들어' } },
                         { type: 'chain_advance_fail', log: '망토 조각만 챙기고 다음 길은 포기했습니다.', reward: { type: 'gold', amount: 1500 } },
                     ],
                 },

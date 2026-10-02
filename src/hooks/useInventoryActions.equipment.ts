@@ -1,6 +1,7 @@
 import { AT } from '../reducers/actionTypes';
 import { getEquipmentIdentity } from '../utils/equipmentUtils';
 import { resolveConsumableEffect } from '../systems/consumableEffect';
+import { isConsumableItem } from '../systems/consumableRules';
 import type { EquipSlots, Item, Player } from '../types/index.js';
 import type { InventoryActionCtx } from './actionDeps';
 
@@ -21,7 +22,7 @@ export const createEquipmentActions = ({ player, dispatch, addLog }: InventoryAc
     useItem: (item: Item) => {
         if (!item?.id) return;
         const inventoryItem = (player.inv || []).find((entry) => entry.id === item.id);
-        if (inventoryItem && ['hp', 'mp', 'cure', 'buff'].includes(inventoryItem.type!)) {
+        if (inventoryItem && isConsumableItem(inventoryItem)) {
             const preview = resolveConsumableEffect({ player, item: inventoryItem });
             if (!preview.ok) {
                 addLog?.('warn', preview.message);

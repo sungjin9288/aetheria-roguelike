@@ -1,4 +1,5 @@
 import { BALANCE } from './constants';
+import { MSG } from './messages';
 
 /**
  * premiumShop.js — 프리미엄 상점 아이템 정의
@@ -18,7 +19,8 @@ export const PREMIUM_SHOP = {
     /** 합성 보호 (1회) */
     synthProtect: {
         id: 'synth_protect',
-        name: '합성 보호권',
+        // Wave 61 (원장 §61.3 소모품 · 상점): 이름은 MSG 하나 — 크리스털 교환 · 구매 로그 · 합성 화면이 같은 이름을 쓴다.
+        name: MSG.SYNTHESIS_PROTECT_ITEM_NAME,
         desc: '합성 실패 시 재료 보존 (1회)',
         cost: BALANCE.SYNTHESIS_PROTECT_COST,
     },

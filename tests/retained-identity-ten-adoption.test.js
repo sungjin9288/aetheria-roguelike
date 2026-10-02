@@ -36,7 +36,8 @@ test('retained ten preserves approved monster and map gameplay data', async () =
     // Wave 59(소유자 결정 "보스 기믹 전부 설명대로"): 보스 기믹 선언(mechanics) · 페이즈 상태 · 2페이즈 패턴을 고친 의도된 게임 데이터 변경 — 재고정.
     // Wave 60(소유자 결정 "보스별 고정 생명 상향"): 브리핑 보스 22종 hpMult를 1:1 대결로 보정한 의도된 게임 데이터 변경 — 재고정.
     assert.equal(hashMonsters(), 'fb70034911ffd1fa30908d7ee253e35f127bab634487bd772b3406ebed872dce', 'src/data/monsters.ts gameplay data');
-    assert.equal(hashMaps(), '34f3eccb41468ff5e4f6069757bd5a5f6f09b6ca3c7db1463a00757396999cd4', 'src/data/maps.ts gameplay data');
+    // Wave 61(소유자 결정 "지역 조우에 넣음"): 보스 6종을 지역 조우 풀에 넣고 심연 층 보스 목록을 채우고 지역 설명 잔재를 고친 의도된 게임 데이터 변경 — 재고정.
+    assert.equal(hashMaps(), 'b71e68c06422eba370c3679fa860cf18c4fd09cb0d698ac27425182a12a24a20', 'src/data/maps.ts gameplay data');
     assert.equal(
         sha(await readFile(new URL('public/assets/monsters/fire/fire-lizard.png', root))),
         '7a1246fe5c2952bf042436978249ca2db1a81fbbb0dc27e1198842568458dbe1',

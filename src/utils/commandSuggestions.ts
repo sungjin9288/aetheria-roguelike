@@ -1,4 +1,6 @@
 import { DB } from '../data/db';
+import { MSG } from '../data/messages';
+import { getRestCost } from './expeditionReturnFlow';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
 import type { Player } from '../types/index.js';
@@ -21,8 +23,9 @@ export const getAvailableCommands = (gameState: GameMode, player: Player | null 
     if (gameState === GS.IDLE) {
         base.push({ cmd: 'explore', desc: '주변 탐색' });
         base.push({ cmd: 'move', desc: '이동 (move <지역명>)' });
-        if (isSafe) {
-            base.push({ cmd: 'rest', desc: '휴식 (100G)' });
+        if (isSafe && player) {
+            // Wave 61 (원장 §61.3): 실제 휴식이 받는 비용(레벨 · 거울 반영)을 그린다 — 고정 "100G"였다.
+            base.push({ cmd: 'rest', desc: MSG.CMD_SUGGEST_REST(getRestCost(player)) });
             base.push({ cmd: 'shop', desc: '상점 열기' });
         }
     }
