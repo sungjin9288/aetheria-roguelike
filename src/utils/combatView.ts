@@ -19,7 +19,7 @@ interface CombatViewInput {
 /**
  * `buildCombatView()`가 반환하는 전투 소모품 1건 — DB 원본 `Item`에 `count`와 표시 문구 `label`을 얹는다.
  * `label`은 빠른 슬롯과 같은 `getConsumableDescription`이다 — 저장된 `desc_stat`을 그리던 동안 접두어 엘릭서가
- * "HP+10006 | 신성한"으로 보였다(엔진은 완전 회복, Wave 62 B 감사 F2).
+ * "HP+10006 | 신성한"으로 보였다(엔진은 완전 회복, Wave 61, 원장 §61.3).
  */
 type CombatConsumableEntry = Item & { count: number; label: string };
 

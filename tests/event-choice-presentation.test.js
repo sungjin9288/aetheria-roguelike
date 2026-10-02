@@ -71,7 +71,8 @@ test('확장 어휘 결과(정예/상태이상/유물/버프)는 선택 전에 �
     };
 
     assert.deepEqual(getEventChoicePreview(event, 0), { text: '정예 전투로 이어짐', tone: 'danger' });
-    assert.deepEqual(getEventChoicePreview(event, 1), { text: '보상 가능 · 상태이상 위험', tone: 'danger' });
+    // 2026-10: 이 결과는 생명도 18 잃는다 — 상태이상 줄이 위험 판정보다 먼저 반환하던 동안 생명 손실이 빠졌다.
+    assert.deepEqual(getEventChoicePreview(event, 1), { text: '보상 가능 · 상태이상 위험 · 생명 손실 위험', tone: 'danger' });
     assert.deepEqual(getEventChoicePreview(event, 2), { text: '유물 선택지가 열림', tone: 'reward' });
     assert.deepEqual(getEventChoicePreview(event, 3), { text: '다음 전투 강화', tone: 'reward' });
 });
@@ -140,7 +141,8 @@ test('story-chain previews describe progression and reward type without exposing
     };
 
     assert.deepEqual(getEventChoicePreview(chainEvent, 0), { text: '이야기 진행 · 유물 보상', tone: 'reward' });
-    assert.deepEqual(getEventChoicePreview(chainEvent, 1), { text: '이야기의 흐름이 달라질 수 있음', tone: 'danger' });
+    // 2026-10: 실패 선택은 체인을 'failed'로 닫는다(갈래가 없다) — "흐름이 달라질 수 있음"은 거짓이었다.
+    assert.deepEqual(getEventChoicePreview(chainEvent, 1), { text: '이야기가 여기서 끝남 · 다시 이어지지 않음', tone: 'danger' });
 });
 
 test('story-chain gold costs are exact danger previews while positive gold remains a reward', () => {

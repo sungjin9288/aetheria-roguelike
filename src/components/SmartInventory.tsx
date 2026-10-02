@@ -392,7 +392,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                         강화 보기
                                     </Motion.button>
                                 )}
-                                {/* Wave 62 (B 감사 F9): 리듀서(USE_INVENTORY_ITEM)가 받는 종류에만 버튼을 그린다 — 재료 · 열쇠의
+                                {/* Wave 61 (원장 §61.3 소모품 · 상점): 리듀서(USE_INVENTORY_ITEM)가 받는 종류에만 버튼을 그린다 — 재료 · 열쇠의
                                     "사용"은 눌러도 아무 일이 없었다. 판정은 리듀서와 같은 isInventoryUseAccepted 하나다. */}
                                 {isInventoryUseAccepted(item) && (
                                     <Motion.button

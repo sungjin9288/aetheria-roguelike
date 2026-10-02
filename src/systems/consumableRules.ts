@@ -6,7 +6,7 @@ import type { Item, ItemType } from '../types/index.js';
  * - 엔진(`consumableEffect.resolveConsumableEffect`)은 소모품 종류와 엘릭서 완전 회복을 이 판정으로 정한다.
  * - 리듀서(`USE_INVENTORY_ITEM`)는 `isInventoryUseAccepted`로 받고, 장비면 장착 · 아니면 소모품 경로로 보낸다.
  * - 표시(인벤토리 "사용" 버튼 · 소모품 문구 · 접두어 문구)도 같은 판정을 읽는다 — 재료 · 열쇠에 눌러도 아무 일 없는
- *   "사용" 버튼이 있었고(리듀서가 조용히 거부), 접두어 엘릭서는 "생명 +10006"처럼 수치로 그려졌다(2026-10 Wave 62).
+ *   "사용" 버튼이 있었고(리듀서가 조용히 거부), 접두어 엘릭서는 "생명 +10006"처럼 수치로 그려졌다(2026-10 Wave 61, 원장 §61.3).
  *
  * `statsCalculator → equipmentUtils` 순환을 피하려고 의존이 없는 잎 모듈로 둔다(equipmentUtils도 이 판정을 읽는다).
  */

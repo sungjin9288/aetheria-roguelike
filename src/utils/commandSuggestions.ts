@@ -24,7 +24,7 @@ export const getAvailableCommands = (gameState: GameMode, player: Player | null 
         base.push({ cmd: 'explore', desc: '주변 탐색' });
         base.push({ cmd: 'move', desc: '이동 (move <지역명>)' });
         if (isSafe && player) {
-            // Wave 62 (B 감사 F6): 실제 휴식이 받는 비용(레벨 · 거울 반영)을 그린다 — 고정 "100G"였다.
+            // Wave 61 (원장 §61.3): 실제 휴식이 받는 비용(레벨 · 거울 반영)을 그린다 — 고정 "100G"였다.
             base.push({ cmd: 'rest', desc: MSG.CMD_SUGGEST_REST(getRestCost(player)) });
             base.push({ cmd: 'shop', desc: '상점 열기' });
         }

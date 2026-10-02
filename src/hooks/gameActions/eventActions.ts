@@ -112,7 +112,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 if (typeof chainStep !== 'number') return;
                 dispatch({
                     type: AT.RESOLVE_CHAIN_GOLD_CHOICE,
-                    payload: { chainId, step: chainStep, choiceIndex: idx, relicRoll: Math.random() },
+                    payload: { chainId, step: chainStep, choiceIndex: idx, relicRoll: rng() },
                 });
                 return;
             }

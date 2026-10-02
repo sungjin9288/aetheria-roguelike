@@ -80,11 +80,13 @@ for (const costCase of COST_CASES) {
             dispatch: (action) => dispatches.push(action),
             addLog: (type, text) => logs.push({ type, text }),
             getFullStats: () => ({ maxHp: state.player.maxHp, maxMp: state.player.maxMp }),
+            rng: () => 0.25,
         }, { emitUnlockedTitles: () => {} }).handleEventChoice(costCase.choiceIndex);
 
+        // Wave 61 A17: 지불이 일일 '골드 소비'를 채울 때 파편 변환 판정에 쓰는 난수만 함께 넘긴다(주입된 rng).
         assert.deepEqual(dispatches, [{
             type: AT.RESOLVE_CHAIN_GOLD_CHOICE,
-            payload: payloadFor(costCase),
+            payload: { ...payloadFor(costCase), relicRoll: 0.25 },
         }]);
         assert.deepEqual(logs, []);
     });
@@ -138,12 +140,16 @@ for (const costCase of COST_CASES) {
             assert.equal(settled.player.gold, expectedGold);
             assert.equal(settled.player.stats.total_gold, state.player.stats.total_gold);
             assert.equal(settled.player.eventChainProgress[costCase.chainId], costCase.step + 1);
-            assert.deepEqual(settled.logs.slice(0, -1), state.logs);
-            assert.deepEqual(settled.logs.at(-1), {
+            assert.deepEqual(settled.logs.slice(0, state.logs.length), state.logs);
+            const added = settled.logs.slice(state.logs.length);
+            assert.deepEqual(added[0], {
                 id: `chain-gold:${costCase.chainId}:${costCase.step}:${costCase.choiceIndex}`,
                 type: 'event',
                 text: outcome.log,
             });
+            // Wave 61 A17: 지불이 일일 '골드 소비'를 채우면 그 보상 로그만 뒤따른다.
+            const dailyPrefix = `chain-gold-daily:${costCase.chainId}:${costCase.step}:${costCase.choiceIndex}:`;
+            assert.ok(added.slice(1).every((entry) => entry.id.startsWith(dailyPrefix)), JSON.stringify(added.slice(1)));
             assert.equal(settled.currentEvent, null);
             assert.equal(settled.gameState, GS.IDLE);
             assert.equal(settled.syncStatus, 'syncing');

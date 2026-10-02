@@ -44,7 +44,8 @@ test('first-play surfaces use player-facing Korean labels', async () => {
     assert.match(mapNavigator, /전체 경로/);
     assert.match(mapNavigator, /지역 이야기/);
     assert.match(mapNavigator, /data-testid="map-navigator"/);
-    assert.match(mapNavigator, /레벨 1~10/);
+    // 2026-10 Wave 61: 띠의 레벨 범위는 실제 지역에서 세어 MSG로 그린다(고정 '레벨 1~10'은 Lv15 쉼터를 품고 있었다).
+    assert.match(messages, /MAP_BAND_LEVEL_RANGE: [^]*?`레벨 \$\{minLevel\}~\$\{maxLevel\}`/);
     assert.doesNotMatch(mapNavigator, />\s*(Atlas Map|Current Position|World Routes|Area Lore)\s*</);
     assert.doesNotMatch(mapNavigator, /`Lv\.\$\{|\}G<\/span>/);
 

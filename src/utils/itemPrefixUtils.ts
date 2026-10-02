@@ -21,7 +21,7 @@ const supportsPrefixStat = (normalizedType: string | undefined, prefixStat: stri
 
 const formatStatText = (item: Item, normalizedType: string | undefined) => {
     if (normalizedType === 'weapon' || normalizedType === 'armor') return getItemStatText(item);
-    // Wave 62 (B 감사 F2): 접두어 엘릭서는 val(9999 + 접두어)과 무관하게 완전 회복이다 — "HP+10006"으로 쓰지 않는다.
+    // Wave 61 (원장 §61.3): 접두어 엘릭서는 val(9999 + 접두어)과 무관하게 완전 회복이다 — "HP+10006"으로 쓰지 않는다.
     if (normalizedType === 'hp') return isFullRestoreElixir(item) ? MSG.CONSUMABLE_HP_FULL_RESTORE : `HP+${item.val}`;
     if (normalizedType === 'mp') return `MP+${item.val}`;
     return item.desc_stat || '';

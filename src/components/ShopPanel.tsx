@@ -69,7 +69,7 @@ const getComparisonMeta = (item: Item | null | undefined, player: Player | null 
         };
     }
 
-    // Wave 62 (B 감사 F2 · F8): 소모품 효과 문구는 consumablePresentation이 엔진 판정으로 만든다 — 여기서 만들던 동안
+    // Wave 61 (원장 §61.3 소모품 · 상점): 소모품 효과 문구는 consumablePresentation이 엔진 판정으로 만든다 — 여기서 만들던 동안
     //   엘릭서가 "생명 9999 회복", 정화가 "poison 해제"였다.
     if (item.type === 'hp' || item.type === 'mp' || item.type === 'buff') return { text: getConsumableEffectSummary(item), tone: 'positive' };
     if (item.type === 'cure') return { text: getConsumableEffectSummary(item), tone: 'neutral' };

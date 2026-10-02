@@ -142,7 +142,7 @@ const useInventoryItem = (state: GameState, action: ActionOf<typeof AT.USE_INVEN
     const itemId = typeof action.payload?.itemId === 'string' ? action.payload.itemId : '';
     if (!itemId) return state;
     const item = (state.player.inv || []).find((entry) => entry.id === itemId);
-    // Wave 62 (B 감사 F9): 받는 종류는 `isInventoryUseAccepted` 하나가 정한다 — 인벤토리의 "사용" 버튼도 같은 판정으로만
+    // Wave 61 (원장 §61.3 소모품 · 상점): 받는 종류는 `isInventoryUseAccepted` 하나가 정한다 — 인벤토리의 "사용" 버튼도 같은 판정으로만
     //   그린다(재료 · 열쇠에 눌러도 아무 일 없는 버튼이 있었다).
     if (!item || !isInventoryUseAccepted(item)) return state;
     if (isEquipmentUseItem(item)) return equipInventoryItem(state, item);

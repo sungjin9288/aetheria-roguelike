@@ -33,7 +33,7 @@ const BUFF_EFFECTS = new Set(['atk_up', 'def_up', 'all_up']);
 
 const isFinitePositive = (value: unknown) => typeof value === 'number' && Number.isFinite(value) && value > 0;
 // 2026-10 Wave 58: 접두어가 붙은 엘릭서("신성한 엘릭서")도 "HP 완전 회복"이다. 판정(`isFullRestoreElixir`)은
-//   `consumableRules.ts`가 소유한다 — 인벤토리 · 상점 · 빠른 슬롯 · 전투 목록 문구가 같은 판정을 읽는다(Wave 62).
+//   `consumableRules.ts`가 소유한다 — 인벤토리 · 상점 · 빠른 슬롯 · 전투 목록 문구가 같은 판정을 읽는다(Wave 61).
 
 /** RECOVERY_TYPES.has()에 타입 서술을 씌운 것 — 반환 boolean은 동일, item.type을 좁혀 준다. */
 const isRecoveryItemType = (type: ItemType | undefined): type is 'hp' | 'mp' => RECOVERY_TYPES.has(type as 'hp' | 'mp');

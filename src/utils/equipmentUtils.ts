@@ -604,7 +604,7 @@ export const getItemStatText = (item: Item | null | undefined, slot?: 'offhand')
     if (item.type === 'armor') {
         return [`방어력 +${getEnhancedEquipmentStatValue(item, 'armor')}`, ...getEquipmentPassiveTexts(item)].join(' · ');
     }
-    // Wave 62 (B 감사 F2): 엘릭서(접두어 사본 포함)는 엔진이 val과 무관하게 실효 최대 생명까지 회복한다 — "생명 +9999"로 그리지 않는다.
+    // Wave 61 (원장 §61.3 소모품 · 상점): 엘릭서(접두어 사본 포함)는 엔진이 val과 무관하게 실효 최대 생명까지 회복한다 — "생명 +9999"로 그리지 않는다.
     if (item.type === 'hp') return isFullRestoreElixir(item) ? MSG.CONSUMABLE_HP_FULL_RESTORE : `생명 +${item.val || 0}`;
     if (item.type === 'mp') return `기력 +${item.val || 0}`;
 
