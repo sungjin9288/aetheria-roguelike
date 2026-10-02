@@ -1,6 +1,8 @@
 import type { Monster } from '../types/monster.js';
 
 // 2026-09 Wave 51: `family`(언데드 22 · 마족 7)는 성직자 계열 회복 기술의 신성 피해 대상이다 — 이름으로 추론하지 말고 여기서 선언한다.
+// 2026-10 Wave 60: 브리핑 보스 22종의 `hpMult`는 1:1 대결로 맞춘 값이다 — 그 지역 레벨에 막 닿은 자연 플레이어가 중앙값 6턴에 잡는다(원장 §60).
+//   이 보스들은 대부분 지역 일반 조우이기도 하므로 값을 바꾸면 그 지역 사냥 길이도 함께 움직인다. 진 보스(원시의 신)도 이 값을 읽는다.
 export const MONSTERS: Record<string, Monster> = {
     슬라임: { weakness: '화염', resistance: '대지', hpMult: 0.8, pattern: { guardChance: 0.05, heavyChance: 0.1 }, statusOnHit: 'poison' },
     늑대: { weakness: '화염', resistance: '자연', atkMult: 1.1, pattern: { guardChance: 0.05, heavyChance: 0.35 } },
@@ -21,7 +23,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '냉기',
         resistance: '화염',
-        hpMult: 1.35,
+        hpMult: 5.4,
         atkMult: 1.2,
         expMult: 1.35,
         goldMult: 1.35,
@@ -33,7 +35,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '냉기',
         resistance: '화염',
-        hpMult: 1.5,
+        hpMult: 6.0,
         atkMult: 1.25,
         expMult: 1.45,
         goldMult: 1.4,
@@ -45,7 +47,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '어둠',
         resistance: '빛',
-        hpMult: 1.32,
+        hpMult: 5.0,
         atkMult: 1.2,
         expMult: 1.32,
         goldMult: 1.3,
@@ -61,7 +63,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '빛',
         resistance: '어둠',
-        hpMult: 1.34,
+        hpMult: 5.4,
         atkMult: 1.2,
         expMult: 1.34,
         goldMult: 1.34,
@@ -71,7 +73,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '화염',
         resistance: '냉기',
-        hpMult: 1.45,
+        hpMult: 9.4,
         atkMult: 1.22,
         expMult: 1.45,
         goldMult: 1.4,
@@ -87,7 +89,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '화염',
         resistance: '냉기',
-        hpMult: 1.3,
+        hpMult: 9.8,
         atkMult: 1.2,
         expMult: 1.3,
         goldMult: 1.3,
@@ -100,7 +102,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '빛',
         resistance: '어둠',
-        hpMult: 1.6,
+        hpMult: 39.2,
         atkMult: 1.3,
         expMult: 1.8,
         goldMult: 1.8,
@@ -130,7 +132,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '빛',
         resistance: '어둠',
-        hpMult: 1.5,
+        hpMult: 27.0,
         atkMult: 1.28,
         expMult: 1.6,
         goldMult: 1.55,
@@ -144,7 +146,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '자연',
         resistance: '빛',
-        hpMult: 1.45,
+        hpMult: 20.3,
         atkMult: 1.25,
         expMult: 1.55,
         goldMult: 1.5,
@@ -160,7 +162,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '어둠',
         resistance: '빛',
-        hpMult: 1.62,
+        hpMult: 25.5,
         atkMult: 1.35,
         expMult: 1.75,
         goldMult: 1.7,
@@ -324,7 +326,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '빛',
         resistance: '어둠',
-        hpMult: 2.2,
+        hpMult: 16.5,
         atkMult: 1.8,
         expMult: 5.0,
         goldMult: 5.0,
@@ -369,7 +371,7 @@ export const MONSTERS: Record<string, Monster> = {
     // ── Sprint 18: 숨겨진 보스 3종 ──────────────────────────────────────────
     '시간의 파수꾼': {
         isBoss: true, weakness: '어둠', resistance: '빛',
-        hpMult: 1.8, atkMult: 1.5, expMult: 3.0, goldMult: 3.0, dropMod: 4.0,
+        hpMult: 35.6, atkMult: 1.5, expMult: 3.0, goldMult: 3.0, dropMod: 4.0,
         pattern: { guardChance: 0.05, heavyChance: 0.5 },
         phase2: { name: '분열하는 시간의 파수꾼', atkBonus: 0.6, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '시간이 뒤틀립니다! 파수꾼이 과거와 미래를 동시에 공격합니다!', statusEffect: 'stun' },
         // Wave 59: "연속 기절 패턴" · "희귀 유물이 높은 확률로 드랍".
@@ -380,7 +382,7 @@ export const MONSTERS: Record<string, Monster> = {
     },
     '원한의 용사': {
         isBoss: true, weakness: '빛', resistance: '어둠',
-        hpMult: 1.9, atkMult: 1.6, expMult: 3.5, goldMult: 3.5, dropMod: 4.5,
+        hpMult: 25.2, atkMult: 1.6, expMult: 3.5, goldMult: 3.5, dropMod: 4.5,
         pattern: { guardChance: 0.1, heavyChance: 0.45 },
         phase2: { name: '절규하는 원한의 용사', atkBonus: 0.7, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '원한이 극에 달했습니다! 용사가 최후의 힘을 폭발시킵니다!', statusEffect: 'curse' },
         // Wave 59: "기사 계열 전설 장비".
@@ -388,7 +390,7 @@ export const MONSTERS: Record<string, Monster> = {
     },
     '공허의 군주': {
         isBoss: true, weakness: '빛', resistance: '어둠',
-        hpMult: 2.0, atkMult: 1.7, expMult: 4.0, goldMult: 4.0, dropMod: 5.0,
+        hpMult: 35.0, atkMult: 1.7, expMult: 4.0, goldMult: 4.0, dropMod: 5.0,
         pattern: { guardChance: 0.05, heavyChance: 0.5 },
         phase2: { name: '해방된 공허의 군주', atkBonus: 0.8, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '공허가 세계를 집어삼킵니다! 군주가 진정한 힘을 드러냅니다!', statusEffect: 'burn' },
         phase3: { name: '공허의 심연', atkBonus: 1.2, pattern: { guardChance: 0.0, heavyChance: 0.8 }, log: '모든 것이 공허로 돌아갑니다!', statusEffect: 'curse' },
@@ -713,7 +715,7 @@ export const MONSTERS: Record<string, Monster> = {
     '부식된 골렘':     { weakness: '냉기', resistance: '화염', hpMult: 1.18, pattern: { guardChance: 0.3, heavyChance: 0.2 } },
     '프로토타입 제로': {
         isBoss: true, weakness: '대지', resistance: '냉기',
-        hpMult: 1.85, atkMult: 1.35, expMult: 2.2, goldMult: 2.0, dropMod: 2.5,
+        hpMult: 6.5, atkMult: 1.35, expMult: 2.2, goldMult: 2.0, dropMod: 2.5,
         pattern: { guardChance: 0.15, heavyChance: 0.4 },
         phase2: { name: '폭주하는 프로토타입 제로', atkBonus: 0.4, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '프로토타입 제로의 리미터가 해제됩니다! 파괴 프로토콜이 기동합니다!', statusEffect: 'burn' },
         // Wave 59: "기계 계열 장비".
@@ -727,7 +729,7 @@ export const MONSTERS: Record<string, Monster> = {
     '묘지기 네크론': {
         family: 'undead',
         isBoss: true, weakness: '빛', resistance: '어둠',
-        hpMult: 1.9, atkMult: 1.38, expMult: 2.3, goldMult: 2.1, dropMod: 2.6,
+        hpMult: 12.8, atkMult: 1.38, expMult: 2.3, goldMult: 2.1, dropMod: 2.6,
         pattern: { guardChance: 0.1, heavyChance: 0.45 },
         phase2: { name: '각성한 묘지기 네크론', atkBonus: 0.42, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '네크론이 묘지의 모든 망자를 깨웁니다! 죽음의 기운이 폭발합니다!', statusEffect: 'curse' },
         // Wave 59: "망자 소환" · "2페이즈에서 저주가 중첩".
@@ -745,7 +747,7 @@ export const MONSTERS: Record<string, Monster> = {
     '용암 거인':       { weakness: '냉기', resistance: '화염', hpMult: 1.2, pattern: { guardChance: 0.3, heavyChance: 0.25 } },
     '화염 군주 이프리트': {
         isBoss: true, weakness: '냉기', resistance: '화염',
-        hpMult: 2.0, atkMult: 1.42, expMult: 2.5, goldMult: 2.3, dropMod: 2.8,
+        hpMult: 17.5, atkMult: 1.42, expMult: 2.5, goldMult: 2.3, dropMod: 2.8,
         pattern: { guardChance: 0.1, heavyChance: 0.5 },
         phase2: { name: '진화한 화염 군주 이프리트', atkBonus: 0.45, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '이프리트가 용암의 심장을 해방합니다! 대지가 녹아내리기 시작합니다!', statusEffect: 'burn' },
         // Wave 59: "화상 누적" · "화염 계열 상위 장비".
@@ -761,7 +763,7 @@ export const MONSTERS: Record<string, Monster> = {
     '뇌운의 사냥꾼':   { weakness: '대지', resistance: '빛', hpMult: 1.1, pattern: { guardChance: 0.15, heavyChance: 0.4 } },
     '천둥새 제피로스': {
         isBoss: true, weakness: '대지', resistance: '빛',
-        hpMult: 2.1, atkMult: 1.45, expMult: 2.6, goldMult: 2.4, dropMod: 3.0,
+        hpMult: 13.7, atkMult: 1.45, expMult: 2.6, goldMult: 2.4, dropMod: 3.0,
         pattern: { guardChance: 0.1, heavyChance: 0.45 },
         phase2: { name: '폭풍의 천둥새 제피로스', atkBonus: 0.48, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '제피로스가 폭풍의 눈을 해방합니다! 하늘 전체가 뇌광으로 뒤덮입니다!', statusEffect: 'stun' },
         // Wave 59: "기절 연속 공격" · "바람 계열 상위 장비".
@@ -779,7 +781,7 @@ export const MONSTERS: Record<string, Monster> = {
     '붕괴된 수호자':   { weakness: '대지', resistance: '빛', hpMult: 1.2, pattern: { guardChance: 0.25, heavyChance: 0.3 } },
     '에테르 심판자': {
         isBoss: true, weakness: '어둠', resistance: '빛',
-        hpMult: 2.2, atkMult: 1.55, expMult: 3.0, goldMult: 2.8, dropMod: 3.5,
+        hpMult: 28.1, atkMult: 1.55, expMult: 3.0, goldMult: 2.8, dropMod: 3.5,
         pattern: { guardChance: 0.1, heavyChance: 0.5 },
         phase2: { name: '각성한 에테르 심판자', atkBonus: 0.5, pattern: { guardChance: 0.05, heavyChance: 0.6 }, log: '에테르 심판자가 차원의 법칙을 재편합니다! 공간이 뒤틀리기 시작합니다!', statusEffect: 'burn' },
         phase3: { name: '에테르의 절대 심판', atkBonus: 0.85, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '심판자가 에테르의 근원과 하나가 됩니다! 모든 저항이 무력화됩니다!', statusEffect: 'curse', pierceResist: true },
@@ -802,7 +804,7 @@ export const MONSTERS: Record<string, Monster> = {
     '차원 균열체':     { weakness: '빛', resistance: '어둠', atkMult: 1.18, pattern: { guardChance: 0.0, heavyChance: 0.55 }, statusOnHit: 'curse' },
     '공허의 대행자': {
         isBoss: true, weakness: '빛', resistance: '어둠',
-        hpMult: 2.4, atkMult: 1.65, expMult: 3.2, goldMult: 3.0, dropMod: 4.0,
+        hpMult: 29.4, atkMult: 1.65, expMult: 3.2, goldMult: 3.0, dropMod: 4.0,
         pattern: { guardChance: 0.1, heavyChance: 0.5 },
         phase2: { name: '해방된 공허의 대행자', atkBonus: 0.55, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '공허의 대행자가 허무의 권능을 해방합니다! 존재의 경계가 희미해집니다!', statusEffect: 'curse' },
         phase3: { name: '절대 공허의 대행자', threshold: 0.2, atkBonus: 0.95, defBonus: 20, pattern: { guardChance: 0.0, heavyChance: 0.78 }, log: '대행자가 공허 그 자체와 합일합니다! 모든 것이 소멸로 향합니다!', statusEffect: 'burn' },
@@ -816,7 +818,7 @@ export const MONSTERS: Record<string, Monster> = {
     // 종말의 전장 (Lv73) — 1 boss only (3-phase)
     '종말의 기사': {
         isBoss: true, weakness: '빛', resistance: '어둠',
-        hpMult: 2.5, atkMult: 1.8, expMult: 3.5, goldMult: 3.5, dropMod: 4.5,
+        hpMult: 26.9, atkMult: 1.8, expMult: 3.5, goldMult: 3.5, dropMod: 4.5,
         pattern: { guardChance: 0.1, heavyChance: 0.5 },
         phase2: { name: '분노한 종말의 기사', atkBonus: 0.6, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '종말의 기사가 파멸의 검을 뽑아듭니다! 전장 전체가 검은 화염에 휩싸입니다!', statusEffect: 'burn' },
         phase3: { name: '종말의 화신', threshold: 0.2, atkBonus: 1.1, defBonus: 25, pattern: { guardChance: 0.0, heavyChance: 0.82 }, log: '기사가 종말 그 자체로 변모합니다! 이것이 최후의 전투입니다!', statusEffect: ['curse', 'burn'] },
@@ -829,7 +831,7 @@ export const MONSTERS: Record<string, Monster> = {
         isBoss: true,
         weakness: '어둠',
         resistance: '냉기',
-        hpMult: 1.45,
+        hpMult: 3.6,
         atkMult: 1.18,
         expMult: 1.4,
         goldMult: 1.4,
