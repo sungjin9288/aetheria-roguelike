@@ -16,6 +16,7 @@ import { getInventoryCapacity, growsPastInventoryCapacity } from '../../utils/in
 import { getBagTier, getNextBagRecipe } from '../../data/bagRecipes';
 import { getAutoSellMaterialTargets } from '../../utils/bagCrafting';
 import { incrementStat } from '../../utils/playerStateUtils';
+import { syncQuestProgress } from '../../utils/questProgress';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
 import { getSignatureSaleVerdict } from '../../utils/signatureSale';
@@ -184,6 +185,8 @@ const craftRecipe = (state: GameState, action: ActionOf<typeof AT.CRAFT_RECIPE>)
     const daily = advanceDailyProtocol(player, 'goldSpend', recipe.gold || 0, action.payload?.relicRoll);
     const logs = getDailyProtocolRewardLogs(daily.reward);
     player = addNewTitles(daily.player, logs);
+    // Wave 61: 제작 임무("아이템 N개 제작")는 제작한 그 자리에서 진행된다 — 다음 탐험 · 전투까지 수령 버튼이 없었다.
+    player = { ...player, quests: syncQuestProgress(player, '', DB.QUESTS).updatedQuests };
     logs.push({ type: 'success', text: MSG.CRAFT_DONE(recipe.name || '') });
     return completeTransaction(state, player, logs);
 };

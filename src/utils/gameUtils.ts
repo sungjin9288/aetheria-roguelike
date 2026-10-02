@@ -19,6 +19,7 @@ import { getCurrentRunSnapshot } from './runProgress.js';
 import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { getSeasonArchive } from './seasonPassPresentation.js';
 import { formatSkillText } from './skillPresentation.js';
+import { countDiscoveredMaps } from './discoveredMaps.js';
 import {
     countDiscoveredSignatures,
     isSignatureName,
@@ -380,7 +381,7 @@ export const checkTitles = (player: Player): string[] => {
         // cycle 83: 'discoveries' 시맨틱 통일 — visitedMaps.length(맵 발견 수)로 교체.
         // cartographer("지도 제작자") 칭호가 stats.discoveries(이벤트 카운터)만으로 풀리던
         // 회귀 수정. achievement(target='discoveries') 정합성 기준선과 일치시킴.
-        if (type === 'discoveries')    return (player.stats?.visitedMaps || []).length >= val;
+        if (type === 'discoveries')    return countDiscoveredMaps(player.stats) >= val;
         // cycle 77: 도주 카운터 기반 칭호 (cautious_explorer / survivor_instinct).
         if (type === 'escapes')        return (player.stats?.escapes || 0) >= val;
         if (type === 'signaturesDiscovered') {

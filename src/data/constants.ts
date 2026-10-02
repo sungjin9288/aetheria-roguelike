@@ -218,6 +218,7 @@ export const BALANCE = {
     OFFHAND_WEAPON_RATIO: 0.34,
     TWO_HAND_ATK_BONUS: 1.55,
     DUAL_WIELD_ATK_BONUS: 1.05,
+    LOW_HP_WIN_THRESHOLDS: [0.2, 0.1, 0.05], // 낮은 생명 승리 임무(62 · 63 · 75)가 쓰는 경계 — 승리마다 누적 집계한다(Wave 61)
     LOW_HP_PASSIVE_THRESHOLD: 0.3,      // 직업 패시브 "HP 30% 이하"(무당 죽음의 직관)의 경계 — 이하이므로 포함(Wave 58)
     DUAL_WIELD_DEF_MULT: 0.92,
     ONE_HAND_CRIT_BONUS: 0.08,

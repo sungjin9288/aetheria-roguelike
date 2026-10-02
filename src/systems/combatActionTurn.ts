@@ -37,7 +37,6 @@ export type CombatActionTurnResult = {
     visualEffect: string | null;
     victoryStats?: FullStats;
     deadEnemy?: Monster;
-    extendedVictoryChecks?: boolean;
     graveData?: GraveEntry;
     runSummary?: ReturnType<typeof buildRunSummary>;
     stories: Array<{ type: string; data: Record<string, unknown> }>;
@@ -212,7 +211,6 @@ export const resolveCombatActionTurn = ({
             visualEffect: null,
             victoryStats: stats,
             deadEnemy: enemy,
-            extendedVictoryChecks: true,
             stories: [],
         };
     }
@@ -285,7 +283,6 @@ export const resolveCombatActionTurn = ({
             visualEffect: null,
             victoryStats: counterStats,
             deadEnemy: enemyAfterAction,
-            extendedVictoryChecks: false,
             stories,
         };
     }

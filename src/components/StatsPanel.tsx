@@ -9,6 +9,7 @@ import SignalBadge from './SignalBadge';
 import { MSG } from '../data/messages';
 import { BALANCE } from '../data/constants';
 import { getMetaBonusRamp } from '../systems/metaBonusRamp';
+import { countDiscoveredMaps } from '../utils/discoveredMaps';
 
 // cycle 475: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 토글 상태 / 가지 ternary / 토글 버튼 일괄 정리.
@@ -89,7 +90,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
         // cycle 83: 'discoveries' 시맨틱 통일 — visitedMaps.length(맵 발견 수).
         // 기존엔 stats.discoveries(이벤트 카운터)를 읽어 ach_discover_*("새 지역 N곳") /
         // 타이틀 cartographer("지도 제작자") 의도와 어긋났음. 모든 surface가 맵 발견 수로 일치.
-        { label: '발견 지역', value: (player?.stats?.visitedMaps || []).length, icon: Sparkles, color: 'text-fuchsia-300' },
+        { label: '발견 지역', value: countDiscoveredMaps(player?.stats), icon: Sparkles, color: 'text-fuchsia-300' },
         { label: '휴식 횟수', value: player?.stats?.rests || 0, icon: TrendingUp, color: 'text-emerald-300' },
         // cycle 80: ESCAPES — cycle 74-78에서 통합한 도주 카운터를 stats panel에도 노출.
         { label: '도주 횟수', value: player?.stats?.escapes || 0, icon: Footprints, color: 'text-sky-300' },

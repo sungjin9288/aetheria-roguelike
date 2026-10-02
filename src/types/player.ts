@@ -62,6 +62,11 @@ interface PlayerStats {
      *   recentBattles가 빈 구세이브에서만 fallback으로 읽히므로 남겨둔다(신규 write 0건).
      */
     lowHpWins?: number;
+    /**
+     * Wave 61: 낮은 생명 승리의 누적 수 — 키는 `BALANCE.LOW_HP_WIN_THRESHOLDS`의 경계(문자열). 임무는 이 값을 읽는다.
+     *   최근 50전 창(`recentBattles`)은 동적 난이도 · 성향 분석용이라 창이 돌면 임무 진행이 줄었다.
+     */
+    lowHpWinTotals?: Record<string, number>;
     // cycle 280: discoveries 제거 — cycle 83/84 deprecated (visitedMaps.length로 통일).
     buildWins?: Record<string, number>;
     /** cycle 102: 완료한 발견 체인 ID(BALANCE.DISCOVERY_CHAINS[].id) 목록. */

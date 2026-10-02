@@ -40,7 +40,6 @@ interface SettleVictoryParams {
     stats: FullStats;
     logs: Array<{ type: string; text: string }>;
     stories: Array<{ type: string; data: Record<string, unknown> }>;
-    extendedChecks: boolean;
     seed: number;
     now: number;
     nextTurn: number;
@@ -55,7 +54,6 @@ const settleVictory = (
         stats,
         logs,
         stories,
-        extendedChecks,
         seed,
         now,
         nextTurn,
@@ -155,7 +153,6 @@ const settleVictory = (
         addLog: appendLog,
         addStoryLog: (type: string, data: Record<string, unknown>) => storyEvents.push({ type, data }),
         emitUnlockedTitles,
-        extendedChecks,
         liveConfig: state.liveConfig,
         rng: random,
         now: () => now,
@@ -340,7 +337,6 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
                 stats: result.victoryStats!,
                 logs: result.logs,
                 stories: result.stories,
-                extendedChecks: result.extendedVictoryChecks === true,
                 seed,
                 now,
                 nextTurn,
@@ -395,7 +391,6 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
                 stats: result.victoryStats!,
                 logs,
                 stories: [],
-                extendedChecks: false,
                 seed,
                 now,
                 nextTurn,
