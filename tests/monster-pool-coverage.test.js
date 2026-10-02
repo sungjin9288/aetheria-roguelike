@@ -50,7 +50,11 @@ test('기존 보스 보존 — 덮어쓰기 없음', () => {
     assert.equal(MAPS['에테르 관문'].boss, true, '에테르 관문 boss:true 유지');
     // 점유 보스 존의 신규 보스는 bossMonsters[]로 (덮어쓰기 회피)
     assert.ok(MAPS['기계 폐도'].bossMonsters?.includes('프로토타입 제로'));
-    assert.ok(MAPS['에테르 관문'].bossMonsters?.includes('무한의 화신'));
+    // 2026-10 Wave 61 A2: bossMonsters에만 있던 보스는 나오지 않았다 — 지역 조우 풀에도 넣는다(소유자 결정).
+    assert.ok(MAPS['기계 폐도'].monsters?.includes('프로토타입 제로'));
+    // 무한의 화신은 심연 50층 보스다 — 에테르 관문 목록에서 빼고 혼돈의 심연 목록에 둔다.
+    assert.equal(MAPS['에테르 관문'].bossMonsters?.includes('무한의 화신'), false);
+    assert.ok(MAPS['혼돈의 심연'].bossMonsters?.includes('무한의 화신'));
 });
 
 test('맵 풀이 참조하는 모든 이름은 MONSTERS에 존재 (역방향 무결성)', () => {

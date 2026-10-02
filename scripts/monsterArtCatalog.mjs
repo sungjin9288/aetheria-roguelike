@@ -40,6 +40,15 @@ const LEGACY_MONSTER_KEYS = Object.freeze({
     '레드 드래곤': 'red-dragon',
 });
 
+// 2026-10 Wave 61: 그림의 대표 지역은 그 몬스터를 그린 시점의 지역으로 고정한다 — 스폰 지역 목록은 게임 데이터라
+//   바뀔 수 있다(혼돈의 심연 `bossMonsters`가 층 보스 10종 전부를 들게 되자 지역 순서상 심연이 앞선 세 보스의 대표 지역이
+//   바뀌어 카탈로그 정체성 해시가 움직였다). 그림 정체성은 아트 결정이고 스폰 데이터와 묶지 않는다(CLAUDE.md §9와 같은 교훈).
+const ART_PRIMARY_REGION_PINS = Object.freeze({
+    '무한의 화신': '에테르 관문',
+    '허무의 전령': '공허의 회랑',
+    '멸절의 사도': '에테르 폐허',
+});
+
 const includesAny = (name, words) => words.some((word) => name.includes(word));
 
 const REVIEWED_ARCHETYPES = Object.freeze({
@@ -106,7 +115,7 @@ export const buildMonsterArtCatalog = async ({ corrections } = {}) => {
     const monsters = Object.entries(MONSTERS).map(([name, monster]) => {
         const regions = [...new Set(regionsByMonster.get(name) || [])];
         if (regions.length === 0) throw new Error(`Monster is unreachable from the map catalog: ${name}`);
-        const primaryRegion = regions[0];
+        const primaryRegion = ART_PRIMARY_REGION_PINS[name] ?? regions[0];
         const regionKey = LEGACY_REGION_KEYS[primaryRegion]
             || getLocationVisual(primaryRegion)?.key;
         if (!regionKey) throw new Error(`Monster region is missing visual identity: ${name}/${primaryRegion}`);
