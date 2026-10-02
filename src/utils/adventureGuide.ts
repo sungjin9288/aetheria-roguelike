@@ -9,6 +9,7 @@ import { getQuestBoardRecommendations } from './questOperations.js';
 import { getSignaturePityMultiplier } from './signaturePity.js';
 import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
 import { getMapRequiredLevel, getNextMapTowardTarget } from './mapTopology.js';
+import { getRestCost } from './expeditionReturnFlow.js';
 import {
     getExpeditionQuestTargetMaps,
     getFocusedExpeditionQuestEntries,
@@ -94,12 +95,8 @@ const getRoutePlan = (
 //   getMapLevel(targetMap, playerLevel) 명시 전달이라 default 도달 불가.
 //   util default 청소 메가 시리즈 17번째 (cycle 502-518). body의 (playerLevel
 //   || 1) defensive 가드는 별개 — caller가 0/undefined 넘기는 path 보존.
-const getMapLevel = (map: GameMap | null | undefined, playerLevel: number) => (
-    map?.level === 'infinite'
-        ? Math.max((playerLevel || 1) + 8, 50)
-        // 2026-09 N3: `minLv` 우선 분기 제거 — MAPS 52개 중 정의 0개라 도달 불가였다.
-        : (typeof map?.level === 'number' ? map.level : 1)
-);
+// 안내의 진입 레벨은 지도 · 조작판과 같은 판정이다(Wave 61 — 심연을 따로 "레벨 + 8"로 잠그던 사본을 지웠다).
+const getMapLevel = (map: GameMap | null | undefined, playerLevel: number) => getMapRequiredLevel(map, playerLevel);
 const getVisitedMaps = (player: Player) => new Set([...(player?.stats?.visitedMaps || []), player?.loc].filter(Boolean));
 
 const getQuestProgressLabel = (entry: ExpeditionQuestEntry) => {
@@ -590,7 +587,10 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
         };
     }
 
-    if (safe && hpRatio <= 0.65 && (player?.gold || 0) >= BALANCE.REST_COST) {
+    // Wave 61: 휴식 안내는 실제 휴식 비용(레벨 · 거울 반영, `getRestCost`)으로 판단한다 — 기본 비용 60으로 보던 동안
+    //   Lv40 · 골드 100에서 휴식을 추천하고 누르면 골드 부족으로 거부됐다(원장 §61 A19). 정화 안내도 같은 비용을 본다.
+    const canAffordRest = (player?.gold || 0) >= (player ? getRestCost(player) : BALANCE.REST_COST);
+    if (safe && hpRatio <= 0.65 && canAffordRest) {
         return {
             title: '정비 추천',
             detail: '체력이 충분히 회복되지 않았습니다. 다음 출발 전에 휴식으로 안정성을 확보하세요.',
@@ -601,7 +601,7 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
     // cycle 115: 안전지대에서 활성 debuff 인지 시 정화 권장 — cycle 112 rest가 status를
     // 클리어하므로 자연스러운 actionable hint. cycle 106-110에서 활성화된 5종 status가
     // 영속할 경우 다음 탐험에 페널티 누적 — 안전지대 복귀 후 즉시 알림.
-    if (safe && Array.isArray(player?.status) && player.status.length > 0) {
+    if (safe && canAffordRest && Array.isArray(player?.status) && player.status.length > 0) {
         // 2026-09 Wave 6 X2: 인라인 DEBUFF_LABEL 제거 — MSG.STATUS_LABELS(공유 테이블) 재사용.
         const DEBUFF_LABEL = MSG.STATUS_LABELS;
         const activeDebuffs = player.status.filter((s: StatusId) => DEBUFF_LABEL[s]);

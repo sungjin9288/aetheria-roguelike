@@ -281,3 +281,19 @@ export const migrateEquipmentInstancePrice = <T extends Item | null | undefined>
 };
 
 export const migrateEquipmentPrice = migrateEquipmentInstancePrice;
+
+/**
+ * 이름만으로 표준 장비 이름을 찾는다 — 도감 키처럼 이름만 남은 기록용(2026-10 Wave 61). 접두어가 붙은 이름이면
+ * 그 장비 종류에 맞는 접두어를 벗겨 바탕 이름을, 모르는 이름이면 null을 돌려준다.
+ */
+export const resolveEquipmentBaseNameFromName = (type: EquipmentType, name: string): string | null => {
+    if (EQUIPMENT_BY_IDENTITY.has(getEquipmentIdentityKey(type, name))) return name;
+    const prefixTargetType = type === 'shield' ? 'armor' : type;
+    for (const [prefixName, prefix] of PREFIX_BY_NAME) {
+        if (!prefixName || (prefix.type !== 'all' && prefix.type !== prefixTargetType)) continue;
+        if (!name.startsWith(`${prefixName} `)) continue;
+        const base = EQUIPMENT_BY_IDENTITY.get(getEquipmentIdentityKey(type, name.slice(prefixName.length + 1)));
+        if (base) return base.name;
+    }
+    return null;
+};

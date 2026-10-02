@@ -15,6 +15,8 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { formatEventText } from '../../utils/eventPresentation';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
+import { calculateFullStats } from '../../utils/statsCalculator';
+import { healWithinMax } from '../../systems/vitals';
 import type { Player, Relic, StatusId } from '../../types';
 import type { EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
 import type { GameState } from '../../reducers/gameReducer';
@@ -110,7 +112,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 if (typeof chainStep !== 'number') return;
                 dispatch({
                     type: AT.RESOLVE_CHAIN_GOLD_CHOICE,
-                    payload: { chainId, step: chainStep, choiceIndex: idx },
+                    payload: { chainId, step: chainStep, choiceIndex: idx, relicRoll: Math.random() },
                 });
                 return;
             }
@@ -198,18 +200,26 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                     // cycle 62: stat_bonus는 영구 ATK/DEF/HP 가산 — 기존 chain(rift_secret)에서
                     // 사용 중이지만 핸들러가 없어 silently 무시되던 보상을 정상화.
                     if (rwd.type === 'stat_bonus') {
+                        // 2026-10 Wave 61: 이번 런 누적(`storyStatBonus`)에 적는다 — 공격력 · 방어력은 계산기가 배율 뒤에 더하고,
+                        //   생명 · 기력은 저장 최대치에 굽되(정본) 전직이 이 누적을 다시 더한다. 늘어난 만큼 회복하되 생명을 줄이지
+                        //   않는다(`healWithinMax`, 상한은 실효 최대치 — 저장 최대치로 자르던 동안 1310 → 1180으로 깎였다).
+                        const story = { ...(updatedPlayer.storyStatBonus || {}) };
                         const next: Player = { ...updatedPlayer };
-                        if (rwd.atk) next.atk = (next.atk || 0) + rwd.atk;
-                        if (rwd.def) next.def = (next.def || 0) + rwd.def;
+                        if (rwd.atk) story.atk = (story.atk || 0) + rwd.atk;
+                        if (rwd.def) story.def = (story.def || 0) + rwd.def;
                         if (rwd.hp) {
-                            const nextMaxHp: number = (next.maxHp || 0) + rwd.hp;
-                            next.maxHp = nextMaxHp;
-                            next.hp = Math.min(nextMaxHp, (next.hp || 0) + rwd.hp);
+                            story.hp = (story.hp || 0) + rwd.hp;
+                            next.maxHp = (next.maxHp || 0) + rwd.hp;
                         }
                         if (rwd.mp) {
-                            const nextMaxMp: number = (next.maxMp || 0) + rwd.mp;
-                            next.maxMp = nextMaxMp;
-                            next.mp = Math.min(nextMaxMp, (next.mp || 0) + rwd.mp);
+                            story.mp = (story.mp || 0) + rwd.mp;
+                            next.maxMp = (next.maxMp || 0) + rwd.mp;
+                        }
+                        next.storyStatBonus = story;
+                        if (rwd.hp || rwd.mp) {
+                            const full = calculateFullStats(next);
+                            if (rwd.hp) next.hp = healWithinMax(next.hp, rwd.hp, full?.maxHp ?? next.maxHp);
+                            if (rwd.mp) next.mp = healWithinMax(next.mp, rwd.mp, full?.maxMp ?? next.maxMp);
                         }
                         updatedPlayer = next;
                         // I4 (2026-09 Wave 3): 하드코딩 한국어 → MSG 단일 원천 (출력 문구는 동일).

@@ -335,7 +335,8 @@ export const EVENT_CHAINS = [
                     choices: ['시험을 받아들인다', '알을 돌려준다', '드래곤과 협상한다'],
                     outcomes: [
                         { type: 'chain_advance', log: '시험을 통과했습니다! 드래곤이 당신을 인정했습니다.', reward: { type: 'stat_bonus', atk: 20 } },
-                        { type: 'chain_advance', log: '알을 돌려주자 드래곤이 용의 비늘 하나를 감사의 표시로 줬습니다.', reward: null },
+                        // Wave 61: 문구가 약속한 용의 비늘을 준다(보상이 비어 있었다 — 원장 §61 A15).
+                        { type: 'chain_advance', log: '알을 돌려주자 드래곤이 용의 비늘 하나를 감사의 표시로 줬습니다.', reward: { type: 'item', name: '용의 비늘' } },
                         { type: 'chain_advance', log: '협상 끝에 드래곤과 동맹을 맺었습니다.', reward: null },
                     ],
                 },

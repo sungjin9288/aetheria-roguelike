@@ -250,7 +250,10 @@ const synthesizeItems = (state: GameState, action: ActionOf<typeof AT.SYNTHESIZE
         return rejectTransaction(state, 'error', MSG.SYNTHESIS_NOT_ENOUGH);
     }
 
-    const useProtect = action.payload?.useProtect === true;
+    // Wave 61: 보호는 실패할 수 있는 합성에만 의미가 있다 — 성공률 100%(보호 토글이 보이지 않는 단계)에서도 보호권 ·
+    //   크리스털을 차감하던 결함(원장 §61 A18). 화면이 이전 합성의 토글 상태를 그대로 보내도 여기서 거른다.
+    const canFail = 'successRate' in validation && Number(validation.successRate) < 1;
+    const useProtect = action.payload?.useProtect === true && canFail;
     const successRoll = Number(action.payload?.successRoll);
     const outputRoll = Number(action.payload?.outputRoll);
     if (

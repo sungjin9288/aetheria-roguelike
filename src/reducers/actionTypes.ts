@@ -42,6 +42,8 @@ export interface ResolveChainGoldChoicePayload {
     chainId: string;
     step: number;
     choiceIndex: number;
+    /** Wave 61: 지불이 일일 '골드 소비'를 채울 때 유물 파편 변환 판정에 쓰는 난수(0 이상 1 미만, 선택). */
+    relicRoll?: number;
 }
 
 export interface DeferChainEventPayload {

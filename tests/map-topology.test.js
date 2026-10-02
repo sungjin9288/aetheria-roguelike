@@ -29,7 +29,9 @@ test('getNextMapTowardTarget marks the first branch toward a distant mission', (
 test('getMapRequiredLevel keeps numeric, ranged, and abyss requirements explicit', () => {
     assert.equal(getMapRequiredLevel({ level: 5 }, 2), 5);
     assert.equal(getMapRequiredLevel({ level: [12, 18] }, 8), 12);
-    assert.equal(getMapRequiredLevel({ level: 'infinite' }, 48), 56);
+    // Wave 61: 무한 심연은 잠금이 없다(getMapAccess와 같다) — 이전 값 56(레벨 + 8)은 UI만 심연을 영원히 잠갔다.
+    assert.equal(getMapRequiredLevel({ level: 'infinite' }, 48), 1);
+    assert.equal(getMapRequiredLevel({ level: 'infinite' }, 99), 1);
 });
 
 test('getDefaultMapSelection starts from the current location unless an unlocked mission route is direct', () => {

@@ -39,7 +39,9 @@ const normalizeText = (value: unknown, fallback: string = '') => String(value ||
 
 const normalizeChoiceText = (choice: ChoiceLike, idx: number) => {
     const raw = typeof choice === 'string' ? choice : choice?.text || choice?.label || `선택지 ${idx + 1}`;
-    return normalizeText(raw.replace(/^\d+\s*[.)-]?\s*/, ''), `선택지 ${idx + 1}`);
+    // Wave 61: 목록 번호("1. 공격" · "2) 도망")만 벗긴다 — 숫자 자체("45")나 소수("1.5배")는 선택지 내용이다.
+    //   구분 기호를 선택으로 두던 동안 "1+2+…+10 = ?" 퍼즐의 답 '45' · '50' · '55'가 "선택지 1/2/3"이 됐다.
+    return normalizeText(raw.replace(/^\d+\s*(?:\.\s+|[)-]\s*)(?=\S)/, ''), `선택지 ${idx + 1}`);
 };
 
 // cycle 527: choices default [] 제거 — 1 internal callsite (line 251)

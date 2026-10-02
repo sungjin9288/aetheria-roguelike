@@ -375,8 +375,9 @@ export const calculateFullStats = (player: Player) => {
     // 2026-10 Wave 58: "공격력 +N" · "방어력 +N" · "최대 생명 +N" · "최대 기력 +N"으로 광고하는 고정 보너스(직업 패시브 · 도감 ·
     //   몬스터 도감 처치 이정표 · 칭호)는 모든 배율 뒤에 더한다 — 직업 배율 · 세트 · 조합 배율 앞에 더하던 동안 전사의
     //   "근력 훈련 ATK +5"가 전투 공격력 +6.5 ~ +8로 들어갔다. 배율 안의 값은 장비 · 강화 · 기본 능력치 · 영구 공격력이다.
-    const flatAtk = codexBonus.atk + passiveBonus.atk + (titlePassive.atk || 0);
-    const flatDef = codexBonus.def + passiveBonus.def + (titlePassive.def || 0);
+    // 2026-10 Wave 61: 이야기 능력치 보상도 "+N" 고정값이라 배율 뒤에 더한다(Wave 58 규칙).
+    const flatAtk = codexBonus.atk + passiveBonus.atk + (titlePassive.atk || 0) + (player.storyStatBonus?.atk || 0);
+    const flatDef = codexBonus.def + passiveBonus.def + (titlePassive.def || 0) + (player.storyStatBonus?.def || 0);
     const flatHp = codexBonus.hp + passiveBonus.hp + (titlePassive.hp || 0);
     const flatMp = passiveBonus.mp + (titlePassive.mp || 0);
 

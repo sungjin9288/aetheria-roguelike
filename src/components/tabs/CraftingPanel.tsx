@@ -59,8 +59,11 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
 
   const handleSynthesize = () => {
     if (!validation?.valid) return;
-    actions?.synthesize(selectedIds, useProtect);
+    // 보호 토글은 실패할 수 있는 합성에서만 보인다 — 보이지 않을 때는 보호를 보내지 않고, 합성 뒤에는 끈다(Wave 61).
+    const protectable = 'successRate' in validation && Number(validation.successRate) < 1;
+    actions?.synthesize(selectedIds, useProtect && protectable);
     setSelectedIds([]);
+    setUseProtect(false);
   };
 
   const renderCraftMode = () => (

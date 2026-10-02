@@ -20,6 +20,7 @@ import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { getSeasonArchive } from './seasonPassPresentation.js';
 import { formatSkillText } from './skillPresentation.js';
 import { countDiscoveredMaps } from './discoveredMaps.js';
+import { getCodexEntryName } from './codexIdentity.js';
 import {
     countDiscoveredSignatures,
     isSignatureName,
@@ -203,7 +204,8 @@ export const registerLootToCodex = (player: Player, lootItems: Item[]): Player =
             : item.type === 'armor' ? 'armors'
             : item.type === 'shield' ? 'shields'
             : item.type === 'mat' ? 'materials' : null;
-        if (cat) p = registerCodex(p, cat, item.name);
+        // 2026-10 Wave 61: 장비는 바탕 이름으로 등록한다(접두어 사본은 같은 도감 항목이다 — `utils/codexIdentity.ts`).
+        if (cat) p = registerCodex(p, cat, getCodexEntryName(cat, item));
         // 2026-10 Wave 58: 접두어가 붙은 전설 각인을 얻으면 그 전설 각인 자체도 발견한 것이다(전설 도감 · 수집 업적).
         const signatureBase = cat ? getSignatureBaseName(item) : null;
         if (cat && signatureBase && signatureBase !== item.name) p = registerCodex(p, cat, signatureBase);

@@ -12,6 +12,7 @@ import { normalizeClassJourneyLedger } from './classJourney.js';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward.js';
 import { getSpentMirrorEssence, type MirrorLevels } from '../systems/mirrorUpgrades.js';
 import { migrateEquipmentInstancePrice } from './equipmentBaseIdentity.js';
+import { normalizeCodexEquipmentKeys } from './codexIdentity.js';
 import { advanceSeasonIfComplete, createSeasonPassState } from './seasonPassPresentation.js';
 import { BALANCE } from '../data/constants.js';
 import { sanitizeSavedPendingRelics } from './pendingRelicsRestore.js';
@@ -452,6 +453,11 @@ export const migrateData = (rawData: unknown, options: MigrateDataOptions = {}):
                 codex.monsters[name] = { discovered: true, kills };
             }
         }
+    }
+    // 2026-10 Wave 61: 도감의 장비 키는 바탕 이름이다 — 접두어 사본을 따로 등록하던 예전 기록을 합친다(멱등).
+    const savedCodex = readFields(target.stats.codex);
+    if (savedCodex && typeof savedCodex === 'object' && !Array.isArray(savedCodex)) {
+        target.stats.codex = normalizeCodexEquipmentKeys(savedCodex);
     }
     target.premiumCurrency = target.premiumCurrency || 0;
     // cycle 383: codexClaimed array normalization 제거 (cycle 373-382 동일 lens) —

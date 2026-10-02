@@ -639,6 +639,12 @@ export interface Player {
      * 런 범위라 `pickPermanentPlayerState`에 넣지 않는다.
      */
     metaVitalsSnapshot?: MetaVitalsSnapshot;
+    /**
+     * 2026-10 Wave 61: 이야기(이벤트 체인) 능력치 보상의 이번 런 누적. 공격력 · 방어력은 `calculateFullStats`가 배율 뒤에
+     * 더하고(구워 넣던 동안 "+15"가 직업 배율로 +18 ~ +35였다), 생명 · 기력은 저장 최대치에 굽되 전직이 이 값을 다시 더한다
+     * (전직 재구성이 지우던 결함). 런 범위라 `pickPermanentPlayerState`에 넣지 않는다.
+     */
+    storyStatBonus?: { atk?: number; def?: number; hp?: number; mp?: number };
     /** cycle 186: PremiumShop 부활 토큰 보유 수 — 환생에도 보존되는 영구 자산. */
     reviveTokens?: number;
     /** 2026-07 에테르 거울 revive를 이 런에서 이미 썼는지. 새 런 시작 시 자연 리셋. */
