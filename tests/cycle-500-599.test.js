@@ -1343,19 +1343,19 @@ import { DB } from '../src/data/db.ts';
       const maps = { abyss: { level: 'infinite', type: 'abyss', exits: [] } };
       const player = makePlayerFixture({ level: 45, loc: 'start' });
       const [rec] = getMoveRecommendations(player, null, currentMap, maps);
-      // targetLevel 자체는 UI 계약에 노출되지 않지만(cycle 333), isLocked 판정과
-      // "레벨 N부터 진입할 수 있습니다" 안내 문구에 그 값이 그대로 반영된다.
-      assert.equal(rec.badge, '잠김', "playerLevel(45) < targetLevel(53) → 잠김 판정");
-      assert.ok(rec.reason.includes('레벨 53'), "playerLevel + 8 = 53 (infinite 지역, getMapLevel 실제 반영)");
+      // 2026-10 Wave 61 A3: 무한 심연은 잠금이 없다 — `레벨 + 8`(하한 50)이던 동안 심연은 언제나 "잠김"이었다(원장 §61).
+      assert.notEqual(rec.badge, '잠김', '무한 심연은 플레이어 레벨과 무관하게 잠기지 않는다');
+      assert.ok(!rec.reason.includes('레벨 53'), '레벨 + 8 진입 레벨은 사라졌다');
   });
 
   test('cycle 519: body (playerLevel || 1) defensive 가드 보존 (N3: minLv 체인은 제거)', async () => {
+      // 2026-10 Wave 61 A3: 진입 레벨 계산은 `mapTopology.getMapRequiredLevel` 하나다(adventureGuide는 위임만 한다).
+      //   무한 심연의 `(playerLevel || 1) + 8` 분기는 삭제됐고 level fallback chain은 그쪽에 남는다.
       const source = await readSrc('src/utils/adventureGuide.ts');
-      assert.ok(/\(playerLevel \|\| 1\) \+ 8/.test(source),
-          '(playerLevel || 1) nullish defensive guard 보존');
+      const topology = await readSrc('src/utils/mapTopology.ts');
+      assert.ok(!/\(playerLevel \|\| 1\) \+ 8/.test(source + topology), '레벨 + 8 분기 부활 금지');
       // 2026-09 N3: `map?.minLv ??` 우선 분기는 MAPS 52개 중 정의 0개라 죽은 리더였다.
-      //   cycle 519가 지키려던 것은 defensive 가드와 level fallback 자체다 — 후자만 남긴다.
-      assert.ok(/typeof map\?\.level === 'number' \? map\.level : 1/.test(source),
+      assert.ok(/typeof map\?\.level === 'number' \? map\.level : 1/.test(topology),
           'level fallback chain 보존');
       assert.ok(!/map\?\.minLv/.test(source), 'minLv 리더는 제거됨 (주석 언급은 허용)');
       // playerLevel이 0/undefined여도 (playerLevel || 1) + 8로 안전하게 50 하한이 걸리고,
@@ -1367,8 +1367,8 @@ import { DB } from '../src/data/db.ts';
       };
       const player = makePlayerFixture({ level: 0, loc: 'start' });
       const recs = getMoveRecommendations(player, null, currentMap, maps);
-      assert.ok(recs.find((r) => r.name === 'abyss').reason.includes('레벨 50'),
-          'playerLevel 0이면 (0||1)+8=9 < 50이라 Math.max로 하한 50이 걸린다');
+      assert.notEqual(recs.find((r) => r.name === 'abyss').badge, '잠김',
+          'playerLevel 0이어도 무한 심연은 잠기지 않는다 (Wave 61 A3)');
       assert.equal(recs.find((r) => r.name === 'plains').levelLabel, '레벨 12',
           '숫자 level은 그 값을 그대로 반영 (minLv 체인 없이)');
   });
@@ -2723,8 +2723,9 @@ import { DB } from '../src/data/db.ts';
 
   test('cycle 543: 정합성 가드 — CraftingPanel callsite 보존', async () => {
       const source = await readSrc('src/components/tabs/CraftingPanel.tsx');
-      assert.ok(/actions\?\.synthesize\(selectedIds,\s*useProtect\)/.test(source),
-          'actions.synthesize(selectedIds, useProtect) callsite 보존');
+      // 2026-10 Wave 61 A18: 보호는 실패할 수 있는 합성에서만 보낸다(`useProtect && protectable`).
+      assert.ok(/actions\?\.synthesize\(selectedIds,\s*useProtect && protectable\)/.test(source),
+          'actions.synthesize(selectedIds, useProtect && protectable) callsite 보존');
       // W11 C4: createEconomyActions().synthesize를 실제로 호출해 useProtect가
       // default 없이도 dispatch payload에 그대로 전달되는지.
       let dispatched = null;
@@ -5186,12 +5187,14 @@ import { DB } from '../src/data/db.ts';
   });
 
   test('cycle 592: 정합성 가드 — reducer transaction callsite 보존', async () => {
-      const ca = await readSrc('src/reducers/handlers/combatHandlers.ts');
-      assert.ok(/extendedChecks:\s*result\.extendedVictoryChecks\s*===\s*true/.test(ca),
-          'direct combat victory extendedChecks 전파 보존');
-      const cafalse = (ca.match(/extendedChecks:\s*false/g) || []).length;
-      assert.ok(cafalse >= 1, `combat item/DoT extendedChecks: false 명시 보존: ${cafalse}건`);
-      // W11 C4: extendedChecks/liveConfig를 명시 전달(default 없이)해 실제로 승리 처리가
+      // 2026-10 Wave 61: `extendedChecks`는 삭제됐다 — 처치 방법(직접 · 지속 피해 · 반격 · 소모품)과 무관하게 같은 승리
+      //   후처리를 탄다(원장 §61 A4). 부재 불변식: 승리 경로 세 모듈에 그 식별자가 되돌아오지 않는다.
+      for (const rel of ['src/reducers/handlers/combatHandlers.ts', 'src/hooks/combatActions/combatVictory.ts', 'src/systems/combatActionTurn.ts']) {
+          // 주석(삭제 경위 설명)은 빼고 코드만 본다.
+          const code = (await readSrc(rel)).replace(/\/\*[\s\S]*?\*\//g, '').replace(/\/\/.*$/gm, '');
+          assert.ok(!/\bextended(?:Victory)?Checks\b/.test(code), `${rel}: extendedChecks 부활 금지`);
+      }
+      // W11 C4: liveConfig를 명시 전달(default 없이)해 실제로 승리 처리가
       // 끝까지 동작하는지 — addLog로 실제 승리 로그가 나가는지 확인.
       const player = makePlayerFixture({ level: 5, hp: 50, maxHp: 50 });
       const deadEnemy = { ...DB.MONSTERS['슬라임'], name: '슬라임', baseName: '슬라임', hp: 0, maxHp: 30, exp: 20, gold: 10, drop: [] };
@@ -5199,9 +5202,9 @@ import { DB } from '../src/data/db.ts';
       handleVictoryOutcome({
           playerAfterCombat: player, deadEnemy, stats: { maxHp: 50, maxMp: 30 },
           dispatch: () => {}, addLog: (type, text) => loggedTexts.push(text), addStoryLog: () => {}, emitUnlockedTitles: () => {},
-          extendedChecks: false, liveConfig: {},
+          liveConfig: {},
       });
-      assert.ok(loggedTexts.length > 0, 'extendedChecks=false, liveConfig={} 명시 전달로도 승리 로그가 실제로 쌓인다');
+      assert.ok(loggedTexts.length > 0, 'liveConfig={} 명시 전달로도 승리 로그가 실제로 쌓인다');
   });
 
   test('cycle 592: body CombatEngine.handleVictory liveConfig 전달 보존', async () => {
