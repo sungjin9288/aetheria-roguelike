@@ -13,7 +13,7 @@ import { rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } f
 import { BALANCE } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
-import { formatEventText } from '../../utils/eventPresentation';
+import { formatEventText, reportActualRecovery } from '../../utils/eventPresentation';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { healWithinMax } from '../../systems/vitals';
@@ -194,8 +194,10 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                         }
                     }
                     if (rwd.type === 'combat_bonus') {
-                        updatedPlayer = { ...updatedPlayer, tempBuff: { atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: MSG.CHAIN_REWARD_COMBAT_BONUS_NAME } };
-                        addLog('success', MSG.CHAIN_REWARD_COMBAT_BONUS(Math.round(((rwd.atkMult || 1.3) - 1) * 100), rwd.duration || 5));
+                        // 2026-10: 이름과 로그 앞머리는 체인 데이터가 정한다(`buffName` · `buffIntro`) — 잊혀진 사령관 ·
+                        //   물의 사도도 '최후의 영웅이 합류해 …'와 '기사의 혼령'을 받던 결함. 없으면 MSG의 일반 문구.
+                        updatedPlayer = { ...updatedPlayer, tempBuff: { atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: rwd.buffName || MSG.CHAIN_REWARD_COMBAT_BONUS_NAME } };
+                        addLog('success', MSG.CHAIN_REWARD_COMBAT_BONUS(Math.round(((rwd.atkMult || 1.3) - 1) * 100), rwd.duration || 5, rwd.buffIntro));
                     }
                     // cycle 62: stat_bonus는 영구 ATK/DEF/HP 가산 — 기존 chain(rift_secret)에서
                     // 사용 중이지만 핸들러가 없어 silently 무시되던 보상을 정상화.
@@ -258,11 +260,24 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                     expResult.logs.forEach((log: { type: string; text: string }) => addLog(log.type, log.text));
                     if (expResult.visualEffect) dispatch({ type: AT.SET_VISUAL_EFFECT, payload: expResult.visualEffect });
                 }
+                // 2026-10 U5: 회복은 `healWithinMax`(실효 최대치에서 멈추고 생명을 줄이지 않는다)로 올리고, 실제로 오른 양을
+                //   결과 문구에 쓴다 — 모닥불 휴식 · 폴백 "(+50HP +30MP)"가 상한에 걸려도 적힌 양을 그대로 찍던 결함.
+                const recovered = { hp: 0, mp: 0 };
                 if (selectedOutcome.hp) {
-                    updatedPlayer = { ...updatedPlayer, hp: Math.max(1, Math.min(fullStats.maxHp, updatedPlayer.hp! + selectedOutcome.hp)) };
+                    const before = Number(updatedPlayer.hp) || 0;
+                    const nextHp = selectedOutcome.hp > 0
+                        ? healWithinMax(before, selectedOutcome.hp, fullStats.maxHp)
+                        : Math.max(1, Math.min(fullStats.maxHp, before + selectedOutcome.hp));
+                    recovered.hp = Math.max(0, nextHp - before);
+                    updatedPlayer = { ...updatedPlayer, hp: nextHp };
                 }
                 if (selectedOutcome.mp) {
-                    updatedPlayer = { ...updatedPlayer, mp: Math.max(0, Math.min(fullStats.maxMp, updatedPlayer.mp! + selectedOutcome.mp)) };
+                    const before = Number(updatedPlayer.mp) || 0;
+                    const nextMp = selectedOutcome.mp > 0
+                        ? healWithinMax(before, selectedOutcome.mp, fullStats.maxMp)
+                        : Math.max(0, Math.min(fullStats.maxMp, before + selectedOutcome.mp));
+                    recovered.mp = Math.max(0, nextMp - before);
+                    updatedPlayer = { ...updatedPlayer, mp: nextMp };
                 }
                 if (selectedOutcome.item) updatedPlayer = addItemByName(updatedPlayer, selectedOutcome.item);
                 if (selectedOutcome.rest) updatedPlayer = incrementStat(updatedPlayer, 'rests');
@@ -277,7 +292,11 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 if (selectedOutcome.status) {
                     updatedPlayer = applyOutcomeStatus(updatedPlayer, selectedOutcome.status, addLog, rng);
                 }
-                resultText = formatEventText(selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT);
+                resultText = reportActualRecovery(
+                    formatEventText(selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT),
+                    selectedOutcome,
+                    recovered,
+                );
                 addLog('event', resultText);
             } else if (roll > 0.4) {
                 const rewardGold = player.level! * 50;

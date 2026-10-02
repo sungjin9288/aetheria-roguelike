@@ -1,9 +1,9 @@
-import { useMemo } from 'react';
 import { Leaf } from 'lucide-react';
 import { DB } from '../../data/db';
-import { LOOT_TABLE } from '../../data/loot';
 import { BALANCE, CONSTANTS } from '../../data/constants';
 import { MSG } from '../../data/messages';
+import { getMaterialCodexSources } from '../../utils/codexDropSources';
+import { getSellPrice } from '../../utils/equipmentUtils';
 import ItemIcon from '../icons/ItemIcon';
 import type { CodexCategory, CodexEntry } from '../../types/index.js';
 
@@ -15,16 +15,6 @@ const MaterialCodex = ({ codex = {} }: MaterialCodexProps) => {
     const materials = DB.ITEMS.materials || [];
     const materialCodex = codex.materials || {};
     const discoveredMaterials = materials.filter((material) => material.name && materialCodex[material.name]);
-
-    const materialSources = useMemo(() => {
-        const sources: Record<string, string[]> = {};
-        for (const [monster, drops] of Object.entries(LOOT_TABLE) as Array<[string, string[]]>) {
-            for (const itemName of drops) {
-                sources[itemName] = [...(sources[itemName] || []), monster];
-            }
-        }
-        return sources;
-    }, []);
 
     return (
         <div data-testid="codex-materials" className="space-y-4">
@@ -39,23 +29,23 @@ const MaterialCodex = ({ codex = {} }: MaterialCodexProps) => {
             {discoveredMaterials.length === 0 ? (
                 <div className="border-y border-white/10 py-3">
                     <div className="aether-type-body font-semibold text-slate-100">첫 소재를 찾아보세요</div>
-                    <div className="aether-type-meta mt-1 text-slate-400/76">몬스터 전리품이나 상점에서 소재를 얻으면 이름과 획득처가 기록됩니다</div>
+                    <div className="aether-type-meta mt-1 text-slate-400/76">{MSG.CODEX_MATERIAL_EMPTY_HINT}</div>
                 </div>
             ) : (
                 <div className="divide-y divide-white/8 border-y border-white/10">
                     {discoveredMaterials.map((material) => {
-                        const sources = materialSources[material.name || ''] || [];
+                        const sources = getMaterialCodexSources(material.name || '');
                         return (
                             <div key={material.name} className="flex min-h-16 items-center gap-3 py-2.5">
                                 <ItemIcon item={material} size={32} showBorder className="opacity-95" />
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-baseline justify-between gap-3">
                                         <span className="truncate text-sm font-semibold text-slate-100">{material.name}</span>
-                                        <span className="text-[11px] text-[#d5b180]">골드 {material.price}</span>
+                                        <span data-testid="codex-material-sell-price" className="text-[11px] text-[#d5b180]">{MSG.CODEX_MATERIAL_SELL_PRICE(getSellPrice(material))}</span>
                                     </div>
-                                    <div className="mt-1 line-clamp-2 text-[11px] text-slate-400/76">
-                                        획득처: {sources.length > 0 ? sources.slice(0, 4).join(' · ') : '탐험과 상점에서 확인'}
-                                        {sources.length > 4 ? ` 외 ${sources.length - 4}곳` : ''}
+                                    <div data-testid="codex-material-sources" className="mt-1 line-clamp-2 text-[11px] text-slate-400/76">
+                                        {MSG.CODEX_MATERIAL_SOURCES(sources.length > 0 ? sources.slice(0, 4).join(' · ') : MSG.CODEX_MATERIAL_SOURCE_SPECIAL)}
+                                        {sources.length > 4 ? MSG.CODEX_MATERIAL_SOURCES_MORE(sources.length - 4) : ''}
                                     </div>
                                     {material.name === CONSTANTS.ENHANCE_MATERIAL_NAME && (
                                         <div data-testid="codex-material-late-source" className="mt-0.5 text-[11px] text-[#d5b180]/80">

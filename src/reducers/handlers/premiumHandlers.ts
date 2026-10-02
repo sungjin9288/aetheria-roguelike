@@ -52,7 +52,7 @@ const purchasePreparationOffer = (
                 ...(player.stats || {}),
                 synthProtects: (Number(player.stats?.synthProtects) || 0) + 1,
             },
-        }, MSG.PREMIUM_PURCHASE('합성 보호석', cost));
+        }, MSG.PREMIUM_PURCHASE(PREMIUM_SHOP.synthProtect.name, cost));
     }
 
     if (offerId === PREMIUM_SHOP.revive.id) {

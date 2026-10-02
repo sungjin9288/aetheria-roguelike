@@ -13,7 +13,7 @@ import {
     type PostCombatChoiceId,
 } from '../utils/postCombatChoice';
 import { MSG } from '../data/messages';
-import type { PostCombatResult } from '../types';
+import type { Player, PostCombatResult } from '../types';
 import SignalBadge from './SignalBadge';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 
@@ -42,9 +42,14 @@ interface PostCombatCardProps {
     onOpenInventory?: () => void;
     /** 2026-09 D2 — "밀어붙인다 / 숨을 고른다" 선택을 reducer로 전달 (단일 전이). */
     onResolveChoice?: (choice: PostCombatChoiceId) => void;
+    /**
+     * 2026-10 — 현재 플레이어. "밀어붙인다" 설명이 보스 게이지를 실제로 올릴 때만 그것을 말하도록
+     * `getPostCombatChoiceOptions`에 넘긴다(판정은 utils 소유). 없으면 게이지를 약속하지 않는다.
+     */
+    player?: Player | null;
 }
 
-const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice }: PostCombatCardProps) => {
+const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice, player }: PostCombatCardProps) => {
     const [isClosing, setIsClosing] = useState(false);
     usePlatformBackHandler(Boolean(result && onClose), () => onClose?.(), 40);
 
@@ -107,7 +112,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice }: P
     // 2026-09 D2 — 선택은 reducer 단일 전이. 카드가 닫히기 전 연타가 들어와도
     //   reducer의 postCombatChoiceResolved 가드가 두 번째 적용을 막는다.
     const choiceOffered = isPostCombatChoiceOffered(result) && Boolean(onResolveChoice);
-    const choiceOptions = getPostCombatChoiceOptions();
+    const choiceOptions = getPostCombatChoiceOptions(player);
     const handleChoice = (choice: PostCombatChoiceId) => {
         if (isClosing || !choiceOffered) return;
         onResolveChoice?.(choice);

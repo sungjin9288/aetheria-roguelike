@@ -146,7 +146,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
     const protectionCurrency = player.premiumCurrency || 0;
     const canUseProtection = protectionTokens > 0 || protectionCurrency >= BALANCE.SYNTHESIS_PROTECT_COST;
     const protectionCost = protectionTokens > 0
-      ? `보호권 1개 · 보유 ${protectionTokens}개`
+      ? MSG.SYNTHESIS_PROTECT_TOKEN_COST(protectionTokens)
       : `${BALANCE.PREMIUM_CURRENCY_NAME} ${BALANCE.SYNTHESIS_PROTECT_COST}개 · 보유 ${protectionCurrency}개`;
     const canSynthesize = Boolean(validation?.valid) && (!useProtect || canUseProtection);
     const lockReason = validation?.reason === 'NO_GOLD' && synthesisPreview

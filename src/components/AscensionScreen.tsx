@@ -12,7 +12,7 @@ import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import { MSG } from '../data/messages.js';
 import { BALANCE } from '../data/constants.js';
 import type { Player } from '../types/index.js';
-import { getAscensionOutcome } from '../utils/ascensionPreview';
+import { getAscensionOutcome, isNewAscensionTitle } from '../utils/ascensionPreview';
 import EndgameJourney from './EndgameJourney';
 import PendingQuestRewardList from './PendingQuestRewardList';
 import { getClaimableQuestEntries } from '../utils/questProgress';
@@ -86,7 +86,9 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                                 <Crown size={18} />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <div className="text-[11px] font-readable text-[#d5b180]">새 칭호</div>
+                                <div data-testid="ascension-title-label" className="text-[11px] font-readable text-[#d5b180]">
+                                    {isNewAscensionTitle(outcome, player.titles) ? MSG.ASCEND_NEW_TITLE_LABEL : MSG.ASCEND_TITLE_OWNED_LABEL}
+                                </div>
                                 <div className="mt-0.5 text-[18px] font-readable font-bold text-[#f6e7c8]">
                                     {outcome.title}
                                 </div>

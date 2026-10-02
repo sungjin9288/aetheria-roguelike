@@ -3,6 +3,8 @@ import { getCombatForecast, type SelectedSkillLike } from './combatForecast';
 import { CombatEngine } from '../systems/CombatEngine';
 import { getBossSignatureDrops } from './bossSignatureHint.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
+import { getConsumableDescription } from './consumablePresentation';
+import { isConsumableItem } from '../systems/consumableRules';
 import type { DictRelic, FullStats, Item, Monster, Player } from '../types/index.js';
 
 interface CombatViewInput {
@@ -14,8 +16,12 @@ interface CombatViewInput {
     mobile?: boolean;
 }
 
-/** `buildCombatView()`가 반환하는 전투 소모품 1건 — DB 원본 `Item`에 `count`를 얹는다. */
-type CombatConsumableEntry = Item & { count: number };
+/**
+ * `buildCombatView()`가 반환하는 전투 소모품 1건 — DB 원본 `Item`에 `count`와 표시 문구 `label`을 얹는다.
+ * `label`은 빠른 슬롯과 같은 `getConsumableDescription`이다 — 저장된 `desc_stat`을 그리던 동안 접두어 엘릭서가
+ * "HP+10006 | 신성한"으로 보였다(엔진은 완전 회복, Wave 62 B 감사 F2).
+ */
+type CombatConsumableEntry = Item & { count: number; label: string };
 
 /** `combo_stack`(연격의 반지) 유물만 골라 쓰는 실제 모양 — `val`이 `{stack, bonus}`로 닫힌다. */
 type ComboStackRelic = Extract<DictRelic, { effect: 'combo_stack' }>;
@@ -38,7 +44,7 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
     const primarySignatureDrop = signatureDropCandidates[0] || null;
     const combatConsumables: CombatConsumableEntry[] = Object.values(
         (player.inv || [])
-            .filter((item) => ['hp', 'mp', 'cure', 'buff'].includes(item?.type ?? ''))
+            .filter((item) => isConsumableItem(item))
             .sort((a, b) => {
                 const typeOrder: Record<string, number> = { hp: 0, mp: 1, cure: 2, buff: 3 };
                 return (typeOrder[a.type ?? ''] ?? 99) - (typeOrder[b.type ?? ''] ?? 99);
@@ -46,7 +52,7 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
             .reduce((acc: Record<string, CombatConsumableEntry>, item) => {
                 const key = `${item.type}:${item.name}`;
                 if (!acc[key]) {
-                    acc[key] = { ...item, count: 1 };
+                    acc[key] = { ...item, count: 1, label: getConsumableDescription(item) || item.desc_stat || item.desc || '' };
                 } else {
                     acc[key].count += 1;
                 }

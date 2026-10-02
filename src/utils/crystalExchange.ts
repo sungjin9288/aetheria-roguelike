@@ -102,7 +102,7 @@ export const getCrystalExchangeOffers = (player?: Player | null): CrystalExchang
         },
         {
             id: PREMIUM_SHOP.synthProtect.id,
-            name: '합성 보호석',
+            name: PREMIUM_SHOP.synthProtect.name,
             description: '다음 합성에서 보호를 선택하면 재료 손실을 막습니다.',
             cost: PREMIUM_SHOP.synthProtect.cost,
             currentLabel: `${synthProtects}개`,

@@ -43,7 +43,7 @@ const RAW_QUESTS: Quest[] = [
     // ── 초반 퀘스트 (Lv 1-10) ────────────────────────────────────────────────
     { id: 1,  title: '슬라임 소탕',      desc: '슬라임 3마리 처치',       target: '슬라임',      goal: 3,  reward: { exp: 50,   gold: 100 },           minLv: 1 },
     { id: 2,  title: '멧돼지 사냥',      desc: '멧돼지 5마리 처치',       target: '멧돼지',      goal: 5,  reward: { exp: 80,   gold: 150 },           minLv: 2 },
-    { id: 3,  title: '광산의 위협',      desc: '코볼트 5마리 처치',       target: '코볼트',      goal: 5,  reward: { exp: 300,  gold: 500,  item: '강철 롱소드' }, minLv: 3 },
+    { id: 3,  title: '평원의 코볼트',    desc: '코볼트 5마리 처치',       target: '코볼트',      goal: 5,  reward: { exp: 300,  gold: 500,  item: '강철 롱소드' }, minLv: 3 },
     { id: 4,  title: '숲의 해충',        desc: '거미떼 8마리 처치',       target: '거미떼',      goal: 8,  reward: { exp: 200,  gold: 250,  item: '해독제' },      minLv: 3 },
     { id: 5,  title: '호수의 수호자',    desc: '물의 정령 5마리 처치',    target: '물의 정령',   goal: 5,  reward: { exp: 350,  gold: 400,  item: '마나 결정' },   minLv: 5 },
     { id: 6,  title: '폐허 탐험',        desc: '해골 병사 10마리 처치',   target: '해골 병사',   goal: 10, reward: { exp: 500,  gold: 600 },           minLv: 5 },
@@ -127,7 +127,7 @@ const RAW_QUESTS: Quest[] = [
     { id: 127, title: '망각의 나가 처치',       desc: '심해 회랑의 망각의 나가 8마리를 처치하세요',       target: '망각의 나가', location: '심해 회랑', goal: 8, reward: { exp: 7000, gold: 12000 }, minLv: 52 },
     { id: 128, title: '에테르 거인 분쇄',       desc: '붕괴된 마법 요새의 에테르 거인 6기를 처치하세요', target: '에테르 거인', location: '붕괴된 마법 요새', goal: 6, reward: { exp: 8000, gold: 14000 }, minLv: 62 },
     { id: 129, title: '차원 균열체 소멸',       desc: '차원의 틈새에서 차원 균열체 5개를 소멸시키세요',   target: '차원 균열체', location: '차원의 틈새', goal: 5, reward: { exp: 14000, gold: 24000 }, minLv: 75 },
-    { id: 130, title: '리치 재토벌',            desc: '되살아난 리치를 다시 한번 처치하세요',             target: '리치',          goal: 3,  reward: { exp: 7000,  gold: 15000, item: '혼돈의 로드' },   minLv: 40 },
+    { id: 130, title: '리치 재토벌',            desc: '되살아난 리치를 다시 3번 처치하세요',             target: '리치',          goal: 3,  reward: { exp: 7000,  gold: 15000, item: '혼돈의 로드' },   minLv: 40 },
     { id: 131, title: '데스나이트 토벌',        desc: '암흑 성의 데스나이트 5명을 처치하세요',            target: '데스나이트', location: '암흑 성', goal: 5, reward: { exp: 4500, gold: 9000 }, minLv: 42 },
 
     // 신규 지역 — 세계수 숲 / 고대 신전 도시 / 차원의 균열 전초기지 (Lv 38-62)
@@ -230,7 +230,7 @@ const RAW_QUESTS: Quest[] = [
     // ── cycle 63: 신규 탐험 / 발견 챌린지 (3개) ──────────────────────────────
     { id: 200, title: '대륙의 발자취',  type: 'explore_count', desc: '50번 탐색 후 새 칭호 획득', target: 'explores',    goal: 50,  reward: { exp: 8000,  gold: 12000 }, minLv: 5 },
     { id: 201, title: '지도 완성가',    type: 'discovery_count', desc: '15곳 발견', target: 'discoveries', goal: 15, reward: { exp: 25000, gold: 30000, title: '지도 제작자' }, minLv: 25 },
-    { id: 202, title: '전설 기록자',    desc: 'signature 도감 15종 발견', type: 'signature_collect', target: 'signaturesDiscovered', goal: 15, reward: { exp: 50000, gold: 60000, title: '전설의 기록자' }, minLv: 40 },
+    { id: 202, title: '전설 기록자',    desc: '전설 각인 도감 15종 발견', type: 'signature_collect', target: 'signaturesDiscovered', goal: 15, reward: { exp: 50000, gold: 60000, title: '전설의 기록자' }, minLv: 40 },
 
     // cycle 76: 도주 카운터 기반 챌린지 퀘스트 — cycle 74에서 stats.escapes 도입.
     // 도주는 "도망"이 아니라 "런 보존" — 위험 인지 + 자원 관리 운영 인정.

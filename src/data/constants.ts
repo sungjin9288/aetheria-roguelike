@@ -506,7 +506,7 @@ export const BALANCE = {
         { id: 'halfHp', label: '약한 생명력', desc: '최대 생명력이 절반으로 줄어듭니다.' },
         { id: 'noGold', label: '빈손의 시작', desc: '시작 골드가 없고 얻는 골드도 절반으로 줄어듭니다.' },
         { id: 'randomSkills', label: '뒤섞인 기술', desc: '기술을 쓰면 다른 기술이 무작위로 발동합니다.' },
-        { id: 'eliteOnly', label: '강적의 길', desc: '만나는 적이 모두 정예 적으로 등장합니다.' },
+        { id: 'eliteOnly', label: '강적의 길', desc: '보스를 제외한 모든 적이 정예 적으로 등장합니다.' },
         { id: 'noPotion', label: '물약 없이', desc: '회복과 보조 아이템을 사용할 수 없습니다.' },
         { id: 'blindMap', label: '길 잃은 여행', desc: '현재 위치와 지도 정보가 숨겨집니다.' },
     ],

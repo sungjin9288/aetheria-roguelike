@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants';
+import { MSG } from '../data/messages';
 import {
     FIRST_SEASON,
     getSeasonDef,
@@ -39,19 +40,26 @@ const SEASON_CHAPTERS = [
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
-export const formatSeasonRewardParts = (reward?: SeasonReward | null) => {
+/**
+ * 2026-10 Wave 61: `ownedTitles`(플레이어가 가진 칭호)에 있는 칭호는 '보유 중'으로 보인다 — 수령(`CLAIM_SEASON_REWARD`)은
+ * 가진 칭호를 다시 지급하지 않으므로, 시즌 2부터 10 · 20 · 30단계가 보여 주던 '칭호 시즌 …'은 받을 수 없는 보상이었다.
+ */
+export const formatSeasonRewardParts = (reward?: SeasonReward | null, ownedTitles?: readonly string[] | null) => {
     if (!reward) return [];
 
+    const titlePart = reward.title
+        ? (ownedTitles?.includes(reward.title) ? MSG.SEASON_REWARD_TITLE_OWNED(reward.title) : MSG.SEASON_REWARD_TITLE(reward.title))
+        : null;
     return [
         reward.gold ? `골드 ${formatNumber(reward.gold)}` : null,
         reward.premiumCurrency ? `에테르 크리스탈 ${formatNumber(reward.premiumCurrency)}` : null,
         reward.item || null,
-        reward.title ? `칭호 ${reward.title}` : null,
+        titlePart,
     ].filter((part): part is string => Boolean(part));
 };
 
-export const formatSeasonReward = (reward?: SeasonReward | null) => (
-    formatSeasonRewardParts(reward).join(' · ') || '기록 보상'
+export const formatSeasonReward = (reward?: SeasonReward | null, ownedTitles?: readonly string[] | null) => (
+    formatSeasonRewardParts(reward, ownedTitles).join(' · ') || '기록 보상'
 );
 
 export const normalizeClaimedSeasonTiers = (claimed: Array<number | string> = []) => {

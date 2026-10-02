@@ -349,7 +349,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                   )}
                 </div>
                 <div className="aether-type-meta mt-1 font-fira text-white/55">
-                  {item.desc_stat || item.desc}
+                  {item.label}
                 </div>
               </Motion.button>
             ))}

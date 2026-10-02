@@ -206,7 +206,9 @@ export const handleVictoryOutcome = ({
     if (hitNewTier) {
         const tierIdx = tierThresholds.findIndex((tier) => tier === newStreak);
         const atkPct = Math.round(BALANCE.KILL_STREAK_ATK_BONUS[tierIdx] * 100);
-        addLog('event', MSG.KILL_STREAK_BONUS(newStreak, atkPct));
+        // 2026-10 Wave 61: 같은 단계가 치명타 확률도 올린다(statsCalculator computeKillStreakBonus) — 로그가 공격력만 말했다.
+        const critPct = Math.round(BALANCE.KILL_STREAK_CRIT_BONUS[tierIdx] * 100);
+        addLog('event', MSG.KILL_STREAK_BONUS(newStreak, atkPct, critPct));
     }
     // cycle 95: max-ever 연속 처치 누적 — killStreak는 비전투 30초 / 사망 / 도주 시
     // 0으로 리셋되는 휘발성 카운터라 reflection / 보상 surface에 잡히지 않음. 영구

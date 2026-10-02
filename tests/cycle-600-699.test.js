@@ -1084,8 +1084,9 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 623: 3 callsite threshold 명시 보존', async () => {
       const qp = await readSrc('src/utils/cumulativeQuestProgress.ts');
-      assert.ok(/countLowHpWins\(stats,\s*quest\.threshold\s*\|\|\s*0\.2\)/.test(qp),
-          "cumulativeQuestProgress callsite 'quest.threshold || 0.2' 보존");
+      // Wave 61 A5: 임무는 50전 창(countLowHpWins)이 아니라 누적(getLowHpWinTotal)을 읽는다 — threshold 기본값 0.2는 그대로.
+      assert.ok(/quest\.threshold\s*\|\|\s*0\.2/.test(qp), "cumulativeQuestProgress threshold 'quest.threshold || 0.2' 보존");
+      assert.ok(/getLowHpWinTotal\(/.test(qp), 'cumulativeQuestProgress는 누적 낮은 생명 승리를 읽는다');
 
       const rp = await readSrc('src/utils/runProfile.ts');
       const matches = (rp.match(/countLowHpWins\([^,]+,\s*0\.2\)/g) || []).length;

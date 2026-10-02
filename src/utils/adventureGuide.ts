@@ -5,6 +5,7 @@ import { MSG } from '../data/messages.js';
 import type { FullStats, GameMap, Player, StatusId } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
+import { canBossAppearInMap } from './bossPresence.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
 import { getSignaturePityMultiplier } from './signaturePity.js';
 import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
@@ -28,8 +29,10 @@ interface RoutePlan {
     returnLabel: string;
 }
 
+// 2026-10 Wave 61: 보스 경로 계획은 지역의 `boss` 필드가 아니라 실제 출현 판정(`canBossAppearInMap`)을 따른다 —
+//   해금 전의 숨은 보스 지역 · 구역 보스를 쓰러뜨린 지역에 '보스 진입'을 안내하지 않는다.
 const getRoutePlan = (
-    targetMap: GameMap | null | undefined,
+    bossCanAppear: boolean,
     isSafeTarget: boolean,
     badge: string,
     hpRatio: number,
@@ -44,7 +47,7 @@ const getRoutePlan = (
         };
     }
 
-    if (targetMap?.boss) {
+    if (bossCanAppear) {
         return {
             approach: hpRatio >= ROUTE_PLAN_BOSS_HP_RATIO ? '보스 진입' : '정비 후 진입',
             exitRule: 'HP 75% 미만이면 귀환',
@@ -135,9 +138,10 @@ const getQuestNextStep = (entry: ExpeditionQuestEntry, targetMaps: string[]) => 
     if (targetMaps.length > 0) return `${targetMaps[0]}에서 ${quest.target} 추적`;
     if (quest.type === 'craft') return `제작 ${remaining}회 진행`;
     if (quest.type === 'combat_count') {
+        // 2026-10 Wave 61: `kills`는 보스 처치도 센다(CombatEngine.handleVictory) — '일반 몬스터'라 부르지 않는다.
         return quest.target === 'bossKills'
             ? `보스 ${remaining}회 더 처치`
-            : `일반 몬스터 ${remaining}회 더 처치`;
+            : MSG.QUEST_NEXT_STEP_KILLS(remaining);
     }
     if (quest.type === 'bounty_count') return `현상금 ${remaining}건 완료`;
     if (quest.type === 'build_victory') return `${quest.buildLabel || '지정 빌드'} ${remaining}승`;
@@ -256,7 +260,12 @@ interface ExplorationForecast {
 
 // cycle 334: description 필드 제거 — getExplorationForecast 외부 read 0건이던 dead field.
 //   mood / chips만 ControlPanel & test에서 사용.
-export const getExplorationForecast = (player: Player, mapData: GameMap | null | undefined): ExplorationForecast => {
+export const getExplorationForecast = (
+    player: Player,
+    mapData: GameMap | null | undefined,
+    /** 숨은 보스 해금은 지역별이다 — `DB.MAPS`의 지역 데이터에는 `name`이 없으므로 호출처가 이름을 넘긴다. */
+    mapName: string | null | undefined = mapData?.name,
+): ExplorationForecast => {
     if (!mapData) {
         return {
             mood: '기록 동기화 중',
@@ -285,7 +294,7 @@ export const getExplorationForecast = (player: Player, mapData: GameMap | null |
 
     let mood = '교전 밀도 보통';
 
-    if (mapData.boss) {
+    if (canBossAppearInMap(mapName, mapData, player)) {
         mood = eventPct >= 8 ? '보스 전조' : '보스 권역';
     } else if (eventPct >= 10 || relicPct >= 12) {
         mood = '발견 상승';
@@ -356,7 +365,8 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
             const isLocked = targetLevel > playerLevel;
             const isSafeTarget = targetMap.type === 'safe';
             const isVisited = visitedMaps.has(exitName);
-            const forecast = getExplorationForecast(player, targetMap);
+            const forecast = getExplorationForecast(player, targetMap, exitName);
+            const bossCanAppear = canBossAppearInMap(exitName, targetMap, player);
             // collection-driven 신호: 미발견 signature가 있는 경로는 ✦N 칩으로 강조
             const undiscoveredSignatureCount = getMapUndiscoveredSignatures(exitName, player).length;
             const chips: ExplorationChip[] = [
@@ -386,7 +396,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                     reason = '휴식, 상점, 게시판을 바로 열 수 있는 안전 경로입니다.';
                 }
             } else {
-                if (targetMap.boss) {
+                if (bossCanAppear) {
                     badge = '보스';
                     if (hpRatio >= 0.85 && mpRatio >= 0.65) {
                         score += 28;
@@ -432,7 +442,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                 reason = `레벨 ${targetLevel}부터 진입할 수 있습니다. 현재 지역의 임무와 탐험을 먼저 진행하세요.`;
             }
 
-            const routePlan = getRoutePlan(targetMap, isSafeTarget, badge, hpRatio, inventoryCount, inventoryCap);
+            const routePlan = getRoutePlan(bossCanAppear, isSafeTarget, badge, hpRatio, inventoryCount, inventoryCap);
             chips.push({ label: 'RETURN', value: routePlan.returnLabel });
 
             // cycle 333: score / isSafeTarget / isVisited / isBoss 4 dead 필드 제거 —

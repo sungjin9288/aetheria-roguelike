@@ -93,7 +93,8 @@ test('every cumulative quest starts from its canonical player record', () => {
         [62, 2],
         [66, 4],
         [68, 3],
-        [72, 5],
+        // Wave 61 A6: 발견 지역은 시작 마을을 세지 않는다(업적과 같은 규칙) — 방문 5곳 중 4곳.
+        [72, 4],
         [202, 3],
         [203, 4],
     ]);
@@ -132,7 +133,8 @@ test('quest progress syncs build-guiding and discovery quests from player stats'
     const result = syncQuestProgress(player);
 
     assert.equal(result.updatedQuests.find((quest) => quest.id === 68)?.progress, 3);
-    assert.equal(result.updatedQuests.find((quest) => quest.id === 72)?.progress, 5);
+    // Wave 61 A6: 시작 마을 제외 — 방문 5곳 중 발견 4곳.
+    assert.equal(result.updatedQuests.find((quest) => quest.id === 72)?.progress, 4);
 });
 
 test('location exploration quests ignore global exploration and other regions', () => {

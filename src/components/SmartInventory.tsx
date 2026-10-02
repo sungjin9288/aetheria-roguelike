@@ -10,6 +10,7 @@ import { BALANCE } from '../data/constants';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { getAutoSellMaterialTargets } from '../utils/bagCrafting';
 import { isSignatureItem } from '../data/signatureItems.js';
+import { isEquipmentUseItem, isInventoryUseAccepted } from '../systems/consumableRules';
 import SignalBadge from './SignalBadge';
 import ItemIcon from './icons/ItemIcon';
 import EnhanceDecisionCard from './EnhanceDecisionCard';
@@ -391,14 +392,19 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                         강화 보기
                                     </Motion.button>
                                 )}
-                                <Motion.button
-                                    whileTap={{ scale: 0.95 }}
-                                    disabled={!canEquip}
-                                    onClick={() => actions?.useItem(item)}
-                                    className="bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold min-h-[38px] px-3 py-2 text-sm"
-                                >
-                                    {!canEquip ? '제한' : ['weapon', 'armor', 'shield'].includes(item.type ?? '') ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
-                                </Motion.button>
+                                {/* Wave 62 (B 감사 F9): 리듀서(USE_INVENTORY_ITEM)가 받는 종류에만 버튼을 그린다 — 재료 · 열쇠의
+                                    "사용"은 눌러도 아무 일이 없었다. 판정은 리듀서와 같은 isInventoryUseAccepted 하나다. */}
+                                {isInventoryUseAccepted(item) && (
+                                    <Motion.button
+                                        whileTap={{ scale: 0.95 }}
+                                        data-testid={`inventory-use-${item.id || item.name}`}
+                                        disabled={!canEquip}
+                                        onClick={() => actions?.useItem(item)}
+                                        className="bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold min-h-[38px] px-3 py-2 text-sm"
+                                    >
+                                        {!canEquip ? '제한' : isEquipmentUseItem(item) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
+                                    </Motion.button>
+                                )}
                             </div>
                         </Motion.div>
                     );

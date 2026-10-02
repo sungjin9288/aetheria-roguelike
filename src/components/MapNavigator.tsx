@@ -5,6 +5,7 @@ import { MSG } from '../data/messages';
 import type { FullStats, GameMap, Player } from '../types/index.js';
 import { getMoveRecommendations, type MoveRecommendation } from '../utils/adventureGuide';
 import { getGravesAtLoc, type GraveEntry } from '../utils/graveUtils';
+import { canBossAppearInMap } from '../utils/bossPresence';
 import { getExitBadges } from '../utils/mapBadges';
 import { getMapProgressState } from '../utils/mapProgress';
 import { getMapRouteGate, type MapRouteGate } from '../utils/mapRouteGate';
@@ -28,6 +29,8 @@ interface MapEntry extends GameMap {
     undiscoveredSignatures: Array<{ name: string; rate: number }>;
     badges: Array<{ id: string; label: string }>;
     routeGate: MapRouteGate | null;
+    /** 이 플레이어에게 이 지역에서 보스가 실제로 나올 수 있는가(`canBossAppearInMap`) — 배지 · 위험 · 예상 · 경로 노드가 같이 읽는다. */
+    bossCanAppear: boolean;
 }
 
 interface MapNavigatorProps {
@@ -49,12 +52,36 @@ const MAP_ORDER = Object.entries(DB.MAPS)
     });
 
 const MAP_BANDS = [
-    { key: 'frontier', label: '변방', levelLabel: '레벨 1~10', maxLevel: 10 },
-    { key: 'midlands', label: '중부', levelLabel: '레벨 11~20', maxLevel: 20 },
-    { key: 'highlands', label: '고지', levelLabel: '레벨 21~35', maxLevel: 35 },
-    { key: 'mythic', label: '신화', levelLabel: '레벨 36~60', maxLevel: 60 },
-    { key: 'endgame', label: '종장', levelLabel: '레벨 61 이상', maxLevel: Number.POSITIVE_INFINITY },
+    { key: 'frontier', label: '변방', maxLevel: 10 },
+    { key: 'midlands', label: '중부', maxLevel: 20 },
+    { key: 'highlands', label: '고지', maxLevel: 35 },
+    { key: 'mythic', label: '신화', maxLevel: 60 },
+    { key: 'endgame', label: '종장', maxLevel: Number.POSITIVE_INFINITY },
 ];
+
+const getBandIndex = (map: GameMap) => {
+    const level = map.level === 'infinite' ? 999 : getMapRequiredLevel(map, 1);
+    if (map.type === 'safe' && level <= 15) return 0;
+    return MAP_BANDS.findIndex((band) => level <= band.maxLevel);
+};
+
+/**
+ * 2026-10 Wave 61: 띠의 레벨 범위는 그 띠에 실제로 놓인 지역에서 센다. 고정 문구 '레벨 1~10'이던 동안 변방에는
+ * 정비 지역 묶음 규칙(safe ≤ 15)으로 Lv15 여행자의 쉼터가 들어 있었다. 잠금이 없는 지역(심연)이 있으면 열린 범위다.
+ */
+const getBandLevelLabel = (bandIndex: number) => {
+    const members = MAP_ORDER.filter((map) => getBandIndex(map) === bandIndex);
+    const levels = members
+        .filter((map) => map.level !== 'infinite')
+        .map((map) => getMapRequiredLevel(map, 1));
+    if (levels.length === 0) return '';
+    const minLevel = Math.min(...levels);
+    return members.some((map) => map.level === 'infinite')
+        ? MSG.MAP_BAND_LEVEL_FROM(minLevel)
+        : MSG.MAP_BAND_LEVEL_RANGE(minLevel, Math.max(...levels));
+};
+
+const MAP_BAND_LEVEL_LABELS = MAP_BANDS.map((_, bandIndex) => getBandLevelLabel(bandIndex));
 
 const MAP_STATE = {
     unexplored: { label: '미탐험', badge: 'neutral', dot: 'bg-slate-500/70' },
@@ -84,15 +111,9 @@ const getRouteGateNotice = (routeGate: MapRouteGate | null | undefined) => {
     };
 };
 
-const getBandIndex = (map: GameMap) => {
-    const level = map.level === 'infinite' ? 999 : getMapRequiredLevel(map, 1);
-    if (map.type === 'safe' && level <= 15) return 0;
-    return MAP_BANDS.findIndex((band) => level <= band.maxLevel);
-};
-
-const getRiskLabel = (map: GameMap, playerLevel: number) => {
+const getRiskLabel = (map: MapEntry, playerLevel: number) => {
     if (map.type === 'safe') return '안전';
-    if (map.boss) return '보스';
+    if (map.bossCanAppear) return '보스';
 
     const gap = getMapRequiredLevel(map, playerLevel) - playerLevel;
     if (gap > 0) return '레벨 부족';
@@ -100,9 +121,9 @@ const getRiskLabel = (map: GameMap, playerLevel: number) => {
     return '적정';
 };
 
-const getEncounterLabel = (map: GameMap, route: MoveRecommendation | undefined) => {
+const getEncounterLabel = (map: MapEntry, route: MoveRecommendation | undefined) => {
     if (map.type === 'safe') return '정비';
-    if (map.boss) return '보스 교전';
+    if (map.bossCanAppear) return '보스 교전';
     return route?.routePlan?.approach || '일반 교전';
 };
 
@@ -155,7 +176,7 @@ const WorldRouteList = ({
                         <section key={band.key} className="space-y-1.5">
                             <div className="aether-type-meta flex items-center justify-between px-1 font-readable text-slate-500">
                                 <span className="text-slate-300/80">{band.label}</span>
-                                <span>{band.levelLabel}</span>
+                                <span data-testid="map-band-level">{MAP_BAND_LEVEL_LABELS[bandIndex]}</span>
                             </div>
                             <div className="divide-y divide-white/6 border-y border-white/6">
                                 {bandEntries.map((entry) => {
@@ -229,8 +250,6 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
     const questNextSteps = new Set(questTargets
         .map((target) => getNextMapTowardTarget(DB.MAPS, playerLoc, target))
         .filter(Boolean));
-    const areaBossDefeated = player.stats?.areaBossDefeated;
-    const bossGauge = player.stats?.bossGauge;
 
     const mapEntries = useMemo<MapEntry[]>(() => MAP_ORDER.map((map) => {
         const progress = getMapProgressState(map.name, player, DB.MAPS);
@@ -240,10 +259,11 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
             graves: getGravesAtLoc(grave, map.name),
             signatureDrops: getMapSignatureDrops(map.name),
             undiscoveredSignatures: getMapUndiscoveredSignatures(map.name, player),
-            badges: getExitBadges(map, areaBossDefeated, bossGauge),
+            badges: getExitBadges(map, player, map.name),
             routeGate: getMapRouteGate(DB.MAPS, map.name),
+            bossCanAppear: canBossAppearInMap(map.name, map, player),
         } as MapEntry;
-    }), [areaBossDefeated, bossGauge, grave, player]);
+    }), [grave, player]);
 
     const entriesByName = useMemo(
         () => new Map(mapEntries.map((entry) => [entry.name, entry])),
@@ -255,7 +275,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
         return {
             ...route,
             isMissionRoute: questNextSteps.has(route.name),
-            isBoss: Boolean(entry?.boss),
+            isBoss: Boolean(entry?.bossCanAppear),
             isLocked: playerLevel < getMapRequiredLevel(entry, playerLevel),
         };
     });

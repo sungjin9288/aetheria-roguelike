@@ -7,7 +7,7 @@ import type { Player } from '../../types';
 import { GS } from '../gameStates';
 import { createCurrentRunProgress } from '../../utils/runProgress';
 import { pickPermanentPlayerState } from '../../utils/permanentProgress';
-import { getAscensionOutcome } from '../../utils/ascensionPreview';
+import { getAscensionOutcome, isNewAscensionTitle } from '../../utils/ascensionPreview';
 import { getClaimableQuestEntries } from '../../utils/questProgress';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
@@ -223,7 +223,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
             BALANCE.CHALLENGE_MODIFIERS.find((modifier) => modifier.id === id)?.label || id));
         const logs = appendRewardLogs(INITIAL_STATE.logs, [
             ...ascensionTitles.map((id) => ({ type: 'system', text: MSG.TITLE_UNLOCKED(getTitleLabel(id)) })),
-            { type: 'system', text: MSG.ASCEND_DONE(outcome.nextRank, outcome.title) },
+            { type: 'system', text: MSG.ASCEND_DONE(outcome.nextRank, isNewAscensionTitle(outcome, state.player.titles) ? outcome.title : null) },
             ...(challengeLabels.length > 0 ? [{ type: 'warn', text: MSG.CHALLENGE_START(challengeLabels) }] : []),
             ...(startingRelics.length > 0 ? [{ type: 'event', text: MSG.START_BOOT_RELIC }] : []),
         ]);

@@ -45,6 +45,15 @@ export interface AscensionOutcome {
     ladder: { rankBefore: number; rankKept: number };
 }
 
+/**
+ * 2026-10 Wave 61: 계승 칭호가 플레이어에게 새 칭호인가. 칭호 표(`PRESTIGE_TITLES`)는 10단계에서 끝나 11단계부터는
+ * 이미 가진 '에테르의 신'이 다시 온다 — 계승 로그(`ASCEND`)와 계승 화면은 새 칭호일 때만 '새 칭호'라 말한다.
+ */
+export const isNewAscensionTitle = (
+    outcome: Pick<AscensionOutcome, 'title'>,
+    ownedTitles: readonly string[] | null | undefined,
+): boolean => !(ownedTitles || []).includes(outcome.title);
+
 const toNonNegativeNumber = (value: unknown) => {
     const number = Number(value);
     return Number.isFinite(number) ? Math.max(0, number) : 0;

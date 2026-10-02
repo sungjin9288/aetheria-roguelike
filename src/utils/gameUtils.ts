@@ -125,6 +125,8 @@ export const formatRewardParts = (reward: QuestReward) => {
     if (reward.exp) parts.push(`경험 ${reward.exp}`);
     if (reward.gold) parts.push(`골드 ${reward.gold}`);
     if (reward.item) parts.push(reward.item);
+    // 2026-10: 칭호 보상(임무 152·153·154·201·202)은 수령 때 지급되는데(rewardHandlers) 보상 줄에서 빠져 있었다.
+    if (reward.title) parts.push(MSG.QUEST_REWARD_TITLE(getTitleLabel(reward.title)));
     if (reward.premiumCurrency) parts.push(`에테르 크리스탈 ${reward.premiumCurrency}`);
     return parts;
 };
