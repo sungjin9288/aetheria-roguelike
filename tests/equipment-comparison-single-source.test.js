@@ -10,6 +10,7 @@ import { getLootUpgradeHint } from '../src/hooks/combatActions/_helpers.js';
 import {
     getEquipmentComparison,
     getEquipmentDecision,
+    getSellIncome,
     getSellPrice,
     pickBestEquippable,
 } from '../src/utils/equipmentUtils.js';
@@ -135,9 +136,12 @@ test('A2: getSellPrice가 BALANCE.SELL_PRICE_RATIO 단일 원천을 쓴다', asy
     assert.equal(getSellPrice({}), 0);
 
     // 3 판매 지점(상점 목록 · 개별 판매 · 재료 일괄 판매)이 전부 헬퍼를 쓴다.
+    // 2026-10 Wave 62 (원장 §61.4 C16): 상점 목록은 받는 판매가(`getSellIncome` = 수입 규칙 × `getSellPrice`)를 그린다 —
+    //   판매 로그와 같은 헬퍼다(행동은 tests/no-gold-log-amount-contract.test.js). 규칙 없는 플레이어에게는 판매가 그대로다.
     const shop = await readSrc('src/components/ShopPanel.tsx');
     const economy = await readSrc('src/reducers/handlers/economyHandlers.ts');
-    assert.match(shop, /getSellPrice\(item\)/);
+    assert.match(shop, /getSellIncome\(player, item\)/);
+    assert.equal(getSellIncome(null, { price: 401 }), getSellPrice({ price: 401 }));
     assert.equal((economy.match(/getSellPrice\(item\)/g) || []).length, 2);
     assert.doesNotMatch(shop, /\(item\.price \|\| 0\) \* 0\.5/, '판매가 inline 복제 금지');
     assert.doesNotMatch(economy, /\(item\.price \|\| 0\) \* 0\.5/, '판매가 inline 복제 금지');

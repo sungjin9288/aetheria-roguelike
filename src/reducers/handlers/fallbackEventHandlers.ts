@@ -3,7 +3,7 @@ import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { didFallbackTransactionPay, getStructuredFallbackTransaction } from '../../data/structuredFallbackEvents';
 import { CombatEngine } from '../../systems/CombatEngine';
-import { formatEventText } from '../../utils/eventPresentation';
+import { formatEventText, reportPaidGold } from '../../utils/eventPresentation';
 import { getGoldIncome } from '../../utils/challengeRules';
 import type { ResolveFallbackEventTransactionPayload } from '../actionTypes';
 import type { GameState, HandlerMap } from '../gameReducer';
@@ -139,16 +139,23 @@ export const fallbackEventActionMap = {
         //   결과 문구는 원장의 `lossLog`다. 내기가 아닌 거래는 언제나 지급한다(`didFallbackTransactionPay`).
         const paid = didFallbackTransactionPay(transaction, roll);
         const outcome = transaction.event.outcomes[choiceIndex];
-        const resultText = formatEventText(paid ? outcome.log : (transaction.chance?.lossLog ?? outcome.log));
+        // 2026-10 Wave 62 (원장 §61.4 C16): 받는 골드는 골드 수입 규칙을 한 번 거친다('빈손의 시작'이면 절반). 누적 골드는
+        //   이 거래의 순수익(받은 골드 − 낸 골드) 그대로의 뜻을 유지한다.
+        const grossIncome = paid ? getGoldIncome(state.player, transaction.grossGold) : 0;
+        const netIncome = paid ? Math.max(0, transaction.netGold - (transaction.grossGold - grossIncome)) : 0;
+        // 결과 문구의 금액도 실제 값이다 — 부호 없는 "골드 N"은 받은 골드(지급액), "골드 +N"은 순수익이다
+        //   ("1000G를 손에 쥐었다. (+500G)" · "(+200G)"). 진 내기의 판돈 문구("-500G")는 비용이라 그대로다.
+        const resultText = paid
+            ? reportPaidGold(formatEventText(outcome.log), [
+                { nominal: transaction.grossGold, paid: grossIncome, signed: false },
+                { nominal: transaction.netGold, paid: netIncome, signed: true },
+            ])
+            : formatEventText(transaction.chance?.lossLog ?? outcome.log);
         const logs: LogEntry[] = [{
             id: `fallback-transaction:${transactionId}:${choiceIndex}`,
             type: 'event',
             text: resultText,
         }];
-        // 2026-10 Wave 62 (원장 §61.4 C16): 받는 골드는 골드 수입 규칙을 한 번 거친다('빈손의 시작'이면 절반). 누적 골드는
-        //   이 거래의 순수익(받은 골드 − 낸 골드) 그대로의 뜻을 유지한다.
-        const grossIncome = paid ? getGoldIncome(state.player, transaction.grossGold) : 0;
-        const netIncome = paid ? Math.max(0, transaction.netGold - (transaction.grossGold - grossIncome)) : 0;
         let player: GameState['player'] = {
             ...state.player,
             gold: Number(currentGold) + grossIncome,

@@ -35,6 +35,7 @@ import { GS } from '../../reducers/gameStates.js';
 import { MSG } from '../../data/messages.js';
 import { getDiscoveryOdds } from '../../utils/explorationPacing.js';
 import { findItemByName, grantGold } from '../../utils/gameUtils.js';
+import { getGoldIncome } from '../../utils/challengeRules.js';
 import { withCanonicalEquipmentBaseIdentity } from '../../utils/equipmentBaseIdentity.js';
 import { applyDynamicDifficulty } from '../../systems/DifficultyManager';
 import { CombatEngine } from '../../systems/CombatEngine';
@@ -428,7 +429,8 @@ export const checkDiscoveryChains = (
 
         // 체인 달성!
         const rewardParts = [];
-        if (chain.reward.gold) rewardParts.push(`${chain.reward.gold}G`);
+        // 2026-10 Wave 62 (원장 §61.4 C16): 실제로 받는 골드('빈손의 시작'이면 절반)를 적는다 — 지급은 아래 `grantGold`.
+        if (chain.reward.gold) rewardParts.push(`${getGoldIncome(player, chain.reward.gold)}G`);
         if (chain.reward.exp) rewardParts.push(`${chain.reward.exp} EXP`);
         if (chain.reward.item) rewardParts.push(chain.reward.item);
         if (chain.reward.premiumCurrency) rewardParts.push(`${chain.reward.premiumCurrency} 크리스탈`);

@@ -3,7 +3,7 @@ import { BALANCE } from '../data/constants';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
-import { getEquipmentComparison, getEquipmentDecision, getEquipmentDisclosure, getItemStatText, getSellPrice, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentComparison, getEquipmentDecision, getEquipmentDisclosure, getItemStatText, getSellIncome, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { getDailyDeals, getShopBuyPrice, getShopMaxTier, getShopPriceMult, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
@@ -455,7 +455,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     sellItems.length > 0 ? (
                         sellItems.map((item) => {
                             const isConfirming = sellConfirmId === item.id;
-                            const sellPrice = getSellPrice(item);
+                            // 2026-10 Wave 62 (원장 §61.4 C16): 받는 판매가 — '빈손의 시작'이면 절반(판매 로그와 같은 `getSellIncome`).
+                            const sellPrice = getSellIncome(player, item);
                             const comparison = getComparisonMeta(item, player);
                             const summary = getCompactItemSummary(item);
                             const comparisonText = comparison ? getCompactText(comparison.text) : '';

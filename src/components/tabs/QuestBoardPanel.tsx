@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { ChevronDown, ScrollText, Target } from 'lucide-react';
 import { formatRewardParts } from '../../utils/gameUtils';
+import type { ChallengeHolder } from '../../utils/challengeRules';
 import { getTraitQuestResonance } from '../../utils/runProfileUtils';
 import { getQuestBoardRecommendations } from '../../utils/questOperations.js';
 import SignalBadge from '../SignalBadge';
@@ -68,7 +69,8 @@ const getQuestProgressText = (quest: Quest, progress: number) => (
 
 const getQuestProgressPercent = (progress: number, goal: number) => Math.min(100, (Math.max(0, progress) / Math.max(1, goal)) * 100);
 
-const getRewardSummary = (reward: QuestReward | undefined) => formatRewardParts(reward ?? {}).join(' · ') || '보상 확인';
+// 2026-10 Wave 62 (원장 §61.4 C16): 골드는 받을 플레이어가 실제로 받는 금액이다('빈손의 시작'이면 절반) — 수령과 같은 규칙.
+const getRewardSummary = (reward: QuestReward | undefined, player: ChallengeHolder) => formatRewardParts(reward ?? {}, player).join(' · ') || '보상 확인';
 
 /** `OperationBriefRows`가 실제로 읽는 브리핑 필드 — `getQuestBoardRecommendations().*.brief`와
  *  `LockedPreviewOperation.brief` 양쪽 모두 구조적으로 호환된다(`riskTone`/`tags`는 후자에 없어 optional). */
@@ -85,18 +87,20 @@ interface OperationBriefView {
 interface OperationBriefRowsProps {
     brief?: OperationBriefView | null;
     reward?: QuestReward;
+    /** 받을 플레이어 — 보상 줄의 골드는 실제로 받는 금액이다. */
+    player: ChallengeHolder;
     progress?: number;
     goal?: number;
 }
 
-const OperationBriefRows = ({ brief, reward, progress, goal }: OperationBriefRowsProps) => {
+const OperationBriefRows = ({ brief, reward, player, progress, goal }: OperationBriefRowsProps) => {
   if (!brief) return null;
   const hasProgress = Number.isFinite(Number(progress)) && Number.isFinite(Number(goal));
 
   const rows = [
     { label: '목적지', value: brief.route },
     { label: '위험', value: `${brief.riskLabel} · ${brief.riskDetail}` },
-    { label: '보상', value: getRewardSummary(reward) || brief.payoff },
+    { label: '보상', value: getRewardSummary(reward, player) || brief.payoff },
     { label: '귀환 기준', value: brief.extraction, trailing: hasProgress ? `${progress}/${goal}` : null },
   ];
 
@@ -183,9 +187,10 @@ interface CompactMissionRowProps {
     onToggle: () => void;
     onAccept: () => void;
     objectiveGate: QuestObjectiveGate | null;
+    player: ChallengeHolder;
 }
 
-const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept, objectiveGate }: CompactMissionRowProps) => (
+const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept, objectiveGate, player }: CompactMissionRowProps) => (
   <QuestRowShell kind={entry.isLockedPreview ? 'locked-preview' : 'featured'} testId="quest-decision-row">
     <div className="grid grid-cols-[minmax(0,1fr)_72px] gap-2">
       <button
@@ -218,7 +223,7 @@ const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept, objecti
         <div className="aether-type-meta mt-1 grid grid-cols-2 gap-1 font-readable">
           <span className="break-words text-[#b9f1ec]">목적지 · {entry.brief?.route || '현재 권역'}</span>
           <span className="break-words text-[#f6e7c8]">위험 · {entry.isLockedPreview ? entry.quest.lockLabel : (entry.brief?.riskLabel || '확인')}</span>
-          <span className="col-span-2 break-words text-emerald-100">보상 · {getRewardSummary(entry.quest.reward)}</span>
+          <span className="col-span-2 break-words text-emerald-100">보상 · {getRewardSummary(entry.quest.reward, player)}</span>
         </div>
         <QuestObjectiveGateLine gate={objectiveGate} />
       </button>
@@ -291,7 +296,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
       route: quest.location || '선행 임무',
       riskLabel: '잠금',
       riskDetail: quest.lockLabel,
-      payoff: getRewardSummary(quest.reward),
+      payoff: getRewardSummary(quest.reward, player),
       extraction: quest.lockDetail,
     },
   }));
@@ -343,6 +348,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
               {featuredDisplayOperations.map((entry, index) => (
                 <CompactMissionRow
                   key={`featured_${entry.quest.id}`}
+                  player={player}
                   entry={entry}
                   index={index}
                   expanded={selectedQuestId === entry.quest.id}
@@ -366,7 +372,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                 <div className="mt-1.5 font-readable text-[11px] leading-snug text-slate-200/86">
                   {selectedOperation.reason}
                 </div>
-                <OperationBriefRows brief={selectedOperation.brief} reward={selectedOperation.quest.reward} />
+                <OperationBriefRows brief={selectedOperation.brief} reward={selectedOperation.quest.reward} player={player} />
                 {selectedOperation.resonance?.label && (
                   <div className="mt-2 flex flex-wrap gap-1.5">
                     <SignalBadge tone={selectedOperation.resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">
@@ -416,7 +422,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                     <QuestObjectiveLine>{getQuestObjectiveText(entry.quest)}</QuestObjectiveLine>
                     {!entry.isComplete && <QuestObjectiveGateLine gate={getQuestObjectiveGateNotice(entry.quest, player.level)} />}
                   </div>}
-                  <OperationBriefRows brief={entry.brief} reward={entry.quest.reward} progress={entry.progress} goal={entry.quest.goal} />
+                  <OperationBriefRows brief={entry.brief} reward={entry.quest.reward} player={player} progress={entry.progress} goal={entry.quest.goal} />
                   <div className="mt-2">
                     <div className="h-1.5 overflow-hidden rounded-full bg-black/36">
                       <div className={`h-full rounded-full transition-all ${entry.isComplete ? 'bg-emerald-300' : entry.isBounty ? 'bg-[#d5b180]' : 'bg-[#7dd4d8]'}`} style={{ width: `${getQuestProgressPercent(entry.progress, entry.quest.goal!)}%` }} />
@@ -560,7 +566,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                         <QuestObjectiveGateLine gate={getQuestObjectiveGateNotice(quest, player.level)} />
                       </div>
                       <div className="mt-2 font-readable text-[12px] leading-[1.42] text-slate-300/82">{entry.reason}</div>
-                      <OperationBriefRows brief={entry.brief} reward={quest.reward} />
+                      <OperationBriefRows brief={entry.brief} reward={quest.reward} player={player} />
                     </div>
                     <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions?.acceptQuest(quest.id!)} className="aether-cta-primary min-h-[44px] shrink-0 rounded-[0.9rem] px-5 py-3 text-xs font-bold text-[#dff7f5]">
                       임무 수락
@@ -591,7 +597,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                       {quest.lockDetail}
                     </div>
                     <div className="aether-type-meta mt-2 font-readable text-[#dff7f5]">
-                      보상 · {getRewardSummary(quest.reward)}
+                      보상 · {getRewardSummary(quest.reward, player)}
                     </div>
                   </div>
                 </div>

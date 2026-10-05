@@ -1528,7 +1528,8 @@ import { readFile, readdir } from 'node:fs/promises';
       const source = await readSrc('src/components/tabs/QuestBoardPanel.tsx');
       assert.doesNotMatch(source, /RewardChips|accent = 'blue'/);
       assert.match(source, /const getRewardSummary/);
-      assert.match(source, /getRewardSummary\(reward\)/);
+      // 2026-10 Wave 62 (원장 §61.4 C16): 요약은 받을 플레이어도 받는다 — 골드가 실제로 받는 금액('빈손의 시작'이면 절반)이다.
+      assert.match(source, /getRewardSummary\(reward, player\)/);
   });
 
   test('cycle 427 회귀 가드: SignatureBadge TONE_COLORS rust 보존', async () => {

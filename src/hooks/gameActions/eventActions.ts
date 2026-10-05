@@ -15,11 +15,11 @@ import { BALANCE } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { markBossGaugeEvaded, resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
 import { applyTempBuffRule } from '../../systems/tempBuffMerge';
-import { formatEventText, reportActualRecovery } from '../../utils/eventPresentation';
+import { formatEventText, reportActualRecovery, reportPaidGold } from '../../utils/eventPresentation';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { healWithinMax } from '../../systems/vitals';
-import { getChallengeMaxHpGain } from '../../utils/challengeRules';
+import { getChallengeMaxHpGain, getGoldIncome } from '../../utils/challengeRules';
 import type { Player, Relic, StatusId } from '../../types';
 import type { ChainCombatSpec, EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
 import type { ChainCombatRef } from '../combatActions/_helpers';
@@ -289,6 +289,9 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             // 일반 이벤트 outcome 처리
             let resultText = '';
             if (selectedOutcome) {
+                // 2026-10 Wave 62 (원장 §61.4 C16): 결과 문구의 "골드 +N"은 실제로 받는 금액('빈손의 시작'이면 절반)으로 적는다.
+                const nominalGold = Number(selectedOutcome.gold) || 0;
+                const paidGold = getGoldIncome(updatedPlayer, nominalGold);
                 if (selectedOutcome.gold) updatedPlayer = grantGold(updatedPlayer, selectedOutcome.gold);
                 if (selectedOutcome.exp) {
                     const expResult = CombatEngine.applyExpGain(
@@ -334,10 +337,13 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 if (selectedOutcome.status) {
                     updatedPlayer = applyOutcomeStatus(updatedPlayer, selectedOutcome.status, addLog, rng);
                 }
-                resultText = reportActualRecovery(
-                    formatEventText(selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT),
-                    selectedOutcome,
-                    recovered,
+                resultText = reportPaidGold(
+                    reportActualRecovery(
+                        formatEventText(selectedOutcome.log || MSG.EVENT_RESULT_DEFAULT),
+                        selectedOutcome,
+                        recovered,
+                    ),
+                    [{ nominal: nominalGold, paid: paidGold }],
                 );
                 addLog('event', resultText);
                 // Wave 62 C6: 더 센 강화가 남아 이번 강화(모닥불 단련 · 사건 강화)가 들어가지 않았으면 결과 줄 뒤에 알린다.
@@ -345,7 +351,8 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             } else if (roll > 0.4) {
                 const rewardGold = player.level! * 50;
                 updatedPlayer = grantGold(updatedPlayer, rewardGold);
-                resultText = MSG.EVENT_SUCCESS_GOLD(rewardGold);
+                // 2026-10 Wave 62 (원장 §61.4 C16): 로그는 실제로 받은 금액을 적는다('빈손의 시작'이면 절반).
+                resultText = MSG.EVENT_SUCCESS_GOLD(getGoldIncome(player, rewardGold));
                 addLog('success', resultText);
             } else {
                 const dmg = Math.floor(Math.max(1, updatedPlayer.maxHp!) * 0.1);

@@ -56,7 +56,9 @@ const GravePanel = ({
     const [loading, setLoading] = useState(false);
     const [invadingUid, setInvadingUid] = useState<string | null | undefined>(null);
 
-    const recoveryGroups = getGraveRecoveryGroups(grave, player?.loc);
+    // 2026-10 Wave 62 (원장 §61.4 C16): 회수 골드는 실제로 받는 금액이다('빈손의 시작'이면 절반) — 묶음이 회수와 같은 규칙으로 계산한다.
+    //   총계는 지역마다 받는 금액의 합이다(회수는 지역마다 한 번).
+    const recoveryGroups = getGraveRecoveryGroups(grave, player?.loc, player);
     const recoveryGold = recoveryGroups.reduce((sum, group) => sum + group.gold, 0);
     const recoveryItems = recoveryGroups.reduce((sum, group) => sum + group.items.length, 0);
     const playerAtk = player?.atk || 10;

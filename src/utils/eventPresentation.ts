@@ -2,7 +2,9 @@ import { findStructuredFallbackHiddenEvent, getStructuredFallbackTransaction } f
 import type { EventChoiceFeedback, EventChoiceTone, EventOutcome } from '../types/session.js';
 import { RELICS } from '../data/relics';
 import { MSG } from '../data/messages';
+import { BOUNDED_ENCOUNTERS } from '../data/boundedEncounters';
 import { mergeTempBuff, type TempBuffValue } from '../systems/tempBuffMerge';
+import { getGoldIncome, type ChallengeHolder } from './challengeRules';
 
 export type { EventChoiceTone };
 
@@ -28,6 +30,7 @@ interface PresentationEvent {
     isScout?: boolean;
     isBossGaugeChallenge?: boolean;
     isBoundedEncounter?: boolean;
+    boundedEncounterId?: string;
     _chainId?: string;
     bossName?: string;
     source?: string;
@@ -77,6 +80,45 @@ export const reportActualRecovery = (
     }
     return next;
 };
+
+/** 문구 속 골드 금액 하나를 실제로 받는 금액으로 다시 적는 규칙. `signed`가 true면 "골드 +N" 꼴만, false면 부호 없는 꼴만 고친다. */
+export interface PaidGoldRestatement {
+    nominal: number;
+    paid: number;
+    signed?: boolean;
+}
+
+/** 금액 바로 뒤에 올 수 있는 조사 글자 — 정규식은 뒤에 한글이 이어지지 않을 때만 조사로 본다("골드 60이상"의 '이'는 조사가 아니다). */
+const NUMBER_PARTICLE_CLASS = MSG.NUMBER_PARTICLE_PAIRS.flat().join('');
+
+/**
+ * 2026-10 Wave 62 (원장 §61.4 C16): 결과 · 미리보기 문구(`formatEventText`를 거친 것)가 적은 골드 금액을 실제로 받는 금액으로 고친다 —
+ * '빈손의 시작'이면 모든 골드 수입이 절반인데(`getGoldIncome`) 데이터 문구("(+500G)" · "골드 60을 찾아냈습니다")는 명목 금액이라
+ * 읽은 숫자와 받은 숫자가 달랐다. 명목 금액과 같은 "골드 N" · "골드 +N" 토큰만 바꾸고(뒤따르는 조사도 맞춘다), 받는 금액이 명목과
+ * 같으면 문구를 그대로 둔다(규칙이 없는 플레이어는 바이트 그대로). 한 번에 고쳐 바꾼 금액이 다른 규칙에 다시 걸리지 않는다.
+ */
+export const reportPaidGold = (text: string, restatements: readonly PaidGoldRestatement[]): string => {
+    const active = restatements.filter((entry) => (
+        Number.isFinite(entry.nominal) && entry.nominal > 0 && entry.paid !== entry.nominal
+    ));
+    if (active.length === 0) return text;
+    const pattern = new RegExp(`${unitLabels.G} (\\+?)(\\d+)(?!\\d)(?:([${NUMBER_PARTICLE_CLASS}])(?![\\uAC00-\\uD7A3]))?`, 'g');
+    return text.replace(pattern, (match: string, sign: string, digits: string, particle: string | undefined) => {
+        const amount = Number(digits);
+        const entry = active.find((candidate) => (
+            candidate.nominal === amount && (candidate.signed === undefined || candidate.signed === (sign === '+'))
+        ));
+        if (!entry) return match;
+        return `${unitLabels.G} ${sign}${entry.paid}${particle ? MSG.NUMBER_PARTICLE(particle, entry.paid) : ''}`;
+    });
+};
+
+/** 받는 골드 하나(`nominal` → 이 플레이어가 실제로 받는 값)를 다시 적는 규칙 — 부호 있는 꼴 · 없는 꼴 모두. */
+const paidGoldRestatement = (holder: ChallengeHolder, nominal: number, signed?: boolean): PaidGoldRestatement => ({
+    nominal,
+    paid: getGoldIncome(holder, nominal),
+    ...(signed === undefined ? {} : { signed }),
+});
 
 export const getEventPanelCopy = (event: PresentationEvent | null | undefined): EventPanelCopy => {
     if (event?.isCampfire) return { title: '모닥불 앞에서', kind: '휴식처' };
@@ -242,17 +284,34 @@ const withBuffKeptNotice = (
     };
 };
 
-const getBoundedPreview = (outcome: EventOutcome | null): EventChoicePreview => {
-    const text = formatEventText(outcome?.tradeoff) || '결과는 선택 뒤에 드러남';
+/** 한정 조우 선택지가 주는 골드(원장 `BOUNDED_ENCOUNTERS`) — 열린 이벤트의 칸은 문구 · 어조만 싣는다. */
+const getBoundedOutcomeGold = (event: PresentationEvent | null | undefined, outcome: EventOutcome | null): number => {
+    const encounter = BOUNDED_ENCOUNTERS.find((entry) => entry.id === event?.boundedEncounterId);
+    const choice = encounter?.choices.find((entry) => entry.id === outcome?.choiceId);
+    return Number(choice?.outcome.gold) || 0;
+};
+
+const getBoundedPreview = (
+    event: PresentationEvent | null | undefined,
+    outcome: EventOutcome | null,
+    context: EventPreviewContext | undefined,
+): EventChoicePreview => {
+    // 2026-10 Wave 62 (원장 §61.4 C16): "골드 60을 바로 챙깁니다"는 실제로 받는 금액으로 적는다(정산은 `grantGold`).
+    const text = reportPaidGold(
+        formatEventText(outcome?.tradeoff),
+        [paidGoldRestatement(context?.player, getBoundedOutcomeGold(event, outcome))],
+    ) || '결과는 선택 뒤에 드러남';
     const tone = outcome?.tone;
     return tone === 'reward' || tone === 'danger' || tone === 'story'
         ? { text, tone }
         : { text, tone: 'unknown' };
 };
 
-/** 미리보기가 읽는 지금 상태 — 이벤트 밖의 값(지금 걸린 강화)만 담는다. */
+/** 미리보기가 읽는 지금 상태 — 이벤트 밖의 값(지금 걸린 강화 · 골드 수입 규칙을 정하는 도전 조건)만 담는다. */
 export interface EventPreviewContext {
     activeBuff?: TempBuffValue | null;
+    /** 받는 골드를 정하는 플레이어 조각 — '빈손의 시작'이면 미리보기의 골드 금액이 실제로 받는 절반이다(`getGoldIncome`). */
+    player?: ChallengeHolder;
 }
 
 export const getEventChoicePreview = (
@@ -271,13 +330,24 @@ export const getEventChoicePreview = (
         ? getStructuredFallbackTransaction(event?.fallbackTransactionId)
         : null;
     if (fallbackTransaction?.choiceIndex === choiceIndex) {
-        return { text: fallbackTransaction.preview, tone: 'danger' };
+        // 2026-10 Wave 62 (원장 §61.4 C16): "골드 200 획득" · "이기면 골드 1000"은 받는 금액(지급액)이다 — 판돈(비용)은 그대로.
+        return {
+            text: reportPaidGold(fallbackTransaction.preview, [
+                paidGoldRestatement(context?.player, fallbackTransaction.grossGold, false),
+            ]),
+            tone: 'danger',
+        };
     }
     // 2026-10 Wave 62 C18: 결과를 숨기는 폴백 이벤트는 모든 선택지가 원장의 같은 문장을 쓴다 — 선택지마다 결과를 읽던 동안
     //   카드 · 크리스탈 · 암호 상자의 미리보기가 이기는 자리를 가리켰다. 판정과 같은 함수로 알아본다.
     const hiddenEvent = findStructuredFallbackHiddenEvent(event);
     if (hiddenEvent && choiceIndex >= 0 && choiceIndex < hiddenEvent.event.choices.length) {
-        return { text: hiddenEvent.preview, tone: hiddenEvent.tone };
+        // 받는 골드(카드 · 암호 상자의 칸)는 실제로 받는 금액으로 적는다.
+        const goldSlots = hiddenEvent.event.outcomes.filter((slot) => slot.gold > 0);
+        return {
+            text: reportPaidGold(hiddenEvent.preview, goldSlots.map((slot) => paidGoldRestatement(context?.player, slot.gold))),
+            tone: hiddenEvent.tone,
+        };
     }
     if (event?.isCampfire) return withBuffKeptNotice(formatCampfirePreview(outcome), event, outcome, context);
     if (event?.isScout) return scoutPreview[outcome?.scoutEffect ?? ''] || scoutPreview.unknown;
@@ -286,7 +356,7 @@ export const getEventChoicePreview = (
             ? { text: `${event.bossName || '구역 보스'} 전투 시작`, tone: 'danger' }
             : { text: '이번에는 물러남 · 다음 탐험에 다시 선택', tone: 'unknown' };
     }
-    if (event?.isBoundedEncounter) return getBoundedPreview(outcome);
+    if (event?.isBoundedEncounter) return getBoundedPreview(event, outcome, context);
     if (event?._chainId) return withBuffKeptNotice(getChainPreview(outcome), event, outcome, context);
     return withBuffKeptNotice(getGeneralPreview(outcome), event, outcome, context);
 };

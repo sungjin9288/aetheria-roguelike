@@ -114,7 +114,8 @@ const AchievementPanel = ({ player, actions }: AchievementPanelProps) => {
             target: achievement.target || 'level',
             goal: achievement.goal || 1,
             current: getAchievementCurrentValue(achievement, player),
-            rewardText: formatRewardParts(achievement.reward || {}).join(' · '),
+            // 2026-10 Wave 62 (원장 §61.4 C16): 골드는 실제로 받는 금액이다('빈손의 시작'이면 절반) — 수령과 같은 규칙.
+            rewardText: formatRewardParts(achievement.reward || {}, player).join(' · '),
             unlocked: isAchievementUnlocked(achievement, player),
             claimed: claimed.includes(achievement.id || ''),
         }));

@@ -2,6 +2,7 @@ import React from 'react';
 import { Scroll } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { formatRewardParts, getActiveQuestEntries } from '../../utils/gameUtils';
+import { getGoldIncome } from '../../utils/challengeRules';
 import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
 import { buildChainJournal } from '../../utils/chainJournal';
 import { getQuestObjectiveGateNotice } from '../../utils/questObjectiveGate';
@@ -50,13 +51,15 @@ type QuestRewardAccent = 'green' | 'amber' | 'blue';
 interface QuestRewardChipsProps {
     reward: QuestReward;
     accent: QuestRewardAccent;
+    /** 받을 플레이어 — 골드 칩은 실제로 받는 금액('빈손의 시작'이면 절반)이다(2026-10 Wave 62). */
+    player: Player;
 }
 
 // cycle 313: export 제거 — QuestTab 내부 1회 사용만, 외부 import 0건.
 // cycle 429: default accent 값 제거 — 호출자가 ternary로 명시 전달이라 default
 //   도달 불가 (cycle 428 QuestBoardPanel RewardChips paired completion).
-const QuestRewardChips = ({ reward, accent }: QuestRewardChipsProps) => {
-    const rewards = formatRewardParts(reward);
+const QuestRewardChips = ({ reward, accent, player }: QuestRewardChipsProps) => {
+    const rewards = formatRewardParts(reward, player);
     if (!rewards.length) return null;
     const accentClass = accent === 'green'
         ? 'border-cyber-green/30 bg-cyber-green/10 text-cyber-green'
@@ -304,7 +307,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                                 </button>
                                             ) : (
                                                 <span className={`text-[11px] font-fira ${mission.claimed ? 'text-emerald-100' : 'text-slate-500'}`}>
-                                                    {mission.claimed ? '✓ 수령됨' : `골드 +${mission.reward.gold}${mission.reward.premiumCurrency ? ` +${mission.reward.premiumCurrency}💎` : ''}`}
+                                                    {mission.claimed ? '✓ 수령됨' : `골드 +${getGoldIncome(player, mission.reward.gold)}${mission.reward.premiumCurrency ? ` +${mission.reward.premiumCurrency}💎` : ''}`}
                                                 </span>
                                             )}
                                         </div>
@@ -366,7 +369,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                     {entry.resonance.summary && (
                                         <div className="mt-2 text-sm font-fira text-[#d9d0f3]/72">{entry.resonance.summary}</div>
                                     )}
-                                    <QuestRewardChips reward={entry.quest.reward ?? {}} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} />
+                                    <QuestRewardChips reward={entry.quest.reward ?? {}} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} player={player} />
                                     <div className="mt-3">
                                         <div className="mb-1 flex justify-between text-xs font-fira">
                                             <span className={entry.isComplete ? 'text-emerald-100' : 'text-slate-300/74'}>{getQuestProgressText(entry.quest, entry.progress)}</span>

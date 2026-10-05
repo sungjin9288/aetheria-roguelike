@@ -10,7 +10,8 @@ import {
     registerLootToCodex,
 } from '../../utils/gameUtils';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
-import { getSellPrice } from '../../utils/equipmentUtils';
+import { getSellIncome, getSellPrice } from '../../utils/equipmentUtils';
+import { getGoldIncome } from '../../utils/challengeRules';
 import { getCraftingInvestmentPreview } from '../../utils/itemInvestmentPreview';
 import { getInventoryCapacity, growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
 import { getBagTier, getNextBagRecipe } from '../../data/bagRecipes';
@@ -125,7 +126,9 @@ const sellInventoryItem = (state: GameState, action: ActionOf<typeof AT.SELL_INV
         inv: (state.player.inv || []).filter((entry) => entry.id !== item.id),
     }, sellPrice);
     player = addNewTitles(player, logs);
-    logs.push({ type: 'success', text: MSG.SHOP_SELL_DONE(item.name, sellPrice) });
+    // 2026-10 Wave 62 (원장 §61.4 C16): 로그는 실제로 받은 골드('빈손의 시작'이면 절반 — `grantGold`와 같은 규칙)를 적는다.
+    //   상점 판매 목록의 판매가와 같은 함수(`getSellIncome`)다.
+    logs.push({ type: 'success', text: MSG.SHOP_SELL_DONE(item.name, getSellIncome(state.player, item)) });
     return completeTransaction(state, player, logs);
 };
 
@@ -310,7 +313,8 @@ const autoSellMaterials = (state: GameState): GameState => {
         inv: (state.player.inv || []).filter((item) => !targetIds.has(item.id)),
     }, totalGold);
     player = addNewTitles(player, logs);
-    logs.push({ type: 'success', text: MSG.BULK_SELL_DONE(targets.length, totalGold) });
+    // 받은 골드는 합계에 수입 규칙을 한 번 건 값이다(`grantGold`가 합계로 지급한다).
+    logs.push({ type: 'success', text: MSG.BULK_SELL_DONE(targets.length, getGoldIncome(state.player, totalGold)) });
     return completeTransaction(state, player, logs);
 };
 

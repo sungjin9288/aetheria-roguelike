@@ -20,11 +20,13 @@ interface EventPanelProps {
     location?: string;
     /** 지금 걸린 강화 — 미리보기가 "더 센 강화가 있어 붙지 않음"을 판정하는 입력(Wave 62 C6, 판정은 eventPresentation 소유). */
     activeBuff?: Player['tempBuff'] | null;
+    /** 도전 조건 — 미리보기의 골드 금액이 실제로 받는 금액('빈손의 시작'이면 절반)이 되게 한다(판정은 eventPresentation 소유). */
+    challengeModifiers?: Player['challengeModifiers'];
 }
 
 // cycle 437: 모바일 포커스 default 값 제거 — 호출자 ControlPanel:192이 명시
 //   전달이라 default 도달 불가 (cycle 364-368 redundant default annotation lens).
-const EventPanel = ({ currentEvent, actions, location, activeBuff }: EventPanelProps) => {
+const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModifiers }: EventPanelProps) => {
     if (!currentEvent) return null;
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
     const panelCopy = getEventPanelCopy(currentEvent);
@@ -59,7 +61,7 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff }: EventPanelP
             <div className="mt-3 shrink-0 font-readable text-[12px] text-slate-300/82">어떤 길을 택하시겠습니까?</div>
             <div data-testid="event-choice-list" className="mt-2 flex shrink-0 flex-col gap-2">
                 {choices.length > 0 ? choices.map((choice, idx) => {
-                    const preview = getEventChoicePreview(currentEvent, idx, { activeBuff });
+                    const preview = getEventChoicePreview(currentEvent, idx, { activeBuff, player: { challengeModifiers } });
                     const PreviewIcon = previewStyle[preview.tone].icon;
                     return (
                         <button

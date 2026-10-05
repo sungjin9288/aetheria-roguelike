@@ -488,7 +488,7 @@ const ControlPanel = ({
 
   if (gameState === GS.EVENT) {
     // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 이벤트 화면의 지역 그림도 그리지 않는다(자리표시 이름에는 그림이 없다).
-    return <EventPanel currentEvent={currentEvent} actions={actions} location={getVisibleLocationName(player, player.loc)} activeBuff={player.tempBuff} />;
+    return <EventPanel currentEvent={currentEvent} actions={actions} location={getVisibleLocationName(player, player.loc)} activeBuff={player.tempBuff} challengeModifiers={player.challengeModifiers} />;
   }
 
   if (gameState === GS.SHOP) {

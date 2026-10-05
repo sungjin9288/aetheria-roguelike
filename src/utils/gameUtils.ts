@@ -21,7 +21,7 @@ import { getSeasonArchive } from './seasonPassPresentation.js';
 import { formatSkillText } from './skillPresentation.js';
 import { countDiscoveredMaps } from './discoveredMaps.js';
 import { getCodexEntryName } from './codexIdentity.js';
-import { getGoldIncome, getVisibleLocationName } from './challengeRules.js';
+import { getGoldIncome, getVisibleLocationName, type ChallengeHolder } from './challengeRules.js';
 import {
     countDiscoveredSignatures,
     isSignatureName,
@@ -121,10 +121,12 @@ export const findItemByName = (name: string | undefined) => getAllItems().find((
  */
 // cycle 556: reward default {} 제거 — 3 callers (QuestBoardPanel/QuestTab/
 //   AchievementPanel) 모두 reward 명시 전달이라 default 도달 불가.
-export const formatRewardParts = (reward: QuestReward) => {
+// 2026-10 Wave 62 (원장 §61.4 C16): 골드는 받을 플레이어(`holder`)가 실제로 받는 금액이다('빈손의 시작'이면 절반, `getGoldIncome`) —
+//   수령(`CLAIM_QUEST_REWARD` · `CLAIM_ACHIEVEMENT_REWARD`)이 `grantGold`로 같은 규칙을 건다.
+export const formatRewardParts = (reward: QuestReward, holder?: ChallengeHolder) => {
     const parts = [];
     if (reward.exp) parts.push(`경험 ${reward.exp}`);
-    if (reward.gold) parts.push(`골드 ${reward.gold}`);
+    if (reward.gold) parts.push(`골드 ${getGoldIncome(holder, reward.gold)}`);
     if (reward.item) parts.push(reward.item);
     // 2026-10: 칭호 보상(임무 152·153·154·201·202)은 수령 때 지급되는데(rewardHandlers) 보상 줄에서 빠져 있었다.
     if (reward.title) parts.push(MSG.QUEST_REWARD_TITLE(getTitleLabel(reward.title)));

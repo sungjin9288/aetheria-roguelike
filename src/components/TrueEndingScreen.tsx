@@ -204,7 +204,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                     완료한 임무 보상을 지금 수령할 수 있습니다. 수령 기록은 영구 보존되며, 보상 장비를 이번 여정에서 사용하려면 현재 여정을 계속하세요.
                                 </p>
                             </div>
-                            <PendingQuestRewardList entries={claimableQuests} testIdPrefix="true-ending" onClaim={actions?.completeQuest} />
+                            <PendingQuestRewardList entries={claimableQuests} testIdPrefix="true-ending" onClaim={actions?.completeQuest} player={player} />
                         </Motion.section>
                     )}
 

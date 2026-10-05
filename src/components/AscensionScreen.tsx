@@ -74,7 +74,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         <section data-testid="ascension-pending-quests" aria-labelledby="ascension-pending-quests-title" className="space-y-3 border-b border-amber-200/20 pb-4 font-readable">
                             <h2 id="ascension-pending-quests-title" className="text-sm font-bold text-amber-100">{MSG.ASCEND_PENDING_QUESTS_TITLE}</h2>
                             <p className="text-[13px] leading-6 text-slate-300">{MSG.ASCEND_PENDING_QUESTS_GUIDANCE}</p>
-                            <PendingQuestRewardList entries={claimableQuests} testIdPrefix="ascension" onClaim={actions?.completeQuest} />
+                            <PendingQuestRewardList entries={claimableQuests} testIdPrefix="ascension" onClaim={actions?.completeQuest} player={player} />
                         </section>
                     )}
                     <section

@@ -8,6 +8,7 @@ import type {
     CodexMilestoneEntry,
     CodexReward,
 } from '../data/codexRewards';
+import { getGoldIncome, type ChallengeHolder } from './challengeRules';
 
 export type { CodexCategoryId, CodexMilestone, CodexMilestoneEntry, CodexReward };
 
@@ -25,12 +26,16 @@ export const CODEX_CATEGORY_LABELS: Record<CodexCategoryId, string> = {
     materials: '소재',
 };
 
-export const formatCodexRewardParts = (reward: CodexReward): string[] => {
+/**
+ * 도감 보상 줄 — 골드는 받을 플레이어(`holder`)가 실제로 받는 금액이다('빈손의 시작'이면 절반, `getGoldIncome`).
+ * 보상 카드(Codex)와 수령 로그(`CLAIM_CODEX_REWARD`)가 같은 함수를 읽는다.
+ */
+export const formatCodexRewardParts = (reward: CodexReward, holder?: ChallengeHolder): string[] => {
     const parts: string[] = [];
     if (reward.atk) parts.push(`공격력 +${reward.atk}`);
     if (reward.def) parts.push(`방어력 +${reward.def}`);
     if (reward.hp) parts.push(`생명 +${reward.hp}`);
-    if (reward.gold) parts.push(`골드 ${reward.gold}`);
+    if (reward.gold) parts.push(`골드 ${getGoldIncome(holder, reward.gold)}`);
     if (reward.premiumCurrency) parts.push(`에테르 크리스탈 ${reward.premiumCurrency}`);
     return parts;
 };

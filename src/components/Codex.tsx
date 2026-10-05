@@ -155,7 +155,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                                 <div className="min-w-0 flex-1">
                                     <div className="aether-type-body font-semibold text-slate-100">{milestone.label}</div>
                                     <div className="aether-type-meta mt-0.5 text-[#d5b180]">
-                                        {formatCodexRewardParts(milestone.reward).join(' · ')}
+                                        {formatCodexRewardParts(milestone.reward, player).join(' · ')}
                                     </div>
                                 </div>
                                 <button
@@ -199,7 +199,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                                     <div className="h-full rounded-full bg-[#7dd4d8]" style={{ width: `${goalPct}%` }} />
                                 </div>
                                 <div className="aether-type-meta mt-1.5 text-[#d5b180]">
-                                    {formatCodexRewardParts(goal.reward).join(' · ')} · {goal.remaining}개 남음
+                                    {formatCodexRewardParts(goal.reward, player).join(' · ')} · {goal.remaining}개 남음
                                 </div>
                             </div>
                         );

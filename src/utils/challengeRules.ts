@@ -16,7 +16,8 @@ import type { ExpeditionSummary, GameMap, Player } from '../types/index.js';
  * - 길 잃은 여행(A10): 위치 이름 · 지역 그림 · 지역 색이 숨는다(`isBlindMap` 하나가 판정).
  */
 
-type ChallengeHolder = Pick<Player, 'challengeModifiers'> | null | undefined;
+/** 규칙 판정이 읽는 플레이어 조각 — 화면 · 문구 헬퍼는 플레이어 전체 대신 이것만 받는다. */
+export type ChallengeHolder = Pick<Player, 'challengeModifiers'> | null | undefined;
 
 export const hasChallengeModifier = (player: ChallengeHolder, id: string): boolean => (
     Array.isArray(player?.challengeModifiers) && player.challengeModifiers.includes(id)
@@ -37,6 +38,8 @@ export const getChallengeRewardPercent = (ruleCount: number): number => (
 /**
  * 빈손의 시작 — 이 플레이어가 실제로 받는 골드 수입. 들어오는 골드(양수)만 절반이고, 비용(음수)은 그대로다.
  * 모든 수입 경로가 이것을 정확히 한 번 거친다(`grantGold` · 전투 승리 정산 · 묘비 회수 · 폴백 이벤트 거래).
+ * 수입을 말하는 로그 · 미리보기(판매가 · 보상 줄 · 사건 결과)도 이 값을 적는다 — 명목 금액을 적으면 '빈손의 시작'에서
+ * "골드 +500"을 읽고 250을 받는다(`tests/no-gold-log-amount-contract.test.js`).
  */
 export const getGoldIncome = (player: ChallengeHolder, amount: number): number => (
     amount > 0 && hasChallengeModifier(player, 'noGold')

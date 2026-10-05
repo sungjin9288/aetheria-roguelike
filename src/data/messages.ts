@@ -50,6 +50,16 @@ const VAMPIRE_LORD_LABEL = '흡혈 군주';
 // 2026-10 Wave 61 (원장 §61.3): 합성 보호 상품의 이름 하나 — 크리스털 교환 · 구매 로그 · 합성 화면이 "합성 보호권" ·
 // "합성 보호석" · "보호권" 세 이름을 쓰고 있었다. 아래 SYNTHESIS_PROTECT_TOKEN_COST가 재사용하므로 top-level const로 둔다.
 const SYNTHESIS_PROTECT_ITEM_NAME = '합성 보호권';
+// 2026-10 Wave 62 (원장 §61.4 C16): 숫자 뒤 조사 — 금액을 실제로 받는 값('빈손의 시작'이면 절반)으로 다시 적을 때 조사가 따라
+//   바뀐다("골드 70을" → "골드 35를"). 숫자의 끝소리는 끝자리로 정해진다: 0(십 · 백 · 천 · 만) · 1(일) · 3(삼) · 6(육) · 7(칠) ·
+//   8(팔)은 받침이 있고 2 · 4 · 5 · 9는 없다. 아래 GUIDE_FIRST_SORTIE_DETAIL이 재사용하므로 top-level const로 둔다.
+const NUMBER_PARTICLE_PAIRS = [['을', '를'], ['이', '가'], ['은', '는'], ['과', '와']] as const;
+const NUMBER_FINAL_CONSONANT_DIGITS: readonly number[] = [0, 1, 3, 6, 7, 8];
+const numberParticle = (particle: string, amount: number): string => {
+    const pair = NUMBER_PARTICLE_PAIRS.find((entry) => (entry as readonly string[]).includes(particle));
+    if (!pair) return particle;
+    return NUMBER_FINAL_CONSONANT_DIGITS.includes(Math.abs(Math.trunc(amount)) % 10) ? pair[0] : pair[1];
+};
 
 export const MSG = {
     // --- 전투 (Combat) ---
@@ -359,6 +369,9 @@ export const MSG = {
     BAG_ACTION_CHECK: '재료 확인',
     BAG_ALL_DONE: '모든 가방을 만들었습니다.',
     BAG_GOLD: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
+    // 2026-10 Wave 62 (원장 §61.4 C16): 첫 출발 안내의 첫 방문 보상 — 골드는 실제로 받는 금액('빈손의 시작'이면 절반)이다.
+    GUIDE_FIRST_SORTIE_DETAIL: (gold: number, exp: number) =>
+        `추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상으로 골드 ${gold}${numberParticle('과', gold)} 경험 ${exp}${numberParticle('을', exp)} 얻습니다.`,
     GUIDE_BAG_UPGRADE_TITLE: '가방을 넓힐 수 있습니다',
     GUIDE_BAG_UPGRADE_DETAIL: (name: string, count: number, capacity: number, nextCapacity: number) =>
         `가방이 ${count}/${capacity}입니다. 제작소에서 ${name}을(를) 만들면 ${nextCapacity}칸이 됩니다.`,
@@ -492,6 +505,10 @@ export const MSG = {
         healed.hp !== undefined ? `생명 +${healed.hp}` : '',
         healed.mp !== undefined ? `기력 +${healed.mp}` : '',
     ].filter(Boolean).join(' · ')}만 회복했습니다.`,
+    // 2026-10 Wave 62 (원장 §61.4 C16): 숫자 뒤 조사 짝(받침 있음 · 없음)과 금액에 맞는 조사 — 사건 결과 · 미리보기 문구 속 골드
+    //   금액을 실제로 받는 금액으로 다시 적을 때 조사를 맞춘다(eventPresentation.reportPaidGold — "골드 70을" → "골드 35를").
+    NUMBER_PARTICLE_PAIRS,
+    NUMBER_PARTICLE: numberParticle,
     // 탐험 스카우팅 (2026-07): 사전 정찰 카드 — 체인/캠프파이어 다음 우선순위 결정 노드.
     SCOUT_DESC: '앞길에서 낯선 기척이 느껴집니다. 어떻게 정찰하시겠습니까?',
     SCOUT_COMBAT_CHOICE: '전투의 기척 — 적과 맞서며 처치 보상을 더 받는다',

@@ -11,6 +11,7 @@ import {
     type SeasonRewardRow,
 } from '../data/seasonPass';
 import type { Player, SeasonArchiveEntry } from '../types/player';
+import { getGoldIncome, type ChallengeHolder } from './challengeRules';
 
 /**
  * 세이브에 실린 시즌 상태. 정본은 `types/player.ts`의 `Player['seasonPass']`이고
@@ -44,22 +45,35 @@ const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(va
  * 2026-10 Wave 61: `ownedTitles`(플레이어가 가진 칭호)에 있는 칭호는 '보유 중'으로 보인다 — 수령(`CLAIM_SEASON_REWARD`)은
  * 가진 칭호를 다시 지급하지 않으므로, 시즌 2부터 10 · 20 · 30단계가 보여 주던 '칭호 시즌 …'은 받을 수 없는 보상이었다.
  */
-export const formatSeasonRewardParts = (reward?: SeasonReward | null, ownedTitles?: readonly string[] | null) => {
+/**
+ * 2026-10 Wave 62 (원장 §61.4 C16): 골드는 받을 플레이어(`holder`)가 실제로 받는 금액이다('빈손의 시작'이면 절반, `getGoldIncome`).
+ * 수령은 무료 · 추가 트랙의 골드를 합쳐 한 번 지급한다 — 두 트랙이 모두 홀수 골드인 단계는 없어서(시즌 1 ~ 30 전수) 줄마다의 절반 합이
+ * 곧 지급액이다(`tests/no-gold-log-amount-contract.test.js`가 그 전제를 고정한다).
+ */
+export const formatSeasonRewardParts = (
+    reward?: SeasonReward | null,
+    ownedTitles?: readonly string[] | null,
+    holder?: ChallengeHolder,
+) => {
     if (!reward) return [];
 
     const titlePart = reward.title
         ? (ownedTitles?.includes(reward.title) ? MSG.SEASON_REWARD_TITLE_OWNED(reward.title) : MSG.SEASON_REWARD_TITLE(reward.title))
         : null;
     return [
-        reward.gold ? `골드 ${formatNumber(reward.gold)}` : null,
+        reward.gold ? `골드 ${formatNumber(getGoldIncome(holder, reward.gold))}` : null,
         reward.premiumCurrency ? `에테르 크리스탈 ${formatNumber(reward.premiumCurrency)}` : null,
         reward.item || null,
         titlePart,
     ].filter((part): part is string => Boolean(part));
 };
 
-export const formatSeasonReward = (reward?: SeasonReward | null, ownedTitles?: readonly string[] | null) => (
-    formatSeasonRewardParts(reward, ownedTitles).join(' · ') || '기록 보상'
+export const formatSeasonReward = (
+    reward?: SeasonReward | null,
+    ownedTitles?: readonly string[] | null,
+    holder?: ChallengeHolder,
+) => (
+    formatSeasonRewardParts(reward, ownedTitles, holder).join(' · ') || '기록 보상'
 );
 
 export const normalizeClaimedSeasonTiers = (claimed: Array<number | string> = []) => {

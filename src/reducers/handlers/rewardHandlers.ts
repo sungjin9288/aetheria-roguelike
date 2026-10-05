@@ -26,6 +26,7 @@ import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileU
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { removeExpeditionFocusQuest } from '../../utils/expeditionMissionFocus';
 import { CombatEngine } from '../../systems/CombatEngine';
+import { getGoldIncome } from '../../utils/challengeRules';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 import { addNewTitles, addSeasonXp } from './helpers';
@@ -147,8 +148,10 @@ export const rewardActionMap = {
             const resonance = getTraitQuestResonance(quest, traitProfile);
             if (resonance.score >= 6) {
                 const bonusGold = Math.max(100, Math.floor(quest.reward.gold * 0.15));
+                // 2026-10 Wave 62 (원장 §61.4 C16): 로그는 실제로 받은 골드('빈손의 시작'이면 절반)를 적는다.
+                const paidBonusGold = getGoldIncome(nextPlayer, bonusGold);
                 nextPlayer = grantGold(nextPlayer, bonusGold);
-                logs.push({ type: 'event', text: MSG.QUEST_TRAIT_BONUS(traitProfile.title, bonusGold) });
+                logs.push({ type: 'event', text: MSG.QUEST_TRAIT_BONUS(traitProfile.title, paidBonusGold) });
             }
         }
 
@@ -267,6 +270,8 @@ export const rewardActionMap = {
             }
         }
         // 2026-10 Wave 58: 보상 골드도 누적 골드에 들어간다(`grantGold`) — 시즌 · 도감 · 주간 보상이 빠져 있었다.
+        // 2026-10 Wave 62 (원장 §61.4 C16): 수령 줄은 실제로 받은 골드('빈손의 시작'이면 합계의 절반)를 적는다.
+        const paidGoldGain = getGoldIncome(nextPlayer, goldGain);
         if (goldGain > 0) nextPlayer = grantGold(nextPlayer, goldGain);
         if (premiumCurrencyGain > 0) {
             nextPlayer = {
@@ -276,7 +281,7 @@ export const rewardActionMap = {
         }
 
         const rewardParts = [
-            goldGain > 0 ? `골드 ${formatNumber(goldGain)}` : null,
+            goldGain > 0 ? `골드 ${formatNumber(paidGoldGain)}` : null,
             premiumCurrencyGain > 0 ? `에테르 크리스탈 ${formatNumber(premiumCurrencyGain)}` : null,
             ...grantedItems,
             ...grantedTitles.map((title) => `칭호 ${title}`),
@@ -341,7 +346,8 @@ export const rewardActionMap = {
         };
         if (reward.gold) p = grantGold(p, reward.gold);
         if (reward.premiumCurrency) p = { ...p, premiumCurrency: (p.premiumCurrency || 0) + reward.premiumCurrency };
-        const rewardText = formatCodexRewardParts(reward).join(' · ');
+        // 2026-10 Wave 62 (원장 §61.4 C16): 보상 줄의 골드는 실제로 받은 금액이다 — 카드(Codex)와 같은 함수 · 같은 플레이어.
+        const rewardText = formatCodexRewardParts(reward, state.player).join(' · ');
         return {
             ...state,
             player: p,
