@@ -218,3 +218,26 @@ test('전투 1턴 리듀서 전이에서도 불사조 → 거울 → 부활석 �
         { mode: GS.DEAD, tokens: 0, phoenix: false, mirror: false },
     ]);
 });
+
+// ── Wave 63: 불사조의 공격 강화도 강화 칸 규칙(더 센 쪽이 남는다)을 거친다 ─────────────────────
+
+test('Wave 63: 불사조 부활의 공격 강화는 더 센 강화를 덮지 않는다 — 약하면 붙고, 세면 지금 강화가 남고 안내한다', () => {
+    const { atkBuff, duration } = PHOENIX.val;
+    // 지금 강화가 더 세다(+100% · 3턴 > 불사조 +50% · 3턴): 남고, 밀린 안내가 로그에 있다.
+    const strong = { atk: atkBuff * 2, def: 0, turn: duration, name: '광폭화' };
+    const kept = strike({ ...makePlayer({ relics: [PHOENIX] }), tempBuff: strong }, makeEnemy());
+    assert.equal(kept.source, 'phoenix');
+    assert.deepEqual(kept.updatedPlayer.tempBuff, strong, '더 센 강화가 남는다');
+    assert.ok(kept.logs.some((log) => log.text === MSG.TEMP_BUFF_KEPT_STRONGER(PHOENIX.name, {
+        atk: Math.round(strong.atk * 100), def: 0, counter: 0, turns: duration,
+    })), '밀린 안내');
+
+    // 지금 강화가 더 약하다(+10% · 1턴): 불사조 강화가 붙는다.
+    const weak = { atk: 0.1, def: 0, turn: 1, name: '분노의 물약' };
+    const applied = strike({ ...makePlayer({ relics: [PHOENIX] }), tempBuff: weak }, makeEnemy());
+    assert.equal(applied.source, 'phoenix');
+    assert.equal(applied.updatedPlayer.tempBuff.atk, atkBuff);
+    assert.equal(applied.updatedPlayer.tempBuff.turn, duration);
+    assert.equal(applied.updatedPlayer.tempBuff.name, 'phoenix_revive');
+    assert.ok(!applied.logs.some((log) => log.text.includes(`${PHOENIX.name}은(는) 적용되지 않았습니다`)), '붙을 때는 밀린 안내가 없다');
+});

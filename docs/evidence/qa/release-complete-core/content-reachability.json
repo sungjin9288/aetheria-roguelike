@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "f612db4edf10d0d17d19bc61febdc1bedc578e00396099fa22c44cec73bf615e",
+  "reportHash": "d7c58e08f3c5d25773db783334bd77133c89e574547a30ebf765190ddc565b62",
   "report": {
     "schemaVersion": 6,
     "catalog": {
@@ -7265,9 +7265,10 @@
           },
           {
             "gateLevel": 73,
-            "count": 1,
+            "count": 2,
             "members": [
-              151
+              151,
+              154
             ],
             "cost": {
               "level": 73,
@@ -7289,12 +7290,11 @@
           },
           {
             "gateLevel": 75,
-            "count": 4,
+            "count": 3,
             "members": [
               47,
               97,
-              129,
-              154
+              129
             ],
             "cost": {
               "level": 75,
@@ -8764,7 +8764,7 @@
           "modeledActions": 7935,
           "modeledHours": 198.38,
           "maps": 1,
-          "quests": 5,
+          "quests": 4,
           "equipment": 20,
           "jobs": 0,
           "eventChains": 0

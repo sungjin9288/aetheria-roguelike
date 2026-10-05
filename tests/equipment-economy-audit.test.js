@@ -260,13 +260,14 @@ test('stock, discounts, migrated sell values, and reducer purchase use canonical
         price: 22000,
     });
 
-    for (const deal of getDailyDeals(60).items) {
+    // 2026-10 Wave 63: 할인 · 주간 특별 상품은 상점의 판매 등급 안에서 나온다 — 기본가 상점(허공의 섬, 6등급)에서 잰다.
+    for (const deal of getDailyDeals(60, '허공의 섬').items) {
         const base = [...ITEMS.weapons, ...ITEMS.armors, ...ITEMS.consumables].find((item) => item.name === deal.name);
         assert.ok(base);
         assert.equal(deal.originalPrice, base.price);
         assert.equal(deal.price, Math.floor(base.price * 0.9));
     }
-    const weekly = getWeeklySpecial(60);
+    const weekly = getWeeklySpecial(60, '허공의 섬');
     assert.ok(weekly);
     const weeklyBase = [...ITEMS.weapons, ...ITEMS.armors].find((item) => item.name === weekly.name);
     assert.ok(weeklyBase);
