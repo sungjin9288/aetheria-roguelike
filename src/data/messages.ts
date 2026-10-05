@@ -543,6 +543,8 @@ export const MSG = {
     CHAIN_JOURNAL_TITLE: '진행 중인 이야기',
     CHAIN_JOURNAL_STEP: (current: number, total: number) => `${current}/${total} 단계`,
     CHAIN_JOURNAL_NEXT_LOC: (loc: string) => `다음 이야기: ${loc}`,
+    // Wave 62 C17: 층 조건이 있는 스텝(심연의 신호) — 그 층에 닿아야 발동한다.
+    CHAIN_JOURNAL_NEXT_LOC_FLOOR: (loc: string, floor: number) => `다음 이야기: ${loc} ${floor}층`,
 
     // --- 맵 exit 배지 (MapNavigator) ---
     MAP_BADGE_BOSS: '보스',

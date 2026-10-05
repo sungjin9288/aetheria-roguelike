@@ -121,6 +121,16 @@ export interface QuestGateDivergence {
  * 이 둘이 리셋(승천) 지점을 사이에 두고 갈라지면, 플레이어는 시작한 이야기를
  * 끝내기 전에 진행도를 잃는다. 그 간극은 종착 게이트 하나로는 보이지 않는다.
  */
+/**
+ * Wave 62 C17 — 혼돈의 심연 층 조건(`minAbyssFloor`)을 가진 체인. 이 모델에는 심연 층 진행이 없어 그 스텝은 지역 게이트로
+ * 값을 매길 수 없다 — 매기면 "50층" 스텝의 완주 비용을 조용히 과소 계상한다. 버킷 · 구간 행에서 빠지고 여기에 층 조건을 든 채로
+ * 남는다. `unresolvedEventChainCompletions`(스텝 지역을 읽을 수 없는 데이터 결함 — 작성기가 0을 요구한다)와는 다른 목록이다.
+ */
+export interface FloorGatedEventChain {
+    chain: string;
+    steps: Array<{ step: number; loc: string; minAbyssFloor: number }>;
+}
+
 export interface EventChainSpan {
     chain: string;
     steps: number;
@@ -174,6 +184,7 @@ export interface ContentCostReport {
     questGateDivergence: QuestGateDivergence[];
     unresolvedQuestGates: Array<string | number>;
     eventChainSpans: EventChainSpan[];
+    floorGatedEventChains: FloorGatedEventChain[];
     unresolvedEventChainCompletions: string[];
     malformedGates: string[];
     behind: CostBehindRow[];
@@ -185,8 +196,9 @@ export interface ContentReachabilityReport {
      * `cost.mapsWithoutWalkingRoute`로 빠지고, 임무 게이트가 minLv에서 목표 게이트(선행 사슬 ·
      * 목표 지역 경로 게이트의 max)로 바뀌며 `questGateDivergence`/`unresolvedQuestGates`/
      * `policy.questGateAuthority`가 생겼다.
+     * Wave 62 C17: 5 → 6. 혼돈의 심연 층 조건 스텝을 가진 체인이 `cost.floorGatedEventChains`로 빠진다(버킷 · 구간 행 밖).
      */
-    schemaVersion: 5;
+    schemaVersion: 6;
     catalog: {
         maps: number;
         monsters: number;
@@ -789,6 +801,10 @@ const eventChainStepLocations = () => EVENT_CHAINS.map((chain) => ({
     openLoc: chain.steps[0]?.loc ?? null,
     locs: chain.steps.map((step) => step.loc ?? null),
     steps: chain.steps.length,
+    // Wave 62 C17: 혼돈의 심연 층 조건 스텝 — 이 모델에는 심연 층 진행이 없어 지역 게이트로 값을 매기지 않는다.
+    floorGates: chain.steps.flatMap((step) => ('minAbyssFloor' in step && typeof step.minAbyssFloor === 'number'
+        ? [{ step: step.step, loc: step.loc, minAbyssFloor: step.minAbyssFloor }]
+        : [])),
 }));
 
 type QuestGateResolution =
@@ -976,12 +992,17 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
     const terminalEntries: GateEntry[] = [];
     const eventChainSpans: EventChainSpan[] = [];
     const unresolvedEventChainCompletions: string[] = [];
+    const floorGatedEventChains: FloorGatedEventChain[] = [];
     const resolveLocGate = (loc: string | null) => {
         if (loc === null) return null;
         const gateLevel = routeGates.get(loc);
         return gateLevel === undefined || !isUsableGateLevel(gateLevel) ? null : gateLevel;
     };
     for (const terminal of terminals) {
+        if (terminal.floorGates.length > 0) {
+            floorGatedEventChains.push({ chain: terminal.chain, steps: terminal.floorGates });
+            continue;
+        }
         const stepGates = terminal.locs.map(resolveLocGate);
         const openGateLevel = resolveLocGate(terminal.openLoc);
         // 스텝 하나라도 값을 매길 수 없으면 완주 게이트는 max가 아니라 **미상**이다 —
@@ -1056,6 +1077,8 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
                 'Anchors come from one deterministic seed; the p10/p50/p90 band across 1000 seeds lives in progression-diagnostic-v2.json.',
                 'Rows with basis "interpolated" are not model outputs — they are cumulative-EXP interpolations between the two named anchors.',
                 'Rows with basis "beyond-anchors" carry no modeled cost; the simulation stops at the highest checkpoint level.',
+                'Event chain steps gated by a Chaos Abyss floor (minAbyssFloor) are not priced — the simulation has no abyss floor '
+                    + 'progression; floorGatedEventChains lists those chains with their floor conditions instead of a bucket.',
             ],
         },
         anchors,
@@ -1069,6 +1092,7 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
         questGateDivergence: questGateDivergence.sort((left, right) => compareQuestIds(left.quest, right.quest)),
         unresolvedQuestGates: unresolvedQuestGates.sort(compareQuestIds),
         eventChainSpans,
+        floorGatedEventChains: floorGatedEventChains.sort((left, right) => codePointCompare(left.chain, right.chain)),
         unresolvedEventChainCompletions: unresolvedEventChainCompletions.sort(codePointCompare),
         malformedGates: malformedGates.sort(codePointCompare),
         behind,
@@ -1107,7 +1131,7 @@ export const buildContentReachabilityReport = (
         signatures: signatures.routes.length,
     };
     const report: ContentReachabilityReport = {
-        schemaVersion: 5,
+        schemaVersion: 6,
         catalog,
         maps: {
             start: START_LOCATION,

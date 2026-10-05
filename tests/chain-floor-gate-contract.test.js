@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createElement } from 'react';
 
 import { AT } from '../src/reducers/actionTypes.ts';
 import { GS } from '../src/reducers/gameStates.ts';
@@ -8,6 +9,10 @@ import { EVENT_CHAINS, getChainEventForLoc, isChainStepFloorReached } from '../s
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 import { createExploreActions } from '../src/hooks/gameActions/exploreActions.ts';
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.ts';
+import { buildChainJournal } from '../src/utils/chainJournal.ts';
+import { MSG } from '../src/data/messages.ts';
+import QuestTab from '../src/components/tabs/QuestTab.tsx';
+import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 
 /**
  * 2026-10 Wave 62 C17 (원장 §61.4 · 소유자 답 §61.6 "심연 신호 50층 조건").
@@ -138,4 +143,24 @@ test('[트리거] 다른 지역 · 다른 체인 판정은 층과 무관하다',
     // 층 조건 스텝이 막히면 null이지, 다른 체인으로 잘못 넘어가지 않는다(혼돈의 심연에 다른 체인 스텝은 없다).
     assert.equal(getChainEventForLoc(ABYSS, { abyss_signal: 1 }, undefined, 48), null);
     assert.equal(getChainEventForLoc(ABYSS, { abyss_signal: 1 }, undefined, 49)?.step.step, 1);
+});
+
+test('[일지] 신호를 받은 뒤 임무 일지의 다음 이야기는 층 조건까지 말한다 — 조건 없는 체인은 지역만', () => {
+    const [signal] = buildChainJournal({ abyss_signal: 1 }).filter((entry) => entry.chainId === 'abyss_signal');
+    assert.equal(signal.nextLoc, ABYSS);
+    assert.equal(signal.nextMinAbyssFloor, stepOf(1).minAbyssFloor);
+    assert.equal(MSG.CHAIN_JOURNAL_NEXT_LOC_FLOOR(signal.nextLoc, signal.nextMinAbyssFloor), `다음 이야기: ${ABYSS} ${stepOf(1).minAbyssFloor}층`);
+
+    const others = buildChainJournal(Object.fromEntries(EVENT_CHAINS.filter((chain) => chain.id !== 'abyss_signal').map((chain) => [chain.id, 1])));
+    assert.ok(others.length > 0);
+    for (const entry of others) assert.equal(entry.nextMinAbyssFloor, null, `${entry.chainId}: 층 조건 없음`);
+});
+
+test('[일지 화면] 임무 탭이 "혼돈의 심연 50층"을 그린다', () => {
+    const floor = stepOf(1).minAbyssFloor;
+    const html = renderStatic(createElement(QuestTab, {
+        player: makePlayerFixture({ eventChainProgress: { abyss_signal: 1 } }), actions: {}, isInSafeZone: true,
+    }));
+    assert.ok(html.includes(MSG.CHAIN_JOURNAL_NEXT_LOC_FLOOR(ABYSS, floor)), '층 조건을 그린다');
+    assert.ok(!html.includes(`${MSG.CHAIN_JOURNAL_NEXT_LOC(ABYSS)}<`), '지역만 그리지 않는다');
 });

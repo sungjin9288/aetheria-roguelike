@@ -34,7 +34,8 @@ test('elemental six preserves approved monster and map gameplay data', () => {
     // Wave 60(소유자 결정 "보스별 고정 생명 상향"): 브리핑 보스 22종 hpMult를 1:1 대결로 보정한 의도된 게임 데이터 변경 — 재고정.
     assert.equal(hashMonsters(), 'fb70034911ffd1fa30908d7ee253e35f127bab634487bd772b3406ebed872dce', 'src/data/monsters.ts gameplay data');
     // Wave 61(소유자 결정 "지역 조우에 넣음"): 보스 6종을 지역 조우 풀에 넣고 심연 층 보스 목록을 채우고 지역 설명 잔재를 고친 의도된 게임 데이터 변경 — 재고정.
-    assert.equal(hashMaps(), 'b71e68c06422eba370c3679fa860cf18c4fd09cb0d698ac27425182a12a24a20', 'src/data/maps.ts gameplay data');
+    // Wave 62(소유자 결정 "전부 설명대로"): 북부 요새 판매 등급 3 · 황금 왕국 물가 ×1.3을 지역 데이터로 선언하고 두 상점 · 허공의 섬 문구를 고친 의도된 게임 데이터 변경 — 재고정.
+    assert.equal(hashMaps(), '9b83a7e3a9d14df03a730a1888ed489a9daa9ece43c4f4d49eb43ffe5f4e7a0f', 'src/data/maps.ts gameplay data');
 });
 
 test('six elemental portraits resolve to approved v25 bytes through authored registry and runtime', async () => {

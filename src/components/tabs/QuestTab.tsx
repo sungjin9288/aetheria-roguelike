@@ -218,7 +218,9 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                                             <span className="text-[11px] font-fira text-[#e3dcff]">{MSG.CHAIN_JOURNAL_STEP(entry.currentStep, entry.totalSteps)}</span>
                                         </div>
                                         {entry.nextLoc && (
-                                            <div className="text-[11px] font-fira text-slate-400/72">{MSG.CHAIN_JOURNAL_NEXT_LOC(entry.nextLoc)}</div>
+                                            <div className="text-[11px] font-fira text-slate-400/72">{entry.nextMinAbyssFloor !== null
+                                                ? MSG.CHAIN_JOURNAL_NEXT_LOC_FLOOR(entry.nextLoc, entry.nextMinAbyssFloor)
+                                                : MSG.CHAIN_JOURNAL_NEXT_LOC(entry.nextLoc)}</div>
                                         )}
                                         <div className="mt-1 h-[2px] overflow-hidden rounded-full bg-black/30">
                                             <div className="h-full rounded-full bg-[#9a8ac0]/60 transition-all duration-500" style={{ width: `${pct}%` }} />

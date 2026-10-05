@@ -1,8 +1,8 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "be2aff6f22a48ec51d4fe8b5fa396172cbaa2abd6e861aba6c62b5b7b4a5bb69",
+  "reportHash": "f612db4edf10d0d17d19bc61febdc1bedc578e00396099fa22c44cec73bf615e",
   "report": {
-    "schemaVersion": 5,
+    "schemaVersion": 6,
     "catalog": {
       "maps": 52,
       "monsters": 254,
@@ -2416,7 +2416,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -2431,7 +2430,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "혼돈의 화신",
             "황금 왕국"
@@ -2459,7 +2457,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -2502,7 +2499,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -2518,7 +2514,6 @@
           "sources": [
             "quest:148",
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -2533,7 +2528,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -2566,7 +2560,6 @@
           "sources": [
             "tier:5",
             "리치",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -2788,7 +2781,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "스핑크스",
             "허공의 섬",
@@ -2834,7 +2826,6 @@
           "sources": [
             "tier:5",
             "광석골렘",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -2978,7 +2969,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "에테르 드래곤",
             "허공의 섬",
             "황금 왕국"
@@ -3023,7 +3013,6 @@
           "sources": [
             "tier:5",
             "레드 드래곤",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -3168,7 +3157,6 @@
           "sources": [
             "tier:5",
             "마왕",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -3228,7 +3216,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "폭풍 세이렌",
             "허공의 섬",
             "황금 왕국"
@@ -3285,7 +3272,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -3343,7 +3329,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -3358,7 +3343,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -3387,7 +3371,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -3402,7 +3385,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -3418,7 +3400,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "서리 군주",
             "아이스 드래곤",
             "허공의 섬",
@@ -3448,7 +3429,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -3462,7 +3442,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -3611,7 +3590,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -3627,7 +3605,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "아이스 드래곤",
             "허공의 섬",
@@ -3664,7 +3641,6 @@
             "quest:99",
             "tier:5",
             "마왕",
-            "북부 요새",
             "타락한 천사",
             "허공의 섬",
             "황금 왕국"
@@ -3682,7 +3658,6 @@
           "sources": [
             "quest:45",
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "차원 파쇄자",
             "허공의 섬",
@@ -3699,7 +3674,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "아누비스 수호자",
             "허공의 섬",
@@ -3760,7 +3734,6 @@
           "sources": [
             "quest:145",
             "tier:5",
-            "북부 요새",
             "스핑크스",
             "허공의 섬",
             "황금 왕국"
@@ -3776,7 +3749,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "에테르 드래곤",
             "허공의 섬",
             "황금 왕국"
@@ -3791,7 +3763,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -3805,7 +3776,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -3847,7 +3817,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "숲 요정",
             "허공의 섬",
             "황금 왕국"
@@ -3863,7 +3832,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "수련 님프",
             "허공의 섬",
             "황금 왕국"
@@ -3882,7 +3850,6 @@
             "quest:142",
             "tier:5",
             "봄의 여왕",
-            "북부 요새",
             "수련 님프",
             "허공의 섬",
             "황금 왕국"
@@ -3897,7 +3864,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -3911,7 +3877,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4070,7 +4035,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "스핑크스",
             "허공의 섬",
             "황금 왕국"
@@ -4085,7 +4049,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -4099,7 +4062,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4117,7 +4079,6 @@
           "sources": [
             "quest:44",
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "차원 파쇄자",
             "허공의 섬",
@@ -4133,7 +4094,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4148,7 +4108,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4179,7 +4138,6 @@
           "sources": [
             "tier:5",
             "고대 호수의 수호신",
-            "북부 요새",
             "심연 크라켄",
             "허공의 섬",
             "황금 왕국"
@@ -4194,7 +4152,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4237,7 +4194,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4299,7 +4255,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4314,7 +4269,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4331,7 +4285,6 @@
           "sources": [
             "tier:5",
             "리치",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -4345,7 +4298,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4378,7 +4330,6 @@
             "quest:33",
             "tier:4",
             "데스나이트",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4408,7 +4359,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4453,7 +4403,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4468,7 +4417,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -4513,7 +4461,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4530,7 +4477,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "에테르 거인",
             "에테르 드래곤",
             "허공의 섬",
@@ -4546,7 +4492,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4563,7 +4508,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "에테르 군주",
             "차원 마왕",
             "허공의 섬",
@@ -4610,7 +4554,6 @@
           "sources": [
             "quest:46",
             "tier:5",
-            "북부 요새",
             "에테르 드래곤",
             "영겁의 수문장",
             "허공의 섬",
@@ -4639,7 +4582,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -4728,7 +4670,6 @@
           "sources": [
             "tier:5",
             "리치",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -4742,7 +4683,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -4758,7 +4698,6 @@
           "sources": [
             "tier:4",
             "드래곤 나이트",
-            "북부 요새",
             "사막 오아시스",
             "지옥의 문지기",
             "허공의 섬",
@@ -4777,7 +4716,6 @@
           "sources": [
             "tier:4",
             "레드 드래곤",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4806,7 +4744,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4821,7 +4758,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -4838,7 +4774,6 @@
           "sources": [
             "tier:5",
             "레드 드래곤",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -4922,7 +4857,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -4982,7 +4916,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -5011,7 +4944,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -5055,7 +4987,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -5069,7 +5000,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -5086,7 +5016,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "차원 마왕",
             "차원 파쇄자",
             "허공의 섬",
@@ -5143,7 +5072,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -5157,7 +5085,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -5187,7 +5114,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "천공 수호조",
             "허공의 섬",
             "황금 왕국"
@@ -5202,7 +5128,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -5217,7 +5142,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -5233,7 +5157,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "아누비스 수호자",
             "허공의 섬",
             "황금 왕국"
@@ -5248,7 +5171,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -5264,7 +5186,6 @@
           "sources": [
             "quest:41",
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -5309,7 +5230,6 @@
           "sources": [
             "quest:43",
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "심연 크라켄",
             "허공의 섬",
@@ -5340,7 +5260,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "타락 기사",
             "허공의 섬",
@@ -5356,7 +5275,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -5386,7 +5304,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "황금 왕국"
           ]
@@ -5444,7 +5361,6 @@
           ],
           "sources": [
             "tier:4",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -5490,7 +5406,6 @@
             "quest:29",
             "quest:32",
             "tier:5",
-            "북부 요새",
             "빙결의 마녀",
             "허공의 섬",
             "황금 왕국"
@@ -5534,7 +5449,6 @@
           ],
           "sources": [
             "tier:5",
-            "북부 요새",
             "허공의 섬",
             "혼돈의 화신",
             "황금 왕국"
@@ -5569,7 +5483,6 @@
             "quest:34",
             "tier:4",
             "리치",
-            "북부 요새",
             "사막 오아시스",
             "허공의 섬",
             "황금 왕국"
@@ -5857,7 +5770,8 @@
           "Modeled actions and seconds are policy arithmetic over modeled reward settlements, not observed play time.",
           "Anchors come from one deterministic seed; the p10/p50/p90 band across 1000 seeds lives in progression-diagnostic-v2.json.",
           "Rows with basis \"interpolated\" are not model outputs — they are cumulative-EXP interpolations between the two named anchors.",
-          "Rows with basis \"beyond-anchors\" carry no modeled cost; the simulation stops at the highest checkpoint level."
+          "Rows with basis \"beyond-anchors\" carry no modeled cost; the simulation stops at the highest checkpoint level.",
+          "Event chain steps gated by a Chaos Abyss floor (minAbyssFloor) are not priced — the simulation has no abyss floor progression; floorGatedEventChains lists those chains with their floor conditions instead of a bucket."
         ]
       },
       "anchors": [
@@ -7692,9 +7606,8 @@
           },
           {
             "gateLevel": 48,
-            "count": 5,
+            "count": 4,
             "members": [
-              "abyss_signal",
               "ancient_prophecy",
               "forgotten_commander",
               "forgotten_god",
@@ -8245,46 +8158,6 @@
           }
         },
         {
-          "chain": "abyss_signal",
-          "steps": 3,
-          "openGateLevel": 48,
-          "openCost": {
-            "level": 48,
-            "basis": "interpolated",
-            "modeledActions": 2126,
-            "modeledSeconds": 191340,
-            "modeledHours": 53.15,
-            "cumulativeExp": 931846,
-            "interpolation": {
-              "lowerLevel": 45,
-              "upperLevel": 60,
-              "lowerModeledActions": 1568,
-              "upperModeledActions": 5249,
-              "lowerCumulativeExp": 612298,
-              "upperCumulativeExp": 2721799,
-              "expFraction": 0.1514803737945609
-            }
-          },
-          "completionGateLevel": 48,
-          "completionCost": {
-            "level": 48,
-            "basis": "interpolated",
-            "modeledActions": 2126,
-            "modeledSeconds": 191340,
-            "modeledHours": 53.15,
-            "cumulativeExp": 931846,
-            "interpolation": {
-              "lowerLevel": 45,
-              "upperLevel": 60,
-              "lowerModeledActions": 1568,
-              "upperModeledActions": 5249,
-              "lowerCumulativeExp": 612298,
-              "upperCumulativeExp": 2721799,
-              "expFraction": 0.1514803737945609
-            }
-          }
-        },
-        {
           "chain": "world_tree_corruption",
           "steps": 3,
           "openGateLevel": 40,
@@ -8469,6 +8342,23 @@
           }
         }
       ],
+      "floorGatedEventChains": [
+        {
+          "chain": "abyss_signal",
+          "steps": [
+            {
+              "step": 1,
+              "loc": "혼돈의 심연",
+              "minAbyssFloor": 50
+            },
+            {
+              "step": 2,
+              "loc": "혼돈의 심연",
+              "minAbyssFloor": 50
+            }
+          ]
+        }
+      ],
       "unresolvedEventChainCompletions": [],
       "malformedGates": [],
       "behind": [
@@ -8481,7 +8371,7 @@
           "quests": 141,
           "equipment": 229,
           "jobs": 18,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 2,
@@ -8492,7 +8382,7 @@
           "quests": 138,
           "equipment": 193,
           "jobs": 17,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 3,
@@ -8503,7 +8393,7 @@
           "quests": 136,
           "equipment": 193,
           "jobs": 17,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 4,
@@ -8514,7 +8404,7 @@
           "quests": 130,
           "equipment": 193,
           "jobs": 17,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 5,
@@ -8525,7 +8415,7 @@
           "quests": 127,
           "equipment": 193,
           "jobs": 17,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 6,
@@ -8536,7 +8426,7 @@
           "quests": 118,
           "equipment": 193,
           "jobs": 14,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 7,
@@ -8547,7 +8437,7 @@
           "quests": 117,
           "equipment": 193,
           "jobs": 14,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 8,
@@ -8558,7 +8448,7 @@
           "quests": 116,
           "equipment": 193,
           "jobs": 14,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 10,
@@ -8569,7 +8459,7 @@
           "quests": 111,
           "equipment": 193,
           "jobs": 14,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 12,
@@ -8580,7 +8470,7 @@
           "quests": 101,
           "equipment": 150,
           "jobs": 14,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 14,
@@ -8591,7 +8481,7 @@
           "quests": 96,
           "equipment": 150,
           "jobs": 12,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 15,
@@ -8602,7 +8492,7 @@
           "quests": 94,
           "equipment": 150,
           "jobs": 12,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 18,
@@ -8613,7 +8503,7 @@
           "quests": 89,
           "equipment": 150,
           "jobs": 12,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 20,
@@ -8624,7 +8514,7 @@
           "quests": 87,
           "equipment": 150,
           "jobs": 12,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 25,
@@ -8635,7 +8525,7 @@
           "quests": 86,
           "equipment": 150,
           "jobs": 12,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 28,
@@ -8646,7 +8536,7 @@
           "quests": 78,
           "equipment": 150,
           "jobs": 11,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 29,
@@ -8657,7 +8547,7 @@
           "quests": 77,
           "equipment": 107,
           "jobs": 11,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 30,
@@ -8668,7 +8558,7 @@
           "quests": 75,
           "equipment": 107,
           "jobs": 11,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 35,
@@ -8679,7 +8569,7 @@
           "quests": 74,
           "equipment": 107,
           "jobs": 5,
-          "eventChains": 13
+          "eventChains": 12
         },
         {
           "level": 36,
@@ -8690,7 +8580,7 @@
           "quests": 55,
           "equipment": 107,
           "jobs": 5,
-          "eventChains": 10
+          "eventChains": 9
         },
         {
           "level": 40,
@@ -8701,7 +8591,7 @@
           "quests": 55,
           "equipment": 107,
           "jobs": 5,
-          "eventChains": 10
+          "eventChains": 9
         },
         {
           "level": 42,
@@ -8712,7 +8602,7 @@
           "quests": 46,
           "equipment": 107,
           "jobs": 5,
-          "eventChains": 7
+          "eventChains": 6
         },
         {
           "level": 44,
@@ -8723,7 +8613,7 @@
           "quests": 43,
           "equipment": 107,
           "jobs": 5,
-          "eventChains": 7
+          "eventChains": 6
         },
         {
           "level": 45,
@@ -8734,7 +8624,7 @@
           "quests": 41,
           "equipment": 107,
           "jobs": 5,
-          "eventChains": 7
+          "eventChains": 6
         },
         {
           "level": 48,
@@ -8745,7 +8635,7 @@
           "quests": 41,
           "equipment": 65,
           "jobs": 0,
-          "eventChains": 7
+          "eventChains": 6
         },
         {
           "level": 49,

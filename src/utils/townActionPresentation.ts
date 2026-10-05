@@ -3,6 +3,7 @@ import type { ItemRecipeDef } from '../types/item.js';
 import { FIRST_STORY_QUEST_ID } from '../data/quests.js';
 import { canInvestigateTown } from './townInvestigation';
 import { getChainEventForLoc } from '../data/eventChains.js';
+import { getShopBuyPrice } from './shopRotation';
 import type { getAdventureGuidance, getExpeditionPreparation } from './adventureGuide.js';
 
 export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'grave';
@@ -158,8 +159,9 @@ export const getTownActionPresentation = ({
     const recoveryItems = inventory.filter((item) => (
         typeof item?.type === 'string' && ['hp', 'mp', 'cure'].includes(item.type)
     ));
+    // Wave 62 C20: 이 마을 상점의 실제 가격(황금 왕국 물가 ×1.3) — 기본 가격으로 재면 살 수 없는 물건을 권한다.
     const cheapestSupply = consumables.reduce(
-        (lowest, item) => Math.min(lowest, item?.price || Number.POSITIVE_INFINITY),
+        (lowest, item) => Math.min(lowest, item?.price ? getShopBuyPrice(player.loc || '', item.price) : Number.POSITIVE_INFINITY),
         Number.POSITIVE_INFINITY,
     );
     const needsSupply = recoveryItems.length <= 1 && (player.gold || 0) >= cheapestSupply;

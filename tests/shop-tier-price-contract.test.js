@@ -17,6 +17,8 @@ import {
     getWeeklySpecial,
 } from '../src/utils/shopRotation.ts';
 import { getSellPrice } from '../src/utils/equipmentUtils.ts';
+import { getExpeditionReturnAction, getRestCost } from '../src/utils/expeditionReturnFlow.ts';
+import { getTownActionPresentation } from '../src/utils/townActionPresentation.ts';
 import ShopPanel from '../src/components/ShopPanel.tsx';
 import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
@@ -276,4 +278,32 @@ test('다른 상점은 그대로다 — 판매 등급 · 구매가 · 할인 · 
     const state = shopState('허공의 섬');
     const potion = byName('하급 체력 물약');
     assert.equal(buy(state, 'stock', potion.name).player.gold, state.player.gold - potion.price);
+});
+
+test('황금 왕국: 보급 안내(귀환 행동 · 마을 상점 상태)도 할증된 가격으로 살 수 있는지 판단한다', () => {
+    const supplies = DB.ITEMS.consumables.filter((item) => ['hp', 'mp', 'cure'].includes(item.type) && item.price > 0);
+    const cheapest = Math.min(...supplies.map((item) => item.price));
+    const playerAt = (loc) => ({
+        ...clone(INITIAL_STATE.player), name: '보급 확인', loc, level: 30, hp: 10, maxHp: 1000, mp: 10, maxMp: 300,
+        gold: cheapest, inv: [], quests: [],
+    });
+    const summary = { destination: KINGDOM, lastLocation: KINGDOM, returnLocation: KINGDOM, maxHpAtReturn: 1000, newItems: [] };
+    const town = (player) => getTownActionPresentation({
+        player, mapData: MAPS[player.loc], stats: { maxHp: player.maxHp, maxMp: player.maxMp },
+        guidance: { primaryAction: null }, preparation: null, hasGrave: false,
+        classes: DB.CLASSES, recipes: DB.ITEMS.recipes || [], consumables: DB.ITEMS.consumables,
+    });
+
+    // 기본가로는 가장 싼 보급품을 살 수 있지만 × 1.3으로는 어느 것도 살 수 없는 골드 — 휴식은 그보다 비싸다.
+    assert.ok(getShopBuyPrice(KINGDOM, cheapest) > cheapest);
+    const kingdom = playerAt(KINGDOM);
+    assert.ok(getRestCost(kingdom) > kingdom.gold, '휴식을 살 수 없는 골드');
+    assert.notEqual(getExpeditionReturnAction(kingdom, summary).kind, 'open_shop', '황금 왕국에서 살 수 없는 물약을 권한다');
+    assert.equal(town(kingdom).facilityStatus.market, '이용 가능');
+
+    // 대조군: 같은 골드가 기본가 마을에서는 보급을 권한다.
+    const plain = playerAt(FORTRESS);
+    assert.equal(getShopPriceMult(FORTRESS), 1);
+    assert.equal(getExpeditionReturnAction(plain, { ...summary, returnLocation: FORTRESS }).kind, 'open_shop');
+    assert.equal(town(plain).facilityStatus.market, '보급 권장');
 });
