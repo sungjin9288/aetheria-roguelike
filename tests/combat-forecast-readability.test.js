@@ -47,7 +47,8 @@ test('combat forecast recommends weakness skill when readable timing is favorabl
         player: basePlayer,
         enemy: { ...baseEnemy, weakness: '화염' },
         stats: { maxHp: 100 },
-        selectedSkill: { name: '화염구', type: '화염', mp: 20 },
+        // 2026-10 Wave 65: 약점 표시는 위력 있는 기술만이다(`isDamagingSkill`) — 실제 화염구의 위력 2.2를 싣는다.
+        selectedSkill: { name: '화염구', type: '화염', mp: 20, mult: 2.2 },
         skillCooldown: 0,
         enemyTelegraph: { type: 'normal', label: '일반 공격 예상' },
         combatConsumables: [],

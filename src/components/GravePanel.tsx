@@ -14,7 +14,7 @@ import { collection, getDocs, limit, orderBy, query, type DocumentData, type Que
 import { db, hasFirebaseConfig } from '../firebase';
 import { APP_ID, BALANCE } from '../data/constants';
 import { isSignatureItem } from '../data/signatureItems.js';
-import { calcInvasionChance, excludeOwnGraves, getGraveItems, getGraveRecoveryGroups, type GraveEntry } from '../utils/graveUtils';
+import { calcInvasionChance, excludeOwnGraves, getGraveItems, getGraveRecoveryGroups, getInvasionAttackPower, type GraveEntry } from '../utils/graveUtils';
 import {
     PRODUCTION_GAME_CAPABILITIES,
     type GameCapabilities,
@@ -61,7 +61,7 @@ const GravePanel = ({
     const recoveryGroups = getGraveRecoveryGroups(grave, player?.loc, player);
     const recoveryGold = recoveryGroups.reduce((sum, group) => sum + group.gold, 0);
     const recoveryItems = recoveryGroups.reduce((sum, group) => sum + group.items.length, 0);
-    const playerAtk = player?.atk || 10;
+    const playerAtk = player ? getInvasionAttackPower(player) : 10;
     const today = new Date().toDateString();
     const lastDate = player?.stats?.lastInvadeDate;
     const usedCount = lastDate === today ? (player?.stats?.dailyInvadeCount || 0) : 0;

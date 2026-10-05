@@ -5,7 +5,7 @@ import { getMonsterFamily } from '../data/monsters.js';
 import type { EnemyDotId, FullStats, Monster, NumericRelicEffect, Player, Relic, RelicDotScope, RelicSynergy } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { mergeFearAtkMult } from './CombatEngine.status.js';
-import { isDamagingSkill } from './skillPower.js';
+import { getSkillElement, isDamagingSkill } from './skillPower.js';
 import { healWithinMax } from './vitals.js';
 import type { CalculateDamageOptions } from './CombatEngine.js';
 
@@ -456,7 +456,7 @@ export const actionMethods = {
             ? 0
             : (freeChance > 0 && random() < freeChance) ? 0 : mpCost;
 
-        const skillElem = skill.type || stats.elem;
+        const skillElem = getSkillElement(skill, stats);
         const elementMultiplier = this.getElementMultiplier(skillElem, enemy, relics);
         // cycle 155: 시너지 'arcane_singularity' — bonus.skillMult 0.3 "기술 피해 30% 증가".
         // 2026-10 Wave 56: 위력에 0.3을 더하던 것(위력 2 → +15%, 4 → +7%)을 피해 × 1.3으로 바꿨다.

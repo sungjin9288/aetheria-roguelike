@@ -4,7 +4,7 @@ import { makeEmitTitles } from '../utils/gameUtils';
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
-import { getGraveItems, resolveInvasion } from '../utils/graveUtils';
+import { getGraveItems, getInvasionAttackPower, resolveInvasion } from '../utils/graveUtils';
 import { createRewardActions } from './useInventoryActions.rewards';
 import { createEquipmentActions } from './useInventoryActions.equipment';
 import { createEconomyActions } from './useInventoryActions.economy';
@@ -78,7 +78,7 @@ export const createInventoryActions = ({
             if (getGraveItems(targetGrave).length === 0) {
                 return addLog('warn', MSG.INVADE_NO_ITEMS);
             }
-            const playerAtk = getFullStats?.()?.atk || player.atk || 10;
+            const playerAtk = getInvasionAttackPower(player);
             const { success, reward } = resolveInvasion(targetGrave, playerAtk);
             dispatch({ type: AT.INVADE_GRAVE, payload: { reward: reward || null, uid: targetGrave.uid } });
             if (success && reward) {

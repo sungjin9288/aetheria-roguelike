@@ -7,3 +7,14 @@
  */
 export const isDamagingSkill = (skill: { mult?: number } | null | undefined): boolean =>
     typeof skill?.mult === 'number' && skill.mult > 0;
+
+/**
+ * 2026-10 Wave 65 (원장 §61.5 · §66): 기술이 피해를 줄 때 쓰는 원소 — 기술 `type`이 없으면 무기 원소(`stats.elem`)다.
+ * 엔진(`performSkill`)과 전투 예고의 "약점" 표시가 같은 판정을 읽는다. 예고가 `type`만 보던 동안 무기 원소를 쓰는
+ * 위력 기술 24개(파워배시 · 암살 · 저격 …)는 약점을 찔러도 표시가 없었다.
+ */
+export function getSkillElement(skill: { type?: string } | null | undefined, stats: { elem: string }): string;
+export function getSkillElement(skill: { type?: string } | null | undefined, stats: { elem?: string } | null | undefined): string | undefined;
+export function getSkillElement(skill: { type?: string } | null | undefined, stats: { elem?: string } | null | undefined): string | undefined {
+    return skill?.type || stats?.elem;
+}
