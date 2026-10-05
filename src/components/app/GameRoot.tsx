@@ -3,7 +3,7 @@ import { MotionConfig } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
 import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
-import { getVisibleRegionTheme } from '../../utils/challengeRules';
+import { getVisibleExpeditionSummary, getVisibleRegionTheme } from '../../utils/challengeRules';
 import { buildReturnBriefing } from '../../utils/returnBriefing';
 import { getExpeditionReturnAction } from '../../utils/expeditionReturnFlow';
 import { getPendingMilestoneStoryBeat, type MilestoneStoryBeat } from '../../utils/milestoneStory';
@@ -416,7 +416,7 @@ const GameRoot = ({
             {showExpeditionDebrief && expeditionSummary && expeditionReturnAction && (
                 <Suspense fallback={null}>
                     <ExpeditionDebriefCard
-                        summary={expeditionSummary}
+                        summary={getVisibleExpeditionSummary(engine.player, expeditionSummary)}
                         recommendation={expeditionReturnAction}
                         journeyJob={expeditionJob}
                         journey={expeditionJob ? engine.player.classJourney?.byJob[expeditionJob] : undefined}

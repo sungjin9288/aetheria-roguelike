@@ -13,7 +13,9 @@ import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { resolveCombatActionTurn } from '../src/systems/combatActionTurn.js';
 import { createSeededRandom } from '../src/systems/combatItemTurn.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
-import { getJobSkills } from '../src/utils/gameUtils.js';
+import { buildRunSummary, getJobSkills } from '../src/utils/gameUtils.js';
+import { buildReturnBriefing } from '../src/utils/returnBriefing.js';
+import { getExpeditionPreparation } from '../src/utils/adventureGuide.js';
 import { resolveGraveRecovery } from '../src/utils/graveUtils.js';
 import { parseCommand } from '../src/utils/commandParser.js';
 import { getAvailableCommands } from '../src/utils/commandSuggestions.js';
@@ -22,6 +24,7 @@ import { getLocationVisual } from '../src/utils/locationVisuals.js';
 import {
     applyChallengeMaxHp,
     getChallengeRewardPercent,
+    getVisibleExpeditionSummary,
     getVisibleLocationName,
     getVisibleLocationVisual,
     getVisibleRegionTheme,
@@ -32,6 +35,8 @@ import { createMoveActions } from '../src/hooks/gameActions/moveActions.js';
 import ChallengeModifierPicker from '../src/components/ChallengeModifierPicker.tsx';
 import TerminalView from '../src/components/TerminalView.tsx';
 import ControlPanel from '../src/components/ControlPanel.tsx';
+import MapNavigator from '../src/components/MapNavigator.tsx';
+import GravePanel from '../src/components/GravePanel.tsx';
 import { renderStatic } from './helpers/render.ts';
 
 /**
@@ -382,6 +387,59 @@ test('A10: 길 잃은 여행 — 터미널 · 이벤트 화면의 지역 그림�
         assert.doesNotMatch(eventPanel(blind), /data-location-visual/, `${loc}: 이벤트 그림`);
         assert.match(eventPanel(plain), /data-location-visual/, `${loc}: 대조군 이벤트 그림`);
     }
+});
+
+test('A10: 길 잃은 여행 — 지도 화면의 현재 위치 카드도 이름 · 설명을 감춘다', () => {
+    for (const [, loc] of BLIND_ROUTES) {
+        const render = (player) => renderStatic(createElement(MapNavigator, { player, grave: undefined, stats: null }));
+        const visited = { ...structuredClone(INITIAL_STATE.player.stats), visitedMaps: [CONSTANTS.START_LOCATION, loc] };
+        const blind = render(basePlayer({ challengeModifiers: ['blindMap'], loc, level: 99, stats: visited }));
+        assert.ok(!blind.includes(`>${loc}<`), `${loc}: 지도 화면이 위치 이름을 그린다`);
+        if (DB.MAPS[loc].desc) assert.ok(!blind.includes(DB.MAPS[loc].desc), `${loc}: 지도 화면이 지역 설명을 그린다`);
+        const plain = render(basePlayer({ loc, level: 99, stats: visited }));
+        assert.ok(plain.includes(`>${loc}<`), `${loc}: 대조군은 위치 이름을 그린다`);
+    }
+});
+
+// 화면 텍스트(태그 사이)만 본다 — data-testid 같은 속성의 지역 키는 플레이어에게 보이지 않는다.
+const visibleText = (html) => html.replace(/<[^>]*>/g, '\n');
+
+test('A10: 길 잃은 여행 — 사망 요약 · 귀환 브리핑 · 묘비 · 원정 기록 · 출발 준비가 지역 이름을 말하지 않는다', () => {
+    const graveLoc = '잊혀진 폐허';
+    for (const [from, loc] of BLIND_ROUTES) {
+        const stats = { ...structuredClone(INITIAL_STATE.player.stats), lastSeenAt: NOW - 7 * 3_600_000 };
+        const blind = basePlayer({ challengeModifiers: ['blindMap'], loc, stats });
+        const plain = basePlayer({ loc, stats });
+
+        // 사망 화면 요약 · 귀환 브리핑
+        assert.equal(buildRunSummary(blind, loc).loc, MSG.BLIND_MAP_LOCATION, `${loc}: 사망 요약`);
+        assert.equal(buildRunSummary(plain, loc).loc, loc, `${loc}: 대조군 사망 요약`);
+        assert.equal(buildReturnBriefing(blind, NOW)?.loc, MSG.BLIND_MAP_LOCATION, `${loc}: 귀환 브리핑`);
+        assert.equal(buildReturnBriefing(plain, NOW)?.loc, loc, `${loc}: 대조군 귀환 브리핑`);
+
+        // 묘비 화면(회수 목적지 제목)
+        const grave = [{ loc: graveLoc, gold: 120, items: [], timestamp: 1, level: 5 }];
+        const graveHtml = (player) => visibleText(renderStatic(createElement(GravePanel, { player, uid: 'u', grave, actions: {} })));
+        assert.ok(!graveHtml(blind).includes(graveLoc), `${loc}: 묘비 화면이 묘비 지역을 그린다`);
+        assert.ok(graveHtml(plain).includes(graveLoc), `${loc}: 대조군 묘비 화면`);
+
+        // 원정 귀환 카드 · 지난 원정 줄이 읽는 기록 — 저장은 그대로, 그릴 때만 가린다.
+        const summary = { destination: loc, lastLocation: loc, origin: from, returnLocation: from };
+        const shown = getVisibleExpeditionSummary(blind, summary);
+        for (const key of ['destination', 'lastLocation', 'origin', 'returnLocation']) {
+            assert.equal(shown[key], MSG.BLIND_MAP_LOCATION, `${loc}: 원정 기록 ${key}`);
+        }
+        assert.equal(summary.destination, loc, '저장된 기록은 바뀌지 않는다');
+        assert.equal(getVisibleExpeditionSummary(plain, summary), summary, '대조군은 그대로');
+    }
+
+    // 출발 준비(안전지대)의 목적지 = 다음으로 걸을 출구 — 지도 화면의 '미확인 경로'와 같은 자리표시.
+    const town = CONSTANTS.START_LOCATION;
+    const prep = (player) => getExpeditionPreparation(player, { maxHp: 500, maxMp: 200 }, DB.MAPS[town], DB.MAPS);
+    const blindPrep = prep(basePlayer({ challengeModifiers: ['blindMap'], loc: town }));
+    const plainPrep = prep(basePlayer({ loc: town }));
+    assert.ok(DB.MAPS[town].exits.includes(plainPrep.destination), `대조군 목적지는 출구 이름: ${plainPrep.destination}`);
+    assert.equal(blindPrep.destination, MSG.BLIND_MAP_ROUTE_NAME);
 });
 
 // ── C15: 뒤섞인 기술 — 다른 기술이 뽑히고, 쓸 수 없는 기술도 차례를 쓴다 ─────────────

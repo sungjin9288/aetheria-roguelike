@@ -22,6 +22,7 @@ import {
 import type { GameActions } from '../hooks/actionDeps';
 import type { GameState } from '../reducers/gameReducer';
 import type { Item, Player } from '../types/index.js';
+import { getVisibleLocationName } from '../utils/challengeRules';
 
 const GRAVES_LIMIT = 10;
 
@@ -191,7 +192,7 @@ const GravePanel = ({
                                                     <span>{group.atCurrentLocation ? '현재 위치' : '회수 목적지'}</span>
                                                     {group.count > 1 && <span>· 유해 {group.count}구</span>}
                                                 </div>
-                                                <h3 className="mt-1 truncate text-[15px] font-readable font-bold text-white/92">{group.loc}</h3>
+                                                <h3 className="mt-1 truncate text-[15px] font-readable font-bold text-white/92">{getVisibleLocationName(player, group.loc)}</h3>
                                             </div>
                                             {group.atCurrentLocation && (
                                                 <span className="shrink-0 rounded-md border border-[#d5b180]/24 bg-[#d5b180]/10 px-2 py-1 text-[11px] font-readable text-[#f4e6c8]">

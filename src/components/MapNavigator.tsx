@@ -289,13 +289,18 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
     const selectedIsLocked = selectedIsDirectExit && playerLevel < selectedRequiredLevel;
     const selectedIsCurrent = selectedEntry?.name === playerLoc;
     const canMove = selectedIsDirectExit && !selectedIsLocked && typeof actions?.move === 'function';
-    const selectedDisplayName = blindMap && selectedIsDirectExit ? '미확인 경로' : selectedEntry?.name;
-    const selectedDescription = blindMap && selectedIsDirectExit
-        ? '이동하면 지역 정보가 드러납니다.'
+    // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행은 직접 출구만이 아니라 현재 위치 카드도 감춘다(이름 · 설명 · 레벨 · 위험).
+    //   이동해도 지역 정보는 드러나지 않는다 — 이동 로그 · 터미널도 숨긴다(utils/challengeRules.ts).
+    const hideSelected = blindMap && (selectedIsDirectExit || selectedIsCurrent);
+    const selectedDisplayName = hideSelected
+        ? (selectedIsCurrent ? MSG.BLIND_MAP_LOCATION : '미확인 경로')
+        : selectedEntry?.name;
+    const selectedDescription = hideSelected
+        ? (selectedIsCurrent ? MSG.MOVE_AREA_DESC_BLIND : MSG.BLIND_MAP_ROUTE_DESC)
         : selectedEntry?.desc;
     const selectedMissionCount = focusedQuestEntries.filter((entry) => entry.targetMaps.includes(selectedEntry?.name)).length;
     // blindMap(도전 규칙)에서는 경로 정보를 감추므로 진입 레벨도 같이 감춘다.
-    const selectedRouteNotice = blindMap && selectedIsDirectExit
+    const selectedRouteNotice = hideSelected
         ? null
         : getRouteGateNotice(selectedEntry?.routeGate);
     const statusCounts = mapEntries.reduce<Record<MapState, number>>((counts, entry) => {
@@ -372,7 +377,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                         </div>
                         <div className="shrink-0 text-right">
                             <span className="aether-type-meta font-readable font-semibold text-[#dff7f5]">
-                                {blindMap && selectedIsDirectExit ? '정보 없음' : formatMapLevel(selectedEntry, playerLevel)}
+                                {hideSelected ? '정보 없음' : formatMapLevel(selectedEntry, playerLevel)}
                             </span>
                             {selectedRouteNotice && (
                                 <div data-testid="map-route-gate-level" className="aether-type-label mt-0.5 font-readable text-amber-100/88">
@@ -384,9 +389,9 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
 
                     <div className="mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-4" data-testid="map-route-forecast">
                         {[
-                            { label: '위험', value: blindMap && selectedIsDirectExit ? '미확인' : getRiskLabel(selectedEntry, playerLevel) },
-                            { label: '예상', value: blindMap && selectedIsDirectExit ? '미확인' : getEncounterLabel(selectedEntry, selectedRoute) },
-                            { label: '보상', value: blindMap && selectedIsDirectExit ? '미확인' : getRewardLabel(selectedEntry) },
+                            { label: '위험', value: hideSelected ? '미확인' : getRiskLabel(selectedEntry, playerLevel) },
+                            { label: '예상', value: hideSelected ? '미확인' : getEncounterLabel(selectedEntry, selectedRoute) },
+                            { label: '보상', value: hideSelected ? '미확인' : getRewardLabel(selectedEntry) },
                             { label: '귀환', value: selectedRoute?.routePlan?.returnLabel || (selectedIsCurrent ? '현재 위치' : '경로 확인') },
                         ].map((item) => (
                             <div key={item.label} className="aether-map-forecast-cell min-w-0 px-1.5 py-1.5">

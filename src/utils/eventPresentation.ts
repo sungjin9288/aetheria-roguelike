@@ -2,6 +2,7 @@ import { findStructuredFallbackHiddenEvent, getStructuredFallbackTransaction } f
 import type { EventChoiceFeedback, EventChoiceTone, EventOutcome } from '../types/session.js';
 import { RELICS } from '../data/relics';
 import { MSG } from '../data/messages';
+import { mergeTempBuff, type TempBuffValue } from '../systems/tempBuffMerge';
 
 export type { EventChoiceTone };
 
@@ -134,7 +135,15 @@ const getChainPreview = (outcome: EventOutcome | null): EventChoicePreview => {
     const rewardType = outcome?.reward?.type;
     const rewardAmount = Number(outcome?.reward?.amount);
     const isGoldCost = rewardType === 'gold' && Number.isFinite(rewardAmount) && rewardAmount < 0;
-    const rewardLabel = rewardType && !isGoldCost ? chainRewardLabels[rewardType] : undefined;
+    // Wave 62 C3: 데이터가 전설 등급을 선언한 유물(`rarity: 'legendary'`)은 "전설 유물"이라 말한다 — 엔진이 그 등급에서 뽑는다.
+    const rewardLabel = rewardType === 'relic' && outcome?.reward?.rarity === 'legendary'
+        ? MSG.CHAIN_PREVIEW_LEGENDARY_RELIC
+        : rewardType && !isGoldCost ? chainRewardLabels[rewardType] : undefined;
+    // Wave 62 C19: 실제 전투를 여는 선택(`combat`)은 전투라고 말하고, 보상은 승리했을 때의 것이라고 말한다 — 지거나 물러나면
+    //   단계가 그대로 남으므로 끝맺음 · 진행으로 보이면 안 된다.
+    if (outcome?.combat) {
+        return { text: MSG.CHAIN_PREVIEW_COMBAT(rewardLabel ?? null), tone: 'danger' };
+    }
     // 2026-10: 체인을 닫는 선택이 먼저다 — 보상 종류를 먼저 읽던 동안 골드를 주는 실패 선택 3개가
     //   "이야기 진행 · 골드 보상"으로 보였다. 실패는 진행도를 'failed'로 고정하고(사망 · 계승도 넘어간다)
     //   다른 갈래가 없으므로 "흐름이 달라질 수 있음"도 거짓이었다. 남는 보상은 끝맺음 뒤에 붙인다.
@@ -193,6 +202,46 @@ const getGeneralPreview = (outcome: EventOutcome | null): EventChoicePreview => 
     return { text: '결과는 선택 뒤에 드러남', tone: 'unknown' };
 };
 
+/**
+ * 이 선택이 걸 강화 — 엔진의 환산과 같은 모양(이야기 `combat_bonus`: `eventActions` 체인 보상, 사건 `buff`: `applyOutcomeBuff`
+ * 두 스키마). 강화를 걸지 않는 선택이면 null. 미리보기의 예측이 실제 정산과 같은지는
+ * `tests/event-preview-reward-contract.test.js`가 실제 훅과 대조한다.
+ */
+const getIncomingBuff = (event: PresentationEvent | null | undefined, outcome: EventOutcome | null): TempBuffValue | null => {
+    if (event?._chainId) {
+        const reward = outcome?.reward;
+        if (reward?.type !== 'combat_bonus') return null;
+        return { atk: (reward.atkMult || 1.3) - 1, def: 0, turn: reward.duration || 5 };
+    }
+    const buff = outcome?.buff;
+    if (!buff) return null;
+    const isMultSchema = buff.atkMult !== undefined || buff.defMult !== undefined || buff.turns !== undefined;
+    if (!isMultSchema) return { atk: 0, def: 0, turn: 0, ...buff, name: buff.name ?? null };
+    const atk = Math.max(0, (Number(buff.atkMult) || 1) - 1);
+    const def = Math.max(0, (Number(buff.defMult) || 1) - 1);
+    const turn = Math.max(0, Number(buff.turns) || 0);
+    return turn > 0 && (atk > 0 || def > 0) ? { atk, def, turn } : null;
+};
+
+/**
+ * Wave 62 C6: 강화 칸은 더 센 쪽을 남긴다(`mergeTempBuff`) — 지금 걸린 강화가 더 세면 이 선택의 강화는 붙지 않는다고 말한다.
+ * 지금 강화는 호출자가 넘긴다(이벤트 화면이 플레이어의 `tempBuff`를 넘긴다). 강화가 보상의 전부였으면 보상 어조를 거둔다.
+ */
+const withBuffKeptNotice = (
+    preview: EventChoicePreview,
+    event: PresentationEvent | null | undefined,
+    outcome: EventOutcome | null,
+    context: EventPreviewContext | undefined,
+): EventChoicePreview => {
+    const incoming = getIncomingBuff(event, outcome);
+    if (!incoming || !context?.activeBuff) return preview;
+    if (mergeTempBuff(context.activeBuff, incoming).kept !== 'current') return preview;
+    return {
+        text: `${preview.text} · ${MSG.EVENT_PREVIEW_BUFF_KEPT}`,
+        tone: preview.tone === 'reward' ? 'unknown' : preview.tone,
+    };
+};
+
 const getBoundedPreview = (outcome: EventOutcome | null): EventChoicePreview => {
     const text = formatEventText(outcome?.tradeoff) || '결과는 선택 뒤에 드러남';
     const tone = outcome?.tone;
@@ -201,7 +250,16 @@ const getBoundedPreview = (outcome: EventOutcome | null): EventChoicePreview => 
         : { text, tone: 'unknown' };
 };
 
-export const getEventChoicePreview = (event: PresentationEvent | null | undefined, choiceIndex: number): EventChoicePreview => {
+/** 미리보기가 읽는 지금 상태 — 이벤트 밖의 값(지금 걸린 강화)만 담는다. */
+export interface EventPreviewContext {
+    activeBuff?: TempBuffValue | null;
+}
+
+export const getEventChoicePreview = (
+    event: PresentationEvent | null | undefined,
+    choiceIndex: number,
+    context?: EventPreviewContext,
+): EventChoicePreview => {
     // 2026-09 Wave 27 N1: 리듀서가 이 선택을 거부하고 이벤트를 열어 두었으면 그 이유가 먼저다 —
     //   이벤트 화면에는 로그가 그려지지 않으므로 이 줄이 플레이어가 보는 유일한 응답이다.
     const feedback = event?.choiceFeedback;
@@ -221,7 +279,7 @@ export const getEventChoicePreview = (event: PresentationEvent | null | undefine
     if (hiddenEvent && choiceIndex >= 0 && choiceIndex < hiddenEvent.event.choices.length) {
         return { text: hiddenEvent.preview, tone: hiddenEvent.tone };
     }
-    if (event?.isCampfire) return formatCampfirePreview(outcome);
+    if (event?.isCampfire) return withBuffKeptNotice(formatCampfirePreview(outcome), event, outcome, context);
     if (event?.isScout) return scoutPreview[outcome?.scoutEffect ?? ''] || scoutPreview.unknown;
     if (event?.isBossGaugeChallenge) {
         return outcome?.gaugeEffect === 'challenge'
@@ -229,6 +287,6 @@ export const getEventChoicePreview = (event: PresentationEvent | null | undefine
             : { text: '이번에는 물러남 · 다음 탐험에 다시 선택', tone: 'unknown' };
     }
     if (event?.isBoundedEncounter) return getBoundedPreview(outcome);
-    if (event?._chainId) return getChainPreview(outcome);
-    return getGeneralPreview(outcome);
+    if (event?._chainId) return withBuffKeptNotice(getChainPreview(outcome), event, outcome, context);
+    return withBuffKeptNotice(getGeneralPreview(outcome), event, outcome, context);
 };

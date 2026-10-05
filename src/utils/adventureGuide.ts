@@ -2,6 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { getInventoryCapacity } from './inventoryCapacity';
 import { getBagCraftReadiness } from './bagCrafting';
 import { MSG } from '../data/messages.js';
+import { getVisibleRouteName } from './challengeRules.js';
 import type { FullStats, GameMap, Player, StatusId } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
@@ -534,7 +535,8 @@ export const getExpeditionPreparation = (
         missionStatus: tracker?.progressLabel || '임무 선택 전',
         goalLabel,
         focusQuests: tracker?.focusQuests || [],
-        destination: departure?.name || '이동 경로 없음',
+        // Wave 62 (원장 §61.2 A10): 길 잃은 여행은 출구가 어디로 이어지는지 말하지 않는다(지도 화면의 '미확인 경로'와 같다).
+        destination: departure?.name ? getVisibleRouteName(player, departure.name) : '이동 경로 없음',
         resourceLabel: `HP ${hpPercent}% · NRG ${mpPercent}%`,
         equipmentLabel: equipmentWarnings.length > 0 ? equipmentWarnings.join(' · ') : '주요 장비 확인',
         returnLabel: departure?.routePlan?.exitRule || tracker?.returnLabel || '임무 목표 후 마을 복귀',

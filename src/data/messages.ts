@@ -448,6 +448,8 @@ export const MSG = {
     MOVE_EXITS_BLIND: (count: number) => `이동할 수 있는 길이 ${count}갈래 있습니다. 어디로 이어지는지는 알 수 없습니다.`,
     MOVE_AREA_DANGER_BLIND: '이곳은 위험해 보입니다. 정예와 구역 보스를 주의하고, 생명이 부족하면 돌아가세요.',
     MOVE_AREA_DESC_BLIND: '짙은 안개에 가려 이곳이 어디인지 알 수 없습니다.',
+    BLIND_MAP_ROUTE_DESC: '어디로 이어지는지 알 수 없는 길입니다.',
+    BLIND_MAP_ROUTE_NAME: '미확인 경로',
     // 첫 방문 보상의 실제 지급 로그 — 길 잃은 여행(이름 숨김)이나 빈손의 시작(골드 절반)으로 데이터 문구와 달라질 때 쓴다.
     FIRST_VISIT_REWARD: (loc: string, gold: number, exp: number) => `${loc}에 처음 발을 들였습니다. 골드 ${gold} · 경험 ${exp}`,
     MOVE_ARRIVED: (loc: string) => `${loc}에 도착했습니다.`,
@@ -761,6 +763,14 @@ export const MSG = {
     CHAIN_PREVIEW_ENDS: '이야기가 여기서 끝남 · 다시 이어지지 않음',
     // 2026-10 Wave 62 C2: 이야기 능력치 보상은 이번 여정 범위다(`storyStatBonus` — 사망 · 계승에서 사라진다). '영구'라 부르지 않는다.
     CHAIN_PREVIEW_STAT_BONUS: '이번 여정 능력 상승',
+    // Wave 62 C3: 데이터가 전설 등급을 선언한 유물 보상(`reward.rarity === 'legendary'`)은 미리보기도 전설이라 말한다.
+    CHAIN_PREVIEW_LEGENDARY_RELIC: '전설 유물 보상',
+    // Wave 62 C19: 실제 전투를 여는 이야기 선택지(`outcome.combat`) — 보상 · 진행은 승리했을 때만 정산된다.
+    CHAIN_PREVIEW_COMBAT: (rewardLabel: string | null) => (
+        rewardLabel ? `전투 시작 · 승리하면 ${rewardLabel}` : '전투 시작 · 승리하면 이야기 진행'
+    ),
+    // Wave 62 C6: 지금 걸린 강화가 더 세서 이 선택의 강화가 붙지 않을 때 미리보기 끝에 붙인다(정산과 같은 `mergeTempBuff`).
+    EVENT_PREVIEW_BUFF_KEPT: '지금 걸린 강화가 더 강해 이 강화는 붙지 않음',
     // 2026-10: 일반 사건 미리보기 — 기력만 잃는 결과를 '생명 손실'로 말하던 결함.
     EVENT_PREVIEW_MP_LOSS: '기력 손실 위험',
     ELITE_ENEMY_PREFIX: '정예',

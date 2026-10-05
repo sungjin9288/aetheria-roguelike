@@ -14,6 +14,7 @@ import {
     getWeeklyMissionRows,
 } from './protocolCycle';
 import type { Player } from '../types/index.js';
+import { getVisibleLocationName } from './challengeRules.js';
 
 export interface Briefing {
     loc: string;
@@ -76,7 +77,8 @@ export function buildReturnBriefing(
         : (player.maxHp ?? 0);
 
     return {
-        loc: player.loc || '알 수 없는 곳',
+        // Wave 62 A10: 길 잃은 여행이면 귀환 브리핑도 위치를 숨긴다.
+        loc: getVisibleLocationName(player, player.loc) || '알 수 없는 곳',
         level: player.level || 1,
         hp: player.hp ?? 0,
         maxHp,

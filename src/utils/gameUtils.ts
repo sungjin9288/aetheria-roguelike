@@ -21,7 +21,7 @@ import { getSeasonArchive } from './seasonPassPresentation.js';
 import { formatSkillText } from './skillPresentation.js';
 import { countDiscoveredMaps } from './discoveredMaps.js';
 import { getCodexEntryName } from './codexIdentity.js';
-import { getGoldIncome } from './challengeRules.js';
+import { getGoldIncome, getVisibleLocationName } from './challengeRules.js';
 import {
     countDiscoveredSignatures,
     isSignatureName,
@@ -447,7 +447,8 @@ export const buildRunSummary = (player: Player, loc: string | undefined) => {
         bossKills:    currentRun.bossKills,
         relicsFound:  player.relics?.length || 0,
         activeTitle:  player.activeTitle || null,
-        loc:          loc || player.loc || '???',
+        // Wave 62 A10: 길 잃은 여행이면 사망 화면도 위치를 숨긴다(`getVisibleLocationName`).
+        loc:          getVisibleLocationName(player, loc || player.loc) || '???',
         prestigeRank: player.meta?.prestigeRank || 0,
         totalGold:    currentRun.totalGold,
         primaryBuild: buildProfile.primary.name,

@@ -2,7 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { getLocationVisual, type LocationVisual } from './locationVisuals.js';
 import { getRegionTheme, type RegionTheme } from './regionTheme.js';
-import type { GameMap, Player } from '../types/index.js';
+import type { ExpeditionSummary, GameMap, Player } from '../types/index.js';
 
 /**
  * 도전 규칙(`BALANCE.CHALLENGE_MODIFIERS`)의 엔진 판정 — 2026-10 Wave 62 (원장 §61.2 A9 · A10, §61.4 C1 · C15 · C16,
@@ -77,4 +77,22 @@ export const getVisibleRegionTheme = (
     mapData: GameMap | null | undefined,
 ): RegionTheme | null => (
     isBlindMap(player) ? null : getRegionTheme(player?.loc, mapData)
+);
+
+/** 원정 기록(귀환 카드 · 지난 원정 줄)의 지역 이름 — 길 잃은 여행이면 자리표시. 저장된 기록은 그대로 두고 그릴 때만 가린다. */
+export const getVisibleExpeditionSummary = (player: ChallengeHolder, summary: ExpeditionSummary): ExpeditionSummary => (
+    isBlindMap(player)
+        ? {
+            ...summary,
+            origin: MSG.BLIND_MAP_LOCATION,
+            destination: MSG.BLIND_MAP_LOCATION,
+            lastLocation: MSG.BLIND_MAP_LOCATION,
+            returnLocation: MSG.BLIND_MAP_LOCATION,
+        }
+        : summary
+);
+
+/** 출발 준비의 목적지(다음으로 걸을 출구) — 길 잃은 여행이면 출구가 어디로 이어지는지 말하지 않는다. */
+export const getVisibleRouteName = (player: ChallengeHolder, routeName: string): string => (
+    isBlindMap(player) ? MSG.BLIND_MAP_ROUTE_NAME : routeName
 );
