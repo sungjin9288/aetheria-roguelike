@@ -104,6 +104,35 @@ test('C9: 한 여정 안에서 수락 → 종말의 기사 처치(실제 전투 
     assert.ok(claimed.player.stats.claimedQuestIds.includes(154));
 });
 
+// ── Wave 63: 151과 154는 같은 레벨에서 받고 한 번의 처치로 함께 진행된다 ─────────────────────
+
+test('Wave 63: 151 · 154는 같은 기사를 목표로 하고 같은 레벨에 열린다 — Lv73에 둘 다 받아 한 번의 처치로 둘 다 완료', () => {
+    const quest151 = QUESTS.find((quest) => quest.id === 151);
+    assert.equal(quest151.target, QUEST_154.target);
+    assert.equal(quest151.location, QUEST_154.location);
+    // 75이던 동안 Lv73 ~ 74에 151로 기사를 먼저 잡으면 154는 그 여정에서 진행할 수 없었다(기사는 여정당 한 번).
+    assert.equal(QUEST_154.minLv, quest151.minLv, '같은 수락 레벨');
+
+    let state = accept(baseState({ level: quest151.minLv }), 151);
+    state = accept(state, 154);
+    const player = { ...state.player, loc: BOSS_FIELD };
+    const boss = spawnEnemy(DB.MAPS[BOSS_FIELD], player, [], { addLog() {} }, { forceAreaBoss: true, rng: () => 0.5 }).mStats;
+    state = {
+        ...state,
+        player,
+        gameState: GS.COMBAT,
+        enemy: { ...boss, hp: 1, pattern: { guardChance: 0, heavyChance: 0 } },
+        combatTurn: 0,
+        combatReceipt: null,
+    };
+    state = gameReducer(state, {
+        type: AT.RESOLVE_COMBAT_ACTION,
+        payload: { kind: 'attack', expectedTurn: 0, seed: 3, now: 1_700_000_000_000 },
+    });
+    const claimable = getClaimableQuestEntries(state.player).map((entry) => entry.id);
+    assert.ok(claimable.includes(151) && claimable.includes(154), `처치 한 번으로 둘 다 수령 가능: ${claimable}`);
+});
+
 // ── C10 ─────────────────────────────────────────────────────────────────
 
 test('C10: "새 칭호 획득"을 말하는 임무는 칭호를 주고, 임무 보상 칭호는 모두 정의 · 효과를 가진다', () => {

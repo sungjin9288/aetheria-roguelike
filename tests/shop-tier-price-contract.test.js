@@ -33,6 +33,7 @@ import { renderStatic, makePlayerFixture } from './helpers/render.ts';
  */
 
 const FORTRESS = '북부 요새';
+const CONSTANTS_START = '시작의 마을';
 const KINGDOM = '황금 왕국';
 const clone = (value) => structuredClone(value);
 
@@ -135,6 +136,7 @@ test('북부 요새: 재고 · 오늘의 할인 · 주간 특별 상품이 어�
     assert.ok(catalog.every((item) => tierOf(item) <= 3), '재고');
     assert.ok(catalog.some((item) => tierOf(item) === 3), '3등급까지는 판다');
     let weeklySeen = 0;
+    let higherOffered = 0;
     for (const iso of ROTATION_DAYS) {
         withDate(iso, () => {
             for (const level of LEVELS) {
@@ -147,7 +149,9 @@ test('북부 요새: 재고 · 오늘의 할인 · 주간 특별 상품이 어�
                     assert.ok(tierOf(special) <= 3, `${iso} Lv${level}: 주간 ${special.name} T${tierOf(special)}`);
                 }
                 // 구매 리듀서가 확인하는 제안도 같은 규칙이다 — 화면에 없는 상위 등급 할인은 살 수 없다.
-                const unrestricted = getDailyDeals(level, '').items.filter((item) => tierOf(item) > 3);
+                //   (대조군은 같은 날 6등급 상점의 할인 — Wave 63부터 위치 없는 호출은 판매 등급 1이라 대조가 되지 않는다.)
+                const unrestricted = getDailyDeals(level, '허공의 섬').items.filter((item) => tierOf(item) > 3);
+                if (level >= 20) higherOffered += unrestricted.length;
                 for (const item of unrestricted) {
                     assert.equal(getCanonicalShopOffer('daily', item.name, level, FORTRESS), null, `${iso}: ${item.name}`);
                 }
@@ -155,6 +159,7 @@ test('북부 요새: 재고 · 오늘의 할인 · 주간 특별 상품이 어�
         });
     }
     assert.ok(weeklySeen > 0, '주간 특별 상품은 3등급으로라도 나온다');
+    assert.ok(higherOffered > 0, '대조군: 다른 상점은 같은 날 4등급 이상 할인을 판다');
 });
 
 test('북부 요새: 리듀서는 4등급 이상 재고 구매를 거부하고 3등급은 판다 (실제 BUY_SHOP_ITEM)', () => {
@@ -212,7 +217,8 @@ test('황금 왕국: 오늘의 할인 · 주간 특별 상품도 할증을 거�
         withDate(iso, () => {
             const level = 40;
             const deals = getDailyDeals(level, KINGDOM).items;
-            const plain = getDailyDeals(level, '').items;
+            // 같은 판매 등급(6)을 기본가로 파는 허공의 섬과 같은 날 같은 상품이다 — 가격만 다르다.
+            const plain = getDailyDeals(level, '허공의 섬').items;
             assert.deepEqual(deals.map((item) => item.name), plain.map((item) => item.name), '같은 날 같은 상품(가격만 다르다)');
             for (const deal of deals) {
                 const base = byName(deal.name).price || 0;
@@ -253,10 +259,40 @@ test('황금 왕국: 판매가는 그대로다 — 같은 물건을 다른 상�
     assert.equal(sellAt(KINGDOM), sellAt('허공의 섬'));
 });
 
-// ── 다른 상점은 그대로 ─────────────────────────────────────────────────────
+// ── 모든 상점: 할인 · 주간 특별 상품도 판매 등급 안 (Wave 63) ─────────────────────────────
 
-test('다른 상점은 그대로다 — 판매 등급 · 구매가 · 할인 · 주간 특별 상품이 선언 이전 규칙과 같다', () => {
+/** 판매 등급을 보지 않던 할인 후보 — 플레이어 레벨 규칙만(이전 규칙). 판매 등급이 실제로 무언가를 거르는지 대조군으로 쓴다. */
+const dealTierByLevel = (level) => (level < 10 ? 2 : level < 20 ? 3 : level < 35 ? 4 : 5);
+
+test('모든 상점: 오늘의 할인 · 주간 특별 상품이 그 상점의 판매 등급(머리말 "판매 등급 N")을 넘지 않는다', () => {
     assert.ok(OTHER_SHOPS.length >= 3, OTHER_SHOPS.join(', '));
+    let binding = 0;
+    for (const loc of SAFE_SHOPS) {
+        const shopTier = getShopMaxTier(loc);
+        for (const iso of ROTATION_DAYS.slice(0, 30)) {
+            withDate(iso, () => {
+                for (const level of LEVELS) {
+                    for (const deal of getDailyDeals(level, loc).items) {
+                        assert.ok(tierOf(deal) <= shopTier, `${loc} ${iso} Lv${level}: ${deal.name} ${tierOf(deal)}등급 > 판매 등급 ${shopTier}`);
+                        assert.ok(tierOf(deal) <= dealTierByLevel(level), `${loc}: 레벨 규칙도 그대로`);
+                    }
+                    const special = getWeeklySpecial(level, loc);
+                    if (special) assert.ok(tierOf(special) <= shopTier, `${loc} ${iso} Lv${level}: 주간 ${special.name}`);
+                    if (dealTierByLevel(level) > shopTier) binding += 1;
+                }
+            });
+        }
+    }
+    // 대조군: 판매 등급이 레벨 규칙보다 낮은 상점 · 레벨이 실제로 있다(시작의 마을 1 · 여행자의 쉼터 3 · 사막 오아시스 4).
+    assert.ok(binding > 0, '판매 등급이 할인 후보를 거르는 경우가 있다');
+    for (const iso of ROTATION_DAYS.slice(0, 14)) {
+        withDate(iso, () => {
+            assert.equal(getWeeklySpecial(60, CONSTANTS_START), null, '판매 등급 1인 시작의 마을에는 3등급 이상 주간 특별 상품이 없다');
+        });
+    }
+});
+
+test('다른 상점은 판매 등급 · 구매가가 선언 이전 규칙과 같고, 판매 등급이 6인 상점끼리는 같은 날 같은 할인이다', () => {
     for (const loc of [...OTHER_SHOPS, KINGDOM]) {
         assert.equal(getShopMaxTier(loc), derivedTier(MAPS[loc]), `${loc}: 판매 등급`);
     }
@@ -266,14 +302,16 @@ test('다른 상점은 그대로다 — 판매 등급 · 구매가 · 할인 · 
             assert.equal(getShopBuyPrice(loc, item.price || 0), item.price || 0, `${loc}: ${item.name}`);
             assert.equal(getCanonicalShopOffer('stock', item.name, 60, loc)?.price, item.price || 0);
         }
-        for (const iso of ROTATION_DAYS.slice(0, 30)) {
-            withDate(iso, () => {
-                for (const level of LEVELS) {
-                    assert.deepEqual(getDailyDeals(level, loc), getDailyDeals(level, ''), `${loc} ${iso} Lv${level}`);
-                    assert.deepEqual(getWeeklySpecial(level, loc), getWeeklySpecial(level, ''), `${loc} ${iso} Lv${level}`);
-                }
-            });
-        }
+    }
+    const tierSix = SAFE_SHOPS.filter((loc) => getShopMaxTier(loc) === 6 && getShopPriceMult(loc) === 1);
+    assert.ok(tierSix.length >= 1, tierSix.join(', '));
+    for (const iso of ROTATION_DAYS.slice(0, 30)) {
+        withDate(iso, () => {
+            for (const level of LEVELS) {
+                const names = (loc) => getDailyDeals(level, loc).items.map((item) => item.name);
+                for (const loc of tierSix) assert.deepEqual(names(loc), names(tierSix[0]), `${loc} ${iso} Lv${level}`);
+            }
+        });
     }
     const state = shopState('허공의 섬');
     const potion = byName('하급 체력 물약');

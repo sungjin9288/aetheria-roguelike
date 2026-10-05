@@ -964,7 +964,7 @@ import { readFile, readdir } from 'node:fs/promises';
       // Wave 6 X3: 소스 정규식(`Math.floor(item.price * 0.9)`) 가드 → 동작 단언.
       //   seededShuffle 제네릭화로 표현식이 `(item.price ?? 0)`로 바뀌어도 할인 계약은 동일.
       const { getDailyDeals } = await import('../src/utils/shopRotation.js');
-      const { items } = getDailyDeals(20);
+      const { items } = getDailyDeals(20, '허공의 섬');
       assert.ok(items.length > 0, '일일 딜 항목 존재');
       for (const item of items) {
           assert.ok(typeof item.originalPrice === 'number', 'originalPrice 보존');
@@ -975,8 +975,10 @@ import { readFile, readdir } from 'node:fs/promises';
 
   test('cycle 415: getWeeklySpecial 동작 보존 (originalPrice / price)', async () => {
       const { getWeeklySpecial } = await import('../src/utils/shopRotation.js');
-      const result = getWeeklySpecial(20);
-      if (result === null) return; // 데이터 없는 경우는 회귀 가드 면제
+      // 2026-10 Wave 63: 할인 · 주간 특별 상품도 상점의 판매 등급 안에서 나온다 — 위치 없이 부르면 판매 등급 1이라 주간 특별
+      //   상품(3등급 이상)이 없어 이 가드가 공허해진다. 기본가로 6등급까지 파는 허공의 섬에서 잰다.
+      const result = getWeeklySpecial(20, '허공의 섬');
+      assert.ok(result, '주간 특별 상품 존재');
       assert.ok(typeof result.originalPrice === 'number', 'originalPrice 보존');
       assert.ok(typeof result.price === 'number', 'price 보존');
       assert.equal(result.price, Math.floor(result.originalPrice * 0.85),

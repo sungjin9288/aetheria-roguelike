@@ -68,7 +68,7 @@ export const getShopMaxTier = (location: string) => {
     return declaredCap === null ? derivedTier : Math.min(derivedTier, declaredCap);
 };
 
-/** 지역 데이터가 선언한 판매 등급 상한(`shopMaxTier`) — 없으면 null. 오늘의 할인 · 주간 특별 상품도 이 등급 위로는 팔지 않는다. */
+/** 지역 데이터가 선언한 판매 등급 상한(`shopMaxTier`) — 없으면 null. `getShopMaxTier`가 레벨 규칙 위에 건다. */
 function getDeclaredShopTierCap(location: string): number | null {
     const cap = DB.MAPS?.[location]?.shopMaxTier;
     return typeof cap === 'number' && Number.isFinite(cap) ? cap : null;
@@ -89,10 +89,12 @@ export const getShopBuyPrice = (location: string, basePrice: number): number => 
     return mult === 1 ? basePrice : Math.round(basePrice * mult);
 };
 
-const passesDeclaredShopTierCap = (location: string, item: { tier?: number }) => {
-    const cap = getDeclaredShopTierCap(location);
-    return cap === null || (item.tier || 1) <= cap;
-};
+/**
+ * 이 상점이 파는 등급인가 — 재고 · 오늘의 할인 · 주간 특별 상품이 모두 이 상점의 판매 등급(`getShopMaxTier`, 상점 머리말의
+ * "판매 등급 N") 안에서 나온다. 2026-10 Wave 63 (원장 §63.8): 선언한 상한이 있는 상점(북부 요새, Wave 62 C20)만 거르던 동안
+ * 판매 등급 1인 시작의 마을이 Lv25 플레이어에게 4등급 할인 · 주간 특별 상품을 팔았다 — 상점 하나에 두 규칙이었다.
+ */
+const passesShopTier = (location: string, item: { tier?: number }) => (item.tier || 1) <= getShopMaxTier(location);
 
 // 병합(2026-09): 03e8b88에서 "파일 내부 전용"이라 export를 내렸으나, Codex가 추가한
 //   contentReachability / equipmentEconomyAudit / equipmentBaseIdentity가 이 카탈로그를
@@ -129,7 +131,7 @@ const buildDailyDealOffers = (playerLevel: number, location: string) => {
         ...(DB.ITEMS.weapons || []),
         ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
         ...(DB.ITEMS.consumables || []),
-    ].filter((item) => (item.tier || 1) <= maxTier && passesDeclaredShopTierCap(location, item));
+    ].filter((item) => (item.tier || 1) <= maxTier && passesShopTier(location, item));
 
     // cycle 436: 일일 딜 마커 제거 — production read 0건이던 dead 출력
     //   (cycle 415 주간 특별 마커 정리 paired completion). cycle 355는 회귀
@@ -171,7 +173,7 @@ const buildWeeklySpecialOffer = (playerLevel: number, location: string) => {
     const rareItems = [
         ...(DB.ITEMS.weapons || []),
         ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
-    ].filter((item) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier && passesDeclaredShopTierCap(location, item));
+    ].filter((item) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier && passesShopTier(location, item));
 
     if (rareItems.length === 0) return null;
 

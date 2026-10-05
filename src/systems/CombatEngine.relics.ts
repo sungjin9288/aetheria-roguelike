@@ -2,6 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { getMirrorEffects } from './mirrorUpgrades';
 import { getEffectiveMaxHp } from './vitals.js';
+import { applyTempBuffRule } from './tempBuffMerge.js';
 import type { Player, Relic, Monster, RelicSynergy } from '../types/index.js';
 import type { LootLog } from './CombatEngine.loot.js';
 
@@ -66,7 +67,8 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
             return reviveMaxHpCache;
         };
         // cycle 162: phoenix_revive atkBuff tempBuff — 부활 분기에서 set, return에 합류.
-        let phoenixTempBuff: Player['tempBuff'] | null = null;
+        let phoenixTempBuff: NonNullable<Player['tempBuff']> | null = null;
+        let phoenixLabel = '';
         // 2026-10 Wave 62: 부활석 차감은 "이번 호출에서 부활석으로 부활했는가"만 본다. `combatFlags.reviveTokenUsed`는
         //   전투가 끝날 때까지 남는 신호라, 그 플래그로 차감하던 동안 부활석 부활 뒤 같은 전투의 적 공격마다(치명상이
         //   아니어도) 부활석이 하나씩 더 사라지고 기력이 50%로 다시 찼다(3개 → 2 → 1).
@@ -122,6 +124,7 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
                         turn: duration,
                         name: 'phoenix_revive',
                     };
+                    phoenixLabel = phoenixRelic.name || '';
                 }
                 logs.push({ type: 'event', text: MSG.RELIC_PHOENIX_REVIVE(nextHp, Math.round(atkBuff * 100), duration) });
             } else if (mirrorEffects.reviveEnabled && !player.mirrorReviveUsed) {
@@ -162,8 +165,14 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
             }
         }
 
-        const updatedPlayer: Player = { ...player, hp: nextHp, combatFlags: flags };
-        if (phoenixTempBuff) updatedPlayer.tempBuff = phoenixTempBuff;
+        let updatedPlayer: Player = { ...player, hp: nextHp, combatFlags: flags };
+        // 2026-10 Wave 63 (원장 §63.8): 불사조의 공격 강화도 강화 칸 규칙(Wave 62 C6 — 더 센 쪽이 남는다)을 거친다.
+        //   그대로 대입하던 동안 광폭화 · 영웅의 물약 같은 더 센 강화가 부활 순간 +N% 강화로 덮여 약해졌다.
+        if (phoenixTempBuff) {
+            const applied = applyTempBuffRule(updatedPlayer, phoenixTempBuff, phoenixLabel);
+            updatedPlayer = applied.player;
+            if (applied.notice) logs.push({ type: 'info', text: applied.notice });
+        }
         // cycle 186: reviveTokens 소비 + MP 50% 회복 (token 사용 시).
         if (reviveTokenSpent) {
             updatedPlayer.reviveTokens = Math.max(0, Number(player.reviveTokens) || 0) - 1;
