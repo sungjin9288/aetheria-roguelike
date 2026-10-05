@@ -124,6 +124,7 @@ const getQuestRouteLabel = (quest: ExpeditionQuestDefinition | undefined, target
     if (quest?.type === 'build_victory') return quest?.buildLabel || '빌드 전투';
     if (quest?.type === 'discovery_count') return '미답 권역';
     if (quest?.type === 'explore_count') return '탐험 루프';
+    if (quest?.type === 'gold_earned') return MSG.QUEST_ROUTE_GOLD;
     if (quest?.type === 'survive_low_hp') return '위험 교전';
     return quest?.target || '현재 권역';
 };
@@ -149,6 +150,7 @@ const getQuestNextStep = (entry: ExpeditionQuestEntry, targetMaps: string[]) => 
     if (quest.type === 'build_victory') return `${quest.buildLabel || '지정 빌드'} ${remaining}승`;
     if (quest.type === 'discovery_count') return `발견 ${remaining}회 확보`;
     if (quest.type === 'explore_count') return `탐험 ${remaining}회 진행`;
+    if (quest.type === 'gold_earned') return MSG.QUEST_NEXT_STEP_GOLD(remaining);
     if (quest.type === 'survive_low_hp') return `저체력 승리 ${remaining}회`;
     return `${quest.target || '목표'} ${remaining}회 진행`;
 };
@@ -163,6 +165,7 @@ const getQuestReturnLabel = (entry: ExpeditionQuestEntry, targetMaps: string[]) 
     if (quest.type === 'bounty_count') return '현상금';
     if (quest.type === 'build_victory') return '빌드';
     if (quest.type === 'discovery_count') return '발견';
+    if (quest.type === 'gold_earned') return MSG.QUEST_RETURN_GOLD;
     return '계속 진행';
 };
 

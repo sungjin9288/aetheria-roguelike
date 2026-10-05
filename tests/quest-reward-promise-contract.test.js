@@ -19,10 +19,13 @@ import { calculateFullStats } from '../src/utils/statsCalculator.ts';
  *
  * C9 — 임무 154 "종말의 기사 3회 처치": 종말의 기사는 종말의 전장의 구역 보스라 한 여정에 한 번만 나오고(첫 처치가
  *   `areaBossDefeated`를 세운다), 임무는 여정이 끝나면 사라진다 — 진행도가 1/3을 넘을 수 없었다. 소유자 결정은 목표 1회.
+ *   그 결과 151과 목표가 같아졌고, Wave 64(소유자 결정 "각각의 목표")가 기사 1회를 151에 남기고 154를 파멸의 기사 사냥으로
+ *   바꿨다(tests/quest-distinct-objective-contract.test.js). 아래 C9 테스트는 기사 1회를 맡은 151을 본다.
  * C10 — 임무 200 "50번 탐색 후 새 칭호 획득": 보상에 칭호가 없었다. 소유자 결정은 칭호를 준다 — 새 칭호 '대륙의 여행자'.
  *   그 칭호는 임무 수령으로만 열린다(다른 조건으로 자동 해금되는 같은 이름의 칭호가 없다).
  */
 
+const QUEST_151 = QUESTS.find((quest) => quest.id === 151);
 const QUEST_154 = QUESTS.find((quest) => quest.id === 154);
 const QUEST_200 = QUESTS.find((quest) => quest.id === 200);
 const NEW_TITLE = '대륙의 여행자';
@@ -48,39 +51,39 @@ const claim = (state, questId) => gameReducer(state, { type: AT.CLAIM_QUEST_REWA
 
 // ── C9 ──────────────────────────────────────────────────────────────────
 
-test('C9: 임무 154의 목표는 1회이고 설명이 목표 횟수와 어긋나지 않는다', () => {
-    assert.ok(QUEST_154);
-    assert.equal(QUEST_154.goal, 1);
-    assert.equal(QUEST_154.target, '종말의 기사');
-    assert.equal(QUEST_154.location, BOSS_FIELD);
-    assert.ok(QUEST_154.desc.includes(QUEST_154.target));
-    const counted = QUEST_154.desc.match(/(\d+)\s*회/);
-    assert.ok(!counted || Number(counted[1]) === QUEST_154.goal, `설명의 횟수(${counted?.[1]})가 목표와 같아야 한다`);
-    assert.equal(QUEST_154.reward.title, '종말의 정복자');
+test('C9: 종말의 기사 임무(151)의 목표는 1회이고 설명이 목표 횟수와 어긋나지 않는다', () => {
+    assert.ok(QUEST_151);
+    assert.equal(QUEST_151.goal, 1);
+    assert.equal(QUEST_151.target, '종말의 기사');
+    assert.equal(QUEST_151.location, BOSS_FIELD);
+    assert.ok(QUEST_151.desc.includes(QUEST_151.target));
+    const counted = QUEST_151.desc.match(/(\d+)\s*회/);
+    assert.ok(!counted || Number(counted[1]) === QUEST_151.goal, `설명의 횟수(${counted?.[1]})가 목표와 같아야 한다`);
+    assert.equal(QUESTS.filter((quest) => quest.target === '종말의 기사').length, 1, 'Wave 64: 기사를 목표로 하는 임무는 151 하나');
 });
 
 test('C9: 종말의 기사는 구역 보스다 — 한 여정에 한 번만 나오므로 목표가 1을 넘으면 완료할 수 없다', () => {
     const map = DB.MAPS[BOSS_FIELD];
-    assert.equal(map.boss, QUEST_154.target, '종말의 전장의 구역 보스');
-    assert.ok(!(map.monsters || []).includes(QUEST_154.target), '일반 조우에는 없다');
+    assert.equal(map.boss, QUEST_151.target, '종말의 전장의 구역 보스');
+    assert.ok(!(map.monsters || []).includes(QUEST_151.target), '일반 조우에는 없다');
     const player = { ...structuredClone(INITIAL_STATE.player), level: 75, loc: BOSS_FIELD };
     const first = spawnEnemy(map, player, [], { addLog() {} }, { forceAreaBoss: true, rng: () => 0.5 }).mStats;
-    assert.equal(first.baseName, QUEST_154.target, '처치 전에는 도전으로 나온다');
-    const defeated = { ...player, stats: { ...player.stats, areaBossDefeated: { [QUEST_154.target]: true } } };
+    assert.equal(first.baseName, QUEST_151.target, '처치 전에는 도전으로 나온다');
+    const defeated = { ...player, stats: { ...player.stats, areaBossDefeated: { [QUEST_151.target]: true } } };
     for (const roll of [0, 0.25, 0.5, 0.75, 0.99]) {
         const again = spawnEnemy(map, defeated, [], { addLog() {} }, { forceAreaBoss: true, rng: () => roll }).mStats;
-        assert.notEqual(again.baseName, QUEST_154.target, '같은 여정에서 다시 나오지 않는다');
+        assert.notEqual(again.baseName, QUEST_151.target, '같은 여정에서 다시 나오지 않는다');
     }
 });
 
-test('C9: 한 여정 안에서 수락 → 종말의 기사 처치(실제 전투 전이) → 완료 → 수령(칭호)까지 이어진다', () => {
-    let state = accept(baseState({ level: 75 }), 154);
-    assert.equal(state.player.quests.find((quest) => quest.id === 154).progress, 0);
+test('C9: 한 여정 안에서 수락 → 종말의 기사 처치(실제 전투 전이) → 완료 → 수령까지 이어진다', () => {
+    let state = accept(baseState({ level: 75 }), 151);
+    assert.equal(state.player.quests.find((quest) => quest.id === 151).progress, 0);
 
     // 종말의 전장에서 구역 보스 도전 — 스폰은 실제 spawnEnemy, 처치는 실제 전투 1턴 리듀서 전이.
     const player = { ...state.player, loc: BOSS_FIELD };
     const boss = spawnEnemy(DB.MAPS[BOSS_FIELD], player, [], { addLog() {} }, { forceAreaBoss: true, rng: () => 0.5 }).mStats;
-    assert.equal(boss.baseName, QUEST_154.target);
+    assert.equal(boss.baseName, QUEST_151.target);
     state = {
         ...state,
         player,
@@ -94,26 +97,24 @@ test('C9: 한 여정 안에서 수락 → 종말의 기사 처치(실제 전투 
         payload: { kind: 'attack', expectedTurn: 0, seed: 3, now: 1_700_000_000_000 },
     });
     assert.notEqual(state.gameState, GS.COMBAT, '처치로 전투가 끝난다');
-    assert.equal(state.player.stats.areaBossDefeated?.[QUEST_154.target], true);
-    const progress = state.player.quests.find((quest) => quest.id === 154)?.progress;
+    assert.equal(state.player.stats.areaBossDefeated?.[QUEST_151.target], true);
+    const progress = state.player.quests.find((quest) => quest.id === 151)?.progress;
     assert.equal(progress, 1);
-    assert.ok(getClaimableQuestEntries(state.player).some((entry) => entry.id === 154), '수령 가능');
+    assert.ok(getClaimableQuestEntries(state.player).some((entry) => entry.id === 151), '수령 가능');
 
-    const claimed = claim({ ...state, gameState: GS.IDLE, player: { ...state.player, loc: CONSTANTS.START_LOCATION } }, 154);
-    assert.ok(claimed.player.titles.includes('종말의 정복자'));
-    assert.ok(claimed.player.stats.claimedQuestIds.includes(154));
+    const claimed = claim({ ...state, gameState: GS.IDLE, player: { ...state.player, loc: CONSTANTS.START_LOCATION } }, 151);
+    assert.ok(claimed.player.stats.claimedQuestIds.includes(151));
 });
 
-// ── Wave 63: 151과 154는 같은 레벨에서 받고 한 번의 처치로 함께 진행된다 ─────────────────────
+// ── Wave 63 · 64: 151과 154는 같은 레벨에 열리고 목표가 다르다 ───────────────────────────────
 
-test('Wave 63: 151 · 154는 같은 기사를 목표로 하고 같은 레벨에 열린다 — Lv73에 둘 다 받아 한 번의 처치로 둘 다 완료', () => {
-    const quest151 = QUESTS.find((quest) => quest.id === 151);
-    assert.equal(quest151.target, QUEST_154.target);
-    assert.equal(quest151.location, QUEST_154.location);
-    // 75이던 동안 Lv73 ~ 74에 151로 기사를 먼저 잡으면 154는 그 여정에서 진행할 수 없었다(기사는 여정당 한 번).
-    assert.equal(QUEST_154.minLv, quest151.minLv, '같은 수락 레벨');
+test('Wave 63 · 64: 151 · 154는 같은 수락 레벨이고(Wave 63) 목표가 다르다(Wave 64) — 기사 처치는 154를 진행시키지 않는다', () => {
+    assert.equal(QUEST_154.minLv, QUEST_151.minLv, '같은 수락 레벨');
+    assert.notEqual(QUEST_154.target, QUEST_151.target, '다른 목표');
+    assert.equal(QUEST_154.location, QUEST_151.location, '같은 전장');
+    assert.equal(QUEST_154.reward.title, '종말의 정복자');
 
-    let state = accept(baseState({ level: quest151.minLv }), 151);
+    let state = accept(baseState({ level: QUEST_151.minLv }), 151);
     state = accept(state, 154);
     const player = { ...state.player, loc: BOSS_FIELD };
     const boss = spawnEnemy(DB.MAPS[BOSS_FIELD], player, [], { addLog() {} }, { forceAreaBoss: true, rng: () => 0.5 }).mStats;
@@ -130,7 +131,9 @@ test('Wave 63: 151 · 154는 같은 기사를 목표로 하고 같은 레벨에 
         payload: { kind: 'attack', expectedTurn: 0, seed: 3, now: 1_700_000_000_000 },
     });
     const claimable = getClaimableQuestEntries(state.player).map((entry) => entry.id);
-    assert.ok(claimable.includes(151) && claimable.includes(154), `처치 한 번으로 둘 다 수령 가능: ${claimable}`);
+    assert.ok(claimable.includes(151), `기사 처치로 151 수령 가능: ${claimable}`);
+    assert.ok(!claimable.includes(154), '154는 파멸의 기사 사냥이다');
+    assert.equal(state.player.quests.find((quest) => quest.id === 154).progress, 0);
 });
 
 // ── C10 ─────────────────────────────────────────────────────────────────

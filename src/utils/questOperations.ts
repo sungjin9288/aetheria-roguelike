@@ -5,6 +5,7 @@ import type { QuestProgressState } from '../types/player.js';
 import type { GameMap } from '../types/map.js';
 import { MAPS } from '../data/maps.js';
 import { BALANCE } from '../data/constants.js';
+import { MSG } from '../data/messages.js';
 import { getInventoryCapacity } from './inventoryCapacity';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 import type { TraitProfile } from './runProfile.js';
@@ -144,7 +145,7 @@ const getBeginnerQuestEffortScore = (quest: Quest, playerLevel: number) => {
 const getQuestLane = (quest: Quest, resonance: TraitQuestResonance, maps: Record<string, GameMap>): QuestLane => {
     if (isStoryQuest(quest)) return 'story';
     if (quest?.buildTag || quest?.type === 'build_victory' || (quest?.type === 'survive_low_hp' && resonance.score >= 3)) return 'build';
-    if (quest?.target === 'level' || ['craft', 'combat_count', 'explore_count', 'discovery_count', 'bounty_count'].includes(quest?.type ?? '')) return 'growth';
+    if (quest?.target === 'level' || ['craft', 'combat_count', 'explore_count', 'discovery_count', 'bounty_count', 'gold_earned'].includes(quest?.type ?? '')) return 'growth';
     if (isBossQuest(quest, maps)) return 'boss';
     return 'hunt';
 };
@@ -185,6 +186,7 @@ const getOperationPlanObjective = (quest: Quest, targetMaps: string[]) => {
             : `누적 처치 ${quest.goal}회 달성`;
     }
     if (['explore_count', 'discovery_count'].includes(quest?.type ?? '')) return '탐험 루트 확장';
+    if (quest?.type === 'gold_earned') return MSG.QUEST_OBJECTIVE_GOLD(Number(quest.goal) || 0);
     if (quest?.target) return `${quest.target} 추적`;
     return '임무 목표 추적';
 };
@@ -208,6 +210,7 @@ const getOperationRouteLabel = (quest: Quest, targetMaps: string[]) => {
     if (quest?.type === 'craft') return '제작과 보급 경로';
     if (quest?.type === 'combat_count') return quest.target === 'bossKills' ? '보스 권역' : '모든 권역';
     if (['explore_count', 'discovery_count'].includes(quest?.type ?? '')) return '미답사 루트';
+    if (quest?.type === 'gold_earned') return MSG.QUEST_ROUTE_GOLD;
     return '현재 권역';
 };
 
@@ -295,6 +298,7 @@ const getOperationExtractionRule = (quest: Quest, player: Player, lane: QuestLan
         const label = quest.target === 'bossKills' ? '보스 처치' : '누적 처치';
         return `${label} ${quest.goal}회 달성 후 마을 귀환`;
     }
+    if (quest?.type === 'gold_earned') return MSG.QUEST_EXTRACTION_GOLD(Number(quest.goal) || 0);
     if (targetMaps[0]) return `${targetMaps[0]} 목표 ${quest.goal || 1}회 후 귀환`;
     if (lane === 'build') return '보상 장비를 확인하고 장비 조합 점검';
     return '목표 달성 후 마을 회수';
