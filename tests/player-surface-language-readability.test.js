@@ -205,7 +205,9 @@ test('EquipmentPanel: "양손 무기(2피스)" 안내는 세트 카탈로그를 
 });
 
 test('ShopPanel: 마을 상점 한국어 상거래 어휘가 실제로 렌더링된다', () => {
-    const player = makePlayerFixture({ level: 40, gold: 100000, job: '전사' });
+    // 2026-10 Wave 63: 할인 · 주간 특별 상품도 상점의 판매 등급 안에서 나온다 — 시작의 마을(판매 등급 1)에는 3등급 이상인
+    //   주간 특별 상품이 없으므로 6등급까지 파는 허공의 섬에서 어휘를 확인한다.
+    const player = makePlayerFixture({ level: 40, gold: 100000, job: '전사', loc: '허공의 섬' });
     const html = renderStatic(createElement(ShopPanel, {
         player, actions: NOOP_ACTIONS, shopItems: [], setGameState: () => {}, stats: null, onOpenArchiveConsole: () => {},
     }));
