@@ -15,7 +15,7 @@ import { getChainEventForLoc } from '../../data/eventChains';
 import { canInvestigateTown } from '../../utils/townInvestigation';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../../utils/scoutEvents';
-import { isAreaBossUndefeated, isBossGaugeFull, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
+import { isAreaBossUndefeated, isBossGaugeFull, isBossGaugeCardSuppressed, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
 import type { GameMap, Player } from '../../types';
 import type { GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -175,7 +175,7 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             const mapData = DB.MAPS[player.loc!];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
             // 내러티브 이벤트 체인 체크 (AI 이벤트보다 우선)
-            const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps);
+            const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps, player.stats?.abyssFloor);
             if (chainTrigger) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const { chain, step } = chainTrigger;
@@ -241,7 +241,9 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             //   서사적으로 앞서야 하고, 게이지가 만충인데 스카우팅 카드에 밀려 계속
             //   미뤄지면 "접근했는데 아무 일도 안 일어남"이 반복돼 게이지 시스템의
             //   존재감이 사라짐).
-            if (isAreaBossUndefeated(mapData, player) && isBossGaugeFull(player, player.loc!)) {
+            //   Wave 62 C5: "회피"를 고른 지역은 `BALANCE.BOSS_GAUGE_EVADE_EXPLORES`번 탐험하는 동안 카드를 건너뛴다(게이지는 만충 그대로).
+            if (isAreaBossUndefeated(mapData, player) && isBossGaugeFull(player, player.loc!)
+                && !isBossGaugeCardSuppressed(player, player.loc!)) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const bossName = getAreaBossName(mapData) as string;
                 const challengeEvent = buildBossChallengeEvent(bossName);

@@ -6,6 +6,7 @@ import type { Item, ItemRecipeDef } from '../types/item.js';
 import { getEquipmentDecision } from './equipmentUtils.js';
 import { getExpeditionQuestEntries } from './expeditionMissionFocus.js';
 import { getMirrorEffects } from '../systems/mirrorUpgrades.js';
+import { getShopBuyPrice } from './shopRotation';
 
 export type ExpeditionReturnActionKind =
     | 'claim_quest'
@@ -99,7 +100,8 @@ export const getExpeditionReturnAction = (
         }
 
         const affordableSupply = (DB.ITEMS.consumables || []).find((item) => (
-            ['hp', 'mp', 'cure'].includes(item?.type ?? '') && (item.price || 0) <= (player.gold || 0)
+            // Wave 62 C20: 귀환한 마을 상점의 실제 가격(황금 왕국 물가 ×1.3)으로 잰다.
+            ['hp', 'mp', 'cure'].includes(item?.type ?? '') && getShopBuyPrice(player.loc || '', item.price || 0) <= (player.gold || 0)
         ));
         if (affordableSupply) {
             return {

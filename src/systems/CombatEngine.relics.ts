@@ -67,6 +67,10 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
         };
         // cycle 162: phoenix_revive atkBuff tempBuff — 부활 분기에서 set, return에 합류.
         let phoenixTempBuff: Player['tempBuff'] | null = null;
+        // 2026-10 Wave 62: 부활석 차감은 "이번 호출에서 부활석으로 부활했는가"만 본다. `combatFlags.reviveTokenUsed`는
+        //   전투가 끝날 때까지 남는 신호라, 그 플래그로 차감하던 동안 부활석 부활 뒤 같은 전투의 적 공격마다(치명상이
+        //   아니어도) 부활석이 하나씩 더 사라지고 기력이 50%로 다시 찼다(3개 → 2 → 1).
+        let reviveTokenSpent = false;
 
         if (nextHp <= 0) {
             const deathSaveRelic = relics.find((relic) => relic.effect === 'death_save');
@@ -76,64 +80,60 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
             const maxRevives = absoluteImmortalSyn ? (absoluteImmortalSyn.bonus.reviveCount || 1) : 1;
             const reviveUsedCount = flags.deathSaveUsedCount || 0;
 
+            // 2026-10 Wave 62 (원장 §61.4 C7, 소유자 결정 "무료 부활 먼저"): 부활 수단은 무료 → 유료 순서다 —
+            //   불사의 의지 → 허공의 심장 → 불사조의 깃털(전투마다) → 에테르 거울(런당 1회) → 에테르 부활석(크리스털로 산 소모품).
+            //   부활석 분기가 불사조 · 거울보다 앞에 있던 동안, 공짜 부활이 남아 있어도 산 부활석이 먼저 사라졌다.
+            //   판정은 입력 플래그만 읽고 난수를 쓰지 않는다 — 순서를 바꿔도 난수 소비는 그대로(0회)다.
+            const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
+            // cycle 157: 'phoenix_revive' (불사조의 깃털) — HP 0 도달 시 1회 부활 (HP healRatio% 회복).
+            // cycle 162: atkBuff/duration tempBuff 적용 추가 — 부활 직후 N턴 동안 ATK 증폭.
+            const phoenixRelic = relics.find((relic) => relic.effect === 'phoenix_revive');
+            // 2026-07 — 에테르 거울: revive 노드(에센스 소비 영구 업그레이드) — 런당 1회.
+            //   pure function 원칙 유지: 부활 여부는 입력(player.mirrorReviveUsed 플래그)으로
+            //   판정하고 새 player를 반환 — CombatEngine에 side effect 없음.
+            //   플래그는 handleDefeat(새 런 시작)/ASCEND에서 자연 리셋(freshPlayer가
+            //   INITIAL_STATE.player 기반이라 별도 처리 불필요).
+            const mirrorEffects = getMirrorEffects(player.meta);
+            // cycle 186: 'reviveTokens' (PremiumShop revive) — HP 0 도달 시 token 1개 소비해 즉시 부활.
+            //   spec: 'HP/MP 50% 회복 후 즉시 부활'. token 음수 가드.
+            const reviveTokens = Math.max(0, Number(player.reviveTokens) || 0);
+
             if (deathSaveRelic && reviveUsedCount < maxRevives) {
                 nextHp = 1;
                 flags.deathSaveUsed = true;
                 flags.deathSaveUsedCount = reviveUsedCount + 1;
                 const reviveMsg = reviveUsedCount > 0 ? MSG.RELIC_DEATH_SAVE_REVIVE(reviveUsedCount + 1) : MSG.RELIC_DEATH_SAVE_FIRST;
                 logs.push({ type: 'event', text: reviveMsg });
-            } else {
-                const voidHeartRelic = relics.find((relic) => relic.effect === 'void_heart');
-                if (voidHeartRelic && !flags.voidHeartUsed) {
-                    nextHp = 1;
-                    flags.voidHeartUsed = true;
-                    flags.voidHeartArmed = true;
-                    logs.push({ type: 'event', text: MSG.RELIC_VOID_HEART_REVIVE });
-                } else {
-                    // cycle 186: 'reviveTokens' (PremiumShop revive) — HP 0 도달 시 token 1개 소비해 즉시 부활.
-                    //   spec: 'HP/MP 50% 회복 후 즉시 부활'. token 음수 가드.
-                    //   기존엔 token 구매되지만 소비 로직 없어 dead purchase 회귀.
-                    const reviveTokens = Math.max(0, Number(player.reviveTokens) || 0);
-                    if (reviveTokens > 0) {
-                        nextHp = Math.floor(getReviveMaxHp() * 0.5);
-                        // reviveTokens 소비는 updatedPlayer 합류 시점에 처리 (return 직전).
-                        flags.reviveTokenUsed = true;
-                        logs.push({ type: 'event', text: MSG.RELIC_REVIVE_TOKEN_USED });
-                    } else {
-                    // cycle 157: 'phoenix_revive' (불사조의 깃털) — HP 0 도달 시 1회 부활 (HP healRatio% 회복).
-                    // cycle 162: atkBuff/duration tempBuff 적용 추가 — 부활 직후 N턴 동안 ATK 증폭.
-                    const phoenixRelic = relics.find((relic) => relic.effect === 'phoenix_revive');
-                    if (phoenixRelic && !flags.phoenixUsed) {
-                        const healRatio = phoenixRelic.val?.healRatio || 0.3;
-                        nextHp = Math.max(1, Math.floor(getReviveMaxHp() * healRatio));
-                        flags.phoenixUsed = true;
-                        const atkBuff = phoenixRelic.val?.atkBuff || 0;
-                        const duration = phoenixRelic.val?.duration || 0;
-                        if (atkBuff > 0 && duration > 0) {
-                            phoenixTempBuff = {
-                                atk: atkBuff,
-                                def: 0,
-                                turn: duration,
-                                name: 'phoenix_revive',
-                            };
-                        }
-                        logs.push({ type: 'event', text: MSG.RELIC_PHOENIX_REVIVE(nextHp, Math.round(atkBuff * 100), duration) });
-                    } else {
-                        // 2026-07 — 에테르 거울: revive 노드(에센스 소비 영구 업그레이드) — 런당 1회,
-                        //   위 모든 유물/토큰 부활 수단이 없거나 이미 소진됐을 때의 마지막 안전망.
-                        //   pure function 원칙 유지: 부활 여부는 입력(player.mirrorReviveUsed 플래그)으로
-                        //   판정하고 새 player를 반환 — CombatEngine에 side effect 없음.
-                        //   플래그는 handleDefeat(새 런 시작)/ASCEND에서 자연 리셋(freshPlayer가
-                        //   INITIAL_STATE.player 기반이라 별도 처리 불필요).
-                        const mirrorEffects = getMirrorEffects(player.meta);
-                        if (mirrorEffects.reviveEnabled && !player.mirrorReviveUsed) {
-                            nextHp = Math.max(1, Math.floor(getReviveMaxHp() * mirrorEffects.reviveHpRatio));
-                            flags.mirrorReviveUsed = true;
-                            logs.push({ type: 'event', text: MSG.MIRROR_REVIVE });
-                        }
-                    }
-                    } // close cycle 186 else (token-not-used path)
+            } else if (voidHeartRelic && !flags.voidHeartUsed) {
+                nextHp = 1;
+                flags.voidHeartUsed = true;
+                flags.voidHeartArmed = true;
+                logs.push({ type: 'event', text: MSG.RELIC_VOID_HEART_REVIVE });
+            } else if (phoenixRelic && !flags.phoenixUsed) {
+                const healRatio = phoenixRelic.val?.healRatio || 0.3;
+                nextHp = Math.max(1, Math.floor(getReviveMaxHp() * healRatio));
+                flags.phoenixUsed = true;
+                const atkBuff = phoenixRelic.val?.atkBuff || 0;
+                const duration = phoenixRelic.val?.duration || 0;
+                if (atkBuff > 0 && duration > 0) {
+                    phoenixTempBuff = {
+                        atk: atkBuff,
+                        def: 0,
+                        turn: duration,
+                        name: 'phoenix_revive',
+                    };
                 }
+                logs.push({ type: 'event', text: MSG.RELIC_PHOENIX_REVIVE(nextHp, Math.round(atkBuff * 100), duration) });
+            } else if (mirrorEffects.reviveEnabled && !player.mirrorReviveUsed) {
+                nextHp = Math.max(1, Math.floor(getReviveMaxHp() * mirrorEffects.reviveHpRatio));
+                flags.mirrorReviveUsed = true;
+                logs.push({ type: 'event', text: MSG.MIRROR_REVIVE });
+            } else if (reviveTokens > 0) {
+                nextHp = Math.floor(getReviveMaxHp() * 0.5);
+                // reviveTokens 소비는 updatedPlayer 합류 시점에 처리 (return 직전).
+                flags.reviveTokenUsed = true;
+                reviveTokenSpent = true;
+                logs.push({ type: 'event', text: MSG.RELIC_REVIVE_TOKEN_USED });
             }
         }
 
@@ -165,7 +165,7 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
         const updatedPlayer: Player = { ...player, hp: nextHp, combatFlags: flags };
         if (phoenixTempBuff) updatedPlayer.tempBuff = phoenixTempBuff;
         // cycle 186: reviveTokens 소비 + MP 50% 회복 (token 사용 시).
-        if (flags.reviveTokenUsed) {
+        if (reviveTokenSpent) {
             updatedPlayer.reviveTokens = Math.max(0, Number(player.reviveTokens) || 0) - 1;
             // 2026-10 Wave 58: "기력 50% 회복" — 실효 최대 기준이고, 회복은 기력을 줄이지 않는다.
             const reviveMaxMp = this.getEffectiveMaxMp(player, relics);

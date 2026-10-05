@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
+import { MSG } from '../src/data/messages.js';
 import { AT } from '../src/reducers/actionTypes.js';
 import { GS } from '../src/reducers/gameStates.js';
 import { BALANCE } from '../src/data/constants.js';
@@ -106,13 +107,19 @@ test('relic outcome: 보유하지 않은 유물 후보로 SET_PENDING_RELICS가 
     assert.equal(new Set(pending.payload.map((r) => r.id)).size, 2, '후보는 서로 달라야 함');
 });
 
-test('relic outcome: 유물 보유 한도에 도달하면 선택지를 열지 않는다', () => {
+// Wave 62 C4: 이전에는 한도에서 선택지를 열지 않았다(미리보기 "유물 선택지가 열림"이 거짓) — 이제 교체 제안으로 연다.
+//   유물 수는 늘지 않는다(패널의 ADD_RELIC은 상한에서 거부, REPLACE_RELIC은 수를 유지 — tests/relic-reward-guarantee-contract.test.js).
+test('relic outcome: 유물 보유 한도에서는 교체 제안으로 선택지를 연다(유물 수는 그대로)', () => {
     const owned = [
         { id: 'r1' }, { id: 'r2' }, { id: 'r3' }, { id: 'r4' }, { id: 'r5' },
     ];
-    const { dispatches } = makeHarness({ relic: { count: 1 } }, { relics: owned });
+    const { dispatches, logs, resolvedPlayer } = makeHarness({ relic: { count: 1 } }, { relics: owned });
 
-    assert.equal(dispatches.find((d) => d.type === AT.SET_PENDING_RELICS), undefined);
+    const pending = dispatches.find((d) => d.type === AT.SET_PENDING_RELICS);
+    assert.ok(pending, '한도에서도 선택지가 열린다');
+    assert.equal(pending.payload.length, 1);
+    assert.ok(logs.some((log) => log.text === MSG.EVENT_RELIC_REPLACE_OFFER(1)), '교체 제안 로그');
+    assert.equal(resolvedPlayer.relics.length, owned.length, '이벤트가 유물을 직접 더하지 않는다');
 });
 
 test('elite outcome: 정예 조우가 전투 상태로 이어진다 (정찰 카드와 동일 산출)', () => {

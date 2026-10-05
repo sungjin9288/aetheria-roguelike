@@ -31,9 +31,10 @@ interface SeasonPassPanelProps {
     onClaimSeasonReward?: (tier: number) => void;
 }
 
-const getVisibleRewardParts = (row: SeasonRewardRow, isPremium: boolean, ownedTitles: readonly string[] | undefined) => [
-    ...formatSeasonRewardParts(row.free, ownedTitles),
-    ...(isPremium ? formatSeasonRewardParts(row.premium, ownedTitles).map((part) => `추가 ${part}`) : []),
+// 2026-10 Wave 62 (원장 §61.4 C16): 골드는 이 플레이어가 실제로 받는 금액이다('빈손의 시작'이면 절반) — 같은 플레이어를 넘긴다.
+const getVisibleRewardParts = (row: SeasonRewardRow, isPremium: boolean, ownedTitles: readonly string[] | undefined, player: Player | undefined) => [
+    ...formatSeasonRewardParts(row.free, ownedTitles, player),
+    ...(isPremium ? formatSeasonRewardParts(row.premium, ownedTitles, player).map((part) => `추가 ${part}`) : []),
 ];
 
 const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPanelProps) => {
@@ -123,7 +124,7 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
                                 <div className="min-w-0 flex-1">
                                     <div className="aether-type-body font-semibold text-slate-100">{row.tier}단계 보상</div>
                                     <div className="aether-type-meta mt-1 text-[#d5b180]">
-                                        {getVisibleRewardParts(row, isPremium, ownedTitles).join(' · ')}
+                                        {getVisibleRewardParts(row, isPremium, ownedTitles, player).join(' · ')}
                                     </div>
                                 </div>
                                 <button
@@ -163,11 +164,11 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
                                 <div className="min-w-0 flex-1">
                                     <div className="aether-type-body font-semibold text-slate-100">{row.tier}단계</div>
                                     <div className="aether-type-meta mt-0.5 text-[#d5b180]">
-                                        {formatSeasonReward(row.free, ownedTitles)}
+                                        {formatSeasonReward(row.free, ownedTitles, player)}
                                     </div>
                                     {isPremium && (
                                         <div className="aether-type-meta mt-0.5 text-[#9ddfe2]">
-                                            추가 보상 · {formatSeasonReward(row.premium, ownedTitles)}
+                                            추가 보상 · {formatSeasonReward(row.premium, ownedTitles, player)}
                                         </div>
                                     )}
                                 </div>
@@ -299,11 +300,11 @@ const SeasonPassPanel = ({ player, dispatch, onClaimSeasonReward }: SeasonPassPa
                                                         </span>
                                                     </div>
                                                     <div className="aether-type-meta mt-0.5 text-[#d5b180]">
-                                                        {formatSeasonReward(row.free, ownedTitles)}
+                                                        {formatSeasonReward(row.free, ownedTitles, player)}
                                                     </div>
                                                     {isPremium && (
                                                         <div className="aether-type-meta mt-0.5 text-[#9ddfe2]">
-                                                            추가 보상 · {formatSeasonReward(row.premium, ownedTitles)}
+                                                            추가 보상 · {formatSeasonReward(row.premium, ownedTitles, player)}
                                                         </div>
                                                     )}
                                                 </div>

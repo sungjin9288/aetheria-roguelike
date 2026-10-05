@@ -39,6 +39,13 @@ export interface GameMap {
     // cycle 284: isSignatureZone 제거 — runtime access 0건.
     /** 묘비 드롭 보정 (maps.ts 실측 — '잊혀진 묘지' 1곳만 보유). */
     graveDropBonus?: number;
-    /** 상점 가격 보정 (maps.ts 실측 — 1곳만 보유). */
+    /**
+     * 상점 판매 등급 +1 (maps.ts 실측 — 황금 왕국 1곳만 보유). 값의 크기는 읽지 않는다(`getShopMaxTier`) —
+     * 가격 보정이 아니다(가격은 `shopPriceMult`).
+     */
     shopBonus?: number;
+    /** 상점 판매 등급 상한 — 지역 설명이 약속한 등급(북부 요새 "Tier 3 상점"). 재고 · 오늘의 할인 · 주간 특별 상품에 모두 걸린다(Wave 62 C20). */
+    shopMaxTier?: number;
+    /** 상점 구매 가격 배율 — 판매가는 바뀌지 않는다(황금 왕국 "물가가 높지만"). 없으면 1(Wave 62 C20). */
+    shopPriceMult?: number;
 }

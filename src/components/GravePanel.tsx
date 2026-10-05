@@ -22,6 +22,7 @@ import {
 import type { GameActions } from '../hooks/actionDeps';
 import type { GameState } from '../reducers/gameReducer';
 import type { Item, Player } from '../types/index.js';
+import { getVisibleLocationName } from '../utils/challengeRules';
 
 const GRAVES_LIMIT = 10;
 
@@ -55,7 +56,9 @@ const GravePanel = ({
     const [loading, setLoading] = useState(false);
     const [invadingUid, setInvadingUid] = useState<string | null | undefined>(null);
 
-    const recoveryGroups = getGraveRecoveryGroups(grave, player?.loc);
+    // 2026-10 Wave 62 (원장 §61.4 C16): 회수 골드는 실제로 받는 금액이다('빈손의 시작'이면 절반) — 묶음이 회수와 같은 규칙으로 계산한다.
+    //   총계는 지역마다 받는 금액의 합이다(회수는 지역마다 한 번).
+    const recoveryGroups = getGraveRecoveryGroups(grave, player?.loc, player);
     const recoveryGold = recoveryGroups.reduce((sum, group) => sum + group.gold, 0);
     const recoveryItems = recoveryGroups.reduce((sum, group) => sum + group.items.length, 0);
     const playerAtk = player?.atk || 10;
@@ -191,7 +194,7 @@ const GravePanel = ({
                                                     <span>{group.atCurrentLocation ? '현재 위치' : '회수 목적지'}</span>
                                                     {group.count > 1 && <span>· 유해 {group.count}구</span>}
                                                 </div>
-                                                <h3 className="mt-1 truncate text-[15px] font-readable font-bold text-white/92">{group.loc}</h3>
+                                                <h3 className="mt-1 truncate text-[15px] font-readable font-bold text-white/92">{getVisibleLocationName(player, group.loc)}</h3>
                                             </div>
                                             {group.atCurrentLocation && (
                                                 <span className="shrink-0 rounded-md border border-[#d5b180]/24 bg-[#d5b180]/10 px-2 py-1 text-[11px] font-readable text-[#f4e6c8]">

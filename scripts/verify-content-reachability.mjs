@@ -28,7 +28,8 @@ const hashReport = (report) => createHash('sha256')
     .digest('hex');
 
 // Wave 27 N3: 4 → 5 (cost.mapsWithoutWalkingRoute · questGateDivergence · unresolvedQuestGates · policy.questGateAuthority).
-const EXPECTED_SCHEMA_VERSION = 5;
+// Wave 62 C17: 5 → 6 (cost.floorGatedEventChains — 혼돈의 심연 층 조건 체인은 값을 매기지 않는다).
+const EXPECTED_SCHEMA_VERSION = 6;
 
 /**
  * Wave 12 D1 하드 게이트 — 비용 축이 (1) 존재하고 (2) 앵커/보간을 구분하며
@@ -64,6 +65,17 @@ const assertCostAxis = (report) => {
     }
     const chainsInBuckets = cost.gates.eventChainCompletions.reduce((sum, bucket) => sum + bucket.count, 0);
     if (chainsInBuckets !== cost.eventChainSpans.length) throw new Error('CONTENT_COST_CHAIN_SPAN_COUNT_MISMATCH');
+    // Wave 62 C17: 층 조건 체인은 값을 매기지 않는다 — 구간 행 · 버킷에 있으면 안 되고, 층 조건을 실제로 들어야 한다.
+    //   모든 체인은 구간 행 · 층 조건 목록 · 미상(위에서 0을 요구한다) 중 정확히 한 곳에 있다.
+    for (const gated of cost.floorGatedEventChains) {
+        if (gated.steps.length === 0 || gated.steps.some((step) => !Number.isSafeInteger(step.minAbyssFloor) || step.minAbyssFloor < 1)
+            || cost.eventChainSpans.some((span) => span.chain === gated.chain)) {
+            throw new Error(`CONTENT_COST_FLOOR_GATED_CHAIN_INVALID:${gated.chain}`);
+        }
+    }
+    if (cost.eventChainSpans.length + cost.floorGatedEventChains.length !== cost.summary.eventChains) {
+        throw new Error('CONTENT_COST_CHAIN_PARTITION_MISMATCH');
+    }
     const rows = [
         ...cost.gates.maps,
         ...cost.gates.quests,

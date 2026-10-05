@@ -89,12 +89,15 @@ test('legacy canonical Elixir restores calculated effective max HP without rewri
     assert.equal(elixir.name, '엘릭서');
 });
 
-test('a useful buff trade-off remains consumable and removes exactly one matching instance', () => {
+// Wave 62 C6: 강화 칸 규칙(세기 = 증가량 × 남은 턴, 더 센 쪽 유지 — systems/tempBuffMerge.ts). 이전 테스트는 "다른 축 물약은
+//   언제나 받는다"(공격 +40% · 5턴 위에 수호의 물약 → 공격 강화가 사라짐)를 고정했다 — 그것이 C6의 결함이었다. 이제 다른 축
+//   물약은 더 셀 때만 받고, 받을 때는 같은 id의 사본 하나만 지운다. 약한 쪽 물약의 거부는 tests/temp-buff-merge-contract.test.js.
+test('a stronger buff on another stat is consumable and removes exactly one matching instance', () => {
     const first = { id: 'same-id', name: '수호의 물약', type: 'buff', effect: 'def_up', val: 1.3, turn: 3 };
     const second = { ...first, name: '중복 수호의 물약' };
     const player = makePlayer({
         inv: [first, second],
-        tempBuff: { atk: 0.4, def: 0, turn: 5, name: '공격 강화' },
+        tempBuff: { atk: 0.1, def: 0, turn: 2, name: '공격 강화' },
     });
 
     const result = resolve(player, first);

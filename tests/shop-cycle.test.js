@@ -352,9 +352,10 @@ import { readFile } from 'node:fs/promises';
       assert.ok(/dateHash\(weekKey,\s*777\)/.test(shop), 'dateHash(weekKey, 777) 보존');
 
       const panel = await readSrc('src/components/ShopPanel.tsx');
-      assert.ok(/getDailyDeals\(player\.level \|\| 1\)/.test(panel),
+      // 2026-10 Wave 62 C20: 상점 위치(판매 등급 상한 · 가격 배율의 입력)가 둘째 인자로 붙었다 — 레벨 인자의 계약은 그대로다.
+      assert.ok(/getDailyDeals\(player\.level \|\| 1[,)]/.test(panel),
           'getDailyDeals(player.level || 1) callsite 보존');
-      assert.ok(/getWeeklySpecial\(player\.level \|\| 1\)/.test(panel),
+      assert.ok(/getWeeklySpecial\(player\.level \|\| 1[,)]/.test(panel),
           'getWeeklySpecial(player.level || 1) callsite 보존');
   });
 

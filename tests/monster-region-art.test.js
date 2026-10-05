@@ -82,7 +82,8 @@ test('runtime components expose exact canonical and undiscovered art states with
     assert.match(monsterIcon, /data-region-family=\{visual\?\.regionKey\}/);
     assert.match(routeTopology, /blindMap \? null : getLocationVisual/);
     assert.match(routeTopology, /data-location-visual=\{locationVisual\?\.key\}/);
-    assert.match(terminalView, /getLocationVisual\(player\.loc\)/);
+    // Wave 62 (원장 §61.2 A10): 터미널 그림은 길 잃은 여행 판정을 거친다(utils/challengeRules.ts — 행동 테스트는 challenge-modifier-delivery-contract).
+    assert.match(terminalView, /getVisibleLocationVisual\(player\)/);
     assert.match(terminalView, /data-testid="terminal-location-visual"/);
     assert.match(terminalView, /data-location-visual=\{locationVisual\.key\}/);
     assert.match(terminalView, /src=\{locationVisual\.src\}/);

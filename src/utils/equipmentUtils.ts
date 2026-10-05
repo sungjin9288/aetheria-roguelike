@@ -6,6 +6,7 @@ import { canEquip, isWeapon, isTwoHandWeapon } from './equipmentValidation.js';
 import { getItemEquipmentPassive } from './equipmentPassives.js';
 import { ALL_RESIST_ELEMENTS } from '../data/equipmentPassives.js';
 import { isFullRestoreElixir } from '../systems/consumableRules.js';
+import { getGoldIncome, type ChallengeHolder } from './challengeRules.js';
 export { isWeapon, getWeaponHands, isTwoHandWeapon } from './equipmentValidation.js';
 
 const MAGIC_WEAPON_KEYWORDS = ['지팡이', '스태프', '로드', '완드', '마법', '오브'];
@@ -464,6 +465,14 @@ export const pickBestEquippable = (
  */
 export const getSellPrice = (item: Item | null | undefined) => (
     Math.floor((item?.price || 0) * BALANCE.SELL_PRICE_RATIO)
+);
+
+/**
+ * 2026-10 Wave 62 (원장 §61.4 C16): 이 플레이어가 아이템 하나를 팔고 실제로 받는 골드 — 판매가에 골드 수입 규칙('빈손의 시작'이면
+ * 절반, `getGoldIncome`)을 한 번 건 값. 상점 판매 목록의 판매가와 판매 로그가 이것을 읽는다(지급은 `grantGold`가 같은 규칙으로 한다).
+ */
+export const getSellIncome = (holder: ChallengeHolder, item: Item | null | undefined) => (
+    getGoldIncome(holder, getSellPrice(item))
 );
 
 export const isMagicWeapon = (weapon: Item | null | undefined) => {

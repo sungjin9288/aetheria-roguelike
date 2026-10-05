@@ -3,7 +3,7 @@ import { MotionConfig } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
 import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
-import { getRegionTheme } from '../../utils/regionTheme';
+import { getVisibleExpeditionSummary, getVisibleRegionTheme } from '../../utils/challengeRules';
 import { buildReturnBriefing } from '../../utils/returnBriefing';
 import { getExpeditionReturnAction } from '../../utils/expeditionReturnFlow';
 import { getPendingMilestoneStoryBeat, type MilestoneStoryBeat } from '../../utils/milestoneStory';
@@ -148,7 +148,8 @@ const GameRoot = ({
     );
     const readabilityMode = engine.player?.settings?.readabilityMode === 'high' ? 'high' : 'standard';
     // slice 21: 지역별 ambient 팔레트 — 위치 기반 accent/wash CSS 변수.
-    const regionTheme = getRegionTheme(engine.player?.loc, DB.MAPS?.[engine.player?.loc ?? '']);
+    // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 지역 색을 고정한다(지역 색이 곧 위치 단서다).
+    const regionTheme = getVisibleRegionTheme(engine.player, DB.MAPS?.[engine.player?.loc ?? '']);
     // cycle 208: codex prop 전달 — useLegendaryDropDetector가 SEASON_XP 중복 award 방지용
     //   alreadyInCodex 체크에 활용.
     const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch, engine.player?.stats?.codex);
@@ -415,7 +416,7 @@ const GameRoot = ({
             {showExpeditionDebrief && expeditionSummary && expeditionReturnAction && (
                 <Suspense fallback={null}>
                     <ExpeditionDebriefCard
-                        summary={expeditionSummary}
+                        summary={getVisibleExpeditionSummary(engine.player, expeditionSummary)}
                         recommendation={expeditionReturnAction}
                         journeyJob={expeditionJob}
                         journey={expeditionJob ? engine.player.classJourney?.byJob[expeditionJob] : undefined}

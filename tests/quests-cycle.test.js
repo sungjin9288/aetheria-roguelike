@@ -906,7 +906,8 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       const block = source.slice(fnIdx, fnEnd);
       assert.ok(!/accent = 'blue'/.test(block),
           "QuestRewardChips destructure default 제거됨");
-      assert.ok(/\{ reward, accent \}/.test(block),
+      // 2026-10 Wave 62 (원장 §61.4 C16): 받을 플레이어(`player`)가 뒤에 붙었다 — 보상 칩의 골드가 실제로 받는 금액이다.
+      assert.ok(/\{ reward, accent, player \}/.test(block),
           'destructure에서 accent 파라미터 보존');
   });
 

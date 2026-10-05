@@ -137,8 +137,10 @@ test.describe('Equipment economy at 390x844', () => {
 
         const t4Row = page.getByTestId('shop-buy-item').filter({ hasText: '에테르 검' });
         const t5Row = page.getByTestId('shop-buy-item').filter({ hasText: '차원절단자' });
-        await expect(t4Row).toContainText('5,500 골드');
-        await expect(t5Row).toContainText('22,000 골드');
+        // 2026-10 Wave 62 C20: 황금 왕국은 "물가가 높지만" — 구매가는 기본가 × 1.3(5,500 → 7,150 · 22,000 → 28,600)이고,
+        //   산 물건은 기본가(5,500)로 저장된다(판매가 불변).
+        await expect(t4Row).toContainText('7,150 골드');
+        await expect(t5Row).toContainText('28,600 골드');
 
         const geometry = await page.evaluate(() => {
             const panel = document.querySelector<HTMLElement>('[data-testid="shop-panel"]');
@@ -170,7 +172,7 @@ test.describe('Equipment economy at 390x844', () => {
 
         await expect.poll(async () => readDeviceQaSnapshot(page)).toMatchObject({
             player: {
-                gold: before.player.gold - 5500,
+                gold: before.player.gold - 7150,
                 inv: expect.arrayContaining([
                     expect.objectContaining({ name: '에테르 검', price: 5500, baseItemName: '에테르 검' }),
                 ]),

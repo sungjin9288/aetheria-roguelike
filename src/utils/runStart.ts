@@ -48,7 +48,8 @@ export const getStartBootChoiceCount = (meta: Meta): number => (
     getPrestigeUnlocks(meta?.prestigeRank).startBootChoices + getMirrorEffects(meta).startBootChoiceBonus
 );
 
-/** 약한 생명력 — 최대 생명 절반(하한 50). */
-export const applyChallengeMaxHp = (maxHp: number, challengeModifiers: readonly string[]): number => (
-    challengeModifiers.includes('halfHp') ? Math.max(50, Math.floor(maxHp * 0.5)) : maxHp
-);
+/**
+ * 약한 생명력 — 최대 생명 절반(하한 `BALANCE.CHALLENGE_HALF_HP_FLOOR`). 2026-10 Wave 62: 판정은 `utils/challengeRules.ts`가 소유한다
+ * (전직 재구성 · 레벨업 · 이야기 보상도 같은 규칙을 읽는다). 시작 조건 호출부(start · ASCEND)를 위해 여기서도 내보낸다.
+ */
+export { applyChallengeMaxHp } from './challengeRules.js';

@@ -1,7 +1,9 @@
-import { BALANCE } from '../data/constants.js';
+import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { getInventoryCapacity } from './inventoryCapacity';
 import { getBagCraftReadiness } from './bagCrafting';
 import { MSG } from '../data/messages.js';
+import { getGoldIncome, getVisibleRouteName } from './challengeRules.js';
+import { FIRST_VISIT_REWARDS } from '../data/firstVisitRewards.js';
 import type { FullStats, GameMap, Player, StatusId } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
@@ -534,7 +536,8 @@ export const getExpeditionPreparation = (
         missionStatus: tracker?.progressLabel || '임무 선택 전',
         goalLabel,
         focusQuests: tracker?.focusQuests || [],
-        destination: departure?.name || '이동 경로 없음',
+        // Wave 62 (원장 §61.2 A10): 길 잃은 여행은 출구가 어디로 이어지는지 말하지 않는다(지도 화면의 '미확인 경로'와 같다).
+        destination: departure?.name ? getVisibleRouteName(player, departure.name) : '이동 경로 없음',
         resourceLabel: `HP ${hpPercent}% · NRG ${mpPercent}%`,
         equipmentLabel: equipmentWarnings.length > 0 ? equipmentWarnings.join(' · ') : '주요 장비 확인',
         returnLabel: departure?.routePlan?.exitRule || tracker?.returnLabel || '임무 목표 후 마을 복귀',
@@ -574,10 +577,13 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
     //   전직(Lv5+)·정비 등 일반 힌트보다는 선순위.
     const totalKills = Number(player?.stats?.kills) || 0;
     const totalExplores = Number(player?.stats?.explores) || 0;
-    if (safe && (player?.level || 1) <= 2 && totalExplores === 0 && totalKills === 0) {
+    // 2026-10 Wave 62 (원장 §61.4 C16): 첫 방문 보상은 시작 마을의 첫 출구(추천 경로의 첫 지역)의 표 값이고, 골드는 실제로 받는
+    //   금액이다('빈손의 시작'이면 절반 — 지급은 `moveActions`의 `grantGold`). 문구에 적힌 100 · 25가 표와 따로 놀던 것도 함께 닫는다.
+    const firstSortieReward = FIRST_VISIT_REWARDS[MAPS[CONSTANTS.START_LOCATION]?.exits?.[0] ?? ''];
+    if (safe && firstSortieReward && (player?.level || 1) <= 2 && totalExplores === 0 && totalKills === 0) {
         return {
             title: '첫 원정 준비',
-            detail: '추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상으로 골드 100과 경험 25를 얻습니다.',
+            detail: MSG.GUIDE_FIRST_SORTIE_DETAIL(getGoldIncome(player, firstSortieReward.gold), firstSortieReward.exp),
             primaryAction: { kind: 'open_move', label: '첫 출발' },
         };
     }

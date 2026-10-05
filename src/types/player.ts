@@ -88,6 +88,11 @@ interface PlayerStats {
     areaBossDefeated?: Record<string, boolean>;
     /** 2026-07: 원정 보스 접근 게이지 — 지역명 → 0~1. */
     bossGauge?: Record<string, number>;
+    /**
+     * Wave 62 C5: 보스 게이지 카드에서 "회피"를 고른 시점의 그 지역 탐험 수(`exploresByLocation[loc]`) — 지역명 → 탐험 수.
+     * 그 뒤 `BALANCE.BOSS_GAUGE_EVADE_EXPLORES`번 탐험하는 동안 카드가 뜨지 않는다(`bossGauge.ts`). 없으면(구세이브) 억제 없음.
+     */
+    bossGaugeEvadedAt?: Record<string, number>;
     /** cycle 82: 합성 보호 토큰 보유 수(프리미엄 자산 — 환생에도 보존). */
     synthProtects?: number;
     /** cycle 185: 프리미엄 상점에서 구매한 칭호 ID(영문) 목록 — 환생에도 보존. */
@@ -645,6 +650,12 @@ export interface Player {
      * (전직 재구성이 지우던 결함). 런 범위라 `pickPermanentPlayerState`에 넣지 않는다.
      */
     storyStatBonus?: { atk?: number; def?: number; hp?: number; mp?: number };
+    /**
+     * 2026-10 Wave 62 (원장 §61.4 C11, 소유자 결정 "첫 방문은 여정마다"): 이번 여정에 첫 방문 보상을 받은 지역. 새 여정(새 게임 ·
+     * 사망 재시작 · 계승)이 빈 목록으로 연다. 런 범위라 `pickPermanentPlayerState`에 넣지 않는다. 없으면(예전 세이브) 방문 기록
+     * (`stats.visitedMaps`)을 받은 것으로 읽는다(`utils/firstVisitRewards.ts`) — 이번 여정에 받은 보상을 다시 주지 않는다.
+     */
+    firstVisitRewardMaps?: string[];
     /** cycle 186: PremiumShop 부활 토큰 보유 수 — 환생에도 보존되는 영구 자산. */
     reviveTokens?: number;
     /** 2026-07 에테르 거울 revive를 이 런에서 이미 썼는지. 새 런 시작 시 자연 리셋. */

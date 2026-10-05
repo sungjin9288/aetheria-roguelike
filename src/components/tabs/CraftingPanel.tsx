@@ -7,6 +7,7 @@ import { MSG } from '../../data/messages';
 import { getSynthesisGroups, validateSynthesis } from '../../utils/synthesisUtils';
 import { getItemRarity } from '../../utils/gameUtils';
 import { getCraftingInvestmentPreview, getSynthesisOutcomePreviews } from '../../utils/itemInvestmentPreview';
+import { getRecipeInputEnhanceUsage } from '../../utils/recipeInputSelection';
 import FocusPanelHeader from '../FocusPanelHeader';
 import ItemIcon from '../icons/ItemIcon';
 import BagCraftingSection from './BagCraftingSection';
@@ -16,6 +17,59 @@ import type { Item, ItemRecipeDef, ItemType, Player } from '../../types/index.js
 import type { GameMode } from '../../reducers/gameStates';
 
 const TYPE_LABEL: Record<string, string> = { weapon: '무기', armor: '방어구', shield: '방패' };
+
+/**
+ * 합성 재료 고르기 목록 — 같은 타입 · 단계 묶음마다 보유 사본을 보인다. 사본마다 강화 수치(+N)를 함께 보여
+ * 강화된 사본을 재료로 고르면 강화가 함께 사라진다는 것을 알 수 있다(Wave 62 C8).
+ */
+export const SynthesisInputGroups = ({ groups, selectedIds, onToggle }: {
+  groups: ReturnType<typeof getSynthesisGroups>;
+  selectedIds: string[];
+  onToggle: (itemId: string) => void;
+}) => (
+  <>
+    {groups.length === 0 ? (
+      <div className="rounded-lg border border-dashed border-purple-500/20 bg-cyber-dark/30 px-4 py-8 text-center text-sm font-readable text-purple-200/55">
+        합성할 수 있는 장비 조합이 없습니다.
+      </div>
+    ) : groups.map((group) => (
+      <div key={`${group.type}_${group.tier}`} className="rounded-md border border-purple-500/15 bg-cyber-dark/60 p-3">
+        <div className="mb-2 flex items-center gap-2">
+          <span className="aether-type-body font-readable font-bold text-purple-200">{TYPE_LABEL[group.type]} {group.tier}단계</span>
+          <span className="aether-type-label font-readable text-purple-300/58">{group.count}개 보유</span>
+        </div>
+        <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+          {group.items.map((item) => {
+            const isSelected = selectedIds.includes(item.id ?? '');
+            const rarity = getItemRarity(item);
+            return (
+              <Motion.button
+                key={item.id}
+                data-testid={`synthesis-input-${item.id}`}
+                whileTap={{ scale: 0.97 }}
+                onClick={() => item.id && onToggle(item.id)}
+                className={`flex min-h-[48px] items-center gap-2 rounded-lg border px-2 py-1.5 text-left font-readable transition-all
+                  ${isSelected
+                    ? 'border-purple-400/70 bg-purple-900/50 text-white ring-1 ring-purple-400/30'
+                    : 'border-white/8 bg-black/20 text-slate-300 hover:border-purple-500/30'
+                  }`}
+                style={isSelected ? {} : { borderLeftColor: BALANCE.RARITY_COLORS[rarity], borderLeftWidth: 2 }}
+              >
+                <ItemIcon item={item} size={30} showBorder className="shrink-0" />
+                <span className="aether-type-label min-w-0 break-words font-readable font-semibold">{item.name}</span>
+                {(item.enhance || 0) > 0 && (
+                  <span data-testid={`synthesis-input-enhance-${item.id}`} className="ml-auto shrink-0 text-xs font-bold font-fira text-[#d5b180]">
+                    {MSG.SYNTHESIS_INPUT_ENHANCE(item.enhance || 0)}
+                  </span>
+                )}
+              </Motion.button>
+            );
+          })}
+        </div>
+      </div>
+    ))}
+  </>
+);
 
 /** CraftingPanel이 실제로 호출하는 액션만 좁혀 받는다 (제작/합성). */
 type CraftingPanelActions = Pick<GameActions, 'craft' | 'craftBag' | 'synthesize'>;
@@ -74,6 +128,8 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
         </div>
       ) : recipes.map((recipe: ItemRecipeDef) => {
         const preview = getCraftingInvestmentPreview(player, recipe);
+        // 같은 이름의 사본 중 강화된 것이 있으면 제작에 쓰일 사본의 +N을 보인다(Wave 62 C8 — 낮은 강화부터 쓴다).
+        const enhanceUsage = getRecipeInputEnhanceUsage(player.inv, recipe);
         const output = preview.output;
         const decision = output?.equipmentDecision;
         const canCraft = preview.canCraft;
@@ -128,6 +184,11 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                 return (
                   <span key={`${recipe.id}_${input.name}`} className={`rounded border px-2 py-1 ${input.enough ? 'border-cyber-green/30 bg-cyber-green/10 text-cyber-green' : 'border-red-500/30 bg-red-950/20 text-red-400'}`}>
                     {input.name} {input.owned}/{input.required}
+                    {enhanceUsage[input.name] && (
+                      <span data-testid={`crafting-input-enhance-${recipe.id}-${input.name}`} className="ml-1 font-bold text-[#d5b180]">
+                        · {MSG.CRAFT_INPUT_ENHANCE_USED(enhanceUsage[input.name])}
+                      </span>
+                    )}
                   </span>
                 );
               })}
@@ -182,7 +243,12 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
                   {item ? (
                     <>
                       <ItemIcon item={item} size={34} showBorder />
-                      <span className="aether-type-label mt-1 w-full truncate font-readable font-bold">{item.name}</span>
+                      <span className="aether-type-label mt-1 w-full truncate font-readable font-bold">
+                        {item.name}
+                        {(item.enhance || 0) > 0 && (
+                          <span data-testid={`synthesis-slot-enhance-${index}`} className="ml-1 font-fira text-[#d5b180]">{MSG.SYNTHESIS_INPUT_ENHANCE(item.enhance || 0)}</span>
+                        )}
+                      </span>
                       <span className="aether-type-label mt-0.5" style={{ color: BALANCE.RARITY_COLORS[getItemRarity(item)] }}>
                         {item.tier}단계 · {MSG.RARITY_LABEL[getItemRarity(item)]}
                       </span>
@@ -287,41 +353,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
           )}
         </div>
 
-        {synthGroups.length === 0 ? (
-          <div className="rounded-lg border border-dashed border-purple-500/20 bg-cyber-dark/30 px-4 py-8 text-center text-sm font-readable text-purple-200/55">
-            합성할 수 있는 장비 조합이 없습니다.
-          </div>
-        ) : synthGroups.map((group) => (
-          <div key={`${group.type}_${group.tier}`} className="rounded-md border border-purple-500/15 bg-cyber-dark/60 p-3">
-            <div className="mb-2 flex items-center gap-2">
-              <span className="aether-type-body font-readable font-bold text-purple-200">{TYPE_LABEL[group.type]} {group.tier}단계</span>
-              <span className="aether-type-label font-readable text-purple-300/58">{group.count}개 보유</span>
-            </div>
-            <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-              {group.items.map((item) => {
-                const isSelected = selectedIds.includes(item.id ?? '');
-                const rarity = getItemRarity(item);
-                return (
-                  <Motion.button
-                    key={item.id}
-                    data-testid={`synthesis-input-${item.id}`}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => item.id && toggleSlot(item.id)}
-                    className={`flex min-h-[48px] items-center gap-2 rounded-lg border px-2 py-1.5 text-left font-readable transition-all
-                      ${isSelected
-                        ? 'border-purple-400/70 bg-purple-900/50 text-white ring-1 ring-purple-400/30'
-                        : 'border-white/8 bg-black/20 text-slate-300 hover:border-purple-500/30'
-                      }`}
-                    style={isSelected ? {} : { borderLeftColor: BALANCE.RARITY_COLORS[rarity], borderLeftWidth: 2 }}
-                  >
-                    <ItemIcon item={item} size={30} showBorder className="shrink-0" />
-                    <span className="aether-type-label min-w-0 break-words font-readable font-semibold">{item.name}</span>
-                  </Motion.button>
-                );
-              })}
-            </div>
-          </div>
-        ))}
+        <SynthesisInputGroups groups={synthGroups} selectedIds={selectedIds} onToggle={toggleSlot} />
       </div>
     );
   };

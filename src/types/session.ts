@@ -7,6 +7,7 @@
  */
 
 import type { ProgressionProfileRef } from './progression.js';
+import type { RelicRarity } from './relic.js';
 
 /**
  * 터미널 로그 1건 — `state.logs` 배열의 원소.
@@ -123,11 +124,27 @@ export interface EventReward {
     /** 체인 보상 유물 지정자 (eventPresentation이 읽는다). */
     relicId?: string;
     /**
+     * `relic` 전용(Wave 62 C3) — 약속한 등급. 이야기가 "전설의 유물"을 말하면 데이터가 `'legendary'`를 선언하고
+     * 엔진(`eventActions`)이 그 등급의 미보유 유물에서 뽑는다. 그 등급을 다 가졌으면 남은 가장 높은 등급으로 내려가고 로그로 알린다.
+     */
+    rarity?: RelicRarity;
+    /**
      * `combat_bonus` 전용 — 다음 전투 강화의 이름(`tempBuff.name`)과 로그 앞머리("…이 합류해").
      * 체인마다 다르다(2026-10: 셋 모두 '최후의 영웅 · 기사의 혼령'을 말하던 결함). 없으면 MSG의 일반 문구.
      */
     buffName?: string;
     buffIntro?: string;
+}
+
+/**
+ * 체인 전투 선택지의 적(Wave 62 C19, 소유자 결정 "설명대로" — 잃어버린 마법사 3단계 "전투를 받아들인다").
+ * `monster`는 기존 몬스터 종(`DB.MONSTERS`)이고 지금 지역의 레벨로 일반 스폰 경로(`spawnEnemy`)를 거쳐 만든 뒤 정예 배율을 얹는다.
+ * `enemyName`은 화면에 보일 이름(정체성은 종 `baseName`), `intro`는 전투가 열릴 때의 로그다. 승리 로그는 선택지의 `log`다.
+ */
+export interface ChainCombatSpec {
+    monster: string;
+    enemyName: string;
+    intro: string;
 }
 
 /** 이벤트 outcome이 실어 보내는 버프 — 신규 배율 스키마와 캠프파이어 스키마 양쪽. */
@@ -165,6 +182,8 @@ export interface EventOutcome {
     log?: string;
     /** 체인 스텝 데이터(eventChains.ts)는 보상 없는 선택지를 `reward: null`로 표기한다. */
     reward?: EventReward | null;
+    /** 체인 전투 선택지(Wave 62 C19) — 고르면 실제 전투가 열리고, 보상 · 진행은 승리 때만 정산된다. */
+    combat?: ChainCombatSpec;
     gold?: number;
     exp?: number;
     hp?: number;

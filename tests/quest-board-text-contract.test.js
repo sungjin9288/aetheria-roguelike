@@ -56,7 +56,8 @@ const townState = (player) => ({ ...structuredClone(INITIAL_STATE), bootStage: '
 const TITLE_REWARD_QUESTS = QUESTS.filter((quest) => quest.reward?.title);
 
 test('[칭호 보상] 칭호를 주는 임무는 보상 줄에 그 칭호의 표시 이름을 보인다', () => {
-    assert.deepEqual(TITLE_REWARD_QUESTS.map((quest) => quest.id).sort((a, b) => a - b), [152, 153, 154, 201, 202], '비공허 — 감사가 센 5개');
+    // Wave 62 (원장 §61.4 C10): 임무 200 "50번 탐색 후 새 칭호 획득"이 약속한 칭호 '대륙의 여행자'를 받는다 — 감사가 센 5개 + 200.
+    assert.deepEqual(TITLE_REWARD_QUESTS.map((quest) => quest.id).sort((a, b) => a - b), [152, 153, 154, 200, 201, 202], '비공허 — 감사가 센 5개 + 임무 200');
     for (const quest of TITLE_REWARD_QUESTS) {
         assert.ok(
             formatRewardParts(quest.reward).includes(MSG.QUEST_REWARD_TITLE(getTitleLabel(quest.reward.title))),
@@ -71,7 +72,7 @@ test('[칭호 보상] 표시 이름은 칭호 정의에서 찾고(영문 id 포�
     assert.deepEqual(formatRewardParts({}), [], '칭호가 없으면 줄도 없다');
 });
 
-test('[칭호 보상] 광고 = 지급 — 5개 임무를 실제로 수령하면 보상 줄이 말한 그 칭호를 얻는다', () => {
+test('[칭호 보상] 광고 = 지급 — 칭호를 주는 6개 임무를 실제로 수령하면 보상 줄이 말한 그 칭호를 얻는다', () => {
     for (const quest of TITLE_REWARD_QUESTS) {
         const player = townPlayer({ level: Math.max(quest.minLv || 1, 75), active: [quest.id] });
         player.quests = [{ id: quest.id, progress: quest.goal }];

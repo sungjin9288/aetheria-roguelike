@@ -18,6 +18,9 @@ export interface JournalEntry {
     totalSteps: number;
     /** 다음 스텝이 발동되는 지역. 체인이 이미 마지막 스텝 단계면 존재하지 않을 수 있음. */
     nextLoc: string | null;
+    /** 다음 스텝이 요구하는 혼돈의 심연 층(`minAbyssFloor`, Wave 62 C17) — 없으면 null. 일지가 "다음 이야기: 혼돈의 심연"만 말하던
+     *  동안 50층 조건이 보이지 않았다(발동 판정은 `isChainStepFloorReached`). */
+    nextMinAbyssFloor: number | null;
 }
 
 /**
@@ -50,6 +53,9 @@ export function buildChainJournal(
             currentStep,
             totalSteps,
             nextLoc: nextStepData?.loc ?? null,
+            nextMinAbyssFloor: nextStepData && 'minAbyssFloor' in nextStepData && typeof nextStepData.minAbyssFloor === 'number'
+                ? nextStepData.minAbyssFloor
+                : null,
         });
 
         return entries;

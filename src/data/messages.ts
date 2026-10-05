@@ -50,6 +50,16 @@ const VAMPIRE_LORD_LABEL = '흡혈 군주';
 // 2026-10 Wave 61 (원장 §61.3): 합성 보호 상품의 이름 하나 — 크리스털 교환 · 구매 로그 · 합성 화면이 "합성 보호권" ·
 // "합성 보호석" · "보호권" 세 이름을 쓰고 있었다. 아래 SYNTHESIS_PROTECT_TOKEN_COST가 재사용하므로 top-level const로 둔다.
 const SYNTHESIS_PROTECT_ITEM_NAME = '합성 보호권';
+// 2026-10 Wave 62 (원장 §61.4 C16): 숫자 뒤 조사 — 금액을 실제로 받는 값('빈손의 시작'이면 절반)으로 다시 적을 때 조사가 따라
+//   바뀐다("골드 70을" → "골드 35를"). 숫자의 끝소리는 끝자리로 정해진다: 0(십 · 백 · 천 · 만) · 1(일) · 3(삼) · 6(육) · 7(칠) ·
+//   8(팔)은 받침이 있고 2 · 4 · 5 · 9는 없다. 아래 GUIDE_FIRST_SORTIE_DETAIL이 재사용하므로 top-level const로 둔다.
+const NUMBER_PARTICLE_PAIRS = [['을', '를'], ['이', '가'], ['은', '는'], ['과', '와']] as const;
+const NUMBER_FINAL_CONSONANT_DIGITS: readonly number[] = [0, 1, 3, 6, 7, 8];
+const numberParticle = (particle: string, amount: number): string => {
+    const pair = NUMBER_PARTICLE_PAIRS.find((entry) => (entry as readonly string[]).includes(particle));
+    if (!pair) return particle;
+    return NUMBER_FINAL_CONSONANT_DIGITS.includes(Math.abs(Math.trunc(amount)) % 10) ? pair[0] : pair[1];
+};
 
 export const MSG = {
     // --- 전투 (Combat) ---
@@ -216,6 +226,12 @@ export const MSG = {
     // --- 도전 설정 ---
     // cycle 116: CHALLENGE_COMPLETE 제거 — 0건 사용. START만 active.
     CHALLENGE_START: (labels: string[]) => `⚔ 도전 모험 시작: ${labels.join(', ')}`,
+    // 2026-10 Wave 62 (원장 §61.4 C1): 도전 규칙 선택 화면 — 보상 "+N%"는 엔진 표(`BALANCE.CHALLENGE_REWARD_MULT_BY_COUNT`)에서
+    //   계산하고, 오르는 것이 전투 경험치 · 골드임을 말한다(이전 "+N% 보상"은 무엇이 오르는지 말하지 않았다).
+    CHALLENGE_PICKER_TITLE: '도전 규칙',
+    CHALLENGE_PICKER_SELECT: '선택',
+    CHALLENGE_PICKER_HINT: '더 어려운 규칙에는 더 큰 보상이 따릅니다.',
+    CHALLENGE_PICKER_REWARD: (percent: number) => `전투 경험치 · 골드 +${percent}%`,
 
     // --- 진 엔딩 (True Ending) ---
     // cycle 116: TRUE_BOSS_PHASE3 제거 — 0건 사용. UNLOCK/APPEAR만 active.
@@ -317,7 +333,8 @@ export const MSG = {
     CONSUMABLE_FULL_HP: '생명이 이미 가득합니다.',
     CONSUMABLE_FULL_MP: '기력이 이미 가득합니다.',
     CONSUMABLE_STATUS_ABSENT: '해제할 상태이상이 없습니다.',
-    CONSUMABLE_BUFF_DOMINATED: '더 강하거나 오래가는 강화 효과가 이미 적용 중입니다.',
+    // Wave 62 C6: 강화 칸 하나를 쓰는 모든 경로가 같은 규칙(`systems/tempBuffMerge.ts` — 세기 = (공격 + 방어 + 반격) × 남은 턴)을 쓴다.
+    CONSUMABLE_BUFF_DOMINATED: '지금 걸린 강화가 같거나 더 강합니다(증가량 × 남은 턴). 물약은 쓰지 않았습니다.',
     // 2026-10 Wave 61 (원장 §61.3): 소모품 효과 문구 — 판정(엘릭서 · 소모품 종류)은 `systems/consumableRules.ts`가
     //   엔진과 함께 소유한다. 엘릭서(접두어 사본 포함)는 val과 무관하게 실효 최대 생명까지 회복하므로 수치를 그리지 않는다.
     CONSUMABLE_HP_FULL_RESTORE: '생명 완전 회복',
@@ -334,6 +351,10 @@ export const MSG = {
     SHOP_SELL_DONE: (name: string | undefined, gold: number) => `${name} 판매 · 골드 +${gold}`,
     CRAFT_MAT_INSUFFICIENT: (name: string) => `재료 부족: ${name}`,
     CRAFT_DONE: (name: string) => `${name} 제작 완료`,
+    // 2026-10 Wave 62 (원장 §61.4 C8): 같은 이름의 사본 중 강화된 것이 있을 때, 제작에 쓰일 사본의 강화 수치(낮은 강화부터 쓴다).
+    CRAFT_INPUT_ENHANCE_USED: (levels: readonly number[]) => `${levels.map((level) => `+${level}`).join(' · ')} 사용`,
+    // 합성 재료 목록 · 슬롯의 강화 수치 표시(+N) — 강화된 사본을 고르면 강화가 함께 사라진다.
+    SYNTHESIS_INPUT_ENHANCE: (level: number) => `+${level}`,
     // 2026-09 Wave 33 — 제작소 가방 단계(data/bagRecipes.ts). 이번 런에만 유효하다.
     BAG_CRAFTED: (name: string, capacity: number) => `${name} 제작 완료 — 이번 여정의 가방이 ${capacity}칸이 됐습니다.`,
     BAG_TAB_LABEL: '가방',
@@ -348,6 +369,9 @@ export const MSG = {
     BAG_ACTION_CHECK: '재료 확인',
     BAG_ALL_DONE: '모든 가방을 만들었습니다.',
     BAG_GOLD: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
+    // 2026-10 Wave 62 (원장 §61.4 C16): 첫 출발 안내의 첫 방문 보상 — 골드는 실제로 받는 금액('빈손의 시작'이면 절반)이다.
+    GUIDE_FIRST_SORTIE_DETAIL: (gold: number, exp: number) =>
+        `추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상으로 골드 ${gold}${numberParticle('과', gold)} 경험 ${exp}${numberParticle('을', exp)} 얻습니다.`,
     GUIDE_BAG_UPGRADE_TITLE: '가방을 넓힐 수 있습니다',
     GUIDE_BAG_UPGRADE_DETAIL: (name: string, count: number, capacity: number, nextCapacity: number) =>
         `가방이 ${count}/${capacity}입니다. 제작소에서 ${name}을(를) 만들면 ${nextCapacity}칸이 됩니다.`,
@@ -395,6 +419,10 @@ export const MSG = {
     SHOP_SAFE_ONLY: '상점은 안전 지역에서만 이용할 수 있습니다.',
     SHOP_BLOCKED: '전투 중에는 상점을 이용할 수 없습니다.',
     SHOP_ENTERED: '상점에 입장했습니다.',
+    // 2026-10 Wave 62 C20: 상점 머리말 — 판매 등급과 가방에 더해, 가격 배율이 있는 상점(황금 왕국)은 물가를 말한다.
+    SHOP_HEADER_META: (maxTier: number, bagCount: number, bagCapacity: number, pricePercent: number) => (
+        `판매 등급 ${maxTier}${pricePercent !== 100 ? ` · 물가 ${pricePercent}%` : ''} · 가방 ${bagCount}/${bagCapacity}`
+    ),
     REST_GOLD_INSUFFICIENT: (cost: number) => `휴식할 골드가 부족합니다. 필요 골드: ${cost}`,
     // cycle 116: REST_DONE 제거 — REST_DONE_FULL이 active.
     SKILL_SWAP_SAFE_ONLY: '스킬 교체는 안전한 지역에서만 가능합니다.',
@@ -428,6 +456,15 @@ export const MSG = {
 
     // --- 이동/탐험 동적 메시지 ---
     MOVE_EXITS: (exits: string) => `이동 가능한 지역: ${exits}`,
+    // 2026-10 Wave 62 (원장 §61.2 A10): 도전 규칙 '길 잃은 여행' — 위치 이름 자리표시와, 지역을 드러내지 않는 이동 로그.
+    BLIND_MAP_LOCATION: '???',
+    MOVE_EXITS_BLIND: (count: number) => `이동할 수 있는 길이 ${count}갈래 있습니다. 어디로 이어지는지는 알 수 없습니다.`,
+    MOVE_AREA_DANGER_BLIND: '이곳은 위험해 보입니다. 정예와 구역 보스를 주의하고, 생명이 부족하면 돌아가세요.',
+    MOVE_AREA_DESC_BLIND: '짙은 안개에 가려 이곳이 어디인지 알 수 없습니다.',
+    BLIND_MAP_ROUTE_DESC: '어디로 이어지는지 알 수 없는 길입니다.',
+    BLIND_MAP_ROUTE_NAME: '미확인 경로',
+    // 첫 방문 보상의 실제 지급 로그 — 길 잃은 여행(이름 숨김)이나 빈손의 시작(골드 절반)으로 데이터 문구와 달라질 때 쓴다.
+    FIRST_VISIT_REWARD: (loc: string, gold: number, exp: number) => `${loc}에 처음 발을 들였습니다. 골드 ${gold} · 경험 ${exp}`,
     MOVE_ARRIVED: (loc: string) => `${loc}에 도착했습니다.`,
     MOVE_NEW_AREA: (loc: string) => `처음 발견한 지역은 ${loc}입니다.`,
     // C-2 (B+ 2026-06): 갓 진입한 위험 지역(권장 레벨 근접) 경고 — 정예/보스 readability.
@@ -468,6 +505,10 @@ export const MSG = {
         healed.hp !== undefined ? `생명 +${healed.hp}` : '',
         healed.mp !== undefined ? `기력 +${healed.mp}` : '',
     ].filter(Boolean).join(' · ')}만 회복했습니다.`,
+    // 2026-10 Wave 62 (원장 §61.4 C16): 숫자 뒤 조사 짝(받침 있음 · 없음)과 금액에 맞는 조사 — 사건 결과 · 미리보기 문구 속 골드
+    //   금액을 실제로 받는 금액으로 다시 적을 때 조사를 맞춘다(eventPresentation.reportPaidGold — "골드 70을" → "골드 35를").
+    NUMBER_PARTICLE_PAIRS,
+    NUMBER_PARTICLE: numberParticle,
     // 탐험 스카우팅 (2026-07): 사전 정찰 카드 — 체인/캠프파이어 다음 우선순위 결정 노드.
     SCOUT_DESC: '앞길에서 낯선 기척이 느껴집니다. 어떻게 정찰하시겠습니까?',
     SCOUT_COMBAT_CHOICE: '전투의 기척 — 적과 맞서며 처치 보상을 더 받는다',
@@ -486,7 +527,7 @@ export const MSG = {
     BOSS_GAUGE_CHALLENGE_CHOICE: '도전 — 구역 보스와 정면으로 맞선다',
     BOSS_GAUGE_AVOID_CHOICE: '회피 — 흔적을 피해 계속 나아간다',
     BOSS_GAUGE_CHALLENGE_LOG: (bossName: string) => `${bossName}에게 정면으로 도전합니다.`,
-    BOSS_GAUGE_AVOID_LOG: '흔적을 피해 발걸음을 돌립니다. 기척은 여전히 짙게 남아 있습니다.',
+    BOSS_GAUGE_AVOID_LOG: '흔적을 피해 계속 나아갑니다. 기척은 여전히 짙게 남아 있습니다.',
     MAP_BADGE_BOSS_GAUGE: (pct: number) => `게이지 ${pct}%`,
     EXPEDITION_CLEAR_RECAP: (bossName: string, kills: number, gold: number) => (
         `원정 완료 · ${bossName} 격파 · 적 ${kills}마리 처치 · 골드 +${gold}`
@@ -519,6 +560,8 @@ export const MSG = {
     CHAIN_JOURNAL_TITLE: '진행 중인 이야기',
     CHAIN_JOURNAL_STEP: (current: number, total: number) => `${current}/${total} 단계`,
     CHAIN_JOURNAL_NEXT_LOC: (loc: string) => `다음 이야기: ${loc}`,
+    // Wave 62 C17: 층 조건이 있는 스텝(심연의 신호) — 그 층에 닿아야 발동한다.
+    CHAIN_JOURNAL_NEXT_LOC_FLOOR: (loc: string, floor: number) => `다음 이야기: ${loc} ${floor}층`,
 
     // --- 맵 exit 배지 (MapNavigator) ---
     MAP_BADGE_BOSS: '보스',
@@ -567,6 +610,8 @@ export const MSG = {
 
     // --- 전투 아이템/스킬 ---
     COMBAT_CHAOS_SKILL: (name: string) => `뒤섞인 기술: [${name}]이(가) 발동했습니다!`,
+    // 2026-10 Wave 62 (원장 §61.4 C15): 뽑힌 기술을 쓸 수 없어도(기력 부족 · 재사용 대기) 차례는 지나간다 — 기력은 쓰지 않는다.
+    COMBAT_CHAOS_SKILL_FIZZLE: (name: string) => `뒤섞인 기술: [${name}]을(를) 쓸 수 없어 이번 차례를 놓쳤습니다.`,
     COMBAT_DOT_KILL: (name: string) => `[지속 피해] ${name}이(가) 쓰러졌습니다!`,
     COMBAT_COUNTER_KILL: (name: string) => `[반사·반격] ${name}이(가) 쓰러졌습니다!`,
     ITEM_USE_SIMPLE: (name: string) => `${name} 사용.`,
@@ -735,6 +780,16 @@ export const MSG = {
     //   실패 선택은 진행도를 'failed'로 고정하고 사망 · 계승도 넘어가므로 "달라질 수 있음"이 아니라 끝이다.
     CHAIN_PREVIEW_PROGRESS: '이야기 진행',
     CHAIN_PREVIEW_ENDS: '이야기가 여기서 끝남 · 다시 이어지지 않음',
+    // 2026-10 Wave 62 C2: 이야기 능력치 보상은 이번 여정 범위다(`storyStatBonus` — 사망 · 계승에서 사라진다). '영구'라 부르지 않는다.
+    CHAIN_PREVIEW_STAT_BONUS: '이번 여정 능력 상승',
+    // Wave 62 C3: 데이터가 전설 등급을 선언한 유물 보상(`reward.rarity === 'legendary'`)은 미리보기도 전설이라 말한다.
+    CHAIN_PREVIEW_LEGENDARY_RELIC: '전설 유물 보상',
+    // Wave 62 C19: 실제 전투를 여는 이야기 선택지(`outcome.combat`) — 보상 · 진행은 승리했을 때만 정산된다.
+    CHAIN_PREVIEW_COMBAT: (rewardLabel: string | null) => (
+        rewardLabel ? `전투 시작 · 승리하면 ${rewardLabel}` : '전투 시작 · 승리하면 이야기 진행'
+    ),
+    // Wave 62 C6: 지금 걸린 강화가 더 세서 이 선택의 강화가 붙지 않을 때 미리보기 끝에 붙인다(정산과 같은 `mergeTempBuff`).
+    EVENT_PREVIEW_BUFF_KEPT: '지금 걸린 강화가 더 강해 이 강화는 붙지 않음',
     // 2026-10: 일반 사건 미리보기 — 기력만 잃는 결과를 '생명 손실'로 말하던 결함.
     EVENT_PREVIEW_MP_LOSS: '기력 손실 위험',
     ELITE_ENEMY_PREFIX: '정예',
@@ -1048,6 +1103,8 @@ export const MSG = {
     CMD_MAP: (visited: number, total: number, loc: string | undefined) => (
         `[월드맵] 탐험 ${visited}/${total} | 현재 위치: ${loc} | 이동은 move <지역> 명령으로 진행`
     ),
+    /** 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행 — 지도 명령도 위치 · 탐험 지도를 드러내지 않는다. */
+    CMD_MAP_BLIND: '[월드맵] 지도 정보가 숨겨져 있습니다 | 이동은 move <지역> 명령으로 진행',
     CMD_HELP: '이동: move <지역>\n행동: explore, rest, shop\n전투: attack(a), skill(s), nextskill(sn), escape(r)\n정보: status, inventory, quest, map',
     CMD_UNKNOWN: (command: string) => `알 수 없는 명령어: ${command} (/help)`,
     /** 자동완성의 휴식 줄 — 실제 비용(`getRestCost`: 레벨 · 거울 반영)을 그린다. 고정 "100G"였다(Wave 61, 원장 §61.3). */
@@ -1086,6 +1143,38 @@ export const MSG = {
     RELIC_REPLACE_PROMPT: (name: string) => `${name} 대신 내려놓을 유물을 고르세요.`,
     RELIC_REPLACE_OPTION_LABEL: (released: string, gained: string) => `${released} 내려놓고 ${gained} 받기`,
     RELIC_REPLACE_BACK: '다른 유물 보기',
+
+    // ── Wave 62 — 강해지는 쪽 규칙(C3 · C4 · C5 · C6) · 약해지는 쪽 서사(C19) ──
+    /** C3: "전설의 유물"을 약속한 이야기 보상인데 전설 유물을 모두 가졌을 때 — 남은 가장 높은 등급으로 내려간다. */
+    CHAIN_REWARD_RELIC_RARITY_FALLBACK: (promised: string, given: string) => (
+        `이야기 보상 · ${promised} 유물을 이미 모두 가졌습니다. 남은 가장 높은 등급(${given})에서 고릅니다.`
+    ),
+    /** C4: 정찰 "정예의 흔적" 보장 유물이 유물 칸이 가득 찬 채 열릴 때. */
+    SCOUT_RELIC_REPLACE_OFFER: '정예의 흔적 보상 · 유물 선택 — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.',
+    /** C4: 사건 결과가 여는 유물 선택이 유물 칸이 가득 찬 채 열릴 때. */
+    EVENT_RELIC_REPLACE_OFFER: (count: number) => (
+        `기묘한 기운이 남았습니다. 유물 선택지 ${count}개 — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.`
+    ),
+    /** C5: 회피 뒤 그 지역을 이만큼 더 탐험하는 동안 보스 카드가 뜨지 않는다(게이지는 만충 그대로). */
+    BOSS_GAUGE_AVOID_SUPPRESSED: (explores: number) => (
+        `이 지역을 ${explores}번 더 탐험하는 동안에는 보스를 피해 다닙니다. 그 뒤 다시 도전할 수 있습니다.`
+    ),
+    /** C6: 들어온 강화가 지금 걸린 강화보다 약해(세기 = 증가량 × 남은 턴) 적용되지 않았을 때. */
+    TEMP_BUFF_KEPT_STRONGER: (incoming: string, kept: { atk: number; def: number; counter: number; turns: number }) => {
+        const parts = [
+            kept.atk !== 0 && `공격력 ${kept.atk > 0 ? '+' : ''}${kept.atk}%`,
+            kept.def !== 0 && `방어력 ${kept.def > 0 ? '+' : ''}${kept.def}%`,
+            kept.counter > 0 && `반격 ${kept.counter}%`,
+        ].filter(Boolean).join(' · ');
+        return `지금 걸린 강화(${parts} · ${kept.turns}턴)가 더 강해 ${incoming}은(는) 적용되지 않았습니다.`;
+    },
+    /** C6: '밀어붙인다' 카드 — 지금 걸린 강화가 더 세서 공격력 강화가 붙지 않을 때 설명 끝에 붙인다. */
+    POST_COMBAT_PUSH_DETAIL_BUFF_KEPT: '지금 걸린 강화가 더 강해 공격력 강화는 붙지 않음',
+    WAR_DRUM_BUFF_LABEL: '전쟁의 북',
+    WAR_DRUM_BUFF_LOG: (atkPercent: number, turns: number) => `[전쟁의 북] 전투 시작 ATK +${atkPercent}% (${turns}턴)`,
+    CAMPFIRE_FORGE_BUFF_NAME: '모닥불 단련',
+    /** C19: 체인 전투 선택지 — 이야기 전투에서 지거나 물러나면 그 단계는 다시 찾아온다. */
+    CHAIN_COMBAT_RETRY_NOTICE: '이 시험은 이기기 전까지 끝나지 않습니다. 물러나거나 쓰러져도 같은 자리에서 다시 마주칩니다.',
 
     // ── Wave 28 P1 — 서명 사본 판매(D4) ──
     //   쓸 수 있는 유일한 사본만 보호한다. 도감 기록은 획득 순간에 남으므로 판매해도 수집은 사라지지 않는다.

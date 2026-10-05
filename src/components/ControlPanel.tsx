@@ -39,6 +39,7 @@ import type { FullStats, GameMap, Item, Player, Monster } from '../types/index.j
 import { getTownActionPresentation } from '../utils/townActionPresentation';
 import { getExpeditionFocusRouteTargets, MAX_EXPEDITION_FOCUS_QUESTS } from '../utils/expeditionMissionFocus';
 import { getScoutAvailability } from '../utils/scoutEvents';
+import { getVisibleLocationName } from '../utils/challengeRules';
 import { MSG } from '../data/messages';
 import type { GameState } from '../reducers/gameReducer';
 import type { GameActions } from '../hooks/actionDeps';
@@ -486,7 +487,8 @@ const ControlPanel = ({
   }
 
   if (gameState === GS.EVENT) {
-    return <EventPanel currentEvent={currentEvent} actions={actions} location={player.loc} />;
+    // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 이벤트 화면의 지역 그림도 그리지 않는다(자리표시 이름에는 그림이 없다).
+    return <EventPanel currentEvent={currentEvent} actions={actions} location={getVisibleLocationName(player, player.loc)} activeBuff={player.tempBuff} challengeModifiers={player.challengeModifiers} />;
   }
 
   if (gameState === GS.SHOP) {
@@ -784,7 +786,7 @@ const ControlPanel = ({
                   <History size={14} className="shrink-0 text-[#d5b180]" />
                   <div className="min-w-0 flex-1">
                     <div className="aether-type-body font-readable font-semibold text-slate-100">
-                      지난 원정 · {player.lastExpeditionSummary.destination}
+                      지난 원정 · {getVisibleLocationName(player, player.lastExpeditionSummary.destination)}
                     </div>
                     <div className="aether-type-meta mt-0.5 font-readable text-slate-400">
                       전투 {player.lastExpeditionSummary.battles} · 탐험 {player.lastExpeditionSummary.explores} · +{player.lastExpeditionSummary.expGained.toLocaleString('ko-KR')} EXP

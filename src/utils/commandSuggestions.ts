@@ -1,6 +1,7 @@
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import { getRestCost } from './expeditionReturnFlow';
+import { isBlindMap } from './challengeRules';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
 import type { Player } from '../types/index.js';
@@ -47,7 +48,8 @@ export const getAvailableCommands = (gameState: GameMode, player: Player | null 
         );
     }
 
-    const exits = DB.MAPS[player?.loc as string]?.exits || [];
+    // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 출구 이름(지도 정보)을 자동완성에 띄우지 않는다.
+    const exits = isBlindMap(player) ? [] : (DB.MAPS[player?.loc as string]?.exits || []);
     exits.forEach((exitName) => {
         base.push({ cmd: exitName, desc: `→ ${exitName}으로 이동` });
     });

@@ -3,6 +3,7 @@ import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 import { grantGold } from '../../utils/gameUtils';
+import { getGoldIncome } from '../../utils/challengeRules';
 import {
     getCurrentWeeklyProtocol,
     getWeeklyMissionProgress,
@@ -81,8 +82,9 @@ export const protocolActionMap = {
         return {
             ...state,
             player: p,
+            // 2026-10 Wave 62 (원장 §61.4 C16): 수령 줄은 실제로 받은 골드('빈손의 시작'이면 절반)를 적는다.
             logs: appendRewardLogs(state.logs, [
-                MSG.WEEKLY_MISSION_CLAIM(reward.gold || 0, reward.premiumCurrency),
+                MSG.WEEKLY_MISSION_CLAIM(getGoldIncome(state.player, reward.gold || 0), reward.premiumCurrency),
             ]),
             syncStatus: 'syncing',
         };

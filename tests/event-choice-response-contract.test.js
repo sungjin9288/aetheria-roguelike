@@ -6,7 +6,7 @@ import { AT } from '../src/reducers/actionTypes.ts';
 import { GS } from '../src/reducers/gameStates.ts';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
 import { MSG } from '../src/data/messages.ts';
-import { STRUCTURED_FALLBACK_TRANSACTIONS } from '../src/data/structuredFallbackEvents.ts';
+import { STRUCTURED_FALLBACK_TRANSACTIONS, didFallbackTransactionPay } from '../src/data/structuredFallbackEvents.ts';
 import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.ts';
 import { EVENT_CHAINS } from '../src/data/eventChains.ts';
 import { RELICS } from '../src/data/relics.ts';
@@ -182,8 +182,10 @@ for (const tx of STRUCTURED_FALLBACK_TRANSACTIONS) {
         const settled = press(opened, tx.choiceIndex);
         assert.notEqual(settled, opened, '비용 선택지가 동일 참조면 지급되지 않은 것이다');
         const goldCost = tx.cost.type === 'gold' ? tx.cost.amount : 0;
-        assert.equal(settled.player.gold, opened.player.gold - goldCost + tx.grossGold);
-        assert.equal(settled.player.stats.total_gold, opened.player.stats.total_gold + tx.netGold);
+        // Wave 62 C18: 내기는 훅이 굴린 난수(`press`는 0.5)로 승패가 갈린다 — 원장의 판정으로 기대값을 만든다.
+        const paid = didFallbackTransactionPay(tx, 0.5);
+        assert.equal(settled.player.gold, opened.player.gold - goldCost + (paid ? tx.grossGold : 0));
+        assert.equal(settled.player.stats.total_gold, opened.player.stats.total_gold + (paid ? tx.netGold : 0));
         if (tx.cost.type === 'hp-recovery-consumable') {
             assert.deepEqual(settled.player.inv, [], '회복 물약 1개를 소모한다');
         } else {
@@ -191,7 +193,8 @@ for (const tx of STRUCTURED_FALLBACK_TRANSACTIONS) {
         }
         assert.equal(settled.currentEvent, null);
         assert.equal(settled.gameState, GS.IDLE);
-        assert.ok(settled.logs.some((log) => log.text === formatEventText(tx.event.outcomes[tx.choiceIndex].log)));
+        const resultLog = paid ? tx.event.outcomes[tx.choiceIndex].log : tx.chance.lossLog;
+        assert.ok(settled.logs.some((log) => log.text === formatEventText(resultLog)));
     });
 
     for (const wallet of [
@@ -277,7 +280,7 @@ for (const tx of STRUCTURED_FALLBACK_TRANSACTIONS) {
         assert.equal(settled.currentEvent, null, '거부 안내가 정본 판정을 오염시키지 않는다');
         assert.equal(settled.gameState, GS.IDLE);
         const goldCost = tx.cost.type === 'gold' ? tx.cost.amount : 0;
-        assert.equal(settled.player.gold, 5000 - goldCost + tx.grossGold);
+        assert.equal(settled.player.gold, 5000 - goldCost + (didFallbackTransactionPay(tx, 0.5) ? tx.grossGold : 0));
     });
 }
 

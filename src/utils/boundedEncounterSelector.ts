@@ -11,8 +11,11 @@ import type { Player } from '../types/player.js';
 import { grantGold } from './gameUtils.js';
 import { MSG } from '../data/messages.js';
 import { healWithinMax } from '../systems/vitals.js';
+import { applyTempBuffRule } from '../systems/tempBuffMerge.js';
 import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
 import { calculateFullStats } from './statsCalculator.js';
+import { getGoldIncome } from './challengeRules.js';
+import { reportPaidGold } from './eventPresentation.js';
 
 const SAFE_ID = /^[a-z0-9][a-z0-9._:-]{0,127}$/;
 const HP_BANDS = new Set(['critical', 'strained', 'healthy']);
@@ -408,12 +411,15 @@ export const applyBoundedEncounterChoice = (
     const nextMp = outcome.mp ? healWithinMax(paidMp, outcome.mp, maxMp) : Math.min(maxMp, paidMp);
     const recoveryCapped = (Number(outcome.hp) > 0 && nextHp - paidHp < Number(outcome.hp))
         || (Number(outcome.mp) > 0 && nextMp - paidMp < Number(outcome.mp));
-    const result = recoveryCapped
+    // 2026-10 Wave 62 (원장 §61.4 C16): 결과 줄의 "골드 60을 찾아냈습니다"는 실제로 받는 금액('빈손의 시작'이면 절반)으로 적는다 —
+    //   지급은 아래 `grantGold`가 같은 규칙(`getGoldIncome`)으로 한다.
+    const nominalGold = Number(outcome.gold) || 0;
+    const result = reportPaidGold(recoveryCapped
         ? MSG.EVENT_RECOVERY_CAPPED({
             ...(Number(outcome.hp) > 0 ? { hp: Math.max(0, nextHp - paidHp) } : {}),
             ...(Number(outcome.mp) > 0 ? { mp: Math.max(0, nextMp - paidMp) } : {}),
         })
-        : outcome.result;
+        : outcome.result, [{ nominal: nominalGold, paid: getGoldIncome(player, nominalGold) }]);
     let nextPlayer: Player = {
         ...player,
         hp: nextHp,
@@ -433,7 +439,13 @@ export const applyBoundedEncounterChoice = (
             inv: [...(player.inv || []), { ...item, id: `bounded:${receiptKey}` }],
         };
     }
-    if (outcome.buff) nextPlayer = { ...nextPlayer, tempBuff: { ...outcome.buff } };
+    // Wave 62 C6: 강화 칸 규칙(더 센 쪽 유지) — 더 센 강화가 걸려 있으면 그것을 남기고 결과 줄에 알린다.
+    let buffNotice: string | null = null;
+    if (outcome.buff) {
+        const buffResult = applyTempBuffRule(nextPlayer, { ...outcome.buff }, outcome.buff.name || MSG.EVENT_BUFF_NAME);
+        nextPlayer = buffResult.player;
+        buffNotice = buffResult.notice;
+    }
     nextPlayer = {
         ...nextPlayer,
         eventChainProgress: {
@@ -449,6 +461,6 @@ export const applyBoundedEncounterChoice = (
         player: nextPlayer,
         reason: 'applied',
         receiptKey,
-        result,
+        result: buffNotice ? `${result} ${buffNotice}` : result,
     };
 };

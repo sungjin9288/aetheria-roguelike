@@ -225,10 +225,13 @@ const RAW_QUESTS: Quest[] = [
     // Lv70+ 도전 퀘스트 (3개)
     { id: 152, title: '에테르 폐허 완전 탐험',  desc: '에테르 폐허 20회 탐험',           type: 'explore_count', target: 'explores', location: '에테르 폐허', goal: 20, reward: { exp: 0, gold: 40000, title: '에테르 탐험가' }, minLv: 70 },
     { id: 153, title: '공허의 회랑 정복',       desc: '공허의 회랑 15회 탐험',           type: 'explore_count', target: 'explores', location: '공허의 회랑', goal: 15, reward: { exp: 0, gold: 50000, title: '공허의 방랑자' }, minLv: 70 },
-    { id: 154, title: '종말을 넘어서',          desc: '종말의 전장에서 종말의 기사를 3회 처치한다', target: '종말의 기사', location: '종말의 전장', goal: 3, reward: { exp: 100000, gold: 120000, title: '종말의 정복자' }, minLv: 75 },
+    // 2026-10 Wave 62 (원장 §61.4 C9, 소유자 결정 "목표 1회"): 종말의 기사는 구역 보스라 한 여정에 한 번만 나오고
+    //   임무는 여정이 끝나면 사라진다 — "3회 처치"(goal 3)는 1/3을 넘을 수 없었다.
+    { id: 154, title: '종말을 넘어서',          desc: '종말의 전장에서 종말의 기사를 처치한다', target: '종말의 기사', location: '종말의 전장', goal: 1, reward: { exp: 100000, gold: 120000, title: '종말의 정복자' }, minLv: 75 },
 
     // ── cycle 63: 신규 탐험 / 발견 챌린지 (3개) ──────────────────────────────
-    { id: 200, title: '대륙의 발자취',  type: 'explore_count', desc: '50번 탐색 후 새 칭호 획득', target: 'explores',    goal: 50,  reward: { exp: 8000,  gold: 12000 }, minLv: 5 },
+    // 2026-10 Wave 62 (원장 §61.4 C10, 소유자 결정 "칭호를 준다"): 설명이 약속한 새 칭호 '대륙의 여행자'(titles.ts, questReward 200).
+    { id: 200, title: '대륙의 발자취',  type: 'explore_count', desc: '50번 탐색 후 새 칭호 획득', target: 'explores',    goal: 50,  reward: { exp: 8000,  gold: 12000, title: '대륙의 여행자' }, minLv: 5 },
     { id: 201, title: '지도 완성가',    type: 'discovery_count', desc: '15곳 발견', target: 'discoveries', goal: 15, reward: { exp: 25000, gold: 30000, title: '지도 제작자' }, minLv: 25 },
     { id: 202, title: '전설 기록자',    desc: '전설 각인 도감 15종 발견', type: 'signature_collect', target: 'signaturesDiscovered', goal: 15, reward: { exp: 50000, gold: 60000, title: '전설의 기록자' }, minLv: 40 },
 

@@ -1,6 +1,7 @@
 import type { Item, Player } from '../types/index.js';
 import { MAPS } from '../data/maps.js';
 import { CONSTANTS } from '../data/constants.js';
+import { getGoldIncome, type ChallengeHolder } from './challengeRules.js';
 
 /**
  * 묘비(grave) 데이터 1건 — 로컬 세이브의 회수 대상과 공개 침공 대상 문서를 함께 표현한다.
@@ -140,7 +141,11 @@ interface GraveRecoveryGroup {
     latestTimestamp: number;
 }
 
-export const getGraveRecoveryGroups = (grave: GraveInput, currentLoc: string | undefined) => {
+/**
+ * 지역별 회수 묶음. `holder`(회수할 플레이어)를 넘기면 `gold`는 그 지역을 회수할 때 실제로 받는 금액이다 — 회수
+ * (`resolveGraveRecovery`)는 그 지역 유해의 골드 합에 수입 규칙을 한 번 건다('빈손의 시작'이면 절반, 2026-10 Wave 62).
+ */
+export const getGraveRecoveryGroups = (grave: GraveInput, currentLoc: string | undefined, holder?: ChallengeHolder) => {
     const groups = new Map<string | undefined, GraveRecoveryGroup>();
 
     normalizeGraves(grave).forEach((graveEntry) => {
@@ -162,6 +167,7 @@ export const getGraveRecoveryGroups = (grave: GraveInput, currentLoc: string | u
     return [...groups.values()]
         .map((group) => ({
             ...group,
+            gold: getGoldIncome(holder, group.gold),
             count: group.graves.length,
             atCurrentLocation: group.loc === currentLoc,
         }))
@@ -193,7 +199,8 @@ export const resolveGraveRecovery = (player: Player, grave: GraveInput) => {
     const recoveredItems = graves
         .flatMap((entry) => getGraveItems(entry))
         .map((item) => createGraveItem(item));
-    const goldGain = graves.reduce((total, entry) => total + Math.max(0, entry?.gold || 0), 0);
+    // 2026-10 Wave 62 (원장 §61.4 C16): 회수한 골드도 이번 여정의 골드 수입이다 — '빈손의 시작'이면 절반(`getGoldIncome`).
+    const goldGain = getGoldIncome(player, graves.reduce((total, entry) => total + Math.max(0, entry?.gold || 0), 0));
     const updatedPlayer: Player = {
         ...player,
         gold: (player?.gold || 0) + goldGain,

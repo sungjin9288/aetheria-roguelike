@@ -30,7 +30,7 @@ export const buildCampfireEvent = (fullStats: Pick<FullStats, 'maxHp' | 'maxMp'>
             { choiceIndex: 0, hp: healHp, mp: healMp, rest: true, log: MSG.CAMPFIRE_REST_LOG(healHp, healMp) },
             {
                 choiceIndex: 1,
-                buff: { atk: BALANCE.CAMPFIRE_FORGE_ATK, def: 0, turn: forgeTurns, name: '모닥불 단련' },
+                buff: { atk: BALANCE.CAMPFIRE_FORGE_ATK, def: 0, turn: forgeTurns, name: MSG.CAMPFIRE_FORGE_BUFF_NAME },
                 log: MSG.CAMPFIRE_FORGE_LOG(forgePct, forgeTurns),
             },
         ],

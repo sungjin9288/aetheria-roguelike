@@ -17,6 +17,7 @@ import { endDevourBonus } from '../utils/adventureRelicBonuses.js';
 import { endCombatScopedRelics } from '../utils/combatScopedRelics.js';
 import { isBorrowedRelic } from './chaosHeart.js';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
+import { getChallengeMaxHpGain, getChallengeRewardMult, getGoldIncome } from '../utils/challengeRules.js';
 
 /**
  * CombatEngine 결과(경험치/승리) 메서드 — mixin으로 CombatEngine에 spread.
@@ -41,24 +42,28 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             );
             // 2026-09 Wave 40: 영구 생명 · 기력은 연동 비율이 오른 만큼 함께 굽는다(스냅숏이 없는 예전 세이브는 0).
             const metaDelta = getMetaVitalsLevelUpDelta(p.metaVitalsSnapshot, p.level - 1, p.level);
-            p.maxHp = p.maxHp! + BALANCE.HP_PER_LEVEL + metaDelta.hp;
+            // 2026-10 Wave 62 (원장 §61.2 A9): '약한 생명력'은 레벨업으로 늘어나는 생명도 절반이다 — 시작 때 한 번만 절반이던 동안
+            //   레벨업이 전체량을 더해 Lv10에 0.77배였다(`getChallengeMaxHpGain`, 재구성은 `applyChallengeMaxHp`).
+            const levelHpGain = getChallengeMaxHpGain(p, BALANCE.HP_PER_LEVEL);
+            const hpGain = getChallengeMaxHpGain(p, BALANCE.HP_PER_LEVEL + metaDelta.hp);
+            p.maxHp = p.maxHp! + hpGain;
             p.maxMp = p.maxMp! + BALANCE.MP_PER_LEVEL + metaDelta.mp;
             // 2026-10 Wave 56: 레벨업은 최대치와 현재치를 같은 양만큼 올린다 — 저장된 최대치로 자르던 동안 장비 · 유물로 늘어난
             //   생명 · 기력이 레벨업에 깎였다(실효 최대 720에서 696 → 520). 상한은 실효 최대(직업 약점이면 저장값보다 작다).
-            p.hp = healWithinMax(p.hp, BALANCE.HP_PER_LEVEL + metaDelta.hp, getEffectiveMaxHp(p));
+            p.hp = healWithinMax(p.hp, hpGain, getEffectiveMaxHp(p));
             p.mp = healWithinMax(p.mp, BALANCE.MP_PER_LEVEL + metaDelta.mp, getEffectiveMaxMpFull(p, p.relics || [], p.maxMp));
             p.atk = p.atk! + BALANCE.ATK_PER_LEVEL;
             p.def = p.def! + BALANCE.DEF_PER_LEVEL;
             levelUps += 1;
             visualEffect = 'levelUp';
-            logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level, BALANCE.ATK_PER_LEVEL, BALANCE.HP_PER_LEVEL) });
+            logs.push({ type: 'system', text: MSG.LEVEL_UP(p.level, BALANCE.ATK_PER_LEVEL, levelHpGain) });
 
             // 레벨 마일스톤 보상
             const isMajor = p.level % BALANCE.LEVEL_MAJOR_MILESTONE_EVERY === 0;
             const isMinor = !isMajor && p.level % BALANCE.LEVEL_MILESTONE_EVERY === 0;
             if (isMajor) {
                 const atkBonus = BALANCE.MILESTONE_STAT_ATK;
-                const hpBonus = BALANCE.MILESTONE_STAT_HP;
+                const hpBonus = getChallengeMaxHpGain(p, BALANCE.MILESTONE_STAT_HP);
                 const mpBonus = BALANCE.MILESTONE_STAT_MP;
                 p.atk = p.atk! + atkBonus;
                 p.maxHp = p.maxHp! + hpBonus;
@@ -67,7 +72,8 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
                 p.mp = healWithinMax(p.mp, mpBonus, getEffectiveMaxMpFull(p, p.relics || [], p.maxMp));
                 logs.push({ type: 'event', text: MSG.LEVEL_MAJOR_MILESTONE(p.level, atkBonus, hpBonus, mpBonus) });
             } else if (isMinor) {
-                const goldBonus = p.level * BALANCE.MILESTONE_GOLD_PER_LV;
+                // 2026-10 Wave 62 (원장 §61.4 C16): 성장 골드도 골드 수입이다 — '빈손의 시작'이면 절반(`getGoldIncome`).
+                const goldBonus = getGoldIncome(p, p.level * BALANCE.MILESTONE_GOLD_PER_LV);
                 p.gold = (p.gold || 0) + goldBonus;
                 // 2026-10 Wave 58: 번 골드는 누적 골드(업적 "누적 골드 N달성")에도 들어간다.
                 p.stats = { ...(p.stats || {}), total_gold: (p.stats?.total_gold || 0) + goldBonus };
@@ -119,13 +125,9 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             * eventMult * seasonXpMult;
         const goldMult = (1 + getStrongestNumericRelicValue(relics, 'gold_mult') + (passiveBonus.goldMult || 0))
             * seasonGoldMult;
-        // 챌린지 모디파이어 보상 스케일링 (3개 이상 → 1.5배, rank≥7 풀 스택 4개 → 2.0배)
-        const challengeMods = p.challengeModifiers || [];
-        const challengeScale: { threshold?: number; mult?: number; fullThreshold?: number; fullMult?: number } = BALANCE.CHALLENGE_REWARD_SCALING || {};
-        const challengeRewardMult =
-            challengeScale.fullThreshold && challengeMods.length >= challengeScale.fullThreshold ? (challengeScale.fullMult || 2.0)
-            : challengeMods.length >= (challengeScale.threshold || 3) ? (challengeScale.mult || 1.5)
-            : 1;
+        // 도전 규칙 보상 — 2026-10 Wave 62 (원장 §61.4 C1): 규칙 1 · 2 · 3 · 4개 = ×1.2 · ×1.5 · ×2.0 · ×2.5(선택 화면의 "+N%"와 같은 표).
+        //   이전에는 1 ~ 2개 보상 없음 · 3개 ×1.5 · 4개 ×2.0이었다.
+        const challengeRewardMult = getChallengeRewardMult((p.challengeModifiers || []).length);
         // 유물: 처치 보너스 (kill_bonus)
         const killBonusRelic = relics.find((r) => r.effect === 'kill_bonus');
         const killExpMult = killBonusRelic ? (1 + (killBonusRelic.val?.exp || 0)) : 1;
@@ -149,11 +151,14 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             Math.floor((enemy.exp ?? 0) * expMult * killExpMult * challengeRewardMult * eliteRewardMult * longFightRewardMult),
         );
         const expGained = getPacedCombatExp(p, rawExpGained);
-        const noGold = p.challengeModifiers?.includes('noGold');
         const rawGoldGained = (enemy.gold ?? 0) * goldMult * killGoldMult * levelPenalty
-            * (noGold ? BALANCE.NO_GOLD_MODIFIER_MULT : 1) * challengeRewardMult * eliteRewardMult * longFightRewardMult;
+            * challengeRewardMult * eliteRewardMult * longFightRewardMult;
         if (!Number.isFinite(rawGoldGained)) throw new Error('INVALID_RELIC_EFFECT_VALUE');
-        const goldGained = Math.floor(rawGoldGained);
+        // 2026-10 Wave 62 (원장 §61.4 C16): '빈손의 시작'의 반감은 모든 골드 수입이 거치는 `getGoldIncome` 한 번이다
+        //   (`grantGold`와 같은 규칙 — 이 정산은 `grantGold`를 거치지 않으므로 여기서 한 번 건다). floor(floor(x) / 2) = floor(x / 2)라
+        //   예전 곱셈 안의 반감과 같은 값이다.
+        const earnedGold = Math.floor(rawGoldGained);
+        const goldGained = getGoldIncome(p, earnedGold);
         const currentGold = Number.isFinite(p.gold) ? p.gold! : 0;
         const nextGold = currentGold + goldGained;
         if (!Number.isFinite(nextGold) || (goldGained > 0 && nextGold <= currentGold)) {
@@ -185,10 +190,12 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             // 2026-10 Wave 59 "대량 초회 보상"(아이스 드래곤 · 에테르 드래곤 · 공허의 대행자) — 보스가 선언한 배율을 곱한다.
             //   이전에는 모든 보스가 max(120, 처치 골드 × 35%)였다(그 셋은 120 · 120 · 163골드).
             const firstClearMult = enemy.mechanics?.firstClearBonusMult ?? 1;
-            const bonusGold = Math.floor(Math.max(
+            //   2026-10 Wave 62: 반감 전 처치 골드로 계산하고 수입 규칙(`getGoldIncome`)을 한 번만 건다 — 반감된 처치 골드에서
+            //   다시 반감하면 비례 몫이 4분의 1이 된다.
+            const bonusGold = getGoldIncome(p, Math.floor(Math.max(
                 BALANCE.FIRST_BOSS_BONUS_GOLD_FLOOR,
-                Math.floor(goldGained * BALANCE.FIRST_BOSS_BONUS_GOLD_RATE),
-            ) * firstClearMult);
+                Math.floor(earnedGold * BALANCE.FIRST_BOSS_BONUS_GOLD_RATE),
+            ) * firstClearMult));
             p.gold += bonusGold;
             p.stats.total_gold = (p.stats.total_gold || 0) + bonusGold;
             bossClearBonus = {

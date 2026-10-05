@@ -2,6 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { DB } from '../data/db.js';
 import { advanceBossGauge, isAreaBossUndefeated } from './bossGauge.js';
+import { applyTempBuffRule, mergeTempBuff } from '../systems/tempBuffMerge.js';
 import type { GameMap, Player, PostCombatResult } from '../types/index.js';
 
 /**
@@ -62,6 +63,19 @@ export const doesPushAdvanceBossGauge = (
  * 말한다 — `player`의 현재 지역(지도 데이터는 리듀서와 같은 `DB.MAPS[loc]`)으로 판정한다. 플레이어를 모르면
  * 게이지를 약속하지 않는다.
  */
+/** "밀어붙인다"가 거는 강화 — 카드 설명과 정산(`applyPostCombatChoice`)이 같은 값을 읽는다. */
+const buildPushBuff = () => ({
+    atk: BALANCE.POST_COMBAT_PUSH_ATK_BONUS,
+    def: 0,
+    turn: BALANCE.POST_COMBAT_PUSH_TURNS,
+    name: MSG.POST_COMBAT_PUSH_BUFF_NAME,
+});
+
+/** Wave 62 C6: 지금 걸린 강화가 더 세서 "밀어붙인다"의 공격력 강화가 붙지 않는지 — 정산과 같은 규칙(`mergeTempBuff`). */
+const isPushBuffKeptOut = (player: Player | null | undefined): boolean => Boolean(
+    player && mergeTempBuff(player.tempBuff, buildPushBuff()).kept === 'current',
+);
+
 export const getPostCombatChoiceOptions = (
     player?: Player | null,
     mapData: GameMap | null | undefined = player?.loc ? DB.MAPS[player.loc] : null,
@@ -69,11 +83,15 @@ export const getPostCombatChoiceOptions = (
     {
         id: 'push',
         label: MSG.POST_COMBAT_PUSH_CHOICE,
-        detail: MSG.POST_COMBAT_PUSH_DETAIL(
-            Math.round(BALANCE.POST_COMBAT_PUSH_ATK_BONUS * 100),
-            BALANCE.POST_COMBAT_PUSH_TURNS,
-            doesPushAdvanceBossGauge(player, mapData),
-        ),
+        detail: [
+            MSG.POST_COMBAT_PUSH_DETAIL(
+                Math.round(BALANCE.POST_COMBAT_PUSH_ATK_BONUS * 100),
+                BALANCE.POST_COMBAT_PUSH_TURNS,
+                doesPushAdvanceBossGauge(player, mapData),
+            ),
+            // 설명이 약속한 강화가 규칙에 밀릴 때는 그 사실을 함께 말한다(정산 로그와 같은 판정).
+            ...(isPushBuffKeptOut(player) ? [MSG.POST_COMBAT_PUSH_DETAIL_BUFF_KEPT] : []),
+        ].join(' · '),
         testId: 'post-combat-choice-push',
     },
     {
@@ -110,17 +128,15 @@ export const applyPostCombatChoice = (
             ...(gaugeAdvances ? advanceBossGauge(player, mapData) : (player.stats || {})),
             nextExploreCampfireBlocked: true,
         };
-        logs.push({ type: 'success', text: MSG.POST_COMBAT_PUSH_LOG(pct, BALANCE.POST_COMBAT_PUSH_TURNS) });
+        // Wave 62 C6: 강화 칸 규칙(더 센 쪽 유지) — 더 센 강화(물약 · 모닥불 단련 …)가 걸려 있으면 그것을 남기고 알린다.
+        //   모닥불 차단 · 게이지는 강화와 무관하게 그대로 치른다(고른 대가).
+        const push = applyTempBuffRule(player, buildPushBuff(), MSG.POST_COMBAT_PUSH_BUFF_NAME);
+        if (push.applied) logs.push({ type: 'success', text: MSG.POST_COMBAT_PUSH_LOG(pct, BALANCE.POST_COMBAT_PUSH_TURNS) });
+        else if (push.notice) logs.push({ type: 'info', text: push.notice });
         if (gaugeAdvances) logs.push({ type: 'warning', text: MSG.POST_COMBAT_PUSH_GAUGE_LOG });
         return {
             player: {
-                ...player,
-                tempBuff: {
-                    atk: BALANCE.POST_COMBAT_PUSH_ATK_BONUS,
-                    def: 0,
-                    turn: BALANCE.POST_COMBAT_PUSH_TURNS,
-                    name: MSG.POST_COMBAT_PUSH_BUFF_NAME,
-                },
+                ...push.player,
                 stats: nextStats,
             },
             logs,

@@ -75,6 +75,12 @@ test('cost.gates.eventChainCompletions는 전 스텝 max(완주 게이트)로 �
 
     for (const chain of EVENT_CHAINS) {
         const bucket = cost.gates.eventChainCompletions.find((entry) => entry.members.includes(chain.id));
+        // 2026-10 Wave 62 C17: 층 조건(`minAbyssFloor`) 스텝을 가진 체인은 지역 게이트로 값을 매길 수 없다 — 버킷이 아니라 층 조건 목록이다.
+        if (chain.steps.some((step) => 'minAbyssFloor' in step)) {
+            assert.equal(bucket, undefined, `${chain.id}: 층 조건 체인이 지역 게이트 버킷에 들어간다`);
+            assert.ok(cost.floorGatedEventChains.some((entry) => entry.chain === chain.id), `${chain.id}: 층 조건 목록에 없다`);
+            continue;
+        }
         assert.ok(bucket, `${chain.id}가 버킷에 없다`);
         assert.equal(
             bucket.gateLevel,
@@ -93,7 +99,8 @@ test('cost.gates.eventChainCompletions는 전 스텝 max(완주 게이트)로 �
     //   40·48·68은 그대로다 — 셋 다 승천 지점(48) 이하라 걸치는 체인은 여전히 0개다.
     assert.deepEqual(
         cost.gates.eventChainCompletions.map(({ gateLevel, count }) => [gateLevel, count]),
-        [[35, 3], [40, 3], [48, 5], [68, 2]],
+        // 2026-10 Wave 62 C17: 48의 다섯 중 심연의 신호가 층 조건 목록으로 빠진다 — 48:5 → 48:4.
+        [[35, 3], [40, 3], [48, 4], [68, 2]],
     );
     assert.deepEqual(
         cost.gates.eventChainCompletions.find((bucket) => bucket.gateLevel === 35).members,
@@ -178,17 +185,18 @@ test('forgotten_god은 승천 지점 안에서 닫힌다 — 열림 5.25h, 완�
 // 종착 게이트 하나로는 "이 이야기가 언제 시작되어 언제 끝나는가"가 안 보인다.
 // 그 간격 안에 리셋(승천 Lv48 ≈ 53.28h)이 들어 있는지를 이 행들이 보여 준다.
 
-test('cost.eventChainSpans는 체인 13개의 열림/완주를 비용과 함께 싣는다', () => {
+test('cost.eventChainSpans는 값을 매기는 체인 12개의 열림/완주를 비용과 함께 싣는다 (심연의 신호 = 층 조건)', () => {
     const { cost } = buildContentReachabilityReport();
     const gates = routeGates();
 
-    assert.equal(cost.eventChainSpans.length, 13);
+    // Wave 62 C17: 13개 중 심연의 신호는 층 조건 때문에 값을 매기지 않는다 — 구간 행은 값을 매기는 12개다.
+    assert.equal(cost.eventChainSpans.length, 12);
     assert.equal(
         cost.eventChainSpans.length,
         cost.gates.eventChainCompletions.reduce((sum, bucket) => sum + bucket.count, 0),
     );
     assert.deepEqual(
-        cost.eventChainSpans.map((span) => span.chain).toSorted(),
+        [...cost.eventChainSpans.map((span) => span.chain), ...cost.floorGatedEventChains.map((entry) => entry.chain)].toSorted(),
         EVENT_CHAINS.map((chain) => chain.id).toSorted(),
     );
 
@@ -211,7 +219,7 @@ test('cost.eventChainSpans는 체인 13개의 열림/완주를 비용과 함께 
 //   (승천은 레벨 게이트가 아니라 플레이어가 고르는 시점이라 체인을 열어 둔 채 승천하는
 //   런은 여전히 가능하다 — `tests/permanent-progress-copy.test.js`가 고정한다),
 //   "자기 런 안에서 닫히는 이야기"가 0개에서 11개가 됐다.
-test('승천 지점을 걸치는 체인이 0개다 — 13개 전부 루프 안에서 닫히거나 승천 뒤에 열린다', () => {
+test('승천 지점을 걸치는 체인이 0개다 — 값을 매기는 12개 전부 루프 안에서 닫히거나 승천 뒤에 열린다', () => {
     const { cost } = buildContentReachabilityReport();
     const ascensionGate = cost.gates.maps.find((bucket) => bucket.members.includes('마왕성'));
     assert.equal(ascensionGate.gateLevel, 48);
@@ -236,8 +244,10 @@ test('승천 지점을 걸치는 체인이 0개다 — 13개 전부 루프 안�
         ],
     );
 
-    // 13개 전부가 같은 이분법에 들어간다: 승천 이하에서 닫히거나(11개),
+    // 값을 매기는 12개 전부가 같은 이분법에 들어간다: 승천 이하에서 닫히거나(10개),
     // 애초에 승천 뒤에 열린다(2개 — divine_apostle_trial · rift_secret).
+    // 2026-10 Wave 62 C17: 심연의 신호는 이 이분법 밖이다 — 1 · 2단계가 혼돈의 심연 50층(돌파 49층)을 요구하고 이 모델에는
+    //   심연 층 진행이 없다(`floorGatedEventChains`). 돌파 층은 사망 · 계승을 넘어 유지되므로 계승을 걸쳐도 진행이 사라지지 않는다.
     const closesInLoop = cost.eventChainSpans
         .filter((span) => span.completionGateLevel <= ascensionGate.gateLevel)
         .map((span) => span.chain);
@@ -245,9 +255,12 @@ test('승천 지점을 걸치는 체인이 0개다 — 13개 전부 루프 안�
         .filter((span) => span.openGateLevel > ascensionGate.gateLevel)
         .map((span) => span.chain)
         .toSorted();
-    assert.equal(closesInLoop.length, 11);
+    assert.equal(closesInLoop.length, 10);
     assert.deepEqual(opensAfterAscension, ['divine_apostle_trial', 'rift_secret']);
     assert.equal(closesInLoop.length + opensAfterAscension.length, cost.eventChainSpans.length);
+    assert.deepEqual(cost.floorGatedEventChains.map((entry) => entry.chain), ['abyss_signal']);
+    assert.deepEqual(cost.unresolvedEventChainCompletions, []);
+    assert.equal(cost.eventChainSpans.length + cost.floorGatedEventChains.length, EVENT_CHAINS.length);
 });
 
 // 2026-09 Wave 27 N3: 북부 권역을 지나는 두 체인의 구간 — 경로 게이트가 실제 이동 규칙(시즌 없음)이 되자

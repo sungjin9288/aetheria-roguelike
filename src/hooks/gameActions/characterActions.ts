@@ -87,6 +87,8 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
                 challengeModifiers: mods,
                 quests: startingQuests,
                 expeditionFocusQuestIds,
+                // 2026-10 Wave 62 (원장 §61.4 C11, 소유자 결정 "첫 방문은 여정마다"): 새 여정은 첫 방문 보상을 지역마다 한 번 다시 받는다.
+                firstVisitRewardMaps: [],
                 stats: { ...(player.stats || {}), visitedMaps: [CONSTANTS.START_LOCATION] }
             }});
             const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
@@ -252,9 +254,11 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             if (player.level! < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', MSG.JOB_CHANGE_LEVEL);
             const classVitals = buildClassVitals(player.level!, jobName, player.meta || {});
             // 2026-10 Wave 61: 이번 런의 이야기 생명 · 기력 보상은 전직 재구성 뒤에도 남는다(지우던 결함 — 원장 §61 A13).
+            // 2026-10 Wave 62 (원장 §61.2 A9): 전직 재구성도 '약한 생명력'을 거친다 — 거치지 않던 동안 Lv10 전사 전직이 전체 생명(390)을
+            //   돌려줬다. 이야기 생명 보상은 받을 때 이미 절반으로 쌓였다(`getChallengeMaxHpGain`).
             const vitals = {
                 ...classVitals,
-                maxHp: classVitals.maxHp + (player.storyStatBonus?.hp || 0),
+                maxHp: applyChallengeMaxHp(classVitals.maxHp, player.challengeModifiers || []) + (player.storyStatBonus?.hp || 0),
                 maxMp: classVitals.maxMp + (player.storyStatBonus?.mp || 0),
             };
             const nextStats = getFullStats({

@@ -24,7 +24,8 @@ test('canonical content has the approved production catalog counts and routes', 
     // Wave 14 F2: cost.eventChainSpans 신설 + 체인 게이트가 종착 → 완주(전 스텝 max)로.
     // Wave 27 N3: 4 → 5 — cost.mapsWithoutWalkingRoute · questGateDivergence · unresolvedQuestGates ·
     //   policy.questGateAuthority 신설(맵 게이트는 실제 이동 규칙, 임무 게이트는 목표 게이트).
-    assert.equal(report.schemaVersion, 5);
+    // Wave 62 C17: 5 → 6 (cost.floorGatedEventChains).
+    assert.equal(report.schemaVersion, 6);
     assert.deepEqual(report.catalog, {
         maps: 52,
         monsters: 254,
@@ -176,7 +177,17 @@ test('cost axis anchors come from the progression checkpoints plus the simulatio
     const actions = cost.anchors.map((anchor) => anchor.modeledActions);
     assert.deepEqual(actions, [...actions].sort((left, right) => left - right));
     assert.deepEqual(cost.malformedGates, []);
+    // 데이터 결함(스텝 지역을 읽을 수 없음)은 0이다 — 작성기가 0을 요구한다.
     assert.deepEqual(cost.unresolvedEventChainCompletions, []);
+    // 2026-10 Wave 62 C17: 심연의 신호 1 · 2단계는 혼돈의 심연 50층을 요구한다 — 이 모델에는 심연 층 진행이 없어 지역 게이트로
+    //   매기면 과소 계상이다. 결함이 아니라 모델 밖이므로 별도 목록에 층 조건을 든 채로 남는다.
+    assert.deepEqual(cost.floorGatedEventChains, [{
+        chain: 'abyss_signal',
+        steps: [
+            { step: 1, loc: '혼돈의 심연', minAbyssFloor: 50 },
+            { step: 2, loc: '혼돈의 심연', minAbyssFloor: 50 },
+        ],
+    }]);
 });
 
 test('every cost row declares whether it is anchored or interpolated, and interpolation is reproducible', () => {
@@ -290,8 +301,10 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     // `terminals.length`이고 `terminals`는 체인당 한 행이라 **언제나** `eventChains`와
     // 같았다(G1이 종착 스텝을 넷 옮겨도 둘 다 13에 붙박여 있었던 것이 그 증거다).
     // 같은 수를 두 이름으로 싣던 키이므로 삭제가 재측정이 아니라 중복 제거다.
+    // 2026-10 Wave 62 C17: 체인은 13개 그대로이고 값을 매기는 체인은 12개다 — 심연의 신호는 층 조건 때문에
+    //   `floorGatedEventChains`로 간다(버킷 · 아래 행에서 빠진다).
     assert.deepEqual(cost.summary, { eventChains: 13, eventChainSteps: 39 });
-    assert.equal(cost.gates.eventChainCompletions.reduce((sum, bucket) => sum + bucket.count, 0), 13);
+    assert.equal(cost.gates.eventChainCompletions.reduce((sum, bucket) => sum + bucket.count, 0), 12);
     // 2026-09 Wave 15 G1: 승천(마왕성 경로 게이트 Lv48 = 53.28h)을 걸치던 스텝 4개를
     //   루프 안으로 옮겼다 — ancient_prophecy:2 → 마왕성(48) · dragon_legacy:2 → 천공 정원(40)
     //   · world_tree_corruption:1 → 천공 정원(40) · :2 → 세계수 숲(40). 68:5 / 48:4 / 40:1이던
@@ -303,7 +316,9 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     assert.equal(etherGate.cost.basis, 'interpolated');
     assert.equal(etherGate.cost.modeledActions, 6_682);
     assert.equal(etherGate.cost.modeledHours, 167.05);
-    assert.equal(bucketAt(cost.gates.eventChainCompletions, 48).count, 5);
+    // Wave 62 C17: 48 버킷의 다섯 중 심연의 신호가 층 조건 목록으로 빠져 넷이다.
+    assert.equal(bucketAt(cost.gates.eventChainCompletions, 48).count, 4);
+    assert.ok(!bucketAt(cost.gates.eventChainCompletions, 48).members.includes('abyss_signal'));
     assert.equal(bucketAt(cost.gates.eventChainCompletions, 40).count, 3);
     // 50 버킷은 생기지 않는다 — world_tree_corruption의 스텝 1(고대 신전 도시 50)까지
     // 옮겼기 때문이다. 종착만 옮겼다면 완주가 50(65.90h)에 남아 승천보다 뒤였다.
@@ -324,7 +339,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 141,
         equipment: 229,
         jobs: 18,
-        eventChains: 13,
+        // Wave 62 C17: 심연의 신호는 값을 매기지 않는다(층 조건) — 13 → 12.
+        eventChains: 12,
     });
     // Wave 14 F4: 퀘스트 101이 59 → 44로 내려와 45 이후의 모든 행에서 `quests`가 1씩 줄어든다
     //   (45·48: 42 → 41, 49: 39 → 38, 50: 38 → 37, 52: 32 → 31, 55: 30 → 29). 같은 행의
@@ -338,7 +354,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 41,
         equipment: 107,
         jobs: 5,
-        eventChains: 7,
+        // Wave 62 C17: 7 → 6 (심연의 신호는 층 조건 목록).
+        eventChains: 6,
     });
     // 승천(마왕성 Lv48)은 체크포인트가 없다 — 보간이고, 리포트가 그렇게 표기한다.
     // Wave 13 E1: 승천 시점과 그 너머에 남는 직업이 5 → 0이다. 같은 행의
@@ -352,7 +369,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         quests: 41,
         equipment: 65,
         jobs: 0,
-        eventChains: 7,
+        // Wave 62 C17: 7 → 6 (심연의 신호는 층 조건 목록).
+        eventChains: 6,
     });
     // 승천 게이트를 실제로 넘어선 첫 행(= 게이트 레벨이 48보다 큰 콘텐츠).
     // Wave 28(D6): 본편 86 · 87이 48로 내려와 49 · 60 · 68 행의 `quests`가 2씩 준다(38 → 36 · 27 → 25 · 24 → 22).

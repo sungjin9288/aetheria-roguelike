@@ -16,7 +16,7 @@ import {
 } from '../src/systems/equipmentEconomyAudit.js';
 import { CANONICAL_EQUIPMENT, migrateEquipmentInstancePrice } from '../src/utils/equipmentBaseIdentity.js';
 import { ITEMS } from '../src/data/items.js';
-import { getCanonicalShopOffer, getDailyDeals, getWeeklySpecial } from '../src/utils/shopRotation.js';
+import { getCanonicalShopOffer, getDailyDeals, getShopBuyPrice, getWeeklySpecial } from '../src/utils/shopRotation.js';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { AT } from '../src/reducers/actionTypes.js';
 import { GS } from '../src/reducers/gameStates.js';
@@ -248,7 +248,14 @@ test('stock, discounts, migrated sell values, and reducer purchase use canonical
     const canonical = ITEMS.weapons.find((item) => item.name === '차원절단자');
     assert.ok(canonical);
     assert.equal(canonical.price, 22000);
+    // 2026-10 Wave 62 C20: 황금 왕국은 "물가가 높지만" — 구매가는 상점 가격 규칙(×1.3)을 거치고, 제안의 물건은 정본 그대로다.
+    //   같은 재고를 파는 허공의 섬은 정본 가격 그대로다.
     assert.deepEqual(getCanonicalShopOffer('stock', canonical.name, 60, '황금 왕국'), {
+        item: canonical,
+        price: getShopBuyPrice('황금 왕국', 22000),
+    });
+    assert.equal(getShopBuyPrice('황금 왕국', 22000), 28600);
+    assert.deepEqual(getCanonicalShopOffer('stock', canonical.name, 60, '허공의 섬'), {
         item: canonical,
         price: 22000,
     });

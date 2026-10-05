@@ -3,9 +3,9 @@ import { BALANCE } from '../data/constants';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
-import { getEquipmentComparison, getEquipmentDecision, getEquipmentDisclosure, getItemStatText, getSellPrice, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
+import { getEquipmentComparison, getEquipmentDecision, getEquipmentDisclosure, getItemStatText, getSellIncome, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
-import { getDailyDeals, getShopMaxTier, getWeeklySpecial } from '../utils/shopRotation';
+import { getDailyDeals, getShopBuyPrice, getShopMaxTier, getShopPriceMult, getWeeklySpecial } from '../utils/shopRotation';
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
 import { getSignatureSaleVerdict } from '../utils/signatureSale';
@@ -183,11 +183,14 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
         return (shopItems || [])
             .filter((item) => (item.tier || 1) <= maxTier)
             .map((item) => {
-                const affordable = currentGold >= (item.price ?? Infinity);
+                // Wave 62 C20: 보이는 값 · 살 수 있는지 판정 모두 이 상점의 값(`getShopBuyPrice`) — 구매 리듀서와 같은 규칙.
+                const price = item.price === undefined ? undefined : getShopBuyPrice(loc, item.price);
+                const affordable = currentGold >= (price ?? Infinity);
                 const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(currentJob ?? '');
                 const resonance = getTraitItemResonance(item, traitProfile, { job: currentJob });
                 return {
                     item,
+                    price,
                     affordable,
                     equipable,
                     inventoryHasRoom,
@@ -198,9 +201,9 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
             .sort((a, b) => (
                 a.priorityScore - b.priorityScore
                 || b.resonanceScore - a.resonanceScore
-                || (a.item.price || 0) - (b.item.price || 0)
+                || (a.price || 0) - (b.price || 0)
             ));
-    }, [shopItems, maxTier, currentGold, currentJob, traitProfile, inventoryHasRoom]);
+    }, [shopItems, maxTier, loc, currentGold, currentJob, traitProfile, inventoryHasRoom]);
 
     const visibleBuyItems = useMemo(() => {
         if (buyItemsExpanded) return buyItems;
@@ -214,12 +217,12 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     ), [player.inv]);
 
     const dailyDeals = useMemo(
-        () => getDailyDeals(player.level || 1),
-        [player.level]
+        () => getDailyDeals(player.level || 1, loc),
+        [player.level, loc]
     );
     const weeklySpecial = useMemo(
-        () => getWeeklySpecial(player.level || 1),
-        [player.level]
+        () => getWeeklySpecial(player.level || 1, loc),
+        [player.level, loc]
     );
 
     return (
@@ -228,7 +231,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                 eyebrow="마을 거래소"
                 title="마을 상점"
                 titleClassName="text-[1.1rem] leading-none"
-                meta={`판매 등급 ${maxTier} · 가방 ${(player.inv || []).length}/${getInventoryCapacity(player)}`}
+                meta={MSG.SHOP_HEADER_META(maxTier, (player.inv || []).length, getInventoryCapacity(player), Math.round(getShopPriceMult(loc) * 100))}
                 onBack={() => setGameState?.('idle')}
                 backLabel="복귀"
                 backTestId="shop-close"
@@ -370,7 +373,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
 
                 {shopMode === 'buy' ? (
                     buyItems.length > 0 ? (
-                        visibleBuyItems.map(({ item, affordable, equipable, inventoryHasRoom: canStore }) => {
+                        visibleBuyItems.map(({ item, price, affordable, equipable, inventoryHasRoom: canStore }) => {
                             const canBuy = affordable && equipable && canStore;
                             const comparison = getComparisonMeta(item, player);
                             const typeTag = getItemTags(item)[0];
@@ -424,7 +427,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             </div>
                                         </div>
                                         <div className="flex min-w-0 shrink-0 flex-col items-stretch gap-1">
-                                            <div className="text-center font-readable text-[11px] font-bold text-[#f6e7c8]">{formatGold(item.price)}</div>
+                                            <div data-testid="shop-buy-price" className="text-center font-readable text-[11px] font-bold text-[#f6e7c8]">{formatGold(price)}</div>
                                             {!canBuy && blockReason && (
                                                 <div className="text-center font-readable text-[9px] leading-[1.15] text-rose-200/88">{blockReason}</div>
                                             )}
@@ -452,7 +455,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     sellItems.length > 0 ? (
                         sellItems.map((item) => {
                             const isConfirming = sellConfirmId === item.id;
-                            const sellPrice = getSellPrice(item);
+                            // 2026-10 Wave 62 (원장 §61.4 C16): 받는 판매가 — '빈손의 시작'이면 절반(판매 로그와 같은 `getSellIncome`).
+                            const sellPrice = getSellIncome(player, item);
                             const comparison = getComparisonMeta(item, player);
                             const summary = getCompactItemSummary(item);
                             const comparisonText = comparison ? getCompactText(comparison.text) : '';

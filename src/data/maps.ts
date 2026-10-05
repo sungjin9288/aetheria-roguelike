@@ -1,5 +1,17 @@
 import type { GameMap } from '../types/map.js';
 
+/**
+ * 2026-10 Wave 62 C20 (소유자 결정 "전부 설명대로"): 상점 설명이 약속한 규칙을 지역 데이터가 선언한다 — 상점 규칙
+ * (`utils/shopRotation.ts`의 `getShopMaxTier` · `getShopBuyPrice`)이 이 값을 읽고 상점 화면과 구매 리듀서가 같은 규칙을 쓴다.
+ * - 북부 요새 "(판매 등급 3 상점)": 레벨 규칙으로는 5등급이었다.
+ * - 황금 왕국 "물가가 높지만": 가격 보정이 없었다(`shopBonus`는 판매 등급 +1이고 이미 6에 닿아 있어 아무 일도 하지 않는다).
+ *   ×1.3 — 같은 재고(6등급까지)를 기본가로 파는 허공의 섬(Lv42)이 더 이른 지역이므로 이 할증은 되돌아가지 않는 값이지
+ *   잠금이 아니다. 오늘의 할인(−10%) · 주간 특별(−15%)도 이 위에 붙어 기본가의 약 1.17 · 1.1배라, 황금 왕국은 어느 상품도
+ *   다른 상점보다 싸게 팔지 않는다. 판매가는 바뀌지 않는다.
+ */
+const NORTH_FORTRESS_SHOP_MAX_TIER = 3;
+const GOLDEN_KINGDOM_SHOP_PRICE_MULT = 1.3;
+
 // 2026-10 Wave 61: `bossMonsters`의 모든 보스는 실제로 나와야 한다 — 그 지역 `monsters`(일반 조우) · 구역 보스(`boss` 이름) ·
 //   숨은 보스(`spawnEnemy`의 해금 조건) · 혼돈의 심연 층 보스(`BALANCE.ABYSS_BOSS_NAMES`) 중 하나. `bossMonsters`에만 있던
 //   6종(프로토타입 제로 · 에테르 심판자 · 공허의 대행자 · 봄의 여왕 · 서리 군주 · 에테르 관문의 무한의 화신)은 한 번도 나오지 않아
@@ -163,8 +175,9 @@ export const MAPS: Record<string, GameMap> = {
     },
     '북부 요새': {
         level: 32, type: 'safe', exits: ['얼음 성채', '기계 폐도'],
-        desc: '북쪽 끝 설원에 위치한 전방 요새입니다. (Tier 3 상점)',
-        lore: '제국 최후의 방어선. 마왕의 세력이 북상하는 것을 막기 위해 건설되었습니다. 요새의 대장장이가 최고 등급의 장비를 제작합니다.'
+        desc: `북쪽 끝 설원에 위치한 전방 요새입니다. (판매 등급 ${NORTH_FORTRESS_SHOP_MAX_TIER} 상점)`,
+        lore: '제국 최후의 방어선. 마왕의 세력이 북상하는 것을 막기 위해 건설되었습니다. 요새의 대장장이가 전선의 병사들에게 나눠 줄 장비를 벼려 냅니다.',
+        shopMaxTier: NORTH_FORTRESS_SHOP_MAX_TIER,
     },
 
     // ── 확장 지역 (Lv 25-75) ─────────────────────────────────────────────────
@@ -195,7 +208,8 @@ export const MAPS: Record<string, GameMap> = {
     '허공의 섬': {
         level: 42, type: 'safe', exits: ['천공 정원'],
         desc: '구름 위에 떠 있는 신비로운 섬입니다. 하늘의 상인이 머무는 곳.',
-        lore: '중력의 법칙을 거스르고 하늘에 떠있는 섬. 천계로 가는 자들이 마지막으로 쉬어가던 장소입니다. 하늘 상인이 이곳에서만 구할 수 있는 희귀한 물건을 팔고 있습니다.'
+        // 2026-10 Wave 62 C14 (소유자 결정 "문구"): 독점 상품은 없다 — 재고는 판매 등급 규칙 그대로(최상급 6등급까지)라 그것만 말한다.
+        lore: '중력의 법칙을 거스르고 하늘에 떠있는 섬. 천계로 가는 자들이 마지막으로 쉬어가던 장소입니다. 하늘 상인이 천계로 떠나는 이들을 위해 최상급 장비까지 갖춰 두고 있습니다.'
     },
     '심해 회랑': {
         level: 52, type: 'dungeon', exits: ['천공 정원', '에테르 관문', '영혼의 강'],
@@ -272,7 +286,8 @@ export const MAPS: Record<string, GameMap> = {
         desc: '황금으로 넘쳐나는 무역 도시입니다. 물가가 높지만 최상급 물품을 구할 수 있습니다.',
         lore: '고대 황금 왕국의 후예들이 세운 도시. 물물교환과 모험가 길드가 공존하는 번영의 땅.',
         eventChance: 0.28,
-        shopBonus: 1.5
+        shopBonus: 1.5,
+        shopPriceMult: GOLDEN_KINGDOM_SHOP_PRICE_MULT,
     },
     '지하 미궁': {
         level: 44, type: 'dungeon', exits: ['어둠의 동굴', '심해 회랑'],

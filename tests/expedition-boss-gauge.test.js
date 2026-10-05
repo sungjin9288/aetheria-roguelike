@@ -256,18 +256,28 @@ test('보스 도전 선택(idx 0) → 구역 보스 확정 스폰 (SET_ENEMY + G
     assert.ok(setPlayerCalls.length > 0, 'SET_PLAYER dispatch로 게이지 리셋 반영');
 });
 
-test('보스 회피 선택(idx 1) → 전투 미발생, 게이지는 리셋되지 않고 만충 유지', () => {
+// Wave 62 C5: 이전에는 "회피 → 전투 미발생 · 탐험 종료"를 고정했다 — 다음 탐험마다 같은 카드가 떠서 그 지역 사냥이 막히던
+//   결함(문구 "계속 나아간다"와 다름)이었다. 이제 회피는 같은 탐험의 남은 롤로 이어지고 카드는 정해진 탐험 수 동안 쉰다
+//   (전 흐름 계약: tests/boss-gauge-evade-contract.test.js). 보스는 나오지 않고 게이지는 만충 그대로다.
+test('보스 회피 선택(idx 1) → 보스 없이 이번 탐험의 롤로 이어지고, 게이지는 만충 유지 · 회피 기록', () => {
     const ev = buildBossChallengeEvent('고대 호수의 수호신');
     const { actions, dispatches, logs } = makeDeps(ev, {
         player: { loc: '신성한 호수', stats: { bossGauge: { '신성한 호수': 1 } } },
+        deps: { rng: () => 0.99 },
     });
 
     actions.handleEventChoice(1);
 
-    assert.equal(findDispatch(dispatches, 'SET_ENEMY'), undefined, '회피는 전투를 발생시키지 않음');
-    const setGameState = findDispatch(dispatches, 'SET_GAME_STATE');
-    assert.equal(setGameState.payload, 'idle');
+    const setEnemy = findDispatch(dispatches, 'SET_ENEMY');
+    assert.ok(setEnemy, '회피 뒤 일반 롤이 이어져 조우가 생긴다(rng 0.99 = quiet 롤 실패 → 전투)');
+    assert.notEqual(setEnemy.payload.baseName, '고대 호수의 수호신', '구역 보스는 나오지 않는다');
     assert.ok(logs.some((l) => l.text === MSG.BOSS_GAUGE_AVOID_LOG), '회피 로그 출력');
+    assert.ok(logs.some((l) => l.text === MSG.BOSS_GAUGE_AVOID_SUPPRESSED(BALANCE.BOSS_GAUGE_EVADE_EXPLORES)));
+    const player = dispatches.filter((d) => d.type === 'SET_PLAYER')
+        .reduce((acc, d) => (typeof d.payload === 'function' ? d.payload(acc) : { ...acc, ...d.payload }),
+            { loc: '신성한 호수', relics: [], stats: { bossGauge: { '신성한 호수': 1 } } });
+    assert.equal(player.stats.bossGauge['신성한 호수'], 1, '게이지는 만충 그대로');
+    assert.equal(player.stats.bossGaugeEvadedAt['신성한 호수'], 0, '회피 시점의 그 지역 탐험 수');
 });
 
 test('handleEventChoice가 isBossGaugeChallenge 이벤트를 스카우팅/일반 이벤트와 별개 분기로 처리', () => {
