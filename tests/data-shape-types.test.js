@@ -363,7 +363,7 @@ const QUEST_FIELDS = [
 
 const QUEST_TYPES = [
     'bounty_count', 'build_victory', 'combat_count', 'craft', 'discovery_count',
-    'escape_count', 'explore_count', 'signature_collect', 'survive_low_hp',
+    'escape_count', 'explore_count', 'gold_earned', 'signature_collect', 'survive_low_hp',
 ];
 
 const ACHIEVEMENT_TARGETS = [

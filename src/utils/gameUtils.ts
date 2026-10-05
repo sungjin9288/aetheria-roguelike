@@ -22,6 +22,7 @@ import { formatSkillText } from './skillPresentation.js';
 import { countDiscoveredMaps } from './discoveredMaps.js';
 import { getCodexEntryName } from './codexIdentity.js';
 import { getGoldIncome, getVisibleLocationName, type ChallengeHolder } from './challengeRules.js';
+import { syncQuestProgress } from './questProgress.js';
 import {
     countDiscoveredSignatures,
     isSignatureName,
@@ -240,7 +241,7 @@ export const grantGold = (player: Player, amount: number) => {
     const income = getGoldIncome(player, amount);
     if (!income) return player;
     const stats = player.stats || {};
-    return {
+    const next: Player = {
         ...player,
         gold: (player.gold || 0) + income,
         stats: {
@@ -248,6 +249,9 @@ export const grantGold = (player: Player, amount: number) => {
             total_gold: (stats.total_gold || 0) + Math.max(0, income),
         }
     };
+    // 2026-10 Wave 64 (원장 §65): 누적 골드 임무(64 '황금 수집가')는 번 그 자리에서 진행된다 — 판매 · 임무 보상처럼 마을에서
+    //   번 골드로 목표를 넘겨도 다음 탐험 · 전투까지 수령 버튼이 없었을 것이다(Wave 61 제작 임무와 같은 결함 종류).
+    return next.quests?.length ? { ...next, quests: syncQuestProgress(next, '', DB.QUESTS).updatedQuests } : next;
 };
 
 /** `getActiveQuestEntries()`가 만드는 진행 중 퀘스트 1건 — `quest`는 현상수배(`isBounty`)면 `QuestProgressState` 자체, 그 외엔 `DB.QUESTS` 카탈로그 원본. */

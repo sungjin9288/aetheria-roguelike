@@ -378,6 +378,12 @@ export const MSG = {
     GUIDE_BAG_UPGRADE_ACTION: '제작소 열기',
     // 2026-10 Wave 61: 누적 처치 임무(`kills`)의 다음 단계 — 보스 처치도 함께 센다(CombatEngine.handleVictory).
     QUEST_NEXT_STEP_KILLS: (remaining: number) => `몬스터 ${remaining}회 더 처치 (보스 포함)`,
+    // 2026-10 Wave 64: 누적 골드 임무(`gold_earned`) — 경로 · 다음 단계 · 귀환 · 작전 목표 문구.
+    QUEST_ROUTE_GOLD: '골드 수입',
+    QUEST_NEXT_STEP_GOLD: (remaining: number) => `골드 ${remaining} 더 벌기`,
+    QUEST_RETURN_GOLD: '골드',
+    QUEST_OBJECTIVE_GOLD: (goal: number) => `누적 골드 ${goal} 달성`,
+    QUEST_EXTRACTION_GOLD: (goal: number) => `누적 골드 ${goal} 달성 후 마을 귀환`,
     QUEST_REWARD_ITEM: (name: string) => `보상 아이템: ${name}`,
     // 2026-10 임무 문구 감사: 칭호 보상 표시(formatRewardParts) — 수령하면 칭호가 지급되는데 보상 줄에서 빠져 있었다.
     QUEST_REWARD_TITLE: (label: string) => `칭호 ${label}`,

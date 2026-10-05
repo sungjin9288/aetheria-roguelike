@@ -30,6 +30,8 @@ export type QuestType =
     | 'discovery_count'
     | 'escape_count'
     | 'explore_count'
+    /** 2026-10 Wave 64: 평생 누적 골드(`stats.total_gold`) — 임무 64 '황금 수집가'. */
+    | 'gold_earned'
     | 'signature_collect'
     | 'survive_low_hp';
 

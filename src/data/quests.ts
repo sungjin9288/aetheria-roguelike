@@ -75,11 +75,15 @@ const RAW_QUESTS: Quest[] = [
     { id: 136, title: '황금 골렘 격파',   desc: '고대 보물고의 황금 골렘 6기를 파괴하세요', target: '황금 골렘', location: '고대 보물고', goal: 6, reward: { exp: 2400, gold: 3000, item: '마나 결정' }, minLv: 25 },
     { id: 137, title: '보물고 미믹 퇴치', desc: '고대 보물고의 미믹 5마리를 처치하세요',    target: '미믹', location: '고대 보물고', goal: 5, reward: { exp: 2600, gold: 3500, item: '잊혀진 열쇠' }, minLv: 26 },
     { id: 29, title: '탑 수호자 격파',   desc: '탑 수호자 5마리 처치',    target: '탑 수호자',   goal: 5,  reward: { exp: 2200, gold: 2800, item: '현자의 예복' }, minLv: 25 },
-    { id: 30, title: '영웅의 길 (2차)',  desc: '레벨 30 달성',           target: 'level',       goal: 30, reward: { exp: 0,    gold: 5000 },            minLv: 29 },
+    // 2026-10 Wave 64 (원장 §65, 소유자 결정 "각각의 목표"): 100(전직의 자격 (2차))과 같은 '레벨 30 달성'이었다 — 100은 전직
+    //   시리즈(10 · 100 · 101)라 레벨을 맡고, 30은 어느 임무도 목표로 삼지 않던 기계 폐도의 보스를 맡는다. 수락 레벨은 기계 폐도에
+    //   걸어 들어갈 수 있는 레벨(경로 게이트 35 — 선언 레벨은 28)이다: 레벨 임무의 29를 남기면 받아 두고 여섯 레벨 동안 진행할 수 없다.
+    { id: 30, title: '영웅의 길',        desc: '기계 폐도의 프로토타입 제로를 처치한다', target: '프로토타입 제로', location: '기계 폐도', goal: 1, reward: { exp: 0, gold: 5000 }, minLv: 35 },
 
     // ── 고급 퀘스트 (Lv 25-40) ───────────────────────────────────────────────
     { id: 31, title: '용의 둥지 습격',   desc: '레드 드래곤 처치',        target: '레드 드래곤', goal: 1,  reward: { exp: 5000,  gold: 8000,  item: '용의 심장' },  minLv: 25 },
-    { id: 32, title: '빙결의 마녀 토벌', desc: '빙결의 마녀 처치',        target: '빙결의 마녀', location: '빙하 심연', goal: 1, reward: { exp: 6000, gold: 10000, item: '현자의 예복' }, minLv: 35 },
+    // 2026-10 Wave 64 (원장 §65): 이야기 83(얼음의 저주)과 같은 '마녀 1회'였다 — 83이 1회를 맡고 토벌은 3회다(마녀는 빙하 심연의 일반 조우라 반복된다).
+    { id: 32, title: '빙결의 마녀 토벌', desc: '빙결의 마녀 3회 처치',    target: '빙결의 마녀', location: '빙하 심연', goal: 3, reward: { exp: 6000, gold: 10000, item: '현자의 예복' }, minLv: 35 },
     { id: 33, title: '암흑 성 침공',     desc: '데스나이트 10마리 처치',  target: '데스나이트', location: '암흑 성', goal: 10, reward: { exp: 4000, gold: 6000, item: '암흑의 대검' }, minLv: 35 },
     { id: 34, title: '리치 처단',        desc: '리치 처치',               target: '리치',        goal: 1,  reward: { exp: 7000,  gold: 12000, item: '혼돈의 지팡이' }, minLv: 35 },
     { id: 35, title: '뱀파이어 박멸',    desc: '뱀파이어 5마리 처치',     target: '뱀파이어', location: '암흑 성', goal: 5, reward: { exp: 5500, gold: 7500 }, minLv: 35 },
@@ -153,7 +157,10 @@ const RAW_QUESTS: Quest[] = [
     //   `questData.threshold || 0.2` fallback과 동일.
     { id: 62, title: '생존의 의지',          type: 'survive_low_hp',  desc: 'HP 20% 이하에서 승리 5회',     target: 'lowHpWins',          goal: 5, reward: { exp: 8000, gold: 6000, item: '엘릭서' }, minLv: 15 },
     { id: 63, title: '맨몸의 용사',          type: 'survive_low_hp',  desc: 'HP 10% 이하에서 승리 3회',     target: 'lowHpWins',          threshold: 0.1, goal: 3, reward: { exp: 12000, gold: 10000, item: '엘릭서' }, minLv: 25 },
-    { id: 64, title: '황금 수집가',          type: 'explore_count',   desc: '50번 탐색',                    target: 'explores',           goal: 50, reward: { exp: 10000, gold: 15000 }, minLv: 20 },
+    // 2026-10 Wave 64 (원장 §65, 소유자 결정 "각각의 목표"): 200(대륙의 발자취)과 같은 '누적 탐험 50회'였다 — 제목대로 누적 골드다.
+    //   목표 10만: 1회차 자연 플레이(5경로 × 12시드)에서 누적 골드가 10만에 닿는 레벨은 중앙값 26(p10 15 · p90 36)이고,
+    //   수락 레벨 20에 이미 채워진 경우는 60회 중 9회다(이전 '누적 탐험 50회'는 Lv20 탐험 중앙값 260이라 사실상 전부 수락 즉시 완료).
+    { id: 64, title: '황금 수집가',          type: 'gold_earned',     desc: '누적 골드 100000 획득',        target: 'total_gold',         goal: 100000, reward: { exp: 10000, gold: 15000 }, minLv: 20 },
     { id: 65, title: '장인의 길',            type: 'craft',           desc: '아이템 10개 제작',             target: 'crafts',             goal: 10, reward: { exp: 15000, gold: 20000, item: '강화 재료' }, minLv: 25 },
     { id: 66, title: '현상금 사냥꾼',        type: 'bounty_count',    desc: '현상수배 5건 완료',            target: 'bountiesCompleted',  goal: 5,  reward: { exp: 10000, gold: 15000 }, minLv: 10 },
     { id: 67, title: '전설의 사냥꾼',        type: 'bounty_count',    desc: '현상수배 15건 완료',           target: 'bountiesCompleted',  goal: 15, reward: { exp: 25000, gold: 40000, item: '그림자 망토' }, minLv: 25 },
@@ -226,10 +233,10 @@ const RAW_QUESTS: Quest[] = [
     { id: 152, title: '에테르 폐허 완전 탐험',  desc: '에테르 폐허 20회 탐험',           type: 'explore_count', target: 'explores', location: '에테르 폐허', goal: 20, reward: { exp: 0, gold: 40000, title: '에테르 탐험가' }, minLv: 70 },
     { id: 153, title: '공허의 회랑 정복',       desc: '공허의 회랑 15회 탐험',           type: 'explore_count', target: 'explores', location: '공허의 회랑', goal: 15, reward: { exp: 0, gold: 50000, title: '공허의 방랑자' }, minLv: 70 },
     // 2026-10 Wave 62 (원장 §61.4 C9, 소유자 결정 "목표 1회"): 종말의 기사는 구역 보스라 한 여정에 한 번만 나오고
-    //   임무는 여정이 끝나면 사라진다 — "3회 처치"(goal 3)는 1/3을 넘을 수 없었다.
-    // 2026-10 Wave 63 (원장 §63.8): 수락 레벨을 151(종말의 기사 정복)과 같은 73으로 맞췄다 — 75이던 동안 Lv73 ~ 74에 151로 기사를
-    //   먼저 잡으면 154는 그 여정에서 진행할 수 없었다(기사는 여정당 한 번). 이제 둘 다 받아 둔 채 한 번의 처치로 함께 진행된다.
-    { id: 154, title: '종말을 넘어서',          desc: '종말의 전장에서 종말의 기사를 처치한다', target: '종말의 기사', location: '종말의 전장', goal: 1, reward: { exp: 100000, gold: 120000, title: '종말의 정복자' }, minLv: 73 },
+    //   임무는 여정이 끝나면 사라진다 — "3회 처치"(goal 3)는 1/3을 넘을 수 없었다. 그 결과 151과 목표가 같아졌다.
+    // 2026-10 Wave 64 (원장 §65, 소유자 결정 "동일하면 안 됨 — 각각의 목표"): 기사 1회는 151이 맡고, 154는 종말의 전장의
+    //   정예(파멸의 기사) 사냥이다. 파멸의 기사는 일반 조우라 여정당 횟수 제한이 없다. 수락 레벨 73은 Wave 63 그대로다.
+    { id: 154, title: '종말을 넘어서',          desc: '종말의 전장에서 파멸의 기사 10명을 처치한다', target: '파멸의 기사', location: '종말의 전장', goal: 10, reward: { exp: 100000, gold: 120000, title: '종말의 정복자' }, minLv: 73 },
 
     // ── cycle 63: 신규 탐험 / 발견 챌린지 (3개) ──────────────────────────────
     // 2026-10 Wave 62 (원장 §61.4 C10, 소유자 결정 "칭호를 준다"): 설명이 약속한 새 칭호 '대륙의 여행자'(titles.ts, questReward 200).

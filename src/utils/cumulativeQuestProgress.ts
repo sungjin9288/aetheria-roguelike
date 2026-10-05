@@ -40,6 +40,8 @@ const getLifetimeCounterReader = (quest: Quest | undefined): LifetimeCounterRead
         return (player) => countDiscoveredMaps(statsOf(player));
     }
     if (quest?.type === 'escape_count' && quest.target === 'escapes') return (player) => statsOf(player).escapes;
+    // 2026-10 Wave 64 (원장 §65): 누적 골드 — 업적 '거상' 계열과 같은 기록이다(번 골드는 전부 `stats.total_gold`에 쌓인다).
+    if (quest?.type === 'gold_earned' && quest.target === 'total_gold') return (player) => statsOf(player).total_gold;
     if (quest?.type === 'signature_collect' && quest.target === 'signaturesDiscovered') {
         return (player) => countDiscoveredSignatures(player);
     }

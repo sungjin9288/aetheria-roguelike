@@ -348,7 +348,7 @@ const EXPECTED_CATALOG_COUNTS = Object.freeze({
 //   구 표기 'Level'은 데이터에 남아 있지 않지만 외부 소스를 받는 함수라 둘 다 허용한다.
 const SYSTEM_QUEST_TARGETS = new Set([
     'level', 'Level', 'explores', 'kills', 'bossKills', 'crafts', 'discoveries',
-    'escapes', 'bountiesCompleted', 'signaturesDiscovered', 'lowHpWins',
+    'escapes', 'bountiesCompleted', 'signaturesDiscovered', 'lowHpWins', 'total_gold',
     'crusher', 'dual', 'fortress', 'arcane',
 ]);
 
