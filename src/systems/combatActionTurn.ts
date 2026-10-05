@@ -44,16 +44,20 @@ export type CombatActionTurnResult = {
 
 const selectedSkill = (player: Player, random: () => number) => {
     const skills = getJobSkills(player);
-    if (skills.length === 0) return { skill: null, log: null };
-    if (player.challengeModifiers?.includes('randomSkills')) {
-        const skill = skills[Math.floor(random() * skills.length)];
-        return { skill, log: { type: 'warn', text: MSG.COMBAT_CHAOS_SKILL(skill.name ?? '') } };
-    }
+    if (skills.length === 0) return { skill: null, log: null, shuffled: false };
     const selected = Number.isInteger(player.skillLoadout?.selected)
         ? player.skillLoadout!.selected as number
         : 0;
     const index = ((selected % skills.length) + skills.length) % skills.length;
-    return { skill: skills[index], log: null };
+    if (player.challengeModifiers?.includes('randomSkills')) {
+        // 2026-10 Wave 62 (원장 §61.4 C15): "다른 기술이 무작위로 발동" — 고른 기술을 뺀 나머지에서 뽑는다(기술이 하나뿐이면 그 기술).
+        //   전체에서 고르게 뽑던 동안 고른 기술이 그대로 나갈 수 있었다. 난수는 예전처럼 한 번 쓴다.
+        const others = skills.filter((_, skillIndex) => skillIndex !== index);
+        const pool = others.length > 0 ? others : skills;
+        const skill = pool[Math.floor(random() * pool.length)];
+        return { skill, log: { type: 'warn', text: MSG.COMBAT_CHAOS_SKILL(skill.name ?? '') }, shuffled: true };
+    }
+    return { skill: skills[index], log: null, shuffled: false };
 };
 
 const resolveDefeat = (
@@ -168,6 +172,21 @@ export const resolveCombatActionTurn = ({
         ignoredGuard = Boolean(selected.skill && 'ignoreGuard' in selected.skill && selected.skill.ignoreGuard);
         if (selected.log) logs.push(selected.log);
         actionResult = CombatEngine.performSkill(player, enemy, stats, selected.skill, random);
+        if (!actionResult.success && selected.shuffled) {
+            // 2026-10 Wave 62 (원장 §61.4 C15): 뒤섞인 기술이 쓸 수 없는 기술(기력 부족 · 재사용 대기)을 뽑아도 차례는 지나간다 —
+            //   기력은 쓰지 않고 적은 평소처럼 행동한다. 거부하던 동안 다음 입력이 새 씨앗으로 다시 뽑아 비용 없는 다시 굴리기였다.
+            actionResult = {
+                success: true,
+                updatedPlayer: player,
+                updatedEnemy: enemy,
+                logs: [
+                    ...(actionResult.logs || []),
+                    { type: 'warn', text: MSG.COMBAT_CHAOS_SKILL_FIZZLE(selected.skill?.name ?? '') },
+                ],
+                isCrit: false,
+                isVictory: false,
+            };
+        }
         if (!actionResult.success) {
             return {
                 kind: 'rejected',

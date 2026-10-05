@@ -7,6 +7,7 @@ import { DB } from '../src/data/db.js';
 import { MSG } from '../src/data/messages.js';
 import { EVENT_CHAINS } from '../src/data/eventChains.js';
 import { FALLBACK_EVENT_POOL } from '../src/data/aiEventPools.js';
+import { findStructuredFallbackHiddenEvent } from '../src/data/structuredFallbackEvents.js';
 import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.js';
 import { AT } from '../src/reducers/actionTypes.js';
 import { GS } from '../src/reducers/gameStates.js';
@@ -46,7 +47,7 @@ const basePlayer = (overrides = {}) => ({
 });
 
 /** 실제 `handleEventChoice` → 실제 리듀서. 로그는 액션이 남긴 것과 리듀서가 남긴 것을 함께 모은다. */
-const runEventChoice = (player, currentEvent, choiceIndex) => {
+const runEventChoice = (player, currentEvent, choiceIndex, rng = () => 0.5) => {
     let state = { ...clone(INITIAL_STATE), player, gameState: GS.EVENT, currentEvent, logs: [] };
     const logs = [];
     createEventActions({
@@ -55,7 +56,7 @@ const runEventChoice = (player, currentEvent, choiceIndex) => {
         dispatch: (action) => { state = gameReducer(state, action); },
         addLog: (type, text) => logs.push({ type, text }),
         getFullStats: () => calculateFullStats(player),
-        rng: () => 0.5,
+        rng,
     }, { emitUnlockedTitles: () => {} }).handleEventChoice(choiceIndex);
     return { state, logs };
 };
@@ -174,6 +175,20 @@ test('E13: 생명을 잃는 폴백 풀 결과는 어느 줄로 미리보든 생�
                     );
                     assert.ok(pkg, entry.desc);
                     const event = { ...pkg, fallbackTransactionId: entry.fallbackTransactionId };
+                    // 2026-10 Wave 62 C18: 결과를 숨기는 폴백 이벤트(카드 · 크리스탈 · 암호 상자)는 선택지마다 결과를 읽지 않는다 —
+                    //   어느 칸이든 생명을 잃을 수 있으면 **모든** 선택지가 생명 손실을 말한다(어느 선택지인지는 말하지 않는다).
+                    const hidden = findStructuredFallbackHiddenEvent(event);
+                    if (hidden) {
+                        const anyLoss = hidden.event.outcomes.some((slot) => slot.hp < 0);
+                        for (const outcome of pkg.outcomes) {
+                            checked += 1;
+                            if (outcome.hp < 0) lossCount += 1;
+                            const preview = getEventChoicePreview(event, outcome.choiceIndex);
+                            assert.equal(preview.text.includes(HP_LOSS_TEXT), anyLoss, `${entry.desc} #${outcome.choiceIndex} → ${preview.text}`);
+                            if (anyLoss) assert.equal(preview.tone, 'danger');
+                        }
+                        continue;
+                    }
                     for (const outcome of pkg.outcomes) {
                         checked += 1;
                         const preview = getEventChoicePreview(event, outcome.choiceIndex);
@@ -282,7 +297,8 @@ test('U5: 회복 수치를 적은 폴백 사건 결과는 상한에 걸리면 �
     for (const { entry, outcome } of healers) {
         const pkg = buildEventPackage({ ...entry, source: 'fallback' }, { location: player.loc, source: 'fallback' });
         const missing = { hp: 7, mp: 3 };
-        const capped = runEventChoice({ ...player, hp: full.maxHp - missing.hp, mp: full.maxMp - missing.mp }, pkg, outcome.choiceIndex);
+        // Wave 62 C18: 숨김 이벤트(크리스탈)는 판마다 칸을 섞는다 — 난수 0은 배치 0(칸 i = 선택지 i)이라 이 결과 칸이 나온다.
+        const capped = runEventChoice({ ...player, hp: full.maxHp - missing.hp, mp: full.maxMp - missing.mp }, pkg, outcome.choiceIndex, () => 0);
         const text = capped.logs.find((entry) => entry.type === 'event').text;
         for (const [key, label] of [['hp', '생명'], ['mp', '기력']]) {
             if (!(outcome[key] > 0)) continue;

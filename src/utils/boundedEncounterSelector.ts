@@ -11,6 +11,7 @@ import type { Player } from '../types/player.js';
 import { grantGold } from './gameUtils.js';
 import { MSG } from '../data/messages.js';
 import { healWithinMax } from '../systems/vitals.js';
+import { applyTempBuffRule } from '../systems/tempBuffMerge.js';
 import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
 import { calculateFullStats } from './statsCalculator.js';
 
@@ -433,7 +434,13 @@ export const applyBoundedEncounterChoice = (
             inv: [...(player.inv || []), { ...item, id: `bounded:${receiptKey}` }],
         };
     }
-    if (outcome.buff) nextPlayer = { ...nextPlayer, tempBuff: { ...outcome.buff } };
+    // Wave 62 C6: 강화 칸 규칙(더 센 쪽 유지) — 더 센 강화가 걸려 있으면 그것을 남기고 결과 줄에 알린다.
+    let buffNotice: string | null = null;
+    if (outcome.buff) {
+        const buffResult = applyTempBuffRule(nextPlayer, { ...outcome.buff }, outcome.buff.name || MSG.EVENT_BUFF_NAME);
+        nextPlayer = buffResult.player;
+        buffNotice = buffResult.notice;
+    }
     nextPlayer = {
         ...nextPlayer,
         eventChainProgress: {
@@ -449,6 +456,6 @@ export const applyBoundedEncounterChoice = (
         player: nextPlayer,
         reason: 'applied',
         receiptKey,
-        result,
+        result: buffNotice ? `${result} ${buffNotice}` : result,
     };
 };

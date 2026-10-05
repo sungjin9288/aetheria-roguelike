@@ -117,6 +117,14 @@ test('D2 체인 전설 보상(lost_wizard 2단계)으로 21/20이 된 대마법�
         getFullStats: () => calculateFullStats(state.player),
         rng: () => 0.5,
     }, { emitUnlockedTitles: () => {} }).handleEventChoice(choiceIndex);
+    // Wave 62 C19: "전투를 받아들인다"는 실제 전투를 연다 — 지팡이와 진행은 승리 정산이 준다. 이 테스트의 관심은 가방 상한이라
+    //   환영의 생명을 1로 두고 실제 전투 전이(RESOLVE_COMBAT_ACTION)로 이긴다(전투 계약은 tests/lost-wizard-fight-contract.test.js).
+    assert.equal(state.gameState, GS.COMBAT, '전제: 이야기 전투가 열렸다');
+    state = { ...state, enemy: { ...state.enemy, hp: 1 } };
+    dispatch({
+        type: AT.RESOLVE_COMBAT_ACTION,
+        payload: { kind: 'attack', expectedTurn: state.combatTurn || 0, seed: 20261005, now: 1_700_000_000_000 },
+    });
 
     assert.equal(state.player.eventChainProgress[chain.id], 3, '체인 스텝이 실제로 진행됐다');
     assert.equal(state.player.inv.length, CAP + 1, '체인 전설 보상은 상한을 넘겨도 들어온다');

@@ -1,5 +1,6 @@
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
+import { getVisibleLocationName, isBlindMap } from './challengeRules';
 import type { Player } from '../types/index.js';
 import type { GameActions } from '../hooks/actionDeps.js';
 import { GS } from '../reducers/gameStates';
@@ -121,9 +122,10 @@ export const parseCommand = (input: string, gameState: GameMode, player: Player,
     case '상태':
     case 'i': {
       const stats = actions.getFullStats();
+      // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 위치를 자리표시로 — 상태줄은 숨기는데 터미널이 드러냈다.
       return MSG.CMD_STATUS(
         player.level, player.name, player.job,
-        player.hp, stats.maxHp, player.mp, player.maxMp, player.gold, player.loc,
+        player.hp, stats.maxHp, player.mp, player.maxMp, player.gold, getVisibleLocationName(player, player.loc),
       );
     }
 
@@ -141,6 +143,7 @@ export const parseCommand = (input: string, gameState: GameMode, player: Player,
 
     case 'map':
     case '지도': {
+      if (isBlindMap(player)) return MSG.CMD_MAP_BLIND;
       const visitedCount = new Set([...(player.stats?.visitedMaps || []), player.loc]).size;
       const totalCount = Object.keys(DB.MAPS).length;
       return MSG.CMD_MAP(visitedCount, totalCount, player.loc);

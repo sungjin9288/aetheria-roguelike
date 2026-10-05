@@ -1,9 +1,10 @@
 import { DB } from '../../data/db';
 import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
-import { getStructuredFallbackTransaction } from '../../data/structuredFallbackEvents';
+import { didFallbackTransactionPay, getStructuredFallbackTransaction } from '../../data/structuredFallbackEvents';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { formatEventText } from '../../utils/eventPresentation';
+import { getGoldIncome } from '../../utils/challengeRules';
 import type { ResolveFallbackEventTransactionPayload } from '../actionTypes';
 import type { GameState, HandlerMap } from '../gameReducer';
 import { GS } from '../gameStates';
@@ -13,17 +14,25 @@ import type { Item } from '../../types';
 import type { LogEntry } from '../../types/session.js';
 
 const PAYLOAD_KEYS = ['choiceIndex', 'transactionId'];
+// 2026-10 Wave 62 C18: 내기 거래만 승패 난수(`roll`)를 싣는다 — 있는지 없는지는 거래가 정한다(핸들러가 대조).
+const OPTIONAL_PAYLOAD_KEYS = ['roll'];
+
+const isUnitRoll = (value: unknown): value is number => (
+    typeof value === 'number' && Number.isFinite(value) && value >= 0 && value < 1
+);
 
 const isPayload = (value: unknown): value is ResolveFallbackEventTransactionPayload => {
     if (!value || typeof value !== 'object' || Array.isArray(value)) return false;
     const payload = value as Record<string, unknown>;
     const keys = Reflect.ownKeys(payload);
-    return keys.length === PAYLOAD_KEYS.length
-        && keys.every((key) => typeof key === 'string' && PAYLOAD_KEYS.includes(key))
+    return PAYLOAD_KEYS.every((key) => keys.includes(key))
+        && keys.every((key) => typeof key === 'string'
+            && (PAYLOAD_KEYS.includes(key) || OPTIONAL_PAYLOAD_KEYS.includes(key)))
         && typeof payload.transactionId === 'string'
         && payload.transactionId.trim().length > 0
         && Number.isSafeInteger(payload.choiceIndex)
-        && Number(payload.choiceIndex) >= 0;
+        && Number(payload.choiceIndex) >= 0
+        && (!Object.hasOwn(payload, 'roll') || isUnitRoll(payload.roll));
 };
 
 const structurallyEqual = (left: unknown, right: unknown): boolean => {
@@ -66,14 +75,16 @@ export const fallbackEventActionMap = {
     RESOLVE_FALLBACK_EVENT_TRANSACTION: (state, action) => {
         if (state.gameState !== GS.EVENT || !isPayload(action.payload)) return state;
 
-        const { transactionId, choiceIndex } = action.payload;
+        const { transactionId, choiceIndex, roll } = action.payload;
         const transaction = getStructuredFallbackTransaction(transactionId);
         const event = state.currentEvent;
         // 신원 판정: 출처·선택 인덱스가 틀린 payload는 훅이 만들 수 없는 조합이다(훅은 열린
         //   이벤트의 출처와 원장 거래의 비용 인덱스로 보낸다) — 도달 불가 경로라 동일 참조가 정답이다.
+        //   승패 난수도 같다: 훅은 내기 거래에만, 그리고 언제나 `roll`을 싣는다(Wave 62 C18).
         if (!event
             || !transaction
             || transaction.choiceIndex !== choiceIndex
+            || Boolean(transaction.chance) !== (roll !== undefined)
             || event?.source !== 'fallback') return state;
         // 정본 판정(위조 방지): 원장(structuredFallbackEvents)이 모양의 유일한 소유자다 — 생산자
         //   (pickFallbackEvent)는 원장 값과 거래 id를 그대로 내보내므로 정상 경로에서는 항상 통과한다.
@@ -124,20 +135,27 @@ export const fallbackEventActionMap = {
             currentGold = Number(currentGold) - transaction.cost.amount;
         }
 
+        // 2026-10 Wave 62 C18: 내기는 판돈을 치른 뒤 `winChance` 확률로만 지급한다 — 지면 지급 0 · 누적 골드 불변이고
+        //   결과 문구는 원장의 `lossLog`다. 내기가 아닌 거래는 언제나 지급한다(`didFallbackTransactionPay`).
+        const paid = didFallbackTransactionPay(transaction, roll);
         const outcome = transaction.event.outcomes[choiceIndex];
-        const resultText = formatEventText(outcome.log);
+        const resultText = formatEventText(paid ? outcome.log : (transaction.chance?.lossLog ?? outcome.log));
         const logs: LogEntry[] = [{
             id: `fallback-transaction:${transactionId}:${choiceIndex}`,
             type: 'event',
             text: resultText,
         }];
+        // 2026-10 Wave 62 (원장 §61.4 C16): 받는 골드는 골드 수입 규칙을 한 번 거친다('빈손의 시작'이면 절반). 누적 골드는
+        //   이 거래의 순수익(받은 골드 − 낸 골드) 그대로의 뜻을 유지한다.
+        const grossIncome = paid ? getGoldIncome(state.player, transaction.grossGold) : 0;
+        const netIncome = paid ? Math.max(0, transaction.netGold - (transaction.grossGold - grossIncome)) : 0;
         let player: GameState['player'] = {
             ...state.player,
-            gold: Number(currentGold) + transaction.grossGold,
+            gold: Number(currentGold) + grossIncome,
             inv: nextInventory,
             stats: {
                 ...(state.player.stats || {}),
-                total_gold: Number(trackedTotalGold) + transaction.netGold,
+                total_gold: Number(trackedTotalGold) + netIncome,
             },
             history: [
                 ...(state.player.history || []),

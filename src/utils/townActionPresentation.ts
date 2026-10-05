@@ -189,7 +189,7 @@ export const getTownActionPresentation = ({
     //   진행됐다. 대기 스텝이 있으면 같은 explore 행동을 마을 행동으로 노출한다 —
     //   explore()는 체인 트리거를 가장 먼저 검사하므로 이 버튼은 항상 그 분기로 간다.
     const hasPendingChainStep = Boolean(
-        getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps),
+        getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps, player.stats?.abyssFloor),
     );
     const canInvestigate = canInvestigateTown(player.loc, mapData);
     const exploreIntent: TownExploreIntent = hasPendingChainStep

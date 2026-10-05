@@ -12,6 +12,8 @@ import { BALANCE } from './constants';
 import type { EventChainProgress } from '../types/player.js';
 
 const PRIMAL_SHARD_DROP_PERCENT = Math.round(BALANCE.PRIMAL_SHARD_DROP_CHANCE * 100);
+/** 심연의 신호가 가리키는 층 — 신호 문구("50층")와 생존자 · 핵심 스텝의 층 조건이 같은 값을 읽는다(Wave 62 C17). */
+const ABYSS_SIGNAL_SURVIVOR_FLOOR = 50;
 
 export const EVENT_CHAINS = [
     {
@@ -95,11 +97,16 @@ export const EVENT_CHAINS = [
                 loc: '천공 정원',
                 event: {
                     title: '마법사의 환영',
-                    desc: '정원에서 마법사의 환영이 나타납니다. "당신이 내 일기장을 가져왔군요. 하지만... 이 자리를 떠날 수 없습니다. 나를 대신해 이 마법서를 써주세요."',
+                    desc: '정원에서 마법사의 환영이 나타납니다. "당신이 내 일기장을 가져왔군요. 하지만... 이 자리를 떠날 수 없습니다. 내 지팡이를 이어받고 싶다면, 먼저 내 환영을 쓰러뜨려 자격을 증명하세요."',
                     choices: ['전투를 받아들인다 (전설 보상)', '거절한다'],
                     outcomes: [
                         // cycle 140: '전설의 마법서'가 items.ts에 없는 missing item이라 보상이 silently 누락됐음. 실재하는 tier 5 mage staff '천벌의 지팡이'로 교체.
-                        { type: 'chain_advance', log: '환영을 물리쳤습니다. 천벌의 지팡이를 얻었습니다!', reward: { type: 'legendary_item', name: '천벌의 지팡이' } },
+                        // Wave 62 C19(소유자 결정 "설명대로"): 고르면 실제 전투가 열린다(`combat` — 기존 종 '고대 마법사'를 이 지역 레벨로
+                        //   스폰한 정예). 지팡이 · 진행은 승리 때만 정산되고 `log`가 그때의 승리 로그다. 지거나 물러나면 단계는 그대로 남는다.
+                        {
+                            type: 'chain_advance', log: '환영을 물리쳤습니다. 천벌의 지팡이를 얻었습니다!', reward: { type: 'legendary_item', name: '천벌의 지팡이' },
+                            combat: { monster: '고대 마법사', enemyName: '사라진 마법사의 환영', intro: '마법사의 환영이 지팡이를 들어 올립니다. 자격을 증명할 시간입니다!' },
+                        },
                         { type: 'nothing', log: '거절했습니다. 마법사의 환영이 사라집니다.', reward: null },
                     ],
                 },
@@ -283,7 +290,8 @@ export const EVENT_CHAINS = [
                     desc: '전초기지 지하에 기계들만의 은신처가 있습니다. 의식을 가진 자동인형들이 모여 있습니다. "당신이 우리 동료를 도왔군요. 우리는 인간과 공존하고 싶습니다."',
                     choices: ['협력을 약속한다', '당국에 신고하겠다고 협박한다', '조용히 물러난다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '기계 집단과 동맹을 맺었습니다. 전투에서 도움을 받을 수 있게 됩니다.', reward: { type: 'gold', amount: 3000 } },
+                        // 2026-10 Wave 62 C13 (소유자 결정 "문구"): 보상은 골드 3,000뿐이고 이 진행을 읽는 전투 도움은 없다 — 약속하지 않는다.
+                        { type: 'chain_advance', log: '기계 집단과 동맹을 맺었습니다. 감사의 표시로 그들이 모아 둔 금화를 건넵니다.', reward: { type: 'gold', amount: 3000 } },
                         { type: 'chain_advance_fail', log: '협박이 역효과를 냈습니다. 기계들은 은신처를 버리고 자취를 감췄습니다. 다시는 그들을 만날 수 없을 것입니다.', reward: null },
                         { type: 'nothing', log: '아무 결정도 하지 않고 물러났습니다.', reward: null },
                     ],
@@ -349,7 +357,8 @@ export const EVENT_CHAINS = [
                     desc: '시험을 치렀던 그 자리에 드래곤이 다시 내려앉습니다. 구름 위 정원의 빛 속에서 마지막 선물을 건넵니다. "이것은 용족의 가장 소중한 보물입니다. 당신은 그것을 받을 자격이 있습니다."',
                     choices: ['경건하게 받는다', '어떤 선택이 최선인지 묻는다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '용의 심장 유물을 받았습니다. 전설의 힘이 당신에게 깃듭니다!', reward: { type: 'relic' } },
+                        // Wave 62 C3: '용의 심장'은 재료라 그런 유물이 없었다 — 전설 등급 유물을 준다(데이터가 등급을 선언, 엔진이 읽는다).
+                        { type: 'chain_advance', log: '용족이 지켜 온 전설의 유물을 받았습니다. 전설의 힘이 당신에게 깃듭니다!', reward: { type: 'relic', rarity: 'legendary' as const } },
                         { type: 'chain_advance', log: '드래곤이 조언과 함께 유물을 건넸습니다. 지혜와 힘을 동시에 얻었습니다.', reward: { type: 'relic' } },
                     ],
                 },
@@ -367,7 +376,7 @@ export const EVENT_CHAINS = [
                 loc: '혼돈의 심연',
                 event: {
                     title: '비밀 신호',
-                    desc: '심연 깊은 곳에서 규칙적인 신호가 감지됩니다. 모스 부호처럼 반복됩니다. 내용을 해독하면: "살아 있다. 50층. 함정 주의."',
+                    desc: `심연 깊은 곳에서 규칙적인 신호가 감지됩니다. 모스 부호처럼 반복됩니다. 내용을 해독하면: "살아 있다. ${ABYSS_SIGNAL_SURVIVOR_FLOOR}층. 함정 주의."`,
                     choices: ['신호 발신지를 찾아간다', '신호를 기록한다', '무시한다'],
                     outcomes: [
                         { type: 'chain_advance', log: '신호 발신지를 찾아 떠났습니다. 더 깊은 심연에서 생존자가 기다리고 있습니다.', reward: null },
@@ -379,9 +388,12 @@ export const EVENT_CHAINS = [
             {
                 step: 1,
                 loc: '혼돈의 심연',
+                // 2026-10 Wave 62 C17 (소유자 결정 "설명대로"): 신호가 말한 50층에 닿아야 생존자를 만난다 — 위치만 보던 동안
+                //   1층에서 바로 다음 탐험에 발동했다. 판정은 `isChainStepFloorReached` 하나다(지금 싸우는 층 = 돌파 층 + 1).
+                minAbyssFloor: ABYSS_SIGNAL_SURVIVOR_FLOOR,
                 event: {
                     title: '심연의 생존자',
-                    desc: '50층에서 믿을 수 없는 광경을 마주칩니다. 심연에 갇힌 고대 탐험가가 마법으로 연명하고 있습니다. "드디어 누군가 왔군! 탈출 방법을 함께 찾읍시다."',
+                    desc: `${ABYSS_SIGNAL_SURVIVOR_FLOOR}층에서 믿을 수 없는 광경을 마주칩니다. 심연에 갇힌 고대 탐험가가 마법으로 연명하고 있습니다. "드디어 누군가 왔군! 탈출 방법을 함께 찾읍시다."`,
                     choices: ['탐험가를 구한다', '탐험가의 지식만 얻는다'],
                     outcomes: [
                         { type: 'chain_advance', log: '탐험가를 구하는 데 성공했습니다! 그가 심연의 비밀을 알려줍니다.', reward: { type: 'gold', amount: 4000 } },
@@ -392,12 +404,15 @@ export const EVENT_CHAINS = [
             {
                 step: 2,
                 loc: '혼돈의 심연',
+                // 핵심은 50층의 생존자가 안내하는 더 깊은 곳이다 — 같은 층 조건을 둔다(돌파 층은 사망 · 계승을 넘어 유지되므로
+                //   생존자를 만난 플레이어에게는 추가 조건이 아니고, 이전 세이브에서 1단계를 이미 넘긴 진행만 50층을 요구받는다).
+                minAbyssFloor: ABYSS_SIGNAL_SURVIVOR_FLOOR,
                 event: {
                     title: '심연의 핵심',
                     desc: '탐험가가 안내한 심연의 핵심에 도달했습니다. "이곳에 심연을 지배하는 고대의 힘이 잠들어 있습니다. 당신이라면 감당할 수 있을 것입니다."',
                     choices: ['고대의 힘을 흡수한다', '힘을 봉인한다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '심연의 힘을 흡수했습니다. 그 힘이 전설의 유물로 응결됩니다!', reward: { type: 'relic' } },
+                        { type: 'chain_advance', log: '심연의 힘을 흡수했습니다. 그 힘이 전설의 유물로 응결됩니다!', reward: { type: 'relic', rarity: 'legendary' as const } },
                         { type: 'chain_advance', log: '심연의 힘을 봉인했습니다. 세계가 더 안전해졌습니다. 봉인의 대가로 보상이 내려집니다.', reward: { type: 'gold', amount: 15000 } },
                     ],
                 },
@@ -496,7 +511,7 @@ export const EVENT_CHAINS = [
                     outcomes: [
                         // cycle 140: '신전의 성광석' missing → tier 5 holy spear '성스러운 창'으로 교체.
                         { type: 'chain_advance', log: '신성한 판결을 받았습니다! 수호신이 당신을 인정하며 성스러운 창을 내립니다.', reward: { type: 'item', name: '성스러운 창' } },
-                        { type: 'chain_advance', log: '스스로 길을 열었습니다. 신과 대등한 힘을 인정받아 전설의 유물이 주어집니다.', reward: { type: 'relic' } },
+                        { type: 'chain_advance', log: '스스로 길을 열었습니다. 신과 대등한 힘을 인정받아 전설의 유물이 주어집니다.', reward: { type: 'relic', rarity: 'legendary' as const } },
                     ],
                 },
             },
@@ -545,7 +560,7 @@ export const EVENT_CHAINS = [
                     outcomes: [
                         // cycle 140: '균열 봉인석' missing → tier 4 균열 light shield '균열 차단 방패'로 교체.
                         { type: 'chain_advance', log: '균열이 완전히 봉인되었습니다! 차원 침략이 저지되었습니다. 균열 차단 방패의 힘이 보상으로 주어집니다.', reward: { type: 'item', name: '균열 차단 방패' } },
-                        { type: 'chain_advance', log: '균열의 힘을 자신에게 봉인했습니다. 차원의 힘이 몸에 깃들었습니다. 전설의 유물이 강림합니다!', reward: { type: 'relic' } },
+                        { type: 'chain_advance', log: '균열의 힘을 자신에게 봉인했습니다. 차원의 힘이 몸에 깃들었습니다. 전설의 유물이 강림합니다!', reward: { type: 'relic', rarity: 'legendary' as const } },
                     ],
                 },
             },
@@ -594,8 +609,9 @@ export const EVENT_CHAINS = [
                     desc: '마왕성 입구에서 푸른 빛이 일렁입니다. 사령관의 영혼이 모습을 드러냅니다. "당신이 내 뜻을 이어 여기까지 왔구나... 마지막 한 번, 함께 싸워주겠소?"',
                     choices: ['사령관의 영혼과 함께 싸운다', '영혼에게 안식을 권한다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '사령관의 영혼이 당신과 동행합니다. 그의 마지막 의지가 전설 유물로 응결됩니다.', reward: { type: 'relic' } },
-                        { type: 'chain_advance', log: '사령관에게 안식을 권했습니다. 영혼이 남긴 수호의 의지가 스며들어 방어력과 생명이 영구히 강해집니다.', reward: { type: 'stat_bonus', def: 12, hp: 100 } },
+                        { type: 'chain_advance', log: '사령관의 영혼이 당신과 동행합니다. 그의 마지막 의지가 전설 유물로 응결됩니다.', reward: { type: 'relic', rarity: 'legendary' as const } },
+                        // 2026-10 Wave 62 C2 (소유자 결정 "문구"): 이야기 능력치는 이번 여정 범위다(`storyStatBonus`) — '영구'라 하지 않는다.
+                        { type: 'chain_advance', log: '사령관에게 안식을 권했습니다. 영혼이 남긴 수호의 의지가 스며들어 이번 여정 동안 방어력과 생명이 강해집니다.', reward: { type: 'stat_bonus', def: 12, hp: 100 } },
                     ],
                 },
             },
@@ -645,7 +661,7 @@ export const EVENT_CHAINS = [
                     choices: ['정수에 의지를 더해 봉인을 강화한다', '정수의 힘을 받아들인다'],
                     outcomes: [
                         { type: 'chain_advance', log: '봉인이 단단해졌습니다. 정수가 보답으로 신관의 유산을 남겼습니다.', reward: { type: 'item', name: '엘릭서' } },
-                        { type: 'chain_advance', log: '정수의 힘이 당신에게 깃들었습니다. 전설 유물 한 점이 손 안에 응결됩니다.', reward: { type: 'relic' } },
+                        { type: 'chain_advance', log: '정수의 힘이 당신에게 깃들었습니다. 전설 유물 한 점이 손 안에 응결됩니다.', reward: { type: 'relic', rarity: 'legendary' as const } },
                     ],
                 },
             },
@@ -681,7 +697,30 @@ export function normalizeDeferredEventChainSteps(value: unknown, progress: Recor
  * 체인별 진행 값은 `Player.eventChainProgress`(types/player.ts)가 정본이다 — 체인 id 키는
  * 스텝 번호 또는 '실패' 마커, 예약 키 `boundedEncounterReceipts`만 영수증 레코드를 담는다.
  */
-export function getChainEventForLoc(loc: string | undefined, progress: EventChainProgress | null | undefined, deferredSteps?: Record<string, number>) {
+/**
+ * 2026-10 Wave 62 C17: 스텝이 요구하는 심연 층에 닿았는가 — 트리거의 층 판정은 이것 하나다.
+ * 층 조건(`minAbyssFloor`)을 가진 스텝은 **지금 싸우는 층**(돌파한 층 `stats.abyssFloor` + 1, Wave 35 층 번호)이
+ * 그 층 이상일 때만 발동한다. 조건이 없는 스텝은 언제나 통과한다.
+ */
+export function isChainStepFloorReached(
+    step: { loc?: string; minAbyssFloor?: number },
+    clearedAbyssFloor: number | undefined,
+): boolean {
+    if (typeof step.minAbyssFloor !== 'number') return true;
+    const cleared = Number.isFinite(clearedAbyssFloor) ? Math.max(0, Number(clearedAbyssFloor)) : 0;
+    return cleared + 1 >= step.minAbyssFloor;
+}
+
+/**
+ * `clearedAbyssFloor`는 `player.stats.abyssFloor`(돌파한 층 수)다 — 층 조건이 있는 스텝(심연의 신호 1 · 2단계)은
+ * 그 층에 닿기 전에는 발동하지 않고, 다른 체인 판정으로 넘어간다(Wave 62 C17).
+ */
+export function getChainEventForLoc(
+    loc: string | undefined,
+    progress: EventChainProgress | null | undefined,
+    deferredSteps: Record<string, number> | undefined,
+    clearedAbyssFloor: number | undefined,
+) {
     for (const chain of EVENT_CHAINS) {
         const rawStep = progress?.[chain.id];
         // '실패(fail)' 체인 스킵 — 원래는 완료 검사 뒤에 있었지만 'failed' >= n 은 항상 false라 순서 무관
@@ -693,7 +732,7 @@ export function getChainEventForLoc(loc: string | undefined, progress: EventChai
         if (deferredSteps?.[chain.id] === currentStep) continue;
 
         const step = chain.steps[currentStep];
-        if (step && step.loc === loc) {
+        if (step && step.loc === loc && isChainStepFloorReached(step, clearedAbyssFloor)) {
             return { chain, step };
         }
     }

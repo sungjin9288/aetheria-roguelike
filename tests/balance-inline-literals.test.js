@@ -48,7 +48,10 @@ test('H3: handleVictory 본문에 골드 스케일링 숫자가 inline으로 남
     assert.match(body, /BALANCE\.VICTORY_GOLD_LEVEL_GAP_THRESHOLD/);
     assert.match(body, /BALANCE\.VICTORY_GOLD_LEVEL_PENALTY_FLOOR/);
     assert.match(body, /BALANCE\.VICTORY_GOLD_LEVEL_PENALTY_SLOPE/);
-    assert.match(body, /BALANCE\.NO_GOLD_MODIFIER_MULT/);
+    // 2026-10 Wave 62 (원장 §61.4 C16): '빈손의 시작' 반감은 모든 골드 수입이 거치는 getGoldIncome(utils/challengeRules.ts)이
+    //   BALANCE.NO_GOLD_MODIFIER_MULT로 한 번 건다 — 승리 정산은 그 함수를 부른다(행동은 challenge-modifier-delivery-contract).
+    assert.match(body, /getGoldIncome\(p, earnedGold\)/);
+    assert.match(await readSrc('src/utils/challengeRules.ts'), /BALANCE\.NO_GOLD_MODIFIER_MULT/);
     assert.match(body, /BALANCE\.FIRST_BOSS_BONUS_GOLD_FLOOR/);
     assert.match(body, /BALANCE\.FIRST_BOSS_BONUS_GOLD_RATE/);
 });

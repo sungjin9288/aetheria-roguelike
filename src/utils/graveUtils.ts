@@ -1,6 +1,7 @@
 import type { Item, Player } from '../types/index.js';
 import { MAPS } from '../data/maps.js';
 import { CONSTANTS } from '../data/constants.js';
+import { getGoldIncome } from './challengeRules.js';
 
 /**
  * 묘비(grave) 데이터 1건 — 로컬 세이브의 회수 대상과 공개 침공 대상 문서를 함께 표현한다.
@@ -193,7 +194,8 @@ export const resolveGraveRecovery = (player: Player, grave: GraveInput) => {
     const recoveredItems = graves
         .flatMap((entry) => getGraveItems(entry))
         .map((item) => createGraveItem(item));
-    const goldGain = graves.reduce((total, entry) => total + Math.max(0, entry?.gold || 0), 0);
+    // 2026-10 Wave 62 (원장 §61.4 C16): 회수한 골드도 이번 여정의 골드 수입이다 — '빈손의 시작'이면 절반(`getGoldIncome`).
+    const goldGain = getGoldIncome(player, graves.reduce((total, entry) => total + Math.max(0, entry?.gold || 0), 0));
     const updatedPlayer: Player = {
         ...player,
         gold: (player?.gold || 0) + goldGain,

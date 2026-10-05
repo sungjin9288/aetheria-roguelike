@@ -20,6 +20,7 @@ import { syncQuestProgress } from '../../utils/questProgress';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
 import { getSignatureSaleVerdict } from '../../utils/signatureSale';
+import { getRecipeInputIds } from '../../utils/recipeInputSelection';
 import { GS } from '../gameStates';
 import type { GameState, HandlerMap } from '../gameReducer';
 import { AT, type ActionOf } from '../actionTypes';
@@ -128,28 +129,15 @@ const sellInventoryItem = (state: GameState, action: ActionOf<typeof AT.SELL_INV
     return completeTransaction(state, player, logs);
 };
 
-const getRecipeInputIds = (player: Player, recipe: { inputs?: readonly { name?: string; qty?: number }[] }) => {
-    const available = [...(player.inv || [])];
-    const inputIds: string[] = [];
-    for (const input of recipe.inputs || []) {
-        const required = Math.max(0, input.qty || 0);
-        for (let index = 0; index < required; index += 1) {
-            const matchIndex = available.findIndex((item) => item.name === input.name);
-            if (matchIndex < 0) return inputIds;
-            const [match] = available.splice(matchIndex, 1);
-            if (match.id) inputIds.push(match.id);
-        }
-    }
-    return inputIds;
-};
-
 const craftRecipe = (state: GameState, action: ActionOf<typeof AT.CRAFT_RECIPE>): GameState => {
     if (state.gameState !== GS.CRAFTING) return state;
     const recipe = DB.ITEMS.recipes?.find((entry) => entry.id === action.payload?.recipeId);
     if (!recipe) return state;
 
     const inputIds = Array.isArray(action.payload?.inputIds) ? action.payload.inputIds : [];
-    const expectedIds = getRecipeInputIds(state.player, recipe);
+    // 2026-10 Wave 62 (원장 §61.4 C8): 기대 재료 id는 훅과 같은 선택기(`utils/recipeInputSelection`)가 정한다 —
+    //   같은 이름의 사본 중 낮은 강화 → 접두어 없음 → 가방 앞쪽. 이름이 같은 첫 사본을 쓰던 동안 +5 사본이 먼저 사라졌다.
+    const expectedIds = getRecipeInputIds(state.player.inv, recipe);
     const requiredCount = (recipe.inputs || []).reduce((total, input) => total + (input.qty || 0), 0);
     if (inputIds.length !== requiredCount) {
         const preview = getCraftingInvestmentPreview(state.player, recipe);
@@ -201,7 +189,7 @@ const craftBag = (state: GameState, action: ActionOf<typeof AT.CRAFT_BAG>): Game
     if (!recipe || action.payload?.tier !== recipe.tier) return state;
 
     const inputIds = Array.isArray(action.payload?.inputIds) ? action.payload.inputIds : [];
-    const expectedIds = getRecipeInputIds(state.player, recipe);
+    const expectedIds = getRecipeInputIds(state.player.inv, recipe);
     const requiredCount = recipe.inputs.reduce((total, input) => total + input.qty, 0);
     if (expectedIds.length !== requiredCount) {
         const inventory = state.player.inv || [];

@@ -1,7 +1,7 @@
 import { ChevronDown } from 'lucide-react';
 import { BALANCE } from '../data/constants';
-
-const CHALLENGE_REWARD_TEXT = ['', '+20% 보상', '+50% 보상', '+100% 보상', '+150% 보상'];
+import { MSG } from '../data/messages';
+import { getChallengeRewardPercent } from '../utils/challengeRules';
 
 interface ChallengeModifierPickerProps {
     /** data-testid 접두어 — 인트로는 `intro`(기존 e2e 계약), 계승 화면은 `ascension`. */
@@ -22,7 +22,7 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle }: Ch
     >
         <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-readable [&::-webkit-details-marker]:hidden">
             <span className="text-xs text-slate-300">
-                도전 규칙 <span className="text-slate-500">선택</span>
+                {MSG.CHALLENGE_PICKER_TITLE} <span className="text-slate-500">{MSG.CHALLENGE_PICKER_SELECT}</span>
             </span>
             <span className="flex items-center gap-2 text-xs text-slate-400">
                 <span aria-live="polite">{selected.length}/{slots}</span>
@@ -31,10 +31,12 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle }: Ch
         </summary>
         <div className="pb-2 pt-1">
             <div className="mb-2 flex items-center justify-between gap-3 font-readable text-xs text-slate-400">
-                <span>더 어려운 규칙에는 더 큰 보상이 따릅니다.</span>
+                <span>{MSG.CHALLENGE_PICKER_HINT}</span>
                 {selected.length > 0 && (
-                    <span className="shrink-0 text-[#d5b180]">
-                        {CHALLENGE_REWARD_TEXT[selected.length]}
+                    // 2026-10 Wave 62 (원장 §61.4 C1): 엔진이 곱하는 표(`BALANCE.CHALLENGE_REWARD_MULT_BY_COUNT`)에서 그린다 — 화면이 따로
+                    //   든 "+20% / +50% / +100% / +150%"와 엔진의 ×1 / ×1 / ×1.5 / ×2가 달랐다.
+                    <span data-testid={`${testIdPrefix}-challenge-reward`} className="shrink-0 text-[#d5b180]">
+                        {MSG.CHALLENGE_PICKER_REWARD(getChallengeRewardPercent(selected.length))}
                     </span>
                 )}
             </div>

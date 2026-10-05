@@ -201,5 +201,6 @@ test('event decisions keep location identity in leftover space without displacin
     assert.match(panel, /min-h-0 flex-1 items-center justify-center overflow-hidden/);
     assert.match(panel, /data-testid="event-situation"[\s\S]*?shrink-0/);
     assert.match(panel, /data-testid="event-choice-list"[\s\S]*?shrink-0/);
-    assert.match(controlPanel, /<EventPanel[\s\S]*?location=\{player\.loc\}/);
+    // Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 자리표시 이름이 넘어가 그림이 없다(utils/challengeRules.ts).
+    assert.match(controlPanel, /<EventPanel[\s\S]*?location=\{getVisibleLocationName\(player, player\.loc\)\}/);
 });

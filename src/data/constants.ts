@@ -454,10 +454,19 @@ export const BALANCE = {
     //   "도전 vs 회피" 선택 카드(StS 위험 선택)를 제시 — 15% 기댓값(~6.7탐험당 1회)과
     //   유사한 리듬을 유지하도록 1/0.14 ≈ 7.1탐험에 만충.
     BOSS_GAUGE_PER_EXPLORE: 0.14,   // 미격파 구역 보스 던전 탐험당 게이지 누적량 (약 7~8탐험에 만충)
+    // Wave 62 C5(소유자 결정 "회피 — 계속 나아간다"를 설명대로): 회피를 고르면 그 탐험은 일반 롤로 이어지고, 그 지역을
+    //   이 횟수만큼 더 탐험하는 동안 카드가 뜨지 않는다. 게이지는 만충 그대로라 그 뒤 다시 도전할 수 있다.
+    //   5 = 빈 게이지가 다시 차는 탐험 수(⌈1/0.14⌉ = 8)보다 짧다 — 회피가 도전 실패(게이지 0)보다 싸지 않고, 보스의
+    //   압박은 원정 한 번 안에 돌아온다. 그래도 5번이면 사냥 임무 몇 마리 · 정찰 한 번은 이어 갈 수 있다.
+    BOSS_GAUGE_EVADE_EXPLORES: 5,
 
     // 현상수배 카운트
     BOUNTY_MIN_COUNT: 5,            // 현상수배 최소 처치 수
     BOUNTY_COUNT_RANGE: 6,          // 현상수배 처치 수 범위 (min + 0~range-1)
+    // 2026-10 Wave 62 (원장 §61.4 C12): 현상수배 대상 지역의 레벨 창 = [레벨 − BELOW, 레벨 + ABOVE].
+    //   창 안에 걸어갈 수 있는 사냥 지역이 없으면(최고 지역 Lv75 너머) 아래쪽을 BELOW씩 넓힌다.
+    BOUNTY_LEVEL_WINDOW_BELOW: 10,
+    BOUNTY_LEVEL_WINDOW_ABOVE: 5,
 
     // 전투 계산 — 속성 배율
     ELEMENT_WEAK_MULT: 1.25,        // 속성 약점 피해 배율
@@ -520,8 +529,10 @@ export const BALANCE = {
     // 스킬 교체 비용
     SKILL_SWAP_COST: 50,
 
-    // 챌린지 보상 스케일링 — rank≥7 해금 시 4번째 슬롯이 열리므로 풀 스택(4개) 상위 티어 필요
-    CHALLENGE_REWARD_SCALING: { threshold: 3, mult: 1.5, fullThreshold: 4, fullMult: 2.0 },
+    // 2026-10 Wave 62 (원장 §61.4 C1, 소유자 결정 "전부 설명대로"): 도전 규칙 수 → 전투 경험치 · 골드 배율(인덱스 = 고른 규칙 수).
+    //   선택 화면(ChallengeModifierPicker)이 같은 표에서 "+20% / +50% / +100% / +150%"를 그린다 — 화면은 +20 ~ +150%를 약속하고
+    //   엔진은 3개부터 ×1.5 · 4개 ×2.0(1 ~ 2개는 보상 없음)이던 표({ threshold: 3, mult: 1.5, fullThreshold: 4, fullMult: 2.0 })를 대신한다.
+    CHALLENGE_REWARD_MULT_BY_COUNT: [1, 1.2, 1.5, 2.0, 2.5],
 
     // v5.0 — 진 엔딩
     PRIMAL_SHARD_DROP_CHANCE: 0.5,  // 마왕 처치 시 파편 드랍 확률 (기존 0.4 → 진 엔딩 접근성 개선)
@@ -584,7 +595,13 @@ export const BALANCE = {
     VICTORY_GOLD_LEVEL_PENALTY_FLOOR: 0.3,
     VICTORY_GOLD_LEVEL_PENALTY_SLOPE: 0.07,
     //   'noGold' 도전 수정자의 골드 배율(0 아님 — 완전 차단이 아니라 반감).
+    //   2026-10 Wave 62 (원장 §61.4 C16): 전투 골드만이 아니라 모든 골드 수입에 건다(`utils/challengeRules.ts`의 `getGoldIncome`,
+    //   `grantGold`가 읽는다).
     NO_GOLD_MODIFIER_MULT: 0.5,
+    //   2026-10 Wave 62 (원장 §61.2 A9): '약한 생명력'의 최대 생명 배율과 시작 하한. 시작 · 계승 · 전직 재구성은 전체에,
+    //   레벨업 · 이야기 보상은 늘어나는 양에 곱한다(`utils/challengeRules.ts`) — 시작 때 한 번만 절반이던 동안 전직에서 사라졌다.
+    CHALLENGE_HALF_HP_MULT: 0.5,
+    CHALLENGE_HALF_HP_FLOOR: 50,
     //   보스 초회 토벌 보너스 골드 = max(FLOOR, 획득 골드 × RATE).
     FIRST_BOSS_BONUS_GOLD_FLOOR: 120,
     FIRST_BOSS_BONUS_GOLD_RATE: 0.35,

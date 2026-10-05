@@ -202,6 +202,9 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
             gender: state.player.gender,
             gold: getRunStartGold(outcome.meta, challengeModifiers),
             challengeModifiers,
+            // 2026-10 Wave 62 (원장 §61.4 C11, 소유자 결정 "첫 방문은 여정마다"): 계승은 방문 기록을 넘기지만 첫 방문 보상은 새 여정에서
+            //   다시 받는다 — 방문 기록으로 판정하던 동안 계승 뒤에는 51곳 중 한 곳도 받지 못했다.
+            firstVisitRewardMaps: [],
             meta: outcome.meta,
             titles: [...new Set([...prevTitles, outcome.title])],
             activeTitle: outcome.title,

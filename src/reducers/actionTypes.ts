@@ -56,6 +56,11 @@ export interface DeferChainEventPayload {
 export interface ResolveFallbackEventTransactionPayload {
     transactionId: string;
     choiceIndex: number;
+    /**
+     * 2026-10 Wave 62 C18: 내기 거래(원장 `chance`)의 승패 난수 [0, 1) — 훅이 굴려 넘긴다(리듀서는 난수를 부르지 않는다).
+     * 내기 거래에만 있고, 내기가 아닌 거래에는 없다(있거나 없으면 리듀서가 동일 참조로 거부한다).
+     */
+    roll?: number;
 }
 
 /** 2026-09 N1b — 플레이어 호출 정찰의 단일 전이 페이로드 (비용·게이지·카드 개방). */

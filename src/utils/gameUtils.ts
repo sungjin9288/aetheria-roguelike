@@ -21,6 +21,7 @@ import { getSeasonArchive } from './seasonPassPresentation.js';
 import { formatSkillText } from './skillPresentation.js';
 import { countDiscoveredMaps } from './discoveredMaps.js';
 import { getCodexEntryName } from './codexIdentity.js';
+import { getGoldIncome } from './challengeRules.js';
 import {
     countDiscoveredSignatures,
     isSignatureName,
@@ -232,13 +233,17 @@ export const countNewCodexEntries = (player: Player) => countCodexEntries(player
  */
 export const grantGold = (player: Player, amount: number) => {
     if (!amount) return player;
+    // 2026-10 Wave 62 (원장 §61.4 C16): 도전 규칙 '빈손의 시작'의 "얻는 골드도 절반"은 모든 골드 수입에 걸린다 — 전투 승리 골드만
+    //   절반이던 동안 임무 · 업적 · 시즌 · 도감 · 주간 · 첫 방문 · 이벤트 · 판매 골드는 그대로였다. 비용(음수)은 그대로다.
+    const income = getGoldIncome(player, amount);
+    if (!income) return player;
     const stats = player.stats || {};
     return {
         ...player,
-        gold: (player.gold || 0) + amount,
+        gold: (player.gold || 0) + income,
         stats: {
             ...stats,
-            total_gold: (stats.total_gold || 0) + Math.max(0, amount),
+            total_gold: (stats.total_gold || 0) + Math.max(0, income),
         }
     };
 };

@@ -6,7 +6,7 @@ import type { Item, Player } from '../types/index.js';
 import type { LogEntry } from '../types/session.js';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
-import { getLocationVisual } from '../utils/locationVisuals';
+import { getVisibleLocationVisual } from '../utils/challengeRules';
 import { FIRST_STORY_QUEST_ID } from '../data/quests';
 import { MSG } from '../data/messages';
 
@@ -185,7 +185,8 @@ const TerminalView = ({
     const showQuickSlots = Boolean(player && quickSlots && hasAnyQuickSlot);
     const showExpandToggle = isCombat || logs.length > compactMobileLogCount;
     const showNarrativePulse = Boolean(latestStory) && gameState !== GS.COMBAT && (logExpanded || logs.length > compactMobileLogCount);
-    const locationVisual = player?.loc ? getLocationVisual(player.loc) : null;
+    // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 지역 그림을 그리지 않는다(판정은 utils/challengeRules.ts).
+    const locationVisual = getVisibleLocationVisual(player);
     const showLocationVisual = Boolean(gameState === GS.IDLE && locationVisual);
     const showFirstJourney = gameState === GS.IDLE && player?.loc === '시작의 마을'
         && !(player.meta?.prestigeRank || 0)

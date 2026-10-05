@@ -377,6 +377,15 @@ export const TITLES = Object.freeze([
         cond: { type: 'questReward', val: 202 },
         color: 'text-amber-300',
     },
+    // 2026-10 Wave 62 (원장 §61.4 C10, 소유자 결정 "칭호를 준다"): 임무 200 "50번 탐색 후 새 칭호 획득"이 약속한 칭호.
+    //   임무 수령(`claimedQuestIds`의 200)으로만 열린다 — 다른 조건(탐험 수)으로 자동 해금되는 같은 이름의 칭호를
+    //   두지 않는다(지도 제작자 · 전설의 기록자처럼 같은 이름이 두 번 생기지 않게).
+    {
+        id: '대륙의 여행자',
+        name: '대륙의 여행자',
+        cond: { type: 'questReward', val: 200 },
+        color: 'text-teal-300',
+    },
 
     // cycle 197: PRESTIGE_TITLES 10종 정식 TITLES 등록 — getTitleDefinition lookup이 token으로
     //   id 비교만 하므로 Korean PRESTIGE_TITLES 토큰들이 기존 TITLES 엔트리와 매칭 안 돼 모두
@@ -525,6 +534,9 @@ export const TITLE_PASSIVES: Record<string, TitlePassive> = Object.freeze({
     '지도 제작자':     { hp: 25, mp: 15, label: 'HP +25 · MP +15' },
     // cycle 249: '전설의 기록자' ↔ legend_chronicler 영문-id 동등 미러.
     '전설의 기록자':   { atk: 4, crit: 0.02, hp: 20, label: 'ATK +4 · CRIT +2% · HP +20' },
+    // 2026-10 Wave 62: 임무 200(탐험 50회) 칭호 — 탐험 계열의 지속 스탯(MP · HP)을 쓰고, 탐험 100회 칭호 방랑자
+    //   (MP +10 · HP +10)의 절반이다. 50회는 방랑자 조건의 절반이라 그보다 약해야 한다.
+    '대륙의 여행자':   { mp: 5, hp: 5, label: 'MP +5 · HP +5' },
 
     각성자:           { hp: 25, mp: 10, label: 'HP +25 · MP +10' },
     초월자:           { hp: 35, atk: 2, label: 'HP +35 · ATK +2' },

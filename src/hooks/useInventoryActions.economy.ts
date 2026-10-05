@@ -1,22 +1,10 @@
 import { DB } from '../data/db';
 import { getNextBagRecipe } from '../data/bagRecipes';
 import { AT } from '../reducers/actionTypes';
-import type { Item, ItemRecipeDef } from '../types/index.js';
+// 2026-10 Wave 62 (원장 §61.4 C8): 재료 사본 선택은 리듀서와 같은 선택기 하나다 — 낮은 강화 → 접두어 없음 → 가방 앞쪽.
+import { getRecipeInputIds } from '../utils/recipeInputSelection';
+import type { Item } from '../types/index.js';
 import type { InventoryActionCtx } from './actionDeps';
-
-const getRecipeInputIds = (inventory: Item[], recipe: { inputs?: ItemRecipeDef['inputs'] | readonly { name: string; qty: number }[] }) => {
-    const available = [...inventory];
-    const inputIds: string[] = [];
-    for (const input of recipe.inputs || []) {
-        for (let count = 0; count < (input.qty || 0); count += 1) {
-            const index = available.findIndex((item) => item.name === input.name);
-            if (index < 0) return inputIds;
-            const [item] = available.splice(index, 1);
-            if (item.id) inputIds.push(item.id);
-        }
-    }
-    return inputIds;
-};
 
 /** UI는 선택 식별자와 난수만 전달하고, 비용과 결과는 reducer가 최신 상태에서 확정한다. */
 export const createEconomyActions = (ctx: InventoryActionCtx) => {

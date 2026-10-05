@@ -148,7 +148,9 @@ test('D8 체인 완주 보상 유물(dragon_legacy 2단계)로 최대 기력이 
         addLog: () => {},
         getFullStats: () => calculateFullStats(state.player),
         rng: () => 0.9,
-    }, { emitUnlockedTitles: () => {} }).handleEventChoice(0);
+    // Wave 62 C3: 선택 0은 이제 전설 등급만 준다(이야기 "전설의 유물") — 등급을 약속하지 않는 선택 1이 같은 체인 지급 경로로
+    //   예전 선택 0과 같은 유물을 뽑는다(같은 풀 · 같은 난수).
+    }, { emitUnlockedTitles: () => {} }).handleEventChoice(1);
 
     const oldMax = effectiveMax(before.player);
     const newMax = effectiveMax(state.player);

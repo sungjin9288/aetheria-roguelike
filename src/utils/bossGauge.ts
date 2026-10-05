@@ -59,12 +59,48 @@ export const advanceBossGauge = (player: Player, mapData: GameMap | null | undef
     };
 };
 
-/** 도전/회피 이후 게이지 리셋 — 회피 시 만충 유지(다음 탐험 재선택), 도전 시 0으로 리셋. */
+/** 도전 이후 게이지 리셋 — 0으로 되돌리고 그 지역의 회피 기록도 지운다(회피는 게이지를 그대로 둔다 — `markBossGaugeEvaded`). */
 export const resetBossGaugeAfterChallenge = (player: Player, loc: string): Player['stats'] => {
     const prevStats = player?.stats || {};
+    const { [loc]: _cleared, ...restEvaded } = prevStats.bossGaugeEvadedAt || {};
     return {
         ...prevStats,
         bossGauge: { ...(prevStats.bossGauge || {}), [loc]: 0 },
+        ...(prevStats.bossGaugeEvadedAt ? { bossGaugeEvadedAt: restEvaded } : {}),
+    };
+};
+
+/** 그 지역의 탐험 수(`commitExploreOutcome`가 탐험마다 1 올린다 — 계승 · 사망을 넘어 이어지는 단조 증가 카운터). */
+const exploresAt = (player: Player | null | undefined, loc: string): number => {
+    const raw = player?.stats?.exploresByLocation?.[loc];
+    return typeof raw === 'number' && Number.isFinite(raw) && raw >= 0 ? raw : 0;
+};
+
+/**
+ * Wave 62 C5: "회피 — 흔적을 피해 계속 나아간다"를 고른 지역에서 카드가 다시 뜨기까지 남은 탐험 수.
+ * 회피 시점의 그 지역 탐험 수를 적어 두고(`bossGaugeEvadedAt`), 그 뒤 `BALANCE.BOSS_GAUGE_EVADE_EXPLORES`번 탐험할 때까지
+ * 억제한다 — 감소시키는 상태가 없어 저장 · 복원 · 탐험 경로와 무관하게 같은 값이 나온다. 기록이 없거나(구세이브)
+ * 비정상이면(기록보다 탐험 수가 작다) 억제하지 않는다.
+ */
+export const getBossGaugeEvadeRemaining = (player: Player | null | undefined, loc: string): number => {
+    const evadedAt = player?.stats?.bossGaugeEvadedAt?.[loc];
+    if (typeof evadedAt !== 'number' || !Number.isFinite(evadedAt)) return 0;
+    const elapsed = exploresAt(player, loc) - evadedAt;
+    if (elapsed < 0) return 0;
+    return Math.max(0, BALANCE.BOSS_GAUGE_EVADE_EXPLORES - elapsed);
+};
+
+/** 회피한 지역에서 보스 카드를 띄우지 않는 중인지. */
+export const isBossGaugeCardSuppressed = (player: Player | null | undefined, loc: string): boolean => (
+    getBossGaugeEvadeRemaining(player, loc) > 0
+);
+
+/** 회피 기록 — 게이지는 그대로(만충) 두고 지금 그 지역의 탐험 수를 적는다. 순수 함수, 새 stats 반환. */
+export const markBossGaugeEvaded = (player: Player, loc: string): Player['stats'] => {
+    const prevStats = player?.stats || {};
+    return {
+        ...prevStats,
+        bossGaugeEvadedAt: { ...(prevStats.bossGaugeEvadedAt || {}), [loc]: exploresAt(player, loc) },
     };
 };
 

@@ -9,7 +9,7 @@ import { addItemByName } from '../../utils/inventoryUtils';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../../utils/runProfileUtils';
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
 import { SEASON_XP } from '../../data/seasonPass';
-import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, applyBossRelicReward, buildPassiveBonusWithScout } from './_helpers';
+import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, applyBossRelicReward, applyChainCombatVictory, buildPassiveBonusWithScout } from './_helpers';
 import { applyAbyssFloorAdvance } from './combatBossHandlers';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
@@ -356,6 +356,8 @@ export const handleVictoryOutcome = ({
     // 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
     applyScoutGuaranteedRelic(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });
     applyBossRelicReward(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });
+    // Wave 62 C19: 이야기 전투(잃어버린 마법사의 환영)를 이기면 그 선택지의 보상과 체인 진행을 정산한다.
+    applyChainCombatVictory(deadEnemy, updatedPlayer, { dispatch, addLog });
 
     return { earlyReturn: false, lootSettlement };
 };

@@ -485,7 +485,9 @@ import { DB } from '../src/data/db.ts';
       const fnEnd = source.indexOf('export const', fnIdx + 1);
       const block = source.slice(fnIdx, fnEnd);
       assert.ok(/if \(!amount\) return player/.test(block), 'defensive `if (!amount)` 가드 보존');
-      assert.ok(/\(player\.gold \|\| 0\) \+ amount/.test(block), 'gold 누적 동작 보존');
+      // 2026-10 Wave 62 (원장 §61.4 C16): 더하는 값은 골드 수입 규칙(getGoldIncome — '빈손의 시작'이면 절반)을 거친 income이다.
+      assert.ok(/\(player\.gold \|\| 0\) \+ income/.test(block), 'gold 누적 동작 보존');
+      assert.equal(grantGold(makePlayerFixture({ gold: 100, stats: {}, challengeModifiers: ['noGold'] }), 50).gold, 125, '빈손의 시작이면 절반');
       // W11 C4: amount=0(혹은 falsy)이면 player를 그대로 반환(no-op)하고, amount>0이면
       // 실제로 gold가 누적되는지 실제 호출로 확인한다.
       const player = makePlayerFixture({ gold: 100, stats: {} });
@@ -5506,7 +5508,8 @@ import { DB } from '../src/data/db.ts';
           'Codex getCodexProgress(codex, claimed) callsite 보존');
 
       const ea = await readSrc('src/hooks/gameActions/exploreActions.ts');
-      assert.ok(/getChainEventForLoc\(player\.loc,\s*player\.eventChainProgress,\s*player\.deferredEventChainSteps\)/.test(ea),
+      // 2026-10 Wave 62 C17: 넷째 인자(돌파한 심연 층)가 붙었다 — 층 조건 스텝의 판정 입력. 앞 세 인자의 계약은 그대로다.
+      assert.ok(/getChainEventForLoc\(player\.loc,\s*player\.eventChainProgress,\s*player\.deferredEventChainSteps[,)]/.test(ea),
           'exploreActions는 명시적 progress와 현재 원정의 deferred steps를 함께 전달');
 
       const test1 = await readSrc('tests/forgotten-commander-chain.test.js');

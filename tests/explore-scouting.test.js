@@ -347,16 +347,21 @@ test('applyScoutGuaranteedRelic: scoutGuaranteedRelic=true → SET_PENDING_RELIC
     assert.ok(Array.isArray(setPendingRelics.payload) && setPendingRelics.payload.length > 0, '유물 후보 배열 존재');
 });
 
-test('applyScoutGuaranteedRelic: 유물 슬롯이 가득 찼으면 무동작 (기존 pity 인프라와 동일 가드)', () => {
+// Wave 62 C4: 이전에는 "슬롯이 가득 차면 무동작"을 고정했다 — 카드가 약속한 "승리 시 유물"이 조용히 사라지던 결함이었다.
+//   이제 교체 제안으로 연다(유물 수는 패널의 REPLACE_RELIC/DECLINE_RELIC이 지킨다 — tests/relic-reward-guarantee-contract.test.js).
+test('applyScoutGuaranteedRelic: 유물 슬롯이 가득 차도 교체 제안으로 선택지를 연다', () => {
     const dispatches = [];
+    const logs = [];
     const dispatch = (a) => dispatches.push(a);
     const fullRelics = Array.from({ length: MAX_RELICS_PER_RUN }, (_, i) => ({ id: `relic_${i}` }));
     applyScoutGuaranteedRelic(
         { scoutGuaranteedRelic: true },
         { relics: fullRelics, meta: {} },
-        { dispatch, addLog: () => {} }
+        { dispatch, addLog: (type, text) => logs.push({ type, text }), rng: () => 0.5 }
     );
-    assert.equal(findDispatch(dispatches, 'SET_PENDING_RELICS'), undefined, '슬롯 가득 차면 큐잉하지 않음');
+    const pending = findDispatch(dispatches, 'SET_PENDING_RELICS');
+    assert.ok(pending && pending.payload.length > 0, '슬롯이 가득 차도 제안한다');
+    assert.ok(logs.some((log) => log.text === MSG.SCOUT_RELIC_REPLACE_OFFER), '교체 제안 로그');
 });
 
 // ── buildPassiveBonusWithScout (combatVictory.ts EXP/골드 보너스 합산) ─────────

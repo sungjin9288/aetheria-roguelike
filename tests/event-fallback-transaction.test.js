@@ -10,7 +10,7 @@ import {
     getStructuredFallbackTransaction,
 } from '../src/data/structuredFallbackEvents.ts';
 import { buildEventPackage, pickFallbackEvent } from '../src/utils/aiEventUtils.ts';
-import { getEventChoicePreview } from '../src/utils/eventPresentation.ts';
+import { formatEventText, getEventChoicePreview } from '../src/utils/eventPresentation.ts';
 import { createEventActions } from '../src/hooks/gameActions/eventActions.ts';
 
 const clone = (value) => structuredClone(value);
@@ -43,9 +43,14 @@ const stateFor = (transactionId, player = {}) => ({
     logs: [],
 });
 
-const resolve = (state, transactionId, choiceIndex = 0) => gameReducer(state, {
+// 2026-10 Wave 62 C18: 내기 거래는 훅이 굴린 승패 난수(`roll`)를 싣는다 — 기본값 0은 이기는 판이다(roll < winChance).
+const resolve = (state, transactionId, choiceIndex = 0, roll = 0) => gameReducer(state, {
     type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION,
-    payload: { transactionId, choiceIndex },
+    payload: {
+        transactionId,
+        choiceIndex,
+        ...(getStructuredFallbackTransaction(transactionId)?.chance ? { roll } : {}),
+    },
 });
 
 test('fallback hook delegates the trusted cost choice as one identity-only reducer action', () => {
@@ -65,9 +70,10 @@ test('fallback hook delegates the trusted cost choice as one identity-only reduc
 
     actions.handleEventChoice(0);
 
+    // Wave 62 C18: 내기의 승패 난수는 훅이 굴려 함께 넘긴다(리듀서는 난수를 부르지 않는다).
     assert.deepEqual(dispatches, [{
         type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION,
-        payload: { transactionId, choiceIndex: 0 },
+        payload: { transactionId, choiceIndex: 0, roll: 0.5 },
     }]);
     assert.equal(player.gold, 500);
     assert.deepEqual(player.history, []);
@@ -82,6 +88,7 @@ test('structured fallback transaction registry is the exact frozen three-case au
             cost: entry.cost,
             grossGold: entry.grossGold,
             netGold: entry.netGold,
+            winChance: entry.chance?.winChance ?? null,
         })),
         [
             {
@@ -90,6 +97,7 @@ test('structured fallback transaction registry is the exact frozen three-case au
                 cost: { type: 'hp-recovery-consumable', amount: 1 },
                 grossGold: 200,
                 netGold: 200,
+                winChance: null,
             },
             {
                 id: 'fallback:suspicious-merchant-wager:v1',
@@ -97,6 +105,7 @@ test('structured fallback transaction registry is the exact frozen three-case au
                 cost: { type: 'gold', amount: 500 },
                 grossGold: 1000,
                 netGold: 500,
+                winChance: 0.5,
             },
             {
                 id: 'fallback:destiny-dice-wager:v1',
@@ -104,6 +113,7 @@ test('structured fallback transaction registry is the exact frozen three-case au
                 cost: { type: 'gold', amount: 720 },
                 grossGold: 1440,
                 netGold: 720,
+                winChance: 0.5,
             },
         ],
     );
@@ -174,6 +184,14 @@ for (const wager of [
         assert.equal(settled.currentEvent, null);
         assert.equal(settled.gameState, GS.IDLE);
         assert.equal(resolve(settled, wager.id), settled);
+
+        // Wave 62 C18: 지는 판 — 판돈만 나가고 지급 · 누적 골드는 없다. 결과 문구는 원장의 진 문구다.
+        const lost = resolve(exact, wager.id, 0, 0.99);
+        assert.equal(lost.player.gold, 0);
+        assert.equal(lost.player.stats.total_gold, 31);
+        assert.equal(lost.currentEvent, null);
+        assert.equal(lost.gameState, GS.IDLE);
+        assert.equal(lost.logs.at(-1).text, formatEventText(getStructuredFallbackTransaction(wager.id).chance.lossLog));
     });
 }
 
@@ -185,6 +203,11 @@ test('fallback transaction payload and canonical event identity fail closed on s
         { transactionId: id, choiceIndex: 0, extra: true },
         { transactionId: 'fallback:unknown:v1', choiceIndex: 0 },
         { transactionId: id, choiceIndex: 1 },
+        // Wave 62 C18: 내기 거래는 승패 난수가 있어야 하고, 난수는 [0, 1)이어야 한다.
+        { transactionId: id, choiceIndex: 0 },
+        { transactionId: id, choiceIndex: 0, roll: 1 },
+        { transactionId: id, choiceIndex: 0, roll: -0.1 },
+        { transactionId: id, choiceIndex: 0, roll: Number.NaN },
     ];
     for (const payload of cases) {
         assert.equal(gameReducer(state, { type: AT.RESOLVE_FALLBACK_EVENT_TRANSACTION, payload }), state);
@@ -260,8 +283,9 @@ test('malformed current gold or tracked total is rejected before resource mutati
 test('costed fallback previews state the actual resource, gross payout, and net gain', () => {
     const expected = [
         ['fallback:wounded-merchant:v1', '보유한 회복 물약 중 가장 값싼 것 1개 소모 · 골드 200 획득'],
-        ['fallback:suspicious-merchant-wager:v1', '골드 500 소모 · 1000 획득 · 순증가 500'],
-        ['fallback:destiny-dice-wager:v1', '골드 720 소모 · 1440 획득 · 순증가 720'],
+        // Wave 62 C18: 내기는 결과가 아니라 판돈 · 지급액 · 승률을 말한다.
+        ['fallback:suspicious-merchant-wager:v1', '판돈 골드 500 · 이기면 골드 1000 · 승률 50% · 결과는 굴린 뒤에 드러남'],
+        ['fallback:destiny-dice-wager:v1', '판돈 골드 720 · 이기면 골드 1440 · 승률 50% · 결과는 굴린 뒤에 드러남'],
     ];
     for (const [id, text] of expected) {
         const event = trustedEvent(id);

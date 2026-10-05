@@ -312,6 +312,8 @@ test('Monster: 보스 기믹 필드가 BossMechanics 선언 집합 안에 있다
 const MAP_FIELDS = [
     'name', 'type', 'level', 'desc', 'lore', 'exits', 'monsters', 'bossMonsters',
     'boss', 'eventChance', 'seasonOnly', 'graveDropBonus', 'shopBonus',
+    // 2026-10 Wave 62 C20: 상점 판매 등급 상한 · 구매 가격 배율(지역 설명이 약속한 상점 규칙).
+    'shopMaxTier', 'shopPriceMult',
 ];
 
 test('GameMap: 지역 필드/타입 유니온이 types/map.ts 선언과 일치한다', () => {

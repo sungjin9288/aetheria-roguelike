@@ -1,4 +1,4 @@
-import { getJobSkills } from '../../utils/gameUtils';
+import { findItemByName, getJobSkills } from '../../utils/gameUtils';
 import { getEquipmentComparison } from '../../utils/equipmentUtils';
 import { MSG } from '../../data/messages';
 import { AT } from '../../reducers/actionTypes';
@@ -6,8 +6,11 @@ import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { getRunBuildProfile } from '../../utils/runProfile';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { pickBossRewardRelics } from '../../utils/bossRelicReward';
+import { EVENT_CHAINS } from '../../data/eventChains';
+import { addItemByName } from '../../utils/inventoryUtils';
 import type { FullStats, Item, Monster, Player } from '../../types/index.js';
 import type { AddLog, GameActionDeps } from '../actionDeps';
+import type { EventOutcome } from '../../types/session.js';
 
 /**
  * 처치된 적 — 몬스터 인스턴스에 탐험 정찰 카드가 붙인 "이 전투 한정" 보너스가 함께 실린다
@@ -18,7 +21,19 @@ export type DefeatedEnemy = Monster & {
     scoutRewardBonus?: number;
     /** 정찰 "정예의 흔적" — 승리 시 유물 발견 보장. */
     scoutGuaranteedRelic?: boolean;
+    /**
+     * Wave 62 C19: 이야기 전투(체인 선택지 `combat`)의 출처 — 승리하면 `applyChainCombatVictory`가 그 선택지의 보상과
+     * 체인 진행을 정산한다. 보상은 여기 싣지 않고 데이터(`EVENT_CHAINS`)에서 다시 읽는다.
+     */
+    chainCombat?: ChainCombatRef;
 };
+
+/** 이야기 전투의 출처 — 체인 id · 단계 · 선택지 번호. */
+export interface ChainCombatRef {
+    chainId: string;
+    step: number;
+    choiceIndex: number;
+}
 
 /** 전투 요약 로그가 쓰는 전리품 힌트 (장비 업그레이드 / 성향 공명 공통 모양). */
 export interface LootHint {
@@ -146,7 +161,9 @@ export const buildPassiveBonusWithScout = (stats: FullStats, deadEnemy: Defeated
 /**
  * 탐험 스카우팅 "정예의 흔적" 카드 — 승리 시 유물 발견 보장(고위험 베팅의 보상).
  * exploreActions.ts의 유물 3(4)선택 큐잉 인프라(SET_PENDING_RELICS)를 그대로 재사용한다.
- * deadEnemy.scoutGuaranteedRelic이 없거나, 유물 슬롯이 가득 찼거나 후보가 없으면 무동작.
+ * deadEnemy.scoutGuaranteedRelic이 없거나 후보가 없으면(전부 보유) 무동작.
+ * Wave 62 C4: 유물 칸이 가득 차도 제안한다 — 카드가 "승리 시 유물"을 약속했다. 선택 화면이 교체 · 넘기기를 보이고
+ *   (보스 보상 · 체인 보상과 같은 흐름), 유물 수는 상한을 넘지 않는다(`ADD_RELIC`이 거부, `REPLACE_RELIC`은 수를 유지).
  */
 export const applyScoutGuaranteedRelic = (
     deadEnemy: DefeatedEnemy,
@@ -156,7 +173,7 @@ export const applyScoutGuaranteedRelic = (
     if (!deadEnemy?.scoutGuaranteedRelic) return;
     const ownedRelics = updatedPlayer.relics || [];
     const relicUnlocks = getPrestigeUnlocks(updatedPlayer.meta?.prestigeRank);
-    if (ownedRelics.length >= relicUnlocks.maxRelics) return;
+    const atCapacity = ownedRelics.length >= relicUnlocks.maxRelics;
     const available = RELICS.filter((r) => !ownedRelics.some((pr) => pr.id === r.id));
     if (available.length === 0) return;
 
@@ -167,8 +184,42 @@ export const applyScoutGuaranteedRelic = (
         rng,
         buildId: getRunBuildProfile(updatedPlayer, null).primary.id,
     });
+    if (candidates.length === 0) return;
     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-    addLog('event', MSG.EXPLORE_RELIC_FOUND);
+    addLog('event', atCapacity ? MSG.SCOUT_RELIC_REPLACE_OFFER : MSG.EXPLORE_RELIC_FOUND);
+};
+
+/**
+ * 이야기 전투 승리 정산(Wave 62 C19) — 체인 선택지 `combat`으로 열린 전투에서 이기면 그 선택지의 보상을 주고 체인을 한 단계
+ * 진행한다. 보상 · 승리 로그는 데이터(`EVENT_CHAINS`)에서 읽는다. 체인이 이미 그 단계를 지났으면(중복 정산) 아무것도 하지 않는다.
+ * 지거나 물러나면 이 함수는 불리지 않고 단계는 그대로 남는다 — 같은 자리를 탐험하면 다시 마주친다.
+ */
+export const applyChainCombatVictory = (
+    deadEnemy: DefeatedEnemy,
+    updatedPlayer: Player,
+    { dispatch, addLog }: Pick<GameActionDeps, 'dispatch' | 'addLog'>,
+) => {
+    const ref = deadEnemy?.chainCombat;
+    if (!ref) return;
+    const chain = EVENT_CHAINS.find((entry) => entry.id === ref.chainId);
+    const outcome: EventOutcome | undefined = chain?.steps.find((entry) => entry.step === ref.step)?.event.outcomes[ref.choiceIndex];
+    if (!outcome || outcome.type !== 'chain_advance') return;
+    if ((updatedPlayer.eventChainProgress?.[ref.chainId] ?? 0) !== ref.step) return;
+    const reward = outcome.reward;
+    const itemName = reward && (reward.type === 'legendary_item' || reward.type === 'item') && reward.name && findItemByName(reward.name)
+        ? reward.name
+        : null;
+    dispatch({
+        type: AT.SET_PLAYER,
+        payload: (p: Player) => {
+            const progress = p.eventChainProgress || {};
+            if ((progress[ref.chainId] ?? 0) !== ref.step) return p;
+            const rewarded = itemName ? addItemByName(p, itemName) : p;
+            return { ...rewarded, eventChainProgress: { ...progress, [ref.chainId]: ref.step + 1 } };
+        },
+    });
+    if (outcome.log) addLog('success', outcome.log);
+    if (itemName) addLog('success', MSG.LOOT_GET(itemName));
 };
 
 /**

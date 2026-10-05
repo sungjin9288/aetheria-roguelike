@@ -1,6 +1,7 @@
 import { MSG } from '../data/messages';
 import { calculateFullStats } from '../utils/statsCalculator';
 import { isConsumableItem, isFullRestoreElixir } from './consumableRules';
+import { mergeTempBuff } from './tempBuffMerge';
 import type { Item, ItemType, Player, StatusId } from '../types/index.js';
 
 type ConsumableReason =
@@ -89,14 +90,13 @@ const getBuff = (item: Item) => {
     };
 };
 
-const isDominatedByCurrentBuff = (current: Player['tempBuff'], candidate: ReturnType<typeof getBuff>) => (
-    Number.isFinite(current?.atk)
-    && Number.isFinite(current?.def)
-    && Number.isFinite(current?.turn)
-    && (current?.turn ?? 0) > 0
-    && (current?.atk ?? 0) >= candidate.atk
-    && (current?.def ?? 0) >= candidate.def
-    && (current?.turn ?? 0) >= (candidate.turn ?? 0)
+/**
+ * Wave 62 C6: 강화 물약도 강화 칸의 단일 규칙(`mergeTempBuff` — 세기 = 증가량 × 남은 턴, 더 센 쪽 유지)을 따른다.
+ *   이전의 "공격 · 방어 · 턴이 모두 같거나 더 클 때만 거부"는 다른 축의 물약을 받아 더 센 강화를 지웠다
+ *   (+50% · 3턴 기술 강화 위에 수호의 물약 → 공격력 345 → 235). 규칙이 지금 강화를 남기면 물약은 쓰지 않는다.
+ */
+const isKeptOutByCurrentBuff = (current: Player['tempBuff'], candidate: ReturnType<typeof getBuff>) => (
+    mergeTempBuff(current, candidate).kept === 'current'
 );
 
 /**
@@ -166,7 +166,7 @@ export const resolveConsumableEffect = ({ player, item }: { player: Player; item
         return rejection(player, 'INVALID_ITEM');
     }
     const candidate = getBuff(item);
-    if (isDominatedByCurrentBuff(player.tempBuff, candidate)) return rejection(player, 'BUFF_DOMINATED');
+    if (isKeptOutByCurrentBuff(player.tempBuff, candidate)) return rejection(player, 'BUFF_DOMINATED');
     return {
         ok: true,
         reason: null,

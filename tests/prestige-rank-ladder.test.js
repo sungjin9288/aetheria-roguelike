@@ -190,14 +190,14 @@ test('통합: rank≥9 → 정예 아닌 적은 보상 불변', async () => {
 });
 
 // ── 후속 보완: rank≥7 챌린지 4슬롯의 풀 스택 보상 티어 ─────────────────────
-//   4번째 슬롯이 열려도 보상 배율이 threshold 3(×1.5)에서 멈추면
-//   "난이도만 늘고 보상은 그대로"가 되어 해금 가치가 없다.
-//   CHALLENGE_REWARD_SCALING.fullThreshold(4) → fullMult(×2.0) 상위 티어 검증.
-test('챌린지 풀 스택(4개) → 보상 ×2.0 티어 적용 (3개는 ×1.5 유지)', async () => {
+//   4번째 슬롯이 열려도 보상 배율이 그대로면 "난이도만 늘고 보상은 그대로"가 되어 해금 가치가 없다.
+//   2026-10 Wave 62 (원장 §61.4 C1): 표가 규칙 수마다 오른다 — 1 · 2 · 3 · 4개 = ×1.2 · ×1.5 · ×2.0 · ×2.5
+//   (선택 화면의 "+20 / +50 / +100 / +150%"와 같은 표 `BALANCE.CHALLENGE_REWARD_MULT_BY_COUNT`).
+//   이전 표(3개 ×1.5 · 4개 ×2.0, 1 ~ 2개 보상 없음)는 화면과 달랐다.
+test('챌린지 풀 스택(4개) → 보상 ×2.5 티어 적용 (3개는 ×2.0)', async () => {
     const { CombatEngine } = await import('../src/systems/CombatEngine.ts');
     const { BALANCE } = await import('../src/data/constants.ts');
-    assert.equal(BALANCE.CHALLENGE_REWARD_SCALING.fullThreshold, 4);
-    assert.equal(BALANCE.CHALLENGE_REWARD_SCALING.fullMult, 2.0);
+    assert.deepEqual([...BALANCE.CHALLENGE_REWARD_MULT_BY_COUNT], [1, 1.2, 1.5, 2.0, 2.5]);
 
     const mkPlayer = (mods) => ({
         level: 10, exp: 0, nextExp: 999999, gold: 0, maxHp: 200, hp: 200, maxMp: 50, mp: 50,
@@ -209,7 +209,7 @@ test('챌린지 풀 스택(4개) → 보상 ×2.0 티어 적용 (3개는 ×1.5 �
     const r3 = CombatEngine.handleVictory(mkPlayer(['a', 'b', 'c']), enemy, {}, {});
     const r4 = CombatEngine.handleVictory(mkPlayer(['a', 'b', 'c', 'd']), enemy, {}, {});
 
-    assert.equal(r3.expGained, Math.floor(100 * 1.5), '3개 스택은 기존 ×1.5 유지');
-    assert.equal(r4.expGained, Math.floor(100 * 2.0), '4개 풀 스택은 ×2.0');
+    assert.equal(r3.expGained, Math.floor(100 * 2.0), '3개 스택은 ×2.0');
+    assert.equal(r4.expGained, Math.floor(100 * 2.5), '4개 풀 스택은 ×2.5');
     assert.ok(r4.goldGained > r3.goldGained, `풀 스택 골드(${r4.goldGained}) > 3스택(${r3.goldGained})`);
 });

@@ -1,5 +1,4 @@
-import { BALANCE } from './constants.js';
-import { getStructuredFallbackPoolEvent } from './structuredFallbackEvents.js';
+import { getStructuredFallbackHiddenPoolEvent, getStructuredFallbackPoolEvent } from './structuredFallbackEvents.js';
 
 /**
  * 저작 이벤트 1건 — getStructuredFallbackPoolEvent()의 반환형과 동형으로 연다.
@@ -407,16 +406,8 @@ export const FALLBACK_EVENT_POOL: Record<string, FallbackEventEntry[]> = {
                 { choiceIndex: 2, log: '전사의 신음 소리를 뒤로 하고 길을 간다.' },
             ],
         },
-        // 퍼즐: 마력 공명 시험
-        {
-            desc: '"세 개의 크리스탈 중 하나에 마력을 주입하시오." 틀린 크리스탈을 건드리면 폭발할 것 같습니다.',
-            choices: ['왼쪽 크리스탈', '가운데 크리스탈', '오른쪽 크리스탈'],
-            outcomes: [
-                { choiceIndex: 0, mp: 50, log: '정답! 크리스탈이 공명하며 마나가 충전된다. (+50MP)' },
-                { choiceIndex: 1, exp: 80, log: '정답! 크리스탈이 황금빛으로 빛나며 경험이 쌓인다. (+80EXP)' },
-                { choiceIndex: 2, hp: -25, log: '크리스탈이 폭발한다! (-25HP)' },
-            ],
-        },
+        // 퍼즐: 마력 공명 시험 — 2026-10 Wave 62 C18: 폭발하는 크리스탈의 자리는 판마다 섞인다(원장 소유).
+        getStructuredFallbackHiddenPoolEvent('fallback:resonance-crystals:v1'),
         // NPC: 도전하는 신참 전사
         {
             desc: '"용감한 모험가여! 나와 겨루어 보자!" 어린 전사가 자신만만하게 검을 내밉니다.',
@@ -427,27 +418,10 @@ export const FALLBACK_EVENT_POOL: Record<string, FallbackEventEntry[]> = {
                 { choiceIndex: 2, log: '손을 흔들며 길을 계속한다.' },
             ],
         },
-        // 도박: 3장 카드 트릭
-        {
-            desc: '"세 장 중 한 장에 골드가 있소. 선택하시오." 노름꾼이 카드를 뒤섞습니다.',
-            choices: ['첫 번째 카드', '두 번째 카드', '세 번째 카드'],
-            outcomes: [
-                { choiceIndex: 0, gold: 300, log: '맞췄다! (+300G)' },
-                { choiceIndex: 1, gold: 300, log: '맞췄다! (+300G)' },
-                { choiceIndex: 2, log: '빈 카드다. 노름꾼이 쓴웃음을 짓는다.' },
-            ],
-        },
-        // 퍼즐: 잠긴 보물 상자의 암호
-        // 관대함 하향 (2026-07 밸런스 감사): 풀 내 두 번째 상위 이상치(800G) —
-        //   BALANCE.STRUCTURED_EVENT_PUZZLE_GOLD_CAP(600)으로 -25% 하향.
-        {
-            desc: '"1 + 2 + 3 + ... + 10 = ?" 오래된 보물 상자 자물쇠에 숫자 입력 장치가 있습니다.',
-            choices: ['45', '50', '55'],
-            outcomes: [
-                { choiceIndex: 0, log: '땡! 45는 아니다. 자물쇠가 더 꽉 잠긴다.' },
-                { choiceIndex: 1, log: '땡! 50도 아니다. 자물쇠에서 경고음이 울린다.' },
-                { choiceIndex: 2, gold: BALANCE.STRUCTURED_EVENT_PUZZLE_GOLD_CAP, item: '중급 체력 물약', log: '정답 55! 자물쇠가 열리며 보물이 쏟아진다. (+600G +물약)' },
-            ],
-        },
+        // 도박: 3장 카드 트릭 — 2026-10 Wave 62 C18: 골드가 든 카드는 판마다 세 장 중 정확히 한 장이다(이전에는
+        //   정해진 두 자리가 300골드를 줬고 미리보기가 그 자리를 보여 줬다). 칸 구성 · 미리보기는 원장 소유.
+        getStructuredFallbackHiddenPoolEvent('fallback:three-card-trick:v1'),
+        // 퍼즐: 잠긴 보물 상자의 암호 — 답은 계산할 수 있어 자리는 고정이고, 미리보기만 정답을 가리키지 않는다(원장 소유).
+        getStructuredFallbackHiddenPoolEvent('fallback:treasure-chest-cipher:v1'),
     ],
 };

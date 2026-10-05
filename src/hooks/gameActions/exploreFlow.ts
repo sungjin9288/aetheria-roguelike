@@ -48,6 +48,7 @@ import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals.js';
 import { borrowChaosHeartRelic, isBorrowedRelic } from '../../systems/chaosHeart.js';
 import { formatSynergyDrawback } from '../../utils/relicSynergyHint.js';
 import { calculateFullStats } from '../../utils/statsCalculator.js';
+import { applyTempBuffRule } from '../../systems/tempBuffMerge.js';
 import { spawnEnemy } from '../../utils/exploreUtils.js';
 import {
     createDailyProtocol,
@@ -213,17 +214,21 @@ export const applyBattleStartRelics = (
 
     // cycle 158: 'battle_start_buff' (전쟁의 북) — 전투 시작 시 ATK +val.atk (val.turns 턴).
     //   tempBuff.atk는 multiplier (1 + atk) 로 statsCalculator에서 적용.
+    // Wave 62 C6: 강화 칸 규칙(더 센 쪽 유지) — 전투 전에 마신 물약 · 모닥불 단련이 더 세면 그것을 남기고 알린다
+    //   (이전에는 전쟁의 북이 전투 시작에 덮어써 +30% · 5턴이 +20% · 2턴이 됐다).
     const startBuffRelic = playerRelics.find((r) => r.effect === 'battle_start_buff');
     if (startBuffRelic) {
         const atkBonus = startBuffRelic.val?.atk || 0;
         const turns = startBuffRelic.val?.turns || 1;
-        combatStartPlayer.tempBuff = {
+        const drum = applyTempBuffRule(combatStartPlayer, {
             atk: atkBonus,
             def: 0,
             turn: turns,
             name: 'battle_start_buff',
-        };
-        addLog('event', `[전쟁의 북] 전투 시작 ATK +${Math.round(atkBonus * 100)}% (${turns}턴)`);
+        }, MSG.WAR_DRUM_BUFF_LABEL);
+        combatStartPlayer.tempBuff = drum.player.tempBuff;
+        if (drum.applied) addLog('event', MSG.WAR_DRUM_BUFF_LOG(Math.round(atkBonus * 100), turns));
+        else if (drum.notice) addLog('info', drum.notice);
     }
 
     const startHealRelic = playerRelics.find((r) => r.effect === 'battle_start_heal');

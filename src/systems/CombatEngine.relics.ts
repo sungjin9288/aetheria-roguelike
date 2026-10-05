@@ -67,6 +67,10 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
         };
         // cycle 162: phoenix_revive atkBuff tempBuff — 부활 분기에서 set, return에 합류.
         let phoenixTempBuff: Player['tempBuff'] | null = null;
+        // 2026-10 Wave 62: 부활석 차감은 "이번 호출에서 부활석으로 부활했는가"만 본다. `combatFlags.reviveTokenUsed`는
+        //   전투가 끝날 때까지 남는 신호라, 그 플래그로 차감하던 동안 부활석 부활 뒤 같은 전투의 적 공격마다(치명상이
+        //   아니어도) 부활석이 하나씩 더 사라지고 기력이 50%로 다시 찼다(3개 → 2 → 1).
+        let reviveTokenSpent = false;
 
         if (nextHp <= 0) {
             const deathSaveRelic = relics.find((relic) => relic.effect === 'death_save');
@@ -128,6 +132,7 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
                 nextHp = Math.floor(getReviveMaxHp() * 0.5);
                 // reviveTokens 소비는 updatedPlayer 합류 시점에 처리 (return 직전).
                 flags.reviveTokenUsed = true;
+                reviveTokenSpent = true;
                 logs.push({ type: 'event', text: MSG.RELIC_REVIVE_TOKEN_USED });
             }
         }
@@ -160,7 +165,7 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
         const updatedPlayer: Player = { ...player, hp: nextHp, combatFlags: flags };
         if (phoenixTempBuff) updatedPlayer.tempBuff = phoenixTempBuff;
         // cycle 186: reviveTokens 소비 + MP 50% 회복 (token 사용 시).
-        if (flags.reviveTokenUsed) {
+        if (reviveTokenSpent) {
             updatedPlayer.reviveTokens = Math.max(0, Number(player.reviveTokens) || 0) - 1;
             // 2026-10 Wave 58: "기력 50% 회복" — 실효 최대 기준이고, 회복은 기력을 줄이지 않는다.
             const reviveMaxMp = this.getEffectiveMaxMp(player, relics);

@@ -6,19 +6,23 @@ import { toArray, grantGold, findItemByName } from '../../utils/gameUtils';
 import { addItemByName } from '../../utils/inventoryUtils';
 import { incrementStat } from '../../utils/playerStateUtils';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
+import { selectRarityRewardPool } from '../../utils/relicRewardPool';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
 import { spawnEnemy } from '../../utils/exploreUtils';
 import { rollExplorationEvent, applyBattleStartRelics, runQuietRollAndCombat } from './exploreFlow';
 import { BALANCE } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
-import { resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
+import { markBossGaugeEvaded, resetBossGaugeAfterChallenge } from '../../utils/bossGauge';
+import { applyTempBuffRule } from '../../systems/tempBuffMerge';
 import { formatEventText, reportActualRecovery } from '../../utils/eventPresentation';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { healWithinMax } from '../../systems/vitals';
+import { getChallengeMaxHpGain } from '../../utils/challengeRules';
 import type { Player, Relic, StatusId } from '../../types';
-import type { EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
+import type { ChainCombatSpec, EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
+import type { ChainCombatRef } from '../combatActions/_helpers';
 import type { GameState } from '../../reducers/gameReducer';
 import type { AddLog, GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
 import type { CommitExploreOutcome, TitleSharedHelpers } from './_shared';
@@ -31,7 +35,7 @@ const eventOutcomes = (event: GameState['currentEvent']): EventOutcome[] => toAr
 //   이 별칭을 쓰는 곳은 전부 null을 이미 걸러낸 뒤이므로 NonNullable로 좁힌다.
 type SpawnedEnemyStats = NonNullable<ReturnType<typeof spawnEnemy>['mStats']>;
 
-import { STRUCTURED_FALLBACK_TRANSACTIONS } from '../../data/structuredFallbackEvents';
+import { STRUCTURED_FALLBACK_TRANSACTIONS, resolveStructuredFallbackHiddenOutcome } from '../../data/structuredFallbackEvents';
 
 export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelpers) => {
     const { emitUnlockedTitles } = shared;
@@ -76,9 +80,12 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             // `Boolean(currentEvent._chainId)`와 같은 판정 — const 로컬로 바꿔 아래 블록에서
             //   chainId가 string으로 좁혀지게 한다(TS aliased condition narrowing).
             const isChainEvent = !!chainId;
+            // 2026-10 Wave 62 C18: 결과를 숨기는 폴백 이벤트(카드 · 크리스탈 · 암호 상자)는 원장이 결과를 정한다 —
+            //   운의 이벤트는 이번 판의 배치를 `rng`로 섞고(그때만 난수 1회), 퍼즐은 정해진 칸을 쓴다.
             const selectedOutcome: EventOutcome | null = isChainEvent
                 ? (eventOutcomes(currentEvent)[idx] || null)
-                : (eventOutcomes(currentEvent).find((o) => o.choiceIndex === idx) || null);
+                : (resolveStructuredFallbackHiddenOutcome(currentEvent, idx, rng)
+                    || eventOutcomes(currentEvent).find((o) => o.choiceIndex === idx) || null);
             if (isChainEvent && selectedOutcome?.type === 'nothing') {
                 // step이 비면 chainEventHandlers.isDeferralPayload가 거부하던 조합.
                 if (typeof chainStep !== 'number') return;
@@ -101,6 +108,8 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                     payload: {
                         transactionId: reservedFallback.id,
                         choiceIndex: idx,
+                        // Wave 62 C18: 내기의 승패 난수는 훅이 굴린다(리듀서는 난수를 부르지 않는다).
+                        ...(reservedFallback.chance ? { roll: rng() } : {}),
                     },
                 });
                 return;
@@ -118,6 +127,14 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             }
             if (selectedOutcome?.item && !findItemByName(selectedOutcome.item)) {
                 addLog('error', MSG.EVENT_REWARD_UNAVAILABLE);
+                return;
+            }
+            // Wave 62 C19: 전투를 약속한 이야기 선택지는 실제 전투를 연다 — 보상 · 진행은 승리 정산(`applyChainCombatVictory`)이
+            //   맡는다. 난수(`roll`)를 쓰기 전에 갈라 일반 경로의 난수 순서는 그대로다.
+            if (isChainEvent && selectedOutcome?.combat && typeof chainStep === 'number') {
+                startChainCombat(player, selectedOutcome.combat, { chainId, step: chainStep, choiceIndex: idx }, {
+                    dispatch, addLog, getFullStats, rng,
+                });
                 return;
             }
             const roll = rng();
@@ -159,9 +176,19 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                         //   owned를 넘겨야 시너지 소프트 pity가 체인 보상에도 적용된다.
                         //   (기존에는 보유 유물 자체를 pool로 넘겨 중복만 뽑히고 pity도 미적용)
                         const ownedRelics = updatedPlayer.relics || [];
-                        const availableRelics = RELICS.filter(
+                        const unownedRelics = RELICS.filter(
                             (r) => !ownedRelics.some((pr) => pr.id === r.id),
                         );
+                        // Wave 62 C3: 등급을 약속한 보상("전설의 유물")은 데이터가 선언한 등급(`reward.rarity`)의 미보유 유물에서만
+                        //   뽑는다 — 전 등급 추첨이던 동안 전설은 약 4.6%였다. 그 등급을 다 가졌으면 남은 가장 높은 등급으로 내려가고 알린다.
+                        const rarityPool = rwd.rarity ? selectRarityRewardPool(unownedRelics, rwd.rarity) : null;
+                        const availableRelics = rarityPool ? rarityPool.pool : unownedRelics;
+                        if (rwd.rarity && rarityPool?.fellBack && rarityPool.rarity) {
+                            addLog('event', MSG.CHAIN_REWARD_RELIC_RARITY_FALLBACK(
+                                MSG.RARITY_LABEL[rwd.rarity] || rwd.rarity,
+                                MSG.RARITY_LABEL[rarityPool.rarity] || rarityPool.rarity,
+                            ));
+                        }
                         // Wave 4 O2: 체인 보상도 현재 빌드 아키타입에 공명시킨다 (pity 우선은 유지).
                         const pickedRelics = pickWeightedRelics(availableRelics, 1, {
                             owned: ownedRelics,
@@ -196,8 +223,17 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                     if (rwd.type === 'combat_bonus') {
                         // 2026-10: 이름과 로그 앞머리는 체인 데이터가 정한다(`buffName` · `buffIntro`) — 잊혀진 사령관 ·
                         //   물의 사도도 '최후의 영웅이 합류해 …'와 '기사의 혼령'을 받던 결함. 없으면 MSG의 일반 문구.
-                        updatedPlayer = { ...updatedPlayer, tempBuff: { atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: rwd.buffName || MSG.CHAIN_REWARD_COMBAT_BONUS_NAME } };
-                        addLog('success', MSG.CHAIN_REWARD_COMBAT_BONUS(Math.round(((rwd.atkMult || 1.3) - 1) * 100), rwd.duration || 5, rwd.buffIntro));
+                        // Wave 62 C6: 강화 칸 규칙(더 센 쪽 유지) — 더 센 강화가 걸려 있으면 그것을 남기고 알린다.
+                        const bonusName = rwd.buffName || MSG.CHAIN_REWARD_COMBAT_BONUS_NAME;
+                        const bonus = applyTempBuffRule(updatedPlayer, {
+                            atk: (rwd.atkMult || 1.3) - 1, def: 0, turn: rwd.duration || 5, name: bonusName,
+                        }, bonusName);
+                        updatedPlayer = bonus.player;
+                        if (bonus.applied) {
+                            addLog('success', MSG.CHAIN_REWARD_COMBAT_BONUS(Math.round(((rwd.atkMult || 1.3) - 1) * 100), rwd.duration || 5, rwd.buffIntro));
+                        } else if (bonus.notice) {
+                            addLog('info', bonus.notice);
+                        }
                     }
                     // cycle 62: stat_bonus는 영구 ATK/DEF/HP 가산 — 기존 chain(rift_secret)에서
                     // 사용 중이지만 핸들러가 없어 silently 무시되던 보상을 정상화.
@@ -209,9 +245,12 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                         const next: Player = { ...updatedPlayer };
                         if (rwd.atk) story.atk = (story.atk || 0) + rwd.atk;
                         if (rwd.def) story.def = (story.def || 0) + rwd.def;
+                        // 2026-10 Wave 62 (원장 §61.2 A9): '약한 생명력'이면 늘어나는 최대 생명도 절반이다(`getChallengeMaxHpGain`) —
+                        //   절반으로 쌓아 두므로 전직 재구성이 이 누적을 다시 더해도 그대로다.
+                        const storyHpGain = getChallengeMaxHpGain(updatedPlayer, rwd.hp || 0);
                         if (rwd.hp) {
-                            story.hp = (story.hp || 0) + rwd.hp;
-                            next.maxHp = (next.maxHp || 0) + rwd.hp;
+                            story.hp = (story.hp || 0) + storyHpGain;
+                            next.maxHp = (next.maxHp || 0) + storyHpGain;
                         }
                         if (rwd.mp) {
                             story.mp = (story.mp || 0) + rwd.mp;
@@ -220,7 +259,7 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                         next.storyStatBonus = story;
                         if (rwd.hp || rwd.mp) {
                             const full = calculateFullStats(next);
-                            if (rwd.hp) next.hp = healWithinMax(next.hp, rwd.hp, full?.maxHp ?? next.maxHp);
+                            if (rwd.hp) next.hp = healWithinMax(next.hp, storyHpGain, full?.maxHp ?? next.maxHp);
                             if (rwd.mp) next.mp = healWithinMax(next.mp, rwd.mp, full?.maxMp ?? next.maxMp);
                         }
                         updatedPlayer = next;
@@ -285,8 +324,11 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 //   turn-based라 전투 전까지 유지되며 다음 전투에서 소모된다.
                 //   2026-09 Wave 3 I1: 이벤트 outcome이 보내는 { atkMult/defMult/turns } 배율
                 //   스키마도 같은 tempBuff로 환산한다(캠프파이어의 { atk, def, turn, name }는 불변).
+                let buffNotice: string | null = null;
                 if (selectedOutcome.buff) {
-                    updatedPlayer = applyOutcomeBuff(updatedPlayer, selectedOutcome.buff, addLog);
+                    const buffResult = applyOutcomeBuff(updatedPlayer, selectedOutcome.buff, addLog);
+                    updatedPlayer = buffResult.player;
+                    buffNotice = buffResult.notice;
                 }
                 // 상태이상 — 기상 이변(exploreFlow)과 동일하게 id 문자열만 중복 없이 누적한다.
                 if (selectedOutcome.status) {
@@ -298,6 +340,8 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                     recovered,
                 );
                 addLog('event', resultText);
+                // Wave 62 C6: 더 센 강화가 남아 이번 강화(모닥불 단련 · 사건 강화)가 들어가지 않았으면 결과 줄 뒤에 알린다.
+                if (buffNotice) addLog('info', buffNotice);
             } else if (roll > 0.4) {
                 const rewardGold = player.level! * 50;
                 updatedPlayer = grantGold(updatedPlayer, rewardGold);
@@ -349,17 +393,22 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
  * - 신규 배율 스키마 { atkMult?, defMult?, turns }: aiEventUtils가 BALANCE 상한으로 잘라 보낸다.
  * - 기존 캠프파이어 스키마 { atk, def, turn, name }: 그대로 spread (동작 불변).
  */
-const applyOutcomeBuff = (player: Player, buff: OutcomeBuff, addLog: AddLog) => {
+// Wave 62 C6: 두 스키마 모두 강화 칸 규칙(`applyTempBuffRule` — 더 센 쪽 유지)을 거친다. 밀린 강화의 안내(`notice`)는
+//   호출부가 결과 줄 뒤에 남긴다.
+const applyOutcomeBuff = (player: Player, buff: OutcomeBuff, addLog: AddLog): { player: Player; notice: string | null } => {
     const isMultSchema = buff.atkMult !== undefined || buff.defMult !== undefined || buff.turns !== undefined;
     if (!isMultSchema) {
-        return { ...player, tempBuff: { atk: 0, def: 0, turn: 0, name: null, ...buff } };
+        const incoming = { atk: 0, def: 0, turn: 0, name: null, ...buff };
+        const result = applyTempBuffRule(player, incoming, incoming.name || MSG.EVENT_BUFF_NAME);
+        return { player: result.player, notice: result.notice };
     }
     const atk = Math.max(0, (Number(buff.atkMult) || 1) - 1);
     const def = Math.max(0, (Number(buff.defMult) || 1) - 1);
     const turn = Math.max(0, Number(buff.turns) || 0);
-    if (turn <= 0 || (atk <= 0 && def <= 0)) return player;
-    addLog('success', MSG.EVENT_BUFF_APPLIED(Math.round(atk * 100), Math.round(def * 100), turn));
-    return { ...player, tempBuff: { atk, def, turn, name: MSG.EVENT_BUFF_NAME } };
+    if (turn <= 0 || (atk <= 0 && def <= 0)) return { player, notice: null };
+    const result = applyTempBuffRule(player, { atk, def, turn, name: MSG.EVENT_BUFF_NAME }, MSG.EVENT_BUFF_NAME);
+    if (result.applied) addLog('success', MSG.EVENT_BUFF_APPLIED(Math.round(atk * 100), Math.round(def * 100), turn));
+    return { player: result.player, notice: result.notice };
 };
 
 /**
@@ -391,8 +440,9 @@ const applyOutcomeStatus = (player: Player, status: OutcomeStatus, addLog: AddLo
 
 /**
  * 이벤트 outcome 유물 선택지 큐잉 (2026-09 Wave 3 I1).
- * 체인 보상(위 handleEventChoice)과 같은 pickWeightedRelics(available, n, { owned, rng }) 경로를
- * 그대로 쓰고, 보유 한도를 넘는 경우에는 조용히 건너뛴다(탐험 중 유물 발견과 동일 규칙).
+ * 체인 보상(위 handleEventChoice)과 같은 pickWeightedRelics(available, n, { owned, rng }) 경로를 그대로 쓴다.
+ * Wave 62 C4: 보유 한도에서도 조용히 건너뛰지 않는다 — 미리보기가 "유물 선택지가 열림"을 약속했다. 선택 화면이
+ *   교체 · 넘기기를 보이고(체인 · 보스 보상과 같은 흐름) 유물 수는 상한을 넘지 않는다.
  */
 const queueOutcomeRelics = (
     player: Player,
@@ -404,7 +454,7 @@ const queueOutcomeRelics = (
 ) => {
     const ownedRelics = player.relics || [];
     const unlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
-    if (ownedRelics.length >= unlocks.maxRelics) return;
+    const atCapacity = ownedRelics.length >= unlocks.maxRelics;
     // 2026-10 Wave 58: 계승 2단계 "유물 선택지 4개"는 이벤트가 여는 유물 선택에도 적용된다 — 탐험 발견 · 보스 · 심연
     //   마일스톤만 4개이고 이벤트는 1 ~ 2개 그대로였다. 그 아래 단계에서는 이벤트가 정한 수를 쓴다.
     const eventCount = Math.max(1, Math.min(BALANCE.EVENT_RELIC_MAX_COUNT, Number(relic?.count) || 1));
@@ -415,7 +465,7 @@ const queueOutcomeRelics = (
     const candidates = pickWeightedRelics(available, count, { owned: ownedRelics, rng, buildId });
     if (candidates.length === 0) return;
     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-    addLog('event', MSG.EVENT_RELIC_CHOICE(candidates.length));
+    addLog('event', atCapacity ? MSG.EVENT_RELIC_REPLACE_OFFER(candidates.length) : MSG.EVENT_RELIC_CHOICE(candidates.length));
 };
 
 /**
@@ -431,6 +481,48 @@ const buildEliteStats = (rawStats: SpawnedEnemyStats, baseName: string) => ({
     maxHp: Math.floor(rawStats.maxHp * BALANCE.SCOUT_ELITE_HP_MULT),
     atk: Math.floor(rawStats.atk * BALANCE.SCOUT_ELITE_HP_MULT),
 });
+
+/**
+ * 이야기 전투(Wave 62 C19) — 체인 선택지의 `combat`(데이터가 정한 종 · 이름 · 시작 로그)으로 실제 전투를 연다.
+ * 정찰 "정예의 흔적"과 같은 파이프(spawnEnemy → 정예 배율 → applyBattleStartRelics → SET_ENEMY → GS.COMBAT)를 쓰고,
+ * 종은 `storyMonster`로 고정한다(조우 추첨 · 무작위 접두어 없음). 적 인스턴스의 `chainCombat`이 출처를 들고 다니며
+ * 승리 정산(`applyChainCombatVictory`)이 보상과 진행을 맡는다. 체인 진행은 여기서 바꾸지 않는다 — 지거나 물러나면
+ * 단계가 그대로 남아 같은 자리를 탐험할 때 다시 마주친다(보상 소실 금지 · 한 번의 패배로 이야기를 닫지 않는다).
+ */
+const startChainCombat = (
+    player: Player,
+    spec: ChainCombatSpec,
+    ref: ChainCombatRef,
+    { dispatch, addLog, getFullStats, rng }: Pick<GameActionDeps, 'dispatch' | 'addLog' | 'getFullStats'> & {
+        rng: () => number;
+    },
+) => {
+    const mapData = DB.MAPS[player.loc!];
+    if (!mapData || !DB.MONSTERS?.[spec.monster]) {
+        addLog('error', MSG.EVENT_REWARD_UNAVAILABLE);
+        return;
+    }
+    const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, player.relics || [], { addLog }, {
+        storyMonster: spec.monster,
+        rng,
+    });
+    if (rawStats === null || baseName === null) {
+        addLog('error', MSG.EVENT_REWARD_UNAVAILABLE);
+        return;
+    }
+    const mStats = { ...buildEliteStats(rawStats, baseName), name: spec.enemyName, chainCombat: ref };
+    const fullStats = getFullStats();
+    dispatch({ type: AT.SET_EVENT, payload: null });
+    dispatch({
+        type: AT.SET_PLAYER,
+        payload: (p: Player) => applyBattleStartRelics(p, p.relics || [], fullStats, { addLog, rng }),
+    });
+    dispatch({ type: AT.SET_ENEMY, payload: mStats });
+    dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+    addLog('event', spec.intro);
+    addLog('info', MSG.CHAIN_COMBAT_RETRY_NOTICE);
+    addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+};
 
 /**
  * 이벤트 outcome의 정예 조우 (2026-09 Wave 3 I1).
@@ -571,7 +663,11 @@ const handleScoutChoice = (idx: number, currentEvent: GameState['currentEvent'],
  * 원정 보스 접근 게이지 만충 카드("도전 vs 회피") 선택 처리.
  * - 도전: exploreUtils.spawnEnemy를 forceAreaBoss:true로 재호출해 구역 보스를 결정론적으로
  *   스폰(기존 15% 랜덤 스폰과 동일한 스탯 산출 경로 재사용, 신규 스폰 로직 없음) + 게이지 리셋.
- * - 회피: 게이지를 만충 상태로 유지(다음 탐험에서 재선택 가능) — 리셋하지 않는다.
+ * - 회피(Wave 62 C5, "회피 — 흔적을 피해 계속 나아간다"를 설명대로): 게이지는 만충 그대로 두고, 그 지역을
+ *   `BALANCE.BOSS_GAUGE_EVADE_EXPLORES`번 더 탐험하는 동안 카드를 띄우지 않는다(`markBossGaugeEvaded`). 이번 탐험은
+ *   정찰 "짙은 안개"처럼 남은 롤(quiet 롤 → 유물 → 전투)로 바로 이어진다 — 이전에는 아무 일 없이 끝나고 다음 탐험마다
+ *   같은 카드가 떠서 그 지역의 사냥 · 임무가 보스를 잡기 전까지 막혔다. AI 사건 · 정찰 카드는 다시 굴리지 않는다
+ *   (이번 탐험의 결정 지점은 이미 이 카드가 썼다).
  */
 const handleBossGaugeChoice = (idx: number, currentEvent: GameState['currentEvent'], deps: GameActionDepsWithRng) => {
     const { player, dispatch, addLog, getFullStats, rng = Math.random } = deps;
@@ -586,8 +682,28 @@ const handleBossGaugeChoice = (idx: number, currentEvent: GameState['currentEven
     addLog('event', outcome.log || '');
 
     if (outcome.gaugeEffect === 'avoid') {
-        // 회피 — 게이지는 만충 유지, 다음 탐험에서 다시 선택지가 뜬다.
+        const loc = player.loc || '';
+        dispatch({
+            type: AT.SET_PLAYER,
+            payload: (p: Player) => ({ ...p, stats: markBossGaugeEvaded(p, loc) }),
+        });
+        addLog('info', MSG.BOSS_GAUGE_AVOID_SUPPRESSED(BALANCE.BOSS_GAUGE_EVADE_EXPLORES));
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+        const mapData = DB.MAPS[loc];
+        if (!mapData) return;
+        // 이번 탐험의 정산(탐험 수 · 게이지)은 카드가 열릴 때 끝났다 — 이어지는 롤은 전투 시작 유물 변환만 적용한다.
+        const applyTransformOnly: CommitExploreOutcome = (_outcome, transformPlayer) => {
+            if (typeof transformPlayer === 'function') dispatch({ type: AT.SET_PLAYER, payload: transformPlayer });
+        };
+        runQuietRollAndCombat(player, mapData, {
+            dispatch,
+            addLog,
+            addStoryLog: deps.addStoryLog,
+            getFullStats,
+            commitExploreOutcome: applyTransformOnly,
+            skipBossGaugeAdvance: true,
+            rng,
+        });
         return;
     }
 

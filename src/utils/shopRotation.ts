@@ -61,7 +61,37 @@ export const getShopMaxTier = (location: string) => {
     const tierFromLevel = mapLevel < 10 ? 1 : mapLevel < 20 ? 2 : mapLevel < 30 ? 3 : mapLevel < 40 ? 4 : mapLevel < 50 ? 5 : 6;
     const safeBonus = mapData.type === 'safe' && mapLevel > 1 ? 1 : 0;
     const shopBonus = mapData.shopBonus ? 1 : 0;
-    return Math.min(6, tierFromLevel + safeBonus + shopBonus);
+    const derivedTier = Math.min(6, tierFromLevel + safeBonus + shopBonus);
+    // 2026-10 Wave 62 C20: 지역이 선언한 판매 등급 상한(북부 요새 "판매 등급 3 상점")이 있으면 그 아래로 자른다 —
+    //   레벨 규칙만 보던 동안 북부 요새는 5등급까지 팔았다. 상점 화면의 "판매 등급"과 구매 리듀서가 이 값을 읽는다.
+    const declaredCap = getDeclaredShopTierCap(location);
+    return declaredCap === null ? derivedTier : Math.min(derivedTier, declaredCap);
+};
+
+/** 지역 데이터가 선언한 판매 등급 상한(`shopMaxTier`) — 없으면 null. 오늘의 할인 · 주간 특별 상품도 이 등급 위로는 팔지 않는다. */
+function getDeclaredShopTierCap(location: string): number | null {
+    const cap = DB.MAPS?.[location]?.shopMaxTier;
+    return typeof cap === 'number' && Number.isFinite(cap) ? cap : null;
+}
+
+/** 이 상점의 구매 가격 배율 — 지역 데이터(`shopPriceMult`, 황금 왕국 "물가가 높지만")가 정본이고 없으면 1이다(Wave 62 C20). */
+export const getShopPriceMult = (location: string): number => {
+    const mult = DB.MAPS?.[location]?.shopPriceMult;
+    return typeof mult === 'number' && Number.isFinite(mult) && mult > 0 ? mult : 1;
+};
+
+/**
+ * 이 상점에서 사는 값 — 상점 화면(`ShopPanel`)과 구매 리듀서(`getCanonicalShopOffer` → `BUY_SHOP_ITEM`)가 같이 읽는다.
+ * 재고 · 오늘의 할인 · 주간 특별 상품 모두 이 값을 거친다. 판매가(`getSellPrice`)는 바뀌지 않는다 — 산 물건은 기본가로 저장된다.
+ */
+export const getShopBuyPrice = (location: string, basePrice: number): number => {
+    const mult = getShopPriceMult(location);
+    return mult === 1 ? basePrice : Math.round(basePrice * mult);
+};
+
+const passesDeclaredShopTierCap = (location: string, item: { tier?: number }) => {
+    const cap = getDeclaredShopTierCap(location);
+    return cap === null || (item.tier || 1) <= cap;
 };
 
 // 병합(2026-09): 03e8b88에서 "파일 내부 전용"이라 export를 내렸으나, Codex가 추가한
@@ -88,7 +118,7 @@ export const getShopCatalog = (location: string) => {
 // cycle 524: playerLevel default 1 제거 — 1 callsite (ShopPanel.tsx:161
 //   getDailyDeals(player.level || 1)) 명시 전달 + || 1 number 보장이라
 //   default 도달 불가.
-export const getDailyDeals = (playerLevel: number) => {
+const buildDailyDealOffers = (playerLevel: number, location: string) => {
     const today = getToday();
     const seed = dateHash(today, 42);
 
@@ -99,16 +129,26 @@ export const getDailyDeals = (playerLevel: number) => {
         ...(DB.ITEMS.weapons || []),
         ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
         ...(DB.ITEMS.consumables || []),
-    ].filter((item) => (item.tier || 1) <= maxTier);
+    ].filter((item) => (item.tier || 1) <= maxTier && passesDeclaredShopTierCap(location, item));
 
     // cycle 436: 일일 딜 마커 제거 — production read 0건이던 dead 출력
     //   (cycle 415 주간 특별 마커 정리 paired completion). cycle 355는 회귀
     //   가드로 보존했으나 그 가드 자체가 유일 read였음 (circular guard).
     const shuffled = seededShuffle(allItems, seed);
-    const items = shuffled.slice(0, 3).map((item) => ({
+    // 2026-10 Wave 62 C20: 값은 상점 가격 규칙(`getShopBuyPrice`)을 거친다 — 정가(취소선)와 할인가 모두 이 상점의 값이다.
+    //   제안은 기본 아이템(`item`)을 그대로 들고 다녀 구매 리듀서가 기본가로 저장한다(판매가 불변).
+    return shuffled.slice(0, 3).map((item) => ({
+        item,
+        listPrice: getShopBuyPrice(location, item.price ?? 0),
+        price: getShopBuyPrice(location, Math.floor((item.price ?? 0) * 0.9)),
+    }));
+};
+
+export const getDailyDeals = (playerLevel: number, location: string) => {
+    const items = buildDailyDealOffers(playerLevel, location).map(({ item, listPrice, price }) => ({
         ...item,
-        originalPrice: item.price ?? 0,
-        price: Math.floor((item.price ?? 0) * 0.9),
+        originalPrice: listPrice,
+        price,
     }));
 
     return { items };
@@ -122,7 +162,7 @@ export const getDailyDeals = (playerLevel: number) => {
 // cycle 524: playerLevel default 1 제거 — 1 callsite (ShopPanel.tsx:162
 //   getWeeklySpecial(player.level || 1)) 명시 전달 + || 1 number 보장이라
 //   default 도달 불가.
-export const getWeeklySpecial = (playerLevel: number) => {
+const buildWeeklySpecialOffer = (playerLevel: number, location: string) => {
     const weekKey = getWeekKey();
     const seed = dateHash(weekKey, 777);
 
@@ -131,18 +171,28 @@ export const getWeeklySpecial = (playerLevel: number) => {
     const rareItems = [
         ...(DB.ITEMS.weapons || []),
         ...(DB.ITEMS.armors || []).filter((a) => a.type === 'armor'),
-    ].filter((item) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier);
+    ].filter((item) => (item.tier || 1) >= 3 && (item.tier || 1) <= maxTier && passesDeclaredShopTierCap(location, item));
 
     if (rareItems.length === 0) return null;
 
     const shuffled = seededShuffle(rareItems, seed);
     const item = shuffled[0];
+    return {
+        item,
+        listPrice: getShopBuyPrice(location, item.price ?? 0),
+        price: getShopBuyPrice(location, Math.floor((item.price ?? 0) * 0.85)),
+    };
+};
+
+export const getWeeklySpecial = (playerLevel: number, location: string) => {
+    const offer = buildWeeklySpecialOffer(playerLevel, location);
+    if (!offer) return null;
     // cycle 415: isWeeklySpecial 마커 제거 — src/, tests/ read 0건이던 dead 출력.
     //   originalPrice / price는 ShopPanel line-through 표시에 사용 보존.
     return {
-        ...item,
-        originalPrice: item.price ?? 0,
-        price: Math.floor((item.price ?? 0) * 0.85),
+        ...offer.item,
+        originalPrice: offer.listPrice,
+        price: offer.price,
     };
 };
 
@@ -152,20 +202,19 @@ export const getCanonicalShopOffer = (
     playerLevel: number,
     location: string,
 ) => {
+    // 산 물건은 기본 아이템 그대로(기본가) 저장된다 — 할인 · 상점 할증은 낸 값에만 있다(판매가 불변).
     if (source === 'daily') {
-        const deal = getDailyDeals(playerLevel).items.find((item) => item.name === itemName);
+        const deal = buildDailyDealOffers(playerLevel, location).find((offer) => offer.item.name === itemName);
         if (!deal) return null;
-        const { originalPrice, ...item } = deal;
-        return { item: { ...item, price: originalPrice }, price: deal.price };
+        return { item: { ...deal.item, price: deal.item.price ?? 0 }, price: deal.price };
     }
     if (source === 'weekly') {
-        const special = getWeeklySpecial(playerLevel);
-        if (!special || special.name !== itemName) return null;
-        const { originalPrice, ...item } = special;
-        return { item: { ...item, price: originalPrice }, price: special.price };
+        const special = buildWeeklySpecialOffer(playerLevel, location);
+        if (!special || special.item.name !== itemName) return null;
+        return { item: { ...special.item, price: special.item.price ?? 0 }, price: special.price };
     }
     if (source !== 'stock') return null;
 
     const item = getShopCatalog(location).find((entry) => entry.name === itemName);
-    return item ? { item, price: item.price || 0 } : null;
+    return item ? { item, price: getShopBuyPrice(location, item.price || 0) } : null;
 };

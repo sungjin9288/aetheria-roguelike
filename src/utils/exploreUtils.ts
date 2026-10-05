@@ -30,7 +30,8 @@ import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getPrestigeEnemyLevelBonus } from '../systems/metaBonusRamp.js';
 // Track J1: FIRST_VISIT_REWARDS 테이블은 data/firstVisitRewards.ts로 분리됨.
-import { FIRST_VISIT_REWARDS } from '../data/firstVisitRewards.js';
+// Wave 62 (원장 §61.4 C11): 여정마다 한 번인 판정은 utils/firstVisitRewards.ts가 그 테이블을 읽는다.
+import { getJourneyFirstVisitReward } from './firstVisitRewards.js';
 import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
 import { EARLY_ELITE_PREFIX_NAME } from './enemyIdentity.js';
 import { getUnlockedHiddenBosses, isEncounterBoss } from './bossPresence.js';
@@ -76,8 +77,12 @@ export const selectEncounterMonster = (
 //   스폰한다. options 미전달 시 기존 동작(구역 보스는 encounterPool에서 제외, 일반
 //   풀에서만 스폰)과 동일 — 하위 호환.
 // ─────────────────────────────────────────────────────────────────────────
-export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic[], { addLog }: { addLog: (type: string, text: string) => void }, options: { forceAreaBoss?: boolean; rng?: () => number } = {}) => {
+// Wave 62 C19: `storyMonster`는 이야기 전투(체인 선택지 `combat`)의 정해진 종이다 — 이 지역 레벨 · 계승 rank로 같은 경로를
+//   거쳐 스탯을 만들되 조우 추첨 · 무작위 접두어(정예 · 초반 정예 · 프레스티지 정예)는 굴리지 않는다(정체성이 고정된 적).
+//   옵션이 없으면 난수 소비와 결과가 이전과 같다.
+export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic[], { addLog }: { addLog: (type: string, text: string) => void }, options: { forceAreaBoss?: boolean; storyMonster?: string; rng?: () => number } = {}) => {
     const rng = options.rng || Math.random;
+    const storyMonster = typeof options.storyMonster === 'string' && options.storyMonster ? options.storyMonster : null;
     const mapBossMonsters = Array.isArray(mapData.bossMonsters) ? mapData.bossMonsters : [];
     let encounterPool = [...(mapData.monsters || [])];
 
@@ -110,9 +115,10 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const spawnAreaBoss = areaBossName !== null
         && !(player.stats?.areaBossDefeated?.[areaBossName])
         && Boolean(options.forceAreaBoss);
-    const baseName: string | null = (spawnAreaBoss && areaBossName !== null)
-        ? areaBossName
-        : selectEncounterMonster(encounterPool, mapData, player, rng);
+    const baseName: string | null = storyMonster
+        ?? ((spawnAreaBoss && areaBossName !== null)
+            ? areaBossName
+            : selectEncounterMonster(encounterPool, mapData, player, rng));
     // 2026-09 Wave 16 H1: 몬스터 테이블이 빈 지역(safe 5곳이 전부 `monsters: []`)에서
     //   이름 없는 적이 실제 스탯으로 스폰되던 결함을 여기서 닫는다. 호출처는 `mStats`가
     //   `null`일 수 있음을 타입으로 강제받는다 — 모델(progressionSimulator/Diagnostic)은
@@ -194,20 +200,20 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     mStats.isBoss = isEncounterBoss(baseName, mapData);
 
     // eliteOnly 챌린지: 모든 적에게 엘리트 접두어 강제 부여
-    const forceElite = player.challengeModifiers?.includes('eliteOnly') && !mStats.isBoss;
+    const forceElite = !storyMonster && player.challengeModifiers?.includes('eliteOnly') && !mStats.isBoss;
     // A-4 (B+ 2026-06): 초반 정예 — Lv ≤ cap에서 낮은 확률로 "정예" 개체 스폰.
     //   완전 엘리트(1.8~2.5x)는 Lv1에 불공정하므로 전용 완화 배율(EARLY_ELITE_MULT)로
     //   첫 위협은 남기되 시작 물약 2개를 모두 잃는 운 나쁜 전투는 제한한다.
     const earlyBand = typeof level === 'number' && level <= BALANCE.EARLY_ELITE_LEVEL_CAP;
-    const earlyElite = !mStats.isBoss && !forceElite
+    const earlyElite = !storyMonster && !mStats.isBoss && !forceElite
         && earlyBand
         && rng() < BALANCE.EARLY_ELITE_CHANCE;
     // PR #8: 프레스티지 rank≥3 해금 — 엘리트 출현 확률 +25%. forceElite처럼 엘리트
     //   접두어를 강제한다(고승천 플레이어에게 더 잦은 정예 위협 = 광고된 "심연의 메아리").
-    const prestigeElite = !mStats.isBoss && !forceElite && !earlyElite
+    const prestigeElite = !storyMonster && !mStats.isBoss && !forceElite && !earlyElite
         && rng() < getPrestigeUnlocks(player.meta?.prestigeRank).eliteChanceBonus;
     // 접두어 부여
-    if (forceElite || earlyElite || prestigeElite || (rng() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES)) {
+    if (!storyMonster && (forceElite || earlyElite || prestigeElite || (rng() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES))) {
         const prefix = earlyElite
             ? { name: EARLY_ELITE_PREFIX_NAME, mod: BALANCE.EARLY_ELITE_MULT, expMod: BALANCE.EARLY_ELITE_MULT, dropMod: 2.0, isElite: true }
             : (() => {
@@ -285,7 +291,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
  * @returns {{ gold: number, exp: number, msg: string } | null}
  */
 export const getFirstVisitReward = (loc: string, player: Player) => {
-    const visited = player.stats?.visitedMaps || [];
-    if (visited.includes(loc)) return null;
-    return FIRST_VISIT_REWARDS[loc] || null;
+    // 2026-10 Wave 62 (원장 §61.4 C11): 보상은 여정마다 지역당 한 번 — 판정은 utils/firstVisitRewards.ts가 소유한다
+    //   (방문 기록 대신 이번 여정에 받은 지역 목록을 읽는다).
+    return getJourneyFirstVisitReward(loc, player);
 };

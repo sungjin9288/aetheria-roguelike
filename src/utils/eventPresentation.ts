@@ -1,4 +1,4 @@
-import { getStructuredFallbackTransaction } from '../data/structuredFallbackEvents';
+import { findStructuredFallbackHiddenEvent, getStructuredFallbackTransaction } from '../data/structuredFallbackEvents';
 import type { EventChoiceFeedback, EventChoiceTone, EventOutcome } from '../types/session.js';
 import { RELICS } from '../data/relics';
 import { MSG } from '../data/messages';
@@ -22,6 +22,7 @@ export interface EventPanelCopy {
 interface PresentationEvent {
     title?: string;
     desc?: string;
+    choices?: readonly unknown[];
     isCampfire?: boolean;
     isScout?: boolean;
     isBossGaugeChallenge?: boolean;
@@ -124,7 +125,8 @@ const chainRewardLabels: Record<string, string> = {
     legendary_item: '특별 장비 보상',
     relic: '유물 보상',
     combat_bonus: '다음 전투 강화',
-    stat_bonus: '영구 능력 상승',
+    // 2026-10 Wave 62 C2: 이야기 능력치 보상은 이번 여정 범위다(`storyStatBonus`, 사망 · 계승에서 사라진다) — '영구'는 계정 메타의 말이다.
+    stat_bonus: MSG.CHAIN_PREVIEW_STAT_BONUS,
     info: '새로운 단서',
 };
 
@@ -212,6 +214,12 @@ export const getEventChoicePreview = (event: PresentationEvent | null | undefine
         : null;
     if (fallbackTransaction?.choiceIndex === choiceIndex) {
         return { text: fallbackTransaction.preview, tone: 'danger' };
+    }
+    // 2026-10 Wave 62 C18: 결과를 숨기는 폴백 이벤트는 모든 선택지가 원장의 같은 문장을 쓴다 — 선택지마다 결과를 읽던 동안
+    //   카드 · 크리스탈 · 암호 상자의 미리보기가 이기는 자리를 가리켰다. 판정과 같은 함수로 알아본다.
+    const hiddenEvent = findStructuredFallbackHiddenEvent(event);
+    if (hiddenEvent && choiceIndex >= 0 && choiceIndex < hiddenEvent.event.choices.length) {
+        return { text: hiddenEvent.preview, tone: hiddenEvent.tone };
     }
     if (event?.isCampfire) return formatCampfirePreview(outcome);
     if (event?.isScout) return scoutPreview[outcome?.scoutEffect ?? ''] || scoutPreview.unknown;
