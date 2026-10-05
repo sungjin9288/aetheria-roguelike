@@ -76,5 +76,5 @@ export const getVisibleRegionTheme = (
     player: (ChallengeHolder & Pick<Player, 'loc'>) | null | undefined,
     mapData: GameMap | null | undefined,
 ): RegionTheme | null => (
-    getRegionTheme(player?.loc, mapData)
+    isBlindMap(player) ? null : getRegionTheme(player?.loc, mapData)
 );
