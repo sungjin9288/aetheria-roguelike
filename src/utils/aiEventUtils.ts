@@ -518,7 +518,13 @@ export const buildEventPackage = (payload: unknown, context: EventContext): Even
     const rawChoices = Array.isArray(raw.choices)
         ? raw.choices.map((choice: ChoiceLike, idx: number) => normalizeChoiceText(choice, idx))
         : [];
-    const choices = dedupeChoices([...rawChoices, ...fallbackChoices]).slice(0, 3);
+    // 2026-10 Wave 65 (원장 §61.5 · §66): 로컬 폴백 풀의 저작 이벤트(모든 선택지에 손으로 쓴 결과가 있다)는 저작한 선택지
+    //   그대로다 — 지역 선택지("살펴본다")로 셋째 칸을 채우면 그 칸에 절차적 보상이 붙는데, 그 보상이 손으로 쓴 결과보다
+    //   컸다(2지선다 12개 · Lv40에서 골드 + 경험 362 대 손으로 쓴 최대 55 ~ 355). Wave 27 N1(트랜잭션 이벤트)과 같은 결함 종류다.
+    //   출처는 호출자 권한(`context.source`)이라 모델 응답은 이 분기를 자칭할 수 없고, 모델 이벤트는 지금처럼 채운다.
+    const authoredOutcomeCount = Array.isArray(raw.outcomes) ? raw.outcomes.length : 0;
+    const keepAuthoredChoices = context.source === 'fallback' && rawChoices.length >= 2 && authoredOutcomeCount >= rawChoices.length;
+    const choices = dedupeChoices(keepAuthoredChoices ? rawChoices : [...rawChoices, ...fallbackChoices]).slice(0, 3);
 
     if (choices.length < 2) return null;
 

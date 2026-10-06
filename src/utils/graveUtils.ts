@@ -2,6 +2,7 @@ import type { Item, Player } from '../types/index.js';
 import { MAPS } from '../data/maps.js';
 import { CONSTANTS } from '../data/constants.js';
 import { getGoldIncome, type ChallengeHolder } from './challengeRules.js';
+import { calculateFullStats } from './statsCalculator.js';
 
 /**
  * 묘비(grave) 데이터 1건 — 로컬 세이브의 회수 대상과 공개 침공 대상 문서를 함께 표현한다.
@@ -176,6 +177,12 @@ export const getGraveRecoveryGroups = (grave: GraveInput, currentLoc: string | u
             || b.latestTimestamp - a.latestTimestamp
         ));
 };
+
+/**
+ * 2026-10 Wave 65 (원장 §61.5 · §66): 침공에 쓰는 공격력 — 실효 공격력(`calculateFullStats`)이다. 침공 액션과 묘비 화면의
+ * 성공 확률 표시가 같은 값을 읽는다. 화면이 저장 공격력(`player.atk`)을 쓰던 동안 장비 · 영구 공격력 · 칭호만큼 표시가 실제보다 낮았다.
+ */
+export const getInvasionAttackPower = (player: Player): number => calculateFullStats(player)?.atk || player.atk || 10;
 
 export const calcInvasionChance = (playerAtk: number, guardPower: number): number => {
     const atk = Math.max(1, playerAtk);

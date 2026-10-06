@@ -9,6 +9,7 @@ import { RELICS } from '../../data/relics';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { rejectEventChoice } from './eventChoiceFeedback';
 import { advanceDailyProtocol, getDailyProtocolRewardLogs } from './helpers';
+import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import type { GameEvent } from '../../types/session.js';
 
 const PAYLOAD_KEYS = ['chainId', 'choiceIndex', 'step'];
@@ -200,7 +201,10 @@ export const chainEventActionMap = {
             }
         }
 
-        const paidPlayer = {
+        // 2026-10 Wave 65 (원장 §61.5 · §66): 유물 지급은 빌드 성향을 바꿀 수 있다 — 성향 보너스만큼 유효 최대 기력이 줄면 현재치도
+        //   내린다(선택 · 교체 지급과 같은 규칙, Wave 27 N2 D8). 상인의 인장(골드 수급)이 탐험 성향을 3점으로 올려 비전 성향을 밀어내면
+        //   최대 기력 355 → 345인데 현재 355가 남았다.
+        const paidPlayer = clampVitalsToEffectiveMax({
             ...state.player,
             gold: gold - cost,
             ...(rewardRelic ? {
@@ -214,7 +218,7 @@ export const chainEventActionMap = {
                 ...(state.player.eventChainProgress || {}),
                 [chainId]: step + 1,
             },
-        };
+        });
         // Wave 61: 이야기 골드 지불도 골드 소비다 — 일일 '골드 소비'에 더한다(휴식 · 기술 교체 · 정찰과 같은 경로, 원장 §61 A17).
         //   지불 · 유물을 먼저 반영한 뒤 진행하므로 일일 보상의 유물 변환도 지금 유물 칸을 본다.
         const daily = advanceDailyProtocol(paidPlayer, 'goldSpend', cost, action.payload.relicRoll);

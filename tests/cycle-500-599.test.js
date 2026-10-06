@@ -1852,7 +1852,8 @@ import { DB } from '../src/data/db.ts';
 
   test('cycle 527: 정합성 가드 — 2 internal callsite 보존', async () => {
       const source = await readSrc('src/utils/aiEventUtils.ts');
-      assert.ok(/dedupeChoices\(\[\.\.\.rawChoices,\s*\.\.\.fallbackChoices\]\)\.slice\(0,\s*3\)/.test(source),
+      // 2026-10 Wave 65: 로컬 폴백 저작 이벤트는 지역 선택지로 채우지 않는다 — 채우는 쪽은 같은 spread + slice 그대로다.
+      assert.ok(/dedupeChoices\(keepAuthoredChoices \? rawChoices : \[\.\.\.rawChoices,\s*\.\.\.fallbackChoices\]\)\.slice\(0,\s*3\)/.test(source),
           'dedupeChoices spread + slice callsite 보존');
       assert.ok(/normalizeOutcomes\(raw\.outcomes,\s*choices,\s*\{ \.\.\.context,\s*desc \}\)/.test(source),
           'normalizeOutcomes 3 args callsite 보존');
