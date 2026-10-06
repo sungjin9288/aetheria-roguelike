@@ -528,6 +528,7 @@ export const BALANCE = {
     DIMENSION_GRAVE_POOL_LIMIT: 20,          // 최근 공개 묘비 몇 개를 불러올지
     DIMENSION_GRAVE_REFRESH_MS: 10 * 60 * 1000,
     DIMENSION_GRAVE_NAME_MAX: 16,            // 표시 이름 상한(인트로 이름 입력 maxLength와 같다)
+    DIMENSION_GRAVE_UPLOAD_ITEM_LIMIT: 3,    // 사망 때 공개 묘비에 올리는 유품 수(rules 상한 5 안쪽)
 
     // 발견 체인 (Discovery Chains)
     DISCOVERY_CHAINS,

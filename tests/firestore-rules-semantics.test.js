@@ -37,7 +37,12 @@ import { APP_ID, CONSTANTS } from '../src/data/constants.js';
 import { FeedbackValidator } from '../src/systems/FeedbackValidator.ts';
 import { TokenQuotaManager } from '../src/systems/TokenQuotaManager.ts';
 import { createCloudAutosave } from '../src/hooks/createCloudAutosave.ts';
-import { clampPublicGraveGold } from '../src/utils/graveUtils.ts';
+import { DB } from '../src/data/db.ts';
+import { buildPublicGraveDoc } from '../src/utils/publicGraveDoc.ts';
+import { readDimensionGravePool, writePublicGrave } from '../src/platform/publicGraveFirestore.ts';
+import { selectDimensionGraveCandidates } from '../src/utils/dimensionGrave.ts';
+import { makeItem } from '../src/utils/gameUtils.ts';
+import { applyItemPrefix } from '../src/utils/itemPrefixUtils.ts';
 import { makePlayerFixture } from './helpers/render.ts';
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -230,54 +235,85 @@ suite('site 2 — 리더보드는 본인 entry만, 닉네임 20자 상한이 실
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 쓰기 지점 3 — `useFirebaseSync.ts:588` (public/data/graves/{uid})
-//   훅 이펙트 안의 인라인 리터럴이라 함수로 뽑혀 있지 않다. 같은 입력에서 같은 식으로
-//   만든다(원본과 나란히 읽을 것). `gold` 필드만은 예외 — production과 같은 exported
-//   함수 `clampPublicGraveGold`를 그대로 호출한다(Wave 15 G2, 사본이 아니라 같은 함수).
+// 쓰기 지점 3 — 사망 시 공개 묘비(public/data/graves/{uid})
+//   최종 통합 수용(2026-10-06)부터 프로덕션 함수를 그대로 실행한다: 문서는 `buildPublicGraveDoc`
+//   (`src/utils/publicGraveDoc.ts`), 쓰기는 `writePublicGrave`(`src/platform/publicGraveFirestore.ts`)
+//   — `useFirebaseSync`가 부르는 같은 두 함수다. 그 전에는 훅 안의 인라인 리터럴을 여기 옮겨 적었고
+//   유품은 빈 배열만 보냈다. 이 업로드는 Wave 70 전까지 프로덕션에서 꺼져 있었으므로(`publicGraveInvasion: false`)
+//   실제 유품이 든 문서가 rules를 지나는지는 한 번도 실행된 적이 없었다.
 // ─────────────────────────────────────────────────────────────────────────────
 
-/**
- * useFirebaseSync.ts:589-598 의 페이로드 식을 그대로 옮긴 것 — `gold` 필드는 production과
- * 똑같이 `clampPublicGraveGold`(`src/utils/graveUtils.ts`, Wave 15 G2)를 그대로 호출한다.
- * 여기서 클램프를 빼거나 손으로 재구현하면 "site 3 실제 페이로드를 태운다"는 파일
- * 전체의 전제가 production과 갈라진다.
- */
-const buildGraveUploadPayload = ({ player, allItems, totalGold, uid }) => ({
-    playerName: player.name || '무명 용사',
-    level: player.level || 1,
-    loc: player.loc || '알 수 없는 곳',
-    items: allItems,
-    gold: clampPublicGraveGold(totalGold),
-    guardPower: player.atk || 10,
-    createdAt: serverTimestamp(),
-    uid,
-});
+const NOW = 1_700_000_000_000;
+const PREFIXED_WEAPON = DB.ITEMS.weapons
+    .map((template) => applyItemPrefix(makeItem(template, () => 0.5, () => NOW), () => 0))
+    .find((item) => item?.prefixed);
+const CATALOG_MATERIAL = makeItem(DB.ITEMS.materials[0], () => 0.5, () => NOW);
 
-suite('site 3 — 사망 시 공개 묘비 업로드가 통과한다', async () => {
+/** 실제 사망 묘비 모양 — 접두어 무기(강화됨) · 재료 · 위조 아이템이 든 회수용 로컬 묘비. */
+const makeDeathGrave = (gold = 12_345) => [{
+    loc: '어둠의 동굴',
+    gold,
+    items: [
+        { ...PREFIXED_WEAPON, enhance: 3 },
+        CATALOG_MATERIAL,
+        { name: '존재하지 않는 검', type: 'weapon', val: 1e9 },
+    ],
+    timestamp: NOW,
+}];
+
+const makeDyingPlayer = (overrides = {}) => makePlayerFixture({ name: '테스트용사', level: 30, loc: '어둠의 동굴', atk: 120, ...overrides });
+
+suite('site 3 — 사망 시 공개 묘비 업로드가 통과한다(실제 유품이 든 문서)', async () => {
     const env = await getEnv();
     await env.clearFirestore();
     const db = await asPlayer();
 
-    const player = makePlayerFixture({ name: '테스트용사', level: 30, loc: '어둠의 동굴', atk: 120 });
-    const payload = buildGraveUploadPayload({
-        player,
-        allItems: [],
-        totalGold: 12_345,
+    await assertSucceeds(writePublicGrave(db, buildPublicGraveDoc(makeDyingPlayer(), makeDeathGrave(), PLAYER_UID)));
+
+    // 저장된 문서의 유품은 카탈로그 이름 · 종류뿐이다(아이템 수치 · id · 위조 이름이 공개 문서에 남지 않는다).
+    await env.withSecurityRulesDisabled(async (ctx) => {
+        const { getDoc } = await import('firebase/firestore');
+        const stored = (await getDoc(doc(ctx.firestore(), 'artifacts', APP_ID, 'public', 'data', 'graves', PLAYER_UID))).data();
+        assert.deepEqual(stored.items, [
+            { name: PREFIXED_WEAPON.baseItemName, type: PREFIXED_WEAPON.type },
+            { name: CATALOG_MATERIAL.name, type: CATALOG_MATERIAL.type },
+        ]);
+        assert.equal(stored.uid, PLAYER_UID);
+        assert.ok(stored.createdAt, '서버 시각');
+    });
+});
+
+suite('site 3 읽기 — 다른 차원의 묘비: 올린 문서가 다른 플레이어의 풀 조회(실제 쿼리)로 이벤트 후보가 된다', async () => {
+    const env = await getEnv();
+    await env.clearFirestore();
+
+    await assertSucceeds(writePublicGrave(await asPlayer(PLAYER_UID), buildPublicGraveDoc(makeDyingPlayer(), makeDeathGrave(), PLAYER_UID)));
+
+    // 다른 플레이어의 온라인 세션 — `useDimensionGravePool`이 부르는 같은 함수다.
+    const pool = await assertSucceeds(readDimensionGravePool(await asPlayer(OTHER_UID), OTHER_UID));
+    assert.deepEqual(pool.map((entry) => entry.uid), [PLAYER_UID]);
+    const candidates = selectDimensionGraveCandidates(pool, makePlayerFixture({ level: 30 }), OTHER_UID, new Date(NOW).toDateString());
+    assert.equal(candidates.length, 1);
+    assert.deepEqual(candidates[0], {
         uid: PLAYER_UID,
+        playerName: '테스트용사',
+        level: 30,
+        place: '어둠의 동굴',
+        itemNames: [PREFIXED_WEAPON.baseItemName, CATALOG_MATERIAL.name],
     });
 
-    await assertSucceeds(setDoc(
-        doc(db, 'artifacts', APP_ID, 'public', 'data', 'graves', PLAYER_UID),
-        payload,
-    ));
+    // 묘비 주인은 자기 묘비를 풀에서 보지 않는다.
+    assert.deepEqual(await readDimensionGravePool(await asPlayer(PLAYER_UID), PLAYER_UID), []);
+    // 미인증 세션은 풀 조회 자체가 거부된다.
+    await assertFails(readDimensionGravePool(await asAnonymous(), 'anonymous'));
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
 // `level`과 `gold`는 이제 값 자체가 클라이언트로 보장된다 — `level`은 레벨업 로직이
 //   `CONSTANTS.MAX_LEVEL`에서 멈춰서(`CombatEngine.outcome.ts`), `gold`는 Wave 15 G2가
-//   업로드 페이로드에 건 `clampPublicGraveGold`(`src/utils/graveUtils.ts`,
-//   `useFirebaseSync.ts:594`가 호출)가 보장한다. 그래서 아래는 "미보장 상태를 실측"하는 게
-//   아니라 **네거티브 컨트롤**이다 — `buildGraveUploadPayload`가 만드는(=이미 상한 안쪽인)
+//   업로드 문서에 건 `clampPublicGraveGold`(`src/utils/graveUtils.ts`, `buildPublicGraveDoc`이
+//   호출)가 보장한다. 그래서 아래는 "미보장 상태를 실측"하는 게
+//   아니라 **네거티브 컨트롤**이다 — `buildPublicGraveDoc`이 만드는(=이미 상한 안쪽인)
 //   페이로드를 일부러 다시 덮어써 그 보장이 사라지거나 우회됐다고 가정했을 때도 rules가
 //   마지막 방어선으로 거부하는지를 실행으로 고정해 둔다.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -292,19 +328,14 @@ suite(`site 3 — 묘비 네거티브 컨트롤 ${GRAVE_NEGATIVE_CONTROLS.length
     const db = await asPlayer();
 
     for (const [label, override] of GRAVE_NEGATIVE_CONTROLS) {
-        const player = makePlayerFixture({ name: '테스트용사', level: 30, loc: '어둠의 동굴', atk: 120 });
-        const basePayload = buildGraveUploadPayload({
-            player, allItems: [], totalGold: 12_345, uid: PLAYER_UID,
-        });
-        await assertFails(setDoc(
-            doc(db, 'artifacts', APP_ID, 'public', 'data', 'graves', PLAYER_UID),
-            override(basePayload),
-        ), label);
+        const baseDoc = buildPublicGraveDoc(makeDyingPlayer(), makeDeathGrave(), PLAYER_UID);
+        await assertFails(writePublicGrave(db, override(baseDoc)), label);
     }
 });
 
 // 남는 진짜 미보장은 `guardPower` 하나다 — rules 상한 9,999인데 `player.atk`에는
-//   업로드 시점 캡이 없다(`guardPower: player.atk || 10`). 도달 가능성 실측(§18/§19):
+//   업로드 시점 캡이 없다(`guardPower: player.atk || 0`, `buildPublicGraveDoc`). Wave 70부터 이 값을
+//   읽는 곳은 없다 — rules가 필수 키로 요구해 남는다. 도달 가능성 실측(§18/§19):
 //     base atk 12 (INITIAL_STATE)
 //   + 레벨업 성장 3 × 98회 (Lv1→`CONSTANTS.MAX_LEVEL` 99, `BALANCE.ATK_PER_LEVEL`) = 294
 //   + 그 외 flat 보너스(코덱스/프레스티지 등) 4 × 9 = 36
@@ -320,19 +351,8 @@ suite(`site 3 — 묘비의 상한 중 클라이언트가 보장하지 않는 �
     const db = await asPlayer();
 
     for (const [label, over] of GRAVE_UNGUARANTEED_CAPS) {
-        const player = makePlayerFixture({
-            name: '테스트용사', level: 30, loc: '어둠의 동굴', atk: 120, ...(over.player || {}),
-        });
-        const payload = buildGraveUploadPayload({
-            player,
-            allItems: [],
-            totalGold: over.totalGold ?? 12_345,
-            uid: PLAYER_UID,
-        });
-        await assertFails(setDoc(
-            doc(db, 'artifacts', APP_ID, 'public', 'data', 'graves', PLAYER_UID),
-            payload,
-        ), label);
+        const graveDoc = buildPublicGraveDoc(makeDyingPlayer(over.player || {}), makeDeathGrave(over.totalGold ?? 12_345), PLAYER_UID);
+        await assertFails(writePublicGrave(db, graveDoc), label);
     }
 });
 

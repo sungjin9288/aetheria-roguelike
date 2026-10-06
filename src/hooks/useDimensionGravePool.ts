@@ -1,11 +1,10 @@
 import { useEffect } from 'react';
-import { collection, getDocs, limit, orderBy, query, type DocumentData, type QueryDocumentSnapshot } from 'firebase/firestore';
 import { db, hasFirebaseConfig } from '../firebase';
-import { APP_ID, BALANCE } from '../data/constants';
-import { excludeOwnGraves, type GraveEntry } from '../utils/graveUtils';
+import { BALANCE } from '../data/constants';
 import { isMockRuntime } from '../utils/runtimeMode';
 import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
 import { setDimensionGravePool } from '../platform/dimensionGravePool';
+import { readDimensionGravePool } from '../platform/publicGraveFirestore';
 
 /**
  * 다른 차원의 묘비 풀(Wave 70)을 채운다 — 로그인된 온라인 세션에서 최근 공개 묘비를 읽어 모듈 상태에 둔다.
@@ -20,13 +19,8 @@ export const useDimensionGravePool = (uid: string | null | undefined) => {
         let cancelled = false;
         const load = async () => {
             try {
-                const gravesCol = collection(firestore, 'artifacts', APP_ID, 'public', 'data', 'graves');
-                const snapshot = await getDocs(query(gravesCol, orderBy('createdAt', 'desc'), limit(BALANCE.DIMENSION_GRAVE_POOL_LIMIT)));
-                const fetched: GraveEntry[] = [];
-                snapshot.forEach((document: QueryDocumentSnapshot<DocumentData>) => {
-                    fetched.push({ ...document.data(), uid: document.id });
-                });
-                if (!cancelled) setDimensionGravePool(excludeOwnGraves(fetched, uid));
+                const entries = await readDimensionGravePool(firestore, uid);
+                if (!cancelled) setDimensionGravePool(entries);
             } catch (error) {
                 console.warn('Dimension grave fetch failed', error);
             }
