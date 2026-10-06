@@ -10,6 +10,7 @@ import { startE2ERun } from './testHelpers';
 // 2026-10 Wave 67: 같은 투어가 남긴 기록 탭 관찰(원장 §67.6)의 되돌림도 막는다.
 //   ⑥ 기록 탭 조작이 44px보다 작았다(가방 분류 30 · 빠른 칸 24 · 사용 · 강화 보기 38 · 장비 강화 보기 31 · 상세 보기 38 · 세트 목록 32 · 성장 조언 36 · 임무 게시판 42)
 //   ⑦ 375px에서 기술 탭 제목이 "나이트 전투 …", 보조 장비 칸이 "양손 무기가 …", 가방 카드 설명 줄이 "한손 무기 · 공…"으로 잘렸다
+// 2026-10 Wave 68: ⑧ 375 · 390px 가방 카드에서 버튼 열이 설명 칸을 115px까지 좁혀 무기 설명이 네 줄로 꺾였다
 const VIEWPORTS = [
     { width: 375, height: 667 },
     { width: 390, height: 844 },
@@ -75,6 +76,8 @@ const findUndersizedText = (root: Locator) => root.locator('*').evaluateAll((ele
 
 // 44px 최소 폭은 배치 계산에서 43.99997px로 읽힐 수 있다 — 반 픽셀 아래까지는 같은 크기로 본다(40px 회귀는 잡는다).
 const TOUCH_MIN = 44 - 0.5;
+// 가방 카드 설명 칸의 최소 폭(10rem) — 같은 반 픽셀 여유.
+const BODY_MIN = 160 - 0.5;
 
 const expectTouchTarget = async (target: Locator) => {
     await expect(target).toBeVisible();
@@ -257,6 +260,10 @@ for (const viewport of VIEWPORTS) {
             const statLine = content.getByText(/^한손 무기 · 공격력/).first();
             await expect(statLine).toBeVisible();
             expect(await isClipped(statLine)).toBe(false);
+            // Wave 68: 가방 카드 설명 칸은 10rem 아래로 줄지 않는다 — 버튼 열이 옆에서 칸을 좁히면 다음 줄로 내려간다(원장 §70).
+            const bodyWidths = await content.getByTestId('inventory-item-body').evaluateAll((bodies) => bodies.map((body) => body.getBoundingClientRect().width));
+            expect(bodyWidths.length).toBeGreaterThan(0);
+            expect(bodyWidths.filter((width) => width < BODY_MIN)).toEqual([]);
 
             // 기술: 제목 "나이트 전투 기술"이 잘리지 않는다(길면 "현재 선택"이 다음 줄로 내려간다).
             await openArchiveTab(page, 'skills');
