@@ -1,4 +1,4 @@
-import { CONSTANTS } from '../data/constants.js';
+import { CONSTANTS, type MonsterPrefixDef } from '../data/constants.js';
 
 /**
  * 적 이름의 identity — 임무 목표 판정이 읽는 "이 적은 무엇인가".
@@ -16,6 +16,16 @@ const DECORATION_PREFIXES: ReadonlySet<string> = new Set<string>([
     ...CONSTANTS.MONSTER_PREFIXES.map((prefix) => prefix.name),
     EARLY_ELITE_PREFIX_NAME,
 ]);
+
+/**
+ * 이 종에 붙을 수 있는 무작위 접두어(2026-10 Wave 71, 소유자 결정 "접두어 겹치는 경우 빼기") — 종 이름에 이미 있는
+ * 낱말의 접두어는 뺀다. "거대 사슴벌레"에 `거대`, "고대 마법사"에 `고대`가 붙어 "거대 거대 사슴벌레"가 됐다.
+ * `spawnEnemy`가 이 풀에서 고른다(정예 · 초반 비정예 거르기는 그 위에서, 롤 수는 그대로).
+ */
+export const getSpeciesPrefixPool = (baseName: string | null | undefined): MonsterPrefixDef[] => {
+    const words = new Set(String(baseName ?? '').split(/\s+/).filter(Boolean));
+    return CONSTANTS.MONSTER_PREFIXES.filter((prefix) => !words.has(prefix.name));
+};
 
 /** `[N층] ` 무한 심연 층 태그 — spawnEnemy의 `[${depth}층] ${baseName}` 형식. */
 const DEPTH_TAG = /^\[\d+층\]\s+/;

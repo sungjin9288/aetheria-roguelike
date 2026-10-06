@@ -33,7 +33,7 @@ import { getPrestigeEnemyLevelBonus } from '../systems/metaBonusRamp.js';
 // Wave 62 (원장 §61.4 C11): 여정마다 한 번인 판정은 utils/firstVisitRewards.ts가 그 테이블을 읽는다.
 import { getJourneyFirstVisitReward } from './firstVisitRewards.js';
 import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
-import { EARLY_ELITE_PREFIX_NAME } from './enemyIdentity.js';
+import { EARLY_ELITE_PREFIX_NAME, getSpeciesPrefixPool } from './enemyIdentity.js';
 import { getUnlockedHiddenBosses, isEncounterBoss } from './bossPresence.js';
 
 const getActiveHuntTargets = (mapData: GameMap, player: Player) => {
@@ -221,12 +221,15 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
                 //   경로도 지킨다. 초반 구간에서 이 풀은 재앙의(2.5×)·고대(1.8×)를 뽑고 있었다(각 ~2.4%,
                 //   자연 플레이 사망 41건 중 37건이 정예). 풀만 좁히고 롤 수는 그대로다. 플레이어가
                 //   고른 난이도(eliteOnly 도전 · 프레스티지 정예)는 초반에도 완전 엘리트를 유지한다.
+                // 2026-10 Wave 71 (소유자 결정 "접두어 겹치는 경우 빼기"): 종 이름에 이미 있는 낱말의 접두어는 뽑지
+                //   않는다 — "거대 거대 사슴벌레" · "고대 고대 마법사". 풀만 좁히고 롤 수는 그대로다.
+                const fitting = getSpeciesPrefixPool(baseName);
                 const candidates = (forceElite || prestigeElite)
-                    ? CONSTANTS.MONSTER_PREFIXES.filter((p) => p.isElite)
+                    ? fitting.filter((p) => p.isElite)
                     : earlyBand
-                        ? CONSTANTS.MONSTER_PREFIXES.filter((p) => !p.isElite)
-                        : CONSTANTS.MONSTER_PREFIXES;
-                const pool = candidates.length > 0 ? candidates : CONSTANTS.MONSTER_PREFIXES;
+                        ? fitting.filter((p) => !p.isElite)
+                        : fitting;
+                const pool = candidates.length > 0 ? candidates : fitting;
                 return pool[Math.floor(rng() * pool.length)];
             })();
         // 2026-09 Wave 35: 심연에서는 층 태그를 지킨다 — 접두어가 이름을 다시 쓰면서 태그가 사라졌다.

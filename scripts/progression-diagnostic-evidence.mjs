@@ -43,7 +43,12 @@ const HASH_ALGORITHM = 'sha256';
 // 64시드 평균으로 Lv45 −1.1% · Lv60 −0.3% · Lv75 −2.9%이고 모든 시드가 움직였다 — 기계 폐도(Lv28) · 에테르 폐허 ·
 // 공허의 회랑 조우에 보스 경험치가 더해진 실제 이동이다(원장 §62). 그 편집(maps.ts) 하나만 되돌리면 이전 값이 재현된다(실측).
 // 이전 값: '04cbab226dfb4cd84c8f421364671678cdac34f28b4812b6b774fedd04e92730'.
-const PROGRESSION_V1_BASELINE_HASH = '76898ed3a728b3a0ff67b009a6b569f56f5d2279257924fdb74d29b0fa3a2b52';
+// Wave 71 (2026-10-06): 종 이름에 이미 있는 낱말의 접두어를 뽑지 않는다(소유자 결정 — "거대 거대 사슴벌레"). 이 시드의
+// 체크포인트 액션 16/56/87/170/1,577/5,262/7,981은 **바이트 동일**이고, 바뀌는 것은 체크포인트의 남은 경험치 · 최종 골드뿐이다
+// (초반 겹치는 종 하나의 접두어가 풀에서 다음 것으로 밀렸다). 64시드 평균은 Lv2 ~ 75에서 +0.00 ~ 0.39%다(원장 §74).
+// 그 편집(exploreUtils의 접두어 풀) 하나만 되돌리면 이전 값이 재현된다(실측).
+// 이전 값: '76898ed3a728b3a0ff67b009a6b569f56f5d2279257924fdb74d29b0fa3a2b52'.
+const PROGRESSION_V1_BASELINE_HASH = '804a7617ea3c920c30e48b27f9923bdba245b9096a8e7f78d21c28b851a072f3';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';
