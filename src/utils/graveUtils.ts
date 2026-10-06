@@ -17,17 +17,17 @@ export interface GraveEntry {
     item?: Item | null;
     items?: Item[];
     timestamp?: number;
-    /** 공개 침공 대상 전용 — 묘비 주인의 세션 uid. */
+    /** 공개 묘비 문서 전용 — 묘비 주인의 세션 uid. */
     uid?: string;
-    /** 공개 침공 대상 전용 — 침공 성공 확률 계산에 쓰는 수비력. */
+    /** 공개 묘비 문서 전용 — rules가 필수 키로 요구한다(Wave 70부터 읽는 곳이 없다 — 다른 차원의 묘비는 망령과 실제 전투). */
     guardPower?: number;
-    /** 공개 침공 대상 전용 — 표시용 플레이어 이름. */
+    /** 공개 묘비 문서 전용 — 표시용 플레이어 이름. */
     playerName?: string;
-    /** 공개 침공 대상 전용 — 표시용 레벨. */
+    /** 공개 묘비 문서 전용 — 표시용 레벨. */
     level?: number;
 }
 
-type GraveInput = GraveEntry | GraveEntry[] | null | undefined;
+export type GraveInput = GraveEntry | GraveEntry[] | null | undefined;
 
 const createGraveItem = (item: Item) => ({
     ...item,

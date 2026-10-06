@@ -162,8 +162,8 @@ test('grave recovery groups prioritize the current location and keep exact rewar
 });
 
 // Wave 15 G2 — `firestore.rules`의 공개 묘비 `gold <= 9,999,999` 상한을 클라이언트가
-// 보장하지 않던 유일한 필드였다(§18/§19 실측). 클램프는 `useFirebaseSync.ts`의 공개
-// 업로드 페이로드에만 걸었고, 회수용 로컬 묘비(`buildGraveData`/`resolveGraveRecovery`)는
+// 보장하지 않던 유일한 필드였다(§18/§19 실측). 클램프는 공개 업로드 문서
+// (`buildPublicGraveDoc`, `src/utils/publicGraveDoc.ts`)에만 걸었고, 회수용 로컬 묘비(`buildGraveData`/`resolveGraveRecovery`)는
 // 절대 건드리지 않는다 — 건드리면 플레이어 자기 골드가 사라진다(이 트랙의 가장 큰
 // 실패 모드). 소스 정규식이 아니라 실제 함수를 호출해 값으로 확인한다(CLAUDE.md §7).
 test('상한 초과 골드로 죽어도 공개 업로드만 클램프되고 로컬 회수 값은 그대로다 (Wave 15 G2)', () => {
@@ -186,7 +186,7 @@ test('상한 초과 골드로 죽어도 공개 업로드만 클램프되고 로�
     assert.equal(recovered.updatedPlayer.gold, expectedLocalGold);
 
     // (a) 공개 업로드 페이로드는 정확히 CONSTANTS.MAX_PUBLIC_GRAVE_GOLD(9,999,999)에서
-    //     멈춘다 — useFirebaseSync.ts가 부르는 것과 같은 exported 함수를 그대로 호출한다
+    //     멈춘다 — `buildPublicGraveDoc`이 부르는 것과 같은 exported 함수를 그대로 호출한다
     //     (사본을 손으로 다시 구현하지 않는다). 업로드 직전 합산도 production과 같은
     //     `normalizeGraves` + reduce를 쓴다.
     const totalGold = normalizeGraves(localGrave).reduce((sum, g) => sum + (g?.gold || 0), 0);

@@ -11,7 +11,8 @@ import { auth, db, hasFirebaseConfig } from '../firebase';
 import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
 import { migrateData } from '../utils/gameUtils';
 import { hasMigratedPlayer } from '../utils/dataMigration';
-import { normalizeGraves, getGraveItems, clampPublicGraveGold } from '../utils/graveUtils';
+import { buildPublicGraveDoc } from '../utils/publicGraveDoc';
+import { writePublicGrave } from '../platform/publicGraveFirestore';
 import { getDeviceQaScenario, isMockRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
@@ -582,25 +583,10 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
         if (!PRODUCTION_GAME_CAPABILITIES.dimensionGraveEvent) return;
         if (mockMode || !uid || !hasFirebaseConfig || !db) return;
         if (gameState !== 'dead') return;
-        const graveEntries = normalizeGraves(grave);
-        const allItems = graveEntries.flatMap((g) => getGraveItems(g)).slice(0, 3);
-        const totalGold = graveEntries.reduce((sum, g) => sum + (g?.gold || 0), 0);
-        // Wave 15 G2 — `firestore.rules`의 `graves.gold <= 9,999,999` 상한을 이 합산만
-        // 보장하지 않았다(§18/§19 실측). 이 문서는 공개 침공 대상이라 클램프가 회수용
-        // 로컬 `grave`(위 graveEntries 원본, player.grave에 그대로 남는다)에는 절대
-        // 미치지 않는다 — `clampPublicGraveGold`는 이 업로드 페이로드에만 쓴다.
-        const graveDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'graves', uid);
-        setDoc(graveDocRef, {
-            playerName: player.name || '무명 용사',
-            level: player.level || 1,
-            loc: player.loc || '알 수 없는 곳',
-            items: allItems,
-            gold: clampPublicGraveGold(totalGold),
-            // Wave 70: 다른 차원의 묘비는 망령과 실제 전투라 이 값을 읽지 않는다 — rules가 필수 키로 요구해 남긴다(원장 §66.8 해소).
-            guardPower: player.atk || 10,
-            createdAt: serverTimestamp(),
-            uid,
-        }).catch((e: unknown) => console.warn('Public grave upload failed', e));
+        // 문서 모양(유품 = 카탈로그 이름 · 종류만, `gold` rules 상한 클램프)은 `buildPublicGraveDoc`이 소유한다 — 회수용 로컬
+        // `grave`는 건드리지 않는다. 같은 두 함수를 `tests/firestore-rules-semantics.test.js`가 에뮬레이터에서 실행한다.
+        writePublicGrave(db, buildPublicGraveDoc(player, grave, uid))
+            .catch((e: unknown) => console.warn('Public grave upload failed', e));
     // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [gameState, uid]);
 

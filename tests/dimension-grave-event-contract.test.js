@@ -22,6 +22,10 @@ import {
     toDimensionGraveCandidate,
 } from '../src/utils/dimensionGrave.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
+import { buildPublicGraveDoc, toPublicGraveItems } from '../src/utils/publicGraveDoc.ts';
+import { buildGraveData } from '../src/utils/graveUtils.js';
+import { makeItem } from '../src/utils/gameUtils.js';
+import { applyItemPrefix } from '../src/utils/itemPrefixUtils.ts';
 import { startExpedition } from '../src/utils/expeditionLedger.js';
 import { QUESTS } from '../src/data/quests.js';
 import { getEffectiveMaxHp } from '../src/systems/vitals.js';
@@ -401,4 +405,79 @@ test('망령의 초상은 종(baseName)의 그림이다 — 표시 이름("…�
     const key = html.match(/data-monster-key="([^"]+)"/)?.[1];
     assert.equal(key, getMonsterVisual(fight.enemy.baseName)?.key, '종의 그림');
     assert.notEqual(key, getMonsterVisual('슬라임')?.key, '묘비 주인 이름으로 그림을 고르지 않는다');
+});
+
+// ── 업로드 문서(최종 통합 수용 — 업로드 · 조회 왕복) ───────────────────────────────
+// Wave 70이 켠 사망 시 공개 묘비 업로드는 그 전까지 프로덕션에서 꺼져 있었다(`publicGraveInvasion: false`). 읽는 쪽은 문서의
+// 아이템을 카탈로그 이름으로만 쓰므로 업로드도 그것만 올린다 — 아래는 "읽는 쪽이 쓸 것을 업로드가 잃지 않는다"와 "Firestore에
+// 실을 수 없는 값이 업로드에 들어갈 수 없다"를 실제 아이템으로 고정한다. rules · 쿼리 왕복은 `firestore-rules-semantics`가 맡는다.
+
+const ALL_CATALOG = [...DB.ITEMS.consumables, ...DB.ITEMS.weapons, ...DB.ITEMS.armors, ...DB.ITEMS.materials];
+const realItemsForUpload = () => ALL_CATALOG.flatMap((template) => {
+    const plain = makeItem(template, () => 0.5, () => NOW);
+    const prefixed = applyItemPrefix(makeItem(template, () => 0.5, () => NOW), () => 0);
+    return [plain, { ...plain, enhance: 5, enhanceLevel: 5 }, ...(prefixed?.prefixed ? [prefixed] : [])];
+});
+
+test('업로드 문서: 유품은 카탈로그 이름 · 종류 문자열뿐이고, 읽는 쪽이 아이템 하나하나에서 얻는 이름을 그대로 얻는다', () => {
+    const items = realItemsForUpload();
+    assert.ok(items.length > ALL_CATALOG.length * 2, '전제: 접두어 · 강화 사본까지');
+    let compared = 0;
+    for (const item of items) {
+        const uploaded = toPublicGraveItems([item]);
+        for (const entry of uploaded) {
+            assert.deepEqual(Object.keys(entry).sort(), ['name', 'type'], `${item.name}: 이름 · 종류만`);
+            assert.equal(typeof entry.name, 'string');
+            assert.equal(typeof entry.type, 'string');
+        }
+        const direct = toDimensionGraveCandidate({ uid: 'u', items: [item] })?.itemNames ?? [];
+        const viaUpload = toDimensionGraveCandidate({ uid: 'u', items: uploaded })?.itemNames ?? [];
+        assert.deepEqual(viaUpload, direct, `${item.name}: 업로드를 거쳐도 읽는 쪽 결과가 같다`);
+        compared += 1;
+    }
+    assert.equal(compared, items.length);
+});
+
+test('업로드 문서: Firestore에 실을 수 없는 값(undefined · 중첩 배열 · 위조 수치)은 유품에 남지 않는다', () => {
+    const weapon = makeItem(CATALOG_WEAPON, () => 0.5, () => NOW);
+    const uploaded = toPublicGraveItems([
+        { ...weapon, enhance: undefined, grid: [[1, 2]], val: 1e9 },
+        { name: '존재하지 않는 검', type: 'weapon', val: 1e9 },
+    ]);
+    assert.deepEqual(uploaded, [{ name: CATALOG_WEAPON.name, type: CATALOG_WEAPON.type }]);
+    const isPlain = (value) => value === null || ['string', 'number', 'boolean'].includes(typeof value)
+        || (Array.isArray(value) ? value.every((v) => !Array.isArray(v) && isPlain(v)) : (typeof value === 'object' && Object.values(value).every(isPlain)));
+    const doc = buildPublicGraveDoc(
+        { ...INITIAL_STATE.player, name: '', loc: '', level: 0, atk: undefined },
+        [{ loc: LOC, gold: 10, items: [{ ...weapon, enhance: undefined }] }],
+        'uid-1',
+    );
+    assert.ok(isPlain(doc), '문서 전체가 문자열 · 숫자 · 평범한 객체뿐이다');
+    assert.equal(doc.playerName, MSG.DIMENSION_GRAVE_UNKNOWN_NAME, '이름이 비면 rules의 1~20자를 만족하는 이름');
+    assert.ok(Array.from(doc.playerName).length <= 20);
+    assert.equal(doc.loc, MSG.DIMENSION_GRAVE_UNKNOWN_PLACE);
+    assert.equal(doc.level, 1);
+    assert.equal(doc.guardPower, 0);
+    assert.equal(doc.uid, 'uid-1');
+});
+
+test('업로드 문서: 아는 유품만 상한까지 담는다 — 모르는 아이템이 칸을 먹지 않는다', () => {
+    const known = DB.ITEMS.materials.slice(0, BALANCE.DIMENSION_GRAVE_UPLOAD_ITEM_LIMIT + 2).map((item) => makeItem(item, () => 0.5, () => NOW));
+    const unknown = { name: '존재하지 않는 재료', type: 'mat' };
+    const uploaded = toPublicGraveItems([unknown, unknown, ...known]);
+    assert.equal(uploaded.length, BALANCE.DIMENSION_GRAVE_UPLOAD_ITEM_LIMIT);
+    assert.deepEqual(uploaded.map((entry) => entry.name), known.slice(0, BALANCE.DIMENSION_GRAVE_UPLOAD_ITEM_LIMIT).map((item) => item.name));
+    assert.ok(BALANCE.DIMENSION_GRAVE_UPLOAD_ITEM_LIMIT <= 5, 'rules의 items 상한(5) 안쪽');
+});
+
+test('업로드 문서: 골드는 공개 상한에서 멈추고 회수용 로컬 묘비는 그대로다 — 실제 사망 묘비(buildGraveData)에서', () => {
+    const dying = { ...structuredClone(INITIAL_STATE.player), name: '용사', level: 30, loc: LOC, gold: 40_000_000, inv: [makeItem(CATALOG_WEAPON, () => 0.5, () => NOW)] };
+    const localGrave = buildGraveData(dying, () => 0.1, () => NOW);
+    const before = structuredClone(localGrave);
+    const doc = buildPublicGraveDoc(dying, [localGrave], 'uid-1');
+    assert.equal(doc.gold, CONSTANTS.MAX_PUBLIC_GRAVE_GOLD);
+    assert.deepEqual(localGrave, before, '로컬 묘비는 변하지 않는다');
+    assert.ok(localGrave.gold > CONSTANTS.MAX_PUBLIC_GRAVE_GOLD, '전제: 로컬 골드가 공개 상한을 넘는다');
+    assert.deepEqual(doc.items, [{ name: CATALOG_WEAPON.name, type: CATALOG_WEAPON.type }]);
+    assert.deepEqual(toDimensionGraveCandidate(doc).itemNames, [CATALOG_WEAPON.name], '올린 문서가 그대로 후보가 된다');
 });

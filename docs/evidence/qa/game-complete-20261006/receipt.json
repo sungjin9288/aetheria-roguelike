@@ -1,0 +1,373 @@
+{
+  "date": "2026-10-06",
+  "base": "00d67e5128f316d3291a7eb8970125a495105a9f",
+  "head": "c251bb3539313e7adb8d244478b122aa46472173",
+  "scope": "Game-complete final integrated acceptance on the Wave 70 merge SHA: natural play, two-stage screen tour with rendered-font probe, dimension grave screens, tracked evidence and full gate; plus the first execution of the online public-grave path (upload -> other player pool query -> event candidate) on the Firestore rules emulator",
+  "fixtureBoundary": "Natural play: out-of-repo driver, offline (empty grave pool), worktree at the merge SHA. Screens: Chromium iPhone 12 emulation on Linux, mock runtime with the QA seed API, production build of the merge SHA. Online path: Firestore emulator running the repository firestore.rules, not the production project. Not physical-device acceptance.",
+  "naturalPlay": {
+    "worktreeHead": "00d67e5128f316d3291a7eb8970125a495105a9f",
+    "paths": 5,
+    "seedsPerPath": 48,
+    "runsPerSeed": 4,
+    "total": 240,
+    "identicalToWave66Measurement": 240,
+    "identicalToWave70Measurement": 240,
+    "violations": 0,
+    "ascensionRuns": 960,
+    "deaths": 1186,
+    "ignoredFields": [
+      "stops.wallSeconds",
+      "snapTaken"
+    ],
+    "perPath": {
+      "p0": {
+        "seeds": 48,
+        "w66": 48,
+        "w70": 48,
+        "violations": 0
+      },
+      "p1": {
+        "seeds": 48,
+        "w66": 48,
+        "w70": 48,
+        "violations": 0
+      },
+      "p5": {
+        "seeds": 48,
+        "w66": 48,
+        "w70": 48,
+        "violations": 0
+      },
+      "p6": {
+        "seeds": 48,
+        "w66": 48,
+        "w70": 48,
+        "violations": 0
+      },
+      "p4": {
+        "seeds": 48,
+        "w66": 48,
+        "w70": 48,
+        "violations": 0
+      }
+    }
+  },
+  "tour": {
+    "comparedTo": "Wave 69 baseline tour (shots-final69, §72.1)",
+    "A": {
+      "screens": [
+        72,
+        72
+      ],
+      "docOverflow": [
+        0,
+        0
+      ],
+      "offscreen": [
+        276,
+        276
+      ],
+      "posMismatch": [
+        6,
+        6
+      ],
+      "tinyButtons": [
+        0,
+        0
+      ],
+      "small": [
+        836,
+        838
+      ],
+      "clipped": [
+        27,
+        27
+      ],
+      "monoHangul": [
+        480,
+        480
+      ],
+      "fontProbe": {
+        "screens": 72,
+        "probedElements": 452,
+        "firaUsedElements": 79,
+        "spaceInCode": 0,
+        "families": {
+          "WenQuanYi Zen Hei": 1563,
+          "Liberation Sans": 315,
+          "Fira Code Light": 257
+        }
+      },
+      "tinyAfter": []
+    },
+    "B": {
+      "screens": [
+        68,
+        68
+      ],
+      "docOverflow": [
+        0,
+        0
+      ],
+      "offscreen": [
+        272,
+        272
+      ],
+      "posMismatch": [
+        3,
+        3
+      ],
+      "tinyButtons": [
+        2,
+        2
+      ],
+      "small": [
+        1232,
+        1230
+      ],
+      "clipped": [
+        31,
+        31
+      ],
+      "monoHangul": [
+        1025,
+        1025
+      ],
+      "fontProbe": {
+        "screens": 68,
+        "probedElements": 450,
+        "firaUsedElements": 180,
+        "spaceInCode": 0,
+        "families": {
+          "WenQuanYi Zen Hei": 2265,
+          "Fira Code Light": 610,
+          "Liberation Sans": 751,
+          "Unifont": 9
+        }
+      },
+      "tinyAfter": [
+        "B02-archive-inventory@390 quick-slot-assign-2:3 44x44",
+        "B02-archive-inventory@430 quick-slot-assign-2:3 44x44"
+      ]
+    },
+    "differences": [
+      "A small 836->838: the pinned story strip (TerminalView, 10px) behind the post-combat card at 430px; the async victory narrative arrived before capture this time",
+      "B first run: 430px map tab captured on its loading state while natural play shared the CPU; stage B rerun on the same dist (no rebuild) after natural play, map renders and all metrics match the baseline except small -2 (one fewer visible combat log line at 375px)",
+      "rendered font probe: Fira Code drew 0 spaces across A 452 and B 450 code-font elements containing Hangul"
+    ]
+  },
+  "dimensionGraveScreens": {
+    "screens": [
+      {
+        "name": "D01-dimension-grave-event",
+        "width": 375,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": 0
+      },
+      {
+        "name": "D02-shade-combat",
+        "width": 375,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": 0
+      },
+      {
+        "name": "D03-after-victory",
+        "width": 375,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 8,
+        "clipped": 1
+      },
+      {
+        "name": "D01-dimension-grave-event",
+        "width": 390,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": 0
+      },
+      {
+        "name": "D02-shade-combat",
+        "width": 390,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": 0
+      },
+      {
+        "name": "D03-after-victory",
+        "width": 390,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 9,
+        "clipped": 1
+      },
+      {
+        "name": "D01-dimension-grave-event",
+        "width": 430,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": 0
+      },
+      {
+        "name": "D02-shade-combat",
+        "width": 430,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": 0
+      },
+      {
+        "name": "D03-after-victory",
+        "width": 430,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 9,
+        "clipped": 1
+      }
+    ],
+    "rewards": [
+      {
+        "width": 375,
+        "item": "전투도끼",
+        "catalogVal": 25,
+        "forgedVal": 2500,
+        "rewardVals": [
+          25
+        ]
+      },
+      {
+        "width": 390,
+        "item": "전투도끼",
+        "catalogVal": 25,
+        "forgedVal": 2500,
+        "rewardVals": [
+          25
+        ]
+      },
+      {
+        "width": 430,
+        "item": "전투도끼",
+        "catalogVal": 25,
+        "forgedVal": 2500,
+        "rewardVals": [
+          25
+        ]
+      }
+    ]
+  },
+  "onlineGravePath": {
+    "finding": "The death upload enabled by Wave 70 had been off in production (publicGraveInvasion: false); the rules test sent a hand-copied payload with an empty item list, so an upload with real items and the pool query had never executed",
+    "serializationProbe": {
+      "generatedItems": {
+        "catalog": 299,
+        "prefixed": 236,
+        "loot": 1489,
+        "total": 2024
+      },
+      "passed": 2024,
+      "discrimination": [
+        "undefined field -> setDoc throws synchronously",
+        "nested array -> setDoc throws synchronously"
+      ]
+    },
+    "change": "Upload document items are catalog name + type strings only (buildPublicGraveDoc); write and pool read are shared functions (platform/publicGraveFirestore) used by the hooks and the rules test",
+    "rulesEmulator": {
+      "tests": 19,
+      "pass": 19,
+      "fail": 0,
+      "skipped": 0
+    },
+    "unitContracts": "tests/dimension-grave-event-contract.test.js 16 -> 20",
+    "faultInjection": {
+      "allRed": true,
+      "mutations": [
+        {
+          "name": "emptyNameFallback",
+          "failedTests": 1,
+          "red": true
+        },
+        {
+          "name": "goldUnclamped",
+          "failedTests": 1,
+          "red": true
+        },
+        {
+          "name": "noServerTimestamp",
+          "failedTests": 2,
+          "red": true
+        },
+        {
+          "name": "orderByMissingField",
+          "failedTests": 1,
+          "red": true
+        },
+        {
+          "name": "ownGraveInPool",
+          "failedTests": 1,
+          "red": true
+        },
+        {
+          "name": "rawItemsUpload",
+          "failedTests": 5,
+          "red": true
+        },
+        {
+          "name": "sliceBeforeFilter",
+          "failedTests": 1,
+          "red": true
+        }
+      ]
+    }
+  },
+  "evidence": {
+    "rewrittenHashOnly": [
+      "progression-diagnostic-v2.json (6 source hashes; report identical)",
+      "equipment-combat-power.json (constants.ts hash, 2 fields)"
+    ],
+    "trackedVerifies": 15,
+    "allOk": true
+  },
+  "gate": {
+    "runOn": "83ea5aa1 (src identical to c251bb35, which only changes a test guard and docs)",
+    "typeCheck": "ok",
+    "lint": "ok",
+    "unit": {
+      "firstRun": "5886/5887 (latent-type-bugs H5(a) source guard looked for excludeOwnGraves(fetched, uid) in the hook; moved to platform/publicGraveFirestore.ts)",
+      "rerunAfterGuardFix": "5887/5887, 428 files, skip 0"
+    },
+    "buildGuard": "ok",
+    "ciEnvBuild": "ok",
+    "e2e": {
+      "shard1": 78,
+      "shard2": 75,
+      "total": 153
+    },
+    "perf": {
+      "desktopFcpMs": 808,
+      "mobileFirstRun": {
+        "fcpMs": 2728,
+        "dclMs": 2513.5,
+        "result": "over 2500ms budget"
+      },
+      "mobileReruns": [
+        480,
+        596,
+        652
+      ],
+      "desktopRerunFcpMs": 672,
+      "chunkComparison": "same chunks as the Wave 70 build (index -1.8KB, game-combat +2.2KB)"
+    },
+    "rulesEmulator": "19/19"
+  },
+  "remaining": [
+    "Physical iPhone screen and lifecycle acceptance (owner runbook docs/qa/IPHONE_ACCEPTANCE_RUNBOOK.md)",
+    "Production Firebase project and live public grave count (event frequency after launch)",
+    "Native builds and release signing are separate release steps"
+  ]
+}
