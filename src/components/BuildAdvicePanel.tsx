@@ -42,7 +42,7 @@ const BuildAdvicePanel = ({ player, stats }: BuildAdvicePanelProps) => {
             {/* 헤더 토글 */}
             <button
                 onClick={() => setOpen((o) => !o)}
-                className="w-full flex items-center justify-between font-fira text-slate-400/76 hover:text-slate-200 hover:bg-white/[0.03] transition-colors px-3 py-2.5 text-xs"
+                className="min-h-11 w-full flex items-center justify-between font-fira text-slate-400/76 hover:text-slate-200 hover:bg-white/[0.03] transition-colors px-3 py-2.5 text-xs"
             >
                 <span className="flex items-center gap-2 tracking-widest uppercase">
                     <span className={trait.accent}>◈</span>

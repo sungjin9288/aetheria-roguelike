@@ -289,7 +289,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                         data-testid="shop-equipment-detail-toggle"
                         aria-expanded={showDetails}
                         onClick={() => setDetailOverride(!showDetails)}
-                        className="min-h-[38px] shrink-0 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[10px] font-readable font-bold text-[#f6e7c8]"
+                        className="min-h-11 shrink-0 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[10px] font-readable font-bold text-[#f6e7c8]"
                     >
                         {showDetails ? '간단히 보기' : '상세 보기'}
                     </button>

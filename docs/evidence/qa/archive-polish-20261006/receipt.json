@@ -1,0 +1,40 @@
+{
+  "date": "2026-10-06",
+  "base": "2b1bf3213e9439c1f912a25743b972d12025e014",
+  "scope": "Wave 67: product-acceptance leftovers (ledger §67.6) — archive controls below 44px, clipped archive text, duplicate loot names",
+  "fixtureBoundary": "Same two-stage tour as ledger §67 (fresh game with seeded RNG; natural-play snapshot Knight Lv44 restored into isolated device-QA storage). Chromium iPhone 12 emulation on Linux; not physical-device acceptance.",
+  "fixes": [
+    { "id": "archive-touch-44", "surfaces": ["inventory filters + recommend-equip + bulk-sell", "quick-slot assign 1-3 + unassign", "inventory use / enhance", "equipment enhance", "detail toggles (equipment / inventory / shop)", "job set catalog toggle", "build advice toggle", "quest board open"], "before": "24-42px", "after": ">=44px" },
+    { "id": "skill-title-wrap", "before": "375px title truncated to '나이트 전투 …'", "after": "title intact; '현재 선택' wraps to its own line" },
+    { "id": "slot-name-two-lines", "before": "375/390px offhand slot '양손 무기가 …'", "after": "slot names wrap to at most two lines" },
+    { "id": "inventory-stat-line-wrap", "before": "stat line truncated '한손 무기 · 공…' even with details on", "after": "stat line wraps" },
+    { "id": "loot-stacking", "before": "'벌레 껍질 · 벌레 껍질'", "after": "'벌레 껍질 x2' (post-combat card and combat digest share utils/lootSummary.ts; remainder counted in items)" }
+  ],
+  "tourComparison": {
+    "A": { "screens": [72, 72], "docOverflow": [0, 0], "offscreen": [276, 276], "posMismatch": [6, 6], "tinyButtons": [40, 0], "small": [845, 836], "clipped": [27, 27] },
+    "B": { "screens": [65, 68], "docOverflow": [0, 0], "offscreen": [260, 272], "posMismatch": [3, 3], "tinyButtons": [89, 1], "small": [1223, 1230], "clipped": [42, 31] },
+    "notes": [
+      "Before = final build of ledger §67 (shots-final); after = this change. Stage B gained 3 scrolled screens because archive tabs grew taller; offscreen growth is the same decorative blur/aurora divs on those extra screens (all offscreen entries in both runs have no text and no test id).",
+      "The single remaining tiny button is quick-slot-assign-2 measured 44x44 after rounding (sub-pixel layout).",
+      "Remaining clipped entries are sr-only labels (intro name, route, mission loadout) and the intentional status-bar location ellipsis (ledger §67.3 ③)."
+    ]
+  },
+  "contracts": {
+    "e2e": "tests/e2e/product-acceptance-layout.spec.ts — archive tabs at 375/390/430: every visible button >=44px (equipment details, inventory details, quest, map), skill title / two-hand offhand slot / inventory stat line not clipped",
+    "unit": "tests/loot-summary-contract.test.js (4)"
+  },
+  "faultInjection": {
+    "allRed": true,
+    "e2e": {
+      "filter30": "3 failed", "quickslot24": "3 failed", "use38": "3 failed", "invEnhance38": "3 failed", "eqEnhance31": "3 failed",
+      "eqToggle38": "3 failed", "invToggle38": "3 failed", "setCatalog32": "3 failed", "advice36": "3 failed", "questBoard42": "3 failed",
+      "skillHeaderOriginal": "1 failed (375) 2 passed", "slotTruncate": "2 failed (375, 390) 1 passed", "statTruncate": "3 failed"
+    },
+    "unit": { "cardJoinWithoutStacking": "1 failed", "digestJoinWithoutStacking": "1 failed" },
+    "notFaithful": "Removing only flex-wrap from the skill header passed 3/3: the title no longer has truncate, so it wraps instead of clipping. The faithful revert (original header) is skillHeaderOriginal."
+  },
+  "notPerformed": [
+    "Physical iPhone check (owner runbook docs/qa/IPHONE_ACCEPTANCE_RUNBOOK.md)",
+    "font-fira Korean spacing (Linux-only observation, owner device item 6)"
+  ]
+}

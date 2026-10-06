@@ -116,6 +116,9 @@ export const MSG = {
     INFINITE_DEVOUR_HEAL: (health: number) => `무한 포식 효과로 생명을 ${health}만큼 회복했습니다.`,
     STAR_CORE_RESTORE: '별의 핵이 기력을 모두 회복했습니다.',
     LOOT_GET: (name: string) => `전리품: ${name}`,
+    // 2026-10 Wave 67: 같은 전리품은 묶어서 보인다(utils/lootSummary.ts) — "벌레 껍질 · 벌레 껍질"이 "벌레 껍질 x2"가 된다.
+    LOOT_STACK: (name: string, count: number) => (count > 1 ? `${name} x${count}` : name),
+    LOOT_SUMMARY_MORE: (count: number) => ` 외 ${count}`,
     // 2026-09 Wave 39: 후반 강화 재료 드롭 — 도감 소재 기록의 획득처는 몬스터별 전리품 표만 읽으므로(적 레벨 규칙은 표 밖) 이 규칙을 따로 알린다.
     CODEX_ENHANCE_MATERIAL_LATE_SOURCE: (level: number) => `Lv${level} 이상 지역의 적에게서도 드물게 얻습니다 · 보스는 더 자주`,
     LOOT_PREFIX: (name: string) => `접두사 부여: [${name}]`,

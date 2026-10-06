@@ -215,15 +215,17 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
 
     return (
         <div data-testid="skill-tree-preview" className="space-y-4">
-            <header className="flex items-center gap-3 border-b border-white/8 pb-3">
+            {/* 2026-10 Wave 67: 제목과 "현재 선택"이 한 줄에 안 들어가면 "현재 선택"이 다음 줄로 내려간다 —
+                둘을 한 줄에 묶어 두던 동안 375px에서 제목이 "나이트 전투 …"로 잘렸다(원장 §67.6). */}
+            <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/8 pb-3">
                 <ClassIcon className={player.job as string} size={34} tier={currentClass.tier || 0} />
-                <div className="min-w-0 flex-1">
+                <div className="min-w-0 flex-[1_1_9rem]">
                     <div className="aether-type-meta font-readable text-slate-400/76">기술 구성</div>
-                    <h2 className="truncate font-readable text-lg font-semibold text-slate-100">
+                    <h2 className="font-readable text-lg font-semibold text-slate-100">
                         {player.job} 전투 기술
                     </h2>
                 </div>
-                <div className="shrink-0 text-right font-readable">
+                <div className="ml-auto min-w-0 max-w-full text-right font-readable">
                     <div className="aether-type-meta text-slate-400/76">현재 선택</div>
                     <div className="aether-type-body mt-0.5 font-semibold text-[#dff7f5]">{selectedSkillName || '없음'}</div>
                 </div>

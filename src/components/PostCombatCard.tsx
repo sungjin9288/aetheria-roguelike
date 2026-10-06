@@ -13,6 +13,7 @@ import {
     type PostCombatChoiceId,
 } from '../utils/postCombatChoice';
 import { MSG } from '../data/messages';
+import { formatLootStacks, summarizeLoot } from '../utils/lootSummary';
 import type { Player, PostCombatResult } from '../types';
 import SignalBadge from './SignalBadge';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
@@ -92,8 +93,10 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice, pla
     ];
     const rewardSignals = rewardSignalCandidates.filter(Boolean);
     const primarySignal = rewardSignals[0] || null;
-    const lootSummary = nonSignatureLoot.length > 0
-        ? `${nonSignatureLoot.slice(0, 2).join(' · ')}${nonSignatureLoot.length > 2 ? ` 외 ${nonSignatureLoot.length - 2}` : ''}`
+    // 2026-10 Wave 67: 같은 전리품은 "이름 x개수"로 묶는다(utils/lootSummary.ts — 전투 정리 로그와 같은 판정).
+    const lootView = summarizeLoot(nonSignatureLoot);
+    const lootSummary = lootView.shown.length > 0
+        ? `${lootView.shown.join(' · ')}${lootView.restCount > 0 ? MSG.LOOT_SUMMARY_MORE(lootView.restCount) : ''}`
         : null;
     const decisionContext = {
         signatureLootCount: signatureLoot.length,
@@ -217,7 +220,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice, pla
                                             Legendary
                                         </div>
                                         <div className="mt-1 text-sm font-rajdhani font-bold leading-tight text-[#fef3c7]">
-                                            {signatureLoot.join(' · ')}
+                                            {formatLootStacks(signatureLoot).join(' · ')}
                                         </div>
                                         <div className="mt-0.5 text-[11px] font-fira text-[#f6e7a2]/80">
                                             도감에 기록된 전설 각인

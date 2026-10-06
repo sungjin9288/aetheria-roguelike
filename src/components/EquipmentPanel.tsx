@@ -133,7 +133,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                     data-testid="equipment-detail-toggle"
                     aria-expanded={showDetails}
                     onClick={() => setDetailOverride(!showDetails)}
-                    className="inline-flex min-h-[38px] shrink-0 items-center gap-1.5 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[10px] font-readable font-bold text-[#f6e7c8]"
+                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[10px] font-readable font-bold text-[#f6e7c8]"
                 >
                     <ListTree size={13} />
                     {showDetails ? '간단히 보기' : '상세 보기'}
@@ -182,7 +182,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                     title={s.slot ? `${player?.job} 세트 매치 슬롯` : undefined}
                                 >
                                     <span className="w-[52px] shrink-0 text-[10px] font-readable text-slate-400/74">{s.label}</span>
-                                    <span className={`min-w-0 flex-1 truncate text-[11px] font-readable font-semibold ${s.slot ? 'text-[#f6e7c8]' : 'text-white/88'}`}>{s.name}</span>
+                                    <span className={`min-w-0 flex-1 line-clamp-2 text-[11px] leading-snug font-readable font-semibold ${s.slot ? 'text-[#f6e7c8]' : 'text-white/88'}`}>{s.name}</span>
                                     {s.slot && <Sparkles size={11} aria-label="세트 매치" className="shrink-0 text-[#d5b180]" />}
                                 </div>
                             ))}
@@ -239,7 +239,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         type="button"
                         onClick={() => setShowSetCatalog((prev) => !prev)}
                         data-testid="job-set-catalog-toggle"
-                        className="flex w-full items-center justify-between gap-2 text-left"
+                        className="flex min-h-11 w-full items-center justify-between gap-2 text-left"
                         aria-expanded={showSetCatalog}
                     >
                         <div className="min-w-0">
@@ -490,7 +490,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                             itemId: item.id || `equip:${slotKey}`,
                                         })}
                                         aria-label={`${item.name} 강화 결과와 비용 보기`}
-                                        className="shrink-0 rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-3 py-1.5 text-[11px] font-fira font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/18"
+                                        className="min-h-11 shrink-0 rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-3 py-1.5 text-[11px] font-fira font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/18"
                                         title="강화 결과와 비용 보기"
                                     >
                                         강화 보기
