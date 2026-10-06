@@ -610,8 +610,8 @@ export const EVENT_CHAINS = [
                     choices: ['사령관의 영혼과 함께 싸운다', '영혼에게 안식을 권한다'],
                     outcomes: [
                         { type: 'chain_advance', log: '사령관의 영혼이 당신과 동행합니다. 그의 마지막 의지가 전설 유물로 응결됩니다.', reward: { type: 'relic', rarity: 'legendary' as const } },
-                        // 2026-10 Wave 62 C2 (소유자 결정 "문구"): 이야기 능력치는 이번 여정 범위다(`storyStatBonus`) — '영구'라 하지 않는다.
-                        { type: 'chain_advance', log: '사령관에게 안식을 권했습니다. 영혼이 남긴 수호의 의지가 스며들어 이번 여정 동안 방어력과 생명이 강해집니다.', reward: { type: 'stat_bonus', def: 12, hp: 100 } },
+                        // 2026-10 Wave 72 (소유자 결정 "영구로 전환", Wave 62 C2를 대체): 이야기 능력치는 영구다(`storyStatBonus`).
+                        { type: 'chain_advance', log: '사령관에게 안식을 권했습니다. 영혼이 남긴 수호의 의지가 스며들어 방어력과 생명이 영구히 강해집니다.', reward: { type: 'stat_bonus', def: 12, hp: 100 } },
                     ],
                 },
             },

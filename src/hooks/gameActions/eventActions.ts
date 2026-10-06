@@ -21,7 +21,8 @@ import { calculateFullStats } from '../../utils/statsCalculator';
 import { getEffectiveMaxHp, healWithinMax } from '../../systems/vitals';
 import { getDimensionGravePrayerHeal } from '../../utils/dimensionGrave';
 import { isEncounterBoss } from '../../utils/bossPresence';
-import { getChallengeMaxHpGain, getGoldIncome } from '../../utils/challengeRules';
+import { getGoldIncome } from '../../utils/challengeRules';
+import { applyStoryStatGrant } from '../../utils/permanentStatSources';
 import type { Player, Relic, StatusId } from '../../types';
 import type { ChainCombatSpec, EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
 import type { ChainCombatRef } from '../combatActions/_helpers';
@@ -246,29 +247,16 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                     // cycle 62: stat_bonus는 영구 ATK/DEF/HP 가산 — 기존 chain(rift_secret)에서
                     // 사용 중이지만 핸들러가 없어 silently 무시되던 보상을 정상화.
                     if (rwd.type === 'stat_bonus') {
-                        // 2026-10 Wave 61: 이번 런 누적(`storyStatBonus`)에 적는다 — 공격력 · 방어력은 계산기가 배율 뒤에 더하고,
-                        //   생명 · 기력은 저장 최대치에 굽되(정본) 전직이 이 누적을 다시 더한다. 늘어난 만큼 회복하되 생명을 줄이지
-                        //   않는다(`healWithinMax`, 상한은 실효 최대치 — 저장 최대치로 자르던 동안 1310 → 1180으로 깎였다).
-                        const story = { ...(updatedPlayer.storyStatBonus || {}) };
-                        const next: Player = { ...updatedPlayer };
-                        if (rwd.atk) story.atk = (story.atk || 0) + rwd.atk;
-                        if (rwd.def) story.def = (story.def || 0) + rwd.def;
-                        // 2026-10 Wave 62 (원장 §61.2 A9): '약한 생명력'이면 늘어나는 최대 생명도 절반이다(`getChallengeMaxHpGain`) —
-                        //   절반으로 쌓아 두므로 전직 재구성이 이 누적을 다시 더해도 그대로다.
-                        const storyHpGain = getChallengeMaxHpGain(updatedPlayer, rwd.hp || 0);
-                        if (rwd.hp) {
-                            story.hp = (story.hp || 0) + storyHpGain;
-                            next.maxHp = (next.maxHp || 0) + storyHpGain;
-                        }
-                        if (rwd.mp) {
-                            story.mp = (story.mp || 0) + rwd.mp;
-                            next.maxMp = (next.maxMp || 0) + rwd.mp;
-                        }
-                        next.storyStatBonus = story;
-                        if (rwd.hp || rwd.mp) {
+                        // 2026-10 Wave 61: 누적(`storyStatBonus`)에 적는다 — 공격력 · 방어력은 계산기가 배율 뒤에 더한다.
+                        // 2026-10 Wave 72 (소유자 결정 "영구로 전환"): 누적은 사망 · 계승을 넘어 남고 레벨에 비례한다. 생명 · 기력은 지금
+                        //   레벨의 비례만큼 굽고(`applyStoryStatGrant`, '약한 생명력'이면 절반), 늘어난 만큼 회복하되 생명을 줄이지 않는다
+                        //   (`healWithinMax`, 상한은 실효 최대치 — 저장 최대치로 자르던 동안 1310 → 1180으로 깎였다).
+                        const granted = applyStoryStatGrant(updatedPlayer, rwd);
+                        const next: Player = granted.player;
+                        if (granted.hpGain > 0 || granted.mpGain > 0) {
                             const full = calculateFullStats(next);
-                            if (rwd.hp) next.hp = healWithinMax(next.hp, storyHpGain, full?.maxHp ?? next.maxHp);
-                            if (rwd.mp) next.mp = healWithinMax(next.mp, rwd.mp, full?.maxMp ?? next.maxMp);
+                            if (granted.hpGain > 0) next.hp = healWithinMax(next.hp, granted.hpGain, full?.maxHp ?? next.maxHp);
+                            if (granted.mpGain > 0) next.mp = healWithinMax(next.mp, granted.mpGain, full?.maxMp ?? next.maxMp);
                         }
                         updatedPlayer = next;
                         // I4 (2026-09 Wave 3): 하드코딩 한국어 → MSG 단일 원천 (출력 문구는 동일).

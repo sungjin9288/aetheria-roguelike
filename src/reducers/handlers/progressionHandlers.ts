@@ -183,7 +183,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         const prevTitles = permanent.titles || [];
         // 2026-09 Wave 40: 계승은 이름을 남겨 새 게임(start)을 다시 타지 않는다 — 여기서 새 런의 영구 생명 · 기력을
         //   Lv1 연동 비율만큼 굽고 스냅숏을 남긴다. 굽지 않던 동안 넘어온 영구 생명 · 기력이 첫 전직 전까지 0이었다.
-        const metaVitalsSnapshot = snapshotMetaVitals(outcome.meta);
+        const metaVitalsSnapshot = snapshotMetaVitals(outcome.meta, permanent.storyStatBonus);
         const bakedMeta = getBakedMetaVitals(metaVitalsSnapshot, 1);
         // 2026-10 Wave 58: 새 여정의 시작 조건은 새 게임(start)과 같은 계산이다(utils/runStart.ts) — 계승 화면에서 고른
         //   도전 조건(슬롯은 새 단계 기준) · 거울 시작 골드 · 첫 유물 선택지. 이전에는 사망 재시작에만 적용됐다.

@@ -10,6 +10,8 @@ import { MSG } from '../data/messages';
 import { BALANCE } from '../data/constants';
 import { getMetaBonusRamp } from '../systems/metaBonusRamp';
 import { countDiscoveredMaps } from '../utils/discoveredMaps';
+import { ELITE_TITLE_MAPS, sumEliteTitleBonus } from '../utils/eliteTitles';
+import { formatPermanentStatBonus, readStoryStatBonus } from '../utils/permanentStatSources';
 
 // cycle 475: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 토글 상태 / 가지 ternary / 토글 버튼 일괄 정리.
@@ -59,6 +61,10 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
             killRegistry: s.killRegistry || {},
         };
     }, [player]);
+
+    // 2026-10 Wave 72: 영구 원천 — 이야기 보상(영구로 전환)과 정예 목격 칭호(모은 만큼 합산)의 원래 양. 아래 레벨 비례 줄이 함께 설명한다.
+    const storyBonus = useMemo(() => readStoryStatBonus(player?.storyStatBonus), [player?.storyStatBonus]);
+    const eliteTitleTotal = useMemo(() => sumEliteTitleBonus(player?.titles), [player?.titles]);
 
     const trait = useMemo(() => stats?.traitProfile || (player ? getTraitProfile(player, stats) : null), [player, stats]);
     const passiveParts = useMemo(() => getTraitPassiveParts(trait), [trait]);
@@ -375,6 +381,14 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                         <div className="aether-panel-muted rounded-lg px-3 py-2.5">
                             <div className="text-[11px] text-slate-400">추가 생명</div>
                             <div className="mt-1 font-bold text-emerald-100">+{player?.meta?.bonusHp || 0}</div>
+                        </div>
+                        <div data-testid="stats-story-bonus" className="aether-panel-muted col-span-2 rounded-lg px-3 py-2.5">
+                            <div className="text-[11px] text-slate-400">{MSG.STATS_STORY_BONUS_LABEL}</div>
+                            <div className="mt-1 font-bold text-[#f6e7c8]">{formatPermanentStatBonus(storyBonus) || MSG.STATS_PERMANENT_NONE}</div>
+                        </div>
+                        <div data-testid="stats-elite-titles" className="aether-panel-muted col-span-2 rounded-lg px-3 py-2.5">
+                            <div className="text-[11px] text-slate-400">{MSG.STATS_ELITE_TITLE_LABEL(eliteTitleTotal.count, ELITE_TITLE_MAPS.length)}</div>
+                            <div className="mt-1 font-bold text-amber-200">{formatPermanentStatBonus(eliteTitleTotal) || MSG.STATS_PERMANENT_NONE}</div>
                         </div>
                         <p data-testid="stats-meta-ramp" className="col-span-2 text-[11px] text-slate-400">
                             {MSG.STATS_META_RAMP(Math.round(getMetaBonusRamp(player?.level) * 100), BALANCE.META_BONUS_FULL_LEVEL)}

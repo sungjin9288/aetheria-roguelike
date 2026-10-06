@@ -66,7 +66,7 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
         start: (name: string, gender: string, jobId: string, challengeModifiers: string[]) => {
             const trimmedName = String(name || '').trim().slice(0, 16);
             if (!trimmedName) return;
-            const vitals = buildClassVitals(1, jobId, player.meta || {});
+            const vitals = buildClassVitals(1, jobId, player.meta || {}, player.storyStatBonus);
             // 2026-07 — 에테르 거울: start_gold 노드가 레벨당 시작 골드에 가산(빈손의 시작은 거울 보너스도 무효화).
             // 2026-10 Wave 58: 시작 조건 계산은 계승(ASCEND)과 함께 utils/runStart.ts가 소유한다. 도전 조건도 같은 규칙으로 거른다.
             const mods = sanitizeChallengeModifiers(challengeModifiers, player.meta?.prestigeRank);
@@ -252,14 +252,14 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             const current = DB.CLASSES[player.job!];
             if (!current?.next?.includes(jobName)) return addLog('error', MSG.JOB_CHANGE_INVALID);
             if (player.level! < (DB.CLASSES[jobName]?.reqLv || 1)) return addLog('error', MSG.JOB_CHANGE_LEVEL);
-            const classVitals = buildClassVitals(player.level!, jobName, player.meta || {});
-            // 2026-10 Wave 61: 이번 런의 이야기 생명 · 기력 보상은 전직 재구성 뒤에도 남는다(지우던 결함 — 원장 §61 A13).
+            // 2026-10 Wave 61: 이야기 생명 · 기력 보상은 전직 재구성 뒤에도 남는다(지우던 결함 — 원장 §61 A13).
+            // 2026-10 Wave 72: 이야기 보상이 영구가 되면서 재구성 스냅숏(`buildClassVitals`)이 그 몫을 레벨 비례로 굽는다 — 따로 더하지 않는다.
+            const classVitals = buildClassVitals(player.level!, jobName, player.meta || {}, player.storyStatBonus);
             // 2026-10 Wave 62 (원장 §61.2 A9): 전직 재구성도 '약한 생명력'을 거친다 — 거치지 않던 동안 Lv10 전사 전직이 전체 생명(390)을
-            //   돌려줬다. 이야기 생명 보상은 받을 때 이미 절반으로 쌓였다(`getChallengeMaxHpGain`).
+            //   돌려줬다.
             const vitals = {
                 ...classVitals,
-                maxHp: applyChallengeMaxHp(classVitals.maxHp, player.challengeModifiers || []) + (player.storyStatBonus?.hp || 0),
-                maxMp: classVitals.maxMp + (player.storyStatBonus?.mp || 0),
+                maxHp: applyChallengeMaxHp(classVitals.maxHp, player.challengeModifiers || []),
             };
             const nextStats = getFullStats({
                 ...endDevourBonus(player),

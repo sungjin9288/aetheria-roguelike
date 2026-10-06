@@ -644,15 +644,17 @@ export interface Player {
     /** 2026-09 Wave 33: 이번 런에 제작한 가방 단계(`data/bagRecipes.ts`). 영구 상태가 아니라 사망·계승에서 0으로 돌아간다. */
     bagTier?: number;
     /**
-     * 2026-09 Wave 40: 이번 런의 재구성(새 게임 · 전직 · 사망 재시작) 때 잡은 영구 생명 · 기력 전체량. 저장된 `maxHp`/`maxMp`에는
+     * 2026-09 Wave 40: 이번 런의 재구성(새 게임 · 전직 · 사망 재시작) 때 잡은 영구 생명 · 기력 전체량(Wave 72부터 영구 이야기 생명 · 기력 포함). 저장된 `maxHp`/`maxMp`에는
      * 이 값 × 레벨 연동 비율만 구워져 있고, 레벨업이 비율이 오른 만큼 더 굽는다(`systems/metaBonusRamp.ts`). 없으면 예전 세이브다.
      * 런 범위라 `pickPermanentPlayerState`에 넣지 않는다.
      */
     metaVitalsSnapshot?: MetaVitalsSnapshot;
     /**
-     * 2026-10 Wave 61: 이야기(이벤트 체인) 능력치 보상의 이번 런 누적. 공격력 · 방어력은 `calculateFullStats`가 배율 뒤에
-     * 더하고(구워 넣던 동안 "+15"가 직업 배율로 +18 ~ +35였다), 생명 · 기력은 저장 최대치에 굽되 전직이 이 값을 다시 더한다
-     * (전직 재구성이 지우던 결함). 런 범위라 `pickPermanentPlayerState`에 넣지 않는다.
+     * 2026-10 Wave 61: 이야기(이벤트 체인) 능력치 보상의 누적. 공격력 · 방어력은 `calculateFullStats`가 배율 뒤에 더한다
+     * (구워 넣던 동안 "+15"가 직업 배율로 +18 ~ +35였다).
+     * 2026-10 Wave 72 (소유자 결정 "영구로 전환"): 영구다 — `pickPermanentPlayerState`가 사망 · 계승으로 넘기고, 다른 영구 능력치처럼
+     * `META_BONUS_FULL_LEVEL`까지 레벨에 비례한다. 생명 · 기력은 영구 생명 · 기력 스냅숏(`metaVitalsSnapshot`)에 함께 실려 재구성 ·
+     * 레벨업이 굽는다(`utils/permanentStatSources.ts`). 값은 원래 양이다('약한 생명력' 절반은 굽는 순간 건다).
      */
     storyStatBonus?: { atk?: number; def?: number; hp?: number; mp?: number };
     /**

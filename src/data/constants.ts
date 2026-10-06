@@ -278,6 +278,17 @@ export const BALANCE = {
     // 영구 스탯(정수 사다리 · 첫 죽음 · 계승 보상)은 이 레벨에 닿을 때까지 레벨에 비례해 적용된다(Wave 40). 계승 런이
     //   Lv1부터 전부 받던 동안 2·3회차 사망이 16시드 모두 0이었다.
     META_BONUS_FULL_LEVEL: 30,
+    // 2026-10 Wave 72 (소유자 결정 "정예를 조우했다는 칭호 — 지역별 · 모은 만큼 합산"): 사냥 지역마다 그 지역에서 정예를 처음
+    //   만나면 칭호 하나. 칭호 하나의 효과는 지역 레벨 단계로 정한다(`minLevel` 이상 중 가장 높은 단계, 심연 · 표기 없는 지역은
+    //   마지막 단계). 효과는 장착과 상관없이 모은 만큼 더해지고 다른 영구 능력치처럼 `META_BONUS_FULL_LEVEL`까지 레벨에 비례한다.
+    //   47곳을 모두 모으면 공격력 +51 · 방어력 +25 · 생명 +310 · 기력 +40이다(Lv48 전투 공격력의 수 %).
+    ELITE_TITLE_BONUS_BANDS: [
+        { minLevel: 0, atk: 0, def: 0, hp: 5, mp: 0 },
+        { minLevel: 15, atk: 1, def: 0, hp: 5, mp: 0 },
+        { minLevel: 30, atk: 1, def: 1, hp: 5, mp: 0 },
+        { minLevel: 45, atk: 2, def: 1, hp: 10, mp: 0 },
+        { minLevel: 60, atk: 2, def: 1, hp: 10, mp: 5 },
+    ],
     // PR #8 (2026-06) — 프레스티지 해금 효과(PRESTIGE_UNLOCKS). AscensionScreen이
     //   광고하던 rank별 해금이 대부분 dead display text였던 것을 실제 구현.
     //   getPrestigeUnlocks(rank)가 단일 진실 원천(systems/prestigeUnlocks.ts).

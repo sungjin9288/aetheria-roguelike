@@ -40,11 +40,13 @@ export const buildClassVitals = (
     level: number,
     jobId: string,
     meta: NonNullable<Player['meta']>,
+    storyStatBonus?: Player['storyStatBonus'],
 ) => {
     const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
     // PR #8: 프레스티지 rank≥10 "에테르 초월" — 영구 스탯 보너스 ×2 (statsCalculator atk와 대칭).
     // 2026-09 Wave 40: 영구 생명 · 기력은 그 레벨의 연동 비율만 굽고, 전체량 스냅숏을 함께 돌려준다 — 레벨업이 나머지를 굽는다.
-    const metaVitalsSnapshot = snapshotMetaVitals(meta);
+    // 2026-10 Wave 72: 영구가 된 이야기 생명 · 기력도 같은 스냅숏으로 굽는다(전직이 따로 더하던 것을 대신한다).
+    const metaVitalsSnapshot = snapshotMetaVitals(meta, storyStatBonus);
     const baked = getBakedMetaVitals(metaVitalsSnapshot, level);
     const maxHp = Math.floor(CONSTANTS.START_HP * cls.hpMod!) + Math.max(0, level - 1) * BALANCE.HP_PER_LEVEL + baked.hp;
     const maxMp = Math.floor(CONSTANTS.START_MP * cls.mpMod!) + Math.max(0, level - 1) * BALANCE.MP_PER_LEVEL + baked.mp;
