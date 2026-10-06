@@ -7,7 +7,7 @@ import type { Player } from '../../types';
 import { MSG } from '../../data/messages';
 import { DB } from '../../data/db';
 import { clearAdventureRelicBonuses, endDevourBonus } from '../../utils/adventureRelicBonuses';
-import { endCombatScopedRelics } from '../../utils/combatScopedRelics';
+import { endCombatScope } from '../../utils/combatScope';
 import { normalizeAdventureRelicBonuses } from '../../utils/adventureRelicState';
 import { normalizeDeferredEventChainSteps } from '../../data/eventChains';
 import { restorePendingRelics } from '../../utils/pendingRelicsRestore';
@@ -99,8 +99,9 @@ export const bootstrapActionMap = {
         }
         // 2026-10 Wave 57: 전투로 복원하지 않으면 이번 전투 한정 효과(혼돈의 심장이 빌린 유물 · 혼돈의 보석)도 끝난다 —
         //   위 두 분기와 무관하게(안전지대 · 사망 세이브 포함) 폴드된 `gameState`로 판정한다.
+        //   Wave 66: 기술 재사용 대기도 함께 비운다(전투 밖에 남은 대기는 이전 규칙의 잔재다). 전투로 복원하면 그대로 둔다.
         if (gameState !== GS.COMBAT) {
-            loadedPlayer = endCombatScopedRelics(loadedPlayer);
+            loadedPlayer = endCombatScope(loadedPlayer);
         }
         return {
             ...state,

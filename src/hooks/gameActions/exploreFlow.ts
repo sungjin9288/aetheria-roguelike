@@ -44,7 +44,7 @@ import { getBossSignatureDrops } from '../../utils/bossSignatureHint';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { resolveAbyssDailyDive } from '../../utils/abyssDailyDive';
 import { activateDevourBonus } from '../../utils/adventureRelicBonuses.js';
-import { endCombatScopedRelics } from '../../utils/combatScopedRelics.js';
+import { endCombatScope } from '../../utils/combatScope.js';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals.js';
 import { borrowChaosHeartRelic, isBorrowedRelic } from '../../systems/chaosHeart.js';
 import { formatSynergyDrawback } from '../../utils/relicSynergyHint.js';
@@ -176,7 +176,8 @@ export const applyBattleStartRelics = (
     { addLog, rng = Math.random }: { addLog: AddLog; rng?: () => number },
 ): Player => {
     // 2026-10 Wave 57: 끝나지 않은 채 남은 전투 한정 유물 효과(빌린 유물 · 혼돈의 보석)를 먼저 걷어 낸다.
-    let activatedPlayer = activateDevourBonus(endCombatScopedRelics(player));
+    //   Wave 66: 기술 재사용 대기도 여기서 새로 시작한다(이전 세이브에 남은 대기 포함).
+    let activatedPlayer = activateDevourBonus(endCombatScope(player));
     playerRelics = playerRelics.filter((relic) => !isBorrowedRelic(relic));
     // 2026-10 Wave 57: 혼돈의 심장 — 가지지 않은 유물 하나를 이번 전투 동안 빌린다. 다른 전투 시작 효과보다 먼저 빌려서
     //   빌린 유물의 전투 시작 효과 · 그림자 망토 · 조합(대가 포함)이 이 전투에 그대로 걸린다(소유자 결정 "조합까지 켜지게").

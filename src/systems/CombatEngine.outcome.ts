@@ -14,7 +14,7 @@ import type { LiveConfig } from '../types/session.js';
 import type { LootLog } from './CombatEngine.loot.js';
 import { scaleProgressionExpReward } from '../data/progressionProfiles.js';
 import { endDevourBonus } from '../utils/adventureRelicBonuses.js';
-import { endCombatScopedRelics } from '../utils/combatScopedRelics.js';
+import { endCombatScope } from '../utils/combatScope.js';
 import { isBorrowedRelic } from './chaosHeart.js';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 import { getChallengeMaxHpGain, getChallengeRewardMult, getGoldIncome } from '../utils/challengeRules.js';
@@ -96,8 +96,9 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
 
     handleVictory(player, enemy, passiveBonus, liveConfig) {
         // 2026-10 Wave 57: 정산 전에 이번 전투 한정 효과(혼돈의 심장이 빌린 유물 · 혼돈의 보석)를 끝낸다 — 빌린 유물은
-        //   정산 효과(골드 · 경험 · 처치 회복 · 원정 누적)를 내지 않는다.
-        const p: Player = { ...endCombatScopedRelics(endDevourBonus(player)) };
+        //   정산 효과(골드 · 경험 · 처치 회복 · 원정 누적)를 내지 않는다. Wave 66: 기술 재사용 대기도 여기서 비운다
+        //   (마왕 처치 직후 이어지는 진 보스전도 새로 시작한다).
+        const p: Player = { ...endCombatScope(endDevourBonus(player)) };
         const relics = p.relics || [];
         const returnedBorrowedRelic = (player.relics || []).some(isBorrowedRelic);
         const baseName: string = this.resolveEnemyBaseName(enemy) || '';
