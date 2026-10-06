@@ -272,10 +272,12 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                             transition={{ delay: i * 0.04 }}
                             data-is-signature={isSignature ? 'true' : 'false'}
                             style={rowStyle}
-                            className={`min-h-[54px] p-3 rounded-[1rem] flex justify-between items-center group transition-all cursor-pointer ${rowClass}`}
+                            className={`min-h-[54px] p-3 rounded-[1rem] flex flex-wrap justify-between items-center gap-y-2 group transition-all cursor-pointer ${rowClass}`}
                         >
                             <ItemIcon item={item} size={36} showBorder className="mr-2 opacity-95" />
-                            <div className="flex-1 min-w-0">
+                            {/* 2026-10 Wave 68: 설명 칸이 10rem보다 좁아지면 버튼 열이 다음 줄(오른쪽)로 내려간다 — 버튼 열이 옆에 남아 있던 동안
+                                375px에서 무기 설명이 115px 칸에 네 줄로 꺾였다(원장 §69.5). */}
+                            <div data-testid="inventory-item-body" className="min-w-0 flex-[1_1_10rem]">
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                     <span
                                         className={`text-sm font-fira ${isSignature ? '' : ((item.tier ?? 0) >= 2 ? 'text-[#e3dcff]' : 'text-white/86')}`}
@@ -379,7 +381,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                     />
                                 )}
                             </div>
-                            <div className="flex items-center gap-1 ml-2 shrink-0">
+                            <div className="ml-auto flex shrink-0 items-center gap-1 pl-2">
                                 {showDetails && enhanceState.canEnhance && actions?.enhanceItem && (
                                     <Motion.button
                                         whileTap={{ scale: 0.95 }}
