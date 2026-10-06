@@ -11,6 +11,7 @@ import { startE2ERun } from './testHelpers';
 //   ⑥ 기록 탭 조작이 44px보다 작았다(가방 분류 30 · 빠른 칸 24 · 사용 · 강화 보기 38 · 장비 강화 보기 31 · 상세 보기 38 · 세트 목록 32 · 성장 조언 36 · 임무 게시판 42)
 //   ⑦ 375px에서 기술 탭 제목이 "나이트 전투 …", 보조 장비 칸이 "양손 무기가 …", 가방 카드 설명 줄이 "한손 무기 · 공…"으로 잘렸다
 // 2026-10 Wave 68: ⑧ 375 · 390px 가방 카드에서 버튼 열이 설명 칸을 115px까지 좁혀 무기 설명이 네 줄로 꺾였다
+// 2026-10 Wave 69(소유자 결정 B): ⑨ 코드 글꼴(`font-fira`)의 고정폭 공백 0.6em이 한국어 낱말 사이를 벌렸다 — 숫자 · 영문만 Fira Code
 const VIEWPORTS = [
     { width: 375, height: 667 },
     { width: 390, height: 844 },
@@ -160,6 +161,32 @@ const isClipped = (target: Locator) => target.evaluate((element) => (
     element.scrollWidth > element.clientWidth + 0.5 || element.scrollHeight > element.clientHeight + 0.5
 ));
 
+// 2026-10 Wave 69(소유자 결정 B): 코드 글꼴(`font-fira`)의 고정폭 공백 0.6em이 한국어 낱말 사이를 벌렸다 — 숫자 · 영문만 Fira Code.
+// 같은 글을 코드 글꼴과 본문 글꼴로 그려 폭을 잰다. 코드 글꼴(저장소의 Fira Code)은 미리 내려받아 둔다.
+const measureFonts = (page: Page) => page.evaluate(async () => {
+    await document.fonts.load('16px "Aether Fira Code"', 'M0');
+    const width = (className: string, text: string) => {
+        const span = document.createElement('span');
+        span.className = className;
+        span.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font-size:16px';
+        span.textContent = text;
+        document.body.appendChild(span);
+        const value = span.getBoundingClientRect().width;
+        span.remove();
+        return value;
+    };
+    const korean = '세트 기여 없음 · 강화 재료 1개';
+    return {
+        firaLoaded: [...document.fonts].some((face) => face.family.replace(/["']/g, '') === 'Aether Fira Code' && face.status === 'loaded'),
+        koreanCode: width('font-fira', korean),
+        koreanReadable: width('font-readable', korean),
+        spaceCode: width('font-fira', 'a          b') - width('font-fira', 'ab'),
+        spaceReadable: width('font-readable', 'a          b') - width('font-readable', 'ab'),
+        narrowCode: width('font-fira', 'iiiiiiiiii'),
+        wideCode: width('font-fira', 'MMMMMMMMMM'),
+    };
+});
+
 for (const viewport of VIEWPORTS) {
     test(`${viewport.width}px 첫 원정 준비의 목표는 낱말 단위로 줄바꿈한다`, async ({ browser, baseURL }) => {
         const { context, page } = await newMobilePage(browser, baseURL, viewport);
@@ -172,6 +199,23 @@ for (const viewport of VIEWPORTS) {
                 return [style.wordBreak, style.overflowWrap];
             })).toEqual(['keep-all', 'anywhere']);
             expect(await countMidWordBreaks(prep)).toBe(0);
+        } finally {
+            await context.close();
+        }
+    });
+
+    test(`${viewport.width}px 코드 글꼴은 숫자 · 영문만 고정폭이고, 공백과 한글은 본문 글꼴로 그린다`, async ({ browser, baseURL }) => {
+        const { context, page } = await newMobilePage(browser, baseURL, viewport);
+        try {
+            await startE2ERun(page);
+            const fonts = await measureFonts(page);
+            expect(fonts.firaLoaded).toBe(true);
+            // 영문은 고정폭이다(Fira Code가 실제로 쓰인다).
+            expect(Math.abs(fonts.narrowCode - fonts.wideCode)).toBeLessThanOrEqual(0.5);
+            // 공백은 본문 글꼴의 공백이다(고정폭 0.6em이 아니다).
+            expect(Math.abs(fonts.spaceCode - fonts.spaceReadable)).toBeLessThanOrEqual(0.5);
+            // 공백 · 한글이 섞인 한국어 문장의 폭은 숫자 · 기호 몫만큼만 본문과 다르다.
+            expect(Math.abs(fonts.koreanCode - fonts.koreanReadable)).toBeLessThan(fonts.koreanReadable * 0.1);
         } finally {
             await context.close();
         }

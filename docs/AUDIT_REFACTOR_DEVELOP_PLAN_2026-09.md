@@ -5112,3 +5112,36 @@ Wave 27 N1(트랜잭션 이벤트)과 같은 종류다. 이제 출처가 로컬 
 - **계약:** 기록 탭 e2e 3건에 가방 카드 설명 칸 ≥ 160px를 더했다. 결함 주입(이전 배치)은 2 red(375 · 390)였다.
 - **투어 재측정(두 단계, 수정 전 = `main` `d80ff8d3`):** 새 잘림 · 새 작은 버튼 · 가로 넘침이 0이다. 고정폭으로 그린 한국어는 1,507 → 1,509건이다(그림 위치만 달라졌다).
 - **전체 게이트:** type-check · lint · 단위 5,868/5,868(427파일 · skip 0) · build:guard · build · e2e 149건(75 + 74) · perf desktop/mobile(FCP 680 · 500ms)이 통과했다. 성장 진단 증빙은 소스 해시만 바뀌었다.
+
+## 71. Wave 69 — 한국어 낱말 간격: 공백 · 한글은 본문 글꼴, 숫자 · 영문 · 기호는 Fira Code (2026-10-06, 베이스 = `main` `32fa65eb` = PR #104 머지)
+
+### 71.1 소유자 결정
+
+§70.3의 두 안 중 **B**("B로 하자 … 터미널 화면이 중요한 것은 아니야"). 코드 글꼴(`font-fira` · `.aether-label` · `.aether-log-badge` · `code`/`pre`)로 그리는 한국어가 본문처럼 읽히게 한다. 숫자 · 영문 · 기호는 Fira Code로 남긴다.
+
+### 71.2 구현
+
+- **Fira Code를 저장소에 둔다:** `src/assets/fonts/fira-code-latin-wght-normal.woff2`(가변 300 ~ 700, 라틴 부분 36KB)와 OFL 라이선스(`FiraCode-OFL.txt`)를 넣었다. Google Fonts 요청에서는 Fira Code를 뺐다(Rajdhani는 그대로). 오프라인 앱에서도 같은 글꼴이 나온다.
+- **`@font-face 'Aether Fira Code'`:** 이름을 따로 둔다. 그래야 기기에 설치된 Fira Code(공백 포함)가 대신 잡히지 않는다.
+  - `unicode-range`는 라틴 부분에서 공백류를 뺐다: U+0020 · U+00A0 · U+2000 ~ 200F · U+2028 ~ 202F · U+205F ~ 206F.
+  - 그래서 공백과 한글은 다음 글꼴로 넘어간다.
+- **글꼴 묶음:** `--aether-code-font: 'Aether Fira Code', var(--aether-readable-font)`. Tailwind `font-fira`도 이 변수를 읽는다. 끝을 고정폭(`monospace`)으로 두지 않는다 — 공백이 다시 고정폭이 된다.
+
+### 71.3 계약 · 결함 주입
+
+- **`tests/e2e/product-acceptance-layout.spec.ts` + 3건(375 · 390 · 430):**
+  - 저장소 글꼴이 실제로 로드된다.
+  - 코드 글꼴의 영문은 고정폭이다("iiiiiiiiii" = "MMMMMMMMMM").
+  - 코드 글꼴의 공백은 본문 글꼴의 공백과 같다.
+  - 공백 · 숫자가 섞인 한국어 문장의 폭은 본문 글꼴과 10% 안이다.
+- **결함 주입 3종 — 모두 3 red.**
+  - 수정 전 전체(Google Fonts + `'Fira Code', monospace`)
+  - `unicode-range`에 공백 다시 넣기(U+0020)
+  - 묶음 끝을 `monospace`로
+
+### 71.4 화면 · 게이트
+
+- **적용 전후 그림(375px, `docs/evidence/qa/typography-options-20261006/*-before-after-applied.png`):** 이번에는 주입이 아니라 저장소 글꼴로 찍었다. §70.3 B안 그림과 같은 모습이다.
+- **전체 게이트:** type-check · lint · 단위 5,868/5,868(427파일 · skip 0) · build:guard · build · e2e 152건(77 + 75) · perf desktop/mobile(FCP 592 · 524ms)이 통과했다.
+  - 빌드에 woff2 하나가 더해졌고, 그 대신 Google Fonts의 Fira Code 요청이 빠졌다.
+  - 성장 진단 증빙은 그대로다(`.ts`/`.tsx` 변경 없음).

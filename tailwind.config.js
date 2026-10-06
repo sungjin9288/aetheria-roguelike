@@ -9,7 +9,8 @@ export default {
       fontFamily: {
         readable: ['var(--aether-readable-font)'],
         rajdhani: ['Rajdhani', 'sans-serif'],
-        fira: ['"Fira Code"', 'monospace'],
+        // Wave 69: 숫자 · 영문 · 기호만 Fira Code, 공백 · 한글은 본문 글꼴(src/index.css의 @font-face)
+        fira: ['var(--aether-code-font)'],
       },
       colors: {
         cyber: {
