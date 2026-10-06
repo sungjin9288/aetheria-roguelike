@@ -179,9 +179,6 @@ export const AT = Object.freeze({
     UPDATE_WEEKLY_PROTOCOL: 'UPDATE_WEEKLY_PROTOCOL',
     CHOOSE_SKILL_BRANCH: 'CHOOSE_SKILL_BRANCH',
 
-    // v4.3 — Grave PvP
-    INVADE_GRAVE: 'INVADE_GRAVE',
-
     // v5.0 — 내러티브 이벤트 체인
     UPDATE_EVENT_CHAIN: 'UPDATE_EVENT_CHAIN',
 
@@ -418,9 +415,6 @@ export interface ActionPayloadMap {
     [AT.CLAIM_WEEKLY_MISSION]: { missionId: string };
     [AT.UPDATE_WEEKLY_PROTOCOL]: UpdateWeeklyProtocolPayload;
     [AT.CHOOSE_SKILL_BRANCH]: { skillName: string; choice: string };
-
-    // ── v4.3 — Grave PvP ─────────────────────────────────────────────────
-    [AT.INVADE_GRAVE]: { reward: Item | null; uid?: string };
 
     // ── v5.0 — 내러티브 이벤트 체인 ───────────────────────────────────────
     //   `step`은 다음 스텝 번호이거나, 실패 분기에서 'failed' 문자열이다.

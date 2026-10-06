@@ -25,6 +25,7 @@ import { BOUNDED_ENCOUNTER_PACK_ENABLED, BOUNDED_ENCOUNTERS } from '../../data/b
 import { buildBoundedEncounterContext, selectBoundedEncounter } from '../../utils/boundedEncounterSelector';
 import { buildBoundedEncounterEvent } from '../../utils/boundedEncounterEvent';
 import { getAdditiveNumericRelicValue } from '../../utils/relicEffectValues';
+import { buildDimensionGraveEvent, markDimensionGraveMet, pickDimensionGrave, selectDimensionGraveCandidates } from '../../utils/dimensionGrave';
 
 const takeHarnessExploreSeed = (): number | undefined => {
     if (import.meta.env?.VITE_ENABLE_TEST_API !== '1' || typeof document === 'undefined') {
@@ -250,6 +251,27 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: challengeEvent });
                 addLog('event', challengeEvent.desc);
+                return;
+            }
+
+            // 다른 차원의 묘비 (2026-10 Wave 70, 소유자 결정 "이벤트식으로 발생 · 망령과 실제 전투 · 실제 플레이어 묘비만"):
+            //   다른 플레이어의 공개 묘비가 드물게 나타난다. 후보 판정은 난수를 쓰지 않고, 후보가 없으면(오프라인 · 다른
+            //   플레이어 묘비 없음 · 오늘 한도 소진) 이 블록은 난수를 하나도 쓰지 않는다 — 그 동안의 탐험은 이 기능이 없던 때와 같다.
+            const today = new Date().toDateString();
+            const dimensionCandidates = optionalDecisionAllowed && mapData.type !== 'safe'
+                ? selectDimensionGraveCandidates(deps.getDimensionGraves?.(), player, deps.uid, today)
+                : [];
+            if (dimensionCandidates.length > 0 && actionRng() < BALANCE.DIMENSION_GRAVE_EVENT_CHANCE) {
+                const grave = pickDimensionGrave(dimensionCandidates, actionRng);
+                commitExploreOutcome('narrative_event', null, mapData);
+                dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (p: Player) => ({ ...p, stats: markDimensionGraveMet(p.stats, grave.uid, today) }),
+                });
+                const graveEvent = buildDimensionGraveEvent(grave);
+                dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+                dispatch({ type: AT.SET_EVENT, payload: graveEvent });
+                addLog('event', graveEvent.desc);
                 return;
             }
 

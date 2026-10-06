@@ -22,6 +22,8 @@ import { acknowledgeMilestoneStoryBeat, type MilestoneStoryBeatId } from '../uti
 import { getQuestCompletionStory } from '../utils/storyJournal';
 
 import { useFirebaseSync } from './useFirebaseSync';
+import { useDimensionGravePool } from './useDimensionGravePool';
+import { getDimensionGravePool } from '../platform/dimensionGravePool';
 import { useProductTelemetry } from './useProductTelemetry';
 import { createGameActions } from './useGameActions';
 import { createCombatActions } from './useCombatActions';
@@ -109,6 +111,8 @@ export const useGameEngine = () => {
 
     // --- Firebase Sync ---
     const { flushLocalSave } = useFirebaseSync(state, dispatch);
+    // Wave 70: 다른 차원의 묘비 — 온라인 세션만 최근 공개 묘비를 읽는다(탐험 액션이 getDimensionGraves로 읽는다).
+    useDimensionGravePool(uid);
 
     useEffect(() => {
         combatItemLocksRef.current.clear();
@@ -254,6 +258,7 @@ export const useGameEngine = () => {
                 addLog,
                 addStoryLog,
                 getFullStats,
+                getDimensionGraves: getDimensionGravePool,
             };
             const combatDeps: CombatActionDeps = {
                 ...deps,

@@ -247,11 +247,23 @@ export const MSG = {
     ABYSS_MILESTONE: (floor: number) => `🌀 심연 ${floor}층 마일스톤 달성!`,
     ABYSS_BOSS_APPEAR: (name: string) => `💀 심연 보스 출현: ${name}`,
 
-    // --- 묘비 침략 (Grave Invasion) ---
-    INVADE_SUCCESS: (name: string, item: string) => `⚔ ${name}의 묘비 침략 성공! [${item}] 획득.`,
-    INVADE_FAIL: (name: string) => `⚔ ${name}의 묘비 침략 실패. 아무것도 얻지 못했습니다.`,
-    INVADE_LIMIT: '오늘의 침략 횟수를 모두 사용했습니다. (5회/일)',
-    INVADE_NO_ITEMS: '묘비에 침략할 아이템이 없습니다.',
+    // --- 다른 차원의 묘비 (2026-10 Wave 70) — 다른 플레이어의 공개 묘비가 탐험 이벤트로 나타난다 ---
+    DIMENSION_GRAVE_UNKNOWN_NAME: '이름 없는 모험가',
+    DIMENSION_GRAVE_UNKNOWN_PLACE: '알 수 없는 곳',
+    DIMENSION_GRAVE_TITLE: '다른 차원의 묘비',
+    DIMENSION_GRAVE_DESC: (name: string, level: number, place: string, item: string) =>
+        `차원의 틈 너머로 묘비 하나가 비칩니다. 다른 차원에서 쓰러진 모험가 ${name}(레벨 ${level}) · ${place}. 묘비 곁을 망령이 지키고 있습니다. 놓인 유품: [${item}]`,
+    DIMENSION_GRAVE_CHOICE_INVADE: '침공 — 망령과 싸워 유품을 차지한다',
+    DIMENSION_GRAVE_CHOICE_PRAY: '기도 — 잠든 모험가의 명복을 빈다',
+    DIMENSION_GRAVE_CHOICE_LEAVE: '지나친다 — 차원의 틈을 닫는다',
+    DIMENSION_GRAVE_INVADE_LOG: (name: string) => `${name}의 망령이 차원의 틈을 넘어 덤벼듭니다!`,
+    DIMENSION_GRAVE_PRAY_LOG: (name: string, heal: number) => `${name}의 망령이 고요히 잠듭니다. 생명 ${heal} 회복.`,
+    DIMENSION_GRAVE_LEAVE_LOG: '차원의 틈이 닫히고 묘비가 사라졌습니다.',
+    DIMENSION_GRAVE_SHADE_NAME: (name: string) => `${name}의 망령`,
+    DIMENSION_GRAVE_VICTORY: (name: string, item: string) => `${name}의 망령이 흩어졌습니다. 다른 차원의 유품 [${item}] 획득.`,
+    DIMENSION_GRAVE_PREVIEW_INVADE: (item: string) => `현재 지역 정예급 망령과 전투 · 이기면 [${item}]`,
+    DIMENSION_GRAVE_PREVIEW_PRAY: (percent: number) => `최대 생명의 ${percent}% 회복 · 전투 없음`,
+    DIMENSION_GRAVE_PREVIEW_LEAVE: '아무 일도 일어나지 않음',
 
     // --- 신규 직업 스킬 (Sprint 16) ---
     SKILL_EXTRA_TURN: (name: string) => `[${name}] 시간이 흘러갑니다 — 추가 행동 획득!`,

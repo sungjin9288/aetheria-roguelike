@@ -97,9 +97,14 @@ interface PlayerStats {
     synthProtects?: number;
     /** cycle 185: 프리미엄 상점에서 구매한 칭호 ID(영문) 목록 — 환생에도 보존. */
     cosmeticTitles?: string[];
-    /** 묘비 침공 일일 제한 — 마지막 침공 날짜(Date.toDateString())와 그날의 횟수. */
+    /**
+     * 다른 차원의 묘비(Wave 70) 일일 제한 — 마지막으로 묘비를 만난 날짜(Date.toDateString())와 그날 만난 수.
+     * 이름은 공개 목록 침공 시절(Wave 69까지, 꺼져 있었다) 그대로다 — 이전 세이브의 같은 필드를 그대로 읽는다.
+     */
     lastInvadeDate?: string | null;
     dailyInvadeCount?: number;
+    /** 그날 이미 만난 묘비 주인의 uid — 같은 묘비가 하루에 두 번 나오지 않는다(날짜가 바뀌면 비운다). */
+    invadedGraveUids?: string[];
     /** 마지막 플레이(저장) 시각(ms). 복귀 브리핑 카드가 경과 시간 판정에 사용. */
     lastSeenAt?: number | null;
     /** 혼돈의 심연 일일 첫 다이브 — 오늘 날짜 문자열과 사용 여부. */

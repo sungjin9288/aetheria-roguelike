@@ -9,7 +9,7 @@ import { addItemByName } from '../../utils/inventoryUtils';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../../utils/runProfileUtils';
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
 import { SEASON_XP } from '../../data/seasonPass';
-import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, applyBossRelicReward, applyChainCombatVictory, buildPassiveBonusWithScout } from './_helpers';
+import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, applyBossRelicReward, applyChainCombatVictory, applyDimensionGraveVictory, buildPassiveBonusWithScout } from './_helpers';
 import { applyAbyssFloorAdvance } from './combatBossHandlers';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { isSignatureItem } from '../../data/signatureItems.js';
@@ -358,6 +358,8 @@ export const handleVictoryOutcome = ({
     applyBossRelicReward(deadEnemy, updatedPlayer, { dispatch, addLog, rng: random });
     // Wave 62 C19: 이야기 전투(잃어버린 마법사의 환영)를 이기면 그 선택지의 보상과 체인 진행을 정산한다.
     applyChainCombatVictory(deadEnemy, updatedPlayer, { dispatch, addLog });
+    // Wave 70: 다른 차원의 묘비 망령을 이기면 그 묘비의 유품을 준다.
+    applyDimensionGraveVictory(deadEnemy, { dispatch, addLog });
 
     return { earlyReturn: false, lootSettlement };
 };

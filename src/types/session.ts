@@ -50,6 +50,9 @@ export interface GameEvent {
     isScout?: boolean;
     /** 원정 보스 게이지 조우 전용. */
     isBossGaugeChallenge?: boolean;
+    /** 다른 차원의 묘비(Wave 70) 전용 — 다른 플레이어의 공개 묘비. */
+    isDimensionGrave?: boolean;
+    dimensionGrave?: DimensionGraveRef;
     /** 내러티브 이벤트 체인 전용 — 진행 중인 체인 id/스텝. */
     _chainId?: string;
     _chainStep?: number;
@@ -62,6 +65,21 @@ export interface GameEvent {
      */
     choiceFeedback?: EventChoiceFeedback;
 }
+
+/**
+ * 다른 차원의 묘비(2026-10 Wave 70) — 다른 플레이어의 공개 묘비 문서를 정리한 값. 묘비 문서는 다른 플레이어가 쓴 데이터라
+ * 그대로 믿지 않는다: 이름은 길이를 자르고, 지역은 아는 지역일 때만, 유품은 카탈로그에 있는 이름만 남긴다
+ * (`utils/dimensionGrave.ts`). 승리 보상은 이 이름의 카탈로그 아이템이다 — 문서의 아이템 수치는 쓰지 않는다.
+ */
+export interface DimensionGraveRef {
+    uid: string;
+    playerName: string;
+    level: number;
+    place: string | null;
+    itemName: string;
+}
+
+export type DimensionGraveEffect = 'invade' | 'pray' | 'leave';
 
 /** `GameEvent.choiceFeedback` — 거부된 선택지 인덱스와 플레이어에게 보일 문장(MSG). */
 export interface EventChoiceFeedback {
@@ -201,6 +219,8 @@ export interface EventOutcome {
     rewardBonus?: number;
     /** 보스 게이지 카드 전용 — 'avoid' | (도전). */
     gaugeEffect?: string;
+    /** 다른 차원의 묘비 카드 전용(Wave 70). */
+    graveEffect?: DimensionGraveEffect;
     /** 한정 조우 카드 전용 — 선택지 톤/트레이드오프 문구 (eventPresentation이 읽는다). */
     tradeoff?: string;
     tone?: EventChoiceTone;

@@ -520,8 +520,14 @@ export const BALANCE = {
         { id: 'blindMap', label: '길 잃은 여행', desc: '현재 위치와 지도 정보가 숨겨집니다.' },
     ],
 
-    // v4.3 — 묘비 침략
+    // 다른 차원의 묘비(2026-10 Wave 70, 소유자 결정 "이벤트식으로 발생 · 망령과 실제 전투 · 실제 플레이어 묘비만") —
+    //   다른 플레이어의 공개 묘비가 탐험 이벤트로 나타난다. 하루에 만나는 묘비 수가 DAILY_INVADE_LIMIT다.
     DAILY_INVADE_LIMIT: 5,
+    DIMENSION_GRAVE_EVENT_CHANCE: 0.04,      // 자격이 있는 탐험 1회당(풀이 비면 난수를 쓰지 않는다)
+    DIMENSION_GRAVE_PRAYER_HEAL_RATIO: 0.1,  // "기도" — 실효 최대 생명의 10% 회복
+    DIMENSION_GRAVE_POOL_LIMIT: 20,          // 최근 공개 묘비 몇 개를 불러올지
+    DIMENSION_GRAVE_REFRESH_MS: 10 * 60 * 1000,
+    DIMENSION_GRAVE_NAME_MAX: 16,            // 표시 이름 상한(인트로 이름 입력 maxLength와 같다)
 
     // 발견 체인 (Discovery Chains)
     DISCOVERY_CHAINS,

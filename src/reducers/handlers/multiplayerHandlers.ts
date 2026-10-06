@@ -1,5 +1,4 @@
 import type { HandlerMap } from '../gameReducer';
-import { PRODUCTION_GAME_CAPABILITIES } from '../../platform/gameCapabilities';
 
 export const multiplayerActionMap = {
     // ── Skill Branch ──────────────────────────────────────────────────────
@@ -16,30 +15,6 @@ export const multiplayerActionMap = {
         };
     },
 
-    // ── Grave PvP ─────────────────────────────────────────────────────────
-    // cycle 305: publicGraves filter 제거 — state.publicGraves dead (항상 []),
-    //   filter no-op. targetUid 인자도 현재 dispatch에서 미사용.
-    INVADE_GRAVE: (state, action) => {
-        if (!PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion) return state;
-        const { reward } = action.payload;
-        const today = new Date().toDateString();
-        const lastInvadeDate = state.player.stats?.lastInvadeDate;
-        const currentCount = lastInvadeDate === today ? (state.player.stats?.dailyInvadeCount || 0) : 0;
-        const nextInv = reward
-            ? [...(state.player.inv || []), reward]
-            : state.player.inv;
-        return {
-            ...state,
-            player: {
-                ...state.player,
-                inv: nextInv,
-                stats: {
-                    ...(state.player.stats || {}),
-                    dailyInvadeCount: currentCount + 1,
-                    lastInvadeDate: today,
-                },
-            },
-            syncStatus: 'syncing',
-        };
-    },
+    // 2026-10 Wave 70: 공개 목록 침공(`INVADE_GRAVE`, 꺼져 있었다)은 다른 차원의 묘비 탐험 이벤트로 바뀌었다 —
+    //   만난 기록은 탐험이, 유품은 망령 전투의 승리 정산(`applyDimensionGraveVictory`)이 소유한다.
 } satisfies HandlerMap;

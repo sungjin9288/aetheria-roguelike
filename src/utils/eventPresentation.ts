@@ -1,5 +1,6 @@
 import { findStructuredFallbackHiddenEvent, getStructuredFallbackTransaction } from '../data/structuredFallbackEvents';
-import type { EventChoiceFeedback, EventChoiceTone, EventOutcome } from '../types/session.js';
+import type { DimensionGraveRef, EventChoiceFeedback, EventChoiceTone, EventOutcome } from '../types/session.js';
+import { BALANCE } from '../data/constants';
 import { RELICS } from '../data/relics';
 import { MSG } from '../data/messages';
 import { BOUNDED_ENCOUNTERS } from '../data/boundedEncounters';
@@ -29,6 +30,8 @@ interface PresentationEvent {
     isCampfire?: boolean;
     isScout?: boolean;
     isBossGaugeChallenge?: boolean;
+    isDimensionGrave?: boolean;
+    dimensionGrave?: DimensionGraveRef;
     isBoundedEncounter?: boolean;
     boundedEncounterId?: string;
     _chainId?: string;
@@ -355,6 +358,16 @@ export const getEventChoicePreview = (
         return outcome?.gaugeEffect === 'challenge'
             ? { text: `${event.bossName || '구역 보스'} 전투 시작`, tone: 'danger' }
             : { text: '이번에는 물러남 · 다음 탐험에 다시 선택', tone: 'unknown' };
+    }
+    // Wave 70: 다른 차원의 묘비 — 침공은 실제 전투와 그 보상, 기도는 회복량, 지나침은 아무 일도 없다(엔진과 같은 수치).
+    if (event?.isDimensionGrave) {
+        if (outcome?.graveEffect === 'invade') {
+            return { text: MSG.DIMENSION_GRAVE_PREVIEW_INVADE(event.dimensionGrave?.itemName || ''), tone: 'danger' };
+        }
+        if (outcome?.graveEffect === 'pray') {
+            return { text: MSG.DIMENSION_GRAVE_PREVIEW_PRAY(Math.round(BALANCE.DIMENSION_GRAVE_PRAYER_HEAL_RATIO * 100)), tone: 'recovery' };
+        }
+        return { text: MSG.DIMENSION_GRAVE_PREVIEW_LEAVE, tone: 'unknown' };
     }
     if (event?.isBoundedEncounter) return getBoundedPreview(event, outcome, context);
     if (event?._chainId) return withBuffKeptNotice(getChainPreview(outcome), event, outcome, context);
