@@ -144,7 +144,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                         data-testid="quest-tab-open-board"
                         whileTap={{ scale: 0.96 }}
                         onClick={() => actions?.setGameState?.(GS.QUEST_BOARD)}
-                        className="mt-3 min-h-[42px] rounded-[0.95rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-4 py-2 text-xs font-rajdhani font-bold tracking-[0.14em] text-[#dff7f5] transition-colors hover:border-[#7dd4d8]/34 hover:bg-[#7dd4d8]/14"
+                        className="mt-3 min-h-11 rounded-[0.95rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-4 py-2 text-xs font-rajdhani font-bold tracking-[0.14em] text-[#dff7f5] transition-colors hover:border-[#7dd4d8]/34 hover:bg-[#7dd4d8]/14"
                     >
                         임무 게시판 열기
                     </Motion.button>

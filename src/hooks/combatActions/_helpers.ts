@@ -8,6 +8,7 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { pickBossRewardRelics } from '../../utils/bossRelicReward';
 import { EVENT_CHAINS } from '../../data/eventChains';
 import { addItemByName } from '../../utils/inventoryUtils';
+import { summarizeLoot } from '../../utils/lootSummary';
 import type { FullStats, Item, Monster, Player } from '../../types/index.js';
 import type { AddLog, GameActionDeps } from '../actionDeps';
 import type { EventOutcome } from '../../types/session.js';
@@ -124,9 +125,10 @@ export const addCombatDigestLogs = ({
     ];
     // slice 24: 전리품 1건은 LOOT_GET 개별 로그("전리품: X")가 이미 표시하므로
     //   digest에선 생략 — 동일 아이템명 2회 출력 중복 제거. 2건 이상일 때만
-    //   요약("A · B +1")로서의 가치가 있어 표기.
+    //   요약("A · B +1")로서의 가치가 있어 표기. Wave 67: 같은 전리품은 "A x2"로 묶는다(카드와 같은 판정).
     if (droppedItems.length > 1) {
-        const lootText = `${droppedItems.slice(0, 2).join(' · ')}${droppedItems.length > 2 ? ` +${droppedItems.length - 2}` : ''}`;
+        const loot = summarizeLoot(droppedItems);
+        const lootText = `${loot.shown.join(' · ')}${loot.restCount > 0 ? ` +${loot.restCount}` : ''}`;
         summaryParts.push(MSG.COMBAT_DIGEST_LOOT(lootText));
     }
     addLog('system', MSG.COMBAT_DIGEST(summaryParts.join(' · ')));

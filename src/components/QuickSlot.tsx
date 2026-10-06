@@ -93,7 +93,7 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots 
     if (!item || !item.type || !['hp', 'mp', 'buff', 'cure'].includes(item.type)) return null;
 
     return (
-        <div className="mt-1 flex items-center gap-1">
+        <div className="mt-1 flex flex-wrap items-center gap-1">
             <span className="font-fira text-slate-400/70 text-xs">퀵슬롯:</span>
             {Array.from({ length: slotCount }, (_, i) => {
                 const occupied = currentSlots?.[i];
@@ -102,7 +102,7 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots 
                         key={i}
                         data-testid={`quick-slot-assign-${i}`}
                         onClick={() => onAssign(i, item)}
-                        className={`h-6 w-6 text-[10px] rounded border font-bold transition-all backdrop-blur-md
+                        className={`h-11 w-11 text-xs rounded-md border font-bold transition-all backdrop-blur-md
                             ${occupied?.id === item?.id
                                 ? 'border-[#7dd4d8]/35 bg-[#7dd4d8]/10 text-[#dff7f5]'
                                 : occupied
@@ -122,7 +122,7 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots 
                         const idx = currentSlots?.findIndex((s) => s?.id === item?.id) ?? -1;
                         if (idx >= 0) onAssign(idx, null);
                     }}
-                    className="ml-1 text-rose-300/55 hover:text-rose-200"
+                    className="inline-flex h-11 w-11 items-center justify-center text-rose-300/55 hover:text-rose-200"
                     title="할당 해제"
                 >
                     <X size={11} />

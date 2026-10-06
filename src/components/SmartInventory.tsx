@@ -167,7 +167,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                     data-testid="inventory-detail-toggle"
                     aria-expanded={showDetails}
                     onClick={() => setDetailOverride(!showDetails)}
-                    className="inline-flex min-h-[38px] shrink-0 items-center gap-1.5 rounded-md border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 text-[10px] font-readable font-bold text-[#dff7f5]"
+                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 text-[10px] font-readable font-bold text-[#dff7f5]"
                 >
                     <ListTree size={13} />
                     {showDetails ? '간단히 보기' : '상세 보기'}
@@ -183,7 +183,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                         onClick={() => {
                             setActiveFilter(f.id);
                         }}
-                        className={`min-h-[30px] px-2.5 py-1 text-sm rounded-full border font-rajdhani font-bold transition-all
+                        className={`min-h-11 px-2.5 py-1 text-sm rounded-full border font-rajdhani font-bold transition-all
                             ${activeFilter === f.id
                                 ? 'bg-[#7dd4d8]/14 border-[#7dd4d8]/30 text-[#dff7f5]'
                                 : 'bg-black/18 border-white/8 text-slate-400 hover:border-white/14 hover:text-slate-200'
@@ -198,7 +198,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={handleSmartEquip}
-                        className="ml-auto rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8] font-rajdhani font-bold flex items-center gap-1 hover:bg-[#d5b180]/16 transition-all min-h-[30px] px-2.5 py-1 text-sm"
+                        className="ml-auto rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8] font-rajdhani font-bold flex items-center gap-1 hover:bg-[#d5b180]/16 transition-all min-h-11 px-2.5 py-1 text-sm"
                         title={MSG.UI_AUTO_EQUIP_BEST}
                     >
                         <Star size={11} /> 추천 장착
@@ -222,7 +222,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                     <Motion.button
                         whileTap={{ scale: 0.95 }}
                         onClick={() => actions?.autoSell?.()}
-                        className="flex items-center gap-1 font-rajdhani font-bold text-[#f6e7c8] bg-black/18 hover:bg-white/[0.04] border border-white/8 rounded-full transition-all shrink-0 ml-2 min-h-[30px] px-2.5 py-1 text-sm"
+                        className="flex items-center gap-1 font-rajdhani font-bold text-[#f6e7c8] bg-black/18 hover:bg-white/[0.04] border border-white/8 rounded-full transition-all shrink-0 ml-2 min-h-11 px-2.5 py-1 text-sm"
                     >
                         <Package size={11} /> 일괄 정리
                     </Motion.button>
@@ -352,7 +352,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                     </div>
                                 )}
                                 {(!isEquipment || showDetails) && (getItemStatText(item) || item.desc_stat) && (
-                                    <div className="mt-0.5 truncate font-fira text-slate-400/72 text-sm">{getItemStatText(item) || item.desc_stat}</div>
+                                    <div className="mt-0.5 font-fira leading-snug text-slate-400/72 text-sm">{getItemStatText(item) || item.desc_stat}</div>
                                 )}
                                 {showDetails && enhanceRequirement && (
                                     <div className="mt-0.5 space-y-0.5 text-[11px] font-fira">
@@ -386,7 +386,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                         data-testid={`inventory-enhance-${item.id || item.name}`}
                                         onClick={() => setEnhanceTarget({ item, slot: null })}
                                         aria-label={`${item.name} 강화 결과와 비용 보기`}
-                                        className="min-h-[38px] rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2.5 py-2 text-xs font-bold font-fira text-[#f6e7c8] hover:bg-[#d5b180]/18"
+                                        className="min-h-11 rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2.5 py-2 text-xs font-bold font-fira text-[#f6e7c8] hover:bg-[#d5b180]/18"
                                         title="강화 결과와 비용 보기"
                                     >
                                         강화 보기
@@ -400,7 +400,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                         data-testid={`inventory-use-${item.id || item.name}`}
                                         disabled={!canEquip}
                                         onClick={() => actions?.useItem(item)}
-                                        className="bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold min-h-[38px] px-3 py-2 text-sm"
+                                        className="bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold min-h-11 px-3 py-2 text-sm"
                                     >
                                         {!canEquip ? '제한' : isEquipmentUseItem(item) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
                                     </Motion.button>
