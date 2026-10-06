@@ -222,9 +222,11 @@ test('풀이 없을 때의 탐험은 이 기능 이전 코드와 같다 — 난�
     // 같은 시나리오를 기능 이전 작업 트리(main 953c261c = Wave 69)와 이 코드에서 돌려 같은 값을 얻었다(원장 §72).
     //   위 테스트는 "풀 없음 = 빈 풀"을 비교하므로 두 경우에 같은 난수를 더 쓰는 결함을 못 본다 — 이 고정값이 그것을 잡는다.
     //   탐험 경로가 다른 이유로 바뀌면 이 값을 그 변경의 근거와 함께 다시 잰다.
+    //   Wave 71(접두어 겹침 제외, 원장 §74): 고요한 숲의 적은 "거대 거대 사슴벌레"(생명 158)였다 — 같은 난수 10회로 이제
+    //   "광폭한 거대 사슴벌레"(137)다. 난수 호출 수와 결과(전투)는 그대로다(풀만 좁히고 롤 수는 같다).
     const cases = [
-        { loc: '고요한 숲', values: [0.9, 0.5, 0.3, 0.7, 0.2, 0.8, 0.6, 0.4, 0.1, 0.95], expected: { calls: 10, gameState: GS.COMBAT, enemyMaxHp: 158 } },
-        { loc: '서쪽 평원', values: [0.95, 0.9, 0.85, 0.1, 0.5, 0.5, 0.5], expected: { calls: 6, gameState: GS.IDLE, enemyMaxHp: null } },
+        { loc: '고요한 숲', values: [0.9, 0.5, 0.3, 0.7, 0.2, 0.8, 0.6, 0.4, 0.1, 0.95], expected: { calls: 10, gameState: GS.COMBAT, enemyName: '광폭한 거대 사슴벌레', enemyMaxHp: 137 } },
+        { loc: '서쪽 평원', values: [0.95, 0.9, 0.85, 0.1, 0.5, 0.5, 0.5], expected: { calls: 6, gameState: GS.IDLE, enemyName: null, enemyMaxHp: null } },
     ];
     for (const { loc, values, expected } of cases) {
         const state = baseState({}, {});
@@ -234,7 +236,7 @@ test('풀이 없을 때의 탐험은 이 기능 이전 코드와 같다 — 난�
             const rng = sequence(...values);
             const after = await explore(start, rng, extraDeps);
             assert.deepEqual(
-                { calls: rng.calls, gameState: after.gameState, enemyMaxHp: after.enemy?.maxHp ?? null },
+                { calls: rng.calls, gameState: after.gameState, enemyName: after.enemy?.name ?? null, enemyMaxHp: after.enemy?.maxHp ?? null },
                 expected,
                 `${loc} ${Object.keys(extraDeps).join(',') || 'no-pool'}`,
             );
