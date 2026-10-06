@@ -5,6 +5,7 @@ import { findItemByName } from './gameUtils';
 import { getGraveItems, type GraveEntry } from './graveUtils';
 import { isEquipmentItem, resolveEquipmentBaseIdentity, resolveEquipmentBaseNameFromName } from './equipmentBaseIdentity';
 import { getEffectiveMaxHp } from '../systems/vitals';
+import { isSignatureItem } from '../data/signatureItems';
 import type { DimensionGraveRef, GameEvent } from '../types/session';
 import type { Item, Player } from '../types';
 
@@ -125,11 +126,20 @@ export const getDimensionGravePrayerHeal = (player: Player): number => {
     return Math.max(0, Math.min(planned, max - Math.max(0, Number(player?.hp) || 0)));
 };
 
+/**
+ * 유품 표시 이름 — 전설 각인이면 "전설 · 이름"이다. 전설 각인을 든 묘비는 이례적인 먹잇감이라 위험 대비 보상을 판단할 수
+ * 있어야 한다(공개 목록 시절의 "전설" 배지를 이벤트 카드 · 미리보기로 옮겼다).
+ */
+export const getDimensionGraveItemLabel = (ref: Pick<DimensionGraveRef, 'itemName'> | null | undefined): string => {
+    const name = ref?.itemName || '';
+    return isSignatureItem(findItemByName(name)) ? MSG.DIMENSION_GRAVE_SIGNATURE_ITEM(name) : name;
+};
+
 export const buildDimensionGraveEvent = (ref: DimensionGraveRef): GameEvent => ({
     title: MSG.DIMENSION_GRAVE_TITLE,
     isDimensionGrave: true,
     dimensionGrave: ref,
-    desc: MSG.DIMENSION_GRAVE_DESC(ref.playerName, ref.level, ref.place ?? MSG.DIMENSION_GRAVE_UNKNOWN_PLACE, ref.itemName),
+    desc: MSG.DIMENSION_GRAVE_DESC(ref.playerName, ref.level, ref.place ?? MSG.DIMENSION_GRAVE_UNKNOWN_PLACE, getDimensionGraveItemLabel(ref)),
     choices: [MSG.DIMENSION_GRAVE_CHOICE_INVADE, MSG.DIMENSION_GRAVE_CHOICE_PRAY, MSG.DIMENSION_GRAVE_CHOICE_LEAVE],
     outcomes: [
         { choiceIndex: 0, graveEffect: 'invade' },

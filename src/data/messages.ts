@@ -260,6 +260,7 @@ export const MSG = {
     DIMENSION_GRAVE_PRAY_LOG: (name: string, heal: number) => `${name}의 망령이 고요히 잠듭니다. 생명 ${heal} 회복.`,
     DIMENSION_GRAVE_LEAVE_LOG: '차원의 틈이 닫히고 묘비가 사라졌습니다.',
     DIMENSION_GRAVE_SHADE_NAME: (name: string) => `${name}의 망령`,
+    DIMENSION_GRAVE_SIGNATURE_ITEM: (item: string) => `전설 · ${item}`,
     DIMENSION_GRAVE_VICTORY: (name: string, item: string) => `${name}의 망령이 흩어졌습니다. 다른 차원의 유품 [${item}] 획득.`,
     DIMENSION_GRAVE_PREVIEW_INVADE: (item: string) => `현재 지역 정예급 망령과 전투 · 이기면 [${item}]`,
     DIMENSION_GRAVE_PREVIEW_PRAY: (percent: number) => `최대 생명의 ${percent}% 회복 · 전투 없음`,
