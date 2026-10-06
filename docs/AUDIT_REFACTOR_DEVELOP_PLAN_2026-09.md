@@ -5139,6 +5139,9 @@ Wave 27 N1(트랜잭션 이벤트)과 같은 종류다. 이제 출처가 로컬 
   - `unicode-range`에 공백 다시 넣기(U+0020)
   - 묶음 끝을 `monospace`로
 
-### 71.4 투어 · 게이트
+### 71.4 화면 · 게이트
 
-GATE71_PLACEHOLDER
+- **적용 전후 그림(375px, `docs/evidence/qa/typography-options-20261006/*-before-after-applied.png`):** 이번에는 주입이 아니라 저장소 글꼴로 찍었다. §70.3 B안 그림과 같은 모습이다.
+- **전체 게이트:** type-check · lint · 단위 5,868/5,868(427파일 · skip 0) · build:guard · build · e2e 152건(77 + 75) · perf desktop/mobile(FCP 592 · 524ms)이 통과했다.
+  - 빌드에 woff2 하나가 더해졌고, 그 대신 Google Fonts의 Fira Code 요청이 빠졌다.
+  - 성장 진단 증빙은 그대로다(`.ts`/`.tsx` 변경 없음).
