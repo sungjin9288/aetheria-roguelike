@@ -62,11 +62,12 @@ import { readFile } from 'node:fs/promises';
           'publicGraves filter 제거됨');
   });
 
-  test('cycle 305: INVADE_GRAVE 핸들러 active dispatch 보존', async () => {
-      const source = await readSrc('src/reducers/handlers/multiplayerHandlers.ts');
-      assert.ok(/dailyInvadeCount/.test(source), 'dailyInvadeCount dispatch 유지');
-      assert.ok(/lastInvadeDate/.test(source), 'lastInvadeDate dispatch 유지');
-      assert.ok(/syncStatus:\s*'syncing'/.test(source), 'syncStatus syncing 유지');
+  test('cycle 305 → Wave 70: INVADE_GRAVE 핸들러는 없어졌고, 하루 만난 묘비 기록은 다른 차원의 묘비가 소유한다', async () => {
+      const handlers = await readSrc('src/reducers/handlers/multiplayerHandlers.ts');
+      assert.ok(!/INVADE_GRAVE:\s*\(/.test(handlers), 'INVADE_GRAVE 핸들러 0건');
+      const owner = await readSrc('src/utils/dimensionGrave.ts');
+      assert.ok(/dailyInvadeCount/.test(owner), 'dailyInvadeCount 기록');
+      assert.ok(/lastInvadeDate/.test(owner), 'lastInvadeDate 기록');
   });
 
   test('cycle 304 회귀 가드: DB wrapper 2 dead key 유지 제거', async () => {
@@ -194,10 +195,10 @@ import { readFile } from 'node:fs/promises';
       assert.ok(!/\bcompact\b/.test(jsx), 'Dashboard <GravePanel> compact 전달 0건');
   });
 
-  test('cycle 476: player / actions / fetchGraves / invade 핵심 로직 보존', async () => {
+  test('cycle 476 → Wave 70: 무덤 탭은 내 유해 회수만 — player / actions 보존, 목록 조회 · 침공 로직 0건', async () => {
       const source = await readSrc('src/components/GravePanel.tsx');
-      assert.ok(/fetchGraves/.test(source), 'fetchGraves 보존');
-      assert.ok(/DAILY_INVADE_LIMIT/.test(source), 'DAILY_INVADE_LIMIT 로직 보존');
+      assert.ok(!/fetchGraves/.test(source), 'fetchGraves 0건(다른 차원의 묘비 풀이 읽는다)');
+      assert.ok(!/DAILY_INVADE_LIMIT/.test(source), '하루 한도는 탐험 이벤트가 소유');
       const fnIdx = source.indexOf('const GravePanel =');
       const fnEnd = source.indexOf('=>', fnIdx);
       const sig = source.slice(fnIdx, fnEnd);

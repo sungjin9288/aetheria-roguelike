@@ -1,4 +1,6 @@
 import { useEffect, type RefObject } from 'react';
+import { setDimensionGravePool } from '../platform/dimensionGravePool';
+import { EVENT_CHAINS } from '../data/eventChains';
 import type { useGameEngine } from './useGameEngine';
 import type {
     ClassJourneyLedger,
@@ -284,6 +286,21 @@ export interface BagCraftingSeed {
     capacityAfter: number;
 }
 
+/** Wave 70: seedDimensionGraveScenario() 반환 모양 — 묘비 주인 이름 · 유품 카탈로그 이름과 그 카탈로그 수치. */
+export interface DimensionGraveSeed {
+    playerName: string;
+    itemName: string;
+    catalogVal: number;
+    forgedVal: number;
+}
+
+/** Wave 70: getDimensionGraveSnapshot() — 가방에 든 그 유품의 수치(카탈로그로 다시 만들었는지)와 오늘 만난 묘비 수. */
+export interface DimensionGraveSnapshot {
+    rewardVals: number[];
+    metToday: number;
+    metUids: string[];
+}
+
 /** injectRelicReplaceChoice() 반환 모양 — e2e가 이름으로 단언한다. */
 export interface RelicReplaceChoiceSeed {
     capacity: number;
@@ -369,6 +386,12 @@ export interface AetheriaTestApi {
     injectRelicReplaceChoice: () => RelicReplaceChoiceSeed | false;
     /** Wave 33: 가방 1단계 재료와 골드를 채우고 제작소를 연다(가방 단계 0). */
     seedBagCraftingScenario: () => BagCraftingSeed | false;
+    /**
+     * Wave 70: 다른 차원의 묘비 풀에 묘비 하나(유품 수치는 위조)를 넣고, 지금 던전에서 다음 탐험이 선택 이벤트를 받을 수 있게
+     * 탐험 기록을 맞춘다(원정 시작 뒤 탐험 1회 · 직전 이야기 뒤 일반 탐험). 망령을 한 번에 쓰러뜨리도록 공격력을 올린다.
+     */
+    seedDimensionGraveScenario: () => DimensionGraveSeed | false;
+    getDimensionGraveSnapshot: (itemName: string) => DimensionGraveSnapshot;
     getCanonicalUndyingRelicChoiceSnapshot: () => CanonicalUndyingRelicChoiceSnapshot;
     injectFreeSkillRelicChoice: () => void;
     getCanonicalFreeSkillRelicChoiceSnapshot: () => CanonicalFreeSkillRelicChoiceSnapshot;
@@ -1837,6 +1860,54 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.CRAFTING });
                 const capacityBefore = getInventoryCapacity(seededPlayer);
                 return { recipeName: recipe.name, capacityBefore, capacityAfter: capacityBefore + recipe.slots };
+            },
+            seedDimensionGraveScenario: () => {
+                const er = engineRef.current;
+                const item = DB.ITEMS.weapons.find((entry) => (entry.tier || 1) === 2 && typeof entry.val === 'number');
+                if (!item || typeof item.val !== 'number' || typeof item.name !== 'string') return false;
+                const forgedVal = item.val * 100;
+                const playerName = '차원의 방랑자';
+                setDimensionGravePool([{
+                    uid: 'qa-dimension-grave',
+                    playerName,
+                    level: 23,
+                    loc: '잊혀진 폐허',
+                    gold: 0,
+                    items: [{ ...item, id: 'qa-forged-relic', val: forgedVal }],
+                }]);
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (p: Player) => {
+                        const explores = Math.max(Number(p.stats?.explores) || 0, Number(p.activeExpedition?.explores) || 0) + 1;
+                        return {
+                            ...p,
+                            atk: Math.max(p.atk || 0, 5_000),
+                            // 이야기 체인 단계는 묘비보다 먼저 뜬다 — 이 시드는 묘비 경로만 보므로 체인을 끝난 상태로 둔다.
+                            eventChainProgress: Object.fromEntries(EVENT_CHAINS.map((chain) => [chain.id, chain.steps.length])),
+                            stats: {
+                                ...(p.stats || {}),
+                                explores,
+                                lastInvadeDate: null,
+                                dailyInvadeCount: 0,
+                                invadedGraveUids: [],
+                                exploreState: { ...(p.stats?.exploreState || {}), sinceNarrativeEvent: 3 },
+                            },
+                        };
+                    },
+                });
+                return { playerName, itemName: item.name, catalogVal: item.val, forgedVal };
+            },
+            getDimensionGraveSnapshot: (itemName: string) => {
+                const er = engineRef.current;
+                const today = new Date().toDateString();
+                const sameDay = er.player.stats?.lastInvadeDate === today;
+                return {
+                    rewardVals: (er.player.inv || [])
+                        .filter((entry: Item) => entry?.name === itemName)
+                        .map((entry: Item) => Number(entry.val)),
+                    metToday: sameDay ? Number(er.player.stats?.dailyInvadeCount) || 0 : 0,
+                    metUids: sameDay && Array.isArray(er.player.stats?.invadedGraveUids) ? er.player.stats.invadedGraveUids : [],
+                };
             },
             injectUndyingRelicChoice: () => {
                 const ids = ['undying', 'blood_pact', 'twin_blades'];

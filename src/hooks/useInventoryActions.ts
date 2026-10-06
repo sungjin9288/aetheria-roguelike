@@ -1,24 +1,20 @@
-import { BALANCE } from '../data/constants';
 import { CLASSES } from '../data/classes';
 import { makeEmitTitles } from '../utils/gameUtils';
 import { AT } from '../reducers/actionTypes';
 import { CombatEngine } from '../systems/CombatEngine';
 import { MSG } from '../data/messages';
-import { getGraveItems, getInvasionAttackPower, resolveInvasion } from '../utils/graveUtils';
 import { createRewardActions } from './useInventoryActions.rewards';
 import { createEquipmentActions } from './useInventoryActions.equipment';
 import { createEconomyActions } from './useInventoryActions.economy';
 import type { Player } from '../types';
-import type { GraveEntry } from '../utils/graveUtils';
 import type { InventoryActionCtx, InventoryActionDeps } from './actionDeps';
 import { createPremiumActions } from './useInventoryActions.premium';
-import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
 
 /**
  * createInventoryActions — 인벤토리/경제 액션 오케스트레이터.
  *   PR #4: 도메인별 sub-factory(rewards/equipment/economy/premium)로 분할하고
  *   여기서 공유 클로저 + deps(ctx)를 주입해 조합한다. 단건 액션
- *   (chooseSkillBranch/invadeGrave)만 본 파일에 잔류.
+ *   (chooseSkillBranch)만 본 파일에 잔류. 묘비 침공(invadeGrave)은 Wave 70에 다른 차원의 묘비 탐험 이벤트로 옮겼다.
  */
 export const createInventoryActions = ({
     player,
@@ -65,28 +61,6 @@ export const createInventoryActions = ({
             addLog('system', MSG.SKILL_BRANCH_CHOSEN(skillName, branch.label || '선택한 성장'));
         },
 
-        ...(PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion ? { invadeGrave: (targetGrave: GraveEntry) => {
-            const today = new Date().toDateString();
-            const lastDate = player.stats?.lastInvadeDate;
-            const count = lastDate === today ? (player.stats?.dailyInvadeCount || 0) : 0;
-            // cycle 137: DAILY_INVADE_LIMIT(=5)이 BALANCE 객체에 있으나 기존엔 CONSTANTS의
-            // 동일명 키(undefined)를 참조 → count >= undefined가 항상 false라 일일 5회
-            // 침략 제한이 절대 작동 안 했음 (무제한 침략) 잠복 버그 수정.
-            if (count >= BALANCE.DAILY_INVADE_LIMIT) {
-                return addLog('warn', MSG.INVADE_LIMIT);
-            }
-            if (getGraveItems(targetGrave).length === 0) {
-                return addLog('warn', MSG.INVADE_NO_ITEMS);
-            }
-            const playerAtk = getInvasionAttackPower(player);
-            const { success, reward } = resolveInvasion(targetGrave, playerAtk);
-            dispatch({ type: AT.INVADE_GRAVE, payload: { reward: reward || null, uid: targetGrave.uid } });
-            if (success && reward) {
-                addLog('success', MSG.INVADE_SUCCESS(targetGrave.playerName || '무명 용사', reward.name || ''));
-            } else {
-                addLog('warn', MSG.INVADE_FAIL(targetGrave.playerName || '무명 용사'));
-            }
-        }} : {}),
 
     });
 };

@@ -11,7 +11,7 @@ import { addItemByName } from '../../utils/inventoryUtils';
 import { summarizeLoot } from '../../utils/lootSummary';
 import type { FullStats, Item, Monster, Player } from '../../types/index.js';
 import type { AddLog, GameActionDeps } from '../actionDeps';
-import type { EventOutcome } from '../../types/session.js';
+import type { DimensionGraveRef, EventOutcome } from '../../types/session.js';
 
 /**
  * 처치된 적 — 몬스터 인스턴스에 탐험 정찰 카드가 붙인 "이 전투 한정" 보너스가 함께 실린다
@@ -27,6 +27,8 @@ export type DefeatedEnemy = Monster & {
      * 체인 진행을 정산한다. 보상은 여기 싣지 않고 데이터(`EVENT_CHAINS`)에서 다시 읽는다.
      */
     chainCombat?: ChainCombatRef;
+    /** Wave 70: 다른 차원의 묘비 망령 — 이기면 `applyDimensionGraveVictory`가 그 묘비의 유품(카탈로그 이름)을 준다. */
+    dimensionGrave?: DimensionGraveRef;
 };
 
 /** 이야기 전투의 출처 — 체인 id · 단계 · 선택지 번호. */
@@ -222,6 +224,21 @@ export const applyChainCombatVictory = (
     });
     if (outcome.log) addLog('success', outcome.log);
     if (itemName) addLog('success', MSG.LOOT_GET(itemName));
+};
+
+/**
+ * 다른 차원의 묘비 승리 정산(2026-10 Wave 70) — 망령을 이기면 그 묘비의 유품을 준다. 유품은 카탈로그 이름으로 다시 만든
+ * 아이템이라 다른 플레이어 문서의 수치(강화 · 위조된 능력치)는 들어오지 않는다. 보상이라 가방 상한을 보지 않는다(보상 소실 금지).
+ * 지거나 물러나면 이 함수는 불리지 않는다.
+ */
+export const applyDimensionGraveVictory = (
+    deadEnemy: DefeatedEnemy,
+    { dispatch, addLog }: Pick<GameActionDeps, 'dispatch' | 'addLog'>,
+) => {
+    const ref = deadEnemy?.dimensionGrave;
+    if (!ref || typeof ref.itemName !== 'string' || !findItemByName(ref.itemName)) return;
+    dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => addItemByName(p, ref.itemName) });
+    addLog('success', MSG.DIMENSION_GRAVE_VICTORY(ref.playerName, ref.itemName));
 };
 
 /**

@@ -2,7 +2,6 @@ import type { Item, Player } from '../types/index.js';
 import { MAPS } from '../data/maps.js';
 import { CONSTANTS } from '../data/constants.js';
 import { getGoldIncome, type ChallengeHolder } from './challengeRules.js';
-import { calculateFullStats } from './statsCalculator.js';
 
 /**
  * 묘비(grave) 데이터 1건 — 로컬 세이브의 회수 대상과 공개 침공 대상 문서를 함께 표현한다.
@@ -178,28 +177,9 @@ export const getGraveRecoveryGroups = (grave: GraveInput, currentLoc: string | u
         ));
 };
 
-/**
- * 2026-10 Wave 65 (원장 §61.5 · §66): 침공에 쓰는 공격력 — 실효 공격력(`calculateFullStats`)이다. 침공 액션과 묘비 화면의
- * 성공 확률 표시가 같은 값을 읽는다. 화면이 저장 공격력(`player.atk`)을 쓰던 동안 장비 · 영구 공격력 · 칭호만큼 표시가 실제보다 낮았다.
- */
-export const getInvasionAttackPower = (player: Player): number => calculateFullStats(player)?.atk || player.atk || 10;
-
-export const calcInvasionChance = (playerAtk: number, guardPower: number): number => {
-    const atk = Math.max(1, playerAtk);
-    const guard = Math.max(1, guardPower);
-    return Math.min(0.9, atk / (atk + guard));
-};
-
-export const resolveInvasion = (targetGrave: GraveEntry, playerAtk: number) => {
-    const chance = calcInvasionChance(playerAtk, targetGrave.guardPower || 10);
-    const success = Math.random() < chance;
-    // W11: 묘비 아이템 읽기는 언제나 getGraveItems 경유 — 구형 save의 단수 `item`도 흡수한다(§8-2).
-    const items = getGraveItems(targetGrave);
-    const reward = success && items.length > 0
-        ? { ...items[Math.floor(Math.random() * items.length)], id: `${Date.now()}_${Math.random().toString(16).slice(2, 8)}` }
-        : null;
-    return { success, reward, chance };
-};
+// 2026-10 Wave 70: 확률 침공(공격력 대 묘비 방어력, 상한 90% — `calcInvasionChance` · `resolveInvasion` · `getInvasionAttackPower`)은
+//   없어졌다. 다른 플레이어의 묘비는 탐험 이벤트 "다른 차원의 묘비"로 만나고 망령과 실제로 싸운다(`utils/dimensionGrave.ts`).
+//   그래서 공개 묘비의 `guardPower`(저장 공격력)와 침공 공격력(실효)의 비대칭(원장 §66.8)도 함께 사라졌다.
 
 export const resolveGraveRecovery = (player: Player, grave: GraveInput) => {
     const graves = normalizeGraves(grave);

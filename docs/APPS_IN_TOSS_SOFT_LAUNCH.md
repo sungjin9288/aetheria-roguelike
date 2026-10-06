@@ -145,6 +145,11 @@ source-map upload command, so CLI compatibility must be resolved before enabling
 
 ## Phase C optional return-supply rewarded ad contract
 
+> **Launch scope (2026-10-06 owner decision):** the rewarded ad is out of the launch scope, like payments —
+> it is decided after observing player reaction to the registered app. The code below stays as is and stays off:
+> no tracked build configuration sets `VITE_TOSS_REWARDED_AD_GROUP_ID` (`tests/launch-no-payment-contract.test.js`,
+> ledger §72.4). The `ad-activation` gate below is therefore a separate post-launch decision, not part of the release.
+
 The only rewarded-ad placement is the active safe-return debrief. It is offered only when the
 expedition recorded at least one battle or exploration, the debrief is actually open, the runtime
 is Toss or Sandbox, the SDK bridge is supported, and a non-placeholder group ID is configured.

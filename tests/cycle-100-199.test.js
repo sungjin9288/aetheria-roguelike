@@ -1302,10 +1302,13 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.match(source, /BALANCE\.PRIMAL_SHARD_DROP_CHANCE/);
   });
 
-  test('useInventoryActions: 더 이상 CONSTANTS.DAILY_INVADE_LIMIT 잘못 참조 안 함', async () => {
-      const source = await readInventoryActionsSource();
+  test('하루 묘비 한도: 더 이상 CONSTANTS.DAILY_INVADE_LIMIT 잘못 참조 안 함 (Wave 70: 소유처 = 다른 차원의 묘비)', async () => {
       // CONSTANTS.DAILY_INVADE_LIMIT은 undefined여서 일일 침략 5회 제한이 작동 안 했음.
-      // BALANCE.DAILY_INVADE_LIMIT로 교체되어야 함.
+      // BALANCE.DAILY_INVADE_LIMIT로 교체되어야 함. Wave 70에 목록 침공(useInventoryActions)이 없어지고
+      // 한도는 탐험 이벤트 "다른 차원의 묘비"(utils/dimensionGrave.ts)가 읽는다.
+      const inventory = await readInventoryActionsSource();
+      assert.doesNotMatch(inventory, /DAILY_INVADE_LIMIT/);
+      const source = await readSrc('src/utils/dimensionGrave.ts');
       assert.doesNotMatch(source, /CONSTANTS\.DAILY_INVADE_LIMIT/);
       assert.match(source, /BALANCE\.DAILY_INVADE_LIMIT/);
   });

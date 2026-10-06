@@ -16,7 +16,7 @@ import { CombatEngine } from '../src/systems/CombatEngine.ts';
 import { getSkillElement, isDamagingSkill } from '../src/systems/skillPower.ts';
 import { buildEventPackage } from '../src/utils/aiEventUtils.ts';
 import { getCombatForecast } from '../src/utils/combatForecast.ts';
-import { calcInvasionChance, getInvasionAttackPower } from '../src/utils/graveUtils.ts';
+import * as graveUtils from '../src/utils/graveUtils.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 
 /**
@@ -25,7 +25,8 @@ import { calculateFullStats } from '../src/utils/statsCalculator.ts';
  * ① 저작 폴백 이벤트 — 로컬 풀의 2지선다 저작 이벤트 12개에 지역 선택지("살펴본다")가 셋째로 붙고 그 칸의 절차적 보상이
  *    손으로 쓴 결과보다 컸다. 이제 저작 선택지 그대로다(모델 이벤트 · 결과 없는 풀 항목은 지금처럼 채운다).
  * ② 체인 유물 지급(그림자 길드 상인의 인장) — 선택 · 교체 지급과 달리 실효 최대치 내리기를 거치지 않았다.
- * ③ 묘비 침공 확률 — 화면은 저장 공격력, 판정은 실효 공격력이었다. 이제 둘 다 `getInvasionAttackPower`.
+ * ③ 묘비 침공 확률 — 화면은 저장 공격력, 판정은 실효 공격력이었다(Wave 65에 둘 다 `getInvasionAttackPower`).
+ *   Wave 70에 확률 침공 자체가 없어졌다 — 다른 차원의 묘비는 망령과 실제로 싸운다(`tests/dimension-grave-event-contract.test.js`).
  * ④ 전투 예고의 "약점" — 기술 `type`만 봤다. 엔진은 `type`이 없으면 무기 원소를 쓴다. 이제 둘 다 `getSkillElement`.
  */
 
@@ -136,20 +137,14 @@ test('[대조] 최대치가 그대로인 구매는 현재 생명 · 기력을 �
 
 // ── ③ 묘비 침공 확률 ───────────────────────────────────────────────────────────
 
-test('③ 침공 공격력은 실효 공격력이다 — 장비를 든 플레이어에서 저장 공격력과 다르고, 표시 확률도 그 값으로 계산된다', () => {
-    const weapon = DB.ITEMS.weapons.find((item) => (item.val || 0) >= 50);
-    const player = { ...structuredClone(INITIAL_STATE.player), job: '전사', level: 30, atk: 40, equip: { ...INITIAL_STATE.player.equip, weapon } };
-    const full = calculateFullStats(player).atk;
-    assert.ok(full > player.atk, `전제: 실효 공격력(${full})이 저장 공격력(${player.atk})보다 크다`);
-    assert.equal(getInvasionAttackPower(player), full);
-    assert.ok(calcInvasionChance(getInvasionAttackPower(player), 200) > calcInvasionChance(player.atk, 200));
-});
-
-test('③ 화면과 침공 액션은 같은 판정을 읽는다 — 저장 공격력으로 침공 확률을 계산하지 않는다(부재 불변식)', () => {
-    for (const path of ['src/components/GravePanel.tsx', 'src/hooks/useInventoryActions.ts']) {
+test('③ 확률 침공은 없다 — 저장/실효 공격력 비대칭이 들어설 판정 자체가 사라졌다(Wave 70, 부재 불변식)', () => {
+    for (const name of ['calcInvasionChance', 'resolveInvasion', 'getInvasionAttackPower']) {
+        assert.equal(name in graveUtils, false, `graveUtils.${name}`);
+    }
+    for (const path of ['src/components/GravePanel.tsx', 'src/hooks/useInventoryActions.ts', 'src/utils/dimensionGrave.ts']) {
         const source = SRC(path);
-        assert.ok(source.includes('getInvasionAttackPower'), `${path}: getInvasionAttackPower`);
-        assert.ok(!/playerAtk\s*=\s*[^;\n]*player\??\.atk/.test(source), `${path}: 저장 공격력으로 침공 공격력을 만들지 않는다`);
+        assert.ok(!/guardPower/.test(source), `${path}: 묘비 방어력으로 승패를 정하지 않는다`);
+        assert.ok(!/invadeGrave/.test(source.replace(/\/\/.*$/gm, '').replace(/\/\*[\s\S]*?\*\//g, '')), `${path}: 목록 침공 액션이 없다`);
     }
 });
 

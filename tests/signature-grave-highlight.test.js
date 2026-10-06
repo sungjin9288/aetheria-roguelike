@@ -1,64 +1,45 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+
+import { DB } from '../src/data/db.js';
+import { MSG } from '../src/data/messages.js';
+import { isSignatureItem } from '../src/data/signatureItems.js';
+import { buildDimensionGraveEvent, getDimensionGraveItemLabel, toDimensionGraveCandidate } from '../src/utils/dimensionGrave.js';
+import { getEventChoicePreview } from '../src/utils/eventPresentation.js';
 
 /**
- * Dormant public-grave characterization.
+ * 전설 각인 유품이 든 묘비는 이례적인 먹잇감이다 — 위험 대비 보상을 판단할 수 있게 "전설"을 보인다.
  *
- * 다른 플레이어가 전설 각인을 장착한 채 사망하면 그 묘비는 이례적인 먹잇감이다.
- * GravePanel이 이 사실을 숨기면 invader 입장에서 매력적인 위험 대비 보상 판단이
- * 불가능해진다. 이 UI는 server-authoritative claim이 생기기 전까지 production capability로
- * 숨겨져 있으며, 아래 계약은 향후 별도 승인 시 사용할 bounded presentation만 보존한다.
- *
- * 계약:
- *   1. GravePanel이 isSignatureItem을 import
- *   2. per-item 또는 per-grave 수준에서 isSignatureItem(...) 호출
- *   3. "전설" 라벨 노출
- *   4. 묘비 카드에 data-has-signature 속성 (0개일 때 'false', 있으면 'true')
+ * 공개 묘비 목록(GravePanel, 꺼져 있었다) 시절에는 카드의 "전설" 배지 · `data-has-signature`가 이 일을 했다.
+ * 2026-10 Wave 70(소유자 결정)에 다른 플레이어의 묘비는 탐험 이벤트 "다른 차원의 묘비"로 옮겼다 — 같은 판단은 이제
+ * 이벤트 카드의 유품 표시와 침공 선택지의 미리보기가 보인다. 판정은 `isSignatureItem` 하나다.
  */
 
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(HERE, '..');
-const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
+const SIGNATURE = Object.values(DB.ITEMS).flat().find((item) => item && isSignatureItem(item));
+const PLAIN = DB.ITEMS.weapons.find((item) => !isSignatureItem(item));
+const refFor = (item) => ({ uid: 'other', playerName: '방랑자', level: 30, place: null, itemName: item.name });
 
-test('GravePanel imports isSignatureItem from signatureItems', async () => {
-    const source = await readSrc('src/components/GravePanel.tsx');
-    assert.ok(
-        /import\s*\{[^}]*isSignatureItem[^}]*\}\s*from\s*['"][^'"]*signatureItems/.test(source),
-        'GravePanel should import isSignatureItem'
-    );
+test('전제: 카탈로그에 전설 각인 장비와 일반 장비가 있다', () => {
+    assert.ok(SIGNATURE, '전설 각인');
+    assert.ok(PLAIN, '일반 장비');
 });
 
-test('GravePanel calls isSignatureItem on grave items', async () => {
-    const source = await readSrc('src/components/GravePanel.tsx');
-    assert.ok(
-        /isSignatureItem\(\s*\w+\s*\)/.test(source),
-        'GravePanel should call isSignatureItem(item) to detect bounty graves'
-    );
+test('전설 각인 유품은 이벤트 카드와 침공 미리보기에서 "전설"로 보인다', () => {
+    const event = buildDimensionGraveEvent(refFor(SIGNATURE));
+    const label = MSG.DIMENSION_GRAVE_SIGNATURE_ITEM(SIGNATURE.name);
+    assert.equal(getDimensionGraveItemLabel(event.dimensionGrave), label);
+    assert.ok(event.desc.includes(label), event.desc);
+    assert.equal(getEventChoicePreview(event, 0).text, MSG.DIMENSION_GRAVE_PREVIEW_INVADE(label));
 });
 
-test('GravePanel renders "전설" label on signature bounty', async () => {
-    const source = await readSrc('src/components/GravePanel.tsx');
-    assert.ok(
-        /전설/.test(source),
-        'GravePanel should show 전설 label when bounty signatures exist'
-    );
+test('일반 유품은 이름 그대로다 — "전설"을 붙이지 않는다', () => {
+    const event = buildDimensionGraveEvent(refFor(PLAIN));
+    assert.equal(getDimensionGraveItemLabel(event.dimensionGrave), PLAIN.name);
+    assert.ok(!event.desc.includes(MSG.DIMENSION_GRAVE_SIGNATURE_ITEM(PLAIN.name)));
+    assert.equal(getEventChoicePreview(event, 0).text, MSG.DIMENSION_GRAVE_PREVIEW_INVADE(PLAIN.name));
 });
 
-test('GravePanel grave card exposes data-has-signature attribute', async () => {
-    const source = await readSrc('src/components/GravePanel.tsx');
-    assert.ok(
-        /data-has-signature/.test(source),
-        'grave card should expose data-has-signature for styling/testing'
-    );
-});
-
-test('GravePanel uses stable testid for signature bounty badge', async () => {
-    const source = await readSrc('src/components/GravePanel.tsx');
-    assert.ok(
-        /grave-signature-bounty/.test(source),
-        'signature bounty badge should carry a stable testid'
-    );
+test('묘비 문서의 전설 각인 사본도 후보 유품으로 남는다 — 바탕 이름으로', () => {
+    const candidate = toDimensionGraveCandidate({ uid: 'other', playerName: '방랑자', items: [{ ...SIGNATURE, id: 'copy', val: 1e9 }] });
+    assert.deepEqual(candidate.itemNames, [SIGNATURE.name]);
 });

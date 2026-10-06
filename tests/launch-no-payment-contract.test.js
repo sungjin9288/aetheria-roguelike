@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 
 import * as tossFramework from '@apps-in-toss/web-framework';
@@ -64,4 +65,24 @@ test('에테르 교환소의 모든 상품은 크리스털로만 바꾼다 — �
         assert.ok(Number.isFinite(offer.cost) && offer.cost > 0, `${offer.id} 크리스털 비용`);
         for (const key of Object.keys(offer)) assert.doesNotMatch(key, /price|krw|usd|sku|productId/i, `${offer.id}.${key}`);
     }
+});
+
+/**
+ * 2026-10-06 소유자 결정 — 보상형 광고(귀환 보급: 광고 1회 = 하급 체력 물약 1개)도 "결제처럼 반응 보고 결정"이다(원장 §72).
+ * 코드는 그대로 두고, 토스 빌드에 광고 그룹 ID(`VITE_TOSS_REWARDED_AD_GROUP_ID`)를 넣을 때만 켜진다. 출시 범위 밖이므로
+ * 저장소의 어떤 빌드 설정(환경 파일 · 워크플로 · 패키지 스크립트 · 토스 설정)도 그 값을 정하지 않는다 — 켤 때 이 계약을 함께 고칠 것.
+ */
+test('보상형 광고는 출시 범위 밖이다 — 추적되는 빌드 설정 어디에도 광고 그룹 ID 값이 없다', () => {
+    const tracked = execFileSync('git', ['ls-files'], { encoding: 'utf8' }).split('\n').filter(Boolean);
+    assert.ok(tracked.length > 100, '전제: git 추적 파일 목록');
+    const configFiles = tracked.filter((file) => !/^(src|tests|docs|scripts\/art_sources|public)\//.test(file)
+        && !/\.(png|jpe?g|webp|gif|ico|woff2?|ttf|mp3|ogg|wav|json\.gz|ait|zip|jar|keystore)$/i.test(file));
+    const offenders = [];
+    for (const file of configFiles) {
+        if (!existsSync(file) || statSync(file).size > 2_000_000) continue;
+        const source = readFileSync(file, 'utf8');
+        if (/VITE_TOSS_REWARDED_AD_GROUP_ID\s*[=:]\s*['"]?[A-Za-z0-9_-]/.test(source)) offenders.push(file);
+    }
+    assert.deepEqual(offenders, []);
+    assert.equal(tracked.some((file) => /(^|\/)\.env(\.|$)/.test(file) && !/\.example$/.test(file)), false, '추적되는 .env 파일이 없다');
 });

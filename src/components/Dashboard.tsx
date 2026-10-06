@@ -23,7 +23,6 @@ import ArchiveTabButton from './ArchiveTabButton';
 import EquipmentPanel from './EquipmentPanel';
 import SignalBadge from './SignalBadge';
 import SmartInventory from './SmartInventory';
-import { PRODUCTION_GAME_CAPABILITIES } from '../platform/gameCapabilities';
 import type { GameActions } from '../hooks/actionDeps';
 import type { GameState } from '../reducers/gameReducer';
 import type { SystemTabRuntime } from './tabs/SystemTab';
@@ -47,8 +46,6 @@ const TabSpinner = () => (
 
 interface DashboardProps {
     player: Player;
-    /** H5(a): 세션 uid — 공개 묘비 목록에서 내 묘비를 제외하는 데 쓴다. */
-    uid?: string | null;
     grave?: GameState['grave'];
     sideTab?: string;
     setSideTab?: (tab: string) => void;
@@ -76,7 +73,6 @@ const TAB_ITEMS = [
 
 const Dashboard = ({
     player,
-    uid,
     grave,
     sideTab,
     setSideTab,
@@ -205,10 +201,8 @@ const Dashboard = ({
                 <Suspense fallback={<TabSpinner />}>
                     <GravePanel
                         player={player}
-                        uid={uid}
                         grave={grave}
                         actions={actions}
-                        capabilities={PRODUCTION_GAME_CAPABILITIES}
                         onOpenMap={() => selectTab('map')}
                     />
                 </Suspense>

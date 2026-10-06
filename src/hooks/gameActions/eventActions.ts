@@ -18,7 +18,9 @@ import { applyTempBuffRule } from '../../systems/tempBuffMerge';
 import { formatEventText, reportActualRecovery, reportPaidGold } from '../../utils/eventPresentation';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { calculateFullStats } from '../../utils/statsCalculator';
-import { healWithinMax } from '../../systems/vitals';
+import { getEffectiveMaxHp, healWithinMax } from '../../systems/vitals';
+import { getDimensionGravePrayerHeal } from '../../utils/dimensionGrave';
+import { isEncounterBoss } from '../../utils/bossPresence';
 import { getChallengeMaxHpGain, getGoldIncome } from '../../utils/challengeRules';
 import type { Player, Relic, StatusId } from '../../types';
 import type { ChainCombatSpec, EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
@@ -72,6 +74,12 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
             // 원정 보스 접근 게이지 만충 카드 처리 — 도전/회피 즉시 해소.
             if (currentEvent.isBossGaugeChallenge) {
                 handleBossGaugeChoice(idx, currentEvent, { ...deps, rng });
+                return;
+            }
+
+            // 다른 차원의 묘비(Wave 70) — 침공(망령과 실제 전투) / 기도 / 지나침.
+            if (currentEvent.isDimensionGrave) {
+                handleDimensionGraveChoice(idx, currentEvent, { ...deps, rng });
                 return;
             }
 
@@ -676,6 +684,69 @@ const handleScoutChoice = (idx: number, currentEvent: GameState['currentEvent'],
  *   같은 카드가 떠서 그 지역의 사냥 · 임무가 보스를 잡기 전까지 막혔다. AI 사건 · 정찰 카드는 다시 굴리지 않는다
  *   (이번 탐험의 결정 지점은 이미 이 카드가 썼다).
  */
+/**
+ * 다른 차원의 묘비 선택 처리(2026-10 Wave 70, 소유자 결정 "망령과 실제 전투").
+ *  - 침공: 지금 지역의 일반 몬스터 종 하나(보스 종 제외)로 정예급 망령을 만들어 실제 전투를 연다 — 정찰 "정예의 흔적"과
+ *    같은 파이프(spawnEnemy → 정예 배율 → applyBattleStartRelics → SET_ENEMY → GS.COMBAT). 이름은 묘비 주인의 망령이고,
+ *    적 인스턴스의 `dimensionGrave`가 출처를 들고 다니며 승리 정산(`applyDimensionGraveVictory`)이 유품을 준다.
+ *    지거나 물러나면 유품은 없다(그날 그 묘비는 이미 만났다).
+ *  - 기도: 실효 최대 생명의 `BALANCE.DIMENSION_GRAVE_PRAYER_HEAL_RATIO`만큼 회복(모자란 만큼까지).
+ *  - 지나침: 아무 일도 없다.
+ * 탐험 정산(탐험 수 · 만난 기록)은 카드가 열릴 때 이미 끝났다.
+ */
+const handleDimensionGraveChoice = (idx: number, currentEvent: GameState['currentEvent'], deps: GameActionDepsWithRng) => {
+    const { player, dispatch, addLog, getFullStats, rng } = deps;
+    const grave = currentEvent?.dimensionGrave;
+    const outcome = eventOutcomes(currentEvent).find((o) => o.choiceIndex === idx) || null;
+    if (!outcome?.graveEffect) return;
+    dispatch({ type: AT.SET_EVENT, payload: null });
+    const closeToIdle = () => dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+    if (!grave || outcome.graveEffect === 'leave') {
+        addLog('info', MSG.DIMENSION_GRAVE_LEAVE_LOG);
+        closeToIdle();
+        return;
+    }
+    if (outcome.graveEffect === 'pray') {
+        const heal = getDimensionGravePrayerHeal(player);
+        if (heal > 0) {
+            dispatch({
+                type: AT.SET_PLAYER,
+                payload: (p: Player) => ({ ...p, hp: healWithinMax(p.hp, getDimensionGravePrayerHeal(p), getEffectiveMaxHp(p)) }),
+            });
+        }
+        addLog('success', MSG.DIMENSION_GRAVE_PRAY_LOG(grave.playerName, heal));
+        closeToIdle();
+        return;
+    }
+
+    const mapData = DB.MAPS[player.loc!];
+    const species = mapData
+        ? (mapData.monsters || []).filter((name) => Boolean(DB.MONSTERS?.[name]) && !isEncounterBoss(name, mapData))
+        : [];
+    if (!mapData || species.length === 0) {
+        closeToIdle();
+        addLog('info', MSG.EXPLORE_QUIET);
+        return;
+    }
+    const storyMonster = species[Math.min(species.length - 1, Math.floor(rng() * species.length))];
+    const { mStats: rawStats, baseName } = spawnEnemy(mapData, player, player.relics || [], { addLog }, { storyMonster, rng });
+    if (rawStats === null || baseName === null) {
+        closeToIdle();
+        addLog('info', MSG.EXPLORE_QUIET);
+        return;
+    }
+    const mStats = { ...buildEliteStats(rawStats, baseName), name: MSG.DIMENSION_GRAVE_SHADE_NAME(grave.playerName), dimensionGrave: grave };
+    const fullStats = getFullStats();
+    dispatch({
+        type: AT.SET_PLAYER,
+        payload: (p: Player) => applyBattleStartRelics(p, p.relics || [], fullStats, { addLog, rng }),
+    });
+    dispatch({ type: AT.SET_ENEMY, payload: mStats });
+    dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+    addLog('event', MSG.DIMENSION_GRAVE_INVADE_LOG(grave.playerName));
+    addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+};
+
 const handleBossGaugeChoice = (idx: number, currentEvent: GameState['currentEvent'], deps: GameActionDepsWithRng) => {
     const { player, dispatch, addLog, getFullStats, rng = Math.random } = deps;
     const outcome = eventOutcomes(currentEvent).find((o) => o.choiceIndex === idx) || null;

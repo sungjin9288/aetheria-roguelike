@@ -119,7 +119,8 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: EnemyStatusProps) => {
             aria-hidden="true"
             className="flex h-14 w-14 shrink-0 items-center justify-center rounded-lg border border-rose-200/18 bg-black/24 text-rose-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.05)]"
           >
-            <MonsterIcon name={enemy.name || ''} discovered isBoss={Boolean(enemy.isBoss)} size={46} />
+            {/* 그림은 종(baseName)으로 찾는다 — 표시 이름은 접두어 · 층 태그 · "…의 망령"(Wave 70) 같은 장식을 얹는다. */}
+            <MonsterIcon name={enemy.baseName || enemy.name || ''} discovered isBoss={Boolean(enemy.isBoss)} size={46} />
           </div>
           <div className="min-w-0">
             <div data-testid="enemy-status-label" className="text-[10px] font-readable text-rose-100/66">

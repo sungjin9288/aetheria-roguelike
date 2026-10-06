@@ -55,19 +55,15 @@ test('H5(a): uid를 모르면(오프라인·인증 전) 목록을 그대로 둔�
     assert.deepEqual(excludeOwnGraves(null, 'me'), []);
 });
 
-test('H5(a): 화면은 player.uid가 아니라 세션 uid prop을 쓴다', async () => {
-    const panel = stripComments(await readSrc('src/components/GravePanel.tsx'));
-    assert.doesNotMatch(panel, /player as \{ uid\?: string \}/, 'B3-TODO 캐스트 제거');
-    assert.doesNotMatch(panel, /player\?\.uid|player\.uid/, 'player.uid는 존재하지 않는 필드');
-    assert.match(panel, /excludeOwnGraves\(fetched, uid\)/);
-
-    const dashboard = await readSrc('src/components/Dashboard.tsx');
-    assert.match(dashboard, /<GravePanel[\s\S]{0,200}uid=\{uid\}/, 'Dashboard가 uid를 넘긴다');
-
-    const layout = await readSrc('src/components/app/MobileGameLayout.tsx');
-    assert.match(layout, /uid=\{engine\.uid\}/, '엔진 세션 uid가 화면까지 내려온다');
+test('H5(a): 내 묘비 제외는 player.uid가 아니라 세션 uid를 쓴다 (Wave 70: 공개 목록 화면 → 다른 차원의 묘비 풀)', async () => {
+    // 2026-10 Wave 70: 공개 묘비 목록 화면(GravePanel)은 없어졌고, 세션 uid는 풀을 채우는 훅과 탐험 액션 deps로 간다.
+    //   후보 선택이 세션 uid를 빼는 행동은 tests/dimension-grave-event-contract.test.js가 실제 함수로 확인한다.
+    const pool = stripComments(await readSrc('src/hooks/useDimensionGravePool.ts'));
+    assert.doesNotMatch(pool, /player\?\.uid|player\.uid/, 'player.uid는 존재하지 않는 필드');
+    assert.match(pool, /excludeOwnGraves\(fetched, uid\)/);
 
     const engine = await readSrc('src/hooks/useGameEngine.ts');
+    assert.match(engine, /useDimensionGravePool\(uid\)/, '엔진 세션 uid가 풀 훅까지 내려온다');
     assert.match(engine, /\n {8}uid,\n {8}actions,/, 'useGameEngine이 uid를 노출한다');
 });
 

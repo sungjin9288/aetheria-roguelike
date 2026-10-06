@@ -22,6 +22,7 @@ import type { createGameActions } from './useGameActions';
 import type { createCombatActions } from './useCombatActions';
 import type { createInventoryActions } from './useInventoryActions';
 import type { GameMode } from '../reducers/gameStates';
+import type { GraveEntry } from '../utils/graveUtils';
 
 /** 게임 로그 출력 — `useGameEngine.addLog` (AT.ADD_LOG 래퍼)의 시그니처. */
 export type AddLog = (type: string, text: string) => void;
@@ -75,6 +76,11 @@ export interface GameActionDeps {
      * 각 팩토리가 `typeof deps.rng === 'function' ? deps.rng : Math.random`으로 떨어진다.
      */
     rng?: () => number;
+    /**
+     * 다른 차원의 묘비(Wave 70) 풀 — 최근 공개 묘비 문서. 프로덕션은 `platform/dimensionGravePool`을 넘기고,
+     * 넘기지 않으면(테스트 · 성장 드라이버) 빈 풀이라 탐험이 이 기능의 난수를 쓰지 않는다.
+     */
+    getDimensionGraves?: () => readonly GraveEntry[];
 }
 
 /** `GameActionDeps` + 팩토리 내부에서 rng가 이미 확정된 상태(스카우팅/보스 게이지 해소). */

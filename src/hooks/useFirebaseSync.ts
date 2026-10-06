@@ -579,7 +579,7 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
 
     // --- Public Grave Upload on Death ---
     useEffect(() => {
-        if (!PRODUCTION_GAME_CAPABILITIES.publicGraveInvasion) return;
+        if (!PRODUCTION_GAME_CAPABILITIES.dimensionGraveEvent) return;
         if (mockMode || !uid || !hasFirebaseConfig || !db) return;
         if (gameState !== 'dead') return;
         const graveEntries = normalizeGraves(grave);
@@ -596,6 +596,7 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
             loc: player.loc || '알 수 없는 곳',
             items: allItems,
             gold: clampPublicGraveGold(totalGold),
+            // Wave 70: 다른 차원의 묘비는 망령과 실제 전투라 이 값을 읽지 않는다 — rules가 필수 키로 요구해 남긴다(원장 §66.8 해소).
             guardPower: player.atk || 10,
             createdAt: serverTimestamp(),
             uid,
