@@ -226,7 +226,7 @@ const TerminalView = ({
                                 data-testid="combat-log-toggle"
                                 aria-expanded={logExpanded}
                                 onClick={() => setLogExpanded((open) => !open)}
-                                className="inline-flex min-h-8 shrink-0 items-center rounded-lg border border-white/10 bg-black/20 px-2.5 py-1 text-[10px] font-readable text-slate-200/78"
+                                className="inline-flex min-h-[44px] shrink-0 items-center rounded-lg border border-white/10 bg-black/20 px-2.5 py-1 text-[11px] font-readable text-slate-200/78"
                             >
                                 {isCombat
                                     ? (logExpanded

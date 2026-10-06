@@ -176,13 +176,13 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice, pla
                             className="aether-result-strip grid grid-cols-[minmax(0,0.8fr)_minmax(0,1.2fr)] gap-2 rounded-lg px-3 py-2"
                         >
                             <div className="min-w-0">
-                                <div className="font-readable text-[8px] font-bold text-slate-400/78">상태</div>
+                                <div className="font-readable text-[11px] font-bold text-slate-400/78">상태</div>
                                 <div className="mt-0.5 truncate font-readable text-[11px] font-semibold text-slate-100/90">
                                     {decisionState}
                                 </div>
                             </div>
                             <div className="min-w-0 border-l border-white/8 pl-2">
-                                <div className="font-readable text-[8px] font-bold text-slate-400/78">추천</div>
+                                <div className="font-readable text-[11px] font-bold text-slate-400/78">추천</div>
                                 <div className="mt-0.5 truncate font-readable text-[11px] font-semibold text-slate-100/90">
                                     {recommendation.label}
                                 </div>
@@ -212,14 +212,14 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice, pla
                                         className="rounded-lg border border-[#f6e7a2]/40 px-2.5 py-2 shadow-[0_2px_10px_rgba(246,231,162,0.16)]"
                                         style={{ background: 'linear-gradient(180deg, rgba(246,231,162,0.14) 0%, rgba(64,48,12,0.4) 100%)' }}
                                     >
-                                        <div className="flex items-center gap-1.5 text-[9px] font-fira uppercase text-[#f6e7a2]">
+                                        <div className="flex items-center gap-1.5 text-[11px] font-fira uppercase text-[#f6e7a2]">
                                             <Sparkles size={11} />
                                             Legendary
                                         </div>
                                         <div className="mt-1 text-sm font-rajdhani font-bold leading-tight text-[#fef3c7]">
                                             {signatureLoot.join(' · ')}
                                         </div>
-                                        <div className="mt-0.5 text-[10px] font-fira text-[#f6e7a2]/80">
+                                        <div className="mt-0.5 text-[11px] font-fira text-[#f6e7a2]/80">
                                             도감에 기록된 전설 각인
                                         </div>
                                     </div>
@@ -259,7 +259,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice, pla
                                 aria-label={MSG.POST_COMBAT_CHOICE_TITLE}
                                 className="rounded-[1rem] border border-white/8 bg-black/18 px-2.5 py-2"
                             >
-                                <div className="font-readable text-[10px] font-bold text-slate-400/80">
+                                <div className="font-readable text-[11px] font-bold text-slate-400/80">
                                     {MSG.POST_COMBAT_CHOICE_TITLE}
                                 </div>
                                 <div className="mt-1.5 grid grid-cols-2 gap-2">
@@ -277,7 +277,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onResolveChoice, pla
                                             }`}
                                         >
                                             <span className="font-readable text-xs font-bold">{option.label}</span>
-                                            <span className="font-readable text-[10px] leading-tight opacity-80">
+                                            <span className="font-readable text-[11px] leading-tight opacity-80">
                                                 {option.detail}
                                             </span>
                                         </Motion.button>

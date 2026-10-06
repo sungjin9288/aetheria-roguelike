@@ -1,0 +1,242 @@
+{
+  "date": "2026-10-06",
+  "base": "2ffbded88e58fa61013363902346882f5116cfb1",
+  "scope": "Product integration acceptance: latest screens, full regression and representative natural play bound to one source SHA",
+  "fixtureBoundary": "Stage 1 is a fresh game through real UI actions with seeded RNG. Stage 2 restores natural-play driver snapshots from the same SHA into isolated device-QA storage. Chromium iPhone 12 emulation on Linux; not physical-device acceptance.",
+  "sameSource": {
+    "gateNotes": [
+      "First full gate: type-check, lint, build:guard, CI-env build, e2e 75+71 and perf passed; unit 5,853/5,854 failed only on progression-diagnostic evidence, which binds hashes of every src .ts/.tsx file",
+      "Diagnostic evidence rewritten: only the four edited component hashes changed, report body identical; unit rerun 5,854/5,854 and 15 tracked evidence verifies ok"
+    ],
+    "trackedEvidenceVerify": 15,
+    "tourComparison": {
+      "A": {
+        "screens": [
+          72,
+          72
+        ],
+        "docOverflow": [
+          0,
+          0
+        ],
+        "offscreen": [
+          210,
+          207
+        ],
+        "posMismatch": [
+          9,
+          6
+        ],
+        "tinyButtons": [
+          64,
+          40
+        ],
+        "small": [
+          866,
+          845
+        ],
+        "clipped": [
+          27,
+          27
+        ],
+        "newIssues": [],
+        "posMismatchAfter": [
+          "persistent-status-bar want=sticky got=relative"
+        ]
+      },
+      "B": {
+        "screens": [
+          65,
+          65
+        ],
+        "docOverflow": [
+          0,
+          0
+        ],
+        "offscreen": [
+          198,
+          195
+        ],
+        "posMismatch": [
+          6,
+          3
+        ],
+        "tinyButtons": [
+          104,
+          89
+        ],
+        "small": [
+          1242,
+          1223
+        ],
+        "clipped": [
+          63,
+          42
+        ],
+        "newIssues": [],
+        "posMismatchAfter": [
+          "persistent-status-bar want=sticky got=relative"
+        ]
+      }
+    },
+    "naturalPlay": {
+      "worktreeHead": "2ffbded88e58fa61013363902346882f5116cfb1",
+      "paths": 5,
+      "seedsPerPath": 48,
+      "runsPerSeed": 4,
+      "identicalToWave65Measurement": 240,
+      "differing": 0,
+      "violations": 0,
+      "ignoredFields": [
+        "stops.wallSeconds",
+        "snapTaken"
+      ]
+    },
+    "snapshots": 9600
+  },
+  "screens": {
+    "widths": [
+      375,
+      390,
+      430
+    ],
+    "stage1Screens": {
+      "perWidth": 24,
+      "total": 72
+    },
+    "stage2Screens": {
+      "total": 65,
+      "surfaces": "field HUD, archive 9 tabs (+ scrolled), event, combat, post-combat"
+    },
+    "metrics": [
+      "documentOverflow",
+      "offscreen",
+      "textBelow11px",
+      "buttonsBelow44px",
+      "clippedText",
+      "positionUtilityMismatch"
+    ]
+  },
+  "defectsFixed": [
+    {
+      "id": 1,
+      "name": "post-combat card was in-flow (relative) instead of fixed bottom overlay; shifted 12px right, 4px clipped; 8-10px labels",
+      "widths": [
+        375,
+        390,
+        430
+      ],
+      "cause": ".panel-noise declared after tailwind utilities overrides .fixed"
+    },
+    {
+      "id": 2,
+      "name": "route chip and recommended region name collapsed into one character per line",
+      "widths": [
+        375,
+        390
+      ]
+    },
+    {
+      "id": 3,
+      "name": "two-character player name truncated to one character in HUD",
+      "widths": [
+        375
+      ]
+    },
+    {
+      "id": 4,
+      "name": "map/move buttons 40px wide, combat log toggle 32px tall",
+      "widths": [
+        375,
+        390,
+        430
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Korean words broken mid-word (e.g. 진/행, 모닥/불)",
+      "widths": [
+        375,
+        390,
+        430
+      ],
+      "fix": "body word-break: keep-all + overflow-wrap: anywhere"
+    }
+  ],
+  "checks": {
+    "newE2eFiles": 1,
+    "newE2eTests": 6,
+    "mutations": [
+      {
+        "name": "m1-fixed",
+        "red": 3,
+        "passed": 3
+      },
+      {
+        "name": "m2-cardtext",
+        "red": 3,
+        "passed": 3
+      },
+      {
+        "name": "m3-chip",
+        "red": 2,
+        "passed": 4
+      },
+      {
+        "name": "m4-name",
+        "red": 1,
+        "passed": 5
+      },
+      {
+        "name": "m5-mapbtn",
+        "red": 3,
+        "passed": 3
+      },
+      {
+        "name": "m6-logtoggle",
+        "red": 3,
+        "passed": 3
+      },
+      {
+        "name": "m7-keepall",
+        "red": 5,
+        "passed": 1
+      },
+      {
+        "name": "m8-wraponly",
+        "red": 1,
+        "passed": 5
+      }
+    ],
+    "full": {
+      "command": "scratchpad gate.sh (type-check, lint, unit, build:guard, CI-env build, preview, e2e 2 shards, perf desktop/mobile)",
+      "unitTests": 5854,
+      "unitPassed": 5854,
+      "unitFailed": 0,
+      "unitSkipped": 0,
+      "e2eShards": [
+        75,
+        71
+      ],
+      "perfFcpMs": {
+        "desktop": 568,
+        "mobile": 464
+      }
+    }
+  },
+  "naturalPlay": {
+    "story86to87": "all 240 seeds claim 86 and 87 in run 1; median gap 0.06-0.12 model hours; deaths while 87 active: 1 total",
+    "ascensionScreenSeeds": 240,
+    "trueEnding": "not exercised by the driver (ascends at first demon-king kill, no shard tracking)"
+  },
+  "ownerQuestions": [
+    "Skill cooldowns carry into the next combat (92.1% of 9,600 idle snapshots hold a cooldown, 1-10 turns); rest/return does not clear them"
+  ],
+  "remaining": [
+    "Physical iPhone screen and lifecycle QA (owner device)",
+    "Native cap sync / Android debug / iOS unsigned build: not run (no Android SDK or Xcode in this Linux container)",
+    "font-fira Korean monospace spacing seen on Linux Chromium; check on iPhone",
+    "Archive secondary controls below 44px (filters 30px, quick-slot assign 24px)",
+    "Release signing and submission"
+  ]
+}

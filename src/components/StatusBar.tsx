@@ -215,7 +215,8 @@ const StatusBar = ({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div data-testid="status-player-summary" className="flex min-w-0 flex-1 items-baseline gap-1 font-readable">
-              <span className="max-w-[6.5rem] shrink truncate text-[14px] font-semibold leading-tight text-white/96">{player.name}</span>
+              {/* 2026-10 제품 통합 수용: 이름이 지역과 함께 줄어 375px에서 두 글자 이름이 "용…"이 됐다 — 이름은 상한(6.5rem)까지 줄지 않고 지역이 줄어든다. */}
+              <span className="max-w-[6.5rem] shrink-0 truncate text-[14px] font-semibold leading-tight text-white/96">{player.name}</span>
               <span className="shrink-0 text-[10px] text-slate-300/82">{player.job}</span>
               <span className="shrink-0 text-[10px] text-[#cfc4ee]">레벨 {player.level}</span>
               <span aria-hidden="true" className="shrink-0 text-slate-500">·</span>

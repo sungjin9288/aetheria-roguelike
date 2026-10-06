@@ -308,9 +308,13 @@ const MapSignalStrip = ({
             <span className="sr-only">현재 위치에서 추천 경로</span>
             <Route size={14} className="justify-self-center text-[#b9f1ec]" />
           </div>
-          <div className="mt-1 flex min-w-0 items-center justify-center gap-1.5">
-            <SignalBadge tone="recommended" size="sm">{routeBadge}</SignalBadge>
-            <span className="aether-type-body min-w-0 font-readable font-semibold text-[#dff7f5]">{routeName}</span>
+          <div className="mt-1 flex min-w-0 flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5">
+            {/* 2026-10 제품 통합 수용: 좁은 폭에서 칩과 지역 이름이 함께 줄어 "추천" · "암흑 성"이 세로로 한 글자씩 꺾였다.
+                칩은 줄지 않고, 한 줄에 안 들어가면 지역 이름이 다음 줄로 내려간다. */}
+            <span className="shrink-0 whitespace-nowrap">
+              <SignalBadge tone="recommended" size="sm">{routeBadge}</SignalBadge>
+            </span>
+            <span className="aether-type-body min-w-0 text-center font-readable font-semibold text-[#dff7f5]">{routeName}</span>
           </div>
         </div>
 
@@ -320,7 +324,7 @@ const MapSignalStrip = ({
               type="button"
               data-testid="control-map-open"
               onClick={openMap}
-              className="aether-type-meta min-h-[44px] rounded-[0.85rem] border border-[#7dd4d8]/26 bg-black/22 px-2 font-fira font-bold uppercase tracking-normal text-[#dff7f5]"
+              className="aether-type-meta min-h-[44px] min-w-[44px] rounded-[0.85rem] border border-[#7dd4d8]/26 bg-black/22 px-2 font-fira font-bold uppercase tracking-normal text-[#dff7f5]"
             >
               지도
             </button>
@@ -330,7 +334,7 @@ const MapSignalStrip = ({
             data-testid="control-route-open"
             disabled={isAiThinking || !recommendedRoute}
             onClick={openRoute}
-            className="aether-type-meta min-h-[44px] rounded-[0.85rem] border border-[#d5b180]/28 bg-[#d5b180]/12 px-2 font-fira font-bold uppercase tracking-normal text-[#f6e7c8] disabled:opacity-45"
+            className="aether-type-meta min-h-[44px] min-w-[44px] rounded-[0.85rem] border border-[#d5b180]/28 bg-[#d5b180]/12 px-2 font-fira font-bold uppercase tracking-normal text-[#f6e7c8] disabled:opacity-45"
           >
             이동
           </button>
