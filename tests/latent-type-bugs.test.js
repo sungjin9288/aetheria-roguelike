@@ -58,9 +58,14 @@ test('H5(a): uid를 모르면(오프라인·인증 전) 목록을 그대로 둔�
 test('H5(a): 내 묘비 제외는 player.uid가 아니라 세션 uid를 쓴다 (Wave 70: 공개 목록 화면 → 다른 차원의 묘비 풀)', async () => {
     // 2026-10 Wave 70: 공개 묘비 목록 화면(GravePanel)은 없어졌고, 세션 uid는 풀을 채우는 훅과 탐험 액션 deps로 간다.
     //   후보 선택이 세션 uid를 빼는 행동은 tests/dimension-grave-event-contract.test.js가 실제 함수로 확인한다.
+    //   최종 통합 수용: 풀 조회는 `platform/publicGraveFirestore.ts`의 `readDimensionGravePool`로 옮겼고, 자기 묘비가
+    //   빠지는지는 tests/firestore-rules-semantics.test.js가 에뮬레이터에서 같은 함수로 확인한다.
     const pool = stripComments(await readSrc('src/hooks/useDimensionGravePool.ts'));
     assert.doesNotMatch(pool, /player\?\.uid|player\.uid/, 'player.uid는 존재하지 않는 필드');
-    assert.match(pool, /excludeOwnGraves\(fetched, uid\)/);
+    assert.match(pool, /readDimensionGravePool\(firestore, uid\)/, '훅은 세션 uid를 풀 조회에 넘긴다');
+    const read = stripComments(await readSrc('src/platform/publicGraveFirestore.ts'));
+    assert.doesNotMatch(read, /player\?\.uid|player\.uid/);
+    assert.match(read, /excludeOwnGraves\(fetched, uid\)/);
 
     const engine = await readSrc('src/hooks/useGameEngine.ts');
     assert.match(engine, /useDimensionGravePool\(uid\)/, '엔진 세션 uid가 풀 훅까지 내려온다');
