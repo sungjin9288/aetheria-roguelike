@@ -1,0 +1,407 @@
+{
+  "date": "2026-10-06",
+  "base": "db8ff65c5c9053a212915529efa7a267c3661d53",
+  "head": "1b55853422ec42689b51015e5b02362a83a68f62",
+  "scope": "Wave 69 baseline acceptance on the PR #105 merge tree, then Wave 70: dimension grave exploration event (owner decision) and rewarded ad out of launch scope (owner decision)",
+  "fixtureBoundary": "Natural play: out-of-repo driver, 5 job paths x 48 seeds x 4 ascension runs, offline (empty grave pool). Screens: Chromium iPhone 12 emulation on Linux, mock runtime with the QA seed API. Not physical-device acceptance; the live Firestore grave pool is not exercised here.",
+  "wave69Baseline": {
+    "naturalPlay": {
+      "worktreeHead": "953c261c854a9dadf43c132a684eef916c7d8264",
+      "mergeTreeIdentical": {
+        "merge": "db8ff65c",
+        "tree": "5d34d9fa21ae960c85738fda9b38441120c663a2"
+      },
+      "seeds": 240,
+      "identicalToWave66Measurement": 240,
+      "violations": 0,
+      "ignoredFields": [
+        "stops.wallSeconds",
+        "snapTaken"
+      ]
+    },
+    "tour": {
+      "widths": [
+        375,
+        390,
+        430
+      ],
+      "comparedTo": "Wave 68 tour (shots-w68)",
+      "A": {
+        "screens": [
+          72,
+          72
+        ],
+        "docOverflow": [
+          0,
+          0
+        ],
+        "offscreen": [
+          276,
+          276
+        ],
+        "posMismatch": [
+          6,
+          6
+        ],
+        "tinyButtons": [
+          0,
+          0
+        ],
+        "small": [
+          836,
+          836
+        ],
+        "clipped": [
+          27,
+          27
+        ],
+        "monoHangul": [
+          480,
+          480
+        ],
+        "fontProbe": {
+          "screens": 72,
+          "probedElements": 450,
+          "firaUsedElements": 77,
+          "spaceInCode": 0,
+          "families": {
+            "WenQuanYi Zen Hei": 1519,
+            "Liberation Sans": 305,
+            "Fira Code Light": 255
+          }
+        },
+        "tinyAfter": [],
+        "clippedAfterDistinct": [
+          "intro-mobile-name:제라드",
+          "span:원정 임무 구성",
+          "span:현재 위치에서 추천 경로",
+          "intro-mobile-name:실베르",
+          "intro-mobile-name:리베아"
+        ],
+        "posMismatchAfter": [
+          "persistent-status-bar:제라드전투 중레벨 1생명 177/177기력 52/52교전 대상거대 사슴벌 want=sticky got=relative",
+          "persistent-status-bar:제라드전투 중레벨 1생명 148/177기력 52/52✦ -15교전 대상거 want=sticky got=relative",
+          "persistent-status-bar:실베르전투 중레벨 1생명 177/177기력 52/52교전 대상거대 사슴벌 want=sticky got=relative",
+          "persistent-status-bar:실베르전투 중레벨 1생명 148/177기력 52/52✦ -15교전 대상거 want=sticky got=relative",
+          "persistent-status-bar:리베아전투 중레벨 1생명 177/177기력 52/52교전 대상거대 사슴벌 want=sticky got=relative",
+          "persistent-status-bar:리베아전투 중레벨 1생명 148/177기력 52/52✦ -15교전 대상거 want=sticky got=relative"
+        ]
+      },
+      "B": {
+        "screens": [
+          68,
+          68
+        ],
+        "docOverflow": [
+          0,
+          0
+        ],
+        "offscreen": [
+          272,
+          272
+        ],
+        "posMismatch": [
+          3,
+          3
+        ],
+        "tinyButtons": [
+          0,
+          2
+        ],
+        "small": [
+          1229,
+          1232
+        ],
+        "clipped": [
+          31,
+          31
+        ],
+        "monoHangul": [
+          1029,
+          1025
+        ],
+        "fontProbe": {
+          "screens": 68,
+          "probedElements": 450,
+          "firaUsedElements": 180,
+          "spaceInCode": 0,
+          "families": {
+            "WenQuanYi Zen Hei": 2263,
+            "Fira Code Light": 610,
+            "Liberation Sans": 751,
+            "Unifont": 9
+          }
+        },
+        "tinyAfter": [
+          "B02-archive-inventory@390 quick-slot-assign-2:3 44x44",
+          "B02-archive-inventory@430 quick-slot-assign-0:1 44x44"
+        ],
+        "clippedAfterDistinct": [
+          "status-location:어둠의 지하 감옥",
+          "span:현재 위치에서 추천 경로"
+        ],
+        "posMismatchAfter": [
+          "persistent-status-bar:용사전투 중레벨 44생명 3795/3795기력 1186/1462교전 대상 want=sticky got=relative"
+        ]
+      }
+    },
+    "renderedFontProbe": {
+      "method": "CDP CSS.getPlatformFontsForNode on every visible code-font element whose own text has Hangul; flagged when Fira glyphs exceed non-space code-range characters (ligatures only lower that count)",
+      "discrimination": [
+        "BASE {\"probed\":4,\"firaUsed\":0,\"spaceInCode\":0,\"families\":{\"WenQuanYi Zen Hei\":13,\"Liberation Sans\":2}}",
+        "woff2 /assets/fira-code-latin-wght-normal-CHoedHDv.woff2",
+        "SPACE-IN-FIRA {\"probed\":4,\"firaUsed\":2,\"spaceInCode\":2,\"sample\":[\"원정 준비 fira=1 code=0\",\"출발 가능 fira=1 code=0\"],\"families\":{\"WenQuanYi Zen Hei\":13,\"Fira Code Light\":2}}"
+      ]
+    }
+  },
+  "ownerDecisions": [
+    {
+      "topic": "rewarded ad (return supply)",
+      "decision": "결제처럼 반응 보고 결정 — out of launch scope; code unchanged and off unless the Toss build sets the ad group id"
+    },
+    {
+      "topic": "grave invasion",
+      "decision": "이벤트식으로 발생하는 이벤트 — 다른 차원의 묘비 침공 이벤트; invade = real fight with the shade; real player graves only"
+    }
+  ],
+  "wave70": {
+    "contracts": {
+      "unit": "tests/dimension-grave-event-contract.test.js (16)",
+      "e2e": "tests/e2e/dimension-grave-event.spec.ts (1)",
+      "launch": "tests/launch-no-payment-contract.test.js +1 (ad group id absent from tracked build config)",
+      "migratedLegacyGuards": [
+        "game-capabilities",
+        "grave-cycle",
+        "cycle-100-199",
+        "latent-type-bugs H5(a)",
+        "observation-sweep ③"
+      ]
+    },
+    "faultInjection": {
+      "allRed": true,
+      "mutations": [
+        {
+          "name": "adGroupInWorkflow",
+          "failed": 1,
+          "passed": 3
+        },
+        {
+          "name": "dailyLimitIgnored",
+          "failed": 2,
+          "passed": 14
+        },
+        {
+          "name": "noVictorySettlement",
+          "failed": 1,
+          "passed": 15
+        },
+        {
+          "name": "ownGraveIncluded",
+          "failed": 2,
+          "passed": 14
+        },
+        {
+          "name": "portraitByName",
+          "failed": 1,
+          "passed": 15
+        },
+        {
+          "name": "prayOverMax",
+          "failed": 1,
+          "passed": 15
+        },
+        {
+          "name": "rewardForgedCopy",
+          "failed": 1,
+          "passed": 15
+        },
+        {
+          "name": "rngBeforeCandidates",
+          "failed": 1,
+          "passed": 15
+        },
+        {
+          "name": "shadeMayBeBoss",
+          "failed": 1,
+          "passed": 15
+        },
+        {
+          "name": "trustGraveItemName",
+          "failed": 1,
+          "passed": 15
+        }
+      ],
+      "initiallySurvived": [
+        "rngBeforeCandidates",
+        "trustGraveItemName",
+        "shadeMayBeBoss",
+        "prayOverMax"
+      ]
+    },
+    "preFeatureExploreGolden": {
+      "measuredOn": "953c261c (Wave 69) and this code",
+      "cases": [
+        {
+          "loc": "고요한 숲",
+          "rngCalls": 10,
+          "result": "combat, enemy maxHp 158"
+        },
+        {
+          "loc": "서쪽 평원",
+          "rngCalls": 6,
+          "result": "idle"
+        }
+      ]
+    },
+    "screens": [
+      {
+        "name": "D01-dimension-grave-event",
+        "width": 375,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": []
+      },
+      {
+        "name": "D02-shade-combat",
+        "width": 375,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": []
+      },
+      {
+        "name": "D03-after-victory",
+        "width": 375,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 8,
+        "clipped": [
+          "span:현재 위치에서 추천 경로"
+        ]
+      },
+      {
+        "name": "D01-dimension-grave-event",
+        "width": 390,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": []
+      },
+      {
+        "name": "D02-shade-combat",
+        "width": 390,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": []
+      },
+      {
+        "name": "D03-after-victory",
+        "width": 390,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 9,
+        "clipped": [
+          "span:현재 위치에서 추천 경로"
+        ]
+      },
+      {
+        "name": "D01-dimension-grave-event",
+        "width": 430,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": []
+      },
+      {
+        "name": "D02-shade-combat",
+        "width": 430,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 4,
+        "clipped": []
+      },
+      {
+        "name": "D03-after-victory",
+        "width": 430,
+        "docOverflow": 0,
+        "tinyButtons": 0,
+        "small": 9,
+        "clipped": [
+          "span:현재 위치에서 추천 경로"
+        ]
+      }
+    ],
+    "rewardSnapshots": [
+      {
+        "width": 375,
+        "item": "전투도끼",
+        "catalogVal": 25,
+        "forgedVal": 2500,
+        "rewardVals": [
+          25
+        ],
+        "metToday": 1
+      },
+      {
+        "width": 390,
+        "item": "전투도끼",
+        "catalogVal": 25,
+        "forgedVal": 2500,
+        "rewardVals": [
+          25
+        ],
+        "metToday": 1
+      },
+      {
+        "width": 430,
+        "item": "전투도끼",
+        "catalogVal": 25,
+        "forgedVal": 2500,
+        "rewardVals": [
+          25
+        ],
+        "metToday": 1
+      }
+    ],
+    "naturalPlay": {
+      "worktreeHead": "d580e0f11a669e327ce66fc9f7b5a9e36376d40c",
+      "paths": 5,
+      "seedsPerPath": 48,
+      "runsPerSeed": 4,
+      "identicalToWave66Measurement": 240,
+      "differing": 0,
+      "violations": 0,
+      "graveEventFired": 0,
+      "note": "the driver passes no grave pool (offline); later src commits change only event-card text unreachable offline"
+    }
+  },
+  "gate": {
+    "command": "scratchpad gate.sh (type-check, lint, unit, build:guard, CI-env build, preview, e2e 2 shards, perf desktop/mobile)",
+    "unitTests": 5883,
+    "unitPassed": 5883,
+    "unitFailed": 0,
+    "unitSkipped": 0,
+    "unitFiles": 428,
+    "e2eShards": [
+      78,
+      75
+    ],
+    "perfFcpMs": {
+      "desktop": 704,
+      "mobile": 476
+    },
+    "trackedEvidenceVerify": 15,
+    "rewrittenEvidence": [
+      "progression-diagnostic-v2 (source hash)",
+      "relic-event-chance (eventReward authority hash)",
+      "equipment-combat-power (constants.ts hash)"
+    ]
+  },
+  "remaining": [
+    "Live frequency of the dimension grave event depends on the public grave count after launch (driver and simulator are offline)",
+    "Physical iPhone screen and lifecycle QA (owner runbook)",
+    "Native builds and release signing are separate release steps"
+  ]
+}
