@@ -153,6 +153,7 @@ test('후보: 유품은 카탈로그 이름만 남는다 — 위조된 수치 ·
     assert.equal(resolveCatalogItemName({ ...CATALOG_WEAPON, val: 999_999 }), CATALOG_WEAPON.name);
     assert.equal(resolveCatalogItemName({ ...CATALOG_MATERIAL }), CATALOG_MATERIAL.name);
     assert.equal(resolveCatalogItemName({ name: '존재하지 않는 검', type: 'weapon', val: 1 }), null);
+    assert.equal(resolveCatalogItemName({ name: '존재하지 않는 재료', type: 'mat' }), null, '장비가 아닌 위조 이름');
     assert.equal(resolveCatalogItemName(null), null);
 
     const candidate = toDimensionGraveCandidate(otherGrave({
@@ -210,6 +211,30 @@ test('풀이 없거나 비었거나 내 묘비뿐이면 탐험은 이 기능의 
         { getDimensionGraves: () => [otherGrave({ items: [] })] },
     ]) {
         assert.deepEqual(await run(extraDeps), without);
+    }
+});
+
+test('풀이 없을 때의 탐험은 이 기능 이전 코드와 같다 — 난수 호출 수 · 결과를 기능 이전(953c261c)에서 잰 값으로 고정', async () => {
+    // 같은 시나리오를 기능 이전 작업 트리(main 953c261c = Wave 69)와 이 코드에서 돌려 같은 값을 얻었다(원장 §72).
+    //   위 테스트는 "풀 없음 = 빈 풀"을 비교하므로 두 경우에 같은 난수를 더 쓰는 결함을 못 본다 — 이 고정값이 그것을 잡는다.
+    //   탐험 경로가 다른 이유로 바뀌면 이 값을 그 변경의 근거와 함께 다시 잰다.
+    const cases = [
+        { loc: '고요한 숲', values: [0.9, 0.5, 0.3, 0.7, 0.2, 0.8, 0.6, 0.4, 0.1, 0.95], expected: { calls: 10, gameState: GS.COMBAT, enemyMaxHp: 158 } },
+        { loc: '서쪽 평원', values: [0.95, 0.9, 0.85, 0.1, 0.5, 0.5, 0.5], expected: { calls: 6, gameState: GS.IDLE, enemyMaxHp: null } },
+    ];
+    for (const { loc, values, expected } of cases) {
+        const state = baseState({}, {});
+        const moved = startExpedition({ ...state.player, activeExpedition: null, loc, stats: { ...state.player.stats, explores: 5, visitedMaps: ['시작의 마을', loc] } }, loc, NOW, QUESTS);
+        const start = { ...state, player: { ...moved, stats: { ...moved.stats, explores: 6, exploreState: { sinceNarrativeEvent: 3 } } } };
+        for (const extraDeps of [{}, { getDimensionGraves: () => [] }]) {
+            const rng = sequence(...values);
+            const after = await explore(start, rng, extraDeps);
+            assert.deepEqual(
+                { calls: rng.calls, gameState: after.gameState, enemyMaxHp: after.enemy?.maxHp ?? null },
+                expected,
+                `${loc} ${Object.keys(extraDeps).join(',') || 'no-pool'}`,
+            );
+        }
     }
 });
 
@@ -272,6 +297,19 @@ test('침공: 그 지역 일반 종(보스 제외)의 정예급 망령과 실제
     }
 });
 
+test('침공의 망령은 보스 종이 아니다 — 조우 목록에 보스가 섞인 지역(용의 둥지)에서도', async () => {
+    const DRAGON = '용의 둥지';
+    const bosses = DB.MAPS[DRAGON].monsters.filter((name) => isEncounterBoss(name, DB.MAPS[DRAGON]));
+    assert.ok(bosses.length > 0, '전제: 조우 목록에 보스 종이 있다');
+    const opened = await openGrave([otherGrave()], baseState({}, { loc: DRAGON }));
+    assert.equal(opened.currentEvent?.isDimensionGrave, true);
+    for (const roll of [0, 0.25, 0.5, 0.75, 0.99]) {
+        const fight = choose(opened, 0, () => roll);
+        assert.equal(fight.enemy.isBoss, false, `roll ${roll}: ${fight.enemy.baseName}`);
+        assert.ok(!bosses.includes(fight.enemy.baseName));
+    }
+});
+
 test('이기면 유품을 받는다 — 카탈로그 수치로(위조된 수치가 아니다), 저장 · 복원을 넘어도', async () => {
     const fight = choose(await openGrave(), 0);
     for (const state0 of [fight, JSON.parse(JSON.stringify(fight))]) {
@@ -315,7 +353,9 @@ test('기도: 실효 최대 생명의 10%를 모자란 만큼까지 회복하고
 
     const nearFull = await openGrave([otherGrave()], baseState({}, { hp: 0 }));
     const fullHp = { ...nearFull, player: { ...nearFull.player, hp: getEffectiveMaxHp(nearFull.player) - 3 } };
-    assert.equal(choose(fullHp, 1).player.hp, getEffectiveMaxHp(fullHp.player), '최대를 넘지 않는다');
+    const topped = choose(fullHp, 1);
+    assert.equal(topped.player.hp, getEffectiveMaxHp(fullHp.player), '최대를 넘지 않는다');
+    assert.ok(topped.logs.some((log) => log.text === MSG.DIMENSION_GRAVE_PRAY_LOG('방랑자', 3)), '로그는 실제 회복량(3)을 말한다');
 
     const left = choose(opened, 2);
     assert.equal(left.gameState, GS.IDLE);
