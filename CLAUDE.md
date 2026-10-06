@@ -135,7 +135,7 @@ src/
     └── commandParser.ts       # 명령어 파싱
 tests/                # 단위 테스트 (Node.js built-in test, 424 파일 / 5,854 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
-                      #   + e2e/ (Playwright 50 스펙 / 140 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
+                      #   + e2e/ (Playwright 51 스펙 / 146 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 functions/api/        # Cloudflare Pages Functions (ai-proxy.js)
 android/ ios/         # Capacitor 네이티브 프로젝트
@@ -242,6 +242,7 @@ npm run mobile:doctor     # Capacitor 환경 점검
 - **임무 진행도는 목표에서 멈춘다 — 레벨 임무 포함**(Wave 32): 모든 유형이 `latch`(내려가지 않고 목표에서 멈춘다)다. 레벨 임무만 `player.level`을 그대로 쓰던 동안 101('레벨 45 달성')을 Lv46에서 받으면 46/45였다(자연 플레이 드라이버의 `questProgressOverGoal`). **현상수배는 "진행 중 하나, 완료하면 바로 다음"이다**(Wave 32 소유자 결정) — 카탈로그 임무가 계정당 1회라 계승 뒤 유일한 반복 게시판 콘텐츠다. `stats.bountyDate`/`bountyIssued`는 마지막 발급 기록이지 게이트가 아니다. `tests/level-quest-progress-cap.test.js` · `bounty-continuous-contract.test.js`
 - **임무마다 자기 목표가 있다**(Wave 64, 소유자 결정 "동일하면 안 됨 — 각각의 목표가 있어야지"): 목표(종류 · 대상 · 지역 · 횟수 · 문턱 · 빌드)가 같은 임무 쌍은 0이다 — 보상 · 제목 · 수락 레벨만 다른 두 임무는 같은 행동으로 함께 끝나므로 같은 임무다. 154 · 30 · 32 · 64가 151 · 100 · 83 · 200과 그랬다(154 = 종말의 전장 파멸의 기사 10명 · 30 = 기계 폐도 프로토타입 제로 · 32 = 마녀 3회 · 64 = 누적 골드 10만). 구역 보스(어느 조우 풀에도 없는 지역 `boss`)를 목표로 하는 임무는 1회다(여정당 한 번 나온다). 목표를 새로 정한 30은 수락 레벨을 목표 지역의 경로 게이트에 맞췄다(기계 폐도 선언 28 · 경로 35 — 기존 20개는 Wave 28 표시 규칙 그대로). 누적 골드 임무(`gold_earned`, `stats.total_gold`)는 `grantGold`가 그 자리에서 진행시킨다 — 마을 수입으로 목표를 넘겨도 다음 탐험 · 전투를 기다리지 않는다(Wave 61 제작 임무와 같은 결함 종류). 새 평생 기록 임무 종류는 `getLifetimeCounterReader` · 도달 비용 시스템 대상 · 추적기 문구(`MSG`)에 함께 넣을 것. `tests/quest-distinct-objective-contract.test.js`
 - **같은 일을 하는 두 경로는 같은 판정을 읽는다 — 원장 §61.5 남은 관찰**(Wave 65): 로컬 폴백 풀의 저작 이벤트(모든 선택지에 손으로 쓴 결과)는 저작 선택지 그대로다 — `buildEventPackage`가 지역 선택지로 셋째 칸을 채우던 동안 그 칸의 절차적 보상이 손으로 쓴 결과보다 컸다(2지선다 12개 · Lv40 362 대 55 ~ 355). 출처는 호출자 권한(`context.source`)이고 모델 이벤트 · 결과 없는 풀 항목은 지금처럼 채운다. 유물 지급은 모든 경로가 실효 최대치 내리기(`clampVitalsToEffectiveMax`)를 거친다 — 체인 직접 지급(상인의 인장)이 빠져 있었다. 침공 공격력은 `getInvasionAttackPower`(실효 공격력) 하나를 묘비 화면과 판정이 읽는다. 기술 원소는 `getSkillElement`(`systems/skillPower.ts` — `type`, 없으면 무기 원소) 하나를 엔진과 전투 예고가 읽고, 예고는 위력 기술(`isDamagingSkill`)만 약점을 말한다. 공개 묘비 `guardPower`가 저장 공격력으로 올라가는 비대칭은 rules 상한(9,999)과 얽혀 소유자 판단 거리로 남는다(원장 §66.8). `tests/observation-sweep-contract.test.js`
+- **패널 장식은 위치를 덮지 않고, 한국어는 낱말 단위로 줄바꿈한다 — 제품 통합 수용**(2026-10-06): `.panel-noise`는 `@tailwind utilities` 뒤에 선언돼 같은 요소의 `fixed`를 `relative`로 덮는다 — 전투 결과 카드가 2026-08부터 하단 고정이 아니라 흐름 안에서 12px 밀려 오른쪽이 잘렸다. 고정 패널은 `.panel-noise.fixed`가 지킨다(새 장식 클래스가 위치를 쓰면 같은 짝 규칙을 둘 것). 본문 기본값이 `word-break: keep-all` + `overflow-wrap: anywhere`다 — 칸마다 `break-keep`을 덧대지 말 것(`anywhere`가 최소 폭을 늘리지 않아 새 가로 넘침이 없다). 좁은 줄에서 칩 · 짧은 이름은 줄지 않고(`shrink-0`) 긴 쪽이 줄거나 다음 줄로 내려간다. 전투 결과 카드는 모바일 가독성 계약(11px · 44px · 가로 넘침 없음) 안이다. `tests/e2e/product-acceptance-layout.spec.ts`(375 · 390 · 430). 화면 · 회귀 · 자연 플레이 240시드를 한 SHA에 묶은 기록은 원장 §67 · `docs/evidence/qa/product-acceptance-20261006/receipt.json`.
 
 ---
 

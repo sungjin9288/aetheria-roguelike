@@ -72,6 +72,10 @@
     color: var(--aether-ink);
     font-feature-settings: "kern" 1;
     letter-spacing: 0;
+    /* 2026-10 제품 통합 수용: 한국어는 낱말 단위로 줄바꿈한다("진/행" · "모닥/불"처럼 낱말 안에서 꺾이던 것).
+       한 낱말이 한 줄보다 길 때만 낱말 안에서 꺾는다 — `anywhere`는 최소 폭을 늘리지 않아 새 가로 넘침을 만들지 않는다. */
+    word-break: keep-all;
+    overflow-wrap: anywhere;
   }
 
   h1,
@@ -397,6 +401,12 @@
 .panel-noise {
   position: relative;
   isolation: isolate;
+}
+
+/* 2026-10 제품 통합 수용: 이 규칙은 @tailwind utilities 뒤라 같은 요소의 `fixed`를 덮는다.
+   전투 결과 카드가 하단 고정이 아니라 흐름 안에서 12px 밀려 오른쪽이 잘렸다. 고정 패널은 고정을 지킨다. */
+.panel-noise.fixed {
+  position: fixed;
 }
 
 .panel-noise > * {
