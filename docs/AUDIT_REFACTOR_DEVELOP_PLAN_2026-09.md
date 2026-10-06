@@ -5178,6 +5178,7 @@ PR #105 머지 직후 계획대로 최종 통합 수용을 시작했다. 소유�
   - 침공 — 지금 지역의 일반 종 하나(보스 종 제외)로 만든 정예급 망령(`"이름"의 망령`)과 실제 전투. 정찰 "정예의 흔적"과 같은 파이프다. 이기면 유품 하나(`applyDimensionGraveVictory` — 리듀서 승리 정산 `settleVictory` → `handleVictoryOutcome` 경로). 지거나 물러나면 유품은 없다.
   - 기도 — 실효 최대 생명의 10%를 모자란 만큼까지 회복(`healWithinMax`, 로그도 실제 회복량).
   - 지나침 — 아무 일도 없다.
+  - 망령의 정체성은 종(`baseName`)이라 처치 보상(경험 · 골드 · 전리품)과 임무 진행은 그 종의 정예와 같다(이야기 전투 · 정찰 정예와 같은 규칙). 유품은 그 위에 더해진다.
 - **남이 쓴 데이터:** 묘비 문서는 다른 플레이어가 올린다. 이름은 16자로 자르고, 지역은 아는 지역일 때만 보이며, 유품은 **카탈로그에 있는 이름만** 남긴다(장비는 바탕 장비로). 보상은 그 이름의 카탈로그 아이템이라 문서의 수치(강화 · 위조된 능력치)는 들어오지 않는다.
 - **풀:** `useDimensionGravePool`이 로그인된 온라인 세션에서 최근 공개 묘비 20개를 10분마다 읽어 `platform/dimensionGravePool`에 둔다(rules `graves`: 인증된 유저 읽기). 탐험은 `GameActionDeps.getDimensionGraves`로 읽는다 — 넘기지 않으면(테스트 · 성장 드라이버) 빈 풀이다. 죽을 때 공개 묘비를 올리는 업로드는 같은 플래그(`dimensionGraveEvent`)를 본다.
 - **없앤 것:** 공개 목록 확률 침공 — `AT.INVADE_GRAVE` · `invadeGrave` · `calcInvasionChance` · `resolveInvasion` · `getInvasionAttackPower`, 무덤 탭의 공개 목록 화면(꺼져 있어 보이지 않던 코드). 무덤 탭은 내 유해 회수만 보인다(화면은 그대로).
