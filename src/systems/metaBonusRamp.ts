@@ -7,7 +7,8 @@ import { getPrestigeUnlocks } from './prestigeUnlocks.js';
  *
  * 계승으로 넘어온 영구 스탯(정수 사다리 · 첫 죽음 · 계승 보상)이 Lv1부터 전부 적용되던 동안, 계승 런은 사망이 원래 나는
  * 초반을 통째로 건너뛰었다(16시드 × 계승 4회에서 2·3회차 사망 0). 이제 영구 스탯은 레벨이 `META_BONUS_FULL_LEVEL`에
- * 닿을 때까지 비례해서 적용되고, 계승 rank마다 적의 전투 레벨이 그 레벨에 비례해 오른다(상한 있음, 보상 · 표시 레벨은 그대로).
+ * 닿을 때까지 비례해서 적용되고, 계승 rank마다 적의 전투 레벨이 그 레벨에 비례해 오른다(보상 · 표시 레벨은 그대로). 오르는 비율은
+ * 계승할 때마다 커지고 오르는 폭은 줄어든다(Wave 73 — 상한 30%에서 멈추던 것을 대체).
  *
  * 영구 공격력은 `calculateFullStats`가 매번 더하므로(Wave 32) 여기의 비율을 곱하면 끝이다. 영구 생명 · 기력은 저장된
  * `maxHp`/`maxMp`에 구워지므로, 재구성(새 게임 · 전직 · 사망 재시작) 때 **전체량 스냅숏**을 남기고 그 × 비율만 굽는다.
@@ -65,10 +66,13 @@ export const getMetaVitalsLevelUpDelta = (
     return { hp: Math.max(0, after.hp - before.hp), mp: Math.max(0, after.mp - before.mp) };
 };
 
-/** 계승 rank만큼 오르는 적 전투 레벨의 비율(상한 있음). */
-export const getPrestigeEnemyLevelRate = (prestigeRank: unknown): number => Math.min(
-    BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_MAX,
-    Math.floor(nonNegative(prestigeRank)) * BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_PER_RANK,
+/**
+ * 계승 rank만큼 오르는 적 전투 레벨의 비율 — 계승할 때마다 오르고 오르는 폭은 줄어든다(Wave 73).
+ * `LIMIT × (1 − DECAY^rank)`: rank 0은 0이고, rank가 오를수록 커지며, `LIMIT`을 넘지 않는다.
+ */
+export const getPrestigeEnemyLevelRate = (prestigeRank: unknown): number => (
+    BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_LIMIT
+    * (1 - BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_DECAY ** Math.floor(nonNegative(prestigeRank)))
 );
 
 /** 계승 rank만큼 오르는 적의 전투 레벨 — 그 적 레벨에 비례한다(생명 · 공격력 · 방어력에만 쓴다). */

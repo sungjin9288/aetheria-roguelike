@@ -43,7 +43,7 @@ test('prestige: rank0 → 스케일링 없음 (기본 곡선 불변)', () => {
 });
 
 test('prestige: rank5 → 적 hp/atk/def가 곱연산 스케일', () => {
-    // 2026-09 Wave 40: 곱연산은 계승 rank만큼 오른 전투 레벨(레벨의 +10%/rank, 상한 +30%) 위에 걸린다.
+    // 2026-09 Wave 40: 곱연산은 계승 rank만큼 오른 전투 레벨 위에 걸린다(비율은 Wave 73부터 rank마다 오르고 폭이 줄어드는 곡선).
     const r0 = spawnAt(20 + getPrestigeEnemyLevelBonus(5, 20), 0);
     const r5 = spawnAt(20, 5);
     const m = 1 + 5 * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK;

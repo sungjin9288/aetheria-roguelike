@@ -27,10 +27,10 @@ import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 const FULL = BALANCE.META_BONUS_FULL_LEVEL;
 const RANK_META = { prestigeRank: 1, bonusAtk: 120, bonusHp: 600, bonusMp: 360 };
 
-test('[상수] 영구 스탯은 Lv30에 전부 적용되고, 적 전투 레벨은 rank당 +10% · 상한 +30%이다', () => {
+test('[상수] 영구 스탯은 Lv30에 전부 적용되고, 적 전투 레벨 비율은 60% × (1 − 0.65^rank)이다(Wave 73)', () => {
     assert.equal(FULL, 30);
-    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_PER_RANK, 0.1);
-    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_MAX, 0.3);
+    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_LIMIT, 0.6);
+    assert.equal(BALANCE.PRESTIGE_ENEMY_LEVEL_PCT_DECAY, 0.65);
 });
 
 test('[전투 공격력] 영구 공격력은 레벨에 비례해 더해지고 Lv30부터 전부다', () => {
@@ -132,8 +132,8 @@ test('[적 레벨 가산] 계승 rank만큼 적의 생명 · 공격력 · 방어
     const statMult = (rank) => 1 + rank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK;
     const rewardMult = (rank) => 1 + rank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK;
     const base = spawnAt(0);
-    // 용의 둥지 Lv25: rank 1 → +3(10%, 반올림), rank 2 → +5, rank 3 → +8, rank 7 → +8(상한 30%).
-    for (const [rank, bonus] of [[1, 3], [2, 5], [3, 8], [7, 8]]) {
+    // 용의 둥지 Lv25(반올림): rank 1 → +5(21%), rank 2 → +9(34.7%), rank 3 → +11(43.5%), rank 7 → +14(57.1%) — Wave 73.
+    for (const [rank, bonus] of [[1, 5], [2, 9], [3, 11], [7, 14]]) {
         const enemy = spawnAt(rank);
         const shifted = spawnAt(0, map.level + bonus);
         assert.equal(enemy.level, map.level, `rank ${rank}: 표시 레벨`);
@@ -157,8 +157,8 @@ test('[초반 지역 보호] 비례 가산이라 Lv1~4 적은 rank 3에서도 �
 
 test('[계승 화면] 다음 세계의 적 레벨 가산과 영구 스탯 연동을 알린다', () => {
     const outcome = getAscensionOutcome({ prestigeRank: 1 });
-    assert.equal(outcome.currentEnemyLevelPercent, 10);
-    assert.equal(outcome.nextEnemyLevelPercent, 20);
+    assert.equal(outcome.currentEnemyLevelPercent, 21);
+    assert.equal(outcome.nextEnemyLevelPercent, 35);
     assert.equal(outcome.metaBonusFullLevel, FULL);
     const html = renderStatic(createElement(AscensionScreen, { player: makePlayerFixture({ meta: { prestigeRank: 1 }, quests: [] }) }));
     assert.ok(html.includes('data-testid="ascension-enemy-level"'));
