@@ -181,7 +181,6 @@ export const resolveExplorationRhythmOutcomeStep = ({
     exploreState,
     policy,
     eventChanceBonus,
-    relicLimit,
     rng,
 }: {
     map: GameMap;
@@ -189,7 +188,6 @@ export const resolveExplorationRhythmOutcomeStep = ({
     exploreState: SimulatedExploreState;
     policy: ExplorationRhythmPolicy;
     eventChanceBonus: number;
-    relicLimit: number;
     rng: () => number;
 }): ExplorationRhythmOutcome => {
     const optionalAllowed = policy.minimumOrdinaryGap === 0
@@ -216,14 +214,14 @@ export const resolveExplorationRhythmOutcomeStep = ({
     const discoveryOdds = getDiscoveryOdds(player, map);
     if (rng() < discoveryOdds.quietChance) {
         if (rng() < discoveryOdds.anomalyChance) return 'anomaly';
-        if (player.relics.length < relicLimit && rng() < discoveryOdds.relicChance) return 'relic';
+        // Wave 77: 유물 칸이 가득 차도 추첨한다(실제 탐험은 교체 제안으로 연다 — `exploreFlow`와 같은 규칙).
+        if (rng() < discoveryOdds.relicChance) return 'relic';
         return 'nothing';
     }
 
     const firstRelicPity = player.relics.length === 0
         && exploreState.sinceRelic >= BALANCE.FIRST_RELIC_PITY_EXPLORES;
-    if (player.relics.length < relicLimit
-        && (firstRelicPity || rng() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
+    if (firstRelicPity || rng() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
         return 'relic';
     }
     return 'combat';
@@ -254,10 +252,10 @@ const simulateSeed = (
             exploreState,
             policy,
             eventChanceBonus,
-            relicLimit,
             rng,
         });
-        if (outcome === 'relic') {
+        // Wave 77: 칸이 가득 찬 뒤의 발견은 교체 제안이라 유물 수가 늘지 않는다.
+        if (outcome === 'relic' && player.relics.length < relicLimit) {
             player.relics.push(makeRhythmRelicStub(`rhythm-relic-${player.relics.length + 1}`));
         }
 
