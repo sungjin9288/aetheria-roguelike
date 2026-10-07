@@ -5731,4 +5731,5 @@ Wave 70 머지 SHA에서 계획한 "게임 완성" 수용을 했다. 자연 플�
 
 ### 81.5 게이트
 
-- GATE_PLACEHOLDER
+- **`8240dad0`:** type-check · lint · 단위 5,946/5,946(435파일 · skip 0) · build:guard · CI 환경 빌드 · e2e 78 + 77 · perf desktop 692ms / mobile 580ms(FCP)가 통과했다.
+- **추적 증빙 15종:** 탐험 리듬 · 유물 이벤트 확률 · 성장 진단은 이번에 다시 썼고(§81.2), 15종 모두 검증을 통과한다.
