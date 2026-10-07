@@ -5589,3 +5589,8 @@ Wave 70 머지 SHA에서 계획한 "게임 완성" 수용을 했다. 자연 플�
 ### 78.4 다음
 
 - **소유자 판단(§77.6 그대로):** 숨은 보스 원한의 용사의 지하 미궁 조우 비중 — 현행 유지 / 게이지 도전으로만 / 출현 확률을 낮춤.
+
+### 78.5 게이트
+
+- **`d562fe42`:** type-check · lint · 단위 5,935/5,935(433파일 · skip 0) · build:guard · CI 환경 빌드 · e2e 78 + 77 · perf desktop 772ms / mobile 492ms(FCP)가 통과했다.
+- **추적 증빙 15종:** relic-event-chance · progression-diagnostic · equipment-combat-power는 출처 해시만 다시 썼고(결과 해시 `424909de…` · `b2080e27…` 그대로) 나머지 12종은 그대로 통과한다.
