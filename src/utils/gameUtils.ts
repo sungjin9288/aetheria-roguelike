@@ -22,6 +22,7 @@ import { formatSkillText } from './skillPresentation.js';
 import { countDiscoveredMaps } from './discoveredMaps.js';
 import { getCodexEntryName } from './codexIdentity.js';
 import { getGoldIncome, getVisibleLocationName, type ChallengeHolder } from './challengeRules.js';
+import { getEliteTitleName, getEliteTitlePassiveLabel } from './eliteTitles.js';
 import { syncQuestProgress } from './questProgress.js';
 import {
     countDiscoveredSignatures,
@@ -144,11 +145,15 @@ export const getTitleDefinition = (token: TitleToken): TitleDef | null => TITLES
 /** 칭호 표시 이름 반환 (ID 또는 문자열 모두 지원) */
 export const getTitleLabel = (token: TitleToken) => {
     if (!token) return '';
-    return getTitleDefinition(token)?.name || String(token);
+    // 2026-10 Wave 72: 정예 목격 칭호(`elite:<지역>`)는 표에 없는 생성 칭호다 — 이름은 지역에서 만든다.
+    return getTitleDefinition(token)?.name || getEliteTitleName(token) || String(token);
 };
 
+const ELITE_TITLE_COLOR = 'text-amber-300';
 /** 칭호 색상 반환 */
-export const getTitleColor = (token: TitleToken) => getTitleDefinition(token)?.color || 'text-cyber-purple';
+export const getTitleColor = (token: TitleToken) => (
+    getTitleDefinition(token)?.color || (getEliteTitleName(token) ? ELITE_TITLE_COLOR : 'text-cyber-purple')
+);
 
 /** 칭호 패시브 메타 조회 */
 export const getTitlePassive = (token: TitleToken): TitlePassive | null => {
@@ -158,6 +163,9 @@ export const getTitlePassive = (token: TitleToken): TitlePassive | null => {
 
 /** 칭호 패시브 표시 문구 */
 export const getTitlePassiveLabel = (token: TitleToken) => {
+    // 정예 목격 칭호는 장착 패시브가 없다 — 효과는 모은 만큼 합산되므로(`sumEliteTitleBonus`) 그 칭호 하나의 몫을 보인다.
+    const eliteLabel = getEliteTitlePassiveLabel(token);
+    if (eliteLabel) return eliteLabel;
     const passive = getTitlePassive(token);
     return passive?.label ? formatSkillText(passive.label) : '패시브 없음';
 };

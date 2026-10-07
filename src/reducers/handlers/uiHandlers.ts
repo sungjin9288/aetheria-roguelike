@@ -4,6 +4,9 @@ import { sanitizeQuickSlots } from './helpers';
 import type { HandlerMap } from '../gameReducer';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
+import { MSG } from '../../data/messages';
+import { getEliteTitleBonus, recordEliteEncounter } from '../../utils/eliteTitles';
+import { formatPermanentStatBonus } from '../../utils/permanentStatSources';
 
 export const uiActionMap = {
     SET_SYNC_STATUS: (state, action) =>
@@ -84,11 +87,29 @@ export const entityActionMap = {
     SET_EVENT: (state, action) =>
         ({ ...state, currentEvent: action.payload, syncStatus: 'syncing' }),
 
-    SET_ENEMY: (state, action) => ({
-        ...state,
-        enemy: typeof action.payload === 'function' ? action.payload(state.enemy) : action.payload,
-        syncStatus: 'syncing'
-    }),
+    // 2026-10 Wave 72 (소유자 결정 "정예를 조우했다는 칭호"): 적이 나타나는 모든 경로(탐험 · 이벤트 전투 · 다른 차원의 묘비 ·
+    //   이야기 전투)가 이 전이를 지난다 — 정예면 그 지역의 정예 목격 칭호를 여기서 한 번 기록한다. 결과(승리 · 도주 · 사망)와
+    //   무관하다. 로그 id는 지역마다 한 번뿐이라 지역 이름으로 고정한다.
+    SET_ENEMY: (state, action) => {
+        const enemy = typeof action.payload === 'function' ? action.payload(state.enemy) : action.payload;
+        const recorded = recordEliteEncounter(state.player, enemy);
+        if (!recorded.unlockedMap) return { ...state, enemy, syncStatus: 'syncing' };
+        const mapName = recorded.unlockedMap;
+        return {
+            ...state,
+            enemy,
+            player: recorded.player,
+            logs: [
+                ...state.logs,
+                {
+                    id: `elite-title:${mapName}`,
+                    type: 'system',
+                    text: MSG.ELITE_TITLE_UNLOCKED(MSG.ELITE_TITLE_NAME(mapName), formatPermanentStatBonus(getEliteTitleBonus(mapName))),
+                },
+            ].slice(-BALANCE.LOG_MAX_SIZE),
+            syncStatus: 'syncing',
+        };
+    },
 
     SET_GRAVE: (state, action) =>
         ({ ...state, grave: action.payload, syncStatus: 'syncing' }),

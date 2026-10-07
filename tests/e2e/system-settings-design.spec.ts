@@ -78,11 +78,28 @@ test.describe('System settings design', () => {
         await expect(titleSection).not.toContainText(/\b(?:ATK|DEF|HP|MP|CRIT)\b/);
 
         const picker = page.getByTestId('system-title-picker');
-        await picker.locator('summary').click();
+        // 2026-10 Wave 72: 목록 안에 정예 칭호 묶음(`summary`)이 하나 더 있다 — 목록 자신의 제목줄만 누른다.
+        await picker.locator(':scope > summary').click();
         await page.getByTestId('system-title-wanderer').click();
         await expect(titleSection).toContainText('방랑자');
         await expect(titleSection).toContainText('기력 +10 · 생명 +10');
         await expect(page.getByTestId('system-title-wanderer')).toHaveAttribute('aria-pressed', 'true');
+    });
+
+    test('정예 목격 칭호는 칭호 바꾸기 안의 묶음으로 보이고, 묶음이 모은 수와 합산 효과를 말한다', async ({ page }) => {
+        // 2026-10 Wave 72 (소유자 결정): 지역마다 하나, 효과는 장착과 상관없이 모은 만큼 합산된다.
+        const picker = page.getByTestId('system-title-picker');
+        await picker.scrollIntoViewIfNeeded();
+        await picker.locator(':scope > summary').click();
+        const group = page.getByTestId('system-elite-titles');
+        await expect(group).toBeVisible();
+        await expect(group.locator('summary')).toContainText('정예 목격 칭호 2/47');
+        await expect(page.getByTestId('system-elite-titles-total')).toContainText('생명 +10');
+        const groupBox = await group.locator('summary').boundingBox();
+        expect(groupBox?.height || 0).toBeGreaterThanOrEqual(44);
+        await group.locator('summary').click();
+        await expect(page.getByTestId('system-title-elite:수정 동굴')).toContainText('수정 동굴의 정예 목격자');
+        await expect(page.getByTestId('system-title-elite:수정 동굴')).toContainText('장착하지 않아도 모은 칭호만큼 합산');
     });
 
     test('진단과 초기화는 보조 영역에서 필요할 때만 드러난다', async ({ page }) => {

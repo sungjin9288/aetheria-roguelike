@@ -32,12 +32,18 @@ export const getRampedMetaAtk = (meta: MetaSource, level: unknown): number => (
     nonNegative(meta?.bonusAtk) * getPrestigeUnlocks(meta?.prestigeRank).statMult * getMetaBonusRamp(level)
 );
 
-/** 재구성 순간의 영구 생명 · 기력 전체량(에테르 초월 배율 포함). */
-export const snapshotMetaVitals = (meta: MetaSource): MetaVitalsSnapshot => {
+type StorySource = Pick<NonNullable<Player['storyStatBonus']>, 'hp' | 'mp'> | null | undefined;
+
+/**
+ * 재구성 순간의 영구 생명 · 기력 전체량(에테르 초월 배율 포함).
+ * 2026-10 Wave 72: 영구가 된 이야기 생명 · 기력(`storyStatBonus`)도 같은 스냅숏에 실린다 — 같은 레벨 비례로 굽고, 에테르 초월
+ *   배율(계승 정수 · 첫 죽음의 영구 보너스 ×2)은 걸지 않는다.
+ */
+export const snapshotMetaVitals = (meta: MetaSource, story?: StorySource): MetaVitalsSnapshot => {
     const statMult = getPrestigeUnlocks(meta?.prestigeRank).statMult;
     return {
-        hp: nonNegative(meta?.bonusHp) * statMult,
-        mp: nonNegative(meta?.bonusMp) * statMult,
+        hp: nonNegative(meta?.bonusHp) * statMult + nonNegative(story?.hp),
+        mp: nonNegative(meta?.bonusMp) * statMult + nonNegative(story?.mp),
     };
 };
 

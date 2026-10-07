@@ -27,6 +27,8 @@ import { APP_ID, CONSTANTS, RARITY_CLASSES } from '../../data/constants';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { exportToJson } from '../../utils/fileUtils';
 import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/gameUtils';
+import { ELITE_TITLE_MAPS, splitEliteTitles, sumEliteTitleBonus } from '../../utils/eliteTitles';
+import { formatPermanentStatBonus } from '../../utils/permanentStatSources';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
 import { formatRelicText, getRelicDisplayName } from '../../utils/relicPresentation';
 import { clearErrorReports, readErrorReports } from '../../platform/localErrorReportStore';
@@ -153,6 +155,9 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         ? equipmentDetailPref
         : 'auto';
     const titles = useMemo(() => player.titles || [], [player.titles]);
+    // 2026-10 Wave 72: 정예 목격 칭호(지역마다 하나, 효과는 모은 만큼 합산)는 칭호 바꾸기 목록 안에 묶어서 보인다.
+    const titleGroups = useMemo(() => splitEliteTitles(titles), [titles]);
+    const eliteTitleTotal = useMemo(() => sumEliteTitleBonus(titles), [titles]);
     const relics = useMemo(() => player.relics || [], [player.relics]);
     const relicCapacity = getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics;
     const leaderboard = actions?.leaderboard || [];
@@ -181,6 +186,24 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             text: nextTitle ? `[${getTitleLabel(nextTitle)}] 칭호를 적용했습니다.` : '칭호 적용을 해제했습니다.',
         });
     }, [actions, player.activeTitle]);
+
+    const renderTitleButton = (id: string) => {
+        const isActive = player.activeTitle === id;
+        return (
+            <button
+                key={id}
+                type="button"
+                data-testid={`system-title-${id}`}
+                aria-pressed={isActive}
+                onClick={() => handleSetActiveTitle(id)}
+                className={`min-h-[48px] w-full border-b border-white/6 px-2 py-2 text-left last:border-b-0 ${isActive ? 'bg-[#d5b180]/8' : 'hover:bg-white/[0.03]'}`}
+            >
+                <span className={`font-readable text-xs font-bold ${getTitleColor(id)}`}>[{getTitleLabel(id)}]</span>
+                {isActive && <span className="ml-2 font-readable text-[11px] text-[#f6e7c8]">적용 중</span>}
+                <span className="mt-1 block font-readable text-[11px] leading-snug text-slate-400">{getTitlePassiveLabel(id)}</span>
+            </button>
+        );
+    };
 
     const qaContext = useMemo(() => {
         const platform = typeof navigator !== 'undefined'
@@ -587,23 +610,21 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                             <ChevronDown size={14} className="transition-transform group-open:rotate-180" />
                         </summary>
                         <div className="space-y-1 border-t border-white/8 py-2">
-                            {titles.map((id: string) => {
-                                const isActive = player.activeTitle === id;
-                                return (
-                                    <button
-                                        key={id}
-                                        type="button"
-                                        data-testid={`system-title-${id}`}
-                                        aria-pressed={isActive}
-                                        onClick={() => handleSetActiveTitle(id)}
-                                        className={`min-h-[48px] w-full border-b border-white/6 px-2 py-2 text-left last:border-b-0 ${isActive ? 'bg-[#d5b180]/8' : 'hover:bg-white/[0.03]'}`}
-                                    >
-                                        <span className={`font-readable text-xs font-bold ${getTitleColor(id)}`}>[{getTitleLabel(id)}]</span>
-                                        {isActive && <span className="ml-2 font-readable text-[11px] text-[#f6e7c8]">적용 중</span>}
-                                        <span className="mt-1 block font-readable text-[11px] leading-snug text-slate-400">{getTitlePassiveLabel(id)}</span>
-                                    </button>
-                                );
-                            })}
+                            {titleGroups.regular.map((id: string) => renderTitleButton(id))}
+                            {titleGroups.elite.length > 0 && (
+                                <details data-testid="system-elite-titles" className="group/elite border-t border-white/8">
+                                    <summary className="flex min-h-[48px] cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-0.5 py-2 font-readable text-xs font-semibold text-amber-200 [&::-webkit-details-marker]:hidden">
+                                        <span className="shrink-0">{MSG.ELITE_TITLE_GROUP(eliteTitleTotal.count, ELITE_TITLE_MAPS.length)}</span>
+                                        <span data-testid="system-elite-titles-total" className="min-w-0 flex-1 text-[11px] font-normal text-slate-400">
+                                            {MSG.ELITE_TITLE_GROUP_TOTAL(formatPermanentStatBonus(eliteTitleTotal))}
+                                        </span>
+                                        <ChevronDown size={14} className="shrink-0 transition-transform group-open/elite:rotate-180" />
+                                    </summary>
+                                    <div className="space-y-1 pb-1">
+                                        {titleGroups.elite.map((id: string) => renderTitleButton(id))}
+                                    </div>
+                                </details>
+                            )}
                         </div>
                     </details>
                 </section>

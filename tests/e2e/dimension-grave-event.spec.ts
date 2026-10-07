@@ -39,6 +39,8 @@ test.describe('다른 차원의 묘비', () => {
         const inCombat = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
         expect(inCombat.gameState).toBe('combat');
         expect(inCombat.enemy?.name).toBe(`${playerName}의 망령`);
+        // 2026-10 Wave 72: 망령은 정예다 — 마주친 순간 그 지역의 정예 목격 칭호가 기록된다(이기든 지든).
+        expect(inCombat.player?.titles).toContain(`elite:${inCombat.player?.loc}`);
 
         for (let turn = 0; turn < 6; turn += 1) {
             const state = await page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));

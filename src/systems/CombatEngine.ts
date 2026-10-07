@@ -373,7 +373,7 @@ export const CombatEngine = {
         //   (계승·새 게임과 같은 경로). 굽던 동안 사망 재시작만 영구 공격력을 두 번 받았다.
         starterState.atk = starterState.atk || 10;
         // 2026-09 Wave 40: 새 런은 Lv1이라 영구 생명 · 기력의 Lv1 연동 비율만 굽고, 전체량 스냅숏을 남긴다(레벨업이 나머지를 굽는다).
-        const metaVitalsSnapshot = snapshotMetaVitals(meta);
+        const metaVitalsSnapshot = snapshotMetaVitals(meta, permanent.storyStatBonus);
         const bakedMeta = getBakedMetaVitals(metaVitalsSnapshot, 1);
         starterState.metaVitalsSnapshot = metaVitalsSnapshot;
         starterState.maxHp = (starterState.maxHp || BALANCE.DEFAULT_MAX_HP) + bakedMeta.hp;

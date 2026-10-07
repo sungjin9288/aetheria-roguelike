@@ -563,6 +563,16 @@ export const MSG = {
     JOB_CHANGE_DONE: (jobName: string) => `${jobName} 전직 완료!`,
     BOUNTY_ACCEPTED_NEW: (target: string, count: number) => `새로운 현상수배 수락: ${target} ${count}마리`,
     TITLE_UNLOCKED: (label: string) => `새 칭호를 얻었습니다. ${label}`,
+    // 2026-10 Wave 72 (소유자 결정): 정예 목격 칭호 — 지역마다 하나, 효과는 장착과 상관없이 모은 만큼 합산된다(`utils/eliteTitles.ts`).
+    ELITE_TITLE_NAME: (mapName: string) => `${mapName}의 정예 목격자`,
+    ELITE_TITLE_PASSIVE: (bonusLabel: string) => `${bonusLabel} · 장착하지 않아도 모은 칭호만큼 합산`,
+    ELITE_TITLE_UNLOCKED: (name: string, bonusLabel: string) => `정예와 마주쳤습니다. 새 칭호 [${name}] — ${bonusLabel}(모은 정예 칭호에 합산)`,
+    ELITE_TITLE_GROUP: (count: number, total: number) => `정예 목격 칭호 ${count}/${total}`,
+    ELITE_TITLE_GROUP_TOTAL: (bonusLabel: string) => (bonusLabel ? `합산 효과 ${bonusLabel}` : '합산 효과 없음'),
+    // 능력치 화면 '계승 기록' — 영구 원천별 합(레벨 비례 전 원래 양).
+    STATS_STORY_BONUS_LABEL: '이야기 보상',
+    STATS_ELITE_TITLE_LABEL: (count: number, total: number) => `정예 목격 ${count}/${total}`,
+    STATS_PERMANENT_NONE: '없음',
     // 2026-10 Wave 61: 새 칭호는 아직 없는 칭호일 때만 알린다(`title` null) — 계승 11단계부터는 10단계의 '에테르의 신'이 다시 온다.
     ASCEND_DONE: (rank: number, title: string | null) => (title
         ? `에테르 계승 ${rank}단계에 도달했습니다. 새 칭호 '${title}'와 영구 성장이 다음 여정에 적용됩니다.`
@@ -802,8 +812,9 @@ export const MSG = {
     //   실패 선택은 진행도를 'failed'로 고정하고 사망 · 계승도 넘어가므로 "달라질 수 있음"이 아니라 끝이다.
     CHAIN_PREVIEW_PROGRESS: '이야기 진행',
     CHAIN_PREVIEW_ENDS: '이야기가 여기서 끝남 · 다시 이어지지 않음',
-    // 2026-10 Wave 62 C2: 이야기 능력치 보상은 이번 여정 범위다(`storyStatBonus` — 사망 · 계승에서 사라진다). '영구'라 부르지 않는다.
-    CHAIN_PREVIEW_STAT_BONUS: '이번 여정 능력 상승',
+    // 2026-10 Wave 72 (소유자 결정 "영구로 전환", Wave 62 C2를 대체): 이야기 능력치 보상은 영구다(`storyStatBonus` — 사망 · 계승을
+    //   넘어 남고, 다른 영구 능력치처럼 Lv30까지 레벨에 비례한다). 체인은 계정당 한 번이라 런 범위이던 동안 한 번 죽으면 영원히 잃었다.
+    CHAIN_PREVIEW_STAT_BONUS: '영구 능력 상승',
     // Wave 62 C3: 데이터가 전설 등급을 선언한 유물 보상(`reward.rarity === 'legendary'`)은 미리보기도 전설이라 말한다.
     CHAIN_PREVIEW_LEGENDARY_RELIC: '전설 유물 보상',
     // Wave 62 C19: 실제 전투를 여는 이야기 선택지(`outcome.combat`) — 보상 · 진행은 승리했을 때만 정산된다.

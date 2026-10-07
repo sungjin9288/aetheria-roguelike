@@ -172,7 +172,7 @@ const chainRewardLabels: Record<string, string> = {
     legendary_item: '특별 장비 보상',
     relic: '유물 보상',
     combat_bonus: '다음 전투 강화',
-    // 2026-10 Wave 62 C2: 이야기 능력치 보상은 이번 여정 범위다(`storyStatBonus`, 사망 · 계승에서 사라진다) — '영구'는 계정 메타의 말이다.
+    // 2026-10 Wave 72 (소유자 결정, Wave 62 C2를 대체): 이야기 능력치 보상은 영구다(`storyStatBonus`, 사망 · 계승을 넘어 남는다).
     stat_bonus: MSG.CHAIN_PREVIEW_STAT_BONUS,
     info: '새로운 단서',
 };

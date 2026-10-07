@@ -3,6 +3,7 @@ import { EVENT_CHAINS } from '../data/eventChains';
 import { normalizeClassJourneyLedger } from './classJourney';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward';
 import { collectAchievedAchievementIds } from './achievementProgress';
+import { pickPermanentStoryStatBonus } from './permanentStatSources';
 
 const clone = <T>(value: T): T => {
     if (Array.isArray(value)) return value.map((entry) => clone(entry)) as T;
@@ -54,7 +55,11 @@ export const pickPermanentPlayerState = (
 ): Partial<Player> => {
     const stats = player.stats || {};
     const initialStats = initialPlayer.stats || {};
+    // 2026-10 Wave 72 (소유자 결정 "영구로 전환"): 이야기 능력치 보상은 체인이 계정당 한 번이라 영구다 — 런 범위이던 동안
+    //   한 번 죽으면 영원히 잃었다. 값이 없으면 필드를 싣지 않는다(새 런 기본값 그대로).
+    const storyStatBonus = pickPermanentStoryStatBonus(player.storyStatBonus);
     return {
+        ...(storyStatBonus ? { storyStatBonus } : {}),
         meta: clone({ ...(initialPlayer.meta || {}), ...(player.meta || {}) }),
         achievements: clone(Array.isArray(player.achievements) ? player.achievements : []),
         titles: clone(Array.isArray(player.titles) ? player.titles : []),
