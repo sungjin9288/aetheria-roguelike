@@ -51,6 +51,16 @@ const usableBy = (item: Item, job: string | undefined): boolean => (
 );
 const pick = <T>(pool: readonly T[], rng: RandomSource): T | null => (pool.length ? pool[Math.floor(rng() * pool.length)] ?? null : null);
 
+/** 이 레벨에서 착용할 수 있는 가장 높은 장비 등급(`BALANCE.TIER_REQ_LEVEL` — 착용 판정 `canEquip`과 같은 표). */
+export const getUsableGearTier = (level: number | undefined): number => {
+    const current = Math.max(1, Number(level) || 1);
+    let usable = 1;
+    for (const [tier, reqLevel] of Object.entries(BALANCE.TIER_REQ_LEVEL)) {
+        if (current >= reqLevel) usable = Math.max(usable, Number(tier));
+    }
+    return usable;
+};
+
 const RARE_MATERIAL_NAME = '강화 재료';
 
 /** 이 등급까지의 제작 장비에 들어가는 재료와 다음 가방 단계의 재료 — 행상인의 재료는 지금 쓸 데가 있는 것만 판다. */
@@ -77,8 +87,8 @@ const offer = (item: Item, price: number, rare: boolean): WanderingMerchantOffer
 });
 
 /**
- * 이번 만남의 재고 — 소모품 둘 · 쓸 데 있는 재료 하나 · 이 지역 등급 장비 하나(이 직업이 쓸 수 있는 것), 그리고
- * `WANDERING_MERCHANT_RARE_CHANCE`로 희귀 한 칸(강화 재료 또는 한 등급 위 장비). 탐험 수 · 지역마다 다르다.
+ * 이번 만남의 재고 — 소모품 둘 · 쓸 데 있는 재료 하나 · 장비 하나(지역 등급과 착용 가능 등급 중 낮은 쪽, 이 직업용), 그리고
+ * `WANDERING_MERCHANT_RARE_CHANCE`로 희귀 한 칸(강화 재료 또는 착용 가능한 최고 등급의 강한 장비). 탐험 수 · 지역마다 다르다.
  */
 export const buildMerchantStock = (player: Player, loc: string): WanderingMerchantOffer[] => {
     const rng = createSeededRandom(hashKey(`merchant-stock:${exploreCount(player)}:${loc}`));
@@ -110,11 +120,16 @@ export const buildMerchantStock = (player: Player, loc: string): WanderingMercha
         isEquipment(item) && (Number(item.tier) || 1) === gearTier && usableBy(item, player.job) && !isSignatureItem(item)
         && (Number(item.price) || 0) > 0
     ));
-    const gear = pick(gearPool(tier), rng);
+    // 장비는 지금 착용할 수 있는 등급만 판다 — 지역 상점 등급은 착용 레벨보다 앞서 간다(Lv35 지역의 4등급은 Lv45 필요).
+    const usableTier = getUsableGearTier(player.level);
+    const gear = pick(gearPool(Math.min(tier, usableTier)), rng);
     add(gear, (Number(gear?.price) || 0) * mult, false);
 
     if (rng() < BALANCE.WANDERING_MERCHANT_RARE_CHANCE) {
-        const rareGear = tier < 6 ? pick(gearPool(tier + 1), rng) : null;
+        // 희귀 장비: 착용할 수 있는 가장 높은 등급에서 위력 상위 1/4(이 직업용) — 이 지역이 팔지 않는 등급일 수도 있다.
+        const rarePool = gearPool(usableTier).filter((item) => !taken.has(String(item.name)))
+            .sort((a, b) => (Number(b.val) || 0) - (Number(a.val) || 0) || String(a.name).localeCompare(String(b.name)));
+        const rareGear = pick(rarePool.slice(0, Math.max(1, Math.ceil(rarePool.length / 4))), rng);
         const wantsGear = rng() < 0.5;
         if (wantsGear && rareGear) {
             add(rareGear, (Number(rareGear.price) || 0) * rareMult, true);

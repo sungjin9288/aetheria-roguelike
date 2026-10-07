@@ -21,11 +21,14 @@ import { startExpedition } from '../src/utils/expeditionLedger.js';
 import { pickPermanentPlayerState } from '../src/utils/permanentProgress.js';
 import { getShopMaxTier } from '../src/utils/shopRotation.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
+import { canEquip } from '../src/utils/equipmentValidation.js';
+import { isSignatureItem } from '../src/data/signatureItems.js';
 import {
     buildMerchantEvent,
     buildMerchantStock,
     getActiveMerchantVisit,
     getMerchantRoll,
+    getUsableGearTier,
     shouldMeetMerchant,
     startMerchantVisit,
 } from '../src/utils/wanderingMerchant.js';
@@ -197,7 +200,7 @@ test('[재고] 만날 때마다 바뀌고, 같은 자리에서는 같다 — 소
             const isGear = ['weapon', 'armor', 'shield'].includes(item.type);
             if (isGear) {
                 assert.ok(!Array.isArray(item.jobs) || item.jobs.length === 0 || item.jobs.includes('전사'), `${slot.name}: 이 직업이 쓸 수 있다`);
-                assert.equal(item.tier || 1, slot.rare ? tier + 1 : tier, `${slot.name}: 등급`);
+                assert.equal(item.tier || 1, slot.rare ? getUsableGearTier(30) : Math.min(tier, getUsableGearTier(30)), `${slot.name}: 등급`);
             }
             if (!slot.rare) {
                 assert.equal(slot.price, Math.ceil(item.price * BALANCE.WANDERING_MERCHANT_PRICE_MULT), `${slot.name}: 떠돌이 할증`);
@@ -220,6 +223,40 @@ test('[재고] 만날 때마다 바뀌고, 같은 자리에서는 같다 — 소
             if (item) assert.ok(item.price <= BALANCE.WANDERING_MERCHANT_CONSUMABLE_PRICE_FLOOR, `${slot.name} ${item.price}`);
         }
     }
+});
+
+test('[재고] 장비는 지금 착용할 수 있는 것만 판다 — 일반은 지역 등급과 착용 등급 중 낮은 쪽, 희귀는 착용 가능한 최고 등급의 강한 장비', () => {
+    // 지역 상점 등급은 착용 레벨보다 앞서 간다(Lv35 지역의 4등급은 Lv45 필요) — 그대로 팔면 희귀 장비가 1회차 내내 착용 불가였다.
+    assert.deepEqual([1, 9, 10, 27, 28, 44, 45, 59, 60, 75].map(getUsableGearTier), [1, 1, 2, 2, 3, 3, 4, 4, 5, 6]);
+    const gearCatalog = [...DB.ITEMS.weapons, ...DB.ITEMS.armors];
+    let rareGear = 0;
+    for (const loc of [FIELD, DUNGEON, '지하 미궁', '기계 폐도', '용암 지대']) {
+        for (const level of [1, 12, 30, 47]) {
+            for (const job of ['전사', '마법사', '도적']) {
+                for (let explores = 0; explores < 120; explores += 1) {
+                    const player = playerAt(loc, explores, { level, job });
+                    for (const slot of buildMerchantStock(player, loc)) {
+                        const item = gearCatalog.find((entry) => entry.name === slot.name);
+                        if (!item) continue;
+                        const verdict = canEquip(item, player, structuredClone(INITIAL_STATE.player.equip));
+                        assert.ok(verdict.ok, `${loc} Lv${level} ${job}: ${slot.name} ${JSON.stringify(verdict)}`);
+                        assert.ok((item.tier || 1) <= getUsableGearTier(level), `${slot.name}: 착용 등급 안`);
+                        if (slot.rare) {
+                            rareGear += 1;
+                            const pool = gearCatalog.filter((entry) => (entry.tier || 1) === getUsableGearTier(level)
+                                && (!Array.isArray(entry.jobs) || entry.jobs.length === 0 || entry.jobs.includes(job))
+                                && !isSignatureItem(entry) && (Number(entry.price) || 0) > 0)
+                                .map((entry) => Number(entry.val) || 0).sort((a, b) => b - a);
+                            assert.equal(item.tier || 1, getUsableGearTier(level));
+                            // 상위 1/4(일반 장비 칸이 먼저 가져간 하나를 빼고 자르므로 한 칸 여유).
+                            assert.ok((Number(item.val) || 0) >= pool[Math.min(pool.length - 1, Math.ceil(pool.length / 4))], `${slot.name}: 위력 상위`);
+                        }
+                    }
+                }
+            }
+        }
+    }
+    assert.ok(rareGear > 100, `희귀 장비 진열 ${rareGear}`);
 });
 
 // ── ④ 실제 탐험 경로 ──────────────────────────────────────────────────────────────
