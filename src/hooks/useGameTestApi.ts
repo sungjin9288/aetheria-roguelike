@@ -1938,7 +1938,7 @@ export const useGameTestApi = (
                 // 만남은 탐험 수 · 지역의 해시다 — 지금 지역에서 만나는 다음 탐험 수를 찾는다(원정 시작 기록보다 커야 선택 이벤트가 열린다).
                 let explores = Math.max(Number(er.player.stats?.explores) || 0, Number(er.player.activeExpedition?.explores) || 0) + 1;
                 while (!shouldMeetMerchant({ ...er.player, stats: { ...(er.player.stats || {}), explores } }, mapData, loc)) explores += 1;
-                const material = DB.ITEMS.materials.find((entry) => (Number(entry.price) || 0) > 0 && entry.name !== '강화 재료');
+                const material = DB.ITEMS.materials.find((entry) => (Number(entry.price) || 0) > 0 && entry.name !== CONSTANTS.ENHANCE_MATERIAL_NAME);
                 if (!material) return false;
                 er.dispatch({
                     type: AT.SET_PLAYER,

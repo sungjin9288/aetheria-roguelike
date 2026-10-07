@@ -1,4 +1,4 @@
-import { BALANCE } from '../data/constants.js';
+import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { MSG } from '../data/messages.js';
 import { getNextBagRecipe } from '../data/bagRecipes.js';
@@ -61,7 +61,7 @@ export const getUsableGearTier = (level: number | undefined): number => {
     return usable;
 };
 
-const RARE_MATERIAL_NAME = '강화 재료';
+const RARE_MATERIAL_NAME = CONSTANTS.ENHANCE_MATERIAL_NAME;
 
 /** 이 등급까지의 제작 장비에 들어가는 재료와 다음 가방 단계의 재료 — 행상인의 재료는 지금 쓸 데가 있는 것만 판다. */
 const getUsefulMaterials = (maxTier: number, player: Player): Item[] => {
