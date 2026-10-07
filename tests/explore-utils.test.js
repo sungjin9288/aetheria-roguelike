@@ -275,9 +275,8 @@ test('spawnEnemy: 시간술사 + Lv40 + player.loc=공중 신전 → 시간의 �
     };
     const { addLog } = makeAddLogSpy();
     let foundHiddenBoss = false;
-    // 100번 spawn해서 시간의 파수꾼이 한 번이라도 등장하는지 확인 (encounter pool에 push되면
-    // Math.random에 따라 가끔 뽑힘). pool에 들어가지 않으면 절대 못 뽑힘.
-    for (let i = 0; i < 100; i++) {
+    // 2026-10 Wave 76: 숨은 보스는 조우의 3%다 — 미시드 100회로는 4.8% 확률로 못 만나므로 추첨값을 고르게 훑는다.
+    for (let i = 0; i < 400; i++) {
         const player = {
             job: '시간술사',
             level: 45,
@@ -285,7 +284,8 @@ test('spawnEnemy: 시간술사 + Lv40 + player.loc=공중 신전 → 시간의 �
             stats: { abyssFloor: 0 },
             challengeModifiers: [],
         };
-        const { baseName } = spawnEnemy(mapData, player, [], { addLog });
+        const roll = (i + 0.5) / 400;
+        const { baseName } = spawnEnemy(mapData, player, [], { addLog }, { rng: () => roll });
         if (baseName === '시간의 파수꾼') {
             foundHiddenBoss = true;
             break;

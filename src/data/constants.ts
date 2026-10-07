@@ -208,6 +208,10 @@ export const BALANCE = {
     // 활성 토벌 임무의 목표 조우를 돕되 지역 몬스터 다양성은 절반가량 유지한다.
     // 목표가 7종 풀에 하나라면 실질 조우율은 약 53%(45% 집중 + 일반 풀 55%/7).
     HUNT_TARGET_FOCUS_CHANCE: 0.45,
+    // 2026-10 Wave 76 (소유자 결정 "출현 확률을 낮추자"): 해금된 숨은 보스는 조우 풀의 한 칸(지역 5종 + 1 = 1/6)이 아니라
+    //   그 지역 조우의 이 비율이다(허공의 눈은 배수). 원한의 용사가 지하 미궁 조우의 1/6이던 동안 2회차 사망 증가 전부가
+    //   그 보스였다(원장 §77.5).
+    HIDDEN_BOSS_ENCOUNTER_CHANCE: 0.03,
     MAP_HIGH_EVENT_CHANCE_THRESHOLD: 0.28,  // '이벤트↑' 배지 임계값 — 보정 없는 지역(×1)이 eventChance 0.28일 때의 실제 이야기 확률(× SPECIAL_EVENT_BASE_MULT)이 기준(Wave 61, mapBadges)
     PREFIX_CHANCE: 0.2,
     ITEM_PREFIX_CHANCE: 0.12,

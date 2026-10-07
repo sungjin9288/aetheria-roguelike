@@ -62,13 +62,23 @@ export const selectEncounterMonster = (
     mapData: GameMap,
     player: Player,
     random: () => number,
+    hiddenBosses: readonly string[] = [],
+    hiddenShare = 0,
 ): string | null => {
     const huntTargets = getActiveHuntTargets(mapData, player);
     if (huntTargets.length > 0 && random() < BALANCE.HUNT_TARGET_FOCUS_CHANCE) {
         return huntTargets[Math.floor(random() * huntTargets.length)] ?? null;
     }
-    if (encounterPool.length === 0) return null;
-    return encounterPool[Math.floor(random() * encounterPool.length)] ?? null;
+    // 2026-10 Wave 76: 해금된 숨은 보스는 같은 한 번의 추첨에서 위쪽 `hiddenShare` 구간을 나눠 갖는다 — 추첨 수는 그대로이고,
+    //   숨은 보스가 없으면(`hiddenShare` 0) 이전과 같은 칸을 뽑는다.
+    const share = hiddenBosses.length > 0 ? Math.min(1, Math.max(0, hiddenShare)) : 0;
+    if (encounterPool.length === 0 && share === 0) return null;
+    const roll = random();
+    if (share > 0 && (encounterPool.length === 0 || roll >= 1 - share)) {
+        const within = Math.max(0, roll - (1 - share)) / share;
+        return hiddenBosses[Math.min(hiddenBosses.length - 1, Math.floor(within * hiddenBosses.length))] ?? null;
+    }
+    return encounterPool[Math.min(encounterPool.length - 1, Math.floor((roll / (1 - share)) * encounterPool.length))] ?? null;
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -91,11 +101,10 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     //   지도 · 모험 가이드의 보스 표시(`canBossAppearInMap`)가 같은 표를 읽는다(Wave 61).
     // cycle 71: mapData.name은 MAPS dict에 저장될 때 설정되지 않으므로 항상 undefined.
     // hidden boss spawn이 영원히 트리거되지 않던 버그 수정 — player.loc로 비교.
-    getUnlockedHiddenBosses(player.loc, player).forEach((boss) => {
-        if (!encounterPool.includes(boss)) {
-            encounterPool.push(boss);
-        }
-    });
+    // 2026-10 Wave 76 (소유자 결정 "출현 확률을 낮추자"): 해금된 숨은 보스는 풀의 한 칸이 아니라 조우의
+    //   `BALANCE.HIDDEN_BOSS_ENCOUNTER_CHANCE`(보스마다)다 — 풀에 넣던 동안 지역 5종 풀의 1/6이었다.
+    const hiddenBosses = getUnlockedHiddenBosses(player.loc, player).filter((boss) => !encounterPool.includes(boss));
+    let hiddenBossShare = hiddenBosses.length * BALANCE.HIDDEN_BOSS_ENCOUNTER_CHANCE;
 
     // 2026-10 Wave 56: 허공의 눈 "보스 발견 확률 3배" = 조우 풀에 이미 있는 보스의 가중치 × 3. 이전에는 지역 보스 목록
     //   전체를 풀에 넣어, 해금 조건이 있는 숨은 보스(시간의 파수꾼 · 원한의 용사 · 공허의 군주 · 에테르 군주)가 조건 없이
@@ -104,9 +113,12 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const bossHunterRelic = playerRelics.find((r) => r.effect === 'boss_hunter');
     if (bossHunterRelic && mapBossMonsters.length > 0) {
         const bossEntries = encounterPool.filter((name) => mapBossMonsters.includes(name));
-        for (let i = 1; i < Math.max(1, Math.floor(bossHunterRelic.val.spawn || 1)); i += 1) {
+        const spawnMult = Math.max(1, Math.floor(bossHunterRelic.val.spawn || 1));
+        for (let i = 1; i < spawnMult; i += 1) {
             encounterPool = [...encounterPool, ...bossEntries];
         }
+        // 숨은 보스도 보스다 — 그 지역 보스 목록에 있으면 출현 비율이 같은 배수로 오른다.
+        if (hiddenBosses.some((boss) => mapBossMonsters.includes(boss))) hiddenBossShare *= spawnMult;
     }
 
     // 구역 보스 — 2026-07: 15% 순수 랜덤 강제 조우 제거, 원정 보스 접근 게이지
@@ -120,7 +132,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const baseName: string | null = storyMonster
         ?? ((spawnAreaBoss && areaBossName !== null)
             ? areaBossName
-            : selectEncounterMonster(encounterPool, mapData, player, rng));
+            : selectEncounterMonster(encounterPool, mapData, player, rng, hiddenBosses, hiddenBossShare));
     // 2026-09 Wave 16 H1: 몬스터 테이블이 빈 지역(safe 5곳이 전부 `monsters: []`)에서
     //   이름 없는 적이 실제 스탯으로 스폰되던 결함을 여기서 닫는다. 호출처는 `mStats`가
     //   `null`일 수 있음을 타입으로 강제받는다 — 모델(progressionSimulator/Diagnostic)은

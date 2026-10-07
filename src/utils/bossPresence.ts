@@ -23,7 +23,7 @@ interface HiddenBossUnlock {
     isUnlocked: (player: Player) => boolean;
 }
 
-/** Sprint 18: 숨겨진 보스 해금 조건 — 해금되면 그 지역의 조우 풀에 들어간다(`spawnEnemy`). */
+/** Sprint 18: 숨겨진 보스 해금 조건 — 해금되면 그 지역 조우의 `BALANCE.HIDDEN_BOSS_ENCOUNTER_CHANCE`로 나온다(`spawnEnemy`, Wave 76). */
 export const HIDDEN_BOSS_UNLOCKS: readonly HiddenBossUnlock[] = Object.freeze([
     // 시간의 파수꾼: 시간술사 직업 + Lv 40+ (공중 신전)
     { boss: '시간의 파수꾼', loc: '공중 신전', isUnlocked: (player: Player) => player.job === '시간술사' && (player.level || 1) >= 40 },
@@ -42,7 +42,7 @@ export const HIDDEN_BOSS_UNLOCKS: readonly HiddenBossUnlock[] = Object.freeze([
     { boss: '에테르 군주', loc: '에테르 관문', isUnlocked: (player: Player) => (player.meta?.prestigeRank || 0) >= 10 },
 ]);
 
-/** `loc`에서 이 플레이어에게 해금된 숨은 보스 — 표 순서 그대로(`spawnEnemy`가 이 순서로 조우 풀에 넣는다). */
+/** `loc`에서 이 플레이어에게 해금된 숨은 보스 — 표 순서 그대로(`spawnEnemy`가 이 순서로 숨은 보스 구간을 나눈다). */
 export const getUnlockedHiddenBosses = (loc: string | null | undefined, player: Player): string[] => (
     HIDDEN_BOSS_UNLOCKS
         .filter((entry) => entry.loc === loc && entry.isUnlocked(player))
