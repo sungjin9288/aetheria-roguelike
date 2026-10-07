@@ -135,7 +135,7 @@ src/
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     ├── wanderingMerchant.ts   # 떠돌이 행상인 만남 · 재고 (탐험 수 · 지역 해시, 탐험 난수 미사용 — Wave 75)
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 434 파일 / 5,938 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 435 파일 / 5,946 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
                       #   + e2e/ (Playwright 53 스펙 / 155 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
@@ -292,7 +292,7 @@ useGameEngine (useReducer)
 
 ### Roguelike 루프 구조
 1. **탐험** → 적/이벤트/유물 랜덤 발생 (pity counter로 드랍 보장)
-2. **유물 선택** → 3개 중 선택(프레스티지 rank≥2: 4개), 최대 5개 보유(rank≥2: 6개)
+2. **유물 선택** → 3개 중 선택(프레스티지 rank≥2: 4개), 최대 5개 보유(rank≥2: 6개). 칸이 가득 차도 탐험 발견은 같은 확률이고 교체 제안으로 열린다(Wave 77)
 3. **마왕 격파** → Ascension 옵션 제공 (마왕성 경로 게이트 Lv48 ≈ 53.2 모델시간 — Wave 71 이후 53.18h)
    - **본편 스토리 사슬도 승천 지점을 걸치지 않는다**(Wave 28) — 86은 에테르 관문(68)에서 마왕성(48)의 `지옥의 문지기`로 옮겼고 87 `minLv`는 48이다. 그 전에는 87이 170.23h라 이야기를 끝내기 전에 마왕을 잡을 때마다 계승 제안이 떴다. `tests/content-reachability.test.js`가 `FIRST_STORY_QUEST_ID`부터 선행을 따라 만든 사슬 전체의 게이트 ≤ 마왕성 경로 게이트, 종장 = 그 게이트를 단언한다
    - **계승 화면의 "미루기"는 런 범위 결정이다**(Wave 28) — `AT.DEFER_ASCENSION`이 `player.ascensionOfferDeferred`를 세우면 그 런의 마왕 처치는 계승 화면 없이 로그로 정산되고(`endgameSettlement`), 조작판 [계승하기] → `AT.REOPEN_ASCENSION`으로 다시 연다. 재오픈 게이트는 **미룸 표시와 처치 영수증 둘 다** 본다 — 영수증(`meta.endgame.lastEndgameReceiptKey`)은 영구 meta라 승천 뒤 새 런에도 남으므로, 표시 검사를 빼면 마왕을 잡지 않고 계승할 수 있다(`tests/ascension-deferral-contract.test.js`)
