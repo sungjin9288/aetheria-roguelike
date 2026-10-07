@@ -6,6 +6,7 @@ import { MSG } from '../data/messages';
 import { getEquipmentComparison, getEquipmentDecision, getEquipmentDisclosure, getItemStatText, getSellIncome, getWeaponStyleLabel, isTwoHandWeapon, isWeapon } from '../utils/equipmentUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { getDailyDeals, getShopBuyPrice, getShopMaxTier, getShopPriceMult, getWeeklySpecial } from '../utils/shopRotation';
+import { getActiveMerchantVisit, getMerchantShelf } from '../utils/wanderingMerchant';
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
 import { getSignatureSaleVerdict } from '../utils/signatureSale';
@@ -15,7 +16,7 @@ import type { FullStats, Item, ItemType, Player } from '../types/index.js';
 import type { GameMode } from '../reducers/gameStates';
 
 /** ShopPanel이 실제로 호출하는 액션만 좁혀 받는다 (구매/판매/구매 영수증 해제). */
-type ShopPanelActions = Pick<GameActions, 'economyReceipt' | 'clearEconomyReceipt' | 'market'>;
+type ShopPanelActions = Pick<GameActions, 'economyReceipt' | 'clearEconomyReceipt' | 'market'> & Partial<Pick<GameActions, 'leaveMerchant'>>;
 
 /** getComparisonMeta / getEquipmentDecision이 쓰는 비교 어조 — getToneClass 배색과 1:1. */
 type ComparisonTone = 'positive' | 'negative' | 'neutral';
@@ -161,6 +162,10 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     const expansionKey = `${loc}:${shopMode}`;
 
     const maxTier = getShopMaxTier(loc);
+    // 2026-10 Wave 75: 떠돌이 행상인 — 이번 만남의 재고만 판다(할인 · 주간 특별 상품 없음). 판매는 마을 상점과 같다.
+    const isMerchant = getActiveMerchantVisit(player) !== null;
+    const merchantShelf = isMerchant ? getMerchantShelf(player) : [];
+    const closeShop = () => (isMerchant && actions?.leaveMerchant ? actions.leaveMerchant() : setGameState?.('idle'));
 
     const traitProfile = useMemo(
         () => getTraitProfile(player, stats || { maxHp: player.maxHp, maxMp: player.maxMp }),
@@ -228,14 +233,19 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
     return (
         <div data-testid="shop-panel" className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3">
             <FocusPanelHeader
-                eyebrow="마을 거래소"
-                title="마을 상점"
+                eyebrow={isMerchant ? MSG.MERCHANT_SHOP_EYEBROW : '마을 거래소'}
+                title={isMerchant ? MSG.MERCHANT_TITLE : '마을 상점'}
                 titleClassName="text-[1.1rem] leading-none"
-                meta={MSG.SHOP_HEADER_META(maxTier, (player.inv || []).length, getInventoryCapacity(player), Math.round(getShopPriceMult(loc) * 100))}
-                onBack={() => setGameState?.('idle')}
+                meta={MSG.SHOP_HEADER_META(
+                    maxTier,
+                    (player.inv || []).length,
+                    getInventoryCapacity(player),
+                    Math.round((isMerchant ? BALANCE.WANDERING_MERCHANT_PRICE_MULT : getShopPriceMult(loc)) * 100),
+                )}
+                onBack={closeShop}
                 backLabel="복귀"
                 backTestId="shop-close"
-                onOpenArchive={onOpenArchiveConsole}
+                onOpenArchive={isMerchant ? null : onOpenArchiveConsole}
                 archiveLabel="가방"
                 archiveTestId="shop-open-archive"
             />
@@ -298,7 +308,53 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
 
             <div className="flex-1 overflow-y-auto space-y-2.5 custom-scrollbar pr-1">
                 {/* 할인 상품 */}
-                {shopMode === 'buy' && (dailyDeals.items.length > 0 || weeklySpecial) && (
+                {shopMode === 'buy' && isMerchant && (
+                    <div data-testid="merchant-shelf" className="space-y-2">
+                        <div className="font-readable text-[11px] leading-[1.35] text-amber-100/80">{MSG.MERCHANT_SHOP_NOTE}</div>
+                        {merchantShelf.every((slot) => slot.sold) && (
+                            <div className="font-readable text-[11px] text-slate-400">{MSG.MERCHANT_SOLD_OUT}</div>
+                        )}
+                        {merchantShelf.filter((slot) => !slot.sold).map(({ item, price, rare }) => {
+                            const affordable = currentGold >= price;
+                            const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(currentJob ?? '');
+                            const canBuy = affordable && equipable && inventoryHasRoom;
+                            const blockReason = getBuyBlockReason({ canStore: inventoryHasRoom, affordable, equipable, item });
+                            return (
+                                <div
+                                    key={item.name}
+                                    data-testid="merchant-offer"
+                                    data-merchant-rare={rare ? 'true' : 'false'}
+                                    className={`aether-shop-row ${canBuy ? '' : 'is-blocked'} flex items-center justify-between gap-2 rounded-[1rem] px-3 py-2.5`}
+                                >
+                                    <div className="min-w-0 flex items-center gap-2">
+                                        <ItemIcon item={item} size={38} showBorder className="opacity-95" />
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                <span className="font-readable text-sm font-semibold text-white">{item.name}</span>
+                                                {rare && (
+                                                    <span className="shrink-0 rounded-full border border-amber-300/40 bg-amber-300/12 px-1.5 py-0.5 text-[9px] font-readable font-bold text-amber-100">
+                                                        {MSG.MERCHANT_RARE_BADGE}
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <div className="mt-0.5 font-readable text-[11px] font-bold text-amber-300">{formatGold(price)}</div>
+                                            <ShopEquipmentDecisionStrip player={player} item={item} scope="list" />
+                                        </div>
+                                    </div>
+                                    <button
+                                        data-testid="merchant-buy"
+                                        onClick={() => { if (canBuy) actions?.market('buy', item, 'merchant'); }}
+                                        disabled={!canBuy}
+                                        className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-3 py-1 text-[10px] font-bold text-amber-100"
+                                    >
+                                        {canBuy ? MSG.MERCHANT_BUY_ACTION : (blockReason || MSG.MERCHANT_BUY_BLOCKED)}
+                                    </button>
+                                </div>
+                            );
+                        })}
+                    </div>
+                )}
+                {shopMode === 'buy' && !isMerchant && (dailyDeals.items.length > 0 || weeklySpecial) && (
                     <div className="mb-2 space-y-2 border-b border-white/8 pb-2">
                         <div className="aether-label text-[#f6e7c8]/70">오늘의 할인 · 10%</div>
                         <div className="grid grid-cols-1 gap-2">
@@ -371,7 +427,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     </div>
                 )}
 
-                {shopMode === 'buy' ? (
+                {shopMode === 'buy' && isMerchant ? null : shopMode === 'buy' ? (
                     buyItems.length > 0 ? (
                         visibleBuyItems.map(({ item, price, affordable, equipable, inventoryHasRoom: canStore }) => {
                             const canBuy = affordable && equipable && canStore;
@@ -470,6 +526,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                             return (
                                 <div
                                     key={item.id}
+                                    data-testid="shop-sell-row"
+                                    data-item-name={item.name}
                                     className={`aether-shop-row is-blocked flex flex-col rounded-[1.05rem] px-3 py-3 transition-all ${isConfirming ? 'border-rose-300/28 bg-rose-400/10' : 'hover:border-rose-300/18'}`}
                                 >
                                     <div className="flex items-start justify-between gap-3">

@@ -52,6 +52,10 @@ export interface GameEvent {
     isBossGaugeChallenge?: boolean;
     /** 다른 차원의 묘비(Wave 70) 전용 — 다른 플레이어의 공개 묘비. */
     isDimensionGrave?: boolean;
+    /** 떠돌이 행상인(Wave 75) 전용 — 재고는 `player.merchantVisit`가 든다. */
+    isWanderingMerchant?: boolean;
+    /** 행상인 카드 미리보기용 — 이번 만남의 칸 수 · 희귀 칸 수. */
+    merchantStock?: { count: number; rare: number };
     dimensionGrave?: DimensionGraveRef;
     /** 내러티브 이벤트 체인 전용 — 진행 중인 체인 id/스텝. */
     _chainId?: string;

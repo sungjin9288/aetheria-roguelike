@@ -7,6 +7,8 @@ import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { MSG } from '../../data/messages';
 import { getEliteTitleBonus, recordEliteEncounter } from '../../utils/eliteTitles';
 import { formatPermanentStatBonus } from '../../utils/permanentStatSources';
+import { endMerchantVisit, getActiveMerchantVisit } from '../../utils/wanderingMerchant';
+import { appendRewardLogs } from './rewardLog';
 
 export const uiActionMap = {
     SET_SYNC_STATUS: (state, action) =>
@@ -15,13 +17,25 @@ export const uiActionMap = {
     // 2026-09 D3: 다른 화면으로 넘어가면 지난 전투 결과 카드는 내린다 — 카드(z-40 하단 고정)가
     //   전투/이벤트/상점 화면의 주 행동 위에 남아 조작을 가리는 것을 막는다 (lessons R12).
     //   탐험 대기(idle)에서는 유지 — 승리 직후 판단 카드가 바로 사라지면 안 되기 때문.
-    SET_GAME_STATE: (state, action) => ({
-        ...state,
-        gameState: action.payload,
-        economyReceipt: action.payload === 'shop' ? state.economyReceipt : null,
-        postCombatResult: action.payload === GS.IDLE ? state.postCombatResult : null,
-        syncStatus: 'syncing',
-    }),
+    SET_GAME_STATE: (state, action) => {
+        const next = {
+            ...state,
+            gameState: action.payload,
+            economyReceipt: action.payload === 'shop' ? state.economyReceipt : null,
+            postCombatResult: action.payload === GS.IDLE ? state.postCombatResult : null,
+            syncStatus: 'syncing',
+        };
+        // 2026-10 Wave 75: 행상인은 만남 카드 · 행상인 상점에만 있다 — 다른 화면으로 넘어가면(뒤로가기 · 기록 열기 ·
+        //   카드 닫기) 행상인이 떠난다. 나가는 길마다 `LEAVE_MERCHANT`를 부르게 하지 않고 이 전이 하나가 끝낸다.
+        if (!state.player.merchantVisit || action.payload === GS.SHOP || action.payload === GS.EVENT) return next;
+        const wasOpen = getActiveMerchantVisit(state.player) !== null
+            && (state.gameState === GS.SHOP || state.gameState === GS.EVENT);
+        return {
+            ...next,
+            player: endMerchantVisit(state.player),
+            logs: wasOpen ? appendRewardLogs(state.logs, [{ type: 'info', text: MSG.MERCHANT_LEAVE_LOG }]) : state.logs,
+        };
+    },
 
     SET_AI_THINKING: (state, action) =>
         ({ ...state, isAiThinking: action.payload }),

@@ -39,6 +39,11 @@ export const createEconomyActions = (ctx: InventoryActionCtx) => {
             });
         },
 
+        // 2026-10 Wave 75: 행상인 상점에서 나오면 행상인이 떠난다(만남 종료) — 판정은 리듀서(`LEAVE_MERCHANT`).
+        leaveMerchant: () => {
+            dispatch({ type: AT.LEAVE_MERCHANT });
+        },
+
         craft: (recipeId: string) => {
             const recipe = DB.ITEMS.recipes?.find((entry) => entry.id === recipeId);
             if (!recipe) return;
