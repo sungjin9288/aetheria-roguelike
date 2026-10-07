@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "424909de42bc199747279d17e645b9360996912c2b669f637a7ccce9e4574597",
+  "reportHash": "9758e639e1b091610b16d1ac9b22a5a76521df8a8cf420590addaab707593c02",
   "authorityHashes": {
     "combatExp": "54d7ab1766d07e15cae3bc9e482f7fff4ea2d3deb28a4da7e6d82c7be4c2a99f",
     "combatLoot": "321f5096aec7caa2a56ec1121661e4cd41e9660f685fad2ff9e6fb5544fb9f7a",
@@ -110,13 +110,13 @@
             "classification": "subset-of-general-narrative",
             "countAuthority": "production-integration"
           },
-          "combat": 174310,
-          "discovery": 5070,
+          "combat": 167447,
+          "discovery": 15931,
           "discoveryBreakdown": {
-            "anomaly": 4750,
-            "relic": 320
+            "anomaly": 4566,
+            "relic": 11365
           },
-          "nothing": 27678,
+          "nothing": 23680,
           "optionalDecisionCount": 55086,
           "optionalBackToBackCount": 0,
           "optionalGap": {
@@ -139,13 +139,13 @@
             "classification": "subset-of-general-narrative",
             "countAuthority": "production-integration"
           },
-          "combat": 174310,
-          "discovery": 5070,
+          "combat": 167447,
+          "discovery": 15931,
           "discoveryBreakdown": {
-            "anomaly": 4750,
-            "relic": 320
+            "anomaly": 4566,
+            "relic": 11365
           },
-          "nothing": 27678,
+          "nothing": 23680,
           "optionalDecisionCount": 55086,
           "optionalBackToBackCount": 0,
           "optionalGap": {
@@ -251,13 +251,13 @@
             "classification": "subset-of-general-narrative",
             "countAuthority": "production-integration"
           },
-          "combat": 171833,
-          "discovery": 4934,
+          "combat": 165077,
+          "discovery": 15676,
           "discoveryBreakdown": {
-            "anomaly": 4614,
-            "relic": 320
+            "anomaly": 4451,
+            "relic": 11225
           },
-          "nothing": 27434,
+          "nothing": 23448,
           "optionalDecisionCount": 57943,
           "optionalBackToBackCount": 0,
           "optionalGap": {
@@ -280,13 +280,13 @@
             "classification": "subset-of-general-narrative",
             "countAuthority": "production-integration"
           },
-          "combat": 173689,
-          "discovery": 5038,
+          "combat": 166847,
+          "discovery": 15886,
           "discoveryBreakdown": {
-            "anomaly": 4718,
-            "relic": 320
+            "anomaly": 4539,
+            "relic": 11347
           },
-          "nothing": 27591,
+          "nothing": 23585,
           "optionalDecisionCount": 55826,
           "optionalBackToBackCount": 0,
           "optionalGap": {
@@ -392,13 +392,13 @@
             "classification": "subset-of-general-narrative",
             "countAuthority": "production-integration"
           },
-          "combat": 173024,
-          "discovery": 4992,
+          "combat": 166199,
+          "discovery": 15818,
           "discoveryBreakdown": {
-            "anomaly": 4672,
-            "relic": 320
+            "anomaly": 4498,
+            "relic": 11320
           },
-          "nothing": 27561,
+          "nothing": 23560,
           "optionalDecisionCount": 56567,
           "optionalBackToBackCount": 0,
           "optionalGap": {
@@ -421,13 +421,13 @@
             "classification": "subset-of-general-narrative",
             "countAuthority": "production-integration"
           },
-          "combat": 173024,
-          "discovery": 4992,
+          "combat": 166199,
+          "discovery": 15818,
           "discoveryBreakdown": {
-            "anomaly": 4672,
-            "relic": 320
+            "anomaly": 4498,
+            "relic": 11320
           },
-          "nothing": 27561,
+          "nothing": 23560,
           "optionalDecisionCount": 56567,
           "optionalBackToBackCount": 0,
           "optionalGap": {
@@ -533,13 +533,13 @@
             "classification": "subset-of-general-narrative",
             "countAuthority": "production-integration"
           },
-          "combat": 170772,
-          "discovery": 4879,
+          "combat": 164034,
+          "discovery": 15599,
           "discoveryBreakdown": {
-            "anomaly": 4559,
-            "relic": 320
+            "anomaly": 4401,
+            "relic": 11198
           },
-          "nothing": 27218,
+          "nothing": 23236,
           "optionalDecisionCount": 59275,
           "optionalBackToBackCount": 0,
           "optionalGap": {
@@ -562,13 +562,13 @@
             "classification": "subset-of-general-narrative",
             "countAuthority": "production-integration"
           },
-          "combat": 172442,
-          "discovery": 4960,
+          "combat": 165646,
+          "discovery": 15749,
           "discoveryBreakdown": {
-            "anomaly": 4640,
-            "relic": 320
+            "anomaly": 4475,
+            "relic": 11274
           },
-          "nothing": 27500,
+          "nothing": 23507,
           "optionalDecisionCount": 57242,
           "optionalBackToBackCount": 0,
           "optionalGap": {
