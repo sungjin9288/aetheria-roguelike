@@ -1,12 +1,12 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "cb16640365a6a8a62a2a4e7c6fc13b2159bf51add90973ae95ccf490bc147748",
+  "reportHash": "12028bd27b1a5bb6eabd0177da7cbea41498e0268547acf67d94e340b58d6624",
   "report": {
     "schemaVersion": 6,
     "catalog": {
       "maps": 52,
       "monsters": 254,
-      "quests": 143,
+      "quests": 151,
       "jobs": 18,
       "equipment": 229,
       "signatures": 25
@@ -1995,8 +1995,16 @@
         80,
         81,
         82,
+        207,
+        208,
+        209,
         83,
         84,
+        210,
+        211,
+        212,
+        213,
+        214,
         85,
         86,
         87,
@@ -6786,6 +6794,30 @@
             }
           },
           {
+            "gateLevel": 26,
+            "count": 1,
+            "members": [
+              207
+            ],
+            "cost": {
+              "level": 26,
+              "basis": "interpolated",
+              "modeledActions": 224,
+              "modeledSeconds": 20160,
+              "modeledHours": 5.6,
+              "cumulativeExp": 41880,
+              "interpolation": {
+                "lowerLevel": 20,
+                "upperLevel": 45,
+                "lowerModeledActions": 166,
+                "upperModeledActions": 1569,
+                "lowerCumulativeExp": 17389,
+                "upperCumulativeExp": 612298,
+                "expFraction": 0.04116764076522628
+              }
+            }
+          },
+          {
             "gateLevel": 28,
             "count": 1,
             "members": [
@@ -6858,8 +6890,32 @@
             }
           },
           {
+            "gateLevel": 31,
+            "count": 1,
+            "members": [
+              208
+            ],
+            "cost": {
+              "level": 31,
+              "basis": "interpolated",
+              "modeledActions": 327,
+              "modeledSeconds": 29430,
+              "modeledHours": 8.18,
+              "cumulativeExp": 85491,
+              "interpolation": {
+                "lowerLevel": 20,
+                "upperLevel": 45,
+                "lowerModeledActions": 166,
+                "upperModeledActions": 1569,
+                "lowerCumulativeExp": 17389,
+                "upperCumulativeExp": 612298,
+                "expFraction": 0.11447465074490384
+              }
+            }
+          },
+          {
             "gateLevel": 35,
-            "count": 20,
+            "count": 21,
             "members": [
               12,
               26,
@@ -6880,7 +6936,8 @@
               124,
               134,
               135,
-              206
+              206,
+              209
             ],
             "cost": {
               "level": 35,
@@ -6933,6 +6990,30 @@
             }
           },
           {
+            "gateLevel": 41,
+            "count": 1,
+            "members": [
+              210
+            ],
+            "cost": {
+              "level": 41,
+              "basis": "interpolated",
+              "modeledActions": 949,
+              "modeledSeconds": 85410,
+              "modeledHours": 23.73,
+              "cumulativeExp": 349573,
+              "interpolation": {
+                "lowerLevel": 20,
+                "upperLevel": 45,
+                "lowerModeledActions": 166,
+                "upperModeledActions": 1569,
+                "lowerCumulativeExp": 17389,
+                "upperCumulativeExp": 612298,
+                "expFraction": 0.5583778359379333
+              }
+            }
+          },
+          {
             "gateLevel": 42,
             "count": 3,
             "members": [
@@ -6959,6 +7040,30 @@
             }
           },
           {
+            "gateLevel": 43,
+            "count": 1,
+            "members": [
+              211
+            ],
+            "cost": {
+              "level": 43,
+              "basis": "interpolated",
+              "modeledActions": 1216,
+              "modeledSeconds": 109440,
+              "modeledHours": 30.4,
+              "cumulativeExp": 462695,
+              "interpolation": {
+                "lowerLevel": 20,
+                "upperLevel": 45,
+                "lowerModeledActions": 166,
+                "upperModeledActions": 1569,
+                "lowerCumulativeExp": 17389,
+                "upperCumulativeExp": 612298,
+                "expFraction": 0.7485279261197931
+              }
+            }
+          },
+          {
             "gateLevel": 44,
             "count": 2,
             "members": [
@@ -6980,6 +7085,70 @@
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.8654920332353352
+              }
+            }
+          },
+          {
+            "gateLevel": 45,
+            "count": 1,
+            "members": [
+              212
+            ],
+            "cost": {
+              "level": 45,
+              "basis": "anchored",
+              "modeledActions": 1569,
+              "modeledSeconds": 141210,
+              "modeledHours": 39.23,
+              "cumulativeExp": 612298,
+              "interpolation": null
+            }
+          },
+          {
+            "gateLevel": 46,
+            "count": 1,
+            "members": [
+              213
+            ],
+            "cost": {
+              "level": 46,
+              "basis": "interpolated",
+              "modeledActions": 1730,
+              "modeledSeconds": 155700,
+              "modeledHours": 43.25,
+              "cumulativeExp": 704321,
+              "interpolation": {
+                "lowerLevel": 45,
+                "upperLevel": 60,
+                "lowerModeledActions": 1569,
+                "upperModeledActions": 5250,
+                "lowerCumulativeExp": 612298,
+                "upperCumulativeExp": 2721799,
+                "expFraction": 0.043623112764582715
+              }
+            }
+          },
+          {
+            "gateLevel": 47,
+            "count": 1,
+            "members": [
+              214
+            ],
+            "cost": {
+              "level": 47,
+              "basis": "interpolated",
+              "modeledActions": 1914,
+              "modeledSeconds": 172260,
+              "modeledHours": 47.85,
+              "cumulativeExp": 810147,
+              "interpolation": {
+                "lowerLevel": 45,
+                "upperLevel": 60,
+                "lowerModeledActions": 1569,
+                "upperModeledActions": 5250,
+                "lowerCumulativeExp": 612298,
+                "upperCumulativeExp": 2721799,
+                "expFraction": 0.09378947912326185
               }
             }
           },
@@ -7805,13 +7974,6 @@
           "objectiveGateLevel": 35
         },
         {
-          "quest": 84,
-          "minLv": 28,
-          "acceptGateLevel": 28,
-          "objectiveMap": "기계 폐도",
-          "objectiveGateLevel": 35
-        },
-        {
           "quest": 105,
           "minLv": 65,
           "acceptGateLevel": 65,
@@ -8368,7 +8530,7 @@
           "modeledActions": 0,
           "modeledHours": 0,
           "maps": 49,
-          "quests": 141,
+          "quests": 149,
           "equipment": 229,
           "jobs": 18,
           "eventChains": 12
@@ -8379,7 +8541,7 @@
           "modeledActions": 16,
           "modeledHours": 0.4,
           "maps": 47,
-          "quests": 138,
+          "quests": 146,
           "equipment": 193,
           "jobs": 17,
           "eventChains": 12
@@ -8390,7 +8552,7 @@
           "modeledActions": 28,
           "modeledHours": 0.7,
           "maps": 47,
-          "quests": 136,
+          "quests": 144,
           "equipment": 193,
           "jobs": 17,
           "eventChains": 12
@@ -8401,7 +8563,7 @@
           "modeledActions": 41,
           "modeledHours": 1.03,
           "maps": 46,
-          "quests": 130,
+          "quests": 138,
           "equipment": 193,
           "jobs": 17,
           "eventChains": 12
@@ -8412,7 +8574,7 @@
           "modeledActions": 56,
           "modeledHours": 1.4,
           "maps": 46,
-          "quests": 127,
+          "quests": 135,
           "equipment": 193,
           "jobs": 17,
           "eventChains": 12
@@ -8423,7 +8585,7 @@
           "modeledActions": 61,
           "modeledHours": 1.53,
           "maps": 44,
-          "quests": 118,
+          "quests": 126,
           "equipment": 193,
           "jobs": 14,
           "eventChains": 12
@@ -8434,7 +8596,7 @@
           "modeledActions": 66,
           "modeledHours": 1.65,
           "maps": 44,
-          "quests": 117,
+          "quests": 125,
           "equipment": 193,
           "jobs": 14,
           "eventChains": 12
@@ -8445,7 +8607,7 @@
           "modeledActions": 72,
           "modeledHours": 1.8,
           "maps": 43,
-          "quests": 116,
+          "quests": 124,
           "equipment": 193,
           "jobs": 14,
           "eventChains": 12
@@ -8456,7 +8618,7 @@
           "modeledActions": 87,
           "modeledHours": 2.18,
           "maps": 42,
-          "quests": 111,
+          "quests": 119,
           "equipment": 193,
           "jobs": 14,
           "eventChains": 12
@@ -8467,7 +8629,7 @@
           "modeledActions": 95,
           "modeledHours": 2.38,
           "maps": 40,
-          "quests": 101,
+          "quests": 109,
           "equipment": 150,
           "jobs": 14,
           "eventChains": 12
@@ -8478,7 +8640,7 @@
           "modeledActions": 106,
           "modeledHours": 2.65,
           "maps": 39,
-          "quests": 96,
+          "quests": 104,
           "equipment": 150,
           "jobs": 12,
           "eventChains": 12
@@ -8489,7 +8651,7 @@
           "modeledActions": 113,
           "modeledHours": 2.83,
           "maps": 38,
-          "quests": 94,
+          "quests": 102,
           "equipment": 150,
           "jobs": 12,
           "eventChains": 12
@@ -8500,7 +8662,7 @@
           "modeledActions": 140,
           "modeledHours": 3.5,
           "maps": 36,
-          "quests": 89,
+          "quests": 97,
           "equipment": 150,
           "jobs": 12,
           "eventChains": 12
@@ -8511,7 +8673,7 @@
           "modeledActions": 166,
           "modeledHours": 4.15,
           "maps": 34,
-          "quests": 87,
+          "quests": 95,
           "equipment": 150,
           "jobs": 12,
           "eventChains": 12
@@ -8522,9 +8684,20 @@
           "modeledActions": 210,
           "modeledHours": 5.25,
           "maps": 34,
-          "quests": 86,
+          "quests": 94,
           "equipment": 150,
           "jobs": 12,
+          "eventChains": 12
+        },
+        {
+          "level": 26,
+          "basis": "interpolated",
+          "modeledActions": 224,
+          "modeledHours": 5.6,
+          "maps": 32,
+          "quests": 86,
+          "equipment": 150,
+          "jobs": 11,
           "eventChains": 12
         },
         {
@@ -8533,7 +8706,7 @@
           "modeledActions": 257,
           "modeledHours": 6.43,
           "maps": 32,
-          "quests": 78,
+          "quests": 85,
           "equipment": 150,
           "jobs": 11,
           "eventChains": 12
@@ -8544,7 +8717,7 @@
           "modeledActions": 277,
           "modeledHours": 6.93,
           "maps": 32,
-          "quests": 77,
+          "quests": 84,
           "equipment": 107,
           "jobs": 11,
           "eventChains": 12
@@ -8555,9 +8728,20 @@
           "modeledActions": 300,
           "modeledHours": 7.5,
           "maps": 32,
-          "quests": 76,
+          "quests": 83,
           "equipment": 107,
           "jobs": 11,
+          "eventChains": 12
+        },
+        {
+          "level": 31,
+          "basis": "interpolated",
+          "modeledActions": 327,
+          "modeledHours": 8.18,
+          "maps": 32,
+          "quests": 82,
+          "equipment": 107,
+          "jobs": 5,
           "eventChains": 12
         },
         {
@@ -8566,7 +8750,7 @@
           "modeledActions": 480,
           "modeledHours": 12,
           "maps": 32,
-          "quests": 75,
+          "quests": 81,
           "equipment": 107,
           "jobs": 5,
           "eventChains": 12
@@ -8577,7 +8761,7 @@
           "modeledActions": 533,
           "modeledHours": 13.33,
           "maps": 22,
-          "quests": 55,
+          "quests": 60,
           "equipment": 107,
           "jobs": 5,
           "eventChains": 9
@@ -8588,10 +8772,21 @@
           "modeledActions": 842,
           "modeledHours": 21.05,
           "maps": 21,
-          "quests": 55,
+          "quests": 60,
           "equipment": 107,
           "jobs": 5,
           "eventChains": 9
+        },
+        {
+          "level": 41,
+          "basis": "interpolated",
+          "modeledActions": 949,
+          "modeledHours": 23.73,
+          "maps": 18,
+          "quests": 51,
+          "equipment": 107,
+          "jobs": 5,
+          "eventChains": 6
         },
         {
           "level": 42,
@@ -8599,7 +8794,18 @@
           "modeledActions": 1073,
           "modeledHours": 26.83,
           "maps": 18,
-          "quests": 46,
+          "quests": 50,
+          "equipment": 107,
+          "jobs": 5,
+          "eventChains": 6
+        },
+        {
+          "level": 43,
+          "basis": "interpolated",
+          "modeledActions": 1216,
+          "modeledHours": 30.4,
+          "maps": 16,
+          "quests": 47,
           "equipment": 107,
           "jobs": 5,
           "eventChains": 6
@@ -8610,7 +8816,7 @@
           "modeledActions": 1380,
           "modeledHours": 34.5,
           "maps": 16,
-          "quests": 43,
+          "quests": 46,
           "equipment": 107,
           "jobs": 5,
           "eventChains": 6
@@ -8621,9 +8827,31 @@
           "modeledActions": 1569,
           "modeledHours": 39.23,
           "maps": 15,
-          "quests": 41,
+          "quests": 44,
           "equipment": 107,
           "jobs": 5,
+          "eventChains": 6
+        },
+        {
+          "level": 46,
+          "basis": "interpolated",
+          "modeledActions": 1730,
+          "modeledHours": 43.25,
+          "maps": 15,
+          "quests": 43,
+          "equipment": 65,
+          "jobs": 0,
+          "eventChains": 6
+        },
+        {
+          "level": 47,
+          "basis": "interpolated",
+          "modeledActions": 1914,
+          "modeledHours": 47.85,
+          "maps": 15,
+          "quests": 42,
+          "equipment": 65,
+          "jobs": 0,
           "eventChains": 6
         },
         {
