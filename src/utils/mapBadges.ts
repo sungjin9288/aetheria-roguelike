@@ -18,7 +18,7 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import type { GameMap, Player } from '../types/index.js';
-import { getBossGaugeValue, isAreaBossUndefeated } from './bossGauge.js';
+import { getBossGaugeValue, isAreaBossChallengeable } from './bossGauge.js';
 import { canBossAppearInMap } from './bossPresence.js';
 import { getNarrativeEventChance } from './explorationPacing.js';
 
@@ -64,7 +64,7 @@ export function getExitBadges(
         badges.push({ id: 'boss', label: MSG.MAP_BADGE_BOSS });
 
         // 게이지는 미격파 구역 보스에만 쌓인다(bossGauge.ts).
-        const gaugeValue = mapName && isAreaBossUndefeated(map, player) ? getBossGaugeValue(player, mapName) : 0;
+        const gaugeValue = mapName && isAreaBossChallengeable(map, player) ? getBossGaugeValue(player, mapName) : 0;
         if (gaugeValue > 0) {
             const pct = Math.min(100, Math.round(gaugeValue * 100));
             badges.push({ id: 'bossGauge', label: MSG.MAP_BADGE_BOSS_GAUGE(pct) });

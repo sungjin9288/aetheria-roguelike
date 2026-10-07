@@ -9,7 +9,7 @@ import { renderStatic } from './helpers/render.ts';
 
 test('모든 이야기 임무는 실제 선행 순서와 고유한 완료 서사를 가진다', () => {
     const catalog = DB.QUESTS.filter((quest) => quest.title?.startsWith('[스토리]'));
-    assert.deepEqual(STORY_CHAPTERS.map((chapter) => chapter.questId), [80, 81, 82, 84, 83, 85, 86, 87]);
+    assert.deepEqual(STORY_CHAPTERS.map((chapter) => chapter.questId), [80, 81, 82, 207, 208, 209, 84, 83, 210, 211, 212, 213, 214, 85, 86, 87]);
     assert.deepEqual([...STORY_CHAPTERS.map((chapter) => chapter.questId)].sort(), catalog.map((quest) => quest.id).sort());
     assert.equal(new Set(STORY_CHAPTERS.map((chapter) => chapter.body)).size, catalog.length);
     STORY_CHAPTERS.forEach((chapter, index) => {

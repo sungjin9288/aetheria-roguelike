@@ -1,7 +1,7 @@
 import { BALANCE } from '../../data/constants';
 import { DB } from '../../data/db';
 import { MSG } from '../../data/messages';
-import { advanceBossGauge, isAreaBossUndefeated } from '../../utils/bossGauge';
+import { advanceBossGauge, isAreaBossChallengeable } from '../../utils/bossGauge';
 import { buildScoutEvent, consumeScoutCharge, getScoutAvailability } from '../../utils/scoutEvents';
 import { createSeededRandom } from '../../utils/seededRandom';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
@@ -108,7 +108,7 @@ export const exploreActionMap = {
                 : MSG.SCOUT_PAID_LOG(availability.cost),
         }];
         // 게이지가 실제로 오르는 지역에서만 "시간이 흐른다"는 대가를 함께 알린다 (lessons R26).
-        if (isAreaBossUndefeated(mapData, state.player)) {
+        if (isAreaBossChallengeable(mapData, state.player)) {
             logs.push({ id: `scout:${now}:${seed}:time`, type: 'info', text: MSG.SCOUT_TIME_PASSES });
         }
 

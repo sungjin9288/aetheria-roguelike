@@ -15,7 +15,7 @@ import { BALANCE } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { BOSS_MONSTERS } from '../data/monsters.js';
 import type { GameMap, Player } from '../types/index.js';
-import { getAreaBossName, isAreaBossUndefeated } from './bossGauge.js';
+import { getAreaBossName, isAreaBossChallengeable } from './bossGauge.js';
 
 interface HiddenBossUnlock {
     boss: string;
@@ -86,7 +86,7 @@ export const canBossAppearInMap = (
     if (encounterNames.some((name) => isEncounterBoss(name, mapData))) return true;
 
     const areaBossName = getAreaBossName(mapData);
-    if (areaBossName !== null && isAreaBossUndefeated(mapData, player) && isEncounterBoss(areaBossName, mapData)) return true;
+    if (areaBossName !== null && isAreaBossChallengeable(mapData, player) && isEncounterBoss(areaBossName, mapData)) return true;
 
     return hasRemainingAbyssFloorBoss(mapData, player);
 };

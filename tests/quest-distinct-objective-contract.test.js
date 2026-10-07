@@ -96,7 +96,7 @@ const killOnce = (state, loc, { monster, areaBoss = false, seed = 3 }) => {
 // ── 카탈로그 불변식 ──────────────────────────────────────────────────────────────
 
 test('카탈로그: 목표(종류 · 대상 · 지역 · 횟수 · 문턱 · 빌드)가 같은 임무 쌍이 없다', () => {
-    assert.equal(QUESTS.length, 143);
+    assert.equal(QUESTS.length, 151);
     assert.deepEqual(findSameObjectivePairs(QUESTS), []);
 });
 

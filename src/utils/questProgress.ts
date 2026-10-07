@@ -67,6 +67,21 @@ export const getClaimableQuestEntries = (player: Player) => {
     });
 };
 
+/**
+ * 수락했고 아직 목표에 닿지 않은 처치 임무의 정의(현상수배 포함, 수령한 임무 제외) — 2026-10 Wave 74.
+ * 처치 임무는 `type`이 없는 임무다(종류가 있는 임무는 통계 · 행동을 센다).
+ */
+export const getOpenKillQuests = (player: Player | null | undefined, questCatalog: Quest[] = QUESTS): Quest[] => {
+    const claimedQuestIds = new Set((player?.stats?.claimedQuestIds || []).map((id) => String(id)));
+    return (Array.isArray(player?.quests) ? player.quests : []).flatMap((questState) => {
+        const quest = findQuestDefinition(questState, questCatalog);
+        if (!quest || quest.type || !quest.target) return [];
+        if (!questState.isBounty && claimedQuestIds.has(String(quest.id))) return [];
+        if ((questState.progress || 0) >= Number(quest.goal)) return [];
+        return [quest];
+    });
+};
+
 // cycle 508: enemyName / questCatalog default 제거 — 1 callsite (CombatEngine
 //   :1571) 항상 3 args 전달이라 default 도달 불가. util default 청소 메가
 //   시리즈 7번째 (cycle 502-507).

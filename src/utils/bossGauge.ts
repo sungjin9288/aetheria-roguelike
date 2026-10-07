@@ -1,6 +1,8 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
+import { DB } from '../data/db.js';
 import type { GameMap, Player } from '../types/index.js';
+import { getOpenKillQuests } from './questProgress.js';
 
 /**
  * bossGauge.ts — 원정 보스 접근 게이지 (2026-07 감사 축4 — 모바일 세션 정합).
@@ -31,6 +33,23 @@ export const isAreaBossUndefeated = (mapData: GameMap | null | undefined, player
     return !player?.stats?.areaBossDefeated?.[bossName];
 };
 
+/**
+ * 지금 이 지역의 구역 보스에 도전할 수 있는가 — 게이지 · 도전 카드 · 출현 · 지도 배지 · 원정 HUD · 이동 안내 ·
+ * 전투 후 선택이 모두 이 판정을 읽는다(2026-10 Wave 74).
+ *
+ * 미격파이거나, 격파했어도 수락했고 아직 끝나지 않은 처치 임무가 그 보스를 노리면 참이다. 구역 보스는 여정마다
+ * 한 번만 나오는데(`stats.areaBossDefeated`), 임무를 받기 **전에** 잡았으면 그 여정 안에서는 임무를 끝낼 수 없었다
+ * (부가 임무 134 · 142 · 151, 그리고 구역 보스로 끝나는 이야기 장 — 본편 사슬이 통째로 막힌다). 임무의 지역이
+ * 있으면 그 지역의 구역 보스여야 한다.
+ */
+export const isAreaBossChallengeable = (mapData: GameMap | null | undefined, player: Player | null | undefined): boolean => {
+    const bossName = getAreaBossName(mapData);
+    if (!bossName) return false;
+    if (!player?.stats?.areaBossDefeated?.[bossName]) return true;
+    return getOpenKillQuests(player).some((quest) => quest.target === bossName
+        && (!quest.location || getAreaBossName(DB.MAPS[quest.location]) === bossName));
+};
+
 /** 특정 지역의 현재 게이지 값 (0~1, 구세이브/미기록 시 0). */
 export const getBossGaugeValue = (player: Player | null | undefined, loc: string): number => {
     const raw = player?.stats?.bossGauge?.[loc];
@@ -44,11 +63,11 @@ export const isBossGaugeFull = (player: Player | null | undefined, loc: string):
 
 /**
  * 탐험 1회에 대한 다음 게이지 값을 계산한다 (순수 함수, 새 stats 객체 반환).
- * 미격파 구역 보스가 없는 지역이면 기존 stats를 그대로 반환(변화 없음).
+ * 도전할 수 있는 구역 보스가 없는 지역이면 기존 stats를 그대로 반환(변화 없음 — `isAreaBossChallengeable`).
  */
 export const advanceBossGauge = (player: Player, mapData: GameMap | null | undefined): Player['stats'] => {
     const prevStats = player?.stats || {};
-    if (!isAreaBossUndefeated(mapData, player)) return prevStats;
+    if (!isAreaBossChallengeable(mapData, player)) return prevStats;
 
     const loc = player?.loc || '';
     const current = getBossGaugeValue(player, loc);
