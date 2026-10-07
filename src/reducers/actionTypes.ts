@@ -129,6 +129,9 @@ export const AT = Object.freeze({
     CRAFT_BAG: 'CRAFT_BAG',
     SYNTHESIZE_ITEMS: 'SYNTHESIZE_ITEMS',
     AUTO_SELL_MATERIALS: 'AUTO_SELL_MATERIALS',
+    // 2026-10 Wave 75: 떠돌이 행상인 — 만남 카드에서 상점을 열고(사고팔기) 떠나면 만남이 끝난다.
+    OPEN_MERCHANT_SHOP: 'OPEN_MERCHANT_SHOP',
+    LEAVE_MERCHANT: 'LEAVE_MERCHANT',
     PURCHASE_PREMIUM_OFFER: 'PURCHASE_PREMIUM_OFFER',
     USE_COMBAT_ITEM: 'USE_COMBAT_ITEM',
     RESOLVE_COMBAT_ACTION: 'RESOLVE_COMBAT_ACTION',
@@ -371,6 +374,8 @@ export interface ActionPayloadMap {
     [AT.CRAFT_BAG]: CraftBagPayload;
     [AT.SYNTHESIZE_ITEMS]: SynthesizeItemsPayload;
     [AT.AUTO_SELL_MATERIALS]: undefined;
+    [AT.OPEN_MERCHANT_SHOP]: undefined;
+    [AT.LEAVE_MERCHANT]: undefined;
     [AT.PURCHASE_PREMIUM_OFFER]: PurchasePremiumOfferPayload;
     [AT.USE_COMBAT_ITEM]: UseCombatItemPayload;
     [AT.RESOLVE_COMBAT_ACTION]: ResolveCombatActionPayload;

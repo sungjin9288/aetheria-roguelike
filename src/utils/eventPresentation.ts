@@ -33,6 +33,8 @@ interface PresentationEvent {
     isBossGaugeChallenge?: boolean;
     isDimensionGrave?: boolean;
     dimensionGrave?: DimensionGraveRef;
+    isWanderingMerchant?: boolean;
+    merchantStock?: { count: number; rare: number };
     isBoundedEncounter?: boolean;
     boundedEncounterId?: string;
     _chainId?: string;
@@ -369,6 +371,12 @@ export const getEventChoicePreview = (
             return { text: MSG.DIMENSION_GRAVE_PREVIEW_PRAY(Math.round(BALANCE.DIMENSION_GRAVE_PRAYER_HEAL_RATIO * 100)), tone: 'recovery' };
         }
         return { text: MSG.DIMENSION_GRAVE_PREVIEW_LEAVE, tone: 'unknown' };
+    }
+    // Wave 75: 떠돌이 행상인 — 살펴보기는 이번 만남의 재고와 판매, 지나치기는 행상인이 떠난다.
+    if (event?.isWanderingMerchant) {
+        return choiceIndex === 0
+            ? { text: MSG.MERCHANT_PREVIEW_BROWSE(event.merchantStock?.count ?? 0, event.merchantStock?.rare ?? 0), tone: 'reward' }
+            : { text: MSG.MERCHANT_PREVIEW_PASS, tone: 'unknown' };
     }
     if (event?.isBoundedEncounter) return getBoundedPreview(event, outcome, context);
     if (event?._chainId) return withBuffKeptNotice(getChainPreview(outcome), event, outcome, context);

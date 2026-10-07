@@ -84,6 +84,12 @@ export const createEventActions = (deps: GameActionDeps, shared: TitleSharedHelp
                 return;
             }
 
+            // 떠돌이 행상인(Wave 75) — 살펴보기는 행상인 상점(사고팔기), 지나치기는 만남이 끝난다. 판정은 리듀서가 한다.
+            if (currentEvent.isWanderingMerchant) {
+                dispatch({ type: idx === 0 ? AT.OPEN_MERCHANT_SHOP : AT.LEAVE_MERCHANT });
+                return;
+            }
+
             const chainId = currentEvent._chainId;
             const chainStep = currentEvent._chainStep;
             // `Boolean(currentEvent._chainId)`와 같은 판정 — const 로컬로 바꿔 아래 블록에서

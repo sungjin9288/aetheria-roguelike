@@ -545,6 +545,17 @@ export const BALANCE = {
     DIMENSION_GRAVE_NAME_MAX: 16,            // 표시 이름 상한(인트로 이름 입력 maxLength와 같다)
     DIMENSION_GRAVE_UPLOAD_ITEM_LIMIT: 3,    // 사망 때 공개 묘비에 올리는 유품 수(rules 상한 5 안쪽)
 
+    // 떠돌이 행상인(2026-10 Wave 75, 소유자 결정 "가방은 현행 유지, 대신 낮은 확률의 이벤트로 행상인 — 물품은 늘 바뀌고 가끔 희귀한
+    //   재료 · 장비, 판매도 가능"): 사냥 지역 탐험 중에 드물게 만난다. 만남 · 재고는 탐험 난수를 쓰지 않고 탐험 수 · 지역의 해시로
+    //   정한다 — 만나지 않는 탐험의 난수열은 기능 이전과 같다(`utils/wanderingMerchant.ts`). 판매가는 상점과 같다(경제 불변).
+    WANDERING_MERCHANT_CHANCE: 0.012,              // 자격이 있는 탐험 1회당 — 약 80탐험(모델 2시간)에 한 번
+    WANDERING_MERCHANT_PRICE_MULT: 1.3,            // 떠돌이 할증(기본 상품)
+    WANDERING_MERCHANT_RARE_CHANCE: 0.35,          // 희귀 상품 한 칸이 붙을 확률
+    WANDERING_MERCHANT_RARE_PRICE_MULT: 2,         // 희귀 상품 할증
+    WANDERING_MERCHANT_RARE_MATERIAL_PRICE_PER_LEVEL: 40, // 희귀 재료(강화 재료)의 최저가 = 지역 레벨 × 이 값
+    WANDERING_MERCHANT_CONSUMABLE_PRICE_FLOOR: 60,          // 소모품은 기본가가 max(이 값, 지역 레벨 × 아래 값) 이하인 것만 — Lv1에 영웅의 물약을 팔지 않는다
+    WANDERING_MERCHANT_CONSUMABLE_PRICE_PER_LEVEL: 20,
+
     // 발견 체인 (Discovery Chains)
     DISCOVERY_CHAINS,
 

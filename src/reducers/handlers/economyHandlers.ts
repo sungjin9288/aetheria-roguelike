@@ -19,6 +19,7 @@ import { getAutoSellMaterialTargets } from '../../utils/bagCrafting';
 import { incrementStat } from '../../utils/playerStateUtils';
 import { syncQuestProgress } from '../../utils/questProgress';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
+import { endMerchantVisit, getActiveMerchantVisit, getMerchantOffer, markMerchantOfferSold } from '../../utils/wanderingMerchant';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
 import { getSignatureSaleVerdict } from '../../utils/signatureSale';
 import { getRecipeInputIds } from '../../utils/recipeInputSelection';
@@ -65,13 +66,17 @@ const buyShopItem = (state: GameState, action: ActionOf<typeof AT.BUY_SHOP_ITEM>
     const inventory = state.player.inv || [];
     if (state.player.gold !== expectedGold || inventory.length !== expectedInventorySize) return state;
 
-    const offer = getCanonicalShopOffer(
-        source,
-        itemName,
-        state.player.level || 1,
-        state.player.loc || '',
-    );
-    if (!offer) return state;
+    // 2026-10 Wave 75: 떠돌이 행상인의 물건은 이번 만남의 재고(`player.merchantVisit`)가 값을 정한다 — 그 지역에 있을 때만.
+    const fromMerchant = source === 'merchant';
+    const offer = fromMerchant
+        ? getMerchantOffer(state.player, itemName)
+        : getCanonicalShopOffer(
+            source,
+            itemName,
+            state.player.level || 1,
+            state.player.loc || '',
+        );
+    if (!offer) return fromMerchant ? rejectTransaction(state, 'error', MSG.MERCHANT_BUY_UNAVAILABLE) : state;
     if ((state.player.gold || 0) < offer.price) {
         return rejectTransaction(state, 'error', MSG.GOLD_INSUFFICIENT);
     }
@@ -89,8 +94,9 @@ const buyShopItem = (state: GameState, action: ActionOf<typeof AT.BUY_SHOP_ITEM>
 
     const purchasedItem = makeItem(offer.item);
     const codexBefore = countNewCodexEntries(state.player);
+    const buyer = fromMerchant ? markMerchantOfferSold(state.player, itemName) : state.player;
     let player = registerLootToCodex({
-        ...state.player,
+        ...buyer,
         gold: (state.player.gold || 0) - offer.price,
         inv: [...inventory, purchasedItem],
     }, [offer.item]);
@@ -318,6 +324,26 @@ const autoSellMaterials = (state: GameState): GameState => {
     return completeTransaction(state, player, logs);
 };
 
+/** 행상인 만남 카드 → 행상인 상점(사고팔기). 카드가 열려 있고 그 지역의 만남이 유효할 때만. */
+const openMerchantShop = (state: GameState): GameState => {
+    if (state.gameState !== GS.EVENT || !state.currentEvent?.isWanderingMerchant) return state;
+    if (!getActiveMerchantVisit(state.player)) return state;
+    return { ...state, gameState: GS.SHOP, currentEvent: null };
+};
+
+/** 행상인이 떠난다 — 만남 카드나 행상인 상점에서 나오면 만남이 끝난다(다시 볼 수 없다). */
+const leaveMerchant = (state: GameState): GameState => {
+    const fromCard = state.gameState === GS.EVENT && Boolean(state.currentEvent?.isWanderingMerchant);
+    const fromShop = state.gameState === GS.SHOP && Boolean(getActiveMerchantVisit(state.player));
+    if (!fromCard && !fromShop && !state.player.merchantVisit) return state;
+    return {
+        ...state,
+        player: endMerchantVisit(state.player),
+        ...(fromCard || fromShop ? { gameState: GS.IDLE, currentEvent: null } : {}),
+        logs: appendRewardLogs(state.logs, [{ type: 'info', text: MSG.MERCHANT_LEAVE_LOG }]),
+    };
+};
+
 export const economyActionMap = {
     BUY_SHOP_ITEM: buyShopItem,
     SELL_INVENTORY_ITEM: sellInventoryItem,
@@ -325,4 +351,6 @@ export const economyActionMap = {
     CRAFT_BAG: craftBag,
     SYNTHESIZE_ITEMS: synthesizeItems,
     AUTO_SELL_MATERIALS: autoSellMaterials,
+    OPEN_MERCHANT_SHOP: openMerchantShop,
+    LEAVE_MERCHANT: leaveMerchant,
 } satisfies HandlerMap;

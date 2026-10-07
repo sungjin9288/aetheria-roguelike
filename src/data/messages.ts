@@ -266,6 +266,26 @@ export const MSG = {
     DIMENSION_GRAVE_PREVIEW_PRAY: (percent: number) => `최대 생명의 ${percent}% 회복 · 전투 없음`,
     DIMENSION_GRAVE_PREVIEW_LEAVE: '아무 일도 일어나지 않음',
 
+    // --- 떠돌이 행상인 (2026-10 Wave 75) — 사냥 지역에서 드물게 만나는 상인. 물품은 만날 때마다 바뀌고 판매도 된다 ---
+    MERCHANT_TITLE: '떠돌이 행상인',
+    MERCHANT_DESC: (count: number, rare: boolean) => rare
+        ? `짐을 잔뜩 진 떠돌이 행상인이 길을 막아 섭니다. "오늘은 귀한 물건이 있다네." 보따리에 ${count}가지 물건이 보입니다.`
+        : `짐을 잔뜩 진 떠돌이 행상인이 길을 막아 섭니다. "필요한 게 있으면 사고, 짐이 무거우면 팔고 가게." 보따리에 ${count}가지 물건이 보입니다.`,
+    MERCHANT_CHOICE_BROWSE: '물건을 살펴본다 — 사고팔기',
+    MERCHANT_CHOICE_PASS: '지나친다',
+    MERCHANT_PREVIEW_BROWSE: (count: number, rare: number) => (rare > 0
+        ? `이번 만남에만 파는 물건 ${count}가지(희귀 ${rare}) · 가방 물건 판매 가능`
+        : `이번 만남에만 파는 물건 ${count}가지 · 가방 물건 판매 가능`),
+    MERCHANT_PREVIEW_PASS: '행상인이 떠납니다',
+    MERCHANT_LEAVE_LOG: '행상인이 짐을 꾸려 다음 길로 떠났습니다.',
+    MERCHANT_SHOP_EYEBROW: '길 위의 거래',
+    MERCHANT_SHOP_NOTE: '이번 만남에만 파는 물건입니다 · 떠나면 다시 볼 수 없습니다.',
+    MERCHANT_RARE_BADGE: '희귀',
+    MERCHANT_SOLD_OUT: '모두 팔렸습니다',
+    MERCHANT_BUY_UNAVAILABLE: '행상인에게 그 물건이 없습니다.',
+    MERCHANT_BUY_ACTION: '구매',
+    MERCHANT_BUY_BLOCKED: '불가',
+
     // --- 신규 직업 스킬 (Sprint 16) ---
     SKILL_EXTRA_TURN: (name: string) => `[${name}] 시간이 흘러갑니다 — 추가 행동 획득!`,
     SKILL_RESET_COOLDOWNS: (name: string) => `${name} 효과로 모든 기술을 바로 다시 사용할 수 있습니다.`,

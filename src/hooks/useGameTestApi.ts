@@ -1,5 +1,6 @@
 import { useEffect, type RefObject } from 'react';
 import { setDimensionGravePool } from '../platform/dimensionGravePool';
+import { canMeetMerchantIn, shouldMeetMerchant } from '../utils/wanderingMerchant';
 import { EVENT_CHAINS } from '../data/eventChains';
 import type { useGameEngine } from './useGameEngine';
 import type {
@@ -301,6 +302,21 @@ export interface DimensionGraveSnapshot {
     metUids: string[];
 }
 
+/** Wave 75: seedWanderingMerchantScenario() 반환 모양 — 만나는 탐험 수 · 판매용으로 넣은 재료 이름. */
+export interface WanderingMerchantSeed {
+    loc: string;
+    explores: number;
+    sellItemName: string;
+}
+
+/** Wave 75: getWanderingMerchantSnapshot() — 지금 모드 · 골드 · 가방 이름 · 이번 만남의 재고(없으면 빈 배열). */
+export interface WanderingMerchantSnapshot {
+    gameState: GameMode;
+    gold: number;
+    invNames: string[];
+    stock: Array<{ name: string; price: number; rare: boolean; sold: boolean }>;
+}
+
 /** injectRelicReplaceChoice() 반환 모양 — e2e가 이름으로 단언한다. */
 export interface RelicReplaceChoiceSeed {
     capacity: number;
@@ -392,6 +408,8 @@ export interface AetheriaTestApi {
      */
     seedDimensionGraveScenario: () => DimensionGraveSeed | false;
     getDimensionGraveSnapshot: (itemName: string) => DimensionGraveSnapshot;
+    seedWanderingMerchantScenario: () => WanderingMerchantSeed | false;
+    getWanderingMerchantSnapshot: () => WanderingMerchantSnapshot;
     getCanonicalUndyingRelicChoiceSnapshot: () => CanonicalUndyingRelicChoiceSnapshot;
     injectFreeSkillRelicChoice: () => void;
     getCanonicalFreeSkillRelicChoiceSnapshot: () => CanonicalFreeSkillRelicChoiceSnapshot;
@@ -1910,6 +1928,42 @@ export const useGameTestApi = (
                         .map((entry: Item) => Number(entry.val)),
                     metToday: sameDay ? Number(er.player.stats?.dailyInvadeCount) || 0 : 0,
                     metUids: sameDay && Array.isArray(er.player.stats?.invadedGraveUids) ? er.player.stats.invadedGraveUids : [],
+                };
+            },
+            seedWanderingMerchantScenario: () => {
+                const er = engineRef.current;
+                const loc = er.player.loc;
+                const mapData = loc ? DB.MAPS[loc] : null;
+                if (!loc || !mapData || !canMeetMerchantIn(mapData)) return false;
+                // 만남은 탐험 수 · 지역의 해시다 — 지금 지역에서 만나는 다음 탐험 수를 찾는다(원정 시작 기록보다 커야 선택 이벤트가 열린다).
+                let explores = Math.max(Number(er.player.stats?.explores) || 0, Number(er.player.activeExpedition?.explores) || 0) + 1;
+                while (!shouldMeetMerchant({ ...er.player, stats: { ...(er.player.stats || {}), explores } }, mapData, loc)) explores += 1;
+                const material = DB.ITEMS.materials.find((entry) => (Number(entry.price) || 0) > 0 && entry.name !== CONSTANTS.ENHANCE_MATERIAL_NAME);
+                if (!material) return false;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (p: Player) => ({
+                        ...p,
+                        gold: Math.max(p.gold || 0, 100_000),
+                        inv: [...(p.inv || []), { ...material, id: 'qa-merchant-sell' }],
+                        // 이야기 체인 단계는 행상인보다 먼저 뜬다 — 이 시드는 행상인 경로만 보므로 체인을 끝난 상태로 둔다.
+                        eventChainProgress: Object.fromEntries(EVENT_CHAINS.map((chain) => [chain.id, chain.steps.length])),
+                        stats: {
+                            ...(p.stats || {}),
+                            explores,
+                            exploreState: { ...(p.stats?.exploreState || {}), sinceNarrativeEvent: 3 },
+                        },
+                    }),
+                });
+                return { loc, explores, sellItemName: String(material.name) };
+            },
+            getWanderingMerchantSnapshot: () => {
+                const er = engineRef.current;
+                return {
+                    gameState: er.gameState,
+                    gold: Number(er.player.gold) || 0,
+                    invNames: (er.player.inv || []).map((entry: Item) => String(entry.name)),
+                    stock: (er.player.merchantVisit?.stock || []).map((slot) => ({ ...slot })),
                 };
             },
             injectUndyingRelicChoice: () => {

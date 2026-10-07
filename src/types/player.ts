@@ -517,6 +517,20 @@ export type StatusId =
  *     진행 상태와 함께 보관하고 `isBounty: true`로 표시한다. 아래 정의 필드는 전부
  *     "현상수배 전용"이며 카탈로그 퀘스트에는 존재하지 않는다.
  */
+/** 떠돌이 행상인의 한 칸(Wave 75) — 카탈로그 아이템 이름과 이번 만남의 값. */
+export interface WanderingMerchantOffer {
+    name: string;
+    price: number;
+    rare: boolean;
+    sold: boolean;
+}
+
+/** 떠돌이 행상인과의 만남(Wave 75). */
+export interface WanderingMerchantVisit {
+    loc: string;
+    stock: WanderingMerchantOffer[];
+}
+
 export interface QuestProgressState {
     id: number | string;
     /** 현재 진행도. 목표치(`Quest.goal`)는 카탈로그(또는 현상수배의 `goal`)가 소유. */
@@ -663,6 +677,11 @@ export interface Player {
      * (`stats.visitedMaps`)을 받은 것으로 읽는다(`utils/firstVisitRewards.ts`) — 이번 여정에 받은 보상을 다시 주지 않는다.
      */
     firstVisitRewardMaps?: string[];
+    /**
+     * 2026-10 Wave 75: 지금 만나고 있는 떠돌이 행상인 — 만난 지역과 이번 만남의 재고(산 칸은 `sold`). 그 지역에 있는 동안만
+     * 유효하다(`getActiveMerchantVisit`). 런 범위라 `pickPermanentPlayerState`에 넣지 않는다. 없으면 행상인이 없다.
+     */
+    merchantVisit?: WanderingMerchantVisit;
     /** cycle 186: PremiumShop 부활 토큰 보유 수 — 환생에도 보존되는 영구 자산. */
     reviveTokens?: number;
     /** 2026-07 에테르 거울 revive를 이 런에서 이미 썼는지. 새 런 시작 시 자연 리셋. */

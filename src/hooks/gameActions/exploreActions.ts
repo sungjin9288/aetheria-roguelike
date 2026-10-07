@@ -26,6 +26,7 @@ import { buildBoundedEncounterContext, selectBoundedEncounter } from '../../util
 import { buildBoundedEncounterEvent } from '../../utils/boundedEncounterEvent';
 import { getAdditiveNumericRelicValue } from '../../utils/relicEffectValues';
 import { buildDimensionGraveEvent, markDimensionGraveMet, pickDimensionGrave, selectDimensionGraveCandidates } from '../../utils/dimensionGrave';
+import { buildMerchantEvent, buildMerchantStock, shouldMeetMerchant, startMerchantVisit } from '../../utils/wanderingMerchant';
 
 const takeHarnessExploreSeed = (): number | undefined => {
     if (import.meta.env?.VITE_ENABLE_TEST_API !== '1' || typeof document === 'undefined') {
@@ -272,6 +273,20 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: graveEvent });
                 addLog('event', graveEvent.desc);
+                return;
+            }
+
+            // 떠돌이 행상인 (2026-10 Wave 75, 소유자 결정 "낮은 확률의 이벤트로 행상인 — 물품은 늘 바뀌고, 판매도 가능"):
+            //   만남 · 재고는 탐험 난수(`actionRng`)를 쓰지 않고 탐험 수 · 지역의 해시로 정한다 — 만나지 않는 탐험의 난수열은
+            //   기능 이전과 같다. 재고는 만남에 실려(`player.merchantVisit`) 구매 리듀서가 그 값으로 검증한다.
+            if (optionalDecisionAllowed && shouldMeetMerchant(player, mapData, player.loc!)) {
+                commitExploreOutcome('narrative_event', null, mapData);
+                const stock = buildMerchantStock(player, player.loc!);
+                dispatch({ type: AT.SET_PLAYER, payload: (p: Player) => startMerchantVisit(p, p.loc!, stock) });
+                const merchantEvent = buildMerchantEvent(stock);
+                dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+                dispatch({ type: AT.SET_EVENT, payload: merchantEvent });
+                addLog('event', merchantEvent.desc);
                 return;
             }
 
