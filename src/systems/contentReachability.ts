@@ -339,7 +339,7 @@ const QUEST_GATE_AUTHORITY = 'A quest is priced at its objective gate: max(accep
 const EXPECTED_CATALOG_COUNTS = Object.freeze({
     maps: 52,
     monsters: 254,
-    quests: 143,
+    quests: 151,
     jobs: 18,
     equipment: 229,
     signatures: 25,

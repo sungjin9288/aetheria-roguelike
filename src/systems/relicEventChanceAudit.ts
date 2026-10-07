@@ -138,7 +138,7 @@ export const buildRelicEventChanceReport = ({
 
     const optionalRollIndex = exploreActionsSource.indexOf('await runExplorePostDecisionRoll(');
     const mandatoryStoryIndex = exploreActionsSource.indexOf('getChainEventForLoc(player.loc');
-    const bossChallengeIndex = exploreActionsSource.indexOf('if (isAreaBossUndefeated(');
+    const bossChallengeIndex = exploreActionsSource.indexOf('if (isAreaBossChallengeable(');
     const mandatoryStoryBeforeOptionalRoll = mandatoryStoryIndex >= 0
         && optionalRollIndex >= 0
         && mandatoryStoryIndex < optionalRollIndex;

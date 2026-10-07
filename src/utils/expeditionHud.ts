@@ -1,7 +1,7 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { DB } from '../data/db.js';
-import { getAreaBossName, getBossGaugeValue, isAreaBossUndefeated } from './bossGauge.js';
+import { getAreaBossName, getBossGaugeValue, isAreaBossChallengeable } from './bossGauge.js';
 import { getAbyssDailyDiveRemaining } from './abyssDailyDive.js';
 import { getProtocolDayKey } from './protocolCycle.js';
 import type { Player } from '../types/index.js';
@@ -43,7 +43,7 @@ export const getBossGaugeChip = (player: Player | null | undefined): ExpeditionH
     if (player?.challengeModifiers?.includes('blindMap')) return null;
 
     const mapData = DB.MAPS[loc];
-    if (!isAreaBossUndefeated(mapData, player)) return null;
+    if (!isAreaBossChallengeable(mapData, player)) return null;
 
     const bossName = getAreaBossName(mapData);
     if (!bossName) return null;

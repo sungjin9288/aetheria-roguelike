@@ -176,13 +176,26 @@ const RAW_QUESTS: Quest[] = [
 
     // ── 스토리 퀘스트 ─────────────────────────────────────────────────────────
     // 레벨은 도전 가능 시점, prerequisiteQuestId는 실제 서사 순서를 책임진다.
-    // 기계 폐도(Lv28)를 거쳐 얼음 권역(Lv35)으로 이어진 뒤 마왕 추적이 시작된다.
+    // 2026-10 Wave 74 (소유자 결정 "8장 · 최대 공백 약 7.6시간"): 이야기가 Lv19 → 37(21h) · Lv37 → 48(38h) 동안
+    //   비어 있었다(원장 §75.1). 그 사이에 8장(207 ~ 214, Lv26 · 31 · 35 · 41 · 43 · 45 · 46 · 47)을 넣었고 각 장은
+    //   그 구간의 보스로 끝난다: 용의 둥지 → 저주받은 묘지 → 기계 폐도 → 빙하 심연 → 용암 지대 → 폭풍의 고원 →
+    //   천공 정원 → 암흑 성 → 마왕성. 구역 보스(여정당 한 번)를 노리는 장은 임무를 받기 전에 그 보스를 잡았어도
+    //   다시 도전할 수 있다(`isAreaBossChallengeable`) — 그렇지 않으면 본편 사슬이 그 여정 안에서 막힌다.
     { id: FIRST_STORY_QUEST_ID, title: '[스토리] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다', type: 'explore_count', target: 'explores', location: '고요한 숲', goal: 1, reward: { exp: 100, gold: 200 }, minLv: 1 },
     { id: 81, title: '[스토리] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', location: '잊혀진 폐허', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5,  prerequisiteQuestId: 80 },
     { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 5마리를 처치한다', target: '화염 정령', location: '화염의 협곡', goal: 5, reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15, prerequisiteQuestId: 81 },
+    { id: 207, title: '[스토리] 용족의 경고',  desc: '용의 둥지에서 화염의 군주를 쓰러뜨려 용족 문자가 경고한 것을 확인한다', target: '화염의 군주', location: '용의 둥지', goal: 1, reward: { exp: 4000, gold: 4000 }, minLv: 26, prerequisiteQuestId: 82 },
+    { id: 208, title: '[스토리] 둥지의 주인',  desc: '용의 둥지에서 레드 드래곤 3마리를 쓰러뜨려 둥지가 지키던 것을 찾는다', target: '레드 드래곤', location: '용의 둥지', goal: 3, reward: { exp: 5000, gold: 5000 }, minLv: 31, prerequisiteQuestId: 207 },
+    { id: 209, title: '[스토리] 망자의 봉인',  desc: '저주받은 묘지에서 묘지기 네크론을 쓰러뜨려 제국이 묻은 봉인을 확인한다', target: '묘지기 네크론', location: '저주받은 묘지', goal: 1, reward: { exp: 6000, gold: 7000 }, minLv: 35, prerequisiteQuestId: 208 },
     { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙하 심연에서 빙결의 마녀를 처치해 저주의 정체를 밝힌다', target: '빙결의 마녀', location: '빙하 심연', goal: 1, reward: { exp: 8000, gold: 8000, item: '냉기의 결정' }, minLv: 35, prerequisiteQuestId: 84 },
-    { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도에서 증기 골렘 10기를 쓰러뜨리고 진실을 밝힌다', target: '증기 골렘', location: '기계 폐도', goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 28, prerequisiteQuestId: 82 },
-    { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕성에서 마왕의 사도 5명을 처치해 마왕의 계획을 알아낸다', target: '마왕의 사도', location: '마왕성', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 48, prerequisiteQuestId: 83 },
+    // Wave 74: minLv 28 → 35 — 선행이 209(저주받은 묘지 Lv35)가 되어 실제 수락은 35부터다(87이 Wave 28에 맞춘 것과 같은 정렬).
+    { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도에서 증기 골렘 10기를 쓰러뜨리고 진실을 밝힌다', target: '증기 골렘', location: '기계 폐도', goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 35, prerequisiteQuestId: 209 },
+    { id: 210, title: '[스토리] 빙하의 심장',  desc: '빙하 심연 깊은 곳에서 아이스 드래곤을 쓰러뜨려 남은 기척의 정체를 밝힌다', target: '아이스 드래곤', location: '빙하 심연', goal: 1, reward: { exp: 9000, gold: 10000 }, minLv: 41, prerequisiteQuestId: 83 },
+    { id: 211, title: '[스토리] 꺼지지 않는 불', desc: '용암 지대에서 화염 군주 이프리트를 쓰러뜨려 봉인을 녹이는 불씨를 끈다', target: '화염 군주 이프리트', location: '용암 지대', goal: 1, reward: { exp: 10000, gold: 11000 }, minLv: 43, prerequisiteQuestId: 210 },
+    { id: 212, title: '[스토리] 폭풍의 날개',  desc: '폭풍의 고원에서 천둥새 제피로스를 쓰러뜨려 폭풍 속에 숨은 길을 찾는다', target: '천둥새 제피로스', location: '폭풍의 고원', goal: 1, reward: { exp: 11000, gold: 12000 }, minLv: 45, prerequisiteQuestId: 211 },
+    { id: 213, title: '[스토리] 물든 정원',    desc: '천공 정원에서 타락한 세계수 수호자를 쓰러뜨려 정원을 정화한다', target: '타락한 세계수 수호자', location: '천공 정원', goal: 1, reward: { exp: 12000, gold: 13000 }, minLv: 46, prerequisiteQuestId: 212 },
+    { id: 214, title: '[스토리] 혈월의 문',    desc: '암흑 성에서 혈월의 뱀파이어 로드를 쓰러뜨려 결전으로 가는 길을 연다', target: '혈월의 뱀파이어 로드', location: '암흑 성', goal: 1, reward: { exp: 13000, gold: 15000 }, minLv: 47, prerequisiteQuestId: 213 },
+    { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕성에서 마왕의 사도 5명을 처치해 마왕의 계획을 알아낸다', target: '마왕의 사도', location: '마왕성', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 48, prerequisiteQuestId: 214 },
     // 2026-09 Wave 28 (D6): 86은 에테르 관문(경로 게이트 68 = 170.23h)이었다 — 본편이 승천 지점(마왕성 48)을
     //   걸쳐 87을 끝내기 전에 마왕 처치마다 계승 제안이 떴다. 체인에 적용한 Wave 15 G1과 같은 기준으로
     //   마왕성(48)의 `지옥의 문지기`(다른 임무 목표와 겹치지 않는 비보스)로 옮겼다. 에테르 관문은 후일담으로 남는다.

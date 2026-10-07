@@ -1,7 +1,7 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { DB } from '../data/db.js';
-import { advanceBossGauge, isAreaBossUndefeated } from './bossGauge.js';
+import { advanceBossGauge, isAreaBossChallengeable } from './bossGauge.js';
 import { applyTempBuffRule, mergeTempBuff } from '../systems/tempBuffMerge.js';
 import type { GameMap, Player, PostCombatResult } from '../types/index.js';
 
@@ -55,7 +55,7 @@ export const isPostCombatChoiceOffered = (result: PostCombatResult | null | unde
 export const doesPushAdvanceBossGauge = (
     player: Player | null | undefined,
     mapData: GameMap | null | undefined,
-): boolean => isAreaBossUndefeated(mapData, player);
+): boolean => isAreaBossChallengeable(mapData, player);
 
 /**
  * 두 선택지의 표시 정보 — 수치는 전부 BALANCE, 문구는 전부 MSG.

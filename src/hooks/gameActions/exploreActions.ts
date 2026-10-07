@@ -15,7 +15,7 @@ import { getChainEventForLoc } from '../../data/eventChains';
 import { canInvestigateTown } from '../../utils/townInvestigation';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../../utils/scoutEvents';
-import { isAreaBossUndefeated, isBossGaugeFull, isBossGaugeCardSuppressed, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
+import { isAreaBossChallengeable, isBossGaugeFull, isBossGaugeCardSuppressed, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
 import type { GameMap, Player } from '../../types';
 import type { GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -243,7 +243,7 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             //   미뤄지면 "접근했는데 아무 일도 안 일어남"이 반복돼 게이지 시스템의
             //   존재감이 사라짐).
             //   Wave 62 C5: "회피"를 고른 지역은 `BALANCE.BOSS_GAUGE_EVADE_EXPLORES`번 탐험하는 동안 카드를 건너뛴다(게이지는 만충 그대로).
-            if (isAreaBossUndefeated(mapData, player) && isBossGaugeFull(player, player.loc!)
+            if (isAreaBossChallengeable(mapData, player) && isBossGaugeFull(player, player.loc!)
                 && !isBossGaugeCardSuppressed(player, player.loc!)) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const bossName = getAreaBossName(mapData) as string;

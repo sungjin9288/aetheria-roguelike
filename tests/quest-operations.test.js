@@ -152,7 +152,8 @@ test('story missions unlock one chapter at a time even for a high-level player',
 });
 
 test('story mission data keeps the intended chapter sequence explicit', () => {
-    const storySequence = [80, 81, 82, 84, 83, 85, 86, 87];
+    // Wave 74: 중반 8장(207 ~ 214)이 82 → 84 · 83 → 85 사이에 들어갔다.
+    const storySequence = [80, 81, 82, 207, 208, 209, 84, 83, 210, 211, 212, 213, 214, 85, 86, 87];
     const storyQuests = new Map(QUESTS.map((quest) => [quest.id, quest]));
 
     assert.equal(storyQuests.get(storySequence[0]).prerequisiteQuestId, undefined);

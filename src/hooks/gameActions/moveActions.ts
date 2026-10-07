@@ -11,7 +11,7 @@ import { getGoldIncome, getVisibleLocationName, isBlindMap } from '../../utils/c
 import { getFirstVisitClaimedMaps, markFirstVisitRewardClaimed } from '../../utils/firstVisitRewards';
 import { checkDiscoveryChains } from './exploreFlow';
 import { CombatEngine } from '../../systems/CombatEngine';
-import { isAreaBossUndefeated, getAreaBossName } from '../../utils/bossGauge';
+import { isAreaBossChallengeable, getAreaBossName } from '../../utils/bossGauge';
 import { finishExpedition, normalizeActiveExpedition, startExpedition } from '../../utils/expeditionLedger';
 import { resolveProgressionProfile, scaleProgressionExpReward } from '../../data/progressionProfiles';
 import type { Player } from '../../types';
@@ -132,7 +132,7 @@ export const createMoveActions = (deps: GameActionDeps) => {
             //   던전 진입 시마다 "지역 진입 → 구역 보스 격파" 원정 프레이밍을 안내한다.
             //   첫 방문 여부와 무관하게 매 진입마다 표시(재진입 시에도 원정 목표를 되새김).
             //   길 잃은 여행이면 띄우지 않는다 — 구역 보스 이름이 곧 지역이다(원정 HUD도 숨는다, `expeditionHud.ts`).
-            if (!blindMap && isAreaBossUndefeated(targetMap, player)) {
+            if (!blindMap && isAreaBossChallengeable(targetMap, player)) {
                 addLog('event', MSG.EXPEDITION_GOAL_BANNER(getAreaBossName(targetMap) as string));
             }
 

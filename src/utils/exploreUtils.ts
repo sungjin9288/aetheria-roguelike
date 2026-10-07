@@ -34,6 +34,7 @@ import { getPrestigeEnemyLevelBonus } from '../systems/metaBonusRamp.js';
 import { getJourneyFirstVisitReward } from './firstVisitRewards.js';
 import { getFocusedExpeditionQuestEntries } from './expeditionMissionFocus';
 import { EARLY_ELITE_PREFIX_NAME, getSpeciesPrefixPool } from './enemyIdentity.js';
+import { isAreaBossChallengeable } from './bossGauge.js';
 import { getUnlockedHiddenBosses, isEncounterBoss } from './bossPresence.js';
 
 const getActiveHuntTargets = (mapData: GameMap, player: Player) => {
@@ -112,8 +113,9 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     //   (bossGauge.ts) 만충 후 "도전" 선택 시에만 options.forceAreaBoss:true로
     //   결정론적 스폰 (exploreActions.ts/eventActions.ts가 이 함수를 재호출).
     const areaBossName: string | null = typeof mapData.boss === 'string' ? mapData.boss : null;
+    // 2026-10 Wave 74: 미격파 또는 수락한 임무가 다시 부르는 구역 보스 — 게이지 · 도전 카드와 같은 판정이다.
     const spawnAreaBoss = areaBossName !== null
-        && !(player.stats?.areaBossDefeated?.[areaBossName])
+        && isAreaBossChallengeable(mapData, player)
         && Boolean(options.forceAreaBoss);
     const baseName: string | null = storyMonster
         ?? ((spawnAreaBoss && areaBossName !== null)

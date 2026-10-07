@@ -380,12 +380,13 @@ test('exploreActions: 체인 → 캠프파이어 → 보스 도전 선택 → �
     assert.ok(bossGaugeIdx < scoutIdx, '보스 도전 선택이 스카우팅보다 먼저 (게이지 만충 시 스카우팅에 밀리지 않음)');
 });
 
-test('exploreActions: 보스 도전 선택 분기가 isAreaBossUndefeated + isBossGaugeFull 조건으로 게이팅됨', async () => {
+test('exploreActions: 보스 도전 선택 분기가 isAreaBossChallengeable + isBossGaugeFull 조건으로 게이팅됨', async () => {
     const source = await readSrc('src/hooks/gameActions/exploreActions.ts');
     // Wave 6 X1: loc 파라미터가 string으로 닫히면서 호출부가 `player.loc!`로 좁혀졌다.
-    assert.ok(/isAreaBossUndefeated\(mapData,\s*player\)\s*&&\s*isBossGaugeFull\(mapData,\s*player\.loc!?\)/.test(source)
-        || /isAreaBossUndefeated\(mapData,\s*player\)\s*&&\s*isBossGaugeFull\(player,\s*player\.loc!?\)/.test(source),
-        '보스 도전 선택 카드는 미격파 + 게이지 만충일 때만 발동');
+    // 2026-10 Wave 74: 미격파 판정 → 도전 가능 판정(미격파 또는 수락한 임무가 다시 부르는 구역 보스).
+    assert.ok(/isAreaBossChallengeable\(mapData,\s*player\)\s*&&\s*isBossGaugeFull\(mapData,\s*player\.loc!?\)/.test(source)
+        || /isAreaBossChallengeable\(mapData,\s*player\)\s*&&\s*isBossGaugeFull\(player,\s*player\.loc!?\)/.test(source),
+        '보스 도전 선택 카드는 도전 가능 + 게이지 만충일 때만 발동');
 });
 
 // ── combatVictory: 원정 완료 리캡 wiring ────────────────────────────────────
