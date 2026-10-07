@@ -62,8 +62,13 @@ test('fixed seed comparison proves optional spacing and target direction', () =>
     assert.ok(report.candidate.generalNarrative < report.predecessor.generalNarrative);
     assert.ok(report.candidate.scout < report.predecessor.scout);
     assert.equal(report.gates.expLootInvariant, true);
-    assert.equal(report.candidate.discoveryBreakdown.relic, 20);
-    assert.equal(report.candidate.discovery, report.candidate.discoveryBreakdown.anomaly + 20);
+    // Wave 77: 유물 칸(5)이 가득 차도 발견한다(교체 제안) — 상한 × 4시드 = 20에서 멈추던 값이다.
+    assert.ok(report.candidate.discoveryBreakdown.relic > 4 * 5);
+    assert.equal(report.candidate.discoveryBreakdown.relic, 687);
+    assert.equal(
+        report.candidate.discovery,
+        report.candidate.discoveryBreakdown.anomaly + report.candidate.discoveryBreakdown.relic,
+    );
 });
 
 test('registered v2 predecessor to active v3 keeps event-only invariants and target rhythm', () => {

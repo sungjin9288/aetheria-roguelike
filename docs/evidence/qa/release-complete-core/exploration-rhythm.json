@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "0818fb7afb6b88a628076791a1ba255981df40a9b1310a4aeb3d527e8fb8424e",
+  "reportHash": "dd746e09b1ff42371c1bf0a6c6b948c466eeb7b30b639185a6d223e3af040382",
   "progressionEvidence": {
     "candidateProfile": {
       "id": "exploration-rhythm",
@@ -108,13 +108,13 @@
         "classification": "subset-of-general-narrative",
         "countAuthority": "production-integration"
       },
-      "combat": 174310,
-      "discovery": 5070,
+      "combat": 167447,
+      "discovery": 15931,
       "discoveryBreakdown": {
-        "anomaly": 4750,
-        "relic": 320
+        "anomaly": 4566,
+        "relic": 11365
       },
-      "nothing": 27678,
+      "nothing": 23680,
       "optionalDecisionCount": 55086,
       "optionalBackToBackCount": 0,
       "optionalGap": {
@@ -138,13 +138,13 @@
         "classification": "subset-of-general-narrative",
         "countAuthority": "production-integration"
       },
-      "combat": 182612,
-      "discovery": 5366,
+      "combat": 175335,
+      "discovery": 16565,
       "discoveryBreakdown": {
-        "anomaly": 5046,
-        "relic": 320
+        "anomaly": 4816,
+        "relic": 11749
       },
-      "nothing": 28364,
+      "nothing": 24442,
       "optionalDecisionCount": 45802,
       "optionalBackToBackCount": 0,
       "optionalGap": {

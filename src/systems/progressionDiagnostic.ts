@@ -794,7 +794,6 @@ const buildExplorationDiagnostic = (
                 exploreState,
                 policy: ACTIVE_EXPLORATION_RHYTHM,
                 eventChanceBonus: 0,
-                relicLimit,
                 rng,
             });
             outcomes[outcome] += 1;
@@ -816,7 +815,10 @@ const buildExplorationDiagnostic = (
             );
             if (outcome === 'relic') {
                 if (firstRelicPityReady) firstRelicPityActivations += 1;
-                player.relics.push(makeRhythmRelicStub(`diagnostic-relic-${player.relics.length + 1}`));
+                // Wave 77: 칸이 가득 찬 뒤의 발견은 교체 제안이라 유물 수가 늘지 않는다.
+                if (player.relics.length < relicLimit) {
+                    player.relics.push(makeRhythmRelicStub(`diagnostic-relic-${player.relics.length + 1}`));
+                }
             }
 
             const optional = outcome === 'campfire'

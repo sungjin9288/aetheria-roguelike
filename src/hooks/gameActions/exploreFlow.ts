@@ -152,13 +152,18 @@ export const rollExplorationEvent = (
     }
 
     // 유물 발견 — PR #8: 프레스티지 rank≥2면 보유 한도 +1(6) · 선택지 4지선다.
+    //   2026-10 Wave 77(소유자 결정 1a): 유물 칸이 가득 차도 같은 확률로 굴리고 교체 제안으로 보인다 — 선택 화면이
+    //   교체 · 넘기기를 준다(`REPLACE_RELIC` · `DECLINE_RELIC`). 칸이 찬 뒤 추첨을 멈추던 동안 회차의 약 96%(중앙값
+    //   Lv9 · 2.5h 이후)에서 유물 선택이 시간당 0.19번이었다(원장 §80.3).
     const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
-    if (playerRelics.length < relicUnlocks.maxRelics && rng() < discoveryOdds.relicChance) {
+    if (rng() < discoveryOdds.relicChance) {
         const available = RELICS.filter((r) => !playerRelics.some((pr) => pr.id === r.id));
         if (available.length > 0) {
             const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-            addLog('event', MSG.EXPLORE_RELIC_DISCOVERED);
+            addLog('event', playerRelics.length >= relicUnlocks.maxRelics
+                ? MSG.EXPLORE_RELIC_REPLACE_OFFER
+                : MSG.EXPLORE_RELIC_DISCOVERED);
             return 'relic_found';
         }
     }
@@ -300,18 +305,19 @@ export const runQuietRollAndCombat = (
         return;
     }
 
-    // 전투 직전 유물 발견 기회
+    // 전투 직전 유물 발견 기회 — Wave 77: 칸이 가득 차도 굴리고 교체 제안으로 보인다(위 발견과 같은 규칙).
     const firstRelicPity = playerRelics.length === 0
         && (player.stats?.exploreState?.sinceRelic || 0) >= BALANCE.FIRST_RELIC_PITY_EXPLORES;
     const relicUnlocks = getPrestigeUnlocks(player.meta?.prestigeRank);
-    if (playerRelics.length < relicUnlocks.maxRelics
-        && (firstRelicPity || rng() < BALANCE.RELIC_FIND_CHANCE * 0.5)) {
+    if (firstRelicPity || rng() < BALANCE.RELIC_FIND_CHANCE * 0.5) {
         const available = RELICS.filter((r) => !playerRelics.some((pr) => pr.id === r.id));
         if (available.length > 0) {
             commitExploreOutcome('relic_found', null, gaugeMapData);
             const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-            addLog('event', MSG.EXPLORE_RELIC_FOUND);
+            addLog('event', playerRelics.length >= relicUnlocks.maxRelics
+                ? MSG.EXPLORE_RELIC_REPLACE_OFFER
+                : MSG.EXPLORE_RELIC_FOUND);
             return;
         }
     }
