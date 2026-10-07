@@ -662,6 +662,8 @@ export const useGameTestApi = (
                     activeExpeditionId: e.player.activeExpedition?.id || '',
                     lastExpeditionSummaryId: e.player.lastExpeditionSummary?.id || '',
                     loc: e.player.loc,
+                    // 2026-10 Wave 72: 정예 목격 칭호(`elite:<지역>`) 기록을 e2e가 읽는다.
+                    titles: Array.isArray(e.player.titles) ? e.player.titles : [],
                     hp: e.player.hp,
                     maxHp: fs.maxHp,
                     mp: e.player.mp,
@@ -1286,7 +1288,8 @@ export const useGameTestApi = (
                             readabilityMode: 'standard',
                             equipmentDetailMode: 'auto',
                         },
-                        titles: ['wanderer', 'cartographer', 'chain_master'],
+                        // 2026-10 Wave 72: 정예 목격 칭호 둘 — 칭호 바꾸기 목록이 묶음으로 보이는지 화면에서 본다.
+                        titles: ['wanderer', 'cartographer', 'chain_master', 'elite:고요한 숲', 'elite:수정 동굴'],
                         activeTitle: 'cartographer',
                         // effect/val: Relic은 effect가 판별자인 유니온이라 항상 필요하다.
                         //   desc 문구에 맞춰 가장 가까운 실제 effect로 채웠다(SystemTab은

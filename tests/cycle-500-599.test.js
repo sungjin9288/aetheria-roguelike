@@ -2148,11 +2148,12 @@ import { DB } from '../src/data/db.ts';
 
   test('cycle 532: 정합성 가드 — 2 callsite 보존', async () => {
       const source = await readSrc('src/hooks/gameActions/characterActions.ts');
-      assert.ok(/buildClassVitals\(1,\s*jobId,\s*player\.meta \|\| \{\}\)/.test(source),
-          '1st callsite (1, jobId, player.meta || {}) 보존 — 신규 캐릭터 Lv1 시작');
+      // 2026-10 Wave 72: 영구가 된 이야기 생명 · 기력(`player.storyStatBonus`)이 넷째 인자로 함께 간다.
+      assert.ok(/buildClassVitals\(1,\s*jobId,\s*player\.meta \|\| \{\},\s*player\.storyStatBonus\)/.test(source),
+          '1st callsite (1, jobId, player.meta || {}, player.storyStatBonus) 보존 — 신규 캐릭터 Lv1 시작');
       // Wave 6 X1: level 파라미터가 number로 닫히면서 호출부가 `player.level!`로 좁혀졌다.
-      assert.ok(/buildClassVitals\(player\.level!?,\s*jobName,\s*player\.meta \|\| \{\}\)/.test(source),
-          '2nd callsite (player.level, jobName, player.meta || {}) 보존');
+      assert.ok(/buildClassVitals\(player\.level!?,\s*jobName,\s*player\.meta \|\| \{\},\s*player\.storyStatBonus\)/.test(source),
+          '2nd callsite (player.level, jobName, player.meta || {}, player.storyStatBonus) 보존');
       // W11 C4: 두 callsite 모양(Lv1 신규 / player.level 기존)으로 직접 호출해도
       // meta default {} 없이 실제 maxHp/maxMp가 계산되는지.
       const fresh = buildClassVitals(1, '나이트', {});
@@ -3974,8 +3975,8 @@ import { DB } from '../src/data/db.ts';
       assert.ok(/if \(!Array\.isArray\(value\)\) return \[\];/.test(runStartSource),
           'Array.isArray(challengeModifiers) defensive guard 보존 (sanitizeChallengeModifiers)');
       assert.ok(/sanitizeChallengeModifiers\(challengeModifiers,/.test(source), 'start가 같은 거르기를 쓴다');
-      assert.ok(/buildClassVitals\(1,\s*jobId,\s*player\.meta \|\| \{\}\)/.test(source),
-          'buildClassVitals 호출 보존 — 신규 캐릭터 Lv1 기준');
+      assert.ok(/buildClassVitals\(1,\s*jobId,\s*player\.meta \|\| \{\},\s*player\.storyStatBonus\)/.test(source),
+          'buildClassVitals 호출 보존 — 신규 캐릭터 Lv1 기준(Wave 72: 영구 이야기 생명 · 기력 포함)');
       assert.ok(/level:\s*1,\s*exp:\s*0,\s*nextExp:\s*CONSTANTS\.START_NEXT_EXP/.test(source),
           'start payload가 level/exp/nextExp 초기값을 명시');
       // challengeModifiers가 배열이 아니어도(방어적 호출) 실제로 halfHp/noGold 분기 없이

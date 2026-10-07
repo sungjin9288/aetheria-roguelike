@@ -19,6 +19,9 @@ import { renderStatic } from './helpers/render.ts';
  * 2026-10 Wave 62 — 강해지는 쪽 서사 문구 3건(원장 §61.4 · 소유자 답 §61.6 "서사는 문구").
  *
  * C2  이야기 능력치 보상은 '영구'라 했지만 이번 여정 범위다(`storyStatBonus` — 사망 · 계승에서 사라지고 체인은 다시 못 한다).
+ *     → 2026-10 Wave 72 소유자 결정 "영구로 전환"이 대체했다: 체인은 계정당 한 번이라 런 범위이던 동안 한 번 죽으면 영원히 잃었다.
+ *       이제 보상은 영구이고(사망 · 계승을 넘는다) 문구 · 미리보기도 '영구'라 말한다. 행동 계약은
+ *       tests/permanent-stats-elite-titles-contract.test.js.
  * C13 기계 반란 2단계 "전투에서 도움을 받을 수 있게 됩니다" — 보상은 골드 3,000뿐이고 그 진행을 읽는 전투 도움은 없다.
  * C14 허공의 섬 "이곳에서만 구할 수 있는 희귀한 물건" — 독점 상품이 없다(재고는 판매 등급 규칙 그대로).
  */
@@ -49,10 +52,11 @@ const renderPreviewRow = (event, choiceIndex) => {
 
 // ── C2 ────────────────────────────────────────────────────────────────────
 
-test('C2: 이야기 문구 · 미리보기는 능력치 보상을 "영구"라 부르지 않고 "이번 여정"이라 한다', () => {
+test('C2 → Wave 72: 이야기 미리보기 · 문구는 능력치 보상을 "영구"라 말하고, 다른 보상은 "영구"를 약속하지 않는다', () => {
     for (const chain of EVENT_CHAINS) {
         for (const step of chain.steps) {
-            const texts = [step.event.title, step.event.desc, ...step.event.choices, ...step.event.outcomes.map((o) => o.log)];
+            const texts = [step.event.title, step.event.desc, ...step.event.choices,
+                ...step.event.outcomes.filter((o) => o.reward?.type !== 'stat_bonus').map((o) => o.log)];
             for (const text of texts) assert.ok(!String(text || '').includes('영구'), `${chain.id}:${step.step}: ${text}`);
         }
     }
@@ -62,19 +66,19 @@ test('C2: 이야기 문구 · 미리보기는 능력치 보상을 "영구"라 �
         if (outcome.type !== 'chain_advance') continue;
         const preview = getEventChoicePreview(chainEvent(chain.id, step.step), choiceIndex);
         assert.equal(preview.text, `${MSG.CHAIN_PREVIEW_PROGRESS} · ${MSG.CHAIN_PREVIEW_STAT_BONUS}`, `${chain.id}:${step.step}:${choiceIndex}`);
-        assert.ok(preview.text.includes('이번 여정'));
-        assert.ok(!preview.text.includes('영구'));
+        assert.ok(preview.text.includes('영구'));
+        assert.ok(!preview.text.includes('이번 여정'));
     }
     // 원장이 짚은 문구: 잊혀진 사령관 3단계 "영혼에게 안식을 권한다".
     const commander = chainEvent('forgotten_commander', 2);
-    assert.match(commander.outcomes[1].log, /이번 여정 동안 방어력과 생명이 강해집니다/);
+    assert.match(commander.outcomes[1].log, /방어력과 생명이 영구히 강해집니다/);
     assert.ok(renderPreviewRow(commander, 1).includes(MSG.CHAIN_PREVIEW_STAT_BONUS), 'EventPanel이 그리는 줄');
 });
 
-test('C2: 문구가 맞다 — 이야기 능력치(`storyStatBonus`)는 사망 · 계승 뒤로 넘어가지 않는다', () => {
+test('C2 → Wave 72: 문구가 맞다 — 이야기 능력치(`storyStatBonus`)는 사망 · 계승 뒤로 넘어간다', () => {
     const player = { ...clone(INITIAL_STATE.player), storyStatBonus: { def: 12, hp: 100 } };
     const carried = pickPermanentPlayerState(player, clone(INITIAL_STATE.player));
-    assert.equal('storyStatBonus' in carried, false, '영구 상태 선별에 들어가지 않는다');
+    assert.deepEqual(carried.storyStatBonus, { atk: 0, def: 12, hp: 100, mp: 0 }, '영구 상태 선별에 들어간다');
 });
 
 // ── C13 ───────────────────────────────────────────────────────────────────
