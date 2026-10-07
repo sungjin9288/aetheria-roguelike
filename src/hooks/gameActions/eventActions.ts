@@ -471,7 +471,9 @@ const queueOutcomeRelics = (
     const available = RELICS.filter((r) => !ownedRelics.some((pr) => pr.id === r.id));
     if (available.length === 0) return;
     // Wave 4 O2: 이벤트 outcome 유물 3택도 체인 보상과 같은 빌드 공명 규칙을 쓴다.
-    const candidates = pickWeightedRelics(available, count, { owned: ownedRelics, rng, buildId });
+    const candidates = pickWeightedRelics(available, count, {
+        owned: ownedRelics, rng, buildId, replacing: atCapacity ? ownedRelics : undefined,
+    });
     if (candidates.length === 0) return;
     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
     addLog('event', atCapacity ? MSG.EVENT_RELIC_REPLACE_OFFER(candidates.length) : MSG.EVENT_RELIC_CHOICE(candidates.length));

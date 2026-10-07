@@ -159,9 +159,12 @@ export const rollExplorationEvent = (
     if (rng() < discoveryOdds.relicChance) {
         const available = RELICS.filter((r) => !playerRelics.some((pr) => pr.id === r.id));
         if (available.length > 0) {
-            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
+            const atCapacity = playerRelics.length >= relicUnlocks.maxRelics;
+            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, {
+                owned: playerRelics, rng, replacing: atCapacity ? playerRelics : undefined,
+            });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-            addLog('event', playerRelics.length >= relicUnlocks.maxRelics
+            addLog('event', atCapacity
                 ? MSG.EXPLORE_RELIC_REPLACE_OFFER
                 : MSG.EXPLORE_RELIC_DISCOVERED);
             return 'relic_found';
@@ -313,9 +316,12 @@ export const runQuietRollAndCombat = (
         const available = RELICS.filter((r) => !playerRelics.some((pr) => pr.id === r.id));
         if (available.length > 0) {
             commitExploreOutcome('relic_found', null, gaugeMapData);
-            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, { owned: playerRelics, rng });
+            const atCapacity = playerRelics.length >= relicUnlocks.maxRelics;
+            const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, {
+                owned: playerRelics, rng, replacing: atCapacity ? playerRelics : undefined,
+            });
             dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });
-            addLog('event', playerRelics.length >= relicUnlocks.maxRelics
+            addLog('event', atCapacity
                 ? MSG.EXPLORE_RELIC_REPLACE_OFFER
                 : MSG.EXPLORE_RELIC_FOUND);
             return;

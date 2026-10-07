@@ -38,13 +38,18 @@ export const applyAbyssFloorAdvance = (
     if (milestone) {
         addLog('event', MSG.ABYSS_MILESTONE(newDepth));
         if (milestone.type === 'relic_choice') {
-            const available = RELICS.filter((r) => !(updated.relics || []).some((pr) => pr.id === r.id));
+            const ownedRelics = updated.relics || [];
+            const available = RELICS.filter((r) => !ownedRelics.some((pr) => pr.id === r.id));
             // PR #8: 프레스티지 rank≥2면 선택지 4지선다.
-            const choices = getPrestigeUnlocks(updated.meta?.prestigeRank).relicChoices;
+            const unlocks = getPrestigeUnlocks(updated.meta?.prestigeRank);
             if (available.length > 0) {
+                // Wave 77 후속: 칸이 가득 찼으면 교체하면 나아지는 카드를 먼저 보인다.
+                const atCapacity = ownedRelics.length >= unlocks.maxRelics;
                 dispatch({
                     type: AT.SET_PENDING_RELICS,
-                    payload: pickWeightedRelics(available, choices, { rng }),
+                    payload: pickWeightedRelics(available, unlocks.relicChoices, {
+                        rng, replacing: atCapacity ? ownedRelics : undefined,
+                    }),
                 });
             }
         } else if (milestone.type === 'legendary_item') {
