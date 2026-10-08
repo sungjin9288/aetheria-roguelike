@@ -120,6 +120,8 @@ interface PlayerStats {
 export interface HuntContractProgress {
     stage: number;
     progress: number;
+    /** Wave 82: 차수(1부터 `HUNT_CONTRACT_MAX_ROUNDS`까지). 없으면 1차다. */
+    round?: number;
 }
 
 export interface ExploreState {
