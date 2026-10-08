@@ -116,6 +116,12 @@ interface PlayerStats {
 }
 
 /** 탐험 pacing pity 카운터 — utils/explorationPacing.ts가 단일 진실 원천(DEFAULT_EXPLORE_STATE). */
+/** 2026-10 Wave 80: 지역 토벌 의뢰 한 건의 진행 — 단계(0 처치 · 1 정예 · 2 우두머리 · 3 완수)와 그 단계의 진행. */
+export interface HuntContractProgress {
+    stage: number;
+    progress: number;
+}
+
 export interface ExploreState {
     sinceNarrativeEvent?: number;
     sinceDiscovery?: number;
@@ -682,6 +688,11 @@ export interface Player {
      * 유효하다(`getActiveMerchantVisit`). 런 범위라 `pickPermanentPlayerState`에 넣지 않는다. 없으면 행상인이 없다.
      */
     merchantVisit?: WanderingMerchantVisit;
+    /**
+     * 2026-10 Wave 80: 지역 토벌 의뢰 진행(`data/huntContracts.ts` · `utils/huntContracts.ts`) — 지역 이름 → 단계(0 처치 · 1 정예 ·
+     * 2 우두머리 · 3 완수)와 그 단계의 진행. 회차마다 다시 하는 의뢰라 런 범위다 — `pickPermanentPlayerState`에 넣지 않는다.
+     */
+    huntContracts?: Record<string, HuntContractProgress>;
     /** cycle 186: PremiumShop 부활 토큰 보유 수 — 환생에도 보존되는 영구 자산. */
     reviveTokens?: number;
     /** 2026-07 에테르 거울 revive를 이 런에서 이미 썼는지. 새 런 시작 시 자연 리셋. */

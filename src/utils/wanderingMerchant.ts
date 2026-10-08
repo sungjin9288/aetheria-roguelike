@@ -51,6 +51,14 @@ const usableBy = (item: Item, job: string | undefined): boolean => (
 );
 const pick = <T>(pool: readonly T[], rng: RandomSource): T | null => (pool.length ? pool[Math.floor(rng() * pool.length)] ?? null : null);
 
+/**
+ * 이 직업이 쓸 수 있는 한 등급의 상점 장비(전설 각인 제외, 가격 있는 것) — 행상인 재고와 지역 토벌 의뢰 보상(Wave 80)이 같이 읽는다.
+ */
+export const getJobGearPool = (job: string | undefined, gearTier: number): Item[] => [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((item) => (
+    isEquipment(item) && (Number(item.tier) || 1) === gearTier && usableBy(item, job) && !isSignatureItem(item)
+    && (Number(item.price) || 0) > 0
+));
+
 /** 이 레벨에서 착용할 수 있는 가장 높은 장비 등급(`BALANCE.TIER_REQ_LEVEL` — 착용 판정 `canEquip`과 같은 표). */
 export const getUsableGearTier = (level: number | undefined): number => {
     const current = Math.max(1, Number(level) || 1);
@@ -116,10 +124,7 @@ export const buildMerchantStock = (player: Player, loc: string): WanderingMercha
     const material = pick(getUsefulMaterials(tier, player), rng);
     add(material, (Number(material?.price) || 0) * mult, false);
 
-    const gearPool = (gearTier: number) => [...DB.ITEMS.weapons, ...DB.ITEMS.armors].filter((item) => (
-        isEquipment(item) && (Number(item.tier) || 1) === gearTier && usableBy(item, player.job) && !isSignatureItem(item)
-        && (Number(item.price) || 0) > 0
-    ));
+    const gearPool = (gearTier: number) => getJobGearPool(player.job, gearTier);
     // 장비는 지금 착용할 수 있는 등급만 판다 — 지역 상점 등급은 착용 레벨보다 앞서 간다(Lv35 지역의 4등급은 Lv45 필요).
     const usableTier = getUsableGearTier(player.level);
     const gear = pick(gearPool(Math.min(tier, usableTier)), rng);

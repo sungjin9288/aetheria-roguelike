@@ -29,6 +29,8 @@ export type DefeatedEnemy = Monster & {
     chainCombat?: ChainCombatRef;
     /** Wave 70: 다른 차원의 묘비 망령 — 이기면 `applyDimensionGraveVictory`가 그 묘비의 유품(카탈로그 이름)을 준다. */
     dimensionGrave?: DimensionGraveRef;
+    /** Wave 80: 지역 토벌 의뢰의 우두머리 — 그 지역 이름. 이기면 `advanceHuntContractOnVictory`가 의뢰를 완수한다. */
+    huntChampion?: string;
 };
 
 /** 이야기 전투의 출처 — 체인 id · 단계 · 선택지 번호. */

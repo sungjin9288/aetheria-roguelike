@@ -10,6 +10,7 @@ import { isLifetimeCounterQuest } from '../../utils/cumulativeQuestProgress';
 import SignalBadge from '../SignalBadge';
 import StoryJournal from '../StoryJournal';
 import EndgameJourney from '../EndgameJourney';
+import HuntContractCard from './HuntContractCard';
 import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { GS } from '../../reducers/gameStates';
@@ -155,6 +156,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
             <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
                 <StoryJournal claimedQuestIds={player.stats?.claimedQuestIds} />
                 <EndgameJourney player={player} />
+                <HuntContractCard player={player} />
                 {/* 오늘의 임무 */}
                 {dpMissions.length > 0 && (
                     <div className="mb-3 p-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8">
