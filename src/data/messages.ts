@@ -1214,13 +1214,16 @@ export const MSG = {
     HUNT_CONTRACT_STAGE_KILLS_DONE: (map: string, gold: number, eliteGoal: number) => (
         `📜 [토벌 의뢰] ${map} 1단계 완료 — 골드 +${gold}. 다음: 정예 ${eliteGoal}마리 처치`
     ),
-    HUNT_CONTRACT_STAGE_ELITES_DONE: (map: string, materials: number, material: string, champion: string) => (
-        `📜 [토벌 의뢰] ${map} 2단계 완료 — ${material} ×${materials}. 다음: 우두머리 「${champion}」의 기척 — 이 지역에서 탐험`
+    HUNT_CONTRACT_STAGE_ELITES_DONE: (map: string, materials: number, material: string, champion: string, omenKills: number) => (
+        `📜 [토벌 의뢰] ${map} 2단계 완료 — ${material} ×${materials}. 우두머리 「${champion}」의 기척이 느껴집니다 — 이 지역에서 ${omenKills}마리를 더 쓰러뜨리면 모습을 드러냅니다`
     ),
     HUNT_CONTRACT_COMPLETE: (map: string, champion: string, item: string, essence: number) => (
         `🏆 [토벌 의뢰 완수] ${map} 우두머리 「${champion}」 토벌 — ${item} · 계승 정수 +${essence}`
     ),
     HUNT_CHAMPION_NAME: (champion: string, species: string) => `${champion} ${species}`,
+    HUNT_CHAMPION_ENRAGED_NAME: (champion: string, species: string) => `격노한 ${champion} ${species}`,
+    HUNT_CHAMPION_ENRAGE_LOG: (champion: string) => `「${champion}」 격노 — 공격이 거세집니다!`,
+    HUNT_CHAMPION_NEAR: (champion: string, map: string) => `⚠️ [토벌 의뢰] ${map} — 우두머리 「${champion}」 접근. 다음 조우를 대비하십시오`,
     HUNT_CHAMPION_APPEAR: (champion: string, map: string) => `⚔️ [토벌 의뢰] ${map} 우두머리 「${champion}」 출현!`,
     HUNT_CONTRACT_PANEL_TITLE: '지역 토벌 의뢰',
     HUNT_CONTRACT_PANEL_HINT: '회차마다 다시 — 처치 · 정예 · 우두머리',
@@ -1228,6 +1231,7 @@ export const MSG = {
     HUNT_CONTRACT_STATUS_LOCKED: (level: number) => `Lv${level} 지역`,
     HUNT_CONTRACT_STATUS_STAGE: (stage: number, label: string, progress: number, goal: number) => `${stage}단계 ${label} ${progress}/${goal}`,
     HUNT_CONTRACT_STATUS_CHAMPION: (champion: string) => `3단계 우두머리 「${champion}」 — 이 지역에서 탐험`,
+    HUNT_CONTRACT_STATUS_OMEN: (champion: string, progress: number, goal: number) => `3단계 우두머리 「${champion}」의 기척 ${progress}/${goal}`,
     HUNT_CONTRACT_STATUS_DONE: '완수',
     EXPLORE_RELIC_REPLACE_OFFER: '✨ [유물 발견] 고대의 유물이 눈에 들어옵니다 — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.',
     /** C4: 사건 결과가 여는 유물 선택이 유물 칸이 가득 찬 채 열릴 때. */

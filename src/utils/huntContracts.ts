@@ -118,13 +118,19 @@ export const advanceHuntContractOnVictory = (
         const advanced = withProgress(player, map, { stage: HUNT_STAGE_CHAMPION, progress: 0 });
         logs.push({
             type: 'event',
-            text: MSG.HUNT_CONTRACT_STAGE_ELITES_DONE(map, items.length, materialName, contract.champion),
+            text: MSG.HUNT_CONTRACT_STAGE_ELITES_DONE(map, items.length, materialName, contract.champion, BALANCE.HUNT_CHAMPION_OMEN_KILLS),
         });
         return { player: { ...advanced, inv: [...(advanced.inv || []), ...items] }, logs, items, completedStage: HUNT_STAGE_ELITES };
     }
 
     if (stage === HUNT_STAGE_CHAMPION) {
-        if (deadEnemy.huntChampion !== map) return unchanged;
+        if (deadEnemy.huntChampion !== map) {
+            // Wave 81: 기척 → 접근 — 그 지역의 다른 승리가 `HUNT_CHAMPION_OMEN_KILLS`까지 센다(거기서 멈춘다).
+            if (deadEnemy.huntChampion || progress >= BALANCE.HUNT_CHAMPION_OMEN_KILLS) return unchanged;
+            const next = progress + 1;
+            if (next >= BALANCE.HUNT_CHAMPION_OMEN_KILLS) logs.push({ type: 'critical', text: MSG.HUNT_CHAMPION_NEAR(contract.champion, map) });
+            return { player: withProgress(player, map, { stage, progress: next }), logs, items: [], completedStage: null };
+        }
         const template = pickHuntChampionGear(player, map);
         const rng = createDomainRandom(0, 'hunt-contract-gear', map, Number(player.stats?.explores) || 0);
         const items = template ? [makeItem(template, rng, now)] : [];
@@ -145,8 +151,9 @@ export const advanceHuntContractOnVictory = (
 };
 
 /**
- * 우두머리 출현 — 2단계 의뢰가 있는 지역에서 다음 일반 개체(보스 · 정예 · 접두어 없는 개체)가 우두머리가 된다. 난수를 쓰지 않는다.
- * 종(`baseName`)은 그대로라 임무 목표 판정 · 도감 · 초상은 그 종을 본다.
+ * 우두머리 출현 — 2단계 의뢰가 있는 지역에서 기척을 다 채운 뒤(`HUNT_CHAMPION_OMEN_KILLS`) 다음 일반 개체(보스 · 정예 · 접두어
+ * 개체 제외)가 우두머리가 된다. 난수를 쓰지 않는다. 종(`baseName`)은 그대로라 임무 목표 판정 · 도감 · 초상은 그 종을 본다.
+ * Wave 81: 생명 50%에서 격노한다(정예 격노와 같은 `phase2` 경로 — 공격력 · 강타 확률이 오른다).
  */
 export type HuntChampionCandidate = SpawnedMonster & { huntChampion?: string };
 
@@ -158,7 +165,8 @@ export const applyHuntChampion = (
     const map = String(player.loc || '');
     const contract = getHuntContract(map);
     if (!contract || !mapData || mapData.level === 'infinite') return enemy;
-    if (getHuntContractProgress(player, map).stage !== HUNT_STAGE_CHAMPION) return enemy;
+    const { stage, progress } = getHuntContractProgress(player, map);
+    if (stage !== HUNT_STAGE_CHAMPION || progress < BALANCE.HUNT_CHAMPION_OMEN_KILLS) return enemy;
     if (enemy.isBoss || enemy.isElite || !enemy.baseName || enemy.name !== enemy.baseName) return enemy;
     return {
         ...enemy,
@@ -170,6 +178,16 @@ export const applyHuntChampion = (
         atk: Math.floor(enemy.atk * BALANCE.HUNT_CHAMPION_ATK_MULT),
         exp: Math.floor(enemy.exp * BALANCE.HUNT_CHAMPION_REWARD_MULT),
         gold: Math.floor(enemy.gold * BALANCE.HUNT_CHAMPION_REWARD_MULT),
+        phase2: {
+            threshold: BALANCE.HUNT_CHAMPION_PHASE_THRESHOLD,
+            name: MSG.HUNT_CHAMPION_ENRAGED_NAME(contract.champion, enemy.baseName),
+            atkBonus: BALANCE.HUNT_CHAMPION_PHASE_ATK_BONUS,
+            pattern: {
+                guardChance: Math.max(0, (enemy.pattern?.guardChance ?? 0.12) - 0.05),
+                heavyChance: BALANCE.HUNT_CHAMPION_PHASE_HEAVY_CHANCE,
+            },
+            log: MSG.HUNT_CHAMPION_ENRAGE_LOG(contract.champion),
+        },
     };
 };
 
@@ -196,14 +214,17 @@ export const getHuntContractRows = (player: Player | null | undefined): HuntCont
             const { stage, progress } = getHuntContractProgress(player, contract.map);
             const reachable = level >= mapLevel;
             const goal = stage === HUNT_STAGE_KILLS ? BALANCE.HUNT_CONTRACT_KILL_GOAL
-                : stage === HUNT_STAGE_ELITES ? BALANCE.HUNT_CONTRACT_ELITE_GOAL : 1;
+                : stage === HUNT_STAGE_ELITES ? BALANCE.HUNT_CONTRACT_ELITE_GOAL
+                    : stage === HUNT_STAGE_CHAMPION ? BALANCE.HUNT_CHAMPION_OMEN_KILLS : 1;
+            const omenDone = stage === HUNT_STAGE_CHAMPION && progress >= BALANCE.HUNT_CHAMPION_OMEN_KILLS;
             const status = stage >= HUNT_STAGE_DONE ? MSG.HUNT_CONTRACT_STATUS_DONE
                 : !reachable && stage === HUNT_STAGE_KILLS && progress === 0 ? MSG.HUNT_CONTRACT_STATUS_LOCKED(mapLevel)
-                    : stage === HUNT_STAGE_CHAMPION ? MSG.HUNT_CONTRACT_STATUS_CHAMPION(contract.champion)
-                        : MSG.HUNT_CONTRACT_STATUS_STAGE(stage + 1, MSG.HUNT_CONTRACT_STAGE_LABELS[stage], progress, goal);
+                    : omenDone ? MSG.HUNT_CONTRACT_STATUS_CHAMPION(contract.champion)
+                        : stage === HUNT_STAGE_CHAMPION ? MSG.HUNT_CONTRACT_STATUS_OMEN(contract.champion, progress, goal)
+                            : MSG.HUNT_CONTRACT_STATUS_STAGE(stage + 1, MSG.HUNT_CONTRACT_STAGE_LABELS[stage], progress, goal);
             return {
                 map: contract.map, champion: contract.champion, mapLevel, stage,
-                progress: stage >= HUNT_STAGE_DONE ? 1 : stage === HUNT_STAGE_CHAMPION ? 0 : progress,
+                progress: stage >= HUNT_STAGE_DONE ? 1 : progress,
                 goal, status, done: stage >= HUNT_STAGE_DONE, reachable,
             };
         });

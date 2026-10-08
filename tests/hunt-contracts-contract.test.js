@@ -83,13 +83,14 @@ const logTexts = (state) => (state.logs || []).map((log) => log.text);
 
 // ── 데이터 ─────────────────────────────────────────────────────────
 
-test('데이터: 의뢰 지역 셋은 Lv40 ~ 44의 사냥 지역이고 우두머리 칭호는 종 이름 · 접두어와 겹치지 않는다', () => {
-    assert.deepEqual(HUNT_CONTRACTS.map((contract) => contract.map), ['천공 정원', '어둠의 지하 감옥', '지하 미궁']);
+test('데이터: 의뢰 지역 여섯은 Lv25 ~ 44의 사냥 지역이고 우두머리 칭호는 종 이름 · 접두어와 겹치지 않는다', () => {
+    // Wave 80 셋(Lv41 ~ 45 구간) + Wave 81 셋(1회차 긴 공백이 시작되는 Lv26 ~ 40 구간), 지역 레벨 순서.
+    assert.deepEqual(HUNT_CONTRACTS.map((contract) => contract.map), ['고대 마법 탑', '용의 둥지', '용암 지대', '천공 정원', '어둠의 지하 감옥', '지하 미궁']);
+    assert.deepEqual(HUNT_CONTRACTS.map((contract) => DB.MAPS[contract.map].level), [25, 25, 36, 40, 42, 44]);
     const prefixes = new Set(CONSTANTS.MONSTER_PREFIXES.map((prefix) => prefix.name));
     for (const contract of HUNT_CONTRACTS) {
         const map = DB.MAPS[contract.map];
         assert.ok(map && map.type !== 'safe' && map.monsters.length > 0, `${contract.map}: 사냥 지역`);
-        assert.ok(map.level >= 40 && map.level <= 44, `${contract.map}: Lv41 ~ 45 구간`);
         assert.equal(DB.MONSTERS[contract.champion], undefined, `${contract.champion}: 몬스터 이름이 아니다`);
         for (const word of contract.champion.split(' ')) assert.ok(!prefixes.has(word), `${contract.champion}: 접두어 낱말 없음`);
     }
@@ -130,12 +131,31 @@ test('2단계: 정예만 센다(우두머리 · 보스 제외) — 완료하면 
     assert.equal(done.items.length, BALANCE.HUNT_CONTRACT_ENHANCE_MATERIALS);
     assert.ok(done.items.every((item) => item.name === CONSTANTS.ENHANCE_MATERIAL_NAME));
     assert.equal(done.player.inv.length, BALANCE.HUNT_CONTRACT_ENHANCE_MATERIALS);
+    assert.deepEqual(done.logs.map((log) => log.text), [MSG.HUNT_CONTRACT_STAGE_ELITES_DONE(
+        SKY, BALANCE.HUNT_CONTRACT_ENHANCE_MATERIALS, CONSTANTS.ENHANCE_MATERIAL_NAME, getHuntContract(SKY).champion, BALANCE.HUNT_CHAMPION_OMEN_KILLS,
+    )]);
+});
+
+test('기척 → 접근: 2단계 뒤 그 지역 승리(우두머리 아닌)가 기척을 채우고, 다 차면 접근 경보 한 번 · 거기서 멈춘다', () => {
+    const OMEN = BALANCE.HUNT_CHAMPION_OMEN_KILLS;
+    let player = withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION);
+    const nearLogs = [];
+    for (let kill = 1; kill <= OMEN + 5; kill += 1) {
+        const step = advanceHuntContractOnVictory(player, { isElite: kill % 2 === 0 }, () => NOW);
+        nearLogs.push(...step.logs.map((log) => log.text));
+        player = step.player;
+        assert.equal(player.huntContracts[SKY].stage, HUNT_STAGE_CHAMPION, '우두머리를 잡기 전에는 3단계 그대로');
+        assert.equal(player.huntContracts[SKY].progress, Math.min(kill, OMEN));
+    }
+    assert.deepEqual(nearLogs, [MSG.HUNT_CHAMPION_NEAR(getHuntContract(SKY).champion, SKY)], '접근 경보는 기척을 다 채울 때 한 번');
+    const elsewhere = advanceHuntContractOnVictory({ ...withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION), loc: '기계 폐도' }, { isElite: false }, () => NOW);
+    assert.equal(elsewhere.player.huntContracts[SKY].progress, 0, '다른 지역 승리는 기척을 채우지 않는다');
 });
 
 test('3단계: 그 지역 우두머리 처치만 완수 — 착용 가능한 이 직업 장비 + 정수(처치 정수 × 50)', () => {
     for (const job of ['전사', '마법사', '도적']) {
         for (const contract of HUNT_CONTRACTS) {
-            const player = withContract(basePlayer({ job, loc: contract.map, inv: [] }), contract.map, HUNT_STAGE_CHAMPION);
+            const player = withContract(basePlayer({ job, loc: contract.map, inv: [] }), contract.map, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS);
             assert.equal(advanceHuntContractOnVictory(player, { isElite: true }, () => NOW).player, player, '일반 정예는 아니다');
             assert.equal(advanceHuntContractOnVictory(player, { isElite: true, huntChampion: '다른 지역' }, () => NOW).player, player);
             const done = advanceHuntContractOnVictory(player, { isElite: true, huntChampion: contract.map }, () => NOW);
@@ -153,21 +173,24 @@ test('3단계: 그 지역 우두머리 처치만 완수 — 착용 가능한 이
 });
 
 test('결정론: 판정 · 보상은 Math.random을 쓰지 않고, 같은 상태는 같은 장비를 준다', () => {
-    const player = withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION);
+    const player = withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS);
     const a = noRandom(() => advanceHuntContractOnVictory(player, { isElite: true, huntChampion: SKY }, () => NOW));
     const b = noRandom(() => advanceHuntContractOnVictory(player, { isElite: true, huntChampion: SKY }, () => NOW));
     assert.deepEqual(a.items, b.items);
     assert.equal(pickHuntChampionGear(player, SKY)?.name, a.items[0].name);
     noRandom(() => advanceHuntContractOnVictory(withContract(basePlayer(), SKY, HUNT_STAGE_ELITES, BALANCE.HUNT_CONTRACT_ELITE_GOAL - 1), { isElite: true }, () => NOW));
     noRandom(() => advanceHuntContractOnVictory(withContract(basePlayer(), SKY, HUNT_STAGE_KILLS, BALANCE.HUNT_CONTRACT_KILL_GOAL - 1), { isElite: false }, () => NOW));
+    noRandom(() => advanceHuntContractOnVictory(withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS - 1), { isElite: false }, () => NOW));
 });
 
 // ── 우두머리 출현 ──────────────────────────────────────────────────
 
-test('우두머리: 2단계 의뢰 지역의 다음 일반 개체가 우두머리다 — 종 · 탐험 난수 소비는 그대로', () => {
+test('우두머리: 기척을 다 채운 지역의 다음 일반 개체가 우두머리다 — 종 · 탐험 난수 소비는 그대로, 50%에서 격노', () => {
     for (const contract of HUNT_CONTRACTS) {
         const plain = spawnState(basePlayer({ loc: contract.map }));
-        const hunting = spawnState(withContract(basePlayer({ loc: contract.map }), contract.map, HUNT_STAGE_CHAMPION));
+        const omen = spawnState(withContract(basePlayer({ loc: contract.map }), contract.map, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS - 1));
+        assert.equal(omen.state.enemy.huntChampion, undefined, `${contract.map}: 기척을 다 채우기 전에는 나오지 않는다`);
+        const hunting = spawnState(withContract(basePlayer({ loc: contract.map }), contract.map, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS));
         assert.equal(hunting.rng.calls, plain.rng.calls, `${contract.map}: 난수 소비 동일`);
         const before = plain.state.enemy;
         const champion = hunting.state.enemy;
@@ -179,6 +202,9 @@ test('우두머리: 2단계 의뢰 지역의 다음 일반 개체가 우두머�
         assert.equal(champion.maxHp, Math.floor(before.maxHp * BALANCE.HUNT_CHAMPION_HP_MULT));
         assert.equal(champion.atk, Math.floor(before.atk * BALANCE.HUNT_CHAMPION_ATK_MULT));
         assert.equal(champion.exp, Math.floor(before.exp * BALANCE.HUNT_CHAMPION_REWARD_MULT));
+        assert.equal(champion.phase2.threshold, BALANCE.HUNT_CHAMPION_PHASE_THRESHOLD);
+        assert.equal(champion.phase2.name, MSG.HUNT_CHAMPION_ENRAGED_NAME(contract.champion, before.baseName));
+        assert.equal(champion.phase2.atkBonus, BALANCE.HUNT_CHAMPION_PHASE_ATK_BONUS);
         assert.ok(matchesQuestTarget(champion.baseName, before.baseName), '임무 목표 판정은 종으로');
         assert.ok(logTexts(hunting.state).includes(MSG.HUNT_CHAMPION_APPEAR(contract.champion, contract.map)));
         assert.equal(plain.state.enemy.huntChampion, undefined, '의뢰 0단계에는 우두머리가 없다');
@@ -186,7 +212,7 @@ test('우두머리: 2단계 의뢰 지역의 다음 일반 개체가 우두머�
 });
 
 test('우두머리: 보스 · 정예 · 접두어 개체 · 다른 단계 · 다른 지역 · 심연에서는 바꾸지 않는다', () => {
-    const player = withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION);
+    const player = withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS);
     const enemy = { name: '하늘 정령', baseName: '하늘 정령', hp: 100, maxHp: 100, atk: 10, def: 1, exp: 10, gold: 10 };
     const map = DB.MAPS[SKY];
     assert.equal(applyHuntChampion(enemy, player, map).huntChampion, SKY);
@@ -202,7 +228,7 @@ test('우두머리: 보스 · 정예 · 접두어 개체 · 다른 단계 · 다
 // ── 실제 승리 정산 ─────────────────────────────────────────────────
 
 test('실제 승리 정산: 우두머리를 이기면 의뢰 완수 · 장비 · 정수 · 도감', () => {
-    const { state } = spawnState(withContract(basePlayer({ inv: [] }), SKY, HUNT_STAGE_CHAMPION));
+    const { state } = spawnState(withContract(basePlayer({ inv: [] }), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS));
     const after = win(state);
     assert.notEqual(after.gameState, GS.COMBAT, '전투가 끝났다');
     assert.deepEqual(after.player.huntContracts[SKY], { stage: HUNT_STAGE_DONE, progress: 0 });
@@ -212,6 +238,19 @@ test('실제 승리 정산: 우두머리를 이기면 의뢰 완수 · 장비 ·
     assert.ok(after.player.inv.some((item) => item.name === gear.name), `${gear.name}이 가방에`);
     assert.ok(logTexts(after).some((text) => text.startsWith('🏆 [토벌 의뢰 완수]')));
     assert.ok((after.player.meta.essenceLifetime || 0) - (state.player.meta.essenceLifetime || 0) >= getHuntChampionEssence(state.player, SKY));
+});
+
+test('실제 전투: 우두머리는 생명 50% 아래에서 격노한다(이름 · 공격력)', () => {
+    const { state } = spawnState(withContract(basePlayer({ hp: 50_000, maxHp: 50_000 }), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS));
+    const champion = state.enemy;
+    const hurt = { ...state, enemy: { ...champion, hp: Math.floor(champion.maxHp * 0.45) } };
+    const after = gameReducer(hurt, { type: AT.RESOLVE_COMBAT_ACTION, payload: { kind: 'attack', expectedTurn: hurt.combatTurn || 0, seed: 7, now: NOW } });
+    assert.equal(after.gameState, GS.COMBAT, '전제: 한 번에 쓰러지지 않는다');
+    assert.equal(after.enemy.phase2Triggered, true);
+    assert.equal(after.enemy.name, champion.phase2.name);
+    assert.equal(after.enemy.atk, Math.floor(champion.atk * (1 + BALANCE.HUNT_CHAMPION_PHASE_ATK_BONUS)));
+    assert.equal(after.enemy.huntChampion, SKY, '격노해도 의뢰의 우두머리다');
+    assert.ok(logTexts(after).some((text) => text.includes(MSG.HUNT_CHAMPION_ENRAGE_LOG(getHuntContract(SKY).champion))));
 });
 
 test('실제 승리 정산: 의뢰 지역의 일반 승리는 처치를 하나 센다(첫 처치가 게시)', () => {
@@ -231,18 +270,23 @@ test('런 범위: 진행은 사망 · 계승을 넘지 않는다', () => {
 });
 
 test('임무 탭: 지역 레벨 − 5부터 보이고 단계마다 상태 줄이 바뀐다', () => {
-    assert.deepEqual(getHuntContractRows(basePlayer({ level: 34 })), []);
-    const preview = getHuntContractRows(basePlayer({ level: 35 }));
-    assert.deepEqual(preview.map((row) => row.map), [SKY]);
-    assert.equal(preview[0].status, MSG.HUNT_CONTRACT_STATUS_LOCKED(DB.MAPS[SKY].level));
-    const rows = getHuntContractRows(withContract(withContract(basePlayer({ level: 44 }), SKY, HUNT_STAGE_CHAMPION), '어둠의 지하 감옥', HUNT_STAGE_DONE));
-    assert.deepEqual(rows.map((row) => row.map), HUNT_CONTRACTS.map((contract) => contract.map));
-    assert.equal(rows[0].status, MSG.HUNT_CONTRACT_STATUS_CHAMPION(getHuntContract(SKY).champion));
-    assert.equal(rows[1].status, MSG.HUNT_CONTRACT_STATUS_DONE);
-    assert.equal(rows[2].status, MSG.HUNT_CONTRACT_STATUS_STAGE(1, MSG.HUNT_CONTRACT_STAGE_LABELS[0], 0, BALANCE.HUNT_CONTRACT_KILL_GOAL));
+    assert.deepEqual(getHuntContractRows(basePlayer({ level: 19 })), []);
+    const preview = getHuntContractRows(basePlayer({ level: 20 }));
+    assert.deepEqual(preview.map((row) => row.map), ['고대 마법 탑', '용의 둥지']);
+    assert.equal(preview[0].status, MSG.HUNT_CONTRACT_STATUS_LOCKED(25));
+    assert.deepEqual(getHuntContractRows(basePlayer({ level: 35 })).map((row) => row.map), ['고대 마법 탑', '용의 둥지', '용암 지대', SKY]);
+    const DUNGEON = '어둠의 지하 감옥';
+    const MAZE = '지하 미궁';
+    const player = withContract(withContract(withContract(basePlayer({ level: 44 }), SKY, HUNT_STAGE_CHAMPION, 7), DUNGEON, HUNT_STAGE_DONE), MAZE, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS);
+    const rows = Object.fromEntries(getHuntContractRows(player).map((row) => [row.map, row]));
+    assert.deepEqual(Object.keys(rows), HUNT_CONTRACTS.map((contract) => contract.map));
+    assert.equal(rows[SKY].status, MSG.HUNT_CONTRACT_STATUS_OMEN(getHuntContract(SKY).champion, 7, BALANCE.HUNT_CHAMPION_OMEN_KILLS));
+    assert.equal(rows[MAZE].status, MSG.HUNT_CONTRACT_STATUS_CHAMPION(getHuntContract(MAZE).champion));
+    assert.equal(rows[DUNGEON].status, MSG.HUNT_CONTRACT_STATUS_DONE);
+    assert.equal(rows['용암 지대'].status, MSG.HUNT_CONTRACT_STATUS_STAGE(1, MSG.HUNT_CONTRACT_STAGE_LABELS[0], 0, BALANCE.HUNT_CONTRACT_KILL_GOAL));
 
     const html = renderStatic(createElement(HuntContractCard, { player: withContract(basePlayer(), SKY, HUNT_STAGE_ELITES, 2) }));
     assert.ok(html.includes(MSG.HUNT_CONTRACT_PANEL_TITLE));
     assert.ok(html.includes(MSG.HUNT_CONTRACT_STATUS_STAGE(2, MSG.HUNT_CONTRACT_STAGE_LABELS[1], 2, BALANCE.HUNT_CONTRACT_ELITE_GOAL)));
-    assert.equal(renderStatic(createElement(HuntContractCard, { player: basePlayer({ level: 20 }) })), '');
+    assert.equal(renderStatic(createElement(HuntContractCard, { player: basePlayer({ level: 19 }) })), '');
 });
