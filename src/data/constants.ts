@@ -241,6 +241,10 @@ export const BALANCE = {
     QUIET_STREAK_NOTHING_REDUCTION: 0.05,
     RELIC_PITY_PER_EXPLORE: 0.01,
     RELIC_FIND_MAX_CHANCE: 0.18,
+    // 2026-10 Wave 79 (소유자 결정 §82.4 b): 칸이 찼고 교체로 나아질 카드가 없는 탐험 유물 발견은 선택 화면 대신
+    //   '유물의 잔향' — 같은 레벨 적 한 마리(spawnEnemy의 기본 경험치 10 + 레벨 × 10)를 처치한 만큼의 계승 정수다.
+    RELIC_ECHO_EXP_BASE: 10,
+    RELIC_ECHO_EXP_PER_LEVEL: 10,
     ANOMALY_BASE_CHANCE: 0.12,
     ANOMALY_PITY_PER_EXPLORE: 0.03,
     ANOMALY_MAX_CHANCE: 0.3,

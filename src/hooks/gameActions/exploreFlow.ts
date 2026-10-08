@@ -28,7 +28,9 @@ type ExploreRollDeps = Pick<GameActionDeps, 'dispatch' | 'addLog' | 'getFullStat
 
 import { DB } from '../../data/db.js';
 import { BALANCE } from '../../data/constants.js';
-import { RELICS, pickWeightedRelics, relicNumber } from '../../data/relics.js';
+import { RELICS, isRelicReplacementUpgrade, pickWeightedRelics, relicNumber } from '../../data/relics.js';
+import { applyEssenceGain, getEssenceGainFromExp } from '../../systems/essenceLedger.js';
+import { getEssenceRewardMult } from '../../systems/essenceRewardMult.js';
 import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { AT } from '../../reducers/actionTypes.js';
 import { GS } from '../../reducers/gameStates.js';
@@ -87,6 +89,36 @@ export const resetDailyProtocolIfNeeded = (player: Player, dispatch: Dispatch<Ga
     if (!dp || dp.date !== today) {
         dispatch({ type: AT.SET_DAILY_PROTOCOL, payload: createDailyProtocol(player, new Date()) });
     }
+};
+
+// ─────────────────────────────────────────────────────────────────────────
+// 1.5 칸이 찬 탐험 유물 발견 — 2026-10 Wave 79 (소유자 결정 원장 §82.4 b)
+//   칸이 찼고 교체로 나아질 카드(`isRelicReplacementUpgrade`)가 하나도 없으면 선택 화면 대신 '유물의 잔향'을 준다 —
+//   같은 레벨 적 한 마리를 처치한 만큼의 계승 정수(처치 정수와 같은 공식 · 같은 배율). Wave 78 측정에서 칸이 찬 제안의
+//   약 97%가 이 경우였고(보유 유물이 조합 2 ~ 4개로 묶여 있다), 플레이어는 고를 이유가 없는 화면을 시간당 약 1.8번 넘겼다.
+//   후보를 뽑지 않으므로 이 경우에는 후보 추첨 난수를 쓰지 않는다. 나아질 카드가 있으면 이전과 같이 교체 제안이다.
+// ─────────────────────────────────────────────────────────────────────────
+const hasRelicReplacementUpgrade = (available: Relic[], owned: Relic[]) => (
+    available.some((relic) => isRelicReplacementUpgrade(relic, owned))
+);
+
+export const getRelicEchoEssence = (player: Player): number => {
+    const level = Math.max(1, Number(player.level) || 1);
+    return getEssenceGainFromExp(
+        BALANCE.RELIC_ECHO_EXP_BASE + level * BALANCE.RELIC_ECHO_EXP_PER_LEVEL,
+        getEssenceRewardMult(player.meta),
+    );
+};
+
+const grantRelicEcho = (player: Player, { dispatch, addLog }: { dispatch: Dispatch<GameAction>; addLog: AddLog }) => {
+    const essence = getRelicEchoEssence(player);
+    const preview = applyEssenceGain(player.meta || {}, essence);
+    dispatch({
+        type: AT.SET_PLAYER,
+        payload: (p: Player): Player => ({ ...p, meta: applyEssenceGain(p.meta || {}, essence).meta }),
+    });
+    addLog('event', MSG.EXPLORE_RELIC_ECHO(essence));
+    if (preview.rankGain > 0) addLog('system', MSG.LEGACY_RANK(preview.meta.rank));
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -160,6 +192,10 @@ export const rollExplorationEvent = (
         const available = RELICS.filter((r) => !playerRelics.some((pr) => pr.id === r.id));
         if (available.length > 0) {
             const atCapacity = playerRelics.length >= relicUnlocks.maxRelics;
+            if (atCapacity && !hasRelicReplacementUpgrade(available, playerRelics)) {
+                grantRelicEcho(player, { dispatch, addLog });
+                return 'relic_found';
+            }
             const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, {
                 owned: playerRelics, rng, replacing: atCapacity ? playerRelics : undefined,
             });
@@ -317,6 +353,10 @@ export const runQuietRollAndCombat = (
         if (available.length > 0) {
             commitExploreOutcome('relic_found', null, gaugeMapData);
             const atCapacity = playerRelics.length >= relicUnlocks.maxRelics;
+            if (atCapacity && !hasRelicReplacementUpgrade(available, playerRelics)) {
+                grantRelicEcho(player, { dispatch, addLog });
+                return;
+            }
             const candidates = pickWeightedRelics(available, relicUnlocks.relicChoices, {
                 owned: playerRelics, rng, replacing: atCapacity ? playerRelics : undefined,
             });
