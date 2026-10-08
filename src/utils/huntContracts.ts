@@ -13,7 +13,7 @@ import { getJobGearPool, getUsableGearTier } from './wanderingMerchant.js';
 /**
  * 지역 토벌 의뢰 판정 (2026-10 Wave 80, 소유자 결정 "회차마다 다시 하는 지역 토벌 의뢰").
  *
- * - 단계: 0 처치(`HUNT_CONTRACT_KILL_GOAL`) → 1 정예 처치(`HUNT_CONTRACT_ELITE_GOAL`, 우두머리 제외) → 2 우두머리 → 3 완수.
+ * - 단계: 0 처치(`HUNT_CONTRACT_KILL_GOAL`) → 1 정예 추적(정예 10점 · 일반 1점, `getHuntTraceGoal` — Wave 83, 보스 · 우두머리 제외) → 2 우두머리 → 3 완수.
  * - 진행은 그 지역에 있을 때의 승리만 센다. 첫 처치가 의뢰를 게시한다.
  * - **난수를 쓰지 않는다** — 우두머리 출현은 단계가 정하고(2단계에서 그 지역의 다음 일반 개체), 보상 장비는 지역 · 탐험 수의
  *   도메인 난수가 고른다. 탐험 · 승리의 난수열이 기능 이전과 같다(Wave 70 · 71 · 75와 같은 원칙).
@@ -46,6 +46,11 @@ export const getHuntRoundMult = (round: number = 1): number => 1 + BALANCE.HUNT_
 /** 차수의 1단계 처치 목표 · 2단계 정예 목표. */
 export const getHuntKillGoal = (round: number = 1): number => BALANCE.HUNT_CONTRACT_KILL_GOAL + BALANCE.HUNT_CONTRACT_KILL_GOAL_PER_ROUND * (Math.max(1, round) - 1);
 export const getHuntEliteGoal = (round: number = 1): number => BALANCE.HUNT_CONTRACT_ELITE_GOAL + BALANCE.HUNT_CONTRACT_ELITE_GOAL_PER_ROUND * (Math.max(1, round) - 1);
+/**
+ * Wave 83: 2단계는 정예 추적 점수다 — 정예 처치 `HUNT_CONTRACT_ELITE_TRACE`점, 일반 처치 1점, 목표 = 정예 목표 × 그 점수(30 · 40 · 50).
+ * 정예만 세던 동안 이 단계가 지역마다 중앙값 1.6 ~ 2.6시간(p90 3 ~ 4.4시간)이라 2회차 긴 공백의 시작점이었다(원장 §87).
+ */
+export const getHuntTraceGoal = (round: number = 1): number => getHuntEliteGoal(round) * BALANCE.HUNT_CONTRACT_ELITE_TRACE;
 
 /** 3단계 보상 — 착용할 수 있는 가장 높은 등급(지역 레벨까지)의 이 직업용 장비 중 위력 상위 1/4에서 하나. */
 export const pickHuntChampionGear = (player: Player, map: string, round: number = 1): Item | null => {
@@ -102,7 +107,7 @@ export const advanceHuntContractOnVictory = (
     const { stage, progress, round } = getHuntContractProgress(player, map);
     const logs: HuntContractVictoryResult['logs'] = [];
     const killGoal = getHuntKillGoal(round);
-    const eliteGoal = getHuntEliteGoal(round);
+    const traceGoal = getHuntTraceGoal(round);
 
     if (stage === HUNT_STAGE_KILLS) {
         const next = progress + 1;
@@ -114,14 +119,14 @@ export const advanceHuntContractOnVictory = (
         }
         const gold = getHuntStageGold(map, round);
         const paid = grantGold(withProgress(player, map, { stage: HUNT_STAGE_ELITES, progress: 0, round }), gold);
-        logs.push({ type: 'event', text: MSG.HUNT_CONTRACT_STAGE_KILLS_DONE(map, gold, eliteGoal) });
+        logs.push({ type: 'event', text: MSG.HUNT_CONTRACT_STAGE_KILLS_DONE(map, gold, traceGoal, BALANCE.HUNT_CONTRACT_ELITE_TRACE) });
         return { player: paid, logs, items: [], completedStage: HUNT_STAGE_KILLS };
     }
 
     if (stage === HUNT_STAGE_ELITES) {
-        if (!deadEnemy.isElite || deadEnemy.isBoss || deadEnemy.huntChampion) return unchanged;
-        const next = progress + 1;
-        if (next < eliteGoal) {
+        if (deadEnemy.isBoss || deadEnemy.huntChampion) return unchanged;
+        const next = Math.min(traceGoal, progress + (deadEnemy.isElite ? BALANCE.HUNT_CONTRACT_ELITE_TRACE : 1));
+        if (next < traceGoal) {
             return { player: withProgress(player, map, { stage, progress: next, round }), logs, items: [], completedStage: null };
         }
         const materialName = CONSTANTS.ENHANCE_MATERIAL_NAME;
@@ -243,7 +248,7 @@ export const getHuntContractRows = (player: Player | null | undefined): HuntCont
             const { stage, progress, round } = getHuntContractProgress(player, contract.map);
             const reachable = level >= mapLevel;
             const goal = stage === HUNT_STAGE_KILLS ? getHuntKillGoal(round)
-                : stage === HUNT_STAGE_ELITES ? getHuntEliteGoal(round)
+                : stage === HUNT_STAGE_ELITES ? getHuntTraceGoal(round)
                     : stage === HUNT_STAGE_CHAMPION ? BALANCE.HUNT_CHAMPION_OMEN_KILLS : 1;
             const omenDone = stage === HUNT_STAGE_CHAMPION && progress >= BALANCE.HUNT_CHAMPION_OMEN_KILLS;
             const stageStatus = omenDone ? MSG.HUNT_CONTRACT_STATUS_CHAMPION(contract.champion)

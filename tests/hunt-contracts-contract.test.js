@@ -18,7 +18,7 @@ import { canEquip } from '../src/utils/equipmentValidation.js';
 import {
     HUNT_STAGE_CHAMPION, HUNT_STAGE_DONE, HUNT_STAGE_ELITES, HUNT_STAGE_KILLS,
     advanceHuntContractOnVictory, applyHuntChampion, getHuntChampionEssence, getHuntContractRows, getHuntEliteGoal,
-    getHuntEliteMaterials, getHuntKillGoal, getHuntRoundMult, getHuntStageGold, pickHuntChampionGear,
+    getHuntEliteMaterials, getHuntKillGoal, getHuntRoundMult, getHuntStageGold, getHuntTraceGoal, pickHuntChampionGear,
 } from '../src/utils/huntContracts.js';
 import { pickPermanentPlayerState } from '../src/utils/permanentProgress.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
@@ -83,10 +83,10 @@ const logTexts = (state) => (state.logs || []).map((log) => log.text);
 
 // ── 데이터 ─────────────────────────────────────────────────────────
 
-test('데이터: 의뢰 지역 여섯은 Lv25 ~ 44의 사냥 지역이고 우두머리 칭호는 종 이름 · 접두어와 겹치지 않는다', () => {
-    // Wave 80 셋(Lv41 ~ 45 구간) + Wave 81 셋(1회차 긴 공백이 시작되는 Lv26 ~ 40 구간), 지역 레벨 순서.
-    assert.deepEqual(HUNT_CONTRACTS.map((contract) => contract.map), ['고대 마법 탑', '용의 둥지', '용암 지대', '천공 정원', '어둠의 지하 감옥', '지하 미궁']);
-    assert.deepEqual(HUNT_CONTRACTS.map((contract) => DB.MAPS[contract.map].level), [25, 25, 36, 40, 42, 44]);
+test('데이터: 의뢰 지역 일곱은 Lv18 ~ 44의 사냥 지역이고 우두머리 칭호는 종 이름 · 접두어와 겹치지 않는다', () => {
+    // Wave 80 셋(Lv41 ~ 45 구간) + Wave 81 셋(1회차 긴 공백 Lv26 ~ 40) + Wave 83 몰락한 전초기지(2회차 긴 공백 Lv16 ~ 25), 지역 레벨 순서.
+    assert.deepEqual(HUNT_CONTRACTS.map((contract) => contract.map), ['몰락한 전초기지', '고대 마법 탑', '용의 둥지', '용암 지대', '천공 정원', '어둠의 지하 감옥', '지하 미궁']);
+    assert.deepEqual(HUNT_CONTRACTS.map((contract) => DB.MAPS[contract.map].level), [18, 25, 25, 36, 40, 42, 44]);
     const prefixes = new Set(CONSTANTS.MONSTER_PREFIXES.map((prefix) => prefix.name));
     for (const contract of HUNT_CONTRACTS) {
         const map = DB.MAPS[contract.map];
@@ -116,14 +116,23 @@ test('1단계: 그 지역 처치 40번이 게시 → 완료(골드)로 이어지
     assert.deepEqual(done.player.huntContracts[SKY], { stage: HUNT_STAGE_ELITES, progress: 0, round: 1 });
     assert.equal(done.player.gold, getHuntStageGold(SKY));
     assert.equal(getHuntStageGold(SKY), DB.MAPS[SKY].level * BALANCE.HUNT_CONTRACT_GOLD_PER_LEVEL);
-    assert.deepEqual(done.logs.map((log) => log.text), [MSG.HUNT_CONTRACT_STAGE_KILLS_DONE(SKY, getHuntStageGold(SKY), BALANCE.HUNT_CONTRACT_ELITE_GOAL)]);
+    assert.deepEqual(done.logs.map((log) => log.text), [MSG.HUNT_CONTRACT_STAGE_KILLS_DONE(SKY, getHuntStageGold(SKY), getHuntTraceGoal(1), BALANCE.HUNT_CONTRACT_ELITE_TRACE)]);
 });
 
-test('2단계: 정예만 센다(우두머리 · 보스 제외) — 완료하면 강화 재료', () => {
+test('2단계 정예 추적: 정예 10점 · 일반 1점(보스 · 우두머리 제외), 목표 30점 — 완료하면 강화 재료', () => {
+    const TRACE = BALANCE.HUNT_CONTRACT_ELITE_TRACE;
+    assert.equal(getHuntTraceGoal(1), BALANCE.HUNT_CONTRACT_ELITE_GOAL * TRACE);
     let player = withContract(basePlayer({ inv: [] }), SKY, HUNT_STAGE_ELITES);
-    for (const enemy of [{ isElite: false }, { isElite: true, isBoss: true }, { isElite: true, huntChampion: SKY }]) {
+    for (const enemy of [{ isElite: true, isBoss: true }, { isElite: true, huntChampion: SKY }, { isElite: false, isBoss: true }]) {
         assert.equal(advanceHuntContractOnVictory(player, enemy, () => NOW).player, player, JSON.stringify(enemy));
     }
+    assert.equal(advanceHuntContractOnVictory(player, { isElite: false }, () => NOW).player.huntContracts[SKY].progress, 1, '일반 처치 1점');
+    assert.equal(advanceHuntContractOnVictory(player, { isElite: true }, () => NOW).player.huntContracts[SKY].progress, TRACE, '정예 처치 10점');
+    // 일반 처치만으로도 끝난다(30번) — 정예가 드문 지역에서 단계가 멈추지 않는다.
+    let normalsOnly = player;
+    for (let kill = 1; kill < getHuntTraceGoal(1); kill += 1) normalsOnly = advanceHuntContractOnVictory(normalsOnly, { isElite: false }, () => NOW).player;
+    assert.equal(normalsOnly.huntContracts[SKY].stage, HUNT_STAGE_ELITES);
+    assert.equal(advanceHuntContractOnVictory(normalsOnly, { isElite: false }, () => NOW).completedStage, HUNT_STAGE_ELITES);
     for (let kill = 1; kill < BALANCE.HUNT_CONTRACT_ELITE_GOAL; kill += 1) player = advanceHuntContractOnVictory(player, { isElite: true }, () => NOW).player;
     const done = advanceHuntContractOnVictory(player, { isElite: true }, () => NOW);
     assert.equal(done.completedStage, HUNT_STAGE_ELITES);
@@ -281,7 +290,7 @@ test('차수: 목표는 차수마다 늘고 우두머리 · 보상은 +20%씩 �
     const killsDone = advanceHuntContractOnVictory(player, { isElite: false }, () => NOW);
     assert.equal(killsDone.player.gold, getHuntStageGold(SKY, 2));
     // 2차 2단계: 정예 4번째에서 재료 3개.
-    const elites = advanceHuntContractOnVictory(withContract(basePlayer({ inv: [] }), SKY, HUNT_STAGE_ELITES, getHuntEliteGoal(2) - 1, 2), { isElite: true }, () => NOW);
+    const elites = advanceHuntContractOnVictory(withContract(basePlayer({ inv: [] }), SKY, HUNT_STAGE_ELITES, getHuntTraceGoal(2) - 1, 2), { isElite: false }, () => NOW);
     assert.equal(elites.items.length, getHuntEliteMaterials(2));
 
     // 마지막 차수의 우두머리 → 완수, 그 뒤로는 아무것도 세지 않는다.
@@ -294,7 +303,7 @@ test('차수: 목표는 차수마다 늘고 우두머리 · 보상은 +20%씩 �
 });
 
 test('지역 상태 이상: 우두머리는 그 지역의 상태 이상을 강타와 격노로 걸고, 차수 배율이 생명 · 공격력에 붙는다', () => {
-    assert.deepEqual(HUNT_CONTRACTS.map((contract) => contract.status), ['curse', 'burn', 'burn', 'stun', 'bleed', 'poison']);
+    assert.deepEqual(HUNT_CONTRACTS.map((contract) => contract.status), ['bleed', 'curse', 'burn', 'burn', 'stun', 'bleed', 'poison']);
     assert.ok(HUNT_CONTRACTS.every((contract) => typeof MSG.DOT_LABELS[contract.status] === 'string'), '상태 이상 라벨이 있다');
     const enemy = { name: '하늘 정령', baseName: '하늘 정령', hp: 100, maxHp: 100, atk: 10, def: 1, exp: 10, gold: 10 };
     for (const round of [1, 2, 3]) {
@@ -321,11 +330,12 @@ test('런 범위: 진행은 사망 · 계승을 넘지 않는다', () => {
 });
 
 test('임무 탭: 지역 레벨 − 5부터 보이고 단계마다 상태 줄이 바뀐다', () => {
-    assert.deepEqual(getHuntContractRows(basePlayer({ level: 19 })), []);
-    const preview = getHuntContractRows(basePlayer({ level: 20 }));
-    assert.deepEqual(preview.map((row) => row.map), ['고대 마법 탑', '용의 둥지']);
-    assert.equal(preview[0].status, MSG.HUNT_CONTRACT_STATUS_LOCKED(25));
-    assert.deepEqual(getHuntContractRows(basePlayer({ level: 35 })).map((row) => row.map), ['고대 마법 탑', '용의 둥지', '용암 지대', SKY]);
+    assert.deepEqual(getHuntContractRows(basePlayer({ level: 12 })), []);
+    const preview = getHuntContractRows(basePlayer({ level: 13 }));
+    assert.deepEqual(preview.map((row) => row.map), ['몰락한 전초기지']);
+    assert.equal(preview[0].status, MSG.HUNT_CONTRACT_STATUS_LOCKED(18));
+    assert.deepEqual(getHuntContractRows(basePlayer({ level: 20 })).map((row) => row.map), ['몰락한 전초기지', '고대 마법 탑', '용의 둥지']);
+    assert.deepEqual(getHuntContractRows(basePlayer({ level: 35 })).map((row) => row.map), ['몰락한 전초기지', '고대 마법 탑', '용의 둥지', '용암 지대', SKY]);
     const DUNGEON = '어둠의 지하 감옥';
     const MAZE = '지하 미궁';
     const player = withContract(withContract(withContract(basePlayer({ level: 44 }), SKY, HUNT_STAGE_CHAMPION, 7), DUNGEON, HUNT_STAGE_DONE, 0, BALANCE.HUNT_CONTRACT_MAX_ROUNDS), MAZE, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS, 2);
@@ -339,6 +349,6 @@ test('임무 탭: 지역 레벨 − 5부터 보이고 단계마다 상태 줄이
 
     const html = renderStatic(createElement(HuntContractCard, { player: withContract(basePlayer(), SKY, HUNT_STAGE_ELITES, 2) }));
     assert.ok(html.includes(MSG.HUNT_CONTRACT_PANEL_TITLE));
-    assert.ok(html.includes(MSG.HUNT_CONTRACT_ROUND_TAG(1, BALANCE.HUNT_CONTRACT_MAX_ROUNDS) + MSG.HUNT_CONTRACT_STATUS_STAGE(2, MSG.HUNT_CONTRACT_STAGE_LABELS[1], 2, BALANCE.HUNT_CONTRACT_ELITE_GOAL)));
-    assert.equal(renderStatic(createElement(HuntContractCard, { player: basePlayer({ level: 19 }) })), '');
+    assert.ok(html.includes(MSG.HUNT_CONTRACT_ROUND_TAG(1, BALANCE.HUNT_CONTRACT_MAX_ROUNDS) + MSG.HUNT_CONTRACT_STATUS_STAGE(2, MSG.HUNT_CONTRACT_STAGE_LABELS[1], 2, getHuntTraceGoal(1))));
+    assert.equal(renderStatic(createElement(HuntContractCard, { player: basePlayer({ level: 12 }) })), '');
 });

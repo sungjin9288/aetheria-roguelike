@@ -13,6 +13,8 @@ import type { StatusId } from '../types/index.js';
  */
 export const HUNT_CONTRACTS: ReadonlyArray<{ readonly map: string; readonly champion: string; readonly status: StatusId }> = [
     // 2026-10 Wave 81 (소유자 결정 "B, C 같이"): 1회차 긴 공백이 시작되는 Lv26 ~ 40의 세 지역(고대 마법 탑 · 용의 둥지 · 용암 지대)을 더했다.
+    // Wave 83 (소유자 결정 (c)): 2회차 긴 공백의 시작점 2위(몰락한 전초기지 Lv16 ~ 25).
+    { map: '몰락한 전초기지', champion: '녹슨 철의 군주', status: 'bleed' },
     { map: '고대 마법 탑', champion: '탑의 대마도사', status: 'curse' },
     { map: '용의 둥지', champion: '둥지의 폭군', status: 'burn' },
     { map: '용암 지대', champion: '용암의 심장', status: 'burn' },
