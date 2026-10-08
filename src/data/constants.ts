@@ -252,9 +252,14 @@ export const BALANCE = {
     HUNT_CONTRACT_GOLD_PER_LEVEL: 80,             // 1단계 보상 골드 = 지역 레벨 × 이 값
     HUNT_CONTRACT_ENHANCE_MATERIALS: 2,           // 2단계 보상 강화 재료 수
     HUNT_CONTRACT_CHAMPION_ESSENCE_KILLS: 50,     // 3단계 보상 정수 = 같은 레벨 적 처치 정수 × 이 값
-    HUNT_CHAMPION_HP_MULT: 3,                     // 우두머리: 그 지역 일반 개체 대비
-    HUNT_CHAMPION_ATK_MULT: 1.3,
-    HUNT_CHAMPION_REWARD_MULT: 3,                 // 우두머리 처치 경험치 · 골드
+    // Wave 81 (소유자 결정 (c) "예고 → 출현, 위협을 키운다"): ×3 · ×1.3이던 동안 240시드 우두머리 사망 0이었다.
+    HUNT_CHAMPION_HP_MULT: 5,                     // 우두머리: 그 지역 일반 개체 대비
+    HUNT_CHAMPION_ATK_MULT: 1.5,
+    HUNT_CHAMPION_REWARD_MULT: 4,                 // 우두머리 처치 경험치 · 골드
+    HUNT_CHAMPION_OMEN_KILLS: 20,                 // 2단계 완료(기척) 뒤 그 지역 처치 이만큼이면 다음 일반 개체가 우두머리
+    HUNT_CHAMPION_PHASE_THRESHOLD: 0.5,           // 격노 문턱(생명 비율)
+    HUNT_CHAMPION_PHASE_ATK_BONUS: 0.3,           // 격노: 공격력 +30%
+    HUNT_CHAMPION_PHASE_HEAVY_CHANCE: 0.4,        // 격노: 강타 확률
     ANOMALY_BASE_CHANCE: 0.12,
     ANOMALY_PITY_PER_EXPLORE: 0.03,
     ANOMALY_MAX_CHANCE: 0.3,
