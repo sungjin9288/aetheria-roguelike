@@ -186,6 +186,14 @@ export const advanceHuntContractOnVictory = (
  */
 export type HuntChampionCandidate = SpawnedMonster & { huntChampion?: string };
 
+/**
+ * Wave 84 (소유자 결정 (b)): 우두머리 공격력 배율 — 지역 상태 이상이 받는 피해를 키우면(저주) 그 증폭으로 나눈다.
+ * 저주에 걸린 뒤의 실효 타격이 다른 지역 우두머리와 같다. 지속 피해 · 기절처럼 따로 피해를 내거나 차례를 뺏는 상태는 나누지 않는다.
+ */
+export const getHuntChampionAtkMult = (status: HuntContractDef['status']): number => (
+    status === 'curse' ? BALANCE.HUNT_CHAMPION_ATK_MULT / BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT : BALANCE.HUNT_CHAMPION_ATK_MULT
+);
+
 export const applyHuntChampion = (
     enemy: SpawnedMonster,
     player: Player,
@@ -205,7 +213,7 @@ export const applyHuntChampion = (
         huntChampion: map,
         hp: Math.floor(enemy.hp * BALANCE.HUNT_CHAMPION_HP_MULT * roundMult),
         maxHp: Math.floor(enemy.maxHp * BALANCE.HUNT_CHAMPION_HP_MULT * roundMult),
-        atk: Math.floor(enemy.atk * BALANCE.HUNT_CHAMPION_ATK_MULT * roundMult),
+        atk: Math.floor(enemy.atk * getHuntChampionAtkMult(contract.status) * roundMult),
         exp: Math.floor(enemy.exp * BALANCE.HUNT_CHAMPION_REWARD_MULT * roundMult),
         gold: Math.floor(enemy.gold * BALANCE.HUNT_CHAMPION_REWARD_MULT * roundMult),
         statusOnHit: contract.status,

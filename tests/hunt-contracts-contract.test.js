@@ -17,9 +17,10 @@ import { matchesQuestTarget } from '../src/utils/enemyIdentity.js';
 import { canEquip } from '../src/utils/equipmentValidation.js';
 import {
     HUNT_STAGE_CHAMPION, HUNT_STAGE_DONE, HUNT_STAGE_ELITES, HUNT_STAGE_KILLS,
-    advanceHuntContractOnVictory, applyHuntChampion, getHuntChampionEssence, getHuntContractRows, getHuntEliteGoal,
+    advanceHuntContractOnVictory, applyHuntChampion, getHuntChampionAtkMult, getHuntChampionEssence, getHuntContractRows, getHuntEliteGoal,
     getHuntEliteMaterials, getHuntKillGoal, getHuntRoundMult, getHuntStageGold, getHuntTraceGoal, pickHuntChampionGear,
 } from '../src/utils/huntContracts.js';
+import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { pickPermanentPlayerState } from '../src/utils/permanentProgress.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
 import HuntContractCard from '../src/components/tabs/HuntContractCard.tsx';
@@ -193,6 +194,34 @@ test('결정론: 판정 · 보상은 Math.random을 쓰지 않고, 같은 상태
     noRandom(() => advanceHuntContractOnVictory(withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS - 1), { isElite: false }, () => NOW));
 });
 
+// ── Wave 84: 저주 우두머리의 공격력 ──
+
+test('Wave 84: 받는 피해를 키우는 상태(저주)를 거는 우두머리는 공격력 배율을 그 증폭으로 나눈다 — 저주 뒤 실효 타격이 다른 지역과 같다', () => {
+    for (const contract of HUNT_CONTRACTS) {
+        const expected = contract.status === 'curse'
+            ? BALANCE.HUNT_CHAMPION_ATK_MULT / BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT
+            : BALANCE.HUNT_CHAMPION_ATK_MULT;
+        assert.equal(getHuntChampionAtkMult(contract.status), expected, contract.map);
+    }
+    assert.ok(HUNT_CONTRACTS.some((contract) => contract.status === 'curse'), '저주 우두머리가 있다(탑의 대마도사)');
+    // 실제 엔진: 저주에 걸린 플레이어가 저주 우두머리에게 받는 피해 ≈ 저주 없는 플레이어가 전체 배율 우두머리에게 받는 피해.
+    const TOWER = '고대 마법 탑';
+    const species = { name: '마법 인형', baseName: '마법 인형', hp: 900, maxHp: 900, atk: 115, def: 28, exp: 10, gold: 10, level: 25 };
+    const tower = applyHuntChampion(species, withContract(basePlayer({ loc: TOWER }), TOWER, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS), DB.MAPS[TOWER]);
+    assert.equal(tower.huntChampion, TOWER);
+    const plainHit = { ...tower, atk: Math.floor(species.atk * BALANCE.HUNT_CHAMPION_ATK_MULT), statusOnHit: undefined, pattern: { guardChance: 0, heavyChance: 0 } };
+    const curseHit = { ...tower, statusOnHit: undefined, pattern: { guardChance: 0, heavyChance: 0 } };
+    const victim = basePlayer({ loc: TOWER, def: 20, status: [] });
+    const cursed = { ...victim, status: ['curse'] };
+    const hit = (player, enemy) => CombatEngine.enemyAttack(player, enemy, calculateFullStats(player), () => 0.9).damage;
+    const base = hit(victim, plainHit);
+    const amplified = hit(cursed, curseHit);
+    assert.ok(base > 0);
+    // 방어 경감이 증폭 전에 빠지므로 저주 쪽이 약간 낮다(같거나 10% 안).
+    assert.ok(amplified <= base && amplified >= base * 0.9, `저주 우두머리 ${amplified} ≈ 기준 ${base}`);
+    assert.ok(hit(cursed, plainHit) > base * 1.2, '나누지 않으면 저주가 같은 배율 위에 곱해진다');
+});
+
 // ── 우두머리 출현 ──────────────────────────────────────────────────
 
 test('우두머리: 기척을 다 채운 지역의 다음 일반 개체가 우두머리다 — 종 · 탐험 난수 소비는 그대로, 50%에서 격노', () => {
@@ -210,7 +239,7 @@ test('우두머리: 기척을 다 채운 지역의 다음 일반 개체가 우�
         assert.equal(champion.isElite, true);
         assert.equal(champion.name, MSG.HUNT_CHAMPION_NAME(contract.champion, before.baseName));
         assert.equal(champion.maxHp, Math.floor(before.maxHp * BALANCE.HUNT_CHAMPION_HP_MULT));
-        assert.equal(champion.atk, Math.floor(before.atk * BALANCE.HUNT_CHAMPION_ATK_MULT));
+        assert.equal(champion.atk, Math.floor(before.atk * getHuntChampionAtkMult(contract.status)));
         assert.equal(champion.exp, Math.floor(before.exp * BALANCE.HUNT_CHAMPION_REWARD_MULT));
         assert.equal(champion.phase2.threshold, BALANCE.HUNT_CHAMPION_PHASE_THRESHOLD);
         assert.equal(champion.phase2.name, MSG.HUNT_CHAMPION_ENRAGED_NAME(contract.champion, before.baseName));
@@ -276,11 +305,13 @@ test('실제 승리 정산: 의뢰 지역의 일반 승리는 처치를 하나 �
 
 test('차수: 목표는 차수마다 늘고 우두머리 · 보상은 +20%씩 — 마지막 차수의 우두머리가 완수다', () => {
     const MAX = BALANCE.HUNT_CONTRACT_MAX_ROUNDS;
-    assert.equal(MAX, 3);
-    assert.deepEqual([1, 2, 3].map(getHuntKillGoal), [40, 60, 80]);
-    assert.deepEqual([1, 2, 3].map(getHuntEliteGoal), [3, 4, 5]);
-    assert.deepEqual([1, 2, 3].map(getHuntRoundMult), [1, 1.2, 1 + 0.2 * 2]);
-    assert.deepEqual([1, 2, 3].map(getHuntEliteMaterials), [2, 3, 4]);
+    assert.equal(MAX, 5, 'Wave 84: 3차 → 5차');
+    const rounds = [1, 2, 3, 4, 5];
+    assert.deepEqual(rounds.map(getHuntKillGoal), [40, 60, 80, 100, 120]);
+    assert.deepEqual(rounds.map(getHuntEliteGoal), [3, 4, 5, 6, 7]);
+    assert.deepEqual(rounds.map(getHuntTraceGoal), [30, 40, 50, 60, 70]);
+    assert.deepEqual(rounds.map(getHuntRoundMult), [1, 1.2, 1 + 0.2 * 2, 1 + 0.2 * 3, 1 + 0.2 * 4]);
+    assert.deepEqual(rounds.map(getHuntEliteMaterials), [2, 3, 4, 5, 6]);
     assert.equal(getHuntStageGold(SKY, 3), Math.floor(DB.MAPS[SKY].level * BALANCE.HUNT_CONTRACT_GOLD_PER_LEVEL * getHuntRoundMult(3)));
 
     // 2차 1단계: 60번째 처치에서 끝나고 골드도 2차 배율이다.
@@ -293,6 +324,9 @@ test('차수: 목표는 차수마다 늘고 우두머리 · 보상은 +20%씩 �
     const elites = advanceHuntContractOnVictory(withContract(basePlayer({ inv: [] }), SKY, HUNT_STAGE_ELITES, getHuntTraceGoal(2) - 1, 2), { isElite: false }, () => NOW);
     assert.equal(elites.items.length, getHuntEliteMaterials(2));
 
+    // 3차 우두머리는 이제 완수가 아니다 — 4차가 이어진다.
+    const third = advanceHuntContractOnVictory(withContract(basePlayer({ inv: [] }), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS, 3), { isElite: true, huntChampion: SKY }, () => NOW);
+    assert.deepEqual(third.player.huntContracts[SKY], { stage: HUNT_STAGE_KILLS, progress: 0, round: 4 });
     // 마지막 차수의 우두머리 → 완수, 그 뒤로는 아무것도 세지 않는다.
     const last = withContract(basePlayer({ inv: [] }), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS, MAX);
     const done = advanceHuntContractOnVictory(last, { isElite: true, huntChampion: SKY }, () => NOW);
@@ -306,7 +340,8 @@ test('지역 상태 이상: 우두머리는 그 지역의 상태 이상을 강�
     assert.deepEqual(HUNT_CONTRACTS.map((contract) => contract.status), ['bleed', 'curse', 'burn', 'burn', 'stun', 'bleed', 'poison']);
     assert.ok(HUNT_CONTRACTS.every((contract) => typeof MSG.DOT_LABELS[contract.status] === 'string'), '상태 이상 라벨이 있다');
     const enemy = { name: '하늘 정령', baseName: '하늘 정령', hp: 100, maxHp: 100, atk: 10, def: 1, exp: 10, gold: 10 };
-    for (const round of [1, 2, 3]) {
+    assert.equal(BALANCE.HUNT_CONTRACT_MAX_ROUNDS, 5, 'Wave 84: 5차까지');
+    for (let round = 1; round <= BALANCE.HUNT_CONTRACT_MAX_ROUNDS; round += 1) {
         const champion = applyHuntChampion(enemy, withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS, round), DB.MAPS[SKY]);
         assert.equal(champion.statusOnHit, 'stun');
         assert.equal(champion.phase2.statusEffect, 'stun');
