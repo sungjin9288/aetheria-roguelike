@@ -18,7 +18,8 @@ import { getJobGearPool, getUsableGearTier } from './wanderingMerchant.js';
  * - **난수를 쓰지 않는다** — 우두머리 출현은 단계가 정하고(2단계에서 그 지역의 다음 일반 개체), 보상 장비는 지역 · 탐험 수의
  *   도메인 난수가 고른다. 탐험 · 승리의 난수열이 기능 이전과 같다(Wave 70 · 71 · 75와 같은 원칙).
  * - 진행(`player.huntContracts`)은 런 범위다 — 사망 · 계승에서 비워진다(`pickPermanentPlayerState`에 없다).
- * - Wave 82: 우두머리를 쓰러뜨리면 같은 지역의 다음 차수 의뢰가 이어진다(`HUNT_CONTRACT_MAX_ROUNDS`까지) — 목표가 늘고
+ * - Wave 82: 우두머리를 쓰러뜨리면 같은 지역의 다음 차수 의뢰가 이어진다(`HUNT_CONTRACT_MAX_ROUNDS`까지, Wave 84부터 5차) — 추적 목표가 늘고
+ *   (처치 목표는 Wave 84부터 차수마다 같다)
  *   우두머리 · 보상이 차수마다 `HUNT_CONTRACT_ROUND_GROWTH`만큼 커진다. 우두머리는 지역의 상태 이상(`status`)을 강타와 격노로 건다.
  */
 

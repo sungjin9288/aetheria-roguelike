@@ -303,21 +303,21 @@ test('실제 승리 정산: 의뢰 지역의 일반 승리는 처치를 하나 �
 
 // ── Wave 82: 차수 · 지역 상태 이상 ──────────────────────────────────
 
-test('차수: 목표는 차수마다 늘고 우두머리 · 보상은 +20%씩 — 마지막 차수의 우두머리가 완수다', () => {
+test('차수: 처치 목표는 같고(Wave 84) 추적 목표는 늘고 우두머리 · 보상은 +20%씩 — 마지막 차수의 우두머리가 완수다', () => {
     const MAX = BALANCE.HUNT_CONTRACT_MAX_ROUNDS;
     assert.equal(MAX, 5, 'Wave 84: 3차 → 5차');
     const rounds = [1, 2, 3, 4, 5];
-    assert.deepEqual(rounds.map(getHuntKillGoal), [40, 60, 80, 100, 120]);
+    assert.deepEqual(rounds.map(getHuntKillGoal), [40, 40, 40, 40, 40], 'Wave 84: 처치 목표는 차수마다 같다');
     assert.deepEqual(rounds.map(getHuntEliteGoal), [3, 4, 5, 6, 7]);
     assert.deepEqual(rounds.map(getHuntTraceGoal), [30, 40, 50, 60, 70]);
     assert.deepEqual(rounds.map(getHuntRoundMult), [1, 1.2, 1 + 0.2 * 2, 1 + 0.2 * 3, 1 + 0.2 * 4]);
     assert.deepEqual(rounds.map(getHuntEliteMaterials), [2, 3, 4, 5, 6]);
     assert.equal(getHuntStageGold(SKY, 3), Math.floor(DB.MAPS[SKY].level * BALANCE.HUNT_CONTRACT_GOLD_PER_LEVEL * getHuntRoundMult(3)));
 
-    // 2차 1단계: 60번째 처치에서 끝나고 골드도 2차 배율이다.
+    // 2차 1단계: 40번째 처치에서 끝나고 골드도 2차 배율이다.
     let player = withContract(basePlayer({ gold: 0 }), SKY, HUNT_STAGE_KILLS, getHuntKillGoal(2) - 2, 2);
     player = advanceHuntContractOnVictory(player, { isElite: false }, () => NOW).player;
-    assert.equal(player.huntContracts[SKY].stage, HUNT_STAGE_KILLS, '59번째에는 아직');
+    assert.equal(player.huntContracts[SKY].stage, HUNT_STAGE_KILLS, '39번째에는 아직');
     const killsDone = advanceHuntContractOnVictory(player, { isElite: false }, () => NOW);
     assert.equal(killsDone.player.gold, getHuntStageGold(SKY, 2));
     // 2차 2단계: 정예 4번째에서 재료 3개.

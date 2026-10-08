@@ -269,7 +269,9 @@ export const BALANCE = {
     // Wave 84 (소유자 결정 (c)): 3차까지이던 동안 2회차 고대 마법 탑 Lv31 ~ 35는 세 차수를 다 끝낸 뒤 머무는 구간이라 3시간 이상 공백의 2/3였다(원장 §87).
     HUNT_CONTRACT_MAX_ROUNDS: 5,
     HUNT_CONTRACT_ROUND_GROWTH: 0.2,              // 차수마다 우두머리 생명 · 공격력 · 보상 +20%
-    HUNT_CONTRACT_KILL_GOAL_PER_ROUND: 20,        // 1단계 처치 목표: 40 · 60 · 80 · 100 · 120
+    // Wave 84: 1단계 처치 목표는 차수마다 같다(40). 40 · 60 · 80으로 늘던 동안 2회차 고대 마법 탑 3시간 공백 58건이 모두
+    //   2차 우두머리 직후 — 3차 1단계(처치 80)에서 시작했다(원장 §88).
+    HUNT_CONTRACT_KILL_GOAL_PER_ROUND: 0,
     HUNT_CONTRACT_ELITE_GOAL_PER_ROUND: 1,        // 2단계 정예 목표: 3 · 4 · 5 · 6 · 7
     ANOMALY_BASE_CHANCE: 0.12,
     ANOMALY_PITY_PER_EXPLORE: 0.03,
