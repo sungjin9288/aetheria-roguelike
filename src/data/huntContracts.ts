@@ -17,6 +17,8 @@ export const HUNT_CONTRACTS: ReadonlyArray<{ readonly map: string; readonly cham
     { map: '몰락한 전초기지', champion: '녹슨 철의 군주', status: 'bleed' },
     { map: '고대 마법 탑', champion: '탑의 대마도사', status: 'curse' },
     { map: '용의 둥지', champion: '둥지의 폭군', status: 'burn' },
+    // Wave 85 (소유자 결정 (c)): 1회차 남은 3시간 공백 7건 전부(기계 폐도 Lv35 ~ 36 — 선언 Lv28, 걸어서 닿는 Lv35).
+    { map: '기계 폐도', champion: '폐도의 중앙 제어자', status: 'burn' },
     { map: '용암 지대', champion: '용암의 심장', status: 'burn' },
     { map: '천공 정원', champion: '폭풍을 부르는 자', status: 'stun' },
     { map: '어둠의 지하 감옥', champion: '감옥의 간수장', status: 'bleed' },
