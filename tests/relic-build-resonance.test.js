@@ -200,5 +200,5 @@ test('빌드 공명을 넘기는 유물 추첨 호출부가 소스에 유지된�
 
     const events = await read('src/hooks/gameActions/eventActions.ts');
     assert.match(events, /buildId:\s*fullStats\?\.buildProfile\?\.primary\?\.id/);
-    assert.match(events, /pickWeightedRelics\(available, count, \{ owned: ownedRelics, rng, buildId \}\)/);
+    assert.match(events, /pickWeightedRelics\(available, count, \{\s*owned: ownedRelics, rng, buildId\b/);
 });

@@ -187,6 +187,7 @@ export const applyScoutGuaranteedRelic = (
         owned: ownedRelics,
         rng,
         buildId: getRunBuildProfile(updatedPlayer, null).primary.id,
+        replacing: atCapacity ? ownedRelics : undefined,
     });
     if (candidates.length === 0) return;
     dispatch({ type: AT.SET_PENDING_RELICS, payload: candidates });

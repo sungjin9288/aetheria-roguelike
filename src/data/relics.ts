@@ -804,6 +804,22 @@ const findSynergyPityCandidates = (pool: Relic[], owned: Relic[] | undefined): R
     return Array.from(partialCandidates.values());
 };
 
+/**
+ * 2026-10 Wave 77 후속(소유자 결정 §81.4 b) — 칸이 가득 찬 제안에서 이 카드가 "교체하면 나아지는" 카드인가.
+ * 보유 유물 하나를 이 카드로 바꿨을 때 켜진 조합 수가 늘거나, 조합 수가 그대로이면서 내려놓는 유물보다 등급이
+ * 높으면 참이다(조합을 깨는 교체는 등급이 올라도 나아진 것이 아니다). 드라이버 측정에서 칸이 찬 제안 약 119번 중
+ * 이런 카드가 있던 것은 2 ~ 3번이었다(원장 §81.3).
+ */
+export const isRelicReplacementUpgrade = (card: Relic, owned: Relic[]): boolean => {
+    if (owned.length === 0 || owned.some((relic) => relic.id === card.id)) return false;
+    const rankOf = (relic: Relic) => RARITY_ORDER.indexOf((relic.rarity ?? 'common') as RelicRarity);
+    const combosBefore = getActiveRelicSynergies(owned).length;
+    return owned.some((released, index) => {
+        const combosAfter = getActiveRelicSynergies(owned.map((relic, i) => (i === index ? card : relic))).length;
+        return combosAfter > combosBefore || (combosAfter === combosBefore && rankOf(card) > rankOf(released));
+    });
+};
+
 // cycle 597: count default 3 제거 — 4 production caller (exploreUtils/
 //   eventActions/exploreActions/combatBossHandlers) + 1 test 모두 count 명시
 //   (1 또는 3) 전달이라 default 도달 불가.
@@ -818,7 +834,10 @@ const findSynergyPityCandidates = (pool: Relic[], owned: Relic[] | undefined): R
 //   속한 effect의 유물만 가중치에 BALANCE.RELIC_BUILD_FIT_WEIGHT_MULT를 곱해 뽑힌다.
 //   buildId 미전달 시 가중치 계산은 기존과 완전히 동일하다(기존 호출부/분포 테스트 무영향).
 //   시너지 pity 슬롯은 편향 대상이 아니다 — pity 후보가 있으면 그 슬롯은 항상 pity가 가진다.
-export const pickWeightedRelics = (pool: Relic[], count: number, options?: { owned?: Relic[]; rarityCap?: string; rng?: () => number; buildId?: string }): Relic[] => {
+// 2026-10 Wave 77 후속(소유자 결정 §81.4 b): options.replacing(칸이 가득 찬 보유 유물)을 넘기면 모든 슬롯이
+//   "교체하면 나아지는" 카드(`isRelicReplacementUpgrade`)를 먼저 뽑고, 그런 카드가 바닥나면 나머지에서 채운다.
+//   pity 슬롯도 그 카드만 쓴다. 슬롯마다 추첨은 한 번이라 난수 소비 수는 그대로다 — 뒤따르는 난수열이 밀리지 않는다.
+export const pickWeightedRelics = (pool: Relic[], count: number, options?: { owned?: Relic[]; rarityCap?: string; rng?: () => number; buildId?: string; replacing?: Relic[] }): Relic[] => {
     const random = typeof options?.rng === 'function' ? options.rng : Math.random;
     const buildEffects = buildFitEffects(options?.buildId);
     const cappedPool = filterByRarityCap(pool, options?.rarityCap as Relic['rarity']);
@@ -828,7 +847,12 @@ export const pickWeightedRelics = (pool: Relic[], count: number, options?: { own
     if (needed === 0) return [];
 
     const result: Relic[] = [];
-    const pityCandidates = findSynergyPityCandidates(remaining, options?.owned);
+    const replacing = options?.replacing && options.replacing.length > 0 ? options.replacing : null;
+    const upgradeIds = replacing
+        ? new Set(remaining.filter((relic) => isRelicReplacementUpgrade(relic, replacing)).map((relic) => relic.id))
+        : null;
+    const pityCandidates = findSynergyPityCandidates(remaining, options?.owned)
+        .filter((relic) => !upgradeIds || upgradeIds.has(relic.id));
 
     if (pityCandidates.length > 0) {
         const pitySlots = Math.min(BALANCE.SYNERGY_PITY_SLOT, needed, pityCandidates.length);
@@ -843,7 +867,8 @@ export const pickWeightedRelics = (pool: Relic[], count: number, options?: { own
 
     const remainingNeeded = needed - result.length;
     for (let i = 0; i < remainingNeeded; i++) {
-        const chosen = drawOneWeighted(remaining, random, buildEffects);
+        const upgradesLeft = upgradeIds ? remaining.filter((relic) => upgradeIds.has(relic.id)) : [];
+        const chosen = drawOneWeighted(upgradesLeft.length > 0 ? upgradesLeft : remaining, random, buildEffects);
         result.push(chosen);
         remaining.splice(remaining.indexOf(chosen), 1);
     }
