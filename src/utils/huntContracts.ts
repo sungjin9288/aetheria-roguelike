@@ -4,6 +4,7 @@ import { HUNT_CONTRACTS, getHuntContract, type HuntContractDef } from '../data/h
 import { MSG } from '../data/messages.js';
 import { getEssenceGainFromExp, applyEssenceGain } from '../systems/essenceLedger.js';
 import { getEssenceRewardMult } from '../systems/essenceRewardMult.js';
+import { getEffectiveMaxHp, getEffectiveMaxMpFull } from '../systems/vitals.js';
 import type { GameMap, HuntContractProgress, Item, Monster, Player } from '../types/index.js';
 import { grantGold, makeItem } from './gameUtils.js';
 import type { SpawnedMonster } from './exploreUtils.js';
@@ -87,6 +88,30 @@ export interface HuntContractVictoryResult {
     completedStage: number | null;
 }
 
+export interface HuntChampionReadiness {
+    /** 실효 최대 생명 대비 현재 생명(0 ~ 100, 내림). */
+    hpPct: number;
+    /** 실효 최대 기력 대비 현재 기력(0 ~ 100, 내림). */
+    mpPct: number;
+    ready: boolean;
+}
+
+/**
+ * Wave 86 (소유자 결정 (c)): 우두머리를 맞을 준비 — 생명 `HUNT_CHAMPION_READY_HP_PCT` · 기력 `_MP_PCT` 이상이면 준비됨.
+ * 실효 최대치(`calculateFullStats`) 기준이다. 판정은 안내만 하고 출현 규칙은 바꾸지 않는다.
+ */
+export const getHuntChampionReadiness = (player: Player): HuntChampionReadiness => {
+    const maxHp = Math.max(1, getEffectiveMaxHp(player));
+    const maxMp = Math.max(1, getEffectiveMaxMpFull(player, player.relics || [], Number(player.maxMp) || 1));
+    const hpRatio = Math.max(0, Number(player.hp) || 0) / maxHp;
+    const mpRatio = Math.max(0, Number(player.mp) || 0) / maxMp;
+    return {
+        hpPct: Math.min(100, Math.floor(hpRatio * 100)),
+        mpPct: Math.min(100, Math.floor(mpRatio * 100)),
+        ready: hpRatio >= BALANCE.HUNT_CHAMPION_READY_HP_PCT && mpRatio >= BALANCE.HUNT_CHAMPION_READY_MP_PCT,
+    };
+};
+
 const withProgress = (player: Player, map: string, next: Required<HuntContractProgress>): Player => ({
     ...player,
     huntContracts: { ...(player.huntContracts || {}), [map]: next },
@@ -149,7 +174,12 @@ export const advanceHuntContractOnVictory = (
             // Wave 81: 기척 → 접근 — 그 지역의 다른 승리가 `HUNT_CHAMPION_OMEN_KILLS`까지 센다(거기서 멈춘다).
             if (deadEnemy.huntChampion || progress >= BALANCE.HUNT_CHAMPION_OMEN_KILLS) return unchanged;
             const next = progress + 1;
-            if (next >= BALANCE.HUNT_CHAMPION_OMEN_KILLS) logs.push({ type: 'critical', text: MSG.HUNT_CHAMPION_NEAR(contract.champion, map) });
+            if (next >= BALANCE.HUNT_CHAMPION_OMEN_KILLS) {
+                logs.push({ type: 'critical', text: MSG.HUNT_CHAMPION_NEAR(contract.champion, map) });
+                // Wave 86: 지금 상태로 맞기엔 부족하면 쉬고 와도 된다고 알린다.
+                const readiness = getHuntChampionReadiness(player);
+                if (!readiness.ready) logs.push({ type: 'warning', text: MSG.HUNT_CHAMPION_PREPARE(readiness.hpPct, readiness.mpPct) });
+            }
             return { player: withProgress(player, map, { stage, progress: next, round }), logs, items: [], completedStage: null };
         }
         const template = pickHuntChampionGear(player, map, round);
@@ -272,9 +302,12 @@ export const getHuntContractRows = (player: Player | null | undefined): HuntCont
             const stageStatus = omenDone ? MSG.HUNT_CONTRACT_STATUS_CHAMPION(contract.champion)
                 : stage === HUNT_STAGE_CHAMPION ? MSG.HUNT_CONTRACT_STATUS_OMEN(contract.champion, progress, goal)
                     : MSG.HUNT_CONTRACT_STATUS_STAGE(stage + 1, MSG.HUNT_CONTRACT_STAGE_LABELS[stage], progress, goal);
+            // Wave 86: 우두머리가 다음 조우인데 준비가 부족하면 상태 줄이 알린다.
+            const readiness = omenDone && player ? getHuntChampionReadiness(player) : null;
+            const readinessNote = readiness && !readiness.ready ? MSG.HUNT_CONTRACT_STATUS_UNREADY(readiness.hpPct, readiness.mpPct) : '';
             const status = stage >= HUNT_STAGE_DONE ? MSG.HUNT_CONTRACT_STATUS_DONE
                 : !reachable && stage === HUNT_STAGE_KILLS && progress === 0 && round === 1 ? MSG.HUNT_CONTRACT_STATUS_LOCKED(mapLevel)
-                    : `${MSG.HUNT_CONTRACT_ROUND_TAG(round, BALANCE.HUNT_CONTRACT_MAX_ROUNDS)}${stageStatus}`;
+                    : `${MSG.HUNT_CONTRACT_ROUND_TAG(round, BALANCE.HUNT_CONTRACT_MAX_ROUNDS)}${stageStatus}${readinessNote}`;
             return {
                 map: contract.map, champion: contract.champion, mapLevel, stage,
                 progress: stage >= HUNT_STAGE_DONE ? 1 : progress,
