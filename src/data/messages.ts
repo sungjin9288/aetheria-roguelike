@@ -1211,8 +1211,8 @@ export const MSG = {
     ),
     // 2026-10 Wave 80: 지역 토벌 의뢰
     HUNT_CONTRACT_POSTED: (map: string, goal: number) => `📜 [토벌 의뢰] ${map} — 이 지역의 마물을 ${goal}마리 처치하십시오. (임무 탭)`,
-    HUNT_CONTRACT_STAGE_KILLS_DONE: (map: string, gold: number, eliteGoal: number) => (
-        `📜 [토벌 의뢰] ${map} 1단계 완료 — 골드 +${gold}. 다음: 정예 ${eliteGoal}마리 처치`
+    HUNT_CONTRACT_STAGE_KILLS_DONE: (map: string, gold: number, traceGoal: number, elitePoints: number) => (
+        `📜 [토벌 의뢰] ${map} 1단계 완료 — 골드 +${gold}. 다음: 정예 추적 ${traceGoal}점(정예 처치 +${elitePoints} · 일반 처치 +1)`
     ),
     HUNT_CONTRACT_STAGE_ELITES_DONE: (map: string, materials: number, material: string, champion: string, omenKills: number) => (
         `📜 [토벌 의뢰] ${map} 2단계 완료 — ${material} ×${materials}. 우두머리 「${champion}」의 기척이 느껴집니다 — 이 지역에서 ${omenKills}마리를 더 쓰러뜨리면 모습을 드러냅니다`
@@ -1227,7 +1227,7 @@ export const MSG = {
     HUNT_CHAMPION_APPEAR: (champion: string, map: string) => `⚔️ [토벌 의뢰] ${map} 우두머리 「${champion}」 출현!`,
     HUNT_CONTRACT_PANEL_TITLE: '지역 토벌 의뢰',
     HUNT_CONTRACT_PANEL_HINT: '회차마다 다시 — 처치 · 정예 · 우두머리, 3차까지',
-    HUNT_CONTRACT_STAGE_LABELS: ['처치', '정예 처치', '우두머리'] as const,
+    HUNT_CONTRACT_STAGE_LABELS: ['처치', '정예 추적', '우두머리'] as const,
     HUNT_CONTRACT_STATUS_LOCKED: (level: number) => `Lv${level} 지역`,
     HUNT_CONTRACT_STATUS_STAGE: (stage: number, label: string, progress: number, goal: number) => `${stage}단계 ${label} ${progress}/${goal}`,
     HUNT_CONTRACT_STATUS_CHAMPION: (champion: string) => `3단계 우두머리 「${champion}」 — 이 지역에서 탐험`,

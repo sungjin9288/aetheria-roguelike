@@ -247,20 +247,22 @@ export const BALANCE = {
     RELIC_ECHO_EXP_PER_LEVEL: 10,
     // 2026-10 Wave 80: 지역 토벌 의뢰(`data/huntContracts.ts`) — 처치 → 정예 처치 → 우두머리, 회차마다 다시.
     HUNT_CONTRACT_KILL_GOAL: 40,                  // 1단계: 그 지역에서 처치
-    HUNT_CONTRACT_ELITE_GOAL: 3,                  // 2단계: 그 지역에서 정예 처치(우두머리 제외)
+    HUNT_CONTRACT_ELITE_GOAL: 3,                  // 2단계: 그 지역에서 정예 처치(우두머리 제외) — Wave 83부터 추적 점수 목표 = 이 값 × ELITE_TRACE
+    HUNT_CONTRACT_ELITE_TRACE: 10,                // 2단계 정예 추적: 정예 처치 점수(일반 처치 1점)
     HUNT_CONTRACT_PREVIEW_LEVELS: 5,              // 지역 레벨 − 이 값부터 임무 탭에 미리 보인다
     HUNT_CONTRACT_GOLD_PER_LEVEL: 80,             // 1단계 보상 골드 = 지역 레벨 × 이 값
     HUNT_CONTRACT_ENHANCE_MATERIALS: 2,           // 2단계 보상 강화 재료 수
     HUNT_CONTRACT_CHAMPION_ESSENCE_KILLS: 50,     // 3단계 보상 정수 = 같은 레벨 적 처치 정수 × 이 값
     // Wave 81 (소유자 결정 (c) "예고 → 출현, 위협을 키운다"): ×3 · ×1.3이던 동안 240시드 우두머리 사망 0이었다.
     // Wave 82 (소유자 결정 (b) "우두머리를 더 세게"): ×5 · ×1.5 · 격노 +30%이던 Wave 81은 출현 2,757회에 사망 3회였다.
-    HUNT_CHAMPION_HP_MULT: 6,                     // 우두머리: 그 지역 일반 개체 대비
-    HUNT_CHAMPION_ATK_MULT: 1.7,
+    // Wave 83 (소유자 결정 (b) "위협을 더"): ×6 · ×1.7 · 격노 +40% · 강타 40%이던 Wave 82는 출현 3,661회에 사망 10회(0.27%)였다.
+    HUNT_CHAMPION_HP_MULT: 7,                     // 우두머리: 그 지역 일반 개체 대비
+    HUNT_CHAMPION_ATK_MULT: 2.0,
     HUNT_CHAMPION_REWARD_MULT: 4,                 // 우두머리 처치 경험치 · 골드
     HUNT_CHAMPION_OMEN_KILLS: 20,                 // 2단계 완료(기척) 뒤 그 지역 처치 이만큼이면 다음 일반 개체가 우두머리
     HUNT_CHAMPION_PHASE_THRESHOLD: 0.5,           // 격노 문턱(생명 비율)
-    HUNT_CHAMPION_PHASE_ATK_BONUS: 0.4,           // 격노: 공격력 +40%
-    HUNT_CHAMPION_PHASE_HEAVY_CHANCE: 0.4,        // 격노: 강타 확률
+    HUNT_CHAMPION_PHASE_ATK_BONUS: 0.5,           // 격노: 공격력 +50%
+    HUNT_CHAMPION_PHASE_HEAVY_CHANCE: 0.5,        // 격노: 강타 확률
     // Wave 82 (소유자 결정 (c)): 같은 회차 안에서 의뢰가 차수로 이어진다 — 의뢰를 끝낸 뒤에도 그 지역에 머무는 구간(고대 마법 탑 Lv31 ~ 35)을 채운다.
     HUNT_CONTRACT_MAX_ROUNDS: 3,
     HUNT_CONTRACT_ROUND_GROWTH: 0.2,              // 차수마다 우두머리 생명 · 공격력 · 보상 +20%
