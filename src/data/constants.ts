@@ -253,13 +253,19 @@ export const BALANCE = {
     HUNT_CONTRACT_ENHANCE_MATERIALS: 2,           // 2단계 보상 강화 재료 수
     HUNT_CONTRACT_CHAMPION_ESSENCE_KILLS: 50,     // 3단계 보상 정수 = 같은 레벨 적 처치 정수 × 이 값
     // Wave 81 (소유자 결정 (c) "예고 → 출현, 위협을 키운다"): ×3 · ×1.3이던 동안 240시드 우두머리 사망 0이었다.
-    HUNT_CHAMPION_HP_MULT: 5,                     // 우두머리: 그 지역 일반 개체 대비
-    HUNT_CHAMPION_ATK_MULT: 1.5,
+    // Wave 82 (소유자 결정 (b) "우두머리를 더 세게"): ×5 · ×1.5 · 격노 +30%이던 Wave 81은 출현 2,757회에 사망 3회였다.
+    HUNT_CHAMPION_HP_MULT: 6,                     // 우두머리: 그 지역 일반 개체 대비
+    HUNT_CHAMPION_ATK_MULT: 1.7,
     HUNT_CHAMPION_REWARD_MULT: 4,                 // 우두머리 처치 경험치 · 골드
     HUNT_CHAMPION_OMEN_KILLS: 20,                 // 2단계 완료(기척) 뒤 그 지역 처치 이만큼이면 다음 일반 개체가 우두머리
     HUNT_CHAMPION_PHASE_THRESHOLD: 0.5,           // 격노 문턱(생명 비율)
-    HUNT_CHAMPION_PHASE_ATK_BONUS: 0.3,           // 격노: 공격력 +30%
+    HUNT_CHAMPION_PHASE_ATK_BONUS: 0.4,           // 격노: 공격력 +40%
     HUNT_CHAMPION_PHASE_HEAVY_CHANCE: 0.4,        // 격노: 강타 확률
+    // Wave 82 (소유자 결정 (c)): 같은 회차 안에서 의뢰가 차수로 이어진다 — 의뢰를 끝낸 뒤에도 그 지역에 머무는 구간(고대 마법 탑 Lv31 ~ 35)을 채운다.
+    HUNT_CONTRACT_MAX_ROUNDS: 3,
+    HUNT_CONTRACT_ROUND_GROWTH: 0.2,              // 차수마다 우두머리 생명 · 공격력 · 보상 +20%
+    HUNT_CONTRACT_KILL_GOAL_PER_ROUND: 20,        // 1단계 처치 목표: 40 · 60 · 80
+    HUNT_CONTRACT_ELITE_GOAL_PER_ROUND: 1,        // 2단계 정예 목표: 3 · 4 · 5
     ANOMALY_BASE_CHANCE: 0.12,
     ANOMALY_PITY_PER_EXPLORE: 0.03,
     ANOMALY_MAX_CHANCE: 0.3,

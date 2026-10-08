@@ -1226,13 +1226,17 @@ export const MSG = {
     HUNT_CHAMPION_NEAR: (champion: string, map: string) => `⚠️ [토벌 의뢰] ${map} — 우두머리 「${champion}」 접근. 다음 조우를 대비하십시오`,
     HUNT_CHAMPION_APPEAR: (champion: string, map: string) => `⚔️ [토벌 의뢰] ${map} 우두머리 「${champion}」 출현!`,
     HUNT_CONTRACT_PANEL_TITLE: '지역 토벌 의뢰',
-    HUNT_CONTRACT_PANEL_HINT: '회차마다 다시 — 처치 · 정예 · 우두머리',
+    HUNT_CONTRACT_PANEL_HINT: '회차마다 다시 — 처치 · 정예 · 우두머리, 3차까지',
     HUNT_CONTRACT_STAGE_LABELS: ['처치', '정예 처치', '우두머리'] as const,
     HUNT_CONTRACT_STATUS_LOCKED: (level: number) => `Lv${level} 지역`,
     HUNT_CONTRACT_STATUS_STAGE: (stage: number, label: string, progress: number, goal: number) => `${stage}단계 ${label} ${progress}/${goal}`,
     HUNT_CONTRACT_STATUS_CHAMPION: (champion: string) => `3단계 우두머리 「${champion}」 — 이 지역에서 탐험`,
     HUNT_CONTRACT_STATUS_OMEN: (champion: string, progress: number, goal: number) => `3단계 우두머리 「${champion}」의 기척 ${progress}/${goal}`,
     HUNT_CONTRACT_STATUS_DONE: '완수',
+    HUNT_CONTRACT_ROUND_TAG: (round: number, max: number) => `${round}/${max}차 · `,
+    HUNT_CONTRACT_NEXT_ROUND: (map: string, round: number, max: number, killGoal: number) => (
+        `📜 [토벌 의뢰] ${map} ${round}/${max}차 의뢰가 이어집니다 — 처치 ${killGoal}부터, 우두머리는 더 강해집니다`
+    ),
     EXPLORE_RELIC_REPLACE_OFFER: '✨ [유물 발견] 고대의 유물이 눈에 들어옵니다 — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.',
     /** C4: 사건 결과가 여는 유물 선택이 유물 칸이 가득 찬 채 열릴 때. */
     EVENT_RELIC_REPLACE_OFFER: (count: number) => (
