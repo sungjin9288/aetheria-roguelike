@@ -191,6 +191,14 @@ export type HuntChampionCandidate = SpawnedMonster & { huntChampion?: string };
  * Wave 84 (소유자 결정 (b)): 우두머리 공격력 배율 — 지역 상태 이상이 받는 피해를 키우면(저주) 그 증폭으로 나눈다.
  * 저주에 걸린 뒤의 실효 타격이 다른 지역 우두머리와 같다. 지속 피해 · 기절처럼 따로 피해를 내거나 차례를 뺏는 상태는 나누지 않는다.
  */
+/**
+ * Wave 85 (소유자 결정 (b)): 우두머리 생명 배율 — 지역 레벨 `HUNT_CHAMPION_HP_FULL_LEVEL`까지 레벨에 비례한다.
+ * 같은 ×7이 낮은 지역에서는 긴 소모전(Lv18 중앙값 13턴)이었고 높은 지역에서는 몇 턴이었다. 공격력 배율은 그대로다.
+ */
+export const getHuntChampionHpMult = (mapLevel: number): number => (
+    BALANCE.HUNT_CHAMPION_HP_MULT * Math.min(1, Math.max(1, mapLevel) / BALANCE.HUNT_CHAMPION_HP_FULL_LEVEL)
+);
+
 export const getHuntChampionAtkMult = (status: HuntContractDef['status']): number => (
     status === 'curse' ? BALANCE.HUNT_CHAMPION_ATK_MULT / BALANCE.CURSE_PLAYER_DMG_TAKEN_MULT : BALANCE.HUNT_CHAMPION_ATK_MULT
 );
@@ -207,13 +215,14 @@ export const applyHuntChampion = (
     if (stage !== HUNT_STAGE_CHAMPION || progress < BALANCE.HUNT_CHAMPION_OMEN_KILLS) return enemy;
     if (enemy.isBoss || enemy.isElite || !enemy.baseName || enemy.name !== enemy.baseName) return enemy;
     const roundMult = getHuntRoundMult(round);
+    const hpMult = getHuntChampionHpMult(mapLevelOf(map)) * roundMult;
     return {
         ...enemy,
         name: MSG.HUNT_CHAMPION_NAME(contract.champion, enemy.baseName),
         isElite: true,
         huntChampion: map,
-        hp: Math.floor(enemy.hp * BALANCE.HUNT_CHAMPION_HP_MULT * roundMult),
-        maxHp: Math.floor(enemy.maxHp * BALANCE.HUNT_CHAMPION_HP_MULT * roundMult),
+        hp: Math.floor(enemy.hp * hpMult),
+        maxHp: Math.floor(enemy.maxHp * hpMult),
         atk: Math.floor(enemy.atk * getHuntChampionAtkMult(contract.status) * roundMult),
         exp: Math.floor(enemy.exp * BALANCE.HUNT_CHAMPION_REWARD_MULT * roundMult),
         gold: Math.floor(enemy.gold * BALANCE.HUNT_CHAMPION_REWARD_MULT * roundMult),
