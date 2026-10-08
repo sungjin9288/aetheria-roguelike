@@ -1226,7 +1226,7 @@ export const MSG = {
     HUNT_CHAMPION_NEAR: (champion: string, map: string) => `⚠️ [토벌 의뢰] ${map} — 우두머리 「${champion}」 접근. 다음 조우를 대비하십시오`,
     HUNT_CHAMPION_APPEAR: (champion: string, map: string) => `⚔️ [토벌 의뢰] ${map} 우두머리 「${champion}」 출현!`,
     HUNT_CONTRACT_PANEL_TITLE: '지역 토벌 의뢰',
-    HUNT_CONTRACT_PANEL_HINT: '회차마다 다시 — 처치 · 정예 · 우두머리, 3차까지',
+    HUNT_CONTRACT_PANEL_HINT: '회차마다 다시 — 처치 · 정예 · 우두머리, 5차까지',
     HUNT_CONTRACT_STAGE_LABELS: ['처치', '정예 추적', '우두머리'] as const,
     HUNT_CONTRACT_STATUS_LOCKED: (level: number) => `Lv${level} 지역`,
     HUNT_CONTRACT_STATUS_STAGE: (stage: number, label: string, progress: number, goal: number) => `${stage}단계 ${label} ${progress}/${goal}`,

@@ -257,6 +257,8 @@ export const BALANCE = {
     // Wave 82 (소유자 결정 (b) "우두머리를 더 세게"): ×5 · ×1.5 · 격노 +30%이던 Wave 81은 출현 2,757회에 사망 3회였다.
     // Wave 83 (소유자 결정 (b) "위협을 더"): ×6 · ×1.7 · 격노 +40% · 강타 40%이던 Wave 82는 출현 3,661회에 사망 10회(0.27%)였다.
     HUNT_CHAMPION_HP_MULT: 7,                     // 우두머리: 그 지역 일반 개체 대비
+    // Wave 84 (소유자 결정 (b)): 받는 피해를 키우는 상태(저주 ×CURSE_PLAYER_DMG_TAKEN_MULT)를 거는 우두머리는 이 배율을 그 증폭으로 나눈다
+    //   (`getHuntChampionAtkMult`) — 같은 배율 위에 저주가 곱해지던 동안 탑의 대마도사가 우두머리 사망 48회 중 25회였다(원장 §87).
     HUNT_CHAMPION_ATK_MULT: 2.0,
     HUNT_CHAMPION_REWARD_MULT: 4,                 // 우두머리 처치 경험치 · 골드
     HUNT_CHAMPION_OMEN_KILLS: 20,                 // 2단계 완료(기척) 뒤 그 지역 처치 이만큼이면 다음 일반 개체가 우두머리
@@ -264,10 +266,13 @@ export const BALANCE = {
     HUNT_CHAMPION_PHASE_ATK_BONUS: 0.5,           // 격노: 공격력 +50%
     HUNT_CHAMPION_PHASE_HEAVY_CHANCE: 0.5,        // 격노: 강타 확률
     // Wave 82 (소유자 결정 (c)): 같은 회차 안에서 의뢰가 차수로 이어진다 — 의뢰를 끝낸 뒤에도 그 지역에 머무는 구간(고대 마법 탑 Lv31 ~ 35)을 채운다.
-    HUNT_CONTRACT_MAX_ROUNDS: 3,
+    // Wave 84 (소유자 결정 (c)): 3차까지이던 동안 2회차 고대 마법 탑 Lv31 ~ 35는 세 차수를 다 끝낸 뒤 머무는 구간이라 3시간 이상 공백의 2/3였다(원장 §87).
+    HUNT_CONTRACT_MAX_ROUNDS: 5,
     HUNT_CONTRACT_ROUND_GROWTH: 0.2,              // 차수마다 우두머리 생명 · 공격력 · 보상 +20%
-    HUNT_CONTRACT_KILL_GOAL_PER_ROUND: 20,        // 1단계 처치 목표: 40 · 60 · 80
-    HUNT_CONTRACT_ELITE_GOAL_PER_ROUND: 1,        // 2단계 정예 목표: 3 · 4 · 5
+    // Wave 84: 1단계 처치 목표는 차수마다 같다(40). 40 · 60 · 80으로 늘던 동안 2회차 고대 마법 탑 3시간 공백 58건이 모두
+    //   2차 우두머리 직후 — 3차 1단계(처치 80)에서 시작했다(원장 §88).
+    HUNT_CONTRACT_KILL_GOAL_PER_ROUND: 0,
+    HUNT_CONTRACT_ELITE_GOAL_PER_ROUND: 1,        // 2단계 정예 목표: 3 · 4 · 5 · 6 · 7
     ANOMALY_BASE_CHANCE: 0.12,
     ANOMALY_PITY_PER_EXPLORE: 0.03,
     ANOMALY_MAX_CHANCE: 0.3,
