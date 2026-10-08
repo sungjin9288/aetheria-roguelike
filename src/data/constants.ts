@@ -245,6 +245,16 @@ export const BALANCE = {
     //   '유물의 잔향' — 같은 레벨 적 한 마리(spawnEnemy의 기본 경험치 10 + 레벨 × 10)를 처치한 만큼의 계승 정수다.
     RELIC_ECHO_EXP_BASE: 10,
     RELIC_ECHO_EXP_PER_LEVEL: 10,
+    // 2026-10 Wave 80: 지역 토벌 의뢰(`data/huntContracts.ts`) — 처치 → 정예 처치 → 우두머리, 회차마다 다시.
+    HUNT_CONTRACT_KILL_GOAL: 40,                  // 1단계: 그 지역에서 처치
+    HUNT_CONTRACT_ELITE_GOAL: 3,                  // 2단계: 그 지역에서 정예 처치(우두머리 제외)
+    HUNT_CONTRACT_PREVIEW_LEVELS: 5,              // 지역 레벨 − 이 값부터 임무 탭에 미리 보인다
+    HUNT_CONTRACT_GOLD_PER_LEVEL: 80,             // 1단계 보상 골드 = 지역 레벨 × 이 값
+    HUNT_CONTRACT_ENHANCE_MATERIALS: 2,           // 2단계 보상 강화 재료 수
+    HUNT_CONTRACT_CHAMPION_ESSENCE_KILLS: 50,     // 3단계 보상 정수 = 같은 레벨 적 처치 정수 × 이 값
+    HUNT_CHAMPION_HP_MULT: 3,                     // 우두머리: 그 지역 일반 개체 대비
+    HUNT_CHAMPION_ATK_MULT: 1.3,
+    HUNT_CHAMPION_REWARD_MULT: 3,                 // 우두머리 처치 경험치 · 골드
     ANOMALY_BASE_CHANCE: 0.12,
     ANOMALY_PITY_PER_EXPLORE: 0.03,
     ANOMALY_MAX_CHANCE: 0.3,

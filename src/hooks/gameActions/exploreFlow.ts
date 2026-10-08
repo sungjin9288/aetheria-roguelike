@@ -53,6 +53,8 @@ import { formatSynergyDrawback } from '../../utils/relicSynergyHint.js';
 import { calculateFullStats } from '../../utils/statsCalculator.js';
 import { applyTempBuffRule } from '../../systems/tempBuffMerge.js';
 import { spawnEnemy } from '../../utils/exploreUtils.js';
+import { applyHuntChampion } from '../../utils/huntContracts.js';
+import { getHuntContract } from '../../data/huntContracts.js';
 import {
     createDailyProtocol,
     getCurrentWeeklyProtocol,
@@ -439,6 +441,13 @@ export const runQuietRollAndCombat = (
                 addLog('event', MSG.ABYSS_DAILY_DIVE_START(BALANCE.ABYSS_DAILY_DIVE_MULT));
             }
         }
+    }
+
+    // 2026-10 Wave 80: 지역 토벌 의뢰 2단계 — 그 지역의 다음 일반 개체가 우두머리다(난수 없음).
+    const champion = applyHuntChampion(mStats, player, mapData);
+    if (champion.huntChampion) {
+        mStats = champion;
+        addLog('critical', MSG.HUNT_CHAMPION_APPEAR(getHuntContract(champion.huntChampion)?.champion || champion.name, champion.huntChampion));
     }
 
     const fullStats = getFullStats();

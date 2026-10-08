@@ -17,6 +17,7 @@ import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 import { appendExpeditionBoss } from '../../utils/expeditionLedger';
 import { admitCombatLoot } from '../../systems/combatLootCapacity';
+import { advanceHuntContractOnVictory } from '../../utils/huntContracts';
 import type { FullStats, Player } from '../../types';
 import type { LootSettlementReceipt } from '../../reducers/gameReducer';
 import type { AddLog, AddStoryLog, EmitUnlockedTitles, GameActionDeps } from '../actionDeps';
@@ -155,6 +156,12 @@ export const handleVictoryOutcome = ({
         pityBefore: prevPity,
         pityAfter: updatedPlayer.stats?.signaturePity || 0,
     };
+
+    // 2026-10 Wave 80: 지역 토벌 의뢰 — 그 지역에서의 승리가 처치 → 정예 → 우두머리 단계를 움직인다(난수 없음).
+    const huntResult = advanceHuntContractOnVictory(updatedPlayer, deadEnemy, currentTime);
+    updatedPlayer = huntResult.player;
+    huntResult.logs.forEach((log) => addLog(log.type, log.text));
+    if (huntResult.items.length > 0) updatedPlayer = registerLootToCodex(updatedPlayer, huntResult.items);
 
     // codex
     const baseName = CombatEngine.resolveEnemyBaseName(deadEnemy);
