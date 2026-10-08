@@ -17,7 +17,7 @@ import { matchesQuestTarget } from '../src/utils/enemyIdentity.js';
 import { canEquip } from '../src/utils/equipmentValidation.js';
 import {
     HUNT_STAGE_CHAMPION, HUNT_STAGE_DONE, HUNT_STAGE_ELITES, HUNT_STAGE_KILLS,
-    advanceHuntContractOnVictory, applyHuntChampion, getHuntChampionAtkMult, getHuntChampionEssence, getHuntChampionHpMult, getHuntContractRows, getHuntEliteGoal,
+    advanceHuntContractOnVictory, applyHuntChampion, getHuntChampionAtkMult, getHuntChampionEssence, getHuntChampionHpMult, getHuntChampionReadiness, getHuntContractRows, getHuntEliteGoal,
     getHuntEliteMaterials, getHuntKillGoal, getHuntRoundMult, getHuntStageGold, getHuntTraceGoal, pickHuntChampionGear,
 } from '../src/utils/huntContracts.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
@@ -392,6 +392,46 @@ test('지역 상태 이상: 우두머리는 그 지역의 상태 이상을 강�
 test('런 범위: 진행은 사망 · 계승을 넘지 않는다', () => {
     const player = withContract(basePlayer(), SKY, HUNT_STAGE_DONE);
     assert.equal('huntContracts' in pickPermanentPlayerState(player, structuredClone(INITIAL_STATE.player)), false);
+});
+
+// ── Wave 86: 우두머리 준비 안내 ──
+
+test('Wave 86: 준비 판정은 실효 최대치 대비 생명 70% · 기력 30%이고, 접근 경보 · 출현 · 임무 탭이 부족할 때만 알린다', () => {
+    const full = basePlayer();
+    const maxHp = calculateFullStats(full).maxHp;
+    const maxMp = calculateFullStats(full).maxMp;
+    assert.equal(getHuntChampionReadiness({ ...full, hp: maxHp, mp: maxMp }).ready, true);
+    assert.equal(getHuntChampionReadiness({ ...full, hp: Math.ceil(maxHp * 0.7), mp: Math.ceil(maxMp * 0.3) }).ready, true, '문턱은 포함');
+    const lowHp = getHuntChampionReadiness({ ...full, hp: Math.floor(maxHp * 0.69), mp: maxMp });
+    assert.equal(lowHp.ready, false);
+    assert.equal(lowHp.hpPct, 68);
+    const emptyMp = getHuntChampionReadiness({ ...full, hp: maxHp, mp: 1 });
+    assert.equal(emptyMp.ready, false, '생명이 가득해도 기력이 비면 부족 — 전초기지 사망 사례(원장 §89)');
+    assert.equal(emptyMp.mpPct, 0);
+
+    // 접근 경보: 기척을 다 채우는 승리에서 준비 부족이면 안내가 한 줄 더 붙는다.
+    const near = (player) => advanceHuntContractOnVictory(withContract(player, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS - 1), { isElite: false }, () => NOW).logs.map((log) => log.text);
+    const readyLogs = near({ ...full, hp: maxHp, mp: maxMp });
+    assert.deepEqual(readyLogs, [MSG.HUNT_CHAMPION_NEAR(getHuntContract(SKY).champion, SKY)], '준비됐으면 경보만');
+    const unreadyLogs = near({ ...full, hp: maxHp, mp: 1 });
+    assert.deepEqual(unreadyLogs, [MSG.HUNT_CHAMPION_NEAR(getHuntContract(SKY).champion, SKY), MSG.HUNT_CHAMPION_PREPARE(100, 0)]);
+
+    // 출현: 준비 부족이면 경고 한 줄 — 적 · 탐험 난수 소비는 준비 여부와 무관하다.
+    const ready = spawnState(withContract({ ...full, hp: maxHp, mp: maxMp }, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS));
+    const unready = spawnState(withContract({ ...full, hp: maxHp, mp: 1 }, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS));
+    assert.equal(unready.state.enemy.huntChampion, SKY);
+    assert.deepEqual(unready.state.enemy, ready.state.enemy, '같은 우두머리');
+    assert.equal(unready.rng.calls, ready.rng.calls, '난수 소비 동일');
+    assert.ok(!logTexts(ready.state).includes(MSG.HUNT_CHAMPION_UNPREPARED(100, 100)));
+    assert.ok(logTexts(unready.state).includes(MSG.HUNT_CHAMPION_UNPREPARED(100, 0)));
+
+    // 임무 탭: 우두머리가 다음 조우인 지역에만 준비 부족 줄이 붙는다.
+    const rowsOf = (player) => Object.fromEntries(getHuntContractRows(player).map((row) => [row.map, row]));
+    const tag = MSG.HUNT_CONTRACT_ROUND_TAG(1, BALANCE.HUNT_CONTRACT_MAX_ROUNDS);
+    const champion = getHuntContract(SKY).champion;
+    assert.equal(rowsOf(withContract({ ...full, hp: maxHp, mp: maxMp }, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS))[SKY].status, tag + MSG.HUNT_CONTRACT_STATUS_CHAMPION(champion));
+    assert.equal(rowsOf(withContract({ ...full, hp: maxHp, mp: 1 }, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS))[SKY].status, tag + MSG.HUNT_CONTRACT_STATUS_CHAMPION(champion) + MSG.HUNT_CONTRACT_STATUS_UNREADY(100, 0));
+    assert.equal(rowsOf(withContract({ ...full, hp: maxHp, mp: 1 }, SKY, HUNT_STAGE_CHAMPION, 7))[SKY].status, tag + MSG.HUNT_CONTRACT_STATUS_OMEN(champion, 7, BALANCE.HUNT_CHAMPION_OMEN_KILLS), '기척 단계에는 붙지 않는다');
 });
 
 test('임무 탭: 지역 레벨 − 5부터 보이고 단계마다 상태 줄이 바뀐다', () => {

@@ -269,6 +269,10 @@ export const BALANCE = {
     HUNT_CHAMPION_PHASE_THRESHOLD: 0.5,           // 격노 문턱(생명 비율)
     HUNT_CHAMPION_PHASE_ATK_BONUS: 0.5,           // 격노: 공격력 +50%
     HUNT_CHAMPION_PHASE_HEAVY_CHANCE: 0.5,        // 격노: 강타 확률
+    // Wave 86 (소유자 결정 (c)): 우두머리 준비 안내 — 실효 최대치 대비 생명 · 기력이 이 비율 아래면 접근 경보 · 출현 · 임무 탭이 알린다.
+    //   전초기지 우두머리 사망(원장 §89)은 기력이 빈(1 · 9) 플레이어가 경보 뒤에도 쉬지 않고 들어간 경우였다.
+    HUNT_CHAMPION_READY_HP_PCT: 0.7,
+    HUNT_CHAMPION_READY_MP_PCT: 0.3,
     // Wave 82 (소유자 결정 (c)): 같은 회차 안에서 의뢰가 차수로 이어진다 — 의뢰를 끝낸 뒤에도 그 지역에 머무는 구간(고대 마법 탑 Lv31 ~ 35)을 채운다.
     // Wave 84 (소유자 결정 (c)): 3차까지이던 동안 2회차 고대 마법 탑 Lv31 ~ 35는 세 차수를 다 끝낸 뒤 머무는 구간이라 3시간 이상 공백의 2/3였다(원장 §87).
     HUNT_CONTRACT_MAX_ROUNDS: 5,

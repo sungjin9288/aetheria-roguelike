@@ -53,7 +53,7 @@ import { formatSynergyDrawback } from '../../utils/relicSynergyHint.js';
 import { calculateFullStats } from '../../utils/statsCalculator.js';
 import { applyTempBuffRule } from '../../systems/tempBuffMerge.js';
 import { spawnEnemy } from '../../utils/exploreUtils.js';
-import { applyHuntChampion } from '../../utils/huntContracts.js';
+import { applyHuntChampion, getHuntChampionReadiness } from '../../utils/huntContracts.js';
 import { getHuntContract } from '../../data/huntContracts.js';
 import {
     createDailyProtocol,
@@ -448,6 +448,9 @@ export const runQuietRollAndCombat = (
     if (champion.huntChampion) {
         mStats = champion;
         addLog('critical', MSG.HUNT_CHAMPION_APPEAR(getHuntContract(champion.huntChampion)?.champion || champion.name, champion.huntChampion));
+        // Wave 86: 준비가 부족한 채 맞으면 한 줄 더 알린다(도주 · 물약 판단은 플레이어 몫).
+        const readiness = getHuntChampionReadiness(player);
+        if (!readiness.ready) addLog('warning', MSG.HUNT_CHAMPION_UNPREPARED(readiness.hpPct, readiness.mpPct));
     }
 
     const fullStats = getFullStats();
