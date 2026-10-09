@@ -16,6 +16,8 @@ import { canInvestigateTown } from '../../utils/townInvestigation';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../../utils/scoutEvents';
 import { isAreaBossChallengeable, isBossGaugeFull, isBossGaugeCardSuppressed, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
+import { spawnEnemy } from '../../utils/exploreUtils';
+import { getEnemyThreat } from '../../utils/enemyThreat';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
 import type { GameMap, Player } from '../../types';
 import type { GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -248,7 +250,11 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
                 && !isBossGaugeCardSuppressed(player, player.loc!)) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const bossName = getAreaBossName(mapData) as string;
-                const challengeEvent = buildBossChallengeEvent(bossName);
+                // Wave 88: 카드의 위협은 도전 경로와 같은 구역 보스 스폰을 고정 난수로 만든 개체다(접두어 없음 — 게임 난수를 쓰지 않는다).
+                const probeBoss = spawnEnemy(mapData, player, player.relics || [], { addLog: () => undefined }, {
+                    forceAreaBoss: true, rng: () => BALANCE.ENEMY_THREAT_PROBE_ROLL,
+                }).mStats;
+                const challengeEvent = buildBossChallengeEvent(bossName, probeBoss ? getEnemyThreat(player, probeBoss) : null);
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: challengeEvent });
                 addLog('event', challengeEvent.desc);

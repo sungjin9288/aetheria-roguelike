@@ -466,7 +466,8 @@ test('Wave 87: 격노 강타 예상치는 실제 엔진 한 방이고(방어 · 
     const TOWER = '고대 마법 탑';
     const towerChampion = applyHuntChampion({ name: '마법 인형', baseName: '마법 인형', hp: 900, maxHp: 900, atk: 115, def: 28, exp: 10, gold: 10, level: 25 },
         withContract(basePlayer({ loc: TOWER }), TOWER, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS), DB.MAPS[TOWER]);
-    const uncursed = estimateHuntChampionEnragedHit(player, { ...towerChampion, statusOnHit: undefined });
+    // Wave 88: 저주는 격노 전환(`phase2.statusEffect`)이 거는 대로 엔진이 적용한다 — 대조군은 둘 다 뺀다.
+    const uncursed = estimateHuntChampionEnragedHit(player, { ...towerChampion, statusOnHit: undefined, phase2: { ...towerChampion.phase2, statusEffect: undefined } });
     assert.ok(estimateHuntChampionEnragedHit(player, towerChampion) > uncursed, '저주 증폭 반영');
     // 예상치 계산은 게임 난수를 쓰지 않는다.
     noRandom(() => getHuntRegionThreat(player, SKY));
