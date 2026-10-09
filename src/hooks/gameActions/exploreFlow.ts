@@ -53,7 +53,7 @@ import { formatSynergyDrawback } from '../../utils/relicSynergyHint.js';
 import { calculateFullStats } from '../../utils/statsCalculator.js';
 import { applyTempBuffRule } from '../../systems/tempBuffMerge.js';
 import { spawnEnemy } from '../../utils/exploreUtils.js';
-import { applyHuntChampion, getHuntChampionReadiness } from '../../utils/huntContracts.js';
+import { applyHuntChampion, getHuntChampionReadiness, getHuntChampionThreat } from '../../utils/huntContracts.js';
 import { getHuntContract } from '../../data/huntContracts.js';
 import {
     createDailyProtocol,
@@ -448,6 +448,9 @@ export const runQuietRollAndCombat = (
     if (champion.huntChampion) {
         mStats = champion;
         addLog('critical', MSG.HUNT_CHAMPION_APPEAR(getHuntContract(champion.huntChampion)?.champion || champion.name, champion.huntChampion));
+        // Wave 87: 나타난 우두머리의 격노 강타 한 방을 내 최대 생명과 함께 보인다(실제 엔진 · 고정 난수 — 게임 난수를 쓰지 않는다).
+        const threat = getHuntChampionThreat(player, champion);
+        addLog('warning', MSG.HUNT_CHAMPION_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits));
         // Wave 86: 준비가 부족한 채 맞으면 한 줄 더 알린다(도주 · 물약 판단은 플레이어 몫).
         const readiness = getHuntChampionReadiness(player);
         if (!readiness.ready) addLog('warning', MSG.HUNT_CHAMPION_UNPREPARED(readiness.hpPct, readiness.mpPct));

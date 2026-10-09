@@ -17,7 +17,7 @@ import { matchesQuestTarget } from '../src/utils/enemyIdentity.js';
 import { canEquip } from '../src/utils/equipmentValidation.js';
 import {
     HUNT_STAGE_CHAMPION, HUNT_STAGE_DONE, HUNT_STAGE_ELITES, HUNT_STAGE_KILLS,
-    advanceHuntContractOnVictory, applyHuntChampion, getHuntChampionAtkMult, getHuntChampionEssence, getHuntChampionHpMult, getHuntChampionReadiness, getHuntContractRows, getHuntEliteGoal,
+    advanceHuntContractOnVictory, applyHuntChampion, getHuntChampionAtkMult, getHuntChampionEssence, getHuntChampionHpMult, getHuntChampionReadiness, getHuntChampionThreat, getHuntRegionThreat, estimateHuntChampionEnragedHit, getHuntContractRows, getHuntEliteGoal,
     getHuntEliteMaterials, getHuntKillGoal, getHuntRoundMult, getHuntStageGold, getHuntTraceGoal, pickHuntChampionGear,
 } from '../src/utils/huntContracts.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
@@ -160,7 +160,11 @@ test('기척 → 접근: 2단계 뒤 그 지역 승리(우두머리 아닌)가 �
         assert.equal(player.huntContracts[SKY].stage, HUNT_STAGE_CHAMPION, '우두머리를 잡기 전에는 3단계 그대로');
         assert.equal(player.huntContracts[SKY].progress, Math.min(kill, OMEN));
     }
-    assert.deepEqual(nearLogs, [MSG.HUNT_CHAMPION_NEAR(getHuntContract(SKY).champion, SKY)], '접근 경보는 기척을 다 채울 때 한 번');
+    const threat = getHuntRegionThreat(basePlayer(), SKY);
+    assert.deepEqual(nearLogs, [
+        MSG.HUNT_CHAMPION_NEAR(getHuntContract(SKY).champion, SKY),
+        MSG.HUNT_CHAMPION_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits),
+    ], '접근 경보(+ Wave 87 예상 타격)는 기척을 다 채울 때 한 번');
     const elsewhere = advanceHuntContractOnVictory({ ...withContract(basePlayer(), SKY, HUNT_STAGE_CHAMPION), loc: OUTSIDE }, { isElite: false }, () => NOW);
     assert.equal(elsewhere.player.huntContracts[SKY].progress, 0, '다른 지역 승리는 기척을 채우지 않는다');
 });
@@ -411,10 +415,12 @@ test('Wave 86: 준비 판정은 실효 최대치 대비 생명 70% · 기력 30%
 
     // 접근 경보: 기척을 다 채우는 승리에서 준비 부족이면 안내가 한 줄 더 붙는다.
     const near = (player) => advanceHuntContractOnVictory(withContract(player, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS - 1), { isElite: false }, () => NOW).logs.map((log) => log.text);
+    const regionThreat = getHuntRegionThreat(full, SKY);
+    const threatLine = MSG.HUNT_CHAMPION_THREAT(regionThreat.hit, regionThreat.maxHp, regionThreat.pct, regionThreat.hits);
     const readyLogs = near({ ...full, hp: maxHp, mp: maxMp });
-    assert.deepEqual(readyLogs, [MSG.HUNT_CHAMPION_NEAR(getHuntContract(SKY).champion, SKY)], '준비됐으면 경보만');
+    assert.deepEqual(readyLogs, [MSG.HUNT_CHAMPION_NEAR(getHuntContract(SKY).champion, SKY), threatLine], '준비됐으면 경보(+ 예상 타격)만');
     const unreadyLogs = near({ ...full, hp: maxHp, mp: 1 });
-    assert.deepEqual(unreadyLogs, [MSG.HUNT_CHAMPION_NEAR(getHuntContract(SKY).champion, SKY), MSG.HUNT_CHAMPION_PREPARE(100, 0)]);
+    assert.deepEqual(unreadyLogs, [MSG.HUNT_CHAMPION_NEAR(getHuntContract(SKY).champion, SKY), threatLine, MSG.HUNT_CHAMPION_PREPARE(100, 0)]);
 
     // 출현: 준비 부족이면 경고 한 줄 — 적 · 탐험 난수 소비는 준비 여부와 무관하다.
     const ready = spawnState(withContract({ ...full, hp: maxHp, mp: maxMp }, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS));
@@ -432,6 +438,60 @@ test('Wave 86: 준비 판정은 실효 최대치 대비 생명 70% · 기력 30%
     assert.equal(rowsOf(withContract({ ...full, hp: maxHp, mp: maxMp }, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS))[SKY].status, tag + MSG.HUNT_CONTRACT_STATUS_CHAMPION(champion));
     assert.equal(rowsOf(withContract({ ...full, hp: maxHp, mp: 1 }, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS))[SKY].status, tag + MSG.HUNT_CONTRACT_STATUS_CHAMPION(champion) + MSG.HUNT_CONTRACT_STATUS_UNREADY(100, 0));
     assert.equal(rowsOf(withContract({ ...full, hp: maxHp, mp: 1 }, SKY, HUNT_STAGE_CHAMPION, 7))[SKY].status, tag + MSG.HUNT_CONTRACT_STATUS_OMEN(champion, 7, BALANCE.HUNT_CHAMPION_OMEN_KILLS), '기척 단계에는 붙지 않는다');
+});
+
+// ── Wave 87: 예상 타격 · 우두머리 도주 ──
+
+test('Wave 87: 격노 강타 예상치는 실제 엔진 한 방이고(방어 · 저주 반영), 지역 위협은 일반 종 가운데 가장 센 우두머리다', () => {
+    const player = basePlayer({ loc: SKY, def: 30 });
+    const { state } = spawnState(withContract(player, SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS));
+    const champion = state.enemy;
+    assert.equal(champion.huntChampion, SKY);
+    const threat = getHuntChampionThreat(player, champion);
+    assert.ok(logTexts(state).includes(MSG.HUNT_CHAMPION_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits)), '출현 안내가 예상 타격을 보인다');
+    const maxHp = calculateFullStats(player).maxHp;
+    assert.equal(threat.maxHp, maxHp);
+    assert.equal(threat.pct, Math.ceil((threat.hit / maxHp) * 100));
+    assert.equal(threat.hits, Math.ceil(maxHp / threat.hit));
+    // 격노 + 강타는 격노 전 보통 타격보다 세다(실제 엔진, 강타 · 회피 없음).
+    const plain = CombatEngine.enemyAttack({ ...player, hp: maxHp }, { ...champion, pattern: { guardChance: 0, heavyChance: 0 }, statusOnHit: undefined }, calculateFullStats(player), () => 0.999).damage;
+    assert.ok(threat.hit > plain * (1 + BALANCE.HUNT_CHAMPION_PHASE_ATK_BONUS), `격노 강타 ${threat.hit} > 보통 ${plain} × 격노`);
+    // 방어가 높으면 예상치가 줄어든다 — 엔진의 방어 경감을 그대로 탄다.
+    assert.ok(getHuntChampionThreat({ ...player, def: 300 }, champion).hit < threat.hit);
+    // 지역 위협 = 일반 종 가운데 가장 센 우두머리(보스 종 제외).
+    const region = getHuntRegionThreat(player, SKY);
+    assert.ok(region.hit >= threat.hit, '지역 최대 ≥ 이번 개체');
+    assert.equal(getHuntRegionThreat(player, OUTSIDE), null, '의뢰 밖 지역은 없다');
+    // 저주 우두머리는 저주에 걸린 뒤의 한 방이다.
+    const TOWER = '고대 마법 탑';
+    const towerChampion = applyHuntChampion({ name: '마법 인형', baseName: '마법 인형', hp: 900, maxHp: 900, atk: 115, def: 28, exp: 10, gold: 10, level: 25 },
+        withContract(basePlayer({ loc: TOWER }), TOWER, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS), DB.MAPS[TOWER]);
+    const uncursed = estimateHuntChampionEnragedHit(player, { ...towerChampion, statusOnHit: undefined });
+    assert.ok(estimateHuntChampionEnragedHit(player, towerChampion) > uncursed, '저주 증폭 반영');
+    // 예상치 계산은 게임 난수를 쓰지 않는다.
+    noRandom(() => getHuntRegionThreat(player, SKY));
+});
+
+test('Wave 87: 우두머리에게서의 도주는 언제나 성공하고(난수 한 번 그대로) 기척이 남아 다음 일반 개체가 다시 우두머리다', () => {
+    const { state } = spawnState(withContract(basePlayer({ loc: SKY }), SKY, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS));
+    const champion = state.enemy;
+    const stats = calculateFullStats(state.player);
+    const failing = counting(0.1); // 0.1 ≤ ESCAPE_CHANCE — 보통 적이면 실패하는 굴림
+    const championEscape = CombatEngine.attemptEscape(champion, stats, failing);
+    assert.equal(championEscape.success, true);
+    assert.ok(championEscape.logs.some((log) => log.text === MSG.HUNT_CHAMPION_ESCAPE));
+    assert.equal(failing.calls, 1, '난수는 한 번');
+    const plainRng = counting(0.1);
+    const plainEscape = CombatEngine.attemptEscape({ ...champion, huntChampion: undefined }, stats, plainRng);
+    assert.equal(plainEscape.success, false, '보통 적은 같은 굴림에서 실패');
+    assert.equal(plainRng.calls, 1);
+    // 실제 리듀서 도주: 전투가 끝나고 기척이 그대로 남는다 → 같은 지역 다음 일반 개체가 다시 우두머리.
+    const fled = gameReducer(state, { type: AT.RESOLVE_COMBAT_ACTION, payload: { kind: 'escape', expectedTurn: state.combatTurn || 0, seed: 1, now: NOW } });
+    assert.equal(fled.gameState, GS.IDLE);
+    assert.equal(fled.enemy, null);
+    assert.deepEqual(fled.player.huntContracts[SKY], state.player.huntContracts[SKY], '기척 그대로');
+    const again = spawnState(fled.player);
+    assert.equal(again.state.enemy.huntChampion, SKY, '다시 맞설 수 있다');
 });
 
 test('임무 탭: 지역 레벨 − 5부터 보이고 단계마다 상태 줄이 바뀐다', () => {

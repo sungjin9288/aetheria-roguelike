@@ -597,7 +597,13 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
 
     attemptEscape(enemy: Monster, stats: FullStats, rng?: () => number) {
         const random = typeof rng === 'function' ? rng : Math.random;
-        const success = random() > BALANCE.ESCAPE_CHANCE;
+        // 2026-10 Wave 87 (소유자 결정 (c)): 토벌 의뢰 우두머리는 쫓지 않는다 — 도주는 언제나 성공하고 기척은 남는다(다시 맞설 수 있다).
+        //   난수는 다른 적과 같이 한 번 쓴다(전투 시드 스트림을 밀지 않는다).
+        const roll = random();
+        if (enemy.huntChampion) {
+            return { success: true, logs: [{ type: 'info', text: MSG.ESCAPE_SUCCESS }, { type: 'event', text: MSG.HUNT_CHAMPION_ESCAPE }] };
+        }
+        const success = roll > BALANCE.ESCAPE_CHANCE;
         if (success) {
             return { success: true, logs: [{ type: 'info', text: MSG.ESCAPE_SUCCESS }] };
         }
