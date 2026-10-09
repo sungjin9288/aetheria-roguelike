@@ -25,6 +25,7 @@ import { getGoldIncome } from '../../utils/challengeRules';
 import { applyStoryStatGrant } from '../../utils/permanentStatSources';
 import type { Player, Relic, StatusId } from '../../types';
 import type { ChainCombatSpec, EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
+import { getEnemyThreat } from '../../utils/enemyThreat';
 import type { ChainCombatRef } from '../combatActions/_helpers';
 import type { GameState } from '../../reducers/gameReducer';
 import type { AddLog, GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -810,4 +811,7 @@ const handleBossGaugeChoice = (idx: number, currentEvent: GameState['currentEven
     dispatch({ type: AT.SET_ENEMY, payload: mStats });
     dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+    // Wave 88: 실제로 나온 구역 보스(접두어 포함)의 가장 센 한 방.
+    const threat = getEnemyThreat(player, mStats);
+    addLog('warning', MSG.BOSS_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits));
 };

@@ -43,6 +43,7 @@ import { applyDynamicDifficulty } from '../../systems/DifficultyManager';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
 import { getBossSignatureDrops } from '../../utils/bossSignatureHint';
+import { getEnemyThreat } from '../../utils/enemyThreat';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { resolveAbyssDailyDive } from '../../utils/abyssDailyDive';
 import { activateDevourBonus } from '../../utils/adventureRelicBonuses.js';
@@ -463,6 +464,9 @@ export const runQuietRollAndCombat = (
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
     // anticipate 레이어: boss가 signature를 드롭 가능한 경우 pre-combat 예고
     if (mStats.isBoss) {
+        // Wave 88: 보스(지역 조우 · 숨은 보스 · 심연 층 보스)의 가장 센 한 방을 내 최대 생명과 함께 보인다(실제 엔진 · 고정 난수).
+        const threat = getEnemyThreat(player, mStats);
+        addLog('warning', MSG.BOSS_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits));
         const sigDrops = getBossSignatureDrops(mStats.baseName);
         if (sigDrops.length > 0) {
             const top = sigDrops[0];

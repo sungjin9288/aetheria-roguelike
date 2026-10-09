@@ -3,6 +3,7 @@ import { MSG } from '../data/messages.js';
 import { DB } from '../data/db.js';
 import type { GameMap, Player } from '../types/index.js';
 import { getOpenKillQuests } from './questProgress.js';
+import type { EnemyThreat } from './enemyThreat.js';
 
 /**
  * bossGauge.ts — 원정 보스 접근 게이지 (2026-07 감사 축4 — 모바일 세션 정합).
@@ -141,10 +142,13 @@ export interface BossGaugeEvent {
  * 게이지 만충 시 제시할 "도전 / 회피" 선택 카드. campfireEvent.ts/scoutEvents.ts와
  * 동일하게 순수 함수 — 입력 → 새 이벤트 객체.
  */
-export const buildBossChallengeEvent = (bossName: string): BossGaugeEvent => ({
+export const buildBossChallengeEvent = (bossName: string, threat?: EnemyThreat | null): BossGaugeEvent => ({
     isBossGaugeChallenge: true,
     bossName,
-    desc: MSG.BOSS_GAUGE_FULL_DESC(bossName),
+    // Wave 88: 도전 · 회피를 고르는 카드라 위협을 카드 문구에 싣는다(이벤트 화면에는 기록 창이 없다).
+    desc: threat
+        ? `${MSG.BOSS_GAUGE_FULL_DESC(bossName)} ${MSG.BOSS_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits)}`
+        : MSG.BOSS_GAUGE_FULL_DESC(bossName),
     choices: [MSG.BOSS_GAUGE_CHALLENGE_CHOICE, MSG.BOSS_GAUGE_AVOID_CHOICE],
     outcomes: [
         { choiceIndex: 0, gaugeEffect: 'challenge', log: MSG.BOSS_GAUGE_CHALLENGE_LOG(bossName) },
