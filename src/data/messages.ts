@@ -1227,7 +1227,10 @@ export const MSG = {
     HUNT_CHAMPION_APPEAR: (champion: string, map: string) => `⚔️ [토벌 의뢰] ${map} 우두머리 「${champion}」 출현!`,
     // Wave 86: 준비 안내 — 우두머리는 그 지역에서 기다린다(기척은 떠나도 남는다).
     HUNT_CHAMPION_PREPARE: (hpPct: number, mpPct: number) => `🛡️ 준비가 부족합니다 — 생명 ${hpPct}% · 기력 ${mpPct}%. 안전지대에서 쉬고 와도 우두머리는 이 지역에서 기다립니다`,
-    HUNT_CHAMPION_UNPREPARED: (hpPct: number, mpPct: number) => `🛡️ 생명 ${hpPct}% · 기력 ${mpPct}%로 맞섭니다 — 위험하면 물러나 회복한 뒤 다시 오십시오`,
+    HUNT_CHAMPION_UNPREPARED: (hpPct: number, mpPct: number) => `🛡️ 생명 ${hpPct}% · 기력 ${mpPct}%로 맞섭니다 — 위험하면 도주하십시오. 우두머리는 쫓지 않습니다`,
+    // Wave 87: 격노 강타 예상치 — 실제 엔진으로 계산한 한 방(최대 생명의 몇 % · 몇 번에 쓰러지는지).
+    HUNT_CHAMPION_THREAT: (hit: number, maxHp: number, pct: number, hits: number) => `🩸 격노 강타 예상 최대 ${hit} — 최대 생명 ${maxHp}의 ${pct}% (${hits}번에 쓰러짐)`,
+    HUNT_CHAMPION_ESCAPE: '🏃 우두머리는 쫓지 않습니다 — 기척은 남아 이 지역에서 다시 맞설 수 있습니다',
     HUNT_CONTRACT_STATUS_UNREADY: (hpPct: number, mpPct: number) => ` · 준비 부족(생명 ${hpPct}% · 기력 ${mpPct}%)`,
     HUNT_CONTRACT_PANEL_TITLE: '지역 토벌 의뢰',
     HUNT_CONTRACT_PANEL_HINT: '회차마다 다시 — 처치 · 정예 · 우두머리, 5차까지',

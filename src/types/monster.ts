@@ -101,6 +101,8 @@ export interface MonsterBase {
     isBoss?: boolean;
     /** 엘리트 prefix 여부. */
     isElite?: boolean;
+    /** 2026-10 Wave 80: 토벌 의뢰 우두머리 인스턴스면 그 지역 이름(`applyHuntChampion`이 붙인다 — 데이터 템플릿에는 없다). */
+    huntChampion?: string;
     dropMod?: number;
     /**
      * 강타(heavy hit) 적중 시 플레이어에게 부여하는 상태이상 키.

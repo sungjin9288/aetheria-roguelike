@@ -4,7 +4,11 @@ import { HUNT_CONTRACTS, getHuntContract, type HuntContractDef } from '../data/h
 import { MSG } from '../data/messages.js';
 import { getEssenceGainFromExp, applyEssenceGain } from '../systems/essenceLedger.js';
 import { getEssenceRewardMult } from '../systems/essenceRewardMult.js';
+import { CombatEngine } from '../systems/CombatEngine.js';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull } from '../systems/vitals.js';
+import { isEncounterBoss } from './bossPresence.js';
+import { spawnEnemy } from './exploreUtils.js';
+import { calculateFullStats } from './statsCalculator.js';
 import type { GameMap, HuntContractProgress, Item, Monster, Player } from '../types/index.js';
 import { grantGold, makeItem } from './gameUtils.js';
 import type { SpawnedMonster } from './exploreUtils.js';
@@ -112,6 +116,77 @@ export const getHuntChampionReadiness = (player: Player): HuntChampionReadiness 
     };
 };
 
+/**
+ * Wave 87 (소유자 결정 (b)): 우두머리의 격노 강타 한 방 — 실제 엔진(`CombatEngine.enemyAttack`)을 격노 · 강타 확정 상태로 한 번
+ * 굴린 값이다(방어 · 받는 피해 보정 · 원소 저항이 그대로 들어간다). 저주 우두머리는 저주에 걸린 뒤의 값이다.
+ * 고정 난수(`HUNT_CHAMPION_THREAT_PROBE_ROLL`)로 굴리므로 게임 난수를 쓰지 않는다.
+ */
+export const estimateHuntChampionEnragedHit = (player: Player, champion: Monster): number => {
+    const phase2 = champion.phase2;
+    const enraged: Monster = {
+        ...champion,
+        hp: Math.max(1, Number(champion.maxHp) || Number(champion.hp) || 1),
+        atk: Math.floor((Number(champion.atk) || 0) * (1 + (phase2?.atkBonus ?? 0))),
+        phase2: undefined,
+        phase2Triggered: true,
+        pattern: { guardChance: 0, heavyChance: 1 },
+        statusOnHit: undefined,
+    };
+    const probe: Player = {
+        ...player,
+        hp: Math.max(1, getEffectiveMaxHp(player)),
+        status: champion.statusOnHit === 'curse' ? ['curse'] : [],
+    };
+    const stats = calculateFullStats(probe);
+    if (!stats) return 0;
+    try {
+        const roll = () => BALANCE.HUNT_CHAMPION_THREAT_PROBE_ROLL;
+        return Math.max(0, Math.floor(Number(CombatEngine.enemyAttack(probe, enraged, stats, roll).damage) || 0));
+    } catch {
+        return 0;
+    }
+};
+
+export interface HuntChampionThreat {
+    hit: number;
+    maxHp: number;
+    /** 한 방이 최대 생명의 몇 %인지(올림). */
+    pct: number;
+    /** 가득 찬 생명이 몇 번에 쓰러지는지. */
+    hits: number;
+}
+
+const toThreat = (player: Player, hit: number): HuntChampionThreat => {
+    const maxHp = Math.max(1, getEffectiveMaxHp(player));
+    const safeHit = Math.max(1, hit);
+    return { hit: safeHit, maxHp, pct: Math.ceil((safeHit / maxHp) * 100), hits: Math.max(1, Math.ceil(maxHp / safeHit)) };
+};
+
+/** 나타난 우두머리 한 개체의 위협. */
+export const getHuntChampionThreat = (player: Player, champion: Monster): HuntChampionThreat => toThreat(player, estimateHuntChampionEnragedHit(player, champion));
+
+/**
+ * 접근 경보 때의 위협 — 아직 어느 종이 나올지 모르므로 그 지역 일반 종(보스 제외) 가운데 가장 센 우두머리 한 방이다.
+ * 종 스탯은 이야기 전투와 같은 정해진 종 경로(`spawnEnemy`의 `storyMonster`)로 만들어 난수를 쓰지 않는다.
+ */
+export const getHuntRegionThreat = (player: Player, map: string): HuntChampionThreat | null => {
+    const mapData = DB.MAPS[map];
+    if (!mapData || !getHuntContract(map)) return null;
+    const { round } = getHuntContractProgress(player, map);
+    const atChampion = withProgress({ ...player, loc: map }, map, { stage: HUNT_STAGE_CHAMPION, progress: BALANCE.HUNT_CHAMPION_OMEN_KILLS, round });
+    const noop = () => undefined;
+    const hits = (mapData.monsters || [])
+        .filter((name) => !isEncounterBoss(name, mapData))
+        .map((name) => {
+            const spawned = spawnEnemy(mapData, atChampion, [], { addLog: noop }, { storyMonster: name, rng: () => BALANCE.HUNT_CHAMPION_THREAT_PROBE_ROLL }).mStats;
+            if (!spawned) return 0;
+            const champion = applyHuntChampion(spawned, atChampion, mapData);
+            return champion.huntChampion ? estimateHuntChampionEnragedHit(player, champion) : 0;
+        });
+    const top = Math.max(0, ...hits);
+    return top > 0 ? toThreat(player, top) : null;
+};
+
 const withProgress = (player: Player, map: string, next: Required<HuntContractProgress>): Player => ({
     ...player,
     huntContracts: { ...(player.huntContracts || {}), [map]: next },
@@ -176,6 +251,9 @@ export const advanceHuntContractOnVictory = (
             const next = progress + 1;
             if (next >= BALANCE.HUNT_CHAMPION_OMEN_KILLS) {
                 logs.push({ type: 'critical', text: MSG.HUNT_CHAMPION_NEAR(contract.champion, map) });
+                // Wave 87: 이 지역에서 나올 수 있는 가장 센 우두머리의 격노 강타 한 방.
+                const threat = getHuntRegionThreat(player, map);
+                if (threat) logs.push({ type: 'warning', text: MSG.HUNT_CHAMPION_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits) });
                 // Wave 86: 지금 상태로 맞기엔 부족하면 쉬고 와도 된다고 알린다.
                 const readiness = getHuntChampionReadiness(player);
                 if (!readiness.ready) logs.push({ type: 'warning', text: MSG.HUNT_CHAMPION_PREPARE(readiness.hpPct, readiness.mpPct) });
