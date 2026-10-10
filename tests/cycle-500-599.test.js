@@ -3974,7 +3974,10 @@ import { DB } from '../src/data/db.ts';
       const runStartSource = await readSrc('src/utils/runStart.ts');
       assert.ok(/if \(!Array\.isArray\(value\)\) return \[\];/.test(runStartSource),
           'Array.isArray(challengeModifiers) defensive guard 보존 (sanitizeChallengeModifiers)');
-      assert.ok(/sanitizeChallengeModifiers\(challengeModifiers,/.test(source), 'start가 같은 거르기를 쓴다');
+      // 2026-10 Wave 89: start는 회차 규칙의 비틀기를 함께 붙이는 buildRunChallengeModifiers를 거친다(그 안이 같은 거르기다).
+      assert.ok(/buildRunChallengeModifiers\(challengeModifiers,/.test(source), 'start가 같은 거르기를 쓴다');
+      assert.ok(/sanitizeChallengeModifiers\(/.test(runStartSource.slice(runStartSource.indexOf('export const buildRunChallengeModifiers'))),
+          'buildRunChallengeModifiers가 sanitizeChallengeModifiers로 거른다');
       assert.ok(/buildClassVitals\(1,\s*jobId,\s*player\.meta \|\| \{\},\s*player\.storyStatBonus\)/.test(source),
           'buildClassVitals 호출 보존 — 신규 캐릭터 Lv1 기준(Wave 72: 영구 이야기 생명 · 기력 포함)');
       assert.ok(/level:\s*1,\s*exp:\s*0,\s*nextExp:\s*CONSTANTS\.START_NEXT_EXP/.test(source),

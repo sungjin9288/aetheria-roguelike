@@ -127,6 +127,8 @@ export const pickPermanentPlayerState = (
             ),
             // 2026-10 Wave 58: 달성했지만 수령하지 않은 업적을 남긴다 — 이 선별이 계승 · 사망 재시작 · 다시 시작의 공통 지점이다.
             achievedAchievements: collectAchievedAchievementIds(player),
+            // 2026-10 Wave 89: 회차 규칙 정복 기록 — 계정 단위(정복 보상은 단계마다 한 번).
+            ruleConquestRanks: clone(Array.isArray(stats.ruleConquestRanks) ? stats.ruleConquestRanks : []),
             claimedQuestIds: clone(Array.isArray(stats.claimedQuestIds) ? stats.claimedQuestIds : []),
             codexBonusAtk: numberOrZero(stats.codexBonusAtk),
             codexBonusDef: numberOrZero(stats.codexBonusDef),

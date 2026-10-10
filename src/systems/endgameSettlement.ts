@@ -3,6 +3,7 @@ import { DB } from '../data/db';
 import { MSG } from '../data/messages';
 import type { Monster, Player } from '../types/index.js';
 import { normalizeEndgameProgress } from '../utils/dataMigration';
+import { applyRuleConquest } from '../utils/ruleConquest';
 import type { GameMode } from '../reducers/gameStates';
 
 export interface EndgameSettlementResult {
@@ -145,7 +146,7 @@ export const resolveEndgameVictory = ({
         primalShards: shardCount,
         lastEndgameReceiptKey: receiptKey,
     };
-    const acceptedPlayer = {
+    const settledPlayer = {
         ...player,
         meta: {
             ...(player.meta || {}),
@@ -156,7 +157,10 @@ export const resolveEndgameVictory = ({
             demonKingSlain: (player.stats?.demonKingSlain || 0) + 1,
         },
     };
-    const logs: Array<{ type: string; text: string }> = [];
+    // 2026-10 Wave 89: 회차 규칙 정복 — 그 계승 단계에서 처음 마왕을 쓰러뜨리면 정복 칭호 + 아직 없는 전설 각인 하나(단계마다 한 번).
+    const conquest = applyRuleConquest(settledPlayer, receiptKey);
+    const acceptedPlayer = conquest.player;
+    const logs: Array<{ type: string; text: string }> = [...conquest.logs];
     if (earnedShard) logs.push({ type: 'event', text: MSG.PRIMAL_SHARD_DROP(shardCount) });
 
     if (prestigeRank >= 3 && shardCount >= required) {

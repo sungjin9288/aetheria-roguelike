@@ -15,7 +15,8 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getBakedMetaVitals, snapshotMetaVitals } from '../../systems/metaBonusRamp';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
-import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, sanitizeChallengeModifiers } from '../../utils/runStart';
+import { getAscensionRuleStartLog } from '../../systems/ascensionRule';
+import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, buildRunChallengeModifiers } from '../../utils/runStart';
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { createSeededRandom } from '../../utils/seededRandom';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
@@ -187,7 +188,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         const bakedMeta = getBakedMetaVitals(metaVitalsSnapshot, 1);
         // 2026-10 Wave 58: 새 여정의 시작 조건은 새 게임(start)과 같은 계산이다(utils/runStart.ts) — 계승 화면에서 고른
         //   도전 조건(슬롯은 새 단계 기준) · 거울 시작 골드 · 첫 유물 선택지. 이전에는 사망 재시작에만 적용됐다.
-        const challengeModifiers = sanitizeChallengeModifiers(payload?.challengeModifiers, outcome.meta.prestigeRank);
+        const challengeModifiers = buildRunChallengeModifiers(payload?.challengeModifiers, outcome.meta.prestigeRank);
         const freshMaxHp = applyChallengeMaxHp((INITIAL_STATE.player.maxHp || 0) + bakedMeta.hp, challengeModifiers);
         const freshMaxMp = (INITIAL_STATE.player.maxMp || 0) + bakedMeta.mp;
         const freshPlayer: Player = {
@@ -224,9 +225,11 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         });
         const challengeLabels = challengeModifiers.map((id) => (
             BALANCE.CHALLENGE_MODIFIERS.find((modifier) => modifier.id === id)?.label || id));
+        const ruleLog = getAscensionRuleStartLog(outcome.meta.prestigeRank);
         const logs = appendRewardLogs(INITIAL_STATE.logs, [
             ...ascensionTitles.map((id) => ({ type: 'system', text: MSG.TITLE_UNLOCKED(getTitleLabel(id)) })),
             { type: 'system', text: MSG.ASCEND_DONE(outcome.nextRank, isNewAscensionTitle(outcome, state.player.titles) ? outcome.title : null) },
+            ...(ruleLog ? [{ type: 'event', text: ruleLog }] : []),
             ...(challengeLabels.length > 0 ? [{ type: 'warn', text: MSG.CHALLENGE_START(challengeLabels) }] : []),
             ...(startingRelics.length > 0 ? [{ type: 'event', text: MSG.START_BOOT_RELIC }] : []),
         ]);

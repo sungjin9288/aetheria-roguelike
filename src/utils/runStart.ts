@@ -1,6 +1,7 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import { getMirrorEffects } from '../systems/mirrorUpgrades.js';
+import { getAscensionRule } from '../systems/ascensionRule.js';
 import type { Player } from '../types/index.js';
 
 /**
@@ -29,6 +30,19 @@ export const sanitizeChallengeModifiers = (value: unknown, prestigeRank: number 
         picked.push(id);
     }
     return picked.slice(0, getChallengeSlotCount(prestigeRank));
+};
+
+/**
+ * 이번 회차의 도전 조건 — 회차 규칙(2026-10 Wave 89)의 비틀기를 먼저 두고, 고른 도전 조건은 그것을 빼고 슬롯 수까지 더한다.
+ * 회차 규칙은 슬롯을 차지하지 않고 보상 배율에는 하나로 센다. 새 게임 · 사망 재시작(`start`)과 계승(`ASCEND`)이 같이 부른다.
+ */
+export const buildRunChallengeModifiers = (value: unknown, prestigeRank: number | undefined): string[] => {
+    const forced = getAscensionRule(prestigeRank)?.modifier;
+    const picked = sanitizeChallengeModifiers(
+        Array.isArray(value) ? value.filter((id) => id !== forced) : value,
+        prestigeRank,
+    );
+    return forced ? [forced, ...picked] : picked;
 };
 
 /** 도전 규칙 선택 토글 — 고른 것은 빼고, 아니면 슬롯 수까지 더한다(인트로 · 계승 화면 공용). */

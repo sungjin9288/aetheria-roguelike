@@ -8,7 +8,8 @@ import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getJobSkills } from '../../utils/gameUtils';
 import { buildClassVitals } from './_shared';
-import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, sanitizeChallengeModifiers } from '../../utils/runStart';
+import { getAscensionRuleStartLog } from '../../systems/ascensionRule';
+import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, buildRunChallengeModifiers } from '../../utils/runStart';
 import { createQuestProgressState } from '../../utils/questProgress';
 import { getDefaultExpeditionFocusQuestIds } from '../../utils/expeditionMissionFocus';
 import { getRestCost } from '../../utils/expeditionReturnFlow';
@@ -69,7 +70,7 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             const vitals = buildClassVitals(1, jobId, player.meta || {}, player.storyStatBonus);
             // 2026-07 — 에테르 거울: start_gold 노드가 레벨당 시작 골드에 가산(빈손의 시작은 거울 보너스도 무효화).
             // 2026-10 Wave 58: 시작 조건 계산은 계승(ASCEND)과 함께 utils/runStart.ts가 소유한다. 도전 조건도 같은 규칙으로 거른다.
-            const mods = sanitizeChallengeModifiers(challengeModifiers, player.meta?.prestigeRank);
+            const mods = buildRunChallengeModifiers(challengeModifiers, player.meta?.prestigeRank);
             const maxHp = applyChallengeMaxHp(vitals.maxHp, mods);
             const startGold = getRunStartGold(player.meta, mods);
             // Compute full starting HP/MP including passive skill bonuses for the chosen job
@@ -94,6 +95,8 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
             addLog('system', MSG.START_JOURNEY(trimmedName));
             addLog('event', MSG.START_SKILL(cls.skills?.[0]?.name || '강타'));
+            const ruleLog = getAscensionRuleStartLog(player.meta?.prestigeRank);
+            if (ruleLog) addLog('event', ruleLog);
             if (mods.length > 0) {
                 const labels = mods.map((id) => BALANCE.CHALLENGE_MODIFIERS
                     .find((m: { id: string; label: string }) => m.id === id)?.label || id);

@@ -19,6 +19,7 @@ import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { GameActions } from '../hooks/actionDeps';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
+import { getAscensionRulePreview } from '../utils/ascensionRuleView';
 
 interface AscensionScreenProps {
     player: Player;
@@ -220,6 +221,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                     {/* 도전 규칙은 확정 버튼 바로 위 — 고른 뒤 확정한다(스크롤 영역의 다른 내용 배치는 그대로). */}
                     <ChallengeModifierPicker
                         testIdPrefix="ascension"
+                        rule={getAscensionRulePreview(outcome.nextRank)}
                         selected={selectedChallenges}
                         slots={challengeSlots}
                         onToggle={(id) => setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots))}

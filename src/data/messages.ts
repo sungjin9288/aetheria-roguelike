@@ -241,6 +241,18 @@ export const MSG = {
     TRUE_BOSS_UNLOCK: '세계의 근원이 흔들립니다... 숨겨진 문이 열렸습니다!',
     TRUE_BOSS_APPEAR: '원시의 신이 강림했습니다. 이것이 진짜 끝입니다.',
     PRIMAL_SHARD_DROP: (count: number) => `원시의 파편 획득! (${count}/3)`,
+    // 2026-10 Wave 89 (소유자 결정 §93.4 b + 콜렉터): 회차 규칙 — 계승 단계마다 이름 있는 규칙 하나(비틀기 · 표적 세트 · 정복 보상).
+    ASCENSION_RULE_START: (ruleName: string, twist: string, setName: string) => `📜 회차 규칙 [${ruleName}] — ${twist} 강제 · 이번 회차 '${setName}' 각인이 더 자주 나옵니다.`,
+    ASCENSION_RULE_CONQUERED: (ruleName: string) => `📜 회차 규칙 [${ruleName}]을 정복했습니다.`,
+    ASCENSION_RULE_CONQUEST_SIGNATURE: (itemName: string) => `정복의 전리품: ${itemName}`,
+    ASCENSION_RULE_CONQUEST_COMPLETE: '모든 전설 각인을 이미 모았습니다 — 정복의 전리품은 없습니다.',
+    ASCENSION_RULE_LOCKED: '회차 규칙',
+    ASCENSION_RULE_NEXT: (ruleName: string) => `다음 회차 규칙: ${ruleName}`,
+    ASCENSION_RULE_DETAIL: (twist: string, setName: string, titleName: string) => `${twist} 강제 · '${setName}' 각인 드롭 ×3 · 마왕을 쓰러뜨리면 칭호 [${titleName}] + 그 세트의 없는 각인 하나`,
+    COLLECTION_SUMMARY_TITLE: '수집 완주',
+    COLLECTION_SET_ROW: (setName: string, owned: number, total: number) => `${setName} ${owned}/${total}`,
+    COLLECTION_CONQUEST_ROW: (owned: number, total: number) => `회차 규칙 정복 ${owned}/${total}`,
+    COLLECTION_FEATURED: (ruleName: string, setName: string) => `이번 회차 [${ruleName}] · 표적 세트 '${setName}'`,
     PRIMAL_SHARD_HINT: (count: number) => `원시의 파편 ${count}/3개. 마왕을 쓰러뜨리면 진실이 드러납니다.`,
 
     // --- 심연 마일스톤 (Abyss Milestone) ---

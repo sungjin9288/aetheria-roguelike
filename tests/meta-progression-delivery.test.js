@@ -48,10 +48,14 @@ test('계승도 새 여정의 시작 조건을 적용한다 — 거울 시작 �
     const mirror = { start_gold: 5, start_boot_extra: 2 };
     const after = ascend({ prestigeRank: 6, mirror }, { challengeModifiers: ['halfHp', 'eliteOnly', 'noPotion', 'blindMap', 'randomSkills'] });
     assert.equal(after.player.meta.prestigeRank, 7);
-    assert.equal(after.player.gold, CONSTANTS.START_GOLD + 5 * BALANCE.MIRROR_START_GOLD_PER_LEVEL);
-    // 7단계에서 오른 rank로 고른다 — 3 + 1칸.
+    // 2026-10 Wave 89: 7단계의 회차 규칙은 '빈손의 성전'(빈손의 시작 강제)이라 시작 골드가 0이다 — 거울 시작 골드는 규칙이 골드를
+    //   건드리지 않는 단계(8단계 = 뒤틀린 차원)에서 본다.
+    assert.equal(after.player.gold, 0);
+    const goldAfter = ascend({ prestigeRank: 7, mirror }, { challengeModifiers: [] });
+    assert.equal(goldAfter.player.gold, CONSTANTS.START_GOLD + 5 * BALANCE.MIRROR_START_GOLD_PER_LEVEL);
+    // 7단계에서 오른 rank로 고른다 — 3 + 1칸. 회차 규칙의 비틀기는 칸을 쓰지 않고 맨 앞에 붙는다.
     assert.equal(getChallengeSlotCount(7), BALANCE.CHALLENGE_MODIFIER_SLOTS + 1);
-    assert.deepEqual(after.player.challengeModifiers, ['halfHp', 'eliteOnly', 'noPotion', 'blindMap']);
+    assert.deepEqual(after.player.challengeModifiers, ['noGold', 'halfHp', 'eliteOnly', 'noPotion', 'blindMap']);
     assert.ok(after.player.maxHp < basePlayer().maxHp, '약한 생명력이 적용됐다');
     // 5단계(첫 유물 선택지 +1) + 거울 각성의 선택 2.
     assert.equal(after.pendingRelics.length, getPrestigeUnlocks(7).startBootChoices + 2);
@@ -65,7 +69,8 @@ test('계승도 새 여정의 시작 조건을 적용한다 — 거울 시작 �
 test('빈손의 시작은 계승 뒤에도 0골드다 · 알 수 없는 도전 조건은 버린다', () => {
     const after = ascend({ prestigeRank: 0, mirror: { start_gold: 5 } }, { challengeModifiers: ['noGold', 'noGold', 'unknown'] });
     assert.equal(after.player.gold, 0);
-    assert.deepEqual(after.player.challengeModifiers, ['noGold']);
+    // 2026-10 Wave 89: 1단계 회차 규칙(길 잃은 여행)이 앞에 붙는다.
+    assert.deepEqual(after.player.challengeModifiers, ['blindMap', 'noGold']);
     assert.deepEqual(sanitizeChallengeModifiers('noGold', 0), []);
 });
 

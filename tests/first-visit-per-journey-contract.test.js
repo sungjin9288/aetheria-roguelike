@@ -87,13 +87,16 @@ test('계승도 새 여정 — 방문 기록은 넘어가지만 첫 방문 보�
     const veteran = basePlayer({
         level: 50, quests: [], firstVisitRewardMaps: [FOREST],
         stats: { ...structuredClone(INITIAL_STATE.player.stats), visitedMaps: [CONSTANTS.START_LOCATION, FOREST] },
-        meta: { ...structuredClone(INITIAL_STATE.player.meta), endgame: { lastEndgameReceiptKey: 'rk' } },
+        // 2026-10 Wave 89: 계승 단계마다 회차 규칙이 도전 조건 하나를 강제한다 — 1단계(길 잃은 여행)는 지역 이름을 가리고
+        //   2단계(빈손의 시작)는 골드를 줄이므로, 첫 방문 규칙만 보려고 규칙이 '뒤섞인 기술'인 3단계로 계승한다.
+        meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: 2, endgame: { lastEndgameReceiptKey: 'rk' } },
     });
     const ascended = gameReducer(
         { ...structuredClone(INITIAL_STATE), gameState: GS.ASCENSION, player: veteran, bootStage: 'ready' },
-        { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: 'rk', seed: 3, challengeModifiers: [] } },
+        { type: AT.ASCEND, payload: { expectedPrestigeRank: 2, sourceReceiptKey: 'rk', seed: 3, challengeModifiers: [] } },
     );
-    assert.equal(ascended.player.meta.prestigeRank, 1, '계승했다');
+    assert.equal(ascended.player.meta.prestigeRank, 3, '계승했다');
+    assert.deepEqual(ascended.player.challengeModifiers, ['randomSkills'], '3단계 회차 규칙의 비틀기');
     assert.ok(ascended.player.stats.visitedMaps.includes(FOREST), '방문 기록(발견 지역)은 그대로 넘어간다');
     assert.deepEqual(ascended.player.firstVisitRewardMaps, []);
 

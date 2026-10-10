@@ -1,3 +1,5 @@
+import { ASCENSION_RULES } from './ascensionRules.js';
+
 /**
  * 칭호 시스템 (Title System) — v4.0
  * 25개 잠금 해제 칭호 + 10개 프레스티지 칭호
@@ -270,6 +272,33 @@ export const TITLES = Object.freeze([
         color: 'text-amber-200',
     },
 
+    // ─── 수집 완주 계열 (2026-10 Wave 89, 소유자 결정 "반복하면서 칭호 · 세트를 다 모으는 콜렉터의 재미") ───
+    //   회차 규칙 정복 칭호는 규칙 데이터(`ascensionRules.ts`)에서 만든다 — 이름이 두 곳에서 갈라지지 않게.
+    ...ASCENSION_RULES.map((rule, index) => ({
+        id: rule.conquestTitle.id,
+        name: rule.conquestTitle.name,
+        cond: { type: 'ruleConquest', val: index + 1 },
+        color: 'text-orange-300',
+    })),
+    {
+        id: 'conquest_all',
+        name: '다섯 규칙의 정복자',
+        cond: { type: 'ruleConquest', val: 0 },
+        color: 'text-orange-200',
+    },
+    {
+        id: 'set_collector',
+        name: '다섯 세트의 수집가',
+        cond: { type: 'signatureSetsCompleted', val: 5 },
+        color: 'text-amber-100',
+    },
+    {
+        id: 'legend_complete',
+        name: '전설의 완성자',
+        cond: { type: 'signaturesDiscovered', val: 25 },
+        color: 'text-yellow-200',
+    },
+
     // ─── 도주/생존 계열 (cycle 77 신규) ───────────────────────────────────
     // cycle 74의 stats.escapes 카운터를 기반. ironman(noDeathWin)과 짝을 이루는
     // "런 보존" 축. 도주는 가치 있는 행동이라는 메시지를 칭호로도 강화.
@@ -510,6 +539,15 @@ export const TITLE_PASSIVES: Record<string, TitlePassive> = Object.freeze({
     cartographer:     { hp: 25, mp: 15, label: 'HP +25 · MP +15' },
     legend_seeker:    { atk: 2, crit: 0.01, label: 'ATK +2 · CRIT +1%' },
     legend_chronicler:{ atk: 4, crit: 0.02, hp: 20, label: 'ATK +4 · CRIT +2% · HP +20' },
+    // 2026-10 Wave 89: 수집 완주 칭호 — 장착 패시브는 기존 상위 칭호 수준(전설의 기록자 · 마왕 토벌자)이다.
+    conquest_worldtree: { hp: 30, def: 2, label: 'HP +30 · DEF +2' },
+    conquest_celestial: { atk: 4, crit: 0.01, label: 'ATK +4 · CRIT +1%' },
+    conquest_dimension: { mp: 20, crit: 0.02, label: 'MP +20 · CRIT +2%' },
+    conquest_dragon:    { atk: 3, hp: 20, def: 1, label: 'ATK +3 · HP +20 · DEF +1' },
+    conquest_shadow:    { atk: 5, crit: 0.02, label: 'ATK +5 · CRIT +2%' },
+    conquest_all:       { atk: 6, def: 3, hp: 40, crit: 0.02, label: 'ATK +6 · DEF +3 · HP +40 · CRIT +2%' },
+    set_collector:      { atk: 5, def: 2, hp: 30, label: 'ATK +5 · DEF +2 · HP +30' },
+    legend_complete:    { atk: 6, crit: 0.03, hp: 30, label: 'ATK +6 · CRIT +3% · HP +30' },
 
     // cycle 77 신규 도주/생존 칭호 패시브 — 위험 회피 운영을 보상.
     // ironman(공격적 무사망)과 대조되는 보수적 빌드의 정체성: HP/DEF 중심.
