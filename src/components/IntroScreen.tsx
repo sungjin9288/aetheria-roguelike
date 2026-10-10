@@ -6,6 +6,7 @@ import AetherMark from './AetherMark';
 import { markPerfOnce, measurePerfOnce } from '../utils/performanceMarks';
 import { createRandomMobileName } from '../utils/nameGenerator';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
+import { getAscensionRulePreview } from '../utils/ascensionRuleView';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 
 interface IntroScreenProps {
@@ -135,6 +136,7 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
 
                         <ChallengeModifierPicker
                             testIdPrefix="intro"
+                            rule={getAscensionRulePreview(prestigeRank)}
                             selected={selectedChallenges}
                             slots={challengeSlots}
                             onToggle={toggleChallenge}

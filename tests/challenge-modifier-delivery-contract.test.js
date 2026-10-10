@@ -279,7 +279,8 @@ test('A9: 약한 생명력 — 계승과 사망 재시작으로 연 여정도 �
     };
     const normalAsc = ascend([]);
     const halfAsc = ascend(['halfHp']);
-    assert.deepEqual(halfAsc.challengeModifiers, ['halfHp']);
+    // 2026-10 Wave 89: 계승 1단계의 회차 규칙(길 잃은 여행)이 앞에 붙는다 — 고른 도전 조건은 그대로 뒤에 남는다.
+    assert.deepEqual(halfAsc.challengeModifiers, ['blindMap', 'halfHp']);
     assert.equal(halfAsc.maxHp, applyChallengeMaxHp(normalAsc.maxHp, ['halfHp']));
     assertHalvedLevelUps(normalAsc, halfAsc, 10, '계승 뒤');
 

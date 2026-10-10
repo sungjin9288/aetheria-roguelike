@@ -20,6 +20,7 @@ import PendingQuestRewardList from './PendingQuestRewardList';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
+import { getAscensionRulePreview } from '../utils/ascensionRuleView';
 
 interface TrueEndingScreenProps {
     player: Player;
@@ -218,6 +219,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                             <div className="w-full max-w-sm">
                                 <ChallengeModifierPicker
                                     testIdPrefix="true-ending"
+                                    rule={getAscensionRulePreview(getAscensionOutcome(player.meta).nextRank)}
                                     selected={selectedChallenges}
                                     slots={challengeSlots}
                                     onToggle={(id) => setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots))}

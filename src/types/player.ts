@@ -53,6 +53,11 @@ interface PlayerStats {
      * 레벨 · 방문 지역처럼 런마다 줄어드는 값이 수령 전 업적을 다시 잠그지 않게 한다.
      */
     achievedAchievements?: string[];
+    /**
+     * 2026-10 Wave 89: 회차 규칙을 정복한 계승 단계(마왕을 그 단계에서 쓰러뜨렸다) — 계정 기록이라 계승 · 사망 재시작을 넘는다.
+     * 정복 보상(칭호 · 각인)은 단계마다 한 번이고, 정복 칭호의 복구 근거다(`checkTitles` 'ruleConquest').
+     */
+    ruleConquestRanks?: number[];
     /** cycle 260: 수령 완료 퀘스트 영구 ledger. quest.id는 숫자(DB.QUESTS)와 문자열(bounty) 혼용. */
     claimedQuestIds?: Array<string | number>;
     explores?: number;

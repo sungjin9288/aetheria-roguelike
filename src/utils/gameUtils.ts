@@ -24,7 +24,10 @@ import { getCodexEntryName } from './codexIdentity.js';
 import { getGoldIncome, getVisibleLocationName, type ChallengeHolder } from './challengeRules.js';
 import { getEliteTitleName, getEliteTitlePassiveLabel } from './eliteTitles.js';
 import { syncQuestProgress } from './questProgress.js';
+import { ASCENSION_RULES } from '../data/ascensionRules.js';
+import { getConqueredRuleOrdinals } from '../systems/ascensionRule.js';
 import {
+    countCompletedSignatureSets,
     countDiscoveredSignatures,
     isSignatureName,
 } from './signatureDiscovery.js';
@@ -407,6 +410,12 @@ export const checkTitles = (player: Player): string[] => {
         if (type === 'discoveries')    return countDiscoveredMaps(player.stats) >= val;
         // cycle 77: 도주 카운터 기반 칭호 (cautious_explorer / survivor_instinct).
         if (type === 'escapes')        return (player.stats?.escapes || 0) >= val;
+        // 2026-10 Wave 89: 회차 규칙 정복(정복 기록 `stats.ruleConquestRanks`) — val은 규칙 번호(1 ~ 5), 0은 다섯 규칙 모두.
+        if (type === 'ruleConquest') {
+            const conquered = getConqueredRuleOrdinals(player.stats?.ruleConquestRanks);
+            return val === 0 ? conquered.size >= ASCENSION_RULES.length : conquered.has(val);
+        }
+        if (type === 'signatureSetsCompleted') return countCompletedSignatureSets(player) >= val;
         if (type === 'signaturesDiscovered') {
             // cycle 75: codex 합집합 크기 근사 → SIGNATURE_REGISTRY 교집합 정확 카운트로 교체.
             // 기존 근사는 일반 weapon/armor/shield까지 포함되어 칭호가 의도보다 일찍 풀렸음.

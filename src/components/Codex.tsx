@@ -1,10 +1,12 @@
 import { useState, useMemo, useCallback, type Dispatch } from 'react';
 import { BookOpen, Bug, Gift, Hammer, Leaf, Sparkles, Sword } from 'lucide-react';
-// cycle 321: unused BALANCE / MSG imports 제거 — Codex.tsx 어디에서도 참조 0건.
+// cycle 321: unused BALANCE import 제거 — MSG는 2026-10 Wave 89 수집 완주 요약에서 다시 쓴다.
 import { DB } from '../data/db';
 import { getCodexProgress } from '../data/codexRewards';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { AT } from '../reducers/actionTypes';
+import { MSG } from '../data/messages';
+import { getCollectionSummary } from '../utils/ascensionRuleView';
 import {
     CODEX_CATEGORY_LABELS,
     formatCodexRewardParts,
@@ -103,6 +105,8 @@ const Codex = ({ player, dispatch }: CodexProps) => {
         progress.milestones,
         discoveredCounts as Partial<Record<CodexCategoryId, number>>,
     ), [discoveredCounts, progress.milestones]);
+
+    const collection = useMemo(() => (player ? getCollectionSummary(player) : null), [player]);
 
     const tabProgress = useMemo(() => ({
         equip: {
@@ -206,6 +210,30 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                     })}
                 </div>
             </section>
+
+            {collection && (
+                // 2026-10 Wave 89: 수집 완주 — 전설 각인 세트별 발견 수와 회차 규칙 정복 수, 이번 회차의 표적 세트.
+                <section data-testid="codex-collection" className="border-b border-white/10 py-4">
+                    <div className="flex items-baseline justify-between gap-3">
+                        <h3 className="aether-type-title font-semibold text-slate-100">{MSG.COLLECTION_SUMMARY_TITLE}</h3>
+                        <span data-testid="codex-collection-conquest" className="aether-type-meta shrink-0 text-orange-200">{collection.conquestLabel}</span>
+                    </div>
+                    {collection.featuredLabel && (
+                        <p data-testid="codex-collection-featured" className="aether-type-meta mt-1 text-orange-200/90">{collection.featuredLabel}</p>
+                    )}
+                    <ul className="mt-2 grid grid-cols-2 gap-x-3 gap-y-1">
+                        {collection.sets.map((row) => (
+                            <li
+                                key={row.key}
+                                data-testid={`codex-collection-set-${row.key}`}
+                                className={`aether-type-meta ${row.complete ? 'text-[#d5b180]' : row.featured ? 'text-orange-200' : 'text-slate-300'}`}
+                            >
+                                {row.label}
+                            </li>
+                        ))}
+                    </ul>
+                </section>
+            )}
 
             <nav aria-label="도감 분류" className="grid grid-cols-5 gap-1 py-4" data-testid="codex-category-tabs">
                 {SUB_TABS.map((tab) => {

@@ -1157,8 +1157,8 @@ import { fileURLToPath } from 'node:url';
       const source = await readSrc('src/components/Codex.tsx');
       assert.ok(!/^import \{ BALANCE \} from/m.test(source),
           'BALANCE import 제거됨');
-      assert.ok(!/^import \{ MSG \} from/m.test(source),
-          'MSG import 제거됨');
+      // 2026-10 Wave 89: MSG는 수집 완주 요약 문구로 다시 쓴다(사용처가 생겼으므로 미사용 import가 아니다).
+      assert.ok(/MSG\.COLLECTION_SUMMARY_TITLE/.test(source), 'MSG import는 실제로 쓰인다');
   });
 
   test('cycle 321: CombatEngine.ts LOOT_TABLE / DROP_TABLES imports 제거', async () => {
@@ -1275,8 +1275,8 @@ import { fileURLToPath } from 'node:url';
       const codexSrc = await readSrc('src/components/Codex.tsx');
       assert.ok(!/^import \{ BALANCE \} from/m.test(codexSrc),
           'cycle 321 Codex.tsx BALANCE 제거 보존');
-      assert.ok(!/^import \{ MSG \} from/m.test(codexSrc),
-          'cycle 321 Codex.tsx MSG 제거 보존');
+      assert.ok(/MSG\.COLLECTION_SUMMARY_TITLE/.test(codexSrc),
+          'cycle 321 Codex.tsx MSG — Wave 89 수집 완주 요약에서 다시 사용');
   });
 }
 

@@ -9,6 +9,7 @@ import { MSG } from '../data/messages.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { LIBRARY_BONUS_LOOT } from '../data/libraryLoot.js';
 import { getPrestigeUnlocks } from './prestigeUnlocks';
+import { getRuleSignatureDropMult } from './ascensionRule.js';
 import { getProgressionLootMultiplier } from '../data/progressionProfiles.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
 
@@ -163,7 +164,7 @@ export const processLoot = (
     if (!Number.isFinite(dropRateMult)) throw new Error('INVALID_LOOT_DROP_CHANCE');
     if (enrichedList) {
         enrichedList.forEach((entry) => {
-            const entryPityMult = SIGNATURE_ITEM_REGISTRY[entry.item] ? pityMult : 1;
+            const entryPityMult = SIGNATURE_ITEM_REGISTRY[entry.item] ? pityMult * getRuleSignatureDropMult(player, entry.item) : 1;
             calculateCappedLootChance(entry.rate, enemyDropMult, dropRateMult, bossDropMult, progressionLootMult, entryPityMult);
         });
     }
@@ -204,7 +205,8 @@ export const processLoot = (
         enrichedList.forEach((entry) => {
             // Signature 아이템에만 pity 배율 적용 (일반 아이템 드롭률은 변동 없음)
             const isSignature = Boolean(SIGNATURE_ITEM_REGISTRY[entry.item]);
-            const entryPityMult = isSignature ? pityMult : 1;
+            // 2026-10 Wave 89: 회차 규칙의 표적 세트 각인은 배율이 더 붙는다(난수 소비는 그대로 — 확률만 바뀐다).
+            const entryPityMult = isSignature ? pityMult * getRuleSignatureDropMult(player, entry.item) : 1;
             const chance = calculateCappedLootChance(
                 entry.rate,
                 enemyDropMult,
