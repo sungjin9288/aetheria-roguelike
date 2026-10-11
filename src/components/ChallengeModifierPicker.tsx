@@ -52,6 +52,18 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule
                             </button>
                         </div>
                     )}
+                    {rule.outlook && (
+                        // 2026-10 Wave 92: 두 선택의 측정 차이를 숫자로만 보인다 — 지금 고른 쪽을 밝게, 판단은 플레이어 몫(Wave 88 위협 줄과 같은 원칙).
+                        <div data-testid={`${testIdPrefix}-ascension-rule-outlook`} className="mt-2 border-t border-white/10 pt-2 text-[11px] leading-snug">
+                            <span data-testid={`${testIdPrefix}-ascension-rule-outlook-accepted`} className={`block ${declined ? 'text-slate-400' : 'text-orange-100'}`}>
+                                {rule.outlook.accepted}
+                            </span>
+                            <span data-testid={`${testIdPrefix}-ascension-rule-outlook-declined`} className={`block ${declined ? 'text-orange-100' : 'text-slate-400'}`}>
+                                {rule.outlook.declined}
+                            </span>
+                            <span className="mt-0.5 block text-slate-500">{rule.outlook.source}</span>
+                        </div>
+                    )}
                 </div>
             )}
             <details

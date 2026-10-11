@@ -374,3 +374,56 @@ test('Wave 91: 도감 수집 요약 — 거절한 회차에는 표적 묶음이 
     assert.equal(getCollectionSummary(playerAt(4, { ascensionRuleDeclined: true })).featuredLabel, null);
     assert.ok(getCollectionSummary(playerAt(1, { ascensionRuleDeclined: true })).featuredLabel, '강제 규칙은 거절이 없다');
 });
+
+test('Wave 92: 측정 미리보기는 선택형 규칙에만 있고, 받아들임이 거절보다 위험하고 각인을 더 준다(측정 그대로)', () => {
+    for (const rule of ASCENSION_RULES) {
+        if (!rule.optional) {
+            assert.equal(rule.outlook, undefined, `${rule.id}: 강제 규칙에는 고를 차이가 없다`);
+            continue;
+        }
+        const o = rule.outlook;
+        assert.ok(o, `${rule.id}: 선택형 규칙은 측정값을 든다`);
+        for (const value of Object.values(o)) assert.ok(Number.isFinite(value) && value >= 0);
+        assert.ok(o.acceptedDeaths > o.declinedDeaths, `${rule.id}: 받아들이면 더 위험하다`);
+        assert.ok(o.acceptedSignatures > o.declinedSignatures, `${rule.id}: 받아들이면 각인을 더 얻는다`);
+    }
+});
+
+test('Wave 92: 미리보기 줄은 데이터 숫자를 그대로 그리고, 순환이 다시 와도 같은 규칙의 측정을 보인다', () => {
+    for (const rank of [4, 5, 6]) {
+        const rule = ASCENSION_RULES[rank - 1];
+        const preview = getAscensionRulePreview(rank);
+        const o = rule.outlook;
+        const r1 = (value) => (Math.round(value * 10) / 10).toFixed(1);
+        assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)));
+        assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)));
+        assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE);
+        assert.deepEqual(getAscensionRulePreview(rank + ASCENSION_RULES.length).outlook, preview.outlook);
+    }
+    for (const rank of [1, 2, 3]) assert.equal(getAscensionRulePreview(rank).outlook, null);
+    assert.equal(getAscensionRulePreview(4).outlook.accepted, '받아들이면: 사망 3.6회 · 새 각인 +1.6개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(5).outlook.declined, '거절하면: 사망 1.7회 · 새 각인 +0.2개');
+    assert.equal(getAscensionRulePreview(6).outlook.accepted, '받아들이면: 사망 5.9회 · 새 각인 +1.2개 · 정복 보상', '5.85는 5.9로 반올림한다');
+});
+
+test('Wave 92: 선택 화면 — 두 줄을 함께 보이고 지금 고른 쪽을 밝힌다, 강제 규칙은 줄이 없다, 미리보기는 규칙을 바꾸지 않는다', () => {
+    const preview = getAscensionRulePreview(6);
+    const render = (ruleDeclined) => renderStatic(createElement(ChallengeModifierPicker, {
+        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: preview, ruleDeclined,
+    }));
+    const lineClass = (html, side) => html.match(new RegExp(`<span[^>]*data-testid="probe-ascension-rule-outlook-${side}"[^>]*>`))[0];
+    for (const declined of [false, true]) {
+        const html = render(declined);
+        assert.ok(html.includes('probe-ascension-rule-outlook'));
+        assert.ok(html.includes(preview.outlook.accepted) && html.includes(preview.outlook.declined) && html.includes(preview.outlook.source));
+        assert.match(lineClass(html, declined ? 'declined' : 'accepted'), /text-orange-100/);
+        assert.match(lineClass(html, declined ? 'accepted' : 'declined'), /text-slate-400/);
+    }
+    const forced = renderStatic(createElement(ChallengeModifierPicker, {
+        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: getAscensionRulePreview(2),
+    }));
+    assert.ok(!forced.includes('probe-ascension-rule-outlook'));
+    // 표시만이다 — 규칙 · 보상 판정은 미리보기 필드를 읽지 않는다.
+    assert.deepEqual(buildRunChallengeModifiers([], 6), ['eliteOnly']);
+    assert.deepEqual(buildRunChallengeModifiers([], 6, true), []);
+});

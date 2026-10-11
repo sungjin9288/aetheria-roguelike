@@ -107,3 +107,41 @@ test.describe('계승과 다음 여정 화면', () => {
         expect(after.inventoryIds).not.toContain('ascension-smoke-potion');
     });
 });
+
+// 2026-10 Wave 92: 다음 회차가 선택형 규칙(rank 4 '뒤엉킨 전설')이면 받아들임 · 거절의 측정 차이를 두 줄로 보이고, 고른 쪽을 밝힌다.
+test.describe('계승 화면 — 선택형 회차 규칙 미리보기', () => {
+    test('두 선택의 측정 차이를 보이고 거절하면 강조가 넘어간다 (375px)', async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 667 });
+        await startE2ERun(page);
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.(3));
+        await expect(page.getByTestId('ascension-screen')).toBeVisible({ timeout: 8_000 });
+
+        const outlook = page.getByTestId('ascension-ascension-rule-outlook');
+        const accepted = page.getByTestId('ascension-ascension-rule-outlook-accepted');
+        const declined = page.getByTestId('ascension-ascension-rule-outlook-declined');
+        await outlook.scrollIntoViewIfNeeded();
+        await expect(accepted).toContainText('3.6');
+        await expect(declined).toContainText('1.7');
+        await expect(accepted).toHaveClass(/text-orange-100/);
+
+        await page.getByTestId('ascension-ascension-rule-toggle').click();
+        await expect(declined).toHaveClass(/text-orange-100/);
+        await expect(accepted).toHaveClass(/text-slate-400/);
+
+        const geometry = await outlook.evaluate((root) => {
+            const leaves = [...root.querySelectorAll<HTMLElement>('*')].filter((node) => (node.textContent || '').trim());
+            const screen = document.querySelector<HTMLElement>('[data-testid="ascension-screen"]')!;
+            return {
+                minFont: Math.min(...leaves.map((node) => parseFloat(getComputedStyle(node).fontSize))),
+                overflow: root.scrollWidth - root.clientWidth,
+                screenOverflow: screen.scrollWidth - screen.clientWidth,
+                pageWidth: document.documentElement.scrollWidth,
+                viewportWidth: window.innerWidth,
+            };
+        });
+        expect(geometry.minFont).toBeGreaterThanOrEqual(11);
+        expect(geometry.overflow).toBeLessThanOrEqual(1);
+        expect(geometry.screenOverflow).toBeLessThanOrEqual(1);
+        expect(geometry.pageWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+    });
+});

@@ -374,7 +374,8 @@ export interface AetheriaTestApi {
     seedItemInvestmentScenario: () => void;
     seedSeasonJourneyScenario: () => void;
     seedGraveRecoveryScenario: () => void;
-    seedAscensionJourneyScenario: () => void;
+    /** 2026-10 Wave 92: `prestigeRank`(기본 2)를 넘기면 그 단계에서 계승하는 화면 — 다음 회차 규칙 미리보기 확인용. */
+    seedAscensionJourneyScenario: (prestigeRank?: number) => void;
     seedTrueEndingJourneyScenario: () => boolean;
     weakenTrueBossForJourney: () => boolean;
     seedMirrorJourneyScenario: () => void;
@@ -1100,7 +1101,7 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'graves' });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
-            seedAscensionJourneyScenario: () => {
+            seedAscensionJourneyScenario: (prestigeRank = 2) => {
                 const er = engineRef.current;
                 er.dispatch({
                     type: AT.SET_PLAYER,
@@ -1120,7 +1121,7 @@ export const useGameTestApi = (
                         relics: [{ id: 'ascension-smoke-relic', name: '용기의 문장', rarity: 'legendary', effect: 'mp_restore_battle' }],
                         meta: {
                             ...er.player.meta,
-                            prestigeRank: 2,
+                            prestigeRank,
                             essence: 180,
                             bonusAtk: 10,
                             bonusHp: 50,
