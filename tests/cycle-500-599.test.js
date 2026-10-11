@@ -3947,8 +3947,9 @@ import { DB } from '../src/data/db.ts';
 
   test('cycle 566: 정합성 가드 — IntroScreen callsite 보존', async () => {
       const source = await readSrc('src/components/IntroScreen.tsx');
-      assert.ok(/onStart\?\.\(selectedName,\s*'male',\s*'모험가',\s*selectedChallenges\)/.test(source),
-          "IntroScreen onStart?.(selectedName, 'male', '모험가', selectedChallenges) callsite 보존");
+      // 2026-10 Wave 91: 다섯째 인자로 선택형 회차 규칙 거절 여부가 붙는다.
+      assert.ok(/onStart\?\.\(selectedName,\s*'male',\s*'모험가',\s*selectedChallenges,\s*ruleDeclined\)/.test(source),
+          "IntroScreen onStart?.(selectedName, 'male', '모험가', selectedChallenges, ruleDeclined) callsite 보존");
       // W11 C4: IntroScreen과 동일한 4-arg 명시 호출로 실제 start를 실행해, gender/jobId/
       // challengeModifiers가 default 없이도 SET_PLAYER payload에 그대로 반영되는지.
       let dispatched = null;
