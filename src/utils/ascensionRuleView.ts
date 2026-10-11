@@ -9,7 +9,7 @@ import {
     getSignatureSetMemberNames,
     getSignatureSetName,
 } from '../systems/ascensionRule.js';
-import { ASCENSION_RULES } from '../data/ascensionRules.js';
+import { ASCENSION_RULES, type AscensionRuleDef } from '../data/ascensionRules.js';
 import type { Player } from '../types/index.js';
 import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
 
@@ -25,7 +25,29 @@ export interface AscensionRulePreview {
     detail: string;
     /** 2026-10 Wave 91: 거절할 수 있는 규칙(무거운 셋)인가. */
     optional: boolean;
+    /** 2026-10 Wave 92: 받아들임 · 거절의 측정 차이(선택형 규칙만, 데이터 `outlook`) — 강제 규칙은 null. */
+    outlook: AscensionRuleOutlookLines | null;
 }
+
+export interface AscensionRuleOutlookLines {
+    accepted: string;
+    declined: string;
+    source: string;
+}
+
+// 소수 한 자리 반올림 — `toFixed`만 쓰면 5.85가 이진 표현 때문에 5.8로 내려간다.
+const formatOutlookNumber = (value: number): string => (Math.round(value * 10) / 10).toFixed(1);
+
+/** 선택형 규칙의 받아들임 · 거절 미리보기 줄 — 강제 규칙이나 측정값이 없는 규칙은 null(숫자를 지어내지 않는다). */
+const getAscensionRuleOutlookLines = (rule: AscensionRuleDef): AscensionRuleOutlookLines | null => {
+    const outlook = isOptionalAscensionRule(rule) ? rule.outlook : undefined;
+    if (!outlook) return null;
+    return {
+        accepted: MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(formatOutlookNumber(outlook.acceptedDeaths), formatOutlookNumber(outlook.acceptedSignatures)),
+        declined: MSG.ASCENSION_RULE_OUTLOOK_DECLINED(formatOutlookNumber(outlook.declinedDeaths), formatOutlookNumber(outlook.declinedSignatures)),
+        source: MSG.ASCENSION_RULE_OUTLOOK_SOURCE,
+    };
+};
 
 /** 이 계승 단계에서 시작하는 회차의 규칙 미리보기 — 규칙이 없으면 null. */
 export const getAscensionRulePreview = (rank: number | null | undefined): AscensionRulePreview | null => {
@@ -36,6 +58,7 @@ export const getAscensionRulePreview = (rank: number | null | undefined): Ascens
         name: rule.name,
         detail: MSG.ASCENSION_RULE_DETAIL(getAscensionRuleTwistLabel(rule), getSignatureSetName(rule.signatureSet), rule.conquestTitle.name),
         optional: isOptionalAscensionRule(rule),
+        outlook: getAscensionRuleOutlookLines(rule),
     };
 };
 

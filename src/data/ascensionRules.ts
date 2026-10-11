@@ -31,6 +31,20 @@ export interface AscensionRuleDef {
      * 내용은 그대로다(a). 거절하면 그 회차에는 비틀기 · 표적 배율 · 정복 보상이 모두 없다 — 그 단계의 정복은 순환이 다시 올 때 받는다(c).
      */
     optional?: true;
+    /**
+     * 2026-10 Wave 92 (소유자 결정 "C를 보여주는게 좋지" — 원장 §96.5 (c)): 선택형 규칙의 받아들임 · 거절 측정 차이. 선택 화면이 한 줄로
+     * 보이고 판단은 플레이어 몫이다(Wave 88 위협 줄과 같은 원칙). 값은 자연 플레이 120시드 × 7회차(원장 §96.3 · §97)에서 규칙이
+     * 처음 놓인 회차(rank 4 ~ 6)의 시드당 평균이다 — 사망은 그 회차의 사망 수, 각인은 그 회차에 새로 발견한 전설 각인 수. 순환이
+     * 다시 돌아온 단계(rank 10 ~ 12)는 적이 더 강하므로 화면은 "첫 순환 측정"이라고 밝힌다. 규칙 · 순서 · 엔진을 바꾸면 다시 잴 것.
+     */
+    outlook?: AscensionRuleOutlook;
+}
+
+export interface AscensionRuleOutlook {
+    acceptedDeaths: number;
+    declinedDeaths: number;
+    acceptedSignatures: number;
+    declinedSignatures: number;
 }
 
 export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
@@ -62,6 +76,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         signatureSet: UNBOUND_SIGNATURE_GROUP.key,
         conquestTitle: { id: 'conquest_unbound', name: '흩어진 전설의 수집가' },
         optional: true,
+        outlook: { acceptedDeaths: 3.59, declinedDeaths: 1.69, acceptedSignatures: 1.59, declinedSignatures: 0.48 },
     },
     {
         id: 'fading_dimension',
@@ -70,6 +85,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         signatureSet: 'dimension',
         conquestTitle: { id: 'conquest_dimension', name: '차원을 꿰뚫은 자' },
         optional: true,
+        outlook: { acceptedDeaths: 6.28, declinedDeaths: 1.7, acceptedSignatures: 1.23, declinedSignatures: 0.24 },
     },
     {
         id: 'shadow_legion',
@@ -78,5 +94,6 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         signatureSet: 'shadow-lord',
         conquestTitle: { id: 'conquest_shadow', name: '암흑을 꺾은 자' },
         optional: true,
+        outlook: { acceptedDeaths: 5.85, declinedDeaths: 2.03, acceptedSignatures: 1.23, declinedSignatures: 0.21 },
     },
 ]);
