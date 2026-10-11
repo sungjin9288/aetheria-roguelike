@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 
-import { ASCENSION_RULES } from '../src/data/ascensionRules.js';
+import { ASCENSION_RULES, UNBOUND_SIGNATURE_GROUP } from '../src/data/ascensionRules.js';
 import { BALANCE } from '../src/data/constants.js';
 import { DB } from '../src/data/db.js';
 import { MSG } from '../src/data/messages.js';
@@ -77,15 +77,19 @@ test('규칙은 rank에서 도출된다 — rank 0은 없고 1 ~ 5가 서로 다
     }
 });
 
-test('규칙 데이터는 실제 도전 조건 · 실제 세트 · 실제 칭호를 가리키고, 다섯 세트를 한 번씩 표적으로 삼는다', () => {
+test('규칙 데이터는 실제 도전 조건 · 실제 세트 · 실제 칭호를 가리키고, 다섯 세트 + 세트 밖 묶음을 한 번씩 표적으로 삼는다', () => {
     const setKeys = Object.keys(signatureSetsData.sets);
-    assert.deepEqual([...ASCENSION_RULES.map((rule) => rule.signatureSet)].sort(), [...setKeys].sort());
+    assert.deepEqual([...ASCENSION_RULES.map((rule) => rule.signatureSet)].sort(), [...setKeys, UNBOUND_SIGNATURE_GROUP.key].sort());
+    assert.equal(new Set(ASCENSION_RULES.map((rule) => rule.modifier)).size, ASCENSION_RULES.length, '비틀기는 규칙마다 다르다');
     for (const rule of ASCENSION_RULES) {
         assert.ok(KNOWN_MODIFIERS.has(rule.modifier), `${rule.id}의 비틀기는 알려진 도전 조건이다`);
+        const expectedMembers = rule.signatureSet === UNBOUND_SIGNATURE_GROUP.key
+            ? Object.keys(signatureRegistry.entries).filter((name) => !setKeys.some((key) => signatureSetsData.sets[key].members.includes(name)))
+            : signatureSetsData.sets[rule.signatureSet].members;
         assert.deepEqual(
             [...getSignatureSetMemberNames(rule.signatureSet)].sort(),
-            [...signatureSetsData.sets[rule.signatureSet].members].sort(),
-            `${rule.signatureSet} 구성원은 레지스트리 setGroup과 세트 정의가 같다`,
+            [...expectedMembers].sort(),
+            `${rule.signatureSet} 구성원은 레지스트리 setGroup과 세트 정의가 같다(세트 밖 묶음은 setGroup이 없는 각인 전부)`,
         );
         const title = TITLES.find((entry) => entry.id === rule.conquestTitle.id);
         assert.ok(title, `${rule.conquestTitle.id} 칭호가 있다`);
@@ -95,6 +99,14 @@ test('규칙 데이터는 실제 도전 조건 · 실제 세트 · 실제 칭호
     for (const id of ['conquest_all', 'set_collector', 'legend_complete']) {
         assert.ok(TITLES.some((entry) => entry.id === id) && TITLE_PASSIVES[id], `${id}`);
     }
+    // 표적 묶음이 레지스트리 25개를 빠짐없이 덮는다 — 정복만으로도 모든 각인에 닿는다.
+    const covered = ASCENSION_RULES.flatMap((rule) => getSignatureSetMemberNames(rule.signatureSet));
+    assert.deepEqual([...covered].sort(), Object.keys(signatureRegistry.entries).sort());
+});
+
+test('Wave 90: 비틀기는 측정한 무게 순이다 — 가벼운 셋(위치 · 골드 · 물약)이 먼저, 정예가 맨 뒤', () => {
+    assert.deepEqual(ASCENSION_RULES.map((rule) => rule.modifier), ['blindMap', 'noGold', 'noPotion', 'randomSkills', 'halfHp', 'eliteOnly']);
+    assert.equal(getAscensionRule(4).signatureSet, UNBOUND_SIGNATURE_GROUP.key);
 });
 
 // ── 비틀기: 도전 조건 강제 ─────────────────────────────────────────────
@@ -210,23 +222,36 @@ test('표적 세트를 다 모았으면 다른 세트의 없는 각인, 전부 �
     assert.ok(none.player.titles.includes(rule.conquestTitle.id), '칭호는 그대로 받는다');
 });
 
-test('6단계는 1단계 규칙을 다시 돌고, 정복은 새 단계로 다시 받는다 — 칭호는 하나, 각인은 다음 없는 것', () => {
+test('규칙 수 다음 단계는 1단계 규칙을 다시 돌고, 정복은 새 단계로 다시 받는다 — 칭호는 하나, 각인은 다음 없는 것', () => {
+    const cycle = RULE_COUNT + 1;
     const first = killDemonKing(playerAt(1), 'rk-1');
-    const sixth = killDemonKing({ ...first.player, meta: { ...first.player.meta, prestigeRank: 6, endgame: {} } }, 'rk-6');
-    assert.deepEqual(sixth.player.stats.ruleConquestRanks, [1, 6]);
+    const again = killDemonKing({ ...first.player, meta: { ...first.player.meta, prestigeRank: cycle, endgame: {} } }, 'rk-again');
+    assert.deepEqual(again.player.stats.ruleConquestRanks, [1, cycle]);
     const titleId = getAscensionRule(1).conquestTitle.id;
-    assert.equal(sixth.player.titles.filter((id) => id === titleId).length, 1);
-    const second = sixth.player.inv.find((item) => item.id === 'rule-conquest:rk-6');
+    assert.equal(again.player.titles.filter((id) => id === titleId).length, 1);
+    const second = again.player.inv.find((item) => item.id === 'rule-conquest:rk-again');
     assert.equal(second?.name, getSignatureSetMemberNames(getAscensionRule(1).signatureSet)[1]);
 });
 
-test('정복 칭호는 정복 기록으로 복구된다 — 규칙마다 · 다섯 모두 · 세트 다섯 완성 · 각인 전부', () => {
+test('흩어진 전설 규칙: 세트 밖 각인만 드롭 배율 · 정복은 그 묶음의 없는 첫 각인', () => {
+    const rank = ASCENSION_RULES.findIndex((rule) => rule.signatureSet === UNBOUND_SIGNATURE_GROUP.key) + 1;
+    const unbound = getSignatureSetMemberNames(UNBOUND_SIGNATURE_GROUP.key);
+    assert.equal(unbound.length, 8);
+    for (const name of unbound) assert.equal(getRuleSignatureDropMult(playerAt(rank), name), BALANCE.ASCENSION_RULE_SIGNATURE_MULT, name);
+    assert.equal(getRuleSignatureDropMult(playerAt(rank), '세계수의 검'), 1, '세트 각인은 표적이 아니다');
+    const result = killDemonKing(playerAt(rank), 'rk-u');
+    assert.equal(result.player.inv.find((item) => item.id === 'rule-conquest:rk-u')?.name, unbound[0]);
+    assert.ok(result.player.titles.includes('conquest_unbound'));
+});
+
+test('정복 칭호는 정복 기록으로 복구된다 — 규칙마다 · 모든 규칙 · 세트 다섯 완성 · 각인 전부', () => {
     const base = playerAt(1, { titles: [] });
-    assert.ok(checkTitles({ ...base, stats: { ...base.stats, ruleConquestRanks: [6] } }).includes(getAscensionRule(1).conquestTitle.id));
-    const four = checkTitles({ ...base, stats: { ...base.stats, ruleConquestRanks: [1, 2, 3, 4] } });
-    assert.ok(!four.includes('conquest_all'));
-    const five = checkTitles({ ...base, stats: { ...base.stats, ruleConquestRanks: [1, 2, 3, 4, 5] } });
-    assert.ok(five.includes('conquest_all'));
+    const ranks = Array.from({ length: RULE_COUNT }, (_, i) => i + 1);
+    assert.ok(checkTitles({ ...base, stats: { ...base.stats, ruleConquestRanks: [RULE_COUNT + 1] } }).includes(getAscensionRule(1).conquestTitle.id));
+    const allButOne = checkTitles({ ...base, stats: { ...base.stats, ruleConquestRanks: ranks.slice(0, -1) } });
+    assert.ok(!allButOne.includes('conquest_all'));
+    const all = checkTitles({ ...base, stats: { ...base.stats, ruleConquestRanks: ranks } });
+    assert.ok(all.includes('conquest_all'));
     const allSets = withDiscovered(base, Object.values(signatureSetsData.sets).flatMap((set) => set.members));
     assert.ok(checkTitles(allSets).includes('set_collector'));
     assert.ok(!checkTitles(allSets).includes('legend_complete'));
@@ -259,6 +284,8 @@ test('도감 수집 완주: 세트별 발견 수 · 정복 수 · 이번 회차 
     const player = withDiscovered(playerAt(1, { stats: { ...playerAt(1).stats, ruleConquestRanks: [1, 2] } }), [member]);
     const summary = getCollectionSummary(player);
     assert.equal(summary.conquered, 2);
+    const unboundRow = summary.sets.find((entry) => entry.key === UNBOUND_SIGNATURE_GROUP.key);
+    assert.equal(unboundRow?.total, 8, '세트 밖 묶음도 수집 요약 한 줄이다');
     const row = summary.sets.find((entry) => entry.key === rule.signatureSet);
     assert.equal(row.owned, 1);
     assert.equal(row.featured, true);
