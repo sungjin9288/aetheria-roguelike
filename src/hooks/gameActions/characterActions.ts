@@ -8,7 +8,7 @@ import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getJobSkills } from '../../utils/gameUtils';
 import { buildClassVitals } from './_shared';
-import { getAscensionRuleStartLog } from '../../systems/ascensionRule';
+import { getAscensionRuleStartLog, resolveAscensionRuleDeclined } from '../../systems/ascensionRule';
 import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, buildRunChallengeModifiers } from '../../utils/runStart';
 import { createQuestProgressState } from '../../utils/questProgress';
 import { getDefaultExpeditionFocusQuestIds } from '../../utils/expeditionMissionFocus';
@@ -64,13 +64,14 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
         //   '모험가', selectedChallenges)) 4 args 명시 전달이라 모든 default
         //   도달 불가. body의 Array.isArray(challengeModifiers) defensive
         //   guard 보존. 청소 메가 시리즈 59번째 single-cycle 3-default batch.
-        start: (name: string, gender: string, jobId: string, challengeModifiers: string[]) => {
+        start: (name: string, gender: string, jobId: string, challengeModifiers: string[], declineRule = false) => {
             const trimmedName = String(name || '').trim().slice(0, 16);
             if (!trimmedName) return;
             const vitals = buildClassVitals(1, jobId, player.meta || {}, player.storyStatBonus);
             // 2026-07 — 에테르 거울: start_gold 노드가 레벨당 시작 골드에 가산(빈손의 시작은 거울 보너스도 무효화).
             // 2026-10 Wave 58: 시작 조건 계산은 계승(ASCEND)과 함께 utils/runStart.ts가 소유한다. 도전 조건도 같은 규칙으로 거른다.
-            const mods = buildRunChallengeModifiers(challengeModifiers, player.meta?.prestigeRank);
+            const ascensionRuleDeclined = resolveAscensionRuleDeclined(player.meta?.prestigeRank, declineRule);
+            const mods = buildRunChallengeModifiers(challengeModifiers, player.meta?.prestigeRank, ascensionRuleDeclined);
             const maxHp = applyChallengeMaxHp(vitals.maxHp, mods);
             const startGold = getRunStartGold(player.meta, mods);
             // Compute full starting HP/MP including passive skill bonuses for the chosen job
@@ -86,6 +87,7 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
                 metaVitalsSnapshot: vitals.metaVitalsSnapshot,
                 gold: startGold,
                 challengeModifiers: mods,
+                ascensionRuleDeclined,
                 quests: startingQuests,
                 expeditionFocusQuestIds,
                 // 2026-10 Wave 62 (원장 §61.4 C11, 소유자 결정 "첫 방문은 여정마다"): 새 여정은 첫 방문 보상을 지역마다 한 번 다시 받는다.
@@ -95,7 +97,7 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
             addLog('system', MSG.START_JOURNEY(trimmedName));
             addLog('event', MSG.START_SKILL(cls.skills?.[0]?.name || '강타'));
-            const ruleLog = getAscensionRuleStartLog(player.meta?.prestigeRank);
+            const ruleLog = getAscensionRuleStartLog(player.meta?.prestigeRank, ascensionRuleDeclined);
             if (ruleLog) addLog('event', ruleLog);
             if (mods.length > 0) {
                 const labels = mods.map((id) => BALANCE.CHALLENGE_MODIFIERS

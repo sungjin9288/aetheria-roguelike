@@ -12,14 +12,18 @@ interface ChallengeModifierPickerProps {
     onToggle: (id: string) => void;
     /** 2026-10 Wave 89: 이 회차의 규칙 — 그 도전 조건은 잠겨 켜지고 슬롯을 쓰지 않으며 보상 배율에는 센다. */
     rule?: AscensionRulePreview | null;
+    /** 2026-10 Wave 91: 선택형 규칙을 거절했는가 · 받아들임/거절 전환. 강제 규칙에는 쓰지 않는다. */
+    ruleDeclined?: boolean;
+    onToggleRule?: () => void;
 }
 
 /**
  * 도전 규칙 선택(2026-10 Wave 58) — 새 게임(인트로)과 계승 화면이 함께 쓴다. 계승은 인트로를 다시 거치지 않아
  * 계승 7단계 "도전 조건을 하나 더 선택 가능"을 고를 곳이 없었다(소유자 결정 "계승 화면에서 함께 고름").
  */
-const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule = null }: ChallengeModifierPickerProps) => {
-    const lockedId = rule?.lockedId ?? null;
+const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule = null, ruleDeclined = false, onToggleRule }: ChallengeModifierPickerProps) => {
+    const declined = Boolean(rule?.optional && ruleDeclined);
+    const lockedId = rule && !declined ? rule.lockedId : null;
     const picked = lockedId ? selected.filter((id) => id !== lockedId) : selected;
     const rewardCount = picked.length + (lockedId ? 1 : 0);
     return (
@@ -27,7 +31,27 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule
             {rule && (
                 <div data-testid={`${testIdPrefix}-ascension-rule`} className="mt-3 rounded-md border border-[rgba(240,170,110,0.4)] bg-[rgba(240,170,110,0.08)] px-3 py-2 font-readable">
                     <span className="block text-xs font-bold text-orange-200">{MSG.ASCENSION_RULE_NEXT(rule.name)}</span>
-                    <span className="mt-1 block text-xs leading-snug text-slate-300">{rule.detail}</span>
+                    <span className="mt-1 block text-xs leading-snug text-slate-300">
+                        {declined ? MSG.ASCENSION_RULE_DECLINED_DETAIL : rule.detail}
+                    </span>
+                    {rule.optional && (
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                            <span className="text-[11px] leading-snug text-slate-400">{MSG.ASCENSION_RULE_OPTIONAL_HINT}</span>
+                            <button
+                                type="button"
+                                data-testid={`${testIdPrefix}-ascension-rule-toggle`}
+                                aria-pressed={!declined}
+                                onClick={() => onToggleRule?.()}
+                                className={`min-h-11 shrink-0 rounded-md border px-3 text-xs font-bold ${
+                                    declined
+                                        ? 'border-white/20 bg-[rgba(10,17,25,0.9)] text-slate-300'
+                                        : 'border-[rgba(240,170,110,0.6)] bg-[rgba(240,170,110,0.16)] text-orange-100'
+                                }`}
+                            >
+                                {declined ? MSG.ASCENSION_RULE_DECLINED : MSG.ASCENSION_RULE_ACCEPTED}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
             <details

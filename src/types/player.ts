@@ -627,6 +627,11 @@ export interface Player {
     skillChoices?: Record<string, string>;
     challengeModifiers?: string[];
     /**
+     * 2026-10 Wave 91: 이번 회차의 선택형 회차 규칙(무거운 셋)을 거절했다 — 런 범위(사망 재시작 · 계승이 새로 정한다,
+     * `pickPermanentPlayerState`에 넣지 않는다). 거절하면 표적 배율 · 정복 보상이 없다.
+     */
+    ascensionRuleDeclined?: boolean;
+    /**
      * 2026-09 Wave 28 (D6): 이번 런에서 계승 제안을 한 번 미뤘다. 이후 마왕 처치는 계승 화면을 다시 열지 않고
      * 로그만 남기며, 계승은 `AT.REOPEN_ASCENSION`(조작판의 "계승하기")으로 연다. 런 범위 선택 필드라
      * `pickPermanentPlayerState`가 싣지 않는다 — 승천·사망으로 새 런이 되면 저절로 사라진다(DATA_VERSION 불변).

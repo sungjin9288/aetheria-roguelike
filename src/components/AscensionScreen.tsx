@@ -36,6 +36,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
     // 2026-10 Wave 58: 새 여정의 도전 조건은 여기서 고른다 — 계승은 인트로를 다시 거치지 않는다. 슬롯은 새 단계 기준.
     const challengeSlots = getChallengeSlotCount(outcome.nextRank);
     const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
+    const [ruleDeclined, setRuleDeclined] = useState(false);
     const statRows = [
         { label: '공격력', before: player.meta?.bonusAtk || 0, after: outcome.meta.bonusAtk, tone: 'text-rose-100' },
         { label: '생명', before: player.meta?.bonusHp || 0, after: outcome.meta.bonusHp, tone: 'text-emerald-100' },
@@ -222,6 +223,8 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                     <ChallengeModifierPicker
                         testIdPrefix="ascension"
                         rule={getAscensionRulePreview(outcome.nextRank)}
+                        ruleDeclined={ruleDeclined}
+                        onToggleRule={() => setRuleDeclined((current) => !current)}
                         selected={selectedChallenges}
                         slots={challengeSlots}
                         onToggle={(id) => setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots))}
@@ -242,7 +245,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         <button
                             type="button"
                             data-testid="ascension-confirm"
-                            onClick={() => actions?.confirmAscension?.(selectedChallenges)}
+                            onClick={() => actions?.confirmAscension?.(selectedChallenges, ruleDeclined)}
                             disabled={hasPendingQuestRewards}
                             aria-describedby={hasPendingQuestRewards ? 'ascension-pending-quests-title' : undefined}
                             className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-[#d5b180]/36 bg-[#d5b180]/14 px-3 text-[13px] font-readable font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/20 disabled:cursor-not-allowed disabled:opacity-50"

@@ -10,13 +10,14 @@ import { getAscensionRulePreview } from '../utils/ascensionRuleView';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 
 interface IntroScreenProps {
-    onStart?: (name: string, gender: 'male', job: '모험가', challenges: string[]) => void;
+    onStart?: (name: string, gender: 'male', job: '모험가', challenges: string[], declineRule?: boolean) => void;
     prestigeRank?: number;
 }
 
 const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
     const [name, setName] = useState(() => createRandomMobileName(Math.random));
     const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
+    const [ruleDeclined, setRuleDeclined] = useState(false);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const challengeSlots = getChallengeSlotCount(prestigeRank);
 
@@ -41,7 +42,7 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
         if (!canStart) return;
 
         nameInputRef.current?.blur();
-        onStart?.(selectedName, 'male', '모험가', selectedChallenges);
+        onStart?.(selectedName, 'male', '모험가', selectedChallenges, ruleDeclined);
     };
 
     const handleNameKeyDown = (event: KeyboardEvent<HTMLInputElement>) => {
@@ -137,6 +138,8 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
                         <ChallengeModifierPicker
                             testIdPrefix="intro"
                             rule={getAscensionRulePreview(prestigeRank)}
+                            ruleDeclined={ruleDeclined}
+                            onToggleRule={() => setRuleDeclined((current) => !current)}
                             selected={selectedChallenges}
                             slots={challengeSlots}
                             onToggle={toggleChallenge}

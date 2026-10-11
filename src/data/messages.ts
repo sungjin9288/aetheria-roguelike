@@ -247,6 +247,12 @@ export const MSG = {
     ASCENSION_RULE_CONQUEST_SIGNATURE: (itemName: string) => `정복의 전리품: ${itemName}`,
     ASCENSION_RULE_CONQUEST_COMPLETE: '모든 전설 각인을 이미 모았습니다 — 정복의 전리품은 없습니다.',
     ASCENSION_RULE_LOCKED: '회차 규칙',
+    // 2026-10 Wave 91 (소유자 결정 "a, c 섞어서"): 무거운 회차 규칙 셋은 받아들일지 고른다 — 거절하면 비틀기 · 표적 · 정복 보상이 모두 없다.
+    ASCENSION_RULE_OPTIONAL_HINT: '이 규칙은 거절할 수 있습니다. 거절하면 표적 각인 배율과 정복 보상이 없습니다.',
+    ASCENSION_RULE_ACCEPTED: '받아들임',
+    ASCENSION_RULE_DECLINED: '거절함',
+    ASCENSION_RULE_DECLINED_DETAIL: '비틀기 없음 · 표적 배율 없음 · 이 단계의 정복 보상은 규칙이 다시 돌아올 때',
+    ASCENSION_RULE_DECLINED_START: (ruleName: string) => `📜 회차 규칙 [${ruleName}]을 거절했습니다 — 이번 회차에는 표적 각인 배율과 정복 보상이 없습니다.`,
     ASCENSION_RULE_NEXT: (ruleName: string) => `다음 회차 규칙: ${ruleName}`,
     ASCENSION_RULE_DETAIL: (twist: string, setName: string, titleName: string) => `${twist} 강제 · '${setName}' 각인 드롭 ×3 · 마왕을 쓰러뜨리면 칭호 [${titleName}] + 그 세트의 없는 각인 하나`,
     COLLECTION_SUMMARY_TITLE: '수집 완주',
