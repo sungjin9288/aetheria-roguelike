@@ -1,5 +1,6 @@
 import { MSG } from '../data/messages.js';
 import {
+    SIGNATURE_COLLECTION_GROUPS,
     getAscensionRule,
     getAscensionRuleTwistLabel,
     getConqueredRuleOrdinals,
@@ -7,7 +8,6 @@ import {
     getSignatureSetName,
 } from '../systems/ascensionRule.js';
 import { ASCENSION_RULES } from '../data/ascensionRules.js';
-import signatureSetsData from '../data/signatureSets.json' with { type: 'json' };
 import type { Player } from '../types/index.js';
 import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
 
@@ -51,11 +51,11 @@ export interface CollectionSummary {
     featuredLabel: string | null;
 }
 
-/** 도감의 수집 완주 요약 — 세트별 발견 수 · 회차 규칙 정복 수 · 이번 회차의 표적 세트. */
+/** 도감의 수집 완주 요약 — 세트별(세트 밖 묶음 포함) 발견 수 · 회차 규칙 정복 수 · 이번 회차의 표적 묶음. */
 export const getCollectionSummary = (player: Player): CollectionSummary => {
     const discovered = new Set(getDiscoveredSignatureNames(player));
     const rule = getAscensionRule(player.meta?.prestigeRank);
-    const sets = Object.keys(signatureSetsData.sets).map((key) => {
+    const sets = SIGNATURE_COLLECTION_GROUPS.map((key) => {
         const members = getSignatureSetMemberNames(key);
         const owned = members.filter((name) => discovered.has(name)).length;
         return {

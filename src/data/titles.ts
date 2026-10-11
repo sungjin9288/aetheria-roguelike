@@ -282,7 +282,7 @@ export const TITLES = Object.freeze([
     })),
     {
         id: 'conquest_all',
-        name: '다섯 규칙의 정복자',
+        name: '모든 규칙의 정복자',
         cond: { type: 'ruleConquest', val: 0 },
         color: 'text-orange-200',
     },
@@ -545,6 +545,7 @@ export const TITLE_PASSIVES: Record<string, TitlePassive> = Object.freeze({
     conquest_dimension: { mp: 20, crit: 0.02, label: 'MP +20 · CRIT +2%' },
     conquest_dragon:    { atk: 3, hp: 20, def: 1, label: 'ATK +3 · HP +20 · DEF +1' },
     conquest_shadow:    { atk: 5, crit: 0.02, label: 'ATK +5 · CRIT +2%' },
+    conquest_unbound:   { atk: 4, def: 2, crit: 0.02, label: 'ATK +4 · DEF +2 · CRIT +2%' },
     conquest_all:       { atk: 6, def: 3, hp: 40, crit: 0.02, label: 'ATK +6 · DEF +3 · HP +40 · CRIT +2%' },
     set_collector:      { atk: 5, def: 2, hp: 30, label: 'ATK +5 · DEF +2 · HP +30' },
     legend_complete:    { atk: 6, crit: 0.03, hp: 30, label: 'ATK +6 · CRIT +3% · HP +30' },

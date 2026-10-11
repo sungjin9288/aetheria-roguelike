@@ -410,7 +410,7 @@ export const checkTitles = (player: Player): string[] => {
         if (type === 'discoveries')    return countDiscoveredMaps(player.stats) >= val;
         // cycle 77: 도주 카운터 기반 칭호 (cautious_explorer / survivor_instinct).
         if (type === 'escapes')        return (player.stats?.escapes || 0) >= val;
-        // 2026-10 Wave 89: 회차 규칙 정복(정복 기록 `stats.ruleConquestRanks`) — val은 규칙 번호(1 ~ 5), 0은 다섯 규칙 모두.
+        // 2026-10 Wave 89: 회차 규칙 정복(정복 기록 `stats.ruleConquestRanks`) — val은 규칙 번호(1 ~ 규칙 수), 0은 모든 규칙.
         if (type === 'ruleConquest') {
             const conquered = getConqueredRuleOrdinals(player.stats?.ruleConquestRanks);
             return val === 0 ? conquered.size >= ASCENSION_RULES.length : conquered.has(val);

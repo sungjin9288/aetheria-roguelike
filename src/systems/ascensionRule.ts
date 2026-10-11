@@ -1,6 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
-import { ASCENSION_RULES, type AscensionRuleDef } from '../data/ascensionRules.js';
+import { ASCENSION_RULES, UNBOUND_SIGNATURE_GROUP, type AscensionRuleDef } from '../data/ascensionRules.js';
 import signatureRegistryData from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSetsData from '../data/signatureSets.json' with { type: 'json' };
 import type { Player } from '../types/index.js';
@@ -10,11 +10,14 @@ import type { Player } from '../types/index.js';
  * 같은 규칙을 읽는다. rank 0(첫 회차)에는 규칙이 없다. 데이터는 `data/ascensionRules.ts`.
  */
 
-const SIGNATURE_SET_OF: Record<string, string | undefined> = Object.fromEntries(
-    Object.entries(signatureRegistryData.entries).map(([name, entry]) => [name, (entry as { setGroup?: string }).setGroup]),
+// 각인 → 묶음 키. 세트에 속하지 않은 각인은 `UNBOUND_SIGNATURE_GROUP.key`(Wave 90 — 여섯째 규칙의 표적).
+const SIGNATURE_SET_OF: Record<string, string> = Object.fromEntries(
+    Object.entries(signatureRegistryData.entries).map(([name, entry]) => [
+        name, (entry as { setGroup?: string }).setGroup || UNBOUND_SIGNATURE_GROUP.key,
+    ]),
 );
 
-/** 이 계승 단계의 회차 규칙(rank 1 ~ 5가 차례, 6부터 다시 돈다). rank 0은 없다. */
+/** 이 계승 단계의 회차 규칙(rank 1 ~ 규칙 수가 차례, 그 뒤 다시 돈다). rank 0은 없다. */
 export const getAscensionRule = (rank: number | null | undefined): AscensionRuleDef | null => {
     const r = Math.floor(Number(rank) || 0);
     if (r < 1 || ASCENSION_RULES.length === 0) return null;
@@ -33,14 +36,21 @@ export const getRuleSignatureDropMult = (player: Pick<Player, 'meta'> | null | u
     return SIGNATURE_SET_OF[itemName] === rule.signatureSet ? BALANCE.ASCENSION_RULE_SIGNATURE_MULT : 1;
 };
 
-/** 이 세트의 각인 이름(레지스트리 순서). */
+/** 이 묶음(세트 또는 세트 밖 묶음)의 각인 이름(레지스트리 순서). */
 export const getSignatureSetMemberNames = (setKey: string): string[] => (
     Object.entries(SIGNATURE_SET_OF).filter(([, set]) => set === setKey).map(([name]) => name)
 );
 
-const SIGNATURE_SET_NAMES: Record<string, string> = Object.fromEntries(
-    Object.entries(signatureSetsData.sets).map(([key, set]) => [key, set.name]),
-);
+const SIGNATURE_SET_NAMES: Record<string, string> = {
+    ...Object.fromEntries(Object.entries(signatureSetsData.sets).map(([key, set]) => [key, set.name])),
+    [UNBOUND_SIGNATURE_GROUP.key]: UNBOUND_SIGNATURE_GROUP.name,
+};
+
+/** 수집 단위 묶음 키 — 다섯 세트(`signatureSets.json` 순서) + 세트 밖 묶음. 표적 · 도감 수집 요약이 같은 목록을 읽는다. */
+export const SIGNATURE_COLLECTION_GROUPS: readonly string[] = Object.freeze([
+    ...Object.keys(signatureSetsData.sets),
+    UNBOUND_SIGNATURE_GROUP.key,
+]);
 
 /** 세트 표시 이름(`signatureSets.json`). */
 export const getSignatureSetName = (setKey: string): string => SIGNATURE_SET_NAMES[setKey] || setKey;

@@ -7,16 +7,23 @@
  * - **표적 세트** — 그 회차에 각인 드롭률이 오르는 전설 각인 세트(`signatureSet`, `signatureSets.json`의 키).
  * - **정복 보상** — 그 회차에 마왕을 쓰러뜨리면 받는 칭호(`conquestTitle`)와 표적 세트의 아직 없는 각인 하나.
  *
- * 다섯 규칙이 rank 1 ~ 5에 차례로 놓이고 rank 6부터 다시 돈다. 순서는 비틀기의 무게(위치 가림 → 골드 → 기술 → 물약 → 정예) 순이다.
+ * 여섯 규칙이 rank 1 ~ 6에 차례로 놓이고 rank 7부터 다시 돈다. 순서는 **비틀기의 무게** 순이다(2026-10 Wave 90, 소유자 결정
+ * "b, c 섞어서" — 원장 §94.5): 위치 가림 → 골드 → 생명 절반 → 물약 → 정예 → 기술 뒤섞기. Wave 89의 5규칙에서 뒤섞인 기술이
+ * 3단계였던 동안 그 회차 사망이 1.02 → 2.50(무사망 시드 45 → 19%)이었다 — 직업 기술 운용을 잃는 가장 무거운 비틀기라 맨 뒤다.
+ * 여섯째 규칙의 표적은 세트에 속하지 않은 전설 각인 8개(`UNBOUND_SIGNATURE_GROUP`)다 — 그 각인들은 정복 보상이 다섯 세트를 다
+ * 채운 뒤에야 나왔다.
  */
+
+/** 세트에 속하지 않은 전설 각인 묶음(레지스트리 `setGroup`이 없는 것). 세트 보너스는 없고 표적 · 수집 단위로만 쓴다. */
+export const UNBOUND_SIGNATURE_GROUP = Object.freeze({ key: 'unbound', name: '흩어진 전설' } as const);
 
 export interface AscensionRuleDef {
     id: string;
     name: string;
     /** 그 회차 내내 켜지는 도전 조건 id. */
-    modifier: 'blindMap' | 'noGold' | 'randomSkills' | 'noPotion' | 'eliteOnly';
-    /** 드롭률이 오르고 정복 때 각인 하나를 주는 세트(`signatureSets.json`의 키). */
-    signatureSet: 'worldtree' | 'celestial' | 'dimension' | 'dragon-lord' | 'shadow-lord';
+    modifier: 'blindMap' | 'noGold' | 'halfHp' | 'noPotion' | 'eliteOnly' | 'randomSkills';
+    /** 드롭률이 오르고 정복 때 각인 하나를 주는 세트(`signatureSets.json`의 키, 또는 세트 밖 묶음 `UNBOUND_SIGNATURE_GROUP.key`). */
+    signatureSet: 'worldtree' | 'celestial' | 'dimension' | 'dragon-lord' | 'shadow-lord' | typeof UNBOUND_SIGNATURE_GROUP.key;
     conquestTitle: { id: string; name: string };
 }
 
@@ -36,9 +43,9 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_celestial', name: '천공의 정복자' },
     },
     {
-        id: 'twisted_dimension',
-        name: '뒤틀린 차원',
-        modifier: 'randomSkills',
+        id: 'fading_dimension',
+        name: '꺼져 가는 차원',
+        modifier: 'halfHp',
         signatureSet: 'dimension',
         conquestTitle: { id: 'conquest_dimension', name: '차원을 꿰뚫은 자' },
     },
@@ -55,5 +62,12 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         modifier: 'eliteOnly',
         signatureSet: 'shadow-lord',
         conquestTitle: { id: 'conquest_shadow', name: '암흑을 꺾은 자' },
+    },
+    {
+        id: 'tangled_legends',
+        name: '뒤엉킨 전설',
+        modifier: 'randomSkills',
+        signatureSet: UNBOUND_SIGNATURE_GROUP.key,
+        conquestTitle: { id: 'conquest_unbound', name: '흩어진 전설의 수집가' },
     },
 ]);
