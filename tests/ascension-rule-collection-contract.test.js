@@ -104,9 +104,9 @@ test('규칙 데이터는 실제 도전 조건 · 실제 세트 · 실제 칭호
     assert.deepEqual([...covered].sort(), Object.keys(signatureRegistry.entries).sort());
 });
 
-test('Wave 90: 비틀기는 무게 순이다 — 기술을 뒤섞는 규칙이 맨 뒤, 생명 절반은 셋째', () => {
-    assert.deepEqual(ASCENSION_RULES.map((rule) => rule.modifier), ['blindMap', 'noGold', 'halfHp', 'noPotion', 'eliteOnly', 'randomSkills']);
-    assert.equal(getAscensionRule(6).signatureSet, UNBOUND_SIGNATURE_GROUP.key);
+test('Wave 90: 비틀기는 측정한 무게 순이다 — 가벼운 셋(위치 · 골드 · 물약)이 먼저, 정예가 맨 뒤', () => {
+    assert.deepEqual(ASCENSION_RULES.map((rule) => rule.modifier), ['blindMap', 'noGold', 'noPotion', 'randomSkills', 'halfHp', 'eliteOnly']);
+    assert.equal(getAscensionRule(4).signatureSet, UNBOUND_SIGNATURE_GROUP.key);
 });
 
 // ── 비틀기: 도전 조건 강제 ─────────────────────────────────────────────
@@ -233,8 +233,8 @@ test('규칙 수 다음 단계는 1단계 규칙을 다시 돌고, 정복은 새
     assert.equal(second?.name, getSignatureSetMemberNames(getAscensionRule(1).signatureSet)[1]);
 });
 
-test('여섯째 규칙(흩어진 전설): 세트 밖 각인만 드롭 배율 · 정복은 그 묶음의 없는 첫 각인', () => {
-    const rank = 6;
+test('흩어진 전설 규칙: 세트 밖 각인만 드롭 배율 · 정복은 그 묶음의 없는 첫 각인', () => {
+    const rank = ASCENSION_RULES.findIndex((rule) => rule.signatureSet === UNBOUND_SIGNATURE_GROUP.key) + 1;
     const unbound = getSignatureSetMemberNames(UNBOUND_SIGNATURE_GROUP.key);
     assert.equal(unbound.length, 8);
     for (const name of unbound) assert.equal(getRuleSignatureDropMult(playerAt(rank), name), BALANCE.ASCENSION_RULE_SIGNATURE_MULT, name);
