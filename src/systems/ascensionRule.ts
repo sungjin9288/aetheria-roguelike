@@ -24,13 +24,25 @@ export const getAscensionRule = (rank: number | null | undefined): AscensionRule
     return ASCENSION_RULES[(r - 1) % ASCENSION_RULES.length];
 };
 
-/** 플레이어의 지금 회차 규칙. */
-export const getPlayerAscensionRule = (player: Pick<Player, 'meta'> | null | undefined): AscensionRuleDef | null => (
-    getAscensionRule(player?.meta?.prestigeRank)
+/** 거절할 수 있는 규칙인가(Wave 91 — 무거운 비틀기 셋). */
+export const isOptionalAscensionRule = (rule: AscensionRuleDef | null | undefined): boolean => rule?.optional === true;
+
+/** 이번 회차에 실제로 적용된 규칙 — 선택형 규칙을 거절했으면 없다(표적 배율 · 정복 보상 · 수집 요약이 이것을 읽는다). */
+export const getPlayerAscensionRule = (
+    player: Pick<Player, 'meta' | 'ascensionRuleDeclined'> | null | undefined,
+): AscensionRuleDef | null => {
+    const rule = getAscensionRule(player?.meta?.prestigeRank);
+    if (rule && isOptionalAscensionRule(rule) && player?.ascensionRuleDeclined === true) return null;
+    return rule;
+};
+
+/** 시작 · 계승 요청의 거절 의사를 저장할 값으로 — 선택형 규칙일 때만 참이 된다. */
+export const resolveAscensionRuleDeclined = (rank: number | null | undefined, declineRule: unknown): boolean => (
+    declineRule === true && isOptionalAscensionRule(getAscensionRule(rank))
 );
 
 /** 이 각인이 지금 회차의 표적 세트이면 드롭률 배율(`BALANCE.ASCENSION_RULE_SIGNATURE_MULT`), 아니면 1. 난수를 쓰지 않는다. */
-export const getRuleSignatureDropMult = (player: Pick<Player, 'meta'> | null | undefined, itemName: string | undefined): number => {
+export const getRuleSignatureDropMult = (player: Pick<Player, 'meta' | 'ascensionRuleDeclined'> | null | undefined, itemName: string | undefined): number => {
     const rule = getPlayerAscensionRule(player);
     if (!rule || !itemName) return 1;
     return SIGNATURE_SET_OF[itemName] === rule.signatureSet ? BALANCE.ASCENSION_RULE_SIGNATURE_MULT : 1;
@@ -73,8 +85,10 @@ export const getAscensionRuleTwistLabel = (rule: AscensionRuleDef): string => (
     BALANCE.CHALLENGE_MODIFIERS.find((modifier) => modifier.id === rule.modifier)?.label || rule.modifier
 );
 
-/** 회차 시작 로그 — 규칙이 없으면 null. */
-export const getAscensionRuleStartLog = (rank: number | null | undefined): string | null => {
+/** 회차 시작 로그 — 규칙이 없으면 null, 선택형 규칙을 거절했으면 거절 로그. */
+export const getAscensionRuleStartLog = (rank: number | null | undefined, declined = false): string | null => {
     const rule = getAscensionRule(rank);
-    return rule ? MSG.ASCENSION_RULE_START(rule.name, getAscensionRuleTwistLabel(rule), getSignatureSetName(rule.signatureSet)) : null;
+    if (!rule) return null;
+    if (declined && isOptionalAscensionRule(rule)) return MSG.ASCENSION_RULE_DECLINED_START(rule.name);
+    return MSG.ASCENSION_RULE_START(rule.name, getAscensionRuleTwistLabel(rule), getSignatureSetName(rule.signatureSet));
 };

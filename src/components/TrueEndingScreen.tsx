@@ -26,7 +26,7 @@ interface TrueEndingScreenProps {
     player: Player;
     actions?: {
         completeQuest?: (questId: string | number) => void;
-        confirmAscension?: (challengeModifiers?: string[]) => void;
+        confirmAscension?: (challengeModifiers?: string[], declineRule?: boolean) => void;
         cancelAscension?: () => void;
     };
 }
@@ -86,13 +86,14 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
     // 2026-10 Wave 58: 새 여정의 도전 조건 — 계승 화면과 같다(슬롯은 새 단계 기준).
     const challengeSlots = getChallengeSlotCount(getAscensionOutcome(player.meta).nextRank);
     const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
+    const [ruleDeclined, setRuleDeclined] = useState(false);
 
     const confirmNewGamePlus = useCallback(() => {
         if (confirmationAcceptedRef.current) return;
         confirmationAcceptedRef.current = true;
         setConfirmationAccepted(true);
-        actions?.confirmAscension?.(selectedChallenges);
-    }, [actions, selectedChallenges]);
+        actions?.confirmAscension?.(selectedChallenges, ruleDeclined);
+    }, [actions, selectedChallenges, ruleDeclined]);
 
     const stats = [
         { label: '총 처치', value: (player?.stats?.kills || 0).toLocaleString() },
@@ -220,6 +221,8 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                 <ChallengeModifierPicker
                                     testIdPrefix="true-ending"
                                     rule={getAscensionRulePreview(getAscensionOutcome(player.meta).nextRank)}
+                                    ruleDeclined={ruleDeclined}
+                                    onToggleRule={() => setRuleDeclined((current) => !current)}
                                     selected={selectedChallenges}
                                     slots={challengeSlots}
                                     onToggle={(id) => setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots))}

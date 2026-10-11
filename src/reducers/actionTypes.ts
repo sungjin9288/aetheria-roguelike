@@ -29,6 +29,8 @@ export type AscendPayload = {
     challengeModifiers?: string[];
     /** 2026-10 Wave 58: 새 여정의 첫 유물 선택지를 뽑는 난수 씨앗(리듀서는 순수해야 한다). 없으면 0. */
     seed?: number;
+    /** 2026-10 Wave 91: 새 단계의 선택형 회차 규칙(무거운 셋)을 거절한다. 강제 규칙에는 효과가 없다. */
+    declineRule?: boolean;
 };
 
 export interface ResolveBoundedEncounterChoicePayload {

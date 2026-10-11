@@ -15,7 +15,7 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getBakedMetaVitals, snapshotMetaVitals } from '../../systems/metaBonusRamp';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
-import { getAscensionRuleStartLog } from '../../systems/ascensionRule';
+import { getAscensionRuleStartLog, resolveAscensionRuleDeclined } from '../../systems/ascensionRule';
 import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, buildRunChallengeModifiers } from '../../utils/runStart';
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { createSeededRandom } from '../../utils/seededRandom';
@@ -188,7 +188,8 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         const bakedMeta = getBakedMetaVitals(metaVitalsSnapshot, 1);
         // 2026-10 Wave 58: 새 여정의 시작 조건은 새 게임(start)과 같은 계산이다(utils/runStart.ts) — 계승 화면에서 고른
         //   도전 조건(슬롯은 새 단계 기준) · 거울 시작 골드 · 첫 유물 선택지. 이전에는 사망 재시작에만 적용됐다.
-        const challengeModifiers = buildRunChallengeModifiers(payload?.challengeModifiers, outcome.meta.prestigeRank);
+        const ascensionRuleDeclined = resolveAscensionRuleDeclined(outcome.meta.prestigeRank, payload?.declineRule);
+        const challengeModifiers = buildRunChallengeModifiers(payload?.challengeModifiers, outcome.meta.prestigeRank, ascensionRuleDeclined);
         const freshMaxHp = applyChallengeMaxHp((INITIAL_STATE.player.maxHp || 0) + bakedMeta.hp, challengeModifiers);
         const freshMaxMp = (INITIAL_STATE.player.maxMp || 0) + bakedMeta.mp;
         const freshPlayer: Player = {
@@ -203,6 +204,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
             gender: state.player.gender,
             gold: getRunStartGold(outcome.meta, challengeModifiers),
             challengeModifiers,
+            ascensionRuleDeclined,
             // 2026-10 Wave 62 (원장 §61.4 C11, 소유자 결정 "첫 방문은 여정마다"): 계승은 방문 기록을 넘기지만 첫 방문 보상은 새 여정에서
             //   다시 받는다 — 방문 기록으로 판정하던 동안 계승 뒤에는 51곳 중 한 곳도 받지 못했다.
             firstVisitRewardMaps: [],
@@ -225,7 +227,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         });
         const challengeLabels = challengeModifiers.map((id) => (
             BALANCE.CHALLENGE_MODIFIERS.find((modifier) => modifier.id === id)?.label || id));
-        const ruleLog = getAscensionRuleStartLog(outcome.meta.prestigeRank);
+        const ruleLog = getAscensionRuleStartLog(outcome.meta.prestigeRank, ascensionRuleDeclined);
         const logs = appendRewardLogs(INITIAL_STATE.logs, [
             ...ascensionTitles.map((id) => ({ type: 'system', text: MSG.TITLE_UNLOCKED(getTitleLabel(id)) })),
             { type: 'system', text: MSG.ASCEND_DONE(outcome.nextRank, isNewAscensionTitle(outcome, state.player.titles) ? outcome.title : null) },

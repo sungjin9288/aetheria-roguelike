@@ -4,6 +4,8 @@ import {
     getAscensionRule,
     getAscensionRuleTwistLabel,
     getConqueredRuleOrdinals,
+    getPlayerAscensionRule,
+    isOptionalAscensionRule,
     getSignatureSetMemberNames,
     getSignatureSetName,
 } from '../systems/ascensionRule.js';
@@ -21,6 +23,8 @@ export interface AscensionRulePreview {
     lockedId: string;
     name: string;
     detail: string;
+    /** 2026-10 Wave 91: 거절할 수 있는 규칙(무거운 셋)인가. */
+    optional: boolean;
 }
 
 /** 이 계승 단계에서 시작하는 회차의 규칙 미리보기 — 규칙이 없으면 null. */
@@ -31,6 +35,7 @@ export const getAscensionRulePreview = (rank: number | null | undefined): Ascens
         lockedId: rule.modifier,
         name: rule.name,
         detail: MSG.ASCENSION_RULE_DETAIL(getAscensionRuleTwistLabel(rule), getSignatureSetName(rule.signatureSet), rule.conquestTitle.name),
+        optional: isOptionalAscensionRule(rule),
     };
 };
 
@@ -54,7 +59,8 @@ export interface CollectionSummary {
 /** 도감의 수집 완주 요약 — 세트별(세트 밖 묶음 포함) 발견 수 · 회차 규칙 정복 수 · 이번 회차의 표적 묶음. */
 export const getCollectionSummary = (player: Player): CollectionSummary => {
     const discovered = new Set(getDiscoveredSignatureNames(player));
-    const rule = getAscensionRule(player.meta?.prestigeRank);
+    // 2026-10 Wave 91: 거절한 선택형 규칙은 이번 회차의 표적이 아니다.
+    const rule = getPlayerAscensionRule(player);
     const sets = SIGNATURE_COLLECTION_GROUPS.map((key) => {
         const members = getSignatureSetMemberNames(key);
         const owned = members.filter((name) => discovered.has(name)).length;

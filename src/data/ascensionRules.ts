@@ -26,6 +26,11 @@ export interface AscensionRuleDef {
     /** 드롭률이 오르고 정복 때 각인 하나를 주는 세트(`signatureSets.json`의 키, 또는 세트 밖 묶음 `UNBOUND_SIGNATURE_GROUP.key`). */
     signatureSet: 'worldtree' | 'celestial' | 'dimension' | 'dragon-lord' | 'shadow-lord' | typeof UNBOUND_SIGNATURE_GROUP.key;
     conquestTitle: { id: string; name: string };
+    /**
+     * 2026-10 Wave 91 (소유자 결정 "a, c 섞어서" — 원장 §95.5): 무거운 비틀기 셋(rank 4 ~ 6)은 받아들일지 고른다. 기본은 받아들임이고
+     * 내용은 그대로다(a). 거절하면 그 회차에는 비틀기 · 표적 배율 · 정복 보상이 모두 없다 — 그 단계의 정복은 순환이 다시 올 때 받는다(c).
+     */
+    optional?: true;
 }
 
 export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
@@ -56,6 +61,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         modifier: 'randomSkills',
         signatureSet: UNBOUND_SIGNATURE_GROUP.key,
         conquestTitle: { id: 'conquest_unbound', name: '흩어진 전설의 수집가' },
+        optional: true,
     },
     {
         id: 'fading_dimension',
@@ -63,6 +69,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         modifier: 'halfHp',
         signatureSet: 'dimension',
         conquestTitle: { id: 'conquest_dimension', name: '차원을 꿰뚫은 자' },
+        optional: true,
     },
     {
         id: 'shadow_legion',
@@ -70,5 +77,6 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         modifier: 'eliteOnly',
         signatureSet: 'shadow-lord',
         conquestTitle: { id: 'conquest_shadow', name: '암흑을 꺾은 자' },
+        optional: true,
     },
 ]);

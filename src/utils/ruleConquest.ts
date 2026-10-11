@@ -1,7 +1,7 @@
 import { DB } from '../data/db.js';
 import { MSG } from '../data/messages.js';
 import signatureRegistryData from '../data/signatureRegistry.json' with { type: 'json' };
-import { getAscensionRule, getSignatureSetMemberNames } from '../systems/ascensionRule.js';
+import { getPlayerAscensionRule, getSignatureSetMemberNames } from '../systems/ascensionRule.js';
 import type { Item, Player } from '../types/index.js';
 import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { registerLootToCodex } from './gameUtils.js';
@@ -41,7 +41,8 @@ export const applyRuleConquest = (
     receiptKey: string,
 ): { player: Player; logs: Array<{ type: string; text: string }>; signature: string | null; titleId: string | null } => {
     const rank = Math.floor(Number(player.meta?.prestigeRank) || 0);
-    const rule = getAscensionRule(rank);
+    // 2026-10 Wave 91: 선택형 규칙을 거절한 회차는 정복이 없다(그 단계는 순환이 다시 올 때 받는다).
+    const rule = getPlayerAscensionRule(player);
     if (!rule || hasConqueredRank(player, rank)) return { player, logs: [], signature: null, titleId: null };
 
     const logs: Array<{ type: string; text: string }> = [{ type: 'critical', text: MSG.ASCENSION_RULE_CONQUERED(rule.name) }];

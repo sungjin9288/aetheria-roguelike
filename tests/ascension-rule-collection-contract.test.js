@@ -298,3 +298,79 @@ test('도감 수집 완주: 세트별 발견 수 · 정복 수 · 이번 회차 
     const firstRun = getCollectionSummary(playerAt(0));
     assert.equal(firstRun.featuredLabel, null, '첫 회차는 표적 세트가 없다');
 });
+
+// ── Wave 91: 무거운 규칙 셋은 선택형(기본 받아들임) ─────────────────────────
+
+const ascendFrom = (rank, payload = {}) => gameReducer(
+    { ...structuredClone(INITIAL_STATE), gameState: GS.ASCENSION, bootStage: 'ready',
+        player: playerAt(rank, { meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: rank, endgame: { lastEndgameReceiptKey: 'rk' } } }) },
+    { type: AT.ASCEND, payload: { expectedPrestigeRank: rank, sourceReceiptKey: 'rk', seed: 1, challengeModifiers: [], ...payload } },
+);
+
+test('Wave 91: 가벼운 셋(1 ~ 3단계)은 강제, 무거운 셋(4 ~ 6단계)은 선택형이고 내용은 그대로다', () => {
+    assert.deepEqual(ASCENSION_RULES.map((rule) => rule.optional === true), [false, false, false, true, true, true]);
+    assert.deepEqual(ASCENSION_RULES.map((rule) => rule.modifier), ['blindMap', 'noGold', 'noPotion', 'randomSkills', 'halfHp', 'eliteOnly']);
+    assert.deepEqual(buildRunChallengeModifiers([], 4), ['randomSkills'], '기본은 받아들임');
+    assert.deepEqual(buildRunChallengeModifiers(['noGold'], 4, true), ['noGold'], '거절하면 비틀기가 없다');
+    assert.deepEqual(buildRunChallengeModifiers([], 1, true), ['blindMap'], '강제 규칙은 거절할 수 없다');
+});
+
+test('Wave 91: 계승에서 거절하면 비틀기 · 표적 배율 · 정복이 모두 없고 기록은 런 범위다', () => {
+    const declined = ascendFrom(3, { declineRule: true });
+    assert.equal(declined.player.meta.prestigeRank, 4);
+    assert.equal(declined.player.ascensionRuleDeclined, true);
+    assert.deepEqual(declined.player.challengeModifiers, []);
+    assert.ok(declined.logs.some((log) => log.text === MSG.ASCENSION_RULE_DECLINED_START(getAscensionRule(4).name)));
+    const unbound = getSignatureSetMemberNames(UNBOUND_SIGNATURE_GROUP.key)[0];
+    assert.equal(getRuleSignatureDropMult(declined.player, unbound), 1);
+    const kill = killDemonKing({ ...declined.player, meta: { ...declined.player.meta, endgame: {} } }, 'rk-d');
+    assert.ok(!kill.player.inv.some((item) => item.id === 'rule-conquest:rk-d'), '정복 각인 없음');
+    assert.deepEqual(kill.player.stats.ruleConquestRanks || [], [], '정복 기록 없음 — 그 단계는 순환이 다시 올 때');
+    assert.equal(pickPermanentPlayerState(declined.player, INITIAL_STATE.player).ascensionRuleDeclined, undefined, '영구 상태가 아니다');
+
+    const accepted = ascendFrom(3);
+    assert.equal(accepted.player.ascensionRuleDeclined, false);
+    assert.deepEqual(accepted.player.challengeModifiers, ['randomSkills']);
+    assert.equal(getRuleSignatureDropMult(accepted.player, unbound), BALANCE.ASCENSION_RULE_SIGNATURE_MULT);
+
+    const forced = ascendFrom(0, { declineRule: true });
+    assert.equal(forced.player.ascensionRuleDeclined, false, '강제 규칙 단계에서 거절 요청은 무시된다');
+    assert.deepEqual(forced.player.challengeModifiers, ['blindMap']);
+});
+
+test('Wave 91: 새 게임 · 사망 재시작(start)도 거절을 받는다', () => {
+    let dispatched = null;
+    createCharacterActions({
+        player: playerAt(5), gameState: GS.IDLE, dispatch: (action) => { if (action.type === AT.SET_PLAYER && !dispatched) dispatched = action; },
+        addLog: () => {}, addStoryLog: () => {}, getFullStats: (p) => calculateFullStats(p),
+    }, { emitUnlockedTitles: () => {} }).start('수집가', 'male', '모험가', [], true);
+    assert.equal(dispatched.payload.ascensionRuleDeclined, true);
+    assert.deepEqual(dispatched.payload.challengeModifiers, []);
+});
+
+test('Wave 91: 선택 화면 — 선택형 규칙은 받아들임/거절 단추, 거절하면 잠긴 칸 · 보상 % 없음, 강제 규칙은 단추 없음', () => {
+    const optional = getAscensionRulePreview(4);
+    assert.equal(optional.optional, true);
+    const render = (props) => renderStatic(createElement(ChallengeModifierPicker, {
+        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: optional, ...props,
+    }));
+    const accepted = render({ ruleDeclined: false });
+    assert.match(accepted, /data-testid="probe-ascension-rule-toggle"[^>]*aria-pressed="true"|aria-pressed="true"[^>]*data-testid="probe-ascension-rule-toggle"/);
+    assert.match(accepted.match(/<button[^>]*data-testid="probe-challenge-randomSkills"[^>]*>/)[0], /aria-disabled="true"/);
+    assert.ok(accepted.includes(MSG.CHALLENGE_PICKER_REWARD(getChallengeRewardPercent(1))));
+    const declined = render({ ruleDeclined: true });
+    assert.ok(declined.includes(MSG.ASCENSION_RULE_DECLINED_DETAIL));
+    assert.doesNotMatch(declined.match(/<button[^>]*data-testid="probe-challenge-randomSkills"[^>]*>/)[0], /aria-disabled/);
+    assert.ok(!declined.includes('probe-challenge-reward'), '고른 것도 규칙도 없으면 보상 줄이 없다');
+    const forced = renderStatic(createElement(ChallengeModifierPicker, {
+        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: getAscensionRulePreview(1), ruleDeclined: true,
+    }));
+    assert.ok(!forced.includes('probe-ascension-rule-toggle'));
+    assert.match(forced.match(/<button[^>]*data-testid="probe-challenge-blindMap"[^>]*>/)[0], /aria-disabled="true"/, '강제 규칙은 거절 값을 무시한다');
+});
+
+test('Wave 91: 도감 수집 요약 — 거절한 회차에는 표적 묶음이 없다', () => {
+    assert.ok(getCollectionSummary(playerAt(4)).featuredLabel);
+    assert.equal(getCollectionSummary(playerAt(4, { ascensionRuleDeclined: true })).featuredLabel, null);
+    assert.ok(getCollectionSummary(playerAt(1, { ascensionRuleDeclined: true })).featuredLabel, '강제 규칙은 거절이 없다');
+});
