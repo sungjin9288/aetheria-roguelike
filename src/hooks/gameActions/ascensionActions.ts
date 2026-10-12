@@ -31,6 +31,11 @@ export const createAscensionActions = (deps: GameActionDeps) => {
             });
         },
 
+        /** 2026-10 Wave 95: 회차 규칙 패 다시 뽑기 — 화면이 본 횟수를 보내고, 허용 · 대가는 리듀서 · 계승이 소유한다. */
+        rerollAscensionRuleOffer: (expectedRerolls: number) => {
+            dispatch({ type: AT.REROLL_ASCENSION_RULE_OFFER, payload: { expectedRerolls } });
+        },
+
         cancelAscension: () => {
             // 2026-09 Wave 28 (D6): 계승 화면의 "미루기"는 이번 런 동안 다시 묻지 않는 결정이다 — 리듀서가 소유한다.
             //   진엔딩 화면의 취소는 계승 제안이 아니므로 이전 동작 그대로다.

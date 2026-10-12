@@ -13,6 +13,10 @@ import { createSeededRandom, deriveSeed } from '../utils/seededRandom.js';
  * `BALANCE.ASCENSION_RULE_OFFER_COUNT`장을 뽑아 하나를 고른다. 고른 규칙은 `meta.ascensionRule`(영구)에 남아 같은 단계의 사망 재시작이
  * 같은 규칙을 읽는다. 패는 마왕 처치 영수증 · 다음 단계의 해시로 정해진다 — 화면과 리듀서가 같은 패를 보고 리로드로 다시 뽑을 수 없다.
  * `meta.ascensionRule`이 없거나 단계가 다르면(이전 세이브) 고정 순서(`getAscensionRule`)로 읽는다.
+ *
+ * 2026-10 Wave 95 (소유자 결정 "무료 한 번 + 영구 능력치"): 패를 다시 뽑을 수 있다 — 처음 `ASCENSION_RULE_REROLL_FREE`번은 무료이고
+ * 되돌릴 수 없으며(리듀서가 횟수를 저장한다), 그 뒤 `ASCENSION_RULE_REROLL_PAID_MAX`번까지는 한 번마다 다음 여정으로 넘어가는 정수
+ * 사다리 단계의 `ASCENSION_RULE_REROLL_LADDER_COST`를 내려놓는다(계승할 때 `getAscensionOutcome`이 적용).
  */
 type RuleConquestStats = { ruleConquestRanks?: number[]; ruleConquestRuleIds?: string[] } | null | undefined;
 type AscensionRuleMeta = Pick<NonNullable<Player['meta']>, 'prestigeRank' | 'ascensionRule'> | null | undefined;
@@ -67,32 +71,85 @@ export const getRuleConquestLedger = (stats: RuleConquestStats): string[] => {
 /** 한 번이라도 정복한 규칙 id(칭호 복구 · 도감 정복 수). */
 export const getConqueredRuleIds = (stats: RuleConquestStats): Set<string> => new Set(getRuleConquestLedger(stats));
 
+type RuleOfferPlayer = { meta?: Player['meta']; stats?: Player['stats'] } | null | undefined;
+
+/** 덱 — 정복 횟수가 가장 적은 규칙들(이번 순환에서 아직 정복하지 않은 규칙, 규칙 표 순서). 여섯을 모두 정복하면 다시 찬다. */
+const getAscensionRuleDeck = (stats: RuleConquestStats): AscensionRuleDef[] => {
+    const counts = new Map<string, number>();
+    for (const id of getRuleConquestLedger(stats)) counts.set(id, (counts.get(id) || 0) + 1);
+    const fewest = Math.min(...ASCENSION_RULES.map((rule) => counts.get(rule.id) || 0));
+    return ASCENSION_RULES.filter((rule) => (counts.get(rule.id) || 0) === fewest);
+};
+
+/**
+ * 이 마왕 처치 · 다음 단계의 패를 다시 뽑은 횟수(2026-10 Wave 95) — 기록이 다른 처치 영수증 · 다른 단계의 것이면 0.
+ * 리듀서(`REROLL_ASCENSION_RULE_OFFER`)만 늘린다.
+ */
+export const getAscensionRuleRerolls = (meta: Player['meta'] | null | undefined, nextRank: number): number => {
+    const record = meta?.ascensionRuleOffer;
+    const receiptKey = meta?.endgame?.lastEndgameReceiptKey;
+    if (!record || !receiptKey || record.receiptKey !== receiptKey || record.rank !== nextRank) return 0;
+    const rerolls = Math.floor(Number(record.rerolls) || 0);
+    return Math.min(Math.max(0, rerolls), BALANCE.ASCENSION_RULE_REROLL_FREE + BALANCE.ASCENSION_RULE_REROLL_PAID_MAX);
+};
+
+/** 다시 뽑기 중 대가를 치른 횟수(무료 횟수 뒤) — 계승이 그만큼 넘어가는 사다리를 내려놓는다. */
+export const getAscensionRulePaidRerolls = (meta: Player['meta'] | null | undefined, nextRank: number): number => (
+    Math.max(0, getAscensionRuleRerolls(meta, nextRank) - BALANCE.ASCENSION_RULE_REROLL_FREE)
+);
+
+/** 유료 다시 뽑기를 `paid`번 했을 때 다음 여정으로 넘어가는 사다리 비율(1 = 전부, 0 = 없음). */
+export const getAscensionRuleRerollLadderKeep = (paid: number): number => (
+    Math.max(0, 1 - Math.max(0, Math.floor(Number(paid) || 0)) * BALANCE.ASCENSION_RULE_REROLL_LADDER_COST)
+);
+
 /**
  * 계승할 때 보이는 회차 규칙 카드 — 덱이다: 정복 횟수가 가장 적은 규칙들(이번 순환에서 아직 정복하지 않은 규칙)에서만 무작위로
  * 최대 `BALANCE.ASCENSION_RULE_OFFER_COUNT`장을 뽑는다. 남은 규칙이 그보다 적으면 패도 그만큼이다(하나면 그 규칙뿐) — 정복한
  * 규칙으로 칸을 채우지 않는다. 채우던 첫 구현에서는 고르지 않는 플레이어가 언제나 정복한 가벼운 카드를 받아 무거운 규칙을 영원히
  * 피했다(원장 §99). 여섯을 모두 정복하면 덱이 다시 찬다. 씨앗은 마왕 처치 영수증 · 다음 단계라 같은 처치에서는 같은 패다.
  * 다음 단계가 0 이하면 빈 패.
+ *
+ * 2026-10 Wave 95: 다시 뽑은 패(k번째)는 씨앗에 k를 더해 덱 전체에서 다시 무작위로 뽑는다 — 직전 패와 똑같은 패만 나오지 않는다
+ * (그러면 마지막 칸을 직전 패에 없던 카드 하나로 바꾼다). 아직 보지 못한 카드를 먼저 채우지 말 것 — 그렇게 하던 구현에서는 무료 한 번이
+ * "나머지 절반 보기"가 되어 원하는 카드가 늘 나왔고(유료 다시 뽑기 720회 중 0번), 순서를 마음대로 정해 사망이 30% 줄었다(원장 §100).
+ * 다시 뽑지 않은 패(k = 0)는 Wave 94와 같다.
  */
-export const getAscensionRuleOffer = (
-    player: { meta?: Player['meta']; stats?: Player['stats'] } | null | undefined,
-    nextRank: number,
-): AscensionRuleDef[] => {
+export const getAscensionRuleOffer = (player: RuleOfferPlayer, nextRank: number): AscensionRuleDef[] => {
     if (!(nextRank >= 1)) return [];
-    const counts = new Map<string, number>();
-    for (const id of getRuleConquestLedger(player?.stats)) counts.set(id, (counts.get(id) || 0) + 1);
-    const fewest = Math.min(...ASCENSION_RULES.map((rule) => counts.get(rule.id) || 0));
-    const rng = createSeededRandom(deriveSeed(0, 'ascension-rule-offer', player?.meta?.endgame?.lastEndgameReceiptKey ?? 'none', nextRank));
-    const shuffle = (rules: AscensionRuleDef[]): AscensionRuleDef[] => {
-        const deck = [...rules];
-        for (let i = deck.length - 1; i > 0; i -= 1) {
+    const deck = getAscensionRuleDeck(player?.stats);
+    const receiptKey = player?.meta?.endgame?.lastEndgameReceiptKey ?? 'none';
+    const shuffle = (rules: AscensionRuleDef[], rng: () => number): AscensionRuleDef[] => {
+        const cards = [...rules];
+        for (let i = cards.length - 1; i > 0; i -= 1) {
             const j = Math.floor(rng() * (i + 1));
-            [deck[i], deck[j]] = [deck[j], deck[i]];
+            [cards[i], cards[j]] = [cards[j], cards[i]];
         }
-        return deck;
+        return cards;
     };
-    return shuffle(ASCENSION_RULES.filter((rule) => (counts.get(rule.id) || 0) === fewest)).slice(0, BALANCE.ASCENSION_RULE_OFFER_COUNT);
+    let hand = shuffle(deck, createSeededRandom(deriveSeed(0, 'ascension-rule-offer', receiptKey, nextRank))).slice(0, BALANCE.ASCENSION_RULE_OFFER_COUNT);
+    const rerolls = getAscensionRuleRerolls(player?.meta, nextRank);
+    for (let k = 1; k <= rerolls; k += 1) {
+        const rng = createSeededRandom(deriveSeed(0, 'ascension-rule-offer', receiptKey, nextRank, 'reroll', k));
+        const previous = new Set(hand.map((rule) => rule.id));
+        const next = shuffle(deck, rng).slice(0, BALANCE.ASCENSION_RULE_OFFER_COUNT);
+        // 직전 패와 같은 패면 마지막 칸을 직전 패에 없던 카드 하나로 바꾼다(덱이 패보다 크면 언제나 있다).
+        if (next.every((rule) => previous.has(rule.id))) {
+            const outside = shuffle(deck.filter((rule) => !previous.has(rule.id)), rng);
+            if (outside.length > 0) next[next.length - 1] = outside[0];
+        }
+        hand = next;
+    }
+    return hand;
 };
+
+/** 지금 패를 다시 뽑을 수 있는가 — 덱이 패보다 커야 하고(아니면 같은 카드뿐이다) 횟수가 남아야 한다. */
+export const canRerollAscensionRuleOffer = (player: RuleOfferPlayer, nextRank: number): boolean => (
+    nextRank >= 1
+    && Boolean(player?.meta?.endgame?.lastEndgameReceiptKey)
+    && getAscensionRuleDeck(player?.stats).length > BALANCE.ASCENSION_RULE_OFFER_COUNT
+    && getAscensionRuleRerolls(player?.meta, nextRank) < BALANCE.ASCENSION_RULE_REROLL_FREE + BALANCE.ASCENSION_RULE_REROLL_PAID_MAX
+);
 
 /**
  * 계승 요청의 규칙 선택을 패 안의 규칙으로 — 패에 없는 id(또는 없음)는 패에서 가장 가벼운 카드(규칙 표 순서 = 측정한 무게 순,

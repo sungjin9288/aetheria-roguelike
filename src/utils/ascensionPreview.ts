@@ -3,6 +3,7 @@ import { PRESTIGE_TITLES } from '../data/titles';
 import { carryEssenceLadderOnAscension } from '../systems/essenceLedger';
 import { getPrestigeEnemyLevelRate } from '../systems/metaBonusRamp';
 import { scaleEssenceReward } from '../systems/essenceRewardMult';
+import { getAscensionRulePaidRerolls, getAscensionRuleRerollLadderKeep } from '../systems/ascensionRule';
 import type { Player } from '../types/player';
 
 export interface PrestigeMilestone {
@@ -42,7 +43,7 @@ export interface AscensionOutcome {
     nextEnemyLevelPercent: number;
     metaBonusFullLevel: number;
     /** 2026-09 Wave 32: 정수 사다리 이월(계승 직전 단계 → 남는 단계). */
-    ladder: { rankBefore: number; rankKept: number };
+    ladder: { rankBefore: number; rankKept: number; carryPercent: number; rerollPaid: number };
 }
 
 /**
@@ -60,12 +61,15 @@ const toNonNegativeNumber = (value: unknown) => {
 };
 
 export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): AscensionOutcome => {
-    const currentMeta = meta || {};
+    // 2026-10 Wave 95: 회차 규칙 패 다시 뽑기 기록은 이 계승에서 쓰고 지운다(유료 횟수만큼 넘어가는 사다리를 내려놓는다).
+    const { ascensionRuleOffer: _usedRuleOffer, ...currentMeta } = meta || {};
     const currentRank = Math.floor(toNonNegativeNumber(currentMeta.prestigeRank));
     const nextRank = currentRank + 1;
     const titleIndex = Math.min(nextRank - 1, PRESTIGE_TITLES.length - 1);
+    const rerollPaid = getAscensionRulePaidRerolls(meta, nextRank);
+    const ladderKeep = getAscensionRuleRerollLadderKeep(rerollPaid);
     // 2026-09 Wave 32: 사다리 이월을 먼저 적용하고 그 위에 이번 계승의 보상을 얹는다.
-    const carried = carryEssenceLadderOnAscension(currentMeta);
+    const carried = carryEssenceLadderOnAscension(currentMeta, ladderKeep);
     const carriedMeta = carried.meta;
     // 2026-10 Wave 58: 거울 에센스 공명 "전투와 계승으로 얻는 계승 정수" · 계승 1단계 "에센스 획득 +10%" — 계승 보상에도
     //   전투 · 오늘의 임무와 같은 배율(지금 단계 × 거울)을 곱한다. 이전에는 고정 +200이었다.
@@ -96,6 +100,11 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
         currentEnemyLevelPercent: Math.round(getPrestigeEnemyLevelRate(currentRank) * 100),
         nextEnemyLevelPercent: Math.round(getPrestigeEnemyLevelRate(nextRank) * 100),
         metaBonusFullLevel: BALANCE.META_BONUS_FULL_LEVEL,
-        ladder: { rankBefore: carried.rankBefore, rankKept: carried.rankKept },
+        ladder: {
+            rankBefore: carried.rankBefore,
+            rankKept: carried.rankKept,
+            carryPercent: Math.round(BALANCE.ESSENCE_LADDER_ASCEND_CARRY * ladderKeep * 100),
+            rerollPaid,
+        },
     };
 };

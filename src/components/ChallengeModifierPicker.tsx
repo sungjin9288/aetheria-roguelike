@@ -2,7 +2,7 @@ import { ChevronDown } from 'lucide-react';
 import { BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
 import { getChallengeRewardPercent } from '../utils/challengeRules';
-import type { AscensionRulePreview } from '../utils/ascensionRuleView';
+import type { AscensionRulePreview, AscensionRuleRerollView } from '../utils/ascensionRuleView';
 
 interface ChallengeModifierPickerProps {
     /** data-testid 접두어 — 인트로는 `intro`(기존 e2e 계약), 계승 화면은 `ascension`. */
@@ -18,13 +18,16 @@ interface ChallengeModifierPickerProps {
     /** 2026-10 Wave 94: 계승할 때 보이는 회차 규칙 카드(패) · 카드 고르기. 고른 카드가 `rule`이다. */
     ruleOffer?: AscensionRulePreview[];
     onSelectRule?: (id: string) => void;
+    /** 2026-10 Wave 95: 패 다시 뽑기(없으면 그리지 않는다) · 누르면 리듀서 전이를 부른다. */
+    ruleReroll?: AscensionRuleRerollView | null;
+    onRerollRule?: () => void;
 }
 
 /**
  * 도전 규칙 선택(2026-10 Wave 58) — 새 게임(인트로)과 계승 화면이 함께 쓴다. 계승은 인트로를 다시 거치지 않아
  * 계승 7단계 "도전 조건을 하나 더 선택 가능"을 고를 곳이 없었다(소유자 결정 "계승 화면에서 함께 고름").
  */
-const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule = null, ruleDeclined = false, onToggleRule, ruleOffer = [], onSelectRule }: ChallengeModifierPickerProps) => {
+const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule = null, ruleDeclined = false, onToggleRule, ruleOffer = [], onSelectRule, ruleReroll = null, onRerollRule }: ChallengeModifierPickerProps) => {
     const declined = Boolean(rule?.optional && ruleDeclined);
     const lockedId = rule && !declined ? rule.lockedId : null;
     const picked = lockedId ? selected.filter((id) => id !== lockedId) : selected;
@@ -59,6 +62,25 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule
                             );
                         })}
                     </div>
+                    {ruleReroll && (
+                        // 2026-10 Wave 95: 다시 뽑기 — 첫 번째는 무료, 그 뒤는 넘어가는 정수 사다리를 보이는 그대로 내려놓는다.
+                        <div className="mt-2 flex items-center justify-between gap-3">
+                            <span data-testid={`${testIdPrefix}-rule-reroll-count`} className="text-[11px] leading-snug text-slate-400">{ruleReroll.countLabel}</span>
+                            <button
+                                type="button"
+                                data-testid={`${testIdPrefix}-rule-reroll`}
+                                disabled={!ruleReroll.available}
+                                onClick={() => onRerollRule?.()}
+                                className={`min-h-11 min-w-0 rounded-md border px-3 text-left text-xs font-bold disabled:cursor-not-allowed disabled:opacity-60 ${
+                                    ruleReroll.free
+                                        ? 'border-[rgba(240,170,110,0.6)] bg-[rgba(240,170,110,0.12)] text-orange-100'
+                                        : 'border-rose-300/40 bg-rose-300/[0.08] text-rose-100'
+                                }`}
+                            >
+                                {ruleReroll.label}
+                            </button>
+                        </div>
+                    )}
                 </div>
             )}
             {rule && (

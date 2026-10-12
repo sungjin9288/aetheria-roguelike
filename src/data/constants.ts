@@ -357,6 +357,11 @@ export const BALANCE = {
     ASCENSION_RULE_SIGNATURE_MULT: 3,
     // 2026-10 Wave 94 (소유자 결정 "로그라이크 느낌 — 회차 규칙 카드 뽑기"): 계승할 때 보이는 회차 규칙 카드 수(아직 정복하지 않은 규칙에서 뽑는다).
     ASCENSION_RULE_OFFER_COUNT: 3,
+    // 2026-10 Wave 95 (소유자 결정 "무료 한 번 + 영구 능력치 — 섞어서"): 회차 규칙 패 다시 뽑기. 처음 FREE번은 무료이고 되돌릴 수 없다,
+    //   그 뒤 PAID_MAX번까지는 한 번마다 다음 여정으로 넘어가는 정수 사다리 단계의 LADDER_COST만큼을 내려놓는다(계승할 때 적용).
+    ASCENSION_RULE_REROLL_FREE: 1,
+    ASCENSION_RULE_REROLL_PAID_MAX: 2,
+    ASCENSION_RULE_REROLL_LADDER_COST: 0.5,
     CHALLENGE_MODIFIER_SLOTS: 3,          // 챌린지 모디파이어 동시 선택 기본 상한
     PRESTIGE_R7_CHALLENGE_SLOT_BONUS: 1,  // rank≥7: 챌린지 모디파이어 슬롯 +1 (3→4)
     PRESTIGE_R8_ESSENCE_BONUS: 0.10,      // rank≥8: 에센스 획득 추가 +10%p (rank1과 누적 +20%)

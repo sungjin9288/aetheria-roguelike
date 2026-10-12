@@ -197,6 +197,9 @@ export interface AscensionSnapshot {
     inventoryCount: number;
     inventoryIds: Array<string | undefined>;
     relicCount: number;
+    /** Wave 95: 이 단계에서 고른 회차 규칙 id · 넘어간 정수 사다리 단계. */
+    ascensionRuleId: string | null;
+    ladderRank: number;
 }
 
 /** getMirrorSnapshot() 반환 모양. */
@@ -375,7 +378,8 @@ export interface AetheriaTestApi {
     seedSeasonJourneyScenario: () => void;
     seedGraveRecoveryScenario: () => void;
     /** 2026-10 Wave 92: `prestigeRank`(기본 2)를 넘기면 그 단계에서 계승하는 화면 — 다음 회차 규칙 미리보기 확인용. */
-    seedAscensionJourneyScenario: (prestigeRank?: number) => void;
+    /** Wave 95: `receiptKey`를 주면 마왕 처치 영수증을 세운다(회차 규칙 패 다시 뽑기는 영수증이 있는 계승에서만 열린다). */
+    seedAscensionJourneyScenario: (prestigeRank?: number, receiptKey?: string) => void;
     seedTrueEndingJourneyScenario: () => boolean;
     weakenTrueBossForJourney: () => boolean;
     seedMirrorJourneyScenario: () => void;
@@ -831,6 +835,8 @@ export const useGameTestApi = (
                     inventoryCount: er.player.inv?.length || 0,
                     inventoryIds: (er.player.inv || []).map((item) => item.id),
                     relicCount: er.player.relics?.length || 0,
+                    ascensionRuleId: er.player.meta?.ascensionRule?.ruleId ?? null,
+                    ladderRank: er.player.meta?.rank || 0,
                 };
             },
             getMirrorSnapshot: () => {
@@ -1101,7 +1107,7 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'graves' });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
-            seedAscensionJourneyScenario: (prestigeRank = 2) => {
+            seedAscensionJourneyScenario: (prestigeRank = 2, receiptKey) => {
                 const er = engineRef.current;
                 er.dispatch({
                     type: AT.SET_PLAYER,
@@ -1127,6 +1133,14 @@ export const useGameTestApi = (
                             bonusHp: 50,
                             bonusMp: 30,
                             mirror: { start_gold: 2 },
+                            ...(typeof receiptKey === 'string' ? {
+                                rank: 400,
+                                endgame: {
+                                    version: 1 as const, primalShards: 0, legacyInventoryMigrated: true, trueEndingSeen: false,
+                                    ...(er.player.meta?.endgame || {}),
+                                    lastEndgameReceiptKey: receiptKey,
+                                },
+                            } : {}),
                         },
                     },
                 });
