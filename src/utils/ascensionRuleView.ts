@@ -2,6 +2,7 @@ import { MSG } from '../data/messages.js';
 import {
     SIGNATURE_COLLECTION_GROUPS,
     getAscensionRule,
+    getAscensionRuleCycle,
     getAscensionRuleTwistLabel,
     getConqueredRuleOrdinals,
     getPlayerAscensionRule,
@@ -38,14 +39,21 @@ export interface AscensionRuleOutlookLines {
 // 소수 한 자리 반올림 — `toFixed`만 쓰면 5.85가 이진 표현 때문에 5.8로 내려간다.
 const formatOutlookNumber = (value: number): string => (Math.round(value * 10) / 10).toFixed(1);
 
-/** 선택형 규칙의 받아들임 · 거절 미리보기 줄 — 강제 규칙이나 측정값이 없는 규칙은 null(숫자를 지어내지 않는다). */
-const getAscensionRuleOutlookLines = (rule: AscensionRuleDef): AscensionRuleOutlookLines | null => {
-    const outlook = isOptionalAscensionRule(rule) ? rule.outlook : undefined;
-    if (!outlook) return null;
+/**
+ * 선택형 규칙의 받아들임 · 거절 미리보기 줄 — 강제 규칙이나 측정값이 없는 규칙은 null(숫자를 지어내지 않는다).
+ * 2026-10 Wave 93: 이 단계의 순환에 맞는 측정을 고르고, 그 순환의 측정이 없으면 마지막으로 잰 순환 값을 보이며 출처 줄이 밝힌다.
+ */
+const getAscensionRuleOutlookLines = (rule: AscensionRuleDef, cycle: number): AscensionRuleOutlookLines | null => {
+    const measured = isOptionalAscensionRule(rule) ? rule.outlook : undefined;
+    if (!measured || measured.length === 0 || cycle < 1) return null;
+    const measuredCycle = Math.min(cycle, measured.length);
+    const outlook = measured[measuredCycle - 1];
     return {
         accepted: MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(formatOutlookNumber(outlook.acceptedDeaths), formatOutlookNumber(outlook.acceptedSignatures)),
         declined: MSG.ASCENSION_RULE_OUTLOOK_DECLINED(formatOutlookNumber(outlook.declinedDeaths), formatOutlookNumber(outlook.declinedSignatures)),
-        source: MSG.ASCENSION_RULE_OUTLOOK_SOURCE,
+        source: measuredCycle === cycle
+            ? MSG.ASCENSION_RULE_OUTLOOK_SOURCE(measuredCycle)
+            : MSG.ASCENSION_RULE_OUTLOOK_SOURCE_LATER(measuredCycle, cycle),
     };
 };
 
@@ -58,7 +66,7 @@ export const getAscensionRulePreview = (rank: number | null | undefined): Ascens
         name: rule.name,
         detail: MSG.ASCENSION_RULE_DETAIL(getAscensionRuleTwistLabel(rule), getSignatureSetName(rule.signatureSet), rule.conquestTitle.name),
         optional: isOptionalAscensionRule(rule),
-        outlook: getAscensionRuleOutlookLines(rule),
+        outlook: getAscensionRuleOutlookLines(rule, getAscensionRuleCycle(rank)),
     };
 };
 

@@ -24,6 +24,13 @@ export const getAscensionRule = (rank: number | null | undefined): AscensionRule
     return ASCENSION_RULES[(r - 1) % ASCENSION_RULES.length];
 };
 
+/** 이 계승 단계가 규칙 표의 몇 번째 순환인지(1부터, rank 1 ~ 6 = 1, 7 ~ 12 = 2). rank 0은 0 — 2026-10 Wave 93. */
+export const getAscensionRuleCycle = (rank: number | null | undefined): number => {
+    const r = Math.floor(Number(rank) || 0);
+    if (r < 1 || ASCENSION_RULES.length === 0) return 0;
+    return Math.floor((r - 1) / ASCENSION_RULES.length) + 1;
+};
+
 /** 거절할 수 있는 규칙인가(Wave 91 — 무거운 비틀기 셋). */
 export const isOptionalAscensionRule = (rule: AscensionRuleDef | null | undefined): boolean => rule?.optional === true;
 

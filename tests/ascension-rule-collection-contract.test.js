@@ -15,6 +15,7 @@ import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
 import { GS } from '../src/reducers/gameStates.js';
 import {
     getAscensionRule,
+    getAscensionRuleCycle,
     getRuleSignatureDropMult,
     getSignatureSetMemberNames,
 } from '../src/systems/ascensionRule.js';
@@ -375,35 +376,51 @@ test('Wave 91: 도감 수집 요약 — 거절한 회차에는 표적 묶음이 
     assert.ok(getCollectionSummary(playerAt(1, { ascensionRuleDeclined: true })).featuredLabel, '강제 규칙은 거절이 없다');
 });
 
-test('Wave 92: 측정 미리보기는 선택형 규칙에만 있고, 받아들임이 거절보다 위험하고 각인을 더 준다(측정 그대로)', () => {
+test('Wave 92 · 93: 측정 미리보기는 선택형 규칙에만 있고, 순환마다 받아들임이 거절보다 위험하고 각인을 더 준다(측정 그대로)', () => {
+    const cycles = new Set();
     for (const rule of ASCENSION_RULES) {
         if (!rule.optional) {
             assert.equal(rule.outlook, undefined, `${rule.id}: 강제 규칙에는 고를 차이가 없다`);
             continue;
         }
-        const o = rule.outlook;
-        assert.ok(o, `${rule.id}: 선택형 규칙은 측정값을 든다`);
-        for (const value of Object.values(o)) assert.ok(Number.isFinite(value) && value >= 0);
-        assert.ok(o.acceptedDeaths > o.declinedDeaths, `${rule.id}: 받아들이면 더 위험하다`);
-        assert.ok(o.acceptedSignatures > o.declinedSignatures, `${rule.id}: 받아들이면 각인을 더 얻는다`);
+        assert.ok(Array.isArray(rule.outlook) && rule.outlook.length >= 2, `${rule.id}: 선택형 규칙은 첫 · 두 번째 순환 측정을 든다`);
+        cycles.add(rule.outlook.length);
+        rule.outlook.forEach((o, i) => {
+            for (const value of Object.values(o)) assert.ok(Number.isFinite(value) && value >= 0);
+            assert.ok(o.acceptedDeaths > o.declinedDeaths, `${rule.id} 순환 ${i + 1}: 받아들이면 더 위험하다`);
+            assert.ok(o.acceptedSignatures > o.declinedSignatures, `${rule.id} 순환 ${i + 1}: 받아들이면 각인을 더 얻는다`);
+        });
     }
+    assert.equal(cycles.size, 1, '선택형 규칙은 같은 순환까지 잰다');
 });
 
-test('Wave 92: 미리보기 줄은 데이터 숫자를 그대로 그리고, 순환이 다시 와도 같은 규칙의 측정을 보인다', () => {
-    for (const rank of [4, 5, 6]) {
-        const rule = ASCENSION_RULES[rank - 1];
+test('Wave 93: 순환 번호는 계승 단계에서 도출된다 — rank 1 ~ 6 = 1, 7 ~ 12 = 2', () => {
+    assert.deepEqual([0, 1, 6, 7, 12, 13, 18, 19].map(getAscensionRuleCycle), [0, 1, 1, 2, 2, 3, 3, 4]);
+});
+
+test('Wave 92 · 93: 미리보기 줄은 그 순환의 측정을 그대로 그리고, 잰 적 없는 순환은 마지막 측정을 보이며 출처가 밝힌다', () => {
+    const r1 = (value) => (Math.round(value * 10) / 10).toFixed(1);
+    for (const rank of [4, 5, 6, 10, 11, 12, 16, 17, 18]) {
+        const rule = getAscensionRule(rank);
+        const cycle = getAscensionRuleCycle(rank);
+        const measuredCycle = Math.min(cycle, rule.outlook.length);
+        const o = rule.outlook[measuredCycle - 1];
         const preview = getAscensionRulePreview(rank);
-        const o = rule.outlook;
-        const r1 = (value) => (Math.round(value * 10) / 10).toFixed(1);
-        assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)));
-        assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)));
-        assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE);
-        assert.deepEqual(getAscensionRulePreview(rank + ASCENSION_RULES.length).outlook, preview.outlook);
+        assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)), `rank ${rank}`);
+        assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)), `rank ${rank}`);
+        assert.equal(preview.outlook.source, measuredCycle === cycle
+            ? MSG.ASCENSION_RULE_OUTLOOK_SOURCE(cycle)
+            : MSG.ASCENSION_RULE_OUTLOOK_SOURCE_LATER(measuredCycle, cycle), `rank ${rank}`);
     }
-    for (const rank of [1, 2, 3]) assert.equal(getAscensionRulePreview(rank).outlook, null);
+    for (const rank of [1, 2, 3, 7, 8, 9]) assert.equal(getAscensionRulePreview(rank).outlook, null);
+    assert.notDeepEqual(getAscensionRulePreview(10).outlook, getAscensionRulePreview(4).outlook, '두 번째 순환은 자기 측정을 보인다');
     assert.equal(getAscensionRulePreview(4).outlook.accepted, '받아들이면: 사망 3.6회 · 새 각인 +1.6개 · 정복 보상');
     assert.equal(getAscensionRulePreview(5).outlook.declined, '거절하면: 사망 1.7회 · 새 각인 +0.2개');
     assert.equal(getAscensionRulePreview(6).outlook.accepted, '받아들이면: 사망 5.9회 · 새 각인 +1.2개 · 정복 보상', '5.85는 5.9로 반올림한다');
+    assert.equal(getAscensionRulePreview(10).outlook.accepted, '받아들이면: 사망 2.2회 · 새 각인 +1.0개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(11).outlook.declined, '거절하면: 사망 0.8회 · 새 각인 +0.0개');
+    assert.equal(getAscensionRulePreview(4).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 이 규칙의 1번째 순환 측정');
+    assert.equal(getAscensionRulePreview(16).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 2번째 순환 측정 — 지금은 3번째 순환');
 });
 
 test('Wave 92: 선택 화면 — 두 줄을 함께 보이고 지금 고른 쪽을 밝힌다, 강제 규칙은 줄이 없다, 미리보기는 규칙을 바꾸지 않는다', () => {
