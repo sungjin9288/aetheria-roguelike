@@ -19,7 +19,7 @@ import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { GameActions } from '../hooks/actionDeps';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
-import { getAscensionRulePreview } from '../utils/ascensionRuleView';
+import { getAscensionRuleOfferView } from '../utils/ascensionRuleView';
 
 interface AscensionScreenProps {
     player: Player;
@@ -37,6 +37,10 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
     const challengeSlots = getChallengeSlotCount(outcome.nextRank);
     const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
     const [ruleDeclined, setRuleDeclined] = useState(false);
+    // 2026-10 Wave 94: 새 단계의 회차 규칙 카드 — 처음에는 패에서 가장 가벼운 카드가 골라져 있다(리듀서 기본값과 같다).
+    const ruleOfferView = getAscensionRuleOfferView(player, outcome.nextRank);
+    const [selectedRuleId, setSelectedRuleId] = useState<string | null>(ruleOfferView.defaultId);
+    const selectedRule = ruleOfferView.cards.find((card) => card.id === selectedRuleId) ?? null;
     const statRows = [
         { label: '공격력', before: player.meta?.bonusAtk || 0, after: outcome.meta.bonusAtk, tone: 'text-rose-100' },
         { label: '생명', before: player.meta?.bonusHp || 0, after: outcome.meta.bonusHp, tone: 'text-emerald-100' },
@@ -222,7 +226,9 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                     {/* 도전 규칙은 확정 버튼 바로 위 — 고른 뒤 확정한다(스크롤 영역의 다른 내용 배치는 그대로). */}
                     <ChallengeModifierPicker
                         testIdPrefix="ascension"
-                        rule={getAscensionRulePreview(outcome.nextRank)}
+                        rule={selectedRule}
+                        ruleOffer={ruleOfferView.cards}
+                        onSelectRule={setSelectedRuleId}
                         ruleDeclined={ruleDeclined}
                         onToggleRule={() => setRuleDeclined((current) => !current)}
                         selected={selectedChallenges}
@@ -245,7 +251,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         <button
                             type="button"
                             data-testid="ascension-confirm"
-                            onClick={() => actions?.confirmAscension?.(selectedChallenges, ruleDeclined)}
+                            onClick={() => actions?.confirmAscension?.(selectedChallenges, ruleDeclined, selectedRuleId)}
                             disabled={hasPendingQuestRewards}
                             aria-describedby={hasPendingQuestRewards ? 'ascension-pending-quests-title' : undefined}
                             className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-[#d5b180]/36 bg-[#d5b180]/14 px-3 text-[13px] font-readable font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/20 disabled:cursor-not-allowed disabled:opacity-50"

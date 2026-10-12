@@ -31,6 +31,8 @@ export type AscendPayload = {
     seed?: number;
     /** 2026-10 Wave 91: 새 단계의 선택형 회차 규칙(무거운 셋)을 거절한다. 강제 규칙에는 효과가 없다. */
     declineRule?: boolean;
+    /** 2026-10 Wave 94: 계승 화면의 패에서 고른 회차 규칙 id. 패 밖이거나 없으면 패에서 가장 가벼운 카드. */
+    ruleId?: string;
 };
 
 export interface ResolveBoundedEncounterChoicePayload {

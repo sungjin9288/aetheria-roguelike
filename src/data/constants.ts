@@ -355,6 +355,8 @@ export const BALANCE = {
     PRESTIGE_R6_RELIC_PITY_MULT: 1.5,     // rank≥6: 유물 발견 pity 누적 가속 ×1.5
     // 2026-10 Wave 89: 회차 규칙(data/ascensionRules.ts)의 표적 세트 각인 드롭률 배율 — pity 배율과 곱한다(상한은 같은 calculateCappedLootChance).
     ASCENSION_RULE_SIGNATURE_MULT: 3,
+    // 2026-10 Wave 94 (소유자 결정 "로그라이크 느낌 — 회차 규칙 카드 뽑기"): 계승할 때 보이는 회차 규칙 카드 수(아직 정복하지 않은 규칙에서 뽑는다).
+    ASCENSION_RULE_OFFER_COUNT: 3,
     CHALLENGE_MODIFIER_SLOTS: 3,          // 챌린지 모디파이어 동시 선택 기본 상한
     PRESTIGE_R7_CHALLENGE_SLOT_BONUS: 1,  // rank≥7: 챌린지 모디파이어 슬롯 +1 (3→4)
     PRESTIGE_R8_ESSENCE_BONUS: 0.10,      // rank≥8: 에센스 획득 추가 +10%p (rank1과 누적 +20%)

@@ -20,13 +20,13 @@ import PendingQuestRewardList from './PendingQuestRewardList';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
-import { getAscensionRulePreview } from '../utils/ascensionRuleView';
+import { getAscensionRuleOfferView } from '../utils/ascensionRuleView';
 
 interface TrueEndingScreenProps {
     player: Player;
     actions?: {
         completeQuest?: (questId: string | number) => void;
-        confirmAscension?: (challengeModifiers?: string[], declineRule?: boolean) => void;
+        confirmAscension?: (challengeModifiers?: string[], declineRule?: boolean, ruleId?: string | null) => void;
         cancelAscension?: () => void;
     };
 }
@@ -87,13 +87,17 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
     const challengeSlots = getChallengeSlotCount(getAscensionOutcome(player.meta).nextRank);
     const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
     const [ruleDeclined, setRuleDeclined] = useState(false);
+    // 2026-10 Wave 94: 새 단계의 회차 규칙 카드 — 계승 화면과 같다.
+    const ruleOfferView = getAscensionRuleOfferView(player, getAscensionOutcome(player.meta).nextRank);
+    const [selectedRuleId, setSelectedRuleId] = useState<string | null>(ruleOfferView.defaultId);
+    const selectedRule = ruleOfferView.cards.find((card) => card.id === selectedRuleId) ?? null;
 
     const confirmNewGamePlus = useCallback(() => {
         if (confirmationAcceptedRef.current) return;
         confirmationAcceptedRef.current = true;
         setConfirmationAccepted(true);
-        actions?.confirmAscension?.(selectedChallenges, ruleDeclined);
-    }, [actions, selectedChallenges, ruleDeclined]);
+        actions?.confirmAscension?.(selectedChallenges, ruleDeclined, selectedRuleId);
+    }, [actions, selectedChallenges, ruleDeclined, selectedRuleId]);
 
     const stats = [
         { label: '총 처치', value: (player?.stats?.kills || 0).toLocaleString() },
@@ -220,7 +224,9 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                             <div className="w-full max-w-sm">
                                 <ChallengeModifierPicker
                                     testIdPrefix="true-ending"
-                                    rule={getAscensionRulePreview(getAscensionOutcome(player.meta).nextRank)}
+                                    rule={selectedRule}
+                                    ruleOffer={ruleOfferView.cards}
+                                    onSelectRule={setSelectedRuleId}
                                     ruleDeclined={ruleDeclined}
                                     onToggleRule={() => setRuleDeclined((current) => !current)}
                                     selected={selectedChallenges}

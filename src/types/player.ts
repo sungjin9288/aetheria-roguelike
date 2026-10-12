@@ -58,6 +58,11 @@ interface PlayerStats {
      * 정복 보상(칭호 · 각인)은 단계마다 한 번이고, 정복 칭호의 복구 근거다(`checkTitles` 'ruleConquest').
      */
     ruleConquestRanks?: number[];
+    /**
+     * 2026-10 Wave 94: 정복한 회차 규칙 id(정복마다 한 줄, 같은 규칙도 다시 남는다 — 패가 순환을 센다). 카드 뽑기 뒤로는 단계 번호가
+     * 규칙을 정하지 않는다. 없으면(이전 세이브) 정복한 단계를 고정 순서로 읽고, 처음 쓸 때 그 값으로 채운다(`getRuleConquestLedger`).
+     */
+    ruleConquestRuleIds?: string[];
     /** cycle 260: 수령 완료 퀘스트 영구 ledger. quest.id는 숫자(DB.QUESTS)와 문자열(bounty) 혼용. */
     claimedQuestIds?: Array<string | number>;
     explores?: number;
@@ -255,6 +260,11 @@ interface PlayerMeta {
     bonusHp?: number;
     bonusMp?: number;
     prestigeRank?: number;
+    /**
+     * 2026-10 Wave 94: 이 계승 단계에서 고른 회차 규칙 카드. 영구 meta라 같은 단계의 사망 재시작이 같은 규칙을 읽는다.
+     * `rank`가 지금 `prestigeRank`와 다르거나 없으면(이전 세이브) 고정 순서(`getAscensionRule`)로 읽는다.
+     */
+    ascensionRule?: { rank: number; ruleId: string };
     // cycle 281: totalPrestigeAtk/Hp/Mp 3 dead 필드 제거 (cycle 277 runtime cleanup paired completion).
     //   runtime read 0건 + saved 데이터 잔존 필드는 무시되지만 무해 (runtime access 안 함).
     // 2026-07 — 에테르 거울: 노드id → 레벨. getMirrorEffects(meta)가 단일 진실 원천.

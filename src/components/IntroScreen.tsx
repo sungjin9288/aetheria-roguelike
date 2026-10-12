@@ -8,13 +8,16 @@ import { createRandomMobileName } from '../utils/nameGenerator';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
 import { getAscensionRulePreview } from '../utils/ascensionRuleView';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
+import type { Player } from '../types';
 
 interface IntroScreenProps {
     onStart?: (name: string, gender: 'male', job: '모험가', challenges: string[], declineRule?: boolean) => void;
     prestigeRank?: number;
+    /** 2026-10 Wave 94: 이 단계에서 고른 회차 규칙(`meta.ascensionRule`)을 읽는다. 없으면 단계의 고정 순서. */
+    meta?: Player['meta'];
 }
 
-const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
+const IntroScreen = ({ onStart, prestigeRank, meta }: IntroScreenProps) => {
     const [name, setName] = useState(() => createRandomMobileName(Math.random));
     const [selectedChallenges, setSelectedChallenges] = useState<string[]>([]);
     const [ruleDeclined, setRuleDeclined] = useState(false);
@@ -137,7 +140,7 @@ const IntroScreen = ({ onStart, prestigeRank }: IntroScreenProps) => {
 
                         <ChallengeModifierPicker
                             testIdPrefix="intro"
-                            rule={getAscensionRulePreview(prestigeRank)}
+                            rule={getAscensionRulePreview(meta ?? { prestigeRank })}
                             ruleDeclined={ruleDeclined}
                             onToggleRule={() => setRuleDeclined((current) => !current)}
                             selected={selectedChallenges}

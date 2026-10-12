@@ -188,7 +188,7 @@ function App() {
         return (
             <MotionConfig reducedMotion="user">
                 <MainLayout visualEffect={null} immersive>
-                    <IntroScreen onStart={engine.actions.start} prestigeRank={engine.player.meta?.prestigeRank} />
+                    <IntroScreen onStart={engine.actions.start} prestigeRank={engine.player.meta?.prestigeRank} meta={engine.player.meta} />
                 </MainLayout>
             </MotionConfig>
         );
