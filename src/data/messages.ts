@@ -257,7 +257,9 @@ export const MSG = {
     // 2026-10 Wave 92: 선택형 규칙의 받아들임 · 거절 측정 차이(데이터 `outlook`) — 숫자만 보이고 판단은 플레이어 몫이다.
     ASCENSION_RULE_OUTLOOK_ACCEPTED: (deaths: string, signatures: string) => `받아들이면: 사망 ${deaths}회 · 새 각인 +${signatures}개 · 정복 보상`,
     ASCENSION_RULE_OUTLOOK_DECLINED: (deaths: string, signatures: string) => `거절하면: 사망 ${deaths}회 · 새 각인 +${signatures}개`,
-    ASCENSION_RULE_OUTLOOK_SOURCE: '그 회차 평균 · 모의 플레이 120판 · 이 규칙의 첫 순환 측정',
+    // 2026-10 Wave 93: 순환별 측정 — 측정이 없는 이후 순환은 마지막으로 잰 순환 값이고 그렇다고 밝힌다.
+    ASCENSION_RULE_OUTLOOK_SOURCE: (measuredCycle: number) => `그 회차 평균 · 모의 플레이 120판 · 이 규칙의 ${measuredCycle}번째 순환 측정`,
+    ASCENSION_RULE_OUTLOOK_SOURCE_LATER: (measuredCycle: number, cycle: number) => `그 회차 평균 · 모의 플레이 120판 · ${measuredCycle}번째 순환 측정 — 지금은 ${cycle}번째 순환`,
     ASCENSION_RULE_DETAIL: (twist: string, setName: string, titleName: string) => `${twist} 강제 · '${setName}' 각인 드롭 ×3 · 마왕을 쓰러뜨리면 칭호 [${titleName}] + 그 세트의 없는 각인 하나`,
     COLLECTION_SUMMARY_TITLE: '수집 완주',
     COLLECTION_SET_ROW: (setName: string, owned: number, total: number) => `${setName} ${owned}/${total}`,

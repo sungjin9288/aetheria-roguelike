@@ -33,11 +33,15 @@ export interface AscensionRuleDef {
     optional?: true;
     /**
      * 2026-10 Wave 92 (소유자 결정 "C를 보여주는게 좋지" — 원장 §96.5 (c)): 선택형 규칙의 받아들임 · 거절 측정 차이. 선택 화면이 한 줄로
-     * 보이고 판단은 플레이어 몫이다(Wave 88 위협 줄과 같은 원칙). 값은 자연 플레이 120시드 × 7회차(원장 §96.3 · §97)에서 규칙이
-     * 처음 놓인 회차(rank 4 ~ 6)의 시드당 평균이다 — 사망은 그 회차의 사망 수, 각인은 그 회차에 새로 발견한 전설 각인 수. 순환이
-     * 다시 돌아온 단계(rank 10 ~ 12)는 적이 더 강하므로 화면은 "첫 순환 측정"이라고 밝힌다. 규칙 · 순서 · 엔진을 바꾸면 다시 잴 것.
+     * 보이고 판단은 플레이어 몫이다(Wave 88 위협 줄과 같은 원칙). 값은 그 회차의 시드당 평균이다 — 사망은 그 회차의 사망 수, 각인은
+     * 그 회차에 새로 발견한 전설 각인 수. 규칙 · 순서 · 엔진을 바꾸면 다시 잴 것.
+     *
+     * 2026-10 Wave 93 (소유자 결정 "b" — 원장 §97.5 (b) · §98): 순환마다 따로 잰다. 배열의 i번째가 i + 1번째 순환이다 — [0] = rank 4 ~ 6
+     * (120시드 × 7회차, 원장 §96.3), [1] = rank 10 ~ 12(120시드 × 13회차, 원장 §98). 두 번째 순환은 적이 더 강한데도 사망이 첫 순환의
+     * 39 ~ 62%였다(영구 성장이 적 성장보다 빨리 쌓인 것으로 보인다) — 첫 순환 값을 그대로 보이면 위험을 1.6 ~ 2.6배 크게 말했다. 측정이 없는 순환은
+     * 마지막으로 잰 순환 값을 보이고 화면이 그렇다고 밝힌다(숫자를 지어내지 않는다).
      */
-    outlook?: AscensionRuleOutlook;
+    outlook?: readonly AscensionRuleOutlook[];
 }
 
 export interface AscensionRuleOutlook {
@@ -76,7 +80,10 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         signatureSet: UNBOUND_SIGNATURE_GROUP.key,
         conquestTitle: { id: 'conquest_unbound', name: '흩어진 전설의 수집가' },
         optional: true,
-        outlook: { acceptedDeaths: 3.59, declinedDeaths: 1.69, acceptedSignatures: 1.59, declinedSignatures: 0.48 },
+        outlook: [
+            { acceptedDeaths: 3.59, declinedDeaths: 1.69, acceptedSignatures: 1.59, declinedSignatures: 0.48 },
+            { acceptedDeaths: 2.23, declinedDeaths: 0.74, acceptedSignatures: 1.02, declinedSignatures: 0.03 },
+        ],
     },
     {
         id: 'fading_dimension',
@@ -85,7 +92,10 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         signatureSet: 'dimension',
         conquestTitle: { id: 'conquest_dimension', name: '차원을 꿰뚫은 자' },
         optional: true,
-        outlook: { acceptedDeaths: 6.28, declinedDeaths: 1.7, acceptedSignatures: 1.23, declinedSignatures: 0.24 },
+        outlook: [
+            { acceptedDeaths: 6.28, declinedDeaths: 1.7, acceptedSignatures: 1.23, declinedSignatures: 0.24 },
+            { acceptedDeaths: 3.48, declinedDeaths: 0.82, acceptedSignatures: 1, declinedSignatures: 0.04 },
+        ],
     },
     {
         id: 'shadow_legion',
@@ -94,6 +104,9 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         signatureSet: 'shadow-lord',
         conquestTitle: { id: 'conquest_shadow', name: '암흑을 꺾은 자' },
         optional: true,
-        outlook: { acceptedDeaths: 5.85, declinedDeaths: 2.03, acceptedSignatures: 1.23, declinedSignatures: 0.21 },
+        outlook: [
+            { acceptedDeaths: 5.85, declinedDeaths: 2.03, acceptedSignatures: 1.23, declinedSignatures: 0.21 },
+            { acceptedDeaths: 2.26, declinedDeaths: 0.98, acceptedSignatures: 1, declinedSignatures: 0.03 },
+        ],
     },
 ]);
