@@ -10,7 +10,6 @@ import {
 } from 'lucide-react';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import { MSG } from '../data/messages.js';
-import { BALANCE } from '../data/constants.js';
 import type { Player } from '../types/index.js';
 import { getAscensionOutcome, isNewAscensionTitle } from '../utils/ascensionPreview';
 import EndgameJourney from './EndgameJourney';
@@ -19,11 +18,11 @@ import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { GameActions } from '../hooks/actionDeps';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
-import { getAscensionRuleOfferView } from '../utils/ascensionRuleView';
+import { getAscensionRuleOfferView, getAscensionRuleRerollView } from '../utils/ascensionRuleView';
 
 interface AscensionScreenProps {
     player: Player;
-    actions?: Pick<GameActions, 'cancelAscension' | 'confirmAscension' | 'completeQuest'>;
+    actions?: Pick<GameActions, 'cancelAscension' | 'confirmAscension' | 'completeQuest' | 'rerollAscensionRuleOffer'>;
     /** 2026-09 G3: 승천 화면에서 곧바로 에테르 거울로 — SystemTab과 같은 진입점을 재사용. */
     onOpenMirror?: () => void;
 }
@@ -40,7 +39,16 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
     // 2026-10 Wave 94: 새 단계의 회차 규칙 카드 — 처음에는 패에서 가장 가벼운 카드가 골라져 있다(리듀서 기본값과 같다).
     const ruleOfferView = getAscensionRuleOfferView(player, outcome.nextRank);
     const [selectedRuleId, setSelectedRuleId] = useState<string | null>(ruleOfferView.defaultId);
-    const selectedRule = ruleOfferView.cards.find((card) => card.id === selectedRuleId) ?? null;
+    // 2026-10 Wave 95: 다시 뽑아 고른 카드가 패에서 사라지면 새 패의 기본 카드(가장 가벼운 카드)가 골라져 있다.
+    const selectedRule = ruleOfferView.cards.find((card) => card.id === selectedRuleId)
+        ?? ruleOfferView.cards.find((card) => card.id === ruleOfferView.defaultId)
+        ?? null;
+    const ruleRerollView = getAscensionRuleRerollView(player, outcome.nextRank);
+    const rerollRule = () => {
+        if (!ruleRerollView?.available) return;
+        setRuleDeclined(false);
+        actions?.rerollAscensionRuleOffer?.(ruleRerollView.rerolls);
+    };
     const statRows = [
         { label: '공격력', before: player.meta?.bonusAtk || 0, after: outcome.meta.bonusAtk, tone: 'text-rose-100' },
         { label: '생명', before: player.meta?.bonusHp || 0, after: outcome.meta.bonusHp, tone: 'text-emerald-100' },
@@ -132,7 +140,12 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         </div>
                         {outcome.ladder.rankBefore > outcome.ladder.rankKept && (
                             <p data-testid="ascension-ladder-carry" className="mt-2 text-[11px] font-readable leading-relaxed text-amber-100/80">
-                                {MSG.ASCEND_LADDER_CARRY(outcome.ladder.rankBefore, outcome.ladder.rankKept, Math.round(BALANCE.ESSENCE_LADDER_ASCEND_CARRY * 100))}
+                                {MSG.ASCEND_LADDER_CARRY(outcome.ladder.rankBefore, outcome.ladder.rankKept, outcome.ladder.carryPercent)}
+                            </p>
+                        )}
+                        {outcome.ladder.rerollPaid > 0 && (
+                            <p data-testid="ascension-ladder-reroll-cost" className="mt-1 text-[11px] font-readable leading-relaxed text-rose-100/85">
+                                {MSG.ASCEND_LADDER_REROLL_COST(outcome.ladder.rerollPaid)}
                             </p>
                         )}
                         <p className="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">
@@ -229,6 +242,8 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         rule={selectedRule}
                         ruleOffer={ruleOfferView.cards}
                         onSelectRule={setSelectedRuleId}
+                        ruleReroll={ruleRerollView}
+                        onRerollRule={rerollRule}
                         ruleDeclined={ruleDeclined}
                         onToggleRule={() => setRuleDeclined((current) => !current)}
                         selected={selectedChallenges}
@@ -251,7 +266,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         <button
                             type="button"
                             data-testid="ascension-confirm"
-                            onClick={() => actions?.confirmAscension?.(selectedChallenges, ruleDeclined, selectedRuleId)}
+                            onClick={() => actions?.confirmAscension?.(selectedChallenges, ruleDeclined, selectedRule?.id ?? null)}
                             disabled={hasPendingQuestRewards}
                             aria-describedby={hasPendingQuestRewards ? 'ascension-pending-quests-title' : undefined}
                             className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-[#d5b180]/36 bg-[#d5b180]/14 px-3 text-[13px] font-readable font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/20 disabled:cursor-not-allowed disabled:opacity-50"

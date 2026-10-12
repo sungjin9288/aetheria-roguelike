@@ -265,6 +265,11 @@ interface PlayerMeta {
      * `rank`가 지금 `prestigeRank`와 다르거나 없으면(이전 세이브) 고정 순서(`getAscensionRule`)로 읽는다.
      */
     ascensionRule?: { rank: number; ruleId: string };
+    /**
+     * 2026-10 Wave 95: 계승 화면의 회차 규칙 패를 다시 뽑은 횟수 — 이 마왕 처치 영수증(`receiptKey`)과 다음 단계(`rank`)의 패에만 쓴다
+     * (리로드로 첫 패를 되살릴 수 없다). 유료 다시 뽑기의 사다리 비용은 계승(`getAscensionOutcome`)이 적용하고 계승 뒤에는 지운다.
+     */
+    ascensionRuleOffer?: { receiptKey: string; rank: number; rerolls: number };
     // cycle 281: totalPrestigeAtk/Hp/Mp 3 dead 필드 제거 (cycle 277 runtime cleanup paired completion).
     //   runtime read 0건 + saved 데이터 잔존 필드는 무시되지만 무해 (runtime access 안 함).
     // 2026-07 — 에테르 거울: 노드id → 레벨. getMirrorEffects(meta)가 단일 진실 원천.

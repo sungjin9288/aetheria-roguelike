@@ -173,3 +173,60 @@ test.describe('계승 화면 — 회차 규칙 카드 · 선택형 규칙 미리
         expect(geometry.pageWidth).toBeLessThanOrEqual(geometry.viewportWidth);
     });
 });
+
+// 2026-10 Wave 95: 회차 규칙 패 다시 뽑기 — 첫 번째는 무료이고 처음 패로 돌아갈 수 없으며, 그 뒤는 넘어가는 정수 사다리를 내려놓는다.
+//   이 시드(2단계 → 3단계, 영수증 e2e-reroll, 사다리 400단계)의 패: 처음 = dry_dragon_road · shadow_legion · lost_pilgrimage,
+//   첫 다시 뽑기 = shadow_legion · fading_dimension · empty_crusade(덱 전체에서 다시 무작위), 둘째 = fading_dimension · lost_pilgrimage · shadow_legion.
+test.describe('계승 화면 — 회차 규칙 패 다시 뽑기', () => {
+    test('무료로 한 번 다시 뽑고, 대가를 치러 다시 뽑으면 넘어가는 사다리가 줄어든 채 계승한다 (375px)', async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 667 });
+        await startE2ERun(page);
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.(2, 'e2e-reroll'));
+        await expect(page.getByTestId('ascension-screen')).toBeVisible({ timeout: 8_000 });
+
+        const reroll = page.getByTestId('ascension-rule-reroll');
+        await reroll.scrollIntoViewIfNeeded();
+        await expect(page.getByTestId('ascension-rule-card-dry_dragon_road')).toBeVisible();
+        await expect(reroll).toHaveText('다시 뽑기 · 무료');
+        await expect(page.getByTestId('ascension-rule-reroll-count')).toHaveText('다시 뽑음 0/3');
+        const box = await reroll.boundingBox();
+        expect(box!.height).toBeGreaterThanOrEqual(44);
+
+        await reroll.click();
+        for (const id of ['shadow_legion', 'fading_dimension', 'empty_crusade']) {
+            await expect(page.getByTestId(`ascension-rule-card-${id}`)).toBeVisible();
+        }
+        await expect(page.getByTestId('ascension-rule-card-dry_dragon_road')).toHaveCount(0);
+        await expect(page.getByTestId('ascension-rule-card-empty_crusade')).toHaveAttribute('aria-pressed', 'true');
+        await expect(reroll).toHaveText('다시 뽑기 · 넘어가는 정수 사다리 40 → 20단계');
+        await expect(page.getByTestId('ascension-ladder-reroll-cost')).toHaveCount(0);
+
+        await reroll.click();
+        await expect(page.getByTestId('ascension-rule-card-empty_crusade')).toHaveCount(0);
+        await expect(page.getByTestId('ascension-rule-card-lost_pilgrimage')).toHaveAttribute('aria-pressed', 'true');
+        await expect(page.getByTestId('ascension-rule-reroll-count')).toHaveText('다시 뽑음 2/3');
+        await expect(page.getByTestId('ascension-ladder-reroll-cost')).toHaveCount(1);
+        await expect(page.getByTestId('ascension-ladder-carry')).toContainText('400단계 중 20단계(5%)');
+
+        const geometry = await page.getByTestId('ascension-rule-offer').evaluate((root) => ({
+            minFont: Math.min(...[...root.querySelectorAll<HTMLElement>('*')].filter((node) => (node.textContent || '').trim())
+                .map((node) => parseFloat(getComputedStyle(node).fontSize))),
+            minButton: Math.min(...[...root.querySelectorAll<HTMLElement>('button')].map((node) => node.getBoundingClientRect().height)),
+            overflow: root.scrollWidth - root.clientWidth,
+            pageWidth: document.documentElement.scrollWidth,
+            viewportWidth: window.innerWidth,
+        }));
+        expect(geometry.minFont).toBeGreaterThanOrEqual(11);
+        expect(geometry.minButton).toBeGreaterThanOrEqual(44);
+        expect(geometry.overflow).toBeLessThanOrEqual(1);
+        expect(geometry.pageWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+
+        await page.getByTestId('ascension-confirm').click();
+        await expect(page.getByTestId('ascension-screen')).toBeHidden();
+        const after = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()))!;
+        expect(after.gameState).toBe('idle');
+        expect(after.prestigeRank).toBe(3);
+        expect(after.ascensionRuleId).toBe('lost_pilgrimage');
+        expect(after.ladderRank).toBe(20);
+    });
+});

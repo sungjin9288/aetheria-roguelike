@@ -20,13 +20,14 @@ import PendingQuestRewardList from './PendingQuestRewardList';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
-import { getAscensionRuleOfferView } from '../utils/ascensionRuleView';
+import { getAscensionRuleOfferView, getAscensionRuleRerollView } from '../utils/ascensionRuleView';
 
 interface TrueEndingScreenProps {
     player: Player;
     actions?: {
         completeQuest?: (questId: string | number) => void;
         confirmAscension?: (challengeModifiers?: string[], declineRule?: boolean, ruleId?: string | null) => void;
+        rerollAscensionRuleOffer?: (expectedRerolls: number) => void;
         cancelAscension?: () => void;
     };
 }
@@ -90,14 +91,23 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
     // 2026-10 Wave 94: 새 단계의 회차 규칙 카드 — 계승 화면과 같다.
     const ruleOfferView = getAscensionRuleOfferView(player, getAscensionOutcome(player.meta).nextRank);
     const [selectedRuleId, setSelectedRuleId] = useState<string | null>(ruleOfferView.defaultId);
-    const selectedRule = ruleOfferView.cards.find((card) => card.id === selectedRuleId) ?? null;
+    // 2026-10 Wave 95: 다시 뽑아 고른 카드가 패에서 사라지면 새 패의 기본 카드(가장 가벼운 카드)가 골라져 있다.
+    const selectedRule = ruleOfferView.cards.find((card) => card.id === selectedRuleId)
+        ?? ruleOfferView.cards.find((card) => card.id === ruleOfferView.defaultId)
+        ?? null;
+    const ruleRerollView = getAscensionRuleRerollView(player, getAscensionOutcome(player.meta).nextRank);
+    const rerollRule = () => {
+        if (!ruleRerollView?.available) return;
+        setRuleDeclined(false);
+        actions?.rerollAscensionRuleOffer?.(ruleRerollView.rerolls);
+    };
 
     const confirmNewGamePlus = useCallback(() => {
         if (confirmationAcceptedRef.current) return;
         confirmationAcceptedRef.current = true;
         setConfirmationAccepted(true);
-        actions?.confirmAscension?.(selectedChallenges, ruleDeclined, selectedRuleId);
-    }, [actions, selectedChallenges, ruleDeclined, selectedRuleId]);
+        actions?.confirmAscension?.(selectedChallenges, ruleDeclined, selectedRule?.id ?? null);
+    }, [actions, selectedChallenges, ruleDeclined, selectedRule?.id]);
 
     const stats = [
         { label: '총 처치', value: (player?.stats?.kills || 0).toLocaleString() },
@@ -227,6 +237,8 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                     rule={selectedRule}
                                     ruleOffer={ruleOfferView.cards}
                                     onSelectRule={setSelectedRuleId}
+                                    ruleReroll={ruleRerollView}
+                                    onRerollRule={rerollRule}
                                     ruleDeclined={ruleDeclined}
                                     onToggleRule={() => setRuleDeclined((current) => !current)}
                                     selected={selectedChallenges}

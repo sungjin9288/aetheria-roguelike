@@ -169,10 +169,12 @@ export interface EssenceLadderCarry {
  *   유일한 지점인 계승에서 줄인다. 첫 죽음·프레스티지 보너스는 사다리 몫이 아니므로 그대로다(빼는 양은 단계 × 단계당 값).
  *   누적 정수·쓸 수 있는 정수는 건드리지 않는다. 사망 재시작은 이 함수를 부르지 않는다.
  */
-export const carryEssenceLadderOnAscension = (meta: EssenceMeta | null | undefined): EssenceLadderCarry => {
+export const carryEssenceLadderOnAscension = (meta: EssenceMeta | null | undefined, keepMult = 1): EssenceLadderCarry => {
     const base = meta || {};
     const rankBefore = Math.floor(toNonNegative(base.rank));
-    const rankKept = Math.floor(rankBefore * BALANCE.ESSENCE_LADDER_ASCEND_CARRY);
+    // 2026-10 Wave 95: 회차 규칙 패를 대가를 치르고 다시 뽑았으면 넘어가는 몫이 그만큼 줄어든다(`keepMult` — 1이면 이전과 같다).
+    const keep = Math.min(1, Math.max(0, Number.isFinite(keepMult) ? keepMult : 1));
+    const rankKept = Math.floor(rankBefore * BALANCE.ESSENCE_LADDER_ASCEND_CARRY * keep);
     const dropped = rankBefore - rankKept;
     return {
         meta: {

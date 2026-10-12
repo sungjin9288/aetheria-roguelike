@@ -260,7 +260,12 @@ export const MSG = {
     // 2026-10 Wave 93 · 94: 순환별 측정, 잰 단계를 밝힌다 — 카드 뽑기 뒤로는 규칙이 다른 단계에 올 수 있다.
     ASCENSION_RULE_OUTLOOK_SOURCE: (measuredRank: number) => `그 회차 평균 · 모의 플레이 120판 · 고정 순서 계승 ${measuredRank}단계에서 잰 값`,
     ASCENSION_RULE_OFFER_TITLE: '다음 회차 규칙 — 카드 한 장을 고르세요',
-    ASCENSION_RULE_OFFER_HINT: '이번 순환에서 아직 정복하지 않은 규칙에서 뽑았습니다. 같은 처치에서는 같은 패입니다.',
+    ASCENSION_RULE_OFFER_HINT: '이번 순환에서 아직 정복하지 않은 규칙에서 뽑았습니다. 다시 뽑으면 지금 패로 돌아올 수 없습니다.',
+    // 2026-10 Wave 95: 회차 규칙 패 다시 뽑기 — 첫 번째는 무료, 그 뒤는 다음 여정으로 넘어가는 정수 사다리를 내려놓는다.
+    ASCENSION_RULE_REROLL_FREE: '다시 뽑기 · 무료',
+    ASCENSION_RULE_REROLL_PAID: (before: number, after: number) => `다시 뽑기 · 넘어가는 정수 사다리 ${before} → ${after}단계`,
+    ASCENSION_RULE_REROLL_SPENT: '다시 뽑기를 모두 썼습니다.',
+    ASCENSION_RULE_REROLL_COUNT: (count: number, max: number) => `다시 뽑음 ${count}/${max}`,
     ASCENSION_RULE_CARD_OPTIONAL: '거절 가능',
     ASCENSION_RULE_DETAIL: (twist: string, setName: string, titleName: string) => `${twist} 강제 · '${setName}' 각인 드롭 ×3 · 마왕을 쓰러뜨리면 칭호 [${titleName}] + 그 세트의 없는 각인 하나`,
     COLLECTION_SUMMARY_TITLE: '수집 완주',
@@ -785,6 +790,8 @@ export const MSG = {
     // 2026-09 Wave 32: 계승 시 정수 사다리 이월(BALANCE.ESSENCE_LADDER_ASCEND_CARRY).
     ASCEND_LADDER_CARRY: (before: number, kept: number, percent: number) =>
         `정수 사다리 ${before}단계 중 ${kept}단계(${percent}%)만 다음 여정으로 이어집니다. 위 공격력·생명·기력에 반영돼 있고, 계승 정수는 그대로입니다.`,
+    // 2026-10 Wave 95: 유료 다시 뽑기의 대가가 이 계승에 들어갔다.
+    ASCEND_LADDER_REROLL_COST: (paid: number) => `회차 규칙을 대가를 치르고 ${paid}번 다시 뽑아 넘어가는 몫이 줄었습니다.`,
     // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
     SCOUT_ACTION_LABEL: '정찰',
     SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,

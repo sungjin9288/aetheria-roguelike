@@ -161,6 +161,8 @@ export const AT = Object.freeze({
     // 2026-09 Wave 28 (D6): 계승 제안 미루기 / 미룬 계승 다시 열기 — 둘 다 게이트는 리듀서가 소유한다.
     DEFER_ASCENSION: 'DEFER_ASCENSION',
     REOPEN_ASCENSION: 'REOPEN_ASCENSION',
+    // 2026-10 Wave 95: 계승 화면의 회차 규칙 패 다시 뽑기 — 횟수 · 허용은 리듀서가 소유한다(리로드로 되돌릴 수 없다).
+    REROLL_ASCENSION_RULE_OFFER: 'REROLL_ASCENSION_RULE_OFFER',
     UNLOCK_TITLES: 'UNLOCK_TITLES',
     // 2026-09 Wave 30: 칭호 전환은 유효 최대치를 바꾸므로 클램프를 소유한 리듀서 전이다.
     SET_ACTIVE_TITLE: 'SET_ACTIVE_TITLE',
@@ -400,6 +402,8 @@ export interface ActionPayloadMap {
     [AT.ASCEND]: AscendPayload;
     [AT.DEFER_ASCENSION]: undefined;
     [AT.REOPEN_ASCENSION]: undefined;
+    /** 화면이 본 다시 뽑기 횟수 — 다르면(연타 · 늦은 요청) 무시한다. */
+    [AT.REROLL_ASCENSION_RULE_OFFER]: { expectedRerolls: number };
     [AT.UNLOCK_TITLES]: string[];
     [AT.SET_ACTIVE_TITLE]: string | null;
     [AT.SET_DAILY_PROTOCOL]: DailyProtocol | null;

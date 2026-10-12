@@ -15,7 +15,14 @@ import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
 import { getBakedMetaVitals, snapshotMetaVitals } from '../../systems/metaBonusRamp';
 import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
-import { getAscensionRuleOffer, getAscensionRuleStartLog, resolveAscensionRuleChoice, resolveAscensionRuleDeclined } from '../../systems/ascensionRule';
+import {
+    canRerollAscensionRuleOffer,
+    getAscensionRuleOffer,
+    getAscensionRuleRerolls,
+    getAscensionRuleStartLog,
+    resolveAscensionRuleChoice,
+    resolveAscensionRuleDeclined,
+} from '../../systems/ascensionRule';
 import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, buildRunChallengeModifiers } from '../../utils/runStart';
 import { calculateFullStats } from '../../utils/statsCalculator';
 import { createSeededRandom } from '../../utils/seededRandom';
@@ -167,6 +174,27 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         return { ...state, gameState: GS.ASCENSION };
     },
 
+    // 2026-10 Wave 95 (소유자 결정 "무료 한 번 + 영구 능력치"): 계승 화면의 회차 규칙 패 다시 뽑기 — 횟수를 이 마왕 처치 영수증 · 다음
+    //   단계에 묶어 저장하므로 리로드로 첫 패를 되살릴 수 없다. 대가(유료 횟수만큼 넘어가는 사다리)는 계승이 적용한다.
+    REROLL_ASCENSION_RULE_OFFER: (state, action) => {
+        if (state.gameState !== GS.ASCENSION && state.gameState !== GS.TRUE_ENDING) return state;
+        const meta = state.player.meta;
+        const receiptKey = meta?.endgame?.lastEndgameReceiptKey;
+        if (!meta || !receiptKey) return state;
+        const nextRank = getAscensionOutcome(meta).nextRank;
+        const rerolls = getAscensionRuleRerolls(meta, nextRank);
+        if (Number(action.payload?.expectedRerolls) !== rerolls) return state;
+        if (!canRerollAscensionRuleOffer(state.player, nextRank)) return state;
+        return {
+            ...state,
+            player: {
+                ...state.player,
+                meta: { ...meta, ascensionRuleOffer: { receiptKey, rank: nextRank, rerolls: rerolls + 1 } },
+            },
+            syncStatus: 'syncing',
+        };
+    },
+
     ASCEND: (state, action) => {
         if (state.gameState !== GS.ASCENSION && state.gameState !== GS.TRUE_ENDING) return state;
         if (getClaimableQuestEntries(state.player).length > 0) return state;
@@ -190,6 +218,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         //   도전 조건(슬롯은 새 단계 기준) · 거울 시작 골드 · 첫 유물 선택지. 이전에는 사망 재시작에만 적용됐다.
         // 2026-10 Wave 94: 새 단계의 회차 규칙은 계승 화면의 패에서 고른 카드다 — 패 밖의 id(또는 없음)는 패에서 가장 가벼운 카드.
         //   고른 규칙은 영구 meta에 남아 같은 단계의 사망 재시작이 같은 규칙을 읽는다.
+        //   Wave 95: 패는 다시 뽑은 뒤의 패다(지금 player의 기록) — `outcome.meta`는 그 기록을 지우고 유료 횟수의 대가를 적용했다.
         const nextRank = Number(outcome.meta.prestigeRank) || 0;
         const chosenRule = resolveAscensionRuleChoice(getAscensionRuleOffer(state.player, nextRank), payload?.ruleId);
         const ruleMeta = chosenRule ? { ...outcome.meta, ascensionRule: { rank: nextRank, ruleId: chosenRule.id } } : outcome.meta;

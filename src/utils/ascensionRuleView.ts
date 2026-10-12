@@ -1,7 +1,11 @@
 import { MSG } from '../data/messages.js';
 import {
     SIGNATURE_COLLECTION_GROUPS,
+    canRerollAscensionRuleOffer,
     getActiveAscensionRule,
+    getAscensionRulePaidRerolls,
+    getAscensionRuleRerollLadderKeep,
+    getAscensionRuleRerolls,
     getAscensionRuleCycle,
     getAscensionRuleOffer,
     resolveAscensionRuleChoice,
@@ -15,6 +19,8 @@ import {
 import { ASCENSION_RULES, type AscensionRuleDef } from '../data/ascensionRules.js';
 import type { Player } from '../types/index.js';
 import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
+import { BALANCE } from '../data/constants.js';
+import { carryEssenceLadderOnAscension } from '../systems/essenceLedger.js';
 
 /**
  * 회차 규칙 · 수집 완주 화면 뷰모델 (2026-10 Wave 89) — 계승 · 인트로 · 진 엔딩의 도전 규칙 선택과 도감의 수집 요약이 읽는다.
@@ -96,6 +102,39 @@ export const getAscensionRuleOfferView = (
         cards: offer.map((rule) => buildAscensionRulePreview(rule, nextRank)),
         defaultId: resolveAscensionRuleChoice(offer, undefined)?.id ?? null,
     };
+};
+
+export interface AscensionRuleRerollView {
+    /** 지금 다시 뽑은 횟수 — 리듀서에 그대로 보낸다(연타 · 늦은 요청 거부). */
+    rerolls: number;
+    /** 지금 다시 뽑을 수 있는가(남은 횟수 · 덱이 패보다 큰가). */
+    available: boolean;
+    /** 다음 다시 뽑기가 무료인가. */
+    free: boolean;
+    /** 버튼 문구(무료 / 넘어가는 사다리 지금 → 다음) · 횟수 문구. 다 썼으면 버튼 문구가 소진 문구다. */
+    label: string;
+    countLabel: string;
+}
+
+/**
+ * 2026-10 Wave 95: 계승 화면의 회차 규칙 패 다시 뽑기 — 다시 뽑을 수 없고(덱 ≤ 패) 다시 뽑은 적도 없으면 null(버튼을 그리지 않는다).
+ * 유료 다시 뽑기의 문구는 계승이 실제로 적용할 사다리 이월(`carryEssenceLadderOnAscension`)을 지금 · 한 번 더 뽑은 뒤로 계산한다.
+ */
+export const getAscensionRuleRerollView = (
+    player: { meta?: Player['meta']; stats?: Player['stats'] } | null | undefined,
+    nextRank: number,
+): AscensionRuleRerollView | null => {
+    const rerolls = getAscensionRuleRerolls(player?.meta, nextRank);
+    const available = canRerollAscensionRuleOffer(player, nextRank);
+    if (!available && rerolls === 0) return null;
+    const max = BALANCE.ASCENSION_RULE_REROLL_FREE + BALANCE.ASCENSION_RULE_REROLL_PAID_MAX;
+    const free = rerolls < BALANCE.ASCENSION_RULE_REROLL_FREE;
+    const paid = getAscensionRulePaidRerolls(player?.meta, nextRank);
+    const keptNow = carryEssenceLadderOnAscension(player?.meta, getAscensionRuleRerollLadderKeep(paid)).rankKept;
+    const keptNext = carryEssenceLadderOnAscension(player?.meta, getAscensionRuleRerollLadderKeep(paid + 1)).rankKept;
+    let label: string = MSG.ASCENSION_RULE_REROLL_SPENT;
+    if (available) label = free ? MSG.ASCENSION_RULE_REROLL_FREE : MSG.ASCENSION_RULE_REROLL_PAID(keptNow, keptNext);
+    return { rerolls, available, free, label, countLabel: MSG.ASCENSION_RULE_REROLL_COUNT(rerolls, max) };
 };
 
 export interface CollectionSetRow {
