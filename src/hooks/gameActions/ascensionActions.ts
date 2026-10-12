@@ -12,7 +12,7 @@ export const createAscensionActions = (deps: GameActionDeps) => {
     let ascensionRequestInFlight = false;
     return {
         /** 2026-10 Wave 58: 계승 화면에서 고른 새 여정의 도전 조건과 첫 유물 선택지 씨앗을 함께 보낸다(리듀서가 다시 거른다). */
-        confirmAscension: (challengeModifiers?: string[], declineRule?: boolean) => {
+        confirmAscension: (challengeModifiers?: string[], declineRule?: boolean, ruleId?: string | null) => {
             if ((gameState === GS.ASCENSION || gameState === GS.TRUE_ENDING) && getClaimableQuestEntries(player).length > 0) return;
             if (ascensionRequestInFlight) return;
             ascensionRequestInFlight = true;
@@ -25,6 +25,8 @@ export const createAscensionActions = (deps: GameActionDeps) => {
                     challengeModifiers: Array.isArray(challengeModifiers) ? challengeModifiers : [],
                     seed: Math.floor(Math.random() * 2 ** 31),
                     ...(declineRule === true ? { declineRule: true } : {}),
+                    // 2026-10 Wave 94: 계승 화면의 패에서 고른 회차 규칙(리듀서가 같은 패로 검증한다).
+                    ...(typeof ruleId === 'string' ? { ruleId } : {}),
                 },
             });
         },

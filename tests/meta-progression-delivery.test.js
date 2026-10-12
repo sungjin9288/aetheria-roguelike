@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { pickOfferedRuleId, ruleOf } from './helpers/ascensionRuleOffer.ts';
 import assert from 'node:assert/strict';
 
 import { DB } from '../src/data/db.js';
@@ -36,26 +37,30 @@ const basePlayer = (extra = {}) => ({
     ...extra,
 });
 
+// 2026-10 Wave 94: 회차 규칙은 계승 패에서 고른다 — 이 파일은 골드를 보므로 '빈손'이 아닌 카드를 고른다.
 const ascend = (meta, payload = {}) => {
     const player = basePlayer({ level: 50, quests: [], meta: { ...structuredClone(INITIAL_STATE.player.meta), ...meta, endgame: { lastEndgameReceiptKey: 'rk' } } });
+    const ruleId = pickOfferedRuleId(player, (meta.prestigeRank || 0) + 1, ['noGold']);
     return gameReducer(
         { ...structuredClone(INITIAL_STATE), gameState: GS.ASCENSION, player, bootStage: 'ready' },
-        { type: AT.ASCEND, payload: { expectedPrestigeRank: meta.prestigeRank || 0, sourceReceiptKey: 'rk', seed: 7, ...payload } },
+        { type: AT.ASCEND, payload: { expectedPrestigeRank: meta.prestigeRank || 0, sourceReceiptKey: 'rk', seed: 7, ruleId, ...payload } },
     );
 };
+const forcedOf = (state) => ruleOf(state.player.meta.ascensionRule?.ruleId).modifier;
 
 test('계승도 새 여정의 시작 조건을 적용한다 — 거울 시작 골드 · 첫 유물 선택지 · 도전 조건', () => {
     const mirror = { start_gold: 5, start_boot_extra: 2 };
     const after = ascend({ prestigeRank: 6, mirror }, { challengeModifiers: ['halfHp', 'eliteOnly', 'noPotion', 'blindMap', 'randomSkills'] });
     assert.equal(after.player.meta.prestigeRank, 7);
-    // 2026-10 Wave 89 · 90: 7단계의 회차 규칙은 1단계 규칙(길 잃은 순례 — 골드를 건드리지 않는다)으로 돈다. 8단계는 '빈손의 성전'이라
-    //   빈손의 시작이 강제되어 거울 시작 골드도 0이다.
+    // 2026-10 Wave 94: 고른 회차 규칙이 '빈손'이 아니면 거울 시작 골드가 그대로, 빈손의 시작을 고르면 거울 시작 골드도 0이다.
     assert.equal(after.player.gold, CONSTANTS.START_GOLD + 5 * BALANCE.MIRROR_START_GOLD_PER_LEVEL);
-    const noGoldRank = ascend({ prestigeRank: 7, mirror }, { challengeModifiers: [] });
+    const noGoldRank = ascend({ prestigeRank: 7, mirror }, { challengeModifiers: ['noGold'] });
     assert.equal(noGoldRank.player.gold, 0);
     // 7단계에서 오른 rank로 고른다 — 3 + 1칸. 회차 규칙의 비틀기는 칸을 쓰지 않고 맨 앞에 붙는다(고른 것과 겹치면 한 번).
     assert.equal(getChallengeSlotCount(7), BALANCE.CHALLENGE_MODIFIER_SLOTS + 1);
-    assert.deepEqual(after.player.challengeModifiers, ['blindMap', 'halfHp', 'eliteOnly', 'noPotion', 'randomSkills']);
+    const picked = ['halfHp', 'eliteOnly', 'noPotion', 'blindMap', 'randomSkills'];
+    assert.deepEqual(after.player.challengeModifiers,
+        [forcedOf(after), ...picked.filter((id) => id !== forcedOf(after)).slice(0, getChallengeSlotCount(7))]);
     assert.ok(after.player.maxHp < basePlayer().maxHp, '약한 생명력이 적용됐다');
     // 5단계(첫 유물 선택지 +1) + 거울 각성의 선택 2.
     assert.equal(after.pendingRelics.length, getPrestigeUnlocks(7).startBootChoices + 2);
@@ -69,8 +74,8 @@ test('계승도 새 여정의 시작 조건을 적용한다 — 거울 시작 �
 test('빈손의 시작은 계승 뒤에도 0골드다 · 알 수 없는 도전 조건은 버린다', () => {
     const after = ascend({ prestigeRank: 0, mirror: { start_gold: 5 } }, { challengeModifiers: ['noGold', 'noGold', 'unknown'] });
     assert.equal(after.player.gold, 0);
-    // 2026-10 Wave 89: 1단계 회차 규칙(길 잃은 여행)이 앞에 붙는다.
-    assert.deepEqual(after.player.challengeModifiers, ['blindMap', 'noGold']);
+    // 2026-10 Wave 89 · 94: 고른 회차 규칙의 비틀기가 앞에 붙는다.
+    assert.deepEqual(after.player.challengeModifiers, [forcedOf(after), 'noGold']);
     assert.deepEqual(sanitizeChallengeModifiers('noGold', 0), []);
 });
 

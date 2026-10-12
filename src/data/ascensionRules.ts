@@ -40,11 +40,16 @@ export interface AscensionRuleDef {
      * (120시드 × 7회차, 원장 §96.3), [1] = rank 10 ~ 12(120시드 × 13회차, 원장 §98). 두 번째 순환은 적이 더 강한데도 사망이 첫 순환의
      * 39 ~ 62%였다(영구 성장이 적 성장보다 빨리 쌓인 것으로 보인다) — 첫 순환 값을 그대로 보이면 위험을 1.6 ~ 2.6배 크게 말했다. 측정이 없는 순환은
      * 마지막으로 잰 순환 값을 보이고 화면이 그렇다고 밝힌다(숫자를 지어내지 않는다).
+     *
+     * 2026-10 Wave 94: 카드 뽑기로 규칙이 아무 단계에나 올 수 있다. 값은 고정 순서에서 잰 그대로이고, 화면은 잰 단계(`measuredRank`)를
+     * 밝힌다 — 순환(1 ~ 6 · 7 ~ 12단계)으로 고르는 규칙은 그대로다.
      */
     outlook?: readonly AscensionRuleOutlook[];
 }
 
 export interface AscensionRuleOutlook {
+    /** 2026-10 Wave 94: 이 값을 잰 계승 단계(고정 순서 측정) — 카드 뽑기 뒤로는 규칙이 다른 단계에 올 수 있어 화면이 밝힌다. */
+    measuredRank: number;
     acceptedDeaths: number;
     declinedDeaths: number;
     acceptedSignatures: number;
@@ -81,8 +86,8 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_unbound', name: '흩어진 전설의 수집가' },
         optional: true,
         outlook: [
-            { acceptedDeaths: 3.59, declinedDeaths: 1.69, acceptedSignatures: 1.59, declinedSignatures: 0.48 },
-            { acceptedDeaths: 2.23, declinedDeaths: 0.74, acceptedSignatures: 1.02, declinedSignatures: 0.03 },
+            { measuredRank: 4, acceptedDeaths: 3.59, declinedDeaths: 1.69, acceptedSignatures: 1.59, declinedSignatures: 0.48 },
+            { measuredRank: 10, acceptedDeaths: 2.23, declinedDeaths: 0.74, acceptedSignatures: 1.02, declinedSignatures: 0.03 },
         ],
     },
     {
@@ -93,8 +98,8 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_dimension', name: '차원을 꿰뚫은 자' },
         optional: true,
         outlook: [
-            { acceptedDeaths: 6.28, declinedDeaths: 1.7, acceptedSignatures: 1.23, declinedSignatures: 0.24 },
-            { acceptedDeaths: 3.48, declinedDeaths: 0.82, acceptedSignatures: 1, declinedSignatures: 0.04 },
+            { measuredRank: 5, acceptedDeaths: 6.28, declinedDeaths: 1.7, acceptedSignatures: 1.23, declinedSignatures: 0.24 },
+            { measuredRank: 11, acceptedDeaths: 3.48, declinedDeaths: 0.82, acceptedSignatures: 1, declinedSignatures: 0.04 },
         ],
     },
     {
@@ -105,8 +110,8 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_shadow', name: '암흑을 꺾은 자' },
         optional: true,
         outlook: [
-            { acceptedDeaths: 5.85, declinedDeaths: 2.03, acceptedSignatures: 1.23, declinedSignatures: 0.21 },
-            { acceptedDeaths: 2.26, declinedDeaths: 0.98, acceptedSignatures: 1, declinedSignatures: 0.03 },
+            { measuredRank: 6, acceptedDeaths: 5.85, declinedDeaths: 2.03, acceptedSignatures: 1.23, declinedSignatures: 0.21 },
+            { measuredRank: 12, acceptedDeaths: 2.26, declinedDeaths: 0.98, acceptedSignatures: 1, declinedSignatures: 0.03 },
         ],
     },
 ]);

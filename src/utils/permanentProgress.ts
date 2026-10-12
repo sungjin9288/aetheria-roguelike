@@ -129,6 +129,8 @@ export const pickPermanentPlayerState = (
             achievedAchievements: collectAchievedAchievementIds(player),
             // 2026-10 Wave 89: 회차 규칙 정복 기록 — 계정 단위(정복 보상은 단계마다 한 번).
             ruleConquestRanks: clone(Array.isArray(stats.ruleConquestRanks) ? stats.ruleConquestRanks : []),
+            // 2026-10 Wave 94: 정복한 규칙 id(없으면 이전 세이브 — 읽는 쪽이 단계를 고정 순서로 읽는다).
+            ...(Array.isArray(stats.ruleConquestRuleIds) ? { ruleConquestRuleIds: clone(stats.ruleConquestRuleIds) } : {}),
             claimedQuestIds: clone(Array.isArray(stats.claimedQuestIds) ? stats.claimedQuestIds : []),
             codexBonusAtk: numberOrZero(stats.codexBonusAtk),
             codexBonusDef: numberOrZero(stats.codexBonusDef),

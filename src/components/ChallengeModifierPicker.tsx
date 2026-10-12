@@ -15,19 +15,52 @@ interface ChallengeModifierPickerProps {
     /** 2026-10 Wave 91: 선택형 규칙을 거절했는가 · 받아들임/거절 전환. 강제 규칙에는 쓰지 않는다. */
     ruleDeclined?: boolean;
     onToggleRule?: () => void;
+    /** 2026-10 Wave 94: 계승할 때 보이는 회차 규칙 카드(패) · 카드 고르기. 고른 카드가 `rule`이다. */
+    ruleOffer?: AscensionRulePreview[];
+    onSelectRule?: (id: string) => void;
 }
 
 /**
  * 도전 규칙 선택(2026-10 Wave 58) — 새 게임(인트로)과 계승 화면이 함께 쓴다. 계승은 인트로를 다시 거치지 않아
  * 계승 7단계 "도전 조건을 하나 더 선택 가능"을 고를 곳이 없었다(소유자 결정 "계승 화면에서 함께 고름").
  */
-const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule = null, ruleDeclined = false, onToggleRule }: ChallengeModifierPickerProps) => {
+const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule = null, ruleDeclined = false, onToggleRule, ruleOffer = [], onSelectRule }: ChallengeModifierPickerProps) => {
     const declined = Boolean(rule?.optional && ruleDeclined);
     const lockedId = rule && !declined ? rule.lockedId : null;
     const picked = lockedId ? selected.filter((id) => id !== lockedId) : selected;
     const rewardCount = picked.length + (lockedId ? 1 : 0);
     return (
         <>
+            {ruleOffer.length > 1 && (
+                // 2026-10 Wave 94: 회차 규칙 카드 — 아직 정복하지 않은 규칙에서 뽑은 패에서 한 장을 고른다.
+                <div data-testid={`${testIdPrefix}-rule-offer`} className="mt-3 font-readable">
+                    <span className="block text-xs font-bold text-orange-200">{MSG.ASCENSION_RULE_OFFER_TITLE}</span>
+                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">{MSG.ASCENSION_RULE_OFFER_HINT}</span>
+                    <div className="mt-2 grid grid-cols-3 gap-2">
+                        {ruleOffer.map((card) => {
+                            const isPicked = card.id === rule?.id;
+                            return (
+                                <button
+                                    key={card.id}
+                                    type="button"
+                                    data-testid={`${testIdPrefix}-rule-card-${card.id}`}
+                                    aria-pressed={isPicked}
+                                    onClick={() => onSelectRule?.(card.id)}
+                                    className={`min-h-[4.5rem] rounded-md border px-2 py-2 text-left transition-colors ${
+                                        isPicked
+                                            ? 'border-[rgba(240,170,110,0.7)] bg-[rgba(240,170,110,0.16)] text-orange-50'
+                                            : 'border-white/20 bg-[rgba(10,17,25,0.9)] text-slate-300 hover:border-white/30'
+                                    }`}
+                                >
+                                    <span className="block text-xs font-bold leading-snug">{card.name}</span>
+                                    <span className="mt-1 block text-[11px] leading-snug text-slate-400">{card.twist}</span>
+                                    {card.optional && <span className="mt-1 block text-[11px] leading-snug text-orange-200">{MSG.ASCENSION_RULE_CARD_OPTIONAL}</span>}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
             {rule && (
                 <div data-testid={`${testIdPrefix}-ascension-rule`} className="mt-3 rounded-md border border-[rgba(240,170,110,0.4)] bg-[rgba(240,170,110,0.08)] px-3 py-2 font-readable">
                     <span className="block text-xs font-bold text-orange-200">{MSG.ASCENSION_RULE_NEXT(rule.name)}</span>

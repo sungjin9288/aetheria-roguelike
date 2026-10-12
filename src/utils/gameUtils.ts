@@ -412,7 +412,7 @@ export const checkTitles = (player: Player): string[] => {
         if (type === 'escapes')        return (player.stats?.escapes || 0) >= val;
         // 2026-10 Wave 89: 회차 규칙 정복(정복 기록 `stats.ruleConquestRanks`) — val은 규칙 번호(1 ~ 규칙 수), 0은 모든 규칙.
         if (type === 'ruleConquest') {
-            const conquered = getConqueredRuleOrdinals(player.stats?.ruleConquestRanks);
+            const conquered = getConqueredRuleOrdinals(player.stats);
             return val === 0 ? conquered.size >= ASCENSION_RULES.length : conquered.has(val);
         }
         if (type === 'signatureSetsCompleted') return countCompletedSignatureSets(player) >= val;

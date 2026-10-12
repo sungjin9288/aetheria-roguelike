@@ -1,7 +1,7 @@
 import { DB } from '../data/db.js';
 import { MSG } from '../data/messages.js';
 import signatureRegistryData from '../data/signatureRegistry.json' with { type: 'json' };
-import { getPlayerAscensionRule, getSignatureSetMemberNames } from '../systems/ascensionRule.js';
+import { getPlayerAscensionRule, getRuleConquestLedger, getSignatureSetMemberNames } from '../systems/ascensionRule.js';
 import type { Item, Player } from '../types/index.js';
 import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { registerLootToCodex } from './gameUtils.js';
@@ -54,6 +54,9 @@ export const applyRuleConquest = (
         stats: {
             ...(player.stats || {}),
             ruleConquestRanks: [...(player.stats?.ruleConquestRanks || []), rank],
+            // 2026-10 Wave 94: 카드 뽑기 뒤로는 단계가 규칙을 정하지 않으므로 정복한 규칙 id를 정복마다 남긴다 — 덱(패)이 순환을 센다.
+            //   이전 기록(단계)은 처음 쓸 때 고정 순서로 옮긴다.
+            ruleConquestRuleIds: [...getRuleConquestLedger(player.stats), rule.id],
         },
     };
     if (!hadTitle) logs.push({ type: 'system', text: MSG.TITLE_UNLOCKED(rule.conquestTitle.name) });

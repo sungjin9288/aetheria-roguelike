@@ -1,4 +1,5 @@
 import test from 'node:test';
+import { pickOfferedRuleId, ruleOf } from './helpers/ascensionRuleOffer.ts';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 
@@ -274,13 +275,15 @@ test('A9: 약한 생명력 — Lv10 전사 전직도 절반이고 현재 생명�
 test('A9: 약한 생명력 — 계승과 사망 재시작으로 연 여정도 시작 · 레벨업 모두 절반이다', () => {
     const ascend = (mods) => {
         const player = basePlayer({ level: 50, meta: { ...structuredClone(INITIAL_STATE.player.meta), endgame: { lastEndgameReceiptKey: 'rk' } } });
+        // 2026-10 Wave 94: 회차 규칙은 계승 패에서 고른다 — 약한 생명력이 아닌 카드를 골라 고른 도전 조건만 절반을 만들게 한다.
+        const ruleId = pickOfferedRuleId(player, 1, ['halfHp']);
         return gameReducer({ ...idleState(player), gameState: GS.ASCENSION },
-            { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: 'rk', seed: 7, challengeModifiers: mods } }).player;
+            { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: 'rk', seed: 7, challengeModifiers: mods, ruleId } }).player;
     };
     const normalAsc = ascend([]);
     const halfAsc = ascend(['halfHp']);
-    // 2026-10 Wave 89: 계승 1단계의 회차 규칙(길 잃은 여행)이 앞에 붙는다 — 고른 도전 조건은 그대로 뒤에 남는다.
-    assert.deepEqual(halfAsc.challengeModifiers, ['blindMap', 'halfHp']);
+    // 2026-10 Wave 89: 회차 규칙의 비틀기가 앞에 붙는다 — 고른 도전 조건은 그대로 뒤에 남는다.
+    assert.deepEqual(halfAsc.challengeModifiers, [ruleOf(halfAsc.meta.ascensionRule?.ruleId).modifier, 'halfHp']);
     assert.equal(halfAsc.maxHp, applyChallengeMaxHp(normalAsc.maxHp, ['halfHp']));
     assertHalvedLevelUps(normalAsc, halfAsc, 10, '계승 뒤');
 

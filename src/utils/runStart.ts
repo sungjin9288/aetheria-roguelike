@@ -1,7 +1,7 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import { getMirrorEffects } from '../systems/mirrorUpgrades.js';
-import { getAscensionRule, resolveAscensionRuleDeclined } from '../systems/ascensionRule.js';
+import { getActiveAscensionRule, resolveAscensionRuleDeclined } from '../systems/ascensionRule.js';
 import type { Player } from '../types/index.js';
 
 /**
@@ -36,12 +36,17 @@ export const sanitizeChallengeModifiers = (value: unknown, prestigeRank: number 
  * 이번 회차의 도전 조건 — 회차 규칙(2026-10 Wave 89)의 비틀기를 먼저 두고, 고른 도전 조건은 그것을 빼고 슬롯 수까지 더한다.
  * 회차 규칙은 슬롯을 차지하지 않고 보상 배율에는 하나로 센다. 새 게임 · 사망 재시작(`start`)과 계승(`ASCEND`)이 같이 부른다.
  */
-export const buildRunChallengeModifiers = (value: unknown, prestigeRank: number | undefined, declineRule = false): string[] => {
+export const buildRunChallengeModifiers = (
+    value: unknown,
+    meta: Pick<NonNullable<Player['meta']>, 'prestigeRank' | 'ascensionRule'> | null | undefined,
+    declineRule = false,
+): string[] => {
     // 2026-10 Wave 91: 선택형 규칙(무거운 셋)을 거절하면 비틀기를 붙이지 않는다 — 강제 규칙(가벼운 셋)은 거절할 수 없다.
-    const forced = resolveAscensionRuleDeclined(prestigeRank, declineRule) ? undefined : getAscensionRule(prestigeRank)?.modifier;
+    // 2026-10 Wave 94: 규칙은 이 단계에서 고른 카드(`meta.ascensionRule`), 없으면 고정 순서다.
+    const forced = resolveAscensionRuleDeclined(meta, declineRule) ? undefined : getActiveAscensionRule(meta)?.modifier;
     const picked = sanitizeChallengeModifiers(
         Array.isArray(value) ? value.filter((id) => id !== forced) : value,
-        prestigeRank,
+        meta?.prestigeRank,
     );
     return forced ? [forced, ...picked] : picked;
 };

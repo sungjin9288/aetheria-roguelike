@@ -38,9 +38,16 @@ test.describe('계승과 다음 여정 화면', () => {
             // 닫힌 <details>(도전 규칙 선택 — Wave 58) 안의 버튼은 펼치기 전까지 보이지 않는다. 보이는 버튼만 잰다.
             const buttons = [...root.querySelectorAll<HTMLElement>('button')].filter((node) => !node.closest('details:not([open])'));
             const buttonHeights = buttons.map((node) => node.getBoundingClientRect().height);
-            const visibleButtons = buttons.every((node) => {
+            // 2026-10 Wave 94: 회차 규칙 카드는 스크롤 영역 안이다(스크롤로 닿는다) — 첫 화면에 있어야 하는 것은 영역 밖의 결정 버튼이고,
+            //   영역 안 버튼은 영역 폭 안에 있어야 한다.
+            const visibleButtons = buttons.filter((node) => !scrollRegion?.contains(node)).every((node) => {
                 const bounds = node.getBoundingClientRect();
                 return bounds.top >= 0 && bounds.bottom <= window.innerHeight;
+            });
+            const regionBounds = scrollRegion?.getBoundingClientRect();
+            const scrollButtonsInside = buttons.filter((node) => scrollRegion?.contains(node)).every((node) => {
+                const bounds = node.getBoundingClientRect();
+                return Boolean(regionBounds) && bounds.left >= regionBounds!.left - 1 && bounds.right <= regionBounds!.right + 1;
             });
 
             return {
@@ -48,6 +55,7 @@ test.describe('계승과 다음 여정 화면', () => {
                 minFont: Math.min(...fontSizes),
                 minButtonHeight: Math.min(...buttonHeights),
                 visibleButtons,
+                scrollButtonsInside,
                 scrollOverflow: scrollRegion ? getComputedStyle(scrollRegion).overflowY : null,
                 horizontalOverflow: root.scrollWidth - root.clientWidth,
                 pageWidth: document.documentElement.scrollWidth,
@@ -61,6 +69,7 @@ test.describe('계승과 다음 여정 화면', () => {
         expect(geometry.minFont).toBeGreaterThanOrEqual(11);
         expect(geometry.minButtonHeight).toBeGreaterThanOrEqual(48);
         expect(geometry.visibleButtons).toBe(true);
+        expect(geometry.scrollButtonsInside).toBe(true);
         expect(geometry.scrollOverflow).toBe('auto');
         expect(geometry.horizontalOverflow).toBeLessThanOrEqual(1);
         expect(geometry.pageWidth).toBeLessThanOrEqual(geometry.viewportWidth);
@@ -108,13 +117,22 @@ test.describe('계승과 다음 여정 화면', () => {
     });
 });
 
-// 2026-10 Wave 92: 다음 회차가 선택형 규칙(rank 4 '뒤엉킨 전설')이면 받아들임 · 거절의 측정 차이를 두 줄로 보이고, 고른 쪽을 밝힌다.
-test.describe('계승 화면 — 선택형 회차 규칙 미리보기', () => {
-    test('두 선택의 측정 차이를 보이고 거절하면 강조가 넘어간다 (375px)', async ({ page }) => {
+// 2026-10 Wave 92 · 94: 계승 화면은 회차 규칙 카드 3장을 보이고, 선택형 규칙(뒤엉킨 전설)을 고르면 받아들임 · 거절의 측정 차이를
+//   두 줄로 보이며 고른 쪽을 밝힌다. 이 시드(2단계 → 3단계, 영수증 없음)의 패는 길 잃은 순례 · 암흑의 군단 · 뒤엉킨 전설이다.
+test.describe('계승 화면 — 회차 규칙 카드 · 선택형 규칙 미리보기', () => {
+    test('카드를 고르면 그 규칙의 측정 차이를 보이고 거절하면 강조가 넘어간다 (375px)', async ({ page }) => {
         await page.setViewportSize({ width: 375, height: 667 });
         await startE2ERun(page);
-        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.(3));
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.(2));
         await expect(page.getByTestId('ascension-screen')).toBeVisible({ timeout: 8_000 });
+
+        const offer = page.getByTestId('ascension-rule-offer');
+        await offer.scrollIntoViewIfNeeded();
+        await expect(page.getByTestId('ascension-rule-card-lost_pilgrimage')).toHaveAttribute('aria-pressed', 'true');
+        await expect(page.getByTestId('ascension-ascension-rule-outlook')).toHaveCount(0);
+        await page.getByTestId('ascension-rule-card-tangled_legends').click();
+        await expect(page.getByTestId('ascension-rule-card-tangled_legends')).toHaveAttribute('aria-pressed', 'true');
+        await expect(page.getByTestId('ascension-rule-card-lost_pilgrimage')).toHaveAttribute('aria-pressed', 'false');
 
         const outlook = page.getByTestId('ascension-ascension-rule-outlook');
         const accepted = page.getByTestId('ascension-ascension-rule-outlook-accepted');
@@ -127,6 +145,16 @@ test.describe('계승 화면 — 선택형 회차 규칙 미리보기', () => {
         await page.getByTestId('ascension-ascension-rule-toggle').click();
         await expect(declined).toHaveClass(/text-orange-100/);
         await expect(accepted).toHaveClass(/text-slate-400/);
+
+        const offerGeometry = await offer.evaluate((root) => ({
+            minFont: Math.min(...[...root.querySelectorAll<HTMLElement>('*')].filter((node) => (node.textContent || '').trim())
+                .map((node) => parseFloat(getComputedStyle(node).fontSize))),
+            minButton: Math.min(...[...root.querySelectorAll<HTMLElement>('button')].map((node) => node.getBoundingClientRect().height)),
+            overflow: root.scrollWidth - root.clientWidth,
+        }));
+        expect(offerGeometry.minFont).toBeGreaterThanOrEqual(11);
+        expect(offerGeometry.minButton).toBeGreaterThanOrEqual(44);
+        expect(offerGeometry.overflow).toBeLessThanOrEqual(1);
 
         const geometry = await outlook.evaluate((root) => {
             const leaves = [...root.querySelectorAll<HTMLElement>('*')].filter((node) => (node.textContent || '').trim());

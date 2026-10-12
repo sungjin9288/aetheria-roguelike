@@ -14,14 +14,19 @@ import { AT } from '../src/reducers/actionTypes.js';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
 import { GS } from '../src/reducers/gameStates.js';
 import {
+    getActiveAscensionRule,
     getAscensionRule,
+    getAscensionRuleById,
     getAscensionRuleCycle,
+    getAscensionRuleOffer,
+    getConqueredRuleIds,
+    resolveAscensionRuleChoice,
     getRuleSignatureDropMult,
     getSignatureSetMemberNames,
 } from '../src/systems/ascensionRule.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { resolveEndgameVictory } from '../src/systems/endgameSettlement.js';
-import { getCollectionSummary, getAscensionRulePreview } from '../src/utils/ascensionRuleView.js';
+import { getCollectionSummary, getAscensionRulePreview, getAscensionRuleOfferView } from '../src/utils/ascensionRuleView.js';
 import { getChallengeRewardPercent } from '../src/utils/challengeRules.js';
 import { checkTitles } from '../src/utils/gameUtils.js';
 import { pickPermanentPlayerState } from '../src/utils/permanentProgress.js';
@@ -49,6 +54,12 @@ const playerAt = (rank, extra = {}) => ({
     meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: rank },
     ...extra,
 });
+
+// 2026-10 Wave 94: 규칙을 읽는 함수는 meta를 받는다 — 고른 카드(`ascensionRule`)가 없는 meta는 고정 순서다.
+const rk = (rank) => ({ prestigeRank: rank });
+const ALL_RULE_IDS = ASCENSION_RULES.map((rule) => rule.id);
+// 패를 규칙 하나로 좁힌다 — 나머지를 정복한 것으로 두면 정복하지 않은 규칙이 그 하나뿐이라 패에 반드시 들어간다.
+const onlyUnconquered = (ruleId) => ALL_RULE_IDS.filter((id) => id !== ruleId);
 
 const demonKing = { name: '마왕', baseName: '마왕', isBoss: true, hp: 0, maxHp: 10_000, atk: 500, def: 100, exp: 9_000, gold: 9_000 };
 
@@ -113,24 +124,25 @@ test('Wave 90: 비틀기는 측정한 무게 순이다 — 가벼운 셋(위치 
 // ── 비틀기: 도전 조건 강제 ─────────────────────────────────────────────
 
 test('비틀기는 맨 앞에 붙고, 고른 것과 겹치면 한 번만이며, 고르는 칸을 쓰지 않는다 — rank 0은 그대로다', () => {
-    assert.deepEqual(buildRunChallengeModifiers(['halfHp'], 0), ['halfHp']);
-    assert.deepEqual(buildRunChallengeModifiers([], 1), ['blindMap']);
-    assert.deepEqual(buildRunChallengeModifiers(['blindMap', 'halfHp'], 1), ['blindMap', 'halfHp']);
+    assert.deepEqual(buildRunChallengeModifiers(['halfHp'], rk(0)), ['halfHp']);
+    assert.deepEqual(buildRunChallengeModifiers([], rk(1)), ['blindMap']);
+    assert.deepEqual(buildRunChallengeModifiers(['blindMap', 'halfHp'], rk(1)), ['blindMap', 'halfHp']);
     const slots = getChallengeSlotCount(1);
     const picked = BALANCE.CHALLENGE_MODIFIERS.map((m) => m.id).filter((id) => id !== 'blindMap').slice(0, slots);
-    const mods = buildRunChallengeModifiers(picked, 1);
+    const mods = buildRunChallengeModifiers(picked, rk(1));
     assert.equal(mods.length, slots + 1, '강제 1 + 고른 칸 전부');
     assert.deepEqual(mods, ['blindMap', ...picked]);
-    assert.deepEqual(buildRunChallengeModifiers('noGold', 2), ['noGold'], '배열이 아니어도 비틀기는 붙는다');
+    assert.deepEqual(buildRunChallengeModifiers('noGold', rk(2)), ['noGold'], '배열이 아니어도 비틀기는 붙는다');
 });
 
 test('계승(ASCEND)은 새 단계의 규칙을 붙이고 시작 로그로 알린다', () => {
     const veteran = playerAt(0, { meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: 0, endgame: { lastEndgameReceiptKey: 'rk' } } });
     const next = gameReducer(
         { ...structuredClone(INITIAL_STATE), gameState: GS.ASCENSION, player: veteran, bootStage: 'ready' },
-        { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: 'rk', seed: 1, challengeModifiers: ['halfHp'] } },
+        { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: 'rk', seed: 1, challengeModifiers: ['halfHp'],
+            ruleId: getAscensionRuleOffer(veteran, 1).find((card) => card.modifier !== 'halfHp').id } },
     );
-    const rule = getAscensionRule(1);
+    const rule = getActiveAscensionRule(next.player.meta);
     assert.equal(next.player.meta.prestigeRank, 1);
     assert.deepEqual(next.player.challengeModifiers, [rule.modifier, 'halfHp']);
     assert.ok(next.logs.some((log) => log.text.includes(`[${rule.name}]`)), '회차 규칙 시작 로그');
@@ -262,7 +274,7 @@ test('정복 칭호는 정복 기록으로 복구된다 — 규칙마다 · 모�
 // ── 화면 ──────────────────────────────────────────────────────────────
 
 test('도전 규칙 선택: 규칙의 비틀기는 잠겨 켜져 있고 칸 수에 들지 않으며 보상 % 에는 센다', () => {
-    const rule = getAscensionRulePreview(1);
+    const rule = getAscensionRulePreview(rk(1));
     const html = renderStatic(createElement(ChallengeModifierPicker, {
         testIdPrefix: 'probe', selected: ['halfHp'], slots: 3, onToggle: () => {}, rule,
     }));
@@ -276,7 +288,7 @@ test('도전 규칙 선택: 규칙의 비틀기는 잠겨 켜져 있고 칸 수�
 
     const none = renderStatic(createElement(ChallengeModifierPicker, { testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {} }));
     assert.ok(!none.includes('probe-ascension-rule'));
-    assert.equal(getAscensionRulePreview(0), null);
+    assert.equal(getAscensionRulePreview(rk(0)), null);
 });
 
 test('도감 수집 완주: 세트별 발견 수 · 정복 수 · 이번 회차 표적 세트를 그린다', () => {
@@ -302,18 +314,22 @@ test('도감 수집 완주: 세트별 발견 수 · 정복 수 · 이번 회차 
 
 // ── Wave 91: 무거운 규칙 셋은 선택형(기본 받아들임) ─────────────────────────
 
-const ascendFrom = (rank, payload = {}) => gameReducer(
+// 2026-10 Wave 94: 패를 고정 순서의 다음 규칙 하나로 좁혀 그 카드를 고른다(Wave 91 계약은 규칙 내용을 본다).
+const ascendFrom = (rank, payload = {}, ruleId = getAscensionRule(rank + 1).id) => gameReducer(
     { ...structuredClone(INITIAL_STATE), gameState: GS.ASCENSION, bootStage: 'ready',
-        player: playerAt(rank, { meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: rank, endgame: { lastEndgameReceiptKey: 'rk' } } }) },
-    { type: AT.ASCEND, payload: { expectedPrestigeRank: rank, sourceReceiptKey: 'rk', seed: 1, challengeModifiers: [], ...payload } },
+        player: playerAt(rank, {
+            meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: rank, endgame: { lastEndgameReceiptKey: 'rk' } },
+            stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRuleIds: onlyUnconquered(ruleId) },
+        }) },
+    { type: AT.ASCEND, payload: { expectedPrestigeRank: rank, sourceReceiptKey: 'rk', seed: 1, challengeModifiers: [], ruleId, ...payload } },
 );
 
 test('Wave 91: 가벼운 셋(1 ~ 3단계)은 강제, 무거운 셋(4 ~ 6단계)은 선택형이고 내용은 그대로다', () => {
     assert.deepEqual(ASCENSION_RULES.map((rule) => rule.optional === true), [false, false, false, true, true, true]);
     assert.deepEqual(ASCENSION_RULES.map((rule) => rule.modifier), ['blindMap', 'noGold', 'noPotion', 'randomSkills', 'halfHp', 'eliteOnly']);
-    assert.deepEqual(buildRunChallengeModifiers([], 4), ['randomSkills'], '기본은 받아들임');
-    assert.deepEqual(buildRunChallengeModifiers(['noGold'], 4, true), ['noGold'], '거절하면 비틀기가 없다');
-    assert.deepEqual(buildRunChallengeModifiers([], 1, true), ['blindMap'], '강제 규칙은 거절할 수 없다');
+    assert.deepEqual(buildRunChallengeModifiers([], rk(4)), ['randomSkills'], '기본은 받아들임');
+    assert.deepEqual(buildRunChallengeModifiers(['noGold'], rk(4), true), ['noGold'], '거절하면 비틀기가 없다');
+    assert.deepEqual(buildRunChallengeModifiers([], rk(1), true), ['blindMap'], '강제 규칙은 거절할 수 없다');
 });
 
 test('Wave 91: 계승에서 거절하면 비틀기 · 표적 배율 · 정복이 모두 없고 기록은 런 범위다', () => {
@@ -350,7 +366,7 @@ test('Wave 91: 새 게임 · 사망 재시작(start)도 거절을 받는다', ()
 });
 
 test('Wave 91: 선택 화면 — 선택형 규칙은 받아들임/거절 단추, 거절하면 잠긴 칸 · 보상 % 없음, 강제 규칙은 단추 없음', () => {
-    const optional = getAscensionRulePreview(4);
+    const optional = getAscensionRulePreview(rk(4));
     assert.equal(optional.optional, true);
     const render = (props) => renderStatic(createElement(ChallengeModifierPicker, {
         testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: optional, ...props,
@@ -364,7 +380,7 @@ test('Wave 91: 선택 화면 — 선택형 규칙은 받아들임/거절 단추,
     assert.doesNotMatch(declined.match(/<button[^>]*data-testid="probe-challenge-randomSkills"[^>]*>/)[0], /aria-disabled/);
     assert.ok(!declined.includes('probe-challenge-reward'), '고른 것도 규칙도 없으면 보상 줄이 없다');
     const forced = renderStatic(createElement(ChallengeModifierPicker, {
-        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: getAscensionRulePreview(1), ruleDeclined: true,
+        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: getAscensionRulePreview(rk(1)), ruleDeclined: true,
     }));
     assert.ok(!forced.includes('probe-ascension-rule-toggle'));
     assert.match(forced.match(/<button[^>]*data-testid="probe-challenge-blindMap"[^>]*>/)[0], /aria-disabled="true"/, '강제 규칙은 거절 값을 무시한다');
@@ -398,33 +414,32 @@ test('Wave 93: 순환 번호는 계승 단계에서 도출된다 — rank 1 ~ 6 
     assert.deepEqual([0, 1, 6, 7, 12, 13, 18, 19].map(getAscensionRuleCycle), [0, 1, 1, 2, 2, 3, 3, 4]);
 });
 
-test('Wave 92 · 93: 미리보기 줄은 그 순환의 측정을 그대로 그리고, 잰 적 없는 순환은 마지막 측정을 보이며 출처가 밝힌다', () => {
+test('Wave 92 · 93 · 94: 미리보기 줄은 그 순환의 측정을 그대로 그리고, 출처는 잰 단계(고정 순서)를 밝힌다', () => {
     const r1 = (value) => (Math.round(value * 10) / 10).toFixed(1);
     for (const rank of [4, 5, 6, 10, 11, 12, 16, 17, 18]) {
         const rule = getAscensionRule(rank);
         const cycle = getAscensionRuleCycle(rank);
         const measuredCycle = Math.min(cycle, rule.outlook.length);
         const o = rule.outlook[measuredCycle - 1];
-        const preview = getAscensionRulePreview(rank);
+        const preview = getAscensionRulePreview(rk(rank));
         assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)), `rank ${rank}`);
         assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)), `rank ${rank}`);
-        assert.equal(preview.outlook.source, measuredCycle === cycle
-            ? MSG.ASCENSION_RULE_OUTLOOK_SOURCE(cycle)
-            : MSG.ASCENSION_RULE_OUTLOOK_SOURCE_LATER(measuredCycle, cycle), `rank ${rank}`);
+        assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE(o.measuredRank), `rank ${rank}`);
+        assert.equal(o.measuredRank, ASCENSION_RULES.indexOf(rule) + 1 + (measuredCycle - 1) * ASCENSION_RULES.length, '잰 단계는 고정 순서의 그 규칙 자리다');
     }
-    for (const rank of [1, 2, 3, 7, 8, 9]) assert.equal(getAscensionRulePreview(rank).outlook, null);
-    assert.notDeepEqual(getAscensionRulePreview(10).outlook, getAscensionRulePreview(4).outlook, '두 번째 순환은 자기 측정을 보인다');
-    assert.equal(getAscensionRulePreview(4).outlook.accepted, '받아들이면: 사망 3.6회 · 새 각인 +1.6개 · 정복 보상');
-    assert.equal(getAscensionRulePreview(5).outlook.declined, '거절하면: 사망 1.7회 · 새 각인 +0.2개');
-    assert.equal(getAscensionRulePreview(6).outlook.accepted, '받아들이면: 사망 5.9회 · 새 각인 +1.2개 · 정복 보상', '5.85는 5.9로 반올림한다');
-    assert.equal(getAscensionRulePreview(10).outlook.accepted, '받아들이면: 사망 2.2회 · 새 각인 +1.0개 · 정복 보상');
-    assert.equal(getAscensionRulePreview(11).outlook.declined, '거절하면: 사망 0.8회 · 새 각인 +0.0개');
-    assert.equal(getAscensionRulePreview(4).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 이 규칙의 1번째 순환 측정');
-    assert.equal(getAscensionRulePreview(16).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 2번째 순환 측정 — 지금은 3번째 순환');
+    for (const rank of [1, 2, 3, 7, 8, 9]) assert.equal(getAscensionRulePreview(rk(rank)).outlook, null);
+    assert.notDeepEqual(getAscensionRulePreview(rk(10)).outlook, getAscensionRulePreview(rk(4)).outlook, '두 번째 순환은 자기 측정을 보인다');
+    assert.equal(getAscensionRulePreview(rk(4)).outlook.accepted, '받아들이면: 사망 3.6회 · 새 각인 +1.6개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(rk(5)).outlook.declined, '거절하면: 사망 1.7회 · 새 각인 +0.2개');
+    assert.equal(getAscensionRulePreview(rk(6)).outlook.accepted, '받아들이면: 사망 5.9회 · 새 각인 +1.2개 · 정복 보상', '5.85는 5.9로 반올림한다');
+    assert.equal(getAscensionRulePreview(rk(10)).outlook.accepted, '받아들이면: 사망 2.2회 · 새 각인 +1.0개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(rk(11)).outlook.declined, '거절하면: 사망 0.8회 · 새 각인 +0.0개');
+    assert.equal(getAscensionRulePreview(rk(4)).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 고정 순서 계승 4단계에서 잰 값');
+    assert.equal(getAscensionRulePreview(rk(16)).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 고정 순서 계승 10단계에서 잰 값');
 });
 
 test('Wave 92: 선택 화면 — 두 줄을 함께 보이고 지금 고른 쪽을 밝힌다, 강제 규칙은 줄이 없다, 미리보기는 규칙을 바꾸지 않는다', () => {
-    const preview = getAscensionRulePreview(6);
+    const preview = getAscensionRulePreview(rk(6));
     const render = (ruleDeclined) => renderStatic(createElement(ChallengeModifierPicker, {
         testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: preview, ruleDeclined,
     }));
@@ -437,10 +452,154 @@ test('Wave 92: 선택 화면 — 두 줄을 함께 보이고 지금 고른 쪽�
         assert.match(lineClass(html, declined ? 'accepted' : 'declined'), /text-slate-400/);
     }
     const forced = renderStatic(createElement(ChallengeModifierPicker, {
-        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: getAscensionRulePreview(2),
+        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: getAscensionRulePreview(rk(2)),
     }));
     assert.ok(!forced.includes('probe-ascension-rule-outlook'));
     // 표시만이다 — 규칙 · 보상 판정은 미리보기 필드를 읽지 않는다.
-    assert.deepEqual(buildRunChallengeModifiers([], 6), ['eliteOnly']);
-    assert.deepEqual(buildRunChallengeModifiers([], 6, true), []);
+    assert.deepEqual(buildRunChallengeModifiers([], rk(6)), ['eliteOnly']);
+    assert.deepEqual(buildRunChallengeModifiers([], rk(6), true), []);
+});
+
+// ── Wave 94: 회차 규칙 카드 뽑기 ──────────────────────────────────────
+
+const veteranAt = (rank, receipt, extra = {}) => playerAt(rank, {
+    meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: rank, endgame: { lastEndgameReceiptKey: receipt } },
+    ...extra,
+});
+const ascendWith = (player, payload = {}) => gameReducer(
+    { ...structuredClone(INITIAL_STATE), gameState: GS.ASCENSION, bootStage: 'ready', player },
+    { type: AT.ASCEND, payload: { expectedPrestigeRank: player.meta.prestigeRank, sourceReceiptKey: player.meta.endgame.lastEndgameReceiptKey,
+        seed: 1, challengeModifiers: [], ...payload } },
+);
+const RECEIPTS = Array.from({ length: 60 }, (_, i) => `rk-${i}`);
+
+test('Wave 94: 패는 이번 순환에서 정복하지 않은 규칙에서 서로 다른 최대 3장이고, 같은 처치에서는 같은 패 · 처치마다 다른 패다', () => {
+    assert.equal(BALANCE.ASCENSION_RULE_OFFER_COUNT, 3);
+    const offers = RECEIPTS.map((receipt) => getAscensionRuleOffer(veteranAt(0, receipt), 1).map((rule) => rule.id));
+    for (const offer of offers) assert.equal(new Set(offer).size, 3);
+    assert.deepEqual(getAscensionRuleOffer(veteranAt(0, 'rk-1'), 1).map((r) => r.id), offers[1], '같은 영수증 · 단계는 같은 패');
+    assert.ok(new Set(offers.map((offer) => offer.join())).size > 10, '처치마다 패가 다르다');
+    assert.deepEqual(new Set(offers.flat()), new Set(ALL_RULE_IDS), '여러 처치에 걸쳐 모든 규칙이 나온다');
+    assert.ok(new Set(offers.map((offer) => offer[0])).size > 1, '첫 카드도 고정이 아니다');
+
+    const conquered = ['lost_pilgrimage', 'empty_crusade', 'dry_dragon_road'];
+    for (const receipt of RECEIPTS) {
+        const offer = getAscensionRuleOffer(veteranAt(3, receipt, { stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRuleIds: conquered } }), 4);
+        assert.deepEqual(offer.map((rule) => rule.id).sort(), ['fading_dimension', 'shadow_legion', 'tangled_legends'], '정복하지 않은 것만 남으면 그 셋');
+    }
+    const one = getAscensionRuleOffer(veteranAt(3, 'rk-0', { stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRuleIds: onlyUnconquered('shadow_legion') } }), 4);
+    assert.deepEqual(one.map((rule) => rule.id), ['shadow_legion'], '남은 규칙이 하나면 패도 그 하나 — 정복한 규칙으로 칸을 채우지 않는다');
+    const two = getAscensionRuleOffer(veteranAt(4, 'rk-0', { stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRuleIds: ALL_RULE_IDS.slice(0, 4) } }), 5);
+    assert.deepEqual(two.map((rule) => rule.id).sort(), ['fading_dimension', 'shadow_legion']);
+    assert.deepEqual(getAscensionRuleOffer(veteranAt(0, 'rk-0'), 0), []);
+});
+
+test('Wave 94: 계승은 패에서 고른 카드를 붙이고 영구 meta에 남긴다 — 패 밖 · 없음은 패에서 가장 가벼운 카드', () => {
+    for (const receipt of RECEIPTS.slice(0, 20)) {
+        const player = veteranAt(0, receipt);
+        const offer = getAscensionRuleOffer(player, 1);
+        const lightest = [...offer].sort((a, b) => ASCENSION_RULES.indexOf(a) - ASCENSION_RULES.indexOf(b))[0];
+        for (const card of offer) {
+            const next = ascendWith(player, { ruleId: card.id });
+            assert.deepEqual(next.player.meta.ascensionRule, { rank: 1, ruleId: card.id });
+            assert.equal(next.player.challengeModifiers[0], card.modifier);
+            assert.ok(next.logs.some((log) => log.text.includes(`[${card.name}]`)));
+        }
+        const outside = ALL_RULE_IDS.find((id) => !offer.some((card) => card.id === id));
+        assert.equal(ascendWith(player, { ruleId: outside }).player.meta.ascensionRule.ruleId, lightest.id, '패 밖의 id는 받지 않는다');
+        assert.equal(ascendWith(player).player.meta.ascensionRule.ruleId, lightest.id, '고르지 않으면 가장 가벼운 카드');
+        assert.equal(resolveAscensionRuleChoice(offer, undefined).id, lightest.id);
+        assert.equal(getAscensionRuleOfferView(player, 1).defaultId, lightest.id, '화면이 처음 골라 둔 카드 = 리듀서 기본값');
+    }
+    // 첫 카드가 가장 가벼운 카드가 아닌 처치가 있다(기본값이 "첫 카드"가 아님을 판별).
+    assert.ok(RECEIPTS.some((receipt) => {
+        const offer = getAscensionRuleOffer(veteranAt(0, receipt), 1);
+        return resolveAscensionRuleChoice(offer, undefined).id !== offer[0].id;
+    }));
+});
+
+test('Wave 94: 고른 규칙은 같은 단계의 사망 재시작 · 표적 배율이 읽고, 다른 단계의 기록이나 이전 세이브는 고정 순서다', () => {
+    const picked = playerAt(2, { meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: 2, ascensionRule: { rank: 2, ruleId: 'shadow_legion' } } });
+    assert.equal(getActiveAscensionRule(picked.meta).id, 'shadow_legion');
+    let dispatched = null;
+    createCharacterActions({
+        player: picked, gameState: GS.IDLE, dispatch: (action) => { if (action.type === AT.SET_PLAYER && !dispatched) dispatched = action; },
+        addLog: () => {}, addStoryLog: () => {}, getFullStats: (p) => calculateFullStats(p),
+    }, { emitUnlockedTitles: () => {} }).start('수집가', 'male', '모험가', []);
+    assert.deepEqual(dispatched.payload.challengeModifiers, ['eliteOnly'], '사망 재시작은 고른 규칙 그대로');
+    const shadowSig = getSignatureSetMemberNames('shadow-lord')[0];
+    assert.equal(getRuleSignatureDropMult(picked, shadowSig), BALANCE.ASCENSION_RULE_SIGNATURE_MULT);
+    assert.equal(getRuleSignatureDropMult(picked, '세계수의 검'), 1);
+    const stale = { ...picked.meta, prestigeRank: 3 };
+    assert.equal(getActiveAscensionRule(stale).id, getAscensionRule(3).id, '다른 단계의 기록은 쓰지 않는다');
+    assert.equal(getActiveAscensionRule(rk(2)).id, getAscensionRule(2).id, '기록이 없으면(이전 세이브) 고정 순서');
+    assert.deepEqual(pickPermanentPlayerState(picked, INITIAL_STATE.player).meta.ascensionRule, { rank: 2, ruleId: 'shadow_legion' }, '영구 meta로 넘어간다');
+});
+
+test('Wave 94: 정복은 규칙 id로 남고 칭호 복구 · 패 · 도감이 그것을 읽는다 — 이전 기록(단계)은 처음 쓸 때 고정 순서로 옮긴다', () => {
+    const legacy = { ruleConquestRanks: [1, 2] };
+    assert.deepEqual([...getConqueredRuleIds(legacy)].sort(), ['empty_crusade', 'lost_pilgrimage']);
+    const player = playerAt(1, {
+        meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: 1, ascensionRule: { rank: 1, ruleId: 'shadow_legion' } },
+        stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRanks: [2] },
+    });
+    const kill = killDemonKing(player, 'rk-shadow');
+    assert.ok(kill.player.titles.includes('conquest_shadow'), '고른 규칙의 정복 칭호');
+    assert.deepEqual([...kill.player.stats.ruleConquestRuleIds].sort(), ['empty_crusade', 'shadow_legion'], '이전 기록(2단계 = 빈손의 성전)을 옮기고 새 정복을 더한다');
+    assert.deepEqual(kill.player.stats.ruleConquestRanks, [2, 1]);
+    assert.deepEqual(pickPermanentPlayerState(kill.player, INITIAL_STATE.player).stats.ruleConquestRuleIds, kill.player.stats.ruleConquestRuleIds);
+    const restored = checkTitles({ ...kill.player, titles: [] });
+    assert.ok(restored.includes('conquest_shadow') && restored.includes('conquest_celestial'), '정복 칭호는 규칙 id로 복구된다');
+    assert.ok(!restored.includes('conquest_worldtree'), '1단계 정복이지만 고른 규칙이 달랐다');
+    assert.equal(getCollectionSummary(kill.player).conquered, 2);
+    for (const receipt of RECEIPTS.slice(0, 10)) {
+        const offer = getAscensionRuleOffer({ ...kill.player, meta: { ...kill.player.meta, endgame: { lastEndgameReceiptKey: receipt } } }, 2);
+        assert.ok(offer.every((rule) => !['shadow_legion', 'empty_crusade'].includes(rule.id)), '정복한 규칙은 패에 오지 않는다(정복하지 않은 것이 셋 이상일 때)');
+    }
+});
+
+test('Wave 94: 선택 화면 — 패의 카드를 그리고 고른 카드를 밝히며 그 카드의 띠 · 잠긴 칸을 보인다', () => {
+    const player = veteranAt(0, 'rk-2');
+    const view = getAscensionRuleOfferView(player, 1);
+    const picked = view.cards[2];
+    const html = renderStatic(createElement(ChallengeModifierPicker, {
+        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: picked, ruleOffer: view.cards, onSelectRule: () => {},
+    }));
+    assert.match(html, /data-testid="probe-rule-offer"/);
+    assert.ok(html.includes(MSG.ASCENSION_RULE_OFFER_TITLE));
+    for (const card of view.cards) {
+        const button = html.match(new RegExp(`<button[^>]*data-testid="probe-rule-card-${card.id}"[^>]*>`))[0];
+        assert.match(button, new RegExp(`aria-pressed="${card.id === picked.id}"`));
+        assert.ok(html.includes(card.name) && html.includes(card.twist));
+    }
+    assert.ok(html.includes(MSG.ASCENSION_RULE_NEXT(picked.name)));
+    assert.match(html.match(new RegExp(`<button[^>]*data-testid="probe-challenge-${picked.lockedId}"[^>]*>`))[0], /aria-disabled="true"/);
+    const single = renderStatic(createElement(ChallengeModifierPicker, {
+        testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: getAscensionRulePreview(rk(2)),
+    }));
+    assert.ok(!single.includes('probe-rule-offer'), '인트로(이미 고른 규칙)는 패가 없다');
+});
+
+test('Wave 94: 패는 덱이다 — 고르지 않아도(가장 가벼운 카드) 순환마다 여섯 규칙을 모두 거치고, 다 정복하면 다시 찬다', () => {
+    // 원장 §99: 정복한 규칙으로 칸을 채우던 첫 구현에서는 고르지 않는 플레이어가 언제나 정복한 가벼운 카드를 받아
+    //   무거운 둘(꺼져 가는 차원 · 암흑의 군단)을 720회차 중 한 번도 만나지 않았다.
+    for (const receipt of ['a', 'b', 'c', 'd', 'e']) {
+        let ledger = [];
+        const seen = [];
+        for (let rank = 1; rank <= 12; rank += 1) {
+            const player = veteranAt(rank - 1, `${receipt}-${rank}`, { stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRuleIds: ledger } });
+            const rule = resolveAscensionRuleChoice(getAscensionRuleOffer(player, rank), undefined);
+            seen.push(rule.id);
+            ledger = [...ledger, rule.id];
+        }
+        assert.deepEqual([...seen.slice(0, 6)].sort(), [...ALL_RULE_IDS].sort(), `${receipt}: 첫 순환에 여섯 규칙 모두`);
+        assert.deepEqual([...seen.slice(6)].sort(), [...ALL_RULE_IDS].sort(), `${receipt}: 둘째 순환도 여섯 규칙 모두`);
+    }
+    const full = getAscensionRuleOffer(veteranAt(6, 'rk-0', { stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRuleIds: ALL_RULE_IDS } }), 7);
+    assert.equal(full.length, 3, '여섯을 모두 정복하면 덱이 다시 찬다');
+    const kill = killDemonKing(playerAt(1, {
+        meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: 1, ascensionRule: { rank: 1, ruleId: 'lost_pilgrimage' } },
+        stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRuleIds: ALL_RULE_IDS },
+    }), 'rk-again');
+    assert.deepEqual(kill.player.stats.ruleConquestRuleIds, [...ALL_RULE_IDS, 'lost_pilgrimage'], '다시 정복해도 한 줄이 남는다(순환을 센다)');
 });
