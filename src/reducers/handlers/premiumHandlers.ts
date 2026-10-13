@@ -2,7 +2,7 @@ import { BALANCE } from '../../data/constants';
 import { getMirrorNode } from '../../data/mirror';
 import { MSG } from '../../data/messages';
 import { PREMIUM_SHOP } from '../../data/premiumShop';
-import { getMirrorEndlessStatGain, purchaseMirrorNode } from '../../systems/mirrorUpgrades';
+import { getMirrorEndlessStatGain, purchaseMirrorNode, recordMirrorEndlessCycle } from '../../systems/mirrorUpgrades';
 import type { GameState, HandlerMap } from '../gameReducer';
 import { AT, type ActionOf } from '../actionTypes';
 import type { Player } from '../../types';
@@ -140,6 +140,8 @@ const purchaseMirrorUpgrade = (state: GameState, action: ActionOf<typeof AT.PURC
             ...(endlessStat === 'atk' ? { bonusAtk: (Number(meta.bonusAtk) || 0) + gain } : {}),
             ...(endlessStat === 'hp' ? { bonusHp: (Number(meta.bonusHp) || 0) + gain } : {}),
             ...(endlessStat === 'mp' ? { bonusMp: (Number(meta.bonusMp) || 0) + gain } : {}),
+            // 2026-10 Wave 99: 이번 회차에 새긴 단계 — 계승 화면이 회차 단위로 돌아본다.
+            ...(endlessStat ? { mirrorEndlessCycle: recordMirrorEndlessCycle(meta, endlessStat) } : {}),
         },
     }, endlessStat
         ? MSG.MIRROR_ENDLESS_PURCHASE(node.name, result.newLevel, result.cost, MSG.MIRROR_ENDLESS_STAT_LABELS[endlessStat], gain)

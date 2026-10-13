@@ -131,6 +131,44 @@ export const getMirrorEndlessAffordance = (
     return { unlocked: true, steps, nextCost, shortfall: steps > 0 ? 0 : nextCost - budget };
 };
 
+export interface MirrorEndlessCycle {
+    /** 이번 회차에 새긴 끝없는 단계 수(세 능력치 합). */
+    steps: number;
+    /** 능력치별 단계 수. */
+    levels: Record<MirrorEndlessStat, number>;
+    /** 능력치별로 오른 영구 능력치(단계 수 × 단계당 양). */
+    gains: Record<MirrorEndlessStat, number>;
+}
+
+type MirrorEndlessCycleMeta = {
+    prestigeRank?: number;
+    mirrorEndlessCycle?: { rank: number; atk: number; hp: number; mp: number };
+} | null | undefined;
+
+const ENDLESS_STATS: readonly MirrorEndlessStat[] = ['atk', 'hp', 'mp'];
+const getCurrentRank = (meta: MirrorEndlessCycleMeta): number => Math.max(0, Math.floor(Number(meta?.prestigeRank) || 0));
+
+/**
+ * 2026-10 Wave 99: 이번 회차(지금 계승 단계)에 새긴 끝없는 거울 — 기록의 단계가 지금 단계와 다르면(계승 뒤 · 이전 세이브) 0이다.
+ * 기록은 영구 meta라 사망 재시작을 넘어 회차 내내 쌓인다.
+ */
+export const getMirrorEndlessCycle = (meta: MirrorEndlessCycleMeta): MirrorEndlessCycle => {
+    const record = meta?.mirrorEndlessCycle;
+    const current = record && record.rank === getCurrentRank(meta) ? record : null;
+    const levels = Object.fromEntries(ENDLESS_STATS.map((stat) => [stat, Math.max(0, Math.floor(Number(current?.[stat]) || 0))])) as Record<MirrorEndlessStat, number>;
+    const gains = Object.fromEntries(ENDLESS_STATS.map((stat) => [stat, levels[stat] * getMirrorEndlessStatGain(stat)])) as Record<MirrorEndlessStat, number>;
+    return { steps: levels.atk + levels.hp + levels.mp, levels, gains };
+};
+
+/** 끝없는 단계 하나를 산 뒤의 회차 기록 — 지금 단계로 키를 맞추고, 단계가 바뀌었으면 0부터 센다. */
+export const recordMirrorEndlessCycle = (
+    meta: MirrorEndlessCycleMeta,
+    stat: MirrorEndlessStat,
+): { rank: number; atk: number; hp: number; mp: number } => {
+    const { levels } = getMirrorEndlessCycle(meta);
+    return { rank: getCurrentRank(meta), ...levels, [stat]: levels[stat] + 1 };
+};
+
 export interface MirrorPurchaseResult {
     mirror: MirrorLevels;
     success: boolean;
