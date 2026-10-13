@@ -56,6 +56,7 @@ import { EXPLORATION_RHYTHM_PROFILE } from '../data/progressionProfiles';
 import { advanceExploreState } from '../utils/explorationPacing';
 import { getAdditiveNumericRelicValue } from '../utils/relicEffectValues';
 import { getStructuredFallbackPoolEvent } from '../data/structuredFallbackEvents';
+import { ASCENSION_RULES } from '../data/ascensionRules';
 
 const RETURN_BRIEFING_RENDER_DELAY_MS = 50;
 
@@ -201,6 +202,9 @@ export interface AscensionSnapshot {
     /** Wave 95: 이 단계에서 고른 회차 규칙 id · 넘어간 정수 사다리 단계. */
     ascensionRuleId: string | null;
     ladderRank: number;
+    /** Wave 105: 겹친 규칙의 두 번째 비틀기 · 이번 여정의 도전 조건. */
+    ascensionSecondModifier: string | null;
+    challengeModifiers: string[];
 }
 
 /** getMirrorSnapshot() 반환 모양. */
@@ -381,7 +385,8 @@ export interface AetheriaTestApi {
     /** 2026-10 Wave 92: `prestigeRank`(기본 2)를 넘기면 그 단계에서 계승하는 화면 — 다음 회차 규칙 미리보기 확인용. */
     /** Wave 95: `receiptKey`를 주면 마왕 처치 영수증을 세운다(회차 규칙 패 다시 뽑기는 영수증이 있는 계승에서만 열린다). */
     /** Wave 98: `mirrorFullTree`면 거울 8노드를 모두 채우고 정수 9,000을 둔다(끝없는 단계가 열린 계승 화면). */
-    seedAscensionJourneyScenario: (prestigeRank?: number, receiptKey?: string, mirrorFullTree?: boolean) => void;
+    /** Wave 105: `conqueredBaseRules`면 기본 회차 규칙 여섯을 모두 정복한 기록을 둔다(겹친 규칙 패가 열린 계승 화면). */
+    seedAscensionJourneyScenario: (prestigeRank?: number, receiptKey?: string, mirrorFullTree?: boolean, conqueredBaseRules?: boolean) => void;
     seedTrueEndingJourneyScenario: () => boolean;
     weakenTrueBossForJourney: () => boolean;
     /** Wave 96: `fullTree`면 거울 8노드를 모두 채우고 정수 10,000을 둔다(끝없는 단계가 열린 상태). */
@@ -840,6 +845,8 @@ export const useGameTestApi = (
                     relicCount: er.player.relics?.length || 0,
                     ascensionRuleId: er.player.meta?.ascensionRule?.ruleId ?? null,
                     ladderRank: er.player.meta?.rank || 0,
+                    ascensionSecondModifier: er.player.meta?.ascensionRule?.secondModifier ?? null,
+                    challengeModifiers: [...(er.player.challengeModifiers || [])],
                 };
             },
             getMirrorSnapshot: () => {
@@ -1110,11 +1117,18 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'graves' });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
-            seedAscensionJourneyScenario: (prestigeRank = 2, receiptKey, mirrorFullTree) => {
+            seedAscensionJourneyScenario: (prestigeRank = 2, receiptKey, mirrorFullTree, conqueredBaseRules) => {
                 const er = engineRef.current;
                 er.dispatch({
                     type: AT.SET_PLAYER,
                     payload: {
+                        ...(conqueredBaseRules ? {
+                            stats: {
+                                ...(er.player.stats || {}),
+                                ruleConquestRanks: ASCENSION_RULES.map((_, index) => index + 1),
+                                ruleConquestRuleIds: ASCENSION_RULES.map((rule) => rule.id),
+                            },
+                        } : {}),
                         name: '리베아',
                         gender: er.player.gender || 'female',
                         job: '팔라딘',

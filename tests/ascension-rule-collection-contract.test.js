@@ -573,7 +573,9 @@ test('Wave 94: 선택 화면 — 패의 카드를 그리고 고른 카드를 밝
         assert.ok(html.includes(card.name) && html.includes(card.twist));
     }
     assert.ok(html.includes(MSG.ASCENSION_RULE_NEXT(picked.name)));
-    assert.match(html.match(new RegExp(`<button[^>]*data-testid="probe-challenge-${picked.lockedId}"[^>]*>`))[0], /aria-disabled="true"/);
+    for (const lockedId of picked.lockedIds) {
+        assert.match(html.match(new RegExp(`<button[^>]*data-testid="probe-challenge-${lockedId}"[^>]*>`))[0], /aria-disabled="true"/);
+    }
     const single = renderStatic(createElement(ChallengeModifierPicker, {
         testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: getAscensionRulePreview(rk(2)),
     }));
@@ -593,10 +595,12 @@ test('Wave 94: 패는 덱이다 — 고르지 않아도(가장 가벼운 카드)
             ledger = [...ledger, rule.id];
         }
         assert.deepEqual([...seen.slice(0, 6)].sort(), [...ALL_RULE_IDS].sort(), `${receipt}: 첫 순환에 여섯 규칙 모두`);
-        assert.deepEqual([...seen.slice(6)].sort(), [...ALL_RULE_IDS].sort(), `${receipt}: 둘째 순환도 여섯 규칙 모두`);
+        // 2026-10 Wave 105: 둘째 순환부터 덱은 겹친 여섯 규칙이다 — 둘째 순환도 여섯 모두를 거친다.
+        assert.deepEqual([...seen.slice(6)].sort(), ALL_RULE_IDS.map((id) => `stacked_${id}`).sort(), `${receipt}: 둘째 순환은 겹친 여섯 규칙 모두`);
     }
     const full = getAscensionRuleOffer(veteranAt(6, 'rk-0', { stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRuleIds: ALL_RULE_IDS } }), 7);
-    assert.equal(full.length, 3, '여섯을 모두 정복하면 덱이 다시 찬다');
+    assert.equal(full.length, 3, '여섯을 모두 정복하면 덱이 다시 찬다(겹친 규칙으로)');
+    assert.ok(full.every((rule) => rule.stackedOf), '다시 찬 덱은 겹친 규칙이다');
     const kill = killDemonKing(playerAt(1, {
         meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: 1, ascensionRule: { rank: 1, ruleId: 'lost_pilgrimage' } },
         stats: { ...structuredClone(INITIAL_STATE.player.stats), ruleConquestRuleIds: ALL_RULE_IDS },

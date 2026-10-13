@@ -1,7 +1,7 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import { getMirrorEffects } from '../systems/mirrorUpgrades.js';
-import { getActiveAscensionRule, resolveAscensionRuleDeclined } from '../systems/ascensionRule.js';
+import { getActiveAscensionTwists, resolveAscensionRuleDeclined } from '../systems/ascensionRule.js';
 import type { Player } from '../types/index.js';
 
 /**
@@ -43,12 +43,13 @@ export const buildRunChallengeModifiers = (
 ): string[] => {
     // 2026-10 Wave 91: 선택형 규칙(무거운 셋)을 거절하면 비틀기를 붙이지 않는다 — 강제 규칙(가벼운 셋)은 거절할 수 없다.
     // 2026-10 Wave 94: 규칙은 이 단계에서 고른 카드(`meta.ascensionRule`), 없으면 고정 순서다.
-    const forced = resolveAscensionRuleDeclined(meta, declineRule) ? undefined : getActiveAscensionRule(meta)?.modifier;
+    // 2026-10 Wave 105: 겹친 규칙은 비틀기가 둘이다 — 둘 다 슬롯을 차지하지 않고 보상 배율에는 하나씩 센다.
+    const forced: string[] = resolveAscensionRuleDeclined(meta, declineRule) ? [] : getActiveAscensionTwists(meta);
     const picked = sanitizeChallengeModifiers(
-        Array.isArray(value) ? value.filter((id) => id !== forced) : value,
+        Array.isArray(value) ? value.filter((id) => !forced.includes(id)) : value,
         meta?.prestigeRank,
     );
-    return forced ? [forced, ...picked] : picked;
+    return [...forced, ...picked];
 };
 
 /** 도전 규칙 선택 토글 — 고른 것은 빼고, 아니면 슬롯 수까지 더한다(인트로 · 계승 화면 공용). */

@@ -29,9 +29,10 @@ interface ChallengeModifierPickerProps {
  */
 const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule = null, ruleDeclined = false, onToggleRule, ruleOffer = [], onSelectRule, ruleReroll = null, onRerollRule }: ChallengeModifierPickerProps) => {
     const declined = Boolean(rule?.optional && ruleDeclined);
-    const lockedId = rule && !declined ? rule.lockedId : null;
-    const picked = lockedId ? selected.filter((id) => id !== lockedId) : selected;
-    const rewardCount = picked.length + (lockedId ? 1 : 0);
+    // 2026-10 Wave 105: 겹친 규칙은 잠긴 칸이 둘이다.
+    const lockedIds = rule && !declined ? rule.lockedIds : [];
+    const picked = selected.filter((id) => !lockedIds.includes(id));
+    const rewardCount = picked.length + lockedIds.length;
     return (
         <>
             {ruleOffer.length > 1 && (
@@ -147,7 +148,7 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule
                     </div>
                     <div className="grid grid-cols-2 gap-2">
                         {BALANCE.CHALLENGE_MODIFIERS.map((modifier: { id: string; label: string; desc: string }) => {
-                            const isLocked = modifier.id === lockedId;
+                            const isLocked = lockedIds.includes(modifier.id);
                             const isSelected = isLocked || picked.includes(modifier.id);
 
                             return (

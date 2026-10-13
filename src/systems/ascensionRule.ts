@@ -1,6 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
-import { ASCENSION_RULES, UNBOUND_SIGNATURE_GROUP, type AscensionRuleDef } from '../data/ascensionRules.js';
+import { ALL_ASCENSION_RULES, ASCENSION_RULES, STACKED_ASCENSION_RULES, UNBOUND_SIGNATURE_GROUP, type AscensionRuleDef } from '../data/ascensionRules.js';
 import signatureRegistryData from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSetsData from '../data/signatureSets.json' with { type: 'json' };
 import type { Player } from '../types/index.js';
@@ -42,10 +42,45 @@ export const getAscensionRuleCycle = (rank: number | null | undefined): number =
     return Math.floor((r - 1) / ASCENSION_RULES.length) + 1;
 };
 
-/** id로 찾은 회차 규칙. */
+/** id로 찾은 회차 규칙(기본 · 겹친 규칙 모두 — Wave 105). */
 export const getAscensionRuleById = (ruleId: unknown): AscensionRuleDef | null => (
-    typeof ruleId === 'string' ? ASCENSION_RULES.find((rule) => rule.id === ruleId) ?? null : null
+    typeof ruleId === 'string' ? ALL_ASCENSION_RULES.find((rule) => rule.id === ruleId) ?? null : null
 );
+
+type AscensionTwistId = AscensionRuleDef['modifier'];
+const TWIST_IDS = BALANCE.CHALLENGE_MODIFIERS.map((modifier) => modifier.id) as AscensionTwistId[];
+const isTwistId = (value: unknown): value is AscensionTwistId => typeof value === 'string' && (TWIST_IDS as string[]).includes(value);
+
+/**
+ * 2026-10 Wave 105 (소유자 결정 "카드마다 무작위 두 번째 비틀기"): 겹친 규칙 카드의 두 번째 비틀기 — 기본 비틀기를 뺀 다섯 가지에서
+ * 처치 영수증 · 다음 단계 · 다시 뽑기 횟수 · 규칙 id의 해시로 하나를 뽑는다(화면과 리듀서가 같은 값). 기본 규칙이면 null.
+ * 게임 난수를 쓰지 않는다.
+ */
+export const getStackedSecondModifier = (
+    rule: AscensionRuleDef | null | undefined,
+    receiptKey: string,
+    nextRank: number,
+    rerolls: number,
+): AscensionTwistId | null => {
+    if (!rule?.stackedOf) return null;
+    const pool = TWIST_IDS.filter((id) => id !== rule.modifier);
+    if (pool.length === 0) return null;
+    const rng = createSeededRandom(deriveSeed(0, 'ascension-rule-second', receiptKey, nextRank, rerolls, rule.id));
+    return pool[Math.floor(rng() * pool.length)] ?? null;
+};
+
+/**
+ * 지금 회차의 비틀기(도전 조건 id) — 규칙의 비틀기, 겹친 규칙이면 고른 카드의 두 번째 비틀기(`meta.ascensionRule.secondModifier`)까지.
+ * 규칙이 없으면 빈 목록. 두 번째 비틀기 기록이 없거나 기본 비틀기와 같으면(변조 · 이전 세이브) 하나만.
+ */
+export const getActiveAscensionTwists = (meta: AscensionRuleMeta): AscensionTwistId[] => {
+    const rule = getActiveAscensionRule(meta);
+    if (!rule) return [];
+    const rank = Math.floor(Number(meta?.prestigeRank) || 0);
+    const record = meta?.ascensionRule;
+    const second = rule.stackedOf && record?.rank === rank && record.ruleId === rule.id ? record.secondModifier : undefined;
+    return isTwistId(second) && second !== rule.modifier ? [rule.modifier, second] : [rule.modifier];
+};
 
 /** 지금 단계에서 고른 회차 규칙 — 고른 기록이 없으면(이전 세이브 · 다른 단계의 기록) 고정 순서. rank 0은 없다. */
 export const getActiveAscensionRule = (meta: AscensionRuleMeta): AscensionRuleDef | null => {
@@ -73,12 +108,22 @@ export const getConqueredRuleIds = (stats: RuleConquestStats): Set<string> => ne
 
 type RuleOfferPlayer = { meta?: Player['meta']; stats?: Player['stats'] } | null | undefined;
 
-/** 덱 — 정복 횟수가 가장 적은 규칙들(이번 순환에서 아직 정복하지 않은 규칙, 규칙 표 순서). 여섯을 모두 정복하면 다시 찬다. */
+/**
+ * 덱 — 정복 횟수가 가장 적은 규칙들(이번 순환에서 아직 정복하지 않은 규칙, 규칙 표 순서). 여섯을 모두 정복하면 다시 찬다.
+ * 2026-10 Wave 105 (소유자 결정 "2순환부터 겹친 카드만"): 기본 여섯을 모두 한 번 정복하면 덱은 겹친 여섯 규칙이다(그 안에서 같은 규칙).
+ */
 const getAscensionRuleDeck = (stats: RuleConquestStats): AscensionRuleDef[] => {
     const counts = new Map<string, number>();
     for (const id of getRuleConquestLedger(stats)) counts.set(id, (counts.get(id) || 0) + 1);
-    const fewest = Math.min(...ASCENSION_RULES.map((rule) => counts.get(rule.id) || 0));
-    return ASCENSION_RULES.filter((rule) => (counts.get(rule.id) || 0) === fewest);
+    const table = ASCENSION_RULES.every((rule) => (counts.get(rule.id) || 0) >= 1) ? STACKED_ASCENSION_RULES : ASCENSION_RULES;
+    const fewest = Math.min(...table.map((rule) => counts.get(rule.id) || 0));
+    return table.filter((rule) => (counts.get(rule.id) || 0) === fewest);
+};
+
+/** 겹친 규칙 덱이 열렸는가(기본 여섯을 모두 한 번 정복) — 도감 정복 수의 분모가 읽는다. */
+export const isStackedAscensionRuleDeckOpen = (stats: RuleConquestStats): boolean => {
+    const conquered = getConqueredRuleIds(stats);
+    return ASCENSION_RULES.every((rule) => conquered.has(rule.id));
 };
 
 /**
@@ -143,6 +188,11 @@ export const getAscensionRuleOffer = (player: RuleOfferPlayer, nextRank: number)
     return hand;
 };
 
+/** 2026-10 Wave 105: 지금 패의 이 카드에 붙는 두 번째 비틀기(겹친 규칙만) — 계승 리듀서가 같은 값을 저장한다. */
+export const getAscensionRuleOfferSecond = (player: RuleOfferPlayer, nextRank: number, rule: AscensionRuleDef | null | undefined): AscensionTwistId | null => (
+    getStackedSecondModifier(rule, player?.meta?.endgame?.lastEndgameReceiptKey ?? 'none', nextRank, getAscensionRuleRerolls(player?.meta, nextRank))
+);
+
 /** 지금 패를 다시 뽑을 수 있는가 — 덱이 패보다 커야 하고(아니면 같은 카드뿐이다) 횟수가 남아야 한다. */
 export const canRerollAscensionRuleOffer = (player: RuleOfferPlayer, nextRank: number): boolean => (
     nextRank >= 1
@@ -159,7 +209,8 @@ export const resolveAscensionRuleChoice = (offer: readonly AscensionRuleDef[], r
     if (offer.length === 0) return null;
     const chosen = offer.find((rule) => rule.id === ruleId);
     if (chosen) return chosen;
-    return [...offer].sort((a, b) => ASCENSION_RULES.indexOf(a) - ASCENSION_RULES.indexOf(b))[0];
+    // 2026-10 Wave 105: 겹친 규칙도 바탕 규칙의 무게 순서다(`ALL_ASCENSION_RULES`의 7 ~ 12번이 기본 순서를 따른다).
+    return [...offer].sort((a, b) => ALL_ASCENSION_RULES.indexOf(a) - ALL_ASCENSION_RULES.indexOf(b))[0];
 };
 
 /** 거절할 수 있는 규칙인가(Wave 91 — 무거운 비틀기 셋). */
@@ -205,14 +256,20 @@ export const SIGNATURE_COLLECTION_GROUPS: readonly string[] = Object.freeze([
 /** 세트 표시 이름(`signatureSets.json`). */
 export const getSignatureSetName = (setKey: string): string => SIGNATURE_SET_NAMES[setKey] || setKey;
 
-/** 정복한 규칙 번호(1 ~ 규칙 수, 규칙 표 순서)의 집합 — 칭호 복구(`checkTitles` 'ruleConquest')와 도감 정복 수가 읽는다. */
+/**
+ * 정복한 규칙 번호의 집합 — 칭호 복구(`checkTitles` 'ruleConquest')와 도감 정복 수가 읽는다. 번호는 `ALL_ASCENSION_RULES` 순서다
+ * (기본 1 ~ 6, 겹친 7 ~ 12 — Wave 105).
+ */
 export const getConqueredRuleOrdinals = (stats: RuleConquestStats): Set<number> => new Set(
-    [...getConqueredRuleIds(stats)].map((id) => ASCENSION_RULES.findIndex((rule) => rule.id === id) + 1).filter((ordinal) => ordinal > 0),
+    [...getConqueredRuleIds(stats)].map((id) => ALL_ASCENSION_RULES.findIndex((rule) => rule.id === id) + 1).filter((ordinal) => ordinal > 0),
 );
 
-/** 규칙의 비틀기 표시 이름(도전 조건 라벨). */
-export const getAscensionRuleTwistLabel = (rule: AscensionRuleDef): string => (
-    BALANCE.CHALLENGE_MODIFIERS.find((modifier) => modifier.id === rule.modifier)?.label || rule.modifier
+/** 비틀기 표시 이름(도전 조건 라벨). */
+const getTwistLabel = (id: string): string => BALANCE.CHALLENGE_MODIFIERS.find((modifier) => modifier.id === id)?.label || id;
+
+/** 규칙의 비틀기 표시 이름 — 두 번째 비틀기가 있으면 두 이름을 함께(Wave 105). */
+export const getAscensionRuleTwistLabel = (rule: AscensionRuleDef, second?: string | null): string => (
+    second ? MSG.ASCENSION_RULE_TWIST_PAIR(getTwistLabel(rule.modifier), getTwistLabel(second)) : getTwistLabel(rule.modifier)
 );
 
 /** 회차 시작 로그 — 규칙이 없으면 null, 선택형 규칙을 거절했으면 거절 로그. */
@@ -220,5 +277,6 @@ export const getAscensionRuleStartLog = (meta: AscensionRuleMeta, declined = fal
     const rule = getActiveAscensionRule(meta);
     if (!rule) return null;
     if (declined && isOptionalAscensionRule(rule)) return MSG.ASCENSION_RULE_DECLINED_START(rule.name);
-    return MSG.ASCENSION_RULE_START(rule.name, getAscensionRuleTwistLabel(rule), getSignatureSetName(rule.signatureSet));
+    const twists = getActiveAscensionTwists(meta);
+    return MSG.ASCENSION_RULE_START(rule.name, getAscensionRuleTwistLabel(rule, twists[1]), getSignatureSetName(rule.signatureSet));
 };

@@ -413,7 +413,8 @@ export const checkTitles = (player: Player): string[] => {
         // 2026-10 Wave 89: 회차 규칙 정복(정복 기록 `stats.ruleConquestRanks`) — val은 규칙 번호(1 ~ 규칙 수), 0은 모든 규칙.
         if (type === 'ruleConquest') {
             const conquered = getConqueredRuleOrdinals(player.stats);
-            return val === 0 ? conquered.size >= ASCENSION_RULES.length : conquered.has(val);
+            // 2026-10 Wave 105: 0('모든 규칙의 정복자')은 기본 여섯 규칙이다 — 겹친 규칙 정복으로 채우지 않는다.
+            return val === 0 ? ASCENSION_RULES.every((_, index) => conquered.has(index + 1)) : conquered.has(val);
         }
         if (type === 'signatureSetsCompleted') return countCompletedSignatureSets(player) >= val;
         if (type === 'signaturesDiscovered') {

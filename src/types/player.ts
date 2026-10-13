@@ -264,7 +264,8 @@ interface PlayerMeta {
      * 2026-10 Wave 94: 이 계승 단계에서 고른 회차 규칙 카드. 영구 meta라 같은 단계의 사망 재시작이 같은 규칙을 읽는다.
      * `rank`가 지금 `prestigeRank`와 다르거나 없으면(이전 세이브) 고정 순서(`getAscensionRule`)로 읽는다.
      */
-    ascensionRule?: { rank: number; ruleId: string };
+    /** 2026-10 Wave 105: `secondModifier` — 겹친 규칙 카드의 두 번째 비틀기(도전 조건 id). */
+    ascensionRule?: { rank: number; ruleId: string; secondModifier?: string };
     /**
      * 2026-10 Wave 95: 계승 화면의 회차 규칙 패를 다시 뽑은 횟수 — 이 마왕 처치 영수증(`receiptKey`)과 다음 단계(`rank`)의 패에만 쓴다
      * (리로드로 첫 패를 되살릴 수 없다). 유료 다시 뽑기의 사다리 비용은 계승(`getAscensionOutcome`)이 적용하고 계승 뒤에는 지운다.

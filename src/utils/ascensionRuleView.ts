@@ -3,6 +3,9 @@ import {
     SIGNATURE_COLLECTION_GROUPS,
     canRerollAscensionRuleOffer,
     getActiveAscensionRule,
+    getActiveAscensionTwists,
+    getAscensionRuleOfferSecond,
+    isStackedAscensionRuleDeckOpen,
     getAscensionRulePaidRerolls,
     getAscensionRuleRerollLadderKeep,
     getAscensionRuleRerolls,
@@ -16,7 +19,7 @@ import {
     getSignatureSetMemberNames,
     getSignatureSetName,
 } from '../systems/ascensionRule.js';
-import { ASCENSION_RULES, type AscensionRuleDef } from '../data/ascensionRules.js';
+import { ALL_ASCENSION_RULES, ASCENSION_RULES, type AscensionRuleDef } from '../data/ascensionRules.js';
 import type { Player } from '../types/index.js';
 import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
 import { BALANCE } from '../data/constants.js';
@@ -32,8 +35,8 @@ export interface AscensionRulePreview {
     id: string;
     /** 2026-10 Wave 94: 카드에 짧게 보일 비틀기 이름. */
     twist: string;
-    /** 강제되는 도전 조건 id(선택 화면에서 잠긴 칸). */
-    lockedId: string;
+    /** 강제되는 도전 조건 id(선택 화면에서 잠긴 칸) — 겹친 규칙은 둘이다(Wave 105). */
+    lockedIds: string[];
     name: string;
     detail: string;
     /** 2026-10 Wave 91: 거절할 수 있는 규칙(무거운 셋)인가. */
@@ -67,14 +70,14 @@ const getAscensionRuleOutlookLines = (rule: AscensionRuleDef, cycle: number): As
     };
 };
 
-/** 이 규칙이 이 계승 단계에서 시작하는 회차의 미리보기(카드 한 장). */
-export const buildAscensionRulePreview = (rule: AscensionRuleDef, rank: number): AscensionRulePreview => (
+/** 이 규칙이 이 계승 단계에서 시작하는 회차의 미리보기(카드 한 장) — 겹친 규칙이면 그 카드의 두 번째 비틀기까지(Wave 105). */
+export const buildAscensionRulePreview = (rule: AscensionRuleDef, rank: number, second: string | null = null): AscensionRulePreview => (
     {
         id: rule.id,
-        twist: getAscensionRuleTwistLabel(rule),
-        lockedId: rule.modifier,
+        twist: getAscensionRuleTwistLabel(rule, second),
+        lockedIds: second ? [rule.modifier, second] : [rule.modifier],
         name: rule.name,
-        detail: MSG.ASCENSION_RULE_DETAIL(getAscensionRuleTwistLabel(rule), getSignatureSetName(rule.signatureSet), rule.conquestTitle.name),
+        detail: MSG.ASCENSION_RULE_DETAIL(getAscensionRuleTwistLabel(rule, second), getSignatureSetName(rule.signatureSet), rule.conquestTitle.name),
         optional: isOptionalAscensionRule(rule),
         outlook: getAscensionRuleOutlookLines(rule, getAscensionRuleCycle(rank)),
     }
@@ -83,14 +86,16 @@ export const buildAscensionRulePreview = (rule: AscensionRuleDef, rank: number):
 /** 지금 단계의 회차 규칙 미리보기(새 게임 · 사망 재시작 화면) — 규칙이 없으면 null. */
 export const getAscensionRulePreview = (meta: Player['meta'] | null | undefined): AscensionRulePreview | null => {
     const rule = getActiveAscensionRule(meta);
-    return rule ? buildAscensionRulePreview(rule, Math.floor(Number(meta?.prestigeRank) || 0)) : null;
+    return rule ? buildAscensionRulePreview(rule, Math.floor(Number(meta?.prestigeRank) || 0), getActiveAscensionTwists(meta)[1] ?? null) : null;
 };
 
 /** 2026-10 Wave 94: 계승 화면의 회차 규칙 카드(패 순서) — 리듀서가 같은 패로 고른 id를 검증한다. */
 export const getAscensionRuleOfferPreviews = (
     player: { meta?: Player['meta']; stats?: Player['stats'] } | null | undefined,
     nextRank: number,
-): AscensionRulePreview[] => getAscensionRuleOffer(player, nextRank).map((rule) => buildAscensionRulePreview(rule, nextRank));
+): AscensionRulePreview[] => getAscensionRuleOffer(player, nextRank).map((rule) => (
+    buildAscensionRulePreview(rule, nextRank, getAscensionRuleOfferSecond(player, nextRank, rule))
+));
 
 /** 계승 화면의 패와 처음 골라 둔 카드(리듀서의 기본값과 같은 — 패에서 가장 가벼운 카드). */
 export const getAscensionRuleOfferView = (
@@ -99,7 +104,7 @@ export const getAscensionRuleOfferView = (
 ): { cards: AscensionRulePreview[]; defaultId: string | null } => {
     const offer = getAscensionRuleOffer(player, nextRank);
     return {
-        cards: offer.map((rule) => buildAscensionRulePreview(rule, nextRank)),
+        cards: offer.map((rule) => buildAscensionRulePreview(rule, nextRank, getAscensionRuleOfferSecond(player, nextRank, rule))),
         defaultId: resolveAscensionRuleChoice(offer, undefined)?.id ?? null,
     };
 };
@@ -172,11 +177,13 @@ export const getCollectionSummary = (player: Player): CollectionSummary => {
         };
     });
     const conquered = getConqueredRuleOrdinals(player.stats).size;
+    // 2026-10 Wave 105: 겹친 규칙은 덱이 열린 뒤에야 분모에 든다 — 그 전에는 있다는 것도 말하지 않는다(발견형 원칙, Wave 102 · 103).
+    const conquestTotal = isStackedAscensionRuleDeckOpen(player.stats) ? ALL_ASCENSION_RULES.length : ASCENSION_RULES.length;
     return {
         sets,
-        conquestLabel: MSG.COLLECTION_CONQUEST_ROW(conquered, ASCENSION_RULES.length),
+        conquestLabel: MSG.COLLECTION_CONQUEST_ROW(conquered, conquestTotal),
         conquered,
-        conquestTotal: ASCENSION_RULES.length,
+        conquestTotal,
         featuredLabel: rule ? MSG.COLLECTION_FEATURED(rule.name, getSignatureSetName(rule.signatureSet)) : null,
     };
 };
