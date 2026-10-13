@@ -20,6 +20,7 @@ import { MSG } from '../data/messages.js';
 import type { GameMap, Player } from '../types/index.js';
 import { getBossGaugeValue, isAreaBossChallengeable } from './bossGauge.js';
 import { canBossAppearInMap } from './bossPresence.js';
+import { isEliteTitleTargetNow } from './eliteTitleGuide.js';
 import { getNarrativeEventChance } from './explorationPacing.js';
 
 export interface Badge {
@@ -69,6 +70,11 @@ export function getExitBadges(
             const pct = Math.min(100, Math.round(gaugeValue * 100));
             badges.push({ id: 'bossGauge', label: MSG.MAP_BADGE_BOSS_GAUGE(pct) });
         }
+    }
+
+    // 2026-10 Wave 101: 아직 정예 칭호가 없는 지역 — 지금 걸어 들어갈 수 있는 곳만(레벨 1에서 47곳 전부에 붙으면 잡음이다).
+    if (isEliteTitleTargetNow(player, mapName)) {
+        badges.push({ id: 'eliteTitle', label: MSG.MAP_BADGE_ELITE_TITLE });
     }
 
     if (getMapBaseNarrativeEventChance(map) >= getHighEventChanceThreshold()) {
