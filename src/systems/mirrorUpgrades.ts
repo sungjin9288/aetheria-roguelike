@@ -87,6 +87,50 @@ const getEndlessSpent = (levels: number): number => {
     return rising * base + (step * rising * (rising - 1)) / 2 + (levels - rising) * cap;
 };
 
+export interface MirrorEndlessAffordance {
+    /** 거울 8노드를 모두 채워 끝없는 단계가 열렸는가 — 아니면 나머지 값은 0 · null이다. */
+    unlocked: boolean;
+    /** 이 정수로 살 수 있는 끝없는 단계 수 — 매번 가장 싼 단계를 사는 순서(가장 많이 사는 순서)다. */
+    steps: number;
+    /** 지금 레벨에서 가장 싼 다음 단계의 비용. */
+    nextCost: number | null;
+    /** 한 단계도 못 살 때 다음 단계까지 모자란 정수(살 수 있으면 0). */
+    shortfall: number;
+}
+
+/**
+ * 2026-10 Wave 98: 정수 `essence`로 끝없는 단계를 몇 번 살 수 있는가 — 계승 화면 안내가 읽는다(표시만, 구매는 `purchaseMirrorNode`).
+ * 노드마다 비용이 단계에 따라 줄지 않으므로 매번 가장 싼 단계를 사면 가장 많이 산다. 상한에 닿은 뒤는 모든 단계가 같은 값이라
+ * 닫힌 식으로 센다 — 정수가 아무리 커도 반복은 상한까지의 단계 수(노드당 20) 안이다.
+ */
+export const getMirrorEndlessAffordance = (
+    mirror: MirrorLevels | undefined | null,
+    essence: number,
+): MirrorEndlessAffordance => {
+    if (!isMirrorTreeComplete(mirror)) return { unlocked: false, steps: 0, nextCost: null, shortfall: 0 };
+    const cap = BALANCE.MIRROR_ENDLESS_COST_CAP;
+    const levels = MIRROR_ENDLESS_NODES.map((node) => getLevel(mirror, node.id));
+    const costOf = (index: number) => getMirrorNodeCost(MIRROR_ENDLESS_NODES[index], levels[index]);
+    const cheapest = () => levels.reduce((best, _lv, index) => (costOf(index) < costOf(best) ? index : best), 0);
+    const nextCost = costOf(cheapest());
+    const budget = Math.max(0, Math.floor(Number(essence) || 0));
+    let remaining = budget;
+    let steps = 0;
+    for (;;) {
+        const index = cheapest();
+        const cost = costOf(index);
+        if (cost >= cap) {
+            steps += Math.floor(remaining / cap);
+            break;
+        }
+        if (cost > remaining) break;
+        remaining -= cost;
+        levels[index] += 1;
+        steps += 1;
+    }
+    return { unlocked: true, steps, nextCost, shortfall: steps > 0 ? 0 : nextCost - budget };
+};
+
 export interface MirrorPurchaseResult {
     mirror: MirrorLevels;
     success: boolean;

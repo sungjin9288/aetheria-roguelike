@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
 import { MSG } from '../data/messages.js';
+import { BALANCE } from '../data/constants';
 import type { Player } from '../types/index.js';
 import { getAscensionOutcome, isNewAscensionTitle } from '../utils/ascensionPreview';
 import EndgameJourney from './EndgameJourney';
@@ -148,9 +149,24 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                                 {MSG.ASCEND_LADDER_REROLL_COST(outcome.ladder.rerollPaid)}
                             </p>
                         )}
-                        <p className="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">
-                            {MSG.MIRROR_CTA_HINT(player.meta?.essence || 0)}
-                        </p>
+                        {outcome.mirrorEndless.unlocked ? (
+                            <p data-testid="ascension-mirror-endless" className="mt-2 text-[11px] font-readable leading-relaxed text-[#e3dcff]/85">
+                                {outcome.mirrorEndless.steps > 0
+                                    ? MSG.ASCEND_MIRROR_ENDLESS_STEPS(
+                                        outcome.meta.essence || 0,
+                                        outcome.mirrorEndless.steps,
+                                        outcome.mirrorEndless.nextCost || 0,
+                                        BALANCE.MIRROR_ENDLESS_ATK_PER_LEVEL,
+                                        BALANCE.MIRROR_ENDLESS_HP_PER_LEVEL,
+                                        BALANCE.MIRROR_ENDLESS_MP_PER_LEVEL,
+                                    )
+                                    : MSG.ASCEND_MIRROR_ENDLESS_SHORT(outcome.meta.essence || 0, outcome.mirrorEndless.shortfall)}
+                            </p>
+                        ) : (
+                            <p className="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">
+                                {MSG.MIRROR_CTA_HINT(player.meta?.essence || 0)}
+                            </p>
+                        )}
                         {onOpenMirror && (
                             <button
                                 type="button"

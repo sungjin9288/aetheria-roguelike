@@ -4,6 +4,7 @@ import { carryEssenceLadderOnAscension } from '../systems/essenceLedger';
 import { getPrestigeEnemyLevelRate } from '../systems/metaBonusRamp';
 import { scaleEssenceReward } from '../systems/essenceRewardMult';
 import { getAscensionRulePaidRerolls, getAscensionRuleRerollLadderKeep } from '../systems/ascensionRule';
+import { getMirrorEndlessAffordance, type MirrorEndlessAffordance } from '../systems/mirrorUpgrades';
 import type { Player } from '../types/player';
 
 export interface PrestigeMilestone {
@@ -44,6 +45,8 @@ export interface AscensionOutcome {
     metaBonusFullLevel: number;
     /** 2026-09 Wave 32: 정수 사다리 이월(계승 직전 단계 → 남는 단계). */
     ladder: { rankBefore: number; rankKept: number; carryPercent: number; rerollPaid: number };
+    /** 2026-10 Wave 98: 계승한 뒤의 정수로 끝없는 거울을 몇 단계 살 수 있는가(표시만 — 구매는 거울이 한다). */
+    mirrorEndless: MirrorEndlessAffordance;
 }
 
 /**
@@ -74,6 +77,7 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
     // 2026-10 Wave 58: 거울 에센스 공명 "전투와 계승으로 얻는 계승 정수" · 계승 1단계 "에센스 획득 +10%" — 계승 보상에도
     //   전투 · 오늘의 임무와 같은 배율(지금 단계 × 거울)을 곱한다. 이전에는 고정 +200이었다.
     const essenceReward = scaleEssenceReward(BALANCE.PRESTIGE_ESSENCE_REWARD, currentMeta);
+    const nextEssence = carriedMeta.essence + essenceReward;
 
     return {
         currentRank,
@@ -83,7 +87,7 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
             ...currentMeta,
             ...carriedMeta,
             prestigeRank: nextRank,
-            essence: carriedMeta.essence + essenceReward,
+            essence: nextEssence,
             // 2026-09 G2: 승천 보상도 누적 원장에 함께 기록 (rank는 사다리 기준으로 오른다).
             essenceLifetime: carriedMeta.essenceLifetime + essenceReward,
             essenceLadder: carriedMeta.essenceLadder + essenceReward,
@@ -106,5 +110,6 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
             carryPercent: Math.round(BALANCE.ESSENCE_LADDER_ASCEND_CARRY * ladderKeep * 100),
             rerollPaid,
         },
+        mirrorEndless: getMirrorEndlessAffordance(currentMeta.mirror, nextEssence),
     };
 };

@@ -154,7 +154,7 @@ export const MSG = {
     ),
     MIRROR_ENDLESS_STAT_LABELS: { atk: '영구 공격력', hp: '영구 생명', mp: '영구 기력' } as const,
     MIRROR_ENDLESS_PATH_LABEL: '끝없는',
-    MIRROR_ENDLESS_PATH_SUMMARY: '거울을 모두 채운 뒤에도 계승 정수로 영구 능력치를 조금씩 새깁니다. 단계마다 비용이 오릅니다.',
+    MIRROR_ENDLESS_PATH_SUMMARY: '거울을 모두 채운 뒤에도 계승 정수로 영구 능력치를 조금씩 새깁니다. 비용은 단계마다 오르다가 상한에서 멈춥니다.',
     MIRROR_ENDLESS_EFFECT: (stat: string, total: number) => (total > 0 ? `거울로 새긴 ${stat} +${total}` : `거울로 새긴 ${stat} 없음`),
     MIRROR_ENDLESS_LOCKED: '거울 8가지 성장을 모두 채우면 열립니다',
     MIRROR_ENDLESS_LEVEL: (level: number) => `${level}단계`,
@@ -802,6 +802,11 @@ export const MSG = {
         `정수 사다리 ${before}단계 중 ${kept}단계(${percent}%)만 다음 여정으로 이어집니다. 위 공격력·생명·기력에 반영돼 있고, 계승 정수는 그대로입니다.`,
     // 2026-10 Wave 95: 유료 다시 뽑기의 대가가 이 계승에 들어갔다.
     ASCEND_LADDER_REROLL_COST: (paid: number) => `회차 규칙을 대가를 치르고 ${paid}번 다시 뽑아 넘어가는 몫이 줄었습니다.`,
+    // 2026-10 Wave 98: 끝없는 거울이 열렸으면 계승한 뒤의 정수로 몇 단계를 살 수 있는지 알린다(표시만).
+    ASCEND_MIRROR_ENDLESS_STEPS: (essence: number, steps: number, nextCost: number, atk: number, hp: number, mp: number) =>
+        `계승 뒤 정수 ${essence.toLocaleString('ko-KR')}: 끝없는 거울을 ${steps.toLocaleString('ko-KR')}단계 더 새길 수 있습니다. 단계마다 공격력 +${atk} · 생명 +${hp} · 기력 +${mp} 중 하나, 다음 단계 비용 정수 ${nextCost.toLocaleString('ko-KR')}.`,
+    ASCEND_MIRROR_ENDLESS_SHORT: (essence: number, shortfall: number) =>
+        `계승 뒤 정수 ${essence.toLocaleString('ko-KR')}: 끝없는 거울의 다음 단계까지 정수 ${shortfall.toLocaleString('ko-KR')} 더 필요합니다.`,
     // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
     SCOUT_ACTION_LABEL: '정찰',
     SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
