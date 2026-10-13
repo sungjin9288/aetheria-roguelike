@@ -21,10 +21,13 @@ const ITEM_BUCKETS = new Map<string, CodexBucket>(
         ]),
 );
 
-const isSignatureDiscovered = (name: string, player: Player) => {
+/** 장비 이름이 도감(무기 · 방어구 · 방패)에 있는가 — 전설 각인이 아닌 장비도 같은 판정이다(Wave 103 직업 세트 목록). */
+export const isEquipmentDiscovered = (name: string, player: Player) => {
     const bucket = ITEM_BUCKETS.get(name);
     return bucket ? Boolean(player.stats?.codex?.[bucket]?.[name]) : false;
 };
+
+export const isSignatureDiscovered = isEquipmentDiscovered;
 
 export const isSignatureName = (name: unknown): name is string => (
     typeof name === 'string' && SIGNATURE_NAME_SET.has(name)
@@ -43,4 +46,17 @@ export const countCompletedSignatureSets = (player: Player) => (
         const members = setDefinition?.members || [];
         return members.length > 0 && members.every((name: string) => isSignatureDiscovered(name, player));
     }).length
+);
+
+/**
+ * 2026-10 Wave 103 (소유자 결정 §107.6 "전설 각인 획득처는 얻은 뒤에만 공개"): 제작소에 보일 제작법 — 결과물이 아직 도감에 없는
+ * 전설 각인인 제작법은 숨긴다(제작법 자체가 획득처다). 각인을 다른 길로 얻으면 그 제작법이 보인다.
+ */
+export const getVisibleCraftRecipes = <T extends { name?: string }>(recipes: readonly T[], player: Player): T[] => (
+    recipes.filter((recipe) => !isSignatureName(recipe.name) || isSignatureDiscovered(recipe.name as string, player))
+);
+
+/** 2026-10 Wave 103: 이름 목록에서 아직 도감에 없는 전설 각인을 뺀다 — 몬스터 도감의 전리품 칩이 읽는다(획득처는 플레이어가 알아낸다). */
+export const withoutUndiscoveredSignatures = (names: readonly string[], player: Player | null | undefined): string[] => (
+    names.filter((name) => !isSignatureName(name) || (player ? isSignatureDiscovered(name, player) : false))
 );

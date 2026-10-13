@@ -11,6 +11,8 @@
 
 import { DROP_TABLES } from '../data/dropTables.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
+import type { Player } from '../types/index.js';
+import { isSignatureDiscovered } from './signatureDiscovery.js';
 
 /**
  * 주어진 몬스터의 drop table에서 signature 아이템만 추출.
@@ -33,3 +35,11 @@ export const getBossSignatureDrops = (baseName: string | null | undefined) => {
     signatureDrops.sort((a, b) => b.rate - a.rate);
     return signatureDrops;
 };
+
+/**
+ * 2026-10 Wave 103 (소유자 결정 §107.6 "전설 각인 획득처는 얻은 뒤에만 공개"): 이 보스가 떨어뜨리는 각인 중 이미 도감에 있는 것만.
+ * 보스 배너 · 보스 등장 기록이 읽는다 — 아직 없는 각인이 어디서 나오는지는 플레이어가 알아낸다.
+ */
+export const getDiscoveredBossSignatureDrops = (baseName: string | null | undefined, player: Player | null | undefined) => (
+    player ? getBossSignatureDrops(baseName).filter(({ name }) => isSignatureDiscovered(name, player)) : []
+);

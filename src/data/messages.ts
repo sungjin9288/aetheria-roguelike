@@ -558,12 +558,10 @@ export const MSG = {
     FIRST_JOURNEY_REASON: '마법전쟁이 끝난 뒤에도 고요한 숲에는 변이가 남아 있습니다. 마을을 나서 숲을 조사하고, 첫 발견을 기록하세요.',
     ENDGAME_JOURNEY_TITLE: '마왕성의 봉인',
     ENDGAME_JOURNEY_SCOPE: '마왕을 쓰러뜨린 뒤 열리는 문을 조사합니다.',
-    ENDGAME_JOURNEY_RANK: (rank: number, required: number) => `현재 계승 ${rank}단계 · 필요 ${required}단계`,
     ENDGAME_JOURNEY_SHARDS: (count: number, required: number) => `원시의 파편 ${count}/${required}`,
-    ENDGAME_JOURNEY_START: '마왕 토벌 뒤 계승하면 원시의 파편을 모을 수 있습니다.',
-    ENDGAME_JOURNEY_GROW: (rank: number, chance: number) => `계승 ${rank}단계를 준비하며 마왕을 토벌하세요. 파편은 토벌마다 ${chance}% 확률로 얻습니다.`,
-    ENDGAME_JOURNEY_RANK_LEFT: (rank: number) => `파편은 모두 모았습니다. 계승 ${rank}단계에 도달한 뒤 마왕을 다시 토벌하세요.`,
-    ENDGAME_JOURNEY_COLLECT: (chance: number) => `마왕 토벌 시 ${chance}% 확률로 파편을 얻습니다. 마지막 파편을 얻는 토벌에서 곧바로 다음 전투가 시작될 수 있습니다.`,
+    // 2026-10 Wave 103 (소유자 결정 §107.6): 봉인이 열리는 조건(계승 단계 · 파편 확률)은 말하지 않는다 — 첫 파편 뒤의 단서만.
+    ENDGAME_JOURNEY_CLUE_COLLECT: '파편은 마왕의 잔해에서 나왔습니다. 남은 파편이 어딘가에 있습니다.',
+    ENDGAME_JOURNEY_CLUE_WAIT: '파편이 모두 모였지만 봉인은 아직 반응하지 않습니다. 더 먼 여정이 필요해 보입니다.',
     ENDGAME_JOURNEY_READY: '다음 마왕 토벌 직후 파편을 사용하고 연속 전투에 들어갑니다. 회복과 소모품을 준비하세요.',
     ENDGAME_JOURNEY_PRESERVED: '모은 파편은 계승 후에도 남습니다.',
     ENDGAME_JOURNEY_COMPLETE_TITLE: '종장 기록',
@@ -822,6 +820,12 @@ export const MSG = {
     CYCLE_SUMMARY_SIGNATURES_NONE: (discovered: number, total: number) => `새 전설 각인 없음 (도감 ${discovered}/${total})`,
     CYCLE_SUMMARY_ELITE: (gained: number, owned: number, total: number) => `새 정예 칭호 ${gained}개 (${owned}/${total})`,
     CYCLE_SUMMARY_ELITE_NONE: (owned: number, total: number) => `새 정예 칭호 없음 (${owned}/${total})`,
+    // 2026-10 Wave 103 (소유자 결정 §107.6): 아직 도감에 없는 각인 · 장비 · 유물의 이름은 보이지 않는다.
+    SIGNATURE_SET_UNKNOWN_CANDIDATE: '아직 발견하지 못한 전설 각인',
+    BUILD_ADVICE_UNOWNED_RELICS: (count: number) => `이 성장에 어울리는 유물이 ${count}개 더 있습니다. 어떤 유물인지는 얻어야 알 수 있습니다.`,
+    BUILD_ADVICE_UNOWNED_RELICS_NONE: '현재 성장에 어울리는 유물을 모두 보유하고 있습니다.',
+    JOB_OUTFIT_UNKNOWN_ITEM: '???',
+    JOB_OUTFIT_SEEN: '도감',
     // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
     SCOUT_ACTION_LABEL: '정찰',
     SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,

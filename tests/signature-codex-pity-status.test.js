@@ -24,9 +24,14 @@ import { renderStatic, makePlayerFixture } from './helpers/render.ts';
  *   4. threshold 이상: 배율에서 파생된 +pct% 노출
  */
 
+// 2026-10 Wave 103: 공명 카드는 첫 각인을 발견한 뒤에만 보인다(획득처 공개 규칙) — 픽스처는 각인 하나를 가진다.
 const renderCodexWithPity = (pity) => {
     const base = makePlayerFixture();
-    const player = makePlayerFixture({ stats: { ...base.stats, signaturePity: pity } });
+    const player = makePlayerFixture({ stats: {
+        ...base.stats,
+        signaturePity: pity,
+        codex: { ...base.stats.codex, weapons: { ...base.stats.codex.weapons, '성검 에테르니아': true } },
+    } });
     return renderStatic(createElement(LegendaryCodex, { player }));
 };
 

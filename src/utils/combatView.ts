@@ -1,7 +1,7 @@
 import { getEnemyTacticalProfile } from './runProfileUtils';
 import { getCombatForecast, type SelectedSkillLike } from './combatForecast';
 import { CombatEngine } from '../systems/CombatEngine';
-import { getBossSignatureDrops } from './bossSignatureHint.js';
+import { getDiscoveredBossSignatureDrops } from './bossSignatureHint.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
 import { getConsumableDescription } from './consumablePresentation';
 import { isConsumableItem } from '../systems/consumableRules';
@@ -38,8 +38,9 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
         ? tacticalProfile?.entryHint || tacticalProfile?.hint || tacticalProfile?.phaseHint
         : null;
     // 전투 중 상주 reminder — boss + signature 드롭 가능 시 "끝까지 버틸 이유" 노출
+    // 2026-10 Wave 103 (소유자 결정 §107.6): 이미 도감에 있는 각인만 — 아직 없는 각인의 획득처는 플레이어가 알아낸다.
     const signatureDropCandidates = enemy?.isBoss
-        ? getBossSignatureDrops(CombatEngine.resolveEnemyBaseName(enemy))
+        ? getDiscoveredBossSignatureDrops(CombatEngine.resolveEnemyBaseName(enemy), player)
         : [];
     const primarySignatureDrop = signatureDropCandidates[0] || null;
     const combatConsumables: CombatConsumableEntry[] = Object.values(

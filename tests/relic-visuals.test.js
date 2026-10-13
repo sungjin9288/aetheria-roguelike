@@ -60,7 +60,7 @@ test('시각 helper와 실제 asset 경로가 일치한다', () => {
     }
 });
 
-test('선택·성장 조언·보유 목록은 같은 유물 아이콘을 사용한다', async () => {
+test('선택·보유 목록은 같은 유물 아이콘을 사용한다 — 성장 조언은 미보유 유물을 그리지 않는다(Wave 103)', async () => {
     const [choice, advice, system, icon] = await Promise.all([
         readSource('src/components/RelicChoicePanel.tsx'),
         readSource('src/components/BuildAdvicePanel.tsx'),
@@ -69,7 +69,7 @@ test('선택·성장 조언·보유 목록은 같은 유물 아이콘을 사용�
     ]);
 
     assert.match(choice, /<RelicIcon relic=\{relic\}/);
-    assert.match(advice, /<RelicIcon relic=\{relic\}/);
+    assert.doesNotMatch(advice, /<RelicIcon/);
     assert.match(system, /<RelicIcon relic=\{relic\}/);
     assert.match(system, /getPrestigeUnlocks\(player\.meta\?\.prestigeRank\)\.maxRelics/);
     assert.doesNotMatch(system, /보유 유물 \$\{relics\.length\}\/5/);

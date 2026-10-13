@@ -71,7 +71,8 @@ test.describe('도감 수집 화면', () => {
         await expect(page.getByTestId('codex-material-undiscovered')).toContainText('미발견 소재 56개');
 
         await page.getByTestId('codex-tab-legend').click();
-        await expect(page.getByTestId('legendary-codex-empty-hint')).toBeVisible();
+        await expect(page.getByTestId('codex-legendary')).toBeVisible();
+        await expect(page.getByTestId('legendary-codex-empty-hint')).toHaveCount(0); // Wave 103: 획득처는 얻은 뒤에만
         await expect(page.getByTestId('legendary-codex-collection')).not.toHaveAttribute('open', '');
     });
 

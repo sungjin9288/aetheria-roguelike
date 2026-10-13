@@ -1,13 +1,10 @@
 import { useMemo, useState } from 'react';
 import { ChevronDown, ChevronUp } from 'lucide-react';
-import { RARITY_CLASSES } from '../data/constants';
 import { MSG } from '../data/messages';
 import { RELICS } from '../data/relics';
 import { TRAIT_DEFINITIONS } from '../data/traits';
 import { getRunBuildProfile } from '../utils/runProfile';
 import { getRecommendedRelicsForBuild } from '../utils/relicBuildFit';
-import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
-import RelicIcon from './icons/RelicIcon';
 import type { FullStats, Player } from '../types/index.js';
 
 // cycle 478: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
@@ -78,24 +75,10 @@ const BuildAdvicePanel = ({ player, stats }: BuildAdvicePanelProps) => {
                     {/* 추천 유물 */}
                     <div>
                         <div className="mb-1.5 text-[10px] text-slate-500">아직 얻지 못한 추천 유물</div>
-                        {recommended.length === 0 ? (
-                            <div className="text-[10px] text-slate-500">현재 성장에 어울리는 유물을 모두 보유하고 있습니다.</div>
-                        ) : (
-                            <div className="space-y-1.5">
-                                {recommended.map((relic) => (
-                                    <div key={relic.id} className="flex items-center gap-2.5 rounded-[0.95rem] border border-white/8 bg-black/18 px-2.5 py-2">
-                                        <RelicIcon relic={relic} size={42} />
-                                        <div className="min-w-0 flex-1">
-                                            <div className="flex items-center justify-between gap-2">
-                                                <span className={`text-xs font-bold ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-slate-300'}`}>{getRelicDisplayName(relic.name)}</span>
-                                                <span className={`shrink-0 text-[9px] font-fira ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-slate-400'}`}>{MSG.RARITY_LABEL[relic.rarity ?? '']}</span>
-                                            </div>
-                                            <div className="mt-0.5 text-[10px] text-slate-400/72">{formatRelicText(relic.desc)}</div>
-                                        </div>
-                                    </div>
-                                ))}
-                            </div>
-                        )}
+                        {/* 2026-10 Wave 103 (소유자 결정 §107.6 "미보유 이름만 숨김"): 아직 얻지 못한 유물의 이름 · 효과는 보이지 않는다 — 수만. */}
+                        <div data-testid="build-advice-unowned-relics" className="text-[10px] text-slate-500">
+                            {recommended.length === 0 ? MSG.BUILD_ADVICE_UNOWNED_RELICS_NONE : MSG.BUILD_ADVICE_UNOWNED_RELICS(recommended.length)}
+                        </div>
                     </div>
 
                     {/* 보스 공략 팁 */}

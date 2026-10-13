@@ -10,7 +10,6 @@ import { getDiscoveryOdds } from './explorationPacing.js';
 import { canBossAppearInMap } from './bossPresence.js';
 import { getQuestBoardRecommendations } from './questOperations.js';
 import { getSignaturePityMultiplier } from './signaturePity.js';
-import { getMapUndiscoveredSignatures } from './mapSignatureHints.js';
 import { getMapRequiredLevel, getNextMapTowardTarget } from './mapTopology.js';
 import { getRestCost } from './expeditionReturnFlow.js';
 import {
@@ -330,7 +329,6 @@ interface MoveRecommendationCandidate {
     reason: string;
     levelLabel: string;
     chips: ExplorationChip[];
-    undiscoveredSignatureCount: number;
     routePlan: RoutePlan;
 }
 
@@ -340,7 +338,6 @@ export interface MoveRecommendation {
     reason: string;
     levelLabel: string;
     chips: ExplorationChip[];
-    undiscoveredSignatureCount: number;
     routePlan: RoutePlan;
     isRecommended: boolean;
 }
@@ -372,15 +369,11 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
             const isVisited = visitedMaps.has(exitName);
             const forecast = getExplorationForecast(player, targetMap, exitName);
             const bossCanAppear = canBossAppearInMap(exitName, targetMap, player);
-            // collection-driven 신호: 미발견 signature가 있는 경로는 ✦N 칩으로 강조
-            const undiscoveredSignatureCount = getMapUndiscoveredSignatures(exitName, player).length;
             const chips: ExplorationChip[] = [
                 { label: 'LV', value: targetMap.level === 'infinite' ? 'Abyss' : `${targetLevel}` },
                 { label: 'STATE', value: isSafeTarget ? 'SAFE' : forecast.mood },
             ];
-            if (undiscoveredSignatureCount > 0) {
-                chips.push({ label: 'LEGEND', value: `✦${undiscoveredSignatureCount}` });
-            }
+            // 2026-10 Wave 103 (소유자 결정 §107.6): 미발견 각인 ✦N 칩을 없앴다 — 아직 없는 각인이 어디서 나오는지는 플레이어가 알아낸다.
             let score = 0;
             let badge = '전진';
             let reason = '현재 전력으로 무난하게 전개할 수 있는 경로입니다.';
@@ -461,7 +454,6 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                 reason,
                 levelLabel: targetMap.level === 'infinite' ? '심연' : `레벨 ${targetLevel}`,
                 chips,
-                undiscoveredSignatureCount,
                 routePlan,
             };
         })

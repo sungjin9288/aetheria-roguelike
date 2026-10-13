@@ -9,7 +9,7 @@ import { canBossAppearInMap } from '../utils/bossPresence';
 import { getExitBadges } from '../utils/mapBadges';
 import { getMapProgressState } from '../utils/mapProgress';
 import { getMapRouteGate, type MapRouteGate } from '../utils/mapRouteGate';
-import { getMapSignatureDrops, getMapUndiscoveredSignatures } from '../utils/mapSignatureHints';
+import { getMapDiscoveredSignatureDrops } from '../utils/mapSignatureHints';
 import { getDefaultMapSelection, getMapRequiredLevel, getNextMapTowardTarget } from '../utils/mapTopology';
 import RouteTopology, { type RouteTopologyEntry } from './RouteTopology';
 import SignalBadge from './SignalBadge';
@@ -25,8 +25,8 @@ interface MapEntry extends GameMap {
     isCurrent: boolean;
     progress: { discovered: number; total: number; remaining: number };
     graves: GraveEntry[];
+    /** 2026-10 Wave 103: 이 지역에서 나오는 각인 중 이미 도감에 있는 것만 — 아직 없는 각인의 획득처는 플레이어가 알아낸다. */
     signatureDrops: Array<{ name: string; rate: number }>;
-    undiscoveredSignatures: Array<{ name: string; rate: number }>;
     badges: Array<{ id: string; label: string }>;
     routeGate: MapRouteGate | null;
     /** 이 플레이어에게 이 지역에서 보스가 실제로 나올 수 있는가(`canBossAppearInMap`) — 배지 · 위험 · 예상 · 경로 노드가 같이 읽는다. */
@@ -137,7 +137,6 @@ const BADGE_TONE: Record<string, string> = {
 };
 
 const getRewardLabel = (entry: MapEntry) => {
-    if (entry.undiscoveredSignatures.length > 0) return `전설 ${entry.undiscoveredSignatures.length}종`;
     if (entry.type === 'safe') return '회복·보급';
     if (entry.state === 'unexplored') return '첫 발견';
     return '전리품';
@@ -257,8 +256,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
             ...map,
             ...progress,
             graves: getGravesAtLoc(grave, map.name),
-            signatureDrops: getMapSignatureDrops(map.name),
-            undiscoveredSignatures: getMapUndiscoveredSignatures(map.name, player),
+            signatureDrops: getMapDiscoveredSignatureDrops(map.name, player),
             badges: getExitBadges(map, player, map.name),
             routeGate: getMapRouteGate(DB.MAPS, map.name),
             bossCanAppear: canBossAppearInMap(map.name, map, player),
@@ -440,7 +438,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                         <details className="mt-2 border-t border-white/6 pt-2">
                             <summary className="aether-type-body flex min-h-[44px] cursor-pointer items-center justify-between gap-2 font-readable text-[#f6e7a2]">
                                 <span className="flex items-center gap-1.5"><Sparkles size={11} />전설 각인</span>
-                                <span>미발견 {selectedEntry.undiscoveredSignatures.length}/{selectedEntry.signatureDrops.length}</span>
+                                <span>{selectedEntry.signatureDrops.length}</span>
                             </summary>
                             <div className="flex flex-wrap gap-1.5 pb-1 pt-2">
                                 {selectedEntry.signatureDrops.map(({ name, rate }) => (

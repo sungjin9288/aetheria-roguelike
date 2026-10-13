@@ -7,6 +7,7 @@ import { getMonsterCodexDrops } from '../../utils/codexDropSources';
 import MonsterIcon from '../icons/MonsterIcon';
 import SkillTypeIcon from '../icons/SkillTypeIcon';
 import type { ElementKey, GameMap, Player } from '../../types/index.js';
+import { withoutUndiscoveredSignatures } from '../../utils/signatureDiscovery';
 
 interface MonsterCodexProps {
     player?: Player | null;
@@ -56,7 +57,8 @@ const MonsterCodex = ({ player, initialSelectedMonster = null }: MonsterCodexPro
                 name,
                 kills,
                 encountered: kills > 0,
-                drops: getMonsterCodexDrops(name),
+                // 2026-10 Wave 103: 아직 도감에 없는 전설 각인은 전리품 칩에 보이지 않는다.
+                drops: withoutUndiscoveredSignatures(getMonsterCodexDrops(name), player),
                 location: Object.entries(DB.MAPS)
                     .filter(([, map]) => collectMapEncounters(map).includes(name))
                     .map(([location]) => location)

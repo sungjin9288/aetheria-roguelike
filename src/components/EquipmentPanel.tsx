@@ -13,6 +13,7 @@ import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import ItemIcon from './icons/ItemIcon';
 import EnhanceDecisionCard from './EnhanceDecisionCard';
+import { isEquipmentDiscovered } from '../utils/signatureDiscovery';
 import type { GameActions } from '../hooks/actionDeps';
 import type { EquipSlots, FullStats, Item, Player } from '../types/index.js';
 
@@ -272,6 +273,9 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                             {group.list.map((it) => {
                                                 const isEquipped = equippedItemNames.has(it.name ?? '');
                                                 const isOwned = ownedItemNames.has(it.name ?? '');
+                                                // 2026-10 Wave 103 (소유자 결정 §107.6 "미보유 이름만 숨김"): 가진 적도 도감에 오른 적도 없는 장비는
+                                                //   이름 · 능력치를 숨기고 등급만 남긴다.
+                                                const isKnown = isOwned || (player ? isEquipmentDiscovered(it.name ?? '', player) : false);
                                                 const baseCls = 'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-fira leading-tight';
                                                 const cls = isEquipped
                                                     ? `${baseCls} border-emerald-300/50 bg-emerald-300/10 text-emerald-100`
@@ -282,11 +286,12 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                                     <span
                                                         key={it.name}
                                                         className={cls}
-                                                        title={`${it.name} (등급 ${it.tier || 1}) · ${getItemStatText(it as Item)}`}
+                                                        title={isKnown ? `${it.name} (등급 ${it.tier || 1}) · ${getItemStatText(it as Item)}` : MSG.JOB_OUTFIT_UNKNOWN_ITEM}
                                                         data-testid={`set-catalog-item-${it.name}`}
+                                                        data-known={isKnown ? 'true' : 'false'}
                                                     >
-                                                        <span>{isEquipped ? '장착' : isOwned ? '보유' : '미발견'}</span>
-                                                        <span className="truncate max-w-[100px]">{it.name}</span>
+                                                        <span>{isEquipped ? '장착' : isOwned ? '보유' : isKnown ? MSG.JOB_OUTFIT_SEEN : '미발견'}</span>
+                                                        <span className="truncate max-w-[100px]">{isKnown ? it.name : MSG.JOB_OUTFIT_UNKNOWN_ITEM}</span>
                                                         <span className="text-slate-500/80">등급 {it.tier || 1}</span>
                                                     </span>
                                                 );
@@ -377,8 +382,8 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         </div>
                     )}
                     {setProgress.nextItems.map((candidate) => (
-                        <div key={candidate.name} className="mt-1 text-[10px] font-fira leading-relaxed text-slate-300/85">
-                            후보: {candidate.name} · {candidate.availableNow ? '착용 조건 충족' : `레벨 ${candidate.requiredLevel} 필요`}
+                        <div key={candidate.name} data-testid="signature-set-candidate" className="mt-1 text-[10px] font-fira leading-relaxed text-slate-300/85">
+                            후보: {candidate.discovered ? candidate.name : MSG.SIGNATURE_SET_UNKNOWN_CANDIDATE} · {candidate.availableNow ? '착용 조건 충족' : `레벨 ${candidate.requiredLevel} 필요`}
                         </div>
                     ))}
                     {setProgress.nextItems.length > 0 && (

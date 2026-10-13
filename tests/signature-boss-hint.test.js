@@ -78,13 +78,14 @@ test('exploreActions wires signature boss hint before ENEMY_APPEAR log', async (
     // 공유하기 위함 — firebase 의존 없는 경로 유지). 로직/가드는 그대로, 참조 파일만 갱신.
     const source = await readSrc('src/hooks/gameActions/exploreFlow.ts');
     assert.ok(
-        source.includes("import { getBossSignatureDrops }"),
-        'exploreUtils should import getBossSignatureDrops'
+        source.includes("import { getDiscoveredBossSignatureDrops }"),
+        'exploreFlow should import getDiscoveredBossSignatureDrops (Wave 103 — 발견한 각인만)'
     );
     assert.ok(
-        /getBossSignatureDrops\(mStats\.baseName\)/.test(source),
-        'should call getBossSignatureDrops with mStats.baseName'
+        /getDiscoveredBossSignatureDrops\(mStats\.baseName, player\)/.test(source),
+        'should call getDiscoveredBossSignatureDrops with mStats.baseName and the player'
     );
+    assert.ok(!/[^d]getBossSignatureDrops\(/.test(source), '미발견 각인까지 말하는 조회로 되돌리지 않는다');
     assert.ok(
         /SIGNATURE_BOSS_HINT/.test(source),
         'should emit MSG.SIGNATURE_BOSS_HINT'

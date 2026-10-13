@@ -244,17 +244,6 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
 
                     <EndgameJourney player={player} />
 
-                    {outcome.upcomingMilestone && (
-                        <details data-testid="ascension-upcoming-unlock" className="rounded-lg border border-white/8 bg-black/16 px-3 py-2.5">
-                            <summary className="cursor-pointer text-[11px] font-readable font-bold text-slate-200">
-                                다음 계승 목표 · {outcome.upcomingMilestone.rank}단계 {outcome.upcomingMilestone.name}
-                            </summary>
-                            <p className="mt-2 text-[11px] font-readable leading-relaxed text-slate-400">
-                                {outcome.upcomingMilestone.description}
-                            </p>
-                        </details>
-                    )}
-
                     {/* 도전 규칙은 확정 버튼 바로 위 — 고른 뒤 확정한다(스크롤 영역의 다른 내용 배치는 그대로). */}
                     <ChallengeModifierPicker
                         testIdPrefix="ascension"

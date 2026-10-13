@@ -142,12 +142,13 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
             <div className="flex items-baseline justify-between gap-3">
                 <div>
                     <h3 className="aether-type-title font-semibold text-slate-100">전설 수집</h3>
-                    <p className="aether-type-meta mt-0.5 text-slate-400/76">보스 전리품과 세트 핵심 장비를 기록합니다</p>
+                    <p className="aether-type-meta mt-0.5 text-slate-400/76">발견한 전설 각인과 세트 장비를 기록합니다</p>
                 </div>
                 <div className="aether-type-body shrink-0 text-amber-200">{discoveredCount}/{entries.length}</div>
             </div>
 
-            {/* Pity resonance status */}
+            {/* Pity resonance status — 2026-10 Wave 103: 첫 각인을 얻은 뒤에만(보스 처치로 쌓인다는 규칙도 획득처다). */}
+            {discoveredCount > 0 && (
             <div
                 data-testid="legendary-codex-pity-status"
                 data-pity={pity}
@@ -180,6 +181,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                     {pityActive ? `+${pityPct}%` : '+0%'}
                 </span>
             </div>
+            )}
 
             {setSummary.length > 0 && (
                 <details data-testid="legendary-codex-sets" className="group border-y border-white/10">
@@ -222,25 +224,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                 </details>
             )}
 
-            {/* Empty-state educational hint — 발견 0개일 때 어디서 어떻게 시작하는지 안내 */}
-            {discoveredCount === 0 && (
-                <div
-                    data-testid="legendary-codex-empty-hint"
-                    className="rounded-lg px-3 py-3 text-[11px] leading-relaxed"
-                    style={{
-                        border: '1px solid rgba(246,231,162,0.42)',
-                        background: 'linear-gradient(180deg, rgba(246,231,162,0.10) 0%, rgba(18,16,10,0.62) 100%)',
-                        color: '#f6e7a2',
-                    }}
-                >
-                    <div className="mb-1 font-semibold">첫 발견까지</div>
-                    <div className="text-slate-200/86">
-                        보스를 토벌하면 전설 각인이 떨어질 수 있습니다. 이동 패널의
-                        <span className="mx-1" style={{ color: '#f6e7a2' }}>✦N</span>
-                        칩이 붙은 경로가 미발견 각인을 가진 보스 권역입니다.
-                    </div>
-                </div>
-            )}
+            {/* 2026-10 Wave 103 (소유자 결정 §107.6): 발견 0개일 때 어디서 얻는지 안내하던 칸을 없앴다 — 획득처는 플레이어가 알아낸다. */}
 
             <details data-testid="legendary-codex-collection" className="group border-y border-white/10">
                 <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-3 [&::-webkit-details-marker]:hidden">

@@ -42,7 +42,7 @@ import { withCanonicalEquipmentBaseIdentity } from '../../utils/equipmentBaseIde
 import { applyDynamicDifficulty } from '../../systems/DifficultyManager';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
-import { getBossSignatureDrops } from '../../utils/bossSignatureHint';
+import { getDiscoveredBossSignatureDrops } from '../../utils/bossSignatureHint';
 import { getEnemyThreat } from '../../utils/enemyThreat';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
 import { resolveAbyssDailyDive } from '../../utils/abyssDailyDive';
@@ -467,7 +467,8 @@ export const runQuietRollAndCombat = (
         // Wave 88: 보스(지역 조우 · 숨은 보스 · 심연 층 보스)의 가장 센 한 방을 내 최대 생명과 함께 보인다(실제 엔진 · 고정 난수).
         const threat = getEnemyThreat(player, mStats);
         addLog('warning', MSG.BOSS_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits));
-        const sigDrops = getBossSignatureDrops(mStats.baseName);
+        // 2026-10 Wave 103 (소유자 결정 §107.6): 이미 도감에 있는 각인만 예고한다 — 아직 없는 각인이 어디서 나오는지는 플레이어가 알아낸다.
+        const sigDrops = getDiscoveredBossSignatureDrops(mStats.baseName, player);
         if (sigDrops.length > 0) {
             const top = sigDrops[0];
             const topPct = Math.max(1, Math.round(top.rate * 100));

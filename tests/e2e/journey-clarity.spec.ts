@@ -56,28 +56,24 @@ test('첫 출발의 이유를 읽고 탐험하면 시작 안내가 반복되지 
     await expect(opening).toHaveCount(0);
 });
 
-test('계승 화면과 임무 기록은 현재 단계로 마왕성의 다음 행동을 안내한다', async ({ page }) => {
+// 2026-10 Wave 103 (소유자 결정 §107.6 "진 엔딩 · 계승 목표 조건 숨김, 첫 단서 뒤에만"): 계승 2단계 · 파편 0개에서는 봉인 칸도,
+//   다음 계승 목표 미리보기도 없다 — 열리는 조건은 플레이어가 알아낸다.
+test('계승 화면과 임무 기록은 첫 파편 전에는 마왕성 봉인 · 다음 계승 목표를 보이지 않는다', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await startE2ERun(page);
     await expect(page.getByTestId('endgame-journey')).toHaveCount(0);
     await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario());
-    const progress = page.getByTestId('endgame-journey');
-    await progress.scrollIntoViewIfNeeded();
-    await expect(progress).toContainText('현재 계승 2단계');
-    await expect(progress).toContainText('원시의 파편 0/3');
-    await expect(progress).toContainText('50%');
-    await expect(progress).toBeInViewport({ ratio: 1 });
+    await expect(page.getByTestId('ascension-confirm')).toBeVisible();
+    await expect(page.getByTestId('endgame-journey')).toHaveCount(0);
+    await expect(page.getByTestId('ascension-upcoming-unlock')).toHaveCount(0);
     await expect(page.getByTestId('ascension-confirm')).toBeInViewport({ ratio: 1 });
     await page.screenshot({ path: 'output/playwright/clarity-20260928/ascension-progress-390.png' });
     await page.getByTestId('ascension-cancel').click();
     await page.getByTestId('status-character-chip').click();
     await page.getByTestId('archive-tab-quest').click();
-    await progress.scrollIntoViewIfNeeded();
-    await expect(progress).toContainText('현재 계승 2단계');
-    await expect(progress).toContainText('원시의 파편 0/3');
+    await expect(page.getByTestId('endgame-journey')).toHaveCount(0);
     await page.screenshot({ path: 'output/playwright/clarity-20260928/quest-progress-390.png' });
 });
-
 
 test('긴 수치와 저장된 종장 진행은 재실행 뒤에도 읽을 수 있다', async ({ page }) => {
     await page.goto('/?e2e=1&deviceQa=system-settings');
@@ -111,5 +107,6 @@ test('긴 수치와 저장된 종장 진행은 재실행 뒤에도 읽을 수 �
     await page.getByTestId('archive-tab-quest').click();
     await page.getByTestId('endgame-journey').scrollIntoViewIfNeeded();
     await expect(page.getByTestId('endgame-journey')).toContainText('원시의 파편 2/3');
-    await expect(page.getByTestId('endgame-journey-action')).toContainText('마지막 파편');
+    await expect(page.getByTestId('endgame-journey-action')).toContainText('남은 파편');
+    await expect(page.getByTestId('endgame-journey')).not.toContainText('계승 3단계');
 });
