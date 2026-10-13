@@ -230,3 +230,38 @@ test.describe('계승 화면 — 회차 규칙 패 다시 뽑기', () => {
         expect(after.ladderRank).toBe(20);
     });
 });
+
+// 2026-10 Wave 98: 끝없는 거울이 열렸으면 계승 화면이 계승 뒤 정수로 살 수 있는 단계 수를 알린다(표시만).
+//   이 시드(2단계, 거울 8노드 완성, 정수 9,000)는 계승 보상(2단계 × 에센스 공명 배율) 330을 더해 9,330 — 2,000 × 3 + 2,500 = 8,500까지 4단계다.
+test.describe('계승 화면 — 끝없는 거울 안내', () => {
+    test('계승 뒤 정수로 살 수 있는 단계 수를 보이고, 거울에서 한 단계 사면 줄어든다 (375px)', async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 667 });
+        await startE2ERun(page);
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.(2, undefined, true));
+        await expect(page.getByTestId('ascension-screen')).toBeVisible({ timeout: 8_000 });
+
+        const guide = page.getByTestId('ascension-mirror-endless');
+        await guide.scrollIntoViewIfNeeded();
+        await expect(guide).toHaveText('계승 뒤 정수 9,330: 끝없는 거울을 4단계 더 새길 수 있습니다. 단계마다 공격력 +1 · 생명 +5 · 기력 +3 중 하나, 다음 단계 비용 정수 2,000.');
+
+        const geometry = await page.getByTestId('ascension-permanent-growth').evaluate((root) => ({
+            guideFont: parseFloat(getComputedStyle(root.querySelector<HTMLElement>('[data-testid="ascension-mirror-endless"]')!).fontSize),
+            overflow: root.scrollWidth - root.clientWidth,
+            pageWidth: document.documentElement.scrollWidth,
+            viewportWidth: window.innerWidth,
+        }));
+        expect(geometry.guideFont).toBeGreaterThanOrEqual(11);
+        expect(geometry.overflow).toBeLessThanOrEqual(1);
+        expect(geometry.pageWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+
+        await page.getByTestId('ascension-open-mirror').click();
+        await expect(page.getByTestId('mirror-panel')).toBeVisible();
+        await page.getByTestId('mirror-path-endless').click();
+        await page.getByTestId('mirror-confirm').click();
+        await expect(page.getByTestId('mirror-current-effect')).toHaveText('거울로 새긴 영구 공격력 +1');
+        await page.getByRole('button', { name: '에테르 거울 닫기' }).click();
+        await expect(page.getByTestId('mirror-panel')).toBeHidden();
+
+        await expect(guide).toHaveText('계승 뒤 정수 7,330: 끝없는 거울을 3단계 더 새길 수 있습니다. 단계마다 공격력 +1 · 생명 +5 · 기력 +3 중 하나, 다음 단계 비용 정수 2,000.');
+    });
+});

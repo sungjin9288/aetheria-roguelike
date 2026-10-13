@@ -116,7 +116,7 @@ export const MIRROR_ENDLESS_NODES: MirrorNodeDef[] = [
     {
         id: 'endless_atk',
         name: '끝없는 날',
-        desc: '영구 공격력을 조금 올립니다. 단계마다 비용이 오릅니다.',
+        desc: '영구 공격력을 조금 올립니다. 비용은 단계마다 오르다가 상한에서 멈춥니다.',
         maxLevel: Number.MAX_SAFE_INTEGER,
         costs: [],
         endless: { stat: 'atk' },
@@ -124,7 +124,7 @@ export const MIRROR_ENDLESS_NODES: MirrorNodeDef[] = [
     {
         id: 'endless_hp',
         name: '끝없는 심장',
-        desc: '영구 생명을 조금 올립니다. 새 여정 · 전직부터 생명에 반영되고, 단계마다 비용이 오릅니다.',
+        desc: '영구 생명을 조금 올립니다. 새 여정 · 전직부터 생명에 반영되고, 비용은 단계마다 오르다가 상한에서 멈춥니다.',
         maxLevel: Number.MAX_SAFE_INTEGER,
         costs: [],
         endless: { stat: 'hp' },
@@ -132,7 +132,7 @@ export const MIRROR_ENDLESS_NODES: MirrorNodeDef[] = [
     {
         id: 'endless_mp',
         name: '끝없는 샘',
-        desc: '영구 기력을 조금 올립니다. 새 여정 · 전직부터 기력에 반영되고, 단계마다 비용이 오릅니다.',
+        desc: '영구 기력을 조금 올립니다. 새 여정 · 전직부터 기력에 반영되고, 비용은 단계마다 오르다가 상한에서 멈춥니다.',
         maxLevel: Number.MAX_SAFE_INTEGER,
         costs: [],
         endless: { stat: 'mp' },

@@ -380,7 +380,8 @@ export interface AetheriaTestApi {
     seedGraveRecoveryScenario: () => void;
     /** 2026-10 Wave 92: `prestigeRank`(기본 2)를 넘기면 그 단계에서 계승하는 화면 — 다음 회차 규칙 미리보기 확인용. */
     /** Wave 95: `receiptKey`를 주면 마왕 처치 영수증을 세운다(회차 규칙 패 다시 뽑기는 영수증이 있는 계승에서만 열린다). */
-    seedAscensionJourneyScenario: (prestigeRank?: number, receiptKey?: string) => void;
+    /** Wave 98: `mirrorFullTree`면 거울 8노드를 모두 채우고 정수 9,000을 둔다(끝없는 단계가 열린 계승 화면). */
+    seedAscensionJourneyScenario: (prestigeRank?: number, receiptKey?: string, mirrorFullTree?: boolean) => void;
     seedTrueEndingJourneyScenario: () => boolean;
     weakenTrueBossForJourney: () => boolean;
     /** Wave 96: `fullTree`면 거울 8노드를 모두 채우고 정수 10,000을 둔다(끝없는 단계가 열린 상태). */
@@ -1109,7 +1110,7 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_SIDE_TAB, payload: 'graves' });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
-            seedAscensionJourneyScenario: (prestigeRank = 2, receiptKey) => {
+            seedAscensionJourneyScenario: (prestigeRank = 2, receiptKey, mirrorFullTree) => {
                 const er = engineRef.current;
                 er.dispatch({
                     type: AT.SET_PLAYER,
@@ -1130,11 +1131,13 @@ export const useGameTestApi = (
                         meta: {
                             ...er.player.meta,
                             prestigeRank,
-                            essence: 180,
+                            essence: mirrorFullTree ? 9_000 : 180,
                             bonusAtk: 10,
                             bonusHp: 50,
                             bonusMp: 30,
-                            mirror: { start_gold: 2 },
+                            mirror: mirrorFullTree
+                                ? Object.fromEntries(MIRROR_NODES.map((node) => [node.id, node.maxLevel]))
+                                : { start_gold: 2 },
                             ...(typeof receiptKey === 'string' ? {
                                 rank: 400,
                                 endgame: {
