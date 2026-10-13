@@ -94,8 +94,7 @@ test('Wave 100: 처음 시작한 여정(단계 0)은 빈 기준점 — 기준점
     const stale = veteran({ prestigeRank: 4, cycleStart: { rank: 3, signatures: [], eliteTitles: 0 } });
     assert.equal(getCycleStart(stale), null, '단계가 다른 기준점은 쓰지 않는다');
     const ids = getCycleSummaryLines(getCycleSummary(legacy)).map((line) => line.id);
-    // Wave 101: 다음 회차 정예 칭호 안내는 기준점 없이도 지금 칭호로 정해진다 — 기준점이 필요한 줄(각인 · 정예)만 빠진다.
-    assert.deepEqual(ids, ['rule', 'elite-route'], '모르는 값은 지어내지 않는다 — 기준점이 필요한 줄은 빠진다');
+    assert.deepEqual(ids, ['rule'], '모르는 값은 지어내지 않는다 — 규칙 줄만 남는다');
 });
 
 test('Wave 100: 회차 규칙 줄 — 실제 정복 경로는 정복 · 칭호, 선택형 거절은 거절, 정복 전은 아직', () => {

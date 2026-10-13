@@ -2,7 +2,6 @@ import { MSG } from '../data/messages.js';
 import { getActiveAscensionRule, isOptionalAscensionRule } from '../systems/ascensionRule.js';
 import { getMirrorEndlessCycle, isMirrorTreeComplete, type MirrorEndlessCycle } from '../systems/mirrorUpgrades.js';
 import type { Player } from '../types/index.js';
-import { getNextCycleEliteRouteLine } from './eliteTitleGuide.js';
 import { ELITE_TITLE_MAPS, sumEliteTitleBonus } from './eliteTitles.js';
 import { hasConqueredRank } from './ruleConquest.js';
 import { getDiscoveredSignatureNames, SIGNATURE_NAMES } from './signatureDiscovery.js';
@@ -26,8 +25,6 @@ export interface CycleSummary {
     signatures: { newNames: string[]; discovered: number; total: number } | null;
     /** 새 정예 칭호 — 기준점을 모르면 null. */
     eliteTitles: { gained: number; owned: number; total: number } | null;
-    /** 2026-10 Wave 101: 다음 회차에 들를 정예 칭호 지역(진입 레벨 순) — 걸어서 들어갈 곳이 남아 있지 않으면 null. */
-    eliteRoute: string | null;
     /** 끝없는 거울이 열렸을 때만 의미가 있다(Wave 99). */
     mirrorUnlocked: boolean;
     mirror: MirrorEndlessCycle;
@@ -79,13 +76,12 @@ export const getCycleSummary = (player: Player): CycleSummary => {
             owned: ownedElite,
             total: ELITE_TITLE_MAPS.length,
         } : null,
-        eliteRoute: getNextCycleEliteRouteLine(player.titles),
         mirrorUnlocked: isMirrorTreeComplete(player.meta?.mirror),
         mirror: getMirrorEndlessCycle(player.meta),
     };
 };
 
-export type CycleSummaryLineId = 'rule' | 'signatures' | 'elite' | 'elite-route' | 'mirror';
+export type CycleSummaryLineId = 'rule' | 'signatures' | 'elite' | 'mirror';
 export interface CycleSummaryLine { id: CycleSummaryLineId; text: string; highlight: boolean }
 
 /** 요약 줄에 이름을 다 싣지 않는다 — 앞의 몇 개와 나머지 수. */
@@ -124,7 +120,6 @@ export const getCycleSummaryLines = (summary: CycleSummary): CycleSummaryLine[] 
             text: gained > 0 ? MSG.CYCLE_SUMMARY_ELITE(gained, owned, total) : MSG.CYCLE_SUMMARY_ELITE_NONE(owned, total),
         });
     }
-    if (summary.eliteRoute) lines.push({ id: 'elite-route', highlight: false, text: summary.eliteRoute });
     if (summary.mirrorUnlocked) {
         const { steps, gains } = summary.mirror;
         lines.push({
