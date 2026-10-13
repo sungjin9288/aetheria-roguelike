@@ -2,7 +2,7 @@ import { BALANCE } from '../../data/constants';
 import { getMirrorNode } from '../../data/mirror';
 import { MSG } from '../../data/messages';
 import { PREMIUM_SHOP } from '../../data/premiumShop';
-import { purchaseMirrorNode } from '../../systems/mirrorUpgrades';
+import { getMirrorEndlessStatGain, purchaseMirrorNode } from '../../systems/mirrorUpgrades';
 import type { GameState, HandlerMap } from '../gameReducer';
 import { AT, type ActionOf } from '../actionTypes';
 import type { Player } from '../../types';
@@ -127,14 +127,23 @@ const purchaseMirrorUpgrade = (state: GameState, action: ActionOf<typeof AT.PURC
     const result = purchaseMirrorNode(mirror, nodeId, essence);
     if (!result.success) return state;
 
+    // 2026-10 Wave 96: 끝없는 단계는 영구 보너스(정수 사다리와 같은 `meta.bonus*`)에 그 자리에서 더한다 — 공격력은 바로,
+    //   생명 · 기력은 다음 재구성(새 여정 · 전직)부터 레벨 비례로 구워진다(사다리 단계와 같은 규칙).
+    const endlessStat = node.endless?.stat;
+    const gain = endlessStat ? getMirrorEndlessStatGain(endlessStat) : 0;
     return completePremiumTransaction(state, {
         ...player,
         meta: {
             ...meta,
             essence: essence - result.cost,
             mirror: result.mirror,
+            ...(endlessStat === 'atk' ? { bonusAtk: (Number(meta.bonusAtk) || 0) + gain } : {}),
+            ...(endlessStat === 'hp' ? { bonusHp: (Number(meta.bonusHp) || 0) + gain } : {}),
+            ...(endlessStat === 'mp' ? { bonusMp: (Number(meta.bonusMp) || 0) + gain } : {}),
         },
-    }, MSG.MIRROR_PURCHASE(node.name, result.newLevel, result.cost));
+    }, endlessStat
+        ? MSG.MIRROR_ENDLESS_PURCHASE(node.name, result.newLevel, result.cost, MSG.MIRROR_ENDLESS_STAT_LABELS[endlessStat], gain)
+        : MSG.MIRROR_PURCHASE(node.name, result.newLevel, result.cost));
 };
 
 export const premiumActionMap = {

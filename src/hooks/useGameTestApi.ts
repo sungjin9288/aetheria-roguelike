@@ -20,6 +20,7 @@ import type { RunSummary } from '../reducers/actionTypes';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
 import { BAG_RECIPES } from '../data/bagRecipes';
+import { MIRROR_NODES } from '../data/mirror';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { RELICS } from '../data/relics';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
@@ -382,7 +383,8 @@ export interface AetheriaTestApi {
     seedAscensionJourneyScenario: (prestigeRank?: number, receiptKey?: string) => void;
     seedTrueEndingJourneyScenario: () => boolean;
     weakenTrueBossForJourney: () => boolean;
-    seedMirrorJourneyScenario: () => void;
+    /** Wave 96: `fullTree`면 거울 8노드를 모두 채우고 정수 10,000을 둔다(끝없는 단계가 열린 상태). */
+    seedMirrorJourneyScenario: (fullTree?: boolean) => void;
     seedCrystalExchangeScenario: (balance: number) => void;
     seedSystemSettingsScenario: () => void;
     seedProgressionAcceptanceScenario: () => boolean;
@@ -1261,8 +1263,9 @@ export const useGameTestApi = (
                 });
                 return true;
             },
-            seedMirrorJourneyScenario: () => {
+            seedMirrorJourneyScenario: (fullTree) => {
                 const er = engineRef.current;
+                const fullMirror = Object.fromEntries(MIRROR_NODES.map((node) => [node.id, node.maxLevel]));
                 er.dispatch({
                     type: AT.SET_PLAYER,
                     payload: {
@@ -1272,8 +1275,8 @@ export const useGameTestApi = (
                         loc: '시작의 마을',
                         meta: {
                             ...er.player.meta,
-                            essence: 220,
-                            mirror: {
+                            essence: fullTree ? 10_000 : 220,
+                            mirror: fullTree ? fullMirror : {
                                 start_gold: 1,
                                 campfire_rate: 1,
                             },

@@ -2,6 +2,7 @@ import { useState } from 'react';
 import {
     Check,
     Compass,
+    Infinity as InfinityIcon,
     RefreshCw,
     Route,
     ShieldCheck,
@@ -10,6 +11,7 @@ import {
     type LucideIcon,
 } from 'lucide-react';
 import { getMirrorNode } from '../data/mirror';
+import { MSG } from '../data/messages';
 import type { Player } from '../types/index.js';
 import {
     getMirrorCompletion,
@@ -30,6 +32,7 @@ const PATH_ICONS: Record<MirrorPathId, LucideIcon> = {
     exploration: Compass,
     survival: ShieldCheck,
     legacy: RefreshCw,
+    endless: InfinityIcon,
 };
 
 const EssenceMark = () => <Sparkles size={14} aria-hidden="true" />;
@@ -58,6 +61,8 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
 
     const confirmLabel = !preview
         ? '투자할 성장을 선택하세요'
+        : preview.locked
+            ? MSG.MIRROR_ENDLESS_LOCKED
         : preview.maxed
             ? '이 성장은 완료되었습니다'
             : preview.canAfford
@@ -109,7 +114,7 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                         </span>
                     </div>
 
-                    <nav className="mt-4 grid grid-cols-4 gap-1.5" aria-label="성장 경로">
+                    <nav className="mt-4 grid grid-cols-5 gap-1.5" aria-label="성장 경로">
                         {MIRROR_PATHS.map((path) => {
                             const Icon = PATH_ICONS[path.id];
                             const active = path.id === pathId;
@@ -171,7 +176,9 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                                                 <span className="flex items-center justify-between gap-3">
                                                     <strong className="text-[14px] font-rajdhani text-white">{node.name}</strong>
                                                     <span className="shrink-0 text-[11px] font-fira text-[#cfc4eb]">
-                                                        {nodePreview.currentLevel}/{node.maxLevel} 단계
+                                                        {nodePreview.endless
+                                                            ? MSG.MIRROR_ENDLESS_LEVEL(nodePreview.currentLevel)
+                                                            : <>{nodePreview.currentLevel}/{node.maxLevel} 단계</>}
                                                     </span>
                                                 </span>
                                                 <span className="mt-1 block text-[12px] font-fira leading-5 text-slate-400">{node.desc}</span>

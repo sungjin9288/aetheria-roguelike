@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 
-import { MIRROR_NODES } from '../src/data/mirror.js';
+import { MIRROR_ENDLESS_NODES, MIRROR_NODES } from '../src/data/mirror.js';
 import {
     getMirrorCompletion,
     getMirrorEffectLabel,
@@ -10,15 +10,16 @@ import {
     MIRROR_PATHS,
 } from '../src/utils/mirrorJourney.js';
 
-test('거울의 모든 성장은 네 경로에 한 번씩만 배치된다', () => {
-    assert.deepEqual(MIRROR_PATHS.map((path) => path.label), ['새 여정', '탐험', '생존', '순환']);
+test('거울의 모든 성장은 다섯 경로에 한 번씩만 배치된다 — Wave 96: 다섯째는 끝없는 단계', () => {
+    assert.deepEqual(MIRROR_PATHS.map((path) => path.label), ['새 여정', '탐험', '생존', '순환', '끝없는']);
 
     const assignedNodeIds = MIRROR_PATHS.flatMap((path) => path.nodeIds);
     assert.equal(new Set(assignedNodeIds).size, assignedNodeIds.length);
     assert.deepEqual(
         [...assignedNodeIds].sort(),
-        MIRROR_NODES.map((node) => node.id).sort(),
+        [...MIRROR_NODES, ...MIRROR_ENDLESS_NODES].map((node) => node.id).sort(),
     );
+    assert.deepEqual(MIRROR_PATHS.at(-1).nodeIds, MIRROR_ENDLESS_NODES.map((node) => node.id));
 });
 
 test('투자 미리보기는 실제 거울 효과와 비용을 현재와 다음 단계로 비교한다', () => {
