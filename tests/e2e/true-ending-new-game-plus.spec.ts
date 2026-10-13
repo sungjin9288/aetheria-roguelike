@@ -294,6 +294,10 @@ test.describe('True Ending → New Game+ production journey', () => {
         await expect(page.getByTestId('true-ending-skip')).toBeHidden();
         await expect(page.getByTestId('true-ending-pending-quest-87')).toBeVisible();
         await expect(page.getByTestId('true-ending-confirm')).toBeDisabled();
+        // 2026-10 Wave 100: 실제 마왕 처치가 회차 규칙을 정복했고, 정복 각인이 이번 회차의 새 각인으로 잡힌다.
+        await expect(page.getByTestId('true-ending-cycle-summary')).toBeVisible();
+        await expect(page.getByTestId('true-ending-cycle-rule')).toContainText('정복 · 칭호');
+        await expect(page.getByTestId('true-ending-cycle-signatures')).toContainText('새 전설 각인');
         await assertTrueEndingGeometry(page, viewport);
         await page.getByTestId('true-ending-continue').click();
         await expect(page.getByTestId('true-ending-screen')).toBeHidden({ timeout: 10_000 });

@@ -241,8 +241,13 @@ test.describe('계승 화면 — 끝없는 거울 안내', () => {
         await expect(page.getByTestId('ascension-screen')).toBeVisible({ timeout: 8_000 });
 
         const guide = page.getByTestId('ascension-mirror-endless');
-        const cycle = page.getByTestId('ascension-mirror-endless-cycle');
+        const cycle = page.getByTestId('ascension-cycle-mirror');
         await guide.scrollIntoViewIfNeeded();
+        // 2026-10 Wave 100: 이번 회차 요약 — 이 시드는 회차 기준점이 없는 계승 단계라 각인 · 정예 줄을 지어내지 않는다.
+        await expect(page.getByTestId('ascension-cycle-summary')).toBeVisible();
+        await expect(page.getByTestId('ascension-cycle-rule')).toContainText('아직 정복하지 못함');
+        await expect(page.getByTestId('ascension-cycle-signatures')).toHaveCount(0);
+        await expect(page.getByTestId('ascension-cycle-elite')).toHaveCount(0);
         // 2026-10 Wave 99: 이번 회차에 새긴 끝없는 거울 — 시드는 아직 새긴 것이 없다.
         await expect(cycle).toHaveText('이번 회차에는 끝없는 거울을 새기지 않았습니다.');
         await expect(guide).toHaveText('계승 뒤 정수 9,330: 끝없는 거울을 4단계 더 새길 수 있습니다. 단계마다 공격력 +1 · 생명 +5 · 기력 +3 중 하나, 다음 단계 비용 정수 2,000.');

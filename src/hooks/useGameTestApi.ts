@@ -1163,6 +1163,8 @@ export const useGameTestApi = (
                     bonusAtk: 45,
                     bonusHp: 180,
                     bonusMp: 90,
+                    // Wave 100: 이 회차를 빈 기준점에서 시작한 것으로 둔다 — 진 엔딩 화면의 "이번 회차 요약"이 새 각인을 센다.
+                    cycleStart: { rank: 3, signatures: [], eliteTitles: 0 },
                     storyMilestones: { seen: ['first_death', 'first_job_change'], pending: [] },
                     endgame: {
                         version: 1,

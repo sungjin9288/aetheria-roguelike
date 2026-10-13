@@ -811,6 +811,17 @@ export const MSG = {
     ASCEND_MIRROR_ENDLESS_CYCLE: (steps: number, atk: number, hp: number, mp: number) =>
         `이번 회차에 새긴 끝없는 거울 ${steps.toLocaleString('ko-KR')}단계: 영구 공격력 +${atk} · 생명 +${hp} · 기력 +${mp}`,
     ASCEND_MIRROR_ENDLESS_CYCLE_NONE: '이번 회차에는 끝없는 거울을 새기지 않았습니다.',
+    // 2026-10 Wave 100: 계승 화면 "이번 회차 요약" — 회차 규칙 정복 · 새 전설 각인 · 새 정예 칭호 · 끝없는 거울(Wave 99 줄).
+    CYCLE_SUMMARY_TITLE: '이번 회차 요약',
+    CYCLE_SUMMARY_RULE_CONQUERED: (rule: string, title: string) => `회차 규칙 [${rule}] 정복 · 칭호 「${title}」`,
+    CYCLE_SUMMARY_RULE_DECLINED: (rule: string) => `회차 규칙 [${rule}] 거절 · 정복 보상 없음`,
+    CYCLE_SUMMARY_RULE_OPEN: (rule: string) => `회차 규칙 [${rule}] 아직 정복하지 못함`,
+    CYCLE_SUMMARY_SIGNATURES: (count: number, names: string, discovered: number, total: number) =>
+        `새 전설 각인 ${count}개: ${names} (도감 ${discovered}/${total})`,
+    CYCLE_SUMMARY_SIGNATURES_MORE: (shown: string, rest: number) => `${shown} 외 ${rest}개`,
+    CYCLE_SUMMARY_SIGNATURES_NONE: (discovered: number, total: number) => `새 전설 각인 없음 (도감 ${discovered}/${total})`,
+    CYCLE_SUMMARY_ELITE: (gained: number, owned: number, total: number) => `새 정예 칭호 ${gained}개 (${owned}/${total})`,
+    CYCLE_SUMMARY_ELITE_NONE: (owned: number, total: number) => `새 정예 칭호 없음 (${owned}/${total})`,
     // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
     SCOUT_ACTION_LABEL: '정찰',
     SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
