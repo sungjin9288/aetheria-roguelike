@@ -234,14 +234,17 @@ test.describe('계승 화면 — 회차 규칙 패 다시 뽑기', () => {
 // 2026-10 Wave 98: 끝없는 거울이 열렸으면 계승 화면이 계승 뒤 정수로 살 수 있는 단계 수를 알린다(표시만).
 //   이 시드(2단계, 거울 8노드 완성, 정수 9,000)는 계승 보상(2단계 × 에센스 공명 배율) 330을 더해 9,330 — 2,000 × 3 + 2,500 = 8,500까지 4단계다.
 test.describe('계승 화면 — 끝없는 거울 안내', () => {
-    test('계승 뒤 정수로 살 수 있는 단계 수를 보이고, 거울에서 한 단계 사면 줄어든다 (375px)', async ({ page }) => {
+    test('계승 뒤 정수로 살 수 있는 단계 수와 이번 회차에 새긴 단계를 보이고, 거울에서 한 단계 사면 둘 다 바뀐다 (375px)', async ({ page }) => {
         await page.setViewportSize({ width: 375, height: 667 });
         await startE2ERun(page);
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.(2, undefined, true));
         await expect(page.getByTestId('ascension-screen')).toBeVisible({ timeout: 8_000 });
 
         const guide = page.getByTestId('ascension-mirror-endless');
+        const cycle = page.getByTestId('ascension-mirror-endless-cycle');
         await guide.scrollIntoViewIfNeeded();
+        // 2026-10 Wave 99: 이번 회차에 새긴 끝없는 거울 — 시드는 아직 새긴 것이 없다.
+        await expect(cycle).toHaveText('이번 회차에는 끝없는 거울을 새기지 않았습니다.');
         await expect(guide).toHaveText('계승 뒤 정수 9,330: 끝없는 거울을 4단계 더 새길 수 있습니다. 단계마다 공격력 +1 · 생명 +5 · 기력 +3 중 하나, 다음 단계 비용 정수 2,000.');
 
         const geometry = await page.getByTestId('ascension-permanent-growth').evaluate((root) => ({
@@ -262,6 +265,7 @@ test.describe('계승 화면 — 끝없는 거울 안내', () => {
         await page.getByRole('button', { name: '에테르 거울 닫기' }).click();
         await expect(page.getByTestId('mirror-panel')).toBeHidden();
 
+        await expect(cycle).toHaveText('이번 회차에 새긴 끝없는 거울 1단계: 영구 공격력 +1 · 생명 +0 · 기력 +0');
         await expect(guide).toHaveText('계승 뒤 정수 7,330: 끝없는 거울을 3단계 더 새길 수 있습니다. 단계마다 공격력 +1 · 생명 +5 · 기력 +3 중 하나, 다음 단계 비용 정수 2,000.');
     });
 });

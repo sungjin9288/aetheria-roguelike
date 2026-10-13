@@ -149,8 +149,20 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                                 {MSG.ASCEND_LADDER_REROLL_COST(outcome.ladder.rerollPaid)}
                             </p>
                         )}
+                        {outcome.mirrorEndless.unlocked && (
+                            <p data-testid="ascension-mirror-endless-cycle" className="mt-2 text-[11px] font-readable font-bold leading-relaxed text-[#e3dcff]">
+                                {outcome.mirrorEndlessCycle.steps > 0
+                                    ? MSG.ASCEND_MIRROR_ENDLESS_CYCLE(
+                                        outcome.mirrorEndlessCycle.steps,
+                                        outcome.mirrorEndlessCycle.gains.atk,
+                                        outcome.mirrorEndlessCycle.gains.hp,
+                                        outcome.mirrorEndlessCycle.gains.mp,
+                                    )
+                                    : MSG.ASCEND_MIRROR_ENDLESS_CYCLE_NONE}
+                            </p>
+                        )}
                         {outcome.mirrorEndless.unlocked ? (
-                            <p data-testid="ascension-mirror-endless" className="mt-2 text-[11px] font-readable leading-relaxed text-[#e3dcff]/85">
+                            <p data-testid="ascension-mirror-endless" className="mt-1 text-[11px] font-readable leading-relaxed text-[#e3dcff]/85">
                                 {outcome.mirrorEndless.steps > 0
                                     ? MSG.ASCEND_MIRROR_ENDLESS_STEPS(
                                         outcome.meta.essence || 0,

@@ -807,6 +807,10 @@ export const MSG = {
         `계승 뒤 정수 ${essence.toLocaleString('ko-KR')}: 끝없는 거울을 ${steps.toLocaleString('ko-KR')}단계 더 새길 수 있습니다. 단계마다 공격력 +${atk} · 생명 +${hp} · 기력 +${mp} 중 하나, 다음 단계 비용 정수 ${nextCost.toLocaleString('ko-KR')}.`,
     ASCEND_MIRROR_ENDLESS_SHORT: (essence: number, shortfall: number) =>
         `계승 뒤 정수 ${essence.toLocaleString('ko-KR')}: 끝없는 거울의 다음 단계까지 정수 ${shortfall.toLocaleString('ko-KR')} 더 필요합니다.`,
+    // 2026-10 Wave 99: 이번 회차(지금 계승 단계)에 새긴 끝없는 거울 — 사망 재시작을 넘어 회차 내내 센다.
+    ASCEND_MIRROR_ENDLESS_CYCLE: (steps: number, atk: number, hp: number, mp: number) =>
+        `이번 회차에 새긴 끝없는 거울 ${steps.toLocaleString('ko-KR')}단계: 영구 공격력 +${atk} · 생명 +${hp} · 기력 +${mp}`,
+    ASCEND_MIRROR_ENDLESS_CYCLE_NONE: '이번 회차에는 끝없는 거울을 새기지 않았습니다.',
     // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
     SCOUT_ACTION_LABEL: '정찰',
     SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,

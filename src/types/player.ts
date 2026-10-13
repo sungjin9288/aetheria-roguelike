@@ -270,6 +270,11 @@ interface PlayerMeta {
      * (리로드로 첫 패를 되살릴 수 없다). 유료 다시 뽑기의 사다리 비용은 계승(`getAscensionOutcome`)이 적용하고 계승 뒤에는 지운다.
      */
     ascensionRuleOffer?: { receiptKey: string; rank: number; rerolls: number };
+    /**
+     * 2026-10 Wave 99: 이 계승 단계(회차)에 새긴 끝없는 거울 단계 수(능력치별). 영구 meta라 사망 재시작을 넘어 회차 내내 쌓이고,
+     * `rank`가 지금 `prestigeRank`와 다르면 없는 것으로 읽는다(`getMirrorEndlessCycle`). 계승(`getAscensionOutcome`)이 지운다.
+     */
+    mirrorEndlessCycle?: { rank: number; atk: number; hp: number; mp: number };
     // cycle 281: totalPrestigeAtk/Hp/Mp 3 dead 필드 제거 (cycle 277 runtime cleanup paired completion).
     //   runtime read 0건 + saved 데이터 잔존 필드는 무시되지만 무해 (runtime access 안 함).
     // 2026-07 — 에테르 거울: 노드id → 레벨. getMirrorEffects(meta)가 단일 진실 원천.

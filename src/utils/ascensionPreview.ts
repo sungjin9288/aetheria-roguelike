@@ -4,7 +4,7 @@ import { carryEssenceLadderOnAscension } from '../systems/essenceLedger';
 import { getPrestigeEnemyLevelRate } from '../systems/metaBonusRamp';
 import { scaleEssenceReward } from '../systems/essenceRewardMult';
 import { getAscensionRulePaidRerolls, getAscensionRuleRerollLadderKeep } from '../systems/ascensionRule';
-import { getMirrorEndlessAffordance, type MirrorEndlessAffordance } from '../systems/mirrorUpgrades';
+import { getMirrorEndlessAffordance, getMirrorEndlessCycle, type MirrorEndlessAffordance, type MirrorEndlessCycle } from '../systems/mirrorUpgrades';
 import type { Player } from '../types/player';
 
 export interface PrestigeMilestone {
@@ -47,6 +47,8 @@ export interface AscensionOutcome {
     ladder: { rankBefore: number; rankKept: number; carryPercent: number; rerollPaid: number };
     /** 2026-10 Wave 98: 계승한 뒤의 정수로 끝없는 거울을 몇 단계 살 수 있는가(표시만 — 구매는 거울이 한다). */
     mirrorEndless: MirrorEndlessAffordance;
+    /** 2026-10 Wave 99: 이번 회차(계승 전 단계)에 새긴 끝없는 거울 — 계승하면 기록은 지워진다. */
+    mirrorEndlessCycle: MirrorEndlessCycle;
 }
 
 /**
@@ -65,7 +67,8 @@ const toNonNegativeNumber = (value: unknown) => {
 
 export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): AscensionOutcome => {
     // 2026-10 Wave 95: 회차 규칙 패 다시 뽑기 기록은 이 계승에서 쓰고 지운다(유료 횟수만큼 넘어가는 사다리를 내려놓는다).
-    const { ascensionRuleOffer: _usedRuleOffer, ...currentMeta } = meta || {};
+    // 2026-10 Wave 99: 이번 회차 끝없는 거울 기록도 이 계승에서 돌아보고 지운다(다음 회차는 0부터 센다).
+    const { ascensionRuleOffer: _usedRuleOffer, mirrorEndlessCycle: _closedMirrorCycle, ...currentMeta } = meta || {};
     const currentRank = Math.floor(toNonNegativeNumber(currentMeta.prestigeRank));
     const nextRank = currentRank + 1;
     const titleIndex = Math.min(nextRank - 1, PRESTIGE_TITLES.length - 1);
@@ -111,5 +114,6 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
             rerollPaid,
         },
         mirrorEndless: getMirrorEndlessAffordance(currentMeta.mirror, nextEssence),
+        mirrorEndlessCycle: getMirrorEndlessCycle(meta),
     };
 };
