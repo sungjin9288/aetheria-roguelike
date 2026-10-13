@@ -61,10 +61,15 @@ export const isMirrorTreeComplete = (mirror: MirrorLevels | undefined | null): b
     MIRROR_NODES.every((node) => getLevel(mirror, node.id) >= node.maxLevel)
 );
 
-/** 이 노드의 `level` → `level + 1` 비용 — 끝없는 단계는 `MIRROR_ENDLESS_BASE_COST + STEP × level`(단계마다 오른다). */
+/**
+ * 이 노드의 `level` → `level + 1` 비용 — 끝없는 단계는 `MIRROR_ENDLESS_BASE_COST + STEP × level`로 오르다가
+ * `MIRROR_ENDLESS_COST_CAP`에서 멈춘다(Wave 97 — 회차 수입이 거의 일정해서, 계속 오르면 회차마다 사는 단계가 줄어든다).
+ */
 export const getMirrorNodeCost = (node: MirrorNodeDef, level: number): number => {
     const lv = Math.max(0, Math.floor(Number(level) || 0));
-    if (node.endless) return BALANCE.MIRROR_ENDLESS_BASE_COST + BALANCE.MIRROR_ENDLESS_COST_STEP * lv;
+    if (node.endless) {
+        return Math.min(BALANCE.MIRROR_ENDLESS_COST_CAP, BALANCE.MIRROR_ENDLESS_BASE_COST + BALANCE.MIRROR_ENDLESS_COST_STEP * lv);
+    }
     return node.costs[lv] ?? 0;
 };
 
@@ -75,10 +80,12 @@ export const getMirrorEndlessStatGain = (stat: MirrorEndlessStat): number => (
             : BALANCE.MIRROR_ENDLESS_MP_PER_LEVEL
 );
 
-/** 끝없는 단계 `levels`번에 든 정수 총액 — 비용이 등차라 합은 닫힌 식이다. */
-const getEndlessSpent = (levels: number): number => (
-    levels * BALANCE.MIRROR_ENDLESS_BASE_COST + (BALANCE.MIRROR_ENDLESS_COST_STEP * levels * (levels - 1)) / 2
-);
+/** 끝없는 단계 `levels`번에 든 정수 총액 — 상한 전은 등차, 상한부터는 같은 값이라 합은 닫힌 식이다. */
+const getEndlessSpent = (levels: number): number => {
+    const { MIRROR_ENDLESS_BASE_COST: base, MIRROR_ENDLESS_COST_STEP: step, MIRROR_ENDLESS_COST_CAP: cap } = BALANCE;
+    const rising = Math.min(levels, Math.max(0, Math.ceil((cap - base) / step)));
+    return rising * base + (step * rising * (rising - 1)) / 2 + (levels - rising) * cap;
+};
 
 export interface MirrorPurchaseResult {
     mirror: MirrorLevels;

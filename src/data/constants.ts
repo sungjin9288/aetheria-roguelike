@@ -376,6 +376,9 @@ export const BALANCE = {
     //   끝없는 단계. k번째 단계(0부터) 비용 = BASE + STEP × k(정수 사다리는 단계당 150), 단계마다 영구 공격력 · 생명 · 기력 중 하나.
     MIRROR_ENDLESS_BASE_COST: 2000,
     MIRROR_ENDLESS_COST_STEP: 500,
+    // 2026-10 Wave 97 (소유자 결정 "비용이 너무 가파르게 증가하면 반복되는 플레이에 질린다"): 단계 비용은 여기서 멈춘다(20단계에서 닿는다).
+    //   계속 오르던 동안 회차마다 사는 단계가 13 → 7 → … → 3으로 줄었다(원장 §102).
+    MIRROR_ENDLESS_COST_CAP: 12000,
     MIRROR_ENDLESS_ATK_PER_LEVEL: 1,
     MIRROR_ENDLESS_HP_PER_LEVEL: 5,
     MIRROR_ENDLESS_MP_PER_LEVEL: 3,

@@ -51,6 +51,7 @@ test('Wave 96: 끝없는 단계는 셋(공격 · 생명 · 기력)이고 상수 
     for (const node of MIRROR_ENDLESS_NODES) assert.equal(getMirrorNode(node.id), node);
     assert.equal(BALANCE.MIRROR_ENDLESS_BASE_COST, 2000);
     assert.equal(BALANCE.MIRROR_ENDLESS_COST_STEP, 500);
+    assert.equal(BALANCE.MIRROR_ENDLESS_COST_CAP, 12000);
     assert.deepEqual(['atk', 'hp', 'mp'].map(getMirrorEndlessStatGain), [BALANCE.ESSENCE_RANK_ATK, BALANCE.ESSENCE_RANK_HP, BALANCE.ESSENCE_RANK_MP],
         '한 단계 = 정수 사다리 한 단계와 같은 양');
     assert.equal(MIRROR_TREE_TOTAL_COST, MIRROR_NODES.reduce((t, n) => t + n.costs.reduce((a, b) => a + b, 0), 0));
@@ -99,16 +100,32 @@ test('Wave 96: 정수가 모자라거나 화면이 본 정수 · 단계가 다�
     assert.equal(gameReducer(once, action), once, '같은 화면 스냅숏으로 두 번 사지 못한다');
 });
 
-test('Wave 96: 강해지는 속도는 느리다 — 7회차 끝에 남던 정수(중앙값 167만)로 한 능력치에 몰아도 100단계에 못 닿는다', () => {
-    const spentFor = (levels) => getSpentMirrorEssence({ endless_atk: levels });
-    assert.equal(spentFor(0), 0);
-    assert.equal(spentFor(3), 2000 + 2500 + 3000);
-    assert.ok(spentFor(100) > 1_670_000);
-    let levels = 0;
-    while (spentFor(levels + 1) <= 1_670_000) levels += 1;
-    assert.ok(levels < 80, `정수 167만으로 ${levels}단계`);
-    // 정수 사다리는 단계당 150 — 끝없는 단계의 첫 단계도 13배 이상 비싸다.
-    assert.ok(getMirrorNodeCost(getMirrorNode('endless_atk'), 0) >= 13 * BALANCE.ESSENCE_PER_RANK);
+test('Wave 97: 비용은 20단계까지 오르다가 상한(12,000)에서 멈춘다 — 회차마다 사는 단계가 줄어들지 않는다', () => {
+    // 원장 §102: 계속 오르던 동안(Wave 96) 회차마다 능력치당 사는 단계가 13 → 7 → 6 → 5 → 4 → 5 → 3으로 줄었다
+    //   (회차 수입은 거의 일정하다) — 소유자 결정 "비용이 너무 가파르게 증가하면 반복되는 플레이에 질린다".
+    const node = getMirrorNode('endless_atk');
+    const costs = Array.from({ length: 60 }, (_, k) => getMirrorNodeCost(node, k));
+    assert.equal(costs[0], 2000);
+    assert.equal(costs[19], 11500);
+    for (let k = 20; k < 60; k += 1) assert.equal(costs[k], 12000, `${k}단계`);
+    for (let k = 1; k < 60; k += 1) assert.ok(costs[k] >= costs[k - 1], '내려가지 않는다');
+    // 상한 뒤에는 같은 정수로 언제나 같은 단계 수를 산다.
+    const stepsWith = (from, budget) => { let k = from; let left = budget; while (left >= getMirrorNodeCost(node, k)) { left -= getMirrorNodeCost(node, k); k += 1; } return k - from; };
+    assert.equal(stepsWith(25, 60_000), stepsWith(80, 60_000));
+    assert.equal(stepsWith(80, 60_000), 5);
+    // 여전히 적은 능력치를 많은 정수로 — 첫 단계도 정수 사다리 한 단계(150)의 13배 이상, 상한은 80배다.
+    assert.ok(getMirrorNodeCost(node, 0) >= 13 * BALANCE.ESSENCE_PER_RANK);
+    assert.equal(BALANCE.MIRROR_ENDLESS_COST_CAP / BALANCE.ESSENCE_PER_RANK, 80);
+});
+
+test('Wave 97: 지출 역산은 상한 뒤 단계도 그 비용 그대로 센다(낱낱이 더한 값과 같다)', () => {
+    const node = getMirrorNode('endless_hp');
+    let brute = 0;
+    for (let levels = 0; levels <= 80; levels += 1) {
+        assert.equal(getSpentMirrorEssence({ endless_hp: levels }), brute, `${levels}단계`);
+        brute += getMirrorNodeCost(node, levels);
+    }
+    assert.equal(getSpentMirrorEssence({ endless_hp: 30 }), 135_000 + 10 * 12_000);
 });
 
 test('Wave 96: 지출 역산(누적 정수 백필)은 끝없는 단계를 포함한다', () => {
