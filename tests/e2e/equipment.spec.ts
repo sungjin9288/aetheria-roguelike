@@ -56,5 +56,8 @@ test.describe('Equipment panel', () => {
 
         const anyCatalogItem = page.locator('[data-testid^="set-catalog-item-"]').first();
         await expect(anyCatalogItem).toBeVisible({ timeout: 5_000 });
+        // 2026-10 Wave 103: 가진 적도 도감에 오른 적도 없는 장비는 이름 대신 ???로 보인다.
+        const unknown = page.locator('[data-testid^="set-catalog-item-"][data-known="false"]').first();
+        await expect(unknown).toContainText('???');
     });
 });

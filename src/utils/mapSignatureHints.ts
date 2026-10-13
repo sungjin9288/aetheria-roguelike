@@ -12,6 +12,7 @@ import { MAPS } from '../data/maps.js';
 import { DROP_TABLES } from '../data/dropTables.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import type { Player } from '../types/index.js';
+import { isSignatureDiscovered } from './signatureDiscovery.js';
 
 interface MapSignatureDrop {
     name: string;
@@ -63,18 +64,9 @@ export const getMapSignatureDrops = (mapName: string | null | undefined) => {
 };
 
 /**
- * 맵의 signature 중 플레이어가 아직 도감에 등록하지 않은 것만 반환.
- *
- * @param {string | null | undefined} mapName
- * @param {{ stats?: { codex?: object } } | null | undefined} player
- * @returns {ReadonlyArray<MapSignatureDrop>}
+ * 2026-10 Wave 103 (소유자 결정 §107.6 "전설 각인 획득처는 얻은 뒤에만 공개"): 이 지역에서 나오는 각인 중 이미 도감에 있는 것만.
+ * 지도가 읽는다 — 다시 노릴 곳은 보이고, 아직 없는 각인의 획득처와 개수는 보이지 않는다.
  */
-export const getMapUndiscoveredSignatures = (mapName: string | null | undefined, player: Player | null | undefined) => {
-    const drops = getMapSignatureDrops(mapName);
-    if (drops.length === 0) return [];
-    const codex = player?.stats?.codex || {};
-    const weapons = codex.weapons || {};
-    const armors = codex.armors || {};
-    const shields = codex.shields || {};
-    return drops.filter(({ name }) => !(weapons[name] || armors[name] || shields[name]));
-};
+export const getMapDiscoveredSignatureDrops = (mapName: string | null | undefined, player: Player | null | undefined) => (
+    player ? getMapSignatureDrops(mapName).filter(({ name }) => isSignatureDiscovered(name, player)) : []
+);

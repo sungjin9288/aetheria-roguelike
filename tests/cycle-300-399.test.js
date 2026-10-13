@@ -1798,8 +1798,9 @@ import { fileURLToPath } from 'node:url';
           assert.ok(typeof r.reason === 'string', 'reason 보존');
           assert.ok(typeof r.levelLabel === 'string', 'levelLabel 보존');
           assert.ok(Array.isArray(r.chips), 'chips 보존');
-          assert.equal(typeof r.undiscoveredSignatureCount, 'number',
-              'undiscoveredSignatureCount 보존');
+          // 2026-10 Wave 103: 미발견 각인 수는 출력하지 않는다(획득처는 얻은 뒤에만 공개).
+          assert.equal(r.undiscoveredSignatureCount, undefined,
+              'undiscoveredSignatureCount 출력 0건');
           // dead 필드 0건.
           assert.equal(r.score, undefined, 'score 출력 0건');
           assert.equal(r.isSafeTarget, undefined, 'isSafeTarget 출력 0건');

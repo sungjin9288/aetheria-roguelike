@@ -6,7 +6,7 @@ import path from 'node:path';
 
 import {
     getMapSignatureDrops,
-    getMapUndiscoveredSignatures,
+    getMapDiscoveredSignatureDrops,
 } from '../src/utils/mapSignatureHints.js';
 
 /**
@@ -17,8 +17,8 @@ import {
  *   1. getMapSignatureDrops(name) → [{ name, rate }] rate 내림차순, unique by name
  *   2. 같은 signature가 다중 몬스터에서 드롭 가능하면 최고 rate로 집계 (플레이어 관점)
  *   3. 미등록/monsters 없는 맵 → []
- *   4. getMapUndiscoveredSignatures는 player.stats.codex를 가지고 미발견만 반환
- *   5. MapNavigator에 wiring (import + 배지 + detail 패널)
+ *   4. getMapDiscoveredSignatureDrops는 player.stats.codex에 오른 각인만 반환 (Wave 103 — 미발견 각인의 획득처 · 개수는 숨긴다)
+ *   5. MapNavigator는 발견한 각인만 그린다 (미발견 수 배지 없음)
  */
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -57,60 +57,28 @@ test('getMapSignatureDrops returns [] for unknown/safe maps', () => {
     assert.deepEqual(getMapSignatureDrops(''), []);
 });
 
-test('getMapUndiscoveredSignatures filters by player codex state', () => {
+const codexWith = (names) => {
+    const codex = { weapons: {}, armors: {}, shields: {} };
+    for (const name of names) { codex.weapons[name] = true; codex.armors[name] = true; codex.shields[name] = true; }
+    return { stats: { codex } };
+};
+
+test('getMapDiscoveredSignatureDrops returns only signatures already in the codex', () => {
     const drops = getMapSignatureDrops('마왕성');
     assert.ok(drops.length >= 2);
+    assert.deepEqual(getMapDiscoveredSignatureDrops('마왕성', codexWith([])), [], '발견 전에는 아무것도 없다');
+    assert.deepEqual(getMapDiscoveredSignatureDrops('마왕성', null), []);
 
-    // 코덱스 비어 있음 → 전부 미발견
-    const allMissing = getMapUndiscoveredSignatures('마왕성', null);
-    assert.equal(allMissing.length, drops.length);
+    const partial = getMapDiscoveredSignatureDrops('마왕성', codexWith(['마왕의 대낫']));
+    assert.deepEqual(partial.map((d) => d.name), ['마왕의 대낫']);
 
-    // 마왕의 대낫만 발견 → 나머지만 반환
-    const partial = getMapUndiscoveredSignatures('마왕성', {
-        stats: {
-            codex: {
-                weapons: { '마왕의 대낫': { discovered: true } },
-                armors: {},
-                shields: {},
-            },
-        },
-    });
-    assert.ok(partial.length < drops.length);
-    assert.ok(!partial.find((d) => d.name === '마왕의 대낫'));
+    const all = getMapDiscoveredSignatureDrops('마왕성', codexWith(drops.map((d) => d.name)));
+    assert.deepEqual(all, drops, '모두 발견하면 전체 — 순서 · 확률은 getMapSignatureDrops 그대로');
 });
 
-test('getMapUndiscoveredSignatures returns [] when player has discovered all', () => {
-    const drops = getMapSignatureDrops('마왕성');
-    const codex = { weapons: {}, armors: {}, shields: {} };
-    for (const d of drops) codex.weapons[d.name] = { discovered: true };
-    const missing = getMapUndiscoveredSignatures('마왕성', { stats: { codex } });
-    assert.equal(missing.length, 0);
-});
-
-test('getMapUndiscoveredSignatures handles null player', () => {
-    const missing = getMapUndiscoveredSignatures('마왕성', null);
-    assert.ok(missing.length > 0, 'null player means nothing discovered yet');
-});
-
-test('MapNavigator imports helpers and renders signature hint UI', async () => {
+test('MapNavigator renders only discovered signatures (Wave 103 — no undiscovered count)', async () => {
     const source = await readSrc('src/components/MapNavigator.tsx');
-    assert.ok(
-        /import\s*\{[^}]*getMapSignatureDrops[^}]*\}\s*from\s*['"]\.\.\/utils\/mapSignatureHints/.test(source)
-            || source.includes('getMapSignatureDrops'),
-        'MapNavigator should import getMapSignatureDrops'
-    );
-    assert.ok(
-        source.includes('getMapUndiscoveredSignatures'),
-        'MapNavigator should use getMapUndiscoveredSignatures'
-    );
-    // Node 뱃지 또는 detail 패널에 "전설" 레이블 노출
-    assert.ok(
-        /전설/.test(source),
-        'MapNavigator should include 전설 label for signature UI'
-    );
-    // 골드 팔레트 재사용
-    assert.ok(
-        /f6e7a2/.test(source),
-        'signature UI should use gold palette (#f6e7a2)'
-    );
+    assert.ok(source.includes('getMapDiscoveredSignatureDrops'), 'MapNavigator should use getMapDiscoveredSignatureDrops');
+    assert.ok(!source.includes('getMapUndiscoveredSignatures'), '미발견 각인 수 조회로 되돌리지 않는다');
+    assert.ok(!source.includes('undiscoveredSignatures'), '미발견 각인 필드 부재');
 });

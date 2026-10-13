@@ -2,47 +2,28 @@ import { test, expect } from '@playwright/test';
 import { startE2ERun } from './testHelpers';
 
 /**
- * E2E: 전설 도감 (LegendaryCodex) 진입 + 빈 상태 educational hint.
+ * E2E: 전설 도감 (LegendaryCodex) 진입 — 발견 0개 화면.
  *
- * 새 캐릭터는 signature 발견 0개 상태 → cycle 28에서 정착된
- * "data-testid=legendary-codex-empty-hint" gold banner가 노출되어야 함.
- *
- * cycle 64: 신규 E2E.
+ * 2026-10 Wave 103 (소유자 결정 §107.6 "전설 각인 획득처는 얻은 뒤에만 공개"): 새 캐릭터의 전설 도감은 어디서 얻는지
+ * (보스 · 공명 임계)를 안내하지 않는다. 이전 계약(cycle 28 빈 상태 안내 배너 · cycle 23 공명 카드 상시 노출)은 의도적으로 뒤집었다.
  */
 test.describe('Legendary Codex empty state', () => {
     test.beforeEach(async ({ page }) => {
         await startE2ERun(page, { openStatusConsole: true });
     });
 
-    test('Codex → LEGEND sub tab → 신규 캐릭터에 educational hint 노출', async ({ page }) => {
-        // 1. Codex 탭 진입
+    test('Codex → LEGEND sub tab → 신규 캐릭터에 획득처 안내 · 공명 카드가 없다', async ({ page }) => {
         const codexTab = page.locator('[data-testid$="-tab-codex"]').first();
         await expect(codexTab).toBeVisible({ timeout: 8_000 });
         await codexTab.click();
 
-        // 2. LEGEND sub tab 클릭 (Codex.tsx의 SUB_TABS에 'legend' 항목 존재)
         const legendButton = page.getByTestId('codex-tab-legend');
         await expect(legendButton).toBeVisible({ timeout: 8_000 });
         await legendButton.click();
 
-        // 3. 빈 상태 educational hint
-        const emptyHint = page.getByTestId('legendary-codex-empty-hint');
-        await expect(emptyHint).toBeVisible({ timeout: 5_000 });
-
-        // 4. hint 안에 핵심 키워드 포함 ("보스" + "전설 각인")
-        const hintText = await emptyHint.textContent();
-        expect(hintText || '').toMatch(/보스|전설/);
-    });
-
-    test('Codex → LEGEND → pity status panel 노출', async ({ page }) => {
-        const codexTab = page.locator('[data-testid$="-tab-codex"]').first();
-        await codexTab.click();
-
-        const legendButton = page.getByTestId('codex-tab-legend');
-        await legendButton.click();
-
-        // pity status는 항상 노출 (cycle 23 anticipation hint)
-        const pityStatus = page.getByTestId('legendary-codex-pity-status');
-        await expect(pityStatus).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('codex-legendary')).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('legendary-codex-empty-hint')).toHaveCount(0);
+        await expect(page.getByTestId('legendary-codex-pity-status')).toHaveCount(0);
+        await expect(page.getByTestId('codex-legendary')).not.toContainText('보스');
     });
 });

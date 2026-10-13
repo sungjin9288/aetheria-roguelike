@@ -29,20 +29,33 @@ import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
 const BOSS_NAME = '마왕'; // src/data/dropTables.ts: '마왕' → '마왕의 대낫'(0.15) / '성검 에테르니아'(0.1)
 const BOSS_STATS = { atk: 10, def: 5, maxHp: 100, maxMp: 50 };
+
+// 2026-10 Wave 103 (소유자 결정 §107.6 "전설 각인 획득처는 얻은 뒤에만 공개"): 힌트는 도감에 오른 각인만 말한다.
+const discovering = (names) => {
+    const base = makePlayerFixture();
+    const weapons = { ...base.stats.codex.weapons };
+    const armors = { ...base.stats.codex.armors };
+    for (const name of names) { weapons[name] = true; armors[name] = true; }
+    return makePlayerFixture({ stats: { ...base.stats, codex: { ...base.stats.codex, weapons, armors } } });
+};
 const ACTIONS = { getSelectedSkill: () => null };
 
-test('buildCombatView는 resolveEnemyBaseName으로 정규화한 이름을 getBossSignatureDrops에 질의한다', () => {
-    const player = makePlayerFixture();
+test('buildCombatView는 resolveEnemyBaseName으로 정규화한 이름의 드롭 중 발견한 각인만 후보로 둔다', () => {
     const enemy = { name: `강화된 ${BOSS_NAME}`, isBoss: true, hp: 500, maxHp: 500 };
 
     const expectedBaseName = CombatEngine.resolveEnemyBaseName(enemy);
     assert.equal(expectedBaseName, BOSS_NAME, '전제: prefix가 제거된 baseName이 마왕이어야 함');
     const expectedDrops = getBossSignatureDrops(expectedBaseName);
-    assert.ok(expectedDrops.length > 0, '전제: 마왕 drop table에 signature 아이템이 있어야 함');
+    assert.ok(expectedDrops.length > 1, '전제: 마왕 drop table에 signature 아이템이 둘 이상 있어야 함');
 
-    const view = buildCombatView({ player, enemy, stats: BOSS_STATS, selectedSkill: null, skillCooldown: 0, mobile: false });
-    assert.deepEqual(view.signatureDropCandidates, expectedDrops, '실제 drop table 교집합과 동일한 후보 목록');
-    assert.deepEqual(view.primarySignatureDrop, expectedDrops[0], '최고 확률 signature가 primary로 선택됨');
+    const unknown = buildCombatView({ player: makePlayerFixture(), enemy, stats: BOSS_STATS, selectedSkill: null, skillCooldown: 0, mobile: false });
+    assert.deepEqual(unknown.signatureDropCandidates, [], '발견 전에는 후보가 없다');
+    assert.equal(unknown.primarySignatureDrop, null);
+
+    const second = expectedDrops[1];
+    const view = buildCombatView({ player: discovering([second.name]), enemy, stats: BOSS_STATS, selectedSkill: null, skillCooldown: 0, mobile: false });
+    assert.deepEqual(view.signatureDropCandidates, [second], '발견한 각인만 — 실제 drop table 교집합의 부분집합');
+    assert.deepEqual(view.primarySignatureDrop, second);
 });
 
 test('buildCombatView는 보스가 아니면 signature 후보를 비워둔다', () => {
@@ -54,10 +67,15 @@ test('buildCombatView는 보스가 아니면 signature 후보를 비워둔다', 
     assert.equal(view.primarySignatureDrop, null);
 });
 
-test('CombatPanel은 보스가 signature를 떨굴 수 있을 때 combat-signature-drop-hint를 실제로 렌더링한다', () => {
-    const player = makePlayerFixture();
+test('CombatPanel은 보스가 발견한 각인을 떨굴 수 있을 때만 combat-signature-drop-hint를 렌더링한다', () => {
     const enemy = { name: BOSS_NAME, isBoss: true, hp: 500, maxHp: 500 };
     const expectedTopDrop = getBossSignatureDrops(BOSS_NAME)[0];
+    const hidden = renderStatic(createElement(CombatPanel, {
+        player: makePlayerFixture(), actions: ACTIONS, enemy, stats: BOSS_STATS, isAiThinking: false, mobile: false,
+    }));
+    assert.ok(!hidden.includes('combat-signature-drop-hint'), '발견 전에는 힌트 없음');
+    assert.ok(!hidden.includes(expectedTopDrop.name), '발견 전에는 각인 이름 없음');
+    const player = discovering([expectedTopDrop.name]);
 
     const html = renderStatic(createElement(CombatPanel, {
         player, actions: ACTIONS, enemy, stats: BOSS_STATS, isAiThinking: false, mobile: false,

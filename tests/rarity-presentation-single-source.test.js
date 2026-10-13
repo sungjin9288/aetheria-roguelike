@@ -53,8 +53,8 @@ test('A3: 한국어 희귀도 라벨은 MSG.RARITY_LABEL 하나뿐이다', async
         assert.equal(typeof MSG.RARITY_LABEL[rarity], 'string');
     }
 
+    // 2026-10 Wave 103: 성장 조언은 아직 얻지 못한 유물을 수로만 보인다(이름 · 등급을 그리지 않는다) — 라벨 소비처에서 빠졌다.
     const copies = [
-        'src/components/BuildAdvicePanel.tsx',
         'src/components/RelicChoicePanel.tsx',
         'src/components/tabs/CraftingPanel.tsx',
     ];
@@ -69,7 +69,6 @@ test('A3: 한국어 희귀도 라벨은 MSG.RARITY_LABEL 하나뿐이다', async
 
 test('A3: Tailwind 희귀도 색은 constants의 RARITY_CLASSES를 직접 import한다', async () => {
     const consumers = [
-        ['src/components/BuildAdvicePanel.tsx', '../data/constants'],
         ['src/components/RelicChoicePanel.tsx', '../data/constants'],
         ['src/components/tabs/SystemTab.tsx', '../../data/constants'],
     ];

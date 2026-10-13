@@ -17,6 +17,7 @@ import { getSellPrice } from '../src/utils/equipmentUtils.ts';
 import { makeItem } from '../src/utils/gameUtils.ts';
 import MaterialCodex from '../src/components/codex/MaterialCodex.tsx';
 import MonsterCodex from '../src/components/codex/MonsterCodex.tsx';
+import { SIGNATURE_NAMES } from '../src/utils/signatureDiscovery.ts';
 import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 
 /**
@@ -62,16 +63,24 @@ const candidateNames = sorted(new Set([
         ...(typeof map.boss === 'string' ? [map.boss] : []),
     ]),
 ]));
-const playerWhoKilled = (names) => makePlayerFixture({
+// 2026-10 Wave 103 (소유자 결정 §107.6 "전설 각인 획득처는 얻은 뒤에만 공개"): 몬스터 기록의 전리품 칩은 도감에 없는 각인을 숨긴다.
+//   엔진 대조는 각인을 모두 발견한 플레이어로 하고(그래야 칩 = 엔진 표), 발견 전 화면은 아래 별도 계약이 본다.
+const ALL_SIGNATURES_CODEX = (() => {
+    const base = structuredClone(INITIAL_STATE.player.stats.codex || {});
+    const bucket = (key) => ({ ...(base[key] || {}), ...Object.fromEntries(SIGNATURE_NAMES.map((name) => [name, true])) });
+    return { ...base, weapons: bucket('weapons'), armors: bucket('armors'), shields: bucket('shields') };
+})();
+const playerWhoKilled = (names, { signaturesDiscovered = true } = {}) => makePlayerFixture({
     stats: {
         ...structuredClone(INITIAL_STATE.player.stats),
         killRegistry: Object.fromEntries(names.map((name) => [name, 1])),
+        ...(signaturesDiscovered ? { codex: ALL_SIGNATURES_CODEX } : {}),
     },
 });
 
 // 한 종만 처치한 플레이어로 그 기록을 펼쳐 렌더한다 — 기록이 열리면 MonsterCodex가 그 몬스터를 목록에 올린다는 뜻이다.
-const renderMonsterDetail = (name) => renderStatic(createElement(MonsterCodex, {
-    player: playerWhoKilled([name]),
+const renderMonsterDetail = (name, options) => renderStatic(createElement(MonsterCodex, {
+    player: playerWhoKilled([name], options),
     initialSelectedMonster: name,
 }));
 
@@ -105,6 +114,18 @@ test('[몬스터 기록] 목록에 오르는 모든 몬스터의 전리품 칩�
         assert.deepEqual(sorted(getMonsterCodexDrops(name)), expected, `${name}: getMonsterCodexDrops = 엔진`);
     }
     assert.deepEqual(mismatches, [], `도감 전리품이 엔진과 다른 몬스터:\n${mismatches.join('\n')}`);
+});
+
+test('[몬스터 기록] 각인을 발견하기 전에는 전리품 칩이 그 각인을 말하지 않는다 — 나머지 칩은 엔진 표 그대로 (Wave 103)', () => {
+    const signatureSet = new Set(SIGNATURE_NAMES);
+    let monstersWithSignature = 0;
+    for (const name of listedMonsters().keys()) {
+        const expected = sorted([...engineTableDrops(name)].filter((drop) => !signatureSet.has(drop)));
+        if (expected.length !== engineTableDrops(name).size) monstersWithSignature += 1;
+        const shown = renderedDrops(renderMonsterDetail(name, { signaturesDiscovered: false }));
+        assert.deepEqual(sorted(shown), expected.map(escapeHtml), `${name}: 발견 전 칩 = 엔진 표 − 각인`);
+    }
+    assert.ok(monstersWithSignature >= 18, `각인을 내는 목록 몬스터 ${monstersWithSignature}종 — 픽스처 비공허`);
 });
 
 test('[몬스터 기록] 감사에서 틀렸던 행 — 나오지 않는 항목은 사라지고 숨어 있던 드롭(전설 각인 포함)이 보인다', () => {

@@ -5,6 +5,7 @@ import { getSignatureBaseName, getSignatureMetadata } from '../data/signatureIte
 import { isTwoHandWeapon, getNextEquipmentState } from './equipmentUtils.js';
 import { canEquip } from './equipmentValidation.js';
 import { findItemByName } from './gameUtils.js';
+import { isSignatureDiscovered } from './signatureDiscovery.js';
 
 /** signatureSets.json 세트 정의 1건 — 티어별 보너스는 동적 문자열 키("2"/"3"…)로
  *  조회하므로 Record<string, X>로 연다(값 모양은 JSON 실측). */
@@ -268,10 +269,11 @@ export const getSignatureSetProgress = (equip: EquipSlots | null | undefined) =>
 };
 
 /** 현재 signature를 유지하면서 다음 tier를 완성할 수 있는 장비만 안내한다. */
-export const getSignatureSetGuidance = (player: Pick<Player, 'job' | 'level' | 'equip'>) => {
+export const getSignatureSetGuidance = (player: Pick<Player, 'job' | 'level' | 'equip' | 'stats'>) => {
     const progress = getSignatureSetProgress(player.equip);
     if (!progress) return null;
-    const nextItems: Array<{ name: string; availableNow: boolean; requiredLevel: number | null }> = [];
+    // 2026-10 Wave 103 (소유자 결정 §107.6): 후보 중 아직 도감에 없는 각인은 이름을 보이지 않는다(`discovered: false`).
+    const nextItems: Array<{ name: string; availableNow: boolean; requiredLevel: number | null; discovered: boolean }> = [];
     const retained = Object.values(player.equip || {}).filter((item) => getRegistryEntry(item)?.setGroup === progress.key);
     const futurePlayer = { job: player.job, level: CONSTANTS.MAX_LEVEL };
     const previousJobGear = retained.some((item) => !canEquip(item!, futurePlayer, {}).ok);
@@ -290,6 +292,7 @@ export const getSignatureSetGuidance = (player: Pick<Player, 'job' | 'level' | '
             const validation = canEquip(candidate, player, player.equip || {});
             nextItems.push({
                 name,
+                discovered: isSignatureDiscovered(name, player as Player),
                 availableNow: validation.ok,
                 requiredLevel: !validation.ok && validation.reason === 'level' ? validation.reqLevel : null,
             });

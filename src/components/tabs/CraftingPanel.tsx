@@ -8,6 +8,7 @@ import { getSynthesisGroups, validateSynthesis } from '../../utils/synthesisUtil
 import { getItemRarity } from '../../utils/gameUtils';
 import { getCraftingInvestmentPreview, getSynthesisOutcomePreviews } from '../../utils/itemInvestmentPreview';
 import { getRecipeInputEnhanceUsage } from '../../utils/recipeInputSelection';
+import { getVisibleCraftRecipes } from '../../utils/signatureDiscovery';
 import FocusPanelHeader from '../FocusPanelHeader';
 import ItemIcon from '../icons/ItemIcon';
 import BagCraftingSection from './BagCraftingSection';
@@ -92,7 +93,8 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [useProtect, setUseProtect] = useState(false);
 
-  const recipes = DB.ITEMS.recipes || [];
+  // 2026-10 Wave 103: 아직 없는 전설 각인의 제작법은 보이지 않는다(획득처는 플레이어가 알아낸다).
+  const recipes = getVisibleCraftRecipes(DB.ITEMS.recipes || [], player);
 
   const synthGroups = useMemo(() => getSynthesisGroups(player.inv ?? []), [player.inv]);
 

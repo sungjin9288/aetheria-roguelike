@@ -9,7 +9,6 @@ export interface RouteTopologyEntry {
     isMissionRoute?: boolean;
     isBoss?: boolean;
     isLocked?: boolean;
-    undiscoveredSignatureCount?: number;
 }
 
 interface RouteTopologyProps {
@@ -125,17 +124,6 @@ const RouteTopology = ({
                                             <span className="break-words">
                                                 {blindMap ? '정보 없음' : [route.levelLabel, route.badge].filter(Boolean).join(' · ')}
                                             </span>
-                                            {!blindMap && (route.undiscoveredSignatureCount || 0) > 0 && (
-                                                <span
-                                                    data-testid={`move-recommendation-signature-${index}`}
-                                                    data-signature-count={route.undiscoveredSignatureCount}
-                                                    className="inline-flex shrink-0 items-center gap-0.5 text-[#f6e7a2]"
-                                                    aria-label={`미발견 전설 각인 ${route.undiscoveredSignatureCount}종`}
-                                                >
-                                                    <Sparkles size={9} aria-hidden="true" />
-                                                    {route.undiscoveredSignatureCount}
-                                                </span>
-                                            )}
                                         </span>
                                     </span>
                                 </span>

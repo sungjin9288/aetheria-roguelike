@@ -135,9 +135,9 @@ src/
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     ├── wanderingMerchant.ts   # 떠돌이 행상인 만남 · 재고 (탐험 수 · 지역 해시, 탐험 난수 미사용 — Wave 75)
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 446 파일 / 6,063 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 447 파일 / 6,065 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
-                      #   + e2e/ (Playwright 53 스펙 / 160 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
+                      #   + e2e/ (Playwright 53 스펙 / 159 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
 functions/api/        # Cloudflare Pages Functions (ai-proxy.js)
 android/ ios/         # Capacitor 네이티브 프로젝트
@@ -277,6 +277,7 @@ npm run mobile:doctor     # Capacitor 환경 점검
   **이번 회차에 새긴 끝없는 단계는 회차 단위 기록이다**(Wave 99, 소유자 결정 §103.4 b · "회차 단위로"): `meta.mirrorEndlessCycle = { rank, atk, hp, mp }`를 거울 구매 리듀서가 `recordMirrorEndlessCycle`로 올리고, 읽기는 `getMirrorEndlessCycle` 하나다(기록 단계 ≠ 지금 `prestigeRank`면 0). 영구 meta라 사망 재시작을 넘어 회차 내내 쌓인다 — **런 범위(`player` 필드)로 옮기지 말 것**(회차당 사망 약 2번이라 계승 화면이 마지막 사망 이후만 보인다). 계승 미리보기가 돌아보고 다음 회차 meta에서는 지운다(Wave 95 다시 뽑기 기록과 같은 방식). 게임 판정은 이 기록을 읽지 않는다. 계승 화면에 보이는 값은 회차마다 세 능력치 합 15 ~ 20단계(중앙값)다(원장 §104). `tests/mirror-endless-cycle-record.test.js`
   **계승 · 진 엔딩 화면은 "이번 회차 요약"을 그린다 — 각인 · 정예 칭호는 회차 시작 기준점과의 차이다**(Wave 100, 소유자 결정 §104.4 c): 줄(회차 규칙 정복 · 새 전설 각인 · 새 정예 칭호 · 끝없는 거울)은 `getCycleSummaryLines`(`utils/cycleSummary.ts`)가 만들고 `AscensionCycleSummary`가 두 화면에서 그린다. 기준점 `meta.cycleStart = { rank, signatures, eliteTitles }`는 계승 리듀서(`ASCEND`) 한 곳이 새 단계로 남긴다(`snapshotCycleStart` — 계승 단계는 `ASCEND`에서만 바뀐다). 읽기는 `getCycleStart` 하나다: 단계가 맞는 기록, 단계 0은 빈 기준점, 그 밖(이전 세이브)은 null — null이면 각인 · 정예 줄을 그리지 않는다(지어내지 말 것). **사건마다 기록하는 방식으로 바꾸지 말 것** — 각인 발견 지점(전리품 · 정복 · 체인 · 보스 보상 …)이 여럿이라 하나만 빠져도 줄이 틀린다. 게임 판정은 기준점을 읽지 않는다. 자연 플레이에서 새 각인은 회차마다 1개 이상이고 정예 칭호는 19/47에서 멈춘다(원장 §105). `tests/ascension-cycle-summary.test.js`
 - **칭호를 얻는 방법은 안내하지 않는다 — 플레이어가 직접 알아낸다**(Wave 102, 소유자 원칙 "칭호 안내 등은 하지 말자. 칭호가 뭘 해야 얻어지는지 플레이어가 직접 알아내야지"): 화면은 가진 칭호(이름 · 효과)와 모은 수(정예 N/47 · 계승 요약의 "새 정예 칭호 N개")만 보이고, 아직 없는 칭호의 조건 · 지역 · 갈 곳은 보이지 않는다. Wave 101의 정예 칭호 안내(지도 배지 · 칭호 목록 안내 줄 · 계승 요약 "다음 회차에 들를 곳" · 칭호 0개에도 보이던 묶음)는 되돌렸다 — 다시 넣지 말 것. 대신 칭호마다 실제로 얻을 길이 있다는 것은 계약이 지킨다(`tests/elite-title-attainable.test.js` — 47곳 모두 진입 레벨에서 실제 스폰으로 정예가 나온다). 회차 규칙 카드의 정복 칭호(Wave 89)는 고르는 카드의 보상 미리보기라 이 원칙 밖이다(원장 §107).
+- **얻는 방법은 얻은 뒤에만 보인다 — 전설 각인 · 진 엔딩 · 계승 목표 · 미보유 유물 · 장비 이름**(Wave 103, 소유자 결정 §107.6): 각인 획득처(지도 · 이동 경로 · 보스 기록 · 전투 배너 · 몬스터 기록 칩 · 제작법 · 세트 후보)는 `isSignatureDiscovered`(도감 등록) 하나를 읽고, 도감에 없는 각인의 이름 · 확률 · 지역 · 수를 그리지 않는다(`getMapDiscoveredSignatureDrops` · `getDiscoveredBossSignatureDrops` · `withoutUndiscoveredSignatures` · `getVisibleCraftRecipes`) — 미발견 수 칩(✦N) · 배지 · 빈 도감 안내 · 미발견 공명 카드를 되살리지 말 것. 진 엔딩 봉인 칸은 첫 원시의 파편(또는 진엔딩) 뒤에만 보이고 계승 단계 · 파편 확률을 말하지 않는다(`getEndgameJourney`, 정산은 그대로). 계승 화면은 다음 계승 목표를 미리 보이지 않는다. 성장 조언의 미보유 추천 유물은 수만, 직업 세트 목록의 가진 적 · 도감에 오른 적 없는 장비는 `???`(`isEquipmentDiscovered`). 업적 조건 · 유물 조합 힌트 · 회차 규칙 카드 · 임무 · 시즌 패스는 그대로다(고를 때의 값). 숨긴 것을 실제로 얻을 수 있다는 것은 계약이 지킨다(몬스터 기록 칩 = 엔진 표 · 정예 47곳 · 진 보스 정산). `tests/discovery-first-surfaces.test.js` · 원장 §108.
 
 ---
 

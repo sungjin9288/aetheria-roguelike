@@ -11,8 +11,7 @@ const EndgameJourney = ({ player }: { player: Player }) => {
             {!journey.completed && (
                 <>
                     <p className="mt-2 text-sm leading-6 text-slate-300">{MSG.ENDGAME_JOURNEY_SCOPE}</p>
-                    <p className="mt-3 text-sm leading-6 text-white">{MSG.ENDGAME_JOURNEY_RANK(journey.rank, journey.requiredRank)}</p>
-                    <p className="text-sm leading-6 text-white">{MSG.ENDGAME_JOURNEY_SHARDS(journey.shards, journey.requiredShards)}</p>
+                    <p data-testid="endgame-journey-shards" className="mt-3 text-sm leading-6 text-white">{MSG.ENDGAME_JOURNEY_SHARDS(journey.shards, journey.requiredShards)}</p>
                 </>
             )}
             <p data-testid="endgame-journey-action" className="mt-3 text-sm leading-6 text-[#b9f1ec]">{journey.action}</p>

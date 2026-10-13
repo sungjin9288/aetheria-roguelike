@@ -17,36 +17,45 @@ const playerAt = (rank = 0, shards = 0) => {
 };
 const demonKing = { name: '마왕', baseName: '마왕', isBoss: true, hp: 0, maxHp: 1 };
 
-test('마왕성 진행은 발견 전에는 숨기고 실제 예언 단계와 영구 기록으로 공개한다', () => {
+// 2026-10 Wave 103 (소유자 결정 §107.6 "진 엔딩 조건 숨김, 첫 단서 뒤에만"): 봉인 칸은 첫 원시의 파편(또는 진엔딩) 뒤에만 보이고,
+//   보여도 열리는 조건(계승 단계 · 파편 확률)을 말하지 않는다. 계승 · 마왕 처치 · 예언 단계만으로는 열리지 않는다.
+test('마왕성 봉인은 첫 파편 전에는 숨기고 계승 · 마왕 처치 · 예언만으로는 열지 않는다', () => {
+    const hidden = [
+        playerAt(), playerAt(1), playerAt(3), playerAt(5),
+        { ...playerAt(), stats: { demonKingSlain: 1 } },
+        { ...playerAt(), eventChainProgress: { ancient_prophecy: 2 } },
+    ];
     for (const value of [undefined, 0, 1, 'failed', { collected: true }, NaN]) {
-        const player = { ...playerAt(), eventChainProgress: { ancient_prophecy: value } };
+        hidden.push({ ...playerAt(), eventChainProgress: { ancient_prophecy: value } });
+    }
+    for (const player of hidden) {
         assert.equal(getEndgameJourney(player), null);
         assert.equal(renderStatic(createElement(EndgameJourney, { player })), '');
     }
-    for (const player of [playerAt(1), playerAt(0, 1), { ...playerAt(), stats: { demonKingSlain: 1 } }, { ...playerAt(), eventChainProgress: { ancient_prophecy: 2 } }]) {
+    for (const player of [playerAt(0, 1), playerAt(2, 3), { ...playerAt(), meta: { ...playerAt().meta, endgame: { primalShards: 0, trueEndingSeen: true } } }]) {
         assert.ok(getEndgameJourney(player));
     }
 });
 
-test('현재 계승과 파편의 다음 행동은 실제 마왕 정산과 일치하고 마지막 획득도 안내한다', () => {
-    for (const rank of [1, 2, 3, 4]) {
-        for (const shards of [0, 2, 3]) {
+test('보이는 봉인 칸은 실제 마왕 정산과 같은 준비 판정을 쓰되 계승 단계 · 확률을 말하지 않는다', () => {
+    for (const rank of [0, 1, 2, 3, 4]) {
+        for (const shards of [1, 2, 3]) {
             const player = playerAt(rank, shards);
             const before = structuredClone(player);
             const view = getEndgameJourney(player);
             const result = resolveEndgameVictory({ player, deadEnemy: demonKing, receiptKey: `preview:${rank}:${shards}`, rng: () => 1, now: 1000 });
             assert.equal(view.ready, result.outcome === 'true_boss');
-            assert.equal(view.rank, rank, '다음 계승 단계를 현재 단계로 쓰지 않는다');
+            assert.equal('rank' in view, false, '계승 단계를 뷰에 싣지 않는다');
+            assert.doesNotMatch(view.action, /계승 \d|\d+%/, '열리는 조건(계승 단계 · 확률)을 말하지 않는다');
             assert.deepEqual(player, before, '표시는 상태를 변경하지 않는다');
+            const html = renderStatic(createElement(EndgameJourney, { player }));
+            assert.doesNotMatch(html, /계승 \d+단계|필요 \d|\d+% 확률/);
+            assert.match(html, new RegExp(`원시의 파편 ${shards}/`));
         }
     }
-    const player = playerAt(3, 2);
-    assert.match(getEndgameJourney(player).action, /마지막 파편.*곧바로 다음 전투/);
-    const won = resolveEndgameVictory({ player, deadEnemy: demonKing, receiptKey: 'last:shard:1', rng: () => 0, now: 1000 });
-    assert.equal(won.outcome, 'true_boss');
-    assert.equal(won.player.meta.endgame.primalShards, 0);
-    assert.match(getEndgameJourney(playerAt(2, 3)).action, /계승 3단계에 도달/);
-    assert.match(getEndgameJourney(playerAt(2, 2)).action, /50%/);
+    // 준비 완료 경고는 조건이 아니라 곧 일어날 일이라 그대로 — 다음 토벌에서 연속 전투가 시작된다.
+    assert.match(getEndgameJourney(playerAt(3, 3)).action, /다음 마왕 토벌 직후/);
+    assert.equal(getEndgameJourney(playerAt(2, 3)).action, getEndgameJourney(playerAt(1, 3)).action);
 });
 
 test('완주 기록은 진입 경로와 무관하게 우선 표시하고 파편 진행은 계승 뒤 보존한다', () => {

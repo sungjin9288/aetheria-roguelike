@@ -40,16 +40,15 @@ test('ascension outcome compares current and next world difficulty with matching
     assert.equal(outcome.nextEnemyRewardPercent, 24);
 });
 
-test('ascension milestone ladder exposes only implemented ranks and the next long-term target', () => {
+test('ascension milestone ladder exposes only implemented ranks — the next target stays hidden (Wave 103)', () => {
     assert.deepEqual(PRESTIGE_MILESTONES.map((entry) => entry.rank), [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]);
 
     const rankThree = getAscensionOutcome({ prestigeRank: 2 });
     assert.equal(rankThree.milestone?.name, '심연의 메아리');
-    assert.equal(rankThree.upcomingMilestone?.rank, 4);
+    assert.equal('upcomingMilestone' in rankThree, false);
 
     const beyondLadder = getAscensionOutcome({ prestigeRank: 10 });
     assert.equal(beyondLadder.milestone, null);
-    assert.equal(beyondLadder.upcomingMilestone, null);
 });
 
 test('ascension preview and confirmation share one outcome model', async () => {

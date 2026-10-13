@@ -34,7 +34,6 @@ export interface AscensionOutcome {
     title: string;
     meta: AscensionMeta;
     milestone: PrestigeMilestone | null;
-    upcomingMilestone: PrestigeMilestone | null;
     currentEnemyStatPercent: number;
     nextEnemyStatPercent: number;
     currentEnemyRewardPercent: number;
@@ -99,7 +98,6 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
             bonusMp: carriedMeta.bonusMp + BALANCE.PRESTIGE_MP_BONUS,
         },
         milestone: PRESTIGE_MILESTONES.find((entry) => entry.rank === nextRank) || null,
-        upcomingMilestone: PRESTIGE_MILESTONES.find((entry) => entry.rank > nextRank) || null,
         currentEnemyStatPercent: Math.round(currentRank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK * 100),
         nextEnemyStatPercent: Math.round(nextRank * BALANCE.PRESTIGE_ENEMY_STAT_PER_RANK * 100),
         currentEnemyRewardPercent: Math.round(currentRank * BALANCE.PRESTIGE_ENEMY_REWARD_PER_RANK * 100),
