@@ -135,7 +135,7 @@ src/
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     ├── wanderingMerchant.ts   # 떠돌이 행상인 만남 · 재고 (탐험 수 · 지역 해시, 탐험 난수 미사용 — Wave 75)
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 446 파일 / 6,068 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 446 파일 / 6,063 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
                       #   + e2e/ (Playwright 53 스펙 / 160 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
@@ -276,7 +276,7 @@ npm run mobile:doctor     # Capacitor 환경 점검
   **계승 화면은 계승 뒤 정수로 살 수 있는 끝없는 단계 수를 알린다**(Wave 98, 소유자 결정 §102.4 b): 셈은 `getMirrorEndlessAffordance`(`systems/mirrorUpgrades.ts`) 하나이고 계승 미리보기 `getAscensionOutcome().mirrorEndless`가 계승한 뒤의 정수(사다리 이월 + 계승 보상)로 부른다 — 화면에서 단계 수를 다시 세지 말 것. 매번 가장 싼 단계를 사는 순서가 최대이고, 상한 뒤는 닫힌 식이다(정수 크기만큼 반복하지 말 것). 표시만이라 자연 플레이는 바이트 동일이다. 이 줄은 "지금 살 수 있는 것"이다 — 회차 중에 사는 플레이어에게는 1 ~ 2단계로 보인다(원장 §103). `tests/mirror-endless-ascension-guide.test.js` · e2e `ascension-journey-design.spec.ts`
   **이번 회차에 새긴 끝없는 단계는 회차 단위 기록이다**(Wave 99, 소유자 결정 §103.4 b · "회차 단위로"): `meta.mirrorEndlessCycle = { rank, atk, hp, mp }`를 거울 구매 리듀서가 `recordMirrorEndlessCycle`로 올리고, 읽기는 `getMirrorEndlessCycle` 하나다(기록 단계 ≠ 지금 `prestigeRank`면 0). 영구 meta라 사망 재시작을 넘어 회차 내내 쌓인다 — **런 범위(`player` 필드)로 옮기지 말 것**(회차당 사망 약 2번이라 계승 화면이 마지막 사망 이후만 보인다). 계승 미리보기가 돌아보고 다음 회차 meta에서는 지운다(Wave 95 다시 뽑기 기록과 같은 방식). 게임 판정은 이 기록을 읽지 않는다. 계승 화면에 보이는 값은 회차마다 세 능력치 합 15 ~ 20단계(중앙값)다(원장 §104). `tests/mirror-endless-cycle-record.test.js`
   **계승 · 진 엔딩 화면은 "이번 회차 요약"을 그린다 — 각인 · 정예 칭호는 회차 시작 기준점과의 차이다**(Wave 100, 소유자 결정 §104.4 c): 줄(회차 규칙 정복 · 새 전설 각인 · 새 정예 칭호 · 끝없는 거울)은 `getCycleSummaryLines`(`utils/cycleSummary.ts`)가 만들고 `AscensionCycleSummary`가 두 화면에서 그린다. 기준점 `meta.cycleStart = { rank, signatures, eliteTitles }`는 계승 리듀서(`ASCEND`) 한 곳이 새 단계로 남긴다(`snapshotCycleStart` — 계승 단계는 `ASCEND`에서만 바뀐다). 읽기는 `getCycleStart` 하나다: 단계가 맞는 기록, 단계 0은 빈 기준점, 그 밖(이전 세이브)은 null — null이면 각인 · 정예 줄을 그리지 않는다(지어내지 말 것). **사건마다 기록하는 방식으로 바꾸지 말 것** — 각인 발견 지점(전리품 · 정복 · 체인 · 보스 보상 …)이 여럿이라 하나만 빠져도 줄이 틀린다. 게임 판정은 기준점을 읽지 않는다. 자연 플레이에서 새 각인은 회차마다 1개 이상이고 정예 칭호는 19/47에서 멈춘다(원장 §105). `tests/ascension-cycle-summary.test.js`
-  **아직 없는 정예 칭호는 "갈 곳"으로 안내한다 — 판정은 `getEliteTitleGuide` 하나다**(Wave 101, 소유자 결정 §105.4 b): 지금 걸어 들어갈 수 있는 곳(가까운 순, `findMapPath`) · 레벨이 모자란 곳(경로 게이트 순) · 걸어서 못 들어가는 곳(계절 · 열쇠)으로 나누고, 진입 레벨은 실제 이동 규칙의 경로 게이트(`getMapRouteGate`)다 — 선언 레벨로 바꾸지 말 것(갈 수 없는 곳을 가깝다고 말한다). 지도 목록 배지는 지금 갈 수 있는 곳만(`isEliteTitleTargetNow`), 기록 탭 칭호 목록은 안내 줄(칭호 0개에도 묶음), 계승 · 진 엔딩 요약은 다음 회차 경로(진입 레벨 순, 특수 지역 제외)다. 47곳 모두 실제 스폰에서 정예가 나온다(계약) — 정예가 나올 수 없는 지역이 생기면 안내에서 빼야 한다. 표시만이다(원장 §106). `tests/elite-title-guide.test.js`
+- **칭호를 얻는 방법은 안내하지 않는다 — 플레이어가 직접 알아낸다**(Wave 102, 소유자 원칙 "칭호 안내 등은 하지 말자. 칭호가 뭘 해야 얻어지는지 플레이어가 직접 알아내야지"): 화면은 가진 칭호(이름 · 효과)와 모은 수(정예 N/47 · 계승 요약의 "새 정예 칭호 N개")만 보이고, 아직 없는 칭호의 조건 · 지역 · 갈 곳은 보이지 않는다. Wave 101의 정예 칭호 안내(지도 배지 · 칭호 목록 안내 줄 · 계승 요약 "다음 회차에 들를 곳" · 칭호 0개에도 보이던 묶음)는 되돌렸다 — 다시 넣지 말 것. 대신 칭호마다 실제로 얻을 길이 있다는 것은 계약이 지킨다(`tests/elite-title-attainable.test.js` — 47곳 모두 진입 레벨에서 실제 스폰으로 정예가 나온다). 회차 규칙 카드의 정복 칭호(Wave 89)는 고르는 카드의 보상 미리보기라 이 원칙 밖이다(원장 §107).
 
 ---
 

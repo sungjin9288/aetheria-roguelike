@@ -661,8 +661,6 @@ export const MSG = {
     MAP_BADGE_HIGH_EVENT: '이벤트↑',
     MAP_BADGE_SHOP: '상점',
     MAP_BADGE_GRAVE: '유해 회수↑',
-    // 2026-10 Wave 101: 아직 정예 칭호가 없고 지금 레벨로 걸어 들어갈 수 있는 지역.
-    MAP_BADGE_ELITE_TITLE: '정예 칭호',
 
     // --- 복귀 브리핑 카드 (리텐션 훅) ---
     RETURN_BRIEFING_TITLE: '복귀를 환영합니다',
@@ -824,16 +822,6 @@ export const MSG = {
     CYCLE_SUMMARY_SIGNATURES_NONE: (discovered: number, total: number) => `새 전설 각인 없음 (도감 ${discovered}/${total})`,
     CYCLE_SUMMARY_ELITE: (gained: number, owned: number, total: number) => `새 정예 칭호 ${gained}개 (${owned}/${total})`,
     CYCLE_SUMMARY_ELITE_NONE: (owned: number, total: number) => `새 정예 칭호 없음 (${owned}/${total})`,
-    // 2026-10 Wave 101: 정예 칭호 안내 — 칭호 목록 · 계승 화면 요약.
-    ELITE_GUIDE_STEP: (map: string, steps: number) => `${map}(이동 ${steps})`,
-    ELITE_GUIDE_LEVEL: (map: string, level: number) => `${map}(Lv${level})`,
-    ELITE_GUIDE_MORE: (shown: string, rest: number) => `${shown} 외 ${rest}곳`,
-    ELITE_GUIDE_NEAR: (count: number, list: string) => `지금 갈 수 있는 곳 ${count}곳: ${list}`,
-    ELITE_GUIDE_NEXT: (list: string) => `레벨을 올리면 갈 곳: ${list}`,
-    ELITE_GUIDE_SPECIAL: (list: string) => `계절 · 열쇠로 들어가는 곳: ${list}`,
-    ELITE_GUIDE_DONE: '모든 지역의 정예 칭호를 모았습니다.',
-    ELITE_GUIDE_HINT: '그 지역에서 정예를 만나기만 하면 칭호를 얻습니다.',
-    CYCLE_SUMMARY_ELITE_ROUTE: (list: string) => `다음 회차에 들를 곳: ${list}`,
     // --- 2026-09 D1: 플레이어가 직접 부르는 정찰 ---
     SCOUT_ACTION_LABEL: '정찰',
     SCOUT_ACTION_COST_LABEL: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
