@@ -41,6 +41,7 @@ import RelicIcon from '../icons/RelicIcon';
 import { countOwnedRelics } from '../../systems/chaosHeart';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { GameMode } from '../../reducers/gameStates';
+import { getEliteTitleGuideLines } from '../../utils/eliteTitleGuide';
 
 const SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
 
@@ -611,7 +612,8 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                         </summary>
                         <div className="space-y-1 border-t border-white/8 py-2">
                             {titleGroups.regular.map((id: string) => renderTitleButton(id))}
-                            {titleGroups.elite.length > 0 && (
+                            {/* 2026-10 Wave 101: 정예 칭호가 하나도 없어도 묶음과 안내를 보인다 — 빈칸이 "갈 곳"이 된다. */}
+                            {ELITE_TITLE_MAPS.length > 0 && (
                                 <details data-testid="system-elite-titles" className="group/elite border-t border-white/8">
                                     <summary className="flex min-h-[48px] cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-0.5 py-2 font-readable text-xs font-semibold text-amber-200 [&::-webkit-details-marker]:hidden">
                                         <span className="shrink-0">{MSG.ELITE_TITLE_GROUP(eliteTitleTotal.count, ELITE_TITLE_MAPS.length)}</span>
@@ -621,6 +623,9 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                         <ChevronDown size={14} className="shrink-0 transition-transform group-open/elite:rotate-180" />
                                     </summary>
                                     <div className="space-y-1 pb-1">
+                                        <div data-testid="system-elite-titles-guide" className="space-y-0.5 px-1 pb-1.5 font-readable text-[11px] leading-relaxed text-slate-300/85">
+                                            {getEliteTitleGuideLines(player).map((line) => <p key={line}>{line}</p>)}
+                                        </div>
                                         {titleGroups.elite.map((id: string) => renderTitleButton(id))}
                                     </div>
                                 </details>

@@ -134,6 +134,7 @@ const BADGE_TONE: Record<string, string> = {
     shop: 'upgrade',
     highEvent: 'recommended',
     grave: 'recommended',
+    eliteTitle: 'upgrade',
 };
 
 const getRewardLabel = (entry: MapEntry) => {

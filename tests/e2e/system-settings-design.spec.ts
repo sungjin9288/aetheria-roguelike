@@ -100,6 +100,12 @@ test.describe('System settings design', () => {
         await group.locator('summary').click();
         await expect(page.getByTestId('system-title-elite:수정 동굴')).toContainText('수정 동굴의 정예 목격자');
         await expect(page.getByTestId('system-title-elite:수정 동굴')).toContainText('장착하지 않아도 모은 칭호만큼 합산');
+        // 2026-10 Wave 101: 아직 없는 정예 칭호는 "갈 곳"으로 안내한다 — 지금 걸어 들어갈 수 있는 곳(가까운 순) · 레벨이 모자란 곳.
+        const guide = page.getByTestId('system-elite-titles-guide');
+        await expect(guide).toContainText('지금 갈 수 있는 곳');
+        await expect(guide).toContainText('레벨을 올리면 갈 곳');
+        await expect(guide).toContainText('그 지역에서 정예를 만나기만 하면 칭호를 얻습니다.');
+        await expect(guide).not.toContainText('수정 동굴(');
     });
 
     test('진단과 초기화는 보조 영역에서 필요할 때만 드러난다', async ({ page }) => {
