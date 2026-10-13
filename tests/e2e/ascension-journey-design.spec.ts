@@ -174,6 +174,49 @@ test.describe('계승 화면 — 회차 규칙 카드 · 선택형 규칙 미리
     });
 });
 
+// 2026-10 Wave 105: 기본 여섯 규칙을 모두 정복한 뒤의 계승 — 패는 겹친 규칙뿐이고, 고른 카드의 두 비틀기가 잠긴 칸이 되어 새 여정에 강제된다.
+test.describe('계승 화면 — 겹친 회차 규칙', () => {
+    test('2순환 패는 겹친 카드이고 두 비틀기를 함께 보이며, 계승하면 두 비틀기가 새 여정에 걸린다 (375px)', async ({ page }) => {
+        await page.setViewportSize({ width: 375, height: 667 });
+        await startE2ERun(page);
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.(6, 'e2e-stacked', false, true));
+        await expect(page.getByTestId('ascension-screen')).toBeVisible({ timeout: 8_000 });
+
+        const offer = page.getByTestId('ascension-rule-offer');
+        await offer.scrollIntoViewIfNeeded();
+        const cards = offer.locator('[data-testid^="ascension-rule-card-"]');
+        await expect(cards).toHaveCount(3);
+        const ids = await cards.evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-testid')));
+        for (const id of ids) expect(id).toMatch(/^ascension-rule-card-stacked_/);
+        await expect(offer).toContainText(' + ');
+
+        const locked = page.locator('[data-testid^="ascension-challenge-"][aria-disabled="true"]');
+        await expect(locked).toHaveCount(2);
+
+        const geometry = await offer.evaluate((root) => ({
+            minFont: Math.min(...[...root.querySelectorAll<HTMLElement>('*')].filter((node) => (node.textContent || '').trim())
+                .map((node) => parseFloat(getComputedStyle(node).fontSize))),
+            minButton: Math.min(...[...root.querySelectorAll<HTMLElement>('button')].map((node) => node.getBoundingClientRect().height)),
+            overflow: root.scrollWidth - root.clientWidth,
+            pageWidth: document.documentElement.scrollWidth,
+            viewportWidth: window.innerWidth,
+        }));
+        expect(geometry.minFont).toBeGreaterThanOrEqual(11);
+        expect(geometry.minButton).toBeGreaterThanOrEqual(44);
+        expect(geometry.overflow).toBeLessThanOrEqual(1);
+        expect(geometry.pageWidth).toBeLessThanOrEqual(geometry.viewportWidth);
+
+        const lockedIds = await locked.evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-testid')!.replace('ascension-challenge-', '')));
+        await page.getByTestId('ascension-confirm').click();
+        await expect(page.getByTestId('ascension-screen')).toBeHidden();
+        const after = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()))!;
+        expect(after.prestigeRank).toBe(7);
+        expect(after.ascensionRuleId).toMatch(/^stacked_/);
+        expect(after.ascensionSecondModifier).not.toBeNull();
+        expect(after.challengeModifiers.slice(0, 2).sort()).toEqual([...lockedIds].sort());
+    });
+});
+
 // 2026-10 Wave 95: 회차 규칙 패 다시 뽑기 — 첫 번째는 무료이고 처음 패로 돌아갈 수 없으며, 그 뒤는 넘어가는 정수 사다리를 내려놓는다.
 //   이 시드(2단계 → 3단계, 영수증 e2e-reroll, 사다리 400단계)의 패: 처음 = dry_dragon_road · shadow_legion · lost_pilgrimage,
 //   첫 다시 뽑기 = shadow_legion · fading_dimension · empty_crusade(덱 전체에서 다시 무작위), 둘째 = fading_dimension · lost_pilgrimage · shadow_legion.

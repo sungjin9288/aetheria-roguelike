@@ -1,4 +1,4 @@
-import { ASCENSION_RULES } from './ascensionRules.js';
+import { ALL_ASCENSION_RULES } from './ascensionRules.js';
 
 /**
  * 칭호 시스템 (Title System) — v4.0
@@ -274,11 +274,12 @@ export const TITLES = Object.freeze([
 
     // ─── 수집 완주 계열 (2026-10 Wave 89, 소유자 결정 "반복하면서 칭호 · 세트를 다 모으는 콜렉터의 재미") ───
     //   회차 규칙 정복 칭호는 규칙 데이터(`ascensionRules.ts`)에서 만든다 — 이름이 두 곳에서 갈라지지 않게.
-    ...ASCENSION_RULES.map((rule, index) => ({
+    //   2026-10 Wave 105: 겹친 규칙 여섯의 칭호도 같은 방식이다(번호 7 ~ 12 — `ALL_ASCENSION_RULES` 순서).
+    ...ALL_ASCENSION_RULES.map((rule, index) => ({
         id: rule.conquestTitle.id,
         name: rule.conquestTitle.name,
         cond: { type: 'ruleConquest', val: index + 1 },
-        color: 'text-orange-300',
+        color: rule.stackedOf ? 'text-rose-300' : 'text-orange-300',
     })),
     {
         id: 'conquest_all',
@@ -547,6 +548,13 @@ export const TITLE_PASSIVES: Record<string, TitlePassive> = Object.freeze({
     conquest_shadow:    { atk: 5, crit: 0.02, label: 'ATK +5 · CRIT +2%' },
     conquest_unbound:   { atk: 4, def: 2, crit: 0.02, label: 'ATK +4 · DEF +2 · CRIT +2%' },
     conquest_all:       { atk: 6, def: 3, hp: 40, crit: 0.02, label: 'ATK +6 · DEF +3 · HP +40 · CRIT +2%' },
+    // 2026-10 Wave 105: 겹친 규칙 정복 칭호 — 장착 패시브는 바탕 규칙 칭호보다 한 단계 위(장착은 하나뿐이라 영구 성장은 칭호 하나만큼이다).
+    conquest_stacked_lost_pilgrimage:  { hp: 45, def: 3, label: 'HP +45 · DEF +3' },
+    conquest_stacked_empty_crusade:    { atk: 6, crit: 0.02, label: 'ATK +6 · CRIT +2%' },
+    conquest_stacked_dry_dragon_road:  { atk: 4, hp: 30, def: 2, label: 'ATK +4 · HP +30 · DEF +2' },
+    conquest_stacked_tangled_legends:  { atk: 6, def: 3, crit: 0.02, label: 'ATK +6 · DEF +3 · CRIT +2%' },
+    conquest_stacked_fading_dimension: { mp: 30, crit: 0.03, label: 'MP +30 · CRIT +3%' },
+    conquest_stacked_shadow_legion:    { atk: 7, crit: 0.03, label: 'ATK +7 · CRIT +3%' },
     set_collector:      { atk: 5, def: 2, hp: 30, label: 'ATK +5 · DEF +2 · HP +30' },
     legend_complete:    { atk: 6, crit: 0.03, hp: 30, label: 'ATK +6 · CRIT +3% · HP +30' },
 

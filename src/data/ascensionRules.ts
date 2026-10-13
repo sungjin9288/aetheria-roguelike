@@ -45,6 +45,12 @@ export interface AscensionRuleDef {
      * 밝힌다 — 순환(1 ~ 6 · 7 ~ 12단계)으로 고르는 규칙은 그대로다.
      */
     outlook?: readonly AscensionRuleOutlook[];
+    /**
+     * 2026-10 Wave 105 (소유자 결정 §109.4 (c) "2순환부터 겹친 카드만 · 카드마다 무작위 두 번째 비틀기 · 새 정복 칭호 6개 + 각인"):
+     * 겹친 규칙이 바탕으로 삼는 기본 규칙 id. 겹친 규칙은 기본 규칙의 비틀기 · 표적 세트 · 선택형 여부를 그대로 들고, 카드마다 무작위
+     * 두 번째 비틀기를 하나 더 얹는다(`systems/ascensionRule.ts` `getStackedSecondModifier`). 칭호는 자기 것이다.
+     */
+    stackedOf?: string;
 }
 
 export interface AscensionRuleOutlook {
@@ -115,3 +121,41 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         ],
     },
 ]);
+
+/**
+ * 겹친 회차 규칙 (2026-10 Wave 105, 소유자 결정 §109.4 (c)) — 기본 여섯 규칙을 모두 한 번 정복하면(1순환 끝) 덱이 이 여섯으로 바뀐다.
+ * 13회차 측정(원장 §109)에서 2순환의 무거운 회차 사망이 1순환의 37 ~ 63%로 줄었다(영구 성장이 비틀기 하나의 무게를 따라잡는다) —
+ * 비틀기를 하나 더 얹어 무게를 다시 올린다. 수치 보정이 아니라 콘텐츠다(소유자 원칙 §53.1).
+ * 두 번째 비틀기는 카드마다 처치 영수증 · 다음 단계 · 다시 뽑기 횟수 · 규칙 id의 해시로 뽑는다 — 화면과 리듀서가 같은 카드를 본다.
+ */
+export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze(ASCENSION_RULES.map((base) => {
+    const names: Record<string, { name: string; title: string }> = {
+        lost_pilgrimage: { name: '두 겹의 순례', title: '두 겹 길의 순례자' },
+        empty_crusade: { name: '두 겹의 성전', title: '두 겹 성전의 정복자' },
+        dry_dragon_road: { name: '두 겹의 용의 길', title: '두 겹 용왕의 계승자' },
+        tangled_legends: { name: '두 겹의 전설', title: '두 겹 전설의 수집가' },
+        fading_dimension: { name: '두 겹의 차원', title: '두 겹 차원을 꿰뚫은 자' },
+        shadow_legion: { name: '두 겹의 군단', title: '두 겹 암흑을 꺾은 자' },
+    };
+    // 선택형 겹친 규칙의 받아들임 · 거절 측정(Wave 105, 원장 §110): 받아들인 회차와 같은 시드 · 같은 단계에서 겹친 선택형만 거절한
+    // 회차를 짝지었다(거절은 규칙 없이 그 회차를 한다). 둘째 비틀기는 카드마다 다르므로 값은 다섯 조합의 평균이다.
+    const outlook: Record<string, AscensionRuleOutlook> = {
+        tangled_legends: { measuredRank: 10, acceptedDeaths: 5.72, declinedDeaths: 1.18, acceptedSignatures: 1.04, declinedSignatures: 0.03 },
+        fading_dimension: { measuredRank: 11, acceptedDeaths: 4.18, declinedDeaths: 0.55, acceptedSignatures: 1.01, declinedSignatures: 0 },
+        shadow_legion: { measuredRank: 12, acceptedDeaths: 3.17, declinedDeaths: 0.4, acceptedSignatures: 1, declinedSignatures: 0.01 },
+    };
+    const entry = names[base.id];
+    const stacked: AscensionRuleDef = {
+        id: `stacked_${base.id}`,
+        name: entry.name,
+        modifier: base.modifier,
+        signatureSet: base.signatureSet,
+        conquestTitle: { id: `conquest_stacked_${base.id}`, name: entry.title },
+        stackedOf: base.id,
+        ...(base.optional ? { optional: true as const, outlook: [outlook[base.id]] } : {}),
+    };
+    return stacked;
+}));
+
+/** 기본 + 겹친 규칙 전부(id 조회 · 정복 기록 · 칭호 번호). 번호는 이 순서다 — 기본 1 ~ 6, 겹친 7 ~ 12. */
+export const ALL_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([...ASCENSION_RULES, ...STACKED_ASCENSION_RULES]);

@@ -264,6 +264,8 @@ export const MSG = {
     ASCENSION_RULE_DECLINED_DETAIL: '비틀기 없음 · 표적 배율 없음 · 이 단계의 정복 보상은 규칙이 다시 돌아올 때',
     ASCENSION_RULE_DECLINED_START: (ruleName: string) => `📜 회차 규칙 [${ruleName}]을 거절했습니다 — 이번 회차에는 표적 각인 배율과 정복 보상이 없습니다.`,
     ASCENSION_RULE_NEXT: (ruleName: string) => `다음 회차 규칙: ${ruleName}`,
+    // 2026-10 Wave 105: 겹친 규칙의 두 비틀기.
+    ASCENSION_RULE_TWIST_PAIR: (first: string, second: string) => `${first} + ${second}`,
     // 2026-10 Wave 92: 선택형 규칙의 받아들임 · 거절 측정 차이(데이터 `outlook`) — 숫자만 보이고 판단은 플레이어 몫이다.
     ASCENSION_RULE_OUTLOOK_ACCEPTED: (deaths: string, signatures: string) => `받아들이면: 사망 ${deaths}회 · 새 각인 +${signatures}개 · 정복 보상`,
     ASCENSION_RULE_OUTLOOK_DECLINED: (deaths: string, signatures: string) => `거절하면: 사망 ${deaths}회 · 새 각인 +${signatures}개`,

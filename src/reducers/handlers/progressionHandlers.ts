@@ -18,6 +18,7 @@ import { appendRewardLogs } from './rewardLog';
 import {
     canRerollAscensionRuleOffer,
     getAscensionRuleOffer,
+    getAscensionRuleOfferSecond,
     getAscensionRuleRerolls,
     getAscensionRuleStartLog,
     resolveAscensionRuleChoice,
@@ -222,7 +223,11 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         //   Wave 95: 패는 다시 뽑은 뒤의 패다(지금 player의 기록) — `outcome.meta`는 그 기록을 지우고 유료 횟수의 대가를 적용했다.
         const nextRank = Number(outcome.meta.prestigeRank) || 0;
         const chosenRule = resolveAscensionRuleChoice(getAscensionRuleOffer(state.player, nextRank), payload?.ruleId);
-        const ruleMeta = chosenRule ? { ...outcome.meta, ascensionRule: { rank: nextRank, ruleId: chosenRule.id } } : outcome.meta;
+        // 2026-10 Wave 105: 겹친 규칙 카드는 패의 두 번째 비틀기를 함께 남긴다(같은 단계의 사망 재시작이 같은 비틀기를 읽는다).
+        const secondModifier = getAscensionRuleOfferSecond(state.player, nextRank, chosenRule);
+        const ruleMeta = chosenRule
+            ? { ...outcome.meta, ascensionRule: { rank: nextRank, ruleId: chosenRule.id, ...(secondModifier ? { secondModifier } : {}) } }
+            : outcome.meta;
         const ascensionRuleDeclined = resolveAscensionRuleDeclined(ruleMeta, payload?.declineRule);
         const challengeModifiers = buildRunChallengeModifiers(payload?.challengeModifiers, ruleMeta, ascensionRuleDeclined);
         const freshMaxHp = applyChallengeMaxHp((INITIAL_STATE.player.maxHp || 0) + bakedMeta.hp, challengeModifiers);
