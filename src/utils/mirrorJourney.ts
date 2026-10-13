@@ -1,7 +1,14 @@
-import { getMirrorNode, MIRROR_NODES, type MirrorNodeDef } from '../data/mirror';
-import { getMirrorEffects, type MirrorLevels } from '../systems/mirrorUpgrades';
+import { getMirrorNode, MIRROR_ENDLESS_NODES, MIRROR_NODES, type MirrorNodeDef } from '../data/mirror';
+import { MSG } from '../data/messages';
+import {
+    getMirrorEffects,
+    getMirrorEndlessStatGain,
+    getMirrorNodeCost,
+    isMirrorTreeComplete,
+    type MirrorLevels,
+} from '../systems/mirrorUpgrades';
 
-export type MirrorPathId = 'departure' | 'exploration' | 'survival' | 'legacy';
+export type MirrorPathId = 'departure' | 'exploration' | 'survival' | 'legacy' | 'endless';
 
 export interface MirrorPath {
     id: MirrorPathId;
@@ -35,6 +42,13 @@ export const MIRROR_PATHS: MirrorPath[] = [
         summary: '다음 성장을 위한 계승 정수 획득량을 늘립니다.',
         nodeIds: ['essence_flow'],
     },
+    // 2026-10 Wave 96: 끝없는 거울 — 8가지 성장을 모두 채운 뒤 열린다(그 전에는 잠긴 채 보인다).
+    {
+        id: 'endless',
+        label: MSG.MIRROR_ENDLESS_PATH_LABEL,
+        summary: MSG.MIRROR_ENDLESS_PATH_SUMMARY,
+        nodeIds: MIRROR_ENDLESS_NODES.map((node) => node.id),
+    },
 ];
 
 const clampLevel = (node: MirrorNodeDef, mirror: MirrorLevels): number => (
@@ -44,6 +58,10 @@ const clampLevel = (node: MirrorNodeDef, mirror: MirrorLevels): number => (
 const formatPercent = (value: number): number => Math.round(value * 100);
 
 export const getMirrorEffectLabel = (nodeId: string, level: number): string => {
+    const endlessStat = getMirrorNode(nodeId)?.endless?.stat;
+    if (endlessStat) {
+        return MSG.MIRROR_ENDLESS_EFFECT(MSG.MIRROR_ENDLESS_STAT_LABELS[endlessStat], Math.max(0, level) * getMirrorEndlessStatGain(endlessStat));
+    }
     const effects = getMirrorEffects({ mirror: { [nodeId]: level } });
 
     switch (nodeId) {
@@ -91,6 +109,9 @@ export interface MirrorInvestmentPreview {
     shortage: number;
     maxed: boolean;
     canAfford: boolean;
+    /** 2026-10 Wave 96: 끝없는 단계인가 · 아직 잠겨 있는가(거울 8가지 성장을 다 채우기 전). */
+    endless: boolean;
+    locked: boolean;
 }
 
 export const getMirrorInvestmentPreview = (
@@ -104,9 +125,10 @@ export const getMirrorInvestmentPreview = (
     const currentLevel = clampLevel(node, mirror);
     const maxed = currentLevel >= node.maxLevel;
     const nextLevel = maxed ? null : currentLevel + 1;
-    const nextCost = maxed ? null : node.costs[currentLevel];
+    const nextCost = maxed ? null : getMirrorNodeCost(node, currentLevel);
     const availableEssence = Math.max(0, Math.floor(Number(essence) || 0));
     const cost = nextCost || 0;
+    const locked = Boolean(node.endless) && !isMirrorTreeComplete(mirror);
 
     return {
         node,
@@ -118,7 +140,9 @@ export const getMirrorInvestmentPreview = (
         remainingEssence: Math.max(0, availableEssence - cost),
         shortage: Math.max(0, cost - availableEssence),
         maxed,
-        canAfford: !maxed && availableEssence >= cost,
+        canAfford: !maxed && !locked && availableEssence >= cost,
+        endless: Boolean(node.endless),
+        locked,
     };
 };
 

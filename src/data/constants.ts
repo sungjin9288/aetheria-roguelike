@@ -372,6 +372,13 @@ export const BALANCE = {
     //   systems/mirrorUpgrades.ts(getMirrorEffects)가 단일 진실 원천.
     //   여기 상수는 "레벨당 효과 크기"만 — 노드 존재/비용/최대레벨은 MIRROR_NODES 참조.
     MIRROR_START_GOLD_PER_LEVEL: 100,        // start_gold: 레벨당 시작 골드 +100
+    // 2026-10 Wave 96 (소유자 결정 "거울 확장 — 적은 능력치를 많은 정수로, 강해지는 속도를 늦춘다"): 거울 8노드를 다 채운 뒤 열리는
+    //   끝없는 단계. k번째 단계(0부터) 비용 = BASE + STEP × k(정수 사다리는 단계당 150), 단계마다 영구 공격력 · 생명 · 기력 중 하나.
+    MIRROR_ENDLESS_BASE_COST: 2000,
+    MIRROR_ENDLESS_COST_STEP: 500,
+    MIRROR_ENDLESS_ATK_PER_LEVEL: 1,
+    MIRROR_ENDLESS_HP_PER_LEVEL: 5,
+    MIRROR_ENDLESS_MP_PER_LEVEL: 3,
     MIRROR_CAMPFIRE_BONUS_PER_LEVEL: 0.02,   // campfire_rate: 레벨당 캠프파이어 확률 +2%p
     MIRROR_RELIC_PITY_BONUS_PER_LEVEL: 0.25, // relic_pity: 레벨당 유물 pity 누적 +25%
     MIRROR_REST_DISCOUNT_PER_LEVEL: 0.20,    // rest_discount: 레벨당 휴식 비용 -20%

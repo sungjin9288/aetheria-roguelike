@@ -1,4 +1,5 @@
-import { MIRROR_NODES, MIRROR_EFFECT_VALUES, getMirrorNode } from '../data/mirror';
+import { BALANCE } from '../data/constants';
+import { MIRROR_ENDLESS_NODES, MIRROR_NODES, MIRROR_EFFECT_VALUES, getMirrorNode, type MirrorEndlessStat, type MirrorNodeDef } from '../data/mirror';
 
 /**
  * getMirrorEffects — 에테르 거울(에센스 소비 영구 업그레이드 트리) 노드 레벨→효과의
@@ -55,6 +56,30 @@ export const getMirrorEffects = (meta: { mirror?: MirrorLevels } | undefined | n
     };
 };
 
+/** 2026-10 Wave 96: 거울 8노드를 모두 채웠는가 — 끝없는 단계는 그 뒤에 열린다. */
+export const isMirrorTreeComplete = (mirror: MirrorLevels | undefined | null): boolean => (
+    MIRROR_NODES.every((node) => getLevel(mirror, node.id) >= node.maxLevel)
+);
+
+/** 이 노드의 `level` → `level + 1` 비용 — 끝없는 단계는 `MIRROR_ENDLESS_BASE_COST + STEP × level`(단계마다 오른다). */
+export const getMirrorNodeCost = (node: MirrorNodeDef, level: number): number => {
+    const lv = Math.max(0, Math.floor(Number(level) || 0));
+    if (node.endless) return BALANCE.MIRROR_ENDLESS_BASE_COST + BALANCE.MIRROR_ENDLESS_COST_STEP * lv;
+    return node.costs[lv] ?? 0;
+};
+
+/** 끝없는 단계 한 번에 오르는 영구 능력치. */
+export const getMirrorEndlessStatGain = (stat: MirrorEndlessStat): number => (
+    stat === 'atk' ? BALANCE.MIRROR_ENDLESS_ATK_PER_LEVEL
+        : stat === 'hp' ? BALANCE.MIRROR_ENDLESS_HP_PER_LEVEL
+            : BALANCE.MIRROR_ENDLESS_MP_PER_LEVEL
+);
+
+/** 끝없는 단계 `levels`번에 든 정수 총액 — 비용이 등차라 합은 닫힌 식이다. */
+const getEndlessSpent = (levels: number): number => (
+    levels * BALANCE.MIRROR_ENDLESS_BASE_COST + (BALANCE.MIRROR_ENDLESS_COST_STEP * levels * (levels - 1)) / 2
+);
+
 export interface MirrorPurchaseResult {
     mirror: MirrorLevels;
     success: boolean;
@@ -80,8 +105,12 @@ export const purchaseMirrorNode = (
     if (!node || currentLevel >= node.maxLevel) {
         return { mirror: current, success: false, cost: 0, newLevel: currentLevel };
     }
+    // 2026-10 Wave 96: 끝없는 단계는 거울 8노드를 모두 채운 뒤에만 산다.
+    if (node.endless && !isMirrorTreeComplete(current)) {
+        return { mirror: current, success: false, cost: 0, newLevel: currentLevel };
+    }
 
-    const cost = node.costs[currentLevel];
+    const cost = getMirrorNodeCost(node, currentLevel);
     if ((essence || 0) < cost) {
         return { mirror: current, success: false, cost, newLevel: currentLevel };
     }
@@ -105,6 +134,8 @@ export const getSpentMirrorEssence = (mirror: MirrorLevels | undefined | null): 
         const level = getLevel(mirror, node.id);
         return total + node.costs.slice(0, level).reduce((sum, cost) => sum + cost, 0);
     }, 0)
+    // 2026-10 Wave 96: 끝없는 단계에 쓴 정수도 지출이다(누적 정수 역산이 쓴다).
+    + MIRROR_ENDLESS_NODES.reduce((total, node) => total + getEndlessSpent(getLevel(mirror, node.id)), 0)
 );
 
 export { MIRROR_NODES };

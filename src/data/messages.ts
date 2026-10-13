@@ -148,6 +148,16 @@ export const MSG = {
     // 2026-07 — 에테르 거울: revive 노드(런당 1회 치명상 부활) 발동 로그.
     MIRROR_REVIVE: '[에테르 수호] 거울의 가호가 치명상을 막아냈습니다!',
     MIRROR_PURCHASE: (name: string, newLevel: number, cost: number) => `에테르 거울에 ${name} ${newLevel}단계를 새겼습니다. 계승 정수 -${cost}`,
+    // 2026-10 Wave 96: 끝없는 거울 — 거울 8노드를 다 채운 뒤 비용이 오르는 작은 영구 능력치.
+    MIRROR_ENDLESS_PURCHASE: (name: string, newLevel: number, cost: number, stat: string, gain: number) => (
+        `에테르 거울에 ${name} ${newLevel}단계를 새겼습니다. ${stat} +${gain} · 계승 정수 -${cost}`
+    ),
+    MIRROR_ENDLESS_STAT_LABELS: { atk: '영구 공격력', hp: '영구 생명', mp: '영구 기력' } as const,
+    MIRROR_ENDLESS_PATH_LABEL: '끝없는',
+    MIRROR_ENDLESS_PATH_SUMMARY: '거울을 모두 채운 뒤에도 계승 정수로 영구 능력치를 조금씩 새깁니다. 단계마다 비용이 오릅니다.',
+    MIRROR_ENDLESS_EFFECT: (stat: string, total: number) => (total > 0 ? `거울로 새긴 ${stat} +${total}` : `거울로 새긴 ${stat} 없음`),
+    MIRROR_ENDLESS_LOCKED: '거울 8가지 성장을 모두 채우면 열립니다',
+    MIRROR_ENDLESS_LEVEL: (level: number) => `${level}단계`,
     // slice 19: 스탯 상승 표기 — 레벨업이 무엇을 바꿨는지 로그에서 즉시 확인 (성장 가시화)
     LEVEL_UP: (level: number, attack: number, health: number) => `레벨 ${level} 상승 · 공격력 +${attack} · 생명 +${health}`,
     LEVEL_MILESTONE: (level: number, gold: number) => `레벨 ${level} 달성 · 골드 ${gold.toLocaleString()} 획득`,

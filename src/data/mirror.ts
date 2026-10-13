@@ -20,9 +20,16 @@ export interface MirrorNodeDef {
     name: string;
     desc: string;
     maxLevel: number;
-    /** 레벨별 누적 비용 배열 — costs[0]은 Lv0→1, costs[1]은 Lv1→2 ... */
+    /** 레벨별 누적 비용 배열 — costs[0]은 Lv0→1, costs[1]은 Lv1→2 ... (끝없는 단계는 비어 있고 비용은 공식이다) */
     costs: number[];
+    /**
+     * 2026-10 Wave 96: 끝없는 단계 — 단계 상한이 없고 비용은 `getMirrorNodeCost`의 공식이다. 단계마다 이 영구 능력치가 오른다
+     * (`meta.bonusAtk` · `bonusHp` · `bonusMp` — 정수 사다리와 같은 영구 보너스, 레벨 비례 · 에테르 초월 배율도 같다).
+     */
+    endless?: { stat: MirrorEndlessStat };
 }
+
+export type MirrorEndlessStat = 'atk' | 'hp' | 'mp';
 
 /**
  * 2026-09 감사 G3: 구 트리는 13레벨 / 총액 2,570 정수 — Lv30 지역 ~68킬이면 완주해
@@ -100,7 +107,39 @@ export const MIRROR_NODES: MirrorNodeDef[] = [
     },
 ];
 
-/** 트리 전체를 완주하는 데 드는 계승 정수 총액 (2026-09 기준 14,150). */
+/**
+ * 2026-10 Wave 96 (소유자 결정 "거울 확장 — 적은 능력치를 많은 정수로"): 거울 8노드를 모두 채우면 열리는 끝없는 단계.
+ *   정수는 회차마다 18만 ~ 30만씩 쌓이고 거울 8노드는 1회차 약 15시간에 다 차서, 7회차 끝에 쓸 곳 없는 정수가 중앙값 167만이었다
+ *   (원장 §101). 비용이 단계마다 오르는 작은 영구 능력치라 강해지는 속도가 느리다.
+ */
+export const MIRROR_ENDLESS_NODES: MirrorNodeDef[] = [
+    {
+        id: 'endless_atk',
+        name: '끝없는 날',
+        desc: '영구 공격력을 조금 올립니다. 단계마다 비용이 오릅니다.',
+        maxLevel: Number.MAX_SAFE_INTEGER,
+        costs: [],
+        endless: { stat: 'atk' },
+    },
+    {
+        id: 'endless_hp',
+        name: '끝없는 심장',
+        desc: '영구 생명을 조금 올립니다. 새 여정 · 전직부터 생명에 반영되고, 단계마다 비용이 오릅니다.',
+        maxLevel: Number.MAX_SAFE_INTEGER,
+        costs: [],
+        endless: { stat: 'hp' },
+    },
+    {
+        id: 'endless_mp',
+        name: '끝없는 샘',
+        desc: '영구 기력을 조금 올립니다. 새 여정 · 전직부터 기력에 반영되고, 단계마다 비용이 오릅니다.',
+        maxLevel: Number.MAX_SAFE_INTEGER,
+        costs: [],
+        endless: { stat: 'mp' },
+    },
+];
+
+/** 트리 전체를 완주하는 데 드는 계승 정수 총액 (2026-09 기준 14,150) — 끝없는 단계는 넣지 않는다. */
 export const MIRROR_TREE_TOTAL_COST = MIRROR_NODES.reduce(
     (total, node) => total + node.costs.reduce((sum, cost) => sum + cost, 0),
     0,
@@ -120,4 +159,4 @@ export const MIRROR_EFFECT_VALUES = {
 };
 
 export const getMirrorNode = (nodeId: string): MirrorNodeDef | undefined =>
-    MIRROR_NODES.find((n) => n.id === nodeId);
+    MIRROR_NODES.find((n) => n.id === nodeId) ?? MIRROR_ENDLESS_NODES.find((n) => n.id === nodeId);
