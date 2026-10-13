@@ -121,7 +121,7 @@ test('Wave 99: 계승 화면은 끝없는 거울이 열렸으면 이번 회차 �
     const played = buyAll(stateOf(veteran()), ['endless_atk', 'endless_hp', 'endless_mp', 'endless_atk']).player;
     const cycle = getMirrorEndlessCycle(played.meta);
     const html = renderStatic(createElement(AscensionScreen, { player: played }));
-    assert.ok(html.includes('data-testid="ascension-mirror-endless-cycle"'));
+    assert.ok(html.includes('data-testid="ascension-cycle-mirror"'));
     assert.ok(html.includes(MSG.ASCEND_MIRROR_ENDLESS_CYCLE(cycle.steps, cycle.gains.atk, cycle.gains.hp, cycle.gains.mp)));
     assert.ok(html.includes('data-testid="ascension-mirror-endless"'), 'Wave 98 줄(지금 살 수 있는 것)도 함께 있다');
 
@@ -129,5 +129,5 @@ test('Wave 99: 계승 화면은 끝없는 거울이 열렸으면 이번 회차 �
     assert.ok(fresh.includes(MSG.ASCEND_MIRROR_ENDLESS_CYCLE_NONE));
 
     const locked = renderStatic(createElement(AscensionScreen, { player: veteran({ mirror: { ...FULL_TREE, revive: 0 } }) }));
-    assert.ok(!locked.includes('ascension-mirror-endless-cycle'));
+    assert.ok(!locked.includes('ascension-cycle-mirror'));
 });

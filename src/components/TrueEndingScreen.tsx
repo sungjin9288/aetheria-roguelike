@@ -17,6 +17,7 @@ import {
 import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { Player } from '../types/index.js';
 import PendingQuestRewardList from './PendingQuestRewardList';
+import AscensionCycleSummary from './AscensionCycleSummary';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
@@ -201,6 +202,12 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                 ))}
                             </div>
                         </Motion.div>
+                    )}
+
+                    {revealState === 'complete' && (
+                        <div className="mb-7 w-full min-w-0 max-w-sm px-1 sm:px-6">
+                            <AscensionCycleSummary player={player} testIdPrefix="true-ending" />
+                        </div>
                     )}
 
                     {revealState === 'complete' && hasPendingQuestRewards && (

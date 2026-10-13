@@ -28,6 +28,7 @@ import { calculateFullStats } from '../../utils/statsCalculator';
 import { createSeededRandom } from '../../utils/seededRandom';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { BALANCE } from '../../data/constants';
+import { snapshotCycleStart } from '../../utils/cycleSummary';
 
 /**
  * makeProgressionActionMap(INITIAL_STATE) → action map
@@ -252,6 +253,8 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         };
         const ascensionTitles = checkTitles({ ...state.player, meta: outcome.meta, titles: freshPlayer.titles, activeTitle: outcome.title });
         freshPlayer.titles = [...new Set([...(freshPlayer.titles || []), ...ascensionTitles])];
+        // 2026-10 Wave 100: 새 회차의 수집 기준점 — 계승 화면의 "이번 회차 요약"이 다음 계승 때 지금 수집 − 기준점으로 센다.
+        freshPlayer.meta = { ...(freshPlayer.meta || {}), cycleStart: snapshotCycleStart(freshPlayer, nextRank) };
         // 첫 유물 선택지(새 게임의 시작 부트와 같은 규칙 — 등급 상한 · 직업 기본 성향 공명). 난수는 payload 씨앗이다.
         const seed = Number.isSafeInteger(payload?.seed) ? Number(payload?.seed) : 0;
         const startingRelics = pickWeightedRelics(RELICS, getStartBootChoiceCount(outcome.meta), {

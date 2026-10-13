@@ -275,6 +275,11 @@ interface PlayerMeta {
      * `rank`가 지금 `prestigeRank`와 다르면 없는 것으로 읽는다(`getMirrorEndlessCycle`). 계승(`getAscensionOutcome`)이 지운다.
      */
     mirrorEndlessCycle?: { rank: number; atk: number; hp: number; mp: number };
+    /**
+     * 2026-10 Wave 100: 이 계승 단계(회차)를 시작할 때의 수집 기준점 — 계승(`ASCEND`)이 새 단계로 남긴다. 계승 화면의 "이번 회차 요약"이
+     * 지금 수집 − 기준점으로 새로 얻은 것을 센다(`getCycleSummary`). `rank`가 지금 `prestigeRank`와 다르면 없는 것으로 읽는다.
+     */
+    cycleStart?: { rank: number; signatures: string[]; eliteTitles: number };
     // cycle 281: totalPrestigeAtk/Hp/Mp 3 dead 필드 제거 (cycle 277 runtime cleanup paired completion).
     //   runtime read 0건 + saved 데이터 잔존 필드는 무시되지만 무해 (runtime access 안 함).
     // 2026-07 — 에테르 거울: 노드id → 레벨. getMirrorEffects(meta)가 단일 진실 원천.

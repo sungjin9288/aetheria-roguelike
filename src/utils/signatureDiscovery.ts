@@ -6,7 +6,7 @@ import type { Player } from '../types/player.js';
 
 type CodexBucket = 'weapons' | 'armors' | 'shields';
 
-const SIGNATURE_NAMES = Object.keys(signatureRegistryData?.entries || {});
+export const SIGNATURE_NAMES = Object.keys(signatureRegistryData?.entries || {});
 const SIGNATURE_NAME_SET = new Set(SIGNATURE_NAMES);
 // resolveJsonModule이 signatureSets.json의 각 세트 모양(members/bonuses 등)을 이미
 // 정확히 추론한다 — 캐스트 없이도 union 배열로 쓸 수 있다.
