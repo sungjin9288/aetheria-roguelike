@@ -19,6 +19,7 @@ import type { Player } from '../types/index.js';
 import PendingQuestRewardList from './PendingQuestRewardList';
 import AscensionCycleSummary from './AscensionCycleSummary';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
+import { MSG } from '../data/messages';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
 import { getAscensionRuleOfferView, getAscensionRuleRerollView } from '../utils/ascensionRuleView';
@@ -224,7 +225,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                     먼저 회수할 임무 보상
                                 </h2>
                                 <p data-testid="true-ending-pending-reward-guidance" className="mt-1 break-words text-[11px] leading-relaxed text-amber-100/75">
-                                    완료한 임무 보상을 지금 수령할 수 있습니다. 수령 기록은 영구 보존되며, 보상 장비를 이번 여정에서 사용하려면 현재 여정을 계속하세요.
+                                    {MSG.TRUE_ENDING_PENDING_GUIDANCE}
                                 </p>
                             </div>
                             <PendingQuestRewardList entries={claimableQuests} testIdPrefix="true-ending" onClaim={actions?.completeQuest} player={player} />
@@ -275,12 +276,12 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                             <p className="break-words text-[11px] font-readable text-slate-400">
                                 {hasPendingQuestRewards
                                     ? '보상 수령 전에는 현재 여정을 계속할 수 있습니다.'
-                                    : '영구 성장과 기록을 계승해 다음 여정을 시작합니다.'}
+                                    : MSG.TRUE_ENDING_CONTINUE_NOTE}
                             </p>
                             <p data-testid="true-ending-new-game-plus-guidance" className="max-w-sm break-words text-[11px] leading-relaxed text-slate-500">
                                 {hasPendingQuestRewards
                                     ? 'New Game+는 현재 장비와 소지 골드를 초기화합니다. 보상 장비를 사용하려면 수령 후 현재 여정을 계속하세요.'
-                                    : 'New Game+는 현재 장비와 소지 골드를 초기화하고 영구 성장과 기록만 계승합니다.'}
+                                    : MSG.TRUE_ENDING_NEW_GAME_PLUS_NOTE}
                             </p>
                         </Motion.div>
                     )}

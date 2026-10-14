@@ -16,6 +16,8 @@ import {
 import { buildChainJournal } from '../src/utils/chainJournal.ts';
 import { buildGraveData, getGraveRecoveryGroups } from '../src/utils/graveUtils.ts';
 import { pickPermanentPlayerState } from '../src/utils/permanentProgress.ts';
+import { getJourneySurfaceText } from '../src/utils/journeyScope.ts';
+import { MSG } from '../src/data/messages.ts';
 import {
     getCompletedSeasonCount,
     getSeasonArchive,
@@ -29,9 +31,12 @@ const readSource = (relativePath) => readFile(path.join(ROOT, relativePath), 'ut
 test('manual reset copy names the current journey and distinguishes reset from preservation', async () => {
     const source = await readSource('src/components/Dashboard.tsx');
 
-    assert.match(source, /현재 여정 다시 시작/);
-    assert.match(source, /레벨[^\n]*장비[^\n]*(가방|소지품)[^\n]*(임무|퀘스트)[^\n]*현재 원정/);
-    assert.match(source, /영구 성장[^\n]*직업 여정[^\n]*설정[^\n]*도감/);
+    // 2026-10 Wave 109: 목록은 사망의 표(JOURNEY_RESET_SURFACE)에서 그린다 — 다시 시작은 사망과 같은 초기화다(도감도 처음부터).
+    assert.equal(MSG.MENU_RESET_TITLE, '현재 여정 다시 시작');
+    assert.match(source, /MSG\.MENU_RESET_TITLE/);
+    assert.match(getJourneySurfaceText('death', 'reset'), /레벨[^\n]*장비와 가방[^\n]*임무[^\n]*도감[^\n]*현재 원정/);
+    assert.match(getJourneySurfaceText('death', 'kept'), /정수로 새긴 영구 성장[^\n]*직업 여정[^\n]*설정/);
+    assert.match(source, /MSG\.MENU_RESET_LOSS\(getJourneySurfaceText\('death', 'reset'\)\)/);
     assert.doesNotMatch(source, /진행 초기화/);
     assert.doesNotMatch(source, /지금까지의 진행 상황을.*지/);
 });
@@ -39,8 +44,10 @@ test('manual reset copy names the current journey and distinguishes reset from p
 test('ascension copy includes permanent journey and accessibility state', async () => {
     const source = await readSource('src/components/AscensionScreen.tsx');
 
-    assert.match(source, /영구 능력[^\n]*직업 여정[^\n]*설정[^\n]*도감/);
-    assert.match(source, /레벨[^\n]*장비와 가방[^\n]*유물[^\n]*임무[^\n]*현재 원정/);
+    // 2026-10 Wave 109: 목록은 계승의 표에서 그린다(실제 전이 대조는 journey-surface-copy-contract).
+    assert.match(getJourneySurfaceText('ascension', 'kept'), /정수로 새긴 영구 성장[^\n]*도감[^\n]*직업 여정[^\n]*설정/);
+    assert.match(getJourneySurfaceText('ascension', 'reset'), /레벨[^\n]*장비와 가방[^\n]*유물[^\n]*임무[^\n]*현재 원정/);
+    assert.match(source, /getJourneySurfaceText\('ascension', 'kept'\)/);
     assert.match(source, /data-testid="ascension-confirm"[\s\S]*min-h-\[48px\]/);
     assert.match(source, /data-testid="ascension-cancel"[\s\S]*min-h-\[48px\]/);
 });

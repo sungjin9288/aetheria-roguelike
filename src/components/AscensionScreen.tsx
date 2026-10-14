@@ -21,6 +21,7 @@ import type { GameActions } from '../hooks/actionDeps';
 import ChallengeModifierPicker from './ChallengeModifierPicker';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
 import { getAscensionRuleOfferView, getAscensionRuleRerollView } from '../utils/ascensionRuleView';
+import { getJourneySurfaceText } from '../utils/journeyScope';
 
 interface AscensionScreenProps {
     player: Player;
@@ -217,10 +218,10 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                     <section className="grid gap-2 sm:grid-cols-2">
                         <div data-testid="ascension-preserved-summary" className="rounded-lg border border-emerald-300/18 bg-emerald-300/[0.06] p-3">
                             <h2 className="flex items-center gap-1.5 text-[12px] font-readable font-bold text-emerald-100">
-                                <BookOpenCheck size={14} /> 그대로 남는 것
+                                <BookOpenCheck size={14} /> {MSG.JOURNEY_KEPT_HEADING}
                             </h2>
                             <p className="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">
-                                영구 능력 · 직업 여정 · 설정 · 도감 · 칭호 · 업적과 누적 기록 · 시즌 진행 · 회수하지 못한 유해
+                                {getJourneySurfaceText('ascension', 'kept')}
                             </p>
                             {signatureProgress.discovered > 0 && (
                                 <p
@@ -234,10 +235,10 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
 
                         <div data-testid="ascension-reset-summary" className="rounded-lg border border-rose-300/18 bg-rose-300/[0.06] p-3">
                             <h2 className="flex items-center gap-1.5 text-[12px] font-readable font-bold text-rose-100">
-                                <ShieldAlert size={14} /> 새로 시작하는 것
+                                <ShieldAlert size={14} /> {MSG.JOURNEY_RESET_HEADING}
                             </h2>
                             <p className="mt-1.5 text-[11px] font-readable leading-relaxed text-slate-300/82">
-                                레벨 · 장비와 가방 · 유물 · 진행 중 임무 · 현재 원정
+                                {getJourneySurfaceText('ascension', 'reset')}
                             </p>
                         </div>
                     </section>

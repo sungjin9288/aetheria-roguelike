@@ -26,6 +26,7 @@ import SmartInventory from './SmartInventory';
 import type { GameActions } from '../hooks/actionDeps';
 import type { GameState } from '../reducers/gameReducer';
 import type { SystemTabRuntime } from './tabs/SystemTab';
+import { getJourneySurfaceText } from '../utils/journeyScope';
 
 const AchievementPanel = lazy(() => import('./AchievementPanel'));
 const BuildAdvicePanel = lazy(() => import('./BuildAdvicePanel'));
@@ -287,9 +288,9 @@ const Dashboard = ({
                     >
                         <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                                <h3 className="text-[12px] font-readable font-bold text-rose-100/88">현재 여정 다시 시작</h3>
+                                <h3 className="text-[12px] font-readable font-bold text-rose-100/88">{MSG.MENU_RESET_TITLE}</h3>
                                 <p className="mt-1 text-[11px] font-readable text-slate-400/78">
-                                    이번 회차만 정리하고 영구 성장과 기록은 보존합니다.
+                                    {MSG.MENU_RESET_SUMMARY}
                                 </p>
                             </div>
                             <button
@@ -300,7 +301,7 @@ const Dashboard = ({
                                 aria-controls="menu-reset-confirmation"
                                 onClick={() => setConfirmMenuReset((open) => !open)}
                                 className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-[0.65rem] border border-rose-300/18 bg-rose-950/28 px-3 py-1.5 text-[11px] font-readable text-rose-100/84 transition-colors hover:border-rose-200/28 hover:bg-rose-900/34"
-                                title="현재 여정 다시 시작"
+                                title={MSG.MENU_RESET_TITLE}
                             >
                                 <RotateCcw size={13} />
                                 <span>다시 시작</span>
@@ -320,10 +321,10 @@ const Dashboard = ({
                                     새 여정을 시작할까요?
                                 </h4>
                                 <p data-testid="menu-reset-loss" className="text-[11px] font-readable leading-relaxed text-rose-100/82">
-                                    새로 시작: 레벨 · 장비와 가방 · 유물 · 임무 · 현재 원정
+                                    {MSG.MENU_RESET_LOSS(getJourneySurfaceText('death', 'reset'))}
                                 </p>
                                 <p data-testid="menu-reset-preserved" className="mt-1 text-[11px] font-readable leading-relaxed text-emerald-100/82">
-                                    그대로 보존: 영구 성장 · 직업 여정 · 설정 · 도감과 누적 기록
+                                    {MSG.MENU_RESET_PRESERVED(getJourneySurfaceText('death', 'kept'))}
                                 </p>
                                 <div className="mt-2 grid grid-cols-2 gap-2">
                                     <button

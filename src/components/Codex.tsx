@@ -134,7 +134,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                             </span>
                         </div>
                         <p className="aether-type-meta mt-0.5 text-slate-400/76">
-                            발견한 장비와 생물, 제작 기록을 오래 보존합니다
+                            {MSG.CODEX_SUBTITLE}
                         </p>
                     </div>
                 </div>
