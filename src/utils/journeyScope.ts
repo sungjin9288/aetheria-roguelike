@@ -1,5 +1,6 @@
 import type { AchievementTarget } from '../types/quest.js';
 import type { Player } from '../types/player.js';
+import { MSG } from '../data/messages.js';
 import { ELITE_TITLE_PREFIX } from './eliteTitles.js';
 
 /**
@@ -156,3 +157,48 @@ export const getJourneyMaxKillStreak = (stats: Player['stats'] | null | undefine
     if (run && typeof run === 'object' && run.countersAtStart) return toCount(run.maxKillStreak);
     return toCount(stats?.maxKillStreak);
 };
+
+/**
+ * 2026-10 Wave 109: 사망 · 다시 시작 · 계승 화면이 "남는 것 / 새로 시작하는 것"으로 말하는 항목.
+ * 화면은 이 표의 라벨(`MSG.JOURNEY_ITEM_LABELS`)만 그리고, `tests/journey-surface-copy-contract.test.js`가 항목마다
+ * 실제 전이(`handleDefeat` · `RESET_GAME` · `ASCEND`)로 그 약속을 확인한다 — Wave 108 뒤에도 사망 화면이
+ * "칭호 · 도감 기록은 다음 모험에도 이어집니다"라고 말하던 것처럼 문구가 규칙과 갈라지지 않게.
+ */
+export type JourneySurfaceItem =
+    | 'essenceGrowth'
+    | 'prestigeLedger'
+    | 'classJourney'
+    | 'settings'
+    | 'seasonPass'
+    | 'crystals'
+    | 'codex'
+    | 'unrecoveredGraves'
+    | 'level'
+    | 'gear'
+    | 'relics'
+    | 'questsStory'
+    | 'journeyTitles'
+    | 'activeExpedition';
+
+export interface JourneySurface {
+    readonly kept: readonly JourneySurfaceItem[];
+    readonly reset: readonly JourneySurfaceItem[];
+}
+
+const DEATH_SURFACE: JourneySurface = {
+    kept: ['essenceGrowth', 'prestigeLedger', 'classJourney', 'seasonPass', 'crystals', 'settings'],
+    reset: ['level', 'gear', 'relics', 'questsStory', 'journeyTitles', 'codex', 'activeExpedition'],
+};
+const ASCENSION_SURFACE: JourneySurface = {
+    kept: ['essenceGrowth', 'prestigeLedger', 'codex', 'classJourney', 'seasonPass', 'crystals', 'settings', 'unrecoveredGraves'],
+    reset: ['level', 'gear', 'relics', 'questsStory', 'journeyTitles', 'activeExpedition'],
+};
+
+export const JOURNEY_RESET_SURFACE: Readonly<Record<JourneyResetKind, JourneySurface>> = Object.freeze({
+    death: DEATH_SURFACE,
+    ascension: ASCENSION_SURFACE,
+});
+
+export const getJourneySurfaceText = (kind: JourneyResetKind, side: keyof JourneySurface): string => (
+    JOURNEY_RESET_SURFACE[kind][side].map((item) => MSG.JOURNEY_ITEM_LABELS[item]).join(' · ')
+);

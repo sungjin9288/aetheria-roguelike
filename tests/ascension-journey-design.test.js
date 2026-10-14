@@ -73,6 +73,6 @@ test('ascension screen keeps irreversible controls outside the scroll region', a
     assert.ok(footerIndex > scrollIndex);
     assert.ok(cancelIndex > footerIndex);
     assert.ok(confirmIndex > footerIndex);
-    assert.match(source, /새로 시작하는 것/);
-    assert.match(source, /그대로 남는 것/);
+    assert.match(source, /MSG\.JOURNEY_RESET_HEADING/);
+    assert.match(source, /MSG\.JOURNEY_KEPT_HEADING/);
 });

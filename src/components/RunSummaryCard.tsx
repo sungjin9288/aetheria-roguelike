@@ -23,6 +23,8 @@ import { buildRunShareText } from '../utils/runShareText.js';
 import SignalBadge from './SignalBadge';
 import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
 import type { RunSummary } from '../reducers/actionTypes.js';
+import { getJourneySurfaceText } from '../utils/journeyScope';
+import { MSG } from '../data/messages';
 
 interface RunSummaryCardProps {
     runSummary: RunSummary;
@@ -171,7 +173,10 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
 
                     <section data-testid="run-summary-persistent-growth" className="mt-4 flex items-start gap-2.5 border-t border-white/8 pt-3 text-[10px] font-readable leading-relaxed text-slate-300/74">
                         <ShieldCheck size={14} className="mt-0.5 shrink-0 text-[#7dd4d8]" />
-                        <span>승천 단계와 칭호·도감 기록은 다음 모험에도 이어집니다.</span>
+                        <span className="min-w-0">
+                            <span data-testid="run-summary-kept" className="block">{MSG.JOURNEY_KEPT_LINE(getJourneySurfaceText('death', 'kept'))}</span>
+                            <span data-testid="run-summary-reset" className="mt-1 block text-slate-400/74">{MSG.JOURNEY_RESET_LINE(getJourneySurfaceText('death', 'reset'))}</span>
+                        </span>
                     </section>
 
                     {storyBeat && (
