@@ -63,6 +63,12 @@ interface PlayerStats {
      * 규칙을 정하지 않는다. 없으면(이전 세이브) 정복한 단계를 고정 순서로 읽고, 처음 쓸 때 그 값으로 채운다(`getRuleConquestLedger`).
      */
     ruleConquestRuleIds?: string[];
+    /**
+     * 2026-10 Wave 107 (소유자 결정 §111.7 (b)): 거절하고 지나간 회차 규칙 id(거절한 단계를 계승할 때마다 한 줄). 덱은 정복과 이 기록을 함께
+     * 세어 "이번 순환에서 지나간 규칙"을 뺀다 — 거절한 카드가 정복되지 않아 덱에 남아 다음 계승부터 그 카드만 나오던 것을 막는다.
+     * 정복 보상 · 겹친 덱 열림은 정복만 본다. 없으면(이전 세이브) 빈 기록.
+     */
+    ruleDeclinePassIds?: string[];
     /** cycle 260: 수령 완료 퀘스트 영구 ledger. quest.id는 숫자(DB.QUESTS)와 문자열(bounty) 혼용. */
     claimedQuestIds?: Array<string | number>;
     explores?: number;

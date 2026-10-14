@@ -20,6 +20,7 @@ import {
     getAscensionRuleOfferSecond,
     getAscensionRuleRerolls,
     getAscensionRuleStartLog,
+    getRuleDeclinePasses,
     resolveAscensionRuleOfferChoice,
     resolveAscensionRuleDeclined,
 } from '../../systems/ascensionRule';
@@ -253,6 +254,8 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
             activeTitle: outcome.title,
             stats: {
                 ...permanentStats,
+                // 2026-10 Wave 107: 이번 회차를 거절했으면 그 규칙은 이번 순환에서 지나간 것이다(덱이 센다) — 계승이 기록하는 한 곳.
+                ruleDeclinePassIds: getRuleDeclinePasses(state.player),
                 currentRun: createCurrentRunProgress(permanentStats),
             },
         };
