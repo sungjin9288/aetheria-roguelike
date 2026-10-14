@@ -65,6 +65,40 @@ jobs:
       - name: Build guard
         run: npm run build:guard
 
+  tracked-evidence:
+    name: Tracked evidence verify
+    runs-on: ubuntu-latest
+    # 2026-10-14 출시 전 통합 수용 — 증빙(docs/evidence/qa/release-complete-core)은 리포트와
+    # 그 리포트를 만든 소스 파일의 해시를 함께 고정한다. unit 스위트는 이 바이트 비교를
+    # 하지 않아(tests/equipment-combat-power-audit.test.js 머리 주석) Wave 103이 고정된 소스를
+    # 바꾸고 증빙을 다시 쓰지 않은 채 머지됐다. 목록은 package.json에서 도출한다
+    # (scripts/verify-tracked-evidence.mjs). static-checks와 병렬로 돈다.
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Setup Python art runtime
+        # art:verify는 Pillow 기반 픽셀 검사기(scripts/*.py)를 부른다.
+        uses: actions/setup-python@v7
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+          cache: 'pip'
+          cache-dependency-path: requirements-art.txt
+
+      - name: Install Python art dependencies
+        run: python -m pip install --disable-pip-version-check -r requirements-art.txt
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Tracked evidence verify
+        run: npm run evidence:verify
+
   firestore-rules:
     name: Firestore rules (emulator)
     runs-on: ubuntu-latest

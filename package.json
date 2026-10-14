@@ -34,6 +34,7 @@
     "content:verify": "node --import tsx scripts/verify-content-reachability.mjs --verify docs/evidence/qa/release-complete-core/content-reachability.json",
     "pacing:verify": "node --import tsx scripts/compare-exploration-rhythm.mjs --seed-start 20260810 --seed-count 64 --verify docs/evidence/qa/release-complete-core/exploration-rhythm.json",
     "event-reward:verify": "node --import tsx scripts/verify-event-reward-coherence.mjs --verify docs/evidence/qa/release-complete-core/event-reward-coherence.json",
+    "evidence:verify": "node scripts/verify-tracked-evidence.mjs",
     "assets:brand": "python3 scripts/generate_app_brand_assets.py",
     "art:catalog": "node --import tsx scripts/artCatalog.mjs --stdout",
     "art:monsters:build": "python3 scripts/generate_monster_catalog_art.py --output-root public --manifest-output src/data/monsterArtManifest.json",
