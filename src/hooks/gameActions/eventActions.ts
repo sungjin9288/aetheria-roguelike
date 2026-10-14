@@ -25,7 +25,7 @@ import { getGoldIncome } from '../../utils/challengeRules';
 import { applyStoryStatGrant } from '../../utils/permanentStatSources';
 import type { Player, Relic, StatusId } from '../../types';
 import type { ChainCombatSpec, EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
-import { getEnemyThreat } from '../../utils/enemyThreat';
+import { getAppearThreatLine } from '../../utils/enemyThreat';
 import type { ChainCombatRef } from '../combatActions/_helpers';
 import type { GameState } from '../../reducers/gameReducer';
 import type { AddLog, GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -484,6 +484,12 @@ const queueOutcomeRelics = (
  * 정예 조우 스탯 — 정찰 "정예의 흔적" 카드와 동일한 산출(신규 스폰 로직 없음).
  * 확정 유물 보상(scoutGuaranteedRelic)은 "골라서 들어간" 정찰 카드에만 붙인다.
  */
+/** Wave 88 · 111: 나타난 보스 · 정예의 가장 센 한 방(실제 엔진 · 고정 난수 — 게임 난수를 쓰지 않는다). */
+const logAppearThreat = (player: Player, enemy: Parameters<typeof getAppearThreatLine>[1], addLog: AddLog) => {
+    const line = getAppearThreatLine(player, enemy);
+    if (line) addLog('warning', line);
+};
+
 const buildEliteStats = (rawStats: SpawnedEnemyStats, baseName: string) => ({
     ...rawStats,
     name: rawStats.name?.startsWith(MSG.ELITE_ENEMY_PREFIX) ? rawStats.name : MSG.ELITE_ENEMY_NAME(baseName),
@@ -534,6 +540,7 @@ const startChainCombat = (
     addLog('event', spec.intro);
     addLog('info', MSG.CHAIN_COMBAT_RETRY_NOTICE);
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+    logAppearThreat(player, mStats, addLog);
 };
 
 /**
@@ -570,6 +577,7 @@ const startEliteEncounter = (
     dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
     addLog('warning', MSG.EVENT_ELITE_AMBUSH);
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+    logAppearThreat(player, mStats, addLog);
 };
 
 /**
@@ -630,6 +638,7 @@ const handleScoutChoice = (idx: number, currentEvent: GameState['currentEvent'],
         dispatch({ type: AT.SET_ENEMY, payload: mStats });
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
         addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+        logAppearThreat(player, mStats, addLog);
         return;
     }
 
@@ -742,6 +751,7 @@ const handleDimensionGraveChoice = (idx: number, currentEvent: GameState['curren
     dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
     addLog('event', MSG.DIMENSION_GRAVE_INVADE_LOG(grave.playerName));
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
+    logAppearThreat(player, mStats, addLog);
 };
 
 const handleBossGaugeChoice = (idx: number, currentEvent: GameState['currentEvent'], deps: GameActionDepsWithRng) => {
@@ -812,6 +822,5 @@ const handleBossGaugeChoice = (idx: number, currentEvent: GameState['currentEven
     dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
     // Wave 88: 실제로 나온 구역 보스(접두어 포함)의 가장 센 한 방.
-    const threat = getEnemyThreat(player, mStats);
-    addLog('warning', MSG.BOSS_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits));
+    logAppearThreat(player, mStats, addLog);
 };

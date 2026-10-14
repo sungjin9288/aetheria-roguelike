@@ -3,6 +3,7 @@ import { getCombatForecast, type SelectedSkillLike } from './combatForecast';
 import { CombatEngine } from '../systems/CombatEngine';
 import { getDiscoveredBossSignatureDrops } from './bossSignatureHint.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
+import { getEliteThreatChip } from './enemyThreat';
 import { getConsumableDescription } from './consumablePresentation';
 import { isConsumableItem } from '../systems/consumableRules';
 import type { DictRelic, FullStats, Item, Monster, Player } from '../types/index.js';
@@ -86,7 +87,16 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
         ]
         : [];
 
+    // 2026-10 Wave 111: 정예와 싸우는 동안 가장 센 한 방(격노 포함)을 칩으로 보인다 — 나타날 때의 기록 줄은 밀려 올라간다.
+    const eliteThreatChip = enemy ? getEliteThreatChip(player, enemy) : null;
     const mobileCombatSignals = [
+        eliteThreatChip
+            ? {
+                key: 'elite',
+                text: eliteThreatChip,
+                className: 'border-rose-300/30 bg-rose-500/12 text-rose-100',
+            }
+            : null,
         bossBriefLine
             ? {
                 key: 'boss',
