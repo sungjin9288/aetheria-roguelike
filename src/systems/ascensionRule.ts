@@ -1,6 +1,6 @@
 import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
-import { ALL_ASCENSION_RULES, ASCENSION_RULES, STACKED_ASCENSION_RULES, UNBOUND_SIGNATURE_GROUP, type AscensionRuleDef } from '../data/ascensionRules.js';
+import { ALL_ASCENSION_RULES, ASCENSION_RULES, ASCENSION_TWIST_WEIGHTS, STACKED_ASCENSION_RULES, UNBOUND_SIGNATURE_GROUP, type AscensionRuleDef } from '../data/ascensionRules.js';
 import signatureRegistryData from '../data/signatureRegistry.json' with { type: 'json' };
 import signatureSetsData from '../data/signatureSets.json' with { type: 'json' };
 import type { Player } from '../types/index.js';
@@ -202,32 +202,71 @@ export const canRerollAscensionRuleOffer = (player: RuleOfferPlayer, nextRank: n
 );
 
 /**
- * 계승 요청의 규칙 선택을 패 안의 규칙으로 — 패에 없는 id(또는 없음)는 패에서 가장 가벼운 카드(규칙 표 순서 = 측정한 무게 순,
- * Wave 90)다. 아무것도 고르지 않은 플레이어가 무거운 카드를 떠안지 않게 한다.
+ * 2026-10 Wave 106: 무거운 비틀기 — 거절할 수 있는 기본 규칙(Wave 91 선택형 셋)의 비틀기. 측정 무게(`ASCENSION_TWIST_WEIGHTS`)로도
+ * 위쪽 셋이다(계약이 대조한다).
  */
-export const resolveAscensionRuleChoice = (offer: readonly AscensionRuleDef[], ruleId: unknown): AscensionRuleDef | null => {
+const HEAVY_TWISTS: ReadonlySet<string> = new Set(ASCENSION_RULES.filter((rule) => rule.optional === true).map((rule) => rule.modifier));
+export const isHeavyAscensionTwist = (id: unknown): boolean => typeof id === 'string' && HEAVY_TWISTS.has(id);
+
+/**
+ * 거절할 수 있는 규칙 카드인가 — 선택형 규칙(Wave 91 무거운 셋), 또는 무거운 두 번째 비틀기가 붙은 겹친 규칙 카드
+ * (2026-10 Wave 106, 소유자 결정 §110.6 (b): "무거운 비틀기는 거절할 수 있다"를 겹친 카드에도 똑같이 적용한다 — 바탕이 가벼운
+ * 겹친 카드에 무거운 두 번째가 붙은 회차가 거절할 수 없는 사망 루프였다, 원장 §110.3).
+ */
+export const isOptionalAscensionRule = (rule: AscensionRuleDef | null | undefined, second: string | null = null): boolean => (
+    rule?.optional === true || (Boolean(rule?.stackedOf) && isHeavyAscensionTwist(second))
+);
+
+/** 지금 회차의 규칙 카드가 거절할 수 있는 카드인가(규칙 + 고른 카드의 두 번째 비틀기). */
+export const isActiveAscensionRuleOptional = (meta: AscensionRuleMeta): boolean => (
+    isOptionalAscensionRule(getActiveAscensionRule(meta), getActiveAscensionTwists(meta)[1] ?? null)
+);
+
+/** 2026-10 Wave 106: 규칙 카드의 측정 무게 — 비틀기 무게의 합(`ASCENSION_TWIST_WEIGHTS`). */
+export const getAscensionRuleCardWeight = (rule: AscensionRuleDef, second: string | null): number => (
+    ASCENSION_TWIST_WEIGHTS[rule.modifier] + (isTwistId(second) ? ASCENSION_TWIST_WEIGHTS[second] : 0)
+);
+
+/**
+ * 계승 요청의 규칙 선택을 패 안의 규칙으로 — 패에 없는 id(또는 없음)는 패에서 가장 가벼운 카드다. 아무것도 고르지 않은 플레이어가
+ * 무거운 카드를 떠안지 않게 한다.
+ * - 기본 카드(1순환): 규칙 표 순서(= 놓인 회차에서 잰 무게 순, Wave 90).
+ * - 겹친 카드: 두 비틀기의 측정 무게 합이 가장 작은 카드(2026-10 Wave 106, 소유자 결정 §110.6 (c)), 같으면 규칙 번호 순.
+ *   바탕 순서만 보던 Wave 105에서는 가벼운 바탕에 무거운 두 번째가 붙은 카드를 고르지 않는 플레이어가 떠안았다(원장 §110.5).
+ * `secondOf`는 카드의 두 번째 비틀기다(리듀서 · 화면이 같은 패의 값을 넘긴다 — `resolveAscensionRuleOfferChoice`).
+ */
+export const resolveAscensionRuleChoice = (
+    offer: readonly AscensionRuleDef[],
+    ruleId: unknown,
+    secondOf: (rule: AscensionRuleDef) => string | null = () => null,
+): AscensionRuleDef | null => {
     if (offer.length === 0) return null;
     const chosen = offer.find((rule) => rule.id === ruleId);
     if (chosen) return chosen;
-    // 2026-10 Wave 105: 겹친 규칙도 바탕 규칙의 무게 순서다(`ALL_ASCENSION_RULES`의 7 ~ 12번이 기본 순서를 따른다).
-    return [...offer].sort((a, b) => ALL_ASCENSION_RULES.indexOf(a) - ALL_ASCENSION_RULES.indexOf(b))[0];
+    const order = (rule: AscensionRuleDef) => ALL_ASCENSION_RULES.indexOf(rule);
+    if (!offer.some((rule) => rule.stackedOf)) return [...offer].sort((a, b) => order(a) - order(b))[0];
+    return [...offer].sort((a, b) => (
+        getAscensionRuleCardWeight(a, secondOf(a)) - getAscensionRuleCardWeight(b, secondOf(b)) || order(a) - order(b)
+    ))[0];
 };
 
-/** 거절할 수 있는 규칙인가(Wave 91 — 무거운 비틀기 셋). */
-export const isOptionalAscensionRule = (rule: AscensionRuleDef | null | undefined): boolean => rule?.optional === true;
+/** 2026-10 Wave 106: 이 계승의 패에서 고른(또는 기본) 카드 — 계승 리듀서와 화면이 같은 패 · 같은 두 번째 비틀기로 고른다. */
+export const resolveAscensionRuleOfferChoice = (player: RuleOfferPlayer, nextRank: number, ruleId: unknown): AscensionRuleDef | null => (
+    resolveAscensionRuleChoice(getAscensionRuleOffer(player, nextRank), ruleId, (rule) => getAscensionRuleOfferSecond(player, nextRank, rule))
+);
 
 /** 이번 회차에 실제로 적용된 규칙 — 선택형 규칙을 거절했으면 없다(표적 배율 · 정복 보상 · 수집 요약이 이것을 읽는다). */
 export const getPlayerAscensionRule = (
     player: Pick<Player, 'meta' | 'ascensionRuleDeclined'> | null | undefined,
 ): AscensionRuleDef | null => {
     const rule = getActiveAscensionRule(player?.meta);
-    if (rule && isOptionalAscensionRule(rule) && player?.ascensionRuleDeclined === true) return null;
+    if (rule && isActiveAscensionRuleOptional(player?.meta) && player?.ascensionRuleDeclined === true) return null;
     return rule;
 };
 
-/** 시작 · 계승 요청의 거절 의사를 저장할 값으로 — 선택형 규칙일 때만 참이 된다. */
+/** 시작 · 계승 요청의 거절 의사를 저장할 값으로 — 거절할 수 있는 카드일 때만 참이 된다(Wave 106: 무거운 두 번째 비틀기 포함). */
 export const resolveAscensionRuleDeclined = (meta: AscensionRuleMeta, declineRule: unknown): boolean => (
-    declineRule === true && isOptionalAscensionRule(getActiveAscensionRule(meta))
+    declineRule === true && isActiveAscensionRuleOptional(meta)
 );
 
 /** 이 각인이 지금 회차의 표적 세트이면 드롭률 배율(`BALANCE.ASCENSION_RULE_SIGNATURE_MULT`), 아니면 1. 난수를 쓰지 않는다. */
@@ -276,7 +315,7 @@ export const getAscensionRuleTwistLabel = (rule: AscensionRuleDef, second?: stri
 export const getAscensionRuleStartLog = (meta: AscensionRuleMeta, declined = false): string | null => {
     const rule = getActiveAscensionRule(meta);
     if (!rule) return null;
-    if (declined && isOptionalAscensionRule(rule)) return MSG.ASCENSION_RULE_DECLINED_START(rule.name);
+    if (declined && isActiveAscensionRuleOptional(meta)) return MSG.ASCENSION_RULE_DECLINED_START(rule.name);
     const twists = getActiveAscensionTwists(meta);
     return MSG.ASCENSION_RULE_START(rule.name, getAscensionRuleTwistLabel(rule, twists[1]), getSignatureSetName(rule.signatureSet));
 };

@@ -43,6 +43,9 @@ export interface AscensionRuleDef {
      *
      * 2026-10 Wave 94: 카드 뽑기로 규칙이 아무 단계에나 올 수 있다. 값은 고정 순서에서 잰 그대로이고, 화면은 잰 단계(`measuredRank`)를
      * 밝힌다 — 순환(1 ~ 6 · 7 ~ 12단계)으로 고르는 규칙은 그대로다.
+     *
+     * 2026-10 Wave 106: 겹친 규칙은 그 규칙의 카드 가운데 거절할 수 있는 카드(선택형 바탕, 또는 무거운 두 번째 비틀기)만 잰 값이다 —
+     * 바탕이 가벼운 겹친 규칙은 무거운 두 번째 비틀기가 붙은 카드의 측정이다.
      */
     outlook?: readonly AscensionRuleOutlook[];
     /**
@@ -61,6 +64,22 @@ export interface AscensionRuleOutlook {
     acceptedSignatures: number;
     declinedSignatures: number;
 }
+
+/**
+ * 2026-10 Wave 106 (소유자 결정 §110.6 "(b)+(c) 같이"): 비틀기의 측정 무게 — 겹친 회차(rank 7 ~ 12)에서 그 비틀기가 두 번째
+ * 비틀기였던 회차의 시드당 사망 평균(Wave 105 측정, 120시드 × 6회차 = 720회차, 원장 §110 · §111). 두 번째 비틀기는 카드마다
+ * 무작위라 단계 · 경로와 독립이다 — 바탕 비틀기의 평균은 무거운 바탕이 rank 10 ~ 12에 몰려 단계와 섞인다.
+ * 겹친 카드의 무게는 두 비틀기 무게의 합이고, 계승 화면이 처음 골라 두는 카드가 그 합이 가장 작은 카드다(`resolveAscensionRuleChoice`).
+ * 기본 카드(1순환)는 규칙 표 순서 그대로다(Wave 90 — 놓인 회차에서 잰 순서). 규칙 · 순서 · 엔진이 바뀌면 다시 잴 것.
+ */
+export const ASCENSION_TWIST_WEIGHTS: Readonly<Record<AscensionRuleDef['modifier'], number>> = Object.freeze({
+    noPotion: 0.92,
+    blindMap: 1.85,
+    noGold: 2.19,
+    randomSkills: 4.79,
+    eliteOnly: 6.9,
+    halfHp: 7.5,
+});
 
 export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
     {
@@ -137,12 +156,16 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
         fading_dimension: { name: '두 겹의 차원', title: '두 겹 차원을 꿰뚫은 자' },
         shadow_legion: { name: '두 겹의 군단', title: '두 겹 암흑을 꺾은 자' },
     };
-    // 선택형 겹친 규칙의 받아들임 · 거절 측정(Wave 105, 원장 §110): 받아들인 회차와 같은 시드 · 같은 단계에서 겹친 선택형만 거절한
-    // 회차를 짝지었다(거절은 규칙 없이 그 회차를 한다). 둘째 비틀기는 카드마다 다르므로 값은 다섯 조합의 평균이다.
+    // 겹친 규칙 카드 가운데 거절할 수 있는 카드(선택형 바탕, 또는 무거운 두 번째 비틀기 — Wave 106)의 받아들임 · 거절 측정
+    // (Wave 106, 원장 §111): 받아들인 회차와 같은 시드 · 같은 단계에서 그 카드를 거절한 회차를 짝지었다(거절은 규칙 없이 그 회차를 한다).
+    // 카드마다 두 번째 비틀기가 다르므로 값은 그 규칙의 거절 가능한 카드들의 평균이고, 잰 단계는 가장 많이 놓인 단계다.
     const outlook: Record<string, AscensionRuleOutlook> = {
-        tangled_legends: { measuredRank: 10, acceptedDeaths: 5.72, declinedDeaths: 1.18, acceptedSignatures: 1.04, declinedSignatures: 0.03 },
-        fading_dimension: { measuredRank: 11, acceptedDeaths: 4.18, declinedDeaths: 0.55, acceptedSignatures: 1.01, declinedSignatures: 0 },
-        shadow_legion: { measuredRank: 12, acceptedDeaths: 3.17, declinedDeaths: 0.4, acceptedSignatures: 1, declinedSignatures: 0.01 },
+        lost_pilgrimage: { measuredRank: 9, acceptedDeaths: 4.9, declinedDeaths: 1.68, acceptedSignatures: 1.15, declinedSignatures: 0.07 },
+        empty_crusade: { measuredRank: 7, acceptedDeaths: 5, declinedDeaths: 1.1, acceptedSignatures: 1.03, declinedSignatures: 0.1 },
+        dry_dragon_road: { measuredRank: 7, acceptedDeaths: 2.56, declinedDeaths: 1.98, acceptedSignatures: 1.08, declinedSignatures: 0.12 },
+        tangled_legends: { measuredRank: 10, acceptedDeaths: 3.78, declinedDeaths: 1.15, acceptedSignatures: 1, declinedSignatures: 0.01 },
+        fading_dimension: { measuredRank: 12, acceptedDeaths: 5, declinedDeaths: 0.58, acceptedSignatures: 1.01, declinedSignatures: 0 },
+        shadow_legion: { measuredRank: 12, acceptedDeaths: 4.44, declinedDeaths: 0.95, acceptedSignatures: 1, declinedSignatures: 0 },
     };
     const entry = names[base.id];
     const stacked: AscensionRuleDef = {
@@ -152,7 +175,8 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
         signatureSet: base.signatureSet,
         conquestTitle: { id: `conquest_stacked_${base.id}`, name: entry.title },
         stackedOf: base.id,
-        ...(base.optional ? { optional: true as const, outlook: [outlook[base.id]] } : {}),
+        ...(base.optional ? { optional: true as const } : {}),
+        outlook: [outlook[base.id]],
     };
     return stacked;
 }));

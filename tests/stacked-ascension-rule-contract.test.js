@@ -136,7 +136,7 @@ test('계승 — 고른 겹친 카드의 두 번째 비틀기가 화면 카드�
     assert.ok(checked >= 60);
 });
 
-test('선택형 겹친 규칙을 거절하면 두 비틀기 · 표적 · 정복이 모두 없다 — 강제 겹친 규칙은 거절할 수 없다', () => {
+test('선택형 겹친 규칙을 거절하면 두 비틀기 · 표적 · 정복이 모두 없다 — 바탕이 가벼운 겹친 규칙은 두 번째도 가벼우면 거절할 수 없다', () => {
     const optional = STACKED_ASCENSION_RULES.filter((rule) => rule.optional);
     const forced = STACKED_ASCENSION_RULES.filter((rule) => !rule.optional);
     assert.equal(optional.length, 3);
@@ -149,9 +149,16 @@ test('선택형 겹친 규칙을 거절하면 두 비틀기 · 표적 · 정복�
         const kill = resolveEndgameVictory({ player: { ...declined.player, hp: 900 }, deadEnemy: demonKing, receiptKey: 'kill-opt', rng: () => 0.99, now: NOW });
         assert.ok(!(kill.player.titles || []).includes(rule.conquestTitle.id), '거절하면 정복 칭호가 없다');
     }
+    // 2026-10 Wave 106: 무거운 두 번째 비틀기가 붙으면 바탕이 가벼워도 거절할 수 있다(`tests/stacked-heavy-second-optional.test.js`) —
+    //   여기서는 가벼운 두 번째가 붙은 카드만 본다. 처치 영수증은 그런 카드가 나오는 것을 고른다(고정 영수증 하나로는 우연에 기댄다).
     for (const rule of forced) {
         const ledger = [...BASE_IDS, ...STACKED_ASCENSION_RULES.filter((other) => other.id !== rule.id).map((other) => other.id)];
-        const next = ascendWith(veteranAt(6, 'rk-forced', ledger), { ruleId: rule.id, declineRule: true });
+        const receipt = RECEIPTS.find((key) => {
+            const second = getStackedSecondModifier(rule, key, 7, 0);
+            return !ASCENSION_RULES.some((base) => base.optional && base.modifier === second);
+        });
+        assert.ok(receipt, `${rule.id}: 가벼운 두 번째가 붙는 영수증`);
+        const next = ascendWith(veteranAt(6, receipt, ledger), { ruleId: rule.id, declineRule: true });
         assert.equal(next.player.ascensionRuleDeclined, false);
         assert.equal(next.player.challengeModifiers.length >= 2, true);
     }
@@ -204,26 +211,30 @@ test('변조 · 이전 세이브 — 두 번째 비틀기 기록이 없거나 �
     assert.deepEqual(getActiveAscensionTwists({ prestigeRank: 1, ascensionRule: { rank: 1, ruleId: ASCENSION_RULES[0].id, secondModifier: 'halfHp' } }), [ASCENSION_RULES[0].modifier], '기본 규칙은 두 번째를 무시');
 });
 
-test('선택형 겹친 규칙은 받아들임 · 거절의 측정을 들고 화면이 그 값을 그린다 — 강제 겹친 규칙은 측정이 없다', async () => {
+test('겹친 규칙은 거절할 수 있는 카드의 받아들임 · 거절 측정을 들고, 화면은 거절할 수 있는 카드에서만 그 값을 그린다', async () => {
     const { MSG } = await import('../src/data/messages.js');
     const { buildAscensionRulePreview } = await import('../src/utils/ascensionRuleView.js');
     const r1 = (value) => (Math.round(value * 10) / 10).toFixed(1);
+    const isHeavy = (id) => ASCENSION_RULES.some((base) => base.optional && base.modifier === id);
     for (const rule of STACKED_ASCENSION_RULES) {
-        if (rule.optional !== true) {
-            assert.equal(rule.outlook, undefined, `${rule.id}: 강제 규칙에는 고를 차이가 없다`);
-            assert.equal(buildAscensionRulePreview(rule, 8).outlook, null);
-            continue;
-        }
+        // 2026-10 Wave 106: 바탕이 가벼운 겹친 규칙도 무거운 두 번째 비틀기가 붙으면 거절할 수 있어 측정을 든다.
         assert.ok(Array.isArray(rule.outlook) && rule.outlook.length === 1, `${rule.id}: 2순환 측정 하나`);
         const [o] = rule.outlook;
         assert.ok(o.measuredRank >= 7 && o.measuredRank <= 12, `${rule.id}: 2순환 단계에서 잰 값`);
         assert.ok(o.acceptedDeaths > o.declinedDeaths, `${rule.id}: 받아들임이 더 위험하다`);
         assert.ok(o.acceptedSignatures > o.declinedSignatures, `${rule.id}: 받아들임이 각인을 더 준다`);
-        for (const rank of [o.measuredRank, 16]) {
-            const preview = buildAscensionRulePreview(rule, rank, getStackedSecondModifier(rule, 'rk-outlook', rank, 0));
-            assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)), `${rule.id} rank ${rank}`);
-            assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)), `${rule.id} rank ${rank}`);
-            assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE(o.measuredRank), `${rule.id} rank ${rank}: 잰 단계를 밝힌다`);
+        for (const receipt of RECEIPTS.slice(0, 12)) {
+            for (const rank of [o.measuredRank, 16]) {
+                const second = getStackedSecondModifier(rule, receipt, rank, 0);
+                const preview = buildAscensionRulePreview(rule, rank, second);
+                if (!(rule.optional || isHeavy(second))) {
+                    assert.equal(preview.outlook, null, `${rule.id} + ${second}: 거절할 수 없는 카드에는 고를 차이가 없다`);
+                    continue;
+                }
+                assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)), `${rule.id} rank ${rank}`);
+                assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)), `${rule.id} rank ${rank}`);
+                assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE(o.measuredRank), `${rule.id} rank ${rank}: 잰 단계를 밝힌다`);
+            }
         }
     }
 });
