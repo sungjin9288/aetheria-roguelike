@@ -106,18 +106,35 @@ export const getRuleConquestLedger = (stats: RuleConquestStats): string[] => {
 /** 한 번이라도 정복한 규칙 id(칭호 복구 · 도감 정복 수). */
 export const getConqueredRuleIds = (stats: RuleConquestStats): Set<string> => new Set(getRuleConquestLedger(stats));
 
-type RuleOfferPlayer = { meta?: Player['meta']; stats?: Player['stats'] } | null | undefined;
+type RuleOfferPlayer = { meta?: Player['meta']; stats?: Player['stats']; ascensionRuleDeclined?: boolean } | null | undefined;
 
 /**
- * 덱 — 정복 횟수가 가장 적은 규칙들(이번 순환에서 아직 정복하지 않은 규칙, 규칙 표 순서). 여섯을 모두 정복하면 다시 찬다.
- * 2026-10 Wave 105 (소유자 결정 "2순환부터 겹친 카드만"): 기본 여섯을 모두 한 번 정복하면 덱은 겹친 여섯 규칙이다(그 안에서 같은 규칙).
+ * 2026-10 Wave 107 (소유자 결정 §111.7 (b)): 거절하고 지나간 규칙 id — 기록(`stats.ruleDeclinePassIds`, 계승이 남긴다)에 지금 회차를
+ * 거절했으면 그 규칙을 더한다. 계승 화면의 패는 계승 리듀서가 기록하기 전의 player로 뽑으므로 지금 회차의 거절도 여기서 센다.
  */
-const getAscensionRuleDeck = (stats: RuleConquestStats): AscensionRuleDef[] => {
-    const counts = new Map<string, number>();
-    for (const id of getRuleConquestLedger(stats)) counts.set(id, (counts.get(id) || 0) + 1);
-    const table = ASCENSION_RULES.every((rule) => (counts.get(rule.id) || 0) >= 1) ? STACKED_ASCENSION_RULES : ASCENSION_RULES;
-    const fewest = Math.min(...table.map((rule) => counts.get(rule.id) || 0));
-    return table.filter((rule) => (counts.get(rule.id) || 0) === fewest);
+export const getRuleDeclinePasses = (player: RuleOfferPlayer): string[] => {
+    const recorded = Array.isArray(player?.stats?.ruleDeclinePassIds)
+        ? player.stats.ruleDeclinePassIds.filter((id) => Boolean(getAscensionRuleById(id)))
+        : [];
+    const active = getActiveAscensionRule(player?.meta);
+    const declinedNow = active && player?.ascensionRuleDeclined === true && isActiveAscensionRuleOptional(player?.meta);
+    return declinedNow ? [...recorded, active.id] : recorded;
+};
+
+/**
+ * 덱 — 지나간 횟수가 가장 적은 규칙들(이번 순환에서 아직 지나가지 않은 규칙, 규칙 표 순서). 여섯이 모두 지나가면 다시 찬다.
+ * 2026-10 Wave 105 (소유자 결정 "2순환부터 겹친 카드만"): 기본 여섯을 모두 한 번 정복하면 덱은 겹친 여섯 규칙이다(그 안에서 같은 규칙).
+ * 2026-10 Wave 107 (소유자 결정 §111.7 (b)): 지나간 횟수 = 정복 + 거절하고 지나감(`getRuleDeclinePasses`). 정복만 세던 동안 거절한
+ * 카드는 덱에 남아 다음 계승부터 그 카드만 나왔다(원장 §110.3 · §111.4 — 거절 정책 720회차 중 439회차). 겹친 덱 열림은 정복만 본다.
+ */
+const getAscensionRuleDeck = (player: RuleOfferPlayer): AscensionRuleDef[] => {
+    const conquests = new Map<string, number>();
+    for (const id of getRuleConquestLedger(player?.stats)) conquests.set(id, (conquests.get(id) || 0) + 1);
+    const passed = new Map(conquests);
+    for (const id of getRuleDeclinePasses(player)) passed.set(id, (passed.get(id) || 0) + 1);
+    const table = ASCENSION_RULES.every((rule) => (conquests.get(rule.id) || 0) >= 1) ? STACKED_ASCENSION_RULES : ASCENSION_RULES;
+    const fewest = Math.min(...table.map((rule) => passed.get(rule.id) || 0));
+    return table.filter((rule) => (passed.get(rule.id) || 0) === fewest);
 };
 
 /** 겹친 규칙 덱이 열렸는가(기본 여섯을 모두 한 번 정복) — 도감 정복 수의 분모가 읽는다. */
@@ -162,7 +179,7 @@ export const getAscensionRuleRerollLadderKeep = (paid: number): number => (
  */
 export const getAscensionRuleOffer = (player: RuleOfferPlayer, nextRank: number): AscensionRuleDef[] => {
     if (!(nextRank >= 1)) return [];
-    const deck = getAscensionRuleDeck(player?.stats);
+    const deck = getAscensionRuleDeck(player);
     const receiptKey = player?.meta?.endgame?.lastEndgameReceiptKey ?? 'none';
     const shuffle = (rules: AscensionRuleDef[], rng: () => number): AscensionRuleDef[] => {
         const cards = [...rules];
@@ -197,7 +214,7 @@ export const getAscensionRuleOfferSecond = (player: RuleOfferPlayer, nextRank: n
 export const canRerollAscensionRuleOffer = (player: RuleOfferPlayer, nextRank: number): boolean => (
     nextRank >= 1
     && Boolean(player?.meta?.endgame?.lastEndgameReceiptKey)
-    && getAscensionRuleDeck(player?.stats).length > BALANCE.ASCENSION_RULE_OFFER_COUNT
+    && getAscensionRuleDeck(player).length > BALANCE.ASCENSION_RULE_OFFER_COUNT
     && getAscensionRuleRerolls(player?.meta, nextRank) < BALANCE.ASCENSION_RULE_REROLL_FREE + BALANCE.ASCENSION_RULE_REROLL_PAID_MAX
 );
 
