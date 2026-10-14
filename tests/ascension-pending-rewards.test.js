@@ -44,7 +44,8 @@ test('일반 마왕 승리의 완료 보상은 계승 전에 보호되고 수령
     assert.notEqual(ascended, claimed, '수령 후에는 계승이 실제 진행된다');
     assert.equal(ascended.gameState, 'idle');
     assert.equal(ascended.player.meta.prestigeRank, 1);
-    assert.ok(ascended.player.stats.claimedQuestIds.includes(87));
+    // 2026-10 Wave 108 (소유자 결정 "계승하면 임무 · 이야기도 처음부터"): 수령 기록은 새 여정에서 비고 이야기를 다시 한다.
+    assert.deepEqual(ascended.player.stats.claimedQuestIds, []);
     assert.equal(ascended.player.inv.some((item) => item.name === '성검 에테르니아'), false, '현재 장비 초기화 정책은 유지한다');
     assert.equal(gameReducer(ascended, ascend), ascended);
 });
@@ -93,7 +94,7 @@ test('계승 화면은 실제 보상과 수령 버튼을 보여주고 완료 보
     assert.match(html, /성검 에테르니아/);
     assert.ok(!html.includes('위조 제목'));
     assert.match(html, /data-testid="ascension-confirm"[^>]*disabled=""/);
-    assert.match(html, /수령 기록은 계승 후에도 남습니다/);
+    assert.ok(html.includes(MSG.ASCEND_PENDING_QUESTS_GUIDANCE), '계승하면 임무를 처음부터 다시 한다고 알린다');
     const claimed = apply(won, AT.CLAIM_QUEST_REWARD, { questId: 87 });
     const clean = renderStatic(createElement(AscensionScreen, { player: claimed.player }));
     assert.ok(!clean.includes('ascension-pending-quests'));

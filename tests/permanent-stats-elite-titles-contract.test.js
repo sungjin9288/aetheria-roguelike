@@ -196,32 +196,37 @@ const permanentSources = (player) => ({
     meta: [player.meta?.bonusAtk, player.meta?.bonusHp, player.meta?.bonusMp],
 });
 
-test('결정 1 감사: 사망 재시작은 도감 · 칭호(정예 포함) · 이야기 보상 · 계승 보너스를 모두 넘긴다', () => {
+// 2026-10 Wave 108 (소유자 결정 "죽으면 모든 게 초기화 — 정수로 올린 것만 남는다 · 계승은 도감을 남긴다"): Wave 72의 결정 1
+//   (수집 · 칭호 · 이야기 능력치는 사망 · 계승을 넘는다)을 대체한다. 남는 것은 정수로 올린 영구 보너스(`meta.bonus*`)와
+//   계정 장부이고, 도감 보너스는 계승에서만 남는다. 정예 목격 칭호 · 이야기 보상은 새 여정에서 다시 얻는다.
+test('Wave 108: 사망 재시작은 정수로 올린 영구 보너스만 넘긴다 — 칭호(정예 포함) · 이야기 보상 · 도감은 비운다', () => {
     const before = collector();
     const dead = CombatEngine.handleDefeat(before, clone(INITIAL_STATE.player), () => 0.5, () => NOW).updatedPlayer;
     assert.equal(dead.level, 1, '죽음의 비용은 그대로 크다 — 레벨 · 장비 · 가방은 리셋');
-    assert.deepEqual(permanentSources(dead), permanentSources(before));
-    const snapshot = snapshotMetaVitals(dead.meta, dead.storyStatBonus);
-    assert.deepEqual(dead.metaVitalsSnapshot, snapshot, '새 런의 영구 생명 스냅숏에 이야기 생명이 실린다');
-    assert.equal(snapshot.hp, 160);
+    assert.deepEqual(dead.titles, []);
+    assert.equal(dead.activeTitle, null);
+    assert.equal(dead.storyStatBonus, undefined);
+    assert.deepEqual([dead.stats.codexBonusAtk, dead.stats.codexBonusDef, dead.stats.codexBonusHp], [0, 0, 0]);
+    assert.deepEqual([dead.meta.bonusAtk, dead.meta.bonusHp, dead.meta.bonusMp], [30, 60, 10]);
+    assert.deepEqual(dead.metaVitalsSnapshot, snapshotMetaVitals(dead.meta), '새 런의 영구 생명 스냅숏은 정수 보너스만이다');
+    assert.equal(dead.metaVitalsSnapshot.hp, 60);
 });
 
-test('결정 1 감사: 계승도 같은 원천을 모두 넘긴다(계승 정수 사다리는 Wave 32 결정대로 따로 줄어든다)', () => {
+test('Wave 108: 계승은 도감 보너스를 남기고, 칭호 · 이야기 보상은 비운다', () => {
     const before = collector({ level: 50 });
     const after = gameReducer({ ...idleState(before), gameState: GS.ASCENSION },
         { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: 'rk', seed: 7, challengeModifiers: [] } }).player;
     assert.equal(after.level, 1);
-    assert.deepEqual(readStoryStatBonus(after.storyStatBonus), readStoryStatBonus(before.storyStatBonus));
-    for (const id of before.titles) assert.ok(after.titles.includes(id), id);
+    assert.equal(after.storyStatBonus, undefined);
+    for (const id of before.titles) assert.ok(!after.titles.includes(id), id);
     assert.deepEqual([after.stats.codexBonusAtk, after.stats.codexBonusDef, after.stats.codexBonusHp], [6, 2, 40]);
-    assert.ok(after.metaVitalsSnapshot.hp >= 100, '이야기 생명이 스냅숏에 실린다');
 });
 
-test('영구 상태 선별: 이야기 보상은 원래 양으로 넘어가고, 없으면 필드를 싣지 않는다', () => {
-    const carried = pickPermanentPlayerState(basePlayer({ storyStatBonus: { def: 12, hp: 100 } }), clone(INITIAL_STATE.player));
-    assert.deepEqual(carried.storyStatBonus, { atk: 0, def: 12, hp: 100, mp: 0 });
-    const empty = pickPermanentPlayerState(basePlayer({ storyStatBonus: { atk: 0 } }), clone(INITIAL_STATE.player));
-    assert.equal('storyStatBonus' in empty, false);
+test('Wave 108: 영구 상태 선별은 이야기 보상을 싣지 않는다(사망 · 계승 모두)', () => {
+    for (const kind of ['death', 'ascension']) {
+        const carried = pickPermanentPlayerState(basePlayer({ storyStatBonus: { def: 12, hp: 100 } }), clone(INITIAL_STATE.player), kind);
+        assert.equal('storyStatBonus' in carried, false, kind);
+    }
 });
 
 // ── 이야기 보상: 지급 · 레벨 비례 · 재구성 ──────────────────────────────────
@@ -301,7 +306,7 @@ test('스냅숏이 없는 예전 세이브는 예전처럼 전부 굽는다(다�
     assert.equal(player.metaVitalsSnapshot, undefined);
 });
 
-test('실제 체인 선택(잊혀진 사령관 · 안식)이 영구 누적에 적히고, 미리보기 · 로그는 "영구"라 말한다', () => {
+test('Wave 108: 실제 체인 선택(잊혀진 사령관 · 안식)이 이번 여정 누적에 적히고, 로그는 "이번 여정"이라 말한다', () => {
     const chain = EVENT_CHAINS.find((entry) => entry.id === 'forgotten_commander');
     const step = chain.steps.find((entry) => entry.step === 2);
     const event = { ...clone(step.event), _chainId: chain.id, _chainStep: 2 };
@@ -325,9 +330,10 @@ test('실제 체인 선택(잊혀진 사령관 · 안식)이 영구 누적에 �
     }, { emitUnlockedTitles: () => {} }).handleEventChoice(1);
     assert.deepEqual(readStoryStatBonus(state.player.storyStatBonus), { atk: 0, def: 12, hp: 100, mp: 0 });
     assert.equal(state.player.maxHp, before.maxHp + 100, 'Lv48은 전부 굽는다');
-    assert.ok(logs.some((text) => text.includes('영구히')), logs.join(' | '));
-    const carried = pickPermanentPlayerState(state.player, clone(INITIAL_STATE.player));
-    assert.deepEqual(carried.storyStatBonus, { atk: 0, def: 12, hp: 100, mp: 0 }, '죽어도 남는다');
+    assert.ok(logs.some((text) => text.includes('이번 여정 동안')), logs.join(' | '));
+    assert.ok(!logs.some((text) => text.includes('영구')), '영구를 약속하지 않는다');
+    const carried = pickPermanentPlayerState(state.player, clone(INITIAL_STATE.player), 'death');
+    assert.equal('storyStatBonus' in carried, false, '죽으면 이야기와 함께 다시 시작한다');
 });
 
 // ── 화면 ────────────────────────────────────────────────────────────────────

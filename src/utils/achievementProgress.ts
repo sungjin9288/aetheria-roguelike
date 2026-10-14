@@ -3,6 +3,7 @@ import { ACHIEVEMENTS } from '../data/quests.js';
 import type { Achievement, Player } from '../types/index.js';
 import { countCompletedSignatureSets, countDiscoveredSignatures } from './signatureDiscovery.js';
 import { countDiscoveredMaps } from './discoveredMaps.js';
+import { getJourneyCounter, getJourneyMaxKillStreak } from './journeyScope.js';
 
 /**
  * 업적 진행값 · 달성 판정(2026-10 Wave 58 — gameUtils에서 옮김).
@@ -18,7 +19,7 @@ const getRawAchievementValue = (achievement: Achievement, player: Player) => {
     if (target === 'level') return player?.level || 0;
     if (target === 'prestige') return player?.meta?.prestigeRank || 0;
     // 2026-10 Wave 58: `stats.syntheses`는 성공한 합성만 센다(업적 "합성 N회 성공").
-    if (target === 'synths') return stats?.syntheses || 0;
+    if (target === 'synths') return getJourneyCounter(stats, 'syntheses');
     // 2026-10 Wave 58: "새 지역 N곳 발견" — 시작 마을은 발견한 곳이 아니다(처음부터 방문 목록에 있다).
     if (target === 'discoveries') return countDiscoveredMaps(stats);
     // 2026-10 Wave 58: "혼돈의 심연 N층 도달" — `abyssRecord`는 돌파한 층 수이고(Wave 35) 돌파하면 다음 층에
@@ -27,18 +28,23 @@ const getRawAchievementValue = (achievement: Achievement, player: Player) => {
         const record = stats?.abyssRecord || 0;
         return record > 0 ? record + 1 : 0;
     }
-    // cycle 95: 휘발성 killStreak는 매번 0으로 리셋되므로 max-ever 누적 카운터를 읽음.
-    if (target === 'maxKillStreak') return stats?.maxKillStreak || 0;
+    // cycle 95: 휘발성 killStreak는 매번 0으로 리셋되므로 최대 연속 처치를 읽는다.
+    // 2026-10 Wave 108: 여정 범위 업적은 이번 여정의 값이다(사망 · 계승이 새로 센다 — `utils/journeyScope.ts`).
+    if (target === 'maxKillStreak') return getJourneyMaxKillStreak(stats);
     // cycle 101: stats.relicCount 단일 source of truth — ADD_RELIC handler가
     // player.relics에 push와 stats.relicCount++ 둘 다 수행하므로, relics.length를
     // 추가로 더하면 현재 런의 relic이 double count됨. 이전엔 ach_relic_5("유물 5개")
     // 가 실제로 3개에서 풀리던 부풀림 회귀를 fix. checkTitles('relicCount')와도 정합.
-    if (target === 'relicCount') return stats?.relicCount || 0;
+    if (target === 'relicCount') return getJourneyCounter(stats, 'relicCount');
     // cycle 102: 발견 체인(BALANCE.DISCOVERY_CHAINS) 완료 카운트 — exploreUtils
     // checkDiscoveryChains가 stats.discoveryChains 배열에 완료 ID push.
     if (target === 'discoveryChains') return Array.isArray(stats?.discoveryChains) ? stats.discoveryChains.length : 0;
     if (target === 'signaturesDiscovered') return countDiscoveredSignatures(player);
     if (target === 'signatureSetsCompleted') return countCompletedSignatureSets(player);
+    if (target === 'kills' || target === 'bossKills' || target === 'explores' || target === 'crafts'
+        || target === 'bountiesCompleted' || target === 'total_gold' || target === 'escapes' || target === 'rests') {
+        return getJourneyCounter(stats, target);
+    }
     // B3-TODO(2026-09): achievement.target은 data-driven 문자열이라 PlayerStats 키로
     //   좁히려면 quests.ts ACHIEVEMENTS의 target 리터럴 유니온화가 선행돼야 한다.
     //   그때까지 이 한 곳만 동적 인덱스 캐스트를 유지한다(Number()로 number 반환형 보존,

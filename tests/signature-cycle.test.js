@@ -103,7 +103,7 @@ import { readFile } from 'node:fs/promises';
           kills: 500,
           cosmeticTitles: ['별을 보는 자'],
           synthProtects: 2,
-          claimedAchievements: ['ach_test'],
+          claimedAchievements: ['ach_die_1'],
           explores: 100,
       });
       const ascended = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
@@ -117,7 +117,7 @@ import { readFile } from 'node:fs/promises';
       assert.deepEqual(ascended.player.stats.cosmeticTitles, ['별을 보는 자']);
       assert.equal(ascended.player.stats.synthProtects, 2);
       // cycle 202
-      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_test']);
+      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_die_1'], 'Wave 108: 계정 장부 업적의 수령은 남는다');
       // cycle 203
       assert.equal(ascended.player.stats.explores, 100);
       // cycle 212

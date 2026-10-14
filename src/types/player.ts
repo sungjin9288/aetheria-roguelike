@@ -49,6 +49,11 @@ interface PlayerStats {
     dailyProtocol?: DailyProtocol | null;
     claimedAchievements?: string[];
     /**
+     * 2026-10 Wave 108 (소유자 결정 "영구 보상은 처음 한 번만"): 크리스털 보상을 이미 받은 업적 — 계정 단위.
+     * 업적은 사망 · 계승으로 다시 달성할 수 있지만(초기화 범위는 `utils/journeyScope.ts`) 크리스털은 계정당 한 번이다.
+     */
+    crystalRewardedAchievements?: string[];
+    /**
      * 2026-10 Wave 58: 달성했지만 아직 수령하지 않은 업적 — 계승 · 사망 재시작 직전에 남긴다(`pickPermanentPlayerState`).
      * 레벨 · 방문 지역처럼 런마다 줄어드는 값이 수령 전 업적을 다시 잠그지 않게 한다.
      */

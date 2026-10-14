@@ -475,6 +475,8 @@ export const MSG = {
     STORY_JOURNAL_NEXT: (title: string | undefined, level: number | undefined) => `다음 이야기: ${title} · 수락 조건 레벨 ${level}. 마을 게시판에서 확인하세요.`,
     ACH_REWARD_ITEM: (name: string) => `업적 보상 아이템: ${name}`,
     ACH_DONE: (title: string | undefined) => `업적 달성: ${title}`,
+    // 2026-10 Wave 108 (소유자 결정 "영구 보상은 처음 한 번만"): 다시 달성한 업적의 크리스털은 계정당 한 번만 준다.
+    ACH_CRYSTAL_ALREADY_GRANTED: (amount: number) => `에테르 크리스탈 ${amount}개는 이전 여정에서 이미 받았습니다`,
     PREMIUM_INSUFFICIENT: (name: string) => `${name}이(가) 부족합니다.`,
     ITEM_NOT_FOUND: '아이템을 찾을 수 없습니다.',
     SKILL_BRANCH_CHOSEN: (name: string, branchName: string) => `${name} 성장 선택: ${branchName}`,
@@ -535,7 +537,8 @@ export const MSG = {
     BOUNTY_ABANDON_WARNING: '새 현상수배는 바로 받을 수 있지만 대상과 수량은 새로 정해집니다.',
     // cycle 116: BOUNTY_ACCEPTED 제거 — BOUNTY_ACCEPTED_NEW가 active.
     ASCEND_PENDING_QUESTS_TITLE: '먼저 받을 임무 보상',
-    ASCEND_PENDING_QUESTS_GUIDANCE: '수령 기록은 계승 후에도 남습니다. 보상 장비와 골드를 쓰려면 수령 후 이 여정을 계속하세요.',
+    // 2026-10 Wave 108: 계승하면 임무 · 이야기를 처음부터 다시 한다(수령 기록이 남지 않는다).
+    ASCEND_PENDING_QUESTS_GUIDANCE: '계승하면 임무와 이야기를 처음부터 다시 합니다. 완료한 임무 보상은 계승 전에 받으세요.',
     ASCEND_PENDING_QUESTS_BLOCKED: '완료한 임무 보상을 모두 받은 뒤 계승할 수 있습니다.',
     ASCEND_CANCEL: '계승을 미루고 현재 여정을 계속합니다.',
 
@@ -630,9 +633,9 @@ export const MSG = {
     ELITE_TITLE_UNLOCKED: (name: string, bonusLabel: string) => `정예와 마주쳤습니다. 새 칭호 [${name}] — ${bonusLabel}(모은 정예 칭호에 합산)`,
     ELITE_TITLE_GROUP: (count: number, total: number) => `정예 목격 칭호 ${count}/${total}`,
     ELITE_TITLE_GROUP_TOTAL: (bonusLabel: string) => (bonusLabel ? `합산 효과 ${bonusLabel}` : '합산 효과 없음'),
-    // 능력치 화면 '계승 기록' — 영구 원천별 합(레벨 비례 전 원래 양).
-    STATS_STORY_BONUS_LABEL: '이야기 보상',
-    STATS_ELITE_TITLE_LABEL: (count: number, total: number) => `정예 목격 ${count}/${total}`,
+    // 능력치 화면 '계승 기록' — 원천별 합(레벨 비례 전 원래 양). 2026-10 Wave 108부터 이야기 보상 · 정예 칭호는 이번 여정 값이다.
+    STATS_STORY_BONUS_LABEL: '이야기 보상 · 이번 여정',
+    STATS_ELITE_TITLE_LABEL: (count: number, total: number) => `정예 목격 ${count}/${total} · 이번 여정`,
     STATS_PERMANENT_NONE: '없음',
     // 2026-10 Wave 61: 새 칭호는 아직 없는 칭호일 때만 알린다(`title` null) — 계승 11단계부터는 10단계의 '에테르의 신'이 다시 온다.
     ASCEND_DONE: (rank: number, title: string | null) => (title
@@ -898,12 +901,12 @@ export const MSG = {
     // 2026-10: 체인 보상의 `buffName`이 없을 때의 일반 이름 — '기사의 혼령'은 이제 최후의 영웅 데이터가 직접 든다.
     CHAIN_REWARD_COMBAT_BONUS_NAME: '이야기의 가호',
     // 2026-10: 이야기 선택지 미리보기 — 진행 머리말과, 체인을 영구히 닫는 선택(`chain_advance_fail`)의 표시.
-    //   실패 선택은 진행도를 'failed'로 고정하고 사망 · 계승도 넘어가므로 "달라질 수 있음"이 아니라 끝이다.
+    //   실패 선택은 진행도를 'failed'로 고정한다 — 2026-10 Wave 108부터 이야기는 사망 · 계승에서 처음부터 다시 하므로 이번 여정에서 끝이다.
     CHAIN_PREVIEW_PROGRESS: '이야기 진행',
-    CHAIN_PREVIEW_ENDS: '이야기가 여기서 끝남 · 다시 이어지지 않음',
-    // 2026-10 Wave 72 (소유자 결정 "영구로 전환", Wave 62 C2를 대체): 이야기 능력치 보상은 영구다(`storyStatBonus` — 사망 · 계승을
-    //   넘어 남고, 다른 영구 능력치처럼 Lv30까지 레벨에 비례한다). 체인은 계정당 한 번이라 런 범위이던 동안 한 번 죽으면 영원히 잃었다.
-    CHAIN_PREVIEW_STAT_BONUS: '영구 능력 상승',
+    CHAIN_PREVIEW_ENDS: '이야기가 여기서 끝남 · 이번 여정에서는 다시 이어지지 않음',
+    // 2026-10 Wave 108 (소유자 결정 "죽으면 모든 게 초기화", Wave 72의 영구 전환을 대체): 이야기 능력치 보상은 이번 여정 범위다 —
+    //   이야기도 사망 · 계승에서 처음부터 다시 하므로 다시 얻을 수 있다(Lv30까지 레벨에 비례하는 규칙은 그대로).
+    CHAIN_PREVIEW_STAT_BONUS: '이번 여정 능력 상승',
     // Wave 62 C3: 데이터가 전설 등급을 선언한 유물 보상(`reward.rarity === 'legendary'`)은 미리보기도 전설이라 말한다.
     CHAIN_PREVIEW_LEGENDARY_RELIC: '전설 유물 보상',
     // Wave 62 C19: 실제 전투를 여는 이야기 선택지(`outcome.combat`) — 보상 · 진행은 승리했을 때만 정산된다.

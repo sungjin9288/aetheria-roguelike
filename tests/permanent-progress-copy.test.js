@@ -167,70 +167,25 @@ const chainProgressFixture = () => ({
     },
 });
 
-test('pickPermanentPlayerState는 체인 id 키만 이월하고 영수증 레저는 남긴다', () => {
+// 2026-10 Wave 108 (소유자 결정 "죽으면 임무 · 이야기 · 체인도 초기화 — 계승도 같다"): Wave 14 F2의 체인 이월을 되돌린다.
+//   이야기는 새 여정마다 처음부터 다시 하므로 사망 · 다시 시작 · 계승 모두 체인 진행도와 영수증 장부를 넘기지 않는다.
+//   (초기화 표 전체는 tests/journey-reset-scope-contract.test.js)
+test('Wave 108: 사망 · 다시 시작 · 계승은 체인 진행도도 영수증 장부도 넘기지 않는다', () => {
     const eventChainProgress = chainProgressFixture();
-    const permanent = pickPermanentPlayerState(
-        { ...INITIAL_STATE.player, eventChainProgress },
-        INITIAL_STATE.player,
-    );
-
-    assert.deepEqual(permanent.eventChainProgress, {
-        ancient_prophecy: 2,
-        dragon_legacy: 1,
-        forgotten_god: 'failed',
-        world_tree_corruption: 1,
-    });
-    // 예약 키는 체인 id가 아니므로 화이트리스트에 걸리지 않는다.
-    assert.equal(Object.hasOwn(permanent.eventChainProgress, RECEIPT_LEDGER_KEY), false);
-    // 이월본을 만져도 원본이 흔들리지 않는다.
-    assert.notEqual(permanent.eventChainProgress, eventChainProgress);
-});
-
-test('이월은 EVENT_CHAINS 화이트리스트다 — 정의에 없는 키와 레코드 값은 실리지 않는다', () => {
-    const permanent = pickPermanentPlayerState(
-        {
-            ...INITIAL_STATE.player,
-            eventChainProgress: {
-                lost_wizard: 3,
-                '없는_체인': 2,
-                // 체인 id 키에 레코드가 들어와도(형태 붕괴) 스텝 값이 아니므로 버린다.
-                last_hero: { forged: { encounterId: 'x', choiceId: 'y' } },
-                shadow_guild: -1,
-            },
-        },
-        INITIAL_STATE.player,
-    );
-
-    assert.deepEqual(permanent.eventChainProgress, { lost_wizard: 3 });
-    for (const key of Object.keys(permanent.eventChainProgress)) {
-        assert.ok(EVENT_CHAINS.some((chain) => chain.id === key), `${key}는 체인 id가 아니다`);
+    for (const kind of ['death', 'ascension']) {
+        const permanent = pickPermanentPlayerState({ ...INITIAL_STATE.player, eventChainProgress }, INITIAL_STATE.player, kind);
+        assert.equal(Object.hasOwn(permanent, 'eventChainProgress'), false, kind);
     }
-});
-
-test('ASCEND는 체인 진행도를 이어가고 RESET_GAME도 같다', () => {
-    const eventChainProgress = chainProgressFixture();
-    const base = {
-        ...INITIAL_STATE,
-        player: { ...INITIAL_STATE.player, eventChainProgress },
-        uid: 'test-uid',
-    };
-
+    const base = { ...INITIAL_STATE, player: { ...INITIAL_STATE.player, eventChainProgress }, uid: 'test-uid' };
     const ascended = gameReducer(
         { ...base, gameState: 'ascension' },
         { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: null } },
     );
     const restarted = gameReducer(base, { type: AT.RESET_GAME });
-
     for (const next of [ascended, restarted]) {
-        assert.equal(next.player.eventChainProgress.ancient_prophecy, 2);
-        assert.equal(next.player.eventChainProgress.dragon_legacy, 1);
-        assert.equal(next.player.eventChainProgress.forgotten_god, 'failed');
-        assert.equal(next.player.eventChainProgress.world_tree_corruption, 1);
-        // 플레이어가 보는 곳: 진행 중 목록이 리셋으로 비지 않는다.
-        assert.deepEqual(
-            buildChainJournal(next.player.eventChainProgress).map((entry) => entry.chainId).toSorted(),
-            ['ancient_prophecy', 'dragon_legacy', 'world_tree_corruption'],
-        );
+        assert.equal(next.player.eventChainProgress?.ancient_prophecy, undefined);
+        assert.equal(next.player.eventChainProgress?.forgotten_god, undefined, '실패로 닫은 체인도 새 여정에서 다시 열린다');
+        assert.deepEqual(buildChainJournal(next.player.eventChainProgress || {}), []);
     }
 });
 
@@ -260,9 +215,9 @@ test('영수증은 승천을 넘지 않는다 — 같은 조우를 다시 정산
         { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: null } },
     );
 
-    // 체인은 남고 영수증은 사라진다.
-    assert.equal(ascended.player.eventChainProgress.ancient_prophecy, 1);
-    assert.equal(Object.hasOwn(ascended.player.eventChainProgress, RECEIPT_LEDGER_KEY), false);
+    // Wave 108: 체인도 영수증도 새 여정으로 넘어가지 않는다.
+    assert.equal(ascended.player.eventChainProgress?.ancient_prophecy, undefined);
+    assert.equal(Object.hasOwn(ascended.player.eventChainProgress || {}, RECEIPT_LEDGER_KEY), false);
     assert.deepEqual(
         buildBoundedEncounterContext({ ...ascended.player, hp: 200, maxHp: 200 }, encounter.region).receiptKeys,
         [],

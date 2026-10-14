@@ -1,4 +1,5 @@
 import type { Player } from '../types/player.js';
+import type { JourneyCounterKey } from './journeyScope.js';
 
 export interface CurrentRunProgress {
     startedAt: number | null;
@@ -9,7 +10,25 @@ export interface CurrentRunProgress {
     escapesAtStart: number;
     visitedMapsAtStart: string[];
     maxKillStreak: number;
+    /**
+     * 2026-10 Wave 108: 여정 범위 진행(업적 · 칭호 · 임무)이 읽는 누적 카운터의 여정 시작 값(`utils/journeyScope.ts`
+     * `getJourneyCounter`). 이전 세이브에는 없다 — 그때는 평생 값을 그대로 읽는다.
+     */
+    countersAtStart?: Partial<Record<JourneyCounterKey, number>>;
 }
+
+const JOURNEY_COUNTER_KEYS: readonly JourneyCounterKey[] = Object.freeze([
+    'kills', 'bossKills', 'total_gold', 'escapes', 'explores', 'rests', 'crafts', 'syntheses', 'relicCount', 'bountiesCompleted',
+]);
+
+const snapshotJourneyCounters = (stats: Player['stats'] = {}): Record<JourneyCounterKey, number> => (
+    Object.fromEntries(JOURNEY_COUNTER_KEYS.map((key) => [key, toCount(stats?.[key])])) as Record<JourneyCounterKey, number>
+);
+
+const readCountersAtStart = (value: unknown): Partial<Record<JourneyCounterKey, number>> | undefined => {
+    if (!isRecord(value)) return undefined;
+    return Object.fromEntries(JOURNEY_COUNTER_KEYS.map((key) => [key, toCount(value[key])])) as Record<JourneyCounterKey, number>;
+};
 
 const toCount = (value: unknown) => Math.max(0, Number.isFinite(value) ? Number(value) : 0);
 
@@ -36,6 +55,7 @@ export const createCurrentRunProgress = (
     escapesAtStart: toCount(stats.escapes),
     visitedMapsAtStart: toUniqueLocations(stats.visitedMaps),
     maxKillStreak: 0,
+    countersAtStart: snapshotJourneyCounters(stats),
 });
 
 /**
@@ -51,7 +71,10 @@ export const normalizeCurrentRunProgress = (
     // 저장 데이터를 방어적으로 정규화하는 경계다 — unknown으로 다시 받아 재검증한다.
     const currentRun: unknown = stats.currentRun;
     if (!isRecord(currentRun)) {
-        return createCurrentRunProgress(stats, { complete: false, startedAt: options.now });
+        // 2026-10 Wave 108: 여정 시작을 모르는 이전 세이브에는 카운터 기준점을 찍지 않는다 — 지금 값을 기준점으로
+        //   찍으면 진행 중이던 업적 · 칭호 · 임무 진행이 0으로 떨어진다(평생 값 그대로 읽는다).
+        const { countersAtStart: _unknownStart, ...legacy } = createCurrentRunProgress(stats, { complete: false, startedAt: options.now });
+        return legacy;
     }
 
     return {
@@ -63,6 +86,7 @@ export const normalizeCurrentRunProgress = (
         escapesAtStart: toCount(currentRun.escapesAtStart),
         visitedMapsAtStart: toUniqueLocations(currentRun.visitedMapsAtStart),
         maxKillStreak: toCount(currentRun.maxKillStreak),
+        ...(readCountersAtStart(currentRun.countersAtStart) ? { countersAtStart: readCountersAtStart(currentRun.countersAtStart) } : {}),
     };
 };
 

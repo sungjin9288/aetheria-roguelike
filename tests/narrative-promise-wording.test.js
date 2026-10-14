@@ -52,11 +52,12 @@ const renderPreviewRow = (event, choiceIndex) => {
 
 // ── C2 ────────────────────────────────────────────────────────────────────
 
-test('C2 → Wave 72: 이야기 미리보기 · 문구는 능력치 보상을 "영구"라 말하고, 다른 보상은 "영구"를 약속하지 않는다', () => {
+// 2026-10 Wave 108 (소유자 결정 "죽으면 모든 게 초기화"): Wave 72의 '영구' 문구를 대체한다 — 이야기 능력치는 이번 여정 범위다.
+test('C2 → Wave 108: 이야기 미리보기 · 문구는 능력치 보상을 "이번 여정"이라 말하고, 어떤 이야기 문구도 "영구"를 약속하지 않는다', () => {
     for (const chain of EVENT_CHAINS) {
         for (const step of chain.steps) {
             const texts = [step.event.title, step.event.desc, ...step.event.choices,
-                ...step.event.outcomes.filter((o) => o.reward?.type !== 'stat_bonus').map((o) => o.log)];
+                ...step.event.outcomes.map((o) => o.log)];
             for (const text of texts) assert.ok(!String(text || '').includes('영구'), `${chain.id}:${step.step}: ${text}`);
         }
     }
@@ -66,19 +67,21 @@ test('C2 → Wave 72: 이야기 미리보기 · 문구는 능력치 보상을 "�
         if (outcome.type !== 'chain_advance') continue;
         const preview = getEventChoicePreview(chainEvent(chain.id, step.step), choiceIndex);
         assert.equal(preview.text, `${MSG.CHAIN_PREVIEW_PROGRESS} · ${MSG.CHAIN_PREVIEW_STAT_BONUS}`, `${chain.id}:${step.step}:${choiceIndex}`);
-        assert.ok(preview.text.includes('영구'));
-        assert.ok(!preview.text.includes('이번 여정'));
+        assert.ok(preview.text.includes('이번 여정'));
+        assert.ok(!preview.text.includes('영구'));
     }
     // 원장이 짚은 문구: 잊혀진 사령관 3단계 "영혼에게 안식을 권한다".
     const commander = chainEvent('forgotten_commander', 2);
-    assert.match(commander.outcomes[1].log, /방어력과 생명이 영구히 강해집니다/);
+    assert.match(commander.outcomes[1].log, /이번 여정 동안 방어력과 생명이 강해집니다/);
     assert.ok(renderPreviewRow(commander, 1).includes(MSG.CHAIN_PREVIEW_STAT_BONUS), 'EventPanel이 그리는 줄');
 });
 
-test('C2 → Wave 72: 문구가 맞다 — 이야기 능력치(`storyStatBonus`)는 사망 · 계승 뒤로 넘어간다', () => {
+test('C2 → Wave 108: 문구가 맞다 — 이야기 능력치(`storyStatBonus`)는 사망 · 계승 뒤로 넘어가지 않는다', () => {
     const player = { ...clone(INITIAL_STATE.player), storyStatBonus: { def: 12, hp: 100 } };
-    const carried = pickPermanentPlayerState(player, clone(INITIAL_STATE.player));
-    assert.deepEqual(carried.storyStatBonus, { atk: 0, def: 12, hp: 100, mp: 0 }, '영구 상태 선별에 들어간다');
+    for (const kind of ['death', 'ascension']) {
+        const carried = pickPermanentPlayerState(player, clone(INITIAL_STATE.player), kind);
+        assert.equal('storyStatBonus' in carried, false, kind);
+    }
 });
 
 // ── C13 ───────────────────────────────────────────────────────────────────

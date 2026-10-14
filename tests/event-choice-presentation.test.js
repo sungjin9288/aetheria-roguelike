@@ -142,7 +142,7 @@ test('story-chain previews describe progression and reward type without exposing
 
     assert.deepEqual(getEventChoicePreview(chainEvent, 0), { text: '이야기 진행 · 유물 보상', tone: 'reward' });
     // 2026-10: 실패 선택은 체인을 'failed'로 닫는다(갈래가 없다) — "흐름이 달라질 수 있음"은 거짓이었다.
-    assert.deepEqual(getEventChoicePreview(chainEvent, 1), { text: '이야기가 여기서 끝남 · 다시 이어지지 않음', tone: 'danger' });
+    assert.deepEqual(getEventChoicePreview(chainEvent, 1), { text: '이야기가 여기서 끝남 · 이번 여정에서는 다시 이어지지 않음', tone: 'danger' });
 });
 
 test('story-chain gold costs are exact danger previews while positive gold remains a reward', () => {

@@ -22,6 +22,7 @@ import { renderStatic } from './helpers/render.ts';
  * Wave 100 (원장 §104.4 c — 소유자 결정 "c로 진행"): 계승 화면이 "이번 회차 요약"을 그린다 — 회차 규칙 정복 · 새 전설 각인 · 새 정예 칭호 ·
  * 끝없는 거울(Wave 99). 각인 · 정예 칭호는 계정 단위로 쌓여서 "이번 회차에 새로"는 회차 시작 기준점(`meta.cycleStart`)과의 차이다.
  * 기준점은 계승(`ASCEND`) 한 곳이 새 단계로 남기고 영구 meta라 사망 재시작을 넘는다. 기준점 없는 이전 세이브(단계 ≥ 1)는 그 줄을 그리지 않는다.
+ * Wave 108부터 정예 칭호는 계승 · 사망에서, 도감(각인)은 사망에서 빈다 — 요약은 지금 가진 것 − 기준점이다.
  */
 
 const FULL_TREE = Object.fromEntries(MIRROR_NODES.map((node) => [node.id, node.maxLevel]));
@@ -58,7 +59,8 @@ test('Wave 100: 계승이 새 단계의 수집 기준점을 남기고, 그 회�
     start = discover(start, SIGNATURE_NAMES[0]);
     const ascended = ascend(stateOf(start, GS.ASCENSION));
     assert.equal(ascended.player.meta.prestigeRank, 3);
-    assert.deepEqual(ascended.player.meta.cycleStart, { rank: 3, signatures: [SIGNATURE_NAMES[0]], eliteTitles: 1 });
+    // 2026-10 Wave 108: 정예 칭호는 계승에서 비고(칭호 초기화) 도감(각인)은 남는다 — 기준점도 그 상태다.
+    assert.deepEqual(ascended.player.meta.cycleStart, { rank: 3, signatures: [SIGNATURE_NAMES[0]], eliteTitles: 0 });
     const fresh = getCycleSummary(ascended.player);
     assert.deepEqual(fresh.signatures.newNames, []);
     assert.equal(fresh.eliteTitles.gained, 0);
@@ -70,16 +72,20 @@ test('Wave 100: 계승이 새 단계의 수집 기준점을 남기고, 그 회�
     assert.deepEqual(summary.signatures.newNames, [SIGNATURE_NAMES[1], SIGNATURE_NAMES[2]]);
     assert.equal(summary.signatures.discovered, 3);
     assert.equal(summary.signatures.total, SIGNATURE_NAMES.length);
-    assert.deepEqual([summary.eliteTitles.gained, summary.eliteTitles.owned, summary.eliteTitles.total], [2, 3, ELITE_TITLE_MAPS.length]);
+    assert.deepEqual([summary.eliteTitles.gained, summary.eliteTitles.owned, summary.eliteTitles.total], [2, 2, ELITE_TITLE_MAPS.length]);
 });
 
-test('Wave 100: 기준점은 사망 재시작을 넘는다 — 회차 안에서 죽어도 그 회차의 수집은 이어서 센다', () => {
+// 2026-10 Wave 108 (소유자 결정 "죽으면 도감도 초기화"): 기준점은 사망 재시작을 넘지만 도감은 비므로, 요약은 사망 뒤 다시 모은 것만 센다.
+test('Wave 100 → Wave 108: 기준점은 사망 재시작을 넘고, 사망이 비운 도감은 요약에서도 빠진다', () => {
     const ascended = ascend(stateOf(veteran(), GS.ASCENSION));
     const found = discover(ascended.player, SIGNATURE_NAMES[3]);
+    assert.deepEqual(getCycleSummary(found).signatures.newNames, [SIGNATURE_NAMES[3]]);
     const restarted = CombatEngine.handleDefeat(found, structuredClone(INITIAL_STATE.player), () => 0.5, () => 1).updatedPlayer;
     assert.equal(restarted.level, 1, '사망 재시작이 적용됐다');
     assert.deepEqual(restarted.meta.cycleStart, ascended.player.meta.cycleStart);
-    assert.deepEqual(getCycleSummary(restarted).signatures.newNames, [SIGNATURE_NAMES[3]]);
+    assert.deepEqual(getCycleSummary(restarted).signatures.newNames, [], '사망이 도감을 비웠다');
+    const again = discover(restarted, SIGNATURE_NAMES[4]);
+    assert.deepEqual(getCycleSummary(again).signatures.newNames, [SIGNATURE_NAMES[4]]);
 });
 
 test('Wave 100: 처음 시작한 여정(단계 0)은 빈 기준점 — 기준점 없는 이전 세이브의 계승 단계는 각인 · 정예 줄을 그리지 않는다', () => {

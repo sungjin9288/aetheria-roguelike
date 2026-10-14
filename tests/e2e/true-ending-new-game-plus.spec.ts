@@ -238,7 +238,8 @@ test.describe('True Ending → New Game+ production journey', () => {
         expect(ascended.primalShards).toBe(0);
         expect(ascended.trueEndingSeen).toBe(true);
         expect(ascended.heartCount).toBe(0);
-        expect(ascended.claimedQuestIds).toContain(87);
+        // 2026-10 Wave 108: 계승하면 임무를 처음부터 다시 한다 — 수령 기록도 새 여정에는 없다.
+        expect(ascended.claimedQuestIds).not.toContain(87);
         expect(ascended.activeQuestIds).not.toContain(87);
         expect(ascended.endgameReceiptKey).toBe(endingBeforeReload.endgameReceiptKey);
         expect(ascended.classJourney).toEqual(migratedClassJourney);
@@ -250,7 +251,7 @@ test.describe('True Ending → New Game+ production journey', () => {
             window.localStorage.getItem('aetheria.device-qa.true-ending-journey.snapshot.v1') || 'null',
         ));
         expect(savedJourney?.player?.meta?.prestigeRank).toBe(4);
-        expect(savedJourney?.player?.stats?.claimedQuestIds).toContain(87);
+        expect(savedJourney?.player?.stats?.claimedQuestIds).not.toContain(87);
         expect(savedJourney?.player?.quests?.some((quest: { id: number }) => quest.id === 87)).toBe(false);
         await page.reload({ waitUntil: 'domcontentloaded' });
         await expect.poll(() => page.evaluate(() => JSON.parse(
@@ -260,7 +261,7 @@ test.describe('True Ending → New Game+ production journey', () => {
         const finalReload = await snapshot(page);
         expect(finalReload.prestigeRank).toBe(4);
         expect(finalReload.heartCount).toBe(0);
-        expect(finalReload.claimedQuestIds).toContain(87);
+        expect(finalReload.claimedQuestIds).not.toContain(87);
         expect(finalReload.activeQuestIds).not.toContain(87);
         expect(finalReload.endgameReceiptKey).toBe(endingBeforeReload.endgameReceiptKey);
         expect(finalReload.classJourney).toEqual(migratedClassJourney);
