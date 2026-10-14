@@ -171,7 +171,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                         )}
                     </section>
 
-                    <section data-testid="run-summary-persistent-growth" className="mt-4 flex items-start gap-2.5 border-t border-white/8 pt-3 text-[10px] font-readable leading-relaxed text-slate-300/74">
+                    <section data-testid="run-summary-persistent-growth" className="mt-4 flex items-start gap-2.5 border-t border-white/8 pt-3 text-[11px] font-readable leading-relaxed text-slate-300/74">
                         <ShieldCheck size={14} className="mt-0.5 shrink-0 text-[#7dd4d8]" />
                         <span className="min-w-0">
                             <span data-testid="run-summary-kept" className="block">{MSG.JOURNEY_KEPT_LINE(getJourneySurfaceText('death', 'kept'))}</span>
