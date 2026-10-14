@@ -32,6 +32,7 @@ import { appendRewardLogs } from './rewardLog';
 import { addNewTitles, addSeasonXp } from './helpers';
 import type { GameState, HandlerMap } from '../gameReducer';
 import type { CodexEntry, Player } from '../../types';
+import { collectCrystalRewardedAchievementIds } from '../../utils/permanentProgress';
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
@@ -206,12 +207,19 @@ export const rewardActionMap = {
         }
         if (achievement.reward?.premiumCurrency) {
             const premiumCurrency = Math.max(0, Number(achievement.reward.premiumCurrency) || 0);
-            nextPlayer = {
-                ...nextPlayer,
-                premiumCurrency: (nextPlayer.premiumCurrency || 0) + premiumCurrency,
-            };
-            if (premiumCurrency > 0) {
-                logs.push({ type: 'success', text: `에테르 크리스탈 +${formatNumber(premiumCurrency)}` });
+            // 2026-10 Wave 108: 업적은 사망 · 계승으로 다시 달성할 수 있지만 크리스털은 초기화를 넘어 남는 보상이라 계정당 한 번이다.
+            const crystalRewarded = collectCrystalRewardedAchievementIds(state.player.stats);
+            if (crystalRewarded.includes(achievementId)) {
+                if (premiumCurrency > 0) logs.push({ type: 'system', text: MSG.ACH_CRYSTAL_ALREADY_GRANTED(premiumCurrency) });
+            } else {
+                nextPlayer = {
+                    ...nextPlayer,
+                    premiumCurrency: (nextPlayer.premiumCurrency || 0) + premiumCurrency,
+                    stats: { ...nextPlayer.stats, crystalRewardedAchievements: [...crystalRewarded, achievementId] },
+                };
+                if (premiumCurrency > 0) {
+                    logs.push({ type: 'success', text: `에테르 크리스탈 +${formatNumber(premiumCurrency)}` });
+                }
             }
         }
 

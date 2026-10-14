@@ -1,9 +1,15 @@
-import type { EventChainProgress, EventChainProgressValue, Player } from '../types/player';
-import { EVENT_CHAINS } from '../data/eventChains';
+import type { Player } from '../types/player';
 import { normalizeClassJourneyLedger } from './classJourney';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward';
 import { collectAchievedAchievementIds } from './achievementProgress';
-import { pickPermanentStoryStatBonus } from './permanentStatSources';
+import { ACHIEVEMENTS } from '../data/quests';
+import { TITLES } from '../data/titles';
+import {
+    ACHIEVEMENT_TARGET_SCOPE,
+    getTitleScope,
+    isScopeKeptOn,
+    type JourneyResetKind,
+} from './journeyScope';
 
 const clone = <T>(value: T): T => {
     if (Array.isArray(value)) return value.map((entry) => clone(entry)) as T;
@@ -21,49 +27,58 @@ const numberOrZero = (value: unknown) => {
     return Number.isFinite(numeric) ? numeric : 0;
 };
 
-/** 체인 진행 값의 실제 모양 — 스텝 번호이거나 실패 마커다(영수증 레코드는 아니다). */
-const isChainStepValue = (value: EventChainProgressValue): value is number | 'failed' => (
-    value === 'failed' || (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0)
+const TITLE_COND_TYPE_BY_ID: ReadonlyMap<string, string> = new Map(TITLES.map((title) => [title.id, title.cond.type]));
+const ACHIEVEMENT_SCOPE_BY_ID: ReadonlyMap<string, keyof typeof ACHIEVEMENT_TARGET_SCOPE | undefined> = new Map(
+    ACHIEVEMENTS.flatMap((achievement) => (achievement.id ? [[achievement.id, achievement.target] as const] : [])),
+);
+const CRYSTAL_ACHIEVEMENT_IDS: ReadonlySet<string> = new Set(
+    ACHIEVEMENTS.filter((achievement) => Number(achievement.reward?.premiumCurrency) > 0).flatMap((achievement) => (achievement.id ? [achievement.id] : [])),
 );
 
-/**
- * 2026-09 Wave 14 F2: 이벤트 체인 진행도는 승천/사망을 넘어 이어진다 — 지식 축의
- * 나머지(`stats.discoveryChains`·`stats.visitedMaps`·`stats.codex`·`titles`)가 전부
- * 계승되는데 이것 하나만 리셋되고 있었다. 체인은 Lv10~40(2.05h~21.08h)에 열리고
- * 완주는 그보다 훨씬 깊어서, 리셋 지점(승천 Lv48 ≈ 53.28h)이 **항상 그 사이에** 있다.
- *
- * **이월 대상은 `EVENT_CHAINS`의 체인 id 키뿐이다.** 이 필드는 용도가 둘이라
- * 예약 키 `boundedEncounterReceipts`가 원정 조우 영수증 레저를 겸한다
- * (`types/player.ts` · `boundedEncounterSelector.ts`). 통째로 넘기면 그 영수증이
- * 승천을 넘어가 같은 조우의 재획득을 영구히 막는다 — 그래서 progress 쪽 키를
- * 훑는 것이 아니라 **EVENT_CHAINS를 훑어 화이트리스트로** 고른다(정의에 없는
- * 키는 구조적으로 실릴 수 없다).
- */
-const pickEventChainProgress = (progress: EventChainProgress | undefined): EventChainProgress => {
-    const carried: EventChainProgress = {};
-    for (const chain of EVENT_CHAINS) {
-        const value = progress?.[chain.id];
-        if (value === undefined || !isChainStepValue(value)) continue;
-        carried[chain.id] = value;
-    }
-    return carried;
-};
+const readIdList = (value: unknown): string[] => (
+    Array.isArray(value) ? value.filter((id): id is string => typeof id === 'string') : []
+);
+
+/** 남는 칭호 — 계정 장부 칭호(계승 단계 · 시즌 · 회차 규칙 · 크리스털로 산 칭호 …)와 계승이면 도감 칭호. */
+const pickKeptTitles = (titles: unknown, kind: JourneyResetKind): string[] => (
+    [...new Set(readIdList(titles))].filter((id) => isScopeKeptOn(getTitleScope(id, TITLE_COND_TYPE_BY_ID), kind))
+);
+
+/** 남는 업적 id — 모르는 id(카탈로그에서 빠진 업적)는 여정 범위다. */
+const filterAchievementIdsKeptOn = (ids: unknown, kind: JourneyResetKind): string[] => (
+    [...new Set(readIdList(ids))].filter((id) => {
+        const target = ACHIEVEMENT_SCOPE_BY_ID.get(id);
+        return Boolean(target) && isScopeKeptOn(ACHIEVEMENT_TARGET_SCOPE[target as keyof typeof ACHIEVEMENT_TARGET_SCOPE], kind);
+    })
+);
+
+/** 크리스털을 이미 받은 업적 — 기록 + 지금까지 수령한 크리스털 업적(장부가 생기기 전 세이브의 수령분). */
+export const collectCrystalRewardedAchievementIds = (stats: Player['stats'] | null | undefined): string[] => (
+    [...new Set([
+        ...readIdList(stats?.crystalRewardedAchievements),
+        ...readIdList(stats?.claimedAchievements).filter((id) => CRYSTAL_ACHIEVEMENT_IDS.has(id)),
+    ])]
+);
 
 export const pickPermanentPlayerState = (
     player: Player,
     initialPlayer: Player,
+    kind: JourneyResetKind,
 ): Partial<Player> => {
     const stats = player.stats || {};
     const initialStats = initialPlayer.stats || {};
-    // 2026-10 Wave 72 (소유자 결정 "영구로 전환"): 이야기 능력치 보상은 체인이 계정당 한 번이라 영구다 — 런 범위이던 동안
-    //   한 번 죽으면 영원히 잃었다. 값이 없으면 필드를 싣지 않는다(새 런 기본값 그대로).
-    const storyStatBonus = pickPermanentStoryStatBonus(player.storyStatBonus);
+    // 2026-10 Wave 108 (소유자 결정 "죽으면 모든 게 초기화 — 정수로 올린 것만 남는다 · 계승은 도감을 남긴다"):
+    //   이야기 능력치 보상 · 임무 · 이야기 · 체인 · 현상수배 · 칭호 · 업적은 사망 · 계승 모두 새로 시작한다(Wave 72의 이야기
+    //   능력치 영구 전환과 Wave 14 F2의 체인 이월을 대체한다). 도감(수집 · 발견)은 계승에서만 남는다. 무엇이 남는지는
+    //   `utils/journeyScope.ts`의 표가 소유한다.
+    const keepCodex = isScopeKeptOn('codex', kind);
+    const titles = pickKeptTitles(player.titles, kind);
+    const activeTitle = player.activeTitle && titles.includes(player.activeTitle) ? player.activeTitle : null;
     return {
-        ...(storyStatBonus ? { storyStatBonus } : {}),
         meta: clone({ ...(initialPlayer.meta || {}), ...(player.meta || {}) }),
-        achievements: clone(Array.isArray(player.achievements) ? player.achievements : []),
-        titles: clone(Array.isArray(player.titles) ? player.titles : []),
-        activeTitle: player.activeTitle || null,
+        achievements: [],
+        titles,
+        activeTitle,
         premiumCurrency: Math.max(0, numberOrZero(player.premiumCurrency)),
         reviveTokens: Math.max(0, numberOrZero(player.reviveTokens)),
         ...(player.maxInv !== undefined
@@ -83,7 +98,6 @@ export const pickPermanentPlayerState = (
             ? player.expeditionSequence
             : 0,
         returnSupplyRewards: normalizeReturnSupplyRewardLedger(player.returnSupplyRewards),
-        eventChainProgress: pickEventChainProgress(player.eventChainProgress),
         stats: {
             ...clone(initialStats),
             kills: numberOrZero(stats.kills),
@@ -106,40 +120,37 @@ export const pickPermanentPlayerState = (
             crafts: numberOrZero(stats.crafts),
             bountiesCompleted: numberOrZero(stats.bountiesCompleted),
             demonKingSlain: numberOrZero(stats.demonKingSlain),
-            visitedMaps: clone(Array.isArray(stats.visitedMaps) ? stats.visitedMaps : initialStats.visitedMaps),
-            discoveryChains: clone(Array.isArray(stats.discoveryChains) ? stats.discoveryChains : []),
+            visitedMaps: clone(keepCodex && Array.isArray(stats.visitedMaps) ? stats.visitedMaps : initialStats.visitedMaps),
+            discoveryChains: clone(keepCodex && Array.isArray(stats.discoveryChains) ? stats.discoveryChains : []),
             killRegistry: clone(
-                stats.killRegistry && typeof stats.killRegistry === 'object'
+                keepCodex && stats.killRegistry && typeof stats.killRegistry === 'object'
                     ? stats.killRegistry
                     : {},
             ),
-            buildWins: clone(
-                stats.buildWins && typeof stats.buildWins === 'object'
-                    ? stats.buildWins
-                    : {},
-            ),
-            codex: clone(stats.codex || initialStats.codex),
-            codexClaimed: clone(Array.isArray(stats.codexClaimed) ? stats.codexClaimed : []),
+            // 2026-10 Wave 108: 빌드 승리 기록은 빌드 임무만 읽는 여정 기록이라 넘기지 않는다.
+            codex: clone(keepCodex ? stats.codex || initialStats.codex : initialStats.codex),
+            codexClaimed: clone(keepCodex && Array.isArray(stats.codexClaimed) ? stats.codexClaimed : []),
             cosmeticTitles: clone(Array.isArray(stats.cosmeticTitles) ? stats.cosmeticTitles : []),
             synthProtects: numberOrZero(stats.synthProtects),
-            claimedAchievements: clone(
-                Array.isArray(stats.claimedAchievements) ? stats.claimedAchievements : [],
-            ),
+            // 2026-10 Wave 108: 업적은 목표의 초기화 범위를 따른다 — 계정 장부(계승 단계 · 마왕 처치 · 사망 수 · 심연 기록)를
+            //   읽는 업적은 지워도 곧바로 다시 달성되므로 수령 · 달성 기록을 남기고, 여정 · 도감 업적은 다시 한다.
+            claimedAchievements: filterAchievementIdsKeptOn(stats.claimedAchievements, kind),
             // 2026-10 Wave 58: 달성했지만 수령하지 않은 업적을 남긴다 — 이 선별이 계승 · 사망 재시작 · 다시 시작의 공통 지점이다.
-            achievedAchievements: collectAchievedAchievementIds(player),
+            achievedAchievements: filterAchievementIdsKeptOn(collectAchievedAchievementIds(player), kind),
+            // 2026-10 Wave 108 (소유자 결정 "영구 보상은 처음 한 번만"): 크리스털처럼 초기화를 넘어 남는 업적 보상은 계정당
+            //   한 번이다 — 다시 달성한 업적은 크리스털 없이 수령한다. 장부가 없던 세이브는 지금까지 수령한 업적으로 채운다.
+            crystalRewardedAchievements: collectCrystalRewardedAchievementIds(stats),
             // 2026-10 Wave 89: 회차 규칙 정복 기록 — 계정 단위(정복 보상은 단계마다 한 번).
             ruleConquestRanks: clone(Array.isArray(stats.ruleConquestRanks) ? stats.ruleConquestRanks : []),
             // 2026-10 Wave 94: 정복한 규칙 id(없으면 이전 세이브 — 읽는 쪽이 단계를 고정 순서로 읽는다).
             ...(Array.isArray(stats.ruleConquestRuleIds) ? { ruleConquestRuleIds: clone(stats.ruleConquestRuleIds) } : {}),
             // 2026-10 Wave 107: 거절하고 지나간 규칙 — 계정 단위(덱이 순환을 센다).
             ...(Array.isArray(stats.ruleDeclinePassIds) ? { ruleDeclinePassIds: clone(stats.ruleDeclinePassIds) } : {}),
-            claimedQuestIds: clone(Array.isArray(stats.claimedQuestIds) ? stats.claimedQuestIds : []),
-            codexBonusAtk: numberOrZero(stats.codexBonusAtk),
-            codexBonusDef: numberOrZero(stats.codexBonusDef),
-            codexBonusHp: numberOrZero(stats.codexBonusHp),
+            // 2026-10 Wave 108: 임무 · 이야기 수령 기록 · 현상수배 발급 기록은 여정 범위다(수령한 임무를 다시 받는다).
+            codexBonusAtk: keepCodex ? numberOrZero(stats.codexBonusAtk) : 0,
+            codexBonusDef: keepCodex ? numberOrZero(stats.codexBonusDef) : 0,
+            codexBonusHp: keepCodex ? numberOrZero(stats.codexBonusHp) : 0,
             signaturePity: numberOrZero(stats.signaturePity),
-            bountyDate: stats.bountyDate ?? null,
-            bountyIssued: Boolean(stats.bountyIssued),
             dailyProtocol: clone(stats.dailyProtocol ?? null),
             dailyInvadeCount: numberOrZero(stats.dailyInvadeCount),
             lastInvadeDate: stats.lastInvadeDate ?? null,

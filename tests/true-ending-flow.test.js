@@ -102,7 +102,8 @@ test('true ending eligibility uses canonical quest metadata and claimed ids', ()
     assert.deepEqual(questProgress.getClaimableQuestEntries(claimedState.player), []);
 });
 
-test('true ending blocks ASCEND until the pending quest is claimed, then preserves the claim across New Game+', () => {
+// 2026-10 Wave 108 (소유자 결정 "계승하면 임무 · 이야기도 처음부터"): 수령은 계승 전에 받고, 새 여정에서는 수령 기록이 빈다.
+test('true ending blocks ASCEND until the pending quest is claimed, then starts New Game+ with a fresh quest ledger', () => {
     const state = makeTrueEndingQuestState();
     const ascend = {
         type: AT.ASCEND,
@@ -134,7 +135,7 @@ test('true ending blocks ASCEND until the pending quest is claimed, then preserv
     assert.equal(ascended.player.meta.prestigeRank, 4);
     assert.equal(ascended.player.meta.endgame.trueEndingSeen, true);
     assert.equal(ascended.player.meta.endgame.lastEndgameReceiptKey, 'true-boss:87');
-    assert.ok(ascended.player.stats.claimedQuestIds.includes(87));
+    assert.deepEqual(ascended.player.stats.claimedQuestIds, []);
     assert.equal(ascended.player.quests.some((quest) => quest.id === 87), false);
 });
 

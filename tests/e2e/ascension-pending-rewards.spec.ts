@@ -52,7 +52,7 @@ for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }
             expect((await button.boundingBox())!.height).toBeGreaterThanOrEqual(48);
         }
         expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(viewport.width);
-        await expect(page.getByTestId('ascension-pending-quests')).toContainText('수령 기록은 계승 후에도 남습니다');
+        await expect(page.getByTestId('ascension-pending-quests')).toContainText('계승하면 임무와 이야기를 처음부터 다시 합니다');
         if (process.env.AETHERIA_CAPTURE_ASCENSION) {
             await page.screenshot({ path: `output/playwright/ascension-rewards-20260928/pending-${viewport.width}.png` });
         }
@@ -75,7 +75,8 @@ for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }
         const restored = await snapshot(page);
         expect(restored.gameState).toBe('idle');
         expect(restored.level).toBe(1);
-        expect(restored.claimedQuestIds.filter((id) => id === 87)).toHaveLength(1);
+        // 2026-10 Wave 108: 계승하면 임무를 처음부터 다시 한다 — 수령 기록도 새 여정에는 없다.
+        expect(restored.claimedQuestIds).not.toContain(87);
         expect(restored.activeQuestIds).not.toContain(87);
     });
 }

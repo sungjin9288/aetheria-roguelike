@@ -246,12 +246,13 @@ import { readFile } from 'node:fs/promises';
       assert.equal(next.player.stats.codexBonusHp, 50);
   });
 
-  test('cycle 211: RESET_GAME이 codexBonus 3종 동시 보존', () => {
+  // 2026-10 Wave 108 (소유자 결정 "죽으면 도감도 초기화 · 계승은 도감을 남긴다"): 다시 시작은 사망과 같아 도감 보너스가 빈다.
+  test('cycle 211 → Wave 108: RESET_GAME은 codexBonus 3종을 비운다(계승은 남긴다)', () => {
       const state = buildState({ codexBonusAtk: 12, codexBonusDef: 6, codexBonusHp: 100 });
       const next = gameReducer(state, { type: AT.RESET_GAME });
-      assert.equal(next.player.stats.codexBonusAtk, 12);
-      assert.equal(next.player.stats.codexBonusDef, 6);
-      assert.equal(next.player.stats.codexBonusHp, 100);
+      assert.equal(next.player.stats.codexBonusAtk, 0);
+      assert.equal(next.player.stats.codexBonusDef, 0);
+      assert.equal(next.player.stats.codexBonusHp, 0);
   });
 
   test('cycle 211: 미정의(구형 save) → 0 fallback', () => {
@@ -288,7 +289,7 @@ import { readFile } from 'node:fs/promises';
           bossKills: 25,
           cosmeticTitles: ['별을 보는 자'],
           synthProtects: 2,
-          claimedAchievements: ['ach_test'],
+          claimedAchievements: ['ach_die_1'],
           explores: 100,
       });
       const ascended = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
@@ -299,7 +300,7 @@ import { readFile } from 'node:fs/promises';
       assert.deepEqual(ascended.player.stats.cosmeticTitles, ['별을 보는 자']);
       assert.equal(ascended.player.stats.synthProtects, 2);
       // cycle 202
-      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_test']);
+      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_die_1'], 'Wave 108: 계정 장부 업적의 수령은 남는다');
       // cycle 203
       assert.equal(ascended.player.stats.explores, 100);
       // cycle 211

@@ -4,10 +4,9 @@ import { MSG } from '../data/messages';
 import type { Player } from '../types/player';
 
 /**
- * 이야기(이벤트 체인) 능력치 보상 — 2026-10 Wave 72 (소유자 결정 "영구로 전환", Wave 62 C2를 대체).
- *
- * 체인은 계정당 한 번이라 런 범위이던 동안 한 번 죽으면 그 보상을 영원히 잃었다. 이제 `player.storyStatBonus`는 사망 · 계승을
- * 넘어 남고(영구 상태 선별), 다른 영구 능력치처럼 `META_BONUS_FULL_LEVEL`까지 레벨에 비례한다:
+ * 이야기(이벤트 체인) 능력치 보상 — 2026-10 Wave 72에 영구로 바꿨다가 Wave 108 (소유자 결정 "죽으면 모든 게 초기화")에서 이번
+ * 여정 범위로 돌아왔다: 이야기 · 체인도 사망 · 계승에서 처음부터 다시 하므로 보상을 다시 얻는다(`pickPermanentPlayerState`가
+ * 넘기지 않는다). 다른 영구 능력치처럼 `META_BONUS_FULL_LEVEL`까지 레벨에 비례한다:
  * - 공격력 · 방어력: `calculateFullStats`가 배율 뒤에 더한다(Wave 58 고정값 규칙) — 여기 `getRampedStoryFlat`.
  * - 생명 · 기력: 저장 최대치가 정본이라 영구 생명 · 기력 스냅숏(`snapshotMetaVitals`)에 함께 실려 재구성 · 레벨업이 굽는다.
  * 저장값은 원래 양(도전 조건 '약한 생명력'의 절반 적용 전)이다 — 그 규칙은 굽는 순간(`applyChallengeMaxHp` · `getChallengeMaxHpGain`)이 건다.
@@ -38,12 +37,6 @@ export const formatPermanentStatBonus = (bonus: StoryStatBonus): string => (
         .map((key) => `${MSG.CHAIN_REWARD_STAT_LABEL[key]} +${bonus[key]}`)
         .join(' · ')
 );
-
-/** 영구 상태 선별용 — 값이 하나도 없으면 필드를 남기지 않는다. */
-export const pickPermanentStoryStatBonus = (value: Player['storyStatBonus'] | null | undefined): StoryStatBonus | null => {
-    const story = readStoryStatBonus(value);
-    return story.atk + story.def + story.hp + story.mp > 0 ? story : null;
-};
 
 /** 전투 공격력 · 방어력에 더할 이야기 보상(레벨 비례). */
 export const getRampedStoryFlat = (player: Pick<Player, 'storyStatBonus' | 'level'>): { atk: number; def: number } => {

@@ -99,12 +99,18 @@ test('"전부" 업적의 목표는 등록된 전설 각인 수다 — 문구 숫
     }
 });
 
-test('계승은 수령하지 않은 달성 업적을 다시 잠그지 않는다', () => {
+// 2026-10 Wave 108 (소유자 결정 "죽으면 모든 게 초기화 · 계승 때 칭호 · 업적도 초기화"): Wave 58의 달성 기록(수령하지 않은 업적이
+//   계승 · 사망 뒤에도 다시 잠기지 않게)은 이제 남는 범위의 업적만 남긴다 — 여정 업적(레벨 …)은 새 여정에서 다시 하고, 도감 업적
+//   (발견 지역 …)은 계승에서만 남는다. 계정 장부 업적(사망 수 …)은 값이 줄지 않으므로 그대로 달성 상태다.
+//   초기화 표 전체는 tests/journey-reset-scope-contract.test.js.
+test('Wave 108: 계승은 여정 업적의 달성 기록을 남기지 않고, 계정 장부 업적은 그대로 수령할 수 있다', () => {
     const lv30 = achievement('ach_lv_30');
+    const die1 = achievement('ach_die_1');
     const player = {
         ...structuredClone(INITIAL_STATE.player),
         name: '시험자', level: 50, quests: [],
         meta: { prestigeRank: 0, endgame: { lastEndgameReceiptKey: 'k' } },
+        stats: { ...structuredClone(INITIAL_STATE.player.stats), deaths: 1 },
     };
     assert.equal(isAchievementUnlocked(lv30, player), true);
     const ascended = gameReducer(
@@ -112,16 +118,14 @@ test('계승은 수령하지 않은 달성 업적을 다시 잠그지 않는다'
         { type: AT.ASCEND, payload: { expectedPrestigeRank: 0, sourceReceiptKey: 'k', seed: 1 } },
     );
     assert.equal(ascended.player.level, 1);
-    assert.ok(ascended.player.stats.achievedAchievements.includes('ach_lv_30'));
-    assert.equal(isAchievementUnlocked(lv30, ascended.player), true);
-    assert.equal(getAchievementCurrentValue(lv30, ascended.player), lv30.goal, '진행 표시도 목표에 머문다');
-
-    const claimed = gameReducer(ascended, { type: AT.CLAIM_ACHIEVEMENT_REWARD, payload: { achievementId: 'ach_lv_30' } });
-    assert.notEqual(claimed, ascended, '수령이 받아들여진다');
-    assert.ok(claimed.player.stats.claimedAchievements.includes('ach_lv_30'));
+    assert.ok(!ascended.player.stats.achievedAchievements.includes('ach_lv_30'), '여정 업적은 새 여정에서 다시 한다');
+    assert.equal(isAchievementUnlocked(lv30, ascended.player), false);
+    assert.equal(isAchievementUnlocked(die1, ascended.player), true, '계정 장부 업적은 달성 상태 그대로다');
+    const claimed = gameReducer(ascended, { type: AT.CLAIM_ACHIEVEMENT_REWARD, payload: { achievementId: 'ach_die_1' } });
+    assert.ok(claimed.player.stats.claimedAchievements.includes('ach_die_1'));
 });
 
-test('사망 재시작도 달성 기록을 남긴다 — 방문 지역이 줄어도 발견 업적은 유지된다', () => {
+test('Wave 108: 사망 재시작은 도감 업적의 달성 기록도 남기지 않는다 — 발견 지역을 다시 모아야 한다', () => {
     const discover15 = achievement('ach_discover_15');
     const maps = Object.keys(DB.MAPS).filter((name) => name !== CONSTANTS.START_LOCATION).slice(0, 15);
     const player = {
@@ -129,19 +133,11 @@ test('사망 재시작도 달성 기록을 남긴다 — 방문 지역이 줄어
         name: '시험자', level: 20,
         stats: { ...structuredClone(INITIAL_STATE.player.stats), visitedMaps: [CONSTANTS.START_LOCATION, ...maps], deaths: 1 },
     };
-    const defeated = CombatEngine.handleDefeat(player, structuredClone(INITIAL_STATE.player), () => 0.5, () => 1);
-    const afterDeath = defeated.updatedPlayer;
-    assert.ok(afterDeath.stats.achievedAchievements.includes('ach_discover_15'));
-
-    // 사망 재시작 화면의 새 여정(start)은 방문 지역을 시작 마을로 되돌린다.
-    const dispatched = [];
-    createCharacterActions({
-        player: { ...afterDeath, name: '' }, gameState: GS.IDLE, dispatch: (entry) => dispatched.push(entry),
-        addLog: () => {}, addStoryLog: () => {}, getFullStats: (p) => calculateFullStats(p ?? afterDeath),
-    }, { emitUnlockedTitles: () => {} }).start('시험자', 'male', '모험가', []);
-    const restarted = { ...afterDeath, ...dispatched.find((entry) => entry.type === AT.SET_PLAYER).payload };
-    assert.deepEqual(restarted.stats.visitedMaps, [CONSTANTS.START_LOCATION]);
-    assert.equal(isAchievementUnlocked(discover15, restarted), true);
+    assert.equal(isAchievementUnlocked(discover15, player), true);
+    const afterDeath = CombatEngine.handleDefeat(player, structuredClone(INITIAL_STATE.player), () => 0.5, () => 1).updatedPlayer;
+    assert.ok(!afterDeath.stats.achievedAchievements.includes('ach_discover_15'));
+    assert.deepEqual(afterDeath.stats.visitedMaps, [CONSTANTS.START_LOCATION], '발견 지역(도감)은 사망에서 빈다');
+    assert.equal(isAchievementUnlocked(discover15, afterDeath), false);
 });
 
 test('누적 골드는 보상 골드도 센다 — 시즌 · 도감 · 주간 · 레벨 이정표', () => {

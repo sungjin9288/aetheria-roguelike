@@ -148,7 +148,8 @@ test('RESET_GAME keeps lifetime counters and starts a fresh complete run baselin
     assert.equal(reset.player.stats.currentRun.bossKillsAtStart, 5);
     assert.equal(reset.player.stats.currentRun.totalGoldAtStart, 22000);
     assert.equal(reset.player.stats.currentRun.escapesAtStart, 3);
-    assert.deepEqual(reset.player.stats.currentRun.visitedMapsAtStart, ['시작의 마을', '고요한 숲']);
+    // 2026-10 Wave 108: 다시 시작은 사망과 같아 발견 지역(도감)이 시작 마을로 돌아간다 — 기준점도 그 상태다.
+    assert.deepEqual(reset.player.stats.currentRun.visitedMapsAtStart, INITIAL_STATE.player.stats.visitedMaps);
     assert.equal(reset.player.stats.currentRun.maxKillStreak, 0);
 });
 

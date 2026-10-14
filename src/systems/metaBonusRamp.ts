@@ -37,8 +37,9 @@ type StorySource = Pick<NonNullable<Player['storyStatBonus']>, 'hp' | 'mp'> | nu
 
 /**
  * 재구성 순간의 영구 생명 · 기력 전체량(에테르 초월 배율 포함).
- * 2026-10 Wave 72: 영구가 된 이야기 생명 · 기력(`storyStatBonus`)도 같은 스냅숏에 실린다 — 같은 레벨 비례로 굽고, 에테르 초월
- *   배율(계승 정수 · 첫 죽음의 영구 보너스 ×2)은 걸지 않는다.
+ * 2026-10 Wave 72: 이야기 생명 · 기력(`storyStatBonus`)도 같은 스냅숏에 실린다 — 같은 레벨 비례로 굽고, 에테르 초월
+ *   배율(계승 정수 · 첫 죽음의 영구 보너스 ×2)은 걸지 않는다. Wave 108부터 이야기 보상은 여정 범위라 새 여정(사망 · 계승)
+ *   재구성에는 없고, 여정 안의 재구성(전직)이 싣는다.
  */
 export const snapshotMetaVitals = (meta: MetaSource, story?: StorySource): MetaVitalsSnapshot => {
     const statMult = getPrestigeUnlocks(meta?.prestigeRank).statMult;

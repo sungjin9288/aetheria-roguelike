@@ -115,14 +115,15 @@ test('이기면(실제 전투 전이) 지팡이를 받고 체인이 진행된다
     assert.equal(getChainEventForLoc(step2.loc, state.player.eventChainProgress), null, '같은 단계가 다시 뜨지 않는다');
 });
 
-test('지면 보상 없이 단계가 남는다 — 같은 자리에서 다시 마주친다', () => {
+// 2026-10 Wave 108 (소유자 결정 "죽으면 모든 게 초기화"): 지면 이야기도 새 여정과 함께 처음부터다 — 단계가 남지 않는다.
+test('지면 보상 없이 이야기가 처음부터다(Wave 108 — 죽으면 체인 진행도 초기화)', () => {
     let state = accept(stepState({ hp: 1 }));
     state = { ...state, enemy: { ...state.enemy, hp: 1e9, maxHp: 1e9, atk: 1e7 } };
     for (let seed = 1; seed <= 20 && state.gameState === GS.COMBAT; seed += 1) state = act(state, 'attack', seed);
     assert.equal(state.gameState, GS.DEAD, '전제: 실제로 쓰러졌다');
     assert.ok(!hasStaff(state.player));
-    assert.equal(state.player.eventChainProgress[CHAIN], 2);
-    assert.equal(getChainEventForLoc(step2.loc, state.player.eventChainProgress)?.step.step, 2);
+    assert.equal(state.player.eventChainProgress[CHAIN], undefined);
+    assert.notEqual(getChainEventForLoc(step2.loc, state.player.eventChainProgress)?.step.step, 2);
 });
 
 test('물러나도(도주 성공) 보상 없이 단계가 남는다', () => {

@@ -148,8 +148,10 @@ for (const kind of ['defeat', 'manual_reset', 'ascend']) {
         assert.equal(result.reviveTokens, 3);
         assert.equal(result.maxInv, 27);
         assert.equal(result.stats.signaturePity, 5);
-        assert.deepEqual(result.stats.claimedAchievements, ['ach-permanent']);
-        assert.deepEqual(result.stats.claimedQuestIds, ['quest-permanent']);
+        // 2026-10 Wave 108: 카탈로그에 없는 업적 · 임무 수령 기록은 여정 범위다 — 임무는 새 여정에서 다시 한다
+        //   (계정 장부 업적만 남는다 — tests/journey-reset-scope-contract.test.js).
+        assert.deepEqual(result.stats.claimedAchievements, []);
+        assert.deepEqual(result.stats.claimedQuestIds, []);
     });
 
     test(`${kind} resets run-bound combat, expedition, inventory, equipment, quest, and relic state`, () => {

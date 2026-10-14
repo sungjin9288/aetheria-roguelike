@@ -20,6 +20,7 @@ import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { getSeasonArchive } from './seasonPassPresentation.js';
 import { formatSkillText } from './skillPresentation.js';
 import { countDiscoveredMaps } from './discoveredMaps.js';
+import { getJourneyCounter, getJourneyMaxKillStreak } from './journeyScope.js';
 import { getCodexEntryName } from './codexIdentity.js';
 import { getGoldIncome, getVisibleLocationName, type ChallengeHolder } from './challengeRules.js';
 import { getEliteTitleName, getEliteTitlePassiveLabel } from './eliteTitles.js';
@@ -333,13 +334,14 @@ export const checkTitles = (player: Player): string[] => {
     return TITLES.filter((t) => {
         if (existing.has(t.id)) return false;
         const { type, val } = t.cond;
-        if (type === 'kills')          return (player.stats?.kills         || 0) >= val;
-        if (type === 'bossKills')      return (player.stats?.bossKills     || 0) >= val;
+        // 2026-10 Wave 108: 여정 범위 칭호는 이번 여정의 값이다(사망 · 계승이 새로 센다 — `utils/journeyScope.ts`).
+        if (type === 'kills')          return getJourneyCounter(player.stats, 'kills') >= val;
+        if (type === 'bossKills')      return getJourneyCounter(player.stats, 'bossKills') >= val;
         if (type === 'level')          return (player.level ?? 0) >= val;
         if (type === 'deaths')         return (player.stats?.deaths        || 0) >= val;
-        if (type === 'total_gold')     return (player.stats?.total_gold    || 0) >= val;
-        if (type === 'rests')          return (player.stats?.rests         || 0) >= val;
-        if (type === 'relicCount')     return (player.stats?.relicCount    || 0) >= val;
+        if (type === 'total_gold')     return getJourneyCounter(player.stats, 'total_gold') >= val;
+        if (type === 'rests')          return getJourneyCounter(player.stats, 'rests') >= val;
+        if (type === 'relicCount')     return getJourneyCounter(player.stats, 'relicCount') >= val;
         if (type === 'prestige')       return (player.meta?.prestigeRank   || 0) >= val;
         // cycle 199: 'prestigeRank' cond.type — cycle 197에서 PRESTIGE_TITLES 10종을 정식 등록할
         //   때 도입. ASCEND가 직접 newTitle을 grant하지만 checkTitles에도 fallback handler를 추가해
@@ -388,13 +390,13 @@ export const checkTitles = (player: Player): string[] => {
         }
         if (type === 'abyssFloor')     return (player.stats?.abyssFloor    || 0) >= val;
         if (type === 'abyssRecord')    return (player.stats?.abyssRecord   || 0) >= val;
-        if (type === 'bountyDone')     return (player.stats?.bountiesCompleted || 0) >= val;
-        if (type === 'crafts')         return (player.stats?.crafts        || 0) >= val;
+        if (type === 'bountyDone')     return getJourneyCounter(player.stats, 'bountiesCompleted') >= val;
+        if (type === 'crafts')         return getJourneyCounter(player.stats, 'crafts') >= val;
         // cycle 85: 합성(synthesis) 카운터 — alchemist 칭호용. cycle 82에서 INITIAL_STATE에
         // syntheses:0 declarative하게 추가했고, achievement target='synths'와 동일한 필드를 읽음.
-        if (type === 'synths')         return (player.stats?.syntheses || 0) >= val;
+        if (type === 'synths')         return getJourneyCounter(player.stats, 'syntheses') >= val;
         // cycle 95: 최대 연속 처치 — berserker 칭호용. combatVictory에서 max-ever를 누적.
-        if (type === 'maxKillStreak') return (player.stats?.maxKillStreak || 0) >= val;
+        if (type === 'maxKillStreak') return getJourneyMaxKillStreak(player.stats) >= val;
         // cycle 103: 발견 체인 — chain_master 칭호용. exploreFlow.checkDiscoveryChains에서
         // stats.discoveryChains 배열에 완료 ID push. cycle 102 achievement target과 동일 source.
         if (type === 'discoveryChains') {
@@ -403,13 +405,13 @@ export const checkTitles = (player: Player): string[] => {
         }
         if (type === 'demonKingSlain') return (player.stats?.demonKingSlain || 0) >= val;
         if (type === 'noDeathWin')     return (player.stats?.demonKingSlain || 0) >= val && (player.stats?.deaths || 0) === 0;
-        if (type === 'explores')       return (player.stats?.explores || 0) >= val;
+        if (type === 'explores')       return getJourneyCounter(player.stats, 'explores') >= val;
         // cycle 83: 'discoveries' 시맨틱 통일 — visitedMaps.length(맵 발견 수)로 교체.
         // cartographer("지도 제작자") 칭호가 stats.discoveries(이벤트 카운터)만으로 풀리던
         // 회귀 수정. achievement(target='discoveries') 정합성 기준선과 일치시킴.
         if (type === 'discoveries')    return countDiscoveredMaps(player.stats) >= val;
         // cycle 77: 도주 카운터 기반 칭호 (cautious_explorer / survivor_instinct).
-        if (type === 'escapes')        return (player.stats?.escapes || 0) >= val;
+        if (type === 'escapes')        return getJourneyCounter(player.stats, 'escapes') >= val;
         // 2026-10 Wave 89: 회차 규칙 정복(정복 기록 `stats.ruleConquestRanks`) — val은 규칙 번호(1 ~ 규칙 수), 0은 모든 규칙.
         if (type === 'ruleConquest') {
             const conquered = getConqueredRuleOrdinals(player.stats);

@@ -146,7 +146,8 @@ import { readFile } from 'node:fs/promises';
       // 다른 multi-run 카운터는 보존
       assert.equal(result.updatedPlayer.stats.kills, 50);
       assert.equal(result.updatedPlayer.stats.bossKills, 3);
-      assert.deepEqual(result.updatedPlayer.stats.killRegistry, { '슬라임': 30, '봄의 여왕': 1 });
+      // 2026-10 Wave 108: 처치 기록(도감)은 사망에서 빈다 — 누적 카운터는 평생 기록으로 남는다.
+      assert.deepEqual(result.updatedPlayer.stats.killRegistry, {});
       // deaths += 1 (cycle 191 회귀 가드)
       assert.equal(result.updatedPlayer.stats.deaths, 1);
   });
@@ -157,8 +158,9 @@ import { readFile } from 'node:fs/promises';
           name: 'Test',
           hp: 0,
           maxHp: 100,
-          titles: ['warrior'],
-          activeTitle: 'warrior',
+          // 2026-10 Wave 108: 사망은 계정 장부 칭호(시즌 …)만 남긴다.
+          titles: ['시즌 선구자'],
+          activeTitle: '시즌 선구자',
           premiumCurrency: 100,
           reviveTokens: 2,
           maxInv: 25,
@@ -172,8 +174,8 @@ import { readFile } from 'node:fs/promises';
       };
       const result = CombatEngine.handleDefeat(player, INITIAL_STATE.player);
       // cycle 191
-      assert.deepEqual(result.updatedPlayer.titles, ['warrior']);
-      assert.equal(result.updatedPlayer.activeTitle, 'warrior');
+      assert.deepEqual(result.updatedPlayer.titles, ['시즌 선구자']);
+      assert.equal(result.updatedPlayer.activeTitle, '시즌 선구자');
       assert.equal(result.updatedPlayer.premiumCurrency, 100);
       assert.equal(result.updatedPlayer.reviveTokens, 2);
       assert.equal(result.updatedPlayer.maxInv, 25);

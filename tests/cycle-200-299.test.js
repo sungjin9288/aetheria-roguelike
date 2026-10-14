@@ -71,13 +71,15 @@ import { readFile } from 'node:fs/promises';
       sourceReceiptKey: null,
   };
 
-  test('cycle 202: ASCEND가 claimedAchievements를 보존', () => {
-      const state = buildAscendingState(['ach_first_blood', 'ach_kill_100', 'ach_boss_5']);
+  // 2026-10 Wave 108 (소유자 결정 "계승 때 칭호 · 업적도 초기화"): 계승은 계정 장부 업적(사망 수 · 마왕 처치 …)과 도감 업적만
+  //   수령 상태를 남긴다 — 여정 업적은 새 여정의 기준점부터 다시 세므로 곧바로 재청구되지 않는다(tests/journey-reset-scope-contract.test.js).
+  test('cycle 202 → Wave 108: ASCEND는 계정 장부 · 도감 업적의 수령만 남긴다', () => {
+      const state = buildAscendingState(['ach_first_blood', 'ach_die_1', 'ach_chain_1']);
       const next = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
       assert.deepEqual(
           next.player.stats.claimedAchievements,
-          ['ach_first_blood', 'ach_kill_100', 'ach_boss_5'],
-          'claimedAchievements 3건 모두 ASCEND 후 보존되어야 함 (재청구 exploit 방지)',
+          ['ach_die_1', 'ach_chain_1'],
+          '여정 업적(첫 처치)은 다시 하고, 사망 · 도감 업적은 재청구할 수 없다',
       );
   });
 
@@ -95,13 +97,13 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 188 회귀 가드: cosmeticTitles / synthProtects 보존 동시 유지', () => {
-      const state = buildAscendingState(['ach_test']);
+      const state = buildAscendingState(['ach_die_1']);
       state.player.stats.cosmeticTitles = ['별을 보는 자'];
       state.player.stats.synthProtects = 3;
       const next = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
       assert.deepEqual(next.player.stats.cosmeticTitles, ['별을 보는 자']);
       assert.equal(next.player.stats.synthProtects, 3);
-      assert.deepEqual(next.player.stats.claimedAchievements, ['ach_test']);
+      assert.deepEqual(next.player.stats.claimedAchievements, ['ach_die_1']);
   });
 
   test('cycle 119 회귀 가드: 영구 카운터 동시 보존', () => {
@@ -198,16 +200,13 @@ import { readFile } from 'node:fs/promises';
       );
   });
 
-  test('cycle 203: ASCEND가 buildWins 보존', () => {
+  // 2026-10 Wave 108: buildWins는 빌드 임무만 읽는 여정 기록이다 — 임무가 새 여정에서 다시 시작하므로 함께 비운다.
+  test('cycle 203 → Wave 108: ASCEND는 buildWins를 비운다(빌드 임무를 다시 한다)', () => {
       const state = buildAscendingState({
           buildWins: { 'warrior': 3, 'mage': 1 },
       });
       const next = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
-      assert.deepEqual(
-          next.player.stats.buildWins,
-          { 'warrior': 3, 'mage': 1 },
-          'buildWins는 questProgress build win counter — 보존 필요',
-      );
+      assert.deepEqual(next.player.stats.buildWins, {});
   });
 
   test('cycle 203: 4 카운터 미정의(구형 save) → fallback (0 / {})', () => {
@@ -229,8 +228,8 @@ import { readFile } from 'node:fs/promises';
       const next = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
       assert.equal(next.player.stats.explores, 250);
       assert.equal(next.player.stats.rests, 30);
-      assert.deepEqual(next.player.stats.killRegistry, { '드래곤': 1 });
-      assert.deepEqual(next.player.stats.buildWins, { 'rogue': 5 });
+      assert.deepEqual(next.player.stats.killRegistry, { '드래곤': 1 }, '도감(처치 기록)은 계승에서 남는다');
+      assert.deepEqual(next.player.stats.buildWins, {}, 'Wave 108: 빌드 승리 기록은 여정 범위');
   });
 
   test('cycle 119/188/202 회귀 가드: 기존 보존 필드 동시 유지', () => {
@@ -242,7 +241,7 @@ import { readFile } from 'node:fs/promises';
           visitedMaps: ['시작의 마을', '고요한 숲'],
           cosmeticTitles: ['별을 보는 자'],
           synthProtects: 2,
-          claimedAchievements: ['ach_test'],
+          claimedAchievements: ['ach_die_1'],
       });
       const next = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
       // cycle 119
@@ -253,9 +252,9 @@ import { readFile } from 'node:fs/promises';
       // cycle 188
       assert.deepEqual(next.player.stats.cosmeticTitles, ['별을 보는 자']);
       assert.equal(next.player.stats.synthProtects, 2);
-      // cycle 202
-      assert.deepEqual(next.player.stats.claimedAchievements, ['ach_test']);
-      // cycle 203
+      // cycle 202 → Wave 108: 계정 장부 업적(사망)의 수령은 남는다
+      assert.deepEqual(next.player.stats.claimedAchievements, ['ach_die_1']);
+      // cycle 203 — 누적 카운터는 평생 기록으로 남는다(여정 진행은 기준점과의 차이)
       assert.equal(next.player.stats.explores, 50);
   });
 }
@@ -359,10 +358,11 @@ import { readFile } from 'node:fs/promises';
       assert.equal(next.player.meta.bonusHp, 100);
   });
 
-  test('cycle 204: RESET_GAME이 titles / activeTitle 보존', () => {
+  // 2026-10 Wave 108 (소유자 결정 "죽으면 모든 게 초기화"): 다시 시작은 사망과 같다 — 계정 장부 칭호(계승 단계)만 남는다.
+  test('cycle 204 → Wave 108: RESET_GAME은 계정 장부 칭호만 남긴다', () => {
       const state = buildState();
       const next = gameReducer(state, { type: AT.RESET_GAME });
-      assert.deepEqual(next.player.titles, ['warrior', 'first_blood', '각성자']);
+      assert.deepEqual(next.player.titles, ['각성자']);
       assert.equal(next.player.activeTitle, '각성자');
   });
 
@@ -387,10 +387,11 @@ import { readFile } from 'node:fs/promises';
       assert.equal(next.player.stats.maxKillStreak, 50);
       assert.equal(next.player.stats.explores, 250);
       assert.equal(next.player.stats.rests, 30);
-      assert.deepEqual(next.player.stats.killRegistry, { '슬라임': 50, '드래곤': 1 });
-      assert.deepEqual(next.player.stats.buildWins, { 'warrior': 5 });
-      assert.deepEqual(next.player.stats.visitedMaps, ['시작의 마을', '고요한 숲', '어둠의 동굴']);
-      assert.deepEqual(next.player.stats.discoveryChains, ['water_apostle']);
+      // Wave 108: 도감(처치 기록 · 발견 지역 · 발견 체인)은 사망 · 다시 시작에서 비고, 빌드 승리 기록은 여정 범위다.
+      assert.deepEqual(next.player.stats.killRegistry, {});
+      assert.deepEqual(next.player.stats.buildWins, {});
+      assert.deepEqual(next.player.stats.visitedMaps, INITIAL_STATE.player.stats.visitedMaps);
+      assert.deepEqual(next.player.stats.discoveryChains, []);
   });
 
   test('cycle 204: RESET_GAME이 cosmeticTitles / synthProtects / claimedAchievements 보존 (cycle 188/202 align)', () => {
@@ -398,7 +399,7 @@ import { readFile } from 'node:fs/promises';
       const next = gameReducer(state, { type: AT.RESET_GAME });
       assert.deepEqual(next.player.stats.cosmeticTitles, ['별을 보는 자']);
       assert.equal(next.player.stats.synthProtects, 2);
-      assert.deepEqual(next.player.stats.claimedAchievements, ['ach_first_blood', 'ach_kill_100']);
+      assert.deepEqual(next.player.stats.claimedAchievements, [], 'Wave 108: 여정 업적은 다시 한다');
   });
 
   test('cycle 204: RESET_GAME이 RUN-bound 진행도 reset (회귀 가드)', () => {
@@ -766,24 +767,14 @@ import { readFile } from 'node:fs/promises';
       sourceReceiptKey: null,
   };
 
-  test('cycle 213: ASCEND가 bountyDate 보존', () => {
+  // 2026-10 Wave 108 (소유자 결정 "현상수배도 초기화"): Wave 32부터 현상수배는 "진행 중 하나, 완료하면 바로 다음"이라
+  //   bountyDate/bountyIssued는 게이트가 아니라 마지막 발급 기록이다 — 비워도 재발급 악용이 없다.
+  test('cycle 213 → Wave 108: ASCEND · RESET_GAME은 현상수배 발급 기록을 비운다', () => {
       const state = buildState({ bountyDate: '2026-05-06', bountyIssued: true });
-      const next = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
-      assert.equal(next.player.stats.bountyDate, '2026-05-06',
-          'bountyDate는 일일 발급 ledger — ASCEND 시 보존 필요 (mid-day 재발급 exploit 방지)');
-  });
-
-  test('cycle 213: ASCEND가 bountyIssued 보존', () => {
-      const state = buildState({ bountyDate: '2026-05-06', bountyIssued: true });
-      const next = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
-      assert.equal(next.player.stats.bountyIssued, true);
-  });
-
-  test('cycle 213: RESET_GAME이 bountyDate / bountyIssued 보존', () => {
-      const state = buildState({ bountyDate: '2026-05-06', bountyIssued: true });
-      const next = gameReducer(state, { type: AT.RESET_GAME });
-      assert.equal(next.player.stats.bountyDate, '2026-05-06');
-      assert.equal(next.player.stats.bountyIssued, true);
+      for (const next of [gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD }), gameReducer(state, { type: AT.RESET_GAME })]) {
+          assert.equal(next.player.stats.bountyDate || null, null);
+          assert.equal(Boolean(next.player.stats.bountyIssued), false);
+      }
   });
 
   test('cycle 213: 미정의(구형 save) → null/false fallback', () => {
@@ -818,12 +809,12 @@ import { readFile } from 'node:fs/promises';
           codexBonusAtk: 10,
           kills: 500,
           cosmeticTitles: ['별을 보는 자'],
-          claimedAchievements: ['ach_test'],
+          claimedAchievements: ['ach_die_1'],
       });
       const ascended = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
-      // cycle 213
-      assert.equal(ascended.player.stats.bountyDate, '2026-05-06');
-      assert.equal(ascended.player.stats.bountyIssued, true);
+      // cycle 213 → Wave 108: 현상수배 발급 기록은 여정 범위
+      assert.equal(ascended.player.stats.bountyDate || null, null);
+      assert.equal(Boolean(ascended.player.stats.bountyIssued), false);
       // cycle 212
       assert.equal(ascended.player.stats.signaturePity, 25);
       // cycle 211
@@ -832,8 +823,8 @@ import { readFile } from 'node:fs/promises';
       assert.equal(ascended.player.stats.kills, 500);
       // cycle 188
       assert.deepEqual(ascended.player.stats.cosmeticTitles, ['별을 보는 자']);
-      // cycle 202
-      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_test']);
+      // cycle 202 → Wave 108: 계정 장부 업적의 수령은 남는다
+      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_die_1']);
   });
 }
 
@@ -956,12 +947,13 @@ import { readFile } from 'node:fs/promises';
           kills: 200,
           cosmeticTitles: ['별을 보는 자'],
           synthProtects: 1,
-          claimedAchievements: ['ach_a'],
+          claimedAchievements: ['ach_die_1'],
       };
       const ascended = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
-      // cycle 191 META
-      assert.deepEqual(ascended.player.titles, ['warrior', '각성자', 'first_blood', 'centurion', 'reborn'],
-          '기존 칭호를 보존하고 처치200/계승1의 칭호를 승인된 전이에서 함께 해금한다');
+      // cycle 191 META → Wave 108: 계정 장부 칭호(계승 단계)만 남고, 새 단계의 칭호를 새 여정 기준으로 해금한다 —
+      //   여정 칭호(처치 200의 첫 처치 · 백인대장)는 새 여정에서 다시 얻는다.
+      assert.deepEqual(ascended.player.titles, ['각성자', 'reborn'],
+          '계정 장부 칭호를 남기고 계승 1의 칭호를 승인된 전이에서 함께 해금한다');
       assert.equal(ascended.player.premiumCurrency, 100);
       assert.equal(ascended.player.reviveTokens, 2);
       assert.equal(ascended.player.maxInv, 25);
@@ -969,7 +961,7 @@ import { readFile } from 'node:fs/promises';
       // cycle 188/202 stats
       assert.deepEqual(ascended.player.stats.cosmeticTitles, ['별을 보는 자']);
       assert.equal(ascended.player.stats.synthProtects, 1);
-      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_a']);
+      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_die_1']);
       // cycle 214
       assert.deepEqual(ascended.player.weeklyProtocol, SAMPLE_WP);
   });
@@ -1081,21 +1073,21 @@ import { readFile } from 'node:fs/promises';
           bountyIssued: true,
           codexBonusAtk: 10,
           signaturePity: 25,
-          claimedAchievements: ['ach_test'],
+          claimedAchievements: ['ach_die_1'],
       });
       const ascended = gameReducer(state, { type: AT.ASCEND, payload: ASCEND_PAYLOAD });
       // cycle 216
       assert.equal(ascended.player.stats.dailyInvadeCount, 4);
       assert.equal(ascended.player.stats.lastInvadeDate, today);
-      // cycle 213
-      assert.equal(ascended.player.stats.bountyDate, today);
-      assert.equal(ascended.player.stats.bountyIssued, true);
+      // cycle 213 → Wave 108: 현상수배 발급 기록은 여정 범위
+      assert.equal(ascended.player.stats.bountyDate || null, null);
+      assert.equal(Boolean(ascended.player.stats.bountyIssued), false);
       // cycle 211
       assert.equal(ascended.player.stats.codexBonusAtk, 10);
       // cycle 212
       assert.equal(ascended.player.stats.signaturePity, 25);
-      // cycle 202
-      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_test']);
+      // cycle 202 → Wave 108
+      assert.deepEqual(ascended.player.stats.claimedAchievements, ['ach_die_1']);
   });
 }
 

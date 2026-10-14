@@ -2227,13 +2227,14 @@ import { readFile, readdir } from 'node:fs/promises';
       ...overrides,
   });
 
-  test('cycle 191: handleDefeat가 titles 보존', () => {
+  // 2026-10 Wave 108 (소유자 결정 "죽으면 칭호도 초기화"): 여정 칭호(처치 …)는 비고, 계정 장부 칭호(시즌 …)만 남는다.
+  test('cycle 191 → Wave 108: handleDefeat는 계정 장부 칭호만 남긴다', () => {
       const player = buildPlayer({
           titles: ['first_blood', 'centurion', '시즌 선구자'],
           activeTitle: '시즌 선구자',
       });
       const result = CombatEngine.handleDefeat(player, INITIAL_STATE.player);
-      assert.deepEqual(result.updatedPlayer.titles, ['first_blood', 'centurion', '시즌 선구자']);
+      assert.deepEqual(result.updatedPlayer.titles, ['시즌 선구자']);
       assert.equal(result.updatedPlayer.activeTitle, '시즌 선구자');
   });
 

@@ -48,7 +48,8 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
     //   RUN 진행도(gold / inv / equip / relics / hp / mp / quests / skillLoadout)는
     //   INITIAL_STATE로 reset 유지.
     RESET_GAME: (state) => {
-        const permanent = pickPermanentPlayerState(state.player, INITIAL_STATE.player);
+        // 2026-10 Wave 108: 다시 시작은 사망과 같은 초기화다(여정을 버리는 것 — 도감도 남지 않는다).
+        const permanent = pickPermanentPlayerState(state.player, INITIAL_STATE.player, 'death');
         const permanentStats: NonNullable<Player['stats']> = permanent.stats || {};
         return {
             ...INITIAL_STATE,
@@ -209,12 +210,13 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         if (sourceReceiptKey !== null && typeof sourceReceiptKey !== 'string') return state;
         const currentReceiptKey = state.player.meta?.endgame?.lastEndgameReceiptKey ?? null;
         if (sourceReceiptKey !== currentReceiptKey) return state;
-        const permanent = pickPermanentPlayerState(state.player, INITIAL_STATE.player);
+        const permanent = pickPermanentPlayerState(state.player, INITIAL_STATE.player, 'ascension');
         const permanentStats: NonNullable<Player['stats']> = permanent.stats || {};
         const prevTitles = permanent.titles || [];
         // 2026-09 Wave 40: 계승은 이름을 남겨 새 게임(start)을 다시 타지 않는다 — 여기서 새 런의 영구 생명 · 기력을
         //   Lv1 연동 비율만큼 굽고 스냅숏을 남긴다. 굽지 않던 동안 넘어온 영구 생명 · 기력이 첫 전직 전까지 0이었다.
-        const metaVitalsSnapshot = snapshotMetaVitals(outcome.meta, permanent.storyStatBonus);
+        // 2026-10 Wave 108: 이야기 능력치는 여정 범위라 새 여정에는 없다.
+        const metaVitalsSnapshot = snapshotMetaVitals(outcome.meta);
         const bakedMeta = getBakedMetaVitals(metaVitalsSnapshot, 1);
         // 2026-10 Wave 58: 새 여정의 시작 조건은 새 게임(start)과 같은 계산이다(utils/runStart.ts) — 계승 화면에서 고른
         //   도전 조건(슬롯은 새 단계 기준) · 거울 시작 골드 · 첫 유물 선택지. 이전에는 사망 재시작에만 적용됐다.
@@ -259,7 +261,9 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
                 currentRun: createCurrentRunProgress(permanentStats),
             },
         };
-        const ascensionTitles = checkTitles({ ...state.player, meta: outcome.meta, titles: freshPlayer.titles, activeTitle: outcome.title });
+        // 2026-10 Wave 108: 새 단계로 열리는 칭호는 새 여정의 player로 판정한다 — 계승 전 player로 판정하던 동안 이전 여정의 누적값이
+        //   여정 칭호(처치 · 탐험 …)를 되살렸다.
+        const ascensionTitles = checkTitles({ ...freshPlayer, activeTitle: outcome.title });
         freshPlayer.titles = [...new Set([...(freshPlayer.titles || []), ...ascensionTitles])];
         // 2026-10 Wave 100: 새 회차의 수집 기준점 — 계승 화면의 "이번 회차 요약"이 다음 계승 때 지금 수집 − 기준점으로 센다.
         freshPlayer.meta = { ...(freshPlayer.meta || {}), cycleStart: snapshotCycleStart(freshPlayer, nextRank) };
