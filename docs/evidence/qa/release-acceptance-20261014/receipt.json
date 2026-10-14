@@ -1,0 +1,317 @@
+{
+ "date": "2026-10-14",
+ "base": "e96e20bd404b7815072df6daad863726cfa5be4b",
+ "scope": "Pre-release integrated acceptance on the Wave 107 merge SHA (41 commits since the 2026-10-06 game-complete acceptance at 00d67e51, Waves 71-107): natural play byte identity, three-stage screen tour with rendered-font probe, dimension grave screens, tracked evidence, rules emulator and full gate",
+ "fixtureBoundary": "Natural play: out-of-repo driver, offline, worktree at e96e20bd. Screens: Chromium iPhone 12 emulation on Linux, mock runtime with the QA seed API, production build of e96e20bd; stage B restores late-game snapshots taken by this natural play. Not physical-device acceptance.",
+ "naturalPlay": {
+  "worktreeHead": "e96e20bd404b7815072df6daad863726cfa5be4b",
+  "paths": 5,
+  "seedsPerPath": 24,
+  "runsPerSeed": 13,
+  "policies": {
+   "acceptAll": {
+    "comparedTo": "Wave 106 measurement w106a",
+    "identical": 120,
+    "total": 120,
+    "violations": 0,
+    "runs": 1560,
+    "deaths": 4332,
+    "runsWith15PlusDeaths": 37
+   },
+   "declineStackedOptional": {
+    "comparedTo": "Wave 107 measurement w107s",
+    "identical": 120,
+    "total": 120,
+    "violations": 0,
+    "runs": 1560,
+    "deaths": 2670,
+    "runsWith15PlusDeaths": 8
+   }
+  },
+  "ignoredFields": [
+   "stops.wallSeconds",
+   "snapTaken"
+  ]
+ },
+ "tour": {
+  "comparedTo": {
+   "A": "§73 baseline shots-finalF",
+   "B": "§73 stage B rerun shots-finalF-b2"
+  },
+  "A": {
+   "screens": 72,
+   "docOverflow": [
+    0,
+    0
+   ],
+   "offscreen": [
+    276,
+    276
+   ],
+   "posMismatch": [
+    6,
+    6
+   ],
+   "tinyButtons": [
+    0,
+    0
+   ],
+   "small": [
+    838,
+    837
+   ],
+   "clipped": [
+    27,
+    27
+   ],
+   "monoHangul": [
+    480,
+    480
+   ],
+   "fontProbe": {
+    "screens": 72,
+    "probedElements": 450,
+    "firaUsedElements": 77,
+    "spaceInCode": 0
+   },
+   "tinyAfter": []
+  },
+  "B": {
+   "screens": 65,
+   "docOverflow": [
+    0,
+    0
+   ],
+   "offscreen": [
+    272,
+    260
+   ],
+   "posMismatch": [
+    3,
+    3
+   ],
+   "tinyButtons": [
+    2,
+    0
+   ],
+   "small": [
+    1230,
+    1210
+   ],
+   "clipped": [
+    31,
+    30
+   ],
+   "monoHangul": [
+    1025,
+    865
+   ],
+   "fontProbe": {
+    "screens": 65,
+    "probedElements": 409,
+    "firaUsedElements": 160,
+    "spaceInCode": 0
+   },
+   "tinyAfter": []
+  },
+  "B2": {
+   "screens": 64,
+   "docOverflow": 0,
+   "offscreen": 256,
+   "posMismatch": 3,
+   "tinyButtons": 2,
+   "small": 1188,
+   "clipped": 9,
+   "monoHangul": 810,
+   "fontProbe": {
+    "screens": 64,
+    "probedElements": 368,
+    "firaUsedElements": 146,
+    "spaceInCode": 0
+   },
+   "tinyAfter": [
+    "B202-archive-inventory@375 quick-slot-assign-0:1 44x44",
+    "B202-archive-inventory@390 quick-slot-assign-0:1 44x44"
+   ],
+   "fixture": "rank 8 Lv44 snapshot"
+  },
+  "B3": {
+   "screens": 68,
+   "docOverflow": 0,
+   "offscreen": 272,
+   "posMismatch": 4,
+   "tinyButtons": 0,
+   "small": 1222,
+   "clipped": 29,
+   "monoHangul": 900,
+   "fontProbe": {
+    "screens": 68,
+    "probedElements": 401,
+    "firaUsedElements": 145,
+    "spaceInCode": 0
+   },
+   "tinyAfter": [],
+   "fixture": "rank 12 Lv48 snapshot"
+  },
+  "C": {
+   "screens": 33,
+   "docOverflow": 0,
+   "offscreen": 142,
+   "posMismatch": 0,
+   "tinyButtons": 0,
+   "small": 275,
+   "clipped": 30,
+   "monoHangul": 350,
+   "fontProbe": {
+    "screens": 33,
+    "probedElements": 345,
+    "firaUsedElements": 75,
+    "spaceInCode": 0
+   },
+   "tinyAfter": [],
+   "scope": "ascension screen: rule card offer, optional decline, stacked cards with default lowest-weight card, endless mirror"
+  },
+  "differences": [
+   "A small 838->837",
+   "B: 3 event screens absent because exploration on this snapshot produced no event (captured in B3); tiny 2->0",
+   "D shade combat small +1: Wave 72 elite sighting title log line (expected; the shade is an elite)"
+  ]
+ },
+ "dimensionGraveScreens": [
+  {
+   "name": "D01-dimension-grave-event",
+   "width": 375,
+   "docOverflow": 0,
+   "tinyButtons": 0,
+   "small": 4,
+   "clipped": 0
+  },
+  {
+   "name": "D02-shade-combat",
+   "width": 375,
+   "docOverflow": 0,
+   "tinyButtons": 0,
+   "small": 5,
+   "clipped": 0
+  },
+  {
+   "name": "D03-after-victory",
+   "width": 375,
+   "docOverflow": 0,
+   "tinyButtons": 0,
+   "small": 8,
+   "clipped": 1
+  },
+  {
+   "name": "D01-dimension-grave-event",
+   "width": 390,
+   "docOverflow": 0,
+   "tinyButtons": 0,
+   "small": 4,
+   "clipped": 0
+  },
+  {
+   "name": "D02-shade-combat",
+   "width": 390,
+   "docOverflow": 0,
+   "tinyButtons": 0,
+   "small": 5,
+   "clipped": 0
+  },
+  {
+   "name": "D03-after-victory",
+   "width": 390,
+   "docOverflow": 0,
+   "tinyButtons": 0,
+   "small": 8,
+   "clipped": 1
+  },
+  {
+   "name": "D01-dimension-grave-event",
+   "width": 430,
+   "docOverflow": 0,
+   "tinyButtons": 0,
+   "small": 4,
+   "clipped": 0
+  },
+  {
+   "name": "D02-shade-combat",
+   "width": 430,
+   "docOverflow": 0,
+   "tinyButtons": 0,
+   "small": 5,
+   "clipped": 0
+  },
+  {
+   "name": "D03-after-victory",
+   "width": 430,
+   "docOverflow": 0,
+   "tinyButtons": 0,
+   "small": 10,
+   "clipped": 1
+  }
+ ],
+ "finding": {
+  "what": "equipment-combat-power.json failed byte verify: pinned source hash of src/utils/signatureSetBonus.ts changed by Wave 103 (#143) without rewriting the evidence; 4 PRs merged on top",
+  "cause": "CI ran no tracked evidence verify; unit tests check report semantics only",
+  "change": "CI job tracked-evidence runs npm run evidence:verify (list derived from package.json --verify docs/evidence/ scripts + 2 art verifies); combat-power evidence hash rewritten (report body identical); progression diagnostic evidence rewritten for the package.json hash only",
+  "contract": "tests/tracked-evidence-ci-contract.test.js (3)",
+  "faultInjection": {
+   "allRed": true,
+   "mutations": [
+    "no CI run line",
+    "continue-on-error",
+    "art verify dropped from list",
+    "derive regex narrowed",
+    "Pillow install removed"
+   ]
+  },
+  "reproduction": {
+   "staleEvidence": "exit 1",
+   "afterRewrite": "15/15 exit 0"
+  }
+ },
+ "evidence": {
+  "trackedVerifies": 15,
+  "allOk": true,
+  "rewrittenHashOnly": [
+   "equipment-combat-power.json (signatureSetBonus.ts hash, 2 fields)",
+   "progression-diagnostic-v2.json (package.json hash, 1 field)"
+  ]
+ },
+ "rulesEmulator": {
+  "tests": 19,
+  "pass": 19,
+  "fail": 0,
+  "skipped": 0
+ },
+ "gate": {
+  "typeCheck": "ok",
+  "lint": "ok",
+  "unit": {
+   "tests": 6090,
+   "pass": 6090,
+   "files": 451,
+   "skipped": 0
+  },
+  "buildGuard": "ok",
+  "ciEnvBuild": "ok",
+  "e2e": {
+   "shard1": 83,
+   "shard2": 77,
+   "total": 160
+  },
+  "perf": {
+   "desktopFcpMs": 488,
+   "mobileFcpMs": 432
+  }
+ },
+ "observations": [
+  "Max kill streak reads 1 on driver snapshots: streak decays after 30s wall clock and the driver advances 15s per UI action, so natural play cannot measure streaks (measurement limit, not a game defect; untouched by Waves 71-107)"
+ ],
+ "remaining": [
+  "Physical iPhone screen and lifecycle acceptance (docs/qa/IPHONE_ACCEPTANCE_RUNBOOK.md)",
+  "Production Firebase project and live public grave count",
+  "Native builds and release signing"
+ ]
+}
