@@ -17,11 +17,10 @@ import { MSG } from '../../data/messages';
 import { appendRewardLogs } from './rewardLog';
 import {
     canRerollAscensionRuleOffer,
-    getAscensionRuleOffer,
     getAscensionRuleOfferSecond,
     getAscensionRuleRerolls,
     getAscensionRuleStartLog,
-    resolveAscensionRuleChoice,
+    resolveAscensionRuleOfferChoice,
     resolveAscensionRuleDeclined,
 } from '../../systems/ascensionRule';
 import { applyChallengeMaxHp, getRunStartGold, getStartBootChoiceCount, buildRunChallengeModifiers } from '../../utils/runStart';
@@ -222,7 +221,8 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         //   고른 규칙은 영구 meta에 남아 같은 단계의 사망 재시작이 같은 규칙을 읽는다.
         //   Wave 95: 패는 다시 뽑은 뒤의 패다(지금 player의 기록) — `outcome.meta`는 그 기록을 지우고 유료 횟수의 대가를 적용했다.
         const nextRank = Number(outcome.meta.prestigeRank) || 0;
-        const chosenRule = resolveAscensionRuleChoice(getAscensionRuleOffer(state.player, nextRank), payload?.ruleId);
+        // 2026-10 Wave 106: 고르지 않은 계승의 기본 카드는 겹친 카드면 두 비틀기의 측정 무게 합이 가장 작은 카드다.
+        const chosenRule = resolveAscensionRuleOfferChoice(state.player, nextRank, payload?.ruleId);
         // 2026-10 Wave 105: 겹친 규칙 카드는 패의 두 번째 비틀기를 함께 남긴다(같은 단계의 사망 재시작이 같은 비틀기를 읽는다).
         const secondModifier = getAscensionRuleOfferSecond(state.player, nextRank, chosenRule);
         const ruleMeta = chosenRule

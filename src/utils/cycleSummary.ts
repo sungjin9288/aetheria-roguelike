@@ -1,5 +1,5 @@
 import { MSG } from '../data/messages.js';
-import { getActiveAscensionRule, isOptionalAscensionRule } from '../systems/ascensionRule.js';
+import { getActiveAscensionRule, isActiveAscensionRuleOptional } from '../systems/ascensionRule.js';
 import { getMirrorEndlessCycle, isMirrorTreeComplete, type MirrorEndlessCycle } from '../systems/mirrorUpgrades.js';
 import type { Player } from '../types/index.js';
 import { ELITE_TITLE_MAPS, sumEliteTitleBonus } from './eliteTitles.js';
@@ -52,7 +52,7 @@ export const getCycleSummary = (player: Player): CycleSummary => {
     const activeRule = rank >= 1 ? getActiveAscensionRule(player.meta) : null;
     const rule = activeRule ? {
         name: activeRule.name,
-        status: isOptionalAscensionRule(activeRule) && player.ascensionRuleDeclined === true
+        status: isActiveAscensionRuleOptional(player.meta) && player.ascensionRuleDeclined === true
             ? 'declined' as const
             : hasConqueredRank(player, rank) ? 'conquered' as const : 'open' as const,
         titleName: activeRule.conquestTitle.name,
