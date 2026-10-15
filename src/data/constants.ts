@@ -382,6 +382,10 @@ export const BALANCE = {
     MIRROR_ENDLESS_ATK_PER_LEVEL: 1,
     MIRROR_ENDLESS_HP_PER_LEVEL: 5,
     MIRROR_ENDLESS_MP_PER_LEVEL: 3,
+    // 2026-10 Wave 114 (소유자 결정 "정수로 올릴 수 있는 능력치의 한계" · "영구 총상한"): 끝없는 단계는 능력치마다 여기까지다.
+    //   상한이 없던 동안 회차마다 6 ~ 7단계씩 직선으로 늘어 rank 12에 90단계였다(원장 §109). 정수 사다리 이월 상한
+    //   (`ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS`)과 합한 것이 정수로 계승 너머까지 남는 능력치의 한계다.
+    MIRROR_ENDLESS_MAX_LEVEL: 60,
     MIRROR_CAMPFIRE_BONUS_PER_LEVEL: 0.02,   // campfire_rate: 레벨당 캠프파이어 확률 +2%p
     MIRROR_RELIC_PITY_BONUS_PER_LEVEL: 0.25, // relic_pity: 레벨당 유물 pity 누적 +25%
     MIRROR_REST_DISCOUNT_PER_LEVEL: 0.20,    // rest_discount: 레벨당 휴식 비용 -20%
@@ -725,6 +729,10 @@ export const BALANCE = {
     // 2026-09 Wave 32 (소유자 결정): 계승할 때 사다리 단계 중 이 비율만 다음 런으로 넘긴다(내림). 한 런에 800단계
     //   안팎이 쌓여 통째로 넘어가던 동안 계승 런 48판 사망이 0이었다. 획득률은 1회차 성장의 몫이라 건드리지 않는다.
     ESSENCE_LADDER_ASCEND_CARRY: 0.1,
+    // 2026-10 Wave 114 (소유자 결정 "영구 총상한"): 넘어가는 사다리는 비율과 상관없이 이 단계까지다. 비율만 있던 동안 1회차
+    //   사다리가 800 → 1,370단계로 자라며 넘어가는 몫도 80 → 137단계로 따라 커져 2회차 사망이 시드당 0.25(무사망 77%)였다(원장 §120).
+    //   70단계는 2순환 강제 카드의 사망 루프(한 회차 15번 이상)를 3 → 20%로 만들어 100단계로 정했다(소유자 결정, 원장 §121).
+    ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS: 100,
     // 2026-09 Wave 37 (소유자 결정 "로그라이크의 느낌에 맞게 체감형 사다리"): 이 단계까지는 단계당 ESSENCE_PER_RANK 그대로다
     //   (1회차는 계승까지 800단계 안팎이라 건드리지 않는다). 그 뒤 k번째 단계의 비용은 ESSENCE_PER_RANK × (1 + k / SCALE)로
     //   늘어나, SOFTCAP_RANK + SCALE 단계에서 단계당 비용이 두 배가 된다. 계승을 미룬 런이 225 모델시간에 4,200단계

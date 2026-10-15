@@ -36,18 +36,18 @@ const ladderMeta = (rank, extra = {}) => ({
 
 test('[이월] 계승하면 사다리 단계의 10%만 남고, 사다리 몫이 아닌 영구 보너스는 그대로다', () => {
     assert.equal(BALANCE.ESSENCE_LADDER_ASCEND_CARRY, 0.1);
-    const outcome = getAscensionOutcome(ladderMeta(812));
-    assert.equal(outcome.meta.rank, 81);
-    assert.equal(outcome.ladder.rankBefore, 812);
-    assert.equal(outcome.ladder.rankKept, 81);
-    const dropped = 812 - 81;
-    assert.equal(outcome.meta.bonusAtk, ladderMeta(812).bonusAtk - dropped * BALANCE.ESSENCE_RANK_ATK + BALANCE.PRESTIGE_ATK_BONUS);
-    assert.equal(outcome.meta.bonusHp, ladderMeta(812).bonusHp - dropped * BALANCE.ESSENCE_RANK_HP + BALANCE.PRESTIGE_HP_BONUS);
-    assert.equal(outcome.meta.bonusMp, ladderMeta(812).bonusMp - dropped * BALANCE.ESSENCE_RANK_MP + BALANCE.PRESTIGE_MP_BONUS);
+    const outcome = getAscensionOutcome(ladderMeta(612));
+    assert.equal(outcome.meta.rank, 61);
+    assert.equal(outcome.ladder.rankBefore, 612);
+    assert.equal(outcome.ladder.rankKept, 61);
+    const dropped = 612 - 61;
+    assert.equal(outcome.meta.bonusAtk, ladderMeta(612).bonusAtk - dropped * BALANCE.ESSENCE_RANK_ATK + BALANCE.PRESTIGE_ATK_BONUS);
+    assert.equal(outcome.meta.bonusHp, ladderMeta(612).bonusHp - dropped * BALANCE.ESSENCE_RANK_HP + BALANCE.PRESTIGE_HP_BONUS);
+    assert.equal(outcome.meta.bonusMp, ladderMeta(612).bonusMp - dropped * BALANCE.ESSENCE_RANK_MP + BALANCE.PRESTIGE_MP_BONUS);
 });
 
 test('[원장] 누적 정수와 쓸 수 있는 정수는 줄지 않고, 이후 획득은 남은 단계에서 이어 오른다', () => {
-    const before = ladderMeta(812);
+    const before = ladderMeta(612);
     const outcome = getAscensionOutcome(before);
     // 2026-10 Wave 58: 계승 보상 정수에도 정수 배율(지금 단계 × 거울)이 곱해진다.
     const reward = scaleEssenceReward(BALANCE.PRESTIGE_ESSENCE_REWARD, before);
@@ -55,7 +55,7 @@ test('[원장] 누적 정수와 쓸 수 있는 정수는 줄지 않고, 이후 �
     assert.equal(getEssenceLifetime(outcome.meta), before.essenceLifetime + reward);
     // 계승 보상 정수(200)는 예전처럼 사다리에도 들어간다 — 다음 획득에서 +1단계.
     const next = applyEssenceGain(outcome.meta, 1);
-    assert.equal(next.meta.rank, 81 + Math.floor(BALANCE.PRESTIGE_ESSENCE_REWARD / BALANCE.ESSENCE_PER_RANK));
+    assert.equal(next.meta.rank, 61 + Math.floor(BALANCE.PRESTIGE_ESSENCE_REWARD / BALANCE.ESSENCE_PER_RANK));
     const more = applyEssenceGain(next.meta, BALANCE.ESSENCE_PER_RANK);
     assert.equal(more.meta.rank, next.meta.rank + 1, '누적 정수가 크다고 옛 단계로 되튀지 않는다');
     assert.equal(more.rankGain, 1);
@@ -79,12 +79,12 @@ test('[계승 전이] ASCEND가 이월된 meta로 새 런을 연다', () => {
             name: '계승자',
             level: 49,
             quests: [],
-            meta: { ...structuredClone(INITIAL_STATE.player.meta), ...ladderMeta(812) },
+            meta: { ...structuredClone(INITIAL_STATE.player.meta), ...ladderMeta(612) },
         },
     };
     const next = gameReducer(state, { type: AT.ASCEND, payload: { expectedPrestigeRank: 1, sourceReceiptKey: null } });
     assert.equal(next.player.meta.prestigeRank, 2, '비공허: 계승이 적용됐다');
-    assert.equal(next.player.meta.rank, 81);
+    assert.equal(next.player.meta.rank, 61);
     assert.equal(next.player.meta.bonusAtk, getAscensionOutcome(state.player.meta).meta.bonusAtk);
 });
 
@@ -94,18 +94,18 @@ test('[표시] 계승 화면이 사다리 이월을 설명한다', () => {
         name: '계승자',
         level: 49,
         quests: [],
-        meta: { ...structuredClone(INITIAL_STATE.player.meta), ...ladderMeta(812) },
+        meta: { ...structuredClone(INITIAL_STATE.player.meta), ...ladderMeta(612) },
     };
     const html = renderStatic(createElement(AscensionScreen, { player, actions: new Proxy({}, { get: () => () => {} }) }));
     assert.ok(html.includes('data-testid="ascension-ladder-carry"'));
-    assert.ok(html.includes('812'), '이전 단계');
-    assert.ok(html.includes('81'), '남는 단계');
+    assert.ok(html.includes('612'), '이전 단계');
+    assert.ok(html.includes('61'), '남는 단계');
 });
 
 test('[사망] 사망 재시작은 사다리를 줄이지 않는다(이월은 계승 전용)', async () => {
     const { CombatEngine } = await import('../src/systems/CombatEngine.ts');
-    const player = { ...structuredClone(INITIAL_STATE.player), name: 'x', level: 30, meta: { ...structuredClone(INITIAL_STATE.player.meta), ...ladderMeta(812) }, stats: { ...structuredClone(INITIAL_STATE.player.stats), deaths: 2 } };
+    const player = { ...structuredClone(INITIAL_STATE.player), name: 'x', level: 30, meta: { ...structuredClone(INITIAL_STATE.player.meta), ...ladderMeta(612) }, stats: { ...structuredClone(INITIAL_STATE.player.stats), deaths: 2 } };
     const restarted = CombatEngine.handleDefeat(player, INITIAL_STATE.player, () => 0.5, () => 0).updatedPlayer;
-    assert.equal(restarted.meta.rank, 812);
+    assert.equal(restarted.meta.rank, 612);
     assert.equal(restarted.meta.bonusAtk, player.meta.bonusAtk);
 });

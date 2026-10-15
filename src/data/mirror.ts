@@ -111,29 +111,30 @@ export const MIRROR_NODES: MirrorNodeDef[] = [
  * 2026-10 Wave 96 (소유자 결정 "거울 확장 — 적은 능력치를 많은 정수로"): 거울 8노드를 모두 채우면 열리는 끝없는 단계.
  *   정수는 회차마다 18만 ~ 30만씩 쌓이고 거울 8노드는 1회차 약 15시간에 다 차서, 7회차 끝에 쓸 곳 없는 정수가 중앙값 167만이었다
  *   (원장 §101). 비용이 단계마다 오르는 작은 영구 능력치라 강해지는 속도가 느리다.
+ * 2026-10 Wave 114 (소유자 결정 "정수로 올릴 수 있는 능력치의 한계"): 능력치마다 `MIRROR_ENDLESS_MAX_LEVEL` 단계까지다.
  */
 export const MIRROR_ENDLESS_NODES: MirrorNodeDef[] = [
     {
         id: 'endless_atk',
         name: '끝없는 날',
-        desc: '영구 공격력을 조금 올립니다. 비용은 단계마다 오르다가 상한에서 멈춥니다.',
-        maxLevel: Number.MAX_SAFE_INTEGER,
+        desc: `영구 공격력을 조금 올립니다. 비용은 단계마다 오르다가 상한에서 멈추고, 최대 ${BALANCE.MIRROR_ENDLESS_MAX_LEVEL}단계까지 새깁니다.`,
+        maxLevel: BALANCE.MIRROR_ENDLESS_MAX_LEVEL,
         costs: [],
         endless: { stat: 'atk' },
     },
     {
         id: 'endless_hp',
         name: '끝없는 심장',
-        desc: '영구 생명을 조금 올립니다. 새 여정 · 전직부터 생명에 반영되고, 비용은 단계마다 오르다가 상한에서 멈춥니다.',
-        maxLevel: Number.MAX_SAFE_INTEGER,
+        desc: `영구 생명을 조금 올립니다. 새 여정 · 전직부터 생명에 반영되고, 비용은 단계마다 오르다가 상한에서 멈추고, 최대 ${BALANCE.MIRROR_ENDLESS_MAX_LEVEL}단계까지 새깁니다.`,
+        maxLevel: BALANCE.MIRROR_ENDLESS_MAX_LEVEL,
         costs: [],
         endless: { stat: 'hp' },
     },
     {
         id: 'endless_mp',
         name: '끝없는 샘',
-        desc: '영구 기력을 조금 올립니다. 새 여정 · 전직부터 기력에 반영되고, 비용은 단계마다 오르다가 상한에서 멈춥니다.',
-        maxLevel: Number.MAX_SAFE_INTEGER,
+        desc: `영구 기력을 조금 올립니다. 새 여정 · 전직부터 기력에 반영되고, 비용은 단계마다 오르다가 상한에서 멈추고, 최대 ${BALANCE.MIRROR_ENDLESS_MAX_LEVEL}단계까지 새깁니다.`,
+        maxLevel: BALANCE.MIRROR_ENDLESS_MAX_LEVEL,
         costs: [],
         endless: { stat: 'mp' },
     },

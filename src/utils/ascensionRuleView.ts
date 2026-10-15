@@ -19,7 +19,7 @@ import {
     getSignatureSetMemberNames,
     getSignatureSetName,
 } from '../systems/ascensionRule.js';
-import { ALL_ASCENSION_RULES, ASCENSION_RULES, type AscensionRuleDef } from '../data/ascensionRules.js';
+import { ALL_ASCENSION_RULES, ASCENSION_RULES, OUTLOOK_DEFAULT_SAMPLES, type AscensionRuleDef } from '../data/ascensionRules.js';
 import type { Player } from '../types/index.js';
 import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
 import { BALANCE } from '../data/constants.js';
@@ -66,7 +66,7 @@ const getAscensionRuleOutlookLines = (rule: AscensionRuleDef, cycle: number, opt
     return {
         accepted: MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(formatOutlookNumber(outlook.acceptedDeaths), formatOutlookNumber(outlook.acceptedSignatures)),
         declined: MSG.ASCENSION_RULE_OUTLOOK_DECLINED(formatOutlookNumber(outlook.declinedDeaths), formatOutlookNumber(outlook.declinedSignatures)),
-        source: MSG.ASCENSION_RULE_OUTLOOK_SOURCE(outlook.measuredRank),
+        source: MSG.ASCENSION_RULE_OUTLOOK_SOURCE(outlook.measuredRank, outlook.samples ?? OUTLOOK_DEFAULT_SAMPLES),
     };
 };
 

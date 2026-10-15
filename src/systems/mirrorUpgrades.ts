@@ -92,35 +92,46 @@ export interface MirrorEndlessAffordance {
     unlocked: boolean;
     /** 이 정수로 살 수 있는 끝없는 단계 수 — 매번 가장 싼 단계를 사는 순서(가장 많이 사는 순서)다. */
     steps: number;
-    /** 지금 레벨에서 가장 싼 다음 단계의 비용. */
+    /** 지금 레벨에서 가장 싼 다음 단계의 비용 — 모든 단계가 한계에 닿았으면 null. */
     nextCost: number | null;
-    /** 한 단계도 못 살 때 다음 단계까지 모자란 정수(살 수 있으면 0). */
+    /** 한 단계도 못 살 때 다음 단계까지 모자란 정수(살 수 있거나 한계에 닿았으면 0). */
     shortfall: number;
+    /** 2026-10 Wave 114: 세 능력치 모두 `MIRROR_ENDLESS_MAX_LEVEL`에 닿았는가. */
+    maxed: boolean;
 }
 
 /**
  * 2026-10 Wave 98: 정수 `essence`로 끝없는 단계를 몇 번 살 수 있는가 — 계승 화면 안내가 읽는다(표시만, 구매는 `purchaseMirrorNode`).
  * 노드마다 비용이 단계에 따라 줄지 않으므로 매번 가장 싼 단계를 사면 가장 많이 산다. 상한에 닿은 뒤는 모든 단계가 같은 값이라
  * 닫힌 식으로 센다 — 정수가 아무리 커도 반복은 상한까지의 단계 수(노드당 20) 안이다.
+ * 2026-10 Wave 114: 한계(`MIRROR_ENDLESS_MAX_LEVEL`)에 닿은 단계는 사지 않는다 — 닫힌 식도 남은 단계 수를 넘지 않는다.
  */
 export const getMirrorEndlessAffordance = (
     mirror: MirrorLevels | undefined | null,
     essence: number,
 ): MirrorEndlessAffordance => {
-    if (!isMirrorTreeComplete(mirror)) return { unlocked: false, steps: 0, nextCost: null, shortfall: 0 };
+    if (!isMirrorTreeComplete(mirror)) return { unlocked: false, steps: 0, nextCost: null, shortfall: 0, maxed: false };
     const cap = BALANCE.MIRROR_ENDLESS_COST_CAP;
     const levels = MIRROR_ENDLESS_NODES.map((node) => getLevel(mirror, node.id));
+    const open = (index: number) => levels[index] < MIRROR_ENDLESS_NODES[index].maxLevel;
     const costOf = (index: number) => getMirrorNodeCost(MIRROR_ENDLESS_NODES[index], levels[index]);
-    const cheapest = () => levels.reduce((best, _lv, index) => (costOf(index) < costOf(best) ? index : best), 0);
-    const nextCost = costOf(cheapest());
+    const cheapest = (): number => levels.reduce(
+        (best, _lv, index) => (open(index) && (best < 0 || costOf(index) < costOf(best)) ? index : best),
+        -1,
+    );
+    const first = cheapest();
+    if (first < 0) return { unlocked: true, steps: 0, nextCost: null, shortfall: 0, maxed: true };
+    const nextCost = costOf(first);
     const budget = Math.max(0, Math.floor(Number(essence) || 0));
     let remaining = budget;
     let steps = 0;
     for (;;) {
         const index = cheapest();
+        if (index < 0) break;
         const cost = costOf(index);
         if (cost >= cap) {
-            steps += Math.floor(remaining / cap);
+            const room = levels.reduce((sum, lv, i) => sum + Math.max(0, MIRROR_ENDLESS_NODES[i].maxLevel - lv), 0);
+            steps += Math.min(room, Math.floor(remaining / cap));
             break;
         }
         if (cost > remaining) break;
@@ -128,7 +139,7 @@ export const getMirrorEndlessAffordance = (
         levels[index] += 1;
         steps += 1;
     }
-    return { unlocked: true, steps, nextCost, shortfall: steps > 0 ? 0 : nextCost - budget };
+    return { unlocked: true, steps, nextCost, shortfall: steps > 0 ? 0 : nextCost - budget, maxed: false };
 };
 
 export interface MirrorEndlessCycle {
@@ -224,7 +235,8 @@ export const getSpentMirrorEssence = (mirror: MirrorLevels | undefined | null): 
         return total + node.costs.slice(0, level).reduce((sum, cost) => sum + cost, 0);
     }, 0)
     // 2026-10 Wave 96: 끝없는 단계에 쓴 정수도 지출이다(누적 정수 역산이 쓴다).
-    + MIRROR_ENDLESS_NODES.reduce((total, node) => total + getEndlessSpent(getLevel(mirror, node.id)), 0)
+    // 2026-10 Wave 114: 한계(`MIRROR_ENDLESS_MAX_LEVEL`) 전에 그보다 많이 산 세이브도 실제로 쓴 정수를 센다 — 기록된 단계 그대로.
+    + MIRROR_ENDLESS_NODES.reduce((total, node) => total + getEndlessSpent(Math.max(0, Math.floor(Number(mirror?.[node.id]) || 0))), 0)
 );
 
 export { MIRROR_NODES };

@@ -138,8 +138,8 @@ test.describe('계승 화면 — 회차 규칙 카드 · 선택형 규칙 미리
         const accepted = page.getByTestId('ascension-ascension-rule-outlook-accepted');
         const declined = page.getByTestId('ascension-ascension-rule-outlook-declined');
         await outlook.scrollIntoViewIfNeeded();
-        await expect(accepted).toContainText('3.6');
-        await expect(declined).toContainText('1.7');
+        await expect(accepted).toContainText('8.2');
+        await expect(declined).toContainText('4.2');
         await expect(accepted).toHaveClass(/text-orange-100/);
 
         await page.getByTestId('ascension-ascension-rule-toggle').click();
@@ -249,7 +249,7 @@ test.describe('계승 화면 — 회차 규칙 패 다시 뽑기', () => {
         await expect(page.getByTestId('ascension-rule-card-lost_pilgrimage')).toHaveAttribute('aria-pressed', 'true');
         await expect(page.getByTestId('ascension-rule-reroll-count')).toHaveText('다시 뽑음 2/3');
         await expect(page.getByTestId('ascension-ladder-reroll-cost')).toHaveCount(1);
-        await expect(page.getByTestId('ascension-ladder-carry')).toContainText('400단계 중 20단계(5%)');
+        await expect(page.getByTestId('ascension-ladder-carry')).toContainText('400단계 중 20단계(5%, 최대 100단계)');
 
         const geometry = await page.getByTestId('ascension-rule-offer').evaluate((root) => ({
             minFont: Math.min(...[...root.querySelectorAll<HTMLElement>('*')].filter((node) => (node.textContent || '').trim())

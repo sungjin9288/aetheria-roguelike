@@ -37,13 +37,14 @@ const MAX_REROLLS = BALANCE.ASCENSION_RULE_REROLL_FREE + BALANCE.ASCENSION_RULE_
 const ALL_RULE_IDS = ASCENSION_RULES.map((rule) => rule.id);
 const RECEIPTS = Array.from({ length: 60 }, (_, i) => `rk-${i}`);
 
+// 2026-10 Wave 114: 사다리 600단계 — 넘어가는 몫(10% = 60)이 고정 상한(70) 아래라 Wave 95 대가가 비율 그대로 보인다.
 const veteranAt = (rank, receipt, extra = {}) => ({
     ...structuredClone(INITIAL_STATE.player),
     name: '수집가', job: '전사', level: 50, hp: 900, maxHp: 900, mp: 200, maxMp: 200, atk: 300, def: 100,
     ...extra,
     meta: {
         ...structuredClone(INITIAL_STATE.player.meta),
-        prestigeRank: rank, rank: 900, bonusAtk: 900, bonusHp: 4_500, bonusMp: 2_700,
+        prestigeRank: rank, rank: 600, bonusAtk: 600, bonusHp: 3_000, bonusMp: 1_800,
         endgame: { lastEndgameReceiptKey: receipt },
         ...(extra.meta || {}),
     },
@@ -179,20 +180,20 @@ test('Wave 95: 다시 뽑은 패는 덱 전체에서 다시 무작위다 — 직
 test('Wave 95: 계승은 다시 뽑은 패에서 고르고, 무료는 대가가 없으며 유료 한 번마다 넘어가는 사다리가 절반씩 줄고, 기록은 지운다', () => {
     const player = veteranAt(0, 'rk-21');
     const base = getAscensionOutcome(player.meta);
-    assert.equal(base.ladder.rankKept, 90);
+    assert.equal(base.ladder.rankKept, 60);
     for (let times = 0; times <= MAX_REROLLS; times += 1) {
         const state = rerolledTimes(player, times);
         const hand = getAscensionRuleOffer(state.player, 1);
         const paid = Math.max(0, times - BALANCE.ASCENSION_RULE_REROLL_FREE);
         assert.equal(getAscensionRulePaidRerolls(state.player.meta, 1), paid);
         const keep = Math.max(0, 1 - paid * BALANCE.ASCENSION_RULE_REROLL_LADDER_COST);
-        const expectedKept = Math.floor(900 * BALANCE.ESSENCE_LADDER_ASCEND_CARRY * keep);
+        const expectedKept = Math.floor(600 * BALANCE.ESSENCE_LADDER_ASCEND_CARRY * keep);
         const outcome = getAscensionOutcome(state.player.meta);
         assert.equal(outcome.ladder.rankKept, expectedKept, `${times}번`);
         assert.equal(outcome.ladder.rerollPaid, paid);
         assert.equal(outcome.ladder.carryPercent, Math.round(BALANCE.ESSENCE_LADDER_ASCEND_CARRY * keep * 100));
-        assert.equal(outcome.meta.bonusAtk, base.meta.bonusAtk - (90 - expectedKept) * BALANCE.ESSENCE_RANK_ATK, '내려놓은 단계만큼 영구 공격력');
-        assert.equal(outcome.meta.bonusHp, base.meta.bonusHp - (90 - expectedKept) * BALANCE.ESSENCE_RANK_HP);
+        assert.equal(outcome.meta.bonusAtk, base.meta.bonusAtk - (60 - expectedKept) * BALANCE.ESSENCE_RANK_ATK, '내려놓은 단계만큼 영구 공격력');
+        assert.equal(outcome.meta.bonusHp, base.meta.bonusHp - (60 - expectedKept) * BALANCE.ESSENCE_RANK_HP);
         assert.equal(outcome.meta.essence, base.meta.essence, '계승 정수는 그대로');
 
         const card = hand[hand.length - 1];
@@ -241,7 +242,7 @@ test('Wave 95: 화면 — 무료 · 유료(넘어가는 사다리 지금 → 다
         }
     }
     assert.deepEqual(views.map((view) => view.label), [
-        MSG.ASCENSION_RULE_REROLL_FREE, MSG.ASCENSION_RULE_REROLL_PAID(90, 45), MSG.ASCENSION_RULE_REROLL_PAID(45, 0), MSG.ASCENSION_RULE_REROLL_SPENT,
+        MSG.ASCENSION_RULE_REROLL_FREE, MSG.ASCENSION_RULE_REROLL_PAID(60, 30), MSG.ASCENSION_RULE_REROLL_PAID(30, 0), MSG.ASCENSION_RULE_REROLL_SPENT,
     ]);
 
     const offer = getAscensionRuleOfferView(player, 1);
@@ -262,11 +263,11 @@ test('Wave 95: 계승 화면 — 유료 다시 뽑기를 했으면 줄어든 영
     const plain = renderStatic(createElement(AscensionScreen, { player }));
     assert.ok(plain.includes('ascension-rule-reroll'), '다시 뽑기 버튼이 있다');
     assert.ok(!plain.includes('ascension-ladder-reroll-cost'));
-    assert.ok(plain.includes(MSG.ASCEND_LADDER_CARRY(900, 90, 10)));
+    assert.ok(plain.includes(MSG.ASCEND_LADDER_CARRY(600, 60, 10, BALANCE.ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS)));
     const paid = rerolledTimes(player, 2).player;
     const html = renderStatic(createElement(AscensionScreen, { player: paid }));
     assert.ok(html.includes(MSG.ASCEND_LADDER_REROLL_COST(1)));
-    assert.ok(html.includes(MSG.ASCEND_LADDER_CARRY(900, 45, 5)));
+    assert.ok(html.includes(MSG.ASCEND_LADDER_CARRY(600, 30, 5, BALANCE.ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS)));
     assert.ok(html.includes(`+${getAscensionOutcome(paid.meta).meta.bonusAtk}`), '영구 성장 칸은 대가를 반영한 값');
 });
 

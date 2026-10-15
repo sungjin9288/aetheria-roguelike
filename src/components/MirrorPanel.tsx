@@ -177,7 +177,7 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                                                     <strong className="text-[14px] font-rajdhani text-white">{node.name}</strong>
                                                     <span className="shrink-0 text-[11px] font-fira text-[#cfc4eb]">
                                                         {nodePreview.endless
-                                                            ? MSG.MIRROR_ENDLESS_LEVEL(nodePreview.currentLevel)
+                                                            ? MSG.MIRROR_ENDLESS_LEVEL(nodePreview.currentLevel, node.maxLevel)
                                                             : <>{nodePreview.currentLevel}/{node.maxLevel} 단계</>}
                                                     </span>
                                                 </span>
