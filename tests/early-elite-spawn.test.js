@@ -123,10 +123,11 @@ test('A-4: 실제 전투 규칙에서도 시작 물약 2개 고갈은 드물고 
         `시작 물약 2개를 모두 쓰는 전투는 5% 이하여야 함 (실제 ${bothPotions}/${results.length})`);
 });
 
-test('A-4: 선택·도전형 일반 엘리트는 기존 격노 강도를 유지', () => {
+test('A-4: 선택·도전형 일반 엘리트는 초반 구간 밖에서 기존 격노 강도를 유지', () => {
+    // 2026-10 Wave 115: 초반 구간(≤ EARLY_ELITE_LEVEL_CAP)의 eliteOnly는 초반 정예(×1.4 · 초반 격노)다 — 아래 테스트.
     const player = freshPlayer();
     player.challengeModifiers = ['eliteOnly'];
-    const mapData = { level: 1, monsters: ['슬라임'] };
+    const mapData = { level: BALANCE.EARLY_ELITE_LEVEL_CAP + 1, monsters: ['슬라임'] };
     const { mStats } = withStubbedRandom(0.8, () =>
         spawnEnemy(mapData, player, [], { addLog: () => {} }));
 
@@ -138,6 +139,18 @@ test('A-4: 선택·도전형 일반 엘리트는 기존 격노 강도를 유지'
         BALANCE.ELITE_PHASE_HEAVY_BONUS,
         '자동 조우가 아닌 엘리트는 기존 강타 보너스 유지',
     );
+});
+
+test('Wave 115: 초반 구간의 eliteOnly는 초반 정예 — 배율 · 격노 모두 초반 정예와 같다', () => {
+    const player = freshPlayer();
+    player.challengeModifiers = ['eliteOnly'];
+    const mapData = { level: 1, monsters: ['슬라임'] };
+    const { mStats } = withStubbedRandom(0.8, () =>
+        spawnEnemy(mapData, player, [], { addLog: () => {} }));
+    assert.equal(mStats.isElite, true);
+    assert.ok(mStats.name.startsWith('정예'), mStats.name);
+    assert.equal(mStats.phase2.atkBonus, BALANCE.EARLY_ELITE_PHASE_ATK_BONUS);
+    assert.equal(mStats.phase2.pattern.heavyChance - mStats.pattern.heavyChance, BALANCE.EARLY_ELITE_PHASE_HEAVY_BONUS);
 });
 
 test('A-4: 맵 레벨이 cap 초과면 정예 미발동', () => {

@@ -17,7 +17,7 @@ import { createDomainRandom } from '../src/utils/seededRandom.ts';
  *
  * 계약: 맵 레벨 ≤ EARLY_ELITE_LEVEL_CAP에서 **일반 경로**는 완전 엘리트를 내지 않는다. 대신
  * ① 초반 전용 완화 정예는 남고 ② 비정예 접두어는 그대로 나오며 ③ 플레이어가 고른 난이도
- * (`eliteOnly` 도전 · 프레스티지 정예)는 초반에도 완전 엘리트이고 ④ cap 바로 위 지역은 예전 그대로다.
+ * (`eliteOnly` 도전 · 프레스티지 정예)는 Wave 115부터 초반 구간에서 초반 정예(×1.4)이고 ④ cap 바로 위 지역은 예전 그대로다.
  * 시드 고정 샘플링이라 결정론적이다.
  */
 
@@ -91,15 +91,49 @@ test('[D7 경계] cap 바로 위 지역은 예전처럼 완전 엘리트가 일�
     assert.equal(counts.get('정예') || 0, 0, 'cap 위에는 초반 전용 정예가 없다');
 });
 
-test('[D7 선택 난이도] eliteOnly 도전과 프레스티지 정예는 초반 구간에서도 완전 엘리트다', () => {
+test('[Wave 115 선택 난이도] eliteOnly 도전과 프레스티지 정예는 초반 구간에서 초반 정예(×1.4)다 — 정예라는 사실은 그대로', () => {
+    // 2026-10 Wave 115 (소유자 결정 "A 적용"): Wave 108 뒤 사망 재시작이 시작 지역의 완전 정예에 다시 죽는 순환이 됐다(원장 §120).
     const early = EARLY_MAPS[0];
     const challenger = census(early, player({ loc: early, challengeModifiers: ['eliteOnly'] }));
     assert.equal(count(challenger, NON_ELITE_NAMES), 0, `eliteOnly: ${JSON.stringify([...challenger])}`);
-    assert.ok(count(challenger, FULL_ELITE_NAMES) > SAMPLES * 0.9, `eliteOnly: ${JSON.stringify([...challenger])}`);
+    assert.equal(count(challenger, FULL_ELITE_NAMES), 0, `eliteOnly 초반 구간에 완전 정예가 없다: ${JSON.stringify([...challenger])}`);
+    assert.ok((challenger.get('정예') || 0) > SAMPLES * 0.9, `eliteOnly는 여전히 모두 정예: ${JSON.stringify([...challenger])}`);
 
     const rank = [...Array(20).keys()].find((candidate) => getPrestigeUnlocks(candidate).eliteChanceBonus > 0);
     assert.ok(rank !== undefined, '프레스티지 정예 해금 rank가 있어야 한다');
     const veteran = player({ loc: early, meta: { ...structuredClone(INITIAL_STATE.player.meta), prestigeRank: rank } });
     const veteranCounts = census(early, veteran);
-    assert.ok(count(veteranCounts, FULL_ELITE_NAMES) > 0, `rank ${rank}: ${JSON.stringify([...veteranCounts])}`);
+    assert.equal(count(veteranCounts, FULL_ELITE_NAMES), 0, `rank ${rank}: ${JSON.stringify([...veteranCounts])}`);
+    const rookieEarly = census(early, player({ loc: early })).get('정예') || 0;
+    assert.ok((veteranCounts.get('정예') || 0) > rookieEarly * 2, `프레스티지 정예는 초반 정예로 더 자주 나온다: ${rookieEarly} → ${veteranCounts.get('정예')}`);
+});
+
+test('[Wave 115] 초반 구간 밖에서는 eliteOnly · 프레스티지 정예가 그대로 완전 정예다', () => {
+    const above = Object.entries(DB.MAPS)
+        .filter(([, map]) => typeof map.level === 'number' && map.level > BALANCE.EARLY_ELITE_LEVEL_CAP && map.type !== 'safe' && (map.monsters || []).length > 0)
+        .sort((a, b) => a[1].level - b[1].level)[0][0];
+    const challenger = census(above, player({ loc: above, challengeModifiers: ['eliteOnly'] }));
+    assert.equal(challenger.get('정예') || 0, 0);
+    assert.ok(count(challenger, FULL_ELITE_NAMES) > SAMPLES * 0.9, `${above}: ${JSON.stringify([...challenger])}`);
+});
+
+test('[Wave 115] 초반 정예로 바꾸는 것은 추첨 수를 바꾸지 않는다 — 같은 몬스터 표에서 초반 구간 안팎의 추첨 수가 같다', () => {
+    // 고른 난이도의 완전 정예는 접두어 추첨을 한 번 쓴다. 초반 정예로 바꿀 때도 그 한 번을 그대로 써야 뒤의 난수열이 밀리지 않는다.
+    const early = EARLY_MAPS[0];
+    const base = DB.MAPS[early];
+    // eliteOnly는 초반 정예 판정 추첨(`EARLY_ELITE_CHANCE`)을 건너뛰므로 같은 몬스터 표면 구간 안팎의 추첨 수가 정확히 같아야 한다.
+    for (const who of [player({ loc: early, challengeModifiers: ['eliteOnly'] })]) {
+        for (let seed = 1; seed <= 200; seed += 1) {
+            const draws = (level) => {
+                const inner = createDomainRandom('wave115-draws', seed);
+                let n = 0;
+                const enemy = spawnEnemy({ ...base, level }, who, [], { addLog: () => {} }, { rng: () => { n += 1; return inner(); } }).mStats;
+                return { n, elite: Boolean(enemy?.isElite) };
+            };
+            const inside = draws(base.level);
+            const outside = draws(BALANCE.EARLY_ELITE_LEVEL_CAP + 1);
+            assert.ok(inside.elite && outside.elite, `seed ${seed}: 둘 다 정예`);
+            assert.equal(inside.n, outside.n, `seed ${seed}`);
+        }
+    }
 });
