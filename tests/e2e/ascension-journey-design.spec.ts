@@ -138,8 +138,8 @@ test.describe('계승 화면 — 회차 규칙 카드 · 선택형 규칙 미리
         const accepted = page.getByTestId('ascension-ascension-rule-outlook-accepted');
         const declined = page.getByTestId('ascension-ascension-rule-outlook-declined');
         await outlook.scrollIntoViewIfNeeded();
-        await expect(accepted).toContainText('3.6');
-        await expect(declined).toContainText('1.7');
+        await expect(accepted).toContainText('8.2');
+        await expect(declined).toContainText('4.2');
         await expect(accepted).toHaveClass(/text-orange-100/);
 
         await page.getByTestId('ascension-ascension-rule-toggle').click();
