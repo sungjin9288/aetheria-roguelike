@@ -228,13 +228,19 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         && rng() < getPrestigeUnlocks(player.meta?.prestigeRank).eliteChanceBonus;
     // 접두어 부여
     if (!storyMonster && (forceElite || earlyElite || prestigeElite || (rng() < BALANCE.PREFIX_CHANCE && CONSTANTS.MONSTER_PREFIXES))) {
-        const prefix = earlyElite
+        // 2026-10 Wave 115 (소유자 결정 "A 적용"): 고른 난이도(eliteOnly 도전)와 프레스티지 정예도 초반 구간에서는 초반 정예(×1.4)다.
+        //   Wave 108(사망하면 도감 · 칭호까지 처음부터) 뒤로 사망 재시작은 Lv1 · 영구 능력치 1/30이라, 시작 지역의 완전 정예(×2.5)가
+        //   다시 죽이는 순환이 됐다 — 생명 절반 회차 시드당 118회 · 강적의 길 회차 60회(원장 §120). 정예라는 사실(`isElite`)은 그대로이고
+        //   추첨 수도 그대로다(이 경로가 원래 쓰던 접두어 추첨 한 번을 그대로 소비한다 — 뒤의 난수열이 밀리지 않는다).
+        const chosenEarly = (forceElite || prestigeElite) && earlyBand;
+        if (chosenEarly) rng();
+        const prefix = (earlyElite || chosenEarly)
             ? { name: EARLY_ELITE_PREFIX_NAME, mod: BALANCE.EARLY_ELITE_MULT, expMod: BALANCE.EARLY_ELITE_MULT, dropMod: 2.0, isElite: true }
             : (() => {
                 // 2026-09 Wave 28 (D7): 위 A-4가 선언한 "완전 엘리트는 초반에 불공정"을 일반 접두어
                 //   경로도 지킨다. 초반 구간에서 이 풀은 재앙의(2.5×)·고대(1.8×)를 뽑고 있었다(각 ~2.4%,
-                //   자연 플레이 사망 41건 중 37건이 정예). 풀만 좁히고 롤 수는 그대로다. 플레이어가
-                //   고른 난이도(eliteOnly 도전 · 프레스티지 정예)는 초반에도 완전 엘리트를 유지한다.
+                //   자연 플레이 사망 41건 중 37건이 정예). 풀만 좁히고 롤 수는 그대로다. 고른 난이도(eliteOnly 도전 ·
+                //   프레스티지 정예)는 Wave 115부터 초반 구간에서 위의 초반 정예다 — 이 풀은 초반 구간 밖에서만 그 둘을 받는다.
                 // 2026-10 Wave 71 (소유자 결정 "접두어 겹치는 경우 빼기"): 종 이름에 이미 있는 낱말의 접두어는 뽑지
                 //   않는다 — "거대 거대 사슴벌레" · "고대 고대 마법사". 풀만 좁히고 롤 수는 그대로다.
                 const fitting = getSpeciesPrefixPool(baseName);
@@ -258,10 +264,11 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
 
         // 엘리트 몬스터 페이즈: HP 50% 이하 시 패턴 강화 (보스 제외)
         if (mStats.isElite && !mStats.isBoss && !mStats.phase2) {
-            const phaseAtkBonus = earlyElite
+            // Wave 115: 초반 구간의 고른 난이도 · 프레스티지 정예도 초반 정예의 격노다(배율과 같은 묶음).
+            const phaseAtkBonus = (earlyElite || chosenEarly)
                 ? BALANCE.EARLY_ELITE_PHASE_ATK_BONUS
                 : BALANCE.ELITE_PHASE_ATK_BONUS;
-            const phaseHeavyBonus = earlyElite
+            const phaseHeavyBonus = (earlyElite || chosenEarly)
                 ? BALANCE.EARLY_ELITE_PHASE_HEAVY_BONUS
                 : BALANCE.ELITE_PHASE_HEAVY_BONUS;
             mStats.phase2 = {
