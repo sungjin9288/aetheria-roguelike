@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import { MSG } from '../data/messages.js';
 import { CombatEngine } from '../systems/CombatEngine.js';
 import { getEffectiveMaxHp } from '../systems/vitals.js';
 import type { Monster, Player } from '../types/index.js';
@@ -65,3 +66,30 @@ export const toEnemyThreat = (player: Player, hit: number): EnemyThreat => {
 };
 
 export const getEnemyThreat = (player: Player, enemy: Monster): EnemyThreat => toEnemyThreat(player, estimateEnemyMaxHit(player, enemy));
+
+/** 보스도 의뢰 우두머리(자기 줄 — Wave 87)도 아닌 정예인가. */
+const isPlainElite = (enemy: Monster | null | undefined): enemy is Monster => Boolean(enemy?.isElite && !enemy.isBoss && !enemy.huntChampion);
+
+/**
+ * 적이 나타날 때 전투 기록에 붙는 위협 줄(Wave 88 보스 · Wave 111 정예). 의뢰 우두머리는 출현 안내가 자기 줄을 붙이므로 없다.
+ * 모든 전투 시작 지점(탐험 조우 · 정찰 · 이벤트 정예 · 체인 전투 · 다른 차원의 묘비 · 구역 보스 도전)이 이것 하나를 읽는다.
+ */
+export const getAppearThreatLine = (player: Player, enemy: Monster | null | undefined): string | null => {
+    if (!enemy || enemy.huntChampion) return null;
+    if (enemy.isBoss) {
+        const threat = getEnemyThreat(player, enemy);
+        return MSG.BOSS_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits);
+    }
+    if (isPlainElite(enemy)) {
+        const threat = getEnemyThreat(player, enemy);
+        return MSG.ELITE_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits);
+    }
+    return null;
+};
+
+/** 전투 화면의 정예 칩(Wave 111) — 기록이 밀려 올라가도 싸우는 동안 보인다. 보스는 보스 전술 줄이 있어 없다. */
+export const getEliteThreatChip = (player: Player, enemy: Monster | null | undefined): string | null => {
+    if (!isPlainElite(enemy)) return null;
+    const threat = getEnemyThreat(player, enemy);
+    return MSG.ELITE_COMBAT_CHIP(threat.pct, threat.hits);
+};
