@@ -166,13 +166,16 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
     // 겹친 규칙 카드 가운데 거절할 수 있는 카드(선택형 바탕, 또는 무거운 두 번째 비틀기 — Wave 106)의 받아들임 · 거절 측정
     // (Wave 106, 원장 §111): 받아들인 회차와 같은 시드 · 같은 단계에서 그 카드를 거절한 회차를 짝지었다(거절은 규칙 없이 그 회차를 한다).
     // 카드마다 두 번째 비틀기가 다르므로 값은 그 규칙의 거절 가능한 카드들의 평균이고, 잰 단계는 가장 많이 놓인 단계다.
+    // 2026-10 Wave 116: Wave 108(사망하면 처음부터) · 114(이월 100단계) · 115 위에서 다시 쟀다 — 늘 받아들이는 드라이버와
+    // 겹친 카드만 거절하는 드라이버(같은 120시드 × 13회차)의 거절 가능한 카드 회차 평균이다(짝이 아니다 — 첫 거절 뒤로 두 드라이버의
+    // 회차가 갈라진다). 판 수는 두 쪽 중 적은 쪽이다. 이전 값은 사망을 1.6 ~ 8.7분의 1로 말했다(원장 §122).
     const outlook: Record<string, AscensionRuleOutlook> = {
-        lost_pilgrimage: { measuredRank: 9, acceptedDeaths: 4.9, declinedDeaths: 1.68, acceptedSignatures: 1.15, declinedSignatures: 0.07 },
-        empty_crusade: { measuredRank: 7, acceptedDeaths: 5, declinedDeaths: 1.1, acceptedSignatures: 1.03, declinedSignatures: 0.1 },
-        dry_dragon_road: { measuredRank: 7, acceptedDeaths: 2.56, declinedDeaths: 1.98, acceptedSignatures: 1.08, declinedSignatures: 0.12 },
-        tangled_legends: { measuredRank: 10, acceptedDeaths: 3.78, declinedDeaths: 1.15, acceptedSignatures: 1, declinedSignatures: 0.01 },
-        fading_dimension: { measuredRank: 12, acceptedDeaths: 5, declinedDeaths: 0.58, acceptedSignatures: 1.01, declinedSignatures: 0 },
-        shadow_legion: { measuredRank: 12, acceptedDeaths: 4.44, declinedDeaths: 0.95, acceptedSignatures: 1, declinedSignatures: 0 },
+        lost_pilgrimage: { measuredRank: 8, samples: 56, acceptedDeaths: 18.18, declinedDeaths: 4.64, acceptedSignatures: 2.27, declinedSignatures: 1.7 },
+        empty_crusade: { measuredRank: 10, samples: 47, acceptedDeaths: 43.74, declinedDeaths: 3.88, acceptedSignatures: 2.6, declinedSignatures: 1.76 },
+        dry_dragon_road: { measuredRank: 8, samples: 55, acceptedDeaths: 10.95, declinedDeaths: 4.98, acceptedSignatures: 2.61, declinedSignatures: 1.56 },
+        tangled_legends: { measuredRank: 9, samples: 120, acceptedDeaths: 24.92, declinedDeaths: 4.15, acceptedSignatures: 2.31, declinedSignatures: 1.53 },
+        fading_dimension: { measuredRank: 12, samples: 120, acceptedDeaths: 13.16, declinedDeaths: 1.5, acceptedSignatures: 2.19, declinedSignatures: 1.24 },
+        shadow_legion: { measuredRank: 11, samples: 120, acceptedDeaths: 7.41, declinedDeaths: 2.33, acceptedSignatures: 2.66, declinedSignatures: 1.56 },
     };
     const entry = names[base.id];
     const stacked: AscensionRuleDef = {

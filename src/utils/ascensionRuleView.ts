@@ -66,7 +66,7 @@ const getAscensionRuleOutlookLines = (rule: AscensionRuleDef, cycle: number, opt
     return {
         accepted: MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(formatOutlookNumber(outlook.acceptedDeaths), formatOutlookNumber(outlook.acceptedSignatures)),
         declined: MSG.ASCENSION_RULE_OUTLOOK_DECLINED(formatOutlookNumber(outlook.declinedDeaths), formatOutlookNumber(outlook.declinedSignatures)),
-        source: MSG.ASCENSION_RULE_OUTLOOK_SOURCE(outlook.measuredRank, outlook.samples ?? OUTLOOK_DEFAULT_SAMPLES),
+        source: (rule.stackedOf ? MSG.ASCENSION_RULE_OUTLOOK_SOURCE_STACKED : MSG.ASCENSION_RULE_OUTLOOK_SOURCE)(outlook.measuredRank, outlook.samples ?? OUTLOOK_DEFAULT_SAMPLES),
     };
 };
 
