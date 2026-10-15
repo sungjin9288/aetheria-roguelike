@@ -49,7 +49,7 @@ const playerWith = (meta = {}) => ({
 
 test('Wave 98: 거울 8노드가 다 차지 않았으면 끝없는 단계 안내는 없다', () => {
     const partial = { ...FULL_TREE, revive: 0 };
-    assert.deepEqual(getMirrorEndlessAffordance(partial, 1_000_000), { unlocked: false, steps: 0, nextCost: null, shortfall: 0 });
+    assert.deepEqual(getMirrorEndlessAffordance(partial, 1_000_000), { unlocked: false, steps: 0, nextCost: null, shortfall: 0, maxed: false });
     assert.deepEqual(getMirrorEndlessAffordance(undefined, 1_000_000).unlocked, false);
     const html = renderStatic(createElement(AscensionScreen, { player: playerWith({ essence: 50_000, mirror: partial }) }));
     assert.ok(!html.includes('ascension-mirror-endless'), '잠긴 거울에는 끝없는 단계 줄이 없다');
@@ -76,9 +76,12 @@ test('Wave 98: 정수가 아무리 커도 상한 뒤는 닫힌 식이다 — 반
     const started = performance.now();
     const got = getMirrorEndlessAffordance(withEndless([0, 0, 0]), essence);
     assert.ok(performance.now() - started < 50, '큰 정수에서도 즉시 끝난다');
+    // 2026-10 Wave 114: 닫힌 식도 능력치마다 한계(`MIRROR_ENDLESS_MAX_LEVEL`)까지만 센다.
+    assert.equal(got.steps, MIRROR_ENDLESS_NODES.length * BALANCE.MIRROR_ENDLESS_MAX_LEVEL);
     const rising = Math.ceil((BALANCE.MIRROR_ENDLESS_COST_CAP - BALANCE.MIRROR_ENDLESS_BASE_COST) / BALANCE.MIRROR_ENDLESS_COST_STEP);
     const risingSum = MIRROR_ENDLESS_NODES.length * Array.from({ length: rising }, (_, k) => getMirrorNodeCost(MIRROR_ENDLESS_NODES[0], k)).reduce((a, b) => a + b, 0);
-    assert.equal(got.steps, MIRROR_ENDLESS_NODES.length * rising + Math.floor((essence - risingSum) / BALANCE.MIRROR_ENDLESS_COST_CAP));
+    const budget = risingSum + 7 * BALANCE.MIRROR_ENDLESS_COST_CAP + 1;
+    assert.equal(getMirrorEndlessAffordance(withEndless([0, 0, 0]), budget).steps, MIRROR_ENDLESS_NODES.length * rising + 7, '한계 전에는 상한 비용으로 나눈 몫 그대로');
 });
 
 test('Wave 98: 안내한 단계 수만큼 실제 거울 구매가 성공하고 그다음은 실패한다', () => {
@@ -133,6 +136,6 @@ test('Wave 98: 계승 화면은 살 수 있는 단계 수 · 단계당 능력치
 });
 
 test('Wave 98: 끝없는 단계 설명은 비용 상한(Wave 97)을 말한다', () => {
-    for (const node of MIRROR_ENDLESS_NODES) assert.match(node.desc, /상한에서 멈춥니다/, node.id);
-    assert.match(MSG.MIRROR_ENDLESS_PATH_SUMMARY, /상한에서 멈춥니다/);
+    for (const node of MIRROR_ENDLESS_NODES) assert.match(node.desc, /상한에서 멈추/, node.id);
+    assert.match(MSG.MIRROR_ENDLESS_PATH_SUMMARY, /상한에서 멈추/);
 });

@@ -105,7 +105,7 @@ test.describe('에테르 거울 — 끝없는 단계', () => {
     test('다 채우면 영구 공격력을 한 단계씩 사고, 다음 단계는 더 비싸다', async ({ page }) => {
         await openMirror(page, true);
         const before = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()))!;
-        await expect(page.getByTestId('mirror-node-select-endless_atk')).toContainText('0단계');
+        await expect(page.getByTestId('mirror-node-select-endless_atk')).toContainText('0/60단계');
         await expect(page.getByTestId('mirror-current-effect')).toHaveText('거울로 새긴 영구 공격력 없음');
         await expect(page.getByTestId('mirror-next-effect')).toHaveText('거울로 새긴 영구 공격력 +1');
         await expect(page.getByTestId('mirror-investment-preview')).toContainText('필요 2000');
@@ -113,7 +113,7 @@ test.describe('에테르 거울 — 끝없는 단계', () => {
 
         await expect(page.getByTestId('mirror-current-effect')).toHaveText('거울로 새긴 영구 공격력 +1');
         await expect(page.getByTestId('mirror-investment-preview')).toContainText('필요 2500');
-        await expect(page.getByTestId('mirror-node-select-endless_atk')).toContainText('1단계');
+        await expect(page.getByTestId('mirror-node-select-endless_atk')).toContainText('1/60단계');
         const after = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getAscensionSnapshot?.()))!;
         expect(after.essence).toBe(before.essence - 2000);
         expect(after.bonusAtk).toBe(before.bonusAtk + 1);

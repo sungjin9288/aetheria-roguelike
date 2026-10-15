@@ -154,10 +154,10 @@ export const MSG = {
     ),
     MIRROR_ENDLESS_STAT_LABELS: { atk: '영구 공격력', hp: '영구 생명', mp: '영구 기력' } as const,
     MIRROR_ENDLESS_PATH_LABEL: '끝없는',
-    MIRROR_ENDLESS_PATH_SUMMARY: '거울을 모두 채운 뒤에도 계승 정수로 영구 능력치를 조금씩 새깁니다. 비용은 단계마다 오르다가 상한에서 멈춥니다.',
+    MIRROR_ENDLESS_PATH_SUMMARY: '거울을 모두 채운 뒤에도 계승 정수로 영구 능력치를 조금씩 새깁니다. 비용은 단계마다 오르다가 상한에서 멈추고, 능력치마다 새길 수 있는 단계에는 한계가 있습니다.',
     MIRROR_ENDLESS_EFFECT: (stat: string, total: number) => (total > 0 ? `거울로 새긴 ${stat} +${total}` : `거울로 새긴 ${stat} 없음`),
     MIRROR_ENDLESS_LOCKED: '거울 8가지 성장을 모두 채우면 열립니다',
-    MIRROR_ENDLESS_LEVEL: (level: number) => `${level}단계`,
+    MIRROR_ENDLESS_LEVEL: (level: number, maxLevel: number) => `${level}/${maxLevel}단계`,
     // slice 19: 스탯 상승 표기 — 레벨업이 무엇을 바꿨는지 로그에서 즉시 확인 (성장 가시화)
     LEVEL_UP: (level: number, attack: number, health: number) => `레벨 ${level} 상승 · 공격력 +${attack} · 생명 +${health}`,
     LEVEL_MILESTONE: (level: number, gold: number) => `레벨 ${level} 달성 · 골드 ${gold.toLocaleString()} 획득`,
@@ -831,8 +831,9 @@ export const MSG = {
     MIRROR_CTA_LABEL: '에테르 거울 열기',
     MIRROR_CTA_HINT: (essence: number) => `계승 정수 ${essence}로 영구 성장을 새길 수 있습니다.`,
     // 2026-09 Wave 32: 계승 시 정수 사다리 이월(BALANCE.ESSENCE_LADDER_ASCEND_CARRY).
-    ASCEND_LADDER_CARRY: (before: number, kept: number, percent: number) =>
-        `정수 사다리 ${before}단계 중 ${kept}단계(${percent}%)만 다음 여정으로 이어집니다. 위 공격력·생명·기력에 반영돼 있고, 계승 정수는 그대로입니다.`,
+    // 2026-10 Wave 114: 넘어가는 몫은 비율과 고정 상한(BALANCE.ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS) 중 작은 쪽이다.
+    ASCEND_LADDER_CARRY: (before: number, kept: number, percent: number, maxRanks: number) =>
+        `정수 사다리 ${before}단계 중 ${kept}단계(${percent}%, 최대 ${maxRanks}단계)만 다음 여정으로 이어집니다. 위 공격력·생명·기력에 반영돼 있고, 계승 정수는 그대로입니다.`,
     // 2026-10 Wave 95: 유료 다시 뽑기의 대가가 이 계승에 들어갔다.
     ASCEND_LADDER_REROLL_COST: (paid: number) => `회차 규칙을 대가를 치르고 ${paid}번 다시 뽑아 넘어가는 몫이 줄었습니다.`,
     // 2026-10 Wave 98: 끝없는 거울이 열렸으면 계승한 뒤의 정수로 몇 단계를 살 수 있는지 알린다(표시만).
@@ -844,6 +845,9 @@ export const MSG = {
     ASCEND_MIRROR_ENDLESS_CYCLE: (steps: number, atk: number, hp: number, mp: number) =>
         `이번 회차에 새긴 끝없는 거울 ${steps.toLocaleString('ko-KR')}단계: 영구 공격력 +${atk} · 생명 +${hp} · 기력 +${mp}`,
     ASCEND_MIRROR_ENDLESS_CYCLE_NONE: '이번 회차에는 끝없는 거울을 새기지 않았습니다.',
+    // 2026-10 Wave 114: 끝없는 거울 세 능력치가 모두 한계(BALANCE.MIRROR_ENDLESS_MAX_LEVEL)에 닿았다.
+    ASCEND_MIRROR_ENDLESS_MAXED: (maxLevel: number) =>
+        `끝없는 거울이 한계에 닿았습니다 — 공격력 · 생명 · 기력 모두 ${maxLevel}단계입니다. 정수로 더 새길 능력치는 없습니다.`,
     // 2026-10 Wave 100: 계승 화면 "이번 회차 요약" — 회차 규칙 정복 · 새 전설 각인 · 새 정예 칭호 · 끝없는 거울(Wave 99 줄).
     CYCLE_SUMMARY_TITLE: '이번 회차 요약',
     CYCLE_SUMMARY_RULE_CONQUERED: (rule: string, title: string) => `회차 규칙 [${rule}] 정복 · 칭호 「${title}」`,

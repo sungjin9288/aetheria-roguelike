@@ -71,12 +71,12 @@ test('[기존 세이브] 예전 규칙으로 오른 단계는 내려가지 않�
     assert.equal(getRankFromLifetime(getLadderEssenceForRank(3001), 3000), 3001, '새 비용을 채우면 다음 단계');
 });
 
-test('[계승 이월] 남긴 단계의 사다리 정수는 새 비용표에서 그 단계의 정수다', () => {
-    // 이월 뒤 단계(10%)도 무릎을 넘는 규모여야 새 비용표를 쓰는지 가려진다.
+test('[계승 이월] 남긴 단계의 사다리 정수는 비용표에서 그 단계의 정수다 — 무릎 너머 사다리도 넘어가는 몫은 상한까지다', () => {
+    // 2026-10 Wave 114: 넘어가는 몫은 비율(10%)과 고정 상한(`ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS`) 중 작은 쪽이라 무릎을 넘지 않는다.
     const rank = 25_000;
     const carried = carryEssenceLadderOnAscension({ rank, essenceLadder: getLadderEssenceForRank(rank), essenceLifetime: getLadderEssenceForRank(rank), bonusAtk: rank, bonusHp: rank * 5, bonusMp: rank * 3 });
-    assert.equal(carried.rankKept, Math.floor(rank * BALANCE.ESSENCE_LADDER_ASCEND_CARRY));
-    assert.ok(carried.rankKept > KNEE, '전제: 남긴 단계가 무릎 너머다');
+    assert.equal(carried.rankKept, BALANCE.ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS);
+    assert.ok(carried.rankKept < KNEE, '넘어가는 몫은 무릎 아래다');
     assert.equal(carried.meta.essenceLadder, getLadderEssenceForRank(carried.rankKept));
     assert.equal(getLadderRank(carried.meta.essenceLadder), carried.rankKept);
 });

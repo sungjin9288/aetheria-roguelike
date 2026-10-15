@@ -162,6 +162,16 @@ export interface EssenceLadderCarry {
 }
 
 /**
+ * 2026-10 Wave 114 (소유자 결정 "영구 총상한"): 계승할 때 다음 회차로 넘어가는 사다리 단계(다시 뽑기 대가 전) —
+ * `ESSENCE_LADDER_ASCEND_CARRY` 비율과 `ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS` 중 작은 쪽. 비율만 있던 동안 넘어가는 몫이
+ * 1회차 사다리 크기를 따라 자랐다(80 → 137단계).
+ */
+export const getLadderCarryRanks = (rankBefore: unknown): number => Math.min(
+    BALANCE.ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS,
+    toNonNegative(rankBefore) * BALANCE.ESSENCE_LADDER_ASCEND_CARRY,
+);
+
+/**
  * 계승 시 사다리 이월 — 단계의 `BALANCE.ESSENCE_LADDER_ASCEND_CARRY`만 남기고(내림), 내려놓은 단계의 영구 스탯을 뺀다.
  *
  * 2026-09 Wave 32 (소유자 결정): 사다리는 한 런에 800단계 안팎(공격력 +800 · 생명 +4,000)을 쌓았고 그것이 통째로
@@ -174,7 +184,8 @@ export const carryEssenceLadderOnAscension = (meta: EssenceMeta | null | undefin
     const rankBefore = Math.floor(toNonNegative(base.rank));
     // 2026-10 Wave 95: 회차 규칙 패를 대가를 치르고 다시 뽑았으면 넘어가는 몫이 그만큼 줄어든다(`keepMult` — 1이면 이전과 같다).
     const keep = Math.min(1, Math.max(0, Number.isFinite(keepMult) ? keepMult : 1));
-    const rankKept = Math.floor(rankBefore * BALANCE.ESSENCE_LADDER_ASCEND_CARRY * keep);
+    // 2026-10 Wave 114: 넘어가는 몫은 비율과 고정 상한 중 작은 쪽이다 — 상한은 비율 뒤, 다시 뽑기 대가 앞에 건다(대가는 상한이 걸린 몫에서 덜어낸다).
+    const rankKept = Math.floor(getLadderCarryRanks(rankBefore) * keep);
     const dropped = rankBefore - rankKept;
     return {
         meta: {

@@ -145,7 +145,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         </div>
                         {outcome.ladder.rankBefore > outcome.ladder.rankKept && (
                             <p data-testid="ascension-ladder-carry" className="mt-2 text-[11px] font-readable leading-relaxed text-amber-100/80">
-                                {MSG.ASCEND_LADDER_CARRY(outcome.ladder.rankBefore, outcome.ladder.rankKept, outcome.ladder.carryPercent)}
+                                {MSG.ASCEND_LADDER_CARRY(outcome.ladder.rankBefore, outcome.ladder.rankKept, outcome.ladder.carryPercent, BALANCE.ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS)}
                             </p>
                         )}
                         {outcome.ladder.rerollPaid > 0 && (
@@ -155,7 +155,9 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                         )}
                         {outcome.mirrorEndless.unlocked ? (
                             <p data-testid="ascension-mirror-endless" className="mt-2 text-[11px] font-readable leading-relaxed text-[#e3dcff]/85">
-                                {outcome.mirrorEndless.steps > 0
+                                {outcome.mirrorEndless.maxed
+                                    ? MSG.ASCEND_MIRROR_ENDLESS_MAXED(BALANCE.MIRROR_ENDLESS_MAX_LEVEL)
+                                    : outcome.mirrorEndless.steps > 0
                                     ? MSG.ASCEND_MIRROR_ENDLESS_STEPS(
                                         outcome.meta.essence || 0,
                                         outcome.mirrorEndless.steps,
