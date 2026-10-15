@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 
-import { ALL_ASCENSION_RULES, ASCENSION_RULES, STACKED_ASCENSION_RULES } from '../src/data/ascensionRules.js';
+import { ALL_ASCENSION_RULES, ASCENSION_RULES, OUTLOOK_DEFAULT_SAMPLES, STACKED_ASCENSION_RULES } from '../src/data/ascensionRules.js';
 import { BALANCE } from '../src/data/constants.js';
 import { TITLES, TITLE_PASSIVES } from '../src/data/titles.js';
 import { AT } from '../src/reducers/actionTypes.js';
@@ -233,7 +233,7 @@ test('겹친 규칙은 거절할 수 있는 카드의 받아들임 · 거절 측
                 }
                 assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)), `${rule.id} rank ${rank}`);
                 assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)), `${rule.id} rank ${rank}`);
-                assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE(o.measuredRank), `${rule.id} rank ${rank}: 잰 단계를 밝힌다`);
+                assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE(o.measuredRank, OUTLOOK_DEFAULT_SAMPLES), `${rule.id} rank ${rank}: 잰 단계를 밝힌다`);
             }
         }
     }

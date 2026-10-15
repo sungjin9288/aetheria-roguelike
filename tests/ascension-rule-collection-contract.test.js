@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 
-import { ASCENSION_RULES, UNBOUND_SIGNATURE_GROUP } from '../src/data/ascensionRules.js';
+import { ASCENSION_RULES, OUTLOOK_DEFAULT_SAMPLES, UNBOUND_SIGNATURE_GROUP } from '../src/data/ascensionRules.js';
 import { BALANCE } from '../src/data/constants.js';
 import { DB } from '../src/data/db.js';
 import { MSG } from '../src/data/messages.js';
@@ -399,10 +399,12 @@ test('Wave 92 · 93: 측정 미리보기는 선택형 규칙에만 있고, 순�
             assert.equal(rule.outlook, undefined, `${rule.id}: 강제 규칙에는 고를 차이가 없다`);
             continue;
         }
-        assert.ok(Array.isArray(rule.outlook) && rule.outlook.length >= 2, `${rule.id}: 선택형 규칙은 첫 · 두 번째 순환 측정을 든다`);
+        // 2026-10 Wave 114: 두 번째 순환 측정은 Wave 108 전 값이라 지웠다 — 지금은 첫 순환 측정 하나다(원장 §121.7).
+        assert.ok(Array.isArray(rule.outlook) && rule.outlook.length >= 1, `${rule.id}: 선택형 규칙은 첫 순환 측정을 든다`);
         cycles.add(rule.outlook.length);
         rule.outlook.forEach((o, i) => {
             for (const value of Object.values(o)) assert.ok(Number.isFinite(value) && value >= 0);
+            assert.equal(o.measuredRank, ASCENSION_RULES.indexOf(rule) + 1 + i * ASCENSION_RULES.length, `${rule.id} 순환 ${i + 1}: 잰 단계는 고정 순서의 그 자리다`);
             assert.ok(o.acceptedDeaths > o.declinedDeaths, `${rule.id} 순환 ${i + 1}: 받아들이면 더 위험하다`);
             assert.ok(o.acceptedSignatures > o.declinedSignatures, `${rule.id} 순환 ${i + 1}: 받아들이면 각인을 더 얻는다`);
         });
@@ -424,18 +426,18 @@ test('Wave 92 · 93 · 94: 미리보기 줄은 그 순환의 측정을 그대로
         const preview = getAscensionRulePreview(rk(rank));
         assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)), `rank ${rank}`);
         assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)), `rank ${rank}`);
-        assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE(o.measuredRank), `rank ${rank}`);
+        assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE(o.measuredRank, o.samples ?? OUTLOOK_DEFAULT_SAMPLES), `rank ${rank}`);
         assert.equal(o.measuredRank, ASCENSION_RULES.indexOf(rule) + 1 + (measuredCycle - 1) * ASCENSION_RULES.length, '잰 단계는 고정 순서의 그 규칙 자리다');
     }
     for (const rank of [1, 2, 3, 7, 8, 9]) assert.equal(getAscensionRulePreview(rk(rank)).outlook, null);
-    assert.notDeepEqual(getAscensionRulePreview(rk(10)).outlook, getAscensionRulePreview(rk(4)).outlook, '두 번째 순환은 자기 측정을 보인다');
-    assert.equal(getAscensionRulePreview(rk(4)).outlook.accepted, '받아들이면: 사망 3.6회 · 새 각인 +1.6개 · 정복 보상');
-    assert.equal(getAscensionRulePreview(rk(5)).outlook.declined, '거절하면: 사망 1.7회 · 새 각인 +0.2개');
-    assert.equal(getAscensionRulePreview(rk(6)).outlook.accepted, '받아들이면: 사망 5.9회 · 새 각인 +1.2개 · 정복 보상', '5.85는 5.9로 반올림한다');
-    assert.equal(getAscensionRulePreview(rk(10)).outlook.accepted, '받아들이면: 사망 2.2회 · 새 각인 +1.0개 · 정복 보상');
-    assert.equal(getAscensionRulePreview(rk(11)).outlook.declined, '거절하면: 사망 0.8회 · 새 각인 +0.0개');
-    assert.equal(getAscensionRulePreview(rk(4)).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 고정 순서 계승 4단계에서 잰 값');
-    assert.equal(getAscensionRulePreview(rk(16)).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 고정 순서 계승 10단계에서 잰 값');
+    // 2026-10 Wave 114: 두 번째 순환은 첫 순환 측정을 보이고 출처 줄이 잰 단계를 밝힌다(Wave 93 규칙).
+    assert.deepEqual(getAscensionRulePreview(rk(10)).outlook, getAscensionRulePreview(rk(4)).outlook, '두 번째 순환은 마지막으로 잰 순환 값을 보인다');
+    assert.equal(getAscensionRulePreview(rk(4)).outlook.accepted, '받아들이면: 사망 8.2회 · 새 각인 +2.6개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(rk(5)).outlook.accepted, '받아들이면: 사망 30.7회 · 새 각인 +2.2개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(rk(5)).outlook.declined, '거절하면: 사망 4.9회 · 새 각인 +1.8개');
+    assert.equal(getAscensionRulePreview(rk(6)).outlook.accepted, '받아들이면: 사망 14.0회 · 새 각인 +3.5개 · 정복 보상', '3.45는 3.5로 반올림한다');
+    assert.equal(getAscensionRulePreview(rk(4)).outlook.source, '그 회차 평균 · 모의 플레이 83판 · 고정 순서 계승 4단계에서 잰 값');
+    assert.equal(getAscensionRulePreview(rk(17)).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 고정 순서 계승 5단계에서 잰 값');
 });
 
 test('Wave 92: 선택 화면 — 두 줄을 함께 보이고 지금 고른 쪽을 밝힌다, 강제 규칙은 줄이 없다, 미리보기는 규칙을 바꾸지 않는다', () => {

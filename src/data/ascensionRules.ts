@@ -44,6 +44,11 @@ export interface AscensionRuleDef {
      * 2026-10 Wave 94: 카드 뽑기로 규칙이 아무 단계에나 올 수 있다. 값은 고정 순서에서 잰 그대로이고, 화면은 잰 단계(`measuredRank`)를
      * 밝힌다 — 순환(1 ~ 6 · 7 ~ 12단계)으로 고르는 규칙은 그대로다.
      *
+     * 2026-10 Wave 114: 기본 선택형 규칙 셋의 첫 순환 값을 Wave 108(사망하면 여정이 처음부터) · 115 · 114(이월 100단계) 위에서 다시 쟀다
+     * (원장 §121.7). 두 번째 순환 값(rank 10 ~ 12)은 Wave 108 전 측정이라 지웠다 — 첫 순환 사망이 그 측정의 2.3 ~ 4.9배라 두 번째 순환을
+     * 그대로 보이면 위험을 작게 말한다. 두 번째 순환은 첫 순환 값을 보이고 출처 줄이 잰 단계를 밝힌다(Wave 93 규칙). 새 각인은 계승 화면
+     * 요약과 같은 규칙(마지막 사망 뒤 회차 시작에 없던 각인)으로 센다 — 사망이 도감을 비우므로 회차 끝 발견 수의 차이는 음수가 될 수 있다.
+     *
      * 2026-10 Wave 106: 겹친 규칙은 그 규칙의 카드 가운데 거절할 수 있는 카드(선택형 바탕, 또는 무거운 두 번째 비틀기)만 잰 값이다 —
      * 바탕이 가벼운 겹친 규칙은 무거운 두 번째 비틀기가 붙은 카드의 측정이다.
      */
@@ -56,9 +61,14 @@ export interface AscensionRuleDef {
     stackedOf?: string;
 }
 
+/** 2026-10 Wave 114: 판 수를 따로 적지 않은 측정(Wave 92 · 93 · 106)은 120판이었다. */
+export const OUTLOOK_DEFAULT_SAMPLES = 120;
+
 export interface AscensionRuleOutlook {
     /** 2026-10 Wave 94: 이 값을 잰 계승 단계(고정 순서 측정) — 카드 뽑기 뒤로는 규칙이 다른 단계에 올 수 있어 화면이 밝힌다. */
     measuredRank: number;
+    /** 2026-10 Wave 114: 받아들임 · 거절을 짝지은 판 수(없으면 `OUTLOOK_DEFAULT_SAMPLES`) — 출처 줄이 그대로 밝힌다. */
+    samples?: number;
     acceptedDeaths: number;
     declinedDeaths: number;
     acceptedSignatures: number;
@@ -111,8 +121,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_unbound', name: '흩어진 전설의 수집가' },
         optional: true,
         outlook: [
-            { measuredRank: 4, acceptedDeaths: 3.59, declinedDeaths: 1.69, acceptedSignatures: 1.59, declinedSignatures: 0.48 },
-            { measuredRank: 10, acceptedDeaths: 2.23, declinedDeaths: 0.74, acceptedSignatures: 1.02, declinedSignatures: 0.03 },
+            { measuredRank: 4, samples: 83, acceptedDeaths: 8.22, declinedDeaths: 4.23, acceptedSignatures: 2.6, declinedSignatures: 1.47 },
         ],
     },
     {
@@ -123,8 +132,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_dimension', name: '차원을 꿰뚫은 자' },
         optional: true,
         outlook: [
-            { measuredRank: 5, acceptedDeaths: 6.28, declinedDeaths: 1.7, acceptedSignatures: 1.23, declinedSignatures: 0.24 },
-            { measuredRank: 11, acceptedDeaths: 3.48, declinedDeaths: 0.82, acceptedSignatures: 1, declinedSignatures: 0.04 },
+            { measuredRank: 5, samples: 120, acceptedDeaths: 30.72, declinedDeaths: 4.92, acceptedSignatures: 2.23, declinedSignatures: 1.83 },
         ],
     },
     {
@@ -135,8 +143,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_shadow', name: '암흑을 꺾은 자' },
         optional: true,
         outlook: [
-            { measuredRank: 6, acceptedDeaths: 5.85, declinedDeaths: 2.03, acceptedSignatures: 1.23, declinedSignatures: 0.21 },
-            { measuredRank: 12, acceptedDeaths: 2.26, declinedDeaths: 0.98, acceptedSignatures: 1, declinedSignatures: 0.03 },
+            { measuredRank: 6, samples: 120, acceptedDeaths: 14, declinedDeaths: 5.95, acceptedSignatures: 3.45, declinedSignatures: 1.72 },
         ],
     },
 ]);
