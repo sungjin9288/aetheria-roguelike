@@ -168,7 +168,7 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
     // 카드마다 두 번째 비틀기가 다르므로 값은 그 규칙의 거절 가능한 카드들의 평균이고, 잰 단계는 가장 많이 놓인 단계다.
     // 2026-10 Wave 116: Wave 108(사망하면 처음부터) · 114(이월 100단계) · 115 위에서 다시 쟀다 — 늘 받아들이는 드라이버와
     // 겹친 카드만 거절하는 드라이버(같은 120시드 × 13회차)의 거절 가능한 카드 회차 평균이다(짝이 아니다 — 첫 거절 뒤로 두 드라이버의
-    // 회차가 갈라진다). 판 수는 두 쪽 중 적은 쪽이다. 이전 값은 사망을 1.6 ~ 8.7분의 1로 말했다(원장 §122).
+    // 회차가 갈라진다). 판 수는 두 쪽 중 적은 쪽이다. 이전 값은 받아들임 사망을 1.7 ~ 8.7분의 1로 말했다(원장 §122).
     const outlook: Record<string, AscensionRuleOutlook> = {
         lost_pilgrimage: { measuredRank: 8, samples: 56, acceptedDeaths: 18.18, declinedDeaths: 4.64, acceptedSignatures: 2.27, declinedSignatures: 1.7 },
         empty_crusade: { measuredRank: 10, samples: 47, acceptedDeaths: 43.74, declinedDeaths: 3.88, acceptedSignatures: 2.6, declinedSignatures: 1.76 },
