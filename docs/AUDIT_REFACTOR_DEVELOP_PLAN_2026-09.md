@@ -7970,7 +7970,7 @@ Wave 108(§114)은 초기화 범위를 바꿨지만 범위를 말하는 화면 �
 2. **테스트가 요구한다:** `item-visuals` · `character-appearance` 테스트가 요구하는 파일 집합 612개를 그대로 재구성했다.
 3. **해시로 고정돼 있다:** 후보 이미지마다 sha256을 저장소 전체 텍스트에서 찾았다(`unknown-route.png` · `fire-lizard.png` 두 개가 걸려 남겼다). 아트 카탈로그 해시가 나열하는 폴더(`equipment-family/items`)와 검증기가 여분 파일을 거부하는 폴더는 건드리지 않았다.
 4. **스크립트 · CI · 검증기가 읽는다:** `package.json` 스크립트, `.github/workflows`, `evidence:verify`(목록 도출), 테스트의 폴더 나열(`readdirSync` 등)을 모두 확인했다.
-5. **운영에 쓰인다:** 배포 · 출시 · 스토어 · 모바일 설정 문서, iPhone 수용 런북과 그것이 가리키는 기록, 플레이테스트 점검표가 가리키는 영수증, 최근 수용 기록 2건(§67 · §113), `AGENTS.md`의 작업 장부 `tasks/`, `AGENTS.md` · `DESIGN.md`, 아트 재생성 도구 5개, OpenSpace 스킬 묶음, `aws/`(실제 계정에서 아직 쓰는지 확인되지 않음 — 지우는 것은 소유자 확인 뒤).
+5. **운영에 쓰인다:** 배포 · 출시 · 스토어 · 모바일 설정 문서, iPhone 수용 런북과 그것이 가리키는 기록, 플레이테스트 점검표가 가리키는 영수증, 최근 수용 기록 2건(§67 · §113), `AGENTS.md`의 작업 장부 `tasks/`, `AGENTS.md` · `DESIGN.md`, 아트 재생성 도구 5개, OpenSpace 스킬 묶음.
 
 ### 118.2 지운 것 — 1,053개 · 약 109MB
 
@@ -7987,6 +7987,8 @@ Wave 108(§114)은 초기화 범위를 바꿨지만 범위를 말하는 화면 �
 | 날짜 붙은 QA 보고서 · 스크린샷, 아트 검토 노트 · 대조표 | 약 190 | 약 55MB | 검증기 · 테스트가 읽지 않음(영수증 2개는 운영 문서가 가리켜 유지) |
 | 쓰지 않는 몬스터 아트 배치 `scripts/art_sources/monsters/v2 ~ v5` | 122 | 48MB | v1 · v6 ~ v27은 각각 테스트가 읽는다, v2 ~ v5는 읽는 곳 0 |
 | `.superpowers/` · `progress.md` · 깨진 심볼릭 링크 4개 · 에셋 폴더 README 2개 | 19 | — | 8월 작업 보고, 다른 기기에서 끊기는 링크, 배포본에 섞여 나가던 안내문 |
+
+옛 AWS 코드 `aws/**`(SAM 템플릿 · Lambda 두 개, 5개)도 지웠다 — 소유자 결정 "aws 관련 전부 지우자". 게임 · `functions/` · CI 어디서도 부르지 않았다(실제 AI 프록시는 Cloudflare Pages `functions/api/ai-proxy.js`). `eslint.config.js`의 `aws/**` 블록도 지웠다. 저장소에서 지운 것은 코드뿐이다 — AWS 계정에 배포된 자원이 남아 있다면 계정에서 따로 내려야 한다.
 
 고친 참조: `tsconfig.json`의 `scripts/_archive` 제외 항목, `itemVisuals.ts` 주석(지운 생성 스크립트), 몬스터 · 지역 아트 README(지운 지역 그림). 원장 · 아트 원본 노트 안의 옛 문서 경로는 기록이라 그대로 두었다 — 파일은 git 기록에 남는다.
 
