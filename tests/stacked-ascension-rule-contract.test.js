@@ -233,8 +233,20 @@ test('겹친 규칙은 거절할 수 있는 카드의 받아들임 · 거절 측
                 }
                 assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)), `${rule.id} rank ${rank}`);
                 assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)), `${rule.id} rank ${rank}`);
-                assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE(o.measuredRank, OUTLOOK_DEFAULT_SAMPLES), `${rule.id} rank ${rank}: 잰 단계를 밝힌다`);
+                assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE_STACKED(o.measuredRank, o.samples ?? OUTLOOK_DEFAULT_SAMPLES), `${rule.id} rank ${rank}: 2순환 카드 뽑기에서 잰 값 · 판 수를 밝힌다`);
             }
         }
     }
+});
+
+test('Wave 116: 겹친 카드 미리보기는 Wave 108 뒤 측정이고, 출처 줄은 2순환 카드 뽑기 · 판 수를 밝힌다', async () => {
+    const { buildAscensionRulePreview } = await import('../src/utils/ascensionRuleView.js');
+    const byId = Object.fromEntries(STACKED_ASCENSION_RULES.map((rule) => [rule.id, rule]));
+    const empty = buildAscensionRulePreview(byId.stacked_empty_crusade, 10, 'halfHp');
+    assert.equal(empty.outlook.accepted, '받아들이면: 사망 43.7회 · 새 각인 +2.6개 · 정복 보상');
+    assert.equal(empty.outlook.declined, '거절하면: 사망 3.9회 · 새 각인 +1.8개');
+    assert.equal(empty.outlook.source, '그 회차 평균 · 모의 플레이 47판 · 2순환 카드 뽑기에서 잰 값(주로 계승 10단계)');
+    const fading = buildAscensionRulePreview(byId.stacked_fading_dimension, 12, 'noGold');
+    assert.equal(fading.outlook.accepted, '받아들이면: 사망 13.2회 · 새 각인 +2.2개 · 정복 보상');
+    assert.ok(!fading.outlook.source.includes('고정 순서'), '겹친 규칙은 고정 순서에서 재지 않는다');
 });

@@ -271,6 +271,8 @@ export const MSG = {
     ASCENSION_RULE_OUTLOOK_DECLINED: (deaths: string, signatures: string) => `거절하면: 사망 ${deaths}회 · 새 각인 +${signatures}개`,
     // 2026-10 Wave 93 · 94: 순환별 측정, 잰 단계를 밝힌다 — 카드 뽑기 뒤로는 규칙이 다른 단계에 올 수 있다.
     ASCENSION_RULE_OUTLOOK_SOURCE: (measuredRank: number, samples: number) => `그 회차 평균 · 모의 플레이 ${samples}판 · 고정 순서 계승 ${measuredRank}단계에서 잰 값`,
+    // 2026-10 Wave 116: 겹친 규칙은 고정 순서가 아니라 2순환 카드 뽑기에서 잰다 — 가장 많이 놓인 단계를 밝힌다.
+    ASCENSION_RULE_OUTLOOK_SOURCE_STACKED: (measuredRank: number, samples: number) => `그 회차 평균 · 모의 플레이 ${samples}판 · 2순환 카드 뽑기에서 잰 값(주로 계승 ${measuredRank}단계)`,
     ASCENSION_RULE_OFFER_TITLE: '다음 회차 규칙 — 카드 한 장을 고르세요',
     ASCENSION_RULE_OFFER_HINT: '이번 순환에서 아직 정복하지 않은 규칙에서 뽑았습니다. 다시 뽑으면 지금 패로 돌아올 수 없습니다.',
     // 2026-10 Wave 95: 회차 규칙 패 다시 뽑기 — 첫 번째는 무료, 그 뒤는 다음 여정으로 넘어가는 정수 사다리를 내려놓는다.
