@@ -446,7 +446,7 @@ export const getItemIconAssetKey = (item: Item | null | undefined) => getEquipme
 /**
  * cycle 40에서 chibi 결로 derive된 PNG가 있는 item 키 set.
  * 이 set의 키는 .png로 로드 (procedural SVG 대신).
- * scripts/derive_item_variants.py가 생성한 PNG들 등록.
+ * 그때의 이미지 생성 스크립트가 만든 PNG들 등록(스크립트는 Wave 112에 저장소에서 지웠다 — PNG가 정본).
  */
 // cycle 294: export 제거 — getItemIconAssetExtension 내부 1회만 사용, 외부 consumer 0건.
 const IMAGEGEN_ITEM_PNG_KEYS = new Set([

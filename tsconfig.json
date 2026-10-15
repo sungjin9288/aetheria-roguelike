@@ -28,5 +28,5 @@
     "skipLibCheck": true
   },
   "include": ["src/**/*", "tests/**/*"],
-  "exclude": ["node_modules", "dist", "android", "ios", "scripts/_archive", "output"]
+  "exclude": ["node_modules", "dist", "android", "ios", "output"]
 }
