@@ -249,7 +249,7 @@ test.describe('계승 화면 — 회차 규칙 패 다시 뽑기', () => {
         await expect(page.getByTestId('ascension-rule-card-lost_pilgrimage')).toHaveAttribute('aria-pressed', 'true');
         await expect(page.getByTestId('ascension-rule-reroll-count')).toHaveText('다시 뽑음 2/3');
         await expect(page.getByTestId('ascension-ladder-reroll-cost')).toHaveCount(1);
-        await expect(page.getByTestId('ascension-ladder-carry')).toContainText('400단계 중 20단계(5%, 최대 70단계)');
+        await expect(page.getByTestId('ascension-ladder-carry')).toContainText('400단계 중 20단계(5%, 최대 100단계)');
 
         const geometry = await page.getByTestId('ascension-rule-offer').evaluate((root) => ({
             minFont: Math.min(...[...root.querySelectorAll<HTMLElement>('*')].filter((node) => (node.textContent || '').trim())
