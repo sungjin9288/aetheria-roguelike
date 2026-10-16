@@ -33,6 +33,7 @@ import { getActiveRelicSynergies, isRelicReplacementUpgrade } from '../../src/da
 import { MIRROR_ENDLESS_NODES, MIRROR_NODES } from '../../src/data/mirror.ts';
 import { getMirrorNodeCost, isMirrorTreeComplete } from '../../src/systems/mirrorUpgrades.ts';
 import { getRestCost } from '../../src/utils/expeditionReturnFlow.ts';
+import { hasChallengeModifier } from '../../src/utils/challengeRules.ts';
 
 export const DRIVER_VERSION = 1;
 
@@ -320,7 +321,7 @@ export const runNaturalPlay = async (options) => {
         const stats = getFullStats();
         const hpRatio = p.hp / Math.max(1, stats.maxHp);
         lastCombatSnapshot = { level: Number(p.level) || 1, loc: p.loc, hpRatio: Number(hpRatio.toFixed(3)), enemy: { name: enemy.name, baseName: enemy.baseName, isElite: enemy.isElite, isBoss: enemy.isBoss, huntChampion: enemy.huntChampion } };
-        if (hpRatio < 0.3) {
+        if (hpRatio < 0.3 && potionsAllowed()) {
             const potion = HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean);
             if (potion) { A.combatUseItem(potion); return; }
         }
@@ -334,7 +335,8 @@ export const runNaturalPlay = async (options) => {
             if ((p.mp || 0) < cost || (cooldowns[String(skill.name)] || 0) > 0) return;
             if (!best || mult > best.mult) best = { skill, mult };
         });
-        if (best) {
+        // '뒤섞인 기술' 회차는 고른 기술을 뺀 나머지가 무작위로 나간다(보조 기술이면 차례를 버린다) — 기본 공격만 한다.
+        if (best && !hasChallengeModifier(p, 'randomSkills')) {
             const selected = skills[p.skillLoadout?.selected ?? 0];
             if (selected?.name !== best.skill.name) { A.selectSkill(best.skill.name); }
             buildActions().combat('skill');
@@ -434,7 +436,7 @@ export const runNaturalPlay = async (options) => {
             }
             // 체력 물약 3개까지 산다.
             const owned = (p.inv || []).filter((item) => item.type === 'hp').length;
-            if (owned < 3) {
+            if (owned < 3 && potionsAllowed()) {
                 A.openShop();
                 for (let index = owned; index < 3; index += 1) {
                     const shopActions = buildActions();
@@ -448,7 +450,7 @@ export const runNaturalPlay = async (options) => {
                 A = buildActions(); p = state.player;
             }
         } else if (lowHp || lowMp) {
-            const potion = lowHp ? HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean) : null;
+            const potion = lowHp && potionsAllowed() ? HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean) : null;
             if (potion) { A.useItem(potion); return; }
             const safe = canRest ? nearestSafeMap(p.loc) : null;
             if (safe) { stepToward(safe); return; }
@@ -479,6 +481,11 @@ export const runNaturalPlay = async (options) => {
             if (!best || score > best.score) best = { relic: released, score };
         });
         return best?.relic ?? null;
+    }
+
+    /** '물약 없이' 회차에는 회복 · 보조 아이템을 쓸 수 없다(`consumableEffect`가 거부한다). */
+    function potionsAllowed() {
+        return !hasChallengeModifier(state.player, 'noPotion');
     }
 
     /** 지금 받을 수 있는데 아직 받지 않은 이야기 장(선행 수령 · 수락 레벨). */
