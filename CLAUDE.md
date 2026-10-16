@@ -135,10 +135,11 @@ src/
     ├── scoutEvents.ts         # 탐험 정찰 3택 카드
     ├── wanderingMerchant.ts   # 떠돌이 행상인 만남 · 재고 (탐험 수 · 지역 해시, 탐험 난수 미사용 — Wave 75)
     └── commandParser.ts       # 명령어 파싱
-tests/                # 단위 테스트 (Node.js built-in test, 455 파일 / 6,124 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
+tests/                # 단위 테스트 (Node.js built-in test, 456 파일 / 6,128 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
                       #   + e2e/ (Playwright 53 스펙 / 160 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
+                      #   + naturalPlay/driver.mjs · natural-play*.mjs (자연 플레이 측정 드라이버 — Wave 117, 원장의 사망 · 시간 · 루프 수치의 출처)
 functions/api/        # Cloudflare Pages Functions (ai-proxy.js)
 android/ ios/         # Capacitor 네이티브 프로젝트
 ```
@@ -164,6 +165,9 @@ npm run test:smoke        # 스모크 게임플레이 테스트 (preview 서버 
 npm run test:e2e          # Playwright e2e (2 shard)
 npm run perf:guard        # FCP/DCL 예산 검사 (CI blocking — Wave 10 B4; 로컬은 preview 서버 필요)
 npm run progression:simulate  # 성장 곡선 시뮬레이션 (밸런스 변경 시 compare와 함께)
+npm run natural-play -- --seed 1 --path knight --runs 4         # 자연 플레이 한 판 (실제 액션 팩토리 · 리듀서, 시드 결정론)
+npm run natural-play:batch -- --out DIR --seeds 1-24 --runs 4   # 여러 경로 · 시드 병렬 (이미 있는 결과는 건너뜀)
+npm run natural-play:report -- DIR [BASE_DIR]                   # 회차별 요약 · 두 결과의 짝 비교(z)
 
 # 모바일
 npm run cap:sync          # Capacitor sync (iOS + Android 동시)
@@ -380,6 +384,7 @@ npm run test:smoke   # 게임플레이 스모크 테스트
 - `boot-state-machine.test.js` — §8-5 부트 전이표(`platform/bootStateMachine.ts`). 복원 **dispatch까지** 전이표 소유(Wave 11 C1)이므로 계약은 "ready 뒤 `LOAD_DATA`는 크로스 디바이스 복원 경로에서만, 폴백·mock/device-QA는 무(無)". Wave 10의 "복원 승인 없는 ready 금지"는 dispatch를 훅이 소유하던 동안 **공허참**이었다 — 주장하는 쪽과 강제하는 쪽이 같은 모듈이어야 계약이 성립한다
 - `ai-event-policy.test.js` — AI 폴백 결정표 (Wave 11 C3)
 - `tracked-evidence-ci-contract.test.js` — **추적 증빙은 CI가 검증한다** (2026-10-14 출시 전 통합 수용). 증빙(`docs/evidence/qa/release-complete-core/*.json`)은 리포트와 그 리포트를 만든 소스 파일의 해시를 함께 고정하는데, unit 스위트는 그 바이트를 비교하지 않고 CI도 돌리지 않아 Wave 103이 고정된 소스(`signatureSetBonus.ts`)를 바꾼 채 머지됐다(장비 전투력 증빙이 그 뒤 4개 PR 동안 불일치였다). 이제 CI `tracked-evidence` job이 `npm run evidence:verify`(목록은 `package.json`의 `--verify docs/evidence/` 스크립트 전부 + 아트 2종에서 **도출**)를 static-checks와 병렬로 돌린다. 성장 진단 증빙은 `package.json` 자체도 고정하므로 npm 스크립트 한 줄만 바꿔도 `progression:diagnostic:write`가 필요하다 — 붉어지면 해당 `:write`로 다시 쓰고 리포트 본문이 그대로인지(해시만 바뀌었는지) 확인할 것
+- `natural-play-driver-contract.test.js` — **자연 플레이 측정 드라이버는 저장소 안의 도구다** (Wave 117). 원장의 사망 · 시간 · 루프 수치는 모두 `scripts/naturalPlay/driver.mjs`에서 나온다 — 저장소 밖 작업 공간에 두던 이전 드라이버(`driverDP.mjs`)는 컨테이너 재시작에 지워졌다(원장 §123). 드라이버는 실제 액션 팩토리(`createGameActions` · `createCombatActions` · `createInventoryActions`)와 `gameReducer`를 그대로 돌리고, 전역 `Math.random` · `Date`를 시드 난수 · 가짜 시계(스텝당 15초)로 바꾸며 기록 id는 카운터다(그래서 기록 줄 하나가 난수열을 밀지 않는다 — 원장 §117.5의 함정). 계약은 같은 시드 = 같은 결과 · 짧은 예산의 실제 성장 · 전역 복구 · 직업 경로의 실제 전직 사슬이다. **정책을 바꾸면 `DRIVER_VERSION`을 올리고 이전 결과와 짝 비교하지 말 것** — 정책 차이가 게임 변경처럼 보인다(Wave 117 첫 기준선은 이전 드라이버 수치와 비교할 수 없다)
 - `grave-item-reader-contract.test.js` — §8-2 "묘비 아이템은 `getGraveItems()` 경유로만 읽는다" 부재 가드 + 단수/복수/빈배열/null 읽기 동치 (Wave 11)
 - `event-chain-cost.test.js` — **체인의 열림→완주 구간**과 **승천 지점을 걸치는 체인이 0개임**을 고정한다 (Wave 14 F2 + Wave 15 G1). 완주 게이트는 종착 스텝의 게이트가 아니라 **전 스텝 max**다 — `chainEventHandlers`가 스텝 순서를 강제하므로 중간 스텝이 더 깊으면 그게 완주 비용이다. 스텝 지역 하나라도 못 읽으면 남은 스텝의 max가 아니라 **미상**(fail-closed)
 - `firestore-rules-semantics.test.js` — **rules를 에뮬레이터로 실행** (Wave 14 F3). 테스트는 rules가 아니라 **클라이언트 쓰기 지점 6곳의 실제 페이로드**에서 유도한다 — rules 텍스트를 재현한 테스트는 거부가 버그인 rules 위에서도 초록이다. `npm run test:rules`(JDK 필요, CI 별도 job). 에뮬레이터가 없으면 러너 존재를 단언한다(skip 0 유지)
