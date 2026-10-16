@@ -32,6 +32,7 @@ import { getPrestigeUnlocks } from '../../src/systems/prestigeUnlocks.ts';
 import { getActiveRelicSynergies, isRelicReplacementUpgrade } from '../../src/data/relics.ts';
 import { MIRROR_ENDLESS_NODES, MIRROR_NODES } from '../../src/data/mirror.ts';
 import { getMirrorNodeCost, isMirrorTreeComplete } from '../../src/systems/mirrorUpgrades.ts';
+import { getRestCost } from '../../src/utils/expeditionReturnFlow.ts';
 
 export const DRIVER_VERSION = 1;
 
@@ -85,6 +86,8 @@ const installClock = (clock) => {
  * @param {number} [options.stepSeconds]     행동 하나가 가짜 시계에서 걸리는 시간
  * @param {'none'|'all'|'stacked'} [options.ruleDecline] 거절할 수 있는 회차 규칙 카드를 거절하는 범위
  */
+const TRACE = Boolean(process.env.NATURAL_PLAY_TRACE);
+
 export const runNaturalPlay = async (options) => {
     const {
         seed,
@@ -183,6 +186,7 @@ export const runNaturalPlay = async (options) => {
     const declineFor = (nextRank) => ruleDecline === 'all' || (ruleDecline === 'stacked' && nextRank > 6);
 
     let lastGameState = null;
+    let lastCombatSnapshot = null;
     let previousTopState = null;
     let lastProgressStep = 0;
     let lastSignature = '';
@@ -199,6 +203,7 @@ export const runNaturalPlay = async (options) => {
             // 진행 감시 — 같은 상태가 오래 이어지면 정책이 막힌 것이다(결과에 남기고 멈춘다).
             const signature = `${state.gameState}|${p?.loc}|${p?.level}|${p?.exp}|${p?.hp}|${p?.gold}|${state.combatTurn}|${(p?.stats?.explores) || 0}`;
             if (signature !== lastSignature) { lastSignature = signature; lastProgressStep = step; }
+            if (TRACE) console.error(`${step} ${state.gameState} ${p?.loc} Lv${p?.level} hp${p?.hp} mp${p?.mp} g${p?.gold} | ${state.logs.at(-1)?.text ?? ''}`);
             if (step - lastProgressStep > 200) {
                 result.stalled = { step, gameState: state.gameState, loc: p?.loc, level: p?.level, lastLogs: state.logs.slice(-6).map((log) => log.text) };
                 break;
@@ -241,12 +246,16 @@ export const runNaturalPlay = async (options) => {
 
             switch (state.gameState) {
             case GS.DEAD: {
-                const enemy = state.enemy || {};
+                // 패배 정산(`handleDefeat`)이 이미 새 여정 player를 만들었으므로 죽은 순간의 기록은 전투 직전 스냅숏이다.
+                const before = lastCombatSnapshot || { level, loc: p.loc, enemy: {} };
+                const enemy = before.enemy || {};
                 run.deaths += 1;
                 result.deaths.push({
-                    run: run.run, step, hours: Number((hours() - run.startHours).toFixed(3)), level, loc: p.loc,
+                    run: run.run, step, hours: Number((hours() - run.startHours).toFixed(3)), level: before.level, loc: before.loc,
+                    hpRatio: before.hpRatio ?? null,
                     enemy: { name: enemy.name ?? null, baseName: enemy.baseName ?? null, isElite: Boolean(enemy.isElite), isBoss: Boolean(enemy.isBoss), huntChampion: Boolean(enemy.huntChampion) },
                 });
+                lastCombatSnapshot = null;
                 A.reset();
                 continue;
             }
@@ -304,6 +313,7 @@ export const runNaturalPlay = async (options) => {
         }
         const stats = getFullStats();
         const hpRatio = p.hp / Math.max(1, stats.maxHp);
+        lastCombatSnapshot = { level: Number(p.level) || 1, loc: p.loc, hpRatio: Number(hpRatio.toFixed(3)), enemy: { name: enemy.name, baseName: enemy.baseName, isElite: enemy.isElite, isBoss: enemy.isBoss, huntChampion: enemy.huntChampion } };
         if (hpRatio < 0.3) {
             const potion = HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean);
             if (potion) { A.combatUseItem(potion); return; }
@@ -404,9 +414,11 @@ export const runNaturalPlay = async (options) => {
         const map = DB.MAPS[p.loc];
         const lowHp = p.hp / Math.max(1, stats.maxHp) < 0.5;
         const lowMp = (p.mp || 0) / Math.max(1, stats.maxMp) < 0.25;
+        // 쉴 돈이 없으면 돌아가도 소용없다 — 가진 것으로 계속 싸운다(골드 54로 마을 ↔ 평원을 오가던 시드 2).
+        const canRest = (p.gold || 0) >= getRestCost(p);
 
         if (map?.type === 'safe') {
-            if (lowHp || lowMp) {
+            if ((lowHp || lowMp) && canRest) {
                 const before = state.player;
                 A.rest();
                 if (state.player !== before) return;
@@ -429,7 +441,7 @@ export const runNaturalPlay = async (options) => {
         } else if (lowHp || lowMp) {
             const potion = lowHp ? HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean) : null;
             if (potion) { A.useItem(potion); return; }
-            const safe = nearestSafeMap(p.loc);
+            const safe = canRest ? nearestSafeMap(p.loc) : null;
             if (safe) { stepToward(safe); return; }
         }
 
