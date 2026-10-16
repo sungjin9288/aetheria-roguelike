@@ -8298,3 +8298,7 @@ Lv21 이상 105건: 완전 정예 62 · 보스 41 · 의뢰 우두머리 2. 전�
 - **회차 규칙 미리보기 값:** 화면 값은 이전 드라이버로 잰 것이다. 새 드라이버의 크기가 같은 범위라 지금 고치지 않는다. 규칙 · 엔진을 바꾸는 다음 웨이브가 이 드라이버로 다시 잰다.
 - **화면 투어 스크립트:** 아직 다시 만들지 않았다. 3폭 화면 계약은 e2e(`product-acceptance-layout`)가 지킨다.
 - **사용:** `npm run natural-play:batch -- --out DIR --seeds 1-24 --paths knight,berserker,archmage,cleric,assassin --runs 4 --jobs 4` → `npm run natural-play:report -- DIR [BASE_DIR]`. 결과 디렉터리는 저장소 밖(스크래치)에 둔다 — 원장에는 숫자와 조건만 남긴다.
+
+### 124.6 게이트
+
+type-check · lint 0, 단위 6,128/6,128(456파일 · skip 0), build:guard, 추적 증빙 15/15(성장 진단 증빙은 `package.json` 스크립트 세 줄 때문에 다시 썼다 — 소스 해시 한 줄만 바뀌고 리포트 본문은 그대로), rules 19/19, CI 환경 빌드, e2e 160(83 + 77), perf FCP 데스크톱 384ms · 모바일 344ms. 게임 코드(`src/`)는 바뀌지 않았다.
