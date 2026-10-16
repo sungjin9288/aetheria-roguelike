@@ -298,6 +298,12 @@ export const runNaturalPlay = async (options) => {
     result.steps = step;
     result.finalLevel = Number(state.player?.level) || 0;
     result.finalRank = Number(state.player?.meta?.prestigeRank) || 0;
+    // 끝난 시점의 이야기 임무 — 계승하지 못한 판을 진단한다.
+    result.openStoryQuests = (state.player?.quests || [])
+        .map((entry) => ({ entry, quest: QUESTS.find((quest) => quest.id === entry.id) }))
+        .filter(({ quest }) => String(quest?.title || '').startsWith(STORY_PREFIX))
+        .map(({ entry, quest }) => ({ id: quest.id, progress: entry.progress ?? null, goal: quest.goal, target: quest.target ?? null, location: quest.location ?? null }));
+    result.claimedStoryQuests = QUESTS.filter((quest) => String(quest.title || '').startsWith(STORY_PREFIX) && claimed().has(String(quest.id))).map((quest) => quest.id);
     return result;
 
     // ── 정책 ──────────────────────────────────────────────────────────────
@@ -377,6 +383,9 @@ export const runNaturalPlay = async (options) => {
         }
         // 임무 수락은 마을 게시판에서만 된다.
         if (DB.MAPS[p.loc]?.type === 'safe') {
+            // 다음 이야기 장은 추천 칸에 없어도 받는다(사람은 이야기를 따라간다).
+            const story = nextStoryQuest(p);
+            if (story) { A.acceptQuest(story.id); A = buildActions(); p = state.player; }
             const board = getQuestBoardRecommendations(p);
             for (const entry of board.featured || []) {
                 A.acceptQuest(entry.quest.id);
@@ -445,6 +454,12 @@ export const runNaturalPlay = async (options) => {
             if (safe) { stepToward(safe); return; }
         }
 
+        // 받을 수 있는 이야기 장이 있으면 게시판(안전지대)으로 돌아간다.
+        if (map?.type !== 'safe' && nextStoryQuest(state.player)) {
+            const safe = nearestSafeMap(state.player.loc);
+            if (safe) { stepToward(safe); return; }
+        }
+
         const target = chooseTargetMap(state.player);
         if (target && target !== state.player.loc) { stepToward(target); return; }
         await buildActions().explore();
@@ -464,6 +479,17 @@ export const runNaturalPlay = async (options) => {
             if (!best || score > best.score) best = { relic: released, score };
         });
         return best?.relic ?? null;
+    }
+
+    /** 지금 받을 수 있는데 아직 받지 않은 이야기 장(선행 수령 · 수락 레벨). */
+    function nextStoryQuest(p) {
+        const done = claimed();
+        const active = new Set((p.quests || []).map((entry) => String(entry.id)));
+        const level = Number(p.level) || 1;
+        return QUESTS.find((quest) => String(quest.title || '').startsWith(STORY_PREFIX)
+            && !done.has(String(quest.id)) && !active.has(String(quest.id))
+            && level >= (quest.minLv || 1)
+            && (quest.prerequisiteQuestId == null || done.has(String(quest.prerequisiteQuestId)))) || null;
     }
 
     function chooseTargetMap(p) {

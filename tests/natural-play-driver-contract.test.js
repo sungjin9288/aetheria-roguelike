@@ -1,0 +1,46 @@
+// 2026-10 Wave 117 — 자연 플레이 측정 드라이버(`scripts/naturalPlay/driver.mjs`)는 저장소 안의 도구다.
+// 원장의 측정(사망 · 시간 · 루프)이 모두 이 드라이버에서 나오므로, 게임이 바뀌어도 드라이버가 계속 돌고
+// 같은 시드에서 같은 결과를 내는지를 지킨다. 측정 자체는 CI에서 돌리지 않는다(수십 분) — 여기서는 짧은 예산만.
+import test from 'node:test';
+import assert from 'node:assert/strict';
+
+import { JOB_PATHS, runNaturalPlay } from '../scripts/naturalPlay/driver.mjs';
+
+const SHORT = { seed: 7, maxSteps: 800 };
+
+test('같은 시드는 같은 결과다 — 전역 난수 · 시계를 시드로 바꾸고 기록 id도 카운터다', async () => {
+    const first = await runNaturalPlay(SHORT);
+    const second = await runNaturalPlay(SHORT);
+    assert.deepEqual(second, first);
+    const other = await runNaturalPlay({ ...SHORT, seed: 8 });
+    assert.notDeepEqual(other.runs, first.runs, '다른 시드는 다른 회차를 걷는다');
+});
+
+test('짧은 예산에서도 실제로 성장한다 — 막힘 감시가 비어 있고 전투 · 레벨이 오른다', async () => {
+    const result = await runNaturalPlay(SHORT);
+    assert.equal(result.stalled, null, JSON.stringify(result.stalled));
+    assert.equal(result.steps, SHORT.maxSteps);
+    const [run] = result.runs;
+    assert.ok(run.combats >= 30, `전투 ${run.combats}`);
+    assert.ok(result.finalLevel >= 10, `레벨 ${result.finalLevel}`);
+    assert.ok(run.levelAt[2] > 0, '레벨 도달 시각을 기록한다');
+});
+
+test('돌린 뒤 전역 Math.random · Date를 되돌린다', async () => {
+    const realRandom = Math.random;
+    const RealDate = Date;
+    await runNaturalPlay({ seed: 3, maxSteps: 50 });
+    assert.equal(Math.random, realRandom);
+    assert.equal(Date, RealDate);
+});
+
+test('직업 경로는 실제 전직 사슬이다', async () => {
+    const { CLASSES } = await import('../src/data/classes.js');
+    for (const [name, path] of Object.entries(JOB_PATHS)) {
+        let current = '모험가';
+        for (const job of path) {
+            assert.ok(CLASSES[current]?.next?.includes(job), `${name}: ${current} → ${job}`);
+            current = job;
+        }
+    }
+});
