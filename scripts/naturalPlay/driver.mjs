@@ -348,7 +348,8 @@ export const runNaturalPlay = async (options) => {
         }
         // v2: 생명 50% 아래면 회복 기술(`hp_regen`)을 먼저, 없으면 30% 아래에서 물약.
         if (canChooseSkill && hpRatio < 0.5) {
-            const heal = skills.filter((skill) => skill.effect === 'hp_regen' && usable(skill))
+            // 즉시 회복이 최대 생명의 20% 이상인 기술만 — 10% 회복(역경의 힘)으로 차례를 쓰면 버서커 1회차 사망이 늘었다(z +2.0).
+            const heal = skills.filter((skill) => skill.effect === 'hp_regen' && (Number(skill.val) || 0) >= 0.2 && usable(skill))
                 .sort((a, b) => (Number(b.val) || 0) - (Number(a.val) || 0))[0];
             if (heal) { useSkill(heal); return; }
         }
