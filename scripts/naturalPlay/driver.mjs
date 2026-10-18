@@ -170,6 +170,8 @@ export const runNaturalPlay = async (options) => {
             combats: 0,
             eliteCombats: 0,
             bossCombats: 0,
+            // 보스 · 정예 종별 교전 수(지역 · 종) — 사망 수와 나눠 교전당 사망률을 본다.
+            fightsBy: {},
         };
     };
     const closeRun = () => {
@@ -317,6 +319,10 @@ export const runNaturalPlay = async (options) => {
             run.combats += 1;
             if (enemy.isElite) run.eliteCombats += 1;
             if (enemy.isBoss) run.bossCombats += 1;
+            if (enemy.isBoss || enemy.isElite) {
+                const key = `${enemy.isBoss ? 'boss' : 'elite'}|${p.loc}|${enemy.baseName}`;
+                run.fightsBy[key] = (run.fightsBy[key] || 0) + 1;
+            }
         }
         const stats = getFullStats();
         const hpRatio = p.hp / Math.max(1, stats.maxHp);
