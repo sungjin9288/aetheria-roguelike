@@ -34,6 +34,8 @@ import { getActiveRelicSynergies, isRelicReplacementUpgrade } from '../../src/da
 import { MIRROR_ENDLESS_NODES, MIRROR_NODES } from '../../src/data/mirror.ts';
 import { getMirrorNodeCost, isMirrorTreeComplete } from '../../src/systems/mirrorUpgrades.ts';
 import { getRestCost } from '../../src/utils/expeditionReturnFlow.ts';
+import { countDiscoveredSignatures } from '../../src/utils/signatureDiscovery.ts';
+import { HIDDEN_BOSS_UNLOCKS } from '../../src/utils/bossPresence.ts';
 import { hasChallengeModifier } from '../../src/utils/challengeRules.ts';
 
 // v2 (Wave 119): 퇴마 · 회복 기술을 쓴다 — v1은 위력(`mult`) 있는 기술만 써서 성직자가 회복도 퇴마도 하지 않았다(원장 §126).
@@ -57,6 +59,8 @@ const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const START_EPOCH_MS = 1_790_000_000_000;
 const ROUTE_GATES = mapRouteGateLevels(MAP_ROUTE_START_LOCATION, DB.MAPS);
 const STORY_PREFIX = '[스토리]';
+const STORY_QUEST_IDS = QUESTS.filter((quest) => String(quest.title || '').startsWith(STORY_PREFIX)).map((quest) => quest.id);
+const HIDDEN_BOSS_NAMES = new Set(HIDDEN_BOSS_UNLOCKS.map((entry) => entry.boss));
 const HP_POTIONS = DB.ITEMS.consumables.filter((item) => item.type === 'hp').sort((a, b) => (b.val || 0) - (a.val || 0));
 
 const isHuntMap = (name) => {
@@ -174,12 +178,15 @@ export const runNaturalPlay = async (options) => {
             bossCombats: 0,
             // 보스 · 정예 종별 교전 수(지역 · 종) — 사망 수와 나눠 교전당 사망률을 본다.
             fightsBy: {},
+            // 큰 순간(원장 §80 정의 + 토벌 의뢰) — [회차 시작부터 시간, 종류]. 상태 차이만 읽는다(정책 · 난수 불변).
+            moments: [],
         };
     };
     const closeRun = () => {
         const meta = state.player?.meta || {};
+        const { momentBest: _best, momentJobs: _jobs, ...runRecord } = run;
         result.runs.push({
-            ...run,
+            ...runRecord,
             endStep: step,
             hours: Number((hours() - run.startHours).toFixed(3)),
             ladderRank: Number(meta.rank) || 0,
@@ -195,6 +202,7 @@ export const runNaturalPlay = async (options) => {
     let previousTopState = null;
     let lastProgressStep = 0;
     let lastSignature = '';
+    let lastMoments = null;
 
     try {
         while (step < maxSteps && result.runs.length < targetRuns) {
@@ -219,6 +227,7 @@ export const runNaturalPlay = async (options) => {
                 continue;
             }
             if (!run) openRun();
+            detectMoments(p);
             const level = Number(p.level) || 1;
             if (run.levelAt[level] === undefined) run.levelAt[level] = Number((hours() - run.startHours).toFixed(3));
 
@@ -503,6 +512,47 @@ export const runNaturalPlay = async (options) => {
             if (!best || score > best.score) best = { relic: released, score };
         });
         return best?.relic ?? null;
+    }
+
+
+    /** 큰 순간의 셈 — 각 항목이 늘면 그 종류의 순간이다(사망 · 계승으로 줄어든 뒤 다시 늘어도 순간이다). */
+    function momentCounts(p) {
+        const done = claimed();
+        const chain = Object.entries(p.eventChainProgress || {}).reduce((sum, [, value]) => sum + (typeof value === 'number' ? value : 0), 0);
+        const hunt = Object.values(p.huntContracts || {}).reduce((sum, entry) => sum + (Number(entry?.stage) || 0) + 10 * ((Number(entry?.round) || 1) - 1), 0);
+        return {
+            story: STORY_QUEST_IDS.filter((id) => done.has(String(id))).length,
+            chain,
+            job: p.job,
+            relicOffer: Array.isArray(state.pendingRelics) && state.pendingRelics.length > 0 ? 1 : 0,
+            signature: countDiscoveredSignatures(p),
+            areaBoss: Object.values(p.stats?.areaBossDefeated || {}).filter(Boolean).length,
+            merchant: p.merchantVisit ? `${p.merchantVisit.loc}|${(p.merchantVisit.stock || []).map((offer) => offer.name).join(',')}` : '',
+            region: (p.stats?.visitedMaps || []).length,
+            hunt,
+            bag: Number(p.bagTier) || 0,
+        };
+    }
+
+    function detectMoments(p) {
+        const now = momentCounts(p);
+        const before = lastMoments;
+        lastMoments = now;
+        if (!before || !run) return;
+        const at = Number((hours() - run.startHours).toFixed(3));
+        // 사망하면 여정이 처음부터라 이야기 · 지역 · 체인 · 의뢰를 다시 얻는다 — 회차 안 최고치를 넘을 때만 새 순간이다.
+        const best = run.momentBest || (run.momentBest = {});
+        for (const kind of ['story', 'chain', 'signature', 'areaBoss', 'region', 'hunt', 'bag']) {
+            if (now[kind] > before[kind] && now[kind] > (best[kind] ?? 0)) run.moments.push([at, kind]);
+            best[kind] = Math.max(best[kind] ?? 0, now[kind]);
+        }
+        const jobs = run.momentJobs || (run.momentJobs = new Set());
+        if (now.job !== before.job && now.job !== '모험가' && !jobs.has(now.job)) { jobs.add(now.job); run.moments.push([at, 'job']); }
+        if (now.relicOffer && !before.relicOffer) run.moments.push([at, 'relic']);
+        if (now.merchant && now.merchant !== before.merchant) run.moments.push([at, 'merchant']);
+        // 숨은 보스 처치 — 전투가 승리로 끝난 차례(살아서 전투를 벗어났고 마지막 적이 숨은 보스).
+        if (lastGameState === GS.COMBAT && state.gameState !== GS.COMBAT && state.gameState !== GS.DEAD
+            && HIDDEN_BOSS_NAMES.has(lastCombatSnapshot?.enemy?.baseName)) run.moments.push([at, 'hiddenBoss']);
     }
 
     /** '물약 없이' 회차에는 회복 · 보조 아이템을 쓸 수 없다(`consumableEffect`가 거부한다). */

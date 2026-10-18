@@ -24,6 +24,11 @@ test('짧은 예산에서도 실제로 성장한다 — 막힘 감시가 비어 
     assert.ok(run.combats >= 30, `전투 ${run.combats}`);
     assert.ok(result.finalLevel >= 10, `레벨 ${result.finalLevel}`);
     assert.ok(run.levelAt[2] > 0, '레벨 도달 시각을 기록한다');
+    // Wave 120: 큰 순간(원장 §80 정의 + 토벌 의뢰)을 시각과 함께 남긴다 — 리듬(최장 공백) 측정의 입력이다.
+    const kinds = new Set(run.moments.map(([, kind]) => kind));
+    assert.ok(run.moments.length >= 10, `큰 순간 ${run.moments.length}`);
+    assert.ok(kinds.has('region') && kinds.has('relic'), [...kinds].join(','));
+    assert.ok(run.moments.every(([at], index) => at >= 0 && at <= run.hours && (index === 0 || at >= run.moments[index - 1][0])));
 });
 
 test('돌린 뒤 전역 Math.random · Date를 되돌린다', async () => {
