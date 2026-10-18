@@ -11,6 +11,7 @@
 // 정책은 일부러 단순하다. 바꾸면 기준선이 바뀌므로 정책 변경은 옵션으로 켜고 짝 비교로 잰다.
 
 import { DB } from '../../src/data/db.ts';
+import { getMonsterFamily } from '../../src/data/monsters.ts';
 import { QUESTS } from '../../src/data/quests.ts';
 import { AT } from '../../src/reducers/actionTypes.ts';
 import { INITIAL_STATE, gameReducer } from '../../src/reducers/gameReducer.ts';
@@ -35,7 +36,8 @@ import { getMirrorNodeCost, isMirrorTreeComplete } from '../../src/systems/mirro
 import { getRestCost } from '../../src/utils/expeditionReturnFlow.ts';
 import { hasChallengeModifier } from '../../src/utils/challengeRules.ts';
 
-export const DRIVER_VERSION = 1;
+// v2 (Wave 119): 퇴마 · 회복 기술을 쓴다 — v1은 위력(`mult`) 있는 기술만 써서 성직자가 회복도 퇴마도 하지 않았다(원장 §126).
+export const DRIVER_VERSION = 2;
 
 /** 직업 경로 기본값 — 경로 이름 → [1차, 2차, 3차]. */
 export const JOB_PATHS = {
@@ -327,27 +329,40 @@ export const runNaturalPlay = async (options) => {
         const stats = getFullStats();
         const hpRatio = p.hp / Math.max(1, stats.maxHp);
         lastCombatSnapshot = { level: Number(p.level) || 1, loc: p.loc, hpRatio: Number(hpRatio.toFixed(3)), enemy: { name: enemy.name, baseName: enemy.baseName, isElite: enemy.isElite, isBoss: enemy.isBoss, huntChampion: enemy.huntChampion } };
+        const cooldowns = p.skillLoadout?.cooldowns || {};
+        const skills = getJobSkills(p);
+        const usable = (skill) => (p.mp || 0) >= (Number(skill.mp) || 0) && !((cooldowns[String(skill.name)] || 0) > 0);
+        // '뒤섞인 기술' 회차는 고른 기술을 뺀 나머지가 무작위로 나간다(보조 기술이면 차례를 버린다) — 기술을 고르지 않는다.
+        const canChooseSkill = !hasChallengeModifier(p, 'randomSkills');
+        const useSkill = (skill) => {
+            const selected = skills[p.skillLoadout?.selected ?? 0];
+            if (selected?.name !== skill.name) A.selectSkill(skill.name);
+            buildActions().combat('skill');
+        };
+        // v2: 퇴마(`smite`) — 언데드 · 마족에게 회복 기술은 회복량만큼 신성 피해다(Wave 51). 쓸 수 있으면 먼저 쓴다.
+        const family = getMonsterFamily(enemy);
+        if (canChooseSkill && (family === 'undead' || family === 'demon')) {
+            const smite = skills.filter((skill) => Number(skill.smite) > 0 && usable(skill))
+                .sort((a, b) => (Number(b.val) || 0) - (Number(a.val) || 0))[0];
+            if (smite) { useSkill(smite); return; }
+        }
+        // v2: 생명 50% 아래면 회복 기술(`hp_regen`)을 먼저, 없으면 30% 아래에서 물약.
+        if (canChooseSkill && hpRatio < 0.5) {
+            const heal = skills.filter((skill) => skill.effect === 'hp_regen' && usable(skill))
+                .sort((a, b) => (Number(b.val) || 0) - (Number(a.val) || 0))[0];
+            if (heal) { useSkill(heal); return; }
+        }
         if (hpRatio < 0.3 && potionsAllowed()) {
             const potion = HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean);
             if (potion) { A.combatUseItem(potion); return; }
         }
-        const cooldowns = p.skillLoadout?.cooldowns || {};
-        const skills = getJobSkills(p);
         let best = null;
         skills.forEach((skill) => {
             const mult = Number(skill.mult) || 0;
-            if (mult <= 0 || skill.effect === 'escape_100') return;
-            const cost = Number(skill.mp) || 0;
-            if ((p.mp || 0) < cost || (cooldowns[String(skill.name)] || 0) > 0) return;
+            if (mult <= 0 || skill.effect === 'escape_100' || !usable(skill)) return;
             if (!best || mult > best.mult) best = { skill, mult };
         });
-        // '뒤섞인 기술' 회차는 고른 기술을 뺀 나머지가 무작위로 나간다(보조 기술이면 차례를 버린다) — 기본 공격만 한다.
-        if (best && !hasChallengeModifier(p, 'randomSkills')) {
-            const selected = skills[p.skillLoadout?.selected ?? 0];
-            if (selected?.name !== best.skill.name) { A.selectSkill(best.skill.name); }
-            buildActions().combat('skill');
-            return;
-        }
+        if (best && canChooseSkill) { useSkill(best.skill); return; }
         A.combat('attack');
     }
 
