@@ -130,6 +130,7 @@ export const MAPS: Record<string, GameMap> = {
         level: 25, type: 'dungeon', exits: ['화염의 협곡', '화염의 사원'],
         monsters: ['화염의 군주', '레드 드래곤', '화염 와이번', '드래곤 나이트'],
         bossMonsters: ['화염의 군주', '레드 드래곤'],
+        bossEncounterShare: true,
         desc: '용들이 거주하는 전설의 장소입니다.',
         lore: '세계 최강의 생명체, 용들의 영역입니다. 여기까지 도달한 모험가는 극소수이며, 살아 돌아온 자는 더욱 드뭅니다. 드래곤의 보물창고에는 전설급 유물이 있다고 합니다.',
         eventChance: 0.28, boss: true

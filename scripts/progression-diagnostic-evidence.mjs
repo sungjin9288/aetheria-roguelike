@@ -48,7 +48,8 @@ const HASH_ALGORITHM = 'sha256';
 // (초반 겹치는 종 하나의 접두어가 풀에서 다음 것으로 밀렸다). 64시드 평균은 Lv2 ~ 75에서 +0.00 ~ 0.39%다(원장 §74).
 // 그 편집(exploreUtils의 접두어 풀) 하나만 되돌리면 이전 값이 재현된다(실측).
 // 이전 값: '76898ed3a728b3a0ff67b009a6b569f56f5d2279257924fdb74d29b0fa3a2b52'.
-const PROGRESSION_V1_BASELINE_HASH = '804a7617ea3c920c30e48b27f9923bdba245b9096a8e7f78d21c28b851a072f3';
+// Wave 118: 용의 둥지 보스 조우 비율(원장 §125) — 이전 값 '804a7617ea3c920c30e48b27f9923bdba245b9096a8e7f78d21c28b851a072f3'.
+const PROGRESSION_V1_BASELINE_HASH = '440890e589a3b552029bb93cb87a02722ddda36d38397ea1da8d7d9e153f63b8';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';

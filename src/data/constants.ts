@@ -212,6 +212,9 @@ export const BALANCE = {
     //   그 지역 조우의 이 비율이다(허공의 눈은 배수). 원한의 용사가 지하 미궁 조우의 1/6이던 동안 2회차 사망 증가 전부가
     //   그 보스였다(원장 §77.5).
     HIDDEN_BOSS_ENCOUNTER_CHANCE: 0.03,
+    // 2026-10 Wave 118 (소유자 결정 "보스를 조우의 일부로"): `bossEncounterShare` 지역(용의 둥지)의 조우 풀 보스는 풀의 한 칸이 아니라
+    //   보스마다 조우의 이 비율이다 — 4종 중 2종이 보스라 조우의 절반이 보스였고 1회차 사망의 55%가 그 지역이었다(원장 §125).
+    REGION_BOSS_ENCOUNTER_CHANCE: 0.15,
     MAP_HIGH_EVENT_CHANCE_THRESHOLD: 0.28,  // '이벤트↑' 배지 임계값 — 보정 없는 지역(×1)이 eventChance 0.28일 때의 실제 이야기 확률(× SPECIAL_EVENT_BASE_MULT)이 기준(Wave 61, mapBadges)
     PREFIX_CHANCE: 0.2,
     ITEM_PREFIX_CHANCE: 0.12,

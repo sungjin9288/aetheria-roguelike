@@ -30,6 +30,8 @@ export interface GameMap {
     monsters?: string[];
     /** 보스 몬스터 풀. */
     bossMonsters?: string[];
+    /** 2026-10 Wave 118: 조우 풀에 있는 보스를 풀의 한 칸이 아니라 보스마다 `BALANCE.REGION_BOSS_ENCOUNTER_CHANCE`로 뽑는다. */
+    bossEncounterShare?: boolean;
     /** 지역 보스 존재 여부 (boolean) — 단일 보스 이름은 legacy로 bossMonsters[0] 등에 위치. */
     boss?: boolean | string;
     /** 이벤트 발생 확률 (0~1). */

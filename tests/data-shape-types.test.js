@@ -314,6 +314,8 @@ const MAP_FIELDS = [
     'boss', 'eventChance', 'seasonOnly', 'graveDropBonus', 'shopBonus',
     // 2026-10 Wave 62 C20: 상점 판매 등급 상한 · 구매 가격 배율(지역 설명이 약속한 상점 규칙).
     'shopMaxTier', 'shopPriceMult',
+    // 2026-10 Wave 118: 조우 풀의 보스를 보스마다 조우의 비율로 뽑는 지역(용의 둥지).
+    'bossEncounterShare',
 ];
 
 test('GameMap: 지역 필드/타입 유니온이 types/map.ts 선언과 일치한다', () => {

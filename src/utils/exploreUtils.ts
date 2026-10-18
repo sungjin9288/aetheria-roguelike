@@ -64,6 +64,8 @@ export const selectEncounterMonster = (
     random: () => number,
     hiddenBosses: readonly string[] = [],
     hiddenShare = 0,
+    regionBosses: readonly string[] = [],
+    regionShare = 0,
 ): string | null => {
     const huntTargets = getActiveHuntTargets(mapData, player);
     if (huntTargets.length > 0 && random() < BALANCE.HUNT_TARGET_FOCUS_CHANCE) {
@@ -71,14 +73,22 @@ export const selectEncounterMonster = (
     }
     // 2026-10 Wave 76: 해금된 숨은 보스는 같은 한 번의 추첨에서 위쪽 `hiddenShare` 구간을 나눠 갖는다 — 추첨 수는 그대로이고,
     //   숨은 보스가 없으면(`hiddenShare` 0) 이전과 같은 칸을 뽑는다.
+    // 2026-10 Wave 118: `bossEncounterShare` 지역의 보스는 숨은 보스 바로 아래 구간 `regionShare`를 나눠 갖는다 — 같은 한 번의 추첨이고,
+    //   `regionShare`가 0이면 구간 배치가 이전과 같다.
     const share = hiddenBosses.length > 0 ? Math.min(1, Math.max(0, hiddenShare)) : 0;
-    if (encounterPool.length === 0 && share === 0) return null;
+    const region = regionBosses.length > 0 ? Math.min(1 - share, Math.max(0, regionShare)) : 0;
+    const bands = share + region;
+    if (encounterPool.length === 0 && bands === 0) return null;
     const roll = random();
-    if (share > 0 && (encounterPool.length === 0 || roll >= 1 - share)) {
+    if (share > 0 && (encounterPool.length === 0 && region === 0 || roll >= 1 - share)) {
         const within = Math.max(0, roll - (1 - share)) / share;
         return hiddenBosses[Math.min(hiddenBosses.length - 1, Math.floor(within * hiddenBosses.length))] ?? null;
     }
-    return encounterPool[Math.min(encounterPool.length - 1, Math.floor((roll / (1 - share)) * encounterPool.length))] ?? null;
+    if (region > 0 && (encounterPool.length === 0 || roll >= 1 - bands)) {
+        const within = Math.min(region, Math.max(0, roll - (1 - bands))) / region;
+        return regionBosses[Math.min(regionBosses.length - 1, Math.floor(within * regionBosses.length))] ?? null;
+    }
+    return encounterPool[Math.min(encounterPool.length - 1, Math.floor((roll / (1 - bands)) * encounterPool.length))] ?? null;
 };
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -105,6 +115,12 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     //   `BALANCE.HIDDEN_BOSS_ENCOUNTER_CHANCE`(보스마다)다 — 풀에 넣던 동안 지역 5종 풀의 1/6이었다.
     const hiddenBosses = getUnlockedHiddenBosses(player.loc, player).filter((boss) => !encounterPool.includes(boss));
     let hiddenBossShare = hiddenBosses.length * BALANCE.HIDDEN_BOSS_ENCOUNTER_CHANCE;
+    // 2026-10 Wave 118 (소유자 결정 "보스를 조우의 일부로"): `bossEncounterShare` 지역은 조우 풀의 보스를 풀에서 빼고 보스마다
+    //   `BALANCE.REGION_BOSS_ENCOUNTER_CHANCE`로 뽑는다(같은 한 번의 추첨 — 원장 §125). 임무 목표 집중(`getActiveHuntTargets`)은
+    //   지역 `monsters`를 그대로 읽으므로 그 보스를 노리는 임무는 집중 확률을 그대로 받는다.
+    const regionBosses = mapData.bossEncounterShare ? encounterPool.filter((name) => mapBossMonsters.includes(name)) : [];
+    if (regionBosses.length > 0) encounterPool = encounterPool.filter((name) => !regionBosses.includes(name));
+    let regionBossShare = regionBosses.length * BALANCE.REGION_BOSS_ENCOUNTER_CHANCE;
 
     // 2026-10 Wave 56: 허공의 눈 "보스 발견 확률 3배" = 조우 풀에 이미 있는 보스의 가중치 × 3. 이전에는 지역 보스 목록
     //   전체를 풀에 넣어, 해금 조건이 있는 숨은 보스(시간의 파수꾼 · 원한의 용사 · 공허의 군주 · 에테르 군주)가 조건 없이
@@ -119,6 +135,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         }
         // 숨은 보스도 보스다 — 그 지역 보스 목록에 있으면 출현 비율이 같은 배수로 오른다.
         if (hiddenBosses.some((boss) => mapBossMonsters.includes(boss))) hiddenBossShare *= spawnMult;
+        regionBossShare *= spawnMult;
     }
 
     // 구역 보스 — 2026-07: 15% 순수 랜덤 강제 조우 제거, 원정 보스 접근 게이지
@@ -132,7 +149,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     const baseName: string | null = storyMonster
         ?? ((spawnAreaBoss && areaBossName !== null)
             ? areaBossName
-            : selectEncounterMonster(encounterPool, mapData, player, rng, hiddenBosses, hiddenBossShare));
+            : selectEncounterMonster(encounterPool, mapData, player, rng, hiddenBosses, hiddenBossShare, regionBosses, regionBossShare));
     // 2026-09 Wave 16 H1: 몬스터 테이블이 빈 지역(safe 5곳이 전부 `monsters: []`)에서
     //   이름 없는 적이 실제 스탯으로 스폰되던 결함을 여기서 닫는다. 호출처는 `mStats`가
     //   `null`일 수 있음을 타입으로 강제받는다 — 모델(progressionSimulator/Diagnostic)은
