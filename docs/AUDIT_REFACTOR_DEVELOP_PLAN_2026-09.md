@@ -8547,3 +8547,4 @@ Wave 122 무게표에서는 무거운 카드가 기본 카드로 10단계 뒤에
 ### 130.4 바꾼 것 · 게이트
 
 - `AscensionRuleOutlook.measuredRanks`(선택), 겹친 규칙 여섯의 구간 두 값, 화면 구간 선택, 출처 줄 문구, 계약(`stacked-ascension-rule-contract` 구간 계약 · 구체 문구), 원장 · CLAUDE.md. 표시만이라 자연 플레이는 바이트 동일이다(드라이버는 미리보기를 읽지 않는다).
+- 게이트(Wave 122 · 123 함께): type-check · lint 0, 단위 6,135/6,135(457 파일, skip 0 — 첫 실행에서 성장 진단 증빙의 소스 해시 셋(`ascensionRules.ts` · `messages.ts` · `ascensionRuleView.ts`)만 어긋나 다시 썼고 리포트 본문은 그대로다), build:guard, 추적 증빙 15/15, rules 19/19, CI 환경 빌드, e2e `ascension-journey-design` 7/7(375px). 나머지 e2e · perf는 CI로 판정한다.
