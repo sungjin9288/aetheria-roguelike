@@ -71,6 +71,13 @@ export const OUTLOOK_DEFAULT_SAMPLES = 120;
 export interface AscensionRuleOutlook {
     /** 2026-10 Wave 94: 이 값을 잰 계승 단계(고정 순서 측정) — 카드 뽑기 뒤로는 규칙이 다른 단계에 올 수 있어 화면이 밝힌다. */
     measuredRank: number;
+    /**
+     * 2026-10 Wave 123 (소유자 결정 "구간 분리", 원장 §130): 겹친 규칙은 단계 구간마다 하나 — 이 값을 잰 계승 단계 구간(양 끝 포함).
+     * 계승 10단계에서 영구 능력치가 ×2가 되어(`getPrestigeUnlocks().statMult`) 같은 겹친 카드의 사망이 그 앞뒤로 2.6 ~ 10배 다르다 —
+     * 두 구간의 평균은 앞에서 만난 플레이어에게 위험을 작게, 뒤에서 만난 플레이어에게 크게 말했다. 화면은 지금 단계가 시작 단계 이상인
+     * 마지막 구간을 고른다(13단계 이후는 마지막 구간 — 출처 줄이 잰 구간을 밝힌다). `measuredRank`는 그 구간에서 가장 많이 놓인 단계다.
+     */
+    measuredRanks?: readonly [number, number];
     /** 2026-10 Wave 114: 받아들임 · 거절을 짝지은 판 수(없으면 `OUTLOOK_DEFAULT_SAMPLES`) — 출처 줄이 그대로 밝힌다. */
     samples?: number;
     acceptedDeaths: number;
@@ -179,13 +186,11 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
     // 회차가 갈라진다). 판 수는 두 쪽 중 적은 쪽이다. 이전 값은 받아들임 사망을 1.7 ~ 8.7분의 1로 말했다(원장 §122).
     // 2026-10 Wave 121: 같은 방식을 저장소 드라이버 v2 · Wave 118 게임으로 다시 쟀다(원장 §128). 잰 단계는 받아들임 쪽에서 가장 많이
     // 놓인 단계다(같으면 두 쪽 합). 계승 10단계(에테르 초월, 영구 능력치 ×2) 앞뒤로 사망이 5 ~ 9배 달라 이 값은 두 구간의 평균이다.
-    const outlook: Record<string, AscensionRuleOutlook> = {
-        lost_pilgrimage: { measuredRank: 9, samples: 44, acceptedDeaths: 15.16, declinedDeaths: 1.11, acceptedSignatures: 1.18, declinedSignatures: 0.27 },
-        empty_crusade: { measuredRank: 9, samples: 39, acceptedDeaths: 52.69, declinedDeaths: 2.18, acceptedSignatures: 1.21, declinedSignatures: 0.26 },
-        dry_dragon_road: { measuredRank: 7, samples: 64, acceptedDeaths: 31.57, declinedDeaths: 2.47, acceptedSignatures: 1.2, declinedSignatures: 0.36 },
-        tangled_legends: { measuredRank: 10, samples: 120, acceptedDeaths: 37.27, declinedDeaths: 1.59, acceptedSignatures: 1.21, declinedSignatures: 0.37 },
-        fading_dimension: { measuredRank: 12, samples: 120, acceptedDeaths: 12.06, declinedDeaths: 0.87, acceptedSignatures: 1.18, declinedSignatures: 0.13 },
-        shadow_legion: { measuredRank: 12, samples: 120, acceptedDeaths: 5.31, declinedDeaths: 1.12, acceptedSignatures: 1.18, declinedSignatures: 0.22 },
+    // 2026-10 Wave 123 (소유자 결정 "구간 분리", 원장 §130): 단계 구간마다 따로 잰다 — 계승 7 ~ 9단계와 10 ~ 12단계(영구 능력치 ×2,
+    // `getPrestigeUnlocks().statMult`). Wave 122 무게표의 기본 카드 위에서 늘 받아들임 · 겹친 카드만 거절 240판 × 13회차로 쟀다.
+    const band = (from: number, to: number, values: Omit<AscensionRuleOutlook, 'measuredRanks'>): AscensionRuleOutlook => ({ ...values, measuredRanks: [from, to] });
+    const outlook: Record<string, readonly AscensionRuleOutlook[]> = {
+        /*__BANDS__*/
     };
     const entry = names[base.id];
     const stacked: AscensionRuleDef = {
@@ -196,7 +201,7 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
         conquestTitle: { id: `conquest_stacked_${base.id}`, name: entry.title },
         stackedOf: base.id,
         ...(base.optional ? { optional: true as const } : {}),
-        outlook: [outlook[base.id]],
+        outlook: outlook[base.id],
     };
     return stacked;
 }));

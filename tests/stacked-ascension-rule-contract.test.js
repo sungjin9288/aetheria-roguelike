@@ -211,20 +211,29 @@ test('변조 · 이전 세이브 — 두 번째 비틀기 기록이 없거나 �
     assert.deepEqual(getActiveAscensionTwists({ prestigeRank: 1, ascensionRule: { rank: 1, ruleId: ASCENSION_RULES[0].id, secondModifier: 'halfHp' } }), [ASCENSION_RULES[0].modifier], '기본 규칙은 두 번째를 무시');
 });
 
-test('겹친 규칙은 거절할 수 있는 카드의 받아들임 · 거절 측정을 들고, 화면은 거절할 수 있는 카드에서만 그 값을 그린다', async () => {
+test('겹친 규칙은 단계 구간마다 거절할 수 있는 카드의 받아들임 · 거절 측정을 들고, 화면은 지금 단계의 구간 값을 거절할 수 있는 카드에서만 그린다', async () => {
     const { MSG } = await import('../src/data/messages.js');
     const { buildAscensionRulePreview } = await import('../src/utils/ascensionRuleView.js');
+    const { getPrestigeUnlocks } = await import('../src/systems/prestigeUnlocks.js');
     const r1 = (value) => (Math.round(value * 10) / 10).toFixed(1);
     const isHeavy = (id) => ASCENSION_RULES.some((base) => base.optional && base.modifier === id);
+    // 2026-10 Wave 123: 구간 경계는 영구 능력치가 ×2가 되는 단계다 — 그 앞뒤로 같은 카드의 사망이 2.6 ~ 10배 다르다(원장 §128.5 · §130).
+    const transcendRank = Array.from({ length: 40 }, (_, i) => i + 1).find((rank) => getPrestigeUnlocks(rank).statMult > 1);
+    const first = ASCENSION_RULES.length + 1;
+    const last = ASCENSION_RULES.length * 2;
+    assert.ok(transcendRank > first && transcendRank <= last, `구간 경계 ${transcendRank}는 2순환 안이다`);
     for (const rule of STACKED_ASCENSION_RULES) {
         // 2026-10 Wave 106: 바탕이 가벼운 겹친 규칙도 무거운 두 번째 비틀기가 붙으면 거절할 수 있어 측정을 든다.
-        assert.ok(Array.isArray(rule.outlook) && rule.outlook.length === 1, `${rule.id}: 2순환 측정 하나`);
-        const [o] = rule.outlook;
-        assert.ok(o.measuredRank >= 7 && o.measuredRank <= 12, `${rule.id}: 2순환 단계에서 잰 값`);
-        assert.ok(o.acceptedDeaths > o.declinedDeaths, `${rule.id}: 받아들임이 더 위험하다`);
-        assert.ok(o.acceptedSignatures > o.declinedSignatures, `${rule.id}: 받아들임이 각인을 더 준다`);
+        assert.deepEqual(rule.outlook.map((o) => o.measuredRanks), [[first, transcendRank - 1], [transcendRank, last]], `${rule.id}: 영구 능력치 ×2 앞뒤 두 구간`);
+        for (const o of rule.outlook) {
+            const band = o.measuredRanks.join('~');
+            assert.ok(o.measuredRank >= o.measuredRanks[0] && o.measuredRank <= o.measuredRanks[1], `${rule.id} ${band}: 가장 많이 놓인 단계는 구간 안`);
+            assert.ok(o.acceptedDeaths > o.declinedDeaths, `${rule.id} ${band}: 받아들임이 더 위험하다`);
+            assert.ok(o.acceptedSignatures > o.declinedSignatures, `${rule.id} ${band}: 받아들임이 각인을 더 준다`);
+        }
         for (const receipt of RECEIPTS.slice(0, 12)) {
-            for (const rank of [o.measuredRank, 16]) {
+            for (const rank of [first, transcendRank - 1, transcendRank, last, last + 4]) {
+                const o = rule.outlook[rank < transcendRank ? 0 : 1];
                 const second = getStackedSecondModifier(rule, receipt, rank, 0);
                 const preview = buildAscensionRulePreview(rule, rank, second);
                 if (!(rule.optional || isHeavy(second))) {
@@ -233,7 +242,7 @@ test('겹친 규칙은 거절할 수 있는 카드의 받아들임 · 거절 측
                 }
                 assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)), `${rule.id} rank ${rank}`);
                 assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)), `${rule.id} rank ${rank}`);
-                assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE_STACKED(o.measuredRank, o.samples ?? OUTLOOK_DEFAULT_SAMPLES), `${rule.id} rank ${rank}: 2순환 카드 뽑기에서 잰 값 · 판 수를 밝힌다`);
+                assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE_STACKED(o.measuredRanks[0], o.measuredRanks[1], o.samples ?? OUTLOOK_DEFAULT_SAMPLES), `${rule.id} rank ${rank}: 잰 구간 · 판 수를 밝힌다`);
             }
         }
     }
