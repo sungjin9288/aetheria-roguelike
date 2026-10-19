@@ -136,7 +136,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_unbound', name: '흩어진 전설의 수집가' },
         optional: true,
         outlook: [
-            { measuredRank: 4, samples: 75, acceptedDeaths: 11.84, declinedDeaths: 1.67, acceptedSignatures: 1.23, declinedSignatures: 0.36 },
+            { measuredRank: 4, samples: 74, acceptedDeaths: 11.86, declinedDeaths: 1.72, acceptedSignatures: 1.61, declinedSignatures: 0.39 },
         ],
     },
     {
@@ -147,7 +147,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_dimension', name: '차원을 꿰뚫은 자' },
         optional: true,
         outlook: [
-            { measuredRank: 5, samples: 120, acceptedDeaths: 17.28, declinedDeaths: 1.66, acceptedSignatures: 1.15, declinedSignatures: 0.13 },
+            { measuredRank: 5, samples: 120, acceptedDeaths: 15.92, declinedDeaths: 1.38, acceptedSignatures: 1.14, declinedSignatures: 0.05 },
         ],
     },
     {
@@ -158,7 +158,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_shadow', name: '암흑을 꺾은 자' },
         optional: true,
         outlook: [
-            { measuredRank: 6, samples: 120, acceptedDeaths: 4.41, declinedDeaths: 2.19, acceptedSignatures: 1.27, declinedSignatures: 0.38 },
+            { measuredRank: 6, samples: 120, acceptedDeaths: 4.75, declinedDeaths: 2.24, acceptedSignatures: 1.02, declinedSignatures: 0.23 },
         ],
     },
 ]);
