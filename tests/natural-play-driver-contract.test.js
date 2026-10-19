@@ -4,7 +4,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { JOB_PATHS, runNaturalPlay } from '../scripts/naturalPlay/driver.mjs';
+import { JOB_PATHS, pickAscensionRuleId, runNaturalPlay } from '../scripts/naturalPlay/driver.mjs';
+import { getAscensionRule, getAscensionRuleOffer } from '../src/systems/ascensionRule.js';
 
 const SHORT = { seed: 7, maxSteps: 800 };
 
@@ -48,4 +49,19 @@ test('직업 경로는 실제 전직 사슬이다', async () => {
             current = job;
         }
     }
+});
+
+test('고정 순서 카드 모드는 그 규칙이 패에 있을 때만 고르고, 기본 모드는 고르지 않는다 (Wave 121)', () => {
+    // 첫 순환 미리보기 값은 고정 순서 단계(`measuredRank`)에서 잰다 — 패에 없으면 기본 카드로 넘어간다(원장 §121.7 · §128).
+    let inHand = 0;
+    let outOfHand = 0;
+    for (let k = 0; k < 40; k += 1) {
+        const player = { meta: { prestigeRank: 3, endgame: { lastEndgameReceiptKey: `probe-${k}` } }, stats: {} };
+        const fixed = getAscensionRule(4);
+        const offered = getAscensionRuleOffer(player, 4).some((rule) => rule.id === fixed.id);
+        assert.equal(pickAscensionRuleId(player, 4, 'fixed'), offered ? fixed.id : undefined);
+        assert.equal(pickAscensionRuleId(player, 4, 'default'), undefined);
+        if (offered) inHand += 1; else outOfHand += 1;
+    }
+    assert.ok(inHand > 0 && outOfHand > 0, `패에 있음 ${inHand} · 없음 ${outOfHand}`);
 });

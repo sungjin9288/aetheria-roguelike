@@ -34,7 +34,8 @@ import { getActiveRelicSynergies, isRelicReplacementUpgrade } from '../../src/da
 import { MIRROR_ENDLESS_NODES, MIRROR_NODES } from '../../src/data/mirror.ts';
 import { getMirrorNodeCost, isMirrorTreeComplete } from '../../src/systems/mirrorUpgrades.ts';
 import { getRestCost } from '../../src/utils/expeditionReturnFlow.ts';
-import { countDiscoveredSignatures } from '../../src/utils/signatureDiscovery.ts';
+import { countDiscoveredSignatures, getDiscoveredSignatureNames } from '../../src/utils/signatureDiscovery.ts';
+import { getAscensionRule, getAscensionRuleOffer, isActiveAscensionRuleOptional } from '../../src/systems/ascensionRule.ts';
 import { HIDDEN_BOSS_UNLOCKS } from '../../src/utils/bossPresence.ts';
 import { hasChallengeModifier } from '../../src/utils/challengeRules.ts';
 
@@ -92,8 +93,20 @@ const installClock = (clock) => {
  * @param {number} [options.maxSteps]        안전 상한(행동 수)
  * @param {number} [options.stepSeconds]     행동 하나가 가짜 시계에서 걸리는 시간
  * @param {'none'|'all'|'stacked'} [options.ruleDecline] 거절할 수 있는 회차 규칙 카드를 거절하는 범위
+ * @param {'default'|'fixed'} [options.rulePick] 회차 규칙 카드 — 화면이 처음 골라 두는 카드(기본), 또는 고정 순서 규칙이 패에 있으면 그 카드
+ *   (`fixed` — 첫 순환 미리보기 값을 잰 단계(`measuredRank`)에 놓는다, 원장 §121.7 · §128). 고르는 방식만 다르고 난수 소비는 같다.
  */
 const TRACE = Boolean(process.env.NATURAL_PLAY_TRACE);
+
+/**
+ * 계승 화면에서 고르는 회차 규칙 카드. `default`는 아무것도 고르지 않는다(리듀서가 패에서 가장 가벼운 카드 — 화면이 처음 골라 두는 카드).
+ * `fixed`는 고정 순서 규칙(`getAscensionRule`)이 패에 있으면 그 카드, 없으면 기본 카드다.
+ */
+export const pickAscensionRuleId = (player, nextRank, rulePick) => {
+    if (rulePick !== 'fixed') return undefined;
+    const fixedRule = getAscensionRule(nextRank);
+    return fixedRule && getAscensionRuleOffer(player, nextRank).some((rule) => rule.id === fixedRule.id) ? fixedRule.id : undefined;
+};
 
 export const runNaturalPlay = async (options) => {
     const {
@@ -103,6 +116,7 @@ export const runNaturalPlay = async (options) => {
         maxSteps = 400_000,
         stepSeconds = 15,
         ruleDecline = 'none',
+        rulePick = 'default',
     } = options;
     if (!Number.isInteger(seed)) throw new Error('seed must be an integer');
 
@@ -148,6 +162,7 @@ export const runNaturalPlay = async (options) => {
         seed,
         jobPath,
         ruleDecline,
+        rulePick,
         stepSeconds,
         runs: [],
         deaths: [],
@@ -167,6 +182,8 @@ export const runNaturalPlay = async (options) => {
             rank: rank(),
             ruleId: meta.ascensionRule?.rank === rank() ? meta.ascensionRule?.ruleId ?? null : null,
             secondModifier: meta.ascensionRule?.rank === rank() ? meta.ascensionRule?.secondModifier ?? null : null,
+            // 거절할 수 있는 카드였는가(선택형 규칙, 또는 무거운 두 번째 비틀기가 붙은 겹친 카드) — 미리보기 값은 이 회차만 잰다.
+            ruleOptional: meta.ascensionRule?.rank === rank() ? isActiveAscensionRuleOptional(meta) : false,
             ruleDeclined: Boolean(state.player?.ascensionRuleDeclined),
             challengeModifiers: [...(state.player?.challengeModifiers || [])],
             startStep: step,
@@ -192,6 +209,8 @@ export const runNaturalPlay = async (options) => {
             ladderRank: Number(meta.rank) || 0,
             metaBonus: { atk: Number(meta.bonusAtk) || 0, hp: Number(meta.bonusHp) || 0, mp: Number(meta.bonusMp) || 0 },
             essence: Number(meta.essence) || 0,
+            // 회차 끝 도감의 전설 각인 — 직전 회차 끝에 없던 것이 그 회차의 새 각인이다(계승 화면 요약과 같은 규칙, 원장 §121.7).
+            signatures: getDiscoveredSignatureNames(state.player),
         });
         run = null;
     };
@@ -278,8 +297,9 @@ export const runNaturalPlay = async (options) => {
                 if (!ready) { A.cancelAscension(); continue; }
                 for (const entry of getClaimableQuestEntries(p)) { A.completeQuest(entry.quest?.id ?? entry.id); A = buildActions(); }
                 const before = rank();
+                const ruleId = pickAscensionRuleId(state.player, before + 1, rulePick);
                 closeRun();
-                A.confirmAscension([], declineFor(before + 1), undefined);
+                A.confirmAscension([], declineFor(before + 1), ruleId);
                 if (rank() === before) { openRun(); run.run = result.runs.length; result.runs.pop(); }
                 continue;
             }
