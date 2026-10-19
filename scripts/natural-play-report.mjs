@@ -24,7 +24,8 @@ const load = (dir, collectDeaths = false) => {
             const result = JSON.parse(fs.readFileSync(path.join(sub, file), 'utf8'));
             const ordered = [...(result.runs || [])].sort((a, b) => a.run - b.run);
             ordered.forEach((run, index) => {
-                // 새 각인 = 회차 끝 도감의 각인 중 직전 회차 끝에 없던 것(계승 화면 요약과 같은 규칙, 원장 §121.7). 기록이 없는 결과면 null.
+                // 새 각인 = 회차 끝 발견한 각인 중 직전 회차 끝에 없던 것(계승 화면 요약과 같은 규칙, 원장 §121.7 — Wave 125부터 발견은
+                //   계정 수집이라 처음 모은 각인만 센다). 기록이 없는 결과면 null.
                 const before = new Set(ordered[index - 1]?.signatures || []);
                 const newSignatures = Array.isArray(run.signatures) ? run.signatures.filter((name) => !before.has(name)).length : null;
                 rows.set(`${name}/${file}/${run.run}`, {

@@ -8,7 +8,7 @@ import {
     Sparkles,
     Swords,
 } from 'lucide-react';
-import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
+import { getSignatureDiscoveryProgress } from '../utils/signatureDiscovery';
 import { MSG } from '../data/messages.js';
 import { BALANCE } from '../data/constants';
 import type { Player } from '../types/index.js';

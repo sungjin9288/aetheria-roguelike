@@ -5,14 +5,15 @@ import { SIGNATURE_ITEM_REGISTRY } from '../../data/signatureItems.js';
 import { computeSignatureSetBonus, getSignatureSetDefinitions, getSignatureSetEquippedCounts } from '../../utils/signatureSetBonus.js';
 import { getSignatureDropSources } from '../../utils/signatureDropSources.js';
 import { getSignaturePityMultiplier, SIGNATURE_PITY } from '../../utils/signaturePity.js';
+import { getDiscoveredSignatureNames } from '../../utils/signatureDiscovery.js';
 import ItemIcon from '../icons/ItemIcon.jsx';
 import type { Item, Player } from '../../types/index.js';
 
 /**
  * 전설 도감 — dedicated signature art를 가진 20종 레전더리 아이템 컬렉션.
  *
- * 발견 상태는 player.stats.codex.{weapons|armors|shields}에서 읽어와서
- * family codex와 동일한 룰로 잠금/잠금해제 표시.
+ * 발견 상태는 계정 수집(`getDiscoveredSignatureNames` — 이번 여정 도감 + 지난 여정들의 장부, Wave 125)에서 읽어
+ * 잠금/잠금해제 표시.
  */
 
 /** signatureRegistry.json entries의 런타임 모양 — tone/category/artNote만 이 화면에서 읽는다. */
@@ -72,13 +73,6 @@ const CATEGORY_LABEL: Record<string, string> = Object.freeze({
 
 const DEFAULT_TONE_ACCENT = TONE_ACCENT.holy;
 
-const resolveDiscoveryBucket = (item: Item): 'weapons' | 'shields' | 'armors' | null => {
-    if (item.type === 'weapon') return 'weapons';
-    if (item.type === 'shield') return 'shields';
-    if (item.type === 'armor') return 'armors';
-    return null;
-};
-
 const buildEntries = (): LegendaryEntry[] => {
     const all = [
         ...(DB.ITEMS.weapons || []),
@@ -100,12 +94,10 @@ interface LegendaryCodexProps {
 
 const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
     const [selected, setSelected] = useState<string | null>(null);
-    const codex = useMemo(() => player?.stats?.codex || {}, [player?.stats?.codex]);
+    // 2026-10 Wave 125: 전설 각인 수집은 계정 단위다 — 이번 여정 도감 + 지난 여정들의 장부(`getDiscoveredSignatureNames`).
+    const discoveredNames = useMemo(() => new Set(player ? getDiscoveredSignatureNames(player) : []), [player]);
     const entries = useMemo(() => buildEntries(), []);
-    const discoveredCount = entries.filter((entry) => {
-        const bucket = resolveDiscoveryBucket(entry.item);
-        return bucket && codex[bucket]?.[entry.item.name ?? ''];
-    }).length;
+    const discoveredCount = entries.filter((entry) => discoveredNames.has(entry.item.name ?? '')).length;
 
     const pity = Math.max(0, Number(player?.stats?.signaturePity) || 0);
     const pityMult = getSignaturePityMultiplier(pity);
@@ -124,18 +116,13 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
     const setSummary = useMemo(() => {
         const sets = getSignatureSetDefinitions() as Record<string, SignatureSetDef>;
         return Object.entries(sets).map(([key, def]) => {
-            const discovered = def.members.filter((memberName: string) => {
-                const entry = entries.find((e) => e.item.name === memberName);
-                if (!entry) return false;
-                const bucket = resolveDiscoveryBucket(entry.item);
-                return bucket && codex[bucket]?.[entry.item.name ?? ''];
-            }).length;
+            const discovered = def.members.filter((memberName: string) => discoveredNames.has(memberName)).length;
             // 2026-10 Wave 58: 장착 수와 발동 단계는 엔진 계산 그대로다(2H 가중치 · 접두어 사본 포함, 발동은 가장 많이 낀 세트 하나).
             const equipped = equippedCounts[key] || 0;
             const activeBonus = activeSet?.key === key ? def.bonuses[String(activeSet.tier)] : undefined;
             return { key, def, total: def.members.length, discovered, equipped, activeBonus };
         });
-    }, [codex, entries, equippedCounts, activeSet]);
+    }, [discoveredNames, equippedCounts, activeSet]);
 
     return (
         <div data-testid="codex-legendary" className="space-y-4">
@@ -235,8 +222,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                 </summary>
                 <div className="grid grid-cols-2 gap-1.5 pb-3">
                 {entries.map(({ item, meta }) => {
-                    const bucket = resolveDiscoveryBucket(item);
-                    const found = bucket ? Boolean(codex[bucket]?.[item.name ?? '']) : false;
+                    const found = discoveredNames.has(item.name ?? '');
                     const accent = TONE_ACCENT[meta.tone ?? ''] || DEFAULT_TONE_ACCENT;
                     const isSelected = selected === item.name;
 

@@ -4,7 +4,7 @@ import { createElement } from 'react';
 
 import ArchiveTabButton from '../src/components/ArchiveTabButton.tsx';
 import Dashboard from '../src/components/Dashboard.tsx';
-import { getSignatureDiscoveryProgress } from '../src/data/signatureItems.js';
+import { getSignatureDiscoveryProgress } from '../src/utils/signatureDiscovery.js';
 import { Star } from 'lucide-react';
 import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 

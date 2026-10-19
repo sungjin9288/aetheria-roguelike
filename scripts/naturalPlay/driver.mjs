@@ -216,7 +216,8 @@ export const runNaturalPlay = async (options) => {
             ladderRank: Number(meta.rank) || 0,
             metaBonus: { atk: Number(meta.bonusAtk) || 0, hp: Number(meta.bonusHp) || 0, mp: Number(meta.bonusMp) || 0 },
             essence: Number(meta.essence) || 0,
-            // 회차 끝 도감의 전설 각인 — 직전 회차 끝에 없던 것이 그 회차의 새 각인이다(계승 화면 요약과 같은 규칙, 원장 §121.7).
+            // 회차 끝에 발견한 전설 각인 — 직전 회차 끝에 없던 것이 그 회차의 새 각인이다(계승 화면 요약과 같은 규칙, 원장 §121.7).
+            //   Wave 125부터 발견은 계정 수집(도감 ∪ 장부)이라 사망으로 줄지 않는다.
             signatures: getDiscoveredSignatureNames(state.player),
         });
         run = null;

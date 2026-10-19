@@ -4,13 +4,13 @@ import assert from 'node:assert/strict';
 import {
     SIGNATURE_CANDIDATES,
     SIGNATURE_ITEM_REGISTRY,
-    getSignatureDiscoveryProgress,
     getSignatureItemCount,
     getSignatureMetadata,
     getSignatureSpriteKey,
     hasDedicatedSignatureArt,
     isSignatureItem,
 } from '../src/data/signatureItems.js';
+import { getSignatureDiscoveryProgress } from '../src/utils/signatureDiscovery.js';
 import { ITEMS } from '../src/data/items.js';
 import {
     SPECIAL_ITEM_ICON_KEYS,

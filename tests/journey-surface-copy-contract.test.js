@@ -11,6 +11,7 @@ import { CombatEngine } from '../src/systems/CombatEngine.js';
 import { buildRunSummary } from '../src/utils/gameUtils.js';
 import { normalizeClassJourneyLedger } from '../src/utils/classJourney.js';
 import { JOURNEY_RESET_SURFACE, getJourneySurfaceText } from '../src/utils/journeyScope.js';
+import { getSignatureDiscoveryProgress, isSignatureDiscovered } from '../src/utils/signatureDiscovery.js';
 import RunSummaryCard from '../src/components/RunSummaryCard.tsx';
 import AscensionScreen from '../src/components/AscensionScreen.tsx';
 import { renderStatic } from './helpers/render.ts';
@@ -27,6 +28,8 @@ import { renderStatic } from './helpers/render.ts';
 const NOW = 1_700_000_000_000;
 const clone = (value) => structuredClone(value);
 const GRAVE = { loc: '고요한 숲', gold: 321, items: ['녹슨 단검'], timestamp: NOW - 1000 };
+// 2026-10 Wave 125: 전설 각인 발견은 사망에도 남는다(도감 무기 칸은 비워진다).
+const SURFACE_SIGNATURE = '성검 에테르니아';
 
 const veteran = () => {
     const base = clone(INITIAL_STATE.player);
@@ -53,7 +56,7 @@ const veteran = () => {
             kills: 900, deaths: 12, demonKingSlain: 1,
             claimedQuestIds: [80],
             visitedMaps: ['시작의 마을', '고요한 숲', '버려진 광산'],
-            codex: { ...base.stats.codex, monsters: { 슬라임: true } },
+            codex: { ...base.stats.codex, monsters: { 슬라임: true }, weapons: { [SURFACE_SIGNATURE]: { discovered: true } } },
             codexBonusAtk: 3, codexBonusDef: 2, codexBonusHp: 15,
             claimedAchievements: ['ach_first_blood', 'ach_die_1'],
             ruleConquestRuleIds: ['worldtree_pilgrimage'],
@@ -92,6 +95,7 @@ const KEPT = {
     codex: (b, a) => Boolean(a.stats.codex?.monsters?.슬라임) && a.stats.codexBonusHp === b.stats.codexBonusHp
         && a.stats.visitedMaps.includes('버려진 광산'),
     unrecoveredGraves: (b, a, grave) => JSON.stringify(grave) === JSON.stringify(GRAVE),
+    signatureCollection: (b, a) => isSignatureDiscovered(SURFACE_SIGNATURE, a) && getSignatureDiscoveryProgress(a).discovered === 1,
 };
 const RESET = {
     level: (b, a) => a.level === 1,
@@ -100,7 +104,8 @@ const RESET = {
     questsStory: (b, a) => (a.stats.claimedQuestIds || []).length === 0 && !(a.quests || []).some((q) => q.id === 81)
         && !a.eventChainProgress?.ancient_seal,
     journeyTitles: (b, a) => !a.titles.includes('first_blood') && !(a.stats.claimedAchievements || []).includes('ach_first_blood'),
-    codex: (b, a) => !a.stats.codex?.monsters?.슬라임 && a.stats.codexBonusHp === 0 && !a.stats.visitedMaps.includes('버려진 광산'),
+    codex: (b, a) => !a.stats.codex?.monsters?.슬라임 && !a.stats.codex?.weapons?.[SURFACE_SIGNATURE]
+        && a.stats.codexBonusHp === 0 && !a.stats.visitedMaps.includes('버려진 광산'),
     activeExpedition: (b, a) => !a.activeExpedition,
 };
 

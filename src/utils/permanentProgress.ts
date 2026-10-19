@@ -1,6 +1,7 @@
 import type { Player } from '../types/player';
 import { normalizeClassJourneyLedger } from './classJourney';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward';
+import { collectSignatureLedger } from './signatureDiscovery';
 import { collectAchievedAchievementIds } from './achievementProgress';
 import { ACHIEVEMENTS } from '../data/quests';
 import { TITLES } from '../data/titles';
@@ -146,6 +147,9 @@ export const pickPermanentPlayerState = (
             ...(Array.isArray(stats.ruleConquestRuleIds) ? { ruleConquestRuleIds: clone(stats.ruleConquestRuleIds) } : {}),
             // 2026-10 Wave 107: 거절하고 지나간 규칙 — 계정 단위(덱이 순환을 센다).
             ...(Array.isArray(stats.ruleDeclinePassIds) ? { ruleDeclinePassIds: clone(stats.ruleDeclinePassIds) } : {}),
+            // 2026-10 Wave 125 (소유자 결정 "각인 수집만 계정 단위"): 전설 각인 발견은 계정 장부로 넘긴다 — 도감은 사망하면 비워지므로
+            //   비우기 전 이 지점에서 이번 여정 도감의 각인을 장부에 합친다(각인을 얻는 지점마다 쓰지 않는다).
+            signatureLedger: collectSignatureLedger(player),
             // 2026-10 Wave 108: 임무 · 이야기 수령 기록 · 현상수배 발급 기록은 여정 범위다(수령한 임무를 다시 받는다).
             codexBonusAtk: keepCodex ? numberOrZero(stats.codexBonusAtk) : 0,
             codexBonusDef: keepCodex ? numberOrZero(stats.codexBonusDef) : 0,

@@ -55,6 +55,9 @@ export interface AscensionRuleDef {
      * 2026-10 Wave 121: 저장소 안 자연 플레이 드라이버(`scripts/naturalPlay/driver.mjs`, v2)와 Wave 118 게임으로 다시 쟀다(원장 §128) —
      * 이전 값을 잰 드라이버는 저장소 밖에 있다가 지워져 재현할 수 없었다. 첫 순환은 고정 순서 카드(`--rule-pick fixed`)의 받아들임과,
      * 그 단계 카드 하나만 거절한 회차(`--rule-decline rank:N`)를 짝지었다 — 앞 회차가 같은 역사라 결정 하나의 차이다.
+     *
+     * 2026-10 Wave 125: 전설 각인 발견이 계정 장부가 되어(사망해도 남는다) 새 각인은 계정에 처음 모은 각인만 센다 — 같은 명령으로
+     * 다시 쟀다(원장 §132.4). 받아들임의 새 각인은 거의 정복 보상 하나이고, 거절은 0에 가깝다.
      */
     outlook?: readonly AscensionRuleOutlook[];
     /**
@@ -136,7 +139,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_unbound', name: '흩어진 전설의 수집가' },
         optional: true,
         outlook: [
-            { measuredRank: 4, samples: 75, acceptedDeaths: 11.84, declinedDeaths: 1.67, acceptedSignatures: 1.23, declinedSignatures: 0.36 },
+            { measuredRank: 4, samples: 74, acceptedDeaths: 11.86, declinedDeaths: 1.72, acceptedSignatures: 1.61, declinedSignatures: 0.39 },
         ],
     },
     {
@@ -147,7 +150,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_dimension', name: '차원을 꿰뚫은 자' },
         optional: true,
         outlook: [
-            { measuredRank: 5, samples: 120, acceptedDeaths: 17.28, declinedDeaths: 1.66, acceptedSignatures: 1.15, declinedSignatures: 0.13 },
+            { measuredRank: 5, samples: 120, acceptedDeaths: 15.92, declinedDeaths: 1.38, acceptedSignatures: 1.14, declinedSignatures: 0.05 },
         ],
     },
     {
@@ -158,7 +161,7 @@ export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
         conquestTitle: { id: 'conquest_shadow', name: '암흑을 꺾은 자' },
         optional: true,
         outlook: [
-            { measuredRank: 6, samples: 120, acceptedDeaths: 4.41, declinedDeaths: 2.19, acceptedSignatures: 1.27, declinedSignatures: 0.38 },
+            { measuredRank: 6, samples: 120, acceptedDeaths: 4.75, declinedDeaths: 2.24, acceptedSignatures: 1.02, declinedSignatures: 0.23 },
         ],
     },
 ]);
@@ -190,31 +193,32 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
     // `getPrestigeUnlocks().statMult`). 카드를 무작위로 고르는 드라이버(`--rule-pick random`)의 늘 받아들임 · 겹친 카드만 거절
     // 240판 × 13회차로 쟀다 — 기본 카드로 재면 무거운 카드가 10단계 뒤로 밀려(Wave 122) 7 ~ 9단계 표본이 4 ~ 6판뿐이었다.
     // 짝이 아니고(첫 거절 뒤로 회차가 갈라진다) 판 수는 두 쪽 중 적은 쪽, 잰 단계는 받아들임 쪽에서 가장 많이 놓인 단계다.
+    // 2026-10 Wave 125: 각인 발견이 계정 장부가 된 게임(새 각인 = 계정에 처음 모은 것)으로 같은 방식을 다시 쟀다(원장 §132.4).
     const band = (from: number, to: number, values: Omit<AscensionRuleOutlook, 'measuredRanks'>): AscensionRuleOutlook => ({ ...values, measuredRanks: [from, to] });
     const outlook: Record<string, readonly AscensionRuleOutlook[]> = {
         lost_pilgrimage: [
-            band(7, 9, { measuredRank: 8, samples: 62, acceptedDeaths: 19.06, declinedDeaths: 2.84, acceptedSignatures: 1.19, declinedSignatures: 0.29 }),
-            band(10, 12, { measuredRank: 11, samples: 77, acceptedDeaths: 3.88, declinedDeaths: 0.44, acceptedSignatures: 1.26, declinedSignatures: 0.1 }),
+            band(7, 9, { measuredRank: 9, samples: 70, acceptedDeaths: 18.23, declinedDeaths: 2.86, acceptedSignatures: 1.19, declinedSignatures: 0.12 }),
+            band(10, 12, { measuredRank: 12, samples: 67, acceptedDeaths: 4.3, declinedDeaths: 0.5, acceptedSignatures: 1.03, declinedSignatures: 0.01 }),
         ],
         empty_crusade: [
-            band(7, 9, { measuredRank: 7, samples: 77, acceptedDeaths: 37.71, declinedDeaths: 2.36, acceptedSignatures: 1.16, declinedSignatures: 0.28 }),
-            band(10, 12, { measuredRank: 12, samples: 61, acceptedDeaths: 5.25, declinedDeaths: 0.54, acceptedSignatures: 1.19, declinedSignatures: 0.13 }),
+            band(7, 9, { measuredRank: 7, samples: 65, acceptedDeaths: 56.25, declinedDeaths: 2.67, acceptedSignatures: 1.06, declinedSignatures: 0.19 }),
+            band(10, 12, { measuredRank: 10, samples: 64, acceptedDeaths: 6.05, declinedDeaths: 0.4, acceptedSignatures: 1.02, declinedSignatures: 0.03 }),
         ],
         dry_dragon_road: [
-            band(7, 9, { measuredRank: 7, samples: 75, acceptedDeaths: 35.75, declinedDeaths: 2.56, acceptedSignatures: 1.18, declinedSignatures: 0.28 }),
-            band(10, 12, { measuredRank: 10, samples: 60, acceptedDeaths: 2.98, declinedDeaths: 0.46, acceptedSignatures: 1.18, declinedSignatures: 0.2 }),
+            band(7, 9, { measuredRank: 7, samples: 67, acceptedDeaths: 36.82, declinedDeaths: 2.1, acceptedSignatures: 1.15, declinedSignatures: 0.24 }),
+            band(10, 12, { measuredRank: 10, samples: 58, acceptedDeaths: 2.55, declinedDeaths: 0.45, acceptedSignatures: 1, declinedSignatures: 0 }),
         ],
         tangled_legends: [
-            band(7, 9, { measuredRank: 9, samples: 118, acceptedDeaths: 124.44, declinedDeaths: 2.97, acceptedSignatures: 1.02, declinedSignatures: 0.3 }),
-            band(10, 12, { measuredRank: 10, samples: 118, acceptedDeaths: 11.34, declinedDeaths: 0.48, acceptedSignatures: 1.2, declinedSignatures: 0.22 }),
+            band(7, 9, { measuredRank: 9, samples: 114, acceptedDeaths: 113.37, declinedDeaths: 2.81, acceptedSignatures: 1.32, declinedSignatures: 0.16 }),
+            band(10, 12, { measuredRank: 12, samples: 126, acceptedDeaths: 13.28, declinedDeaths: 0.63, acceptedSignatures: 1.05, declinedSignatures: 0.03 }),
         ],
         fading_dimension: [
-            band(7, 9, { measuredRank: 9, samples: 115, acceptedDeaths: 108.83, declinedDeaths: 2.53, acceptedSignatures: 1.14, declinedSignatures: 0.39 }),
-            band(10, 12, { measuredRank: 12, samples: 111, acceptedDeaths: 8.91, declinedDeaths: 0.66, acceptedSignatures: 1.25, declinedSignatures: 0.17 }),
+            band(7, 9, { measuredRank: 7, samples: 123, acceptedDeaths: 107.3, declinedDeaths: 2.99, acceptedSignatures: 1.19, declinedSignatures: 0.2 }),
+            band(10, 12, { measuredRank: 12, samples: 116, acceptedDeaths: 9.76, declinedDeaths: 0.44, acceptedSignatures: 1.03, declinedSignatures: 0.01 }),
         ],
         shadow_legion: [
-            band(7, 9, { measuredRank: 7, samples: 121, acceptedDeaths: 43.32, declinedDeaths: 2.29, acceptedSignatures: 1.11, declinedSignatures: 0.29 }),
-            band(10, 12, { measuredRank: 12, samples: 114, acceptedDeaths: 4.34, declinedDeaths: 0.56, acceptedSignatures: 1.21, declinedSignatures: 0.14 }),
+            band(7, 9, { measuredRank: 8, samples: 115, acceptedDeaths: 50.43, declinedDeaths: 2.49, acceptedSignatures: 1.04, declinedSignatures: 0.23 }),
+            band(10, 12, { measuredRank: 11, samples: 117, acceptedDeaths: 3.62, declinedDeaths: 0.55, acceptedSignatures: 1, declinedSignatures: 0.02 }),
         ],
     };
     const entry = names[base.id];

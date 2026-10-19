@@ -142,6 +142,8 @@ test.describe('Expedition return debrief', () => {
         // 2026-10 Wave 110: 사망 화면의 남는 것 / 새로 시작하는 것(Wave 109 표)도 모바일 가독성 하한 안이다.
         const persistentGrowth = page.getByTestId('run-summary-persistent-growth');
         await expect(page.getByTestId('run-summary-kept')).toContainText('정수로 새긴 영구 성장');
+        // 2026-10 Wave 125: 전설 각인 발견은 사망에도 남는다(도감은 새로 시작한다).
+        await expect(page.getByTestId('run-summary-kept')).toContainText('전설 각인 수집');
         await expect(page.getByTestId('run-summary-reset')).toContainText('도감');
         expect(await findUndersizedText(persistentGrowth)).toEqual([]);
 

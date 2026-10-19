@@ -1,7 +1,7 @@
 import type { Player } from '../types/player.js';
 import type { Quest } from '../types/quest.js';
 import { getLowHpWinTotal } from '../systems/DifficultyManager.js';
-import { countDiscoveredSignatures } from './signatureDiscovery.js';
+import { countCodexSignatures } from './signatureDiscovery.js';
 import { countDiscoveredMaps } from './discoveredMaps.js';
 import { getJourneyCounter } from './journeyScope.js';
 
@@ -48,7 +48,7 @@ const getLifetimeCounterReader = (quest: Quest | undefined): LifetimeCounterRead
     // 2026-10 Wave 64 (원장 §65): 누적 골드 — 업적 '거상' 계열과 같은 기록이다(번 골드는 전부 `stats.total_gold`에 쌓인다).
     if (quest?.type === 'gold_earned' && quest.target === 'total_gold') return (player) => getJourneyCounter(player.stats, 'total_gold');
     if (quest?.type === 'signature_collect' && quest.target === 'signaturesDiscovered') {
-        return (player) => countDiscoveredSignatures(player);
+        return (player) => countCodexSignatures(player);
     }
     return null;
 };
