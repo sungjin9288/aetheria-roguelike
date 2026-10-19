@@ -8472,3 +8472,4 @@ Wave 77 ~ 85가 결정의 근거로 쓴 "큰 순간 사이 가장 긴 공백"(§
 
 - 첫 순환 셋 · 겹친 여섯의 `outlook` 값 · 판 수 · 잰 단계(`src/data/ascensionRules.ts`). 화면 문구 · 출처 줄 · 방향 계약은 그대로다. 표시만이라 자연 플레이는 바이트 동일이다.
 - 계약 기대값(`ascension-rule-collection-contract` · `stacked-ascension-rule-contract`)과 e2e `ascension-journey-design`의 미리보기 숫자(8.2 · 4.2 → 11.8 · 1.7)를 새 값으로 바꿨다.
+- 게이트: type-check · lint 0, 단위 6,134/6,134(457 파일, skip 0 — 첫 실행에서 성장 진단 증빙의 소스 해시만 어긋나 다시 썼고 리포트 본문은 그대로다), build:guard, 추적 증빙 15/15, rules 19/19, CI 환경 빌드, e2e `ascension-journey-design` 7/7(375px). 나머지 e2e · perf는 CI로 판정한다(바뀐 것은 데이터 값 · 문서 · 측정 도구다).
