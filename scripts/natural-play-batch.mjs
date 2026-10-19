@@ -1,5 +1,5 @@
 // 자연 플레이 여러 시드를 병렬로: node scripts/natural-play-batch.mjs --out DIR [--seeds 1-24] [--paths knight,archmage,...]
-//   [--runs 7] [--jobs 2] [--rule-decline none|all|stacked] [--max-steps N]
+//   [--runs 7] [--jobs 2] [--rule-decline none|all|stacked|rank:N] [--rule-pick default|fixed] [--max-steps N]
 // 결과는 DIR/<path>/seed-<n>.json — 이미 있는 파일은 건너뛴다(중단 뒤 이어 돌리기). 2026-10 Wave 117.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';
@@ -21,7 +21,7 @@ if (!out) throw new Error('--out DIR is required');
 const seeds = parseRange(flag('--seeds', '1-24'));
 const paths = flag('--paths', 'knight,berserker,archmage,cleric,assassin').split(',');
 const jobs = Number(flag('--jobs', '2'));
-const passThrough = ['--runs', '--rule-decline', '--max-steps'].flatMap((name) => (args.includes(name) ? [name, flag(name)] : []));
+const passThrough = ['--runs', '--rule-decline', '--rule-pick', '--max-steps'].flatMap((name) => (args.includes(name) ? [name, flag(name)] : []));
 const cli = path.join(path.dirname(fileURLToPath(import.meta.url)), 'natural-play.mjs');
 
 const queue = [];

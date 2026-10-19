@@ -432,11 +432,12 @@ test('Wave 92 · 93 · 94: 미리보기 줄은 그 순환의 측정을 그대로
     for (const rank of [1, 2, 3, 7, 8, 9]) assert.equal(getAscensionRulePreview(rk(rank)).outlook, null);
     // 2026-10 Wave 114: 두 번째 순환은 첫 순환 측정을 보이고 출처 줄이 잰 단계를 밝힌다(Wave 93 규칙).
     assert.deepEqual(getAscensionRulePreview(rk(10)).outlook, getAscensionRulePreview(rk(4)).outlook, '두 번째 순환은 마지막으로 잰 순환 값을 보인다');
-    assert.equal(getAscensionRulePreview(rk(4)).outlook.accepted, '받아들이면: 사망 8.2회 · 새 각인 +2.6개 · 정복 보상');
-    assert.equal(getAscensionRulePreview(rk(5)).outlook.accepted, '받아들이면: 사망 30.7회 · 새 각인 +2.2개 · 정복 보상');
-    assert.equal(getAscensionRulePreview(rk(5)).outlook.declined, '거절하면: 사망 4.9회 · 새 각인 +1.8개');
-    assert.equal(getAscensionRulePreview(rk(6)).outlook.accepted, '받아들이면: 사망 14.0회 · 새 각인 +3.5개 · 정복 보상', '3.45는 3.5로 반올림한다');
-    assert.equal(getAscensionRulePreview(rk(4)).outlook.source, '그 회차 평균 · 모의 플레이 83판 · 고정 순서 계승 4단계에서 잰 값');
+    // 2026-10 Wave 121: 저장소 드라이버 v2 · Wave 118 게임으로 다시 쟀다 — 거절은 그 단계 카드 하나만 거절한 짝(원장 §128).
+    assert.equal(getAscensionRulePreview(rk(4)).outlook.accepted, '받아들이면: 사망 11.8회 · 새 각인 +1.2개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(rk(5)).outlook.accepted, '받아들이면: 사망 17.3회 · 새 각인 +1.2개 · 정복 보상', '1.15는 1.2로 반올림한다');
+    assert.equal(getAscensionRulePreview(rk(5)).outlook.declined, '거절하면: 사망 1.7회 · 새 각인 +0.1개');
+    assert.equal(getAscensionRulePreview(rk(6)).outlook.accepted, '받아들이면: 사망 4.4회 · 새 각인 +1.3개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(rk(4)).outlook.source, '그 회차 평균 · 모의 플레이 75판 · 고정 순서 계승 4단계에서 잰 값');
     assert.equal(getAscensionRulePreview(rk(17)).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 고정 순서 계승 5단계에서 잰 값');
 });
 
