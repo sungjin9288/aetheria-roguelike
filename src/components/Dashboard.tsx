@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
-import { getSignatureDiscoveryProgress } from '../data/signatureItems.js';
+import { getSignatureDiscoveryProgress } from '../utils/signatureDiscovery';
 import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { FullStats, Player } from '../types/index.js';
 import ArchiveTabButton from './ArchiveTabButton';

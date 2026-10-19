@@ -550,6 +550,7 @@ export const MSG = {
         seasonPass: '시즌 진행',
         crystals: '에테르 크리스탈',
         codex: '도감',
+        signatureCollection: '전설 각인 수집',
         unrecoveredGraves: '회수하지 못한 유해',
         level: '레벨',
         gear: '장비와 가방',

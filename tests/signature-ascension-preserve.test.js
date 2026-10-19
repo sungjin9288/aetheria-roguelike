@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createElement } from 'react';
 
 import AscensionScreen from '../src/components/AscensionScreen.tsx';
-import { getSignatureDiscoveryProgress } from '../src/data/signatureItems.ts';
+import { getSignatureDiscoveryProgress } from '../src/utils/signatureDiscovery.ts';
 import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
 /**

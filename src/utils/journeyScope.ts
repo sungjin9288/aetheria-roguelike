@@ -9,7 +9,8 @@ import { ELITE_TITLE_PREFIX } from './eliteTitles.js';
  *
  * - `journey` — 이번 여정의 진행. 사망 · 계승 모두 초기화한다(임무 · 이야기 · 체인 · 칭호 · 업적의 진행).
  * - `codex` — 도감(수집 · 발견). 사망은 초기화, 계승은 유지한다.
- * - `account` — 계정 장부(계승 단계 · 회차 규칙 · 사망 수 · 마왕 처치 · 심연 기록 · 시즌 · 크리스털로 산 것).
+ * - `account` — 계정 장부(계승 단계 · 회차 규칙 · 사망 수 · 마왕 처치 · 심연 기록 · 시즌 · 크리스털로 산 것 · 전설 각인 수집 —
+ *   Wave 125, 소유자 결정 "각인 수집만 계정 단위": 각인 발견은 `stats.signatureLedger`로 넘고 도감 · 도감 보너스는 그대로 비워진다).
  *   초기화하지 않는다. 이 값을 읽는 업적은 지우면 곧바로 다시 달성되어 죽을 때마다 같은 보상을 받게 되므로
  *   수령 기록도 남긴다.
  *
@@ -42,8 +43,8 @@ export const ACHIEVEMENT_TARGET_SCOPE: Readonly<Record<AchievementTarget, ResetS
     prestige: 'account',
     relicCount: 'journey',
     rests: 'journey',
-    signatureSetsCompleted: 'codex',
-    signaturesDiscovered: 'codex',
+    signatureSetsCompleted: 'account',
+    signaturesDiscovered: 'account',
     synths: 'journey',
     total_gold: 'journey',
 });
@@ -106,8 +107,8 @@ export const TITLE_COND_SCOPE: Readonly<Record<TitleCondType, ResetScope>> = Obj
     rests: 'journey',
     ruleConquest: 'account',
     seasonTier: 'account',
-    signatureSetsCompleted: 'codex',
-    signaturesDiscovered: 'codex',
+    signatureSetsCompleted: 'account',
+    signaturesDiscovered: 'account',
     synths: 'journey',
     total_gold: 'journey',
 });
@@ -172,6 +173,7 @@ export type JourneySurfaceItem =
     | 'seasonPass'
     | 'crystals'
     | 'codex'
+    | 'signatureCollection'
     | 'unrecoveredGraves'
     | 'level'
     | 'gear'
@@ -186,11 +188,11 @@ export interface JourneySurface {
 }
 
 const DEATH_SURFACE: JourneySurface = {
-    kept: ['essenceGrowth', 'prestigeLedger', 'classJourney', 'seasonPass', 'crystals', 'settings'],
+    kept: ['essenceGrowth', 'prestigeLedger', 'signatureCollection', 'classJourney', 'seasonPass', 'crystals', 'settings'],
     reset: ['level', 'gear', 'relics', 'questsStory', 'journeyTitles', 'codex', 'activeExpedition'],
 };
 const ASCENSION_SURFACE: JourneySurface = {
-    kept: ['essenceGrowth', 'prestigeLedger', 'codex', 'classJourney', 'seasonPass', 'crystals', 'settings', 'unrecoveredGraves'],
+    kept: ['essenceGrowth', 'prestigeLedger', 'codex', 'signatureCollection', 'classJourney', 'seasonPass', 'crystals', 'settings', 'unrecoveredGraves'],
     reset: ['level', 'gear', 'relics', 'questsStory', 'journeyTitles', 'activeExpedition'],
 };
 

@@ -255,7 +255,7 @@ const RAW_QUESTS: Quest[] = [
     // 2026-10 Wave 62 (원장 §61.4 C10, 소유자 결정 "칭호를 준다"): 설명이 약속한 새 칭호 '대륙의 여행자'(titles.ts, questReward 200).
     { id: 200, title: '대륙의 발자취',  type: 'explore_count', desc: '50번 탐색 후 새 칭호 획득', target: 'explores',    goal: 50,  reward: { exp: 8000,  gold: 12000, title: '대륙의 여행자' }, minLv: 5 },
     { id: 201, title: '지도 완성가',    type: 'discovery_count', desc: '15곳 발견', target: 'discoveries', goal: 15, reward: { exp: 25000, gold: 30000, title: '지도 제작자' }, minLv: 25 },
-    { id: 202, title: '전설 기록자',    desc: '전설 각인 도감 15종 발견', type: 'signature_collect', target: 'signaturesDiscovered', goal: 15, reward: { exp: 50000, gold: 60000, title: '전설의 기록자' }, minLv: 40 },
+    { id: 202, title: '전설 기록자',    desc: '이번 여정에서 전설 각인 15종 손에 넣기', type: 'signature_collect', target: 'signaturesDiscovered', goal: 15, reward: { exp: 50000, gold: 60000, title: '전설의 기록자' }, minLv: 40 },
 
     // cycle 76: 도주 카운터 기반 챌린지 퀘스트 — cycle 74에서 stats.escapes 도입.
     // 도주는 "도망"이 아니라 "런 보존" — 위험 인지 + 자원 관리 운영 인정.

@@ -74,6 +74,12 @@ interface PlayerStats {
      * 정복 보상 · 겹친 덱 열림은 정복만 본다. 없으면(이전 세이브) 빈 기록.
      */
     ruleDeclinePassIds?: string[];
+    /**
+     * 2026-10 Wave 125 (소유자 결정 "각인 수집만 계정 단위"): 지난 여정들에서 발견한 전설 각인 — 계정 단위라 사망 · 계승을 넘는다.
+     * 도감 · 도감 보너스는 그대로 사망하면 비워지고, 각인 발견만 이 장부에 남는다. 쓰는 곳은 `pickPermanentPlayerState` 하나
+     * (`collectSignatureLedger`), 읽는 곳은 `getSignatureLedger`(없으면 이전 세이브의 발견 흔적으로 채운다).
+     */
+    signatureLedger?: string[];
     /** cycle 260: 수령 완료 퀘스트 영구 ledger. quest.id는 숫자(DB.QUESTS)와 문자열(bounty) 혼용. */
     claimedQuestIds?: Array<string | number>;
     explores?: number;

@@ -76,16 +76,16 @@ test('Wave 100: 계승이 새 단계의 수집 기준점을 남기고, 그 회�
 });
 
 // 2026-10 Wave 108 (소유자 결정 "죽으면 도감도 초기화"): 기준점은 사망 재시작을 넘지만 도감은 비므로, 요약은 사망 뒤 다시 모은 것만 센다.
-test('Wave 100 → Wave 108: 기준점은 사망 재시작을 넘고, 사망이 비운 도감은 요약에서도 빠진다', () => {
+test('Wave 100 → Wave 125: 기준점은 사망 재시작을 넘고, 각인 발견은 계정 장부라 사망해도 요약에서 빠지지 않는다', () => {
     const ascended = ascend(stateOf(veteran(), GS.ASCENSION));
     const found = discover(ascended.player, SIGNATURE_NAMES[3]);
     assert.deepEqual(getCycleSummary(found).signatures.newNames, [SIGNATURE_NAMES[3]]);
     const restarted = CombatEngine.handleDefeat(found, structuredClone(INITIAL_STATE.player), () => 0.5, () => 1).updatedPlayer;
     assert.equal(restarted.level, 1, '사망 재시작이 적용됐다');
     assert.deepEqual(restarted.meta.cycleStart, ascended.player.meta.cycleStart);
-    assert.deepEqual(getCycleSummary(restarted).signatures.newNames, [], '사망이 도감을 비웠다');
+    assert.deepEqual(getCycleSummary(restarted).signatures.newNames, [SIGNATURE_NAMES[3]], '사망이 도감을 비워도 발견은 남는다');
     const again = discover(restarted, SIGNATURE_NAMES[4]);
-    assert.deepEqual(getCycleSummary(again).signatures.newNames, [SIGNATURE_NAMES[4]]);
+    assert.deepEqual(getCycleSummary(again).signatures.newNames, [SIGNATURE_NAMES[3], SIGNATURE_NAMES[4]]);
 });
 
 test('Wave 100: 처음 시작한 여정(단계 0)은 빈 기준점 — 기준점 없는 이전 세이브의 계승 단계는 각인 · 정예 줄을 그리지 않는다', () => {
