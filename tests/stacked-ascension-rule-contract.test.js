@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createElement } from 'react';
 
-import { ALL_ASCENSION_RULES, ASCENSION_RULES, OUTLOOK_DEFAULT_SAMPLES, STACKED_ASCENSION_RULES } from '../src/data/ascensionRules.js';
+import { ALL_ASCENSION_RULES, ASCENSION_RULES, STACKED_ASCENSION_RULES } from '../src/data/ascensionRules.js';
 import { BALANCE } from '../src/data/constants.js';
 import { TITLES, TITLE_PASSIVES } from '../src/data/titles.js';
 import { AT } from '../src/reducers/actionTypes.js';
@@ -240,12 +240,46 @@ test('겹친 규칙은 단계 구간마다 거절할 수 있는 카드의 받아
                     assert.equal(preview.outlook, null, `${rule.id} + ${second}: 거절할 수 없는 카드에는 고를 차이가 없다`);
                     continue;
                 }
-                assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)), `${rule.id} rank ${rank}`);
+                // 2026-10 Wave 126: 받아들임 줄은 이 카드(두 번째 비틀기)의 측정이고, 거절 줄은 두 비틀기가 빠지므로 구간 값이다.
+                const card = o.bySecond?.[second];
+                assert.ok(card, `${rule.id} + ${second} rank ${rank}: 거절할 수 있는 카드마다 그 카드의 측정이 있다`);
+                assert.equal(preview.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(card.acceptedDeaths), r1(card.acceptedSignatures)), `${rule.id} + ${second} rank ${rank}`);
                 assert.equal(preview.outlook.declined, MSG.ASCENSION_RULE_OUTLOOK_DECLINED(r1(o.declinedDeaths), r1(o.declinedSignatures)), `${rule.id} rank ${rank}`);
-                assert.equal(preview.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE_STACKED(o.measuredRanks[0], o.measuredRanks[1], o.samples ?? OUTLOOK_DEFAULT_SAMPLES), `${rule.id} rank ${rank}: 잰 구간 · 판 수를 밝힌다`);
+                assert.equal(
+                    preview.outlook.source,
+                    MSG.ASCENSION_RULE_OUTLOOK_SOURCE_STACKED_CARD(o.measuredRanks[0], o.measuredRanks[1], card.samples, o.declinedSamples),
+                    `${rule.id} + ${second} rank ${rank}: 잰 구간 · 받아들임 · 거절 판 수를 밝힌다`,
+                );
             }
         }
     }
+});
+
+test('Wave 126: 겹친 규칙의 카드별 측정은 거절할 수 있는 카드 칸만 빠짐없이 들고, 칸마다 받아들임이 더 위험하고 각인을 더 준다', async () => {
+    const { MSG } = await import('../src/data/messages.js');
+    const { buildAscensionRulePreview } = await import('../src/utils/ascensionRuleView.js');
+    const isHeavy = (id) => ASCENSION_RULES.some((base) => base.optional && base.modifier === id);
+    const twistIds = BALANCE.CHALLENGE_MODIFIERS.map((modifier) => modifier.id);
+    for (const rule of STACKED_ASCENSION_RULES) {
+        const declinable = twistIds.filter((id) => id !== rule.modifier && (rule.optional || isHeavy(id)));
+        for (const o of rule.outlook) {
+            const band = o.measuredRanks.join('~');
+            assert.deepEqual(Object.keys(o.bySecond || {}).sort(), [...declinable].sort(), `${rule.id} ${band}: 거절할 수 있는 카드 칸만, 빠짐없이`);
+            assert.ok(o.declinedSamples > 0, `${rule.id} ${band}: 거절 판 수`);
+            for (const [second, card] of Object.entries(o.bySecond)) {
+                assert.ok(card.samples > 0, `${rule.id} + ${second} ${band}: 판 수`);
+                assert.ok(card.acceptedDeaths > o.declinedDeaths, `${rule.id} + ${second} ${band}: 받아들임이 더 위험하다`);
+                assert.ok(card.acceptedSignatures > o.declinedSignatures, `${rule.id} + ${second} ${band}: 받아들임이 각인을 더 준다`);
+            }
+        }
+    }
+    // 두 번째 비틀기를 모르는 카드(기록 없는 이전 세이브)는 구간의 규칙 평균을 보인다 — 바탕이 무거운 규칙만 거절할 수 있다.
+    const heavyBase = STACKED_ASCENSION_RULES.find((rule) => rule.optional);
+    const o = heavyBase.outlook[0];
+    const r1 = (value) => (Math.round(value * 10) / 10).toFixed(1);
+    const fallback = buildAscensionRulePreview(heavyBase, o.measuredRanks[0], null);
+    assert.equal(fallback.outlook.accepted, MSG.ASCENSION_RULE_OUTLOOK_ACCEPTED(r1(o.acceptedDeaths), r1(o.acceptedSignatures)));
+    assert.equal(fallback.outlook.source, MSG.ASCENSION_RULE_OUTLOOK_SOURCE_STACKED(o.measuredRanks[0], o.measuredRanks[1], o.samples));
 });
 
 test('Wave 123: 겹친 카드 미리보기는 지금 단계의 구간(영구 능력치 ×2 앞 · 뒤) 값이고, 출처 줄은 잰 구간 · 판 수를 밝힌다', async () => {

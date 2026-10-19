@@ -87,6 +87,22 @@ export interface AscensionRuleOutlook {
     declinedDeaths: number;
     acceptedSignatures: number;
     declinedSignatures: number;
+    /** 2026-10 Wave 126: 거절 쪽 판 수(겹친 규칙 구간) — 카드별 출처 줄이 받아들임 판 수와 함께 밝힌다. */
+    declinedSamples?: number;
+    /**
+     * 2026-10 Wave 126 (소유자 결정 "카드별 값으로", 원장 §134): 겹친 규칙에서 거절할 수 있는 카드마다(두 번째 비틀기별) 받아들임 측정.
+     * 같은 규칙 · 같은 구간에서도 두 번째 비틀기에 따라 사망이 4 ~ 10배 달라, 규칙 평균은 플레이어가 보는 카드의 무게를 0.3 ~ 2.6배로
+     * 말했다. 거절하면 두 비틀기가 모두 빠지므로 거절 값은 구간 값 그대로다. 두 번째 비틀기를 모르는 카드(기록 없는 이전 세이브)는
+     * 구간의 규칙 평균을 보인다.
+     */
+    bySecond?: Readonly<Partial<Record<AscensionRuleDef['modifier'], AscensionRuleCardOutlook>>>;
+}
+
+/** 2026-10 Wave 126: 겹친 카드 한 장(바탕 + 두 번째 비틀기)의 받아들임 측정. */
+export interface AscensionRuleCardOutlook {
+    samples: number;
+    acceptedDeaths: number;
+    acceptedSignatures: number;
 }
 
 /**

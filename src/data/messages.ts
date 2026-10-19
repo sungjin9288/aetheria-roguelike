@@ -273,6 +273,8 @@ export const MSG = {
     ASCENSION_RULE_OUTLOOK_SOURCE: (measuredRank: number, samples: number) => `그 회차 평균 · 모의 플레이 ${samples}판 · 고정 순서 계승 ${measuredRank}단계에서 잰 값`,
     // 2026-10 Wave 116: 겹친 규칙은 고정 순서가 아니라 2순환 카드 뽑기에서 잰다. Wave 123: 단계 구간마다 따로 재고 그 구간을 밝힌다.
     ASCENSION_RULE_OUTLOOK_SOURCE_STACKED: (fromRank: number, toRank: number, samples: number) => `그 회차 평균 · 모의 플레이 ${samples}판 · 2순환 카드 뽑기, 계승 ${fromRank} ~ ${toRank}단계에서 잰 값`,
+    // 2026-10 Wave 126: 겹친 카드는 그 카드(두 비틀기)의 받아들임 측정이다 — 거절 쪽은 같은 규칙 · 구간의 측정이라 판 수를 따로 밝힌다.
+    ASCENSION_RULE_OUTLOOK_SOURCE_STACKED_CARD: (fromRank: number, toRank: number, acceptedSamples: number, declinedSamples: number) => `그 회차 평균 · 이 두 비틀기 카드 받아들임 ${acceptedSamples}판 · 거절 ${declinedSamples}판 · 2순환 카드 뽑기, 계승 ${fromRank} ~ ${toRank}단계에서 잰 값`,
     ASCENSION_RULE_OFFER_TITLE: '다음 회차 규칙 — 카드 한 장을 고르세요',
     ASCENSION_RULE_OFFER_HINT: '이번 순환에서 아직 정복하지 않은 규칙에서 뽑았습니다. 다시 뽑으면 지금 패로 돌아올 수 없습니다.',
     // 2026-10 Wave 95: 회차 규칙 패 다시 뽑기 — 첫 번째는 무료, 그 뒤는 다음 여정으로 넘어가는 정수 사다리를 내려놓는다.
