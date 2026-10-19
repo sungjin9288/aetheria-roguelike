@@ -92,7 +92,7 @@ const installClock = (clock) => {
  * @param {number} [options.runs]            이만큼 계승하면 멈춘다(회차 수)
  * @param {number} [options.maxSteps]        안전 상한(행동 수)
  * @param {number} [options.stepSeconds]     행동 하나가 가짜 시계에서 걸리는 시간
- * @param {'none'|'all'|'stacked'} [options.ruleDecline] 거절할 수 있는 회차 규칙 카드를 거절하는 범위
+ * @param {'none'|'all'|'stacked'|`rank:${number}`} [options.ruleDecline] 거절할 수 있는 회차 규칙 카드를 거절하는 범위
  * @param {'default'|'fixed'} [options.rulePick] 회차 규칙 카드 — 화면이 처음 골라 두는 카드(기본), 또는 고정 순서 규칙이 패에 있으면 그 카드
  *   (`fixed` — 첫 순환 미리보기 값을 잰 단계(`measuredRank`)에 놓는다, 원장 §121.7 · §128). 고르는 방식만 다르고 난수 소비는 같다.
  */
@@ -214,7 +214,8 @@ export const runNaturalPlay = async (options) => {
         });
         run = null;
     };
-    const declineFor = (nextRank) => ruleDecline === 'all' || (ruleDecline === 'stacked' && nextRank > 6);
+    // `rank:N` — 그 단계의 카드 하나만 거절한다(앞 회차는 받아들임과 같은 역사라 받아들임 결과와 깨끗한 짝이 된다, 원장 §128).
+    const declineFor = (nextRank) => ruleDecline === 'all' || (ruleDecline === 'stacked' && nextRank > 6) || ruleDecline === `rank:${nextRank}`;
 
     let lastGameState = null;
     let lastCombatSnapshot = null;
