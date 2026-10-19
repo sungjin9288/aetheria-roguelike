@@ -80,19 +80,23 @@ export interface AscensionRuleOutlook {
 }
 
 /**
- * 2026-10 Wave 106 (소유자 결정 §110.6 "(b)+(c) 같이"): 비틀기의 측정 무게 — 겹친 회차(rank 7 ~ 12)에서 그 비틀기가 두 번째
- * 비틀기였던 회차의 시드당 사망 평균(Wave 105 측정, 120시드 × 6회차 = 720회차, 원장 §110 · §111). 두 번째 비틀기는 카드마다
- * 무작위라 단계 · 경로와 독립이다 — 바탕 비틀기의 평균은 무거운 바탕이 rank 10 ~ 12에 몰려 단계와 섞인다.
+ * 2026-10 Wave 106 (소유자 결정 §110.6 "(b)+(c) 같이"): 비틀기의 측정 무게 — 겹친 회차(rank 7 ~ 12)의 회차당 사망 평균.
  * 겹친 카드의 무게는 두 비틀기 무게의 합이고, 계승 화면이 처음 골라 두는 카드가 그 합이 가장 작은 카드다(`resolveAscensionRuleChoice`).
  * 기본 카드(1순환)는 규칙 표 순서 그대로다(Wave 90 — 놓인 회차에서 잰 순서). 규칙 · 순서 · 엔진이 바뀌면 다시 잴 것.
+ *
+ * 2026-10 Wave 122 (소유자 결정 "무작위 카드 측정으로 다시 잼", 원장 §129): Wave 105의 값은 Wave 108(사망하면 처음부터) 전 측정이었다.
+ * 늘 받아들이는 드라이버가 패에서 무작위로 고른 카드(`--rule-pick random`, 240판 × 13회차 = 겹친 회차 1,440)로 다시 쟀다 — 기본 카드로
+ * 재면 이 표로 고른 카드만 담겨(가벼운 두 번째일수록 무거운 바탕과 짝지어진다) 표가 표를 재는 순환이 된다. 무작위 카드에서는 바탕 ·
+ * 두 번째 · 단계가 서로 독립이라 그 비틀기가 바탕이든 두 번째든 붙은 회차의 평균을 쓴다(두 번째만 쓰던 Wave 106의 이유 — 바탕이 단계와
+ * 섞인다 — 가 사라졌고 표본이 두 배다). 순서가 바뀌었다: 물약 없이가 가장 가볍던 것이 길 잃음, 뒤섞인 기술이 가장 무겁다.
  */
 export const ASCENSION_TWIST_WEIGHTS: Readonly<Record<AscensionRuleDef['modifier'], number>> = Object.freeze({
-    noPotion: 0.92,
-    blindMap: 1.85,
-    noGold: 2.19,
-    randomSkills: 4.79,
-    eliteOnly: 6.9,
-    halfHp: 7.5,
+    blindMap: 7.36,
+    noPotion: 14.19,
+    noGold: 17.67,
+    eliteOnly: 23.82,
+    halfHp: 60.07,
+    randomSkills: 67.64,
 });
 
 export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
