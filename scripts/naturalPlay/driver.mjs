@@ -93,7 +93,7 @@ const installClock = (clock) => {
  * @param {number} [options.maxSteps]        안전 상한(행동 수)
  * @param {number} [options.stepSeconds]     행동 하나가 가짜 시계에서 걸리는 시간
  * @param {'none'|'all'|'stacked'|`rank:${number}`} [options.ruleDecline] 거절할 수 있는 회차 규칙 카드를 거절하는 범위
- * @param {'default'|'fixed'} [options.rulePick] 회차 규칙 카드 — 화면이 처음 골라 두는 카드(기본), 또는 고정 순서 규칙이 패에 있으면 그 카드
+ * @param {'default'|'fixed'|'random'} [options.rulePick] 회차 규칙 카드 — 화면이 처음 골라 두는 카드(기본), 고정 순서 규칙이 패에 있으면 그 카드, 또는 패에서 무작위
  *   (`fixed` — 첫 순환 미리보기 값을 잰 단계(`measuredRank`)에 놓는다, 원장 §121.7 · §128). 고르는 방식만 다르고 난수 소비는 같다.
  */
 const TRACE = Boolean(process.env.NATURAL_PLAY_TRACE);
@@ -101,8 +101,15 @@ const TRACE = Boolean(process.env.NATURAL_PLAY_TRACE);
 /**
  * 계승 화면에서 고르는 회차 규칙 카드. `default`는 아무것도 고르지 않는다(리듀서가 패에서 가장 가벼운 카드 — 화면이 처음 골라 두는 카드).
  * `fixed`는 고정 순서 규칙(`getAscensionRule`)이 패에 있으면 그 카드, 없으면 기본 카드다.
+ * `random`은 패에서 고르게 하나다(Wave 122 — 기본 카드 무게표를 잴 때 무게로 고른 카드만 담기는 선택 편향을 없앤다). 굴림은 시드 ·
+ * 단계의 별도 스트림이라 게임 난수(`Math.random`)를 쓰지 않는다.
  */
-export const pickAscensionRuleId = (player, nextRank, rulePick) => {
+export const pickAscensionRuleId = (player, nextRank, rulePick, pickSeed = 0) => {
+    if (rulePick === 'random') {
+        const offer = getAscensionRuleOffer(player, nextRank);
+        if (offer.length === 0) return undefined;
+        return offer[Math.floor(createSeededRandom(deriveSeed(pickSeed, 'natural-play-rule-pick', nextRank))() * offer.length)].id;
+    }
     if (rulePick !== 'fixed') return undefined;
     const fixedRule = getAscensionRule(nextRank);
     return fixedRule && getAscensionRuleOffer(player, nextRank).some((rule) => rule.id === fixedRule.id) ? fixedRule.id : undefined;
@@ -298,7 +305,7 @@ export const runNaturalPlay = async (options) => {
                 if (!ready) { A.cancelAscension(); continue; }
                 for (const entry of getClaimableQuestEntries(p)) { A.completeQuest(entry.quest?.id ?? entry.id); A = buildActions(); }
                 const before = rank();
-                const ruleId = pickAscensionRuleId(state.player, before + 1, rulePick);
+                const ruleId = pickAscensionRuleId(state.player, before + 1, rulePick, seed);
                 closeRun();
                 A.confirmAscension([], declineFor(before + 1), ruleId);
                 if (rank() === before) { openRun(); run.run = result.runs.length; result.runs.pop(); }

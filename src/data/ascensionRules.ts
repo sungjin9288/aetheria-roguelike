@@ -71,6 +71,13 @@ export const OUTLOOK_DEFAULT_SAMPLES = 120;
 export interface AscensionRuleOutlook {
     /** 2026-10 Wave 94: 이 값을 잰 계승 단계(고정 순서 측정) — 카드 뽑기 뒤로는 규칙이 다른 단계에 올 수 있어 화면이 밝힌다. */
     measuredRank: number;
+    /**
+     * 2026-10 Wave 123 (소유자 결정 "구간 분리", 원장 §130): 겹친 규칙은 단계 구간마다 하나 — 이 값을 잰 계승 단계 구간(양 끝 포함).
+     * 계승 10단계에서 영구 능력치가 ×2가 되어(`getPrestigeUnlocks().statMult`) 같은 겹친 카드의 사망이 그 앞뒤로 2.6 ~ 10배 다르다 —
+     * 두 구간의 평균은 앞에서 만난 플레이어에게 위험을 작게, 뒤에서 만난 플레이어에게 크게 말했다. 화면은 지금 단계가 시작 단계 이상인
+     * 마지막 구간을 고른다(13단계 이후는 마지막 구간 — 출처 줄이 잰 구간을 밝힌다). `measuredRank`는 그 구간에서 가장 많이 놓인 단계다.
+     */
+    measuredRanks?: readonly [number, number];
     /** 2026-10 Wave 114: 받아들임 · 거절을 짝지은 판 수(없으면 `OUTLOOK_DEFAULT_SAMPLES`) — 출처 줄이 그대로 밝힌다. */
     samples?: number;
     acceptedDeaths: number;
@@ -80,19 +87,23 @@ export interface AscensionRuleOutlook {
 }
 
 /**
- * 2026-10 Wave 106 (소유자 결정 §110.6 "(b)+(c) 같이"): 비틀기의 측정 무게 — 겹친 회차(rank 7 ~ 12)에서 그 비틀기가 두 번째
- * 비틀기였던 회차의 시드당 사망 평균(Wave 105 측정, 120시드 × 6회차 = 720회차, 원장 §110 · §111). 두 번째 비틀기는 카드마다
- * 무작위라 단계 · 경로와 독립이다 — 바탕 비틀기의 평균은 무거운 바탕이 rank 10 ~ 12에 몰려 단계와 섞인다.
+ * 2026-10 Wave 106 (소유자 결정 §110.6 "(b)+(c) 같이"): 비틀기의 측정 무게 — 겹친 회차(rank 7 ~ 12)의 회차당 사망 평균.
  * 겹친 카드의 무게는 두 비틀기 무게의 합이고, 계승 화면이 처음 골라 두는 카드가 그 합이 가장 작은 카드다(`resolveAscensionRuleChoice`).
  * 기본 카드(1순환)는 규칙 표 순서 그대로다(Wave 90 — 놓인 회차에서 잰 순서). 규칙 · 순서 · 엔진이 바뀌면 다시 잴 것.
+ *
+ * 2026-10 Wave 122 (소유자 결정 "무작위 카드 측정으로 다시 잼", 원장 §129): Wave 105의 값은 Wave 108(사망하면 처음부터) 전 측정이었다.
+ * 늘 받아들이는 드라이버가 패에서 무작위로 고른 카드(`--rule-pick random`, 240판 × 13회차 = 겹친 회차 1,440)로 다시 쟀다 — 기본 카드로
+ * 재면 이 표로 고른 카드만 담겨(가벼운 두 번째일수록 무거운 바탕과 짝지어진다) 표가 표를 재는 순환이 된다. 무작위 카드에서는 바탕 ·
+ * 두 번째 · 단계가 서로 독립이라 그 비틀기가 바탕이든 두 번째든 붙은 회차의 평균을 쓴다(두 번째만 쓰던 Wave 106의 이유 — 바탕이 단계와
+ * 섞인다 — 가 사라졌고 표본이 두 배다). 순서가 바뀌었다: 물약 없이가 가장 가볍던 것이 길 잃음, 뒤섞인 기술이 가장 무겁다.
  */
 export const ASCENSION_TWIST_WEIGHTS: Readonly<Record<AscensionRuleDef['modifier'], number>> = Object.freeze({
-    noPotion: 0.92,
-    blindMap: 1.85,
-    noGold: 2.19,
-    randomSkills: 4.79,
-    eliteOnly: 6.9,
-    halfHp: 7.5,
+    blindMap: 7.36,
+    noPotion: 14.19,
+    noGold: 17.67,
+    eliteOnly: 23.82,
+    halfHp: 60.07,
+    randomSkills: 67.64,
 });
 
 export const ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freeze([
@@ -175,13 +186,36 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
     // 회차가 갈라진다). 판 수는 두 쪽 중 적은 쪽이다. 이전 값은 받아들임 사망을 1.7 ~ 8.7분의 1로 말했다(원장 §122).
     // 2026-10 Wave 121: 같은 방식을 저장소 드라이버 v2 · Wave 118 게임으로 다시 쟀다(원장 §128). 잰 단계는 받아들임 쪽에서 가장 많이
     // 놓인 단계다(같으면 두 쪽 합). 계승 10단계(에테르 초월, 영구 능력치 ×2) 앞뒤로 사망이 5 ~ 9배 달라 이 값은 두 구간의 평균이다.
-    const outlook: Record<string, AscensionRuleOutlook> = {
-        lost_pilgrimage: { measuredRank: 9, samples: 44, acceptedDeaths: 15.16, declinedDeaths: 1.11, acceptedSignatures: 1.18, declinedSignatures: 0.27 },
-        empty_crusade: { measuredRank: 9, samples: 39, acceptedDeaths: 52.69, declinedDeaths: 2.18, acceptedSignatures: 1.21, declinedSignatures: 0.26 },
-        dry_dragon_road: { measuredRank: 7, samples: 64, acceptedDeaths: 31.57, declinedDeaths: 2.47, acceptedSignatures: 1.2, declinedSignatures: 0.36 },
-        tangled_legends: { measuredRank: 10, samples: 120, acceptedDeaths: 37.27, declinedDeaths: 1.59, acceptedSignatures: 1.21, declinedSignatures: 0.37 },
-        fading_dimension: { measuredRank: 12, samples: 120, acceptedDeaths: 12.06, declinedDeaths: 0.87, acceptedSignatures: 1.18, declinedSignatures: 0.13 },
-        shadow_legion: { measuredRank: 12, samples: 120, acceptedDeaths: 5.31, declinedDeaths: 1.12, acceptedSignatures: 1.18, declinedSignatures: 0.22 },
+    // 2026-10 Wave 123 (소유자 결정 "구간 분리", 원장 §130): 단계 구간마다 따로 잰다 — 계승 7 ~ 9단계와 10 ~ 12단계(영구 능력치 ×2,
+    // `getPrestigeUnlocks().statMult`). 카드를 무작위로 고르는 드라이버(`--rule-pick random`)의 늘 받아들임 · 겹친 카드만 거절
+    // 240판 × 13회차로 쟀다 — 기본 카드로 재면 무거운 카드가 10단계 뒤로 밀려(Wave 122) 7 ~ 9단계 표본이 4 ~ 6판뿐이었다.
+    // 짝이 아니고(첫 거절 뒤로 회차가 갈라진다) 판 수는 두 쪽 중 적은 쪽, 잰 단계는 받아들임 쪽에서 가장 많이 놓인 단계다.
+    const band = (from: number, to: number, values: Omit<AscensionRuleOutlook, 'measuredRanks'>): AscensionRuleOutlook => ({ ...values, measuredRanks: [from, to] });
+    const outlook: Record<string, readonly AscensionRuleOutlook[]> = {
+        lost_pilgrimage: [
+            band(7, 9, { measuredRank: 8, samples: 62, acceptedDeaths: 19.06, declinedDeaths: 2.84, acceptedSignatures: 1.19, declinedSignatures: 0.29 }),
+            band(10, 12, { measuredRank: 11, samples: 77, acceptedDeaths: 3.88, declinedDeaths: 0.44, acceptedSignatures: 1.26, declinedSignatures: 0.1 }),
+        ],
+        empty_crusade: [
+            band(7, 9, { measuredRank: 7, samples: 77, acceptedDeaths: 37.71, declinedDeaths: 2.36, acceptedSignatures: 1.16, declinedSignatures: 0.28 }),
+            band(10, 12, { measuredRank: 12, samples: 61, acceptedDeaths: 5.25, declinedDeaths: 0.54, acceptedSignatures: 1.19, declinedSignatures: 0.13 }),
+        ],
+        dry_dragon_road: [
+            band(7, 9, { measuredRank: 7, samples: 75, acceptedDeaths: 35.75, declinedDeaths: 2.56, acceptedSignatures: 1.18, declinedSignatures: 0.28 }),
+            band(10, 12, { measuredRank: 10, samples: 60, acceptedDeaths: 2.98, declinedDeaths: 0.46, acceptedSignatures: 1.18, declinedSignatures: 0.2 }),
+        ],
+        tangled_legends: [
+            band(7, 9, { measuredRank: 9, samples: 118, acceptedDeaths: 124.44, declinedDeaths: 2.97, acceptedSignatures: 1.02, declinedSignatures: 0.3 }),
+            band(10, 12, { measuredRank: 10, samples: 118, acceptedDeaths: 11.34, declinedDeaths: 0.48, acceptedSignatures: 1.2, declinedSignatures: 0.22 }),
+        ],
+        fading_dimension: [
+            band(7, 9, { measuredRank: 9, samples: 115, acceptedDeaths: 108.83, declinedDeaths: 2.53, acceptedSignatures: 1.14, declinedSignatures: 0.39 }),
+            band(10, 12, { measuredRank: 12, samples: 111, acceptedDeaths: 8.91, declinedDeaths: 0.66, acceptedSignatures: 1.25, declinedSignatures: 0.17 }),
+        ],
+        shadow_legion: [
+            band(7, 9, { measuredRank: 7, samples: 121, acceptedDeaths: 43.32, declinedDeaths: 2.29, acceptedSignatures: 1.11, declinedSignatures: 0.29 }),
+            band(10, 12, { measuredRank: 12, samples: 114, acceptedDeaths: 4.34, declinedDeaths: 0.56, acceptedSignatures: 1.21, declinedSignatures: 0.14 }),
+        ],
     };
     const entry = names[base.id];
     const stacked: AscensionRuleDef = {
@@ -192,7 +226,7 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
         conquestTitle: { id: `conquest_stacked_${base.id}`, name: entry.title },
         stackedOf: base.id,
         ...(base.optional ? { optional: true as const } : {}),
-        outlook: [outlook[base.id]],
+        outlook: outlook[base.id],
     };
     return stacked;
 }));
