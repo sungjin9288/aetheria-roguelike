@@ -252,13 +252,15 @@ test('Wave 123: 겹친 카드 미리보기는 지금 단계의 구간(영구 능
     const { buildAscensionRulePreview } = await import('../src/utils/ascensionRuleView.js');
     const byId = Object.fromEntries(STACKED_ASCENSION_RULES.map((rule) => [rule.id, rule]));
     const early = buildAscensionRulePreview(byId.stacked_empty_crusade, 8, 'halfHp');
-    assert.equal(early.outlook.accepted, '받아들이면: 사망 37.7회 · 새 각인 +1.2개 · 정복 보상');
-    assert.equal(early.outlook.declined, '거절하면: 사망 2.4회 · 새 각인 +0.3개');
-    assert.equal(early.outlook.source, '그 회차 평균 · 모의 플레이 77판 · 2순환 카드 뽑기, 계승 7 ~ 9단계에서 잰 값');
+    // 2026-10 Wave 125: 각인 발견이 계정 장부가 된 게임으로 다시 쟀다(원장 §132.4).
+    assert.equal(early.outlook.accepted, '받아들이면: 사망 56.3회 · 새 각인 +1.1개 · 정복 보상', '56.25는 56.3으로 반올림한다');
+    assert.equal(early.outlook.declined, '거절하면: 사망 2.7회 · 새 각인 +0.2개');
+    assert.equal(early.outlook.source, '그 회차 평균 · 모의 플레이 65판 · 2순환 카드 뽑기, 계승 7 ~ 9단계에서 잰 값');
     const late = buildAscensionRulePreview(byId.stacked_empty_crusade, 10, 'halfHp');
-    assert.equal(late.outlook.accepted, '받아들이면: 사망 5.3회 · 새 각인 +1.2개 · 정복 보상', '5.25는 5.3으로 반올림한다');
-    assert.equal(late.outlook.source, '그 회차 평균 · 모의 플레이 61판 · 2순환 카드 뽑기, 계승 10 ~ 12단계에서 잰 값');
-    assert.equal(buildAscensionRulePreview(byId.stacked_tangled_legends, 9, 'noGold').outlook.accepted, '받아들이면: 사망 124.4회 · 새 각인 +1.0개 · 정복 보상');
+    assert.equal(late.outlook.accepted, '받아들이면: 사망 6.1회 · 새 각인 +1.0개 · 정복 보상', '6.05는 6.1로 반올림한다');
+    assert.equal(late.outlook.declined, '거절하면: 사망 0.4회 · 새 각인 +0.0개', '정복 보상이 없는 회차에는 새로 모으는 각인이 거의 없다');
+    assert.equal(late.outlook.source, '그 회차 평균 · 모의 플레이 64판 · 2순환 카드 뽑기, 계승 10 ~ 12단계에서 잰 값');
+    assert.equal(buildAscensionRulePreview(byId.stacked_tangled_legends, 9, 'noGold').outlook.accepted, '받아들이면: 사망 113.4회 · 새 각인 +1.3개 · 정복 보상');
     // 3순환 이후는 마지막 구간(영구 능력치 ×2 뒤) 값이고, 출처 줄이 잰 구간을 밝힌다(숫자를 지어내지 않는다).
     assert.deepEqual(buildAscensionRulePreview(byId.stacked_fading_dimension, 18, 'noGold').outlook, buildAscensionRulePreview(byId.stacked_fading_dimension, 12, 'noGold').outlook);
     assert.ok(!late.outlook.source.includes('고정 순서'), '겹친 규칙은 고정 순서에서 재지 않는다');
