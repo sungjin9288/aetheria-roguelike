@@ -91,8 +91,8 @@ export interface AscensionRuleOutlook {
     declinedSamples?: number;
     /**
      * 2026-10 Wave 126 (소유자 결정 "카드별 값으로", 원장 §134): 겹친 규칙에서 거절할 수 있는 카드마다(두 번째 비틀기별) 받아들임 측정.
-     * 같은 규칙 · 같은 구간에서도 두 번째 비틀기에 따라 사망이 4 ~ 10배 달라, 규칙 평균은 플레이어가 보는 카드의 무게를 0.3 ~ 2.6배로
-     * 말했다. 거절하면 두 비틀기가 모두 빠지므로 거절 값은 구간 값 그대로다. 두 번째 비틀기를 모르는 카드(기록 없는 이전 세이브)는
+     * 같은 규칙 · 같은 구간에서도 두 번째 비틀기에 따라 사망이 4 ~ 18배 달라, 규칙 평균은 플레이어가 보는 카드의 실제 값의
+     * 0.33 ~ 8.2배였다. 거절하면 두 비틀기가 모두 빠지므로 거절 값은 구간 값 그대로다. 두 번째 비틀기를 모르는 카드(기록 없는 이전 세이브)는
      * 구간의 규칙 평균을 보인다.
      */
     bySecond?: Readonly<Partial<Record<AscensionRuleDef['modifier'], AscensionRuleCardOutlook>>>;
@@ -210,31 +210,93 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
     // 240판 × 13회차로 쟀다 — 기본 카드로 재면 무거운 카드가 10단계 뒤로 밀려(Wave 122) 7 ~ 9단계 표본이 4 ~ 6판뿐이었다.
     // 짝이 아니고(첫 거절 뒤로 회차가 갈라진다) 판 수는 두 쪽 중 적은 쪽, 잰 단계는 받아들임 쪽에서 가장 많이 놓인 단계다.
     // 2026-10 Wave 125: 각인 발견이 계정 장부가 된 게임(새 각인 = 계정에 처음 모은 것)으로 같은 방식을 다시 쟀다(원장 §132.4).
+    // 2026-10 Wave 126 (소유자 결정 "카드별 값으로", 원장 §134): 같은 무작위 카드 측정을 96시드(480판 × 13회차)로 늘려 거절할 수 있는
+    //   카드마다(두 번째 비틀기별) 받아들임 값을 `bySecond`에 둔다 — 칸마다 33 ~ 67판. 구간 값은 규칙 평균(두 번째를 모르는 카드)과 거절 값이다.
     const band = (from: number, to: number, values: Omit<AscensionRuleOutlook, 'measuredRanks'>): AscensionRuleOutlook => ({ ...values, measuredRanks: [from, to] });
     const outlook: Record<string, readonly AscensionRuleOutlook[]> = {
         lost_pilgrimage: [
-            band(7, 9, { measuredRank: 9, samples: 70, acceptedDeaths: 18.23, declinedDeaths: 2.86, acceptedSignatures: 1.19, declinedSignatures: 0.12 }),
-            band(10, 12, { measuredRank: 12, samples: 67, acceptedDeaths: 4.3, declinedDeaths: 0.5, acceptedSignatures: 1.03, declinedSignatures: 0.01 }),
+            band(7, 9, { measuredRank: 9, samples: 137, declinedSamples: 140, acceptedDeaths: 18.46, declinedDeaths: 2.53, acceptedSignatures: 1.18, declinedSignatures: 0.15, bySecond: {
+                eliteOnly: { samples: 50, acceptedDeaths: 6.5, acceptedSignatures: 1 },
+                halfHp: { samples: 42, acceptedDeaths: 18.1, acceptedSignatures: 1.26 },
+                randomSkills: { samples: 45, acceptedDeaths: 32.09, acceptedSignatures: 1.31 },
+            } }),
+            band(10, 12, { measuredRank: 12, samples: 137, declinedSamples: 146, acceptedDeaths: 4.18, declinedDeaths: 0.53, acceptedSignatures: 1.02, declinedSignatures: 0.03, bySecond: {
+                eliteOnly: { samples: 38, acceptedDeaths: 1.26, acceptedSignatures: 1 },
+                halfHp: { samples: 42, acceptedDeaths: 4.07, acceptedSignatures: 1 },
+                randomSkills: { samples: 57, acceptedDeaths: 6.19, acceptedSignatures: 1.05 },
+            } }),
         ],
         empty_crusade: [
-            band(7, 9, { measuredRank: 7, samples: 65, acceptedDeaths: 56.25, declinedDeaths: 2.67, acceptedSignatures: 1.06, declinedSignatures: 0.19 }),
-            band(10, 12, { measuredRank: 10, samples: 64, acceptedDeaths: 6.05, declinedDeaths: 0.4, acceptedSignatures: 1.02, declinedSignatures: 0.03 }),
+            band(7, 9, { measuredRank: 7, samples: 143, declinedSamples: 151, acceptedDeaths: 50.52, declinedDeaths: 2.89, acceptedSignatures: 1.1, declinedSignatures: 0.18, bySecond: {
+                eliteOnly: { samples: 39, acceptedDeaths: 16.51, acceptedSignatures: 1.03 },
+                halfHp: { samples: 50, acceptedDeaths: 53.48, acceptedSignatures: 1.1 },
+                randomSkills: { samples: 54, acceptedDeaths: 72.33, acceptedSignatures: 1.17 },
+            } }),
+            band(10, 12, { measuredRank: 10, samples: 132, declinedSamples: 132, acceptedDeaths: 5.83, declinedDeaths: 0.42, acceptedSignatures: 1.03, declinedSignatures: 0.02, bySecond: {
+                eliteOnly: { samples: 43, acceptedDeaths: 1.88, acceptedSignatures: 1 },
+                halfHp: { samples: 42, acceptedDeaths: 6.29, acceptedSignatures: 1.05 },
+                randomSkills: { samples: 50, acceptedDeaths: 8.84, acceptedSignatures: 1.04 },
+            } }),
         ],
         dry_dragon_road: [
-            band(7, 9, { measuredRank: 7, samples: 67, acceptedDeaths: 36.82, declinedDeaths: 2.1, acceptedSignatures: 1.15, declinedSignatures: 0.24 }),
-            band(10, 12, { measuredRank: 10, samples: 58, acceptedDeaths: 2.55, declinedDeaths: 0.45, acceptedSignatures: 1, declinedSignatures: 0 }),
+            band(7, 9, { measuredRank: 7, samples: 131, declinedSamples: 139, acceptedDeaths: 37.02, declinedDeaths: 2.29, acceptedSignatures: 1.13, declinedSignatures: 0.19, bySecond: {
+                eliteOnly: { samples: 35, acceptedDeaths: 12.2, acceptedSignatures: 1 },
+                halfHp: { samples: 46, acceptedDeaths: 34.91, acceptedSignatures: 1.17 },
+                randomSkills: { samples: 50, acceptedDeaths: 56.34, acceptedSignatures: 1.18 },
+            } }),
+            band(10, 12, { measuredRank: 10, samples: 143, declinedSamples: 143, acceptedDeaths: 2.92, declinedDeaths: 0.51, acceptedSignatures: 1, declinedSignatures: 0.03, bySecond: {
+                eliteOnly: { samples: 49, acceptedDeaths: 0.69, acceptedSignatures: 1 },
+                halfHp: { samples: 58, acceptedDeaths: 2.31, acceptedSignatures: 1 },
+                randomSkills: { samples: 51, acceptedDeaths: 5.76, acceptedSignatures: 1 },
+            } }),
         ],
         tangled_legends: [
-            band(7, 9, { measuredRank: 9, samples: 114, acceptedDeaths: 113.37, declinedDeaths: 2.81, acceptedSignatures: 1.32, declinedSignatures: 0.16 }),
-            band(10, 12, { measuredRank: 12, samples: 126, acceptedDeaths: 13.28, declinedDeaths: 0.63, acceptedSignatures: 1.05, declinedSignatures: 0.03 }),
+            band(7, 9, { measuredRank: 9, samples: 223, declinedSamples: 233, acceptedDeaths: 112.18, declinedDeaths: 2.65, acceptedSignatures: 1.29, declinedSignatures: 0.2, bySecond: {
+                blindMap: { samples: 42, acceptedDeaths: 30.36, acceptedSignatures: 1.21 },
+                noPotion: { samples: 49, acceptedDeaths: 64.43, acceptedSignatures: 1.16 },
+                noGold: { samples: 45, acceptedDeaths: 71.38, acceptedSignatures: 1.31 },
+                eliteOnly: { samples: 41, acceptedDeaths: 104.05, acceptedSignatures: 1.17 },
+                halfHp: { samples: 46, acceptedDeaths: 284.93, acceptedSignatures: 1.59 },
+            } }),
+            band(10, 12, { measuredRank: 10, samples: 247, declinedSamples: 247, acceptedDeaths: 11.89, declinedDeaths: 0.55, acceptedSignatures: 1.05, declinedSignatures: 0.03, bySecond: {
+                blindMap: { samples: 67, acceptedDeaths: 6.67, acceptedSignatures: 1.07 },
+                noPotion: { samples: 33, acceptedDeaths: 6.15, acceptedSignatures: 1 },
+                noGold: { samples: 51, acceptedDeaths: 8.71, acceptedSignatures: 1.02 },
+                eliteOnly: { samples: 55, acceptedDeaths: 11.65, acceptedSignatures: 1 },
+                halfHp: { samples: 51, acceptedDeaths: 25.9, acceptedSignatures: 1.12 },
+            } }),
         ],
         fading_dimension: [
-            band(7, 9, { measuredRank: 7, samples: 123, acceptedDeaths: 107.3, declinedDeaths: 2.99, acceptedSignatures: 1.19, declinedSignatures: 0.2 }),
-            band(10, 12, { measuredRank: 12, samples: 116, acceptedDeaths: 9.76, declinedDeaths: 0.44, acceptedSignatures: 1.03, declinedSignatures: 0.01 }),
+            band(7, 9, { measuredRank: 8, samples: 242, declinedSamples: 242, acceptedDeaths: 115.57, declinedDeaths: 2.79, acceptedSignatures: 1.21, declinedSignatures: 0.19, bySecond: {
+                blindMap: { samples: 44, acceptedDeaths: 24.7, acceptedSignatures: 1.2 },
+                noPotion: { samples: 51, acceptedDeaths: 38.18, acceptedSignatures: 1.14 },
+                noGold: { samples: 53, acceptedDeaths: 50.11, acceptedSignatures: 1.13 },
+                eliteOnly: { samples: 43, acceptedDeaths: 101.42, acceptedSignatures: 1 },
+                randomSkills: { samples: 65, acceptedDeaths: 300.54, acceptedSignatures: 1.48 },
+            } }),
+            band(10, 12, { measuredRank: 12, samples: 224, declinedSamples: 238, acceptedDeaths: 9.69, declinedDeaths: 0.52, acceptedSignatures: 1.03, declinedSignatures: 0.03, bySecond: {
+                blindMap: { samples: 55, acceptedDeaths: 3.82, acceptedSignatures: 1 },
+                noPotion: { samples: 42, acceptedDeaths: 3.26, acceptedSignatures: 1 },
+                noGold: { samples: 45, acceptedDeaths: 5.31, acceptedSignatures: 1.02 },
+                eliteOnly: { samples: 37, acceptedDeaths: 6.73, acceptedSignatures: 1 },
+                randomSkills: { samples: 45, acceptedDeaths: 29.69, acceptedSignatures: 1.11 },
+            } }),
         ],
         shadow_legion: [
-            band(7, 9, { measuredRank: 8, samples: 115, acceptedDeaths: 50.43, declinedDeaths: 2.49, acceptedSignatures: 1.04, declinedSignatures: 0.23 }),
-            band(10, 12, { measuredRank: 11, samples: 117, acceptedDeaths: 3.62, declinedDeaths: 0.55, acceptedSignatures: 1, declinedSignatures: 0.02 }),
+            band(7, 9, { measuredRank: 8, samples: 244, declinedSamples: 244, acceptedDeaths: 47.21, declinedDeaths: 2.6, acceptedSignatures: 1.05, declinedSignatures: 0.21, bySecond: {
+                blindMap: { samples: 48, acceptedDeaths: 5.77, acceptedSignatures: 1.02 },
+                noPotion: { samples: 50, acceptedDeaths: 11.8, acceptedSignatures: 1.02 },
+                noGold: { samples: 54, acceptedDeaths: 23.09, acceptedSignatures: 1.02 },
+                halfHp: { samples: 50, acceptedDeaths: 96.68, acceptedSignatures: 1.04 },
+                randomSkills: { samples: 45, acceptedDeaths: 104.71, acceptedSignatures: 1.16 },
+            } }),
+            band(10, 12, { measuredRank: 10, samples: 233, declinedSamples: 236, acceptedDeaths: 4.05, declinedDeaths: 0.54, acceptedSignatures: 1, declinedSignatures: 0.02, bySecond: {
+                blindMap: { samples: 59, acceptedDeaths: 1.02, acceptedSignatures: 1 },
+                noPotion: { samples: 38, acceptedDeaths: 0.66, acceptedSignatures: 1 },
+                noGold: { samples: 50, acceptedDeaths: 1.3, acceptedSignatures: 1 },
+                halfHp: { samples: 35, acceptedDeaths: 6.06, acceptedSignatures: 1 },
+                randomSkills: { samples: 51, acceptedDeaths: 11.39, acceptedSignatures: 1 },
+            } }),
         ],
     };
     const entry = names[base.id];
