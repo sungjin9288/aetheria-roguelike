@@ -8672,3 +8672,24 @@ Wave 122 무게표에서는 무거운 카드가 기본 카드로 10단계 뒤에
   | 뒤섞인 기술 | 64.71 ± 4.48 | 67.64 |
 
   새 값으로 바꾸면 일부 패의 기본 카드가 뒤바뀐다(길 잃은 여행 + 강적의 길 대 물약 없이 + 빈손). 잡음 수준의 차이로 고르지 않는 플레이어의 카드를 흔들지 않는다.
+
+### 132.5 바꾼 것 · 게이트
+
+- **바꾼 것:**
+  - 장부 · 판정: `utils/signatureDiscovery.ts` · `permanentProgress.ts` · `types/player.ts`
+  - 범위 · 화면 표: `journeyScope.ts` · `MSG.JOURNEY_ITEM_LABELS.signatureCollection`
+  - 전설 도감 탭(`LegendaryCodex`)
+  - 수집 진행(`getSignatureDiscoveryProgress`를 utils로 옮김)
+  - 임무 202 진행 · 문구
+  - 계승 카드 미리보기 값(첫 순환 셋 · 겹친 여섯 × 구간 둘)
+  - 계약 · 원장 · CLAUDE.md, 드라이버 · 요약기 주석(정책 불변, `DRIVER_VERSION` 2 그대로)
+- **게이트 (모두 통과):**
+  - type-check · lint 0
+  - 단위 6,147/6,147(458 파일, skip 0)
+  - 성장 진단 증빙은 소스 해시만 다시 썼고 리포트 본문은 그대로다
+  - build:guard
+  - 추적 증빙 15/15
+  - rules 19/19
+  - CI 환경 빌드
+  - e2e 15/15: `ascension-journey-design` · `expedition-debrief`(사망 화면 "남는 것"에 '전설 각인 수집') · `codex-legendary` · `achievement-progression-design`
+  - 나머지 e2e · perf는 CI로 판정한다.
