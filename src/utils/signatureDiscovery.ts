@@ -50,11 +50,14 @@ export const getSignatureLedger = (player: Pick<Player, 'stats' | 'meta' | 'clas
     return [...new Set([...readSignatureNames(player.meta?.cycleStart?.signatures), ...journeyItems])];
 };
 
-/** 사망 · 계승이 넘기는 장부 — 지금까지의 장부 + 이번 여정 도감의 각인(규칙 표 순서). */
-export const collectSignatureLedger = (player: Player): string[] => {
+/** 발견한 전설 각인 이름(규칙 표 순서) — 이번 여정 도감 ∪ 계정 장부. */
+export const getDiscoveredSignatureNames = (player: Player): string[] => {
     const known = new Set(getSignatureLedger(player));
     return SIGNATURE_NAMES.filter((name) => known.has(name) || isInCodex(name, player));
 };
+
+/** 사망 · 계승이 넘기는 장부 — 지금까지의 장부 + 이번 여정 도감의 각인, 곧 지금 발견한 각인 전부다. */
+export const collectSignatureLedger = getDiscoveredSignatureNames;
 
 /** 전설 각인을 발견했는가 — 이번 여정의 도감 또는 계정 장부(Wave 125). 획득처 공개(Wave 103) · 수집 · 업적이 같이 읽는다. */
 export const isSignatureDiscovered = (name: string, player: Player) => (
@@ -75,11 +78,6 @@ export const isEquipmentDiscovered = (name: string, player: Player) => (
 export const countCodexSignatures = (player: Player) => (
     SIGNATURE_NAMES.filter((name) => isInCodex(name, player)).length
 );
-
-export const getDiscoveredSignatureNames = (player: Player): string[] => {
-    const known = new Set(getSignatureLedger(player));
-    return SIGNATURE_NAMES.filter((name) => known.has(name) || isInCodex(name, player));
-};
 
 export const countDiscoveredSignatures = (player: Player) => getDiscoveredSignatureNames(player).length;
 
