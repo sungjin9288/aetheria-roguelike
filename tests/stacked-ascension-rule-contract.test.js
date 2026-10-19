@@ -248,14 +248,18 @@ test('겹친 규칙은 단계 구간마다 거절할 수 있는 카드의 받아
     }
 });
 
-test('Wave 116 · 121: 겹친 카드 미리보기는 지금 게임 · 저장소 드라이버 측정이고, 출처 줄은 2순환 카드 뽑기 · 판 수를 밝힌다', async () => {
+test('Wave 123: 겹친 카드 미리보기는 지금 단계의 구간(영구 능력치 ×2 앞 · 뒤) 값이고, 출처 줄은 잰 구간 · 판 수를 밝힌다', async () => {
     const { buildAscensionRulePreview } = await import('../src/utils/ascensionRuleView.js');
     const byId = Object.fromEntries(STACKED_ASCENSION_RULES.map((rule) => [rule.id, rule]));
-    const empty = buildAscensionRulePreview(byId.stacked_empty_crusade, 10, 'halfHp');
-    assert.equal(empty.outlook.accepted, '받아들이면: 사망 52.7회 · 새 각인 +1.2개 · 정복 보상');
-    assert.equal(empty.outlook.declined, '거절하면: 사망 2.2회 · 새 각인 +0.3개');
-    assert.equal(empty.outlook.source, '그 회차 평균 · 모의 플레이 39판 · 2순환 카드 뽑기에서 잰 값(주로 계승 9단계)');
-    const fading = buildAscensionRulePreview(byId.stacked_fading_dimension, 12, 'noGold');
-    assert.equal(fading.outlook.accepted, '받아들이면: 사망 12.1회 · 새 각인 +1.2개 · 정복 보상');
-    assert.ok(!fading.outlook.source.includes('고정 순서'), '겹친 규칙은 고정 순서에서 재지 않는다');
+    const early = buildAscensionRulePreview(byId.stacked_empty_crusade, 8, 'halfHp');
+    assert.equal(early.outlook.accepted, '받아들이면: 사망 37.7회 · 새 각인 +1.2개 · 정복 보상');
+    assert.equal(early.outlook.declined, '거절하면: 사망 2.4회 · 새 각인 +0.3개');
+    assert.equal(early.outlook.source, '그 회차 평균 · 모의 플레이 77판 · 2순환 카드 뽑기, 계승 7 ~ 9단계에서 잰 값');
+    const late = buildAscensionRulePreview(byId.stacked_empty_crusade, 10, 'halfHp');
+    assert.equal(late.outlook.accepted, '받아들이면: 사망 5.3회 · 새 각인 +1.2개 · 정복 보상', '5.25는 5.3으로 반올림한다');
+    assert.equal(late.outlook.source, '그 회차 평균 · 모의 플레이 61판 · 2순환 카드 뽑기, 계승 10 ~ 12단계에서 잰 값');
+    assert.equal(buildAscensionRulePreview(byId.stacked_tangled_legends, 9, 'noGold').outlook.accepted, '받아들이면: 사망 124.4회 · 새 각인 +1.0개 · 정복 보상');
+    // 3순환 이후는 마지막 구간(영구 능력치 ×2 뒤) 값이고, 출처 줄이 잰 구간을 밝힌다(숫자를 지어내지 않는다).
+    assert.deepEqual(buildAscensionRulePreview(byId.stacked_fading_dimension, 18, 'noGold').outlook, buildAscensionRulePreview(byId.stacked_fading_dimension, 12, 'noGold').outlook);
+    assert.ok(!late.outlook.source.includes('고정 순서'), '겹친 규칙은 고정 순서에서 재지 않는다');
 });

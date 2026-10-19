@@ -187,10 +187,35 @@ export const STACKED_ASCENSION_RULES: readonly AscensionRuleDef[] = Object.freez
     // 2026-10 Wave 121: 같은 방식을 저장소 드라이버 v2 · Wave 118 게임으로 다시 쟀다(원장 §128). 잰 단계는 받아들임 쪽에서 가장 많이
     // 놓인 단계다(같으면 두 쪽 합). 계승 10단계(에테르 초월, 영구 능력치 ×2) 앞뒤로 사망이 5 ~ 9배 달라 이 값은 두 구간의 평균이다.
     // 2026-10 Wave 123 (소유자 결정 "구간 분리", 원장 §130): 단계 구간마다 따로 잰다 — 계승 7 ~ 9단계와 10 ~ 12단계(영구 능력치 ×2,
-    // `getPrestigeUnlocks().statMult`). Wave 122 무게표의 기본 카드 위에서 늘 받아들임 · 겹친 카드만 거절 240판 × 13회차로 쟀다.
+    // `getPrestigeUnlocks().statMult`). 카드를 무작위로 고르는 드라이버(`--rule-pick random`)의 늘 받아들임 · 겹친 카드만 거절
+    // 240판 × 13회차로 쟀다 — 기본 카드로 재면 무거운 카드가 10단계 뒤로 밀려(Wave 122) 7 ~ 9단계 표본이 4 ~ 6판뿐이었다.
+    // 짝이 아니고(첫 거절 뒤로 회차가 갈라진다) 판 수는 두 쪽 중 적은 쪽, 잰 단계는 받아들임 쪽에서 가장 많이 놓인 단계다.
     const band = (from: number, to: number, values: Omit<AscensionRuleOutlook, 'measuredRanks'>): AscensionRuleOutlook => ({ ...values, measuredRanks: [from, to] });
     const outlook: Record<string, readonly AscensionRuleOutlook[]> = {
-        /*__BANDS__*/
+        lost_pilgrimage: [
+            band(7, 9, { measuredRank: 8, samples: 62, acceptedDeaths: 19.06, declinedDeaths: 2.84, acceptedSignatures: 1.19, declinedSignatures: 0.29 }),
+            band(10, 12, { measuredRank: 11, samples: 77, acceptedDeaths: 3.88, declinedDeaths: 0.44, acceptedSignatures: 1.26, declinedSignatures: 0.1 }),
+        ],
+        empty_crusade: [
+            band(7, 9, { measuredRank: 7, samples: 77, acceptedDeaths: 37.71, declinedDeaths: 2.36, acceptedSignatures: 1.16, declinedSignatures: 0.28 }),
+            band(10, 12, { measuredRank: 12, samples: 61, acceptedDeaths: 5.25, declinedDeaths: 0.54, acceptedSignatures: 1.19, declinedSignatures: 0.13 }),
+        ],
+        dry_dragon_road: [
+            band(7, 9, { measuredRank: 7, samples: 75, acceptedDeaths: 35.75, declinedDeaths: 2.56, acceptedSignatures: 1.18, declinedSignatures: 0.28 }),
+            band(10, 12, { measuredRank: 10, samples: 60, acceptedDeaths: 2.98, declinedDeaths: 0.46, acceptedSignatures: 1.18, declinedSignatures: 0.2 }),
+        ],
+        tangled_legends: [
+            band(7, 9, { measuredRank: 9, samples: 118, acceptedDeaths: 124.44, declinedDeaths: 2.97, acceptedSignatures: 1.02, declinedSignatures: 0.3 }),
+            band(10, 12, { measuredRank: 10, samples: 118, acceptedDeaths: 11.34, declinedDeaths: 0.48, acceptedSignatures: 1.2, declinedSignatures: 0.22 }),
+        ],
+        fading_dimension: [
+            band(7, 9, { measuredRank: 9, samples: 115, acceptedDeaths: 108.83, declinedDeaths: 2.53, acceptedSignatures: 1.14, declinedSignatures: 0.39 }),
+            band(10, 12, { measuredRank: 12, samples: 111, acceptedDeaths: 8.91, declinedDeaths: 0.66, acceptedSignatures: 1.25, declinedSignatures: 0.17 }),
+        ],
+        shadow_legion: [
+            band(7, 9, { measuredRank: 7, samples: 121, acceptedDeaths: 43.32, declinedDeaths: 2.29, acceptedSignatures: 1.11, declinedSignatures: 0.29 }),
+            band(10, 12, { measuredRank: 12, samples: 114, acceptedDeaths: 4.34, declinedDeaths: 0.56, acceptedSignatures: 1.21, declinedSignatures: 0.14 }),
+        ],
     };
     const entry = names[base.id];
     const stacked: AscensionRuleDef = {
