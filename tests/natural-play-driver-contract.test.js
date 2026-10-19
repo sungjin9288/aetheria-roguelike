@@ -65,3 +65,24 @@ test('고정 순서 카드 모드는 그 규칙이 패에 있을 때만 고르�
     }
     assert.ok(inHand > 0 && outOfHand > 0, `패에 있음 ${inHand} · 없음 ${outOfHand}`);
 });
+
+test('무작위 카드 모드는 패 안의 카드를 시드 · 단계로 결정론적으로 고르고, 패의 카드가 고르게 나온다 (Wave 122)', () => {
+    // 기본 카드 무게표를 잴 때 무게로 고른 카드만 담기는 선택 편향을 없앤다(원장 §129). 게임 난수를 쓰지 않는다.
+    const counts = new Map();
+    const realRandom = Math.random;
+    Math.random = () => { throw new Error('게임 난수를 쓰면 안 된다'); };
+    try {
+        for (let k = 0; k < 300; k += 1) {
+            const player = { meta: { prestigeRank: 3, endgame: { lastEndgameReceiptKey: 'probe-fixed' } }, stats: {} };
+            const offer = getAscensionRuleOffer(player, 4).map((rule) => rule.id);
+            const picked = pickAscensionRuleId(player, 4, 'random', k);
+            assert.ok(offer.includes(picked), picked);
+            assert.equal(pickAscensionRuleId(player, 4, 'random', k), picked, '같은 시드 · 단계는 같은 카드');
+            counts.set(picked, (counts.get(picked) || 0) + 1);
+        }
+    } finally {
+        Math.random = realRandom;
+    }
+    assert.equal(counts.size, 3, [...counts.keys()].join(','));
+    for (const n of counts.values()) assert.ok(n > 60, `고르게 나온다 ${[...counts.values()]}`);
+});
