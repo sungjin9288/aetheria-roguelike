@@ -137,7 +137,7 @@ src/
     └── commandParser.ts       # 명령어 파싱
 tests/                # 단위 테스트 (Node.js built-in test, 458 파일 / 6,148 케이스, skip 0, 로컬 full gate 통과·현재 PR CI는 원격 기록 참조 — 아트 재현성은 디코딩 픽셀 기준,
                       #   UI 계약은 tests/helpers/render.ts 렌더 단언 — 소스 정규식 가드는 아트/네이티브/Toss 증빙 계약에만 남김)
-                      #   + e2e/ (Playwright 53 스펙 / 160 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
+                      #   + e2e/ (Playwright 53 스펙 / 166 테스트, iPhone 12 에뮬레이션 — 엔진은 chromium 고정, Linux WebKit hang 회피) + device-qa/
 scripts/              # 빌드 가드, 스모크 테스트, 모바일 빌드 스크립트
                       #   + naturalPlay/driver.mjs · natural-play*.mjs (자연 플레이 측정 드라이버 — Wave 117, 원장의 사망 · 시간 · 루프 수치의 출처)
 functions/api/        # Cloudflare Pages Functions (ai-proxy.js)

@@ -12,6 +12,8 @@ import { startE2ERun } from './testHelpers';
 //   ⑦ 375px에서 기술 탭 제목이 "나이트 전투 …", 보조 장비 칸이 "양손 무기가 …", 가방 카드 설명 줄이 "한손 무기 · 공…"으로 잘렸다
 // 2026-10 Wave 68: ⑧ 375 · 390px 가방 카드에서 버튼 열이 설명 칸을 115px까지 좁혀 무기 설명이 네 줄로 꺾였다
 // 2026-10 Wave 69(소유자 결정 B): ⑨ 코드 글꼴(`font-fira`)의 고정폭 공백 0.6em이 한국어 낱말 사이를 벌렸다 — 숫자 · 영문만 Fira Code
+// 2026-10 통합 수용 3차(원장 §135): ⑩ 375px 사망 화면 회고 줄이 말줄임으로 "최근 승률: 4…"를 숨겼다
+//   ⑪ 겹친 회차 카드의 카드별 미리보기(Wave 126 — 출처 줄이 가장 길다)는 세 폭 어디서도 그려 본 적이 없었다
 const VIEWPORTS = [
     { width: 375, height: 667 },
     { width: 390, height: 844 },
@@ -274,6 +276,56 @@ for (const viewport of VIEWPORTS) {
             await expect(logToggle).toBeVisible({ timeout: 8_000 });
             const toggleBounds = await logToggle.boundingBox();
             expect(toggleBounds!.height).toBeGreaterThanOrEqual(TOUCH_MIN);
+        } finally {
+            await context.close();
+        }
+    });
+
+    test(`${viewport.width}px 사망 화면의 회고 줄 · 남는 것 · 새로 시작하는 것이 잘리지 않는다`, async ({ browser, baseURL }) => {
+        const { context, page } = await newMobilePage(browser, baseURL, viewport);
+        try {
+            await startE2ERun(page);
+            await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.());
+            // ⑩ 성장 방향 · 난이도 · 최근 승률은 줄을 넘긴다 — 말줄임으로 마지막 값을 숨기지 않는다.
+            const notes = page.getByTestId('run-summary-notes');
+            await expect(notes).toBeVisible({ timeout: 8_000 });
+            await expect(notes).toContainText('최근 승률');
+            expect(await isClipped(notes)).toBe(false);
+            expect(await countMidWordBreaks(notes)).toBe(0);
+            for (const id of ['run-summary-kept', 'run-summary-reset']) {
+                const line = page.getByTestId(id);
+                expect(await isClipped(line)).toBe(false);
+                expect(await countMidWordBreaks(line)).toBe(0);
+            }
+            expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+        } finally {
+            await context.close();
+        }
+    });
+
+    test(`${viewport.width}px 겹친 회차 카드의 카드별 미리보기가 폭과 읽기 크기를 지킨다`, async ({ browser, baseURL }) => {
+        const { context, page } = await newMobilePage(browser, baseURL, viewport);
+        try {
+            await startE2ERun(page);
+            // 기본 여섯을 모두 정복한 6 → 7단계 계승: 이 영수증의 패는 거절할 수 있는 겹친 카드 셋이다(원장 §135).
+            await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedAscensionJourneyScenario?.(6, 'e2e-stacked', false, true));
+            await expect(page.getByTestId('ascension-screen')).toBeVisible({ timeout: 8_000 });
+            const offer = page.getByTestId('ascension-rule-offer');
+            await offer.scrollIntoViewIfNeeded();
+            const ids = await offer.locator('[data-testid^="ascension-rule-card-stacked_"]')
+                .evaluateAll((nodes) => nodes.map((node) => node.getAttribute('data-testid')!));
+            expect(ids).toHaveLength(3);
+            const outlook = page.getByTestId('ascension-ascension-rule-outlook');
+            for (const id of ids) {
+                await page.getByTestId(id).click();
+                await expect(outlook).toBeVisible();
+                await outlook.scrollIntoViewIfNeeded();
+                await expect(outlook).toContainText('이 두 비틀기 카드 받아들임');
+                expect(await findUndersizedText(outlook)).toEqual([]);
+                expect(await countMidWordBreaks(outlook)).toBe(0);
+                expect(await outlook.evaluate((root) => root.scrollWidth - root.clientWidth)).toBeLessThanOrEqual(1);
+            }
+            expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
         } finally {
             await context.close();
         }
