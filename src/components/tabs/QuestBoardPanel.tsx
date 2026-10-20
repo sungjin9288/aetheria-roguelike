@@ -220,6 +220,11 @@ const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept, objecti
             {getQuestObjectiveText(entry.quest)}
           </div>
         )}
+        {!entry.isLockedPreview && entry.storyHook && (
+          <div data-testid="quest-story-hook" className="aether-type-body mt-1 font-readable text-[#f6e7c8]/88">
+            {entry.storyHook}
+          </div>
+        )}
         <div className="aether-type-meta mt-1 grid grid-cols-2 gap-1 font-readable">
           <span className="break-words text-[#b9f1ec]">목적지 · {entry.brief?.route || '현재 권역'}</span>
           <span className="break-words text-[#f6e7c8]">위험 · {entry.isLockedPreview ? entry.quest.lockLabel : (entry.brief?.riskLabel || '확인')}</span>

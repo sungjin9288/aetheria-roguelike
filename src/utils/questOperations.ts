@@ -379,6 +379,8 @@ interface ScoredQuestEntry extends QuestBoardDisplayFields {
     quest: Quest;
     _sortKey: number;
     reason: string;
+    /** Wave 128: 아직 열리지 않은 곁가지 이야기를 여는 임무면 그 이야기의 소문(데이터 `questStart.hook`) — 추천 줄이 바로 보인다. */
+    storyHook: string | null;
 }
 
 const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | null | undefined, activeEntries: EnrichedQuestEntry[], maps: Record<string, GameMap>): ScoredQuestEntry => {
@@ -422,6 +424,7 @@ const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | n
         targetMaps,
         meta: OPERATION_META[lane] || OPERATION_META.hunt,
         reason: getQuestReason(quest, lane, resonance, targetMaps, sideStory?.hook ?? null),
+        storyHook: sideStory?.hook ?? null,
         planSteps: getOperationPlanSteps(quest, player, lane, targetMaps),
         brief: getOperationBrief(quest, player, lane, resonance, targetMaps, maps),
     };

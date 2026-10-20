@@ -23,6 +23,9 @@ import { buildChainJournal } from '../src/utils/chainJournal.ts';
 import { getQuestBoardRecommendations } from '../src/utils/questOperations.ts';
 import { getMapRouteGate } from '../src/utils/mapRouteGate.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
+import { createElement } from 'react';
+import QuestBoardPanel from '../src/components/tabs/QuestBoardPanel.tsx';
+import { renderStatic } from './helpers/render.ts';
 
 const TOWN = '시작의 마을';
 const questById = (id) => QUESTS.find((quest) => quest.id === id);
@@ -184,6 +187,27 @@ test('[게시판] 이야기를 여는 임무는 이야기 임무 칸에 소문�
         assert.notEqual(entry?.lane, 'story', `${id}는 더 이상 이야기를 열지 않는다`);
         assert.equal(getQuestOpenedChain(id, opened.eventChainProgress), null);
     }
+});
+
+test('[게시판 화면] 추천 줄이 이야기를 여는 임무의 소문을 바로 그린다 — 본편 장 줄에는 소문이 없다', () => {
+    const base = {
+        ...structuredClone(INITIAL_STATE.player),
+        name: '게시판 화면', job: '모험가', loc: TOWN, level: 6,
+        stats: { ...structuredClone(INITIAL_STATE.player.stats), claimedQuestIds: [80] },
+    };
+    const render = (player) => renderStatic(createElement(QuestBoardPanel, { player, actions: {} }));
+    const accepted = { ...base, quests: [{ id: 81, progress: 0 }] };
+    const story = getQuestBoardRecommendations(accepted).featured[0];
+    const hook = getQuestOpenedChain(story.quest.id, accepted.eventChainProgress).hook;
+    const html = render(accepted);
+    assert.ok(html.includes('data-testid="quest-story-hook"'), '소문 줄');
+    assert.ok(html.includes(hook), hook);
+    // 받을 본편 장이 이야기 칸을 쓰면 그 줄에는 소문이 없다 — 소문은 곁가지 이야기의 것이다.
+    const withMain = getQuestBoardRecommendations(base);
+    assert.equal(withMain.featured[0].storyHook, null);
+    const mainHtml = render(base);
+    const featuredHooks = withMain.featured.filter((entry) => entry.storyHook).length;
+    assert.equal(mainHtml.split('data-testid="quest-story-hook"').length - 1, featuredHooks);
 });
 
 test('[불러오기] 이 규칙 전에 여는 임무를 받고 0단계 이벤트를 지나친 세이브는 불러올 때 이야기가 열린다 — 실패 · 진행은 그대로다', () => {
