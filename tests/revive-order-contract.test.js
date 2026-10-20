@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { MSG } from '../src/data/messages.ts';
+import { withJosa } from '../src/data/koreanParticles.ts';
 import { RELICS, RELIC_SYNERGIES } from '../src/data/relics.ts';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { GS } from '../src/reducers/gameStates.ts';
@@ -239,5 +240,6 @@ test('Wave 63: 불사조 부활의 공격 강화는 더 센 강화를 덮지 않
     assert.equal(applied.updatedPlayer.tempBuff.atk, atkBuff);
     assert.equal(applied.updatedPlayer.tempBuff.turn, duration);
     assert.equal(applied.updatedPlayer.tempBuff.name, 'phoenix_revive');
-    assert.ok(!applied.logs.some((log) => log.text.includes(`${PHOENIX.name}은(는) 적용되지 않았습니다`)), '붙을 때는 밀린 안내가 없다');
+    // Wave 129: 밀린 안내의 조사는 이름의 받침에 맞춘다 — 같은 문구 생성기로 찾는다(괄호 병기 문자열로 찾으면 공허참이다).
+    assert.ok(!applied.logs.some((log) => log.text.includes(`${withJosa(PHOENIX.name, '은/는')} 적용되지 않았습니다`)), '붙을 때는 밀린 안내가 없다');
 });

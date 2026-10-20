@@ -1,4 +1,5 @@
 import { BALANCE } from '../data/constants.js';
+import { MSG } from '../data/messages.js';
 import { getInventoryCapacity } from './inventoryCapacity';
 import { DB } from '../data/db.js';
 import type { ExpeditionSummary, Player } from '../types/player.js';
@@ -86,7 +87,7 @@ export const getExpeditionReturnAction = (
             return {
                 kind: 'rest',
                 label: '휴식하고 회복',
-                detail: `골드 ${restCost.toLocaleString('ko-KR')}로 생명과 기력을 모두 회복합니다.`,
+                detail: MSG.RETURN_REST_GOLD(restCost.toLocaleString('ko-KR')),
             };
         }
 
@@ -95,7 +96,7 @@ export const getExpeditionReturnAction = (
             return {
                 kind: 'open_inventory',
                 label: '회복 아이템 확인',
-                detail: `${recoveryItem.name}을 사용해 다음 출발을 준비하세요.`,
+                detail: MSG.RETURN_USE_RECOVERY_ITEM(recoveryItem.name),
             };
         }
 
@@ -107,7 +108,7 @@ export const getExpeditionReturnAction = (
             return {
                 kind: 'open_shop',
                 label: '회복 물품 마련',
-                detail: `${affordableSupply.name}을 마련해 다음 원정의 위험을 낮추세요.`,
+                detail: MSG.RETURN_BUY_SUPPLY(affordableSupply.name),
             };
         }
     }

@@ -316,7 +316,7 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
         : selectedIsLocked
             ? `레벨 ${selectedRequiredLevel} 필요`
             : selectedIsDirectExit
-                ? `${blindMap ? '이 경로' : selectedEntry?.name}(으)로 이동`
+                ? (blindMap ? MSG.MAP_MOVE_TO_BLIND : MSG.MAP_MOVE_TO(selectedEntry?.name ?? ''))
                 : '연결 경로에서 선택';
 
     return (

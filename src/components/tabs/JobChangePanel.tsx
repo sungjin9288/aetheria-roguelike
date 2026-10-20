@@ -227,7 +227,7 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
                     {selectedIsLocked ? (
                       <><LockKeyhole size={15} />레벨 {requirement}에 전직 가능</>
                     ) : (
-                      <>{selectedName}로 전직 <ArrowRight size={15} /></>
+                      <>{MSG.JOB_CHANGE_CONFIRM(selectedName)} <ArrowRight size={15} /></>
                     )}
                   </button>
                 </Motion.section>

@@ -448,7 +448,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                 ) : confirmAbandonQuestId === entry.id ? (
                   <div data-testid="quest-board-abandon-warning" className="border-t border-rose-300/18 pt-3">
                     <div className="font-readable text-[12px] leading-[1.45] text-rose-100/88">
-                      지금까지의 진행도 {getQuestProgressText(entry.quest, entry.progress)}이 사라집니다.
+                      {MSG.QUEST_ABANDON_PROGRESS_LOSS(getQuestProgressText(entry.quest, entry.progress))}
                       {entry.isBounty && ` ${MSG.BOUNTY_ABANDON_WARNING}`}
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-2">

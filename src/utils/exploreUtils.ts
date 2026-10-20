@@ -27,6 +27,7 @@ export type SpawnedMonster = MonsterBase & {
  */
 import { DB } from '../data/db.js';
 import { BALANCE, CONSTANTS } from '../data/constants.js';
+import { MSG } from '../data/messages.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getPrestigeEnemyLevelBonus } from '../systems/metaBonusRamp.js';
 // Track J1: FIRST_VISIT_REWARDS 테이블은 data/firstVisitRewards.ts로 분리됨.
@@ -295,7 +296,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
                     guardChance: Math.max(0, (mStats.pattern?.guardChance || 0.12) - 0.05),
                     heavyChance: Math.min(0.6, (mStats.pattern?.heavyChance || 0.15) + phaseHeavyBonus),
                 },
-                log: `${baseName}이(가) 광폭화합니다! 공격이 거세집니다!`,
+                log: MSG.ELITE_ENRAGE_LOG(baseName),
             };
         }
 

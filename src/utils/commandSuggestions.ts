@@ -51,7 +51,7 @@ export const getAvailableCommands = (gameState: GameMode, player: Player | null 
     // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 출구 이름(지도 정보)을 자동완성에 띄우지 않는다.
     const exits = isBlindMap(player) ? [] : (DB.MAPS[player?.loc as string]?.exits || []);
     exits.forEach((exitName) => {
-        base.push({ cmd: exitName, desc: `→ ${exitName}으로 이동` });
+        base.push({ cmd: exitName, desc: MSG.COMMAND_SUGGEST_MOVE(exitName) });
     });
 
     return base;
