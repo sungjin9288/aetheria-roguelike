@@ -646,7 +646,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                         <div className={`font-readable text-xs font-bold ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-slate-200'}`}>
                                             {getRelicDisplayName(relic.name)}
                                             {relic.borrowed && (
-                                                <span data-testid="system-relic-borrowed" className="ml-1.5 font-normal text-[10px] text-fuchsia-300/80">
+                                                <span data-testid="system-relic-borrowed" className="ml-1.5 font-normal text-[11px] text-fuchsia-300/80">
                                                     {MSG.CHAOS_HEART_BORROWED_TAG}
                                                 </span>
                                             )}

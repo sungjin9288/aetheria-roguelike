@@ -128,7 +128,7 @@ const ShopEquipmentDecisionStrip = ({ player, item, scope }: ShopEquipmentDecisi
     return (
         <div
             data-testid={`shop-equipment-decision-${scope}-${item.id || item.name}`}
-            className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[9px] font-readable"
+            className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-readable"
         >
             <span className={`rounded border px-1.5 py-0.5 font-bold ${decision.tone === 'positive' ? 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100' : decision.tone === 'negative' ? 'border-amber-300/24 bg-amber-300/10 text-amber-100' : decision.tone === 'blocked' ? 'border-rose-300/24 bg-rose-400/10 text-rose-100' : 'border-white/8 bg-white/[0.03] text-slate-300'}`}>
                 {decision.recommendation}
@@ -290,7 +290,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                 >
                     <div className="min-w-0">
                         <div className="text-[11px] font-readable font-bold text-white/88">구매 판단</div>
-                        <div className="mt-0.5 text-[10px] font-readable text-slate-400/78">
+                        <div className="mt-0.5 text-[11px] font-readable text-slate-400/78">
                             {showDetails ? '전체 효과와 비교값 표시' : '추천·대표 변화·세트 기여만 표시'}
                         </div>
                     </div>
@@ -299,7 +299,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                         data-testid="shop-equipment-detail-toggle"
                         aria-expanded={showDetails}
                         onClick={() => setDetailOverride(!showDetails)}
-                        className="min-h-11 shrink-0 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[10px] font-readable font-bold text-[#f6e7c8]"
+                        className="min-h-11 shrink-0 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[11px] font-readable font-bold text-[#f6e7c8]"
                     >
                         {showDetails ? '간단히 보기' : '상세 보기'}
                     </button>
@@ -332,7 +332,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             <div className="flex flex-wrap items-center gap-1.5">
                                                 <span className="font-readable text-sm font-semibold text-white">{item.name}</span>
                                                 {rare && (
-                                                    <span className="shrink-0 rounded-full border border-amber-300/40 bg-amber-300/12 px-1.5 py-0.5 text-[9px] font-readable font-bold text-amber-100">
+                                                    <span className="shrink-0 rounded-full border border-amber-300/40 bg-amber-300/12 px-1.5 py-0.5 text-[11px] font-readable font-bold text-amber-100">
                                                         {MSG.MERCHANT_RARE_BADGE}
                                                     </span>
                                                 )}
@@ -345,7 +345,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                         data-testid="merchant-buy"
                                         onClick={() => { if (canBuy) actions?.market('buy', item, 'merchant'); }}
                                         disabled={!canBuy}
-                                        className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-3 py-1 text-[10px] font-bold text-amber-100"
+                                        className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-3 py-1 text-[11px] font-bold text-amber-100"
                                     >
                                         {canBuy ? MSG.MERCHANT_BUY_ACTION : (blockReason || MSG.MERCHANT_BUY_BLOCKED)}
                                     </button>
@@ -371,8 +371,8 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             <div className="min-w-0">
                                                 <div className="truncate font-readable text-xs font-semibold text-white">{item.name}</div>
                                                 <div className="mt-0.5 flex items-center gap-1.5">
-                                                    <span className="text-[10px] font-readable text-amber-300 font-bold">{formatGold(item.price)}</span>
-                                                    <span className="text-[9px] font-readable text-slate-500 line-through">{formatGold(item.originalPrice)}</span>
+                                                    <span className="text-[11px] font-readable text-amber-300 font-bold">{formatGold(item.price)}</span>
+                                                    <span className="text-[11px] font-readable text-slate-500 line-through">{formatGold(item.originalPrice)}</span>
                                                 </div>
                                                 <ShopEquipmentDecisionStrip player={player} item={item} scope="daily" />
                                                 {/* slice 20: 본문 reason 행 제거 — 우측 버튼이 동일한
@@ -383,7 +383,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             onClick={() => actions?.market('buy', item, 'daily')}
                                             disabled={!canBuy}
                                             title={!canBuy && reason ? reason : '구매'}
-                                            className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-2.5 py-1 text-[10px] font-bold text-amber-100"
+                                            className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-2.5 py-1 text-[11px] font-bold text-amber-100"
                                         >
                                             {canBuy ? '구매' : reason}
                                         </button>
@@ -400,7 +400,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                         <div className="truncate font-readable text-sm font-semibold text-white">{weeklySpecial.name}</div>
                                         <div className="mt-0.5 flex items-center gap-1.5">
                                             <span className="text-[11px] font-readable text-purple-300 font-bold">{formatGold(weeklySpecial.price)}</span>
-                                            <span className="text-[9px] font-readable text-slate-500 line-through">{formatGold(weeklySpecial.originalPrice)}</span>
+                                            <span className="text-[11px] font-readable text-slate-500 line-through">{formatGold(weeklySpecial.originalPrice)}</span>
                                         </div>
                                         <ShopEquipmentDecisionStrip player={player} item={weeklySpecial} scope="weekly" />
                                     </div>
@@ -451,14 +451,14 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                 <div className="flex flex-wrap items-center gap-1.5">
                                                     <div className="truncate font-readable text-[14px] font-semibold leading-tight text-slate-100">{item.name}</div>
                                                     {typeTag && (
-                                                        <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[9px] font-readable text-slate-300/85">
+                                                        <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[11px] font-readable text-slate-300/85">
                                                             {typeTag}
                                                         </span>
                                                     )}
                                                     {showDetails && Array.isArray(item.jobs) && item.jobs.includes(player.job ?? '') && isEquipmentItem(item) && (
                                                         <span
                                                             title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
-                                                            className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-readable font-bold"
+                                                            className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-readable font-bold"
                                                             style={{
                                                                 color: '#d5b180',
                                                                 border: '1px solid rgba(213,177,128,0.42)',
@@ -475,7 +475,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                 <ShopEquipmentDecisionStrip player={player} item={item} scope="list" />
                                                 {showDetails && comparison && (
                                                     <div className="mt-1.5">
-                                                        <div className={`aether-shop-delta inline-flex max-w-full items-center rounded-[0.65rem] px-2 py-1 font-readable text-[10px] leading-[1.2] ${getToneClass(comparison.tone)}`}>
+                                                        <div className={`aether-shop-delta inline-flex max-w-full items-center rounded-[0.65rem] px-2 py-1 font-readable text-[11px] leading-[1.2] ${getToneClass(comparison.tone)}`}>
                                                             <span className="break-words">{comparisonText}</span>
                                                         </div>
                                                     </div>
@@ -485,7 +485,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                         <div className="flex min-w-0 shrink-0 flex-col items-stretch gap-1">
                                             <div data-testid="shop-buy-price" className="text-center font-readable text-[11px] font-bold text-[#f6e7c8]">{formatGold(price)}</div>
                                             {!canBuy && blockReason && (
-                                                <div className="text-center font-readable text-[9px] leading-[1.15] text-rose-200/88">{blockReason}</div>
+                                                <div className="text-center font-readable text-[11px] leading-[1.15] text-rose-200/88">{blockReason}</div>
                                             )}
                                             <button
                                                 data-testid="shop-buy-inline"
@@ -493,7 +493,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                     if (canBuy) actions?.market('buy', item, 'stock');
                                                 }}
                                                 disabled={!canBuy}
-                                                className="aether-disabled-action aether-cta-gold min-h-[44px] rounded-[0.75rem] px-2 py-1 text-[10px] font-bold text-[#f6e7c8]"
+                                                className="aether-disabled-action aether-cta-gold min-h-[44px] rounded-[0.75rem] px-2 py-1 text-[11px] font-bold text-[#f6e7c8]"
                                             >
                                                 {canBuy ? '구매' : '불가'}
                                             </button>
@@ -535,13 +535,13 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                             <ItemIcon item={item} size={38} showBorder className="mt-0.5 opacity-95" />
                                             <div className="min-w-0">
                                                 <div className="truncate font-readable text-base font-semibold text-red-200">{item.name}</div>
-                                                <div className="mt-1 truncate font-readable text-[11px] text-slate-300/78">{summary}</div>
+                                                <div data-testid="shop-sell-summary" className="mt-1 font-readable text-[11px] leading-snug text-slate-300/78">{summary}</div>
                                             </div>
                                         </div>
                                         <span className="shrink-0 text-[#f6e7c8] font-readable font-bold text-sm">+{formatGold(sellPrice)}</span>
                                     </div>
 
-                                    <div className="mt-2 flex flex-wrap gap-1.5 text-[10px] font-readable">
+                                    <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-readable">
                                         <span className="px-2 py-1 rounded border border-slate-600/70 bg-slate-900/80 text-slate-300">등급 {item.tier || 1}</span>
                                         <span className="px-2 py-1 rounded border border-red-500/20 bg-red-950/20 text-red-300">
                                             판매가 {formatGold(sellPrice)}
@@ -549,14 +549,14 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                     </div>
 
                                     {comparison && (
-                                        <div className={`aether-shop-delta mt-2 rounded-[0.75rem] px-2.5 py-2 font-readable text-[10px] ${getToneClass(comparison.tone)}`}>
+                                        <div className={`aether-shop-delta mt-2 rounded-[0.75rem] px-2.5 py-2 font-readable text-[11px] ${getToneClass(comparison.tone)}`}>
                                             {comparisonText}
                                         </div>
                                     )}
 
                                     <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-2.5">
                                         <div
-                                            className="font-readable text-[10px] text-slate-300/74"
+                                            className="font-readable text-[11px] text-slate-300/74"
                                             data-testid={signatureSaleNote ? `shop-sell-signature-note-${item.id}` : undefined}
                                         >
                                             {isSignatureLocked

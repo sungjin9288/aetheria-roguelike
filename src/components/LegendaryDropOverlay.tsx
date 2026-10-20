@@ -108,7 +108,7 @@ const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) =>
                             <Sparkles size={24} style={{ color: glow.particle, filter: `drop-shadow(0 0 10px ${glow.ring})` }} />
                         </Motion.div>
 
-                        <div className="text-[10px] font-fira uppercase tracking-[0.3em]" style={{ color: glow.particle }}>
+                        <div className="text-[11px] font-fira uppercase tracking-[0.3em]" style={{ color: glow.particle }}>
                             Legendary
                         </div>
 

@@ -246,8 +246,8 @@ const TerminalView = ({
                                 <Bot size={12} className="shrink-0" />
                             </div>
                             <div>
-                                <div className="mb-0.5 text-[10px] font-readable text-[#dff7f5]/62">이야기 흐름</div>
-                                <p className="line-clamp-2 text-[10px] font-fira text-slate-100/82 italic leading-relaxed">{latestStory?.text}</p>
+                                <div className="mb-0.5 text-[11px] font-readable text-[#dff7f5]/62">이야기 흐름</div>
+                                <p className="line-clamp-2 text-[11px] font-fira text-slate-100/82 italic leading-relaxed">{latestStory?.text}</p>
                             </div>
                         </div>
                     </div>

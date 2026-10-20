@@ -1667,10 +1667,21 @@ import { readFile, readdir } from 'node:fs/promises';
           `dead challenge modifiers (no handler):\n  ${dead.join('\n  ')}`);
   });
 
-  test('cycle 176: StatusBar에 blindMap 분기 명시', async () => {
-      const sbSrc = await readFile(path.join(ROOT, 'src/components/StatusBar.tsx'), 'utf8');
-      assert.match(sbSrc, /'blindMap'/, 'StatusBar에 blindMap 분기 명시');
-      assert.match(sbSrc, /\?\?\?/, '???대체 표시');
+  test('cycle 176: StatusBar는 길 잃은 여행(blindMap) 회차에서 위치를 가린다', async () => {
+      // Wave 133: 소스의 'blindMap' · '???' 글자 대신 실제 렌더로 본다 — 위치 표시는 getVisibleLocationName(isBlindMap 하나)을
+      //   읽는다(CLAUDE.md §5 '길 잃은 여행'). 글자 검사는 손으로 쓴 분기를 요구해 정본 판정기로 옮기는 변경을 막았다.
+      const { createElement } = await import('react');
+      const { default: StatusBar } = await import('../src/components/StatusBar.tsx');
+      const { makePlayerFixture, renderStatic } = await import('./helpers/render.ts');
+      const render = (challengeModifiers) => renderStatic(createElement(StatusBar, {
+          player: makePlayerFixture({ name: '조사', loc: '고요한 숲', challengeModifiers }),
+          stats: null,
+          enemy: null,
+      }));
+      const blind = render(['blindMap']);
+      assert.match(blind, new RegExp(`data-testid="status-location"[^>]*>${MSG.BLIND_MAP_LOCATION.replace(/\?/g, '\\?')}<`), '???대체 표시');
+      assert.ok(!blind.includes('고요한 숲'), '지역 이름이 새지 않는다');
+      assert.match(render([]), /data-testid="status-location"[^>]*>고요한 숲</, '평소에는 지역 이름');
   });
 }
 

@@ -2,7 +2,7 @@ import { expect, type Page } from '@playwright/test';
 
 export const startE2ERun = async (
     page: Page,
-    options: { openStatusConsole?: boolean } = {},
+    options: { openStatusConsole?: boolean; name?: string } = {},
 ) => {
     await page.goto('/?e2e=1', { waitUntil: 'domcontentloaded' });
 
@@ -17,6 +17,7 @@ export const startE2ERun = async (
     ]);
 
     if (readyState === 'intro') {
+        if (options.name) await page.getByTestId('intro-name-input').fill(options.name);
         await expect(startButton).toBeEnabled({ timeout: 5_000 });
         await startButton.click();
         await expect(page.getByTestId('intro-name-input')).toBeHidden({ timeout: 15_000 });

@@ -86,7 +86,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
                             className={tileClassName}
                         >
                             <div className="flex items-center justify-between gap-1">
-                                <span className="text-[9px] font-fira uppercase tracking-[0.18em] text-slate-500">
+                                <span className="text-[11px] font-fira uppercase tracking-[0.18em] text-slate-500">
                                     {entry.label}
                                 </span>
                                 {isSignature && (
@@ -95,7 +95,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
                             </div>
                             <div className="mt-1 flex items-center gap-1 min-w-0">
                                 <span
-                                    className={`truncate text-[10px] font-fira leading-none ${isSignature ? '' : 'text-slate-200/88'}`}
+                                    className={`truncate text-[11px] font-fira leading-none ${isSignature ? '' : 'text-slate-200/88'}`}
                                     style={isSignature ? { color: '#f6e7a2' } : undefined}
                                 >
                                     {entry.item?.name || entry.fallback}
@@ -115,7 +115,7 @@ const DashboardMobileSummary = ({ player }: DashboardMobileSummaryProps) => {
                     {statusPills.map((pill) => (
                         <span
                             key={pill.key}
-                            className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em] backdrop-blur-md ${
+                            className={`shrink-0 inline-flex items-center rounded-full border px-2 py-0.5 text-[11px] font-fira uppercase tracking-[0.14em] backdrop-blur-md ${
                                 pill.tone === 'success' ? 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100'
                                 : pill.tone === 'resonance' ? 'border-[#9a8ac0]/28 bg-[#9a8ac0]/10 text-[#e3dcff]'
                                 : pill.tone === 'recommended' ? 'border-[#7dd4d8]/28 bg-[#7dd4d8]/10 text-[#dff7f5]'

@@ -257,7 +257,7 @@ for (const viewport of VIEWPORTS) {
         try {
             await loadLateFieldFixture(page);
 
-            // ③ 두 글자 이름은 잘리지 않는다 — 좁을 때는 지역이 줄어든다.
+            // ③ 두 글자 이름은 잘리지 않는다 — 위치는 둘째 줄이라 함께 줄지 않는다(Wave 133).
             const name = page.getByTestId('status-player-summary').locator('span').first();
             await expect(name).toHaveText('용사');
             expect(await name.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(true);

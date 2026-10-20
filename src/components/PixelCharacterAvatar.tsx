@@ -10,17 +10,17 @@ const SIZE_MAP: Record<string, { frame: string; inner: string; badge: string }> 
     sm: {
         frame: 'h-[4.6rem] w-[4.6rem] rounded-[1.25rem] p-1.5',
         inner: 'rounded-[0.95rem]',
-        badge: 'text-[8px] px-1.5 py-[1px]',
+        badge: 'text-[11px] px-1.5 py-[1px]',
     },
     md: {
         frame: 'h-[5.45rem] w-[5.45rem] rounded-[1.35rem] p-2',
         inner: 'rounded-[1.05rem]',
-        badge: 'text-[8px] px-1.5 py-0.5',
+        badge: 'text-[11px] px-1.5 py-0.5',
     },
     lg: {
         frame: 'h-[6.95rem] w-[6.95rem] rounded-[1.55rem] p-2.5',
         inner: 'rounded-[1.2rem]',
-        badge: 'text-[9px] px-2 py-0.5',
+        badge: 'text-[11px] px-2 py-0.5',
     },
 };
 

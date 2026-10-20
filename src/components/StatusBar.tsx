@@ -3,6 +3,7 @@ import SignalBadge from './SignalBadge';
 import MonsterIcon from './icons/MonsterIcon';
 import { useHitFlash } from '../hooks/useHitFlash';
 import { getExpeditionHudChips } from '../utils/expeditionHud';
+import { getVisibleLocationName } from '../utils/challengeRules';
 import { MSG } from '../data/messages.js';
 import type { FullStats, Player, Monster } from '../types/index.js';
 
@@ -123,7 +124,7 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: EnemyStatusProps) => {
             <MonsterIcon name={enemy.baseName || enemy.name || ''} discovered isBoss={Boolean(enemy.isBoss)} size={46} />
           </div>
           <div className="min-w-0">
-            <div data-testid="enemy-status-label" className="text-[10px] font-readable text-rose-100/66">
+            <div data-testid="enemy-status-label" className="text-[11px] font-readable text-rose-100/66">
               교전 대상
             </div>
             <div className="mt-0.5 flex min-w-0 items-center gap-1.5">
@@ -133,7 +134,7 @@ const EnemyStatus = ({ enemy, enemyHitCrit }: EnemyStatusProps) => {
           </div>
         </div>
         <div className="shrink-0 text-right">
-          <div data-testid="enemy-health-label" className="text-[10px] font-readable text-rose-100/62">생명</div>
+          <div data-testid="enemy-health-label" className="text-[11px] font-readable text-rose-100/62">생명</div>
           <div data-testid="enemy-health-value" className="font-readable font-semibold text-rose-50/92 text-[12px]">{safeValue}/{safeMax}</div>
         </div>
       </div>
@@ -216,19 +217,17 @@ const StatusBar = ({
         <div className="min-w-0 flex-1">
           <div className="flex items-center justify-between gap-2">
             <div data-testid="status-player-summary" className="flex min-w-0 flex-1 items-baseline gap-1 font-readable">
-              {/* 2026-10 제품 통합 수용: 이름이 지역과 함께 줄어 375px에서 두 글자 이름이 "용…"이 됐다 — 이름은 상한(6.5rem)까지 줄지 않고 지역이 줄어든다. */}
+              {/* 2026-10 제품 통합 수용: 이름은 상한(6.5rem)까지 줄지 않는다(375px에서 두 글자 이름이 "용…"이 됐다).
+                  Wave 133: 위치는 둘째 줄로 옮겼다 — 첫 줄에서 줄어드는 칸이던 동안 여섯 글자 이름이면 375 · 390px에서
+                  지역 이름이 거의 다 잘렸고 긴 직업과 함께면 0px로 사라졌다. 이제 이 줄에서는 직업만 마지막에 줄어든다. */}
               <span className="max-w-[6.5rem] shrink-0 truncate text-[14px] font-semibold leading-tight text-white/96">{player.name}</span>
-              <span className="shrink-0 text-[10px] text-slate-300/82">{player.job}</span>
-              <span className="shrink-0 text-[10px] text-[#cfc4ee]">레벨 {player.level}</span>
-              <span aria-hidden="true" className="shrink-0 text-slate-500">·</span>
-              <span data-testid="status-location" className="min-w-0 truncate text-[10px]" style={{ color: 'var(--region-accent)' }}>
-                {player.challengeModifiers?.includes('blindMap') ? '???' : player.loc}
-              </span>
+              <span className="min-w-0 truncate text-[11px] text-slate-300/82">{player.job}</span>
+              <span className="shrink-0 text-[11px] text-[#cfc4ee]">레벨 {player.level}</span>
             </div>
             <div className="shrink-0 flex items-center gap-1.5">
               <div className="text-right">
                 <span className="text-[13px] font-rajdhani font-bold text-[#f6e7c8]">{player.gold}</span>
-                <span className="ml-0.5 text-[9px] font-readable text-slate-400/68">골드</span>
+                <span className="ml-0.5 text-[11px] font-readable text-slate-400/68">골드</span>
                 {hasPremiumCurrency && (
                   <div className={`text-[11px] font-rajdhani font-bold text-cyan-200 leading-none mt-0.5 ${onCrystalClick ? 'cursor-pointer pointer-events-auto' : ''}`} onClick={onCrystalClick || undefined}>
                     💎{player.premiumCurrency}
@@ -237,13 +236,18 @@ const StatusBar = ({
               </div>
             </div>
           </div>
-          {((player.killStreak || 0) >= 3 || expeditionChips.length > 0 || (Array.isArray(player.status) && player.status.length > 0)) && (
-            <div data-testid="status-context-line" className="mt-1 flex min-h-[18px] min-w-0 flex-wrap items-center gap-1.5">
+          {/* Wave 133(소유자 결정 "위치를 둘째 줄로"): 위치는 상황 칩 줄의 맨 앞이고, 이 줄은 늘 그린다 — 줄이지 않는다.
+              칩이 셋(보스 접근 · 연속 처치 · 상태이상)이면 좁은 폭에서 칩이 다음 줄로 넘어간다(136 → 163px) — 칩 여백을 한 단계
+              좁혀 사냥 지역 46곳 중 375px 46 → 44곳, 390px 44 → 27곳, 430px 4 → 1곳으로 줄였다(글자는 11px 그대로). */}
+          <div data-testid="status-context-line" className="mt-1 flex min-h-[18px] min-w-0 flex-wrap items-center gap-x-1 gap-y-1">
+                <span data-testid="status-location" className="min-w-0 font-readable text-[11px] leading-tight" style={{ color: 'var(--region-accent)' }}>
+                  {getVisibleLocationName(player, player.loc)}
+                </span>
                 {expeditionChips.map((chip) => (
                   <span
                     key={chip.id}
                     data-testid={`status-${chip.id}-chip`}
-                    className={`shrink-0 rounded-full border px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal ${
+                    className={`shrink-0 rounded-full border px-1 py-0.5 text-[11px] font-fira font-bold tracking-normal ${
                       chip.tone === 'warning'
                         ? 'border-amber-400/32 bg-amber-500/16 text-amber-200'
                         : 'border-[#9a8ac0]/34 bg-[#9a8ac0]/16 text-[#dcd2f6]'
@@ -253,7 +257,7 @@ const StatusBar = ({
                   </span>
                 ))}
                 {(player.killStreak || 0) >= 3 && (
-                  <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal text-orange-300">연속 처치 {player.killStreak}</span>
+                  <span className="shrink-0 rounded-full border border-orange-400/28 bg-orange-500/18 px-1 py-0.5 text-[11px] font-fira font-bold tracking-normal text-orange-300">연속 처치 {player.killStreak}</span>
                 )}
                 {/* cycle 111: 활성 디버프 chip — cycle 106-110에서 활성화된 5종 status
                     (bleed/freeze/stun/curse/blind/fear)의 시각 노출. 기존엔 전투 로그에만
@@ -270,15 +274,14 @@ const StatusBar = ({
                     <span
                       data-testid="status-debuff-chip"
                       data-debuff-count={debuffs.length}
-                      className="shrink-0 rounded-full border border-rose-400/40 bg-rose-500/16 px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal text-rose-200"
+                      className="shrink-0 rounded-full border border-rose-400/40 bg-rose-500/16 px-1 py-0.5 text-[11px] font-fira font-bold tracking-normal text-rose-200"
                       aria-label={MSG.STATUS_AILMENT_ARIA(debuffs.length, debuffs.map((d) => DEBUFF_LABELS[d] || d).join(', '))}
                     >
                       {headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}
                     </span>
                   );
                 })()}
-            </div>
-          )}
+          </div>
           <div data-testid="status-metrics" className="mt-1.5 grid grid-cols-3 gap-1">
             <StatusMetric label="생명" value={player.hp} max={stats?.maxHp} variant="hp" />
             <StatusMetric label="기력" value={player.mp} max={stats?.maxMp} variant="mp" />
