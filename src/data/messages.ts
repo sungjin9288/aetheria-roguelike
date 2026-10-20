@@ -1,6 +1,7 @@
 // cycle 321: unused DB import 제거 — messages.ts 어디에서도 DB 참조 0건.
 
 import type { StatusId } from '../types/index.js';
+import { josa, withJosa } from './koreanParticles.js';
 
 /**
  * messages.js — 게임 내 모든 메시지를 한국어로 통합 관리합니다.
@@ -68,7 +69,7 @@ export const MSG = {
         `${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
     COMBAT_ENEMY_HIT: (name: string | undefined, dmg: number, rng: () => number = Math.random) => {
         const variants = [
-            `${name}이(가) ${dmg} 피해를 가했습니다.`,
+            `${withJosa(name, '이/가')} ${dmg} 피해를 가했습니다.`,
             `${name}의 공격! ${dmg} 피해를 받았습니다.`,
             `${name}에게 가격당했습니다. (${dmg})`,
         ];
@@ -77,13 +78,13 @@ export const MSG = {
     COMBAT_ENEMY_HEAVY_HIT: (name: string | undefined, dmg: number, rng: () => number = Math.random) => {
         const variants = [
             `${name}의 강타! ${dmg} 피해를 입었습니다.`,
-            `${name}이(가) 맹렬하게 공격합니다! ${dmg} 피해!`,
+            `${withJosa(name, '이/가')} 맹렬하게 공격합니다! ${dmg} 피해!`,
             `강력한 일격! ${name}의 공격에 ${dmg} 피해를 받았습니다.`,
         ];
         return variants[Math.floor(rng() * variants.length)];
     },
-    COMBAT_ENEMY_GUARD: (name: string | undefined) => `${name}이(가) 방어 자세를 취했습니다.`,
-    COMBAT_ENEMY_STUNNED: (name: string | undefined) => `${name}이(가) 기절하여 턴을 잃습니다.`,
+    COMBAT_ENEMY_GUARD: (name: string | undefined) => `${withJosa(name, '이/가')} 방어 자세를 취했습니다.`,
+    COMBAT_ENEMY_STUNNED: (name: string | undefined) => `${withJosa(name, '이/가')} 기절하여 턴을 잃습니다.`,
     COMBAT_CRIT: '치명타!',
 
     // --- 스킬 (Skill) ---
@@ -93,7 +94,7 @@ export const MSG = {
     // 2026-10 Wave 52: 위력이 없는 보조 기술은 피해 줄 대신 사용 줄을 남긴다(효과 줄은 뒤따른다).
     SKILL_USE_SUPPORT: (skillName: string | undefined) => `[${skillName}] 사용!`,
     // 2026-10 Wave 53: 생명을 바치는 기술 · 다음 공격 강화 소진.
-    SKILL_HP_COST: (skillName: string, cost: number) => `[${skillName}] 계약의 대가로 생명 ${cost}을(를) 바쳤습니다.`,
+    SKILL_HP_COST: (skillName: string, cost: number) => `[${skillName}] 계약의 대가로 생명 ${withJosa(cost, '을/를')} 바쳤습니다.`,
     SKILL_NEXT_ATTACK_ARMED: (skillName: string, mult: number) => `[${skillName}] 다음 공격의 피해가 ${mult}배가 됩니다.`,
     NEXT_ATTACK_MULT_PROC: (mult: number) => `그림자 일격! 피해 ${mult}배`,
     SKILL_BUFF_ACTIVE: (name: string, turns: number) => `${name} 강화 효과가 ${turns}턴 동안 적용됩니다.`,
@@ -105,7 +106,7 @@ export const MSG = {
     // --- 탈출 (Escape) ---
     ESCAPE_SUCCESS: '성공적으로 탈출했습니다!',
     ESCAPE_FAIL: '탈출 실패!',
-    ESCAPE_FAIL_DMG: (name: string | undefined, dmg: number) => `${name}이(가) 뒤쫓아 ${dmg} 피해를 입혔습니다.`,
+    ESCAPE_FAIL_DMG: (name: string | undefined, dmg: number) => `${withJosa(name, '이/가')} 뒤쫓아 ${dmg} 피해를 입혔습니다.`,
 
     // --- 전투 결과 (Victory / Defeat) ---
     VICTORY: (exp: number, gold: number) => `승리했습니다. 경험 +${exp} · 골드 +${gold}`,
@@ -125,8 +126,8 @@ export const MSG = {
     PRESTIGE_RARE_DROP: (name: string) => `✦ [심연의 메아리] 보스가 희귀 장비를 떨어뜨렸습니다: ${name}`,
     SIGNATURE_DISCOVERED: (name: string) => `✦ 전설 각인 ─ ${name} 획득!`,
     COMBAT_LOOT_CAPACITY_BLOCKED: (count: number) => `가방이 가득해 전리품 ${count}개를 챙기지 못했습니다.`,
-    SIGNATURE_SELL_BLOCKED: (name: string | undefined) => `[${name}]은(는) 전설 각인 아이템이라 판매할 수 없습니다.`,
-    SIGNATURE_SYNTH_BLOCKED: (name: string) => `[${name}]은(는) 전설 각인 아이템이라 합성 재료로 사용할 수 없습니다.`,
+    SIGNATURE_SELL_BLOCKED: (name: string | undefined) => `[${name}]${josa(name, '은/는')} 전설 각인 아이템이라 판매할 수 없습니다.`,
+    SIGNATURE_SYNTH_BLOCKED: (name: string) => `[${name}]${josa(name, '은/는')} 전설 각인 아이템이라 합성 재료로 사용할 수 없습니다.`,
     SIGNATURE_BOSS_HINT: (bossName: string, count: number, topName: string, topPct: number | string) => (
         count > 1
             ? `✦ [${bossName}] 전설 각인 ${count}종 드롭 가능 — 최고 [${topName}] ${topPct}%`
@@ -229,7 +230,7 @@ export const MSG = {
     ENHANCE_FAIL: (name: string, lv: number) => `💔 [${name}] +${lv} 강화 실패. 등급 유지.`,
     ENHANCE_MAX_LEVEL: '이미 최고 강화 등급입니다 (+10).',
     ENHANCE_NO_GOLD: (cost: number) => `강화할 골드가 부족합니다. 필요 골드: ${cost}`,
-    ENHANCE_NO_MATERIAL: (name: string, count: number) => `${name}이(가) 부족합니다. (필요: ${count}개)`,
+    ENHANCE_NO_MATERIAL: (name: string, count: number) => `${withJosa(name, '이/가')} 부족합니다. (필요: ${count}개)`,
     ENHANCE_NOT_EQUIP: '강화는 장비 아이템에만 가능합니다.',
 
     // --- 주간 미션 (Weekly Mission) ---
@@ -402,7 +403,7 @@ export const MSG = {
 
     // --- 인벤토리/장비 액션 ---
     INV_ITEM_NOT_FOUND: '가방에 없는 아이템입니다.',
-    EQUIP_JOB_RESTRICT: (job: string | undefined, name: string | undefined) => `${job}은(는) ${name}을(를) 장착할 수 없습니다.`,
+    EQUIP_JOB_RESTRICT: (job: string | undefined, name: string | undefined) => `${withJosa(job, '은/는')} ${withJosa(name, '을/를')} 장착할 수 없습니다.`,
     EQUIP_TWO_HAND_SHIELD_BLOCK: '양손 무기 사용 중에는 방패를 장착할 수 없습니다.',
     EQUIP_TWO_HAND_OFFHAND_RELEASE: '양손 무기로 전환되어 보조 손 장비가 해제되었습니다.',
     EQUIP_TWO_HAND_TO_ONE_HAND: '양손 무기를 해제하고 한손 무기 체계로 전환했습니다.',
@@ -427,7 +428,7 @@ export const MSG = {
     CONSUMABLE_CURE_STATUS: (label: string) => `${label} 해제`,
     CONSUMABLE_CURE_ANY: '상태이상 해제',
     CONSUMABLE_BUFF_TURNS: (turn: number) => `${turn}턴 버프`,
-    ITEM_USE_BUFF: (name: string) => `${name}을 사용해 강화 효과를 얻었습니다.`,
+    ITEM_USE_BUFF: (name: string) => `${withJosa(name, '을/를')} 사용해 강화 효과를 얻었습니다.`,
     GOLD_INSUFFICIENT: '골드가 부족합니다.',
     INV_FULL: '가방이 가득 찼습니다.',
     SHOP_BUY_DONE: (name: string | undefined) => `${name} 구매 완료.`,
@@ -457,7 +458,7 @@ export const MSG = {
         `추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상으로 골드 ${gold}${numberParticle('과', gold)} 경험 ${exp}${numberParticle('을', exp)} 얻습니다.`,
     GUIDE_BAG_UPGRADE_TITLE: '가방을 넓힐 수 있습니다',
     GUIDE_BAG_UPGRADE_DETAIL: (name: string, count: number, capacity: number, nextCapacity: number) =>
-        `가방이 ${count}/${capacity}입니다. 제작소에서 ${name}을(를) 만들면 ${nextCapacity}칸이 됩니다.`,
+        `가방이 ${count}/${capacity}입니다. 제작소에서 ${withJosa(name, '을/를')} 만들면 ${nextCapacity}칸이 됩니다.`,
     GUIDE_BAG_UPGRADE_ACTION: '제작소 열기',
     // 2026-10 Wave 61: 누적 처치 임무(`kills`)의 다음 단계 — 보스 처치도 함께 센다(CombatEngine.handleVictory).
     QUEST_NEXT_STEP_KILLS: (remaining: number) => `몬스터 ${remaining}회 더 처치 (보스 포함)`,
@@ -481,7 +482,7 @@ export const MSG = {
     ACH_DONE: (title: string | undefined) => `업적 달성: ${title}`,
     // 2026-10 Wave 108 (소유자 결정 "영구 보상은 처음 한 번만"): 다시 달성한 업적의 크리스털은 계정당 한 번만 준다.
     ACH_CRYSTAL_ALREADY_GRANTED: (amount: number) => `에테르 크리스탈 ${amount}개는 이전 여정에서 이미 받았습니다`,
-    PREMIUM_INSUFFICIENT: (name: string) => `${name}이(가) 부족합니다.`,
+    PREMIUM_INSUFFICIENT: (name: string) => `${withJosa(name, '이/가')} 부족합니다.`,
     ITEM_NOT_FOUND: '아이템을 찾을 수 없습니다.',
     SKILL_BRANCH_CHOSEN: (name: string, branchName: string) => `${name} 성장 선택: ${branchName}`,
     SKILL_BRANCH_ALREADY_CHOSEN: (name: string) => `${name}의 첫 성장 선택은 끝났습니다. 안전한 지역에서 다시 선택할 수 있습니다.`,
@@ -612,7 +613,7 @@ export const MSG = {
     ENEMY_APPEAR: (name: string) => `${name} 등장!`,
     EVENT_RESULT_DEFAULT: '선택의 결과가 반영되었습니다.',
     EVENT_REWARD_UNAVAILABLE: '이 선택의 보상 정보를 확인할 수 없습니다. 다른 선택을 골라주세요.',
-    CHAIN_RELIC_ALREADY_OWNED: (name: string) => `${name}은 이미 보유하고 있습니다. 다른 선택을 골라주세요.`,
+    CHAIN_RELIC_ALREADY_OWNED: (name: string) => `${withJosa(name, '은/는')} 이미 보유하고 있습니다. 다른 선택을 골라주세요.`,
     CHAIN_RELIC_SLOTS_FULL: '유물 슬롯이 가득 차 이 유물을 받을 수 없습니다. 다른 선택지를 고르세요.',
     // 캠프파이어 노드 (Phase 2, B+ 2026-06): 휴식 vs 단련 결정 (StS 캠프파이어).
     CAMPFIRE_DESC: '사그라드는 모닥불을 발견했습니다. 잠시 숨을 고를 수 있습니다. 무엇을 하시겠습니까?',
@@ -657,7 +658,7 @@ export const MSG = {
     EXPEDITION_RETURN_EXP: '경험 획득',
     EXPEDITION_RETURN_HP: (hp: number, percent: number) => `생명 ${hp.toLocaleString('ko-KR')} · ${percent}%`,
     EVENT_SUCCESS_GOLD: (gold: number) => `선택에 성공했습니다. 골드 +${gold}`,
-    EVENT_FAIL_DAMAGE: (dmg: number) => `선택의 대가로 생명 ${dmg}을 잃었습니다.`,
+    EVENT_FAIL_DAMAGE: (dmg: number) => `선택의 대가로 생명 ${withJosa(dmg, '을/를')} 잃었습니다.`,
     REST_DONE_FULL: (cost: number) => `휴식을 마치고 생명과 기력을 모두 회복했습니다. 골드 -${cost}`,
     JOB_CHANGE_DONE: (jobName: string) => `${jobName} 전직 완료!`,
     BOUNTY_ACCEPTED_NEW: (target: string, count: number) => `새로운 현상수배 수락: ${target} ${count}마리`,
@@ -682,7 +683,7 @@ export const MSG = {
         `${count > 1 ? `오늘의 임무 ${count}개 완료` : '오늘의 임무 완료'} · ${reward}`
     ),
     DAILY_PROTOCOL_RELIC_COMPLETE: (name: string) => `유물 파편 완성 · ${name} 획득`,
-    CHAIN_REWARD_RELIC: (name: string) => `이야기 보상 · 유물 ${name}을 얻었습니다.`,
+    CHAIN_REWARD_RELIC: (name: string) => `이야기 보상 · 유물 ${withJosa(name, '을/를')} 얻었습니다.`,
     // 2026-10: 앞머리는 체인 보상의 `buffIntro`다(최후의 영웅 '최후의 영웅이 합류해' · 잊혀진 사령관 · 물의 사도) —
     //   셋 모두 '최후의 영웅이 합류해'를 찍던 결함. 없으면 아래 일반 문구.
     CHAIN_REWARD_COMBAT_BONUS: (attackPercent: number, turns: number, intro: string = '이야기의 힘이 깃들어') => `${intro} ${turns}턴 동안 공격력이 ${attackPercent}% 오릅니다.`,
@@ -740,11 +741,11 @@ export const MSG = {
     ABYSS_RECORD: (floor: number) => `🏆 심연 최고 기록 경신! ${floor}층 돌파`,
 
     // --- 전투 아이템/스킬 ---
-    COMBAT_CHAOS_SKILL: (name: string) => `뒤섞인 기술: [${name}]이(가) 발동했습니다!`,
+    COMBAT_CHAOS_SKILL: (name: string) => `뒤섞인 기술: [${name}]${josa(name, '이/가')} 발동했습니다!`,
     // 2026-10 Wave 62 (원장 §61.4 C15): 뽑힌 기술을 쓸 수 없어도(기력 부족 · 재사용 대기) 차례는 지나간다 — 기력은 쓰지 않는다.
-    COMBAT_CHAOS_SKILL_FIZZLE: (name: string) => `뒤섞인 기술: [${name}]을(를) 쓸 수 없어 이번 차례를 놓쳤습니다.`,
-    COMBAT_DOT_KILL: (name: string) => `[지속 피해] ${name}이(가) 쓰러졌습니다!`,
-    COMBAT_COUNTER_KILL: (name: string) => `[반사·반격] ${name}이(가) 쓰러졌습니다!`,
+    COMBAT_CHAOS_SKILL_FIZZLE: (name: string) => `뒤섞인 기술: [${name}]${josa(name, '을/를')} 쓸 수 없어 이번 차례를 놓쳤습니다.`,
+    COMBAT_DOT_KILL: (name: string) => `[지속 피해] ${withJosa(name, '이/가')} 쓰러졌습니다!`,
+    COMBAT_COUNTER_KILL: (name: string) => `[반사·반격] ${withJosa(name, '이/가')} 쓰러졌습니다!`,
     ITEM_USE_SIMPLE: (name: string) => `${name} 사용.`,
     ITEM_USE_CURE: (name: string) => `${name} 사용: 상태이상 해제`,
 
@@ -834,7 +835,7 @@ export const MSG = {
 
     // --- 에테르 거울 진입 (2026-09 · 승천 화면 CTA) ---
     MIRROR_CTA_LABEL: '에테르 거울 열기',
-    MIRROR_CTA_HINT: (essence: number) => `계승 정수 ${essence}로 영구 성장을 새길 수 있습니다.`,
+    MIRROR_CTA_HINT: (essence: number) => `계승 정수 ${withJosa(essence, '으로/로')} 영구 성장을 새길 수 있습니다.`,
     // 2026-09 Wave 32: 계승 시 정수 사다리 이월(BALANCE.ESSENCE_LADDER_ASCEND_CARRY).
     // 2026-10 Wave 114: 넘어가는 몫은 비율과 고정 상한(BALANCE.ESSENCE_LADDER_ASCEND_CARRY_MAX_RANKS) 중 작은 쪽이다.
     ASCEND_LADDER_CARRY: (before: number, kept: number, percent: number, maxRanks: number) =>
@@ -877,8 +878,8 @@ export const MSG = {
     SCOUT_ACTION_HINT: '앞길을 미리 살펴 다음 한 걸음을 고릅니다.',
     SCOUT_SAFE_ONLY: '안전지대에서는 정찰할 곳이 없습니다.',
     SCOUT_BUSY: '지금은 정찰할 수 없습니다.',
-    SCOUT_GOLD_INSUFFICIENT: (cost: number) => `정찰에는 골드 ${cost.toLocaleString('ko-KR')}이 필요합니다.`,
-    SCOUT_PAID_LOG: (cost: number) => `골드 ${cost.toLocaleString('ko-KR')}을 들여 앞길을 정찰합니다.`,
+    SCOUT_GOLD_INSUFFICIENT: (cost: number) => `정찰에는 골드 ${withJosa(cost.toLocaleString('ko-KR'), '이/가')} 필요합니다.`,
+    SCOUT_PAID_LOG: (cost: number) => `골드 ${withJosa(cost.toLocaleString('ko-KR'), '을/를')} 들여 앞길을 정찰합니다.`,
     SCOUT_FREE_LOG: (remaining: number) => `거울의 눈으로 앞길을 정찰합니다. 남은 무료 정찰 ${remaining}회`,
     SCOUT_TIME_PASSES: '정찰하는 동안에도 시간은 흐릅니다.',
 
@@ -1003,7 +1004,7 @@ export const MSG = {
     SKILL_DRAIN_HEAL: (heal: number) => `[생명흡수] +${heal} HP 흡수!`,
     SKILL_HP_REGEN_PROC: (skillName: string | undefined, heal: number) => `[${skillName}] +${heal} HP 회복!`,
     // Wave 51(소유자 결정 "성직자의 컨셉"): 회복의 빛이 언데드 · 마족을 태운다.
-    SKILL_HOLY_SMITE: (skillName: string | undefined, enemyName: string | undefined, dmg: number) => `[${skillName}] 신성한 빛이 ${enemyName}을(를) 태웁니다! ${dmg} 신성 피해`,
+    SKILL_HOLY_SMITE: (skillName: string | undefined, enemyName: string | undefined, dmg: number) => `[${skillName}] 신성한 빛이 ${withJosa(enemyName, '을/를')} 태웁니다! ${dmg} 신성 피해`,
     SKILL_REGEN_TICK: (skillName: string, heal: number) => `[${skillName}] 지속 회복 +${heal} HP`,
     // 2026-10 Wave 54: 기력 지속 회복 · 연속 타격 태그.
     SKILL_MP_REGEN_TICK: (skillName: string, amount: number) => `[${skillName}] 지속 회복 +${amount} MP`,
@@ -1036,7 +1037,7 @@ export const MSG = {
     EQUIP_RESIST_ALL_ELEMENTS: '모든 원소',
     EQUIP_REGEN_STAT: (pct: number) => `매 턴 생명 ${pct}% 회복`,
     CHAOS_HEART_BORROW: (name: string, desc: string) => `[혼돈의 심장] 이번 전투 동안 「${name}」 — ${desc}`,
-    CHAOS_HEART_SYNERGY: (label: string, drawback: string) => `[혼돈의 심장] 조합 「${label}」이(가) 켜졌습니다 (대가: ${drawback})`,
+    CHAOS_HEART_SYNERGY: (label: string, drawback: string) => `[혼돈의 심장] 조합 「${label}」${josa(label, '이/가')} 켜졌습니다 (대가: ${drawback})`,
     CHAOS_HEART_BORROWED_TAG: '혼돈의 심장 · 이번 전투',
     CHAOS_GEM_PROC: (stat: 'atk' | 'def', pct: number) => (
         `[혼돈의 보석] 이번 전투 동안 ${stat === 'atk' ? '공격력' : '방어력'} +${pct}%`
@@ -1044,7 +1045,7 @@ export const MSG = {
     STEALTH_EVADE_MISS: (enemyName: string | undefined) => `[은신] ${enemyName}에게 들켰습니다!`,
     // 2026-10 Wave 55: 실명 빗나감 · 지속 턴이 끝난 지속 피해.
     ENEMY_BLIND_MISS: (enemyName: string | undefined) => `[실명] ${enemyName}의 공격이 빗나갔습니다!`,
-    ENEMY_DOT_EXPIRED: (label: string, enemyName: string | undefined) => `${enemyName}의 ${label}이(가) 사라졌습니다.`,
+    ENEMY_DOT_EXPIRED: (label: string, enemyName: string | undefined) => `${enemyName}의 ${withJosa(label, '이/가')} 사라졌습니다.`,
     ENEMY_DOT_CHIP_TURNS: (label: string, turns: number) => `${label} · ${turns}턴`,
     ARMOR_EVADE_PROC: (enemyName: string | undefined) => `[회피] ${enemyName}의 공격을 회피했습니다!`,
     ENEMY_PHASE_STATUS_APPLIED: (phase: number, label: string) => `[Phase ${phase}] [${label}] 상태이상 부여!`,
@@ -1078,13 +1079,13 @@ export const MSG = {
     ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `💀 Phase 3 임박 — ${formName || '최종 형태'}`,
     ENEMY_TELEGRAPH_BREATH: '🔥 브레스 준비 — 다음 행동',
     ENEMY_GUARD_COUNTER_STANCE: (enemyName: string | undefined) => (
-        `${enemyName}이(가) 반격 자세를 취했습니다. 지금 공격하면 반격당합니다.`
+        `${withJosa(enemyName, '이/가')} 반격 자세를 취했습니다. 지금 공격하면 반격당합니다.`
     ),
     ENEMY_GUARD_COUNTER_HIT: (enemyName: string | undefined, dmg: number) => `[반격] ${enemyName}의 반격! ${dmg} 피해를 받았습니다.`,
-    ENEMY_GUARD_HEAL: (enemyName: string | undefined, heal: number) => `${enemyName}이(가) 방어 자세로 생명을 ${heal} 회복했습니다.`,
+    ENEMY_GUARD_HEAL: (enemyName: string | undefined, heal: number) => `${withJosa(enemyName, '이/가')} 방어 자세로 생명을 ${heal} 회복했습니다.`,
     ENEMY_BREATH_HIT: (enemyName: string | undefined, dmg: number) => `🔥 ${enemyName}의 브레스! ${dmg} 피해를 받았습니다.`,
     ENEMY_SUMMON: (enemyName: string | undefined, summonName: string, count: number) => (
-        `${enemyName}이(가) ${summonName} ${count}체를 깨웠습니다! 공격할 때마다 하나씩 쓰러집니다.`
+        `${withJosa(enemyName, '이/가')} ${summonName} ${count}체를 깨웠습니다! 공격할 때마다 하나씩 쓰러집니다.`
     ),
     ENEMY_SUMMON_HIT: (summonName: string, count: number, dmg: number) => `[${summonName} ${count}체] 함께 공격! ${dmg} 피해를 받았습니다.`,
     ENEMY_SUMMON_SLAIN: (summonName: string, left: number) => `${summonName} 하나가 쓰러졌습니다. (남은 ${left}체)`,
@@ -1172,12 +1173,12 @@ export const MSG = {
     SEASON_SUBTITLE: '평소의 모험이 성장으로 이어집니다',
     /** 완주 로그 — 리셋 직전에 남긴다. */
     SEASON_ROTATED: (completedName: string, nextName: string, scale: string) => (
-        `${completedName} 완주! ${nextName}이 열렸습니다 · 보상 규모 ×${scale}`
+        `${completedName} 완주! ${withJosa(nextName, '이/가')} 열렸습니다 · 보상 규모 ×${scale}`
     ),
     SEASON_ROTATION_TITLE: '시즌이 끝나면',
     /** 완주 안내 — 남은 수령 수와 다음 시즌 보상 배율을 함께 보여준다. */
     SEASON_ROTATION_NOTICE: (nextName: string, scale: string) => (
-        `30단계 보상을 모두 받으면 ${nextName}이 열립니다 · 숫자 보상 ×${scale}`
+        `30단계 보상을 모두 받으면 ${withJosa(nextName, '이/가')} 열립니다 · 숫자 보상 ×${scale}`
     ),
     SEASON_CLAIMS_REMAINING: (remaining: number) => `완주까지 남은 보상 ${remaining}개`,
     SEASON_CLAIMS_READY: '마지막 보상을 받으면 다음 시즌이 시작됩니다',
@@ -1364,7 +1365,7 @@ export const MSG = {
             kept.def !== 0 && `방어력 ${kept.def > 0 ? '+' : ''}${kept.def}%`,
             kept.counter > 0 && `반격 ${kept.counter}%`,
         ].filter(Boolean).join(' · ');
-        return `지금 걸린 강화(${parts} · ${kept.turns}턴)가 더 강해 ${incoming}은(는) 적용되지 않았습니다.`;
+        return `지금 걸린 강화(${parts} · ${kept.turns}턴)가 더 강해 ${withJosa(incoming, '은/는')} 적용되지 않았습니다.`;
     },
     WAR_DRUM_BUFF_LABEL: '전쟁의 북',
     WAR_DRUM_BUFF_LOG: (atkPercent: number, turns: number) => `[전쟁의 북] 전투 시작 ATK +${atkPercent}% (${turns}턴)`,
@@ -1396,4 +1397,24 @@ export const MSG = {
     //   수락 순간 이미 채워져 있을 수 있다 — 수락 뒤부터 세는 임무처럼 읽히지 않게 목표 줄 앞에 붙인다.
     QUEST_LIFETIME_COUNTER_CHIP: '누적',
     QUEST_LIFETIME_COUNTER_HINT: '수락하기 전의 기록도 함께 셉니다.',
+
+    // ── Wave 129 — 이름 뒤 조사는 받침에 맞춘다(data/koreanParticles.ts) ──
+    //   utils · 컴포넌트가 이름 뒤에 고정 조사를 붙이던 문구다("도적로 전직" · "수정 동굴으로 출발").
+    TOWN_DEPART_FIRST: (destination: string) => `${withJosa(destination, '으로/로')} 첫 출발`,
+    TOWN_DEPART: (destination: string) => `${withJosa(destination, '으로/로')} 출발`,
+    COMMAND_SUGGEST_MOVE: (exitName: string) => `→ ${withJosa(exitName, '으로/로')} 이동`,
+    MAP_MOVE_TO: (name: string) => `${withJosa(name, '으로/로')} 이동`,
+    MAP_MOVE_TO_BLIND: '이 경로로 이동',
+    JOB_CHANGE_CONFIRM: (jobName: string) => `${withJosa(jobName, '으로/로')} 전직`,
+    SKILL_BRANCH_CONFIRM: (branchLabel: string | undefined) => `${withJosa(branchLabel, '으로/로')} 성장 확정`,
+    SKILL_BRANCH_QUESTION: (skillName: string) => `${withJosa(skillName, '을/를')} 어떻게 바꿀까?`,
+    CODEX_COMPARE_EQUIPPED: (itemName: string | undefined) => `현재 ${withJosa(itemName, '과/와')} 비교`,
+    QUEST_ABANDON_PROGRESS_LOSS: (progressText: string) => `지금까지의 진행도 ${withJosa(progressText, '이/가')} 사라집니다.`,
+    QA_EVENT_MULTIPLIER_SET: (value: number) => `이벤트 보상 배율을 ${withJosa(`x${value}`, '으로/로')} 바꿨습니다.`,
+    RETURN_REST_GOLD: (cost: string) => `골드 ${withJosa(cost, '으로/로')} 생명과 기력을 모두 회복합니다.`,
+    RETURN_USE_RECOVERY_ITEM: (itemName: string | undefined) => `${withJosa(itemName, '을/를')} 사용해 다음 출발을 준비하세요.`,
+    RETURN_BUY_SUPPLY: (itemName: string | undefined) => `${withJosa(itemName, '을/를')} 마련해 다음 원정의 위험을 낮추세요.`,
+    TRAIT_LOOT_SUMMARY: (traitName: string) => `${withJosa(traitName, '과/와')} 잘 맞는 전리품입니다.`,
+    TRAIT_LOOT_SUMMARY_DEFAULT_TRAIT: '현재 성향',
+    ELITE_ENRAGE_LOG: (baseName: string) => `${withJosa(baseName, '이/가')} 광폭화합니다! 공격이 거세집니다!`,
 };

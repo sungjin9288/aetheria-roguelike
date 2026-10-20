@@ -135,7 +135,7 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
             <div className="space-y-1 rounded-lg border border-white/6 bg-black/16 px-2.5 py-2">
                 <div className="mb-1.5 text-[11px] text-slate-500">
                     {MSG.EQUIP_STAT_COMPARE}
-                    {equipped && <span className="ml-1.5 normal-case text-slate-600">현재 {equipped.name}과 비교</span>}
+                    {equipped && <span className="ml-1.5 normal-case text-slate-600">{MSG.CODEX_COMPARE_EQUIPPED(equipped.name)}</span>}
                 </div>
                 {/* cycle W9-A1: atk / def 읽기 제거 — 카탈로그·Player.equip 어디에도 없는
                     필드라 항상 undefined였고 StatRow가 렌더된 적이 없다. 장비의 ATK/DEF는

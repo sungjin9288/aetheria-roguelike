@@ -1,4 +1,5 @@
 import { BALANCE } from './constants.js';
+import { withJosa } from './koreanParticles.js';
 
 export type StructuredFallbackCost =
     | { type: 'hp-recovery-consumable'; amount: 1 }
@@ -258,7 +259,7 @@ const CRYSTAL_HP_LOSS = 25;
 const threeCardTrick = defineHiddenEvent({
     id: 'fallback:three-card-trick:v1',
     layout: 'shuffle',
-    preview: `골드 ${CARD_TRICK_GOLD}은 세 장 중 한 장 · 뒤집기 전에는 알 수 없음`,
+    preview: `골드 ${withJosa(CARD_TRICK_GOLD, '은/는')} 세 장 중 한 장 · 뒤집기 전에는 알 수 없음`,
     tone: 'unknown',
     desc: '"세 장 중 한 장에 골드가 있소. 선택하시오." 노름꾼이 카드를 뒤섞습니다.',
     choices: ['첫 번째 카드', '두 번째 카드', '세 번째 카드'],

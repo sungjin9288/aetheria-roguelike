@@ -232,7 +232,8 @@ test('표시만 고친다: 경로 게이트를 권한으로 승격하지 않는�
 test('도전 규칙(blindMap)에서는 선택 카드의 진입 레벨도 감춘다', () => {
     const fixture = { loc: '저주받은 묘지', level: 35, quests: [{ id: 84, progress: 0, goal: 10 }] };
     const open = renderMap(fixture);
-    assert.ok(open.includes('얼음 성채(으)로 이동'), '선택 카드가 갈라지는 직접 출구(얼음 성채)다');
+    assert.ok(open.includes(MSG.MAP_MOVE_TO('얼음 성채')), '선택 카드가 갈라지는 직접 출구(얼음 성채)다');
+    assert.ok(open.includes('얼음 성채로 이동'), '받침 없는 이름 뒤는 "로"다(Wave 129)');
     assert.ok(open.includes(MSG.MAP_ROUTE_GATE_NOTE(20, 35)), '대조군: blindMap이 없으면 진입 레벨 줄을 그린다');
 
     const html = renderMap({ ...fixture, challengeModifiers: ['blindMap'] });

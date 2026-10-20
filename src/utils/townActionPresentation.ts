@@ -1,6 +1,7 @@
 import type { ClassDef, Item, Player } from '../types/index.js';
 import type { ItemRecipeDef } from '../types/item.js';
 import { FIRST_STORY_QUEST_ID } from '../data/quests.js';
+import { MSG } from '../data/messages.js';
 import { canInvestigateTown } from './townInvestigation';
 import { getChainEventForLoc } from '../data/eventChains.js';
 import { getShopBuyPrice } from './shopRotation';
@@ -109,8 +110,8 @@ const getPrimaryLabel = (kind: TownPrimaryKind, guidance: AdventureGuidance, pre
         case 'open_move':
             if (!preparation?.canDepart) return '출발 경로 확인';
             return isFirstStoryDeparture(guidance, preparation)
-                ? `${preparation.destination}으로 첫 출발`
-                : `${preparation.destination}으로 출발`;
+                ? MSG.TOWN_DEPART_FIRST(preparation.destination)
+                : MSG.TOWN_DEPART(preparation.destination);
         case 'open_quest_board':
             return '임무 고르기';
         case 'rest':

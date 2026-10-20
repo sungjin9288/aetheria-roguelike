@@ -3,6 +3,7 @@ import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { Check, Coins, GitBranch, RotateCcw, Shield, Sparkles, Zap } from 'lucide-react';
 import { DB } from '../data/db';
 import { BALANCE } from '../data/constants';
+import { MSG } from '../data/messages';
 import { getJobSkills } from '../utils/gameUtils';
 import {
     formatSkillText,
@@ -80,7 +81,7 @@ const GrowthDecision = ({
         if (!selectedBranch) return '성장을 선택하세요';
         if (!isFirstChoice && !canAfford) return `골드 부족 · ${cost} 필요`;
         if (isUnchanged) return '현재 적용 중인 성장';
-        return `${selectedBranch.label}로 성장 확정`;
+        return MSG.SKILL_BRANCH_CONFIRM(selectedBranch.label);
     })();
 
     return (
@@ -89,7 +90,7 @@ const GrowthDecision = ({
                 <div>
                     <div className="aether-type-meta font-readable text-slate-400/76">{isFirstChoice ? '첫 성장' : '성장 변경'}</div>
                     <h3 className="aether-type-title mt-0.5 font-readable font-semibold text-slate-100">
-                        {skillName}을 어떻게 바꿀까?
+                        {MSG.SKILL_BRANCH_QUESTION(skillName)}
                     </h3>
                 </div>
                 <SignalBadge tone={isFirstChoice ? 'recommended' : 'upgrade'} size="sm">

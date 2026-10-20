@@ -694,7 +694,8 @@ import { readFile } from 'node:fs/promises';
       assert.ok(!/equipped\?\.(?:atk|def)/.test(source), 'equipped?.atk / equipped?.def dead read 0건');
       assert.ok(/equipped\?\.hp/.test(source), 'equipped?.hp 비교 보존');
       assert.ok(/equipped\?\.mp/.test(source), 'equipped?.mp 비교 보존');
-      assert.ok(/현재 \{equipped\.name\}과 비교/.test(source), '현재 장비와의 비교 텍스트 보존');
+      // Wave 129: 비교 문구는 MSG가 이름의 받침에 맞춰 만든다("현재 롱소드와 비교").
+      assert.ok(/MSG\.CODEX_COMPARE_EQUIPPED\(equipped\.name\)/.test(source), '현재 장비와의 비교 텍스트 보존');
   });
 }
 

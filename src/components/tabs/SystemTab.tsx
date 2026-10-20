@@ -384,7 +384,7 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
 
         try {
             await updateLiveConfig({ eventMultiplier: value });
-            setNotice({ type: 'success', text: `이벤트 보상 배율을 x${value}로 바꿨습니다.` });
+            setNotice({ type: 'success', text: MSG.QA_EVENT_MULTIPLIER_SET(value) });
         } catch {
             setNotice({ type: 'error', text: '이벤트 보상 배율을 바꾸지 못했습니다.' });
         }

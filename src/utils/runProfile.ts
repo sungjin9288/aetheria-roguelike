@@ -1,5 +1,6 @@
 import type { Item, Monster, MonsterPattern, Quest } from '../types/index.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
+import { MSG } from '../data/messages.js';
 import type { FullStats, Player } from "../types/index.js";
 // cycle 271: getDifficultyMults / calcPerformanceScore / getExploreState / CLASS_BUILD_IDENTITIES /
 //   hasProfileTag — getRunDiagnostics + 3 class-build helpers 제거 후 dead imports cleanup.
@@ -414,7 +415,7 @@ export const getTraitLootHint = (items: Item[], traitProfile: TraitProfile | nul
 
     return {
         name: best.item.name,
-        summary: best.resonance.summary || `${traitProfile?.name || '현재 성향'}과 잘 맞는 전리품입니다.`,
+        summary: best.resonance.summary || MSG.TRAIT_LOOT_SUMMARY(traitProfile?.name || MSG.TRAIT_LOOT_SUMMARY_DEFAULT_TRAIT),
     };
 };
 
