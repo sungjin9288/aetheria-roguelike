@@ -280,7 +280,7 @@ const resonanceCrystals = defineHiddenEvent({
     desc: '"세 개의 크리스탈 중 하나에 마력을 주입하시오." 틀린 크리스탈을 건드리면 폭발할 것 같습니다.',
     choices: ['왼쪽 크리스탈', '가운데 크리스탈', '오른쪽 크리스탈'],
     slots: [
-        { mp: CRYSTAL_MP, log: `정답! 크리스탈이 공명하며 마나가 충전된다. (+${CRYSTAL_MP}MP)` },
+        { mp: CRYSTAL_MP, log: `정답! 크리스탈이 공명하며 기력이 차오른다. (+${CRYSTAL_MP}MP)` },
         { exp: CRYSTAL_EXP, log: `정답! 크리스탈이 황금빛으로 빛나며 경험이 쌓인다. (+${CRYSTAL_EXP}EXP)` },
         { hp: -CRYSTAL_HP_LOSS, log: `크리스탈이 폭발한다! (-${CRYSTAL_HP_LOSS}HP)` },
     ],

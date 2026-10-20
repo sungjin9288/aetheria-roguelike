@@ -36,7 +36,8 @@ test('elemental six preserves approved monster and map gameplay data', () => {
     // Wave 61(소유자 결정 "지역 조우에 넣음"): 보스 6종을 지역 조우 풀에 넣고 심연 층 보스 목록을 채우고 지역 설명 잔재를 고친 의도된 게임 데이터 변경 — 재고정.
     // Wave 62(소유자 결정 "전부 설명대로"): 북부 요새 판매 등급 3 · 황금 왕국 물가 ×1.3을 지역 데이터로 선언하고 두 상점 · 허공의 섬 문구를 고친 의도된 게임 데이터 변경 — 재고정.
     // Wave 118(소유자 결정 "보스를 조우의 일부로"): 용의 둥지에 bossEncounterShare를 선언한 의도된 게임 데이터 변경 — 재고정.
-    assert.equal(hashMaps(), '9f6da7655d46f4001618be77794b21a9adcb6cfac6fc46ff92772fd93cfa3351', 'src/data/maps.ts gameplay data');
+    // Wave 131(원장 §143 "한 개념, 한 이름"): 영혼의 강 설명을 화면 용어로 고친 의도된 문구 변경("사망 아이템 드랍률" → 묘비에 남는 아이템 · 골드, 실제 graveDropBonus) — 재고정.
+    assert.equal(hashMaps(), '0e5fb56d7b5d79af8cc7378204603a0689cf9b58a14de0f94b59087f2cd17cce', 'src/data/maps.ts gameplay data');
 });
 
 test('six elemental portraits resolve to approved v25 bytes through authored registry and runtime', async () => {

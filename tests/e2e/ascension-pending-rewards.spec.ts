@@ -56,7 +56,7 @@ for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }
         if (process.env.AETHERIA_CAPTURE_ASCENSION) {
             await page.screenshot({ path: `output/playwright/ascension-rewards-20260928/pending-${viewport.width}.png` });
         }
-        await page.getByRole('button', { name: '[스토리] 세계의 끝 보상 받기', exact: true }).evaluate((button: HTMLButtonElement) => {
+        await page.getByRole('button', { name: '[이야기] 세계의 끝 보상 받기', exact: true }).evaluate((button: HTMLButtonElement) => {
             button.click();
             button.click();
         });

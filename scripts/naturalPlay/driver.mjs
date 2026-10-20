@@ -14,6 +14,7 @@ import { DB } from '../../src/data/db.ts';
 import { getMonsterFamily } from '../../src/data/monsters.ts';
 import { QUESTS } from '../../src/data/quests.ts';
 import { EVENT_CHAINS } from '../../src/data/eventChains.ts';
+import { isMainStoryQuest } from '../../src/data/storyChapters.ts';
 import { AT } from '../../src/reducers/actionTypes.ts';
 import { INITIAL_STATE, gameReducer } from '../../src/reducers/gameReducer.ts';
 import { GS } from '../../src/reducers/gameStates.ts';
@@ -63,8 +64,7 @@ const FINAL_STORY_QUEST_ID = 87;
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const START_EPOCH_MS = 1_790_000_000_000;
 const ROUTE_GATES = mapRouteGateLevels(MAP_ROUTE_START_LOCATION, DB.MAPS);
-const STORY_PREFIX = '[스토리]';
-const STORY_QUEST_IDS = QUESTS.filter((quest) => String(quest.title || '').startsWith(STORY_PREFIX)).map((quest) => quest.id);
+const STORY_QUEST_IDS = QUESTS.filter((quest) => isMainStoryQuest(quest)).map((quest) => quest.id);
 /** 이야기를 여는 임무 → 그 이야기와 시작 지역(0단계 `loc`) — 데이터에서 도출한다(임무로 여는 단계가 없는 게임이면 비어 있다). */
 const STORY_OPENINGS = new Map(EVENT_CHAINS.flatMap((chain) => {
     const questStart = chain.steps[0]?.questStart;
@@ -359,9 +359,9 @@ export const runNaturalPlay = async (options) => {
     // 끝난 시점의 이야기 임무 — 계승하지 못한 판을 진단한다.
     result.openStoryQuests = (state.player?.quests || [])
         .map((entry) => ({ entry, quest: QUESTS.find((quest) => quest.id === entry.id) }))
-        .filter(({ quest }) => String(quest?.title || '').startsWith(STORY_PREFIX))
+        .filter(({ quest }) => isMainStoryQuest(quest))
         .map(({ entry, quest }) => ({ id: quest.id, progress: entry.progress ?? null, goal: quest.goal, target: quest.target ?? null, location: quest.location ?? null }));
-    result.claimedStoryQuests = QUESTS.filter((quest) => String(quest.title || '').startsWith(STORY_PREFIX) && claimed().has(String(quest.id))).map((quest) => quest.id);
+    result.claimedStoryQuests = QUESTS.filter((quest) => isMainStoryQuest(quest) && claimed().has(String(quest.id))).map((quest) => quest.id);
     return result;
 
     // ── 정책 ──────────────────────────────────────────────────────────────
@@ -613,7 +613,7 @@ export const runNaturalPlay = async (options) => {
         const done = claimed();
         const active = new Set((p.quests || []).map((entry) => String(entry.id)));
         const level = Number(p.level) || 1;
-        return QUESTS.find((quest) => String(quest.title || '').startsWith(STORY_PREFIX)
+        return QUESTS.find((quest) => isMainStoryQuest(quest)
             && !done.has(String(quest.id)) && !active.has(String(quest.id))
             && level >= (quest.minLv || 1)
             && (quest.prerequisiteQuestId == null || done.has(String(quest.prerequisiteQuestId)))) || null;
@@ -629,7 +629,7 @@ export const runNaturalPlay = async (options) => {
             const quest = QUESTS.find((entry) => entry.id === questState.id);
             if (!quest || Number(questState.progress) >= Number(quest.goal)) continue;
             const opening = STORY_OPENINGS.get(quest.id);
-            const target = String(quest.title || '').startsWith(STORY_PREFIX)
+            const target = isMainStoryQuest(quest)
                 ? quest.location
                 : opening && !p.eventChainProgress?.[opening.chainId] ? opening.loc : null;
             if (target && reachable(target)) return target;

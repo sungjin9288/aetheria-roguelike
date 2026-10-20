@@ -274,8 +274,8 @@ export const AI_SERVICE = {
             death:         `${data.player?.name || '용사'}의 전사 — ${location}`,
             levelUp:       `레벨 ${data.level} 달성`,
             rest:          `${location}에서 휴식`,
-            bossPhase2:    `보스 [${data.bossName}] Phase 2 전환 — ${location}`,
-            questComplete: `퀘스트 [퀘스트: ${data.questTitle}] 완료 in ${location}`,
+            bossPhase2:    `보스 [${data.bossName}] 2페이즈 전환 — ${location}`,
+            questComplete: `임무 [${data.questTitle}] 완료 — ${location}`,
             ruinRecap:     `${data.name}의 사망 후회고 — 레벨 ${data.level}, ${location}에서 전사`,
         };
         // context 변수를 AI 프록시에 전달하여 문맥 품질 향상

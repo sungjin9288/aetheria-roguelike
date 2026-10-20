@@ -73,7 +73,7 @@ const renderedRewardPercent = (selected) => {
     if (!match) return null;
     const percent = match[1].match(/\+(\d+)%/);
     assert.ok(percent, `보상 문구에 +N%가 있다: ${match[1]}`);
-    assert.match(match[1], /전투 경험치 · 골드/, '무엇이 오르는지 말한다');
+    assert.match(match[1], /전투 경험 · 골드/, '무엇이 오르는지 말한다');
     return Number(percent[1]);
 };
 

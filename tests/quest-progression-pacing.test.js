@@ -99,7 +99,7 @@ test('early route pacing keeps first visits and beginner quests below runaway le
 
     // slice 52: 첫 방문 감속 + 전투 EXP 60% + 퀘스트 상한 하향을 함께 반영한다.
     player = applyExp(player, 25); // 고요한 숲 first-visit discovery.
-    player = claimQuest(player, 80); // [스토리] 첫 번째 여정.
+    player = claimQuest(player, 80); // [이야기] 첫 번째 여정.
     player = applyExp(player, getPacedCombatExp(player, 60)); // 슬라임 3회 처치.
     player = claimQuest(player, 1); // 슬라임 소탕.
     player = applyExp(player, 30); // 서쪽 평원 first-visit discovery.

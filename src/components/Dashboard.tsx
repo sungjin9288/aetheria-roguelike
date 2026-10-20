@@ -68,7 +68,7 @@ const TAB_ITEMS = [
     { id: 'stats', icon: BarChart3, label: '상태' },
     { id: 'codex', icon: Eye, label: '도감' },
     { id: 'pass', icon: Star, label: '시즌' },
-    { id: 'graves', icon: Skull, label: '무덤' },
+    { id: 'graves', icon: Skull, label: '묘비' },
     { id: 'system', icon: Zap, label: '설정' },
 ];
 

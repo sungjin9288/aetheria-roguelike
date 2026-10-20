@@ -107,7 +107,7 @@ export const getExpeditionReturnAction = (
         if (affordableSupply) {
             return {
                 kind: 'open_shop',
-                label: '회복 물품 마련',
+                label: '회복 아이템 마련',
                 detail: MSG.RETURN_BUY_SUPPLY(affordableSupply.name),
             };
         }

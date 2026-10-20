@@ -35,7 +35,7 @@ const curseCrystal = {
     id: 'curse_crystal',
     name: '저주의 결정',
     rarity: 'rare',
-    desc: '상태 이상 피해 50% 증가',
+    desc: '상태이상 피해 50% 증가',
     effect: 'dot_mult',
     val: 1.5,
 };

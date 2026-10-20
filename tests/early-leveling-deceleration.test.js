@@ -84,7 +84,7 @@ test('slice 52: 초반 누적 성장 동선 — 멧돼지 후 Lv2, 거미 후 Lv
     let player = freshVitals();
 
     player = applyExp(player, visitExp('고요한 숲'));   // 첫 방문 (감속 후)
-    player = claimQuest(player, 80);                     // [스토리] 첫 번째 여정
+    player = claimQuest(player, 80);                     // [이야기] 첫 번째 여정
     player = awardCombatExp(player, 60);                 // 슬라임 3킬 (20/킬)
     player = claimQuest(player, 1);                      // 슬라임 소탕
     assert.equal(player.level, 1, '첫 이야기와 슬라임 임무 뒤 학습 구간 Lv1 유지');

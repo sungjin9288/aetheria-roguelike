@@ -85,7 +85,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                             <SignalBadge tone="danger" size="sm">종료</SignalBadge>
                             {s.prestigeRank > 0 && (
                                 <SignalBadge tone="resonance" size="sm">
-                                    <span className="inline-flex items-center gap-1"><Zap size={10} />승천 {s.prestigeRank}</span>
+                                    <span className="inline-flex items-center gap-1"><Zap size={10} />{MSG.PRESTIGE_RANK_LABEL(s.prestigeRank)}</span>
                                 </SignalBadge>
                             )}
                         </div>

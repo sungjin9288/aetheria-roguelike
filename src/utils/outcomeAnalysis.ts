@@ -70,7 +70,7 @@ export const getPostCombatAnalysis = (result: PostCombatResultLike) => {
     else if (enemyTier === 'ELITE') rewardHighlights.push('정예 격파');
     if ((result.items?.length || 0) >= 2) rewardHighlights.push('풍성한 전리품');
     if ((result.gold || 0) >= 100) rewardHighlights.push(`골드 +${result.gold}`);
-    if ((result.exp || 0) >= 100) rewardHighlights.push(`경험치 +${result.exp}`);
+    if ((result.exp || 0) >= 100) rewardHighlights.push(`경험 +${result.exp}`);
 
     // cycle 336: hpRatio / mpRatio 출력 필드 제거 — analysis.hpRatio/mpRatio 외부 read 0건.
     //   내부에서만 grade/notes/actions 분기 계산용으로 사용. 출력은 dead.
@@ -186,7 +186,7 @@ export const getRunSummaryAnalysis = (summary: RunSummaryLike) => {
     if (Number.isFinite(summary.recentWinRate)) notes.push(`최근 승률: ${summary.recentWinRate}%`);
 
     const focus: string[] = [];
-    if ((summary.relicsFound || 0) <= 1) focus.push('얻은 유물이 적었습니다. 탐험 중 새로운 사건을 더 찾아보세요.');
+    if ((summary.relicsFound || 0) <= 1) focus.push('얻은 유물이 적었습니다. 탐험 중 새로운 이벤트를 더 찾아보세요.');
     if ((summary.bossKills || 0) === 0 && (summary.level || 0) >= 12) focus.push('보스에 들어가기 전 방어 장비와 회복 수단을 더 준비하면 한 단계 더 올라갈 수 있습니다.');
     if ((summary.kills || 0) < 30) focus.push('초반 교전 수가 적었습니다. 첫 두 지역을 더 살펴 성장 기회를 확보하세요.');
     if ((summary.totalGold || 0) > 0 && (summary.totalGold || 0) < 1500) focus.push('모은 골드가 적었습니다. 상점 구매를 서두르지 말고 장비 교체 시점을 골라보세요.');
@@ -197,7 +197,7 @@ export const getRunSummaryAnalysis = (summary: RunSummaryLike) => {
         focus.push('도주가 많았고 보스 진입이 적었습니다. 장비와 성장을 보강한 뒤 보스에 도전하세요.');
     }
     if ((summary.discoveries || 0) <= 1 && (summary.level || 0) >= 10) {
-        focus.push('발견한 지역이 적었습니다. 새로운 길을 탐색해 유물과 사건을 만날 기회를 넓히세요.');
+        focus.push('발견한 지역이 적었습니다. 새로운 길을 탐험해 유물과 이벤트를 만날 기회를 넓히세요.');
     }
     if ((summary.discoveries || 0) >= 5) {
         focus.push('탐험 폭이 넓었습니다. 같은 호기심으로 다음 모험도 시작하세요.');
@@ -274,10 +274,10 @@ export const getRunSummaryReflectionStrip = (
         cause = '골드 부족';
         lesson = '구매 시점 조절';
         next = '상점 전리품 비교';
-    } else if (lowDiscovery || /발견한 지역|탐색/.test(focusText)) {
+    } else if (lowDiscovery || /발견한 지역/.test(focusText)) {
         tone = 'growth';
         cause = '탐험 폭 부족';
-        lesson = '새 사건 발견 부족';
+        lesson = '새 이벤트 발견 부족';
         next = '새 지역 개방';
     } else if (lowStreak || /연속 처치가 끊/.test(focusText)) {
         tone = 'growth';

@@ -2,7 +2,7 @@
 //
 // 2026-08 모바일 압축은 기본 토벌(종류 없이 몬스터 대상 · 횟수)의 진행도를 제목에 합치고("슬라임 소탕 (0/3)") 목표 줄을 숨겼다.
 // 제목이 대상을 말한다는 전제였는데 기본 토벌 113개 중 49개는 그렇지 않았다 — "호수의 수호자 (0/5)"(물의 정령) ·
-// "[스토리] 불꽃의 시험 (0/5)"(화염 정령). 추천 줄을 펼친 안내도 목표를 그리지 않아 수락 전 게시판 어디에도 무엇을 하는
+// "[이야기] 불꽃의 시험 (0/5)"(화염 정령). 추천 줄을 펼친 안내도 목표를 그리지 않아 수락 전 게시판 어디에도 무엇을 하는
 // 임무인지가 없었다. Wave 128 뒤 이야기 칸의 추천 줄이 바로 그런 임무(본편 장 · 이야기를 여는 임무 5 · 17 · 205)다.
 //
 // 판정은 `isSelfDescribingHuntQuest`(utils/questOperations.ts) 하나이고 추천 줄이 그것을 읽는다 — 데이터 전수 + 실제 렌더.
@@ -61,7 +61,7 @@ test('[이야기 칸] 이야기를 여는 임무와 본편 장은 제목이 대�
     const silentOpeners = openers.filter((id) => !isSelfDescribingHuntQuest(byId(id)) && isBasicHuntQuest(byId(id)));
     // 제목이 대상을 말하지 않는 여는 임무 — 2026-10 데이터에서 셋 이상(5 호수의 수호자 · 17 평원 정화 · 205 혼돈 속의 생존자 …).
     for (const id of [5, 17, 205]) assert.ok(silentOpeners.includes(id), String(id));
-    const storyChapters = QUESTS.filter((quest) => String(quest.title).includes('[스토리]') && isBasicHuntQuest(quest));
+    const storyChapters = QUESTS.filter((quest) => String(quest.title).includes('[이야기]') && isBasicHuntQuest(quest));
     assert.ok(storyChapters.some((quest) => !isSelfDescribingHuntQuest(quest)), '본편 장');
 });
 

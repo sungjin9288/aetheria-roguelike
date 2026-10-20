@@ -216,7 +216,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
       ? `골드 부족 · ${player.gold}/${synthesisPreview.goldCost}`
       : useProtect && !canUseProtection
         ? `합성 보호 자산 부족 · ${protectionCost}`
-        : `동일 타입·동일 티어 장비 ${BALANCE.SYNTHESIS_INPUT_COUNT}개를 선택해야 합성할 수 있습니다.`;
+        : MSG.SYNTHESIS_SELECT_REQUIRED(BALANCE.SYNTHESIS_INPUT_COUNT);
     const failureText = useProtect
       ? `실패해도 장비 ${BALANCE.SYNTHESIS_INPUT_COUNT}개는 모두 돌아오며 골드와 보호 자산은 소모됩니다.`
       : `실패하면 장비 ${BALANCE.SYNTHESIS_INPUT_COUNT}개 중 ${BALANCE.SYNTHESIS_FAIL_RETURN}개만 돌아오며 골드는 소모됩니다.`;
@@ -225,7 +225,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
       <div className="custom-scrollbar flex-1 space-y-4 overflow-y-auto pr-2">
         <div className="rounded-md border border-purple-500/20 bg-cyber-dark/60 p-4">
           <div className="aether-type-body mb-3 font-readable text-purple-200/78">
-            {BALANCE.SYNTHESIS_INPUT_COUNT}개 동일 타입 · 동일 티어 장비 선택
+            {MSG.SYNTHESIS_SELECT_HINT(BALANCE.SYNTHESIS_INPUT_COUNT)}
           </div>
           <div className="mb-3 flex justify-center gap-2">
             {Array.from({ length: BALANCE.SYNTHESIS_INPUT_COUNT }).map((_, index) => {
@@ -370,7 +370,7 @@ const CraftingPanel = ({ player, actions, setGameState, onOpenArchiveConsole }: 
         eyebrow="장비 제작소"
         title={mode === 'bag' ? MSG.BAG_PANEL_TITLE : mode === 'craft' ? '제작' : '장비 합성'}
         titleClassName="flex items-center gap-2 text-[1.05rem] text-orange-400"
-        meta={mode === 'bag' ? MSG.BAG_PANEL_META : mode === 'craft' ? '제작 가능한 레시피와 재료 수량을 즉시 비교합니다.' : '동일 티어 장비를 골라 합성 결과를 확인합니다.'}
+        meta={mode === 'bag' ? MSG.BAG_PANEL_META : mode === 'craft' ? '제작 가능한 레시피와 재료 수량을 즉시 비교합니다.' : MSG.SYNTHESIS_PANEL_META}
         onBack={() => setGameState?.('idle')}
         backLabel="복귀"
         backTestId="crafting-close"

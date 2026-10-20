@@ -4,6 +4,7 @@ import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
 import { getConsumableCompactLabel, getConsumableDescription } from '../utils/consumablePresentation';
 import type { Item } from '../types/index.js';
+import { MSG } from '../data/messages';
 
 /**
  * QuickSlot — 빠른 소모품 슬롯 (Feature #8)
@@ -41,8 +42,8 @@ const QuickSlot = ({ slots, onUse, gameState }: QuickSlotProps) => {
                         data-testid={`quick-slot-${i}`}
                         whileTap={item && canUse ? { scale: 0.9 } : {}}
                         onClick={() => item && canUse && onUse?.(item, i)}
-                        title={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 빠른 사용 (슬롯 ${i + 1})` : `퀵슬롯 ${i + 1} (인벤에서 할당)`}
-                        aria-label={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 슬롯 ${i + 1}` : `퀵슬롯 ${i + 1} (인벤에서 할당)`}
+                        title={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 빠른 사용 (슬롯 ${i + 1})` : MSG.QUICK_SLOT_EMPTY_LABEL(i + 1)}
+                        aria-label={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 슬롯 ${i + 1}` : MSG.QUICK_SLOT_EMPTY_LABEL(i + 1)}
                         className={`relative flex min-h-[40px] min-w-[40px] items-center justify-center rounded-[0.95rem] border text-center text-xs font-fira transition-all backdrop-blur-md h-10 w-10
                             ${item
                                 ? canUse

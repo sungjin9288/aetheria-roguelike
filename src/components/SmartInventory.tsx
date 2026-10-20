@@ -217,7 +217,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                 >
                     <div className="flex items-center gap-2 text-[#f6e7c8] font-fira text-sm">
                         <AlertCircle size={13} className="shrink-0 animate-pulse" />
-                        <span>인벤토리 {(player.inv || []).length}/{inventoryCapacity} — 저가 재료 {sellableMatCount}개 정리 가능</span>
+                        <span>{MSG.BAG_AUTOSELL_NOTICE((player.inv || []).length, inventoryCapacity, sellableMatCount)}</span>
                     </div>
                     <Motion.button
                         whileTap={{ scale: 0.95 }}

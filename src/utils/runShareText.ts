@@ -1,5 +1,6 @@
 import { getTitleLabel } from './gameUtils.js';
 import type { RunSummary } from '../reducers/actionTypes.js';
+import { MSG } from '../data/messages.js';
 
 /**
  * buildRunShareText — RunSummaryCard 클립보드 공유용 자랑 텍스트.
@@ -63,13 +64,13 @@ export const buildRunShareText = (s: RunSummary | null | undefined) => {
 
     return `⚔️ AETHERIA RUN ENDED
 ─────────────────────
-${titlePrefix}${job} Lv.${level}
+${titlePrefix}${job} ${MSG.LEVEL_LABEL(level)}
 📍 ${loc}에서 전사
 
 🗡️ 처치: ${kills}마리 (보스 ${bossKills}회)
 💎 유물: ${relicsFound}개 수집
 💰 획득 골드: ${totalGold}
-⚡ 프레스티지: ${prestigeRank}랭크${buildLine}${escapeLine}${discoveryLine}${maxStreakLine}${signatureLine}
+⚡ ${MSG.PRESTIGE_RANK_LABEL(prestigeRank)}${buildLine}${escapeLine}${discoveryLine}${maxStreakLine}${signatureLine}
 
 #에테리아 #AetheriaRPG #로그라이크`;
 };

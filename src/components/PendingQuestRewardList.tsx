@@ -12,7 +12,7 @@ interface PendingQuestRewardListProps {
 
 const formatQuestReward = (reward: QuestReward | undefined, player: ChallengeHolder) => {
     const parts = [
-        Number(reward?.exp) > 0 ? `경험치 ${Number(reward?.exp).toLocaleString()}` : null,
+        Number(reward?.exp) > 0 ? `경험 ${Number(reward?.exp).toLocaleString()}` : null,
         Number(reward?.gold) > 0 ? `골드 ${getGoldIncome(player, Number(reward?.gold)).toLocaleString()}` : null,
         typeof reward?.item === 'string' && reward.item.trim() ? reward.item : null,
         typeof reward?.title === 'string' && reward.title.trim() ? `칭호 ${reward.title}` : null,

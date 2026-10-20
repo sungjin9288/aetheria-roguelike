@@ -14,14 +14,14 @@ export interface PrestigeMilestone {
 }
 
 export const PRESTIGE_MILESTONES: readonly PrestigeMilestone[] = Object.freeze([
-    { rank: 1, name: '에테르 각성', description: '에센스 획득 +10% · 마왕에게서 원시의 파편 발견' },
+    { rank: 1, name: '에테르 각성', description: '계승 정수 획득 +10% · 마왕에게서 원시의 파편 발견' },
     { rank: 2, name: '강화된 유물', description: '유물 선택지 4개 · 최대 보유 6개' },
     { rank: 3, name: '심연의 메아리', description: '정예 출현 증가 · 보스 희귀 장비 보장 · 진 보스 도전' },
-    { rank: 4, name: '재의 인장', description: '캠프파이어 발견율 +4%p' },
+    { rank: 4, name: '재의 인장', description: '모닥불 발견율 +4%p' },
     { rank: 5, name: '심연의 인장', description: '첫 유물 선택지 4개' },
     { rank: 6, name: '잔향의 나침반', description: '유물을 얻지 못할수록 다음 발견 확률이 더 빠르게 상승' },
     { rank: 7, name: '심연의 서약', description: '도전 조건을 하나 더 선택 가능' },
-    { rank: 8, name: '에테르 심화', description: '에센스 획득 보너스가 누적 +20%로 상승' },
+    { rank: 8, name: '에테르 심화', description: '계승 정수 획득 보너스가 누적 +20%로 상승' },
     { rank: 9, name: '심연 사냥꾼', description: '정예 몬스터 처치 보상 +25%' },
     { rank: 10, name: '에테르 초월', description: '영구 능력치 2배 · 에테르 관문의 숨겨진 보스 출현' },
 ]);

@@ -116,7 +116,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
         { label: '보스 처치', value: player?.stats?.bossKills || 0 },
         { label: '사망 횟수', value: player?.stats?.deaths || 0 },
         { label: '최고 심연층', value: player?.stats?.abyssFloor || 0 },
-        { label: '에테르 환생', value: player?.meta?.prestigeRank || 0 },
+        { label: MSG.TRUE_ENDING_STAT_PRESTIGE, value: player?.meta?.prestigeRank || 0 },
         { label: '마왕 토벌', value: player?.stats?.demonKingSlain || 0 },
     ];
 

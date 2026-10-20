@@ -90,7 +90,7 @@ test('계승 화면은 실제 보상과 수령 버튼을 보여주고 완료 보
     won.player.quests[0].title = '위조 제목';
     won.player.quests[0].reward = { gold: 1 };
     const html = renderStatic(createElement(AscensionScreen, { player: won.player }));
-    assert.match(html, /\[스토리\] 세계의 끝 보상 받기/);
+    assert.match(html, /\[이야기\] 세계의 끝 보상 받기/);
     assert.match(html, /성검 에테르니아/);
     assert.ok(!html.includes('위조 제목'));
     assert.match(html, /data-testid="ascension-confirm"[^>]*disabled=""/);

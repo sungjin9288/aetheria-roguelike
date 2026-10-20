@@ -96,7 +96,7 @@ test('menu, settings, and device playtest use one natural Korean vocabulary', as
     assert.match(messages, /CHALLENGE_NO_CONSUMABLE: '물약 없이:/);
     assert.match(messages, /COMBAT_CHAOS_SKILL: \(name: string\) => `뒤섞인 기술:/);
 
-    for (const label of ['장비', '가방', '임무', '업적', '기술', '지도', '상태', '도감', '시즌', '무덤', '설정']) {
+    for (const label of ['장비', '가방', '임무', '업적', '기술', '지도', '상태', '도감', '시즌', '묘비', '설정']) {
         assert.match(dashboard, new RegExp(`label: '${label}'`));
     }
     assert.match(dashboard, /모험 기록/);

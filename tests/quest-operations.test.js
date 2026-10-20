@@ -85,7 +85,7 @@ test('quest board surfaces story and build operations for a fresh run', () => {
     assert.equal(board.featured[0].lane, 'story');
     assert.ok(featuredLanes.includes('build'));
     assert.ok(featuredIds.includes(68));
-    assert.ok(board.featured.some((entry) => entry.quest.title.includes('[스토리]')));
+    assert.ok(board.featured.some((entry) => entry.quest.title.includes('[이야기]')));
 });
 
 test('quest board does not offer static quests that already paid their reward', () => {
@@ -144,7 +144,7 @@ test('story missions unlock one chapter at a time even for a high-level player',
     const board = getQuestBoardRecommendations(player);
     // Wave 128: 이야기 칸에는 곁가지 이야기를 여는 임무도 들어간다 — 본편 장만 센다(본편은 한 장씩 열린다).
     const availableStoryIds = [...board.featured, ...board.backlog]
-        .filter((entry) => entry.lane === 'story' && entry.quest.title.includes('[스토리]'))
+        .filter((entry) => entry.lane === 'story' && entry.quest.title.includes('[이야기]'))
         .map((entry) => entry.quest.id);
 
     assert.deepEqual(availableStoryIds, [80]);
@@ -312,7 +312,7 @@ test('the next story chapter unlocks only after its prerequisite reward was clai
     const board = getQuestBoardRecommendations(player);
     // Wave 128: 이야기 칸의 곁가지 이야기 임무는 빼고 본편 장만 센다. 받을 본편 장이 이야기 칸을 먼저 쓴다.
     const availableStoryIds = [...board.featured, ...board.backlog]
-        .filter((entry) => entry.lane === 'story' && entry.quest.title.includes('[스토리]'))
+        .filter((entry) => entry.lane === 'story' && entry.quest.title.includes('[이야기]'))
         .map((entry) => entry.quest.id);
 
     assert.deepEqual(availableStoryIds, [81]);
@@ -443,7 +443,7 @@ test('quest action rejects direct acceptance of a locked story chapter', () => {
     assert.equal(state.logs.length, 1);
     assert.deepEqual(
         { type: state.logs[0].type, text: state.logs[0].text },
-        { type: 'info', text: MSG.QUEST_PREREQUISITE_REQUIRED('[스토리] 에테르의 균열') },
+        { type: 'info', text: MSG.QUEST_PREREQUISITE_REQUIRED('[이야기] 에테르의 균열') },
     );
 });
 

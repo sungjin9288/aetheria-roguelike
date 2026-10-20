@@ -159,8 +159,8 @@ test.describe('True Ending → New Game+ production journey', () => {
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.triggerPlatformBack?.());
         await expect(page.getByTestId('true-ending-pending-quest-86')).toBeVisible();
         await expect(page.getByTestId('true-ending-pending-quest-87')).toBeVisible();
-        const finalQuest = page.getByRole('button', { name: '[스토리] 세계의 끝 보상 받기', exact: true });
-        const riftQuest = page.getByRole('button', { name: '[스토리] 에테르의 균열 보상 받기', exact: true });
+        const finalQuest = page.getByRole('button', { name: '[이야기] 세계의 끝 보상 받기', exact: true });
+        const riftQuest = page.getByRole('button', { name: '[이야기] 에테르의 균열 보상 받기', exact: true });
         await expect(finalQuest).toBeVisible();
         await expect(riftQuest).toBeVisible();
         await finalQuest.click();

@@ -245,7 +245,7 @@ export const MSG = {
     CHALLENGE_PICKER_TITLE: '도전 규칙',
     CHALLENGE_PICKER_SELECT: '선택',
     CHALLENGE_PICKER_HINT: '더 어려운 규칙에는 더 큰 보상이 따릅니다.',
-    CHALLENGE_PICKER_REWARD: (percent: number) => `전투 경험치 · 골드 +${percent}%`,
+    CHALLENGE_PICKER_REWARD: (percent: number) => `전투 경험 · 골드 +${percent}%`,
 
     // --- 진 엔딩 (True Ending) ---
     // cycle 116: TRUE_BOSS_PHASE3 제거 — 0건 사용. UNLOCK/APPEAR만 active.
@@ -427,7 +427,7 @@ export const MSG = {
     /** 정화 아이템 — 라벨은 상태 칩과 같은 `STATUS_LABELS`(원시 효과 id를 그리던 상점 줄: "poison 해제"). */
     CONSUMABLE_CURE_STATUS: (label: string) => `${label} 해제`,
     CONSUMABLE_CURE_ANY: '상태이상 해제',
-    CONSUMABLE_BUFF_TURNS: (turn: number) => `${turn}턴 버프`,
+    CONSUMABLE_BUFF_TURNS: (turn: number) => `${turn}턴 강화`,
     ITEM_USE_BUFF: (name: string) => `${withJosa(name, '을/를')} 사용해 강화 효과를 얻었습니다.`,
     GOLD_INSUFFICIENT: '골드가 부족합니다.',
     INV_FULL: '가방이 가득 찼습니다.',
@@ -474,7 +474,7 @@ export const MSG = {
     QUEST_TRAIT_BONUS: (title: string, gold: number) => `${title} 공명 보상 · 골드 +${gold}`,
     // W2 (Wave 5): Quest.title은 타입상 optional이고 현상수배/카탈로그 양쪽을 받는
     //   호출부가 있어 QUEST_ACCEPTED / QUEST_ABANDONED와 같은 시그니처로 맞춘다.
-    QUEST_DONE: (title: string | undefined) => `퀘스트 완료: ${title}`,
+    QUEST_DONE: (title: string | undefined) => `임무 완료: ${title}`,
     STORY_JOURNAL_TITLE: '지금까지의 이야기',
     STORY_JOURNAL_PREVIOUS: '앞선 이야기 다시 읽기',
     STORY_JOURNAL_NEXT: (title: string | undefined, level: number | undefined) => `다음 이야기: ${title} · 수락 조건 레벨 ${level}. 마을 게시판에서 확인하세요.`,
@@ -494,8 +494,8 @@ export const MSG = {
     MOVE_SEASON_ONLY: '⚡ 시즌 이벤트 기간에만 접근할 수 있는 지역입니다.',
     MOVE_NO_EXIT: '갈 수 없는 곳입니다.',
     MOVE_LEVEL_REQUIRED: (lv: number | string) => `레벨 ${lv} 이상에서 입장할 수 있습니다.`,
-    TOWN_BUFF_CLEAR: '마을에 돌아와 임시 강화 효과와 상태 이상을 정리했습니다.',
-    EXPLORE_BLOCKED: '탐색할 수 없는 상태입니다.',
+    TOWN_BUFF_CLEAR: '마을에 돌아와 임시 강화 효과와 상태이상을 정리했습니다.',
+    EXPLORE_BLOCKED: '탐험할 수 없는 상태입니다.',
     TOWN_PEACEFUL: '마을 주변은 평화롭습니다.',
     // 2026-09 Wave 16 H3: safe 지역의 explore 라벨 — ControlPanel이 하드코딩하던
     //   한국어 문자열을 MSG로 옮기고, 이야기 스텝 대기 케이스를 새로 구분한다.
@@ -523,11 +523,11 @@ export const MSG = {
     SKILL_INVALID_BRANCH: '유효하지 않은 분기입니다.',
     JOB_CHANGE_INVALID: '전직 가능한 직업이 아닙니다.',
     JOB_CHANGE_LEVEL: '전직 레벨이 부족합니다.',
-    QUEST_TOWN_ONLY: '퀘스트 수락은 마을 게시판에서만 가능합니다.',
-    QUEST_ALREADY_COMPLETED: '이미 완료해 보상을 받은 퀘스트입니다.',
-    QUEST_LEVEL_REQUIRED: (lv: number | undefined) => `레벨 ${lv} 이상부터 수락할 수 있는 퀘스트입니다.`,
+    QUEST_TOWN_ONLY: '임무 수락은 마을 게시판에서만 가능합니다.',
+    QUEST_ALREADY_COMPLETED: '이미 완료해 보상을 받은 임무입니다.',
+    QUEST_LEVEL_REQUIRED: (lv: number | undefined) => `레벨 ${lv} 이상부터 수락할 수 있는 임무입니다.`,
     QUEST_PREREQUISITE_REQUIRED: (title: string | undefined) => `‘${title}’ 임무를 먼저 완료해야 이어지는 이야기를 받을 수 있습니다.`,
-    QUEST_ACCEPTED: (title: string | undefined) => `퀘스트 수락: ${title}`,
+    QUEST_ACCEPTED: (title: string | undefined) => `임무 수락: ${title}`,
     QUEST_ABANDON_TOWN_ONLY: '임무 포기는 마을 게시판에서만 가능합니다.',
     QUEST_ABANDON_REWARD_PENDING: '완료한 임무는 보상을 받은 뒤 목록에서 정리할 수 있습니다.',
     QUEST_ABANDONED: (title: string | undefined) => `${title} 임무를 포기했습니다. 같은 임무는 다시 수락할 수 있습니다.`,
@@ -738,7 +738,7 @@ export const MSG = {
     COMBAT_NOT_IN_BATTLE: '전투 상태가 아닙니다.',
     COMBAT_ITEM_NOT_FOUND: '가방에 없는 아이템입니다.',
     COMBAT_CONSUMABLE_ONLY: '전투 중에는 소모품만 사용할 수 있습니다.',
-    DEMON_KING_SLAIN_ASCEND: '⚡ 마왕이 쓰러졌습니다. 에테르 환생의 문이 열렸습니다...',
+    DEMON_KING_SLAIN_ASCEND: '⚡ 마왕이 쓰러졌습니다. 계승의 문이 열렸습니다...',
     TRUE_GOD_SLAIN: '🌟 원시의 신이 쓰러졌습니다. 세계의 진실이 밝혀집니다...',
     VOID_GOD_SLAIN: '💀 공허의 신이 쓰러졌습니다. 공허가 잠시 물러났습니다... 당신은 심연의 끝을 정복했습니다.',
     ABYSS_RECORD: (floor: number) => `🏆 심연 최고 기록 경신! ${floor}층 돌파`,
@@ -753,7 +753,7 @@ export const MSG = {
     ITEM_USE_CURE: (name: string) => `${name} 사용: 상태이상 해제`,
 
     // --- 전투 승리 ---
-    QUEST_CONDITION_MET: (count: number) => `퀘스트 조건 달성: ${count}개`,
+    QUEST_CONDITION_MET: (count: number) => `임무 조건 달성: ${count}개`,
     // 2026-10 Wave 61: 연속 처치 단계는 공격력과 치명타 확률을 함께 올린다(BALANCE.KILL_STREAK_ATK_BONUS · KILL_STREAK_CRIT_BONUS).
     KILL_STREAK_BONUS: (streak: number, atkPct: number, critPct: number) => `🔥 ${streak}연속 처치! 공격력 +${atkPct}% · 치명타 확률 +${critPct}%p 보너스 발동`,
 
@@ -1020,7 +1020,7 @@ export const MSG = {
         `[${skillName}] 적 공격 ${hits}번을 회피합니다${laterChancePct === null ? '' : `(두 번째부터 ${laterChancePct}%)`}!`,
     RELIC_TIME_MASTER_EXTRA_TURN: '[시간 지배자] 시간이 멈춥니다 — 추가 행동!',
     RELIC_ECHO_ATK_ARMED: '[공허의 메아리] 다음 공격이 강화됩니다!',
-    SKILL_CRIT_COOLDOWN_RESET: '[인과율 조작] 치명타! 모든 쿨타임 -1.',
+    SKILL_CRIT_COOLDOWN_RESET: '[인과율 조작] 치명타! 모든 기술의 재사용 대기 -1턴.',
     RELIC_FIRST_SKILL_FREE: '[시간 군주의 왕관] 첫 기술 기력 소모 없음!',
     RELIC_FREE_SKILL_PROC: '[주문 메아리] 기력 소모 없음!',
     RELIC_SKILL_LIFESTEAL_PROC: (heal: number) => `[영혼 흡수] 생명 +${heal}`,
@@ -1073,7 +1073,7 @@ export const MSG = {
     ),
     ENEMY_TELEGRAPH_STUNNED: '기절 중 — 행동 불가',
     ENEMY_TELEGRAPH_PHASE2_IMMINENT: (formName?: string) => `⚡ 2페이즈 임박 — ${formName || '형태 변환'}`,
-    ENEMY_TELEGRAPH_GUARD_HIGH: (pct: number) => `방어 태세 (${pct}%)`,
+    ENEMY_TELEGRAPH_GUARD_HIGH: (pct: number) => `방어 자세 (${pct}%)`,
     ENEMY_TELEGRAPH_HEAVY_HIGH: (pct: number) => `맹공 준비 (${pct}%)`,
     ENEMY_TELEGRAPH_GUARD_MED: (pct: number) => `방어 가능 (${pct}%)`,
     ENEMY_TELEGRAPH_HEAVY_MED: (pct: number) => `맹공 주의 (${pct}%)`,
@@ -1093,7 +1093,7 @@ export const MSG = {
     ENEMY_SUMMON_HIT: (summonName: string, count: number, dmg: number) => `[${summonName} ${count}체] 함께 공격! ${dmg} 피해를 받았습니다.`,
     ENEMY_SUMMON_SLAIN: (summonName: string, left: number) => `${summonName} 하나가 쓰러졌습니다. (남은 ${left}체)`,
     ENEMY_LONG_FIGHT_ENRAGE: (enemyName: string | undefined, pct: number) => `[장기전] ${enemyName}의 공격력 +${pct}% — 길어질수록 강해집니다.`,
-    LONG_FIGHT_REWARD: (pct: number) => `[장기전 보상] 처치 골드 · 경험치 +${pct}%`,
+    LONG_FIGHT_REWARD: (pct: number) => `[장기전 보상] 처치 골드 · 경험 +${pct}%`,
     PLAYER_STATUS_STACKED: (label: string, stacks: number) => `[${label}] ${stacks}중첩 — 효과가 강해집니다!`,
     PLAYER_FROST_BUILDUP: (stacks: number, max: number) => `[냉기 누적] ${stacks}/${max} — ${max}에 닿으면 얼어붙습니다.`,
     PLAYER_FROZEN_BY_FROST: '[빙결] 냉기가 쌓여 얼어붙었습니다!',
@@ -1125,7 +1125,8 @@ export const MSG = {
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.outcome.ts.
     FIRST_BOSS_REWARD_HINT_FALLBACK: '초회 토벌 보너스를 확보했습니다.',
     KILL_STACK_SOURCE_RELIC: '[허공의 왕좌]',
-    KILL_STACK_SOURCE_SYNERGY: '[시너지 처형 분노]',
+    // 2026-10 Wave 131: 조합의 이름을 쓴다("[시너지 처형 분노]"는 화면에 없는 이름이었다 — 화면 용어는 '조합').
+    KILL_STACK_SOURCE_SYNERGY: (labels: string) => `[${labels}]`,
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.ts.
     RELIC_TURN_MP_REGEN: (val: number) => `[비전 서지] 기력 +${val}`,
@@ -1150,8 +1151,8 @@ export const MSG = {
     // 2026-10 Wave 130: 기세 안내는 단계가 바뀔 때만 한 번 나온다(`applyDynamicDifficulty`) — 전투 시작마다 같은 문장이 반복됐다.
     DIFFICULTY_GM_OVERWHELM: '⚔️ 당신의 기세가 압도적입니다 — 약간의 긴장과 함께 보상이 크게 늘어납니다.',
     // 2026-10 Wave 61: 하향 단계는 적만 약하게 하지 않는다 — 처치 골드 · 경험치도 낮춘다(DifficultyManager DIFF_TABLE의 goldMult · expMult < 1).
-    DIFFICULTY_GM_CRISIS: '🛡️ 잠시 숨을 고를 시간입니다. 몬스터가 약해지는 대신 얻는 골드와 경험치도 줄어듭니다.',
-    DIFFICULTY_GM_DISADVANTAGE: '🛡️ 어려운 상황이군요. 몬스터 강도를 낮추는 대신 얻는 골드와 경험치도 조금 줄어듭니다.',
+    DIFFICULTY_GM_CRISIS: '🛡️ 잠시 숨을 고를 시간입니다. 몬스터가 약해지는 대신 얻는 골드와 경험도 줄어듭니다.',
+    DIFFICULTY_GM_DISADVANTAGE: '🛡️ 어려운 상황이군요. 몬스터 강도를 낮추는 대신 얻는 골드와 경험도 조금 줄어듭니다.',
 
     // 2026-09 Wave 6 X2: systems 이관 — combatActionTurn.ts / combatItemTurn.ts.
     LOCATION_UNKNOWN_FALLBACK: '알 수 없는 곳',
@@ -1237,11 +1238,11 @@ export const MSG = {
     //   `event_pending`은 위 `AI_EVENT_PREPARING_BLOCKED`가 이미 소유한다.
     CMD_BLOCKED_EVENT: '이벤트 진행 중입니다. 1, 2, 3 중 하나를 선택하세요.',
     CMD_BLOCKED_JOB_CHANGE: '전직 선택 중입니다. 화면에서 직업을 선택하거나 닫아 주세요.',
-    CMD_BLOCKED_QUEST_BOARD: '퀘스트 보드가 열려 있습니다. 수락 또는 닫기를 먼저 완료하세요.',
+    CMD_BLOCKED_QUEST_BOARD: '임무 게시판이 열려 있습니다. 수락 또는 닫기를 먼저 완료하세요.',
     CMD_BLOCKED_SHOP: '상점 이용 중입니다. 다른 행동은 상점을 닫은 뒤 진행하세요.',
     CMD_BLOCKED_CRAFTING: '제작 화면이 열려 있습니다. 제작을 완료하거나 닫아 주세요.',
-    CMD_BLOCKED_ASCENSION: '환생 여부를 먼저 결정해야 합니다.',
-    CMD_BLOCKED_DEAD: '런이 종료되었습니다. 결과 화면에서 다시 시작하세요.',
+    CMD_BLOCKED_ASCENSION: '계승 여부를 먼저 결정해야 합니다.',
+    CMD_BLOCKED_DEAD: '여정이 끝났습니다. 결과 화면에서 다시 시작하세요.',
 
     // ── 명령 응답 ────────────────────────────────────────────────────────────
     CMD_SKILL_CYCLED: '기술 칸을 전환했습니다.',
@@ -1255,13 +1256,13 @@ export const MSG = {
     ) => (
         `[상태] 레벨 ${level} ${name} (${job}) | 생명: ${hp}/${maxHp} | 기력: ${mp}/${maxMp} | 골드: ${gold} | 위치: ${loc}`
     ),
-    CMD_INVENTORY: (count: number) => `[인벤토리] ${count}개 아이템`,
-    CMD_QUEST: (count: number) => `[퀘스트] ${count}개 진행 중`,
+    CMD_INVENTORY: (count: number) => `[가방] 아이템 ${count}개`,
+    CMD_QUEST: (count: number) => `[임무] ${count}개 진행 중`,
     CMD_MAP: (visited: number, total: number, loc: string | undefined) => (
-        `[월드맵] 탐험 ${visited}/${total} | 현재 위치: ${loc} | 이동은 move <지역> 명령으로 진행`
+        `[지도] 발견한 지역 ${visited}/${total} | 현재 위치: ${loc} | 이동은 move <지역> 명령으로 진행`
     ),
     /** 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행 — 지도 명령도 위치 · 탐험 지도를 드러내지 않는다. */
-    CMD_MAP_BLIND: '[월드맵] 지도 정보가 숨겨져 있습니다 | 이동은 move <지역> 명령으로 진행',
+    CMD_MAP_BLIND: '[지도] 지도 정보가 숨겨져 있습니다 | 이동은 move <지역> 명령으로 진행',
     CMD_HELP: '이동: move <지역>\n행동: explore, rest, shop\n전투: attack(a), skill(s), nextskill(sn), escape(r)\n정보: status, inventory, quest, map',
     CMD_UNKNOWN: (command: string) => `알 수 없는 명령어: ${command} (/help)`,
     /** 자동완성의 휴식 줄 — 실제 비용(`getRestCost`: 레벨 · 거울 반영)을 그린다. 고정 "100G"였다(Wave 61, 원장 §61.3). */
@@ -1379,7 +1380,7 @@ export const MSG = {
     RELIC_CURSED_POWER_START_COST: (selfDamage: number) => `[저주받은 반지] 전투 시작 대가 · 생명 -${selfDamage}`,
     // 2026-10 Wave 130: 발견 체인 완료 — 보상 줄이 "300G, 200 EXP"였다.
     DISCOVERY_JOURNEY_DESC: (desc: string) => `🔍 ${desc}`,
-    DISCOVERY_JOURNEY_COMPLETE: (label: string, rewards: string) => `🏆 [발견 체인 완료] ${label}! 보상: ${rewards}`,
+    DISCOVERY_JOURNEY_COMPLETE: (label: string, rewards: string) => `🏆 [발견 여정 완료] ${label}! 보상: ${rewards}`,
     DISCOVERY_JOURNEY_REWARD_GOLD: (gold: number) => `골드 ${gold}`,
     DISCOVERY_JOURNEY_REWARD_EXP: (exp: number) => `경험 ${exp}`,
     DISCOVERY_JOURNEY_REWARD_CRYSTAL: (count: number) => `크리스탈 ${count}`,
@@ -1436,4 +1437,29 @@ export const MSG = {
     TRAIT_LOOT_SUMMARY: (traitName: string) => `${withJosa(traitName, '과/와')} 잘 맞는 전리품입니다.`,
     TRAIT_LOOT_SUMMARY_DEFAULT_TRAIT: '현재 성향',
     ELITE_ENRAGE_LOG: (baseName: string) => `${withJosa(baseName, '이/가')} 광폭화합니다! 공격이 거세집니다!`,
+
+    // ── Wave 131 — 한 개념, 한 이름 ──
+    //   같은 개념을 화면 · 기록이 두 이름으로 부르던 곳이다("퀘스트 수락"과 '임무' 탭, "에센스 +5"와 '계승 정수',
+    //   "엘리트 몬스터"와 '정예', "도망" 단추와 '도주' 기록, '무덤' 탭과 '묘비'). 화면 이름은 탭 · 게시판 · 단추가 쓰는 쪽이다.
+    ELITE_APPEAR: '⚠️ 정예 개체가 나타났습니다!',
+    ELITE_PREFIX_APPEAR: (prefix: string) => `⚠️ [${prefix}] 정예 개체가 나타났습니다!`,
+    PREFIX_APPEAR: (prefix: string) => `[${prefix}] 개체가 나타났습니다.`,
+    MOBILE_SUMMARY_QUEST_PILL: (done: number, total: number) => `임무 ${done}/${total}`,
+    QUEST_EMPTY_TOWN_HINT: '마을 게시판에서 새 임무를 수락할 수 있습니다.',
+    QUEST_EMPTY_FIELD_HINT: '마을로 이동하면 임무 게시판을 이용할 수 있습니다.',
+    ESSENCE_REWARD: (amount: number) => `계승 정수 +${amount}`,
+    PRESTIGE_RANK_LABEL: (rank: number) => `계승 ${rank}단계`,
+    TRUE_ENDING_STAT_PRESTIGE: '계승 단계',
+    QUICK_SLOT_EMPTY_LABEL: (slot: number) => `퀵슬롯 ${slot} (가방에서 할당)`,
+    BAG_AUTOSELL_NOTICE: (count: number, capacity: number, sellable: number) => `가방 ${count}/${capacity} — 저가 재료 ${sellable}개 정리 가능`,
+    STATUS_AILMENT_ARIA: (count: number, labels: string) => `상태이상 ${count}개: ${labels}`,
+    ENEMY_DEBUFF_LABEL: '적 약화',
+    ENEMY_DEBUFF_ARIA: (labels: string) => `적 약화: ${labels}`,
+    COMBAT_ACTION_ESCAPE: '도주',
+    GRAVE_RECORD_ARIA: '묘비 기록',
+    GRAVE_RECOVERY_ITEMS_LABEL: '장비 · 아이템',
+    GRAVE_UNNAMED_ITEM: '이름 없는 아이템',
+    SYNTHESIS_SELECT_REQUIRED: (count: number) => `같은 종류 · 같은 등급 장비 ${count}개를 골라야 합성할 수 있습니다.`,
+    SYNTHESIS_SELECT_HINT: (count: number) => `같은 종류 · 같은 등급 장비 ${count}개 선택`,
+    SYNTHESIS_PANEL_META: '같은 등급 장비를 골라 합성 결과를 확인합니다.',
 };

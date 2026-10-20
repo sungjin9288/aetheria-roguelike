@@ -21,7 +21,7 @@ export const CLASSES: Record<string, ClassDef> = {
 
     // ── 1차 전직 ─────────────────────────────────────────────────────────────
     '전사': {
-        tier: 1, reqLv: 5, desc: '체력/공격 특화 — 전선을 지키는 용사', hpMod: 1.4, mpMod: 0.5, atkMod: 1.3,
+        tier: 1, reqLv: 5, desc: '생명 · 공격 특화 — 전선을 지키는 용사', hpMod: 1.4, mpMod: 0.5, atkMod: 1.3,
         traits: { strengths: ['toughness', 'guard'], weaknesses: ['low_mana', 'physical_only'] },
         skills: [
             { name: '파워배시', mp: 15, mult: 2.0, ignoreGuard: true, desc: '강력한 내려찍기 — 적의 방어 자세를 무시한다' },
@@ -63,7 +63,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '차원 분열', mp: 55, type: '어둠', mult: 3.8, effect: 'curse', desc: '공간을 찢어 저주와 대미지 부여' },
             // 패시브
             { name: '마력 집중', passive: true, effect: 'mp_up', val: 60, desc: '최대 MP +60 (패시브)' },
-            { name: '예리한 주문', passive: true, effect: 'crit_up', val: 0.04, desc: '크리티컬 확률 +4% — 마법 집중 (패시브)' },
+            { name: '예리한 주문', passive: true, effect: 'crit_up', val: 0.04, desc: '치명타 확률 +4% — 마법 집중 (패시브)' },
         ],
         skillBranches: {
             '화염구': [
@@ -96,7 +96,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '독 보강', mp: 22, type: '자연', mult: 1.6, effect: 'poison', dotDamageMult: 1.5, desc: '기존 독 강화(독 피해 +50%) + 추가 자연 피해' },
             // 패시브
             { name: '날카로운 감각', passive: true, effect: 'atk_up', val: 6, desc: 'ATK +6 (패시브)' },
-            { name: '암살자의 눈', passive: true, effect: 'crit_up', val: 0.05, desc: '크리티컬 확률 +5% (패시브)' },
+            { name: '암살자의 눈', passive: true, effect: 'crit_up', val: 0.05, desc: '치명타 확률 +5% (패시브)' },
         ],
         skillBranches: {
             '급소찌르기': [
@@ -187,7 +187,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '시간 왜곡', mp: 55, type: 'debuff', effect: 'stun', turn: 2, desc: '시간 왜곡으로 적 행동 중단 2턴' },
             // 패시브
             { name: '대마도사의 심상', passive: true, effect: 'mp_up', val: 120, desc: '최대 MP +120 (패시브)' },
-            { name: '원소 집중', passive: true, effect: 'crit_up', val: 0.06, desc: '크리티컬 확률 +6% — 원소 집중 (패시브)' },
+            { name: '원소 집중', passive: true, effect: 'crit_up', val: 0.06, desc: '치명타 확률 +6% — 원소 집중 (패시브)' },
         ],
         skillBranches: {
             '메테오': [
@@ -248,7 +248,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '처형 판결', mp: 80, mult: 6.0, crit: 0.9, desc: '고배율 + 90% 치명타 처형기' },
             // 패시브
             { name: '암살자의 각인', passive: true, effect: 'atk_up', val: 10, desc: 'ATK +10 (패시브)' },
-            { name: '그림자의 정밀함', passive: true, effect: 'crit_up', val: 0.07, desc: '크리티컬 확률 +7% — 그림자 특화 (패시브)' },
+            { name: '그림자의 정밀함', passive: true, effect: 'crit_up', val: 0.07, desc: '치명타 확률 +7% — 그림자 특화 (패시브)' },
         ],
         skillBranches: {
             '암살': [
@@ -324,7 +324,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '기적의 손길', mp: 45, type: 'buff', effect: 'hp_regen', val: 0.25, turn: 3, smite: 1, desc: 'HP 25% 회복 + 3턴간 지속 회복 · 언데드 · 마족에게는 회복량만큼 신성 피해' },
             // 패시브
             { name: '신의 은총', passive: true, effect: 'hp_up', val: 50, desc: '최대 HP +50 (패시브)' },
-            { name: '신성한 학습', passive: true, effect: 'exp_up', val: 0.08, desc: '경험치 획득 +8% — 신의 가르침 (패시브)' },
+            { name: '신성한 학습', passive: true, effect: 'exp_up', val: 0.08, desc: '경험 획득 +8% — 신의 가르침 (패시브)' },
         ],
         skillBranches: {
             '신성 광선': [
@@ -355,7 +355,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '천상의 포화', mp: 100, type: '빛', mult: 6.5, effect: 'purify', desc: '빛의 연속 공격 + 정화' },
             // 패시브
             { name: '팔라딘의 맹세', passive: true, effect: 'hp_up', val: 250, desc: '최대 HP +250 (패시브)' },
-            { name: '성소의 깨달음', passive: true, effect: 'exp_up', val: 0.12, desc: '경험치 획득 +12% — 성소의 축복 (패시브)' },
+            { name: '성소의 깨달음', passive: true, effect: 'exp_up', val: 0.12, desc: '경험 획득 +12% — 성소의 축복 (패시브)' },
         ],
         skillBranches: {
             '신성 강타': [
@@ -413,7 +413,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '대마법사의 위엄', mp: 60, type: 'buff', effect: 'atk_up', val: 2.5, turn: 4, desc: 'ATK 150% 상승 4턴 — 마력 해방' },
             // 패시브
             { name: '마법의 정점', passive: true, effect: 'mp_up', val: 200, desc: '최대 MP +200 (패시브)' },
-            { name: '완전한 원소', passive: true, effect: 'crit_up', val: 0.09, desc: '크리티컬 확률 +9% — 원소 지배 (패시브)' },
+            { name: '완전한 원소', passive: true, effect: 'crit_up', val: 0.09, desc: '치명타 확률 +9% — 원소 지배 (패시브)' },
         ],
         skillBranches: {
             '오메가 메테오': [
@@ -444,7 +444,7 @@ export const CLASSES: Record<string, ClassDef> = {
             { name: '무한 연격', mp: 90, mult: 8.0, crit: 0.95, desc: '연속 치명타 공격' },
             // 패시브
             { name: '절대 어둠', passive: true, effect: 'atk_up', val: 22, desc: 'ATK +22 (패시브)' },
-            { name: '그림자 처형', passive: true, effect: 'crit_up', val: 0.10, desc: '크리티컬 확률 +10% — 절대 암살 (패시브)' },
+            { name: '그림자 처형', passive: true, effect: 'crit_up', val: 0.10, desc: '치명타 확률 +10% — 절대 암살 (패시브)' },
         ],
         skillBranches: {
             '신의 일격': [
@@ -483,7 +483,7 @@ export const CLASSES: Record<string, ClassDef> = {
                 { choice: 'B', label: '지속 저주', desc: '저주 지속 +2턴', override: { mult: 1.6, curseTurn: 5 } },
             ],
             '죽음의 낫': [
-                { choice: 'A', label: '처형의 낫', desc: '피해 배율 3.5배 (폭딜)', override: { mult: 3.5, effect: 'curse' } },
+                { choice: 'A', label: '처형의 낫', desc: '피해 배율 3.5배 (순수 화력)', override: { mult: 3.5, effect: 'curse' } },
                 // cycle 257: drainRatio 0.35 추가 — desc "35%" data-code 정합.
                 { choice: 'B', label: '흡혈의 낫', desc: '피해의 50% HP 흡수', override: { mult: 2.5, effect: 'drain', drainRatio: 0.5 } },
             ],
@@ -496,14 +496,14 @@ export const CLASSES: Record<string, ClassDef> = {
         traits: { strengths: ['tempo', 'crit', 'escape'], weaknesses: ['no_sustain'] },
         skills: [
             { name: '시간 가속', mp: 40, type: 'buff', effect: 'extraTurn', val: 1.2, turn: 1, desc: '이번 턴 후 추가 행동 획득, ATK 20% 상승' },
-            { name: '시간 역행', mp: 50, type: 'buff', effect: 'resetCooldowns', desc: '모든 스킬 쿨타임을 즉시 초기화' },
+            { name: '시간 역행', mp: 50, type: 'buff', effect: 'resetCooldowns', desc: '모든 기술의 재사용 대기를 즉시 초기화' },
             { name: '시간 파열', mp: 70, type: '빛', mult: 3.5, desc: '시공간 파열 — 최강의 단일 피해' },
             { name: '시간 결빙', mp: 45, type: '냉기', mult: 2.0, effect: 'freeze', turn: 2, desc: '시간을 얼려 적을 2턴 빙결' },
             { name: '순간 이동', mp: 35, type: 'escape', effect: 'escape_100', desc: '즉시 전투 이탈 — 100% 성공' },
-            { name: '인과율 조작', mp: 55, mult: 2.8, crit: 0.5, effect: 'crit_cooldown', desc: '크리 시 모든 쿨타임 -1' },
+            { name: '인과율 조작', mp: 55, mult: 2.8, crit: 0.5, effect: 'crit_cooldown', desc: '치명타 시 모든 기술의 재사용 대기 -1턴' },
             { name: '시간 붕괴', mp: 120, type: '어둠', mult: 6.0, crit: 0.7, desc: '궁극기 — 70% 치명타 시공 붕괴' },
             // 패시브
-            { name: '시간 감각', passive: true, effect: 'crit_up', val: 0.08, desc: '크리티컬 확률 +8% — 최적의 순간 포착 (패시브)' },
+            { name: '시간 감각', passive: true, effect: 'crit_up', val: 0.08, desc: '치명타 확률 +8% — 최적의 순간 포착 (패시브)' },
             { name: '차원 감지', passive: true, effect: 'mp_up', val: 80, desc: '최대 MP +80 (패시브)' },
         ],
         skillBranches: {
@@ -512,13 +512,13 @@ export const CLASSES: Record<string, ClassDef> = {
                 { choice: 'B', label: '시간 충전', desc: '추가 행동 + MP 30 즉시 회복', override: { effect: 'extraTurn', mpRestore: 30 } },
             ],
             '시간 파열': [
-                { choice: 'A', label: '시공 소멸', desc: '데미지 4.8배 (순수 폭딜)', override: { mult: 4.8 } },
+                { choice: 'A', label: '시공 소멸', desc: '피해 4.8배 (순수 화력)', override: { mult: 4.8 } },
                 { choice: 'B', label: '확정 파열', desc: '치명타 확정', override: { mult: 3.5, crit: 1.0 } },
             ],
             // Wave 4 O1: 세 번째 분기 — 되감기(쿨타임 초기화 + 보호) vs 가속(초기화를 버리고 추가 행동).
             '시간 역행': [
-                { choice: 'A', label: '심층 되감기', desc: '쿨타임 초기화 + 방어력 50% 상승 3턴', override: { effect: 'resetCooldowns', defBonus: 1.5 } },
-                { choice: 'B', label: '역류 가속', desc: '쿨타임 초기화를 포기하고 추가 행동 + 공격력 30% 상승', override: { effect: 'extraTurn', val: 1.3 } },
+                { choice: 'A', label: '심층 되감기', desc: '재사용 대기 초기화 + 방어력 50% 상승 3턴', override: { effect: 'resetCooldowns', defBonus: 1.5 } },
+                { choice: 'B', label: '역류 가속', desc: '재사용 대기 초기화를 포기하고 추가 행동 + 공격력 30% 상승', override: { effect: 'extraTurn', val: 1.3 } },
             ],
         },
         next: []

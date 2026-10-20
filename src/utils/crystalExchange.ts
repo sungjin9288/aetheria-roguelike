@@ -72,7 +72,7 @@ export const getCrystalSources = (): CrystalSource[] => {
         {
             id: 'achievements',
             name: '장기 업적',
-            detail: '심연·전설 수집·발견 체인 업적 달성',
+            detail: '심연 · 전설 수집 · 발견 여정 업적 달성',
             rewardLabel: rewardRange(ACHIEVEMENTS),
         },
         {

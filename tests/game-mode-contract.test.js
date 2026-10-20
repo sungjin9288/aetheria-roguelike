@@ -153,7 +153,7 @@ test('읽기 전용 명령은 차단 모드에서도 통과한다 (기존 계약
     const { calls, actions } = countingActions();
     const player = { ...clone(INITIAL_STATE.player), loc: '시작의 마을', level: 5 };
     const result = parseCommand('inventory', GS.SHOP, player, actions);
-    assert.ok(String(result).includes('인벤토리'), '상점 중에도 인벤토리 조회는 된다');
+    assert.ok(String(result).includes('[가방]'), '상점 중에도 가방 조회는 된다');
     assert.ok(calls.includes('setSideTab'), 'setSideTab이 호출된다');
 });
 

@@ -25,7 +25,7 @@ test('마을의 완료 임무 트래커에서 보상을 바로 수령한다', as
             gold: parsed.player?.gold,
             questCount: parsed.player?.questCount,
             seasonXp: parsed.player?.seasonXp,
-            completionLogs: parsed.logTail?.filter((log: { text: string }) => log.text === '퀘스트 완료: 슬라임 소탕').length,
+            completionLogs: parsed.logTail?.filter((log: { text: string }) => log.text === '임무 완료: 슬라임 소탕').length,
         };
     })).toEqual({ exp: 40, gold: 300, questCount: 0, seasonXp: 30, completionLogs: 1 });
 });
@@ -70,7 +70,7 @@ test('추천 임무 버튼이 같은 frame에 두 번 눌려도 임무와 안내
         return {
             questCount: parsed.player?.questCount,
             expeditionFocusQuestIds: parsed.player?.expeditionFocusQuestIds,
-            acceptedLogs: parsed.logTail?.filter((log: { text: string }) => log.text === '퀘스트 수락: 슬라임 소탕').length,
+            acceptedLogs: parsed.logTail?.filter((log: { text: string }) => log.text === '임무 수락: 슬라임 소탕').length,
         };
     })).toEqual({ questCount: 1, expeditionFocusQuestIds: [1], acceptedLogs: 1 });
 });

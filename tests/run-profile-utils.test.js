@@ -271,7 +271,7 @@ test('risk trait uses recent low-hp wins even when legacy lowHpWins counter is z
     const trait = getTraitProfile(player, { maxHp: 180, isMagic: false });
 
     assert.equal(trait.id, 'risk');
-    assert.ok(trait.reasons.some((reason) => reason.includes('저체력 승리 2회')));
+    assert.ok(trait.reasons.some((reason) => reason.includes('낮은 생명 승리 2회')));
 });
 
 test('trait loot hint picks the highest resonance reward', () => {

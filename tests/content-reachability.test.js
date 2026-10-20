@@ -487,7 +487,7 @@ test('본편 스토리 사슬의 모든 임무 게이트는 마왕성 경로 게
 
     const chain = [FIRST_STORY_QUEST_ID];
     for (;;) {
-        const next = DB.QUESTS.find((quest) => quest.prerequisiteQuestId === chain.at(-1) && String(quest.title).startsWith('[스토리]'));
+        const next = DB.QUESTS.find((quest) => quest.prerequisiteQuestId === chain.at(-1) && String(quest.title).startsWith('[이야기]'));
         if (!next) break;
         chain.push(next.id);
     }

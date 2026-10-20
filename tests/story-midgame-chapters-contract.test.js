@@ -51,7 +51,7 @@ const quest = (id) => {
 const buildChain = () => {
     const chain = [FIRST_STORY_QUEST_ID];
     for (;;) {
-        const next = QUESTS.find((entry) => entry.prerequisiteQuestId === chain.at(-1) && String(entry.title).startsWith('[스토리]'));
+        const next = QUESTS.find((entry) => entry.prerequisiteQuestId === chain.at(-1) && String(entry.title).startsWith('[이야기]'));
         if (!next) return chain;
         chain.push(next.id);
     }
@@ -64,7 +64,7 @@ test('[사슬] 본편은 16장이고 중반 8장이 82 → 84 · 83 → 85 사�
     assert.deepEqual(STORY_CHAPTERS.map((chapter) => chapter.questId), STORY_CHAIN);
     for (const chapter of MIDGAME) {
         const entry = quest(chapter.id);
-        assert.ok(entry.title.startsWith('[스토리]'), `${chapter.id}`);
+        assert.ok(entry.title.startsWith('[이야기]'), `${chapter.id}`);
         assert.deepEqual([entry.minLv, entry.location, entry.target], [chapter.minLv, chapter.loc, chapter.target], `${chapter.id}`);
         assert.ok(entry.desc.includes(chapter.target) && entry.desc.includes(chapter.loc), entry.desc);
     }

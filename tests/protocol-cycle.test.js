@@ -98,7 +98,7 @@ test('daily mission completion records the essence amount actually granted by th
     assert.equal(next.player.meta.essence, 11);
     assert.equal(next.logs.length, 1);
     assert.equal(next.logs[0].type, 'success');
-    assert.equal(next.logs[0].text, '오늘의 임무 완료 · 에센스 +11');
+    assert.equal(next.logs[0].text, '오늘의 임무 완료 · 계승 정수 +11');
 });
 
 test('daily relic shard completion names the relic created from five shards', () => {

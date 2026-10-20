@@ -4,6 +4,7 @@ import { Activity, BarChart3, ChevronDown, Coins, Compass, Flame, FlaskConical, 
 import type { FullStats, Player } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
 import { formatRelicText } from '../utils/relicPresentation';
+import { formatEventText } from '../utils/eventPresentation';
 import { formatSynergyDrawback } from '../utils/relicSynergyHint';
 import SignalBadge from './SignalBadge';
 import { MSG } from '../data/messages';
@@ -255,7 +256,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                     </div>
                     {activeSet.desc && (
                         <div className="text-[11px] font-readable leading-relaxed text-amber-50/80">
-                            {activeSet.desc}
+                            {formatEventText(activeSet.desc)}
                         </div>
                     )}
                 </div>
