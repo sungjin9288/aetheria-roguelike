@@ -99,7 +99,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
 
                 <div className="relative mb-2 flex shrink-0 items-start justify-between gap-2">
                     <div className="min-w-0">
-                        <div className="text-[10px] font-readable text-slate-500">
+                        <div className="text-[11px] font-readable text-slate-500">
                             유물 선택
                         </div>
                         <h2 className="mt-0.5 text-[1rem] font-readable font-bold text-[#f6e7c8]">
@@ -120,7 +120,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                             key={cell.label}
                             className="aether-relic-decision-cell min-h-[54px] rounded-lg px-2 py-1.5"
                         >
-                            <div className="text-[9px] font-readable text-slate-400/78">
+                            <div className="text-[11px] font-readable text-slate-400/78">
                                 {cell.label}
                             </div>
                             <div className="mt-0.5 text-[11px] font-readable font-semibold leading-snug text-[#f8ecd4]">
@@ -183,24 +183,24 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                     {formatRelicText(relic.desc)}
                                 </div>
                                 {isLegendaryComplete ? (
-                                    <div className="mt-1 text-[10px] font-readable text-rose-100">{synergy.legendaryHint} 완성</div>
+                                    <div className="mt-1 text-[11px] font-readable text-rose-100">{synergy.legendaryHint} 완성</div>
                                 ) : completesPair ? (
-                                    <div data-testid={`relic-choice-${index}-pair`} className="mt-1 text-[10px] font-readable text-[#dff7f5]">
+                                    <div data-testid={`relic-choice-${index}-pair`} className="mt-1 text-[11px] font-readable text-[#dff7f5]">
                                         {MSG.RELIC_SYNERGY_COMPLETE_LINE(completesPair)}
                                     </div>
                                 ) : hasNearLegendary ? (
-                                    <div className="mt-1 text-[10px] font-readable text-[#f6e7c8]">{synergy.nearLegendary}까지 1개 남음</div>
+                                    <div className="mt-1 text-[11px] font-readable text-[#f6e7c8]">{synergy.nearLegendary}까지 1개 남음</div>
                                 ) : startsCombo ? (
-                                    <div data-testid={`relic-choice-${index}-start`} className="mt-1 text-[10px] font-readable text-[#f6e7c8]">
+                                    <div data-testid={`relic-choice-${index}-start`} className="mt-1 text-[11px] font-readable text-[#f6e7c8]">
                                         {MSG.RELIC_COMBO_START_LINE(startsCombo)}
                                     </div>
                                 ) : hasSynergy ? (
-                                    <div className="mt-1 truncate text-[10px] font-readable text-[#dff7f5]">
+                                    <div className="mt-1 text-[11px] font-readable text-[#dff7f5]">
                                         함께 쓰기 · {synergy.synergies.map(getRelicDisplayName).join(' · ')}
                                     </div>
                                 ) : null}
                                 {(synergy.drawbacks?.length ?? 0) > 0 && (
-                                    <div data-testid={`relic-choice-${index}-drawback`} className="mt-0.5 text-[10px] font-readable text-rose-200/85">
+                                    <div data-testid={`relic-choice-${index}-drawback`} className="mt-0.5 text-[11px] font-readable text-rose-200/85">
                                         {MSG.RELIC_SYNERGY_DRAWBACK_LINE(synergy.drawbacks!.join(' · '))}
                                     </div>
                                 )}
@@ -230,7 +230,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                         <div className="text-[12px] font-readable font-bold leading-tight text-slate-100">
                                             {getRelicDisplayName(owned.name)}
                                         </div>
-                                        <div className="mt-0.5 truncate text-[10px] font-readable text-slate-300/80">
+                                        <div className="mt-0.5 text-[11px] font-readable text-slate-300/80">
                                             {formatRelicText(owned.desc)}
                                         </div>
                                     </div>

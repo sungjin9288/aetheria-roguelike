@@ -212,6 +212,49 @@ for (const viewport of VIEWPORTS) {
     });
 }
 
+// 2026-10 Wave 132(원장 §145, 소유자 결정 "두 화면 모두"): 고르는 화면(유물 선택 · 교체)과 돌아보는 화면(사망)도
+//   11px 하한 · 가로 넘침 없음 안이다. 판단 칸 이름 · 조합 줄 · 교체할 유물의 효과 · 결과 분석 머리말 · 메모가 9 ~ 10px였다.
+for (const viewport of VIEWPORTS) {
+    test(`${viewport.width}x${viewport.height} 유물 선택 · 교체 · 사망 화면도 읽기 크기와 폭을 지킨다`, async ({ browser, baseURL }) => {
+        const context = await browser.newContext({
+            ...devices['iPhone 12'],
+            baseURL: baseURL || 'http://localhost:4173',
+            viewport: { ...viewport },
+            screen: { ...viewport },
+        });
+        const page = await context.newPage();
+
+        try {
+            await startE2ERun(page);
+
+            await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRelicChoice?.());
+            const choice = page.getByTestId('relic-choice-panel');
+            await expect(page.getByTestId('relic-choice-decision-strip')).toBeVisible({ timeout: 8_000 });
+            await expectReadableSurface(page, choice);
+            await page.getByTestId('relic-choice-skip').click();
+            await expect(choice).toBeHidden({ timeout: 8_000 });
+
+            const replace = await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRelicReplaceChoice?.());
+            expect(replace).toBeTruthy();
+            await expect(page.getByTestId('relic-replace-options')).toBeVisible({ timeout: 8_000 });
+            await expectReadableSurface(page, page.getByTestId('relic-choice-panel'));
+            await page.getByTestId('relic-choice-skip').click();
+            await expect(page.getByTestId('relic-choice-panel')).toBeHidden({ timeout: 8_000 });
+
+            await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.());
+            const summary = page.getByTestId('run-summary-card');
+            await expect(page.getByTestId('run-summary-notes')).toBeVisible({ timeout: 8_000 });
+            await expect(summary).toHaveCSS('opacity', '1');
+            await expectReadableSurface(page, summary);
+            if (viewport.width === 375) {
+                await page.screenshot({ path: 'playtest-artifacts/mobile-legibility/run-summary-375x667.png' });
+            }
+        } finally {
+            await context.close();
+        }
+    });
+}
+
 test('선명하게 모드는 확대 변형 없이 본문 크기와 행간을 높인다', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await startE2ERun(page);

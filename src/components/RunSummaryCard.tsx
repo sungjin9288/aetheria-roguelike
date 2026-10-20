@@ -64,6 +64,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                 initial={{ opacity: 0, y: 28, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 transition={{ duration: 0.36, ease: 'easeOut' }}
+                data-testid="run-summary-card"
                 className="panel-noise aether-surface-strong relative z-10 flex max-h-[calc(100svh-1rem)] w-full max-w-[34rem] flex-col overflow-hidden rounded-[1.5rem] shadow-[0_32px_80px_rgba(1,6,14,0.64)]"
             >
                 <div className="pointer-events-none absolute inset-0 bg-[linear-gradient(180deg,rgba(255,255,255,0.045),transparent_24%)]" />
@@ -78,7 +79,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                             </h1>
                             <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-fira text-slate-300/76">
                                 <MapPin size={11} className="shrink-0 text-slate-400" />
-                                <span className="truncate">{MSG.RUN_SUMMARY_ENDED_AT(s.loc)}</span>
+                                <span data-testid="run-summary-ended-at" className="min-w-0">{MSG.RUN_SUMMARY_ENDED_AT(s.loc)}</span>
                             </div>
                         </div>
                         <div className="flex shrink-0 flex-col items-end gap-1.5">
@@ -92,7 +93,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                     </header>
 
                     {s.runTrackingComplete === false && (
-                        <div className="mt-3 rounded-md border border-amber-300/18 bg-amber-300/[0.06] px-3 py-2 text-[10px] font-readable text-amber-100/76">
+                        <div className="mt-3 rounded-md border border-amber-300/18 bg-amber-300/[0.06] px-3 py-2 text-[11px] font-readable text-amber-100/76">
                             {MSG.RUN_SUMMARY_PARTIAL_TRACKING}
                         </div>
                     )}
@@ -126,7 +127,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                     </section>
 
                     {(s.escapes > 0 || s.discoveries > 0 || s.maxKillStreak > 0) && (
-                        <div data-testid="run-summary-extras" className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[10px] font-fira text-slate-300/82">
+                        <div data-testid="run-summary-extras" className="mt-3 flex flex-wrap gap-x-3 gap-y-1.5 text-[11px] font-fira text-slate-300/82">
                             {s.escapes > 0 && (
                                 <span data-testid="run-summary-escape" className="inline-flex items-center gap-1 text-sky-200">
                                     <Footprints size={11} />도주 {s.escapes}회
@@ -158,16 +159,16 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
 
                     <section className="mt-4 border-t border-white/8 pt-4">
                         <div className="flex items-center justify-between gap-3">
-                            <span className="aether-type-label inline-flex items-center gap-1.5 font-readable text-slate-500">
+                            <span className="aether-type-label inline-flex shrink-0 items-center gap-1.5 font-readable text-slate-500">
                                 <Radar size={11} />다음 시도 추천
                             </span>
-                            <span className="truncate text-[10px] font-readable text-[#f6e7c8]/72">{analysis.headline}</span>
+                            <span data-testid="run-summary-headline" className="min-w-0 text-right text-[11px] font-readable text-[#f6e7c8]/72">{analysis.headline}</span>
                         </div>
                         <p className="mt-2 break-keep text-[12px] font-readable font-semibold leading-relaxed text-[#dff7f5]">
                             {analysis.focus[0]}
                         </p>
                         {analysis.notes.length > 0 && (
-                            <p data-testid="run-summary-notes" className="mt-1.5 text-[10px] font-fira text-slate-400/74">{analysis.notes.join(' · ')}</p>
+                            <p data-testid="run-summary-notes" className="mt-1.5 text-[11px] font-fira text-slate-400/74">{analysis.notes.join(' · ')}</p>
                         )}
                     </section>
 
