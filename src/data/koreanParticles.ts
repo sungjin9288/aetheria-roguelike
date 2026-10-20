@@ -86,3 +86,19 @@ export const josa = (word: unknown, pair: ParticlePair): string => {
 
 /** 낱말 + 조사. */
 export const withJosa = (word: unknown, pair: ParticlePair): string => `${word}${josa(word, pair)}`;
+
+const PAIR_OF_PARTICLE: Record<string, ParticlePair> = {
+    을: '을/를', 를: '을/를', 이: '이/가', 가: '이/가', 은: '은/는', 는: '은/는', 과: '과/와', 와: '과/와', 으로: '으로/로', 로: '으로/로',
+};
+
+/** 조사 글자들(정규식 문자 집합용) — '으로'는 '으' · '로' 두 글자다. */
+export const PARTICLE_CHARACTERS = [...new Set(Object.keys(PAIR_OF_PARTICLE).join(''))].join('');
+
+/**
+ * 이미 붙어 있던 조사를 새 낱말의 끝소리에 맞춰 다시 고른다(Wave 130) — 낱말이 바뀌는 변환("1000G를" → "골드 1000을",
+ * "HP가" → "생명이")이 원래 낱말에 맞춘 조사를 그대로 끌고 가지 않게 한다. 조사가 아니면 그대로 돌려준다.
+ */
+export const repickJosa = (word: unknown, particle: string): string => {
+    const pair = PAIR_OF_PARTICLE[particle];
+    return pair ? josa(word, pair) : particle;
+};

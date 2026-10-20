@@ -24,7 +24,7 @@ const OWNED = [
     ['EXPLORE_KEY_EVENT', '💎 [잊혀진 열쇠]가 빛나며 숨겨진 <고대 보물고> 입구가 열립니다!'],
     ['EXPLORE_RELIC_DISCOVERED', '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.'],
     ['EXPLORE_ANOMALY_POISON', '자욱한 독안개가 밀려옵니다! (중독)'],
-    ['EXPLORE_ANOMALY_MANA_REGEN', '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)'],
+    ['EXPLORE_ANOMALY_MANA_REGEN', '강력한 마력의 폭풍이 붑니다. (기력 30% 회복)'],
     ['EXPLORE_ANOMALY_BURN', '피부를 찌르는 산성비가 내립니다. (화상)'],
 ];
 

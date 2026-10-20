@@ -1,4 +1,5 @@
 import { RELICS } from '../data/relics.js';
+import { MSG } from '../data/messages.js';
 import { AT } from '../reducers/actionTypes.js';
 import type { ActionOf } from '../reducers/actionTypes.js';
 import { makeCombatActionMap } from '../reducers/handlers/combatHandlers.js';
@@ -400,7 +401,7 @@ export const buildRelicDotMultiplierReport = ({
         || status.some((vector) => vector.mp !== 90 || vector.cooldown !== 1 || !sameJson(vector.enemyDots, ['burn']) || vector.rngDraws !== 3)) {
         errors.add('DOT_MULT_PRODUCTION_ORDER_MISMATCH');
     }
-    if (!status[0].logTexts.some((text) => text.includes('[burn] 추가 피해 +1'))) {
+    if (!status[0].logTexts.some((text) => text.includes(MSG.SKILL_STATUS_BONUS(MSG.DOT_LABELS.burn, 1)))) {
         errors.add('DOT_MULT_NO_RELIC_BASELINE_REGRESSION');
     }
     if (!sameJson(nonStatus.map((vector) => vector.enemyHp), [94, 94])

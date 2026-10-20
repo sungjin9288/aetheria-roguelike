@@ -15,7 +15,7 @@ test('390x844 assignment keeps an effectless potion, then consumes it on a valid
     await page.getByRole('button', { name: '닫기', exact: true }).click();
 
     const quickSlot = page.getByTestId('quick-slot-0');
-    await expect(quickSlot).toHaveAccessibleName(/초급 회복 물약.*HP 30 회복.*전투 턴 1회 소모/);
+    await expect(quickSlot).toHaveAccessibleName(/초급 회복 물약.*생명 30 회복.*전투 턴 1회 소모/);
     const quickSlotBounds = await quickSlot.boundingBox();
     expect(quickSlotBounds).not.toBeNull();
     expect(quickSlotBounds!.width).toBeGreaterThanOrEqual(40);

@@ -1,7 +1,7 @@
 // cycle 321: unused DB import 제거 — messages.ts 어디에서도 DB 참조 0건.
 
 import type { StatusId } from '../types/index.js';
-import { josa, withJosa } from './koreanParticles.js';
+import { josa, repickJosa, withJosa } from './koreanParticles.js';
 
 /**
  * messages.js — 게임 내 모든 메시지를 한국어로 통합 관리합니다.
@@ -48,19 +48,17 @@ const DOT_LABELS = {
 // 나므로, STATUS_LABELS/DOT_LABELS와 같은 이유로 top-level const로 둔다.
 const HELL_REAPER_LABEL = '지옥의 수확자';
 const VAMPIRE_LORD_LABEL = '흡혈 군주';
+// 2026-10 Wave 130: 생명을 바치는 공격 유물의 기록 표지 — 기록을 찾는 감사(`relicHpDrainAtkAudit`)가 같은 낱말을 읽는다.
+const HP_DRAIN_ATK_COST_MARKER = '생명 대가';
 // 2026-10 Wave 61 (원장 §61.3): 합성 보호 상품의 이름 하나 — 크리스털 교환 · 구매 로그 · 합성 화면이 "합성 보호권" ·
 // "합성 보호석" · "보호권" 세 이름을 쓰고 있었다. 아래 SYNTHESIS_PROTECT_TOKEN_COST가 재사용하므로 top-level const로 둔다.
 const SYNTHESIS_PROTECT_ITEM_NAME = '합성 보호권';
 // 2026-10 Wave 62 (원장 §61.4 C16): 숫자 뒤 조사 — 금액을 실제로 받는 값('빈손의 시작'이면 절반)으로 다시 적을 때 조사가 따라
 //   바뀐다("골드 70을" → "골드 35를"). 숫자의 끝소리는 끝자리로 정해진다: 0(십 · 백 · 천 · 만) · 1(일) · 3(삼) · 6(육) · 7(칠) ·
 //   8(팔)은 받침이 있고 2 · 4 · 5 · 9는 없다. 아래 GUIDE_FIRST_SORTIE_DETAIL이 재사용하므로 top-level const로 둔다.
+// 2026-10 Wave 130: 판정은 `koreanParticles.ts` 하나다 — 이 파일에 따로 있던 끝자리 표(Wave 129가 놓친 두 번째 판정기)를 지웠다.
 const NUMBER_PARTICLE_PAIRS = [['을', '를'], ['이', '가'], ['은', '는'], ['과', '와']] as const;
-const NUMBER_FINAL_CONSONANT_DIGITS: readonly number[] = [0, 1, 3, 6, 7, 8];
-const numberParticle = (particle: string, amount: number): string => {
-    const pair = NUMBER_PARTICLE_PAIRS.find((entry) => (entry as readonly string[]).includes(particle));
-    if (!pair) return particle;
-    return NUMBER_FINAL_CONSONANT_DIGITS.includes(Math.abs(Math.trunc(amount)) % 10) ? pair[0] : pair[1];
-};
+const numberParticle = (particle: string, amount: number): string => repickJosa(amount, particle);
 
 export const MSG = {
     // --- 전투 (Combat) ---
@@ -98,10 +96,11 @@ export const MSG = {
     SKILL_NEXT_ATTACK_ARMED: (skillName: string, mult: number) => `[${skillName}] 다음 공격의 피해가 ${mult}배가 됩니다.`,
     NEXT_ATTACK_MULT_PROC: (mult: number) => `그림자 일격! 피해 ${mult}배`,
     SKILL_BUFF_ACTIVE: (name: string, turns: number) => `${name} 강화 효과가 ${turns}턴 동안 적용됩니다.`,
-    SKILL_STATUS_BONUS: (effect: string, dmg: number) => `[${effect}] 추가 피해 +${dmg}`,
+    // 2026-10 Wave 130: 지속 피해 라벨(`DOT_LABELS`)을 받는다 — 효과 키(bleed · burn)가 그대로 찍혔다.
+    SKILL_STATUS_BONUS: (dotLabel: string, dmg: number) => `[${dotLabel}] 추가 피해 +${dmg}`,
     SKILL_NO_MP: '기력이 부족합니다.',
     SKILL_ON_COOLDOWN: (name: string, turns: number) => `${name} 재사용까지 ${turns}턴 남았습니다.`,
-    SKILL_NONE: '사용 가능한 스킬이 없습니다.',
+    SKILL_NONE: '사용 가능한 기술이 없습니다.',
 
     // --- 탈출 (Escape) ---
     ESCAPE_SUCCESS: '성공적으로 탈출했습니다!',
@@ -121,7 +120,7 @@ export const MSG = {
     LOOT_STACK: (name: string, count: number) => (count > 1 ? `${name} x${count}` : name),
     LOOT_SUMMARY_MORE: (count: number) => ` 외 ${count}`,
     // 2026-09 Wave 39: 후반 강화 재료 드롭 — 도감 소재 기록의 획득처는 몬스터별 전리품 표만 읽으므로(적 레벨 규칙은 표 밖) 이 규칙을 따로 알린다.
-    CODEX_ENHANCE_MATERIAL_LATE_SOURCE: (level: number) => `Lv${level} 이상 지역의 적에게서도 드물게 얻습니다 · 보스는 더 자주`,
+    CODEX_ENHANCE_MATERIAL_LATE_SOURCE: (level: number) => `레벨 ${level} 이상 지역의 적에게서도 드물게 얻습니다 · 보스는 더 자주`,
     LOOT_PREFIX: (name: string) => `접두사 부여: [${name}]`,
     PRESTIGE_RARE_DROP: (name: string) => `✦ [심연의 메아리] 보스가 희귀 장비를 떨어뜨렸습니다: ${name}`,
     SIGNATURE_DISCOVERED: (name: string) => `✦ 전설 각인 ─ ${name} 획득!`,
@@ -145,7 +144,8 @@ export const MSG = {
     OUTFIT_STAGE_PARTIAL2: '2단계',
     OUTFIT_STAGE_FULL: '풀세트',
     LEGACY_ESSENCE: (n: number) => `계승 정수 +${n}`,
-    LEGACY_RANK: (n: number) => `계승 단계 ${n} 달성`,
+    // 2026-10 Wave 130: 처치 정수가 올리는 단계는 정수 사다리다 — "계승 단계"는 계승(회차) 단계의 이름이라 둘이 겹쳤다.
+    LEGACY_RANK: (n: number) => `정수 사다리 ${n}단계 달성`,
     // 2026-07 — 에테르 거울: revive 노드(런당 1회 치명상 부활) 발동 로그.
     MIRROR_REVIVE: '[에테르 수호] 거울의 가호가 치명상을 막아냈습니다!',
     MIRROR_PURCHASE: (name: string, newLevel: number, cost: number) => `에테르 거울에 ${name} ${newLevel}단계를 새겼습니다. 계승 정수 -${cost}`,
@@ -254,7 +254,7 @@ export const MSG = {
     PRIMAL_SHARD_DROP: (count: number) => `원시의 파편 획득! (${count}/3)`,
     // 2026-10 Wave 89 (소유자 결정 §93.4 b + 콜렉터): 회차 규칙 — 계승 단계마다 이름 있는 규칙 하나(비틀기 · 표적 세트 · 정복 보상).
     ASCENSION_RULE_START: (ruleName: string, twist: string, setName: string) => `📜 회차 규칙 [${ruleName}] — ${twist} 강제 · 이번 회차 '${setName}' 각인이 더 자주 나옵니다.`,
-    ASCENSION_RULE_CONQUERED: (ruleName: string) => `📜 회차 규칙 [${ruleName}]을 정복했습니다.`,
+    ASCENSION_RULE_CONQUERED: (ruleName: string) => `📜 회차 규칙 ${withJosa(`[${ruleName}]`, '을/를')} 정복했습니다.`,
     ASCENSION_RULE_CONQUEST_SIGNATURE: (itemName: string) => `정복의 전리품: ${itemName}`,
     ASCENSION_RULE_CONQUEST_COMPLETE: '모든 전설 각인을 이미 모았습니다 — 정복의 전리품은 없습니다.',
     ASCENSION_RULE_LOCKED: '회차 규칙',
@@ -263,7 +263,7 @@ export const MSG = {
     ASCENSION_RULE_ACCEPTED: '받아들임',
     ASCENSION_RULE_DECLINED: '거절함',
     ASCENSION_RULE_DECLINED_DETAIL: '비틀기 없음 · 표적 배율 없음 · 이 단계의 정복 보상은 규칙이 다시 돌아올 때',
-    ASCENSION_RULE_DECLINED_START: (ruleName: string) => `📜 회차 규칙 [${ruleName}]을 거절했습니다 — 이번 회차에는 표적 각인 배율과 정복 보상이 없습니다.`,
+    ASCENSION_RULE_DECLINED_START: (ruleName: string) => `📜 회차 규칙 ${withJosa(`[${ruleName}]`, '을/를')} 거절했습니다 — 이번 회차에는 표적 각인 배율과 정복 보상이 없습니다.`,
     ASCENSION_RULE_NEXT: (ruleName: string) => `다음 회차 규칙: ${ruleName}`,
     // 2026-10 Wave 105: 겹친 규칙의 두 비틀기.
     ASCENSION_RULE_TWIST_PAIR: (first: string, second: string) => `${first} + ${second}`,
@@ -517,9 +517,9 @@ export const MSG = {
     ),
     REST_GOLD_INSUFFICIENT: (cost: number) => `휴식할 골드가 부족합니다. 필요 골드: ${cost}`,
     // cycle 116: REST_DONE 제거 — REST_DONE_FULL이 active.
-    SKILL_SWAP_SAFE_ONLY: '스킬 교체는 안전한 지역에서만 가능합니다.',
+    SKILL_SWAP_SAFE_ONLY: '기술 교체는 안전한 지역에서만 가능합니다.',
     SKILL_SWAP_GOLD_INSUFFICIENT: (cost: number) => `기술을 바꿀 골드가 부족합니다. 필요 골드: ${cost}`,
-    SKILL_NO_BRANCH: '해당 스킬에 분기가 없습니다.',
+    SKILL_NO_BRANCH: '해당 기술에 분기가 없습니다.',
     SKILL_INVALID_BRANCH: '유효하지 않은 분기입니다.',
     JOB_CHANGE_INVALID: '전직 가능한 직업이 아닙니다.',
     JOB_CHANGE_LEVEL: '전직 레벨이 부족합니다.',
@@ -671,11 +671,14 @@ export const MSG = {
     ELITE_TITLE_GROUP_TOTAL: (bonusLabel: string) => (bonusLabel ? `합산 효과 ${bonusLabel}` : '합산 효과 없음'),
     // 능력치 화면 '계승 기록' — 원천별 합(레벨 비례 전 원래 양). 2026-10 Wave 108부터 이야기 보상 · 정예 칭호는 이번 여정 값이다.
     STATS_STORY_BONUS_LABEL: '이야기 보상 · 이번 여정',
+    // 2026-10 Wave 130: 처치 정수가 쌓는 단계는 계승 화면과 같은 이름 '정수 사다리'다 — 능력치 화면이 "계승 단계"라 불러 계승(회차) 단계와 겹쳤다.
+    STATS_ESSENCE_LADDER_LABEL: '정수 사다리',
+    STATS_ESSENCE_LADDER_RANK: (rank: number) => `정수 사다리 ${rank}단계`,
     STATS_ELITE_TITLE_LABEL: (count: number, total: number) => `정예 목격 ${count}/${total} · 이번 여정`,
     STATS_PERMANENT_NONE: '없음',
     // 2026-10 Wave 61: 새 칭호는 아직 없는 칭호일 때만 알린다(`title` null) — 계승 11단계부터는 10단계의 '에테르의 신'이 다시 온다.
     ASCEND_DONE: (rank: number, title: string | null) => (title
-        ? `에테르 계승 ${rank}단계에 도달했습니다. 새 칭호 '${title}'와 영구 성장이 다음 여정에 적용됩니다.`
+        ? `에테르 계승 ${rank}단계에 도달했습니다. 새 칭호 ${withJosa(`'${title}'`, '과/와')} 영구 성장이 다음 여정에 적용됩니다.`
         : `에테르 계승 ${rank}단계에 도달했습니다. 영구 성장이 다음 여정에 적용됩니다.`),
     ASCEND_NEW_TITLE_LABEL: '새 칭호',
     ASCEND_TITLE_OWNED_LABEL: '칭호 (이미 보유)',
@@ -892,7 +895,7 @@ export const MSG = {
     EXPLORE_RELIC_DISCOVERED: '✨ [유물 발견] 고대의 기운이 느껴집니다! 유물을 선택하세요.',
     EXPLORE_ANOMALY: (desc: string) => `[기상 이변] ${desc}`,
     EXPLORE_ANOMALY_POISON: '자욱한 독안개가 밀려옵니다! (중독)',
-    EXPLORE_ANOMALY_MANA_REGEN: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)',
+    EXPLORE_ANOMALY_MANA_REGEN: '강력한 마력의 폭풍이 붑니다. (기력 30% 회복)',
     EXPLORE_ANOMALY_BURN: '피부를 찌르는 산성비가 내립니다. (화상)',
     EXPLORE_CHAIN_EVENT: (label: string, desc: string) => `📜 [${label}] ${desc}`,
     /** Wave 127: 임무 수령이 연 체인 단계 — 이벤트 없이 다음 단서를 알린다. */
@@ -986,7 +989,7 @@ export const MSG = {
     HELL_REAPER_LABEL,
     VAMPIRE_LORD_LABEL,
     RELIC_LIFESTEAL_PROC: (isHellReaper: boolean, steal: number) => (
-        `[${isHellReaper ? HELL_REAPER_LABEL : VAMPIRE_LORD_LABEL}] +${steal} HP 흡혈!`
+        `[${isHellReaper ? HELL_REAPER_LABEL : VAMPIRE_LORD_LABEL}] 생명 +${steal} 흡혈!`
     ),
     RELIC_EXECUTE_PROC: '[처형자의 날] 처형 피해!',
     RELIC_COMBO_PROC: '[연격의 반지] 축적된 연격이 폭발했습니다!',
@@ -994,22 +997,22 @@ export const MSG = {
     RELIC_EXECUTE_ATK_PROC: '[예언의 돌판] 예언 처형! 피해 2배!',
     RELIC_ECHO_ATK_PROC: '[공허의 메아리] 강화된 공격!',
     RELIC_FREEZE_ON_HIT: (enemyName: string | undefined) => `[동결의 닻] ${enemyName} 빙결!`,
-    SKILL_BLIND_MISS: '[실명] 스킬이 빗나갔습니다!',
+    SKILL_BLIND_MISS: '[실명] 기술이 빗나갔습니다!',
     SKILL_ENEMY_STATUS_APPLIED: (skillName: string | undefined, enemyName: string | undefined, label: string) => (
         `[${skillName}] ${enemyName}에게 [${label}] 부여!`
     ),
     SKILL_BRANCH_STATUS_APPLIED: (enemyName: string | undefined, label: string) => (
         `[분기 효과] ${enemyName}에게 [${label}] 추가 부여!`
     ),
-    SKILL_DRAIN_HEAL: (heal: number) => `[생명흡수] +${heal} HP 흡수!`,
-    SKILL_HP_REGEN_PROC: (skillName: string | undefined, heal: number) => `[${skillName}] +${heal} HP 회복!`,
+    SKILL_DRAIN_HEAL: (heal: number) => `[생명흡수] 생명 +${heal} 흡수!`,
+    SKILL_HP_REGEN_PROC: (skillName: string | undefined, heal: number) => `[${skillName}] 생명 +${heal} 회복!`,
     // Wave 51(소유자 결정 "성직자의 컨셉"): 회복의 빛이 언데드 · 마족을 태운다.
     SKILL_HOLY_SMITE: (skillName: string | undefined, enemyName: string | undefined, dmg: number) => `[${skillName}] 신성한 빛이 ${withJosa(enemyName, '을/를')} 태웁니다! ${dmg} 신성 피해`,
-    SKILL_REGEN_TICK: (skillName: string, heal: number) => `[${skillName}] 지속 회복 +${heal} HP`,
+    SKILL_REGEN_TICK: (skillName: string, heal: number) => `[${skillName}] 생명 지속 회복 +${heal}`,
     // 2026-10 Wave 54: 기력 지속 회복 · 연속 타격 태그.
-    SKILL_MP_REGEN_TICK: (skillName: string, amount: number) => `[${skillName}] 지속 회복 +${amount} MP`,
+    SKILL_MP_REGEN_TICK: (skillName: string, amount: number) => `[${skillName}] 기력 지속 회복 +${amount}`,
     COMBAT_TAG_HITS: (hits: number) => `${hits}연타`,
-    SKILL_MP_REGEN_PROC: (skillName: string | undefined, amount: number) => `[${skillName}] +${amount} MP 회복!`,
+    SKILL_MP_REGEN_PROC: (skillName: string | undefined, amount: number) => `[${skillName}] 기력 +${amount} 회복!`,
     SKILL_PURIFY_PROC: (skillName: string | undefined) => `[${skillName}] 상태이상이 정화되었습니다!`,
     SKILL_STEALTH_PROC: (skillName: string | undefined) => `[${skillName}] 다음 적 공격을 회피합니다!`,
     // 2026-10 Wave 53: 여러 번 막는 은신 — 두 번째부터 확률이면 그 확률을 함께 말한다.
@@ -1018,10 +1021,10 @@ export const MSG = {
     RELIC_TIME_MASTER_EXTRA_TURN: '[시간 지배자] 시간이 멈춥니다 — 추가 행동!',
     RELIC_ECHO_ATK_ARMED: '[공허의 메아리] 다음 공격이 강화됩니다!',
     SKILL_CRIT_COOLDOWN_RESET: '[인과율 조작] 치명타! 모든 쿨타임 -1.',
-    RELIC_FIRST_SKILL_FREE: '[시간 군주의 왕관] 첫 스킬 MP 무소비!',
-    RELIC_FREE_SKILL_PROC: '[주문 메아리] MP 소모 없음!',
-    RELIC_SKILL_LIFESTEAL_PROC: (heal: number) => `[영혼 흡수] +${heal} HP`,
-    RELIC_SKILL_MULT_PROC: '[정신 연소] 스킬 피해 강화!',
+    RELIC_FIRST_SKILL_FREE: '[시간 군주의 왕관] 첫 기술 기력 소모 없음!',
+    RELIC_FREE_SKILL_PROC: '[주문 메아리] 기력 소모 없음!',
+    RELIC_SKILL_LIFESTEAL_PROC: (heal: number) => `[영혼 흡수] 생명 +${heal}`,
+    RELIC_SKILL_MULT_PROC: '[정신 연소] 기술 피해 강화!',
     RELIC_DOT_MULT_PROC: '[죽음의 낙인] 지속 피해가 증폭됩니다!',
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.enemyAI.ts.
@@ -1048,7 +1051,7 @@ export const MSG = {
     ENEMY_DOT_EXPIRED: (label: string, enemyName: string | undefined) => `${enemyName}의 ${withJosa(label, '이/가')} 사라졌습니다.`,
     ENEMY_DOT_CHIP_TURNS: (label: string, turns: number) => `${label} · ${turns}턴`,
     ARMOR_EVADE_PROC: (enemyName: string | undefined) => `[회피] ${enemyName}의 공격을 회피했습니다!`,
-    ENEMY_PHASE_STATUS_APPLIED: (phase: number, label: string) => `[Phase ${phase}] [${label}] 상태이상 부여!`,
+    ENEMY_PHASE_STATUS_APPLIED: (phase: number, label: string) => `[${phase}페이즈] [${label}] 상태이상 부여!`,
     ANCIENT_SEAL_RESIST: '[고대의 봉인] 상태이상을 저항했습니다!',
     CRIT_BLOCK_PROC: '[강철 의지] 강타를 흘려냈습니다!',
     REFLECT_DAMAGE_PROC: (dmg: number) => `[반사] 반사 피해 ${dmg}!`,
@@ -1069,14 +1072,14 @@ export const MSG = {
         `[${buffName}] 반격! ${enemyName}에게 ${dmg} 피해!`
     ),
     ENEMY_TELEGRAPH_STUNNED: '기절 중 — 행동 불가',
-    ENEMY_TELEGRAPH_PHASE2_IMMINENT: (formName?: string) => `⚡ Phase 2 임박 — ${formName || '형태 변환'}`,
+    ENEMY_TELEGRAPH_PHASE2_IMMINENT: (formName?: string) => `⚡ 2페이즈 임박 — ${formName || '형태 변환'}`,
     ENEMY_TELEGRAPH_GUARD_HIGH: (pct: number) => `방어 태세 (${pct}%)`,
     ENEMY_TELEGRAPH_HEAVY_HIGH: (pct: number) => `맹공 준비 (${pct}%)`,
     ENEMY_TELEGRAPH_GUARD_MED: (pct: number) => `방어 가능 (${pct}%)`,
     ENEMY_TELEGRAPH_HEAVY_MED: (pct: number) => `맹공 주의 (${pct}%)`,
     ENEMY_TELEGRAPH_NORMAL: '일반 공격 예상',
     // 2026-10 Wave 59: 보스 기믹(소유자 결정 "보스 기믹 전부 설명대로 구현").
-    ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `💀 Phase 3 임박 — ${formName || '최종 형태'}`,
+    ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `💀 3페이즈 임박 — ${formName || '최종 형태'}`,
     ENEMY_TELEGRAPH_BREATH: '🔥 브레스 준비 — 다음 행동',
     ENEMY_GUARD_COUNTER_STANCE: (enemyName: string | undefined) => (
         `${withJosa(enemyName, '이/가')} 반격 자세를 취했습니다. 지금 공격하면 반격당합니다.`
@@ -1103,14 +1106,14 @@ export const MSG = {
     ENEMY_CURSE_DOT_TICK: (enemyName: string | undefined, dmg: number) => `[저주] ${enemyName}에게 ${dmg} 저주 피해!`,
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.relics.ts.
-    RELIC_CRIT_MP_RESTORE: (amount: number) => `[피의 갈증] +${amount} MP`,
-    RELIC_HEAL_ON_SAVE_PROC: (bonus: number) => `[난공불락] 부활 시 +${bonus} HP 회복!`,
+    RELIC_CRIT_MP_RESTORE: (amount: number) => `[피의 갈증] 기력 +${amount}`,
+    RELIC_HEAL_ON_SAVE_PROC: (bonus: number) => `[난공불락] 부활하며 생명 +${bonus} 회복!`,
     RELIC_DEATH_SAVE_REVIVE: (count: number) => `[절대 불사] ${count}회 부활!`,
     RELIC_DEATH_SAVE_FIRST: '[불사의 의지] 치명상을 버텼습니다!',
     RELIC_VOID_HEART_REVIVE: '[허공의 심장] 죽음을 거부했습니다. 다음 공격이 강화됩니다!',
     RELIC_REVIVE_TOKEN_USED: '[에테르 부활석] 저장된 에테르가 생명과 기력을 절반까지 되돌렸습니다.',
     RELIC_PHOENIX_REVIVE: (hp: number, atkPercent: number, duration: number) => (
-        `[불사조의 깃털] 재의 잿더미에서 부활! +${hp} HP, ATK +${atkPercent}% (${duration}턴)`
+        `[불사조의 깃털] 재의 잿더미에서 부활! 생명 +${hp} · 공격력 +${atkPercent}% (${duration}턴)`
     ),
     ENTROPY_LABEL_GOD: '엔트로피의 신',
     ENTROPY_LABEL_BRAND: '엔트로피 낙인',
@@ -1125,13 +1128,14 @@ export const MSG = {
     KILL_STACK_SOURCE_SYNERGY: '[시너지 처형 분노]',
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.ts.
-    RELIC_TURN_MP_REGEN: (val: number) => `[비전 서지] +${val} MP`,
-    RELIC_TURN_HP_REGEN: (label: string | undefined, heal: number) => `[${label}] +${heal} HP 재생`,
+    RELIC_TURN_MP_REGEN: (val: number) => `[비전 서지] 기력 +${val}`,
+    RELIC_TURN_HP_REGEN: (label: string | undefined, heal: number) => `[${label}] 생명 +${heal} 재생`,
     RELIC_LABEL_EARTH_HEART: '대지의 심장',
     RELIC_LABEL_ETERNAL_LIFE: '영원의 생명',
     RELIC_LABEL_GENESIS_CORE: '창세의 핵',
     RELIC_LABEL_ETERNAL_FORTRESS: '영원의 요새',
-    RELIC_HP_DRAIN_ATK_COST: (label: string | undefined, dmg: number) => `[${label}] HP 대가 -${dmg}`,
+    HP_DRAIN_ATK_COST_MARKER,
+    RELIC_HP_DRAIN_ATK_COST: (label: string | undefined, dmg: number) => `[${label}] ${HP_DRAIN_ATK_COST_MARKER} -${dmg}`,
 
     // 2026-09 Wave 6 X2: systems 이관 — DifficultyManager.ts.
     // cycle 116에서 "0건 사용"으로 제거됐던 GM 톤 메시지를 다시 들인다 — DifficultyManager가
@@ -1143,10 +1147,11 @@ export const MSG = {
     DIFFICULTY_LABEL_DISADVANTAGE: '열세',
     DIFFICULTY_LABEL_CRISIS: '위기',
     DIFFICULTY_LABEL_BEGINNER_GRACE: '신입 보호',
-    DIFFICULTY_GM_OVERWHELM: '⚔️ [GM] 당신의 기세가 압도적입니다 — 약간의 긴장과 함께 보상이 크게 늘어납니다.',
+    // 2026-10 Wave 130: 기세 안내는 단계가 바뀔 때만 한 번 나온다(`applyDynamicDifficulty`) — 전투 시작마다 같은 문장이 반복됐다.
+    DIFFICULTY_GM_OVERWHELM: '⚔️ 당신의 기세가 압도적입니다 — 약간의 긴장과 함께 보상이 크게 늘어납니다.',
     // 2026-10 Wave 61: 하향 단계는 적만 약하게 하지 않는다 — 처치 골드 · 경험치도 낮춘다(DifficultyManager DIFF_TABLE의 goldMult · expMult < 1).
-    DIFFICULTY_GM_CRISIS: '🛡️ [GM] 잠시 숨을 고를 시간입니다. 몬스터가 약해지는 대신 얻는 골드와 경험치도 줄어듭니다.',
-    DIFFICULTY_GM_DISADVANTAGE: '🛡️ [GM] 어려운 상황이군요. 몬스터 강도를 낮추는 대신 얻는 골드와 경험치도 조금 줄어듭니다.',
+    DIFFICULTY_GM_CRISIS: '🛡️ 잠시 숨을 고를 시간입니다. 몬스터가 약해지는 대신 얻는 골드와 경험치도 줄어듭니다.',
+    DIFFICULTY_GM_DISADVANTAGE: '🛡️ 어려운 상황이군요. 몬스터 강도를 낮추는 대신 얻는 골드와 경험치도 조금 줄어듭니다.',
 
     // 2026-09 Wave 6 X2: systems 이관 — combatActionTurn.ts / combatItemTurn.ts.
     LOCATION_UNKNOWN_FALLBACK: '알 수 없는 곳',
@@ -1239,7 +1244,7 @@ export const MSG = {
     CMD_BLOCKED_DEAD: '런이 종료되었습니다. 결과 화면에서 다시 시작하세요.',
 
     // ── 명령 응답 ────────────────────────────────────────────────────────────
-    CMD_SKILL_CYCLED: '스킬 슬롯을 전환했습니다.',
+    CMD_SKILL_CYCLED: '기술 칸을 전환했습니다.',
     /** `[상태]` 접두사는 `command-surface-contract`가 읽는다 — 바꾸지 말 것. */
     //   인자 대부분이 `| undefined`인 것은 기존 템플릿 리터럴의 동작을 그대로
     //   보존하기 위해서다(`Player`에서 전부 선택 필드다 — MSG의 기존 관례와 같다).
@@ -1340,7 +1345,7 @@ export const MSG = {
     HUNT_CONTRACT_PANEL_TITLE: '지역 토벌 의뢰',
     HUNT_CONTRACT_PANEL_HINT: '회차마다 다시 — 처치 · 정예 · 우두머리, 5차까지',
     HUNT_CONTRACT_STAGE_LABELS: ['처치', '정예 추적', '우두머리'] as const,
-    HUNT_CONTRACT_STATUS_LOCKED: (level: number) => `Lv${level} 지역`,
+    HUNT_CONTRACT_STATUS_LOCKED: (level: number) => `레벨 ${level} 지역`,
     HUNT_CONTRACT_STATUS_STAGE: (stage: number, label: string, progress: number, goal: number) => `${stage}단계 ${label} ${progress}/${goal}`,
     HUNT_CONTRACT_STATUS_CHAMPION: (champion: string) => `3단계 우두머리 「${champion}」 — 이 지역에서 탐험`,
     HUNT_CONTRACT_STATUS_OMEN: (champion: string, progress: number, goal: number) => `3단계 우두머리 「${champion}」의 기척 ${progress}/${goal}`,
@@ -1368,7 +1373,19 @@ export const MSG = {
         return `지금 걸린 강화(${parts} · ${kept.turns}턴)가 더 강해 ${withJosa(incoming, '은/는')} 적용되지 않았습니다.`;
     },
     WAR_DRUM_BUFF_LABEL: '전쟁의 북',
-    WAR_DRUM_BUFF_LOG: (atkPercent: number, turns: number) => `[전쟁의 북] 전투 시작 ATK +${atkPercent}% (${turns}턴)`,
+    WAR_DRUM_BUFF_LOG: (atkPercent: number, turns: number) => `[전쟁의 북] 전투 시작 공격력 +${atkPercent}% (${turns}턴)`,
+    // 2026-10 Wave 130: 전투 시작 유물 기록 — 훅에 있던 "+N HP" 문구를 옮겼다.
+    RELIC_BATTLE_START_HEAL: (heal: number) => `[재생 코어] 전투 시작 회복 · 생명 +${heal}`,
+    RELIC_CURSED_POWER_START_COST: (selfDamage: number) => `[저주받은 반지] 전투 시작 대가 · 생명 -${selfDamage}`,
+    // 2026-10 Wave 130: 발견 체인 완료 — 보상 줄이 "300G, 200 EXP"였다.
+    DISCOVERY_JOURNEY_DESC: (desc: string) => `🔍 ${desc}`,
+    DISCOVERY_JOURNEY_COMPLETE: (label: string, rewards: string) => `🏆 [발견 체인 완료] ${label}! 보상: ${rewards}`,
+    DISCOVERY_JOURNEY_REWARD_GOLD: (gold: number) => `골드 ${gold}`,
+    DISCOVERY_JOURNEY_REWARD_EXP: (exp: number) => `경험 ${exp}`,
+    DISCOVERY_JOURNEY_REWARD_CRYSTAL: (count: number) => `크리스탈 ${count}`,
+    // 2026-10 Wave 130: 지난 원정 요약 줄 — "+N EXP"였다.
+    LAST_EXPEDITION_SUMMARY_LINE: (battles: number, explores: number, expGained: number) =>
+        `전투 ${battles} · 탐험 ${explores} · 경험 +${expGained.toLocaleString('ko-KR')}`,
     CAMPFIRE_FORGE_BUFF_NAME: '모닥불 단련',
     /** C19: 체인 전투 선택지 — 이야기 전투에서 지거나 물러나면 그 단계는 다시 찾아온다. */
     CHAIN_COMBAT_RETRY_NOTICE: '이 시험은 이기기 전까지 끝나지 않습니다. 물러나거나 쓰러져도 같은 자리에서 다시 마주칩니다.',
@@ -1384,8 +1401,10 @@ export const MSG = {
     //   한 번 미루면 이번 여정에서는 마왕을 다시 쓰러뜨려도 계승 화면이 뜨지 않는다. 조작판에서 다시 연다.
     // 2026-09 Wave 40: 계승 화면 — 다음 세계의 적 전투 레벨 가산과 영구 스탯 레벨 연동.
     ASCENSION_ENEMY_LEVEL_BONUS: (current: number, next: number) => `적 전투 레벨 +${current}% → +${next}%`,
-    ASCENSION_META_RAMP: (level: number) => `영구 능력치는 레벨에 비례해 적용되고 Lv${level}에 전부 적용됩니다. 매 여정은 약하게 시작합니다.`,
-    STATS_META_RAMP: (percent: number, level: number) => `지금 ${percent}% 적용 · Lv${level}에 전부 적용`,
+    ASCENSION_META_RAMP: (level: number) => `영구 능력치는 레벨에 비례해 적용되고 레벨 ${level}에 전부 적용됩니다. 매 여정은 약하게 시작합니다.`,
+    STATS_META_RAMP: (percent: number, level: number) => `지금 ${percent}% 적용 · 레벨 ${level}에 전부 적용`,
+    // 2026-10 Wave 130: 사망 화면 · 진 엔딩의 레벨 표기 — "Lv.25"였다(화면 용어는 "레벨 N").
+    LEVEL_LABEL: (level: number) => `레벨 ${level}`,
     ASCENSION_DEFERRED_NOTICE: '이번 여정에서는 마왕을 다시 쓰러뜨려도 계승을 묻지 않습니다. 준비되면 조작판의 [계승하기]를 누르세요.',
     DEMON_KING_SLAIN_ASCEND_DEFERRED: '⚡ 마왕이 쓰러졌습니다. 계승은 조작판의 [계승하기]에서 언제든 선택할 수 있습니다.',
     ASCENSION_REOPEN_LABEL: '계승하기',

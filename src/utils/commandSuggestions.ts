@@ -34,8 +34,8 @@ export const getAvailableCommands = (gameState: GameMode, player: Player | null 
     if (gameState === GS.COMBAT) {
         base.push(
             { cmd: 'attack', desc: '공격 (a)' },
-            { cmd: 'skill', desc: '스킬 사용 (s)' },
-            { cmd: 'nextskill', desc: '스킬 전환 (sn)' },
+            { cmd: 'skill', desc: '기술 사용 (s)' },
+            { cmd: 'nextskill', desc: '기술 전환 (sn)' },
             { cmd: 'escape', desc: '도주 (r)' }
         );
     }

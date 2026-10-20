@@ -155,8 +155,8 @@ const RAW_QUESTS: Quest[] = [
     { id: 61, title: '탐험가의 기록',        type: 'explore_count',   desc: '20번 탐색',                    target: 'explores',           goal: 20, reward: { exp: 5000,  gold: 3000 }, minLv: 5 },
     // cycle 368: threshold: 0.2 redundant default 제거 — questProgress.ts:41
     //   `questData.threshold || 0.2` fallback과 동일.
-    { id: 62, title: '생존의 의지',          type: 'survive_low_hp',  desc: 'HP 20% 이하에서 승리 5회',     target: 'lowHpWins',          goal: 5, reward: { exp: 8000, gold: 6000, item: '엘릭서' }, minLv: 15 },
-    { id: 63, title: '맨몸의 용사',          type: 'survive_low_hp',  desc: 'HP 10% 이하에서 승리 3회',     target: 'lowHpWins',          threshold: 0.1, goal: 3, reward: { exp: 12000, gold: 10000, item: '엘릭서' }, minLv: 25 },
+    { id: 62, title: '생존의 의지',          type: 'survive_low_hp',  desc: '생명 20% 이하에서 승리 5회',     target: 'lowHpWins',          goal: 5, reward: { exp: 8000, gold: 6000, item: '엘릭서' }, minLv: 15 },
+    { id: 63, title: '맨몸의 용사',          type: 'survive_low_hp',  desc: '생명 10% 이하에서 승리 3회',     target: 'lowHpWins',          threshold: 0.1, goal: 3, reward: { exp: 12000, gold: 10000, item: '엘릭서' }, minLv: 25 },
     // 2026-10 Wave 64 (원장 §65, 소유자 결정 "각각의 목표"): 200(대륙의 발자취)과 같은 '누적 탐험 50회'였다 — 제목대로 누적 골드다.
     //   목표 10만: 1회차 자연 플레이(5경로 × 12시드)에서 누적 골드가 10만에 닿는 레벨은 중앙값 26(p10 15 · p90 36)이고,
     //   수락 레벨 20에 이미 채워진 경우는 60회 중 9회다(이전 '누적 탐험 50회'는 Lv20 탐험 중앙값 260이라 사실상 전부 수락 즉시 완료).
@@ -171,7 +171,7 @@ const RAW_QUESTS: Quest[] = [
     { id: 72, title: '개척자의 현장 기록',   type: 'discovery_count', buildTag: 'explorer', buildLabel: '탐험 수집가', desc: '탐험 발견 6회 달성', objective: '탐험 발견 6회 달성', target: 'discoveries', goal: 6, reward: { exp: 10000, gold: 11000 }, minLv: 10 },
     { id: 73, title: '마스터 크래프터',      type: 'craft',           desc: '아이템 25개 제작',             target: 'crafts',             goal: 25, reward: { exp: 30000, gold: 40000, item: '강화 재료' }, minLv: 40 },
     { id: 74, title: '탐험의 극한',          type: 'explore_count',   desc: '100번 탐색',                   target: 'explores',           goal: 100, reward: { exp: 20000, gold: 30000 }, minLv: 30 },
-    { id: 75, title: '전설의 경계인',        type: 'survive_low_hp',  desc: 'HP 5% 이하에서 승리 1회',      target: 'lowHpWins',          threshold: 0.05, goal: 1, reward: { exp: 20000, gold: 25000, item: '엘릭서' }, minLv: 35 },
+    { id: 75, title: '전설의 경계인',        type: 'survive_low_hp',  desc: '생명 5% 이하에서 승리 1회',      target: 'lowHpWins',          threshold: 0.05, goal: 1, reward: { exp: 20000, gold: 25000, item: '엘릭서' }, minLv: 35 },
     { id: 76, title: '끝없는 현상금',        type: 'bounty_count',    desc: '현상수배 30건 완료',           target: 'bountiesCompleted',  goal: 30, reward: { exp: 50000, gold: 80000, item: '영웅의 물약' }, minLv: 40 },
 
     // ── 스토리 퀘스트 ─────────────────────────────────────────────────────────
@@ -283,10 +283,10 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: 'ach_boss_25',      title: '신화의 사냥꾼',  desc: '보스 25회 처치',            target: 'bossKills',  goal: 25,  reward: { gold: 40000, item: '분노의 물약' } },
 
     // ── 골드 업적 ─────────────────────────────────────────────────────────────
-    { id: 'ach_gold_1000',    title: '저축왕',         desc: '누적 골드 1000G 달성',      target: 'total_gold', goal: 1000,   reward: { item: '하급 체력 물약' } },
-    { id: 'ach_gold_10000',   title: '갑부',           desc: '누적 골드 10000G 달성',     target: 'total_gold', goal: 10000,  reward: { item: '엘릭서' } },
-    { id: 'ach_gold_50000',   title: '거상',           desc: '누적 골드 50000G 달성',     target: 'total_gold', goal: 50000,  reward: { item: '영웅의 물약' } },
-    { id: 'ach_gold_200000',  title: '전설의 재벌',    desc: '누적 골드 200000G 달성',    target: 'total_gold', goal: 200000, reward: { item: '천상의갑주' } },
+    { id: 'ach_gold_1000',    title: '저축왕',         desc: '누적 골드 1,000 달성',      target: 'total_gold', goal: 1000,   reward: { item: '하급 체력 물약' } },
+    { id: 'ach_gold_10000',   title: '갑부',           desc: '누적 골드 10,000 달성',     target: 'total_gold', goal: 10000,  reward: { item: '엘릭서' } },
+    { id: 'ach_gold_50000',   title: '거상',           desc: '누적 골드 50,000 달성',     target: 'total_gold', goal: 50000,  reward: { item: '영웅의 물약' } },
+    { id: 'ach_gold_200000',  title: '전설의 재벌',    desc: '누적 골드 200,000 달성',    target: 'total_gold', goal: 200000, reward: { item: '천상의갑주' } },
 
     // ── 레벨 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_lv_10',        title: '성장의 기쁨',    desc: '레벨 10 달성',              target: 'level',      goal: 10,   reward: { item: '강철 롱소드' } },

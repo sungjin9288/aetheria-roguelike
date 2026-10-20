@@ -28,7 +28,7 @@ export const PREMIUM_SHOP = {
     revive: {
         id: 'revive',
         name: '즉시 부활',
-        desc: '사망 시 HP/MP 50% 회복 후 즉시 부활',
+        desc: '사망 시 생명 · 기력 50% 회복 후 즉시 부활',
         cost: BALANCE.REVIVE_COST,
     },
     /** 코스메틱 칭호 */

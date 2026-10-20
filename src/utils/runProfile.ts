@@ -133,7 +133,7 @@ export const getRunBuildProfile = (player: Player, stats: DerivedStatsView | nul
         if (dualWield) { score += 4; reasons.push('쌍수 무기'); }
         if (relicEffects.has('combo_stack')) { score += 2; reasons.push('연격 스택'); }
         if (relicEffects.has('double_strike')) { score += 2; reasons.push('2회 타격'); }
-        if (relicEffects.has('crit_mp_regen')) { score += 1; reasons.push('치명타 MP 회복'); }
+        if (relicEffects.has('crit_mp_regen')) { score += 1; reasons.push('치명타 기력 회복'); }
         tags.push(scoreTag('dual', '쌍수 연격', score, reasons));
     }
 
@@ -154,10 +154,10 @@ export const getRunBuildProfile = (player: Player, stats: DerivedStatsView | nul
         if (stats?.isMagic) { score += 2; reasons.push('마법 공격'); }
         if (focus) { score += 3; reasons.push('주문서/마도서'); }
         if (isMagicWeapon(mainWeapon) || isMagicWeapon(offhand)) { score += 2; reasons.push('마법 무기'); }
-        if (relicEffects.has('mp_mult')) { score += 1; reasons.push('최대 MP 증가'); }
-        if (relicEffects.has('free_skill')) { score += 2; reasons.push('MP 무소모 확률'); }
-        if (relicEffects.has('mp_regen_turn')) { score += 2; reasons.push('턴당 MP 회복'); }
-        if (relicEffects.has('skill_mult')) { score += 2; reasons.push('스킬 증폭'); }
+        if (relicEffects.has('mp_mult')) { score += 1; reasons.push('최대 기력 증가'); }
+        if (relicEffects.has('free_skill')) { score += 2; reasons.push('기력 무소모 확률'); }
+        if (relicEffects.has('mp_regen_turn')) { score += 2; reasons.push('턴당 기력 회복'); }
+        if (relicEffects.has('skill_mult')) { score += 2; reasons.push('기술 증폭'); }
         tags.push(scoreTag('arcane', '비전 공명', score, reasons));
     }
 
@@ -167,7 +167,7 @@ export const getRunBuildProfile = (player: Player, stats: DerivedStatsView | nul
         if (relicEffects.has('event_chance')) { score += 2; reasons.push('이벤트 증가'); }
         if (relicEffects.has('drop_rate')) { score += 2; reasons.push('드롭 증가'); }
         if (relicEffects.has('gold_mult')) { score += 1; reasons.push('골드 수급'); }
-        if (relicEffects.has('exp_mult')) { score += 1; reasons.push('EXP 수급'); }
+        if (relicEffects.has('exp_mult')) { score += 1; reasons.push('경험 수급'); }
         if (relicEffects.has('boss_hunter')) { score += 3; reasons.push('보스 추적'); }
         tags.push(scoreTag('explorer', '탐험 수집가', score, reasons));
     }
@@ -188,7 +188,7 @@ export const getRunBuildProfile = (player: Player, stats: DerivedStatsView | nul
         let score = 0;
         if (relicEffects.has('dot_mult')) { score += 3; reasons.push('지속 피해 증폭'); }
         if (mainWeapon?.elem && mainWeapon.elem !== '물리') { score += 2; reasons.push(`${mainWeapon.elem} 속성 무기`); }
-        if (isMagicWeapon(mainWeapon)) { score += 1; reasons.push('상태이상 스킬 연계'); }
+        if (isMagicWeapon(mainWeapon)) { score += 1; reasons.push('상태이상 기술 연계'); }
         tags.push(scoreTag('status', '상태이상 집행자', score, reasons));
     }
 
@@ -480,14 +480,14 @@ export const getEnemyTacticalProfile = (enemy: Monster, stats: FullStats | null 
     const guardChance = Math.max(0, Math.round((pattern.guardChance || 0) * 100));
     const heavyChance = Math.max(0, Math.round((pattern.heavyChance || 0) * 100));
     const bossBrief = enemy.isBoss ? BOSS_BRIEFS[(enemy.baseName || enemy.name) as string] : null;
-    const rawPhaseHint = bossBrief?.phaseHint || (enemy.isBoss && enemy.phase2 ? 'HP 50% 이하에서 2페이즈로 전환됩니다.' : null);
+    const rawPhaseHint = bossBrief?.phaseHint || (enemy.isBoss && enemy.phase2 ? '생명 50% 이하에서 2페이즈로 전환됩니다.' : null);
     const phaseHint = rawPhaseHint && enemy.isBoss && enemy.phase2 && !rawPhaseHint.includes('50%')
-        ? `${rawPhaseHint} (전환 기준 HP 50%)`
+        ? `${rawPhaseHint} (전환 기준 생명 50%)`
         : rawPhaseHint;
     const hint = heavyChance >= 30
         ? '강타 비중이 높습니다. 방어/회복 타이밍을 아껴두는 편이 좋습니다.'
         : guardChance >= 30
-            ? '방어 빈도가 높습니다. 큰 스킬은 가드가 빠진 뒤에 쓰는 편이 좋습니다.'
+            ? '방어 빈도가 높습니다. 큰 기술은 가드가 빠진 뒤에 쓰는 편이 좋습니다.'
             : '공격 패턴이 고른 편입니다. 안정적인 교전이 유리합니다.';
 
     // cycle 270: 12 dead 필드 제거 (role/tier/guardChance/heavyChance/estimatedHit/estimatedHeavy/

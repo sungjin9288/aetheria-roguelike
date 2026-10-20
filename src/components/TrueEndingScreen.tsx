@@ -164,7 +164,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                         <Star size={28} className="text-[#d5b180]" />
                         <h1 className="font-fira text-[14px] uppercase tracking-[0.32em] text-[#d5b180]">True Ending</h1>
                         <p className="break-words text-[12px] font-fira tracking-wider text-slate-300">
-                            {player?.name || '영웅'} — Lv.{player?.level || 1} {player?.job || '모험가'}
+                            {player?.name || '영웅'} — {MSG.LEVEL_LABEL(player?.level || 1)} {player?.job || '모험가'}
                         </p>
                     </Motion.div>
 

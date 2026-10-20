@@ -23,6 +23,15 @@ const getBuffTarget = (effect: string | undefined) => (
     effect === 'atk_up' ? 'ATK' : effect === 'def_up' ? 'DEF' : effect === 'all_up' ? 'ATK·DEF' : ''
 );
 
+/** 설명 줄의 강화 대상 — 2026-10 Wave 130: "ATK +30%"였다. 빠른 칸 배지(`getConsumableCompactLabel`)는 40px 칸의 압축 표기라 그대로다. */
+const getBuffTargetWords = (effect: string | undefined) => {
+    const labels = MSG.EQUIP_DELTA_LABEL;
+    if (effect === 'atk_up') return `${labels.atk} `;
+    if (effect === 'def_up') return `${labels.def} `;
+    if (effect === 'all_up') return `${labels.atk} · ${labels.def} `;
+    return '';
+};
+
 export const getConsumableCompactLabel = (item: Item | null | undefined) => {
     if (item?.type === 'hp') return isFullRestoreElixir(item) ? 'HP∞' : `HP${item.val ?? ''}`;
     if (item?.type === 'mp') return `MP${item.val ?? ''}`;
@@ -36,13 +45,12 @@ export const getConsumableCompactLabel = (item: Item | null | undefined) => {
 
 export const getConsumableDescription = (item: Item | null | undefined, { includeTurnCost = false } = {}) => {
     let detail = '';
-    if (item?.type === 'hp') detail = isFullRestoreElixir(item) ? MSG.CONSUMABLE_HP_FULL_RESTORE : `HP ${item.val ?? 0} 회복`;
-    if (item?.type === 'mp') detail = `MP ${item.val ?? 0} 회복`;
+    if (item?.type === 'hp') detail = isFullRestoreElixir(item) ? MSG.CONSUMABLE_HP_FULL_RESTORE : MSG.CONSUMABLE_HP_RESTORE(item.val ?? 0);
+    if (item?.type === 'mp') detail = MSG.CONSUMABLE_MP_RESTORE(item.val ?? 0);
     if (item?.type === 'cure') detail = getCureDetail(item.effect);
     if (item?.type === 'buff') {
-        const target = getBuffTarget(item.effect);
         const percent = Number.isFinite(item.val) ? Math.round(((item.val ?? 0) - 1) * 100) : 0;
-        detail = `${target ? `${target} ` : ''}+${percent}% · ${item.turn ?? 0}턴`;
+        detail = `${getBuffTargetWords(item.effect)}+${percent}% · ${item.turn ?? 0}턴`;
     }
     return includeTurnCost && detail ? `${detail} · 전투 턴 1회 소모` : detail;
 };

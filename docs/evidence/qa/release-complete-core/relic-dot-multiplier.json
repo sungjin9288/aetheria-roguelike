@@ -1,13 +1,13 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "f1914c7741432ff1a95dbeb1cda5f3299f8d8c9ce18c8f6c15c74f9c23bbd134",
+  "reportHash": "eb8c2b7b394f59d5fd057af55bbba6745293dd3c77821cff966b6bb1c0fd0d3e",
   "sourceHashes": {
     "src/data/relics.ts": "648c76a6f8531c459b3f3452ae51611cc3b7a9eda79413ef77d1de7214a02456",
-    "src/systems/CombatEngine.actions.ts": "2bbfe4dd87464d3c8b275f0465135a8f05cfb27f55f1ddff91c49f9f3e14d4c5",
-    "src/systems/relicDotMultiplierAudit.ts": "030ba8f22b7f41adff7ee7bb04d10cd1511febfe1e96d838a1f9a6559da2db77",
+    "src/systems/CombatEngine.actions.ts": "3555d67b425c77f0e2e37555367aa95ca68243fb071f1b859c893a0043023829",
+    "src/systems/relicDotMultiplierAudit.ts": "497c99103bc28f9cf3ebdf4f838b53f888836af14c26ae0dbcfa034695ce25cc",
     "src/utils/dataMigration.ts": "92f19020fa32e195c27cd63b32e5be2cc82eddd970a10344971d9e2d6d999e4b",
     "src/reducers/handlers/combatHandlers.ts": "8f6583396174ed5f026e8dd7bd8c9e3ac425599c00ead20976fdd2c1e60f54ff",
-    "tests/relic-dot-multiplier-coherence.test.js": "301239a4cea1284b35a9802eecc2503bb8a047ec2a6d1c28212b2b4da6a89346",
+    "tests/relic-dot-multiplier-coherence.test.js": "278adc12dc3f6bba8ab1138e70c6dae7b506fe4d05833a5b8c5a94e9c3002340",
     "scripts/verify-relic-dot-multiplier.mjs": "55ddc162ca69d4e999b0d01f708543e3f3556bdb61f0488e14d65dc6a8a0d02e",
     "docs/superpowers/plans/2026-08-17-aetheria-relic-dot-multiplier-plan.md": "25530503725c3ebf739a9e4a70ff3c2fcf9affb8959d6a7429789a9818dd19e9"
   },
@@ -56,7 +56,7 @@
           "logTexts": [
             "[화상 시험]: dot-target에게 10 피해! (90/100)",
             "[화상 시험] dot-target에게 [화상] 부여!",
-            "[burn] 추가 피해 +1"
+            "[화상] 추가 피해 +1"
           ]
         },
         {
@@ -72,7 +72,7 @@
           "logTexts": [
             "[화상 시험]: dot-target에게 6 피해! (94/100)",
             "[화상 시험] dot-target에게 [화상] 부여!",
-            "[burn] 추가 피해 +1"
+            "[화상] 추가 피해 +1"
           ]
         },
         {
@@ -88,7 +88,7 @@
           "logTexts": [
             "[화상 시험]: dot-target에게 9 피해! (91/100)",
             "[화상 시험] dot-target에게 [화상] 부여!",
-            "[burn] 추가 피해 +5",
+            "[화상] 추가 피해 +5",
             "[죽음의 낙인] 지속 피해가 증폭됩니다!"
           ]
         },
@@ -105,7 +105,7 @@
           "logTexts": [
             "[화상 시험]: dot-target에게 7 피해! (93/100)",
             "[화상 시험] dot-target에게 [화상] 부여!",
-            "[burn] 추가 피해 +2",
+            "[화상] 추가 피해 +2",
             "[죽음의 낙인] 지속 피해가 증폭됩니다!"
           ]
         },
@@ -122,7 +122,7 @@
           "logTexts": [
             "[화상 시험]: dot-target에게 9 피해! (91/100)",
             "[화상 시험] dot-target에게 [화상] 부여!",
-            "[burn] 추가 피해 +5",
+            "[화상] 추가 피해 +5",
             "[죽음의 낙인] 지속 피해가 증폭됩니다!"
           ]
         },
@@ -139,7 +139,7 @@
           "logTexts": [
             "[화상 시험]: dot-target에게 9 피해! (91/100)",
             "[화상 시험] dot-target에게 [화상] 부여!",
-            "[burn] 추가 피해 +5",
+            "[화상] 추가 피해 +5",
             "[죽음의 낙인] 지속 피해가 증폭됩니다!"
           ]
         }
@@ -184,7 +184,7 @@
           "logTexts": [
             "[화상 시험]: dot-target에게 18 피해! (82/100) [치명타]",
             "[화상 시험] dot-target에게 [화상] 부여!",
-            "[burn] 추가 피해 +10",
+            "[화상] 추가 피해 +10",
             "[죽음의 낙인] 지속 피해가 증폭됩니다!"
           ]
         },
@@ -201,7 +201,7 @@
           "logTexts": [
             "[화상 시험]: dot-target에게 18 피해! (82/100) [치명타]",
             "[화상 시험] dot-target에게 [화상] 부여!",
-            "[burn] 추가 피해 +10",
+            "[화상] 추가 피해 +10",
             "[죽음의 낙인] 지속 피해가 증폭됩니다!"
           ]
         }

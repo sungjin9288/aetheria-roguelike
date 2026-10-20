@@ -14,6 +14,7 @@ import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
 import { canInvestigateTown } from '../../utils/townInvestigation';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
+import { formatEventText } from '../../utils/eventPresentation';
 import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../../utils/scoutEvents';
 import { isAreaBossChallengeable, isBossGaugeFull, isBossGaugeCardSuppressed, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
 import { spawnEnemy } from '../../utils/exploreUtils';
@@ -189,7 +190,8 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
                     _chainId: chain.id,
                     _chainStep: step.step,
                 }});
-                addLog('event', MSG.EXPLORE_CHAIN_EVENT(chain.label, step.event.desc));
+                // 2026-10 Wave 130: 이벤트 화면과 같은 변환을 거친다 — 기록에만 "2000G"가 그대로 찍혔다.
+                addLog('event', MSG.EXPLORE_CHAIN_EVENT(chain.label, formatEventText(step.event.desc)));
                 return;
             }
 

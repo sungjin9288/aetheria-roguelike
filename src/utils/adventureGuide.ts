@@ -51,8 +51,8 @@ const getRoutePlan = (
     if (bossCanAppear) {
         return {
             approach: hpRatio >= ROUTE_PLAN_BOSS_HP_RATIO ? '보스 진입' : '정비 후 진입',
-            exitRule: 'HP 75% 미만이면 귀환',
-            returnLabel: 'HP 75%',
+            exitRule: '생명 75% 미만이면 귀환',
+            returnLabel: '생명 75%',
         };
     }
 
@@ -83,8 +83,8 @@ const getRoutePlan = (
     if (badge === '도전' || badge === '경계') {
         return {
             approach: '소모품 확인',
-            exitRule: 'HP 절반 이하면 귀환',
-            returnLabel: 'HP 50%',
+            exitRule: '생명 절반 이하면 귀환',
+            returnLabel: '생명 50%',
         };
     }
 
@@ -105,7 +105,7 @@ const getVisitedMaps = (player: Player) => new Set([...(player?.stats?.visitedMa
 
 const getQuestProgressLabel = (entry: ExpeditionQuestEntry) => {
     if (!entry?.quest) return '';
-    if (entry.quest.target === 'level') return `Lv.${entry.progress}/${entry.quest.goal}`;
+    if (entry.quest.target === 'level') return `레벨 ${entry.progress}/${entry.quest.goal}`;
     return `${entry.progress}/${entry.quest.goal}`;
 };
 
@@ -133,7 +133,7 @@ const getQuestNextStep = (entry: ExpeditionQuestEntry, targetMaps: string[]) => 
     const remaining = Math.max(0, (quest.goal || 0) - (entry?.progress || 0));
 
     if (entry?.isComplete) return '마을에서 보상 회수';
-    if (quest.target === 'level') return `Lv.${quest.goal}까지 성장`;
+    if (quest.target === 'level') return `레벨 ${quest.goal}까지 성장`;
     if (quest.type === 'explore_count' && quest.location && targetMaps.length > 0) {
         return `${targetMaps[0]}에서 탐험 ${remaining}회 진행`;
     }
@@ -431,7 +431,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                 if (hpRatio <= 0.35) {
                     score -= 18;
                     badge = '경계';
-                    reason = '현재 HP가 낮아 더 깊이 들어가기엔 위험한 경로입니다.';
+                    reason = '현재 생명이 낮아 더 깊이 들어가기엔 위험한 경로입니다.';
                 }
             }
 
@@ -533,7 +533,7 @@ export const getExpeditionPreparation = (
         focusQuests: tracker?.focusQuests || [],
         // Wave 62 (원장 §61.2 A10): 길 잃은 여행은 출구가 어디로 이어지는지 말하지 않는다(지도 화면의 '미확인 경로'와 같다).
         destination: departure?.name ? getVisibleRouteName(player, departure.name) : '이동 경로 없음',
-        resourceLabel: `HP ${hpPercent}% · NRG ${mpPercent}%`,
+        resourceLabel: `생명 ${hpPercent}% · 기력 ${mpPercent}%`,
         equipmentLabel: equipmentWarnings.length > 0 ? equipmentWarnings.join(' · ') : '주요 장비 확인',
         returnLabel: departure?.routePlan?.exitRule || tracker?.returnLabel || '임무 목표 후 마을 복귀',
     };
@@ -681,7 +681,7 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
     if (!safe && hpRatio <= 0.35) {
         return {
             title: '후퇴 또는 회복 권장',
-            detail: '현재 HP가 낮습니다. 더 깊게 들어가기보다 이동과 회복을 먼저 고려하세요.',
+            detail: '현재 생명이 낮습니다. 더 깊게 들어가기보다 이동과 회복을 먼저 고려하세요.',
             primaryAction: { kind: 'open_move', label: '이동 경로' },
         };
     }

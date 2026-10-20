@@ -163,7 +163,7 @@ test('[계승 화면] 다음 세계의 적 레벨 가산과 영구 스탯 연동
     const html = renderStatic(createElement(AscensionScreen, { player: makePlayerFixture({ meta: { prestigeRank: 1 }, quests: [] }) }));
     assert.ok(html.includes('data-testid="ascension-enemy-level"'));
     assert.ok(html.includes('data-testid="ascension-meta-ramp"'));
-    assert.ok(html.includes(`Lv${FULL}`));
+    assert.ok(html.includes(`레벨 ${FULL}`));
     assert.ok(CONSTANTS.MAX_LEVEL >= FULL);
 });
 
@@ -175,5 +175,5 @@ test('[계승 기록] 상태 화면은 영구 보너스 전체량 옆에 지금 
     assert.ok(render(10).includes('data-testid="stats-meta-ramp"'));
     assert.ok(render(10).includes('33%'), 'Lv10은 1/3');
     assert.ok(render(45).includes('100%'), 'Lv30 이후 전부');
-    assert.ok(render(10).includes(`Lv${FULL}`));
+    assert.ok(render(10).includes(`레벨 ${FULL}`));
 });
