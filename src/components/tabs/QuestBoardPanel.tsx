@@ -5,7 +5,7 @@ import { ChevronDown, ScrollText, Target } from 'lucide-react';
 import { formatRewardParts } from '../../utils/gameUtils';
 import type { ChallengeHolder } from '../../utils/challengeRules';
 import { getTraitQuestResonance } from '../../utils/runProfileUtils';
-import { getQuestBoardRecommendations } from '../../utils/questOperations.js';
+import { getQuestBoardRecommendations, isBasicHuntQuest, isSelfDescribingHuntQuest } from '../../utils/questOperations.js';
 import SignalBadge from '../SignalBadge';
 import FocusPanelHeader from '../FocusPanelHeader';
 import { getPreparedExpeditionFocusQuestIds, MAX_EXPEDITION_FOCUS_QUESTS } from '../../utils/expeditionMissionFocus.js';
@@ -165,13 +165,6 @@ const QuestRowShell = ({ children, kind, testId }: QuestRowShellProps) => (
   </div>
 );
 
-const isBasicHuntQuest = (quest: Quest) => (
-  !quest?.type
-  && quest?.target
-  && quest.target !== 'level'
-  && Number.isFinite(Number(quest.goal))
-);
-
 const getRecommendationTitle = (quest: Quest) => (
   isBasicHuntQuest(quest) ? `${quest.title} (0/${quest.goal})` : quest.title
 );
@@ -215,8 +208,8 @@ const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept, objecti
             className={`ml-auto shrink-0 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
           />
         </div>
-        {!isBasicHuntQuest(entry.quest) && (
-          <div className="aether-type-body mt-1 font-readable text-slate-300/84">
+        {!isSelfDescribingHuntQuest(entry.quest) && (
+          <div data-testid="quest-featured-objective" className="aether-type-body mt-1 font-readable text-slate-300/84">
             {getQuestObjectiveText(entry.quest)}
           </div>
         )}

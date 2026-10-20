@@ -87,6 +87,24 @@ const toArray = <T,>(value: T[] | null | undefined): T[] => (Array.isArray(value
 //   path 보존). cycle 519 getMapLevel 패턴과 동일.
 const getQuestLevelGap = (quest: Quest, playerLevel: number) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
 const isStoryQuest = (quest: Quest) => String(quest?.title || '').includes('[스토리]');
+
+/** 기본 토벌 — 종류 없이 몬스터 대상 · 횟수만 있는 임무. 추천 줄은 진행도를 제목에 합친다("슬라임 소탕 (0/3)"). */
+export const isBasicHuntQuest = (quest: Quest | null | undefined): boolean => Boolean(
+    quest
+    && !quest.type
+    && quest.target
+    && quest.target !== 'level'
+    && Number.isFinite(Number(quest.goal)),
+);
+
+/**
+ * 제목이 곧 목표인 기본 토벌 — 추천 줄이 목표 줄을 생략해도 된다. 2026-08 압축은 기본 토벌 전부의 목표 줄을 숨겼는데,
+ * 113개 중 49개(본편 장 · 이야기를 여는 임무 5 · 17 · 205 포함)는 제목이 대상을 말하지 않아("호수의 수호자 (0/5)")
+ * 수락 전 게시판 어디에도 무엇을 하는 임무인지가 없었다(통합 수용 4차, 원장 §138).
+ */
+export const isSelfDescribingHuntQuest = (quest: Quest | null | undefined): boolean => (
+    isBasicHuntQuest(quest) && String(quest?.title || '').includes(String(quest?.target))
+);
 /**
  * 2026-10 Wave 128(소유자 결정 "임무로 시작하게 — 스토리, 시나리오, 퀘스트 같이 자연스러운 구조로 이어지게"):
  * 아직 열리지 않은 곁가지 이야기(이벤트 체인)를 여는 본편 밖 임무 — 게시판은 이 임무를 이야기 임무 칸에 그 이야기의

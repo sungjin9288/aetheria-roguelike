@@ -1,5 +1,5 @@
 import { devices, expect, test, type Browser, type Locator, type Page } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { openTownFacilities, startE2ERun } from './testHelpers';
 
 // 2026-10 제품 통합 수용: 같은 소스의 자연 플레이 스냅숏으로 세 폭을 돌며 찾은 배치 결함 다섯 건의 되돌림을 막는다.
 //   ① 전투 결과 카드가 하단 고정이 아니었다(`.panel-noise`가 `fixed`를 덮어 12px 밀리고 오른쪽 4px가 잘렸다) · 8 ~ 10px 글자
@@ -14,6 +14,8 @@ import { startE2ERun } from './testHelpers';
 // 2026-10 Wave 69(소유자 결정 B): ⑨ 코드 글꼴(`font-fira`)의 고정폭 공백 0.6em이 한국어 낱말 사이를 벌렸다 — 숫자 · 영문만 Fira Code
 // 2026-10 통합 수용 3차(원장 §135): ⑩ 375px 사망 화면 회고 줄이 말줄임으로 "최근 승률: 4…"를 숨겼다
 //   ⑪ 겹친 회차 카드의 카드별 미리보기(Wave 126 — 출처 줄이 가장 길다)는 세 폭 어디서도 그려 본 적이 없었다
+// 2026-10 통합 수용 4차(원장 §138): ⑫ 게시판 추천 줄이 기본 토벌의 목표를 모두 숨겨, 제목이 대상을 말하지 않는 임무
+//   ("호수의 수호자 (0/5)" — 이야기를 여는 임무 · 본편 장 포함 49개)는 수락 전 무엇을 하는지가 없었다. Wave 128의 소문 줄도 여기서 그린다
 const VIEWPORTS = [
     { width: 375, height: 667 },
     { width: 390, height: 844 },
@@ -124,6 +126,33 @@ const loadLateKnightFixture = async (page: Page) => {
     await page.addInitScript(({ key, snapshot }) => localStorage.setItem(key, snapshot), { key: SETTINGS_KEY, snapshot: fixture });
     await page.reload();
     await expect.poll(() => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player?.job)).toBe('나이트');
+    for (const id of ['return-briefing-close', 'milestone-story-close']) {
+        const close = page.getByTestId(id);
+        if (await close.isVisible().catch(() => false)) await close.click();
+    }
+};
+
+// 본편 2장(폐허의 진실)을 받아 둔 Lv5 — 게시판 이야기 칸의 추천 줄은 곁가지 이야기를 여는 '호수의 수호자'다(Wave 128).
+const EARLY_STORY = {
+    name: '용사', job: '모험가', level: 5, exp: 0, loc: '시작의 마을', gold: 640,
+    quests: [{ id: 81, progress: 0, isBounty: false }],
+    eventChainProgress: { lost_wizard: 1 },
+};
+
+const loadEarlyStoryFixture = async (page: Page) => {
+    await page.goto('/?e2e=1&deviceQa=system-settings', { waitUntil: 'domcontentloaded' });
+    await expect.poll(() => page.evaluate((key) => Boolean(localStorage.getItem(key)), SETTINGS_KEY), { timeout: 20_000 }).toBe(true);
+    const fixture = await page.evaluate(({ key, early }) => {
+        const saved = JSON.parse(localStorage.getItem(key)!);
+        saved.player = { ...saved.player, ...early, stats: { ...saved.player.stats, claimedQuestIds: [80], lastSeenAt: Date.now() } };
+        saved.gameState = 'idle';
+        saved.enemy = null;
+        saved.currentEvent = null;
+        return JSON.stringify(saved);
+    }, { key: SETTINGS_KEY, early: EARLY_STORY });
+    await page.addInitScript(({ key, snapshot }) => localStorage.setItem(key, snapshot), { key: SETTINGS_KEY, snapshot: fixture });
+    await page.reload();
+    await expect.poll(() => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').player?.level)).toBe(5);
     for (const id of ['return-briefing-close', 'milestone-story-close']) {
         const close = page.getByTestId(id);
         if (await close.isVisible().catch(() => false)) await close.click();
@@ -325,6 +354,38 @@ for (const viewport of VIEWPORTS) {
                 expect(await countMidWordBreaks(outlook)).toBe(0);
                 expect(await outlook.evaluate((root) => root.scrollWidth - root.clientWidth)).toBeLessThanOrEqual(1);
             }
+            expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
+        } finally {
+            await context.close();
+        }
+    });
+
+    test(`${viewport.width}px 게시판 이야기 칸의 추천 줄은 목표와 소문을 잘리지 않게 그리고 추천 셋이 첫 화면에 든다`, async ({ browser, baseURL }) => {
+        const { context, page } = await newMobilePage(browser, baseURL, viewport);
+        try {
+            await loadEarlyStoryFixture(page);
+            if (!(await page.getByTestId('control-quests').isVisible().catch(() => false))) await openTownFacilities(page);
+            await page.getByTestId('control-quests').click();
+            const featured = page.getByTestId('quest-featured-list');
+            await expect(featured).toBeVisible({ timeout: 8_000 });
+            const rows = featured.getByTestId('quest-decision-row');
+            await expect(rows).toHaveCount(3);
+            // ⑫ 제목이 대상을 말하지 않는 임무는 목표를 그린다 — 소문(Wave 128)과 함께.
+            const storyRow = rows.first();
+            await expect(storyRow).toContainText('호수의 수호자 (0/5)');
+            const objective = storyRow.getByTestId('quest-featured-objective');
+            await expect(objective).toHaveText('물의 정령 5마리 처치');
+            const hook = storyRow.getByTestId('quest-story-hook');
+            await expect(hook).toBeVisible();
+            expect(await isClipped(objective)).toBe(false);
+            expect(await isClipped(hook)).toBe(false);
+            // 제목이 곧 목표인 기본 토벌은 목표 줄을 생략한다(진행도가 제목에 있다).
+            await expect(rows.filter({ hasText: '머맨 토벌 (0/8)' }).getByTestId('quest-featured-objective')).toHaveCount(0);
+            expect(await countMidWordBreaks(featured)).toBe(0);
+            expect(await findUndersizedText(featured)).toEqual([]);
+            expect(await findUndersizedButtons(featured)).toEqual([]);
+            const bottoms = await rows.evaluateAll((nodes) => nodes.map((node) => node.getBoundingClientRect().bottom));
+            expect(bottoms.filter((bottom) => bottom > viewport.height)).toEqual([]);
             expect(await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth)).toBeLessThanOrEqual(0);
         } finally {
             await context.close();
