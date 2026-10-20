@@ -170,9 +170,12 @@ test('skill growth uses natural labels and hides internal choice codes', async (
         readSrc('src/data/messages.ts'),
     ]);
 
-    for (const label of ['기술 구성', '현재 기술', '다음 전직 기술 미리보기', '기술 성장 선택', '첫 선택은 무료', '선택 결과', '성장 확정', "buff: '강화'", "debuff: '약화'"]) {
+    for (const label of ['기술 구성', '현재 기술', '다음 전직 기술 미리보기', '기술 성장 선택', '첫 선택은 무료', '선택 결과', "buff: '강화'", "debuff: '약화'"]) {
         assert.match(`${skills}\n${classTree}`, new RegExp(label));
     }
+    // Wave 129: "○○(으)로 성장 확정"은 이름의 받침에 맞춰 MSG가 만든다(data/koreanParticles.ts).
+    assert.match(messages, /SKILL_BRANCH_CONFIRM: .*성장 확정/);
+    assert.match(skills, /MSG\.SKILL_BRANCH_CONFIRM\(/);
     assert.match(skillPresentation, /기력 소모 없음/);
     assert.match(skillPresentation, /추가 효과|EFFECT_LABELS/);
     assert.match(skills, /formatSkillText\(branch\.desc\)/);
