@@ -44,14 +44,14 @@ const ArchiveTabButton = ({ icon, label, active = false, onClick, compact = fals
             } ${frameClass} ${heightClass}`}
         >
             <Icon size={rail ? 13 : 14} />
-            <span className={`${rail ? 'text-[10px]' : 'text-[8px]'} font-readable`}>
+            <span className="text-[11px] font-readable">
                 {label}
             </span>
             {badge != null && (
                 <span
                     title={badgeTitle || undefined}
                     data-testid={testId ? `${testId}-badge` : undefined}
-                    className="pointer-events-none absolute -right-0.5 -top-0.5 min-w-[14px] rounded-full border border-[#f6e7a2]/50 bg-[linear-gradient(180deg,rgba(246,231,162,0.22)_0%,rgba(64,48,12,0.85)_100%)] px-1 text-[8px] font-fira font-bold leading-[12px] text-[#f6e7a2] shadow-[0_2px_6px_rgba(246,231,162,0.22)]"
+                    className="pointer-events-none absolute -right-0.5 -top-0.5 min-w-[14px] rounded-full border border-[#f6e7a2]/50 bg-[linear-gradient(180deg,rgba(246,231,162,0.22)_0%,rgba(64,48,12,0.85)_100%)] px-1 text-[11px] font-fira font-bold leading-[14px] text-[#f6e7a2] shadow-[0_2px_6px_rgba(246,231,162,0.22)]"
                 >
                     {badge}
                 </span>

@@ -51,7 +51,7 @@ const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCa
                         <X size={16} />
                     </button>
 
-                    <div className="text-[10px] font-fira uppercase tracking-[0.22em] text-slate-500">
+                    <div className="text-[11px] font-fira uppercase tracking-[0.22em] text-slate-500">
                         다시 만난 모험가에게
                     </div>
                     <div className="mt-2 text-[1.4rem] font-rajdhani font-bold tracking-[0.04em] text-[#f6e7c8]">
@@ -63,7 +63,7 @@ const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCa
 
                     <div className="mt-5 grid grid-cols-2 gap-2.5">
                         <div className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-3">
-                            <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400">
+                            <div className="flex items-center gap-1.5 text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">
                                 <MapPin size={12} className="text-[#7dd4d8]" />
                                 {MSG.RETURN_BRIEFING_LOCATION_LABEL}
                             </div>
@@ -73,7 +73,7 @@ const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCa
                         </div>
 
                         <div className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-3">
-                            <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400">
+                            <div className="flex items-center gap-1.5 text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">
                                 <Heart size={12} className="text-rose-300" />
                                 {MSG.RETURN_BRIEFING_STATUS_LABEL}
                             </div>
@@ -83,7 +83,7 @@ const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCa
                         </div>
 
                         <div className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-3">
-                            <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400">
+                            <div className="flex items-center gap-1.5 text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">
                                 <ListChecks size={12} className="text-[#d5b180]" />
                                 {MSG.RETURN_BRIEFING_DAILY_LABEL}
                             </div>
@@ -93,7 +93,7 @@ const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCa
                         </div>
 
                         <div className="rounded-[1rem] border border-white/8 bg-white/[0.04] px-3 py-3">
-                            <div className="flex items-center gap-1.5 text-[10px] font-fira uppercase tracking-[0.16em] text-slate-400">
+                            <div className="flex items-center gap-1.5 text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400">
                                 <ScrollText size={12} className="text-[#e3dcff]" />
                                 {MSG.RETURN_BRIEFING_CHAINS_LABEL}
                             </div>

@@ -31,9 +31,9 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
  *   2. StatusBar: 상시 상태/교전 대상 표시는 생명/기력/경험/골드/교전 대상/보스/레벨
  *      같은 직접적 한국어 라벨을 쓰고, 음소거 관련 UI나 "Target Lock"/">Boss<" 같은
  *      영문 잔재는 없다. enemy-portrait/enemy-status-label/enemy-health-value testid를 갖는다.
- *   3. StatusBar: 정체성·위치는 한 줄(status-player-summary/status-location)에, 지표는
- *      status-metrics/status-metric-label/status-metric-value로 노출하고 10px/11px
- *      타이포를 쓴다. PixelCharacterAvatar의 강화 뱃지는 "강화 +N" 형태.
+ *   3. StatusBar: 정체성은 첫 줄(status-player-summary), 위치는 둘째 줄(status-context-line의
+ *      status-location — Wave 133)에, 지표는 status-metrics/status-metric-label/status-metric-value로
+ *      노출하고 글자는 11px 이상이다. PixelCharacterAvatar의 강화 뱃지는 "강화 +N" 형태.
  *   4. useGameTestApi의 아바타 QA 프리셋은 hp/mp를 장비 반영 최대치로 clamp한다.
  *   5. TerminalView: 로그 타입 뱃지는 COMBAT/CRIT/AI 같은 개발자 약어가 아니라
  *      전투/치명타/이야기/안내/획득/이벤트/주의/오류/전설 같은 뜻이 통하는 한국어다.
@@ -84,16 +84,16 @@ test('StatusBar: 비전투(대기) 화면에서는 경험/골드 지표와 정�
     }
 });
 
-test('StatusBar: 정체성/위치는 한 줄, 지표는 status-metrics로, 10px/11px 타이포를 쓴다', () => {
+test('StatusBar: 정체성은 첫 줄, 위치는 둘째 줄, 지표는 status-metrics로, 11px 이상 타이포를 쓴다', () => {
     const player = makePlayerFixture({ name: '테스트' });
     const html = renderStatic(createElement(StatusBar, { player, stats: null, enemy: null }));
 
     assert.ok(html.includes('data-testid="status-player-summary"'));
-    assert.ok(html.includes('data-testid="status-location"'));
+    assert.match(html, /data-testid="status-context-line"[^>]*>\s*<span[^>]*data-testid="status-location"/u, '위치는 둘째 줄 맨 앞(Wave 133)');
     assert.ok(html.includes('data-testid="status-metrics"'));
     assert.ok(html.includes('data-testid="status-metric-label"'));
     assert.ok(html.includes('data-testid="status-metric-value"'));
-    assert.match(html, /text-\[10px\]/);
+    assert.doesNotMatch(html, /text-\[(?:8|9|10)px\]/, '11px 하한(Wave 133)');
     assert.match(html, /text-\[11px\]/);
     assert.ok(!/status-outfit-affinity-chip|status-signature-chip/.test(html));
 });

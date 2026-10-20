@@ -158,7 +158,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
             >
                 <div className="min-w-0">
                     <div className="text-[11px] font-readable font-bold text-white/88">장비 비교</div>
-                    <div className="mt-0.5 text-[10px] font-readable text-slate-400/78">
+                    <div className="mt-0.5 text-[11px] font-readable text-slate-400/78">
                         {showDetails ? '전체 능력치와 강화 조건 표시' : '추천·대표 변화·장착·세트만 표시'}
                     </div>
                 </div>
@@ -167,7 +167,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                     data-testid="inventory-detail-toggle"
                     aria-expanded={showDetails}
                     onClick={() => setDetailOverride(!showDetails)}
-                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 text-[10px] font-readable font-bold text-[#dff7f5]"
+                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 text-[11px] font-readable font-bold text-[#dff7f5]"
                 >
                     <ListTree size={13} />
                     {showDetails ? '간단히 보기' : '상세 보기'}
@@ -292,7 +292,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                     {isSignature && (
                                         <span
                                             data-testid={`inventory-signature-chip-${item.id || item.name}`}
-                                            className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[9px] font-fira uppercase tracking-[0.14em]"
+                                            className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-fira uppercase tracking-[0.14em]"
                                             style={{
                                                 color: '#f6e7a2',
                                                 border: '1px solid rgba(246,231,162,0.42)',
@@ -308,7 +308,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                         <span
                                             data-testid={`inventory-job-affinity-${item.id || item.name}`}
                                             title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
-                                            className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[9px] font-fira font-bold uppercase tracking-[0.1em]"
+                                            className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-fira font-bold uppercase tracking-[0.1em]"
                                             style={{
                                                 color: '#d5b180',
                                                 border: '1px solid rgba(213,177,128,0.42)',
@@ -328,7 +328,7 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                         <SignalBadge tone={isCurrentEquip ? 'equipped' : decision.tone === 'positive' ? 'recommended' : decision.tone === 'negative' ? 'warning' : decision.tone === 'blocked' ? 'danger' : 'neutral'} size="sm">
                                             {isCurrentEquip ? '장착 중' : decision.recommendation}
                                         </SignalBadge>
-                                        <span className={`text-[10px] font-readable font-bold ${decision.primaryDelta.value > 0 ? 'text-emerald-200' : decision.primaryDelta.value < 0 ? 'text-rose-200' : 'text-slate-300/78'}`}>
+                                        <span className={`text-[11px] font-readable font-bold ${decision.primaryDelta.value > 0 ? 'text-emerald-200' : decision.primaryDelta.value < 0 ? 'text-rose-200' : 'text-slate-300/78'}`}>
                                             {!decision.equipable && '가정 비교 · '}{decision.primaryDelta.text}
                                         </span>
                                         <SignalBadge tone={decision.equipable ? 'success' : 'danger'} size="sm">

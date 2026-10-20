@@ -40,7 +40,7 @@ const SeasonPassPanel = lazy(() => import('./tabs/SeasonPassPanel'));
 const SystemTab = lazy(() => import('./tabs/SystemTab'));
 
 const TabSpinner = () => (
-    <div className="flex items-center justify-center py-8 text-[10px] font-readable text-slate-500">
+    <div className="flex items-center justify-center py-8 text-[11px] font-readable text-slate-500">
         불러오는 중…
     </div>
 );
@@ -228,7 +228,7 @@ const Dashboard = ({
                         <ActiveTabIcon size={15} />
                     </div>
                     <div className="min-w-0">
-                        <div className="text-[10px] font-readable text-slate-400/70">모험 기록</div>
+                        <div className="text-[11px] font-readable text-slate-400/70">모험 기록</div>
                         <div className="mt-0.5 flex items-center gap-2">
                             <h2 className="truncate text-[15px] font-readable font-bold text-white/92">
                                 {activeTab.label}
@@ -248,7 +248,7 @@ const Dashboard = ({
                         setConfirmMenuReset(false);
                         onReturnToLog?.();
                     }}
-                    className="min-h-[44px] shrink-0 rounded-full border border-white/8 bg-black/20 px-3 py-1.5 text-[10px] font-readable text-slate-300/78 transition-colors hover:border-white/14 hover:text-white"
+                    className="min-h-[44px] shrink-0 rounded-full border border-white/8 bg-black/20 px-3 py-1.5 text-[11px] font-readable text-slate-300/78 transition-colors hover:border-white/14 hover:text-white"
                 >
                     {MSG.UI_CLOSE}
                 </button>

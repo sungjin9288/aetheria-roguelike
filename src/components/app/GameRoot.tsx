@@ -345,7 +345,7 @@ const GameRoot = ({
                             <button
                                 type="button"
                                 onClick={() => { if (seasonEvent.bonusMap) engine.actions.move(seasonEvent.bonusMap); }}
-                                className="shrink-0 rounded-full border border-[#d5b180]/28 bg-[#d5b180]/16 px-2 py-0.5 text-[10px] font-fira text-[#f4e6c8] uppercase tracking-[0.14em] hover:bg-[#d5b180]/24"
+                                className="shrink-0 rounded-full border border-[#d5b180]/28 bg-[#d5b180]/16 px-2 py-0.5 text-[11px] font-fira text-[#f4e6c8] uppercase tracking-[0.14em] hover:bg-[#d5b180]/24"
                             >
                                 이동
                             </button>

@@ -54,11 +54,11 @@ const QuickSlot = ({ slots, onUse, gameState }: QuickSlotProps) => {
                     >
                         {item ? (
                             <>
-                                <span className="text-[10px] leading-tight text-center">
+                                <span className="text-[11px] leading-tight text-center">
                                     {getConsumableCompactLabel(item)}
                                 </span>
                                 {/* Slot number badge */}
-                                <span className="absolute rounded-full border border-white/10 bg-[rgba(9,12,18,0.95)] text-slate-400 -left-1 -top-1 px-1 py-0 text-[8px]">
+                                <span className="absolute rounded-full border border-white/10 bg-[rgba(9,12,18,0.95)] text-slate-400 -left-1 -top-1 px-1 py-0 text-[11px]">
                                     {i + 1}
                                 </span>
                             </>

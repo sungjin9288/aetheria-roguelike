@@ -1,5 +1,5 @@
 import { devices, expect, test, type Locator, type Page } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { openTownFacilities, startE2ERun } from './testHelpers';
 
 const VIEWPORTS = [
     { width: 375, height: 667 },
@@ -183,6 +183,8 @@ for (const viewport of VIEWPORTS) {
             await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(false));
             const combat = page.getByTestId('combat-focus-panel');
             await expectReadableSurface(page, combat);
+            // Wave 133: 전투 중 상태 표시줄(교전 대상 · 생명 이름표)도 11px 하한 안이다.
+            await expectReadableSurface(page, page.getByTestId('persistent-status-bar'));
             for (const action of ['attack', 'skill', 'item', 'escape']) {
                 await expectTouchTarget(page.getByTestId(`combat-action-${action}`));
             }
@@ -248,6 +250,72 @@ for (const viewport of VIEWPORTS) {
             await expectReadableSurface(page, summary);
             if (viewport.width === 375) {
                 await page.screenshot({ path: 'playtest-artifacts/mobile-legibility/run-summary-375x667.png' });
+            }
+        } finally {
+            await context.close();
+        }
+    });
+}
+
+// 2026-10 Wave 133(원장 §146, 소유자 결정 "위치를 둘째 줄로"): 상태 표시줄 · 기록 창 · 기록 탭 11개 · 상점 · 귀환 브리핑도
+//   11px 하한 안이다. 상점의 구매 판단 줄이 9px, 기록 탭 이름이 10px, 기록 창 배지가 8px였다. 상태 표시줄의 위치는 첫 줄에서
+//   줄어드는 칸이라 여섯 글자 이상 이름이면 375 · 390px에서 지역 이름이 거의 다 잘렸다 — 이제 둘째 줄이고 줄이지 않는다.
+const ARCHIVE_TABS = ['equipment', 'inventory', 'quest', 'achievements', 'skills', 'map', 'stats', 'codex', 'pass', 'graves', 'system'] as const;
+const LONG_NAME = '열여섯글자의아주긴모험가이름이다';
+
+for (const viewport of VIEWPORTS) {
+    test(`${viewport.width}x${viewport.height} 상태 표시줄 · 기록 창 · 기록 탭 · 상점 · 귀환 브리핑도 읽기 크기와 폭을 지킨다`, async ({ browser, baseURL }) => {
+        const context = await browser.newContext({
+            ...devices['iPhone 12'],
+            baseURL: baseURL || 'http://localhost:4173',
+            viewport: { ...viewport },
+            screen: { ...viewport },
+        });
+        const page = await context.newPage();
+
+        try {
+            await startE2ERun(page, { name: LONG_NAME });
+
+            const bar = page.getByTestId('persistent-status-bar');
+            await expectReadableSurface(page, bar);
+            const location = page.getByTestId('status-location');
+            await expect(location).toBeVisible();
+            const locationFits = await location.evaluate((element) => (
+                element.getBoundingClientRect().width > 0 && element.scrollWidth <= element.clientWidth + 0.5
+            ));
+            expect(locationFits).toBe(true);
+            await expect(page.getByTestId('status-context-line').getByTestId('status-location')).toHaveCount(1);
+            await expectReadableSurface(page, page.getByTestId('terminal-panel'));
+            await expect(page.getByTestId('log-type-badge').first()).toBeVisible();
+
+            await page.getByTestId('status-character-chip').click();
+            const archive = page.getByTestId('mobile-archive-console');
+            for (const tab of ARCHIVE_TABS) {
+                await page.getByTestId(`archive-tab-${tab}`).click();
+                await expect(page.getByTestId(`archive-tab-${tab}`)).toHaveAttribute('data-active', 'true');
+                await expectReadableSurface(page, archive);
+            }
+            await page.getByTestId('mobile-console-return-log').click();
+
+            await openTownFacilities(page);
+            await page.getByTestId('control-market').click();
+            const shop = page.getByTestId('shop-panel');
+            await expectReadableSurface(page, shop);
+            await page.getByTestId('shop-equipment-detail-toggle').click();
+            await expect(page.getByTestId('shop-equipment-disclosure')).toHaveAttribute('data-equipment-view', 'full');
+            await expectReadableSurface(page, shop);
+            await shop.getByRole('button', { name: '판매', exact: true }).first().click();
+            await expectReadableSurface(page, shop);
+            if (viewport.width === 375) {
+                await page.screenshot({ path: 'playtest-artifacts/mobile-legibility/shop-sell-375x667.png' });
+            }
+
+            await page.evaluate(() => window.__AETHERIA_TEST_API__?.showReturnBriefingScenario?.());
+            const briefing = page.getByTestId('return-briefing-card');
+            await expectReadableSurface(page, briefing);
+            await expectReadableSurface(page, bar);
+            if (viewport.width === 375) {
+                await page.screenshot({ path: 'playtest-artifacts/mobile-legibility/return-briefing-375x667.png' });
             }
         } finally {
             await context.close();
