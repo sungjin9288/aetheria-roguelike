@@ -1,8 +1,15 @@
 /**
- * eventChains.js — Sprint 17 내러티브 이벤트 체인 (3종)
+ * eventChains.ts — 내러티브 이벤트 체인
  *
- * 각 체인은 { id, steps[] } 형태이며, step은 loc(발동 위치), step(단계 번호),
- * event(SET_EVENT payload) 구조를 가집니다.
+ * 각 체인은 { id, label, steps[] } 형태이며, step은 loc(그 단계가 일어나는 지역), step(단계 번호)과
+ * event(SET_EVENT payload) 또는 questStart(임무로 여는 단계) 중 하나를 가집니다.
+ *
+ * 2026-10 Wave 127 · 128(소유자 결정 "처음 숲의 이야기는 퀘스트를 통해 자동으로 알게" · "임무로 시작하게 바꿔 —
+ *   스토리, 시나리오, 퀘스트 같이 자연스러운 구조로 이어지게"): 모든 체인의 0단계는 임무로 연다(`questStart`).
+ *   그 임무를 수령하면 단계가 끝나고(`advanceQuestStartedChains`) 단서 기록(`log`)이 다음 단계의 지역을 알린다.
+ *   여는 임무는 그 이야기가 시작되는 지역(`loc`)에서 하는 임무다 — 본편 장(80 · 81 · 82 · 84)이 곁가지 이야기를 열고,
+ *   나머지는 그 지역의 임무가 연다. 본편이 아닌 임무는 게시판에 소문(`hook`)을 보인다(`getQuestOpenedChain`).
+ *   1단계부터는 지역 이벤트다.
  *
  * player.eventChainProgress[chainId] 값이 step 번호를 추적합니다.
  * 0 = 미시작, 1 = 1단계 완료, 2 = 2단계 완료, 3 = 완료
@@ -16,6 +23,16 @@ const PRIMAL_SHARD_DROP_PERCENT = Math.round(BALANCE.PRIMAL_SHARD_DROP_CHANCE * 
 /** 심연의 신호가 가리키는 층 — 신호 문구("50층")와 생존자 · 핵심 스텝의 층 조건이 같은 값을 읽는다(Wave 62 C17). */
 const ABYSS_SIGNAL_SURVIVOR_FLOOR = 50;
 
+/** 임무로 여는 체인 단계(Wave 127 · 128) — `questId` 임무를 수령하면 그 단계가 끝난다. */
+export interface ChainQuestStart {
+    questId: number;
+    /** 게시판 소문 — 본편이 아닌 임무가 아직 열리지 않은 이야기를 열 때 그 임무의 추천 이유 칸에 보인다(Wave 128). */
+    hook?: string;
+    /** 수령 기록 — 임무에서 알게 된 것과 다음 단계의 지역. */
+    log: string;
+}
+const chainQuestStart = (value: ChainQuestStart): ChainQuestStart => value;
+
 export const EVENT_CHAINS = [
     {
         id: 'ancient_prophecy',
@@ -24,15 +41,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '어둠의 동굴',
-                event: {
-                    title: '예언의 돌판',
-                    desc: '동굴 깊은 곳에서 고대 문자가 새겨진 돌판을 발견했습니다. "세 개의 파편이 모이면, 원시의 문이 열리리라..."',
-                    choices: ['돌판을 면밀히 조사한다', '그냥 지나친다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '예언의 내용이 머릿속에 새겨졌습니다. 무언가 큰 것의 존재를 느낍니다.', reward: null },
-                        { type: 'nothing', log: '지나치기엔 찜찜하지만... 일단 무시했습니다.', reward: null },
-                    ],
-                },
+                // 임무 117 '암흑 마법사 처단' — 동굴의 암흑 마법사들이 돌판을 두고 모여 있었다.
+                questStart: chainQuestStart({
+                    questId: 117,
+                    hook: '어둠의 동굴 깊은 곳에서 암흑 마법사들이 고대 문자가 새겨진 돌판 앞에 모인다는 소문이 있습니다.',
+                    log: '처단한 암흑 마법사의 품에서 돌판의 탁본이 나왔습니다. "세 개의 파편이 모이면, 원시의 문이 열리리라..." 이 고대 문자를 읽을 수 있는 학자가 고대 마법 탑에 있다고 합니다.',
+                }),
             },
             {
                 step: 1,
@@ -70,13 +84,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '고요한 숲',
-                // 2026-10 Wave 127(소유자 결정 "처음 숲에서 이벤트로 새 길을 발견하는 기능 삭제 — 퀘스트를 통해 자동으로 알게"):
-                //   이 단계에는 이벤트가 없다. 첫 임무 '첫 번째 여정'을 수령하면 끝나고(`advanceQuestStartedChains`),
-                //   단서는 수령 기록과 임무 탭의 체인 일지로 알게 된다. 단계 번호는 그대로라 저장된 진행 값의 뜻이 바뀌지 않는다.
-                questStart: {
+                // 본편 80 '[스토리] 첫 번째 여정'(Wave 127) — 첫 탐험이 이야기 화면으로 막히지 않는다. 단계 번호는 그대로라
+                //   저장된 진행 값의 뜻이 바뀌지 않는다(다른 체인의 0단계도 같다).
+                questStart: chainQuestStart({
                     questId: FIRST_STORY_QUEST_ID,
                     log: '첫 여정에서 주운 그을린 지팡이 파편은 사라진 마법사의 것이었습니다. 흔적은 수정 동굴로 이어집니다.',
-                },
+                }),
             },
             {
                 step: 1,
@@ -120,15 +133,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '서쪽 평원',
-                event: {
-                    title: '죽어가는 기사',
-                    desc: '평원에서 중상을 입은 기사를 발견했습니다. "제... 제발... 마왕을 막아주세요. 제가 혼자서는..." 기사가 쓰러집니다. 치료에는 골드 300이 필요합니다.',
-                    choices: ['치료한다 (골드 -300)', '어쩔 수 없다, 지나친다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '기사를 치료했습니다. 기사가 당신을 기억할 것입니다.', reward: { type: 'gold', amount: -300 } },
-                        { type: 'chain_advance_fail', log: '기사를 두고 지나쳤습니다. 기사의 검은 다시 찾을 수 없을 것입니다.', reward: null },
-                    ],
-                },
+                // 임무 17 '평원 정화' — 도적 떼에게 습격당한 기사를 구한다(그 기사의 검이 1단계에서 기다린다).
+                questStart: chainQuestStart({
+                    questId: 17,
+                    hook: '서쪽 평원에서 도적 떼에게 습격당한 기사가 쓰러져 있다는 소문이 돕니다.',
+                    log: '도적 떼를 몰아낸 자리에서 중상을 입은 기사를 마을로 옮겨 치료했습니다. 기사는 마왕을 막아 달라는 부탁과 함께, 화염의 협곡에서 잃어버린 자신의 검 이야기를 남겼습니다.',
+                }),
             },
             {
                 step: 1,
@@ -167,15 +177,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '잊혀진 폐허',
-                event: {
-                    title: '수상한 표식',
-                    desc: '폐허 기둥 아래에 그림자 형상의 표식이 새겨져 있습니다. 지하 세계 조직의 암호 같습니다. 최근에 새겨진 것으로 보입니다.',
-                    choices: ['표식을 해독한다', '무시한다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '그림자 길드의 흔적을 발견했습니다. 암시장이 근처 동굴에 있는 것 같습니다.', reward: null },
-                        { type: 'nothing', log: '그냥 지나쳤습니다.', reward: null },
-                    ],
-                },
+                // 임무 19 '고블린 소탕' — 폐허의 고블린들이 그림자 길드의 쪽지를 나르고 있었다.
+                questStart: chainQuestStart({
+                    questId: 19,
+                    hook: '잊혀진 폐허의 고블린들이 그림자 문양이 찍힌 쪽지를 어딘가로 나른다는 소문이 있습니다.',
+                    log: '소탕한 고블린들이 지닌 쪽지마다 그림자 형상의 표식이 찍혀 있었습니다. 지하 조직의 암호를 풀자 접선 장소가 드러났습니다. 그림자 길드의 암시장은 어둠의 동굴 깊은 곳에 있습니다.',
+                }),
             },
             {
                 step: 1,
@@ -215,16 +222,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '고대 마법 탑',
-                event: {
-                    title: '금지된 제목의 서적',
-                    desc: '탑 최상층 서가에서 봉인된 책을 발견했습니다. 표지에는 "잊혀진 신 — 세상이 기억해서는 안 되는 존재"라고 적혀 있습니다.',
-                    choices: ['봉인을 풀고 읽는다', '탑 관리자에게 가져간다', '그대로 둔다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '봉인을 풀었습니다. 머릿속에 낯선 지식이 흘러들어옵니다. 뭔가 시작된 것 같습니다.', reward: null },
-                        { type: 'nothing', log: '관리자는 책을 보고 창백해지며 당신을 쫓아냅니다.', reward: null },
-                        { type: 'nothing', log: '책을 건드리지 않고 떠났습니다.', reward: null },
-                    ],
-                },
+                // 임무 29 '탑 수호자 격파' — 수호자들이 지키던 최상층 서가의 봉인된 책.
+                questStart: chainQuestStart({
+                    questId: 29,
+                    hook: '고대 마법 탑의 수호자들이 최상층 서가의 봉인된 책을 지키고 있다고 합니다.',
+                    log: '탑 수호자들이 지키던 최상층 서가에서 봉인된 책을 가져왔습니다. 표지에는 "잊혀진 신 — 세상이 기억해서는 안 되는 존재"라고 적혀 있습니다. 봉인을 풀자 낯선 지식이 머릿속으로 흘러들었고, 그 지식은 지하 미궁을 가리킵니다.',
+                }),
             },
             {
                 // 2026-09 Wave 14 F2: loc이 '에테르 관문'(경로 게이트 68)이었다 — 종착 스텝
@@ -270,16 +273,11 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '기계 폐도',
-                event: {
-                    title: '이상한 자동인형',
-                    desc: '파손된 자동인형이 당신에게 말을 겁니다. "나... 는... 의식이... 생겼다. 처음에는... 두려웠어. 우리... 를 도와줘." 눈에서 푸른 빛이 깜빡입니다.',
-                    choices: ['인형을 수리해준다', '무장 해제 후 돕는다', '경계하며 지나간다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '자동인형을 도왔습니다. 기계 동료의 연락처를 받았습니다.', reward: null },
-                        { type: 'chain_advance', log: '조심스럽게 접근했습니다. 기계 집단의 비밀을 알게 되었습니다.', reward: null },
-                        { type: 'nothing', log: '지나쳤습니다. 인형이 슬픈 눈빛으로 바라봅니다.', reward: null },
-                    ],
-                },
+                // 본편 84 '[스토리] 기계의 심장' — 명령을 반복하는 병기들 사이에서 의식을 가진 자동인형 하나가 말을 건다.
+                questStart: chainQuestStart({
+                    questId: 84,
+                    log: '증기 골렘을 쓰러뜨린 잔해 더미에서 부서진 자동인형 하나가 말을 걸었습니다. "나... 는... 의식이... 생겼다. 우리... 를 도와줘." 인형을 고쳐 주자, 의식을 가진 동료들이 몰락한 전초기지 지하에 숨어 있다고 알려 주었습니다.',
+                }),
             },
             {
                 step: 1,
@@ -322,16 +320,11 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '화염의 협곡',
-                event: {
-                    title: '용의 알',
-                    desc: '협곡 깊은 곳에서 거대한 알을 발견했습니다. 뜨겁게 달아올라 있으며 가끔 빛이 납니다. 어미 드래곤이 돌아오기 전에 결정해야 합니다.',
-                    choices: ['알을 가져간다', '알을 보호하며 기다린다', '그냥 자리를 피한다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '용의 알을 가져왔습니다. 무언가 강렬한 생명력이 느껴집니다.', reward: null },
-                        { type: 'chain_advance', log: '어미 드래곤이 돌아왔습니다. 당신을 해치지 않고 고개를 숙입니다. 신뢰를 얻었습니다.', reward: null },
-                        { type: 'nothing', log: '슬그머니 자리를 피했습니다.', reward: null },
-                    ],
-                },
+                // 본편 82 '[스토리] 불꽃의 시험' — 화염 정령들이 둘러싸고 있던 용의 알(1단계 드래곤이 알을 데려온 모험가를 찾는다).
+                questStart: chainQuestStart({
+                    questId: 82,
+                    log: '화염 정령들이 둘러싸고 있던 협곡 깊은 곳에서 뜨겁게 달아오른 거대한 알을 품고 나왔습니다. 비늘 무늬는 둥지의 붉은 용이 아니라 구름 위에 사는 용족의 것입니다. 알의 주인을 아는 용은 천공 정원에 있을 것입니다.',
+                }),
             },
             {
                 step: 1,
@@ -373,16 +366,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '혼돈의 심연',
-                event: {
-                    title: '비밀 신호',
-                    desc: `심연 깊은 곳에서 규칙적인 신호가 감지됩니다. 모스 부호처럼 반복됩니다. 내용을 해독하면: "살아 있다. ${ABYSS_SIGNAL_SURVIVOR_FLOOR}층. 함정 주의."`,
-                    choices: ['신호 발신지를 찾아간다', '신호를 기록한다', '무시한다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '신호 발신지를 찾아 떠났습니다. 더 깊은 심연에서 생존자가 기다리고 있습니다.', reward: null },
-                        { type: 'chain_advance', log: '신호를 기록했습니다. 언젠가 이 정보가 중요해질 것 같습니다.', reward: null },
-                        { type: 'nothing', log: '신호를 무시하고 지나갔습니다.', reward: null },
-                    ],
-                },
+                // 임무 205 '[심연] 혼돈 속의 생존자' — 심연의 수호자들이 지키던 자리에서 생존자의 신호를 잡는다.
+                questStart: chainQuestStart({
+                    questId: 205,
+                    hook: '혼돈의 심연 깊은 곳에서 규칙적인 신호가 잡힌다는 이야기가 있습니다.',
+                    log: `심연의 수호자들을 쓰러뜨린 자리에서 규칙적인 신호를 잡았습니다. 해독하면: "살아 있다. ${ABYSS_SIGNAL_SURVIVOR_FLOOR}층. 함정 주의." 생존자는 혼돈의 심연 ${ABYSS_SIGNAL_SURVIVOR_FLOOR}층에서 기다리고 있습니다.`,
+                }),
             },
             {
                 step: 1,
@@ -428,15 +417,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '세계수 숲',
-                event: {
-                    title: '오염된 뿌리',
-                    desc: '세계수 숲 깊숙이 들어서자 뿌리들이 검게 물들어 있습니다. 고대 수호자의 흔적이 남아 있고, 타락한 에너지가 땅 속에서 솟아오릅니다. "탐험자여, 이 오염을 멈춰주세요."',
-                    choices: ['오염의 근원을 추적한다', '뿌리에서 에너지를 채취한다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '오염의 근원을 향해 발걸음을 옮깁니다. 구름 위 천공 정원에 단서가 있을 것입니다.', reward: { type: 'gold', amount: 2500 } },
-                        { type: 'chain_advance', log: '타락한 에너지를 채취했습니다. 이 힘을 이용해 더 깊이 파고들겠습니다.', reward: { type: 'stat_bonus', atk: 8, hp: 50 } },
-                    ],
-                },
+                // 임무 141 '자연의 정령 정화' — 정화한 정령들이 검게 물든 뿌리를 알린다.
+                questStart: chainQuestStart({
+                    questId: 141,
+                    hook: '세계수 숲의 정령들이 날뛰기 시작했고, 숲 깊은 곳의 뿌리가 검게 물들었다는 소문이 있습니다.',
+                    log: '정화한 자연의 정령들이 마지막으로 속삭였습니다. "탐험자여, 뿌리가 검게 물들고 있어요. 이 오염을 멈춰 주세요." 오염의 실마리는 구름 위 천공 정원에 있습니다.',
+                }),
             },
             {
                 step: 1,
@@ -477,15 +463,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '고대 신전 도시',
-                event: {
-                    title: '수호신의 시험',
-                    desc: '고대 신전 도시 중심부에서 빛나는 제단을 발견했습니다. 신성한 목소리가 울립니다. "이방인이여, 네 가치를 증명하라. 세 가지 시험을 통과해야 신전의 축복을 받을 수 있다."',
-                    choices: ['시험을 수락한다', '제단에서 성물을 가져간다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '시험을 수락하자 제단이 당신의 각오를 비추고, 첫 번째 시험을 통과했습니다. 두 번째 시험은 차원의 균열에서 기다리고 있습니다.', reward: { type: 'gold', amount: 1000 } },
-                        { type: 'chain_advance', log: '제단에서 성물을 가져가자 그 가호가 몸에 스며들었습니다. 두 번째 시험은 차원의 균열에서 기다리고 있습니다.', reward: { type: 'stat_bonus', hp: 80, def: 5 } },
-                    ],
-                },
+                // 임무 143 '신전 경비병 소탕' — 제단을 지키던 경비병을 물리친 것이 첫 번째 시험이다.
+                questStart: chainQuestStart({
+                    questId: 143,
+                    hook: '고대 신전 도시의 경비병들이 빛나는 제단에 다가가는 이방인을 막아선다고 합니다.',
+                    log: '신전 경비병들을 물리치자 그들이 지키던 제단이 빛나며 목소리가 울렸습니다. "이방인이여, 네 가치를 증명했다. 첫 번째 시험은 끝났다." 두 번째 시험은 차원의 균열 전초기지에서 기다리고 있습니다.',
+                }),
             },
             {
                 step: 1,
@@ -526,15 +509,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '차원의 균열 전초기지',
-                event: {
-                    title: '차원 교란의 원인',
-                    desc: '전초기지에서 차원 보병의 유품을 발견했습니다. 암호화된 명령서에는 "균열을 확대하라 — 차원 마왕의 명령"이라 적혀 있습니다. 더 깊이 조사해야 합니다.',
-                    choices: ['명령서를 해독한다', '전초기지 지휘관을 추적한다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '명령서를 해독했습니다. 균열의 중심이 붕괴된 마법 요새와 연결되어 있습니다.', reward: { type: 'gold', amount: 3500 } },
-                        { type: 'chain_advance', log: '지휘관의 흔적을 찾았습니다. 그가 붕괴된 요새로 도주했다는 증거를 확보했습니다.', reward: { type: 'stat_bonus', atk: 12, def: 6 } },
-                    ],
-                },
+                // 임무 146 '차원 보병 격멸' — 차원 보병의 유품에서 나온 암호 명령서.
+                questStart: chainQuestStart({
+                    questId: 146,
+                    hook: '차원의 균열 전초기지의 차원 보병들이 암호로 된 명령서를 지니고 다닌다고 합니다.',
+                    log: '격멸한 차원 보병의 유품에서 암호화된 명령서를 찾았습니다. "균열을 확대하라 — 차원 마왕의 명령." 해독하자 균열의 중심이 붕괴된 마법 요새와 이어져 있다는 사실이 드러났습니다.',
+                }),
             },
             {
                 step: 1,
@@ -577,15 +557,11 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '잊혀진 폐허',
-                event: {
-                    title: '녹슨 갑옷',
-                    desc: '폐허 한가운데에서 녹슨 갑옷과 함께 부서진 검을 발견했습니다. 갑옷에는 제국 사령관의 문장이 새겨져 있고, 검의 손잡이에는 "용서받지 못한 자"라는 글귀가 있습니다.',
-                    choices: ['갑옷의 주인을 추적한다', '갑옷에 경의를 표하고 떠난다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '사령관의 흔적을 추적합니다. 그의 마지막 임무지가 몰락한 전초기지일 것 같습니다.', reward: null },
-                        { type: 'chain_advance_fail', log: '갑옷에 경의를 표한 뒤 떠났습니다. 작은 보상이 마음을 채웁니다.', reward: { type: 'gold', amount: 500 } },
-                    ],
-                },
+                // 본편 81 '[스토리] 폐허의 진실' — 제국 연구자들의 기록과 함께 제국 사령관의 갑옷이 나온다.
+                questStart: chainQuestStart({
+                    questId: 81,
+                    log: '폐허를 살피다 녹슨 갑옷과 부서진 검을 발견했습니다. 갑옷에는 제국 사령관의 문장이, 검의 손잡이에는 "용서받지 못한 자"라는 글귀가 새겨져 있습니다. 사령관의 마지막 임무지는 몰락한 전초기지였던 것 같습니다.',
+                }),
             },
             {
                 step: 1,
@@ -628,15 +604,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '호수의 신전',
-                event: {
-                    title: '신관의 일기',
-                    desc: '신전 한구석에서 물이 닿지 않은 가죽 일기를 발견했습니다. 첫 페이지에 "물의 정수가 마르고 있다. 사막을 건너 피라미드로 향한다"라고 적혀 있습니다.',
-                    choices: ['일기를 챙겨 신관을 추적한다', '신성한 일기를 그 자리에 두고 떠난다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '신관의 흔적을 따라가기 시작했습니다. 사막 오아시스 쪽에서 단서가 이어질 것 같습니다.', reward: null },
-                        { type: 'chain_advance_fail', log: '일기는 본래 자리에 두고 떠났습니다. 신전이 작은 축복을 보내옵니다.', reward: { type: 'gold', amount: 800 } },
-                    ],
-                },
+                // 임무 5 '호수의 수호자' — 물의 정령들이 날뛴 까닭이 신관의 일기에 있다.
+                questStart: chainQuestStart({
+                    questId: 5,
+                    hook: '호수의 신전에서 물의 정령들이 갑자기 날뛰기 시작했고, 신전을 지키던 신관도 보이지 않는다고 합니다.',
+                    log: '날뛰던 물의 정령들을 가라앉힌 뒤 신전 한구석에서 물에 젖지 않은 신관의 일기를 찾았습니다. "물의 정수가 마르고 있다. 사막을 건너 피라미드로 향한다." 정령들이 날뛴 까닭이었습니다. 신관의 흔적은 사막 오아시스로 이어집니다.',
+                }),
             },
             {
                 step: 1,
@@ -731,7 +704,7 @@ export function getChainEventForLoc(
         if (deferredSteps?.[chain.id] === currentStep) continue;
 
         const step = chain.steps[currentStep];
-        // Wave 127: 임무로 여는 단계(`questStart`)는 이벤트가 없다 — 그 자리에서 아무것도 띄우지 않고 다른 체인으로 넘어간다.
+        // Wave 127 · 128: 임무로 여는 단계(`questStart`)는 이벤트가 없다 — 그 자리에서 아무것도 띄우지 않고 다른 체인으로 넘어간다.
         if (isChainEventStep(step) && step.loc === loc && isChainStepFloorReached(step, clearedAbyssFloor)) {
             return { chain, step };
         }
@@ -740,17 +713,45 @@ export function getChainEventForLoc(
 }
 
 type EventChainStepEntry = (typeof EVENT_CHAINS)[number]['steps'][number];
-/** 이벤트를 띄우는 체인 단계 — 임무로 여는 단계(`questStart`, Wave 127)가 아닌 모든 단계다. */
+/** 이벤트를 띄우는 체인 단계 — 임무로 여는 단계(`questStart`, Wave 127 · 128)가 아닌 모든 단계다. */
 export type EventChainEventStep = EventChainStepEntry & { event: NonNullable<EventChainStepEntry['event']> };
 
 export function isChainEventStep(step: EventChainStepEntry | undefined): step is EventChainEventStep {
     return Boolean(step?.event);
 }
 
+/** 임무로 여는 단계면 그 임무 · 소문 · 단서, 이벤트 단계면 null. */
+export function getChainQuestStart(step: EventChainStepEntry | undefined): ChainQuestStart | null {
+    return step && 'questStart' in step && step.questStart ? step.questStart : null;
+}
+
+/** 체인 진행 값의 지금 단계 번호 — 시작 전이면 0, 실패했으면 null(체인 id 키에는 숫자 또는 '실패' 마커만 온다). */
+const currentChainStepIndex = (progress: EventChainProgress | null | undefined, chainId: string): number | null => {
+    const raw = progress?.[chainId];
+    return typeof raw === 'number' ? raw : raw === undefined ? 0 : null;
+};
+
 /**
- * 2026-10 Wave 127(소유자 결정 "퀘스트를 통해 자동으로 알게"): 지금 단계가 임무로 여는 단계(`questStart`)이고 그 임무를
- * 수령했으면 그 단계를 끝낸다. 임무 수령(`CLAIM_QUEST_REWARD`)과 불러오기(`LOAD_DATA` — 이 규칙 전에 첫 임무를 받고 이벤트를
- * 지나친 세이브)가 이것 하나를 읽는다. 열린 단계가 없으면 같은 참조를 돌려준다.
+ * 2026-10 Wave 128: 이 임무가 아직 열리지 않은 이야기를 여는가 — 지금 단계가 그 임무로 여는 단계인 체인과 게시판 소문.
+ * 임무 게시판(`questOperations` — 이야기 임무 칸 · 추천 이유)이 읽는다. 이미 연 이야기 · 실패한 이야기는 null이다.
+ */
+export function getQuestOpenedChain(
+    questId: unknown,
+    progress: EventChainProgress | null | undefined,
+): { chainId: string; label: string; hook: string | null } | null {
+    for (const chain of EVENT_CHAINS) {
+        const stepIndex = currentChainStepIndex(progress, chain.id);
+        if (stepIndex === null) continue;
+        const questStart = getChainQuestStart(chain.steps[stepIndex]);
+        if (questStart && questStart.questId === questId) return { chainId: chain.id, label: chain.label, hook: questStart.hook ?? null };
+    }
+    return null;
+}
+
+/**
+ * 2026-10 Wave 127 · 128(소유자 결정 "퀘스트를 통해 자동으로 알게" · "임무로 시작하게"): 지금 단계가 임무로 여는 단계
+ * (`questStart`)이고 그 임무를 수령했으면 그 단계를 끝낸다. 임무 수령(`CLAIM_QUEST_REWARD`)과 불러오기(`LOAD_DATA` — 이
+ * 규칙 전에 그 임무를 받고 0단계 이벤트를 지나친 세이브)가 이것 하나를 읽는다. 열린 단계가 없으면 같은 참조를 돌려준다.
  */
 export function advanceQuestStartedChains(
     progress: EventChainProgress | null | undefined,
@@ -761,13 +762,12 @@ export function advanceQuestStartedChains(
     let next = current;
     const started: Array<{ label: string; log: string }> = [];
     for (const chain of EVENT_CHAINS) {
-        const raw = current[chain.id];
-        const stepIndex = typeof raw === 'number' ? raw : raw === undefined ? 0 : null;
+        const stepIndex = currentChainStepIndex(current, chain.id);
         if (stepIndex === null) continue;
-        const step = chain.steps[stepIndex];
-        if (!step || !('questStart' in step) || !step.questStart || !claimed.includes(step.questStart.questId)) continue;
+        const questStart = getChainQuestStart(chain.steps[stepIndex]);
+        if (!questStart || !claimed.includes(questStart.questId)) continue;
         next = { ...next, [chain.id]: stepIndex + 1 };
-        started.push({ label: chain.label, log: step.questStart.log });
+        started.push({ label: chain.label, log: questStart.log });
     }
     return { progress: next, started };
 }

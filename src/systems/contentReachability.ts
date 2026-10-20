@@ -1,7 +1,7 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { DROP_TABLES } from '../data/dropTables.js';
-import { EVENT_CHAINS } from '../data/eventChains.js';
+import { EVENT_CHAINS, getChainQuestStart } from '../data/eventChains.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import {
     // Wave 13 E2: 경로 게이트 보행은 `utils/mapRouteGate.ts`가 소유한다 — 이 리포트와
@@ -794,12 +794,17 @@ const bucketGates = (
  * 중간 스텝이 종착보다 깊은 지역에 있으면 종착 게이트는 완주 비용을 과소 계상한다.
  * (Wave 12가 맵 축에서 잡은 "선언 레벨은 실제 게이트가 아니다"와 같은 종류의 오류다.)
  *
- * 열림(`openLoc`)은 첫 스텝의 지역 — 체인이 플레이어에게 보이기 시작하는 지점이다.
+ * 열림은 첫 스텝의 게이트 — 체인이 플레이어에게 보이기 시작하는 지점이다. 스텝의 게이트는 그 지역의 경로 게이트이고,
+ * 임무로 여는 스텝(`questStart`, Wave 127 · 128 — 모든 체인의 0단계)은 그 임무의 목표 게이트다(그 임무를 수령해야 열린다).
  */
+type ChainStepGateSource = { kind: 'loc'; loc: string | null } | { kind: 'quest'; questId: number };
+
 const eventChainStepLocations = () => EVENT_CHAINS.map((chain) => ({
     chain: chain.id,
-    openLoc: chain.steps[0]?.loc ?? null,
-    locs: chain.steps.map((step) => step.loc ?? null),
+    gateSources: chain.steps.map((step): ChainStepGateSource => {
+        const questStart = getChainQuestStart(step);
+        return questStart ? { kind: 'quest', questId: questStart.questId } : { kind: 'loc', loc: step.loc ?? null };
+    }),
     steps: chain.steps.length,
     // Wave 62 C17: 혼돈의 심연 층 조건 스텝 — 이 모델에는 심연 층 진행이 없어 지역 게이트로 값을 매기지 않는다.
     floorGates: chain.steps.flatMap((step) => ('minAbyssFloor' in step && typeof step.minAbyssFloor === 'number'
@@ -946,6 +951,7 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
     const questEntries: GateEntry[] = [];
     const questGateDivergence: QuestGateDivergence[] = [];
     const unresolvedQuestGates: Array<string | number> = [];
+    const questObjectiveGates = new Map<string, number>();
     for (const { quest, resolution } of resolveQuestGates(quests, maps, routeGates)) {
         if (resolution.kind === 'malformed') {
             malformedGates.push(`quest:${String(quest?.id)}`);
@@ -956,6 +962,7 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
             continue;
         }
         questEntries.push({ member: quest.id, gateLevel: resolution.row.objectiveGateLevel });
+        questObjectiveGates.set(String(quest.id), resolution.row.objectiveGateLevel);
         if (resolution.row.objectiveGateLevel !== resolution.row.minLv) questGateDivergence.push(resolution.row);
     }
 
@@ -998,13 +1005,19 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
         const gateLevel = routeGates.get(loc);
         return gateLevel === undefined || !isUsableGateLevel(gateLevel) ? null : gateLevel;
     };
+    // 임무로 여는 스텝은 그 임무의 목표 게이트 — 값을 매길 수 없는 임무(목표 지역 · 선행 미상)면 스텝도 미상이다.
+    const resolveStepGate = (source: ChainStepGateSource | undefined) => {
+        if (!source) return null;
+        if (source.kind === 'loc') return resolveLocGate(source.loc);
+        return questObjectiveGates.get(String(source.questId)) ?? null;
+    };
     for (const terminal of terminals) {
         if (terminal.floorGates.length > 0) {
             floorGatedEventChains.push({ chain: terminal.chain, steps: terminal.floorGates });
             continue;
         }
-        const stepGates = terminal.locs.map(resolveLocGate);
-        const openGateLevel = resolveLocGate(terminal.openLoc);
+        const stepGates = terminal.gateSources.map(resolveStepGate);
+        const openGateLevel = resolveStepGate(terminal.gateSources[0]);
         // 스텝 하나라도 값을 매길 수 없으면 완주 게이트는 max가 아니라 **미상**이다 —
         // 남은 스텝만으로 max를 취하면 비용을 조용히 과소 계상하게 된다.
         if (openGateLevel === null || stepGates.some((gateLevel) => gateLevel === null)) {
@@ -1079,6 +1092,8 @@ const buildCostReport = ({ progression, maps, quests, classes, equipment }: Cost
                 'Rows with basis "beyond-anchors" carry no modeled cost; the simulation stops at the highest checkpoint level.',
                 'Event chain steps gated by a Chaos Abyss floor (minAbyssFloor) are not priced — the simulation has no abyss floor '
                     + 'progression; floorGatedEventChains lists those chains with their floor conditions instead of a bucket.',
+                'Event chain steps opened by a quest (questStart — the first step of every chain) are priced at that quest\'s '
+                    + 'objective gate, not at the step location: the chain opens when the quest is claimed.',
             ],
         },
         anchors,

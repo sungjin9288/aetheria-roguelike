@@ -65,7 +65,7 @@ interface ChainStepInput {
         outcomes?: ChainOutcomeInput[];
     };
     /** Wave 127: 임무 수령으로 끝나는 단계 — 이벤트 · 선택지가 없다. */
-    questStart?: { questId?: unknown; log?: unknown };
+    questStart?: { questId?: unknown; log?: unknown; hook?: unknown };
 }
 
 interface EventChainInput {
@@ -196,11 +196,13 @@ export const buildEventRewardCoherenceReport = ({
             const location = stepData?.loc;
             const map = maps?.[location ?? ''];
             if (!map) errors.add(`CHAIN_LOCATION_UNKNOWN:${chainId}:${String(step)}:${String(location)}`);
-            // Wave 127: 임무로 여는 단계는 이벤트가 없다 — 임무 id와 단서 문구만 있으면 된다(선택지 · 결과 검사 밖).
+            // Wave 127 · 128: 임무로 여는 단계(모든 체인의 0단계)는 이벤트가 없다 — 임무 id와 단서 문구(+ 게시판 소문)만
+            //   있으면 된다(선택지 · 결과 검사 밖).
             if (stepData?.questStart && !stepData.event) {
                 chainQuestStartCount += 1;
-                const { questId, log } = stepData.questStart;
-                if (!Number.isSafeInteger(questId) || Number(questId) <= 0 || typeof log !== 'string' || log.trim() === '') {
+                const { questId, log, hook } = stepData.questStart;
+                const hookInvalid = hook !== undefined && (typeof hook !== 'string' || hook.trim() === '');
+                if (!Number.isSafeInteger(questId) || Number(questId) <= 0 || typeof log !== 'string' || log.trim() === '' || hookInvalid) {
                     errors.add(`CHAIN_QUEST_START_INVALID:${chainId}:${String(step)}`);
                 }
                 return;
@@ -359,8 +361,8 @@ export const buildEventRewardCoherenceReport = ({
 
     if (chainList.length !== 13) errors.add('CHAIN_COUNT_MISMATCH');
     if (chainStepCount !== 39) errors.add('CHAIN_STEP_COUNT_MISMATCH');
-    if (chainOutcomeCount !== 82) errors.add('CHAIN_OUTCOME_COUNT_MISMATCH');
-    if (chainQuestStartCount !== 1) errors.add('CHAIN_QUEST_START_COUNT_MISMATCH');
+    if (chainOutcomeCount !== 54) errors.add('CHAIN_OUTCOME_COUNT_MISMATCH');
+    if (chainQuestStartCount !== 13) errors.add('CHAIN_QUEST_START_COUNT_MISMATCH');
     if (boundedList.length !== 8) errors.add('BOUNDED_COUNT_MISMATCH');
     if (boundedChoiceCount !== 16) errors.add('BOUNDED_CHOICE_COUNT_MISMATCH');
     if (fallbackList.length !== 3) errors.add('FALLBACK_COUNT_MISMATCH');

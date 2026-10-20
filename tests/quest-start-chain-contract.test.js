@@ -53,7 +53,7 @@ const claim = (state, questId = FIRST_STORY_QUEST_ID) => gameReducer(
     { type: AT.CLAIM_QUEST_REWARD, payload: { questId } },
 );
 
-test('데이터: 사라진 마법사 첫 단계는 이벤트가 없고 첫 임무가 연다 — 임무로 여는 단계는 이것 하나다', () => {
+test('데이터: 사라진 마법사 첫 단계는 이벤트가 없고 첫 임무가 연다 — 임무로 여는 단계는 모든 이야기의 0단계다(Wave 128)', () => {
     assert.equal(questStep.loc, FOREST);
     assert.equal(questStep.event, undefined);
     assert.equal(isChainEventStep(questStep), false);
@@ -62,7 +62,7 @@ test('데이터: 사라진 마법사 첫 단계는 이벤트가 없고 첫 임�
     // 단서 문구는 다음 단계의 지역을 말한다(그 단계의 이벤트가 그곳에서 열린다).
     assert.ok(questStep.questStart.log.includes(wizard.steps[1].loc));
     const questSteps = EVENT_CHAINS.flatMap((chain) => chain.steps.filter((step) => !isChainEventStep(step)).map((step) => `${chain.id}:${step.step}`));
-    assert.deepEqual(questSteps, ['lost_wizard:0']);
+    assert.deepEqual(questSteps, EVENT_CHAINS.map((chain) => `${chain.id}:0`));
 });
 
 test('[트리거] 고요한 숲은 새 여정에서 체인 이벤트를 띄우지 않는다 — 첫 탐험이 이야기 화면으로 막히지 않는다', async () => {
@@ -99,10 +99,11 @@ test('[수령] 첫 임무를 받으면 체인이 다음 단계로 넘어가고, 
     assert.equal(again.logs.filter((log) => log.text === lead).length, 1);
 });
 
-test('[다른 임무] 첫 임무가 아닌 수령은 체인을 건드리지 않는다', () => {
+test('[다른 임무] 이야기를 열지 않는 임무의 수령은 체인을 건드리지 않는다', () => {
     const state = freshState();
     const before = state.player.eventChainProgress;
-    const unrelated = advanceQuestStartedChains(before, [81, 82]);
+    // 81 · 82는 Wave 128부터 곁가지 이야기를 연다 — 여기서는 어느 이야기도 열지 않는 임무를 쓴다.
+    const unrelated = advanceQuestStartedChains(before, [1, 2, 10]);
     assert.equal(unrelated.progress, before ?? unrelated.progress);
     assert.deepEqual(unrelated.started, []);
 });
