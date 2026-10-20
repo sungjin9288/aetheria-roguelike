@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "28b450f5c6b3fc25d80ef470ea519324ec0f11cfdd563f41e59360e7b15ce284",
+  "reportHash": "b46ae4403eae1a20851137a17fe58e7074fcfcf208071da1deea593123505d58",
   "report": {
     "schemaVersion": 6,
     "catalog": {
@@ -5779,7 +5779,8 @@
           "Anchors come from one deterministic seed; the p10/p50/p90 band across 1000 seeds lives in progression-diagnostic-v2.json.",
           "Rows with basis \"interpolated\" are not model outputs — they are cumulative-EXP interpolations between the two named anchors.",
           "Rows with basis \"beyond-anchors\" carry no modeled cost; the simulation stops at the highest checkpoint level.",
-          "Event chain steps gated by a Chaos Abyss floor (minAbyssFloor) are not priced — the simulation has no abyss floor progression; floorGatedEventChains lists those chains with their floor conditions instead of a bucket."
+          "Event chain steps gated by a Chaos Abyss floor (minAbyssFloor) are not priced — the simulation has no abyss floor progression; floorGatedEventChains lists those chains with their floor conditions instead of a bucket.",
+          "Event chain steps opened by a quest (questStart — the first step of every chain) are priced at that quest's objective gate, not at the step location: the chain opens when the quest is claimed."
         ]
       },
       "anchors": [
@@ -8130,14 +8131,14 @@
         {
           "chain": "last_hero",
           "steps": 3,
-          "openGateLevel": 3,
+          "openGateLevel": 4,
           "openCost": {
-            "level": 3,
+            "level": 4,
             "basis": "interpolated",
-            "modeledActions": 28,
-            "modeledSeconds": 2520,
-            "modeledHours": 0.7,
-            "cumulativeExp": 429,
+            "modeledActions": 41,
+            "modeledSeconds": 3690,
+            "modeledHours": 1.03,
+            "cumulativeExp": 692,
             "interpolation": {
               "lowerLevel": 2,
               "upperLevel": 5,
@@ -8145,7 +8146,7 @@
               "upperModeledActions": 56,
               "lowerCumulativeExp": 200,
               "upperCumulativeExp": 994,
-              "expFraction": 0.2884130982367758
+              "expFraction": 0.6196473551637279
             }
           },
           "completionGateLevel": 35,
@@ -8170,15 +8171,23 @@
         {
           "chain": "shadow_guild",
           "steps": 3,
-          "openGateLevel": 5,
+          "openGateLevel": 6,
           "openCost": {
-            "level": 5,
-            "basis": "anchored",
-            "modeledActions": 56,
-            "modeledSeconds": 5040,
-            "modeledHours": 1.4,
-            "cumulativeExp": 994,
-            "interpolation": null
+            "level": 6,
+            "basis": "interpolated",
+            "modeledActions": 61,
+            "modeledSeconds": 5490,
+            "modeledHours": 1.53,
+            "cumulativeExp": 1341,
+            "interpolation": {
+              "lowerLevel": 5,
+              "upperLevel": 10,
+              "lowerModeledActions": 56,
+              "upperModeledActions": 87,
+              "lowerCumulativeExp": 994,
+              "upperCumulativeExp": 3328,
+              "expFraction": 0.14867180805484148
+            }
           },
           "completionGateLevel": 48,
           "completionCost": {

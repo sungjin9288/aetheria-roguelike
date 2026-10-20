@@ -13,6 +13,7 @@
 import { DB } from '../../src/data/db.ts';
 import { getMonsterFamily } from '../../src/data/monsters.ts';
 import { QUESTS } from '../../src/data/quests.ts';
+import { EVENT_CHAINS } from '../../src/data/eventChains.ts';
 import { AT } from '../../src/reducers/actionTypes.ts';
 import { INITIAL_STATE, gameReducer } from '../../src/reducers/gameReducer.ts';
 import { GS } from '../../src/reducers/gameStates.ts';
@@ -40,7 +41,10 @@ import { HIDDEN_BOSS_UNLOCKS } from '../../src/utils/bossPresence.ts';
 import { hasChallengeModifier } from '../../src/utils/challengeRules.ts';
 
 // v2 (Wave 119): 퇴마 · 회복 기술을 쓴다 — v1은 위력(`mult`) 있는 기술만 써서 성직자가 회복도 퇴마도 하지 않았다(원장 §126).
-export const DRIVER_VERSION = 2;
+// v3 (Wave 128): 받은 이야기 임무 — 본편 장과 곁가지 이야기를 여는 임무 — 를 받은 순서대로 하러 간다. v2는 본편 장의 목표 지역만
+//   찾아가 Wave 128(모든 이야기의 0단계를 임무가 연다) 뒤 곁가지 이야기를 여는 임무를 거의 끝내지 않았다(원장 §137). 곁가지 이야기를
+//   여는 임무가 없는 게임(Wave 127까지)에서는 v2와 같은 결과다. 회차마다 이야기별로 닿은 단계(`chainSteps`)도 남긴다(상태만 읽는다).
+export const DRIVER_VERSION = 3;
 
 /** 직업 경로 기본값 — 경로 이름 → [1차, 2차, 3차]. */
 export const JOB_PATHS = {
@@ -61,6 +65,11 @@ const START_EPOCH_MS = 1_790_000_000_000;
 const ROUTE_GATES = mapRouteGateLevels(MAP_ROUTE_START_LOCATION, DB.MAPS);
 const STORY_PREFIX = '[스토리]';
 const STORY_QUEST_IDS = QUESTS.filter((quest) => String(quest.title || '').startsWith(STORY_PREFIX)).map((quest) => quest.id);
+/** 이야기를 여는 임무 → 그 이야기와 시작 지역(0단계 `loc`) — 데이터에서 도출한다(임무로 여는 단계가 없는 게임이면 비어 있다). */
+const STORY_OPENINGS = new Map(EVENT_CHAINS.flatMap((chain) => {
+    const questStart = chain.steps[0]?.questStart;
+    return questStart ? [[questStart.questId, { chainId: chain.id, loc: chain.steps[0].loc }]] : [];
+}));
 const HIDDEN_BOSS_NAMES = new Set(HIDDEN_BOSS_UNLOCKS.map((entry) => entry.boss));
 const HP_POTIONS = DB.ITEMS.consumables.filter((item) => item.type === 'hp').sort((a, b) => (b.val || 0) - (a.val || 0));
 
@@ -208,9 +217,11 @@ export const runNaturalPlay = async (options) => {
     };
     const closeRun = () => {
         const meta = state.player?.meta || {};
-        const { momentBest: _best, momentJobs: _jobs, ...runRecord } = run;
+        const { momentBest: _best, momentJobs: _jobs, chainBest, ...runRecord } = run;
         result.runs.push({
             ...runRecord,
+            // 이야기별로 그 회차에 닿은 가장 높은 단계(사망하면 처음부터라 최고치) — 어떤 이야기가 열리고 끝났는지 본다(v3).
+            chainSteps: { ...(chainBest || {}) },
             endStep: step,
             hours: Number((hours() - run.startHours).toFixed(3)),
             ladderRank: Number(meta.rank) || 0,
@@ -567,6 +578,10 @@ export const runNaturalPlay = async (options) => {
         if (!before || !run) return;
         const at = Number((hours() - run.startHours).toFixed(3));
         // 사망하면 여정이 처음부터라 이야기 · 지역 · 체인 · 의뢰를 다시 얻는다 — 회차 안 최고치를 넘을 때만 새 순간이다.
+        const chainBest = run.chainBest || (run.chainBest = {});
+        for (const [chainId, value] of Object.entries(p.eventChainProgress || {})) {
+            if (typeof value === 'number' && value > (chainBest[chainId] ?? 0)) chainBest[chainId] = value;
+        }
         const best = run.momentBest || (run.momentBest = {});
         for (const kind of ['story', 'chain', 'signature', 'areaBoss', 'region', 'hunt', 'bag']) {
             if (now[kind] > before[kind] && now[kind] > (best[kind] ?? 0)) run.moments.push([at, kind]);
@@ -601,12 +616,16 @@ export const runNaturalPlay = async (options) => {
         const level = Number(p.level) || 1;
         // 이동은 지역의 선언 레벨로 막힌다(`getMapAccess`) — 경로 게이트와 둘 다 넘어야 걸어 들어간다.
         const reachable = (name) => (ROUTE_GATES.get(name) ?? Infinity) <= level && mapLevel(name) <= level;
-        // 이야기 임무의 목표 지역이 먼저다.
+        // 이야기 임무의 목표 지역이 먼저다 — 받은 순서대로. 본편 장은 그 장의 지역, 곁가지 이야기를 여는 임무(v3)는 그 이야기가
+        //   시작되는 지역이다(여는 임무의 목표가 그 지역에서 진행된다 — tests/story-quest-opening-contract). 이미 연 이야기면 아니다.
         for (const questState of p.quests || []) {
             const quest = QUESTS.find((entry) => entry.id === questState.id);
-            if (!quest || !String(quest.title || '').startsWith(STORY_PREFIX)) continue;
-            if (Number(questState.progress) >= Number(quest.goal)) continue;
-            if (quest.location && reachable(quest.location)) return quest.location;
+            if (!quest || Number(questState.progress) >= Number(quest.goal)) continue;
+            const opening = STORY_OPENINGS.get(quest.id);
+            const target = String(quest.title || '').startsWith(STORY_PREFIX)
+                ? quest.location
+                : opening && !p.eventChainProgress?.[opening.chainId] ? opening.loc : null;
+            if (target && reachable(target)) return target;
         }
         // 그 밖에는 걸어서 들어갈 수 있는 가장 높은 사냥 지역.
         let best = null;

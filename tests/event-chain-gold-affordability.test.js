@@ -8,8 +8,9 @@ import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
 import { GS } from '../src/reducers/gameStates.js';
 import { MAX_RELICS_PER_RUN } from '../src/data/relics.js';
 
+// 2026-10 Wave 128: 최후의 영웅 0단계(치료비 300)는 임무 '평원 정화'로 연다(이벤트 없음) — 남은 이야기 골드 지불은
+//   그림자 길드 1단계(상인의 인장 2,000) 하나다.
 const COST_CASES = [
-    { chainId: 'last_hero', step: 0, choiceIndex: 0, cost: 300 },
     { chainId: 'shadow_guild', step: 1, choiceIndex: 0, cost: 2000 },
 ];
 
@@ -49,7 +50,7 @@ const resolve = (state, payload) => gameReducer(state, {
     payload,
 });
 
-test('canonical negative-gold chain choice census is exactly the two literal costs', () => {
+test('canonical negative-gold chain choice census is exactly the one literal cost', () => {
     const actual = EVENT_CHAINS.flatMap((chain) => chain.steps.filter(isChainEventStep).flatMap((stepData) => (
         stepData.event.outcomes.flatMap((outcome, choiceIndex) => (
             outcome?.reward?.type === 'gold' && outcome.reward.amount < 0
@@ -61,7 +62,7 @@ test('canonical negative-gold chain choice census is exactly the two literal cos
 });
 
 test('shadow guild market names the exact rare relic included in its atomic purchase', () => {
-    const costCase = COST_CASES[1];
+    const costCase = COST_CASES[0];
     const outcome = canonicalStep(costCase).event.outcomes[costCase.choiceIndex];
     assert.equal(outcome.reward.relicId, 'merchant_seal');
     assert.match(canonicalStep(costCase).event.desc, /상인의 인장/);
@@ -130,7 +131,7 @@ for (const costCase of COST_CASES) {
 
     for (const [startingGold, expectedGold] of [
         [costCase.cost, 0],
-        [costCase.chainId === 'last_hero' ? 301 : 2500, costCase.chainId === 'last_hero' ? 1 : 500],
+        [costCase.cost + 500, 500],
     ]) {
         test(`${costCase.chainId} settles ${startingGold} gold from canonical current state`, () => {
             const state = buildState(costCase, startingGold);
@@ -182,8 +183,8 @@ test('payload must contain exactly the three validated identity keys', () => {
 test('stale, forged, and non-cost identities are exact state-object no-ops', () => {
     const costCase = COST_CASES[0];
     const state = buildState(costCase, costCase.cost);
-    assert.strictEqual(resolve(state, { ...payloadFor(costCase), chainId: 'shadow_guild' }), state);
-    assert.strictEqual(resolve(state, { ...payloadFor(costCase), step: 1 }), state);
+    assert.strictEqual(resolve(state, { ...payloadFor(costCase), chainId: 'last_hero' }), state);
+    assert.strictEqual(resolve(state, { ...payloadFor(costCase), step: costCase.step + 1 }), state);
     assert.strictEqual(resolve(state, { ...payloadFor(costCase), choiceIndex: 1 }), state);
     const idle = { ...state, gameState: GS.IDLE };
     assert.strictEqual(resolve(idle, payloadFor(costCase)), idle);
@@ -199,7 +200,7 @@ test('stale, forged, and non-cost identities are exact state-object no-ops', () 
 });
 
 test('canonical event comparison ignores object key order but rejects semantic mutation', () => {
-    const costCase = COST_CASES[1];
+    const costCase = COST_CASES[0];
     const state = buildState(costCase, costCase.cost);
     const reordered = {
         ...state,
@@ -242,7 +243,7 @@ test('canonical event comparison ignores object key order but rejects semantic m
 });
 
 test('shadow guild market grants the promised relic once at the exact gold boundary', () => {
-    const costCase = COST_CASES[1];
+    const costCase = COST_CASES[0];
     const state = buildState(costCase, costCase.cost);
     const settled = resolve(state, payloadFor(costCase));
 
@@ -253,7 +254,7 @@ test('shadow guild market grants the promised relic once at the exact gold bound
 });
 
 test('shadow guild market keeps the event open when the relic is owned or slots are full', () => {
-    const costCase = COST_CASES[1];
+    const costCase = COST_CASES[0];
     const merchantSeal = { id: 'merchant_seal', name: '상인의 인장' };
     const owned = buildState(costCase, costCase.cost, {
         player: {

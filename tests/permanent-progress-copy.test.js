@@ -54,8 +54,9 @@ test('ascension copy includes permanent journey and accessibility state', async 
 
 test('primal shard guidance derives its percentage from the live balance constant', async () => {
     const prophecy = EVENT_CHAINS.find((chain) => chain.id === 'ancient_prophecy');
+    // Wave 128: 0단계는 임무로 연다(이벤트 없음) — 이벤트 단계의 결과만 본다.
     const infoReward = prophecy.steps
-        .flatMap((step) => step.event.outcomes)
+        .flatMap((step) => step.event?.outcomes ?? [])
         .map((outcome) => outcome.reward)
         .find((reward) => reward?.type === 'info');
     const expectedPercent = Math.round(BALANCE.PRIMAL_SHARD_DROP_CHANCE * 100);

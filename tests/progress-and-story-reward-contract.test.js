@@ -214,9 +214,9 @@ test('A16: 선택지 번호만 지우고 숫자 답 · 소수는 남긴다', () 
 });
 
 // ── A17 ──────────────────────────────────────────────────────────────────
-test('A17: 이야기 골드 지불(최후의 영웅 300 · 그림자 길드 2,000)도 일일 골드 소비를 채운다', () => {
+// Wave 128: 최후의 영웅 0단계(치료비 300)는 임무 '평원 정화'로 연다(이벤트 없음) — 남은 이야기 골드 지불은 그림자 길드 하나다.
+test('A17: 이야기 골드 지불(그림자 길드 2,000)도 일일 골드 소비를 채운다', () => {
     for (const { chainId, step, choiceIndex, cost } of [
-        { chainId: 'last_hero', step: 0, choiceIndex: 0, cost: 300 },
         { chainId: 'shadow_guild', step: 1, choiceIndex: 0, cost: 2000 },
     ]) {
         const player = basePlayer({ gold: 10_000, level: 10, stats: { dailyProtocol: getCurrentDailyProtocol(INITIAL_STATE.player, new Date()) } });

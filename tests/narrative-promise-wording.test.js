@@ -60,9 +60,13 @@ test('C2 → Wave 108: 이야기 미리보기 · 문구는 능력치 보상을 "
                 ...step.event.outcomes.map((o) => o.log)];
             for (const text of texts) assert.ok(!String(text || '').includes('영구'), `${chain.id}:${step.step}: ${text}`);
         }
+        // Wave 128: 임무로 여는 0단계의 단서 · 게시판 소문도 이야기 문구다.
+        const questStart = chain.steps[0].questStart;
+        for (const text of [questStart.log, questStart.hook]) assert.ok(!String(text || '').includes('영구'), `${chain.id}:0: ${text}`);
     }
+    // Wave 128: 0단계의 능력치 선택지 셋(세계수 · 신전 · 균열)이 0단계 이벤트와 함께 사라져 표본은 1 · 2단계의 7개다.
     const statRewards = chainOutcomes().filter(({ outcome }) => outcome.reward?.type === 'stat_bonus');
-    assert.ok(statRewards.length >= 8, '능력치 보상 선택지가 표본에 있다');
+    assert.ok(statRewards.length >= 7, '능력치 보상 선택지가 표본에 있다');
     for (const { chain, step, outcome, choiceIndex } of statRewards) {
         if (outcome.type !== 'chain_advance') continue;
         const preview = getEventChoicePreview(chainEvent(chain.id, step.step), choiceIndex);

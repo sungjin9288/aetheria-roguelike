@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { EVENT_CHAINS, getChainEventForLoc } from '../src/data/eventChains.js';
+import { EVENT_CHAINS, getChainEventForLoc, isChainEventStep } from '../src/data/eventChains.js';
 
 // cycle 62: 신규 체인 "잊혀진 사령관" — 잊혀진 폐허 → 몰락한 전초기지 → 마왕성으로
 // 이어지는 3단계 체인. 위치별 트리거 + outcome reward 형태가 정상인지 회귀 가드.
@@ -12,11 +12,13 @@ test('forgotten_commander chain has 3 steps', () => {
     assert.equal(chain.steps.length, 3);
 });
 
-test('forgotten_commander step 0 triggers at 잊혀진 폐허', () => {
-    const result = getChainEventForLoc('잊혀진 폐허', {});
-    assert.ok(result, 'should return event for 잊혀진 폐허 with no progress');
-    // 이전 체인이 같은 위치를 쓰지 않는 한 forgotten_commander가 우선이 아닐 수도 있음.
-    // 적어도 어떤 체인이든 트리거되어야 함을 검증.
+// Wave 128: 0단계는 잊혀진 폐허의 본편 장 '폐허의 진실'(81)이 연다 — 폐허의 첫 탐험은 이야기 화면을 띄우지 않는다.
+test('forgotten_commander step 0 is opened by 본편 81 at 잊혀진 폐허, not by an exploration event', () => {
+    const chain = EVENT_CHAINS.find((c) => c.id === 'forgotten_commander');
+    assert.equal(chain.steps[0].loc, '잊혀진 폐허');
+    assert.equal(chain.steps[0].questStart.questId, 81);
+    assert.match(chain.steps[0].questStart.log, /몰락한 전초기지/);
+    assert.equal(getChainEventForLoc('잊혀진 폐허', {}), null);
 });
 
 test('forgotten_commander step 1 triggers at 몰락한 전초기지 after step 0', () => {
@@ -52,7 +54,7 @@ test('forgotten_commander outcomes use supported reward types', () => {
     // cycle 62: stat_bonus 핸들러도 추가됨.
     const validTypes = new Set(['gold', 'item', 'relic', 'combat_bonus', 'stat_bonus']);
 
-    for (const step of chain.steps) {
+    for (const step of chain.steps.filter(isChainEventStep)) {
         for (const outcome of step.event.outcomes) {
             if (outcome.reward) {
                 assert.ok(

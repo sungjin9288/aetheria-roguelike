@@ -8,17 +8,9 @@ import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
 import { GS } from '../src/reducers/gameStates.js';
 import { buildChainJournal } from '../src/utils/chainJournal.js';
 
+// 2026-10 Wave 128: 모든 이야기의 0단계가 임무로 열려(이벤트 없음) 0단계의 포기 선택 셋(최후의 영웅 '지나친다' ·
+//   잊혀진 사령관 '경의를 표하고 떠난다' · 물의 사도 '일기를 두고 떠난다')이 사라졌다 — 남은 포기 선택은 1단계의 넷이다.
 const CANONICAL_FAILURES = [
-    {
-        chainId: 'last_hero',
-        step: 0,
-        loc: '서쪽 평원',
-        title: '죽어가는 기사',
-        choiceIndex: 1,
-        choice: '어쩔 수 없다, 지나친다',
-        log: '기사를 두고 지나쳤습니다. 기사의 검은 다시 찾을 수 없을 것입니다.',
-        reward: null,
-    },
     {
         chainId: 'forgotten_god',
         step: 1,
@@ -45,16 +37,6 @@ const CANONICAL_FAILURES = [
     },
     {
         chainId: 'forgotten_commander',
-        step: 0,
-        loc: '잊혀진 폐허',
-        title: '녹슨 갑옷',
-        choiceIndex: 1,
-        choice: '갑옷에 경의를 표하고 떠난다',
-        log: '갑옷에 경의를 표한 뒤 떠났습니다. 작은 보상이 마음을 채웁니다.',
-        reward: { type: 'gold', amount: 500 },
-    },
-    {
-        chainId: 'forgotten_commander',
         step: 1,
         loc: '몰락한 전초기지',
         title: '사령관의 일지',
@@ -62,16 +44,6 @@ const CANONICAL_FAILURES = [
         choice: '위험을 무릅쓰지 않는다',
         log: '일지를 그대로 두고 떠났습니다.',
         reward: null,
-    },
-    {
-        chainId: 'water_apostle',
-        step: 0,
-        loc: '호수의 신전',
-        title: '신관의 일기',
-        choiceIndex: 1,
-        choice: '신성한 일기를 그 자리에 두고 떠난다',
-        log: '일기는 본래 자리에 두고 떠났습니다. 신전이 작은 축복을 보내옵니다.',
-        reward: { type: 'gold', amount: 800 },
     },
     {
         chainId: 'water_apostle',
@@ -127,7 +99,7 @@ const settleCanonicalChoice = ({ chainId, step }, choiceIndex) => {
     return { dispatches, logs, startingGold, state };
 };
 
-test('canonical chain_advance_fail census is exactly the seven terminal outcomes', () => {
+test('canonical chain_advance_fail census is exactly the four terminal outcomes', () => {
     const actual = EVENT_CHAINS.flatMap((chain) => chain.steps.filter(isChainEventStep).flatMap((stepData) => (
         stepData.event.outcomes.flatMap((outcome, choiceIndex) => (
             outcome.type === 'chain_advance_fail'
@@ -182,24 +154,27 @@ for (const failure of CANONICAL_FAILURES) {
 }
 
 test('canonical chain_advance still increments the numeric current step', () => {
-    const progress = { chainId: 'shadow_guild', step: 0 };
-    const result = settleCanonicalChoice(progress, 0);
+    // Wave 128: 0단계는 임무로 연다 — 비용 없는 진행 선택은 그림자 길드 1단계의 '정보만 얻는다'다.
+    const progress = { chainId: 'shadow_guild', step: 1 };
+    const result = settleCanonicalChoice(progress, 1);
 
     assert.deepEqual(
         result.dispatches.find((action) => action.type === AT.UPDATE_EVENT_CHAIN),
-        { type: AT.UPDATE_EVENT_CHAIN, payload: { chainId: 'shadow_guild', step: 1 } },
+        { type: AT.UPDATE_EVENT_CHAIN, payload: { chainId: 'shadow_guild', step: 2 } },
     );
-    assert.equal(result.state.player.eventChainProgress.shadow_guild, 1);
+    assert.equal(result.state.player.eventChainProgress.shadow_guild, 2);
     assert.equal(result.state.currentEvent, null);
     assert.equal(result.state.gameState, GS.IDLE);
 });
 
 test('canonical nothing outcome does not update chain progress', () => {
-    const progress = { chainId: 'ancient_prophecy', step: 0 };
+    // Wave 128: 0단계에는 이벤트가 없다 — nothing 선택은 고대의 예언 1단계의 '시간이 없다, 돌아간다'다.
+    const progress = { chainId: 'ancient_prophecy', step: 1 };
+    assert.equal(getCanonicalStep(progress.chainId, progress.step).stepData.event.outcomes[1].type, 'nothing');
     const result = settleCanonicalChoice(progress, 1);
 
     assert.equal(result.dispatches.some((action) => action.type === AT.UPDATE_EVENT_CHAIN), false);
-    assert.equal(result.state.player.eventChainProgress.ancient_prophecy, 0);
+    assert.equal(result.state.player.eventChainProgress.ancient_prophecy, 1);
     assert.equal(result.state.currentEvent, null);
     assert.equal(result.state.gameState, GS.IDLE);
 });

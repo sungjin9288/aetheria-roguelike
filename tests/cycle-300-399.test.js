@@ -3297,8 +3297,9 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 365: getChainEventForLoc 동작 보존', async () => {
       const { getChainEventForLoc } = await import('../src/data/eventChains.js');
-      const result = getChainEventForLoc('호수의 신전', { water_apostle: 0 });
-      assert.ok(result, 'water_apostle chain step 0 반환');
+      // Wave 128: 0단계는 임무로 연다(이벤트 없음) — 첫 이벤트 단계(1단계, 사막 오아시스)로 본다.
+      const result = getChainEventForLoc('사막 오아시스', { water_apostle: 1 });
+      assert.ok(result, 'water_apostle chain step 1 반환');
       assert.equal(result.chain.id, 'water_apostle', 'chain.id 보존');
   });
 

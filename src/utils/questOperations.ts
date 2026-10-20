@@ -10,6 +10,7 @@ import { getInventoryCapacity } from './inventoryCapacity';
 import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 import type { TraitProfile } from './runProfile.js';
 import { getUnmetQuestPrerequisite } from './questPrerequisites.js';
+import { getQuestOpenedChain } from '../data/eventChains.js';
 
 /**
  * 게시판 UI 레인 분류 — `Quest.type`과 별개로 questOperations 전용 5분류
@@ -86,6 +87,14 @@ const toArray = <T,>(value: T[] | null | undefined): T[] => (Array.isArray(value
 //   path 보존). cycle 519 getMapLevel 패턴과 동일.
 const getQuestLevelGap = (quest: Quest, playerLevel: number) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
 const isStoryQuest = (quest: Quest) => String(quest?.title || '').includes('[스토리]');
+/**
+ * 2026-10 Wave 128(소유자 결정 "임무로 시작하게 — 스토리, 시나리오, 퀘스트 같이 자연스러운 구조로 이어지게"):
+ * 아직 열리지 않은 곁가지 이야기(이벤트 체인)를 여는 본편 밖 임무 — 게시판은 이 임무를 이야기 임무 칸에 그 이야기의
+ * 소문과 함께 보인다. 본편 장도 곁가지 이야기를 열지만(80 · 81 · 82 · 84) 그 칸의 이유는 본편이다.
+ */
+const getOpenedSideStory = (quest: Quest, player: Player) => (
+    isStoryQuest(quest) ? null : getQuestOpenedChain(quest?.id, player?.eventChainProgress)
+);
 const getActiveQuestEntries = (player: Player): ActiveQuestEntry[] => (
     toArray(player?.quests)
         .map((questState: QuestProgressState): ActiveQuestEntry | null => {
@@ -142,8 +151,8 @@ const getBeginnerQuestEffortScore = (quest: Quest, playerLevel: number) => {
     return -Math.min(18, (quest.goal - 5) * 3);
 };
 
-const getQuestLane = (quest: Quest, resonance: TraitQuestResonance, maps: Record<string, GameMap>): QuestLane => {
-    if (isStoryQuest(quest)) return 'story';
+const getQuestLane = (quest: Quest, resonance: TraitQuestResonance, maps: Record<string, GameMap>, opensSideStory: boolean): QuestLane => {
+    if (isStoryQuest(quest) || opensSideStory) return 'story';
     if (quest?.buildTag || quest?.type === 'build_victory' || (quest?.type === 'survive_low_hp' && resonance.score >= 3)) return 'build';
     if (quest?.target === 'level' || ['craft', 'combat_count', 'explore_count', 'discovery_count', 'bounty_count', 'gold_earned'].includes(quest?.type ?? '')) return 'growth';
     if (isBossQuest(quest, maps)) return 'boss';
@@ -153,7 +162,9 @@ const getQuestLane = (quest: Quest, resonance: TraitQuestResonance, maps: Record
 // cycle 545: targetMaps default [] 제거 — 1 internal callsite (line 153)
 //   getQuestReason(quest, lane, resonance, targetMaps) 명시 전달이라
 //   default 도달 불가. cross-file batch와 동일 사이클.
-const getQuestReason = (quest: Quest, lane: QuestLane, resonance: TraitQuestResonance, targetMaps: string[]) => {
+const getQuestReason = (quest: Quest, lane: QuestLane, resonance: TraitQuestResonance, targetMaps: string[], sideStoryHook: string | null) => {
+    // Wave 128: 곁가지 이야기를 여는 임무의 이유는 그 이야기의 소문이다(데이터 `questStart.hook`).
+    if (lane === 'story' && sideStoryHook) return sideStoryHook;
     if (lane === 'story') {
         return `서사 진행을 당겨 ${quest.minLv || 1}레벨 구간의 다음 전개를 열어 주는 임무입니다.`;
     }
@@ -350,7 +361,7 @@ interface EnrichedQuestEntry extends ActiveQuestEntry, QuestBoardDisplayFields {
 
 const enrichActiveQuestEntry = (entry: ActiveQuestEntry, player: Player, traitProfile: TraitProfile | null | undefined, maps: Record<string, GameMap>): EnrichedQuestEntry => {
     const resonance = getTraitQuestResonance(entry.quest, traitProfile);
-    const lane: QuestLane = entry.isBounty ? 'hunt' : getQuestLane(entry.quest, resonance, maps);
+    const lane: QuestLane = entry.isBounty ? 'hunt' : getQuestLane(entry.quest, resonance, maps, Boolean(getOpenedSideStory(entry.quest, player)));
     const targetMaps = getQuestTargetMaps(entry.quest, maps);
 
     return {
@@ -368,11 +379,14 @@ interface ScoredQuestEntry extends QuestBoardDisplayFields {
     quest: Quest;
     _sortKey: number;
     reason: string;
+    /** Wave 128: 아직 열리지 않은 곁가지 이야기를 여는 임무면 그 이야기의 소문(데이터 `questStart.hook`) — 추천 줄이 바로 보인다. */
+    storyHook: string | null;
 }
 
 const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | null | undefined, activeEntries: EnrichedQuestEntry[], maps: Record<string, GameMap>): ScoredQuestEntry => {
     const resonance = getTraitQuestResonance(quest, traitProfile);
-    const lane = getQuestLane(quest, resonance, maps);
+    const sideStory = getOpenedSideStory(quest, player);
+    const lane = getQuestLane(quest, resonance, maps, Boolean(sideStory));
     const playerLevel = player?.level || 1;
     const targetMaps = getQuestTargetMaps(quest, maps);
     const activeTargets = new Set(activeEntries.map((entry) => entry.quest?.target).filter(Boolean));
@@ -409,7 +423,8 @@ const scoreQuest = (quest: Quest, player: Player, traitProfile: TraitProfile | n
         resonance,
         targetMaps,
         meta: OPERATION_META[lane] || OPERATION_META.hunt,
-        reason: getQuestReason(quest, lane, resonance, targetMaps),
+        reason: getQuestReason(quest, lane, resonance, targetMaps, sideStory?.hook ?? null),
+        storyHook: sideStory?.hook ?? null,
         planSteps: getOperationPlanSteps(quest, player, lane, targetMaps),
         brief: getOperationBrief(quest, player, lane, resonance, targetMaps, maps),
     };
@@ -457,7 +472,9 @@ export const getQuestBoardRecommendations = (player: Player, maps: Record<string
     const featured: ExposedQuestEntry[] = [];
     const usedIds = new Set<Quest['id']>();
     FEATURED_LANE_ORDER.forEach((lane) => {
-        const match = scoredAvailable.find((entry) => entry.lane === lane && !usedIds.has(entry.quest.id));
+        const candidates = scoredAvailable.filter((entry) => entry.lane === lane && !usedIds.has(entry.quest.id));
+        // Wave 128: 이야기 칸은 본편 장이 먼저다 — 받을 본편 장이 없을 때 곁가지 이야기를 여는 임무가 그 칸을 쓴다.
+        const match = candidates.find((entry) => isStoryQuest(entry.quest)) ?? candidates[0];
         if (!match || featured.length >= 3) return;
         featured.push(match);
         usedIds.add(match.quest.id);

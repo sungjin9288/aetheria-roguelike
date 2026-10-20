@@ -1446,8 +1446,9 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
           'getQuestTargetMaps(quest, maps) chain 보존');
       assert.ok(/isBossQuest\(quest,\s*maps\)/.test(source),
           'isBossQuest(quest, maps) chain 보존');
-      assert.ok(/getQuestLane\(quest,\s*resonance,\s*maps\)/.test(source),
-          'getQuestLane(quest, resonance, maps) chain 보존');
+      // Wave 128: 곁가지 이야기를 여는 임무 여부가 넷째 인자로 붙었다 — maps를 명시로 넘기는 것이 이 가드의 뜻이다.
+      assert.ok(/getQuestLane\(quest,\s*resonance,\s*maps[,)]/.test(source),
+          'getQuestLane(quest, resonance, maps, …) chain 보존');
   });
 
   test('cycle 555: cycle 502-554 회귀 가드 — default 청소 시리즈 보존', async () => {

@@ -436,8 +436,8 @@ const SEAL = RELICS.find((relic) => relic.id === 'merchant_seal');
 const RANK0_CAP = getPrestigeUnlocks(0).maxRelics;
 const relicsAtCap = () => clone(RELICS.filter((relic) => relic.id !== SEAL.id).slice(0, RANK0_CAP));
 
+// Wave 128: 최후의 영웅 0단계(치료비 300)는 임무로 연다(이벤트 없음) — 체인 비용 거부는 그림자 길드 1단계에만 있다.
 const CHAIN_REJECTIONS = [
-    { label: '마지막 영웅 · 골드 부족', chainId: 'last_hero', step: 0, choiceIndex: 0, player: { gold: 299 }, expected: () => MSG.GOLD_INSUFFICIENT },
     { label: '그림자 길드 · 골드 부족', chainId: 'shadow_guild', step: 1, choiceIndex: 0, player: { gold: 1999 }, expected: () => MSG.GOLD_INSUFFICIENT },
     {
         label: '그림자 길드 · 인장 이미 보유',
@@ -482,9 +482,10 @@ test('[체인 비용 거부 뒤 재시도] 거부 안내가 정본 판정을 오
 });
 
 test('[체인 미루기] 거부 안내가 붙은 체인 이벤트도 미루기 선택지는 그대로 미룬다', () => {
-    // 현재 데이터의 비용 스텝 두 곳에는 미루기 선택지가 없다 — 비용 스텝에 미루기가 생기거나
+    // 현재 데이터의 비용 스텝(그림자 길드 1단계)에는 미루기 선택지가 없다 — 비용 스텝에 미루기가 생기거나
     //   다른 거부가 체인 이벤트에 안내를 붙여도, 표시용 필드가 미루기의 정본 판정을 막지 않는다.
-    const opened = chainState('shadow_guild', 0);
+    //   Wave 128: 0단계는 임무로 연다 — 미루기 선택지가 있는 이벤트 단계(고대의 예언 1단계)로 본다.
+    const opened = chainState('ancient_prophecy', 1);
     const deferIndex = opened.currentEvent.outcomes.findIndex((outcome) => outcome.type === 'nothing');
     assert.ok(deferIndex >= 0);
     const flagged = {
@@ -494,5 +495,5 @@ test('[체인 미루기] 거부 안내가 붙은 체인 이벤트도 미루기 �
     const deferred = press(flagged, deferIndex);
     assert.equal(deferred.currentEvent, null);
     assert.equal(deferred.gameState, GS.IDLE);
-    assert.equal(deferred.player.deferredEventChainSteps?.shadow_guild, 0);
+    assert.equal(deferred.player.deferredEventChainSteps?.ancient_prophecy, 1);
 });
