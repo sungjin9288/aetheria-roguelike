@@ -72,7 +72,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                     <header className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="aether-type-label font-readable text-slate-500">이번 모험 기록</div>
-                            <h1 className="mt-1.5 truncate font-readable text-[1.42rem] font-bold text-[#f6e7c8]">
+                            <h1 className="mt-1.5 break-words font-readable text-[1.42rem] font-bold text-[#f6e7c8]">
                                 {s.activeTitle && <span className="text-[#e3dcff]">[{getTitleLabel(s.activeTitle)}] </span>}
                                 {s.job} <span className="text-white">{MSG.LEVEL_LABEL(s.level ?? 1)}</span>
                             </h1>
