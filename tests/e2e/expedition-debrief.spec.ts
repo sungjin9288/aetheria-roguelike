@@ -92,7 +92,7 @@ test.describe('Expedition return debrief', () => {
         const history = page.getByTestId('control-last-expedition');
         await expect(history).toBeVisible();
         await expect(history).toContainText('지난 원정 · 고요한 숲');
-        await expect(history).toContainText('전투 4 · 탐험 6 · +185 EXP');
+        await expect(history).toContainText('전투 4 · 탐험 6 · 경험 +185');
         expect(await findUndersizedText(history)).toEqual([]);
 
         await history.click();
