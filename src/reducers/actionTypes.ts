@@ -12,7 +12,6 @@ import type { CodexCategory, DailyProtocol, DailyProtocolMissionType } from '../
 import type { GameEvent, LeaderboardEntry, LiveConfig, LogEntry } from '../types/session.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
 import type { buildRunSummary } from '../utils/gameUtils.js';
-import type { PostCombatChoiceId } from '../utils/postCombatChoice.js';
 import type { GameMode } from './gameStates';
 
 export type UseCombatItemPayload = {
@@ -193,9 +192,6 @@ export const AT = Object.freeze({
 
     // 2026-07 — 에테르 거울 (에센스 소비 영구 업그레이드 트리)
     PURCHASE_MIRROR_NODE: 'PURCHASE_MIRROR_NODE',
-
-    // 2026-09 — 전투 후 "밀어붙인다 / 숨을 고른다" 2선택 (단일 reducer 전이 + 1회 한정)
-    RESOLVE_POST_COMBAT_CHOICE: 'RESOLVE_POST_COMBAT_CHOICE',
 } as const);
 
 // cycle 301: ActionType type alias 제거 — 외부 import 0건. AT const literal types로 충분.
@@ -435,9 +431,6 @@ export interface ActionPayloadMap {
 
     // ── 2026-07 — 에테르 거울 ────────────────────────────────────────────
     [AT.PURCHASE_MIRROR_NODE]: PurchaseMirrorNodePayload;
-
-    // ── 2026-09 — 전투 후 2선택 ──────────────────────────────────────────
-    [AT.RESOLVE_POST_COMBAT_CHOICE]: { choice: PostCombatChoiceId };
 }
 
 /** 모든 action type 리터럴의 유니온 — `AT`의 값 집합과 같다. */

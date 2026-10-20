@@ -6,7 +6,7 @@ import { AT } from '../src/reducers/actionTypes.ts';
 import { GS } from '../src/reducers/gameStates.ts';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
 import { MSG } from '../src/data/messages.ts';
-import { EVENT_CHAINS } from '../src/data/eventChains.ts';
+import { EVENT_CHAINS, isChainEventStep } from '../src/data/eventChains.ts';
 import { FALLBACK_EVENT_POOL } from '../src/data/aiEventPools.ts';
 import { buildEventPackage } from '../src/utils/aiEventUtils.ts';
 import { buildCampfireEvent } from '../src/utils/campfireEvent.ts';
@@ -26,7 +26,7 @@ import { renderStatic } from './helpers/render.ts';
 
 const clone = (value) => structuredClone(value);
 
-const chainOutcomes = () => EVENT_CHAINS.flatMap((chain) => chain.steps.flatMap((step) => (
+const chainOutcomes = () => EVENT_CHAINS.flatMap((chain) => chain.steps.filter(isChainEventStep).flatMap((step) => (
     step.event.outcomes.map((outcome, choiceIndex) => ({ chain, step, outcome, choiceIndex }))
 )));
 const chainEvent = (chainId, stepIndex) => ({

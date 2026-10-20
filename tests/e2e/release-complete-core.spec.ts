@@ -74,11 +74,7 @@ test.describe('release-complete player journey', () => {
         expect(state.player.loc).toBe('고요한 숲');
         expect(state.player.activeExpeditionId).toBeTruthy();
 
-        await page.getByTestId('control-explore').click();
-        await expect(page.getByTestId('event-panel')).toBeVisible({ timeout: 8_000 });
-        await page.getByTestId('event-choice-0').click();
-        await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 8_000 });
-
+        // 2026-10 Wave 127(소유자 결정): 첫 탐험은 강제 이야기('마법의 흔적')를 띄우지 않는다 — 첫 탐험부터 전투 씨앗이다.
         const armed = await page.evaluate(() => (
             window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(112596)
         ));
@@ -100,7 +96,8 @@ test.describe('release-complete player journey', () => {
         const debrief = page.getByTestId('expedition-debrief-card');
         await expect(debrief).toBeVisible({ timeout: 8_000 });
         await expect(debrief).toContainText(/전투\s*1회/);
-        await expect(debrief).toContainText(/탐험\s*[2-9]회/);
+        // Wave 127: 첫 탐험이 곧 그 전투다(강제 이야기 탐험이 없다) — 원정 기록은 탐험 1회다.
+        await expect(debrief).toContainText(/탐험\s*1회/);
         await assertNoHorizontalOverflow(page, 'expedition-debrief-card');
         state = await readRenderedState(page);
         expect(state.player.loc).toBe('시작의 마을');

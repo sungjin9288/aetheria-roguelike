@@ -756,13 +756,6 @@ export const BALANCE = {
     SCOUT_LOW_HP_ELITE_MULT: 0.35,      // 저생명 시 정예 카드 확률 배율
     MIRROR_FREE_SCOUT_PER_LEVEL: 1,     // scout_charges 노드 레벨당 원정 무료 정찰 +1회
 
-    // 2026-09 D2 — 전투 후 "밀어붙인다 / 숨을 고른다" 2선택.
-    //   밀어붙인다: 다음 전투 공격력 버프 + 보스 접근 게이지 1칸 추가 + 다음 탐험 모닥불 차단.
-    //   숨을 고른다: 최대 생명의 일부 회복 + 연속 처치 초기화(게이지는 그대로).
-    POST_COMBAT_PUSH_ATK_BONUS: 0.25,   // 밀어붙이기 공격력 +25%
-    POST_COMBAT_PUSH_TURNS: 6,          // 버프 지속 턴 (다음 전투 1회를 대체로 커버 — 모닥불 단련과 동일 방식)
-    POST_COMBAT_BREATHER_HEAL_RATIO: 0.18, // 숨 고르기 회복량 = 최대 생명 × 18%
-
     // 2026-09 Wave 3 I — 이벤트 결과 어휘 확장(유물/상태이상/정예/버프).
     //   모델 출력은 신뢰할 수 없으므로 aiEventUtils.normalizeOutcomes가 이 화이트리스트와
     //   상한만 통과시킨다. "죽음은 항상 공정" 원칙에 따라 이벤트가 직접 생명을 0으로
@@ -772,7 +765,7 @@ export const BALANCE = {
     EVENT_RELIC_MAX_COUNT: 2,           // 이벤트 1건이 열 수 있는 유물 선택지 최대 개수
     EVENT_STATUS_MAX_TURNS: 3,          // 이벤트 상태이상 지속 턴 상한
     EVENT_BUFF_MAX_MULT: 1.3,           // 이벤트 버프 배율 상한 (모닥불 단련과 같은 눈금)
-    EVENT_BUFF_MAX_TURNS: 6,            // 이벤트 버프 지속 턴 상한 (POST_COMBAT_PUSH_TURNS와 동일)
+    EVENT_BUFF_MAX_TURNS: 6,            // 이벤트 버프 지속 턴 상한
     // 절차적 outcome(buildProceduralOutcome)의 "위험" 선택 특수 결과 확률/가중.
     //   위험 선택이 ±골드로만 끝나지 않도록 1건의 특수 결과를 얹는다.
     EVENT_RISKY_SPECIAL_CHANCE: 0.35,

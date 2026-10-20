@@ -48,8 +48,10 @@ test('첫 출발의 이유를 읽고 탐험하면 시작 안내가 반복되지 
     await page.screenshot({ path: 'output/playwright/clarity-20260928/first-town-375.png' });
     await page.getByTestId('control-expedition-start').click();
     await expect(opening).toHaveCount(0);
+    // 2026-10 Wave 127: 첫 탐험은 강제 이야기 없이 자연 결과다 — 조용한 결과 씨앗으로 고정한다.
+    await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8));
     await page.getByTestId('control-explore').click();
-    await page.getByTestId('event-choice-0').click();
+    await expect(page.getByTestId('event-panel')).toBeHidden();
     await page.getByTestId('control-move').click();
     await page.getByTestId('control-route-option-시작의 마을').click();
     await page.getByTestId('expedition-debrief-close-icon').click();

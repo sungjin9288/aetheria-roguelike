@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { EVENT_CHAINS, getChainEventForLoc } from '../src/data/eventChains.js';
+import { EVENT_CHAINS, getChainEventForLoc, isChainEventStep } from '../src/data/eventChains.js';
 import { createEventActions } from '../src/hooks/gameActions/eventActions.js';
 import { AT } from '../src/reducers/actionTypes.js';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
@@ -128,7 +128,7 @@ const settleCanonicalChoice = ({ chainId, step }, choiceIndex) => {
 };
 
 test('canonical chain_advance_fail census is exactly the seven terminal outcomes', () => {
-    const actual = EVENT_CHAINS.flatMap((chain) => chain.steps.flatMap((stepData) => (
+    const actual = EVENT_CHAINS.flatMap((chain) => chain.steps.filter(isChainEventStep).flatMap((stepData) => (
         stepData.event.outcomes.flatMap((outcome, choiceIndex) => (
             outcome.type === 'chain_advance_fail'
                 ? [{

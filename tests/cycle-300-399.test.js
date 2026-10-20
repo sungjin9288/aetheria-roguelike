@@ -3207,7 +3207,8 @@ import { fileURLToPath } from 'node:url';
       // legendary_item reward는 name이 보존되어야 함.
       let found = false;
       for (const step of lostWizard.steps) {
-          for (const outcome of step.event.outcomes) {
+          // Wave 127: 첫 단계는 임무로 연다(이벤트 없음).
+          for (const outcome of step.event?.outcomes ?? []) {
               if (outcome.reward?.type === 'legendary_item') {
                   assert.ok(outcome.reward.name, `legendary_item reward에 name 보존`);
                   assert.equal(outcome.reward.itemType, undefined, `itemType 0건`);
@@ -3283,7 +3284,8 @@ import { fileURLToPath } from 'node:url';
       let totalOutcomes = 0;
       for (const chain of EVENT_CHAINS) {
           for (const step of chain.steps) {
-              for (const outcome of step.event.outcomes) {
+              // Wave 127: 임무로 여는 단계는 이벤트 · 결과가 없다.
+              for (const outcome of step.event?.outcomes ?? []) {
                   assert.ok(typeof outcome.type === 'string', 'outcome.type 보존');
                   assert.equal(outcome.chainId, undefined, 'outcome.chainId 0건');
                   totalOutcomes += 1;

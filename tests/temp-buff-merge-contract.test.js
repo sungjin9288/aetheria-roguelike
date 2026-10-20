@@ -20,7 +20,6 @@ import {
 } from '../src/systems/tempBuffMerge.js';
 import { applyBoundedEncounterChoice } from '../src/utils/boundedEncounterSelector.js';
 import { buildCampfireEvent } from '../src/utils/campfireEvent.js';
-import { applyPostCombatChoice, getPostCombatChoiceOptions } from '../src/utils/postCombatChoice.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
 
 /**
@@ -28,9 +27,9 @@ import { calculateFullStats } from '../src/utils/statsCalculator.js';
  *
  * 세기 = (공격 + 방어 + 반격 확률) × 남은 턴. 같으면 한 턴의 증가량이 큰 쪽, 그것도 같으면 지금 강화(물약은 쓰지 않는다).
  * 이전에는 경로마다 덮어써 더 센 강화가 사라졌다 — +50% · 3턴 기술 강화 위에 수호의 물약 → 공격력 345 → 235, 전쟁의 북이
- * 전투 전 물약(+30% · 5턴)을 +20% · 2턴으로 바꿈, 모닥불 · 밀어붙인다 · 이야기 보너스 · 한정 조우 · 사건 강화도 같은 모양.
+ * 전투 전 물약(+30% · 5턴)을 +20% · 2턴으로 바꿈, 모닥불 · 이야기 보너스 · 한정 조우 · 사건 강화도 같은 모양.
  *
- * 이 파일은 **모든 비기술 강화 경로**(물약 · 전투 중 물약 · 전쟁의 북 · 모닥불 단련 · 밀어붙인다 · 이야기 전투 보너스 · 한정 조우 ·
+ * 이 파일은 **모든 비기술 강화 경로**(물약 · 전투 중 물약 · 전쟁의 북 · 모닥불 단련 · 이야기 전투 보너스 · 한정 조우 ·
  * 사건 강화)를 같은 두 경우로 돈다: 더 센 강화가 걸려 있으면 그것이 남고(부가 필드 포함) 안내가 나온다, 더 약한 강화가 걸려
  * 있으면 들어온 강화가 칸을 갖는다. 기술 강화(`CombatEngine.actions.ts`, Wave 52 · 53)는 이 규칙 밖이다.
  */
@@ -124,18 +123,6 @@ const SOURCES = [
         incoming: { atk: BALANCE.CAMPFIRE_FORGE_ATK, def: 0, turn: BALANCE.CAMPFIRE_FORGE_TURNS, name: MSG.CAMPFIRE_FORGE_BUFF_NAME },
         apply: (tempBuff) => resolveEvent(basePlayer(tempBuff), buildCampfireEvent({ maxHp: 1_000, maxMp: 300 }), 1),
         keptOut: ({ logs }, kept) => assert.ok(logs.includes(formatTempBuffKeptNotice(kept, MSG.CAMPFIRE_FORGE_BUFF_NAME))),
-    },
-    {
-        id: '밀어붙인다',
-        incoming: { atk: BALANCE.POST_COMBAT_PUSH_ATK_BONUS, def: 0, turn: BALANCE.POST_COMBAT_PUSH_TURNS, name: MSG.POST_COMBAT_PUSH_BUFF_NAME },
-        apply: (tempBuff) => {
-            const result = applyPostCombatChoice(basePlayer(tempBuff), 'push', DB.MAPS['고요한 숲'], 1_000);
-            return { player: result.player, logs: result.logs.map((log) => log.text) };
-        },
-        keptOut: ({ logs, player }, kept) => {
-            assert.ok(logs.includes(formatTempBuffKeptNotice(kept, MSG.POST_COMBAT_PUSH_BUFF_NAME)));
-            assert.equal(player.stats.nextExploreCampfireBlocked, true, '고른 대가(모닥불 차단)는 그대로 치른다');
-        },
     },
     {
         id: '이야기 전투 보너스(잊혀진 사령관)',
@@ -259,9 +246,3 @@ test('전투 중: 더 센 영웅의 물약은 기술 강화를 대신한다(규�
     assert.equal(after.player.inv.length, 0);
 });
 
-test('밀어붙인다 카드 설명은 정산과 같은 판정으로 "강화가 붙지 않음"을 말한다', () => {
-    const detail = (tempBuff) => getPostCombatChoiceOptions(basePlayer(tempBuff)).find((option) => option.id === 'push').detail;
-    assert.ok(detail(STRONG()).includes(MSG.POST_COMBAT_PUSH_DETAIL_BUFF_KEPT));
-    assert.ok(!detail(WEAK()).includes(MSG.POST_COMBAT_PUSH_DETAIL_BUFF_KEPT));
-    assert.ok(!detail({ atk: 0, def: 0, turn: 0, name: null }).includes(MSG.POST_COMBAT_PUSH_DETAIL_BUFF_KEPT));
-});

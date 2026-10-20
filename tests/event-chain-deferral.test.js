@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { EVENT_CHAINS, getChainEventForLoc } from '../src/data/eventChains.js';
+import { EVENT_CHAINS, getChainEventForLoc, isChainEventStep } from '../src/data/eventChains.js';
 import { createEventActions } from '../src/hooks/gameActions/eventActions.js';
 import { createMoveActions } from '../src/hooks/gameActions/moveActions.js';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
@@ -12,10 +12,13 @@ import { createExploreActions } from '../src/hooks/gameActions/exploreActions.js
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
 
-const cases = EVENT_CHAINS.flatMap(chain => chain.steps.flatMap(step =>
+const cases = EVENT_CHAINS.flatMap(chain => chain.steps.filter(isChainEventStep).flatMap(step =>
     step.event.outcomes.flatMap((outcome, choiceIndex) => outcome.type === 'nothing'
         ? [{ chainId: chain.id, step: step.step, choiceIndex, data: step }] : [])));
-const wizard = cases.find(entry => entry.chainId === 'lost_wizard' && entry.step === 0);
+// Wave 127: 사라진 마법사 0단계(고요한 숲)는 이벤트 없이 첫 임무 수령으로 끝난다 — 기준 사례는 1단계(수정 동굴,
+//   이웃 안전지대 여행자의 쉼터)다.
+const wizard = cases.find(entry => entry.chainId === 'lost_wizard' && entry.step === 1);
+const SAFE_NEXT_TO_WIZARD = '여행자의 쉼터';
 const buildState = (entry = wizard) => ({
     ...structuredClone(INITIAL_STATE), gameState: 'event',
     player: { ...structuredClone(INITIAL_STATE.player), name: '이야기 검증',
@@ -30,8 +33,8 @@ const restore = (state) => gameReducer(INITIAL_STATE, {
     type: 'LOAD_DATA', payload: migrateData(JSON.parse(JSON.stringify({ ...state, version: 5 }))),
 });
 
-test('미루기 대상은 8개 이야기의 보상 없는 nothing 선택 14개다', () => {
-    assert.equal(cases.length, 14);
+test('미루기 대상은 8개 이야기의 보상 없는 nothing 선택 13개다', () => {
+    assert.equal(cases.length, 13);
     assert.equal(new Set(cases.map(entry => entry.chainId)).size, 8);
     for (const entry of cases) assert.equal(entry.data.event.outcomes[entry.choiceIndex].reward, null);
 });
@@ -77,37 +80,37 @@ test('위조·stale·잘못된 선택은 state/log/save를 전혀 바꾸지 않�
     for (const invalid of [
         { ...state, gameState: 'combat' },
         { ...state, currentEvent: { ...state.currentEvent, desc: '위조' } },
-        { ...state, player: { ...state.player, eventChainProgress: { lost_wizard: 1 } } },
-        { ...state, player: { ...state.player, deferredEventChainSteps: { lost_wizard: 0 } } },
+        { ...state, player: { ...state.player, eventChainProgress: { lost_wizard: 2 } } },
+        { ...state, player: { ...state.player, deferredEventChainSteps: { lost_wizard: 1 } } },
     ]) assert.equal(gameReducer(invalid, action), invalid);
 });
 
 test('같은 원정의 복원은 유지하고 다른 이야기·다음 단계는 막지 않는다', () => {
     const settled = gameReducer(buildState(), actionFor());
     const loaded = restore(settled);
-    assert.deepEqual(loaded.player.deferredEventChainSteps, { lost_wizard: 0 });
-    assert.deepEqual(restore(loaded).player.deferredEventChainSteps, { lost_wizard: 0 });
-    assert.equal(getChainEventForLoc('수정 동굴', { lost_wizard: 1 }, { lost_wizard: 0 })?.chain.id, 'lost_wizard');
-    assert.equal(getChainEventForLoc('서쪽 평원', {}, { lost_wizard: 0 })?.chain.id, 'last_hero');
+    assert.deepEqual(loaded.player.deferredEventChainSteps, { lost_wizard: 1 });
+    assert.deepEqual(restore(loaded).player.deferredEventChainSteps, { lost_wizard: 1 });
+    assert.equal(getChainEventForLoc('천공 정원', { lost_wizard: 2 }, { lost_wizard: 1 })?.chain.id, 'lost_wizard');
+    assert.equal(getChainEventForLoc('서쪽 평원', {}, { lost_wizard: 1 })?.chain.id, 'last_hero');
     const resumedEvent = restore(buildState());
-    assert.deepEqual(gameReducer(resumedEvent, actionFor()).player.deferredEventChainSteps, { lost_wizard: 0 });
+    assert.deepEqual(gameReducer(resumedEvent, actionFor()).player.deferredEventChainSteps, { lost_wizard: 1 });
 });
 
 test('정규화는 알 수 없는 이야기·완료·실패·지난 step·잘못된 값을 버린다', () => {
     const original = buildState();
-    for (const value of [null, [], 'lost_wizard', { lost_wizard: '0' },
+    for (const value of [null, [], 'lost_wizard', { lost_wizard: '1' },
         { lost_wizard: -1 }, { lost_wizard: 99 }, { unknown: 0 }, { water_apostle: 0 }]) {
         const loaded = restore({ ...original, player: { ...original.player, deferredEventChainSteps: value } });
         assert.equal(loaded.player.deferredEventChainSteps, undefined);
     }
-    for (const progress of [1, 3, 'failed']) {
+    for (const progress of [2, 3, 'failed']) {
         const loaded = restore({ ...original, player: { ...original.player,
-            eventChainProgress: { lost_wizard: progress }, deferredEventChainSteps: { lost_wizard: 0 } } });
+            eventChainProgress: { lost_wizard: progress }, deferredEventChainSteps: { lost_wizard: 1 } } });
         assert.equal(loaded.player.deferredEventChainSteps, undefined);
     }
     const partial = restore({ ...original, player: { ...original.player,
-        deferredEventChainSteps: { lost_wizard: 0, unknown: 4, ancient_prophecy: '0' } } });
-    assert.deepEqual(partial.player.deferredEventChainSteps, { lost_wizard: 0 });
+        deferredEventChainSteps: { lost_wizard: 1, unknown: 4, ancient_prophecy: '0' } } });
+    assert.deepEqual(partial.player.deferredEventChainSteps, { lost_wizard: 1 });
     const legacy = gameReducer(partial, { type: 'LOAD_DATA', payload: { player: original.player } });
     assert.equal(legacy.player.deferredEventChainSteps, undefined, 'legacy save must not inherit an old session marker');
 });
@@ -119,10 +122,10 @@ test('위험 지역 이동은 유지하고 안전 귀환 후 다시 제안한다
     const danger = DB.MAPS[state.player.loc].exits.find(loc => DB.MAPS[loc].type !== 'safe');
     move(danger);
     assert.equal(state.player.loc, danger);
-    assert.deepEqual(state.player.deferredEventChainSteps, { lost_wizard: 0 });
+    assert.deepEqual(state.player.deferredEventChainSteps, { lost_wizard: 1 });
     move(wizard.data.loc);
-    move('시작의 마을');
-    assert.equal(state.player.loc, '시작의 마을');
+    move(SAFE_NEXT_TO_WIZARD);
+    assert.equal(state.player.loc, SAFE_NEXT_TO_WIZARD);
     assert.equal(state.player.deferredEventChainSteps, undefined);
     move(wizard.data.loc);
     assert.equal(getChainEventForLoc(state.player.loc, state.player.eventChainProgress,
@@ -170,7 +173,7 @@ test('실제 Explore → 무시 → Explore는 같은 이야기가 아니라 전
     assert.ok(state.enemy?.hp > 0);
     assert.equal(state.player.stats.explores, 2);
     assert.deepEqual(state.player.eventChainProgress, progress);
-    assert.deepEqual(state.player.deferredEventChainSteps, { lost_wizard: 0 });
+    assert.deepEqual(state.player.deferredEventChainSteps, { lost_wizard: 1 });
 });
 
 test('이전 원정의 늦은 선택은 다시 열린 같은 step을 닫지 못한다', async () => {
@@ -186,7 +189,7 @@ test('이전 원정의 늦은 선택은 다시 열린 같은 step을 닫지 못�
     dispatch(stale);
     const move = loc => createMoveActions({ player: state.player, gameState: state.gameState,
         liveConfig: {}, dispatch, addLog() {} }).move(loc);
-    move('시작의 마을');
+    move(SAFE_NEXT_TO_WIZARD);
     move(wizard.data.loc);
     await explore();
     assert.equal(state.currentEvent._chainId, wizard.chainId);
@@ -195,7 +198,7 @@ test('이전 원정의 늦은 선택은 다시 열린 같은 step을 닫지 못�
     assert.equal(state, fresh);
     dispatch(actionFor(wizard, state.player.stats.explores));
     assert.equal(state.gameState, 'idle');
-    assert.deepEqual(state.player.deferredEventChainSteps, { lost_wizard: 0 });
+    assert.deepEqual(state.player.deferredEventChainSteps, { lost_wizard: 1 });
 });
 
 for (const route of ['scout', 'boss']) {

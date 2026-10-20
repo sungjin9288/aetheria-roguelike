@@ -2,22 +2,30 @@ import { test, expect } from '@playwright/test';
 import { startE2ERun } from './testHelpers';
 
 test.describe('Event choice location continuity', () => {
-    test('첫 이야기 선택 결과가 짧은 기록에서도 화면 안에 이어진다', async ({ page }) => {
+    // 2026-10 Wave 127(소유자 결정 "처음 숲에서 이벤트로 새 길을 발견하는 기능 삭제 — 퀘스트를 통해 자동으로 알게"):
+    //   첫 탐험은 이야기 화면을 띄우지 않고, 사라진 마법사의 단서(수정 동굴)는 첫 임무를 수령할 때 기록으로 이어진다.
+    test('첫 임무 수령이 연 이야기 단서가 짧은 기록에서도 화면 안에 이어진다', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
         await startE2ERun(page);
         await page.getByTestId('control-expedition-start').click();
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8));
         await page.getByTestId('control-explore').click();
-        await page.getByTestId('event-choice-0').click();
-        const result = page.getByTestId('terminal-panel').locator('[data-log-type]').filter({ hasText: '마법사의 것으로 보이는 단서를 발견했습니다. 수정 동굴 방향으로 이어집니다.' });
-        await expect(result).toBeInViewport({ ratio: 1 });
+        await expect(page.getByTestId('event-panel')).toBeHidden();
+        await page.getByTestId('control-move').click();
+        await page.getByTestId('control-route-option-시작의 마을').click();
+        await page.getByTestId('expedition-debrief-close-icon').click();
+        await page.getByTestId('control-claim-quest-reward').click();
+        const lead = page.getByTestId('terminal-panel').locator('[data-log-type]').filter({ hasText: '흔적은 수정 동굴로 이어집니다.' });
+        await expect(lead).toHaveCount(1);
+        await expect(lead).toBeInViewport({ ratio: 1 });
     });
 
     test('첫 이야기 보상 수령은 고유한 서사와 다시 읽을 기록으로 이어진다', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
         await startE2ERun(page);
         await page.getByTestId('control-expedition-start').click();
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8));
         await page.getByTestId('control-explore').click();
-        await page.getByTestId('event-choice-0').click();
         await page.getByTestId('control-move').click();
         await page.getByTestId('control-route-option-시작의 마을').click();
         await page.getByTestId('expedition-debrief-close-icon').click();

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { EVENT_CHAINS } from '../src/data/eventChains.js';
+import { EVENT_CHAINS, isChainEventStep } from '../src/data/eventChains.js';
 import { createEventActions } from '../src/hooks/gameActions/eventActions.js';
 import { AT } from '../src/reducers/actionTypes.js';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
@@ -50,7 +50,7 @@ const resolve = (state, payload) => gameReducer(state, {
 });
 
 test('canonical negative-gold chain choice census is exactly the two literal costs', () => {
-    const actual = EVENT_CHAINS.flatMap((chain) => chain.steps.flatMap((stepData) => (
+    const actual = EVENT_CHAINS.flatMap((chain) => chain.steps.filter(isChainEventStep).flatMap((stepData) => (
         stepData.event.outcomes.flatMap((outcome, choiceIndex) => (
             outcome?.reward?.type === 'gold' && outcome.reward.amount < 0
                 ? [{ chainId: chain.id, step: stepData.step, choiceIndex, cost: -outcome.reward.amount }]

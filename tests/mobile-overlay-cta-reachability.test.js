@@ -115,7 +115,7 @@ test('FocusPanelHeader: 뒤로/보관함 버튼은 44px 터치 타깃으로 렌�
 test('PostCombatCard: post-combat-close는 44px 정사각 터치 타깃으로 렌더링된다', () => {
     const result = { enemy: '숲의 정령', playerHp: 60, playerMaxHp: 100, items: [] };
     const html = renderStatic(createElement(PostCombatCard, {
-        result, onClose: () => {}, onOpenInventory: () => {}, onResolveChoice: () => {},
+        result, onClose: () => {}, onOpenInventory: () => {},
     }));
     const start = html.indexOf('data-testid="post-combat-close"');
     assert.ok(start >= 0);

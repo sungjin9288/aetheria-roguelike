@@ -882,21 +882,6 @@ export const MSG = {
     SCOUT_FREE_LOG: (remaining: number) => `거울의 눈으로 앞길을 정찰합니다. 남은 무료 정찰 ${remaining}회`,
     SCOUT_TIME_PASSES: '정찰하는 동안에도 시간은 흐릅니다.',
 
-    // --- 2026-09 D2: 전투 후 밀어붙이기 / 숨 고르기 ---
-    POST_COMBAT_CHOICE_TITLE: '다음 한 걸음',
-    POST_COMBAT_PUSH_CHOICE: '밀어붙인다',
-    POST_COMBAT_PUSH_BUFF_NAME: '맹공의 기세',
-    POST_COMBAT_BREATHER_CHOICE: '숨을 고른다',
-    // 2026-10: 모닥불 차단은 늘 일어나고, 보스 게이지는 미격파 구역 보스가 있는 지역에서만 오른다
-    //   (applyPostCombatChoice와 같은 판정) — 늘 "보스가 더 빨리"라고만 말하던 결함.
-    POST_COMBAT_PUSH_DETAIL: (pct: number, turns: number, bossGaugeAdvances: boolean) => (
-        `다음 전투 ${turns}턴 공격력 +${pct}% · 다음 탐험엔 모닥불 없음${bossGaugeAdvances ? ' · 보스가 더 빨리 다가옵니다' : ''}`
-    ),
-    POST_COMBAT_BREATHER_DETAIL: (pct: number) => `생명 ${pct}% 회복 · 연속 처치가 끊깁니다`,
-    POST_COMBAT_PUSH_LOG: (pct: number, turns: number) => `숨 돌릴 틈 없이 밀어붙입니다. 다음 전투 ${turns}턴 동안 공격력 +${pct}%.`,
-    POST_COMBAT_PUSH_GAUGE_LOG: '거칠어진 발소리를 따라 보스의 기척이 한 걸음 가까워집니다.',
-    POST_COMBAT_BREATHER_LOG: (health: number) => `자리를 잡고 숨을 고릅니다. 생명 +${health} 회복, 연속 처치는 여기서 끊깁니다.`,
-
     // --- H4 (Wave 3 감사): 엔진/리듀서/탐험 계층의 하드코딩 한국어 회수 ---
     //   문구는 이전과 한 글자도 다르지 않다 — 소유만 MSG로 옮긴다.
     COMBAT_BLIND_MISS: '[실명] 공격이 빗나갔습니다!',
@@ -909,6 +894,8 @@ export const MSG = {
     EXPLORE_ANOMALY_MANA_REGEN: '강력한 마력의 폭풍이 붑니다. (MP 30% 회복)',
     EXPLORE_ANOMALY_BURN: '피부를 찌르는 산성비가 내립니다. (화상)',
     EXPLORE_CHAIN_EVENT: (label: string, desc: string) => `📜 [${label}] ${desc}`,
+    /** Wave 127: 임무 수령이 연 체인 단계 — 이벤트 없이 다음 단서를 알린다. */
+    CHAIN_QUEST_START: (label: string, text: string) => `📜 [${label}] ${text}`,
     // --- 2026-09 Wave 3 I: 이벤트 결과 어휘 확장 (유물 / 상태이상 / 정예 / 버프) ---
     // 이벤트 outcome이 ±골드를 넘어 분기할 때의 로그. 모델·풀 어느 쪽에서 왔든
     //   aiEventUtils.normalizeOutcomes를 통과한 값만 여기로 온다.
@@ -1379,8 +1366,6 @@ export const MSG = {
         ].filter(Boolean).join(' · ');
         return `지금 걸린 강화(${parts} · ${kept.turns}턴)가 더 강해 ${incoming}은(는) 적용되지 않았습니다.`;
     },
-    /** C6: '밀어붙인다' 카드 — 지금 걸린 강화가 더 세서 공격력 강화가 붙지 않을 때 설명 끝에 붙인다. */
-    POST_COMBAT_PUSH_DETAIL_BUFF_KEPT: '지금 걸린 강화가 더 강해 공격력 강화는 붙지 않음',
     WAR_DRUM_BUFF_LABEL: '전쟁의 북',
     WAR_DRUM_BUFF_LOG: (atkPercent: number, turns: number) => `[전쟁의 북] 전투 시작 ATK +${atkPercent}% (${turns}턴)`,
     CAMPFIRE_FORGE_BUFF_NAME: '모닥불 단련',

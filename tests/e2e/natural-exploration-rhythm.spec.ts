@@ -31,7 +31,6 @@ const REPORT_DEVICE = {
     hasTouch: true,
 };
 
-const MANDATORY_VISIBLE_TEXT = '숲 한가운데에서 이상한 마법 연기가 피어오릅니다. 주변에는 불에 탄 흔적과 지팡이 파편이 있습니다.';
 const OPTIONAL_LOCAL_RESOURCE_PATHS = new Set(['/favicon.ico']);
 
 const isOptionalLocalResource = (resourceUrl: string) => {
@@ -291,21 +290,12 @@ const runJourney = async (browser: Browser, testInfo: TestInfo, journeyNumber: n
         await page.getByTestId('control-expedition-start').click();
         await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 8_000 });
 
-        await page.getByTestId('control-explore').click();
-        const mandatoryPanel = page.getByTestId('event-panel');
-        await expect(mandatoryPanel).toBeVisible({ timeout: 8_000 });
-        await expect(mandatoryPanel.getByText(NATURAL_EXPLORATION_SOURCE_CONTRACT.mandatoryEvent.visibleTitle, { exact: true })).toBeVisible();
-        await expect(mandatoryPanel.getByTestId('event-situation')).toContainText(MANDATORY_VISIBLE_TEXT);
-        const mandatory = {
-            kind: 'mandatory_event',
-            visibleTitle: NATURAL_EXPLORATION_SOURCE_CONTRACT.mandatoryEvent.visibleTitle,
-            visibleText: MANDATORY_VISIBLE_TEXT,
-        };
-        await page.getByTestId('event-choice-0').click();
-        await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 8_000 });
-
+        // 2026-10 Wave 127(소유자 결정): 첫 탐험은 강제 이야기를 띄우지 않는다 — 첫 탐험부터 씨앗대로의 자연 결과다.
         await armExploreSeed(page, NATURAL_EXPLORATION_SEEDS[0]);
         await page.getByTestId('control-explore').click();
+        await expect(page.getByTestId('combat-action-attack')).toBeVisible({ timeout: 10_000 });
+        const noForcedStory = !await page.getByTestId('event-panel').isVisible();
+        expect(noForcedStory).toBe(true);
         const attackCount = await winCombatThroughVisibleAttacks(page);
         const combat = {
             kind: 'combat',
@@ -336,14 +326,14 @@ const runJourney = async (browser: Browser, testInfo: TestInfo, journeyNumber: n
             visibleSituation: NATURAL_EXPLORATION_SOURCE_CONTRACT.boundedEncounter.visibleSituation,
             visibleChoices: [...NATURAL_EXPLORATION_SOURCE_CONTRACT.boundedEncounter.visibleChoices],
         };
-        const sequence = [mandatory, combat, nothing, bounded];
-        const ordinaryActionsBetweenNarratives = sequence
-            .slice(1, -1)
+        const sequence = [combat, nothing, bounded];
+        const ordinaryActionsBeforeNarrative = sequence
+            .slice(0, -1)
             .filter((step) => step.kind === 'combat' || step.kind === 'nothing')
             .length;
-        expect(ordinaryActionsBetweenNarratives).toBe(2);
+        expect(ordinaryActionsBeforeNarrative).toBe(2);
         expect(sequence.map((step) => (
-            step.kind === 'mandatory_event' ? 'mandatory_story' : step.kind === 'bounded_event' ? 'bounded_encounter' : step.kind
+            step.kind === 'bounded_event' ? 'bounded_encounter' : step.kind
         ))).toEqual(NATURAL_EXPLORATION_OUTCOMES);
 
         await page.screenshot({
@@ -355,13 +345,13 @@ const runJourney = async (browser: Browser, testInfo: TestInfo, journeyNumber: n
         const gates = {
             freshContext: true,
             runtime: runtimeGate,
-            mandatoryEvent: true,
+            noForcedStory,
             naturalCombat: combat.combatSurfaceVisible && combat.wonThroughVisibleAttacks,
             naturalNothing: nothing.exploreControlVisible
                 && !nothing.eventSurfaceVisible
                 && !nothing.combatSurfaceVisible,
             boundedEncounter: true,
-            cadence: ordinaryActionsBetweenNarratives === 2,
+            cadence: ordinaryActionsBeforeNarrative === 2,
             ...boundedSurfaceGates,
             pageErrorsEmpty: errors.page.length === 0,
             consoleErrorsEmpty: errors.console.length === 0,
@@ -395,7 +385,7 @@ test('two fresh iPhone 12 journeys prove natural exploration rhythm on the real 
             freshContextCount: 2,
             seeds: [...NATURAL_EXPLORATION_SEEDS],
             outcomes: [...NATURAL_EXPLORATION_OUTCOMES],
-            ordinaryActionsBetweenNarratives: 2,
+            ordinaryActionsBeforeNarrative: 2,
             sequence: first.sequence,
         },
         gates: first.gates,

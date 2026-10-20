@@ -8,8 +8,10 @@ test('첫 원정은 연결이 끊겨도 귀환 기록을 표시하고 다시 불
     await context.setOffline(true);
     try {
         await page.getByTestId('control-expedition-start').click();
+        // 2026-10 Wave 127(소유자 결정): 첫 탐험은 강제 이야기를 띄우지 않는다 — 조용한 결과 씨앗으로 고정한다.
+        expect(await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8))).toBe(true);
         await page.getByTestId('control-explore').click();
-        await page.getByTestId('event-choice-1').click();
+        await expect(page.getByTestId('event-panel')).toBeHidden();
         await page.getByTestId('control-route-open').click();
         await page.getByTestId('control-route-option-시작의 마을').click();
 

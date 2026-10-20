@@ -42,7 +42,8 @@ test('event reward audit covers every canonical occurrence class without defects
     assert.deepEqual(report.catalog, {
         chainCount: 13,
         chainStepCount: 39,
-        chainOutcomeCount: 84,
+        chainOutcomeCount: 82,
+        chainQuestStartCount: 1,
         boundedEncounterCount: 8,
         boundedChoiceCount: 16,
         fallbackTransactionCount: 3,
@@ -55,7 +56,7 @@ test('event reward audit covers every canonical occurrence class without defects
         eventMultiplier: 0.64,
         minimumNarrativeGap: 2,
     });
-    assert.equal(report.rows.length, 108);
+    assert.equal(report.rows.length, 106);
     assert.deepEqual(report.errors, []);
     assert.deepEqual(report, buildReport());
 });
@@ -63,17 +64,20 @@ test('event reward audit covers every canonical occurrence class without defects
 test('event reward audit rejects unknown rewards, non-finite values, and under-tier chain gear', () => {
     const chains = clone(EVENT_CHAINS);
     chains[0].steps[0].event.outcomes[0].reward = { type: 'unknown_reward', amount: 1 };
-    chains[1].steps[0].event.outcomes[0].reward = { type: 'gold', amount: Number.NaN };
+    chains[1].steps[1].event.outcomes[0].reward = { type: 'gold', amount: Number.NaN };
     const finale = chains.find((chain) => chain.id === 'forgotten_commander').steps[2];
     finale.event.outcomes[1].reward = { type: 'item', name: '기사의 흉갑' };
     const shadowMarket = chains.find((chain) => chain.id === 'shadow_guild').steps[1];
     shadowMarket.event.outcomes[0].reward.relicId = 'missing_relic';
+    // Wave 127: 임무로 여는 단계(사라진 마법사 0)는 임무 id · 단서 문구가 있어야 한다.
+    chains.find((chain) => chain.id === 'lost_wizard').steps[0].questStart.questId = 0;
 
     const report = buildReport({ chains });
     assert.ok(report.errors.some((error) => error.startsWith('CHAIN_REWARD_TYPE_INVALID:')));
     assert.ok(report.errors.some((error) => error.startsWith('CHAIN_REWARD_NUMBER_INVALID:')));
     assert.ok(report.errors.includes('CHAIN_ITEM_TIER_TOO_LOW:forgotten_commander:2:1:기사의 흉갑:T2:MIN_T3'));
     assert.ok(report.errors.includes('CHAIN_RELIC_UNKNOWN:shadow_guild:1:0:missing_relic'));
+    assert.ok(report.errors.includes('CHAIN_QUEST_START_INVALID:lost_wizard:0'));
 });
 
 test('event reward audit rejects malformed repeatable rewards and frequency authority', () => {

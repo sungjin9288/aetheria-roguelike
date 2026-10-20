@@ -5,7 +5,7 @@ import { createElement } from 'react';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { GS } from '../src/reducers/gameStates.ts';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
-import { EVENT_CHAINS, getChainEventForLoc, isChainStepFloorReached } from '../src/data/eventChains.ts';
+import { EVENT_CHAINS, getChainEventForLoc, isChainEventStep, isChainStepFloorReached } from '../src/data/eventChains.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 import { createExploreActions } from '../src/hooks/gameActions/exploreActions.ts';
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.ts';
@@ -136,7 +136,8 @@ for (const stepIndex of [1, 2]) {
 
 test('[트리거] 다른 지역 · 다른 체인 판정은 층과 무관하다', () => {
     for (const chain of EVENT_CHAINS) {
-        if (chain.id === 'abyss_signal') continue;
+        // Wave 127: 임무로 여는 첫 단계(사라진 마법사)는 이벤트가 없다 — 그 계약은 quest-start-chain-contract가 지킨다.
+        if (chain.id === 'abyss_signal' || !isChainEventStep(chain.steps[0])) continue;
         const first = chain.steps[0];
         assert.equal(getChainEventForLoc(first.loc, {}, undefined, 0)?.chain.id !== undefined, true, `${chain.id}: 0층에서도 첫 스텝이 잡힌다`);
     }

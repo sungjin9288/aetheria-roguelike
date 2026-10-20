@@ -209,7 +209,7 @@ export const applyChainCombatVictory = (
     const ref = deadEnemy?.chainCombat;
     if (!ref) return;
     const chain = EVENT_CHAINS.find((entry) => entry.id === ref.chainId);
-    const outcome: EventOutcome | undefined = chain?.steps.find((entry) => entry.step === ref.step)?.event.outcomes[ref.choiceIndex];
+    const outcome: EventOutcome | undefined = chain?.steps.find((entry) => entry.step === ref.step)?.event?.outcomes[ref.choiceIndex];
     if (!outcome || outcome.type !== 'chain_advance') return;
     if ((updatedPlayer.eventChainProgress?.[ref.chainId] ?? 0) !== ref.step) return;
     const reward = outcome.reward;

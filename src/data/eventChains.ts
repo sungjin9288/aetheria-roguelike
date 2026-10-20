@@ -9,6 +9,7 @@
  */
 
 import { BALANCE } from './constants';
+import { FIRST_STORY_QUEST_ID } from './quests';
 import type { EventChainProgress } from '../types/player.js';
 
 const PRIMAL_SHARD_DROP_PERCENT = Math.round(BALANCE.PRIMAL_SHARD_DROP_CHANCE * 100);
@@ -69,14 +70,12 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '고요한 숲',
-                event: {
-                    title: '마법의 흔적',
-                    desc: '숲 한가운데에서 이상한 마법 연기가 피어오릅니다. 주변에는 불에 탄 흔적과 지팡이 파편이 있습니다.',
-                    choices: ['흔적을 조사한다', '위험할 수 있다, 무시한다'],
-                    outcomes: [
-                        { type: 'chain_advance', log: '마법사의 것으로 보이는 단서를 발견했습니다. 수정 동굴 방향으로 이어집니다.', reward: null },
-                        { type: 'nothing', log: '그냥 지나쳤습니다.', reward: null },
-                    ],
+                // 2026-10 Wave 127(소유자 결정 "처음 숲에서 이벤트로 새 길을 발견하는 기능 삭제 — 퀘스트를 통해 자동으로 알게"):
+                //   이 단계에는 이벤트가 없다. 첫 임무 '첫 번째 여정'을 수령하면 끝나고(`advanceQuestStartedChains`),
+                //   단서는 수령 기록과 임무 탭의 체인 일지로 알게 된다. 단계 번호는 그대로라 저장된 진행 값의 뜻이 바뀌지 않는다.
+                questStart: {
+                    questId: FIRST_STORY_QUEST_ID,
+                    log: '첫 여정에서 주운 그을린 지팡이 파편은 사라진 마법사의 것이었습니다. 흔적은 수정 동굴로 이어집니다.',
                 },
             },
             {
@@ -686,7 +685,7 @@ export function normalizeDeferredEventChainSteps(value: unknown, progress: Recor
         const step = records[chain.id];
         if (!Number.isSafeInteger(step) || step !== (progress?.[chain.id] ?? 0)) continue;
         const stepData = chain.steps.find((entry) => entry.step === step);
-        if (stepData?.event.outcomes.some((outcome) => outcome.type === 'nothing')) {
+        if (stepData?.event?.outcomes.some((outcome) => outcome.type === 'nothing')) {
             deferred[chain.id] = step as number;
         }
     }
@@ -732,9 +731,43 @@ export function getChainEventForLoc(
         if (deferredSteps?.[chain.id] === currentStep) continue;
 
         const step = chain.steps[currentStep];
-        if (step && step.loc === loc && isChainStepFloorReached(step, clearedAbyssFloor)) {
+        // Wave 127: 임무로 여는 단계(`questStart`)는 이벤트가 없다 — 그 자리에서 아무것도 띄우지 않고 다른 체인으로 넘어간다.
+        if (isChainEventStep(step) && step.loc === loc && isChainStepFloorReached(step, clearedAbyssFloor)) {
             return { chain, step };
         }
     }
     return null;
+}
+
+type EventChainStepEntry = (typeof EVENT_CHAINS)[number]['steps'][number];
+/** 이벤트를 띄우는 체인 단계 — 임무로 여는 단계(`questStart`, Wave 127)가 아닌 모든 단계다. */
+export type EventChainEventStep = EventChainStepEntry & { event: NonNullable<EventChainStepEntry['event']> };
+
+export function isChainEventStep(step: EventChainStepEntry | undefined): step is EventChainEventStep {
+    return Boolean(step?.event);
+}
+
+/**
+ * 2026-10 Wave 127(소유자 결정 "퀘스트를 통해 자동으로 알게"): 지금 단계가 임무로 여는 단계(`questStart`)이고 그 임무를
+ * 수령했으면 그 단계를 끝낸다. 임무 수령(`CLAIM_QUEST_REWARD`)과 불러오기(`LOAD_DATA` — 이 규칙 전에 첫 임무를 받고 이벤트를
+ * 지나친 세이브)가 이것 하나를 읽는다. 열린 단계가 없으면 같은 참조를 돌려준다.
+ */
+export function advanceQuestStartedChains(
+    progress: EventChainProgress | null | undefined,
+    claimedQuestIds: readonly unknown[] | null | undefined,
+): { progress: EventChainProgress; started: Array<{ label: string; log: string }> } {
+    const current: EventChainProgress = progress || {};
+    const claimed = Array.isArray(claimedQuestIds) ? claimedQuestIds : [];
+    let next = current;
+    const started: Array<{ label: string; log: string }> = [];
+    for (const chain of EVENT_CHAINS) {
+        const raw = current[chain.id];
+        const stepIndex = typeof raw === 'number' ? raw : raw === undefined ? 0 : null;
+        if (stepIndex === null) continue;
+        const step = chain.steps[stepIndex];
+        if (!step || !('questStart' in step) || !step.questStart || !claimed.includes(step.questStart.questId)) continue;
+        next = { ...next, [chain.id]: stepIndex + 1 };
+        started.push({ label: chain.label, log: step.questStart.log });
+    }
+    return { progress: next, started };
 }

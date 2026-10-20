@@ -64,6 +64,8 @@ interface ChainStepInput {
         choices?: unknown[];
         outcomes?: ChainOutcomeInput[];
     };
+    /** Wave 127: 임무 수령으로 끝나는 단계 — 이벤트 · 선택지가 없다. */
+    questStart?: { questId?: unknown; log?: unknown };
 }
 
 interface EventChainInput {
@@ -129,6 +131,7 @@ export interface EventRewardCoherenceReport {
         chainCount: number;
         chainStepCount: number;
         chainOutcomeCount: number;
+        chainQuestStartCount: number;
         boundedEncounterCount: number;
         boundedChoiceCount: number;
         fallbackTransactionCount: number;
@@ -179,6 +182,7 @@ export const buildEventRewardCoherenceReport = ({
 
     let chainStepCount = 0;
     let chainOutcomeCount = 0;
+    let chainQuestStartCount = 0;
     const chainIds = new Set<string>();
     for (const chain of chainList) {
         const chainId = typeof chain?.id === 'string' ? chain.id : '<invalid>';
@@ -192,6 +196,15 @@ export const buildEventRewardCoherenceReport = ({
             const location = stepData?.loc;
             const map = maps?.[location ?? ''];
             if (!map) errors.add(`CHAIN_LOCATION_UNKNOWN:${chainId}:${String(step)}:${String(location)}`);
+            // Wave 127: 임무로 여는 단계는 이벤트가 없다 — 임무 id와 단서 문구만 있으면 된다(선택지 · 결과 검사 밖).
+            if (stepData?.questStart && !stepData.event) {
+                chainQuestStartCount += 1;
+                const { questId, log } = stepData.questStart;
+                if (!Number.isSafeInteger(questId) || Number(questId) <= 0 || typeof log !== 'string' || log.trim() === '') {
+                    errors.add(`CHAIN_QUEST_START_INVALID:${chainId}:${String(step)}`);
+                }
+                return;
+            }
             const choices: unknown[] = Array.isArray(stepData?.event?.choices) ? stepData.event.choices : [];
             const outcomes: ChainOutcomeInput[] = Array.isArray(stepData?.event?.outcomes) ? stepData.event.outcomes : [];
             if (choices.length !== outcomes.length || choices.length < 2) {
@@ -346,7 +359,8 @@ export const buildEventRewardCoherenceReport = ({
 
     if (chainList.length !== 13) errors.add('CHAIN_COUNT_MISMATCH');
     if (chainStepCount !== 39) errors.add('CHAIN_STEP_COUNT_MISMATCH');
-    if (chainOutcomeCount !== 84) errors.add('CHAIN_OUTCOME_COUNT_MISMATCH');
+    if (chainOutcomeCount !== 82) errors.add('CHAIN_OUTCOME_COUNT_MISMATCH');
+    if (chainQuestStartCount !== 1) errors.add('CHAIN_QUEST_START_COUNT_MISMATCH');
     if (boundedList.length !== 8) errors.add('BOUNDED_COUNT_MISMATCH');
     if (boundedChoiceCount !== 16) errors.add('BOUNDED_CHOICE_COUNT_MISMATCH');
     if (fallbackList.length !== 3) errors.add('FALLBACK_COUNT_MISMATCH');
@@ -359,6 +373,7 @@ export const buildEventRewardCoherenceReport = ({
             chainCount: chainList.length,
             chainStepCount,
             chainOutcomeCount,
+            chainQuestStartCount,
             boundedEncounterCount: boundedList.length,
             boundedChoiceCount,
             fallbackTransactionCount: fallbackList.length,

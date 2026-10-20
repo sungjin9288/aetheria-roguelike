@@ -16,9 +16,10 @@ export const NATURAL_EXPLORATION_SOURCE_CONTRACT = deepFreeze({
         eventMultiplier: 0.64,
     },
     minimumOrdinaryGap: 2,
-    mandatoryEvent: {
+    // 2026-10 Wave 127(소유자 결정): 첫 탐험은 강제 이야기('마법의 흔적')를 띄우지 않는다 — 그 체인은 첫 임무 수령이 연다.
+    questStartChain: {
         sourceId: 'lost_wizard',
-        visibleTitle: '마법의 흔적',
+        questId: 80,
     },
     boundedEncounter: {
         sourceId: 'forest-old-pillars',
@@ -30,7 +31,6 @@ export const NATURAL_EXPLORATION_SOURCE_CONTRACT = deepFreeze({
 export const NATURAL_EXPLORATION_SEEDS = deepFreeze([112596, 8, 37]);
 
 export const NATURAL_EXPLORATION_OUTCOMES = deepFreeze([
-    'mandatory_story',
     'combat',
     'nothing',
     'bounded_encounter',
@@ -39,7 +39,7 @@ export const NATURAL_EXPLORATION_OUTCOMES = deepFreeze([
 export const NATURAL_EXPLORATION_REQUIRED_GATES = deepFreeze([
     'freshContext',
     'runtime',
-    'mandatoryEvent',
+    'noForcedStory',
     'naturalCombat',
     'naturalNothing',
     'boundedEncounter',
@@ -58,20 +58,19 @@ export const NATURAL_EXPLORATION_REQUIRED_GATES = deepFreeze([
 ]);
 
 const PROFILE_KEYS = ['eventMultiplier', 'expMultiplier', 'id', 'lootMultiplier', 'version'];
-const SOURCE_KEYS = ['boundedEncounter', 'mandatoryEvent', 'minimumOrdinaryGap', 'profile'];
-const MANDATORY_KEYS = ['sourceId', 'visibleTitle'];
+const SOURCE_KEYS = ['boundedEncounter', 'minimumOrdinaryGap', 'profile', 'questStartChain'];
+const QUEST_START_KEYS = ['questId', 'sourceId'];
 const BOUNDED_KEYS = ['sourceId', 'visibleChoices', 'visibleSituation'];
 const DEVICE_KEYS = ['deviceScaleFactor', 'hasTouch', 'isMobile', 'model', 'viewport'];
 const VIEWPORT_KEYS = ['height', 'width'];
 const SURFACE_KEYS = [
     'device',
     'freshContextCount',
-    'ordinaryActionsBetweenNarratives',
+    'ordinaryActionsBeforeNarrative',
     'outcomes',
     'seeds',
     'sequence',
 ];
-const MANDATORY_SURFACE_KEYS = ['kind', 'visibleText', 'visibleTitle'];
 const COMBAT_SURFACE_KEYS = ['combatSurfaceVisible', 'kind', 'seed', 'wonThroughVisibleAttacks'];
 const NOTHING_SURFACE_KEYS = [
     'combatSurfaceVisible',
@@ -144,11 +143,11 @@ const validateSourceContract = (value: unknown) => {
         invalid('sourceContract:keys-or-gap');
     }
 
-    const mandatoryEvent = requireObject(sourceContract.mandatoryEvent, 'sourceContract.mandatoryEvent');
-    if (!hasExactKeys(mandatoryEvent, MANDATORY_KEYS)
-        || mandatoryEvent.sourceId !== NATURAL_EXPLORATION_SOURCE_CONTRACT.mandatoryEvent.sourceId
-        || mandatoryEvent.visibleTitle !== NATURAL_EXPLORATION_SOURCE_CONTRACT.mandatoryEvent.visibleTitle) {
-        invalid('sourceContract.mandatoryEvent:exact');
+    const questStartChain = requireObject(sourceContract.questStartChain, 'sourceContract.questStartChain');
+    if (!hasExactKeys(questStartChain, QUEST_START_KEYS)
+        || questStartChain.sourceId !== NATURAL_EXPLORATION_SOURCE_CONTRACT.questStartChain.sourceId
+        || questStartChain.questId !== NATURAL_EXPLORATION_SOURCE_CONTRACT.questStartChain.questId) {
+        invalid('sourceContract.questStartChain:exact');
     }
 
     const boundedEncounter = requireObject(sourceContract.boundedEncounter, 'sourceContract.boundedEncounter');
@@ -166,9 +165,9 @@ const validateSourceContract = (value: unknown) => {
     return {
         profile: validateProfile(sourceContract.profile),
         minimumOrdinaryGap: 2,
-        mandatoryEvent: {
+        questStartChain: {
             sourceId: 'lost_wizard',
-            visibleTitle: '마법의 흔적',
+            questId: 80,
         },
         boundedEncounter: {
             sourceId: 'forest-old-pillars',
@@ -200,29 +199,14 @@ const validateDevice = (value: unknown) => {
     };
 };
 
-const validateMandatoryStep = (value: unknown) => {
-    const step = requireObject(value, 'surfaceObservation.sequence[0]');
-    if (!hasExactKeys(step, MANDATORY_SURFACE_KEYS)
-        || step.kind !== 'mandatory_event'
-        || step.visibleTitle !== '마법의 흔적'
-        || step.visibleText !== '숲 한가운데에서 이상한 마법 연기가 피어오릅니다. 주변에는 불에 탄 흔적과 지팡이 파편이 있습니다.') {
-        invalid('surfaceObservation.sequence[0]:exact');
-    }
-    return {
-        kind: 'mandatory_event',
-        visibleTitle: '마법의 흔적',
-        visibleText: '숲 한가운데에서 이상한 마법 연기가 피어오릅니다. 주변에는 불에 탄 흔적과 지팡이 파편이 있습니다.',
-    };
-};
-
 const validateCombatStep = (value: unknown) => {
-    const step = requireObject(value, 'surfaceObservation.sequence[1]');
+    const step = requireObject(value, 'surfaceObservation.sequence[0]');
     if (!hasExactKeys(step, COMBAT_SURFACE_KEYS)
         || step.kind !== 'combat'
         || step.seed !== 112596
         || step.combatSurfaceVisible !== true
         || step.wonThroughVisibleAttacks !== true) {
-        invalid('surfaceObservation.sequence[1]:exact');
+        invalid('surfaceObservation.sequence[0]:exact');
     }
     return {
         kind: 'combat',
@@ -233,14 +217,14 @@ const validateCombatStep = (value: unknown) => {
 };
 
 const validateNothingStep = (value: unknown) => {
-    const step = requireObject(value, 'surfaceObservation.sequence[2]');
+    const step = requireObject(value, 'surfaceObservation.sequence[1]');
     if (!hasExactKeys(step, NOTHING_SURFACE_KEYS)
         || step.kind !== 'nothing'
         || step.seed !== 8
         || step.exploreControlVisible !== true
         || step.eventSurfaceVisible !== false
         || step.combatSurfaceVisible !== false) {
-        invalid('surfaceObservation.sequence[2]:exact');
+        invalid('surfaceObservation.sequence[1]:exact');
     }
     return {
         kind: 'nothing',
@@ -252,17 +236,17 @@ const validateNothingStep = (value: unknown) => {
 };
 
 const validateBoundedStep = (value: unknown) => {
-    const step = requireObject(value, 'surfaceObservation.sequence[3]');
+    const step = requireObject(value, 'surfaceObservation.sequence[2]');
     if (!hasExactKeys(step, BOUNDED_SURFACE_KEYS)
         || step.kind !== 'bounded_event'
         || step.seed !== 37
         || step.visibleSituation !== '고요한 숲의 오래된 돌기둥 사이로 먼저 지나간 모험가의 흔적과 희미한 문장이 드러납니다.') {
-        invalid('surfaceObservation.sequence[3]:exact');
+        invalid('surfaceObservation.sequence[2]:exact');
     }
     const visibleChoices = requireExactArray(
         step.visibleChoices,
         NATURAL_EXPLORATION_SOURCE_CONTRACT.boundedEncounter.visibleChoices,
-        'surfaceObservation.sequence[3].visibleChoices',
+        'surfaceObservation.sequence[2].visibleChoices',
     );
     return {
         kind: 'bounded_event',
@@ -274,12 +258,11 @@ const validateBoundedStep = (value: unknown) => {
 
 const validateSequence = (value: unknown) => {
     const sequence = Array.isArray(value) ? value : invalid('surfaceObservation.sequence:array');
-    if (sequence.length !== 4) invalid('surfaceObservation.sequence:length');
+    if (sequence.length !== 3) invalid('surfaceObservation.sequence:length');
     return [
-        validateMandatoryStep(sequence[0]),
-        validateCombatStep(sequence[1]),
-        validateNothingStep(sequence[2]),
-        validateBoundedStep(sequence[3]),
+        validateCombatStep(sequence[0]),
+        validateNothingStep(sequence[1]),
+        validateBoundedStep(sequence[2]),
     ];
 };
 
@@ -287,7 +270,7 @@ const validateSurfaceObservation = (value: unknown) => {
     const surface = requireObject(value, 'surfaceObservation');
     if (!hasExactKeys(surface, SURFACE_KEYS)
         || surface.freshContextCount !== 2
-        || surface.ordinaryActionsBetweenNarratives !== 2) {
+        || surface.ordinaryActionsBeforeNarrative !== 2) {
         invalid('surfaceObservation:keys-or-count');
     }
     const seeds = requireExactArray(surface.seeds, NATURAL_EXPLORATION_SEEDS, 'surfaceObservation.seeds');
@@ -297,7 +280,7 @@ const validateSurfaceObservation = (value: unknown) => {
         freshContextCount: 2,
         seeds,
         outcomes,
-        ordinaryActionsBetweenNarratives: 2,
+        ordinaryActionsBeforeNarrative: 2,
         sequence: validateSequence(surface.sequence),
     };
 };
@@ -337,7 +320,7 @@ const stripVolatileInput = (value: Record<string, unknown>) => {
 export const buildNaturalExplorationReport = (value: unknown) => {
     const input = stripVolatileInput(requireObject(value, 'input'));
     return deepFreeze({
-        schemaVersion: 2,
+        schemaVersion: 3,
         classification: REPORT_CLASSIFICATION,
         actualPlayClaim: false,
         humanObserved: false,
