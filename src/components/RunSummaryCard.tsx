@@ -167,7 +167,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                             {analysis.focus[0]}
                         </p>
                         {analysis.notes.length > 0 && (
-                            <p className="mt-1.5 truncate text-[10px] font-fira text-slate-400/74">{analysis.notes.join(' · ')}</p>
+                            <p data-testid="run-summary-notes" className="mt-1.5 text-[10px] font-fira text-slate-400/74">{analysis.notes.join(' · ')}</p>
                         )}
                     </section>
 
