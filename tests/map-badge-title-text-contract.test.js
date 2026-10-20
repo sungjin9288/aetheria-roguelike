@@ -275,7 +275,7 @@ test('F14: 위기 · 열세 안내는 실제로 줄어드는 골드 · 경험치
         const { mStats } = applyDynamicDifficulty(enemy, player, (type, text) => logs.push(text));
         assert.deepEqual(logs, [message]);
         assert.ok(mStats.gold < enemy.gold && mStats.exp < enemy.exp, `${label}: 골드 · 경험치가 실제로 줄어든다`);
-        assert.ok(message.includes('골드') && message.includes('경험치'), `${label}: 안내가 골드 · 경험치 감소를 말한다`);
+        assert.ok(message.includes('골드') && message.includes('경험'), `${label}: 안내가 골드 · 경험 감소를 말한다`);
     }
 });
 

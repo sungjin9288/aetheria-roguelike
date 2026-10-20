@@ -84,7 +84,7 @@ test('known campfire, scout, and boss rules are explained before commitment', ()
 
     const scout = buildScoutEvent({ stats: {} }, { type: 'dungeon' }, () => 0.99);
     assert.deepEqual(getEventChoicePreview(scout, 0), { text: '전투 확정 · 처치 보상 증가', tone: 'reward' });
-    assert.deepEqual(getEventChoicePreview(scout, 1), { text: '전투 없이 이변과 유물 탐색', tone: 'story' });
+    assert.deepEqual(getEventChoicePreview(scout, 1), { text: '전투 없이 이변과 유물 발견', tone: 'story' });
 
     const boss = buildBossChallengeEvent('호수의 수호신');
     assert.deepEqual(getEventChoicePreview(boss, 0), { text: '호수의 수호신 전투 시작', tone: 'danger' });

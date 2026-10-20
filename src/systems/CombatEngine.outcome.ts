@@ -251,7 +251,9 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             const maxStack = killStackRelic?.val?.max || 1;
             const next = Math.min(maxStack, (p.adventureRelicBonuses?.killStackAtk || 0) + perKill);
             p.adventureRelicBonuses = { ...p.adventureRelicBonuses, killStackAtk: next };
-            const sourceLabel = killStackRelic ? MSG.KILL_STACK_SOURCE_RELIC : MSG.KILL_STACK_SOURCE_SYNERGY;
+            const sourceLabel = killStackRelic
+                ? MSG.KILL_STACK_SOURCE_RELIC
+                : MSG.KILL_STACK_SOURCE_SYNERGY(synergiesForKill.filter((s) => s.bonus?.killStack).map((s) => s.label).join(' · '));
             logs.push({ type: 'event', text: MSG.KILL_STACK_ATTACK(sourceLabel, Math.round(next * 100)) });
         }
 

@@ -1,5 +1,6 @@
 import { MAPS } from '../data/maps.js';
 import { QUESTS } from '../data/quests.js';
+import { isMainStoryQuest } from '../data/storyChapters.js';
 import type { ExpeditionQuestCheckpoint, Player, QuestProgressState } from '../types/player.js';
 import type { GameMap } from '../types/map.js';
 import type { Quest, QuestType } from '../types/quest.js';
@@ -16,6 +17,7 @@ const sameQuestId = (left: string | number | undefined, right: string | number |
  * `QuestProgressState`(isBounty: true) 양쪽 모두 구조적으로 호환된다.
  */
 export interface ExpeditionQuestDefinition {
+    id?: string | number;
     title?: string;
     target?: string;
     goal?: number;
@@ -24,7 +26,7 @@ export interface ExpeditionQuestDefinition {
     buildLabel?: string;
 }
 
-const isStoryQuest = (quest: ExpeditionQuestDefinition | undefined) => String(quest?.title || '').includes('[스토리]');
+const isStoryQuest = (quest: ExpeditionQuestDefinition | undefined) => isMainStoryQuest(quest);
 
 export const getExpeditionQuestTargetMaps = (
     quest: ExpeditionQuestDefinition | undefined,

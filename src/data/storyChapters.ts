@@ -64,3 +64,11 @@ export const STORY_CHAPTERS = [
         body: '마왕이 쓰러지고 성에 내려앉았던 위압감이 걷혔다. 고요한 숲에서 시작한 발걸음이 여기까지 닿았다. 이번 여정의 이야기는 마쳤지만, 균열 너머의 모든 수수께끼가 풀린 것은 아니다. 남은 임무를 정리하며 다음 여정을 선택한다.',
     },
 ] as const;
+
+/**
+ * 본편 장의 임무 — 판정은 제목 글자가 아니라 이 id 집합이다.
+ *   2026-10 Wave 131: 제목 머리표를 화면 이름에 맞춰 '[스토리]' → '[이야기]'로 바꿀 때, 제목 글자로 판정하던
+ *   게시판 · 원정 임무 초점 · 자연 플레이 드라이버가 함께 움직여야 했다. 머리표는 표시일 뿐이다.
+ */
+export const MAIN_STORY_QUEST_IDS: ReadonlySet<number> = new Set(STORY_CHAPTERS.map((chapter) => chapter.questId));
+export const isMainStoryQuest = (quest: { id?: unknown } | null | undefined): boolean => MAIN_STORY_QUEST_IDS.has(Number(quest?.id));

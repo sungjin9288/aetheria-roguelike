@@ -178,8 +178,9 @@ test('debt-ratchet: src/types/*.ts 에 인덱스 시그니처가 다시 생기�
 //   증빙 스크립트(SHA-bound, 미변경)와 데이터 식별자 리터럴(몬스터/맵/직업명 비교 등)뿐이다.
 // 2026-09-21 Wave 21 M3 재고정: 122 → 120 (실측값 그대로 — (f) AST 상한도 이미 120이라
 //   두 카운터가 같은 디렉터리에서 일치한다). slack 2는 래칫이 아니므로 제거한다.
-const SYSTEMS_KOREAN_STRING_BASELINE = 120;
-const REDUCERS_KOREAN_STRING_BASELINE = 26;
+// 2026-10 Wave 131 재고정(실측): 120 → 118 · 26 → 22 — 그사이 웨이브들과 Wave 131(화면 문구의 MSG 이관)이 줄인 값을 잠근다.
+const SYSTEMS_KOREAN_STRING_BASELINE = 118;
+const REDUCERS_KOREAN_STRING_BASELINE = 22;
 
 test(`debt-ratchet: src/systems/** 한글 문자열 리터럴은 ${SYSTEMS_KOREAN_STRING_BASELINE}건을 넘지 않는다 (하락만 허용, engine-msg-ownership.test.js와 별개)`, () => {
     const files = listFiles('src/systems', ['.ts', '.tsx']);
@@ -288,17 +289,19 @@ function countKoreanAstNodesInDir(dir) {
 // 상한으로 고정한다 — src/ 바로 아래의 모든 디렉터리(src/data 제외) 전수. 새
 // 디렉터리가 생기면 아래 테스트가 "상한 없음"으로 먼저 red가 되어 실측 없이
 // 조용히 빠지는 것을 막는다(§7 부재/상한 가드).
+// 2026-10 Wave 131 재고정(실측): components 1319 → 1190 · hooks 285 → 265 · reducers 29 → 25 · systems 120 → 118 ·
+//   utils 1979 → 1946. Wave 131이 화면 문구를 MSG로 옮겨 components −26 · utils −7 · reducers −1을 줄였고, 나머지는 그사이 웨이브들의 몫이다.
 const AST_KOREAN_CEILINGS = {
     assets: 0,
-    components: 1319,
-    hooks: 285,
+    components: 1190,
+    hooks: 265,
     platform: 0,
     pwa: 0,
-    reducers: 29,
+    reducers: 25,
     services: 32,
-    systems: 120,
+    systems: 118,
     types: 16,
-    utils: 1979,
+    utils: 1946,
 };
 
 test('debt-ratchet: src/** (src/data 제외) 디렉터리별 AST 한글 노드 개수는 각 상한을 넘지 않는다 (하락만 허용, StringLiteral·템플릿 조각·JsxText 포함)', () => {

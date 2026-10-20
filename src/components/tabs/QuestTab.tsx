@@ -85,7 +85,7 @@ const DAILY_TYPE_LABEL: Record<string, string> = { kills: '처치', explores: '�
 
 // 2026-10 Wave 58: 정수 보상은 지급량(계승 단계 × 거울 배율)으로 보여 준다 — 원액을 보여 주던 동안 실제 지급보다 적게 보였다.
 const getDailyRewardLabel = (reward: DailyProtocolMissionReward, meta: Player['meta']) => {
-    if (reward?.essence) return `에센스 +${scaleEssenceReward(reward.essence, meta)}`;
+    if (reward?.essence) return MSG.ESSENCE_REWARD(scaleEssenceReward(reward.essence, meta));
     if (reward?.item) return reward.item;
     if (reward?.relicShard) return '유물 파편 +1';
     return '';
@@ -400,7 +400,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
                         <Scroll size={24} className="opacity-20" />
                         <span className="text-sm font-readable text-slate-300/72">진행 중인 임무가 없습니다.</span>
                         <span className="text-sm text-slate-500 font-fira">
-                            {isInSafeZone ? '마을 게시판에서 새 임무를 수락할 수 있습니다.' : '마을로 이동하면 퀘스트 게시판을 이용할 수 있습니다.'}
+                            {isInSafeZone ? MSG.QUEST_EMPTY_TOWN_HINT : MSG.QUEST_EMPTY_FIELD_HINT}
                         </span>
                     </Motion.div>
                 )}

@@ -90,7 +90,7 @@ test('회복 아이템이 없고 휴식보다 저렴한 물약을 살 수 있으
 
     assert.ok(getRestCost(player) > player.gold);
     assert.equal(action.kind, 'open_shop');
-    assert.equal(action.label, '회복 물품 마련');
+    assert.equal(action.label, '회복 아이템 마련');
 });
 
 test('이번 원정에서 얻은 실제 강화 장비를 회복 다음 순서로 제안한다', () => {

@@ -179,7 +179,7 @@ const formatCampfirePreview = (outcome: EventOutcome | null): EventChoicePreview
 
 const scoutPreview: Record<string, EventChoicePreview> = {
     combat: { text: '전투 확정 · 처치 보상 증가', tone: 'reward' },
-    anomaly: { text: '전투 없이 이변과 유물 탐색', tone: 'story' },
+    anomaly: { text: '전투 없이 이변과 유물 발견', tone: 'story' },
     unknown: { text: '원래 탐험 흐름 · 결과 미지', tone: 'unknown' },
     elite: { text: '정예 전투 확정 · 승리 시 유물', tone: 'danger' },
 };

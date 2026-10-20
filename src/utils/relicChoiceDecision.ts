@@ -71,7 +71,7 @@ const EFFECT_BUILD_LABEL: Record<string, string> = {
     drop_rate: '전리품 획득',
     exp_mult: '빠른 성장',
     boss_hunter: '보스 사냥',
-    event_chance: '이벤트 탐색',
+    event_chance: '이벤트 발견',
 };
 
 const getBuildLabel = (effect: string | undefined) => EFFECT_BUILD_LABEL[effect ?? ''] || '균형 성장';

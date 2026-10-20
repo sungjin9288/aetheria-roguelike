@@ -224,7 +224,7 @@ export const advanceDailyProtocol = (
 
 export const getDailyProtocolRewardLogs = (reward: DailyProtocolReward) => {
     const parts: string[] = [];
-    if (reward.essence > 0) parts.push(`에센스 +${reward.essence}`);
+    if (reward.essence > 0) parts.push(MSG.ESSENCE_REWARD(reward.essence));
     reward.items.forEach((name) => parts.push(`${name} 획득`));
     if (reward.relicShards > 0) parts.push(`유물 파편 +${reward.relicShards}`);
 

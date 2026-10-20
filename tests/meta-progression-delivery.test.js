@@ -95,8 +95,8 @@ test('일일 처치 임무의 정수 표시는 실제 지급량이다', () => {
     const granted = scaleEssenceReward(kill.reward.essence, player.meta);
     assert.notEqual(granted, kill.reward.essence);
     const html = renderStatic(createElement(QuestTab, { player: { ...player, stats: { ...player.stats, dailyProtocol: daily } }, actions: {} }));
-    assert.ok(html.includes(`에센스 +${granted}`), '지급량을 그린다');
-    assert.ok(!html.includes(`에센스 +${kill.reward.essence}<`), '원액을 그리지 않는다');
+    assert.ok(html.includes(`계승 정수 +${granted}`), '지급량을 그린다');
+    assert.ok(!html.includes(`계승 정수 +${kill.reward.essence}<`), '원액을 그리지 않는다');
 });
 
 test('유료 정찰 · 기술 교체 비용도 일일 임무 "골드 소비"에 센다', () => {

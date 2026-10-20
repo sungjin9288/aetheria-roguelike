@@ -29,7 +29,7 @@ import { renderStatic } from './helpers/render.ts';
 
 const TOWN = '시작의 마을';
 const questById = (id) => QUESTS.find((quest) => quest.id === id);
-const isMainStory = (quest) => String(quest?.title || '').includes('[스토리]');
+const isMainStory = (quest) => String(quest?.title || '').includes('[이야기]');
 const openings = EVENT_CHAINS.map((chain) => ({ chain, start: getChainQuestStart(chain.steps[0]), quest: questById(getChainQuestStart(chain.steps[0])?.questId) }));
 
 /** 임무 목표가 진행되는 지역 — `location`이 있으면 그곳, 없으면 목표 몬스터가 나오는 지역 전부. */

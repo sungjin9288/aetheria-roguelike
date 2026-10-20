@@ -48,8 +48,8 @@ const ACTION_BUTTONS = [
   },
   {
     key: 'escape',
-    label: '도망',
-    mobileLabel: '도망',
+    label: MSG.COMBAT_ACTION_ESCAPE,
+    mobileLabel: MSG.COMBAT_ACTION_ESCAPE,
     icon: ArrowRight,
     className: 'bg-[linear-gradient(180deg,rgba(28,31,27,0.74)_0%,rgba(10,12,10,0.94)_100%)] border border-[#d5b180]/16 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/24',
   },
@@ -234,9 +234,9 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
                 data-testid="combat-enemy-debuff-chip"
                 data-enemy-debuff-count={debuffs.length}
                 className="aether-type-meta flex flex-wrap items-center justify-center gap-1.5 rounded-lg border border-emerald-300/30 bg-emerald-400/8 px-3 py-1 font-readable text-emerald-200"
-                aria-label={`적 디버프: ${debuffs.join(', ')}`}
+                aria-label={MSG.ENEMY_DEBUFF_ARIA(debuffs.join(', '))}
               >
-                <span className="uppercase tracking-normal text-emerald-300/80">적 디버프</span>
+                <span className="uppercase tracking-normal text-emerald-300/80">{MSG.ENEMY_DEBUFF_LABEL}</span>
                 <span>{headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}</span>
               </div>
             );

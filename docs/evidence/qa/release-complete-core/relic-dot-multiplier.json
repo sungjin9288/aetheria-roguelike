@@ -1,13 +1,13 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "eb8c2b7b394f59d5fd057af55bbba6745293dd3c77821cff966b6bb1c0fd0d3e",
+  "reportHash": "4998862dd5c2d1c7557c7a0deaec7bce3862df472ed312838bbf819b7918b0d1",
   "sourceHashes": {
-    "src/data/relics.ts": "648c76a6f8531c459b3f3452ae51611cc3b7a9eda79413ef77d1de7214a02456",
+    "src/data/relics.ts": "3f25d653491db200092246c461650f6d2f50caf2175a984bf43c0d1ad20731d4",
     "src/systems/CombatEngine.actions.ts": "3555d67b425c77f0e2e37555367aa95ca68243fb071f1b859c893a0043023829",
-    "src/systems/relicDotMultiplierAudit.ts": "497c99103bc28f9cf3ebdf4f838b53f888836af14c26ae0dbcfa034695ce25cc",
+    "src/systems/relicDotMultiplierAudit.ts": "6eb7b8877edbd22b035ce13e3944029a39f099b3e32bb372900d46c1ad1985c2",
     "src/utils/dataMigration.ts": "92f19020fa32e195c27cd63b32e5be2cc82eddd970a10344971d9e2d6d999e4b",
     "src/reducers/handlers/combatHandlers.ts": "8f6583396174ed5f026e8dd7bd8c9e3ac425599c00ead20976fdd2c1e60f54ff",
-    "tests/relic-dot-multiplier-coherence.test.js": "278adc12dc3f6bba8ab1138e70c6dae7b506fe4d05833a5b8c5a94e9c3002340",
+    "tests/relic-dot-multiplier-coherence.test.js": "7494a19ce16e0249d39b592b55f73d70995632f11965f998dc5214448a488533",
     "scripts/verify-relic-dot-multiplier.mjs": "55ddc162ca69d4e999b0d01f708543e3f3556bdb61f0488e14d65dc6a8a0d02e",
     "docs/superpowers/plans/2026-08-17-aetheria-relic-dot-multiplier-plan.md": "25530503725c3ebf739a9e4a70ff3c2fcf9affb8959d6a7429789a9818dd19e9"
   },
@@ -26,7 +26,7 @@
         "id": "curse_crystal",
         "name": "저주의 결정",
         "rarity": "rare",
-        "desc": "상태 이상 피해 50% 증가",
+        "desc": "상태이상 피해 50% 증가",
         "effect": "dot_mult",
         "val": 1.5
       }

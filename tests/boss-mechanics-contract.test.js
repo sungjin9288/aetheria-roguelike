@@ -89,11 +89,11 @@ test('"연속 기절" · "기절 연속" · "강타와 제어"를 말하는 보�
     assert.deepEqual(getPhaseStatuses(MONSTERS['영겁의 수문장'].phase2), ['stun']);
 });
 
-test('칩 · 문구가 약속한 행동은 데이터가 선언한다 — 카운터 · 회복 · 브레스 · 소환 · 장기전 · 저항 무력화', () => {
+test('칩 · 문구가 약속한 행동은 데이터가 선언한다 — 반격 · 회복 · 브레스 · 소환 · 장기전 · 저항 무력화', () => {
     const declared = (name, key) => Boolean(MONSTERS[name].mechanics?.[key]);
     for (const name of BRIEFED) {
         const text = briefText(name);
-        assert.equal(declared(name, 'guardCounter'), /카운터/.test(text), `${name} 카운터`);
+        assert.equal(declared(name, 'guardCounter'), /반격/.test(text), `${name} 반격`);
         assert.equal(declared(name, 'guardHeal'), /회복 압박/.test(text), `${name} 회복 압박`);
         assert.equal(declared(name, 'breath'), /브레스/.test(text), `${name} 브레스`);
         assert.equal(declared(name, 'summon'), /소환/.test(text), `${name} 소환`);
@@ -125,7 +125,7 @@ test('브리핑이 말하는 상태 종류가 페이즈 상태와 같다 — 아
     }
 });
 
-test('"가드 빈도가 높아집니다" · "가드와 독이 섞이므로" — 2페이즈 방어 확률이 스폰된 1페이즈보다 높다', () => {
+test('"방어 자세 빈도가 높아집니다" · "방어 자세와 독이 섞이므로" — 2페이즈 방어 확률이 스폰된 1페이즈보다 높다', () => {
     for (const [name, mapName] of [['차원 파쇄자', '에테르 관문'], ['스핑크스', '피라미드']]) {
         const spawned = spawnBoss(name, mapName);
         assert.ok(spawned.phase2.pattern.guardChance > spawned.pattern.guardChance,
@@ -133,7 +133,7 @@ test('"가드 빈도가 높아집니다" · "가드와 독이 섞이므로" — 
     }
 });
 
-test('"높은 가드" 보스는 방어가 가장 잦은 행동이고 예고도 방어를 말한다', () => {
+test('"잦은 방어 자세" 보스는 방어가 가장 잦은 행동이고 예고도 방어를 말한다', () => {
     const pattern = MONSTERS['고대 호수의 수호신'].pattern;
     assert.ok(pattern.guardChance > pattern.heavyChance && pattern.guardChance > 1 - pattern.guardChance - pattern.heavyChance);
     assert.equal(CombatEngine.predictEnemyNextAction(makeBoss('고대 호수의 수호신')).type, 'guard');
@@ -277,7 +277,7 @@ test('연속 기절 — 2페이즈 강타마다 확률로 기절을 다시 건�
     assert.equal(stuns, 5);
 });
 
-test('강한 카운터 — 방어 자세 중인 보스를 때리면 반격당하고, 방어 자세가 아니면 반격이 없다', () => {
+test('강한 반격 — 방어 자세 중인 보스를 때리면 반격당하고, 방어 자세가 아니면 반격이 없다', () => {
     const player = makePlayer();
     const guarded = resolveCombatActionTurn({ player, enemy: makeBoss('아이스 드래곤', { guarding: true }), kind: 'attack', initialPlayer: player, seed: 7, now: 0 });
     const open = resolveCombatActionTurn({ player, enemy: makeBoss('아이스 드래곤'), kind: 'attack', initialPlayer: player, seed: 7, now: 0 });

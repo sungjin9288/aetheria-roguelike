@@ -152,7 +152,7 @@ const RAW_QUESTS: Quest[] = [
 
     // ── 직업/빌드 특화 퀘스트 ────────────────────────────────────────────────
     { id: 60, title: '대장장이의 의뢰',      type: 'craft',           desc: '아이템 3개 제작',              target: 'crafts',             goal: 3,  reward: { exp: 3000,  gold: 5000,  item: '강화 재료' }, minLv: 10 },
-    { id: 61, title: '탐험가의 기록',        type: 'explore_count',   desc: '20번 탐색',                    target: 'explores',           goal: 20, reward: { exp: 5000,  gold: 3000 }, minLv: 5 },
+    { id: 61, title: '탐험가의 기록',        type: 'explore_count',   desc: '20번 탐험',                    target: 'explores',           goal: 20, reward: { exp: 5000,  gold: 3000 }, minLv: 5 },
     // cycle 368: threshold: 0.2 redundant default 제거 — questProgress.ts:41
     //   `questData.threshold || 0.2` fallback과 동일.
     { id: 62, title: '생존의 의지',          type: 'survive_low_hp',  desc: '생명 20% 이하에서 승리 5회',     target: 'lowHpWins',          goal: 5, reward: { exp: 8000, gold: 6000, item: '엘릭서' }, minLv: 15 },
@@ -170,7 +170,7 @@ const RAW_QUESTS: Quest[] = [
     { id: 71, title: '비전 공명 관측',       type: 'build_victory',   buildTag: 'arcane',   buildLabel: '비전 공명',  desc: '비전 공명 운영으로 전투 4회 승리', objective: '비전 공명 축으로 전투 승리 4회', target: 'arcane', goal: 4, reward: { exp: 9500, gold: 10000 }, minLv: 12 },
     { id: 72, title: '개척자의 현장 기록',   type: 'discovery_count', buildTag: 'explorer', buildLabel: '탐험 수집가', desc: '탐험 발견 6회 달성', objective: '탐험 발견 6회 달성', target: 'discoveries', goal: 6, reward: { exp: 10000, gold: 11000 }, minLv: 10 },
     { id: 73, title: '마스터 크래프터',      type: 'craft',           desc: '아이템 25개 제작',             target: 'crafts',             goal: 25, reward: { exp: 30000, gold: 40000, item: '강화 재료' }, minLv: 40 },
-    { id: 74, title: '탐험의 극한',          type: 'explore_count',   desc: '100번 탐색',                   target: 'explores',           goal: 100, reward: { exp: 20000, gold: 30000 }, minLv: 30 },
+    { id: 74, title: '탐험의 극한',          type: 'explore_count',   desc: '100번 탐험',                   target: 'explores',           goal: 100, reward: { exp: 20000, gold: 30000 }, minLv: 30 },
     { id: 75, title: '전설의 경계인',        type: 'survive_low_hp',  desc: '생명 5% 이하에서 승리 1회',      target: 'lowHpWins',          threshold: 0.05, goal: 1, reward: { exp: 20000, gold: 25000, item: '엘릭서' }, minLv: 35 },
     { id: 76, title: '끝없는 현상금',        type: 'bounty_count',    desc: '현상수배 30건 완료',           target: 'bountiesCompleted',  goal: 30, reward: { exp: 50000, gold: 80000, item: '영웅의 물약' }, minLv: 40 },
 
@@ -181,28 +181,28 @@ const RAW_QUESTS: Quest[] = [
     //   그 구간의 보스로 끝난다: 용의 둥지 → 저주받은 묘지 → 기계 폐도 → 빙하 심연 → 용암 지대 → 폭풍의 고원 →
     //   천공 정원 → 암흑 성 → 마왕성. 구역 보스(여정당 한 번)를 노리는 장은 임무를 받기 전에 그 보스를 잡았어도
     //   다시 도전할 수 있다(`isAreaBossChallengeable`) — 그렇지 않으면 본편 사슬이 그 여정 안에서 막힌다.
-    { id: FIRST_STORY_QUEST_ID, title: '[스토리] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다', type: 'explore_count', target: 'explores', location: '고요한 숲', goal: 1, reward: { exp: 100, gold: 200 }, minLv: 1 },
-    { id: 81, title: '[스토리] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', location: '잊혀진 폐허', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5,  prerequisiteQuestId: 80 },
-    { id: 82, title: '[스토리] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 5마리를 처치한다', target: '화염 정령', location: '화염의 협곡', goal: 5, reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15, prerequisiteQuestId: 81 },
-    { id: 207, title: '[스토리] 용족의 경고',  desc: '용의 둥지에서 화염의 군주를 쓰러뜨려 용족 문자가 경고한 것을 확인한다', target: '화염의 군주', location: '용의 둥지', goal: 1, reward: { exp: 4000, gold: 4000 }, minLv: 26, prerequisiteQuestId: 82 },
-    { id: 208, title: '[스토리] 둥지의 주인',  desc: '용의 둥지에서 레드 드래곤 3마리를 쓰러뜨려 둥지가 지키던 것을 찾는다', target: '레드 드래곤', location: '용의 둥지', goal: 3, reward: { exp: 5000, gold: 5000 }, minLv: 31, prerequisiteQuestId: 207 },
-    { id: 209, title: '[스토리] 망자의 봉인',  desc: '저주받은 묘지에서 묘지기 네크론을 쓰러뜨려 제국이 묻은 봉인을 확인한다', target: '묘지기 네크론', location: '저주받은 묘지', goal: 1, reward: { exp: 6000, gold: 7000 }, minLv: 35, prerequisiteQuestId: 208 },
-    { id: 83, title: '[스토리] 얼음의 저주',  desc: '빙하 심연에서 빙결의 마녀를 처치해 저주의 정체를 밝힌다', target: '빙결의 마녀', location: '빙하 심연', goal: 1, reward: { exp: 8000, gold: 8000, item: '냉기의 결정' }, minLv: 35, prerequisiteQuestId: 84 },
+    { id: FIRST_STORY_QUEST_ID, title: '[이야기] 첫 번째 여정', desc: '고요한 숲을 처음 탐험한다', type: 'explore_count', target: 'explores', location: '고요한 숲', goal: 1, reward: { exp: 100, gold: 200 }, minLv: 1 },
+    { id: 81, title: '[이야기] 폐허의 진실',  desc: '잊혀진 폐허에서 10번 탐험',      type: 'explore_count', target: 'explores', location: '잊혀진 폐허', goal: 10, reward: { exp: 2000, gold: 2000 },           minLv: 5,  prerequisiteQuestId: 80 },
+    { id: 82, title: '[이야기] 불꽃의 시험',  desc: '화염의 협곡에서 화염 정령 5마리를 처치한다', target: '화염 정령', location: '화염의 협곡', goal: 5, reward: { exp: 3000, gold: 3000, item: '화염의 결정' }, minLv: 15, prerequisiteQuestId: 81 },
+    { id: 207, title: '[이야기] 용족의 경고',  desc: '용의 둥지에서 화염의 군주를 쓰러뜨려 용족 문자가 경고한 것을 확인한다', target: '화염의 군주', location: '용의 둥지', goal: 1, reward: { exp: 4000, gold: 4000 }, minLv: 26, prerequisiteQuestId: 82 },
+    { id: 208, title: '[이야기] 둥지의 주인',  desc: '용의 둥지에서 레드 드래곤 3마리를 쓰러뜨려 둥지가 지키던 것을 찾는다', target: '레드 드래곤', location: '용의 둥지', goal: 3, reward: { exp: 5000, gold: 5000 }, minLv: 31, prerequisiteQuestId: 207 },
+    { id: 209, title: '[이야기] 망자의 봉인',  desc: '저주받은 묘지에서 묘지기 네크론을 쓰러뜨려 제국이 묻은 봉인을 확인한다', target: '묘지기 네크론', location: '저주받은 묘지', goal: 1, reward: { exp: 6000, gold: 7000 }, minLv: 35, prerequisiteQuestId: 208 },
+    { id: 83, title: '[이야기] 얼음의 저주',  desc: '빙하 심연에서 빙결의 마녀를 처치해 저주의 정체를 밝힌다', target: '빙결의 마녀', location: '빙하 심연', goal: 1, reward: { exp: 8000, gold: 8000, item: '냉기의 결정' }, minLv: 35, prerequisiteQuestId: 84 },
     // Wave 74: minLv 28 → 35 — 선행이 209(저주받은 묘지 Lv35)가 되어 실제 수락은 35부터다(87이 Wave 28에 맞춘 것과 같은 정렬).
-    { id: 84, title: '[스토리] 기계의 심장',  desc: '기계 폐도에서 증기 골렘 10기를 쓰러뜨리고 진실을 밝힌다', target: '증기 골렘', location: '기계 폐도', goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 35, prerequisiteQuestId: 209 },
-    { id: 210, title: '[스토리] 빙하의 심장',  desc: '빙하 심연 깊은 곳에서 아이스 드래곤을 쓰러뜨려 남은 기척의 정체를 밝힌다', target: '아이스 드래곤', location: '빙하 심연', goal: 1, reward: { exp: 9000, gold: 10000 }, minLv: 41, prerequisiteQuestId: 83 },
-    { id: 211, title: '[스토리] 꺼지지 않는 불', desc: '용암 지대에서 화염 군주 이프리트를 쓰러뜨려 봉인을 녹이는 불씨를 끈다', target: '화염 군주 이프리트', location: '용암 지대', goal: 1, reward: { exp: 10000, gold: 11000 }, minLv: 43, prerequisiteQuestId: 210 },
-    { id: 212, title: '[스토리] 폭풍의 날개',  desc: '폭풍의 고원에서 천둥새 제피로스를 쓰러뜨려 폭풍 속에 숨은 길을 찾는다', target: '천둥새 제피로스', location: '폭풍의 고원', goal: 1, reward: { exp: 11000, gold: 12000 }, minLv: 45, prerequisiteQuestId: 211 },
-    { id: 213, title: '[스토리] 물든 정원',    desc: '천공 정원에서 타락한 세계수 수호자를 쓰러뜨려 정원을 정화한다', target: '타락한 세계수 수호자', location: '천공 정원', goal: 1, reward: { exp: 12000, gold: 13000 }, minLv: 46, prerequisiteQuestId: 212 },
-    { id: 214, title: '[스토리] 혈월의 문',    desc: '암흑 성에서 혈월의 뱀파이어 로드를 쓰러뜨려 결전으로 가는 길을 연다', target: '혈월의 뱀파이어 로드', location: '암흑 성', goal: 1, reward: { exp: 13000, gold: 15000 }, minLv: 47, prerequisiteQuestId: 213 },
-    { id: 85, title: '[스토리] 어둠의 근원',  desc: '마왕성에서 마왕의 사도 5명을 처치해 마왕의 계획을 알아낸다', target: '마왕의 사도', location: '마왕성', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 48, prerequisiteQuestId: 214 },
+    { id: 84, title: '[이야기] 기계의 심장',  desc: '기계 폐도에서 증기 골렘 10기를 쓰러뜨리고 진실을 밝힌다', target: '증기 골렘', location: '기계 폐도', goal: 10, reward: { exp: 12000, gold: 15000, item: '기계 코어' }, minLv: 35, prerequisiteQuestId: 209 },
+    { id: 210, title: '[이야기] 빙하의 심장',  desc: '빙하 심연 깊은 곳에서 아이스 드래곤을 쓰러뜨려 남은 기척의 정체를 밝힌다', target: '아이스 드래곤', location: '빙하 심연', goal: 1, reward: { exp: 9000, gold: 10000 }, minLv: 41, prerequisiteQuestId: 83 },
+    { id: 211, title: '[이야기] 꺼지지 않는 불', desc: '용암 지대에서 화염 군주 이프리트를 쓰러뜨려 봉인을 녹이는 불씨를 끈다', target: '화염 군주 이프리트', location: '용암 지대', goal: 1, reward: { exp: 10000, gold: 11000 }, minLv: 43, prerequisiteQuestId: 210 },
+    { id: 212, title: '[이야기] 폭풍의 날개',  desc: '폭풍의 고원에서 천둥새 제피로스를 쓰러뜨려 폭풍 속에 숨은 길을 찾는다', target: '천둥새 제피로스', location: '폭풍의 고원', goal: 1, reward: { exp: 11000, gold: 12000 }, minLv: 45, prerequisiteQuestId: 211 },
+    { id: 213, title: '[이야기] 물든 정원',    desc: '천공 정원에서 타락한 세계수 수호자를 쓰러뜨려 정원을 정화한다', target: '타락한 세계수 수호자', location: '천공 정원', goal: 1, reward: { exp: 12000, gold: 13000 }, minLv: 46, prerequisiteQuestId: 212 },
+    { id: 214, title: '[이야기] 혈월의 문',    desc: '암흑 성에서 혈월의 뱀파이어 로드를 쓰러뜨려 결전으로 가는 길을 연다', target: '혈월의 뱀파이어 로드', location: '암흑 성', goal: 1, reward: { exp: 13000, gold: 15000 }, minLv: 47, prerequisiteQuestId: 213 },
+    { id: 85, title: '[이야기] 어둠의 근원',  desc: '마왕성에서 마왕의 사도 5명을 처치해 마왕의 계획을 알아낸다', target: '마왕의 사도', location: '마왕성', goal: 5, reward: { exp: 15000, gold: 18000 }, minLv: 48, prerequisiteQuestId: 214 },
     // 2026-09 Wave 28 (D6): 86은 에테르 관문(경로 게이트 68 = 170.23h)이었다 — 본편이 승천 지점(마왕성 48)을
     //   걸쳐 87을 끝내기 전에 마왕 처치마다 계승 제안이 떴다. 체인에 적용한 Wave 15 G1과 같은 기준으로
     //   마왕성(48)의 `지옥의 문지기`(다른 임무 목표와 겹치지 않는 비보스)로 옮겼다. 에테르 관문은 후일담으로 남는다.
-    { id: 86, title: '[스토리] 에테르의 균열', desc: '마왕성 깊은 곳에서 균열을 지키는 지옥의 문지기 10기를 쓰러뜨려 균열을 조사한다', target: '지옥의 문지기', location: '마왕성', goal: 10, reward: { exp: 20000, gold: 25000, item: '마나 결정' }, minLv: 48, prerequisiteQuestId: 85 },
+    { id: 86, title: '[이야기] 에테르의 균열', desc: '마왕성 깊은 곳에서 균열을 지키는 지옥의 문지기 10기를 쓰러뜨려 균열을 조사한다', target: '지옥의 문지기', location: '마왕성', goal: 10, reward: { exp: 20000, gold: 25000, item: '마나 결정' }, minLv: 48, prerequisiteQuestId: 85 },
     // Wave 28 (D6): minLv 50 → 48 — 마왕성 경로 게이트(= 첫 마왕 처치·계승 제안 지점)와 같은 레벨. 50이던 동안에는
     //   Lv48~49에 마왕을 잡아도 종장 크레딧 없이 계승 제안만 떴다.
-    { id: 87, title: '[스토리] 세계의 끝',    desc: '마왕성에서 마왕을 쓰러뜨리고 세계를 구한다', target: '마왕', location: '마왕성', goal: 1, reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 48, prerequisiteQuestId: 86 },
+    { id: 87, title: '[이야기] 세계의 끝',    desc: '마왕성에서 마왕을 쓰러뜨리고 세계를 구한다', target: '마왕', location: '마왕성', goal: 1, reward: { exp: 100000, gold: 100000, item: '성검 에테르니아' }, minLv: 48, prerequisiteQuestId: 86 },
 
     // ── 심연 퀘스트 라인 ─────────────────────────────────────────────────────
     { id: 88, title: '[심연] 심연으로의 첫 발걸음', desc: '혼돈의 심연에서 혼돈의 화신을 처치한다', target: '혼돈의 화신', location: '혼돈의 심연', goal: 1, reward: { exp: 30000, gold: 30000, item: '마나 결정' }, minLv: 55 },
@@ -219,7 +219,7 @@ const RAW_QUESTS: Quest[] = [
     { id: 92, title: '몬스터 1000격파',  desc: '누적 몬스터 1000마리 처치', type: 'combat_count', target: 'kills', goal: 1000, reward: { exp: 50000, gold: 80000, item: '분노의 물약' }, minLv: 40 },
     { id: 93, title: '보스 사냥꾼',      desc: '보스 몬스터 10회 처치',    type: 'combat_count', target: 'bossKills', goal: 10, reward: { exp: 30000, gold: 50000, item: '영웅의 물약' }, minLv: 25 },
     { id: 94, title: '제작 마스터',      type: 'craft', desc: '총 50회 제작',  target: 'crafts', goal: 50, reward: { exp: 60000, gold: 80000, item: '강화 재료' }, minLv: 50 },
-    { id: 206, title: '세계 탐험가',      type: 'explore_count', desc: '총 200번 탐색', target: 'explores', goal: 200, reward: { exp: 40000, gold: 60000, item: '사냥꾼의 외투' }, minLv: 35 },
+    { id: 206, title: '세계 탐험가',      type: 'explore_count', desc: '총 200번 탐험', target: 'explores', goal: 200, reward: { exp: 40000, gold: 60000, item: '사냥꾼의 외투' }, minLv: 35 },
 
     // ── 레벨 전직 퀘스트 ─────────────────────────────────────────────────────
     { id: 100, title: '전직의 자격 (2차)',  desc: '레벨 30 달성하여 2차 전직',   target: 'level', goal: 30, reward: { exp: 0, gold: 5000 }, minLv: 29 },
@@ -253,7 +253,7 @@ const RAW_QUESTS: Quest[] = [
 
     // ── cycle 63: 신규 탐험 / 발견 챌린지 (3개) ──────────────────────────────
     // 2026-10 Wave 62 (원장 §61.4 C10, 소유자 결정 "칭호를 준다"): 설명이 약속한 새 칭호 '대륙의 여행자'(titles.ts, questReward 200).
-    { id: 200, title: '대륙의 발자취',  type: 'explore_count', desc: '50번 탐색 후 새 칭호 획득', target: 'explores',    goal: 50,  reward: { exp: 8000,  gold: 12000, title: '대륙의 여행자' }, minLv: 5 },
+    { id: 200, title: '대륙의 발자취',  type: 'explore_count', desc: '50번 탐험 후 새 칭호 획득', target: 'explores',    goal: 50,  reward: { exp: 8000,  gold: 12000, title: '대륙의 여행자' }, minLv: 5 },
     { id: 201, title: '지도 완성가',    type: 'discovery_count', desc: '15곳 발견', target: 'discoveries', goal: 15, reward: { exp: 25000, gold: 30000, title: '지도 제작자' }, minLv: 25 },
     { id: 202, title: '전설 기록자',    desc: '이번 여정에서 전설 각인 15종 손에 넣기', type: 'signature_collect', target: 'signaturesDiscovered', goal: 15, reward: { exp: 50000, gold: 60000, title: '전설의 기록자' }, minLv: 40 },
 
@@ -297,16 +297,16 @@ export const ACHIEVEMENTS: Achievement[] = [
 
     // ── 사망 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_die_1',        title: '죽음의 첫맛',    desc: '처음으로 전사',             target: 'deaths',     goal: 1,   reward: { gold: 100 } },
-    { id: 'ach_die_5',        title: '불사조',         desc: '5번 전사 후 재기',          target: 'deaths',     goal: 5,   reward: { gold: 500, item: '영웅의 물약' } },
-    { id: 'ach_die_10',       title: '불사조의 환생',  desc: '10번 전사 후 재기',         target: 'deaths',     goal: 10,  reward: { gold: 2000 } },
+    { id: 'ach_die_5',        title: '불사조',         desc: '5번 사망 후 재기',          target: 'deaths',     goal: 5,   reward: { gold: 500, item: '영웅의 물약' } },
+    { id: 'ach_die_10',       title: '불사조의 환생',  desc: '10번 사망 후 재기',         target: 'deaths',     goal: 10,  reward: { gold: 2000 } },
     { id: 'ach_die_30',       title: '죽음을 놀이로',  desc: '30번 전사',                 target: 'deaths',     goal: 30,  reward: { gold: 5000 } },
 
     // ── 탐험 업적 ─────────────────────────────────────────────────────────────
-    { id: 'ach_explore_10',   title: '첫 탐험',        desc: '10번 탐색',                 target: 'explores',   goal: 10,   reward: { gold: 300 } },
-    { id: 'ach_explore_50',   title: '탐험가',         desc: '50번 탐색',                 target: 'explores',   goal: 50,   reward: { gold: 1500 } },
-    { id: 'ach_explore_100',  title: '베테랑 탐험가',  desc: '100번 탐색',                target: 'explores',   goal: 100,  reward: { gold: 4000, item: '사냥꾼의 외투' } },
-    { id: 'ach_explore_500',  title: '세계의 지도자',  desc: '500번 탐색',                target: 'explores',   goal: 500,  reward: { gold: 20000, item: '잊혀진 열쇠' } },
-    { id: 'ach_explore_1000', title: '영원한 방랑자',  desc: '1000번 탐색',               target: 'explores',   goal: 1000, reward: { gold: 50000, item: '사냥꾼의 외투' } },
+    { id: 'ach_explore_10',   title: '첫 탐험',        desc: '10번 탐험',                 target: 'explores',   goal: 10,   reward: { gold: 300 } },
+    { id: 'ach_explore_50',   title: '탐험가',         desc: '50번 탐험',                 target: 'explores',   goal: 50,   reward: { gold: 1500 } },
+    { id: 'ach_explore_100',  title: '베테랑 탐험가',  desc: '100번 탐험',                target: 'explores',   goal: 100,  reward: { gold: 4000, item: '사냥꾼의 외투' } },
+    { id: 'ach_explore_500',  title: '세계의 지도자',  desc: '500번 탐험',                target: 'explores',   goal: 500,  reward: { gold: 20000, item: '잊혀진 열쇠' } },
+    { id: 'ach_explore_1000', title: '영원한 방랑자',  desc: '1000번 탐험',               target: 'explores',   goal: 1000, reward: { gold: 50000, item: '사냥꾼의 외투' } },
 
     // ── 제작 업적 ─────────────────────────────────────────────────────────────
     { id: 'ach_craft_5',      title: '견습 대장장이',  desc: '아이템 5개 제작',           target: 'crafts',     goal: 5,   reward: { gold: 1000 } },
@@ -347,9 +347,9 @@ export const ACHIEVEMENTS: Achievement[] = [
     { id: 'ach_discover_15', title: '세계를 걷는 자',     desc: '새 지역 15곳 발견', target: 'discoveries', goal: 15, reward: { gold: 15000, item: '잊혀진 열쇠' } },
 
     // ── 프레스티지 업적 ──────────────────────────────────────────────────────
-    { id: 'ach_prestige_1',  title: '최초의 각성',   desc: '첫 번째 프레스티지',   target: 'prestige',   goal: 1, reward: { gold: 10000, item: '마나 결정' } },
-    { id: 'ach_prestige_3',  title: '세 번째 윤회',  desc: '세 번째 프레스티지',   target: 'prestige',   goal: 3, reward: { gold: 30000, item: '영웅의 물약' } },
-    { id: 'ach_prestige_5',  title: '다섯 번째 환생', desc: '다섯 번째 프레스티지', target: 'prestige',   goal: 5, reward: { gold: 60000, item: '마나 결정' } },
+    { id: 'ach_prestige_1',  title: '최초의 각성',   desc: '첫 번째 계승',   target: 'prestige',   goal: 1, reward: { gold: 10000, item: '마나 결정' } },
+    { id: 'ach_prestige_3',  title: '세 번째 윤회',  desc: '세 번째 계승',   target: 'prestige',   goal: 3, reward: { gold: 30000, item: '영웅의 물약' } },
+    { id: 'ach_prestige_5',  title: '다섯 번째 환생', desc: '다섯 번째 계승', target: 'prestige',   goal: 5, reward: { gold: 60000, item: '마나 결정' } },
 
     // ── 특수 업적 ────────────────────────────────────────────────────────────
     { id: 'ach_demon_king',   title: '세계의 구원자',  desc: '마왕을 처치하여 세계를 구함', target: 'demonKingSlain', goal: 1, reward: { gold: 50000, item: '영웅의 물약' } },
@@ -381,7 +381,7 @@ export const ACHIEVEMENTS: Achievement[] = [
     // ── 발견 체인 업적 (cycle 102: BALANCE.DISCOVERY_CHAINS 5개 시스템 reflection) ─
     // exploreFlow.checkDiscoveryChains가 즉시 보상은 부여했지만 영구 reflection /
     // achievement reward가 비어있던 자리. 5 chains: fire/frozen/void/ancient/demon.
-    { id: 'ach_chain_1',   title: '체인 입문자',      desc: '발견 체인 1개 완료',  target: 'discoveryChains', goal: 1, reward: { gold: 2000 } },
-    { id: 'ach_chain_3',   title: '체인 추적자',      desc: '발견 체인 3개 완료',  target: 'discoveryChains', goal: 3, reward: { gold: 8000, item: '엘릭서' } },
-    { id: 'ach_chain_all', title: '세계의 비밀 수호자', desc: '모든 발견 체인 5개 완료', target: 'discoveryChains', goal: 5, reward: { gold: 30000, item: '영웅의 물약', premiumCurrency: 20 } },
+    { id: 'ach_chain_1',   title: '여정 입문자',      desc: '발견 여정 1개 완료',  target: 'discoveryChains', goal: 1, reward: { gold: 2000 } },
+    { id: 'ach_chain_3',   title: '여정 추적자',      desc: '발견 여정 3개 완료',  target: 'discoveryChains', goal: 3, reward: { gold: 8000, item: '엘릭서' } },
+    { id: 'ach_chain_all', title: '세계의 비밀 수호자', desc: '발견 여정 5개 모두 완료', target: 'discoveryChains', goal: 5, reward: { gold: 30000, item: '영웅의 물약', premiumCurrency: 20 } },
 ];

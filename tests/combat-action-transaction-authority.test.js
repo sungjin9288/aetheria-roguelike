@@ -106,7 +106,7 @@ test('victory reward logs are deterministic for the same state, seed, and time',
     const second = actionMap.RESOLVE_COMBAT_ACTION(structuredClone(state), action);
 
     assert.deepEqual(first, second);
-    assert.ok(first.logs.some((log) => log.text.includes('에센스 +5')));
+    assert.ok(first.logs.some((log) => log.text.includes('계승 정수 +5')));
 });
 
 test('victory daily item reward is deterministic for the same state, seed, and time', () => {

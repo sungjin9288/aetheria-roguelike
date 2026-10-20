@@ -20,7 +20,7 @@ test('전직 비교 문구는 내부 배율 대신 플레이 성향을 보여 �
     assert.equal(getClassStatGrade(1.4), '높음');
     assert.equal(getClassStatGrade(1.8), '매우 높음');
     assert.deepEqual(getClassIdentity(CLASSES['전사'].desc), {
-        focus: '체력 · 공격 중심',
+        focus: '생명 · 공격 중심',
         identity: '전선을 지키는 용사',
     });
     assert.deepEqual(getActiveClassSkillNames(CLASSES['전사'], 2), ['파워배시', '광폭화']);

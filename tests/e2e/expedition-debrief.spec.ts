@@ -54,7 +54,7 @@ test.describe('Expedition return debrief', () => {
 
         const recommendation = page.getByTestId('expedition-return-recommendation');
         await expect(recommendation).toContainText('이어서 할 일');
-        await expect(recommendation).toContainText('[스토리] 첫 번째 여정의 보상이 기다리고 있습니다.');
+        await expect(recommendation).toContainText('[이야기] 첫 번째 여정의 보상이 기다리고 있습니다.');
 
         const primaryAction = page.getByTestId('expedition-debrief-primary-action');
         await expect(primaryAction).toHaveAttribute('data-return-action', 'claim_quest');

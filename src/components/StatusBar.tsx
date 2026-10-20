@@ -271,7 +271,7 @@ const StatusBar = ({
                       data-testid="status-debuff-chip"
                       data-debuff-count={debuffs.length}
                       className="shrink-0 rounded-full border border-rose-400/40 bg-rose-500/16 px-1.5 py-0.5 text-[9px] font-fira font-bold tracking-normal text-rose-200"
-                      aria-label={`디버프 ${debuffs.length}개: ${debuffs.map((d) => DEBUFF_LABELS[d] || d).join(', ')}`}
+                      aria-label={MSG.STATUS_AILMENT_ARIA(debuffs.length, debuffs.map((d) => DEBUFF_LABELS[d] || d).join(', '))}
                     >
                       {headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}
                     </span>

@@ -300,8 +300,9 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
             };
         }
 
-        if (mStats.isElite) addLog('critical', `⚠️ 엘리트 몬스터 [${prefix.name}] 개체가 등장했습니다!`);
-        else if (prefix.name !== '일반적인') addLog('warning', `[${prefix.name}] 개체가 나타났습니다.`);
+        // 2026-10 Wave 131: 화면 용어는 '정예'다("엘리트 몬스터 [정예] 개체"였다). 초반 정예는 접두어가 곧 '정예'라 되풀이하지 않는다.
+        if (mStats.isElite) addLog('critical', prefix.name === EARLY_ELITE_PREFIX_NAME ? MSG.ELITE_APPEAR : MSG.ELITE_PREFIX_APPEAR(prefix.name));
+        else if (prefix.name !== '일반적인') addLog('warning', MSG.PREFIX_APPEAR(prefix.name));
     }
 
     // PR #5: 프레스티지(환생) 적 난이도 스케일링 — 최종 1회(profile/prefix 적용 후).

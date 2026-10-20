@@ -176,9 +176,9 @@ export const getRunBuildProfile = (player: Player, stats: DerivedStatsView | nul
         const reasons = [];
         let score = 0;
         if (relicEffects.has('glass_cannon')) { score += 2; reasons.push('유리 대포'); }
-        if (relicEffects.has('cursed_power')) { score += 2; reasons.push('체력 대가 화력'); }
-        if (relicEffects.has('low_hp_atk')) { score += 2; reasons.push('저체력 보너스'); }
-        if (hpRatio < 0.45) { score += 1; reasons.push('현재 저체력'); }
+        if (relicEffects.has('cursed_power')) { score += 2; reasons.push('생명 대가 화력'); }
+        if (relicEffects.has('low_hp_atk')) { score += 2; reasons.push('낮은 생명 보너스'); }
+        if (hpRatio < 0.45) { score += 1; reasons.push('현재 낮은 생명'); }
         if (relicEffects.has('ancient_power')) { score += 1; reasons.push('공격 치중'); }
         tags.push(scoreTag('risk', '광전 도박', score, reasons));
     }
@@ -274,7 +274,7 @@ export const getTraitProfile = (player: Player, stats: DerivedStatsView | null |
     if (traitId === 'explorer' && (behaviorStats.explores || 0) > 0) reasons.push(`탐험 ${behaviorStats.explores}회`);
     if (traitId === 'fortress' && (behaviorStats.rests || 0) > 0) reasons.push(`휴식 ${behaviorStats.rests}회`);
     if (traitId === 'balanced' && (behaviorStats.crafts || 0) > 0) reasons.push(`제작 ${behaviorStats.crafts}회`);
-    if (traitId === 'risk' && lowHpWins > 0) reasons.push(`저체력 승리 ${lowHpWins}회`);
+    if (traitId === 'risk' && lowHpWins > 0) reasons.push(`낮은 생명 승리 ${lowHpWins}회`);
 
     const skill = buildTraitSkill(traitId, player, stats);
 
@@ -327,44 +327,44 @@ export const getTraitItemResonance = (item: Item | null | undefined, traitProfil
     switch (traitId) {
         case 'crusher':
             if (isWeapon(item) && isTwoHandWeapon(item)) { score += 6; reasons.push('양손 파쇄 무기'); }
-            if (hasAnyJob(item, ['전사', '버서커', '나이트'])) { score += 2; reasons.push('전열 클래스 장비'); }
+            if (hasAnyJob(item, ['전사', '버서커', '나이트'])) { score += 2; reasons.push('전열 직업 장비'); }
             if (item?.elem === '화염' || item?.elem === '대지') { score += 1; reasons.push('강타 속성'); }
             if (item?.type === 'buff' && (item?.effect === 'atk_up' || item?.effect === 'all_up')) { score += 3; reasons.push('화력 강화 소모품'); }
             break;
         case 'dual':
             if (isWeapon(item) && !isTwoHandWeapon(item)) { score += 6; reasons.push('한손 연계 무기'); }
             if (String(item?.name || '').includes('단검') || String(item?.name || '').includes('표창')) { score += 2; reasons.push('쌍수 급소 장비'); }
-            if (hasAnyJob(item, ['도적', '어쌔신'])) { score += 2; reasons.push('연계 클래스 장비'); }
+            if (hasAnyJob(item, ['도적', '어쌔신'])) { score += 2; reasons.push('연계 직업 장비'); }
             if (item?.type === 'buff' && item?.effect === 'atk_up') { score += 2; reasons.push('순간 화력 보조'); }
             break;
         case 'fortress':
             if (isShield(item)) { score += 6; reasons.push(isFocusOffhand(item) ? '보조 촉매' : '방패 장비'); }
             if (item?.type === 'armor') { score += 4; reasons.push('방어구'); }
             if (item?.type === 'buff' && (item?.effect === 'def_up' || item?.effect === 'all_up')) { score += 3; reasons.push('생존 강화 소모품'); }
-            if (hasAnyJob(item, ['전사', '나이트', '팔라딘'])) { score += 1; reasons.push('수호 클래스 장비'); }
+            if (hasAnyJob(item, ['전사', '나이트', '팔라딘'])) { score += 1; reasons.push('수호 직업 장비'); }
             break;
         case 'arcane':
             if (isMagicWeapon(item)) { score += 6; reasons.push('비전 무기'); }
             if (isFocusOffhand(item)) { score += 6; reasons.push('마도서/집중 촉매'); }
-            if (item?.type === 'mp') { score += 4; reasons.push('마나 회복'); }
+            if (item?.type === 'mp') { score += 4; reasons.push('기력 회복'); }
             if (hasElement(item)) { score += 2; reasons.push('속성 공명'); }
-            if (hasAnyJob(item, ['마법사', '아크메이지', '흑마법사', '성직자'])) { score += 2; reasons.push('비전 클래스 장비'); }
+            if (hasAnyJob(item, ['마법사', '아크메이지', '흑마법사', '성직자'])) { score += 2; reasons.push('비전 직업 장비'); }
             break;
         case 'explorer':
             if (isConsumableType(item)) { score += 3; reasons.push('탐험 보급'); }
             if (String(item?.name || '').includes('활') || String(item?.name || '').includes('궁')) { score += 4; reasons.push('원거리 개척 장비'); }
-            if (hasAnyJob(item, ['레인저', '모험가'])) { score += 2; reasons.push('개척 클래스 장비'); }
+            if (hasAnyJob(item, ['레인저', '모험가'])) { score += 2; reasons.push('개척 직업 장비'); }
             if (String(item?.name || '').includes('외투') || String(item?.name || '').includes('망토')) { score += 1; reasons.push('기동 장비'); }
             break;
         case 'risk':
             if (isWeapon(item) && (isTwoHandWeapon(item) || item?.elem === '화염' || item?.elem === '어둠')) { score += 5; reasons.push('고위험 화력 장비'); }
             if (item?.type === 'buff' && (item?.effect === 'atk_up' || item?.effect === 'all_up')) { score += 4; reasons.push('폭발력 증폭'); }
-            if (hasAnyJob(item, ['버서커', '흑마법사', '어쌔신'])) { score += 2; reasons.push('리스크 클래스 장비'); }
+            if (hasAnyJob(item, ['버서커', '흑마법사', '어쌔신'])) { score += 2; reasons.push('광전 직업 장비'); }
             break;
         case 'status':
             if (hasElement(item)) { score += 5; reasons.push('속성/상태 장비'); }
             if (isMagicWeapon(item)) { score += 3; reasons.push('주문 연계'); }
-            if (hasAnyJob(item, ['레인저', '마법사', '흑마법사', '어쌔신'])) { score += 2; reasons.push('상태 집행 클래스 장비'); }
+            if (hasAnyJob(item, ['레인저', '마법사', '흑마법사', '어쌔신'])) { score += 2; reasons.push('상태 집행 직업 장비'); }
             if (item?.type === 'cure' || (item?.type === 'buff' && item?.effect === 'all_up')) { score += 1; reasons.push('상태 관리 보조'); }
             break;
         case 'balanced':
@@ -443,17 +443,17 @@ export const getTraitQuestResonance = (quest: Quest | null | undefined, traitPro
 
     if (quest.type === 'build_victory' && buildTags.has(quest.target)) {
         score += 4;
-        reasons.push('현재 성향 승리 루프와 직접 연결');
+        reasons.push('현재 성향 승리와 직접 연결');
     }
 
     if (quest.type === 'survive_low_hp' && buildTags.has('risk')) {
         score += 3;
-        reasons.push('고위험 런과 궁합');
+        reasons.push('고위험 운영과 궁합');
     }
 
     if (quest.type === 'bounty_count' && buildTags.has('explorer')) {
         score += 2;
-        reasons.push('개척/추적 루프와 호응');
+        reasons.push('개척 · 추적과 호응');
     }
 
     return {
@@ -487,7 +487,7 @@ export const getEnemyTacticalProfile = (enemy: Monster, stats: FullStats | null 
     const hint = heavyChance >= 30
         ? '강타 비중이 높습니다. 방어/회복 타이밍을 아껴두는 편이 좋습니다.'
         : guardChance >= 30
-            ? '방어 빈도가 높습니다. 큰 기술은 가드가 빠진 뒤에 쓰는 편이 좋습니다.'
+            ? '방어 빈도가 높습니다. 큰 기술은 방어 자세가 풀린 뒤에 쓰는 편이 좋습니다.'
             : '공격 패턴이 고른 편입니다. 안정적인 교전이 유리합니다.';
 
     // cycle 270: 12 dead 필드 제거 (role/tier/guardChance/heavyChance/estimatedHit/estimatedHeavy/

@@ -91,7 +91,7 @@ export const MIRROR_NODES: MirrorNodeDef[] = [
     },
     {
         id: 'essence_flow',
-        name: '에센스 공명',
+        name: '정수 공명',
         desc: '전투와 계승으로 얻는 계승 정수를 늘립니다.',
         maxLevel: 5,
         costs: [150, 300, 600, 1200, 2400], // 4,650

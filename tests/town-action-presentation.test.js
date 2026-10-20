@@ -75,7 +75,7 @@ test('첫 스토리 임무가 활성화되어도 첫 출발 문구를 유지한�
     const result = getTownActionPresentation(baseContext({
         guidance: { title: '첫 원정 준비', primaryAction: { kind: 'open_move', label: '첫 출발' } },
         preparation: {
-            tracker: { questId: 80, title: '[스토리] 첫 번째 여정' },
+            tracker: { questId: 80, title: '[이야기] 첫 번째 여정' },
             isClaimable: false,
             canDepart: true,
             destination: '고요한 숲',

@@ -3425,7 +3425,7 @@ import { DB } from '../src/data/db.ts';
       assert.deepEqual(formatRewardParts(undefined || {}), [], 'AchievementPanel의 reward || {} fallback이 안전하게 빈 목록을 만든다');
       const logs = getDailyProtocolRewardLogs({ essence: 5, items: ['철 조각'], relicShards: 0, completedCount: 1, convertedRelic: null });
       assert.equal(logs.length, 1, 'completedCount > 0이면 실제로 완료 로그가 1건 생긴다');
-      assert.match(logs[0].text, /에센스 \+5/, '에센스 지급이 실제 로그 문구에 반영된다');
+      assert.match(logs[0].text, /계승 정수 \+5/, '계승 정수 지급이 실제 로그 문구에 반영된다');
   });
 
   test('cycle 556: body exp/gold와 실제 essence/item 분기 보존', async () => {

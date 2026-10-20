@@ -16,13 +16,13 @@ export const getAvailableCommands = (gameState: GameMode, player: Player | null 
     const base = [
         { cmd: 'help', desc: '커맨드 목록' },
         { cmd: 'status', desc: '캐릭터 상태' },
-        { cmd: 'inventory', desc: '인벤토리' },
-        { cmd: 'quest', desc: '퀘스트 목록' },
+        { cmd: 'inventory', desc: '가방' },
+        { cmd: 'quest', desc: '임무 목록' },
         { cmd: 'map', desc: '현재 위치/출구' },
     ];
 
     if (gameState === GS.IDLE) {
-        base.push({ cmd: 'explore', desc: '주변 탐색' });
+        base.push({ cmd: 'explore', desc: '주변 탐험' });
         base.push({ cmd: 'move', desc: '이동 (move <지역명>)' });
         if (isSafe && player) {
             // Wave 61 (원장 §61.3): 실제 휴식이 받는 비용(레벨 · 거울 반영)을 그린다 — 고정 "100G"였다.

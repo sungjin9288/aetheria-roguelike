@@ -167,7 +167,7 @@ import { readFile } from 'node:fs/promises';
   test('cycle 393: PREMIUM_SHOP 동작 보존 (사용 필드)', async () => {
       const { PREMIUM_SHOP } = await import('../src/data/premiumShop.js');
       assert.equal(PREMIUM_SHOP.invExpand.id, 'inv_expand', 'invExpand.id 유지');
-      assert.equal(PREMIUM_SHOP.invExpand.name, '인벤토리 확장', 'invExpand.name 유지');
+      assert.equal(PREMIUM_SHOP.invExpand.name, '가방 확장', 'invExpand.name 유지');
       assert.ok(typeof PREMIUM_SHOP.invExpand.cost === 'number', 'invExpand.cost 유지');
       assert.equal(PREMIUM_SHOP.synthProtect.id, 'synth_protect', 'synthProtect.id 유지');
       assert.equal(PREMIUM_SHOP.revive.id, 'revive', 'revive.id 유지');

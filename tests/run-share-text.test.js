@@ -42,7 +42,7 @@ test('buildRunShareText returns a string with required base fields', () => {
     const text = buildRunShareText(baseSummary);
     assert.equal(typeof text, 'string');
     assert.ok(text.includes('전사'), 'job missing');
-    assert.ok(text.includes('Lv.12'), 'level missing');
+    assert.ok(text.includes('레벨 12'), 'level missing');
     assert.ok(text.includes('심연 1층'), 'location missing');
     assert.ok(text.includes('87'), 'kill count missing');
     assert.ok(/보스[^0-9]*3/.test(text), 'boss kills missing');

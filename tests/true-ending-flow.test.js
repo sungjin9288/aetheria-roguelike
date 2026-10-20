@@ -176,7 +176,7 @@ test('true ending source exposes immediate skip, reduced-motion, safe-area and o
         entries: questProgress.getClaimableQuestEntries(makeTrueEndingQuestState().player), testIdPrefix: 'true-ending',
     }));
     assert.match(rewards, /data-testid="true-ending-claim-quest-87"/);
-    assert.match(rewards, /\[스토리\] 세계의 끝 보상 받기/);
+    assert.match(rewards, /\[이야기\] 세계의 끝 보상 받기/);
     assert.match(source, /true-ending-continue/);
     assert.match(source, /completeQuest/);
     assert.match(source, /cancelAscension/);

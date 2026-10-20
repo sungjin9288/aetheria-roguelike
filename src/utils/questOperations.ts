@@ -11,6 +11,7 @@ import { getTraitProfile, getTraitQuestResonance } from './runProfileUtils.js';
 import type { TraitProfile } from './runProfile.js';
 import { getUnmetQuestPrerequisite } from './questPrerequisites.js';
 import { getQuestOpenedChain } from '../data/eventChains.js';
+import { isMainStoryQuest } from '../data/storyChapters.js';
 
 /**
  * 게시판 UI 레인 분류 — `Quest.type`과 별개로 questOperations 전용 5분류
@@ -86,7 +87,7 @@ const toArray = <T,>(value: T[] | null | undefined): T[] => (Array.isArray(value
 //   (playerLevel || 1) defensive 가드는 별개 (caller가 0/undefined 넘기는
 //   path 보존). cycle 519 getMapLevel 패턴과 동일.
 const getQuestLevelGap = (quest: Quest, playerLevel: number) => Math.abs((quest?.minLv || 1) - (playerLevel || 1));
-const isStoryQuest = (quest: Quest) => String(quest?.title || '').includes('[스토리]');
+const isStoryQuest = (quest: Quest) => isMainStoryQuest(quest);
 
 /** 기본 토벌 — 종류 없이 몬스터 대상 · 횟수만 있는 임무. 추천 줄은 진행도를 제목에 합친다("슬라임 소탕 (0/3)"). */
 export const isBasicHuntQuest = (quest: Quest | null | undefined): boolean => Boolean(
@@ -208,7 +209,7 @@ const getQuestReason = (quest: Quest, lane: QuestLane, resonance: TraitQuestReso
 const getOperationPlanObjective = (quest: Quest, targetMaps: string[]) => {
     if (targetMaps[0]) return `${targetMaps[0]} 진입`;
     if (quest?.target === 'level') return `레벨 ${quest.goal} 달성`;
-    if (quest?.type === 'craft') return '제작 루프 가동';
+    if (quest?.type === 'craft') return '제작 시작';
     if (quest?.type === 'combat_count') {
         return quest.target === 'bossKills'
             ? `보스 처치 ${quest.goal}회 달성`

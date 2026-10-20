@@ -10,6 +10,7 @@ import type { GameActions } from '../hooks/actionDeps';
 import type { GameState } from '../reducers/gameReducer';
 import type { Item, Player } from '../types/index.js';
 import { getVisibleLocationName } from '../utils/challengeRules';
+import { MSG } from '../data/messages';
 
 /**
  * GravePanel이 실제로 호출하는 액션만 좁혀 받는다 (이곳 유해 회수).
@@ -48,7 +49,7 @@ const GravePanel = ({
         <div data-testid="grave-recovery-panel" className="space-y-3 pb-2">
             <div
                 role="tablist"
-                aria-label="무덤 기록"
+                aria-label={MSG.GRAVE_RECORD_ARIA}
                 className="grid grid-cols-1 gap-1 rounded-lg border border-white/8 bg-black/20 p-1"
             >
                 <button
@@ -83,7 +84,7 @@ const GravePanel = ({
                                 <strong className="mt-1 block text-[16px] font-readable text-[#f0d69b]">{recoveryGold.toLocaleString('ko-KR')}</strong>
                             </div>
                             <div className="px-2 text-center">
-                                <div className="text-[11px] font-readable text-slate-400">장비·물품</div>
+                                <div className="text-[11px] font-readable text-slate-400">{MSG.GRAVE_RECOVERY_ITEMS_LABEL}</div>
                                 <strong className="mt-1 block text-[16px] font-readable text-[#bcebea]">{recoveryItems}</strong>
                             </div>
                         </div>
@@ -131,7 +132,7 @@ const GravePanel = ({
                                                     key={`${item.id || item.name}-${index}`}
                                                     className={`rounded-md border bg-black/18 px-2 py-1 text-[11px] font-readable ${tierColor(item)}`}
                                                 >
-                                                    {item.name || '이름 없는 물품'}
+                                                    {item.name || MSG.GRAVE_UNNAMED_ITEM}
                                                 </span>
                                             ))}
                                             {group.items.length > 3 && (

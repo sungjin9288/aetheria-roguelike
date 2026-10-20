@@ -122,7 +122,7 @@ const getQuestRouteLabel = (quest: ExpeditionQuestDefinition | undefined, target
     if (quest?.type === 'bounty_count') return '현상금';
     if (quest?.type === 'build_victory') return quest?.buildLabel || '빌드 전투';
     if (quest?.type === 'discovery_count') return '미답 권역';
-    if (quest?.type === 'explore_count') return '탐험 루프';
+    if (quest?.type === 'explore_count') return '탐험 흐름';
     if (quest?.type === 'gold_earned') return MSG.QUEST_ROUTE_GOLD;
     if (quest?.type === 'survive_low_hp') return '위험 교전';
     return quest?.target || '현재 권역';
@@ -150,7 +150,7 @@ const getQuestNextStep = (entry: ExpeditionQuestEntry, targetMaps: string[]) => 
     if (quest.type === 'discovery_count') return `발견 ${remaining}회 확보`;
     if (quest.type === 'explore_count') return `탐험 ${remaining}회 진행`;
     if (quest.type === 'gold_earned') return MSG.QUEST_NEXT_STEP_GOLD(remaining);
-    if (quest.type === 'survive_low_hp') return `저체력 승리 ${remaining}회`;
+    if (quest.type === 'survive_low_hp') return `낮은 생명 승리 ${remaining}회`;
     return `${quest.target || '목표'} ${remaining}회 진행`;
 };
 
@@ -279,7 +279,7 @@ export const getExplorationForecast = (
 
     if (mapData.type === 'safe') {
         return {
-            mood: '안전 지대',
+            mood: '안전지대',
             chips: [
                 { label: 'REST', value: 'SAFE' },
                 { label: 'BOARD', value: 'OPEN' },
@@ -383,7 +383,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                 score += 10;
                 if (hpRatio <= 0.5) {
                     score += 32;
-                    reason = '체력 회복과 보급을 먼저 하기 좋은 안전 경로입니다.';
+                    reason = '생명 회복과 보급을 먼저 하기 좋은 안전 경로입니다.';
                 } else if (inventoryCount >= inventoryCap - 2) {
                     score += 24;
                     reason = '상점과 정리를 먼저 하기 좋은 여유 구간입니다.';
@@ -413,7 +413,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                     score -= 8;
                     reason = '현재 레벨보다 높은 전장입니다. 강한 교전이 예상됩니다.';
                 } else if (levelGap <= -5) {
-                    badge = '파밍';
+                    badge = '사냥터';
                     score += 6;
                     reason = '안정적으로 정리 가능한 구간입니다. 회복 부담이 낮습니다.';
                 }
@@ -593,7 +593,7 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
     if (safe && player?.job === '모험가' && (player?.level || 1) >= 5) {
         return {
             title: '전직 준비 완료',
-            detail: '모험가 단계를 마쳤습니다. 지금 전직하면 런의 방향이 더 선명해집니다.',
+            detail: '모험가 단계를 마쳤습니다. 지금 전직하면 여정의 방향이 더 선명해집니다.',
             primaryAction: { kind: 'open_class', label: '전직 보기' },
         };
     }
@@ -604,7 +604,7 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
     if (safe && hpRatio <= 0.65 && canAffordRest) {
         return {
             title: '정비 추천',
-            detail: '체력이 충분히 회복되지 않았습니다. 다음 출발 전에 휴식으로 안정성을 확보하세요.',
+            detail: '생명이 충분히 회복되지 않았습니다. 다음 출발 전에 휴식으로 안정성을 확보하세요.',
             primaryAction: { kind: 'rest', label: '휴식' },
         };
     }
@@ -619,8 +619,8 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
         if (activeDebuffs.length > 0) {
             const labels = activeDebuffs.map((s: StatusId) => DEBUFF_LABEL[s]).join(', ');
             return {
-                title: '디버프 정화 권장',
-                detail: `현재 활성 상태이상: ${labels}. 안전지대에서 휴식하면 모든 디버프가 해소됩니다.`,
+                title: '상태이상 정화 권장',
+                detail: `현재 걸린 상태이상: ${labels}. 안전지대에서 휴식하면 모두 풀립니다.`,
                 primaryAction: { kind: 'rest', label: '휴식으로 정화' },
             };
         }
@@ -638,8 +638,8 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
 
     if (safe && inventoryCount >= inventoryCap - 2) {
         return {
-            title: '인벤토리 정리 필요',
-            detail: `인벤토리가 ${inventoryCount}/${inventoryCap} 입니다. 다음 드롭 전에 장비와 소모품을 정리하세요.`,
+            title: '가방 정리 필요',
+            detail: `가방이 ${inventoryCount}/${inventoryCap}입니다. 다음 전리품을 받기 전에 장비와 소모품을 정리하세요.`,
             primaryAction: { kind: 'open_inventory', label: '가방 열기' },
         };
     }

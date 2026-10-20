@@ -12,8 +12,8 @@ export const PREMIUM_SHOP = {
     /** 인벤토리 확장 */
     invExpand: {
         id: 'inv_expand',
-        name: '인벤토리 확장',
-        desc: `인벤토리 슬롯 +${BALANCE.INV_EXPAND_AMOUNT}`,
+        name: '가방 확장',
+        desc: `가방 +${BALANCE.INV_EXPAND_AMOUNT}칸`,
         cost: BALANCE.INV_EXPAND_COST,
     },
     /** 합성 보호 (1회) */
