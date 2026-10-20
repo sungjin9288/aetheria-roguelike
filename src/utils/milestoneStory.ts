@@ -11,7 +11,7 @@ const MILESTONE_STORY_BEATS = {
         eyebrow: '첫 패배',
         title: '끝난 자리에도 무언가는 남는다',
         body: '쓰러진 자리에서 에테르가 흩어졌지만, 몸에 밴 감각까지 사라지지는 않았다. 다음 발걸음은 처음보다 단단할 것이다.',
-        closing: '이번 패배에서 얻은 영구 성장은 다음 모험에도 이어진다.',
+        closing: '이번 패배에서 얻은 영구 성장은 다음 여정에도 이어진다.',
     },
     first_area_boss: {
         eyebrow: '첫 구역 보스 격파',

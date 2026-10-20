@@ -291,9 +291,10 @@ function countKoreanAstNodesInDir(dir) {
 // 조용히 빠지는 것을 막는다(§7 부재/상한 가드).
 // 2026-10 Wave 131 재고정(실측): components 1319 → 1190 · hooks 285 → 265 · reducers 29 → 25 · systems 120 → 118 ·
 //   utils 1979 → 1946. Wave 131이 화면 문구를 MSG로 옮겨 components −26 · utils −7 · reducers −1을 줄였고, 나머지는 그사이 웨이브들의 몫이다.
+// 2026-10 통합 수용 6차(원장 §144) 재고정(실측): components 1190 → 1183 — 사망 화면 · 유물 선택 제목의 '여정' 문구 7개를 MSG로 옮겼다.
 const AST_KOREAN_CEILINGS = {
     assets: 0,
-    components: 1190,
+    components: 1183,
     hooks: 265,
     platform: 0,
     pwa: 0,

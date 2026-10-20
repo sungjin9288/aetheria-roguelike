@@ -5,6 +5,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { getRunSummaryAnalysis, getRunSummaryReflectionStrip } from '../src/utils/outcomeAnalysis.js';
+import { MSG } from '../src/data/messages.ts';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -70,8 +71,11 @@ test('RunSummaryCard wires reflection strip without touching share or restart co
     assert.match(source, /whitespace-normal/);
     assert.match(source, /break-keep/);
     assert.doesNotMatch(source, /truncate font-rajdhani/);
-    assert.match(source, /모험 기록/);
-    assert.match(source, /모험 종료/);
+    // 통합 수용 6차(원장 §144): 한 판의 이름은 '여정'이다 — 머리말 · 종료 줄은 MSG가 소유한다.
+    assert.match(source, /MSG\.RUN_SUMMARY_EYEBROW/);
+    assert.match(source, /MSG\.RUN_SUMMARY_ENDED_AT\(s\.loc\)/);
+    assert.equal(MSG.RUN_SUMMARY_EYEBROW, '이번 여정 기록');
+    assert.equal(MSG.RUN_SUMMARY_ENDED_AT('북부 요새'), '북부 요새에서 여정 종료');
     assert.doesNotMatch(source, /Memorial Ledger|Run Ended|Prestige/);
     assert.match(source, /data-testid\s*=\s*["']run-summary-share["']/);
     assert.match(source, /data-testid\s*=\s*["']run-summary-restart["']/);

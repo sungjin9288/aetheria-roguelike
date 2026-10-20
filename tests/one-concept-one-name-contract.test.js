@@ -36,6 +36,9 @@ import { PRESTIGE_MILESTONES } from '../src/utils/ascensionPreview.ts';
 import { formatRelicText } from '../src/utils/relicPresentation.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 import StatsPanel from '../src/components/StatsPanel.tsx';
+import RunSummaryCard from '../src/components/RunSummaryCard.tsx';
+import { buildRunSummary } from '../src/utils/gameUtils.ts';
+import { getJourneySurfaceText } from '../src/utils/journeyScope.ts';
 import { JOB_PATHS, runNaturalPlay } from '../scripts/naturalPlay/driver.mjs';
 import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
@@ -69,6 +72,9 @@ const VARIANTS = [
     { re: /\[스토리\]/u, canon: '[이야기]' },
     { re: /마나/u, canon: '기력' },
     { re: /체력/u, canon: '생명' },
+    // 통합 수용 6차(원장 §144): 한 판은 '여정'이다 — 사망 화면이 "이번 모험 기록" · "새 모험 시작"과 "다음 여정에 남는 것"을 함께 말했다.
+    //   '모험 기록'(기록 콘솔) · '모험 도감' · 직업 '모험가'는 다른 개념의 이름이다.
+    { re: /모험(?!가| 기록| 도감)/u, canon: '여정' },
 ];
 // 서사(이벤트 선택지 · 결과 문장)는 "다른 길을 탐색한다" · "도망간다"처럼 낱말 그대로 쓴다 — 시스템 문장에서만 막는다.
 const SYSTEM_ONLY_VARIANTS = [
@@ -109,6 +115,8 @@ const PROPER_NAMES = (() => {
         '마나의 결', '마나의 조율자',
         // "체력 물약"(아이템 이름)을 가리키는 말 — 그 물약이 필요하다는 이벤트 · 안내.
         '체력 회복 물약',
+        // 게임 전체의 모험을 말하는 문구와 이름(임무 · 시즌 구간 · 첫 사망 이야기 제목) — 한 판(여정)이 아니다.
+        '달빛 아래 펼쳐지는 모험', '모험을 준비하고 있습니다', '평소의 모험', '깊어지는 모험', '신중한 모험', '돌아오는 것도 모험이다',
     );
     return [...new Set(names.filter((name) => typeof name === 'string' && name.trim()))].sort((a, b) => b.length - a.length);
 })();
@@ -164,6 +172,8 @@ test('[MSG 전수] 한 개념의 두 번째 이름(퀘스트 · 에센스 · 엘
     assert.equal(MSG.ELITE_PREFIX_APPEAR('재앙의'), '⚠️ [재앙의] 정예 개체가 나타났습니다!');
     assert.equal(MSG.COMBAT_ACTION_ESCAPE, '도주');
     assert.equal(MSG.ENEMY_TELEGRAPH_GUARD_HIGH(40), '방어 자세 (40%)');
+    assert.equal(MSG.RUN_SUMMARY_RESTART, '새 여정 시작');
+    assert.equal(MSG.JOURNEY_KEPT_LINE('도감'), '다음 여정에 남는 것: 도감');
 });
 
 // ── ② 그대로 그리는 시스템 데이터 전수.
@@ -222,6 +232,9 @@ test('[데이터 전수] 그대로 그리는 시스템 문장(보스 브리핑 �
 const CODE_EXEMPT = {
     'src/utils/commandParser.ts': new Set(['퀘스트', '인벤', '스킬', '스킬변경', '탐색']),
     'src/utils/aiEventUtils.ts': new Set(['도망']),
+    // 타이틀 화면의 시작 단추는 게임 전체를 연다(캐릭터 · 세이브를 만든다). AI 요청 문맥의 기본 낱말은 화면에 그리지 않는다.
+    'src/components/IntroScreen.tsx': new Set(['모험 시작']),
+    'src/services/aiService.ts': new Set(['모험']),
 };
 // QA 시드 API는 프로덕션 번들에서 빠진다.
 const CODE_EXCLUDED_FILES = new Set(['src/hooks/useGameTestApi.ts']);
@@ -325,4 +338,19 @@ test('[렌더] 능력치 화면의 장비 세트 줄은 약어 없이 "공격력
     const player = makePlayerFixture({});
     const html = renderStatic(createElement(StatsPanel, { player, stats: { ...calculateFullStats(player), activeSet: fire } }));
     assert.match(html, /화염의 결속 \(2세트\): 공격력 10% 증가/u);
+});
+
+// ── ⑦ 렌더: 사망 화면은 끝난 한 판을 '여정' 하나로 부른다(통합 수용 6차, 원장 §144).
+test('[렌더] 사망 화면은 한 판을 "여정"으로 부른다 — 머리말 · 종료 줄 · 남는 것 · 다시 시작 단추가 같은 이름이다', () => {
+    const player = makePlayerFixture({ level: 52, loc: '북부 요새', meta: { prestigeRank: 3 } });
+    const html = renderStatic(createElement(RunSummaryCard, { runSummary: buildRunSummary(player, player.loc), onRestart: () => {} }));
+    const visible = html.replace(/<[^>]+>/gu, ' ').replace(/&#x27;|&quot;|&amp;/gu, ' ');
+    const aria = [...html.matchAll(/aria-label="([^"]*)"/gu)].map((match) => match[1]);
+    for (const text of [visible, ...aria]) assert.equal(findVariant(text), null, text.slice(0, 120));
+    assert.ok(visible.includes('이번 여정 기록'));
+    assert.ok(visible.includes('북부 요새에서 여정 종료'));
+    assert.ok(visible.includes('새 여정 시작'));
+    assert.ok(html.includes(MSG.JOURNEY_KEPT_LINE(getJourneySurfaceText('death', 'kept'))));
+    assert.ok(aria.includes('이번 여정 성과'));
+    assert.ok(!/모험/u.test(visible.replace(/모험가|모험 기록|모험 도감/gu, '')), '사망 화면에 한 판의 두 번째 이름이 없다');
 });

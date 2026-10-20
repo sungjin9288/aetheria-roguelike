@@ -50,7 +50,7 @@ export const getPostCombatAnalysis = (result: PostCombatResultLike) => {
     notes.push(`현재 성장 방향은 ${growthDirection}입니다.`);
 
     if (result.difficultyLabel) {
-        notes.push(`현재 모험의 체감 난이도는 ${result.difficultyLabel}입니다.`);
+        notes.push(`현재 여정의 체감 난이도는 ${result.difficultyLabel}입니다.`);
     }
 
     if (result.leveledUp) notes.push('레벨이 올라 다음 구간을 준비할 여유가 생겼습니다.');
@@ -173,16 +173,16 @@ type RunSummaryLike = Partial<RunSummary>;
 //   N test (cycle-87/97) 모두 summary 명시 전달이라 default 도달 불가.
 export const getRunSummaryAnalysis = (summary: RunSummaryLike) => {
     const headline = (summary.bossKills || 0) > 0
-        ? '보스 구간까지 닿은 모험'
+        ? '보스 구간까지 닿은 여정'
         : (summary.level || 0) >= 20
-            ? '중후반까지 이어진 모험'
+            ? '중후반까지 이어진 여정'
             : (summary.level || 0) >= 10
-                ? '성장 방향을 잡은 모험'
-                : '초반 안정화가 필요한 모험';
+                ? '성장 방향을 잡은 여정'
+                : '초반 안정화가 필요한 여정';
 
     const notes: string[] = [];
     if (summary.primaryBuild) notes.push(`성장 방향: ${summary.primaryBuild}`);
-    if (summary.difficultyLabel) notes.push(`모험 난이도: ${summary.difficultyLabel}`);
+    if (summary.difficultyLabel) notes.push(`체감 난이도: ${summary.difficultyLabel}`);
     if (Number.isFinite(summary.recentWinRate)) notes.push(`최근 승률: ${summary.recentWinRate}%`);
 
     const focus: string[] = [];
@@ -200,7 +200,7 @@ export const getRunSummaryAnalysis = (summary: RunSummaryLike) => {
         focus.push('발견한 지역이 적었습니다. 새로운 길을 탐험해 유물과 이벤트를 만날 기회를 넓히세요.');
     }
     if ((summary.discoveries || 0) >= 5) {
-        focus.push('탐험 폭이 넓었습니다. 같은 호기심으로 다음 모험도 시작하세요.');
+        focus.push('탐험 폭이 넓었습니다. 같은 호기심으로 다음 여정도 시작하세요.');
     }
     // cycle 97: maxKillStreak (cycle 95 신규 카운터) 기반 reflection.
     // KILL_STREAK_TIERS [3,5,10,20] 중 10 이상이면 공격 운영 칭찬 — tier 3 진입.
@@ -211,7 +211,7 @@ export const getRunSummaryAnalysis = (summary: RunSummaryLike) => {
     if ((summary.maxKillStreak || 0) < 3 && (summary.level || 0) >= 10) {
         focus.push('연속 처치가 자주 끊겼습니다. 장비를 보강하고 약한 적부터 정리해 흐름을 이어가세요.');
     }
-    if (focus.length === 0) focus.push('이번 모험은 기반이 좋았습니다. 같은 성장 방향을 더 강하게 밀어도 됩니다.');
+    if (focus.length === 0) focus.push('이번 여정은 기반이 좋았습니다. 같은 성장 방향을 더 강하게 밀어도 됩니다.');
 
     return {
         headline,
@@ -246,7 +246,7 @@ export const getRunSummaryReflectionStrip = (
 
     let tone = 'steady';
     let cause = '기반 안정';
-    let lesson = analysis?.headline || '모험 흐름 확인';
+    let lesson = analysis?.headline || '여정 흐름 확인';
     let next = '같은 성장 방향 강화';
 
     if (highEscapes || /도주.*보스/.test(focusText)) {

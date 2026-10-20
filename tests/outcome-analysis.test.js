@@ -70,7 +70,7 @@ test('run summary analysis recommends a next-run focus from weak runs', () => {
         recentWinRate: 42,
     });
 
-    assert.equal(analysis.headline, '초반 안정화가 필요한 모험');
+    assert.equal(analysis.headline, '초반 안정화가 필요한 여정');
     assert.ok(analysis.notes.some((note) => note.includes('균형형 성장')));
     assert.ok(analysis.focus.some((focus) => focus.includes('유물')));
 });
