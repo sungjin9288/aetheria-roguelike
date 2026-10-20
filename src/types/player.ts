@@ -138,8 +138,6 @@ interface PlayerStats {
     abyssDailyDive?: AbyssDailyDive | null;
     /** 2026-09 D1 — 원정 단위 무료 정찰 사용 기록. expeditionId가 바뀌면 자동으로 다시 채워진다. */
     scoutCharges?: { expeditionId: string; used: number };
-    /** 2026-09 D2 — "밀어붙인다" 직후 다음 탐험 1회의 모닥불 분기를 차단한다. */
-    nextExploreCampfireBlocked?: boolean;
 }
 
 /** 탐험 pacing pity 카운터 — utils/explorationPacing.ts가 단일 진실 원천(DEFAULT_EXPLORE_STATE). */

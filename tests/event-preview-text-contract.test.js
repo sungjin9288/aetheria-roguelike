@@ -1,11 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createElement } from 'react';
 
-import { BALANCE } from '../src/data/constants.js';
 import { DB } from '../src/data/db.js';
 import { MSG } from '../src/data/messages.js';
-import { EVENT_CHAINS } from '../src/data/eventChains.js';
+import { EVENT_CHAINS, isChainEventStep } from '../src/data/eventChains.js';
 import { FALLBACK_EVENT_POOL } from '../src/data/aiEventPools.js';
 import { findStructuredFallbackHiddenEvent } from '../src/data/structuredFallbackEvents.js';
 import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.js';
@@ -17,10 +15,7 @@ import { buildEventPackage } from '../src/utils/aiEventUtils.js';
 import { buildCampfireEvent } from '../src/utils/campfireEvent.js';
 import { buildBoundedEncounterEvent } from '../src/utils/boundedEncounterEvent.js';
 import { formatEventText, getEventChoicePreview } from '../src/utils/eventPresentation.js';
-import { applyPostCombatChoice, getPostCombatChoiceOptions } from '../src/utils/postCombatChoice.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
-import PostCombatCard from '../src/components/PostCombatCard.tsx';
-import { renderStatic } from './helpers/render.ts';
 
 /**
  * 2026-10 — 엔진은 맞는데 플레이어가 읽는 문구 · 미리보기가 틀리던 결함(B 묶음)의 행동 계약.
@@ -28,7 +23,7 @@ import { renderStatic } from './helpers/render.ts';
  * E5  체인 `combat_bonus`의 버프 이름 · 로그는 그 체인의 것이다(셋 모두 '최후의 영웅 · 기사의 혼령'이었다).
  * E6  체인을 닫는 선택(`chain_advance_fail`)은 미리보기에서 이야기가 끝난다고 말한다.
  * E13 생명을 잃는 일반 사건 결과는 정예 · 상태이상 · 유물 · 버프 줄에서도 생명 손실을 말한다.
- * E18 "밀어붙인다" 설명은 모닥불 차단을 늘 말하고, 보스 게이지는 실제로 오를 때만 말한다.
+ * (E18 "밀어붙인다" 설명 계약은 Wave 127이 그 선택을 없애며 함께 지웠다.)
  * U5  회복이 실효 최대치에서 멈추면 로그는 실제로 오른 양을 말한다.
  *
  * 전부 실제 모듈(데이터 · 액션 · 리듀서 · 미리보기 · 카드 렌더)을 호출해 결과를 단언한다 — 소스 정규식 없음.
@@ -63,7 +58,7 @@ const runEventChoice = (player, currentEvent, choiceIndex, rng = () => 0.5) => {
 
 const chainEventFor = (chain, stepData) => ({ ...clone(stepData.event), _chainId: chain.id, _chainStep: stepData.step });
 
-const chainOutcomes = () => EVENT_CHAINS.flatMap((chain) => chain.steps.flatMap((stepData) => (
+const chainOutcomes = () => EVENT_CHAINS.flatMap((chain) => chain.steps.filter(isChainEventStep).flatMap((stepData) => (
     stepData.event.outcomes.map((outcome, choiceIndex) => ({ chain, stepData, outcome, choiceIndex }))
 )));
 
@@ -214,56 +209,6 @@ test('E13: 기력만 잃는 결과는 생명 손실이 아니라 기력 손실�
     const event = { choices: ['a', 'b'], outcomes: [{ choiceIndex: 0, mp: -10 }, { choiceIndex: 1, mp: -10, gold: 30 }] };
     assert.deepEqual(getEventChoicePreview(event, 0), { text: MSG.EVENT_PREVIEW_MP_LOSS, tone: 'danger' });
     assert.ok(!getEventChoicePreview(event, 1).text.includes(HP_LOSS_TEXT));
-});
-
-// ── E18 ───────────────────────────────────────────────────────────────────
-test('E18: "밀어붙인다" 설명은 모닥불 차단을 늘 말하고, 게이지는 실제로 오를 때만 말한다', () => {
-    const pct = Math.round(BALANCE.POST_COMBAT_PUSH_ATK_BONUS * 100);
-    const turns = BALANCE.POST_COMBAT_PUSH_TURNS;
-    const withGauge = MSG.POST_COMBAT_PUSH_DETAIL(pct, turns, true);
-    const withoutGauge = MSG.POST_COMBAT_PUSH_DETAIL(pct, turns, false);
-    assert.notEqual(withGauge, withoutGauge);
-    assert.match(withGauge, /보스/);
-    assert.doesNotMatch(withoutGauge, /보스/);
-    assert.match(withoutGauge, /모닥불/);
-
-    let undefeatedCases = 0;
-    let defeatedCases = 0;
-    for (const [loc, map] of Object.entries(DB.MAPS)) {
-        const variants = [{}];
-        if (typeof map.boss === 'string') variants.push({ areaBossDefeated: { [map.boss]: true } });
-        for (const statsOverride of variants) {
-            const player = basePlayer({ loc, stats: { ...clone(INITIAL_STATE.player.stats), ...statsOverride } });
-            const detail = getPostCombatChoiceOptions(player).find((option) => option.id === 'push').detail;
-            const applied = applyPostCombatChoice(player, 'push', map, 100);
-            const gaugeAdvanced = applied.logs.some((log) => log.text === MSG.POST_COMBAT_PUSH_GAUGE_LOG);
-            assert.equal(detail, gaugeAdvanced ? withGauge : withoutGauge, `${loc} ${JSON.stringify(statsOverride)}`);
-            assert.equal(applied.player.stats.nextExploreCampfireBlocked, true, '모닥불 차단은 늘 일어난다');
-            if (typeof map.boss === 'string') {
-                if (statsOverride.areaBossDefeated) defeatedCases += 1;
-                else undefeatedCases += 1;
-            }
-        }
-    }
-    assert.ok(undefeatedCases > 0 && defeatedCases > 0);
-    // 플레이어를 모르면 게이지를 약속하지 않는다.
-    assert.equal(getPostCombatChoiceOptions().find((option) => option.id === 'push').detail, withoutGauge);
-});
-
-test('E18: 카드는 현재 플레이어 기준 설명을 그린다', () => {
-    const result = { enemy: '하수도 쥐', enemyTier: 'NORMAL', isBoss: false, exp: 10, gold: 5, items: [], playerHp: 60, playerMaxHp: 100 };
-    const render = (player) => renderStatic(createElement(PostCombatCard, { result, player, onResolveChoice: () => {} }));
-    const pct = Math.round(BALANCE.POST_COMBAT_PUSH_ATK_BONUS * 100);
-    const turns = BALANCE.POST_COMBAT_PUSH_TURNS;
-    const undefeated = basePlayer({ loc: '고대 하수도' });
-    const defeated = basePlayer({
-        loc: '고대 하수도',
-        stats: { ...clone(INITIAL_STATE.player.stats), areaBossDefeated: { [DB.MAPS['고대 하수도'].boss]: true } },
-    });
-    assert.ok(render(undefeated).includes(MSG.POST_COMBAT_PUSH_DETAIL(pct, turns, true)));
-    const defeatedHtml = render(defeated);
-    assert.ok(defeatedHtml.includes(MSG.POST_COMBAT_PUSH_DETAIL(pct, turns, false)));
-    assert.ok(!defeatedHtml.includes(MSG.POST_COMBAT_PUSH_DETAIL(pct, turns, true)));
 });
 
 // ── U5 ────────────────────────────────────────────────────────────────────

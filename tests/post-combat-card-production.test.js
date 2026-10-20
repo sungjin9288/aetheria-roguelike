@@ -12,7 +12,6 @@ import {
     getPostCombatDecisionStrip,
     getPostCombatRecommendation,
 } from '../src/utils/outcomeAnalysis.js';
-import { isPostCombatChoiceOffered } from '../src/utils/postCombatChoice.js';
 
 /**
  * 2026-09 D3 — 전투 결과 카드(PostCombatCard)를 실제 승리 흐름에 연결.
@@ -131,18 +130,6 @@ test('① 생명 비율이 등급을 나눈다 — 불리언 플래그로 뭉개
     assert.equal(getPostCombatAnalysis(battered).grade, '붕괴 직전');
 });
 
-test('① 일반 승리 결과에는 밀어붙이기/숨 고르기 선택이 제시된다', () => {
-    const won = attack(makeState());
-    assert.equal(isPostCombatChoiceOffered(won.postCombatResult), true);
-
-    const resolved = gameReducer(won, {
-        type: AT.RESOLVE_POST_COMBAT_CHOICE,
-        payload: { choice: 'push' },
-    });
-    assert.ok(resolved.player.tempBuff, '카드에서 고른 선택이 실제 버프로 적용돼야 한다');
-    assert.equal(resolved.postCombatResult.postCombatChoiceResolved, true);
-});
-
 // ── ② 보스 / 정예 승리 ───────────────────────────────────────────────────
 test('② 구역 보스 첫 토벌은 보스 등급과 첫 토벌 보상을 카드에 넘긴다', () => {
     const state = makeState();
@@ -154,8 +141,6 @@ test('② 구역 보스 첫 토벌은 보스 등급과 첫 토벌 보상을 카�
     assert.equal(result.isBoss, true);
     assert.ok(result.bossClearBonus > 0, '첫 토벌 골드 보너스가 카드에 보여야 한다');
     assert.ok(typeof result.bossRewardHint === 'string' && result.bossRewardHint.length > 0);
-    // 보스전은 원정을 마무리하는 지점이라 push/breather 선택은 제시하지 않는다.
-    assert.equal(isPostCombatChoiceOffered(result), false);
 });
 
 test('② 정예 승리는 정예 등급으로 표시된다', () => {

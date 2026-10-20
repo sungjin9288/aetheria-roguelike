@@ -277,12 +277,9 @@ export const runNaturalPlay = async (options) => {
                 continue;
             }
 
-            if (state.postCombatResult && !state.postCombatResult.postCombatChoiceResolved) {
-                const stats = getFullStats();
-                const choice = (p.hp / Math.max(1, stats.maxHp)) < 0.5 ? 'breather' : 'push';
-                const before = state;
-                dispatch({ type: AT.RESOLVE_POST_COMBAT_CHOICE, payload: { choice } });
-                if (state === before) dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+            // Wave 127: 전투 결과 카드에는 고를 것이 없다(전투 후 "밀어붙인다 / 숨을 고른다" 삭제) — 플레이어처럼 닫는다.
+            if (state.postCombatResult) {
+                dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
                 continue;
             }
 

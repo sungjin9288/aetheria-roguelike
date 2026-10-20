@@ -402,13 +402,8 @@ const GameRoot = ({
                 <Suspense fallback={null}>
                     <PostCombatCard
                         result={engine.postCombatResult}
-                        player={engine.player}
                         onClose={() => engine.actions.clearPostCombat?.()}
                         onOpenInventory={() => handleOpenArchiveTab('inventory')}
-                        onResolveChoice={(choice) => engine.dispatch({
-                            type: AT.RESOLVE_POST_COMBAT_CHOICE,
-                            payload: { choice },
-                        })}
                     />
                 </Suspense>
             )}

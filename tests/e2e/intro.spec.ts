@@ -99,9 +99,9 @@ test.describe('Intro flow', () => {
         await primary.getByRole('button').click();
         await expect(page.getByTestId('control-mission-tracker')).toContainText('0/1');
 
+        // 2026-10 Wave 127(소유자 결정): 첫 탐험은 강제 이야기를 띄우지 않는다 — 조용한 결과 씨앗으로 고정한다.
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8));
         await page.getByTestId('control-explore').click();
-        await expect(page.getByTestId('event-panel')).toBeVisible({ timeout: 8_000 });
-        await page.getByTestId('event-choice-0').click();
         const completedMission = page.getByTestId('control-mission-tracker');
         await expect(completedMission).toContainText('보상 대기');
         await expect(completedMission).toContainText('마을에서 보상 회수');

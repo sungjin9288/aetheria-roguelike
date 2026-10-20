@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { EVENT_CHAINS } from '../src/data/eventChains.js';
+import { EVENT_CHAINS, isChainEventStep } from '../src/data/eventChains.js';
 import { MSG } from '../src/data/messages.js';
 import { RELICS } from '../src/data/relics.js';
 import { DB } from '../src/data/db.js';
@@ -84,7 +84,7 @@ const resolveChoice = (state, choiceIndex, rng) => {
 test('C3 "전설" 유물을 말하는 이야기 선택지는 정확히 여섯이고 모두 데이터가 전설 등급을 선언한다', () => {
     const declared = [];
     for (const chain of EVENT_CHAINS) {
-        for (const stepData of chain.steps) {
+        for (const stepData of chain.steps.filter(isChainEventStep)) {
             stepData.event.outcomes.forEach((outcome, choiceIndex) => {
                 if (outcome.reward?.type !== 'relic') return;
                 const promisesLegendary = /전설/.test(outcome.log || '');
@@ -99,7 +99,7 @@ test('C3 "전설" 유물을 말하는 이야기 선택지는 정확히 여섯이
 
 test('C3 "용의 심장 유물"은 더 이상 약속되지 않는다(그런 유물이 없다 — 용의 심장은 재료다)', () => {
     assert.ok(!RELICS.some((relic) => relic.name === '용의 심장'), '전제: 그런 유물은 없다');
-    const logs = EVENT_CHAINS.flatMap((chain) => chain.steps.flatMap((stepData) => stepData.event.outcomes.map((o) => o.log)));
+    const logs = EVENT_CHAINS.flatMap((chain) => chain.steps.filter(isChainEventStep).flatMap((stepData) => stepData.event.outcomes.map((o) => o.log)));
     assert.ok(!logs.some((log) => /용의 심장 유물/.test(log)));
 });
 

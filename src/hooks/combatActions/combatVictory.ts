@@ -327,7 +327,7 @@ export const handleVictoryOutcome = ({
     });
     // 2026-09 D3: 전투 결과 카드(PostCombatCard)를 실제 승리 흐름에 연결한다.
     //   기존엔 payload: null을 넣어 카드가 QA 주입(useGameTestApi.injectPostCombatResult)에서만
-    //   열렸고, 카드에 붙은 판단 요약·전리품 신호·"밀어붙인다 / 숨을 고른다" 선택이 모두
+    //   열렸고, 카드에 붙은 판단 요약·전리품 신호가 모두
     //   프로덕션에서 보이지 않았다. 필드는 injectPostCombatResult 픽스처와 같은 스키마이며,
     //   값은 모두 위에서 이미 계산한 것만 재사용한다(신규 계산 없음).
     //   hpLow/mpLow 불리언 대신 실제 생명/기력 수치를 넘긴다 — outcomeAnalysis가 비율로

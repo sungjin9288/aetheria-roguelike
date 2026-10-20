@@ -9,7 +9,7 @@ import { DB } from '../../data/db';
 import { clearAdventureRelicBonuses, endDevourBonus } from '../../utils/adventureRelicBonuses';
 import { endCombatScope } from '../../utils/combatScope';
 import { normalizeAdventureRelicBonuses } from '../../utils/adventureRelicState';
-import { normalizeDeferredEventChainSteps } from '../../data/eventChains';
+import { advanceQuestStartedChains, normalizeDeferredEventChainSteps } from '../../data/eventChains';
 import { restorePendingRelics } from '../../utils/pendingRelicsRestore';
 
 const getBootstrapLogs = (state: GameState, playerName: string) => {
@@ -41,6 +41,12 @@ export const bootstrapActionMap = {
             adventureRelicBonuses: normalizeAdventureRelicBonuses(
                 action.payload.player?.adventureRelicBonuses, action.payload.player?.maxHp,
             ) };
+        // 2026-10 Wave 127: 임무로 여는 체인 단계는 수령으로 끝난다 — 이 규칙 전에 첫 임무를 받고 숲의 이벤트를 지나친 세이브는
+        //   그 단계에 멈춰 있으므로(이제 그 자리에 이벤트가 없다) 불러올 때 같은 판정으로 넘긴다. 열 단계가 없으면 그대로다.
+        const questStartedChains = advanceQuestStartedChains(loadedPlayer.eventChainProgress, loadedPlayer.stats?.claimedQuestIds);
+        if (questStartedChains.started.length > 0) {
+            loadedPlayer = { ...loadedPlayer, eventChainProgress: questStartedChains.progress };
+        }
         const enemy = action.payload.enemy || null;
         // 2026-09 Wave 20 L1: 봉투의 `gameState`는 `JSON.parse` 결과라 모드가 아닐 수도
         //   있다. 예전의 `restorableMode` else-`true`는 `'formation'` 같은 미지의

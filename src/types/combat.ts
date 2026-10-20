@@ -9,11 +9,9 @@
  * `Player['hp']`), 성장 방향은 빌드 프로파일의 `primary.name`.
  *
  * 소비자가 "생산자가 안 쏘는 필드"를 읽는 경우는 여기에 넓혀 주지 않는다 —
- * 아래 두 optional 그룹만 예외이고, 각각 실제 생산자가 있다:
- *   1. `postCombatChoiceResolved` / `postCombatChoice` — reducer(`handlers/combatHandlers.ts`의
- *      `RESOLVE_POST_COMBAT_CHOICE`)가 카드의 "밀어붙인다 / 숨을 고른다" 선택을 적용할 때
- *      기존 결과에 덧붙인다.
- *   2. `hpLow` / `mpLow` — QA 시드(`hooks/useGameTestApi.injectPostCombatResult`)만 쏘는
+ * 아래 optional 그룹만 예외이고, 실제 생산자가 있다(Wave 127: 전투 후 "밀어붙인다 / 숨을 고른다"
+ * 선택이 없어져 reducer가 덧붙이던 선택 상태 그룹도 사라졌다):
+ *   - `hpLow` / `mpLow` — QA 시드(`hooks/useGameTestApi.injectPostCombatResult`)만 쏘는
  *      레거시 별칭이고, `utils/outcomeAnalysis.ts`가 비율 계산보다 우선해서 읽는다
  *      (`tests/cycle-500-599.test.js` cycle 557이 그 분기를 고정한다). 실제 승리 흐름은
  *      `playerHp`/`playerMaxHp`(수치)를 쏘므로 프로덕션 경로에는 나타나지 않는다.
@@ -31,7 +29,6 @@ import type { Monster } from './monster.js';
 import type { Player } from './player.js';
 import type { getLootUpgradeHint } from '../hooks/combatActions/_helpers.js';
 import type { getRunBuildProfile, getTraitLootHint } from '../utils/runProfileUtils.js';
-import type { PostCombatChoiceId } from '../utils/postCombatChoice.js';
 
 /** 처치한 적의 등급 — 생산자가 `isBossKill` / `deadEnemy.isElite`로 정한다. */
 export type PostCombatEnemyTier = 'BOSS' | 'ELITE' | 'NORMAL';
@@ -65,11 +62,7 @@ export interface PostCombatResult {
     bossRewardHint: string | null;
     bossClearBonus: number;
 
-    // ── reducer가 덧붙이는 선택 상태 (위 주석 1) ──────────────────────────
-    postCombatChoiceResolved?: boolean;
-    postCombatChoice?: PostCombatChoiceId;
-
-    // ── QA 시드 전용 레거시 별칭 (위 주석 2) ─────────────────────────────
+    // ── QA 시드 전용 레거시 별칭 (위 주석) ───────────────────────────────
     hpLow?: boolean;
     mpLow?: boolean;
 }

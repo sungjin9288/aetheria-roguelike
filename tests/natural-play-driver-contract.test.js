@@ -23,7 +23,10 @@ test('짧은 예산에서도 실제로 성장한다 — 막힘 감시가 비어 
     assert.equal(result.steps, SHORT.maxSteps);
     const [run] = result.runs;
     assert.ok(run.combats >= 30, `전투 ${run.combats}`);
-    assert.ok(result.finalLevel >= 10, `레벨 ${result.finalLevel}`);
+    // 그 회차에 닿은 최고 레벨이다 — 사망하면 여정이 처음부터라(Wave 108) 마지막 레벨은 성장의 척도가 아니다
+    //   (Wave 127: 전투 후 회복이 없어진 뒤 시드 7은 Lv11에서 한 번 죽고 Lv3에서 예산이 끝난다).
+    const reached = Math.max(...Object.keys(run.levelAt).map(Number));
+    assert.ok(reached >= 10, `레벨 ${reached}`);
     assert.ok(run.levelAt[2] > 0, '레벨 도달 시각을 기록한다');
     // Wave 120: 큰 순간(원장 §80 정의 + 토벌 의뢰)을 시각과 함께 남긴다 — 리듬(최장 공백) 측정의 입력이다.
     const kinds = new Set(run.moments.map(([, kind]) => kind));

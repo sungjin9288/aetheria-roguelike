@@ -14,7 +14,6 @@ import { advanceBossGauge, getAreaBossName, isAreaBossChallengeable } from '../s
 import { canBossAppearInMap, isEncounterBoss } from '../src/utils/bossPresence.ts';
 import { getBossGaugeChip } from '../src/utils/expeditionHud.ts';
 import { spawnEnemy } from '../src/utils/exploreUtils.ts';
-import { doesPushAdvanceBossGauge } from '../src/utils/postCombatChoice.ts';
 import { getClaimableQuestEntries } from '../src/utils/questProgress.ts';
 import StoryJournal from '../src/components/StoryJournal.tsx';
 import { renderStatic } from './helpers/render.ts';
@@ -151,12 +150,10 @@ test('[결함 재현 → 수정] 이미 쓰러뜨린 구역 보스는 임무가 
     assert.equal(isAreaBossChallengeable(MAP, withQuest), true);
     assert.equal(spawnForced(withQuest).baseName, BOSS, '도전 카드가 부르는 적은 그 구역 보스다');
     assert.ok(advanceBossGauge(withQuest, MAP).bossGauge[LOC] > 0, '게이지가 다시 오른다');
-    // 같은 판정을 읽는 표면들 — 지도 배지 · 원정 HUD · 전투 후 "밀어붙인다".
+    // 같은 판정을 읽는 표면들 — 지도 배지 · 원정 HUD.
     assert.equal(canBossAppearInMap(LOC, MAP, withQuest), true);
     assert.notEqual(getBossGaugeChip(withQuest), null);
-    assert.equal(doesPushAdvanceBossGauge(withQuest, MAP), true);
     assert.equal(getBossGaugeChip(before), null);
-    assert.equal(doesPushAdvanceBossGauge(before, MAP), false);
 });
 
 test('[실제 전투] 다시 부른 구역 보스를 쓰러뜨리면 장이 완료되고, 그 뒤로는 다시 나오지 않는다', () => {

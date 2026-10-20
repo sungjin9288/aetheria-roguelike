@@ -27,13 +27,8 @@ const validSurfaceObservation = (overrides = {}) => ({
     freshContextCount: 2,
     seeds: [...NATURAL_EXPLORATION_SEEDS],
     outcomes: [...NATURAL_EXPLORATION_OUTCOMES],
-    ordinaryActionsBetweenNarratives: 2,
+    ordinaryActionsBeforeNarrative: 2,
     sequence: [
-        {
-            kind: 'mandatory_event',
-            visibleTitle: '마법의 흔적',
-            visibleText: '숲 한가운데에서 이상한 마법 연기가 피어오릅니다. 주변에는 불에 탄 흔적과 지팡이 파편이 있습니다.',
-        },
         {
             kind: 'combat',
             seed: 112596,
@@ -74,7 +69,7 @@ test('canonical report separates exact source contract from automated surface ob
     const report = buildNaturalExplorationReport(validInput());
 
     assert.deepEqual(report, {
-        schemaVersion: 2,
+        schemaVersion: 3,
         classification: 'automated-real-surface-report-only',
         actualPlayClaim: false,
         humanObserved: false,
@@ -136,10 +131,16 @@ test('source and surface provenance are exact and fail closed', () => {
         ['source minimum gap', {
             sourceContract: { ...NATURAL_EXPLORATION_SOURCE_CONTRACT, minimumOrdinaryGap: 1 },
         }],
-        ['mandatory source mapping', {
+        ['quest start source mapping', {
             sourceContract: {
                 ...NATURAL_EXPLORATION_SOURCE_CONTRACT,
-                mandatoryEvent: { sourceId: 'other', visibleTitle: '마법의 흔적' },
+                questStartChain: { sourceId: 'other', questId: 80 },
+            },
+        }],
+        ['quest start quest mapping', {
+            sourceContract: {
+                ...NATURAL_EXPLORATION_SOURCE_CONTRACT,
+                questStartChain: { sourceId: 'lost_wizard', questId: 81 },
             },
         }],
         ['bounded situation mapping', {
@@ -184,11 +185,11 @@ test('source and surface provenance are exact and fail closed', () => {
         ['wrong outcome order', {
             surfaceObservation: {
                 ...validSurfaceObservation(),
-                outcomes: ['combat', 'mandatory_story', 'nothing', 'bounded_encounter'],
+                outcomes: ['nothing', 'combat', 'bounded_encounter'],
             },
         }],
         ['wrong gap', {
-            surfaceObservation: { ...validSurfaceObservation(), ordinaryActionsBetweenNarratives: 1 },
+            surfaceObservation: { ...validSurfaceObservation(), ordinaryActionsBeforeNarrative: 1 },
         }],
         ['wrong sequence seed', {
             surfaceObservation: {

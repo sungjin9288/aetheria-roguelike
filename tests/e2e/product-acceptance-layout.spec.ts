@@ -264,9 +264,9 @@ for (const viewport of VIEWPORTS) {
             expect(geometry.top).toBeGreaterThanOrEqual(0);
             expect(await findUndersizedText(card)).toEqual([]);
             expect(await countMidWordBreaks(card)).toBe(0);
-            for (const choice of ['post-combat-choice-push', 'post-combat-choice-breather']) {
-                await expectTouchTarget(page.getByTestId(choice));
-            }
+            // Wave 127(소유자 결정): 승리 카드에는 고를 것이 없다 — 회복 · 강화는 낮은 확률의 이벤트로만 나온다.
+            await expect(page.getByTestId('post-combat-choice')).toHaveCount(0);
+            await expectTouchTarget(page.getByTestId('post-combat-primary-action'));
             await page.getByTestId('post-combat-close').click();
             await expect(card).toBeHidden({ timeout: 8_000 });
 

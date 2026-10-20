@@ -28,6 +28,7 @@ import { removeExpeditionFocusQuest } from '../../utils/expeditionMissionFocus';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { getGoldIncome } from '../../utils/challengeRules';
 import { MSG } from '../../data/messages';
+import { advanceQuestStartedChains } from '../../data/eventChains';
 import { appendRewardLogs } from './rewardLog';
 import { addNewTitles, addSeasonXp } from './helpers';
 import type { GameState, HandlerMap } from '../gameReducer';
@@ -161,6 +162,15 @@ export const rewardActionMap = {
         nextPlayer = addSeasonXp(nextPlayer, SEASON_XP.questComplete);
         nextPlayer = addNewTitles(nextPlayer, logs);
         logs.push({ type: 'success', text: MSG.QUEST_DONE(quest.title) });
+        // 2026-10 Wave 127(소유자 결정 "퀘스트를 통해 자동으로 알게"): 이 임무가 여는 체인 단계(첫 임무 → 사라진 마법사)를 끝낸다.
+        //   이벤트를 띄우지 않고, 다음 단서가 어디로 이어지는지 이 기록과 체인 일지가 알린다.
+        const questStartedChains = advanceQuestStartedChains(nextPlayer.eventChainProgress, nextPlayer.stats?.claimedQuestIds);
+        if (questStartedChains.started.length > 0) {
+            nextPlayer = { ...nextPlayer, eventChainProgress: questStartedChains.progress };
+            for (const entry of questStartedChains.started) {
+                logs.push({ type: 'event', text: MSG.CHAIN_QUEST_START(entry.label, entry.log) });
+            }
+        }
 
         const receiptKey = [
             String(questId),

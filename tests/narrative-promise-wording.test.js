@@ -6,7 +6,7 @@ import { GS } from '../src/reducers/gameStates.ts';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
 import { MSG } from '../src/data/messages.ts';
 import { MAPS } from '../src/data/maps.ts';
-import { EVENT_CHAINS } from '../src/data/eventChains.ts';
+import { EVENT_CHAINS, isChainEventStep } from '../src/data/eventChains.ts';
 import { getEventChoicePreview } from '../src/utils/eventPresentation.ts';
 import { getShopCatalog, getShopMaxTier } from '../src/utils/shopRotation.ts';
 import { pickPermanentPlayerState } from '../src/utils/permanentProgress.ts';
@@ -34,7 +34,7 @@ const chainEvent = (chainId, step) => ({
     _chainStep: step,
 });
 
-const chainOutcomes = () => EVENT_CHAINS.flatMap((chain) => chain.steps.flatMap((step) => (
+const chainOutcomes = () => EVENT_CHAINS.flatMap((chain) => chain.steps.filter(isChainEventStep).flatMap((step) => (
     step.event.outcomes.map((outcome, choiceIndex) => ({ chain, step, outcome, choiceIndex }))
 )));
 
@@ -55,7 +55,7 @@ const renderPreviewRow = (event, choiceIndex) => {
 // 2026-10 Wave 108 (소유자 결정 "죽으면 모든 게 초기화"): Wave 72의 '영구' 문구를 대체한다 — 이야기 능력치는 이번 여정 범위다.
 test('C2 → Wave 108: 이야기 미리보기 · 문구는 능력치 보상을 "이번 여정"이라 말하고, 어떤 이야기 문구도 "영구"를 약속하지 않는다', () => {
     for (const chain of EVENT_CHAINS) {
-        for (const step of chain.steps) {
+        for (const step of chain.steps.filter(isChainEventStep)) {
             const texts = [step.event.title, step.event.desc, ...step.event.choices,
                 ...step.event.outcomes.map((o) => o.log)];
             for (const text of texts) assert.ok(!String(text || '').includes('영구'), `${chain.id}:${step.step}: ${text}`);
