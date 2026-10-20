@@ -35,6 +35,19 @@ test('짧은 예산에서도 실제로 성장한다 — 막힘 감시가 비어 
     assert.ok(run.moments.every(([at], index) => at >= 0 && at <= run.hours && (index === 0 || at >= run.moments[index - 1][0])));
 });
 
+test('v3 (Wave 128): 받은 곁가지 이야기 임무는 그 이야기가 시작되는 지역에서 끝내고, 회차마다 이야기별 단계를 남긴다', async () => {
+    const { DRIVER_VERSION } = await import('../scripts/naturalPlay/driver.mjs');
+    assert.equal(DRIVER_VERSION, 3);
+    const result = await runNaturalPlay(SHORT);
+    assert.equal(result.driverVersion, 3);
+    const [run] = result.runs;
+    // 본편 장이 여는 이야기(사라진 마법사 · 잊혀진 사령관)와, 게시판에서 받은 곁가지 이야기 임무가 여는 이야기가 함께 열린다.
+    for (const chainId of ['lost_wizard', 'forgotten_commander', 'last_hero', 'water_apostle']) {
+        assert.ok((run.chainSteps[chainId] ?? 0) >= 1, `${chainId}: ${JSON.stringify(run.chainSteps)}`);
+    }
+    assert.ok(Object.values(run.chainSteps).every((value) => Number.isInteger(value) && value >= 1 && value <= 3));
+});
+
 test('돌린 뒤 전역 Math.random · Date를 되돌린다', async () => {
     const realRandom = Math.random;
     const RealDate = Date;

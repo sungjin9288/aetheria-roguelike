@@ -33,9 +33,11 @@ const restore = (state) => gameReducer(INITIAL_STATE, {
     type: 'LOAD_DATA', payload: migrateData(JSON.parse(JSON.stringify({ ...state, version: 5 }))),
 });
 
-test('미루기 대상은 8개 이야기의 보상 없는 nothing 선택 13개다', () => {
-    assert.equal(cases.length, 13);
-    assert.equal(new Set(cases.map(entry => entry.chainId)).size, 8);
+// Wave 128: 모든 이야기의 0단계가 임무로 열려 0단계의 nothing 선택 7개(예언 · 그림자 길드 · 잊혀진 신 2 · 기계 · 용 · 심연)가
+//   사라졌다 — 남은 미루기 대상은 1 · 2단계의 6개다.
+test('미루기 대상은 4개 이야기의 보상 없는 nothing 선택 6개다', () => {
+    assert.equal(cases.length, 6);
+    assert.equal(new Set(cases.map(entry => entry.chainId)).size, 4);
     for (const entry of cases) assert.equal(entry.data.event.outcomes[entry.choiceIndex].reward, null);
 });
 
@@ -91,7 +93,7 @@ test('같은 원정의 복원은 유지하고 다른 이야기·다음 단계는
     assert.deepEqual(loaded.player.deferredEventChainSteps, { lost_wizard: 1 });
     assert.deepEqual(restore(loaded).player.deferredEventChainSteps, { lost_wizard: 1 });
     assert.equal(getChainEventForLoc('천공 정원', { lost_wizard: 2 }, { lost_wizard: 1 })?.chain.id, 'lost_wizard');
-    assert.equal(getChainEventForLoc('서쪽 평원', {}, { lost_wizard: 1 })?.chain.id, 'last_hero');
+    assert.equal(getChainEventForLoc('화염의 협곡', { last_hero: 1 }, { lost_wizard: 1 })?.chain.id, 'last_hero');
     const resumedEvent = restore(buildState());
     assert.deepEqual(gameReducer(resumedEvent, actionFor()).player.deferredEventChainSteps, { lost_wizard: 1 });
 });

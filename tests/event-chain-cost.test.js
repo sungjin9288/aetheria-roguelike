@@ -16,7 +16,8 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 import { DB } from '../src/data/db.ts';
-import { EVENT_CHAINS } from '../src/data/eventChains.ts';
+import { EVENT_CHAINS, getChainQuestStart } from '../src/data/eventChains.ts';
+import { QUESTS } from '../src/data/quests.ts';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import { GS } from '../src/reducers/gameStates.ts';
@@ -28,9 +29,27 @@ import {
 
 const routeGates = () => mapRouteGateLevels(MAP_ROUTE_START_LOCATION, DB.MAPS);
 
-/** 리포트를 안 보고 데이터에서 직접 계산한 완주 게이트 — 리포트의 독립 대조군. */
+/**
+ * 리포트를 안 보고 데이터에서 직접 계산한 스텝 게이트 — 리포트의 독립 대조군. 임무로 여는 스텝(Wave 127 · 128 — 모든 체인의
+ * 0단계)은 그 임무의 목표 게이트다: max(수락 레벨, 목표 지역 중 가장 이른 경로 게이트). 여는 임무의 선행(본편 80 → 81 → 82,
+ * 209 → 84)은 그 임무보다 이른 게이트라 수락 레벨이 그대로 하한이다.
+ */
+const stepGateFromData = (step, gates) => {
+    const questStart = getChainQuestStart(step);
+    if (!questStart) return Number(gates.get(step.loc));
+    const quest = QUESTS.find((candidate) => candidate.id === questStart.questId);
+    const regions = quest.location
+        ? [quest.location]
+        : Object.entries(DB.MAPS)
+            .filter(([, map]) => [...(map.monsters || []), ...(map.bossMonsters || [])].includes(quest.target))
+            .map(([name]) => name);
+    const regionGate = Math.min(...regions.map((name) => gates.get(name)).filter(Number.isFinite));
+    return Math.max(Number(quest.minLv), regionGate);
+};
+
+/** 완주 게이트 — 전 스텝의 max. */
 const completionGateFromData = (chain, gates) => Math.max(
-    ...chain.steps.map((step) => Number(gates.get(step.loc))),
+    ...chain.steps.map((step) => stepGateFromData(step, gates)),
 );
 
 // ── (1) 왜 max인가: 리듀서가 스텝 순서를 강제한다 ───────────────────────────
@@ -204,7 +223,7 @@ test('cost.eventChainSpans는 값을 매기는 체인 12개의 열림/완주를 
     for (const span of cost.eventChainSpans) {
         const chain = EVENT_CHAINS.find((candidate) => candidate.id === span.chain);
         assert.equal(span.steps, chain.steps.length);
-        assert.equal(span.openGateLevel, Number(gates.get(chain.steps[0].loc)));
+        assert.equal(span.openGateLevel, stepGateFromData(chain.steps[0], gates));
         assert.equal(span.completionGateLevel, completionGateFromData(chain, gates));
         // max의 정의상 열림은 완주를 넘을 수 없다.
         assert.ok(span.openGateLevel <= span.completionGateLevel);

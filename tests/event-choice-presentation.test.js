@@ -152,10 +152,7 @@ test('story-chain gold costs are exact danger previews while positive gold remai
         return { ...stepData.event, _chainId: chainId, _chainStep: step };
     };
 
-    assert.deepEqual(getEventChoicePreview(eventFor('last_hero', 0), 0), {
-        text: '이야기 진행 · 골드 300 소모',
-        tone: 'danger',
-    });
+    // Wave 128: 최후의 영웅 0단계(치료비 300)는 임무로 연다 — 남은 이야기 골드 지불은 그림자 길드 1단계다.
     assert.deepEqual(getEventChoicePreview(eventFor('shadow_guild', 1), 0), {
         text: '이야기 진행 · 골드 2000 소모 · 상인의 인장 획득',
         tone: 'danger',

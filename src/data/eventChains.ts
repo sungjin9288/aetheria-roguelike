@@ -726,8 +726,8 @@ export function getChainQuestStart(step: EventChainStepEntry | undefined): Chain
 }
 
 /** 체인 진행 값의 지금 단계 번호 — 시작 전이면 0, 실패했으면 null(체인 id 키에는 숫자 또는 '실패' 마커만 온다). */
-const currentChainStepIndex = (progress: EventChainProgress | null | undefined, chainId: string): number | null => {
-    const raw = progress?.[chainId];
+const currentChainStepIndex = (progress: EventChainProgress | null | undefined, id: string): number | null => {
+    const raw = progress?.[id];
     return typeof raw === 'number' ? raw : raw === undefined ? 0 : null;
 };
 
@@ -738,12 +738,12 @@ const currentChainStepIndex = (progress: EventChainProgress | null | undefined, 
 export function getQuestOpenedChain(
     questId: unknown,
     progress: EventChainProgress | null | undefined,
-): { chainId: string; label: string; hook: string | null } | null {
+): { chain: (typeof EVENT_CHAINS)[number]; hook: string | null } | null {
     for (const chain of EVENT_CHAINS) {
         const stepIndex = currentChainStepIndex(progress, chain.id);
         if (stepIndex === null) continue;
         const questStart = getChainQuestStart(chain.steps[stepIndex]);
-        if (questStart && questStart.questId === questId) return { chainId: chain.id, label: chain.label, hook: questStart.hook ?? null };
+        if (questStart && questStart.questId === questId) return { chain, hook: questStart.hook ?? null };
     }
     return null;
 }

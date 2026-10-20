@@ -11,6 +11,7 @@ import { createExploreActions } from '../src/hooks/gameActions/exploreActions.ts
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.ts';
 import { buildChainJournal } from '../src/utils/chainJournal.ts';
 import { MSG } from '../src/data/messages.ts';
+import { QUESTS } from '../src/data/quests.ts';
 import QuestTab from '../src/components/tabs/QuestTab.tsx';
 import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 
@@ -88,8 +89,9 @@ test('데이터: 신호가 말한 층과 생존자 · 핵심 스텝의 층 조�
     const floor = stepOf(1).minAbyssFloor;
     assert.equal(floor, 50);
     assert.equal(stepOf(2).minAbyssFloor, floor, '핵심은 생존자가 안내하는 더 깊은 곳 — 같은 조건');
-    assert.equal(stepOf(0).minAbyssFloor, undefined, '신호는 심연 어디서든 잡힌다');
-    assert.ok(stepOf(0).event.desc.includes(`${floor}층`), '신호 문구가 그 층을 말한다');
+    assert.equal(stepOf(0).minAbyssFloor, undefined, '신호는 층과 무관하게 잡힌다');
+    // Wave 128: 신호는 0단계 이벤트가 아니라 여는 임무(205 '혼돈 속의 생존자')의 수령 기록이 알린다.
+    assert.ok(stepOf(0).questStart.log.includes(`${floor}층`), '신호 문구가 그 층을 말한다');
     assert.ok(stepOf(1).event.desc.startsWith(`${floor}층에서`), '생존자 문구가 그 층을 말한다');
     // 층 조건을 가진 스텝은 혼돈의 심연에만 있다(층 번호는 그곳에서만 뜻이 있다).
     for (const chain of EVENT_CHAINS) {
@@ -110,9 +112,17 @@ test('판정: 지금 싸우는 층(돌파 층 + 1)이 조건 층 이상이어야
     assert.equal(isChainStepFloorReached(stepOf(0), 0), true, '조건 없는 스텝은 언제나 통과');
 });
 
-test('[실제 탐험] 신호는 1층에서 잡힌다(층 조건 없음)', async () => {
-    const state = await exploreOnce(abyssPlayer(null, 0));
-    assert.equal(openedChainStep(state), 0);
+test('[임무] 신호는 여는 임무를 수령하면 잡힌다(층 조건 없음) — 1층 탐험은 이야기 화면을 띄우지 않는다', async () => {
+    const explored = await exploreOnce(abyssPlayer(null, 0));
+    assert.equal(openedChainStep(explored), null, 'Wave 128: 심연의 첫 탐험은 신호 이벤트를 띄우지 않는다');
+    const questId = stepOf(0).questStart.questId;
+    const goal = QUESTS.find((quest) => quest.id === questId).goal;
+    let state = { ...clone(INITIAL_STATE), gameState: GS.IDLE, player: { ...abyssPlayer(null, 0), loc: '시작의 마을' } };
+    state = gameReducer(state, { type: AT.ACCEPT_QUEST, payload: { questId } });
+    state = { ...state, player: { ...state.player, quests: state.player.quests.map((entry) => (entry.id === questId ? { ...entry, progress: goal } : entry)) } };
+    state = gameReducer(state, { type: AT.CLAIM_QUEST_REWARD, payload: { questId } });
+    assert.equal(state.player.eventChainProgress.abyss_signal, 1, '돌파 0층에서도 신호를 받는다');
+    assert.ok(state.logs.some((log) => log.text === MSG.CHAIN_QUEST_START(abyssSignal.label, stepOf(0).questStart.log)));
 });
 
 for (const stepIndex of [1, 2]) {
@@ -136,10 +146,11 @@ for (const stepIndex of [1, 2]) {
 
 test('[트리거] 다른 지역 · 다른 체인 판정은 층과 무관하다', () => {
     for (const chain of EVENT_CHAINS) {
-        // Wave 127: 임무로 여는 첫 단계(사라진 마법사)는 이벤트가 없다 — 그 계약은 quest-start-chain-contract가 지킨다.
-        if (chain.id === 'abyss_signal' || !isChainEventStep(chain.steps[0])) continue;
-        const first = chain.steps[0];
-        assert.equal(getChainEventForLoc(first.loc, {}, undefined, 0)?.chain.id !== undefined, true, `${chain.id}: 0층에서도 첫 스텝이 잡힌다`);
+        // Wave 127 · 128: 0단계는 임무로 연다 — 층과 무관한 첫 이벤트 단계(1단계)로 본다.
+        if (chain.id === 'abyss_signal') continue;
+        const first = chain.steps.find((step) => isChainEventStep(step));
+        assert.equal(first.step, 1);
+        assert.equal(getChainEventForLoc(first.loc, { [chain.id]: 1 }, undefined, 0)?.chain.id, chain.id, `${chain.id}: 0층에서도 첫 이벤트 단계가 잡힌다`);
     }
     // 층 조건 스텝이 막히면 null이지, 다른 체인으로 잘못 넘어가지 않는다(혼돈의 심연에 다른 체인 스텝은 없다).
     assert.equal(getChainEventForLoc(ABYSS, { abyss_signal: 1 }, undefined, 48), null);

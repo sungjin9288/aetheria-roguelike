@@ -142,8 +142,9 @@ test('story missions unlock one chapter at a time even for a high-level player',
     };
 
     const board = getQuestBoardRecommendations(player);
+    // Wave 128: 이야기 칸에는 곁가지 이야기를 여는 임무도 들어간다 — 본편 장만 센다(본편은 한 장씩 열린다).
     const availableStoryIds = [...board.featured, ...board.backlog]
-        .filter((entry) => entry.lane === 'story')
+        .filter((entry) => entry.lane === 'story' && entry.quest.title.includes('[스토리]'))
         .map((entry) => entry.quest.id);
 
     assert.deepEqual(availableStoryIds, [80]);
@@ -309,11 +310,13 @@ test('the next story chapter unlocks only after its prerequisite reward was clai
     };
 
     const board = getQuestBoardRecommendations(player);
+    // Wave 128: 이야기 칸의 곁가지 이야기 임무는 빼고 본편 장만 센다. 받을 본편 장이 이야기 칸을 먼저 쓴다.
     const availableStoryIds = [...board.featured, ...board.backlog]
-        .filter((entry) => entry.lane === 'story')
+        .filter((entry) => entry.lane === 'story' && entry.quest.title.includes('[스토리]'))
         .map((entry) => entry.quest.id);
 
     assert.deepEqual(availableStoryIds, [81]);
+    assert.equal(board.featured[0].quest.id, 81);
     assert.ok(board.locked.some((quest) => quest.id === 82 && quest.lockDetail.includes('폐허의 진실')));
 });
 
