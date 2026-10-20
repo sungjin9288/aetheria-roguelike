@@ -112,7 +112,7 @@ test('[실제 스폰] 지역이 스폰한 적은 레벨을 들고 있어 규칙�
 test('[도감] 강화 재료 기록은 후반 획득처를 알려 준다', () => {
     const html = renderStatic(createElement(MaterialCodex, { codex: { materials: { [MAT]: true } } }));
     assert.ok(html.includes('data-testid="codex-material-late-source"'));
-    assert.ok(html.includes(`Lv${MIN_LEVEL}`));
+    assert.ok(html.includes(`레벨 ${MIN_LEVEL}`));
     // 다른 소재에는 붙지 않는다.
     const other = DB.ITEMS.materials.find((item) => item.name !== MAT).name;
     const otherHtml = renderStatic(createElement(MaterialCodex, { codex: { materials: { [other]: true } } }));

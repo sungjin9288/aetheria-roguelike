@@ -104,6 +104,8 @@ const installClock = (clock) => {
  * @param {'none'|'all'|'stacked'|`rank:${number}`} [options.ruleDecline] 거절할 수 있는 회차 규칙 카드를 거절하는 범위
  * @param {'default'|'fixed'|'random'} [options.rulePick] 회차 규칙 카드 — 화면이 처음 골라 두는 카드(기본), 고정 순서 규칙이 패에 있으면 그 카드, 또는 패에서 무작위
  *   (`fixed` — 첫 순환 미리보기 값을 잰 단계(`measuredRank`)에 놓는다, 원장 §121.7 · §128). 고르는 방식만 다르고 난수 소비는 같다.
+ * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
+ *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
 const TRACE = Boolean(process.env.NATURAL_PLAY_TRACE);
 
@@ -133,6 +135,7 @@ export const runNaturalPlay = async (options) => {
         stepSeconds = 15,
         ruleDecline = 'none',
         rulePick = 'default',
+        onDispatch,
     } = options;
     if (!Number.isInteger(seed)) throw new Error('seed must be an integer');
 
@@ -143,7 +146,11 @@ export const runNaturalPlay = async (options) => {
 
     let state = { ...structuredClone(INITIAL_STATE), bootStage: 'ready', logs: [] };
     let logCounter = 0;
-    const dispatch = (action) => { state = gameReducer(state, action); };
+    const dispatch = (action) => {
+        const prev = state;
+        state = gameReducer(state, action);
+        onDispatch?.(prev, action, state);
+    };
     const addLog = (type, text) => dispatch({ type: AT.ADD_LOG, payload: { id: `np-${logCounter++}`, type, text } });
     const getFullStats = (player) => calculateFullStats(player ?? state.player);
 

@@ -145,7 +145,9 @@ export const applyDynamicDifficulty = (
         [MSG.DIFFICULTY_LABEL_DISADVANTAGE]: MSG.DIFFICULTY_GM_DISADVANTAGE,
     };
 
-    if (LABEL_VISIBLE.includes(diff.label)) {
+    // 2026-10 Wave 130: 단계가 바뀔 때만 알린다 — 같은 단계가 이어지는 동안 전투 시작마다 같은 문장이 반복됐다(압도 단계에서
+    //   전투의 88%, 원장 §141). 마지막으로 알린 단계는 탐험 확정이 `player.stats.difficultyNotice`에 남긴다(`withDifficultyNotice`).
+    if (LABEL_VISIBLE.includes(diff.label) && diff.label !== player?.stats?.difficultyNotice) {
         addLog?.('system', GM_PREFIX_MAP[diff.label]);
     }
 
@@ -163,8 +165,18 @@ export const applyDynamicDifficulty = (
         gold:  Math.floor(Number(mStats.gold)  * diff.goldMult),
     };
 
-    return { mStats: scaled };
+    return { mStats: scaled, noticeLabel: diff.label };
 };
+
+/**
+ * 2026-10 Wave 130: 이번 조우의 기세 단계를 남긴다 — 다음 조우는 단계가 바뀌었을 때만 안내한다(`applyDynamicDifficulty`).
+ * 여정 범위다(`pickPermanentPlayerState`가 넘기지 않는다 — 새 여정은 최근 전투 창과 함께 처음부터).
+ */
+export const withDifficultyNotice = (player: Player, label: string): Player => (
+    player.stats?.difficultyNotice === label
+        ? player
+        : { ...player, stats: { ...(player.stats || {}), difficultyNotice: label } }
+);
 
 // ─────────────────────────────────────────────────────────────────────────
 // 4. 전투 결과 기록 (player.stats.recentBattles 업데이트용 페이로드 생성)

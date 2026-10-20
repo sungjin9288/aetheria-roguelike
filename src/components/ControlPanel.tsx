@@ -793,7 +793,7 @@ const ControlPanel = ({
                       지난 원정 · {getVisibleLocationName(player, player.lastExpeditionSummary.destination)}
                     </div>
                     <div className="aether-type-meta mt-0.5 font-readable text-slate-400">
-                      전투 {player.lastExpeditionSummary.battles} · 탐험 {player.lastExpeditionSummary.explores} · +{player.lastExpeditionSummary.expGained.toLocaleString('ko-KR')} EXP
+                      {MSG.LAST_EXPEDITION_SUMMARY_LINE(player.lastExpeditionSummary.battles, player.lastExpeditionSummary.explores, player.lastExpeditionSummary.expGained)}
                     </div>
                   </div>
                   <span className="aether-type-body shrink-0 font-readable font-semibold text-[#b9f1ec]">보기</span>

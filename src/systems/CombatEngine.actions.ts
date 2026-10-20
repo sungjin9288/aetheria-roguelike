@@ -917,7 +917,7 @@ export const actionMethods = {
 
 
         // slice 19: 약점/저항 별도 로그 제거 — SKILL_USE 본문 태그로 통합 완료.
-        if (extraDamage > 0) logs.push({ type: 'event', text: MSG.SKILL_STATUS_BONUS(String(skill.effect), extraDamage) });
+        if (extraDamage > 0 && skillDotTarget) logs.push({ type: 'event', text: MSG.SKILL_STATUS_BONUS(MSG.DOT_LABELS[skillDotTarget], extraDamage) });
         const activeTempBuff = updatedPlayer.tempBuff;
         if (activeTempBuff && activeTempBuff.name === skill.name) {
             logs.push({ type: 'system', text: MSG.SKILL_BUFF_ACTIVE(String(skill.name), Number(activeTempBuff.turn)) });

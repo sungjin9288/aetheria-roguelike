@@ -6,6 +6,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
+import { MSG } from '../src/data/messages.ts';
 import { RELICS } from '../src/data/relics.ts';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { makeCombatActionMap } from '../src/reducers/handlers/combatHandlers.ts';
@@ -137,7 +138,7 @@ test('RED: no dot_mult keeps the production 1.0 baseline bonus and status log at
     const { result } = perform({ relics: [], enemyDef: 0 });
 
     assert.equal(result.updatedEnemy.hp, 90);
-    assert.ok(result.logs.some((entry) => entry.text.includes('[burn] 추가 피해 +1')));
+    assert.ok(result.logs.some((entry) => entry.text.includes(MSG.SKILL_STATUS_BONUS(MSG.DOT_LABELS.burn, 1))));
 });
 
 test('dot_mult selector reuses the sole strongest numeric resolver and rejects malformed matches', () => {
@@ -198,7 +199,7 @@ test('production performSkill measures baseline, single relics, both orders, sta
     });
 
     assert.equal(noRelicZeroDef.result.updatedEnemy.hp, 90);
-    assert.ok(noRelicZeroDef.result.logs.some((entry) => entry.text.includes('[burn] 추가 피해 +1')));
+    assert.ok(noRelicZeroDef.result.logs.some((entry) => entry.text.includes(MSG.SKILL_STATUS_BONUS(MSG.DOT_LABELS.burn, 1))));
     assert.deepEqual(
         [none, deathOnly, curseOnly, deathThenCurse, curseThenDeath].map(({ result }) => result.updatedEnemy.hp),
         [94, 91, 93, 91, 91],

@@ -74,7 +74,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart }: RunSummaryCardP
                             <div className="aether-type-label font-readable text-slate-500">이번 모험 기록</div>
                             <h1 className="mt-1.5 truncate font-readable text-[1.42rem] font-bold text-[#f6e7c8]">
                                 {s.activeTitle && <span className="text-[#e3dcff]">[{getTitleLabel(s.activeTitle)}] </span>}
-                                {s.job} <span className="text-white">Lv.{s.level}</span>
+                                {s.job} <span className="text-white">{MSG.LEVEL_LABEL(s.level ?? 1)}</span>
                             </h1>
                             <div className="mt-1.5 flex items-center gap-1.5 text-[11px] font-fira text-slate-300/76">
                                 <MapPin size={11} className="shrink-0 text-slate-400" />

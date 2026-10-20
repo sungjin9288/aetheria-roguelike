@@ -39,7 +39,7 @@ import { getDiscoveryOdds } from '../../utils/explorationPacing.js';
 import { findItemByName, grantGold } from '../../utils/gameUtils.js';
 import { getGoldIncome } from '../../utils/challengeRules.js';
 import { withCanonicalEquipmentBaseIdentity } from '../../utils/equipmentBaseIdentity.js';
-import { applyDynamicDifficulty } from '../../systems/DifficultyManager';
+import { applyDynamicDifficulty, withDifficultyNotice } from '../../systems/DifficultyManager';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { scaleProgressionExpReward } from '../../data/progressionProfiles';
 import { getDiscoveredBossSignatureDrops } from '../../utils/bossSignatureHint';
@@ -284,14 +284,14 @@ export const applyBattleStartRelics = (
     if (startHealRelic) {
         const heal = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * startHealRelic.val));
         combatStartPlayer.hp = Math.min(fullStats.maxHp || player.maxHp!, (combatStartPlayer.hp || 0) + heal);
-        addLog('heal', `[재생 코어] 전투 시작 회복 +${heal} HP`);
+        addLog('heal', MSG.RELIC_BATTLE_START_HEAL(heal));
     }
 
     const cursedPowerRelic = playerRelics.find((r) => r.effect === 'cursed_power');
     if (cursedPowerRelic) {
         const selfDamage = Math.max(1, Math.floor((fullStats.maxHp || player.maxHp || 1) * cursedPowerRelic.val.hp_cost));
         combatStartPlayer.hp = Math.max(1, (combatStartPlayer.hp || 1) - selfDamage);
-        addLog('warning', `[저주받은 반지] 전투 시작 대가 -${selfDamage} HP`);
+        addLog('warning', MSG.RELIC_CURSED_POWER_START_COST(selfDamage));
     }
 
     // 혼돈의 보석 — 2026-10 Wave 57: 고른 능력치가 이번 전투 내내 오른다(전투 플래그 `chaosGemStat`, `statsCalculator`가 더한다).
@@ -381,7 +381,8 @@ export const runQuietRollAndCombat = (
         addLog('info', MSG.EXPLORE_QUIET);
         return;
     }
-    let { mStats } = applyDynamicDifficulty(rawStats, player, addLog);
+    const dynamicDifficulty = applyDynamicDifficulty(rawStats, player, addLog);
+    let { mStats } = dynamicDifficulty;
 
     // 무한 심연 모드
     if (mapData.level === 'infinite') {
@@ -458,7 +459,12 @@ export const runQuietRollAndCombat = (
     }
 
     const fullStats = getFullStats();
-    commitExploreOutcome('combat', (nextPlayer: Player) => applyBattleStartRelics(nextPlayer, nextPlayer.relics || [], fullStats, { addLog, rng }), gaugeMapData);
+    commitExploreOutcome('combat', (nextPlayer: Player) => applyBattleStartRelics(
+        withDifficultyNotice(nextPlayer, dynamicDifficulty.noticeLabel),
+        nextPlayer.relics || [],
+        fullStats,
+        { addLog, rng },
+    ), gaugeMapData);
     dispatch({ type: AT.SET_ENEMY, payload: mStats });
     dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
     addLog('combat', MSG.ENEMY_APPEAR(mStats.name));
@@ -503,13 +509,13 @@ export const checkDiscoveryChains = (
         // 체인 달성!
         const rewardParts = [];
         // 2026-10 Wave 62 (원장 §61.4 C16): 실제로 받는 골드('빈손의 시작'이면 절반)를 적는다 — 지급은 아래 `grantGold`.
-        if (chain.reward.gold) rewardParts.push(`${getGoldIncome(player, chain.reward.gold)}G`);
-        if (chain.reward.exp) rewardParts.push(`${chain.reward.exp} EXP`);
+        if (chain.reward.gold) rewardParts.push(MSG.DISCOVERY_JOURNEY_REWARD_GOLD(getGoldIncome(player, chain.reward.gold)));
+        if (chain.reward.exp) rewardParts.push(MSG.DISCOVERY_JOURNEY_REWARD_EXP(chain.reward.exp));
         if (chain.reward.item) rewardParts.push(chain.reward.item);
-        if (chain.reward.premiumCurrency) rewardParts.push(`${chain.reward.premiumCurrency} 크리스탈`);
+        if (chain.reward.premiumCurrency) rewardParts.push(MSG.DISCOVERY_JOURNEY_REWARD_CRYSTAL(chain.reward.premiumCurrency));
 
-        addLog('event', `🔍 ${chain.desc}`);
-        addLog('success', `🏆 [발견 체인 완료] ${chain.label}! 보상: ${rewardParts.join(', ')}`);
+        addLog('event', MSG.DISCOVERY_JOURNEY_DESC(chain.desc));
+        addLog('success', MSG.DISCOVERY_JOURNEY_COMPLETE(chain.label, rewardParts.join(', ')));
         dispatch({
             type: AT.SET_PLAYER,
             payload: (p: Player) => {

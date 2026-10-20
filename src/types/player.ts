@@ -109,6 +109,8 @@ interface PlayerStats {
     codexBonusHp?: number;
     /** 최근 전투 기록(최대 50개) — DifficultyManager의 동적 난이도 입력. */
     recentBattles?: BattleRecord[];
+    /** 2026-10 Wave 130: 마지막으로 알린 기세 단계(`withDifficultyNotice`) — 단계가 바뀔 때만 안내한다. 여정 범위. */
+    difficultyNotice?: string;
     /** cycle 75: signature 드롭 bad-luck 보호 카운터. */
     signaturePity?: number;
     /** cycle 205: per-run 구역 보스 격파 플래그 — 보스 이름 → true. */

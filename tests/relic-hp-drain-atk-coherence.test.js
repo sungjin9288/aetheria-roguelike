@@ -7,6 +7,7 @@ import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 
 import { DB } from '../src/data/db.ts';
+import { MSG } from '../src/data/messages.ts';
 import { RELICS } from '../src/data/relics.ts';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import { makeCombatActionMap } from '../src/reducers/handlers/combatHandlers.ts';
@@ -50,7 +51,7 @@ const makePlayer = (relics, overrides = {}) => ({
 
 const turnSettlement = (relics, overrides) => {
     const result = CombatEngine.tickCombatState(makePlayer(relics, overrides));
-    const log = result.logs.find((entry) => entry.text.includes('HP 대가'));
+    const log = result.logs.find((entry) => entry.text.includes(MSG.HP_DRAIN_ATK_COST_MARKER));
     return {
         hp: result.updatedPlayer.hp,
         label: log?.text.match(/^\[([^\]]+)\]/)?.[1],

@@ -362,7 +362,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                     <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-2 font-readable [&::-webkit-details-marker]:hidden">
                         <Sparkles size={14} className="text-[#d9d0f3]" />
                         <span className="flex-1 text-xs font-bold text-slate-200/90">계승 기록</span>
-                        <span className="text-[11px] text-slate-500">단계 {player?.meta?.rank || 0}</span>
+                        <span className="text-[11px] text-slate-500">{MSG.STATS_ESSENCE_LADDER_RANK(player?.meta?.rank || 0)}</span>
                         <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
                     </summary>
                     <div className="grid grid-cols-2 gap-2 pb-3 text-xs font-readable">
@@ -371,7 +371,7 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                             <div className="mt-1 font-bold text-[#d9d0f3]">{player?.meta?.essence || 0}</div>
                         </div>
                         <div className="aether-panel-muted rounded-lg px-3 py-2.5">
-                            <div className="text-[11px] text-slate-400">계승 단계</div>
+                            <div className="text-[11px] text-slate-400">{MSG.STATS_ESSENCE_LADDER_LABEL}</div>
                             <div className="mt-1 font-bold text-[#f6e7c8]">{player?.meta?.rank || 0}</div>
                         </div>
                         <div className="aether-panel-muted rounded-lg px-3 py-2.5">

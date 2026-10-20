@@ -275,16 +275,21 @@ test('F12: 강화 물약 라벨은 엔진이 실제로 올리는 능력치만 �
         const item = { ...buff, id: `buff-${buff.name}` };
         const result = resolveConsumableEffect({ player: makePlayerFixture({ inv: [item] }), item });
         assert.equal(result.ok, true, buff.name);
-        const raised = { ATK: result.player.tempBuff.atk > 0, DEF: result.player.tempBuff.def > 0 };
-        for (const label of [getConsumableCompactLabel(item), getConsumableDescription(item)]) {
+        const raised = { atk: result.player.tempBuff.atk > 0, def: result.player.tempBuff.def > 0 };
+        // Wave 130: 빠른 칸 배지(40px 칸)는 압축 표기 ATK · DEF를 그대로 쓰고, 설명 줄은 공격력 · 방어력이다.
+        const words = [
+            [getConsumableCompactLabel(item), { atk: 'ATK', def: 'DEF' }],
+            [getConsumableDescription(item), { atk: '공격력', def: '방어력' }],
+        ];
+        for (const [label, names] of words) {
             assert.ok(!label.includes('ALL'), `${buff.name}: "${label}"`);
             for (const [stat, isRaised] of Object.entries(raised)) {
-                assert.equal(label.includes(stat), isRaised, `${buff.name}: "${label}"의 ${stat}`);
+                assert.equal(label.includes(names[stat]), isRaised, `${buff.name}: "${label}"의 ${names[stat]}`);
             }
         }
     }
     const hero = buffs.find((item) => item.name === '영웅의 물약');
-    assert.match(getConsumableDescription(hero), /ATK.*DEF.*\+50%/);
+    assert.match(getConsumableDescription(hero), /공격력 · 방어력 \+50%/);
 });
 
 test('F12: 합성 보호 상품의 이름은 모든 표면에서 하나다', () => {

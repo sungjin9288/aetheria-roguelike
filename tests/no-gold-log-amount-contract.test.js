@@ -415,7 +415,7 @@ test('발견 여정 완료 로그의 골드 = 실제 골드 증가', () => {
         checkDiscoveryChains(h.state.player, last, { dispatch: h.dispatch, addLog: (type, text) => logs.push(text) });
         const line = logs.find((text) => text.includes(chain.label));
         assert.ok(line);
-        return { logged: Number(line.match(/보상: (\d+)G/)?.[1]), delta: goldDelta(before, h.state), total: totalGoldDelta(before, h.state) };
+        return { logged: Number(line.match(/보상: 골드 (\d+)/)?.[1]), delta: goldDelta(before, h.state), total: totalGoldDelta(before, h.state) };
     };
     const control = complete(CONTROL);
     assert.equal(control.logged, chain.reward.gold);

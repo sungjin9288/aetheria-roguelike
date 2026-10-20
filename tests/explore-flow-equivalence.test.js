@@ -233,7 +233,7 @@ const CASES = [
     {
         name: 'rollExplorationEvent / 이상 현상(마나 회복) 분기',
         expected: [
-            'log warning :: [기상 이변] 강력한 마력의 폭풍이 붑니다. (MP 30% 회복)',
+            'log warning :: [기상 이변] 강력한 마력의 폭풍이 붑니다. (기력 30% 회복)',
             'dispatch SET_PLAYER :: mp=34',
             'return :: anomaly',
         ],
@@ -281,9 +281,9 @@ const CASES = [
     {
         name: 'applyBattleStartRelics / 전투 시작 버프·회복·대가 유물이 함께 적용된다',
         expected: [
-            'log event :: [전쟁의 북] 전투 시작 ATK +20% (2턴)',
-            'log heal :: [재생 코어] 전투 시작 회복 +20 HP',
-            'log warning :: [저주받은 반지] 전투 시작 대가 -10 HP',
+            'log event :: [전쟁의 북] 전투 시작 공격력 +20% (2턴)',
+            'log heal :: [재생 코어] 전투 시작 회복 · 생명 +20',
+            'log warning :: [저주받은 반지] 전투 시작 대가 · 생명 -10',
             'return :: combatFlags.comboCount=0 | combatFlags.deathSaveUsed=false | combatFlags.firstSkillUsed=false | combatFlags.phoenixUsed=false | combatFlags.turnCount=0 | hp=130 | tempBuff={"atk":0.2,"def":0,"name":"battle_start_buff","turn":2}',
         ],
         run: () => {
@@ -395,7 +395,7 @@ const CASES = [
         name: 'checkDiscoveryChains / 마지막 지역을 밟으면 체인 보상이 지급된다',
         expected: [
             'log event :: 🔍 세 곳의 화염 지역을 탐험하니 고대 용의 기운이 하나로 수렴합니다.',
-            'log success :: 🏆 [발견 체인 완료] 화염의 수렴! 보상: 3000G, 2000 EXP, 용의 화염',
+            'log success :: 🏆 [발견 체인 완료] 화염의 수렴! 보상: 골드 3000, 경험 2000, 용의 화염',
             'dispatch SET_PLAYER :: atk=43 | def=21 | exp=1000 | gold=3500 | hp=140 | inv=[{"baseItemName":"용의 화염","desc":"용의 화염을 담은 검.","desc_stat":"ATK+155(화) / 2H","elem":"화염","hands":2,"id":"disc_<now>","jobs":["전사","버서커"],"name":"용의 화염","price":25500,"tier":5,"type":"weapon","val":155}] | level=11 | maxHp=220 | maxMp=90 | mp=20 | nextExp=1150 | stats.discoveryChains=["fire_convergence"] | stats.total_gold=3000',
         ],
         run: () => {

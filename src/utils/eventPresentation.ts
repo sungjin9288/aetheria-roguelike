@@ -4,6 +4,7 @@ import { BALANCE } from '../data/constants';
 import { getDimensionGraveItemLabel } from './dimensionGrave';
 import { RELICS } from '../data/relics';
 import { MSG } from '../data/messages';
+import { repickJosa } from '../data/koreanParticles';
 import { BOUNDED_ENCOUNTERS } from '../data/boundedEncounters';
 import { mergeTempBuff, type TempBuffValue } from '../systems/tempBuffMerge';
 import { getGoldIncome, type ChallengeHolder } from './challengeRules';
@@ -52,14 +53,30 @@ const unitLabels: Record<string, string> = {
     MP: '기력',
 };
 
-export const formatEventText = (value: unknown) => String(value || '')
-    .replace(/([+-])\s*(\d+)\s*(EXP|HP|MP|G)\b/gi, (_match, sign, amount, unit) => `${unitLabels[String(unit).toUpperCase()]} ${sign}${amount}`)
-    .replace(/\b(\d+)\s*G\b/gi, '골드 $1')
-    .replace(/\bATK\b/gi, '공격력')
-    .replace(/\bDEF\b/gi, '방어력')
-    .replace(/\bEXP\b/gi, '경험')
-    .replace(/\bHP\b/gi, '생명')
-    .replace(/\bMP\b/gi, '기력')
+// 2026-10 Wave 130: 낱말을 바꾸는 변환은 뒤에 붙은 조사도 새 낱말에 맞춘다 — "1000G를"이 "골드 1000를"로 바뀌었다.
+//   조사는 뒤에 한글이 이어지지 않을 때만 조사로 본다("HP가득"의 '가'는 조사가 아니다).
+const TRAILING_PARTICLE = '(?:(으로|[을를이가은는과와로])(?![\\uAC00-\\uD7A3]))?';
+const withTrailingParticle = (word: string, particle: string | undefined) => `${word}${particle ? repickJosa(word, particle) : ''}`;
+const ABBREVIATION_WORDS: ReadonlyArray<readonly [string, string]> = [
+    ['ATK', '공격력'],
+    ['DEF', '방어력'],
+    ['EXP', unitLabels.EXP],
+    ['HP', unitLabels.HP],
+    ['MP', unitLabels.MP],
+];
+
+export const formatEventText = (value: unknown) => ABBREVIATION_WORDS.reduce(
+    (text, [abbreviation, word]) => text.replace(
+        new RegExp(`\\b${abbreviation}\\b${TRAILING_PARTICLE}`, 'gi'),
+        (_match, particle: string | undefined) => withTrailingParticle(word, particle),
+    ),
+    String(value || '')
+        .replace(/([+-])\s*(\d+)\s*(EXP|HP|MP|G)\b/gi, (_match, sign, amount, unit) => `${unitLabels[String(unit).toUpperCase()]} ${sign}${amount}`)
+        .replace(
+            new RegExp(`\\b(\\d+)\\s*G\\b${TRAILING_PARTICLE}`, 'gi'),
+            (_match, amount: string, particle: string | undefined) => `${unitLabels.G} ${withTrailingParticle(amount, particle)}`,
+        ),
+)
     .replace(/\bLv\.?\s*/gi, '레벨 ')
     .replace(/\s+/g, ' ')
     .trim();
