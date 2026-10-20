@@ -193,12 +193,12 @@ const getQuestReason = (quest: Quest, lane: QuestLane, resonance: TraitQuestReso
     if (lane === 'growth') {
         if (quest?.target === 'level') return '전직이나 다음 권역 진입 전에 성장을 확실히 체감하게 해 줍니다.';
         if (quest?.type === 'craft') return '제작을 열어 장비 성장과 보급을 함께 준비하게 해 줍니다.';
-        return '누적 성장 목표를 밀어 모험의 중간 목표를 또렷하게 만드는 임무입니다.';
+        return '누적 성장 목표를 밀어 여정의 중간 목표를 또렷하게 만드는 임무입니다.';
     }
     if (lane === 'boss') {
         return targetMaps[0]
             ? `${targetMaps[0]} 권역의 보스 흐름과 직접 연결됩니다.`
-            : '현재 레벨대 보스 도전으로 모험의 긴장감을 끌어올립니다.';
+            : '현재 레벨대 보스 도전으로 여정의 긴장감을 끌어올립니다.';
     }
     if (targetMaps[0]) {
         return `${targetMaps[0]} 권역 토벌과 바로 이어져 전개가 끊기지 않습니다.`;

@@ -169,7 +169,7 @@ export const MSG = {
     // C-1 (B+ 2026-06): 첫 죽음 영구 메타 보상 안내 — "죽음도 성장이다".
     FIRST_DEATH_META: (attack: number, health: number) => `첫 패배를 딛고 영구적인 힘을 얻었습니다. 공격력 +${attack} · 최대 생명 +${health}. 다음 여정은 더 강하게 시작합니다.`,
     // B-1 (B+ 2026-06): 시작 부트 — 캐릭터 생성 직후 첫 유물 선택 안내.
-    START_BOOT_RELIC: '새 여정의 유물 선택지가 열렸습니다. 지금 고르지 않아도 모험 중 다시 발견할 수 있습니다.',
+    START_BOOT_RELIC: '새 여정의 유물 선택지가 열렸습니다. 지금 고르지 않아도 여정 중에 다시 발견할 수 있습니다.',
 
     // --- 상태이상 (Status Effects) ---
     // cycle 107: 플레이어가 freeze/stun 상태에서 턴을 스킵할 때의 안내 — 적의
@@ -239,7 +239,7 @@ export const MSG = {
 
     // --- 도전 설정 ---
     // cycle 116: CHALLENGE_COMPLETE 제거 — 0건 사용. START만 active.
-    CHALLENGE_START: (labels: string[]) => `⚔ 도전 모험 시작: ${labels.join(', ')}`,
+    CHALLENGE_START: (labels: string[]) => `⚔ 도전 여정 시작: ${labels.join(', ')}`,
     // 2026-10 Wave 62 (원장 §61.4 C1): 도전 규칙 선택 화면 — 보상 "+N%"는 엔진 표(`BALANCE.CHALLENGE_REWARD_MULT_BY_COUNT`)에서
     //   계산하고, 오르는 것이 전투 경험치 · 골드임을 말한다(이전 "+N% 보상"은 무엇이 오르는지 말하지 않았다).
     CHALLENGE_PICKER_TITLE: '도전 규칙',
@@ -564,7 +564,7 @@ export const MSG = {
     } as const,
     JOURNEY_KEPT_HEADING: '그대로 남는 것',
     JOURNEY_RESET_HEADING: '새로 시작하는 것',
-    JOURNEY_KEPT_LINE: (items: string) => `다음 모험에 남는 것: ${items}`,
+    JOURNEY_KEPT_LINE: (items: string) => `다음 여정에 남는 것: ${items}`,
     JOURNEY_RESET_LINE: (items: string) => `처음부터 다시: ${items}`,
     MENU_RESET_TITLE: '현재 여정 다시 시작',
     MENU_RESET_SUMMARY: '이번 여정을 처음부터 다시 합니다. 정수로 새긴 영구 성장과 계승 기록은 남습니다.',
@@ -766,7 +766,7 @@ export const MSG = {
 
     // --- Firebase 동기화 ---
     SYNC_SERVER_LOADED: '서버 데이터와 동기화되었습니다.',
-    SYNC_SAVE_RESTORED: '저장된 모험을 불러왔습니다.',
+    SYNC_SAVE_RESTORED: '저장된 여정을 불러왔습니다.',
     SYNC_AUTH_TIMEOUT: '인증 지연으로 오프라인 모드로 시작했습니다.',
     SYNC_NO_CONFIG: '클라우드 설정을 찾을 수 없어 오프라인 모드로 시작했습니다.',
     SYNC_AUTH_FAIL: '클라우드 인증 실패로 오프라인 모드로 시작했습니다.',
@@ -1462,4 +1462,15 @@ export const MSG = {
     SYNTHESIS_SELECT_REQUIRED: (count: number) => `같은 종류 · 같은 등급 장비 ${count}개를 골라야 합성할 수 있습니다.`,
     SYNTHESIS_SELECT_HINT: (count: number) => `같은 종류 · 같은 등급 장비 ${count}개 선택`,
     SYNTHESIS_PANEL_META: '같은 등급 장비를 골라 합성 결과를 확인합니다.',
+
+    // ── 통합 수용 6차(원장 §144) — 한 판의 이름은 '여정'이다 ──
+    //   사망 화면 한 장이 끝난 한 판을 "이번 모험 기록" · "모험 종료" · "새 모험 시작"과 "다음 여정에 남는 것"으로 함께 불렀다.
+    //   '모험 기록'(기록 콘솔) · '모험 도감' · 직업 '모험가'는 다른 개념의 이름이라 그대로다.
+    RUN_SUMMARY_EYEBROW: '이번 여정 기록',
+    RUN_SUMMARY_ENDED_AT: (loc: string) => `${loc}에서 여정 종료`,
+    RUN_SUMMARY_PARTIAL_TRACKING: '업데이트 이후의 이번 여정 기록만 집계했습니다.',
+    RUN_SUMMARY_REFLECTION_ARIA: '여정 종료 원인과 다음 시도 요약',
+    RUN_SUMMARY_STATS_ARIA: '이번 여정 성과',
+    RUN_SUMMARY_RESTART: '새 여정 시작',
+    RELIC_CHOICE_TITLE: '이번 여정의 힘을 고르세요',
 };

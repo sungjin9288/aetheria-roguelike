@@ -103,7 +103,7 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                             유물 선택
                         </div>
                         <h2 className="mt-0.5 text-[1rem] font-readable font-bold text-[#f6e7c8]">
-                            이번 모험의 힘을 고르세요
+                            {MSG.RELIC_CHOICE_TITLE}
                         </h2>
                     </div>
                     <SignalBadge tone="neutral" size="sm">{ownedRelics.length}/{relicCapacity}</SignalBadge>

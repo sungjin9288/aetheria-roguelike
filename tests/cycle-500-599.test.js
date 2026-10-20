@@ -3531,7 +3531,7 @@ import { DB } from '../src/data/db.ts';
       // W11 C4: result/summary default {}가 사라져도, 명시 전달 호출로 실제 등급/headline이
       // 정확히 계산되는지.
       assert.equal(getPostCombatAnalysis({ hpLow: true }).grade, '붕괴 직전', 'hpLow flag가 grade에 실제 반영된다');
-      assert.equal(getRunSummaryAnalysis({ bossKills: 1 }).headline, '보스 구간까지 닿은 모험', 'bossKills가 headline에 실제 반영된다');
+      assert.equal(getRunSummaryAnalysis({ bossKills: 1 }).headline, '보스 구간까지 닿은 여정', 'bossKills가 headline에 실제 반영된다');
   });
 
   test('cycle 557: cycle 502-556 회귀 가드 — default 청소 시리즈 보존', async () => {
