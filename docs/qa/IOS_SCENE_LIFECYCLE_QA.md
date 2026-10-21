@@ -1,6 +1,6 @@
 # iOS scene 생명주기 런타임 QA
 
-Xcode 27 SDK 앱의 UIScene 시작·복귀·저장 지속성을 검사한다. `SceneDelegate`가 연결마다 창과 `CAPBridgeViewController`를 하나 생성하고, Capacitor의 scene proxy에 연결·URL·userActivity를 전달한다. Main storyboard 자동 생성 설정은 제거해 창을 중복 생성하지 않는다. [Capacitor 8.5 전환 지침](https://capacitorjs.com/docs/updating/8-5)을 기준으로 core/ios/cli와 SPM을 8.5.0에 맞췄다.
+Xcode 27 SDK 앱의 UIScene 시작·복귀·저장 지속성을 검사한다. `SceneDelegate`가 연결마다 창과 `CAPBridgeViewController`를 하나 생성하고, Capacitor의 scene proxy에 연결·URL·userActivity를 전달한다. Main storyboard 자동 생성 설정은 제거해 창을 중복 생성하지 않는다. [Capacitor 8.5 전환 지침](https://capacitorjs.com/docs/updating/8-5)을 기준으로 core/ios/cli와 SPM을 8.5.0에 맞췄다. 2026-10-21 보안 권고(GHSA-rvm3-566m-v7fv)로 core/ios/cli/Android와 SPM을 8.5.3으로 올렸다. 이 절차로 다시 검증한다(원장 §153).
 
 ## 환경과 빌드
 
