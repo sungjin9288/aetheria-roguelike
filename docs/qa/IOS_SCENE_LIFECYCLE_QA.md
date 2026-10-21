@@ -45,4 +45,4 @@ AETHERIA_IOS_INSPECTOR_DIR=/tmp/aetheria-ios-inspector \
 
 이번 실행은 창 생성 코드 추가 직전의 컴파일된 proxy-only SceneDelegate에 최종 manifest를 적용한 별도 bundle을 mutant로 사용했다. 정상·결함 앱에 같은 bundle을 쓰지 않는다. 초기 실험에서는 정상 재설치 뒤에도 검은 화면이 관측됐고, 이후 fault bundle을 분리했다. scene 설정과 inspector 조회 문제가 함께 있어 초기 현상의 단일 원인은 확정하지 않았다. 운영 앱에는 설치·초기화를 하지 않는다. 테스트 후 production asset으로 `npm run cap:sync`하기 전 `npm run build`를 실행한다.
 
-실행 receipt는 `docs/evidence/qa/ios-scene-lifecycle-20260922/`에서 추적한다. 초기 도구 연결·페이지 로딩 오류는 제품 회귀나 결함 주입 성공으로 세지 않는다.
+2026-09-22 실행 receipt(JSON · 미편집 캡처)는 커밋 `604603af`의 `docs/evidence/qa/ios-scene-lifecycle-20260922/`에 있다. Wave 112 정리(원장 §118)가 작업 트리에서 지웠으므로 `git show 604603af:docs/evidence/qa/ios-scene-lifecycle-20260922/ios27.json`처럼 꺼낸다. 다음 실행의 receipt는 새 날짜 폴더에 남긴다. 초기 도구 연결·페이지 로딩 오류는 제품 회귀나 결함 주입 성공으로 세지 않는다.
