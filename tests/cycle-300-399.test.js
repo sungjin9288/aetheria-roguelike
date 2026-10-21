@@ -3870,17 +3870,8 @@ import { fileURLToPath } from 'node:url';
   const ROOT = path.join(HERE, '..');
   const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
-  test('cycle 398: DashboardMobileSummary trait.label 0건 (silent undefined 제거)', async () => {
-      const source = await readSrc('src/components/DashboardMobileSummary.tsx');
-      assert.ok(!/trait\?\.label|trait\.label/.test(source),
-          'trait.label / trait?.label 0건');
-  });
-
-  test('cycle 398: DashboardMobileSummary trait.title 사용 (fix 검증)', async () => {
-      const source = await readSrc('src/components/DashboardMobileSummary.tsx');
-      assert.ok(/trait\?\.title/.test(source) || /trait\.title/.test(source),
-          'trait.title로 변경됨');
-  });
+  // Wave 134: cycle 398의 DashboardMobileSummary 소스 검사 2건은 그 컴포넌트와 함께 지웠다(렌더하는 곳이 없었다 — slice 37).
+  //   trait 데이터의 title 계약은 아래 TRAIT_DEFINITIONS 검사가 그대로 지킨다.
 
   test('cycle 398: TRAIT_DEFINITIONS schema 보존 — title 필드 producer', async () => {
       const { TRAIT_DEFINITIONS } = await import('../src/data/traits.js');
@@ -3976,11 +3967,5 @@ import { fileURLToPath } from 'node:url';
           'QuickSlotAssigner onAssign prop 사용 보존');
   });
 
-  test('cycle 398 회귀 가드: trait.label silent gate fix 보존', async () => {
-      const source = await readSrc('src/components/DashboardMobileSummary.tsx');
-      assert.ok(!/trait\?\.label|trait\.label/.test(source),
-          'cycle 398 trait.label 0건 보존');
-      assert.ok(/trait\?\.title|trait\.title/.test(source),
-          'cycle 398 trait.title 보존');
-  });
+  // Wave 134: 'cycle 398 회귀 가드'(DashboardMobileSummary 소스)는 그 컴포넌트와 함께 지웠다.
 }

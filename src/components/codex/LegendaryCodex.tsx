@@ -6,6 +6,7 @@ import { computeSignatureSetBonus, getSignatureSetDefinitions, getSignatureSetEq
 import { getSignatureDropSources } from '../../utils/signatureDropSources.js';
 import { getSignaturePityMultiplier, SIGNATURE_PITY } from '../../utils/signaturePity.js';
 import { getDiscoveredSignatureNames } from '../../utils/signatureDiscovery.js';
+import { getItemStatText } from '../../utils/equipmentUtils';
 import ItemIcon from '../icons/ItemIcon.jsx';
 import type { Item, Player } from '../../types/index.js';
 
@@ -16,14 +17,13 @@ import type { Item, Player } from '../../types/index.js';
  * 잠금/잠금해제 표시.
  */
 
-/** signatureRegistry.json entries의 런타임 모양 — tone/category/artNote만 이 화면에서 읽는다. */
+/** signatureRegistry.json entries의 런타임 모양 — tone/category만 이 화면에서 읽는다(`artNote`는 그림 생성 지시문이다). */
 interface SignatureMeta {
     spriteKey?: string;
     tier?: string;
     category?: string;
     tone?: string;
     setGroup?: string;
-    artNote?: string;
 }
 
 interface ToneAccent {
@@ -47,7 +47,7 @@ interface SignatureSetDef {
     bonuses: Record<string, SignatureSetBonusTier>;
 }
 
-interface LegendaryEntry {
+export interface LegendaryEntry {
     item: Item;
     meta: SignatureMeta;
 }
@@ -86,6 +86,68 @@ const buildEntries = (): LegendaryEntry[] => {
             return { item, meta };
         })
         .filter((entry): entry is LegendaryEntry => entry !== null);
+};
+
+/**
+ * 2026-10 Wave 134(원장 §147): 고른 전설의 상세 — 능력치는 장비 화면과 같은 변환기(`getItemStatText`)를 읽는다. 데이터의
+ * `desc_stat`("ATK+200(빛)")을 그대로 그리던 동안 한손 무기는 실제 공격력(+88)의 두 배가 넘는 수를, 양손 무기는 실제(+341)보다
+ * 작은 수를 영어 약어로 보였다. 레지스트리의 `artNote`는 그림 생성 지시문(아트 파이프라인이 읽는다)이라 그리지 않는다.
+ */
+export const LegendaryCodexDetail = ({ entry }: { entry: LegendaryEntry }) => {
+    const accent = TONE_ACCENT[entry.meta.tone ?? ''] || DEFAULT_TONE_ACCENT;
+    const statText = getItemStatText(entry.item);
+    const sources = getSignatureDropSources(entry.item.name);
+    return (
+        <div
+            data-testid="legendary-codex-detail"
+            className="rounded-lg p-3 text-[11px]"
+            style={{
+                border: `1px solid ${accent.border}`,
+                background: `linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(10,12,16,1) 100%)`,
+            }}
+        >
+            <div className="flex items-start gap-3">
+                <ItemIcon item={entry.item} size={48} hideSignatureBadge />
+                <div className="min-w-0 flex-1">
+                    <div className="font-rajdhani font-bold text-white text-[13px]">{entry.item.name}</div>
+                    <div className="mt-0.5 text-[11px] text-amber-200/80">
+                        {CATEGORY_LABEL[entry.meta.category ?? ''] || '전설'}
+                        <span className="mx-1 text-slate-600">·</span>
+                        {accent.label}
+                        {statText ? (
+                            <>
+                                <span className="mx-1 text-slate-600">·</span>
+                                <span data-testid="legendary-codex-detail-stat" className="text-slate-300">{statText}</span>
+                            </>
+                        ) : null}
+                    </div>
+                    {entry.item.desc && (
+                        <div className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+                            {entry.item.desc}
+                        </div>
+                    )}
+                    {sources.length > 0 && (
+                        <div className="mt-2 pt-2 border-t border-white/5">
+                            <div className="mb-1 text-[11px] text-slate-500">
+                                획득처
+                            </div>
+                            <div className="flex flex-wrap gap-1">
+                                {sources.map(({ monster, rate }) => (
+                                    <span
+                                        key={monster}
+                                        className="inline-flex min-h-7 items-center gap-1 rounded-lg border border-amber-300/25 bg-amber-300/5 px-2 text-[11px] text-amber-100/90"
+                                    >
+                                        <span className="text-slate-200">{monster}</span>
+                                        <span className="text-amber-300/80">{Math.max(1, Math.round(rate * 100))}%</span>
+                                    </span>
+                                ))}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        </div>
+    );
 };
 
 interface LegendaryCodexProps {
@@ -263,63 +325,7 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
             </details>
 
             {/* Detail */}
-            {selectedEntry && (
-                <div
-                    className="rounded-lg p-3 text-[11px]"
-                    style={{
-                        border: `1px solid ${(TONE_ACCENT[selectedEntry.meta.tone ?? ''] || DEFAULT_TONE_ACCENT).border}`,
-                        background: `linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(10,12,16,1) 100%)`,
-                    }}
-                >
-                    <div className="flex items-start gap-3">
-                        <ItemIcon item={selectedEntry.item} size={48} hideSignatureBadge />
-                        <div className="min-w-0 flex-1">
-                            <div className="font-rajdhani font-bold text-white text-[13px]">{selectedEntry.item.name}</div>
-                            <div className="mt-0.5 text-[11px] text-amber-200/80">
-                                {CATEGORY_LABEL[selectedEntry.meta.category ?? ''] || '전설'}
-                                <span className="mx-1 text-slate-600">·</span>
-                                {(TONE_ACCENT[selectedEntry.meta.tone ?? ''] || DEFAULT_TONE_ACCENT).label}
-                                {selectedEntry.item.desc_stat ? (
-                                    <>
-                                        <span className="mx-1 text-slate-600">·</span>
-                                        <span className="text-slate-300">{selectedEntry.item.desc_stat}</span>
-                                    </>
-                                ) : null}
-                            </div>
-                            {selectedEntry.item.desc && (
-                                <div className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
-                                    {selectedEntry.item.desc}
-                                </div>
-                            )}
-                            <div className="mt-1.5 text-[11px] italic text-slate-500">
-                                {selectedEntry.meta.artNote}
-                            </div>
-                            {(() => {
-                                const sources = getSignatureDropSources(selectedEntry.item.name);
-                                if (sources.length === 0) return null;
-                                return (
-                                    <div className="mt-2 pt-2 border-t border-white/5">
-                                        <div className="mb-1 text-[11px] text-slate-500">
-                                            획득처
-                                        </div>
-                                        <div className="flex flex-wrap gap-1">
-                                            {sources.map(({ monster, rate }) => (
-                                                <span
-                                                    key={monster}
-                                                    className="inline-flex min-h-7 items-center gap-1 rounded-lg border border-amber-300/25 bg-amber-300/5 px-2 text-[11px] text-amber-100/90"
-                                                >
-                                                    <span className="text-slate-200">{monster}</span>
-                                                    <span className="text-amber-300/80">{Math.max(1, Math.round(rate * 100))}%</span>
-                                                </span>
-                                            ))}
-                                        </div>
-                                    </div>
-                                );
-                            })()}
-                        </div>
-                    </div>
-                </div>
-            )}
+            {selectedEntry && <LegendaryCodexDetail entry={selectedEntry} />}
         </div>
     );
 };

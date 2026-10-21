@@ -124,6 +124,12 @@ export const MSG = {
     LOOT_PREFIX: (name: string) => `접두사 부여: [${name}]`,
     PRESTIGE_RARE_DROP: (name: string) => `✦ [심연의 메아리] 보스가 희귀 장비를 떨어뜨렸습니다: ${name}`,
     SIGNATURE_DISCOVERED: (name: string) => `✦ 전설 각인 ─ ${name} 획득!`,
+    // 2026-10 Wave 134: 전설 각인 획득 화면 · 전투 결과 카드의 머리말 — 영어 'Legendary'였다.
+    SIGNATURE_DROP_LABEL: '전설 각인',
+    SIGNATURE_DROP_CODEX_NOTE: '도감에 기록됨',
+    // 2026-10 Wave 134: 시즌 이벤트 띠의 보너스 — 경험은 영어 약어 'XP'였다(옆의 골드는 한국어).
+    SEASON_EVENT_GOLD_BONUS: (pct: number) => ` | 골드+${pct}%`,
+    SEASON_EVENT_EXP_BONUS: (pct: number) => ` 경험+${pct}%`,
     COMBAT_LOOT_CAPACITY_BLOCKED: (count: number) => `가방이 가득해 전리품 ${count}개를 챙기지 못했습니다.`,
     SIGNATURE_SELL_BLOCKED: (name: string | undefined) => `[${name}]${josa(name, '은/는')} 전설 각인 아이템이라 판매할 수 없습니다.`,
     SIGNATURE_SYNTH_BLOCKED: (name: string) => `[${name}]${josa(name, '은/는')} 전설 각인 아이템이라 합성 재료로 사용할 수 없습니다.`,
@@ -133,6 +139,8 @@ export const MSG = {
             : `✦ [${bossName}] 전설 각인 [${topName}] 드롭 가능 — ${topPct}%`
     ),
     SIGNATURE_PITY_RESONANCE: (pct: number | string, pity: number | undefined) => `✦ 각인 공명 +${pct}% — 보스 ${pity}회 연속 무획득 보정 적용`,
+    // 2026-10 Wave 134(원장 §147): 안전지대 안내의 공명 줄 — 'signature 드롭'이라 적혀 있었다.
+    GUIDE_SIGNATURE_PITY_DETAIL: (pity: number, pct: number) => `보스 토벌 ${pity}회 누적 — 다음 전설 각인 확률 +${pct}% 적용 중. 보스 권역으로 진입할 적기입니다.`,
     // fix/signature-set-two-hand: 양손 시그니처 무기가 세트 카운트에 2피스로 반영됐을 때
     // EquipmentPanel "세트 진행도" 카드에 표시하는 힌트 1줄.
     SIGNATURE_SET_TWO_HAND_HINT: '💡 양손 무기는 보조 슬롯을 함께 차지해 2피스로 계산됩니다.',
@@ -572,8 +580,12 @@ export const MSG = {
     MENU_RESET_PRESERVED: (items: string) => `그대로 보존: ${items}`,
     CODEX_SUBTITLE: '발견한 장비와 생물, 제작 기록 — 계승해도 남고, 쓰러지면 처음부터 다시 모읍니다',
     TRUE_ENDING_PENDING_GUIDANCE: '완료한 임무 보상을 지금 수령할 수 있습니다. 계승하면 임무와 이야기를 처음부터 다시 하니, 보상 장비를 이번 여정에서 사용하려면 현재 여정을 계속하세요.',
-    TRUE_ENDING_CONTINUE_NOTE: '정수로 새긴 영구 성장과 도감 · 계승 기록을 이어 다음 여정을 시작합니다.',
-    TRUE_ENDING_NEW_GAME_PLUS_NOTE: 'New Game+는 레벨 · 장비 · 소지 골드 · 임무와 이야기를 초기화하고, 정수로 새긴 영구 성장과 도감 · 계승 기록만 이어 갑니다.',
+    // 2026-10 Wave 134: 진 엔딩 화면은 계승 화면과 같은 단추 이름 · 같은 표(JOURNEY_RESET_SURFACE)를 쓴다 — 'True Ending' ·
+    //   'New Game+'(= 계승) 영어 이름과 손으로 쓴 보존 목록("…도감 · 계승 기록만 이어 갑니다" — 각인 수집 · 직업 여정 · 시즌이 빠졌다)이 있었다.
+    TRUE_ENDING_TITLE: '진 엔딩',
+    ASCENSION_CONFIRM: '계승하고 새 여정',
+    ASCENSION_CONFIRMING: '계승 중…',
+    ASCENSION_CONTINUE: '현재 여정 계속',
     ASCEND_PENDING_QUESTS_GUIDANCE: '계승하면 임무와 이야기를 처음부터 다시 합니다. 완료한 임무 보상은 계승 전에 받으세요.',
     ASCEND_PENDING_QUESTS_BLOCKED: '완료한 임무 보상을 모두 받은 뒤 계승할 수 있습니다.',
     ASCEND_CANCEL: '계승을 미루고 현재 여정을 계속합니다.',
@@ -606,7 +618,7 @@ export const MSG = {
     ENDGAME_JOURNEY_READY: '다음 마왕 토벌 직후 파편을 사용하고 연속 전투에 들어갑니다. 회복과 소모품을 준비하세요.',
     ENDGAME_JOURNEY_PRESERVED: '모은 파편은 계승 후에도 남습니다.',
     ENDGAME_JOURNEY_COMPLETE_TITLE: '종장 기록',
-    ENDGAME_JOURNEY_COMPLETE: '진엔딩을 확인했습니다. 완주 기록은 다음 여정에도 남습니다.',
+    ENDGAME_JOURNEY_COMPLETE: '진 엔딩을 확인했습니다. 완주 기록은 다음 여정에도 남습니다.',
     START_JOURNEY: (name: string) => `${name}의 첫 여정이 시작됩니다.`,
     START_SKILL: (name: string) => `첫 기술로 익힌 능력은 ${name}입니다.`,
     ABYSS_FLOOR_WARNING: (floor: number) => `🌀 심연 ${floor}층 — 강대한 적들이 기다립니다...`,

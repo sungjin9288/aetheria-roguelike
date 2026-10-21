@@ -272,7 +272,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                             onClick={() => actions?.cancelAscension?.()}
                             className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-white/12 bg-black/18 px-3 text-[13px] font-readable font-bold text-slate-100 transition-colors hover:bg-white/[0.05]"
                         >
-                            <RotateCcw size={15} /> 이 여정 계속
+                            <RotateCcw size={15} /> {MSG.ASCENSION_CONTINUE}
                         </button>
                         <button
                             type="button"
@@ -282,7 +282,7 @@ const AscensionScreen = ({ player, actions, onOpenMirror }: AscensionScreenProps
                             aria-describedby={hasPendingQuestRewards ? 'ascension-pending-quests-title' : undefined}
                             className="flex min-h-[48px] items-center justify-center gap-2 rounded-lg border border-[#d5b180]/36 bg-[#d5b180]/14 px-3 text-[13px] font-readable font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/20 disabled:cursor-not-allowed disabled:opacity-50"
                         >
-                            <Crown size={15} /> 계승하고 새 여정
+                            <Crown size={15} /> {MSG.ASCENSION_CONFIRM}
                         </button>
                     </div>
                 </footer>

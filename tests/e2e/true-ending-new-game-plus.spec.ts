@@ -299,6 +299,16 @@ test.describe('True Ending → New Game+ production journey', () => {
         await expect(page.getByTestId('true-ending-cycle-summary')).toBeVisible();
         await expect(page.getByTestId('true-ending-cycle-rule')).toContainText('정복 · 칭호');
         await expect(page.getByTestId('true-ending-cycle-signatures')).toContainText('새 전설 각인');
+        // 2026-10 Wave 134(원장 §147): 화면 이름은 '진 엔딩' · '계승'이고, 남는 것 · 새로 시작하는 것은 계승 화면과 같은 표다.
+        const ending = page.getByTestId('true-ending-screen');
+        await expect(ending.getByRole('heading', { level: 1 })).toHaveText('진 엔딩');
+        const guidance = page.getByTestId('true-ending-new-game-plus-guidance');
+        await expect(guidance).toContainText('다음 여정에 남는 것');
+        await expect(guidance).toContainText('전설 각인 수집');
+        await expect(guidance).toContainText('처음부터 다시');
+        await expect(page.getByTestId('true-ending-confirm')).toHaveText('계승하고 새 여정');
+        await expect(page.getByTestId('true-ending-continue')).toHaveText('현재 여정 계속');
+        await expect(ending).not.toContainText(/New Game|True Ending|Legendary/u);
         await assertTrueEndingGeometry(page, viewport);
         await page.getByTestId('true-ending-continue').click();
         await expect(page.getByTestId('true-ending-screen')).toBeHidden({ timeout: 10_000 });

@@ -661,7 +661,7 @@ export const getAdventureGuidance = (player: Player, stats: FullStats | null | u
             const pct = Math.round((pityMult - 1) * 100);
             return {
                 title: '전설 각인 공명',
-                detail: `보스 토벌 ${pity}회 누적 — 다음 signature 드롭 확률 +${pct}% 적용 중. 보스 권역으로 진입할 적기입니다.`,
+                detail: MSG.GUIDE_SIGNATURE_PITY_DETAIL(pity, pct),
                 primaryAction: { kind: 'open_move', label: '보스 경로' },
             };
         }
