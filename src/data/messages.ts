@@ -55,7 +55,7 @@ const HP_DRAIN_ATK_COST_MARKER = '생명 대가';
 const SYNTHESIS_PROTECT_ITEM_NAME = '합성 보호권';
 // 2026-10 Wave 62 (원장 §61.4 C16): 숫자 뒤 조사 — 금액을 실제로 받는 값('빈손의 시작'이면 절반)으로 다시 적을 때 조사가 따라
 //   바뀐다("골드 70을" → "골드 35를"). 숫자의 끝소리는 끝자리로 정해진다: 0(십 · 백 · 천 · 만) · 1(일) · 3(삼) · 6(육) · 7(칠) ·
-//   8(팔)은 받침이 있고 2 · 4 · 5 · 9는 없다. 아래 GUIDE_FIRST_SORTIE_DETAIL이 재사용하므로 top-level const로 둔다.
+//   8(팔)은 받침이 있고 2 · 4 · 5 · 9는 없다. `MSG.NUMBER_PARTICLE`이 내보낸다(Wave 136에 첫 출발 안내 문구와 함께 이 파일 안 사용처가 사라졌다).
 // 2026-10 Wave 130: 판정은 `koreanParticles.ts` 하나다 — 이 파일에 따로 있던 끝자리 표(Wave 129가 놓친 두 번째 판정기)를 지웠다.
 const NUMBER_PARTICLE_PAIRS = [['을', '를'], ['이', '가'], ['은', '는'], ['과', '와']] as const;
 const numberParticle = (particle: string, amount: number): string => repickJosa(amount, particle);
@@ -139,8 +139,6 @@ export const MSG = {
             : `✦ [${bossName}] 전설 각인 [${topName}] 드롭 가능 — ${topPct}%`
     ),
     SIGNATURE_PITY_RESONANCE: (pct: number | string, pity: number | undefined) => `✦ 각인 공명 +${pct}% — 보스 ${pity}회 연속 무획득 보정 적용`,
-    // 2026-10 Wave 134(원장 §147): 안전지대 안내의 공명 줄 — 'signature 드롭'이라 적혀 있었다.
-    GUIDE_SIGNATURE_PITY_DETAIL: (pity: number, pct: number) => `보스 토벌 ${pity}회 누적 — 다음 전설 각인 확률 +${pct}% 적용 중. 보스 권역으로 진입할 적기입니다.`,
     // fix/signature-set-two-hand: 양손 시그니처 무기가 세트 카운트에 2피스로 반영됐을 때
     // EquipmentPanel "세트 진행도" 카드에 표시하는 힌트 1줄.
     SIGNATURE_SET_TWO_HAND_HINT: '💡 양손 무기는 보조 슬롯을 함께 차지해 2피스로 계산됩니다.',
@@ -461,13 +459,6 @@ export const MSG = {
     BAG_ACTION_CHECK: '재료 확인',
     BAG_ALL_DONE: '모든 가방을 만들었습니다.',
     BAG_GOLD: (gold: number) => `골드 ${gold.toLocaleString('ko-KR')}`,
-    // 2026-10 Wave 62 (원장 §61.4 C16): 첫 출발 안내의 첫 방문 보상 — 골드는 실제로 받는 금액('빈손의 시작'이면 절반)이다.
-    GUIDE_FIRST_SORTIE_DETAIL: (gold: number, exp: number) =>
-        `추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상으로 골드 ${gold}${numberParticle('과', gold)} 경험 ${exp}${numberParticle('을', exp)} 얻습니다.`,
-    GUIDE_BAG_UPGRADE_TITLE: '가방을 넓힐 수 있습니다',
-    GUIDE_BAG_UPGRADE_DETAIL: (name: string, count: number, capacity: number, nextCapacity: number) =>
-        `가방이 ${count}/${capacity}입니다. 제작소에서 ${withJosa(name, '을/를')} 만들면 ${nextCapacity}칸이 됩니다.`,
-    GUIDE_BAG_UPGRADE_ACTION: '제작소 열기',
     // 2026-10 Wave 61: 누적 처치 임무(`kills`)의 다음 단계 — 보스 처치도 함께 센다(CombatEngine.handleVictory).
     QUEST_NEXT_STEP_KILLS: (remaining: number) => `몬스터 ${remaining}회 더 처치 (보스 포함)`,
     // 2026-10 Wave 64: 누적 골드 임무(`gold_earned`) — 경로 · 다음 단계 · 귀환 · 작전 목표 문구.

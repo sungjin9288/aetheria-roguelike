@@ -810,15 +810,13 @@ import { DB } from '../src/data/db.ts';
       const source = await readSrc('src/utils/adventureGuide.ts');
       assert.ok(/if \(runtimeState && runtimeState !== 'idle'\)/.test(source),
           'runtimeState !== idle 분기 보존');
-      assert.ok(/runtimeState === 'combat'/.test(source), 'combat 분기 보존');
-      // W11 C4: runtimeState가 'idle'이면 이 분기를 타지 않고, 'combat'이면 전용 문구를
-      // 반환하는지 실제 호출로 확인.
+      // W11 C4: runtimeState가 'idle'이면 이 분기를 타지 않는다 — 실제 호출로 확인.
+      // 2026-10 Wave 136: 대기 상태가 아니면 안내 줄이 없으므로(전투는 전투 화면) 글도 싣지 않는다(원장 §150).
       const player = makePlayerFixture();
       const combatGuidance = getAdventureGuidance(player, null, null, 'combat');
-      assert.equal(combatGuidance.title, '현재 상황 진행 중');
-      assert.equal(combatGuidance.detail, '전투 판단을 우선하세요.', 'combat 분기 전용 문구');
+      assert.deepEqual(combatGuidance, { primaryAction: null });
       const idleGuidance = getAdventureGuidance(player, null, null, 'idle');
-      assert.notEqual(idleGuidance.title, '현재 상황 진행 중', "runtimeState 'idle'이면 이 분기를 건너뛴다");
+      assert.notEqual(idleGuidance.primaryAction, null, "runtimeState 'idle'이면 이 분기를 건너뛴다");
   });
 
   test('cycle 509: cycle 502-508 회귀 가드 — util default 청소 시리즈 보존', async () => {

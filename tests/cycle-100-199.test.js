@@ -732,9 +732,8 @@ import { readFile, readdir } from 'node:fs/promises';
   test('safe + debuff 보유 → 정화 권장 hint', () => {
       const player = safePlayer({ status: ['curse'] });
       const guidance = getAdventureGuidance(player, baseStats(), safeMap, 'idle');
-      assert.ok(/정화|디버프|상태이상|debuff/i.test(guidance.title + ' ' + guidance.detail),
-          `expected debuff cleanse hint, got: ${guidance.title} | ${guidance.detail}`);
-      assert.equal(guidance.primaryAction?.kind, 'rest');
+      // 2026-10 Wave 136: 마을의 안내는 행동 종류만 낸다(원장 §150) — 정화 안내는 휴식 단추다.
+      assert.deepEqual(guidance, { primaryAction: { kind: 'rest' } });
   });
 
   test('safe + 다중 debuff → 정화 hint (한 번만 노출)', () => {
@@ -746,7 +745,7 @@ import { readFile, readdir } from 'node:fs/promises';
   test('safe + debuff 없음 → 정화 hint 미발생 (fallback hint)', () => {
       const player = safePlayer({ status: [] });
       const guidance = getAdventureGuidance(player, baseStats(), safeMap, 'idle');
-      assert.ok(!/정화/.test(guidance.title || ''), 'should not show cleanse hint without debuff');
+      assert.notEqual(guidance.primaryAction?.kind, 'rest', 'should not point at rest without debuff');
   });
 
   test('not-safe + debuff → 정화 hint 비활성 (rest 불가능 지역)', () => {
@@ -765,8 +764,8 @@ import { readFile, readdir } from 'node:fs/promises';
       // claimable quest는 별도 mock 필요 — getQuestTracker 호출 결과에 의존하므로
       // 직접 검증보다는 debuff hint가 노출되는지로 회귀 가드.
       const guidance = getAdventureGuidance(player, baseStats(), safeMap, 'idle');
-      // 구체적인 quest mock 없이는 정확한 우선순위 검증 어려움 — 단순 동작 가드.
-      assert.ok(typeof guidance.title === 'string');
+      // 2026-10 Wave 136: 보상을 받을 임무가 있으면 정화(휴식)보다 수령이 먼저다.
+      assert.equal(guidance.primaryAction?.kind, 'claim_quest');
   });
 }
 

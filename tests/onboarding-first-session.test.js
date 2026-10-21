@@ -40,8 +40,8 @@ const FIELD_MAP = { type: 'dungeon', level: 1 };
 
 test('slice 22: 신규 플레이어 — 마을에서 첫 출발 안내', () => {
     const guidance = getAdventureGuidance(freshPlayer(), { maxHp: 178, maxMp: 52 }, SAFE_MAP, 'idle');
-    assert.equal(guidance.title, '첫 원정 준비');
-    assert.equal(guidance.primaryAction?.kind, 'open_move');
+    // 2026-10 Wave 136: 마을의 첫 출발은 단추의 표시다(원장 §150) — 그려지지 않던 '첫 원정 준비' 제목 · 이유 문구는 지웠다.
+    assert.deepEqual(guidance, { primaryAction: { kind: 'open_move', firstSortie: true } });
 });
 
 test('slice 22: 신규 플레이어 — 필드에서 첫 교전 안내', () => {
@@ -61,7 +61,7 @@ test('slice 22: 첫 교전 분기는 처치 1회 후 종료 (기존 흐름 복�
 test('slice 22: 탐험 이력 있으면 첫 출발 분기 미발동 (기존 흐름 보존)', () => {
     const player = freshPlayer({ stats: { kills: 0, explores: 3 } });
     const guidance = getAdventureGuidance(player, { maxHp: 178, maxMp: 52 }, SAFE_MAP, 'idle');
-    assert.notEqual(guidance.title, '첫 원정 준비');
+    assert.equal(guidance.primaryAction?.firstSortie, undefined);
 });
 
 test('slice 22: 보상 회수 가능 상태가 온보딩보다 우선', () => {
@@ -70,7 +70,7 @@ test('slice 22: 보상 회수 가능 상태가 온보딩보다 우선', () => {
     });
     const guidance = getAdventureGuidance(player, { maxHp: 178, maxMp: 52 }, SAFE_MAP, 'idle');
     // quests[0] id 1 = 슬라임 소탕 (goal 3) — 완료 상태면 보상 회수가 먼저.
-    assert.equal(guidance.title, '보상 회수 가능');
+    assert.deepEqual(guidance, { primaryAction: { kind: 'claim_quest' } });
 });
 
 test('slice 22: ControlPanel 가이드 스트립 — guidance 텍스트가 실제 렌더', async () => {

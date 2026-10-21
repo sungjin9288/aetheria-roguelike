@@ -759,18 +759,16 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   test('cycle 334: getQuestTracker detail 필드 제거', async () => {
       const source = await readSrc('src/utils/adventureGuide.ts');
       // getQuestTracker 함수 블록 추출 후 detail 필드 0건.
-      const fn = source.slice(source.indexOf('export const getQuestTracker'), source.indexOf('export const getExplorationForecast'));
+      const fn = source.slice(source.indexOf('export const getQuestTracker'), source.indexOf('export const getMoveRecommendations'));
       assert.ok(!/detail:/.test(fn),
           'getQuestTracker에서 detail 필드 제거됨');
   });
 
+  // 2026-10 Wave 136: 남아 있던 분위기 문구 · 칩도 그리는 곳이 없어 탐험 예보 함수를 통째로 지웠다(원장 §150).
   test('cycle 334: getExplorationForecast description 필드 제거', async () => {
       const source = await readSrc('src/utils/adventureGuide.ts');
-      const fn = source.slice(source.indexOf('export const getExplorationForecast'), source.indexOf('export const getMoveRecommendations'));
-      assert.ok(!/description:/.test(fn),
-          'getExplorationForecast에서 description 필드 제거됨');
-      assert.ok(!/let description =/.test(fn),
-          'description 변수 할당 라인 제거됨');
+      assert.ok(!/getExplorationForecast/.test(source), 'getExplorationForecast 제거됨');
+      assert.ok(!/let description =/.test(source), 'description 변수 할당 라인 제거됨');
   });
 
   test('cycle 334: getQuestTracker 동작 보존 (kind/title/progressLabel/questId)', async () => {
@@ -788,11 +786,15 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
   });
 
   test('cycle 334: getExplorationForecast 동작 보존 (mood/chips)', async () => {
-      const { getExplorationForecast } = await import('../src/utils/adventureGuide.js');
-      const forecast = getExplorationForecast({}, null);
-      assert.ok('mood' in forecast, 'mood 보존');
-      assert.ok(Array.isArray(forecast.chips), 'chips array 보존');
-      assert.equal(forecast.description, undefined, 'description 필드 0건');
+      // 2026-10 Wave 136: 예보의 분위기 · 칩은 경로 추천 출력에도 남지 않는다 — 점수의 '발견 상승' 판정만 안에서 쓴다.
+      const { getMoveRecommendations } = await import('../src/utils/adventureGuide.js');
+      const { DB } = await import('../src/data/db.js');
+      const player = { hp: 100, maxHp: 100, mp: 50, maxMp: 50, level: 5, loc: '시작의 마을', inv: [], stats: { visitedMaps: ['시작의 마을'] } };
+      for (const route of getMoveRecommendations(player, null, DB.MAPS['시작의 마을'], DB.MAPS)) {
+          assert.equal(route.chips, undefined, 'chips 0건');
+          assert.equal(route.mood, undefined, 'mood 0건');
+          assert.equal(route.description, undefined, 'description 필드 0건');
+      }
   });
 
   test('cycle 333 회귀 가드: getMoveRecommendations dead 필드 0건 유지', async () => {

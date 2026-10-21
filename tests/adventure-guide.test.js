@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { getAdventureGuidance, getExpeditionPreparation, getExplorationForecast, getMoveRecommendations, getQuestTracker } from '../src/utils/adventureGuide.js';
+import { getAdventureGuidance, getExpeditionPreparation, getMoveRecommendations, getQuestTracker } from '../src/utils/adventureGuide.js';
 
 test('quest tracker prioritizes claimable rewards', () => {
     const player = {
@@ -59,9 +59,11 @@ test('adventure guidance recommends rest in town when hp is low', () => {
     const guidance = getAdventureGuidance(player, { maxHp: 150, maxMp: 50 }, { type: 'safe' }, 'idle');
 
     assert.equal(guidance.primaryAction.kind, 'rest');
-    assert.ok(guidance.detail.includes('휴식'));
+    // 2026-10 Wave 136: 마을은 이유를 그리지 않는다 — 안내도 이유를 싣지 않는다(원장 §150).
+    assert.equal(guidance.detail, undefined);
 });
 
+// 2026-10 Wave 136: 진행 중인 임무는 마을의 원정 준비 칸(목표)이 보인다 — 안내는 출발 단추만 정한다(원장 §150).
 test('adventure guidance keeps active quest visible from town', () => {
     const player = {
         hp: 160,
@@ -82,39 +84,14 @@ test('adventure guidance keeps active quest visible from town', () => {
         stats: { exploreState: { sinceNarrativeEvent: 0, sinceDiscovery: 0, sinceRelic: 0, quietStreak: 0 }, signaturePity: 0 },
     };
 
-    const guidance = getAdventureGuidance(player, { maxHp: 160, maxMp: 44 }, { type: 'safe' }, 'idle');
+    const town = { type: 'safe', level: 1, exits: ['고요한 숲'] };
+    const maps = { '시작의 마을': town, '고요한 숲': { type: 'dungeon', level: 1, exits: ['시작의 마을'], eventChance: 0.18 } };
+    const guidance = getAdventureGuidance({ ...player, loc: '시작의 마을' }, { maxHp: 160, maxMp: 44 }, town, 'idle');
 
-    assert.equal(guidance.title, '임무 재출발 준비');
-    assert.equal(guidance.primaryAction.kind, 'open_move');
-    assert.ok(guidance.detail.includes('슬라임 소탕'));
-    assert.ok(guidance.detail.includes('고요한 숲에서 슬라임 추적'));
-});
-
-test('exploration forecast marks boss zones clearly', () => {
-    const player = {
-        stats: {
-            exploreState: {
-                sinceNarrativeEvent: 6,
-                sinceDiscovery: 3,
-                sinceRelic: 4,
-                quietStreak: 1,
-            }
-        }
-    };
-
-    // 2026-10 Wave 61: `boss: true`만으로는 보스가 나오지 않는다(canBossAppearInMap) — 조우 풀에 보스가 있는 지역으로 둔다.
-    const forecast = getExplorationForecast(player, {
-        type: 'dungeon',
-        level: 30,
-        eventChance: 0.28,
-        boss: true,
-        monsters: ['레드 드래곤'],
-        bossMonsters: ['레드 드래곤'],
-    });
-
-    assert.equal(forecast.mood, '보스 전조');
-    assert.ok(forecast.chips.some((chip) => chip.label === 'EVENT'));
-    assert.ok(forecast.chips.some((chip) => chip.label === 'TEMPO'));
+    assert.deepEqual(guidance, { primaryAction: { kind: 'open_move' } });
+    const preparation = getExpeditionPreparation({ ...player, loc: '시작의 마을' }, { maxHp: 160, maxMp: 44 }, town, maps);
+    assert.equal(preparation.goalLabel, '고요한 숲에서 슬라임 추적');
+    assert.equal(preparation.destination, '고요한 숲');
 });
 
 test('move recommendations prioritize safe exits when hp is low', () => {
@@ -142,7 +119,7 @@ test('move recommendations prioritize safe exits when hp is low', () => {
     assert.equal(routes[0].name, '시작의 마을');
     assert.equal(routes[0].badge, '정비');
     assert.equal(routes[0].routePlan.returnLabel, '안전지대');
-    assert.match(routes[0].routePlan.exitRule, /휴식과 임무 확인/);
+    assert.equal(routes[0].routePlan.approach, '마을 정비');
 });
 
 test('move recommendations favor level-fit unexplored routes when stable', () => {
@@ -173,7 +150,6 @@ test('move recommendations favor level-fit unexplored routes when stable', () =>
     assert.equal(routes[0].badge, '개척');
     assert.equal(routes[0].routePlan.approach, '미답 권역 조사');
     assert.equal(routes[0].routePlan.returnLabel, '발견 후 귀환');
-    assert.equal(routes[0].routePlan.exitRule, '발견 뒤 귀환');
 });
 
 test('move recommendations keep level-locked boss routes out of the primary recommendation', () => {
@@ -237,16 +213,13 @@ test('expedition preparation connects an active mission to one direct departure'
         maps,
     );
 
-    assert.equal(preparation.missionTitle, '슬라임 소탕');
     assert.equal(preparation.destination, '고요한 숲');
     assert.equal(preparation.goalLabel, '고요한 숲에서 슬라임 추적');
-    assert.equal(preparation.resourceLabel, '생명 100% · 기력 100%');
-    assert.equal(preparation.equipmentLabel, '주요 장비 확인');
     assert.equal(preparation.readinessLabel, '출발 가능');
     assert.equal(preparation.canDepart, true);
-    assert.match(preparation.returnLabel, /귀환/);
 });
 
+// 2026-10 Wave 136: 생명 · 장비 경고는 원정 준비 칸의 준비 칩 하나다(생명 → 무기 → 방어구 순) — 그리지 않던 장비 문구 칸은 지웠다.
 test('expedition preparation exposes resource and equipment warnings without hiding departure', () => {
     const player = {
         hp: 45,
@@ -276,6 +249,9 @@ test('expedition preparation exposes resource and equipment warnings without hid
     );
 
     assert.equal(preparation.readinessLabel, '휴식 권장');
-    assert.equal(preparation.equipmentLabel, '무기 미장착 · 방어구 미장착');
     assert.equal(preparation.canDepart, true);
+    const rested = { ...player, hp: 150, mp: 50 };
+    assert.equal(getExpeditionPreparation(rested, { maxHp: 150, maxMp: 50 }, maps['시작의 마을'], maps).readinessLabel, '무기 필요');
+    const armed = { ...rested, equip: { weapon: { name: '녹슨 단검', type: 'weapon', val: 5 } } };
+    assert.equal(getExpeditionPreparation(armed, { maxHp: 150, maxMp: 50 }, maps['시작의 마을'], maps).readinessLabel, '장비 확인');
 });
