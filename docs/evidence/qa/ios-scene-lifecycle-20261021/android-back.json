@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-21",
+  "method": "Manual: one `adb shell input keyevent KEYCODE_BACK` per state; outcome observed on the emulator screen and reported by the owner.",
+  "device": "Android 16 / API 36 emulator Aetheria_QA_API_36_20260904, cold boot (-no-snapshot-load)",
+  "package": "com.aetheria.roguelike",
+  "apk": {
+    "path": "android/app/build/outputs/apk/debug/app-debug.apk",
+    "build": "npm run android:sync -> npm run android:debug",
+    "fileTime": "2026-10-21 17:58 KST",
+    "bytes": 223148392,
+    "sha256": "7baf67992e515c45b1833cb7d289e1a692daf1c3ac867ce9b432f630fe92d12b",
+    "pluginRegistration": "assets/capacitor.plugins.json lists com.capacitorjs.plugins.app.AppPlugin"
+  },
+  "checks": [
+    {
+      "row": 3,
+      "state": "crafting panel open in the starting town",
+      "expected": "panel closes; app remains active",
+      "passed": true
+    },
+    {
+      "row": 1,
+      "state": "idle in the starting town, no panel open",
+      "expected": "activity exits to launcher",
+      "passed": true
+    },
+    {
+      "row": 7,
+      "state": "combat after relaunch (save restored) and exploring a hunting area",
+      "expected": "activity exits to launcher (by design; not an escape roll)",
+      "passed": true
+    }
+  ],
+  "status": "passed",
+  "limitations": [
+    "Rows follow docs/qa/CODEX_K3_BACK_BUTTON_QA.md and match the 2026-09-22 subset; the full 8-row table remains the Wave 22 evidence.",
+    "No timestamps or activity dumps were captured for these rows."
+  ]
+}

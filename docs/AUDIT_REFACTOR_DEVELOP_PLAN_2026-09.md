@@ -10247,3 +10247,19 @@ Wave 125의 48시드 측정에 시드 49 ~ 96을 더했다. 같은 코드이고,
    - `npm run android:sync` → `npm run android:debug`. APK의 `assets/capacitor.plugins.json`에 `AppPlugin`이 있는지 본다.
    - `docs/qa/CODEX_K3_BACK_BUTTON_QA.md` 표의 뒤로가기를 확인한다. 최소 세 행은 2026-09-22 확인(`tasks/todo.md`)과 같게 한다: 1 시작의 마을 → 앱 종료, 3 제작소 → 패널 닫힘, 7 전투 → 앱 종료.
 4. **그 뒤 머지하고, iPhone 수용(§151)은 머지된 `main`에서 한다.** 기기 한 번으로 패치까지 덮는다.
+
+### 153.7 Mac 네이티브 QA 결과 (2026-10-21, 소유자 Mac)
+
+- **트리:** `9ff837df`다. Xcode 27.1이 `Package.resolved`를 다시 풀었다 — `capacitor-swift-pm` 8.5.0(`4f71d0b…`) → 8.5.3(`4c7f346d…`), `originHash`도 바뀌었다. 다른 파일 변경은 0이다.
+- **iOS scene QA:** 26.5 · 27.0 시뮬레이터 모두 통과다. 검사 6개는 단일 WebView · 제작과 저장 · 백그라운드 복귀 · 복귀 뒤 입력 · 60초 생존 · 강제 재실행 뒤 복원이다.
+- **결함 주입:** 창 생성 세 줄을 뺀 사본(별도 번들)이 "live bridge WebView 없음"으로 실패했다. 위 통과는 결함을 가르는 검사의 결과다.
+- **Android(16 / API 36 에뮬레이터):** APK에 `AppPlugin`이 등록됐고, 뒤로가기 세 행(제작소 → 패널 닫힘 · 마을 → 앱 종료 · 전투 → 앱 종료)이 통과했다. 다시 실행하면 세이브가 복원됐다.
+- **관찰:**
+  - 9/22 iOS 27 캡처의 글자 누락이 이번에는 없다.
+  - 에뮬레이터가 iOS 시뮬레이터 두 대 · Gradle 빌드와 함께 돌 때 한 번 강제 종료됐다. 시뮬레이터를 끄고 콜드 부팅하자 끝까지 돌았다(호스트 메모리로 추정, 확인하지 않음). 다음 실행은 iOS를 끝내고 시뮬레이터를 끈 뒤 Android를 돌린다.
+  - Xcode 27.1에서 `open -a Simulator`가 앱을 찾지 못했다. 스크립트는 창 없이 돌아 영향이 없다.
+- **영수증:** `docs/evidence/qa/ios-scene-lifecycle-20261021/`
+  - 스크립트 영수증 · 캡처: 소유자 커밋 `eb3932a2`.
+  - `android-back.json` · `build-and-scope.json`(해시 6개).
+- **QA 문서:** 결함 주입 사본을 만드는 명령을 `docs/qa/IOS_SCENE_LIFECYCLE_QA.md`에 남겼다. 그 전에는 절차 설명만 있었다.
+- **남은 것:** 머지 뒤 `main`에서 iPhone 기기 수용(§151). 실기기 · 서명은 이 QA가 덮지 않는다.

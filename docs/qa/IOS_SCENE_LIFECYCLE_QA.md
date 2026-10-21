@@ -1,6 +1,6 @@
 # iOS scene 생명주기 런타임 QA
 
-Xcode 27 SDK 앱의 UIScene 시작·복귀·저장 지속성을 검사한다. `SceneDelegate`가 연결마다 창과 `CAPBridgeViewController`를 하나 생성하고, Capacitor의 scene proxy에 연결·URL·userActivity를 전달한다. Main storyboard 자동 생성 설정은 제거해 창을 중복 생성하지 않는다. [Capacitor 8.5 전환 지침](https://capacitorjs.com/docs/updating/8-5)을 기준으로 core/ios/cli와 SPM을 8.5.0에 맞췄다. 2026-10-21 보안 권고(GHSA-rvm3-566m-v7fv)로 core/ios/cli/Android와 SPM을 8.5.3으로 올렸다. 이 절차로 다시 검증한다(원장 §153).
+Xcode 27 SDK 앱의 UIScene 시작·복귀·저장 지속성을 검사한다. `SceneDelegate`가 연결마다 창과 `CAPBridgeViewController`를 하나 생성하고, Capacitor의 scene proxy에 연결·URL·userActivity를 전달한다. Main storyboard 자동 생성 설정은 제거해 창을 중복 생성하지 않는다. [Capacitor 8.5 전환 지침](https://capacitorjs.com/docs/updating/8-5)을 기준으로 core/ios/cli와 SPM을 8.5.0에 맞췄다. 2026-10-21 보안 권고(GHSA-rvm3-566m-v7fv)로 core/ios/cli/Android와 SPM을 8.5.3으로 올리고, 같은 날 이 절차로 다시 검증했다(원장 §153).
 
 ## 환경과 빌드
 
@@ -43,6 +43,22 @@ AETHERIA_IOS_INSPECTOR_DIR=/tmp/aetheria-ios-inspector \
 
 격리한 native 프로젝트 복사본에서 `SceneDelegate.scene(_:willConnectTo:options:)`의 `UIWindow(windowScene:)`·rootViewController 할당·`makeKeyAndVisible()`을 제거하고 빌드한다. manifest에는 storyboard 자동 생성 경로가 없어야 한다. `com.aetheria.roguelike.scene-faultqa` 별도 bundle로 설치해 동일 스크립트를 실행하면 살아 있는 WebView 부재로 실패해야 한다. 창이 없는 채 PID만 살아 있는 경우도 시작 실패다.
 
+2026-10-21에는 아래 명령으로 사본을 만들었다. `node_modules`는 심볼릭 링크로 이어 `CapApp-SPM`의 상대 경로를 살린다.
+
+```sh
+FAULT=/tmp/aetheria-scene-fault
+rm -rf "${FAULT:?}" && mkdir -p "$FAULT"
+cp -R ios "$FAULT/ios" && ln -s "$PWD/node_modules" "$FAULT/node_modules"
+sed -i '' -e '/window = UIWindow(windowScene: windowScene)/d' \
+  -e '/window?.rootViewController = CAPBridgeViewController()/d' \
+  -e '/window?.makeKeyAndVisible()/d' "$FAULT/ios/App/App/SceneDelegate.swift"
+xcodebuild -project "$FAULT/ios/App/App.xcodeproj" -scheme App -configuration Debug \
+  -destination 'generic/platform=iOS Simulator' -derivedDataPath /tmp/aetheria-scene-fault-dd \
+  PRODUCT_BUNDLE_IDENTIFIER=com.aetheria.roguelike.scene-faultqa CODE_SIGNING_ALLOWED=NO build
+```
+
+설치 · 실행은 위 스크립트에 이 bundle을 넘긴다. 기대 결과는 `status: failed`이고 오류는 `Launched app did not expose a live bridge WebView`이다.
+
 이번 실행은 창 생성 코드 추가 직전의 컴파일된 proxy-only SceneDelegate에 최종 manifest를 적용한 별도 bundle을 mutant로 사용했다. 정상·결함 앱에 같은 bundle을 쓰지 않는다. 초기 실험에서는 정상 재설치 뒤에도 검은 화면이 관측됐고, 이후 fault bundle을 분리했다. scene 설정과 inspector 조회 문제가 함께 있어 초기 현상의 단일 원인은 확정하지 않았다. 운영 앱에는 설치·초기화를 하지 않는다. 테스트 후 production asset으로 `npm run cap:sync`하기 전 `npm run build`를 실행한다.
 
-2026-09-22 실행 receipt(JSON · 미편집 캡처)는 커밋 `604603af`의 `docs/evidence/qa/ios-scene-lifecycle-20260922/`에 있다. Wave 112 정리(원장 §118)가 작업 트리에서 지웠으므로 `git show 604603af:docs/evidence/qa/ios-scene-lifecycle-20260922/ios27.json`처럼 꺼낸다. 다음 실행의 receipt는 새 날짜 폴더에 남긴다. 초기 도구 연결·페이지 로딩 오류는 제품 회귀나 결함 주입 성공으로 세지 않는다.
+2026-09-22 실행 receipt(JSON · 미편집 캡처)는 커밋 `604603af`의 `docs/evidence/qa/ios-scene-lifecycle-20260922/`에 있다. Wave 112 정리(원장 §118)가 작업 트리에서 지웠으므로 `git show 604603af:docs/evidence/qa/ios-scene-lifecycle-20260922/ios27.json`처럼 꺼낸다. 2026-10-21 실행(Capacitor 8.5.3 · Xcode 27.1)의 receipt는 `docs/evidence/qa/ios-scene-lifecycle-20261021/`에 있다. iOS 26.5 · 27.0 통과, 결함 앱 실패, Android 뒤로가기 세 행 통과이고, 빌드 범위와 해시는 `build-and-scope.json`에 있다. 다음 실행의 receipt는 새 날짜 폴더에 남긴다. 초기 도구 연결·페이지 로딩 오류는 제품 회귀나 결함 주입 성공으로 세지 않는다.
