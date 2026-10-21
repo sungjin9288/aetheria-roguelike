@@ -5,6 +5,9 @@
 계약이다. `public` gate 통과는 **공개 실행 가능 상태**일 뿐 실제 publication 증거가 아니다.
 Upload, review request, public release, ad activation은 각각 별도 수동 승인 후 실행한다.
 
+지금 후보를 만들고 샌드박스 단계를 통과시키는 실행 순서(명령 포함)는
+[앱인토스 샌드박스 런북](../../qa/APPS_IN_TOSS_SANDBOX_RUNBOOK.md)이다.
+
 Raw ProductEvent export, 진단 export, nickname, 원본 user/session key, device serial, inventory,
 log, credential, console authentication 자료는 commit하지 않는다. Soft Launch 원본과 생성
 report는 Git에서 제외된 `build/toss-soft-launch/` 또는 별도 sealed storage에만 둔다.
