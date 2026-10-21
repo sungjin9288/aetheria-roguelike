@@ -260,8 +260,8 @@ import { readFile } from 'node:fs/promises';
   test('cycle 282: player.stats.signaturePity dispatch 유지 (회귀 가드)', async () => {
       // 탐험 스카우팅(2026-07): 참조가 exploreUtils.ts의 runQuietRollAndCombat으로 이동
       // (exploreActions.ts와 eventActions.ts "짙은 안개" 카드 공유) — 경로만 갱신.
+      // 2026-10 Wave 136(원장 §150): 모험 안내의 공명 갈래를 지웠다 — 공명은 전설 도감과 보스 출현 기록 줄이 읽는다.
       const sources = await Promise.all([
-          readSrc('src/utils/adventureGuide.ts'),
           readSrc('src/components/codex/LegendaryCodex.tsx'),
           readSrc('src/hooks/gameActions/exploreFlow.ts'),
       ]);

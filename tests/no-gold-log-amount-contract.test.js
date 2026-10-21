@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createElement } from 'react';
 
 import { DB } from '../src/data/db.js';
+import { MSG } from '../src/data/messages.js';
 import { BALANCE, CONSTANTS } from '../src/data/constants.js';
 import { FALLBACK_EVENT_POOL } from '../src/data/aiEventPools.js';
 import { BOUNDED_ENCOUNTERS } from '../src/data/boundedEncounters.js';
@@ -551,7 +552,9 @@ test('묘비 화면의 회수 골드 = 회수할 때 실제 골드 증가', () =
     }
 });
 
-test('첫 출발 안내가 약속한 첫 방문 골드 = 첫 지역에 들어설 때 실제 골드 증가 (대조군 문구는 그대로)', () => {
+// 2026-10 Wave 136: 첫 출발 안내의 이유 문구(첫 방문 보상 금액)는 화면에 그려진 적이 없어 지웠다(원장 §150) — 마을이 그리는 것은
+//   첫 출발 단추이고, 그 단추는 금액을 약속하지 않는다. 남는 것은 실제 첫 방문 수입의 '빈손의 시작' 규칙이다.
+test('첫 방문 골드는 빈손의 시작이면 절반이다 — 첫 출발 단추와 안내는 금액을 약속하지 않는다', () => {
     const town = CONSTANTS.START_LOCATION;
     const firstArea = DB.MAPS[town].exits[0];
     const guide = (mods) => getAdventureGuidance(
@@ -564,9 +567,8 @@ test('첫 출발 안내가 약속한 첫 방문 골드 = 첫 지역에 들어설
             dispatch: h.dispatch, addLog: () => {} }).move(firstArea);
         return goldDelta(before, h.state);
     };
-    assert.equal(guide(CONTROL).detail, '추천 경로의 첫 지역으로 이동하세요. 첫 방문 보상으로 골드 100과 경험 25를 얻습니다.');
-    assert.deepEqual(goldAmounts(guide(CONTROL).detail), [visit(CONTROL)]);
-    const halvedDetail = guide(NO_GOLD).detail;
-    assert.deepEqual(goldAmounts(halvedDetail), [visit(NO_GOLD)], `안내 "${halvedDetail}" = 첫 방문 증가 ${visit(NO_GOLD)}`);
+    for (const mods of [CONTROL, NO_GOLD]) assert.equal(guide(mods).detail, undefined, '마을 안내는 이유 문구를 싣지 않는다');
+    assert.deepEqual(goldAmounts(MSG.TOWN_DEPART_FIRST(firstArea)), [], '첫 출발 단추는 금액을 말하지 않는다');
+    assert.ok(visit(CONTROL) > 0);
     assert.equal(visit(NO_GOLD), HALF(visit(CONTROL)));
 });

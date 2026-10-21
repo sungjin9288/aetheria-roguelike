@@ -98,8 +98,9 @@ const getPrimaryKind = (guidance: AdventureGuidance, preparation: ExpeditionPrep
     return preparation?.tracker ? 'open_move' : 'open_quest_board';
 };
 
+// 2026-10 Wave 136: 첫 출발은 안내의 표시(`firstSortie`)로 고른다 — 그려지지 않던 안내 제목 · 라벨 문자열을 비교하던 판정이었다.
 const isFirstStoryDeparture = (guidance: AdventureGuidance, preparation: ExpeditionPreparation) => (
-    (guidance?.title === '첫 원정 준비' || guidance?.primaryAction?.label === '첫 출발')
+    guidance?.primaryAction?.firstSortie === true
     && (!preparation?.tracker || preparation.tracker.questId === FIRST_STORY_QUEST_ID)
 );
 
@@ -122,8 +123,6 @@ const getPrimaryLabel = (kind: TownPrimaryKind, guidance: AdventureGuidance, pre
             return '가방 정리하기';
         case 'explore':
             return '탐험 시작';
-        default:
-            return guidance?.primaryAction?.label || '다음 행동';
     }
 };
 

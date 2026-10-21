@@ -1644,13 +1644,14 @@ import { fileURLToPath } from 'node:url';
           `getAdventureGuidance에서 emphasis 필드 0개여야 함, ${matches.length}개 발견`);
   });
 
+  // 2026-10 Wave 136: 제목 · 이유는 그려지는 필드 갈래에만 남았다(원장 §150) — 개수 대신 갈래마다 실제 출력을 본다.
   test('cycle 331: getAdventureGuidance 다른 필드 보존 (회귀 가드)', async () => {
-      const source = await readSrc('src/utils/adventureGuide.ts');
-      // primaryAction, secondaryAction, title, detail 필드는 그대로.
-      const primaryCount = (source.match(/^\s+primaryAction:/gm) || []).length;
-      const titleCount = (source.match(/^\s+title:/gm) || []).length;
-      assert.ok(primaryCount >= 11, `primaryAction 필드 11+ 보존 (실제: ${primaryCount})`);
-      assert.ok(titleCount >= 11, `title 필드 11+ 보존 (실제: ${titleCount})`);
+      const { getAdventureGuidance } = await import('../src/utils/adventureGuide.js');
+      const player = { hp: 100, maxHp: 100, mp: 50, maxMp: 50, level: 5, job: '검사', loc: '고요한 숲', inv: [], quests: [], stats: { kills: 3 } };
+      const field = getAdventureGuidance(player, { maxHp: 100, maxMp: 50 }, { type: 'dungeon' }, 'idle');
+      assert.equal(typeof field.title, 'string', '필드 안내 줄 제목 보존');
+      assert.equal(typeof field.detail, 'string', '필드 안내 줄 이유 보존');
+      assert.equal(field.primaryAction.kind, 'explore', '필드 행동 종류 보존');
   });
 
   test('cycle 331: getAdventureGuidance 동작 보존 (primaryAction 흐름)', async () => {
@@ -1797,7 +1798,8 @@ import { fileURLToPath } from 'node:url';
           assert.ok(typeof r.badge === 'string', 'badge 보존');
           assert.ok(typeof r.reason === 'string', 'reason 보존');
           assert.ok(typeof r.levelLabel === 'string', 'levelLabel 보존');
-          assert.ok(Array.isArray(r.chips), 'chips 보존');
+          // 2026-10 Wave 136: 그리지 않던 영어 칩(LV · STATE · RETURN)을 지웠다.
+          assert.equal(r.chips, undefined, 'chips 출력 0건');
           // 2026-10 Wave 103: 미발견 각인 수는 출력하지 않는다(획득처는 얻은 뒤에만 공개).
           assert.equal(r.undiscoveredSignatureCount, undefined,
               'undiscoveredSignatureCount 출력 0건');
@@ -1892,10 +1894,10 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 334 회귀 가드: getQuestTracker / getExplorationForecast dead 필드 정리 보존', async () => {
       const source = await readSrc('src/utils/adventureGuide.ts');
-      const trackerFn = source.slice(source.indexOf('export const getQuestTracker'), source.indexOf('export const getExplorationForecast'));
-      const forecastFn = source.slice(source.indexOf('export const getExplorationForecast'), source.indexOf('export const getMoveRecommendations'));
+      const trackerFn = source.slice(source.indexOf('export const getQuestTracker'), source.indexOf('export const getMoveRecommendations'));
       assert.ok(!/detail:/.test(trackerFn), 'cycle 334 getQuestTracker.detail 제거 보존');
-      assert.ok(!/description:/.test(forecastFn), 'cycle 334 getExplorationForecast.description 제거 보존');
+      // 2026-10 Wave 136: 탐험 예보 함수 자체를 지웠다(분위기 문구 · 칩을 그리는 곳이 없었다).
+      assert.ok(!/getExplorationForecast/.test(source), 'Wave 136 getExplorationForecast 제거 보존');
   });
 }
 

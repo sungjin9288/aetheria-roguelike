@@ -616,8 +616,9 @@ test('adventure guidance references the top recommended operation when no quest 
     const board = getQuestBoardRecommendations(player);
     const guidance = getAdventureGuidance(player, { maxHp: 140, maxMp: 40 }, { type: 'safe' }, 'idle');
 
-    assert.equal(guidance.primaryAction.kind, 'open_quest_board');
-    assert.ok(guidance.detail.includes(board.featured[0].quest.title));
+    // 2026-10 Wave 136: 추천 임무는 게시판이 그린다 — 마을 안내는 게시판 단추만 정하고 이유 문구를 싣지 않는다(원장 §150).
+    assert.deepEqual(guidance, { primaryAction: { kind: 'open_quest_board' } });
+    assert.ok(board.featured[0]?.quest?.title, '게시판의 추천 임무');
 });
 
 test('town quest shortcut opens the quest board focus panel, not only the progress tab', async () => {

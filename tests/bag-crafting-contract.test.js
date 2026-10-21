@@ -199,11 +199,11 @@ test('[안내] 마을에서 가방이 거의 찼고 다음 가방을 만들 수 
         stats: { ...structuredClone(INITIAL_STATE.player.stats), visitedMaps: ['시작의 마을', '고요한 숲', '서쪽 평원'] },
     };
     const ready = getAdventureGuidance({ ...base, inv: [...mats, ...Array.from({ length: 19 - mats.length }, (_, i) => material('슬라임 젤리', 100 + i))] }, null, DB.MAPS['시작의 마을'], 'idle');
-    assert.equal(ready.title, MSG.GUIDE_BAG_UPGRADE_TITLE);
-    assert.equal(ready.detail, MSG.GUIDE_BAG_UPGRADE_DETAIL(recipe.name, 19, 20, 23));
+    // 2026-10 Wave 136: 마을의 안내는 이유 문구 없이 행동 종류만 낸다(원장 §150) — 강조되는 시설 단추가 그 안내다.
+    assert.deepEqual(ready, { primaryAction: { kind: 'open_crafting' } });
     assert.equal(ACTION_KIND_TO_BUTTON[ready.primaryAction.kind], 'craft', '조작판의 제작소 버튼이 강조된다');
     const short = getAdventureGuidance({ ...base, inv: Array.from({ length: 19 }, (_, i) => material('슬라임 젤리', i)) }, null, DB.MAPS['시작의 마을'], 'idle');
-    assert.notEqual(short.title, MSG.GUIDE_BAG_UPGRADE_TITLE, '재료가 없으면 기존 정리 안내');
+    assert.equal(short.primaryAction.kind, 'open_inventory', '재료가 없으면 기존 정리 안내');
 });
 
 // ── 일괄 판매 · 과밀 배너 ──────────────────────────────────────────────────

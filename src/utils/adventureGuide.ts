@@ -2,14 +2,12 @@ import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { getInventoryCapacity } from './inventoryCapacity';
 import { getBagCraftReadiness } from './bagCrafting';
 import { MSG } from '../data/messages.js';
-import { getGoldIncome, getVisibleRouteName } from './challengeRules.js';
+import { getVisibleRouteName } from './challengeRules.js';
 import { FIRST_VISIT_REWARDS } from '../data/firstVisitRewards.js';
 import type { FullStats, GameMap, Player, StatusId } from "../types/index.js";
 import { MAPS } from '../data/maps.js';
 import { getDiscoveryOdds } from './explorationPacing.js';
 import { canBossAppearInMap } from './bossPresence.js';
-import { getQuestBoardRecommendations } from './questOperations.js';
-import { getSignaturePityMultiplier } from './signaturePity.js';
 import { getMapRequiredLevel, getNextMapTowardTarget } from './mapTopology.js';
 import { getRestCost } from './expeditionReturnFlow.js';
 import {
@@ -24,9 +22,9 @@ const ROUTE_PLAN_LOW_HP_RATIO = 0.35;
 const ROUTE_PLAN_BOSS_HP_RATIO = 0.75;
 const ROUTE_PLAN_INVENTORY_BUFFER = 2;
 
+// 2026-10 Wave 136 (원장 §150): 경로 카드 · 지도가 그리는 접근 · 귀환만 둔다 — 귀환 조건 문구(`exitRule`)는 원정 준비의 읽는 곳 없는 칸만 읽었다.
 interface RoutePlan {
     approach: string;
-    exitRule: string;
     returnLabel: string;
 }
 
@@ -43,7 +41,6 @@ const getRoutePlan = (
     if (isSafeTarget) {
         return {
             approach: '마을 정비',
-            exitRule: '휴식과 임무 확인 후 출발',
             returnLabel: '안전지대',
         };
     }
@@ -51,7 +48,6 @@ const getRoutePlan = (
     if (bossCanAppear) {
         return {
             approach: hpRatio >= ROUTE_PLAN_BOSS_HP_RATIO ? '보스 진입' : '정비 후 진입',
-            exitRule: '생명 75% 미만이면 귀환',
             returnLabel: '생명 75%',
         };
     }
@@ -59,7 +55,6 @@ const getRoutePlan = (
     if (hpRatio <= ROUTE_PLAN_LOW_HP_RATIO) {
         return {
             approach: '교전 보류',
-            exitRule: '안전지대 우선',
             returnLabel: '안전지대',
         };
     }
@@ -67,7 +62,6 @@ const getRoutePlan = (
     if (inventoryCount >= inventoryCap - ROUTE_PLAN_INVENTORY_BUFFER) {
         return {
             approach: '전리품 회수',
-            exitRule: '가방 정리 후 재진입',
             returnLabel: '가방 정리',
         };
     }
@@ -75,7 +69,6 @@ const getRoutePlan = (
     if (badge === '개척') {
         return {
             approach: '미답 권역 조사',
-            exitRule: '발견 뒤 귀환',
             returnLabel: '발견 후 귀환',
         };
     }
@@ -83,14 +76,12 @@ const getRoutePlan = (
     if (badge === '도전' || badge === '경계') {
         return {
             approach: '소모품 확인',
-            exitRule: '생명 절반 이하면 귀환',
             returnLabel: '생명 50%',
         };
     }
 
     return {
         approach: '목표 교전',
-        exitRule: '목표 처리 후 마을 회수',
         returnLabel: '회수',
     };
 };
@@ -252,73 +243,12 @@ export const getQuestTracker = (player: Player): QuestTracker | null => {
     return withFocusSummary(buildQuestTrackerPayload(focus, focus.isBounty ? 'bounty' : 'active', getQuestProgressLabel(focus)));
 };
 
-interface ExplorationChip {
-    label: string;
-    value: string;
-}
-
-interface ExplorationForecast {
-    mood: string;
-    chips: ExplorationChip[];
-}
-
-// cycle 334: description 필드 제거 — getExplorationForecast 외부 read 0건이던 dead field.
-//   mood / chips만 ControlPanel & test에서 사용.
-export const getExplorationForecast = (
-    player: Player,
-    mapData: GameMap | null | undefined,
-    /** 숨은 보스 해금은 지역별이다 — `DB.MAPS`의 지역 데이터에는 `name`이 없으므로 호출처가 이름을 넘긴다. */
-    mapName: string | null | undefined = mapData?.name,
-): ExplorationForecast => {
-    if (!mapData) {
-        return {
-            mood: '기록 동기화 중',
-            chips: [],
-        };
-    }
-
-    if (mapData.type === 'safe') {
-        return {
-            mood: '안전지대',
-            chips: [
-                { label: 'REST', value: 'SAFE' },
-                { label: 'BOARD', value: 'OPEN' },
-            ],
-        };
-    }
-
+// 2026-10 Wave 136 (원장 §150): 탐험 예보는 분위기 문구와 영어 칩(TEMPO · EVENT · RELIC · QUIET, 안전지대는 REST · BOARD)을
+//   만들었지만 화면은 어느 것도 그리지 않았다(경로 추천의 LV · STATE · RETURN 칩도 그리지 않았다). 남는 것은 경로 추천 점수의
+//   '발견 상승' 판정 하나다 — 이전 분위기 순서대로 보스가 나오는 지역은 보스가 먼저라 호출처가 거른다.
+const isDiscoveryRising = (player: Player, mapData: GameMap): boolean => {
     const odds = getDiscoveryOdds(player, mapData);
-    // cycle 469: defensive fallback 제거 — getDiscoveryOdds producer가 항상 5
-    //   valid profile 중 하나 반환이라 odds.pacingProfile은 항상 truthy.
-    //   fallback 진입 0건 unreachable.
-    const pacingProfile = odds.pacingProfile;
-    const eventPct = clampPercent(odds.narrativeEventChance);
-    const relicPct = clampPercent(odds.relicChance);
-    const quietPct = clampPercent(odds.quietChance);
-
-    let mood = '교전 밀도 보통';
-
-    if (canBossAppearInMap(mapName, mapData, player)) {
-        mood = eventPct >= 8 ? '보스 전조' : '보스 권역';
-    } else if (eventPct >= 10 || relicPct >= 12) {
-        mood = '발견 상승';
-    } else if (quietPct >= 24) {
-        mood = '정적 구간';
-    } else if (pacingProfile.id === 'volatile') {
-        mood = '변칙 지대';
-    } else if (pacingProfile.id === 'hostile' || Number(mapData.level) >= 20) {
-        mood = '고위험 교전';
-    }
-
-    return {
-        mood,
-        chips: [
-            { label: 'TEMPO', value: pacingProfile.label },
-            { label: 'EVENT', value: `${eventPct}%` },
-            { label: 'RELIC', value: `${relicPct}%` },
-            { label: 'QUIET', value: `${quietPct}%` },
-        ],
-    };
+    return clampPercent(odds.narrativeEventChance) >= 10 || clampPercent(odds.relicChance) >= 12;
 };
 
 interface MoveRecommendationCandidate {
@@ -328,7 +258,6 @@ interface MoveRecommendationCandidate {
     badge: string;
     reason: string;
     levelLabel: string;
-    chips: ExplorationChip[];
     routePlan: RoutePlan;
 }
 
@@ -337,7 +266,6 @@ export interface MoveRecommendation {
     badge: string;
     reason: string;
     levelLabel: string;
-    chips: ExplorationChip[];
     routePlan: RoutePlan;
     isRecommended: boolean;
 }
@@ -367,13 +295,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
             const isLocked = targetLevel > playerLevel;
             const isSafeTarget = targetMap.type === 'safe';
             const isVisited = visitedMaps.has(exitName);
-            const forecast = getExplorationForecast(player, targetMap, exitName);
             const bossCanAppear = canBossAppearInMap(exitName, targetMap, player);
-            const chips: ExplorationChip[] = [
-                { label: 'LV', value: targetMap.level === 'infinite' ? 'Abyss' : `${targetLevel}` },
-                { label: 'STATE', value: isSafeTarget ? 'SAFE' : forecast.mood },
-            ];
-            // 2026-10 Wave 103 (소유자 결정 §107.6): 미발견 각인 ✦N 칩을 없앴다 — 아직 없는 각인이 어디서 나오는지는 플레이어가 알아낸다.
             let score = 0;
             let badge = '전진';
             let reason = '현재 전력으로 무난하게 전개할 수 있는 경로입니다.';
@@ -427,7 +349,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                 }
 
                 if (!isVisited) score += 6;
-                if (forecast.mood === '발견 상승') score += 5;
+                if (!bossCanAppear && isDiscoveryRising(player, targetMap)) score += 5;
                 if (hpRatio <= 0.35) {
                     score -= 18;
                     badge = '경계';
@@ -441,7 +363,6 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
             }
 
             const routePlan = getRoutePlan(bossCanAppear, isSafeTarget, badge, hpRatio, inventoryCount, inventoryCap);
-            chips.push({ label: 'RETURN', value: routePlan.returnLabel });
 
             // cycle 333: score / isSafeTarget / isVisited / isBoss 4 dead 필드 제거 —
             //   score는 정렬 직후 외부 read 0건, 나머지는 ControlPanel/MapNavigator/test 모두
@@ -453,7 +374,6 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                 badge,
                 reason,
                 levelLabel: targetMap.level === 'infinite' ? '심연' : `레벨 ${targetLevel}`,
-                chips,
                 routePlan,
             };
         })
@@ -491,12 +411,6 @@ export const getExpeditionPreparation = (
     const hpPercent = Math.max(0, Math.min(100, Math.round(
         ((player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1)) * 100,
     )));
-    const mpPercent = Math.max(0, Math.min(100, Math.round(
-        ((player?.mp || 0) / Math.max(1, stats?.maxMp || player?.maxMp || 1)) * 100,
-    )));
-    const equipmentWarnings = [];
-    if (!player?.equip?.weapon) equipmentWarnings.push('무기 미장착');
-    if (!player?.equip?.armor) equipmentWarnings.push('방어구 미장착');
 
     const isClaimable = tracker?.kind === 'claimable';
     const canDepart = Boolean(
@@ -513,7 +427,7 @@ export const getExpeditionPreparation = (
                 ? '휴식 권장'
                 : !player?.equip?.weapon
                     ? '무기 필요'
-                    : equipmentWarnings.length > 0
+                    : !player?.equip?.armor
                         ? '장비 확인'
                         : '출발 가능';
     const additionalGoalCount = Math.max(0, (tracker?.focusQuests?.length || 0) - 1);
@@ -521,184 +435,100 @@ export const getExpeditionPreparation = (
         ? `${tracker.nextStep}${additionalGoalCount > 0 ? ` · 외 ${additionalGoalCount}건` : ''}`
         : '임무를 고르거나 자유 탐험';
 
+    // 2026-10 Wave 136 (원장 §150): 원정 준비 칸이 그리는 것은 준비 칩 · 목적지 · 목표 · 주 단추다 — 아무도 읽지 않던
+    //   임무 이름 · 진행 · 집중 임무 · 생명/기력 · 장비 · 귀환 문구 여섯 칸을 지웠다.
     return {
         tracker,
         departure,
         canDepart,
         isClaimable,
         readinessLabel,
-        missionTitle: tracker?.title || '자유 원정',
-        missionStatus: tracker?.progressLabel || '임무 선택 전',
         goalLabel,
-        focusQuests: tracker?.focusQuests || [],
         // Wave 62 (원장 §61.2 A10): 길 잃은 여행은 출구가 어디로 이어지는지 말하지 않는다(지도 화면의 '미확인 경로'와 같다).
         destination: departure?.name ? getVisibleRouteName(player, departure.name) : '이동 경로 없음',
-        resourceLabel: `생명 ${hpPercent}% · 기력 ${mpPercent}%`,
-        equipmentLabel: equipmentWarnings.length > 0 ? equipmentWarnings.join(' · ') : '주요 장비 확인',
-        returnLabel: departure?.routePlan?.exitRule || tracker?.returnLabel || '임무 목표 후 마을 복귀',
     };
+};
+
+/** 다음 행동의 종류 — 조작판의 단추 강조(`ACTION_KIND_TO_BUTTON`)와 마을 주 단추(`getTownActionPresentation`)가 읽는다. */
+export type GuidanceActionKind =
+    | 'claim_quest'
+    | 'explore'
+    | 'open_class'
+    | 'open_crafting'
+    | 'open_inventory'
+    | 'open_move'
+    | 'open_quest_board'
+    | 'rest';
+
+export interface GuidanceAction {
+    kind: GuidanceActionKind;
+    /** 첫 원정(탐험 · 처치 0)의 출발 — 마을 주 단추가 첫 출발 문구를 고른다. */
+    firstSortie?: true;
+}
+
+/**
+ * 모험 안내. 행동 종류는 언제나 정하고, 제목 · 이유는 필드 안내 줄(`adventure-guidance-strip`)이 그리는 곳 — 대기 상태 ·
+ * 안전지대 밖 · 임무 추적 없음 — 에서만 싣는다. 마을은 행동 종류만 쓴다(주 단추 · 시설 단추 강조).
+ */
+export interface AdventureGuidance {
+    title?: string;
+    detail?: string;
+    primaryAction: GuidanceAction | null;
+}
+
+// 2026-10 Wave 136 (원장 §150, 소유자 결정 "지우기"): 마을의 다음 행동. 이유 문구는 없다 — 안전지대 안내 아홉 갈래의 제목 ·
+//   이유는 화면에 그려진 적이 없다(Wave 62 · 134가 그 문장을 고쳤다). 전설 각인 공명 갈래도 지웠다: 남은 것은 단추뿐이었는데,
+//   자연 플레이 마을 도착의 0.8%(전부 사망 뒤 Lv1 재시작)에서 임무 게시판 대신 시작 지역 출발을 가리켰다(원장 §149.5).
+const getTownGuidanceAction = (player: Player, hpRatio: number, hasQuestTracker: boolean): GuidanceAction => {
+    const level = player?.level || 1;
+    // slice 22: 첫 세션 온보딩 — 탐험 · 처치 이력이 전혀 없으면 첫 출발. 첫 방문 보상은 시작 마을의 첫 출구(추천 경로의
+    //   첫 지역)의 표 값이다(2026-10 Wave 62, 원장 §61.4 C16).
+    const firstSortieReward = FIRST_VISIT_REWARDS[MAPS[CONSTANTS.START_LOCATION]?.exits?.[0] ?? ''];
+    if (firstSortieReward && level <= 2 && !(Number(player?.stats?.explores) || 0) && !(Number(player?.stats?.kills) || 0)) {
+        return { kind: 'open_move', firstSortie: true };
+    }
+    if (player?.job === '모험가' && level >= 5) return { kind: 'open_class' };
+    // Wave 61: 휴식은 실제 휴식 비용(레벨 · 거울 반영, `getRestCost`)으로 판단한다 — 기본 비용 60으로 보던 동안 Lv40 · 골드 100에서
+    //   휴식을 가리키고 누르면 골드 부족으로 거부됐다(원장 §61 A19).
+    const canAffordRest = (player?.gold || 0) >= (player ? getRestCost(player) : BALANCE.REST_COST);
+    if (hpRatio <= 0.65 && canAffordRest) return { kind: 'rest' };
+    // cycle 115: 걸린 상태이상은 안전지대의 휴식이 모두 푼다.
+    if (canAffordRest && (player?.status || []).some((status: StatusId) => MSG.STATUS_LABELS[status])) return { kind: 'rest' };
+    const inventoryCount = player?.inv?.length || 0;
+    // cycle 182: player.maxInv 확장 우선 — 2026-09 Wave 33부터 상한은 getInventoryCapacity(영구 크기 + 이번 런 가방 칸).
+    if (inventoryCount >= getInventoryCapacity(player || {}) - 2) {
+        // 2026-09 Wave 33: 가방이 찼는데 다음 가방을 바로 만들 수 있으면 정리보다 제작소를 먼저 가리킨다.
+        return { kind: player && getBagCraftReadiness(player)?.ready ? 'open_crafting' : 'open_inventory' };
+    }
+    return { kind: hasQuestTracker ? 'open_move' : 'open_quest_board' };
 };
 
 // cycle 509: runtimeState default 제거 — 1 callsite (ControlPanel:57) 항상
 //   gameState 명시 전달이라 default 도달 불가. util default 청소 메가 시리즈
 //   8번째 (cycle 502-508).
-export const getAdventureGuidance = (player: Player, stats: FullStats | null | undefined, mapData: GameMap | null | undefined, runtimeState: string | null | undefined) => {
-    const safe = mapData?.type === 'safe';
+export const getAdventureGuidance = (player: Player, stats: FullStats | null | undefined, mapData: GameMap | null | undefined, runtimeState: string | null | undefined): AdventureGuidance => {
+    // 대기 상태가 아니면 다음 행동이 없다 — 안내 줄은 대기 상태의 조작판에만 있다(전투는 전투 화면, 계승 · 진 엔딩은 화면 전체를 덮는다).
+    if (runtimeState && runtimeState !== 'idle') return { primaryAction: null };
+
     const hpRatio = (player?.hp || 0) / Math.max(1, stats?.maxHp || player?.maxHp || 1);
-    // cycle 332: mpRatio 제거 — secondaryAction 'MP도 회복' 분기 외 read 0건이라 dead.
-    const inventoryCount = player?.inv?.length || 0;
-    // cycle 182: player.maxInv 확장 우선 — 확장 인벤(25)에서도 18칸 경고 발동 회귀 fix.
-    const inventoryCap = getInventoryCapacity(player || {});
     const questTracker = getQuestTracker(player);
+    if (questTracker?.kind === 'claimable') return { primaryAction: { kind: 'claim_quest' } };
+    if (mapData?.type === 'safe') return { primaryAction: getTownGuidanceAction(player, hpRatio, Boolean(questTracker)) };
 
-    if (runtimeState && runtimeState !== 'idle') {
+    // 필드 — 안내 줄은 임무 추적이 없을 때만 그려진다(추적이 있으면 그 자리는 임무 줄이다).
+    const strip = (title: string, detail: string) => (questTracker ? {} : { title, detail });
+    // slice 22: 첫 교전 — 처치 이력이 없는 Lv2 이하에게 탐험 → 첫 교전을 안내한다.
+    if ((player?.level || 1) <= 2 && !(Number(player?.stats?.kills) || 0)) {
         return {
-            title: '현재 상황 진행 중',
-            detail: runtimeState === 'combat' ? '전투 판단을 우선하세요.' : '현재 패널을 먼저 마무리하면 다음 행동이 열립니다.',
-            primaryAction: null,
+            ...strip('첫 교전', '탐험으로 적을 찾아보세요. 기본 공격 사이에 기력 10을 쓰는 강타를 섞으면 4-5턴이면 충분합니다.'),
+            primaryAction: { kind: 'explore' },
         };
     }
-
-    if (questTracker?.kind === 'claimable') {
+    if (hpRatio <= 0.35) {
         return {
-            title: '보상 회수 가능',
-            detail: `${questTracker.title} 완료 보상을 지금 회수할 수 있습니다.`,
-            primaryAction: { kind: 'claim_quest', label: '보상 받기', questId: questTracker.questId },
+            ...strip('후퇴 또는 회복 권장', '현재 생명이 낮습니다. 더 깊게 들어가기보다 이동과 회복을 먼저 고려하세요.'),
+            primaryAction: { kind: 'open_move' },
         };
     }
-
-    // slice 22: 첫 세션 온보딩 — 탐험/처치 이력이 전혀 없는 신규 플레이어에게
-    //   이동→탐험→첫 교전 시퀀스를 명시적으로 안내. 보상 회수보다는 후순위,
-    //   전직(Lv5+)·정비 등 일반 힌트보다는 선순위.
-    const totalKills = Number(player?.stats?.kills) || 0;
-    const totalExplores = Number(player?.stats?.explores) || 0;
-    // 2026-10 Wave 62 (원장 §61.4 C16): 첫 방문 보상은 시작 마을의 첫 출구(추천 경로의 첫 지역)의 표 값이고, 골드는 실제로 받는
-    //   금액이다('빈손의 시작'이면 절반 — 지급은 `moveActions`의 `grantGold`). 문구에 적힌 100 · 25가 표와 따로 놀던 것도 함께 닫는다.
-    const firstSortieReward = FIRST_VISIT_REWARDS[MAPS[CONSTANTS.START_LOCATION]?.exits?.[0] ?? ''];
-    if (safe && firstSortieReward && (player?.level || 1) <= 2 && totalExplores === 0 && totalKills === 0) {
-        return {
-            title: '첫 원정 준비',
-            detail: MSG.GUIDE_FIRST_SORTIE_DETAIL(getGoldIncome(player, firstSortieReward.gold), firstSortieReward.exp),
-            primaryAction: { kind: 'open_move', label: '첫 출발' },
-        };
-    }
-    if (!safe && (player?.level || 1) <= 2 && totalKills === 0) {
-        return {
-            title: '첫 교전',
-            detail: '탐험으로 적을 찾아보세요. 기본 공격 사이에 기력 10을 쓰는 강타를 섞으면 4-5턴이면 충분합니다.',
-            primaryAction: { kind: 'explore', label: '탐험 시작' },
-        };
-    }
-
-    if (safe && player?.job === '모험가' && (player?.level || 1) >= 5) {
-        return {
-            title: '전직 준비 완료',
-            detail: '모험가 단계를 마쳤습니다. 지금 전직하면 여정의 방향이 더 선명해집니다.',
-            primaryAction: { kind: 'open_class', label: '전직 보기' },
-        };
-    }
-
-    // Wave 61: 휴식 안내는 실제 휴식 비용(레벨 · 거울 반영, `getRestCost`)으로 판단한다 — 기본 비용 60으로 보던 동안
-    //   Lv40 · 골드 100에서 휴식을 추천하고 누르면 골드 부족으로 거부됐다(원장 §61 A19). 정화 안내도 같은 비용을 본다.
-    const canAffordRest = (player?.gold || 0) >= (player ? getRestCost(player) : BALANCE.REST_COST);
-    if (safe && hpRatio <= 0.65 && canAffordRest) {
-        return {
-            title: '정비 추천',
-            detail: '생명이 충분히 회복되지 않았습니다. 다음 출발 전에 휴식으로 안정성을 확보하세요.',
-            primaryAction: { kind: 'rest', label: '휴식' },
-        };
-    }
-
-    // cycle 115: 안전지대에서 활성 debuff 인지 시 정화 권장 — cycle 112 rest가 status를
-    // 클리어하므로 자연스러운 actionable hint. cycle 106-110에서 활성화된 5종 status가
-    // 영속할 경우 다음 탐험에 페널티 누적 — 안전지대 복귀 후 즉시 알림.
-    if (safe && canAffordRest && Array.isArray(player?.status) && player.status.length > 0) {
-        // 2026-09 Wave 6 X2: 인라인 DEBUFF_LABEL 제거 — MSG.STATUS_LABELS(공유 테이블) 재사용.
-        const DEBUFF_LABEL = MSG.STATUS_LABELS;
-        const activeDebuffs = player.status.filter((s: StatusId) => DEBUFF_LABEL[s]);
-        if (activeDebuffs.length > 0) {
-            const labels = activeDebuffs.map((s: StatusId) => DEBUFF_LABEL[s]).join(', ');
-            return {
-                title: '상태이상 정화 권장',
-                detail: `현재 걸린 상태이상: ${labels}. 안전지대에서 휴식하면 모두 풀립니다.`,
-                primaryAction: { kind: 'rest', label: '휴식으로 정화' },
-            };
-        }
-    }
-
-    // 2026-09 Wave 33: 가방이 찼는데 다음 가방을 바로 만들 수 있으면 정리보다 제작소를 먼저 가리킨다.
-    const bagReadiness = safe && inventoryCount >= inventoryCap - 2 && player ? getBagCraftReadiness(player) : null;
-    if (bagReadiness?.ready) {
-        return {
-            title: MSG.GUIDE_BAG_UPGRADE_TITLE,
-            detail: MSG.GUIDE_BAG_UPGRADE_DETAIL(bagReadiness.recipe.name, inventoryCount, inventoryCap, bagReadiness.nextCapacity),
-            primaryAction: { kind: 'open_crafting', label: MSG.GUIDE_BAG_UPGRADE_ACTION },
-        };
-    }
-
-    if (safe && inventoryCount >= inventoryCap - 2) {
-        return {
-            title: '가방 정리 필요',
-            detail: `가방이 ${inventoryCount}/${inventoryCap}입니다. 다음 전리품을 받기 전에 장비와 소모품을 정리하세요.`,
-            primaryAction: { kind: 'open_inventory', label: '가방 열기' },
-        };
-    }
-
-    if (safe && questTracker) {
-        return {
-            title: '임무 재출발 준비',
-            detail: `${questTracker.title} · ${questTracker.progressLabel} · ${questTracker.nextStep}`,
-            primaryAction: { kind: 'open_move', label: '경로 보기' },
-        };
-    }
-
-    // 안전지대에서 signature pity가 적립돼 있으면, 보스 권역으로 진입할 적기.
-    // 휴식/퀘스트 루프에 갇혀 적립분이 잠겨버리는 것을 막는 deterministic 힌트.
-    if (safe) {
-        const pity = Math.max(0, Number(player?.stats?.signaturePity) || 0);
-        const pityMult = getSignaturePityMultiplier(pity);
-        if (pityMult > 1) {
-            const pct = Math.round((pityMult - 1) * 100);
-            return {
-                title: '전설 각인 공명',
-                detail: MSG.GUIDE_SIGNATURE_PITY_DETAIL(pity, pct),
-                primaryAction: { kind: 'open_move', label: '보스 경로' },
-            };
-        }
-    }
-
-    if (safe && !questTracker) {
-        const featuredQuest = getQuestBoardRecommendations(player).featured[0] || null;
-        return {
-            title: '새 임무 수령 가능',
-            detail: featuredQuest
-                ? `추천 작전: ${featuredQuest.quest.title} · ${featuredQuest.reason}`
-                : '현재 진행 중인 임무가 없습니다. 마을 게시판에서 목표를 받아 성장 축을 잡으세요.',
-            primaryAction: { kind: 'open_quest_board', label: '게시판 열기' },
-        };
-    }
-
-    if (!safe && hpRatio <= 0.35) {
-        return {
-            title: '후퇴 또는 회복 권장',
-            detail: '현재 생명이 낮습니다. 더 깊게 들어가기보다 이동과 회복을 먼저 고려하세요.',
-            primaryAction: { kind: 'open_move', label: '이동 경로' },
-        };
-    }
-
-    if (!safe && questTracker) {
-        return {
-            title: '현재 목표 진행 중',
-            detail: `${questTracker.title} · ${questTracker.progressLabel} · ${questTracker.nextStep}`,
-            primaryAction: { kind: 'explore', label: '탐험 계속' },
-        };
-    }
-
-    return {
-        title: safe ? '출발 준비 완료' : '탐험 이어가기',
-        detail: safe
-            ? '정비가 끝났다면 다음 지역으로 이동해 흐름을 이어가세요.'
-            : '지금 흐름이면 탐험을 한 번 더 밀어도 됩니다.',
-        primaryAction: safe ? { kind: 'open_move', label: '이동' } : { kind: 'explore', label: '탐험' },
-    };
+    return { ...strip('탐험 이어가기', '지금 흐름이면 탐험을 한 번 더 밀어도 됩니다.'), primaryAction: { kind: 'explore' } };
 };

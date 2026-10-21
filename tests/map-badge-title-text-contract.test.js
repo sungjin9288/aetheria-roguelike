@@ -234,9 +234,9 @@ test('F9: 지도 선택 카드의 위험 · 예상과 경로 노드의 보스 �
 });
 
 const BOSS_APPROACHES = new Set(['보스 진입', '정비 후 진입']);
-const BOSS_MOODS = new Set(['보스 권역', '보스 전조']);
 
-test('F9: 모험 가이드의 이동 추천(배지 · 경로 계획 · 탐험 전망) = 판정 (지역 전수 × 상태 5종)', () => {
+// 2026-10 Wave 136: 탐험 전망(STATE 칩)은 그려진 적이 없어 지웠다(원장 §150) — 그리는 배지 · 경로 계획만 본다.
+test('F9: 모험 가이드의 이동 추천(배지 · 경로 계획) = 판정 (지역 전수 × 상태 5종)', () => {
     const mismatched = [];
     for (const stateName of Object.keys(PLAYER_STATES)) {
         for (const [mapName, map] of MAP_ENTRIES) {
@@ -244,9 +244,7 @@ test('F9: 모험 가이드의 이동 추천(배지 · 경로 계획 · 탐험 �
             for (const route of getMoveRecommendations(player, null, map, DB.MAPS)) {
                 if (DB.MAPS[route.name].type === 'safe') continue;
                 const expected = oracleFor(stateName, route.name);
-                const state = route.chips.find((chip) => chip.label === 'STATE')?.value;
                 if (BOSS_APPROACHES.has(route.routePlan.approach) !== expected) mismatched.push(`${stateName} · ${route.name} 경로 계획`);
-                if (BOSS_MOODS.has(state) !== expected) mismatched.push(`${stateName} · ${route.name} 전망 ${state}`);
                 if (route.badge === '보스' && !expected) mismatched.push(`${stateName} · ${route.name} 배지`);
             }
         }
