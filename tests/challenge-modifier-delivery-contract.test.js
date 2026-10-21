@@ -19,7 +19,6 @@ import { buildReturnBriefing } from '../src/utils/returnBriefing.js';
 import { getExpeditionPreparation } from '../src/utils/adventureGuide.js';
 import { resolveGraveRecovery } from '../src/utils/graveUtils.js';
 import { parseCommand } from '../src/utils/commandParser.js';
-import { getAvailableCommands } from '../src/utils/commandSuggestions.js';
 import { getAreaBossName } from '../src/utils/bossGauge.js';
 import { getLocationVisual } from '../src/utils/locationVisuals.js';
 import {
@@ -348,7 +347,8 @@ test('A10: 길 잃은 여행 — 이동 로그(도착 · 첫 발견 · 첫 방�
     assert.deepEqual(logs, [MSG.MOVE_EXITS_BLIND(DB.MAPS['고요한 숲'].exits.length)]);
 });
 
-test('A10: 길 잃은 여행 — 터미널 상태 · 지도 · 자동완성이 위치와 출구를 말하지 않는다', () => {
+// 2026-10 Wave 135(원장 §148): 자동완성(렌더하는 곳이 없던 CommandAutocomplete · getAvailableCommands)은 지웠다(소유자 결정).
+test('A10: 길 잃은 여행 — 터미널 상태 · 지도가 위치를 말하지 않는다', () => {
     const actions = {
         getFullStats: () => ({ maxHp: 500 }), setSideTab: () => {}, move: () => {}, explore: () => {}, rest: () => {},
         combat: () => {}, cycleSkill: () => {}, openShop: () => {}, handleEventChoice: () => {},
@@ -362,8 +362,6 @@ test('A10: 길 잃은 여행 — 터미널 상태 · 지도 · 자동완성이 �
             const plain = parseCommand(command, GS.IDLE, basePlayer({ loc }), actions);
             assert.ok(plain.includes(loc), `${loc}: 대조군 '${command}'은 위치를 말한다`);
         }
-        const suggestions = getAvailableCommands(GS.IDLE, blind).map((entry) => `${entry.cmd} ${entry.desc}`).join('\n');
-        for (const exit of DB.MAPS[loc].exits) assert.ok(!suggestions.includes(exit), `${loc}: 자동완성이 출구 ${exit}을(를) 드러낸다`);
     }
 });
 

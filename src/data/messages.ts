@@ -1277,8 +1277,6 @@ export const MSG = {
     CMD_MAP_BLIND: '[지도] 지도 정보가 숨겨져 있습니다 | 이동은 move <지역> 명령으로 진행',
     CMD_HELP: '이동: move <지역>\n행동: explore, rest, shop\n전투: attack(a), skill(s), nextskill(sn), escape(r)\n정보: status, inventory, quest, map',
     CMD_UNKNOWN: (command: string) => `알 수 없는 명령어: ${command} (/help)`,
-    /** 자동완성의 휴식 줄 — 실제 비용(`getRestCost`: 레벨 · 거울 반영)을 그린다. 고정 "100G"였다(Wave 61, 원장 §61.3). */
-    CMD_SUGGEST_REST: (cost: number) => `휴식 (골드 ${cost})`,
 
     // ── Wave 27 N1: 이벤트 선택 거부 안내 ────────────────────────────────────
     //   선택이 거부돼 이벤트가 열린 채 남으면(비용 부족·가방 가득·무효 제안) 리듀서가 같은
@@ -1434,7 +1432,6 @@ export const MSG = {
     //   utils · 컴포넌트가 이름 뒤에 고정 조사를 붙이던 문구다("도적로 전직" · "수정 동굴으로 출발").
     TOWN_DEPART_FIRST: (destination: string) => `${withJosa(destination, '으로/로')} 첫 출발`,
     TOWN_DEPART: (destination: string) => `${withJosa(destination, '으로/로')} 출발`,
-    COMMAND_SUGGEST_MOVE: (exitName: string) => `→ ${withJosa(exitName, '으로/로')} 이동`,
     MAP_MOVE_TO: (name: string) => `${withJosa(name, '으로/로')} 이동`,
     MAP_MOVE_TO_BLIND: '이 경로로 이동',
     JOB_CHANGE_CONFIRM: (jobName: string) => `${withJosa(jobName, '으로/로')} 전직`,

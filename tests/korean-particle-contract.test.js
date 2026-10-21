@@ -17,9 +17,7 @@ import { MSG } from '../src/data/messages.ts';
 import { DB } from '../src/data/db.ts';
 import { CLASSES } from '../src/data/classes.ts';
 import { RELICS } from '../src/data/relics.ts';
-import { GS } from '../src/reducers/gameStates.ts';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
-import { getAvailableCommands } from '../src/utils/commandSuggestions.ts';
 import { getTownActionPresentation } from '../src/utils/townActionPresentation.ts';
 import JobChangePanel from '../src/components/tabs/JobChangePanel.tsx';
 import { renderStatic } from './helpers/render.ts';
@@ -88,7 +86,6 @@ test('[전수] 지역 52곳 — 출발 · 이동 문구는 받침에 맞는 "(�
         assert.equal(MSG.TOWN_DEPART(name), `${name}${ro} 출발`, name);
         assert.equal(MSG.TOWN_DEPART_FIRST(name), `${name}${ro} 첫 출발`, name);
         assert.equal(MSG.MAP_MOVE_TO(name), `${name}${ro} 이동`, name);
-        assert.equal(MSG.COMMAND_SUGGEST_MOVE(name), `→ ${name}${ro} 이동`, name);
     }
 });
 
@@ -138,11 +135,6 @@ test('[실제 경로] 안전지대 출발 단추 · 이동 자동완성 · 전�
         });
         assert.equal(presentation.primary.kind, 'open_move');
         assert.equal(presentation.primary.label, `${exit}${expectEuroRo(exit)} 출발`, `${loc} → ${exit}`);
-    }
-    // 이동 자동완성: 여행자의 쉼터의 출구.
-    const commands = getAvailableCommands(GS.IDLE, { ...structuredClone(INITIAL_STATE.player), loc: '여행자의 쉼터' });
-    for (const exit of DB.MAPS['여행자의 쉼터'].exits) {
-        assert.ok(commands.some((entry) => entry.cmd === exit && entry.desc === `→ ${exit}${expectEuroRo(exit)} 이동`), exit);
     }
     // 전직 단추: 도적 Lv30의 첫 후보는 어쌔신 — "어쌔신으로 전직".
     const rogue = { ...structuredClone(INITIAL_STATE.player), name: '조사', job: '도적', level: 30, loc: '시작의 마을' };
