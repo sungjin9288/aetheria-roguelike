@@ -48,7 +48,14 @@ npm run ios:device:fresh-qa:smoke
 npm run ios:device:launch-smoke
 ```
 
-`ios:device:launch-smoke`는 설치된 `com.aetheria.roguelike` metadata가 없으면 중단하고 전체 `ios:device:smoke`를 안내합니다. 따라서 이전 archive의 존재를 추정하거나 설치 검증을 건너뛰는 용도로 사용할 수 없습니다.
+`ios:device:launch-smoke`는 설치된 `com.aetheria.roguelike` metadata가 없으면 중단하고 전체 `ios:device:smoke`를 안내합니다. 따라서 이전 archive의 존재를 추정하거나 설치 검증을 건너뛰는 용도로 사용할 수 없습니다. QA bundle의 `ios:device:fresh-qa:*` · `ios:device:material-qa:*`도 같은 규칙입니다.
+
+스크립트가 알려 주는 다시 할 명령은 실행한 npm 스크립트 묶음을 따릅니다.
+
+- **같은 묶음:** `ios:device:fresh-qa:smoke`가 막히면 `ios:device:fresh-qa:…`를 안내하고 production 명령은 안내하지 않습니다.
+- **막힌 단계:** 설치가 끝난 뒤 막혔다면(실행 단계의 잠금, 개발자 프로필 신뢰) 다시 설치하지 않는 `…:launch-smoke`를, 설치 전에 막혔다면 전체 smoke를 안내합니다.
+- **archive가 없을 때:** 같은 묶음의 `ios:archive…`를 안내합니다.
+- **묶음을 모를 때:** npm 밖에서 스크립트를 직접 부르거나 production 스크립트 위에 다른 bundle을 덮어쓴 실행에는 명령 이름 없이 "같은 명령을 다시"(`the same command again`)라고만 안내합니다.
 
 ### 0-2. 실기기 QA 실행 순서
 

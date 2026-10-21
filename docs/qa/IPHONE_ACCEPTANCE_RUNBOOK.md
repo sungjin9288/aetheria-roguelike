@@ -20,7 +20,7 @@ npm run ios:device:fresh-qa:smoke  # 설치 + 실행 + 프로세스 확인
 ```
 
 - 기기 식별자 기본값은 스크립트에 적힌 페어링 기기다. 다른 기기면 `xcrun devicectl list devices`로 식별자를 찾아 `AETHERIA_IOS_DEVICE_ID=<식별자>`를 앞에 붙인다.
-- 기기가 잠겨 있으면 설치 · 실행이 막힌다. 화면을 켠 채로 둔다.
+- 기기가 잠겨 있으면 설치 · 실행이 막힌다. 화면을 켠 채로 둔다. 막히면 스크립트가 같은 QA 번들의 다시 할 명령을 알려 준다. 설치가 끝난 뒤라면 실행만 다시 하는 `npm run ios:device:fresh-qa:launch-smoke`다.
 - "신뢰하지 않는 개발자"가 뜨면 기기의 설정 > 일반 > VPN 및 기기 관리에서 개발자 앱을 신뢰한다. 그 뒤 `npm run ios:device:fresh-qa:launch-smoke`로 실행만 다시 한다.
 - 스크립트는 설치 · 실행 영수증(JSON)을 안에서 검증한 뒤 지운다. 결과에는 명령마다 종료 코드와 `[ios-device-smoke]` 출력 줄을 붙인다.
 - 스크립트는 앱이 화면 앞에 떴는지 증명하지 못한다(스크립트도 그렇게 출력한다). 화면은 기기 또는 iPhone 미러링으로 직접 본다. 9/14 기록도 미러링으로 확인했다.
