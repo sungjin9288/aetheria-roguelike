@@ -3,21 +3,55 @@ set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 DEVICE_ID="${AETHERIA_IOS_DEVICE_ID:-FCB8EE83-2B35-5FAD-AA58-AA87EF2D2E3B}"
-BUNDLE_ID="${AETHERIA_IOS_BUNDLE_ID:-com.aetheria.roguelike}"
+DEFAULT_BUNDLE_ID="com.aetheria.roguelike"
+BUNDLE_ID="${AETHERIA_IOS_BUNDLE_ID:-$DEFAULT_BUNDLE_ID}"
 APP_PATH="${AETHERIA_IOS_APP_PATH:-$ROOT_DIR/build/ios/Aetheria.xcarchive/Products/Applications/App.app}"
 DEVICECTL_TIMEOUT_SECONDS="${AETHERIA_DEVICECTL_TIMEOUT_SECONDS:-120}"
 PROCESS_HOLD_SECONDS="${AETHERIA_IOS_PROCESS_HOLD_SECONDS:-60}"
 REUSE_INSTALLED_APP="${AETHERIA_IOS_REUSE_INSTALLED_APP:-0}"
+APP_INSTALLED="$REUSE_INSTALLED_APP"
 diagnostic_log=""
 process_snapshot=""
 metadata_receipt=""
 launch_receipt=""
 
-if [[ "$REUSE_INSTALLED_APP" == "1" ]]; then
-  RERUN_COMMAND="npm run ios:device:launch-smoke"
-else
-  RERUN_COMMAND="npm run ios:device:smoke"
+# Recovery hints name the npm script family that started this run (npm sets npm_lifecycle_event):
+# ios:device:[<family>:]smoke installs, ios:device:[<family>:]launch-smoke relaunches, and
+# ios:archive[:<family>] builds the archive. A QA-bundle run must never be pointed at the
+# production commands, so a run started outside these scripts, or one that overrides the bundle
+# on top of the production scripts, gets hints that name no npm script.
+SMOKE_FAMILY=""
+SMOKE_FAMILY_KNOWN=0
+if [[ "${npm_lifecycle_event:-}" =~ ^ios:device:([a-z0-9-]+:)?(launch-)?smoke$ ]]; then
+  SMOKE_FAMILY="${BASH_REMATCH[1]}"
+  SMOKE_FAMILY_KNOWN=1
+elif [[ -z "${npm_lifecycle_event:-}" && -z "${AETHERIA_IOS_BUNDLE_ID:-}" && -z "${AETHERIA_IOS_APP_PATH:-}" ]]; then
+  SMOKE_FAMILY_KNOWN=1
 fi
+if [[ -z "$SMOKE_FAMILY" && "$BUNDLE_ID" != "$DEFAULT_BUNDLE_ID" ]]; then
+  SMOKE_FAMILY_KNOWN=0
+fi
+
+if [[ "$SMOKE_FAMILY_KNOWN" == "1" ]]; then
+  INSTALL_HINT="npm run ios:device:${SMOKE_FAMILY}smoke"
+  LAUNCH_HINT="npm run ios:device:${SMOKE_FAMILY}launch-smoke"
+  ARCHIVE_HINT="npm run ios:archive${SMOKE_FAMILY:+:${SMOKE_FAMILY%:}}"
+else
+  INSTALL_HINT="an install smoke for ${BUNDLE_ID}"
+  LAUNCH_HINT=""
+  ARCHIVE_HINT="an archive build for ${BUNDLE_ID}"
+fi
+
+# After a lock or trust failure, relaunch without reinstalling once the app is on the device.
+rerun_command() {
+  if [[ "$SMOKE_FAMILY_KNOWN" != "1" ]]; then
+    printf '%s' 'the same command again'
+  elif [[ "$APP_INSTALLED" == "1" ]]; then
+    printf '%s' "$LAUNCH_HINT"
+  else
+    printf '%s' "$INSTALL_HINT"
+  fi
+}
 
 log_step() {
   printf '[ios-device-smoke] %s\n' "$1"
@@ -45,15 +79,17 @@ device_is_locked() {
 explain_device_failure() {
   local output_file="$1"
   local step="$2"
+  local rerun
+  rerun="$(rerun_command)"
 
   if grep -Eq "not been explicitly trusted|Untrusted Developer" "$output_file"; then
     printf '%s\n' 'The archive is installed, but this developer profile is not trusted on the iOS device.' >&2
-    printf 'On the device, open Settings > General > VPN & Device Management > Developer App, trust the profile, then run %s.\n' "$RERUN_COMMAND" >&2
+    printf 'On the device, open Settings > General > VPN & Device Management > Developer App, trust the profile, then run %s.\n' "$rerun" >&2
   fi
 
   if device_is_locked "$output_file"; then
     printf 'iOS blocked %s because the device is locked.\n' "$step" >&2
-    printf 'Unlock the iPhone or iPad, keep the screen awake, then run %s. Confirm foreground visibility separately on the device or through iPhone Mirroring.\n' "$RERUN_COMMAND" >&2
+    printf 'Unlock the iPhone or iPad, keep the screen awake, then run %s. Confirm foreground visibility separately on the device or through iPhone Mirroring.\n' "$rerun" >&2
   fi
 }
 
@@ -114,11 +150,11 @@ run_required_device_step() {
 verify_device_receipts() {
   local stage="$1"
 
-  ruby - "$stage" "$BUNDLE_ID" "$metadata_receipt" "$launch_receipt" "$process_snapshot" <<'RUBY'
+  ruby - "$stage" "$BUNDLE_ID" "$metadata_receipt" "$launch_receipt" "$process_snapshot" "$INSTALL_HINT" <<'RUBY'
 require 'json'
 require 'uri'
 
-stage, bundle_id, metadata_path, launch_path, processes_path = ARGV
+stage, bundle_id, metadata_path, launch_path, processes_path, install_hint = ARGV
 
 def read_result(path, command)
   receipt = JSON.parse(File.read(path))
@@ -141,7 +177,7 @@ end
 begin
   metadata = read_result(metadata_path, 'info.apps')
   apps = metadata.fetch('apps')
-  raise "Installed app #{bundle_id} was not found uniquely. Run npm run ios:device:smoke first." unless apps.is_a?(Array) && apps.length == 1 && apps[0]['bundleIdentifier'] == bundle_id
+  raise "Installed app #{bundle_id} was not found uniquely. Run #{install_hint} first." unless apps.is_a?(Array) && apps.length == 1 && apps[0]['bundleIdentifier'] == bundle_id
   app_path = file_path(apps[0]['url'])
   raise 'installed app URL is not an app bundle' unless app_path.end_with?('.app')
   exit 0 if stage == 'metadata'
@@ -184,7 +220,7 @@ fi
 
 if [[ "$REUSE_INSTALLED_APP" != "1" && ! -d "$APP_PATH" ]]; then
   printf 'App bundle not found: %s\n' "$APP_PATH" >&2
-  printf 'Run npm run ios:archive first, or set AETHERIA_IOS_APP_PATH.\n' >&2
+  printf 'Run %s first, or set AETHERIA_IOS_APP_PATH.\n' "$ARCHIVE_HINT" >&2
   exit 1
 fi
 
@@ -213,7 +249,7 @@ if ! run_timed "metadata before install" \
     exit 1
   fi
   if [[ "$REUSE_INSTALLED_APP" == "1" ]]; then
-    printf 'Installed app metadata is required for launch-only smoke. Run npm run ios:device:smoke first.\n' >&2
+    printf 'Installed app metadata is required for launch-only smoke. Run %s first.\n' "$INSTALL_HINT" >&2
     exit 1
   fi
   printf '[ios-device-smoke] metadata before install unavailable; continuing to install attempt.\n' >&2
@@ -229,6 +265,7 @@ else
     xcrun devicectl device install app \
       --device "$DEVICE_ID" \
       "$APP_PATH"
+  APP_INSTALLED=1
 
   remove_temp_file "$metadata_receipt"
   metadata_receipt="$(mktemp)"

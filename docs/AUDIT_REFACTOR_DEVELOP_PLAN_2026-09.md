@@ -10263,3 +10263,45 @@ Wave 125의 48시드 측정에 시드 49 ~ 96을 더했다. 같은 코드이고,
   - `android-back.json` · `build-and-scope.json`(해시 6개).
 - **QA 문서:** 결함 주입 사본을 만드는 명령을 `docs/qa/IOS_SCENE_LIFECYCLE_QA.md`에 남겼다. 그 전에는 절차 설명만 있었다.
 - **남은 것:** 머지 뒤 `main`에서 iPhone 기기 수용(§151). 실기기 · 서명은 이 QA가 덮지 않는다.
+
+## 154. iOS 기기 스모크의 다시 할 명령을 실행한 묶음 · 막힌 단계에 맞춤 (2026-10-21, 도구 · 문서, 베이스 = `main` `a98b9fb4` = PR #187 머지)
+
+### 154.1 찾은 것
+
+- **운영 명령을 가리킨 안내:** iPhone 수용(§151) 첫 실행에서 `npm run ios:device:fresh-qa:smoke`가 설치 뒤 실행 단계에서 기기 잠금으로 막혔다. 스크립트는 `npm run ios:device:smoke`를 안내했다.
+  - 그 명령은 운영 번들 `com.aetheria.roguelike`와 운영 archive를 쓴다.
+  - 수용 런북은 수용 중 운영 번들 설치를 금한다. 안내를 따르면 남아 있던 운영 archive를 기기에 깔거나 "archive 먼저"로 막힌다.
+- **원인:** 다시 할 명령이 설치 / 실행 모드만 보고 번들을 보지 않았다.
+  - 같은 종류의 안내가 셋 더 있었다: 설치 확인 실패 · launch-only 앱 없음 · archive 없음.
+  - `ios:archive`도 운영 archive를 만든다.
+- **단계도 보지 않았다:** 설치가 끝난 뒤 막혀도 전체 smoke(다시 설치)를 안내했다. `docs/MOBILE_RELEASE.md`는 그 경우 다시 설치하지 말고 launch-smoke로 실행만 재검증하라고 정해 두었다.
+
+### 154.2 고친 방법
+
+- **묶음:** npm이 넘기는 `npm_lifecycle_event`(실행한 스크립트 이름)에서 묶음을 읽는다.
+  - 설치는 `ios:device:[<묶음>:]smoke`, 실행만은 `…launch-smoke`, archive는 `ios:archive[:<묶음>]`이다.
+  - 묶음 표를 스크립트에 두지 않았다. 표는 `package.json`과 따로 놀아 이번과 같은 어긋남을 다시 만든다.
+  - 대신 계약 테스트가 `package.json`의 모든 스모크 스크립트가 묶음(설치 · 실행 · archive)을 이루고, 묶음마다 번들이 하나인지 확인한다.
+- **단계:** 앱이 기기에 있으면(launch-only이거나 설치 단계를 통과한 뒤) launch-smoke, 아니면 전체 smoke를 안내한다.
+- **묶음을 모를 때:** npm 밖에서 직접 부르거나 운영 스크립트 위에 다른 번들을 덮어쓴 실행에는 명령 이름 없이 `the same command again`이라고 안내한다. 운영 기본값으로 직접 부른 실행만 이전처럼 운영 명령을 안내한다.
+
+### 154.3 검증
+
+- **행동 테스트 15건:** 가짜 `xcrun`이 고른 단계에서 잠금 · 신뢰 오류를 내고, 환경은 `package.json`의 실제 스크립트 정의에서 만든다.
+  - 스모크 스크립트 6개 × 실행 단계 잠금
+  - 설치 단계 잠금 · 개발자 프로필 신뢰 · launch-only 앱 없음 2갈래
+  - archive 없음 3묶음 · 운영 스크립트 위 QA 번들 · 직접 실행 2갈래
+  - 묶음 계약 1건
+- **파일 전체:** 50/50.
+- **결함 주입:**
+  - 수정 전 스크립트 → 새 테스트 12건 실패. 통과한 2건은 원래 안내가 우연히 맞던 운영 묶음의 실행만 재시도 · 운영 archive다.
+  - 운영 스크립트 위 다른 번들 가드 제거 → 1건.
+  - 설치 뒤 단계 인식 제거 → 4건.
+- **테스트 실행 환경:** 가짜 실행이 `npm_lifecycle_event`를 지운다. `npm run test:unit`으로 돌려도 결과가 같다.
+
+### 154.4 바뀐 파일
+
+- `scripts/ios-device-smoke.sh`
+- `tests/ios-device-smoke-guidance.test.js`: 내부 변수 이름(`RERUN_COMMAND`)을 보던 소스 정규식 단언 하나는 위 행동 테스트로 대체했다.
+- `docs/MOBILE_RELEASE.md`: 다시 할 명령 규칙.
+- `docs/qa/IPHONE_ACCEPTANCE_RUNBOOK.md`: 잠금 뒤 `npm run ios:device:fresh-qa:launch-smoke`.
