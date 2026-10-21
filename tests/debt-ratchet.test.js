@@ -292,9 +292,11 @@ function countKoreanAstNodesInDir(dir) {
 // 2026-10 Wave 131 재고정(실측): components 1319 → 1190 · hooks 285 → 265 · reducers 29 → 25 · systems 120 → 118 ·
 //   utils 1979 → 1946. Wave 131이 화면 문구를 MSG로 옮겨 components −26 · utils −7 · reducers −1을 줄였고, 나머지는 그사이 웨이브들의 몫이다.
 // 2026-10 통합 수용 6차(원장 §144) 재고정(실측): components 1190 → 1183 — 사망 화면 · 유물 선택 제목의 '여정' 문구 7개를 MSG로 옮겼다.
+// 2026-10 Wave 134(원장 §147) 재고정(실측): components 1183 → 1165 · utils 1946 → 1944 — 죽은 컴포넌트 DashboardMobileSummary 삭제,
+//   진 엔딩 · 계승 단추 · 전투 결과 카드 · 안전지대 공명 안내 문구를 MSG로 옮겼다.
 const AST_KOREAN_CEILINGS = {
     assets: 0,
-    components: 1183,
+    components: 1165,
     hooks: 265,
     platform: 0,
     pwa: 0,
@@ -302,7 +304,7 @@ const AST_KOREAN_CEILINGS = {
     services: 32,
     systems: 118,
     types: 16,
-    utils: 1946,
+    utils: 1944,
 };
 
 test('debt-ratchet: src/** (src/data 제외) 디렉터리별 AST 한글 노드 개수는 각 상한을 넘지 않는다 (하락만 허용, StringLiteral·템플릿 조각·JsxText 포함)', () => {

@@ -1871,10 +1871,7 @@ import { readFile } from 'node:fs/promises';
   });
 
   test('cycle 613: 정합성 가드 — caller {} 명시 추가', async () => {
-      const dms = await readSrc('src/components/DashboardMobileSummary.tsx');
-      assert.ok(/getTraitProfile\(player,\s*\{\}\)/.test(dms),
-          'DashboardMobileSummary getTraitProfile(player, {}) 명시');
-
+      // Wave 134: 호출자였던 DashboardMobileSummary는 지웠다(렌더하는 곳이 없었다 — slice 37).
       const gu = await readSrc('src/utils/gameUtils.ts');
       assert.ok(/getTraitSkill\(player,\s*\{\}\)/.test(gu),
           'gameUtils getTraitSkill(player, {}) 명시');

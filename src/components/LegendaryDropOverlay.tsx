@@ -3,6 +3,7 @@ import { motion as Motion, AnimatePresence } from 'framer-motion';
 import { Sparkles } from 'lucide-react';
 import ItemIcon from './icons/ItemIcon.jsx';
 import { getSignatureMetadata } from '../data/signatureItems.js';
+import { MSG } from '../data/messages';
 import type { Item } from '../types/index.js';
 
 /**
@@ -13,6 +14,7 @@ import type { Item } from '../types/index.js';
  * - 3초 auto-dismiss
  * - 탭/클릭 시 즉시 dismiss
  * - 아이콘은 실제 signature sprite (gold ring + badge 포함)을 그대로 사용
+ * - 머리말은 `MSG.SIGNATURE_DROP_LABEL`(전설 각인), 아래 줄은 아이템 설명(Wave 134)
  */
 
 // cycle 358: steel 톤 제거 — signatureRegistry.json / signatureSets.json 어디에도
@@ -109,7 +111,7 @@ const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) =>
                         </Motion.div>
 
                         <div className="text-[11px] font-fira uppercase tracking-[0.3em]" style={{ color: glow.particle }}>
-                            Legendary
+                            {MSG.SIGNATURE_DROP_LABEL}
                         </div>
 
                         <Motion.div
@@ -126,9 +128,11 @@ const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) =>
                         >
                             {item.name}
                         </div>
-                        {meta?.artNote && (
-                            <div className="max-w-xs text-center text-[11px] font-fira text-slate-300/90">
-                                {meta.artNote}
+                        {/* 2026-10 Wave 134(원장 §147): 레지스트리의 artNote는 그림 생성 지시문("plate · 가시 숄더 + 혼돈 Z-crack")이라
+                            그리지 않고, 아이템의 설명을 그린다. */}
+                        {item.desc && (
+                            <div data-testid="legendary-drop-desc" className="max-w-xs text-center text-[11px] text-slate-300/90">
+                                {item.desc}
                             </div>
                         )}
                     </Motion.div>

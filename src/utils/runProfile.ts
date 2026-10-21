@@ -261,8 +261,8 @@ const buildTraitSkill = (traitId: string, player: Player, stats: DerivedStatsVie
 };
 
 // cycle 613: stats default {} 제거 — explicit default-elimination pattern
-//   (cycle 608/609/611/612에 이은 5번째 적용). DashboardMobileSummary:37
-//   1-arg caller에 {} 명시 추가 후 모든 caller가 명시 전달.
+//   (cycle 608/609/611/612에 이은 5번째 적용). 모든 caller가 stats를 명시 전달한다
+//   (1-arg caller였던 DashboardMobileSummary는 렌더하는 곳이 없어 Wave 134에 지웠다).
 export const getTraitProfile = (player: Player, stats: DerivedStatsView | null | undefined) => {
     const buildProfile = getRunBuildProfile(player, stats);
     const traitId = pickTraitId(player, buildProfile);

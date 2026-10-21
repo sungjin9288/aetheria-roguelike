@@ -62,7 +62,8 @@ export const buildRunShareText = (s: RunSummary | null | undefined) => {
     const maxStreakCount = s?.maxKillStreak ?? 0;
     const maxStreakLine = maxStreakCount > 0 ? `\n🔥 최대 ${maxStreakCount}연속 처치` : '';
 
-    return `⚔️ AETHERIA RUN ENDED
+    // 2026-10 Wave 134(원장 §147): 머리말이 'RUN ENDED'였다 — 끝난 한 판은 '여정'이다(Wave 131). 로고(AETHERIA)와 해시태그는 이름이다.
+    return `⚔️ AETHERIA 여정 기록
 ─────────────────────
 ${titlePrefix}${job} ${MSG.LEVEL_LABEL(level)}
 📍 ${loc}에서 전사

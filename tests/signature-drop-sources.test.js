@@ -1,14 +1,15 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+import { createElement } from 'react';
 
 import {
     getSignatureDropSources,
     getAllSignatureDropSourceIndex,
 } from '../src/utils/signatureDropSources.js';
 import { SIGNATURE_ITEM_REGISTRY } from '../src/data/signatureItems.js';
+import { DB } from '../src/data/db.js';
+import { LegendaryCodexDetail } from '../src/components/codex/LegendaryCodex.tsx';
+import { renderStatic } from './helpers/render.ts';
 
 /**
  * 역 인덱스 — signature 이름 → 드롭 몬스터 + 확률 목록.
@@ -18,12 +19,8 @@ import { SIGNATURE_ITEM_REGISTRY } from '../src/data/signatureItems.js';
  *   1. getSignatureDropSources(itemName) → [{ monster, rate }], rate 내림차순
  *   2. 미등록/null/빈 문자열 → []
  *   3. getAllSignatureDropSourceIndex() → 전체 registry에 대한 맵 (완전성 보장)
- *   4. LegendaryCodex가 helper를 detail 패널에 연결
+ *   4. LegendaryCodex 상세가 고른 각인의 획득처를 그린다(렌더 검사)
  */
-
-const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.join(HERE, '..');
-const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('getSignatureDropSources returns boss drops for 마왕의 대낫', () => {
     const sources = getSignatureDropSources('마왕의 대낫');
@@ -76,19 +73,19 @@ test('getAllSignatureDropSourceIndex results are consistent with getSignatureDro
     assert.deepEqual(index[sampleName], getSignatureDropSources(sampleName));
 });
 
-test('LegendaryCodex wires drop sources into detail panel', async () => {
-    const source = await readSrc('src/components/codex/LegendaryCodex.tsx');
-    assert.ok(
-        source.includes("import { getSignatureDropSources }"),
-        'LegendaryCodex should import getSignatureDropSources'
-    );
-    assert.ok(
-        /getSignatureDropSources\(selectedEntry\.item\.name\)/.test(source),
-        'should call helper with selected item name'
-    );
-    // 획득처/DROP 레이블이 detail 패널에 등장해야 함
-    assert.ok(
-        /획득처|DROP FROM|drops from/i.test(source),
-        'detail panel should display a "획득처" / "DROP FROM" label'
-    );
+// 2026-10 Wave 134(원장 §147): 소스 글자 검사(`getSignatureDropSources(selectedEntry.item.name)`)를 렌더 검사로 바꿨다 —
+//   상세를 `LegendaryCodexDetail`로 뽑자 호출 식의 글자만 바뀌고 동작은 같았는데 붉었다(Wave 11 C4: 동작은 렌더로 확인한다).
+test('LegendaryCodex 상세는 고른 각인의 획득처(몬스터 · 확률)를 그린다', () => {
+    const name = '마왕의 대낫';
+    const item = DB.ITEMS.weapons.find((candidate) => candidate.name === name);
+    const sources = getSignatureDropSources(name);
+    assert.ok(item && sources.length > 0, '전제: 실제 데이터의 각인과 획득처');
+    const html = renderStatic(createElement(LegendaryCodexDetail, { entry: { item, meta: SIGNATURE_ITEM_REGISTRY[name] } }));
+    assert.ok(html.includes('획득처'), '획득처 머리말');
+    for (const { monster, rate } of sources) {
+        assert.ok(html.includes(monster), `획득처 몬스터 ${monster}`);
+        assert.ok(html.includes(`${Math.max(1, Math.round(rate * 100))}%`), `획득처 확률 ${monster}`);
+    }
+    const other = getSignatureDropSources('라그나로크').filter(({ monster }) => !sources.some((source) => source.monster === monster));
+    for (const { monster } of other) assert.ok(!html.includes(monster), `다른 각인의 획득처(${monster})를 그리지 않는다`);
 });

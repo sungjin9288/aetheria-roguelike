@@ -23,6 +23,7 @@ import { MSG } from '../data/messages';
 import { getAscensionOutcome } from '../utils/ascensionPreview';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
 import { getAscensionRuleOfferView, getAscensionRuleRerollView } from '../utils/ascensionRuleView';
+import { getJourneySurfaceText } from '../utils/journeyScope';
 
 interface TrueEndingScreenProps {
     player: Player;
@@ -33,6 +34,18 @@ interface TrueEndingScreenProps {
         cancelAscension?: () => void;
     };
 }
+
+/**
+ * 2026-10 Wave 134(원장 §147): 계승하면 무엇이 남고 무엇이 새로 시작하는지 — 계승 화면과 같은 표(`JOURNEY_RESET_SURFACE`)를
+ * 그린다. 이전에는 계승을 영어 이름으로 부르고 남는 것을 손으로 적은 목록이었는데, 영구 성장 · 도감 · 계승 기록"만" 남는다고
+ * 말해 전설 각인 수집 · 직업 여정 · 시즌 진행이 남는다는 것을 빼먹었다. 미수령 보상 안내는 위의 보상 칸(`TRUE_ENDING_PENDING_GUIDANCE`)이 한다.
+ */
+export const TrueEndingJourneyNote = () => (
+    <div data-testid="true-ending-new-game-plus-guidance" className="max-w-sm space-y-1 break-words text-[11px] leading-relaxed text-slate-400">
+        <p>{MSG.JOURNEY_KEPT_LINE(getJourneySurfaceText('ascension', 'kept'))}</p>
+        <p>{MSG.JOURNEY_RESET_LINE(getJourneySurfaceText('ascension', 'reset'))}</p>
+    </div>
+);
 
 const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
     const prefersReducedMotion = useReducedMotion() === true;
@@ -162,7 +175,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                         className="mb-7 flex min-w-0 flex-col items-center gap-3"
                     >
                         <Star size={28} className="text-[#d5b180]" />
-                        <h1 className="font-fira text-[14px] uppercase tracking-[0.32em] text-[#d5b180]">True Ending</h1>
+                        <h1 className="font-fira text-[14px] uppercase tracking-[0.32em] text-[#d5b180]">{MSG.TRUE_ENDING_TITLE}</h1>
                         <p className="break-words text-[12px] font-fira tracking-wider text-slate-300">
                             {player?.name || '영웅'} — {MSG.LEVEL_LABEL(player?.level || 1)} {player?.job || '모험가'}
                         </p>
@@ -262,7 +275,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                 aria-describedby={hasPendingQuestRewards ? 'true-ending-pending-quests-title' : undefined}
                                 className="min-h-[44px] rounded-[1.2rem] border border-[#d5b180]/40 bg-[#d5b180]/12 px-8 py-3 font-fira text-[12px] uppercase tracking-[0.24em] text-[#d5b180] transition-all hover:border-[#d5b180]/60 hover:bg-[#d5b180]/20 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {confirmationAccepted ? '계승 중…' : 'New Game+'}
+                                {confirmationAccepted ? MSG.ASCENSION_CONFIRMING : MSG.ASCENSION_CONFIRM}
                             </button>
                             <button
                                 type="button"
@@ -271,18 +284,9 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                 disabled={confirmationAccepted}
                                 className="min-h-[44px] rounded-lg border border-white/15 bg-white/5 px-5 py-3 text-[12px] font-readable font-bold text-slate-200 transition-colors hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                현재 여정 계속
+                                {MSG.ASCENSION_CONTINUE}
                             </button>
-                            <p className="break-words text-[11px] font-readable text-slate-400">
-                                {hasPendingQuestRewards
-                                    ? '보상 수령 전에는 현재 여정을 계속할 수 있습니다.'
-                                    : MSG.TRUE_ENDING_CONTINUE_NOTE}
-                            </p>
-                            <p data-testid="true-ending-new-game-plus-guidance" className="max-w-sm break-words text-[11px] leading-relaxed text-slate-500">
-                                {hasPendingQuestRewards
-                                    ? 'New Game+는 현재 장비와 소지 골드를 초기화합니다. 보상 장비를 사용하려면 수령 후 현재 여정을 계속하세요.'
-                                    : MSG.TRUE_ENDING_NEW_GAME_PLUS_NOTE}
-                            </p>
+                            <TrueEndingJourneyNote />
                         </Motion.div>
                     )}
                 </main>

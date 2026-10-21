@@ -1,4 +1,5 @@
 import { getSignatureMetadata, hasDedicatedSignatureArt } from '../../data/signatureItems.js';
+import { MSG } from '../../data/messages';
 import type { Item } from '../../types/index.js';
 
 /**
@@ -8,7 +9,8 @@ import type { Item } from '../../types/index.js';
  * - dedicated signature art(Tier S/A)가 있을 때만 렌더. tinted named 아이템은 스킵.
  * - 위치: top-right, 크기는 size에 비례 (최소 8px).
  * - 색: tone에 따라 gold/violet/crimson 등 미세 매핑.
- * - 접근성: aria-label로 tier + category 전달.
+ * - 접근성: aria-label은 '전설 각인'(`MSG.SIGNATURE_DROP_LABEL`) — Wave 134 전에는 데이터 키를 이은 영어
+ *   ("Signature · legendary · unique-weapon")였다.
  */
 
 // cycle 413: steel 제거 — signatureRegistry.json은 8 tone (arcane/earth/fire/
@@ -44,7 +46,6 @@ const SignatureBadge = ({ item, size }: SignatureBadgeProps) => {
     if (!item || !hasDedicatedSignatureArt(item)) return null;
     const meta = getSignatureMetadata(item);
     const toneColor = TONE_COLORS[meta?.tone ?? ''] || DEFAULT_TONE_COLOR;
-    const label = `Signature · ${meta?.tier || 'legendary'} · ${meta?.category || ''}`;
 
     return (
         <div
@@ -56,7 +57,7 @@ const SignatureBadge = ({ item, size }: SignatureBadgeProps) => {
                 height: size,
                 filter: `drop-shadow(0 0 3px ${toneColor.glow})`,
             }}
-            aria-label={label}
+            aria-label={MSG.SIGNATURE_DROP_LABEL}
             data-signature-badge="true"
             data-signature-tone={meta?.tone || 'holy'}
         >

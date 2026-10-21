@@ -14,6 +14,7 @@ import { JOURNEY_RESET_SURFACE, getJourneySurfaceText } from '../src/utils/journ
 import { getSignatureDiscoveryProgress, isSignatureDiscovered } from '../src/utils/signatureDiscovery.js';
 import RunSummaryCard from '../src/components/RunSummaryCard.tsx';
 import AscensionScreen from '../src/components/AscensionScreen.tsx';
+import { TrueEndingJourneyNote } from '../src/components/TrueEndingScreen.tsx';
 import { renderStatic } from './helpers/render.ts';
 
 /**
@@ -154,13 +155,33 @@ test('계승 화면은 계승의 표를 그린다', () => {
     assert.ok(html.includes(getJourneySurfaceText('ascension', 'reset')));
 });
 
+// 2026-10 Wave 134(원장 §147): 진 엔딩의 계승 단추 위 안내가 손으로 쓴 목록("New Game+는 … 정수로 새긴 영구 성장과 도감 · 계승
+// 기록만 이어 갑니다")이었다 — 전설 각인 수집 · 직업 여정 · 시즌 · 크리스탈이 빠져 잃지 않는 것을 잃는다고 말했다.
+test('진 엔딩 화면도 계승의 표를 그린다', () => {
+    const html = renderStatic(createElement(TrueEndingJourneyNote));
+    assert.ok(html.includes(MSG.JOURNEY_KEPT_LINE(getJourneySurfaceText('ascension', 'kept'))));
+    assert.ok(html.includes(MSG.JOURNEY_RESET_LINE(getJourneySurfaceText('ascension', 'reset'))));
+});
+
 // 부재 불변식: 화면에 손으로 적은 이전 약속이 되돌아오지 않는다(식별자 수준 — 문구 그대로).
 test('이전 약속 문구가 컴포넌트에 되돌아오지 않는다', async () => {
     const dir = new URL('../src/components/', import.meta.url);
     const files = (await readdir(dir, { recursive: true })).filter((name) => name.endsWith('.tsx'));
-    const stale = ['칭호·도감 기록은 다음 모험에도', '도감과 누적 기록', '칭호 · 업적과 누적 기록', '수령 기록은 영구 보존', '영구 성장과 기록은 보존합니다'];
+    const stale = ['칭호·도감 기록은 다음 모험에도', '도감과 누적 기록', '칭호 · 업적과 누적 기록', '수령 기록은 영구 보존', '영구 성장과 기록은 보존합니다',
+        '계승 기록만 이어', 'New Game+'];
     for (const name of files) {
         const source = await readFile(new URL(name, dir), 'utf8');
         for (const phrase of stale) assert.ok(!source.includes(phrase), `${name}: ${phrase}`);
+    }
+    // MSG도 값으로 읽는다(Wave 134 — 진 엔딩의 이전 약속은 MSG 문자열이었다). 함수는 자기 본문만 읽는다(주석 제외).
+    const messages = [];
+    const walk = (value, key) => {
+        if (typeof value === 'string' || typeof value === 'function') messages.push([key, String(value)]);
+        else if (value && typeof value === 'object') for (const [child, next] of Object.entries(value)) walk(next, `${key}.${child}`);
+    };
+    walk(MSG, 'MSG');
+    assert.ok(messages.length > 800, 'MSG 값을 실제로 읽었다');
+    for (const [key, text] of messages) {
+        for (const phrase of stale) assert.ok(!text.includes(phrase), `${key}: ${phrase}`);
     }
 });

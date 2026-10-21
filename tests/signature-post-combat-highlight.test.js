@@ -4,10 +4,11 @@ import { createElement } from 'react';
 
 import PostCombatCard from '../src/components/PostCombatCard.tsx';
 import { DB } from '../src/data/db.ts';
+import { MSG } from '../src/data/messages.ts';
 import { renderStatic } from './helpers/render.ts';
 
 /**
- * PostCombatCard — signature 각인이 loot에 포함됐을 때 "Legendary" 전용 row로 강조.
+ * PostCombatCard — signature 각인이 loot에 포함됐을 때 '전설 각인' 전용 row로 강조(Wave 134 전에는 영어 "Legendary" 머리말).
  *
  * 기존에는 lootSummary = "아이템1 · 아이템2 외 N" 한 줄에 signature가 묻혀 있었음.
  * 보스를 잡고 얻는 가장 큰 순간을 시각적으로 두드러지게 만들기 위해
@@ -16,7 +17,7 @@ import { renderStatic } from './helpers/render.ts';
  * 계약(렌더 검증):
  *   1. droppedItems 중 signature 이름만 골라 별도 row(post-combat-legendary)로 렌더
  *   2. 일반 loot 요약에서는 signature 제외 (중복 방지)
- *   3. Sparkles 아이콘 + "Legendary" 레이블 + gold 팔레트(#f6e7a2)
+ *   3. Sparkles 아이콘 + '전설 각인' 머리말(MSG.SIGNATURE_DROP_LABEL) + gold 팔레트(#f6e7a2), 영어 머리말 없음
  *   4. signatureLoot만 있고 다른 loot/signal이 없어도 패널이 렌더된다
  */
 
@@ -29,7 +30,9 @@ test('signature 각인이 loot에 있으면 post-combat-legendary row로 별도 
     const html = renderCard({ enemy: '마왕', items: [sigWeapon.name, normalPotion.name], leveledUp: false });
 
     assert.ok(html.includes('data-testid="post-combat-legendary"'), 'Legendary row가 렌더링됨');
-    assert.ok(html.includes('Legendary'), '"Legendary" 레이블 노출');
+    assert.ok(html.includes(MSG.SIGNATURE_DROP_LABEL), '전설 각인 머리말 노출');
+    assert.ok(html.includes(MSG.SIGNATURE_DROP_CODEX_NOTE), '도감 기록 줄');
+    assert.ok(!html.includes('Legendary'), '영어 머리말이 되돌아오지 않는다(Wave 134)');
     assert.ok(html.includes('f6e7a2'), 'gold 팔레트(#f6e7a2) 사용');
     assert.ok(html.includes(sigWeapon.name), 'signature 아이템 이름이 Legendary row에 노출');
 });

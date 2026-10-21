@@ -196,13 +196,13 @@ const PostCombatCard = ({ result, onClose, onOpenInventory }: PostCombatCardProp
                                     >
                                         <div className="flex items-center gap-1.5 text-[11px] font-fira uppercase text-[#f6e7a2]">
                                             <Sparkles size={11} />
-                                            Legendary
+                                            {MSG.SIGNATURE_DROP_LABEL}
                                         </div>
                                         <div className="mt-1 text-sm font-rajdhani font-bold leading-tight text-[#fef3c7]">
                                             {formatLootStacks(signatureLoot).join(' · ')}
                                         </div>
                                         <div className="mt-0.5 text-[11px] font-fira text-[#f6e7a2]/80">
-                                            도감에 기록된 전설 각인
+                                            {MSG.SIGNATURE_DROP_CODEX_NOTE}
                                         </div>
                                     </div>
                                 )}

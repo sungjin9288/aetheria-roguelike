@@ -14,11 +14,10 @@ const ROOT = path.join(HERE, '..');
 const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('first-play surfaces use player-facing Korean labels', async () => {
-    const [controlPanel, dashboard, mapNavigator, mobileSummary, returnBriefing, jobChangePanel, classCard, classPresentation, messages] = await Promise.all([
+    const [controlPanel, dashboard, mapNavigator, returnBriefing, jobChangePanel, classCard, classPresentation, messages] = await Promise.all([
         readSrc('src/components/ControlPanel.tsx'),
         readSrc('src/components/Dashboard.tsx'),
         readSrc('src/components/MapNavigator.tsx'),
-        readSrc('src/components/DashboardMobileSummary.tsx'),
         readSrc('src/components/ReturnBriefingCard.tsx'),
         readSrc('src/components/tabs/JobChangePanel.tsx'),
         readSrc('src/components/ClassCard.tsx'),
@@ -50,10 +49,6 @@ test('first-play surfaces use player-facing Korean labels', async () => {
     assert.doesNotMatch(mapNavigator, />\s*(Atlas Map|Current Position|World Routes|Area Lore)\s*</);
     assert.doesNotMatch(mapNavigator, /`Lv\.\$\{|\}G<\/span>/);
 
-    assert.match(mobileSummary, /label: '주무기'/);
-    assert.match(mobileSummary, /fallback: '비어 있음'/);
-    assert.match(mobileSummary, /mobile-summary-signature-\$\{entry\.slot\}/);
-    assert.doesNotMatch(mobileSummary, /label: '(LEFT|RIGHT|ARMOR)'/);
 
     assert.match(returnBriefing, /다시 만난 모험가에게/);
     assert.match(messages, /RETURN_BRIEFING_STATUS_LABEL: '현재 상태'/);

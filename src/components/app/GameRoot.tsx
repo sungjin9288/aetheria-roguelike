@@ -338,8 +338,8 @@ const GameRoot = ({
                         <span className="text-[#f4e6c8]">
                             ⚡ {seasonEvent.name || '시즌 이벤트'} 진행 중
                             {seasonEventEndDate ? ` — D-${Math.max(0, Math.ceil((seasonEventEndDate.getTime() - new Date().getTime()) / 86400000))}` : ''}
-                            {(seasonEvent.goldMultiplier ?? 1) > 1 ? ` | 골드+${Math.round(((seasonEvent.goldMultiplier ?? 1) - 1) * 100)}%` : ''}
-                            {(seasonEvent.xpMultiplier ?? 1) > 1 ? ` XP+${Math.round(((seasonEvent.xpMultiplier ?? 1) - 1) * 100)}%` : ''}
+                            {(seasonEvent.goldMultiplier ?? 1) > 1 ? MSG.SEASON_EVENT_GOLD_BONUS(Math.round(((seasonEvent.goldMultiplier ?? 1) - 1) * 100)) : ''}
+                            {(seasonEvent.xpMultiplier ?? 1) > 1 ? MSG.SEASON_EVENT_EXP_BONUS(Math.round(((seasonEvent.xpMultiplier ?? 1) - 1) * 100)) : ''}
                         </span>
                         {seasonEvent.bonusMap && (
                             <button

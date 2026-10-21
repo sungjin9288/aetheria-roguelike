@@ -63,7 +63,7 @@ test('완주 기록은 진입 경로와 무관하게 우선 표시하고 파편 
     const won = resolveEndgameVictory({ player, deadEnemy: { ...demonKing, name: '원시의 신', baseName: '원시의 신' }, receiptKey: 'abyss:boss:1', rng: () => 1, now: 1000 });
     const html = renderStatic(createElement(EndgameJourney, { player: won.player }));
     assert.match(html, /종장 기록/);
-    assert.match(html, /진엔딩을 확인했습니다/);
+    assert.match(html, /진 엔딩을 확인했습니다/);
     assert.ok(!html.includes('0/3'));
     assert.ok(!html.includes('봉인을 열었습니다'));
     const collecting = playerAt(2, 2);
