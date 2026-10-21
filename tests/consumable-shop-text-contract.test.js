@@ -21,8 +21,6 @@ import {
     getConsumableEffectSummary,
 } from '../src/utils/consumablePresentation.ts';
 import { buildCombatView } from '../src/utils/combatView.ts';
-import { getAvailableCommands } from '../src/utils/commandSuggestions.ts';
-import { getRestCost } from '../src/utils/expeditionReturnFlow.ts';
 import { getCrystalExchangeOffers } from '../src/utils/crystalExchange.ts';
 import ShopPanel from '../src/components/ShopPanel.tsx';
 import SmartInventory from '../src/components/SmartInventory.tsx';
@@ -34,7 +32,7 @@ import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 /**
  * Wave 61 (원장 §61.3 — 엔진은 맞고 플레이어가 보는 문구가 틀렸다):
  *   F2  엘릭서(접두어 사본 포함)는 엔진이 실효 최대 생명까지 회복한다 — 어느 표면도 9999 · 10006 같은 val을 그리지 않는다.
- *   F6  터미널 자동완성의 휴식 비용은 실제 휴식 비용(`getRestCost`)이다.
+ *   (F6 터미널 자동완성의 휴식 비용 — Wave 135에 자동완성과 함께 지웠다. 렌더하는 곳이 없었다.)
  *   F8  상점의 정화 아이템 줄에 원시 상태 id("poison 해제")가 없다.
  *   F9  인벤토리의 "사용"/"장착" 버튼은 리듀서(USE_INVENTORY_ITEM)가 받는 아이템에만 있다 — DB 전수.
  *   F12 영웅의 물약은 공격력 · 방어력만 올린다(라벨이 "ALL"이었다). 합성 보호 상품의 이름은 모든 표면에서 하나다.
@@ -159,24 +157,7 @@ test('F2: 전투 목록 · 인벤토리 · 빠른 슬롯 · 상점이 실제로 
     assert.ok(!shopText.includes('9999'), `상점 줄에 9999가 없다: ${shopText}`);
 });
 
-test('F6: 휴식 자동완성은 실제 휴식 비용(getRestCost)을 그린다 — Lv40', () => {
-    const safeLoc = Object.entries(DB.MAPS).find(([, map]) => map.type === 'safe')?.[0];
-    assert.ok(safeLoc, '안전지대 지역이 있다');
-    const player = makePlayerFixture({ level: 40, loc: safeLoc });
-    const cost = getRestCost(player);
-    assert.notEqual(cost, 100, '레벨 40 휴식 비용은 예전 고정 문구(100)와 다르다');
-
-    const rest = getAvailableCommands(GS.IDLE, player).find((entry) => entry.cmd === 'rest');
-    assert.ok(rest, '안전지대 idle에서 휴식 제안');
-    assert.equal(rest.desc, MSG.CMD_SUGGEST_REST(cost));
-    assert.ok(rest.desc.includes(String(cost)));
-    assert.ok(!rest.desc.includes('100G'));
-
-    // 거울 할인이 붙어도 같은 함수가 정한다.
-    const mirrored = makePlayerFixture({ level: 40, loc: safeLoc, meta: { ...(player.meta || {}), mirror: { rest_discount: 3 } } });
-    const mirroredRest = getAvailableCommands(GS.IDLE, mirrored).find((entry) => entry.cmd === 'rest');
-    assert.equal(mirroredRest.desc, MSG.CMD_SUGGEST_REST(getRestCost(mirrored)));
-});
+// 2026-10 Wave 135(원장 §148): F6(휴식 자동완성의 비용 문구)은 자동완성과 함께 지웠다 — 렌더하는 곳이 없었다(소유자 결정).
 
 test('F8: 정화 아이템 문구에 원시 상태 id가 없다 — 데이터의 모든 정화 아이템 × 모든 문구 생성기 · 상점 렌더', () => {
     const cures = DB.ITEMS.consumables.filter((item) => item.type === 'cure');
