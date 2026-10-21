@@ -306,7 +306,9 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                                 <div className="flex items-start gap-1.5">
                                     <ItemIcon item={item} size={28} hideSignatureBadge />
                                     <div className="min-w-0">
-                                        <div className="truncate text-sm font-semibold text-white">{item.name}</div>
+                                        {/* 통합 수용 7차(원장 §149): 이름은 말줄임 대신 줄을 넘긴다 — 375 · 390px의 두 칸 격자에서
+                                            '신전 도시의 지팡이' · '에테르 거인의 대검'이 잘렸다(Wave 67 규칙). */}
+                                        <div className="text-sm font-semibold leading-tight text-white">{item.name}</div>
                                         <div className="mt-0.5 text-[11px] text-amber-200/80">
                                             {CATEGORY_LABEL[meta.category ?? ''] || '전설'} · {accent.label}
                                         </div>
