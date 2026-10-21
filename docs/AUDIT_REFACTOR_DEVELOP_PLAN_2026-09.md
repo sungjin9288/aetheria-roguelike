@@ -10183,3 +10183,83 @@ Wave 125의 48시드 측정에 시드 49 ~ 96을 더했다. 같은 코드이고,
   - 계정 식별자 표시나 '내 데이터 삭제'. 화면 변경이라 기기 수용 뒤에 한다.
   - AI를 켤 때 프롬프트의 uid 제거.
   - Rajdhani를 앱 안에 넣기.
+
+## 153. Capacitor 보안 권고 GHSA-rvm3-566m-v7fv — core · ios · cli · Android를 8.5.3으로 (2026-10-21, 의존성 · iOS 패키지 매니페스트, 베이스 = `main` `69807b18` = PR #186 머지)
+
+### 153.1 권고와 우리 판
+
+- **권고:** "Capacitor Android and iOS: remote content can be loaded at the app origin via the internal HTTP proxy path"(critical). 원격 콘텐츠가 내부 HTTP 프록시 경로를 거쳐 앱 출처로 로드될 수 있다.
+- **영향 범위(npm 권고 데이터, 8.x만):**
+  - Android: 8.0.0 ~ 8.3.4, 8.3.5 ~ 8.4.2, 8.5.0.
+  - iOS: 8.3.5 ~ 8.4.2, 8.5.0.
+  - 고친 판: 8.4.3, 8.5.1 이상.
+- **우리 판:** core · ios · cli 8.5.0, Android 8.3.1. 두 플랫폼 모두 범위 안이었다.
+- **대상은 네이티브 패키지다.** `@capacitor/core`(웹 JS)는 권고에 없다(레지스트리 조회). 웹 · 토스 빌드는 이 권고와 무관하다.
+- **앱 설정으로 피했다고 보지 않는다.** `capacitor.config.json`에는 `server.url` · 플러그인 설정이 없다. 그래도 그 경로는 네이티브 브리지 안에 있다.
+
+### 153.2 판 선택
+
+- **네 패키지 모두 8.5.3이고, 정확한 판으로 고정한다.** 8.5.3은 레지스트리 `latest`다(8.5.4는 아직 nightly뿐).
+- **Android는 8.4.3이 아니라 8.5.3이다.**
+  - 8.3.x에는 고친 판이 없다(8.3.5도 범위 안).
+  - 8.4.3(`latest-8.4`)도 고친 판이다. 8.5.3을 고르면 네 패키지가 한 판이 된다(Android · iOS 8.5.3의 peer는 core ^8.5.0).
+  - 빌드 요구는 8.3.1과 같다: AGP 8.13.0 · compileSdk 36 · minSdk 24 · targetSdk 36. `android/variables.gradle` · `android/build.gradle`과도 같아서 Android 프로젝트 파일은 바뀌지 않는다.
+- **`@capacitor/app` 8.1.1은 그대로다.** peer가 core >=8.0.0이고 권고 대상이 아니다.
+- **웹 번들의 차이는 한 곳이다.** core JS(8.5.0 → 8.5.3)의 `removeListener`가, 등록되지 않은 리스너를 지울 때 마지막 리스너를 지우던 것을 막는다(`if (index !== -1)`).
+
+### 153.3 바뀐 파일
+
+- **`package.json` · `package-lock.json`:** Capacitor 네 패키지만이다(lockfile은 npm이 만들었다).
+- **`ios/App/CapApp-SPM/Package.swift`:** `npm run cap:sync`가 `capacitor-swift-pm`을 exact 8.5.0 → 8.5.3으로 다시 썼다. 손으로 고치지 않는 생성 파일이다. 원격에 8.5.3 태그(`4c7f346d…`)가 있다. Android 생성 파일은 바뀌지 않았다.
+- **`Package.resolved`는 아직 8.5.0(`4f71d0b…`)이다.**
+  - Xcode(SwiftPM)가 만드는 파일이다. `originHash`를 이 환경에서 만들 수 없어 손으로 고치지 않았다.
+  - Mac에서 Xcode가 다시 풀면 바뀐다. 그 변경을 이 PR에 커밋한다(§153.6).
+- **추적 증빙 `progression-diagnostic-v2.json`:** `package.json` · `package-lock.json`의 해시를 고정하므로 다시 썼다. 리포트 본문과 `reportHash`(`0c81f5eb…`)는 그대로이고, 바뀐 것은 두 소스 해시뿐이다.
+- **문서:**
+  - `CLAUDE.md`: 기술 스택 줄과 §4 "iOS 패키지 판" 규칙.
+  - `docs/qa/IOS_SCENE_LIFECYCLE_QA.md`: 머리말에 "이 절차로 다시 검증한다"를 더했다.
+
+### 153.4 감사 (운영 의존성 `--omit=dev`, lockfile 기준)
+
+- **critical 2 → 0, 합계 11 → 9.** high 6 · moderate 3은 그대로다.
+- **남은 9개는 앱 번들에 들어가지 않는다.**
+  - `@capacitor/cli` 아래(`plist` → `@xmldom/xmldom`, `rimraf` → … → `brace-expansion`, `xcode` → `uuid`): 개발 기기에서 `cap sync`가 쓰는 도구다.
+  - `firebase` → `@firebase/firestore` → `@grpc/grpc-js`: Node 진입점의 경로다. 브라우저 ESM(`dist/index.esm.js`)에는 `@grpc/grpc-js`가 없다.
+- **`npm audit fix`는 쓰지 않았다.** lockfile 전체를 다시 풀어 이 변경의 범위를 넘는다.
+
+### 153.5 게이트 (이 환경)
+
+- **`npm run verify`:** 타입 검사 · 린트 통과, 단위 6,161/6,161(skip 0), 빌드 가드 통과(웹 빌드).
+- **추적 증빙 `npm run evidence:verify`:** 15/15.
+- **CI에 맡긴 것:** e2e · 성능 예산 · rules 에뮬레이터. 웹 번들의 차이는 core `removeListener` 한 줄이다.
+- **이 환경에서 못 한 것:** 네이티브 빌드와 실행. Xcode · Android SDK가 없어서, 8.5.3 네이티브 코드는 Mac에서 처음 빌드된다(§153.6).
+
+### 153.6 Mac에서만 할 수 있는 것 — 머지 전
+
+네이티브 판이 바뀌는 변경은 시뮬레이터 · 에뮬레이터에서 돌려 보기 전에 `main`에 넣지 않는다(CLAUDE.md §4 iOS scene 규칙).
+
+1. **`Package.resolved`:**
+   - 이 브랜치에서 `npm ci`를 하고 Xcode로 `ios/App/App.xcodeproj`를 열어 패키지를 다시 푼다(File › Packages › Resolve Package Versions, 또는 `xcodebuild -resolvePackageDependencies -project ios/App/App.xcodeproj -scheme App`).
+   - 8.5.3(`4c7f346d…`)이 되면 그 파일 하나를 커밋한다.
+   - `project.pbxproj`가 함께 바뀌면 커밋하지 않고 델타를 본다.
+2. **iOS scene QA:** `docs/qa/IOS_SCENE_LIFECYCLE_QA.md` 그대로 한다(iOS 26.5 · 27 시뮬레이터, 결함 주입 포함). receipt는 새 날짜 폴더에 남긴다.
+3. **Android(에뮬레이터면 된다):**
+   - `npm run android:sync` → `npm run android:debug`. APK의 `assets/capacitor.plugins.json`에 `AppPlugin`이 있는지 본다.
+   - `docs/qa/CODEX_K3_BACK_BUTTON_QA.md` 표의 뒤로가기를 확인한다. 최소 세 행은 2026-09-22 확인(`tasks/todo.md`)과 같게 한다: 1 시작의 마을 → 앱 종료, 3 제작소 → 패널 닫힘, 7 전투 → 앱 종료.
+4. **그 뒤 머지하고, iPhone 수용(§151)은 머지된 `main`에서 한다.** 기기 한 번으로 패치까지 덮는다.
+
+### 153.7 Mac 네이티브 QA 결과 (2026-10-21, 소유자 Mac)
+
+- **트리:** `9ff837df`다. Xcode 27.1이 `Package.resolved`를 다시 풀었다 — `capacitor-swift-pm` 8.5.0(`4f71d0b…`) → 8.5.3(`4c7f346d…`), `originHash`도 바뀌었다. 다른 파일 변경은 0이다.
+- **iOS scene QA:** 26.5 · 27.0 시뮬레이터 모두 통과다. 검사 6개는 단일 WebView · 제작과 저장 · 백그라운드 복귀 · 복귀 뒤 입력 · 60초 생존 · 강제 재실행 뒤 복원이다.
+- **결함 주입:** 창 생성 세 줄을 뺀 사본(별도 번들)이 "live bridge WebView 없음"으로 실패했다. 위 통과는 결함을 가르는 검사의 결과다.
+- **Android(16 / API 36 에뮬레이터):** APK에 `AppPlugin`이 등록됐고, 뒤로가기 세 행(제작소 → 패널 닫힘 · 마을 → 앱 종료 · 전투 → 앱 종료)이 통과했다. 다시 실행하면 세이브가 복원됐다.
+- **관찰:**
+  - 9/22 iOS 27 캡처의 글자 누락이 이번에는 없다.
+  - 에뮬레이터가 iOS 시뮬레이터 두 대 · Gradle 빌드와 함께 돌 때 한 번 강제 종료됐다. 시뮬레이터를 끄고 콜드 부팅하자 끝까지 돌았다(호스트 메모리로 추정, 확인하지 않음). 다음 실행은 iOS를 끝내고 시뮬레이터를 끈 뒤 Android를 돌린다.
+  - Xcode 27.1에서 `open -a Simulator`가 앱을 찾지 못했다. 스크립트는 창 없이 돌아 영향이 없다.
+- **영수증:** `docs/evidence/qa/ios-scene-lifecycle-20261021/`
+  - 스크립트 영수증 · 캡처: 소유자 커밋 `eb3932a2`.
+  - `android-back.json` · `build-and-scope.json`(해시 6개).
+- **QA 문서:** 결함 주입 사본을 만드는 명령을 `docs/qa/IOS_SCENE_LIFECYCLE_QA.md`에 남겼다. 그 전에는 절차 설명만 있었다.
+- **남은 것:** 머지 뒤 `main`에서 iPhone 기기 수용(§151). 실기기 · 서명은 이 QA가 덮지 않는다.
