@@ -3537,11 +3537,12 @@ import { readFile, readdir } from 'node:fs/promises';
       assert.ok(/pacingProfile:\s*profile/.test(source), 'pacingProfile: profile set 보존');
   });
 
-  test('cycle 469: getDiscoveryOdds import / pacingProfile read 보존', async () => {
+  // 2026-10 Wave 136(원장 §150): pacingProfile은 탐험 예보의 분위기 문구('변칙 지대' · '고위험 교전')와 TEMPO 칩만 읽었다 —
+  //   둘 다 그려진 적이 없어 지웠고, 남은 '발견 상승' 판정은 이야기 · 유물 확률만 읽는다.
+  test('cycle 469: getDiscoveryOdds import 보존 · pacingProfile read 0건(Wave 136)', async () => {
       const source = await readSrc('src/utils/adventureGuide.ts');
       assert.ok(/getDiscoveryOdds/.test(source), 'getDiscoveryOdds import 보존');
-      assert.ok(/pacingProfile\.id/.test(source), 'pacingProfile.id read 보존');
-      assert.ok(/pacingProfile\.label/.test(source), 'pacingProfile.label read 보존');
+      assert.ok(!/pacingProfile/.test(source), 'pacingProfile read 0건');
   });
 }
 
