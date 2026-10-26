@@ -96,8 +96,9 @@ export const MSG = {
 
     // --- 스킬 (Skill) ---
     // slice 19: tags 추가 — 치명타/약점/저항을 본문에 통합 (COMBAT_ATTACK_DETAIL 동일 패턴)
+    // 소유자 결정 D27(2026-10-26): 머리표 뒤 쌍점을 뺀다 — "[강타]: 숲 요정에게" → "[강타] 숲 요정에게"(다른 기술 줄과 같은 모양).
     SKILL_USE: (skillName: string | undefined, dmg: number, name: string | undefined, cur: number, max: number | undefined, tags: string[]) =>
-        `[${skillName}]: ${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
+        `[${skillName}] ${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
     // 2026-10 Wave 52: 위력이 없는 보조 기술은 피해 줄 대신 사용 줄을 남긴다(효과 줄은 뒤따른다).
     SKILL_USE_SUPPORT: (skillName: string | undefined) => `[${skillName}] 사용!`,
     // 2026-10 Wave 53: 생명을 바치는 기술 · 다음 공격 강화 소진.
@@ -1954,4 +1955,11 @@ export const MSG = {
     // D17(UX-09): 덮는 화면의 닫기 단추 이름은 "<무엇> 닫기"다 — 컴포넌트에 적혀 있던 이름을 옮겼다(끝 낱말은 UI_CLOSE와 같다).
     PREMIUM_SHOP_CLOSE_ARIA: '에테르 교환소 닫기',
     MIRROR_PANEL_CLOSE_ARIA: '에테르 거울 닫기',
+    // === 소유자 결정 2026-10-26 · 전투 · 기록 ===
+    // D25(감사 GF-07): 적이 자기 차례에 한 행동의 기록 배지 — 내 행동(전투 · 치명타)과 가른다. 강타는 '치명타'가 아니다.
+    LOG_BADGE_ENEMY_ACTION: '적 행동',
+    // D25: 전투 요약의 지난 차례는 한 줄로 접는다(표시만 — 기록 줄은 그대로다). 첫 줄('내 행동')과 접힌 나머지 줄 수.
+    COMBAT_LOG_PREVIOUS_TURN: (firstText: string, moreCount: number) => (
+        `지난 차례 · ${firstText}${moreCount > 0 ? ` 외 ${moreCount}줄` : ''}`
+    ),
 };

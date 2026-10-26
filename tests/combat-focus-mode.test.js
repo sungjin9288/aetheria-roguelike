@@ -97,9 +97,11 @@ test('StatusBar: 전투 모드는 자원 압축 + 적 아트 확대 + 한국어 
     assert.match(html, /data-testid="enemy-portrait"[^>]*class="[^"]*\bh-\[88px\] w-\[88px\][^"]*"/, '적 초상 프레임이 88px');
     // MonsterIcon size={80} — 160px 원본의 절반(정수 배율)
     assert.match(html, /width:80px;height:80px/);
-    for (const label of ['생명', '기력', '레벨', '교전 대상']) {
+    // D9(소유자 결정 2026-10-26): 생명 · 기력은 전투 화면의 막대가 보이고 읽는다 — 싸우는 동안 상태 표시줄에는 없다.
+    for (const label of ['레벨', '교전 대상']) {
         assert.ok(html.includes(label), `"${label}" 라벨 노출`);
     }
+    assert.ok(!html.includes('data-testid="status-combat-vitals"'), '전투 중 생명 · 기력 줄은 상태 표시줄에 없다');
 });
 
 test('CombatPanel: 행동 버튼은 공격/기술/아이템/도주 순서 + 가진 기술마다 칸', () => {

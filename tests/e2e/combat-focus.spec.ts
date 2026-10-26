@@ -102,7 +102,7 @@ test.describe('Combat focus mode', () => {
                         log.type === 'success' && log.text === '회복 물약 사용.'
                     )).length,
                     enemyTurnLogCount: rendered.logTail.filter((log: { type: string; text: string }) => (
-                        ['warning', 'critical'].includes(log.type)
+                        ['enemy', 'enemy-heavy'].includes(log.type) // D25: 적 행동 줄의 종류
                         && log.text.includes('정예 숲의 정령')
                     )).length,
                 };
@@ -156,4 +156,31 @@ test.describe('Combat focus mode', () => {
         await expect(page.getByTestId('level-up-banner')).toBeHidden({ timeout: 4_000 });
         await page.screenshot({ path: 'playtest-artifacts/mobile-combat-focus/boss-focus.png' });
     });
+});
+
+// 소유자 결정 D25(2026-10-26): 전투 기록 요약은 지난 차례를 한 줄로 접고, 적의 행동은 '적 행동' 배지다(적 강타에 '치명타' 배지 없음).
+test('D25 전투 기록은 지난 차례를 한 줄로 접고 적 행동을 따로 표시한다', async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await startE2ERun(page);
+    expect(await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(true))).toBe(true);
+    await expect(page.getByTestId('combat-focus-panel')).toBeVisible({ timeout: 8_000 });
+    await waitForModeTransition(page);
+
+    const terminal = page.getByTestId('terminal-panel');
+    const attack = page.getByTestId('combat-action-attack');
+    const folded = terminal.getByTestId('combat-log-previous-turn');
+    await attack.click();
+    await expect(terminal.locator('[data-log-badge="enemy"]').first()).toBeVisible({ timeout: 5_000 });
+    await expect(folded).toHaveCount(0);
+
+    await expect(attack).toBeEnabled({ timeout: 5_000 });
+    await attack.click();
+    await expect(folded).toBeVisible({ timeout: 5_000 });
+    await expect(folded).toContainText('지난 차례');
+    const enemyRows = terminal.locator('[data-log-badge="enemy"]');
+    await expect(enemyRows.first()).toBeVisible();
+    for (const row of await enemyRows.all()) {
+        await expect(row.getByTestId('log-type-badge')).toHaveText('적 행동');
+    }
+    await expect(terminal.locator('[data-log-type="enemy-heavy"] [data-testid="log-type-badge"]', { hasText: '치명타' })).toHaveCount(0);
 });

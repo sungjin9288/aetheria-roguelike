@@ -137,7 +137,7 @@ test('GF-01: 내 치명타 차례 — 금빛 비네트 · 금빛 피해 숫자�
 
 test('GF-01: 적 강타만 있던 차례 — 금빛이 뜨지 않는다(예전 기록 꼬리 판정의 오발)', async (t) => {
     const heavyOnly = findTurn(heavyState, (feedback, logs) => (
-        !feedback.playerCrit && feedback.enemyHeavy && logs[logs.length - 1].type === 'critical'
+        !feedback.playerCrit && feedback.enemyHeavy && logs[logs.length - 1].type === 'enemy-heavy'
     ));
     const h = await openHarness(t);
     await h.render('stage', { feedback: null, epoch: 0, liveEnemy: heavyState.enemy, player: PLAYER });

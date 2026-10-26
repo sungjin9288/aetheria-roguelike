@@ -11,6 +11,7 @@ import { canBossAppearInMap } from '../utils/bossPresence';
 import Chip from './ui/Chip';
 import { FIRST_STORY_QUEST_ID } from '../data/quests';
 import { MSG } from '../data/messages';
+import { ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE, getLogBadgeKind, type LogBadgeKind } from '../data/logBadge';
 import { DB } from '../data/db';
 import { isModalFocusScopeOpen } from '../platform/modalFocus';
 import { resolveGlobalShortcut } from '../utils/keyboardShortcuts';
@@ -34,12 +35,18 @@ const LOG_STYLES: Record<string, { text: string; tone: string }> = {
     loading: { text: 'text-ae-ink-3', tone: 'is-loading' },
     warning: { text: 'text-ae-ink', tone: 'is-warning' },
     legendary: { text: 'text-ae-rarity-legendary font-semibold', tone: 'is-legendary' },
+    // 소유자 결정 D25: 적의 행동 — 내 행동(전투 · 치명타)과 다른 자기 줄이다.
+    [ENEMY_ACTION_LOG_TYPE]: { text: 'text-ae-ink', tone: 'is-enemy' },
+    [ENEMY_HEAVY_LOG_TYPE]: { text: 'text-ae-ink font-semibold', tone: 'is-enemy' },
 };
 
 const DEFAULT_STYLE = { text: 'text-ae-ink-2', tone: 'is-default' };
-const MOBILE_LOG_BADGES: Record<string, { label: string; className: string }> = {
+// 배지는 기록 종류가 아니라 배지 종류(`getLogBadgeKind`)로 고른다 — 소유자 결정 D26: 'success'는 실제로 얻은 줄만 '획득'이고
+//   나머지는 '안내'(system 배지)다. D25: 적의 행동은 '적 행동'이다(강타가 '치명타', 일반 타격이 '주의'로 붙던 것을 가른다).
+const MOBILE_LOG_BADGES: Record<LogBadgeKind, { label: string; className: string }> = {
     combat: { label: '전투', className: 'text-ae-life' },
     critical: { label: '치명타', className: 'text-ae-threat' },
+    enemy: { label: MSG.LOG_BADGE_ENEMY_ACTION, className: 'text-ae-threat' },
     story: { label: '이야기', className: 'text-ae-ether' },
     system: { label: '안내', className: 'text-ae-ether-hi' },
     success: { label: '획득', className: 'text-ae-good' },
@@ -49,7 +56,7 @@ const MOBILE_LOG_BADGES: Record<string, { label: string; className: string }> = 
     legendary: { label: '전설', className: 'text-ae-rarity-legendary' },
 };
 
-const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'heal', 'event', 'info', 'system', 'legendary']);
+const COMBAT_LOG_TYPES = new Set(['combat', 'critical', ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE, 'success', 'warning', 'heal', 'event', 'info', 'system', 'legendary']);
 // 아직 이번 전투의 차례가 없을 때 보일 최근 줄 수 — 차례가 있으면 그 차례를 통째로 보인다(감사 GF-07).
 const SUMMARY_LOG_COUNT = 3;
 const TERMINAL_HEADING_ID = 'terminal-log-heading';
@@ -352,9 +359,25 @@ const TerminalView = ({
 
                     {/* 2026-10-26: 줄은 나타날 때만 움직이고 사라질 때는 곧바로 빠진다 — 나가는 줄이 한 프레임 남아 있던 동안
                         새 묶음의 첫 줄에 맞춘 위치가 그 줄이 빠지면서 82px씩 들쭉날쭉했다. */}
+                    {/* 소유자 결정 D25(감사 GF-07): 전투 요약에서 지난 차례는 흐린 한 줄로 접는다 — 첫 줄('내 행동')과 접힌 줄 수.
+                        표시만이다(기록 줄 · 줄 수는 그대로, '전체'를 누르면 모든 줄이 보인다). */}
+                    {combatSummary?.previousTurn && (
+                        <div
+                            data-testid="combat-log-previous-turn"
+                            data-previous-turn-key={combatSummary.previousTurn.turnKey}
+                            className="aether-log-row ae-log-row is-previous-turn font-readable text-[13px] leading-[1.55] text-ae-ink-3"
+                        >
+                            <span aria-hidden="true" className="ae-log-badge" />
+                            <span className="min-w-0 whitespace-pre-wrap break-words">
+                                {MSG.COMBAT_LOG_PREVIOUS_TURN(combatSummary.previousTurn.first.text, combatSummary.previousTurn.moreCount)}
+                            </span>
+                        </div>
+                    )}
+
                     {displayLogs.map((log) => {
                         const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
-                        const badge = MOBILE_LOG_BADGES[log.type];
+                        const badgeKind = getLogBadgeKind(log);
+                        const badge = badgeKind ? MOBILE_LOG_BADGES[badgeKind] : undefined;
 
                         return (
                             <Motion.div
@@ -364,6 +387,7 @@ const TerminalView = ({
                                 transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
                                 data-log-id={log.id}
                                 data-log-type={log.type || 'default'}
+                                data-log-badge={badgeKind ?? undefined}
                                 className={`aether-log-row ae-log-row ${style.tone} font-readable text-[14px] leading-[1.55] ${style.text}`}
                             >
                                 {badge ? (

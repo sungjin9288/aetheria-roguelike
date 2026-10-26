@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useReducedMotion } from 'framer-motion';
-import { getCombatAnnouncement, getCombatBeatTiming, isCounterStaggered } from '../utils/combatPresentation';
+import { getCombatAnnouncement, getCombatBeatTiming, getCritPulseEndMs, isCounterStaggered } from '../utils/combatPresentation';
 import type { CombatFeedback, DefeatedEnemySnapshot } from '../types/index.js';
 
 /**
@@ -72,6 +72,7 @@ export const useCombatFeedbackBeats = (
     const freshKey = fresh?.key ?? null;
     const counterDelay = isCounterStaggered(fresh) ? timing.counterDelayMs : 0;
     const { pulseMs, shakeMs, killBeatMs } = timing;
+    const critEndMs = getCritPulseEndMs(timing, counterDelay);
 
     useEffect(() => {
         if (!freshKey) return undefined;
@@ -80,14 +81,14 @@ export const useCombatFeedbackBeats = (
             ...patch,
         }));
         const timers = [
-            setTimeout(() => mark({ critOver: true }), pulseMs),
+            setTimeout(() => mark({ critOver: true }), critEndMs),
             setTimeout(() => mark({ heavyOn: true }), counterDelay),
             setTimeout(() => mark({ heavyOver: true }), counterDelay + pulseMs),
             setTimeout(() => mark({ shakeOver: true }), counterDelay + shakeMs),
             setTimeout(() => mark({ killOver: true }), killBeatMs),
         ];
         return () => timers.forEach(clearTimeout);
-    }, [freshKey, counterDelay, pulseMs, shakeMs, killBeatMs]);
+    }, [freshKey, counterDelay, critEndMs, pulseMs, shakeMs, killBeatMs]);
 
     const current = marks.key === freshKey ? marks : NO_MARKS;
     const heavyActive = Boolean(fresh?.enemyHeavy) && (counterDelay === 0 || current.heavyOn);

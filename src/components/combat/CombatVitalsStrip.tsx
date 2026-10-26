@@ -22,7 +22,8 @@ const VitalMeter = ({ tone, label, value, max }: VitalMeterProps) => {
   const safeValue = Math.max(0, value);
   return (
     <div data-testid={`combat-player-${tone}`} className="flex min-w-0 items-center gap-2 font-readable">
-      <span className={`aether-type-label shrink-0 font-bold ${theme.label}`}>{label}</span>
+      {/* 소유자 결정 D9(2026-10-26): 화면 낭독기는 막대(meter — 이름 · 값) 한 번만 읽는다. 보이는 이름 · 값 글자는 같은 사실이라 숨긴다. */}
+      <span aria-hidden="true" className={`aether-type-label shrink-0 font-bold ${theme.label}`}>{label}</span>
       <Gauge
         kind={theme.kind}
         value={safeValue}
@@ -32,7 +33,7 @@ const VitalMeter = ({ tone, label, value, max }: VitalMeterProps) => {
         className="ae-combat-vital-gauge min-w-0 flex-1"
         data-testid={`combat-player-${tone}-fill`}
       />
-      <span data-testid={`combat-player-${tone}-value`} className="aether-type-label shrink-0 whitespace-nowrap font-fira font-semibold tabular-nums text-ae-ink">
+      <span aria-hidden="true" data-testid={`combat-player-${tone}-value`} className="aether-type-label shrink-0 whitespace-nowrap font-fira font-semibold tabular-nums text-ae-ink">
         {safeValue}/{safeMax}
       </span>
     </div>
