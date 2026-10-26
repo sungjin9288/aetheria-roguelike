@@ -31,6 +31,7 @@ import { createSeededRandom } from '../../utils/seededRandom';
 import { RELICS, pickWeightedRelics } from '../../data/relics';
 import { BALANCE } from '../../data/constants';
 import { snapshotCycleStart } from '../../utils/cycleSummary';
+import { getSkillBranchOpenedLog } from '../../utils/skillBranchOpening';
 
 /**
  * makeProgressionActionMap(INITIAL_STATE) → action map
@@ -278,9 +279,12 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
         const challengeLabels = challengeModifiers.map((id) => (
             BALANCE.CHALLENGE_MODIFIERS.find((modifier) => modifier.id === id)?.label || id));
         const ruleLog = getAscensionRuleStartLog(ruleMeta, ascensionRuleDeclined);
+        // 소유자 결정 D5: 계승은 새 여정의 직업(모험가)을 주는 전이다 — 새 게임 시작 · 전직과 같은 판정으로 열린 기술 성장을 알린다.
+        const branchLog = getSkillBranchOpenedLog(null, String(freshPlayer.job), freshPlayer.skillChoices);
         const logs = appendRewardLogs(INITIAL_STATE.logs, [
             ...ascensionTitles.map((id) => ({ type: 'system', text: MSG.TITLE_UNLOCKED(getTitleLabel(id)) })),
             { type: 'system', text: MSG.ASCEND_DONE(outcome.nextRank, isNewAscensionTitle(outcome, state.player.titles) ? outcome.title : null) },
+            ...(branchLog ? [{ type: 'system', text: branchLog }] : []),
             ...(ruleLog ? [{ type: 'event', text: ruleLog }] : []),
             ...(challengeLabels.length > 0 ? [{ type: 'warn', text: MSG.CHALLENGE_START(challengeLabels) }] : []),
             ...(startingRelics.length > 0 ? [{ type: 'event', text: MSG.START_BOOT_RELIC }] : []),

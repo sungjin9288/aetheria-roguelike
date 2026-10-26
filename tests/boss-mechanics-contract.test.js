@@ -30,7 +30,7 @@ import { applyBossRelicReward } from '../src/hooks/combatActions/_helpers.js';
 const BRIEFED = Object.keys(BOSS_BRIEFS);
 const briefText = (name) => {
     const brief = BOSS_BRIEFS[name];
-    return [brief.signature, brief.entryHint, brief.counterHint, brief.phaseHint, brief.rewardHint, ...brief.warningChips].join(' ');
+    return [brief.signature, brief.counterHint, brief.phaseHint, brief.rewardHint, ...brief.warningChips].join(' ');
 };
 const phaseStatuses = (name) => [
     ...getPhaseStatuses(MONSTERS[name].phase2),
@@ -97,7 +97,7 @@ test('칩 · 문구가 약속한 행동은 데이터가 선언한다 — 반격 
         assert.equal(declared(name, 'guardHeal'), /회복 압박/.test(text), `${name} 회복 압박`);
         assert.equal(declared(name, 'breath'), /브레스/.test(text), `${name} 브레스`);
         assert.equal(declared(name, 'summon'), /소환/.test(text), `${name} 소환`);
-        assert.equal(declared(name, 'longFightEnrage'), /장기전 운영은 피하|긴 교전은 .*손해/.test(text), `${name} 장기전 손해`);
+        assert.equal(declared(name, 'longFightEnrage'), /긴 교전을 피하|긴 교전은 .*손해/.test(text), `${name} 장기전 손해`);
         assert.equal(declared(name, 'longFightReward'), /장기전 보상/.test(text), `${name} 장기전 보상`);
         const pierceLog = [MONSTERS[name].phase2?.log, MONSTERS[name].phase3?.log].some((log) => /저항이 무력화/.test(log || ''));
         const pierceDeclared = Boolean(MONSTERS[name].phase2?.pierceResist || MONSTERS[name].phase3?.pierceResist);

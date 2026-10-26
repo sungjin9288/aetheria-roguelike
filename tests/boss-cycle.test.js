@@ -396,11 +396,12 @@ import { readFile } from 'node:fs/promises';
       assert.ok(BOSS_MONSTERS.includes(BOSS_NAME), 'auto-derived BOSS_MONSTERS should include the new boss');
   });
 
-  test('BOSS_BRIEFS에 entryHint / counterHint / phaseHint / rewardHint 모두 등록됨', () => {
+  test('BOSS_BRIEFS에 counterHint / phaseHint / rewardHint 모두 등록됨', () => {
       const brief = BOSS_BRIEFS[BOSS_NAME];
       assert.ok(brief, 'brief should exist');
       assert.ok(brief.signature, 'signature missing');
-      assert.ok(brief.entryHint, 'entryHint missing');
+      // 소유자 결정 D32(2026-10-26): 진입 추천 문구(entryHint)는 읽는 곳이 없어 데이터에서 지웠다.
+      assert.equal('entryHint' in brief, false, 'entryHint는 되살리지 않는다');
       assert.ok(brief.counterHint, 'counterHint missing');
       assert.ok(brief.phaseHint, 'phaseHint missing');
       assert.ok(brief.rewardHint, 'rewardHint missing');

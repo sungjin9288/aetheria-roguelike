@@ -141,15 +141,14 @@ const levelUpOnce = (level, meta) => {
     return CombatEngine.applyExpGain(player, 100).logs.map((log) => log.text);
 };
 
-test('다시 오르는 레벨업 기록: 최고 레벨까지 남은 레벨 · 다시 닿음 · 넘음을 한 줄씩 남긴다', () => {
+test('다시 오르는 레벨업 기록: 최고 레벨을 넘는 레벨업에만 한 줄을 남기고, 그 아래 레벨업은 말하지 않는다(소유자 결정 D22)', () => {
     const meta = { prestigeRank: 0, cycleBestLevel: { rank: 0, level: 6 } };
-    assert.ok(levelUpOnce(3, meta).includes(MSG.CYCLE_BEST_LEVEL_CLIMB(4, 6)));
-    assert.ok(levelUpOnce(5, meta).includes(MSG.CYCLE_BEST_LEVEL_CLIMB(6, 6)));
-    assert.match(MSG.CYCLE_BEST_LEVEL_CLIMB(6, 6), /다시 닿았습니다/u);
-    const passed = levelUpOnce(6, meta);
-    assert.ok(passed.includes(MSG.CYCLE_BEST_LEVEL_PASSED(6)));
-    assert.equal(passed.some((text) => text === MSG.CYCLE_BEST_LEVEL_CLIMB(7, 6)), false);
-    assert.equal(levelUpOnce(9, meta).some((text) => text.includes('이번 회차 최고 레벨')), false, '이미 넘은 뒤에는 말하지 않는다');
+    const mentionsBest = (logs) => logs.filter((text) => text.includes('이번 회차 최고 레벨'));
+    assert.deepEqual(mentionsBest(levelUpOnce(3, meta)), [], '남은 레벨을 레벨마다 말하지 않는다');
+    assert.deepEqual(mentionsBest(levelUpOnce(5, meta)), [], '최고 레벨에 다시 닿아도 말하지 않는다');
+    assert.deepEqual(mentionsBest(levelUpOnce(6, meta)), [MSG.CYCLE_BEST_LEVEL_PASSED(6)]);
+    assert.deepEqual(mentionsBest(levelUpOnce(9, meta)), [], '이미 넘은 뒤에는 말하지 않는다');
+    assert.equal('CYCLE_BEST_LEVEL_CLIMB' in MSG, false, '남은 레벨 문구는 되살리지 않는다');
 });
 
 test('최고 레벨 기록이 없거나 다른 계승 단계의 기록이면 레벨업 기록은 그대로다', () => {

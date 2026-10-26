@@ -1597,10 +1597,7 @@ export const MSG = {
     DEATH_BEAT_TITLE: '쓰러졌습니다',
     DEATH_BEAT_KILLED_BY: (name: string) => `${name}에게 쓰러졌습니다`,
     DEATH_BEAT_SKIP: '눌러서 여정 기록 보기',
-    // 다시 오르는 여정의 레벨업 기록 — 이번 회차 최고 레벨까지 남은 레벨, 넘었을 때.
-    CYCLE_BEST_LEVEL_CLIMB: (level: number, best: number) => (level < best
-        ? `이번 회차 최고 레벨 ${best}까지 ${best - level}레벨 남았습니다.`
-        : `이번 회차 최고 레벨 ${best}에 다시 닿았습니다.`),
+    // 다시 오르는 여정의 레벨업 기록 — 이번 회차 최고 레벨을 넘었을 때 한 번(소유자 결정 D22: 남은 레벨은 말하지 않는다).
     CYCLE_BEST_LEVEL_PASSED: (best: number) => `이번 회차 최고 레벨 ${withJosa(best, '을/를')} 넘었습니다.`,
     // 계승 화면 영구 능력치 정산 — 지금 값에서 내려놓는 몫을 빼고 계승 보상을 더한 값이 다음 여정으로 이어진다.
     ASCEND_GROWTH_TITLE: '영구 능력치 정산',
@@ -1945,4 +1942,9 @@ export const MSG = {
     SHELL_FATAL_TITLE: '게임 화면을 불러오지 못했습니다',
     SHELL_FATAL_BODY: '앱을 다시 열어 주세요. 같은 문제가 계속되면 고객센터에 알려 주세요.',
     // --- /w3:shell ---
+    // === 소유자 결정 2026-10-26 · 문구 · 데이터 정리 ===
+    // D5: 기술 성장(분기)을 고를 수 있게 된 순간의 기록 한 줄 — 어느 기술인지와 어디서 고르는지만 말한다(튜토리얼 · 반복 안내 아님).
+    SKILL_BRANCH_OPENED: (skillNames: readonly string[]) => (
+        `${skillNames.join(' · ')}의 성장을 고를 수 있습니다. 기록의 기술 탭에서 고릅니다.`
+    ),
 };

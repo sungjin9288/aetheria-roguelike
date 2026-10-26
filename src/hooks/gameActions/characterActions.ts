@@ -15,6 +15,7 @@ import { getDefaultExpeditionFocusQuestIds } from '../../utils/expeditionMission
 import { getRestCost } from '../../utils/expeditionReturnFlow';
 import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { endDevourBonus } from '../../utils/adventureRelicBonuses';
+import { getSkillBranchOpenedLog } from '../../utils/skillBranchOpening';
 import type { Player } from '../../types';
 import type { GameActionDeps } from '../actionDeps';
 import type { TitleSharedHelpers } from './_shared';
@@ -98,6 +99,9 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             addLog('system', MSG.START_JOURNEY(trimmedName));
             // 2026-10 통합 감사(town-nav UX-13): 첫 기술 안내는 일어난 사건이 아니라 안내다 — '안내'로 분류한다.
             addLog('system', MSG.START_SKILL(cls.skills?.[0]?.name || '강타'));
+            // 소유자 결정 D5: 직업을 얻는 전이(여정 시작 · 전직)가 새로 열린 기술 성장 선택을 한 줄로 알린다.
+            const branchLog = getSkillBranchOpenedLog(null, jobId, player.skillChoices);
+            if (branchLog) addLog('system', branchLog);
             const ruleLog = getAscensionRuleStartLog(player.meta, ascensionRuleDeclined);
             if (ruleLog) addLog('event', ruleLog);
             if (mods.length > 0) {
@@ -288,6 +292,8 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             });
             dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             addLog('success', MSG.JOB_CHANGE_DONE(jobName));
+            const branchLog = getSkillBranchOpenedLog(player.job, jobName, player.skillChoices);
+            if (branchLog) addLog('system', branchLog);
         },
     };
 };

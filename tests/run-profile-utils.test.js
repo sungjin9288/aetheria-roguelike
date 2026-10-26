@@ -174,9 +174,9 @@ test('caster staves and bows are not mislabeled as crusher builds', () => {
 //   getClassBuildBonus dead exports cleanup. getRunBuildProfile primary.id 'crusher' 검증은
 //   기존 'build profile detects crusher 양손 setup' 테스트(별도)에서 이미 커버.
 
-test('enemy tactical profile includes boss briefing and phase hint', () => {
+test('enemy tactical profile includes boss signature and counter hint', () => {
     // cycle 270: tacticalProfile에서 12 dead 필드 (tier/rewardHint/warningChips 등) 제거.
-    //   사용 5종(hint/entryHint/signature/counterHint/phaseHint)만 보존.
+    //   소유자 결정 D32(2026-10-26): 읽는 곳 없는 추천 문구 hint · entryHint · phaseHint도 지웠다 — 보스 카드가 읽는 두 가지만 남는다.
     const profile = getEnemyTacticalProfile({
         name: '레드 드래곤',
         baseName: '레드 드래곤',
@@ -188,10 +188,9 @@ test('enemy tactical profile includes boss briefing and phase hint', () => {
         phase2: { name: '격노한 레드 드래곤' },
     }, { def: 40 });
 
+    assert.deepEqual(Object.keys(profile).sort(), ['counterHint', 'signature']);
     assert.ok(profile.signature?.includes('브레스'));
-    assert.ok(profile.entryHint?.includes('냉기'));
     assert.ok(profile.counterHint?.includes('냉기'));
-    assert.ok(profile.phaseHint?.includes('50%'));
 });
 
 // cycle 271: 'run diagnostics summarizes pacing and class fit' 테스트 제거 —
