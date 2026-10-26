@@ -3,15 +3,17 @@ import { motion as Motion } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
 import TerminalView from '../TerminalView';
 import ControlPanel from '../ControlPanel';
+import { usePreloadPostCombatCard, useStageEnterClass } from './stageLayoutHooks';
 import type { FullStats, Item } from '../../types/index.js';
 import type { useGameEngine } from '../../hooks/useGameEngine';
 
 const Dashboard = lazy(() => import('../Dashboard'));
 
-const DashboardFallback = () => (
+// 모험 기록을 받는 동안의 자리 — 데스크톱 배치(app/desktop/DesktopGameLayout)의 오른쪽 칸도 같은 자리를 쓴다.
+export const DashboardFallback = () => (
     <div
         aria-hidden="true"
-        className="panel-noise aether-surface animate-pulse border border-white/8 shrink-0 rounded-[1.55rem] px-3 py-2.5 min-h-[4.5rem]"
+        className="ae-card is-quiet animate-pulse shrink-0 rounded-ae-lg px-3 py-2.5 min-h-[4.5rem]"
     />
 );
 
@@ -44,6 +46,8 @@ const MobileGameLayout = ({
 }: MobileGameLayoutProps) => {
     const isCombat = engine.gameState === GS.COMBAT;
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
+    const modeEnterClass = useStageEnterClass(engine.gameState);
+    usePreloadPostCombatCard(isCombat);
     // Dashboard.runtime(SystemTabRuntime)이 읽지 않는 mobileArchiveDockVisible도 실어 보낸다 —
     //   변수에 먼저 담아 전달해 object literal 초과 속성 검사(엄격 리터럴 체크)를 피한다.
     const dashboardRuntime = {
@@ -68,8 +72,8 @@ const MobileGameLayout = ({
         <Motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className={`relative z-10 flex min-h-0 min-w-0 flex-1 w-full flex-col ${isPanelFocusState ? 'overflow-hidden gap-1.5' : 'gap-1'} ${damageFlash ? 'ring-2 ring-red-500/30 rounded-[1.5rem]' : ''} ${healFlash ? 'ring-2 ring-green-500/30 rounded-[1.5rem]' : ''}`}
+            transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
+            className={`relative z-10 flex min-h-0 min-w-0 flex-1 w-full flex-col ${isPanelFocusState ? 'overflow-hidden gap-1.5' : 'gap-1'} ${damageFlash ? 'ring-2 ring-ae-threat/30 rounded-ae-lg' : ''} ${healFlash ? 'ring-2 ring-ae-good/30 rounded-ae-lg' : ''}`}
         >
             {!isPanelFocusState && (
                 showArchiveConsole ? (
@@ -95,6 +99,7 @@ const MobileGameLayout = ({
                             player={engine.player}
                             quickSlots={engine.quickSlots}
                             onQuickSlotUse={handleQuickSlotUse}
+                            maxHp={fullStats?.maxHp}
                         />
                     </div>
                 )
@@ -103,21 +108,7 @@ const MobileGameLayout = ({
             on its returned panel (ShopPanel/EventPanel). Normal state: shrink-0 prevents
             action buttons from being pushed off-screen on small phones. */}
             {isPanelFocusState ? (
-                <ControlPanel
-                    gameState={engine.gameState}
-                    player={engine.player}
-                    enemy={engine.enemy}
-                    actions={engine.actions}
-                    setGameState={engine.actions.setGameState}
-                    shopItems={engine.shopItems}
-                    grave={engine.grave}
-                    isAiThinking={engine.isAiThinking}
-                    currentEvent={engine.currentEvent}
-                    stats={fullStats}
-                    onOpenArchiveConsole={openArchiveConsole}
-                />
-            ) : !showArchiveConsole ? (
-                <div className={isCombat ? 'order-2 shrink-0' : 'shrink-0'}>
+                <div key="focus-panel" className={`flex min-h-0 min-w-0 flex-1 flex-col ${modeEnterClass}`}>
                     <ControlPanel
                         gameState={engine.gameState}
                         player={engine.player}
@@ -130,6 +121,25 @@ const MobileGameLayout = ({
                         currentEvent={engine.currentEvent}
                         stats={fullStats}
                         onOpenArchiveConsole={openArchiveConsole}
+                    />
+                </div>
+            ) : !showArchiveConsole ? (
+                <div key="field-panel" className={`${isCombat ? 'order-2 shrink-0' : 'shrink-0'} ${modeEnterClass}`}>
+                    <ControlPanel
+                        gameState={engine.gameState}
+                        player={engine.player}
+                        enemy={engine.enemy}
+                        actions={engine.actions}
+                        setGameState={engine.actions.setGameState}
+                        onOpenMirror={onOpenMirror}
+                        shopItems={engine.shopItems}
+                        grave={engine.grave}
+                        isAiThinking={engine.isAiThinking}
+                        currentEvent={engine.currentEvent}
+                        stats={fullStats}
+                        onOpenArchiveConsole={openArchiveConsole}
+                        damageFlash={damageFlash}
+                        healFlash={healFlash}
                     />
                 </div>
             ) : null}

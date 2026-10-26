@@ -6,32 +6,13 @@ import { getItemStatText } from '../../utils/equipmentUtils';
 import { getItemRarity } from '../../utils/gameUtils';
 import ItemIcon from '../icons/ItemIcon';
 import EquipmentCodexCard from './EquipmentCodexCard';
+import Gauge from '../ui/Gauge';
 import type { CodexMilestone } from '../../utils/codexPresentation';
 import type { CodexEntry, Item, Player } from '../../types/index.js';
 
-const RARITY_BORDER: Record<string, string> = {
-    common: 'border-slate-500/30',
-    uncommon: 'border-emerald-400/40',
-    rare: 'border-blue-400/40',
-    epic: 'border-purple-400/40',
-    legendary: 'border-amber-400/50',
-};
-
-const RARITY_BG: Record<string, string> = {
-    common: 'bg-slate-500/8',
-    uncommon: 'bg-emerald-400/8',
-    rare: 'bg-blue-400/8',
-    epic: 'bg-purple-400/8',
-    legendary: 'bg-amber-400/10',
-};
-
 type EquipmentCategory = 'weapons' | 'armors' | 'shields';
 
-const CATEGORY_TABS: Array<{ id: EquipmentCategory; label: string }> = [
-    { id: 'weapons', label: '무기' },
-    { id: 'armors', label: '방어구' },
-    { id: 'shields', label: '방패' },
-];
+const CATEGORY_TABS: EquipmentCategory[] = ['weapons', 'armors', 'shields'];
 
 interface WeaponCodexProps {
     codex?: Partial<Record<EquipmentCategory, Record<string, CodexEntry>>>;
@@ -66,56 +47,53 @@ const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, prog
     const selected = selectedItem ? items.find((item) => item.name === selectedItem) : null;
 
     return (
-        <div data-testid="codex-equipment" className="space-y-4">
-            <div className="grid grid-cols-3 gap-1" role="tablist" aria-label="장비 종류">
-                {CATEGORY_TABS.map((tab) => {
-                    const active = category === tab.id;
+        <div data-testid="codex-equipment" className="ab-stack">
+            <div className="ab-segment grid-cols-3" role="tablist" aria-label={MSG.CODEX_EQUIP_KIND_ARIA}>
+                {CATEGORY_TABS.map((tabId) => {
+                    const active = category === tabId;
                     return (
                         <button
-                            key={tab.id}
+                            key={tabId}
                             type="button"
                             role="tab"
                             aria-selected={active}
-                            data-testid={`codex-equipment-category-${tab.id}`}
+                            data-testid={`codex-equipment-category-${tabId}`}
                             onClick={() => {
-                                setCategory(tab.id);
+                                setCategory(tabId);
                                 setSelectedItem(null);
                             }}
-                            className={`min-h-11 rounded-lg border px-2 text-sm font-semibold transition-colors ${
-                                active
-                                    ? 'border-[#7dd4d8]/38 bg-[#7dd4d8]/12 text-slate-100'
-                                    : 'border-white/8 bg-white/[0.03] text-slate-400 hover:text-slate-200'
-                            }`}
+                            className="ab-segment-option px-2"
                         >
-                            {tab.label} {discoveredCounts[tab.id] || 0}/{totalCounts[tab.id] || 0}
+                            {MSG.CODEX_EQUIP_KIND_LABELS[tabId]}{' '}
+                            <span className="font-fira tabular-nums">{discoveredCounts[tabId] || 0}/{totalCounts[tabId] || 0}</span>
                         </button>
                     );
                 })}
             </div>
 
             {nextMilestone && (
-                <div data-testid="codex-equipment-next-reward" className="border-y border-white/10 py-3">
+                <div data-testid="codex-equipment-next-reward" className="ae-well px-3.5 py-3">
                     <div className="flex items-baseline justify-between gap-3">
                         <div>
-                            <div className="aether-type-meta text-slate-400/76">다음 장비 수집 보상</div>
-                            <div className="aether-type-body mt-0.5 font-semibold text-slate-100">{nextMilestone.label}</div>
+                            <div className="aether-type-meta text-ae-ink-3">{MSG.CODEX_EQUIP_NEXT_REWARD}</div>
+                            <div className="aether-type-body mt-0.5 font-semibold text-ae-ink">{nextMilestone.label}</div>
                         </div>
-                        <span className="aether-type-body shrink-0 text-[#dff7f5]">
+                        <span className="aether-type-body shrink-0 font-fira tabular-nums text-ae-ether-hi">
                             {Math.min(discoveredCounts[category] || 0, nextMilestone.count)}/{nextMilestone.count}
                         </span>
                     </div>
                     {nextMilestone.reached && !nextMilestone.claimed && (
-                        <div className="aether-type-meta mt-1 text-[#d5b180]">상단에서 보상을 받을 수 있습니다</div>
+                        <div className="aether-type-meta mt-1 text-ae-gold-text">{MSG.CODEX_EQUIP_CLAIM_ABOVE}</div>
                     )}
                 </div>
             )}
 
             {selected && <EquipmentCodexCard item={selected} player={player} />}
 
-            <div className="divide-y divide-white/10 border-y border-white/10">
+            <div className="ae-card is-quiet ab-rows px-3.5">
                 {grouped.map(([tier, tierItems]) => {
                     const discovered = tierItems.filter((item) => categoryCodex[item.name ?? '']).length;
-                    const tierPct = (discovered / Math.max(1, tierItems.length)) * 100;
+                    const tierRarity = MSG.RARITY_LABEL[getItemRarity(tierItems[0])] || MSG.RARITY_LABEL.common;
 
                     return (
                         <details
@@ -123,57 +101,57 @@ const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, prog
                             data-testid={`codex-equipment-tier-${tier}`}
                             className="group"
                         >
-                            <summary className="flex min-h-14 cursor-pointer list-none items-center gap-3 py-3 [&::-webkit-details-marker]:hidden">
-                                <div className="min-w-0 flex-1">
-                                    <div className="flex items-baseline justify-between gap-3">
-                                        <span className="aether-type-body font-semibold text-slate-100">
-                                            {tier}단계 · {MSG.RARITY_LABEL[getItemRarity(tierItems[0])] || '일반'}
+                            <summary className="ab-summary min-h-14">
+                                <span className="min-w-0 flex-1">
+                                    <span className="flex items-baseline justify-between gap-3">
+                                        <span className="aether-type-body font-semibold text-ae-ink">
+                                            {MSG.CODEX_EQUIP_TIER(tier, tierRarity)}
                                         </span>
-                                        <span className="aether-type-meta shrink-0 text-slate-400/76">
+                                        <span className="aether-type-meta shrink-0 font-fira tabular-nums text-ae-ink-3">
                                             {discovered}/{tierItems.length}
                                         </span>
-                                    </div>
-                                    <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-white/[0.07]">
-                                        <div className="h-full rounded-full bg-[#7dd4d8]" style={{ width: `${tierPct}%` }} />
-                                    </div>
-                                </div>
-                                <ChevronDown size={16} className="shrink-0 text-slate-500 transition-transform group-open:rotate-180" />
+                                    </span>
+                                    <Gauge
+                                        kind="ether"
+                                        value={discovered}
+                                        max={Math.max(1, tierItems.length)}
+                                        label={MSG.CODEX_EQUIP_TIER(tier, tierRarity)}
+                                        className="ab-gauge-thin mt-1.5"
+                                    />
+                                </span>
+                                <ChevronDown size={16} className="ab-chevron" aria-hidden="true" />
                             </summary>
 
                             <div className="grid grid-cols-2 gap-1.5 pb-3">
                                 {tierItems.map((item) => {
                                     const found = Boolean(categoryCodex[item.name ?? '']);
-                                    const itemRarity = getItemRarity(item);
                                     const active = selectedItem === item.name;
+                                    if (!found) {
+                                        return (
+                                            <div key={item.name} className="ab-tile is-undiscovered flex min-h-[60px] items-center gap-2 p-2.5 aether-type-meta">
+                                                <Lock size={14} className="shrink-0" aria-hidden="true" />
+                                                {MSG.CODEX_EQUIP_UNDISCOVERED}
+                                            </div>
+                                        );
+                                    }
                                     return (
                                         <button
                                             key={item.name}
                                             type="button"
-                                            disabled={!found}
-                                            data-testid={found ? `codex-equipment-item-${item.name}` : undefined}
+                                            aria-pressed={active}
+                                            data-testid={`codex-equipment-item-${item.name}`}
                                             onClick={() => setSelectedItem(active ? null : (item.name ?? null))}
-                                            className={`min-h-[60px] rounded-lg border p-2.5 text-left transition-colors ${
-                                                found
-                                                    ? `${RARITY_BORDER[itemRarity]} ${RARITY_BG[itemRarity]} hover:brightness-125`
-                                                    : 'cursor-default border-white/6 bg-black/10 text-slate-500'
-                                            } ${active ? 'ring-1 ring-[#7dd4d8]/50' : ''}`}
+                                            className={`ab-tile ab-rar-${getItemRarity(item)} min-h-[60px] p-2.5 text-left`}
                                         >
-                                            {found ? (
-                                                <div className="flex items-start gap-2">
-                                                    <ItemIcon item={item} size={28} />
-                                                    <div className="min-w-0 flex-1">
-                                                        <div className="truncate text-sm font-semibold text-slate-100">{item.name}</div>
-                                                        <div className="mt-0.5 line-clamp-2 text-[11px] leading-snug text-slate-400/76">
-                                                            {getItemStatText(item)}
-                                                        </div>
+                                            <div className="flex items-start gap-2">
+                                                <ItemIcon item={item} size={28} />
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="aether-type-body font-semibold text-ae-ink">{item.name}</div>
+                                                    <div className="aether-type-meta mt-0.5 text-ae-ink-3">
+                                                        {getItemStatText(item)}
                                                     </div>
                                                 </div>
-                                            ) : (
-                                                <div className="flex items-center gap-2 text-[11px]">
-                                                    <Lock size={14} className="shrink-0 text-slate-600" />
-                                                    미발견 장비
-                                                </div>
-                                            )}
+                                            </div>
                                         </button>
                                     );
                                 })}
@@ -184,8 +162,8 @@ const WeaponCodex = ({ codex = {}, totalCounts = {}, discoveredCounts = {}, prog
             </div>
 
             {milestones.length > 0 && milestones.every((milestone) => milestone.claimed) && (
-                <div className="flex min-h-11 items-center gap-2 text-sm text-emerald-200">
-                    <CircleCheck size={16} /> 모든 장비 수집 보상을 받았습니다
+                <div className="aether-type-body flex min-h-11 items-center gap-2 text-ae-good">
+                    <CircleCheck size={16} aria-hidden="true" /> {MSG.CODEX_EQUIP_ALL_CLAIMED}
                 </div>
             )}
         </div>

@@ -18,6 +18,7 @@ import { enemyAIMethods } from './CombatEngine.enemyAI.js';
 import { queueMilestoneStoryBeat } from '../utils/milestoneStory.js';
 import { pickPermanentPlayerState } from '../utils/permanentProgress.js';
 import { createCurrentRunProgress } from '../utils/runProgress.js';
+import { getEssenceLifetime } from './essenceLedger.js';
 import { resolveHpDrainAtkRelic } from '../utils/hpDrainAtkRelic.js';
 import { getEquipmentPassives } from '../utils/equipmentPassives.js';
 import { getBakedMetaVitals, snapshotMetaVitals } from './metaBonusRamp.js';
@@ -362,7 +363,7 @@ export const CombatEngine = {
             //   영구 차단 → 같은 area의 signature 회수 봉인 + signaturePity counter도
             //   climb 불가 (보스 kill에서만 +=1). ASCEND/RESET_GAME과 정합성 align.
             areaBossDefeated: {},
-            currentRun: createCurrentRunProgress(prevStats),
+            currentRun: createCurrentRunProgress(prevStats, { essenceLifetime: getEssenceLifetime(meta) }),
         };
         starterState.meta = meta;
         starterState.skillLoadout = { selected: 0, cooldowns: {} };

@@ -4,7 +4,7 @@ import { buildRunSummary } from '../utils/gameUtils';
 import { pushBattleRecord, makeBattleRecord } from './DifficultyManager';
 import { calculateFullStats } from '../utils/statsCalculator';
 import type { FullStats } from '../utils/statsCalculator';
-import type { Item, Monster, Player } from '../types/index.js';
+import type { CombatTurnSignals, Item, Monster, Player } from '../types/index.js';
 import { createSeededRandom } from '../utils/seededRandom.js';
 import { resolveConsumableEffect } from './consumableEffect';
 import { tickAfterAction } from './combatTurnTick';
@@ -23,6 +23,8 @@ export type CombatItemTurnResult = {
     runSummary?: RunSummary;
     graveData?: GraveEntry;
     victoryStats?: FullStats;
+    /** 이 차례의 연출 사실(GF-01) — 정산이 `combatFeedback`으로 남긴다. 판정은 읽지 않는다. */
+    signals?: CombatTurnSignals;
 };
 
 export const resolveCombatItemTurn = ({
@@ -60,6 +62,12 @@ export const resolveCombatItemTurn = ({
     const counterStats = calculateFullStats(playerForEnemyTurn)!;
     const counterResult = CombatEngine.enemyAttack(playerForEnemyTurn, enemy, counterStats, random);
     const logs = [consumed.log, ...turnTick.logs, ...counterResult.logs];
+    const signals: CombatTurnSignals = {
+        playerCrit: false,
+        enemyHeavy: Boolean(counterResult.isCrit),
+        enemyActed: true,
+        enemyHpAfter: counterResult.updatedEnemy?.hp ?? 0,
+    };
 
     if (counterResult.isEnemyDead) {
         return {
@@ -71,6 +79,7 @@ export const resolveCombatItemTurn = ({
                 : MSG.COMBAT_DOT_KILL(enemy.name || MSG.ENEMY_NAME_FALLBACK) }],
             visualEffect: null,
             victoryStats: counterStats,
+            signals,
         };
     }
 
@@ -90,8 +99,9 @@ export const resolveCombatItemTurn = ({
             enemy: null,
             logs: [...logs, ...defeatResult.logs],
             visualEffect: null,
-            runSummary: buildRunSummary(deadPlayer, playerForEnemyTurn.loc),
+            runSummary: buildRunSummary(deadPlayer, playerForEnemyTurn.loc, { enemy: counterResult.updatedEnemy ?? enemy }),
             graveData: defeatResult.graveData,
+            signals,
         };
     }
 
@@ -101,5 +111,6 @@ export const resolveCombatItemTurn = ({
         enemy: counterResult.updatedEnemy,
         logs,
         visualEffect: counterResult.isCrit ? 'shake' : null,
+        signals,
     };
 };

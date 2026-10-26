@@ -88,7 +88,9 @@ test('runtime components expose exact canonical and undiscovered art states with
     assert.match(terminalView, /data-location-visual=\{locationVisual\.key\}/);
     assert.match(terminalView, /src=\{locationVisual\.src\}/);
     assert.match(terminalView, /gameState === GS\.IDLE[\s\S]*?&& locationVisual/);
-    assert.match(terminalView, /min-h-0 flex-1 items-center justify-center overflow-hidden/);
+    // 2026-10 에테르 유리: 지역 그림은 기록 창 머리(장면 카드)의 그림 칸이다.
+    assert.match(terminalView, /data-testid="terminal-scene"/);
+    assert.match(terminalView, /ae-scene-art[^"]*items-center justify-center overflow-hidden/);
 });
 
 test('source sheets and explicit crop coordinates remain reproducible', async () => {

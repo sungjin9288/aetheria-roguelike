@@ -17,22 +17,22 @@ const MaterialCodex = ({ codex = {} }: MaterialCodexProps) => {
     const discoveredMaterials = materials.filter((material) => material.name && materialCodex[material.name]);
 
     return (
-        <div data-testid="codex-materials" className="space-y-4">
-            <div className="flex items-baseline justify-between gap-3">
+        <div data-testid="codex-materials" className="ab-stack">
+            <div className="flex items-baseline justify-between gap-3 px-1">
                 <div>
-                    <h3 className="aether-type-title font-semibold text-slate-100">소재 기록</h3>
-                    <p className="aether-type-meta mt-0.5 text-slate-400/76">획득한 소재와 다시 구할 수 있는 몬스터를 확인합니다</p>
+                    <h3 className="ab-section-title">{MSG.CODEX_MATERIAL_TITLE}</h3>
+                    <p className="aether-type-meta mt-0.5 text-ae-ink-3">{MSG.CODEX_MATERIAL_DESC}</p>
                 </div>
-                <span className="aether-type-body shrink-0 text-[#dff7f5]">{discoveredMaterials.length}/{materials.length}</span>
+                <span className="aether-type-body shrink-0 font-fira tabular-nums text-ae-ether-hi">{discoveredMaterials.length}/{materials.length}</span>
             </div>
 
             {discoveredMaterials.length === 0 ? (
-                <div className="border-y border-white/10 py-3">
-                    <div className="aether-type-body font-semibold text-slate-100">첫 소재를 찾아보세요</div>
-                    <div className="aether-type-meta mt-1 text-slate-400/76">{MSG.CODEX_MATERIAL_EMPTY_HINT}</div>
+                <div className="ae-card is-quiet ab-card-pad">
+                    <div className="aether-type-body font-semibold text-ae-ink">{MSG.CODEX_MATERIAL_EMPTY_TITLE}</div>
+                    <div className="aether-type-meta mt-1 text-ae-ink-3">{MSG.CODEX_MATERIAL_EMPTY_HINT}</div>
                 </div>
             ) : (
-                <div className="divide-y divide-white/8 border-y border-white/10">
+                <div className="ae-card ab-rows px-3.5">
                     {discoveredMaterials.map((material) => {
                         const sources = getMaterialCodexSources(material.name || '');
                         return (
@@ -40,15 +40,15 @@ const MaterialCodex = ({ codex = {} }: MaterialCodexProps) => {
                                 <ItemIcon item={material} size={32} showBorder className="opacity-95" />
                                 <div className="min-w-0 flex-1">
                                     <div className="flex items-baseline justify-between gap-3">
-                                        <span className="truncate text-sm font-semibold text-slate-100">{material.name}</span>
-                                        <span data-testid="codex-material-sell-price" className="text-[11px] text-[#d5b180]">{MSG.CODEX_MATERIAL_SELL_PRICE(getSellPrice(material))}</span>
+                                        <span className="aether-type-body min-w-0 font-semibold text-ae-ink">{material.name}</span>
+                                        <span data-testid="codex-material-sell-price" className="aether-type-meta shrink-0 font-fira tabular-nums text-ae-gold-text">{MSG.CODEX_MATERIAL_SELL_PRICE(getSellPrice(material))}</span>
                                     </div>
-                                    <div data-testid="codex-material-sources" className="mt-1 line-clamp-2 text-[11px] text-slate-400/76">
+                                    <div data-testid="codex-material-sources" className="aether-type-meta mt-1 text-ae-ink-3">
                                         {MSG.CODEX_MATERIAL_SOURCES(sources.length > 0 ? sources.slice(0, 4).join(' · ') : MSG.CODEX_MATERIAL_SOURCE_SPECIAL)}
                                         {sources.length > 4 ? MSG.CODEX_MATERIAL_SOURCES_MORE(sources.length - 4) : ''}
                                     </div>
                                     {material.name === CONSTANTS.ENHANCE_MATERIAL_NAME && (
-                                        <div data-testid="codex-material-late-source" className="mt-0.5 text-[11px] text-[#d5b180]/80">
+                                        <div data-testid="codex-material-late-source" className="aether-type-meta mt-0.5 text-ae-gold-text">
                                             {MSG.CODEX_ENHANCE_MATERIAL_LATE_SOURCE(BALANCE.ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL)}
                                         </div>
                                     )}
@@ -59,11 +59,11 @@ const MaterialCodex = ({ codex = {} }: MaterialCodexProps) => {
                 </div>
             )}
 
-            <div data-testid="codex-material-undiscovered" className="flex min-h-14 items-center gap-2 border-y border-white/10 py-3">
-                <Leaf size={16} className="text-emerald-200" />
+            <div data-testid="codex-material-undiscovered" className="ab-tile is-undiscovered flex min-h-14 items-center gap-3 px-3.5 py-3">
+                <Leaf size={16} className="shrink-0 text-ae-ink-3" aria-hidden="true" />
                 <div>
-                    <div className="aether-type-body text-slate-300">미발견 소재 {materials.length - discoveredMaterials.length}개</div>
-                    <div className="aether-type-meta mt-0.5 text-slate-500">실제로 획득한 소재만 상세 기록을 엽니다</div>
+                    <div className="aether-type-body text-ae-ink-2">{MSG.CODEX_MATERIAL_UNDISCOVERED(materials.length - discoveredMaterials.length)}</div>
+                    <div className="aether-type-meta mt-0.5 text-ae-ink-3">{MSG.CODEX_MATERIAL_UNDISCOVERED_HINT}</div>
                 </div>
             </div>
         </div>

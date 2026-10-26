@@ -20,16 +20,17 @@ const TYPE_PATHS: Record<string, string> = {
     //   ('썬더볼트' 등도 빛 type으로 정의). monsters.ts weakness/resistance도 0건.
 };
 
+// 2026-10 에테르 유리(VD-06): 속성 색은 토큰이다 — 원시 hex를 두지 않는다. SVG 획은 style로 넘겨 var()가 풀린다.
 const TYPE_COLORS: Record<string, string> = {
-    '물리': '#e2e8f0',
-    '화염': '#f97316',
-    '냉기': '#22d3ee',
-    '자연': '#22c55e',
-    '대지': '#b45309',
-    '빛': '#facc15',
-    '어둠': '#a855f7',
-    'buff': '#34d399',
-    'debuff': '#f87171',
+    '물리': 'var(--aether-ink-2)',
+    '화염': 'rgb(var(--aether-sig-fire-rgb))',
+    '냉기': 'var(--aether-ether-hi)',
+    '자연': 'var(--aether-good)',
+    '대지': 'var(--aether-gold-lo)',
+    '빛': 'var(--aether-gold)',
+    '어둠': 'var(--aether-exp)',
+    'buff': 'var(--aether-good)',
+    'debuff': 'var(--aether-threat)',
 };
 
 /**
@@ -49,7 +50,7 @@ interface SkillTypeIconProps {
 const SkillTypeIcon = ({ type, size, className = '' }: SkillTypeIconProps) => {
     const path = TYPE_PATHS[type];
     if (!path) return null;
-    const color = TYPE_COLORS[type] || '#e2e8f0';
+    const color = TYPE_COLORS[type] || 'var(--aether-ink-2)';
 
     return (
         <svg
@@ -58,7 +59,7 @@ const SkillTypeIcon = ({ type, size, className = '' }: SkillTypeIconProps) => {
             height={size}
             viewBox="0 0 24 24"
             fill="none"
-            stroke={color}
+            style={{ stroke: color }}
             strokeWidth="1.8"
             strokeLinecap="round"
             strokeLinejoin="round"

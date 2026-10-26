@@ -1,8 +1,10 @@
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, LockKeyhole } from 'lucide-react';
 import { BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
 import { getChallengeRewardPercent } from '../utils/challengeRules';
 import type { AscensionRulePreview, AscensionRuleRerollView } from '../utils/ascensionRuleView';
+import ActionButton from './ui/ActionButton';
+import Chip from './ui/Chip';
 
 interface ChallengeModifierPickerProps {
     /** data-testid 접두어 — 인트로는 `intro`(기존 e2e 계약), 계승 화면은 `ascension`. */
@@ -33,13 +35,18 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule
     const lockedIds = rule && !declined ? rule.lockedIds : [];
     const picked = selected.filter((id) => !lockedIds.includes(id));
     const rewardCount = picked.length + lockedIds.length;
+    const lockedLabels: string[] = [];
+    for (const id of lockedIds) {
+        const label = BALANCE.CHALLENGE_MODIFIERS.find((modifier: { id: string }) => modifier.id === id)?.label;
+        if (label) lockedLabels.push(label);
+    }
     return (
         <>
             {ruleOffer.length > 1 && (
                 // 2026-10 Wave 94: 회차 규칙 카드 — 아직 정복하지 않은 규칙에서 뽑은 패에서 한 장을 고른다.
                 <div data-testid={`${testIdPrefix}-rule-offer`} className="mt-3 font-readable">
-                    <span className="block text-xs font-bold text-orange-200">{MSG.ASCENSION_RULE_OFFER_TITLE}</span>
-                    <span className="mt-0.5 block text-[11px] leading-snug text-slate-400">{MSG.ASCENSION_RULE_OFFER_HINT}</span>
+                    <span className="aether-type-label block font-bold text-ae-gold-text">{MSG.ASCENSION_RULE_OFFER_TITLE}</span>
+                    <span className="aether-type-label mt-0.5 block leading-snug text-ae-ink-3">{MSG.ASCENSION_RULE_OFFER_HINT}</span>
                     <div className="mt-2 grid grid-cols-3 gap-2">
                         {ruleOffer.map((card) => {
                             const isPicked = card.id === rule?.id;
@@ -48,61 +55,57 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule
                                     key={card.id}
                                     type="button"
                                     data-testid={`${testIdPrefix}-rule-card-${card.id}`}
+                                    data-selected={isPicked ? 'true' : 'false'}
                                     aria-pressed={isPicked}
                                     onClick={() => onSelectRule?.(card.id)}
-                                    className={`min-h-[4.5rem] rounded-md border px-2 py-2 text-left transition-colors ${
-                                        isPicked
-                                            ? 'border-[rgba(240,170,110,0.7)] bg-[rgba(240,170,110,0.16)] text-orange-50'
-                                            : 'border-white/20 bg-[rgba(10,17,25,0.9)] text-slate-300 hover:border-white/30'
-                                    }`}
+                                    className="ae-card ae-choice-option flex min-h-[4.5rem] min-w-0 flex-col justify-start px-2 py-2 text-left"
                                 >
-                                    <span className="block text-xs font-bold leading-snug">{card.name}</span>
-                                    <span className="mt-1 block text-[11px] leading-snug text-slate-400">{card.twist}</span>
-                                    {card.optional && <span className="mt-1 block text-[11px] leading-snug text-orange-200">{MSG.ASCENSION_RULE_CARD_OPTIONAL}</span>}
+                                    <span className="aether-type-meta block break-keep font-bold leading-snug text-ae-ink">{card.name}</span>
+                                    <span className="aether-type-label mt-1 block leading-snug text-ae-ink-2">{card.twist}</span>
+                                    {card.optional && <span className="aether-type-label mt-1 block leading-snug text-ae-gold-text">{MSG.ASCENSION_RULE_CARD_OPTIONAL}</span>}
                                 </button>
                             );
                         })}
                     </div>
                     {ruleReroll && (
                         // 2026-10 Wave 95: 다시 뽑기 — 첫 번째는 무료, 그 뒤는 넘어가는 정수 사다리를 보이는 그대로 내려놓는다.
-                        <div className="mt-2 flex items-center justify-between gap-3">
-                            <span data-testid={`${testIdPrefix}-rule-reroll-count`} className="text-[11px] leading-snug text-slate-400">{ruleReroll.countLabel}</span>
-                            <button
-                                type="button"
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+                            <span data-testid={`${testIdPrefix}-rule-reroll-count`} className="aether-type-label leading-snug text-ae-ink-3">{ruleReroll.countLabel}</span>
+                            <ActionButton
+                                variant={ruleReroll.free ? 'glass' : 'danger'}
                                 data-testid={`${testIdPrefix}-rule-reroll`}
                                 disabled={!ruleReroll.available}
                                 onClick={() => onRerollRule?.()}
-                                className={`min-h-11 min-w-0 rounded-md border px-3 text-left text-xs font-bold disabled:cursor-not-allowed disabled:opacity-60 ${
-                                    ruleReroll.free
-                                        ? 'border-[rgba(240,170,110,0.6)] bg-[rgba(240,170,110,0.12)] text-orange-100'
-                                        : 'border-rose-300/40 bg-rose-300/[0.08] text-rose-100'
-                                }`}
-                            >
-                                {ruleReroll.label}
-                            </button>
+                                label={ruleReroll.label}
+                                className="ae-choice-small-btn min-w-0 text-left"
+                            />
                         </div>
                     )}
                 </div>
             )}
             {rule && (
-                <div data-testid={`${testIdPrefix}-ascension-rule`} className="mt-3 rounded-md border border-[rgba(240,170,110,0.4)] bg-[rgba(240,170,110,0.08)] px-3 py-2 font-readable">
-                    <span className="block text-xs font-bold text-orange-200">{MSG.ASCENSION_RULE_NEXT(rule.name)}</span>
-                    <span className="mt-1 block text-xs leading-snug text-slate-300">
+                <div data-testid={`${testIdPrefix}-ascension-rule`} className="ae-well ae-choice-rule mt-3 px-3 py-2.5 text-left font-readable">
+                    <span className="aether-type-meta block font-bold text-ae-gold-text">{MSG.ASCENSION_RULE_NEXT(rule.name)}</span>
+                    <span className="aether-type-meta mt-1 block leading-snug text-ae-ink-2">
                         {declined ? MSG.ASCENSION_RULE_DECLINED_DETAIL : rule.detail}
                     </span>
+                    {lockedLabels.length > 0 && (
+                        <div data-testid={`${testIdPrefix}-ascension-rule-locked`} className="mt-2 flex flex-wrap gap-1.5">
+                            {lockedLabels.map((label) => (
+                                <Chip key={label} tone="gold" icon={<LockKeyhole size={11} />}>{label}</Chip>
+                            ))}
+                        </div>
+                    )}
                     {rule.optional && (
-                        <div className="mt-2 flex items-center justify-between gap-3">
-                            <span className="text-[11px] leading-snug text-slate-400">{MSG.ASCENSION_RULE_OPTIONAL_HINT}</span>
+                        <div className="mt-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+                            <span className="aether-type-label min-w-0 flex-1 leading-snug text-ae-ink-3">{MSG.ASCENSION_RULE_OPTIONAL_HINT}</span>
                             <button
                                 type="button"
                                 data-testid={`${testIdPrefix}-ascension-rule-toggle`}
+                                data-selected={declined ? 'false' : 'true'}
                                 aria-pressed={!declined}
                                 onClick={() => onToggleRule?.()}
-                                className={`min-h-11 shrink-0 rounded-md border px-3 text-xs font-bold ${
-                                    declined
-                                        ? 'border-white/20 bg-[rgba(10,17,25,0.9)] text-slate-300'
-                                        : 'border-[rgba(240,170,110,0.6)] bg-[rgba(240,170,110,0.16)] text-orange-100'
-                                }`}
+                                className="ae-choice-toggle aether-type-meta min-h-11 shrink-0 px-3 font-bold"
                             >
                                 {declined ? MSG.ASCENSION_RULE_DECLINED : MSG.ASCENSION_RULE_ACCEPTED}
                             </button>
@@ -110,38 +113,38 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule
                     )}
                     {rule.outlook && (
                         // 2026-10 Wave 92: 두 선택의 측정 차이를 숫자로만 보인다 — 지금 고른 쪽을 밝게, 판단은 플레이어 몫(Wave 88 위협 줄과 같은 원칙).
-                        <div data-testid={`${testIdPrefix}-ascension-rule-outlook`} className="mt-2 border-t border-white/10 pt-2 text-[11px] leading-snug">
-                            <span data-testid={`${testIdPrefix}-ascension-rule-outlook-accepted`} className={`block ${declined ? 'text-slate-400' : 'text-orange-100'}`}>
+                        <div data-testid={`${testIdPrefix}-ascension-rule-outlook`} className="ae-choice-outlook aether-type-label mt-2 pt-2 leading-snug">
+                            <span data-testid={`${testIdPrefix}-ascension-rule-outlook-accepted`} data-selected={declined ? 'false' : 'true'} className={`block font-fira tabular-nums ${declined ? 'text-ae-ink-3' : 'font-semibold text-ae-ink'}`}>
                                 {rule.outlook.accepted}
                             </span>
-                            <span data-testid={`${testIdPrefix}-ascension-rule-outlook-declined`} className={`block ${declined ? 'text-orange-100' : 'text-slate-400'}`}>
+                            <span data-testid={`${testIdPrefix}-ascension-rule-outlook-declined`} data-selected={declined ? 'true' : 'false'} className={`block font-fira tabular-nums ${declined ? 'font-semibold text-ae-ink' : 'text-ae-ink-3'}`}>
                                 {rule.outlook.declined}
                             </span>
-                            <span className="mt-0.5 block text-slate-500">{rule.outlook.source}</span>
+                            <span className="mt-0.5 block text-ae-ink-3">{rule.outlook.source}</span>
                         </div>
                     )}
                 </div>
             )}
             <details
                 data-testid={`${testIdPrefix}-challenge-settings`}
-                className="group mt-3 border-y border-white/10 py-1 text-left"
+                className="ae-choice-settings group mt-3 px-3 py-1 text-left"
             >
                 <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 font-readable [&::-webkit-details-marker]:hidden">
-                    <span className="text-xs text-slate-300">
-                        {MSG.CHALLENGE_PICKER_TITLE} <span className="text-slate-500">{MSG.CHALLENGE_PICKER_SELECT}</span>
+                    <span className="aether-type-meta text-ae-ink-2">
+                        {MSG.CHALLENGE_PICKER_TITLE} <span className="text-ae-ink-3">{MSG.CHALLENGE_PICKER_SELECT}</span>
                     </span>
-                    <span className="flex items-center gap-2 text-xs text-slate-400">
-                        <span aria-live="polite">{picked.length}/{slots}</span>
-                        <ChevronDown size={16} className="transition-transform group-open:rotate-180" aria-hidden="true" />
+                    <span className="aether-type-meta flex items-center gap-2 text-ae-ink-2">
+                        <span aria-live="polite" className="font-fira tabular-nums">{picked.length}/{slots}</span>
+                        <ChevronDown size={16} className="ae-choice-settings-caret" aria-hidden="true" />
                     </span>
                 </summary>
-                <div className="pb-2 pt-1">
-                    <div className="mb-2 flex items-center justify-between gap-3 font-readable text-xs text-slate-400">
+                <div className="pb-2.5 pt-1">
+                    <div className="aether-type-meta mb-2 flex flex-wrap items-center justify-between gap-x-3 gap-y-1 font-readable text-ae-ink-3">
                         <span>{MSG.CHALLENGE_PICKER_HINT}</span>
                         {rewardCount > 0 && (
                             // 2026-10 Wave 62 (원장 §61.4 C1): 엔진이 곱하는 표(`BALANCE.CHALLENGE_REWARD_MULT_BY_COUNT`)에서 그린다 — 화면이 따로
                             //   든 "+20% / +50% / +100% / +150%"와 엔진의 ×1 / ×1 / ×1.5 / ×2가 달랐다.
-                            <span data-testid={`${testIdPrefix}-challenge-reward`} className="shrink-0 text-[#d5b180]">
+                            <span data-testid={`${testIdPrefix}-challenge-reward`} className="shrink-0 font-semibold text-ae-gold-text">
                                 {MSG.CHALLENGE_PICKER_REWARD(getChallengeRewardPercent(rewardCount))}
                             </span>
                         )}
@@ -156,20 +159,20 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule
                                     key={modifier.id}
                                     type="button"
                                     data-testid={`${testIdPrefix}-challenge-${modifier.id}`}
+                                    data-selected={isSelected ? 'true' : 'false'}
+                                    data-locked={isLocked ? 'true' : undefined}
                                     aria-pressed={isSelected}
                                     aria-disabled={isLocked || undefined}
                                     onClick={() => { if (!isLocked) onToggle(modifier.id); }}
-                                    className={`min-h-[4.75rem] rounded-md border px-3 py-2 text-left transition-colors ${
-                                        isSelected
-                                            ? 'border-[rgba(213,177,128,0.6)] bg-[rgba(213,177,128,0.14)] text-[#f6e7c8]'
-                                            : 'border-white/20 bg-[rgba(10,17,25,0.9)] text-slate-300 hover:border-white/30'
-                                    }`}
+                                    className="ae-card ae-choice-option flex min-h-[4.75rem] min-w-0 flex-col items-start justify-start px-3 py-2 text-left"
                                 >
-                                    <span className="block font-rajdhani text-sm font-bold">
+                                    <span className="aether-type-strong block break-keep font-display font-bold text-ae-ink">
                                         {modifier.label}
-                                        {isLocked && <span className="ml-1.5 text-[11px] font-readable text-orange-200">{MSG.ASCENSION_RULE_LOCKED}</span>}
                                     </span>
-                                    <span className="mt-1 block font-readable text-xs leading-snug text-slate-400">
+                                    {isLocked && (
+                                        <Chip tone="gold" icon={<LockKeyhole size={11} />} className="mt-1">{MSG.ASCENSION_RULE_LOCKED}</Chip>
+                                    )}
+                                    <span className="aether-type-meta mt-1 block font-readable leading-snug text-ae-ink-2">
                                         {modifier.desc}
                                     </span>
                                 </button>

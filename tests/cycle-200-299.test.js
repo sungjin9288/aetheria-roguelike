@@ -2639,15 +2639,8 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 270: CombatPanel display 변화 없음 (회귀 가드)', async () => {
       const source = await readSrc('src/components/tabs/CombatPanel.tsx');
-      // 리팩토링: bossBriefLine(entryHint/hint/phaseHint) 계산은 combatView.ts로 분리,
-      //   signature/counterHint 조건부 렌더는 CombatPanel JSX에 잔존.
-      const view = await readSrc('src/utils/combatView.ts');
-      assert.ok(/tacticalProfile\?.entryHint|tacticalProfile\.entryHint/.test(view),
-          'entryHint 처리 유지');
-      assert.ok(/tacticalProfile\?.hint|tacticalProfile\.hint/.test(view),
-          'hint 처리 유지');
-      assert.ok(/tacticalProfile\?.phaseHint|tacticalProfile\.phaseHint/.test(view),
-          'phaseHint 처리 유지');
+      // 2026-10 감사 CL-06: bossBriefLine(entryHint/hint/phaseHint)은 한 번도 그려지지 않아 combatView에서 지웠다 —
+      //   signature/counterHint 조건부 렌더(보스 카드)는 CombatPanel JSX에 잔존.
       assert.ok(/tacticalProfile\?\.signature/.test(source),
           'cycle 269 signature dispatch 유지');
       assert.ok(/tacticalProfile\?\.counterHint/.test(source),

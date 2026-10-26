@@ -1,12 +1,13 @@
-import { useState, useRef, lazy, Suspense, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect } from 'react';
 import type { Item } from './types';
-import { MotionConfig } from 'framer-motion';
+import { MotionConfig, useReducedMotion } from 'framer-motion';
 
 import { GS } from './reducers/gameStates';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useDamageFlash } from './hooks/useDamageFlash';
 import { useGameTestApi } from './hooks/useGameTestApi';
 import { markPerfOnce, measurePerfOnce, markPerf } from './utils/performanceMarks';
+import { getCounterStagger } from './utils/combatPresentation';
 import { getPendingMilestoneStoryBeat } from './utils/milestoneStory';
 import { bindLifecycleBridge } from './platform/lifecycleBridge';
 import { resolvePlatformBackAction } from './platform/platformBack';
@@ -19,9 +20,8 @@ import {
 import MainLayout from './components/MainLayout';
 import IntroScreen from './components/IntroScreen';
 import BootScreen from './components/app/BootScreen';
-import GameRoot from './components/app/GameRoot';
-
-const RunSummaryCard = lazy(() => import('./components/RunSummaryCard'));
+import GameRoot from './components/app/GameRootLoader';
+import DeathScreen, { preloadDeathScreen } from './components/app/DeathScreen';
 
 const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'item-investment'
@@ -49,7 +49,13 @@ function App() {
         import.meta.env.VITE_DEVICE_QA_SCENARIO === 'mirror-journey',
     );
     const fullStats = engine.getFullStats();
-    const { damageFlash, healFlash, damageAmount } = useDamageFlash(engine.player?.hp, engine.presentationEpoch);
+    // GF-06: 적 반격의 내 피격 연출은 내 타격 뒤 박자에 보인다(판정은 이미 끝났다 — 표시만 늦춘다).
+    const reducedMotion = Boolean(useReducedMotion());
+    const { damageFlash, healFlash, damageAmount } = useDamageFlash(
+        engine.player?.hp,
+        engine.presentationEpoch,
+        getCounterStagger(engine.combatFeedback, reducedMotion),
+    );
 
     // Smoke test refs — updated synchronously during render so harness always reads fresh state.
     // cycle 100: react-hooks/refs 룰은 일반 컴포넌트엔 옳지만 여기선 의도적인 패턴이라 명시 disable.
@@ -138,6 +144,11 @@ function App() {
         measurePerfOnce('aetheria:start-run-from-click-ms', 'aetheria:test-start-run', 'aetheria:run-ready');
     }, [engine.player.name]);
 
+    // 전투가 시작되면 사망 기록 카드를 미리 받아 둔다 — 쓰러진 순간 카드가 늦게 뜨지 않게.
+    useEffect(() => {
+        if (engine.gameState === GS.COMBAT) preloadDeathScreen();
+    }, [engine.gameState]);
+
     useEffect(() => {
         if (engine.gameState !== GS.SHOP) return;
         markPerf('aetheria:shop-open');
@@ -164,23 +175,30 @@ function App() {
 
     if (engine.gameState === GS.DEAD && engine.runSummary) {
         const firstDeathStory = getPendingMilestoneStoryBeat(engine.player, ['first_death']);
+        // 사망 화면에서도 에테르 거울을 연다 — 게임 화면(GameRoot)이 마운트되지 않으므로 거울 · 뒤로가기 등록을 여기서 준다.
         return (
-            <MotionConfig reducedMotion="user">
-                <MainLayout visualEffect={null}>
-                    <Suspense fallback={null}>
-                        <RunSummaryCard
+            <PlatformBackProvider registry={platformBackRegistry}>
+                <MotionConfig reducedMotion="user">
+                    <MainLayout visualEffect={null}>
+                        <DeathScreen
                             runSummary={engine.runSummary}
                             storyBeat={firstDeathStory?.id === 'first_death' ? firstDeathStory : null}
+                            player={engine.player}
+                            mirrorOpen={mirrorPanelOpen}
+                            onOpenMirror={() => setMirrorPanelOpen(true)}
+                            onCloseMirror={() => setMirrorPanelOpen(false)}
+                            onPurchaseMirror={(nodeId) => { engine.actions.purchaseMirrorNode?.(nodeId); }}
                             onRestart={() => {
+                                setMirrorPanelOpen(false);
                                 if (firstDeathStory?.id === 'first_death') {
                                     engine.actions.acknowledgeMilestoneStoryBeat?.(firstDeathStory.id);
                                 }
                                 engine.actions.reset?.();
                             }}
                         />
-                    </Suspense>
-                </MainLayout>
-            </MotionConfig>
+                    </MainLayout>
+                </MotionConfig>
+            </PlatformBackProvider>
         );
     }
 

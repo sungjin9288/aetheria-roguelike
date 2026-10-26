@@ -1,13 +1,25 @@
 import { useState } from 'react';
-import { Sword, Zap, ArrowRight, RotateCw, Sparkles, Backpack } from 'lucide-react';
+import { Sword, Zap, ArrowRight, Sparkles, Backpack, TriangleAlert, Skull, ChevronsDown, Flame } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
-import { buildCombatView } from '../../utils/combatView';
+import { buildCombatView, type CombatSignalTone } from '../../utils/combatView';
+import CombatSkillTray from '../combat/CombatSkillTray';
+import CombatVitalsStrip from '../combat/CombatVitalsStrip';
+import ActionButton, { type ActionButtonVariant } from '../ui/ActionButton';
+import Chip, { type ChipTone } from '../ui/Chip';
 import { MSG } from '../../data/messages.js';
 import type { EnemyDotId, FullStats, Item, Player, Monster, StatusId } from '../../types/index.js';
 import type { GameActions } from '../../hooks/actionDeps';
+import type { LucideIcon } from 'lucide-react';
 
-/** CombatPanel이 실제로 호출하는 액션만 좁혀 받는다 (공격/기술/아이템/스킬 순환). */
-type CombatPanelActions = Pick<GameActions, 'combat' | 'combatUseItem' | 'useItem' | 'cycleSkill' | 'getSelectedSkill'>;
+// 감사 A11Y-06: 전투 행동 영역의 화면 낭독기 제목(눈에 보이는 배치는 그대로).
+const COMBAT_ACTIONS_HEADING_ID = 'combat-actions-heading';
+
+/**
+ * CombatPanel이 실제로 호출하는 액션만 좁혀 받는다 (공격 / 기술 / 아이템 / 기술 칸).
+ * 2026-10 감사 CL-03: 이름 없는 순환 단추(`cycleSkill`) 대신 기술 칸이 `selectSkill`로 고르고 곧바로 쓴다 —
+ * `cycleSkill`은 명령 처리기(QA 테스트 API)에만 남는다.
+ */
+type CombatPanelActions = Pick<GameActions, 'combat' | 'combatUseItem' | 'useItem' | 'selectSkill' | 'getSelectedSkill'>;
 
 // cycle 485: 컴팩트/조밀 모드 props 인터페이스 제거 — cycle 457이 callsite 명시
 //   false 제거 후 caller 0건. cascade로 14 ternary + 1 const + 1 conditional UI
@@ -19,82 +31,132 @@ interface CombatPanelProps {
     stats?: FullStats | null;
     isAiThinking?: boolean;
     mobile?: boolean;
+    /** App의 `useDamageFlash` 상태 — 내 생명 · 기력 막대가 맞은 순간 번쩍인다(2026-10 감사 VD-02 · GF-05). */
+    damageFlash?: boolean;
+    healFlash?: boolean;
 }
 
-// cycle 416: tag / detail 출력 dead 정리 — render는 icon/key/className/
-//   mobileLabel/label만 read. tag (Burst/Core/Loadout/Exit) + detail (한국어 설명)
-//   src/, tests/ read 0건이라 dead.
-const ACTION_BUTTONS = [
+type CombatActionKey = 'attack' | 'skill' | 'item' | 'escape';
+
+interface CombatActionButton {
+  key: CombatActionKey;
+  label: string;
+  mobileLabel: string;
+  icon: LucideIcon;
+  /** 2026-10 에테르 유리: 공격만 금빛 주 행동(화면당 하나), 기술 · 아이템은 유리, 도주는 낮은 위험(ghost). */
+  variant: ActionButtonVariant;
+  className: string;
+}
+
+// cycle 416: tag / detail 출력 dead 정리 — render는 icon/key/variant/className/
+//   mobileLabel/label만 read.
+const ACTION_BUTTONS: CombatActionButton[] = [
   {
     key: 'attack',
-    label: '공격',
-    mobileLabel: '공격',
+    label: MSG.COMBAT_ACTION_ATTACK,
+    mobileLabel: MSG.COMBAT_ACTION_ATTACK,
     icon: Sword,
-    className: 'bg-[linear-gradient(180deg,rgba(82,28,37,0.72)_0%,rgba(27,12,15,0.94)_100%)] border border-rose-300/20 text-rose-100 hover:bg-rose-400/10 hover:border-rose-200/28',
+    variant: 'primary',
+    className: 'ae-combat-action-attack',
   },
   {
     key: 'skill',
-    label: '기술',
-    mobileLabel: '기술',
+    label: MSG.COMBAT_ACTION_SKILL,
+    mobileLabel: MSG.COMBAT_ACTION_SKILL,
     icon: Zap,
-    className: 'bg-[linear-gradient(180deg,rgba(24,43,48,0.74)_0%,rgba(8,16,18,0.94)_100%)] border border-[#7dd4d8]/20 text-[#dff7f5] hover:bg-[#7dd4d8]/10 hover:border-[#d5b180]/24',
+    variant: 'glass',
+    className: 'ae-combat-action-skill',
   },
   {
     key: 'item',
-    label: '아이템',
-    mobileLabel: '아이템',
+    label: MSG.COMBAT_ACTION_ITEM,
+    mobileLabel: MSG.COMBAT_ACTION_ITEM,
     icon: Backpack,
-    className: 'bg-[linear-gradient(180deg,rgba(33,23,45,0.74)_0%,rgba(12,10,18,0.94)_100%)] border border-[#9a8ac0]/20 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/28',
+    variant: 'glass',
+    className: 'ae-combat-action-item',
   },
   {
     key: 'escape',
     label: MSG.COMBAT_ACTION_ESCAPE,
     mobileLabel: MSG.COMBAT_ACTION_ESCAPE,
     icon: ArrowRight,
-    className: 'bg-[linear-gradient(180deg,rgba(28,31,27,0.74)_0%,rgba(10,12,10,0.94)_100%)] border border-[#d5b180]/16 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/24',
+    variant: 'ghost',
+    className: 'ae-combat-action-escape',
   },
 ];
 
+/** 신호 칩의 의미 → 칩 색 · 아이콘. 위협 칩은 정보만이다(추천 없음 — Wave 88 · 111). */
+const SIGNAL_PRESENTATION: Record<CombatSignalTone, { tone: ChipTone; icon: LucideIcon; className: string }> = {
+  threat: { tone: 'threat', icon: TriangleAlert, className: '' },
+  boss: { tone: 'threat', icon: Skull, className: 'ae-combat-signal-boss' },
+  ready: { tone: 'gold', icon: Flame, className: '' },
+  building: { tone: 'neutral', icon: Flame, className: '' },
+};
+
+/** 소모품 종류 → 이름 글자색(토큰). 바탕은 모두 같은 우물 층이다. */
+const CONSUMABLE_TONE: Record<string, string> = {
+  hp: 'text-ae-life',
+  mp: 'text-ae-will',
+  cure: 'text-ae-good',
+  buff: 'text-ae-exp',
+};
+
+/** 적에게 걸린 약화(기절 · 저주 · 실명 · 공포 · 지속 피해) — 남은 턴과 함께. 라벨은 MSG 상태 이상 표다. */
+const getEnemyDebuffs = (enemy: Monster): string[] => {
+  const debuffs: string[] = [];
+  const timed: Array<[StatusId, number | undefined]> = [
+    ['stun', enemy.stunnedTurns], // 기절
+    ['curse', enemy.cursedTurns], // 저주
+    ['blind', enemy.blindTurns], // 실명
+    ['fear', enemy.fearTurns], // 공포
+  ];
+  for (const [status, turns] of timed) {
+    if ((turns || 0) > 0) debuffs.push(MSG.ENEMY_DOT_CHIP_TURNS(MSG.STATUS_LABELS[status], turns as number));
+  }
+  // 2026-09 Wave 6 X2: MSG.DOT_LABELS(공유 테이블) — dots는 poison/burn/bleed만 담는다(독/화상/출혈).
+  const dots: string[] = Array.isArray(enemy?.dots) ? enemy.dots : [];
+  for (const dot of dots) {
+    const label = MSG.DOT_LABELS[dot as StatusId];
+    // 2026-10 Wave 55: 지속 턴이 있는 지속 피해(출혈베기 · 영혼 소환 "3턴간")는 남은 턴을 함께 보인다.
+    const dotTurns = enemy?.dotTurns?.[dot as EnemyDotId];
+    if (label) debuffs.push(dotTurns ? MSG.ENEMY_DOT_CHIP_TURNS(label, dotTurns) : label);
+  }
+  return debuffs;
+};
+
 // cycle 575: enemy / stats / mobile 3 defaults batch 제거 — 1 production caller
-//   (ControlPanel:119) 6 props 모두 명시 전달이라 도달 불가. body의 enemy ?
-//   ternary 분기는 별개 보존 (caller가 enemy: null 명시 전달하는 path).
-//   청소 메가 시리즈 67번째 single-cycle 3-default batch.
-const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: CombatPanelProps) => {
+//   (ControlPanel) 6 props 모두 명시 전달이라 도달 불가.
+/**
+ * 전투 조작판(2026-10 에테르 유리) — 한 장의 유리 카드 안에 내 생명 · 기력 → 신호 칩(위협 · 약화 · 전설 각인) →
+ * 판단 요약 세 칸 → 행동 2 × 2(공격 = 금빛 주 행동) → 기술 칸 → 보스 카드 순서다. 넓은 칸(데스크톱 가운데 열)에서는
+ * 행동이 한 줄 독(dock)으로 늘어선다(index.css `w3:combat`의 컨테이너 쿼리).
+ */
+const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, damageFlash, healFlash }: CombatPanelProps) => {
   const [itemsOpen, setItemsOpen] = useState(false);
   const selectedSkill = actions?.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name ?? ''] || 0 : 0;
-  // 전투 파생 데이터(전술 프로파일·텔레그래프·콤보·전투 예보) — 계산은 buildCombatView로 분리,
-  //   여기서는 렌더링만 한다. (slice 20: 별도 예고 칩을 제거하고 판단 요약의 '적의 행동' 셀로 통일.)
+  // 전투 파생 데이터(전술 프로파일·텔레그래프·콤보·전투 예보) — 계산은 buildCombatView로 분리, 여기서는 렌더링만 한다.
   const combatView = buildCombatView({ player, enemy, stats, selectedSkill, skillCooldown, mobile });
   const {
     tacticalProfile,
-    bossBriefLine,
     signatureDropCandidates,
     primarySignatureDrop,
     combatForecast,
     combatForecastCells,
     mobileCombatSignals,
     skillReadiness,
+    skillTray,
+    combatConsumables,
   } = combatView;
-  const { combatConsumables, comboRelic, comboCount, comboStack } = combatView;
+  const enemyDebuffs = enemy ? getEnemyDebuffs(enemy) : [];
+  const hasSignals = mobileCombatSignals.length > 0 || enemyDebuffs.length > 0 || Boolean(primarySignatureDrop);
 
-  const handleAction = (key: string) => {
-    if (key === 'attack') {
-      actions?.combat('attack');
-      return;
-    }
-
-    if (key === 'skill') {
-      actions?.combat('skill');
-      return;
-    }
-
+  const handleAction = (key: CombatActionKey) => {
     if (key === 'item') {
       setItemsOpen((open) => !open);
       return;
     }
-
-    actions?.combat('escape');
+    actions?.combat(key);
   };
 
   const handleConsumableUse = (item: Item) => {
@@ -105,193 +167,94 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
     actions?.useItem?.(item);
   };
 
-  const getConsumableTone = (type: string) => (({
-    hp: 'border-emerald-500/25 bg-emerald-500/8 text-emerald-200 hover:bg-emerald-500/14',
-    mp: 'border-cyber-blue/25 bg-cyber-blue/8 text-cyber-blue hover:bg-cyber-blue/14',
-    cure: 'border-amber-400/25 bg-amber-500/8 text-amber-200 hover:bg-amber-500/14',
-    buff: 'border-cyber-purple/25 bg-cyber-purple/8 text-cyber-purple hover:bg-cyber-purple/14',
-  } as Record<string, string>)[type] || 'border-slate-600/30 bg-slate-900/25 text-slate-300 hover:bg-slate-800/40');
-
   return (
+    <>
+    <h2 id={COMBAT_ACTIONS_HEADING_ID} className="sr-only">{MSG.A11Y_COMBAT_ACTIONS_HEADING}</h2>
     <Motion.div
+      role="region"
+      aria-labelledby={COMBAT_ACTIONS_HEADING_ID}
       initial={false}
       animate={{ opacity: 1, y: 0 }}
       data-testid="combat-focus-panel"
-      className={`aether-combat-control relative z-10 w-full space-y-2 ${
-        mobile
-          ? 'panel-noise aether-surface rounded-lg p-2.5'
-          : 'mt-2.5'
-      }`}
+      className={`ae-combat-deck relative z-10 w-full space-y-2.5 ${mobile ? 'ae-card p-3' : 'mt-2.5'}`}
     >
-      <>
-          {selectedSkill && (
-            <div className="aether-combat-loadout flex min-h-11 items-center justify-between gap-2 rounded-lg border border-white/10 bg-black/18 px-3 py-1.5">
-              <div className="min-w-0">
-                <div className="aether-type-meta font-readable text-slate-300/64">
-                  준비한 기술
-                </div>
-                <div
-                  id="combat-skill-readiness"
-                  data-testid="combat-skill-readiness"
-                  data-skill-state={skillReadiness.state}
-                  className="aether-type-body font-readable font-semibold text-white/94"
-                >
-                  {selectedSkill.name} · {skillReadiness.detailLabel}
-                </div>
-              </div>
-              <button
-                type="button"
-                data-testid="combat-skill-cycle"
-                title="다음 기술"
-                aria-label="다음 기술"
-                disabled={isAiThinking}
-                onClick={() => actions?.cycleSkill(1)}
-                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border border-[#9a8ac0]/24 bg-[#9a8ac0]/10 text-[#ece5ff] disabled:opacity-45"
-              >
-                <RotateCw size={15} />
-              </button>
-            </div>
-          )}
-          {!mobile && bossBriefLine && (
-            <div className="aether-type-meta rounded-[1rem] border border-[#d5b180]/18 bg-[#d5b180]/10 px-3 py-1.5 text-center font-fira text-[#f6e7c8]">
-              보스 전술: {bossBriefLine}
-            </div>
-          )}
-          {/* cycle 269: tacticalProfile.signature(보스 mechanic) / counterHint(대응) 추가 dispatch.
-              getEnemyTacticalProfile은 14+ 필드 반환했지만 CombatPanel이 entryHint/hint/phaseHint
-              3종만 read이라 signature/counterHint 등 in-combat 핵심 정보 영원히 invisible. */}
-          {enemy?.isBoss && (tacticalProfile?.signature || tacticalProfile?.counterHint) && (
-            <div className="aether-boss-tactics grid grid-cols-2 gap-1">
-              {tacticalProfile?.signature && (
-                <div
-                  data-testid="combat-boss-signature"
-                  className="min-w-0 rounded-lg border border-rose-300/24 bg-rose-300/[0.08] px-2.5 py-2 font-readable"
-                >
-                  <div className="aether-type-label font-bold text-rose-200">보스 기믹</div>
-                  <div className="aether-type-body mt-0.5 text-slate-200/82" title={tacticalProfile.signature}>
-                    {tacticalProfile.signature}
-                  </div>
-                </div>
-              )}
-              {tacticalProfile?.counterHint && (
-                <div
-                  data-testid="combat-boss-counter"
-                  className="min-w-0 rounded-lg border border-emerald-300/24 bg-emerald-300/[0.08] px-2.5 py-2 font-readable"
-                >
-                  <div className="aether-type-label font-bold text-emerald-200">권장 대응</div>
-                  <div className="aether-type-body mt-0.5 text-slate-200/82" title={tacticalProfile.counterHint}>
-                    {tacticalProfile.counterHint}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+      <CombatVitalsStrip
+        hp={Math.max(0, player.hp || 0)}
+        maxHp={Math.max(1, stats?.maxHp || player.maxHp || 1)}
+        mp={Math.max(0, player.mp || 0)}
+        maxMp={Math.max(1, stats?.maxMp || player.maxMp || 1)}
+        damageFlash={damageFlash}
+        healFlash={healFlash}
+      />
 
-          {primarySignatureDrop && (
-            <div
-              data-testid="combat-signature-drop-hint"
-              className="aether-type-body flex items-center justify-center gap-1.5 rounded-lg px-3 py-1.5 font-readable"
-              style={{
-                border: '1px solid rgba(246,231,162,0.42)',
-                background: 'linear-gradient(180deg, rgba(246,231,162,0.12) 0%, rgba(18,16,10,0.72) 100%)',
-                color: '#f6e7a2',
-              }}
-            >
-              <Sparkles size={11} />
-              <span className="uppercase tracking-normal">전설 각인</span>
-              <span className="truncate">
-                ✦ {primarySignatureDrop.name}
-                {signatureDropCandidates.length > 1 ? ` 외 ${signatureDropCandidates.length - 1}` : ''}
-              </span>
-            </div>
-          )}
-
-          {/* slice 20: 판단 요약의 '적의 행동' 셀과 겹치던 데스크톱 예고 행 제거. */}
-
-          {/* cycle 113: 적 debuff chip — cycle 111 player debuff chip의 짝(symmetry).
-              플레이어가 부여한 stun/curse/blind/fear/DoT의 활성 상태를 전투 화면에 노출.
-              emerald 톤(플레이어에게 유리)으로 cycle 111 rose(위험)과 대비. */}
-          {enemy && (() => {
-            const dots: string[] = Array.isArray(enemy?.dots) ? enemy.dots : [];
-            const debuffs: string[] = [];
-            if ((enemy?.stunnedTurns || 0) > 0) debuffs.push(`기절 · ${enemy.stunnedTurns}턴`);
-            if ((enemy?.cursedTurns || 0) > 0) debuffs.push(`저주 · ${enemy.cursedTurns}턴`);
-            if ((enemy?.blindTurns || 0) > 0) debuffs.push(`실명 · ${enemy.blindTurns}턴`);
-            if ((enemy?.fearTurns || 0) > 0) debuffs.push(`공포 · ${enemy.fearTurns}턴`);
-            // 2026-09 Wave 6 X2: 인라인 DOT_LABEL 제거 — MSG.DOT_LABELS(공유 테이블) 재사용.
-            //   dots는 poison/burn/bleed만 담기므로 동작 동일(독/화상/출혈).
-            for (const dot of dots) {
-              const label = MSG.DOT_LABELS[dot as StatusId];
-              // 2026-10 Wave 55: 지속 턴이 있는 지속 피해(출혈베기 · 영혼 소환 "3턴간")는 남은 턴을 함께 보인다.
-              const dotTurns = enemy?.dotTurns?.[dot as EnemyDotId];
-              if (label) debuffs.push(dotTurns ? MSG.ENEMY_DOT_CHIP_TURNS(label, dotTurns) : label);
-            }
-            if (debuffs.length === 0) return null;
-            const headLabel = debuffs[0];
-            const showCount = debuffs.length > 1;
+      {/* 2026-10 감사 CL-06: 보스에서도 그린다 — 위협 칩(가장 센 한 방)이 첫 신호다. 정보만이다(Wave 88 · 111).
+          적 약화(cycle 113)와 전설 각인(도감에 오른 것만 — Wave 103)이 같은 줄에 칩으로 이어진다. */}
+      {hasSignals && (
+        <div className="flex flex-wrap items-center gap-1.5" aria-label={MSG.COMBAT_SIGNALS_ARIA} role="group">
+          {mobileCombatSignals.map((signal) => {
+            if (!signal) return null;
+            const presentation = SIGNAL_PRESENTATION[signal.tone];
+            const Icon = presentation.icon;
             return (
-              <div
-                data-testid="combat-enemy-debuff-chip"
-                data-enemy-debuff-count={debuffs.length}
-                className="aether-type-meta flex flex-wrap items-center justify-center gap-1.5 rounded-lg border border-emerald-300/30 bg-emerald-400/8 px-3 py-1 font-readable text-emerald-200"
-                aria-label={MSG.ENEMY_DEBUFF_ARIA(debuffs.join(', '))}
+              <Chip
+                key={signal.key}
+                data-testid={`combat-signal-${signal.key}`}
+                tone={presentation.tone}
+                icon={<Icon size={13} strokeWidth={2.2} />}
+                className={`ae-combat-signal ${presentation.className}`}
               >
-                <span className="uppercase tracking-normal text-emerald-300/80">{MSG.ENEMY_DEBUFF_LABEL}</span>
-                <span>{headLabel}{showCount ? ` +${debuffs.length - 1}` : ''}</span>
-              </div>
+                {signal.text}
+              </Chip>
             );
-          })()}
-
-          {!mobile && comboRelic && (
-            <div className={`aether-type-meta rounded-[1rem] border px-3 py-1.5 text-center font-fira transition-all ${
-              comboCount >= comboStack - 1
-                ? 'border-cyber-pink/60 bg-cyber-pink/10 text-cyber-pink animate-pulse'
-                : 'border-cyber-pink/20 bg-cyber-pink/5 text-cyber-pink/60'
-            }`}>
-              <span>연속 공격 </span>
-              {Array.from({ length: comboStack }).map((_, i) => (
-                <span key={i} className={`mx-0.5 ${i < comboCount ? 'text-cyber-pink' : 'text-cyber-pink/25'}`}>◆</span>
-              ))}
-              {comboCount >= comboStack && <span className="ml-1 font-bold">준비 완료</span>}
-            </div>
-          )}
-          {mobileCombatSignals.length > 0 && !enemy?.isBoss && (
-            <div className="flex flex-wrap gap-1.5">
-              {mobileCombatSignals.map((signal) => signal && (
-                <span
-                  key={signal.key}
-                  className={`aether-type-label inline-flex min-h-[28px] items-center rounded-full border px-2 py-0.5 font-fira uppercase tracking-normal ${signal.className}`}
-                >
-                  {signal.text}
-                </span>
-              ))}
-            </div>
-          )}
-          {combatForecast && (
-            <section
-              data-testid="combat-forecast-strip"
-              data-forecast-tone={combatForecast.tone}
-              aria-label="전투 판단 요약"
-              className="aether-combat-forecast rounded-lg px-2.5 py-2"
+          })}
+          {enemyDebuffs.length > 0 && (
+            <Chip
+              data-testid="combat-enemy-debuff-chip"
+              data-enemy-debuff-count={enemyDebuffs.length}
+              tone="good"
+              icon={<ChevronsDown size={13} strokeWidth={2.2} />}
+              className="ae-combat-signal"
+              aria-label={MSG.ENEMY_DEBUFF_ARIA(enemyDebuffs.join(', '))}
             >
-              <div className="grid grid-cols-3 gap-1">
-                {combatForecastCells.map((cell) => (
-                  <div key={cell.label} className="aether-combat-forecast-cell rounded-lg px-2 py-1.5">
-                    <div data-testid="combat-forecast-label" className="aether-type-label font-readable font-semibold tracking-normal text-slate-300/78">
-                      {cell.label}
-                    </div>
-                    <div data-testid="combat-forecast-value" className="aether-type-body mt-0.5 font-readable font-semibold text-slate-100/92">
-                      {cell.value}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </section>
+              <span className="text-ae-ink-2">{MSG.ENEMY_DEBUFF_LABEL}</span>
+              <span>{enemyDebuffs[0]}{enemyDebuffs.length > 1 ? ` +${enemyDebuffs.length - 1}` : ''}</span>
+            </Chip>
           )}
+          {primarySignatureDrop && (
+            <span
+              data-testid="combat-signature-drop-hint"
+              className="ae-chip ae-combat-signal ae-combat-signature-hint"
+            >
+              <Sparkles size={13} strokeWidth={2.2} aria-hidden="true" className="shrink-0" />
+              <span>{MSG.COMBAT_SIGNATURE_HINT_LABEL}</span>
+              <span className="font-semibold text-ae-ink">
+                {primarySignatureDrop.name}
+                {signatureDropCandidates.length > 1 ? ` ${MSG.COMBAT_SIGNATURE_HINT_MORE(signatureDropCandidates.length - 1)}` : ''}
+              </span>
+            </span>
+          )}
+        </div>
+      )}
 
-      </>
+      {combatForecast && (
+        <section
+          data-testid="combat-forecast-strip"
+          data-forecast-tone={combatForecast.tone}
+          aria-label={MSG.COMBAT_FORECAST_ARIA}
+          className="ae-combat-forecast grid grid-cols-3 gap-1.5"
+        >
+          {combatForecastCells.map((cell) => (
+            <div key={cell.label} className="ae-well ae-combat-forecast-cell min-w-0 rounded-ae-sm px-2.5 py-1.5">
+              <div data-testid="combat-forecast-label" className="ae-eyebrow font-readable">{cell.label}</div>
+              <div data-testid="combat-forecast-value" className="aether-type-body mt-0.5 font-readable font-bold leading-snug text-ae-ink">
+                {cell.value}
+              </div>
+            </div>
+          ))}
+        </section>
+      )}
 
-      <div className="grid grid-cols-2 gap-1.5">
+      <div className="ae-combat-actions grid grid-cols-2 gap-2">
         {ACTION_BUTTONS.map((action) => {
           const Icon = action.icon;
           const isDisabled = isAiThinking
@@ -302,53 +265,50 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
             : action.mobileLabel || action.label;
 
           return (
-            <Motion.button
+            <ActionButton
               key={action.key}
-              type="button"
+              variant={action.variant}
               data-testid={`combat-action-${action.key}`}
               aria-expanded={action.key === 'item' ? itemsOpen : undefined}
               aria-describedby={action.key === 'skill' && selectedSkill ? 'combat-skill-readiness' : undefined}
               title={action.key === 'skill' && !skillReadiness.canUse ? skillReadiness.buttonLabel : undefined}
-              whileTap={{ scale: 0.95 }}
               disabled={isDisabled}
               onClick={() => handleAction(action.key)}
-              className={`aether-combat-action min-h-[48px] overflow-hidden rounded-lg px-2.5 flex items-center gap-2 font-bold transition-all backdrop-blur-md disabled:opacity-45 ${action.className}`}
-            >
-              <span className="aether-combat-action-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem]">
-                <Icon size={13} className={action.key === 'swap' ? 'transition-transform group-hover:rotate-180' : ''} />
-              </span>
-              <span className="aether-type-body font-readable tracking-normal text-white/94">
-                {actionLabel}
-              </span>
-            </Motion.button>
+              className={`ae-combat-action min-w-0 justify-start px-2.5 ${action.className}`}
+              icon={(
+                <span className="aether-combat-action-icon ae-combat-action-icon">
+                  <Icon size={18} strokeWidth={2.1} />
+                </span>
+              )}
+              label={<span className="ae-combat-action-label min-w-0 text-left font-readable">{actionLabel}</span>}
+            />
           );
         })}
       </div>
 
       {combatConsumables.length > 0 && (!mobile || itemsOpen) && (
-        <div className="space-y-2">
-          <div className="aether-type-body px-1 font-readable font-semibold tracking-normal text-cyan-100/72">
-            전투 소모품
-          </div>
-          <div className={`grid gap-2 ${mobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
+        <div className="space-y-1.5">
+          <div className="ae-eyebrow px-1 font-readable">{MSG.COMBAT_CONSUMABLES_HEADING}</div>
+          <div className={`grid gap-1.5 ${mobile ? 'grid-cols-2' : 'grid-cols-3'}`}>
             {combatConsumables.map((item) => (
               <Motion.button
                 key={`${item.type}:${item.name}`}
+                type="button"
                 data-testid={`combat-consumable-${item.id}`}
                 whileTap={{ scale: 0.97 }}
                 disabled={isAiThinking}
                 onClick={() => handleConsumableUse(item)}
-                className={`min-h-11 rounded-lg border ${mobile ? 'px-3 py-2.5' : 'px-3 py-2'} text-left transition-all disabled:opacity-45 ${getConsumableTone(item.type ?? '')}`}
+                className="ae-well ae-combat-consumable min-h-11 rounded-ae-sm px-3 py-2 text-left disabled:opacity-50"
               >
                 <div className="flex items-start justify-between gap-2">
-                  <span className="aether-type-body font-rajdhani font-bold">{item.name}</span>
+                  <span className={`aether-type-body font-readable font-bold ${CONSUMABLE_TONE[item.type ?? ''] || 'text-ae-ink'}`}>{item.name}</span>
                   {item.count > 1 && (
-                    <span className="aether-type-label rounded-full border border-white/10 bg-black/20 px-1.5 py-0.5 font-fira text-white/70">
+                    <span className="ae-chip shrink-0 font-fira tabular-nums">
                       x{item.count}
                     </span>
                   )}
                 </div>
-                <div className="aether-type-meta mt-1 font-fira text-white/55">
+                <div className="aether-type-meta mt-0.5 font-fira text-ae-ink-2">
                   {item.label}
                 </div>
               </Motion.button>
@@ -356,7 +316,41 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile }: Co
           </div>
         </div>
       )}
+
+      <CombatSkillTray entries={skillTray} actions={actions} isAiThinking={isAiThinking} />
+
+      {/* 2026-10 감사 검토: 보스 기믹 · 공략 요령 카드는 행동 단추 · 기술 칸 아래다 — 위에 두면 375 × 667 보스전에서 '도주'와
+          기술 칸이 첫 화면 밖으로 밀렸다(행동은 매 차례, 카드는 처음 한 번 읽는다). 보스 위협 칩은 위의 신호 줄에 그대로 있다.
+          cycle 269: tacticalProfile.signature(보스 mechanic) / counterHint(대응). */}
+      {enemy?.isBoss && (tacticalProfile?.signature || tacticalProfile?.counterHint) && (
+        <div className="ae-combat-boss-cards grid grid-cols-2 gap-1.5">
+          {tacticalProfile?.signature && (
+            <div
+              data-testid="combat-boss-signature"
+              className="ae-well ae-combat-boss-card min-w-0 rounded-ae-sm px-2.5 py-2 font-readable"
+            >
+              <div className="aether-type-label font-bold text-ae-threat">{MSG.COMBAT_BOSS_SIGNATURE_LABEL}</div>
+              <div className="aether-type-body mt-0.5 text-ae-ink-2" title={tacticalProfile.signature}>
+                {tacticalProfile.signature}
+              </div>
+            </div>
+          )}
+          {tacticalProfile?.counterHint && (
+            <div
+              data-testid="combat-boss-counter"
+              className="ae-well ae-combat-boss-card min-w-0 rounded-ae-sm px-2.5 py-2 font-readable"
+            >
+              {/* 2026-10 감사 CL-09: 판단 요약 칸의 '권장 대응'과 다른 말이라 이름도 다르다. */}
+              <div className="aether-type-label font-bold text-ae-good">{MSG.COMBAT_BOSS_CLUE_LABEL}</div>
+              <div className="aether-type-body mt-0.5 text-ae-ink-2" title={tacticalProfile.counterHint}>
+                {tacticalProfile.counterHint}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </Motion.div>
+    </>
   );
 };
 

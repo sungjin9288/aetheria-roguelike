@@ -21,7 +21,10 @@ const CODEX_BUCKET_BY_TYPE: Readonly<Record<string, CodexCategory>> = Object.fre
  *
  * 주의:
  * - 같은 signature 아이템 여러 개가 동시에 들어오면 queue로 누적해 순차 노출.
+ *   게임 필 감사 GF-12: 대기열은 상태다(맨 앞이 지금 보이는 전설). 예전에는 동시에 들어온 두 번째 ·
+ *   표시 중에 들어온 하나를 잃었고, 대기열 변이가 setState 갱신 함수 안에 있었다.
  * - 초기 mount 시점의 인벤토리는 seen으로 기록하고 알림 없음 (세이브 로드시 스팸 방지).
+ *   GF-13: 복원(`presentationEpoch`가 바뀐 렌더)도 같다 — 기준만 다시 잡고 연출 · 도감 · 시즌 · 기록 dispatch가 없다.
  * - 이미 본 아이템 이름은 재노출 안 함 (같은 전설을 두 번 봐도 한 번만).
  */
 
@@ -46,22 +49,19 @@ export const useLegendaryDropDetector = (
     inv: Item[] | undefined,
     dispatch: Dispatch<GameAction>,
     codex: NonNullable<Player['stats']>['codex'],
+    resetEpoch: number,
 ) => {
     const seenRef = useRef<Set<string> | null>(null);
-    const queueRef = useRef<Item[]>([]);
+    const epochRef = useRef(resetEpoch);
     // cycle 208: codex prop을 ref로 받아 effect deps 미포함 (re-trigger 방지).
     //   dispatch 시점에 latest codex로 alreadyInCodex 체크 → SEASON_XP 중복 award 가드.
     //   ref 갱신은 effect 내부에서 (render 단계 직접 mutation은 react-hooks/refs 룰 위반).
     const codexRef = useRef(codex);
     useEffect(() => { codexRef.current = codex; }, [codex]);
-    const [currentDrop, setCurrentDrop] = useState<Item | null>(null);
+    const [queue, setQueue] = useState<{ epoch: number; items: Item[] }>({ epoch: resetEpoch, items: [] });
 
     const dismiss = useCallback(() => {
-        setCurrentDrop((prev) => {
-            if (!prev) return null;
-            const next = queueRef.current.shift() || null;
-            return next;
-        });
+        setQueue((prev) => ({ ...prev, items: prev.items.slice(1) }));
     }, []);
 
     useEffect(() => {
@@ -74,6 +74,12 @@ export const useLegendaryDropDetector = (
         // (세이브 로드 시 기존 레전더리로 오버레이 스팸 방지)
         if (seenRef.current === null) {
             seenRef.current = new Set(signatureNames);
+            return;
+        }
+        // GF-13: 복원된 가방의 전설도 본 것으로 기준만 더한다 — 획득 연출 · dispatch 없음.
+        if (epochRef.current !== resetEpoch) {
+            epochRef.current = resetEpoch;
+            seenRef.current = new Set([...seenRef.current, ...signatureNames]);
             return;
         }
 
@@ -112,19 +118,19 @@ export const useLegendaryDropDetector = (
             }
         }
 
-        const firstItem = (inv || []).find((entry) => entry?.name === newlySeen[0] && hasDedicatedSignatureArt(entry));
-        if (!firstItem) return;
+        // GF-12: 새로 본 전설은 모두 대기열 끝에 선다 — 표시 중이든 아니든, 동시에 몇 개가 들어오든.
+        const arrived = newlySeen
+            .map((name) => (inv || []).find((entry) => entry?.name === name && hasDedicatedSignatureArt(entry)))
+            .filter((entry): entry is Item => Boolean(entry));
+        if (arrived.length === 0) return;
 
-        setCurrentDrop((prev) => {
-            if (!prev) return firstItem;
-            // 이미 표시중이면 큐에 추가
-            for (const name of newlySeen.slice(1)) {
-                const queuedItem = (inv || []).find((entry) => entry?.name === name && hasDedicatedSignatureArt(entry));
-                if (queuedItem) queueRef.current.push(queuedItem);
-            }
-            return prev;
-        });
-    }, [inv, dispatch]);
+        setQueue((prev) => ({
+            epoch: resetEpoch,
+            items: [...(prev.epoch === resetEpoch ? prev.items : []), ...arrived],
+        }));
+    }, [inv, dispatch, resetEpoch]);
 
+    // 복원 전의 대기열은 그리지 않는다(GF-13).
+    const currentDrop = queue.epoch === resetEpoch ? queue.items[0] ?? null : null;
     return { currentDrop, dismissDrop: dismiss };
 };

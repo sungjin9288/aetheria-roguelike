@@ -92,8 +92,13 @@ test('390x844 production reducer settles both gold_mult inventory orders identic
     expect(forward.gold).toBe(reverse.gold);
     expect(forward.totalGold).toBe(reverse.totalGold);
 
+    // 게임 필 감사 GF-02: 결과 카드는 처치 순간(쓰러진 적 · 처치 도장)이 끝난 뒤에 열린다 — 스냅샷이 아니라 등장을 기다린다.
     const postCombatCard = page.getByTestId('post-combat-card');
-    if (await postCombatCard.isVisible()) {
+    const cardAppeared = await postCombatCard
+        .waitFor({ state: 'visible', timeout: 3_000 })
+        .then(() => true)
+        .catch(() => false);
+    if (cardAppeared) {
         await postCombatCard.getByTestId('post-combat-close').click();
         await expect(postCombatCard).toBeHidden();
     }

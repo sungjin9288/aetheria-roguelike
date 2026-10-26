@@ -125,7 +125,8 @@ import { DB } from '../src/data/db.ts';
               if (/\bclassName=/.test(call)) withClassName++;
           }
       }
-      assert.ok(totalCalls > 50, `SignalBadge 호출 50건 이상 (실제: ${totalCalls})`);
+      // 2026-10 에테르 유리: 화면 대부분이 ui/Chip으로 옮겨 호출이 줄었다 — 이 하한은 스캔이 비지 않았다는 확인일 뿐이다.
+      assert.ok(totalCalls > 0, `SignalBadge 호출이 스캔됐다 (실제: ${totalCalls})`);
       assert.equal(withClassName, 0, `className 명시 전달 0건 (실제: ${withClassName})`);
   });
 
@@ -138,7 +139,8 @@ import { DB } from '../src/data/db.ts';
       }, '유물 발견'));
       assert.ok(html.includes('유물 발견'), 'children이 실제로 렌더된다');
       assert.ok(html.includes('data-testid="rest-prop-spreads"'), '...rest로 받은 prop이 그대로 렌더된다 (spread 보존)');
-      assert.ok(/border-rose-300\/24/.test(html), 'tone prop이 TONE_CLASS.danger로 반영된다');
+      // 2026-10 에테르 유리 3차(shell): 톤은 토큰 칩(바탕 씻김 + 글자색)이다.
+      assert.ok(/bg-ae-threat\/\[0\.14\] text-ae-threat/.test(html), 'tone prop이 TONE_CLASS.danger로 반영된다');
       assert.ok(/min-h-\[24px\]/.test(html), 'size prop이 SIZE_CLASS.sm으로 반영된다');
   });
 
@@ -147,7 +149,7 @@ import { DB } from '../src/data/db.ts';
       // fallback 로직 자체가 아니다) 실제 렌더에 SIZE_CLASS.sm / TONE_CLASS.neutral이 반영되는지.
       const html = renderStatic(createElement(SignalBadge, {}, '기본값'));
       assert.ok(/min-h-\[24px\]/.test(html), 'size 미전달 시 SIZE_CLASS.sm fallback이 실제로 적용된다');
-      assert.ok(/border-white\/8/.test(html), 'tone 미전달 시 TONE_CLASS.neutral fallback이 실제로 적용된다');
+      assert.ok(/bg-ae-ink\/\[0\.08\] text-ae-ink-2/.test(html), 'tone 미전달 시 TONE_CLASS.neutral fallback이 실제로 적용된다');
   });
 }
 
@@ -4088,7 +4090,9 @@ import { DB } from '../src/data/db.ts';
       // W11 C4: tier default 제거 후에도, tier 미전달/알 수 없는 jobName이 실제로
       // fallback 색상(#9ca3af)/기본 경로로 렌더되는지.
       const html = renderStatic(createElement(ClassIcon, { className: '알수없는직업', size: 28 }));
-      assert.ok(html.includes('#9ca3af'), 'tier 미전달 시 TIER_COLORS[0](#9ca3af) fallback이 실제 렌더된다');
+      // w3 choice: 티어 색은 토큰 채널이다(VD-13) — 0단계는 --aether-ink-3.
+      assert.ok(html.includes('var(--aether-ink-3-rgb)'), 'tier 미전달 시 TIER_COLORS[0](--aether-ink-3) fallback이 실제 렌더된다');
+      assert.ok(html.includes('data-class-tier="0"'), 'tier 미전달 시 0단계로 렌더된다');
   });
 
   test('cycle 568: cycle 502-567 회귀 가드 — default 청소 시리즈 보존', async () => {

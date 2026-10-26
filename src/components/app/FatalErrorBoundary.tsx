@@ -8,6 +8,7 @@ import {
 } from '../../platform/errorReporter';
 import { getRuntimeProductEventCoordinator } from '../../platform/productEventCoordinator';
 import { getRuntimeProductEventContext } from '../../platform/productEventContext';
+import { MSG } from '../../data/messages';
 import type { ProductEventContext, ProductEventFields, ProductEventName } from '../../platform/productEvents';
 
 interface FatalEvent {
@@ -65,11 +66,11 @@ export class FatalErrorBoundary extends Component<FatalErrorBoundaryProps, Fatal
     render(): ReactNode {
         if (!this.state.failed) return this.props.children;
         return (
-            <main className="flex min-h-dvh items-center justify-center bg-slate-950 p-6 text-center text-slate-100">
-                <section role="alert" className="max-w-sm rounded-2xl border border-rose-300/20 bg-slate-900 p-5">
-                    <h1 className="font-readable text-lg font-bold">게임 화면을 불러오지 못했습니다</h1>
-                    <p className="mt-2 font-readable text-sm leading-relaxed text-slate-300">
-                        앱을 다시 열어 주세요. 같은 문제가 계속되면 고객센터에 알려 주세요.
+            <main className="flex min-h-dvh items-center justify-center bg-ae-void p-6 text-center text-ae-ink">
+                <section role="alert" className="ae-sheet max-w-sm rounded-ae-xl p-5">
+                    <h1 className="font-readable text-lg font-bold text-ae-ink">{MSG.SHELL_FATAL_TITLE}</h1>
+                    <p className="mt-2 font-readable text-sm leading-relaxed text-ae-ink-2">
+                        {MSG.SHELL_FATAL_BODY}
                     </p>
                 </section>
             </main>

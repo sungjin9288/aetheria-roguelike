@@ -1,16 +1,17 @@
-import React from 'react';
-import { Scroll } from 'lucide-react';
-import { motion as Motion } from 'framer-motion';
+import type { ReactNode } from 'react';
+import { Check, Scroll } from 'lucide-react';
 import { formatRewardParts, getActiveQuestEntries } from '../../utils/gameUtils';
 import { getGoldIncome } from '../../utils/challengeRules';
 import { getTraitProfile, getTraitQuestResonance } from '../../utils/runProfileUtils';
 import { buildChainJournal } from '../../utils/chainJournal';
 import { getQuestObjectiveGateNotice } from '../../utils/questObjectiveGate';
 import { isLifetimeCounterQuest } from '../../utils/cumulativeQuestProgress';
-import SignalBadge from '../SignalBadge';
 import StoryJournal from '../StoryJournal';
 import EndgameJourney from '../EndgameJourney';
 import HuntContractCard from './HuntContractCard';
+import ActionButton from '../ui/ActionButton';
+import Chip from '../ui/Chip';
+import Gauge from '../ui/Gauge';
 import { BALANCE } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { GS } from '../../reducers/gameStates';
@@ -24,22 +25,22 @@ import type { GameActions } from '../../hooks/actionDeps';
 import type { DailyProtocolMissionReward, Player, Quest, QuestReward } from '../../types/index.js';
 
 // ── 유틸 ──────────────────────────────────────────────
-const getQuestObjectiveText = (quest: Quest) => (
-    quest?.objective
-        ? quest.objective
-        : (
-    quest?.target === 'level'
-        ? `레벨 ${quest.goal} 달성`
-        : `${quest.target} ${quest.goal}회 달성`
-        )
-);
+// 2026-10 통합: 게시판(QuestBoardPanel)과 같은 순서 — `objective` → `desc` → 레벨 · 횟수. `desc`를 건너뛰면
+//   카운터 임무(첫 임무 포함)가 내부 키를 그대로 그렸다("목표: explores 1회 달성").
+const getQuestObjectiveText = (quest: Quest) => {
+    if (quest?.objective) return quest.objective;
+    if (quest?.desc) return quest.desc;
+    return quest?.target === 'level'
+        ? MSG.QUEST_TAB_OBJECTIVE_LEVEL(quest.goal)
+        : MSG.QUEST_TAB_OBJECTIVE_COUNT(quest.target, quest.goal);
+};
 
 // cycle 541: progress / goal defaults 제거 — QuestTab/QuestBoardPanel 양쪽
 //   helper duplication. 호출자가 모두 명시 전달이라 default 도달 불가.
 //   default 청소 메가 시리즈 36번째 cross-file 4-default batch.
 const getQuestProgressText = (quest: Quest, progress: number) => (
     quest?.target === 'level'
-        ? `레벨 ${progress}/${quest.goal}`
+        ? MSG.QUEST_TAB_PROGRESS_LEVEL(progress, quest.goal)
         : `${progress}/${quest.goal}`
 );
 
@@ -63,36 +64,112 @@ const QuestRewardChips = ({ reward, accent, player }: QuestRewardChipsProps) => 
     const rewards = formatRewardParts(reward, player);
     if (!rewards.length) return null;
     const accentClass = accent === 'green'
-        ? 'border-cyber-green/30 bg-cyber-green/10 text-cyber-green'
+        ? 'border-ae-good/30 bg-ae-good/10 text-ae-good'
         : accent === 'amber'
-            ? 'border-amber-500/30 bg-amber-500/10 text-amber-300'
-            : 'border-cyber-blue/20 bg-cyber-blue/10 text-cyber-blue';
+            ? 'border-ae-gold/30 bg-ae-gold/10 text-ae-gold-text'
+            : 'border-ae-ether/20 bg-ae-ether/10 text-ae-ether-hi';
     return (
-        <div className="mt-2 flex flex-wrap gap-1.5 text-xs font-fira">
+        <div className="mt-2.5 flex flex-wrap gap-1.5">
             {rewards.map((entry) => (
-                <span key={`${accent}_${entry}`} className={`rounded border px-2 py-1 ${accentClass}`}>{entry}</span>
+                <span key={`${accent}_${entry}`} className={`ae-chip border font-fira tabular-nums ${accentClass}`}>{entry}</span>
             ))}
         </div>
     );
 };
+
+/** 섹션 머리 — 제목 + 오른쪽 진행 수 알약. */
+const SectionHead = ({ title, count, done }: { title: string; count: ReactNode; done: boolean }) => (
+    <header className="flex items-center justify-between gap-3">
+        <h3 className="font-readable aether-type-strong text-ae-ink">{title}</h3>
+        <span className={`ab-count ${done ? 'is-good' : ''}`}>{count}</span>
+    </header>
+);
 
 // ── 컴포넌트 ──────────────────────────────────────────
 /**
  * QuestTab — Dashboard의 quest 탭 콘텐츠 (#4 분리)
  * props: player, actions, isInSafeZone
  */
-const DAILY_TYPE_LABEL: Record<string, string> = { kills: '처치', explores: '탐험', goldSpend: '골드 소비' };
-
 // 2026-10 Wave 58: 정수 보상은 지급량(계승 단계 × 거울 배율)으로 보여 준다 — 원액을 보여 주던 동안 실제 지급보다 적게 보였다.
 const getDailyRewardLabel = (reward: DailyProtocolMissionReward, meta: Player['meta']) => {
     if (reward?.essence) return MSG.ESSENCE_REWARD(scaleEssenceReward(reward.essence, meta));
     if (reward?.item) return reward.item;
-    if (reward?.relicShard) return '유물 파편 +1';
+    if (reward?.relicShard) return MSG.QUEST_TAB_RELIC_SHARD_REWARD;
     return '';
 };
 
 /** QuestTab이 실제로 호출하는 액션만 좁힌 부분집합. */
 type QuestTabActions = Pick<GameActions, 'setGameState' | 'completeQuest' | 'claimWeeklyMission'>;
+
+type ActiveQuestEntry = ReturnType<typeof getActiveQuestEntries>[number] & {
+    resonance: ReturnType<typeof getTraitQuestResonance>;
+    progressPercent: number;
+};
+
+interface QuestCardProps {
+    entry: ActiveQuestEntry;
+    player: Player;
+    onClaim: (id: ActiveQuestEntry['id']) => void;
+}
+
+/** 진행 중인 임무 한 장 — 호박빛 임무 카드(완료하면 초록 림). 보상 칩이 진행도보다 먼저 온다. */
+const QuestCard = ({ entry, player, onClaim }: QuestCardProps) => {
+    const gate = entry.isComplete ? null : getQuestObjectiveGateNotice(entry.quest, player.level);
+    return (
+        <article data-testid={`quest-tab-entry-${entry.id}`} className={`ab-mission p-3.5 font-readable ${entry.isComplete ? 'is-ready' : ''}`}>
+            <div className="flex flex-wrap items-center gap-1.5">
+                {entry.isBounty && <Chip tone="gold">{MSG.QUEST_TAB_BOUNTY}</Chip>}
+                {/* 진행도를 평생 누적 기록에서 읽는 임무 — 판정은 진행도와 같은 표가 소유한다. */}
+                {isLifetimeCounterQuest(entry.quest) && (
+                    <Chip title={MSG.QUEST_LIFETIME_COUNTER_HINT} data-testid="quest-lifetime-counter-chip">
+                        {MSG.QUEST_LIFETIME_COUNTER_CHIP}
+                    </Chip>
+                )}
+                {entry.quest.buildTag && <Chip>{entry.quest.buildLabel || entry.quest.buildTag}</Chip>}
+                {entry.resonance.label ? (
+                    <Chip tone={entry.resonance.score >= 6 ? 'ether' : 'neutral'}>{entry.resonance.label}</Chip>
+                ) : null}
+                {!entry.isComplete && <Chip className="ml-auto">{MSG.QUEST_TAB_IN_PROGRESS}</Chip>}
+            </div>
+            <h4 className={`mt-2 aether-type-strong ${entry.isComplete ? 'text-ae-good' : 'text-ae-ink'}`}>
+                {entry.quest.title}
+            </h4>
+            <p className="mt-1 aether-type-meta leading-snug text-ae-ink-3">{entry.quest.desc}</p>
+            <p className="mt-2 aether-type-body text-ae-ink-2">{MSG.QUEST_TAB_OBJECTIVE(getQuestObjectiveText(entry.quest))}</p>
+            {/* Wave 28: 목표 지역에 아직 걸어 들어갈 수 없으면 실제 진입 레벨을 말한다. */}
+            {gate && (
+                <p data-testid="quest-objective-gate" className="mt-1 aether-type-meta text-ae-gold-text">
+                    {MSG.QUEST_OBJECTIVE_GATE_NOTICE(gate.map, gate.routeGateLevel)}
+                </p>
+            )}
+            {entry.resonance.summary && (
+                <p className="mt-2 aether-type-meta text-ae-ink-2">{entry.resonance.summary}</p>
+            )}
+            <QuestRewardChips reward={entry.quest.reward ?? {}} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} player={player} />
+            <div className="mt-3 flex items-center gap-3">
+                <Gauge
+                    kind="ether"
+                    value={entry.progressPercent}
+                    max={100}
+                    label={entry.quest.title || MSG.QUEST_TAB_ACTIVE_TITLE}
+                    className={`ab-gauge-thin flex-1 ${entry.isComplete ? 'ab-gauge-good' : entry.isBounty ? 'ab-gauge-gold' : ''}`}
+                />
+                <span className={`ab-count ${entry.isComplete ? 'is-good' : entry.isBounty ? 'is-gold' : ''}`}>
+                    {getQuestProgressText(entry.quest, entry.progress)}
+                </span>
+            </div>
+            {entry.isComplete && (
+                <ActionButton
+                    variant="glass"
+                    icon={<Check size={16} />}
+                    label={MSG.QUEST_TAB_CLAIM}
+                    onClick={() => onClaim(entry.id)}
+                    className="mt-3 w-full"
+                />
+            )}
+        </article>
+    );
+};
 
 // cycle 481: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 토글 상태 + 33 ternary + summary 분기 일괄 정리
@@ -105,16 +182,11 @@ interface QuestTabProps {
 
 const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
     const traitProfile = getTraitProfile(player, { maxHp: player.maxHp, maxMp: player.maxMp });
-    const activeQuestEntries = getActiveQuestEntries(player).map((entry, index) => {
-        const resonance = getTraitQuestResonance(entry.quest, traitProfile);
-        const progressPercent = getQuestProgressPercent(entry.progress, entry.quest.goal!);
-        return {
-            ...entry,
-            resonance,
-            progressPercent,
-            originalIndex: index,
-        };
-    });
+    const activeQuestEntries = getActiveQuestEntries(player).map((entry) => ({
+        ...entry,
+        resonance: getTraitQuestResonance(entry.quest, traitProfile),
+        progressPercent: getQuestProgressPercent(entry.progress, entry.quest.goal!),
+    }));
     const claimableQuestCount = activeQuestEntries.filter((e) => e.isComplete).length;
     const chainJournalEntries = buildChainJournal(player.eventChainProgress);
     const dp = getCurrentDailyProtocol(player, new Date());
@@ -124,287 +196,189 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
     // 주간 임무 진행도
     const weeklyProtocol = getCurrentWeeklyProtocol(player.weeklyProtocol, new Date());
     const weeklyMissions = getWeeklyMissionRows(weeklyProtocol);
+    const weeklyClaimed = weeklyMissions.filter((m) => m.claimed).length;
+
+    const discoveryChains = BALANCE.DISCOVERY_CHAINS || [];
+    const visitedMaps = new Set(player.stats?.visitedMaps || []);
+    const completedChains = player.stats?.discoveryChains || [];
 
     return (
-        <div className="flex flex-col h-full">
-            {/* 헤더 바 */}
-            <div className="mb-3 p-3 rounded-[1rem] border border-white/8 bg-black/18 rounded-[1rem] shrink-0">
+        <div className="ab-stack pb-2">
+            {/* 머리 — 진행 · 보상 대기 · 게시판 */}
+            <section className="ae-card is-quiet ab-card-pad font-readable">
                 <div className="flex flex-wrap items-center gap-1.5">
-                    <SignalBadge tone="neutral" size="sm">진행 {activeQuestEntries.length}</SignalBadge>
-                    <SignalBadge tone={claimableQuestCount > 0 ? 'success' : 'neutral'} size="sm">보상 대기 {claimableQuestCount}</SignalBadge>
-                    <SignalBadge tone={isInSafeZone ? 'upgrade' : 'warning'} size="sm">
-                        {isInSafeZone ? '게시판 이용 가능' : '수락은 마을 전용'}
-                    </SignalBadge>
+                    <Chip tone="ether">{MSG.QUEST_TAB_ACTIVE_COUNT(activeQuestEntries.length)}</Chip>
+                    <Chip tone={claimableQuestCount > 0 ? 'good' : 'neutral'}>{MSG.QUEST_TAB_CLAIMABLE_COUNT(claimableQuestCount)}</Chip>
+                    <Chip tone={isInSafeZone ? 'ether' : 'neutral'}>
+                        {isInSafeZone ? MSG.QUEST_TAB_BOARD_OPEN : MSG.QUEST_TAB_BOARD_TOWN_ONLY}
+                    </Chip>
                 </div>
-                <div className="mt-2 text-sm text-slate-400/78 font-fira leading-snug">
-                    새 임무와 현상수배는 마을 게시판에서 받을 수 있습니다. 여기서는 진행 상황과 받을 보상을 확인합니다.
-                </div>
+                <p className="mt-2 aether-type-meta leading-relaxed text-ae-ink-3">{MSG.QUEST_TAB_INTRO}</p>
                 {isInSafeZone && (
-                    <Motion.button
-                        type="button"
+                    <ActionButton
+                        variant="glass"
                         data-testid="quest-tab-open-board"
-                        whileTap={{ scale: 0.96 }}
+                        icon={<Scroll size={16} />}
+                        label={MSG.QUEST_TAB_OPEN_BOARD}
                         onClick={() => actions?.setGameState?.(GS.QUEST_BOARD)}
-                        className="mt-3 min-h-11 rounded-[0.95rem] border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-4 py-2 text-xs font-rajdhani font-bold tracking-[0.14em] text-[#dff7f5] transition-colors hover:border-[#7dd4d8]/34 hover:bg-[#7dd4d8]/14"
-                    >
-                        임무 게시판 열기
-                    </Motion.button>
+                        className="mt-3 w-full"
+                    />
                 )}
-            </div>
+            </section>
 
-            {/* 퀘스트 목록과 오늘의 임무 */}
-            <div className="flex-1 overflow-y-auto custom-scrollbar pr-1">
-                <StoryJournal claimedQuestIds={player.stats?.claimedQuestIds} />
-                <EndgameJourney player={player} />
-                <HuntContractCard player={player} />
-                {/* 오늘의 임무 */}
-                {dpMissions.length > 0 && (
-                    <div className="mb-3 p-3 rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8">
-                        <div className="flex items-center justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                                <span className="text-[#e3dcff] text-xs font-readable">오늘의 임무</span>
-                                <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${dpDoneCount === dpMissions.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-white/8 bg-black/18 text-slate-300/72'}`}>
-                                    {dpDoneCount}/{dpMissions.length}
-                                </span>
-                            </div>
-                            {dp.relicShards > 0 && (
-                                <span className="text-xs font-fira text-[#f6e7c8] border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 rounded-full">
-                                    ◆ 유물 파편 ×{dp.relicShards}
-                                </span>
-                            )}
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            {dpMissions.map((mission) => {
-                                const pct = Math.min(100, (mission.progress / Math.max(1, mission.goal)) * 100);
-                                const rewardLabel = getDailyRewardLabel(mission.reward, player.meta);
-                                return (
-                                    <Motion.div
-                                        key={mission.id}
-                                        initial={{ opacity: 0 }}
-                                        animate={{ opacity: 1 }}
-                                        className={`rounded-[0.95rem] border transition-all px-3 py-2 ${mission.done ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : 'border-white/8 bg-black/18'}`}
-                                    >
-                                        <div className="flex items-center justify-between mb-1">
-                                            <span className={`text-sm font-fira ${mission.done ? 'text-emerald-100' : 'text-slate-200/84'}`}>
-                                                {DAILY_TYPE_LABEL[mission.type] || mission.type} {mission.progress}/{mission.goal}
-                                            </span>
-                                            <span className={`text-xs font-fira ${mission.done ? 'text-emerald-100 font-bold' : 'text-slate-500'}`}>
-                                                {mission.done ? '✓ ' : ''}{rewardLabel}
-                                            </span>
-                                        </div>
-                                        <div className="h-1 overflow-hidden rounded-full bg-black/30">
-                                            <div
-                                                className={`h-full rounded-full transition-all duration-500 ${mission.done ? 'bg-emerald-300' : 'bg-[#9a8ac0]/70'}`}
-                                                style={{ width: `${pct}%` }}
-                                            />
-                                        </div>
-                                    </Motion.div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
-                {/* 체인 저널 섹션 — 진행 중인 내러티브 이벤트 체인 표시 */}
-                {chainJournalEntries.length > 0 && (
-                    <div className="rounded-[1rem] border border-[#9a8ac0]/20 bg-[#9a8ac0]/8 mb-3 px-3 py-2.5">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[#e3dcff] text-xs font-fira tracking-widest uppercase">{MSG.CHAIN_JOURNAL_TITLE}</span>
-                            <span className="text-xs font-fira px-1.5 py-0.5 rounded-full border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 text-[#e3dcff]">
-                                {chainJournalEntries.length}
-                            </span>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            {chainJournalEntries.map((entry) => {
-                                const pct = Math.min(100, (entry.currentStep / Math.max(1, entry.totalSteps)) * 100);
-                                return (
-                                    <div key={entry.chainId} className="rounded-[0.9rem] border border-white/8 bg-black/18 px-2.5 py-1.5">
-                                        <div className="flex items-center justify-between mb-0.5">
-                                            <span className="text-xs font-fira text-slate-200/84">{entry.label}</span>
-                                            <span className="text-[11px] font-fira text-[#e3dcff]">{MSG.CHAIN_JOURNAL_STEP(entry.currentStep, entry.totalSteps)}</span>
-                                        </div>
-                                        {entry.nextLoc && (
-                                            <div className="text-[11px] font-fira text-slate-400/72">{entry.nextMinAbyssFloor !== null
-                                                ? MSG.CHAIN_JOURNAL_NEXT_LOC_FLOOR(entry.nextLoc, entry.nextMinAbyssFloor)
-                                                : MSG.CHAIN_JOURNAL_NEXT_LOC(entry.nextLoc)}</div>
-                                        )}
-                                        <div className="mt-1 h-[2px] overflow-hidden rounded-full bg-black/30">
-                                            <div className="h-full rounded-full bg-[#9a8ac0]/60 transition-all duration-500" style={{ width: `${pct}%` }} />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
+            <StoryJournal claimedQuestIds={player.stats?.claimedQuestIds} />
 
-                {/* 발견 체인 섹션 */}
-                {(() => {
-                    const chains = BALANCE.DISCOVERY_CHAINS || [];
-                    if (!chains.length) return null;
-                    const visitedMaps = new Set(player.stats?.visitedMaps || []);
-                    const completedChains = player.stats?.discoveryChains || [];
-                    return (
-                        <div className="rounded-[1rem] border border-[#7dd4d8]/18 bg-[radial-gradient(circle_at_top_right,rgba(125,212,216,0.12),transparent_24%),linear-gradient(180deg,rgba(14,33,37,0.18)_0%,rgba(8,15,18,0.08)_100%)] mb-3 px-3 py-2.5">
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-[#dff7f5] text-xs font-readable">발견 여정</span>
-                                <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${completedChains.length === chains.length ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#7dd4d8]/22 bg-[#7dd4d8]/10 text-[#dff7f5]'}`}>
-                                    {completedChains.length}/{chains.length}
-                                </span>
-                            </div>
-                            <div className="flex flex-col gap-1.5">
-                                {chains.map((chain) => {
-                                    const done = completedChains.includes(chain.id);
-                                    const visitedCount = chain.locations.filter((l) => visitedMaps.has(l)).length;
-                                    const pct = Math.min(100, (visitedCount / chain.locations.length) * 100);
-                                    return (
-                                        <div key={chain.id} className={`rounded-[0.9rem] border px-2.5 py-1.5 ${done ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : 'border-white/8 bg-black/18'}`}>
-                                            <div className="flex items-center justify-between mb-0.5">
-                                                <span className={`text-xs font-fira ${done ? 'text-emerald-100' : 'text-slate-200/84'}`}>
-                                                    {chain.label}
-                                                </span>
-                                                {done ? (
-                                                    <span className="text-[11px] font-fira text-emerald-100 border border-emerald-300/24 bg-emerald-300/8 px-1.5 py-0.5 rounded-full">✓ 완료</span>
-                                                ) : (
-                                                    <span className="text-[11px] font-fira text-slate-400/72">{visitedCount}/{chain.locations.length} 방문</span>
-                                                )}
-                                            </div>
-                                            <div className="h-[2px] overflow-hidden rounded-full bg-black/30">
-                                                <div className={`h-full rounded-full transition-all duration-500 ${done ? 'bg-emerald-300' : 'bg-[#7dd4d8]/50'}`} style={{ width: `${pct}%` }} />
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-                    );
-                })()}
+            {/* 진행 중인 임무 — 이 탭의 본문이라 이야기 바로 뒤에 둔다. */}
+            {activeQuestEntries.length > 0 ? (
+                <section aria-label={MSG.QUEST_TAB_ACTIVE_TITLE} className="space-y-2.5">
+                    {activeQuestEntries.map((entry) => (
+                        <QuestCard key={entry.id} entry={entry} player={player} onClaim={(id) => actions?.completeQuest(id)} />
+                    ))}
+                </section>
+            ) : (
+                <section className="ae-card is-quiet flex flex-col items-center gap-2 px-4 py-8 text-center font-readable">
+                    <Scroll size={24} className="text-ae-ink-3" aria-hidden="true" />
+                    <p className="aether-type-body font-bold text-ae-ink-2">{MSG.QUEST_TAB_EMPTY}</p>
+                    <p className="aether-type-meta text-ae-ink-3">{isInSafeZone ? MSG.QUEST_EMPTY_TOWN_HINT : MSG.QUEST_EMPTY_FIELD_HINT}</p>
+                </section>
+            )}
 
-                {/* 주간 임무 */}
-                {weeklyMissions.length > 0 && (
-                    <div className="rounded-[1rem] border border-[#d5b180]/20 bg-[#d5b180]/6 mb-3 px-3 py-2.5">
-                        <div className="flex items-center justify-between mb-2">
-                            <span className="text-[#f6e7c8] text-xs font-readable">주간 임무</span>
-                            <span className={`text-xs font-fira px-1.5 py-0.5 rounded-full border ${weeklyMissions.every((m) => m.claimed) ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-100' : 'border-[#d5b180]/22 bg-[#d5b180]/10 text-[#f6e7c8]'}`}>
-                                {weeklyMissions.filter((m) => m.claimed).length}/{weeklyMissions.length}
-                            </span>
-                        </div>
-                        <div className="flex flex-col gap-1.5">
-                            {weeklyMissions.map((mission) => {
-                                const pct = Math.min(100, (mission.current / Math.max(1, mission.target)) * 100);
-                                return (
-                                    <div
-                                        key={mission.id}
-                                        className={`rounded-[0.9rem] border px-2.5 py-1.5 transition-all ${mission.claimed ? 'border-emerald-300/24 bg-emerald-300/[0.06]' : mission.done ? 'border-[#d5b180]/28 bg-[#d5b180]/10' : 'border-white/8 bg-black/18'}`}
-                                    >
-                                        <div className="flex items-center justify-between mb-0.5">
-                                            <span className={`text-xs font-fira ${mission.claimed ? 'text-emerald-100' : mission.done ? 'text-[#f6e7c8]' : 'text-slate-300/82'}`}>
-                                                {mission.label} ({mission.current}/{mission.target})
-                                            </span>
-                                            {mission.done && !mission.claimed ? (
-                                                <button
-                                                    onClick={() => actions?.claimWeeklyMission?.(mission.id)}
-                                                    className="text-[11px] font-fira font-bold text-[#f6e7c8] bg-[#d5b180]/18 border border-[#d5b180]/30 rounded-full px-2 py-0.5 hover:bg-[#d5b180]/28 transition-colors"
-                                                >
-                                                    수령
-                                                </button>
-                                            ) : (
-                                                <span className={`text-[11px] font-fira ${mission.claimed ? 'text-emerald-100' : 'text-slate-500'}`}>
-                                                    {mission.claimed ? '✓ 수령됨' : `골드 +${getGoldIncome(player, mission.reward.gold)}${mission.reward.premiumCurrency ? ` +${mission.reward.premiumCurrency}💎` : ''}`}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <div className="h-[2px] overflow-hidden rounded-full bg-black/30">
-                                            <div
-                                                className={`h-full rounded-full transition-all duration-500 ${mission.claimed ? 'bg-emerald-300' : mission.done ? 'bg-[#d5b180]/70' : 'bg-[#d5b180]/40'}`}
-                                                style={{ width: `${pct}%` }}
-                                            />
-                                        </div>
-                                    </div>
-                                );
-                            })}
-                        </div>
-                    </div>
-                )}
+            <EndgameJourney player={player} />
+            <HuntContractCard player={player} />
 
-                {activeQuestEntries.length > 0 ? (
-                    activeQuestEntries.map((entry, i) => (
-                        <Motion.div
-                            initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
-                            key={entry.id}
-                            className={`mb-2 p-3 rounded-[1rem] border transition-all ${
-                                entry.isComplete
-                                    ? 'bg-emerald-300/[0.06] border-emerald-300/24 shadow-[0_0_10px_rgba(110,231,183,0.08)]'
-                                    : entry.isBounty ? 'bg-[#d5b180]/10 border-[#d5b180]/18' : 'bg-black/18 border-white/8'
-                            }`}
-                        >
-                            <div className="flex justify-between items-start gap-3">
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        <div className={`font-bold font-rajdhani text-sm ${entry.isComplete ? 'text-emerald-100' : entry.isBounty ? 'text-[#f6e7c8]' : 'text-white/88'}`}>
-                                            {entry.quest.title}
-                                        </div>
-                                        {entry.isBounty && <span className="rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 py-0.5 text-xs font-fira text-[#f6e7c8]">현상수배</span>}
-                                        {/* 진행도를 평생 누적 기록에서 읽는 임무 — 판정은 진행도와 같은 표가 소유한다. */}
-                                        {isLifetimeCounterQuest(entry.quest) && (
-                                            <SignalBadge tone="neutral" size="sm" title={MSG.QUEST_LIFETIME_COUNTER_HINT} data-testid="quest-lifetime-counter-chip">
-                                                {MSG.QUEST_LIFETIME_COUNTER_CHIP}
-                                            </SignalBadge>
-                                        )}
-                                        {entry.quest.buildTag && (
-                                            <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
-                                        )}
-                                        {entry.resonance.label ? (
-                                            <SignalBadge tone={entry.resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{entry.resonance.label}</SignalBadge>
-                                        ) : null}
+            {/* 오늘의 임무 */}
+            {dpMissions.length > 0 && (
+                <section className="ae-card ab-card-pad font-readable">
+                    <SectionHead title={MSG.QUEST_TAB_DAILY_TITLE} count={`${dpDoneCount}/${dpMissions.length}`} done={dpDoneCount === dpMissions.length} />
+                    {dp.relicShards > 0 && (
+                        <Chip tone="gold" className="mt-2">{MSG.QUEST_TAB_RELIC_SHARDS(dp.relicShards)}</Chip>
+                    )}
+                    <div className="ab-rows mt-1">
+                        {dpMissions.map((mission) => {
+                            const typeLabel = MSG.QUEST_TAB_DAILY_TYPE[mission.type as keyof typeof MSG.QUEST_TAB_DAILY_TYPE] || mission.type;
+                            return (
+                                <div key={mission.id} className="py-2.5">
+                                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                                        <span className={`flex items-center gap-1.5 aether-type-body ${mission.done ? 'text-ae-good' : 'text-ae-ink'}`}>
+                                            {mission.done && <Check size={14} aria-hidden="true" />}
+                                            {typeLabel} <span className="font-fira tabular-nums">{mission.progress}/{mission.goal}</span>
+                                        </span>
+                                        <span className={`aether-type-meta ${mission.done ? 'font-bold text-ae-good' : 'text-ae-gold-text'}`}>
+                                            {getDailyRewardLabel(mission.reward, player.meta)}
+                                        </span>
                                     </div>
-                                    <div className="mt-1 text-xs text-slate-400/72 leading-snug">{entry.quest.desc}</div>
-                                    <div className="mt-2 text-sm text-slate-300/86 font-fira">목표: {getQuestObjectiveText(entry.quest)}</div>
-                                    {/* Wave 28: 목표 지역에 아직 걸어 들어갈 수 없으면 실제 진입 레벨을 말한다. */}
-                                    {!entry.isComplete && (() => {
-                                        const gate = getQuestObjectiveGateNotice(entry.quest, player.level);
-                                        return gate ? (
-                                            <div data-testid="quest-objective-gate" className="mt-1 text-xs font-fira text-[#f6e7c8]">
-                                                {MSG.QUEST_OBJECTIVE_GATE_NOTICE(gate.map, gate.routeGateLevel)}
-                                            </div>
-                                        ) : null;
-                                    })()}
-                                    {entry.resonance.summary && (
-                                        <div className="mt-2 text-sm font-fira text-[#d9d0f3]/72">{entry.resonance.summary}</div>
-                                    )}
-                                    <QuestRewardChips reward={entry.quest.reward ?? {}} accent={entry.isComplete ? 'green' : entry.isBounty ? 'amber' : 'blue'} player={player} />
-                                    <div className="mt-3">
-                                        <div className="mb-1 flex justify-between text-xs font-fira">
-                                            <span className={entry.isComplete ? 'text-emerald-100' : 'text-slate-300/74'}>{getQuestProgressText(entry.quest, entry.progress)}</span>
-                                            <span className="text-slate-500">{entry.progress}/{entry.quest.goal}</span>
-                                        </div>
-                                        <div className="h-1.5 overflow-hidden rounded-full bg-black/30">
-                                            <div
-                                                className={`h-full rounded-full transition-all ${entry.isComplete ? 'bg-emerald-300' : entry.isBounty ? 'bg-[#d5b180]' : 'bg-[#7dd4d8]'}`}
-                                                style={{ width: `${entry.progressPercent}%` }}
-                                            />
-                                        </div>
-                                    </div>
+                                    <Gauge
+                                        kind="exp"
+                                        value={mission.progress}
+                                        max={Math.max(1, mission.goal)}
+                                        label={typeLabel}
+                                        className={`ab-gauge-thin mt-2 ${mission.done ? 'ab-gauge-good' : ''}`}
+                                    />
                                 </div>
-                                {entry.isComplete ? (
-                                    <Motion.button whileTap={{ scale: 0.95 }} onClick={() => actions?.completeQuest(entry.id)} className="bg-emerald-300/12 hover:bg-emerald-300/18 text-emerald-100 font-bold rounded-full border border-emerald-300/24 shrink-0 min-h-[40px] px-4 py-2 text-sm">
-                                        수령
-                                    </Motion.button>
-                                ) : (
-                                    <div className="text-slate-400/72 font-fira bg-black/18 rounded-full border border-white/8 shrink-0 px-2.5 py-1 text-sm">진행 중</div>
-                                )}
+                            );
+                        })}
+                    </div>
+                </section>
+            )}
+
+            {/* 주간 임무 */}
+            {weeklyMissions.length > 0 && (
+                <section className="ae-card ab-card-pad font-readable">
+                    <SectionHead title={MSG.QUEST_TAB_WEEKLY_TITLE} count={`${weeklyClaimed}/${weeklyMissions.length}`} done={weeklyClaimed === weeklyMissions.length} />
+                    <div className="ab-rows mt-1">
+                        {weeklyMissions.map((mission) => (
+                            <div key={mission.id} className="py-2.5">
+                                <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5">
+                                    <span className={`aether-type-body ${mission.claimed ? 'text-ae-good' : mission.done ? 'text-ae-gold-text' : 'text-ae-ink'}`}>
+                                        {mission.label} ({mission.current}/{mission.target})
+                                    </span>
+                                    {mission.done && !mission.claimed ? (
+                                        <ActionButton
+                                            variant="glass"
+                                            icon={<Check size={16} />}
+                                            label={MSG.QUEST_TAB_CLAIM}
+                                            onClick={() => actions?.claimWeeklyMission?.(mission.id)}
+                                            className="shrink-0"
+                                        />
+                                    ) : mission.claimed ? (
+                                        <Chip tone="good" icon={<Check size={12} />}>{MSG.QUEST_TAB_CLAIMED}</Chip>
+                                    ) : (
+                                        <span className="font-fira tabular-nums aether-type-meta text-ae-gold-text">
+                                            {MSG.QUEST_TAB_WEEKLY_REWARD(getGoldIncome(player, mission.reward.gold), mission.reward.premiumCurrency)}
+                                        </span>
+                                    )}
+                                </div>
+                                <Gauge
+                                    kind="ether"
+                                    value={mission.current}
+                                    max={Math.max(1, mission.target)}
+                                    label={mission.label}
+                                    className={`ab-gauge-thin mt-2 ${mission.claimed ? 'ab-gauge-good' : 'ab-gauge-gold'}`}
+                                />
                             </div>
-                        </Motion.div>
-                    ))
-                ) : (
-                    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="rounded-[1rem] border border-white/8 bg-black/16 text-center flex flex-col items-center gap-2 py-10">
-                        <Scroll size={24} className="opacity-20" />
-                        <span className="text-sm font-readable text-slate-300/72">진행 중인 임무가 없습니다.</span>
-                        <span className="text-sm text-slate-500 font-fira">
-                            {isInSafeZone ? MSG.QUEST_EMPTY_TOWN_HINT : MSG.QUEST_EMPTY_FIELD_HINT}
-                        </span>
-                    </Motion.div>
-                )}
-            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* 체인 저널 섹션 — 진행 중인 내러티브 이벤트 체인 표시 */}
+            {chainJournalEntries.length > 0 && (
+                <section className="ae-card is-quiet ab-card-pad font-readable">
+                    <SectionHead title={MSG.CHAIN_JOURNAL_TITLE} count={chainJournalEntries.length} done={false} />
+                    <div className="ab-rows mt-1">
+                        {chainJournalEntries.map((entry) => (
+                            <div key={entry.chainId} className="py-2.5">
+                                <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-0.5">
+                                    <span className="aether-type-body text-ae-ink">{entry.label}</span>
+                                    <span className="font-fira tabular-nums aether-type-meta text-ae-exp">{MSG.CHAIN_JOURNAL_STEP(entry.currentStep, entry.totalSteps)}</span>
+                                </div>
+                                {entry.nextLoc && (
+                                    <p className="mt-0.5 aether-type-meta text-ae-ink-3">{entry.nextMinAbyssFloor !== null
+                                        ? MSG.CHAIN_JOURNAL_NEXT_LOC_FLOOR(entry.nextLoc, entry.nextMinAbyssFloor)
+                                        : MSG.CHAIN_JOURNAL_NEXT_LOC(entry.nextLoc)}</p>
+                                )}
+                                <Gauge kind="exp" value={entry.currentStep} max={Math.max(1, entry.totalSteps)} label={entry.label} className="ab-gauge-thin mt-2" />
+                            </div>
+                        ))}
+                    </div>
+                </section>
+            )}
+
+            {/* 발견 체인 섹션 */}
+            {discoveryChains.length > 0 && (
+                <section className="ae-card is-quiet ab-card-pad font-readable">
+                    <SectionHead
+                        title={MSG.QUEST_TAB_DISCOVERY_TITLE}
+                        count={`${completedChains.length}/${discoveryChains.length}`}
+                        done={completedChains.length === discoveryChains.length}
+                    />
+                    <div className="ab-rows mt-1">
+                        {discoveryChains.map((chain) => {
+                            const done = completedChains.includes(chain.id);
+                            const visitedCount = chain.locations.filter((l) => visitedMaps.has(l)).length;
+                            return (
+                                <div key={chain.id} className="py-2.5">
+                                    <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                                        <span className={`aether-type-body ${done ? 'text-ae-good' : 'text-ae-ink'}`}>{chain.label}</span>
+                                        {done ? (
+                                            <Chip tone="good" icon={<Check size={12} />}>{MSG.QUEST_TAB_DISCOVERY_DONE}</Chip>
+                                        ) : (
+                                            <span className="font-fira tabular-nums aether-type-meta text-ae-ink-3">{MSG.QUEST_TAB_DISCOVERY_VISITS(visitedCount, chain.locations.length)}</span>
+                                        )}
+                                    </div>
+                                    <Gauge
+                                        kind="ether"
+                                        value={visitedCount}
+                                        max={Math.max(1, chain.locations.length)}
+                                        label={chain.label}
+                                        className={`ab-gauge-thin mt-2 ${done ? 'ab-gauge-good' : ''}`}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+            )}
         </div>
     );
 };

@@ -20,6 +20,8 @@ const potion = { id: 'settle-potion', name: '전투 회복 물약', type: 'hp', 
 const SETTLED_FIELDS = [
     'player', 'enemy', 'gameState', 'grave', 'runSummary', 'logs',
     'quickSlots', 'visualEffect', 'combatTurn', 'combatReceipt', 'syncStatus',
+    // 게임 필 GF-01: 정산이 그 차례의 연출 기록을 남긴다(표시 전용 · 저장하지 않는다).
+    'combatFeedback',
 ];
 
 const makeState = (playerOverrides = {}, enemyOverrides = {}) => ({

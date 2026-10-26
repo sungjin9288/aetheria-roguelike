@@ -202,10 +202,13 @@ import { readFile } from 'node:fs/promises';
           'combat-boss-counter testid');
   });
 
-  test('cycle 269: 기존 bossBriefLine 동작 유지 (회귀 가드)', async () => {
+  // 2026-10 감사 CL-06: bossBriefLine('보스 전술' 줄)은 데스크톱 분기와 보스에서 숨는 신호 줄 안에만 있어 한 번도 그려지지
+  //   않았다 — 지웠다(Wave 135 "그리지 않는 코드"). 보스 카드(기믹 · 공략 요령)와 보스 위협 칩이 그 자리다. 부재 불변식.
+  test('cycle 269: 그려지지 않던 bossBriefLine은 되살아나지 않는다 (2026-10 감사 CL-06)', async () => {
       const source = await readSrc('src/components/tabs/CombatPanel.tsx');
-      assert.ok(/bossBriefLine/.test(source), 'bossBriefLine 변수 유지');
-      assert.ok(/보스 전술/.test(source), '보스 전술 라벨 유지');
+      const view = await readSrc('src/utils/combatView.ts');
+      assert.ok(!/bossBriefLine/.test(source), 'CombatPanel에 bossBriefLine 없음');
+      assert.ok(!/bossBriefLine/.test(view), 'combatView에 bossBriefLine 없음');
   });
 }
 

@@ -8,29 +8,31 @@ type CharacterAppearance = ReturnType<typeof deriveCharacterAppearance>;
 
 const SIZE_MAP: Record<string, { frame: string; inner: string; badge: string }> = {
     sm: {
-        frame: 'h-[4.6rem] w-[4.6rem] rounded-[1.25rem] p-1.5',
-        inner: 'rounded-[0.95rem]',
+        frame: 'h-[4.6rem] w-[4.6rem] rounded-ae-lg p-1.5',
+        inner: 'rounded-ae-md',
         badge: 'text-[11px] px-1.5 py-[1px]',
     },
     md: {
-        frame: 'h-[5.45rem] w-[5.45rem] rounded-[1.35rem] p-2',
-        inner: 'rounded-[1.05rem]',
+        frame: 'h-[5.45rem] w-[5.45rem] rounded-ae-lg p-2',
+        inner: 'rounded-ae-md',
         badge: 'text-[11px] px-1.5 py-0.5',
     },
     lg: {
-        frame: 'h-[6.95rem] w-[6.95rem] rounded-[1.55rem] p-2.5',
-        inner: 'rounded-[1.2rem]',
+        frame: 'h-[6.95rem] w-[6.95rem] rounded-ae-xl p-2.5',
+        inner: 'rounded-ae-lg',
         badge: 'text-[11px] px-2 py-0.5',
     },
 };
 
+// 2026-10 에테르 유리(VD-06): 계열 색은 `.ae-avatar-frame`(index.css w3:archive-a)의 토큰 별칭이다 — 바탕은 표면 톤(s3 → sunk),
+//   계열은 위쪽 광채와 림 한 줄에만 남는다.
 const FRAME_TONE_CLASS: Record<string, string> = {
-    화염: 'border-orange-300/28 bg-[radial-gradient(circle_at_76%_16%,rgba(251,146,60,0.26),transparent_26%),linear-gradient(180deg,rgba(35,20,12,0.98)_0%,rgba(8,8,8,1)_100%)]',
-    냉기: 'border-cyan-300/24 bg-[radial-gradient(circle_at_76%_16%,rgba(103,232,249,0.22),transparent_28%),linear-gradient(180deg,rgba(14,22,34,0.98)_0%,rgba(7,10,16,1)_100%)]',
-    어둠: 'border-violet-300/26 bg-[radial-gradient(circle_at_76%_16%,rgba(167,139,250,0.24),transparent_28%),linear-gradient(180deg,rgba(23,17,36,0.98)_0%,rgba(7,7,16,1)_100%)]',
-    빛: 'border-[#d5b180]/24 bg-[radial-gradient(circle_at_76%_16%,rgba(246,231,200,0.18),transparent_26%),linear-gradient(180deg,rgba(34,26,18,0.98)_0%,rgba(12,11,10,1)_100%)]',
-    자연: 'border-emerald-300/24 bg-[radial-gradient(circle_at_76%_16%,rgba(134,239,172,0.2),transparent_28%),linear-gradient(180deg,rgba(16,28,22,0.98)_0%,rgba(7,10,9,1)_100%)]',
-    대지: 'border-amber-300/22 bg-[radial-gradient(circle_at_76%_16%,rgba(214,179,139,0.2),transparent_28%),linear-gradient(180deg,rgba(31,25,21,0.98)_0%,rgba(10,9,8,1)_100%)]',
+    화염: 'is-fire',
+    냉기: 'is-frost',
+    어둠: 'is-shadow',
+    빛: 'is-holy',
+    자연: 'is-nature',
+    대지: 'is-earth',
 };
 
 // cycle 529: alpha default 0.24 제거 — 1 internal callsite (line 89)
@@ -95,8 +97,7 @@ const PixelCharacterAvatar = ({
 
     const sizeConfig = SIZE_MAP[size] || SIZE_MAP.sm;
     const totalEnhance = (appearance.weapon?.enhance || 0) + (appearance.offhand?.enhance || 0) + (appearance.armor?.enhance || 0);
-    const frameToneClass = FRAME_TONE_CLASS[appearance.frameTone ?? '']
-        || 'border-white/10 bg-[radial-gradient(circle_at_76%_16%,rgba(125,212,216,0.16),transparent_28%),linear-gradient(180deg,rgba(18,24,32,0.98)_0%,rgba(8,12,18,1)_100%)]';
+    const frameToneClass = FRAME_TONE_CLASS[appearance.frameTone ?? ''] || '';
 
     const spriteCandidates = useMemo(
         () => getAvatarSpriteCandidates(appearance),
@@ -114,11 +115,9 @@ const PixelCharacterAvatar = ({
             data-avatar-offhand={appearance.offhand?.art?.key || appearance.offhand?.visual || 'none'}
             data-avatar-armor={appearance.armor?.art?.key || appearance.armor?.visual || 'none'}
             data-avatar-headgear={appearance.armor?.art?.headgearStyle || 'none'}
-            className={`panel-noise relative overflow-hidden border shadow-[0_14px_28px_rgba(3,8,16,0.34),inset_0_1px_0_rgba(255,255,255,0.05)] ${sizeConfig.frame} ${frameToneClass} ${className}`.trim()}
+            className={`ae-avatar-frame relative overflow-hidden ${sizeConfig.frame} ${frameToneClass} ${className ?? ''}`.trim()}
             aria-label={`${label} · ${appearance.job}`}
         >
-            <div className="pointer-events-none absolute inset-x-2 top-1 h-px bg-gradient-to-r from-transparent via-white/24 to-transparent" />
-            <div className="pointer-events-none absolute inset-[3px] rounded-[inherit] border border-white/[0.04]" />
             <div className="pointer-events-none absolute -right-1 top-1 h-5 w-5 rounded-full blur-[10px]" style={{ backgroundColor: softenColor(appearance.palette.glow || appearance.palette.accent, 0.28) }} />
             <div className={`relative h-full w-full overflow-hidden ${sizeConfig.inner}`}>
                 {/* cycle 56+: avatar = cycle 46 직업별 sprite (망토+갑옷+무기 baked-in).
@@ -127,7 +126,7 @@ const PixelCharacterAvatar = ({
                     src={activeSpriteSrc}
                     alt=""
                     aria-hidden="true"
-                    className="h-full w-full scale-[1.04] object-contain pixelated drop-shadow-[0_10px_16px_rgba(0,0,0,0.28)]"
+                    className="ae-avatar-sprite h-full w-full object-contain pixelated"
                     onError={() => {
                         setSpriteState((current) => {
                             const currentState = current.signature === spriteSignature ? current : { signature: spriteSignature, index: 0 };
@@ -143,7 +142,7 @@ const PixelCharacterAvatar = ({
                 <span
                     data-testid="avatar-enhance-badge"
                     aria-label={`장비 강화 합계 ${totalEnhance}`}
-                    className={`absolute bottom-1 right-1 whitespace-nowrap rounded-full border border-[#d5b180]/28 bg-[#d5b180]/16 font-readable font-bold text-[#f6e7c8] shadow-[0_6px_18px_rgba(213,177,128,0.22)] ${sizeConfig.badge}`}
+                    className={`ae-chip ae-chip-gold absolute bottom-1 right-1 whitespace-nowrap font-readable font-bold ${sizeConfig.badge}`}
                 >
                     강화 +{totalEnhance}
                 </span>
@@ -156,7 +155,7 @@ const PixelCharacterAvatar = ({
             <button
                 type="button"
                 onClick={onClick}
-                className="pointer-events-auto rounded-[1rem] transition-transform hover:scale-[1.02] active:scale-[0.98]"
+                className="pointer-events-auto rounded-ae-lg transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] hover:scale-[1.02] active:scale-[0.98] motion-reduce:transition-none"
                 aria-label={label}
             >
                 {avatar}

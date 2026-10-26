@@ -3,6 +3,7 @@ import { normalizeClassJourneyLedger } from './classJourney';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward';
 import { collectSignatureLedger } from './signatureDiscovery';
 import { collectAchievedAchievementIds } from './achievementProgress';
+import { recordCycleBestLevel } from './cycleBestLevel';
 import { ACHIEVEMENTS } from '../data/quests';
 import { TITLES } from '../data/titles';
 import {
@@ -76,7 +77,12 @@ export const pickPermanentPlayerState = (
     const titles = pickKeptTitles(player.titles, kind);
     const activeTitle = player.activeTitle && titles.includes(player.activeTitle) ? player.activeTitle : null;
     return {
-        meta: clone({ ...(initialPlayer.meta || {}), ...(player.meta || {}) }),
+        meta: clone({
+            ...(initialPlayer.meta || {}),
+            ...(player.meta || {}),
+            // 사망 · 다시 시작은 이번 회차의 최고 레벨을 남긴다(사망 화면 · 다시 오르는 레벨업 기록이 읽는다). 계승은 새 회차라 남기지 않는다.
+            ...(kind === 'death' ? { cycleBestLevel: recordCycleBestLevel(player.meta, player.level) } : {}),
+        }),
         achievements: [],
         titles,
         activeTitle,

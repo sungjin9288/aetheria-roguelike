@@ -12,7 +12,8 @@ test('첫 원정은 연결이 끊겨도 귀환 기록을 표시하고 다시 불
         expect(await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8))).toBe(true);
         await page.getByTestId('control-explore').click();
         await expect(page.getByTestId('event-panel')).toBeHidden();
-        await page.getByTestId('control-route-open').click();
+        // 2026-10 통합 감사(town-nav UX-03): 원정 조작판의 이동은 하나다(control-move).
+        await page.getByTestId('control-move').click();
         await page.getByTestId('control-route-option-시작의 마을').click();
 
         const card = page.getByTestId('expedition-debrief-card');

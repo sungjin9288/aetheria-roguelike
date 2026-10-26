@@ -1,7 +1,7 @@
 import type { FullStats, Item, Monster, Player } from '../types/index.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
 import { getActiveHeavyStatus } from '../systems/bossMechanics';
-import { getSkillElement, isDamagingSkill } from '../systems/skillPower';
+import { hitsEnemyWeakness } from '../systems/skillPower';
 
 type ForecastTone = 'pressure' | 'advantage' | 'reward' | 'steady';
 
@@ -92,8 +92,8 @@ export const getCombatForecast = ({
     const canUseSkill = skillReadiness.canUse;
     const skillName = getSkillShortName(selectedSkill);
     // 2026-10 Wave 65: 약점 판정은 엔진과 같은 원소(`getSkillElement` — 기술 원소, 없으면 무기 원소)이고 위력 있는 기술만이다.
-    const skillHitsWeakness = Boolean(canUseSkill && isDamagingSkill(selectedSkill) && enemy.weakness
-        && getSkillElement(selectedSkill, stats) === enemy.weakness);
+    //   2026-10 감사 CL-03: 전투 기술 칸의 약점 표시와 같은 판정(`hitsEnemyWeakness`)을 읽는다.
+    const skillHitsWeakness = canUseSkill && hitsEnemyWeakness(selectedSkill, enemy, stats);
     const skillIsDefensive = Boolean(canUseSkill && (selectedSkill?.type === 'buff' || DEFENSIVE_EFFECTS.has(selectedSkill?.effect ?? '')));
     // 2026-09 N3: `enemy.pattern?.statusEffect ||` fallback 제거 — 정의한 pattern이 0개라
     //   항상 statusOnHit로 내려가던 죽은 우선순위였다.

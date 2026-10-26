@@ -16,6 +16,9 @@ import { openTownFacilities, startE2ERun } from './testHelpers';
 //   ⑪ 겹친 회차 카드의 카드별 미리보기(Wave 126 — 출처 줄이 가장 길다)는 세 폭 어디서도 그려 본 적이 없었다
 // 2026-10 통합 수용 4차(원장 §138): ⑫ 게시판 추천 줄이 기본 토벌의 목표를 모두 숨겨, 제목이 대상을 말하지 않는 임무
 //   ("호수의 수호자 (0/5)" — 이야기를 여는 임무 · 본편 장 포함 49개)는 수락 전 무엇을 하는지가 없었다. Wave 128의 소문 줄도 여기서 그린다
+// 2026-10 통합 감사(town-nav): ⑬ '임무 경로' 칩이 붙은 경로 노드에서 지역 이름이 한 글자씩 세로로 꺾였다(새 여정의 '고요한 숲' —
+//   이동 보드 43px · 2줄, 기록 지도 23px · 3줄, UX-02) ⑭ 기록 탭 레일이 11개 중 4개만 보이면서 넘침을 알리지 않았다(UX-08)
+//   ⑮ 상점 구매 · 판매 전환이 43x29px이고 고른 쪽을 색으로만 말했다(A11Y-05)
 const VIEWPORTS = [
     { width: 375, height: 667 },
     { width: 390, height: 844 },
@@ -192,6 +195,27 @@ const isClipped = (target: Locator) => target.evaluate((element) => (
     element.scrollWidth > element.clientWidth + 0.5 || element.scrollHeight > element.clientHeight + 0.5
 ));
 
+// 경로 노드 이름의 폭과 줄 수 — 줄 수는 이름 글자가 놓인 줄 상자의 서로 다른 높이 수다(UX-02).
+const ROUTE_NAME_MIN_WIDTH = 64;
+const ROUTE_NAME_MAX_LINES = 2;
+const measureRouteNames = (root: Locator) => root.locator('.aether-route-topology-name').evaluateAll((names) => names.map((name) => {
+    const range = document.createRange();
+    range.selectNodeContents(name);
+    const tops = new Set([...range.getClientRects()].filter((rect) => rect.width > 0).map((rect) => Math.round(rect.top)));
+    return { text: name.textContent?.trim() || '', width: name.getBoundingClientRect().width, lines: tops.size };
+}));
+
+const expectReadableRouteNames = async (root: Locator) => {
+    await expect(root.getByText('임무 경로', { exact: true }).first()).toBeVisible();
+    const names = await measureRouteNames(root);
+    expect(names.length).toBeGreaterThan(0);
+    expect(names.filter((name) => name.width < ROUTE_NAME_MIN_WIDTH || name.lines > ROUTE_NAME_MAX_LINES)).toEqual([]);
+    const nameNodes = root.locator('.aether-route-topology-name');
+    for (let index = 0; index < names.length; index += 1) {
+        expect(await countMidWordBreaks(nameNodes.nth(index))).toBe(0);
+    }
+};
+
 // 2026-10 Wave 69(소유자 결정 B): 코드 글꼴(`font-fira`)의 고정폭 공백 0.6em이 한국어 낱말 사이를 벌렸다 — 숫자 · 영문만 Fira Code.
 // 같은 글을 코드 글꼴과 본문 글꼴로 그려 폭을 잰다. 코드 글꼴(저장소의 Fira Code)은 미리 내려받아 둔다.
 const measureFonts = (page: Page) => page.evaluate(async () => {
@@ -266,9 +290,14 @@ for (const viewport of VIEWPORTS) {
             const routeStrip = page.getByTestId('control-map-signal');
             await expect(routeStrip).toBeVisible();
             expect(await countMidWordBreaks(routeStrip)).toBe(0);
-            // ④ 지도 · 이동 버튼은 44px 터치 영역이다.
+            // ④ 지도 · 이동 · 가방 버튼은 44px 터치 영역이다. 2026-10 통합 감사(town-nav UX-03 · UX-07): 이동은 조작판의 하나뿐이고
+            //   (지도 신호 줄의 두 번째 '이동'은 없다), 원정 중 가방(기록의 가방 탭)으로 가는 단추가 이름과 함께 보인다.
             await expectTouchTarget(page.getByTestId('control-map-open'));
-            await expectTouchTarget(page.getByTestId('control-route-open'));
+            await expect(page.getByTestId('control-route-open')).toHaveCount(0);
+            await expect(page.getByTestId('control-move')).toHaveCount(1);
+            await expectTouchTarget(page.getByTestId('control-move'));
+            await expectTouchTarget(page.getByTestId('control-open-bag'));
+            await expect(page.getByTestId('control-open-bag')).toHaveAccessibleName(/가방/);
 
             // ① 전투 결과 카드는 화면 하단에 고정된, 가운데 정렬된 오버레이다.
             await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectPostCombatResult?.());
@@ -397,6 +426,15 @@ for (const viewport of VIEWPORTS) {
         try {
             await loadLateKnightFixture(page);
 
+            // 2026-10 통합 감사(town-nav A11Y-05): 상점 판매 줄의 판매 단추도 44px이다(40px였다) — 팔 물건이 있는 후반 가방에서 잰다.
+            await openTownFacilities(page);
+            await page.getByTestId('control-market').click();
+            await page.getByTestId('shop-mode-sell').click();
+            await expect(page.getByTestId('shop-sell-row').first()).toBeVisible();
+            expect(await findUndersizedButtons(page.getByTestId('shop-panel'))).toEqual([]);
+            await page.getByTestId('shop-close').click();
+            await expect(page.getByTestId('shop-panel')).toHaveCount(0);
+
             // 장비: 상세 보기 · 강화 보기 · 세트 목록이 44px이고, 양손 무기가 쓰는 보조 장비 칸 이름이 잘리지 않는다.
             let content = await openArchiveTab(page, 'equipment');
             await showDetails(page.getByTestId('equipment-detail-toggle'));
@@ -435,6 +473,85 @@ for (const viewport of VIEWPORTS) {
             content = await openArchiveTab(page, 'map');
             await expect(content.getByRole('button', { name: /성장 조언/ })).toBeVisible();
             expect(await findUndersizedButtons(content)).toEqual([]);
+        } finally {
+            await context.close();
+        }
+    });
+
+    test(`${viewport.width}px 새 여정의 경로 노드 이름 · 기록 탭 레일 · 상점 전환이 읽히고 눌린다`, async ({ browser, baseURL }) => {
+        const { context, page } = await newMobilePage(browser, baseURL, viewport);
+        try {
+            await startE2ERun(page);
+
+            // ⑬ 마을 이동 보드: 첫 임무의 목적지(임무 경로 칩)가 꺾이지 않는다.
+            await page.getByTestId('control-move').click();
+            const routeBoard = page.getByTestId('control-route-topology');
+            await expect(routeBoard).toBeVisible();
+            await expectReadableRouteNames(routeBoard);
+            await page.getByTestId('control-move-cancel').click();
+            await expect(routeBoard).toHaveCount(0);
+
+            // ⑮ 상점 구매 · 판매 전환은 44px이고 고른 쪽을 aria-pressed로 알린다.
+            await openTownFacilities(page);
+            await page.getByTestId('control-market').click();
+            const buy = page.getByTestId('shop-mode-buy');
+            const sell = page.getByTestId('shop-mode-sell');
+            await expectTouchTarget(buy);
+            await expectTouchTarget(sell);
+            await expect(buy).toHaveAttribute('aria-pressed', 'true');
+            await expect(sell).toHaveAttribute('aria-pressed', 'false');
+            // 오늘의 할인 구매 단추도 44px이다 — 글자 폭만큼 줄던 단추였다.
+            const dailyBuys = page.getByTestId('shop-daily-buy');
+            await expect(dailyBuys).toHaveCount(3);
+            for (const dailyBuy of await dailyBuys.all()) await expectTouchTarget(dailyBuy);
+            // 구매 화면의 모든 단추가 44px이다 — 간단 · 상세 보기 모두(판매 줄은 팔 물건이 있는 후반 기록 탭 테스트가 잰다).
+            const shopPanel = page.getByTestId('shop-panel');
+            await expect(page.getByTestId('shop-buy-inline').first()).toBeVisible();
+            expect(await findUndersizedButtons(shopPanel)).toEqual([]);
+            await showDetails(page.getByTestId('shop-equipment-detail-toggle'));
+            expect(await findUndersizedButtons(shopPanel)).toEqual([]);
+            await sell.click();
+            await expect(sell).toHaveAttribute('aria-pressed', 'true');
+            await expect(buy).toHaveAttribute('aria-pressed', 'false');
+            await page.getByTestId('shop-close').click();
+            await expect(page.getByTestId('shop-panel')).toHaveCount(0);
+
+            // ⑬ 기록 지도 탭: 같은 노드가 칸을 나눠 쓰는 폭에서도 꺾이지 않는다.
+            const content = await openArchiveTab(page, 'map');
+            const mapTopology = content.getByTestId('map-topology');
+            await expect(mapTopology).toBeVisible();
+            await expectReadableRouteNames(mapTopology);
+
+            // ⑭ 레일이 넘치면 가장자리 흐림 · 진행 막대 · 다음 탭 단추(44px)가 넘침을 알리고, 탭 열한 개와 순서는 그대로다.
+            const frame = page.getByTestId('archive-tab-rail-frame');
+            const rail = page.getByTestId('archive-tab-rail');
+            await expect(rail.locator('button')).toHaveCount(11);
+            await expect(frame).toHaveAttribute('data-overflow', 'true');
+            await expect(page.getByTestId('archive-tab-rail-progress')).toBeVisible();
+            expect(await rail.evaluate((element) => getComputedStyle(element).maskImage || getComputedStyle(element).webkitMaskImage)).not.toBe('none');
+            const more = page.getByTestId('archive-tab-rail-more');
+            await expectTouchTarget(more);
+            await expect(more).toHaveAttribute('aria-controls', 'archive-tab-rail');
+            // 지도 탭은 가운데로 맞춰진다 — 끝에 닿아 있으면 단추가 처음으로 돌아간다(이름도 그렇게 바뀐다).
+            const before = await rail.evaluate((element) => element.scrollLeft);
+            const atEnd = (await frame.getAttribute('data-at-end')) === 'true';
+            await expect(more).toHaveAccessibleName(atEnd ? '처음 기록 탭 보기' : '다음 기록 탭 보기');
+            await more.click();
+            if (atEnd) await expect.poll(() => rail.evaluate((element) => element.scrollLeft)).toBeLessThan(before);
+            else await expect.poll(() => rail.evaluate((element) => element.scrollLeft)).toBeGreaterThan(before);
+
+            // ⑯ 상태 표시줄의 크리스탈은 이름 있는 44px 단추이고 에테르 교환소를 연다(닫기는 하나).
+            await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCrystalExchangeScenario?.(80));
+            const crystal = page.getByTestId('status-crystal');
+            await expectTouchTarget(crystal);
+            await expect(crystal).toHaveAccessibleName(/크리스탈 80개/);
+            await crystal.click();
+            const exchange = page.getByTestId('premium-shop');
+            await expect(exchange).toBeVisible();
+            const exchangeClose = page.getByTestId('premium-shop-close');
+            await expect(exchangeClose).toHaveAccessibleName('에테르 교환소 닫기');
+            await exchangeClose.click();
+            await expect(exchange).toHaveCount(0);
         } finally {
             await context.close();
         }

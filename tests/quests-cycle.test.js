@@ -930,7 +930,8 @@ import { syncQuestProgress } from '../src/utils/questProgress.js';
       const block = source.slice(fnIdx, fnEnd);
       assert.ok(/accent === 'green'/.test(block), 'green 분기 보존');
       assert.ok(/accent === 'amber'/.test(block), 'amber 분기 보존');
-      assert.ok(/border-cyber-blue/.test(block), 'blue fallback 클래스 보존');
+      // 2026-10 에테르 유리: 파란 기본 칩은 사이버 파랑에서 에테르(ae-ether)로 옮겼다(VD-08).
+      assert.ok(/border-ae-ether/.test(block), 'blue fallback 클래스 보존');
   });
 
   test('cycle 428 회귀 가드: QuestBoardPanel RewardChips default accent 0건', async () => {

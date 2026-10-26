@@ -30,12 +30,13 @@ const payload = { desc: '고대 유적에서 신비로운 빛이 흘러나옵니
 
 test('AI 서비스의 실제 폴백 분기마다 폐쇄형 사유를 정확히 한 번 기록한다', async () => {
     await withRuntime(true, async ({ AI_SERVICE, readProductEvents, clearProductEvents, TokenQuotaManager, values }) => {
-        for (const reason of ['mock-runtime', 'quota', 'proxy-unavailable', 'proxy-rejected', 'malformed-response', 'recent-duplicate']) {
+        // 쿼터 게이트의 닫힌 이유(GP-02): 실제 한도 도달은 'quota', 미터 불능(저장소 차단)은 'quota-unavailable'.
+        const gateFor = { quota: 'exhausted', 'quota-unavailable': 'unavailable' };
+        for (const reason of ['mock-runtime', 'quota', 'quota-unavailable', 'proxy-unavailable', 'proxy-rejected', 'malformed-response', 'recent-duplicate']) {
             for (const kind of reason === 'recent-duplicate' ? ['event'] : ['event', 'story']) {
                 values.clear();
                 globalThis.window = { location: { search: reason === 'mock-runtime' ? '?e2e=1' : '' } };
-                if (reason === 'quota') TokenQuotaManager.canMakeAICall = () => false;
-                else TokenQuotaManager.canMakeAICall = () => true;
+                TokenQuotaManager.getCallGate = () => gateFor[reason] ?? 'open';
                 globalThis.fetch = async () => ({ ok: reason !== 'proxy-unavailable', json: async () => (
                     reason === 'proxy-rejected' ? { success: false } : { success: true, data: reason === 'malformed-response' ? {} : payload }
                 ) });

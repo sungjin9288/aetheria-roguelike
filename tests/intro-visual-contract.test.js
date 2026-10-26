@@ -31,9 +31,10 @@ test('intro uses one immersive scene and keeps advanced rules optional', async (
     assert.match(app, /<MainLayout visualEffect=\{null\} immersive>/);
     assert.match(intro, /aetheria-starting-village\.webp/);
     assert.match(intro, /data-testid="intro-location"/);
-    assert.match(intro, /시작의 마을/);
+    // 2026-10 에테르 유리 3차(shell): 첫 장소 이름은 데이터(CONSTANTS.START_LOCATION)에서 읽는다 — 렌더 결과로 확인한다.
     // 2026-10 Wave 58: 도전 규칙 선택은 계승 화면과 함께 쓰는 ChallengeModifierPicker가 그린다 — 렌더 결과로 확인한다.
     const html = renderToStaticMarkup(createElement(IntroScreen, { onStart: () => {} }));
+    assert.match(html, /data-testid="intro-location"[^>]*>시작의 마을</);
     assert.match(html, /data-testid="intro-challenge-settings"/);
     assert.doesNotMatch(html, /<details[^>]*open/);
 });

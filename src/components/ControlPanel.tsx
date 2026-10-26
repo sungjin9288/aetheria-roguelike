@@ -1,60 +1,37 @@
-import {
-  Backpack,
-  BookOpen,
-  ChevronDown,
-  GraduationCap,
-  Hammer,
-  Landmark,
-  Map as MapIcon,
-  Moon,
-  Route,
-  ShoppingBag,
-  Ghost,
-  History,
-  ScrollText,
-  Binoculars,
-  Sparkles,
-} from 'lucide-react';
-import type { LucideIcon } from 'lucide-react';
-import { motion as Motion } from 'framer-motion';
+import { Sparkles } from 'lucide-react';
 import { DB } from '../data/db';
 import { getAdventureGuidance, getExpeditionPreparation, getMoveRecommendations, getQuestTracker } from '../utils/adventureGuide';
 import { canBossAppearInMap } from '../utils/bossPresence';
-import type { MoveRecommendation, QuestTracker } from '../utils/adventureGuide';
 import ShopPanel from './ShopPanel';
 import EventPanel from './EventPanel';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
-import SignalBadge from './SignalBadge';
 import { getGravesAtLoc } from '../utils/graveUtils';
 import { getMapRequiredLevel, getNextMapTowardTarget } from '../utils/mapTopology';
-import RouteTopology, { type RouteTopologyEntry } from './RouteTopology';
+import type { RouteTopologyEntry } from './RouteTopology';
 
 import CombatPanel from './tabs/CombatPanel';
 import JobChangePanel from './tabs/JobChangePanel';
 import QuestBoardPanel from './tabs/QuestBoardPanel';
 import CraftingPanel from './tabs/CraftingPanel';
 import { ACTION_KIND_TO_BUTTON } from './controlPanelConfig';
-import type { FullStats, GameMap, Item, Player, Monster } from '../types/index.js';
+import type { FullStats, Item, Player, Monster } from '../types/index.js';
 import { getTownActionPresentation } from '../utils/townActionPresentation';
-import { getExpeditionFocusRouteTargets, MAX_EXPEDITION_FOCUS_QUESTS } from '../utils/expeditionMissionFocus';
+import { getExpeditionFocusRouteTargets } from '../utils/expeditionMissionFocus';
 import { getScoutAvailability } from '../utils/scoutEvents';
 import { getVisibleLocationName } from '../utils/challengeRules';
 import { MSG } from '../data/messages';
 import type { GameState } from '../reducers/gameReducer';
 import type { GameActions } from '../hooks/actionDeps';
-
-/** 하단 액션 그리드/시설 목록에 렌더링되는 버튼 1건의 정적 서술(descriptor). */
-interface ControlButton {
-  key: string;
-  testId: string;
-  icon: LucideIcon;
-  label: string;
-  mobileLabel?: string;
-  onClick: () => void;
-  className: string;
-  disabled?: boolean;
-}
+import ActionButton from './ui/ActionButton';
+import MissionTrackerStrip from './control/MissionTrackerStrip';
+import ExpeditionPrepStrip from './control/ExpeditionPrepStrip';
+import MapSignalStrip from './control/MapSignalStrip';
+import FieldDock from './control/FieldDock';
+import RouteBoard from './control/RouteBoard';
+import TownActions from './control/TownActions';
+import type { ControlButton } from './control/types';
+import { buildControlButtons } from './control/controlButtons';
 
 interface ControlPanelProps {
   gameState?: GameMode;
@@ -62,288 +39,21 @@ interface ControlPanelProps {
   enemy?: Monster | null;
   actions?: GameActions;
   setGameState?: (state: GameMode) => void;
+  /** 에테르 거울 열기 — 마을 시설의 거울 단추가 쓴다(GameRoot가 거울 화면을 소유한다, CL-02). */
+  onOpenMirror?: () => void;
   shopItems?: Item[];
   grave?: GameState['grave'];
   isAiThinking?: boolean;
   currentEvent?: GameState['currentEvent'];
   stats?: FullStats | null;
   onOpenArchiveConsole?: (tab?: string) => void;
+  /** 전투 조작판의 내 생명 막대가 읽는 맞은 순간 · 회복한 순간(App의 `useDamageFlash`, 2026-10 감사 VD-02). */
+  damageFlash?: boolean;
+  healFlash?: boolean;
 }
 
-const missionTrackerTone: Record<string, string> = {
-  claimable: 'border-[#d5b180]/26 bg-[linear-gradient(180deg,rgba(44,31,15,0.72)_0%,rgba(14,10,6,0.94)_100%)] text-[#f6e7c8]',
-  bounty: 'border-rose-300/22 bg-[linear-gradient(180deg,rgba(42,18,25,0.72)_0%,rgba(15,8,12,0.94)_100%)] text-rose-100',
-  active: 'border-[#7dd4d8]/22 bg-[linear-gradient(180deg,rgba(15,35,39,0.72)_0%,rgba(7,13,17,0.94)_100%)] text-[#dff7f5]',
-};
-
-const MissionTrackerStrip = ({ tracker, canClaimReward, onClaimReward }: {
-  tracker: QuestTracker;
-  canClaimReward: boolean;
-  onClaimReward?: () => void;
-}) => {
-  const toneClass = missionTrackerTone[tracker.kind] || missionTrackerTone.active;
-  const focusQuests = tracker.focusQuests || [];
-  const showFocusOverview = tracker.focusQuests?.length > 1;
-  const isClaimable = tracker.kind === 'claimable';
-
-  return (
-    <section
-      data-testid="control-mission-tracker"
-      aria-label="현재 임무"
-      className={`aether-mission-strip relative overflow-hidden rounded-[1.05rem] px-3 py-2 ${toneClass}`}
-    >
-      <div
-        className="pointer-events-none absolute inset-0 opacity-70"
-        style={{ backgroundImage: 'linear-gradient(140deg, rgba(255,255,255,0.08), transparent 42%)' }}
-      />
-      <div className="relative flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className="aether-label text-slate-300/70">이번 원정 · {tracker.focusCount}/{MAX_EXPEDITION_FOCUS_QUESTS}</div>
-          <div className="aether-type-title mt-0.5 font-readable font-semibold text-white/94">
-            {tracker.title}
-          </div>
-          <div className="aether-type-body mt-0.5 font-readable text-slate-300/76">
-            {tracker.nextStep}
-          </div>
-        </div>
-        <div className="aether-type-meta shrink-0 rounded-full border border-white/10 bg-black/18 px-2 py-1 font-fira font-bold text-white/82">
-          {tracker.progressLabel}
-        </div>
-      </div>
-      <div className="relative mt-2 h-[3px] overflow-hidden rounded-full bg-black/28">
-        <div
-          className="h-full rounded-full bg-[#7dd4d8]"
-          style={{ width: `${Math.max(0, Math.min(100, tracker.progressPercent || 0))}%` }}
-        />
-      </div>
-      {showFocusOverview && (
-        <div className="relative mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-3" data-testid="control-expedition-focus-list">
-          {focusQuests.map((quest) => (
-            <div key={quest.questId} className="aether-decision-cell flex min-h-[38px] min-w-0 items-center justify-between gap-2 rounded-[0.7rem] px-2 py-1.5">
-              <div className="aether-type-meta min-w-0 break-words font-readable font-semibold text-slate-100/88">{quest.title}</div>
-              <div className="aether-type-label shrink-0 font-readable text-slate-400">{quest.progressLabel}</div>
-            </div>
-          ))}
-        </div>
-      )}
-      <div
-        data-testid="control-mission-context"
-        className="relative mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 border-t border-white/8 pt-2 font-readable"
-      >
-        <div className="aether-type-meta text-slate-200/84">
-          <span className="mr-1 text-slate-500">장소</span>
-          {tracker.routeLabel || '현재 지역'}
-        </div>
-        <div className="aether-type-meta text-slate-200/84">
-          <span className="mr-1 text-slate-500">귀환</span>
-          {tracker.returnLabel || '계속 진행'}
-        </div>
-      </div>
-      {isClaimable && (
-        <button
-          type="button"
-          data-testid="control-claim-quest-reward"
-          disabled={!canClaimReward || !onClaimReward}
-          onClick={onClaimReward}
-          className="aether-decision-cell relative mt-2 flex min-h-[44px] w-full items-center justify-between rounded-[0.7rem] border border-[#d5b180]/30 bg-[#d5b180]/12 px-3 text-left disabled:cursor-not-allowed disabled:opacity-55"
-        >
-          <span className="aether-type-label font-readable font-bold text-[#d5b180]/72">임무 완료</span>
-          <span className="aether-type-meta font-readable font-bold text-[#f6e7c8]">
-            {canClaimReward ? '보상 받기' : '마을에서 수령'}
-          </span>
-        </button>
-      )}
-    </section>
-  );
-};
-
-const townPrimaryIcons: Record<string, LucideIcon> = {
-  claim_quest: ScrollText,
-  explore: MapIcon,
-  open_class: GraduationCap,
-  open_inventory: Backpack,
-  open_move: Route,
-  open_quest_board: ScrollText,
-  rest: Moon,
-};
-
-const ExpeditionPrepStrip = ({ preparation, primary, onPrimaryAction, onEditFocus, onOpenArchive }: {
-  preparation: ReturnType<typeof getExpeditionPreparation>;
-  primary: ReturnType<typeof getTownActionPresentation>['primary'];
-  onPrimaryAction: () => void;
-  onEditFocus: () => void;
-  onOpenArchive?: () => void;
-}) => {
-  const PrimaryIcon = townPrimaryIcons[primary.kind] || Route;
-  const checks = [
-    { label: '목적지', value: preparation.destination },
-    { label: '목표', value: preparation.goalLabel },
-  ];
-
-  return (
-    <section
-      data-testid="control-expedition-prep"
-      data-expedition-readiness={preparation.readinessLabel}
-      aria-label="원정 준비"
-      className="aether-expedition-prep overflow-hidden px-3 py-2.5"
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="aether-label text-[#b9f1ec]/72">원정 준비</div>
-        <div className="flex shrink-0 items-center gap-1.5">
-          <SignalBadge tone={preparation.readinessLabel === '출발 가능' ? 'recommended' : 'neutral'} size="sm">
-            {preparation.readinessLabel}
-          </SignalBadge>
-          {onOpenArchive && (
-            <button
-              type="button"
-              data-testid="mobile-console-open-archive"
-              onClick={onOpenArchive}
-              className="inline-flex min-h-[44px] items-center gap-1.5 rounded-[0.75rem] border border-white/10 bg-black/18 px-2.5 font-readable text-[11px] font-semibold text-slate-200/84 transition-colors hover:border-[#7dd4d8]/24 hover:text-white"
-            >
-              <BookOpen size={14} />
-              모험 기록
-            </button>
-          )}
-        </div>
-      </div>
-
-      <div className="mt-2 grid grid-cols-2 gap-1">
-        {checks.map((check) => (
-          <div key={check.label} className="aether-expedition-check min-w-0 px-2 py-1.5">
-            <div className="aether-type-label font-readable font-bold text-slate-400">{check.label}</div>
-            <div className="aether-type-body mt-0.5 break-words font-readable font-semibold text-slate-100/90" title={check.value}>
-              {check.value}
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="mt-2 grid grid-cols-[minmax(0,1fr)_auto] gap-2">
-        <div data-testid="control-town-primary" data-town-primary-kind={primary.kind}>
-          <button
-            type="button"
-            data-testid={primary.testId}
-            disabled={primary.disabled}
-            onClick={onPrimaryAction}
-            className={`${primary.tone === 'reward' ? 'aether-cta-gold text-[#f6e7c8]' : 'aether-cta-primary text-[#dff7f5]'} flex min-h-[48px] w-full items-center justify-center gap-2 px-3 font-readable text-xs font-bold disabled:cursor-not-allowed disabled:opacity-55`}
-          >
-            <PrimaryIcon size={14} />
-            {primary.label}
-          </button>
-        </div>
-        <button
-          type="button"
-          data-testid="control-edit-expedition-focus"
-          title="원정 임무 구성"
-          onClick={onEditFocus}
-          className="aether-action-button flex min-h-[48px] min-w-[48px] items-center justify-center rounded-[0.75rem] border border-white/10 text-[#b9f1ec]"
-        >
-          <ScrollText size={16} />
-          <span className="sr-only">원정 임무 구성</span>
-        </button>
-      </div>
-    </section>
-  );
-};
-
-interface MapSignalStripProps {
-  player: Player;
-  currentMap: GameMap;
-  routes: MoveRecommendation[];
-  setGameState?: (state: GameMode) => void;
-  onOpenArchiveConsole?: (tab?: string) => void;
-  isAiThinking?: boolean;
-}
-
-const MapSignalStrip = ({
-  player,
-  currentMap,
-  routes,
-  setGameState,
-  onOpenArchiveConsole,
-  isAiThinking,
-}: MapSignalStripProps) => {
-  const recommendedRoute = routes?.[0] || null;
-  const blindMap = player?.challengeModifiers?.includes('blindMap');
-  const currentName = blindMap ? '???' : player?.loc;
-  const routeName = blindMap ? '미확인 경로' : (recommendedRoute?.name || '경로 없음');
-  const mapState = currentMap?.type === 'safe'
-    ? '안전지대'
-    // Wave 61 (원장 §61.3): 보스 표시는 이 플레이어가 실제로 보스를 만날 수 있을 때만(`canBossAppearInMap`).
-    : canBossAppearInMap(player?.loc, currentMap, player)
-      ? '보스 권역'
-      : '탐험 지역';
-  const routeBadge = recommendedRoute?.isRecommended ? '추천' : (recommendedRoute?.badge || '대기');
-
-  const openMap = () => {
-    onOpenArchiveConsole?.('map');
-  };
-
-  const openRoute = () => {
-    setGameState?.(GS.MOVING);
-  };
-
-  return (
-    <section
-      data-testid="control-map-signal"
-      aria-label="지도와 추천 경로"
-      className="aether-route-strip rounded-[1.1rem] px-3 py-2"
-    >
-      <div className="flex items-center justify-between gap-2">
-        <div className="min-w-0">
-          <div className="aether-label text-[#b9f1ec]/72">현재 지역</div>
-          <div className="mt-0.5 flex min-w-0 items-center gap-2">
-            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.8rem] border border-[#7dd4d8]/28 bg-black/24 text-[#dff7f5]">
-              <MapIcon size={14} />
-            </span>
-            <div className="min-w-0">
-              <div className="aether-type-title font-readable font-semibold text-white">{currentName}</div>
-              <div className="aether-type-meta font-fira uppercase tracking-normal text-slate-300/70">{mapState}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="min-w-0 flex-1 px-1">
-          <div className="aether-route-path">
-            <span className="sr-only">현재 위치에서 추천 경로</span>
-            <Route size={14} className="justify-self-center text-[#b9f1ec]" />
-          </div>
-          <div className="mt-1 flex min-w-0 flex-wrap items-center justify-center gap-x-1.5 gap-y-0.5">
-            {/* 2026-10 제품 통합 수용: 좁은 폭에서 칩과 지역 이름이 함께 줄어 "추천" · "암흑 성"이 세로로 한 글자씩 꺾였다.
-                칩은 줄지 않고, 한 줄에 안 들어가면 지역 이름이 다음 줄로 내려간다. */}
-            <span className="shrink-0 whitespace-nowrap">
-              <SignalBadge tone="recommended" size="sm">{routeBadge}</SignalBadge>
-            </span>
-            <span className="aether-type-body min-w-0 text-center font-readable font-semibold text-[#dff7f5]">{routeName}</span>
-          </div>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-1">
-          {onOpenArchiveConsole && (
-            <button
-              type="button"
-              data-testid="control-map-open"
-              onClick={openMap}
-              className="aether-type-meta min-h-[44px] min-w-[44px] rounded-[0.85rem] border border-[#7dd4d8]/26 bg-black/22 px-2 font-fira font-bold uppercase tracking-normal text-[#dff7f5]"
-            >
-              지도
-            </button>
-          )}
-          <button
-            type="button"
-            data-testid="control-route-open"
-            disabled={isAiThinking || !recommendedRoute}
-            onClick={openRoute}
-            className="aether-type-meta min-h-[44px] min-w-[44px] rounded-[0.85rem] border border-[#d5b180]/28 bg-[#d5b180]/12 px-2 font-fira font-bold uppercase tracking-normal text-[#f6e7c8] disabled:opacity-45"
-          >
-            이동
-          </button>
-        </div>
-      </div>
-    </section>
-  );
-};
-
+// 2026-10 에테르 유리(감사 CH-08): 923줄이던 조작판을 화면 조각으로 나눴다 — 임무 카드 · 원정 준비 · 추천 경로 · 원정 도크 ·
+//   이동 경로 보드 · 마을 행동은 `control/`이 그린다. 이 파일은 데이터 · 행동 서술 · 모드 분기만 소유한다(동작 · testid 그대로).
 // cycle 587: 3 defaults batch 제거 (enemy/stats/onOpenArchiveConsole) —
 //   2 production caller (MobileGameLayout:106/121) 12 props 모두 명시 전달
 //   이라 3 defaults 모두 도달 불가. 청소 메가 시리즈 78번째.
@@ -353,18 +63,16 @@ const ControlPanel = ({
   enemy,
   actions,
   setGameState,
+  onOpenMirror,
   shopItems,
   grave,
   isAiThinking,
   currentEvent,
   stats,
   onOpenArchiveConsole,
+  damageFlash,
+  healFlash,
 }: ControlPanelProps) => {
-  // cycle 486-489: 모바일 포커스 플래그 4사이클 cascade — caller 항상 truthy
-  //   전달 (2 callsite shorthand) → reset 확인 상태 / reset helper 함수 /
-  //   비-truthy 가드 2 unreachable 블록 / EVENT 비-모바일 분기 + 3 subchild
-  //   (QuestBoardPanel/ShopPanel/EventPanel) cascade 정리. 본체 변수 read 0건이라
-  //   destructure에서 완전 제거. interface도 정리.
   const mapData = DB.MAPS[player.loc as string];
   const currentLocation = player.loc || '';
   const playerLevel = player.level || 1;
@@ -403,20 +111,9 @@ const ControlPanel = ({
     consumables: DB.ITEMS.consumables || [],
   });
 
-  const actionGridClass = 'grid grid-cols-3 gap-2';
-  const actionButtonBase = 'aether-action-button relative min-h-[48px] overflow-hidden rounded-[1rem] px-2.5 flex items-center gap-2 text-left disabled:opacity-50 transition-all group';
-  const actionLabelClass = 'aether-type-body font-readable font-bold uppercase tracking-normal text-left';
-
-  const getRecommendedClass = (buttonKey: string) => (
-    recommendedButton === buttonKey
-      ? 'ring-1 ring-cyan-300/45 shadow-[0_0_18px_rgba(34,211,238,0.18)]'
-      : ''
-  );
-
   // cycle 626: extraClass '' / outer {} explicit default-elimination —
-  //   3 callsite (line 284/285/286)에서 ('', {}) 명시 추가 후 outer defaults
-  //   제거. inner destructure default `hideLabel = false`는 보존 (caller {}
-  //   시 그대로 기본값 적용). explicit default-elimination paired batch 3번째.
+  //   callsite에서 ('', {}) 명시. inner destructure default `hideLabel = false`는 보존.
+  //   2026-10 에테르 유리: 마을 · 회수 단추는 유리 단추(아이콘 위 · 이름 아래)이고, 안내가 고른 단추는 에테르 림이 하나 더 붙는다.
   const renderActionButton = (button: ControlButton, extraClass: string, { hideLabel = false }: { hideLabel?: boolean }) => {
     const {
       key,
@@ -425,39 +122,21 @@ const ControlPanel = ({
       label,
       mobileLabel = label,
       onClick,
-      className,
       disabled = false,
     } = button;
-    const buttonLabel = mobileLabel;
+    const recommendedClass = recommendedButton === key ? 'is-recommended' : '';
 
     return (
-      <Motion.button
+      <ActionButton
         key={key}
         data-testid={testId}
-        title={buttonLabel}
-        whileTap={{ scale: 0.95 }}
+        title={mobileLabel}
         disabled={disabled}
         onClick={onClick}
-        className={`${actionButtonBase} ${getRecommendedClass(key)} ${className} ${extraClass}`.trim()}
-      >
-        <div
-          className="pointer-events-none absolute inset-0 opacity-80"
-          style={{ backgroundImage: 'linear-gradient(145deg, rgba(255,255,255,0.08), transparent 42%), linear-gradient(180deg, rgba(255,255,255,0.035), transparent 42%)' }}
-        />
-        <div className="flex items-center gap-2">
-          <span className="aether-action-icon flex h-7 w-7 shrink-0 items-center justify-center rounded-[0.85rem] shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
-            <Icon size={13} className="transition-transform group-hover:scale-110" />
-          </span>
-          {hideLabel ? (
-            <span className="sr-only">{buttonLabel}</span>
-          ) : (
-            <div className={actionLabelClass}>{buttonLabel}</div>
-          )}
-        </div>
-        {recommendedButton === key && (
-          <span className="ml-auto shrink-0 h-1.5 w-1.5 rounded-full bg-[#7dd4d8] shadow-[0_0_4px_rgba(125,212,216,0.8)]" />
-        )}
-      </Motion.button>
+        icon={<Icon size={18} />}
+        label={hideLabel ? <span className="sr-only">{mobileLabel}</span> : mobileLabel}
+        className={`ae-dock-btn ${recommendedClass} ${extraClass}`.trim()}
+      />
     );
   };
 
@@ -470,6 +149,8 @@ const ControlPanel = ({
         stats={stats}
         isAiThinking={isAiThinking}
         mobile
+        damageFlash={damageFlash}
+        healFlash={healFlash}
       />
     );
   }
@@ -480,13 +161,12 @@ const ControlPanel = ({
   //   최대 9.5초 떴다. 이제 준비 중은 **모드 자체**이므로 플래그를 읽지 않는다.
   if (gameState === GS.EVENT_PENDING) {
     return (
-      <Motion.div
-        initial={false}
-        animate={{ opacity: 1 }}
-        className="panel-noise aether-surface-strong relative z-20 flex min-h-0 flex-1 items-center justify-center rounded-[1.5rem] border border-[#9a8ac0]/20 px-5 py-6 text-center text-[#ece5ff] shadow-[0_24px_48px_rgba(9,12,18,0.24)] backdrop-blur-md"
+      <div
+        role="status"
+        className="ae-card relative z-20 flex min-h-0 flex-1 items-center justify-center px-5 py-6 text-center font-readable aether-type-title font-semibold text-ae-ink-2"
       >
         {MSG.AI_EVENT_PREPARING}
-      </Motion.div>
+      </div>
     );
   }
 
@@ -511,107 +191,15 @@ const ControlPanel = ({
     return <CraftingPanel player={player} actions={actions} setGameState={setGameState} onOpenArchiveConsole={onOpenArchiveConsole} />;
   }
 
-  // cycle 423: coreButtons 부가 라벨 출력 dead 제거 — renderActionButton
-  //   destructure 미포함이라 read 0건. label / mobileLabel만 활성.
-  const coreButtons = [
-    {
-      key: 'explore',
-      testId: 'control-explore',
-      icon: MapIcon,
-      label: '탐험',
-      onClick: () => actions?.explore(),
-      className: 'bg-[linear-gradient(180deg,rgba(18,34,41,0.82)_0%,rgba(8,14,18,0.96)_100%)] border border-[#7dd4d8]/20 text-[#dff7f5] hover:border-[#d5b180]/22 hover:bg-[#d5b180]/8 hover:shadow-[0_18px_28px_rgba(125,212,216,0.1)]',
-    },
-    {
-      key: 'move',
-      testId: 'control-move',
-      icon: Route,
-      label: '이동',
-      mobileLabel: '이동',
-      onClick: () => setGameState?.(GS.MOVING),
-      className: 'bg-[linear-gradient(180deg,rgba(22,29,37,0.84)_0%,rgba(9,13,18,0.96)_100%)] border border-white/8 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-[#7dd4d8]/8 hover:shadow-[0_18px_28px_rgba(125,212,216,0.08)]',
-    },
-  ];
+  const {
+    exploreButton,
+    moveButton,
+    bagButton,
+    auxiliaryButtons,
+    buttonByKey,
+    openQuestBoard,
+  } = buildControlButtons({ actions, setGameState, onOpenMirror, onOpenArchiveConsole, showGraveRecovery });
 
-  const marketButton: ControlButton = {
-    key: 'market',
-    testId: 'control-market',
-    icon: ShoppingBag,
-    label: '상점',
-    mobileLabel: '상점',
-    // 2026-09 Wave 17 I1 보정: 이 버튼이 **세 번째** 상점 진입 표면이었다. 파서와
-    //   GameRoot는 `openShop`으로 돌렸는데 여기만 시퀀스를 복제하고 있었다 — 지금은
-    //   위쪽 `gameState === GS.COMBAT` 조기 반환이 상태 가드를 대신하지만, 그건
-    //   **렌더 조건에 얹힌 가드**라 조기 반환 목록이 바뀌면 조용히 사라진다
-    //   (실측: 그 목록에 `dead`/`ascension`/`true_ending`이 없다). 가드는 액션이 갖는다.
-    onClick: () => actions?.openShop(),
-    className: 'bg-[linear-gradient(180deg,rgba(34,24,14,0.84)_0%,rgba(16,11,7,0.96)_100%)] border border-[#d5b180]/22 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/30',
-  };
-
-  const restButton: ControlButton = {
-    key: 'rest',
-    testId: 'control-rest',
-    icon: Moon,
-    label: '휴식',
-    mobileLabel: '휴식',
-    onClick: () => actions?.rest?.(),
-    className: 'bg-[linear-gradient(180deg,rgba(24,30,44,0.84)_0%,rgba(9,12,18,0.96)_100%)] border border-[#9a8ac0]/22 text-[#ece5ff] hover:bg-[#9a8ac0]/10 hover:border-[#9a8ac0]/30',
-  };
-
-  const questButton: ControlButton = {
-    key: 'quests',
-    testId: 'control-quests',
-    icon: ScrollText,
-    label: '임무',
-    mobileLabel: '임무',
-    onClick: () => {
-      if (actions?.setGameState) {
-        actions.setGameState(GS.QUEST_BOARD);
-        return;
-      }
-      setGameState?.(GS.QUEST_BOARD);
-    },
-    className: 'bg-[linear-gradient(180deg,rgba(16,32,37,0.84)_0%,rgba(7,13,17,0.96)_100%)] border border-[#7dd4d8]/22 text-[#dff7f5] hover:bg-[#7dd4d8]/10 hover:border-[#7dd4d8]/30',
-  };
-
-  const classButton: ControlButton = {
-    key: 'class',
-    testId: 'control-class',
-    icon: GraduationCap,
-    label: '전직',
-    mobileLabel: '전직',
-    onClick: () => setGameState?.(GS.JOB_CHANGE),
-    className: 'bg-[linear-gradient(180deg,rgba(32,27,18,0.84)_0%,rgba(14,11,7,0.96)_100%)] border border-[#d5b180]/18 text-[#f6e7c8] hover:bg-[#d5b180]/10 hover:border-[#d5b180]/28',
-  };
-
-  const craftButton: ControlButton = {
-    key: 'craft',
-    testId: 'control-craft',
-    icon: Hammer,
-    label: '제작',
-    mobileLabel: '제작',
-    onClick: () => setGameState?.(GS.CRAFTING),
-    className: 'bg-[linear-gradient(180deg,rgba(25,30,34,0.84)_0%,rgba(10,13,16,0.96)_100%)] border border-white/10 text-slate-200 hover:border-[#7dd4d8]/18 hover:bg-[#7dd4d8]/8',
-  };
-
-  const safeZoneButtons = [restButton, questButton, marketButton, classButton, craftButton];
-
-  const auxiliaryButtons: ControlButton[] = [];
-  if (showGraveRecovery) {
-    auxiliaryButtons.push({
-      key: 'grave',
-      testId: 'control-recover',
-      icon: Ghost,
-      label: '회수',
-      mobileLabel: '회수',
-      onClick: () => actions?.lootGrave?.(),
-      className: 'bg-[linear-gradient(180deg,rgba(26,31,38,0.85)_0%,rgba(12,15,20,0.96)_100%)] border border-white/10 text-slate-200 hover:border-[#d5b180]/16 hover:bg-white/[0.04]',
-    });
-  }
-
-  const buttonByKey = new Map(
-    [...coreButtons, ...safeZoneButtons, ...auxiliaryButtons].map((button) => [button.key, button]),
-  );
   const townQuickButtons = townPresentation.quickKeys
     .map((key) => buttonByKey.get(key))
     // 2026-09 Wave 16 H3: 라벨 소유권은 townActionPresentation의 exploreIntent다 —
@@ -644,11 +232,7 @@ const ControlPanel = ({
         onOpenArchiveConsole?.('inventory');
         return;
       case 'open_quest_board':
-        if (actions?.setGameState) {
-          actions.setGameState(GS.QUEST_BOARD);
-          return;
-        }
-        setGameState?.(GS.QUEST_BOARD);
+        openQuestBoard();
         return;
       case 'rest':
         actions?.rest?.();
@@ -668,193 +252,100 @@ const ControlPanel = ({
   const openTownArchive = onOpenArchiveConsole
     ? () => onOpenArchiveConsole('inventory')
     : undefined;
+  const openMap = () => onOpenArchiveConsole?.('map');
+  const lastExpedition = player.lastExpeditionSummary
+    ? {
+      destination: getVisibleLocationName(player, player.lastExpeditionSummary.destination) || '',
+      battles: player.lastExpeditionSummary.battles,
+      explores: player.lastExpeditionSummary.explores,
+      expGained: player.lastExpeditionSummary.expGained,
+    }
+    : null;
 
-  const townQuickGridClass = townQuickButtons.length >= 3
-    ? 'grid grid-cols-3 gap-2'
-    : townQuickButtons.length === 2
-      ? 'grid grid-cols-2 gap-2'
-      : 'grid grid-cols-1 gap-2';
+  if (gameState === GS.MOVING) {
+    return (
+      <div className="ae-control relative z-10 w-full">
+        <RouteBoard
+          currentName={currentLocation}
+          routes={routeTopologyEntries}
+          recommendation={moveRecommendations[0] || null}
+          blindMap={Boolean(player.challengeModifiers?.includes('blindMap'))}
+          onSelect={(route) => actions?.move(route.name)}
+          onCancel={() => setGameState?.(GS.IDLE)}
+        />
+      </div>
+    );
+  }
 
   return (
-    <Motion.div
-      initial={false}
-      animate={{ opacity: 1 }}
-      className="relative z-10 w-full panel-noise aether-surface rounded-[1.5rem] p-1.5"
-    >
-      {gameState === GS.MOVING ? (
-        <div className="space-y-2">
-          <div
-            data-testid="control-route-board"
-            className="aether-map-current-card rounded-[0.75rem] px-2.5 py-2"
-          >
-            <div className="mb-1.5 flex items-center justify-between gap-2 px-0.5">
-              <div className="aether-label text-[#b9f1ec]/72">이동 경로</div>
-              <div className="aether-type-meta font-readable text-slate-400">지역을 눌러 이동</div>
-            </div>
-            <RouteTopology
-              compact
-              disableLockedRoutes
-              testId="control-route-topology"
-              currentTestId="control-route-current"
-              connectorTestId="control-route-connector"
-              currentName={currentLocation}
-              routes={routeTopologyEntries}
-              blindMap={player.challengeModifiers?.includes('blindMap')}
-              onSelect={(route) => actions?.move(route.name)}
-              routeTestId={(route) => `control-route-option-${route.name}`}
-            />
-            {moveRecommendations[0] && (
-              <div data-testid="control-route-guide" className="mt-2 border-t border-white/8 px-0.5 pt-2">
-                <div className="aether-type-meta flex flex-wrap items-center justify-between gap-2 font-readable">
-                  <span className="text-[#b9f1ec]">추천 · {moveRecommendations[0].name}</span>
-                  <span className="text-slate-400">귀환 · {moveRecommendations[0].routePlan.returnLabel}</span>
-                </div>
-                <p className="aether-type-meta mt-1 font-readable text-slate-300/68">
-                  {moveRecommendations[0].reason}
-                </p>
-              </div>
-            )}
-          </div>
-          <Motion.button
-            data-testid="control-move-cancel"
-            whileTap={{ scale: 0.95 }}
-            onClick={() => setGameState?.(GS.IDLE)}
-            className="min-h-[44px] w-full rounded-[0.5rem] border border-rose-300/18 bg-[linear-gradient(180deg,rgba(54,18,24,0.72)_0%,rgba(18,9,12,0.94)_100%)] px-3 py-2 font-readable text-xs font-bold text-rose-100/84 transition-all hover:bg-rose-400/10"
-          >
-            돌아가기
-          </Motion.button>
+    <div className="ae-control relative z-10 w-full space-y-2">
+      {isSafeZone ? (
+        <div data-testid="control-map-signal" data-map-signal-mode="expedition-prep">
+          <ExpeditionPrepStrip
+            preparation={expeditionPreparation}
+            primary={townPresentation.primary}
+            onPrimaryAction={runTownPrimaryAction}
+            onEditFocus={() => setGameState?.(GS.QUEST_BOARD)}
+            onOpenArchive={openTownArchive}
+          />
         </div>
-      ) : (
-        <div className="space-y-1.5">
-          {isSafeZone ? (
-            <div data-testid="control-map-signal" data-map-signal-mode="expedition-prep">
-              <ExpeditionPrepStrip
-                preparation={expeditionPreparation}
-                primary={townPresentation.primary}
-                onPrimaryAction={runTownPrimaryAction}
-                onEditFocus={() => setGameState?.(GS.QUEST_BOARD)}
-                onOpenArchive={openTownArchive}
-              />
-            </div>
-          ) : questTracker ? (
-            <MissionTrackerStrip
-              tracker={questTracker}
-              canClaimReward={isSafeZone}
-              onClaimReward={questTracker.kind === 'claimable' && actions?.completeQuest
-                ? () => actions.completeQuest(questTracker.questId)
-                : undefined}
-            />
-          ) : null}
-          {/* 2026-09 Wave 28 (D6): 계승 화면을 한 번 미룬 런은 마왕 처치마다 다시 묻지 않는다 — 대신 여기서 연다.
-              허용 여부는 REOPEN_ASCENSION 리듀서가 판정한다(이 조건은 표시일 뿐이다). */}
-          {gameState === GS.IDLE && player.ascensionOfferDeferred === true && (
-            <button
-              type="button"
-              data-testid="control-reopen-ascension"
-              onClick={() => actions?.reopenAscension?.()}
-              className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[1rem] border border-[#d5b180]/30 bg-[#d5b180]/10 px-3 py-2 font-readable text-sm font-semibold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/16"
-            >
-              <Sparkles size={15} className="shrink-0 text-[#f6e7a2]" />
-              {MSG.ASCENSION_REOPEN_LABEL}
-            </button>
-          )}
-          {/* slice 22: 가이드 스트립 — getAdventureGuidance가 계산만 되고 추천 버튼
-              하이라이트 외엔 렌더 0건이던 갭 해소. 퀘스트 트래커 부재 시(신규
-              플레이어 포함) 다음 행동 제목+이유를 같은 자리에 노출. */}
-          {!isSafeZone && !questTracker && guidance?.title && (
-            <div data-testid="adventure-guidance-strip" className="aether-panel-core rounded-[1.05rem] px-3 py-2">
-              <div className="aether-label text-[#7dd4d8]/72">다음 행동</div>
-              <div className="aether-type-body mt-0.5 font-readable font-semibold text-white/92">{guidance.title}</div>
-              <div className="aether-type-meta mt-0.5 font-readable text-slate-300/82">{guidance.detail}</div>
-            </div>
-          )}
-          {!isSafeZone && (
-            <MapSignalStrip
-              player={player}
-              currentMap={mapData}
-              routes={moveRecommendations}
-              setGameState={setGameState}
-              onOpenArchiveConsole={onOpenArchiveConsole}
-              isAiThinking={isAiThinking}
-            />
-          )}
-          {isSafeZone ? (
-            <>
-              {player.lastExpeditionSummary && (
-                <button
-                  type="button"
-                  data-testid="control-last-expedition"
-                  onClick={() => actions?.openExpeditionDebrief?.()}
-                  className="flex min-h-[44px] w-full items-center gap-2 border-y border-white/8 px-2.5 py-2 text-left transition-colors hover:bg-white/[0.035]"
-                >
-                  <History size={14} className="shrink-0 text-[#d5b180]" />
-                  <div className="min-w-0 flex-1">
-                    <div className="aether-type-body font-readable font-semibold text-slate-100">
-                      지난 원정 · {getVisibleLocationName(player, player.lastExpeditionSummary.destination)}
-                    </div>
-                    <div className="aether-type-meta mt-0.5 font-readable text-slate-400">
-                      {MSG.LAST_EXPEDITION_SUMMARY_LINE(player.lastExpeditionSummary.battles, player.lastExpeditionSummary.explores, player.lastExpeditionSummary.expGained)}
-                    </div>
-                  </div>
-                  <span className="aether-type-body shrink-0 font-readable font-semibold text-[#b9f1ec]">보기</span>
-                </button>
-              )}
-              <div data-testid="control-town-quick-actions" className={townQuickGridClass}>
-                {townQuickButtons.map((button) => renderActionButton(button, '', {}))}
-              </div>
-              {townFacilityButtons.length > 0 && (
-                <details
-                  data-testid="control-town-facilities"
-                  className="group rounded-[1rem] border border-white/8 bg-black/16"
-                >
-                  <summary className="flex min-h-[44px] cursor-pointer list-none items-center gap-2 px-3 py-2 text-left [&::-webkit-details-marker]:hidden">
-                    <Landmark size={14} className="shrink-0 text-[#d5b180]" />
-                    <span className="aether-type-body font-readable font-semibold text-slate-100">마을 시설</span>
-                    <span className="aether-type-meta min-w-0 flex-1 text-right font-readable text-slate-400">
-                      {townPresentation.facilitySummary}
-                    </span>
-                    <ChevronDown size={14} className="shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
-                  </summary>
-                  <div data-testid="control-town-facility-actions" className="grid grid-cols-2 gap-2 border-t border-white/8 p-2">
-                    {townFacilityButtons.map((button) => renderActionButton(button, '', {}))}
-                  </div>
-                </details>
-              )}
-            </>
-          ) : (
-            <>
-              <div className={actionGridClass}>
-                {coreButtons.map((button) => renderActionButton(button, '', {}))}
-                {auxiliaryButtons.map((button) => renderActionButton(button, '', {}))}
-              </div>
-              <button
-                type="button"
-                data-testid="control-scout"
-                disabled={!scoutAvailability.available || !actions?.scout}
-                title={scoutAvailability.reason || MSG.SCOUT_ACTION_HINT}
-                onClick={() => actions?.scout?.()}
-                className="flex min-h-[44px] w-full items-center gap-2 rounded-[0.85rem] border border-[#9a8ac0]/22 bg-black/18 px-3 py-2 text-left transition-colors hover:bg-[#9a8ac0]/10 disabled:cursor-not-allowed disabled:opacity-50"
-              >
-                <Binoculars size={14} className="shrink-0 text-[#ece5ff]" />
-                <span className="aether-type-body font-readable font-bold text-[#ece5ff]">
-                  {MSG.SCOUT_ACTION_LABEL}
-                </span>
-                <span
-                  data-testid="control-scout-cost"
-                  className="aether-type-meta ml-auto min-w-0 truncate font-readable text-slate-300/82"
-                >
-                  {scoutAvailability.available
-                    ? (scoutAvailability.isFree
-                      ? MSG.SCOUT_ACTION_FREE_LABEL(scoutAvailability.remainingFree)
-                      : MSG.SCOUT_ACTION_COST_LABEL(scoutAvailability.cost))
-                    : scoutAvailability.reason}
-                </span>
-              </button>
-            </>
-          )}
+      ) : questTracker ? (
+        <MissionTrackerStrip
+          tracker={questTracker}
+          canClaimReward={isSafeZone}
+          onClaimReward={questTracker.kind === 'claimable' && actions?.completeQuest
+            ? () => actions.completeQuest(questTracker.questId)
+            : undefined}
+        />
+      ) : null}
+      {/* 2026-09 Wave 28 (D6): 계승 화면을 한 번 미룬 런은 마왕 처치마다 다시 묻지 않는다 — 대신 여기서 연다.
+          허용 여부는 REOPEN_ASCENSION 리듀서가 판정한다(이 조건은 표시일 뿐이다). */}
+      {gameState === GS.IDLE && player.ascensionOfferDeferred === true && (
+        <ActionButton
+          data-testid="control-reopen-ascension"
+          onClick={() => actions?.reopenAscension?.()}
+          icon={<Sparkles size={16} />}
+          label={MSG.ASCENSION_REOPEN_LABEL}
+          className="ae-reopen-ascension w-full"
+        />
+      )}
+      {/* slice 22: 가이드 스트립 — 퀘스트 트래커 부재 시(신규 플레이어 포함) 다음 행동 제목+이유를 같은 자리에 노출. */}
+      {!isSafeZone && !questTracker && guidance?.title && (
+        <div data-testid="adventure-guidance-strip" className="ae-card is-quiet px-3.5 py-3 font-readable">
+          <div className="ae-eyebrow">다음 행동</div>
+          <div className="mt-1 aether-type-title font-semibold text-ae-ink">{guidance.title}</div>
+          <div className="mt-0.5 aether-type-meta text-ae-ink-2">{guidance.detail}</div>
         </div>
       )}
-    </Motion.div>
+      {!isSafeZone && <MapSignalStrip player={player} routes={moveRecommendations} />}
+      {isSafeZone ? (
+        <TownActions
+          lastExpedition={lastExpedition}
+          onOpenDebrief={() => actions?.openExpeditionDebrief?.()}
+          quickButtons={townQuickButtons.map((button) => renderActionButton(button, '', {}))}
+          quickCount={townQuickButtons.length}
+          facilityButtons={townFacilityButtons.map((button) => renderActionButton(button, '', {}))}
+          facilityCount={townFacilityButtons.length}
+          facilitySummary={townPresentation.facilitySummary}
+        />
+      ) : (
+        <FieldDock
+          explore={exploreButton}
+          move={moveButton}
+          bag={bagButton}
+          exploreSublabel={getVisibleLocationName(player, player.loc) || ''}
+          onOpenMap={onOpenArchiveConsole ? openMap : undefined}
+          scoutAvailability={scoutAvailability}
+          onScout={actions?.scout ? () => actions.scout?.() : undefined}
+          recommendedKey={recommendedButton}
+          auxiliary={auxiliaryButtons.length > 0 ? (
+            <div className="mt-2 grid grid-cols-1 gap-2">
+              {auxiliaryButtons.map((button) => renderActionButton(button, '', {}))}
+            </div>
+          ) : null}
+        />
+      )}
+    </div>
   );
 };
 

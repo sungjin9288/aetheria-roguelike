@@ -112,7 +112,9 @@ test('자동저장: 로컬 리비전이 클라우드 floor 이상이면 유저 �
 
     const [userSave] = harness.setDocCalls;
     assert.equal(userSave.path, `artifacts/${APP_ID}/users/uid-1`);
-    assert.deepEqual(userSave.options, { merge: true });
+    // CH-01: 세이브 문서는 교체 쓰기다 — `merge: true`면 로컬에서 지운 중첩 키가 서버에 남아
+    //   다른 기기 복원에서 되살아난다(에뮬레이터 회귀: firestore-rules-semantics site 1 교체 쓰기).
+    assert.equal(userSave.options, undefined, '유저 문서 쓰기에 SetOptions(merge/mergeFields)를 넘기지 않는다');
     assert.equal(userSave.data.player.name, '아에테리아');
     assert.equal(userSave.data.player.stats.lastSeenAt, NOW);
     // Firestore는 undefined를 거부하므로 신규 선택 필드는 null로 정규화된다

@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import type { ReactNode } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { ChevronDown, ScrollText, Target } from 'lucide-react';
+import { ChevronDown, Gift, ScrollText, Target } from 'lucide-react';
 import { formatRewardParts } from '../../utils/gameUtils';
 import type { ChallengeHolder } from '../../utils/challengeRules';
 import { getTraitQuestResonance } from '../../utils/runProfileUtils';
 import { getQuestBoardRecommendations, isBasicHuntQuest, isSelfDescribingHuntQuest } from '../../utils/questOperations.js';
-import SignalBadge from '../SignalBadge';
+import ActionButton from '../ui/ActionButton';
+import Chip, { type ChipTone } from '../ui/Chip';
 import FocusPanelHeader from '../FocusPanelHeader';
 import { getPreparedExpeditionFocusQuestIds, MAX_EXPEDITION_FOCUS_QUESTS } from '../../utils/expeditionMissionFocus.js';
 import { getQuestObjectiveGateNotice, type QuestObjectiveGate } from '../../utils/questObjectiveGate';
@@ -93,6 +94,19 @@ interface OperationBriefRowsProps {
     goal?: number;
 }
 
+/** 위험 어조 → 칩 색. 위험 칩은 추천을 말하지 않는다 — 색은 무게만 알린다. */
+const RISK_CHIP_TONE: Readonly<Record<string, ChipTone>> = Object.freeze({
+    danger: 'threat',
+    warning: 'gold',
+    upgrade: 'ether',
+    resonance: 'ether',
+    recommended: 'ether',
+});
+
+const getRiskChipTone = (tone: string | undefined): ChipTone => RISK_CHIP_TONE[tone ?? ''] || 'neutral';
+
+const getResonanceChipTone = (score: number): ChipTone => (score >= 6 ? 'ether' : 'neutral');
+
 const OperationBriefRows = ({ brief, reward, player, progress, goal }: OperationBriefRowsProps) => {
   if (!brief) return null;
   const hasProgress = Number.isFinite(Number(progress)) && Number.isFinite(Number(goal));
@@ -107,21 +121,21 @@ const OperationBriefRows = ({ brief, reward, player, progress, goal }: Operation
   return (
     <div className="mt-3">
       <div className="mb-1.5 flex items-center justify-between gap-2">
-        <div className="aether-label">{brief.label}</div>
-        <SignalBadge tone={brief.riskTone || 'neutral'} size="sm">{brief.riskLabel}</SignalBadge>
+        <div className="ae-eyebrow font-readable">{brief.label}</div>
+        <Chip tone={getRiskChipTone(brief.riskTone)}>{brief.riskLabel}</Chip>
       </div>
-      <div className="grid grid-cols-2 overflow-hidden rounded-[0.95rem] border border-white/8 bg-black/12">
+      <div className="grid grid-cols-2 gap-px overflow-hidden rounded-ae-sm bg-[var(--aether-hairline)]">
         {rows.map((row) => (
-          <div key={`${brief.route}_${row.label}`} className="aether-choice-cell px-2.5 py-2">
+          <div key={`${brief.route}_${row.label}`} className="bg-ae-sunk/85 px-2.5 py-2">
             <div className="flex items-center gap-2">
-              <div className="aether-label">{row.label}</div>
+              <div className="ae-eyebrow font-readable">{row.label}</div>
               {row.trailing && (
-                <span data-testid="quest-operation-progress" className="aether-label shrink-0 font-semibold text-[#dff7f5]">
+                <span data-testid="quest-operation-progress" className="shrink-0 font-fira text-[12px] font-semibold tabular-nums text-ae-ether-hi">
                   {row.trailing}
                 </span>
               )}
             </div>
-            <div className="aether-type-body mt-0.5 min-w-0 break-words font-readable text-slate-200/90">{row.value}</div>
+            <div className="aether-type-body mt-0.5 min-w-0 break-words font-readable text-ae-ink">{row.value}</div>
           </div>
         ))}
       </div>
@@ -130,36 +144,39 @@ const OperationBriefRows = ({ brief, reward, player, progress, goal }: Operation
 };
 
 const QuestObjectiveLine = ({ children }: { children: ReactNode }) => (
-  <div className="aether-type-body font-readable text-slate-100/92">
+  <div className="aether-type-body font-readable text-ae-ink">
     {children}
   </div>
 );
 
 /** Wave 28: 목표 지역에 아직 걸어 들어갈 수 없을 때만 실제 진입 레벨을 말한다(수락 규칙은 그대로). */
 const QuestObjectiveGateLine = ({ gate }: { gate: QuestObjectiveGate | null }) => (gate ? (
-  <div data-testid="quest-objective-gate" className="aether-type-meta mt-1 font-readable text-[#f6e7c8]">
+  <div data-testid="quest-objective-gate" className="aether-type-meta mt-1 font-readable text-ae-gold-text">
     {MSG.QUEST_OBJECTIVE_GATE_NOTICE(gate.map, gate.routeGateLevel)}
   </div>
 ) : null);
 
 /** 진행도를 평생 누적 기록에서 읽는 임무 표시 — 판정은 진행도와 같은 표(`isLifetimeCounterQuest`)가 소유한다. */
 const LifetimeCounterChip = ({ quest }: { quest: Quest }) => (isLifetimeCounterQuest(quest) ? (
-  <SignalBadge tone="neutral" size="sm" title={MSG.QUEST_LIFETIME_COUNTER_HINT} data-testid="quest-lifetime-counter-chip">
+  <Chip title={MSG.QUEST_LIFETIME_COUNTER_HINT} data-testid="quest-lifetime-counter-chip">
     {MSG.QUEST_LIFETIME_COUNTER_CHIP}
-  </SignalBadge>
+  </Chip>
 ) : null);
 
 interface QuestRowShellProps {
     children: ReactNode;
     kind: string;
     testId: string;
+    /** 이야기 임무(본편 장 · 곁가지 이야기를 여는 임무)는 같은 카드에 에테르 결만 더한다. */
+    story?: boolean;
 }
 
-const QuestRowShell = ({ children, kind, testId }: QuestRowShellProps) => (
+// 2026-10 에테르 유리: 임무 카드는 호박빛 유리(`.ae-town-mission`) — 보상 수령 가능은 초록 결, 이야기는 에테르 결.
+const QuestRowShell = ({ children, kind, testId, story = false }: QuestRowShellProps) => (
   <div
     data-testid={testId}
     data-quest-row-kind={kind}
-    className={`aether-choice-row rounded-[1.05rem] px-3 ${kind === 'featured' || kind === 'locked-preview' ? 'py-2' : 'py-3'} transition-colors hover:border-[#7dd4d8]/22 ${kind === 'reward' ? 'is-reward' : kind === 'bounty' ? 'is-bounty' : ''}`}
+    className={`ae-town-mission px-3 ${kind === 'featured' || kind === 'locked-preview' ? 'py-1.5' : 'py-3'} ${kind === 'reward' ? 'is-reward' : story ? 'is-story' : kind === 'locked-preview' ? 'is-quiet' : ''}`.trim()}
   >
     {children}
   </div>
@@ -181,60 +198,66 @@ interface CompactMissionRowProps {
     onAccept: () => void;
     objectiveGate: QuestObjectiveGate | null;
     player: ChallengeHolder;
+    /** 이 화면의 금빛 주 행동 — 첫 번째로 받을 수 있는 추천 임무 하나뿐이다. */
+    primary: boolean;
 }
 
-const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept, objectiveGate, player }: CompactMissionRowProps) => (
-  <QuestRowShell kind={entry.isLockedPreview ? 'locked-preview' : 'featured'} testId="quest-decision-row">
+const CompactMissionRow = ({ entry, index, expanded, onToggle, onAccept, objectiveGate, player, primary }: CompactMissionRowProps) => (
+  <QuestRowShell
+    kind={entry.isLockedPreview ? 'locked-preview' : 'featured'}
+    testId="quest-decision-row"
+    story={!entry.isLockedPreview && entry.lane === 'story'}
+  >
     <div className="grid grid-cols-[minmax(0,1fr)_72px] gap-2">
       <button
         type="button"
         data-testid="quest-board-detail-toggle"
         aria-expanded={expanded}
         onClick={onToggle}
-        className="min-h-[56px] min-w-0 text-left"
+        className="min-h-[56px] min-w-0 rounded-ae-sm text-left focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ae-ether"
       >
         <div className="flex min-w-0 items-center gap-2">
-          <SignalBadge
-            tone={index === 0 ? 'recommended' : 'resonance'}
-            size="sm"
+          <Chip
+            tone={entry.isLockedPreview ? 'neutral' : index === 0 ? 'gold' : 'ether'}
+            className="shrink-0 font-bold"
             title={entry.isLockedPreview ? entry.quest.lockLabel : entry.meta.label}
           >
             {getRecommendationBadge(entry, index)}
-          </SignalBadge>
-          <span className="aether-type-title min-w-0 font-readable font-semibold text-white">{getRecommendationTitle(entry.quest)}</span>
+          </Chip>
+          <span className="aether-type-title min-w-0 font-display font-bold text-ae-ink">{getRecommendationTitle(entry.quest)}</span>
           <LifetimeCounterChip quest={entry.quest} />
           <ChevronDown
-            size={13}
-            className={`ml-auto shrink-0 text-slate-400 transition-transform ${expanded ? 'rotate-180' : ''}`}
+            size={14}
+            aria-hidden="true"
+            className={`ml-auto shrink-0 text-ae-ink-3 transition-transform duration-200 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none ${expanded ? 'rotate-180' : ''}`}
           />
         </div>
         {!isSelfDescribingHuntQuest(entry.quest) && (
-          <div data-testid="quest-featured-objective" className="aether-type-body mt-1 font-readable text-slate-300/84">
+          <div data-testid="quest-featured-objective" className="aether-type-body mt-1 font-readable text-ae-ink-2">
             {getQuestObjectiveText(entry.quest)}
           </div>
         )}
         {!entry.isLockedPreview && entry.storyHook && (
-          <div data-testid="quest-story-hook" className="aether-type-body mt-1 font-readable text-[#f6e7c8]/88">
+          <div data-testid="quest-story-hook" className="aether-type-body mt-1 font-readable text-ae-ether-hi">
             {entry.storyHook}
           </div>
         )}
-        <div className="aether-type-meta mt-1 grid grid-cols-2 gap-1 font-readable">
-          <span className="break-words text-[#b9f1ec]">목적지 · {entry.brief?.route || '현재 권역'}</span>
-          <span className="break-words text-[#f6e7c8]">위험 · {entry.isLockedPreview ? entry.quest.lockLabel : (entry.brief?.riskLabel || '확인')}</span>
-          <span className="col-span-2 break-words text-emerald-100">보상 · {getRewardSummary(entry.quest.reward, player)}</span>
+        <div className="aether-type-meta mt-1 grid grid-cols-2 gap-x-2 gap-y-0.5 font-readable text-ae-ink-2">
+          <span className="break-words">목적지 · <b className="font-semibold text-ae-ink">{entry.brief?.route || '현재 권역'}</b></span>
+          <span className="break-words">위험 · <b className="font-semibold text-ae-ink">{entry.isLockedPreview ? entry.quest.lockLabel : (entry.brief?.riskLabel || '확인')}</b></span>
+          <span className="col-span-2 break-words">보상 · <b className="font-semibold text-ae-gold-text">{getRewardSummary(entry.quest.reward, player)}</b></span>
         </div>
         <QuestObjectiveGateLine gate={objectiveGate} />
       </button>
-      <Motion.button
+      <ActionButton
+        variant={primary ? 'primary' : 'glass'}
         data-testid="quest-board-start-operation"
         data-quest-action-state={entry.isLockedPreview ? 'locked' : 'ready'}
-        whileTap={{ scale: 0.96 }}
         onClick={onAccept}
         disabled={entry.isLockedPreview}
-        className="aether-cta-primary aether-type-body min-h-[56px] px-2 font-readable font-bold text-[#dff7f5] disabled:cursor-not-allowed disabled:opacity-55"
-      >
-        {entry.isLockedPreview ? <>선행 필요<br />잠금</> : <>임무<br />수락</>}
-      </Motion.button>
+        label={entry.isLockedPreview ? <>선행 필요<br />잠금</> : <>임무<br />수락</>}
+        className="aether-disabled-action aether-type-body min-h-[56px] px-2 font-readable font-bold"
+      />
     </div>
   </QuestRowShell>
 );
@@ -255,6 +278,17 @@ interface QuestBoardPanelProps {
     setGameState?: (state: GameMode) => void;
     onOpenArchiveConsole?: () => void;
 }
+
+/** 묶음 머리 — 제목 · 보조 설명 · 오른쪽 값 한 줄. 상자 대신 머리카락 선 하나로 나눈다. */
+const SectionHead = ({ title, note, aside }: { title: ReactNode; note?: ReactNode; aside?: ReactNode }) => (
+  <div className="flex items-end justify-between gap-3 pb-1.5 shadow-[inset_0_-1px_0_var(--aether-hairline)]">
+    <div className="min-w-0">
+      <h3 className="font-display text-[14px] font-bold text-ae-ink">{title}</h3>
+      {note && <div className="aether-type-meta mt-0.5 font-readable text-ae-ink-2">{note}</div>}
+    </div>
+    {aside}
+  </div>
+);
 
 // cycle 589: onOpenArchiveConsole default null 제거 — 1 production caller
 //   (ControlPanel:158) 4 props 명시 전달이라 default 도달 불가. 청소 메가
@@ -299,6 +333,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
     },
   }));
   const featuredDisplayOperations: FeaturedDisplayOperation[] = [...featuredOperations, ...lockedPreviewOperations].slice(0, 3);
+  const primaryFeaturedIndex = featuredDisplayOperations.findIndex((entry) => !entry.isLockedPreview);
   const previewedLockedQuestIds = new Set(
     featuredDisplayOperations.filter((entry) => entry.isLockedPreview).map((entry) => entry.quest.id),
   );
@@ -316,32 +351,30 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
     <Motion.div
       data-testid="quest-board-panel"
       initial={false} animate={{ opacity: 1, y: 0 }}
-      className="aether-focus-panel aether-quest-board relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3"
+      className="ae-town aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3"
     >
       <FocusPanelHeader
         eyebrow="마을 임무 게시판"
         title="임무 선택"
-        titleClassName="flex items-center gap-2 text-[1.05rem] leading-none"
+        titleClassName="flex items-center gap-2 text-[1.05rem] leading-tight"
         meta=""
         onBack={() => setGameState?.('idle')}
-        backLabel="복귀"
+        backLabel={MSG.UI_BACK}
         backTestId="quest-board-close"
         bleedClassName="-mx-3 px-3"
         onOpenArchive={onOpenArchiveConsole}
         archiveLabel="가방"
         archiveTestId="quest-board-open-archive"
-        rightSlot={<ScrollText size={18} className="text-[#f6e7c8]/78" />}
+        rightSlot={<ScrollText size={18} aria-hidden="true" className="text-ae-gold-text" />}
       />
-      <div className="flex-1 overflow-y-auto space-y-4 custom-scrollbar pr-1">
+      <div className="flex-1 space-y-4 overflow-y-auto pr-1 custom-scrollbar">
         {featuredDisplayOperations.length > 0 && (
           <section data-testid="quest-featured-list" className="space-y-2">
-            <div className="flex items-end justify-between border-b border-white/8 pb-1.5">
-              <div>
-                <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">추천 임무</h3>
-                <span className="aether-type-meta font-readable text-slate-400">임무 안내 · 목적지 · 위험 · 보상 · 귀환 기준</span>
-              </div>
-              <span className="aether-label">진행 {activeQuestEntries.length} · 보상 {claimableQuestCount}</span>
-            </div>
+            <SectionHead
+              title="추천 임무"
+              note="임무 안내 · 목적지 · 위험 · 보상 · 귀환 기준"
+              aside={<span className="shrink-0 font-readable text-[12px] text-ae-ink-2">진행 <span className="font-fira tabular-nums text-ae-ink">{activeQuestEntries.length}</span> · 보상 <span className="font-fira tabular-nums text-ae-ink">{claimableQuestCount}</span></span>}
+            />
             <div className="grid gap-1.5">
               {featuredDisplayOperations.map((entry, index) => (
                 <CompactMissionRow
@@ -349,6 +382,7 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   player={player}
                   entry={entry}
                   index={index}
+                  primary={index === primaryFeaturedIndex}
                   expanded={selectedQuestId === entry.quest.id}
                   onToggle={() => setSelectedQuestId(selectedQuestId === entry.quest.id ? null : (entry.quest.id ?? null))}
                   onAccept={() => {
@@ -359,23 +393,23 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
               ))}
             </div>
             {selectedOperation && (
-              <div data-testid="quest-board-detail-sheet" className="aether-quest-detail px-3 py-2.5">
+              <div data-testid="quest-board-detail-sheet" className="ae-well px-3 py-2.5">
                 <div className="flex items-center justify-between gap-2">
                   <div className="min-w-0">
-                    <div className="aether-label">임무 안내</div>
-                    <div className="aether-type-title mt-0.5 font-readable font-semibold text-white">{selectedOperation.quest.title}</div>
+                    <div className="ae-eyebrow font-readable">임무 안내</div>
+                    <div className="aether-type-title mt-0.5 font-display font-bold text-ae-ink">{selectedOperation.quest.title}</div>
                   </div>
-                  <SignalBadge tone="neutral" size="sm">레벨 {selectedOperation.quest.minLv || 1}</SignalBadge>
+                  <Chip className="font-fira tabular-nums">레벨 {selectedOperation.quest.minLv || 1}</Chip>
                 </div>
-                <div className="mt-1.5 font-readable text-[11px] leading-snug text-slate-200/86">
+                <div className="mt-1.5 font-readable text-[12px] leading-snug text-ae-ink-2">
                   {selectedOperation.reason}
                 </div>
                 <OperationBriefRows brief={selectedOperation.brief} reward={selectedOperation.quest.reward} player={player} />
                 {selectedOperation.resonance?.label && (
                   <div className="mt-2 flex flex-wrap gap-1.5">
-                    <SignalBadge tone={selectedOperation.resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">
+                    <Chip tone={getResonanceChipTone(selectedOperation.resonance.score)}>
                       {selectedOperation.resonance.label}
-                    </SignalBadge>
+                    </Chip>
                   </div>
                 )}
               </div>
@@ -386,33 +420,33 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
         {/* 진행 중 임무 */}
         <section className="space-y-3">
           {activeQuestEntries.length > 0 && (
-            <div className="flex items-center justify-between border-b border-white/8 pb-2">
-              <div>
-                <h3 className="font-readable text-sm font-semibold text-emerald-100">이번 원정 임무</h3>
-                <div className="aether-type-meta mt-0.5 font-readable text-slate-400">진행 중 임무는 유지되며 최대 3개를 추적</div>
-              </div>
-              <SignalBadge tone={focusLimitReached ? 'recommended' : 'neutral'} size="sm">
-                {focusedQuestIds.length}/{MAX_EXPEDITION_FOCUS_QUESTS}
-              </SignalBadge>
-            </div>
+            <SectionHead
+              title="이번 원정 임무"
+              note="진행 중 임무는 유지되며 최대 3개를 추적"
+              aside={(
+                <Chip tone={focusLimitReached ? 'ether' : 'neutral'} className="shrink-0 font-fira tabular-nums">
+                  {focusedQuestIds.length}/{MAX_EXPEDITION_FOCUS_QUESTS}
+                </Chip>
+              )}
+            />
           )}
           {activeQuestEntries.length > 0 ? activeQuestEntries.map((entry) => (
             <QuestRowShell key={`active_${entry.id}`} kind={entry.isComplete ? 'reward' : entry.isBounty ? 'bounty' : 'active'} testId="quest-active-row">
               <div className="flex flex-col gap-3">
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
-                    <div className={`font-readable text-base font-semibold ${entry.isComplete ? 'text-emerald-100' : 'text-white'}`}>{entry.quest.title}</div>
-                    {entry.isBounty && <span className="aether-type-meta rounded-full border border-[#d5b180]/28 bg-[#d5b180]/10 px-2 py-0.5 font-readable text-[#f6e7c8]">현상수배</span>}
+                    <div className={`font-display text-[15px] font-bold ${entry.isComplete ? 'text-ae-good' : 'text-ae-ink'}`}>{entry.quest.title}</div>
+                    {entry.isBounty && <Chip tone="gold">현상수배</Chip>}
                     <LifetimeCounterChip quest={entry.quest} />
-                    {entry.isComplete && <span className="aether-type-meta rounded-full border border-emerald-300/24 bg-emerald-300/10 px-2 py-0.5 font-readable text-emerald-100">보상 수령 가능</span>}
-                    {isFocusedQuest(entry.id) && <SignalBadge tone="recommended" size="sm">이번 원정</SignalBadge>}
+                    {entry.isComplete && <Chip tone="good">보상 수령 가능</Chip>}
+                    {isFocusedQuest(entry.id) && <Chip tone="ether">이번 원정</Chip>}
                     {entry.quest.buildTag && (
-                      <SignalBadge tone="neutral" size="sm">{entry.quest.buildLabel || entry.quest.buildTag}</SignalBadge>
+                      <Chip>{entry.quest.buildLabel || entry.quest.buildTag}</Chip>
                     )}
                     {(() => {
                       const resonance = getTraitQuestResonance(entry.quest, traitProfile);
                       return resonance.label ? (
-                        <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>
+                        <Chip tone={getResonanceChipTone(resonance.score)}>{resonance.label}</Chip>
                       ) : null;
                     })()}
                   </div>
@@ -422,74 +456,76 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
                   </div>}
                   <OperationBriefRows brief={entry.brief} reward={entry.quest.reward} player={player} progress={entry.progress} goal={entry.quest.goal} />
                   <div className="mt-2">
-                    <div className="h-1.5 overflow-hidden rounded-full bg-black/36">
-                      <div className={`h-full rounded-full transition-all ${entry.isComplete ? 'bg-emerald-300' : entry.isBounty ? 'bg-[#d5b180]' : 'bg-[#7dd4d8]'}`} style={{ width: `${getQuestProgressPercent(entry.progress, entry.quest.goal!)}%` }} />
+                    <div className="h-1 overflow-hidden rounded-full bg-ae-sunk">
+                      <div className={`h-full rounded-full transition-[width] duration-300 ease-[cubic-bezier(.2,.8,.2,1)] motion-reduce:transition-none ${entry.isComplete ? 'bg-ae-good' : entry.isBounty ? 'bg-ae-gold' : 'bg-ae-ether'}`} style={{ width: `${getQuestProgressPercent(entry.progress, entry.quest.goal!)}%` }} />
                     </div>
                   </div>
                 </div>
                 {entry.isComplete ? (
                   <div className="grid grid-cols-2 gap-2">
-                    <Motion.button
-                      type="button"
+                    <ActionButton
                       data-testid="quest-board-toggle-expedition-focus"
                       data-focus-selected={isFocusedQuest(entry.id)}
                       title={isFocusedQuest(entry.id) ? '이번 원정에서 제외' : '이번 원정에 추가'}
-                      whileTap={{ scale: 0.97 }}
                       disabled={!isFocusedQuest(entry.id) && focusLimitReached}
                       onClick={() => actions?.toggleExpeditionFocusQuest(entry.id)}
-                      className="aether-disabled-action flex min-h-[44px] items-center justify-center gap-1.5 border border-[#7dd4d8]/24 bg-[#7dd4d8]/8 px-3 text-xs font-bold text-[#dff7f5]"
-                    >
-                      <Target size={13} />{isFocusedQuest(entry.id) ? '원정 제외' : '원정 추가'}
-                    </Motion.button>
-                    <Motion.button data-testid="quest-board-claim-reward" whileTap={{ scale: 0.95 }} onClick={() => actions?.completeQuest(entry.id)} className="min-h-[44px] shrink-0 rounded-[0.9rem] border border-emerald-300/35 bg-emerald-300/16 px-4 py-3 text-xs font-bold text-emerald-100 transition-all hover:bg-emerald-300/22">
-                      보상 받기
-                    </Motion.button>
+                      icon={<Target size={15} />}
+                      label={isFocusedQuest(entry.id) ? '원정 제외' : '원정 추가'}
+                      className="aether-disabled-action min-h-[44px] px-3 text-[13px]"
+                    />
+                    <ActionButton
+                      data-testid="quest-board-claim-reward"
+                      onClick={() => actions?.completeQuest(entry.id)}
+                      icon={<Gift size={15} className="text-ae-good" />}
+                      label="보상 받기"
+                      className="min-h-[44px] px-3 text-[13px]"
+                    />
                   </div>
                 ) : confirmAbandonQuestId === entry.id ? (
-                  <div data-testid="quest-board-abandon-warning" className="border-t border-rose-300/18 pt-3">
-                    <div className="font-readable text-[12px] leading-[1.45] text-rose-100/88">
+                  <div data-testid="quest-board-abandon-warning" className="pt-3 shadow-[inset_0_1px_0_var(--aether-hairline)]">
+                    <div className="font-readable text-[12px] leading-[1.45] text-ae-threat">
                       {MSG.QUEST_ABANDON_PROGRESS_LOSS(getQuestProgressText(entry.quest, entry.progress))}
                       {entry.isBounty && ` ${MSG.BOUNTY_ABANDON_WARNING}`}
                     </div>
                     <div className="mt-2 grid grid-cols-2 gap-2">
-                      <Motion.button
+                      <ActionButton
+                        variant="ghost"
                         data-testid="quest-board-abandon-cancel"
-                        whileTap={{ scale: 0.97 }}
                         onClick={() => setConfirmAbandonQuestId(null)}
-                        className="min-h-[44px] rounded-[0.85rem] border border-white/12 bg-black/18 px-3 py-2 text-xs font-bold text-slate-200"
-                      >
-                        계속 진행
-                      </Motion.button>
-                      <Motion.button
+                        label="계속 진행"
+                        className="min-h-[44px] px-3 text-[13px]"
+                      />
+                      <ActionButton
+                        variant="danger"
                         data-testid="quest-board-abandon-confirm"
-                        whileTap={{ scale: 0.97 }}
                         onClick={() => {
                           actions?.abandonQuest(entry.id);
                           setConfirmAbandonQuestId(null);
                         }}
-                        className="min-h-[44px] rounded-[0.85rem] border border-rose-300/28 bg-rose-300/12 px-3 py-2 text-xs font-bold text-rose-100"
-                      >
-                        포기 확정
-                      </Motion.button>
+                        label="포기 확정"
+                        className="min-h-[44px] px-3 text-[13px]"
+                      />
                     </div>
                   </div>
                 ) : (
-                  <div className="flex min-h-[44px] items-center justify-between gap-3 border-t border-white/8 pt-3">
-                    <Motion.button
-                      type="button"
+                  <div className="flex min-h-[44px] items-center justify-between gap-3 pt-3 shadow-[inset_0_1px_0_var(--aether-hairline)]">
+                    <ActionButton
                       data-testid="quest-board-toggle-expedition-focus"
                       data-focus-selected={isFocusedQuest(entry.id)}
                       title={isFocusedQuest(entry.id) ? '이번 원정에서 제외' : '이번 원정에 추가'}
-                      whileTap={{ scale: 0.97 }}
                       disabled={!isFocusedQuest(entry.id) && focusLimitReached}
                       onClick={() => actions?.toggleExpeditionFocusQuest(entry.id)}
-                      className="aether-disabled-action flex min-h-[44px] items-center gap-1.5 border border-[#7dd4d8]/24 bg-[#7dd4d8]/8 px-3 text-xs font-bold text-[#dff7f5]"
-                    >
-                      <Target size={13} />{isFocusedQuest(entry.id) ? '원정 제외' : '원정 추가'}
-                    </Motion.button>
-                    <Motion.button data-testid="quest-board-abandon-mission" whileTap={{ scale: 0.97 }} onClick={() => setConfirmAbandonQuestId(entry.id)} className="min-h-[44px] rounded-[0.85rem] border border-rose-300/20 bg-rose-300/8 px-4 py-2 text-xs font-bold text-rose-100/88">
-                      임무 포기
-                    </Motion.button>
+                      icon={<Target size={15} />}
+                      label={isFocusedQuest(entry.id) ? '원정 제외' : '원정 추가'}
+                      className="aether-disabled-action min-h-[44px] px-3 text-[13px]"
+                    />
+                    <ActionButton
+                      variant="ghost"
+                      data-testid="quest-board-abandon-mission"
+                      onClick={() => setConfirmAbandonQuestId(entry.id)}
+                      label="임무 포기"
+                      className="min-h-[44px] px-3.5 text-[13px]"
+                    />
                   </div>
                 )}
               </div>
@@ -497,78 +533,76 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
           )) : (
             <div
               data-testid="quest-board-empty-active"
-              className="flex min-h-[52px] items-center justify-between gap-3 border-y border-white/8 py-2 font-readable"
+              className="flex min-h-[52px] items-center justify-between gap-3 py-1.5 font-readable shadow-[inset_0_-1px_0_var(--aether-hairline)]"
             >
               <div className="min-w-0">
-                <h3 className="text-sm font-semibold text-emerald-100">이번 원정 임무</h3>
-                <div className="aether-type-meta mt-0.5 text-slate-400">아직 없음</div>
+                <h3 className="font-display text-[14px] font-bold text-ae-ink">이번 원정 임무</h3>
+                <div className="aether-type-meta mt-0.5 text-ae-ink-2">아직 없음</div>
               </div>
-              <SignalBadge tone="neutral" size="sm">0/{MAX_EXPEDITION_FOCUS_QUESTS}</SignalBadge>
+              <Chip className="font-fira tabular-nums">0/{MAX_EXPEDITION_FOCUS_QUESTS}</Chip>
             </div>
           )}
         </section>
 
         <section data-testid="quest-board-bounty" className="space-y-2">
-          <div className="flex items-center justify-between border-b border-white/8 pb-1.5">
-            <h3 className="font-readable text-sm font-semibold text-[#f6e7c8]">현상수배</h3>
-            <span className="aether-label">레벨 {player.level} 기준</span>
-          </div>
-          <div className="aether-choice-row is-bounty px-3 py-2.5">
+          <SectionHead
+            title="현상수배"
+            aside={<span className="shrink-0 font-readable text-[12px] text-ae-ink-2">레벨 <span className="font-fira tabular-nums text-ae-ink">{player.level}</span> 기준</span>}
+          />
+          <div className="ae-town-mission px-3 py-2.5">
             <div className="flex items-center justify-between gap-3">
               <div className="min-w-0">
-                <div className="font-readable text-[12px] font-semibold text-[#f6e7c8]">현상수배 게시판</div>
-                <div className="aether-type-meta mt-0.5 font-readable text-slate-200/78">{bountyHelperText}</div>
+                <div className="font-readable text-[13px] font-semibold text-ae-gold-text">현상수배 게시판</div>
+                <div className="aether-type-meta mt-0.5 font-readable text-ae-ink-2">{bountyHelperText}</div>
               </div>
-              <Motion.button
-                whileTap={{ scale: 0.95 }}
+              <ActionButton
                 onClick={() => actions?.requestBounty()}
                 disabled={!canRequestBounty}
-                className="aether-disabled-action aether-type-body min-h-[44px] shrink-0 border border-[#d5b180]/28 bg-[#d5b180]/12 px-3 py-2 font-bold text-[#f6e7c8] transition-all hover:bg-[#d5b180]/16"
-              >
-                {bountyButtonLabel}
-              </Motion.button>
+                label={bountyButtonLabel}
+                className="aether-disabled-action aether-type-body min-h-[44px] shrink-0 px-3 font-bold"
+              />
             </div>
           </div>
         </section>
 
         {backlogQuestEntries.length > 0 && (
           <section data-testid="quest-board-backlog" className="space-y-3">
-            <div className="flex items-center justify-between border-b border-white/8 pb-2">
-              <h3 className="font-readable text-sm font-semibold text-[#dff7f5]">다른 임무</h3>
-              <span className="aether-label">추천 목록 제외</span>
-            </div>
+            <SectionHead title="다른 임무" aside={<span className="shrink-0 font-readable text-[12px] text-ae-ink-2">추천 목록 제외</span>} />
             {backlogQuestEntries.map((entry) => {
               const quest = entry.quest;
               const resonance = entry.resonance.label ? entry.resonance : getTraitQuestResonance(quest, traitProfile);
               return (
-                <QuestRowShell key={`available_${quest.id}`} kind="available" testId="quest-decision-row">
+                <QuestRowShell key={`available_${quest.id}`} kind="available" testId="quest-decision-row" story={entry.lane === 'story'}>
                   <div className="flex flex-col gap-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <div className="font-readable text-base font-semibold text-white">{quest.title}</div>
-                        <span className="aether-type-meta rounded-full border border-[#9a8ac0]/22 bg-[#9a8ac0]/10 px-2 py-0.5 font-readable text-[#ece5ff]">레벨 {quest.minLv} 필요</span>
+                        <div className="font-display text-[15px] font-bold text-ae-ink">{quest.title}</div>
+                        <Chip className="font-fira tabular-nums">레벨 {quest.minLv} 필요</Chip>
                         <LifetimeCounterChip quest={quest} />
                         {quest.buildTag && (
-                          <SignalBadge tone="neutral" size="sm">{quest.buildLabel || quest.buildTag}</SignalBadge>
+                          <Chip>{quest.buildLabel || quest.buildTag}</Chip>
                         )}
-                        <SignalBadge tone="neutral" size="sm">{entry.meta.emphasis}</SignalBadge>
+                        <Chip>{entry.meta.emphasis}</Chip>
                         {resonance.label && (
-                          <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>
+                          <Chip tone={getResonanceChipTone(resonance.score)}>{resonance.label}</Chip>
                         )}
                         {entry.targetMaps[0] && (
-                          <SignalBadge tone="upgrade" size="sm">{entry.targetMaps[0]}</SignalBadge>
+                          <Chip tone="ether">{entry.targetMaps[0]}</Chip>
                         )}
                       </div>
                       <div className="mt-1">
                         <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
                         <QuestObjectiveGateLine gate={getQuestObjectiveGateNotice(quest, player.level)} />
                       </div>
-                      <div className="mt-2 font-readable text-[12px] leading-[1.42] text-slate-300/82">{entry.reason}</div>
+                      <div className="mt-2 font-readable text-[12px] leading-[1.42] text-ae-ink-2">{entry.reason}</div>
                       <OperationBriefRows brief={entry.brief} reward={quest.reward} player={player} />
                     </div>
-                    <Motion.button data-testid="quest-board-accept-mission" whileTap={{ scale: 0.95 }} onClick={() => actions?.acceptQuest(quest.id!)} className="aether-cta-primary min-h-[44px] shrink-0 rounded-[0.9rem] px-5 py-3 text-xs font-bold text-[#dff7f5]">
-                      임무 수락
-                    </Motion.button>
+                    <ActionButton
+                      data-testid="quest-board-accept-mission"
+                      onClick={() => actions?.acceptQuest(quest.id!)}
+                      label="임무 수락"
+                      className="min-h-[44px] w-full px-5 text-[13px]"
+                    />
                   </div>
                 </QuestRowShell>
               );
@@ -578,24 +612,24 @@ const QuestBoardPanel = ({ player, actions, setGameState, onOpenArchiveConsole }
 
         {remainingLockedQuestEntries.length > 0 && (
           <section data-testid="quest-board-locked" className="space-y-3">
-            <h3 className="border-b border-white/8 pb-2 font-readable text-sm font-semibold text-[#ece5ff]">곧 열릴 임무</h3>
+            <SectionHead title="곧 열릴 임무" />
             {remainingLockedQuestEntries.map((quest) => (
-              <div key={`locked_${quest.id}`} className="aether-locked-row rounded-[1.05rem] px-3 py-3">
+              <div key={`locked_${quest.id}`} className="aether-locked-row rounded-ae-md px-3 py-3">
                 <div className="flex flex-col gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
-                      <div className="font-readable text-base font-semibold text-slate-100">{quest.title}</div>
+                      <div className="font-display text-[15px] font-bold text-ae-ink-2">{quest.title}</div>
                       <LifetimeCounterChip quest={quest} />
                       <span className="aether-lock-note aether-type-meta rounded-full px-2 py-0.5 font-readable">잠금 · {quest.lockLabel}</span>
                     </div>
                     <div className="mt-1">
                       <QuestObjectiveLine>{getQuestObjectiveText(quest)}</QuestObjectiveLine>
                     </div>
-                    <div className="aether-lock-note mt-2 rounded-[0.7rem] px-2.5 py-1.5 font-readable text-[11px] leading-snug">
+                    <div className="aether-lock-note mt-2 px-2.5 py-1.5 font-readable text-[12px] leading-snug">
                       {quest.lockDetail}
                     </div>
-                    <div className="aether-type-meta mt-2 font-readable text-[#dff7f5]">
-                      보상 · {getRewardSummary(quest.reward, player)}
+                    <div className="aether-type-meta mt-2 font-readable text-ae-ink-2">
+                      보상 · <span className="font-semibold text-ae-gold-text">{getRewardSummary(quest.reward, player)}</span>
                     </div>
                   </div>
                 </div>

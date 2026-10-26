@@ -1,4 +1,4 @@
-import { SafeArea, Screen, graniteEvent } from '@apps-in-toss/web-framework';
+import { SafeArea, Screen, graniteEvent } from './tossSdk';
 
 import type { RuntimeEnvironment } from './runtimeEnvironment';
 

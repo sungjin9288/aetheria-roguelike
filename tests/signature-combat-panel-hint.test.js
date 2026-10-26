@@ -24,7 +24,7 @@ import { renderStatic, makePlayerFixture } from './helpers/render.ts';
  *   2. enemy.isBoss + signatureDrops.length > 0일 때만 CombatPanel이
  *      data-testid="combat-signature-drop-hint"를 렌더
  *   3. "전설 각인" 라벨 포함
- *   4. #f6e7a2 gold 팔레트 (기존 signature tone과 일관)
+ *   4. 전설 등급 색(희귀도 색의 단일 출처 `--aether-rarity-legendary` — 2026-10 에테르 유리, 이전 #f6e7a2)
  */
 
 const BOSS_NAME = '마왕'; // src/data/dropTables.ts: '마왕' → '마왕의 대낫'(0.15) / '성검 에테르니아'(0.1)
@@ -83,7 +83,9 @@ test('CombatPanel은 보스가 발견한 각인을 떨굴 수 있을 때만 comb
 
     assert.ok(html.includes('data-testid="combat-signature-drop-hint"'), 'signature 드롭 힌트 노드가 렌더링됨');
     assert.ok(html.includes('전설 각인'), '"전설 각인" 라벨 포함');
-    assert.ok(html.includes('f6e7a2'), 'gold 팔레트(#f6e7a2) 사용');
+    assert.match(html, /data-testid="combat-signature-drop-hint"[^>]*class="[^"]*\bae-combat-signature-hint\b/, '전설 등급 색(ae-combat-signature-hint → --aether-rarity-legendary)');
+    assert.ok(!html.includes('f6e7a2'), '하드코딩한 금빛 팔레트를 쓰지 않는다');
+    assert.ok(!html.includes('✦'), '그림 문자 대신 선 아이콘(VD-13)');
     assert.ok(html.includes(expectedTopDrop.name), '실제 최고 확률 signature 이름이 힌트에 노출됨');
 });
 

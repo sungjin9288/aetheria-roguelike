@@ -53,11 +53,13 @@ test('전설 각인을 발견했으면 보존 배너를 실제로 렌더링하�
     assert.ok(html.includes(`${progress.discovered}/${progress.total} 보존`), '실제 발견 수치가 렌더된 문구에 반영됨');
 });
 
-test('보존 배너는 ✦ 마커 + gold 팔레트(#f6e7a2)를 사용한다 (chain 일관성)', () => {
+// w3 choice(VD-13): 글리프 ✦ 대신 장식 아이콘(보조 기술에 숨김), 색은 금 글자 토큰이다.
+test('보존 배너는 장식 아이콘 + 금 글자 토큰을 사용한다 (chain 일관성)', () => {
     const html = renderAscension(withDiscoveredSignature());
-    const bannerStart = html.indexOf('data-testid="ascension-signature-preserve"');
-    assert.notEqual(bannerStart, -1);
-    const bannerBlock = html.slice(Math.max(0, bannerStart - 400), bannerStart + 400);
-    assert.ok(bannerBlock.includes('✦'), '✦ 글리프 포함');
-    assert.ok(bannerBlock.includes('f6e7a2'), 'gold 팔레트(#f6e7a2) 사용');
+    const banner = html.match(/<p[^>]*data-testid="ascension-signature-preserve"[^>]*>([\s\S]*?)<\/p>/u);
+    assert.ok(banner, '보존 배너 노드');
+    assert.match(banner[0], /class="[^"]*text-ae-gold-text/u, '금 글자 토큰');
+    assert.match(banner[1], /<svg[^>]*aria-hidden="true"/u, '장식 아이콘은 보조 기술에 숨긴다');
+    assert.ok(!banner[1].includes('✦'), '이모지 글리프 없음');
+    assert.ok(!/#[0-9a-f]{6}/iu.test(banner[0]), '하드코딩 색 없음');
 });

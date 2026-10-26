@@ -4,7 +4,7 @@ import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
 import { clearTemporaryAdventureState } from '../src/utils/playerStateUtils.ts';
 import { buildCloudPlayerSnapshot } from '../src/platform/cloudPlayerSnapshot.ts';
 
-test('fresh and restored players serialize cleared adventure fields for Firestore merge', () => {
+test('fresh and restored players serialize cleared adventure fields for Firestore (no undefined)', () => {
     const fresh = clearTemporaryAdventureState({ ...INITIAL_STATE.player, name: 'save-test' });
     const restored = gameReducer(INITIAL_STATE, {
         type: 'LOAD_DATA', payload: { player: fresh, gameState: 'idle' },
@@ -20,7 +20,7 @@ test('fresh and restored players serialize cleared adventure fields for Firestor
     }
 });
 
-test('active expedition markers survive cloud projection while explicit null clears old merged values', () => {
+test('active expedition markers survive cloud projection while cleared ones travel as explicit null', () => {
     const player = { ...INITIAL_STATE.player,
         deferredEventChainSteps: { lost_wizard: 0 },
         adventureRelicBonuses: { killStackAtk: 3 },
@@ -31,7 +31,7 @@ test('active expedition markers survive cloud projection while explicit null cle
     const cleared = buildCloudPlayerSnapshot(clearTemporaryAdventureState(player), 200);
     assert.ok(Object.hasOwn(cleared, 'deferredEventChainSteps'));
     assert.ok(Object.hasOwn(cleared, 'adventureRelicBonuses'));
-    assert.equal(cleared.deferredEventChainSteps, null, 'omission would retain old data with merge:true');
+    assert.equal(cleared.deferredEventChainSteps, null, 'Firestore rejects undefined — cleared fields travel as null');
     assert.equal(cleared.adventureRelicBonuses, null);
     const restored = gameReducer(INITIAL_STATE, {
         type: 'LOAD_DATA', payload: { player: cleared, gameState: 'idle' },

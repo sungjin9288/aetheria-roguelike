@@ -6,7 +6,7 @@ import { bootstrapActionMap } from './handlers/bootstrapHandlers';
 import { uiActionMap, entityActionMap } from './handlers/uiHandlers';
 import { makeProgressionActionMap } from './handlers/progressionHandlers';
 import { makeFeatureActionMap } from './handlers/featureHandlers';
-import type { Player, Item, Monster, PostCombatResult, Relic } from '../types';
+import type { CombatFeedback, Player, Item, Monster, PostCombatResult, Relic } from '../types';
 import type { LogEntry, GameEvent, LiveConfig, LeaderboardEntry } from '../types/session.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
 import type { buildRunSummary } from '../utils/gameUtils.js';
@@ -67,6 +67,9 @@ export interface GameState {
         stories: Array<{ type: string; data: Record<string, unknown> }>;
         lootSettlement?: LootSettlementReceipt;
     } | null;
+    // 게임 필 감사 GF-01: 마지막 전투 차례의 연출 기록(types/combatFeedback.ts) — 표시 전용이라 세이브 봉투에 넣지 않고
+    //   `LOAD_DATA`가 비운다(`presentationEpoch`와 같은 종류). 게임 판정은 읽지 않는다.
+    combatFeedback: CombatFeedback | null;
     // cycle 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건,
     //   UI read 0건. INVADE_GRAVE 핸들러의 filter도 항상 [] 입력 → no-op.
 }
@@ -95,7 +98,7 @@ export const INITIAL_STATE: GameState = {
         inv: [{ ...DB.ITEMS.consumables[0], id: 'starter_1' }, { ...DB.ITEMS.consumables[0], id: 'starter_2' }], equip: { weapon: DB.ITEMS.weapons[0], armor: DB.ITEMS.armors[0], offhand: null },
         quests: [], achievements: [],
         expeditionFocusQuestIds: [],
-        stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0, bountyDate: null, bountyIssued: false, bountiesCompleted: 0, relicCount: 0, crafts: 0, syntheses: 0, maxKillStreak: 0, abyssFloor: 0, abyssRecord: 0, demonKingSlain: 0, dailyProtocol: null, claimedAchievements: [], claimedQuestIds: [], explores: 0, exploresByLocation: {}, escapes: 0, buildWins: {}, discoveryChains: [], visitedMaps: ['시작의 마을'], currentRun: createCurrentRunProgress({ visitedMaps: ['시작의 마을'] }), exploreState: { ...DEFAULT_EXPLORE_STATE }, codex: { weapons: {}, armors: {}, shields: {}, monsters: {}, recipes: {}, materials: {} }, codexClaimed: [], lastSeenAt: null, abyssDailyDive: null },
+        stats: { kills: 0, total_gold: 0, deaths: 0, killRegistry: {}, bossKills: 0, rests: 0, bountyDate: null, bountyIssued: false, bountiesCompleted: 0, relicCount: 0, crafts: 0, syntheses: 0, maxKillStreak: 0, abyssFloor: 0, abyssRecord: 0, demonKingSlain: 0, dailyProtocol: null, claimedAchievements: [], claimedQuestIds: [], explores: 0, exploresByLocation: {}, escapes: 0, buildWins: {}, discoveryChains: [], visitedMaps: ['시작의 마을'], currentRun: createCurrentRunProgress({ visitedMaps: ['시작의 마을'] }, { essenceLifetime: 0 }), exploreState: { ...DEFAULT_EXPLORE_STATE }, codex: { weapons: {}, armors: {}, shields: {}, monsters: {}, recipes: {}, materials: {} }, codexClaimed: [], lastSeenAt: null, abyssDailyDive: null },
         premiumCurrency: 0,
         seasonPass: { xp: 0, tier: 0, claimed: [], isPremium: false, seasonId: 'S1' },
         weeklyProtocol: { kills: 0, explores: 0, bossKills: 0, lastResetWeek: 0, claimed: [] },
@@ -168,6 +171,7 @@ export const INITIAL_STATE: GameState = {
     economyReceipt: null,
     combatTurn: 0,
     combatReceipt: null,
+    combatFeedback: null,
 };
 
 // --- REDUCER ---

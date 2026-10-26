@@ -1,5 +1,6 @@
 import { MSG } from '../data/messages';
 import { RELIC_SYNERGIES, getActiveRelicSynergies } from '../data/relics';
+import { isBorrowedRelic } from '../systems/chaosHeart';
 import type { Relic, RelicSynergy } from '../types/index.js';
 
 /** 조합의 대가 문구(Wave 50) — 데이터(`drawback`)에서 만든다. */
@@ -69,10 +70,72 @@ export interface RelicSynergyResult {
     startsCombo?: string;
 }
 
+/**
+ * 보유 유물이 before → after로 바뀌며 새로 켜진 실제 조합 — 엔진과 같은 판정(`getActiveRelicSynergies`).
+ * 추가(ADD_RELIC)와 교체(REPLACE_RELIC)가 같은 비교를 쓴다(교체는 내려놓은 조각 때문에 꺼지는 조합도 있다).
+ */
+export const getSynergiesActivatedBetween = (before: Relic[], after: Relic[]): RelicSynergy[] => {
+    const active = new Set(getActiveRelicSynergies(before).map((syn) => syn.label));
+    return getActiveRelicSynergies(after).filter((syn) => !active.has(syn.label));
+};
+
 /** 이 유물을 더하면 새로 켜지는 실제 조합 — 엔진과 같은 판정(`getActiveRelicSynergies`). */
-export const getNewlyActivatedSynergies = (newRelic: Relic, ownedRelics: Relic[]) => {
-    const before = new Set(getActiveRelicSynergies(ownedRelics).map((syn) => syn.label));
-    return getActiveRelicSynergies([...ownedRelics, newRelic]).filter((syn) => !before.has(syn.label));
+export const getNewlyActivatedSynergies = (newRelic: Relic, ownedRelics: Relic[]) => (
+    getSynergiesActivatedBetween(ownedRelics, [...ownedRelics, newRelic])
+);
+
+/** 유물을 받은 순간 켜진 조합 하나 — 획득 띠(`MomentBanners`)가 이름과 대가를 함께 보인다. */
+export interface RelicSynergyMoment {
+    label: string;
+    /** 세 조각 전설 조합이다(선택 카드의 '전설 조합 완성'과 같은 기준). */
+    legendary: boolean;
+    drawback: string;
+}
+
+/** 유물을 받은 순간 — 받은 유물 이름과, 그 유물로 새로 켜진 조합(있으면 하나, 전설 먼저). */
+export interface RelicAcquisitionMoment {
+    relicName: string;
+    synergy: RelicSynergyMoment | null;
+}
+
+/** 혼돈의 심장이 이번 전투에 빌린 유물은 받은 것이 아니다(Wave 57) — 획득 순간은 가진 유물로만 센다. */
+const ownedOnly = (relics: readonly Relic[] | null | undefined): Relic[] => (
+    (relics || []).filter((relic) => !isBorrowedRelic(relic))
+);
+
+const relicKey = (relic: Relic): string | null => relic.id || relic.name || null;
+
+/** 가진 유물이 before → after로 바뀌며 켜진 조합의 순간들 — 전설(세 조각) 조합이 먼저다. */
+export const getSynergyMomentsBetween = (
+    before: readonly Relic[] | null | undefined,
+    after: readonly Relic[] | null | undefined,
+): RelicSynergyMoment[] => getSynergiesActivatedBetween(ownedOnly(before), ownedOnly(after))
+    .map((syn) => ({
+        label: syn.label,
+        legendary: syn.requires.length >= 3,
+        drawback: formatSynergyDrawback(syn),
+    }))
+    .sort((a, b) => Number(b.legendary) - Number(a.legendary));
+
+/**
+ * 가진 유물이 before → after로 바뀌며 새 유물이 들어온 순간 — 2026-10 (감사 GF-08). 유물 선택(추가 · 교체) · 이야기 보상 ·
+ * 일일 보상 변환이 모두 같은 판정이다. 새 유물이 없으면 null이다(넘기기 · 사망 · 계승 · 영혼 수집가의 처치 수 갱신 · 빌린 유물 반납).
+ * 조합 이름 · 대가는 고르기 전 카드가 이미 보인 값이라 발견 우선 원칙(Wave 102 · 103)과 부딪히지 않는다.
+ */
+export const getRelicAcquisitionMoment = (
+    before: readonly Relic[] | null | undefined,
+    after: readonly Relic[] | null | undefined,
+): RelicAcquisitionMoment | null => {
+    const previous = new Set(ownedOnly(before).map(relicKey));
+    const gained = ownedOnly(after).find((relic) => {
+        const key = relicKey(relic);
+        return key !== null && !previous.has(key);
+    });
+    if (!gained?.name) return null;
+    return {
+        relicName: gained.name,
+        synergy: getSynergyMomentsBetween(before, after)[0] ?? null,
+    };
 };
 
 const ownedPieces = (requires: string[], ownedRelics: Relic[]) => ownedRelics

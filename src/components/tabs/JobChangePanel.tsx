@@ -15,6 +15,8 @@ import ClassIcon from '../icons/ClassIcon';
 import FocusPanelHeader from '../FocusPanelHeader';
 import PixelCharacterAvatar from '../PixelCharacterAvatar';
 import ClassJourneySummary from '../ClassJourneySummary';
+import ActionButton from '../ui/ActionButton';
+import Chip from '../ui/Chip';
 import type { GameMode } from '../../reducers/gameStates';
 
 interface JobChangeActions {
@@ -29,9 +31,9 @@ interface JobChangePanelProps {
 }
 
 const StatSummary = ({ label, value }: { label: string; value?: number }) => (
-  <div className="min-w-0 flex-1 px-2 first:pl-0 last:pr-0">
-    <div className="aether-type-meta font-readable text-slate-400/76">{label}</div>
-    <div className="aether-type-body mt-0.5 font-readable font-semibold text-slate-100">
+  <div className="ae-job-stat min-w-0 px-2.5 py-2">
+    <div className="aether-type-meta font-readable text-ae-ink-3">{label}</div>
+    <div className="aether-type-body mt-0.5 font-readable font-semibold text-ae-ink">
       {getClassStatGrade(value)}
     </div>
   </div>
@@ -39,18 +41,11 @@ const StatSummary = ({ label, value }: { label: string; value?: number }) => (
 
 const TraitRow = ({ label, traits, tone, testId }: { label: string; traits: string[]; tone: 'strength' | 'weakness'; testId: string }) => (
   <div data-testid={testId} className="flex min-w-0 flex-wrap items-center gap-1.5">
-    <span className="aether-type-meta w-8 shrink-0 font-readable text-slate-400/76">{label}</span>
+    <span className="aether-type-meta w-8 shrink-0 font-readable text-ae-ink-3">{label}</span>
     {traits.map((trait) => (
-      <span
-        key={trait}
-        className={`rounded border px-1.5 py-0.5 font-readable text-[11px] font-semibold ${
-          tone === 'strength'
-            ? 'border-emerald-300/24 bg-emerald-300/8 text-emerald-100'
-            : 'border-amber-300/24 bg-amber-300/8 text-amber-100'
-        }`}
-      >
+      <Chip key={trait} tone={tone === 'strength' ? 'good' : 'threat'}>
         {trait}
-      </span>
+      </Chip>
     ))}
   </div>
 );
@@ -83,14 +78,14 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
       data-testid="job-change-panel"
       initial={false}
       animate={{ opacity: 1, scale: 1 }}
-      className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden border border-[#9a8ac0]/18 px-4 py-4 shadow-[0_24px_48px_rgba(9,12,18,0.24)]"
+      className="ae-job-panel aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden px-4 py-4"
     >
       <FocusPanelHeader
         eyebrow="성장 갈림길"
         title="전직 선택"
         meta={`현재 직업 ${currentJob} · ${availableJobs.length}가지 선택`}
         onBack={() => setGameState?.('idle')}
-        backLabel="복귀"
+        backLabel={MSG.UI_BACK}
         backTestId="job-change-close"
         bleedClassName="-mx-4 px-4"
         onOpenArchive={onOpenArchiveConsole}
@@ -101,16 +96,16 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
       <div className="custom-scrollbar flex-1 overflow-y-auto pr-1">
         <div
           data-testid="job-change-current"
-          className="mb-3 flex items-center gap-2.5 border-b border-white/8 pb-3"
+          className="ae-well mb-3 flex flex-wrap items-center gap-x-2.5 gap-y-1.5 px-3 py-2.5"
         >
           <ClassIcon className={currentJob} size={34} tier={current?.tier || 0} />
           <div className="min-w-0 flex-1">
-            <div className="aether-type-meta font-readable text-slate-400/76">현재 직업</div>
-            <div className="truncate font-readable text-lg font-semibold text-white">{currentJob}</div>
+            <div className="aether-type-meta font-readable text-ae-ink-3">현재 직업</div>
+            <div className="aether-type-title break-keep font-readable font-semibold text-ae-ink">{currentJob}</div>
           </div>
-          <div className="shrink-0 text-right">
-            <div className="aether-type-meta font-readable text-slate-400/76">레벨 {level}</div>
-            <div className={`aether-type-body mt-0.5 font-readable font-semibold ${readyCount > 0 ? 'text-emerald-100' : 'text-[#dff7f5]'}`}>
+          <div className="ml-auto shrink-0 text-right">
+            <div className="aether-type-meta font-readable text-ae-ink-3">레벨 <span className="font-fira tabular-nums">{level}</span></div>
+            <div className={`aether-type-body mt-0.5 font-readable font-semibold ${readyCount > 0 ? 'text-ae-good' : 'text-ae-ether-hi'}`}>
               {growthStatus}
             </div>
           </div>
@@ -121,12 +116,12 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
             <section aria-labelledby="job-change-options-title">
               <div className="mb-2 flex items-end justify-between gap-3">
                 <div>
-                  <div className="aether-type-meta font-readable text-slate-400/76">다음 성장</div>
-                  <h3 id="job-change-options-title" className="aether-type-title mt-0.5 font-readable font-semibold text-slate-100">
+                  <div className="aether-type-meta font-readable text-ae-ink-3">다음 성장</div>
+                  <h3 id="job-change-options-title" className="aether-type-title mt-0.5 font-readable font-semibold text-ae-ink">
                     어떤 방식으로 싸울까?
                   </h3>
                 </div>
-                <span className="aether-type-meta shrink-0 font-readable text-slate-400">{availableJobs.length}가지 선택</span>
+                <span className="aether-type-meta shrink-0 font-readable text-ae-ink-3">{availableJobs.length}가지 선택</span>
               </div>
               <div data-testid="job-change-options" className="grid grid-cols-2 gap-2">
                 {availableJobs.map((jobName) => (
@@ -150,7 +145,7 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0, y: -4 }}
                   transition={{ duration: 0.18 }}
-                  className="rounded-lg border border-[#7dd4d8]/20 bg-black/16 p-3"
+                  className="ae-card ae-job-decision p-3 sm:p-3.5"
                   aria-live="polite"
                 >
                   <div className="flex items-start gap-2.5">
@@ -164,22 +159,22 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
                       label={`${selectedName} 대표 외형`}
                     />
                     <div className="min-w-0 flex-1">
-                      <div className="aether-type-meta font-readable text-[#7dd4d8]/82">선택한 성장</div>
-                      <h3 className="font-readable text-lg font-semibold text-white">{selectedName}</h3>
+                      <div className="ae-eyebrow">선택한 성장</div>
+                      <h3 className="aether-type-heading break-keep font-readable font-semibold text-ae-ink">{selectedName}</h3>
                       <p
                         data-testid="job-change-selected-identity"
-                        className="aether-type-body mt-0.5 font-readable leading-snug text-slate-300/82"
+                        className="aether-type-body mt-0.5 font-readable leading-snug text-ae-ink-2"
                       >
                         {identity.identity}
                       </p>
                     </div>
-                    <div className={`flex shrink-0 items-center gap-1 font-readable text-[11px] font-semibold ${selectedIsLocked ? 'aether-lock-note' : 'text-emerald-100'}`}>
-                      {selectedIsLocked ? <LockKeyhole size={12} /> : <Check size={13} />}
+                    <div className={`ae-job-option-status aether-type-label flex shrink-0 items-center gap-1 font-readable font-semibold ${selectedIsLocked ? 'aether-lock-note' : 'text-ae-good'}`}>
+                      {selectedIsLocked ? <LockKeyhole size={12} aria-hidden="true" /> : <Check size={13} aria-hidden="true" />}
                       {selectedIsLocked ? `레벨 ${requirement}` : '준비 완료'}
                     </div>
                   </div>
 
-                  <div className="mt-3 flex divide-x divide-white/8 border-y border-white/8 py-2.5">
+                  <div className="ae-well ae-job-stats mt-3 grid grid-cols-3 p-0">
                     <StatSummary label="생명" value={selected.hpMod} />
                     <StatSummary label="기력" value={selected.mpMod} />
                     <StatSummary label="공격력" value={selected.atkMod} />
@@ -194,51 +189,48 @@ const JobChangePanel = ({ player, actions, setGameState, onOpenArchiveConsole }:
 
                   <div className="mt-3 space-y-2 font-readable">
                     <div>
-                      <div className="aether-type-meta text-slate-400/76">대표 기술</div>
-                      <div className="aether-type-body mt-0.5 text-slate-100">
+                      <div className="aether-type-meta text-ae-ink-3">대표 기술</div>
+                      <div className="aether-type-body mt-0.5 text-ae-ink">
                         {featuredSkills.join(' · ') || '사용 기술 없음'}
                       </div>
-                      <div className="aether-type-meta mt-0.5 text-slate-400">사용 기술 {getActiveClassSkillNames(selected, Number.POSITIVE_INFINITY).length}개</div>
+                      <div className="aether-type-meta mt-0.5 text-ae-ink-3">사용 기술 <span className="font-fira tabular-nums">{getActiveClassSkillNames(selected, Number.POSITIVE_INFINITY).length}</span>개</div>
                     </div>
                     <ClassJourneySummary
                       job={selectedName}
                       record={player.classJourney?.byJob[selectedName]}
                     />
                     <div>
-                      <div className="aether-type-meta text-slate-400/76">다음 계보</div>
-                      <div className="aether-type-body mt-0.5 text-slate-100">
+                      <div className="aether-type-meta text-ae-ink-3">다음 계보</div>
+                      <div className="aether-type-body mt-0.5 text-ae-ink">
                         {selected.next?.length ? selected.next.join(' 또는 ') : '이 길의 최종 전직'}
                       </div>
                     </div>
                   </div>
 
-                  <div className="mt-3 flex items-start gap-2 border-t border-white/8 pt-3 font-readable text-[11px] leading-relaxed text-slate-300/76">
-                    <Sparkles size={13} className="mt-0.5 shrink-0 text-[#d5b180]" />
+                  <div className="ae-divider mt-3" aria-hidden="true" />
+                  <div className="aether-type-meta mt-3 flex items-start gap-2 font-readable leading-relaxed text-ae-ink-2">
+                    <Sparkles size={13} aria-hidden="true" className="mt-0.5 shrink-0 text-ae-gold-text" />
                     <span>전직하면 생명과 기력이 모두 회복되고, 기술 구성이 {selectedName}에 맞게 바뀝니다.</span>
                   </div>
 
-                  <button
-                    type="button"
+                  <ActionButton
+                    variant="primary"
                     data-testid="job-change-confirm"
                     onClick={() => !selectedIsLocked && actions?.jobChange(selectedName)}
                     disabled={selectedIsLocked}
-                    className="aether-cta-primary aether-disabled-action aether-type-body mt-3 flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg px-4 font-readable font-semibold text-[#dff7f5] disabled:cursor-not-allowed"
-                  >
-                    {selectedIsLocked ? (
-                      <><LockKeyhole size={15} />레벨 {requirement}에 전직 가능</>
-                    ) : (
-                      <>{MSG.JOB_CHANGE_CONFIRM(selectedName)} <ArrowRight size={15} /></>
-                    )}
-                  </button>
+                    icon={selectedIsLocked ? <LockKeyhole size={15} /> : <ArrowRight size={15} />}
+                    label={selectedIsLocked ? <>레벨 {requirement}에 전직 가능</> : MSG.JOB_CHANGE_CONFIRM(selectedName)}
+                    className="mt-3 min-h-[48px] w-full font-readable"
+                  />
                 </Motion.section>
               )}
             </AnimatePresence>
           </div>
         ) : (
           <div data-testid="job-change-complete" className="py-10 text-center font-readable">
-            <Sparkles size={24} className="mx-auto text-[#d5b180]" />
-            <div className="mt-3 text-base font-semibold text-slate-100">최종 전직에 도달했습니다.</div>
-            <div className="aether-type-body mt-1 text-slate-400">이제 기술 성장과 장비 조화로 자신만의 전투를 완성하세요.</div>
+            <Sparkles size={24} aria-hidden="true" className="mx-auto text-ae-gold-text" />
+            <div className="aether-type-title mt-3 font-semibold text-ae-ink">최종 전직에 도달했습니다.</div>
+            <div className="aether-type-body mt-1 text-ae-ink-2">이제 기술 성장과 장비 조화로 자신만의 전투를 완성하세요.</div>
           </div>
         )}
       </div>

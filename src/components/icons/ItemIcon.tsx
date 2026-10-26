@@ -10,15 +10,16 @@ import type { Item } from '../../types/index.js';
 // cycle 412: steel 제거 — signatureRegistry.json은 8 tone (arcane/earth/fire/
 //   frost/holy/nature/rust/shadow)만 emit. SIGNATURE_TONE_RING.steel lookup 절대
 //   hit 안 됨 (cycle 358 LegendaryDropOverlay/LegendaryCodex paired completion).
-const SIGNATURE_TONE_RING: Record<string, { border: string; glow: string }> = Object.freeze({
-    holy: { border: '#f6e7a2', glow: 'rgba(246,231,162,0.45)' },
-    fire: { border: '#ffb48a', glow: 'rgba(255,180,138,0.45)' },
-    frost: { border: '#cce8f5', glow: 'rgba(204,232,245,0.4)' },
-    shadow: { border: '#c7a4f0', glow: 'rgba(199,164,240,0.45)' },
-    arcane: { border: '#c0b0e8', glow: 'rgba(192,176,232,0.45)' },
-    nature: { border: '#a8d0a0', glow: 'rgba(168,208,160,0.45)' },
-    earth: { border: '#d8b878', glow: 'rgba(216,184,120,0.4)' },
-    rust: { border: '#d9a56c', glow: 'rgba(217,165,108,0.4)' },
+// 2026-10 에테르 유리(VD-06): 각인 계열 고리는 별칭 토큰(--aether-sig-*-rgb, index.css w3:archive-a)이다 — 원시 hex 없음.
+const SIGNATURE_TONE_RING: Record<string, { border: string; ring: string; glow: string }> = Object.freeze({
+    holy: { border: 'rgb(var(--aether-sig-holy-rgb))', ring: 'rgb(var(--aether-sig-holy-rgb) / 0.14)', glow: 'rgb(var(--aether-sig-holy-rgb) / 0.42)' },
+    fire: { border: 'rgb(var(--aether-sig-fire-rgb))', ring: 'rgb(var(--aether-sig-fire-rgb) / 0.14)', glow: 'rgb(var(--aether-sig-fire-rgb) / 0.42)' },
+    frost: { border: 'rgb(var(--aether-sig-frost-rgb))', ring: 'rgb(var(--aether-sig-frost-rgb) / 0.14)', glow: 'rgb(var(--aether-sig-frost-rgb) / 0.42)' },
+    shadow: { border: 'rgb(var(--aether-sig-shadow-rgb))', ring: 'rgb(var(--aether-sig-shadow-rgb) / 0.14)', glow: 'rgb(var(--aether-sig-shadow-rgb) / 0.42)' },
+    arcane: { border: 'rgb(var(--aether-sig-arcane-rgb))', ring: 'rgb(var(--aether-sig-arcane-rgb) / 0.14)', glow: 'rgb(var(--aether-sig-arcane-rgb) / 0.42)' },
+    nature: { border: 'rgb(var(--aether-sig-nature-rgb))', ring: 'rgb(var(--aether-sig-nature-rgb) / 0.14)', glow: 'rgb(var(--aether-sig-nature-rgb) / 0.42)' },
+    earth: { border: 'rgb(var(--aether-sig-earth-rgb))', ring: 'rgb(var(--aether-sig-earth-rgb) / 0.14)', glow: 'rgb(var(--aether-sig-earth-rgb) / 0.42)' },
+    rust: { border: 'rgb(var(--aether-sig-rust-rgb))', ring: 'rgb(var(--aether-sig-rust-rgb) / 0.14)', glow: 'rgb(var(--aether-sig-rust-rgb) / 0.42)' },
 });
 
 /**
@@ -70,7 +71,7 @@ const ItemIcon = ({ item, size, showBorder = false, className = '', hideSignatur
     const iconKey = getEquipmentVisualKey(item);
     const path = ICON_PATHS[iconKey] || ICON_PATHS.material;
     const rarity = item ? getItemRarity(item) : 'common';
-    const color = BALANCE.RARITY_COLORS[rarity] || '#9ca3af';
+    const color = BALANCE.RARITY_COLORS[rarity] || BALANCE.RARITY_COLORS.common;
     const isEquipmentItem = ['weapon', 'armor', 'shield'].includes(item?.type ?? '');
     const assetSrc = useMemo(() => getItemIconAssetSrc(item), [item]);
     const [assetState, setAssetState] = useState({ key: iconKey, failed: false });
@@ -87,18 +88,19 @@ const ItemIcon = ({ item, size, showBorder = false, className = '', hideSignatur
     const baseShell = showBorder ? {
         border: `1.5px solid ${color}66`,
         borderRadius: 10,
-        background: `radial-gradient(circle at 30% 22%, ${color}2e, transparent 52%), linear-gradient(180deg, rgba(22,26,33,0.98) 0%, rgba(8,10,14,1) 100%)`,
-        boxShadow: `inset 0 1px 0 rgba(255,255,255,0.08), 0 6px 14px ${color}24`,
+        background: `radial-gradient(circle at 30% 22%, ${color}2e, transparent 52%), linear-gradient(180deg, var(--aether-s3) 0%, var(--aether-sunk) 100%)`,
+        boxShadow: `inset 0 1px 0 var(--aether-rim), 0 6px 14px ${color}24`,
     } : {
-        border: '1px solid rgba(255,255,255,0.08)',
+        // 2026-10 에테르 유리: 테두리 없는 톤 상자 — s3 → sunk + 위쪽 림.
+        border: '1px solid transparent',
         borderRadius: 8,
-        background: 'linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(8,10,14,1) 100%)',
-        boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)',
+        background: 'linear-gradient(180deg, var(--aether-s3) 0%, var(--aether-sunk) 100%)',
+        boxShadow: 'inset 0 1px 0 var(--aether-rim)',
     };
     const shellStyle = signatureRing ? {
         ...baseShell,
         border: `1.5px solid ${signatureRing.border}`,
-        boxShadow: `${baseShell.boxShadow}, 0 0 0 1px ${signatureRing.border}22, 0 0 12px ${signatureRing.glow}`,
+        boxShadow: `${baseShell.boxShadow}, 0 0 0 1px ${signatureRing.ring}, 0 0 12px ${signatureRing.glow}`,
     } : baseShell;
 
     const badgeSize = Math.max(8, Math.round(size * 0.32));

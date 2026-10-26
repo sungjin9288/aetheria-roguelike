@@ -25,7 +25,9 @@ const CodexDiscoveryOverlay = ({ entry, onDismiss }: CodexDiscoveryOverlayProps)
         return () => clearTimeout(timer);
     }, [entry, onDismiss]);
 
+    // 감사 A11Y-03: 2.2초 뒤 사라지는 알림이라 늘 있는 상태 알림 칸 안에 그린다.
     return (
+        <div role="status" className="pointer-events-none absolute">
         <AnimatePresence>
             {entry && (
                 <Motion.div
@@ -41,7 +43,7 @@ const CodexDiscoveryOverlay = ({ entry, onDismiss }: CodexDiscoveryOverlayProps)
                         initial={{ opacity: 0, scale: 0.8 }}
                         animate={{ opacity: [0, 0.4, 0.2, 0], scale: [0.8, 1.2, 1.4, 1.6] }}
                         transition={{ duration: 2, ease: 'easeOut' }}
-                        className="absolute w-64 h-64 rounded-full bg-gradient-to-br from-cyber-blue/40 to-cyber-purple/30 blur-3xl"
+                        className="absolute size-64 rounded-full bg-gradient-to-br from-ae-ether/40 to-ae-exp/30 blur-3xl"
                     />
 
                     {/* 콘텐츠 */}
@@ -63,7 +65,7 @@ const CodexDiscoveryOverlay = ({ entry, onDismiss }: CodexDiscoveryOverlayProps)
                                     scale: [0, 1.2, 0],
                                 }}
                                 transition={{ duration: 1.2, delay: 0.2 + i * 0.12 }}
-                                className="absolute w-1.5 h-1.5 rounded-full bg-cyber-blue"
+                                className="absolute size-1.5 rounded-full bg-ae-ether"
                             />
                         ))}
 
@@ -71,17 +73,17 @@ const CodexDiscoveryOverlay = ({ entry, onDismiss }: CodexDiscoveryOverlayProps)
                             animate={{ rotate: [0, 10, -10, 0] }}
                             transition={{ duration: 0.6, delay: 0.15 }}
                         >
-                            <Sparkles size={28} className="text-cyber-blue drop-shadow-[0_0_8px_rgba(0,204,255,0.8)]" />
+                            <Sparkles size={28} className="text-ae-ether drop-shadow-[0_0_8px_rgb(var(--aether-ether-rgb)/0.8)]" />
                         </Motion.div>
 
-                        <div className="text-[11px] font-fira font-semibold text-cyber-blue/80">
+                        <div className="aether-type-label font-semibold text-ae-ether-hi">
                             새 기록 발견
                         </div>
-                        <div className="text-lg font-rajdhani font-bold text-white drop-shadow-[0_0_12px_rgba(0,204,255,0.5)]">
+                        <div className="aether-type-heading font-display font-bold text-ae-ink drop-shadow-[0_0_12px_rgb(var(--aether-ether-rgb)/0.5)]">
                             {entry.name}
                         </div>
                         {entry.category && (
-                            <div className="text-[11px] font-fira text-slate-400/80">
+                            <div className="aether-type-label text-ae-ink-3">
                                 {entry.category}
                             </div>
                         )}
@@ -89,6 +91,7 @@ const CodexDiscoveryOverlay = ({ entry, onDismiss }: CodexDiscoveryOverlayProps)
                 </Motion.div>
             )}
         </AnimatePresence>
+        </div>
     );
 };
 

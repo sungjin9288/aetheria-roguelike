@@ -138,6 +138,49 @@ test('generateEvent: TokenQuotaManager 할당량 소진 시 즉시 fallback + fa
     });
 });
 
+// GP-02: 사이트 데이터를 막은 브라우저(쿠키 차단 SecurityError)에서는 미터를 읽을 수 없다.
+//   fail-closed라 보내지 않는 것은 그대로지만, 한도에 닿은 것이 아니므로 "마력이 소진되었습니다.
+//   내일 다시"를 붙이면 거짓이다 — 탐험마다 같은 줄이 기록 창에 쌓였다(자연 플레이 140줄, AI 호출 0).
+test('generateEvent/generateStory: 저장소가 막히면 소진 안내 없이 조용히 폴백하고 fetch하지 않는다 (GP-02)', async () => {
+    let fetchCalls = 0;
+    const blocked = {
+        getItem: () => { throw new Error('SecurityError: site data blocked'); },
+        setItem: () => { throw new Error('SecurityError: site data blocked'); },
+        removeItem: () => {},
+        clear: () => {},
+    };
+    await withGlobalStub({
+        localStorage: blocked,
+        fetch: async () => {
+            fetchCalls += 1;
+            return { ok: true, json: async () => ({ success: true, data: { narrative: 'AI' } }) };
+        },
+    }, async () => {
+        assert.equal(TokenQuotaManager.getCallGate(), 'unavailable');
+        assert.equal(TokenQuotaManager.canMakeAICall(), false, '못 세면 보내지 않는다(fail-closed 유지)');
+
+        for (let i = 0; i < 3; i += 1) {
+            const event = await AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', basePlayerContext);
+            assert.ok(event, '폴백 이벤트는 그대로 나온다');
+            assert.equal(event.source, 'fallback');
+            assert.equal(event.fallbackReason, undefined, '미터 불능은 소진이 아니다');
+            assert.equal(event.fallbackMessage, undefined);
+        }
+        const story = await AI_SERVICE.generateStory('victory', { name: '고블린' }, 'test-uid');
+        assert.equal(story, AI_SERVICE.getFallback('victory', { name: '고블린' }));
+        assert.equal(fetchCalls, 0);
+    });
+});
+
+test('getCallGate: 읽기가 멀쩡하고 한도에 닿았으면 exhausted다 — 소진 안내는 실제 한도에서만', async () => {
+    await withGlobalStub({ localStorage: makeLocalStorageStub() }, async () => {
+        assert.equal(TokenQuotaManager.getCallGate(), 'open');
+        for (let i = 0; i < TokenQuotaManager.DAILY_LIMIT; i += 1) TokenQuotaManager.recordCall();
+        assert.equal(TokenQuotaManager.getCallGate(), 'exhausted');
+        assert.equal(TokenQuotaManager.canMakeAICall(), false);
+    });
+});
+
 test('generateStory: TokenQuotaManager 할당량 소진 시 getFallback 내러티브를 즉시 반환한다', async () => {
     let fetchCalled = false;
     await withGlobalStub({

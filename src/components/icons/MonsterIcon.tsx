@@ -86,8 +86,12 @@ const MonsterIcon = ({ name, discovered, isBoss, size }: MonsterIconProps) => {
                     width={size * 0.85}
                     height={size * 0.85}
                     viewBox="0 0 24 24"
-                    fill={discovered ? 'none' : '#1e293b'}
-                    stroke={discovered ? '#e2e8f0' : '#334155'}
+                    // 2026-10 에테르 유리: 실루엣 색은 디자인 토큰(발견 = 잉크, 미발견 = 바탕 층 위 옅은 층)이다.
+                    //   CSS 변수는 표현 속성이 아니라 style로 넘긴다(표현 속성의 var()는 브라우저마다 다르다).
+                    style={{
+                        fill: discovered ? 'none' : 'var(--aether-s3)',
+                        stroke: discovered ? 'var(--aether-ink-2)' : 'var(--aether-s4)',
+                    }}
                     strokeWidth="1.5"
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -98,7 +102,7 @@ const MonsterIcon = ({ name, discovered, isBoss, size }: MonsterIconProps) => {
                             x="12"
                             y="14"
                             textAnchor="middle"
-                            fill="#64748b"
+                            style={{ fill: 'var(--aether-ink-3)' }}
                             fontSize="10"
                             fontWeight="bold"
                             stroke="none"

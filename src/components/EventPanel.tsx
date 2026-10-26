@@ -1,7 +1,8 @@
 import { motion as Motion } from 'framer-motion';
 import { ArrowRight, BookOpen, CircleHelp, Gift, HeartPulse, ShieldAlert, type LucideIcon } from 'lucide-react';
-import SignalBadge from './SignalBadge';
+import Chip from './ui/Chip';
 import FocusPanelHeader from './FocusPanelHeader';
+import { MSG } from '../data/messages';
 import { formatEventText, getEventChoicePreview, getEventPanelCopy, type EventChoiceTone } from '../utils/eventPresentation';
 import { getLocationVisual } from '../utils/locationVisuals';
 import type { GameActions } from '../hooks/actionDeps';
@@ -31,12 +32,13 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModi
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
     const panelCopy = getEventPanelCopy(currentEvent);
     const locationVisual = location ? getLocationVisual(location) : null;
+    // 2026-10 에테르 유리: 예상 결과의 색은 토큰 하나씩 — 보상 금 · 회복 초록 · 위험 장밋빛 · 이야기 보라 · 미상 잉크.
     const previewStyle: Record<EventChoiceTone, { icon: LucideIcon; className: string }> = {
-        reward: { icon: Gift, className: 'text-[#f6e7c8]' },
-        recovery: { icon: HeartPulse, className: 'text-emerald-200' },
-        danger: { icon: ShieldAlert, className: 'text-rose-200' },
-        story: { icon: BookOpen, className: 'text-[#e3dcff]' },
-        unknown: { icon: CircleHelp, className: 'text-slate-300/76' },
+        reward: { icon: Gift, className: 'text-ae-gold-text' },
+        recovery: { icon: HeartPulse, className: 'text-ae-good' },
+        danger: { icon: ShieldAlert, className: 'text-ae-threat' },
+        story: { icon: BookOpen, className: 'text-ae-exp' },
+        unknown: { icon: CircleHelp, className: 'text-ae-ink-2' },
     };
     const panelBody = (
         <div data-testid="event-panel" className="relative flex flex-1 min-h-0 flex-col overflow-x-hidden overflow-y-auto custom-scrollbar">
@@ -45,20 +47,20 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModi
                 title={panelCopy.title}
                 titleClassName="text-[1.2rem]"
                 onBack={() => actions?.dismissEvent?.()}
-                backLabel="복귀"
+                backLabel={MSG.UI_BACK}
                 backTestId="event-close"
-                rightSlot={<SignalBadge tone="resonance" size="sm">{panelCopy.kind}</SignalBadge>}
+                rightSlot={<Chip tone="ether">{panelCopy.kind}</Chip>}
                 bleedClassName=""
             />
 
-            <div data-testid="event-situation" className="shrink-0 border-l-2 border-[#7dd4d8]/45 bg-[#7dd4d8]/[0.05] px-3 py-3 text-white">
-                <div className="font-readable text-[11px] text-[#bce8e8]/82">지금 상황</div>
-                <div className="mt-1.5 text-[0.95rem] font-readable leading-relaxed text-slate-50">
+            <div data-testid="event-situation" className="ae-ornate shrink-0 px-4 py-3.5">
+                <div className="ae-eyebrow font-readable text-ae-gold-text">지금 상황</div>
+                <div className="mt-1.5 font-readable text-[15px] leading-relaxed text-ae-ink">
                     {formatEventText(currentEvent.desc)}
                 </div>
             </div>
 
-            <div className="mt-3 shrink-0 font-readable text-[12px] text-slate-300/82">어떤 길을 택하시겠습니까?</div>
+            <div className="mt-3 shrink-0 font-readable text-[12px] font-semibold text-ae-ink-2">어떤 길을 택하시겠습니까?</div>
             <div data-testid="event-choice-list" className="mt-2 flex shrink-0 flex-col gap-2">
                 {choices.length > 0 ? choices.map((choice, idx) => {
                     const preview = getEventChoicePreview(currentEvent, idx, { activeBuff, player: { challengeModifiers } });
@@ -71,23 +73,23 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModi
                                 event.currentTarget.blur();
                                 actions?.handleEventChoice(idx);
                             }}
-                            className="group min-h-[72px] rounded-[1rem] aether-event-choice px-3.5 py-3 text-left transition-all hover:border-[#d5b180]/28 hover:bg-[#d5b180]/10 hover:shadow-[0_18px_28px_rgba(213,177,128,0.08)]"
+                            className="aether-event-choice ae-event-choice group min-h-[72px] rounded-ae-md px-3.5 py-3 text-left"
                         >
                             <div className="flex items-center gap-3">
                                 <div className="min-w-0 flex-1">
-                                    <div className="font-readable text-[11px] text-[#f4e6c8]/72">선택 {idx + 1}</div>
-                                    <div className="mt-0.5 text-[0.98rem] font-readable font-bold leading-snug text-slate-50">
+                                    <div className="ae-eyebrow font-readable">선택 <span className="font-fira tabular-nums">{idx + 1}</span></div>
+                                    <div className="mt-0.5 font-readable text-[15px] font-bold leading-snug text-ae-ink">
                                         {formatEventText(choice)}
                                     </div>
                                     <div
                                         data-testid={`event-choice-preview-${idx}`}
-                                        className={`mt-1.5 flex items-center gap-1.5 font-readable text-[11px] ${previewStyle[preview.tone].className}`}
+                                        className={`mt-1.5 flex items-start gap-1.5 font-readable text-[12px] font-semibold leading-snug ${previewStyle[preview.tone].className}`}
                                     >
-                                        <PreviewIcon size={12} className="shrink-0" />
+                                        <PreviewIcon size={14} aria-hidden="true" className="mt-px shrink-0" />
                                         <span>예상 결과 · {preview.text}</span>
                                     </div>
                                 </div>
-                                <ArrowRight size={17} className="shrink-0 text-slate-400 transition-transform group-hover:translate-x-0.5 group-hover:text-[#f6e7c8]" />
+                                <ArrowRight size={18} aria-hidden="true" className="ae-event-choice-arrow shrink-0 text-ae-ink-3" />
                             </div>
                         </button>
                     );
@@ -95,7 +97,7 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModi
                     <button
                         data-testid="event-dismiss"
                         onClick={() => actions?.dismissEvent?.()}
-                        className="rounded-[1.2rem] aether-panel-muted px-4 py-4 text-left font-bold text-white transition-colors hover:bg-white/[0.04]"
+                        className="aether-event-choice ae-event-choice min-h-[56px] rounded-ae-md px-4 py-4 text-left font-readable text-[15px] font-bold text-ae-ink"
                     >
                         이곳을 떠납니다.
                     </button>
@@ -114,7 +116,7 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModi
                     <img
                         src={locationVisual.src}
                         alt=""
-                        className="h-32 w-32 max-h-full max-w-full object-contain opacity-80 drop-shadow-[0_10px_20px_rgba(0,0,0,0.42)] [image-rendering:pixelated]"
+                        className="ae-event-art h-32 w-32 max-h-full max-w-full object-contain [image-rendering:pixelated]"
                     />
                 </Motion.div>
             )}
@@ -125,13 +127,9 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModi
         <Motion.div
             initial={false}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.22, ease: 'easeOut' }}
-            className="panel-noise aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3"
+            transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+            className="aether-focus-panel ae-event-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3"
         >
-            <div
-                className="pointer-events-none absolute inset-0 opacity-60"
-                style={{ backgroundImage: 'linear-gradient(180deg, rgba(255,255,255,0.04) 0%, transparent 22%), linear-gradient(145deg, rgba(246,217,140,0.08), transparent 34%)' }}
-            />
             {panelBody}
         </Motion.div>
     );

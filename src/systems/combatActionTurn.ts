@@ -7,7 +7,7 @@ import { endDevourBonus } from '../utils/adventureRelicBonuses';
 import { endCombatScope } from '../utils/combatScope';
 import { createSeededRandom } from './combatItemTurn';
 import { tickAfterAction } from './combatTurnTick';
-import type { Monster, Player } from '../types/index.js';
+import type { CombatTurnSignals, Monster, Player } from '../types/index.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
 
 export type CombatActionKind = 'attack' | 'skill' | 'escape';
@@ -40,6 +40,8 @@ export type CombatActionTurnResult = {
     graveData?: GraveEntry;
     runSummary?: ReturnType<typeof buildRunSummary>;
     stories: Array<{ type: string; data: Record<string, unknown> }>;
+    /** 이 차례의 연출 사실(GF-01) — 정산이 `combatFeedback`으로 남긴다. 판정은 읽지 않는다. */
+    signals?: CombatTurnSignals;
 };
 
 const selectedSkill = (player: Player, random: () => number) => {
@@ -67,6 +69,7 @@ const resolveDefeat = (
     logs: Array<{ type: string; text: string }>,
     random: () => number,
     now: number,
+    killer: Monster | null,
 ): CombatActionTurnResult => {
     // 2026-10 Wave 57: 빌린 유물은 기록(런 요약의 유물 수)에도 남기지 않는다.
     const deadPlayer = { ...endCombatScope(player), killStreak: 0 };
@@ -85,7 +88,7 @@ const resolveDefeat = (
         logs: [...logs, ...defeatResult.logs],
         visualEffect: null,
         graveData: defeatResult.graveData,
-        runSummary: buildRunSummary(deadPlayer, location),
+        runSummary: buildRunSummary(deadPlayer, location, { enemy: killer }),
         stories: [
             { type: 'death', data: { loc: location } },
             { type: 'ruinRecap', data: { name: deadPlayer.name, level: deadPlayer.level } },
@@ -152,6 +155,7 @@ export const resolveCombatActionTurn = ({
                 logs,
                 random,
                 now,
+                enemy,
             );
         }
         return {
@@ -221,6 +225,7 @@ export const resolveCombatActionTurn = ({
         };
     }
 
+    const playerCrit = Boolean(actionResult.isCrit);
     if (actionResult.isVictory) {
         return {
             kind: 'victory',
@@ -231,6 +236,7 @@ export const resolveCombatActionTurn = ({
             victoryStats: stats,
             deadEnemy: enemy,
             stories: [],
+            signals: { playerCrit, enemyHeavy: false, enemyActed: false, enemyHpAfter: actionResult.updatedEnemy?.hp ?? 0 },
         };
     }
 
@@ -250,14 +256,19 @@ export const resolveCombatActionTurn = ({
             logs.push(...counter.logs);
             playerAfterAction = counter.updatedPlayer;
             if (counter.isDead) {
-                return resolveDefeat(
+                const defeated = resolveDefeat(
                     playerAfterAction,
                     initialPlayer,
                     player.loc || MSG.LOCATION_UNKNOWN_FALLBACK,
                     logs,
                     random,
                     now,
+                    enemyAfterAction,
                 );
+                return {
+                    ...defeated,
+                    signals: { playerCrit, enemyHeavy: false, enemyActed: true, enemyHpAfter: enemyAfterAction.hp ?? 0 },
+                };
             }
         }
     }
@@ -270,6 +281,7 @@ export const resolveCombatActionTurn = ({
             logs,
             visualEffect: null,
             stories: [],
+            signals: { playerCrit, enemyHeavy: false, enemyActed: false, enemyHpAfter: enemyAfterAction.hp ?? 0 },
         };
     }
 
@@ -287,6 +299,12 @@ export const resolveCombatActionTurn = ({
         ? [{ type: 'bossPhase2', data: { bossName: counterResult.updatedEnemy.name } }]
         : [];
     const turnLogs = [...logs, ...turnTick.logs, ...counterResult.logs];
+    const signals: CombatTurnSignals = {
+        playerCrit,
+        enemyHeavy: Boolean(counterResult.isCrit),
+        enemyActed: true,
+        enemyHpAfter: counterResult.updatedEnemy?.hp ?? 0,
+    };
 
     if (counterResult.isEnemyDead) {
         return {
@@ -303,6 +321,7 @@ export const resolveCombatActionTurn = ({
             victoryStats: counterStats,
             deadEnemy: enemyAfterAction,
             stories,
+            signals,
         };
     }
 
@@ -314,8 +333,9 @@ export const resolveCombatActionTurn = ({
             turnLogs,
             random,
             now,
+            counterResult.updatedEnemy ?? enemyAfterAction,
         );
-        return { ...defeated, stories: [...stories, ...defeated.stories] };
+        return { ...defeated, stories: [...stories, ...defeated.stories], signals };
     }
 
     return {
@@ -325,5 +345,6 @@ export const resolveCombatActionTurn = ({
         logs: turnLogs,
         visualEffect: counterResult.isCrit ? 'shake' : null,
         stories,
+        signals,
     };
 };

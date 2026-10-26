@@ -18,3 +18,14 @@ export function getSkillElement(skill: { type?: string } | null | undefined, sta
 export function getSkillElement(skill: { type?: string } | null | undefined, stats: { elem?: string } | null | undefined): string | undefined {
     return skill?.type || stats?.elem;
 }
+
+/**
+ * 2026-10 감사 CL-03: 이 기술이 적의 약점을 찌르는가 — 위력 기술(`isDamagingSkill`)이고 그 원소(`getSkillElement`)가 적의 약점이다.
+ * 엔진(`performSkill`의 원소 배율)과 같은 판정이고, 전투 예고(`getCombatForecast`)와 전투 기술 칸(`getCombatSkillTray`)이 함께 읽는다.
+ * 기술 칸은 누르면 곧바로 쓰므로(고르기만 하는 순환 단추가 없다) 쓰기 전에 약점을 볼 곳이 칸이다.
+ */
+export const hitsEnemyWeakness = (
+    skill: { type?: string; mult?: number } | null | undefined,
+    enemy: { weakness?: string | null } | null | undefined,
+    stats: { elem?: string } | null | undefined,
+): boolean => Boolean(isDamagingSkill(skill) && enemy?.weakness && getSkillElement(skill, stats) === enemy.weakness);

@@ -6,6 +6,7 @@ import { MSG } from '../../data/messages';
 import { getMonsterCodexDrops } from '../../utils/codexDropSources';
 import MonsterIcon from '../icons/MonsterIcon';
 import SkillTypeIcon from '../icons/SkillTypeIcon';
+import Chip from '../ui/Chip';
 import type { ElementKey, GameMap, Player } from '../../types/index.js';
 import { withoutUndiscoveredSignatures } from '../../utils/signatureDiscovery';
 
@@ -16,9 +17,9 @@ interface MonsterCodexProps {
 }
 
 const RESEARCH_STEPS = [
-    { target: 10, label: '최대 생명 +5' },
-    { target: 50, label: '방어력 +1' },
-    { target: 100, label: '공격력 +1' },
+    { target: 10, label: MSG.CODEX_MONSTER_STEP_HP },
+    { target: 50, label: MSG.CODEX_MONSTER_STEP_DEF },
+    { target: 100, label: MSG.CODEX_MONSTER_STEP_ATK },
 ];
 
 /** allMonsters가 생산하는 코덱스 엔트리 1건. */
@@ -34,6 +35,83 @@ interface MonsterCodexEntry {
     isBoss: boolean;
     bossBrief: BossBrief | null;
 }
+
+const BRIEF_ROWS = [
+    { key: 'signature', label: MSG.CODEX_MONSTER_BRIEF_LABELS.signature, tone: 'text-ae-threat' },
+    { key: 'counterHint', label: MSG.CODEX_MONSTER_BRIEF_LABELS.counter, tone: 'text-ae-ether-hi' },
+    { key: 'phaseHint', label: MSG.CODEX_MONSTER_BRIEF_LABELS.phase, tone: 'text-ae-exp' },
+] as const;
+
+const BossBriefBlock = ({ brief }: { brief: BossBrief }) => {
+    const warnings = Array.isArray(brief.warningChips) ? brief.warningChips : [];
+    const builds = Array.isArray(brief.recommendedBuilds) ? brief.recommendedBuilds : [];
+    return (
+        <div className="ae-well aether-type-meta mt-3 space-y-1.5 px-3 py-2.5 text-ae-ink-2">
+            {BRIEF_ROWS.map((row) => (brief[row.key] ? (
+                <div key={row.key}><strong className={row.tone}>{row.label}</strong> · {brief[row.key]}</div>
+            ) : null))}
+            {warnings.length > 0 && (
+                <div><strong className="text-ae-threat">{MSG.CODEX_MONSTER_BRIEF_LABELS.warning}</strong> · {warnings.join(' · ')}</div>
+            )}
+            {builds.length > 0 && (
+                <div><strong className="text-ae-good">{MSG.CODEX_MONSTER_BRIEF_LABELS.builds}</strong> · {builds.join(' · ')}</div>
+            )}
+        </div>
+    );
+};
+
+const MonsterCodexDetail = ({ monster }: { monster: MonsterCodexEntry }) => (
+    <div data-testid={`codex-monster-detail-${monster.name}`} className="ae-well mx-1 mb-2 px-3 py-3">
+        <div className="flex items-center justify-between gap-2">
+            <div className="flex min-w-0 items-center gap-2">
+                <MonsterIcon name={monster.name} discovered isBoss={monster.isBoss} size={32} />
+                <div className="aether-type-body min-w-0 font-semibold text-ae-ink">{monster.name}</div>
+            </div>
+            <span className="aether-type-meta shrink-0 font-fira tabular-nums text-ae-ink-3">{MSG.MONSTER_KILL_COUNT(monster.kills)}</span>
+        </div>
+
+        <div className="aether-type-meta mt-3 text-ae-ink-2">{MSG.CODEX_MONSTER_LOCATION(monster.location || MSG.CODEX_MONSTER_LOCATION_UNKNOWN)}</div>
+        {(monster.weakness || monster.resistance) && (
+            <div className="mt-2 flex flex-wrap gap-1.5">
+                {monster.weakness && (
+                    <Chip tone="good" icon={<SkillTypeIcon type={monster.weakness} size={12} />}>
+                        {MSG.MONSTER_WEAKNESS} {monster.weakness}
+                    </Chip>
+                )}
+                {monster.resistance && (
+                    <Chip tone="gold" icon={<SkillTypeIcon type={monster.resistance} size={12} />}>
+                        {MSG.MONSTER_RESISTANCE} {monster.resistance}
+                    </Chip>
+                )}
+            </div>
+        )}
+
+        {monster.drops.length > 0 && (
+            <div data-testid="codex-monster-drops" className="mt-3">
+                <div className="aether-type-meta text-ae-ink-3">{MSG.CODEX_MONSTER_DROPS_LABEL}</div>
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                    {monster.drops.map((drop: string) => (
+                        <Chip key={drop} data-testid="codex-monster-drop" tone="gold">{drop}</Chip>
+                    ))}
+                </div>
+            </div>
+        )}
+
+        {monster.bossBrief && <BossBriefBlock brief={monster.bossBrief} />}
+
+        <div className="aether-type-meta mt-3 space-y-1">
+            <div className="text-ae-ink-3">{MSG.CODEX_MONSTER_RESEARCH_TITLE}</div>
+            {RESEARCH_STEPS.map((step) => {
+                const done = monster.kills >= step.target;
+                return (
+                    <div key={step.target} className={done ? 'text-ae-good' : 'text-ae-ink-3'}>
+                        {MSG.CODEX_MONSTER_RESEARCH_ROW(step.target, step.label, done)}
+                    </div>
+                );
+            })}
+        </div>
+    </div>
+);
 
 const MonsterCodex = ({ player, initialSelectedMonster = null }: MonsterCodexProps) => {
     const [selectedMonster, setSelectedMonster] = useState<string | null>(initialSelectedMonster);
@@ -95,99 +173,36 @@ const MonsterCodex = ({ player, initialSelectedMonster = null }: MonsterCodexPro
         def: totalBonus.def + monster.bonuses.def,
     }), { hp: 0, atk: 0, def: 0 });
 
-    const renderDetail = (monster: MonsterCodexEntry) => (
-        <div data-testid={`codex-monster-detail-${monster.name}`} className="border-t border-white/8 px-2 py-3">
-            <div className="flex items-center justify-between gap-2">
-                <div className="flex min-w-0 items-center gap-2">
-                    <MonsterIcon name={monster.name} discovered isBoss={monster.isBoss} size={32} />
-                    <div className="truncate text-sm font-semibold text-rose-100">{monster.name}</div>
-                </div>
-                <span className="text-[11px] text-slate-400">{MSG.MONSTER_KILL_COUNT(monster.kills)}</span>
-            </div>
-
-            <div className="mt-3 text-[11px] text-slate-300/76">출현 지역 · {monster.location || '아직 확인되지 않음'}</div>
-            {(monster.weakness || monster.resistance) && (
-                <div className="mt-2 flex flex-wrap gap-1.5 text-[11px]">
-                    {monster.weakness && (
-                        <span className="inline-flex min-h-7 items-center gap-1 rounded-lg border border-emerald-300/25 bg-emerald-300/10 px-2 text-emerald-100">
-                            <SkillTypeIcon type={monster.weakness} size={12} />
-                            {MSG.MONSTER_WEAKNESS} {monster.weakness}
-                        </span>
-                    )}
-                    {monster.resistance && (
-                        <span className="inline-flex min-h-7 items-center gap-1 rounded-lg border border-[#d5b180]/22 bg-[#d5b180]/10 px-2 text-[#f6e7c8]">
-                            <SkillTypeIcon type={monster.resistance} size={12} />
-                            {MSG.MONSTER_RESISTANCE} {monster.resistance}
-                        </span>
-                    )}
-                </div>
-            )}
-
-            {monster.drops.length > 0 && (
-                <div data-testid="codex-monster-drops" className="mt-3">
-                    <div className="text-[11px] text-slate-400">{MSG.CODEX_MONSTER_DROPS_LABEL}</div>
-                    <div className="mt-1 flex flex-wrap gap-1.5">
-                        {monster.drops.map((drop: string) => (
-                            <span key={drop} data-testid="codex-monster-drop" className="rounded-lg border border-white/8 bg-white/[0.03] px-2 py-1 text-[11px] text-[#f6e7c8]">
-                                {drop}
-                            </span>
-                        ))}
-                    </div>
-                </div>
-            )}
-
-            {monster.bossBrief && (
-                <div className="mt-3 space-y-1.5 border-y border-rose-300/20 bg-rose-400/[0.06] px-2.5 py-2.5 text-[11px] text-slate-300">
-                    {monster.bossBrief.signature && <div><strong className="text-rose-200">기믹</strong> · {monster.bossBrief.signature}</div>}
-                    {monster.bossBrief.counterHint && <div><strong className="text-[#dff7f5]">대응</strong> · {monster.bossBrief.counterHint}</div>}
-                    {monster.bossBrief.phaseHint && <div><strong className="text-[#d9d0f3]">페이즈</strong> · {monster.bossBrief.phaseHint}</div>}
-                    {Array.isArray(monster.bossBrief.warningChips) && monster.bossBrief.warningChips.length > 0 && (
-                        <div><strong className="text-rose-200">위협</strong> · {monster.bossBrief.warningChips.join(' · ')}</div>
-                    )}
-                    {Array.isArray(monster.bossBrief.recommendedBuilds) && monster.bossBrief.recommendedBuilds.length > 0 && (
-                        <div><strong className="text-emerald-200">추천</strong> · {monster.bossBrief.recommendedBuilds.join(' · ')}</div>
-                    )}
-                </div>
-            )}
-
-            <div className="mt-3 space-y-1 text-[11px]">
-                <div className="text-slate-400">연구 보너스</div>
-                {RESEARCH_STEPS.map((step) => (
-                    <div key={step.target} className={monster.kills >= step.target ? 'text-emerald-200' : 'text-slate-500'}>
-                        {step.target}회 처치 · {step.label}{monster.kills >= step.target ? ' · 달성' : ''}
-                    </div>
-                ))}
-            </div>
-        </div>
-    );
-
     const renderGroup = (label: string, monsters: MonsterCodexEntry[], icon: typeof Compass) => {
         if (monsters.length === 0) return null;
         const Icon = icon;
         return (
-            <details data-testid={`codex-monster-group-${label}`} className="group border-b border-white/10">
-                <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-3 [&::-webkit-details-marker]:hidden">
-                    <Icon size={16} className="text-slate-400" />
-                    <span className="aether-type-body flex-1 font-semibold text-slate-100">{label}</span>
-                    <span className="aether-type-meta text-slate-400/76">{monsters.length}종</span>
-                    <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
+            <details data-testid={`codex-monster-group-${label}`} className="group">
+                <summary className="ab-summary min-h-14">
+                    <span className="ab-icon-well" aria-hidden="true">
+                        <Icon size={16} />
+                    </span>
+                    <span className="aether-type-body flex-1 font-semibold text-ae-ink">{label}</span>
+                    <span className="aether-type-meta font-fira tabular-nums text-ae-ink-3">{MSG.CODEX_MONSTER_GROUP_COUNT(monsters.length)}</span>
+                    <ChevronDown size={16} className="ab-chevron" aria-hidden="true" />
                 </summary>
-                <div className="divide-y divide-white/8 pb-2">
+                <div className="ab-rows pb-2">
                     {monsters.map((monster) => {
                         const selected = selectedMonster === monster.name;
                         return (
                             <div key={monster.name}>
                                 <button
                                     type="button"
+                                    aria-expanded={selected}
                                     onClick={() => setSelectedMonster(selected ? null : monster.name)}
-                                    className="flex min-h-14 w-full items-center gap-2 px-2 text-left transition-colors hover:bg-white/[0.03]"
+                                    className="ab-link-row flex min-h-14 w-full items-center gap-2 px-2 text-left"
                                 >
                                     <MonsterIcon name={monster.name} discovered isBoss={monster.isBoss} size={28} />
-                                    <span className="min-w-0 flex-1 truncate text-sm font-semibold text-slate-100">{monster.name}</span>
+                                    <span className="aether-type-body min-w-0 flex-1 font-semibold text-ae-ink">{monster.name}</span>
                                     {monster.weakness && <SkillTypeIcon type={monster.weakness} size={13} />}
-                                    <span className="text-[11px] text-slate-400">{monster.kills}회</span>
+                                    <span className="aether-type-meta shrink-0 font-fira tabular-nums text-ae-ink-3">{MSG.CODEX_MONSTER_LIST_KILLS(monster.kills)}</span>
                                 </button>
-                                {selected && renderDetail(monster)}
+                                {selected && <MonsterCodexDetail monster={monster} />}
                             </div>
                         );
                     })}
@@ -197,54 +212,56 @@ const MonsterCodex = ({ player, initialSelectedMonster = null }: MonsterCodexPro
     };
 
     return (
-        <div data-testid="codex-monsters" className="space-y-4">
-            <div className="flex items-baseline justify-between gap-3">
+        <div data-testid="codex-monsters" className="ab-stack">
+            <div className="flex items-baseline justify-between gap-3 px-1">
                 <div>
-                    <h3 className="aether-type-title font-semibold text-slate-100">몬스터 연구</h3>
-                    <p className="aether-type-meta mt-0.5 text-slate-400/76">{MSG.CODEX_MONSTER_HEADER_HINT}</p>
+                    <h3 className="ab-section-title">{MSG.CODEX_MONSTER_TITLE}</h3>
+                    <p className="aether-type-meta mt-0.5 text-ae-ink-3">{MSG.CODEX_MONSTER_HEADER_HINT}</p>
                 </div>
-                <span className="aether-type-body shrink-0 text-[#dff7f5]">{encountered.length}/{total}</span>
+                <span className="aether-type-body shrink-0 font-fira tabular-nums text-ae-ether-hi">{encountered.length}/{total}</span>
             </div>
 
-            <div className="grid grid-cols-3 divide-x divide-white/8 border-y border-white/10 py-2 text-center">
-                <div><div className="text-[11px] text-slate-400">생명</div><div className="text-sm font-semibold text-emerald-200">+{earnedBonuses.hp}</div></div>
-                <div><div className="text-[11px] text-slate-400">공격력</div><div className="text-sm font-semibold text-rose-200">+{earnedBonuses.atk}</div></div>
-                <div><div className="text-[11px] text-slate-400">방어력</div><div className="text-sm font-semibold text-sky-200">+{earnedBonuses.def}</div></div>
+            <div className="ae-well grid grid-cols-3 py-2 text-center">
+                <div><div className="aether-type-meta text-ae-ink-3">{MSG.CODEX_MONSTER_BONUS_LABELS.hp}</div><div className="aether-type-body font-fira font-semibold tabular-nums text-ae-life">+{earnedBonuses.hp}</div></div>
+                <div className="border-x border-ae-ink/7"><div className="aether-type-meta text-ae-ink-3">{MSG.CODEX_MONSTER_BONUS_LABELS.atk}</div><div className="aether-type-body font-fira font-semibold tabular-nums text-ae-threat">+{earnedBonuses.atk}</div></div>
+                <div><div className="aether-type-meta text-ae-ink-3">{MSG.CODEX_MONSTER_BONUS_LABELS.def}</div><div className="aether-type-body font-fira font-semibold tabular-nums text-ae-will">+{earnedBonuses.def}</div></div>
             </div>
 
             {researchGoals.length > 0 ? (
-                <section data-testid="codex-monster-research-goals">
+                <section data-testid="codex-monster-research-goals" className="ae-card ab-card-pad">
                     <div className="flex items-center gap-2">
-                        <Target size={16} className="text-rose-200" />
-                        <h4 className="aether-type-title font-semibold text-slate-100">다음 연구 목표</h4>
+                        <Target size={16} className="text-ae-threat" aria-hidden="true" />
+                        <h4 className="ab-section-title">{MSG.CODEX_MONSTER_NEXT_TITLE}</h4>
                     </div>
-                    <div className="mt-2 divide-y divide-white/8">
+                    <div className="ab-rows mt-2">
                         {researchGoals.map(({ monster, step, remaining }) => (
                             <div key={monster.name} className="py-2.5">
                                 <div className="flex items-baseline justify-between gap-3">
-                                    <span className="aether-type-body font-semibold text-slate-100">{monster.name}</span>
-                                    <span className="aether-type-body text-[#dff7f5]">{monster.kills}/{step.target}</span>
+                                    <span className="aether-type-body font-semibold text-ae-ink">{monster.name}</span>
+                                    <span className="aether-type-body shrink-0 font-fira tabular-nums text-ae-ether-hi">{monster.kills}/{step.target}</span>
                                 </div>
-                                <div className="aether-type-meta mt-1 text-slate-400/76">{step.label} · {remaining}회 남음</div>
+                                <div className="aether-type-meta mt-1 text-ae-ink-3">{MSG.CODEX_MONSTER_RESEARCH_REMAINING(step.label, remaining)}</div>
                             </div>
                         ))}
                     </div>
                 </section>
             ) : (
-                <div data-testid="codex-monster-research-goals" className="border-y border-white/10 py-3">
-                    <div className="aether-type-body font-semibold text-slate-100">첫 연구를 시작하세요</div>
-                    <div className="aether-type-meta mt-1 text-slate-400/76">탐험 중 몬스터를 처음 처치하면 출현 지역과 약점, 전리품 정보가 열립니다</div>
+                <div data-testid="codex-monster-research-goals" className="ae-card is-quiet ab-card-pad">
+                    <div className="aether-type-body font-semibold text-ae-ink">{MSG.CODEX_MONSTER_EMPTY_TITLE}</div>
+                    <div className="aether-type-meta mt-1 text-ae-ink-3">{MSG.CODEX_MONSTER_EMPTY_HINT}</div>
                 </div>
             )}
 
-            <div className="border-t border-white/10">
-                {renderGroup('발견한 몬스터', regularMonsters, Compass)}
-                {renderGroup('발견한 보스', bosses, Crown)}
-            </div>
+            {encountered.length > 0 && (
+                <div className="ae-card ab-rows px-3.5">
+                    {renderGroup(MSG.CODEX_MONSTER_GROUP_REGULAR, regularMonsters, Compass)}
+                    {renderGroup(MSG.CODEX_MONSTER_GROUP_BOSS, bosses, Crown)}
+                </div>
+            )}
 
-            <div data-testid="codex-monster-undiscovered" className="border-y border-white/10 py-3">
-                <div className="aether-type-body text-slate-300">미발견 기록 {total - encountered.length}종</div>
-                <div className="aether-type-meta mt-1 text-slate-500">{MSG.CODEX_MONSTER_UNDISCOVERED_HINT}</div>
+            <div data-testid="codex-monster-undiscovered" className="ab-tile is-undiscovered px-3.5 py-3">
+                <div className="aether-type-body text-ae-ink-2">{MSG.CODEX_MONSTER_UNDISCOVERED(total - encountered.length)}</div>
+                <div className="aether-type-meta mt-1 text-ae-ink-3">{MSG.CODEX_MONSTER_UNDISCOVERED_HINT}</div>
             </div>
         </div>
     );

@@ -738,6 +738,10 @@ export const useGameTestApi = (
                         escapes: e.runSummary.escapes,
                         discoveries: e.runSummary.discoveries,
                         maxKillStreak: e.runSummary.maxKillStreak,
+                        killedBy: e.runSummary.killer ? safeText(e.runSummary.killer.name, '') : null,
+                        killerHpPercent: e.runSummary.killer?.hpPercent ?? null,
+                        essenceGained: e.runSummary.essenceGained ?? null,
+                        previousBestLevel: e.runSummary.previousBestLevel ?? null,
                     }
                     : null,
                 sideTab: e.sideTab,
@@ -769,6 +773,10 @@ export const useGameTestApi = (
             signaturesAcquired: 1,
             signatureNames: ['성검 에테르니아'],
             runTrackingComplete: true,
+            // 사망 화면의 쓰러뜨린 적 · 모은 계승 정수 · 이번 회차 이전 최고 레벨(이번 여정보다 높다).
+            killer: { name: Object.keys(DB.MONSTERS)[0] ?? '', hpPercent: 38 },
+            essenceGained: 1240,
+            previousBestLevel: 21,
         };
 
         const testApi: AetheriaTestApi = {

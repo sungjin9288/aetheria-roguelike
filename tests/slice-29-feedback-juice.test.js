@@ -37,17 +37,20 @@ test('slice 29: LevelUpBanner — level null이면 미렌더, 값이면 표시 �
     const src = await readSrc('src/components/LevelUpBanner.tsx');
     assert.ok(/level\s*!=\s*null/.test(src), 'level null 가드');
     assert.ok(/data-testid="level-up-banner"/.test(src), 'level-up-banner testid');
-    assert.ok(/animate-levelup/.test(src), 'levelUpGlow(animate-levelup) 적용 — dead 키프레임 활성화');
+    // 2026-10 화면 디자인 3차: 1.5초 × 3회 반복하던 levelUpGlow(animate-levelup)를 단발 금빛 광채로 바꿨다(감사 VD-14).
+    assert.ok(/ae-moment-glow-once/.test(src), '레벨 상승 알약은 단발 광채(ae-moment-glow-once)');
+    assert.ok(!/animate-levelup/.test(src), '반복 광채로 되돌아가지 않는다');
     assert.ok(/레벨 상승/.test(src), '레벨 상승 안내');
     assert.ok(/레벨 \{level\}/.test(src), '새 레벨 표시');
 });
 
-test('slice 29: GameRoot — player.level 증가 감지 + 배너 렌더', async () => {
+// 게임 필 감사 GF-13: 레벨 증가 감지는 useLevelUpCelebration 훅으로 옮겼다(복원 기준 presentationEpoch 포함).
+//   "증가만 · 1.8초 뒤 해제 · 복원 레벨은 축하하지 않음"은 실제 훅을 Chromium에서 돌려 확인한다 —
+//   tests/combat-feedback-presentation.test.js 'GF-13: 레벨 상승 배너…'. 여기서는 배선만 본다.
+test('slice 29: GameRoot — 레벨 상승 훅의 값을 배너에 그린다', async () => {
     const src = await readSrc('src/components/app/GameRoot.tsx');
     assert.ok(/import LevelUpBanner/.test(src), 'LevelUpBanner import');
     assert.ok(/<LevelUpBanner level=\{levelUpBanner\}/.test(src), '배너 렌더');
-    assert.ok(/prevLevelRef/.test(src) && /lv <= prev/.test(src),
-        'level 증가만 트리거 (감소/동일 무시)');
-    assert.ok(/setTimeout\([\s\S]{0,80}setLevelUpBanner\(null\)[\s\S]{0,20}1800\)/.test(src),
-        '1.8s 후 자동 해제');
+    assert.ok(/const levelUpBanner = useLevelUpCelebration\(engine\.player\?\.level, engine\.presentationEpoch\)/.test(src),
+        '레벨 · 복원 기준을 훅에 넘긴다');
 });

@@ -2,8 +2,10 @@
 /**
  * 직업별 고유 SVG 심볼 아이콘
  * viewBox="0 0 24 24", stroke-based
- * 티어별 색상: T0 slate, T1 cyber-blue, T2 cyber-purple, T3 legendary-gold
+ * 티어별 색상(토큰 채널): T0 잉크(--aether-ink-3), T1 에테르(--aether-ether),
+ * T2 희귀 등급(--aether-rarity-rare), T3 금(--aether-gold)
  */
+import type { CSSProperties } from 'react';
 
 const CLASS_PATHS: Record<string, string> = {
     // Tier 0
@@ -31,10 +33,10 @@ const CLASS_PATHS: Record<string, string> = {
 };
 
 const TIER_COLORS: Record<number, string> = {
-    0: '#9ca3af',   // slate
-    1: '#00ccff',   // cyber-blue
-    2: '#bc13fe',   // cyber-purple
-    3: '#f59e0b',   // legendary gold
+    0: 'var(--aether-ink-3-rgb)',
+    1: 'var(--aether-ether-rgb)',
+    2: 'var(--aether-rarity-rare-rgb)',
+    3: 'var(--aether-gold-rgb)',
 };
 
 /**
@@ -60,29 +62,25 @@ const ClassIcon = ({ className: jobName, size, tier }: ClassIconProps) => {
     const color = TIER_COLORS[tier ?? 0] ?? TIER_COLORS[0];
 
     return (
-        <div
-            className="inline-flex items-center justify-center shrink-0"
-            style={{
-                width: size,
-                height: size,
-                border: `1.5px solid ${color}50`,
-                borderRadius: 8,
-                background: `${color}15`,
-            }}
+        <span
+            data-class-tier={tier ?? 0}
+            className="ae-class-icon"
+            style={{ width: size, height: size, '--ae-class-tone': color } as CSSProperties}
         >
             <svg
                 width={size * 0.75}
                 height={size * 0.75}
                 viewBox="0 0 24 24"
                 fill="none"
-                stroke={color}
+                stroke="currentColor"
                 strokeWidth="1.6"
                 strokeLinecap="round"
                 strokeLinejoin="round"
+                aria-hidden="true"
             >
                 <path d={path} />
             </svg>
-        </div>
+        </span>
     );
 };
 

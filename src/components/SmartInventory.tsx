@@ -1,17 +1,19 @@
 import React, { useCallback, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle, ListTree } from 'lucide-react';
+import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle, ListTree, Sparkles, Swords } from 'lucide-react';
 import { QuickSlotAssigner } from './QuickSlot';
 import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentIdentity, getItemStatText, getWeaponStyleLabel, isWeapon, pickBestEquippable } from '../utils/equipmentUtils';
 import { getEnhanceAvailability, getEnhancePreview, type EnhanceItemSlot } from '../utils/enhancementUtils';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { MSG } from '../data/messages';
-import { BALANCE } from '../data/constants';
+import { BALANCE, RARITY_CLASSES } from '../data/constants';
+import { getItemRarity } from '../utils/gameUtils';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { getAutoSellMaterialTargets } from '../utils/bagCrafting';
 import { isSignatureItem } from '../data/signatureItems.js';
 import { isEquipmentUseItem, isInventoryUseAccepted } from '../systems/consumableRules';
-import SignalBadge from './SignalBadge';
+import SignalChip from './archive/SignalChip';
+import ActionButton from './ui/ActionButton';
 import ItemIcon from './icons/ItemIcon';
 import EnhanceDecisionCard from './EnhanceDecisionCard';
 import type { GameActions } from '../hooks/actionDeps';
@@ -40,12 +42,12 @@ interface SmartInventoryProps {
  * 장비 교체 시 달라지는 능력치를 보여준다.
  */
 const StatDiff = ({ val, label, suffix }: { val: number; label: string; suffix: string }) => {
-    if (val === 0) return <span className="text-slate-500 text-xs">{label} ±0{suffix}</span>;
+    if (val === 0) return <span className="text-[12px] font-readable text-ae-ink-3">{label} <span className="font-fira tabular-nums">±0{suffix}</span></span>;
     const up = val > 0;
     return (
-        <span className={`text-xs font-bold flex items-center gap-0.5 ${up ? 'text-emerald-300' : 'text-rose-300'}`}>
-            {up ? <ArrowUp size={11} /> : <ArrowDown size={11} />}
-            {label} {up ? '+' : ''}{val}{suffix}
+        <span className={`flex items-center gap-0.5 text-[12px] font-readable font-bold ${up ? 'text-ae-good' : 'text-ae-threat'}`}>
+            {up ? <ArrowUp size={12} aria-hidden="true" /> : <ArrowDown size={12} aria-hidden="true" />}
+            {label} <span className="font-fira tabular-nums">{up ? '+' : ''}{val}{suffix}</span>
         </span>
     );
 };
@@ -154,40 +156,37 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
             <div
                 data-testid="inventory-equipment-disclosure"
                 data-equipment-view={showDetails ? 'full' : 'summary'}
-                className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-black/18 px-3 py-2"
+                className="flex items-center justify-between gap-3 px-1"
             >
                 <div className="min-w-0">
-                    <div className="text-[11px] font-readable font-bold text-white/88">장비 비교</div>
-                    <div className="mt-0.5 text-[11px] font-readable text-slate-400/78">
+                    <div className="text-[13px] font-readable font-bold text-ae-ink">장비 비교</div>
+                    <div className="mt-0.5 text-[12px] font-readable text-ae-ink-3">
                         {showDetails ? '전체 능력치와 강화 조건 표시' : '추천·대표 변화·장착·세트만 표시'}
                     </div>
                 </div>
-                <button
-                    type="button"
+                <ActionButton
+                    variant="ghost"
                     data-testid="inventory-detail-toggle"
                     aria-expanded={showDetails}
                     onClick={() => setDetailOverride(!showDetails)}
-                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-[#7dd4d8]/24 bg-[#7dd4d8]/10 px-3 text-[11px] font-readable font-bold text-[#dff7f5]"
-                >
-                    <ListTree size={13} />
-                    {showDetails ? '간단히 보기' : '상세 보기'}
-                </button>
+                    className="min-h-11 shrink-0 px-3 text-[12px]"
+                    icon={<ListTree size={14} />}
+                    label={showDetails ? '간단히 보기' : '상세 보기'}
+                />
             </div>
 
-            {/* Filter Bar */}
-            <div className="rounded-[1rem] border border-white/8 bg-black/16 px-2 py-2">
-                <div className="flex flex-wrap items-center gap-1.5">
+            {/* Filter Bar — 2026-10 에테르 유리: 분류는 기록 탭과 같은 선택 알약(에테르 물빛 = 지금 고른 것). */}
+            <div className="flex flex-wrap items-center gap-1 px-0.5">
                 {FILTERS.map((f) => (
                     <button
                         key={f.id}
+                        type="button"
+                        data-active={activeFilter === f.id ? 'true' : 'false'}
+                        aria-pressed={activeFilter === f.id}
                         onClick={() => {
                             setActiveFilter(f.id);
                         }}
-                        className={`min-h-11 px-2.5 py-1 text-sm rounded-full border font-rajdhani font-bold transition-all
-                            ${activeFilter === f.id
-                                ? 'bg-[#7dd4d8]/14 border-[#7dd4d8]/30 text-[#dff7f5]'
-                                : 'bg-black/18 border-white/8 text-slate-400 hover:border-white/14 hover:text-slate-200'
-                            }`}
+                        className="ae-archive-tab min-h-11 rounded-full px-3 text-[13px] font-readable font-bold"
                     >
                         {f.label}
                     </button>
@@ -195,44 +194,44 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
 
                 {/* Smart Equip Button */}
                 {(bestWeapon || bestArmor) && (
-                    <Motion.button
-                        whileTap={{ scale: 0.95 }}
+                    <ActionButton
+                        variant="glass"
                         onClick={handleSmartEquip}
-                        className="ml-auto rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8] font-rajdhani font-bold flex items-center gap-1 hover:bg-[#d5b180]/16 transition-all min-h-11 px-2.5 py-1 text-sm"
+                        className="ml-auto min-h-11 px-3 text-[13px]"
                         title={MSG.UI_AUTO_EQUIP_BEST}
-                    >
-                        <Star size={11} /> 추천 장착
-                    </Motion.button>
+                        icon={<Star size={14} className="text-ae-gold" />}
+                        label="추천 장착"
+                    />
                 )}
-                </div>
             </div>
 
             {/* 시나리오 2: 인벤토리 과밀 배너 + 일괄 판매 */}
             {isInvNearFull && sellableMatCount > 0 && (
                 <Motion.div
                     data-testid="inventory-bulk-sell-banner"
-                    initial={{ opacity: 0, y: -6 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between rounded-[1rem] border border-[#d5b180]/18 bg-[radial-gradient(circle_at_top_right,rgba(213,177,128,0.14),transparent_24%),linear-gradient(180deg,rgba(41,29,14,0.22)_0%,rgba(18,13,8,0.1)_100%)] px-3 py-2"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+                    className="ae-well flex items-center justify-between gap-2 px-3 py-2"
                 >
-                    <div className="flex items-center gap-2 text-[#f6e7c8] font-fira text-sm">
-                        <AlertCircle size={13} className="shrink-0 animate-pulse" />
+                    <div className="flex items-center gap-2 text-[13px] font-readable text-ae-gold-text">
+                        <AlertCircle size={15} aria-hidden="true" className="shrink-0" />
                         <span>{MSG.BAG_AUTOSELL_NOTICE((player.inv || []).length, inventoryCapacity, sellableMatCount)}</span>
                     </div>
-                    <Motion.button
-                        whileTap={{ scale: 0.95 }}
+                    <ActionButton
+                        variant="glass"
                         onClick={() => actions?.autoSell?.()}
-                        className="flex items-center gap-1 font-rajdhani font-bold text-[#f6e7c8] bg-black/18 hover:bg-white/[0.04] border border-white/8 rounded-full transition-all shrink-0 ml-2 min-h-11 px-2.5 py-1 text-sm"
-                    >
-                        <Package size={11} /> 일괄 정리
-                    </Motion.button>
+                        className="min-h-11 shrink-0 px-3 text-[13px]"
+                        icon={<Package size={14} />}
+                        label="일괄 정리"
+                    />
                 </Motion.div>
             )}
 
-            {/* Item List */}
-            <div className="space-y-1.5">
+            {/* Item List — 2026-10 에테르 유리: 상자 대신 hairline으로 나뉜 줄. 장착 중 · 전설 각인 줄만 물빛으로 띄운다. */}
+            <div className="ae-card ae-rows px-3 py-1">
                 {filtered.length === 0 && (
-                    <div className="rounded-[1rem] border border-white/8 bg-black/16 py-6 text-sm text-center font-rajdhani tracking-widest text-slate-500">
+                    <div className="py-6 text-center text-[13px] font-readable text-ae-ink-3">
                         해당 카테고리의 아이템이 없습니다
                     </div>
                 )}
@@ -252,70 +251,53 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                     const enhanceRequirement = enhanceState.requirement;
 
                     const rowClass = isSignature
-                        ? 'border shadow-[0_0_14px_rgba(246,231,162,0.10)]'
+                        ? 'ae-equip-slot is-signature -mx-1.5 my-1 rounded-ae-md px-1.5'
                         : isCurrentEquip
-                            ? 'border border-emerald-300/24 bg-emerald-300/[0.06]'
-                            : 'border border-white/8 aether-panel-muted hover:border-[#7dd4d8]/18 hover:bg-white/[0.03]';
-
-                    const rowStyle = isSignature
-                        ? {
-                            borderColor: 'rgba(246,231,162,0.42)',
-                            background: 'linear-gradient(180deg, rgba(246,231,162,0.08) 0%, rgba(18,16,10,0.72) 100%)',
-                        }
-                        : undefined;
+                            ? 'ae-inventory-equipped -mx-1.5 my-1 rounded-ae-md px-1.5'
+                            : '';
 
                     return (
                         <Motion.div
                             key={i}
-                            initial={{ opacity: 0, x: 20 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ delay: i * 0.04 }}
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            transition={{ delay: Math.min(i, 8) * 0.03, duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
                             data-is-signature={isSignature ? 'true' : 'false'}
-                            style={rowStyle}
-                            className={`min-h-[54px] p-3 rounded-[1rem] flex flex-wrap justify-between items-center gap-y-2 group transition-all cursor-pointer ${rowClass}`}
+                            className={`flex min-h-[54px] flex-wrap items-center justify-between gap-y-2 py-3 ${rowClass}`}
                         >
-                            <ItemIcon item={item} size={36} showBorder className="mr-2 opacity-95" />
+                            <ItemIcon item={item} size={40} showBorder className="mr-2.5" />
                             {/* 2026-10 Wave 68: 설명 칸이 10rem보다 좁아지면 버튼 열이 다음 줄(오른쪽)로 내려간다 — 버튼 열이 옆에 남아 있던 동안
                                 375px에서 무기 설명이 115px 칸에 네 줄로 꺾였다(원장 §69.5). */}
                             <div data-testid="inventory-item-body" className="min-w-0 flex-[1_1_10rem]">
-                                <div className="flex items-center gap-1.5 flex-wrap">
+                                <div className="flex flex-wrap items-center gap-1.5">
                                     <span
-                                        className={`text-sm font-fira ${isSignature ? '' : ((item.tier ?? 0) >= 2 ? 'text-[#e3dcff]' : 'text-white/86')}`}
-                                        style={isSignature ? { color: '#f6e7a2' } : undefined}
+                                        className={`text-[14px] font-readable font-bold ${isSignature ? 'text-ae-gold-hi' : RARITY_CLASSES[getItemRarity(item)] || 'text-ae-ink'}`}
                                     >
                                         {item.name}
                                     </span>
                                     {(item.enhance || 0) > 0 && (
-                                        <span className="text-xs font-bold font-fira text-[#d5b180]">+{item.enhance}</span>
+                                        <span className="font-fira text-[13px] font-bold tabular-nums text-ae-gold-text">+{item.enhance}</span>
                                     )}
-                                    {count > 1 && <span className="text-sm text-slate-500">x{count}</span>}
+                                    {count > 1 && <span className="font-fira text-[13px] tabular-nums text-ae-ink-3">x{count}</span>}
                                     {isSignature && (
                                         <span
                                             data-testid={`inventory-signature-chip-${item.id || item.name}`}
-                                            className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-fira uppercase tracking-[0.14em]"
-                                            style={{
-                                                color: '#f6e7a2',
-                                                border: '1px solid rgba(246,231,162,0.42)',
-                                                background: 'rgba(246,231,162,0.08)',
-                                            }}
+                                            className="ae-chip ae-chip-gold"
                                         >
-                                            ✦ 전설 각인
+                                            <Sparkles size={11} aria-hidden="true" />
+                                            전설 각인
                                         </span>
                                     )}
-                                    {isCurrentEquip && <SignalBadge tone="equipped" size="sm">장착 중</SignalBadge>}
-                                    {showDetails && resonance.label && <SignalBadge tone={resonance.score >= 6 ? 'recommended' : 'resonance'} size="sm">{resonance.label}</SignalBadge>}
+                                    {isCurrentEquip && <SignalChip tone="equipped">장착 중</SignalChip>}
+                                    {showDetails && resonance.label && <SignalChip tone={resonance.score >= 6 ? 'recommended' : 'resonance'}>{resonance.label}</SignalChip>}
                                     {showDetails && canEquip && Array.isArray(item.jobs) && item.jobs.includes(player.job ?? '') && ['weapon', 'armor', 'shield'].includes(item.type ?? '') && (
                                         <span
                                             data-testid={`inventory-job-affinity-${item.id || item.name}`}
                                             title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
-                                            className="inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-fira font-bold uppercase tracking-[0.1em]"
-                                            style={{
-                                                color: '#d5b180',
-                                                border: '1px solid rgba(213,177,128,0.42)',
-                                                background: 'rgba(213,177,128,0.10)',
-                                            }}
+                                            className="ae-chip ae-chip-gold"
                                         >
-                                            ⚔ {player.job} 세트
+                                            <Swords size={11} aria-hidden="true" />
+                                            {player.job} 세트
                                         </span>
                                     )}
                                 </div>
@@ -325,51 +307,50 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                         data-testid={`inventory-equipment-decision-${item.id || item.name}`}
                                         className="mt-1.5 flex flex-wrap items-center gap-1.5"
                                     >
-                                        <SignalBadge tone={isCurrentEquip ? 'equipped' : decision.tone === 'positive' ? 'recommended' : decision.tone === 'negative' ? 'warning' : decision.tone === 'blocked' ? 'danger' : 'neutral'} size="sm">
+                                        <SignalChip tone={isCurrentEquip ? 'equipped' : decision.tone === 'positive' ? 'recommended' : decision.tone === 'negative' ? 'warning' : decision.tone === 'blocked' ? 'danger' : 'neutral'}>
                                             {isCurrentEquip ? '장착 중' : decision.recommendation}
-                                        </SignalBadge>
-                                        <span className={`text-[11px] font-readable font-bold ${decision.primaryDelta.value > 0 ? 'text-emerald-200' : decision.primaryDelta.value < 0 ? 'text-rose-200' : 'text-slate-300/78'}`}>
+                                        </SignalChip>
+                                        <span className={`text-[12px] font-readable font-bold ${decision.primaryDelta.value > 0 ? 'text-ae-good' : decision.primaryDelta.value < 0 ? 'text-ae-threat' : 'text-ae-ink-2'}`}>
                                             {!decision.equipable && '가정 비교 · '}{decision.primaryDelta.text}
                                         </span>
-                                        <SignalBadge tone={decision.equipable ? 'success' : 'danger'} size="sm">
+                                        <SignalChip tone={decision.equipable ? 'success' : 'danger'}>
                                             {decision.equipable ? '장착 가능' : '장착 불가'}
-                                        </SignalBadge>
-                                        <SignalBadge
+                                        </SignalChip>
+                                        <SignalChip
                                             data-testid={`inventory-set-contribution-${item.id || item.name}`}
                                             tone={decision.setContribution > 0 ? 'upgrade' : 'neutral'}
-                                            size="sm"
                                         >
                                             {decision.setContributionText}
-                                        </SignalBadge>
+                                        </SignalChip>
                                     </div>
                                 )}
 
                                 {showDetails && diff && (
-                                    <div className="mt-1 flex flex-wrap gap-x-2 gap-y-1">
+                                    <div className="mt-1.5 flex flex-wrap gap-x-2.5 gap-y-1">
                                         {diff.atk !== 0 && <StatDiff val={diff.atk} label="공격력" suffix="" />}
                                         {diff.def !== 0 && <StatDiff val={diff.def} label="방어력" suffix="" />}
                                         {diff.crit !== 0 && <StatDiff val={diff.crit} label="치명타" suffix="%" />}
                                         {diff.mp !== 0 && <StatDiff val={diff.mp} label="기력" suffix="" />}
-                                        {diff.atk === 0 && diff.def === 0 && diff.crit === 0 && diff.mp === 0 && <Minus size={11} className="text-cyber-blue/30" />}
+                                        {diff.atk === 0 && diff.def === 0 && diff.crit === 0 && diff.mp === 0 && <Minus size={12} aria-hidden="true" className="text-ae-ink-3" />}
                                     </div>
                                 )}
                                 {(!isEquipment || showDetails) && (getItemStatText(item) || item.desc_stat) && (
-                                    <div className="mt-0.5 font-fira leading-snug text-slate-400/72 text-sm">{getItemStatText(item) || item.desc_stat}</div>
+                                    <div className="mt-1 text-[12px] font-readable leading-relaxed text-ae-ink-2">{getItemStatText(item) || item.desc_stat}</div>
                                 )}
                                 {showDetails && enhanceRequirement && (
-                                    <div className="mt-0.5 space-y-0.5 text-[11px] font-fira">
-                                        <div className="text-slate-500/88">
+                                    <div className="mt-1 space-y-0.5 text-[12px] font-readable">
+                                        <div className="text-ae-ink-3">
                                             강화 비용: 골드 {enhanceRequirement.gold.toLocaleString()} · 강화 재료 {enhanceRequirement.materials}개
                                         </div>
-                                        <div className={enhanceState.affordable ? 'text-emerald-200/70' : 'text-amber-200/78'}>
+                                        <div className={enhanceState.affordable ? 'text-ae-good' : 'text-ae-gold-text'}>
                                             {enhanceState.hint}
                                         </div>
                                     </div>
                                 )}
                                 {showDetails && getItemTags(item).length > 0 && (
-                                    <div className="mt-1 flex flex-wrap gap-1">
+                                    <div className="mt-1.5 flex flex-wrap gap-1">
                                         {getItemTags(item).map((tag) => (
-                                            <SignalBadge key={`${item.name}_${tag}`} tone="neutral" size="sm">{tag}</SignalBadge>
+                                            <SignalChip key={`${item.name}_${tag}`} tone="neutral">{tag}</SignalChip>
                                         ))}
                                     </div>
                                 )}
@@ -381,31 +362,29 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: Smar
                                     />
                                 )}
                             </div>
-                            <div className="ml-auto flex shrink-0 items-center gap-1 pl-2">
+                            <div className="ml-auto flex shrink-0 items-center gap-1.5 pl-2">
                                 {showDetails && enhanceState.canEnhance && actions?.enhanceItem && (
-                                    <Motion.button
-                                        whileTap={{ scale: 0.95 }}
+                                    <ActionButton
+                                        variant="glass"
                                         data-testid={`inventory-enhance-${item.id || item.name}`}
                                         onClick={() => setEnhanceTarget({ item, slot: null })}
                                         aria-label={`${item.name} 강화 결과와 비용 보기`}
-                                        className="min-h-11 rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-2.5 py-2 text-xs font-bold font-fira text-[#f6e7c8] hover:bg-[#d5b180]/18"
+                                        className="min-h-11 px-3 text-[12px]"
                                         title="강화 결과와 비용 보기"
-                                    >
-                                        강화 보기
-                                    </Motion.button>
+                                        label="강화 보기"
+                                    />
                                 )}
                                 {/* Wave 61 (원장 §61.3 소모품 · 상점): 리듀서(USE_INVENTORY_ITEM)가 받는 종류에만 버튼을 그린다 — 재료 · 열쇠의
                                     "사용"은 눌러도 아무 일이 없었다. 판정은 리듀서와 같은 isInventoryUseAccepted 하나다. */}
                                 {isInventoryUseAccepted(item) && (
-                                    <Motion.button
-                                        whileTap={{ scale: 0.95 }}
+                                    <ActionButton
+                                        variant="glass"
                                         data-testid={`inventory-use-${item.id || item.name}`}
                                         disabled={!canEquip}
                                         onClick={() => actions?.useItem(item)}
-                                        className="bg-[#7dd4d8]/10 hover:bg-[#7dd4d8]/16 disabled:opacity-30 disabled:hover:bg-[#7dd4d8]/10 text-[#dff7f5] rounded-full border border-[#7dd4d8]/22 font-bold min-h-11 px-3 py-2 text-sm"
-                                    >
-                                        {!canEquip ? '제한' : isEquipmentUseItem(item) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
-                                    </Motion.button>
+                                        className="min-h-11 px-3.5 text-[13px]"
+                                        label={!canEquip ? '제한' : isEquipmentUseItem(item) ? (isCurrentEquip ? '장착됨' : '장착') : '사용'}
+                                    />
                                 )}
                             </div>
                         </Motion.div>

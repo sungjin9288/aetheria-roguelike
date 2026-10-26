@@ -1,69 +1,24 @@
 // cycle 321: unused BALANCE import 제거 — EquipmentCodexCard 어디에서도 BALANCE 참조 0건.
-import { motion as Motion } from 'framer-motion';
+// 2026-10 감사 VD-07 · VD-09: 등급 프레임 · 모서리 장식은 hex 맵이 아니라 등급 토큰(`ab-rar-*` → `--aether-rarity-*-rgb`)과
+//   단일 출처 `RARITY_CLASSES`를 읽는다.
+import { RARITY_CLASSES } from '../../data/constants';
 import { MSG } from '../../data/messages';
 import { getItemRarity } from '../../utils/gameUtils';
 import ItemIcon from '../icons/ItemIcon';
-import SignalBadge from '../SignalBadge';
+import Chip from '../ui/Chip';
 import type { Item, Player } from '../../types/index.js';
 
-type CornerPosition = 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right';
-const CORNER_POSITIONS: CornerPosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
-
-const RARITY_FRAME: Record<string, { border: string; glow: string; corner: boolean }> = {
-    common: { border: '#9ca3af', glow: 'none', corner: false },
-    uncommon: { border: '#22c55e', glow: 'none', corner: true },
-    rare: { border: '#3b82f6', glow: '0 0 8px rgba(59,130,246,0.3)', corner: true },
-    epic: { border: '#a855f7', glow: '0 0 12px rgba(168,85,247,0.35)', corner: true },
-    legendary: { border: '#f59e0b', glow: '0 0 16px rgba(245,158,11,0.4)', corner: true },
-};
-
-const RARITY_TONE: Record<string, string> = {
-    common: 'neutral',
-    uncommon: 'success',
-    rare: 'recommended',
-    epic: 'resonance',
-    legendary: 'upgrade',
-};
-
-/**
- * SVG 코너 장식
- */
-const CornerOrnament = ({ color, position }: { color: string; position: CornerPosition }) => {
-    const transforms: Record<CornerPosition, string> = {
-        'top-left': '',
-        'top-right': 'scale(-1,1) translate(-24,0)',
-        'bottom-left': 'scale(1,-1) translate(0,-24)',
-        'bottom-right': 'scale(-1,-1) translate(-24,-24)',
-    };
-    const posClass: Record<CornerPosition, string> = {
-        'top-left': 'top-0 left-0',
-        'top-right': 'top-0 right-0',
-        'bottom-left': 'bottom-0 left-0',
-        'bottom-right': 'bottom-0 right-0',
-    };
-
-    return (
-        <svg
-            className={`absolute ${posClass[position]} pointer-events-none`}
-            width="16" height="16" viewBox="0 0 24 24"
-        >
-            <g transform={transforms[position]}>
-                <path d="M2 8V2h6" fill="none" stroke={color} strokeWidth="2" strokeLinecap="round" />
-                <circle cx="2" cy="2" r="1.5" fill={color} opacity="0.5" />
-            </g>
-        </svg>
-    );
-};
+const CORNER_CLASSES = ['is-tl', 'is-tr', 'is-bl', 'is-br'] as const;
 
 const StatRow = ({ label, value, compareValue }: { label: string; value: number; compareValue?: number | null }) => {
     const diff = compareValue != null ? value - compareValue : null;
     return (
-        <div className="flex items-center justify-between text-[11px]">
-            <span className="text-slate-500">{label}</span>
-            <div className="flex items-center gap-1.5">
-                <span className="text-slate-200">{value}</span>
+        <div className="aether-type-meta flex items-center justify-between">
+            <span className="text-ae-ink-3">{label}</span>
+            <div className="flex items-center gap-1.5 font-fira tabular-nums">
+                <span className="text-ae-ink">{value}</span>
                 {diff != null && diff !== 0 && (
-                    <span className={diff > 0 ? 'text-emerald-400' : 'text-rose-400'}>
+                    <span className={diff > 0 ? 'text-ae-good' : 'text-ae-threat'}>
                         {diff > 0 ? `+${diff}` : diff}
                     </span>
                 )}
@@ -73,7 +28,7 @@ const StatRow = ({ label, value, compareValue }: { label: string; value: number;
 };
 
 /**
- * EquipmentCodexCard — 레어리티별 프레임 + 스탯 비교 레이아웃
+ * EquipmentCodexCard — 등급 프레임 + 스탯 비교 레이아웃
  */
 interface EquipmentCodexCardProps {
     item?: Item;
@@ -84,8 +39,6 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
     if (!item) return null;
 
     const rarity = getItemRarity(item);
-    const frame = RARITY_FRAME[rarity] || RARITY_FRAME.common;
-    const tone = RARITY_TONE[rarity] || 'neutral';
 
     // 장착 중인 같은 슬롯 아이템 찾기
     // cycle 468: player.equipment 오타 → player.equip 정정. Player 도메인은
@@ -102,76 +55,59 @@ const EquipmentCodexCard = ({ item, player }: EquipmentCodexCardProps) => {
                 : null;
 
     return (
-        <Motion.div
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="relative space-y-2.5 overflow-hidden rounded-lg p-3"
-            style={{
-                border: `1.5px solid ${frame.border}40`,
-                background: `${frame.border}08`,
-                boxShadow: frame.glow,
-            }}
-        >
-            {/* 코너 장식 */}
-            {frame.corner && CORNER_POSITIONS.map((pos) => (
-                <CornerOrnament key={pos} color={frame.border} position={pos} />
+        <div data-testid="codex-equipment-card" className={`ab-tile ab-rar-${rarity} space-y-2.5 p-3.5`}>
+            {/* 모서리 장식 — 일반 등급은 장식 없이 둔다 */}
+            {rarity !== 'common' && CORNER_CLASSES.map((corner) => (
+                <span key={corner} className={`ab-corner ${corner}`} aria-hidden="true" />
             ))}
 
             {/* 헤더 */}
-            <div className="flex items-center justify-between gap-2">
-                <div className="flex items-center gap-2.5">
+            <div className="flex items-start justify-between gap-2">
+                <div className="flex min-w-0 items-start gap-2.5">
                     <ItemIcon item={item} size={32} showBorder />
                     <div className="min-w-0">
-                        <div className="text-[13px] font-rajdhani font-bold text-white truncate">{item.name}</div>
-                        <div className="mt-0.5 text-[11px] text-slate-400">{item.desc}</div>
+                        <div className="aether-type-body font-display font-bold text-ae-ink">{item.name}</div>
+                        <div className="aether-type-meta mt-0.5 text-ae-ink-2">{item.desc}</div>
                     </div>
                 </div>
-                <SignalBadge tone={tone} size="sm">
+                <Chip className={`shrink-0 ${RARITY_CLASSES[rarity] || RARITY_CLASSES.common}`}>
                     {MSG.RARITY_LABEL?.[rarity] || rarity}
-                </SignalBadge>
+                </Chip>
             </div>
 
             {/* 스탯 */}
-            <div className="space-y-1 rounded-lg border border-white/6 bg-black/16 px-2.5 py-2">
-                <div className="mb-1.5 text-[11px] text-slate-500">
+            <div className="ae-well space-y-1 px-2.5 py-2">
+                <div className="aether-type-meta mb-1.5 text-ae-ink-3">
                     {MSG.EQUIP_STAT_COMPARE}
-                    {equipped && <span className="ml-1.5 normal-case text-slate-600">{MSG.CODEX_COMPARE_EQUIPPED(equipped.name)}</span>}
+                    {equipped && <span className="ml-1.5 text-ae-ink-3">{MSG.CODEX_COMPARE_EQUIPPED(equipped.name)}</span>}
                 </div>
                 {/* cycle W9-A1: atk / def 읽기 제거 — 카탈로그·Player.equip 어디에도 없는
                     필드라 항상 undefined였고 StatRow가 렌더된 적이 없다. 장비의 ATK/DEF는
                     `val`이며 목록 행(WeaponCodex)이 getItemStatText로 이미 보여준다. */}
                 {item.hp != null && (
-                    <StatRow label="생명" value={item.hp} compareValue={equipped?.hp} />
+                    <StatRow label={MSG.CODEX_EQUIP_CARD_LIFE} value={item.hp} compareValue={equipped?.hp} />
                 )}
                 {item.mp != null && (
-                    <StatRow label="기력" value={item.mp} compareValue={equipped?.mp} />
+                    <StatRow label={MSG.CODEX_EQUIP_CARD_WILL} value={item.mp} compareValue={equipped?.mp} />
                 )}
             </div>
 
             {/* 추가 정보 */}
-            <div className="flex flex-wrap gap-1.5 text-[11px]">
-                {item.elem && (
-                    <span className="rounded-full border border-amber-300/20 bg-amber-300/8 px-2 py-0.5 text-amber-200">
-                        {item.elem}
-                    </span>
-                )}
-                {item.hands === 2 && (
-                    <span className="rounded-full border border-white/12 bg-white/5 px-2 py-0.5 text-slate-300">
-                        양손
-                    </span>
-                )}
+            <div className="flex flex-wrap items-center gap-1.5">
+                {item.elem && <Chip tone="gold">{item.elem}</Chip>}
+                {item.hands === 2 && <Chip>{MSG.CODEX_EQUIP_CARD_TWO_HAND}</Chip>}
                 {item.jobs && (
-                    <span className="text-slate-500">
+                    <span className="aether-type-meta text-ae-ink-3">
                         {item.jobs.join(' · ')}
                     </span>
                 )}
             </div>
 
             {/* 가격 */}
-            <div className="text-right text-[11px] text-slate-500">
-                골드 {item.price}
+            <div className="aether-type-meta text-right font-fira tabular-nums text-ae-ink-3">
+                {MSG.CODEX_EQUIP_CARD_PRICE(item.price ?? 0)}
             </div>
-        </Motion.div>
+        </div>
     );
 };
 

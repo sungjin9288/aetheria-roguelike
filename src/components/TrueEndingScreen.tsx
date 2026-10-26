@@ -5,8 +5,9 @@ import {
     useState,
 } from 'react';
 import { motion as Motion, useReducedMotion } from 'framer-motion';
-import { Star } from 'lucide-react';
+import { Crown, RotateCcw, Star } from 'lucide-react';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
+import { useOverlayDialog } from '../hooks/useOverlayDialog';
 import {
     ENDING_LINES,
     TRUE_ENDING_STARS,
@@ -24,6 +25,7 @@ import { getAscensionOutcome } from '../utils/ascensionPreview';
 import { getChallengeSlotCount, toggleChallengeSelection } from '../utils/runStart';
 import { getAscensionRuleOfferView, getAscensionRuleRerollView } from '../utils/ascensionRuleView';
 import { getJourneySurfaceText } from '../utils/journeyScope';
+import ActionButton from './ui/ActionButton';
 
 interface TrueEndingScreenProps {
     player: Player;
@@ -41,7 +43,7 @@ interface TrueEndingScreenProps {
  * 말해 전설 각인 수집 · 직업 여정 · 시즌 진행이 남는다는 것을 빼먹었다. 미수령 보상 안내는 위의 보상 칸(`TRUE_ENDING_PENDING_GUIDANCE`)이 한다.
  */
 export const TrueEndingJourneyNote = () => (
-    <div data-testid="true-ending-new-game-plus-guidance" className="max-w-sm space-y-1 break-words text-[11px] leading-relaxed text-slate-400">
+    <div data-testid="true-ending-new-game-plus-guidance" className="aether-type-label max-w-sm space-y-1 break-words font-readable leading-relaxed text-ae-ink-3">
         <p>{MSG.JOURNEY_KEPT_LINE(getJourneySurfaceText('ascension', 'kept'))}</p>
         <p>{MSG.JOURNEY_RESET_LINE(getJourneySurfaceText('ascension', 'reset'))}</p>
     </div>
@@ -96,6 +98,13 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
         if (resolveTrueEndingBackAction(revealState) === 'reveal_all') revealAll();
         return true;
     }, 500);
+    // 감사 A11Y-01: Escape는 뒤로가기와 같다 — 연출 중이면 한 번에 펼친다.
+    const dialog = useOverlayDialog({
+        label: MSG.TRUE_ENDING_TITLE,
+        onEscape: () => {
+            if (resolveTrueEndingBackAction(revealState) === 'reveal_all') revealAll();
+        },
+    });
 
     const claimableQuests = getClaimableQuestEntries(player);
     const hasPendingQuestRewards = claimableQuests.length > 0;
@@ -135,15 +144,16 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
 
     return (
         <div
+            {...dialog}
             data-testid="true-ending-screen"
             data-reveal-state={revealState}
-            className="fixed inset-0 z-50 h-[100dvh] overflow-x-hidden overflow-y-auto bg-black px-4 pt-[max(var(--aether-safe-area-top),1rem)] pb-[max(var(--aether-safe-area-bottom),1rem)]"
+            className="ae-true-ending fixed inset-0 z-50 h-[100dvh] overflow-x-hidden overflow-y-auto px-4 pt-[max(var(--aether-safe-area-top),1rem)] pb-[max(var(--aether-safe-area-bottom),1rem)]"
         >
             <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
                 {TRUE_ENDING_STARS.map((star) => (
                     <Motion.div
                         key={`${star.top}-${star.left}`}
-                        className="absolute rounded-full bg-white"
+                        className="absolute rounded-full bg-ae-ink"
                         style={{ width: star.w, height: star.w, top: star.top, left: star.left }}
                         animate={prefersReducedMotion ? { opacity: 0.45 } : { opacity: [0.2, 1, 0.2] }}
                         transition={prefersReducedMotion
@@ -153,17 +163,16 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                 ))}
             </div>
 
-            <div className="relative z-10 mx-auto flex min-h-full w-full max-w-lg min-w-0 flex-col">
+            <div className="relative z-10 mx-auto flex min-h-full w-full max-w-xl min-w-0 flex-col">
                 <div className="flex min-h-[44px] w-full justify-end">
                     {revealState === 'narrative' && (
-                        <button
-                            type="button"
+                        <ActionButton
+                            variant="ghost"
                             data-testid="true-ending-skip"
                             onClick={revealAll}
-                            className="min-h-[44px] rounded-lg border border-white/14 bg-black/45 px-4 text-[12px] font-readable font-bold text-slate-200 transition-colors hover:border-[#d5b180]/40 hover:text-[#f4e6c8]"
-                        >
-                            이야기 건너뛰기
-                        </button>
+                            label="이야기 건너뛰기"
+                            className="min-h-[44px] px-4 font-readable"
+                        />
                     )}
                 </div>
 
@@ -172,11 +181,11 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                         initial={prefersReducedMotion ? false : { opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: prefersReducedMotion ? 0 : 1.5 }}
-                        className="mb-7 flex min-w-0 flex-col items-center gap-3"
+                        className="ae-ornate mb-7 flex w-full min-w-0 max-w-sm flex-col items-center gap-2.5 px-6 py-6"
                     >
-                        <Star size={28} className="text-[#d5b180]" />
-                        <h1 className="font-fira text-[14px] uppercase tracking-[0.32em] text-[#d5b180]">{MSG.TRUE_ENDING_TITLE}</h1>
-                        <p className="break-words text-[12px] font-fira tracking-wider text-slate-300">
+                        <Star size={28} aria-hidden="true" className="text-ae-gold" />
+                        <h1 className="aether-type-display font-readable font-bold text-ae-gold-hi">{MSG.TRUE_ENDING_TITLE}</h1>
+                        <p className="aether-type-meta break-words font-readable text-ae-ink-2">
                             {player?.name || '영웅'} — {MSG.LEVEL_LABEL(player?.level || 1)} {player?.job || '모험가'}
                         </p>
                     </Motion.div>
@@ -192,7 +201,7 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                 initial={prefersReducedMotion ? false : { opacity: 0, y: 8 }}
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ duration: prefersReducedMotion ? 0 : 0.8 }}
-                                className={`break-words text-center font-fira text-[12px] leading-relaxed ${index === lineIndex - 1 ? 'text-[#f4e6c8]' : 'text-slate-300'}`}
+                                className={`aether-type-body break-words text-center font-readable leading-relaxed ${index === lineIndex - 1 ? 'text-ae-ink' : 'text-ae-ink-2'}`}
                             >
                                 {line}
                             </Motion.p>
@@ -207,11 +216,11 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                             transition={{ duration: prefersReducedMotion ? 0 : 0.6 }}
                             className="mb-7 w-full min-w-0 max-w-sm px-1 sm:px-6"
                         >
-                            <div className="grid grid-cols-2 gap-3 rounded-[1.2rem] border border-[#d5b180]/20 bg-[#d5b180]/5 p-4 sm:grid-cols-3">
+                            <div className="ae-well grid grid-cols-2 gap-3 p-4 sm:grid-cols-3">
                                 {stats.map(({ label, value }) => (
                                     <div key={label} className="flex min-w-0 flex-col items-center gap-1">
-                                        <span className="font-fira text-[16px] font-bold text-[#f4e6c8]">{value}</span>
-                                        <span className="break-words text-[11px] font-fira uppercase tracking-wider text-slate-400">{label}</span>
+                                        <span className="aether-type-heading font-fira font-bold tabular-nums text-ae-gold-hi">{value}</span>
+                                        <span className="aether-type-label break-words font-readable text-ae-ink-3">{label}</span>
                                     </div>
                                 ))}
                             </div>
@@ -231,13 +240,13 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                             initial={prefersReducedMotion ? false : { opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ duration: prefersReducedMotion ? 0 : 0.6 }}
-                            className="mb-7 flex w-full min-w-0 max-w-md flex-col gap-3 rounded-[1.2rem] border border-amber-200/20 bg-amber-200/5 p-4 text-left"
+                            className="ae-card mb-7 flex w-full min-w-0 max-w-md flex-col gap-3 p-4 text-left"
                         >
                             <div className="min-w-0">
-                                <h2 id="true-ending-pending-quests-title" className="break-words text-[12px] font-readable font-bold text-amber-100">
+                                <h2 id="true-ending-pending-quests-title" className="aether-type-meta break-words font-readable font-bold text-ae-gold-text">
                                     먼저 회수할 임무 보상
                                 </h2>
-                                <p data-testid="true-ending-pending-reward-guidance" className="mt-1 break-words text-[11px] leading-relaxed text-amber-100/75">
+                                <p data-testid="true-ending-pending-reward-guidance" className="aether-type-label mt-1 break-words font-readable leading-relaxed text-ae-ink-2">
                                     {MSG.TRUE_ENDING_PENDING_GUIDANCE}
                                 </p>
                             </div>
@@ -267,25 +276,28 @@ const TrueEndingScreen = ({ player, actions }: TrueEndingScreenProps) => {
                                     onToggle={(id) => setSelectedChallenges((current) => toggleChallengeSelection(current, id, challengeSlots))}
                                 />
                             </div>
-                            <button
-                                type="button"
-                                data-testid="true-ending-confirm"
-                                onClick={confirmNewGamePlus}
-                                disabled={confirmationAccepted || hasPendingQuestRewards}
-                                aria-describedby={hasPendingQuestRewards ? 'true-ending-pending-quests-title' : undefined}
-                                className="min-h-[44px] rounded-[1.2rem] border border-[#d5b180]/40 bg-[#d5b180]/12 px-8 py-3 font-fira text-[12px] uppercase tracking-[0.24em] text-[#d5b180] transition-all hover:border-[#d5b180]/60 hover:bg-[#d5b180]/20 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                {confirmationAccepted ? MSG.ASCENSION_CONFIRMING : MSG.ASCENSION_CONFIRM}
-                            </button>
-                            <button
-                                type="button"
-                                data-testid="true-ending-continue"
-                                onClick={() => actions?.cancelAscension?.()}
-                                disabled={confirmationAccepted}
-                                className="min-h-[44px] rounded-lg border border-white/15 bg-white/5 px-5 py-3 text-[12px] font-readable font-bold text-slate-200 transition-colors hover:border-white/30 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
-                            >
-                                {MSG.ASCENSION_CONTINUE}
-                            </button>
+                            {/* VD-03 소유자 결정: 계승 · 계속은 같은 무게의 한 쌍(계승 화면과 같다) — 금빛 주 행동이 없다. */}
+                            <div className="grid w-full max-w-sm grid-cols-1 gap-2.5 sm:grid-cols-2">
+                                <ActionButton
+                                    variant="glass"
+                                    data-testid="true-ending-confirm"
+                                    onClick={confirmNewGamePlus}
+                                    disabled={confirmationAccepted || hasPendingQuestRewards}
+                                    aria-describedby={hasPendingQuestRewards ? 'true-ending-pending-quests-title' : undefined}
+                                    icon={<Crown size={15} />}
+                                    label={confirmationAccepted ? MSG.ASCENSION_CONFIRMING : MSG.ASCENSION_CONFIRM}
+                                    className="ae-choice-pair w-full px-4 font-readable"
+                                />
+                                <ActionButton
+                                    variant="glass"
+                                    data-testid="true-ending-continue"
+                                    onClick={() => actions?.cancelAscension?.()}
+                                    disabled={confirmationAccepted}
+                                    icon={<RotateCcw size={15} />}
+                                    label={MSG.ASCENSION_CONTINUE}
+                                    className="ae-choice-pair w-full px-4 font-readable"
+                                />
+                            </div>
                             <TrueEndingJourneyNote />
                         </Motion.div>
                     )}

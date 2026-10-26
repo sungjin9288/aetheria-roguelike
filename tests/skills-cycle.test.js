@@ -1543,14 +1543,15 @@ import { readFile } from 'node:fs/promises';
           'cycleSkill 파라미터 자체는 보존');
   });
 
-  test('cycle 535: 정합성 가드 — 2 callsite 보존 (1 명시)', async () => {
+  test('cycle 535: 정합성 가드 — commandParser callsite 보존, 전투 화면의 순환 단추는 없음', async () => {
       const cmd = await readSrc('src/utils/commandParser.ts');
       assert.ok(/actions\.cycleSkill\?\.\(1\)/.test(cmd),
           'commandParser cycleSkill?.(1) callsite 보존');
 
+      // 2026-10 감사 CL-03: 전투 화면은 이름 없는 순환 단추 대신 기술 칸(selectSkill → combat('skill'))을 쓴다 — 부재 불변식.
       const cp = await readSrc('src/components/tabs/CombatPanel.tsx');
-      assert.ok(/actions\?\.cycleSkill\(1\)/.test(cp),
-          'CombatPanel cycleSkill(1) callsite 보존');
+      assert.ok(!/\bcycleSkill\s*\(/.test(cp),
+          'CombatPanel은 cycleSkill을 부르지 않는다');
   });
 
   test('cycle 535: body modulo 계산 + dispatch 보존', async () => {

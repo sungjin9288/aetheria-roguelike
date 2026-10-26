@@ -51,12 +51,22 @@ const normalizeKnownScriptFilenames = (values: readonly string[]): Set<string> =
     values.map(sanitizeFilename).filter(Boolean),
 );
 
+type KnownScriptSource = Pick<Document, 'scripts'> & Partial<Pick<Document, 'querySelectorAll'>>;
+
+/**
+ * 앱 코드가 든 스크립트: 진입 스크립트(`<script>`)와 그것이 미리 받는 청크(`<link rel="modulepreload">` —
+ * index.html의 정적 import 사슬, 그리고 동적 import를 시작할 때 Vite가 더하는 청크). 게임 화면(GameRoot와 그 의존)은
+ * 앱이 뜨자마자 따로 받는 청크라(CH-03) `<script>`만 보면 게임 화면 오류의 위치가 리포트에서 빠진다.
+ */
 export const readKnownRuntimeScriptFilenames = (
-    source: Pick<Document, 'scripts'> | null = typeof document === 'undefined' ? null : document,
+    source: KnownScriptSource | null = typeof document === 'undefined' ? null : document,
 ): string[] => {
     if (!source) return [];
-    return Array.from(source.scripts)
-        .map((script) => sanitizeFilename(script.src))
+    const preloaded = source.querySelectorAll
+        ? Array.from(source.querySelectorAll<HTMLLinkElement>('link[rel="modulepreload"]'), (link) => link.href)
+        : [];
+    return [...Array.from(source.scripts, (script) => script.src), ...preloaded]
+        .map(sanitizeFilename)
         .filter(Boolean);
 };
 

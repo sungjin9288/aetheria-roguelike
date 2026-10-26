@@ -44,8 +44,32 @@ test('A3: hex 맵과 Tailwind 맵이 이름·내용 모두 구분된다', () => 
         assert.match(RARITY_CLASSES[rarity], /^text-/,
             `RARITY_CLASSES.${rarity}는 Tailwind 클래스`);
     }
-    // 드리프트되어 있던 값 — 공용 맵의 common은 text-slate-300 (BuildAdvicePanel 복사본은 400이었다)
-    assert.equal(RARITY_CLASSES.common, 'text-slate-300');
+});
+
+// 2026-10 (감사 VD-07): hex 맵 · Tailwind 맵 · CSS 토큰이 서로 다른 색을 말하던 상태(영웅 = 보라 hex · 노랑 클래스,
+//   전설 = 호박 hex · 빨강 클래스)를 막는다 — 세 표현이 등급마다 같은 색이다.
+test('VD-07: 등급마다 hex · Tailwind 클래스 · CSS 토큰이 같은 색이다', async () => {
+    const css = await readSrc('src/index.css');
+    for (const rarity of RARITIES) {
+        const channel = css.match(new RegExp(`--aether-rarity-${rarity}-rgb:\\s*(\\d+) (\\d+) (\\d+);`));
+        assert.ok(channel, `--aether-rarity-${rarity}-rgb 토큰`);
+        const tokenHex = `#${channel.slice(1, 4).map((value) => Number(value).toString(16).padStart(2, '0')).join('')}`;
+        assert.equal(BALANCE.RARITY_COLORS[rarity].toLowerCase(), tokenHex, `${rarity} hex = CSS 토큰`);
+        assert.equal(RARITY_CLASSES[rarity], `text-ae-rarity-${rarity}`, `${rarity} 클래스 = 토큰 클래스`);
+    }
+});
+
+test('VD-07: 전설 · 영웅은 위험 · 생명 색과 다르다', async () => {
+    const css = await readSrc('src/index.css');
+    const tokenHex = (name) => {
+        const channel = css.match(new RegExp(`--aether-${name}-rgb:\\s*(\\d+) (\\d+) (\\d+);`));
+        assert.ok(channel, `--aether-${name}-rgb 토큰`);
+        return `#${channel.slice(1, 4).map((value) => Number(value).toString(16).padStart(2, '0')).join('')}`;
+    };
+    const alarm = new Set(['threat', 'life'].map(tokenHex));
+    for (const rarity of ['epic', 'legendary']) {
+        assert.ok(!alarm.has(BALANCE.RARITY_COLORS[rarity].toLowerCase()), `${rarity}는 위험 · 생명 색이 아니다`);
+    }
 });
 
 test('A3: 한국어 희귀도 라벨은 MSG.RARITY_LABEL 하나뿐이다', async () => {

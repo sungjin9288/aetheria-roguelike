@@ -452,8 +452,9 @@ test('Wave 92: 선택 화면 — 두 줄을 함께 보이고 지금 고른 쪽�
         const html = render(declined);
         assert.ok(html.includes('probe-ascension-rule-outlook'));
         assert.ok(html.includes(preview.outlook.accepted) && html.includes(preview.outlook.declined) && html.includes(preview.outlook.source));
-        assert.match(lineClass(html, declined ? 'declined' : 'accepted'), /text-orange-100/);
-        assert.match(lineClass(html, declined ? 'accepted' : 'declined'), /text-slate-400/);
+        // w3 choice: 고른 쪽은 `data-selected="true"` · 잉크 1단, 다른 쪽은 잉크 3단(토큰) — 추천 색이 아니라 밝기만 다르다.
+        assert.match(lineClass(html, declined ? 'declined' : 'accepted'), /data-selected="true"[^>]*text-ae-ink"/);
+        assert.match(lineClass(html, declined ? 'accepted' : 'declined'), /data-selected="false"[^>]*text-ae-ink-3/);
     }
     const forced = renderStatic(createElement(ChallengeModifierPicker, {
         testIdPrefix: 'probe', selected: [], slots: 3, onToggle: () => {}, rule: getAscensionRulePreview(rk(2)),

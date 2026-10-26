@@ -1456,7 +1456,7 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 326: TokenQuotaManager 활성 메서드 보존 (회귀 가드)', async () => {
       const source = await readSrc('src/systems/TokenQuotaManager.ts');
-      const aliveMethods = ['canMakeAICall', 'recordCall', 'getExhaustedMessage', 'syncToFirestore', 'getQuotaData'];
+      const aliveMethods = ['canMakeAICall', 'getCallGate', 'recordCall', 'getExhaustedMessage', 'syncToFirestore', 'getQuotaData'];
       aliveMethods.forEach((name) => {
           const re = new RegExp(`${name}\\s*\\(`);
           assert.ok(re.test(source), `${name} 메서드 보존`);
@@ -1465,8 +1465,9 @@ import { fileURLToPath } from 'node:url';
 
   test('cycle 326: aiService TokenQuotaManager 호출 보존', async () => {
       const source = await readSrc('src/services/aiService.ts');
-      assert.ok(/TokenQuotaManager\.canMakeAICall/.test(source),
-          'aiService canMakeAICall 호출 보존');
+      // GP-02: aiService는 닫힌 이유까지 가르는 getCallGate로 게이트를 읽는다(canMakeAICall은 그 불리언 축약).
+      assert.ok(/TokenQuotaManager\.getCallGate/.test(source),
+          'aiService 쿼터 게이트 호출 보존');
       assert.ok(/TokenQuotaManager\.recordCall/.test(source),
           'aiService recordCall 호출 보존');
   });

@@ -13,7 +13,8 @@ import { rewardActionMap } from './rewardHandlers';
 import type { GameAction, GameState, HandlerMap } from '../gameReducer';
 import { addNewTitles, sanitizeQuickSlots } from './helpers';
 import { activateDevourBonus } from '../../utils/adventureRelicBonuses';
-import type { Item, LogEntry, Player, Monster } from '../../types';
+import { buildCombatFeedback } from './combatFeedback';
+import type { CombatTurnSignals, Item, LogEntry, Player, Monster } from '../../types';
 import type { FullStats } from '../../utils/statsCalculator.js';
 
 const appendCombatLogs = (
@@ -41,6 +42,8 @@ interface SettleVictoryParams {
     now: number;
     nextTurn: number;
     random: () => number;
+    /** 차례 해석기가 남긴 연출 사실(GF-01) — 표시 전용 `combatFeedback`으로만 간다. */
+    signals?: CombatTurnSignals;
 }
 
 const settleVictory = (
@@ -55,6 +58,7 @@ const settleVictory = (
         now,
         nextTurn,
         random,
+        signals,
     }: SettleVictoryParams,
 ): GameState => {
     const receiptKey = `${nextTurn}:${now}:${seed}`;
@@ -69,6 +73,18 @@ const settleVictory = (
         visualEffect: null,
         combatTurn: nextTurn,
         combatReceipt: null,
+        // GF-02: 처치 순간은 화면이 그린다 — 쓰러진 적의 모습과 마지막 일격의 사실을 남긴다(판정과 무관).
+        combatFeedback: state.enemy
+            ? buildCombatFeedback({
+                key: receiptKey,
+                kind: 'victory',
+                playerBefore: state.player,
+                enemyBefore: state.enemy,
+                playerHpAfter: player.hp ?? 0,
+                enemyAfter: null,
+                signals,
+            })
+            : null,
         syncStatus: 'syncing',
     };
     const storyEvents = [...stories];
@@ -229,6 +245,7 @@ const settleNonVictory = (
     },
 ): GameState => {
     const logs = [...result.logs];
+    const receiptKey = `${nextTurn}:${now}:${seed}`;
     // Codex: 비승리 전이에서도 원정 생명 원장(trackExpeditionVitals)을 갱신한다.
     const player = trackExpeditionVitals(result.kind === 'defeat'
         ? addNewTitles(result.player, logs)
@@ -256,10 +273,23 @@ const settleNonVictory = (
         visualEffect: result.visualEffect,
         combatTurn: nextTurn,
         combatReceipt: {
-            key: `${nextTurn}:${now}:${seed}`,
+            key: receiptKey,
             kind: result.kind,
             stories,
         },
+        // GF-01 · 06: 이 차례의 사실(내 치명타 · 적 강타 · 주고받은 피해)을 연출에 넘긴다. 쓰러진 차례의 플레이어는
+        //   이미 다시 세워진 모습이라 생명 변화는 0까지로 적는다.
+        combatFeedback: state.enemy
+            ? buildCombatFeedback({
+                key: receiptKey,
+                kind: result.kind,
+                playerBefore: state.player,
+                enemyBefore: state.enemy,
+                playerHpAfter: result.kind === 'defeat' ? 0 : player.hp ?? 0,
+                enemyAfter: result.enemy,
+                signals: result.signals,
+            })
+            : null,
         syncStatus: 'syncing',
     };
 };
@@ -304,6 +334,7 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
                 now,
                 nextTurn,
                 random,
+                signals: result.signals,
             });
             return settled;
         }
@@ -358,6 +389,7 @@ export const makeCombatActionMap = (initialPlayer: Player) => ({
                 now,
                 nextTurn,
                 random,
+                signals: result.signals,
             });
             return {
                 ...settled,

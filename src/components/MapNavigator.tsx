@@ -12,7 +12,8 @@ import { getMapRouteGate, type MapRouteGate } from '../utils/mapRouteGate';
 import { getMapDiscoveredSignatureDrops } from '../utils/mapSignatureHints';
 import { getDefaultMapSelection, getMapRequiredLevel, getNextMapTowardTarget } from '../utils/mapTopology';
 import RouteTopology, { type RouteTopologyEntry } from './RouteTopology';
-import SignalBadge from './SignalBadge';
+import SignalChip from './archive/SignalChip';
+import ActionButton from './ui/ActionButton';
 import { getExpeditionFocusRouteTargets, getFocusedExpeditionQuestEntries } from '../utils/expeditionMissionFocus';
 import type { GameActions } from '../hooks/actionDeps';
 import type { GameState } from '../reducers/gameReducer';
@@ -84,9 +85,9 @@ const getBandLevelLabel = (bandIndex: number) => {
 const MAP_BAND_LEVEL_LABELS = MAP_BANDS.map((_, bandIndex) => getBandLevelLabel(bandIndex));
 
 const MAP_STATE = {
-    unexplored: { label: '미탐험', badge: 'neutral', dot: 'bg-slate-500/70' },
-    exploring: { label: '탐험 중', badge: 'recommended', dot: 'bg-[#7dd4d8]' },
-    completed: { label: '탐험 완료', badge: 'equipped', dot: 'bg-emerald-300' },
+    unexplored: { label: '미탐험', badge: 'neutral', dot: 'bg-ae-ink-3/70' },
+    exploring: { label: '탐험 중', badge: 'recommended', dot: 'bg-ae-ether' },
+    completed: { label: '탐험 완료', badge: 'equipped', dot: 'bg-ae-good' },
 } as const;
 
 const formatMapLevel = (map: GameMap | null | undefined, playerLevel = 1) => (
@@ -127,7 +128,7 @@ const getEncounterLabel = (map: MapEntry, route: MoveRecommendation | undefined)
     return route?.routePlan?.approach || '일반 교전';
 };
 
-/** 배지 id → SignalBadge tone. 목록 행과 선택 카드가 같은 표를 쓴다(색 의미 일관). */
+/** 배지 id → SignalChip tone. 목록 행과 선택 카드가 같은 표를 쓴다(색 의미 일관). */
 const BADGE_TONE: Record<string, string> = {
     boss: 'danger',
     bossGauge: 'warning',
@@ -155,29 +156,29 @@ const WorldRouteList = ({
     blindMap: boolean;
     onSelect: (name: string) => void;
 }) => (
-    <details data-testid="map-world-list" className="aether-map-world-list">
-        <summary data-testid="map-world-list-toggle" className="flex min-h-[44px] cursor-pointer items-center justify-between gap-3 px-1 font-readable text-[11px] text-slate-300/84">
+    <details data-testid="map-world-list" className="ae-card is-quiet group px-3">
+        <summary data-testid="map-world-list-toggle" className="flex min-h-[44px] cursor-pointer list-none items-center justify-between gap-3 font-readable text-[13px] font-semibold text-ae-ink [&::-webkit-details-marker]:hidden">
             <span>전체 경로</span>
-            <span className="text-slate-500">{blindMap ? '도전 규칙으로 비공개' : `${entries.length}곳`}</span>
+            <span className="text-[12px] font-normal text-ae-ink-3">{blindMap ? '도전 규칙으로 비공개' : `${entries.length}곳`}</span>
         </summary>
 
         {blindMap ? (
-            <div className="border-t border-white/8 px-1 py-3 font-readable text-[11px] text-slate-400">
+            <div className="border-t border-ae-ink/10 py-3 font-readable text-[12px] text-ae-ink-3">
                 현재 위치에서 이어진 경로만 확인할 수 있습니다.
             </div>
         ) : (
-            <div className="space-y-4 border-t border-white/8 pt-3">
+            <div className="space-y-4 border-t border-ae-ink/10 pb-3 pt-3">
                 {MAP_BANDS.map((band, bandIndex) => {
                     const bandEntries = entries.filter((entry) => getBandIndex(entry) === bandIndex);
                     if (bandEntries.length === 0) return null;
 
                     return (
                         <section key={band.key} className="space-y-1.5">
-                            <div className="aether-type-meta flex items-center justify-between px-1 font-readable text-slate-500">
-                                <span className="text-slate-300/80">{band.label}</span>
+                            <div className="aether-type-meta flex items-center justify-between px-1 font-readable text-ae-ink-3">
+                                <span className="ae-eyebrow text-ae-ink-2">{band.label}</span>
                                 <span data-testid="map-band-level">{MAP_BAND_LEVEL_LABELS[bandIndex]}</span>
                             </div>
-                            <div className="divide-y divide-white/6 border-y border-white/6">
+                            <div className="ae-rows">
                                 {bandEntries.map((entry) => {
                                     const state = MAP_STATE[entry.state];
                                     const selected = selectedName === entry.name;
@@ -189,17 +190,19 @@ const WorldRouteList = ({
                                             type="button"
                                             data-testid="map-row"
                                             onClick={() => onSelect(entry.name)}
-                                            className={`flex min-h-[44px] w-full flex-col gap-1 px-1.5 py-2 text-left ${selected ? 'bg-[#7dd4d8]/8' : 'hover:bg-white/[0.025]'}`}
+                                            data-active={selected ? 'true' : 'false'}
+                                            aria-pressed={selected}
+                                            className="ae-select-row flex min-h-[44px] w-full flex-col gap-1 rounded-ae-sm px-1.5 py-2 text-left"
                                         >
                                             <span className="flex w-full items-center gap-2">
                                                 <span className={`h-2 w-2 shrink-0 rounded-full ${state.dot}`} />
-                                                <span className="aether-type-body min-w-0 flex-1 font-readable font-semibold text-slate-100/90">{entry.name}</span>
-                                                <span className="aether-type-meta shrink-0 font-readable text-slate-500">{formatMapLevel(entry, playerLevel)}</span>
+                                                <span className="aether-type-body min-w-0 flex-1 font-readable font-semibold text-ae-ink">{entry.name}</span>
+                                                <span className="aether-type-meta shrink-0 font-readable text-ae-ink-3">{formatMapLevel(entry, playerLevel)}</span>
                                                 {entry.state === 'completed'
-                                                    ? <Check size={12} className="shrink-0 text-emerald-200" aria-label="탐험 완료" />
+                                                    ? <Check size={12} className="shrink-0 text-ae-good" aria-label="탐험 완료" />
                                                     : entry.state === 'exploring'
-                                                        ? <Compass size={12} className="shrink-0 text-[#b9f1ec]" aria-label="탐험 중" />
-                                                        : <LockKeyhole size={12} className="shrink-0 text-slate-600" aria-label="미탐험" />}
+                                                        ? <Compass size={12} className="shrink-0 text-ae-ether-hi" aria-label="탐험 중" />
+                                                        : <LockKeyhole size={12} className="shrink-0 text-ae-ink-3" aria-label="미탐험" />}
                                             </span>
                                             {/* 2026-09 G10: 배지를 선택 카드에서만 보여주던 것을 모든 행으로.
                                                 "갈 이유"를 목록에서 바로 비교할 수 있어야 한다.
@@ -208,14 +211,14 @@ const WorldRouteList = ({
                                             {(entry.badges.length > 0 || routeNotice) && (
                                                 <span data-testid="map-row-badges" className="flex flex-wrap gap-1 pl-4">
                                                     {routeNotice && (
-                                                        <SignalBadge data-testid="map-row-route-gate" tone="warning" size="sm">
+                                                        <SignalChip data-testid="map-row-route-gate" tone="warning">
                                                             {routeNotice.level}
-                                                        </SignalBadge>
+                                                        </SignalChip>
                                                     )}
                                                     {entry.badges.map((badge) => (
-                                                        <SignalBadge key={badge.id} tone={BADGE_TONE[badge.id] || 'recommended'} size="sm">
+                                                        <SignalChip key={badge.id} tone={BADGE_TONE[badge.id] || 'recommended'}>
                                                             {badge.label}
-                                                        </SignalBadge>
+                                                        </SignalChip>
                                                     ))}
                                                 </span>
                                             )}
@@ -320,23 +323,23 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                 : '연결 경로에서 선택';
 
     return (
-        <div data-testid="map-navigator" className="aether-readable-surface space-y-3 rounded-[0.75rem] p-3">
-            <header className="flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                    <div className="aether-label">세계 지도</div>
-                    <h2 className="aether-type-title mt-0.5 font-readable font-semibold text-white">
+        <div data-testid="map-navigator" className="space-y-3">
+            <header className="flex flex-wrap items-start justify-between gap-x-3 gap-y-2 px-1">
+                <div className="min-w-0 flex-[1_1_10rem]">
+                    <div className="ae-eyebrow">세계 지도</div>
+                    <h2 className="aether-type-title mt-0.5 font-readable font-semibold text-ae-ink">
                         {blindMap ? '현재 위치에서 이어진 길' : `${playerLoc}에서 이어진 길`}
                     </h2>
                 </div>
-                <div data-testid="map-progress-summary" className="grid shrink-0 grid-cols-3 gap-1" aria-label="지도 진행 요약">
+                <div data-testid="map-progress-summary" className="ae-well ae-cols grid shrink-0 grid-cols-3" aria-label="지도 진행 요약">
                     {[
                         { label: '미탐험', value: statusCounts.unexplored },
                         { label: '진행', value: statusCounts.exploring },
                         { label: '완료', value: statusCounts.completed },
                     ].map((item) => (
-                        <div key={item.label} className="min-w-[34px] text-center font-readable">
-                            <div className="aether-type-label text-slate-500">{item.label}</div>
-                            <strong className="aether-type-metric text-slate-200/88">{item.value}</strong>
+                        <div key={item.label} className="min-w-[44px] px-2 py-1 text-center font-readable">
+                            <div className="text-[11px] text-ae-ink-3">{item.label}</div>
+                            <strong className="font-fira text-[15px] tabular-nums text-ae-ink">{item.value}</strong>
                         </div>
                     ))}
                 </div>
@@ -355,46 +358,46 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
             />
 
             {selectedEntry && (
-                <section data-testid="map-selected-detail" className="border-y border-white/8 py-2.5">
+                <section data-testid="map-selected-detail" className="ae-card p-3.5">
                     <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
                             <div className="flex flex-wrap items-center gap-1.5">
-                                <h3 className="aether-type-title font-readable font-semibold text-white/94">{selectedDisplayName}</h3>
+                                <h3 className="aether-type-title font-readable font-semibold text-ae-ink">{selectedDisplayName}</h3>
                                 {!blindMap && (
-                                    <SignalBadge tone={MAP_STATE[selectedEntry.state].badge} size="sm">
+                                    <SignalChip tone={MAP_STATE[selectedEntry.state].badge}>
                                         {MAP_STATE[selectedEntry.state].label}
-                                    </SignalBadge>
+                                    </SignalChip>
                                 )}
                                 {!blindMap && selectedMissionCount > 0 && (
-                                    <SignalBadge tone="recommended" size="sm">집중 임무 {selectedMissionCount}</SignalBadge>
+                                    <SignalChip tone="recommended">집중 임무 <span className="font-fira tabular-nums">{selectedMissionCount}</span></SignalChip>
                                 )}
                             </div>
-                            <p className="aether-type-body mt-1 font-readable text-slate-300/78">
+                            <p className="aether-type-body mt-1 font-readable text-ae-ink-2">
                                 {selectedDescription}
                             </p>
                         </div>
                         <div className="shrink-0 text-right">
-                            <span className="aether-type-meta font-readable font-semibold text-[#dff7f5]">
+                            <span className="aether-type-meta font-readable font-semibold text-ae-ether-hi">
                                 {hideSelected ? '정보 없음' : formatMapLevel(selectedEntry, playerLevel)}
                             </span>
                             {selectedRouteNotice && (
-                                <div data-testid="map-route-gate-level" className="aether-type-label mt-0.5 font-readable text-amber-100/88">
+                                <div data-testid="map-route-gate-level" className="aether-type-label mt-0.5 font-readable text-ae-gold-text">
                                     {selectedRouteNotice.level}
                                 </div>
                             )}
                         </div>
                     </div>
 
-                    <div className="mt-2 grid grid-cols-2 gap-1 min-[401px]:grid-cols-4" data-testid="map-route-forecast">
+                    <div className="mt-3 grid grid-cols-2 gap-1.5 min-[401px]:grid-cols-4" data-testid="map-route-forecast">
                         {[
                             { label: '위험', value: hideSelected ? '미확인' : getRiskLabel(selectedEntry, playerLevel) },
                             { label: '예상', value: hideSelected ? '미확인' : getEncounterLabel(selectedEntry, selectedRoute) },
                             { label: '보상', value: hideSelected ? '미확인' : getRewardLabel(selectedEntry) },
                             { label: '귀환', value: selectedRoute?.routePlan?.returnLabel || (selectedIsCurrent ? '현재 위치' : '경로 확인') },
                         ].map((item) => (
-                            <div key={item.label} className="aether-map-forecast-cell min-w-0 px-1.5 py-1.5">
-                                <div className="aether-type-label font-readable text-slate-500">{item.label}</div>
-                                <div className="aether-type-meta mt-0.5 break-words font-readable font-semibold text-slate-100/86">{item.value}</div>
+                            <div key={item.label} className="ae-sunk min-w-0 rounded-ae-sm px-2 py-1.5">
+                                <div className="aether-type-label font-readable text-ae-ink-3">{item.label}</div>
+                                <div className="aether-type-meta mt-0.5 break-words font-readable font-semibold text-ae-ink">{item.value}</div>
                             </div>
                         ))}
                     </div>
@@ -402,48 +405,51 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                     {/* 위 칸의 '위험'/'레벨'이 선언 잠금 기준이므로, 갈라지는 지역에서는
                         그 숫자가 왜 진입 레벨이 아닌지 바로 아래에서 말한다. */}
                     {selectedRouteNotice && (
-                        <p data-testid="map-route-gate-note" className="aether-type-meta mt-2 font-readable text-amber-100/78">
+                        <p data-testid="map-route-gate-note" className="aether-type-meta mt-2 font-readable text-ae-gold-text">
                             {selectedRouteNotice.note}
                         </p>
                     )}
 
                     {selectedRoute && !blindMap && (
-                        <p className="aether-type-meta mt-2 font-readable text-slate-300/72">
+                        <p className="aether-type-meta mt-2 font-readable text-ae-ink-2">
                             {selectedRoute.reason}
                         </p>
                     )}
 
-                    <button
-                        type="button"
+                    <ActionButton
+                        variant="primary"
                         data-testid="map-move-selected"
                         disabled={!canMove}
                         onClick={moveToSelectedMap}
-                        className="aether-cta-primary aether-type-body mt-2 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[0.5rem] px-3 font-readable font-semibold text-[#dff7f5] disabled:cursor-not-allowed disabled:border-white/8 disabled:bg-white/[0.03] disabled:text-slate-500"
-                    >
-                        <span>{moveButtonLabel}</span>
-                        {canMove && <ArrowRight size={14} aria-hidden="true" />}
-                    </button>
+                        className="mt-3 w-full px-3 text-[14px]"
+                        label={(
+                            <>
+                                <span>{moveButtonLabel}</span>
+                                {canMove && <ArrowRight size={15} aria-hidden="true" />}
+                            </>
+                        )}
+                    />
 
                     {!blindMap && selectedEntry.badges.length > 0 && (
                         <div className="mt-2 flex flex-wrap gap-1">
                             {selectedEntry.badges.map((badge) => (
-                                <SignalBadge key={badge.id} tone={BADGE_TONE[badge.id] || 'recommended'} size="sm">
+                                <SignalChip key={badge.id} tone={BADGE_TONE[badge.id] || 'recommended'}>
                                     {badge.label}
-                                </SignalBadge>
+                                </SignalChip>
                             ))}
                         </div>
                     )}
 
                     {!blindMap && selectedEntry.signatureDrops.length > 0 && (
-                        <details className="mt-2 border-t border-white/6 pt-2">
-                            <summary className="aether-type-body flex min-h-[44px] cursor-pointer items-center justify-between gap-2 font-readable text-[#f6e7a2]">
-                                <span className="flex items-center gap-1.5"><Sparkles size={11} />전설 각인</span>
-                                <span>{selectedEntry.signatureDrops.length}</span>
+                        <details className="mt-2 border-t border-ae-ink/10 pt-1">
+                            <summary className="aether-type-body flex min-h-[44px] cursor-pointer items-center justify-between gap-2 font-readable text-ae-gold-hi">
+                                <span className="flex items-center gap-1.5"><Sparkles size={12} aria-hidden="true" />전설 각인</span>
+                                <span className="font-fira tabular-nums">{selectedEntry.signatureDrops.length}</span>
                             </summary>
                             <div className="flex flex-wrap gap-1.5 pb-1 pt-2">
                                 {selectedEntry.signatureDrops.map(({ name, rate }) => (
-                                    <span key={name} className="aether-type-meta rounded-full border border-[#f6e7a2]/20 px-2 py-0.5 font-readable text-[#f6e7a2]/86">
-                                        {name} · {Math.max(1, Math.round(rate * 100))}%
+                                    <span key={name} className="ae-chip ae-chip-gold max-w-full whitespace-normal">
+                                        {name} · <span className="font-fira tabular-nums">{Math.max(1, Math.round(rate * 100))}%</span>
                                     </span>
                                 ))}
                             </div>
@@ -451,11 +457,11 @@ const MapNavigator = ({ player, grave, stats, actions }: MapNavigatorProps) => {
                     )}
 
                     {!blindMap && selectedEntry.lore && (
-                        <details className="mt-1 border-t border-white/6 pt-1">
-                            <summary className="aether-type-body flex min-h-[44px] cursor-pointer items-center gap-1.5 font-readable text-slate-400">
-                                <Route size={11} />지역 이야기
+                        <details className="mt-1 border-t border-ae-ink/10 pt-1">
+                            <summary className="aether-type-body flex min-h-[44px] cursor-pointer items-center gap-1.5 font-readable text-ae-ink-2">
+                                <Route size={12} aria-hidden="true" />지역 이야기
                             </summary>
-                            <p className="aether-type-body pb-1 font-readable text-slate-300/70">{selectedEntry.lore}</p>
+                            <p className="aether-type-body pb-1 font-readable text-ae-ink-2">{selectedEntry.lore}</p>
                         </details>
                     )}
                 </section>

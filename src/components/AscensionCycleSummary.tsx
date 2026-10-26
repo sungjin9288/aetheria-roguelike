@@ -15,10 +15,10 @@ const AscensionCycleSummary = ({ player, testIdPrefix }: AscensionCycleSummaryPr
     return (
         <section
             data-testid={`${testIdPrefix}-cycle-summary`}
-            className="w-full min-w-0 rounded-lg border border-[#9a8ac0]/24 bg-[#9a8ac0]/[0.07] p-3 text-left"
+            className="ae-well w-full min-w-0 p-3 text-left"
         >
-            <h2 className="flex items-center gap-1.5 text-[12px] font-readable font-bold text-white">
-                <ScrollText size={13} className="shrink-0 text-[#9a8ac0]" />
+            <h2 className="aether-type-meta flex items-center gap-1.5 font-readable font-bold text-ae-ink">
+                <ScrollText size={13} aria-hidden="true" className="shrink-0 text-ae-ether" />
                 {MSG.CYCLE_SUMMARY_TITLE}
             </h2>
             <ul className="mt-2 space-y-1.5">
@@ -26,7 +26,7 @@ const AscensionCycleSummary = ({ player, testIdPrefix }: AscensionCycleSummaryPr
                     <li
                         key={line.id}
                         data-testid={`${testIdPrefix}-cycle-${line.id}`}
-                        className={`text-[11px] font-readable leading-relaxed ${line.highlight ? 'font-bold text-[#e3dcff]' : 'text-slate-300/85'}`}
+                        className={`aether-type-label font-readable leading-relaxed ${line.highlight ? 'font-bold text-ae-ether-hi' : 'text-ae-ink-2'}`}
                     >
                         {line.text}
                     </li>

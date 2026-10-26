@@ -314,8 +314,9 @@ import { readFile } from 'node:fs/promises';
 
   test('cycle 563: 정합성 가드 — 1 production callsite 보존', async () => {
       const source = await readSrc('src/components/app/GameRoot.tsx');
-      assert.ok(/useLegendaryDropDetector\(engine\.player\?\.inv,\s*engine\.dispatch,\s*engine\.player\?\.stats\?\.codex\)/.test(source),
-          'GameRoot useLegendaryDropDetector 3 args callsite 보존');
+      // 게임 필 GF-13: 넷째 인자 presentationEpoch(복원 기준)가 더해졌다 — 앞의 세 인자는 그대로다.
+      assert.ok(/useLegendaryDropDetector\(engine\.player\?\.inv,\s*engine\.dispatch,\s*engine\.player\?\.stats\?\.codex,\s*engine\.presentationEpoch\)/.test(source),
+          'GameRoot useLegendaryDropDetector callsite (inv, dispatch, codex, presentationEpoch) 보존');
   });
 
   test('cycle 563: body codexRef / queueRef / dispatch 처리 보존', async () => {
@@ -323,8 +324,10 @@ import { readFile } from 'node:fs/promises';
       // Wave 6 X1: ref 제네릭이 any → 도메인 타입(Item[])으로 닫혔다 — ref 배관 자체는 동일.
       assert.ok(/const codexRef = useRef\((codex|<[^>]+>\(codex)\)/.test(source),
           'codexRef useRef(codex) 보존');
-      assert.ok(/const queueRef = useRef<[^>]+\[\]>\(\[\]\)/.test(source),
-          'queueRef useRef<Item[]>([]) 보존');
+      // 게임 필 GF-12: 대기열은 ref 변이가 아니라 상태다(동시 · 표시 중 전설을 잃던 결함) —
+      //   대기 순서 · 복원 기준은 tests/combat-feedback-presentation.test.js가 실제 훅으로 잡는다.
+      assert.ok(/useState<\{ epoch: number; items: Item\[\] \}>/.test(source),
+          '전설 대기열 useState<{ epoch, items: Item[] }> 보존');
   });
 
   test('cycle 563: cycle 502-562 회귀 가드 — default 청소 시리즈 보존', async () => {

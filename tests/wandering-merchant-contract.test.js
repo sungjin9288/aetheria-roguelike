@@ -341,11 +341,15 @@ test('[나가는 길] 뒤로가기 · 기록 열기 · 카드 닫기로 나가�
     const back = gameReducer(inShop, { type: AT.SET_GAME_STATE, payload: GS.IDLE });
     assert.equal(back.player.merchantVisit, undefined);
     assert.equal(back.logs.at(-1).text, MSG.MERCHANT_LEAVE_LOG);
-    // 카드 닫기(dismissEvent)는 SET_EVENT(null) → SET_GAME_STATE(idle)이다.
+    // 카드 닫기(dismissEvent)는 LEAVE_EVENT다(2026-10 town-nav UX-09) — 모드 전환이 행상인을 떠나보내고,
+    //   이벤트를 지나쳤다는 줄은 행상인 만남에 겹쳐 쓰지 않는다.
     const card = meet();
-    const dismissed = gameReducer(gameReducer(card, { type: AT.SET_EVENT, payload: null }), { type: AT.SET_GAME_STATE, payload: GS.IDLE });
+    const dismissed = gameReducer(card, { type: AT.LEAVE_EVENT });
+    assert.equal(dismissed.gameState, GS.IDLE);
+    assert.equal(dismissed.currentEvent, null);
     assert.equal(dismissed.player.merchantVisit, undefined);
     assert.equal(dismissed.logs.at(-1).text, MSG.MERCHANT_LEAVE_LOG);
+    assert.equal(dismissed.logs.length, card.logs.length + 1, '떠나는 줄 하나만 더한다');
     // 상점 · 카드로 가는 전이는 만남을 지우지 않는다(탐험이 만남을 실은 뒤 카드로 넘어간다).
     assert.deepEqual(gameReducer(inShop, { type: AT.SET_GAME_STATE, payload: GS.SHOP }).player.merchantVisit, inShop.player.merchantVisit);
     assert.deepEqual(gameReducer(card, { type: AT.SET_GAME_STATE, payload: GS.EVENT }).player.merchantVisit, card.player.merchantVisit);

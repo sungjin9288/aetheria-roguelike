@@ -11,6 +11,8 @@ import type { GameState } from '../reducers/gameReducer';
 import type { Item, Player } from '../types/index.js';
 import { getVisibleLocationName } from '../utils/challengeRules';
 import { MSG } from '../data/messages';
+import ActionButton from './ui/ActionButton';
+import Chip from './ui/Chip';
 
 /**
  * GravePanel이 실제로 호출하는 액션만 좁혀 받는다 (이곳 유해 회수).
@@ -39,53 +41,44 @@ const GravePanel = ({
     const recoveryGold = recoveryGroups.reduce((sum, group) => sum + group.gold, 0);
     const recoveryItems = recoveryGroups.reduce((sum, group) => sum + group.items.length, 0);
     const tierColor = (item: Item | null | undefined) => {
-        if ((item?.tier || 1) >= 5) return 'text-yellow-200 border-yellow-200/24';
-        if ((item?.tier || 1) >= 4) return 'text-fuchsia-200 border-fuchsia-200/22';
-        if ((item?.tier || 1) >= 3) return 'text-sky-200 border-sky-200/22';
-        return 'text-slate-300 border-white/10';
+        // 등급(tier) 사다리 — 색은 토큰만 쓴다(에테르 유리).
+        if ((item?.tier || 1) >= 5) return 'text-ae-gold-text';
+        if ((item?.tier || 1) >= 4) return 'text-ae-exp';
+        if ((item?.tier || 1) >= 3) return 'text-ae-ether-hi';
+        return 'text-ae-ink-2';
     };
 
     return (
         <div data-testid="grave-recovery-panel" className="space-y-3 pb-2">
-            <div
-                role="tablist"
-                aria-label={MSG.GRAVE_RECORD_ARIA}
-                className="grid grid-cols-1 gap-1 rounded-lg border border-white/8 bg-black/20 p-1"
-            >
-                <button
-                    type="button"
-                    role="tab"
-                    aria-selected
-                    data-testid="grave-view-mine"
-                    className="min-h-[44px] rounded-md bg-[#d5b180]/14 px-3 text-[12px] font-readable font-bold text-[#f4e6c8] transition-colors"
-                >
-                    내 유해 {recoveryGroups.length > 0 ? recoveryGroups.length : ''}
-                </button>
-            </div>
+            {/* 2026-10 감사 UX-14: Wave 70이 공개 묘비 탭을 지운 뒤 누를 것 없는 탭 하나('내 유해')만 남아 화면 낭독기가 "탭 1/1"로 읽었다 —
+                탭이 하나면 탭 목록이 아니라 제목이다. 회수 지역 수는 바로 아래 칸이 말한다. */}
+            <h3 data-testid="grave-mine-heading" className="ae-eyebrow px-1">
+                {MSG.GRAVE_MINE_HEADING}
+            </h3>
 
-            <section data-testid="grave-mine-view" className="space-y-3">
+            <section data-testid="grave-mine-view" aria-label={MSG.GRAVE_MINE_HEADING} className="space-y-3">
                 {recoveryGroups.length === 0 ? (
-                    <div className="flex min-h-[148px] flex-col items-center justify-center border-y border-white/8 px-5 text-center">
-                        <span className="flex h-11 w-11 items-center justify-center rounded-lg border border-emerald-200/16 bg-emerald-300/[0.05] text-emerald-100/80">
-                            <ShieldCheck size={20} />
+                    <div className="ae-card is-quiet flex min-h-[148px] flex-col items-center justify-center px-5 text-center">
+                        <span className="ae-well flex h-11 w-11 items-center justify-center text-ae-good">
+                            <ShieldCheck size={20} aria-hidden="true" />
                         </span>
-                        <h3 className="mt-3 text-[14px] font-readable font-bold text-white/90">잃어버린 유해가 없습니다</h3>
-                        <p className="mt-1 text-[12px] font-readable text-slate-400">다음 원정을 준비할 수 있습니다.</p>
+                        <h4 className="mt-3 text-[15px] font-readable font-bold text-ae-ink">잃어버린 유해가 없습니다</h4>
+                        <p className="mt-1 text-[12px] font-readable text-ae-ink-3">다음 원정을 준비할 수 있습니다.</p>
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-3 divide-x divide-white/8 border-y border-white/8 py-3">
+                        <div data-testid="grave-recovery-summary" className="ae-card is-quiet ae-cols grid grid-cols-3 py-3">
                             <div className="px-2 text-center">
-                                <div className="text-[11px] font-readable text-slate-400">회수 지역</div>
-                                <strong className="mt-1 block text-[16px] font-readable text-white/92">{recoveryGroups.length}</strong>
+                                <div className="ae-eyebrow">회수 지역</div>
+                                <strong className="mt-1 block font-fira text-[17px] tabular-nums text-ae-ink">{recoveryGroups.length}</strong>
                             </div>
                             <div className="px-2 text-center">
-                                <div className="text-[11px] font-readable text-slate-400">골드</div>
-                                <strong className="mt-1 block text-[16px] font-readable text-[#f0d69b]">{recoveryGold.toLocaleString('ko-KR')}</strong>
+                                <div className="ae-eyebrow">골드</div>
+                                <strong className="mt-1 block font-fira text-[17px] tabular-nums text-ae-gold-text">{recoveryGold.toLocaleString('ko-KR')}</strong>
                             </div>
                             <div className="px-2 text-center">
-                                <div className="text-[11px] font-readable text-slate-400">{MSG.GRAVE_RECOVERY_ITEMS_LABEL}</div>
-                                <strong className="mt-1 block text-[16px] font-readable text-[#bcebea]">{recoveryItems}</strong>
+                                <div className="ae-eyebrow">{MSG.GRAVE_RECOVERY_ITEMS_LABEL}</div>
+                                <strong className="mt-1 block font-fira text-[17px] tabular-nums text-ae-ether-hi">{recoveryItems}</strong>
                             </div>
                         </div>
 
@@ -95,33 +88,30 @@ const GravePanel = ({
                                     key={group.loc}
                                     data-testid={`grave-recovery-${group.loc}`}
                                     data-current-location={group.atCurrentLocation ? 'true' : 'false'}
-                                    className={`rounded-lg border p-3 ${group.atCurrentLocation
-                                        ? 'border-[#d5b180]/28 bg-[#d5b180]/[0.06]'
-                                        : 'border-white/9 bg-black/16'
-                                    }`}
+                                    className={`ae-card p-3.5 ${group.atCurrentLocation ? 'ae-grave-here' : 'is-quiet'}`}
                                 >
                                     <div className="flex items-start justify-between gap-3">
                                         <div className="min-w-0">
-                                            <div className="flex items-center gap-1.5 text-[11px] font-readable text-slate-400">
-                                                <MapPinned size={13} />
+                                            <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-readable text-ae-ink-3">
+                                                <MapPinned size={13} aria-hidden="true" />
                                                 <span>{group.atCurrentLocation ? '현재 위치' : '회수 목적지'}</span>
                                                 {group.count > 1 && <span>· 유해 {group.count}구</span>}
                                             </div>
-                                            <h3 className="mt-1 truncate text-[15px] font-readable font-bold text-white/92">{getVisibleLocationName(player, group.loc)}</h3>
+                                            <h4 className="mt-1 text-[15px] font-readable font-bold text-ae-ink">{getVisibleLocationName(player, group.loc)}</h4>
                                         </div>
                                         {group.atCurrentLocation && (
-                                            <span className="shrink-0 rounded-md border border-[#d5b180]/24 bg-[#d5b180]/10 px-2 py-1 text-[11px] font-readable text-[#f4e6c8]">
+                                            <Chip tone="gold" className="shrink-0">
                                                 회수 가능
-                                            </span>
+                                            </Chip>
                                         )}
                                     </div>
 
                                     <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-[12px] font-readable">
-                                        <span className="inline-flex items-center gap-1.5 text-[#f0d69b]">
-                                            <Coins size={13} /> {group.gold.toLocaleString('ko-KR')} 골드
+                                        <span className="inline-flex items-center gap-1.5 text-ae-gold-text">
+                                            <Coins size={13} aria-hidden="true" /> <span className="font-fira tabular-nums">{group.gold.toLocaleString('ko-KR')}</span> 골드
                                         </span>
-                                        <span className="inline-flex items-center gap-1.5 text-[#bcebea]">
-                                            <PackageOpen size={13} /> {group.items.length}개
+                                        <span className="inline-flex items-center gap-1.5 text-ae-ether-hi">
+                                            <PackageOpen size={13} aria-hidden="true" /> <span className="font-fira tabular-nums">{group.items.length}</span>개
                                         </span>
                                     </div>
 
@@ -130,31 +120,28 @@ const GravePanel = ({
                                             {group.items.slice(0, 3).map((item, index) => (
                                                 <span
                                                     key={`${item.id || item.name}-${index}`}
-                                                    className={`rounded-md border bg-black/18 px-2 py-1 text-[11px] font-readable ${tierColor(item)}`}
+                                                    className={`ae-chip ${tierColor(item)}`}
                                                 >
                                                     {item.name || MSG.GRAVE_UNNAMED_ITEM}
                                                 </span>
                                             ))}
                                             {group.items.length > 3 && (
-                                                <span className="rounded-md border border-white/8 bg-black/18 px-2 py-1 text-[11px] font-readable text-slate-400">
+                                                <span className="ae-chip font-fira tabular-nums text-ae-ink-3">
                                                     +{group.items.length - 3}
                                                 </span>
                                             )}
                                         </div>
                                     )}
 
-                                    <button
-                                        type="button"
+                                    {/* 금빛 주 행동은 지금 서 있는 곳의 회수 하나뿐이다 — 다른 지역은 지도로 가는 보조 행동. */}
+                                    <ActionButton
+                                        variant={group.atCurrentLocation ? 'primary' : 'glass'}
                                         data-testid={group.atCurrentLocation ? 'grave-recover-here' : `grave-open-map-${group.loc}`}
                                         onClick={group.atCurrentLocation ? actions?.lootGrave : onOpenMap}
-                                        className={`mt-3 flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border px-3 text-[12px] font-readable font-bold transition-colors ${group.atCurrentLocation
-                                            ? 'border-[#d5b180]/32 bg-[#d5b180]/12 text-[#f4e6c8] hover:bg-[#d5b180]/18'
-                                            : 'border-[#7dd4d8]/24 bg-[#7dd4d8]/[0.06] text-[#dff7f5] hover:bg-[#7dd4d8]/12'
-                                        }`}
-                                    >
-                                        {group.atCurrentLocation ? <PackageOpen size={15} /> : <Navigation size={15} />}
-                                        {group.atCurrentLocation ? '이곳 유해 회수' : '지도에서 경로 확인'}
-                                    </button>
+                                        className="mt-3 w-full"
+                                        icon={group.atCurrentLocation ? <PackageOpen size={16} /> : <Navigation size={16} />}
+                                        label={group.atCurrentLocation ? '이곳 유해 회수' : '지도에서 경로 확인'}
+                                    />
                                 </article>
                             ))}
                         </div>

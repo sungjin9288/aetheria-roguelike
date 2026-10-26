@@ -84,9 +84,9 @@ test('ReturnBriefingCard 닫기 아이콘은 44px 터치 타깃 클래스로 렌
 
 // 구조 불변식(소스 텍스트) — createPortal(document.body) 사용으로 SSR 렌더 불가.
 test('EnhanceDecisionCard 닫기 버튼은 소스 텍스트 기준 44px 터치 타깃을 유지한다 (createPortal이라 SSR 렌더 불가)', async () => {
+    // 2026-10 에테르 유리(VD-10): 닫기는 공용 OverlayCloseButton 하나다 — 44px은 그 단추가 소유한다.
     const source = await read('EnhanceDecisionCard.tsx');
-    const start = source.indexOf('data-testid="enhance-decision-close"');
-    const end = source.indexOf('</button>', start);
-    const button = source.slice(start, end);
-    assert.match(button, /(?:h-11\s+w-11|min-h-\[44px\].*min-w-\[44px\])/, 'EnhanceDecisionCard.tsx');
+    assert.match(source, /<OverlayCloseButton\s+data-testid="enhance-decision-close"/, 'EnhanceDecisionCard.tsx는 공용 닫기 단추를 쓴다');
+    const closeButton = await read('OverlayCloseButton.tsx');
+    assert.match(closeButton, /min-h-\[44px\] min-w-\[44px\]/, 'OverlayCloseButton은 44px 터치 타깃');
 });

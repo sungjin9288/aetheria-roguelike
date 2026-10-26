@@ -123,6 +123,8 @@ export const bootstrapActionMap = {
             logs: getBootstrapLogs(state, loadedPlayer.name ?? ''),
             bootStage: 'ready',
             presentationEpoch: state.presentationEpoch + 1,
+            // 게임 필 감사 GF-13: 지난 세션의 전투 차례 연출은 복원을 넘지 않는다.
+            combatFeedback: null,
             syncStatus: 'synced',
             lastLoadedTimestamp: resolveLastActiveMillis(action.payload.lastActive),
         };

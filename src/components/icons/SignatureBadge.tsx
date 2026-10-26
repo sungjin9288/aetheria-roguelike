@@ -19,15 +19,17 @@ import type { Item } from '../../types/index.js';
 // cycle 427: rust 엔트리 추가 — '광기의 갑주' (rust signature) 등이 등록돼 있는데
 //   SignatureBadge만 누락이라 fallback(holy gold)으로 표시되던 silent UI 결손 fix.
 //   다른 surface (LegendaryDropOverlay/LegendaryCodex/ItemIcon) 모두 rust 보유.
+// 2026-10 에테르 유리(VD-06): 원시 hex 대신 각인 계열 별칭 토큰(--aether-sig-*-rgb, index.css w3:archive-a)을 읽는다.
+//   테두리 획은 바탕(void) 톤 — 어느 계열이든 같은 어두운 윤곽이다.
 const TONE_COLORS: Record<string, { fill: string; glow: string; stroke: string }> = Object.freeze({
-    holy: { fill: '#f6e7a2', glow: 'rgba(246,231,162,0.6)', stroke: '#5a4620' },
-    fire: { fill: '#ffb48a', glow: 'rgba(255,180,138,0.6)', stroke: '#6a2e16' },
-    frost: { fill: '#cce8f5', glow: 'rgba(204,232,245,0.6)', stroke: '#29455a' },
-    shadow: { fill: '#c7a4f0', glow: 'rgba(199,164,240,0.6)', stroke: '#2d2144' },
-    arcane: { fill: '#c0b0e8', glow: 'rgba(192,176,232,0.6)', stroke: '#31245d' },
-    nature: { fill: '#a8d0a0', glow: 'rgba(168,208,160,0.6)', stroke: '#2d4226' },
-    earth: { fill: '#d8b878', glow: 'rgba(216,184,120,0.55)', stroke: '#4c3720' },
-    rust: { fill: '#d9a56c', glow: 'rgba(217,165,108,0.55)', stroke: '#4a2e16' },
+    holy: { fill: 'rgb(var(--aether-sig-holy-rgb))', glow: 'rgb(var(--aether-sig-holy-rgb) / 0.6)', stroke: 'rgb(var(--aether-void-rgb) / 0.85)' },
+    fire: { fill: 'rgb(var(--aether-sig-fire-rgb))', glow: 'rgb(var(--aether-sig-fire-rgb) / 0.6)', stroke: 'rgb(var(--aether-void-rgb) / 0.85)' },
+    frost: { fill: 'rgb(var(--aether-sig-frost-rgb))', glow: 'rgb(var(--aether-sig-frost-rgb) / 0.6)', stroke: 'rgb(var(--aether-void-rgb) / 0.85)' },
+    shadow: { fill: 'rgb(var(--aether-sig-shadow-rgb))', glow: 'rgb(var(--aether-sig-shadow-rgb) / 0.6)', stroke: 'rgb(var(--aether-void-rgb) / 0.85)' },
+    arcane: { fill: 'rgb(var(--aether-sig-arcane-rgb))', glow: 'rgb(var(--aether-sig-arcane-rgb) / 0.6)', stroke: 'rgb(var(--aether-void-rgb) / 0.85)' },
+    nature: { fill: 'rgb(var(--aether-sig-nature-rgb))', glow: 'rgb(var(--aether-sig-nature-rgb) / 0.6)', stroke: 'rgb(var(--aether-void-rgb) / 0.85)' },
+    earth: { fill: 'rgb(var(--aether-sig-earth-rgb))', glow: 'rgb(var(--aether-sig-earth-rgb) / 0.6)', stroke: 'rgb(var(--aether-void-rgb) / 0.85)' },
+    rust: { fill: 'rgb(var(--aether-sig-rust-rgb))', glow: 'rgb(var(--aether-sig-rust-rgb) / 0.6)', stroke: 'rgb(var(--aether-void-rgb) / 0.85)' },
 });
 
 const DEFAULT_TONE_COLOR = TONE_COLORS.holy;
@@ -65,8 +67,7 @@ const SignatureBadge = ({ item, size }: SignatureBadgeProps) => {
                 {/* 4-point star (sparkle) */}
                 <path
                     d="M6 1 L7 5 L11 6 L7 7 L6 11 L5 7 L1 6 L5 5 Z"
-                    fill={toneColor.fill}
-                    stroke={toneColor.stroke}
+                    style={{ fill: toneColor.fill, stroke: toneColor.stroke }}
                     strokeWidth="0.6"
                     strokeLinejoin="round"
                 />

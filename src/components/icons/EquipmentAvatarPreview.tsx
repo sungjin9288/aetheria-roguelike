@@ -26,17 +26,18 @@ const EquipmentAvatarPreview = ({ item, size, className, variant }: EquipmentAva
     const activeSpriteState = spriteState.signature === spriteSignature ? spriteState : { signature: spriteSignature, index: 0 };
     const activeSpriteSrc = spriteCandidates[Math.min(activeSpriteState.index, spriteCandidates.length - 1)] || '/assets/avatars/canonical/adventurer.png';
 
-    const glowColor = appearance.frameTone === '빛' ? 'rgba(246,231,200,0.12)' : 'rgba(125,212,216,0.12)';
+    // 2026-10 에테르 유리(VD-06): 초점 광채 · 비네트는 토큰 채널이다. 이전 배경 선언은 `circle_at_…`(Tailwind 표기)가 섞여
+    //   선언 전체가 무효였다 — 광채가 한 번도 그려지지 않았다. 이제 유효한 그라데이션 둘(초점 광채 + 가장자리 비네트)만 둔다.
+    const glowTone = appearance.frameTone === '빛' ? 'var(--aether-gold-hi-rgb)' : 'var(--aether-ether-rgb)';
     const stageTransform = `translate(${previewStage.translateX}px, ${previewStage.translateY}px) scale(${previewStage.scale})`;
-    const focusAccent = previewStage.focus === 'weapon'
-        ? 'radial-gradient(circle at 72% 58%, rgba(213,177,128,0.14), transparent 38%)'
+    const focusPoint = previewStage.focus === 'weapon'
+        ? '72% 58%'
         : previewStage.focus === 'offhand'
-            ? 'radial-gradient(circle at 28% 58%, rgba(246,231,200,0.14), transparent 38%)'
+            ? '28% 58%'
             : previewStage.focus === 'headgear'
-                ? 'radial-gradient(circle at 50% 14%, rgba(246,231,200,0.16), transparent 40%)'
-                : previewStage.focus === 'armor'
-                    ? 'radial-gradient(circle at 50% 48%, rgba(125,212,216,0.14), transparent 44%)'
-                    : 'radial-gradient(circle at 50% 44%, rgba(125,212,216,0.12), transparent 42%)';
+                ? '50% 14%'
+                : '50% 46%';
+    const stageLight = `radial-gradient(circle at ${focusPoint}, rgb(${glowTone} / 0.14), transparent 40%), radial-gradient(circle at 50% 38%, transparent 44%, rgb(var(--aether-void-rgb) / 0.32) 100%)`;
 
     return (
         <div
@@ -82,7 +83,7 @@ const EquipmentAvatarPreview = ({ item, size, className, variant }: EquipmentAva
                 aria-hidden="true"
                 className="pointer-events-none absolute inset-0"
                 style={{
-                    background: `${previewStage.spotlight}, ${focusAccent}, radial-gradient(circle_at_50%_34%, ${glowColor} 0%, transparent 42%), radial-gradient(circle_at_50%_38%, transparent 0%, transparent 44%, rgba(6,10,15,0.14) 72%, rgba(6,10,15,0.34) 100%)`,
+                    background: stageLight,
                 }}
             />
         </div>

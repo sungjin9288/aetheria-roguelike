@@ -13,6 +13,7 @@ import { DB } from '../data/db';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import ItemIcon from './icons/ItemIcon';
 import EnhanceDecisionCard from './EnhanceDecisionCard';
+import ActionButton from './ui/ActionButton';
 import { isEquipmentDiscovered } from '../utils/signatureDiscovery';
 import type { GameActions } from '../hooks/actionDeps';
 import type { EquipSlots, FullStats, Item, Player } from '../types/index.js';
@@ -43,11 +44,19 @@ interface SignatureSetTone {
 
 // cycle 411: frost / arcane 제거 — signatureSets.json sets는 fire/holy/nature/shadow
 //   4 tone만 emit. activeSignatureSet.tone / setProgress.tone lookup 절대 hit 안 됨.
+// 2026-10 에테르 유리(VD-06): 색은 각인 계열 별칭 토큰(--aether-sig-*-rgb, index.css w3:archive-a)이다 — 원시 hex · rgba 없음.
 const SIG_SET_TONE: Record<string, SignatureSetTone> = Object.freeze({
-    holy: { border: 'rgba(246,231,162,0.5)', glow: 'rgba(246,231,162,0.18)', text: '#f6e7a2' },
-    fire: { border: 'rgba(255,180,138,0.5)', glow: 'rgba(255,180,138,0.18)', text: '#ffb48a' },
-    shadow: { border: 'rgba(199,164,240,0.5)', glow: 'rgba(199,164,240,0.18)', text: '#c7a4f0' },
-    nature: { border: 'rgba(168,208,160,0.5)', glow: 'rgba(168,208,160,0.18)', text: '#a8d0a0' },
+    holy: { border: 'rgb(var(--aether-sig-holy-rgb) / 0.42)', glow: 'rgb(var(--aether-sig-holy-rgb) / 0.16)', text: 'rgb(var(--aether-sig-holy-rgb))' },
+    fire: { border: 'rgb(var(--aether-sig-fire-rgb) / 0.42)', glow: 'rgb(var(--aether-sig-fire-rgb) / 0.16)', text: 'rgb(var(--aether-sig-fire-rgb))' },
+    shadow: { border: 'rgb(var(--aether-sig-shadow-rgb) / 0.42)', glow: 'rgb(var(--aether-sig-shadow-rgb) / 0.16)', text: 'rgb(var(--aether-sig-shadow-rgb))' },
+    nature: { border: 'rgb(var(--aether-sig-nature-rgb) / 0.42)', glow: 'rgb(var(--aether-sig-nature-rgb) / 0.16)', text: 'rgb(var(--aether-sig-nature-rgb))' },
+});
+
+// 직업 세트 맞춤 단계 — 단계마다 토큰 하나(금 → 에테르 → 무채).
+const AFFINITY_TONE_CLASS: Record<string, string> = Object.freeze({
+    full: 'bg-ae-gold-hi/10 text-ae-gold-hi ring-ae-gold-hi/30',
+    partial2: 'bg-ae-gold/10 text-ae-gold-text ring-ae-gold/30',
+    partial1: 'bg-ae-ether/10 text-ae-ether-hi ring-ae-ether/30',
 });
 
 // cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
@@ -122,140 +131,137 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
             data-equipment-view={showDetails ? 'full' : 'summary'}
             className="space-y-3"
         >
-            <div className="flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-black/18 px-3 py-2">
+            <div className="flex items-center justify-between gap-3 px-1">
                 <div className="min-w-0">
-                    <div className="text-[11px] font-readable font-bold text-white/88">장비 판단</div>
-                    <div className="mt-0.5 text-[11px] font-readable text-slate-400/78">
+                    <div className="text-[13px] font-readable font-bold text-ae-ink">장비 판단</div>
+                    <div className="mt-0.5 text-[12px] font-readable text-ae-ink-3">
                         {showDetails ? '보너스와 강화 조건까지 표시 중' : '착용 상태와 세트 조건만 표시 중'}
                     </div>
                 </div>
-                <button
-                    type="button"
+                <ActionButton
+                    variant="ghost"
                     data-testid="equipment-detail-toggle"
                     aria-expanded={showDetails}
                     onClick={() => setDetailOverride(!showDetails)}
-                    className="inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[11px] font-readable font-bold text-[#f6e7c8]"
-                >
-                    <ListTree size={13} />
-                    {showDetails ? '간단히 보기' : '상세 보기'}
-                </button>
+                    className="min-h-11 shrink-0 px-3 text-[12px]"
+                    icon={<ListTree size={14} />}
+                    label={showDetails ? '간단히 보기' : '상세 보기'}
+                />
             </div>
-            <div className="overflow-hidden rounded-[1.1rem] border border-white/8 bg-black/18 p-3">
+            {/* 2026-10 에테르 유리: 캐릭터 진열대(바닥 광채 위 정수배 그림) + 능력치 · 착용 줄. 상자 안 상자는 두 층까지만. */}
+            <div className="ae-card p-3">
                 <div className="flex items-start gap-3">
-                    <PixelCharacterAvatar
-                        player={player}
-                        appearance={appearance}
-                        size="lg"
-                        dataTestId="equipment-character-preview"
-                        label="직업 초상"
-                        className="shrink-0"
-                        showEnhanceBadge={false}
-                    />
+                    <div className="ae-showcase flex shrink-0 items-center justify-center p-1.5">
+                        <PixelCharacterAvatar
+                            player={player}
+                            appearance={appearance}
+                            size="lg"
+                            dataTestId="equipment-character-preview"
+                            label="직업 초상"
+                            className="shrink-0"
+                            showEnhanceBadge={false}
+                        />
+                    </div>
                     <div className="min-w-0 flex-1">
                         <div className="grid grid-cols-2 gap-2">
-                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                                <div className="text-[11px] font-readable text-slate-400">공격력</div>
-                                <div className="mt-0.5 text-xs font-readable font-bold text-[#dff7f5]">{stats?.atk || 0}</div>
+                            <div className="ae-well px-2.5 py-2">
+                                <div className="ae-eyebrow">공격력</div>
+                                <div className="mt-0.5 font-fira text-[17px] font-bold tabular-nums text-ae-ink">{stats?.atk || 0}</div>
                             </div>
-                            <div className="rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                                <div className="text-[11px] font-readable text-slate-400">방어력</div>
-                                <div className="mt-0.5 text-xs font-readable font-bold text-white/88">{stats?.def || 0}</div>
+                            <div className="ae-well px-2.5 py-2">
+                                <div className="ae-eyebrow">방어력</div>
+                                <div className="mt-0.5 font-fira text-[17px] font-bold tabular-nums text-ae-ink">{stats?.def || 0}</div>
                             </div>
                         </div>
-                        <div className="mt-2 flex items-center justify-between rounded-[0.95rem] aether-panel-muted px-2.5 py-2">
-                            <span className="text-[11px] font-readable text-slate-400">강화 재료</span>
-                            <span className="text-xs font-readable font-bold text-[#e3dcff]">{enhanceMaterialCount}개</span>
+                        <div className="mt-2 flex items-center justify-between px-1">
+                            <span className="text-[12px] font-readable text-ae-ink-3">강화 재료</span>
+                            <span className="text-[13px] font-readable font-bold text-ae-exp"><span className="font-fira tabular-nums">{enhanceMaterialCount}</span>개</span>
                         </div>
-                        <div className="mt-2 space-y-1.5">
-                            {[
-                                { key: 'weapon', label: '주무기', name: weaponName, slot: stats?.jobAffinity?.slots?.weapon },
-                                { key: 'armor',  label: '방어구', name: armorName,  slot: stats?.jobAffinity?.slots?.armor },
-                                {
-                                    key: 'offhand',
-                                    label: '보조 장비',
-                                    name: twoHandSetCounted ? MSG.OUTFIT_SET_TWO_HAND_SLOT : offhandName,
-                                    slot: stats?.jobAffinity?.slots?.offhand,
-                                },
-                            ].map((s) => (
-                                <div
-                                    key={s.key}
-                                    className={`flex min-w-0 items-center gap-2 rounded-[0.85rem] px-2.5 py-1.5 transition-colors ${s.slot ? 'border border-[#d5b180]/30 bg-[#d5b180]/8' : 'aether-panel-muted'}`}
-                                    title={s.slot ? `${player?.job} 세트 매치 슬롯` : undefined}
-                                >
-                                    <span className="w-[52px] shrink-0 text-[11px] font-readable text-slate-400/74">{s.label}</span>
-                                    <span className={`min-w-0 flex-1 line-clamp-2 text-[11px] leading-snug font-readable font-semibold ${s.slot ? 'text-[#f6e7c8]' : 'text-white/88'}`}>{s.name}</span>
-                                    {s.slot && <Sparkles size={11} aria-label="세트 매치" className="shrink-0 text-[#d5b180]" />}
-                                </div>
-                            ))}
-                        </div>
-                        {/* cycle 57: 세트 효과 발동 상태 + 발동 조건 안내. matchCount 0 케이스도 노출. */}
-                        {(() => {
-                            const aff = stats?.jobAffinity;
-                            if (!aff) return null;
-                            const matchCount = aff.matchCount || 0;
-                            const tone =
-                                aff.tier === 'full' ? { color: '#f6e7a2', border: 'rgba(246,231,162,0.42)', bg: 'rgba(246,231,162,0.10)' } :
-                                aff.tier === 'partial2' ? { color: '#d5b180', border: 'rgba(213,177,128,0.42)', bg: 'rgba(213,177,128,0.10)' } :
-                                aff.tier === 'partial1' ? { color: '#7dd4d8', border: 'rgba(125,212,216,0.42)', bg: 'rgba(125,212,216,0.10)' } :
-                                { color: '#94a3b8', border: 'rgba(148,163,184,0.32)', bg: 'rgba(148,163,184,0.06)' };
-                            const dots = [0, 1, 2].map((i) => i < matchCount ? '●' : '○').join('');
-                            const nextHint = getJobOutfitNextHint(aff, player.job);
-                            return (
-                                <div
-                                    data-testid="job-outfit-affinity"
-                                    data-affinity-tier={aff.tier}
-                                    data-match-count={matchCount}
-                                    className="mt-2 rounded-[0.95rem] px-2.5 py-2 text-[11px] font-fira"
-                                    style={{ color: tone.color, border: `1px solid ${tone.border}`, background: tone.bg }}
-                                >
-                                    <div className="flex flex-wrap items-center gap-1.5 font-bold">
-                                        <span className="tracking-[0.18em]" aria-hidden="true">{dots}</span>
-                                        <span>{aff.label || `${player?.job} 세트`} ({matchCount}/3)</span>
-                                        {showDetails && (aff.bonus?.atkMult || 0) > 1 && <span className="text-white/82">공격력 +{Math.round(((aff.bonus.atkMult || 0) - 1) * 100)}%</span>}
-                                        {showDetails && (aff.bonus?.defMult || 0) > 1 && <span className="text-white/82">방어력 +{Math.round(((aff.bonus.defMult || 0) - 1) * 100)}%</span>}
-                                        {showDetails && (aff.bonus?.hpBonus || 0) > 0 && <span className="text-white/82">생명 +{Math.round((aff.bonus.hpBonus || 0) * 100)}%</span>}
-                                        {showDetails && (aff.bonus?.mpBonus || 0) > 0 && <span className="text-white/82">기력 +{Math.round((aff.bonus.mpBonus || 0) * 100)}%</span>}
-                                    </div>
-                                    <div className="mt-1 text-white/70 font-normal leading-snug" style={{ color: 'rgba(255,255,255,0.66)' }}>
-                                        {nextHint}
-                                    </div>
-                                    {showDetails && aff.twoHandCounted && (
-                                        <div data-testid="job-outfit-two-hand-hint" className="mt-1 text-white/70 font-normal leading-snug">
-                                            {MSG.OUTFIT_SET_TWO_HAND_HINT}
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })()}
                     </div>
                 </div>
+                <div className="ae-rows mt-3">
+                    {[
+                        { key: 'weapon', label: '주무기', name: weaponName, slot: stats?.jobAffinity?.slots?.weapon },
+                        { key: 'armor',  label: '방어구', name: armorName,  slot: stats?.jobAffinity?.slots?.armor },
+                        {
+                            key: 'offhand',
+                            label: '보조 장비',
+                            name: twoHandSetCounted ? MSG.OUTFIT_SET_TWO_HAND_SLOT : offhandName,
+                            slot: stats?.jobAffinity?.slots?.offhand,
+                        },
+                    ].map((s) => (
+                        <div
+                            key={s.key}
+                            className="flex min-h-[40px] min-w-0 items-center gap-2 px-1 py-1.5"
+                            title={s.slot ? `${player?.job} 세트 매치 슬롯` : undefined}
+                        >
+                            <span className="w-[64px] shrink-0 text-[12px] font-readable text-ae-ink-3">{s.label}</span>
+                            <span className={`min-w-0 flex-1 text-[13px] leading-snug font-readable font-semibold ${s.slot ? 'text-ae-gold-text' : 'text-ae-ink'}`}>{s.name}</span>
+                            {s.slot && <Sparkles size={13} aria-label="세트 매치" className="shrink-0 text-ae-gold" />}
+                        </div>
+                    ))}
+                </div>
+                {/* cycle 57: 세트 효과 발동 상태 + 발동 조건 안내. matchCount 0 케이스도 노출. */}
+                {(() => {
+                    const aff = stats?.jobAffinity;
+                    if (!aff) return null;
+                    const matchCount = aff.matchCount || 0;
+                    const toneClass = AFFINITY_TONE_CLASS[aff.tier ?? ''] || 'bg-ae-ink/5 text-ae-ink-2 ring-ae-ink/10';
+                    const dots = [0, 1, 2].map((i) => i < matchCount ? '●' : '○').join('');
+                    const nextHint = getJobOutfitNextHint(aff, player.job);
+                    return (
+                        <div
+                            data-testid="job-outfit-affinity"
+                            data-affinity-tier={aff.tier}
+                            data-match-count={matchCount}
+                            className={`mt-2 rounded-ae-md px-3 py-2 text-[12px] font-readable ring-1 ring-inset ${toneClass}`}
+                        >
+                            <div className="flex flex-wrap items-center gap-1.5 font-bold">
+                                <span className="tracking-[0.18em]" aria-hidden="true">{dots}</span>
+                                <span>{aff.label || `${player?.job} 세트`} (<span className="font-fira tabular-nums">{matchCount}/3</span>)</span>
+                                {showDetails && (aff.bonus?.atkMult || 0) > 1 && <span className="text-ae-ink">공격력 +{Math.round(((aff.bonus.atkMult || 0) - 1) * 100)}%</span>}
+                                {showDetails && (aff.bonus?.defMult || 0) > 1 && <span className="text-ae-ink">방어력 +{Math.round(((aff.bonus.defMult || 0) - 1) * 100)}%</span>}
+                                {showDetails && (aff.bonus?.hpBonus || 0) > 0 && <span className="text-ae-ink">생명 +{Math.round((aff.bonus.hpBonus || 0) * 100)}%</span>}
+                                {showDetails && (aff.bonus?.mpBonus || 0) > 0 && <span className="text-ae-ink">기력 +{Math.round((aff.bonus.mpBonus || 0) * 100)}%</span>}
+                            </div>
+                            <div className="mt-1 font-normal leading-snug text-ae-ink-2">
+                                {nextHint}
+                            </div>
+                            {showDetails && aff.twoHandCounted && (
+                                <div data-testid="job-outfit-two-hand-hint" className="mt-1 font-normal leading-snug text-ae-ink-2">
+                                    {MSG.OUTFIT_SET_TWO_HAND_HINT}
+                                </div>
+                            )}
+                        </div>
+                    );
+                })()}
             </div>
 
             {/* cycle 58: 직업 세트 카탈로그 — 어떤 아이템이 세트에 포함되는지 명시.
                 사용자 피드백: "세트 효과마다 어떤 아이템들이 세트로 포함되는지를 알려줘야
                 유저들이 그걸 보고 세트아이템을 맞추지". 펼침 토글로 인벤 가시성 보존. */}
             {showDetails && (setCatalog.weapon.length + setCatalog.armor.length + setCatalog.offhand.length) > 0 && (
-                <div className="rounded-[1rem] border border-white/8 bg-black/16 px-3 py-2.5">
+                <div className="ae-card is-quiet px-3 py-1.5">
                     <button
                         type="button"
                         onClick={() => setShowSetCatalog((prev) => !prev)}
                         data-testid="job-set-catalog-toggle"
-                        className="flex min-h-11 w-full items-center justify-between gap-2 text-left"
+                        className="flex min-h-11 w-full items-center justify-between gap-2 rounded-ae-sm text-left"
                         aria-expanded={showSetCatalog}
                     >
                         <div className="min-w-0">
-                            <div className="text-[11px] font-readable text-[#d5b180]/82">{player?.job} 세트 목록</div>
-                            <div className="mt-0.5 text-[11px] font-fira text-slate-300/72 leading-snug">
+                            <div className="text-[13px] font-readable font-bold text-ae-gold-text">{player?.job} 세트 목록</div>
+                            <div className="mt-0.5 text-[12px] font-readable text-ae-ink-3 leading-snug">
                                 슬롯별 후보 · 장착 중 · 보유 · 미발견
                             </div>
                         </div>
-                        <span className="shrink-0 inline-flex items-center gap-1 text-[11px] font-fira text-slate-400/72">
-                            {setCatalog.weapon.length + setCatalog.armor.length + setCatalog.offhand.length}개
-                            {showSetCatalog ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                        <span className="shrink-0 inline-flex items-center gap-1 text-[12px] font-readable text-ae-ink-3">
+                            <span className="font-fira tabular-nums">{setCatalog.weapon.length + setCatalog.armor.length + setCatalog.offhand.length}</span>개
+                            {showSetCatalog ? <ChevronUp size={16} aria-hidden="true" /> : <ChevronDown size={16} aria-hidden="true" />}
                         </span>
                     </button>
                     {showSetCatalog && (
-                        <div className="mt-2.5 space-y-2.5">
+                        <div className="ae-rows mb-1.5 mt-1.5">
                             {[
                                 { key: 'weapon', label: '주무기', list: setCatalog.weapon },
                                 { key: 'armor',  label: '방어구', list: setCatalog.armor },
@@ -264,10 +270,10 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                 if (group.list.length === 0) return null;
                                 const ownedCount = group.list.filter((it) => ownedItemNames.has(it.name ?? '')).length;
                                 return (
-                                    <div key={group.key}>
-                                        <div className="flex items-center justify-between gap-2 mb-1.5">
-                                            <span className="text-[11px] font-fira uppercase tracking-[0.16em] text-slate-400/80">{group.label}</span>
-                                            <span className="text-[11px] font-fira text-slate-500">{ownedCount}/{group.list.length} 보유</span>
+                                    <div key={group.key} className="py-2.5">
+                                        <div className="mb-1.5 flex items-center justify-between gap-2">
+                                            <span className="ae-eyebrow">{group.label}</span>
+                                            <span className="text-[11px] font-readable text-ae-ink-3"><span className="font-fira tabular-nums">{ownedCount}/{group.list.length}</span> 보유</span>
                                         </div>
                                         <div className="flex flex-wrap gap-1.5">
                                             {group.list.map((it) => {
@@ -276,12 +282,12 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                                 // 2026-10 Wave 103 (소유자 결정 §107.6 "미보유 이름만 숨김"): 가진 적도 도감에 오른 적도 없는 장비는
                                                 //   이름 · 능력치를 숨기고 등급만 남긴다.
                                                 const isKnown = isOwned || (player ? isEquipmentDiscovered(it.name ?? '', player) : false);
-                                                const baseCls = 'inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[11px] font-fira leading-tight';
+                                                const baseCls = 'ae-chip max-w-full whitespace-normal font-readable leading-tight';
                                                 const cls = isEquipped
-                                                    ? `${baseCls} border-emerald-300/50 bg-emerald-300/10 text-emerald-100`
+                                                    ? `${baseCls} ae-chip-good`
                                                     : isOwned
-                                                        ? `${baseCls} border-[#d5b180]/40 bg-[#d5b180]/8 text-[#f6e7c8]`
-                                                        : `${baseCls} border-white/10 bg-white/[0.02] text-slate-400/80`;
+                                                        ? `${baseCls} ae-chip-gold`
+                                                        : `${baseCls} text-ae-ink-3`;
                                                 return (
                                                     <span
                                                         key={it.name}
@@ -291,8 +297,8 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                                         data-known={isKnown ? 'true' : 'false'}
                                                     >
                                                         <span>{isEquipped ? '장착' : isOwned ? '보유' : isKnown ? MSG.JOB_OUTFIT_SEEN : '미발견'}</span>
-                                                        <span className="truncate max-w-[100px]">{isKnown ? it.name : MSG.JOB_OUTFIT_UNKNOWN_ITEM}</span>
-                                                        <span className="text-slate-500/80">등급 {it.tier || 1}</span>
+                                                        <span className={isKnown ? 'text-ae-ink' : undefined}>{isKnown ? it.name : MSG.JOB_OUTFIT_UNKNOWN_ITEM}</span>
+                                                        <span className="font-normal text-ae-ink-3">등급 <span className="font-fira tabular-nums">{it.tier || 1}</span></span>
                                                     </span>
                                                 );
                                             })}
@@ -300,7 +306,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                     </div>
                                 );
                             })}
-                            <div className="rounded-[0.85rem] border border-white/8 bg-white/[0.02] px-2.5 py-1.5 text-[11px] font-fira leading-snug text-slate-400/80">
+                            <div className="py-2.5 text-[12px] font-readable leading-relaxed text-ae-ink-2">
                                 한손 무기·방어구·보조 장비 또는 양손 무기(2피스)·방어구를 맞추면 풀세트 효과가 발동합니다. 공격력 +30%, 방어력 +20%, 생명 +10%, 기력 +15%
                             </div>
                         </div>
@@ -312,28 +318,28 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                 <div
                     data-testid="active-signature-set-badge"
                     data-signature-set-key={activeSignatureSet.key}
-                    className="relative overflow-hidden rounded-[1rem] px-3 py-2"
+                    className="relative overflow-hidden rounded-ae-md px-3 py-2.5"
                     style={{
-                        border: `1px solid ${sigSetTone.border}`,
-                        background: `radial-gradient(circle at 18% 42%, ${sigSetTone.glow}, transparent 54%), linear-gradient(180deg, rgba(20,24,30,0.92) 0%, rgba(10,12,16,1) 100%)`,
+                        boxShadow: `inset 0 0 0 1px ${sigSetTone.border}`,
+                        background: `radial-gradient(circle at 18% 42%, ${sigSetTone.glow}, transparent 54%), linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%)`,
                     }}
                 >
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                            <Sparkles size={12} style={{ color: sigSetTone.text }} />
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="flex min-w-0 items-center gap-1.5">
+                            <Sparkles size={14} aria-hidden="true" className="shrink-0" style={{ color: sigSetTone.text }} />
                             <span
-                                className="font-rajdhani font-bold text-[12px] truncate"
+                                className="font-display text-[13px] font-bold"
                                 style={{ color: sigSetTone.text }}
                             >
                                 {activeSignatureSet.name}
                             </span>
                         </div>
-                        <span className="shrink-0 text-[11px] font-fira" style={{ color: sigSetTone.text }}>
-                            {activeSignatureSet.tier}세트 활성
+                        <span className="shrink-0 text-[12px] font-readable" style={{ color: sigSetTone.text }}>
+                            <span className="font-fira tabular-nums">{activeSignatureSet.tier}</span>세트 활성
                         </span>
                     </div>
                     {showDetails && activeSignatureSet.desc && (
-                        <div className="mt-1 text-[11px] font-fira leading-[1.4] text-slate-300/85">
+                        <div className="mt-1 text-[12px] font-readable leading-relaxed text-ae-ink-2">
                             {activeSignatureSet.desc}
                         </div>
                     )}
@@ -346,35 +352,31 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                     data-signature-set-key={setProgress.key}
                     data-equipped-count={setProgress.equippedCount}
                     data-next-tier={setProgress.nextTier}
-                    className="relative overflow-hidden rounded-[1rem] px-3 py-2"
-                    style={{
-                        border: `1px dashed ${progressTone.border}`,
-                        background: `linear-gradient(180deg, rgba(14,16,20,0.92) 0%, rgba(8,10,14,1) 100%)`,
-                    }}
+                    className="ae-card is-quiet relative overflow-hidden px-3 py-2.5"
                 >
-                    <div className="flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5 min-w-0">
-                            <Target size={11} style={{ color: progressTone.text }} />
-                            <span className="font-rajdhani font-bold text-[11px] truncate" style={{ color: progressTone.text }}>
+                    <div className="flex items-start justify-between gap-2">
+                        <div className="flex min-w-0 flex-wrap items-center gap-1.5">
+                            <Target size={13} aria-hidden="true" className="shrink-0" style={{ color: progressTone.text }} />
+                            <span className="font-display text-[13px] font-bold" style={{ color: progressTone.text }}>
                                 {setProgress.name}
                             </span>
-                            <span className="shrink-0 text-[11px] font-fira text-slate-400/80">
-                                {setProgress.equippedCount}피스 적용
+                            <span className="shrink-0 text-[12px] font-readable text-ae-ink-3">
+                                <span className="font-fira tabular-nums">{setProgress.equippedCount}</span>피스 적용
                             </span>
                         </div>
                         <span
-                            className="shrink-0 rounded-full px-2 py-0.5 text-[11px] font-fira uppercase tracking-[0.12em]"
-                            style={{ color: progressTone.text, border: `1px solid ${progressTone.border}` }}
+                            className="ae-chip shrink-0"
+                            style={{ color: progressTone.text, boxShadow: `inset 0 0 0 1px ${progressTone.border}` }}
                         >
                             {setProgress.nextItems.length > 0 ? `${setProgress.nextTier}세트 후보` : '조합 확인'}
                         </span>
                     </div>
                     {setProgress.nextItems.length > 0 ? (
-                        <div className="mt-1 text-[11px] font-fira leading-[1.4] text-slate-300/75">
+                        <div className="mt-1 text-[12px] font-readable leading-relaxed text-ae-ink-2">
                             아래 후보 중 1개를 추가 장착하면 — {setProgress.nextBonus?.desc}
                         </div>
                     ) : (
-                        <div className="mt-1 text-[11px] font-fira leading-relaxed text-slate-300/85">
+                        <div className="mt-1 text-[12px] font-readable leading-relaxed text-ae-ink-2">
                             {setProgress.additionStatus === 'previous-job'
                                 ? '이전 직업의 장비를 유지 중입니다. 현재 직업의 착용 조건에 맞춰 조합을 다시 살펴보세요.'
                                 : '현재 직업에서 이 세트 장비를 유지한 채 추가 장착으로 다음 단계를 완성할 수 없습니다.'}
@@ -382,17 +384,17 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         </div>
                     )}
                     {setProgress.nextItems.map((candidate) => (
-                        <div key={candidate.name} data-testid="signature-set-candidate" className="mt-1 text-[11px] font-fira leading-relaxed text-slate-300/85">
+                        <div key={candidate.name} data-testid="signature-set-candidate" className="mt-1 text-[12px] font-readable leading-relaxed text-ae-ink-2">
                             후보: {candidate.discovered ? candidate.name : MSG.SIGNATURE_SET_UNKNOWN_CANDIDATE} · {candidate.availableNow ? '착용 조건 충족' : `레벨 ${candidate.requiredLevel} 필요`}
                         </div>
                     ))}
                     {setProgress.nextItems.length > 0 && (
-                        <div className="mt-1 text-[11px] font-fira text-slate-400/85">미보유 장비도 포함합니다. 같은 한손무기는 별도의 한 자루가 필요합니다.</div>
+                        <div className="mt-1 text-[12px] font-readable text-ae-ink-3">미보유 장비도 포함합니다. 같은 한손무기는 별도의 한 자루가 필요합니다.</div>
                     )}
                     {setProgress.twoHandCounted && (
                         <div
                             data-testid="signature-set-two-hand-hint"
-                            className="mt-1 text-[11px] font-fira text-slate-500/85 leading-snug"
+                            className="mt-1 text-[12px] font-readable text-ae-ink-3 leading-snug"
                         >
                             {MSG.SIGNATURE_SET_TWO_HAND_HINT}
                         </div>
@@ -400,23 +402,16 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                 </div>
             )}
 
-            {showDetails && <div className="space-y-1.5">
+            {showDetails && <div className="ae-card ae-rows px-3 py-1">
                 {slotEntries.map((slot) => {
                     const item = slot.item;
                     const slotKey = slot.key;
                     const isSignature = slot.isSignature;
 
-                    const slotStyle = isSignature
-                        ? {
-                            border: '1px solid rgba(246,231,162,0.42)',
-                            background: 'linear-gradient(180deg, rgba(246,231,162,0.08) 0%, rgba(18,16,10,0.72) 100%)',
-                            boxShadow: 'inset 0 0 0 1px rgba(246,231,162,0.08)',
-                        }
-                        : undefined;
-
+                    // 2026-10 에테르 유리: 칸은 상자가 아니라 hairline으로 나뉜 줄이다 — 전설 각인 칸만 금빛 물빛으로 띄운다.
                     const slotClassName = isSignature
-                        ? 'rounded-[1rem] px-3 py-3'
-                        : `rounded-[1rem] border px-3 py-3 ${item ? 'border-white/8 aether-panel-muted' : 'border-white/6 bg-black/14'}`;
+                        ? 'ae-equip-slot is-signature -mx-1.5 my-1 rounded-ae-md px-1.5 py-3'
+                        : 'ae-equip-slot py-3';
 
                     return (
                         <div
@@ -424,7 +419,6 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                             data-testid={`equipment-slot-${slot.key}`}
                             data-is-signature={isSignature ? 'true' : 'false'}
                             className={slotClassName}
-                            style={slotStyle}
                         >
                             <div className="flex items-start justify-between gap-3">
                                 {item && (
@@ -432,51 +426,43 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                         item={item}
                                         size={42}
                                         showBorder
-                                        className="mt-0.5 opacity-95"
+                                        className="mt-0.5"
                                     />
                                 )}
                                 <div className="min-w-0 flex-1">
                                     <div className="min-w-0">
-                                        <div className="text-[11px] font-fira uppercase tracking-[0.18em] text-slate-400/68">{slot.label}</div>
+                                        <div className="ae-eyebrow">{slot.label}</div>
                                         {item ? (
-                                            <div className="mt-0.5 flex items-center gap-1.5 flex-wrap">
-                                                <span
-                                                    className={`break-words text-sm font-fira ${isSignature ? '' : 'text-white/88'}`}
-                                                    style={isSignature ? { color: '#f6e7a2' } : undefined}
-                                                >
+                                            <div className="mt-0.5 flex flex-wrap items-center gap-1.5">
+                                                <span className={`break-words text-[14px] font-readable font-bold ${isSignature ? 'text-ae-gold-hi' : 'text-ae-ink'}`}>
                                                     {item.name}
                                                 </span>
                                                 {(item.enhance || 0) > 0 && (
-                                                    <span className="text-xs font-fira font-bold text-[#d5b180]">+{item.enhance}</span>
+                                                    <span className="font-fira text-[13px] font-bold tabular-nums text-ae-gold-text">+{item.enhance}</span>
                                                 )}
                                                 {isSignature && (
                                                     <span
                                                         data-testid={`equipment-signature-chip-${slot.key}`}
-                                                        className="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[11px] font-fira uppercase tracking-[0.14em]"
-                                                        style={{
-                                                            color: '#f6e7a2',
-                                                            border: '1px solid rgba(246,231,162,0.42)',
-                                                            background: 'rgba(246,231,162,0.08)',
-                                                        }}
+                                                        className="ae-chip ae-chip-gold"
                                                     >
-                                                        <Sparkles size={9} />
+                                                        <Sparkles size={11} aria-hidden="true" />
                                                         전설 각인
                                                     </span>
                                                 )}
                                             </div>
                                         ) : (
-                                            <div className="mt-0.5 text-xs font-fira text-slate-500">장착된 장비가 없습니다</div>
+                                            <div className="mt-0.5 text-[13px] font-readable text-ae-ink-3">장착된 장비가 없습니다</div>
                                         )}
                                     </div>
                                     {item && (
                                         <>
-                                            <div className="mt-2 text-xs font-fira leading-[1.45] text-slate-300/80">{getItemStatText(item, slot.key === 'offhand' ? 'offhand' : undefined)}</div>
+                                            <div className="mt-1.5 text-[12px] font-readable leading-relaxed text-ae-ink-2">{getItemStatText(item, slot.key === 'offhand' ? 'offhand' : undefined)}</div>
                                             {slot.canEnhance && slot.requirement && (
-                                                <div className="mt-2 rounded-[0.9rem] border border-white/8 bg-black/16 px-2.5 py-2 space-y-0.5 text-[11px] font-fira">
-                                                    <div className="text-slate-300/86">
-                                                        골드 {slot.requirement.gold.toLocaleString()} · {slot.requirement.materialName} {slot.requirement.materials}개
+                                                <div className="ae-sunk mt-2 space-y-0.5 rounded-ae-sm px-2.5 py-2 text-[12px] font-readable">
+                                                    <div className="text-ae-ink-2">
+                                                        골드 <span className="font-fira tabular-nums">{slot.requirement.gold.toLocaleString()}</span> · {slot.requirement.materialName} <span className="font-fira tabular-nums">{slot.requirement.materials}</span>개
                                                     </div>
-                                                    <div className={slot.affordable ? 'text-emerald-200/70' : 'text-amber-200/78'}>
+                                                    <div className={slot.affordable ? 'text-ae-good' : 'text-ae-gold-text'}>
                                                         {slot.enhanceHint}
                                                     </div>
                                                 </div>
@@ -486,8 +472,8 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                 </div>
 
                                 {slot.canEnhance && item && actions?.enhanceItem && (
-                                    <button
-                                        type="button"
+                                    <ActionButton
+                                        variant="glass"
                                         data-testid={`equipment-enhance-${slot.key}`}
                                         onClick={() => setEnhanceTarget({
                                             item,
@@ -495,11 +481,10 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                             itemId: item.id || `equip:${slotKey}`,
                                         })}
                                         aria-label={`${item.name} 강화 결과와 비용 보기`}
-                                        className="min-h-11 shrink-0 rounded-full border border-[#d5b180]/22 bg-[#d5b180]/10 px-3 py-1.5 text-[11px] font-fira font-bold text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/18"
+                                        className="min-h-11 shrink-0 px-3 text-[12px]"
                                         title="강화 결과와 비용 보기"
-                                    >
-                                        강화 보기
-                                    </button>
+                                        label="강화 보기"
+                                    />
                                 )}
                             </div>
                         </div>

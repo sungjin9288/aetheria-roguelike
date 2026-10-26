@@ -75,13 +75,13 @@ const AI_PROXY_TRACKS: Record<AiRequestKind, AiProxyTrack> = {
  * 들고 있지 않는다(`TokenQuotaManager`가 단일 진실 원천).
  */
 const readQuota = (): AiQuotaState => ({
-    exhausted: !TokenQuotaManager.canMakeAICall(),
+    gate: TokenQuotaManager.getCallGate(),
     exhaustedMessage: TokenQuotaManager.getExhaustedMessage(),
 });
 
 /**
  * 요청 1건의 관측을 모아 정책에 넘긴다. `readQuota`를 값이 아니라 함수로 넘기는 이유는
- * mock 런타임(smoke/e2e/device-QA)에서 쿼터를 읽지 않는 기존 동작을 보존하기 위함이다.
+ * mock 런타임(smoke/e2e/device-QA)과 프록시 비활성 빌드에서 쿼터를 읽지 않기 위함이다(GP-02).
  */
 const decideRequest = (requestKind: AiRequestKind) => decideAiEventRequest({
     requestKind,
@@ -208,8 +208,8 @@ export const AI_SERVICE = {
             return pickFallbackEvent(loc, history, context as EventContext);
         };
 
-        // W11-C3: mock 런타임 / 쿼터 소진 / 프록시 비활성 3분기는 정책이 판정한다.
-        //   쿼터 소진만 폴백 이벤트에 표시(fallbackReason:'quota' + 안내 문구)를 남긴다.
+        // W11-C3: mock 런타임 / 프록시 비활성 / 쿼터(소진 · 미터 불능) 분기는 정책이 판정한다.
+        //   실제 한도 소진만 폴백 이벤트에 표시(fallbackReason:'quota' + 안내 문구)를 남긴다(GP-02).
         const decision = decideRequest('event');
         if (decision.kind === 'fallback') {
             recordLocalAiFallback('event', decision.reason);
@@ -257,7 +257,7 @@ export const AI_SERVICE = {
 
     generateStory: async (type: string, data: AiFallbackData, uid: string | null) => {
         const decision = decideRequest('story');
-        // story 경로는 폴백 이유를 표면화하지 않는다 — 3분기 모두 같은 내러티브 템플릿이다
+        // story 경로는 폴백 이유를 표면화하지 않는다 — 디스패치 전 폴백 모두 같은 내러티브 템플릿이다
         //   (쿼터 안내 문구는 이벤트 카드에만 실린다).
         if (decision.kind === 'fallback') {
             recordLocalAiFallback('story', decision.reason);

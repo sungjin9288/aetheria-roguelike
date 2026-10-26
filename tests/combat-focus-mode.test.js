@@ -10,6 +10,7 @@ import StatusBar from '../src/components/StatusBar.tsx';
 import CombatPanel from '../src/components/tabs/CombatPanel.tsx';
 import TerminalView from '../src/components/TerminalView.tsx';
 import { GS } from '../src/reducers/gameStates.ts';
+import { getJobSkills } from '../src/utils/gameUtils.ts';
 import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -21,11 +22,12 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
  *   1. MobileGameLayout: 전투 중에는 최근 전투 기록(TerminalView)이 결정 영역
  *      (ControlPanel) 위쪽(order-1)에, 결정 영역은 아래(order-2)에 온다.
  *   2. StatusBar: 전투 모드(data-status-mode="combat")에서는 플레이어 자원(생명/기력)을
- *      압축 표시하고 적 아트(size=46, h-14 w-14)를 도드라지게 보여준다. "생명/기력/레벨/
+ *      압축 표시하고 적 아트를 도드라지게 보여준다(2026-10 감사 VD-02: 80px 그림 = 160px 원본의 정수 배율,
+ *      88px 틀 — 이전 46px · h-14 w-14). "생명/기력/레벨/
  *      교전 대상" 라벨은 한국어.
  *   3. CombatPanel: 행동 버튼은 공격/기술/아이템/도주 순으로 노출되고 각각
- *      data-testid="combat-action-{key}"를 갖는다. 기술 사이클 버튼(combat-skill-cycle)이
- *      있다. 아이템 패널은 데스크톱(!mobile)에서는 항상, 모바일에서는 itemsOpen일 때만 열린다.
+ *      data-testid="combat-action-{key}"를 갖는다. 기술 사이클 버튼(combat-skill-cycle) 대신
+ *      가진 기술마다 칸(combat-skill-chip)이 있다(2026-10 감사 CL-03). 아이템 패널은 데스크톱(!mobile)에서는 항상, 모바일에서는 itemsOpen일 때만 열린다.
  *   4. TerminalView: 전투 로그는 기본 3줄 요약(SUMMARY_LOG_COUNT)으로 시작하고,
  *      combat-log-toggle로 펼칠 수 있다(aria-expanded/data-log-expanded로 상태 노출).
  *   5. CombatPanel: 보스 시그니처/카운터 힌트는 더 이상 데스크톱 전용이 아니라
@@ -92,19 +94,18 @@ test('StatusBar: 전투 모드는 자원 압축 + 적 아트 확대 + 한국어 
 
     assert.ok(html.includes('data-status-mode="combat"'));
     assert.ok(html.includes('aether-combat-player-status'));
-    assert.match(html, /class="[^"]*\bh-14 w-14\b[^"]*"/, '적 초상 프레임이 h-14 w-14');
-    assert.ok(html.includes('data-testid="enemy-portrait"'));
-    // MonsterIcon size={46}
-    assert.match(html, /width:46px/);
+    assert.match(html, /data-testid="enemy-portrait"[^>]*class="[^"]*\bh-\[88px\] w-\[88px\][^"]*"/, '적 초상 프레임이 88px');
+    // MonsterIcon size={80} — 160px 원본의 절반(정수 배율)
+    assert.match(html, /width:80px;height:80px/);
     for (const label of ['생명', '기력', '레벨', '교전 대상']) {
         assert.ok(html.includes(label), `"${label}" 라벨 노출`);
     }
 });
 
-test('CombatPanel: 행동 버튼은 공격/기술/아이템/도주 순서 + combat-skill-cycle 노출', () => {
+test('CombatPanel: 행동 버튼은 공격/기술/아이템/도주 순서 + 가진 기술마다 칸', () => {
     const player = makePlayerFixture({ mp: 20 });
     const enemy = { name: '정예 숲의 정령', hp: 100, maxHp: 100, isBoss: false };
-    const actions = { getSelectedSkill: () => ({ name: '테스트 기술', mp: 5 }), cycleSkill: () => {}, combat: () => {} };
+    const actions = { getSelectedSkill: () => getJobSkills(player)[0], selectSkill: () => {}, combat: () => {} };
     const html = renderStatic(createElement(CombatPanel, {
         player, actions, enemy, stats: { atk: 10, def: 5, maxHp: 100, maxMp: 50 }, isAiThinking: false, mobile: false,
     }));
@@ -112,7 +113,12 @@ test('CombatPanel: 행동 버튼은 공격/기술/아이템/도주 순서 + comb
     const order = ['attack', 'skill', 'item', 'escape'].map((key) => html.indexOf(`data-testid="combat-action-${key}"`));
     assert.ok(order.every((idx) => idx >= 0), '4개 행동 버튼이 모두 렌더링됨');
     assert.deepEqual(order, [...order].sort((a, b) => a - b), '공격 → 기술 → 아이템 → 도주 순서로 등장');
-    assert.ok(html.includes('data-testid="combat-skill-cycle"'), '선택한 기술이 있으면 기술 사이클 버튼 노출');
+    assert.ok(!html.includes('data-testid="combat-skill-cycle"'), '이름 없는 순환 단추는 없다(CL-03)');
+    const skills = getJobSkills(player);
+    assert.ok(skills.length >= 2, '픽스처 직업은 기술이 둘 이상');
+    for (const skill of skills) {
+        assert.ok(html.includes(`data-skill-name="${skill.name}"`), `${skill.name} 칸`);
+    }
 });
 
 test('CombatPanel: 모바일에서는 itemsOpen 이전엔 소모품 패널이 닫혀 있고, 데스크톱에서는 항상 열려있다', () => {

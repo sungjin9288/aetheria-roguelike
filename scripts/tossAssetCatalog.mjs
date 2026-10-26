@@ -130,23 +130,29 @@ export const buildTossAssetCatalog = async ({ repoRoot }) => {
     };
 };
 
+/** Copies repo `public/…` files to the same relative paths under `outputRoot` (regular files only). */
+export const copyPublicFiles = async ({ repoRoot, files, outputRoot }) => {
+    for (const file of files) {
+        const relativePath = file.replace(/^public\//, '');
+        const destination = path.join(outputRoot, relativePath);
+        const source = path.join(repoRoot, normalizePublicAssetPath(`/${relativePath}`));
+        const sourceStat = await lstat(source);
+        if (!sourceStat.isFile() || sourceStat.isSymbolicLink()) {
+            throw new Error(`Unsafe public asset source: ${file}`);
+        }
+        await mkdir(path.dirname(destination), { recursive: true });
+        await copyFile(source, destination);
+    }
+
+    return files.length;
+};
+
 export const stageTossAssets = async ({ repoRoot, outputRoot }) => {
     const catalog = await buildTossAssetCatalog({ repoRoot });
     if (catalog.missing.length > 0) {
         throw new Error(`Missing Toss assets: ${catalog.missing.join(', ')}`);
     }
 
-    for (const file of catalog.files) {
-        const relativePath = file.replace(/^public\//, '');
-        const destination = path.join(outputRoot, relativePath);
-        const source = path.join(repoRoot, normalizePublicAssetPath(`/${relativePath}`));
-        const sourceStat = await lstat(source);
-        if (!sourceStat.isFile() || sourceStat.isSymbolicLink()) {
-            throw new Error(`Unsafe Toss asset source: ${file}`);
-        }
-        await mkdir(path.dirname(destination), { recursive: true });
-        await copyFile(source, destination);
-    }
-
-    return { catalog, copiedFiles: catalog.files.length };
+    const copiedFiles = await copyPublicFiles({ repoRoot, files: catalog.files, outputRoot });
+    return { catalog, copiedFiles };
 };

@@ -15,6 +15,7 @@ import { getMoveRecommendations } from '../src/utils/adventureGuide.ts';
 import { findMapPath, getNextMapTowardTarget, getDefaultMapSelection, getMapRequiredLevel } from '../src/utils/mapTopology.ts';
 import { DB } from '../src/data/db.ts';
 import { renderStatic, makePlayerFixture } from './helpers/render.ts';
+import { readControlPanelSource } from './helpers/controlPanelSource.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -27,7 +28,7 @@ const NOOP_ACTIONS = new Proxy({}, { get: () => () => undefined });
  *      body/tailwind 설정에 배선되어 있다.
  *   2. MobileGameLayout: 모바일 첫 화면은 전투 중 로그를 결정 영역 위에 둔다.
  *   3. ControlPanel: 첫 화면에 지도 신호(control-map-signal)와 경로 진입점
- *      (control-map-open/control-route-open)을 노출하고, adventureGuide의
+ *      (control-map-open · 조작판 control-move — UX-03 이후 이동은 하나)을 노출하고, adventureGuide의
  *      levelLabel은 "레벨 N"/"심연"만 쓴다(Abyss/Lv. 금지).
  *   4. MapNavigator: 현재 위치와 주 경로를 경로 목록보다 먼저 보여준다(각종 testid),
  *      mapTopology의 findMapPath/getNextMapTowardTarget/getDefaultMapSelection가
@@ -149,7 +150,7 @@ test('첫 화면 상태/로그 표면은 압축된 읽기 쉬운 CSS 클래스�
 test('control panel exposes a first-screen map signal / mission tracker language (구조 불변식)', async () => {
     const css = await readSrc('src/index.css');
     const status = await readSrc('src/components/StatusBar.tsx');
-    const source = await readSrc('src/components/ControlPanel.tsx');
+    const source = await readControlPanelSource();
 
     assert.match(css, /\.aether-status-shell/);
     assert.match(css, /\.aether-status-metric/);
@@ -161,7 +162,10 @@ test('control panel exposes a first-screen map signal / mission tracker language
     assert.match(source, /data-testid="control-map-signal"/);
     assert.match(source, /data-testid="control-map-open"/);
     assert.match(source, /onOpenArchiveConsole\?\.\('map'\)/);
-    assert.match(source, /data-testid="control-route-open"/);
+    // 2026-10 통합 감사(town-nav UX-03): 원정 조작판의 이동은 하나다 — 지도 신호 줄의 두 번째 '이동'(control-route-open)은
+    //   지웠고 경로 진입점은 조작판의 control-move가 소유한다(부재 불변식).
+    assert.doesNotMatch(source, /control-route-open/);
+    assert.match(source, /testId: 'control-move'/);
     assert.match(source, /setGameState\?\.\(GS\.MOVING\)/);
 
     assert.match(source, /aether-mission-strip/);
@@ -244,7 +248,9 @@ test('readability mode is wired from saved player setting to app shell and syste
     assert.match(css, /backdrop-filter:\s*none/);
     assert.match(mainLayout, /data-readability-mode=\{normalizedReadabilityMode\}/);
     assert.match(gameRoot, /readabilityMode = engine\.player\?\.settings\?\.readabilityMode === 'high' \? 'high' : 'standard'/);
-    assert.match(gameRoot, /<MainLayout visualEffect=\{engine\.visualEffect\} readabilityMode=\{readabilityMode\}[^>]*>/);
+    // 게임 필 감사 GF-01: 앱 셸의 흔들림은 엔진 효과에 전투 박자(적 강타 흔들림)를 얹은 값이다.
+    assert.match(gameRoot, /const visualEffect = getPresentedVisualEffect\(engine\.visualEffect, beats\.shake\)/);
+    assert.match(gameRoot, /<MainLayout visualEffect=\{visualEffect\} readabilityMode=\{readabilityMode\}[^>]*>/);
     assert.match(engine, /setReadabilityMode:/);
     assert.match(engine, /readabilityMode: val === 'high' \? 'high' : 'standard'/);
     assert.match(systemTab, /data-testid="readability-settings"/);

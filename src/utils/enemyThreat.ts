@@ -87,9 +87,21 @@ export const getAppearThreatLine = (player: Player, enemy: Monster | null | unde
     return null;
 };
 
-/** 전투 화면의 정예 칩(Wave 111) — 기록이 밀려 올라가도 싸우는 동안 보인다. 보스는 보스 전술 줄이 있어 없다. */
+/** 전투 화면의 정예 칩(Wave 111) — 기록이 밀려 올라가도 싸우는 동안 보인다. 보스는 아래 보스 칩이다. */
 export const getEliteThreatChip = (player: Player, enemy: Monster | null | undefined): string | null => {
     if (!isPlainElite(enemy)) return null;
     const threat = getEnemyThreat(player, enemy);
     return MSG.ELITE_COMBAT_CHIP(threat.pct, threat.hits);
+};
+
+/**
+ * 전투 화면의 보스 칩(2026-10 감사 CL-06) — 정예 칩과 같은 모양 · 같은 추정기(`estimateEnemyMaxHit`, 페이즈 · 하수인 · 브레스 포함).
+ * 이 칩 전에는 보스의 '보스 전술' 신호가 데스크톱 분기와 보스에서 숨는 신호 줄 안에만 있어 한 번도 그려지지 않았다 —
+ * 가장 위험한 적만 싸우는 동안 위협이 보이지 않았다. 정보만이다 — 물약 · 도주 판단은 플레이어 몫(Wave 88 · 111).
+ * 의뢰 우두머리는 출현 안내가 자기 줄을 붙이므로 없다(나타날 때의 줄과 같은 규칙).
+ */
+export const getBossThreatChip = (player: Player, enemy: Monster | null | undefined): string | null => {
+    if (!enemy?.isBoss || enemy.huntChampion) return null;
+    const threat = getEnemyThreat(player, enemy);
+    return MSG.BOSS_COMBAT_CHIP(threat.pct, threat.hits);
 };

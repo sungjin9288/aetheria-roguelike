@@ -4,7 +4,7 @@ import test from 'node:test';
 import { PREMIUM_SHOP } from '../src/data/premiumShop.js';
 import { PRESTIGE_TITLES, TITLES } from '../src/data/titles.js';
 import { SEASON_REWARDS } from '../src/data/seasonPass.js';
-import { checkTitles, getTitleColor, getTitleDefinition, getTitleLabel } from '../src/utils/gameUtils.js';
+import { checkTitles, DEFAULT_TITLE_COLOR, getTitleColor, getTitleDefinition, getTitleLabel } from '../src/utils/gameUtils.js';
 import { fileURLToPath } from 'node:url';
 import { readFile } from 'node:fs/promises';
 
@@ -208,7 +208,7 @@ import { readFile } from 'node:fs/promises';
    * - 그러나 getTitleDefinition은 'TITLES.find(t => t.id === token)' — Korean 토큰 vs
    *   English id ('transcendent'/'eternal'/'void_lord') 미매치 → null 반환.
    * - 결과: getTitleColor / getTitleLabel이 모두 fallback. 모든 prestige 칭호가
-   *   default 'text-cyber-purple'으로 표시되던 visual inconsistency.
+   *   default 색(당시 'text-cyber-purple', 지금 DEFAULT_TITLE_COLOR)으로 표시되던 visual inconsistency.
    * - 10종 모두 영향 (각성자~에테르의 신).
    *
    * 수정 (src/data/titles.ts):
@@ -243,7 +243,7 @@ import { readFile } from 'node:fs/promises';
       const fallbacks = [];
       for (const token of PRESTIGE_TITLES) {
           const color = getTitleColor(token);
-          if (color === 'text-cyber-purple') fallbacks.push(token);
+          if (color === DEFAULT_TITLE_COLOR) fallbacks.push(token);
       }
       assert.deepEqual(fallbacks, []);
   });

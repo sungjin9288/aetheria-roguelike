@@ -5,12 +5,14 @@ import ItemIcon from './icons/ItemIcon.jsx';
 import { getSignatureMetadata } from '../data/signatureItems.js';
 import { MSG } from '../data/messages';
 import type { Item } from '../types/index.js';
+import { useOverlayDialog } from '../hooks/useOverlayDialog';
+import { MOMENT_DUR_PANEL, MOMENT_DUR_UI, MOMENT_EASE } from './moments/momentMotion';
 
 /**
  * LegendaryDropOverlay — dedicated signature 아이템을 획득한 순간
  * 풀스크린 오버레이로 "와" 모먼트를 연출한다.
  *
- * - framer-motion + SIGNATURE_TONE 글로우로 tone별 색 연출
+ * - framer-motion + SIGNATURE_TONE 글로우로 tone별 색 연출(토큰 색 채널), 패널은 전설 산호색 장식 패널
  * - 3초 auto-dismiss
  * - 탭/클릭 시 즉시 dismiss
  * - 아이콘은 실제 signature sprite (gold ring + badge 포함)을 그대로 사용
@@ -20,20 +22,23 @@ import type { Item } from '../types/index.js';
 // cycle 358: steel 톤 제거 — signatureRegistry.json / signatureSets.json 어디에도
 //   tone='steel' 엔트리 0건이라 unreachable. holy / fire / frost / shadow / arcane /
 //   nature / earth / rust 8종만 활성. fallback은 DEFAULT_GLOW (= TONE_GLOW.holy).
-const TONE_GLOW: Record<string, { ring: string; radial: string; particle: string }> = Object.freeze({
-    holy: { ring: 'rgba(246,231,162,0.6)', radial: 'rgba(246,231,162,0.35)', particle: '#f6e7a2' },
-    fire: { ring: 'rgba(255,180,138,0.6)', radial: 'rgba(255,180,138,0.35)', particle: '#ffb48a' },
-    frost: { ring: 'rgba(204,232,245,0.55)', radial: 'rgba(204,232,245,0.3)', particle: '#cce8f5' },
-    shadow: { ring: 'rgba(199,164,240,0.6)', radial: 'rgba(199,164,240,0.3)', particle: '#c7a4f0' },
-    arcane: { ring: 'rgba(192,176,232,0.6)', radial: 'rgba(192,176,232,0.3)', particle: '#c0b0e8' },
-    nature: { ring: 'rgba(168,208,160,0.55)', radial: 'rgba(168,208,160,0.28)', particle: '#a8d0a0' },
-    earth: { ring: 'rgba(216,184,120,0.5)', radial: 'rgba(216,184,120,0.26)', particle: '#d8b878' },
-    rust: { ring: 'rgba(217,165,108,0.5)', radial: 'rgba(217,165,108,0.26)', particle: '#d9a56c' },
+// 2026-10 화면 디자인 3차: 원소 빛은 hex가 아니라 디자인 토큰의 색 채널(`rgb(<채널> / 투명도)`)이다.
+const TONE_GLOW: Record<string, string> = Object.freeze({
+    holy: 'var(--aether-gold-hi-rgb)',
+    fire: 'var(--aether-rarity-legendary-rgb)',
+    frost: 'var(--aether-will-rgb)',
+    shadow: 'var(--aether-exp-rgb)',
+    arcane: 'var(--aether-rarity-rare-rgb)',
+    nature: 'var(--aether-good-rgb)',
+    earth: 'var(--aether-gold-text-rgb)',
+    rust: 'var(--aether-gold-lo-rgb)',
 });
 
 const DEFAULT_GLOW = TONE_GLOW.holy;
 
 const DROP_DURATION_MS = 3000;
+const PARTICLE_COUNT = 12;
+const PARTICLE_RADIUS_PX = 110;
 
 interface LegendaryDropOverlayProps {
     item?: Item | null;
@@ -41,6 +46,11 @@ interface LegendaryDropOverlayProps {
 }
 
 const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) => {
+    const dialog = useOverlayDialog({
+        label: MSG.A11Y_DIALOG_LEGENDARY(item?.name ?? ''),
+        onEscape: onDismiss,
+        role: 'alertdialog',
+    });
     useEffect(() => {
         if (!item) return undefined;
         const timer = setTimeout(() => onDismiss?.(), DROP_DURATION_MS);
@@ -49,89 +59,79 @@ const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) =>
 
     const meta = item ? getSignatureMetadata(item) : null;
     const glow = TONE_GLOW[meta?.tone ?? ''] || DEFAULT_GLOW;
+    const glowColor = (alpha: number) => `rgb(${glow} / ${alpha})`;
 
     return (
         <AnimatePresence>
             {item && (
                 <Motion.div
+                    {...dialog}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: 0.25 }}
-                    className="fixed inset-0 z-[60] flex items-center justify-center pointer-events-auto bg-black/20 backdrop-blur-[1px]"
+                    transition={{ duration: MOMENT_DUR_UI, ease: MOMENT_EASE }}
+                    className="ae-moment-legendary-backdrop fixed inset-0 z-[60] flex items-center justify-center px-4 pointer-events-auto"
                     onClick={onDismiss}
                     data-testid="legendary-drop-overlay"
                     data-legendary-drop={item.name}
-                    role="alertdialog"
-                    aria-label={`전설 획득: ${item.name}`}
                 >
-                    {/* 배경 라디얼 글로우 */}
+                    {/* 배경 원소 빛 — 한 번 퍼지고 사라진다 */}
                     <Motion.div
+                        aria-hidden="true"
                         initial={{ opacity: 0, scale: 0.7 }}
                         animate={{ opacity: [0, 0.65, 0.35, 0], scale: [0.7, 1.2, 1.4, 1.6] }}
                         transition={{ duration: 2.4, ease: 'easeOut' }}
-                        className="absolute w-80 h-80 rounded-full blur-3xl"
-                        style={{ background: `radial-gradient(circle, ${glow.radial}, transparent 72%)` }}
+                        className="absolute h-80 w-80 rounded-full blur-3xl"
+                        style={{ background: `radial-gradient(circle, ${glowColor(0.35)}, transparent 72%)` }}
                     />
 
-                    {/* 12방향 파티클 스파클 */}
-                    {Array.from({ length: 12 }).map((_, i) => {
-                        const angle = (i / 12) * Math.PI * 2;
-                        const dx = Math.cos(angle) * 110;
-                        const dy = Math.sin(angle) * 110;
+                    {/* 12방향 불꽃 — 단발 */}
+                    {Array.from({ length: PARTICLE_COUNT }).map((_, i) => {
+                        const angle = (i / PARTICLE_COUNT) * Math.PI * 2;
+                        const dx = Math.cos(angle) * PARTICLE_RADIUS_PX;
+                        const dy = Math.sin(angle) * PARTICLE_RADIUS_PX;
                         return (
                             <Motion.div
                                 key={i}
+                                aria-hidden="true"
                                 initial={{ opacity: 0, x: 0, y: 0, scale: 0 }}
-                                animate={{
-                                    opacity: [0, 1, 0],
-                                    x: [0, dx],
-                                    y: [0, dy],
-                                    scale: [0, 1.4, 0],
-                                }}
+                                animate={{ opacity: [0, 1, 0], x: [0, dx], y: [0, dy], scale: [0, 1.4, 0] }}
                                 transition={{ duration: 1.4, delay: 0.18 + i * 0.04, ease: 'easeOut' }}
                                 className="absolute h-1.5 w-1.5 rounded-full"
-                                style={{ backgroundColor: glow.particle, boxShadow: `0 0 8px ${glow.ring}` }}
+                                style={{ backgroundColor: glowColor(1), boxShadow: `0 0 8px ${glowColor(0.6)}` }}
                             />
                         );
                     })}
 
-                    {/* 콘텐츠 */}
+                    {/* 감사 VD-09 · VD-14: 전설 획득은 이 화면의 장식 패널 하나 — 전설 등급은 산호색이다(위험 장미색 아님) */}
                     <Motion.div
-                        initial={{ opacity: 0, scale: 0.6, y: 20 }}
-                        animate={{ opacity: [0, 1, 1, 0], scale: [0.6, 1, 1, 0.96], y: [20, 0, 0, -8] }}
-                        transition={{ duration: DROP_DURATION_MS / 1000, times: [0, 0.15, 0.82, 1] }}
-                        className="relative flex flex-col items-center gap-3"
+                        initial={{ opacity: 0, scale: 0.92, y: 16 }}
+                        animate={{ opacity: [0, 1, 1, 0], scale: [0.92, 1, 1, 0.98], y: [16, 0, 0, -6] }}
+                        // 여러 키프레임에 3차 곡선 배열을 주면 구간별 곡선 목록으로 읽혀 일찍 사라진다 — 기본 곡선을 쓴다.
+                        transition={{ duration: DROP_DURATION_MS / 1000, times: [0, 0.12, 0.84, 1] }}
+                        className="ae-ornate ae-moment-ornate-legendary relative flex w-full max-w-[20rem] flex-col items-center gap-2.5 px-6 pb-6 pt-5 text-center lg:max-w-[24rem]"
                     >
-                        <Motion.div
-                            animate={{ rotate: [0, 8, -8, 0] }}
-                            transition={{ duration: 0.6, delay: 0.15 }}
-                        >
-                            <Sparkles size={24} style={{ color: glow.particle, filter: `drop-shadow(0 0 10px ${glow.ring})` }} />
-                        </Motion.div>
-
-                        <div className="text-[11px] font-fira uppercase tracking-[0.3em]" style={{ color: glow.particle }}>
+                        <div className="flex items-center gap-1.5 font-readable text-[12px] font-bold text-ae-rarity-legendary">
+                            <Sparkles size={14} aria-hidden="true" />
                             {MSG.SIGNATURE_DROP_LABEL}
                         </div>
 
                         <Motion.div
-                            initial={{ scale: 0.4, rotate: -8 }}
-                            animate={{ scale: 1, rotate: 0 }}
-                            transition={{ type: 'spring', stiffness: 180, damping: 16, delay: 0.1 }}
+                            initial={{ scale: 0.6 }}
+                            animate={{ scale: 1 }}
+                            transition={{ duration: MOMENT_DUR_PANEL, ease: MOMENT_EASE, delay: 0.08 }}
+                            style={{ filter: `drop-shadow(0 0 14px ${glowColor(0.45)})` }}
                         >
                             <ItemIcon item={item} size={96} showBorder />
                         </Motion.div>
 
-                        <div
-                            className="text-xl font-rajdhani font-bold text-white tracking-wide"
-                            style={{ textShadow: `0 0 14px ${glow.ring}` }}
-                        >
+                        <div className="break-keep font-display text-[22px] font-extrabold leading-tight text-ae-ink">
                             {item.name}
                         </div>
                         {/* 2026-10 Wave 134(원장 §147): 레지스트리의 artNote는 그림 생성 지시문("plate · 가시 숄더 + 혼돈 Z-crack")이라
                             그리지 않고, 아이템의 설명을 그린다. */}
                         {item.desc && (
-                            <div data-testid="legendary-drop-desc" className="max-w-xs text-center text-[11px] text-slate-300/90">
+                            <div data-testid="legendary-drop-desc" className="break-keep font-readable text-[12px] leading-relaxed text-ae-ink-2">
                                 {item.desc}
                             </div>
                         )}

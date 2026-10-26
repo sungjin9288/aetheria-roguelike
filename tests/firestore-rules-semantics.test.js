@@ -37,6 +37,7 @@ import { APP_ID, CONSTANTS } from '../src/data/constants.js';
 import { FeedbackValidator } from '../src/systems/FeedbackValidator.ts';
 import { TokenQuotaManager } from '../src/systems/TokenQuotaManager.ts';
 import { createCloudAutosave } from '../src/hooks/createCloudAutosave.ts';
+import { buildCloudPlayerSnapshot } from '../src/platform/cloudPlayerSnapshot.ts';
 import { DB } from '../src/data/db.ts';
 import { buildPublicGraveDoc } from '../src/utils/publicGraveDoc.ts';
 import { readDimensionGravePool, writePublicGrave } from '../src/platform/publicGraveFirestore.ts';
@@ -187,11 +188,61 @@ suite('site 1 — lastActive가 서버 타임스탬프가 아니면 거부된다
     const db = await asPlayer();
     const ref = doc(db, 'artifacts', APP_ID, 'users', PLAYER_UID);
 
+    // 클라이언트와 같은 교체 쓰기(CH-01)로 보낸다.
     await assertFails(setDoc(ref, {
         player: { name: '테스트용사' },
         gameState: 'idle',
         lastActive: 1_700_000_000_000, // 숫자 — `is timestamp` 위반
-    }, { merge: true }));
+    }));
+});
+
+// CH-01 — 세이브 문서는 교체 쓰기다. `merge: true`이던 동안 SDK가 중첩 맵 안으로 재귀해 말단 경로만
+//   field mask에 넣었으므로, 로컬에서 지운 중첩 키가 서버에 남았다: 사망 뒤 한손 녹슨 단검이 앞 여정
+//   양손 무기의 `hands: 2` · `elem`을 이어받아 다른 기기 복원에서 공격력이 바뀌었고, 사망 · 계승이
+//   비운 여정 상태(토벌 의뢰 · 첫 방문 기록 · 행상인 · 상태이상 중첩)가 되살아났다(Wave 108 위반).
+//   프로덕션 함수(`createCloudAutosave`)로 두 번 쓰고 본인 세션으로 다시 읽는다 — 복원 경로가 읽는 문서다.
+const TWO_HAND_ELEMENT_WEAPON = DB.ITEMS.weapons.find((w) => w.hands === 2 && w.elem && w.elem !== '물리');
+const ONE_HAND_PLAIN_WEAPON = DB.ITEMS.weapons.find((w) => !('hands' in w) && !('elem' in w));
+
+suite('site 1 — 자동저장은 문서를 교체한다: 로컬에서 지운 중첩 키가 서버에 남지 않는다(CH-01)', async () => {
+    assert.ok(TWO_HAND_ELEMENT_WEAPON, '원소가 있는 양손 무기 행이 있어야 한다');
+    assert.ok(ONE_HAND_PLAIN_WEAPON, 'hands · elem 키가 없는 한손 무기 행이 있어야 한다');
+    const env = await getEnv();
+    await env.clearFirestore();
+    const db = await asPlayer();
+    const ref = doc(db, 'artifacts', APP_ID, 'users', PLAYER_UID);
+
+    const base = makePlayerFixture({ name: '테스트용사', level: 30 });
+    const before = {
+        ...base,
+        equip: { ...base.equip, weapon: { ...TWO_HAND_ELEMENT_WEAPON, id: 'w-old' } },
+        merchantVisit: { explores: 5, loc: '고요한 숲', stock: [] },
+        huntContracts: { '용암 지대': { stage: 2, progress: 12, round: 2 } },
+        firstVisitRewardMaps: ['고요한 숲'],
+        statusStacks: { burn: 2 },
+    };
+    assert.equal((await runCloudAutosave({ db, player: before })).result, 'synced');
+    const { getDoc } = await import('firebase/firestore');
+    const first = (await getDoc(ref)).data();
+    assert.equal(first.player.equip.weapon.hands, 2, '전제: 첫 쓰기의 양손 무기가 저장됐다');
+    assert.ok(first.player.merchantVisit, '전제: 첫 쓰기의 행상인 만남이 저장됐다');
+
+    // 사망 재시작 — 여정 상태가 비워지고 한손 무기를 든다(키 자체가 없다).
+    const { merchantVisit: _merchantVisit, huntContracts: _huntContracts, firstVisitRewardMaps: _firstVisit,
+        statusStacks: _statusStacks, ...rest } = before;
+    const after = { ...rest, level: 1, equip: { ...before.equip, weapon: { ...ONE_HAND_PLAIN_WEAPON, id: 'w-new' } } };
+    assert.equal((await runCloudAutosave({ db, player: after })).result, 'synced');
+
+    const stored = (await getDoc(ref)).data();
+    const weapon = stored.player.equip.weapon;
+    assert.equal(weapon.id, 'w-new');
+    assert.equal('hands' in weapon, false, '앞 무기의 hands가 남으면 한손 무기가 양손으로 복원된다');
+    assert.equal('elem' in weapon, false, '앞 무기의 원소가 남으면 공격 원소가 바뀐다');
+    for (const key of ['merchantVisit', 'huntContracts', 'firstVisitRewardMaps', 'statusStacks']) {
+        assert.equal(key in stored.player, false, `사망이 비운 ${key}가 서버에 남으면 복원에서 되살아난다`);
+    }
+    // 더 강하게: 서버의 player는 이번에 보낸 스냅숏 그대로다(어떤 경로의 잔재도 없다).
+    assert.deepEqual(stored.player, JSON.parse(JSON.stringify(buildCloudPlayerSnapshot(after, 1_700_000_000_000))));
 });
 
 suite('site 2 — 리더보드는 본인 entry만, 닉네임 20자 상한이 실제로 문다', async () => {
