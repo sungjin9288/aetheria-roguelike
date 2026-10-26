@@ -2,7 +2,10 @@ import { test, expect, type Page } from '@playwright/test';
 import { startE2ERun } from './testHelpers';
 
 const expectReadableHud = async (page: Page) => {
-    const geometry = await page.locator('[data-testid^="status-metric-"]').filter({ has: page.getByTestId('status-metric-label') }).evaluateAll((cells) => cells.map((cell) => {
+    const metrics = page.locator('[data-testid^="status-metric-"]').filter({ has: page.getByTestId('status-metric-label') });
+    // 2026-10-26: 재실행 직후에는 상태 표시줄이 그려지기 전에 읽을 수 있다(CI에서 0개로 한 번 붉었다) — 세 칸이 나타날 때까지 기다린다.
+    await expect(metrics).toHaveCount(3);
+    const geometry = await metrics.evaluateAll((cells) => cells.map((cell) => {
         const label = cell.querySelector('[data-testid="status-metric-label"]')!;
         const value = cell.querySelector('[data-testid="status-metric-value"]')!;
         const range = document.createRange(); range.selectNodeContents(label);

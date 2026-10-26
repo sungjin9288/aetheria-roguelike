@@ -252,9 +252,11 @@ const StatusBar = ({
             <div data-testid="status-player-summary" className={`flex min-w-0 flex-1 items-baseline gap-1 font-readable ${isColumn ? 'flex-wrap justify-center' : ''}`}>
               {/* 2026-10 제품 통합 수용: 이름은 상한(6.5rem)까지 줄지 않는다(375px에서 두 글자 이름이 "용…"이 됐다).
                   Wave 133: 위치는 둘째 줄로 옮겼다 — 첫 줄에서 줄어드는 칸이던 동안 여섯 글자 이름이면 375 · 390px에서
-                  지역 이름이 거의 다 잘렸고 긴 직업과 함께면 0px로 사라졌다. 이제 이 줄에서는 직업만 마지막에 줄어든다. */}
-              <span className={`${isColumn ? 'text-[17px]' : 'max-w-[6.5rem] shrink-0 truncate text-[15px]'} font-display font-bold leading-tight text-ae-ink`}>{player.name}</span>
-              <span className={`min-w-0 text-[11px] text-ae-ink-2 ${isColumn ? '' : 'truncate'}`}>{player.job}</span>
+                  지역 이름이 거의 다 잘렸고 긴 직업과 함께면 0px로 사라졌다. 이제 이 줄에서는 직업이 먼저 줄어든다.
+                  2026-10-26: 이름이 전혀 줄지 않던 동안 골드가 일곱 자리면(375px) 레벨이 골드 밑으로 밀려 겹쳤다 — 직업이 다 줄고도
+                  모자라면 그때 이름이 줄어든다(레벨 · 골드는 줄지 않는다). */}
+              <span className={`${isColumn ? 'text-[17px]' : 'min-w-0 max-w-[6.5rem] truncate text-[15px]'} font-display font-bold leading-tight text-ae-ink`}>{player.name}</span>
+              <span className={`min-w-0 text-[11px] text-ae-ink-2 ${isColumn ? '' : 'shrink-[100] truncate'}`}>{player.job}</span>
               <span className="shrink-0 font-fira text-[11px] tabular-nums text-ae-exp">{MSG.SHELL_LEVEL(player.level ?? 1)}</span>
             </div>
             <div className="flex shrink-0 items-center gap-1.5">

@@ -25,7 +25,8 @@ const measurePanel = (panel: Locator) => panel.evaluate((root) => {
 const expectTidyPanel = async (panel: Locator, maxPrimary = 1) => {
     const metrics = await measurePanel(panel);
     expect(metrics.primaryCount).toBeLessThanOrEqual(maxPrimary);
-    expect(metrics.minButtonHeight).toBeGreaterThanOrEqual(44);
+    // 2026-10-26: 변형이 끝난 단추도 43.9999px로 잴 때가 있다(부동소수점) — 1/100px 아래 차이는 44px다.
+    expect(metrics.minButtonHeight).toBeGreaterThanOrEqual(43.99);
     expect(metrics.minFont).toBeGreaterThanOrEqual(11);
     expect(metrics.horizontalOverflow).toBeLessThanOrEqual(1);
     expect(metrics.pageWidth).toBeLessThanOrEqual(metrics.viewportWidth);

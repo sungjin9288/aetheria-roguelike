@@ -53,6 +53,11 @@ const COMBAT_LOG_TYPES = new Set(['combat', 'critical', 'success', 'warning', 'h
 // 아직 이번 전투의 차례가 없을 때 보일 최근 줄 수 — 차례가 있으면 그 차례를 통째로 보인다(감사 GF-07).
 const SUMMARY_LOG_COUNT = 3;
 const TERMINAL_HEADING_ID = 'terminal-log-heading';
+// 앞선 새 줄과 이 간격 안에 들어온 기록 줄은 한 행동의 묶음이다(한 행동의 렌더는 4 ~ 7ms 간격, 사람의 다음 누름은 그보다 훨씬 뒤)
+//   — 기록 창은 그 묶음의 첫 줄부터 보인다.
+const LOG_BATCH_WINDOW_MS = 50;
+// 한 묶음이 기록 창에 다 들어가지 않을 때 처음부터 읽혀야 하는 줄.
+const READ_FIRST_LOG_TYPES = new Set(['story', 'event']);
 
 // slice 20: 로그 핵심 숫자 강조 — 데미지/HP/보상 수치(+21, 16, 73/89, 35%)를
 //   본문보다 한 단계 밝고 굵게 렌더. "라벨보다 숫자가 먼저 읽혀야 한다"는
@@ -99,6 +104,9 @@ const TerminalView = ({
     maxHp,
 }: TerminalViewProps) => {
     const logViewportRef = useRef<HTMLDivElement>(null);
+    const lastSeenLogIdRef = useRef<string | null>(null);
+    // 지금 묶음의 첫 줄과 마지막으로 새 줄이 들어온 시각.
+    const logBatchRef = useRef<{ firstId: string | null; at: number }>({ firstId: null, at: -Infinity });
     const [logExpanded, setLogExpanded] = useState(false); // #10: 전투 로그 요약/전체 토글
     const isCombat = gameState === GS.COMBAT;
     // 감사 GF-07: 이번 전투의 차례는 전투에 들어선 순간의 마지막 기록 뒤에서만 찾는다 —
@@ -206,16 +214,51 @@ const TerminalView = ({
         && !player.stats?.claimedQuestIds?.includes(FIRST_STORY_QUEST_ID)
         && player.quests?.some((quest) => quest.id === FIRST_STORY_QUEST_ID && quest.progress === 0);
 
+    // 화면 모드가 바뀌면(전투 · 펼침 · 요약 차례) 처음부터 맞춘다.
+    //   감사 GF-07: 요약이 한 차례를 통째로 보일 때는 그 차례의 첫 줄('내 행동')부터 보인다. 그 밖에는 맨 아래다.
     useEffect(() => {
         const viewport = logViewportRef.current;
         if (!viewport) return;
+        viewport.scrollTo({ top: summaryTurnKey ? 0 : viewport.scrollHeight, behavior: 'auto' });
+    }, [isCombat, logExpanded, summaryTurnKey]);
 
-        // 감사 GF-07: 요약이 한 차례를 통째로 보일 때는 그 차례의 첫 줄('내 행동')부터 보인다.
+    // 2026-10-26: 새 줄이 들어오면 그 묶음의 첫 줄부터 보이고, 다 들어가면 맨 아래다. 맨 아래만 붙이던 동안 한 번에 여러 줄이 들어오면
+    //   (임무 수령 = 완료 · 단서 · 장의 본문) 첫 줄이 위로 잘렸다 — 글꼴이 넓은 기기(Linux CI)에서 단서 줄이 27% 잘렸다.
+    //   한 행동의 줄은 렌더 두세 번에 나뉘어 들어오므로(수령 = 4ms 간격 두 번) 짧은 간격 안의 줄은 한 묶음이다.
+    //   새 줄이 없는 다시 그리기는 위치를 건드리지 않는다(뒤늦은 맨 아래 붙이기가 묶음의 첫 줄을 다시 밀어냈다).
+    useEffect(() => {
+        const viewport = logViewportRef.current;
+        const previousLastId = lastSeenLogIdRef.current;
+        const lastId = logs.length > 0 ? logs[logs.length - 1].id : null;
+        lastSeenLogIdRef.current = lastId;
+        if (!viewport || summaryTurnKey || lastId === previousLastId) return;
+
+        const findRow = (id: string | null) => (id === null
+            ? null
+            : viewport.querySelector<HTMLElement>(`[data-log-id="${CSS.escape(id)}"]`));
+        const next = findRow(previousLastId)?.nextElementSibling;
+        const firstNewId = next instanceof HTMLElement ? next.dataset.logId ?? null : null;
+        const now = performance.now();
+        const batch = logBatchRef.current;
+        const sameBatch = now - batch.at <= LOG_BATCH_WINDOW_MS;
+        logBatchRef.current = { firstId: sameBatch ? batch.firstId : firstNewId, at: now };
+        const batchStartRow = firstNewId ? findRow(logBatchRef.current.firstId) : null;
+        const bottom = viewport.scrollHeight - viewport.clientHeight;
+        // 묶음이 다 들어가지 않으면 확인 줄(방금 누른 단추의 메아리 — '획득' · '안내')은 위로 밀리고 이야기 · 사건 줄부터 보인다.
+        let anchorRow = batchStartRow;
+        if (anchorRow && anchorRow.offsetTop < bottom) {
+            for (let row: Element | null = anchorRow; row instanceof HTMLElement && row.dataset.logId; row = row.nextElementSibling) {
+                if (READ_FIRST_LOG_TYPES.has(row.dataset.logType ?? '')) {
+                    anchorRow = row;
+                    break;
+                }
+            }
+        }
         viewport.scrollTo({
-            top: summaryTurnKey ? 0 : viewport.scrollHeight,
+            top: anchorRow ? Math.min(bottom, anchorRow.offsetTop) : viewport.scrollHeight,
             behavior: 'auto',
         });
-    }, [isCombat, logExpanded, logs, summaryTurnKey]);
+    }, [logs, summaryTurnKey]);
 
     const showToolbar = showExpandToggle;
 
@@ -305,30 +348,31 @@ const TerminalView = ({
                         </div>
                     )}
 
-                    <AnimatePresence initial={false}>
-                        {displayLogs.map((log) => {
-                            const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
-                            const badge = MOBILE_LOG_BADGES[log.type];
+                    {/* 2026-10-26: 줄은 나타날 때만 움직이고 사라질 때는 곧바로 빠진다 — 나가는 줄이 한 프레임 남아 있던 동안
+                        새 묶음의 첫 줄에 맞춘 위치가 그 줄이 빠지면서 82px씩 들쭉날쭉했다. */}
+                    {displayLogs.map((log) => {
+                        const style = LOG_STYLES[log.type] || DEFAULT_STYLE;
+                        const badge = MOBILE_LOG_BADGES[log.type];
 
-                            return (
-                                <Motion.div
-                                    key={log.id}
-                                    initial={{ opacity: 0, y: 4 }}
-                                    animate={{ opacity: 1, y: 0 }}
-                                    transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
-                                    data-log-type={log.type || 'default'}
-                                    className={`aether-log-row ae-log-row ${style.tone} font-readable text-[14px] leading-[1.55] ${style.text}`}
-                                >
-                                    {badge ? (
-                                        <span data-testid="log-type-badge" className={`aether-log-badge ae-log-badge ${badge.className}`}>
-                                            {badge.label}
-                                        </span>
-                                    ) : <span aria-hidden="true" className="ae-log-badge" />}
-                                    <span className="min-w-0 whitespace-pre-wrap break-words">{renderLogText(log.text)}</span>
-                                </Motion.div>
-                            );
-                        })}
-                    </AnimatePresence>
+                        return (
+                            <Motion.div
+                                key={log.id}
+                                initial={{ opacity: 0, y: 4 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+                                data-log-id={log.id}
+                                data-log-type={log.type || 'default'}
+                                className={`aether-log-row ae-log-row ${style.tone} font-readable text-[14px] leading-[1.55] ${style.text}`}
+                            >
+                                {badge ? (
+                                    <span data-testid="log-type-badge" className={`aether-log-badge ae-log-badge ${badge.className}`}>
+                                        {badge.label}
+                                    </span>
+                                ) : <span aria-hidden="true" className="ae-log-badge" />}
+                                <span className="min-w-0 whitespace-pre-wrap break-words">{renderLogText(log.text)}</span>
+                            </Motion.div>
+                        );
+                    })}
 
                     {showFirstJourney && (
                         <section data-testid="first-journey-context" className="ae-first-journey px-1 pb-1 pt-3 font-readable">
