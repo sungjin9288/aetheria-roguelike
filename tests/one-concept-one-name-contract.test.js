@@ -85,8 +85,9 @@ const VARIANTS = [
     { re: /진엔딩/u, canon: '진 엔딩' },
     // 2026-10 감사 UX-14: 사망 화면 한 장이 다음 판을 '다음 시도' · '다음 시도 추천'과 '다음 여정에 남는 것'으로 함께 불렀다.
     { re: /다음 시도/u, canon: '다음 여정' },
-    // 2026-10 감사 UX-14: 가방 화면 · 빈 칸 이름은 '퀵슬롯'이고 저장소 문서만 '빠른 칸'이라 불렀다 — 화면 이름(단추 · 칸 라벨)이 이긴다.
-    { re: /빠른 ?칸/u, canon: '퀵슬롯' },
+    // 소유자 결정 D30(2026-10-26): 자리를 부르는 말은 '칸'이다 — 화면이 '퀵슬롯' · '유물 슬롯' · '장비 슬롯'과 '유물 칸'을 섞어 불렀다
+    //   (감사 UX-14는 그때 화면 이름 '퀵슬롯'을 지켰다). 빠른 사용 칸은 '빠른 칸'이다.
+    { re: /슬롯/u, canon: '칸' },
 ];
 // 서사(이벤트 선택지 · 결과 문장)는 "다른 길을 탐색한다" · "도망간다"처럼 낱말 그대로 쓴다 — 시스템 문장에서만 막는다.
 const SYSTEM_ONLY_VARIANTS = [
@@ -188,7 +189,7 @@ test('[MSG 전수] 한 개념의 두 번째 이름(퀘스트 · 에센스 · 엘
     assert.equal(MSG.JOURNEY_KEPT_LINE('도감'), '다음 여정에 남는 것: 도감');
     assert.equal(MSG.RUN_REFLECTION_LABELS.next, '다음 여정');
     assert.equal(MSG.RUN_SUMMARY_NEXT_JOURNEY_LABEL, '다음 여정 추천');
-    assert.match(MSG.QUICK_SLOT_EMPTY_LABEL(1), /^퀵슬롯 1 /u);
+    assert.match(MSG.QUICK_SLOT_EMPTY_LABEL(1), /^빠른 칸 1 /u);
 });
 
 // ── ② 그대로 그리는 시스템 데이터 전수.

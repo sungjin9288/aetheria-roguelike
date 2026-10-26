@@ -7,7 +7,7 @@ import type { Item } from '../types/index.js';
 import { MSG } from '../data/messages';
 
 /**
- * QuickSlot — 빠른 소모품 슬롯 (Feature #8)
+ * QuickSlot — 빠른 소모품 칸 (Feature #8)
  * props:
  *   slots: [item | null, item | null, item | null]
  *   onUse: (item: Item) => void
@@ -43,8 +43,8 @@ const QuickSlot = ({ slots, onUse, gameState }: QuickSlotProps) => {
                         data-testid={`quick-slot-${i}`}
                         whileTap={item && canUse ? { scale: 0.94 } : {}}
                         onClick={() => item && canUse && onUse?.(item, i)}
-                        title={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 빠른 사용 (슬롯 ${i + 1})` : MSG.QUICK_SLOT_EMPTY_LABEL(i + 1)}
-                        aria-label={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 슬롯 ${i + 1}` : MSG.QUICK_SLOT_EMPTY_LABEL(i + 1)}
+                        title={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 빠른 사용 (칸 ${i + 1})` : MSG.QUICK_SLOT_EMPTY_LABEL(i + 1)}
+                        aria-label={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 칸 ${i + 1}` : MSG.QUICK_SLOT_EMPTY_LABEL(i + 1)}
                         className={`ae-quick-slot relative flex h-11 w-11 items-center justify-center rounded-ae-sm text-center font-fira tabular-nums
                             ${item
                                 ? canUse
@@ -73,7 +73,7 @@ const QuickSlot = ({ slots, onUse, gameState }: QuickSlotProps) => {
     );
 };
 
-/** QuickSlotAssigner가 실제로 다루는 인벤토리 아이템 → 퀵슬롯 배치 콜백. */
+/** QuickSlotAssigner가 실제로 다루는 인벤토리 아이템 → 빠른 칸 배치 콜백. */
 type OnAssignQuickSlot = (idx: number, item: Item | null) => void;
 
 interface QuickSlotAssignerProps {
@@ -84,7 +84,7 @@ interface QuickSlotAssignerProps {
 }
 
 /**
- * QuickSlotAssigner — 인벤토리 아이템에서 퀵슬롯 할당 UI
+ * QuickSlotAssigner — 인벤토리 아이템에서 빠른 칸 할당 UI
  *
  * cycle 494: 컴팩트 prop cascade — cycle 482가 SmartInventory callsite에서
  *   compact 전달 제거 후 caller 0건. 본체 5 ternary 모두 false 가지 선택.
@@ -96,7 +96,7 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots 
 
     return (
         <div className="mt-1 flex flex-wrap items-center gap-1">
-            <span className="text-[12px] font-semibold text-ae-ink-3">퀵슬롯:</span>
+            <span className="text-[12px] font-semibold text-ae-ink-3">빠른 칸:</span>
             {Array.from({ length: slotCount }, (_, i) => {
                 const occupied = currentSlots?.[i];
                 return (

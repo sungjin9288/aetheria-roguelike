@@ -193,7 +193,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         <div
                             key={s.key}
                             className="flex min-h-[40px] min-w-0 items-center gap-2 px-1 py-1.5"
-                            title={s.slot ? `${player?.job} 세트 매치 슬롯` : undefined}
+                            title={s.slot ? `${player?.job} 세트 매치 칸` : undefined}
                         >
                             <span className="w-[64px] shrink-0 text-[12px] font-readable text-ae-ink-3">{s.label}</span>
                             <span className={`min-w-0 flex-1 text-[13px] leading-snug font-readable font-semibold ${s.slot ? 'text-ae-gold-text' : 'text-ae-ink'}`}>{s.name}</span>
@@ -252,7 +252,7 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                         <div className="min-w-0">
                             <div className="text-[13px] font-readable font-bold text-ae-gold-text">{player?.job} 세트 목록</div>
                             <div className="mt-0.5 text-[12px] font-readable text-ae-ink-3 leading-snug">
-                                슬롯별 후보 · 장착 중 · 보유 · 미발견
+                                칸별 후보 · 장착 중 · 보유 · 미발견
                             </div>
                         </div>
                         <span className="shrink-0 inline-flex items-center gap-1 text-[12px] font-readable text-ae-ink-3">

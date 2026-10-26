@@ -88,6 +88,7 @@
     "@capacitor/app": "8.1.1",
     "@capacitor/cli": "8.5.3",
     "@capacitor/core": "8.5.3",
+    "@capacitor/haptics": "8.0.2",
     "@capacitor/ios": "8.5.3",
     "chart.js": "^4.5.1",
     "firebase": "^12.8.0",
