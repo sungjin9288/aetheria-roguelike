@@ -162,10 +162,9 @@ const GameRoot = ({
     // slice 21: 지역별 ambient 팔레트 — 위치 기반 accent/wash CSS 변수.
     // 2026-10 Wave 62 (원장 §61.2 A10): 길 잃은 여행이면 지역 색을 고정한다(지역 색이 곧 위치 단서다).
     const regionTheme = getVisibleRegionTheme(engine.player, DB.MAPS?.[engine.player?.loc ?? '']);
-    // cycle 208: codex prop 전달 — useLegendaryDropDetector가 SEASON_XP 중복 award 방지용
-    //   alreadyInCodex 체크에 활용.
-    // GF-13: presentationEpoch — 복원된 가방의 전설은 기준으로만 잡는다(획득 연출 · 기록 없음).
-    const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.player?.inv, engine.dispatch, engine.player?.stats?.codex, engine.presentationEpoch);
+    // 2026-10-26 소유자 결정 D33: 도감 · 시즌 경험 · 기록 줄은 리듀서의 획득 전이가 남기고, 이 화면은 그 획득 목록만 읽는다.
+    // GF-13: presentationEpoch — 복원 전의 대기열은 그리지 않는다.
+    const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.legendaryAcquisitions, engine.presentationEpoch);
 
     // cycle 62: 신규 칭호(wanderer / pathfinder / cartographer / legend_seeker /
     // legend_chronicler 등)가 추가된 이후 기존 save를 로드하면, 이미 조건을 만족

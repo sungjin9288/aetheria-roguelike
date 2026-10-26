@@ -1,136 +1,44 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { hasDedicatedSignatureArt } from '../data/signatureItems.js';
-import { MSG } from '../data/messages.js';
-import { AT } from '../reducers/actionTypes.js';
-import { SEASON_XP } from '../data/seasonPass.js';
-import type { Dispatch } from 'react';
-import type { CodexCategory, Item, Player } from '../types';
-import type { GameAction } from '../reducers/gameReducer';
-
-/** 장비 타입 → 도감 버킷. 나머지 타입(소모품/소재 등)은 도감 자동 등록 대상이 아니다. */
-const CODEX_BUCKET_BY_TYPE: Readonly<Record<string, CodexCategory>> = Object.freeze({
-    weapon: 'weapons',
-    shield: 'shields',
-    armor: 'armors',
-});
+import { useCallback, useState } from 'react';
+import type { Item } from '../types';
+import type { LegendaryAcquisition } from '../reducers/gameReducer';
 
 /**
- * player.inv를 관찰해서 dedicated signature art를 가진 아이템이 새로 추가되면
- * { item } 을 currentDrop으로 노출. 타 Overlay와 달리 서버에서 오는 트리거가 아니라
- * 순수 클라이언트 관찰 기반이라 refactoring 영향이 작다.
+ * 전설 획득 화면의 대기열 — 표시만 한다.
  *
- * 주의:
- * - 같은 signature 아이템 여러 개가 동시에 들어오면 queue로 누적해 순차 노출.
- *   게임 필 감사 GF-12: 대기열은 상태다(맨 앞이 지금 보이는 전설). 예전에는 동시에 들어온 두 번째 ·
- *   표시 중에 들어온 하나를 잃었고, 대기열 변이가 setState 갱신 함수 안에 있었다.
- * - 초기 mount 시점의 인벤토리는 seen으로 기록하고 알림 없음 (세이브 로드시 스팸 방지).
- *   GF-13: 복원(`presentationEpoch`가 바뀐 렌더)도 같다 — 기준만 다시 잡고 연출 · 도감 · 시즌 · 기록 dispatch가 없다.
- * - 이미 본 아이템 이름은 재노출 안 함 (같은 전설을 두 번 봐도 한 번만).
+ * 2026-10-26 소유자 결정 D33: 도감 등록 · 시즌 경험 · 기록 줄은 리듀서의 획득 전이(`reducers/handlers/signatureAcquisition.ts`)가
+ * 남기고, 이 훅은 그 전이가 쌓은 `legendaryAcquisitions`(순번 · 아이템)만 읽는다. 예전에는 이 훅이 가방을 관찰하며
+ * dispatch로 원장을 고쳐서, 화면이 없는 경로(자연 플레이 드라이버)와 화면이 있는 경로의 도감 · 시즌이 갈렸다.
+ *
+ *   - 마운트 때 이미 쌓여 있던 획득은 기준이다(보여 주지 않는다).
+ *   - GF-12: 대기열은 순번 커서다 — 동시에 들어온 둘, 표시 중에 들어온 하나를 잃지 않고 차례로 보인다.
+ *   - GF-13: 복원(`presentationEpoch`가 바뀐 렌더)은 기준만 다시 잡는다 — 복원 전의 대기열은 그리지 않는다.
+ *     복원은 획득 전이 자체가 획득으로 세지 않는다(`LOAD_DATA` 제외).
  */
+interface DropCursor {
+    readonly epoch: number;
+    /** 이 순번까지는 보였거나 기준이다. */
+    readonly through: number;
+}
 
-// cycle 614: inv default [] 제거 — explicit default-elimination pattern
-//   (cycle 608-613에 이은 6번째 적용). caller에 || [] defensive guard 명시
-//   추가 후 default unreachable.
-const getSignatureItemNames = (inv: Item[]) => {
-    const names: string[] = [];
-    for (const entry of inv) {
-        // hasDedicatedSignatureArt는 레지스트리를 이름으로 조회하므로 name 없는 항목은 통과 못 한다.
-        if (entry?.name && hasDedicatedSignatureArt(entry)) {
-            names.push(entry.name);
-        }
-    }
-    return names;
-};
+const lastSeqOf = (acquisitions: readonly LegendaryAcquisition[]): number => acquisitions.at(-1)?.seq ?? 0;
 
-// cycle 563: dispatch / codex defaults 제거 — 1 production caller (GameRoot
-//   :32) 3 args 명시 전달 (engine.dispatch, engine.player?.stats?.codex)이라
-//   두 default 모두 도달 불가. test caller 0건. 청소 메가 시리즈 56번째.
 export const useLegendaryDropDetector = (
-    inv: Item[] | undefined,
-    dispatch: Dispatch<GameAction>,
-    codex: NonNullable<Player['stats']>['codex'],
+    acquisitions: readonly LegendaryAcquisition[] | undefined,
     resetEpoch: number,
-) => {
-    const seenRef = useRef<Set<string> | null>(null);
-    const epochRef = useRef(resetEpoch);
-    // cycle 208: codex prop을 ref로 받아 effect deps 미포함 (re-trigger 방지).
-    //   dispatch 시점에 latest codex로 alreadyInCodex 체크 → SEASON_XP 중복 award 가드.
-    //   ref 갱신은 effect 내부에서 (render 단계 직접 mutation은 react-hooks/refs 룰 위반).
-    const codexRef = useRef(codex);
-    useEffect(() => { codexRef.current = codex; }, [codex]);
-    const [queue, setQueue] = useState<{ epoch: number; items: Item[] }>({ epoch: resetEpoch, items: [] });
+): { currentDrop: Item | null; dismissDrop: () => void } => {
+    const list = acquisitions ?? [];
+    const lastSeq = lastSeqOf(list);
+    const [cursor, setCursor] = useState<DropCursor>({ epoch: resetEpoch, through: lastSeq });
+    // 복원으로 장면이 바뀌면 그 순간까지의 획득을 기준으로 다시 잡는다(렌더 중 상태 조정 — 이펙트를 기다리면 한 프레임 보인다).
+    if (cursor.epoch !== resetEpoch) setCursor({ epoch: resetEpoch, through: lastSeq });
+    const through = cursor.epoch === resetEpoch ? cursor.through : lastSeq;
 
-    const dismiss = useCallback(() => {
-        setQueue((prev) => ({ ...prev, items: prev.items.slice(1) }));
-    }, []);
+    const current = list.find((entry) => entry.seq > through) ?? null;
+    const currentSeq = current?.seq ?? null;
+    const dismissDrop = useCallback(() => {
+        if (currentSeq === null) return;
+        setCursor((prev) => (prev.epoch === resetEpoch && prev.through < currentSeq ? { ...prev, through: currentSeq } : prev));
+    }, [currentSeq, resetEpoch]);
 
-    useEffect(() => {
-        // cycle 614: |[] defensive guard 명시 추가 — explicit default-elimination
-        //   pattern (cycle 608-613). getSignatureItemNames default `[]` 제거 후
-        //   undefined 안전 처리는 caller-side로 이전.
-        const signatureNames = getSignatureItemNames(inv || []);
-
-        // 초기 mount: 현재 소지중인 signature 아이템을 모두 seen으로 간주
-        // (세이브 로드 시 기존 레전더리로 오버레이 스팸 방지)
-        if (seenRef.current === null) {
-            seenRef.current = new Set(signatureNames);
-            return;
-        }
-        // GF-13: 복원된 가방의 전설도 본 것으로 기준만 더한다 — 획득 연출 · dispatch 없음.
-        if (epochRef.current !== resetEpoch) {
-            epochRef.current = resetEpoch;
-            seenRef.current = new Set([...seenRef.current, ...signatureNames]);
-            return;
-        }
-
-        const newlySeen = signatureNames.filter((name) => !seenRef.current!.has(name));
-        if (newlySeen.length === 0) return;
-
-        for (const name of newlySeen) {
-            seenRef.current.add(name);
-        }
-
-        // 신규 signature 획득 시 codex 자동 업데이트 + 전용 로그 emit.
-        // 업적 카운터와 LegendaryCodex 잠금 해제 연결 + Terminal 강조 출력.
-        // cycle 208: SEASON_XP.codexDiscover 누락 path fix (cycle 193 / cycle 196 패턴 follow-up).
-        //   기존엔 dispatch(UPDATE_CODEX)만 하고 SEASON_XP 미적립 → 4 quest reward + 4 event chain
-        //   reward로 들어오는 signature는 시즌 XP 0건이던 dead config.
-        //   codexRef로 'alreadyInCodex' 체크 → combatVictory가 먼저 처리한 경우 중복 award 방지.
-        if (dispatch) {
-            for (const name of newlySeen) {
-                const item = (inv || []).find((entry) => entry?.name === name);
-                const bucket = CODEX_BUCKET_BY_TYPE[String(item?.type)];
-                if (bucket) {
-                    const alreadyInCodex = Boolean(codexRef.current?.[bucket]?.[name]);
-                    dispatch({ type: AT.UPDATE_CODEX, payload: { category: bucket, name } });
-                    if (!alreadyInCodex) {
-                        dispatch({ type: AT.ADD_SEASON_XP, payload: SEASON_XP.codexDiscover });
-                    }
-                }
-                dispatch({
-                    type: AT.ADD_LOG,
-                    payload: {
-                        type: 'legendary',
-                        text: MSG.SIGNATURE_DISCOVERED(name),
-                        id: `legendary_${Date.now()}_${name}`,
-                    },
-                });
-            }
-        }
-
-        // GF-12: 새로 본 전설은 모두 대기열 끝에 선다 — 표시 중이든 아니든, 동시에 몇 개가 들어오든.
-        const arrived = newlySeen
-            .map((name) => (inv || []).find((entry) => entry?.name === name && hasDedicatedSignatureArt(entry)))
-            .filter((entry): entry is Item => Boolean(entry));
-        if (arrived.length === 0) return;
-
-        setQueue((prev) => ({
-            epoch: resetEpoch,
-            items: [...(prev.epoch === resetEpoch ? prev.items : []), ...arrived],
-        }));
-    }, [inv, dispatch, resetEpoch]);
-
-    // 복원 전의 대기열은 그리지 않는다(GF-13).
-    const currentDrop = queue.epoch === resetEpoch ? queue.items[0] ?? null : null;
-    return { currentDrop, dismissDrop: dismiss };
+    return { currentDrop: current?.item ?? null, dismissDrop };
 };

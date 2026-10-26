@@ -32,34 +32,16 @@ import { advanceQuestStartedChains } from '../../data/eventChains';
 import { appendRewardLogs } from './rewardLog';
 import { addNewTitles, addSeasonXp } from './helpers';
 import type { GameState, HandlerMap } from '../gameReducer';
-import type { CodexEntry, Player } from '../../types';
+import type { Player } from '../../types';
 import { collectCrystalRewardedAchievementIds } from '../../utils/permanentProgress';
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
 export const rewardActionMap = {
     // ── Codex ─────────────────────────────────────────────────────────────
-    UPDATE_CODEX: (state, action) => {
-        const { category, name } = action.payload;
-        const codex: NonNullable<NonNullable<Player['stats']>['codex']> = state.player.stats?.codex || {};
-        const cat: Record<string, CodexEntry> = codex[category] || {};
-        if (cat[name]) return state;
-        return {
-            ...state,
-            player: {
-                ...state.player,
-                stats: {
-                    ...state.player.stats,
-                    codex: {
-                        ...codex,
-                        // cycle 438: timestamp 출력 dead 제거 (cycle 333-356 시리즈 회귀).
-                        [category]: { ...cat, [name]: { discovered: true } },
-                    },
-                },
-            },
-            syncStatus: 'syncing',
-        };
-    },
+    // 2026-10-26 (D33): UPDATE_CODEX는 지웠다 — 유일한 발신처였던 전설 획득 훅이
+    //   리듀서 획득 전이(handlers/signatureAcquisition.ts)로 옮겨 가 도감을 그 자리에서
+    //   registerLootToCodex로 올린다. 도감 등록은 각 정산 전이가 소유한다.
 
     // ── Season Pass ───────────────────────────────────────────────────────
     // 2026-09 Wave 13 E3 통합: 이 핸들러가 helpers.addSeasonXp와 같은 계산을 독립

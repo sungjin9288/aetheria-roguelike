@@ -211,7 +211,7 @@ export interface CodexEntry {
 export type CodexCategory = 'weapons' | 'armors' | 'shields' | 'monsters' | 'recipes' | 'materials';
 
 // 2026-09 B3 stage 2: 임의 문자열 키를 허용하던 인덱스 시그니처 제거 — 카테고리는 이 6개가 전부다.
-//   (CodexCategory와 키 집합이 일치해야 한다 — registerCodex/UPDATE_CODEX가 둘을 잇는다.)
+//   (CodexCategory와 키 집합이 일치해야 한다 — registerCodex가 둘을 잇는다.)
 interface PlayerCodex {
     weapons?: Record<string, CodexEntry>;
     armors?: Record<string, CodexEntry>;

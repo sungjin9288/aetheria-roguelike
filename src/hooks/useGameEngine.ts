@@ -107,6 +107,7 @@ export const useGameEngine = () => {
         combatTurn,
         combatReceipt,
         combatFeedback,
+        legendaryAcquisitions,
     } = state;
 
     // --- Firebase Sync ---
@@ -334,6 +335,8 @@ export const useGameEngine = () => {
         presentationEpoch,
         // 게임 필 감사 GF-01: 마지막 전투 차례의 연출 기록(표시 전용).
         combatFeedback,
+        // 2026-10-26 소유자 결정 D33: 최근 전설 각인 획득 — 전설 획득 화면의 대기열 원천(표시 전용).
+        legendaryAcquisitions,
         handleCommand,
         // Feature additions
         quickSlots,

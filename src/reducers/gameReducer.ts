@@ -14,6 +14,7 @@ import { createCurrentRunProgress } from '../utils/runProgress';
 import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
 import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
 import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
+import { settleSignatureAcquisitions } from './handlers/signatureAcquisition';
 import type { ActionOf, ActionType, GameAction } from './actionTypes';
 import type { GameMode } from './gameStates';
 
@@ -70,10 +71,18 @@ export interface GameState {
     // 게임 필 감사 GF-01: 마지막 전투 차례의 연출 기록(types/combatFeedback.ts) — 표시 전용이라 세이브 봉투에 넣지 않고
     //   `LOAD_DATA`가 비운다(`presentationEpoch`와 같은 종류). 게임 판정은 읽지 않는다.
     combatFeedback: CombatFeedback | null;
+    // 2026-10-26 소유자 결정 D33: 최근 전설 각인 획득(순번 · 아이템) — 획득 전이(`handlers/signatureAcquisition.ts`)가
+    //   쓰고 전설 획득 화면(`useLegendaryDropDetector`)이 읽는다. 표시 대기열의 원천이라 세이브 봉투에 넣지 않는다.
+    legendaryAcquisitions: LegendaryAcquisition[];
     // cycle 305: publicGraves dead state 제거 — INITIAL_STATE [] 외 SET 0건,
     //   UI read 0건. INVADE_GRAVE 핸들러의 filter도 항상 [] 입력 → no-op.
 }
 
+
+export interface LegendaryAcquisition {
+    readonly seq: number;
+    readonly item: Item;
+}
 
 export interface LootSettlementReceipt {
     rolledCount: number;
@@ -172,6 +181,7 @@ export const INITIAL_STATE: GameState = {
     combatTurn: 0,
     combatReceipt: null,
     combatFeedback: null,
+    legendaryAcquisitions: [],
 };
 
 // --- REDUCER ---
@@ -201,17 +211,7 @@ const ACTION_MAP = {
     ...boundedEncounterActionMap,
 } satisfies HandlerMap;
 
-export const gameReducer = (state: GameState, action: GameAction): GameState => {
-    // 맵을 유니온 키로 조회하면 handler의 파라미터도 유니온이 되어 TS가 "핸들러 K와 action K가
-    // 같은 멤버"임을 스스로 세우지 못한다. 그 상관관계를 이 한 줄에서만 못 박고
-    // (payload는 절대 넓히지 않는다 — action/handler 모두 동일한 `GameAction` 유니온),
-    // 개별 핸들러 안에서는 캐스트 없이 좁혀진 payload를 쓴다.
-    const handler = ACTION_MAP[action.type] as
-        | ((state: GameState, action: GameAction) => GameState)
-        | undefined;
-    if (!handler) return state;
-    const nextState = handler(state, action);
-    if (nextState === state) return state;
+const deliverReturnSupply = (nextState: GameState): GameState => {
     const delivery = deliverPendingReturnSupplyRewards(nextState.player);
     if (delivery.player === nextState.player) return nextState;
     const deliveryLogs = delivery.deliveredExpeditionIds.map((expeditionId) => ({
@@ -225,4 +225,19 @@ export const gameReducer = (state: GameState, action: GameAction): GameState => 
         logs: [...nextState.logs, ...deliveryLogs].slice(-BALANCE.LOG_MAX_SIZE),
         syncStatus: 'syncing',
     };
+};
+
+export const gameReducer = (state: GameState, action: GameAction): GameState => {
+    // 맵을 유니온 키로 조회하면 handler의 파라미터도 유니온이 되어 TS가 "핸들러 K와 action K가
+    // 같은 멤버"임을 스스로 세우지 못한다. 그 상관관계를 이 한 줄에서만 못 박고
+    // (payload는 절대 넓히지 않는다 — action/handler 모두 동일한 `GameAction` 유니온),
+    // 개별 핸들러 안에서는 캐스트 없이 좁혀진 payload를 쓴다.
+    const handler = ACTION_MAP[action.type] as
+        | ((state: GameState, action: GameAction) => GameState)
+        | undefined;
+    if (!handler) return state;
+    const nextState = handler(state, action);
+    if (nextState === state) return state;
+    // 2026-10-26 소유자 결정 D33: 전설 각인 획득(도감 · 시즌 경험 · 기록 줄)은 모든 전이 뒤에 한 곳이 정산한다.
+    return settleSignatureAcquisitions(state, deliverReturnSupply(nextState), action);
 };
