@@ -5,6 +5,8 @@ import { MotionConfig, useReducedMotion } from 'framer-motion';
 import { GS } from './reducers/gameStates';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useDamageFlash } from './hooks/useDamageFlash';
+import { useGameFeedbackHaptics } from './hooks/useHapticFeedback';
+import { isHapticsEnabled } from './utils/playerSettings';
 import { useGameTestApi } from './hooks/useGameTestApi';
 import { markPerfOnce, measurePerfOnce, markPerf } from './utils/performanceMarks';
 import { getCounterStagger } from './utils/combatPresentation';
@@ -56,6 +58,15 @@ function App() {
         engine.presentationEpoch,
         getCounterStagger(engine.combatFeedback, reducedMotion),
     );
+    // 2026-10-26 소유자 결정 D3: 진동(맞음 · 치명타 · 레벨 상승 · 사망) — 사망 화면에서도 살아 있는 여기서 부른다.
+    //   전설 획득 진동은 그 화면을 띄우는 GameRoot가 부른다. 설정의 '진동'이 꺼져 있으면 울리지 않는다.
+    useGameFeedbackHaptics({
+        enabled: isHapticsEnabled(engine.player),
+        epoch: engine.presentationEpoch,
+        combatFeedback: engine.combatFeedback,
+        level: engine.player?.level,
+        dead: engine.gameState === GS.DEAD,
+    });
 
     // Smoke test refs — updated synchronously during render so harness always reads fresh state.
     // cycle 100: react-hooks/refs 룰은 일반 컴포넌트엔 옳지만 여기선 의도적인 패턴이라 명시 disable.

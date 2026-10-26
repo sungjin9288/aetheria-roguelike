@@ -5,7 +5,6 @@ import ItemIcon from './icons/ItemIcon.jsx';
 import { getSignatureMetadata } from '../data/signatureItems.js';
 import { MSG } from '../data/messages';
 import type { Item } from '../types/index.js';
-import { useOverlayDialog } from '../hooks/useOverlayDialog';
 import { MOMENT_DUR_PANEL, MOMENT_DUR_UI, MOMENT_EASE } from './moments/momentMotion';
 
 /**
@@ -15,6 +14,10 @@ import { MOMENT_DUR_PANEL, MOMENT_DUR_UI, MOMENT_EASE } from './moments/momentMo
  * - framer-motion + SIGNATURE_TONE 글로우로 tone별 색 연출(토큰 색 채널), 패널은 전설 산호색 장식 패널
  * - 3초 auto-dismiss
  * - 탭/클릭 시 즉시 dismiss
+ * - 2026-10-26 소유자 결정 D24(감사 A11Y-01): 대화상자가 아니라 **초점을 옮기지 않는 상태 알림**이다 — 저절로 닫히는 화면이
+ *   초점을 가져갔다 돌려주면 키보드 · 화면 낭독기 사용자의 자리가 3초마다 흔들린다. 알림 칸(role="status", aria-live polite)은
+ *   늘 그려 두고 전설이 뜰 때 문장만 바꾼다(나타나는 순간 생긴 알림 칸은 낭독되지 않는 일이 많다). 그림 연출은 화면 낭독기에서
+ *   숨기고(같은 내용을 알림 칸이 말한다) 초점 · 배경 `inert` · Escape를 잡지 않는다
  * - 아이콘은 실제 signature sprite (gold ring + badge 포함)을 그대로 사용
  * - 머리말은 `MSG.SIGNATURE_DROP_LABEL`(전설 각인), 아래 줄은 아이템 설명(Wave 134)
  */
@@ -46,11 +49,6 @@ interface LegendaryDropOverlayProps {
 }
 
 const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) => {
-    const dialog = useOverlayDialog({
-        label: MSG.A11Y_DIALOG_LEGENDARY(item?.name ?? ''),
-        onEscape: onDismiss,
-        role: 'alertdialog',
-    });
     useEffect(() => {
         if (!item) return undefined;
         const timer = setTimeout(() => onDismiss?.(), DROP_DURATION_MS);
@@ -62,10 +60,14 @@ const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) =>
     const glowColor = (alpha: number) => `rgb(${glow} / ${alpha})`;
 
     return (
+        <>
+        <div data-testid="legendary-drop-status" role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+            {item ? MSG.A11Y_LEGENDARY_STATUS(item.name ?? '', item.desc) : ''}
+        </div>
         <AnimatePresence>
             {item && (
                 <Motion.div
-                    {...dialog}
+                    aria-hidden="true"
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
@@ -139,6 +141,7 @@ const LegendaryDropOverlay = ({ item, onDismiss }: LegendaryDropOverlayProps) =>
                 </Motion.div>
             )}
         </AnimatePresence>
+        </>
     );
 };
 

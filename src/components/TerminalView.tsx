@@ -15,6 +15,7 @@ import { ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE, getLogBadgeKind, type LogB
 import { DB } from '../data/db';
 import { isModalFocusScopeOpen } from '../platform/modalFocus';
 import { resolveGlobalShortcut } from '../utils/keyboardShortcuts';
+import { isKeyboardShortcutsEnabled } from '../utils/playerSettings';
 import {
     getAmbientLogTexts,
     getInitialCombatFloorId,
@@ -134,6 +135,8 @@ const TerminalView = ({
 
     // Keyboard shortcuts: 전투 1=공격 · 2=기술 · 3=도주, 빠른 칸 Q · W · E.
     //   감사 A11Y-02: 대화상자 · 수정키 · 한글 조합 · 입력 칸에서는 멈추고, 키 자리(code)로 읽는다.
+    //   2026-10-26 소유자 결정 D23: 기록 탭 설정에서 끄면 어떤 단축키도 동작하지 않는다.
+    const shortcutsEnabled = isKeyboardShortcutsEnabled(player);
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const target = e.target instanceof HTMLElement ? e.target : null;
@@ -147,7 +150,7 @@ const TerminalView = ({
                 isComposing: e.isComposing,
                 targetTagName: target?.tagName ?? null,
                 targetIsContentEditable: target?.isContentEditable ?? false,
-            }, { inCombat: gameState === GS.COMBAT, modalOpen: isModalFocusScopeOpen() });
+            }, { inCombat: gameState === GS.COMBAT, modalOpen: isModalFocusScopeOpen(), shortcutsEnabled });
             if (!shortcut) return;
             if (shortcut.kind === 'combat') {
                 e.preventDefault();
@@ -161,7 +164,7 @@ const TerminalView = ({
         };
         document.addEventListener('keydown', handleKeyDown);
         return () => document.removeEventListener('keydown', handleKeyDown);
-    }, [gameState, quickSlots, onQuickSlotUse, onCommand]);
+    }, [gameState, quickSlots, onQuickSlotUse, onCommand, shortcutsEnabled]);
 
     // Most recent AI story narrative (pinned display)
     const latestStory = useMemo(() => {

@@ -24,6 +24,7 @@ import {
     resolveModalKeyIntent,
 } from '../src/platform/modalFocus.ts';
 import { resolveGlobalShortcut } from '../src/utils/keyboardShortcuts.ts';
+import { isHapticsEnabled, isKeyboardShortcutsEnabled } from '../src/utils/playerSettings.ts';
 import {
     getAmbientLogTexts,
     getCombatTurnKey,
@@ -163,8 +164,8 @@ test('isModalFocusScopeOpen: 열린 대화상자가 없으면(서버 렌더 포�
 
 // ---------------------------------------------------------------- 한 글자 단축키(A11Y-02)
 
-const COMBAT = { inCombat: true, modalOpen: false };
-const IDLE = { inCombat: false, modalOpen: false };
+const COMBAT = { inCombat: true, modalOpen: false, shortcutsEnabled: true };
+const IDLE = { inCombat: false, modalOpen: false, shortcutsEnabled: true };
 
 test('resolveGlobalShortcut: 전투 1 · 2 · 3과 빠른 칸 Q · W · E는 키 자리(code)로 읽는다', () => {
     assert.deepEqual(resolveGlobalShortcut({ key: '1', code: 'Digit1' }, COMBAT), { kind: 'combat', command: 'attack' });
@@ -182,8 +183,8 @@ test('resolveGlobalShortcut: 전투 1 · 2 · 3과 빠른 칸 Q · W · E는 키
 test('resolveGlobalShortcut: 대화상자 · 수정키 · 한글 조합 · 입력 칸에서는 멈춘다', () => {
     const q = { key: 'q', code: 'KeyQ' };
     const one = { key: '1', code: 'Digit1' };
-    assert.equal(resolveGlobalShortcut(q, { inCombat: false, modalOpen: true }), null, '대화상자 위의 Q');
-    assert.equal(resolveGlobalShortcut(one, { inCombat: true, modalOpen: true }), null, '대화상자 위의 1');
+    assert.equal(resolveGlobalShortcut(q, { ...IDLE, modalOpen: true }), null, '대화상자 위의 Q');
+    assert.equal(resolveGlobalShortcut(one, { ...COMBAT, modalOpen: true }), null, '대화상자 위의 1');
     for (const modifier of ['ctrlKey', 'metaKey', 'altKey']) {
         assert.equal(resolveGlobalShortcut({ ...q, [modifier]: true }, IDLE), null, `${modifier} + Q`);
         assert.equal(resolveGlobalShortcut({ ...one, [modifier]: true }, COMBAT), null, `${modifier} + 1`);
@@ -196,6 +197,28 @@ test('resolveGlobalShortcut: 대화상자 · 수정키 · 한글 조합 · 입�
     }
     assert.equal(resolveGlobalShortcut({ ...one, targetIsContentEditable: true }, COMBAT), null, '편집 가능한 칸');
     assert.equal(resolveGlobalShortcut({ key: 'a', code: 'KeyA' }, COMBAT), null, '다른 키');
+});
+
+// 2026-10-26 소유자 결정 D23: 한 글자 단축키를 끄는 설정 — 끄면 어떤 키도 아무 동작을 하지 않는다(기본 켬).
+test('resolveGlobalShortcut: 설정에서 한 글자 단축키를 끄면 전투 1 · 2 · 3 · 빠른 칸 Q · W · E 모두 null', () => {
+    const OFF_COMBAT = { ...COMBAT, shortcutsEnabled: false };
+    const OFF_IDLE = { ...IDLE, shortcutsEnabled: false };
+    for (const code of ['Digit1', 'Digit2', 'Digit3', 'Numpad1', 'KeyQ', 'KeyW', 'KeyE']) {
+        const key = code.slice(-1).toLowerCase();
+        assert.notEqual(resolveGlobalShortcut({ key, code }, COMBAT), null, `켜져 있으면 ${code}는 단축키(판별 조건)`);
+        assert.equal(resolveGlobalShortcut({ key, code }, OFF_COMBAT), null, `끄면 전투 중 ${code}도 아무 동작 없음`);
+        assert.equal(resolveGlobalShortcut({ key, code }, OFF_IDLE), null, `끄면 전투 밖 ${code}도 아무 동작 없음`);
+    }
+});
+
+test('isKeyboardShortcutsEnabled · isHapticsEnabled: 값이 없으면 켬, false만 끔', () => {
+    assert.equal(isKeyboardShortcutsEnabled(makePlayerFixture()), true, '새 캐릭터는 켬');
+    assert.equal(isKeyboardShortcutsEnabled({ settings: { readabilityMode: 'standard' } }), true, '이전 세이브(값 없음)는 켬');
+    assert.equal(isKeyboardShortcutsEnabled({ settings: { keyboardShortcutsEnabled: false } }), false);
+    assert.equal(isKeyboardShortcutsEnabled(null), true);
+    assert.equal(isHapticsEnabled({ settings: {} }), true);
+    assert.equal(isHapticsEnabled({ settings: { hapticsEnabled: false } }), false);
+    assert.equal(isHapticsEnabled({ settings: { hapticsEnabled: true } }), true);
 });
 
 // ---------------------------------------------------------------- 대화상자 표지(A11Y-01)
@@ -232,7 +255,6 @@ test('전체 화면 오버레이는 이름 있는 모달 대화상자다(SSR로 
         loc: '시작의 마을', level: 3, dailyCompletedCount: 1, dailyMissionCount: 3, activeChainCount: 0,
     };
     const relicOffer = RELICS.slice(0, 3);
-    const legendary = { id: 'sig', name: '라그나로크', type: 'weapon', rarity: 'legendary', tier: 6 };
     const cases = [
         { name: 'ExpeditionDebriefCard', html: renderStatic(createElement(ExpeditionDebriefCard, { summary: debrief, recommendation: { detail: '다음 원정', kind: 'continue', label: '계속하기' }, onClose: () => {}, onPrimaryAction: () => {} })), label: MSG.A11Y_DIALOG_EXPEDITION_DEBRIEF },
         { name: 'MilestoneStoryCard', html: renderStatic(createElement(MilestoneStoryCard, { story, onClose: () => {} })), label: story.title, testId: 'milestone-story-close-icon' },
@@ -243,13 +265,26 @@ test('전체 화면 오버레이는 이름 있는 모달 대화상자다(SSR로 
         { name: 'AscensionScreen', html: renderStatic(createElement(AscensionScreen, { player })), label: MSG.A11Y_DIALOG_ASCENSION, testId: 'ascension-screen' },
         { name: 'RunSummaryCard', html: renderStatic(createElement(RunSummaryCard, { runSummary: buildRunSummary(player, player.loc), onRestart: () => {} })), label: MSG.RUN_SUMMARY_EYEBROW },
         { name: 'TrueEndingScreen', html: renderStatic(createElement(TrueEndingScreen, { player })), label: MSG.TRUE_ENDING_TITLE, testId: 'true-ending-screen' },
-        { name: 'LegendaryDropOverlay', html: renderStatic(createElement(LegendaryDropOverlay, { item: legendary, onDismiss: () => {} })), label: MSG.A11Y_DIALOG_LEGENDARY(legendary.name), role: 'alertdialog' },
     ];
     for (const { name, html, ...expected } of cases) {
         assert.ok(html.length > 0, `${name} 렌더`);
         assertDialog(html, expected);
     }
     assert.ok(relicsByName[relicOffer[0].name], '유물 시나리오는 실제 유물');
+});
+
+test('D24: 전설 획득은 대화상자가 아니라 초점을 옮기지 않는 상태 알림이다(2026-10-26 소유자 결정)', () => {
+    const legendary = { id: 'sig', name: '라그나로크', type: 'weapon', rarity: 'legendary', tier: 6, desc: '세계를 끝내는 검' };
+    const html = renderStatic(createElement(LegendaryDropOverlay, { item: legendary, onDismiss: () => {} }));
+    assert.deepEqual(dialogTags(html), [], '대화상자 · 경보 대화상자를 그리지 않는다');
+    assert.ok(!/aria-modal/.test(html), '모달이 아니다');
+    const status = html.match(/<div[^>]*data-testid="legendary-drop-status"[^>]*>([^<]*)<\/div>/);
+    assert.ok(status, '상태 알림 칸');
+    assert.match(status[0], /role="status"/);
+    assert.match(status[0], /aria-live="polite"/);
+    assert.equal(status[1], MSG.A11Y_LEGENDARY_STATUS(legendary.name, legendary.desc));
+    assert.match(html, /data-testid="legendary-drop-overlay"[^>]*aria-hidden="true"|aria-hidden="true"[^>]*data-testid="legendary-drop-overlay"/,
+        '그림 연출은 낭독에서 숨긴다(알림 칸과 같은 내용)');
 });
 
 test('닫힌 오버레이는 대화상자를 남기지 않는다(유물 제안 없음 · 전설 아이템 없음)', () => {

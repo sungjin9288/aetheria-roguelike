@@ -23,6 +23,7 @@ import { BAG_RECIPES } from '../data/bagRecipes';
 import { MIRROR_NODES } from '../data/mirror';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { RELICS } from '../data/relics';
+import { isSignatureItem } from '../data/signatureItems';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
@@ -410,6 +411,8 @@ export interface AetheriaTestApi {
     seedAvatarScenario: (preset: string) => boolean;
     injectPostCombatResult: () => void;
     injectRelicChoice: () => boolean | undefined;
+    /** 2026-10-26 D24: 가방에 전설 각인 무기 하나를 넣고 그 이름을 돌려준다 — 전설 획득 알림(초점을 옮기지 않는 상태 알림) e2e 시드. */
+    injectLegendaryAcquisition: () => string | false;
     injectUndyingRelicChoice: () => void;
     /** Wave 30: 유물 상한(현재 rank)을 채운 채 유물 하나를 제안한다 — 교체 패널 e2e 시드. */
     injectRelicReplaceChoice: () => RelicReplaceChoiceSeed | false;
@@ -1860,6 +1863,17 @@ export const useGameTestApi = (
                     type: AT.SET_POST_COMBAT_RESULT,
                     payload: { ...defaults, ...seed } as PostCombatResult,
                 });
+            },
+            injectLegendaryAcquisition: () => {
+                const er = engineRef.current;
+                const signatureWeapon = DB.ITEMS.weapons.find((item) => isSignatureItem(item));
+                if (!signatureWeapon) return false;
+                const item = { ...signatureWeapon, id: `e2e-legendary-${Date.now()}` };
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (player: Player) => ({ ...player, inv: [...(player.inv || []), item] }),
+                });
+                return signatureWeapon.name ?? false;
             },
             injectRelicChoice: () => {
                 const er = engineRef.current;

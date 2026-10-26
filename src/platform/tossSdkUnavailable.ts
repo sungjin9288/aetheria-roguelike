@@ -17,6 +17,7 @@ export const {
     Storage,
     SafeArea,
     Screen,
+    generateHapticFeedback,
     graniteEvent,
     loadFullScreenAd,
     showFullScreenAd,
@@ -41,6 +42,7 @@ export const {
     Screen: {
         close: () => unavailable('Screen.close'),
     },
+    generateHapticFeedback: () => unavailable('generateHapticFeedback'),
     graniteEvent: {
         addEventListener: () => unavailable('graniteEvent.addEventListener'),
     },

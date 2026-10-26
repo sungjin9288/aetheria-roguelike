@@ -831,7 +831,6 @@ export const MSG = {
     A11Y_DIALOG_ASCENSION: '다음 여정으로 계승',
     A11Y_DIALOG_MIRROR: '에테르 거울 영구 성장',
     A11Y_DIALOG_PREMIUM_SHOP: '에테르 교환소',
-    A11Y_DIALOG_LEGENDARY: (name: string) => `전설 획득: ${name}`,
     A11Y_COMBAT_ACTIONS_HEADING: '전투 행동',
     A11Y_PLAYER_STATUS_HEADING: '내 상태',
     A11Y_LOG_HEADING: '모험 기록',
@@ -1962,4 +1961,18 @@ export const MSG = {
     COMBAT_LOG_PREVIOUS_TURN: (firstText: string, moreCount: number) => (
         `지난 차례 · ${firstText}${moreCount > 0 ? ` 외 ${moreCount}줄` : ''}`
     ),
+
+    // === 소유자 결정 2026-10-26 · 설정 · 접근성 · 진동 ===
+    // D24: 전설 획득은 초점을 옮기지 않는 상태 알림이다(대화상자가 아니다) — 알림 칸이 읽는 한 문장.
+    A11Y_LEGENDARY_STATUS: (name: string, desc?: string) => (desc ? `전설 각인 획득: ${name}. ${desc}` : `전설 각인 획득: ${name}`),
+    // D3 · D23: 기록 탭 '플레이 설정'의 진동 · 한 글자 단축키 켬/끔(기본 켬).
+    SYSTEM_HAPTICS_TITLE: '진동',
+    SYSTEM_HAPTICS_DESC: '맞을 때 · 치명타 · 레벨 상승 · 전설 획득 · 쓰러질 때 기기를 짧게 울립니다. 진동을 지원하지 않는 기기에서는 울리지 않습니다.',
+    SYSTEM_SHORTCUTS_TITLE: '한 글자 단축키',
+    SYSTEM_SHORTCUTS_DESC: '전투 중 1 · 2 · 3(공격 · 기술 · 도주)과 퀵슬롯 Q · W · E. 끄면 이 키를 눌러도 아무 일도 일어나지 않습니다.',
+    SYSTEM_TOGGLE_ON: '켜기',
+    SYSTEM_TOGGLE_OFF: '끄기',
+    SYSTEM_TOGGLE_STATE: (enabled: boolean) => (enabled ? '켜짐' : '꺼짐'),
+    SYSTEM_HAPTICS_CHANGED: (enabled: boolean) => (enabled ? '진동을 켰습니다.' : '진동을 껐습니다.'),
+    SYSTEM_SHORTCUTS_CHANGED: (enabled: boolean) => (enabled ? '한 글자 단축키를 켰습니다.' : '한 글자 단축키를 껐습니다.'),
 };
