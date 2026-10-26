@@ -2592,7 +2592,8 @@
   grid-template-columns: 3.25rem minmax(0, 1fr);
   column-gap: 10px;
   align-items: baseline;
-  padding: 9px 4px;
+  /* 2026-10-26: 9px → 7px — 390×844에서 한 행동의 줄(단서 · 장의 본문)이 기록 창에 함께 들어가도록. */
+  padding: 7px 4px;
   border: 0;
   border-radius: 0;
   background: transparent;

@@ -284,23 +284,25 @@ const TerminalView = ({
             {!isCombat && <h2 id={TERMINAL_HEADING_ID} className="sr-only">{MSG.A11Y_LOG_HEADING}</h2>}
 
             {showSceneHeader && player && (
-                <header data-testid="terminal-scene" className="ae-scene-header flex shrink-0 items-center gap-3 px-0.5 pb-2.5 pt-0.5">
+                // 2026-10-26: 머리는 한 줄이다(그림 44px · 이름 · 종류 칩). 세 줄(그림 64px · '현재 지역' · 이름 · 칩)이던 동안 약 80px를
+                //   차지해 390×844에서 임무 수령의 단서와 장의 본문이 기록 창에 함께 들어가지 않았다(Linux 글꼴 — 본문 마지막 줄이 밀렸다).
+                <header data-testid="terminal-scene" className="ae-scene-header flex shrink-0 items-center gap-2.5 px-0.5 pb-2 pt-0.5">
                     {showLocationVisual && locationVisual && (
                         <div
                             data-testid="terminal-location-visual"
                             data-location-visual={locationVisual.key}
                             aria-hidden="true"
-                            className="ae-scene-art flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden"
+                            className="ae-scene-art flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden"
                         >
-                            <img src={locationVisual.src} alt="" className="h-14 w-14 object-contain [image-rendering:pixelated]" />
+                            <img src={locationVisual.src} alt="" className="h-9 w-9 object-contain [image-rendering:pixelated]" />
                         </div>
                     )}
-                    <div className="min-w-0 flex-1">
-                        <div className="ae-eyebrow">{MSG.FIELD_REGION_EYEBROW}</div>
-                        <div className="mt-0.5 break-words font-display text-[20px] font-bold leading-tight text-ae-ink">
+                    <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1">
+                        <span className="sr-only">{MSG.FIELD_REGION_EYEBROW}</span>
+                        <span className="min-w-0 break-words font-display text-[18px] font-bold leading-tight text-ae-ink">
                             {getVisibleLocationName(player, playerLoc)}
-                        </div>
-                        <Chip tone={sceneKindTone} className="mt-1">{MSG.FIELD_REGION_KIND[sceneKind]}</Chip>
+                        </span>
+                        <Chip tone={sceneKindTone}>{MSG.FIELD_REGION_KIND[sceneKind]}</Chip>
                     </div>
                 </header>
             )}
