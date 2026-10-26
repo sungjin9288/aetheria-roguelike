@@ -137,7 +137,7 @@ const PremiumShop = ({
                             <span className="font-fira text-[15px] font-bold tabular-nums">{crystals}</span>
                             <span className="font-readable text-[11px] text-ae-ink-2">크리스탈</span>
                         </div>
-                        <OverlayCloseButton data-testid="premium-shop-close" aria-label="에테르 교환소 닫기" onClick={onClose} />
+                        <OverlayCloseButton data-testid="premium-shop-close" aria-label={MSG.PREMIUM_SHOP_CLOSE_ARIA} onClick={onClose} />
                     </div>
                 </header>
 

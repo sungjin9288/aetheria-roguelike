@@ -77,7 +77,9 @@ const FieldDock = ({
         />
         <ActionButton
           data-testid="control-map-open"
-          title={MSG.FIELD_ACTION_MAP}
+          // 소유자 결정 2026-10-26 D12: 지도 단추는 늘 보이고, 쓸 수 없을 때는 꺼진 채 이유를 이름 · 툴팁으로 말한다.
+          title={onOpenMap ? MSG.FIELD_ACTION_MAP : MSG.FIELD_ACTION_MAP_UNAVAILABLE}
+          aria-label={onOpenMap ? MSG.FIELD_ACTION_MAP : MSG.FIELD_ACTION_MAP_UNAVAILABLE}
           icon={<MapIcon size={18} />}
           label={<span>{MSG.FIELD_ACTION_MAP}</span>}
           disabled={!onOpenMap}

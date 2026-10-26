@@ -4359,9 +4359,10 @@ details[open] > summary .ab-chevron { transform: rotate(180deg); }
 }
 
 /* ── 데스크톱 배치 (VD-04 · UX-12, 1024px 이상 — hooks/useDesktopLayout.ts와 같은 경계) ── */
+/* 소유자 결정 2026-10-26 D6: 기록 열의 탭이 내용 왼쪽 세로 목록(56px)이 되어 열을 넓혔다 — 내용 폭이 휴대폰 기록 창(약 300px) 아래로 줄지 않게. */
 .ae-desktop-grid {
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr) 320px;
+  grid-template-columns: 216px minmax(0, 1fr) 384px;
   gap: 12px;
   width: 100%;
   max-width: 1480px;
@@ -4372,14 +4373,14 @@ details[open] > summary .ab-chevron { transform: rotate(180deg); }
 
 @media (min-width: 1280px) {
   .ae-desktop-grid {
-    grid-template-columns: 264px minmax(0, 1fr) 380px;
+    grid-template-columns: 256px minmax(0, 1fr) 432px;
     gap: 14px;
   }
 }
 
 @media (min-width: 1440px) {
   .ae-desktop-grid {
-    grid-template-columns: 280px minmax(0, 760px) 440px;
+    grid-template-columns: 280px minmax(0, 760px) 472px;
     justify-content: center;
     gap: 16px;
   }

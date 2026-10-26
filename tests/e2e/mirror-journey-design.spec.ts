@@ -1,13 +1,13 @@
 import { expect, test } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { openTownFacilities, startE2ERun } from './testHelpers';
 
 test.describe('에테르 거울 영구 성장', () => {
     test.beforeEach(async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
-        await startE2ERun(page, { openStatusConsole: true });
+        await startE2ERun(page);
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedMirrorJourneyScenario?.());
-        await expect(page.getByTestId('open-mirror-panel')).toBeVisible({ timeout: 8_000 });
-        await page.getByTestId('open-mirror-panel').click();
+        await openTownFacilities(page);
+        await page.getByTestId('control-mirror').click();
         await expect(page.getByTestId('mirror-panel')).toBeVisible();
     });
 
@@ -87,10 +87,10 @@ test.describe('에테르 거울 영구 성장', () => {
 test.describe('에테르 거울 — 끝없는 단계', () => {
     const openMirror = async (page: import('@playwright/test').Page, fullTree: boolean) => {
         await page.setViewportSize({ width: 390, height: 844 });
-        await startE2ERun(page, { openStatusConsole: true });
+        await startE2ERun(page);
         await page.evaluate((full) => window.__AETHERIA_TEST_API__?.seedMirrorJourneyScenario?.(full), fullTree);
-        await expect(page.getByTestId('open-mirror-panel')).toBeVisible({ timeout: 8_000 });
-        await page.getByTestId('open-mirror-panel').click();
+        await openTownFacilities(page);
+        await page.getByTestId('control-mirror').click();
         await expect(page.getByTestId('mirror-panel')).toBeVisible();
         await page.getByTestId('mirror-path-endless').click();
     };

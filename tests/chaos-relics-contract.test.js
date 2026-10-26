@@ -17,7 +17,7 @@ import { endCombatScopedRelics } from '../src/utils/combatScopedRelics.js';
 import { formatSynergyDrawback } from '../src/utils/relicSynergyHint.js';
 import { migrateData } from '../src/utils/dataMigration.js';
 import { applyBattleStartRelics } from '../src/hooks/gameActions/exploreFlow.js';
-import SystemTab from '../src/components/tabs/SystemTab.tsx';
+import StatsPanel from '../src/components/StatsPanel.tsx';
 import { makePlayerFixture, renderStatic } from './helpers/render.ts';
 
 /**
@@ -218,16 +218,15 @@ test('혼돈의 보석: 고른 능력치가 전투 내내 30% 오른다 — 턴�
 });
 
 test('유물 목록: 빌린 유물은 보유 수에 세지 않고 "이번 전투" 표시를 단다', () => {
+    // 소유자 결정 2026-10-26 D2: 보유 유물 목록은 설정 탭에서 능력치 탭(StatsPanel)으로 옮겼다.
     const borrowed = { ...relic('암석 피부'), borrowed: true };
-    const html = renderStatic(createElement(SystemTab, {
+    const html = renderStatic(createElement(StatsPanel, {
         player: makePlayerFixture({ relics: [relic('혼돈의 심장'), borrowed] }),
-        stats: { maxHp: 150, maxMp: 50 },
-        actions: { leaderboard: [], isAdmin: () => false },
-        runtime: { viewport: 'mobile', gameState: 'combat', syncStatus: 'synced', isAiThinking: false },
+        stats: null,
     }));
-    assert.ok(html.includes('보유 유물 1/5'), '보유 수는 빌린 유물을 빼고 센다');
-    assert.ok(!html.includes('보유 유물 2/5'));
-    const tagged = html.match(/data-testid="system-relic-borrowed"/g) || [];
+    assert.ok(html.includes(MSG.STATS_RELIC_TITLE(1, 5)), '보유 수는 빌린 유물을 빼고 센다');
+    assert.ok(!html.includes(MSG.STATS_RELIC_TITLE(2, 5)));
+    const tagged = html.match(/data-testid="stats-relic-borrowed"/g) || [];
     assert.equal(tagged.length, 1);
     assert.ok(html.includes(MSG.CHAOS_HEART_BORROWED_TAG));
 });

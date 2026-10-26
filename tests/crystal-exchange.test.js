@@ -67,13 +67,24 @@ test('크리스탈 획득처는 실제 보상 데이터의 범위를 사용한�
     );
 });
 
-test('교환소는 잔액과 무관하게 시스템 화면에서 열리고 확정 버튼만 소비를 실행한다', async () => {
+test('교환소는 잔액과 무관하게 마을 시설에서 열리고 확정 버튼만 소비를 실행한다', async () => {
+    // 소유자 결정 2026-10-26 D2(UX-04): 진입점은 설정 탭의 '장기 성장' 칸이 아니라 마을 시설이다(안전지대에서만 그려진다).
+    const { buildControlButtons } = await import('../src/components/control/controlButtons.ts');
+    let opened = 0;
+    const { buttonByKey } = buildControlButtons({ showGraveRecovery: false, onOpenCrystalExchange: () => { opened += 1; } });
+    const crystal = buttonByKey.get('crystal');
+    assert.ok(crystal, '마을 시설에 교환소 단추가 있다');
+    assert.equal(crystal.disabled, false, '잔액과 무관하게 눌린다');
+    crystal.onClick();
+    assert.equal(opened, 1, '누르면 교환소를 연다');
+    assert.equal(buildControlButtons({ showGraveRecovery: false }).buttonByKey.get('crystal').disabled, true, '여는 곳이 없으면 꺼진다');
+
     const systemTab = await readFile(new URL('../src/components/tabs/SystemTab.tsx', import.meta.url), 'utf8');
     const gameRoot = await readFile(new URL('../src/components/app/GameRoot.tsx', import.meta.url), 'utf8');
     const exchange = await readFile(new URL('../src/components/PremiumShop.tsx', import.meta.url), 'utf8');
 
-    assert.match(systemTab, /data-testid="open-crystal-exchange"/);
-    assert.match(systemTab, /runtime\?\.onOpenCrystalExchange\?\.\(\)/);
+    // 부재 불변식: 설정 탭의 두 번째 진입점이 되돌아오지 않는다.
+    assert.doesNotMatch(systemTab, /open-crystal-exchange|onOpenCrystalExchange/);
     assert.match(gameRoot, /onOpenCrystalExchange=\{\(\) => setPremiumShopOpen\(true\)\}/);
     assert.match(exchange, /data-testid="crystal-exchange-confirm"/);
     assert.match(exchange, /onClick=\{confirmExchange\}/);

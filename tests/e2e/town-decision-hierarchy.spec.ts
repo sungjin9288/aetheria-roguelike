@@ -2,7 +2,8 @@ import { test, expect } from '@playwright/test';
 import { openTownFacilities, startE2ERun } from './testHelpers';
 
 // 2026-10 통합 감사(town-nav UX-01 · CL-02): 마을 시설 여섯 개 — 펼치면 모두 화면 안으로 들어와야 한다.
-const FACILITY_TEST_IDS = ['control-rest', 'control-quests', 'control-market', 'control-class', 'control-craft', 'control-mirror'];
+// 소유자 결정 2026-10-26 D2(UX-04): 에테르 교환소도 마을 시설이다(세 열 격자의 셋째 줄).
+const FACILITY_TEST_IDS = ['control-rest', 'control-quests', 'control-market', 'control-class', 'control-craft', 'control-mirror', 'control-crystal-exchange'];
 // 작은 폰(SE · 12 mini급)에서는 펼친 시설 칸이 화면 아래에 그려졌다(390x664 · 375x667에서 보이는 시설 0개).
 const FACILITY_VIEWPORTS = [
     { width: 375, height: 667 },
@@ -94,6 +95,11 @@ test.describe('Town decision hierarchy', () => {
             await expect(page.getByTestId(testId)).toBeVisible();
         }
         await expect(page.getByTestId('control-mirror')).toBeEnabled();
+        await expect(page.getByTestId('control-crystal-exchange')).toBeEnabled();
+        await page.getByTestId('control-crystal-exchange').click();
+        await expect(page.getByTestId('premium-shop')).toBeVisible();
+        await page.getByTestId('premium-shop-close').click();
+        await expect(page.getByTestId('premium-shop')).toHaveCount(0);
 
         await page.screenshot({
             path: 'playtest-artifacts/mobile-town-hierarchy/facilities-open.png',

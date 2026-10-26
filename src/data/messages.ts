@@ -519,6 +519,8 @@ export const MSG = {
         class: '전직',
         craft: '제작',
         mirror: '에테르 거울',
+        // 소유자 결정 2026-10-26 D2(UX-04): 크리스탈 교환도 마을 시설이다 — 기록의 설정 탭에 묻혀 있었다.
+        crystal: '에테르 교환소',
     },
     // 원정 조작판 — 이동은 하나, 탐험이 주 행동, 가방은 기록의 가방 탭을 연다(UX-03 · UX-07).
     FIELD_ACTION_BAG: '가방',
@@ -1580,7 +1582,6 @@ export const MSG = {
         growth: { cause: '보스를 쓰러뜨렸음', lesson: '기반은 충분했음', next: '약했던 곳 보강하기' },
     },
     RUN_SUMMARY_FOCUS_STRONG_STREAK: '공격을 이어 가며 연속 처치 보너스를 안정적으로 지켰습니다.',
-    SYSTEM_GROWTH_LINKS_DESC: '다음 여정을 준비하거나 모은 계승 정수와 크리스탈을 필요한 곳에 씁니다.',
     RUN_SUMMARY_STATS_ARIA: '이번 여정 성과',
     RUN_SUMMARY_RESTART: '새 여정 시작',
     // 사망 화면: 무엇에 쓰러졌는지 · 그 적이 얼마나 남았는지(정보만 — 추천은 붙이지 않는다).
@@ -1717,17 +1718,12 @@ export const MSG = {
     SYSTEM_EQUIPMENT_DETAIL_DESC: '자동은 초반에는 핵심만, 성장한 뒤에는 세부 효과까지 보여 줍니다.',
     SYSTEM_READABILITY_CHANGED: (label: string) => `화면을 ${label} 표시로 바꿨습니다.`,
     SYSTEM_EQUIPMENT_DETAIL_CHANGED: (label: string) => `장비 정보를 ${label} 표시로 바꿨습니다.`,
-    SYSTEM_MIRROR_LINK_DESC: '계승 정수로 영구 성장을 준비합니다.',
-    SYSTEM_CRYSTAL_LINK_DESC: '가방과 원정 지원을 교환합니다.',
-    SYSTEM_ESSENCE_UNIT: '정수',
-    SYSTEM_CRYSTAL_UNIT: '크리스탈',
     SYSTEM_TITLE_NONE: '선택 안 함',
     SYSTEM_TITLE_NONE_HINT: '칭호를 선택하면 고유 효과가 적용됩니다.',
     SYSTEM_TITLE_PICKER: (count: number) => `칭호 바꾸기 · ${count}개 보유`,
     SYSTEM_TITLE_ACTIVE: '적용 중',
     SYSTEM_TITLE_APPLIED: (label: string) => `[${label}] 칭호를 적용했습니다.`,
     SYSTEM_TITLE_CLEARED: '칭호 적용을 해제했습니다.',
-    SYSTEM_RELIC_LIST_DESC: '현재 여정에서 얻은 유물과 효과를 확인합니다.',
     SYSTEM_SECONDARY_TITLE: '기타',
     SYSTEM_SECONDARY_DESC: '순위, 의견, 저장과 기기 점검은 필요할 때 펼쳐 봅니다.',
     SYSTEM_LEADERBOARD_DESC: '다른 모험가와 누적 처치 기록을 비교합니다.',
@@ -1947,4 +1943,15 @@ export const MSG = {
     SKILL_BRANCH_OPENED: (skillNames: readonly string[]) => (
         `${skillNames.join(' · ')}의 성장을 고를 수 있습니다. 기록의 기술 탭에서 고릅니다.`
     ),
+    // === 소유자 결정 2026-10-26 · 마을 · 진입점 · 데스크톱 ===
+    // D2: 보유 유물 목록은 기록의 상태 탭이 그린다(설정 탭에서 옮김) — 펼친 채로 보인다.
+    STATS_RELIC_TITLE: (count: number, capacity: number) => `보유 유물 ${count}/${capacity}`,
+    STATS_RELIC_DESC: '이번 여정에서 얻은 유물과 효과입니다.',
+    // D12: 지도 단추는 늘 보인다 — 열 수 없을 때는 눌리지 않고, 이름이 그 이유를 말한다.
+    FIELD_ACTION_MAP_UNAVAILABLE: '지도 · 지금은 모험 기록을 열 수 없습니다',
+    // D6: 데스크톱 기록 열의 세로 탭 목록 이름.
+    ARCHIVE_TAB_LIST_ARIA: '모험 기록 선택',
+    // D17(UX-09): 덮는 화면의 닫기 단추 이름은 "<무엇> 닫기"다 — 컴포넌트에 적혀 있던 이름을 옮겼다(끝 낱말은 UI_CLOSE와 같다).
+    PREMIUM_SHOP_CLOSE_ARIA: '에테르 교환소 닫기',
+    MIRROR_PANEL_CLOSE_ARIA: '에테르 거울 닫기',
 };

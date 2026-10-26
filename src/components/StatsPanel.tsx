@@ -1,14 +1,17 @@
-import { useMemo } from 'react';
+import { Fragment, useMemo } from 'react';
 import { motion as Motion } from 'framer-motion';
 import { Activity, BarChart3, ChevronDown, Coins, Compass, Flame, FlaskConical, Footprints, Hammer, Heart, Link2, Shield, Skull, Sparkles, Sword, Target, TrendingUp, Zap } from 'lucide-react';
-import type { FullStats, Player } from '../types/index.js';
+import type { FullStats, Player, Relic } from '../types/index.js';
 import { getTraitPassiveParts, getTraitProfile } from '../utils/runProfileUtils';
-import { formatRelicText } from '../utils/relicPresentation';
+import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation';
 import { formatEventText } from '../utils/eventPresentation';
 import { formatSynergyDrawback } from '../utils/relicSynergyHint';
 import SignalChip from './archive/SignalChip';
 import { MSG } from '../data/messages';
-import { BALANCE } from '../data/constants';
+import { BALANCE, RARITY_CLASSES } from '../data/constants';
+import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
+import { countOwnedRelics } from '../systems/chaosHeart';
+import RelicIcon from './icons/RelicIcon';
 import { getMetaBonusRamp } from '../systems/metaBonusRamp';
 import { countDiscoveredMaps } from '../utils/discoveredMaps';
 import { ELITE_TITLE_MAPS, sumEliteTitleBonus } from '../utils/eliteTitles';
@@ -69,6 +72,14 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
 
     const trait = useMemo(() => stats?.traitProfile || (player ? getTraitProfile(player, stats) : null), [player, stats]);
     const passiveParts = useMemo(() => getTraitPassiveParts(trait), [trait]);
+    // 소유자 결정 2026-10-26 D28: 패시브는 항목("방어력 +4%")마다 한 덩어리로 줄을 넘긴다 — 한 줄에 이어 쓰던 동안
+    //   402px에서 "+4%"만 다음 줄로 떨어졌다. 수치 조각이 없는 성향은 데이터 문구를 같은 구분자로 나눈다.
+    const passiveSegments = useMemo(() => (
+        passiveParts.length > 0 ? passiveParts : String(trait?.passiveLabel || '').split(' / ').filter(Boolean)
+    ), [passiveParts, trait]);
+    // 소유자 결정 2026-10-26 D2: 보유 유물 목록은 설정 탭에서 이 능력치 탭으로 옮겼다(펼친 채로 보인다).
+    const relics = useMemo<Relic[]>(() => player?.relics || [], [player?.relics]);
+    const relicCapacity = getPrestigeUnlocks(player?.meta?.prestigeRank).maxRelics;
 
     const activeSignatureSet = stats?.activeSignatureSet || null;
     const sigSetTone = activeSignatureSet ? (SIG_SET_TONE[activeSignatureSet.tone] || SIG_SET_TONE.holy) : null;
@@ -160,7 +171,15 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                                 <Shield size={12} aria-hidden="true" /> 패시브
                             </div>
                             <div className="mt-1 text-[13px] font-readable font-bold text-ae-ink">
-                                {passiveParts.length > 0 ? passiveParts.join(' / ') : trait.passiveLabel}
+                                {/* 구분자는 앞 항목에 붙인다 — 줄이 넘어가도 '/'만 홀로 한 줄을 차지하지 않는다. */}
+                                {passiveSegments.map((part, index) => (
+                                    <Fragment key={part}>
+                                        {index > 0 && ' '}
+                                        <span data-testid="stats-passive-part" className="whitespace-nowrap">
+                                            {index < passiveSegments.length - 1 ? `${part} /` : part}
+                                        </span>
+                                    </Fragment>
+                                ))}
                             </div>
                         </div>
                     </div>
@@ -276,6 +295,34 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                                 </span>
                             </div>
                     ))}
+                    </div>
+                </section>
+            )}
+
+            {relics.length > 0 && (
+                <section data-testid="stats-relic-section" className="ae-card is-quiet px-3.5 py-3">
+                    <div className="mb-1 flex items-center gap-1.5 text-[13px] font-readable font-bold text-ae-ink">
+                        <Sparkles size={13} aria-hidden="true" className="text-ae-ether" />
+                        <span data-testid="stats-relic-title" className="font-fira tabular-nums">{MSG.STATS_RELIC_TITLE(countOwnedRelics(relics), relicCapacity)}</span>
+                    </div>
+                    <p className="font-readable aether-type-meta leading-snug text-ae-ink-3">{MSG.STATS_RELIC_DESC}</p>
+                    <div data-testid="stats-relic-list" className="ae-rows mt-1">
+                        {relics.map((relic) => (
+                            <div key={relic.id} data-testid="stats-relic-row" className="flex items-center gap-3 py-2.5">
+                                <RelicIcon relic={relic} size={42} />
+                                <div className="min-w-0 flex-1">
+                                    <div className={`font-readable aether-type-body font-bold ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-ae-ink'}`}>
+                                        {getRelicDisplayName(relic.name)}
+                                        {relic.borrowed && (
+                                            <span data-testid="stats-relic-borrowed" className="ae-chip ml-2 align-middle">
+                                                {MSG.CHAOS_HEART_BORROWED_TAG}
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="mt-1 font-readable aether-type-meta leading-snug text-ae-ink-2">{formatRelicText(relic.desc)}</p>
+                                </div>
+                            </div>
+                        ))}
                     </div>
                 </section>
             )}

@@ -7,7 +7,7 @@ import { getChainEventForLoc } from '../data/eventChains.js';
 import { getShopBuyPrice } from './shopRotation';
 import type { getAdventureGuidance, getExpeditionPreparation } from './adventureGuide.js';
 
-export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'mirror' | 'grave';
+export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'mirror' | 'crystal' | 'grave';
 
 /**
  * safe 지역에서 explore 행동이 무엇을 의미하는지 — 라벨을 컴포넌트가 하드코딩하지 않게
@@ -60,7 +60,9 @@ interface TownActionContext {
 // 2026-10 통합 감사(CL-02): 계승 정수의 소비처(에테르 거울)도 마을 시설이다 — 기록의 설정 탭 끝과 계승 화면에만 있었다.
 //   시설은 행동 종류만 그린다(Wave 136 — 이유 · 상태 문구 없음). 라벨은 MSG 소유.
 type TownFacilityKey = keyof typeof MSG.TOWN_FACILITY_LABELS & TownActionKey;
-const FACILITY_KEYS: TownFacilityKey[] = ['rest', 'quests', 'market', 'class', 'craft', 'mirror'];
+// 소유자 결정 2026-10-26 D2(UX-04): 크리스탈 교환(에테르 교환소)도 마을 시설이다 — 설정 탭의 '장기 성장' 칸에서 옮겼다.
+//   마을 시설은 안전지대에서만 그려지므로 이 진입점도 안전지대에서만 열린다.
+const FACILITY_KEYS: TownFacilityKey[] = ['rest', 'quests', 'market', 'class', 'craft', 'mirror', 'crystal'];
 
 const PRIMARY_BUTTON_KEYS: Partial<Record<TownPrimaryKind, TownActionKey>> = {
     explore: 'explore',

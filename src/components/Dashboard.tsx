@@ -301,6 +301,103 @@ const Dashboard = ({
         </div>
     );
 
+    const tabButtons = TAB_ITEMS.map((tab) => (
+        <ArchiveTabButton
+            key={tab.id}
+            icon={tab.icon}
+            label={tab.label}
+            active={sideTab === tab.id}
+            onClick={() => selectTab(tab.id)}
+            compact
+            rail={!isColumn}
+            testId={`archive-tab-${tab.id}`}
+            {...getTabExtras(tab.id)}
+        />
+    ));
+
+    const contentPane = (
+        <div
+            data-testid="mobile-archive-console-content"
+            className={`custom-scrollbar min-h-0 min-w-0 flex-1 overflow-y-auto ${isColumn ? '' : 'mt-2'}`}
+        >
+            {renderTabContent()}
+
+            {sideTab === 'system' && (
+                <section
+                    data-testid="system-reset-section"
+                    className="mt-3 border-t border-ae-threat/20 px-1 pb-2 pt-3"
+                >
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="min-w-0">
+                            <h3 className="text-[13px] font-readable font-bold text-ae-threat">{MSG.MENU_RESET_TITLE}</h3>
+                            <p className="mt-1 text-[12px] font-readable leading-relaxed text-ae-ink-2">
+                                {MSG.MENU_RESET_SUMMARY}
+                            </p>
+                        </div>
+                        <button
+                            ref={resetTriggerRef}
+                            type="button"
+                            data-testid="menu-reset"
+                            aria-expanded={confirmMenuReset}
+                            aria-controls="menu-reset-confirmation"
+                            onClick={() => setConfirmMenuReset((open) => !open)}
+                            className="ae-btn ae-btn-ghost min-h-[44px] shrink-0 px-3 text-[13px] font-readable"
+                            title={MSG.MENU_RESET_TITLE}
+                        >
+                            <RotateCcw size={15} aria-hidden="true" />
+                            <span>다시 시작</span>
+                        </button>
+                    </div>
+
+                    {confirmMenuReset && (
+                        <div
+                            ref={resetConfirmationRef}
+                            id="menu-reset-confirmation"
+                            data-testid="menu-reset-confirmation"
+                            role="alertdialog"
+                            aria-labelledby="menu-reset-confirm-title"
+                            className="ae-well ae-threat-rim mt-2 p-3"
+                        >
+                            <h4 id="menu-reset-confirm-title" className="text-[14px] font-readable font-bold text-ae-ink">
+                                새 여정을 시작할까요?
+                            </h4>
+                            <p data-testid="menu-reset-loss" className="mt-1 text-[12px] font-readable leading-relaxed text-ae-threat">
+                                {MSG.MENU_RESET_LOSS(getJourneySurfaceText('death', 'reset'))}
+                            </p>
+                            <p data-testid="menu-reset-preserved" className="mt-1 text-[12px] font-readable leading-relaxed text-ae-good">
+                                {MSG.MENU_RESET_PRESERVED(getJourneySurfaceText('death', 'kept'))}
+                            </p>
+                            <div className="mt-2 grid grid-cols-2 gap-2">
+                                <button
+                                    ref={resetConfirmButtonRef}
+                                    type="button"
+                                    data-testid="menu-reset-confirm"
+                                    onClick={() => {
+                                        setConfirmMenuReset(false);
+                                        actions?.reset?.();
+                                    }}
+                                    className="ae-btn ae-btn-danger min-h-[44px] px-2 text-[13px] font-readable"
+                                >
+                                    <RotateCcw size={15} aria-hidden="true" />
+                                    <span>현재 여정 다시 시작</span>
+                                </button>
+                                <button
+                                    type="button"
+                                    data-testid="menu-reset-cancel"
+                                    onClick={cancelMenuReset}
+                                    className="ae-btn ae-btn-ghost min-h-[44px] px-2 text-[13px] font-readable"
+                                >
+                                    <X size={15} aria-hidden="true" />
+                                    <span>취소</span>
+                                </button>
+                            </div>
+                        </div>
+                    )}
+                </section>
+            )}
+        </div>
+    );
+
     return (
         <section
             data-testid="mobile-archive-console"
@@ -321,154 +418,79 @@ const Dashboard = ({
                 )}
             </header>
 
-            <div
-                data-testid="archive-tab-rail-frame"
-                data-overflow={railScroll.overflows ? 'true' : 'false'}
-                data-at-start={railScroll.atStart ? 'true' : 'false'}
-                data-at-end={railScroll.atEnd ? 'true' : 'false'}
-                className="relative mt-1 flex shrink-0 items-center gap-1"
-            >
-                <div className="relative min-w-0 flex-1">
+            {isColumn ? (
+                // 소유자 결정 2026-10-26 D6: 데스크톱 기록 열의 탭은 세로 목록이다 — 4열 타일 격자가 내용 위를 세 줄(약 150px) 차지했다.
+                //   목록은 내용 왼쪽에 서고, 넘치면 목록만 세로로 넘긴다(탭 순서 · 묶음은 휴대폰 레일과 같다).
+                <div data-testid="archive-column-body" className="mt-2 flex min-h-0 flex-1 gap-2">
                     <nav
                         ref={archiveRailRef}
                         id="archive-tab-rail"
                         data-testid="archive-tab-rail"
-                        aria-label="모험 기록 선택"
-                        className={isColumn
-                            ? 'grid min-w-0 flex-1 grid-cols-4 gap-1.5 py-1'
-                            : 'custom-scrollbar flex min-w-0 flex-1 shrink-0 gap-1 overflow-x-auto py-1'}
-                        style={!isColumn && railMask ? { maskImage: railMask, WebkitMaskImage: railMask } : undefined}
+                        aria-label={MSG.ARCHIVE_TAB_LIST_ARIA}
+                        data-orientation="vertical"
+                        className="custom-scrollbar flex w-14 shrink-0 flex-col gap-1.5 overflow-y-auto"
                     >
-                        {TAB_ITEMS.map((tab) => (
-                            <ArchiveTabButton
-                                key={tab.id}
-                                icon={tab.icon}
-                                label={tab.label}
-                                active={sideTab === tab.id}
-                                onClick={() => selectTab(tab.id)}
-                                compact
-                                rail={!isColumn}
-                                testId={`archive-tab-${tab.id}`}
-                                {...getTabExtras(tab.id)}
-                            />
-                        ))}
+                        {tabButtons}
                     </nav>
-                    {!isColumn && railScroll.overflows && (
-                        <div
-                            data-testid="archive-tab-rail-progress"
-                            aria-hidden="true"
-                            className="ae-archive-progress pointer-events-none absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden rounded-full"
-                        >
-                            <div
-                                className="ae-archive-progress-thumb h-full rounded-full"
-                                style={{ width: `${railScroll.thumb}%`, marginLeft: `${railScroll.offset}%` }}
-                            />
-                        </div>
-                    )}
+                    {contentPane}
                 </div>
-                {!isColumn && railScroll.overflows && (
-                    <button
-                        type="button"
-                        data-testid="archive-tab-rail-more"
-                        aria-label={railScroll.atEnd ? MSG.ARCHIVE_RAIL_START_ARIA : MSG.ARCHIVE_RAIL_MORE_ARIA}
-                        aria-controls="archive-tab-rail"
-                        onClick={pageArchiveRail}
-                        className="ae-archive-tab is-tile flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+            ) : (
+                <>
+                    <div
+                        data-testid="archive-tab-rail-frame"
+                        data-overflow={railScroll.overflows ? 'true' : 'false'}
+                        data-at-start={railScroll.atStart ? 'true' : 'false'}
+                        data-at-end={railScroll.atEnd ? 'true' : 'false'}
+                        className="relative mt-1 flex shrink-0 items-center gap-1"
                     >
-                        {railScroll.atEnd ? <ChevronLeft size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}
-                    </button>
-                )}
-                {!isColumn && (
-                    <OverlayCloseButton
-                        data-testid="mobile-console-return-log"
-                        onClick={() => {
-                            setConfirmMenuReset(false);
-                            onReturnToLog?.();
-                        }}
-                    />
-                )}
-            </div>
-
-            <div
-                data-testid="mobile-archive-console-content"
-                className="custom-scrollbar mt-2 min-h-0 flex-1 overflow-y-auto"
-            >
-                {renderTabContent()}
-
-                {sideTab === 'system' && (
-                    <section
-                        data-testid="system-reset-section"
-                        className="mt-3 border-t border-ae-threat/20 px-1 pb-2 pt-3"
-                    >
-                        <div className="flex items-center justify-between gap-3">
-                            <div className="min-w-0">
-                                <h3 className="text-[13px] font-readable font-bold text-ae-threat">{MSG.MENU_RESET_TITLE}</h3>
-                                <p className="mt-1 text-[12px] font-readable leading-relaxed text-ae-ink-2">
-                                    {MSG.MENU_RESET_SUMMARY}
-                                </p>
-                            </div>
-                            <button
-                                ref={resetTriggerRef}
-                                type="button"
-                                data-testid="menu-reset"
-                                aria-expanded={confirmMenuReset}
-                                aria-controls="menu-reset-confirmation"
-                                onClick={() => setConfirmMenuReset((open) => !open)}
-                                className="ae-btn ae-btn-ghost min-h-[44px] shrink-0 px-3 text-[13px] font-readable"
-                                title={MSG.MENU_RESET_TITLE}
+                        <div className="relative min-w-0 flex-1">
+                            <nav
+                                ref={archiveRailRef}
+                                id="archive-tab-rail"
+                                data-testid="archive-tab-rail"
+                                aria-label={MSG.ARCHIVE_TAB_LIST_ARIA}
+                                data-orientation="horizontal"
+                                className="custom-scrollbar flex min-w-0 flex-1 shrink-0 gap-1 overflow-x-auto py-1"
+                                style={railMask ? { maskImage: railMask, WebkitMaskImage: railMask } : undefined}
                             >
-                                <RotateCcw size={15} aria-hidden="true" />
-                                <span>다시 시작</span>
-                            </button>
-                        </div>
-
-                        {confirmMenuReset && (
-                            <div
-                                ref={resetConfirmationRef}
-                                id="menu-reset-confirmation"
-                                data-testid="menu-reset-confirmation"
-                                role="alertdialog"
-                                aria-labelledby="menu-reset-confirm-title"
-                                className="ae-well ae-threat-rim mt-2 p-3"
-                            >
-                                <h4 id="menu-reset-confirm-title" className="text-[14px] font-readable font-bold text-ae-ink">
-                                    새 여정을 시작할까요?
-                                </h4>
-                                <p data-testid="menu-reset-loss" className="mt-1 text-[12px] font-readable leading-relaxed text-ae-threat">
-                                    {MSG.MENU_RESET_LOSS(getJourneySurfaceText('death', 'reset'))}
-                                </p>
-                                <p data-testid="menu-reset-preserved" className="mt-1 text-[12px] font-readable leading-relaxed text-ae-good">
-                                    {MSG.MENU_RESET_PRESERVED(getJourneySurfaceText('death', 'kept'))}
-                                </p>
-                                <div className="mt-2 grid grid-cols-2 gap-2">
-                                    <button
-                                        ref={resetConfirmButtonRef}
-                                        type="button"
-                                        data-testid="menu-reset-confirm"
-                                        onClick={() => {
-                                            setConfirmMenuReset(false);
-                                            actions?.reset?.();
-                                        }}
-                                        className="ae-btn ae-btn-danger min-h-[44px] px-2 text-[13px] font-readable"
-                                    >
-                                        <RotateCcw size={15} aria-hidden="true" />
-                                        <span>현재 여정 다시 시작</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        data-testid="menu-reset-cancel"
-                                        onClick={cancelMenuReset}
-                                        className="ae-btn ae-btn-ghost min-h-[44px] px-2 text-[13px] font-readable"
-                                    >
-                                        <X size={15} aria-hidden="true" />
-                                        <span>취소</span>
-                                    </button>
+                                {tabButtons}
+                            </nav>
+                            {railScroll.overflows && (
+                                <div
+                                    data-testid="archive-tab-rail-progress"
+                                    aria-hidden="true"
+                                    className="ae-archive-progress pointer-events-none absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden rounded-full"
+                                >
+                                    <div
+                                        className="ae-archive-progress-thumb h-full rounded-full"
+                                        style={{ width: `${railScroll.thumb}%`, marginLeft: `${railScroll.offset}%` }}
+                                    />
                                 </div>
-                            </div>
+                            )}
+                        </div>
+                        {railScroll.overflows && (
+                            <button
+                                type="button"
+                                data-testid="archive-tab-rail-more"
+                                aria-label={railScroll.atEnd ? MSG.ARCHIVE_RAIL_START_ARIA : MSG.ARCHIVE_RAIL_MORE_ARIA}
+                                aria-controls="archive-tab-rail"
+                                onClick={pageArchiveRail}
+                                className="ae-archive-tab is-tile flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                            >
+                                {railScroll.atEnd ? <ChevronLeft size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}
+                            </button>
                         )}
-                    </section>
-                )}
-            </div>
+                        <OverlayCloseButton
+                            data-testid="mobile-console-return-log"
+                            onClick={() => {
+                                setConfirmMenuReset(false);
+                                onReturnToLog?.();
+                            }}
+                        />
+                    </div>
+                    {contentPane}
+                </>
+            )}
         </section>
     );
 };

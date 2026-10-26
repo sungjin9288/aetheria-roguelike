@@ -253,6 +253,12 @@ test('Wave 95: 화면 — 무료 · 유료(넘어가는 사다리 지금 → 다
     const free = render(views[0]);
     const button = free.match(/<button[^>]*data-testid="probe-rule-reroll"[^>]*>/)[0];
     assert.doesNotMatch(button, /\sdisabled=""/);
+    // 소유자 결정 2026-10-26 D10: 무료 다시 뽑기는 유리 단추, 영구 성장을 내려놓는 유료 다시 뽑기는 위험 색 단추다.
+    assert.match(button, /data-variant="glass"/);
+    for (const paid of [views[1], views[2]]) {
+        assert.equal(paid.free, false);
+        assert.match(render(paid).match(/<button[^>]*data-testid="probe-rule-reroll"[^>]*>/)[0], /data-variant="danger"/);
+    }
     assert.ok(free.includes(MSG.ASCENSION_RULE_REROLL_FREE) && free.includes(views[0].countLabel));
     assert.match(render(views[MAX_REROLLS]).match(/<button[^>]*data-testid="probe-rule-reroll"[^>]*>/)[0], /\sdisabled=""/);
     assert.ok(!render(null).includes('probe-rule-reroll'), '다시 뽑을 수 없으면 버튼이 없다');

@@ -10,6 +10,7 @@ import MapNavigator from '../src/components/MapNavigator.tsx';
 import StatsPanel from '../src/components/StatsPanel.tsx';
 import EquipmentPanel from '../src/components/EquipmentPanel.tsx';
 import { DB } from '../src/data/db.ts';
+import { MSG } from '../src/data/messages.ts';
 import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 
 /**
@@ -45,6 +46,29 @@ test('기록 셸: 시트 배치는 닫기 단추를, 열 배치는 닫기 · 더
     assert.match(column, /data-layout="column"/);
     assert.ok(!column.includes('data-testid="mobile-console-return-log"'), '열 배치에는 닫을 것이 없다');
     assert.ok(!column.includes('data-testid="archive-tab-rail-more"'), '열 배치는 탭이 모두 보여 더 보기가 없다');
+});
+
+test('소유자 결정 2026-10-26 D6: 데스크톱 기록 열의 탭은 내용 왼쪽의 세로 목록이고, 휴대폰 시트는 가로 레일 그대로다', () => {
+    const tabIdsIn = (html) => [...html.matchAll(/data-testid="archive-tab-([a-z]+)"/g)].map((match) => match[1])
+        .filter((id) => !['rail', 'rail-frame', 'rail-progress', 'rail-more'].includes(id));
+    const navTag = (html) => html.match(/<nav[^>]*data-testid="archive-tab-rail"[^>]*>/)[0];
+
+    const column = renderStatic(createElement(Dashboard, dashboardProps({ layout: 'column' })));
+    const columnNav = navTag(column);
+    assert.match(columnNav, /data-orientation="vertical"/);
+    assert.match(columnNav, /flex-col/);
+    assert.doesNotMatch(columnNav, /grid-cols-4/, '4열 타일 격자가 아니다');
+    assert.ok(columnNav.includes(`aria-label="${MSG.ARCHIVE_TAB_LIST_ARIA}"`));
+    const body = column.indexOf('data-testid="archive-column-body"');
+    assert.ok(body >= 0 && body < column.indexOf('data-testid="archive-tab-rail"'), '목록은 열 본문 안이다');
+    assert.ok(column.indexOf('data-testid="archive-tab-rail"') < column.indexOf('data-testid="mobile-archive-console-content"'), '목록이 내용 앞(왼쪽)이다');
+    assert.ok(!column.includes('data-testid="archive-tab-rail-frame"'), '가로 레일 틀은 없다');
+    assert.equal(tabIdsIn(column).length, 11, '탭 열한 개가 모두 있다');
+
+    const sheet = renderStatic(createElement(Dashboard, dashboardProps()));
+    assert.match(navTag(sheet), /data-orientation="horizontal"/);
+    assert.ok(sheet.includes('data-testid="archive-tab-rail-frame"'));
+    assert.deepEqual(tabIdsIn(sheet), tabIdsIn(column), '탭 순서는 같다');
 });
 
 test('기록 셸: 탭마다 선택 표시는 data-active 하나이고 지금 탭만 참이다', () => {

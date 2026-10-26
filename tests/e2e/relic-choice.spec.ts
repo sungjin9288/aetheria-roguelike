@@ -41,13 +41,12 @@ test.describe('유물 3택 선택', () => {
         if (await statusChip.count()) {
             await statusChip.click();
         }
-        await page.getByTestId('archive-tab-system').click();
+        // 소유자 결정 2026-10-26 D2: 보유 유물 목록은 능력치(상태) 탭에 펼친 채로 있다.
+        await page.getByTestId('archive-tab-stats').click();
 
-        const relicSection = page.getByTestId('system-relic-section');
+        const relicSection = page.getByTestId('stats-relic-section');
         await expect(relicSection).toBeVisible({ timeout: 5_000 });
         await expect(relicSection).toContainText('보유 유물 1/');
-
-        await page.getByTestId('system-relic-list').locator('summary').click();
         await expect(relicSection).toContainText('난공불락');
     });
 
@@ -59,9 +58,10 @@ test.describe('유물 3택 선택', () => {
         if (await statusChip.count()) {
             await statusChip.click();
         }
-        await page.getByTestId('archive-tab-system').click();
+        await page.getByTestId('archive-tab-stats').click();
+        await expect(page.getByTestId('stats-panel')).toBeVisible({ timeout: 5_000 });
 
-        // 유물이 0개면 SystemTab은 system-relic-section 자체를 렌더링하지 않는다.
-        await expect(page.getByTestId('system-relic-section')).toHaveCount(0);
+        // 유물이 0개면 능력치 탭은 stats-relic-section 자체를 렌더링하지 않는다.
+        await expect(page.getByTestId('stats-relic-section')).toHaveCount(0);
     });
 });
