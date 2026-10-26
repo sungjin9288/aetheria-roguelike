@@ -19,6 +19,7 @@ import { GS } from '../src/reducers/gameStates.js';
 import { DB } from '../src/data/db.js';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { createExploreActions } from '../src/hooks/gameActions/exploreActions.js';
+import { readControlPanelSource } from './helpers/controlPanelSource.mjs';
 
 /**
  * 2026-09 D1 — 플레이어가 직접 부르는 정찰.
@@ -363,7 +364,7 @@ test('⑥ 리듀서 핸들러가 게이지·무료 횟수·카드 개방을 한 
 });
 
 test('⑤ ControlPanel은 탐험 화면에 비용이 적힌 정찰 버튼을 렌더한다', async () => {
-    const source = await readFile(new URL('../src/components/ControlPanel.tsx', import.meta.url), 'utf8');
+    const source = await readControlPanelSource();
 
     assert.match(source, /data-testid="control-scout"/);
     assert.match(source, /data-testid="control-scout-cost"/);

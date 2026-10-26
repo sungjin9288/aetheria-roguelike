@@ -10,15 +10,20 @@ import {
     MapPin,
     Sparkles,
     Swords,
-    X,
 } from 'lucide-react';
 import type { ClassJourneyRecord, ExpeditionSummary } from '../types/player.js';
 import type { ExpeditionReturnAction } from '../utils/expeditionReturnFlow.js';
 import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
 import ClassJourneySummary from './ClassJourneySummary';
+import ActionButton from './ui/ActionButton';
+import Gauge from './ui/Gauge';
+import MomentCloseButton from './moments/MomentCloseButton';
+import MomentRegionArt from './moments/MomentRegionArt';
+import { MOMENT_DUR_PANEL, MOMENT_EASE } from './moments/momentMotion';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 import type { ReturnSupplyRewardViewModel } from '../hooks/useReturnSupplyRewardedAd';
 import { MSG } from '../data/messages';
+import { useOverlayDialog } from '../hooks/useOverlayDialog';
 
 interface ExpeditionDebriefCardProps {
     summary: ExpeditionSummary;
@@ -33,11 +38,10 @@ interface ExpeditionDebriefCardProps {
 
 const formatDuration = (durationMs: number) => {
     const minutes = Math.floor(durationMs / 60_000);
-    if (minutes < 1) return '1분 미만';
-    if (minutes < 60) return `${minutes}분`;
+    if (minutes < 1) return MSG.EXPEDITION_DEBRIEF_UNDER_MINUTE;
+    if (minutes < 60) return MSG.EXPEDITION_DEBRIEF_MINUTES(minutes);
     const hours = Math.floor(minutes / 60);
-    const remainder = minutes % 60;
-    return remainder > 0 ? `${hours}시간 ${remainder}분` : `${hours}시간`;
+    return MSG.EXPEDITION_DEBRIEF_HOURS(hours, minutes % 60);
 };
 
 const signedNumber = (value: number) => `${value > 0 ? '+' : ''}${value.toLocaleString('ko-KR')}`;
@@ -59,106 +63,118 @@ const ExpeditionDebriefCard = ({
     returnSupplyReward,
 }: ExpeditionDebriefCardProps) => {
     usePlatformBackHandler(true, onClose, 70);
+    const dialog = useOverlayDialog({ label: MSG.A11Y_DIALOG_EXPEDITION_DEBRIEF, onEscape: onClose });
     const itemLabels = summarizeItems(summary.newItems);
     const levelLabel = MSG.EXPEDITION_RETURN_LEVEL(summary.startLevel, summary.endLevel);
+    // 감사 VD-06: 수치마다 의미 색 토큰 하나 — 전투(위협) · 탐험(에테르) · 경험(경험) · 골드(금 글자).
     const metrics = [
-        { label: '전투', value: `${summary.battles}회`, icon: Swords, tone: 'text-rose-200' },
-        { label: '탐험', value: `${summary.explores}회`, icon: Compass, tone: 'text-[#b9f1ec]' },
-        { label: MSG.EXPEDITION_RETURN_EXP, value: `+${summary.expGained.toLocaleString('ko-KR')}`, icon: Sparkles, tone: 'text-[#ece5ff]' },
-        { label: '골드 변화', value: signedNumber(summary.goldDelta), icon: Coins, tone: 'text-[#f6e7c8]' },
+        { label: MSG.EXPEDITION_DEBRIEF_BATTLES, value: MSG.EXPEDITION_DEBRIEF_TIMES(summary.battles), icon: Swords, tone: 'text-ae-threat' },
+        { label: MSG.EXPEDITION_DEBRIEF_EXPLORES, value: MSG.EXPEDITION_DEBRIEF_TIMES(summary.explores), icon: Compass, tone: 'text-ae-ether-hi' },
+        { label: MSG.EXPEDITION_RETURN_EXP, value: `+${summary.expGained.toLocaleString('ko-KR')}`, icon: Sparkles, tone: 'text-ae-exp' },
+        { label: MSG.EXPEDITION_DEBRIEF_GOLD, value: signedNumber(summary.goldDelta), icon: Coins, tone: 'text-ae-gold-text' },
     ];
 
     return (
         <Motion.div
+            {...dialog}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             className="fixed inset-0 z-[70] flex items-center justify-center px-3 py-[max(var(--aether-safe-area-top),0.5rem)] pb-[max(var(--aether-safe-area-bottom),0.5rem)]"
         >
-            <div className="aether-overlay" />
+            <div className="ae-scrim ae-moment-scrim" />
             <Motion.section
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
-                transition={{ duration: 0.3, ease: 'easeOut' }}
+                transition={{ duration: MOMENT_DUR_PANEL, ease: MOMENT_EASE }}
                 data-testid="expedition-debrief-card"
-                aria-label="원정 귀환 기록"
+                aria-label={MSG.A11Y_DIALOG_EXPEDITION_DEBRIEF}
                 style={{
                     maxHeight: 'calc(100dvh - max(var(--aether-safe-area-top), 0.5rem) - max(var(--aether-safe-area-bottom), 0.5rem))',
                 }}
-                className="panel-noise aether-surface-strong relative z-10 flex w-full max-w-[25rem] flex-col overflow-hidden rounded-[1.5rem] shadow-[0_32px_90px_rgba(1,6,14,0.68)]"
+                className="ae-sheet relative z-10 flex w-full max-w-[25rem] flex-col overflow-hidden lg:max-w-[30rem]"
             >
-                <header className="relative border-b border-white/8 px-5 pb-4 pt-5">
-                    <button
-                        type="button"
-                        data-testid="expedition-debrief-close-icon"
-                        onClick={onClose}
-                        aria-label="닫기"
-                        className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/8 hover:text-white"
-                    >
-                        <X size={17} />
-                    </button>
-                    <div className="aether-type-label font-fira font-bold uppercase tracking-normal text-[#b9f1ec]/72">원정 기록</div>
-                    <h2 className="mt-1 font-rajdhani text-[1.45rem] font-bold tracking-normal text-white">원정 귀환</h2>
-                    <div className="aether-type-body mt-2 flex min-w-0 items-center gap-2 font-readable text-slate-300/82">
-                        <MapPin size={13} className="shrink-0 text-[#7dd4d8]" />
-                        <span className="min-w-0 truncate">{summary.destination} · {formatDuration(summary.durationMs)}</span>
-                        <span className="ml-auto shrink-0 text-[#d5b180]">{levelLabel}</span>
+                <header className="px-4 pb-3 pt-3">
+                    <div className="flex items-center justify-between gap-3 pl-1">
+                        <div className="ae-eyebrow text-ae-ether-hi">{MSG.EXPEDITION_DEBRIEF_EYEBROW}</div>
+                        <MomentCloseButton
+                            data-testid="expedition-debrief-close-icon"
+                            aria-label={MSG.UI_CLOSE}
+                            onClick={onClose}
+                            className="-mr-1"
+                        />
+                    </div>
+                    {/* 감사 VD-09: 화면의 장식 패널 하나 — 다녀온 지역 그림(보이는 이름일 때만)과 귀환 제목 */}
+                    <div className="ae-ornate mt-1 flex items-center gap-3 px-4 py-3.5">
+                        <MomentRegionArt location={summary.destination} className="h-16 w-16" />
+                        <div className="min-w-0 flex-1">
+                            <h2 className="font-display text-[22px] font-extrabold leading-tight text-ae-ink">{MSG.EXPEDITION_DEBRIEF_TITLE}</h2>
+                            <div className="mt-1.5 flex min-w-0 items-start gap-1.5 font-readable text-[13px] text-ae-ink-2">
+                                <MapPin size={13} className="mt-0.5 shrink-0 text-ae-ether" aria-hidden="true" />
+                                <span className="min-w-0 break-keep">{summary.destination} · {formatDuration(summary.durationMs)}</span>
+                            </div>
+                            <div className="mt-1 font-fira text-[13px] font-bold tabular-nums text-ae-gold-text">{levelLabel}</div>
+                        </div>
                     </div>
                 </header>
 
-                <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 custom-scrollbar">
-                    <div className="grid grid-cols-2 gap-px overflow-hidden rounded-[0.75rem] border border-white/8 bg-white/8">
+                <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+                    <div className="grid grid-cols-2 gap-2">
                         {metrics.map(({ label, value, icon: Icon, tone }) => (
-                            <div key={label} className="bg-[#0b1118] px-3 py-3">
-                                <div className="aether-type-label flex items-center gap-1.5 font-readable font-semibold text-slate-400">
-                                    <Icon size={12} className={tone} />
+                            <div key={label} className="ae-moment-tile rounded-ae-md px-3 py-2.5">
+                                <div className="flex items-center gap-1.5 font-readable text-[11px] font-bold text-ae-ink-2">
+                                    <Icon size={12} className={tone} aria-hidden="true" />
                                     {label}
                                 </div>
-                                <div className={`aether-type-metric mt-1 font-rajdhani font-bold ${tone}`}>{value}</div>
+                                <div className={`mt-1 font-fira text-[17px] font-bold tabular-nums ${tone}`}>{value}</div>
                             </div>
                         ))}
                     </div>
 
-                    <div className="mt-4 border-y border-white/8 py-3">
+                    <div className="ae-well mt-3 px-3 py-2.5">
                         <div className="flex items-center justify-between gap-3">
-                            <div className="aether-type-body flex items-center gap-2 font-readable font-semibold text-slate-300">
-                                <HeartPulse size={13} className="text-rose-300" />
-                                가장 위험했던 순간
+                            <div className="flex items-center gap-2 font-readable text-[12px] font-bold text-ae-ink-2">
+                                <HeartPulse size={13} className="text-ae-life" aria-hidden="true" />
+                                {MSG.EXPEDITION_DEBRIEF_LOWEST_HP}
                             </div>
-                            <div className="font-rajdhani text-sm font-bold text-rose-100">
+                            <div className="font-fira text-[13px] font-bold tabular-nums text-ae-ink">
                                 {MSG.EXPEDITION_RETURN_HP(summary.lowestHp, summary.lowestHpPercent)}
                             </div>
                         </div>
-                        <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/35">
-                            <div
-                                className="h-full rounded-full bg-rose-300/80"
-                                style={{ width: `${Math.max(2, summary.lowestHpPercent)}%` }}
-                            />
-                        </div>
+                        <Gauge
+                            kind="life"
+                            value={Math.max(2, summary.lowestHpPercent)}
+                            max={100}
+                            label={MSG.EXPEDITION_DEBRIEF_LOWEST_HP}
+                            valueText={MSG.EXPEDITION_RETURN_HP(summary.lowestHp, summary.lowestHpPercent)}
+                            className="mt-2"
+                        />
                     </div>
 
-                    <div className="mt-4 space-y-3">
+                    <div className="mt-3 space-y-3 px-1">
                         <section data-testid="expedition-debrief-items" className="flex items-start gap-3">
-                            <Backpack size={14} className="mt-0.5 shrink-0 text-[#d5b180]" />
+                            <Backpack size={15} className="mt-0.5 shrink-0 text-ae-gold" aria-hidden="true" />
                             <div className="min-w-0 flex-1">
-                                <div className="aether-type-label font-readable font-semibold text-slate-400">새로 챙긴 것</div>
-                                <div className="aether-type-body mt-1 font-readable text-slate-100">
-                                    {itemLabels.length > 0 ? itemLabels.slice(0, 3).join(' · ') : '새 아이템 없음'}
-                                    {itemLabels.length > 3 ? ` 외 ${itemLabels.length - 3}종` : ''}
+                                <div className="ae-eyebrow">{MSG.EXPEDITION_DEBRIEF_NEW_ITEMS}</div>
+                                <div className="mt-0.5 break-keep font-readable text-[13px] text-ae-ink">
+                                    {itemLabels.length > 0 ? itemLabels.slice(0, 3).join(' · ') : MSG.EXPEDITION_DEBRIEF_NO_ITEMS}
+                                    {itemLabels.length > 3 ? MSG.EXPEDITION_DEBRIEF_MORE_ITEMS(itemLabels.length - 3) : ''}
                                 </div>
                                 {summary.lostItemCount > 0 && (
-                                    <div className="aether-type-meta mt-0.5 font-readable text-slate-500">사용·소모 {summary.lostItemCount}개</div>
+                                    <div className="mt-0.5 font-readable text-[12px] text-ae-ink-3">{MSG.EXPEDITION_DEBRIEF_USED_ITEMS(summary.lostItemCount)}</div>
                                 )}
                             </div>
                         </section>
 
+                        <div className="ae-divider" />
+
                         <section data-testid="expedition-debrief-quests" className="flex items-start gap-3">
-                            <CheckCircle2 size={14} className="mt-0.5 shrink-0 text-[#7dd4d8]" />
+                            <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-ae-ether" aria-hidden="true" />
                             <div className="min-w-0 flex-1">
-                                <div className="aether-type-label font-readable font-semibold text-slate-400">달성한 임무</div>
-                                <div className="aether-type-body mt-1 font-readable text-slate-100">
+                                <div className="ae-eyebrow">{MSG.EXPEDITION_DEBRIEF_QUESTS}</div>
+                                <div className="mt-0.5 break-keep font-readable text-[13px] text-ae-ink">
                                     {summary.completedQuests.length > 0
                                         ? summary.completedQuests.slice(0, 2).join(' · ')
-                                        : '이번 원정에서 새로 달성한 임무 없음'}
+                                        : MSG.EXPEDITION_DEBRIEF_NO_QUESTS}
                                 </div>
                             </div>
                         </section>
@@ -177,50 +193,48 @@ const ExpeditionDebriefCard = ({
                         <section
                             data-testid="expedition-debrief-story"
                             data-story-id={storyBeat.id}
-                            className="mt-4 border-t border-white/8 pt-4"
+                            className="ae-well mt-4 px-3.5 py-3"
                         >
-                            <div className="flex items-center gap-2 text-[#f6e7c8]">
-                                <BookOpen size={14} />
-                                <span className="aether-type-label font-readable font-semibold">{storyBeat.eyebrow}</span>
+                            <div className="flex items-center gap-2 text-ae-gold-text">
+                                <BookOpen size={14} aria-hidden="true" />
+                                <span className="font-readable text-[11px] font-bold">{storyBeat.eyebrow}</span>
                             </div>
-                            <h3 className="aether-type-title mt-1 font-readable font-bold text-white">{storyBeat.title}</h3>
-                            <p className="aether-type-body mt-2 font-readable leading-relaxed text-slate-200/84">{storyBeat.body}</p>
+                            <h3 className="mt-1 font-display text-[15px] font-extrabold text-ae-ink">{storyBeat.title}</h3>
+                            <p className="mt-1.5 break-keep font-readable text-[13px] leading-relaxed text-ae-ink-2">{storyBeat.body}</p>
                         </section>
                     )}
                 </div>
 
-                <footer className="border-t border-white/8 p-3">
-                    <div data-testid="expedition-return-recommendation" className="mb-2 px-1">
-                        <div className="aether-type-label font-readable font-semibold text-[#b9f1ec]">이어서 할 일</div>
-                        <div className="aether-type-meta mt-0.5 font-readable text-slate-300/78">{recommendation.detail}</div>
+                <footer className="ae-moment-foot px-4 pb-4 pt-3">
+                    <div data-testid="expedition-return-recommendation" className="mb-2.5 px-1">
+                        <div className="font-readable text-[11px] font-bold text-ae-ether-hi">{MSG.EXPEDITION_DEBRIEF_NEXT}</div>
+                        <div className="mt-0.5 break-keep font-readable text-[12px] text-ae-ink-2">{recommendation.detail}</div>
                     </div>
                     {returnSupplyReward?.visible && (
-                        <div data-testid="return-supply-reward" className="mb-2 min-w-0 rounded-xl border border-[#d5b180]/20 bg-[#d5b180]/6 p-2.5">
+                        <div data-testid="return-supply-reward" className="ae-well mb-2.5 min-w-0 p-2">
                             <button
                                 type="button"
                                 data-testid="return-supply-reward-action"
                                 disabled={returnSupplyReward.disabled}
                                 onClick={returnSupplyReward.onPress}
-                                className="aether-type-body min-h-[44px] w-full rounded-lg border border-[#d5b180]/28 px-3 font-readable font-bold text-[#f6e7c8] disabled:cursor-default disabled:opacity-60"
+                                className="ae-btn ae-btn-glass min-h-[44px] w-full font-readable text-[13px]"
                             >
                                 {returnSupplyReward.label}
                             </button>
-                            <p className="aether-type-meta mt-1 break-words px-1 font-readable text-slate-300/78">
+                            <p className="mt-1.5 break-words px-1 font-readable text-[12px] text-ae-ink-2">
                                 {returnSupplyReward.detail}
                             </p>
                         </div>
                     )}
-                    <Motion.button
-                        type="button"
+                    <ActionButton
+                        variant="primary"
                         data-testid="expedition-debrief-primary-action"
                         data-return-action={recommendation.kind}
-                        whileTap={{ scale: 0.98 }}
                         onClick={onPrimaryAction}
-                        className="aether-cta-primary aether-type-body flex min-h-[48px] w-full items-center justify-center gap-2 px-4 font-readable font-bold text-[#dff7f5]"
-                    >
-                        <ArrowRight size={15} />
-                        {recommendation.label}
-                    </Motion.button>
+                        icon={<ArrowRight size={17} />}
+                        label={recommendation.label}
+                        className="w-full"
+                    />
                 </footer>
             </Motion.section>
         </Motion.div>

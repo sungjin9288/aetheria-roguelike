@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { createElement } from 'react';
 
 import { DB } from '../src/data/db.ts';
+import { FIRST_STORY_QUEST_ID } from '../src/data/quests.ts';
 import { MSG } from '../src/data/messages.ts';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
@@ -203,4 +204,19 @@ test('[누적 표시] 수락 전 행(추천 · 다른 임무 · 잠금)도 누�
     }
     assert.equal(countChips(html), open.filter((id) => LIFETIME_IDS.includes(id)).length);
     assert.equal(countChips(html), 4, '61 · 74 · 64 · 73');
+});
+
+// ── ⑦ 목표 줄은 내부 키를 그리지 않는다 ───────────────────────────────────────
+
+test('[목표 줄] 임무 탭 · 게시판은 카운터 임무의 내부 목표 키(explores · kills …)를 그리지 않는다', () => {
+    // 2026-10 통합: 임무 탭만 `desc`를 건너뛰어 첫 임무가 "목표: explores 1회 달성"이었다.
+    const counterIds = QUESTS
+        .filter((quest) => !quest.objective && quest.target !== 'level' && /^[a-z_]+$/i.test(String(quest.target || '')))
+        .map((quest) => quest.id);
+    assert.ok(counterIds.includes(FIRST_STORY_QUEST_ID), '비공허 — 첫 임무가 카운터 임무다');
+    const html = renderTab(townPlayer({ level: 70, active: counterIds }));
+    for (const id of counterIds) {
+        const target = String(questById(id).target);
+        assert.ok(!html.includes(`${target} ${questById(id).goal}회`), `임무 ${id}: 내부 키 '${target}'를 그리지 않는다`);
+    }
 });

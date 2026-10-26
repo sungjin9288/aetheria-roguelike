@@ -63,6 +63,8 @@ export const CONSTANTS = {
     //   (slice 19)는 빠르게 유지하되 레벨당 전투 수를 늘린다. Lv1→5 누적
     //   요구 745 → 998 (+34%).
     START_NEXT_EXP: 200,
+    // 사망 직후 여정 기록 카드 전에 보이는 짧은 순간(ms) — 누르면 곧바로 넘어가고, 움직임 줄이기 설정이면 건너뛴다(화면 연출이라 판정과 무관).
+    DEATH_BEAT_MS: 1200,
     // cycle 195: SAVE_KEY 제거 — Firebase Firestore 사용으로 localStorage save key 미사용 (dead).
     // 5.1 — meta.essenceLifetime 도입 (dataMigration에서 essence + 거울 구매 이력으로 역산)
     DATA_VERSION: 5.1,
@@ -80,8 +82,10 @@ export type GameConstants = typeof CONSTANTS;
 //   (2) 선택 필드: 항목마다 있고 없는 보상 종류(gold/exp/item/premiumCurrency).
 //   이 두 경우 외에는 전부 리터럴 도출이므로, 여기에 스칼라 키를 손으로 늘리지 말 것.
 
-/** 등급 → hex 색. 등급 문자열은 아이템/유물 데이터에서 온다(열린 키). */
-const RARITY_COLORS: Record<string, string> = { common: '#9ca3af', uncommon: '#22c55e', rare: '#3b82f6', epic: '#a855f7', legendary: '#f59e0b' };
+/** 등급 → hex 색. 등급 문자열은 아이템/유물 데이터에서 온다(열린 키).
+ *  2026-10 (감사 VD-07): 등급 색은 한 벌이다 — 이 hex · 아래 `RARITY_CLASSES` · `src/index.css`의 `--aether-rarity-*-rgb`가
+ *  같은 색을 말한다(`tests/rarity-presentation-single-source.test.js`). 영웅은 금, 전설은 산호 — 위험 · 잠김의 장미색과 다르다. */
+const RARITY_COLORS: Record<string, string> = { common: '#c9d2db', uncommon: '#7dd4d8', rare: '#bba4f6', epic: '#f0c36a', legendary: '#ff9f7a' };
 
 /** 합성 티어(= 아이템 tier) → 성공률 / 골드 비용. tier는 아이템 데이터의 number다. */
 const SYNTHESIS_SUCCESS_RATES: Record<number, number> = { 1: 1.0, 2: 0.95, 3: 0.85, 4: 0.7, 5: 0.5 };
@@ -235,7 +239,12 @@ export const BALANCE = {
     EQUIP_SCORE_MP_DIVISOR: 5,
     DEBOUNCE_SAVE_MS: 500,
     LOG_MAX_SIZE: 50,
-    ENEMY_TURN_DELAY_MS: 450,       // 적 반격 딜레이 (ms)
+    ENEMY_TURN_DELAY_MS: 450,       // 적 반격 딜레이 (ms) — 게임 필 GF-06: 내 타격 뒤 적 반격 연출(내 피격 숫자 · 붉은 테두리 · 강타 흔들림)의 박자(표시 전용)
+    // 게임 필 감사(GF-01 · 02): 전투 연출 박자 — 표시 전용이고 리듀서 판정 · 입력과 무관하다.
+    KILL_BEAT_MS: 600,              // 처치 순간 — 쓰러진 적과 마지막 일격을 그리고 결과 카드 · 유물 선택은 그 뒤에 띄운다
+    KILL_BEAT_REDUCED_MS: 150,      // 모션 감소 설정의 처치 순간 — 이동 없이 마지막 숫자만 정지 표시
+    COMBAT_PULSE_MS: 320,           // 내 치명타(금색) · 적 강타(붉은색) 가장자리 비네트
+    COMBAT_SHAKE_MS: 500,           // 적 강타 흔들림 — index.css `.animate-shake`(0.5s)와 같은 길이
     // cycle 195: MILESTONE_KILLS 제거 — checkMilestones에서 10/50/100을 inline 하드코딩하고 있어 dead config.
     //   향후 milestone 변경 시 checkMilestones 함수를 직접 수정하거나 이 상수 재도입 필요.
     INV_MAX_SIZE: 20,               // 인벤토리 최대 슬롯 수
@@ -798,9 +807,9 @@ Object.freeze(BALANCE);
  * 두 값의 이름이 혼동되지 않도록 분리되어 있다.
  */
 export const RARITY_CLASSES: Record<string, string> = Object.freeze({
-    common: 'text-slate-300',
-    uncommon: 'text-cyan-400',
-    rare: 'text-purple-400',
-    epic: 'text-yellow-400',
-    legendary: 'text-red-400',
+    common: 'text-ae-rarity-common',
+    uncommon: 'text-ae-rarity-uncommon',
+    rare: 'text-ae-rarity-rare',
+    epic: 'text-ae-rarity-epic',
+    legendary: 'text-ae-rarity-legendary',
 });

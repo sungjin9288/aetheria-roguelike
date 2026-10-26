@@ -144,12 +144,14 @@ export const EVENT_CHAINS = [
                 step: 1,
                 loc: '화염의 협곡',
                 event: {
-                    title: '기사의 검',
+                    // 제목은 아이템 이름이 아니다 — 가방에 들어오는 것은 '심판자의 검'이고 '기사의 검'은 다른 일반 장비다.
+                    title: '기사가 잃어버린 검',
                     desc: '협곡 어딘가에서 빛나는 검이 박혀 있습니다. "이 검은... 당신이 구해준 그 기사의 검이군요." 아이템이 당신을 기다리고 있습니다.',
                     choices: ['검을 뽑아낸다', '그대로 둔다'],
                     outcomes: [
                         // cycle 140: '기사의 유검' missing → tier 4 light knight sword '심판자의 검'으로 교체.
-                        { type: 'chain_advance', log: '기사의 검을 획득했습니다. 심판자의 검에 강력한 힘이 깃들어 있습니다.', reward: { type: 'item', name: '심판자의 검' } },
+                        // 2026-10 감사 GP-01: 기록이 "기사의 검을 획득했습니다"라 다른 일반 장비를 받은 것처럼 읽혔다 — 받는 아이템 이름을 말한다.
+                        { type: 'chain_advance', log: '검을 뽑아 심판자의 검을 획득했습니다. 그 기사가 잃어버린 검에 강력한 힘이 깃들어 있습니다.', reward: { type: 'item', name: '심판자의 검' } },
                         { type: 'nothing', log: '검을 두고 왔습니다.', reward: null },
                     ],
                 },
@@ -632,7 +634,7 @@ export const EVENT_CHAINS = [
                     desc: '피라미드 심장부에서 신관이 봉인했던 물의 정수를 마주했습니다. 봉인이 약해진 채 천천히 빛을 잃고 있습니다. 신관의 의지가 마지막 한 번을 부탁합니다.',
                     choices: ['정수에 의지를 더해 봉인을 강화한다', '정수의 힘을 받아들인다'],
                     outcomes: [
-                        { type: 'chain_advance', log: '봉인이 단단해졌습니다. 정수가 보답으로 신관의 유산을 남겼습니다.', reward: { type: 'item', name: '엘릭서' } },
+                        { type: 'chain_advance', log: '봉인이 단단해졌습니다. 정수가 보답으로 신관의 유산인 엘릭서를 남겼습니다.', reward: { type: 'item', name: '엘릭서' } },
                         { type: 'chain_advance', log: '정수의 힘이 당신에게 깃들었습니다. 전설 유물 한 점이 손 안에 응결됩니다.', reward: { type: 'relic', rarity: 'legendary' as const } },
                     ],
                 },

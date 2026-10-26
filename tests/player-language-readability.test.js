@@ -8,6 +8,7 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import IntroScreen from '../src/components/IntroScreen.tsx';
 import { getFirstVisitReward } from '../src/utils/exploreUtils.js';
+import { readControlPanelSource } from './helpers/controlPanelSource.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.join(HERE, '..');
@@ -15,7 +16,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
 
 test('first-play surfaces use player-facing Korean labels', async () => {
     const [controlPanel, dashboard, mapNavigator, returnBriefing, jobChangePanel, classCard, classPresentation, messages] = await Promise.all([
-        readSrc('src/components/ControlPanel.tsx'),
+        readControlPanelSource(),
         readSrc('src/components/Dashboard.tsx'),
         readSrc('src/components/MapNavigator.tsx'),
         readSrc('src/components/ReturnBriefingCard.tsx'),
@@ -72,7 +73,7 @@ test('menu, settings, and device playtest use one natural Korean vocabulary', as
         readSrc('src/data/constants.ts'),
         readSrc('src/data/messages.ts'),
         readSrc('src/components/Dashboard.tsx'),
-        readSrc('src/components/ControlPanel.tsx'),
+        readControlPanelSource(),
         readSrc('src/components/tabs/SystemTab.tsx'),
         readSrc('docs/PLAYTEST_CHECKLIST.md'),
     ]);

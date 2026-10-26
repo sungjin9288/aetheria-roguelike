@@ -15,10 +15,10 @@
  *
  * 쿼터는 **상태가 아니라 입력**이다(§15 C3). `TokenQuotaManager`(localStorage IO)가
  * 단일 진실 원천으로 남고, 이 파일은 그 값을 읽기만 한다 — 여기에 사용량을 들이면
- * 진실 원천이 둘이 된다. 쿼터 읽기를 값이 아니라 `readQuota()`로 받는 이유는 현재
- * 동작 보존이다: mock 런타임(smoke/e2e/device-QA)에서는 **쿼터를 읽지 않는다**
- * (그 경로에는 localStorage가 없을 수 있다). 지연 호출일 뿐 정책은 여전히
- * 입력→출력 결정적이다.
+ * 진실 원천이 둘이 된다. 쿼터 읽기를 값이 아니라 `readQuota()`로 받는 이유는
+ * mock 런타임(smoke/e2e/device-QA)과 프록시 비활성 빌드에서 **쿼터를 읽지 않기** 위해서다
+ * (앞은 localStorage가 없을 수 있고, 뒤는 디스패치가 일어날 수 없어 쿼터가 무관하다 — GP-02).
+ * 지연 호출일 뿐 정책은 여전히 입력→출력 결정적이다.
  *
  * ## 쿼터 미터의 의미 (Wave 12 D3)
  *
@@ -59,11 +59,19 @@ export type AiRequestKind = 'event' | 'story';
  */
 export type AiProxyTrack = readonly [trackLabel: string, timeoutMs: number];
 
-/** 쿼터 관측 1회분 — `TokenQuotaManager.canMakeAICall()` / `.getExhaustedMessage()`. */
+/**
+ * 쿼터 게이트의 상태 — `TokenQuotaManager.getCallGate()`.
+ * - `open`: 보낼 수 있다.
+ * - `exhausted`: 오늘 한도(BALANCE.DAILY_AI_LIMIT)를 실제로 다 썼다 — 이것만 소진 안내를 띄운다.
+ * - `unavailable`: 미터를 읽거나 적을 수 없다(쿠키 · 사이트 데이터 차단, 사설 모드, 파손 레코드).
+ *   fail-closed라 보내지 않지만 한도에 닿은 것이 아니므로 "내일 다시"라고 말하면 거짓이다(GP-02).
+ */
+export type AiQuotaGate = 'open' | 'exhausted' | 'unavailable';
+
+/** 쿼터 관측 1회분 — `TokenQuotaManager.getCallGate()` / `.getExhaustedMessage()`. */
 export interface AiQuotaState {
-    /** `!TokenQuotaManager.canMakeAICall()` — 오늘 한도(BALANCE.DAILY_AI_LIMIT)를 다 썼는가. */
-    readonly exhausted: boolean;
-    /** `TokenQuotaManager.getExhaustedMessage()` — 쿼터 폴백에만 실린다. */
+    readonly gate: AiQuotaGate;
+    /** `TokenQuotaManager.getExhaustedMessage()` — `gate === 'exhausted'`인 쿼터 폴백에만 실린다. */
     readonly exhaustedMessage: string;
 }
 
@@ -73,8 +81,9 @@ export interface AiQuotaState {
  * | reason | 출처(리팩토링 전 aiService.ts) |
  * |---|---|
  * | `mock-runtime`       | `if (isMockRuntime())` (event 147 / story 193) |
- * | `quota`              | `if (!TokenQuotaManager.canMakeAICall())` (event 151 / story 197) |
  * | `proxy-disabled`     | `if (CONSTANTS.USE_AI_PROXY)`가 거짓 (event 164 / story 218) |
+ * | `quota`              | 쿼터 게이트 `exhausted` — 오늘 한도에 실제로 닿았다 |
+ * | `quota-unavailable`  | 쿼터 게이트 `unavailable` — 미터를 읽거나 적을 수 없다(fail-closed, GP-02) |
  * | `proxy-unavailable`  | `callProxy`가 `null` 반환 — fetch 예외/AbortError(9.5s 타임아웃)/`!response.ok` |
  * | `proxy-rejected`     | 응답은 왔지만 `result.success`가 거짓 (event 179 / story 236) |
  * | `malformed-response` | event: `buildEventPackage`가 `null`; story: `data.narrative`가 문자열이 아님 |
@@ -99,21 +108,36 @@ export interface AiQuotaState {
  * 대신 그 하나뿐인 표면을 **더 정확하게** 만들었다: 한도 안내 문구가 "오늘 몇 번 보냈고 몇 번이
  * 이야기로 돌아왔는가"를 싣는다(`TokenQuotaManager.getExhaustedMessage`). 표면의 개수를 늘리는
  * 대신 이미 있는 표면의 정직함을 올리는 쪽이다.
+ *
+ * GP-02: `quota-unavailable`도 표면화하지 않는다. 저장소를 막은 브라우저에서 미터 실패가
+ * `quota`로 접히던 동안 AI를 한 번도 부르지 않은 플레이어가 탐험마다 "마력이 소진되었습니다.
+ * 내일 다시"를 봤다 — 내일이 되어도 바뀌지 않는 거짓 안내다. 미터를 못 세면 보내지 않는
+ * 것(fail-closed)은 그대로이고, 플레이어에게는 오프라인과 같은 경험이다.
  */
-export type AiFallbackReason =
-    | 'mock-runtime'
-    | 'quota'
-    | 'proxy-disabled'
-    | 'proxy-unavailable'
-    | 'proxy-rejected'
-    | 'malformed-response'
-    | 'recent-duplicate';
+export const AI_FALLBACK_REASONS = [
+    'mock-runtime',
+    'quota',
+    'quota-unavailable',
+    'proxy-disabled',
+    'proxy-unavailable',
+    'proxy-rejected',
+    'malformed-response',
+    'recent-duplicate',
+] as const;
+
+export type AiFallbackReason = typeof AI_FALLBACK_REASONS[number];
+
+/** 저장소 · 텔레메트리 경계에서 읽은 값이 닫힌 폴백 이유 집합에 속하는가. */
+export const isAiFallbackReason = (value: unknown): value is AiFallbackReason => (
+    typeof value === 'string' && (AI_FALLBACK_REASONS as readonly string[]).includes(value)
+);
 
 /**
- * 디스패치 **이전**에 결정되는 폴백 3종 — 프록시로 나간 요청이 없으므로 쿼터를 쓰지 않고,
+ * 디스패치 **이전**에 결정되는 폴백 4종 — 프록시로 나간 요청이 없으므로 쿼터를 쓰지 않고,
  * `AiCallOutcome`이 될 수도 없다(`decideAiEventRequest`만 만든다).
  */
-export type AiPreDispatchReason = Extract<AiFallbackReason, 'mock-runtime' | 'quota' | 'proxy-disabled'>;
+export type AiPreDispatchReason = Extract<AiFallbackReason,
+    'mock-runtime' | 'proxy-disabled' | 'quota' | 'quota-unavailable'>;
 
 /**
  * 디스패치된 호출이 **채택되지 못한** 이유 4종. 전부 요청이 나간 뒤에만 관측되므로
@@ -133,9 +157,9 @@ export interface AiRequestInput {
     readonly requestKind: AiRequestKind;
     /** `isMockRuntime()` — smoke/e2e/device-QA 하네스. 쿼터보다 먼저 본다. */
     readonly mockRuntime: boolean;
-    /** `CONSTANTS.USE_AI_PROXY`. 쿼터보다 **나중에** 본다(순서가 곧 폴백 이유다). */
+    /** `CONSTANTS.USE_AI_PROXY`. 쿼터보다 **먼저** 본다(순서가 곧 폴백 이유다 — GP-02). */
     readonly proxyEnabled: boolean;
-    /** 쿼터 관측 — mock 런타임에서는 호출되지 않는다. */
+    /** 쿼터 관측 — mock 런타임과 프록시 비활성에서는 호출되지 않는다. */
     readonly readQuota: () => AiQuotaState;
     /** 이 요청이 쓸 프록시 트랙. `call` 결정에 그대로 실린다. */
     readonly track: AiProxyTrack;
@@ -169,21 +193,28 @@ export interface AiFallbackDecision {
 export type AiEventDecision = AiCallDecision | AiFallbackDecision;
 
 /**
- * 요청 판정. 분기 순서는 리팩토링 전 코드 그대로다:
- * mock 런타임 → 쿼터 → 프록시 플래그 → 호출.
+ * 요청 판정. 분기 순서: mock 런타임 → 프록시 플래그 → 쿼터 게이트 → 호출.
  *
- * 순서가 관측 가능한 지점: **쿼터 소진 + 프록시 비활성**이면 `'quota'`가 이긴다
- * (그래야 이벤트 카드에 쿼터 안내가 실린다).
+ * 순서가 관측 가능한 지점(GP-02):
+ * - **프록시 비활성**이면 쿼터를 읽지 않는다. 그 빌드에서는 디스패치가 일어날 수 없으므로
+ *   "마력이 소진되었습니다"는 어떤 저장소 상태에서도 사실이 아니다(예전 순서에서는 쿼터가
+ *   이겨, 저장소가 막힌 브라우저가 AI를 한 번도 부르지 않고 소진 안내를 봤다).
+ * - 쿼터 게이트가 닫혀 있으면 이유를 가른다 — 실제 한도 도달(`exhausted`)만 `'quota'` +
+ *   안내 문구이고, 미터를 못 쓰는 상태(`unavailable`)는 표면화하지 않는 `'quota-unavailable'`이다.
+ *   두 경우 모두 요청을 보내지 않는다(fail-closed, W19-K1).
  */
 export const decideAiEventRequest = (input: AiRequestInput): AiEventDecision => {
     if (input.mockRuntime) return { kind: 'fallback', reason: 'mock-runtime', recordCall: false };
 
+    if (!input.proxyEnabled) return { kind: 'fallback', reason: 'proxy-disabled', recordCall: false };
+
     const quota = input.readQuota();
-    if (quota.exhausted) {
+    if (quota.gate === 'exhausted') {
         return { kind: 'fallback', reason: 'quota', message: quota.exhaustedMessage, recordCall: false };
     }
-
-    if (!input.proxyEnabled) return { kind: 'fallback', reason: 'proxy-disabled', recordCall: false };
+    if (quota.gate === 'unavailable') {
+        return { kind: 'fallback', reason: 'quota-unavailable', recordCall: false };
+    }
 
     const [trackLabel, timeoutMs] = input.track;
     return { kind: 'call', requestKind: input.requestKind, trackLabel, timeoutMs, recordCall: true };

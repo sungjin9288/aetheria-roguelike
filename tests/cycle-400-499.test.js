@@ -3,6 +3,7 @@ import path from 'node:path';
 import test from 'node:test';
 import { fileURLToPath } from 'node:url';
 import { readFile, readdir } from 'node:fs/promises';
+import { readControlPanelSource } from './helpers/controlPanelSource.mjs';
 
 /**
  * cycle 400-499 정리 가드 (audit #1 통합 58개)
@@ -1288,7 +1289,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 423: 활성 필드 보존 (label / key / icon / onClick)', async () => {
-      const source = await readSrc('src/components/ControlPanel.tsx');
+      const source = await readControlPanelSource(); // 2026-10 CH-08: 단추 서술은 control/controlButtons.ts
       // explore 버튼
       assert.ok(/key: 'explore'/.test(source), "explore button key 보존");
       assert.ok(/label: '탐험'/.test(source), "탐험 label 보존");
@@ -2436,7 +2437,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('slice 37: 마을 핵심 행동은 ControlPanel에서 직접 연다', async () => {
-      const source = await readSrc('src/components/ControlPanel.tsx');
+      const source = await readControlPanelSource(); // 2026-10 CH-08: 단추 서술은 control/controlButtons.ts
       assert.ok(/testId: 'control-rest'/.test(source), '휴식 행동 보존');
       assert.ok(/testId: 'control-class'/.test(source), '전직 행동 보존');
       assert.ok(/testId: 'control-quests'/.test(source), '임무 행동 보존');
@@ -3349,9 +3350,12 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 464: showBorder 참조 / ternary 가지 0건', async () => {
       const source = await readSrc('src/components/icons/ClassIcon.tsx');
       assert.ok(!/\bshowBorder\b/.test(source), 'showBorder 참조 0건');
-      // 정적 border / borderRadius / background 보존
-      assert.ok(/border:\s*`1\.5px solid/.test(source), 'border 정적 적용 보존');
-      assert.ok(/borderRadius:\s*8/.test(source), 'borderRadius 정적 적용 보존');
+      // 정적 border / borderRadius / background 보존 — w3 choice: 토큰 CSS(`.ae-class-icon`)가 소유한다.
+      assert.ok(/className="ae-class-icon"/.test(source), '정적 테두리 클래스 보존');
+      const css = await readSrc('src/index.css');
+      const rule = css.slice(css.indexOf('.ae-class-icon {'), css.indexOf('}', css.indexOf('.ae-class-icon {')));
+      assert.ok(/border:\s*1\.5px solid/.test(rule), 'border 정적 적용 보존');
+      assert.ok(/border-radius:\s*var\(--aether-r-sm\)/.test(rule), 'borderRadius 정적 적용 보존');
   });
 
   test('cycle 464: 정합성 가드 — 4 callsite showBorder 명시 0건', async () => {
@@ -4324,14 +4328,17 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 484 후속: 모험 기록 CTA는 원정 준비에 통합하고 핵심 계약을 보존', async () => {
-      const [layout, controlPanel] = await Promise.all([
+      // 2026-10 에테르 유리(CH-08): 원정 준비 카드는 `control/ExpeditionPrepStrip.tsx`로 나뉘었다 — 조작판과 함께 읽는다.
+      const [layout, controlPanel, prepStrip] = await Promise.all([
           readSrc('src/components/app/MobileGameLayout.tsx'),
           readSrc('src/components/ControlPanel.tsx'),
+          readSrc('src/components/control/ExpeditionPrepStrip.tsx'),
       ]);
+      assert.match(controlPanel, /<ExpeditionPrepStrip\b/);
       assert.ok(!/MobileConsoleArchiveButton/.test(layout), '별도 기록 행 제거');
-      assert.match(controlPanel, /data-testid="control-expedition-prep"[\s\S]*data-testid="mobile-console-open-archive"/);
-      assert.match(controlPanel, /data-testid="mobile-console-open-archive"[\s\S]*onClick=\{onOpenArchive\}/);
-      assert.match(controlPanel, /data-testid="mobile-console-open-archive"[\s\S]*min-h-\[44px\]/);
+      assert.match(prepStrip, /data-testid="control-expedition-prep"[\s\S]*data-testid="mobile-console-open-archive"/);
+      assert.match(prepStrip, /data-testid="mobile-console-open-archive"[\s\S]*onClick=\{onOpenArchive\}/);
+      assert.match(prepStrip, /data-testid="mobile-console-open-archive"[\s\S]*min-h-\[44px\]/);
   });
 }
 
@@ -4506,7 +4513,8 @@ import { readFile, readdir } from 'node:fs/promises';
   test('cycle 486: line 181 EVENT 분기 ternary 첫 가지 inline (mobile-focused class)', async () => {
       const source = await readSrc('src/components/ControlPanel.tsx');
       // EVENT + isAiThinking 분기 className에서 mobile-focused 가지만 진입
-      assert.ok(/aether-surface-strong relative z-20 flex min-h-0 flex-1 items-center justify-center/.test(source),
+      // 2026-10 에테르 유리: 준비 중 카드는 `ae-card`(유리 카드)다 — 배치 클래스는 그대로.
+      assert.ok(/ae-card relative z-20 flex min-h-0 flex-1 items-center justify-center/.test(source),
           'mobile-focused EVENT 분기 className 보존');
       // non-mobile-focused 가지는 제거
       assert.ok(!/panel-noise mt-4 rounded-lg border border-cyber-purple\/50/.test(source),
@@ -4524,7 +4532,7 @@ import { readFile, readdir } from 'node:fs/promises';
   });
 
   test('cycle 486: core 구조 보존 (renderActionButton / coreButtons / GS 분기 등)', async () => {
-      const source = await readSrc('src/components/ControlPanel.tsx');
+      const source = await readControlPanelSource(); // 2026-10 CH-08: 단추 서술은 control/controlButtons.ts
       assert.ok(/renderActionButton/.test(source), 'renderActionButton 보존');
       assert.ok(/coreButtons/.test(source), 'coreButtons 보존');
       assert.ok(/GS\.COMBAT/.test(source), 'GS.COMBAT 분기 보존');

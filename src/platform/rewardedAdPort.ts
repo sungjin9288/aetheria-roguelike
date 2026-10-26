@@ -1,4 +1,4 @@
-import { loadFullScreenAd, showFullScreenAd } from '@apps-in-toss/web-framework';
+import { loadFullScreenAd, showFullScreenAd } from './tossSdk';
 
 export type RewardedAdShowEvent =
     | 'requested'

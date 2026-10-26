@@ -161,6 +161,45 @@ test.describe('Expedition return debrief', () => {
         expect(stateAfterRestart.player.storyMilestones.seen).toContain('first_death');
         expect(stateAfterRestart.player.storyMilestones.pending).not.toContain('first_death');
     });
+
+    test('쓰러진 순간 뒤 기록 카드 — 쓰러뜨린 적 · 회차 최고 레벨 · 모은 계승 정수, 거울을 열고 닫아도 기록 카드로 돌아온다', async ({ page }) => {
+        await page.getByTestId('expedition-debrief-close-icon').click();
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.());
+
+        // 감사 GF-03: 기록 카드 전에 짧은 순간 — 누르면 곧바로 넘어간다.
+        const beat = page.getByTestId('death-beat');
+        await expect(beat).toBeVisible();
+        await expect(beat).toContainText('쓰러졌습니다');
+        await beat.click();
+        await expect(beat).toHaveCount(0);
+
+        const card = page.getByTestId('run-summary-card');
+        await expect(card).toBeVisible();
+        // 감사 CL-04 · CL-11
+        await expect(page.getByTestId('run-summary-killer-hp')).toContainText('남은 생명 38%');
+        await expect(page.getByTestId('run-summary-best-level')).toContainText('이번 회차 최고 레벨 21');
+        await expect(page.getByTestId('run-summary-essence-gained')).toContainText('1,240');
+        expect(await findUndersizedText(card)).toEqual([]);
+
+        // 감사 CL-02: 사망 화면에서 곧바로 에테르 거울.
+        const openMirror = page.getByTestId('run-summary-open-mirror');
+        await openMirror.scrollIntoViewIfNeeded();
+        // 카드가 들어오는 움직임(크기 0.97 → 1)이 끝난 뒤의 높이를 잰다.
+        await expect.poll(async () => (await openMirror.boundingBox())?.height ?? 0).toBeGreaterThanOrEqual(44);
+        await openMirror.click();
+        await expect(page.getByTestId('mirror-panel')).toBeVisible();
+        await page.getByTestId('mirror-panel-close').click();
+        await expect(page.getByTestId('mirror-panel')).toHaveCount(0);
+        await expect(card).toBeVisible();
+    });
+
+    test('움직임 줄이기에서는 쓰러진 순간 없이 기록 카드를 바로 보인다', async ({ page }) => {
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        await page.getByTestId('expedition-debrief-close-icon').click();
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.());
+        await expect(page.getByTestId('run-summary-card')).toBeVisible();
+        await expect(page.getByTestId('death-beat')).toHaveCount(0);
+    });
 });
 
 test.describe('Class Journey encounter discovery', () => {

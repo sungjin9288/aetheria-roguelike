@@ -1,4 +1,4 @@
-import { Storage as TossStorage } from '@apps-in-toss/web-framework';
+import { Storage as TossStorage } from './tossSdk';
 
 import type { RuntimeEnvironment } from './runtimeEnvironment';
 

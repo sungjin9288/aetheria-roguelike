@@ -1,7 +1,7 @@
 import { BALANCE } from '../../data/constants';
-import { GS } from '../gameStates';
+import { GS, type GameMode } from '../gameStates';
 import { sanitizeQuickSlots } from './helpers';
-import type { HandlerMap } from '../gameReducer';
+import type { GameState, HandlerMap } from '../gameReducer';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
 import { clampVitalsToEffectiveMax } from '../../utils/effectiveVitals';
 import { MSG } from '../../data/messages';
@@ -9,32 +9,47 @@ import { getEliteTitleBonus, recordEliteEncounter } from '../../utils/eliteTitle
 import { formatPermanentStatBonus } from '../../utils/permanentStatSources';
 import { endMerchantVisit, getActiveMerchantVisit } from '../../utils/wanderingMerchant';
 import { appendRewardLogs } from './rewardLog';
+import { getEventPanelCopy } from '../../utils/eventPresentation';
+
+// 2026-09 D3: 다른 화면으로 넘어가면 지난 전투 결과 카드는 내린다 — 카드(z-40 하단 고정)가
+//   전투/이벤트/상점 화면의 주 행동 위에 남아 조작을 가리는 것을 막는다 (lessons R12).
+//   탐험 대기(idle)에서는 유지 — 승리 직후 판단 카드가 바로 사라지면 안 되기 때문.
+// 2026-10 통합 감사(town-nav UX-09): 이벤트를 떠나는 전이(`LEAVE_EVENT`)도 같은 모드 전환을 거친다 — 함수로 뺐다.
+const applyGameState = (state: GameState, mode: GameMode): GameState => {
+    const next = {
+        ...state,
+        gameState: mode,
+        economyReceipt: mode === 'shop' ? state.economyReceipt : null,
+        postCombatResult: mode === GS.IDLE ? state.postCombatResult : null,
+        syncStatus: 'syncing',
+    };
+    // 2026-10 Wave 75: 행상인은 만남 카드 · 행상인 상점에만 있다 — 다른 화면으로 넘어가면(뒤로가기 · 기록 열기 ·
+    //   카드 닫기) 행상인이 떠난다. 나가는 길마다 `LEAVE_MERCHANT`를 부르게 하지 않고 이 전이 하나가 끝낸다.
+    if (!state.player.merchantVisit || mode === GS.SHOP || mode === GS.EVENT) return next;
+    const wasOpen = getActiveMerchantVisit(state.player) !== null
+        && (state.gameState === GS.SHOP || state.gameState === GS.EVENT);
+    return {
+        ...next,
+        player: endMerchantVisit(state.player),
+        logs: wasOpen ? appendRewardLogs(state.logs, [{ type: 'info', text: MSG.MERCHANT_LEAVE_LOG }]) : state.logs,
+    };
+};
 
 export const uiActionMap = {
     SET_SYNC_STATUS: (state, action) =>
         ({ ...state, syncStatus: action.payload }),
 
-    // 2026-09 D3: 다른 화면으로 넘어가면 지난 전투 결과 카드는 내린다 — 카드(z-40 하단 고정)가
-    //   전투/이벤트/상점 화면의 주 행동 위에 남아 조작을 가리는 것을 막는다 (lessons R12).
-    //   탐험 대기(idle)에서는 유지 — 승리 직후 판단 카드가 바로 사라지면 안 되기 때문.
-    SET_GAME_STATE: (state, action) => {
-        const next = {
-            ...state,
-            gameState: action.payload,
-            economyReceipt: action.payload === 'shop' ? state.economyReceipt : null,
-            postCombatResult: action.payload === GS.IDLE ? state.postCombatResult : null,
-            syncStatus: 'syncing',
-        };
-        // 2026-10 Wave 75: 행상인은 만남 카드 · 행상인 상점에만 있다 — 다른 화면으로 넘어가면(뒤로가기 · 기록 열기 ·
-        //   카드 닫기) 행상인이 떠난다. 나가는 길마다 `LEAVE_MERCHANT`를 부르게 하지 않고 이 전이 하나가 끝낸다.
-        if (!state.player.merchantVisit || action.payload === GS.SHOP || action.payload === GS.EVENT) return next;
-        const wasOpen = getActiveMerchantVisit(state.player) !== null
-            && (state.gameState === GS.SHOP || state.gameState === GS.EVENT);
-        return {
-            ...next,
-            player: endMerchantVisit(state.player),
-            logs: wasOpen ? appendRewardLogs(state.logs, [{ type: 'info', text: MSG.MERCHANT_LEAVE_LOG }]) : state.logs,
-        };
+    SET_GAME_STATE: (state, action) => applyGameState(state, action.payload),
+
+    // 2026-10 통합 감사(town-nav UX-09): 이벤트 화면의 '뒤로' · '이곳을 떠납니다'는 선택 없이 이벤트를 버린다.
+    //   이벤트 화면은 기록 창을 가리므로(FOCUS_PANEL_STATES) 돌아온 기록에 무엇을 지나쳤는지 한 줄 남긴다.
+    //   행상인 만남은 모드 전환이 이미 떠나는 줄을 남기므로 겹쳐 쓰지 않는다. 로그 id는 기록 길이로 고정한다(난수 미사용).
+    LEAVE_EVENT: (state) => {
+        const event = state.currentEvent;
+        const logs = event && !event.isWanderingMerchant
+            ? appendRewardLogs(state.logs, [{ type: 'system', text: MSG.EVENT_LEAVE_LOG(getEventPanelCopy(event).title) }], { seed: state.logs.length })
+            : state.logs;
+        return applyGameState({ ...state, logs, currentEvent: null }, GS.IDLE);
     },
 
     SET_AI_THINKING: (state, action) =>

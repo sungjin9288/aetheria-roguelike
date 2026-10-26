@@ -162,7 +162,9 @@ test('StatusBar(StatusMetric): hp/mp/exp 3종이 각자 올바른 라벨·값·�
         assert.ok(block.replace(/<[^>]*>/g, '').includes(expected), `${variant}: 값 "${expected}"`);
         assert.ok(block.includes('text-[11px]'), `${variant}: 라벨 폰트 크기`);
         assert.ok(block.includes('text-[11px]'), `${variant}: 값 폰트 크기`);
-        assert.ok(block.includes('mt-1 h-[3px]'), `${variant}: 바 크기`);
+        // 2026-10 에테르 유리 3차(shell): 막대는 공용 게이지 부품(.ae-gauge, 6px)이고 색은 지표 종류의 게이지 클래스가 정한다.
+        assert.ok(block.includes('ae-gauge ae-sunk mt-1'), `${variant}: 바 부품`);
+        assert.ok(block.includes(`ae-gauge-${{ hp: 'life', mp: 'will', exp: 'exp' }[variant]}`), `${variant}: 바 색`);
     }
 });
 
@@ -299,7 +301,10 @@ test('구조 불변식(cycle 586): StatusBar 시그니처에 5 defaults가 없�
     }
 
     const gameRoot = await readSrc('src/components/app/GameRoot.tsx');
-    assert.ok(/<StatusBar[\s\S]*?enemy=\{engine\.gameState === GS\.COMBAT \? engine\.enemy : null\}/.test(gameRoot),
+    // 게임 필 감사 GF-02: 처치 순간에는 쓰러진 적을 잠깐 더 그린다 — 싸우는 적은 그대로 전투 중일 때만 넘긴다.
+    assert.ok(/const combatStage = getCombatStageView\(engine\.gameState === GS\.COMBAT \? engine\.enemy : null, beats\.defeatedEnemy\)/.test(gameRoot),
+        'GameRoot가 전투 중 적을 처치 순간 보기에 넘긴다');
+    assert.ok(/<StatusBar[\s\S]*?enemy=\{combatStage\.enemy\}/.test(gameRoot),
         'GameRoot가 enemy를 명시 전달한다');
     assert.ok(!/isMuted=/.test(gameRoot) && !/onToggleMute=/.test(gameRoot), '임시 비활성 사운드 props는 전달되지 않는다');
 });

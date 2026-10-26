@@ -3,7 +3,8 @@ import { getCombatForecast, type SelectedSkillLike } from './combatForecast';
 import { CombatEngine } from '../systems/CombatEngine';
 import { getDiscoveredBossSignatureDrops } from './bossSignatureHint.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
-import { getEliteThreatChip } from './enemyThreat';
+import { getBossThreatChip, getEliteThreatChip } from './enemyThreat';
+import { getCombatSkillTray } from './combatSkillTray';
 import { getConsumableDescription } from './consumablePresentation';
 import { isConsumableItem } from '../systems/consumableRules';
 import type { DictRelic, FullStats, Item, Monster, Player } from '../types/index.js';
@@ -24,6 +25,12 @@ interface CombatViewInput {
  */
 type CombatConsumableEntry = Item & { count: number; label: string };
 
+/**
+ * 전투 신호 칩의 의미 — 색은 화면(CombatPanel)이 토큰으로 정한다(2026-10 에테르 유리: 뷰모델에 색 클래스를 싣지 않는다).
+ * threat = 정예 위협 · boss = 보스 위협(금빛 테두리) · ready / building = 연속 공격이 찼는지.
+ */
+export type CombatSignalTone = 'threat' | 'boss' | 'ready' | 'building';
+
 /** `combo_stack`(연격의 반지) 유물만 골라 쓰는 실제 모양 — `val`이 `{stack, bonus}`로 닫힌다. */
 type ComboStackRelic = Extract<DictRelic, { effect: 'combo_stack' }>;
 
@@ -34,10 +41,11 @@ type ComboStackRelic = Extract<DictRelic, { effect: 'combo_stack' }>;
  */
 export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCooldown, mobile }: CombatViewInput) => {
     const skillReadiness = getCombatSkillReadiness({ player, selectedSkill, skillCooldown });
+    // 2026-10 감사 CL-03: 가진 기술 전부 — 칸마다 같은 준비 판정(재사용 대기 · 기력)과 약점 판정(전투 예고와 같은 판정).
+    const skillTray = getCombatSkillTray(player, { enemy, stats });
+    // 보스 카드(기믹 · 공략 요령)가 읽는다. 2026-10 감사 CL-06: '보스 전술' 신호(entryHint · hint · phaseHint)는 지웠다 — 데스크톱
+    //   분기와 보스에서 숨는 신호 줄 안에만 있어 한 번도 그려지지 않았고(Wave 135 "그리지 않는 코드"), 들어가기 전 준비 조언이었다.
     const tacticalProfile = enemy ? getEnemyTacticalProfile(enemy, stats) : null;
-    const bossBriefLine = enemy?.isBoss
-        ? tacticalProfile?.entryHint || tacticalProfile?.hint || tacticalProfile?.phaseHint
-        : null;
     // 전투 중 상주 reminder — boss + signature 드롭 가능 시 "끝까지 버틸 이유" 노출
     // 2026-10 Wave 103 (소유자 결정 §107.6): 이미 도감에 있는 각인만 — 아직 없는 각인의 획득처는 플레이어가 알아낸다.
     const signatureDropCandidates = enemy?.isBoss
@@ -88,36 +96,35 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
         : [];
 
     // 2026-10 Wave 111: 정예와 싸우는 동안 가장 센 한 방(격노 포함)을 칩으로 보인다 — 나타날 때의 기록 줄은 밀려 올라간다.
+    // 2026-10 감사 CL-06: 보스도 같은 칩이다(페이즈 · 하수인 · 브레스 포함). 위협 칩이 언제나 첫 신호다.
     const eliteThreatChip = enemy ? getEliteThreatChip(player, enemy) : null;
+    const bossThreatChip = enemy ? getBossThreatChip(player, enemy) : null;
     const mobileCombatSignals = [
         eliteThreatChip
             ? {
                 key: 'elite',
                 text: eliteThreatChip,
-                className: 'border-rose-300/30 bg-rose-500/12 text-rose-100',
+                tone: 'threat' as CombatSignalTone,
             }
             : null,
-        bossBriefLine
+        bossThreatChip
             ? {
-                key: 'boss',
-                text: `보스 전술 · ${bossBriefLine}`,
-                className: 'border-[#d5b180]/18 bg-[#d5b180]/10 text-[#f6e7c8]',
+                key: 'boss-threat',
+                text: bossThreatChip,
+                tone: 'boss' as CombatSignalTone,
             }
             : null,
         comboRelic
             ? {
                 key: 'combo',
                 text: comboCount >= comboStack ? `연속 공격 준비 ${comboCount}/${comboStack}` : `연속 공격 ${comboCount}/${comboStack}`,
-                className: comboCount >= comboStack
-                    ? 'border-cyber-pink/50 bg-cyber-pink/12 text-cyber-pink'
-                    : 'border-cyber-pink/18 bg-cyber-pink/6 text-cyber-pink/70',
+                tone: (comboCount >= comboStack ? 'ready' : 'building') as CombatSignalTone,
             }
             : null,
     ].filter(Boolean).slice(0, 2);
 
     return {
         tacticalProfile,
-        bossBriefLine,
         signatureDropCandidates,
         primarySignatureDrop,
         combatConsumables,
@@ -128,5 +135,6 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
         combatForecastCells,
         mobileCombatSignals,
         skillReadiness,
+        skillTray,
     };
 };

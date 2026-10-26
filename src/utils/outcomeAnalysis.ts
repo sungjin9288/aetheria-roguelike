@@ -1,3 +1,4 @@
+import { MSG } from '../data/messages.js';
 import type { PostCombatResult } from '../types/combat.js';
 import type { RunSummary } from '../reducers/actionTypes.js';
 /**
@@ -206,7 +207,7 @@ export const getRunSummaryAnalysis = (summary: RunSummaryLike) => {
     // KILL_STREAK_TIERS [3,5,10,20] 중 10 이상이면 공격 운영 칭찬 — tier 3 진입.
     // 레벨 10 이상인데 최대 연속 처치가 3 미만이면 공격 흐름을 익힐 필요가 있다.
     if ((summary.maxKillStreak || 0) >= 10) {
-        focus.push('공격형 운영으로 연속 처치 보너스를 안정적으로 이어갔습니다.');
+        focus.push(MSG.RUN_SUMMARY_FOCUS_STRONG_STREAK);
     }
     if ((summary.maxKillStreak || 0) < 3 && (summary.level || 0) >= 10) {
         focus.push('연속 처치가 자주 끊겼습니다. 장비를 보강하고 약한 적부터 정리해 흐름을 이어가세요.');
@@ -244,64 +245,54 @@ export const getRunSummaryReflectionStrip = (
     const strongStreak = maxKillStreak >= 10;
     const lowStreak = maxKillStreak < 3 && level >= 10;
 
+    const text = MSG.RUN_REFLECTION;
     let tone = 'steady';
-    let cause = '기반 안정';
-    let lesson = analysis?.headline || '여정 흐름 확인';
-    let next = '같은 성장 방향 강화';
+    let cause = text.steady.cause;
+    let lesson = analysis?.headline || text.steady.lesson;
+    let next = text.steady.next;
 
     if (highEscapes || /도주.*보스/.test(focusText)) {
         tone = 'pressure';
-        cause = '후퇴 누적';
-        lesson = '교전 전 정비 부족';
-        next = '회복·장비 점검';
-    } else if (lowRelics || /유물/.test(focusText)) {
+        ({ cause, lesson, next } = text.escapes);
+    } else if (lowRelics || /얻은 유물/.test(focusText)) {
+        // 감사 UX-14: '/유물/'이던 동안 지역 발견 조언("…유물과 이벤트를 만날 기회를…")도 여기로 와, 유물을 넉넉히 얻은 여정에
+        //   "유물이 적었음"이라 말했고 아래 탐험 폭 갈래는 닿을 수 없었다.
         tone = 'pressure';
-        cause = '유물 부족';
-        lesson = '이벤트 경로 필요';
-        next = '지도·임무 확장';
+        ({ cause, lesson, next } = text.relics);
     } else if (lowBossProgress || /보스 진입 전/.test(focusText)) {
         tone = 'pressure';
-        cause = '보스 전 정비';
-        lesson = '방어·회복 준비';
-        next = '소모품 보강';
+        ({ cause, lesson, next } = text.bossGate);
     } else if (lowKills || /교전 수/.test(focusText)) {
         tone = 'pressure';
-        cause = '성장량 부족';
-        lesson = '초반 순환 짧음';
-        next = '초반 지역 더 탐험';
+        ({ cause, lesson, next } = text.kills);
     } else if (lowGold || /모은 골드/.test(focusText)) {
         tone = 'growth';
-        cause = '골드 부족';
-        lesson = '구매 시점 조절';
-        next = '상점 전리품 비교';
+        ({ cause, lesson, next } = text.gold);
     } else if (lowDiscovery || /발견한 지역/.test(focusText)) {
         tone = 'growth';
-        cause = '탐험 폭 부족';
-        lesson = '새 이벤트 발견 부족';
-        next = '새 지역 개방';
+        ({ cause, lesson, next } = text.discovery);
     } else if (lowStreak || /연속 처치가 끊/.test(focusText)) {
         tone = 'growth';
-        cause = '연속 처치 단절';
-        lesson = '공격 호흡 재정렬';
-        next = '약한 적부터 정리';
+        ({ cause, lesson, next } = text.streakBroken);
     } else if ((bossKills >= 3 && relicsFound >= 4) || strongStreak || wideDiscovery) {
         tone = 'breakthrough';
-        cause = bossKills >= 3 ? '보스권 도달' : strongStreak ? '공격 흐름' : '탐험 폭 강점';
-        lesson = strongStreak ? '연속 처치 운영 유효' : wideDiscovery ? '경로 확장 유효' : '성장 방향 검증';
-        next = bossKills >= 3 ? '막힌 속성 보강' : '동일 강점 유지';
+        const breakthrough = text.breakthrough;
+        cause = bossKills >= 3 ? breakthrough.causeBoss : strongStreak ? breakthrough.causeStreak : breakthrough.causeDiscovery;
+        lesson = strongStreak ? breakthrough.lessonStreak : wideDiscovery ? breakthrough.lessonDiscovery : breakthrough.lessonGrowth;
+        next = bossKills >= 3 ? breakthrough.nextBoss : breakthrough.nextKeep;
     } else if (bossKills > 0 || level >= 20) {
+        // 보스를 잡지 못한 Lv12 이상은 위 보스 전 갈래가 먼저 받으므로 여기는 언제나 보스를 잡은 여정이다
+        //   (이전의 '중반 진입' 문구는 닿을 수 없었다).
         tone = 'growth';
-        cause = bossKills > 0 ? '보스 진입 성공' : '중반 진입';
-        lesson = '기반은 충분';
-        next = '약점 구간 보강';
+        ({ cause, lesson, next } = text.growth);
     }
 
     return {
         tone,
         cells: [
-            { label: '결과', value: cause },
-            { label: '배운 점', value: lesson },
-            { label: '다음 시도', value: next },
+            { label: MSG.RUN_REFLECTION_LABELS.result, value: cause },
+            { label: MSG.RUN_REFLECTION_LABELS.lesson, value: lesson },
+            { label: MSG.RUN_REFLECTION_LABELS.next, value: next },
         ],
     };
 };

@@ -6,7 +6,7 @@
     "src/systems/CombatEngine.actions.ts": "3555d67b425c77f0e2e37555367aa95ca68243fb071f1b859c893a0043023829",
     "src/systems/relicDotMultiplierAudit.ts": "6eb7b8877edbd22b035ce13e3944029a39f099b3e32bb372900d46c1ad1985c2",
     "src/utils/dataMigration.ts": "92f19020fa32e195c27cd63b32e5be2cc82eddd970a10344971d9e2d6d999e4b",
-    "src/reducers/handlers/combatHandlers.ts": "8f6583396174ed5f026e8dd7bd8c9e3ac425599c00ead20976fdd2c1e60f54ff",
+    "src/reducers/handlers/combatHandlers.ts": "bb66ceaf1e301bdd6f263e58882548bffd5de06850c53e20dc9799b09fef8b8b",
     "tests/relic-dot-multiplier-coherence.test.js": "7494a19ce16e0249d39b592b55f73d70995632f11965f998dc5214448a488533",
     "scripts/verify-relic-dot-multiplier.mjs": "55ddc162ca69d4e999b0d01f708543e3f3556bdb61f0488e14d65dc6a8a0d02e",
     "docs/superpowers/plans/2026-08-17-aetheria-relic-dot-multiplier-plan.md": "25530503725c3ebf739a9e4a70ff3c2fcf9affb8959d6a7429789a9818dd19e9"

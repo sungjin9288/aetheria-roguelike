@@ -16,7 +16,7 @@
 | 제2조 〔AI〕 AI 이벤트 | 요청 본문에 이름 · 직업 · 레벨 · 생명 · 기력 · 골드 · 칭호 · 진행 임무 · 빌드 성향 · 최근 사건 · 지역 · uid가 들어간다. 프록시는 항목별 길이를 자르고 Gemini(`gemini-1.5-flash`)로 보낸다. 요청 수 제한은 `uid:IP` 키로 서버 메모리 Map에 둔다. **기본은 꺼짐**(`CONSTANTS.USE_AI_PROXY = VITE_USE_AI_PROXY === 'true'`) | `src/services/aiService.ts`, `functions/api/ai-proxy.js`, `src/data/constants.ts` |
 | 제2조 ④ 기기 안 기록 | 활동 기록(최근 200건 · 128KiB)과 오류 기록(최근 20건)은 localStorage에만 둔다. 네트워크 전송 구현이 없다(싱크는 NOOP · LOCAL 두 가지). 설정 화면에서 지우고 내보낸다 | `src/platform/localProductEventStore.ts`, `src/platform/localErrorReportStore.ts`, `src/platform/productEventSink.ts`, `src/components/tabs/SystemTab.tsx` |
 | 제2조 ② 수집하지 않는 것 | Android 권한은 INTERNET 하나다. src에 위치 · 카메라 · 주소록 API가 없고, 클립보드는 이용자가 누를 때 쓰기만 한다(공유 문구 · 기록 복사). 공유 문구에 캐릭터 이름은 없다 | `android/app/src/main/AndroidManifest.xml`, `src/utils/runShareText.ts` |
-| 제5조 Google Fonts | Rajdhani를 `fonts.googleapis.com`에서 받는다(웹 · 토스 빌드 모두 같은 `index.html`) | `index.html` |
+| 제5조 외부 글꼴 | 없다. 2026-10 디자인 기반에서 Rajdhani(`fonts.googleapis.com`)를 지웠다 — 글꼴은 저장소의 Fira Code와 기기 글꼴뿐이다 | `index.html`, `src/index.css`, `tests/design-token-absence-contract.test.js` |
 | 제8조 접근 통제 | 위 보안 규칙. 공개 문서의 필드 · 크기 상한은 rules가 검사한다 | `firestore.rules`, `tests/firestore-rules-semantics.test.js` |
 | 제9조 쿠키 | src · `index.html`에 `document.cookie`가 없다 | — |
 | 삭제 기능 | src에 `deleteDoc` · `deleteUser`가 없다. Firestore TTL 설정도 없다 | `firebase.json`(rules만) |
@@ -39,11 +39,12 @@
    - 연락처로 받는 요청은 지금 본인 확인을 할 수 없다. 게임 화면 어디에도 계정 식별자가 나오지 않는다. 설정 화면에 표시하거나 '내 데이터 삭제'를 만드는 일은 화면 변경이라 기기 수용 뒤에 한다.
 6. **보유 기간:** 지금은 자동 삭제가 없다. 정하기 전에는 "삭제 요청 · 서비스 종료 시까지"가 사실이다. 기간을 정하면 Firestore TTL 정책이나 정리 작업을 함께 만든다.
 7. **순위표 공개 범위:** `allow read: if true`다. 그대로면 "누구나" 문구가 맞다. 로그인한 이용자로 좁히려면 rules를 바꾸고 rules 시맨틱 테스트를 함께 고친다.
-8. **Google Fonts:** 지금 초안처럼 국외 이전 행으로 공개하거나, Rajdhani를 앱 안에 넣어(Wave 69의 Fira Code와 같은 방식) 외부 요청을 없앤다. 넣으면 제5조 Google Fonts 행을 지운다. 글꼴 로딩 경로가 바뀌므로 기기 수용 뒤에 한다.
+8. **Google Fonts — 닫음(2026-10 디자인 기반).** Rajdhani 외부 요청을 지웠다(표제는 본문 한글 글꼴 굵기 800). 제5조 Google Fonts 행을 지웠다. 기기 수용에서 표제 글꼴이 기기 글꼴로 보이는지만 확인한다.
 9. **토스 저장소:** SDK `Storage`가 기기 안 저장인지 토스 서버 동기화인지 토스 문서로 확인한다. 결과에 따라 제5조 비바리퍼블리카 행을 지우거나 채운다.
 10. **만 14세 미만:** 게임은 나이를 받지 않는다. 앱인토스에는 틴즈(만 14세 이상) 노출 정책이 있다(검색 요약). 콘솔의 이용 연령과 함께 제6조 ④를 정한다.
 11. **처리방침 위치(URL):** 웹 배포(Cloudflare Pages)에 정적 페이지로 둔다.
     - `public/`에 두면 웹 `dist/`에만 들어가고 토스 번들 검증에는 영향이 없다. 토스 빌드는 허용 목록만 담는다(`scripts/tossAssetCatalog.mjs`).
+    - 웹 빌드도 `public/assets` 안은 런타임 그림 목록만 담는다(`scripts/webPublicAssets.mjs`). 처리방침 페이지는 `public/assets` 밖(예: `public/privacy/`)에 둔다 — 밖의 파일은 그대로 담긴다.
     - 토스 번들 안에 넣으려면 허용 목록과 번들 고정값 테스트(`tests/toss-asset-build.test.js`)를 함께 바꿔야 한다. 번들 여유도 3.3MB뿐이다.
     - 콘솔과 게임 설정에는 그 주소를 적는다.
 12. **출시 검수 게이트:** 저장소 검증기의 `review` 단계는 `privacy_policy` · `support_channel` 외부 게이트 영수증을 요구한다(`scripts/tossReleaseEvidence.mjs`). 공개 주소가 생기면 영수증을 남긴다. 절차는 [앱인토스 샌드박스 런북](../qa/APPS_IN_TOSS_SANDBOX_RUNBOOK.md)을 따른다.

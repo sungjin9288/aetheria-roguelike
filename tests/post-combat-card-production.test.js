@@ -262,5 +262,6 @@ test('⑤ 스모크는 실제 승리 카드를 CTA로 닫는다', async () => {
     const smoke = await readFile(new URL('../scripts/smoke-gameplay.mjs', import.meta.url), 'utf8');
 
     assert.match(smoke, /dismissPostCombatCardIfPresent/);
-    assert.match(smoke, /'post-combat-continue', 'post-combat-close'/);
+    // 2026-10 (감사 UX-10): '계속 탐험'은 탐험을 바로 부르므로 스모크는 '닫기'를 먼저 누른다.
+    assert.match(smoke, /'post-combat-close', 'post-combat-continue'/);
 });

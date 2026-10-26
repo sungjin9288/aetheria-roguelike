@@ -168,7 +168,9 @@ test('RelicChoicePanel renders Korean decision labels and recommended marker', a
     assert.match(source, /getRelicDisplayName/);
     assert.match(source, /formatRelicText/);
     assert.match(source, /<RelicIcon relic=\{relic\}/);
-    assert.match(source, /grid-cols-\[50px_minmax\(0,1fr\)_18px\]/);
+    // 2026-10 (감사 UX-11): 카드를 누르면 바로 받는데 다른 화면으로 넘어가는 듯한 꺾쇠(18px 칸)가 있었다 — 아이콘 · 본문 두 칸이다.
+    assert.match(source, /grid-cols-\[56px_minmax\(0,1fr\)\]/);
+    assert.doesNotMatch(source, /ChevronRight/);
     assert.match(source, /max-h-\[calc\(100dvh-1rem\)\]/);
     assert.doesNotMatch(source, /현재 보유 유물과 직접 공명하는 효과는 없습니다|전설까지 -1|★ 전설 시너지/);
     assert.doesNotMatch(source, /Relic Archive|Legendary Synergy|Linked Relics|Near Legendary/);

@@ -7,7 +7,7 @@ import { getChainEventForLoc } from '../data/eventChains.js';
 import { getShopBuyPrice } from './shopRotation';
 import type { getAdventureGuidance, getExpeditionPreparation } from './adventureGuide.js';
 
-export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'grave';
+export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 'class' | 'craft' | 'mirror' | 'grave';
 
 /**
  * safe 지역에서 explore 행동이 무엇을 의미하는지 — 라벨을 컴포넌트가 하드코딩하지 않게
@@ -15,6 +15,21 @@ export type TownActionKey = 'explore' | 'move' | 'rest' | 'quests' | 'market' | 
  * `'chain'`은 이 지역에서 대기 중인 이야기 스텝, `null`은 explore 행동 자체가 없다는 뜻.
  */
 export type TownExploreIntent = 'investigate' | 'chain' | null;
+
+/**
+ * 이 안전지대에 탐험 행동이 있는가 — 조작판이 안전지대에서 탐험 단추를 그리는 조건이다(Wave 16 H3).
+ * 2026-10 (감사 UX-10): 전투 결과 카드의 '계속 탐험'(`utils/postCombatContinue.ts`)도 이 판정을 읽는다 — 두 곳이 갈라지지 않게 한 곳에 둔다.
+ */
+export const getTownExploreIntent = (
+    player: Pick<Player, 'loc' | 'eventChainProgress' | 'deferredEventChainSteps' | 'stats'>,
+    mapData: { type?: string; monsters?: readonly string[] } | undefined,
+): TownExploreIntent => {
+    const hasPendingChainStep = Boolean(
+        getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps, player.stats?.abyssFloor),
+    );
+    if (hasPendingChainStep) return 'chain';
+    return canInvestigateTown(player.loc, mapData) ? 'investigate' : null;
+};
 
 type TownPrimaryKind =
     | 'claim_quest'
@@ -42,14 +57,10 @@ interface TownActionContext {
     consumables: Item[];
 }
 
-const FACILITY_KEYS: TownActionKey[] = ['rest', 'quests', 'market', 'class', 'craft'];
-const FACILITY_LABELS: Record<string, string> = {
-    rest: '휴식',
-    quests: '임무',
-    market: '상점',
-    class: '전직',
-    craft: '제작',
-};
+// 2026-10 통합 감사(CL-02): 계승 정수의 소비처(에테르 거울)도 마을 시설이다 — 기록의 설정 탭 끝과 계승 화면에만 있었다.
+//   시설은 행동 종류만 그린다(Wave 136 — 이유 · 상태 문구 없음). 라벨은 MSG 소유.
+type TownFacilityKey = keyof typeof MSG.TOWN_FACILITY_LABELS & TownActionKey;
+const FACILITY_KEYS: TownFacilityKey[] = ['rest', 'quests', 'market', 'class', 'craft', 'mirror'];
 
 const PRIMARY_BUTTON_KEYS: Partial<Record<TownPrimaryKind, TownActionKey>> = {
     explore: 'explore',
@@ -190,13 +201,7 @@ export const getTownActionPresentation = ({
     //   안전지대에는 탐험 버튼이 없어서 이 둘은 **터미널에 `탐색`을 타이핑해야만**
     //   진행됐다. 대기 스텝이 있으면 같은 explore 행동을 마을 행동으로 노출한다 —
     //   explore()는 체인 트리거를 가장 먼저 검사하므로 이 버튼은 항상 그 분기로 간다.
-    const hasPendingChainStep = Boolean(
-        getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps, player.stats?.abyssFloor),
-    );
-    const canInvestigate = canInvestigateTown(player.loc, mapData);
-    const exploreIntent: TownExploreIntent = hasPendingChainStep
-        ? 'chain'
-        : canInvestigate ? 'investigate' : null;
+    const exploreIntent = getTownExploreIntent(player, mapData);
     if (exploreIntent !== null && primaryKey !== 'explore') quickKeys.push('explore');
     const visibleKeys = new Set<TownActionKey>([...quickKeys, ...(primaryKey ? [primaryKey] : [])]);
     const facilityKeys = FACILITY_KEYS.filter((key) => !visibleKeys.has(key));
@@ -213,7 +218,7 @@ export const getTownActionPresentation = ({
         quickKeys,
         exploreIntent,
         facilityKeys,
-        facilitySummary: facilityKeys.map((key) => FACILITY_LABELS[key]).join(' · '),
+        facilitySummary: facilityKeys.map((key) => MSG.TOWN_FACILITY_LABELS[key]).join(' · '),
         facilityStatus: {
             rest: needsRest ? '회복 가능' : '정비 완료',
             quests: preparation?.isClaimable

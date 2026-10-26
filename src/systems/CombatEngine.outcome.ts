@@ -18,6 +18,7 @@ import { endCombatScope } from '../utils/combatScope.js';
 import { isBorrowedRelic } from './chaosHeart.js';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 import { getChallengeMaxHpGain, getChallengeRewardMult, getGoldIncome } from '../utils/challengeRules.js';
+import { getCycleBestLevel } from '../utils/cycleBestLevel.js';
 
 /**
  * CombatEngine 결과(경험치/승리) 메서드 — mixin으로 CombatEngine에 spread.
@@ -83,6 +84,17 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
 
         if (p.level! >= CONSTANTS.MAX_LEVEL) {
             p.exp = Math.min(p.exp!, Math.max(0, p.nextExp! - 1));
+        }
+
+        // 다시 오르는 여정: 이번 회차에 끝낸 여정의 최고 레벨까지 얼마나 남았는지, 넘었는지를 레벨업 기록에 남긴다(기록일 뿐 판정은 없다).
+        const cycleBest = levelUps > 0 ? getCycleBestLevel(p.meta) : null;
+        if (cycleBest !== null) {
+            const levelBefore = player.level || 1;
+            if (levelBefore <= cycleBest && p.level! > cycleBest) {
+                logs.push({ type: 'event', text: MSG.CYCLE_BEST_LEVEL_PASSED(cycleBest) });
+            } else if (p.level! <= cycleBest) {
+                logs.push({ type: 'system', text: MSG.CYCLE_BEST_LEVEL_CLIMB(p.level!, cycleBest) });
+            }
         }
 
         return {

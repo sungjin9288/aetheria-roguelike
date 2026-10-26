@@ -109,18 +109,21 @@ const RouteTopology = ({
                                         />
                                     )}
                                     <span className="min-w-0 flex-1">
-                                        <span className="flex min-w-0 items-center justify-between gap-1.5">
-                                            <strong className="aether-type-body min-w-0 break-words font-readable font-semibold text-white/92">
+                                        {/* 2026-10 통합 감사(UX-02): 좁은 칸에서 칩과 지역 이름이 한 줄을 나눠 쓰며 이름이 한 글자씩 세로로 꺾였다
+                                            ("고요한 숲"이 폭 23px · 3줄 — 첫 임무의 목적지다). MapSignalStrip과 같은 규칙: 칩은 줄지 않고,
+                                            한 줄에 안 들어가면 칩이 다음 줄로 내려간다. 이름은 최소 폭을 지킨다. */}
+                                        <span className="flex min-w-0 flex-wrap items-center justify-between gap-x-1.5 gap-y-0.5">
+                                            <strong className="aether-route-topology-name aether-type-body min-w-[min(4.5rem,100%)] break-words font-readable font-semibold text-ae-ink">
                                                 {displayName}
                                             </strong>
                                             {marker && (
-                                                <span className="aether-type-label inline-flex shrink-0 items-center gap-1 font-readable font-semibold text-slate-300/80">
-                                                    <marker.Icon size={10} aria-hidden="true" />
+                                                <span className="aether-type-label inline-flex shrink-0 items-center gap-1 font-readable font-semibold text-ae-ink-2">
+                                                    <marker.Icon size={12} aria-hidden="true" />
                                                     {marker.label}
                                                 </span>
                                             )}
                                         </span>
-                                        <span className="aether-type-meta mt-1 flex min-w-0 items-center justify-between gap-1.5 font-readable text-slate-400/82">
+                                        <span className="aether-type-meta mt-1 flex min-w-0 items-center justify-between gap-1.5 font-readable text-ae-ink-3">
                                             <span className="break-words">
                                                 {blindMap ? '정보 없음' : [route.levelLabel, route.badge].filter(Boolean).join(' · ')}
                                             </span>

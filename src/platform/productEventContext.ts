@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core';
-import { Environment } from '@apps-in-toss/web-framework';
+import { Environment } from './tossSdk';
 
 import type { ProductEventContext, ProductEventOs } from './productEvents';
 import { getRuntimeEnvironment, type RuntimeEnvironment } from './runtimeEnvironment';

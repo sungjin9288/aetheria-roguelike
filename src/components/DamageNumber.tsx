@@ -1,11 +1,12 @@
 import type { useDamageFlash } from '../hooks/useDamageFlash';
 
 /**
- * DamageNumber — 데미지/회복 float 숫자 오버레이 (slice 29 개선).
+ * DamageNumber — 데미지/회복 float 숫자 오버레이 (slice 29 개선 · 2026-10 에테르 유리).
  *
  * 기존엔 미정의 keyframe `floatUp`을 참조해 애니메이션이 죽어 있었고 위치도
  * 컨테이너 상단 밖(-top-6)이라 잘 안 보였다. floatUp 키프레임을 index.css에
  * 정의하고, 전투 영역(상단 38%) 중앙에 크게 띄워 타격감을 살린다.
+ * 숫자는 Fira Code 고정폭 숫자, 색은 토큰(회복 = good, 피해 = life)이다.
  */
 interface DamageNumberProps {
     /** `useDamageFlash`가 반환하는 damageAmount 그대로 — type-only import라 훅 모듈이 로드되지 않는다. */
@@ -21,15 +22,15 @@ const DamageNumber = ({ amount }: DamageNumberProps) => {
         <span
             data-testid="damage-number"
             data-heal={isHeal ? 'true' : undefined}
-            className={`pointer-events-none fixed left-1/2 top-[38%] z-[55] font-rajdhani text-2xl font-black ${
-                isHeal ? 'text-emerald-300' : 'text-rose-300'
+            className={`pointer-events-none fixed left-1/2 top-[38%] z-[55] font-fira text-2xl font-bold tabular-nums ${
+                isHeal ? 'text-ae-good' : 'text-ae-life'
             }`}
             style={{
-                animation: 'floatUp 1.2s ease-out forwards',
+                animation: 'floatUp 1.2s cubic-bezier(.2,.8,.2,1) forwards',
                 whiteSpace: 'nowrap',
                 textShadow: isHeal
-                    ? '0 0 12px rgba(16,185,129,0.6), 0 2px 4px rgba(0,0,0,0.7)'
-                    : '0 0 12px rgba(244,63,94,0.55), 0 2px 4px rgba(0,0,0,0.7)',
+                    ? '0 0 12px rgb(var(--aether-good-rgb) / 0.55), 0 2px 4px rgb(var(--aether-void-rgb) / 0.8)'
+                    : '0 0 12px rgb(var(--aether-life-rgb) / 0.55), 0 2px 4px rgb(var(--aether-void-rgb) / 0.8)',
             }}
         >
             {isHeal ? '+' : '-'}{amount.value}

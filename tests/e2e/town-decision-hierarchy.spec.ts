@@ -1,6 +1,16 @@
 import { test, expect } from '@playwright/test';
 import { openTownFacilities, startE2ERun } from './testHelpers';
 
+// 2026-10 통합 감사(town-nav UX-01 · CL-02): 마을 시설 여섯 개 — 펼치면 모두 화면 안으로 들어와야 한다.
+const FACILITY_TEST_IDS = ['control-rest', 'control-quests', 'control-market', 'control-class', 'control-craft', 'control-mirror'];
+// 작은 폰(SE · 12 mini급)에서는 펼친 시설 칸이 화면 아래에 그려졌다(390x664 · 375x667에서 보이는 시설 0개).
+const FACILITY_VIEWPORTS = [
+    { width: 375, height: 667 },
+    { width: 390, height: 664 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+] as const;
+
 test.describe('Town decision hierarchy', () => {
     test.beforeEach(async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
@@ -79,15 +89,38 @@ test.describe('Town decision hierarchy', () => {
     test('접힌 마을 시설을 열면 기존 기능을 모두 사용할 수 있다', async ({ page }) => {
         await openTownFacilities(page);
 
-        for (const testId of ['control-rest', 'control-quests', 'control-market', 'control-class', 'control-craft']) {
+        // 2026-10 통합 감사(town-nav CL-02): 계승 정수의 소비처인 에테르 거울도 마을 시설이다 — 누르면 거울이 열린다.
+        for (const testId of FACILITY_TEST_IDS) {
             await expect(page.getByTestId(testId)).toBeVisible();
         }
+        await expect(page.getByTestId('control-mirror')).toBeEnabled();
 
         await page.screenshot({
             path: 'playtest-artifacts/mobile-town-hierarchy/facilities-open.png',
             fullPage: false,
         });
     });
+
+    for (const viewport of FACILITY_VIEWPORTS) {
+        test(`${viewport.width}x${viewport.height} 마을 시설을 펼치면 시설 단추가 모두 화면 안에 들어오고 에테르 거울이 열린다`, async ({ page }) => {
+            await page.setViewportSize({ ...viewport });
+            await openTownFacilities(page);
+
+            for (const testId of FACILITY_TEST_IDS) {
+                const button = page.getByTestId(testId);
+                await expect.poll(async () => {
+                    const bounds = await button.boundingBox();
+                    return Boolean(bounds && bounds.y >= 0 && bounds.y + bounds.height <= viewport.height + 0.5);
+                }, { message: `${testId} 단추가 ${viewport.width}x${viewport.height} 화면 안에 있다` }).toBe(true);
+            }
+
+            await page.getByTestId('control-mirror').click();
+            await expect(page.getByTestId('mirror-panel-close')).toBeVisible();
+            await expect(page.getByTestId('mirror-panel-close')).toHaveAccessibleName('에테르 거울 닫기');
+            await page.getByTestId('mirror-panel-close').click();
+            await expect(page.getByTestId('mirror-panel-close')).toHaveCount(0);
+        });
+    }
 
     test('전투 중에는 지역 장식보다 교전 정보가 우선한다', async ({ page }) => {
         const seeded = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(false));

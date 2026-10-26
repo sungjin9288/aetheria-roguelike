@@ -100,3 +100,34 @@ test('USE_AI_PROXY가 false면 쿼터 미터가 전혀 움직이지 않는다 (�
         assert.equal(TokenQuotaManager.canMakeAICall(), true);
     });
 });
+
+// GP-02: 프록시가 꺼진 빌드는 디스패치가 일어날 수 없으므로 쿼터와 무관하다 — 저장소를 읽지도 않고,
+//   저장소가 막혔든(쿠키 차단) 예전 빌드가 남긴 한도 기록이 있든 소진 안내를 붙이지 않는다.
+test('USE_AI_PROXY가 false면 저장소 상태와 무관하게 소진 안내가 없고 쿼터를 읽지 않는다 (GP-02)', async () => {
+    let storageReads = 0;
+    const blocked = {
+        getItem: () => { storageReads += 1; throw new Error('SecurityError: site data blocked'); },
+        setItem: () => { throw new Error('SecurityError: site data blocked'); },
+        removeItem: () => {},
+        clear: () => {},
+    };
+    const exhaustedEarlier = makeLocalStorageStub();
+    exhaustedEarlier.setItem(TokenQuotaManager.QUOTA_KEY, JSON.stringify({
+        date: new Date().toDateString(), used: TokenQuotaManager.DAILY_LIMIT, outcomes: {},
+    }));
+    const context = { playerSnapshot: { level: 5, maxHp: 200, maxMp: 100 }, mapSnapshot: { level: 3 } };
+
+    for (const [label, storage] of [['저장소 차단', blocked], ['한도 기록이 남은 저장소', exhaustedEarlier]]) {
+        await withGlobalStub({
+            localStorage: storage,
+            fetch: async () => { throw new Error('프록시가 꺼져 있으면 fetch를 부르면 안 된다'); },
+        }, async () => {
+            const event = await AI_SERVICE.generateEvent('잊혀진 폐허', [], 'test-uid', context);
+            assert.ok(event, label);
+            assert.equal(event.source, 'fallback', label);
+            assert.equal(event.fallbackReason, undefined, `${label}: 소진 안내 없음`);
+            assert.equal(event.fallbackMessage, undefined, label);
+        });
+    }
+    assert.equal(storageReads, 0, '프록시가 꺼져 있으면 쿼터를 읽지 않는다');
+});

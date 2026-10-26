@@ -73,43 +73,28 @@ const CATEGORY_BY_EFFECT: Record<string, RelicVisualCategory> = {
     void_heart: 'cursed',
 };
 
-const VISUAL_BY_CATEGORY = {
-    attack: {
-        src: '/assets/relics/attack.png',
-        color: '#ff9b9b',
-        glow: 'rgba(244, 99, 110, 0.28)',
-    },
-    survival: {
-        src: '/assets/relics/survival.png',
-        color: '#97e7c0',
-        glow: 'rgba(110, 231, 183, 0.24)',
-    },
-    energy: {
-        src: '/assets/relics/energy.png',
-        color: '#8edff4',
-        glow: 'rgba(103, 232, 249, 0.24)',
-    },
-    exploration: {
-        src: '/assets/relics/exploration.png',
-        color: '#7dd4d8',
-        glow: 'rgba(125, 212, 216, 0.24)',
-    },
-    treasure: {
-        src: '/assets/relics/treasure.png',
-        color: '#f2ce91',
-        glow: 'rgba(242, 206, 145, 0.24)',
-    },
-    cursed: {
-        src: '/assets/relics/cursed.png',
-        color: '#c8a7f0',
-        glow: 'rgba(168, 85, 247, 0.26)',
-    },
-    legendary: {
-        src: '/assets/relics/legendary.png',
-        color: '#f6e7b0',
-        glow: 'rgba(250, 204, 21, 0.28)',
-    },
-} as const;
+/**
+ * 계열마다 그림 하나와 색 토큰 하나 — 2026-10 에테르 유리(감사 VD-07): 색은 `--aether-*-rgb` 채널 토큰만 쓴다.
+ *   전설 계열은 전설 등급 색(산호)이다 — 위험 · 생명 색(장미)과 섞이지 않는다.
+ */
+const TONE_BY_CATEGORY: Readonly<Record<RelicVisualCategory, string>> = Object.freeze({
+    attack: '--aether-life-rgb',
+    survival: '--aether-good-rgb',
+    energy: '--aether-will-rgb',
+    exploration: '--aether-ether-rgb',
+    treasure: '--aether-gold-rgb',
+    cursed: '--aether-exp-rgb',
+    legendary: '--aether-rarity-legendary-rgb',
+});
+
+export interface RelicVisual {
+    category: RelicVisualCategory;
+    src: string;
+    /** 색 채널(`R G B`)을 읽는 CSS 식 — `rgb(${tone} / a)`로 투명도를 붙인다. */
+    tone: string;
+    color: string;
+    glow: string;
+}
 
 export const getRelicVisualCategory = (relic?: Relic | null, completesLegendary = false): RelicVisualCategory => {
     if (completesLegendary || relic?.rarity === 'legendary') return 'legendary';
@@ -118,7 +103,14 @@ export const getRelicVisualCategory = (relic?: Relic | null, completesLegendary 
 
 export const hasRelicVisualCategory = (effect?: string | null) => Boolean(effect && CATEGORY_BY_EFFECT[effect]);
 
-export const getRelicVisual = (relic?: Relic | null, completesLegendary = false) => {
+export const getRelicVisual = (relic?: Relic | null, completesLegendary = false): RelicVisual => {
     const category = getRelicVisualCategory(relic, completesLegendary);
-    return { category, ...VISUAL_BY_CATEGORY[category] };
+    const tone = `var(${TONE_BY_CATEGORY[category]})`;
+    return {
+        category,
+        src: `/assets/relics/${category}.png`,
+        tone,
+        color: `rgb(${tone})`,
+        glow: `rgb(${tone} / 0.3)`,
+    };
 };

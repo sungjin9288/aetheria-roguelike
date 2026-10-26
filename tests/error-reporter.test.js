@@ -5,6 +5,7 @@ import { FatalErrorBoundary } from '../src/components/app/FatalErrorBoundary.tsx
 import {
     bindGlobalErrorReporter,
     createSanitizedErrorReport,
+    readKnownRuntimeScriptFilenames,
 } from '../src/platform/errorReporter.ts';
 import { createProductEventContext } from '../src/platform/productEventContext.ts';
 
@@ -41,6 +42,44 @@ test('error reporter exposes controlled codes and strips every raw error surface
         () => createSanitizedErrorReport({ code: 'token=secret', source: 'boundary' }, context),
         /error code/i,
     );
+});
+
+test('known app scripts are the entry script and the chunks it preloads — game screen frames stay in the report', () => {
+    // 게임 화면(GameRoot)은 따로 받는 청크다(CH-03). Vite는 그 청크와 의존을 modulepreload 링크로 미리 받는다.
+    const source = {
+        scripts: [{ src: 'https://aetheria.tossmini.com/assets/index-a1.js' }, { src: '' }],
+        querySelectorAll: (selector) => (selector === 'link[rel="modulepreload"]'
+            ? [
+                { href: 'https://aetheria.tossmini.com/assets/vendor-react-b2.js' },
+                { href: 'https://aetheria.tossmini.com/assets/GameRoot-c3.js' },
+            ]
+            : []),
+    };
+    const known = readKnownRuntimeScriptFilenames(source);
+    assert.deepEqual(known, ['assets/index-a1.js', 'assets/vendor-react-b2.js', 'assets/GameRoot-c3.js']);
+    assert.deepEqual(
+        readKnownRuntimeScriptFilenames({ scripts: [{ src: 'https://aetheria.tossmini.com/assets/app.js' }] }),
+        ['assets/app.js'],
+    );
+
+    const cause = new Error('render failed');
+    cause.stack = [
+        'Error: render failed',
+        '    at Panel (https://aetheria.tossmini.com/assets/GameRoot-c3.js:3:7)',
+        '    at inject (chrome-extension://private-extension/inject.js:1:1)',
+        '    at render (https://aetheria.tossmini.com/assets/vendor-react-b2.js:9:2)',
+    ].join('\n');
+    const report = createSanitizedErrorReport({
+        code: 'react_render_failure',
+        source: 'boundary',
+        cause,
+        knownScriptFilenames: known,
+    }, context);
+    assert.deepEqual(report.frames, [
+        { functionName: 'anonymous', filename: 'assets/GameRoot-c3.js', line: 3, column: 7 },
+        { functionName: 'anonymous', filename: 'assets/vendor-react-b2.js', line: 9, column: 2 },
+    ]);
+    assert.equal(JSON.stringify(report).includes('private-extension'), false);
 });
 
 test('multiline error messages cannot inject nickname or private path as a stack frame', () => {

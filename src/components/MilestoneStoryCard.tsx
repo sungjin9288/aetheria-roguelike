@@ -1,7 +1,12 @@
 import { motion as Motion } from 'framer-motion';
-import { BookOpen, CheckCircle2, X } from 'lucide-react';
+import { BookOpen, CheckCircle2 } from 'lucide-react';
 import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
+import { useOverlayDialog } from '../hooks/useOverlayDialog';
+import { MSG } from '../data/messages';
+import ActionButton from './ui/ActionButton';
+import MomentCloseButton from './moments/MomentCloseButton';
+import { MOMENT_DUR_PANEL, MOMENT_EASE } from './moments/momentMotion';
 
 interface MilestoneStoryCardProps {
     story: MilestoneStoryBeat;
@@ -10,53 +15,53 @@ interface MilestoneStoryCardProps {
 
 const MilestoneStoryCard = ({ story, onClose }: MilestoneStoryCardProps) => {
     usePlatformBackHandler(true, onClose, 72);
+    const dialog = useOverlayDialog({ label: story.title, onEscape: onClose });
     return (
     <Motion.div
+        {...dialog}
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         className="fixed inset-0 z-[72] flex items-center justify-center px-3 py-[max(var(--aether-safe-area-top),0.5rem)] pb-[max(var(--aether-safe-area-bottom),0.5rem)]"
     >
-        <div className="aether-overlay" />
+        <div className="ae-scrim ae-moment-scrim" />
         <Motion.section
-            initial={{ opacity: 0, y: 20, scale: 0.98 }}
+            initial={{ opacity: 0, y: 16, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ duration: 0.28, ease: 'easeOut' }}
+            transition={{ duration: MOMENT_DUR_PANEL, ease: MOMENT_EASE }}
             data-testid="milestone-story-card"
             data-story-id={story.id}
             aria-label={story.eyebrow}
-            className="panel-noise aether-surface-strong relative z-10 w-full max-w-[24rem] overflow-hidden rounded-[1.5rem] shadow-[0_32px_90px_rgba(1,6,14,0.68)]"
+            className="ae-sheet relative z-10 max-h-full w-full max-w-[24rem] overflow-y-auto lg:max-w-[28rem]"
         >
-            <button
-                type="button"
-                data-testid="milestone-story-close-icon"
-                onClick={onClose}
-                aria-label="닫기"
-                className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-full text-slate-400 transition-colors hover:bg-white/8 hover:text-white"
-            >
-                <X size={17} />
-            </button>
-
-            <div className="px-5 pb-4 pt-5">
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]">
-                    <BookOpen size={17} />
-                </div>
-                <div className="aether-type-label mt-4 font-readable font-semibold text-[#b9f1ec]">{story.eyebrow}</div>
-                <h2 className="aether-type-title mt-1 font-readable font-bold text-white">{story.title}</h2>
-                <p className="aether-type-body mt-3 font-readable leading-relaxed text-slate-200/88">{story.body}</p>
-                <p className="aether-type-body mt-3 border-t border-white/8 pt-3 font-readable text-[#f6e7c8]/88">{story.closing}</p>
+            <div className="flex items-center justify-between gap-3 pl-5 pr-3 pt-3">
+                <div className="ae-eyebrow text-ae-ether-hi">{story.eyebrow}</div>
+                <MomentCloseButton
+                    data-testid="milestone-story-close-icon"
+                    aria-label={MSG.UI_CLOSE}
+                    onClick={onClose}
+                />
             </div>
 
-            <div className="border-t border-white/8 p-3">
-                <Motion.button
-                    type="button"
+            {/* 감사 VD-09: 이야기의 한 장 — 화면의 장식 패널 하나 */}
+            <div className="ae-ornate mx-4 mt-1 px-5 pb-5 pt-5">
+                <div className="ae-moment-medallion flex h-11 w-11 items-center justify-center rounded-full" aria-hidden="true">
+                    <BookOpen size={20} />
+                </div>
+                <h2 className="mt-3 break-keep font-display text-[22px] font-extrabold leading-tight text-ae-ink">{story.title}</h2>
+                <p className="mt-3 break-keep font-readable text-[13px] leading-relaxed text-ae-ink-2">{story.body}</p>
+                <div className="ae-divider mt-3" />
+                <p className="mt-3 break-keep font-readable text-[13px] font-semibold leading-relaxed text-ae-gold-text">{story.closing}</p>
+            </div>
+
+            <div className="p-4">
+                <ActionButton
+                    variant="primary"
                     data-testid="milestone-story-close"
-                    whileTap={{ scale: 0.98 }}
                     onClick={onClose}
-                    className="aether-cta-primary aether-type-body flex min-h-[48px] w-full items-center justify-center gap-2 px-4 font-readable font-bold text-[#dff7f5]"
-                >
-                    <CheckCircle2 size={15} />
-                    다음 장면으로
-                </Motion.button>
+                    icon={<CheckCircle2 size={17} />}
+                    label={MSG.MILESTONE_STORY_CONTINUE}
+                    className="w-full"
+                />
             </div>
         </Motion.section>
     </Motion.div>

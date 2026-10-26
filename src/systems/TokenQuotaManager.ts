@@ -2,7 +2,7 @@ import { setDoc, doc, serverTimestamp } from 'firebase/firestore';
 import type { Firestore } from 'firebase/firestore';
 import { BALANCE } from '../data/constants';
 import { MSG } from '../data/messages.js';
-import type { AiCallOutcome } from '../platform/aiEventPolicy';
+import type { AiCallOutcome, AiQuotaGate } from '../platform/aiEventPolicy';
 
 // 시그니처는 firebase/firestore 의 실제 함수에서 `typeof` 로 가져온다 — 테스트가
 // 주입하는 모킹 구현도 이 형태만 만족하면 된다(createCloudAutosave.ts와 같은 패턴).
@@ -155,9 +155,20 @@ export const TokenQuotaManager = {
      *   실패 시 폴백 이벤트 풀로 접히므로 플레이어에게는 오프라인과 같은 경험이다.
      */
     canMakeAICall() {
+        return this.getCallGate() === 'open';
+    },
+
+    /**
+     * 게이트가 **왜** 닫혔는가(GP-02). `canMakeAICall`과 같은 판정이고 닫힌 이유만 가른다 —
+     * 실제 한도 도달(`exhausted`)만 소진 안내를 띄우고, 미터를 못 쓰는 상태(`unavailable`)는
+     * 조용히 폴백한다. 읽기가 멀쩡하고 한도에 닿았으면 쓰기 고장과 상관없이 `exhausted`다
+     * (그쪽이 사실이다).
+     */
+    getCallGate(): AiQuotaGate {
         const { ok, record } = readQuota();
-        if (!ok || !quotaWriteHealthy) return false;
-        return record.used < this.DAILY_LIMIT;
+        if (!ok) return 'unavailable';
+        if (record.used >= this.DAILY_LIMIT) return 'exhausted';
+        return quotaWriteHealthy ? 'open' : 'unavailable';
     },
 
     // cycle 326: getRemainingCalls 메서드 제거 — 외부/내부 호출 0건이던 dead method.

@@ -2,91 +2,79 @@ import type { ReactNode } from 'react';
 import { ChevronLeft, Package } from 'lucide-react';
 
 interface FocusPanelHeaderProps {
-  eyebrow?: string;
-  title: string;
-  meta?: string;
-  onBack?: (() => void) | null;
-  backLabel?: string;
-  backTestId?: string | null;
-  rightSlot?: ReactNode | null;
-  onOpenArchive?: (() => void) | null;
-  archiveLabel?: string;
-  archiveTestId?: string | null;
-  titleClassName?: string;
-  bleedClassName?: string;
+    eyebrow?: string;
+    title: string;
+    meta?: string;
+    onBack?: (() => void) | null;
+    backLabel?: string;
+    backTestId?: string | null;
+    rightSlot?: ReactNode | null;
+    onOpenArchive?: (() => void) | null;
+    archiveLabel?: string;
+    archiveTestId?: string | null;
+    titleClassName?: string;
+    bleedClassName?: string;
 }
 
-// cycle 441: default backLabel 값 제거 — 5 호출자 모두 명시 전달이라 default
-//   '뒤로' 도달 불가.
-// cycle 467: 잔존 redundant default 3건 추가 정리 — eyebrow / archiveLabel /
-//   className. eyebrow는 5/5 명시 전달, archiveLabel은 4/5 'INV' 전달 + 1/5
-//   archive 미렌더, className은 0/5 전달 (정적 baseline만 사용).
+// cycle 441: backLabel 기본값('뒤로') 제거 — 모든 호출자가 명시 전달한다.
+// cycle 467: eyebrow / archiveLabel 기본값 제거 — 호출자가 명시 전달한다.
+// 2026-10: 제목 칸은 11rem 아래로 줄지 않는다 — 좁은 폭에서는 오른쪽 칸이 다음 줄로 내려간다.
+// 2026-10 에테르 유리: 머리는 유리 한 장(`.ae-town-head`)이고 돌아가기 · 기록 열기는 같은 44px 알약(`.ae-town-pill`)이다.
+//   돌아가기는 제목 앞 한 곳뿐이다. 속성 모양은 그대로다(이벤트 · 전직 화면도 같은 머리를 쓴다).
 const FocusPanelHeader = ({
-  eyebrow,
-  title,
-  meta = '',
-  onBack = null,
-  backLabel,
-  backTestId = null,
-  rightSlot = null,
-  onOpenArchive = null,
-  archiveLabel,
-  archiveTestId = null,
-  titleClassName = '',
-  bleedClassName = '-mx-3 px-3',
+    eyebrow,
+    title,
+    meta = '',
+    onBack = null,
+    backLabel,
+    backTestId = null,
+    rightSlot = null,
+    onOpenArchive = null,
+    archiveLabel,
+    archiveTestId = null,
+    titleClassName = '',
+    bleedClassName = '-mx-3 px-3',
 }: FocusPanelHeaderProps) => (
-  <div
-    className={`sticky top-0 z-10 mb-3 border-b border-white/8 bg-[linear-gradient(180deg,rgba(14,19,28,0.99)_0%,rgba(10,13,19,0.96)_100%)] pb-2.5 pt-1 ${bleedClassName}`.trim()}
-  >
-    <div className="flex items-start justify-between gap-3">
-      <div className="min-w-0 flex-1">
-        {eyebrow && (
-          <div className="aether-type-meta font-readable text-slate-300/82">
-            {eyebrow}
-          </div>
-        )}
-        <div className="mt-1 flex items-start gap-2.5">
-          {onBack && (
-            <button
-              type="button"
-              data-testid={backTestId}
-              onClick={onBack}
-              className="aether-type-body flex min-h-[44px] shrink-0 items-center gap-1 rounded-full border border-white/8 bg-black/20 px-3 font-readable text-slate-200 transition-colors hover:bg-white/[0.06]"
-            >
-              <ChevronLeft size={12} />
-              {backLabel}
-            </button>
-          )}
-          <div className="min-w-0 flex-1">
-            <div className={`font-readable font-bold text-[#f6e7c8] ${titleClassName}`.trim()}>
-              {title}
+    <div className={`ae-town-head sticky top-0 z-10 mb-3 pb-3 pt-1 ${bleedClassName}`.trim()}>
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
+            <div className="flex min-w-[11rem] flex-1 items-center gap-2.5">
+                {onBack && (
+                    <button
+                        type="button"
+                        data-testid={backTestId}
+                        onClick={onBack}
+                        className="ae-town-pill min-h-[44px] shrink-0 pl-2.5 pr-3.5 font-readable"
+                    >
+                        <ChevronLeft size={16} aria-hidden="true" />
+                        {backLabel}
+                    </button>
+                )}
+                <div className="min-w-0 flex-1">
+                    {eyebrow && (
+                        <div className="ae-eyebrow font-readable">{eyebrow}</div>
+                    )}
+                    <h2 className={`mt-0.5 break-words font-display font-extrabold text-ae-ink ${titleClassName}`.trim()}>{title}</h2>
+                    {meta && (
+                        <div className="aether-type-meta mt-1 font-readable text-ae-ink-2">{meta}</div>
+                    )}
+                </div>
             </div>
-            {meta && (
-              <div className="aether-type-meta mt-0.5 font-readable text-slate-300/86">
-                {meta}
-              </div>
+            {rightSlot && (
+                <div className="shrink-0">{rightSlot}</div>
             )}
-          </div>
+            {onOpenArchive && (
+                <button
+                    type="button"
+                    data-testid={archiveTestId}
+                    onClick={onOpenArchive}
+                    className="ae-town-pill min-h-[44px] shrink-0 font-readable"
+                >
+                    <Package size={15} aria-hidden="true" />
+                    {archiveLabel}
+                </button>
+            )}
         </div>
-      </div>
-      {rightSlot && (
-        <div className="shrink-0">
-          {rightSlot}
-        </div>
-      )}
-      {onOpenArchive && (
-        <button
-          type="button"
-          data-testid={archiveTestId}
-          onClick={onOpenArchive}
-          className="aether-type-body flex min-h-[44px] shrink-0 items-center gap-1 rounded-full border border-[#d5b180]/18 bg-[#d5b180]/10 px-3 font-readable text-[#f6e7c8] transition-colors hover:bg-[#d5b180]/16"
-        >
-          <Package size={11} />
-          {archiveLabel}
-        </button>
-      )}
     </div>
-  </div>
 );
 
 export default FocusPanelHeader;

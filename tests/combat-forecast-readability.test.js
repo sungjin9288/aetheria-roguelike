@@ -122,8 +122,9 @@ test('smoke loop verifies the combat forecast strip during combat coverage', asy
 test('combat forecast has high readability CSS coverage', async () => {
     const css = await readSrc('src/index.css');
 
-    assert.match(css, /\.aether-combat-forecast/);
-    assert.match(css, /\.aether-combat-forecast-cell/);
-    assert.match(css, /\[data-readability-mode="high"\]\s+\.aether-combat-forecast/);
-    assert.match(css, /\[data-readability-mode="high"\]\s+\.aether-combat-forecast-cell/);
+    // 2026-10 에테르 유리: 판단 요약은 ae-combat-forecast(우물 칸)이다 — 예전 aether-combat-forecast 규칙은 쓰지 않는다.
+    assert.match(css, /\.ae-combat-forecast\b/);
+    assert.match(css, /\.ae-combat-forecast-cell/);
+    assert.match(css, /\[data-readability-mode="high"\]\s+\.ae-combat-forecast\b/);
+    assert.match(css, /\[data-readability-mode="high"\]\s+\.ae-combat-forecast-cell/);
 });

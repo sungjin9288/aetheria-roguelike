@@ -32,8 +32,10 @@ test('run summary reflection: high escapes produce a pressure recovery lesson', 
     });
 
     assert.equal(reflection.tone, 'pressure');
-    assert.deepEqual(reflection.cells.map((cell) => cell.label), ['결과', '배운 점', '다음 시도']);
-    assert.equal(reflection.cells[0].value, '후퇴 누적');
+    // 감사 UX-14: 다음 판의 이름은 '다음 여정'이다(같은 화면이 '다음 여정에 남는 것'이라 말한다) — 칸 문구는 MSG가 소유한다.
+    assert.deepEqual(reflection.cells.map((cell) => cell.label), ['결과', '배운 점', '다음 여정']);
+    assert.equal(reflection.cells[0].value, MSG.RUN_REFLECTION.escapes.cause);
+    assert.equal(reflection.cells[0].value, '도주가 잦았음');
     assert.match(reflection.cells[2].value, /회복|장비/);
 });
 
@@ -53,7 +55,8 @@ test('run summary reflection: boss progress and strong run signals become breakt
     });
 
     assert.equal(reflection.tone, 'breakthrough');
-    assert.equal(reflection.cells[0].value, '보스권 도달');
+    assert.equal(reflection.cells[0].value, MSG.RUN_REFLECTION.breakthrough.causeBoss);
+    assert.equal(reflection.cells[0].value, '보스 구간에 닿음');
     assert.match(reflection.cells[1].value, /성장|연속 처치|경로/);
 });
 

@@ -15,9 +15,21 @@ test.describe('계승과 다음 여정 화면', () => {
         await expect(screen).toContainText('다음 여정으로 계승');
         await expect(screen).toContainText('심연의 탐험가');
         await expect(page.getByTestId('ascension-current-unlock')).toContainText('심연의 메아리');
-        await expect(page.getByTestId('ascension-permanent-growth')).toContainText('+180');
         // 2026-10 Wave 58: 계승 보상 정수에도 계승 단계 배율(2단계 +10%)이 곱해진다 — 180 + 220.
-        await expect(page.getByTestId('ascension-permanent-growth')).toContainText('+400');
+        //   정산표(감사 CL-10)는 지금 · 내려놓는 몫 · 계승 보상 · 다음 여정을 칸마다 나눈다 — 계승 정수는 내려놓지 않는다.
+        const essenceRow = page.getByTestId('ascension-growth-essence');
+        await expect(essenceRow.locator('[data-growth-cell="before"]')).toHaveText('180');
+        await expect(essenceRow.locator('[data-growth-cell="dropped"]')).toHaveText('—');
+        await expect(essenceRow.locator('[data-growth-cell="reward"]')).toHaveText('+220');
+        await expect(essenceRow.locator('[data-growth-cell="after"]')).toHaveText('400');
+        // UX-05: 회차 규칙 카드는 정산표보다 먼저이고, 확인 단추 바로 위에 고른 카드가 보인다.
+        const order = await screen.evaluate((root) => {
+            const offer = root.querySelector('[data-testid="ascension-rule-offer"]');
+            const growth = root.querySelector('[data-testid="ascension-permanent-growth"]');
+            return Boolean(offer && growth && (offer.compareDocumentPosition(growth) & Node.DOCUMENT_POSITION_FOLLOWING));
+        });
+        expect(order).toBe(true);
+        await expect(page.getByTestId('ascension-selected-rule')).toBeVisible();
         await expect(page.getByTestId('ascension-enemy-scaling')).toContainText('+10%');
         await expect(page.getByTestId('ascension-enemy-scaling')).toContainText('+15%');
         await expect(page.getByTestId('ascension-enemy-scaling')).toContainText('+16%');
@@ -140,11 +152,12 @@ test.describe('계승 화면 — 회차 규칙 카드 · 선택형 규칙 미리
         await outlook.scrollIntoViewIfNeeded();
         await expect(accepted).toContainText('11.9');
         await expect(declined).toContainText('1.7');
-        await expect(accepted).toHaveClass(/text-orange-100/);
+        await expect(accepted).toHaveAttribute('data-selected', 'true');
 
         await page.getByTestId('ascension-ascension-rule-toggle').click();
-        await expect(declined).toHaveClass(/text-orange-100/);
-        await expect(accepted).toHaveClass(/text-slate-400/);
+        await expect(declined).toHaveAttribute('data-selected', 'true');
+        await expect(accepted).toHaveAttribute('data-selected', 'false');
+        await expect(accepted).toHaveClass(/text-ae-ink-3/);
 
         const offerGeometry = await offer.evaluate((root) => ({
             minFont: Math.min(...[...root.querySelectorAll<HTMLElement>('*')].filter((node) => (node.textContent || '').trim())

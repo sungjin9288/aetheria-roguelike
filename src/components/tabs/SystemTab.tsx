@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from 'react';
-import type { ReactNode } from 'react';
 import {
     ChevronDown,
+    ChevronRight,
     Copy,
     Crown,
     Download,
@@ -11,16 +11,13 @@ import {
     MessageSquare,
     Save,
     Shield,
-    Skull,
     Sparkles,
-    Trash2,
     Trophy,
     Wrench,
-    type LucideIcon,
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import type { FullStats, Item, Player, Relic } from '../../types/index.js';
-import type { LeaderboardEntry, LiveConfig } from '../../types/session.js';
+import type { LiveConfig } from '../../types/session.js';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
 import { APP_ID, CONSTANTS, RARITY_CLASSES } from '../../data/constants';
@@ -31,9 +28,6 @@ import { ELITE_TITLE_MAPS, splitEliteTitles, sumEliteTitleBonus } from '../../ut
 import { formatPermanentStatBonus } from '../../utils/permanentStatSources';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
 import { formatRelicText, getRelicDisplayName } from '../../utils/relicPresentation';
-import { clearErrorReports, readErrorReports } from '../../platform/localErrorReportStore';
-import { readProductEvents, clearProductEvents, didProductEventWriteFail } from '../../platform/localProductEventStore';
-import { getRuntimeProductEventContext } from '../../platform/productEventContext';
 import { trackRuntimeProductEvent } from '../../platform/productEventCoordinator';
 import { normalizeProductEventJob } from '../../platform/productEvents';
 import { MSG } from '../../data/messages';
@@ -41,6 +35,14 @@ import RelicIcon from '../icons/RelicIcon';
 import { countOwnedRelics } from '../../systems/chaosHeart';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { GameMode } from '../../reducers/gameStates';
+import ActionButton from '../ui/ActionButton';
+import Chip from '../ui/Chip';
+import SettingsDisclosure from './system/SettingsDisclosure';
+import SystemLeaderboard from './system/SystemLeaderboard';
+import SystemFeedbackForm, { type SystemNotice } from './system/SystemFeedbackForm';
+import SystemAdminTools from './system/SystemAdminTools';
+import SystemDeviceRecords from './system/SystemDeviceRecords';
+import { SystemTitleList } from './system/SystemTitleList';
 
 const SESSION_ID = Math.random().toString(36).slice(2, 10).toUpperCase();
 
@@ -78,7 +80,7 @@ const EQUIPMENT_DETAIL_OPTIONS = [
     { value: 'full', label: '상세' },
 ] as const;
 
-const getQaValueLabel = (value: unknown) => QA_VALUE_LABELS[String(value)] || String(value || '확인 안 됨');
+const getQaValueLabel = (value: unknown) => QA_VALUE_LABELS[String(value)] || String(value || QA_VALUE_LABELS.unknown);
 
 /**
  * `navigator.userAgentData`(User-Agent Client Hints)는 DOM lib에 아직 없는 실험적 API라
@@ -88,30 +90,6 @@ const getQaValueLabel = (value: unknown) => QA_VALUE_LABELS[String(value)] || St
 const hasUserAgentData = (
     nav: Navigator,
 ): nav is Navigator & { userAgentData: { platform?: string } } => 'userAgentData' in nav;
-
-interface SettingsDisclosureProps {
-    testId: string;
-    icon: LucideIcon;
-    title: string;
-    summary: string;
-    children: ReactNode;
-}
-
-const SettingsDisclosure = ({ testId, icon: Icon, title, summary, children }: SettingsDisclosureProps) => (
-    <details data-testid={testId} className="group border-b border-white/8 last:border-b-0">
-        <summary className="flex min-h-[52px] cursor-pointer list-none items-center gap-3 px-1 py-2.5 text-left [&::-webkit-details-marker]:hidden">
-            <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.65rem] border border-white/8 bg-white/[0.04] text-slate-200">
-                <Icon size={15} />
-            </span>
-            <span className="min-w-0 flex-1">
-                <span className="block font-readable text-xs font-bold text-slate-100">{title}</span>
-                <span className="mt-0.5 block font-readable text-[11px] leading-snug text-slate-400">{summary}</span>
-            </span>
-            <ChevronDown size={15} className="shrink-0 text-slate-400 transition-transform group-open:rotate-180" />
-        </summary>
-        <div className="border-t border-white/8 px-1 py-3">{children}</div>
-    </details>
-);
 
 /** SystemTab이 실제로 호출하는 액션만 좁혀 받는다 (설정/칭호/순위/관리자). */
 type SystemTabActions = Pick<GameActions,
@@ -132,11 +110,6 @@ export interface SystemTabRuntime {
     onOpenCrystalExchange?: () => void;
 }
 
-interface Notice {
-    type: 'success' | 'error';
-    text: string;
-}
-
 interface SystemTabProps {
     player: Player;
     actions?: SystemTabActions;
@@ -144,10 +117,18 @@ interface SystemTabProps {
     runtime?: SystemTabRuntime;
 }
 
+/** 섹션 머리 — 제목 + 한 줄 설명. */
+const SectionHead = ({ title, desc }: { title: string; desc?: string }) => (
+    <header>
+        <h3 className="ab-section-title font-readable">{title}</h3>
+        {desc && <p className="mt-1 font-readable aether-type-meta leading-relaxed text-ae-ink-3">{desc}</p>}
+    </header>
+);
+
 const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
-    const [notice, setNotice] = useState<Notice | null>(null);
+    const [notice, setNotice] = useState<SystemNotice | null>(null);
     const [feedbackText, setFeedbackText] = useState('');
-    const [feedbackStatus, setFeedbackStatus] = useState<Notice | null>(null);
+    const [feedbackStatus, setFeedbackStatus] = useState<SystemNotice | null>(null);
 
     const readabilityMode = player.settings?.readabilityMode === 'high' ? 'high' : 'standard';
     const equipmentDetailPref = player.settings?.equipmentDetailMode;
@@ -161,21 +142,19 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     const relics = useMemo(() => player.relics || [], [player.relics]);
     const relicCapacity = getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics;
     const leaderboard = actions?.leaderboard || [];
-    const activeTitleLabel = player.activeTitle ? getTitleLabel(player.activeTitle) : '선택 안 함';
-    const activeTitlePassive = player.activeTitle ? getTitlePassiveLabel(player.activeTitle) : '칭호를 선택하면 고유 효과가 적용됩니다.';
+    const activeTitleLabel = player.activeTitle ? getTitleLabel(player.activeTitle) : MSG.SYSTEM_TITLE_NONE;
+    const activeTitlePassive = player.activeTitle ? getTitlePassiveLabel(player.activeTitle) : MSG.SYSTEM_TITLE_NONE_HINT;
 
     const handleSetReadabilityMode = useCallback((mode: 'standard' | 'high') => {
         actions?.setReadabilityMode?.(mode);
-        setNotice({
-            type: 'success',
-            text: `화면을 ${mode === 'high' ? '선명하게' : '표준'} 표시로 바꿨습니다.`,
-        });
+        const label = READABILITY_OPTIONS.find((option) => option.value === mode)?.label || READABILITY_OPTIONS[0].label;
+        setNotice({ type: 'success', text: MSG.SYSTEM_READABILITY_CHANGED(label) });
     }, [actions]);
 
     const handleSetEquipmentDetailMode = useCallback((mode: 'auto' | 'summary' | 'full') => {
         actions?.setEquipmentDetailMode?.(mode);
-        const label = EQUIPMENT_DETAIL_OPTIONS.find((option) => option.value === mode)?.label || '자동';
-        setNotice({ type: 'success', text: `장비 정보를 ${label} 표시로 바꿨습니다.` });
+        const label = EQUIPMENT_DETAIL_OPTIONS.find((option) => option.value === mode)?.label || EQUIPMENT_DETAIL_OPTIONS[0].label;
+        setNotice({ type: 'success', text: MSG.SYSTEM_EQUIPMENT_DETAIL_CHANGED(label) });
     }, [actions]);
 
     const handleSetActiveTitle = useCallback((id: string) => {
@@ -183,27 +162,9 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         actions?.setActiveTitle?.(nextTitle);
         setNotice({
             type: 'success',
-            text: nextTitle ? `[${getTitleLabel(nextTitle)}] 칭호를 적용했습니다.` : '칭호 적용을 해제했습니다.',
+            text: nextTitle ? MSG.SYSTEM_TITLE_APPLIED(getTitleLabel(nextTitle)) : MSG.SYSTEM_TITLE_CLEARED,
         });
     }, [actions, player.activeTitle]);
-
-    const renderTitleButton = (id: string) => {
-        const isActive = player.activeTitle === id;
-        return (
-            <button
-                key={id}
-                type="button"
-                data-testid={`system-title-${id}`}
-                aria-pressed={isActive}
-                onClick={() => handleSetActiveTitle(id)}
-                className={`min-h-[48px] w-full border-b border-white/6 px-2 py-2 text-left last:border-b-0 ${isActive ? 'bg-[#d5b180]/8' : 'hover:bg-white/[0.03]'}`}
-            >
-                <span className={`font-readable text-xs font-bold ${getTitleColor(id)}`}>[{getTitleLabel(id)}]</span>
-                {isActive && <span className="ml-2 font-readable text-[11px] text-[#f6e7c8]">적용 중</span>}
-                <span className="mt-1 block font-readable text-[11px] leading-snug text-slate-400">{getTitlePassiveLabel(id)}</span>
-            </button>
-        );
-    };
 
     const qaContext = useMemo(() => {
         const platform = typeof navigator !== 'undefined'
@@ -297,15 +258,15 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     const copyQaReadout = useCallback(async () => {
         try {
             await navigator.clipboard.writeText(qaReadout);
-            setNotice({ type: 'success', text: '기기 점검 정보를 복사했습니다.' });
+            setNotice({ type: 'success', text: MSG.SYSTEM_QA_COPIED });
         } catch {
-            setNotice({ type: 'error', text: '기기 점검 정보를 복사하지 못했습니다.' });
+            setNotice({ type: 'error', text: MSG.SYSTEM_QA_COPY_FAILED });
         }
     }, [qaReadout]);
 
     const exportQaSnapshot = useCallback(() => {
         exportToJson(`aetheria_qa_snapshot_${Date.now()}.json`, qaSnapshot);
-        setNotice({ type: 'success', text: '기기 점검 파일을 저장했습니다.' });
+        setNotice({ type: 'success', text: MSG.SYSTEM_QA_EXPORTED });
     }, [qaSnapshot]);
 
     const exportPlayRecord = useCallback(() => {
@@ -316,54 +277,8 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             equipment: player.equip,
             history: [...(player.history || [])],
         });
-        setNotice({ type: 'success', text: '플레이 기록을 저장했습니다.' });
+        setNotice({ type: 'success', text: MSG.SYSTEM_PLAY_RECORD_EXPORTED });
     }, [player, stats]);
-
-    // E1 — 로컬 에러 리포트 링버퍼 (읽기 전용 노출 + 지우기)
-    const [errorReports, setErrorReports] = useState(() => readErrorReports());
-    const lastErrorReport = errorReports[errorReports.length - 1] || null;
-
-    const handleClearErrorReports = useCallback(() => {
-        clearErrorReports();
-        setErrorReports([]);
-        setNotice({ type: 'success', text: MSG.ERROR_REPORT_CLEARED });
-    }, []);
-
-    const [productEvents, setProductEvents] = useState(() => readProductEvents());
-    const [productEventWriteFailed, setProductEventWriteFailed] = useState(didProductEventWriteFail);
-    const productEventsActive = getRuntimeProductEventContext() !== null;
-    const refreshProductEvents = () => {
-        setProductEvents(readProductEvents());
-        setProductEventWriteFailed(didProductEventWriteFail());
-    };
-    const handleExportProductEvents = () => {
-        const latest = readProductEvents();
-        setProductEvents(latest);
-        try {
-            if (latest.status !== 'ready') throw new Error('Local records unavailable');
-            exportToJson(`aetheria_activity_${Date.now()}.json`, { version: 1, events: latest.events });
-            setNotice({ type: 'success', text: MSG.PRODUCT_EVENTS_EXPORTED });
-        } catch {
-            setNotice({ type: 'error', text: MSG.PRODUCT_EVENTS_EXPORT_FAILED });
-        }
-    };
-    const handleCopyProductEvents = async () => {
-        const latest = readProductEvents();
-        setProductEvents(latest);
-        try {
-            if (latest.status !== 'ready') throw new Error('Local records unavailable');
-            await navigator.clipboard.writeText(JSON.stringify({ version: 1, events: latest.events }, null, 2));
-            setNotice({ type: 'success', text: MSG.PRODUCT_EVENTS_COPIED });
-        } catch {
-            setNotice({ type: 'error', text: MSG.PRODUCT_EVENTS_EXPORT_FAILED });
-        }
-    };
-    const handleClearProductEvents = () => {
-        const cleared = clearProductEvents();
-        refreshProductEvents();
-        setNotice({ type: cleared ? 'success' : 'error', text: cleared
-            ? MSG.PRODUCT_EVENTS_CLEARED : MSG.PRODUCT_EVENTS_CLEAR_FAILED });
-    };
 
     const updateLiveConfig = useCallback(async (partialConfig: Partial<LiveConfig>) => {
         // Firebase config 부재 시 이전에도 doc(null, …)이 throw했다 — 같은 실패 경로를 명시한다.
@@ -373,12 +288,12 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     }, []);
 
     const handleSetMultiplier = useCallback(async () => {
-        const raw = window.prompt('이벤트 보상 배율을 입력하세요. (1-5)', String(actions?.liveConfig?.eventMultiplier || 1));
+        const raw = window.prompt(MSG.SYSTEM_ADMIN_MULTIPLIER_PROMPT, String(actions?.liveConfig?.eventMultiplier || 1));
         if (raw === null) return;
 
         const value = Number.parseFloat(raw);
         if (!Number.isFinite(value) || value < 1 || value > 5) {
-            setNotice({ type: 'error', text: '배율은 1에서 5 사이여야 합니다.' });
+            setNotice({ type: 'error', text: MSG.SYSTEM_ADMIN_MULTIPLIER_RANGE });
             return;
         }
 
@@ -386,25 +301,25 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             await updateLiveConfig({ eventMultiplier: value });
             setNotice({ type: 'success', text: MSG.QA_EVENT_MULTIPLIER_SET(value) });
         } catch {
-            setNotice({ type: 'error', text: '이벤트 보상 배율을 바꾸지 못했습니다.' });
+            setNotice({ type: 'error', text: MSG.SYSTEM_ADMIN_MULTIPLIER_FAILED });
         }
     }, [actions?.liveConfig, updateLiveConfig]);
 
     const handleBroadcast = useCallback(async () => {
-        const raw = window.prompt('공지 내용을 입력하세요. (최대 100자)', actions?.liveConfig?.announcement || '');
+        const raw = window.prompt(MSG.SYSTEM_ADMIN_BROADCAST_PROMPT, actions?.liveConfig?.announcement || '');
         if (raw === null) return;
 
         const announcement = raw.trim();
         if (!announcement) {
-            setNotice({ type: 'error', text: '공지 내용을 입력해 주세요.' });
+            setNotice({ type: 'error', text: MSG.SYSTEM_ADMIN_BROADCAST_EMPTY });
             return;
         }
 
         try {
             await updateLiveConfig({ announcement: announcement.slice(0, 100) });
-            setNotice({ type: 'success', text: '공지를 등록했습니다.' });
+            setNotice({ type: 'success', text: MSG.SYSTEM_ADMIN_BROADCAST_DONE });
         } catch {
-            setNotice({ type: 'error', text: '공지를 등록하지 못했습니다.' });
+            setNotice({ type: 'error', text: MSG.SYSTEM_ADMIN_BROADCAST_FAILED });
         }
     }, [actions?.liveConfig, updateLiveConfig]);
 
@@ -440,106 +355,85 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             FeedbackValidator.markSubmitted();
             trackFeedbackOutcome('success');
             setFeedbackText('');
-            setFeedbackStatus({ type: 'success', text: '의견을 보냈습니다.' });
+            setFeedbackStatus({ type: 'success', text: MSG.SYSTEM_FEEDBACK_SENT });
         } catch {
             trackFeedbackOutcome('transport_failed');
-            setFeedbackStatus({ type: 'error', text: '의견을 보내지 못했습니다.' });
+            setFeedbackStatus({ type: 'error', text: MSG.SYSTEM_FEEDBACK_FAILED });
         }
     }, [actions, feedbackText, player]);
 
-    const noticeClass = notice?.type === 'error'
-        ? 'border-rose-300/22 bg-rose-400/10 text-rose-100'
-        : 'border-emerald-300/22 bg-emerald-300/10 text-emerald-100';
-    const feedbackStatusClass = feedbackStatus?.type === 'error'
-        ? 'border-rose-300/22 bg-rose-400/10 text-rose-100'
-        : 'border-emerald-300/22 bg-emerald-300/10 text-emerald-100';
+    const qaRows = [
+        [MSG.SYSTEM_QA_VIEWPORT, getQaValueLabel(runtime?.viewport)],
+        [MSG.SYSTEM_QA_STATE, getQaValueLabel(runtime?.gameState)],
+        [MSG.SYSTEM_QA_SYNC, getQaValueLabel(runtime?.syncStatus)],
+        [MSG.SYSTEM_QA_STORY, getQaValueLabel(runtime?.isAiThinking ? 'thinking' : 'idle')],
+    ];
 
     return (
         <Motion.div
             data-testid="system-tab"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
-            className="space-y-4 p-1.5"
+            className="ab-stack p-1.5"
         >
-            <section data-testid="system-player-settings" className="border-b border-white/8 pb-4">
-                <div>
-                    <h3 className="font-readable text-sm font-bold text-white">플레이 설정</h3>
-                    <p className="mt-1 font-readable text-[11px] leading-relaxed text-slate-400">
-                        화면과 장비 설명을 편한 방식으로 맞춥니다.
-                    </p>
-                </div>
+            <section data-testid="system-player-settings" className="ae-card ab-card-pad">
+                <SectionHead title="플레이 설정" desc={MSG.SYSTEM_PLAYER_SETTINGS_DESC} />
 
                 <div data-testid="readability-settings" className="mt-4">
-                    <div className="flex items-end justify-between gap-3">
-                        <div>
-                            <div className="flex items-center gap-2 font-readable text-xs font-bold text-[#dff7f5]">
-                                <Eye size={14} /> 화면 선명도
-                            </div>
-                            <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">
-                                글자와 경계가 흐리게 느껴질 때 선명하게를 선택합니다.
-                            </p>
+                    <div className="flex items-start gap-3">
+                        <span className="ab-icon-well is-ether" aria-hidden="true"><Eye size={16} /></span>
+                        <div className="min-w-0 flex-1">
+                            <div className="font-readable aether-type-strong text-ae-ink">화면 선명도</div>
+                            <p className="mt-0.5 font-readable aether-type-meta leading-snug text-ae-ink-3">{MSG.SYSTEM_READABILITY_DESC}</p>
                         </div>
-                        <span data-testid="readability-mode-current" className="shrink-0 font-readable text-[11px] text-[#b9f1ec]">
-                            {readabilityMode === 'high' ? '선명하게' : '표준'}
-                        </span>
+                        <Chip tone="ether" data-testid="readability-mode-current" className="shrink-0">
+                            {readabilityMode === 'high' ? READABILITY_OPTIONS[1].label : READABILITY_OPTIONS[0].label}
+                        </Chip>
                     </div>
-                    <div className="mt-2 grid grid-cols-2 gap-2" role="group" aria-label="화면 선명도">
+                    <div className="ab-segment mt-3 grid-cols-2" role="group" aria-label="화면 선명도">
                         {READABILITY_OPTIONS.map((option) => {
                             const active = readabilityMode === option.value;
                             return (
-                                <Motion.button
+                                <button
                                     key={option.value}
                                     type="button"
-                                    whileTap={{ scale: 0.98 }}
                                     data-testid={`readability-mode-${option.value}`}
                                     aria-pressed={active}
                                     onClick={() => handleSetReadabilityMode(option.value)}
-                                    className={`min-h-[44px] rounded-[0.65rem] border px-3 font-readable text-xs font-bold transition-colors ${
-                                        active
-                                            ? 'border-[#7dd4d8]/34 bg-[#7dd4d8]/16 text-[#dff7f5]'
-                                            : 'border-white/8 bg-black/20 text-slate-300 hover:border-white/14 hover:bg-white/[0.05]'
-                                    }`}
+                                    className="ab-segment-option font-readable"
                                 >
                                     {option.label}
-                                </Motion.button>
+                                </button>
                             );
                         })}
                     </div>
                 </div>
 
-                <div data-testid="equipment-detail-settings" className="mt-5 border-t border-white/8 pt-4">
-                    <div className="flex items-end justify-between gap-3">
-                        <div>
-                            <div className="flex items-center gap-2 font-readable text-xs font-bold text-[#f6e7c8]">
-                                <ListTree size={14} /> 장비 설명
-                            </div>
-                            <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">
-                                자동은 초반에는 핵심만, 성장한 뒤에는 세부 효과까지 보여 줍니다.
-                            </p>
+                <div data-testid="equipment-detail-settings" className="mt-4 border-t border-ae-ink/7 pt-4">
+                    <div className="flex items-start gap-3">
+                        <span className="ab-icon-well is-gold" aria-hidden="true"><ListTree size={16} /></span>
+                        <div className="min-w-0 flex-1">
+                            <div className="font-readable aether-type-strong text-ae-ink">장비 설명</div>
+                            <p className="mt-0.5 font-readable aether-type-meta leading-snug text-ae-ink-3">{MSG.SYSTEM_EQUIPMENT_DETAIL_DESC}</p>
                         </div>
-                        <span data-testid="equipment-detail-mode-current" className="shrink-0 font-readable text-[11px] text-[#f6e7c8]">
+                        <Chip tone="gold" data-testid="equipment-detail-mode-current" className="shrink-0">
                             {EQUIPMENT_DETAIL_OPTIONS.find((option) => option.value === equipmentDetailMode)?.label}
-                        </span>
+                        </Chip>
                     </div>
-                    <div className="mt-2 grid grid-cols-3 gap-2" role="group" aria-label="장비 설명">
+                    <div className="ab-segment mt-3 grid-cols-3" role="group" aria-label="장비 설명">
                         {EQUIPMENT_DETAIL_OPTIONS.map((option) => {
                             const active = equipmentDetailMode === option.value;
                             return (
-                                <Motion.button
+                                <button
                                     key={option.value}
                                     type="button"
-                                    whileTap={{ scale: 0.98 }}
                                     data-testid={`equipment-detail-mode-${option.value}`}
                                     aria-pressed={active}
                                     onClick={() => handleSetEquipmentDetailMode(option.value)}
-                                    className={`min-h-[44px] rounded-[0.65rem] border px-2 font-readable text-[11px] font-bold transition-colors ${
-                                        active
-                                            ? 'border-[#d5b180]/34 bg-[#d5b180]/14 text-[#f6e7c8]'
-                                            : 'border-white/8 bg-black/20 text-slate-300 hover:border-white/14 hover:bg-white/[0.05]'
-                                    }`}
+                                    className="ab-segment-option font-readable"
                                 >
                                     {option.label}
-                                </Motion.button>
+                                </button>
                             );
                         })}
                     </div>
@@ -547,81 +441,74 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             </section>
 
             {notice && (
-                <div data-testid="system-notice" role="status" className={`rounded-[0.65rem] border px-3 py-2 font-readable text-[11px] ${noticeClass}`}>
+                <div data-testid="system-notice" role="status" className={`ab-notice font-readable ${notice.type === 'error' ? 'is-threat' : 'is-good'}`}>
                     {notice.text}
                 </div>
             )}
 
-            <section data-testid="system-growth-links" className="border-b border-white/8 pb-4">
-                <h3 className="font-readable text-sm font-bold text-white">장기 성장</h3>
-                <p className="mt-1 font-readable text-[11px] leading-relaxed text-slate-400">
-                    다음 여정을 준비하거나 모은 에테르를 필요한 곳에 사용합니다.
-                </p>
-
-                <div className="mt-3 space-y-2">
-                    <button
-                        type="button"
-                        data-testid="open-mirror-panel"
-                        onClick={() => runtime?.onOpenMirror?.()}
-                        className="flex min-h-[58px] w-full items-center gap-3 rounded-[0.7rem] border border-[#9a8ac0]/22 bg-[#9a8ac0]/8 px-3 py-2.5 text-left transition-colors hover:bg-[#9a8ac0]/12"
-                    >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.65rem] border border-[#9a8ac0]/18 bg-black/18 text-[#e3dcff]">
-                            <Sparkles size={15} />
-                        </span>
+            <section data-testid="system-growth-links" className="ae-card ab-card-pad">
+                <SectionHead title="장기 성장" desc={MSG.SYSTEM_GROWTH_LINKS_DESC} />
+                <div className="ab-rows mt-2">
+                    <button type="button" data-testid="open-mirror-panel" onClick={() => runtime?.onOpenMirror?.()} className="ab-link-row">
+                        <span className="ab-icon-well is-exp" aria-hidden="true"><Sparkles size={16} /></span>
                         <span className="min-w-0 flex-1">
-                            <span className="block font-readable text-xs font-bold text-[#e3dcff]">에테르 거울</span>
-                            <span className="mt-0.5 block font-readable text-[11px] text-slate-400">계승 정수로 영구 성장을 준비합니다.</span>
+                            <span className="block font-readable aether-type-strong text-ae-ink">에테르 거울</span>
+                            <span className="mt-0.5 block font-readable aether-type-meta text-ae-ink-3">{MSG.SYSTEM_MIRROR_LINK_DESC}</span>
                         </span>
-                        <span className="shrink-0 font-readable text-[11px] font-semibold text-[#d9d0f3]">{player.meta?.essence || 0} 정수</span>
+                        <span className="shrink-0 font-readable aether-type-meta text-ae-ink-2">
+                            <span className="font-fira tabular-nums aether-type-body font-bold text-ae-ink">{player.meta?.essence || 0}</span> {MSG.SYSTEM_ESSENCE_UNIT}
+                        </span>
+                        <ChevronRight size={16} className="shrink-0 text-ae-ink-3" aria-hidden="true" />
                     </button>
-
-                    <button
-                        type="button"
-                        data-testid="open-crystal-exchange"
-                        onClick={() => runtime?.onOpenCrystalExchange?.()}
-                        className="flex min-h-[58px] w-full items-center gap-3 rounded-[0.7rem] border border-cyan-300/20 bg-cyan-300/8 px-3 py-2.5 text-left transition-colors hover:bg-cyan-300/12"
-                    >
-                        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-[0.65rem] border border-cyan-300/18 bg-black/18 text-cyan-100">
-                            <Gem size={15} />
-                        </span>
+                    <button type="button" data-testid="open-crystal-exchange" onClick={() => runtime?.onOpenCrystalExchange?.()} className="ab-link-row">
+                        <span className="ab-icon-well is-ether" aria-hidden="true"><Gem size={16} /></span>
                         <span className="min-w-0 flex-1">
-                            <span className="block font-readable text-xs font-bold text-cyan-50">에테르 교환소</span>
-                            <span className="mt-0.5 block font-readable text-[11px] text-slate-400">가방과 원정 지원을 교환합니다.</span>
+                            <span className="block font-readable aether-type-strong text-ae-ink">에테르 교환소</span>
+                            <span className="mt-0.5 block font-readable aether-type-meta text-ae-ink-3">{MSG.SYSTEM_CRYSTAL_LINK_DESC}</span>
                         </span>
-                        <span className="shrink-0 font-readable text-[11px] font-semibold text-cyan-100/80">{player.premiumCurrency || 0} 크리스탈</span>
+                        <span className="shrink-0 font-readable aether-type-meta text-ae-ink-2">
+                            <span className="font-fira tabular-nums aether-type-body font-bold text-ae-ink">{player.premiumCurrency || 0}</span> {MSG.SYSTEM_CRYSTAL_UNIT}
+                        </span>
+                        <ChevronRight size={16} className="shrink-0 text-ae-ink-3" aria-hidden="true" />
                     </button>
                 </div>
             </section>
 
             {titles.length > 0 && (
-                <section data-testid="system-title-section" className="border-b border-white/8 pb-4">
-                    <h3 className="font-readable text-sm font-bold text-white">칭호</h3>
-                    <div className="mt-2 border-l-2 border-[#d5b180]/34 pl-3">
-                        <div className={`font-readable text-xs font-bold ${player.activeTitle ? getTitleColor(player.activeTitle) : 'text-slate-200'}`}>
-                            {activeTitleLabel}
+                <section data-testid="system-title-section" className="ae-card ab-card-pad">
+                    <SectionHead title="칭호" />
+                    <div className="ae-well mt-3 flex items-start gap-3 p-3">
+                        <span className="ab-icon-well is-gold" aria-hidden="true"><Crown size={16} /></span>
+                        <div className="min-w-0 flex-1">
+                            <div className={`font-readable aether-type-strong ${player.activeTitle ? getTitleColor(player.activeTitle) : 'text-ae-ink'}`}>
+                                {activeTitleLabel}
+                            </div>
+                            <p className="mt-1 font-readable aether-type-meta leading-snug text-ae-ink-2">{activeTitlePassive}</p>
                         </div>
-                        <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">{activeTitlePassive}</p>
                     </div>
 
-                    <details data-testid="system-title-picker" className="group mt-3 border-y border-white/8">
-                        <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 py-2 font-readable text-xs font-semibold text-[#f6e7c8] [&::-webkit-details-marker]:hidden">
-                            <Crown size={14} />
-                            <span className="flex-1">칭호 바꾸기 · {titles.length}개 보유</span>
-                            <ChevronDown size={14} className="transition-transform group-open:rotate-180" />
+                    <details data-testid="system-title-picker" className="mt-2">
+                        <summary className="ab-summary">
+                            <span className="min-w-0 flex-1 font-readable aether-type-body font-bold text-ae-gold-text">
+                                {MSG.SYSTEM_TITLE_PICKER(titles.length)}
+                            </span>
+                            <ChevronDown size={16} className="ab-chevron" aria-hidden="true" />
                         </summary>
-                        <div className="space-y-1 border-t border-white/8 py-2">
-                            {titleGroups.regular.map((id: string) => renderTitleButton(id))}
+                        <div className="border-t border-ae-ink/7 pt-1">
+                            <SystemTitleList ids={titleGroups.regular} activeTitle={player.activeTitle} onSelect={handleSetActiveTitle} />
                             {titleGroups.elite.length > 0 && (
-                                <details data-testid="system-elite-titles" className="group/elite border-t border-white/8">
-                                    <summary className="flex min-h-[48px] cursor-pointer list-none flex-wrap items-center gap-x-2 gap-y-0.5 py-2 font-readable text-xs font-semibold text-amber-200 [&::-webkit-details-marker]:hidden">
-                                        <span className="shrink-0">{MSG.ELITE_TITLE_GROUP(eliteTitleTotal.count, ELITE_TITLE_MAPS.length)}</span>
-                                        <span data-testid="system-elite-titles-total" className="min-w-0 flex-1 text-[11px] font-normal text-slate-400">
+                                <details data-testid="system-elite-titles" className="border-t border-ae-ink/7">
+                                    <summary className="ab-summary flex-wrap !gap-x-2 !gap-y-0.5">
+                                        <span className="shrink-0 font-readable aether-type-body font-bold text-ae-gold-text">
+                                            {MSG.ELITE_TITLE_GROUP(eliteTitleTotal.count, ELITE_TITLE_MAPS.length)}
+                                        </span>
+                                        <span data-testid="system-elite-titles-total" className="min-w-0 flex-1 font-readable aether-type-meta text-ae-ink-3">
                                             {MSG.ELITE_TITLE_GROUP_TOTAL(formatPermanentStatBonus(eliteTitleTotal))}
                                         </span>
-                                        <ChevronDown size={14} className="shrink-0 transition-transform group-open/elite:rotate-180" />
+                                        <ChevronDown size={16} className="ab-chevron" aria-hidden="true" />
                                     </summary>
-                                    <div className="space-y-1 pb-1">
-                                        {titleGroups.elite.map((id: string) => renderTitleButton(id))}
+                                    <div className="pb-1 pl-2">
+                                        <SystemTitleList ids={titleGroups.elite} activeTitle={player.activeTitle} onSelect={handleSetActiveTitle} />
                                     </div>
                                 </details>
                             )}
@@ -631,27 +518,28 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
             )}
 
             {relics.length > 0 && (
-                <section data-testid="system-relic-section" className="border-b border-white/8 pb-2">
+                <section data-testid="system-relic-section" className="ae-card is-quiet px-3.5 py-1">
                     <SettingsDisclosure
                         testId="system-relic-list"
                         icon={Sparkles}
+                        tone="ether"
                         title={`보유 유물 ${countOwnedRelics(relics)}/${relicCapacity}`}
-                        summary="현재 여정에서 얻은 유물과 효과를 확인합니다."
+                        summary={MSG.SYSTEM_RELIC_LIST_DESC}
                     >
-                        <div className="space-y-2">
+                        <div className="ab-rows">
                             {relics.map((relic: Relic) => (
-                                <div key={relic.id} className="flex items-center gap-2.5 border-b border-white/6 px-1 pb-2 last:border-b-0 last:pb-0">
+                                <div key={relic.id} className="flex items-center gap-3 py-2.5">
                                     <RelicIcon relic={relic} size={42} />
                                     <div className="min-w-0 flex-1">
-                                        <div className={`font-readable text-xs font-bold ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-slate-200'}`}>
+                                        <div className={`font-readable aether-type-body font-bold ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-ae-ink'}`}>
                                             {getRelicDisplayName(relic.name)}
                                             {relic.borrowed && (
-                                                <span data-testid="system-relic-borrowed" className="ml-1.5 font-normal text-[11px] text-fuchsia-300/80">
+                                                <span data-testid="system-relic-borrowed" className="ae-chip ml-2 align-middle">
                                                     {MSG.CHAOS_HEART_BORROWED_TAG}
                                                 </span>
                                             )}
                                         </div>
-                                        <p className="mt-1 font-readable text-[11px] leading-snug text-slate-400">{formatRelicText(relic.desc)}</p>
+                                        <p className="mt-1 font-readable aether-type-meta leading-snug text-ae-ink-2">{formatRelicText(relic.desc)}</p>
                                     </div>
                                 </div>
                             ))}
@@ -660,189 +548,44 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                 </section>
             )}
 
-            <section data-testid="system-secondary-tools">
-                <h3 className="font-readable text-sm font-bold text-white">기타</h3>
-                <p className="mt-1 font-readable text-[11px] leading-relaxed text-slate-400">
-                    순위, 의견, 저장과 기기 점검은 필요할 때 펼쳐 봅니다.
-                </p>
-
-                <div className="mt-2 border-t border-white/8">
-                    <SettingsDisclosure
-                        testId="system-online-records"
-                        icon={Trophy}
-                        title="명예의 전당"
-                        summary="다른 모험가와 누적 처치 기록을 비교합니다."
-                    >
-                        <div className="space-y-1">
-                            {leaderboard.length > 0 ? leaderboard.map((ranker: LeaderboardEntry, index: number) => {
-                                const isMe = ranker.nickname === player.name;
-                                return (
-                                    <div key={`${ranker.nickname}-${index}`} className={`flex min-h-[40px] items-center gap-2 border-b border-white/6 px-1 py-2 last:border-b-0 ${isMe ? 'bg-emerald-300/[0.05]' : ''}`}>
-                                        <span className={`w-6 shrink-0 text-center font-readable text-[11px] font-bold ${index < 3 ? 'text-[#f6e7c8]' : 'text-slate-500'}`}>
-                                            {index + 1}
-                                        </span>
-                                        <span className="min-w-0 flex-1 truncate font-readable text-xs text-slate-100">
-                                            {ranker.nickname}
-                                            {ranker.activeTitle && <span className="ml-1 text-[#d9d0f3]">[{getTitleLabel(ranker.activeTitle)}]</span>}
-                                            {isMe && <span className="ml-1 text-emerald-100">나</span>}
-                                        </span>
-                                        <span className="flex shrink-0 items-center gap-1 font-readable text-[11px] text-rose-200">
-                                            {(ranker.prestigeRank ?? 0) > 0 && <span className="mr-1 text-[#d9d0f3]">계승 {ranker.prestigeRank}</span>}
-                                            <Skull size={12} /> {(ranker.totalKills || 0).toLocaleString('ko-KR')}
-                                        </span>
-                                    </div>
-                                );
-                            }) : (
-                                <p className="py-3 text-center font-readable text-[11px] text-slate-400">아직 순위 기록을 불러오지 못했습니다.</p>
-                            )}
-                        </div>
+            <section data-testid="system-secondary-tools" className="ae-card is-quiet ab-card-pad">
+                <SectionHead title={MSG.SYSTEM_SECONDARY_TITLE} desc={MSG.SYSTEM_SECONDARY_DESC} />
+                <div className="ab-rows mt-2">
+                    <SettingsDisclosure testId="system-online-records" icon={Trophy} tone="gold" title="명예의 전당" summary={MSG.SYSTEM_LEADERBOARD_DESC}>
+                        <SystemLeaderboard entries={leaderboard} playerName={player.name} />
                     </SettingsDisclosure>
 
-                    <SettingsDisclosure
-                        testId="system-feedback"
-                        icon={MessageSquare}
-                        title="의견 보내기"
-                        summary="불편했던 점이나 이상한 동작을 개발팀에 알립니다."
-                    >
-                        {feedbackStatus && (
-                            <div role="status" className={`mb-2 rounded-[0.65rem] border px-3 py-2 font-readable text-[11px] ${feedbackStatusClass}`}>
-                                {feedbackStatus.text}
-                            </div>
-                        )}
-                        <textarea
-                            aria-label="의견 내용"
-                            placeholder="불편했던 점이나 이상한 동작을 적어 주세요."
-                            className="h-28 w-full resize-none rounded-[0.65rem] border border-white/8 bg-black/24 p-3 font-readable text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-[#7dd4d8]/28"
-                            value={feedbackText}
-                            onChange={(event) => setFeedbackText(event.target.value)}
-                            maxLength={500}
-                        />
-                        <Motion.button
-                            type="button"
-                            whileTap={{ scale: 0.98 }}
-                            onClick={submitFeedback}
-                            className="mt-2 min-h-[44px] w-full rounded-[0.65rem] border border-emerald-300/24 bg-emerald-300/10 px-3 py-2 font-readable text-xs font-bold text-emerald-100 transition-colors hover:bg-emerald-300/16"
-                        >
-                            보내기
-                        </Motion.button>
+                    <SettingsDisclosure testId="system-feedback" icon={MessageSquare} tone="ether" title="의견 보내기" summary={MSG.SYSTEM_FEEDBACK_DESC}>
+                        <SystemFeedbackForm value={feedbackText} status={feedbackStatus} onChange={setFeedbackText} onSubmit={submitFeedback} />
                     </SettingsDisclosure>
 
-                    <SettingsDisclosure
-                        testId="system-support-tools"
-                        icon={Wrench}
-                        title="저장과 기기 점검"
-                        summary="플레이 기록을 보관하거나 문제 확인 정보를 준비합니다."
-                    >
-                        <button
-                            type="button"
+                    <SettingsDisclosure testId="system-support-tools" icon={Wrench} title="저장과 기기 점검" summary={MSG.SYSTEM_SUPPORT_DESC}>
+                        <ActionButton
                             data-testid="system-export-play-record"
+                            icon={<Download size={16} />}
+                            label="플레이 기록 저장"
                             onClick={exportPlayRecord}
-                            className="flex min-h-[44px] w-full items-center justify-center gap-2 rounded-[0.65rem] border border-[#7dd4d8]/22 bg-[#7dd4d8]/10 px-3 py-2 font-readable text-xs font-bold text-[#dff7f5] transition-colors hover:bg-[#7dd4d8]/16"
-                        >
-                            <Download size={15} /> 플레이 기록 저장
-                        </button>
-
+                            className="w-full"
+                        />
                         <div className="mt-2 grid grid-cols-2 gap-2">
-                            <button
-                                type="button"
-                                data-testid="system-copy-diagnostics"
-                                onClick={copyQaReadout}
-                                className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.65rem] border border-white/8 bg-black/20 px-2 py-2 font-readable text-[11px] font-semibold text-slate-200"
-                            >
-                                <Copy size={14} /> 점검 정보 복사
-                            </button>
-                            <button
-                                type="button"
-                                data-testid="system-export-diagnostics"
-                                onClick={exportQaSnapshot}
-                                className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.65rem] border border-white/8 bg-black/20 px-2 py-2 font-readable text-[11px] font-semibold text-slate-200"
-                            >
-                                <Save size={14} /> 점검 파일 저장
-                            </button>
+                            <ActionButton variant="ghost" data-testid="system-copy-diagnostics" icon={<Copy size={15} />} label={MSG.SYSTEM_QA_COPY} onClick={copyQaReadout} />
+                            <ActionButton variant="ghost" data-testid="system-export-diagnostics" icon={<Save size={15} />} label={MSG.SYSTEM_QA_EXPORT} onClick={exportQaSnapshot} />
                         </div>
-
-                        <div className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-y border-white/8 py-3 font-readable text-[11px] text-slate-400">
-                            <div>화면 · {getQaValueLabel(runtime?.viewport)}</div>
-                            <div>상태 · {getQaValueLabel(runtime?.gameState)}</div>
-                            <div>동기화 · {getQaValueLabel(runtime?.syncStatus)}</div>
-                            <div>이야기 · {runtime?.isAiThinking ? '생성 중' : '대기'}</div>
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between gap-2 border-b border-white/8 pb-3">
-                            <div className="min-w-0 font-readable text-[11px] text-slate-400">
-                                <div>{MSG.ERROR_REPORT_COUNT(errorReports.length)}</div>
-                                <div className="mt-0.5 truncate">
-                                    {lastErrorReport
-                                        ? MSG.ERROR_REPORT_LAST(
-                                            lastErrorReport.report.code,
-                                            new Date(lastErrorReport.capturedAt).toLocaleString('ko-KR'),
-                                        )
-                                        : MSG.ERROR_REPORT_EMPTY}
+                        <dl className="mt-3 grid grid-cols-2 gap-x-3 gap-y-2 border-y border-ae-ink/7 py-3 font-readable aether-type-meta">
+                            {qaRows.map(([label, value]) => (
+                                <div key={label} className="flex flex-wrap gap-x-1.5">
+                                    <dt className="text-ae-ink-3">{label}</dt>
+                                    <dd className="text-ae-ink">{value}</dd>
                                 </div>
-                            </div>
-                            <button
-                                type="button"
-                                data-testid="system-clear-error-reports"
-                                onClick={handleClearErrorReports}
-                                disabled={errorReports.length === 0}
-                                className="flex min-h-[44px] shrink-0 items-center gap-1 rounded-[0.55rem] border border-white/8 bg-black/20 px-2.5 py-1.5 font-readable text-[11px] font-semibold text-slate-300 transition-colors hover:bg-black/30 disabled:opacity-40"
-                            >
-                                <Trash2 size={13} /> {MSG.ERROR_REPORT_CLEAR_BUTTON}
-                            </button>
-                        </div>
-
-                        <section data-testid="system-product-events" onFocus={refreshProductEvents}
-                            className="mt-3 rounded-[0.65rem] border border-white/10 p-3 font-readable text-[11px] leading-relaxed text-slate-300">
-                            <h3 className="font-semibold text-slate-100">{MSG.PRODUCT_EVENTS_TITLE}</h3>
-                            <p>{MSG.PRODUCT_EVENTS_DESCRIPTION}</p>
-                            <p data-testid="system-product-events-mode">{productEventsActive
-                                ? MSG.PRODUCT_EVENTS_ACTIVE : MSG.PRODUCT_EVENTS_INACTIVE}</p>
-                            {productEventWriteFailed && <p role="alert">{MSG.PRODUCT_EVENTS_WRITE_FAILED}</p>}
-                            <p role="status" data-testid="system-product-events-status">{productEvents.status === 'ready'
-                                ? MSG.PRODUCT_EVENTS_COUNT(productEvents.events.length)
-                                : productEvents.status === 'invalid' ? MSG.PRODUCT_EVENTS_INVALID : MSG.PRODUCT_EVENTS_UNAVAILABLE}</p>
-                            <div className="mt-2 grid grid-cols-2 gap-2">
-                                <button type="button" data-testid="system-export-product-events" onClick={handleExportProductEvents}
-                                    className="min-h-[44px] rounded-lg border border-white/10 bg-black/20 px-2 py-2">
-                                    {MSG.PRODUCT_EVENTS_EXPORT}
-                                </button>
-                                <button type="button" data-testid="system-copy-product-events" onClick={handleCopyProductEvents}
-                                    className="min-h-[44px] rounded-lg border border-white/10 bg-black/20 px-2 py-2">
-                                    {MSG.PRODUCT_EVENTS_COPY}
-                                </button>
-                                <button type="button" data-testid="system-clear-product-events" onClick={handleClearProductEvents}
-                                    className="min-h-[44px] rounded-lg border border-white/10 bg-black/20 px-2 py-2">
-                                    {MSG.PRODUCT_EVENTS_CLEAR}
-                                </button>
-                            </div>
-                        </section>
-
-                        <pre className="mt-3 whitespace-pre-wrap break-all font-fira text-[11px] leading-relaxed text-slate-500">{qaReadout}</pre>
+                            ))}
+                        </dl>
+                        <SystemDeviceRecords onNotice={setNotice} />
+                        <pre className="mt-3 whitespace-pre-wrap break-all font-fira aether-type-label leading-relaxed text-ae-ink-3">{qaReadout}</pre>
                     </SettingsDisclosure>
 
                     {actions?.isAdmin() && (
-                        <SettingsDisclosure
-                            testId="system-admin-tools"
-                            icon={Shield}
-                            title="운영 설정"
-                            summary="승인된 운영자만 보상 배율과 공지를 바꿀 수 있습니다."
-                        >
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    type="button"
-                                    onClick={handleSetMultiplier}
-                                    className="min-h-[44px] rounded-[0.65rem] border border-rose-300/22 bg-rose-400/10 px-2 py-2 font-readable text-[11px] font-semibold text-rose-100"
-                                >
-                                    보상 배율
-                                </button>
-                                <button
-                                    type="button"
-                                    onClick={handleBroadcast}
-                                    className="min-h-[44px] rounded-[0.65rem] border border-rose-300/22 bg-rose-400/10 px-2 py-2 font-readable text-[11px] font-semibold text-rose-100"
-                                >
-                                    공지 등록
-                                </button>
-                            </div>
+                        <SettingsDisclosure testId="system-admin-tools" icon={Shield} tone="threat" title={MSG.SYSTEM_ADMIN_TITLE} summary={MSG.SYSTEM_ADMIN_DESC}>
+                            <SystemAdminTools onSetMultiplier={handleSetMultiplier} onBroadcast={handleBroadcast} />
                         </SettingsDisclosure>
                     )}
                 </div>

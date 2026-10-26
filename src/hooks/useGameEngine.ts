@@ -14,7 +14,6 @@ import type {
 } from './actionDeps';
 import type { Player } from '../types';
 import { AT } from '../reducers/actionTypes';
-import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
 import { calculateFullStats } from '../utils/statsCalculator';
 import { getRunBuildProfile } from '../utils/runProfileUtils';
@@ -107,6 +106,7 @@ export const useGameEngine = () => {
         economyReceipt,
         combatTurn,
         combatReceipt,
+        combatFeedback,
     } = state;
 
     // --- Firebase Sync ---
@@ -226,10 +226,8 @@ export const useGameEngine = () => {
                     },
                 }),
             }),
-            dismissEvent: () => {
-                dispatch({ type: AT.SET_EVENT, payload: null });
-                dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
-            },
+            // 2026-10 통합 감사(town-nav UX-09): 선택 없이 떠나면 지나친 이벤트를 기록에 남긴다 — 전이는 리듀서가 소유한다.
+            dismissEvent: () => dispatch({ type: AT.LEAVE_EVENT }),
 
             // Feature Actions
             setQuickSlot: (index: number, item: GameState['quickSlots'][number]) => dispatch({ type: AT.SET_QUICK_SLOT, payload: { index, item } }),
@@ -334,6 +332,8 @@ export const useGameEngine = () => {
         liveConfig,
         bootStage,
         presentationEpoch,
+        // 게임 필 감사 GF-01: 마지막 전투 차례의 연출 기록(표시 전용).
+        combatFeedback,
         handleCommand,
         // Feature additions
         quickSlots,

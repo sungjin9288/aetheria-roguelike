@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type CSSProperties } from 'react';
 import { ChevronDown, Lock, Sparkles } from 'lucide-react';
 import { DB } from '../../data/db';
 import { SIGNATURE_ITEM_REGISTRY } from '../../data/signatureItems.js';
@@ -7,7 +7,9 @@ import { getSignatureDropSources } from '../../utils/signatureDropSources.js';
 import { getSignaturePityMultiplier, SIGNATURE_PITY } from '../../utils/signaturePity.js';
 import { getDiscoveredSignatureNames } from '../../utils/signatureDiscovery.js';
 import { getItemStatText } from '../../utils/equipmentUtils';
+import { MSG } from '../../data/messages';
 import ItemIcon from '../icons/ItemIcon.jsx';
+import Chip from '../ui/Chip';
 import type { Item, Player } from '../../types/index.js';
 
 /**
@@ -27,8 +29,8 @@ interface SignatureMeta {
 }
 
 interface ToneAccent {
-    border: string;
-    glow: string;
+    /** 이 톤이 빌리는 색 토큰 — `--aether-<token>-rgb` 채널을 타일(`ab-tile`)의 `--ab-rar`로 넘긴다(감사 VD-06). */
+    token: string;
     label: string;
 }
 
@@ -55,14 +57,14 @@ export interface LegendaryEntry {
 // cycle 358: steel 톤 제거 — signatureRegistry.json / signatureSets.json 어디에도
 //   tone='steel' 엔트리 0건이라 unreachable. fallback은 DEFAULT_TONE_ACCENT (= holy).
 const TONE_ACCENT: Record<string, ToneAccent> = Object.freeze({
-    holy: { border: 'rgba(246,231,162,0.6)', glow: 'rgba(246,231,162,0.18)', label: '빛' },
-    fire: { border: 'rgba(255,180,138,0.6)', glow: 'rgba(255,180,138,0.18)', label: '화염' },
-    frost: { border: 'rgba(204,232,245,0.55)', glow: 'rgba(204,232,245,0.16)', label: '냉기' },
-    shadow: { border: 'rgba(199,164,240,0.6)', glow: 'rgba(199,164,240,0.18)', label: '어둠' },
-    arcane: { border: 'rgba(192,176,232,0.6)', glow: 'rgba(192,176,232,0.18)', label: '비전' },
-    nature: { border: 'rgba(168,208,160,0.55)', glow: 'rgba(168,208,160,0.16)', label: '자연' },
-    earth: { border: 'rgba(216,184,120,0.5)', glow: 'rgba(216,184,120,0.14)', label: '대지' },
-    rust: { border: 'rgba(217,165,108,0.5)', glow: 'rgba(217,165,108,0.14)', label: '광란' },
+    holy: { token: 'gold-hi', label: '빛' },
+    fire: { token: 'rarity-legendary', label: '화염' },
+    frost: { token: 'ether-hi', label: '냉기' },
+    shadow: { token: 'rarity-epic', label: '어둠' },
+    arcane: { token: 'exp', label: '비전' },
+    nature: { token: 'good', label: '자연' },
+    earth: { token: 'gold', label: '대지' },
+    rust: { token: 'gold-lo', label: '광란' },
 });
 
 const CATEGORY_LABEL: Record<string, string> = Object.freeze({
@@ -72,6 +74,9 @@ const CATEGORY_LABEL: Record<string, string> = Object.freeze({
 });
 
 const DEFAULT_TONE_ACCENT = TONE_ACCENT.holy;
+
+/** 타일의 테두리 · 광채 색을 톤 토큰으로 바꾼다 — 색 값은 index.css의 토큰이 소유한다. */
+const toneStyle = (accent: ToneAccent): CSSProperties => ({ ['--ab-rar' as string]: `var(--aether-${accent.token}-rgb)` });
 
 const buildEntries = (): LegendaryEntry[] => {
     const all = [
@@ -98,48 +103,38 @@ export const LegendaryCodexDetail = ({ entry }: { entry: LegendaryEntry }) => {
     const statText = getItemStatText(entry.item);
     const sources = getSignatureDropSources(entry.item.name);
     return (
-        <div
-            data-testid="legendary-codex-detail"
-            className="rounded-lg p-3 text-[11px]"
-            style={{
-                border: `1px solid ${accent.border}`,
-                background: `linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(10,12,16,1) 100%)`,
-            }}
-        >
+        <div data-testid="legendary-codex-detail" className="ab-tile p-3.5" style={toneStyle(accent)}>
             <div className="flex items-start gap-3">
                 <ItemIcon item={entry.item} size={48} hideSignatureBadge />
                 <div className="min-w-0 flex-1">
-                    <div className="font-rajdhani font-bold text-white text-[13px]">{entry.item.name}</div>
-                    <div className="mt-0.5 text-[11px] text-amber-200/80">
-                        {CATEGORY_LABEL[entry.meta.category ?? ''] || '전설'}
-                        <span className="mx-1 text-slate-600">·</span>
+                    <div className="aether-type-body font-display font-bold text-ae-ink">{entry.item.name}</div>
+                    <div className="aether-type-meta mt-0.5 text-ae-gold-text">
+                        {CATEGORY_LABEL[entry.meta.category ?? ''] || MSG.CODEX_LEGEND_FALLBACK_CATEGORY}
+                        <span className="mx-1 text-ae-ink-3">·</span>
                         {accent.label}
                         {statText ? (
                             <>
-                                <span className="mx-1 text-slate-600">·</span>
-                                <span data-testid="legendary-codex-detail-stat" className="text-slate-300">{statText}</span>
+                                <span className="mx-1 text-ae-ink-3">·</span>
+                                <span data-testid="legendary-codex-detail-stat" className="text-ae-ink-2">{statText}</span>
                             </>
                         ) : null}
                     </div>
                     {entry.item.desc && (
-                        <div className="mt-1.5 text-[11px] leading-relaxed text-slate-400">
+                        <div className="aether-type-meta mt-1.5 text-ae-ink-2">
                             {entry.item.desc}
                         </div>
                     )}
                     {sources.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-white/5">
-                            <div className="mb-1 text-[11px] text-slate-500">
-                                획득처
+                        <div className="mt-2 border-t border-ae-ink/7 pt-2">
+                            <div className="aether-type-meta mb-1 text-ae-ink-3">
+                                {MSG.CODEX_LEGEND_SOURCES_TITLE}
                             </div>
                             <div className="flex flex-wrap gap-1">
                                 {sources.map(({ monster, rate }) => (
-                                    <span
-                                        key={monster}
-                                        className="inline-flex min-h-7 items-center gap-1 rounded-lg border border-amber-300/25 bg-amber-300/5 px-2 text-[11px] text-amber-100/90"
-                                    >
-                                        <span className="text-slate-200">{monster}</span>
-                                        <span className="text-amber-300/80">{Math.max(1, Math.round(rate * 100))}%</span>
-                                    </span>
+                                    <Chip key={monster} tone="gold">
+                                        <span className="text-ae-ink">{monster}</span>
+                                        <span className="font-fira tabular-nums">{MSG.CODEX_LEGEND_SOURCE_RATE(Math.max(1, Math.round(rate * 100)))}</span>
+                                    </Chip>
                                 ))}
                             </div>
                         </div>
@@ -186,14 +181,20 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
         });
     }, [discoveredNames, equippedCounts, activeSet]);
 
+    const pityLine = pityActive
+        ? (pityCapped ? MSG.CODEX_LEGEND_PITY_CAPPED : MSG.CODEX_LEGEND_PITY_ACTIVE(pity))
+        : (pity > 0
+            ? MSG.CODEX_LEGEND_PITY_LOADING(pity, SIGNATURE_PITY.THRESHOLD, pityRemaining)
+            : MSG.CODEX_LEGEND_PITY_IDLE(SIGNATURE_PITY.THRESHOLD));
+
     return (
-        <div data-testid="codex-legendary" className="space-y-4">
-            <div className="flex items-baseline justify-between gap-3">
+        <div data-testid="codex-legendary" className="ab-stack">
+            <div className="flex items-baseline justify-between gap-3 px-1">
                 <div>
-                    <h3 className="aether-type-title font-semibold text-slate-100">전설 수집</h3>
-                    <p className="aether-type-meta mt-0.5 text-slate-400/76">발견한 전설 각인과 세트 장비를 기록합니다</p>
+                    <h3 className="ab-section-title">{MSG.CODEX_LEGEND_TITLE}</h3>
+                    <p className="aether-type-meta mt-0.5 text-ae-ink-3">{MSG.CODEX_LEGEND_DESC}</p>
                 </div>
-                <div className="aether-type-body shrink-0 text-amber-200">{discoveredCount}/{entries.length}</div>
+                <div className="aether-type-body shrink-0 font-fira tabular-nums text-ae-gold-text">{discoveredCount}/{entries.length}</div>
             </div>
 
             {/* Pity resonance status — 2026-10 Wave 103: 첫 각인을 얻은 뒤에만(보스 처치로 쌓인다는 규칙도 획득처다). */}
@@ -202,129 +203,107 @@ const LegendaryCodex = ({ player }: LegendaryCodexProps) => {
                 data-testid="legendary-codex-pity-status"
                 data-pity={pity}
                 data-pity-mult={pityMult}
-                className="flex min-h-14 items-center justify-between gap-2 rounded-lg px-3 py-2"
-                style={{
-                    border: `1px solid ${pityActive ? 'rgba(246,231,162,0.42)' : 'rgba(255,255,255,0.08)'}`,
-                    background: pityActive
-                        ? 'radial-gradient(circle at 22% 40%, rgba(246,231,162,0.14), transparent 54%), linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(10,12,16,1) 100%)'
-                        : 'linear-gradient(180deg, rgba(14,17,22,0.9) 0%, rgba(8,10,14,1) 100%)',
-                }}
+                className={`flex min-h-14 items-center justify-between gap-2 px-3.5 py-2 ${pityActive ? 'ab-mission' : 'ae-well'}`}
             >
-                <div className="flex items-center gap-1.5 min-w-0">
-                    <Sparkles size={11} className={pityActive ? 'text-amber-300' : 'text-slate-500'} />
-                    <span className="text-sm font-semibold" style={{ color: pityActive ? '#f6e7a2' : '#c8cdd6' }}>
-                        각인 공명
+                <div className="flex min-w-0 items-center gap-1.5">
+                    <Sparkles size={14} className={`shrink-0 ${pityActive ? 'text-ae-gold-text' : 'text-ae-ink-3'}`} aria-hidden="true" />
+                    <span className="aether-type-body shrink-0 font-semibold text-ae-ink">
+                        {MSG.CODEX_LEGEND_PITY_TITLE}
                     </span>
-                    <span className="truncate text-[11px] text-slate-400/80">
-                        {pityActive
-                            ? (pityCapped ? '상한 도달' : `보스 ${pity}회 누적`)
-                            : (pity > 0
-                                ? `적재 ${pity}/${SIGNATURE_PITY.THRESHOLD} · 임계까지 ${pityRemaining}회`
-                                : `보스 ${SIGNATURE_PITY.THRESHOLD}회 연속 무획득 시 배율 상승`)}
-                    </span>
+                    <span className="aether-type-meta min-w-0 text-ae-ink-3">{pityLine}</span>
                 </div>
-                <span
-                    className="shrink-0 text-sm font-semibold"
-                    style={{ color: pityActive ? '#f6e7a2' : '#6b7280' }}
-                >
-                    {pityActive ? `+${pityPct}%` : '+0%'}
+                <span className={`aether-type-body shrink-0 font-fira font-semibold tabular-nums ${pityActive ? 'text-ae-gold-text' : 'text-ae-ink-3'}`}>
+                    {MSG.CODEX_LEGEND_PITY_PCT(pityActive ? pityPct : 0)}
                 </span>
             </div>
             )}
 
-            {setSummary.length > 0 && (
-                <details data-testid="legendary-codex-sets" className="group border-y border-white/10">
-                    <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-3 [&::-webkit-details-marker]:hidden">
-                        <Sparkles size={16} className="text-amber-200" />
-                        <span className="aether-type-body flex-1 font-semibold text-slate-100">전설 세트</span>
-                        <span className="aether-type-meta text-slate-400/76">{setSummary.length}개</span>
-                        <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
-                    </summary>
-                    <div className="grid grid-cols-1 gap-1.5 pb-3">
-                        {setSummary.map(({ key, def, total, discovered, equipped, activeBonus }) => {
-                            const accent = TONE_ACCENT[def.tone] || DEFAULT_TONE_ACCENT;
-                            const isActive = Boolean(activeBonus);
-                            return (
-                                <div
-                                    key={key}
-                                    className="flex min-h-14 flex-col justify-center gap-0.5 rounded-lg px-3 py-2"
-                                    style={{
-                                        border: `1px solid ${isActive ? accent.border : 'rgba(255,255,255,0.08)'}`,
-                                        background: isActive
-                                            ? `radial-gradient(circle at 18% 40%, ${accent.glow}, transparent 50%), linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(10,12,16,1) 100%)`
-                                            : 'linear-gradient(180deg, rgba(14,17,22,0.9) 0%, rgba(8,10,14,1) 100%)',
-                                    }}
-                                >
-                                    <div className="flex items-center justify-between gap-3 text-[11px]">
-                                        <span className="font-semibold text-white">{def.name}</span>
-                                        <span className={isActive ? 'text-amber-200' : 'text-slate-500'}>
-                                            {equipped > 0 ? `장착 ${equipped}` : '미장착'} · 수집 {discovered}/{total}
-                                        </span>
-                                    </div>
-                                    {activeBonus && (
-                                        <div className="text-[11px] text-amber-200/90">
-                                            {activeBonus.desc}
+            <div className="ae-card ab-rows px-3.5">
+                {setSummary.length > 0 && (
+                    <details data-testid="legendary-codex-sets" className="group">
+                        <summary className="ab-summary min-h-14">
+                            <span className="ab-icon-well is-gold" aria-hidden="true"><Sparkles size={16} /></span>
+                            <span className="aether-type-body flex-1 font-semibold text-ae-ink">{MSG.CODEX_LEGEND_SETS_TITLE}</span>
+                            <span className="aether-type-meta font-fira tabular-nums text-ae-ink-3">{MSG.CODEX_PANEL_COUNT(setSummary.length)}</span>
+                            <ChevronDown size={16} className="ab-chevron" aria-hidden="true" />
+                        </summary>
+                        <div className="grid grid-cols-1 gap-1.5 pb-3">
+                            {setSummary.map(({ key, def, total, discovered, equipped, activeBonus }) => {
+                                const isActive = Boolean(activeBonus);
+                                return (
+                                    <div
+                                        key={key}
+                                        className={`flex min-h-14 flex-col justify-center gap-0.5 px-3 py-2 ${isActive ? 'ab-tile' : 'ab-tile is-undiscovered'}`}
+                                        style={isActive ? toneStyle(TONE_ACCENT[def.tone] || DEFAULT_TONE_ACCENT) : undefined}
+                                    >
+                                        <div className="aether-type-meta flex items-center justify-between gap-3">
+                                            <span className="font-semibold text-ae-ink">{def.name}</span>
+                                            <span className={`shrink-0 font-fira tabular-nums ${isActive ? 'text-ae-gold-text' : 'text-ae-ink-3'}`}>
+                                                {MSG.CODEX_LEGEND_SET_STATUS(equipped, discovered, total)}
+                                            </span>
                                         </div>
-                                    )}
+                                        {activeBonus && (
+                                            <div className="aether-type-meta text-ae-gold-text">
+                                                {activeBonus.desc}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
+                        </div>
+                    </details>
+                )}
+
+                {/* 2026-10 Wave 103 (소유자 결정 §107.6): 발견 0개일 때 어디서 얻는지 안내하던 칸을 없앴다 — 획득처는 플레이어가 알아낸다. */}
+
+                <details data-testid="legendary-codex-collection" className="group">
+                    <summary className="ab-summary min-h-14">
+                        <span className="ab-icon-well is-gold" aria-hidden="true"><Sparkles size={16} /></span>
+                        <span className="aether-type-body flex-1 font-semibold text-ae-ink">{MSG.CODEX_LEGEND_COLLECTION_TITLE}</span>
+                        <span className="aether-type-meta font-fira tabular-nums text-ae-ink-3">{discoveredCount}/{entries.length}</span>
+                        <ChevronDown size={16} className="ab-chevron" aria-hidden="true" />
+                    </summary>
+                    <div className="grid grid-cols-2 gap-1.5 pb-3">
+                    {entries.map(({ item, meta }) => {
+                        const found = discoveredNames.has(item.name ?? '');
+                        const accent = TONE_ACCENT[meta.tone ?? ''] || DEFAULT_TONE_ACCENT;
+                        const isSelected = selected === item.name;
+
+                        if (!found) {
+                            return (
+                                <div key={item.name} role="img" aria-label={MSG.CODEX_LEGEND_UNDISCOVERED} className="ab-tile is-undiscovered flex min-h-16 items-center gap-1.5 p-2.5">
+                                    <Lock size={12} className="shrink-0" aria-hidden="true" />
+                                    <div className="aether-type-meta font-semibold">{MSG.CODEX_LEGEND_UNDISCOVERED}</div>
                                 </div>
                             );
-                        })}
-                    </div>
-                </details>
-            )}
-
-            {/* 2026-10 Wave 103 (소유자 결정 §107.6): 발견 0개일 때 어디서 얻는지 안내하던 칸을 없앴다 — 획득처는 플레이어가 알아낸다. */}
-
-            <details data-testid="legendary-codex-collection" className="group border-y border-white/10">
-                <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-3 [&::-webkit-details-marker]:hidden">
-                    <Sparkles size={16} className="text-amber-200" />
-                    <span className="aether-type-body flex-1 font-semibold text-slate-100">전설 장비 기록</span>
-                    <span className="aether-type-meta text-slate-400/76">{discoveredCount}/{entries.length}</span>
-                    <ChevronDown size={16} className="text-slate-500 transition-transform group-open:rotate-180" />
-                </summary>
-                <div className="grid grid-cols-2 gap-1.5 pb-3">
-                {entries.map(({ item, meta }) => {
-                    const found = discoveredNames.has(item.name ?? '');
-                    const accent = TONE_ACCENT[meta.tone ?? ''] || DEFAULT_TONE_ACCENT;
-                    const isSelected = selected === item.name;
-
-                    return (
-                        <button
-                            key={item.name}
-                            type="button"
-                            onClick={() => found && setSelected(isSelected ? null : item.name ?? null)}
-                            className={`relative min-h-16 rounded-lg p-2.5 text-left text-[11px] transition-all ${found ? 'hover:brightness-125' : 'cursor-default'} ${isSelected ? 'ring-1 ring-amber-300/60' : ''}`}
-                            style={{
-                                border: `1px solid ${found ? accent.border : 'rgba(255,255,255,0.08)'}`,
-                                background: found
-                                    ? `radial-gradient(circle at 30% 24%, ${accent.glow}, transparent 46%), linear-gradient(180deg, rgba(20,24,30,0.95) 0%, rgba(8,10,14,1) 100%)`
-                                    : 'linear-gradient(180deg, rgba(12,14,18,0.9) 0%, rgba(6,7,10,1) 100%)',
-                            }}
-                            aria-label={found ? item.name : '미발견 전설'}
-                        >
-                            {found ? (
+                        }
+                        return (
+                            <button
+                                key={item.name}
+                                type="button"
+                                aria-pressed={isSelected}
+                                onClick={() => setSelected(isSelected ? null : item.name ?? null)}
+                                className="ab-tile min-h-16 p-2.5 text-left"
+                                style={toneStyle(accent)}
+                                aria-label={item.name}
+                            >
                                 <div className="flex items-start gap-1.5">
                                     <ItemIcon item={item} size={28} hideSignatureBadge />
                                     <div className="min-w-0">
                                         {/* 통합 수용 7차(원장 §149): 이름은 말줄임 대신 줄을 넘긴다 — 375 · 390px의 두 칸 격자에서
                                             '신전 도시의 지팡이' · '에테르 거인의 대검'이 잘렸다(Wave 67 규칙). */}
-                                        <div className="text-sm font-semibold leading-tight text-white">{item.name}</div>
-                                        <div className="mt-0.5 text-[11px] text-amber-200/80">
-                                            {CATEGORY_LABEL[meta.category ?? ''] || '전설'} · {accent.label}
+                                        <div className="aether-type-body font-semibold leading-tight text-ae-ink">{item.name}</div>
+                                        <div className="aether-type-meta mt-0.5 text-ae-gold-text">
+                                            {CATEGORY_LABEL[meta.category ?? ''] || MSG.CODEX_LEGEND_FALLBACK_CATEGORY} · {accent.label}
                                         </div>
                                     </div>
                                 </div>
-                            ) : (
-                                <div className="flex items-center gap-1.5">
-                                    <Lock size={12} className="text-slate-600" />
-                                    <div className="text-[11px] font-semibold text-slate-500">미발견 전설</div>
-                                </div>
-                            )}
-                        </button>
-                    );
-                })}
-                </div>
-            </details>
+                            </button>
+                        );
+                    })}
+                    </div>
+                </details>
+            </div>
 
             {/* Detail */}
             {selectedEntry && <LegendaryCodexDetail entry={selectedEntry} />}

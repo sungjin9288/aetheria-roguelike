@@ -49,3 +49,14 @@ export const openTownFacilities = async (page: Page) => {
     }
     await expect(facilities).toHaveAttribute('open', '');
 };
+
+/**
+ * 2026-10 (감사 GF-09): 모드가 바뀌면 조작판 칸이 짧게 들어온다(전투 260ms · 그 밖 180ms, `utils/modeTransition.ts`).
+ *   위치를 재는 단언은 그 박자가 끝난 뒤에 잰다 — 박자 중에는 칸이 4 ~ 8px 위에서 내려오는 중이다.
+ */
+export const waitForModeTransition = async (page: Page) => {
+    await expect.poll(() => page.evaluate(() => (
+        [...document.querySelectorAll('.animate-combat-start, .aether-mode-enter-a, .aether-mode-enter-b')]
+            .every((element) => element.getAnimations().every((animation) => animation.playState !== 'running'))
+    )), { timeout: 5_000 }).toBe(true);
+};

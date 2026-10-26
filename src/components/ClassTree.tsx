@@ -15,29 +15,29 @@ const ClassTree = ({ player }: ClassTreeProps) => {
     const nextJobs = currentClass?.next || [];
 
     return (
-        <section data-testid="class-growth-path" aria-labelledby="class-growth-path-title" className="border-t border-white/8 pt-4">
+        <section data-testid="class-growth-path" aria-labelledby="class-growth-path-title" className="ae-card is-quiet p-3.5">
             <div className="flex items-start gap-2">
-                <Sparkles size={15} className="mt-0.5 shrink-0 text-[#d5b180]" />
+                <Sparkles size={15} aria-hidden="true" className="mt-0.5 shrink-0 text-ae-gold" />
                 <div>
-                    <h3 id="class-growth-path-title" className="aether-type-title font-readable font-semibold text-slate-100">전직 계보</h3>
-                    <p className="aether-type-meta mt-0.5 font-readable text-slate-400/76">다음 전직 기술 미리보기</p>
+                    <h3 id="class-growth-path-title" className="aether-type-title font-readable font-semibold text-ae-ink">전직 계보</h3>
+                    <p className="aether-type-meta mt-0.5 font-readable text-ae-ink-3">다음 전직 기술 미리보기</p>
                 </div>
             </div>
 
-            <div data-testid="class-growth-current" className="mt-3 flex items-center gap-2.5 border-y border-white/8 py-2.5">
+            <div data-testid="class-growth-current" className="ae-well mt-3 flex items-center gap-2.5 px-3 py-2.5">
                 <ClassIcon className={currentName} size={30} tier={currentClass?.tier || 0} />
                 <div className="min-w-0 flex-1">
-                    <div className="aether-type-meta font-readable text-[#7dd4d8]/78">현재 직업</div>
-                    <div className="font-readable text-base font-semibold text-slate-100">{currentName}</div>
+                    <div className="ae-eyebrow">현재 직업</div>
+                    <div className="font-readable text-base font-semibold text-ae-ink">{currentName}</div>
                 </div>
-                <ChevronRight size={16} className="shrink-0 text-slate-500" />
-                <div className="aether-type-body shrink-0 font-readable text-slate-300/76">
+                <ChevronRight size={16} aria-hidden="true" className="shrink-0 text-ae-ink-3" />
+                <div className="aether-type-body shrink-0 font-readable text-ae-ink-2">
                     {nextJobs.length > 0 ? `${nextJobs.length}가지 성장` : '최종 전직'}
                 </div>
             </div>
 
             {nextJobs.length > 0 ? (
-                <div className="mt-2 space-y-2">
+                <div className="ae-rows mt-1">
                     {nextJobs.map((jobName, index) => {
                         const job = DB.CLASSES[jobName];
                         if (!job) return null;
@@ -51,26 +51,26 @@ const ClassTree = ({ player }: ClassTreeProps) => {
                             <Motion.div
                                 key={jobName}
                                 data-testid="class-growth-option"
-                                initial={{ opacity: 0, y: 6 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: index * 0.04 }}
-                                className="rounded-lg border border-white/8 bg-black/12 px-3 py-2.5"
+                                initial={{ opacity: 0 }}
+                                animate={{ opacity: 1 }}
+                                transition={{ delay: Math.min(index, 6) * 0.03, duration: 0.2, ease: [0.2, 0.8, 0.2, 1] }}
+                                className="py-3"
                             >
                                 <div className="flex items-start gap-2.5">
                                     <ClassIcon className={jobName} size={30} tier={job.tier || 0} />
                                     <div className="min-w-0 flex-1">
                                         <div className="flex flex-wrap items-center gap-2">
-                                            <span className="font-readable text-sm font-semibold text-slate-100">{jobName}</span>
-                                            <span className={`flex items-center gap-1 font-readable text-[11px] font-semibold ${available ? 'text-emerald-100' : 'aether-lock-note'}`}>
-                                                {available ? <Check size={12} /> : <LockKeyhole size={11} />}
+                                            <span className="font-readable text-[15px] font-semibold text-ae-ink">{jobName}</span>
+                                            <span className={`flex items-center gap-1 font-readable text-[11px] font-semibold ${available ? 'text-ae-good' : 'aether-lock-note'}`}>
+                                                {available ? <Check size={12} aria-hidden="true" /> : <LockKeyhole size={12} aria-hidden="true" />}
                                                 {available ? '전직 가능' : `레벨 ${requirement}`}
                                             </span>
                                         </div>
-                                        <div className="aether-type-body mt-1 font-readable text-slate-300/76">{identity.focus}</div>
-                                        <div className="aether-type-meta mt-1.5 font-readable text-slate-400/76">
+                                        <div className="aether-type-body mt-1 font-readable text-ae-ink-2">{identity.focus}</div>
+                                        <div className="aether-type-meta mt-1.5 font-readable text-ae-ink-3">
                                             대표 기술 · {skills.join(' · ') || '사용 기술 없음'}
                                         </div>
-                                        <div className="aether-type-meta mt-1 font-readable text-slate-500">
+                                        <div className="aether-type-meta mt-1 font-readable text-ae-ink-3">
                                             다음 계보 · {job.next?.length ? job.next.join(' 또는 ') : '이 길의 최종 전직'}
                                         </div>
                                     </div>
@@ -81,8 +81,8 @@ const ClassTree = ({ player }: ClassTreeProps) => {
                 </div>
             ) : (
                 <div data-testid="class-growth-complete" className="py-6 text-center font-readable">
-                    <div className="text-sm font-semibold text-slate-100">최종 전직에 도달했습니다.</div>
-                    <div className="aether-type-meta mt-1 text-slate-400/76">기술 성장과 장비 조화로 전투 방식을 완성하세요.</div>
+                    <div className="text-sm font-semibold text-ae-ink">최종 전직에 도달했습니다.</div>
+                    <div className="aether-type-meta mt-1 text-ae-ink-3">기술 성장과 장비 조화로 전투 방식을 완성하세요.</div>
                 </div>
             )}
         </section>

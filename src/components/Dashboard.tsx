@@ -2,17 +2,19 @@ import { lazy, Suspense, useEffect, useRef, useState } from 'react';
 import {
     BarChart3,
     BookOpen,
+    ChevronLeft,
+    ChevronRight,
     Eye,
     Map,
     Package,
     RotateCcw,
     Scroll,
+    Settings,
     Shield,
     Skull,
     Star,
     Trophy,
     X,
-    Zap,
 } from 'lucide-react';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
@@ -21,12 +23,14 @@ import { getClaimableQuestEntries } from '../utils/questProgress';
 import type { FullStats, Player } from '../types/index.js';
 import ArchiveTabButton from './ArchiveTabButton';
 import EquipmentPanel from './EquipmentPanel';
-import SignalBadge from './SignalBadge';
+import OverlayCloseButton from './OverlayCloseButton';
+import Chip from './ui/Chip';
 import SmartInventory from './SmartInventory';
 import type { GameActions } from '../hooks/actionDeps';
 import type { GameState } from '../reducers/gameReducer';
 import type { SystemTabRuntime } from './tabs/SystemTab';
 import { getJourneySurfaceText } from '../utils/journeyScope';
+import { getPreferredScrollBehavior } from '../utils/scrollBehavior';
 
 const AchievementPanel = lazy(() => import('./AchievementPanel'));
 const BuildAdvicePanel = lazy(() => import('./BuildAdvicePanel'));
@@ -40,8 +44,8 @@ const SeasonPassPanel = lazy(() => import('./tabs/SeasonPassPanel'));
 const SystemTab = lazy(() => import('./tabs/SystemTab'));
 
 const TabSpinner = () => (
-    <div className="flex items-center justify-center py-8 text-[11px] font-readable text-slate-500">
-        불러오는 중…
+    <div role="status" className="flex items-center justify-center py-8 text-[12px] font-readable text-ae-ink-3">
+        {MSG.ARCHIVE_TAB_LOADING}
     </div>
 );
 
@@ -56,6 +60,11 @@ interface DashboardProps {
     quickSlots?: GameState['quickSlots'];
     runtime?: SystemTabRuntime;
     onReturnToLog?: () => void;
+    /**
+     * 'sheet'(기본) — 모바일 기록 콘솔: 제목 한 줄 + 가로 탭 레일(넘침 표시) + 닫기.
+     * 'column' — 데스크톱(≥1024px) 기록 열: 같은 탭을 4열 타일로 펼치고 닫기 · 넘침 표시를 그리지 않는다.
+     */
+    layout?: 'sheet' | 'column';
 }
 
 const TAB_ITEMS = [
@@ -69,8 +78,49 @@ const TAB_ITEMS = [
     { id: 'codex', icon: Eye, label: '도감' },
     { id: 'pass', icon: Star, label: '시즌' },
     { id: 'graves', icon: Skull, label: '묘비' },
-    { id: 'system', icon: Zap, label: '설정' },
+    // 2026-10 감사 UX-14: 번개(Zap)는 전투 '기술' 단추의 아이콘이다 — 설정 탭은 톱니바퀴다.
+    { id: 'system', icon: Settings, label: '설정' },
 ];
+
+// 2026-10 통합 감사(UX-08): 11개 탭 레일은 390px에서 넷만 보이고 넘친다는 표시가 없었다.
+//   레일이 넘치면 끝을 흐리고(mask) 다음 · 처음으로 넘기는 단추와 위치 막대를 그린다 — 탭 순서 · 묶음은 그대로다.
+interface ArchiveRailScroll {
+    overflows: boolean;
+    atStart: boolean;
+    atEnd: boolean;
+    /** 보이는 폭 / 전체 폭(%) — 위치 막대의 길이. */
+    thumb: number;
+    /** 스크롤 위치 / 전체 폭(%) — 위치 막대의 시작. */
+    offset: number;
+}
+
+const ARCHIVE_RAIL_IDLE: ArchiveRailScroll = { overflows: false, atStart: true, atEnd: false, thumb: 100, offset: 0 };
+const ARCHIVE_RAIL_EDGE_PX = 1;
+const ARCHIVE_RAIL_FADE = '28px';
+const ARCHIVE_RAIL_PAGE_RATIO = 0.7;
+
+const readArchiveRailScroll = (rail: HTMLElement): ArchiveRailScroll => {
+    const maxScroll = Math.max(0, rail.scrollWidth - rail.clientWidth);
+    if (maxScroll <= ARCHIVE_RAIL_EDGE_PX || rail.scrollWidth <= 0) return ARCHIVE_RAIL_IDLE;
+    return {
+        overflows: true,
+        atStart: rail.scrollLeft <= ARCHIVE_RAIL_EDGE_PX,
+        atEnd: rail.scrollLeft >= maxScroll - ARCHIVE_RAIL_EDGE_PX,
+        thumb: Math.round((rail.clientWidth / rail.scrollWidth) * 100),
+        offset: Math.round((rail.scrollLeft / rail.scrollWidth) * 100),
+    };
+};
+
+const isSameArchiveRailScroll = (a: ArchiveRailScroll, b: ArchiveRailScroll) => (
+    a.overflows === b.overflows && a.atStart === b.atStart && a.atEnd === b.atEnd && a.thumb === b.thumb && a.offset === b.offset
+);
+
+const getArchiveRailMask = ({ overflows, atStart, atEnd }: ArchiveRailScroll): string | undefined => {
+    if (!overflows) return undefined;
+    const start = atStart ? '#000 0' : `transparent 0, #000 ${ARCHIVE_RAIL_FADE}`;
+    const end = atEnd ? '#000 100%' : `#000 calc(100% - ${ARCHIVE_RAIL_FADE}), transparent 100%`;
+    return `linear-gradient(to right, ${start}, ${end})`;
+};
 
 const Dashboard = ({
     player,
@@ -82,8 +132,11 @@ const Dashboard = ({
     quickSlots,
     runtime,
     onReturnToLog,
+    layout = 'sheet',
 }: DashboardProps) => {
+    const isColumn = layout === 'column';
     const [confirmMenuReset, setConfirmMenuReset] = useState(false);
+    const [railScroll, setRailScroll] = useState<ArchiveRailScroll>(ARCHIVE_RAIL_IDLE);
     const archiveRailRef = useRef<HTMLDivElement>(null);
     const resetTriggerRef = useRef<HTMLButtonElement>(null);
     const resetConfirmationRef = useRef<HTMLDivElement>(null);
@@ -94,7 +147,6 @@ const Dashboard = ({
     //   판정의 단일 진실 원천(QuestBoardPanel과 동일)인 getClaimableQuestEntries로 교체.
     const hasCompletableQuest = getClaimableQuestEntries(player).length > 0;
     const activeTab = TAB_ITEMS.find((tab) => tab.id === sideTab) || TAB_ITEMS[0];
-    const ActiveTabIcon = activeTab.icon;
 
     const signatureProgress = getSignatureDiscoveryProgress(player);
     const signatureBadge = signatureProgress.discovered > 0
@@ -122,6 +174,38 @@ const Dashboard = ({
         const selectedCenter = selectedTab.offsetLeft + (selectedTab.offsetWidth / 2);
         rail.scrollLeft = Math.max(0, selectedCenter - (rail.clientWidth / 2));
     }, [sideTab]);
+
+    useEffect(() => {
+        const rail = archiveRailRef.current;
+        if (!rail) return undefined;
+        const sync = () => {
+            const next = readArchiveRailScroll(rail);
+            setRailScroll((prev) => (isSameArchiveRailScroll(prev, next) ? prev : next));
+        };
+        const frame = window.requestAnimationFrame(sync);
+        rail.addEventListener('scroll', sync, { passive: true });
+        window.addEventListener('resize', sync);
+        const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(sync) : null;
+        observer?.observe(rail);
+        return () => {
+            window.cancelAnimationFrame(frame);
+            rail.removeEventListener('scroll', sync);
+            window.removeEventListener('resize', sync);
+            observer?.disconnect();
+        };
+    }, []);
+
+    const pageArchiveRail = () => {
+        const rail = archiveRailRef.current;
+        if (!rail) return;
+        const behavior = getPreferredScrollBehavior();
+        if (railScroll.atEnd) {
+            rail.scrollTo({ left: 0, behavior });
+            return;
+        }
+        rail.scrollBy({ left: rail.clientWidth * ARCHIVE_RAIL_PAGE_RATIO, behavior });
+    };
+    const railMask = getArchiveRailMask(railScroll);
 
     useEffect(() => {
         if (!confirmMenuReset) return;
@@ -220,60 +304,90 @@ const Dashboard = ({
     return (
         <section
             data-testid="mobile-archive-console"
-            className="panel-noise aether-surface-strong flex min-h-0 flex-1 flex-col overflow-hidden rounded-[1.55rem] border border-white/10 px-3 py-2.5 shadow-[0_18px_34px_rgba(4,10,18,0.24)]"
+            data-layout={layout}
+            className="ae-card flex min-h-0 flex-1 flex-col overflow-hidden px-3 pb-2 pt-2"
         >
-            <header className="flex shrink-0 items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2.5">
-                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-[1rem] border border-white/8 bg-white/[0.03] text-[#dff7f5] shadow-[inset_0_1px_0_rgba(255,255,255,0.03)]">
-                        <ActiveTabIcon size={15} />
-                    </div>
-                    <div className="min-w-0">
-                        <div className="text-[11px] font-readable text-slate-400/70">모험 기록</div>
-                        <div className="mt-0.5 flex items-center gap-2">
-                            <h2 className="truncate text-[15px] font-readable font-bold text-white/92">
-                                {activeTab.label}
-                            </h2>
-                            {hasCompletableQuest && (
-                                <SignalBadge tone="spotlight" size="sm">
-                                    {MSG.UI_REFRESH}
-                                </SignalBadge>
-                            )}
-                        </div>
-                    </div>
-                </div>
-                <button
-                    type="button"
-                    data-testid="mobile-console-return-log"
-                    onClick={() => {
-                        setConfirmMenuReset(false);
-                        onReturnToLog?.();
-                    }}
-                    className="min-h-[44px] shrink-0 rounded-full border border-white/8 bg-black/20 px-3 py-1.5 text-[11px] font-readable text-slate-300/78 transition-colors hover:border-white/14 hover:text-white"
-                >
-                    {MSG.UI_CLOSE}
-                </button>
+            {/* 2026-10 에테르 유리(VD-11): 머리는 글자 한 줄(제목) + 탭 레일 한 줄이다 — 아이콘 상자 · 두 줄 제목 · 레일 위아래 선을 걷고
+                닫기는 레일 줄 끝으로 옮겨 내용이 더 위에서 시작한다(390px에서 머리 약 128 → 90px). */}
+            <header className="flex shrink-0 flex-wrap items-center gap-x-2 gap-y-1 pl-1">
+                <h2 className="ae-archive-title font-readable">
+                    <span className="ae-eyebrow mr-2">모험 기록</span>
+                    {activeTab.label}
+                </h2>
+                {hasCompletableQuest && (
+                    <Chip tone="gold" data-testid="archive-claimable-chip">
+                        {MSG.UI_REFRESH}
+                    </Chip>
+                )}
             </header>
 
-            <nav
-                ref={archiveRailRef}
-                data-testid="archive-tab-rail"
-                aria-label="모험 기록 선택"
-                className="custom-scrollbar mt-2 flex shrink-0 gap-2 overflow-x-auto border-y border-white/8 py-1.5"
+            <div
+                data-testid="archive-tab-rail-frame"
+                data-overflow={railScroll.overflows ? 'true' : 'false'}
+                data-at-start={railScroll.atStart ? 'true' : 'false'}
+                data-at-end={railScroll.atEnd ? 'true' : 'false'}
+                className="relative mt-1 flex shrink-0 items-center gap-1"
             >
-                {TAB_ITEMS.map((tab) => (
-                    <ArchiveTabButton
-                        key={tab.id}
-                        icon={tab.icon}
-                        label={tab.label}
-                        active={sideTab === tab.id}
-                        onClick={() => selectTab(tab.id)}
-                        compact
-                        rail
-                        testId={`archive-tab-${tab.id}`}
-                        {...getTabExtras(tab.id)}
+                <div className="relative min-w-0 flex-1">
+                    <nav
+                        ref={archiveRailRef}
+                        id="archive-tab-rail"
+                        data-testid="archive-tab-rail"
+                        aria-label="모험 기록 선택"
+                        className={isColumn
+                            ? 'grid min-w-0 flex-1 grid-cols-4 gap-1.5 py-1'
+                            : 'custom-scrollbar flex min-w-0 flex-1 shrink-0 gap-1 overflow-x-auto py-1'}
+                        style={!isColumn && railMask ? { maskImage: railMask, WebkitMaskImage: railMask } : undefined}
+                    >
+                        {TAB_ITEMS.map((tab) => (
+                            <ArchiveTabButton
+                                key={tab.id}
+                                icon={tab.icon}
+                                label={tab.label}
+                                active={sideTab === tab.id}
+                                onClick={() => selectTab(tab.id)}
+                                compact
+                                rail={!isColumn}
+                                testId={`archive-tab-${tab.id}`}
+                                {...getTabExtras(tab.id)}
+                            />
+                        ))}
+                    </nav>
+                    {!isColumn && railScroll.overflows && (
+                        <div
+                            data-testid="archive-tab-rail-progress"
+                            aria-hidden="true"
+                            className="ae-archive-progress pointer-events-none absolute bottom-0 left-0 right-0 h-[2px] overflow-hidden rounded-full"
+                        >
+                            <div
+                                className="ae-archive-progress-thumb h-full rounded-full"
+                                style={{ width: `${railScroll.thumb}%`, marginLeft: `${railScroll.offset}%` }}
+                            />
+                        </div>
+                    )}
+                </div>
+                {!isColumn && railScroll.overflows && (
+                    <button
+                        type="button"
+                        data-testid="archive-tab-rail-more"
+                        aria-label={railScroll.atEnd ? MSG.ARCHIVE_RAIL_START_ARIA : MSG.ARCHIVE_RAIL_MORE_ARIA}
+                        aria-controls="archive-tab-rail"
+                        onClick={pageArchiveRail}
+                        className="ae-archive-tab is-tile flex h-11 w-11 shrink-0 items-center justify-center rounded-full"
+                    >
+                        {railScroll.atEnd ? <ChevronLeft size={16} aria-hidden="true" /> : <ChevronRight size={16} aria-hidden="true" />}
+                    </button>
+                )}
+                {!isColumn && (
+                    <OverlayCloseButton
+                        data-testid="mobile-console-return-log"
+                        onClick={() => {
+                            setConfirmMenuReset(false);
+                            onReturnToLog?.();
+                        }}
                     />
-                ))}
-            </nav>
+                )}
+            </div>
 
             <div
                 data-testid="mobile-archive-console-content"
@@ -284,12 +398,12 @@ const Dashboard = ({
                 {sideTab === 'system' && (
                     <section
                         data-testid="system-reset-section"
-                        className="mt-3 border-t border-rose-300/14 px-1 pb-2 pt-3"
+                        className="mt-3 border-t border-ae-threat/20 px-1 pb-2 pt-3"
                     >
                         <div className="flex items-center justify-between gap-3">
                             <div className="min-w-0">
-                                <h3 className="text-[12px] font-readable font-bold text-rose-100/88">{MSG.MENU_RESET_TITLE}</h3>
-                                <p className="mt-1 text-[11px] font-readable text-slate-400/78">
+                                <h3 className="text-[13px] font-readable font-bold text-ae-threat">{MSG.MENU_RESET_TITLE}</h3>
+                                <p className="mt-1 text-[12px] font-readable leading-relaxed text-ae-ink-2">
                                     {MSG.MENU_RESET_SUMMARY}
                                 </p>
                             </div>
@@ -300,10 +414,10 @@ const Dashboard = ({
                                 aria-expanded={confirmMenuReset}
                                 aria-controls="menu-reset-confirmation"
                                 onClick={() => setConfirmMenuReset((open) => !open)}
-                                className="flex min-h-[44px] shrink-0 items-center justify-center gap-1.5 rounded-[0.65rem] border border-rose-300/18 bg-rose-950/28 px-3 py-1.5 text-[11px] font-readable text-rose-100/84 transition-colors hover:border-rose-200/28 hover:bg-rose-900/34"
+                                className="ae-btn ae-btn-ghost min-h-[44px] shrink-0 px-3 text-[13px] font-readable"
                                 title={MSG.MENU_RESET_TITLE}
                             >
-                                <RotateCcw size={13} />
+                                <RotateCcw size={15} aria-hidden="true" />
                                 <span>다시 시작</span>
                             </button>
                         </div>
@@ -315,15 +429,15 @@ const Dashboard = ({
                                 data-testid="menu-reset-confirmation"
                                 role="alertdialog"
                                 aria-labelledby="menu-reset-confirm-title"
-                                className="mt-2 rounded-[0.75rem] border border-rose-300/22 bg-rose-950/32 p-2.5"
+                                className="ae-well ae-threat-rim mt-2 p-3"
                             >
-                                <h4 id="menu-reset-confirm-title" className="text-[12px] font-readable font-bold text-rose-50">
+                                <h4 id="menu-reset-confirm-title" className="text-[14px] font-readable font-bold text-ae-ink">
                                     새 여정을 시작할까요?
                                 </h4>
-                                <p data-testid="menu-reset-loss" className="text-[11px] font-readable leading-relaxed text-rose-100/82">
+                                <p data-testid="menu-reset-loss" className="mt-1 text-[12px] font-readable leading-relaxed text-ae-threat">
                                     {MSG.MENU_RESET_LOSS(getJourneySurfaceText('death', 'reset'))}
                                 </p>
-                                <p data-testid="menu-reset-preserved" className="mt-1 text-[11px] font-readable leading-relaxed text-emerald-100/82">
+                                <p data-testid="menu-reset-preserved" className="mt-1 text-[12px] font-readable leading-relaxed text-ae-good">
                                     {MSG.MENU_RESET_PRESERVED(getJourneySurfaceText('death', 'kept'))}
                                 </p>
                                 <div className="mt-2 grid grid-cols-2 gap-2">
@@ -335,18 +449,18 @@ const Dashboard = ({
                                             setConfirmMenuReset(false);
                                             actions?.reset?.();
                                         }}
-                                        className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.65rem] border border-rose-300/20 bg-rose-950/48 px-2 py-2 text-[11px] font-readable text-rose-100/88 transition-colors hover:border-rose-200/30 hover:bg-rose-900/54"
+                                        className="ae-btn ae-btn-danger min-h-[44px] px-2 text-[13px] font-readable"
                                     >
-                                        <RotateCcw size={13} />
+                                        <RotateCcw size={15} aria-hidden="true" />
                                         <span>현재 여정 다시 시작</span>
                                     </button>
                                     <button
                                         type="button"
                                         data-testid="menu-reset-cancel"
                                         onClick={cancelMenuReset}
-                                        className="flex min-h-[44px] items-center justify-center gap-2 rounded-[0.65rem] border border-white/8 bg-black/20 px-2 py-2 text-[11px] font-readable text-slate-200/84 transition-colors hover:border-white/14 hover:bg-white/[0.05]"
+                                        className="ae-btn ae-btn-ghost min-h-[44px] px-2 text-[13px] font-readable"
                                     >
-                                        <X size={13} />
+                                        <X size={15} aria-hidden="true" />
                                         <span>취소</span>
                                     </button>
                                 </div>

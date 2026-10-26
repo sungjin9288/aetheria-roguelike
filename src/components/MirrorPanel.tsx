@@ -7,11 +7,12 @@ import {
     Route,
     ShieldCheck,
     Sparkles,
-    X,
     type LucideIcon,
 } from 'lucide-react';
 import { getMirrorNode } from '../data/mirror';
 import { MSG } from '../data/messages';
+import OverlayCloseButton from './OverlayCloseButton';
+import ActionButton from './ui/ActionButton';
 import type { Player } from '../types/index.js';
 import {
     getMirrorCompletion,
@@ -20,6 +21,7 @@ import {
     type MirrorPathId,
 } from '../utils/mirrorJourney';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
+import { useOverlayDialog } from '../hooks/useOverlayDialog';
 
 interface MirrorPanelProps {
     player?: Player | null;
@@ -39,6 +41,7 @@ const EssenceMark = () => <Sparkles size={14} aria-hidden="true" />;
 
 const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
     usePlatformBackHandler(Boolean(onClose), () => onClose?.(), 200);
+    const dialog = useOverlayDialog({ label: MSG.A11Y_DIALOG_MIRROR, onEscape: onClose });
     const meta = player?.meta || {};
     const essence = Math.max(0, Number(meta.essence) || 0);
     const mirror = meta.mirror || {};
@@ -70,51 +73,42 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                 : `계승 정수 ${preview.shortage} 부족`;
 
     return (
-        <div className="fixed inset-0 z-[200] flex justify-center bg-black/70 backdrop-blur-sm" onClick={onClose}>
+        <div {...dialog} className="ae-scrim ae-town-overlay fixed inset-0 z-[200] flex justify-center" onClick={onClose}>
             <section
                 data-testid="mirror-panel"
                 aria-label="에테르 거울 영구 성장"
-                className="panel-noise aether-surface relative flex h-[100dvh] w-full max-w-md flex-col overflow-hidden border-x border-[#9a8ac0]/18 bg-[#0b111a] pt-[var(--aether-safe-area-top)]"
-                style={{ backgroundColor: '#0b111a' }}
+                className="ae-sheet ae-town-sheet relative flex h-[100dvh] w-full max-w-md flex-col overflow-hidden pt-[var(--aether-safe-area-top)] lg:max-w-[600px]"
                 onClick={(event) => event.stopPropagation()}
             >
-                <header className="flex shrink-0 items-center justify-between gap-3 border-b border-white/8 px-4 py-3">
+                <header className="ae-town-head flex shrink-0 items-center justify-between gap-3 px-4 py-3">
                     <div className="min-w-0">
-                        <p className="text-[11px] font-fira text-[#b7aad8]">영구 성장</p>
-                        <h2 className="mt-0.5 text-[20px] font-rajdhani font-bold text-white">에테르 거울</h2>
+                        <p className="ae-eyebrow font-readable">영구 성장</p>
+                        <h2 className="mt-0.5 text-[20px] font-display font-extrabold text-ae-ink">에테르 거울</h2>
                     </div>
                     <div className="flex items-center gap-2">
-                        <div data-testid="mirror-essence" className="flex min-h-[44px] items-center gap-2 rounded-lg border border-[#9a8ac0]/24 bg-[#9a8ac0]/10 px-3 text-[#e3dcff]">
+                        <div data-testid="mirror-essence" className="flex min-h-[44px] items-center gap-2 rounded-full bg-ae-ether/10 px-3 text-ae-ether-hi shadow-[inset_0_0_0_1px_var(--aether-rim-ether)]">
                             <EssenceMark />
-                            <span className="text-[15px] font-rajdhani font-bold">{essence}</span>
-                            <span className="text-[11px] font-fira text-slate-300">계승 정수</span>
+                            <span className="font-fira text-[15px] font-bold tabular-nums">{essence}</span>
+                            <span className="font-readable text-[11px] text-ae-ink-2">계승 정수</span>
                         </div>
-                        <button
-                            type="button"
-                            data-testid="mirror-panel-close"
-                            aria-label="에테르 거울 닫기"
-                            onClick={onClose}
-                            className="flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg border border-white/10 bg-black/20 text-slate-300 transition-colors hover:text-white"
-                        >
-                            <X size={18} />
-                        </button>
+                        <OverlayCloseButton data-testid="mirror-panel-close" aria-label="에테르 거울 닫기" onClick={onClose} />
                     </div>
                 </header>
 
                 <div data-testid="mirror-scroll-region" className="min-h-0 flex-1 overflow-y-auto px-4 py-4">
                     <div className="flex items-end justify-between gap-4">
                         <div>
-                            <h3 className="text-[16px] font-rajdhani font-bold text-white">새 여정에도 남는 성장</h3>
-                            <p className="mt-1 text-[12px] font-fira leading-5 text-slate-400">
+                            <h3 className="text-[16px] font-display font-bold text-ae-ink">새 여정에도 남는 성장</h3>
+                            <p className="mt-1 font-readable text-[12px] leading-5 text-ae-ink-2">
                                 투자 전후 효과를 확인한 뒤 계승 정수를 사용합니다.
                             </p>
                         </div>
-                        <span data-testid="mirror-completion" className="shrink-0 text-[12px] font-fira text-[#cfc4eb]">
+                        <span data-testid="mirror-completion" className="shrink-0 font-fira text-[12px] tabular-nums text-ae-ether-hi">
                             {completion.completed}/{completion.total} 단계
                         </span>
                     </div>
 
-                    <nav className="mt-4 grid grid-cols-5 gap-1.5" aria-label="성장 경로">
+                    <nav className="ae-town-seg is-stacked mt-4" aria-label="성장 경로">
                         {MIRROR_PATHS.map((path) => {
                             const Icon = PATH_ICONS[path.id];
                             const active = path.id === pathId;
@@ -125,13 +119,9 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                                     data-testid={`mirror-path-${path.id}`}
                                     aria-pressed={active}
                                     onClick={() => changePath(path.id)}
-                                    className={`flex min-h-[48px] flex-col items-center justify-center gap-1 rounded-lg border px-1 text-[11px] font-fira transition-colors ${
-                                        active
-                                            ? 'border-[#b3a0dd]/45 bg-[#9a8ac0]/16 text-white'
-                                            : 'border-white/8 bg-black/16 text-slate-400 hover:text-slate-200'
-                                    }`}
+                                    className="ae-town-seg-btn font-readable"
                                 >
-                                    <Icon size={15} />
+                                    <Icon size={16} aria-hidden="true" />
                                     {path.label}
                                 </button>
                             );
@@ -139,9 +129,9 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                     </nav>
 
                     <section className="mt-4" aria-labelledby="mirror-path-heading">
-                        <div className="border-b border-white/8 pb-3">
-                            <h3 id="mirror-path-heading" className="text-[15px] font-rajdhani font-bold text-white">{activePath.label}</h3>
-                            <p className="mt-1 text-[12px] font-fira leading-5 text-slate-400">{activePath.summary}</p>
+                        <div className="pb-1">
+                            <h3 id="mirror-path-heading" className="text-[15px] font-display font-bold text-ae-ink">{activePath.label}</h3>
+                            <p className="mt-1 font-readable text-[12px] leading-5 text-ae-ink-2">{activePath.summary}</p>
                         </div>
 
                         <div className="mt-3 space-y-2">
@@ -158,30 +148,22 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                                         data-testid={`mirror-node-select-${node.id}`}
                                         aria-pressed={selected}
                                         onClick={() => setSelectedNodeId(node.id)}
-                                        className={`w-full min-h-[76px] rounded-lg border p-3 text-left transition-colors ${
-                                            selected
-                                                ? 'border-[#b3a0dd]/48 bg-[#9a8ac0]/12'
-                                                : 'border-white/8 bg-black/14 hover:border-white/16'
-                                        }`}
+                                        className="ae-town-pick min-h-[76px] p-3"
                                     >
                                         <div className="flex items-start gap-3">
-                                            <span className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg border ${
-                                                nodePreview.maxed
-                                                    ? 'border-emerald-300/30 bg-emerald-300/10 text-emerald-200'
-                                                    : 'border-[#9a8ac0]/24 bg-black/20 text-[#e3dcff]'
-                                            }`}>
+                                            <span className={`ae-town-tile mt-0.5 h-9 w-9 ${nodePreview.maxed ? 'is-good' : selected ? 'is-ether' : ''}`.trim()} aria-hidden="true">
                                                 {nodePreview.maxed ? <Check size={16} /> : <Sparkles size={16} />}
                                             </span>
                                             <span className="min-w-0 flex-1">
                                                 <span className="flex items-center justify-between gap-3">
-                                                    <strong className="text-[14px] font-rajdhani text-white">{node.name}</strong>
-                                                    <span className="shrink-0 text-[11px] font-fira text-[#cfc4eb]">
+                                                    <strong className="text-[14px] font-display font-bold text-ae-ink">{node.name}</strong>
+                                                    <span className="shrink-0 font-fira text-[12px] tabular-nums text-ae-ether-hi">
                                                         {nodePreview.endless
                                                             ? MSG.MIRROR_ENDLESS_LEVEL(nodePreview.currentLevel, node.maxLevel)
                                                             : <>{nodePreview.currentLevel}/{node.maxLevel} 단계</>}
                                                     </span>
                                                 </span>
-                                                <span className="mt-1 block text-[12px] font-fira leading-5 text-slate-400">{node.desc}</span>
+                                                <span className="mt-1 block font-readable text-[12px] leading-5 text-ae-ink-2">{node.desc}</span>
                                             </span>
                                         </div>
                                     </button>
@@ -191,30 +173,30 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                     </section>
 
                     {preview && (
-                        <section data-testid="mirror-investment-preview" className="mt-5 border-t border-white/10 pt-4">
+                        <section data-testid="mirror-investment-preview" className="mt-5 pt-4 shadow-[inset_0_1px_0_var(--aether-hairline)]">
                             <div className="flex items-center justify-between gap-3">
-                                <h3 className="text-[15px] font-rajdhani font-bold text-white">{preview.node.name}</h3>
-                                <span className="text-[11px] font-fira text-slate-400">
+                                <h3 className="text-[15px] font-display font-bold text-ae-ink">{preview.node.name}</h3>
+                                <span className="font-fira text-[12px] tabular-nums text-ae-ink-2">
                                     {preview.maxed ? '성장 완료' : `${preview.currentLevel} → ${preview.nextLevel} 단계`}
                                 </span>
                             </div>
                             <div className="mt-3 grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-                                <div className="min-h-[72px] rounded-lg border border-white/8 bg-black/16 p-3">
-                                    <p className="text-[11px] font-fira text-slate-500">현재</p>
-                                    <p data-testid="mirror-current-effect" className="mt-2 text-[12px] font-fira leading-5 text-slate-200">
+                                <div className="ae-sunk min-h-[72px] rounded-ae-sm p-3">
+                                    <p className="ae-eyebrow font-readable">현재</p>
+                                    <p data-testid="mirror-current-effect" className="mt-2 font-readable text-[12px] leading-5 text-ae-ink-2">
                                         {preview.currentEffect}
                                     </p>
                                 </div>
-                                <span className="text-[15px] text-[#b7aad8]" aria-hidden="true">→</span>
-                                <div className="min-h-[72px] rounded-lg border border-[#9a8ac0]/22 bg-[#9a8ac0]/8 p-3">
-                                    <p className="text-[11px] font-fira text-[#b7aad8]">투자 후</p>
-                                    <p data-testid="mirror-next-effect" className="mt-2 text-[12px] font-fira leading-5 text-white">
+                                <span className="text-[15px] text-ae-ether" aria-hidden="true">→</span>
+                                <div className="min-h-[72px] rounded-ae-sm bg-ae-ether/10 p-3 shadow-[inset_0_0_0_1px_var(--aether-rim-ether)]">
+                                    <p className="font-readable text-[11px] font-bold text-ae-ether-hi">투자 후</p>
+                                    <p data-testid="mirror-next-effect" className="mt-2 font-readable text-[12px] leading-5 text-ae-ink">
                                         {preview.nextEffect || preview.currentEffect}
                                     </p>
                                 </div>
                             </div>
                             {!preview.maxed && (
-                                <p className="mt-3 text-[12px] font-fira text-slate-400">
+                                <p className="mt-3 font-fira text-[12px] tabular-nums text-ae-ink-2">
                                     필요 {preview.nextCost} · 투자 후 {preview.remainingEssence} 남음
                                 </p>
                             )}
@@ -222,25 +204,17 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                     )}
                 </div>
 
-                <footer data-testid="mirror-action-footer" className="shrink-0 border-t border-white/10 bg-[#0b111a]/96 px-4 pb-[max(12px,var(--aether-safe-area-bottom))] pt-3">
-                    <div className="grid grid-cols-[104px_1fr] gap-2">
-                        <button
-                            type="button"
-                            onClick={onClose}
-                            className="min-h-[50px] rounded-lg border border-white/12 bg-black/20 text-[13px] font-fira text-slate-300"
-                        >
-                            돌아가기
-                        </button>
-                        <button
-                            type="button"
+                <footer data-testid="mirror-action-footer" className="ae-town-sheet-foot shrink-0 px-4 pb-[max(12px,var(--aether-safe-area-bottom))] pt-3">
+                    <div className="grid grid-cols-1 gap-2">
+                        <ActionButton
+                            variant="primary"
                             data-testid="mirror-confirm"
                             disabled={!preview?.canAfford}
                             onClick={() => preview?.canAfford && onPurchase?.(preview.node.id)}
-                            className="flex min-h-[50px] items-center justify-center gap-2 rounded-lg border border-[#b3a0dd]/42 bg-[#9a8ac0]/16 px-3 text-[13px] font-rajdhani font-bold text-white transition-colors enabled:hover:bg-[#9a8ac0]/24 disabled:border-white/8 disabled:bg-black/16 disabled:text-slate-600"
-                        >
-                            {preview?.canAfford && <EssenceMark />}
-                            {confirmLabel}
-                        </button>
+                            icon={preview?.canAfford ? <EssenceMark /> : undefined}
+                            label={confirmLabel}
+                            className="w-full font-display"
+                        />
                     </div>
                 </footer>
             </section>

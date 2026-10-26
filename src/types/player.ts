@@ -298,6 +298,11 @@ interface PlayerMeta {
      * 지금 수집 − 기준점으로 새로 얻은 것을 센다(`getCycleSummary`). `rank`가 지금 `prestigeRank`와 다르면 없는 것으로 읽는다.
      */
     cycleStart?: { rank: number; signatures: string[]; eliteTitles: number };
+    /**
+     * 이 계승 단계(회차)에서 끝낸 여정의 최고 레벨 — 사망 · 다시 시작(`pickPermanentPlayerState`)이 남기고 사망 화면 · 다시 오르는 레벨업
+     * 기록이 읽는다(`utils/cycleBestLevel.ts`). `rank`가 지금 `prestigeRank`와 다르면 없는 것으로 읽는다. 게임 판정은 읽지 않는다.
+     */
+    cycleBestLevel?: { rank: number; level: number };
     // cycle 281: totalPrestigeAtk/Hp/Mp 3 dead 필드 제거 (cycle 277 runtime cleanup paired completion).
     //   runtime read 0건 + saved 데이터 잔존 필드는 무시되지만 무해 (runtime access 안 함).
     // 2026-07 — 에테르 거울: 노드id → 레벨. getMirrorEffects(meta)가 단일 진실 원천.

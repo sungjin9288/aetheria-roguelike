@@ -419,7 +419,7 @@ export const TITLES = Object.freeze([
 
     // cycle 197: PRESTIGE_TITLES 10종 정식 TITLES 등록 — getTitleDefinition lookup이 token으로
     //   id 비교만 하므로 Korean PRESTIGE_TITLES 토큰들이 기존 TITLES 엔트리와 매칭 안 돼 모두
-    //   default color('text-cyber-purple')로 fallback이던 visual UX 회귀.
+    //   default color(당시 사이버 보라, 지금 DEFAULT_TITLE_COLOR)로 fallback이던 visual UX 회귀.
     //   cycle 175(시즌)/cycle 185(cosmetic)/cycle 192(quest reward) 동일 컨벤션 — Korean id.
     //   기존 'transcendent' / 'eternal' / 'void_lord'는 다른 cond.type(prestige/abyssFloor)으로
     //   유지(checkTitles auto-grant). 본 cycle은 PRESTIGE_TITLES 토큰 자체에 정식 entry 추가.

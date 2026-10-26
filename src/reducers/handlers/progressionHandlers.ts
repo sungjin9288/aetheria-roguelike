@@ -6,6 +6,7 @@ import type { GameState, HandlerMap } from '../gameReducer';
 import type { Player } from '../../types';
 import { GS } from '../gameStates';
 import { createCurrentRunProgress } from '../../utils/runProgress';
+import { getEssenceLifetime } from '../../systems/essenceLedger';
 import { pickPermanentPlayerState } from '../../utils/permanentProgress';
 import { getAscensionOutcome, isNewAscensionTitle } from '../../utils/ascensionPreview';
 import { getClaimableQuestEntries } from '../../utils/questProgress';
@@ -62,7 +63,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
                 ...permanent,
                 stats: {
                     ...permanentStats,
-                    currentRun: createCurrentRunProgress(permanentStats),
+                    currentRun: createCurrentRunProgress(permanentStats, { essenceLifetime: getEssenceLifetime(permanent.meta) }),
                 },
             },
         };
@@ -258,7 +259,7 @@ export const makeProgressionActionMap = (INITIAL_STATE: GameState) => ({
                 ...permanentStats,
                 // 2026-10 Wave 107: 이번 회차를 거절했으면 그 규칙은 이번 순환에서 지나간 것이다(덱이 센다) — 계승이 기록하는 한 곳.
                 ruleDeclinePassIds: getRuleDeclinePasses(state.player),
-                currentRun: createCurrentRunProgress(permanentStats),
+                currentRun: createCurrentRunProgress(permanentStats, { essenceLifetime: getEssenceLifetime(ruleMeta) }),
             },
         };
         // 2026-10 Wave 108: 새 단계로 열리는 칭호는 새 여정의 player로 판정한다 — 계승 전 player로 판정하던 동안 이전 여정의 누적값이

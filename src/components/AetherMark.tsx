@@ -3,10 +3,10 @@
 //   md / lg만 사용. size="sm" 호출 0건이라 SIZE_MAP.sm lookup 절대 hit 안 됨.
 const SIZE_MAP: Record<string, { shell: string }> = {
     md: {
-        shell: 'h-10 w-10',
+        shell: 'h-10 w-10 rounded-ae-sm',
     },
     lg: {
-        shell: 'h-16 w-16',
+        shell: 'h-16 w-16 rounded-ae-md',
     },
 };
 
@@ -23,7 +23,7 @@ const AetherMark = ({ size }: { size: 'md' | 'lg' }) => {
         <img
             src="/icons/icon-192.png"
             alt=""
-            className={`${scale.shell} shrink-0 rounded-[22%] object-cover shadow-[0_0_28px_rgba(125,212,216,0.18)]`}
+            className={`${scale.shell} ae-mark shrink-0 object-cover`}
             aria-hidden="true"
         />
     );

@@ -13,7 +13,12 @@ env:
 jobs:
   static-checks:
     name: Lint + Type-check + Unit tests
-    runs-on: ubuntu-latest
+    # 2026-10-26: ubuntu-latest가 26.04로 바뀌자 setup-python이 고정한 3.12.12를 찾지 못했고
+    # (`The version '3.12.12' with architecture 'x64' was not found for Ubuntu 26.04`), Playwright 1.59.1은
+    # chromium을 설치하지 못했다(`Playwright does not support chromium on ubuntu26.04-x64`). 아트 픽셀 검사는
+    # 정확한 Python · Pillow 판에, e2e · 성능 예산은 브라우저 판에 묶여 있으므로 판을 풀지 않고 모든 작업의
+    # 러너를 고정한다(tests/ci-art-runtime.test.js). 러너를 올릴 때는 Python · Playwright 지원을 함께 확인할 것.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v4
 
@@ -67,7 +72,7 @@ jobs:
 
   tracked-evidence:
     name: Tracked evidence verify
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     # 2026-10-14 출시 전 통합 수용 — 증빙(docs/evidence/qa/release-complete-core)은 리포트와
     # 그 리포트를 만든 소스 파일의 해시를 함께 고정한다. unit 스위트는 이 바이트 비교를
     # 하지 않아(tests/equipment-combat-power-audit.test.js 머리 주석) Wave 103이 고정된 소스를
@@ -101,7 +106,7 @@ jobs:
 
   firestore-rules:
     name: Firestore rules (emulator)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: static-checks
     # Wave 14 F3 — `firestore.rules`의 **의미**를 실행해서 검증한다.
     # static-checks의 test:unit은 이 파일을 열긴 하지만 에뮬레이터가 없으면 러너의
@@ -144,7 +149,7 @@ jobs:
 
   e2e:
     name: E2E (Playwright)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: static-checks
     steps:
       - uses: actions/checkout@v4
@@ -190,7 +195,7 @@ jobs:
 
   perf:
     name: Perf guard (FCP/DCL budgets)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     needs: static-checks
     # scripts/perf-guard.mjs asserts real FCP/DCL/interaction budgets. Wave 10 B4
     # (docs/AUDIT_REFACTOR_DEVELOP_PLAN_2026-09.md §14) turned this blocking: the job ran

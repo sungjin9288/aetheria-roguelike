@@ -68,7 +68,7 @@ test('첫 마을은 추천 출발과 실제 경로 선택 행동만 먼저 보�
     assert.equal(result.primary.kind, 'open_move');
     assert.equal(result.primary.label, '고요한 숲으로 첫 출발');
     assert.deepEqual(result.quickKeys, ['move']);
-    assert.deepEqual(result.facilityKeys, ['rest', 'quests', 'market', 'class', 'craft']);
+    assert.deepEqual(result.facilityKeys, ['rest', 'quests', 'market', 'class', 'craft', 'mirror']);
 });
 
 test('첫 스토리 임무가 활성화되어도 첫 출발 문구를 유지한다', () => {

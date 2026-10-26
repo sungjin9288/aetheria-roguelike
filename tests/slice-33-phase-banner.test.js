@@ -39,17 +39,18 @@ test('PhaseBanner: phase 2단계는 경고 톤 "N단계 진입" 라벨로 렌더
     const html = renderStatic(createElement(PhaseBanner, { phase: { n: 2, name: '분노한 마왕' } }));
     assert.ok(html.includes('data-testid="phase-banner"'), '배너 렌더');
     assert.ok(html.includes('data-phase="2"'), 'phase 번호 노출');
-    assert.ok(html.includes('⚡ 2단계 진입'), '2단계 라벨');
+    assert.ok(html.includes('2단계 진입'), '2단계 라벨');
+    assert.ok(!/[⚡💀]/u.test(html), '그림 문자 대신 선 아이콘(VD-13)');
     assert.ok(html.includes('분노한 마왕'), '보스 이름 노출');
-    assert.ok(html.includes('#f47ab0'), '2단계 accent 색상');
+    assert.ok(html.includes('data-phase-tone="rise"'), '2단계 색조(생명색 — index.css w3:combat)');
     assert.ok(!html.includes('최종 단계'), '2단계는 최종 단계 라벨이 아니다');
 });
 
 test('PhaseBanner: phase.n >= 3이면 최종 단계로 강조된다', () => {
     const html = renderStatic(createElement(PhaseBanner, { phase: { n: 3, name: '최종 마왕' } }));
-    assert.ok(html.includes('💀 최종 단계'), '3단계 이상은 최종 단계 라벨');
+    assert.ok(html.includes('최종 단계'), '3단계 이상은 최종 단계 라벨');
     assert.ok(html.includes('최종 마왕'), '보스 이름 노출');
-    assert.ok(html.includes('#c7a4f0'), '최종 단계 accent 색상');
+    assert.ok(html.includes('data-phase-tone="final"'), '최종 단계 색조(경험색 — index.css w3:combat)');
 });
 
 const BOSS_STATS = { atk: 100, def: 50, relics: [], activeSynergies: [], critChance: 0 };

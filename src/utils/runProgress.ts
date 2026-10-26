@@ -1,4 +1,5 @@
 import type { Player } from '../types/player.js';
+import { getEssenceLifetime, type EssenceMeta } from '../systems/essenceLedger.js';
 import type { JourneyCounterKey } from './journeyScope.js';
 
 export interface CurrentRunProgress {
@@ -15,6 +16,11 @@ export interface CurrentRunProgress {
      * `getJourneyCounter`). 이전 세이브에는 없다 — 그때는 평생 값을 그대로 읽는다.
      */
     countersAtStart?: Partial<Record<JourneyCounterKey, number>>;
+    /**
+     * 여정 시작 때의 누적 계승 정수(`getEssenceLifetime`) — 사망 화면이 이번 여정에 모은 계승 정수를 센다(`getJourneyEssenceGain`).
+     * 이전 세이브에는 없다 — 그때는 모은 양을 그리지 않는다(지어내지 않는다).
+     */
+    essenceAtStart?: number;
 }
 
 const JOURNEY_COUNTER_KEYS: readonly JourneyCounterKey[] = Object.freeze([
@@ -32,6 +38,10 @@ const readCountersAtStart = (value: unknown): Partial<Record<JourneyCounterKey, 
 
 const toCount = (value: unknown) => Math.max(0, Number.isFinite(value) ? Number(value) : 0);
 
+const readEssenceAtStart = (value: unknown): { essenceAtStart: number } | Record<string, never> => (
+    Number.isFinite(value) ? { essenceAtStart: Math.floor(toCount(value)) } : {}
+);
+
 const toUniqueLocations = (value: unknown) => (
     Array.isArray(value)
         ? [...new Set(value.filter((location): location is string => typeof location === 'string' && location.length > 0))]
@@ -45,7 +55,7 @@ const isRecord = (value: unknown): value is Record<string, unknown> => (
 
 export const createCurrentRunProgress = (
     stats: Player['stats'] = {},
-    options: { complete?: boolean; startedAt?: number | null } = {},
+    options: { complete?: boolean; startedAt?: number | null; essenceLifetime?: number } = {},
 ): CurrentRunProgress => ({
     startedAt: options.startedAt === undefined ? Date.now() : options.startedAt,
     complete: options.complete !== false,
@@ -56,6 +66,7 @@ export const createCurrentRunProgress = (
     visitedMapsAtStart: toUniqueLocations(stats.visitedMaps),
     maxKillStreak: 0,
     countersAtStart: snapshotJourneyCounters(stats),
+    ...readEssenceAtStart(options.essenceLifetime),
 });
 
 /**
@@ -87,7 +98,18 @@ export const normalizeCurrentRunProgress = (
         visitedMapsAtStart: toUniqueLocations(currentRun.visitedMapsAtStart),
         maxKillStreak: toCount(currentRun.maxKillStreak),
         ...(readCountersAtStart(currentRun.countersAtStart) ? { countersAtStart: readCountersAtStart(currentRun.countersAtStart) } : {}),
+        ...readEssenceAtStart(currentRun.essenceAtStart),
     };
+};
+
+/**
+ * 이번 여정에 모은 계승 정수 — 누적 정수(소비해도 줄지 않는다) − 여정 시작 기준점. 기준점이 없는 이전 세이브는 `null`
+ * (사망 화면이 그 줄을 그리지 않는다).
+ */
+export const getJourneyEssenceGain = (player: { stats?: Player['stats']; meta?: EssenceMeta | null } | null | undefined): number | null => {
+    const currentRun: unknown = player?.stats?.currentRun;
+    if (!isRecord(currentRun) || !Number.isFinite(currentRun.essenceAtStart)) return null;
+    return Math.max(0, getEssenceLifetime(player?.meta) - Math.floor(toCount(currentRun.essenceAtStart)));
 };
 
 export const getCurrentRunSnapshot = (stats: Player['stats'] = {}) => {

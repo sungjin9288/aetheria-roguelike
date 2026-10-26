@@ -2,7 +2,7 @@ import {
     normalizeProductEventJob, PRODUCT_EVENT_NAMES, PRODUCT_EVENT_OUTCOMES,
     type ProductEvent, type ProductEventName,
 } from './productEvents';
-import type { AiFallbackReason, AiRequestKind } from './aiEventPolicy';
+import { isAiFallbackReason, type AiFallbackReason, type AiRequestKind } from './aiEventPolicy';
 import type { ProductEventSink } from './productEventSink';
 
 // 기기 진단 보관 한도이며 게임 밸런스와 독립적이다. 오래된 항목부터 제거한다.
@@ -35,9 +35,8 @@ const projectEvent = (value: unknown): LocalActivityEvent | null => {
         || typeof os !== 'string' || !['ios', 'android', 'web', 'unknown'].includes(os)) return null;
     if (name === 'ai_fallback') {
         const { requestKind, reason } = row;
-        if ((requestKind !== 'event' && requestKind !== 'story') || typeof reason !== 'string'
-            || !['mock-runtime', 'quota', 'proxy-disabled', 'proxy-unavailable', 'proxy-rejected',
-                'malformed-response', 'recent-duplicate'].includes(reason)) return null;
+        // 사유 집합은 정책(`AI_FALLBACK_REASONS`)이 소유한다 — 손으로 적은 사본은 새 사유를 조용히 버린다.
+        if ((requestKind !== 'event' && requestKind !== 'story') || !isAiFallbackReason(reason)) return null;
         return { name, releaseId, runtime, os, sessionId, requestKind, reason } as LocalActivityEvent;
     }
     if (typeof name !== 'string' || !PRODUCT_EVENT_NAMES.includes(name as ProductEventName)

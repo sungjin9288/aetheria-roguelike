@@ -119,7 +119,13 @@ export const createCloudAutosave = ({
             lastActive: serverTimestamp()
         };
 
-        await setDoc(userDocRef, payload, { merge: true });
+        // CH-01: 문서 전체를 **교체**한다(merge 없음). `merge: true`는 SDK가 중첩 맵 안으로 재귀해
+        //   말단 경로만 field mask에 넣으므로, 로컬에서 지운 중첩 키(무기의 `hands`/`elem`,
+        //   `merchantVisit`, `huntContracts`, `statusStacks` …)가 서버에 남았다가 다른 기기 ·
+        //   재설치 복원에서 되살아났다(장비 능력치가 바뀌고 Wave 108 초기화가 풀렸다).
+        //   이 문서를 쓰는 곳은 여기 하나이고 페이로드가 봉투 전체이므로 교체가 정본이다 —
+        //   하위 컬렉션(`quota`/`history`)은 별개 문서라 영향이 없다.
+        await setDoc(userDocRef, payload);
 
         // v5.0: 리더보드 entry 업데이트 (kills > 0 일 때만)
         if (player.name && (player.stats?.kills || 0) > 0) {

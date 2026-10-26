@@ -24,7 +24,7 @@
   --aether-bg-0: #070a10;
   --aether-bg-1: #111821;
   --aether-bg-2: #1d2834;
-  --aether-ink: #edf2f7;
+  --aether-ink: rgb(var(--aether-ink-rgb));
   --aether-muted: #a9b6c3;
   --aether-line: rgba(219, 232, 241, 0.15);
   --aether-line-strong: rgba(238, 244, 249, 0.22);
@@ -32,14 +32,15 @@
   --aether-cyan-soft: rgba(125, 212, 216, 0.12);
   --aether-amber: #f0c36a;
   --aether-amber-soft: rgba(240, 195, 106, 0.13);
-  --aether-gold: #f6d98c;
   --aether-green: #83d6a3;
   --aether-rose: #f27d9a;
   --aether-blue: #82b7ff;
   --aether-violet: #9a8ac0;
   --aether-shadow: rgba(4, 8, 16, 0.46);
   --aether-readable-font: ui-sans-serif, -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
-  --aether-display-font: Rajdhani, var(--aether-readable-font);
+  /* 표제 글꼴 = 본문 한글 묶음(굵기 800). 외부 글꼴(Rajdhani)을 불러오지 않는다 — 한글이 없어 대체 글꼴로 떨어졌고
+     첫 화면 전에 외부 요청을 보냈다(VD-05 · CH-06). 표제 전용 글꼴을 들일 때는 이 변수 하나만 바꾼다. */
+  --aether-display-font: var(--aether-readable-font);
   /* 숫자 · 영문 · 기호 = Fira Code, 나머지(공백 · 한글) = 본문 글꼴(Wave 69) */
   --aether-code-font: 'Aether Fira Code', var(--aether-readable-font);
   --aether-readable-ink: #f4f7fb;
@@ -51,15 +52,117 @@
   --aether-route-strong: #b9f1ec;
   --aether-warning: #f0c36a;
   --aether-surface-glow: rgba(246, 217, 140, 0.08);
+  /* 글자 크기(2026-10 에테르 유리): label 11 · meta 12 · body 13 · strong 15 · heading 17 · display 22. 11px 미만 금지(Wave 133).
+     기존 `title`(구획 제목)은 strong(15), `metric`(큰 수치)은 heading(17)과 같은 값이다. */
   --aether-type-label: 0.6875rem;
-  --aether-type-meta: 0.6875rem;
-  --aether-type-body: 0.75rem;
-  --aether-type-title: 0.875rem;
-  --aether-type-metric: 1rem;
+  --aether-type-meta: 0.75rem;
+  --aether-type-body: 0.8125rem;
+  --aether-type-title: 0.9375rem;
+  --aether-type-metric: 1.0625rem;
+  --aether-type-strong: 0.9375rem;
+  --aether-type-heading: 1.0625rem;
+  --aether-type-display: 1.375rem;
   --aether-leading-label: 1.3;
   --aether-leading-meta: 1.4;
-  --aether-leading-body: 1.48;
+  --aether-leading-body: 1.5;
   --aether-leading-title: 1.35;
+
+  /* ── 에테르 유리 토큰 (정본: design-spec · mock-combat.html) ──────────────────────────
+     색은 `R G B` 채널로 한 번만 적고(Tailwind `ae-*`가 `<alpha-value>`로 읽는다), 같은 이름의 색 변수는 채널에서 만든다. */
+  /* 바탕 · 표면 고도 — 위로 올라올수록 밝아진다. 층은 테두리가 아니라 톤으로 나눈다. */
+  --aether-void-rgb: 4 7 12;
+  --aether-bg-rgb: 7 11 18;
+  --aether-s1-rgb: 11 17 25;
+  --aether-s2-rgb: 17 25 36;
+  --aether-s3-rgb: 23 33 45;
+  --aether-s4-rgb: 30 42 56;
+  --aether-sunk-rgb: 6 10 16;
+  /* 글자 */
+  --aether-ink-rgb: 238 243 248;
+  --aether-ink-2-rgb: 185 197 208;
+  --aether-ink-3-rgb: 143 158 172;
+  /* 에테르 · 금 */
+  --aether-ether-rgb: 125 212 216;
+  --aether-ether-hi-rgb: 185 241 236;
+  --aether-gold-rgb: 240 195 106;
+  --aether-gold-hi-rgb: 251 227 166;
+  --aether-gold-lo-rgb: 196 144 60;
+  --aether-gold-ink-rgb: 36 22 4;
+  --aether-gold-text-rgb: 244 211 140;
+  /* 수치 · 의미 */
+  --aether-life-rgb: 242 125 154;
+  --aether-life-lo-rgb: 180 64 95;
+  --aether-will-rgb: 108 196 245;
+  --aether-will-lo-rgb: 47 127 184;
+  --aether-exp-rgb: 183 164 240;
+  --aether-threat-rgb: 255 154 169;
+  --aether-good-rgb: 143 220 172;
+  /* 등급 — 전설은 위험(장미색)과 구분되는 주황 */
+  --aether-rarity-common-rgb: 201 210 219;
+  --aether-rarity-uncommon-rgb: 125 212 216;
+  --aether-rarity-rare-rgb: 187 164 246;
+  --aether-rarity-epic-rgb: 240 195 106;
+  --aether-rarity-legendary-rgb: 255 159 122;
+
+  --aether-void: rgb(var(--aether-void-rgb));
+  --aether-bg: rgb(var(--aether-bg-rgb));
+  --aether-s1: rgb(var(--aether-s1-rgb));
+  --aether-s2: rgb(var(--aether-s2-rgb));
+  --aether-s3: rgb(var(--aether-s3-rgb));
+  --aether-s4: rgb(var(--aether-s4-rgb));
+  --aether-sunk: rgb(var(--aether-sunk-rgb));
+  --aether-ink-2: rgb(var(--aether-ink-2-rgb));
+  --aether-ink-3: rgb(var(--aether-ink-3-rgb));
+  --aether-ether: rgb(var(--aether-ether-rgb));
+  --aether-ether-hi: rgb(var(--aether-ether-hi-rgb));
+  --aether-ether-wash: rgb(var(--aether-ether-rgb) / 0.1);
+  --aether-gold: rgb(var(--aether-gold-rgb));
+  --aether-gold-hi: rgb(var(--aether-gold-hi-rgb));
+  --aether-gold-lo: rgb(var(--aether-gold-lo-rgb));
+  --aether-gold-ink: rgb(var(--aether-gold-ink-rgb));
+  --aether-gold-text: rgb(var(--aether-gold-text-rgb));
+  --aether-life: rgb(var(--aether-life-rgb));
+  --aether-life-lo: rgb(var(--aether-life-lo-rgb));
+  --aether-life-trail: #ffe0e8;
+  --aether-will: rgb(var(--aether-will-rgb));
+  --aether-will-lo: rgb(var(--aether-will-lo-rgb));
+  --aether-exp: rgb(var(--aether-exp-rgb));
+  --aether-threat: rgb(var(--aether-threat-rgb));
+  --aether-threat-wash: rgb(var(--aether-life-rgb) / 0.12);
+  --aether-good: rgb(var(--aether-good-rgb));
+
+  /* 빛 — 위쪽 1px 림 하이라이트 · 구분선 · 안쪽 광채 */
+  --aether-rim: rgba(214, 236, 246, 0.075);
+  --aether-rim-ether: rgba(185, 241, 236, 0.16);
+  --aether-hairline: rgba(214, 228, 240, 0.07);
+  --aether-glow-ether: rgba(125, 212, 216, 0.16);
+  --aether-glow-gold: rgba(240, 195, 106, 0.14);
+
+  /* 모서리 · 고도 그림자 */
+  --aether-r-xs: 6px;
+  --aether-r-sm: 10px;
+  --aether-r-md: 14px;
+  --aether-r-lg: 20px;
+  --aether-r-xl: 26px;
+  --aether-e1: inset 0 1px 0 var(--aether-rim), 0 4px 12px rgba(0, 0, 0, 0.22);
+  --aether-e2: inset 0 1px 0 var(--aether-rim), 0 10px 28px rgba(0, 0, 0, 0.34);
+  --aether-e3: inset 0 1px 0 rgba(214, 236, 246, 0.1), 0 24px 64px rgba(0, 0, 0, 0.55);
+
+  /* 금빛 주 행동(화면당 하나) */
+  --aether-gold-fill:
+    radial-gradient(120% 140% at 50% -40%, rgba(255, 248, 225, 0.55), transparent 50%),
+    linear-gradient(180deg, var(--aether-gold-hi) 0%, var(--aether-gold) 48%, var(--aether-gold-lo) 100%);
+  --aether-shadow-gold:
+    inset 0 1px 0 rgba(255, 252, 240, 0.7),
+    inset 0 -2px 0 rgba(90, 56, 10, 0.35),
+    0 10px 28px rgba(240, 195, 106, 0.28),
+    0 2px 6px rgba(0, 0, 0, 0.4);
+
+  /* 움직임 — 누름 110ms · UI 200ms · 패널 320ms */
+  --aether-ease: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --aether-dur-press: 110ms;
+  --aether-dur-ui: 200ms;
+  --aether-dur-panel: 320ms;
 }
 
 @layer base {
@@ -71,19 +174,14 @@
     overflow-x: clip;
   }
 
+  /* VD-14: 장식 바탕은 앱 셸(MainLayout의 `.ae-app-backdrop`) 한 곳이 그린다. 문서 바탕은 단색 — 같은 빛 번짐을 세 겹 그리지 않는다. */
   html {
-    background:
-      linear-gradient(145deg, rgba(240, 195, 106, 0.1) 0%, transparent 32%),
-      linear-gradient(215deg, rgba(125, 212, 216, 0.1) 0%, transparent 30%),
-      linear-gradient(180deg, #141923 0%, #091018 48%, #07090f 100%);
+    background: var(--aether-void);
   }
 
   body {
     @apply text-slate-200 font-readable selection:bg-cyan-200/20 selection:text-white;
-    background:
-      linear-gradient(150deg, rgba(246, 217, 140, 0.09) 0%, rgba(246, 217, 140, 0) 28%),
-      linear-gradient(220deg, rgba(125, 212, 216, 0.1) 0%, rgba(125, 212, 216, 0) 26%),
-      linear-gradient(180deg, var(--aether-bg-1) 0%, var(--aether-bg-0) 48%, #06080d 100%);
+    background: var(--aether-void);
     color: var(--aether-ink);
     font-feature-settings: "kern" 1;
     letter-spacing: 0;
@@ -100,7 +198,7 @@
   h5,
   h6 {
     font-family: var(--aether-display-font);
-    font-weight: 700;
+    font-weight: 800;
     letter-spacing: 0;
   }
 
@@ -108,6 +206,330 @@
   pre,
   .font-mono {
     font-family: var(--aether-code-font);
+  }
+}
+
+/* ──────────────────────────────────────────────────────────────────────
+   2026-10 에테르 유리 — 표면 · 글자 · 칩 · 게이지 · 버튼 부품.
+   @layer components라 같은 요소의 Tailwind 유틸(rounded-* · p-* …)이 이긴다 — 화면이 필요한 만큼 덮어 쓴다.
+   React 부품(src/components/ui/ActionButton · Gauge · Chip)이 이 클래스를 쓴다.
+   ────────────────────────────────────────────────────────────────────── */
+@layer components {
+  /* 앱 바탕: 깊은 청흑 + 금 · 에테르 원광. 지역 빛은 `.aether-region-ambient`가 그 위에 한 겹 더한다. */
+  .ae-app-backdrop {
+    background:
+      radial-gradient(60% 40% at 0% 8%, rgba(240, 195, 106, 0.07), transparent 70%),
+      radial-gradient(60% 40% at 100% 4%, rgba(125, 212, 216, 0.08), transparent 70%),
+      linear-gradient(180deg, #0d141d 0%, var(--aether-bg) 46%, var(--aether-void) 100%);
+  }
+
+  /* ── 표면 ── */
+  .ae-card {
+    position: relative;
+    isolation: isolate;
+    background: linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+    border-radius: var(--aether-r-lg);
+    box-shadow: var(--aether-e2);
+  }
+
+  /* 유리의 안쪽 광채 — 왼쪽 위에서 들어오는 에테르 빛 */
+  .ae-card::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(90% 70% at 0% 0%, var(--aether-glow-ether), transparent 55%);
+    opacity: 0.55;
+    pointer-events: none;
+  }
+
+  .ae-card.is-quiet::before {
+    opacity: 0.25;
+  }
+
+  /* 카드 안 두 번째 층 — 테두리 없이 톤만 */
+  .ae-well {
+    background: var(--aether-s3);
+    border-radius: var(--aether-r-md);
+    box-shadow: inset 0 1px 0 rgba(214, 236, 246, 0.05);
+  }
+
+  /* 게이지 홈 · 숫자 우물 */
+  .ae-sunk {
+    background: var(--aether-sunk);
+    box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6), inset 0 -1px 0 rgba(255, 255, 255, 0.03);
+  }
+
+  .ae-divider {
+    height: 1px;
+    border: 0;
+    background: var(--aether-hairline);
+  }
+
+  /* 장식 패널 — 금 이중선 + 네 모서리 장식. 화면당 하나(가장 중요한 이야기 · 보상 패널)만 쓴다. */
+  .ae-ornate {
+    position: relative;
+    isolation: isolate;
+    background: linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+    border: 1px solid rgba(240, 195, 106, 0.42);
+    border-radius: var(--aether-r-md);
+    box-shadow:
+      inset 0 0 0 3px var(--aether-s1),
+      inset 0 0 0 4px rgba(240, 195, 106, 0.2),
+      var(--aether-e2);
+  }
+
+  .ae-ornate::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    pointer-events: none;
+    /* 모서리마다 금빛 꺾쇠 두 획(가로 · 세로 14px) */
+    background:
+      linear-gradient(var(--aether-gold), var(--aether-gold)) top 8px left 8px / 14px 2px no-repeat,
+      linear-gradient(var(--aether-gold), var(--aether-gold)) top 8px left 8px / 2px 14px no-repeat,
+      linear-gradient(var(--aether-gold), var(--aether-gold)) top 8px right 8px / 14px 2px no-repeat,
+      linear-gradient(var(--aether-gold), var(--aether-gold)) top 8px right 8px / 2px 14px no-repeat,
+      linear-gradient(var(--aether-gold), var(--aether-gold)) bottom 8px left 8px / 14px 2px no-repeat,
+      linear-gradient(var(--aether-gold), var(--aether-gold)) bottom 8px left 8px / 2px 14px no-repeat,
+      linear-gradient(var(--aether-gold), var(--aether-gold)) bottom 8px right 8px / 14px 2px no-repeat,
+      linear-gradient(var(--aether-gold), var(--aether-gold)) bottom 8px right 8px / 2px 14px no-repeat,
+      radial-gradient(70% 40% at 50% 0%, var(--aether-glow-gold), transparent 70%);
+    opacity: 0.85;
+  }
+
+  /* ── 오버레이 ── */
+  .ae-scrim {
+    position: fixed;
+    inset: 0;
+    background: rgba(3, 6, 10, 0.66);
+    backdrop-filter: blur(6px) saturate(0.8);
+    -webkit-backdrop-filter: blur(6px) saturate(0.8);
+  }
+
+  .ae-sheet {
+    position: relative;
+    isolation: isolate;
+    background: linear-gradient(180deg, #16202c 0%, var(--aether-s2) 40%, var(--aether-s1) 100%);
+    border-radius: var(--aether-r-xl);
+    box-shadow: var(--aether-e3), inset 0 0 0 1px rgba(214, 236, 246, 0.04);
+  }
+
+  /* 위쪽 금빛 광채 */
+  .ae-sheet::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    background: radial-gradient(70% 40% at 50% 0%, rgba(240, 195, 106, 0.12), transparent 70%);
+    pointer-events: none;
+  }
+
+  /* ── 글자 ── */
+  .ae-eyebrow {
+    font-size: var(--aether-type-label);
+    font-weight: 700;
+    line-height: 1.3;
+    color: var(--aether-ink-3);
+  }
+
+  /* ── 칩 (조작이 아닐 때 22px, 조작이면 부르는 쪽이 44px을 준다) ── */
+  .ae-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    min-height: 22px;
+    padding: 2px 9px;
+    border-radius: 999px;
+    font-size: var(--aether-type-label);
+    font-weight: 700;
+    line-height: 1.2;
+    white-space: nowrap;
+    background: rgba(214, 228, 240, 0.08);
+    color: var(--aether-ink-2);
+  }
+
+  .ae-chip-icon {
+    display: inline-flex;
+    flex: none;
+  }
+
+  .ae-chip-ether {
+    background: var(--aether-ether-wash);
+    color: var(--aether-ether-hi);
+  }
+
+  .ae-chip-gold {
+    background: rgba(240, 195, 106, 0.12);
+    color: var(--aether-gold-text);
+  }
+
+  .ae-chip-threat {
+    background: var(--aether-threat-wash);
+    color: var(--aether-threat);
+  }
+
+  .ae-chip-good {
+    background: rgba(143, 220, 172, 0.1);
+    color: var(--aether-good);
+  }
+
+  /* ── 게이지 ── */
+  .ae-gauge {
+    position: relative;
+    height: 6px;
+    overflow: hidden;
+    border-radius: 999px;
+  }
+
+  .ae-gauge-lg {
+    height: 12px;
+  }
+
+  .ae-gauge > .ae-gauge-trail,
+  .ae-gauge > .ae-gauge-fill {
+    position: absolute;
+    inset: 0 auto 0 0;
+    border-radius: inherit;
+  }
+
+  .ae-gauge > .ae-gauge-trail {
+    background: var(--aether-life-trail);
+    opacity: 0.75;
+    transition: width var(--aether-dur-panel) var(--aether-ease) 350ms;
+  }
+
+  .ae-gauge > .ae-gauge-fill {
+    box-shadow: 0 0 10px currentColor;
+    transition: width var(--aether-dur-ui) var(--aether-ease);
+  }
+
+  /* 10% 눈금 — 적 생명 막대용 */
+  .ae-gauge > .ae-gauge-ticks {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    background: repeating-linear-gradient(90deg, transparent 0 calc(10% - 1px), rgba(4, 7, 12, 0.55) calc(10% - 1px) 10%);
+  }
+
+  .ae-gauge-life > .ae-gauge-fill {
+    background: linear-gradient(90deg, var(--aether-life-lo), var(--aether-life));
+    color: rgba(242, 125, 154, 0.5);
+  }
+
+  .ae-gauge-will > .ae-gauge-fill {
+    background: linear-gradient(90deg, var(--aether-will-lo), var(--aether-will));
+    color: rgba(108, 196, 245, 0.45);
+  }
+
+  .ae-gauge-exp > .ae-gauge-fill {
+    background: linear-gradient(90deg, #6c5bb0, var(--aether-exp));
+    color: rgba(183, 164, 240, 0.4);
+  }
+
+  .ae-gauge-ether > .ae-gauge-fill {
+    background: linear-gradient(90deg, #3f9ca1, var(--aether-ether));
+    color: rgba(125, 212, 216, 0.45);
+  }
+
+  /* ── 버튼 ── */
+  .ae-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 44px;
+    min-height: 48px;
+    padding: 0 14px;
+    border-radius: var(--aether-r-md);
+    font-size: var(--aether-type-strong);
+    font-weight: 700;
+    line-height: 1.2;
+    transition:
+      transform var(--aether-dur-press) var(--aether-ease),
+      filter var(--aether-dur-ui) var(--aether-ease),
+      box-shadow var(--aether-dur-ui) var(--aether-ease);
+  }
+
+  .ae-btn-lg {
+    min-height: 56px;
+  }
+
+  .ae-btn:active:not(:disabled) {
+    transform: scale(0.97);
+  }
+
+  .ae-btn-icon {
+    display: inline-flex;
+    flex: none;
+  }
+
+  .ae-btn-text {
+    display: flex;
+    min-width: 0;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+  }
+
+  .ae-btn-sublabel {
+    font-size: var(--aether-type-label);
+    font-weight: 600;
+    line-height: 1.3;
+    opacity: 0.86;
+  }
+
+  /* 금빛 주 행동 — 화면당 하나 */
+  .ae-btn-primary {
+    color: var(--aether-gold-ink);
+    background-color: var(--aether-gold);
+    background-image: var(--aether-gold-fill);
+    box-shadow: var(--aether-shadow-gold);
+  }
+
+  /* 유리 보조 행동 */
+  .ae-btn-glass {
+    color: var(--aether-ink);
+    background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+    box-shadow: inset 0 1px 0 rgba(214, 236, 246, 0.09), 0 4px 12px rgba(0, 0, 0, 0.28);
+  }
+
+  .ae-btn-glass .ae-btn-icon {
+    color: var(--aether-ether);
+  }
+
+  /* 낮은 위험 행동 */
+  .ae-btn-ghost {
+    color: var(--aether-ink-2);
+    background: rgba(214, 228, 240, 0.04);
+    font-weight: 600;
+  }
+
+  .ae-btn-ghost .ae-btn-icon {
+    color: var(--aether-ink-3);
+  }
+
+  /* 되돌릴 수 없는 위험 행동 */
+  .ae-btn-danger {
+    color: #ffe3ea;
+    background: linear-gradient(180deg, rgba(242, 125, 154, 0.26) 0%, rgba(180, 64, 95, 0.32) 100%);
+    box-shadow: inset 0 1px 0 rgba(255, 224, 232, 0.16), inset 0 0 0 1px rgba(242, 125, 154, 0.32), 0 4px 12px rgba(0, 0, 0, 0.28);
+  }
+
+  .ae-btn:disabled {
+    cursor: not-allowed;
+    color: var(--aether-ink-3);
+    background: var(--aether-s3);
+    box-shadow: inset 0 1px 0 rgba(214, 236, 246, 0.05);
+  }
+
+  .ae-btn:disabled .ae-btn-icon {
+    color: var(--aether-ink-3);
   }
 }
 
@@ -144,25 +566,6 @@
    ============================================ */
 
 /* 데미지 팝업 애니메이션 */
-@keyframes damagePopup {
-  0% {
-    transform: translateY(0) scale(1);
-    opacity: 1;
-  }
-
-  50% {
-    transform: translateY(-20px) scale(1.3);
-  }
-
-  100% {
-    transform: translateY(-40px) scale(1);
-    opacity: 0;
-  }
-}
-
-.animate-damage {
-  animation: damagePopup 0.8s ease-out forwards;
-}
 
 /* slice 29: DamageNumber가 참조하던 floatUp 키프레임이 미정의라 float 숫자가
    애니메이션되지 않던 버그 수정. 중앙 정렬(-50% x)을 키프레임에 baking. */
@@ -171,6 +574,22 @@
   16% { transform: translate(-50%, -4px) scale(1.18); opacity: 1; }
   70% { opacity: 1; }
   100% { transform: translate(-50%, -46px) scale(1); opacity: 0; }
+}
+
+/* 게임 필 감사 GF-11: 모션 감소 설정의 떠오르는 숫자는 움직이지 않고 그 자리에 머문다.
+   전역 규칙(animation-duration 0.01ms)이 floatUp을 곧바로 끝내 마지막 키프레임(opacity 0)에
+   머물게 하던 동안 피해 숫자가 처음부터 투명했다. 숫자는 훅의 타이머가 걷어 간다. */
+@keyframes floatHold {
+  0%, 100% { transform: translate(-50%, 0); opacity: 1; }
+}
+
+/* 떠오르는 숫자(내 피해 · 회복 숫자, 적 피해 숫자)는 움직임만 빼고 정보는 남긴다 — 아래 접근성 절의 전역 규칙(*)보다
+   구체적이라 !important끼리 이긴다. 숫자 칸을 자리(`data-testid`)로 잡아 숫자 칸의 글꼴 · 크기 줄과 무관하다. */
+@media (prefers-reduced-motion: reduce) {
+  [data-testid="damage-number"],
+  [data-testid="enemy-damage-number"] {
+    animation: floatHold 1s linear forwards !important;
+  }
 }
 
 /* 레벨업 글로우 효과 */
@@ -190,21 +609,92 @@
   animation: levelUpGlow 1.5s ease-in-out 3;
 }
 
-/* 전투 시작 페이드인 */
+/* 전투 시작 — 2026-10 (감사 GF-09): 정의만 있고 쓰이지 않던 키프레임을 전투 진입 박자로 쓴다.
+   MobileGameLayout이 전투에 들어갈 때 조작판 칸에 붙인다(위에서 8px 내려오며 나타난다, 260ms).
+   크기는 바꾸지 않는다 — 박자 중에도 단추의 터치 영역 · 아이콘 크기가 그대로다.
+   `backwards`라 끝난 뒤에는 transform이 남지 않는다(고정 위치 자식의 기준 상자를 바꾸지 않는다). */
 @keyframes combatStart {
   0% {
     opacity: 0;
-    transform: scale(0.9);
+    transform: translateY(-8px);
   }
 
   100% {
     opacity: 1;
-    transform: scale(1);
+    transform: none;
   }
 }
 
 .animate-combat-start {
-  animation: combatStart 0.5s ease-out;
+  animation: combatStart 260ms ease-out backwards;
+}
+
+/* 모드 전환 — 2026-10 (감사 GF-09): 조작판이 모드마다 그냥 바뀌던 것을 180ms 페이드 + 4px 이동으로 잇는다.
+   이름이 둘인 것은 같은 칸에서 연달아 바뀔 때 애니메이션을 다시 시작하기 위해서다(클래스 이름이 바뀌어야 다시 돈다). */
+@keyframes aetherModeEnterA {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes aetherModeEnterB {
+  0% { opacity: 0; transform: translateY(4px); }
+  100% { opacity: 1; transform: none; }
+}
+
+.aether-mode-enter-a {
+  animation: aetherModeEnterA 180ms ease-out backwards;
+}
+
+.aether-mode-enter-b {
+  animation: aetherModeEnterB 180ms ease-out backwards;
+}
+
+/* 유물 확정 — 2026-10 (감사 GF-08): 고른 카드가 200ms 동안 빛나며 커진 뒤 받는다.
+   추천 카드의 box-shadow는 !important라 빛은 filter로 낸다. */
+
+/* 승리 보상 순서 공개 — 2026-10 (감사 GF-10): 경험 · 골드가 오른 뒤 전리품(60ms 간격) → 전설 각인 반짝임. */
+@keyframes aetherRevealPop {
+  0% { opacity: 0; transform: scale(0.92); }
+  70% { opacity: 1; transform: scale(1.03); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes aetherSignatureShimmer {
+  0% { filter: brightness(1); box-shadow: 0 2px 10px rgba(246, 231, 162, 0.16); }
+  45% { filter: brightness(1.35); box-shadow: 0 0 24px rgba(246, 231, 162, 0.5); }
+  100% { filter: brightness(1); box-shadow: 0 2px 10px rgba(246, 231, 162, 0.16); }
+}
+
+.aether-reveal-pending {
+  opacity: 0;
+}
+
+.aether-reveal-pop {
+  animation: aetherRevealPop 220ms ease-out backwards;
+}
+
+.aether-reveal-shimmer {
+  animation: aetherRevealPop 220ms ease-out backwards, aetherSignatureShimmer 900ms ease-out 220ms 1;
+}
+
+/* 보스를 쓰러뜨린 결과 카드 — 금빛 테두리. */
+.aether-post-combat-boss {
+  border-color: rgba(246, 231, 162, 0.5) !important;
+  box-shadow: 0 0 0 1px rgba(246, 231, 162, 0.18), 0 18px 40px rgba(64, 48, 12, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-combat-start,
+  .aether-mode-enter-a,
+  .aether-mode-enter-b,
+  .aether-reveal-pop,
+  .aether-reveal-shimmer {
+    animation: none;
+  }
+
+  .aether-reveal-pending {
+    opacity: 1;
+  }
 }
 
 /* 원소별 글로우 */
@@ -273,28 +763,6 @@
 }
 
 /* 치명타 효과 */
-@keyframes criticalHit {
-  0% {
-    transform: scale(1);
-  }
-
-  25% {
-    transform: scale(1.5);
-    color: #ef4444;
-  }
-
-  50% {
-    transform: scale(1.2);
-  }
-
-  100% {
-    transform: scale(1);
-  }
-}
-
-.animate-critical {
-  animation: criticalHit 0.4s ease-out;
-}
 
 /* 흔들림 효과 (피격) */
 @keyframes shake {
@@ -325,93 +793,6 @@
 }
 
 /* 펄스 글로우 (버프 활성) */
-@keyframes buffActive {
-
-  0%,
-  100% {
-    opacity: 1;
-  }
-
-  50% {
-    opacity: 0.7;
-    box-shadow: 0 0 15px #22c55e;
-  }
-}
-
-.animate-buff {
-  animation: buffActive 2s ease-in-out infinite;
-}
-
-@keyframes aetherOrbit {
-  from {
-    transform: translate(-50%, -50%) rotate(0deg);
-  }
-
-  to {
-    transform: translate(-50%, -50%) rotate(360deg);
-  }
-}
-
-@keyframes aetherPulse {
-
-  0%,
-  100% {
-    transform: translate(-50%, -50%) rotate(45deg) scale(1);
-    box-shadow: 0 0 14px rgba(34, 211, 238, 0.18);
-  }
-
-  50% {
-    transform: translate(-50%, -50%) rotate(45deg) scale(1.08);
-    box-shadow: 0 0 22px rgba(16, 185, 129, 0.28);
-  }
-}
-
-@keyframes auroraShift {
-  0% {
-    transform: translate3d(-2%, 0, 0) scale(1);
-    opacity: 0.72;
-  }
-
-  50% {
-    transform: translate3d(2%, -1%, 0) scale(1.04);
-    opacity: 0.92;
-  }
-
-  100% {
-    transform: translate3d(-2%, 0, 0) scale(1);
-    opacity: 0.72;
-  }
-}
-
-@keyframes floatSlow {
-  0% {
-    transform: translateY(0px);
-  }
-
-  50% {
-    transform: translateY(-6px);
-  }
-
-  100% {
-    transform: translateY(0px);
-  }
-}
-
-.animate-aether-orbit {
-  animation: aetherOrbit 8s linear infinite;
-}
-
-.animate-aether-pulse {
-  animation: aetherPulse 3s ease-in-out infinite;
-}
-
-.animate-aurora {
-  animation: auroraShift 16s ease-in-out infinite;
-}
-
-.animate-float-slow {
-  animation: floatSlow 5.4s ease-in-out infinite;
-}
 
 .panel-noise {
   position: relative;
@@ -436,15 +817,14 @@
   position: relative;
 }
 
+/* 2026-10 에테르 유리: 격자 무늬 대신 유리의 빛 두 겹 — 왼쪽 위 에테르 광채(::before) · 위쪽 1px 림(::after). */
 .panel-noise::before {
   content: "";
   position: absolute;
   inset: 0;
-  background-image:
-    linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.02), transparent 32%);
-  background-size: 12px 12px, 100% 100%;
-  opacity: 0.05;
+  border-radius: inherit;
+  background-image: radial-gradient(90% 70% at 0% 0%, var(--aether-glow-ether), transparent 55%);
+  opacity: 0.55;
   pointer-events: none;
   z-index: 0;
 }
@@ -453,52 +833,16 @@
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), transparent 16%, transparent 84%, rgba(125, 212, 216, 0.05)),
-    linear-gradient(145deg, rgba(246, 217, 140, 0.07), transparent 34%);
+  border-radius: inherit;
+  box-shadow: inset 0 1px 0 var(--aether-rim);
   pointer-events: none;
   z-index: 0;
 }
 
-.aether-surface {
-  background: linear-gradient(180deg, rgba(18, 25, 34, 0.94) 0%, rgba(8, 12, 18, 0.98) 100%);
-  border: 1px solid var(--aether-line);
-  box-shadow:
-    0 16px 38px rgba(3, 8, 16, 0.46),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(16px);
-}
+/* 2026-10 에테르 유리: 표면은 불투명한 톤(고도)이다 — 뒤를 흐리게 할 것이 없으므로 backdrop-filter를 쓰지 않는다.
+   테두리 폭(1px)은 그대로 두고 색만 구분선 수준으로 낮춘다(배치가 1px도 움직이지 않게). */
 
-.aether-surface-strong {
-  background:
-    linear-gradient(180deg, rgba(21, 28, 37, 0.94) 0%, rgba(8, 11, 17, 0.98) 100%);
-  border: 1px solid var(--aether-line-strong);
-  box-shadow:
-    0 18px 44px rgba(1, 6, 14, 0.52),
-    inset 0 1px 0 rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(18px);
-}
-
-.aether-panel-core {
-  background:
-    linear-gradient(135deg, rgba(246, 217, 140, 0.1) 0%, rgba(246, 217, 140, 0) 30%),
-    linear-gradient(215deg, rgba(125, 212, 216, 0.1) 0%, rgba(125, 212, 216, 0) 34%),
-    linear-gradient(180deg, rgba(28, 37, 48, 0.96) 0%, rgba(12, 17, 24, 0.98) 100%);
-  border: 1px solid rgba(218, 232, 241, 0.15);
-  box-shadow:
-    0 18px 40px rgba(1, 6, 14, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.075);
-}
-
-.aether-panel-muted {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.058) 0%, rgba(255, 255, 255, 0.022) 100%),
-    linear-gradient(180deg, rgba(20, 27, 36, 0.9) 0%, rgba(9, 13, 19, 0.96) 100%);
-  border: 1px solid rgba(238, 244, 249, 0.12);
-  box-shadow:
-    0 14px 26px rgba(1, 6, 14, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.06);
-}
+/* 카드 안 두 번째 층(.ae-well과 같은 톤) — 테두리 폭은 유지하고 색만 구분선 수준. */
 
 .aether-focus-panel {
   background:
@@ -510,15 +854,6 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
     inset 0 0 0 1px rgba(246, 217, 140, 0.035);
   backdrop-filter: blur(8px);
-}
-
-.aether-focus-panel .aether-label {
-  color: rgba(218, 229, 238, 0.9);
-}
-
-.aether-focus-panel .aether-panel-core,
-.aether-focus-panel .aether-panel-muted {
-  border-color: rgba(238, 244, 249, 0.16);
 }
 
 .aether-event-choice {
@@ -565,19 +900,6 @@
   cursor: not-allowed;
 }
 
-.aether-pill {
-  border: 1px solid rgba(238, 244, 249, 0.12);
-  background: rgba(255, 255, 255, 0.055);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055);
-  backdrop-filter: blur(16px);
-}
-
-.aether-readable-copy {
-  font-family: var(--aether-readable-font);
-  letter-spacing: 0;
-  line-height: 1.48;
-}
-
 .aether-type-label {
   font-size: var(--aether-type-label);
   line-height: var(--aether-leading-label);
@@ -598,28 +920,22 @@
   line-height: var(--aether-leading-title);
 }
 
-.aether-type-metric {
-  font-size: var(--aether-type-metric);
-  line-height: 1.2;
-}
-
-.aether-label {
-  font-family: var(--aether-code-font);
-  font-size: var(--aether-type-label);
+.aether-type-strong {
+  font-size: var(--aether-type-strong);
   font-weight: 700;
-  line-height: var(--aether-leading-label);
-  letter-spacing: 0;
-  text-transform: uppercase;
-  color: var(--aether-readable-muted);
+  line-height: 1.35;
 }
 
-.aether-readable-surface {
-  background:
-    linear-gradient(180deg, rgba(30, 40, 52, 0.95) 0%, rgba(12, 17, 24, 0.98) 100%);
-  border: 1px solid rgba(238, 244, 249, 0.15);
-  box-shadow:
-    0 14px 30px rgba(3, 8, 16, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+.aether-type-heading {
+  font-size: var(--aether-type-heading);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.aether-type-display {
+  font-size: var(--aether-type-display);
+  font-weight: 800;
+  line-height: 1.2;
 }
 
 .aether-status-shell {
@@ -699,13 +1015,6 @@
     0 10px 22px rgba(2, 8, 14, 0.2);
 }
 
-.aether-decision-cell {
-  min-width: 0;
-  border: 1px solid rgba(238, 244, 249, 0.12);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.024));
-}
-
 .aether-combat-forecast {
   border: 1px solid rgba(244, 165, 202, 0.3);
   background:
@@ -742,15 +1051,7 @@
     0 10px 22px rgba(2, 8, 14, 0.18);
 }
 
-.aether-combat-forecast-cell {
-  min-width: 0;
-  border: 1px solid rgba(238, 244, 249, 0.12);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.065), rgba(255, 255, 255, 0.024));
-}
-
-.aether-action-button,
-.aether-combat-action {
+.aether-action-button {
   border: 1px solid rgba(238, 244, 249, 0.13);
   background:
     linear-gradient(135deg, rgba(246, 217, 140, 0.08) 0%, rgba(246, 217, 140, 0) 30%),
@@ -762,9 +1063,7 @@
 }
 
 .aether-action-button:hover:not(:disabled),
-.aether-combat-action:hover:not(:disabled),
-.aether-action-button:focus-visible,
-.aether-combat-action:focus-visible {
+.aether-action-button:focus-visible {
   border-color: rgba(246, 217, 140, 0.34);
   box-shadow:
     0 12px 26px rgba(1, 6, 14, 0.24),
@@ -772,7 +1071,6 @@
     inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
-.aether-action-icon,
 .aether-combat-action-icon {
   border: 1px solid rgba(238, 244, 249, 0.14);
   background:
@@ -934,13 +1232,6 @@
     0 10px 22px rgba(2, 8, 14, 0.18);
 }
 
-.aether-choice-cell {
-  min-width: 0;
-  border-top: 1px solid rgba(238, 244, 249, 0.12);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.022));
-}
-
 .aether-shop-row {
   border: 1px solid rgba(238, 244, 249, 0.14);
   background:
@@ -965,62 +1256,6 @@
   border: 1px solid rgba(238, 244, 249, 0.12);
   background:
     linear-gradient(180deg, rgba(255, 255, 255, 0.06), rgba(255, 255, 255, 0.024));
-}
-
-.aether-route-strip {
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(125, 212, 216, 0.38);
-  background:
-    linear-gradient(135deg, rgba(246, 217, 140, 0.1) 0%, rgba(246, 217, 140, 0) 34%),
-    linear-gradient(90deg, rgba(125, 212, 216, 0.24) 0%, rgba(25, 37, 48, 0.94) 38%, rgba(9, 15, 22, 0.99) 100%);
-  box-shadow:
-    0 14px 28px rgba(2, 9, 16, 0.24),
-    inset 5px 0 0 rgba(185, 241, 236, 0.86),
-    inset 0 1px 0 rgba(255, 255, 255, 0.085);
-}
-
-.aether-route-strip::after {
-  content: "";
-  pointer-events: none;
-  position: absolute;
-  inset: 0;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.07), transparent 50%),
-    linear-gradient(90deg, transparent, rgba(131, 214, 163, 0.07));
-}
-
-.aether-route-strip > * {
-  position: relative;
-  z-index: 1;
-}
-
-.aether-route-path {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.aether-route-path::before,
-.aether-route-path::after {
-  content: "";
-  height: 1px;
-  min-width: 1.25rem;
-  background: linear-gradient(90deg, rgba(125, 212, 216, 0.14), rgba(185, 241, 236, 0.72));
-}
-
-.aether-route-path::after {
-  background: linear-gradient(90deg, rgba(185, 241, 236, 0.72), rgba(213, 177, 128, 0.2));
-}
-
-.aether-map-current-card {
-  border: 1px solid rgba(125, 212, 216, 0.38);
-  background:
-    linear-gradient(90deg, rgba(125, 212, 216, 0.22) 0%, rgba(26, 37, 48, 0.95) 42%, rgba(10, 15, 22, 0.98) 100%);
-  box-shadow:
-    inset 5px 0 0 rgba(185, 241, 236, 0.92),
-    0 12px 24px rgba(3, 8, 16, 0.22);
 }
 
 .aether-route-topology {
@@ -1228,112 +1463,26 @@
   padding: 0.45rem 0.5rem;
 }
 
-.aether-map-forecast-cell {
-  border-left: 1px solid rgba(228, 238, 247, 0.08);
-  background: rgba(255, 255, 255, 0.025);
-}
-
-.aether-map-forecast-cell:first-child {
-  border-left: 0;
-}
-
-.aether-map-world-list {
-  border-top: 1px solid rgba(228, 238, 247, 0.08);
-}
-
-.aether-map-route-card {
-  border: 1px solid rgba(238, 244, 249, 0.13);
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.052), rgba(255, 255, 255, 0.018)),
-    rgba(11, 16, 23, 0.78);
-}
-
-.aether-map-route-card.is-recommended {
-  border-color: rgba(125, 212, 216, 0.42);
-  background:
-    linear-gradient(180deg, rgba(125, 212, 216, 0.18) 0%, rgba(10, 16, 23, 0.9) 100%);
-}
-
-.aether-map-node {
-  border: 1px solid rgba(238, 244, 249, 0.13);
-  background: rgba(255, 255, 255, 0.045);
-}
-
-.aether-map-node.is-current {
-  border-color: rgba(125, 212, 216, 0.48);
-  background:
-    linear-gradient(90deg, rgba(125, 212, 216, 0.24) 0%, rgba(20, 30, 40, 0.95) 54%, rgba(9, 14, 21, 0.97) 100%);
-  box-shadow:
-    inset 4px 0 0 rgba(185, 241, 236, 0.92),
-    0 0 0 1px rgba(185, 241, 236, 0.08);
-}
-
-.aether-soft-grid {
-  background-image:
-    linear-gradient(rgba(255, 255, 255, 0.025) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.025) 1px, transparent 1px);
-  background-size: 42px 42px;
-}
-
-.aether-hairline {
-  height: 1px;
-  background: linear-gradient(90deg, transparent 0%, rgba(213, 177, 128, 0.28) 18%, rgba(125, 212, 216, 0.22) 50%, transparent 100%);
-}
-
-.aether-scrollbar::-webkit-scrollbar {
-  width: 4px;
-  background: transparent;
-}
-
-.aether-scrollbar::-webkit-scrollbar-thumb {
-  background: rgba(149, 166, 181, 0.42);
-  border-radius: 999px;
-}
+/* VD-14 · VD-08: 42px 격자(사이버 무늬)는 그리지 않는다. 클래스는 남은 사용처가 지워질 때까지 빈 규칙으로 둔다. */
 
 /* ============================================
    COMPONENT UTILITY CLASSES
    ============================================ */
 
 /* 오버레이 백드롭 (유물 선택, 이벤트, 환생, 런 요약 등) */
+/* 2026-10 에테르 유리: `.ae-scrim`과 같은 막(배치만 absolute) — 뒤 화면이 흐리게 비친다. */
 .aether-overlay {
   @apply absolute inset-0;
-  background: linear-gradient(180deg, rgba(5, 8, 12, 0.84) 0%, rgba(7, 10, 15, 0.92) 100%);
-  backdrop-filter: blur(12px);
+  background: rgba(3, 6, 10, 0.66);
+  backdrop-filter: blur(6px) saturate(0.8);
+  -webkit-backdrop-filter: blur(6px) saturate(0.8);
 }
 
 /* 게임 카드/패널 기본 */
-.aether-card {
-  border-radius: 1rem;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  background: rgba(0, 0, 0, 0.2);
-  backdrop-filter: blur(4px);
-}
 
 /* 액션 버튼 기본 */
-.aether-btn {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.15s;
-  backdrop-filter: blur(24px);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
-}
-.aether-btn:disabled {
-  opacity: 0.5;
-}
 
 /* 리스트 아이템 행 */
-.aether-list-row {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  border-radius: 0.85rem;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.02);
-  padding: 0.5rem 0.625rem;
-  transition: color 0.15s;
-}
 
 /* ============================================
    MOBILE OPTIMIZATION (Phase 3.3)
@@ -1380,8 +1529,6 @@
    ============================================ */
 
 /* backdrop-filter 사용 요소에 GPU 레이어 승격 */
-.aether-surface,
-.aether-surface-strong,
 .aether-overlay {
   will-change: backdrop-filter;
   -webkit-backface-visibility: hidden;
@@ -1391,8 +1538,6 @@
 
 /* 저사양 기기: backdrop-filter 비활성 (성능 우선) */
 @media (max-width: 767px) and (prefers-reduced-motion: reduce) {
-  .aether-surface,
-  .aether-surface-strong,
   .aether-overlay {
     backdrop-filter: none !important;
     -webkit-backdrop-filter: none !important;
@@ -1413,13 +1558,36 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  /* VD-14: 끝없이 도는 장식 움직임은 한 번도 돌리지 않는다(위 규칙은 한 바퀴를 0.01ms로 줄일 뿐 첫 프레임 상태가 남는다).
+     정보를 전하는 움직임(피해 숫자 · 흔들림)은 여기에 넣지 않는다. */
+  .glow-fire,
+  .glow-ice,
+  .glow-dark,
+  .glow-light,
+  .aether-region-ambient {
+    animation: none !important;
+    transition: none !important;
+  }
 }
 
-/* 포커스 링 — 키보드 탐색 시 명확한 아웃라인 */
+/* 포커스 링 — 키보드 탐색 시 명확한 아웃라인.
+   A11Y-07: 모서리 반경을 덮지 않는다 — outline이 요소의 border-radius를 따른다(Chromium · Safari 16.4+). */
 :focus-visible {
-  outline: 2px solid var(--aether-cyan);
+  outline: 2px solid var(--aether-ether-hi);
   outline-offset: 2px;
-  border-radius: 4px;
+}
+
+/* 넘침을 자르는 칸(스크롤 목록 · 잘린 패널) 안에서는 바깥 링이 칸 경계에 잘린다 — 링을 요소 안쪽으로 들인다.
+   앱 셸(data-app-shell)도 overflow-y-auto지만 그 바로 아래 줄은 화면 가장자리 여백이 있어 제외한다.
+   칸 판정은 :where() 안이라 특이도는 :focus-visible 하나(0,1,0)다 — 화면별 :focus-visible 규칙이 그대로 이긴다. */
+:where(:is(.overflow-auto, .overflow-y-auto, .overflow-x-auto, .overflow-scroll, .overflow-y-scroll, .overflow-x-scroll, .overflow-hidden, .overflow-x-hidden, .overflow-y-hidden):not([data-app-shell])) :focus-visible {
+  outline-offset: -2px;
+}
+
+/* 금빛 주 행동 안쪽에 들인 링은 금 위에서 보이도록 진한 금색으로 */
+:where(:is(.overflow-auto, .overflow-y-auto, .overflow-x-auto, .overflow-scroll, .overflow-y-scroll, .overflow-x-scroll, .overflow-hidden, .overflow-x-hidden, .overflow-y-hidden):not([data-app-shell])) :is(.aether-cta-primary, .aether-cta-gold, .ae-btn-primary):focus-visible {
+  outline-color: var(--aether-gold-ink);
 }
 
 /* 마우스/터치 시 포커스 링 숨김 */
@@ -1427,27 +1595,42 @@
   outline: none;
 }
 
-/* slice 25: 결정 CTA 모던화 — 그라디언트 + 인셋 하이라이트 + 프레스 스케일.
-   행동을 확정하는 버튼(작전 개시/임무 수락/구매)에만 사용. */
+/* slice 25: 결정 CTA — 행동을 확정하는 버튼(작전 개시/임무 수락/구매)에만 사용.
+   2026-10 에테르 유리: 두 클래스 모두 금빛 주 행동(`.ae-btn-primary`와 같은 금 그라데이션 · 진한 금색 글자)이다.
+   @tailwind utilities 뒤라 부르는 쪽의 밝은 글자색 유틸(text-[#dff7f5] 등)을 덮는다 — 금 위의 밝은 글자는 대비가 모자란다.
+   disabled:* 변형 유틸은 특이도가 높아 그대로 이긴다. 화면당 하나만 금빛이어야 한다는 정리는 화면 단계의 몫이다. */
 .aether-cta-primary {
-  background-image: linear-gradient(180deg, rgba(125, 212, 216, 0.24) 0%, rgba(125, 212, 216, 0.1) 52%, rgba(8, 14, 18, 0.25) 100%);
-  border: 1px solid rgba(125, 212, 216, 0.4);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 10px 22px rgba(125, 212, 216, 0.12);
-  transition: transform 0.12s ease, filter 0.18s ease;
+  color: var(--aether-gold-ink);
+  background-color: var(--aether-gold);
+  background-image: var(--aether-gold-fill);
+  border: 1px solid rgba(196, 144, 60, 0.7);
+  box-shadow: var(--aether-shadow-gold);
+  transition: transform var(--aether-dur-press) var(--aether-ease), filter var(--aether-dur-ui) var(--aether-ease);
 }
 .aether-cta-primary:active:not(:disabled) {
   transform: scale(0.97);
-  filter: brightness(1.12);
+  filter: brightness(1.05);
 }
 .aether-cta-gold {
-  background-image: linear-gradient(180deg, rgba(213, 177, 128, 0.26) 0%, rgba(213, 177, 128, 0.1) 52%, rgba(20, 14, 8, 0.25) 100%);
-  border: 1px solid rgba(213, 177, 128, 0.42);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14), 0 10px 22px rgba(213, 177, 128, 0.12);
-  transition: transform 0.12s ease, filter 0.18s ease;
+  color: var(--aether-gold-ink);
+  background-color: var(--aether-gold);
+  background-image: var(--aether-gold-fill);
+  border: 1px solid rgba(196, 144, 60, 0.7);
+  box-shadow: var(--aether-shadow-gold);
+  transition: transform var(--aether-dur-press) var(--aether-ease), filter var(--aether-dur-ui) var(--aether-ease);
 }
 .aether-cta-gold:active:not(:disabled) {
   transform: scale(0.97);
-  filter: brightness(1.12);
+  filter: brightness(1.05);
+}
+/* 잠금 안내(aether-disabled-action)가 없는 비활성 CTA는 금을 끈다 — 누를 수 없는 버튼이 주 행동처럼 보이지 않게. */
+.aether-cta-primary:disabled:not(.aether-disabled-action),
+.aether-cta-gold:disabled:not(.aether-disabled-action) {
+  color: var(--aether-ink-3);
+  background-color: var(--aether-s3);
+  background-image: none;
+  border-color: var(--aether-hairline);
+  box-shadow: inset 0 1px 0 rgba(214, 236, 246, 0.05);
 }
 [data-readability-mode="high"] .aether-cta-primary,
 [data-readability-mode="high"] .aether-cta-gold {
@@ -1475,42 +1658,34 @@
    동일 specificity에서 후순위 승리 → 인라인 rounded를 덮어쓴다.) */
 .aether-focus-panel { border-radius: var(--aether-r-shell); }
 .aether-action-button,
-.aether-combat-action,
 .aether-mission-strip,
-.aether-route-strip,
 .aether-combat-forecast,
 .aether-result-strip,
 .aether-relic-decision-strip,
 .aether-run-reflection-strip { border-radius: var(--aether-r-panel); }
 .aether-shop-row,
 .aether-log-row,
-.aether-map-route-card,
-.aether-map-current-card,
 .aether-status-metric,
 .aether-event-choice,
 .aether-craft-row,
 .aether-locked-row,
 .aether-choice-row { border-radius: var(--aether-r-card); }
-.aether-combat-forecast-cell,
 .aether-relic-decision-cell,
 .aether-run-reflection-cell { border-radius: var(--aether-r-cell); }
 
 /* 상호작용 레이어 — 버튼/CTA에 hover 살짝 떠오름 + 부드러운 transition.
    누름(scale)은 Framer whileTap이 담당하는 곳이 많아 CSS에선 lift만. */
 .aether-action-button,
-.aether-combat-action,
 .aether-cta-primary,
 .aether-cta-gold {
   transition: transform 0.14s ease, border-color 0.18s ease, box-shadow 0.18s ease, filter 0.18s ease;
 }
 .aether-action-button:hover:not(:disabled),
-.aether-combat-action:hover:not(:disabled),
 .aether-cta-primary:hover:not(:disabled),
 .aether-cta-gold:hover:not(:disabled) {
   transform: translateY(-1px);
 }
 [data-readability-mode="high"] .aether-action-button:hover,
-[data-readability-mode="high"] .aether-combat-action:hover,
 [data-readability-mode="high"] .aether-cta-primary:hover,
 [data-readability-mode="high"] .aether-cta-gold:hover {
   transform: none;
@@ -1523,7 +1698,7 @@
   --region-soft: rgba(213, 177, 128, 0.10);
 }
 .aether-region-ambient {
-  background-image: radial-gradient(circle at 50% -8%, var(--region-soft), transparent 46%);
+  background-image: radial-gradient(120% 60% at 50% -12%, var(--region-soft), transparent 60%);
   transition: background-image 0.6s ease;
 }
 
@@ -1535,10 +1710,13 @@
   --aether-readable-panel: rgba(13, 18, 25, 0.99);
   --aether-readable-panel-strong: rgba(18, 26, 36, 1);
   --aether-type-label: 0.75rem;
-  --aether-type-meta: 0.75rem;
-  --aether-type-body: 0.8125rem;
-  --aether-type-title: 0.9375rem;
-  --aether-type-metric: 1.0625rem;
+  --aether-type-meta: 0.8125rem;
+  --aether-type-body: 0.875rem;
+  --aether-type-title: 1rem;
+  --aether-type-metric: 1.125rem;
+  --aether-type-strong: 1rem;
+  --aether-type-heading: 1.125rem;
+  --aether-type-display: 1.5rem;
   --aether-leading-label: 1.35;
   --aether-leading-meta: 1.45;
   --aether-leading-body: 1.52;
@@ -1560,14 +1738,10 @@
   opacity: 0.35;
 }
 
-[data-readability-mode="high"] .aether-surface,
-[data-readability-mode="high"] .aether-surface-strong,
 [data-readability-mode="high"] .aether-focus-panel,
-[data-readability-mode="high"] .aether-readable-surface,
 [data-readability-mode="high"] .aether-status-shell,
 [data-readability-mode="high"] .aether-log-panel,
-[data-readability-mode="high"] .aether-action-button,
-[data-readability-mode="high"] .aether-combat-action {
+[data-readability-mode="high"] .aether-action-button {
   background:
     linear-gradient(180deg, rgba(21, 29, 39, 0.99) 0%, rgba(8, 12, 18, 1) 100%);
   border-color: rgba(228, 238, 247, 0.2);
@@ -1578,16 +1752,10 @@
 }
 
 [data-readability-mode="high"] .aether-log-row,
-[data-readability-mode="high"] .aether-decision-cell,
-[data-readability-mode="high"] .aether-combat-forecast-cell,
 [data-readability-mode="high"] .aether-relic-decision-cell,
 [data-readability-mode="high"] .aether-run-reflection-cell,
-[data-readability-mode="high"] .aether-choice-cell,
 [data-readability-mode="high"] .aether-shop-delta,
-[data-readability-mode="high"] .aether-map-route-card,
-[data-readability-mode="high"] .aether-map-node,
 [data-readability-mode="high"] .aether-status-metric,
-[data-readability-mode="high"] .aether-action-icon,
 [data-readability-mode="high"] .aether-combat-action-icon {
   border-color: rgba(228, 238, 247, 0.16);
   background: rgba(255, 255, 255, 0.055);
@@ -1602,9 +1770,6 @@
 [data-readability-mode="high"] .aether-relic-decision-strip,
 [data-readability-mode="high"] .aether-run-reflection-strip,
 [data-readability-mode="high"] .aether-shop-row,
-[data-readability-mode="high"] .aether-route-strip,
-[data-readability-mode="high"] .aether-map-current-card,
-[data-readability-mode="high"] .aether-map-node.is-current,
 [data-readability-mode="high"] .aether-route-topology-current,
 [data-readability-mode="high"] .aether-route-topology-node.is-recommended {
   border-color: rgba(185, 241, 236, 0.34);
@@ -1667,8 +1832,6 @@
   color: #ffe8f2;
 }
 
-[data-readability-mode="high"] .animate-aurora,
-[data-readability-mode="high"] .animate-float-slow,
 [data-readability-mode="high"] [class*="blur-3xl"],
 [data-readability-mode="high"] [class*="blur-xl"] {
   animation: none !important;
@@ -1704,14 +1867,15 @@
   box-shadow: 0 0 0 5px rgba(125, 212, 216, 0.18);
 }
 
+/* 선명하게 모드의 굵은 링도 넘침을 자르는 칸 안에서는 안쪽으로(A11Y-07) */
+[data-readability-mode="high"] :where(:is(.overflow-auto, .overflow-y-auto, .overflow-x-auto, .overflow-scroll, .overflow-y-scroll, .overflow-x-scroll, .overflow-hidden, .overflow-x-hidden, .overflow-y-hidden):not([data-app-shell])) :is(button, a, input, textarea, select, [role="button"]):focus-visible {
+  outline-offset: -3px;
+  box-shadow: none;
+}
+
 /* Slice 54: combat keeps the enemy and the current turn ahead of history. */
 .aether-status-shell[data-status-mode="combat"],
 .aether-status-shell[data-status-mode="combat"] .aether-encounter-stage,
-.aether-combat-control,
-.aether-combat-control .aether-combat-loadout,
-.aether-combat-control .aether-combat-forecast,
-.aether-combat-control .aether-combat-forecast-cell,
-.aether-combat-control .aether-combat-action,
 .aether-combat-log,
 .aether-combat-log .aether-log-row {
   border-radius: 8px;
@@ -1732,17 +1896,42 @@
   min-height: 76px;
 }
 
-.aether-combat-control {
-  border: 1px solid rgba(244, 165, 202, 0.2);
-  background:
-    linear-gradient(90deg, rgba(244, 114, 182, 0.06), transparent 45%),
-    linear-gradient(180deg, rgba(23, 29, 38, 0.98), rgba(8, 12, 18, 0.995));
-  box-shadow: 0 10px 22px rgba(1, 5, 11, 0.22);
+/* 게임 필 감사 GF-02: 맞는 순간의 적 초상은 테두리가 붉어지고 밝아지며, 처치 순간에는 빛을 잃는다(흑백 · 흐림).
+   초상 자리(`enemy-portrait`)만 잡으므로 초상의 크기 · 등급 테두리와 무관하다. 움직임(밀림 · 작아짐)은 모션 감소 설정이 아닐 때만. */
+.aether-encounter-stage [data-testid="enemy-portrait"] {
+  transition: transform 150ms ease-out, filter 500ms ease-out, opacity 500ms ease-out, border-color 150ms ease-out;
 }
 
-.aether-combat-control .aether-combat-action {
-  min-width: 0;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+.aether-encounter-stage[data-hit-flash="true"]:not([data-defeated]) [data-testid="enemy-portrait"] {
+  border-color: rgba(253, 164, 175, 0.6);
+  filter: brightness(1.2) saturate(1.25);
+}
+
+.aether-encounter-stage[data-defeated="true"] [data-testid="enemy-portrait"] {
+  border-color: rgba(254, 205, 211, 0.1);
+  filter: grayscale(1);
+  opacity: 0.6;
+}
+
+/* 처치 도장은 찍히듯 나타난다 — 모션 감소 설정이면 전역 규칙이 곧바로 마지막 모습(보이는 도장)으로 끝낸다. */
+.aether-defeated-stamp {
+  transform: rotate(-6deg);
+  animation: aether-defeated-stamp-in 180ms ease-out both;
+}
+
+@keyframes aether-defeated-stamp-in {
+  from { opacity: 0; transform: scale(1.4) rotate(-6deg); }
+  to { opacity: 1; transform: scale(1) rotate(-6deg); }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .aether-encounter-stage[data-hit-flash="true"]:not([data-defeated]) [data-testid="enemy-portrait"] {
+    transform: translateX(3px);
+  }
+
+  .aether-encounter-stage[data-defeated="true"] [data-testid="enemy-portrait"] {
+    transform: scale(0.9);
+  }
 }
 
 .aether-combat-log {
@@ -1759,20 +1948,50 @@
 
 @media (prefers-reduced-motion: reduce) {
   .aether-status-shell[data-status-mode="combat"],
-  .aether-combat-control,
   .aether-combat-log {
     transition: none;
   }
 }
 
+/* 2026-10 감사 VD-02 · GF-05: 적의 무게는 초상 테두리와 교전 카드가 말한다 — 보스는 금빛 이중 테두리, 의뢰 우두머리는 호박빛,
+   정예는 장밋빛, 일반은 옅은 테두리다. 타격 번쩍임(`data-hit-flash`)이 있는 동안은 원래 번쩍임 테두리가 이긴다. */
+
+.aether-encounter-stage[data-enemy-rank="boss"] {
+  background-image:
+    radial-gradient(circle at 12% 50%, rgba(233, 196, 106, 0.16), transparent 34%),
+    linear-gradient(180deg, rgba(74, 18, 26, 0.7) 0%, rgba(22, 8, 11, 0.9) 100%);
+}
+
+.aether-encounter-stage[data-enemy-rank="boss"]:not([data-hit-flash]) {
+  border-color: rgba(233, 196, 106, 0.5);
+  box-shadow: 0 12px 26px rgba(22, 6, 10, 0.3), inset 0 0 0 1px rgba(233, 196, 106, 0.14);
+}
+
+.aether-encounter-stage[data-enemy-rank="elite"]:not([data-hit-flash]),
+.aether-encounter-stage[data-enemy-rank="champion"]:not([data-hit-flash]) {
+  border-color: rgba(253, 164, 175, 0.34);
+}
+
+.aether-encounter-stage[data-enemy-rank="boss"]:not([data-hit-flash]) .aether-enemy-health-fill {
+  background-image: linear-gradient(90deg, #be123c, #f59e0b 92%, #f6e7a2);
+}
+
+.aether-encounter-stage[data-enemy-rank="boss"] .aether-enemy-health-track {
+  border-color: rgba(233, 196, 106, 0.4);
+}
+
+/* 내 생명 · 기력 막대 — 맞으면 칸이 붉게 번쩍이고 2px 흔들린다(모션 감소 설정이면 위의 전역 규칙이 흔들림을 끈다). */
+
+@keyframes aether-vitals-hit {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-2px); }
+  50% { transform: translateX(2px); }
+  75% { transform: translateX(-1px); }
+}
+
 /* Slice 55: compare missions first, then leave town through one preparation gate. */
 .aether-expedition-prep,
-.aether-expedition-check,
-.aether-quest-board,
-.aether-quest-board .aether-choice-row,
-.aether-quest-board .aether-choice-cell,
-.aether-quest-board .aether-quest-detail,
-.aether-quest-board button {
+.aether-expedition-check {
   border-radius: 8px;
 }
 
@@ -1789,40 +2008,2415 @@
   background: rgba(255, 255, 255, 0.035);
 }
 
-.aether-quest-board .aether-choice-row {
-  border-color: rgba(238, 244, 249, 0.13);
-  background: rgba(18, 25, 33, 0.96);
-  box-shadow: none;
-}
-
-.aether-quest-board .aether-choice-row[data-quest-row-kind="featured"] {
-  border-color: rgba(125, 212, 216, 0.22);
-  background:
-    linear-gradient(90deg, rgba(125, 212, 216, 0.06), transparent 42%),
-    rgba(16, 23, 31, 0.98);
-}
-
-.aether-quest-board .aether-choice-row[data-quest-row-kind="locked-preview"] {
-  border-color: rgba(213, 177, 128, 0.2);
-  background: rgba(27, 24, 20, 0.88);
-}
-
-.aether-quest-detail {
-  border: 1px solid rgba(213, 177, 128, 0.22);
-  background: rgba(24, 21, 17, 0.72);
-}
-
-[data-readability-mode="high"] .aether-expedition-prep,
-[data-readability-mode="high"] .aether-quest-board .aether-choice-row,
-[data-readability-mode="high"] .aether-quest-detail {
+[data-readability-mode="high"] .aether-expedition-prep {
   border-color: rgba(228, 238, 247, 0.3);
   background: rgba(14, 20, 27, 1);
   box-shadow: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .aether-expedition-prep,
-  .aether-quest-board [data-testid="quest-board-detail-toggle"] svg {
+  .aether-expedition-prep {
     transition: none;
   }
 }
+
+/* === w3:combat === */
+/* 2026-10 에테르 유리 전투 화면 — 조작판(덱) · 신호 칩 · 판단 요약 · 행동 단추 · 소모품 · 기술 칸 · 내 생명 막대 · 적 초상 · 단계 배너.
+   색은 토큰만 쓴다(`rgb(var(--aether-…-rgb) / a)`). 층은 톤 + 테두리 빛으로 나누고 회색 테두리는 쓰지 않는다. */
+
+/* 덱: 넓은 칸(데스크톱 가운데 열)에서는 행동 넷이 한 줄 독으로 늘어선다 — 공격이 조금 더 넓다. */
+.ae-combat-deck {
+  container: ae-combat-deck / inline-size;
+}
+
+@container ae-combat-deck (min-width: 560px) {
+  .ae-combat-actions {
+    grid-template-columns: minmax(0, 1.5fr) repeat(3, minmax(0, 1fr));
+  }
+}
+
+/* 신호 칩: 위협 문구는 길 수 있다 — 칩 안에서 줄을 넘기고 칸 밖으로 나가지 않는다(말줄임 없음). */
+.ae-combat-signal {
+  max-width: 100%;
+  white-space: normal;
+  text-align: left;
+}
+
+.ae-combat-signal-boss {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.55);
+}
+
+.ae-combat-signature-hint {
+  background: rgb(var(--aether-rarity-legendary-rgb) / 0.1);
+  color: rgb(var(--aether-rarity-legendary-rgb));
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-rarity-legendary-rgb) / 0.32);
+}
+
+/* 판단 요약 세 칸: 우물 층 위에 판단의 색(압박 = 위협, 우세 = 좋음, 보상 = 금, 평온 = 에테르)이 위쪽 테두리 빛으로 들어온다. */
+.ae-combat-forecast {
+  --ae-forecast-accent: var(--aether-ether-rgb);
+}
+
+.ae-combat-forecast[data-forecast-tone="pressure"] { --ae-forecast-accent: var(--aether-threat-rgb); }
+.ae-combat-forecast[data-forecast-tone="advantage"] { --ae-forecast-accent: var(--aether-good-rgb); }
+.ae-combat-forecast[data-forecast-tone="reward"] { --ae-forecast-accent: var(--aether-gold-rgb); }
+.ae-combat-forecast[data-forecast-tone="steady"] { --ae-forecast-accent: var(--aether-ether-rgb); }
+
+.ae-combat-forecast-cell {
+  box-shadow:
+    inset 0 2px 0 rgb(var(--ae-forecast-accent) / 0.7),
+    inset 0 0 0 1px rgb(var(--ae-forecast-accent) / 0.12);
+}
+
+.ae-combat-forecast-cell:first-child {
+  background:
+    linear-gradient(180deg, rgb(var(--ae-forecast-accent) / 0.12) 0%, transparent 70%),
+    var(--aether-s3);
+}
+
+[data-readability-mode="high"] .ae-combat-forecast {
+  --ae-forecast-accent: var(--aether-ether-hi-rgb);
+}
+
+[data-readability-mode="high"] .ae-combat-forecast-cell {
+  background: var(--aether-s2);
+  box-shadow:
+    inset 0 2px 0 rgb(var(--ae-forecast-accent) / 0.9),
+    inset 0 0 0 1px rgb(var(--aether-ink-rgb) / 0.16);
+}
+
+/* 행동 단추: 아이콘은 32px 타일(공용 가독성 계약이 28px 이상을 잰다). 예전 `.aether-combat-action-icon` 테두리 · 흰 바탕을 덮는다. */
+.ae-combat-action .aether-combat-action-icon {
+  display: inline-flex;
+  width: 32px;
+  height: 32px;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: var(--aether-r-sm);
+  background: rgb(var(--aether-sunk-rgb) / 0.35);
+  color: inherit;
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ink-rgb) / 0.06);
+}
+
+.ae-combat-action.ae-btn-primary .aether-combat-action-icon {
+  background: rgb(var(--aether-gold-ink-rgb) / 0.14);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-ink-rgb) / 0.16);
+}
+
+.ae-combat-action.ae-btn-glass .aether-combat-action-icon {
+  color: var(--aether-ether);
+}
+
+.ae-combat-action:disabled .aether-combat-action-icon {
+  color: var(--aether-ink-3);
+  background: rgb(var(--aether-sunk-rgb) / 0.3);
+}
+
+.ae-combat-action-escape {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ink-rgb) / 0.07);
+}
+
+.ae-combat-action:focus-visible {
+  outline: 2px solid var(--aether-ether);
+  outline-offset: 2px;
+}
+
+[data-readability-mode="high"] .ae-combat-action .aether-combat-action-icon {
+  background: rgb(var(--aether-sunk-rgb) / 0.55);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ink-rgb) / 0.18);
+}
+
+/* 소모품 · 보스 카드: 우물 층 + 테두리 빛. */
+.ae-combat-consumable {
+  transition: box-shadow var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-combat-consumable:hover:not(:disabled),
+.ae-combat-consumable:focus-visible {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.35);
+}
+
+.ae-combat-boss-card {
+  box-shadow: inset 0 1px 0 rgb(var(--aether-gold-rgb) / 0.18);
+}
+
+/* 기술 칸: 고른 칸은 에테르 테두리 빛 · 옅은 에테르 바탕. */
+.ae-combat-skill-chip {
+  background: var(--aether-s4);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-ink-rgb) / 0.06);
+  transition: box-shadow var(--aether-dur-ui) var(--aether-ease), background-color var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-combat-skill-chip:hover:not(:disabled) {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.35);
+}
+
+.ae-combat-skill-chip.is-selected {
+  background: linear-gradient(180deg, rgb(var(--aether-ether-rgb) / 0.16) 0%, rgb(var(--aether-ether-rgb) / 0.08) 100%), var(--aether-s4);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.6), 0 0 12px rgb(var(--aether-ether-rgb) / 0.16);
+}
+
+.ae-combat-skill-chip:focus-visible {
+  outline: 2px solid var(--aether-ether);
+  outline-offset: 1px;
+}
+
+/* 내 생명 · 기력: 맞으면 우물 칸이 생명색으로 번쩍이고 2px 흔들린다(모션 감소 설정이면 번쩍임만). */
+.ae-combat-vitals {
+  transition:
+    background-color var(--aether-dur-ui) var(--aether-ease),
+    box-shadow var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-combat-vitals[data-vitals-flash="damage"] {
+  background-color: rgb(var(--aether-life-lo-rgb) / 0.3);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-life-rgb) / 0.7), 0 0 12px rgb(var(--aether-life-rgb) / 0.3);
+}
+
+.ae-combat-vitals[data-vitals-flash="heal"] {
+  background-color: rgb(var(--aether-good-rgb) / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-good-rgb) / 0.6), 0 0 12px rgb(var(--aether-good-rgb) / 0.22);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .ae-combat-vitals[data-vitals-flash="damage"] {
+    animation: aether-vitals-hit var(--aether-dur-ui) var(--aether-ease) 1;
+  }
+}
+
+/* 적 초상: 작은 무대 — 안쪽 비네트 · 발밑 그림자 · 무게별 테두리 빛(일반 < 정예 < 우두머리 < 보스). 모서리 꺾쇠는 쓰지 않는다. */
+.ae-enemy-portrait {
+  border: 1px solid rgb(var(--aether-ink-rgb) / 0.1);
+  background:
+    radial-gradient(circle at 50% 42%, rgb(var(--aether-s4-rgb) / 0.9) 0%, rgb(var(--aether-s2-rgb) / 0.9) 58%, rgb(var(--aether-sunk-rgb) / 0.95) 100%);
+  box-shadow: inset 0 0 18px rgb(var(--aether-void-rgb) / 0.75), inset 0 1px 0 rgb(var(--aether-ink-rgb) / 0.06);
+  isolation: isolate;
+}
+
+.ae-enemy-portrait > .aether-monster-art {
+  position: relative;
+  z-index: 2;
+}
+
+.ae-enemy-ground {
+  position: absolute;
+  left: 50%;
+  bottom: 9px;
+  z-index: 1;
+  width: 56px;
+  height: 10px;
+  border-radius: 999px;
+  transform: translateX(-50%);
+  background: radial-gradient(ellipse at center, rgb(var(--aether-void-rgb) / 0.75) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.ae-enemy-portrait[data-enemy-rank="elite"] {
+  border-color: rgb(var(--aether-threat-rgb) / 0.5);
+  box-shadow: inset 0 0 18px rgb(var(--aether-void-rgb) / 0.75), 0 0 10px rgb(var(--aether-threat-rgb) / 0.2);
+}
+
+.ae-enemy-portrait[data-enemy-rank="champion"] {
+  border-color: rgb(var(--aether-gold-lo-rgb) / 0.8);
+  box-shadow: inset 0 0 18px rgb(var(--aether-void-rgb) / 0.75), 0 0 10px rgb(var(--aether-gold-lo-rgb) / 0.3);
+}
+
+.ae-enemy-portrait[data-enemy-rank="boss"] {
+  border-width: 2px;
+  border-color: rgb(var(--aether-gold-rgb) / 0.85);
+  background:
+    radial-gradient(circle at 50% 42%, rgb(var(--aether-life-lo-rgb) / 0.32) 0%, rgb(var(--aether-s2-rgb) / 0.92) 62%, rgb(var(--aether-sunk-rgb) / 0.96) 100%);
+  box-shadow:
+    inset 0 0 18px rgb(var(--aether-void-rgb) / 0.8),
+    inset 0 0 0 2px rgb(var(--aether-sunk-rgb) / 0.85),
+    0 0 14px rgb(var(--aether-gold-rgb) / 0.3);
+}
+
+/* 보스 뒤 정적 마법진 — 움직이지 않는다. 모션 감소 설정이면 그리지 않는다(장식). */
+.ae-enemy-magic-circle {
+  position: absolute;
+  inset: 4px;
+  z-index: 0;
+  width: calc(100% - 8px);
+  height: calc(100% - 8px);
+  fill: none;
+  stroke: rgb(var(--aether-gold-rgb) / 0.38);
+  stroke-width: 1;
+  pointer-events: none;
+}
+
+.ae-enemy-magic-circle line {
+  stroke: rgb(var(--aether-gold-rgb) / 0.5);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ae-enemy-magic-circle {
+    display: none;
+  }
+}
+
+/* 보스 단계 배너: 시트 층 + 단계 색 테두리 빛(2단계 = 생명, 최종 = 경험). */
+.ae-phase-banner {
+  --ae-phase-accent: var(--aether-life-rgb);
+  background: linear-gradient(180deg, rgb(var(--aether-s3-rgb) / 0.92) 0%, rgb(var(--aether-s1-rgb) / 0.94) 100%);
+  box-shadow:
+    var(--aether-e3),
+    inset 0 0 0 1px rgb(var(--ae-phase-accent) / 0.55),
+    0 0 28px rgb(var(--ae-phase-accent) / 0.3);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+[data-phase-tone="final"] .ae-phase-banner {
+  --ae-phase-accent: var(--aether-exp-rgb);
+}
+
+.ae-phase-banner-label {
+  color: rgb(var(--ae-phase-accent));
+}
+/* === /w3:combat === */
+
+/* === w3:field === */
+/* 2026-10 에테르 유리 — 원정 · 마을 조작판, 기록 창(연대기), 이벤트, 경로(w3:field).
+   층은 톤(s1 < s2 < s3 < s4)과 위쪽 1px 림으로 가른다 — 회색 테두리를 쓰지 않는다. 색은 토큰만 쓴다. */
+
+/* ── 조작판 · 컨테이너 질의(데스크톱 가운데 열에서 한 줄 도크) ── */
+.ae-control {
+  container-type: inline-size;
+  container-name: ae-control;
+}
+
+/* ── 임무 카드: 호박빛 카드 하나 ── */
+.ae-mission-card.aether-mission-strip {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--aether-r-lg);
+  background:
+    radial-gradient(90% 100% at 0% 0%, rgb(var(--aether-gold-rgb) / 0.11), transparent 62%),
+    linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-gold-rgb) / 0.18), var(--aether-e1);
+}
+
+.ae-mission-card[data-tracker-kind="claimable"] {
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.3),
+    inset 0 1px 0 rgb(var(--aether-gold-rgb) / 0.24),
+    var(--aether-e1);
+}
+
+.ae-mission-card[data-tracker-kind="bounty"] {
+  background:
+    radial-gradient(90% 100% at 0% 0%, rgb(var(--aether-life-rgb) / 0.1), transparent 62%),
+    linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-life-rgb) / 0.2), var(--aether-e1);
+}
+
+.ae-mission-count {
+  padding: 4px 11px;
+  border-radius: 999px;
+  background: var(--aether-ether-wash);
+  color: var(--aether-ether-hi);
+  font-size: var(--aether-type-body);
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.ae-gauge.ae-mission-gauge {
+  height: 4px;
+}
+
+.ae-mission-claim {
+  background: rgb(var(--aether-gold-rgb) / 0.12);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.28);
+  transition: background-color var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-mission-claim:hover:not(:disabled) {
+  background: rgb(var(--aether-gold-rgb) / 0.18);
+}
+
+.ae-mission-claim:disabled {
+  cursor: not-allowed;
+  background: var(--aether-s3);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+}
+
+/* ── 추천 경로 줄 ── */
+.ae-route-signal {
+  border-radius: var(--aether-r-md);
+  background: linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+  box-shadow: var(--aether-e1);
+}
+
+.ae-route-signal-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--aether-r-sm);
+  background: var(--aether-ether-wash);
+  color: var(--aether-ether);
+}
+
+/* ── 원정 도크: 탐험(금, 폭 전체) + 이동 · 지도 · 정찰 · 가방(유리 한 줄) ── */
+.ae-field-dock {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.ae-field-dock > .ae-dock-primary {
+  grid-column: 1 / -1;
+}
+
+.ae-dock-btn.ae-btn {
+  flex-direction: column;
+  gap: 4px;
+  min-height: 60px;
+  padding: 8px 4px;
+  font-size: var(--aether-type-body);
+  text-align: center;
+  word-break: keep-all;
+}
+
+.ae-dock-btn .ae-btn-text {
+  gap: 1px;
+}
+
+/* 마을 빠른 행동은 한 줄(아이콘 · 이름 나란히) — 첫 화면에서 기록 창 높이를 덜 먹는다. */
+.ae-town-quick .ae-dock-btn.ae-btn {
+  flex-direction: row;
+  gap: 8px;
+  min-height: 48px;
+  padding: 8px 12px;
+}
+
+.ae-dock-btn.is-recommended:not(:disabled) {
+  box-shadow:
+    inset 0 0 0 1px var(--aether-rim-ether),
+    inset 0 1px 0 rgb(var(--aether-ether-hi-rgb) / 0.2),
+    0 4px 12px rgb(var(--aether-void-rgb) / 0.4);
+}
+
+.ae-dock-btn:hover:not(:disabled),
+.ae-route-signal:hover {
+  filter: brightness(1.06);
+}
+
+@container ae-control (min-width: 600px) {
+  .ae-field-dock {
+    grid-template-columns: minmax(0, 2fr) repeat(4, minmax(0, 1fr));
+  }
+
+  .ae-field-dock > .ae-dock-primary {
+    grid-column: auto;
+    min-height: 60px;
+  }
+}
+
+/* ── 마을: 원정 준비 카드 · 지난 원정 줄 · 시설 격자 ── */
+.ae-prep-card.aether-expedition-prep {
+  border: 0;
+  border-radius: var(--aether-r-lg);
+  background: linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+  box-shadow: var(--aether-e2);
+}
+
+.ae-prep-card .aether-expedition-check {
+  border: 0;
+  border-radius: var(--aether-r-sm);
+}
+
+.ae-btn.ae-prep-archive {
+  min-height: 44px;
+  padding: 0 10px;
+  gap: 6px;
+  font-size: var(--aether-type-meta);
+}
+
+.ae-btn.ae-prep-focus {
+  min-width: 48px;
+  padding: 0 12px;
+}
+
+.ae-town-row {
+  border-radius: var(--aether-r-md);
+  background: var(--aether-s2);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+  transition: background-color var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-town-row:hover {
+  background: var(--aether-s3);
+}
+
+.ae-town-facilities {
+  border-radius: var(--aether-r-md);
+  background: var(--aether-s1);
+  box-shadow: var(--aether-e1);
+}
+
+.ae-town-facilities[open] .ae-town-facilities-chevron {
+  transform: rotate(180deg);
+}
+
+.ae-town-facilities-chevron {
+  transition: transform var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-btn.ae-reopen-ascension {
+  color: var(--aether-gold-text);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.3), 0 4px 12px rgb(var(--aether-void-rgb) / 0.4);
+}
+
+.ae-btn.ae-reopen-ascension .ae-btn-icon {
+  color: var(--aether-gold);
+}
+
+/* ── 이동 경로 보드 · 갈림길 ── */
+.ae-route-guide {
+  border-top: 1px solid var(--aether-hairline);
+}
+
+.aether-route-topology {
+  border: 0;
+  border-radius: var(--aether-r-md);
+  background-color: var(--aether-sunk);
+  background-image:
+    radial-gradient(70% 60% at 50% 0%, var(--aether-glow-ether), transparent 70%);
+  box-shadow: inset 0 1px 2px rgb(var(--aether-void-rgb) / 0.6);
+}
+
+.aether-route-topology-current {
+  border: 0;
+  border-radius: var(--aether-r-sm);
+  background: var(--aether-ether-wash);
+  color: var(--aether-ether-hi);
+  box-shadow: inset 0 0 0 1px var(--aether-rim-ether);
+}
+
+.aether-route-topology-connector::before {
+  background: rgb(var(--aether-ether-rgb) / 0.5);
+}
+
+.aether-route-topology-connector > span,
+.aether-route-topology-branch::before {
+  background: rgb(var(--aether-ether-rgb) / 0.28);
+}
+
+.aether-route-topology-node {
+  border: 0;
+  border-radius: var(--aether-r-sm);
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
+  transition: filter var(--aether-dur-ui) var(--aether-ease), box-shadow var(--aether-dur-ui) var(--aether-ease);
+}
+
+.aether-route-topology-node:hover:not(:disabled),
+.aether-route-topology-node:focus-visible {
+  border-color: transparent;
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  filter: brightness(1.08);
+}
+
+.aether-route-topology-node.is-recommended {
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 0 0 1px var(--aether-rim-ether), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
+}
+
+.aether-route-topology-node.is-mission {
+  background:
+    linear-gradient(180deg, rgb(var(--aether-gold-rgb) / 0.1) 0%, transparent 100%),
+    var(--aether-s3);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.34), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
+}
+
+.aether-route-topology-node.is-boss {
+  background:
+    linear-gradient(180deg, var(--aether-threat-wash) 0%, transparent 100%),
+    var(--aether-s3);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-life-rgb) / 0.32), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
+}
+
+.aether-route-topology-node.is-selected {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.55), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
+}
+
+.aether-route-topology-node.is-locked,
+.aether-route-topology-node:disabled {
+  background: var(--aether-s2);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+  color: var(--aether-ink-3);
+  filter: none;
+}
+
+.aether-route-topology-node:disabled .aether-route-topology-name {
+  color: var(--aether-ink-2);
+}
+
+.aether-route-region-art {
+  filter: drop-shadow(0 3px 6px rgb(var(--aether-void-rgb) / 0.4));
+}
+
+/* ── 기록 창: 장면 카드 + 연대기 ── */
+.ae-chronicle.aether-log-panel {
+  border: 0;
+  border-radius: var(--aether-r-lg);
+  background: linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+  box-shadow: var(--aether-e2);
+}
+
+.ae-chronicle.aether-combat-log {
+  border-radius: var(--aether-r-md);
+}
+
+.ae-scene-header {
+  border-bottom: 1px solid var(--aether-hairline);
+}
+
+.ae-scene-art {
+  border-radius: var(--aether-r-md);
+  background:
+    radial-gradient(70% 70% at 50% 40%, var(--aether-glow-ether), transparent 75%),
+    var(--aether-sunk);
+  box-shadow: inset 0 0 0 1px var(--aether-rim-ether), inset 0 1px 2px rgb(var(--aether-void-rgb) / 0.6);
+}
+
+.ae-chronicle .aether-log-row.ae-log-row {
+  display: grid;
+  grid-template-columns: 3.25rem minmax(0, 1fr);
+  column-gap: 10px;
+  align-items: baseline;
+  /* 2026-10-26: 9px → 7px — 390×844에서 한 행동의 줄(단서 · 장의 본문)이 기록 창에 함께 들어가도록. */
+  padding: 7px 4px;
+  border: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+
+.ae-chronicle .aether-log-row.ae-log-row + .aether-log-row.ae-log-row {
+  border-top: 1px solid var(--aether-hairline);
+}
+
+.ae-chronicle .ae-log-row.is-legendary {
+  background: linear-gradient(90deg, rgb(var(--aether-rarity-legendary-rgb) / 0.1), transparent 70%);
+  border-radius: var(--aether-r-xs);
+}
+
+.ae-chronicle .ae-log-row.is-critical,
+.ae-chronicle .ae-log-row.is-error {
+  background: linear-gradient(90deg, var(--aether-threat-wash), transparent 70%);
+  border-radius: var(--aether-r-xs);
+}
+
+.ae-chronicle .ae-log-badge {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  background: none;
+  font-family: var(--aether-readable-font);
+  font-size: var(--aether-type-meta);
+  font-weight: 700;
+  line-height: 1.6;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: nowrap;
+}
+
+.ae-chronicle.aether-combat-log .aether-log-row.ae-log-row {
+  grid-template-columns: 3rem minmax(0, 1fr);
+  padding-block: 7px;
+}
+
+.ae-log-toggle.ae-btn {
+  min-height: 44px;
+  padding: 0 12px;
+  font-size: var(--aether-type-meta);
+}
+
+.ae-first-journey {
+  border-top: 1px solid rgb(var(--aether-gold-rgb) / 0.22);
+}
+
+.ae-chronicle-footer {
+  border-top: 1px solid var(--aether-hairline);
+}
+
+/* ── 빠른 칸 ── */
+.ae-quick-slot {
+  background: var(--aether-s3);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+  transition: filter var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-quick-slot.is-ready {
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 0 0 1px var(--aether-rim-ether), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
+}
+
+.ae-quick-slot.is-ready:hover {
+  filter: brightness(1.08);
+}
+
+.ae-quick-slot.is-empty {
+  background: var(--aether-sunk);
+  box-shadow: inset 0 1px 2px rgb(var(--aether-void-rgb) / 0.5);
+}
+
+.ae-quick-slot-index {
+  background: var(--aether-s1);
+  box-shadow: inset 0 0 0 1px var(--aether-rim);
+}
+
+/* ── 이벤트: 장식 이야기 패널 하나 + 유리 선택지 ── */
+.ae-event-panel.aether-focus-panel {
+  border: 0;
+  border-radius: var(--aether-r-lg);
+  background: linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+  box-shadow: var(--aether-e2);
+  backdrop-filter: none;
+}
+
+.ae-event-choice.aether-event-choice {
+  border: 0;
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
+  transition:
+    transform var(--aether-dur-press) var(--aether-ease),
+    box-shadow var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-event-choice.aether-event-choice:hover {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.3), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
+}
+
+.ae-event-choice.aether-event-choice:active {
+  transform: scale(0.985);
+}
+
+.ae-event-choice-arrow {
+  transition: transform var(--aether-dur-ui) var(--aether-ease), color var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-event-choice:hover .ae-event-choice-arrow {
+  transform: translateX(2px);
+  color: var(--aether-gold);
+}
+
+.ae-event-art {
+  opacity: 0.85;
+  filter: drop-shadow(0 10px 20px rgb(var(--aether-void-rgb) / 0.45));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ae-dock-btn,
+  .ae-town-row,
+  .ae-town-facilities-chevron,
+  .ae-mission-claim,
+  .aether-route-topology-node,
+  .ae-quick-slot,
+  .ae-event-choice.aether-event-choice,
+  .ae-event-choice-arrow {
+    transition: none;
+  }
+
+  .ae-event-choice.aether-event-choice:active,
+  .ae-event-choice:hover .ae-event-choice-arrow {
+    transform: none;
+  }
+}
+/* === /w3:field === */
+
+/* === w3:town === */
+/* 2026-10 에테르 유리 — 마을 시설(상점 · 제작 · 임무 게시판 · 교환소 · 거울)과 집중 화면 머리.
+   마을 집중 화면의 루트는 `ae-town`을 함께 든다. 옛 `.aether-focus-panel` · 잠금 표시 클래스는 계약(대비 · 반경)이
+   클래스 이름을 보므로 그대로 두고, 이 범위 안에서 모양만 유리 층으로 덮는다. */
+.ae-town.aether-focus-panel {
+  border-color: transparent;
+  border-radius: var(--aether-r-lg);
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgb(var(--aether-ether-rgb) / 0.06), transparent 70%),
+    linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+  box-shadow: var(--aether-e2);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+[data-readability-mode="high"] .ae-town.aether-focus-panel {
+  border-color: transparent;
+  background: var(--aether-s1);
+  box-shadow: var(--aether-e1);
+}
+
+/* 집중 화면 머리 — 유리 한 장: 돌아가기 · 제목 · 기록 열기 */
+.ae-town-head {
+  background: linear-gradient(180deg, var(--aether-s2) 0%, rgb(var(--aether-s2-rgb) / 0.96) 100%);
+  box-shadow: inset 0 -1px 0 var(--aether-hairline);
+}
+
+[data-readability-mode="high"] .ae-town-head {
+  background: var(--aether-s1);
+  box-shadow: inset 0 -1px 0 var(--aether-rim-ether);
+}
+
+.ae-town-pill {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  min-width: 44px;
+  padding: 0 14px;
+  border-radius: 9999px;
+  color: var(--aether-ink);
+  font-size: var(--aether-type-body);
+  font-weight: 600;
+  line-height: 1.2;
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim), var(--aether-e1);
+  transition:
+    transform var(--aether-dur-press) var(--aether-ease),
+    filter var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-town-pill svg {
+  flex: none;
+  color: var(--aether-ether);
+}
+
+.ae-town-pill:hover {
+  filter: brightness(1.08);
+}
+
+.ae-town-pill:active {
+  transform: scale(0.97);
+}
+
+.ae-town-pill:focus-visible,
+.ae-town-seg-btn:focus-visible,
+.ae-town-pick:focus-visible {
+  outline: 2px solid var(--aether-ether);
+  outline-offset: 2px;
+}
+
+/* 나뉜 선택(구매 · 판매, 제작 방식, 교환 분류, 거울 경로) */
+.ae-town-seg {
+  display: grid;
+  grid-auto-columns: minmax(0, 1fr);
+  grid-auto-flow: column;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--aether-r-md);
+  background: var(--aether-sunk);
+  box-shadow: inset 0 1px 2px rgb(var(--aether-void-rgb) / 0.6), inset 0 0 0 1px var(--aether-hairline);
+}
+
+.ae-town-seg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 0 8px;
+  border-radius: var(--aether-r-sm);
+  color: var(--aether-ink-2);
+  font-size: var(--aether-type-body);
+  font-weight: 600;
+  line-height: 1.2;
+  text-align: center;
+  transition:
+    background-color var(--aether-dur-ui) var(--aether-ease),
+    color var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-town-seg-btn svg {
+  flex: none;
+  color: var(--aether-ink-3);
+}
+
+.ae-town-seg-btn:hover {
+  color: var(--aether-ink);
+}
+
+.ae-town-seg-btn[aria-pressed="true"] {
+  color: var(--aether-ink);
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim-ether), 0 2px 8px rgb(var(--aether-void-rgb) / 0.4);
+}
+
+.ae-town-seg-btn[aria-pressed="true"] svg {
+  color: var(--aether-ether);
+}
+
+.ae-town-seg.is-stacked .ae-town-seg-btn {
+  flex-direction: column;
+  gap: 3px;
+  min-height: 52px;
+  padding: 4px 2px;
+  font-size: var(--aether-type-label);
+}
+
+/* 목록 묶음 — 상자 대신 한 장의 우물 위에 머리카락 선 */
+.ae-town-group {
+  border-radius: var(--aether-r-md);
+  background: rgb(var(--aether-s3-rgb) / 0.55);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+}
+
+.ae-town-row + .ae-town-row {
+  box-shadow: inset 0 1px 0 var(--aether-hairline);
+}
+
+.ae-town-tile {
+  display: flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--aether-r-sm);
+  color: var(--aether-ink-2);
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+}
+
+.ae-town-tile.is-ether {
+  color: var(--aether-ether-hi);
+  background: rgb(var(--aether-ether-rgb) / 0.12);
+  box-shadow: inset 0 0 0 1px var(--aether-rim-ether);
+}
+
+.ae-town-tile.is-good {
+  color: var(--aether-good);
+  background: rgb(var(--aether-good-rgb) / 0.1);
+}
+
+/* 고르는 줄(교환 상품 · 거울 성장) — 고르면 에테르 테두리 */
+.ae-town-pick {
+  width: 100%;
+  text-align: left;
+  border-radius: var(--aether-r-md);
+  background: rgb(var(--aether-s3-rgb) / 0.55);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+  transition:
+    background-color var(--aether-dur-ui) var(--aether-ease),
+    box-shadow var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-town-pick:hover {
+  background: rgb(var(--aether-s4-rgb) / 0.6);
+}
+
+.ae-town-pick[aria-pressed="true"] {
+  background:
+    radial-gradient(120% 120% at 0% 0%, rgb(var(--aether-ether-rgb) / 0.1), transparent 60%),
+    rgb(var(--aether-s3-rgb) / 0.9);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.45), var(--aether-glow-ether) 0 0 18px;
+}
+
+/* 임무 카드 — 호박빛. 이야기 임무는 같은 카드에 에테르 결 하나만 더한다. */
+.ae-town-mission {
+  border-radius: var(--aether-r-md);
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgb(var(--aether-gold-rgb) / 0.1), transparent 60%),
+    linear-gradient(180deg, var(--aether-s3) 0%, var(--aether-s2) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-gold-rgb) / 0.16), inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.1), var(--aether-e1);
+}
+
+.ae-town-mission.is-story {
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgb(var(--aether-ether-rgb) / 0.1), transparent 60%),
+    linear-gradient(180deg, var(--aether-s3) 0%, var(--aether-s2) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim-ether), inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.12), var(--aether-e1);
+}
+
+.ae-town-mission.is-reward {
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgb(var(--aether-good-rgb) / 0.1), transparent 60%),
+    linear-gradient(180deg, var(--aether-s3) 0%, var(--aether-s2) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-good-rgb) / 0.2), inset 0 0 0 1px rgb(var(--aether-good-rgb) / 0.14), var(--aether-e1);
+}
+
+.ae-town-mission.is-quiet {
+  background: rgb(var(--aether-s3-rgb) / 0.5);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+}
+
+[data-readability-mode="high"] .ae-town-mission,
+[data-readability-mode="high"] .ae-town-mission.is-story,
+[data-readability-mode="high"] .ae-town-mission.is-reward,
+[data-readability-mode="high"] .ae-town-group,
+[data-readability-mode="high"] .ae-town-pick {
+  background: var(--aether-s2);
+}
+
+/* 잠금 표시 — 계약이 보는 클래스 이름은 그대로, 분홍 대신 조용한 유리 */
+.ae-town .aether-locked-row,
+.ae-town .aether-craft-row {
+  border-color: transparent;
+  border-radius: var(--aether-r-md);
+}
+
+.ae-town .aether-craft-row {
+  background: rgb(var(--aether-s3-rgb) / 0.55);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+}
+
+.ae-town .aether-locked-row {
+  background: rgb(var(--aether-s3-rgb) / 0.4);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+}
+
+[data-readability-mode="high"] .ae-town .aether-craft-row {
+  background: var(--aether-s2);
+}
+
+.ae-town .aether-lock-note {
+  border-color: transparent;
+  border-radius: var(--aether-r-xs);
+  background: rgb(var(--aether-ink-3-rgb) / 0.12);
+  color: var(--aether-ink-2);
+}
+
+.ae-town .aether-disabled-action:disabled,
+[data-readability-mode="high"] .ae-town .aether-disabled-action:disabled {
+  border-color: transparent;
+  background: var(--aether-s3);
+  color: var(--aether-ink-2);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-ink-rgb) / 0.05);
+}
+
+[data-readability-mode="high"] .ae-town .aether-lock-note {
+  background: rgb(var(--aether-ink-3-rgb) / 0.2);
+  color: var(--aether-ink);
+}
+
+/* 거래 영수증 */
+.ae-town-receipt {
+  border-radius: var(--aether-r-sm);
+  color: var(--aether-good);
+  background: rgb(var(--aether-good-rgb) / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-good-rgb) / 0.22);
+}
+
+/* 교환소 · 거울 — 휴대폰은 한 화면 가득, 1024px 이상은 가운데 시트 */
+.ae-town-sheet {
+  border-radius: 0;
+}
+
+@media (min-width: 1024px) {
+  .ae-town-overlay {
+    align-items: center;
+    padding: 32px;
+  }
+
+  .ae-town-sheet {
+    height: auto;
+    max-height: min(860px, calc(100dvh - 64px));
+    max-width: 600px;
+    border-radius: var(--aether-r-xl);
+  }
+}
+
+.ae-town-sheet-foot {
+  background: rgb(var(--aether-s1-rgb) / 0.96);
+  box-shadow: inset 0 1px 0 var(--aether-hairline);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ae-town-pill,
+  .ae-town-seg-btn,
+  .ae-town-pick {
+    transition: none;
+  }
+
+  .ae-town-pill:active {
+    transform: none;
+  }
+}
+/* === /w3:town === */
+
+/* === w3:choice === */
+/* 2026-10 에테르 유리 — 선택 카드(유물 선택 · 전직 · 계승 · 진 엔딩). 색은 토큰 채널만 쓴다. */
+
+/* ── 유물 육각 메달 — 계열 색은 `--ae-relic-tone`(relicVisuals) 하나 ── */
+.ae-relic-medal {
+  position: relative;
+  isolation: isolate;
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  filter: drop-shadow(0 4px 10px rgb(var(--ae-relic-tone, var(--aether-ether-rgb)) / 0.28));
+}
+
+.ae-relic-medal::before,
+.ae-relic-medal::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  clip-path: polygon(50% 0%, 93.3% 25%, 93.3% 75%, 50% 100%, 6.7% 75%, 6.7% 25%);
+}
+
+.ae-relic-medal::before {
+  z-index: -2;
+  background: linear-gradient(180deg, rgb(var(--ae-relic-tone, var(--aether-ether-rgb)) / 0.8), rgb(var(--ae-relic-tone, var(--aether-ether-rgb)) / 0.24));
+}
+
+.ae-relic-medal::after {
+  z-index: -1;
+  inset: 2px;
+  background:
+    radial-gradient(70% 60% at 50% 40%, rgb(var(--ae-relic-tone, var(--aether-ether-rgb)) / 0.26), transparent 72%),
+    linear-gradient(180deg, var(--aether-s3), var(--aether-sunk));
+}
+
+.ae-relic-medal-art {
+  position: relative;
+  width: 68%;
+  height: 68%;
+  object-fit: contain;
+}
+
+/* ── 유물 선택 시트 ── */
+.ae-relic-slot-pip {
+  width: 8px;
+  height: 8px;
+  transform: rotate(45deg);
+  background: rgb(var(--aether-ink-rgb) / 0.1);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ink-rgb) / 0.18);
+}
+
+.ae-relic-slot-pip.is-filled {
+  background: var(--aether-gold);
+  box-shadow: 0 0 6px rgb(var(--aether-gold-rgb) / 0.45);
+}
+
+.ae-relic-decision-cell + .ae-relic-decision-cell {
+  box-shadow: inset 1px 0 0 rgb(var(--aether-ink-rgb) / 0.1);
+}
+
+.ae-relic-decision-label {
+  color: var(--aether-ink-3);
+}
+
+.ae-relic-decision[data-relic-tone="legendary"] .ae-relic-decision-label { color: rgb(var(--aether-rarity-legendary-rgb)); }
+.ae-relic-decision[data-relic-tone="synergy"] .ae-relic-decision-label { color: var(--aether-good); }
+.ae-relic-decision[data-relic-tone="potential"] .ae-relic-decision-label { color: var(--aether-gold-text); }
+.ae-relic-decision[data-relic-tone="steady"] .ae-relic-decision-label { color: var(--aether-ether-hi); }
+
+.ae-relic-card {
+  transition:
+    transform var(--aether-dur-ui) var(--aether-ease),
+    box-shadow var(--aether-dur-ui) var(--aether-ease),
+    opacity var(--aether-dur-ui) var(--aether-ease);
+}
+
+/* 계열 빛 — 메달 뒤에서 카드 안쪽으로 번진다 */
+.ae-relic-card::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  pointer-events: none;
+  background: radial-gradient(55% 95% at 0% 50%, rgb(var(--ae-relic-tone, var(--aether-ether-rgb)) / 0.16), transparent 72%);
+}
+
+/* 추천 카드 — 에테르 림 */
+.ae-relic-card[data-relic-recommended="true"] {
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.5),
+    0 0 22px rgb(var(--aether-ether-rgb) / 0.14),
+    var(--aether-e2);
+}
+
+/* 상한에서 받을 유물로 고른 카드 */
+.ae-relic-card[data-relic-replace-target="true"] {
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.6),
+    var(--aether-e2);
+}
+
+@keyframes aeChoiceRelicConfirm {
+  0% { transform: scale(1); }
+  60% { transform: scale(1.03); }
+  100% { transform: scale(1.025); }
+}
+
+/* 확정 박자(GF-08) — 고른 카드가 금빛 림으로 빛난 뒤 받는다 */
+.ae-relic-card[data-relic-confirming="true"] {
+  animation: aeChoiceRelicConfirm var(--aether-dur-ui) var(--aether-ease) forwards;
+  box-shadow:
+    inset 0 0 0 1.5px rgb(var(--aether-gold-hi-rgb) / 0.75),
+    0 0 28px rgb(var(--aether-gold-rgb) / 0.3),
+    var(--aether-e2);
+}
+
+.ae-relic-card:active {
+  transform: scale(0.985);
+}
+
+@media (hover: hover) {
+  .ae-relic-card:hover {
+    transform: translateY(-1px);
+  }
+
+  .ae-relic-card:hover::before {
+    opacity: 0.85;
+  }
+
+  .ae-relic-replace:hover {
+    background: var(--aether-s4);
+  }
+}
+
+.ae-relic-card-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: var(--aether-type-meta);
+  font-weight: 600;
+  line-height: var(--aether-leading-meta);
+}
+
+.ae-relic-card-line + .ae-relic-card-line {
+  margin-top: 2px;
+}
+
+.ae-relic-card-line-icon {
+  flex: none;
+  margin-top: 2px;
+}
+
+.ae-relic-replace {
+  transition: background-color var(--aether-dur-ui) var(--aether-ease);
+}
+
+@media (min-width: 1024px) {
+  .ae-relic-card::after {
+    background: radial-gradient(90% 55% at 15% 0%, rgb(var(--ae-relic-tone, var(--aether-ether-rgb)) / 0.16), transparent 72%);
+  }
+}
+
+[data-readability-mode="high"] .ae-relic-decision {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ether-hi-rgb) / 0.3);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ae-relic-card,
+  .ae-relic-replace {
+    transition: none;
+  }
+
+  .ae-relic-card:hover,
+  .ae-relic-card:active {
+    transform: none;
+  }
+
+  .ae-relic-card[data-relic-confirming="true"] {
+    animation: none;
+  }
+}
+
+/* ── 전직 — 성장 갈림길(작업 패널 껍데기는 그대로, 색만 토큰) ── */
+.ae-job-panel.aether-focus-panel {
+  background:
+    radial-gradient(120% 60% at 0% 0%, rgb(var(--aether-ether-rgb) / 0.08), transparent 60%),
+    linear-gradient(180deg, rgb(var(--aether-s2-rgb)), rgb(var(--aether-bg-rgb)));
+  border: 1px solid var(--aether-hairline);
+  box-shadow: var(--aether-e2);
+}
+
+.ae-class-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--aether-r-sm);
+  border: 1.5px solid rgb(var(--ae-class-tone, var(--aether-ink-3-rgb)) / 0.36);
+  background: rgb(var(--ae-class-tone, var(--aether-ink-3-rgb)) / 0.1);
+  color: rgb(var(--ae-class-tone, var(--aether-ink-3-rgb)));
+}
+
+.ae-job-option {
+  align-content: start;
+  transition:
+    transform var(--aether-dur-ui) var(--aether-ease),
+    box-shadow var(--aether-dur-ui) var(--aether-ease),
+    background-color var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-job-option[data-selected="true"] {
+  box-shadow: var(--aether-e1), inset 0 0 0 1.5px rgb(var(--aether-ether-hi-rgb) / 0.72), 0 0 18px rgb(var(--aether-ether-rgb) / 0.18);
+}
+
+/* 잠긴 직업 — 위험(장미) 대신 낮춘 유리 · 중립 잠금 표시. 이름 · 단계는 그대로 읽힌다. */
+.ae-job-option.aether-locked-row {
+  background: rgb(var(--aether-sunk-rgb) / 0.72);
+  border: 0;
+  box-shadow: inset 0 0 0 1px var(--aether-hairline);
+}
+
+.ae-job-option.aether-locked-row[data-selected="true"] {
+  box-shadow: inset 0 0 0 1.5px rgb(var(--aether-ether-hi-rgb) / 0.6);
+}
+
+.ae-job-option-status.aether-lock-note,
+.ae-job-decision .aether-lock-note {
+  min-height: 22px;
+  padding: 0 8px;
+  border-radius: 999px;
+  border: 1px solid var(--aether-hairline);
+  background: rgb(var(--aether-s3-rgb) / 0.9);
+  color: rgb(var(--aether-ink-2-rgb));
+}
+
+.ae-job-decision {
+  box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.32);
+}
+
+.ae-job-stats { overflow: hidden; }
+.ae-job-stat + .ae-job-stat { border-left: 1px solid var(--aether-hairline); }
+
+.ae-class-journey {
+  box-shadow: inset 2px 0 0 rgb(var(--aether-gold-rgb) / 0.55);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .ae-job-option:hover { transform: translateY(-1px); }
+}
+
+[data-readability-mode="high"] .ae-job-panel.aether-focus-panel { border-color: var(--aether-rim); }
+[data-readability-mode="high"] .ae-job-option.aether-locked-row { box-shadow: inset 0 0 0 1px var(--aether-rim); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ae-job-option { transition: none; }
+  .ae-job-option:hover { transform: none; }
+}
+
+/* ── 회차 규칙 카드 · 도전 조건 — 고른 카드는 에테르 테두리, 잠긴 칸은 금 칩 ── */
+.ae-choice-option {
+  transition:
+    box-shadow var(--aether-dur-ui) var(--aether-ease),
+    background-color var(--aether-dur-ui) var(--aether-ease),
+    transform var(--aether-dur-press) var(--aether-ease);
+}
+
+.ae-choice-option[data-selected="true"] {
+  box-shadow: var(--aether-e1), inset 0 0 0 1.5px rgb(var(--aether-ether-hi-rgb) / 0.72), 0 0 16px rgb(var(--aether-ether-rgb) / 0.16);
+}
+
+.ae-choice-option[data-locked="true"] {
+  cursor: default;
+  box-shadow: var(--aether-e1), inset 0 0 0 1.5px rgb(var(--aether-gold-rgb) / 0.5);
+}
+
+.ae-choice-option:active:not([data-locked="true"]) { transform: scale(0.985); }
+
+.ae-choice-small-btn {
+  min-height: 44px;
+  padding-inline: 12px;
+  font-size: var(--aether-type-meta);
+}
+
+.ae-choice-rule {
+  box-shadow: inset 2px 0 0 rgb(var(--aether-gold-rgb) / 0.6);
+}
+
+.ae-choice-toggle {
+  border-radius: var(--aether-r-sm);
+  border: 1px solid var(--aether-hairline);
+  background: rgb(var(--aether-s3-rgb) / 0.9);
+  color: rgb(var(--aether-ink-2-rgb));
+  transition: box-shadow var(--aether-dur-ui) var(--aether-ease), background-color var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-choice-toggle[data-selected="true"] {
+  border-color: rgb(var(--aether-gold-rgb) / 0.55);
+  background: rgb(var(--aether-gold-rgb) / 0.12);
+  color: rgb(var(--aether-gold-text-rgb));
+}
+
+.ae-choice-outlook { border-top: 1px solid var(--aether-hairline); }
+
+.ae-choice-settings {
+  border-radius: var(--aether-r-md);
+  background: rgb(var(--aether-s2-rgb) / 0.72);
+  box-shadow: inset 0 0 0 1px var(--aether-hairline);
+}
+
+.ae-choice-settings-caret { transition: transform var(--aether-dur-ui) var(--aether-ease); }
+.ae-choice-settings[open] .ae-choice-settings-caret { transform: rotate(180deg); }
+
+@media (hover: hover) and (pointer: fine) {
+  .ae-choice-option:not([data-locked="true"]):hover { background-color: rgb(var(--aether-s3-rgb) / 0.9); }
+}
+
+[data-readability-mode="high"] .ae-choice-settings,
+[data-readability-mode="high"] .ae-choice-toggle { box-shadow: inset 0 0 0 1px var(--aether-rim); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ae-choice-option,
+  .ae-choice-toggle,
+  .ae-choice-settings-caret { transition: none; }
+  .ae-choice-option:active:not([data-locked="true"]) { transform: none; }
+}
+
+/* ── 계승 · 진 엔딩 시트 — 머리 · 바닥 띠, 나뉜 줄, 같은 무게의 결정 한 쌍 ── */
+.ae-choice-sheet-head { border-bottom: 1px solid var(--aether-hairline); }
+.ae-choice-sheet-foot {
+  border-top: 1px solid var(--aether-hairline);
+  background: rgb(var(--aether-s1-rgb) / 0.96);
+}
+.ae-choice-divided { border-top: 1px solid var(--aether-hairline); }
+.ae-choice-kept { box-shadow: inset 2px 0 0 rgb(var(--aether-good-rgb) / 0.55); }
+.ae-choice-reset { box-shadow: inset 2px 0 0 rgb(var(--aether-threat-rgb) / 0.55); }
+.ae-growth-row > * { border-top: 1px solid var(--aether-hairline); }
+.ae-choice-claim { font-size: var(--aether-type-meta); padding-inline: 12px; }
+.ae-choice-pair { font-size: var(--aether-type-body); text-align: center; }
+
+@media (max-width: 639px) {
+  /* 모바일은 화면 전체 — 시트의 둥근 모서리와 위쪽 금빛을 걷어 낸다. */
+  .ae-choice-sheet { border-radius: 0; }
+}
+
+/* ── 진 엔딩 — 공허 바탕 위 금빛 장식 하나(제목 칸) ── */
+.ae-true-ending {
+  background:
+    radial-gradient(80% 50% at 50% 0%, rgb(var(--aether-gold-rgb) / 0.08), transparent 70%),
+    rgb(var(--aether-void-rgb));
+}
+/* === /w3:choice === */
+
+/* === w3:moments === */
+/* 순간 · 결과 카드(전투 결과 · 원정 정리 · 이야기 장 · 귀환 브리핑 · 레벨 상승 · 순간 배너 · 전설 획득 · 사망).
+   이 블록은 @tailwind utilities 뒤라 같은 우선순위의 유틸을 덮는다 — 그래서 위치 · 크기 · 여백은 쓰지 않고
+   색 · 그림자 · 움직임만 쓴다(고정 카드의 `fixed`를 덮지 않는다). */
+
+/* 닫기 — 모든 순간 카드가 같은 모양 · 같은 아이콘 크기(18) · 같은 자리(오른쪽 위)다. 크기는 부르는 쪽의 44px 유틸. */
+.ae-moment-close {
+  color: var(--aether-ink-2);
+  background: rgb(var(--aether-ink-rgb) / 0.06);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-ink-rgb) / 0.07);
+  transition:
+    background-color var(--aether-dur-ui) var(--aether-ease),
+    color var(--aether-dur-ui) var(--aether-ease),
+    transform var(--aether-dur-press) var(--aether-ease);
+}
+
+.ae-moment-close:hover {
+  color: var(--aether-ink);
+  background: rgb(var(--aether-ink-rgb) / 0.1);
+}
+
+.ae-moment-close:active {
+  transform: scale(0.94);
+}
+
+/* 오버레이 셸 안쪽 구분선 — 회색 테두리 대신 머리 · 발 영역의 톤 */
+.ae-moment-foot {
+  background: linear-gradient(180deg, rgb(var(--aether-s1-rgb) / 0) 0%, rgb(var(--aether-s1-rgb) / 0.92) 22%);
+  box-shadow: inset 0 1px 0 var(--aether-hairline);
+}
+
+.ae-moment-head-line {
+  box-shadow: inset 0 -1px 0 var(--aether-hairline);
+}
+
+/* 판단 줄(시안의 조언 띠) — 전투 결과의 `aether-result-strip` · 사망 화면의 `aether-run-reflection-strip`을 같은 모양으로 덮는다.
+   의미 색은 칸 이름 글자 · 옅은 물빛으로만 — 왼쪽 굵은 막대 · 테두리는 쓰지 않는다. */
+.ae-moment-advice {
+  border: 0;
+  border-radius: var(--aether-r-md);
+  background: linear-gradient(180deg, rgb(var(--aether-ether-rgb) / 0.08) 0%, rgb(var(--aether-ether-rgb) / 0.03) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-ether-hi-rgb) / 0.12);
+  --ae-moment-advice-label: var(--aether-ether-hi);
+  --ae-moment-advice-rule: rgb(var(--aether-ether-hi-rgb) / 0.12);
+}
+
+.ae-moment-advice[data-result-tone="reward"],
+.ae-moment-advice[data-run-tone="growth"] {
+  background: linear-gradient(180deg, rgb(var(--aether-gold-rgb) / 0.09) 0%, rgb(var(--aether-gold-rgb) / 0.04) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-gold-hi-rgb) / 0.12);
+  --ae-moment-advice-label: var(--aether-gold-text);
+  --ae-moment-advice-rule: rgb(var(--aether-gold-hi-rgb) / 0.12);
+}
+
+.ae-moment-advice[data-result-tone="pressure"],
+.ae-moment-advice[data-run-tone="pressure"] {
+  background: linear-gradient(180deg, rgb(var(--aether-life-rgb) / 0.1) 0%, rgb(var(--aether-life-rgb) / 0.04) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-threat-rgb) / 0.14);
+  --ae-moment-advice-label: var(--aether-threat);
+  --ae-moment-advice-rule: rgb(var(--aether-threat-rgb) / 0.14);
+}
+
+.ae-moment-advice[data-result-tone="advantage"],
+.ae-moment-advice[data-run-tone="breakthrough"] {
+  background: linear-gradient(180deg, rgb(var(--aether-good-rgb) / 0.08) 0%, rgb(var(--aether-good-rgb) / 0.03) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-good-rgb) / 0.14);
+  --ae-moment-advice-label: var(--aether-good);
+  --ae-moment-advice-rule: rgb(var(--aether-good-rgb) / 0.14);
+}
+
+.ae-moment-advice-label {
+  color: var(--ae-moment-advice-label);
+}
+
+/* 칸 사이 머리카락 선 — 첫 칸 뒤부터 */
+.ae-moment-advice-cell {
+  border: 0;
+  background: transparent;
+}
+
+.ae-moment-advice-cell + .ae-moment-advice-cell {
+  box-shadow: -1px 0 0 var(--ae-moment-advice-rule);
+}
+
+[data-readability-mode="high"] .ae-moment-advice {
+  background: rgb(var(--aether-s3-rgb) / 0.98);
+  box-shadow: inset 0 0 0 1px var(--ae-moment-advice-rule), inset 0 1px 0 rgb(var(--aether-ink-rgb) / 0.08);
+}
+
+[data-readability-mode="high"] .ae-moment-advice-cell {
+  background: transparent;
+}
+
+/* 수치 알약(경험 · 골드 · 전리품) */
+.ae-moment-stat {
+  color: var(--aether-ink-2);
+  background: linear-gradient(180deg, var(--aether-s3) 0%, var(--aether-s2) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-ink-rgb) / 0.06);
+}
+
+.ae-moment-stat.is-exp {
+  color: var(--aether-exp);
+}
+
+.ae-moment-stat.is-gold {
+  color: var(--aether-gold-text);
+}
+
+/* 카드 안 두 번째 층 칸(수치 · 정보) */
+.ae-moment-tile {
+  background: linear-gradient(180deg, var(--aether-s3) 0%, rgb(var(--aether-s2-rgb) / 0.9) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-ink-rgb) / 0.06);
+}
+
+/* 보상 신호(보스 보상 · 장비 갱신 · 성향 공명) */
+.ae-moment-signal {
+  color: var(--aether-ink);
+  background: rgb(var(--aether-ink-rgb) / 0.04);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-ink-rgb) / 0.06);
+}
+
+.ae-moment-signal[data-signal-tone="amber"] {
+  background: linear-gradient(180deg, rgb(var(--aether-gold-rgb) / 0.1) 0%, rgb(var(--aether-gold-rgb) / 0.04) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-gold-hi-rgb) / 0.14);
+}
+
+.ae-moment-signal[data-signal-tone="success"] {
+  background: linear-gradient(180deg, rgb(var(--aether-good-rgb) / 0.1) 0%, rgb(var(--aether-good-rgb) / 0.04) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-good-rgb) / 0.16);
+}
+
+.ae-moment-signal[data-signal-tone="purple"] {
+  background: linear-gradient(180deg, rgb(var(--aether-exp-rgb) / 0.12) 0%, rgb(var(--aether-exp-rgb) / 0.04) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-exp-rgb) / 0.18);
+}
+
+.ae-moment-signal-title {
+  color: var(--aether-ink-2);
+}
+
+.ae-moment-signal[data-signal-tone="amber"] .ae-moment-signal-title {
+  color: var(--aether-gold-text);
+}
+
+.ae-moment-signal[data-signal-tone="success"] .ae-moment-signal-title {
+  color: var(--aether-good);
+}
+
+.ae-moment-signal[data-signal-tone="purple"] .ae-moment-signal-title {
+  color: var(--aether-exp);
+}
+
+/* 전설(코럴) — 전리품 줄 · 사망 화면의 각인 줄. 위험 장미색과 섞지 않는다. */
+.ae-moment-legendary {
+  background: linear-gradient(180deg, rgb(var(--aether-rarity-legendary-rgb) / 0.14) 0%, rgb(var(--aether-rarity-legendary-rgb) / 0.04) 100%);
+  box-shadow:
+    inset 0 0 0 1px rgb(var(--aether-rarity-legendary-rgb) / 0.36),
+    inset 0 1px 0 rgb(var(--aether-rarity-legendary-rgb) / 0.3),
+    0 6px 18px rgb(var(--aether-void-rgb) / 0.3);
+}
+
+/* 전설 획득 장식 패널 — `.ae-ornate`의 금 이중선 · 모서리 장식을 전설 코럴로 */
+.ae-ornate.ae-moment-ornate-legendary {
+  border-color: rgb(var(--aether-rarity-legendary-rgb) / 0.5);
+  box-shadow:
+    inset 0 0 0 3px var(--aether-s1),
+    inset 0 0 0 4px rgb(var(--aether-rarity-legendary-rgb) / 0.22),
+    var(--aether-e3);
+}
+
+.ae-ornate.ae-moment-ornate-legendary::before {
+  --ae-moment-coral: rgb(var(--aether-rarity-legendary-rgb));
+  background:
+    linear-gradient(var(--ae-moment-coral), var(--ae-moment-coral)) top 8px left 8px / 14px 2px no-repeat,
+    linear-gradient(var(--ae-moment-coral), var(--ae-moment-coral)) top 8px left 8px / 2px 14px no-repeat,
+    linear-gradient(var(--ae-moment-coral), var(--ae-moment-coral)) top 8px right 8px / 14px 2px no-repeat,
+    linear-gradient(var(--ae-moment-coral), var(--ae-moment-coral)) top 8px right 8px / 2px 14px no-repeat,
+    linear-gradient(var(--ae-moment-coral), var(--ae-moment-coral)) bottom 8px left 8px / 14px 2px no-repeat,
+    linear-gradient(var(--ae-moment-coral), var(--ae-moment-coral)) bottom 8px left 8px / 2px 14px no-repeat,
+    linear-gradient(var(--ae-moment-coral), var(--ae-moment-coral)) bottom 8px right 8px / 14px 2px no-repeat,
+    linear-gradient(var(--ae-moment-coral), var(--ae-moment-coral)) bottom 8px right 8px / 2px 14px no-repeat,
+    radial-gradient(70% 45% at 50% 0%, rgb(var(--aether-rarity-legendary-rgb) / 0.16), transparent 70%);
+}
+
+/* 이야기 장 · 원정 장면의 메달(아이콘 원) */
+.ae-moment-medallion {
+  color: var(--aether-gold-text);
+  background: radial-gradient(circle at 50% 30%, rgb(var(--aether-gold-rgb) / 0.22), rgb(var(--aether-gold-rgb) / 0.06) 70%);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.42), 0 0 18px rgb(var(--aether-gold-rgb) / 0.16);
+}
+
+/* 지역 그림 틀(원정 정리 · 사망 화면) — 지나온 곳만 그린다 */
+.ae-moment-region {
+  background: radial-gradient(circle at 50% 60%, rgb(var(--aether-ether-rgb) / 0.12), var(--aether-sunk) 72%);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.32), inset 0 1px 2px rgb(var(--aether-void-rgb) / 0.6);
+}
+
+.ae-moment-region > img {
+  image-rendering: pixelated;
+}
+
+/* 생명 하강 막대 — 가장 위험했던 순간 */
+.ae-moment-life-fill {
+  background: linear-gradient(90deg, var(--aether-life-lo), var(--aether-life));
+}
+
+/* 보스를 쓰러뜨린 결과 카드 — 금 림 + 단발 광채(`aether-post-combat-boss`는 시험 · 하네스가 읽는 표시로 남긴다) */
+.ae-moment-sheet.aether-post-combat-boss {
+  box-shadow:
+    var(--aether-e3),
+    inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.42),
+    0 0 0 1px rgb(var(--aether-gold-rgb) / 0.14);
+  animation: aeMomentGoldPulse 900ms var(--aether-ease) 120ms 1 both;
+}
+
+/* 입력 무시 시간(350ms)에는 주 행동을 회색으로 바꾸지 않고 옅게만 — 금 → 회색 → 금으로 깜박이지 않는다 */
+.ae-moment-sheet[data-input-ready="false"] .ae-btn-primary:disabled {
+  color: var(--aether-gold-ink);
+  background-color: var(--aether-gold);
+  background-image: var(--aether-gold-fill);
+  box-shadow: var(--aether-shadow-gold);
+  opacity: 0.72;
+}
+
+.ae-moment-sheet[data-input-ready="false"] .ae-btn-glass:disabled {
+  color: var(--aether-ink);
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  opacity: 0.72;
+}
+
+.ae-moment-sheet .ae-btn {
+  transition:
+    transform var(--aether-dur-press) var(--aether-ease),
+    filter var(--aether-dur-ui) var(--aether-ease),
+    box-shadow var(--aether-dur-ui) var(--aether-ease),
+    opacity var(--aether-dur-ui) var(--aether-ease);
+}
+
+/* 승리 보상 순서 공개 — 같은 갈고리 클래스(`aether-reveal-*`, 하네스 · e2e가 읽는다)를 토큰 움직임으로 다시 그린다 */
+.ae-moment-sheet .aether-reveal-pop {
+  animation: aeMomentRise var(--aether-dur-ui) var(--aether-ease) backwards;
+}
+
+.ae-moment-sheet .aether-reveal-shimmer {
+  animation:
+    aeMomentRise var(--aether-dur-ui) var(--aether-ease) backwards,
+    aeMomentCoralPulse 900ms var(--aether-ease) var(--aether-dur-ui) 1;
+}
+
+/* 축하 순간의 움직임 한 갈래 — 모두 단발(무한 반복 없음) */
+@keyframes aeMomentRise {
+  0% { opacity: 0; transform: translateY(6px) scale(0.97); }
+  100% { opacity: 1; transform: none; }
+}
+
+@keyframes aeMomentGoldPulse {
+  0% { filter: brightness(1); }
+  40% { filter: brightness(1.14); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes aeMomentCoralPulse {
+  0% { filter: brightness(1); }
+  45% { filter: brightness(1.28); }
+  100% { filter: brightness(1); }
+}
+
+@keyframes aeMomentGlow {
+  0% { box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.42), 0 0 0 0 rgb(var(--aether-gold-rgb) / 0); }
+  35% { box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.6), 0 0 28px 4px rgb(var(--aether-gold-rgb) / 0.42); }
+  100% { box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.42), 0 0 14px 0 rgb(var(--aether-gold-rgb) / 0.18); }
+}
+
+/* 위쪽 알림 자리의 알약(레벨 상승 · 보스 · 우두머리 · 유물 · 조합) — 불투명 유리 */
+.ae-moment-pill {
+  color: var(--aether-ink);
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s2) 100%);
+  box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-ink-rgb) / 0.08);
+  --ae-moment-pill-accent: var(--aether-ink-2);
+}
+
+.ae-moment-pill-label {
+  color: var(--ae-moment-pill-accent);
+}
+
+.ae-moment-pill-icon {
+  color: var(--ae-moment-pill-accent);
+  background: rgb(var(--aether-ink-rgb) / 0.06);
+}
+
+.ae-moment-pill.is-gold {
+  background: linear-gradient(180deg, rgb(var(--aether-gold-rgb) / 0.16) 0%, rgb(var(--aether-gold-rgb) / 0.05) 100%), linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s2) 100%);
+  box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.42);
+  --ae-moment-pill-accent: var(--aether-gold-text);
+}
+
+.ae-moment-pill.is-gold .ae-moment-pill-icon {
+  background: rgb(var(--aether-gold-rgb) / 0.16);
+}
+
+.ae-moment-pill.is-ether {
+  background: linear-gradient(180deg, rgb(var(--aether-ether-rgb) / 0.14) 0%, rgb(var(--aether-ether-rgb) / 0.04) 100%), linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s2) 100%);
+  box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.36);
+  --ae-moment-pill-accent: var(--aether-ether-hi);
+}
+
+.ae-moment-pill.is-ether .ae-moment-pill-icon {
+  background: var(--aether-ether-wash);
+}
+
+.ae-moment-pill.is-threat {
+  background: linear-gradient(180deg, rgb(var(--aether-life-rgb) / 0.16) 0%, rgb(var(--aether-life-rgb) / 0.05) 100%), linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s2) 100%);
+  box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-threat-rgb) / 0.4);
+  --ae-moment-pill-accent: var(--aether-threat);
+}
+
+.ae-moment-pill.is-threat .ae-moment-pill-icon {
+  background: var(--aether-threat-wash);
+}
+
+.ae-moment-pill.is-legendary {
+  background: linear-gradient(180deg, rgb(var(--aether-rarity-legendary-rgb) / 0.16) 0%, rgb(var(--aether-rarity-legendary-rgb) / 0.05) 100%), linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s2) 100%);
+  box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-rarity-legendary-rgb) / 0.42);
+  --ae-moment-pill-accent: rgb(var(--aether-rarity-legendary-rgb));
+}
+
+.ae-moment-pill.is-legendary .ae-moment-pill-icon {
+  background: rgb(var(--aether-rarity-legendary-rgb) / 0.14);
+}
+
+/* 레벨 상승(금 알약)의 단발 광채 — 이전의 1.5초 × 3회 반복을 한 번으로 */
+.ae-moment-pill.is-gold.ae-moment-glow-once {
+  animation: aeMomentGlow 1100ms var(--aether-ease) 1 both;
+}
+
+/* 쓰러진 순간 — 생명빛이 꺼져 가는 바탕 */
+.ae-moment-death-beat {
+  background:
+    radial-gradient(circle at 50% 46%, rgb(var(--aether-life-lo-rgb) / 0.36), transparent 58%),
+    radial-gradient(circle at center, rgb(var(--aether-void-rgb) / 0.9), rgb(var(--aether-void-rgb) / 0.97) 68%);
+}
+
+/* 전설 획득 바탕 — 원소 빛은 부르는 쪽이 `--ae-moment-glow`(토큰 채널)로 넘긴다 */
+.ae-moment-legendary-backdrop {
+  background: rgb(var(--aether-void-rgb) / 0.6);
+}
+
+/* 저사양(작은 화면 + 움직임 줄이기): 이전 오버레이와 같이 흐림을 끈다 */
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+  .ae-moment-scrim {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+  }
+}
+
+/* 움직임 줄이기 — 장식 움직임 없이 끝 상태(정보는 그대로 보인다) */
+@media (prefers-reduced-motion: reduce) {
+  .ae-moment-sheet.aether-post-combat-boss,
+  .ae-moment-pill.is-gold.ae-moment-glow-once,
+  .ae-moment-sheet .aether-reveal-pop,
+  .ae-moment-sheet .aether-reveal-shimmer {
+    animation: none;
+  }
+
+  .ae-moment-pill.is-gold.ae-moment-glow-once {
+    box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.42), 0 0 14px 0 rgb(var(--aether-gold-rgb) / 0.18);
+  }
+
+  .ae-moment-close,
+  .ae-moment-sheet .ae-btn {
+    transition: none;
+  }
+}
+/* === /w3:moments === */
+
+/* === w3:archive-a === */
+/* 기록 탭 A(기록 셸 · 장비 · 가방 · 기술 · 상태 · 지도 · 묘비) — 에테르 유리.
+   색은 모두 토큰 채널(rgb(var(--aether-…-rgb) / a))이다. */
+:root {
+  /* 전설 각인 계열 색 — 새 색이 아니라 기존 토큰의 별칭이다(별 배지 · 아이콘 고리 · 세트 칩). */
+  --aether-sig-holy-rgb: var(--aether-gold-hi-rgb);
+  --aether-sig-fire-rgb: var(--aether-rarity-legendary-rgb);
+  --aether-sig-frost-rgb: var(--aether-ether-hi-rgb);
+  --aether-sig-shadow-rgb: var(--aether-exp-rgb);
+  --aether-sig-arcane-rgb: var(--aether-rarity-rare-rgb);
+  --aether-sig-nature-rgb: var(--aether-good-rgb);
+  --aether-sig-earth-rgb: var(--aether-gold-rgb);
+  --aether-sig-rust-rgb: var(--aether-gold-lo-rgb);
+}
+
+/* 머리 — 제목 한 줄 + 탭 레일 */
+.ae-archive-title {
+  font-size: var(--aether-type-strong);
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--aether-ink);
+}
+
+.ae-archive-tab {
+  position: relative;
+  color: var(--aether-ink-3);
+  background: transparent;
+  transition:
+    color var(--aether-dur-ui) var(--aether-ease),
+    background-color var(--aether-dur-ui) var(--aether-ease),
+    box-shadow var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-archive-tab:hover {
+  color: var(--aether-ink-2);
+  background: rgb(var(--aether-s3-rgb) / 0.7);
+}
+
+.ae-archive-tab[data-active='true'] {
+  color: var(--aether-ether-hi);
+  background: var(--aether-ether-wash);
+  box-shadow: inset 0 0 0 1px var(--aether-rim-ether);
+}
+
+.ae-archive-tab:focus-visible {
+  outline: 2px solid var(--aether-ether);
+  outline-offset: 2px;
+}
+
+/* 데스크톱 열의 타일 — 아이콘 위 · 이름 아래 */
+.ae-archive-tab.is-tile {
+  background: var(--aether-s3);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+}
+
+.ae-archive-tab.is-tile[data-active='true'] {
+  background: linear-gradient(180deg, rgb(var(--aether-ether-rgb) / 0.16) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 0 0 1px var(--aether-rim-ether);
+}
+
+.ae-archive-badge {
+  min-width: 18px;
+  border-radius: 9999px;
+  padding: 0 5px;
+  font-size: var(--aether-type-label);
+  font-weight: 700;
+  line-height: 16px;
+  color: var(--aether-gold-text);
+  background: rgb(var(--aether-gold-rgb) / 0.16);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.4);
+}
+
+.ae-archive-progress {
+  background: var(--aether-hairline);
+}
+
+.ae-archive-progress-thumb {
+  background: rgb(var(--aether-ether-rgb) / 0.6);
+}
+
+/* 위험 확인 상자 — 위협 색 림 한 줄(바탕은 .ae-well) */
+.ae-threat-rim {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-threat-rgb) / 0.3);
+}
+
+/* 목록 줄 — 상자 대신 hairline 구분 */
+.ae-rows > * + * {
+  border-top: 1px solid var(--aether-hairline);
+}
+
+.ae-cols > * + * {
+  border-left: 1px solid var(--aether-hairline);
+}
+
+/* 지금 서 있는 곳의 유해 — 금빛 림(회수 = 이 화면의 주 행동) */
+.ae-card.ae-grave-here {
+  box-shadow: var(--aether-e2), inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.3);
+}
+
+/* 장비 칸 — 전설 각인 칸만 금빛 물빛 */
+.ae-equip-slot.is-signature {
+  background: linear-gradient(180deg, rgb(var(--aether-sig-holy-rgb) / 0.08) 0%, rgb(var(--aether-sig-holy-rgb) / 0.02) 100%);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-sig-holy-rgb) / 0.3);
+}
+
+/* 장비 진열대 — 캐릭터 그림 뒤 바닥 광채 */
+.ae-showcase {
+  position: relative;
+  isolation: isolate;
+  background:
+    radial-gradient(60% 55% at 50% 38%, rgb(var(--aether-ether-rgb) / 0.12), transparent 70%),
+    var(--aether-sunk);
+  border-radius: var(--aether-r-md);
+  box-shadow: inset 0 1px 2px rgb(var(--aether-void-rgb) / 0.6), inset 0 -1px 0 var(--aether-rim);
+}
+
+/* 캐릭터 그림 틀 — 계열 색은 위쪽 광채 하나만, 바탕은 표면 톤 */
+.ae-avatar-frame {
+  --ae-frame-tone: var(--aether-ether-rgb);
+  background:
+    radial-gradient(circle at 76% 16%, rgb(var(--ae-frame-tone) / 0.22), transparent 30%),
+    linear-gradient(180deg, var(--aether-s3) 0%, var(--aether-sunk) 100%);
+  box-shadow: var(--aether-e1), inset 0 0 0 1px rgb(var(--ae-frame-tone) / 0.22);
+}
+
+.ae-avatar-frame.is-fire { --ae-frame-tone: var(--aether-sig-fire-rgb); }
+.ae-avatar-frame.is-frost { --ae-frame-tone: var(--aether-sig-frost-rgb); }
+.ae-avatar-frame.is-shadow { --ae-frame-tone: var(--aether-sig-shadow-rgb); }
+.ae-avatar-frame.is-holy { --ae-frame-tone: var(--aether-sig-holy-rgb); }
+.ae-avatar-frame.is-nature { --ae-frame-tone: var(--aether-sig-nature-rgb); }
+.ae-avatar-frame.is-earth { --ae-frame-tone: var(--aether-sig-earth-rgb); }
+
+/* 그림은 확대 없이(정수배 픽셀) 바닥 그림자만 */
+.ae-avatar-sprite {
+  filter: drop-shadow(0 8px 12px rgb(var(--aether-void-rgb) / 0.36));
+}
+
+/* 가방 — 지금 장착 중인 줄 (good 물빛 + 림) */
+.ae-inventory-equipped {
+  background: rgb(var(--aether-good-rgb) / 0.06);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-good-rgb) / 0.24);
+}
+
+/* 목록에서 고르는 줄(지도 전체 경로) — 고른 줄만 에테르 물빛 + 림 */
+.ae-select-row {
+  transition: background-color var(--aether-dur-ui) var(--aether-ease), box-shadow var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-select-row:hover {
+  background: rgb(var(--aether-s3-rgb) / 0.6);
+}
+
+.ae-select-row[data-active='true'] {
+  background: var(--aether-ether-wash);
+  box-shadow: inset 0 0 0 1px var(--aether-rim-ether);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ae-archive-tab,
+  .ae-select-row {
+    transition: none;
+  }
+}
+/* === /w3:archive-a === */
+
+/* === w3:archive-b === */
+/* 기록 탭 B(도감 · 임무 · 업적 · 시즌 · 설정) — 에테르 유리. 색은 토큰만 쓴다. */
+.ab-stack > * + * { margin-top: 12px; }
+.ab-card-pad { padding: 14px 14px 12px; }
+.ab-rows > * + * { border-top: 1px solid var(--aether-hairline); }
+.ab-section-title {
+  font-size: var(--aether-type-title);
+  line-height: var(--aether-leading-title, 1.35);
+  font-weight: 800;
+  color: var(--aether-ink);
+}
+.ab-icon-well {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: var(--aether-r-sm);
+  background: var(--aether-s3);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+  color: var(--aether-ink-2);
+}
+.ab-icon-well.is-ether { color: var(--aether-ether-hi); background: rgb(var(--aether-ether-rgb) / 0.10); }
+.ab-icon-well.is-gold { color: var(--aether-gold-text); background: rgb(var(--aether-gold-rgb) / 0.10); }
+.ab-icon-well.is-exp { color: rgb(var(--aether-exp-rgb)); background: rgb(var(--aether-exp-rgb) / 0.10); }
+.ab-icon-well.is-good { color: var(--aether-good); background: rgb(var(--aether-good-rgb) / 0.10); }
+.ab-icon-well.is-threat { color: var(--aether-threat); background: rgb(var(--aether-threat-rgb) / 0.10); }
+
+/* 펼침 제목줄 — 44px 이상, 브라우저 표식 없음, 꺾쇠 회전 */
+.ab-summary {
+  display: flex;
+  min-height: 52px;
+  cursor: pointer;
+  list-style: none;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 2px;
+  text-align: left;
+  border-radius: var(--aether-r-sm);
+}
+.ab-summary::-webkit-details-marker { display: none; }
+.ab-summary:focus-visible { outline: 2px solid var(--aether-ether); outline-offset: 2px; }
+.ab-chevron { flex-shrink: 0; color: var(--aether-ink-3); transition: transform 200ms cubic-bezier(.2,.8,.2,1); }
+details[open] > summary .ab-chevron { transform: rotate(180deg); }
+
+/* 고르기 칸 — 가라앉은 홈 위의 유리 조각 */
+.ab-segment {
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--aether-r-md);
+  background: var(--aether-sunk);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.ab-segment-option {
+  min-height: 44px;
+  border-radius: var(--aether-r-sm);
+  padding: 0 8px;
+  font-size: var(--aether-type-body);
+  font-weight: 700;
+  color: var(--aether-ink-2);
+  transition: background-color 200ms cubic-bezier(.2,.8,.2,1), color 200ms cubic-bezier(.2,.8,.2,1);
+}
+.ab-segment-option:hover { background: var(--aether-s3); color: var(--aether-ink); }
+.ab-segment-option[aria-pressed="true"], .ab-segment-option[aria-selected="true"] {
+  color: var(--aether-ether-hi);
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim-ether), 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.28);
+}
+
+/* 이동 줄(거울 · 교환소 · 칭호) */
+.ab-link-row {
+  display: flex;
+  width: 100%;
+  min-height: 60px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 4px;
+  text-align: left;
+  border-radius: var(--aether-r-sm);
+  transition: background-color 200ms cubic-bezier(.2,.8,.2,1);
+}
+.ab-link-row:hover { background: rgb(var(--aether-ink-rgb) / 0.03); }
+.ab-link-row[aria-pressed="true"] { background: rgb(var(--aether-gold-rgb) / 0.07); }
+
+/* 임무 카드 — 호박빛 바탕(시안 B 접목) */
+.ab-mission {
+  position: relative;
+  border-radius: var(--aether-r-lg);
+  background:
+    radial-gradient(80% 60% at 100% 0%, rgb(var(--aether-gold-rgb) / 0.12), transparent 70%),
+    linear-gradient(180deg, rgb(var(--aether-gold-rgb) / 0.06), transparent 60%),
+    linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-gold-hi-rgb) / 0.16), var(--aether-e1);
+}
+.ab-mission.is-ready {
+  background:
+    radial-gradient(80% 60% at 100% 0%, rgb(var(--aether-good-rgb) / 0.12), transparent 70%),
+    linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--aether-good-rgb) / 0.22), 0 0 0 1px rgb(var(--aether-good-rgb) / 0.18), var(--aether-e1);
+}
+.ab-count {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-family: 'Aether Fira Code', var(--aether-readable-font);
+  font-variant-numeric: tabular-nums;
+  font-size: var(--aether-type-body);
+  font-weight: 700;
+  color: var(--aether-ether-hi);
+  background: var(--aether-ether-wash);
+}
+.ab-count.is-good { color: var(--aether-good); background: rgb(var(--aether-good-rgb) / 0.12); }
+.ab-count.is-gold { color: var(--aether-gold-text); background: rgb(var(--aether-gold-rgb) / 0.12); }
+
+/* 얇은 게이지 · 색 변형 */
+.ab-gauge-thin { height: 4px; }
+.ab-gauge-gold > .ae-gauge-fill { background: linear-gradient(90deg, var(--aether-gold-lo), var(--aether-gold)); }
+.ab-gauge-good > .ae-gauge-fill { background: linear-gradient(90deg, rgb(var(--aether-good-rgb) / 0.7), var(--aether-good)); }
+
+/* 등급 한 곳: 토큰 채널을 변수로 집어 타일 빛에 쓴다 */
+.ab-rar-common { --ab-rar: var(--aether-rarity-common-rgb); }
+.ab-rar-uncommon { --ab-rar: var(--aether-rarity-uncommon-rgb); }
+.ab-rar-rare { --ab-rar: var(--aether-rarity-rare-rgb); }
+.ab-rar-epic { --ab-rar: var(--aether-rarity-epic-rgb); }
+.ab-rar-legendary { --ab-rar: var(--aether-rarity-legendary-rgb); }
+
+/* 도감 발견 타일 */
+.ab-tile {
+  position: relative;
+  border-radius: var(--aether-r-md);
+  background:
+    radial-gradient(90% 70% at 50% 0%, rgb(var(--ab-rar, var(--aether-ether-rgb)) / 0.14), transparent 70%),
+    linear-gradient(180deg, var(--aether-s3) 0%, var(--aether-s2) 100%);
+  box-shadow: inset 0 1px 0 rgb(var(--ab-rar, var(--aether-ether-rgb)) / 0.22), inset 0 0 0 1px rgb(var(--ab-rar, var(--aether-ether-rgb)) / 0.16), var(--aether-e1);
+  transition: box-shadow 200ms cubic-bezier(.2,.8,.2,1), transform 110ms cubic-bezier(.2,.8,.2,1);
+}
+.ab-tile:is(button):hover { box-shadow: inset 0 1px 0 rgb(var(--ab-rar, var(--aether-ether-rgb)) / 0.34), inset 0 0 0 1px rgb(var(--ab-rar, var(--aether-ether-rgb)) / 0.32), var(--aether-e1); }
+.ab-tile:is(button):active { transform: scale(.98); }
+.ab-tile[aria-pressed="true"], .ab-tile[aria-current="true"] {
+  box-shadow: inset 0 1px 0 rgb(var(--ab-rar, var(--aether-ether-rgb)) / 0.4), 0 0 0 2px rgb(var(--ab-rar, var(--aether-ether-rgb)) / 0.55), var(--aether-e1);
+}
+.ab-tile.is-undiscovered {
+  background: var(--aether-sunk);
+  box-shadow: inset 0 0 0 1px var(--aether-hairline);
+  color: var(--aether-ink-3);
+}
+
+/* 탭 레일(도감 분류 · 업적 분야) */
+.ab-rail {
+  display: grid;
+  gap: 4px;
+  padding: 4px;
+  border-radius: var(--aether-r-md);
+  background: var(--aether-sunk);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6);
+}
+.ab-rail-tab {
+  display: flex;
+  min-height: 52px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  border-radius: var(--aether-r-sm);
+  font-size: var(--aether-type-label);
+  font-weight: 700;
+  color: var(--aether-ink-3);
+  transition: background-color 200ms cubic-bezier(.2,.8,.2,1), color 200ms cubic-bezier(.2,.8,.2,1);
+}
+.ab-rail-tab:hover { color: var(--aether-ink); background: var(--aether-s2); }
+.ab-rail-tab[aria-selected="true"], .ab-rail-tab[aria-current="page"], .ab-rail-tab[aria-current="true"] {
+  color: var(--aether-ether-hi);
+  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim-ether), 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.24);
+}
+
+/* 시즌 단계 길 — 30마디 */
+.ab-track { display: grid; grid-template-columns: repeat(30, minmax(0, 1fr)); gap: 2px; }
+.ab-node { height: 8px; border-radius: 2px; background: var(--aether-sunk); box-shadow: inset 0 0 0 1px var(--aether-hairline); }
+.ab-node.is-claimed { background: var(--aether-ether); box-shadow: none; }
+.ab-node.is-claimable { background: linear-gradient(180deg, var(--aether-gold-hi), var(--aether-gold)); box-shadow: 0 0 6px rgb(var(--aether-gold-rgb) / 0.5); }
+.ab-node.is-chapter { margin-left: 3px; }
+
+/* 이야기 연대기 */
+.ab-chronicle { position: relative; padding-left: 18px; }
+.ab-chronicle::before {
+  content: "";
+  position: absolute;
+  left: 5px;
+  top: 6px;
+  bottom: 6px;
+  width: 1px;
+  background: linear-gradient(180deg, rgb(var(--aether-gold-rgb) / 0.55), rgb(var(--aether-gold-rgb) / 0.08));
+}
+.ab-chronicle-dot {
+  position: absolute;
+  left: -17px;
+  top: 6px;
+  width: 9px;
+  height: 9px;
+  border-radius: 2px;
+  transform: rotate(45deg);
+  background: var(--aether-gold);
+  box-shadow: 0 0 8px rgb(var(--aether-gold-rgb) / 0.5);
+}
+.ab-chronicle-dot.is-past { background: var(--aether-s4); box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.4); }
+
+/* 알림 줄 */
+.ab-notice { border-radius: var(--aether-r-sm); padding: 8px 12px; font-size: var(--aether-type-meta); }
+.ab-notice.is-good { color: var(--aether-good); background: rgb(var(--aether-good-rgb) / 0.10); box-shadow: inset 0 0 0 1px rgb(var(--aether-good-rgb) / 0.2); }
+.ab-notice.is-threat { color: var(--aether-threat); background: var(--aether-threat-wash); box-shadow: inset 0 0 0 1px rgb(var(--aether-threat-rgb) / 0.2); }
+
+/* 장비 도감 카드 모서리 장식 — 등급 토큰 */
+.ab-corner { position: absolute; width: 14px; height: 14px; pointer-events: none; border-color: rgb(var(--ab-rar, var(--aether-ether-rgb)) / 0.7); }
+.ab-corner.is-tl { left: 6px; top: 6px; border-left-width: 2px; border-top-width: 2px; border-top-left-radius: 4px; }
+.ab-corner.is-tr { right: 6px; top: 6px; border-right-width: 2px; border-top-width: 2px; border-top-right-radius: 4px; }
+.ab-corner.is-bl { left: 6px; bottom: 6px; border-left-width: 2px; border-bottom-width: 2px; border-bottom-left-radius: 4px; }
+.ab-corner.is-br { right: 6px; bottom: 6px; border-right-width: 2px; border-bottom-width: 2px; border-bottom-right-radius: 4px; }
+
+.ab-field {
+  width: 100%;
+  border-radius: var(--aether-r-sm);
+  background: var(--aether-sunk);
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6), inset 0 0 0 1px var(--aether-hairline);
+  color: var(--aether-ink);
+  outline: none;
+}
+.ab-field::placeholder { color: var(--aether-ink-3); }
+.ab-field:focus-visible { box-shadow: inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.5), 0 0 0 2px rgb(var(--aether-ether-rgb) / 0.2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .ab-chevron, .ab-segment-option, .ab-link-row, .ab-tile, .ab-rail-tab { transition: none; }
+  .ab-tile:is(button):active { transform: none; }
+}
+/* === /w3:archive-b === */
+
+/* === w3:shell === */
+/* 2026-10 에테르 유리 3차(shell): 앱 바탕 · 상태 표시줄 · 시작 · 부팅 · 데스크톱 배치. 색은 토큰만 쓴다.
+   이 블록은 파일 끝(@tailwind utilities 뒤)이라 같은 특이도의 유틸 · 예전 규칙을 덮는다 — 예전 규칙이 더 특이하면 같은 모양으로 맞춘다. */
+
+/* ── 앱 바탕: 비네트(MainLayout) ── */
+.ae-shell-vignette {
+  background: radial-gradient(circle at center, transparent 42%, rgb(var(--aether-void-rgb) / 0.44) 100%);
+}
+
+/* ── 상태 표시줄 · 상태 카드 ── */
+.ae-status-shell.aether-status-shell {
+  border: 0;
+  background:
+    radial-gradient(90% 120% at 0% 0%, rgb(var(--aether-ether-rgb) / 0.08), transparent 55%),
+    linear-gradient(180deg, rgb(var(--aether-s2-rgb) / 0.95) 0%, rgb(var(--aether-s1-rgb) / 0.97) 100%);
+  box-shadow: var(--aether-e2);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  backdrop-filter: blur(14px) saturate(1.1);
+}
+
+.ae-status-shell.aether-status-shell::before {
+  border-radius: inherit;
+  background: linear-gradient(180deg, var(--aether-rim), transparent 38%);
+}
+
+.ae-status-shell.aether-status-shell[data-status-mode="combat"] {
+  border-radius: var(--aether-r-lg);
+  background:
+    linear-gradient(90deg, rgb(var(--aether-threat-rgb) / 0.07), transparent 42%),
+    linear-gradient(180deg, rgb(var(--aether-s2-rgb) / 0.97) 0%, rgb(var(--aether-s1-rgb) / 0.99) 100%);
+}
+
+.ae-status-column {
+  position: relative;
+  flex: none;
+}
+
+.ae-status-shell .aether-combat-player-status {
+  border-bottom: 0;
+  padding-bottom: 6px;
+  box-shadow: 0 1px 0 var(--aether-hairline);
+}
+
+.ae-status-metric.aether-status-metric {
+  border: 0;
+  border-radius: var(--aether-r-sm);
+  background: rgb(var(--aether-s3-rgb) / 0.72);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+}
+
+.ae-status-chip.ae-chip {
+  min-height: 18px;
+  padding: 1px 7px;
+}
+
+.ae-status-crystal {
+  border-radius: var(--aether-r-sm);
+  transition: color var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-status-crystal:hover {
+  color: var(--aether-ink);
+}
+
+/* 전투 중 내 초상 — 44px(표시줄 높이 불변). 강화 배지는 이 크기에서 그리지 않는다(장비 탭이 말한다). */
+.ae-status-combat-avatar {
+  width: 44px;
+  height: 44px;
+  padding: 3px;
+  border-radius: var(--aether-r-sm);
+}
+
+.ae-status-combat-avatar [data-testid="avatar-enhance-badge"] {
+  display: none;
+}
+
+/* 교전 카드 — 적의 무게(보스 · 우두머리 · 정예)는 안쪽 테두리 빛 하나로 말한다. 초상의 등급 테두리는 초상 부품이 그린다. */
+.ae-encounter-stage.aether-encounter-stage {
+  border: 0;
+  background: linear-gradient(180deg, rgb(var(--aether-s3-rgb) / 0.78) 0%, rgb(var(--aether-s1-rgb) / 0.92) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+  transition: box-shadow var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-status-shell[data-status-mode="combat"] .ae-encounter-stage.aether-encounter-stage {
+  border-radius: var(--aether-r-md);
+}
+
+.ae-encounter-stage.aether-encounter-stage[data-hit-flash="true"]:not([data-defeated]) {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-threat-rgb) / 0.5), inset 0 1px 0 var(--aether-rim);
+}
+
+.ae-encounter-stage.aether-encounter-stage[data-enemy-rank="boss"] {
+  background-image:
+    radial-gradient(circle at 12% 50%, var(--aether-glow-gold), transparent 36%),
+    linear-gradient(180deg, rgb(var(--aether-threat-rgb) / 0.16) 0%, rgb(var(--aether-s1-rgb) / 0.95) 100%);
+}
+
+.ae-encounter-stage.aether-encounter-stage[data-enemy-rank="boss"]:not([data-hit-flash]) {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.42), 0 10px 24px rgb(var(--aether-void-rgb) / 0.4);
+}
+
+.ae-encounter-stage.aether-encounter-stage[data-enemy-rank="elite"]:not([data-hit-flash]),
+.ae-encounter-stage.aether-encounter-stage[data-enemy-rank="champion"]:not([data-hit-flash]) {
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-threat-rgb) / 0.3), inset 0 1px 0 var(--aether-rim);
+}
+
+.ae-encounter-stage.aether-encounter-stage[data-enemy-rank="boss"]:not([data-hit-flash]) .ae-gauge > .aether-enemy-health-fill.ae-gauge-fill {
+  background-image: linear-gradient(90deg, var(--aether-life-lo), var(--aether-gold) 92%, var(--aether-gold-hi));
+}
+
+.ae-enemy-damage {
+  text-shadow: 0 2px 8px rgb(var(--aether-void-rgb) / 0.85);
+}
+
+.ae-enemy-damage[data-crit="true"] {
+  text-shadow: 0 0 12px rgb(var(--aether-gold-rgb) / 0.55), 0 2px 6px rgb(var(--aether-void-rgb) / 0.85);
+}
+
+/* 높은 가독성: 유리 대신 불투명한 바탕 + 또렷한 안쪽 선(흐림 없음). 위의 유리 규칙보다 뒤에 둔다. */
+[data-readability-mode="high"] .ae-status-shell.aether-status-shell {
+  background: linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-sunk) 100%);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ink-rgb) / 0.2), var(--aether-e2);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+[data-readability-mode="high"] .ae-status-metric.aether-status-metric {
+  background: var(--aether-s3);
+  box-shadow: inset 0 0 0 1px rgb(var(--aether-ink-rgb) / 0.16);
+}
+
+/* ── 시작 · 부팅 화면 (VD-09) ── */
+.ae-intro-scrim {
+  background: linear-gradient(
+    180deg,
+    rgb(var(--aether-void-rgb) / 0.82) 0%,
+    rgb(var(--aether-void-rgb) / 0.08) 30%,
+    rgb(var(--aether-void-rgb) / 0.1) 55%,
+    rgb(var(--aether-void-rgb) / 0.95) 82%,
+    var(--aether-void) 100%
+  );
+}
+
+.ae-intro-title {
+  letter-spacing: 0.16em;
+  color: var(--aether-gold-text);
+  background: linear-gradient(180deg, var(--aether-gold-hi) 0%, var(--aether-gold) 58%, var(--aether-gold-lo) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 10px rgb(var(--aether-gold-rgb) / 0.22));
+}
+
+.ae-intro-rule {
+  display: inline-block;
+  width: 18px;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--aether-gold));
+}
+
+.ae-intro-caption {
+  text-shadow: 0 2px 10px rgb(var(--aether-void-rgb) / 0.85);
+}
+
+.ae-intro-input {
+  transition: box-shadow var(--aether-dur-ui) var(--aether-ease);
+}
+
+.ae-intro-input:focus {
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.6), 0 0 0 2px rgb(var(--aether-ether-rgb) / 0.55);
+}
+
+.ae-mark {
+  box-shadow: 0 0 0 1px var(--aether-rim-ether), 0 0 24px var(--aether-glow-ether);
+}
+
+/* 부팅 진행 점 — 예전 깜빡임(animate-pulse, 기존 유틸)을 그대로 쓰고 빛만 토큰으로. */
+.ae-boot-dot {
+  box-shadow: 0 0 12px rgb(var(--aether-ether-rgb) / 0.5);
+}
+
+/* ── 데스크톱 배치 (VD-04 · UX-12, 1024px 이상 — hooks/useDesktopLayout.ts와 같은 경계) ── */
+.ae-desktop-grid {
+  display: grid;
+  grid-template-columns: 232px minmax(0, 1fr) 320px;
+  gap: 12px;
+  width: 100%;
+  max-width: 1480px;
+  margin-inline: auto;
+  flex: 1 1 auto;
+  min-height: 0;
+}
+
+@media (min-width: 1280px) {
+  .ae-desktop-grid {
+    grid-template-columns: 264px minmax(0, 1fr) 380px;
+    gap: 14px;
+  }
+}
+
+@media (min-width: 1440px) {
+  .ae-desktop-grid {
+    grid-template-columns: 280px minmax(0, 760px) 440px;
+    justify-content: center;
+    gap: 16px;
+  }
+}
+
+.ae-desktop-column {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+/* 가운데 무대는 칸 안의 기록 · 조작판이 각자 스크롤한다. */
+.ae-desktop-stage {
+  overflow: hidden;
+}
+
+/* 오른쪽 모험 기록은 늘 열려 있다 — 모바일 콘솔의 '닫기'는 이 열에서 할 일이 없다(Dashboard 소유 단추라 여기서 숨긴다). */
+[data-desktop-archive] [data-testid="mobile-console-return-log"] {
+  display: none;
+}
+
+.ae-desktop-archive > [data-testid="mobile-archive-console"] {
+  flex: 1 1 auto;
+}
+
+.ae-desktop-archive:focus-visible,
+.ae-desktop-stage:focus-visible {
+  box-shadow: 0 0 0 2px rgb(var(--aether-ether-rgb) / 0.45);
+  border-radius: var(--aether-r-lg);
+}
+
+/* 데스크톱의 상태 카드는 흐름 안의 카드다 — 붙지 않고 누를 수 있다. */
+.ae-status-column.aether-status-shell {
+  pointer-events: auto;
+}
+/* === /w3:shell === */

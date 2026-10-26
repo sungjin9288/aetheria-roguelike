@@ -63,13 +63,14 @@ test('slice 25: CTA 모던 토큰 — primary/gold + high 모드 감쇠', async 
         'high 모드 CTA 감쇠');
 });
 
-test('slice 25: 결정 CTA 적용 — 퀘스트 보드 + 상점', async () => {
-    const qb = await readSrc('src/components/tabs/QuestBoardPanel.tsx');
-    assert.ok((qb.match(/aether-cta-primary/g) || []).length >= 2,
-        '작전 개시 + 임무 수락 CTA 적용');
-    const sp = await readSrc('src/components/ShopPanel.tsx');
-    assert.ok((sp.match(/aether-cta-gold/g) || []).length >= 2,
-        '상점 구매 버튼 CTA 적용');
+// 2026-10 에테르 유리(wave 3 · 마을 시설): 결정 버튼은 ActionButton(주 행동 금빛 · 나머지 유리)이다 —
+//   옛 aether-cta-* 그라디언트가 되돌아오지 않는다(부재 불변식). 실제 버튼 위계는
+//   tests/town-facilities-design.test.js가 렌더로 확인한다.
+test('slice 25: 결정 CTA — 퀘스트 보드 + 상점은 옛 aether-cta-* 그라디언트 0건', async () => {
+    for (const rel of ['src/components/tabs/QuestBoardPanel.tsx', 'src/components/ShopPanel.tsx']) {
+        const src = await readSrc(rel);
+        assert.ok(!/aether-cta-/.test(src), `${rel}: aether-cta-* 0건`);
+    }
 });
 
 test('slice 25: ItemIcon 레어리티 플레이트 강화', async () => {

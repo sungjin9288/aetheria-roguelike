@@ -2,16 +2,23 @@ import { test, expect, type Page } from '@playwright/test';
 import { startE2ERun } from './testHelpers';
 
 const expectReadableHud = async (page: Page) => {
-    const geometry = await page.locator('[data-testid^="status-metric-"]').filter({ has: page.getByTestId('status-metric-label') }).evaluateAll((cells) => cells.map((cell) => {
+    const metrics = page.locator('[data-testid^="status-metric-"]').filter({ has: page.getByTestId('status-metric-label') });
+    // 2026-10-26: 재실행 직후에는 상태 표시줄이 그려지기 전에 읽을 수 있다(CI에서 0개로 한 번 붉었다) — 세 칸이 나타날 때까지 기다린다.
+    await expect(metrics).toHaveCount(3);
+    const geometry = await metrics.evaluateAll((cells) => cells.map((cell) => {
         const label = cell.querySelector('[data-testid="status-metric-label"]')!;
         const value = cell.querySelector('[data-testid="status-metric-value"]')!;
         const range = document.createRange(); range.selectNodeContents(label);
-        return { labelLines: range.getClientRects().length, labelBottom: label.getBoundingClientRect().bottom, valueTop: value.getBoundingClientRect().top, fits: cell.scrollWidth <= cell.clientWidth };
+        const labelBox = label.getBoundingClientRect();
+        const valueBox = value.getBoundingClientRect();
+        // 2026-10 에테르 유리: 이름과 수치가 한 줄(이름 왼쪽 · 수치 오른쪽)이다 — 위아래든 좌우든 두 상자가 겹치지 않으면 된다.
+        const separated = labelBox.bottom <= valueBox.top || labelBox.right <= valueBox.left;
+        return { labelLines: range.getClientRects().length, separated, fits: cell.scrollWidth <= cell.clientWidth };
     }));
     expect(geometry).toHaveLength(3);
     for (const metric of geometry) {
         expect(metric.labelLines).toBe(1);
-        expect(metric.labelBottom).toBeLessThanOrEqual(metric.valueTop);
+        expect(metric.separated).toBe(true);
         expect(metric.fits).toBe(true);
     }
 };

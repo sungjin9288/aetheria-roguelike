@@ -96,7 +96,8 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
             }});
             const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
             addLog('system', MSG.START_JOURNEY(trimmedName));
-            addLog('event', MSG.START_SKILL(cls.skills?.[0]?.name || '강타'));
+            // 2026-10 통합 감사(town-nav UX-13): 첫 기술 안내는 일어난 사건이 아니라 안내다 — '안내'로 분류한다.
+            addLog('system', MSG.START_SKILL(cls.skills?.[0]?.name || '강타'));
             const ruleLog = getAscensionRuleStartLog(player.meta, ascensionRuleDeclined);
             if (ruleLog) addLog('event', ruleLog);
             if (mods.length > 0) {

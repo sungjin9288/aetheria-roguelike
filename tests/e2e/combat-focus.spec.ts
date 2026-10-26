@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { startE2ERun, waitForModeTransition } from './testHelpers';
 
 test.describe('Combat focus mode', () => {
     test.beforeEach(async ({ page }) => {
@@ -8,6 +8,7 @@ test.describe('Combat focus mode', () => {
         const seeded = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(false));
         expect(seeded).toBe(true);
         await expect(page.getByTestId('combat-focus-panel')).toBeVisible({ timeout: 8_000 });
+        await waitForModeTransition(page);
     });
 
     test('적 판단과 네 가지 주 행동이 첫 viewport에 함께 보인다', async ({ page }) => {
@@ -144,7 +145,7 @@ test.describe('Combat focus mode', () => {
 
         await expect(page.getByTestId('enemy-status')).toContainText('고대 호수의 수호신');
         await expect(page.getByTestId('combat-boss-signature')).toContainText('보스 기믹');
-        await expect(page.getByTestId('combat-boss-counter')).toContainText('권장 대응');
+        await expect(page.getByTestId('combat-boss-counter')).toContainText('공략 요령');
         await page.locator('[data-app-shell]').evaluate((shell) => { shell.scrollTop = 0; });
 
         const viewport = page.viewportSize();

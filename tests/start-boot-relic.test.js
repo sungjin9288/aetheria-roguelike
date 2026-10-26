@@ -36,7 +36,8 @@ test('첫 플레이는 유물 선택 없이 첫 이야기와 출발 흐름을 �
     ]);
     assert.deepEqual(logs.slice(0, 2), [
         { type: 'system', text: MSG.START_JOURNEY('히어로') },
-        { type: 'event', text: MSG.START_SKILL('강타') },
+        // 2026-10 통합 감사(town-nav UX-13): 첫 기술 안내는 '안내'(system) 유형이다 — '이벤트' 배지로 찍히지 않는다.
+        { type: 'system', text: MSG.START_SKILL('강타') },
     ]);
     assert.ok(logs.every((log) => log.text !== MSG.START_BOOT_RELIC));
     assert.doesNotMatch(logs.map((log) => log.text).join(' '), /콜사인|초기 스킬|빌드/);

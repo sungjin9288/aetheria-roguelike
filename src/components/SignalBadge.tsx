@@ -6,16 +6,18 @@ const SIZE_CLASS: Record<string, string> = {
     sm: 'min-h-[24px] px-2 py-0.5 aether-type-label tracking-normal',
 };
 
+// 2026-10 에테르 유리 3차(shell): 톤은 테두리 없는 유리 칩이다 — 바탕 씻김 + 글자색 하나(토큰). 회색 테두리 · 그림자 · 흐림은 지웠다.
+//   아홉 톤의 이름 · 뜻은 그대로다(추천 = 에테르, 공명 = 경험 보라, 강화 · 조명 = 금, 성공 · 장착 = 초록, 주의 = 금, 위험 = 붉음).
 const TONE_CLASS: Record<string, string> = {
-    neutral: 'border-white/8 bg-white/[0.035] text-slate-300',
-    recommended: 'border-[#7dd4d8]/28 bg-[#7dd4d8]/10 text-[#dff7f5] shadow-[0_10px_24px_rgba(125,212,216,0.12)]',
-    resonance: 'border-[#9a8ac0]/28 bg-[#9a8ac0]/10 text-[#e3dcff] shadow-[0_10px_24px_rgba(154,138,192,0.12)]',
-    upgrade: 'border-[#d5b180]/28 bg-[#d5b180]/10 text-[#f6e7c8] shadow-[0_10px_24px_rgba(213,177,128,0.12)]',
-    success: 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100 shadow-[0_10px_24px_rgba(110,231,183,0.1)]',
-    warning: 'border-amber-300/24 bg-amber-300/10 text-amber-100 shadow-[0_10px_24px_rgba(252,211,77,0.1)]',
-    danger: 'border-rose-300/24 bg-rose-400/10 text-rose-100 shadow-[0_10px_24px_rgba(251,113,133,0.1)]',
-    equipped: 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100',
-    spotlight: 'border-[#d5b180]/24 bg-[#d5b180]/10 text-[#f6e7c8]',
+    neutral: 'bg-ae-ink/[0.08] text-ae-ink-2',
+    recommended: 'bg-ae-ether/[0.12] text-ae-ether-hi',
+    resonance: 'bg-ae-exp/[0.12] text-ae-exp',
+    upgrade: 'bg-ae-gold/[0.12] text-ae-gold-text',
+    success: 'bg-ae-good/[0.12] text-ae-good',
+    warning: 'bg-ae-gold/[0.14] text-ae-gold-hi',
+    danger: 'bg-ae-threat/[0.14] text-ae-threat',
+    equipped: 'bg-ae-good/[0.1] text-ae-good',
+    spotlight: 'bg-ae-gold/[0.1] text-ae-gold-text shadow-[inset_0_0_0_1px_rgb(var(--aether-gold-rgb)/0.24)]',
     // cycle 330: 'signature' tone 제거 — cycle 310 FocusPanel 제거 후 dispatch path 0건이던 dead.
     //   cycle 23 시점 적립된 signature pity '확률 증폭' emphasis surface가 유일 consumer였으나
     //   FocusPanel 자체 제거 → tone class도 cascade dead.
@@ -33,7 +35,7 @@ interface SignalBadgeProps extends ComponentPropsWithoutRef<'span'> {
 
 const SignalBadge = ({ tone, size, children, ...rest }: SignalBadgeProps) => (
     <span
-        className={`inline-flex items-center justify-center rounded-full border font-fira uppercase backdrop-blur-md ${SIZE_CLASS[size ?? ''] || SIZE_CLASS.sm} ${TONE_CLASS[tone ?? ''] || TONE_CLASS.neutral}`}
+        className={`inline-flex items-center justify-center rounded-full font-readable font-bold ${SIZE_CLASS[size ?? ''] || SIZE_CLASS.sm} ${TONE_CLASS[tone ?? ''] || TONE_CLASS.neutral}`}
         {...rest}
     >
         {children}

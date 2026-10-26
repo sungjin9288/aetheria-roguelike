@@ -17,8 +17,10 @@ import assert from 'node:assert/strict';
  */
 
 import {
+    AI_FALLBACK_REASONS,
     decideAiEventRequest,
     getEventFallbackAnnotation,
+    isAiFallbackReason,
     resolveAiEventPackage,
     resolveAiEventResponse,
     resolveAiStoryResponse,
@@ -34,18 +36,21 @@ const STORY_TRACK = ['ai-story', 9500];
 // 접히므로(TokenQuotaManager.getCallLedger → null), 여기서는 항상 MSG.AI_QUOTA_EXHAUSTED다.
 const EXHAUSTED_MESSAGE = TokenQuotaManager.getExhaustedMessage();
 
-/** 쿼터 관측을 세는 스텁 — "mock 런타임에서는 쿼터를 읽지 않는다"를 검증하기 위해 호출 수를 센다. */
-const quotaProbe = (exhausted) => {
+/** 쿼터 게이트 3상태 — `TokenQuotaManager.getCallGate()`의 닫힌 집합. */
+const QUOTA_GATES = ['open', 'exhausted', 'unavailable'];
+
+/** 쿼터 관측을 세는 스텁 — "mock 런타임 · 프록시 비활성에서는 쿼터를 읽지 않는다"를 검증하기 위해 호출 수를 센다. */
+const quotaProbe = (gate) => {
     const probe = { reads: 0 };
     probe.readQuota = () => {
         probe.reads += 1;
-        return { exhausted, exhaustedMessage: EXHAUSTED_MESSAGE };
+        return { gate, exhaustedMessage: EXHAUSTED_MESSAGE };
     };
     return probe;
 };
 
-const makeInput = ({ requestKind, mockRuntime, proxyEnabled, quotaExhausted }) => {
-    const probe = quotaProbe(quotaExhausted);
+const makeInput = ({ requestKind, mockRuntime, proxyEnabled, quotaGate }) => {
+    const probe = quotaProbe(quotaGate);
     return {
         probe,
         input: {
@@ -59,50 +64,75 @@ const makeInput = ({ requestKind, mockRuntime, proxyEnabled, quotaExhausted }) =
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 1. 요청 결정표 — (requestKind × mockRuntime × quotaExhausted × proxyEnabled) 16셀
+// 1. 요청 결정표 — (requestKind × mockRuntime × quotaGate × proxyEnabled) 24셀
 // ─────────────────────────────────────────────────────────────────────────────
+
+const CALL_EVENT = { kind: 'call', requestKind: 'event', trackLabel: 'ai-event', timeoutMs: 9500, recordCall: true };
+const CALL_STORY = { kind: 'call', requestKind: 'story', trackLabel: 'ai-story', timeoutMs: 9500, recordCall: true };
+const MOCK = { kind: 'fallback', reason: 'mock-runtime', recordCall: false };
+const PROXY_OFF = { kind: 'fallback', reason: 'proxy-disabled', recordCall: false };
+const QUOTA = { kind: 'fallback', reason: 'quota', message: EXHAUSTED_MESSAGE, recordCall: false };
+const QUOTA_UNAVAILABLE = { kind: 'fallback', reason: 'quota-unavailable', recordCall: false };
 
 /**
  * 각 행: 입력 4축 → 기대 결정.
- * 분기 순서(mock → 쿼터 → 프록시 플래그)가 곧 폴백 이유다 — 특히 "쿼터 소진 + 프록시
- * 비활성"은 `quota`가 이긴다(이벤트 카드에 쿼터 안내를 실어야 하므로).
+ * 분기 순서(mock → 프록시 플래그 → 쿼터 게이트)가 곧 폴백 이유다.
+ *
+ * GP-02: 프록시가 꺼져 있으면 쿼터 상태와 무관하게 `proxy-disabled`다 — 그 빌드에서는 디스패치가
+ * 일어날 수 없으므로 소진 안내는 어떤 경우에도 사실이 아니다. 게이트가 닫힌 이유도 가른다 —
+ * 실제 한도 도달(`exhausted`)만 `quota` + 안내 문구이고, 미터 불능(`unavailable`)은 조용한
+ * `quota-unavailable`이다. 둘 다 보내지 않는다(fail-closed).
  *
  * W12-D3: 각 셀이 `recordCall`을 함께 고정한다. 쿼터 1건이 빠져나가는 지점은 이 표의
- * `kind: 'call'` 행뿐이고, 폴백 3종은 요청을 보내지 않으므로 전부 `recordCall: false`다.
+ * `kind: 'call'` 행뿐이고, 폴백은 요청을 보내지 않으므로 전부 `recordCall: false`다.
  */
 const REQUEST_DECISION_TABLE = [
-    // requestKind, mockRuntime, quotaExhausted, proxyEnabled, expected
-    ['event', false, false, true,  { kind: 'call', requestKind: 'event', trackLabel: 'ai-event', timeoutMs: 9500, recordCall: true }],
-    ['event', false, false, false, { kind: 'fallback', reason: 'proxy-disabled', recordCall: false }],
-    ['event', false, true,  true,  { kind: 'fallback', reason: 'quota', message: EXHAUSTED_MESSAGE, recordCall: false }],
-    ['event', false, true,  false, { kind: 'fallback', reason: 'quota', message: EXHAUSTED_MESSAGE, recordCall: false }],
-    ['event', true,  false, true,  { kind: 'fallback', reason: 'mock-runtime', recordCall: false }],
-    ['event', true,  false, false, { kind: 'fallback', reason: 'mock-runtime', recordCall: false }],
-    ['event', true,  true,  true,  { kind: 'fallback', reason: 'mock-runtime', recordCall: false }],
-    ['event', true,  true,  false, { kind: 'fallback', reason: 'mock-runtime', recordCall: false }],
-    ['story', false, false, true,  { kind: 'call', requestKind: 'story', trackLabel: 'ai-story', timeoutMs: 9500, recordCall: true }],
-    ['story', false, false, false, { kind: 'fallback', reason: 'proxy-disabled', recordCall: false }],
-    ['story', false, true,  true,  { kind: 'fallback', reason: 'quota', message: EXHAUSTED_MESSAGE, recordCall: false }],
-    ['story', false, true,  false, { kind: 'fallback', reason: 'quota', message: EXHAUSTED_MESSAGE, recordCall: false }],
-    ['story', true,  false, true,  { kind: 'fallback', reason: 'mock-runtime', recordCall: false }],
-    ['story', true,  false, false, { kind: 'fallback', reason: 'mock-runtime', recordCall: false }],
-    ['story', true,  true,  true,  { kind: 'fallback', reason: 'mock-runtime', recordCall: false }],
-    ['story', true,  true,  false, { kind: 'fallback', reason: 'mock-runtime', recordCall: false }],
+    // requestKind, mockRuntime, quotaGate, proxyEnabled, expected
+    ['event', false, 'open',        true,  CALL_EVENT],
+    ['event', false, 'open',        false, PROXY_OFF],
+    ['event', false, 'exhausted',   true,  QUOTA],
+    ['event', false, 'exhausted',   false, PROXY_OFF],
+    ['event', false, 'unavailable', true,  QUOTA_UNAVAILABLE],
+    ['event', false, 'unavailable', false, PROXY_OFF],
+    ['event', true,  'open',        true,  MOCK],
+    ['event', true,  'open',        false, MOCK],
+    ['event', true,  'exhausted',   true,  MOCK],
+    ['event', true,  'exhausted',   false, MOCK],
+    ['event', true,  'unavailable', true,  MOCK],
+    ['event', true,  'unavailable', false, MOCK],
+    ['story', false, 'open',        true,  CALL_STORY],
+    ['story', false, 'open',        false, PROXY_OFF],
+    ['story', false, 'exhausted',   true,  QUOTA],
+    ['story', false, 'exhausted',   false, PROXY_OFF],
+    ['story', false, 'unavailable', true,  QUOTA_UNAVAILABLE],
+    ['story', false, 'unavailable', false, PROXY_OFF],
+    ['story', true,  'open',        true,  MOCK],
+    ['story', true,  'open',        false, MOCK],
+    ['story', true,  'exhausted',   true,  MOCK],
+    ['story', true,  'exhausted',   false, MOCK],
+    ['story', true,  'unavailable', true,  MOCK],
+    ['story', true,  'unavailable', false, MOCK],
 ];
 
-test(`decideAiEventRequest: 요청 결정표 ${REQUEST_DECISION_TABLE.length}셀 (kind × mock × quota × proxy)`, () => {
-    for (const [requestKind, mockRuntime, quotaExhausted, proxyEnabled, expected] of REQUEST_DECISION_TABLE) {
-        const { input } = makeInput({ requestKind, mockRuntime, proxyEnabled, quotaExhausted });
-        const label = `${requestKind} mock=${mockRuntime} quota_exhausted=${quotaExhausted} proxy=${proxyEnabled}`;
+test(`decideAiEventRequest: 요청 결정표 ${REQUEST_DECISION_TABLE.length}셀 (kind × mock × quota gate × proxy)`, () => {
+    for (const [requestKind, mockRuntime, quotaGate, proxyEnabled, expected] of REQUEST_DECISION_TABLE) {
+        const { input } = makeInput({ requestKind, mockRuntime, proxyEnabled, quotaGate });
+        const label = `${requestKind} mock=${mockRuntime} quota_gate=${quotaGate} proxy=${proxyEnabled}`;
         assert.deepEqual(decideAiEventRequest(input), expected, label);
     }
 });
 
+test('decideAiEventRequest: 결정표가 입력 4축의 모든 조합을 덮는다', () => {
+    const seen = new Set(REQUEST_DECISION_TABLE.map(([kind, mock, gate, proxy]) => `${kind}|${mock}|${gate}|${proxy}`));
+    assert.equal(seen.size, 2 * 2 * QUOTA_GATES.length * 2);
+    for (const [, , gate] of REQUEST_DECISION_TABLE) assert.ok(QUOTA_GATES.includes(gate), gate);
+});
+
 test('decideAiEventRequest: 쿼터 소모는 디스패치와 동치다 — recordCall === (kind === "call")', () => {
-    for (const [requestKind, mockRuntime, quotaExhausted, proxyEnabled] of REQUEST_DECISION_TABLE) {
-        const { input } = makeInput({ requestKind, mockRuntime, proxyEnabled, quotaExhausted });
+    for (const [requestKind, mockRuntime, quotaGate, proxyEnabled] of REQUEST_DECISION_TABLE) {
+        const { input } = makeInput({ requestKind, mockRuntime, proxyEnabled, quotaGate });
         const decision = decideAiEventRequest(input);
-        const label = `${requestKind} mock=${mockRuntime} quota_exhausted=${quotaExhausted} proxy=${proxyEnabled}`;
+        const label = `${requestKind} mock=${mockRuntime} quota_gate=${quotaGate} proxy=${proxyEnabled}`;
         assert.equal(decision.recordCall, decision.kind === 'call', label);
     }
 });
@@ -110,39 +140,44 @@ test('decideAiEventRequest: 쿼터 소모는 디스패치와 동치다 — recor
 test('decideAiEventRequest: 이벤트와 스토리의 소모 규칙이 같다 (W11 발견 6의 비대칭 마감)', () => {
     // 같은 관측 3축(mock/quota/proxy)에 대해 두 요청 종류가 같은 소모 결정을 내린다.
     for (const mockRuntime of [true, false]) {
-        for (const quotaExhausted of [true, false]) {
+        for (const quotaGate of QUOTA_GATES) {
             for (const proxyEnabled of [true, false]) {
-                const axes = { mockRuntime, quotaExhausted, proxyEnabled };
+                const axes = { mockRuntime, quotaGate, proxyEnabled };
                 const event = decideAiEventRequest(makeInput({ requestKind: 'event', ...axes }).input);
                 const story = decideAiEventRequest(makeInput({ requestKind: 'story', ...axes }).input);
-                const label = `mock=${mockRuntime} quota=${quotaExhausted} proxy=${proxyEnabled}`;
+                const label = `mock=${mockRuntime} quota=${quotaGate} proxy=${proxyEnabled}`;
                 assert.equal(event.recordCall, story.recordCall, `${label}: 소모 결정 동일`);
                 assert.equal(event.kind, story.kind, `${label}: 호출/폴백 결정 동일`);
+                if (event.kind === 'fallback') assert.equal(event.reason, story.reason, `${label}: 폴백 이유 동일`);
             }
         }
     }
 });
 
-test('decideAiEventRequest: mock 런타임에서는 쿼터를 읽지 않는다 (localStorage 없는 smoke/e2e 경로 보존)', () => {
+test('decideAiEventRequest: mock 런타임 · 프록시 비활성에서는 쿼터를 읽지 않는다 (GP-02)', () => {
     for (const requestKind of ['event', 'story']) {
-        const mocked = makeInput({ requestKind, mockRuntime: true, proxyEnabled: true, quotaExhausted: false });
+        const mocked = makeInput({ requestKind, mockRuntime: true, proxyEnabled: true, quotaGate: 'open' });
         decideAiEventRequest(mocked.input);
         assert.equal(mocked.probe.reads, 0, `${requestKind}: mock 런타임은 쿼터 관측 0회`);
 
-        const online = makeInput({ requestKind, mockRuntime: false, proxyEnabled: false, quotaExhausted: false });
+        const proxyOff = makeInput({ requestKind, mockRuntime: false, proxyEnabled: false, quotaGate: 'unavailable' });
+        decideAiEventRequest(proxyOff.input);
+        assert.equal(proxyOff.probe.reads, 0, `${requestKind}: 디스패치가 불가능한 빌드는 쿼터를 읽지 않는다`);
+
+        const online = makeInput({ requestKind, mockRuntime: false, proxyEnabled: true, quotaGate: 'open' });
         decideAiEventRequest(online.input);
-        assert.equal(online.probe.reads, 1, `${requestKind}: 프록시가 꺼져 있어도 쿼터는 1회 읽는다`);
+        assert.equal(online.probe.reads, 1, `${requestKind}: 프록시가 켜져 있으면 쿼터를 1회 읽는다`);
     }
 });
 
 test('decideAiEventRequest: call 결정은 트랙(라벨/타임아웃)을 그대로 실어 돌려준다 — 9.5s 계약', () => {
-    const { input } = makeInput({ requestKind: 'event', mockRuntime: false, proxyEnabled: true, quotaExhausted: false });
+    const { input } = makeInput({ requestKind: 'event', mockRuntime: false, proxyEnabled: true, quotaGate: 'open' });
     const decision = decideAiEventRequest(input);
     assert.equal(decision.kind, 'call');
     assert.equal(decision.trackLabel, 'ai-event');
     assert.equal(decision.timeoutMs, 9500, 'CLAUDE.md §6 AI 이벤트 생성 9.5s 타임아웃');
 
-    const story = makeInput({ requestKind: 'story', mockRuntime: false, proxyEnabled: true, quotaExhausted: false });
+    const story = makeInput({ requestKind: 'story', mockRuntime: false, proxyEnabled: true, quotaGate: 'open' });
     assert.deepEqual(decideAiEventRequest(story.input), {
         kind: 'call', requestKind: 'story', trackLabel: 'ai-story', timeoutMs: 9500, recordCall: true,
     });
@@ -164,6 +199,7 @@ test('decideAiEventRequest: call 결정은 트랙(라벨/타임아웃)을 그대
 const ANNOTATION_TABLE = [
     [{ kind: 'fallback', reason: 'mock-runtime', recordCall: false }, null],
     [{ kind: 'fallback', reason: 'proxy-disabled', recordCall: false }, null],
+    [{ kind: 'fallback', reason: 'quota-unavailable', recordCall: false }, null],
     [{ kind: 'fallback', reason: 'proxy-unavailable', recordCall: false }, null],
     [{ kind: 'fallback', reason: 'proxy-rejected', recordCall: false }, null],
     [{ kind: 'fallback', reason: 'malformed-response', recordCall: false }, null],
@@ -336,15 +372,15 @@ test(`쿼터 정산 대칭표 ${SHARED_ENVELOPE_TABLE.length}행 — 같은 봉�
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 5. 어휘가 닫혀 있는가 — 폴백 이유 7종 / 정산 결과 5종
+// 5. 어휘가 닫혀 있는가 — 폴백 이유 8종 / 정산 결과 5종
 // ─────────────────────────────────────────────────────────────────────────────
 
-/** 디스패치 **전**에만 나오는 이유 — 이 셋은 어떤 정산 결과로도 나타날 수 없다. */
-const PRE_DISPATCH_REASONS = ['mock-runtime', 'proxy-disabled', 'quota'];
+/** 디스패치 **전**에만 나오는 이유 — 이 넷은 어떤 정산 결과로도 나타날 수 없다. */
+const PRE_DISPATCH_REASONS = ['mock-runtime', 'proxy-disabled', 'quota', 'quota-unavailable'];
 /** 디스패치된 호출 1건이 가질 수 있는 정산 결과의 닫힌 집합. */
 const CALL_OUTCOMES = ['adopted', 'malformed-response', 'proxy-rejected', 'proxy-unavailable', 'recent-duplicate'];
 
-test('폴백 이유 7종이 모두 표에 나타난다 (새 이유를 추가하면 이 테스트가 먼저 깨진다)', () => {
+test('폴백 이유 8종이 모두 표에 나타난다 (새 이유를 추가하면 이 테스트가 먼저 깨진다)', () => {
     const seen = new Set();
     for (const [, , , , expected] of REQUEST_DECISION_TABLE) {
         if (expected.kind === 'fallback') seen.add(expected.reason);
@@ -366,11 +402,18 @@ test('폴백 이유 7종이 모두 표에 나타난다 (새 이유를 추가하�
         'proxy-rejected',
         'proxy-unavailable',
         'quota',
+        'quota-unavailable',
         'recent-duplicate',
     ]);
+    // 텔레메트리 경계(`localProductEventStore`)가 읽는 닫힌 집합과 같다.
+    assert.deepEqual([...seen].sort(), [...AI_FALLBACK_REASONS].sort());
+    for (const reason of AI_FALLBACK_REASONS) assert.equal(isAiFallbackReason(reason), true, reason);
+    for (const stranger of ['quota-exhausted', '', null, 7, 'QUOTA']) {
+        assert.equal(isAiFallbackReason(stranger), false, String(stranger));
+    }
 });
 
-test(`정산 결과는 ${CALL_OUTCOMES.length}종으로 닫혀 있다 — 디스패치 전 이유 3종은 정산이 될 수 없다`, () => {
+test(`정산 결과는 ${CALL_OUTCOMES.length}종으로 닫혀 있다 — 디스패치 전 이유 ${PRE_DISPATCH_REASONS.length}종은 정산이 될 수 없다`, () => {
     const seen = new Set();
     for (const [, , expected] of EVENT_RESPONSE_TABLE) {
         if (expected.outcome !== null) seen.add(expected.outcome);
@@ -417,7 +460,7 @@ test('정책은 IO를 하지 않는다 — fetch/타이머/localStorage가 전�
     globalThis.localStorage = { getItem: explode, setItem: explode };
     globalThis.setTimeout = explode;
     try {
-        const { input } = makeInput({ requestKind: 'event', mockRuntime: false, proxyEnabled: true, quotaExhausted: false });
+        const { input } = makeInput({ requestKind: 'event', mockRuntime: false, proxyEnabled: true, quotaGate: 'open' });
         assert.equal(decideAiEventRequest(input).kind, 'call');
         assert.equal(resolveAiEventResponse({ success: true, data: {} }).kind, 'payload');
         assert.equal(resolveAiEventPackage({ built: true, recentDuplicate: false }).kind, 'accept');
@@ -432,9 +475,9 @@ test('정책은 IO를 하지 않는다 — fetch/타이머/localStorage가 전�
 });
 
 test('결정은 결정적이다 — 같은 입력이면 같은 결정(정책은 상태를 갖지 않는다)', () => {
-    for (const [requestKind, mockRuntime, quotaExhausted, proxyEnabled, expected] of REQUEST_DECISION_TABLE) {
-        const first = makeInput({ requestKind, mockRuntime, proxyEnabled, quotaExhausted });
-        const second = makeInput({ requestKind, mockRuntime, proxyEnabled, quotaExhausted });
+    for (const [requestKind, mockRuntime, quotaGate, proxyEnabled, expected] of REQUEST_DECISION_TABLE) {
+        const first = makeInput({ requestKind, mockRuntime, proxyEnabled, quotaGate });
+        const second = makeInput({ requestKind, mockRuntime, proxyEnabled, quotaGate });
         assert.deepEqual(decideAiEventRequest(first.input), expected);
         assert.deepEqual(decideAiEventRequest(second.input), decideAiEventRequest(first.input));
     }

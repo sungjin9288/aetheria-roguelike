@@ -1,6 +1,6 @@
 import type { Dispatch } from 'react';
 import { ITEMS } from '../data/items.js';
-import type { CodexCategory, Item, Player, Quest, QuestProgressState } from "../types/index.js";
+import type { CodexCategory, Item, Monster, Player, Quest, QuestProgressState } from "../types/index.js";
 import type { QuestReward } from '../types/quest.js';
 import type { GameAction } from '../reducers/gameReducer.js';
 import { DB } from '../data/db.js';
@@ -15,7 +15,8 @@ import { getRunBuildProfile, getTraitSkill } from './runProfileUtils.js';
 import { calcPerformanceScore, getDifficultyMults } from '../systems/DifficultyManager.js';
 import { AT } from '../reducers/actionTypes.js';
 import { MSG } from '../data/messages.js';
-import { getCurrentRunSnapshot } from './runProgress.js';
+import { getCurrentRunSnapshot, getJourneyEssenceGain } from './runProgress.js';
+import { getCycleBestLevel } from './cycleBestLevel.js';
 import { withCanonicalEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
 import { getSeasonArchive } from './seasonPassPresentation.js';
 import { formatSkillText } from './skillPresentation.js';
@@ -154,9 +155,11 @@ export const getTitleLabel = (token: TitleToken) => {
 };
 
 const ELITE_TITLE_COLOR = 'text-amber-300';
+/** 표에 색이 없는 칭호의 기본 색 — 희귀 등급 보라(2026-10 에테르 유리, 사이버 보라 대체). */
+export const DEFAULT_TITLE_COLOR = 'text-ae-rarity-rare';
 /** 칭호 색상 반환 */
 export const getTitleColor = (token: TitleToken) => (
-    getTitleDefinition(token)?.color || (getEliteTitleName(token) ? ELITE_TITLE_COLOR : 'text-cyber-purple')
+    getTitleDefinition(token)?.color || (getEliteTitleName(token) ? ELITE_TITLE_COLOR : DEFAULT_TITLE_COLOR)
 );
 
 /** 칭호 패시브 메타 조회 */
@@ -443,13 +446,30 @@ export const makeEmitTitles = (dispatch: Dispatch<GameAction>, addLog: (type: st
     }
 };
 
+/** 사망 화면의 "쓰러뜨린 적" — 그 순간 싸우던 적의 표시 이름과 남은 생명 비율(살아 있으면 1% 이상). */
+export interface RunSummaryKiller {
+    name: string;
+    hpPercent: number | null;
+}
+
+const getRunSummaryKiller = (enemy: Monster | null | undefined): RunSummaryKiller | null => {
+    const name = typeof enemy?.name === 'string' ? enemy.name : '';
+    if (!enemy || !name) return null;
+    const maxHp = Number(enemy.maxHp);
+    const hp = Math.max(0, Number(enemy.hp) || 0);
+    if (!Number.isFinite(maxHp) || maxHp <= 0) return { name, hpPercent: null };
+    const percent = Math.min(100, Math.ceil((hp / maxHp) * 100));
+    return { name, hpPercent: hp > 0 ? Math.max(1, percent) : 0 };
+};
+
 /**
  * 런 종료 요약(RunSummary) 데이터를 생성 (#1 — 중복 코드 제거)
  * useCombatActions의 전투 패배 / 도주 실패 사망 두 경로에서 공통으로 사용.
  * @param {object} player - 최종 플레이어 상태
  * @param {string} loc - 사망 위치 (player.loc).
+ * @param context.enemy - 쓰러뜨린 적(그 순간의 상태). 전투가 아닌 종료면 없다.
  */
-export const buildRunSummary = (player: Player, loc: string | undefined) => {
+export const buildRunSummary = (player: Player, loc: string | undefined, context: { enemy?: Monster | null } = {}) => {
     const buildProfile = getRunBuildProfile(player, { maxHp: player.maxHp });
     const recentBattles = (player.stats?.recentBattles || []).slice(-20);
     const currentRun = getCurrentRunSnapshot(player.stats || {});
@@ -498,5 +518,10 @@ export const buildRunSummary = (player: Player, loc: string | undefined) => {
         // 으로 노출. berserker 칭호와 같은 데이터 소스.
         maxKillStreak: currentRun.maxKillStreak,
         runTrackingComplete: currentRun.complete,
+        // 사망 화면: 무엇에 쓰러졌는지 · 그 적이 얼마나 남았는지 · 이번 여정에 모은 계승 정수 · 이번 회차의 이전 최고 레벨.
+        //   기준점이 없는 값(이전 세이브)은 null — 화면이 그 줄을 그리지 않는다.
+        killer: getRunSummaryKiller(context.enemy),
+        essenceGained: getJourneyEssenceGain(player),
+        previousBestLevel: getCycleBestLevel(player.meta),
     };
 };

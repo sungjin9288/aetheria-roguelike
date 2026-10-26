@@ -349,6 +349,8 @@ async function verifyPostCombatDecisionStrip(page, options = {}) {
     minHitHeight: 32,
     minVisibleRatio: 0.8,
   });
+  // 2026-10 (감사 UX-10): 카드가 뜬 직후 짧은 입력 무시 시간 동안 주 행동 · 계속 탐험은 비활성이다(연타 실수 방지).
+  await page.locator('[data-testid="post-combat-card"][data-input-ready="true"]').waitFor({ state: 'visible', timeout: 5000 });
   await verifyActionReachable(page.locator('[data-testid="post-combat-primary-action"]'), 'Post-combat primary action', {
     minHitHeight: 44,
     minVisibleRatio: 0.85,
@@ -366,12 +368,15 @@ async function verifyPostCombatDecisionStrip(page, options = {}) {
     await strip.waitFor({ state: 'hidden', timeout: 5000 });
     await page.locator('[data-testid="inventory-equipment-disclosure"]').waitFor({ state: 'visible', timeout: 5000 });
   } else if (options.dismiss) {
+    // '계속 탐험'은 이제 탐험을 바로 부르고(안전지대에서는 그리지 않는다) — 닿는지만 보고 닫기 아이콘으로 닫는다.
     const continueButton = page.locator('[data-testid="post-combat-continue"]');
-    await verifyActionReachable(continueButton, 'Post-combat continue CTA', {
-      minHitHeight: 44,
-      minVisibleRatio: 0.85,
-    });
-    await continueButton.click();
+    if (await continueButton.count()) {
+      await verifyActionReachable(continueButton, 'Post-combat continue CTA', {
+        minHitHeight: 44,
+        minVisibleRatio: 0.85,
+      });
+    }
+    await page.locator('[data-testid="post-combat-close"]').click();
     await strip.waitFor({ state: 'hidden', timeout: 5000 });
   }
 }
@@ -390,7 +395,8 @@ async function verifyRelicChoiceDecisionStrip(page, options = {}) {
   ensure(text.includes('이유'), 'Relic choice decision strip should expose the reason');
   ensure(text.includes('성장 방향'), 'Relic choice decision strip should expose the growth direction');
   ensure(text.includes('난공불락'), 'Relic choice should name the build-aligned relic');
-  ensure(text.includes('현재 성장과 잘 맞음'), 'Relic choice should explain the build fit in player language');
+  // Wave 49: 조합 시작 층이 빌드 적합보다 위다 — 가진 유물이 없으면 난공불락은 실제 조합의 첫 조각이라 이유가 '새 조합 시작'이다.
+  ensure(text.includes('새 조합 시작'), 'Relic choice should explain the reason in player language');
   ensure(text.includes('방어력 강화'), 'Relic choice should explain the resulting growth direction');
   ensure(panelText.includes('방어력 50%와 최대 생명 20% 증가'), 'Relic descriptions should use player-facing stat language');
   ensure(!/\b(?:ATK|DEF|HP|MP|EXP|CD)\b|저HP|킬 스택|직접 공명|전설까지 -1/.test(panelText), 'Relic choice should hide legacy abbreviations and mechanical placeholders');
@@ -453,7 +459,7 @@ async function verifyRunSummaryReflectionStrip(page, options = {}) {
   const tone = await strip.getAttribute('data-run-tone');
   ensure(text.includes('결과'), 'Run summary reflection strip should expose the result');
   ensure(text.includes('배운 점'), 'Run summary reflection strip should expose the lesson');
-  ensure(text.includes('다음 시도'), 'Run summary reflection strip should expose the next attempt');
+  ensure(text.includes('다음 여정'), 'Run summary reflection strip should expose the next journey');
   ensure(['pressure', 'growth', 'breakthrough', 'steady'].includes(tone), 'Run summary reflection strip should expose a known tone');
   await verifyActionReachable(strip, 'Run summary first-scan reflection strip', {
     allowDisabled: true,
@@ -1028,7 +1034,7 @@ async function verifyMobileFocusPanelFlow(page, {
   const archiveOpenButton = page.locator('[data-testid="mobile-console-open-archive"]');
   const backButton = closeTestId
     ? page.locator(`[data-testid="${closeTestId}"]`).first()
-    : page.getByRole('button', { name: /복귀/i }).first();
+    : page.getByRole('button', { name: /뒤로/i }).first();
 
   await trigger();
   const openState = await waitForState(page, openPredicate, openDescription);
@@ -1222,14 +1228,14 @@ async function resolveEvent(page, observations) {
 /**
  * 2026-09 D3: 실제 승리 후에는 전투 결과 카드(PostCombatCard)가 하단 고정 오버레이로 열린다.
  * 다음 조작(탐험 버튼, 탭, 상점 CTA)을 가리지 않도록 카드가 있으면 실제 CTA로 닫는다
- * (장식 shell 대신 CTA 기준 — lessons R8). 주 행동 버튼은 추천에 따라 인벤토리를 열 수 있어
- * '계속 탐험'(있을 때) → '닫기' 순으로만 누른다.
+ * (장식 shell 대신 CTA 기준 — lessons R8). 주 행동 버튼은 추천에 따라 인벤토리를 열 수 있고,
+ * 2026-10 (감사 UX-10)부터 '계속 탐험'은 탐험을 바로 부르므로 '닫기'를 먼저 누른다.
  */
 async function dismissPostCombatCardIfPresent(page) {
   const card = page.locator('[data-testid="post-combat-card"]');
   if (!(await card.count())) return false;
 
-  for (const testId of ['post-combat-continue', 'post-combat-close']) {
+  for (const testId of ['post-combat-close', 'post-combat-continue']) {
     const cta = page.locator(`[data-testid="${testId}"]`);
     if (!(await cta.count())) continue;
     await cta.click();

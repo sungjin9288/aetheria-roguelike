@@ -15,7 +15,8 @@ import type { Player } from '../types/index.js';
 import ClassIcon from './icons/ClassIcon';
 import SkillTypeIcon from './icons/SkillTypeIcon';
 import ClassTree from './ClassTree';
-import SignalBadge from './SignalBadge';
+import SignalChip from './archive/SignalChip';
+import ActionButton from './ui/ActionButton';
 
 interface SkillActions {
     chooseSkillBranch?: (skillName: string, choice: string) => void;
@@ -35,6 +36,8 @@ interface GrowthDecisionProps {
     gold: number;
     cost: number;
     onConfirm?: (choice: string) => void;
+    /** 이 화면의 금빛 주 단추는 하나 — 대기 중인 성장이 여럿이면 첫 결정만 금빛이다. */
+    primary?: boolean;
 }
 
 interface SkillCardProps {
@@ -68,6 +71,7 @@ const GrowthDecision = ({
     gold,
     cost,
     onConfirm,
+    primary = true,
 }: GrowthDecisionProps) => {
     const choices = branches.filter((branch) => branch.choice && branch.label);
     const [selectedChoice, setSelectedChoice] = useState(currentChoice || choices[0]?.choice || '');
@@ -88,14 +92,14 @@ const GrowthDecision = ({
         <div data-testid={`skill-growth-decision-${skillName}`} className="space-y-3">
             <div className="flex items-end justify-between gap-3">
                 <div>
-                    <div className="aether-type-meta font-readable text-slate-400/76">{isFirstChoice ? '첫 성장' : '성장 변경'}</div>
-                    <h3 className="aether-type-title mt-0.5 font-readable font-semibold text-slate-100">
+                    <div className="aether-type-meta font-readable text-ae-ink-3">{isFirstChoice ? '첫 성장' : '성장 변경'}</div>
+                    <h3 className="aether-type-title mt-0.5 font-readable font-semibold text-ae-ink">
                         {MSG.SKILL_BRANCH_QUESTION(skillName)}
                     </h3>
                 </div>
-                <SignalBadge tone={isFirstChoice ? 'recommended' : 'upgrade'} size="sm">
-                    {isFirstChoice ? '무료' : `골드 ${cost}`}
-                </SignalBadge>
+                <SignalChip tone={isFirstChoice ? 'recommended' : 'upgrade'} className="shrink-0">
+                    {isFirstChoice ? '무료' : <>골드 <span className="font-fira tabular-nums">{cost}</span></>}
+                </SignalChip>
             </div>
 
             <div className="grid grid-cols-2 gap-2">
@@ -110,17 +114,14 @@ const GrowthDecision = ({
                             data-selected={selected ? 'true' : 'false'}
                             aria-pressed={selected}
                             onClick={() => setSelectedChoice(choice)}
-                            className={`min-h-[92px] rounded-lg border px-3 py-2.5 text-left transition-colors ${
-                                selected
-                                    ? 'border-[#7dd4d8]/54 bg-[#7dd4d8]/12 text-white'
-                                    : 'border-white/8 bg-black/14 text-slate-200 hover:border-[#7dd4d8]/24'
-                            }`}
+                            data-active={selected ? 'true' : 'false'}
+                            className="ae-archive-tab is-tile min-h-[92px] rounded-ae-md px-3 py-2.5 text-left"
                         >
                             <div className="flex items-center justify-between gap-2">
-                                <span className="font-readable text-sm font-semibold">{branch.label}</span>
-                                {selected && <Check size={14} className="shrink-0 text-[#7dd4d8]" />}
+                                <span className="font-readable text-sm font-semibold text-ae-ink">{branch.label}</span>
+                                {selected && <Check size={14} aria-hidden="true" className="shrink-0 text-ae-ether-hi" />}
                             </div>
-                            <div className="aether-type-body mt-2 font-readable leading-snug text-slate-300/78">
+                            <div className="aether-type-body mt-2 font-readable leading-snug text-ae-ink-2">
                                 {formatSkillText(branch.desc)}
                             </div>
                         </button>
@@ -128,26 +129,25 @@ const GrowthDecision = ({
                 })}
             </div>
 
-            <div className="flex items-start gap-2 border-t border-white/8 pt-3 font-readable">
-                <Sparkles size={14} className="mt-0.5 shrink-0 text-[#d5b180]" />
+            <div className="ae-well flex items-start gap-2 px-3 py-2.5 font-readable">
+                <Sparkles size={14} aria-hidden="true" className="mt-0.5 shrink-0 text-ae-gold" />
                 <div className="min-w-0 flex-1">
-                    <div className="aether-type-meta text-slate-400/76">선택 결과</div>
-                    <div className="aether-type-body mt-0.5 text-slate-100">
+                    <div className="aether-type-meta text-ae-ink-3">선택 결과</div>
+                    <div className="aether-type-body mt-0.5 text-ae-ink">
                         {selectedBranch ? formatSkillText(selectedBranch.desc) : '후보를 선택하면 결과를 미리 볼 수 있습니다.'}
                     </div>
                 </div>
             </div>
 
-            <button
-                type="button"
+            <ActionButton
+                variant={primary ? 'primary' : 'glass'}
                 data-testid={`skill-growth-confirm-${skillName}`}
                 onClick={() => selectedBranch?.choice && canConfirm && onConfirm?.(selectedBranch.choice)}
                 disabled={!canConfirm}
-                className="aether-cta-primary aether-disabled-action flex min-h-[48px] w-full items-center justify-center gap-2 rounded-lg px-4 font-readable text-sm font-semibold text-[#dff7f5] disabled:cursor-not-allowed"
-            >
-                {isFirstChoice ? <GitBranch size={15} /> : <Coins size={15} />}
-                {confirmLabel}
-            </button>
+                className="min-h-[48px] w-full px-4 text-sm"
+                icon={isFirstChoice ? <GitBranch size={15} /> : <Coins size={15} />}
+                label={confirmLabel}
+            />
         </div>
     );
 };
@@ -166,32 +166,29 @@ const SkillCard = ({ skill, cooldown, selected, branchLabel, onSelect }: SkillCa
             aria-pressed={selected}
             onClick={() => onSelect?.(name)}
             disabled={!onSelect}
-            className={`w-full rounded-lg border px-3 py-2.5 text-left transition-colors disabled:cursor-default ${
-                selected
-                    ? 'border-[#7dd4d8]/40 bg-[#7dd4d8]/10'
-                    : 'border-white/8 bg-black/12 hover:border-white/16'
-            } ${cooldown > 0 ? 'opacity-70' : ''}`}
+            data-active={selected ? 'true' : 'false'}
+            className={`ae-archive-tab is-tile w-full rounded-ae-md px-3 py-2.5 text-left disabled:cursor-default ${cooldown > 0 ? 'opacity-70' : ''}`}
         >
             <div className="flex items-start gap-2.5">
-                <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-md border border-white/8 bg-black/18">
+                <div className="ae-sunk mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-ae-sm">
                     <SkillTypeIcon type={skill.type || '물리'} size={15} />
                 </div>
                 <div className="min-w-0 flex-1">
                     <div className="flex flex-wrap items-center gap-1.5">
-                        <span className="font-readable text-sm font-semibold text-slate-100">{name}</span>
-                        {selected && <SignalBadge tone="recommended" size="sm">전투 선택</SignalBadge>}
-                        {branchLabel && <SignalBadge tone="resonance" size="sm">성장 · {branchLabel}</SignalBadge>}
-                        {skill.fromWeapon && <SignalBadge tone="spotlight" size="sm">무기</SignalBadge>}
-                        {skill.fromTrait && <SignalBadge tone="resonance" size="sm">성향</SignalBadge>}
+                        <span className="font-readable text-[15px] font-semibold text-ae-ink">{name}</span>
+                        {selected && <SignalChip tone="recommended">전투 선택</SignalChip>}
+                        {branchLabel && <SignalChip tone="resonance">성장 · {branchLabel}</SignalChip>}
+                        {skill.fromWeapon && <SignalChip tone="spotlight">무기</SignalChip>}
+                        {skill.fromTrait && <SignalChip tone="resonance">성향</SignalChip>}
                     </div>
-                    <div className="aether-type-body mt-1 line-clamp-2 font-readable leading-snug text-slate-300/76">
+                    <div className="aether-type-body mt-1 font-readable leading-snug text-ae-ink-2">
                         {formatSkillText(skill.desc)}
                     </div>
-                    <div className="aether-type-meta mt-1.5 flex flex-wrap gap-x-2 gap-y-1 font-readable text-slate-400/76">
+                    <div className="aether-type-meta mt-1.5 flex flex-wrap gap-x-2 gap-y-1 font-readable text-ae-ink-3">
                         {metrics.map((metric) => <span key={metric}>{metric}</span>)}
                         {effect && !metrics.includes(effect) && <span>{effect}</span>}
-                        {typeLabel && <span className="text-slate-300/82">{typeLabel}</span>}
-                        {cooldown > 0 && <span className="text-rose-200">재사용까지 {cooldown}턴</span>}
+                        {typeLabel && <span className="text-ae-ink-2">{typeLabel}</span>}
+                        {cooldown > 0 && <span className="text-ae-threat">재사용까지 <span className="font-fira tabular-nums">{cooldown}</span>턴</span>}
                     </div>
                 </div>
             </div>
@@ -218,35 +215,36 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
         <div data-testid="skill-tree-preview" className="space-y-4">
             {/* 2026-10 Wave 67: 제목과 "현재 선택"이 한 줄에 안 들어가면 "현재 선택"이 다음 줄로 내려간다 —
                 둘을 한 줄에 묶어 두던 동안 375px에서 제목이 "나이트 전투 …"로 잘렸다(원장 §67.6). */}
-            <header className="flex flex-wrap items-center gap-x-3 gap-y-2 border-b border-white/8 pb-3">
+            <header className="flex flex-wrap items-center gap-x-3 gap-y-2 px-1">
                 <ClassIcon className={player.job as string} size={34} tier={currentClass.tier || 0} />
                 <div className="min-w-0 flex-[1_1_9rem]">
-                    <div className="aether-type-meta font-readable text-slate-400/76">기술 구성</div>
-                    <h2 className="font-readable text-lg font-semibold text-slate-100">
+                    <div className="ae-eyebrow">기술 구성</div>
+                    <h2 className="font-readable text-lg font-semibold text-ae-ink">
                         {player.job} 전투 기술
                     </h2>
                 </div>
                 <div className="ml-auto min-w-0 max-w-full text-right font-readable">
-                    <div className="aether-type-meta text-slate-400/76">현재 선택</div>
-                    <div className="aether-type-body mt-0.5 font-semibold text-[#dff7f5]">{selectedSkillName || '없음'}</div>
+                    <div className="ae-eyebrow">현재 선택</div>
+                    <div className="aether-type-body mt-0.5 font-semibold text-ae-ether-hi">{selectedSkillName || '없음'}</div>
                 </div>
             </header>
 
             {pendingGrowth.length > 0 && (
-                <section data-testid="skill-growth-pending" className="border-y border-[#7dd4d8]/18 bg-[#7dd4d8]/5 px-3 py-3.5">
+                <section data-testid="skill-growth-pending" className="ae-card p-3.5">
                     <div className="mb-3 flex items-center gap-2 font-readable">
-                        <GitBranch size={15} className="text-[#7dd4d8]" />
+                        <GitBranch size={15} aria-hidden="true" className="text-ae-ether-hi" />
                         <div>
-                            <div className="aether-type-title font-semibold text-slate-100">기술 성장 선택</div>
-                            <div className="aether-type-meta mt-0.5 text-slate-400/76">
+                            <div className="aether-type-title font-semibold text-ae-ink">기술 성장 선택</div>
+                            <div className="aether-type-meta mt-0.5 text-ae-ink-3">
                                 후보를 비교한 뒤 확정하세요. 첫 선택은 무료입니다.
                             </div>
                         </div>
                     </div>
                     <div className="space-y-5">
-                        {pendingGrowth.map(([skillName, branches]) => (
+                        {pendingGrowth.map(([skillName, branches], index) => (
                             <GrowthDecision
                                 key={skillName}
+                                primary={index === 0}
                                 skillName={skillName}
                                 branches={branches}
                                 gold={player.gold || 0}
@@ -263,10 +261,10 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
             <section aria-labelledby="current-skills-title">
                 <div className="mb-2 flex items-center justify-between gap-3">
                     <div className="flex items-center gap-2">
-                        <Shield size={14} className="text-slate-400" />
-                        <h3 id="current-skills-title" className="aether-type-title font-readable font-semibold text-slate-100">현재 기술</h3>
+                        <Shield size={14} aria-hidden="true" className="text-ae-ink-3" />
+                        <h3 id="current-skills-title" className="aether-type-title font-readable font-semibold text-ae-ink">현재 기술</h3>
                     </div>
-                    <span className="aether-type-meta font-readable text-slate-400/76">
+                    <span className="aether-type-meta font-readable text-ae-ink-3">
                         {isInSafeZone ? '안전 지역 · 성장 변경 가능' : '마을에서 성장 변경'}
                     </span>
                 </div>
@@ -290,14 +288,14 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
                                 />
 
                                 {branches && currentChoice && isInSafeZone && actions?.swapSkillChoice && (
-                                    <div className="mt-1.5 border-l border-[#d5b180]/24 pl-3">
+                                    <div className="mt-1.5 border-l border-ae-gold/30 pl-3">
                                         <button
                                             type="button"
                                             data-testid={`skill-growth-change-${name}`}
                                             onClick={() => setSwapTarget(isSwapping ? null : name)}
-                                            className="flex min-h-[44px] items-center gap-2 font-readable text-sm text-[#f6e7c8]/82"
+                                            className="flex min-h-[44px] items-center gap-2 rounded-ae-sm px-1 font-readable text-sm text-ae-gold-text transition-colors duration-[110ms] hover:text-ae-gold-hi motion-reduce:transition-none"
                                         >
-                                            <RotateCcw size={14} />
+                                            <RotateCcw size={14} aria-hidden="true" />
                                             {isSwapping ? '성장 변경 닫기' : '성장 변경'}
                                         </button>
                                         <AnimatePresence initial={false}>
@@ -313,6 +311,7 @@ const SkillTreePreview = ({ player, actions }: SkillTreePreviewProps) => {
                                                         skillName={name}
                                                         branches={branches}
                                                         currentChoice={currentChoice}
+                                                        primary={pendingGrowth.length === 0}
                                                         gold={player.gold || 0}
                                                         cost={swapCost}
                                                         onConfirm={(choice) => {

@@ -18,6 +18,8 @@ type RegionAmbientStyle = CSSProperties & {
 // slice 21: regionTheme — 위치 기반 ambient 팔레트. accent/soft를 CSS 변수로
 //   내려보내고, 상단 radial wash 1개 레이어로 지역 분위기를 표현한다.
 //   시맨틱 컬러(행동/위험/보상)는 불변 — ambient 전용.
+// 2026-10 에테르 유리(VD-14): 바탕은 세 겹 — 앱 바탕(금 · 에테르 원광) · 지역 빛 · 비네트. 격자 · 빛 덩어리 셋 · 고리는 지웠다.
+//   셸의 고정폭 글꼴(font-mono)도 지웠다(VD-05) — 숫자만 `font-fira`가 Fira Code로 그린다.
 const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, immersive = false }: MainLayoutProps) => {
   const normalizedReadabilityMode = readabilityMode === 'high' ? 'high' : 'standard';
   const shellSpacing = immersive
@@ -31,10 +33,10 @@ const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, imme
       data-readability-mode={normalizedReadabilityMode}
       data-region-theme={regionTheme?.key || 'haven'}
       style={{
-        '--region-accent': regionTheme?.accent || '#d5b180',
-        '--region-soft': regionTheme?.soft || 'rgba(213, 177, 128, 0.10)',
+        '--region-accent': regionTheme?.accent || 'var(--aether-gold)',
+        '--region-soft': regionTheme?.soft || 'rgb(var(--aether-gold-rgb) / 0.1)',
       } as RegionAmbientStyle}
-      className={`relative flex h-[100dvh] w-full flex-col overflow-x-hidden overflow-y-auto bg-[#03070d] font-mono text-slate-200 ${shellSpacing} ${visualEffect === 'shake' ? 'animate-shake' : ''}`}
+      className={`relative flex h-[100dvh] w-full flex-col overflow-x-hidden overflow-y-auto bg-ae-void text-ae-ink ${shellSpacing} ${visualEffect === 'shake' ? 'animate-shake' : ''}`}
       onScroll={(event: UIEvent<HTMLDivElement>) => {
         if (event.currentTarget.scrollLeft !== 0) {
           event.currentTarget.scrollLeft = 0;
@@ -43,14 +45,9 @@ const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, imme
     >
       {!immersive && (
         <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(213,177,128,0.12),transparent_24%),radial-gradient(circle_at_80%_14%,rgba(125,212,216,0.10),transparent_20%),linear-gradient(180deg,rgba(8,11,16,0.9)_0%,rgba(5,7,11,0.98)_100%)]" />
+          <div className="absolute inset-0 ae-app-backdrop" />
           <div className="absolute inset-0 aether-region-ambient" />
-          <div className="absolute inset-0 aether-soft-grid opacity-[0.18]" />
-          <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,transparent_42%,rgba(2,4,8,0.44)_100%)]" />
-          <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-[#d5b180]/8 via-white/[0.02] to-transparent" />
-          <div className="absolute left-[-3rem] top-[18%] h-48 w-48 rounded-full bg-[#d5b180]/8 blur-3xl" />
-          <div className="absolute right-[-4rem] top-[8%] h-56 w-56 rounded-full bg-[#7dd4d8]/10 blur-3xl" />
-          <div className="absolute bottom-[calc(var(--aether-safe-area-bottom)+0.4rem)] left-1/2 h-16 w-16 -translate-x-1/2 rounded-full border border-white/8 bg-[radial-gradient(circle,rgba(125,212,216,0.08),transparent_70%)] blur-xl" />
+          <div className="ae-shell-vignette absolute inset-0" />
         </div>
       )}
       <div className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col">

@@ -30,40 +30,41 @@ interface QuickSlotProps {
 const QuickSlot = ({ slots, onUse, gameState }: QuickSlotProps) => {
     const canUse = gameState === GS.COMBAT || gameState === GS.IDLE;
 
+    // 2026-10 에테르 유리: 빈 칸 · 쓸 수 없는 칸 · 쓸 수 있는 칸을 톤으로만 가른다(회색 테두리 대신 층과 림). 칸은 44px 터치 하한.
     return (
         <div className="flex items-center gap-2">
-            <div className="flex shrink-0 items-center justify-center rounded-full border border-white/8 bg-white/[0.04] text-[#d5b180] h-8 w-8">
-                <Zap size={12} />
+            <div className="ae-sunk flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-ae-gold">
+                <Zap size={14} aria-hidden="true" />
             </div>
-            <div className="flex gap-1.5">
+            <div className="flex gap-2">
                 {slots.map((item, i) => (
                     <Motion.button
                         key={i}
                         data-testid={`quick-slot-${i}`}
-                        whileTap={item && canUse ? { scale: 0.9 } : {}}
+                        whileTap={item && canUse ? { scale: 0.94 } : {}}
                         onClick={() => item && canUse && onUse?.(item, i)}
                         title={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 빠른 사용 (슬롯 ${i + 1})` : MSG.QUICK_SLOT_EMPTY_LABEL(i + 1)}
                         aria-label={item ? `${item.name} — ${getConsumableDescription(item, { includeTurnCost: true })} · 슬롯 ${i + 1}` : MSG.QUICK_SLOT_EMPTY_LABEL(i + 1)}
-                        className={`relative flex min-h-[40px] min-w-[40px] items-center justify-center rounded-[0.95rem] border text-center text-xs font-fira transition-all backdrop-blur-md h-10 w-10
+                        className={`ae-quick-slot relative flex h-11 w-11 items-center justify-center rounded-ae-sm text-center font-fira tabular-nums
                             ${item
                                 ? canUse
-                                    ? 'border-[#7dd4d8]/24 bg-[#7dd4d8]/10 text-[#dff7f5] shadow-[0_12px_22px_rgba(125,212,216,0.1)] cursor-pointer hover:border-[#d5b180]/22 hover:bg-[#d5b180]/10'
-                                    : 'border-white/8 bg-white/[0.03] text-slate-500 cursor-default'
-                                : 'border-white/6 bg-black/18 text-slate-600 cursor-default'
+                                    ? 'is-ready cursor-pointer text-ae-ink'
+                                    : 'is-idle cursor-default text-ae-ink-3'
+                                : 'is-empty cursor-default text-ae-ink-3'
                             }`}
                     >
                         {item ? (
                             <>
-                                <span className="text-[11px] leading-tight text-center">
+                                <span className="text-[11px] font-bold leading-tight text-center">
                                     {getConsumableCompactLabel(item)}
                                 </span>
                                 {/* Slot number badge */}
-                                <span className="absolute rounded-full border border-white/10 bg-[rgba(9,12,18,0.95)] text-slate-400 -left-1 -top-1 px-1 py-0 text-[11px]">
+                                <span className="ae-quick-slot-index absolute -left-1 -top-1 rounded-full px-1 text-[11px] font-bold leading-[1.35] text-ae-ink-2">
                                     {i + 1}
                                 </span>
                             </>
                         ) : (
-                            <span className="text-slate-600">{i + 1}</span>
+                            <span className="text-[12px]">{i + 1}</span>
                         )}
                     </Motion.button>
                 ))}
@@ -95,22 +96,25 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots 
 
     return (
         <div className="mt-1 flex flex-wrap items-center gap-1">
-            <span className="font-fira text-slate-400/70 text-xs">퀵슬롯:</span>
+            <span className="text-[12px] font-semibold text-ae-ink-3">퀵슬롯:</span>
             {Array.from({ length: slotCount }, (_, i) => {
                 const occupied = currentSlots?.[i];
                 return (
                     <button
                         key={i}
+                        type="button"
                         data-testid={`quick-slot-assign-${i}`}
+                        aria-label={MSG.QUICK_SLOT_ASSIGN_ARIA(i + 1, occupied?.name)}
+                        aria-pressed={Boolean(occupied && occupied.id === item?.id)}
                         onClick={() => onAssign(i, item)}
-                        className={`h-11 w-11 text-xs rounded-md border font-bold transition-all backdrop-blur-md
+                        className={`ae-quick-slot h-11 w-11 rounded-ae-sm font-fira text-[12px] font-bold tabular-nums
                             ${occupied?.id === item?.id
-                                ? 'border-[#7dd4d8]/35 bg-[#7dd4d8]/10 text-[#dff7f5]'
+                                ? 'is-ready text-ae-ether-hi'
                                 : occupied
-                                    ? 'border-white/8 bg-black/20 text-slate-500'
-                                    : 'border-white/10 hover:border-[#d5b180]/30 bg-black/24 text-slate-400'
+                                    ? 'is-idle text-ae-ink-3'
+                                    : 'is-empty text-ae-ink-2'
                             }`}
-                        title={occupied ? `슬롯 ${i + 1}: ${occupied.name}` : `슬롯 ${i + 1}에 할당`}
+                        title={MSG.QUICK_SLOT_ASSIGN_ARIA(i + 1, occupied?.name)}
                     >
                         {i + 1}
                     </button>
@@ -118,15 +122,17 @@ export const QuickSlotAssigner = ({ item, slotCount = 3, onAssign, currentSlots 
             })}
             {isAssigned && (
                 <button
+                    type="button"
                     data-testid="quick-slot-unassign"
+                    aria-label={MSG.QUICK_SLOT_UNASSIGN}
                     onClick={() => {
                         const idx = currentSlots?.findIndex((s) => s?.id === item?.id) ?? -1;
                         if (idx >= 0) onAssign(idx, null);
                     }}
-                    className="inline-flex h-11 w-11 items-center justify-center text-rose-300/55 hover:text-rose-200"
-                    title="할당 해제"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-ae-sm text-ae-ink-3 hover:text-ae-ink"
+                    title={MSG.QUICK_SLOT_UNASSIGN}
                 >
-                    <X size={11} />
+                    <X size={14} aria-hidden="true" />
                 </button>
             )}
         </div>

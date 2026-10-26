@@ -11,6 +11,7 @@ import { QUESTS } from '../src/data/quests.js';
 import { AT } from '../src/reducers/actionTypes.js';
 import { gameReducer, INITIAL_STATE } from '../src/reducers/gameReducer.js';
 import { getProtocolDayKey } from '../src/utils/protocolCycle.js';
+import { readControlPanelSource } from './helpers/controlPanelSource.mjs';
 
 const runQuestAction = (player, invoke) => {
     let state = {
@@ -622,7 +623,7 @@ test('adventure guidance references the top recommended operation when no quest 
 });
 
 test('town quest shortcut opens the quest board focus panel, not only the progress tab', async () => {
-    const source = await readFile(new URL('../src/components/ControlPanel.tsx', import.meta.url), 'utf8');
+    const source = await readControlPanelSource();
 
     assert.match(source, /testId:\s*'control-quests'/);
     assert.match(source, /actions\.setGameState\(GS\.QUEST_BOARD\)/);
@@ -630,7 +631,7 @@ test('town quest shortcut opens the quest board focus panel, not only the progre
 });
 
 test('safe-zone control grid exposes quest board and rest actions for guidance targets', async () => {
-    const source = await readFile(new URL('../src/components/ControlPanel.tsx', import.meta.url), 'utf8');
+    const source = await readControlPanelSource();
 
     assert.match(source, /key:\s*'quests'/);
     assert.match(source, /testId:\s*'control-quests'/);
@@ -640,7 +641,7 @@ test('safe-zone control grid exposes quest board and rest actions for guidance t
 });
 
 test('control panel renders active mission tracker from accepted quests', async () => {
-    const source = await readFile(new URL('../src/components/ControlPanel.tsx', import.meta.url), 'utf8');
+    const source = await readControlPanelSource();
 
     assert.match(source, /getQuestTracker/);
     assert.match(source, /data-testid="control-mission-tracker"/);
@@ -655,7 +656,7 @@ test('control panel renders active mission tracker from accepted quests', async 
 });
 
 test('claimable mission tracker exposes a real town-only reward action', async () => {
-    const source = await readFile(new URL('../src/components/ControlPanel.tsx', import.meta.url), 'utf8');
+    const source = await readControlPanelSource();
 
     assert.match(source, /tracker\.kind === 'claimable'/);
     assert.match(source, /disabled=\{!canClaimReward \|\| !onClaimReward\}/);

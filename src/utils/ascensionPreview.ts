@@ -48,6 +48,21 @@ export interface AscensionOutcome {
     mirrorEndless: MirrorEndlessAffordance;
     /** 2026-10 Wave 99: 이번 회차(계승 전 단계)에 새긴 끝없는 거울 — 계승하면 기록은 지워진다. */
     mirrorEndlessCycle: MirrorEndlessCycle;
+    /**
+     * 영구 능력치 정산 — 능력치마다 지금 값 · 내려놓는 몫(넘어가지 않는 정수 사다리) · 계승 보상 · 다음 여정 값.
+     * `after = before − dropped + reward`이고 `after`는 `meta`의 같은 값이다(계승 화면이 늘어난 것처럼 보이지 않게 나눠 그린다).
+     */
+    growth: AscensionGrowthRow[];
+}
+
+export type AscensionGrowthStat = 'atk' | 'hp' | 'mp' | 'essence';
+
+export interface AscensionGrowthRow {
+    stat: AscensionGrowthStat;
+    before: number;
+    dropped: number;
+    reward: number;
+    after: number;
 }
 
 /**
@@ -67,7 +82,8 @@ const toNonNegativeNumber = (value: unknown) => {
 export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): AscensionOutcome => {
     // 2026-10 Wave 95: 회차 규칙 패 다시 뽑기 기록은 이 계승에서 쓰고 지운다(유료 횟수만큼 넘어가는 사다리를 내려놓는다).
     // 2026-10 Wave 99: 이번 회차 끝없는 거울 기록도 이 계승에서 돌아보고 지운다(다음 회차는 0부터 센다).
-    const { ascensionRuleOffer: _usedRuleOffer, mirrorEndlessCycle: _closedMirrorCycle, ...currentMeta } = meta || {};
+    // 이번 회차 최고 레벨 기록(`cycleBestLevel`)도 회차 단위라 계승에서 지운다.
+    const { ascensionRuleOffer: _usedRuleOffer, mirrorEndlessCycle: _closedMirrorCycle, cycleBestLevel: _closedCycleBest, ...currentMeta } = meta || {};
     const currentRank = Math.floor(toNonNegativeNumber(currentMeta.prestigeRank));
     const nextRank = currentRank + 1;
     const titleIndex = Math.min(nextRank - 1, PRESTIGE_TITLES.length - 1);
@@ -80,6 +96,13 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
     //   전투 · 오늘의 임무와 같은 배율(지금 단계 × 거울)을 곱한다. 이전에는 고정 +200이었다.
     const essenceReward = scaleEssenceReward(BALANCE.PRESTIGE_ESSENCE_REWARD, currentMeta);
     const nextEssence = carriedMeta.essence + essenceReward;
+    const growthRow = (stat: AscensionGrowthStat, before: number, carriedValue: number, reward: number): AscensionGrowthRow => ({
+        stat,
+        before,
+        dropped: Math.max(0, before - carriedValue),
+        reward,
+        after: carriedValue + reward,
+    });
 
     return {
         currentRank,
@@ -113,5 +136,11 @@ export const getAscensionOutcome = (meta: AscensionMeta | null | undefined): Asc
         },
         mirrorEndless: getMirrorEndlessAffordance(currentMeta.mirror, nextEssence),
         mirrorEndlessCycle: getMirrorEndlessCycle(meta),
+        growth: [
+            growthRow('atk', toNonNegativeNumber(currentMeta.bonusAtk), carriedMeta.bonusAtk, BALANCE.PRESTIGE_ATK_BONUS),
+            growthRow('hp', toNonNegativeNumber(currentMeta.bonusHp), carriedMeta.bonusHp, BALANCE.PRESTIGE_HP_BONUS),
+            growthRow('mp', toNonNegativeNumber(currentMeta.bonusMp), carriedMeta.bonusMp, BALANCE.PRESTIGE_MP_BONUS),
+            growthRow('essence', toNonNegativeNumber(currentMeta.essence), carriedMeta.essence, essenceReward),
+        ],
     };
 };

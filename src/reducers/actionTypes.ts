@@ -107,6 +107,8 @@ export const AT = Object.freeze({
     UPDATE_EXPEDITION_FOCUS_QUEST: 'UPDATE_EXPEDITION_FOCUS_QUEST',
     SET_ENEMY: 'SET_ENEMY',
     SET_EVENT: 'SET_EVENT',
+    // 2026-10 통합 감사(town-nav UX-09): 선택 없이 이벤트를 떠난다 — 지나친 이벤트를 기록에 한 줄 남기고 대기로 돌아간다.
+    LEAVE_EVENT: 'LEAVE_EVENT',
     SET_GRAVE: 'SET_GRAVE',
 
     // UI
@@ -349,6 +351,7 @@ export interface ActionPayloadMap {
     [AT.UPDATE_EXPEDITION_FOCUS_QUEST]: { questId: QuestId; selected: boolean };
     [AT.SET_ENEMY]: Monster | null | ((enemy: Monster | null) => Monster | null);
     [AT.SET_EVENT]: GameEvent | null;
+    [AT.LEAVE_EVENT]: undefined;
     [AT.SET_GRAVE]: GraveEntry | GraveEntry[] | null;
 
     // ── UI ───────────────────────────────────────────────────────────────

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { BALANCE } from '../data/constants';
+import { ShieldCheck, ShoppingBag } from 'lucide-react';
+import { BALANCE, RARITY_CLASSES } from '../data/constants';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { DB } from '../data/db';
 import { MSG } from '../data/messages';
@@ -9,6 +10,9 @@ import { getDailyDeals, getShopBuyPrice, getShopMaxTier, getShopPriceMult, getWe
 import { getActiveMerchantVisit, getMerchantShelf } from '../utils/wanderingMerchant';
 import FocusPanelHeader from './FocusPanelHeader';
 import ItemIcon from './icons/ItemIcon';
+import ActionButton from './ui/ActionButton';
+import Chip, { type ChipTone } from './ui/Chip';
+import { getItemRarity } from '../utils/gameUtils';
 import { getSignatureSaleVerdict } from '../utils/signatureSale';
 import { getConsumableDescription, getConsumableEffectSummary } from '../utils/consumablePresentation';
 import type { GameActions } from '../hooks/actionDeps';
@@ -78,11 +82,21 @@ const getComparisonMeta = (item: Item | null | undefined, player: Player | null 
     return null;
 };
 
+// 2026-10 에테르 유리: 비교 어조 색은 토큰이다 — 좋아짐은 에테르, 나빠짐은 위험, 그대로는 잉크.
 const getToneClass = (tone: ComparisonTone): string => {
-    if (tone === 'positive') return 'text-[#dff7f5] border-[#7dd4d8]/24 bg-[#7dd4d8]/10';
-    if (tone === 'negative') return 'text-rose-100 border-rose-300/24 bg-rose-400/10';
-    return 'text-slate-300 border-white/8 bg-white/[0.03]';
+    if (tone === 'positive') return 'text-ae-ether-hi bg-ae-ether/10';
+    if (tone === 'negative') return 'text-ae-threat bg-ae-threat/10';
+    return 'text-ae-ink-2 bg-ae-s3';
 };
+
+/** 이름 색 — 등급 색의 한 원천(`RARITY_CLASSES`). */
+const getRarityTextClass = (item: Item): string => RARITY_CLASSES[getItemRarity(item)] || 'text-ae-ink';
+
+const DECISION_CHIP_TONE: Readonly<Record<string, ChipTone>> = Object.freeze({
+    positive: 'good',
+    negative: 'gold',
+    blocked: 'threat',
+});
 
 interface BuyBlockContext {
     canStore: boolean;
@@ -130,18 +144,18 @@ const ShopEquipmentDecisionStrip = ({ player, item, scope }: ShopEquipmentDecisi
             data-testid={`shop-equipment-decision-${scope}-${item.id || item.name}`}
             className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px] font-readable"
         >
-            <span className={`rounded border px-1.5 py-0.5 font-bold ${decision.tone === 'positive' ? 'border-emerald-300/24 bg-emerald-300/10 text-emerald-100' : decision.tone === 'negative' ? 'border-amber-300/24 bg-amber-300/10 text-amber-100' : decision.tone === 'blocked' ? 'border-rose-300/24 bg-rose-400/10 text-rose-100' : 'border-white/8 bg-white/[0.03] text-slate-300'}`}>
+            <Chip tone={DECISION_CHIP_TONE[decision.tone] || 'neutral'} className="font-bold">
                 {decision.recommendation}
-            </span>
-            <span className={`font-bold ${decision.primaryDelta.value > 0 ? 'text-emerald-200' : decision.primaryDelta.value < 0 ? 'text-rose-200' : 'text-slate-300/78'}`}>
+            </Chip>
+            <span className={`font-bold ${decision.primaryDelta.value > 0 ? 'text-ae-good' : decision.primaryDelta.value < 0 ? 'text-ae-threat' : 'text-ae-ink-2'}`}>
                 {!decision.equipable && '가정 비교 · '}{decision.primaryDelta.text}
             </span>
-            <span
+            <Chip
                 data-testid={`shop-set-contribution-${scope}-${item.id || item.name}`}
-                className={`rounded border px-1.5 py-0.5 ${decision.setContribution > 0 ? 'border-[#d5b180]/30 bg-[#d5b180]/10 text-[#f6e7c8]' : 'border-white/8 bg-white/[0.03] text-slate-400'}`}
+                tone={decision.setContribution > 0 ? 'gold' : 'neutral'}
             >
                 {decision.setContributionText}
-            </span>
+            </Chip>
         </div>
     );
 };
@@ -230,12 +244,14 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
         [player.level, loc]
     );
 
+    // 2026-10 에테르 유리: 한 장의 유리 머리 아래 상품은 묶음(`.ae-town-group`) 한 장에 머리카락 선으로 나뉜다.
+    //   줄마다 구매는 유리 단추이고, 금빛 주 행동은 이 화면에 없다(사고파는 것은 줄마다 같은 무게의 결정이다).
     return (
-        <div data-testid="shop-panel" className="aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3">
+        <div data-testid="shop-panel" className="ae-town aether-focus-panel relative z-20 flex min-h-0 flex-1 flex-col overflow-hidden p-3">
             <FocusPanelHeader
                 eyebrow={isMerchant ? MSG.MERCHANT_SHOP_EYEBROW : '마을 거래소'}
                 title={isMerchant ? MSG.MERCHANT_TITLE : '마을 상점'}
-                titleClassName="text-[1.1rem] leading-none"
+                titleClassName="text-[1.1rem] leading-tight"
                 meta={MSG.SHOP_HEADER_META(
                     maxTier,
                     (player.inv || []).length,
@@ -243,7 +259,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     Math.round((isMerchant ? BALANCE.WANDERING_MERCHANT_PRICE_MULT : getShopPriceMult(loc)) * 100),
                 )}
                 onBack={closeShop}
-                backLabel="복귀"
+                backLabel={MSG.UI_BACK}
                 backTestId="shop-close"
                 onOpenArchive={isMerchant ? null : onOpenArchiveConsole}
                 archiveLabel="가방"
@@ -251,33 +267,40 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
             />
 
             {purchaseReceipt && (
-                <div className="mb-2 rounded-[1rem] border border-emerald-300/22 bg-emerald-400/10 px-3 py-2 text-[11px] font-fira font-semibold text-emerald-100">
-                    구매 완료 · {purchaseReceipt.itemName}
+                <div role="status" className="ae-town-receipt mb-2 px-3 py-2 font-readable text-[12px] font-semibold">
+                    {MSG.SHOP_PURCHASE_RECEIPT(purchaseReceipt.itemName)}
                 </div>
             )}
 
-            <div className="mb-3 flex items-center justify-between gap-2">
-                <div className="font-readable text-[11px] leading-[1.35] text-slate-300/78">
+            <div className="mb-3 flex items-center justify-between gap-3">
+                <div className="min-w-0 font-readable text-[12px] leading-[1.4] text-ae-ink-2">
                     {shopMode === 'buy' ? '구매 후보를 빠르게 비교합니다.' : '판매 확정 전 한 번 더 확인합니다.'}
                 </div>
-                <div className="flex shrink-0 rounded-full border border-white/8 bg-black/20 p-0.5">
+                {/* 2026-10 통합 감사(town-nav A11Y-05): 구매 · 판매 전환은 44px 누름 칸이고, 고른 쪽을 `aria-pressed`로 알린다. */}
+                <div role="group" aria-label={MSG.SHOP_MODE_GROUP_ARIA} className="ae-town-seg w-[9.5rem] shrink-0">
                     <button
+                        type="button"
+                        data-testid="shop-mode-buy"
+                        aria-pressed={shopMode === 'buy'}
                         onClick={() => {
                             setShopMode('buy');
                             setSellConfirmId(null);
                         }}
-                        className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${shopMode === 'buy' ? 'bg-[#d5b180]/18 text-[#f6e7c8]' : 'text-slate-400 hover:text-white'}`}
+                        className="ae-town-seg-btn min-h-11 min-w-11 font-readable"
                     >
-                        구매
+                        {MSG.SHOP_MODE_BUY}
                     </button>
                     <button
+                        type="button"
+                        data-testid="shop-mode-sell"
+                        aria-pressed={shopMode === 'sell'}
                         onClick={() => {
                             setShopMode('sell');
                             setSellConfirmId(null);
                         }}
-                        className={`rounded-full px-3 py-1.5 text-[11px] font-bold transition-colors ${shopMode === 'sell' ? 'bg-rose-400/16 text-rose-100' : 'text-slate-400 hover:text-white'}`}
+                        className="ae-town-seg-btn min-h-11 min-w-11 font-readable"
                     >
-                        판매
+                        {MSG.SHOP_MODE_SELL}
                     </button>
                 </div>
             </div>
@@ -286,11 +309,11 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                 <div
                     data-testid="shop-equipment-disclosure"
                     data-equipment-view={showDetails ? 'full' : 'summary'}
-                    className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-white/8 bg-black/18 px-3 py-2"
+                    className="ae-sunk mb-3 flex items-center justify-between gap-3 rounded-ae-md py-1.5 pl-3 pr-1.5"
                 >
                     <div className="min-w-0">
-                        <div className="text-[11px] font-readable font-bold text-white/88">구매 판단</div>
-                        <div className="mt-0.5 text-[11px] font-readable text-slate-400/78">
+                        <div className="font-readable text-[12px] font-bold text-ae-ink">구매 판단</div>
+                        <div className="mt-0.5 font-readable text-[11px] text-ae-ink-3">
                             {showDetails ? '전체 효과와 비교값 표시' : '추천·대표 변화·세트 기여만 표시'}
                         </div>
                     </div>
@@ -299,65 +322,61 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                         data-testid="shop-equipment-detail-toggle"
                         aria-expanded={showDetails}
                         onClick={() => setDetailOverride(!showDetails)}
-                        className="min-h-11 shrink-0 rounded-md border border-[#d5b180]/26 bg-[#d5b180]/10 px-3 text-[11px] font-readable font-bold text-[#f6e7c8]"
+                        className="ae-town-pill min-h-11 shrink-0 font-readable"
                     >
                         {showDetails ? '간단히 보기' : '상세 보기'}
                     </button>
                 </div>
             )}
 
-            <div className="flex-1 overflow-y-auto space-y-2.5 custom-scrollbar pr-1">
-                {/* 할인 상품 */}
+            <div className="flex-1 space-y-3 overflow-y-auto pr-1 custom-scrollbar">
                 {shopMode === 'buy' && isMerchant && (
                     <div data-testid="merchant-shelf" className="space-y-2">
-                        <div className="font-readable text-[11px] leading-[1.35] text-amber-100/80">{MSG.MERCHANT_SHOP_NOTE}</div>
+                        <div className="font-readable text-[12px] leading-[1.4] text-ae-gold-text">{MSG.MERCHANT_SHOP_NOTE}</div>
                         {merchantShelf.every((slot) => slot.sold) && (
-                            <div className="font-readable text-[11px] text-slate-400">{MSG.MERCHANT_SOLD_OUT}</div>
+                            <div className="font-readable text-[12px] text-ae-ink-2">{MSG.MERCHANT_SOLD_OUT}</div>
                         )}
-                        {merchantShelf.filter((slot) => !slot.sold).map(({ item, price, rare }) => {
-                            const affordable = currentGold >= price;
-                            const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(currentJob ?? '');
-                            const canBuy = affordable && equipable && inventoryHasRoom;
-                            const blockReason = getBuyBlockReason({ canStore: inventoryHasRoom, affordable, equipable, item });
-                            return (
-                                <div
-                                    key={item.name}
-                                    data-testid="merchant-offer"
-                                    data-merchant-rare={rare ? 'true' : 'false'}
-                                    className={`aether-shop-row ${canBuy ? '' : 'is-blocked'} flex items-center justify-between gap-2 rounded-[1rem] px-3 py-2.5`}
-                                >
-                                    <div className="min-w-0 flex items-center gap-2">
-                                        <ItemIcon item={item} size={38} showBorder className="opacity-95" />
-                                        <div className="min-w-0">
-                                            <div className="flex flex-wrap items-center gap-1.5">
-                                                <span className="font-readable text-sm font-semibold text-white">{item.name}</span>
-                                                {rare && (
-                                                    <span className="shrink-0 rounded-full border border-amber-300/40 bg-amber-300/12 px-1.5 py-0.5 text-[11px] font-readable font-bold text-amber-100">
-                                                        {MSG.MERCHANT_RARE_BADGE}
-                                                    </span>
-                                                )}
-                                            </div>
-                                            <div className="mt-0.5 font-readable text-[11px] font-bold text-amber-300">{formatGold(price)}</div>
-                                            <ShopEquipmentDecisionStrip player={player} item={item} scope="list" />
-                                        </div>
-                                    </div>
-                                    <button
-                                        data-testid="merchant-buy"
-                                        onClick={() => { if (canBuy) actions?.market('buy', item, 'merchant'); }}
-                                        disabled={!canBuy}
-                                        className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-3 py-1 text-[11px] font-bold text-amber-100"
+                        <div className="ae-town-group">
+                            {merchantShelf.filter((slot) => !slot.sold).map(({ item, price, rare }) => {
+                                const affordable = currentGold >= price;
+                                const equipable = !isEquipmentItem(item) || !Array.isArray(item.jobs) || item.jobs.includes(currentJob ?? '');
+                                const canBuy = affordable && equipable && inventoryHasRoom;
+                                const blockReason = getBuyBlockReason({ canStore: inventoryHasRoom, affordable, equipable, item });
+                                return (
+                                    <div
+                                        key={item.name}
+                                        data-testid="merchant-offer"
+                                        data-merchant-rare={rare ? 'true' : 'false'}
+                                        className="ae-town-row flex items-center justify-between gap-2 px-3 py-2.5"
                                     >
-                                        {canBuy ? MSG.MERCHANT_BUY_ACTION : (blockReason || MSG.MERCHANT_BUY_BLOCKED)}
-                                    </button>
-                                </div>
-                            );
-                        })}
+                                        <div className="flex min-w-0 items-center gap-2.5">
+                                            <ItemIcon item={item} size={38} showBorder />
+                                            <div className="min-w-0">
+                                                <div className="flex flex-wrap items-center gap-1.5">
+                                                    <span className={`break-words font-readable text-[14px] font-semibold ${getRarityTextClass(item)}`}>{item.name}</span>
+                                                    {rare && <Chip tone="gold" className="font-bold">{MSG.MERCHANT_RARE_BADGE}</Chip>}
+                                                </div>
+                                                <div className="mt-0.5 font-fira text-[12px] font-bold tabular-nums text-ae-gold-text">{formatGold(price)}</div>
+                                                <ShopEquipmentDecisionStrip player={player} item={item} scope="list" />
+                                            </div>
+                                        </div>
+                                        <ActionButton
+                                            data-testid="merchant-buy"
+                                            onClick={() => { if (canBuy) actions?.market('buy', item, 'merchant'); }}
+                                            disabled={!canBuy}
+                                            label={canBuy ? MSG.MERCHANT_BUY_ACTION : (blockReason || MSG.MERCHANT_BUY_BLOCKED)}
+                                            className="aether-disabled-action min-h-[44px] min-w-11 shrink-0 px-3 text-[13px]"
+                                        />
+                                    </div>
+                                );
+                            })}
+                        </div>
                     </div>
                 )}
                 {shopMode === 'buy' && !isMerchant && (dailyDeals.items.length > 0 || weeklySpecial) && (
-                    <div className="mb-2 space-y-2 border-b border-white/8 pb-2">
-                        <div className="aether-label text-[#f6e7c8]/70">오늘의 할인 · 10%</div>
-                        <div className="grid grid-cols-1 gap-2">
+                    <div className="space-y-2">
+                        <div className="ae-eyebrow font-readable text-ae-gold-text">오늘의 할인 · 10%</div>
+                        <div className="ae-town-group">
                             {dailyDeals.items.map((item) => {
                                 const canStore = inventoryHasRoom;
                                 const affordable = (player.gold ?? 0) >= (item.price ?? Infinity);
@@ -365,42 +384,42 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                 const canBuy = canStore && affordable && equipable;
                                 const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
                                 return (
-                                    <div key={item.name} className={`aether-shop-row ${canBuy ? '' : 'is-blocked'} flex items-center justify-between gap-2 rounded-[1rem] px-3 py-2.5`}>
-                                        <div className="min-w-0 flex items-center gap-2">
-                                            <ItemIcon item={item} size={34} showBorder className="opacity-95" />
+                                    <div key={item.name} className="ae-town-row flex items-center justify-between gap-2 px-3 py-2.5">
+                                        <div className="flex min-w-0 items-center gap-2.5">
+                                            <ItemIcon item={item} size={34} showBorder />
                                             <div className="min-w-0">
-                                                <div className="truncate font-readable text-xs font-semibold text-white">{item.name}</div>
-                                                <div className="mt-0.5 flex items-center gap-1.5">
-                                                    <span className="text-[11px] font-readable text-amber-300 font-bold">{formatGold(item.price)}</span>
-                                                    <span className="text-[11px] font-readable text-slate-500 line-through">{formatGold(item.originalPrice)}</span>
+                                                <div className={`break-words font-readable text-[13px] font-semibold ${getRarityTextClass(item)}`}>{item.name}</div>
+                                                <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 font-fira text-[12px] tabular-nums">
+                                                    <span className="font-bold text-ae-gold-text">{formatGold(item.price)}</span>
+                                                    <span className="text-ae-ink-3 line-through">{formatGold(item.originalPrice)}</span>
                                                 </div>
                                                 <ShopEquipmentDecisionStrip player={player} item={item} scope="daily" />
                                                 {/* slice 20: 본문 reason 행 제거 — 우측 버튼이 동일한
                                                     차단 사유를 표시해 같은 행에 2회 출력되던 중복. */}
                                             </div>
                                         </div>
-                                        <button
+                                        <ActionButton
+                                            data-testid="shop-daily-buy"
                                             onClick={() => actions?.market('buy', item, 'daily')}
                                             disabled={!canBuy}
-                                            title={!canBuy && reason ? reason : '구매'}
-                                            className="aether-disabled-action aether-cta-gold shrink-0 min-h-[44px] rounded-full px-2.5 py-1 text-[11px] font-bold text-amber-100"
-                                        >
-                                            {canBuy ? '구매' : reason}
-                                        </button>
+                                            title={!canBuy && reason ? reason : MSG.SHOP_MODE_BUY}
+                                            label={canBuy ? MSG.SHOP_MODE_BUY : reason}
+                                            className="aether-disabled-action min-h-[44px] min-w-11 shrink-0 px-3 text-[13px]"
+                                        />
                                     </div>
                                 );
                             })}
                         </div>
                         {weeklySpecial && (
-                            <div className="aether-shop-row flex items-center justify-between gap-3 rounded-[1rem] px-3 py-2.5">
-                                <div className="min-w-0 flex items-center gap-2.5">
-                                    <ItemIcon item={weeklySpecial} size={38} showBorder className="opacity-95" />
+                            <div className="ae-town-group flex items-center justify-between gap-3 px-3 py-2.5">
+                                <div className="flex min-w-0 items-center gap-2.5">
+                                    <ItemIcon item={weeklySpecial} size={38} showBorder />
                                     <div className="min-w-0">
-                                        <div className="aether-label mb-0.5 text-[#ece5ff]/62">이번 주 특별 상품 · 15%</div>
-                                        <div className="truncate font-readable text-sm font-semibold text-white">{weeklySpecial.name}</div>
-                                        <div className="mt-0.5 flex items-center gap-1.5">
-                                            <span className="text-[11px] font-readable text-purple-300 font-bold">{formatGold(weeklySpecial.price)}</span>
-                                            <span className="text-[11px] font-readable text-slate-500 line-through">{formatGold(weeklySpecial.originalPrice)}</span>
+                                        <div className="ae-eyebrow mb-0.5 font-readable text-ae-ether-hi">이번 주 특별 상품 · 15%</div>
+                                        <div className={`break-words font-readable text-[14px] font-semibold ${getRarityTextClass(weeklySpecial)}`}>{weeklySpecial.name}</div>
+                                        <div className="mt-0.5 flex flex-wrap items-center gap-x-1.5 font-fira text-[12px] tabular-nums">
+                                            <span className="font-bold text-ae-gold-text">{formatGold(weeklySpecial.price)}</span>
+                                            <span className="text-ae-ink-3 line-through">{formatGold(weeklySpecial.originalPrice)}</span>
                                         </div>
                                         <ShopEquipmentDecisionStrip player={player} item={weeklySpecial} scope="weekly" />
                                     </div>
@@ -412,14 +431,13 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                     const canBuy = canStore && affordable && equipable;
                                     const reason = !canStore ? '가방 가득' : !affordable ? '골드 부족' : !equipable ? '직업 제한' : null;
                                     return (
-                                        <button
+                                        <ActionButton
                                             onClick={() => actions?.market('buy', weeklySpecial, 'weekly')}
                                             disabled={!canBuy}
                                             title={!canBuy && reason ? reason : '구매'}
-                                            className="aether-disabled-action shrink-0 min-h-[44px] rounded-full border border-purple-400/30 px-4 py-1.5 text-xs font-bold text-purple-200 transition-all hover:bg-purple-400/10"
-                                        >
-                                            {canBuy ? '구매' : reason}
-                                        </button>
+                                            label={canBuy ? '구매' : reason}
+                                            className="aether-disabled-action min-h-[44px] min-w-11 shrink-0 px-3 text-[13px]"
+                                        />
                                     );
                                 })()}
                             </div>
@@ -429,180 +447,163 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
 
                 {shopMode === 'buy' && isMerchant ? null : shopMode === 'buy' ? (
                     buyItems.length > 0 ? (
-                        visibleBuyItems.map(({ item, price, affordable, equipable, inventoryHasRoom: canStore }) => {
-                            const canBuy = affordable && equipable && canStore;
-                            const comparison = getComparisonMeta(item, player);
-                            const typeTag = getItemTags(item)[0];
-                            const summary = getCompactItemSummary(item);
-                            const comparisonText = getCompactComparisonText(comparison);
-                            const blockReason = getBuyBlockReason({ canStore, affordable, equipable, item });
+                        <div className="ae-town-group">
+                            {visibleBuyItems.map(({ item, price, affordable, equipable, inventoryHasRoom: canStore }) => {
+                                const canBuy = affordable && equipable && canStore;
+                                const comparison = getComparisonMeta(item, player);
+                                const typeTag = getItemTags(item)[0];
+                                const summary = getCompactItemSummary(item);
+                                const comparisonText = getCompactComparisonText(comparison);
+                                const blockReason = getBuyBlockReason({ canStore, affordable, equipable, item });
 
-                            return (
-                                <div
-                                    key={item.name}
-                                    data-testid="shop-buy-item"
-                                    data-shop-state={canBuy ? 'ready' : 'blocked'}
-                                    className={`aether-shop-row ${canBuy ? '' : 'is-blocked'} overflow-hidden rounded-[1.05rem] px-3 py-2.5 transition-colors hover:border-[#d5b180]/24`}
-                                >
-                                    <div className="grid grid-cols-[42px_minmax(0,1fr)_82px] items-start gap-2.5">
-                                        <ItemIcon item={item} size={42} showBorder className="mt-0.5 opacity-95" />
-                                        <div className="min-w-0 flex flex-1 items-start gap-2.5">
-                                            <div className="min-w-0 flex-1">
-                                                <div className="flex flex-wrap items-center gap-1.5">
-                                                    <div className="truncate font-readable text-[14px] font-semibold leading-tight text-slate-100">{item.name}</div>
-                                                    {typeTag && (
-                                                        <span className="shrink-0 rounded-full border border-white/8 bg-white/[0.04] px-1.5 py-0.5 text-[11px] font-readable text-slate-300/85">
-                                                            {typeTag}
-                                                        </span>
-                                                    )}
-                                                    {showDetails && Array.isArray(item.jobs) && item.jobs.includes(player.job ?? '') && isEquipmentItem(item) && (
-                                                        <span
-                                                            title={`${player.job} 세트 매치 — 같은 직업 호환 장비를 모으면 세트 효과 발동`}
-                                                            className="shrink-0 inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-[11px] font-readable font-bold"
-                                                            style={{
-                                                                color: '#d5b180',
-                                                                border: '1px solid rgba(213,177,128,0.42)',
-                                                                background: 'rgba(213,177,128,0.10)',
-                                                            }}
-                                                        >
-                                                            ⚔ 세트
-                                                        </span>
-                                                    )}
-                                                </div>
-                                                {(!isEquipmentItem(item) || showDetails) && (
-                                                    <div className="mt-1 line-clamp-2 font-readable text-[11px] leading-[1.35] text-slate-300/78">{summary}</div>
-                                                )}
-                                                <ShopEquipmentDecisionStrip player={player} item={item} scope="list" />
-                                                {showDetails && comparison && (
-                                                    <div className="mt-1.5">
-                                                        <div className={`aether-shop-delta inline-flex max-w-full items-center rounded-[0.65rem] px-2 py-1 font-readable text-[11px] leading-[1.2] ${getToneClass(comparison.tone)}`}>
-                                                            <span className="break-words">{comparisonText}</span>
-                                                        </div>
-                                                    </div>
+                                return (
+                                    <div
+                                        key={item.name}
+                                        data-testid="shop-buy-item"
+                                        data-shop-state={canBuy ? 'ready' : 'blocked'}
+                                        className="ae-town-row grid grid-cols-[42px_minmax(0,1fr)_auto] items-start gap-2.5 px-3 py-3"
+                                    >
+                                        <ItemIcon item={item} size={42} showBorder className="mt-0.5" />
+                                        <div className="min-w-0">
+                                            <div className="flex flex-wrap items-center gap-1.5">
+                                                <div className={`break-words font-readable text-[14px] font-semibold leading-tight ${getRarityTextClass(item)}`}>{item.name}</div>
+                                                {typeTag && <Chip>{typeTag}</Chip>}
+                                                {showDetails && Array.isArray(item.jobs) && item.jobs.includes(player.job ?? '') && isEquipmentItem(item) && (
+                                                    <Chip tone="gold" className="font-bold" title={MSG.SHOP_SET_MATCH_TITLE(player.job ?? '')}>
+                                                        {MSG.SHOP_SET_MATCH_CHIP}
+                                                    </Chip>
                                                 )}
                                             </div>
-                                        </div>
-                                        <div className="flex min-w-0 shrink-0 flex-col items-stretch gap-1">
-                                            <div data-testid="shop-buy-price" className="text-center font-readable text-[11px] font-bold text-[#f6e7c8]">{formatGold(price)}</div>
-                                            {!canBuy && blockReason && (
-                                                <div className="text-center font-readable text-[11px] leading-[1.15] text-rose-200/88">{blockReason}</div>
+                                            <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                                                <div data-testid="shop-buy-price" className="font-fira text-[13px] font-bold tabular-nums text-ae-gold-text">{formatGold(price)}</div>
+                                                {!canBuy && blockReason && (
+                                                    <div className="font-readable text-[12px] font-semibold text-ae-threat">{blockReason}</div>
+                                                )}
+                                            </div>
+                                            {(!isEquipmentItem(item) || showDetails) && (
+                                                <div className="mt-1 line-clamp-2 font-readable text-[12px] leading-[1.4] text-ae-ink-2">{summary}</div>
                                             )}
-                                            <button
-                                                data-testid="shop-buy-inline"
-                                                onClick={() => {
-                                                    if (canBuy) actions?.market('buy', item, 'stock');
-                                                }}
-                                                disabled={!canBuy}
-                                                className="aether-disabled-action aether-cta-gold min-h-[44px] rounded-[0.75rem] px-2 py-1 text-[11px] font-bold text-[#f6e7c8]"
-                                            >
-                                                {canBuy ? '구매' : '불가'}
-                                            </button>
+                                            <ShopEquipmentDecisionStrip player={player} item={item} scope="list" />
+                                            {showDetails && comparison && (
+                                                <div className="mt-1.5">
+                                                    <div className={`aether-shop-delta inline-flex max-w-full items-center rounded-ae-xs px-2 py-1 font-readable text-[12px] leading-[1.3] ${getToneClass(comparison.tone)}`}>
+                                                        <span className="break-words">{comparisonText}</span>
+                                                    </div>
+                                                </div>
+                                            )}
                                         </div>
+                                        <ActionButton
+                                            data-testid="shop-buy-inline"
+                                            onClick={() => {
+                                                if (canBuy) actions?.market('buy', item, 'stock');
+                                            }}
+                                            disabled={!canBuy}
+                                            icon={canBuy ? <ShoppingBag size={15} /> : undefined}
+                                            label={canBuy ? '구매' : '불가'}
+                                            className="aether-disabled-action min-h-[44px] min-w-11 px-3 text-[13px]"
+                                        />
                                     </div>
-                                </div>
-                            );
-                        })
+                                );
+                            })}
+                        </div>
                     ) : (
-                        <div className="col-span-full text-center text-slate-500 py-10 font-rajdhani border border-dashed border-slate-700 rounded-xl">
+                        <div className="ae-sunk rounded-ae-md py-10 text-center font-readable text-[13px] text-ae-ink-2">
                             현재 지역에서 판매 중인 아이템이 없습니다.
                         </div>
                     )
                 ) : (
                     sellItems.length > 0 ? (
-                        sellItems.map((item) => {
-                            const isConfirming = sellConfirmId === item.id;
-                            // 2026-10 Wave 62 (원장 §61.4 C16): 받는 판매가 — '빈손의 시작'이면 절반(판매 로그와 같은 `getSellIncome`).
-                            const sellPrice = getSellIncome(player, item);
-                            const comparison = getComparisonMeta(item, player);
-                            const summary = getCompactItemSummary(item);
-                            const comparisonText = comparison ? getCompactText(comparison.text) : '';
-                            // Wave 28 (D4): 쓸 수 있는 유일한 서명 사본만 잠근다 — 판정은 리듀서와 같은 유틸이 소유한다.
-                            const signatureVerdict = getSignatureSaleVerdict(item, player);
-                            const isSignatureLocked = Boolean(signatureVerdict && !signatureVerdict.sellable);
-                            const signatureSaleNote = signatureVerdict?.reason === 'duplicate'
-                                ? MSG.SIGNATURE_SELL_DUPLICATE
-                                : signatureVerdict?.reason === 'off-path' ? MSG.SIGNATURE_SELL_OFF_PATH : null;
+                        <div className="ae-town-group">
+                            {sellItems.map((item) => {
+                                const isConfirming = sellConfirmId === item.id;
+                                // 2026-10 Wave 62 (원장 §61.4 C16): 받는 판매가 — '빈손의 시작'이면 절반(판매 로그와 같은 `getSellIncome`).
+                                const sellPrice = getSellIncome(player, item);
+                                const comparison = getComparisonMeta(item, player);
+                                const summary = getCompactItemSummary(item);
+                                const comparisonText = comparison ? getCompactText(comparison.text) : '';
+                                // Wave 28 (D4): 쓸 수 있는 유일한 서명 사본만 잠근다 — 판정은 리듀서와 같은 유틸이 소유한다.
+                                const signatureVerdict = getSignatureSaleVerdict(item, player);
+                                const isSignatureLocked = Boolean(signatureVerdict && !signatureVerdict.sellable);
+                                const signatureSaleNote = signatureVerdict?.reason === 'duplicate'
+                                    ? MSG.SIGNATURE_SELL_DUPLICATE
+                                    : signatureVerdict?.reason === 'off-path' ? MSG.SIGNATURE_SELL_OFF_PATH : null;
 
-                            return (
-                                <div
-                                    key={item.id}
-                                    data-testid="shop-sell-row"
-                                    data-item-name={item.name}
-                                    className={`aether-shop-row is-blocked flex flex-col rounded-[1.05rem] px-3 py-3 transition-all ${isConfirming ? 'border-rose-300/28 bg-rose-400/10' : 'hover:border-rose-300/18'}`}
-                                >
-                                    <div className="flex items-start justify-between gap-3">
-                                        <div className="min-w-0 flex items-start gap-2.5">
-                                            <ItemIcon item={item} size={38} showBorder className="mt-0.5 opacity-95" />
-                                            <div className="min-w-0">
-                                                <div className="truncate font-readable text-base font-semibold text-red-200">{item.name}</div>
-                                                <div data-testid="shop-sell-summary" className="mt-1 font-readable text-[11px] leading-snug text-slate-300/78">{summary}</div>
+                                return (
+                                    <div
+                                        key={item.id}
+                                        data-testid="shop-sell-row"
+                                        data-item-name={item.name}
+                                        className={`ae-town-row flex flex-col px-3 py-3 transition-colors ${isConfirming ? 'bg-ae-threat/10' : ''}`}
+                                    >
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex min-w-0 items-start gap-2.5">
+                                                <ItemIcon item={item} size={38} showBorder className="mt-0.5" />
+                                                <div className="min-w-0">
+                                                    <div className={`break-words font-readable text-[15px] font-semibold ${getRarityTextClass(item)}`}>{item.name}</div>
+                                                    <div data-testid="shop-sell-summary" className="mt-1 font-readable text-[12px] leading-snug text-ae-ink-2">{summary}</div>
+                                                </div>
                                             </div>
+                                            <span className="shrink-0 font-fira text-[14px] font-bold tabular-nums text-ae-gold-text">+{formatGold(sellPrice)}</span>
                                         </div>
-                                        <span className="shrink-0 text-[#f6e7c8] font-readable font-bold text-sm">+{formatGold(sellPrice)}</span>
-                                    </div>
 
-                                    <div className="mt-2 flex flex-wrap gap-1.5 text-[11px] font-readable">
-                                        <span className="px-2 py-1 rounded border border-slate-600/70 bg-slate-900/80 text-slate-300">등급 {item.tier || 1}</span>
-                                        <span className="px-2 py-1 rounded border border-red-500/20 bg-red-950/20 text-red-300">
-                                            판매가 {formatGold(sellPrice)}
-                                        </span>
-                                    </div>
-
-                                    {comparison && (
-                                        <div className={`aether-shop-delta mt-2 rounded-[0.75rem] px-2.5 py-2 font-readable text-[11px] ${getToneClass(comparison.tone)}`}>
-                                            {comparisonText}
+                                        <div className="mt-2 flex flex-wrap gap-1.5">
+                                            <Chip className="font-fira tabular-nums">등급 {item.tier || 1}</Chip>
+                                            <Chip tone="gold" className="font-fira tabular-nums">
+                                                판매가 {formatGold(sellPrice)}
+                                            </Chip>
                                         </div>
-                                    )}
 
-                                    <div className="mt-3 flex items-center justify-between gap-3 border-t border-slate-700/60 pt-2.5">
-                                        <div
-                                            className="font-readable text-[11px] text-slate-300/74"
-                                            data-testid={signatureSaleNote ? `shop-sell-signature-note-${item.id}` : undefined}
-                                        >
-                                            {isSignatureLocked
-                                                ? MSG.SIGNATURE_SELL_LOCKED
-                                                : isConfirming ? '한 번 더 누르면 판매됩니다.' : (signatureSaleNote || '판매 대기')}
+                                        {comparison && (
+                                            <div className={`aether-shop-delta mt-2 rounded-ae-xs px-2.5 py-2 font-readable text-[12px] ${getToneClass(comparison.tone)}`}>
+                                                {comparisonText}
+                                            </div>
+                                        )}
+
+                                        <div className="mt-2.5 flex items-center justify-between gap-3">
+                                            <div
+                                                className={`min-w-0 font-readable text-[12px] ${isConfirming ? 'font-semibold text-ae-threat' : 'text-ae-ink-2'}`}
+                                                data-testid={signatureSaleNote ? `shop-sell-signature-note-${item.id}` : undefined}
+                                            >
+                                                {isSignatureLocked
+                                                    ? MSG.SIGNATURE_SELL_LOCKED
+                                                    : isConfirming ? '한 번 더 누르면 판매됩니다.' : (signatureSaleNote || '판매 대기')}
+                                            </div>
+                                            <ActionButton
+                                                variant={isSignatureLocked ? 'ghost' : isConfirming ? 'danger' : 'ghost'}
+                                                data-testid={isSignatureLocked ? 'shop-sell-locked' : undefined}
+                                                disabled={isSignatureLocked}
+                                                onClick={() => {
+                                                    if (isSignatureLocked) return;
+                                                    if (isConfirming) {
+                                                        actions?.market('sell', item);
+                                                        setSellConfirmId(null);
+                                                        return;
+                                                    }
+                                                    setSellConfirmId(item.id);
+                                                }}
+                                                icon={isSignatureLocked ? <ShieldCheck size={15} /> : undefined}
+                                                label={isSignatureLocked ? MSG.SIGNATURE_SELL_PROTECTED_BADGE : isConfirming ? '정말 판매' : '판매'}
+                                                className="min-h-[44px] shrink-0 px-3.5 text-[13px]"
+                                            />
                                         </div>
-                                        <button
-                                            type="button"
-                                            data-testid={isSignatureLocked ? 'shop-sell-locked' : undefined}
-                                            disabled={isSignatureLocked}
-                                            onClick={() => {
-                                                if (isSignatureLocked) return;
-                                                if (isConfirming) {
-                                                    actions?.market('sell', item);
-                                                    setSellConfirmId(null);
-                                                    return;
-                                                }
-                                                setSellConfirmId(item.id);
-                                            }}
-                                            className={`min-h-[40px] rounded-lg border px-3 py-2 text-xs font-bold transition-all ${isSignatureLocked
-                                                ? 'border-[#f6e7a2]/35 bg-[#f6e7a2]/10 text-[#f6e7a2]/80 cursor-not-allowed'
-                                                : isConfirming
-                                                    ? 'border-red-400 bg-red-600/20 text-red-200 hover:bg-red-600/30'
-                                                    : 'border-red-500/40 text-red-300 hover:bg-red-500/10 hover:border-red-400'}`}
-                                        >
-                                            {isSignatureLocked ? MSG.SIGNATURE_SELL_PROTECTED_BADGE : isConfirming ? '정말 판매' : '판매'}
-                                        </button>
                                     </div>
-                                </div>
-                            );
-                        })
+                                );
+                            })}
+                        </div>
                     ) : (
-                        <div className="col-span-full rounded-[1.2rem] border border-dashed border-white/8 py-10 text-center font-rajdhani text-slate-500">
+                        <div className="ae-sunk rounded-ae-md py-10 text-center font-readable text-[13px] text-ae-ink-2">
                             판매할 수 있는 아이템이 없습니다.
                         </div>
                     )
                 )}
 
                 {shopMode === 'buy' && buyItems.length > visibleBuyItems.length && (
-                    <button
-                        type="button"
+                    <ActionButton
+                        variant="ghost"
                         onClick={() => setBuyItemsExpansion({ key: expansionKey, expanded: true })}
-                        className="min-h-[44px] w-full rounded-[1.05rem] border border-white/8 bg-black/18 px-4 py-3 text-[11px] font-fira uppercase tracking-[0.16em] text-slate-200 transition-colors hover:bg-white/[0.05]"
-                    >
-                        더 보기 ({buyItems.length - visibleBuyItems.length}개 남음)
-                    </button>
+                        label={<>더 보기 (<span className="font-fira tabular-nums">{buyItems.length - visibleBuyItems.length}</span>개 남음)</>}
+                        className="min-h-[44px] w-full text-[13px]"
+                    />
                 )}
             </div>
 

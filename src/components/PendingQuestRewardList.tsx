@@ -1,6 +1,7 @@
 import type { QuestReward } from '../types/index.js';
 import type { getClaimableQuestEntries } from '../utils/questProgress';
 import { getGoldIncome, type ChallengeHolder } from '../utils/challengeRules';
+import ActionButton from './ui/ActionButton';
 
 interface PendingQuestRewardListProps {
     entries: ReturnType<typeof getClaimableQuestEntries>;
@@ -26,25 +27,24 @@ const PendingQuestRewardList = ({ entries, testIdPrefix, onClaim, player }: Pend
             <div
                 key={String(entry.id)}
                 data-testid={`${testIdPrefix}-pending-quest-${String(entry.id)}`}
-                className="flex min-w-0 items-center gap-3 rounded-lg border border-white/10 bg-black/25 p-3"
+                className="ae-well flex min-w-0 flex-wrap items-center gap-x-3 gap-y-2 p-3"
             >
                 <div className="min-w-0 flex-1">
-                    <p className="break-words text-[12px] font-readable font-bold text-slate-100">
+                    <p className="aether-type-meta break-words font-readable font-bold text-ae-ink">
                         {entry.quest?.title || `임무 ${String(entry.id)}`}
                     </p>
-                    <p className="mt-1 break-words text-[11px] font-readable text-slate-400">
+                    <p className="aether-type-label mt-1 break-words font-readable text-ae-ink-2">
                         {formatQuestReward(entry.quest?.reward, player)}
                     </p>
                 </div>
-                <button
-                    type="button"
+                <ActionButton
+                    variant="glass"
                     data-testid={`${testIdPrefix}-claim-quest-${String(entry.id)}`}
                     aria-label={`${entry.quest?.title || `임무 ${String(entry.id)}`} 보상 받기`}
                     onClick={() => onClaim?.(entry.id)}
-                    className="min-h-[48px] shrink-0 rounded-lg border border-emerald-300/35 bg-emerald-300/16 px-3 py-2 text-[11px] font-readable font-bold text-emerald-100 transition-colors hover:bg-emerald-300/24"
-                >
-                    보상 받기
-                </button>
+                    label="보상 받기"
+                    className="ae-choice-claim min-h-[48px] shrink-0 font-readable"
+                />
             </div>
         ))}
     </div>
