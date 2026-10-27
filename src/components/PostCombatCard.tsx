@@ -5,6 +5,7 @@ import {
     getPostCombatAnalysis,
     getPostCombatDecisionStrip,
     getPostCombatRecommendation,
+    isSwiftPostCombat,
 } from '../utils/outcomeAnalysis';
 import { isSignatureItem } from '../data/signatureItems.js';
 import { MSG } from '../data/messages';
@@ -215,6 +216,77 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
     // 감사 UX-10: 판단 칸의 '추천'도 주 행동 단추와 같은 이름이다 — 탐험할 수 없는 곳에서 '계속 탐험'을 약속하지 않는다.
     const primaryLabel = primaryIsContinue && !canExplore ? MSG.POST_COMBAT_CLOSE_LABEL : recommendation.label;
     const isBossKill = Boolean(result.isBoss);
+    const sheetClassName = `ae-sheet ae-moment-sheet fixed inset-x-3 bottom-[calc(var(--aether-safe-area-bottom)+0.8rem)] z-40 mx-auto max-h-[calc(100dvh-var(--aether-safe-area-top)-1.6rem)] max-w-[36rem] overflow-y-auto overscroll-contain ${isBossKill ? 'aether-post-combat-boss' : ''}`;
+
+    // 소유자 결정 2026-10-26 D1: 한 행동에 끝난 일반 전투는 조우 · 처치 · 전리품 한 장이다 — 판단 칸 · 순서 공개 · 등급 줄 없이
+    //   끝값을 바로 보이고 주 행동은 '계속 탐험'(탐험할 수 없는 곳이면 '닫기')이다. 입력 보호(350ms)는 그대로다.
+    if (isSwiftPostCombat(result, decisionContext)) {
+        const swiftKind = canExplore ? 'explore' : 'close';
+        return (
+            <AnimatePresence>
+                {!isClosing && (
+                    <Motion.div
+                        data-testid="post-combat-card"
+                        data-card-mode="swift"
+                        data-reveal-stage="done"
+                        data-input-ready={inputReady ? 'true' : 'false'}
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 12 }}
+                        transition={{ duration: 0.16, ease: MOMENT_EASE }}
+                        className={sheetClassName}
+                    >
+                        <div className="space-y-2.5 px-4 pb-4 pt-3.5">
+                            <header className="flex items-start justify-between gap-3">
+                                <div className="min-w-0">
+                                    <span className="inline-flex items-center gap-1.5 font-readable text-[11px] font-bold text-ae-ether-hi">
+                                        <Sword size={13} aria-hidden="true" />
+                                        {MSG.POST_COMBAT_SWIFT_EYEBROW}
+                                    </span>
+                                    <h2 className="mt-0.5 break-keep font-display text-[16px] font-extrabold leading-snug text-ae-ink">
+                                        {MSG.POST_COMBAT_SWIFT_TITLE(enemyName)}
+                                    </h2>
+                                </div>
+                                <MomentCloseButton
+                                    data-testid="post-combat-close"
+                                    aria-label={MSG.POST_COMBAT_CLOSE_ARIA}
+                                    onClick={handleClose}
+                                    className="-mr-1 -mt-1"
+                                />
+                            </header>
+
+                            <section
+                                data-testid="post-combat-reward-summary"
+                                aria-label={MSG.POST_COMBAT_REWARDS_ARIA}
+                                className="flex flex-wrap items-center gap-2"
+                            >
+                                <span data-testid="post-combat-reward-exp" className="ae-moment-stat is-exp inline-flex min-h-8 items-center rounded-ae-sm px-3 font-fira text-[13px] font-bold tabular-nums">{MSG.POST_COMBAT_EXP(result.exp)}</span>
+                                <span data-testid="post-combat-reward-gold" className="ae-moment-stat is-gold inline-flex min-h-8 items-center rounded-ae-sm px-3 font-fira text-[13px] font-bold tabular-nums">{MSG.POST_COMBAT_GOLD(result.gold)}</span>
+                            </section>
+
+                            {lootSummary && (
+                                <div data-testid="post-combat-loot" className="flex items-start gap-2 px-1 font-readable text-[13px] text-ae-ink-2">
+                                    <Package size={14} className="mt-0.5 shrink-0 text-ae-gold" aria-hidden="true" />
+                                    <span className="min-w-0 break-keep">{lootSummary}</span>
+                                </div>
+                            )}
+
+                            <ActionButton
+                                variant="primary"
+                                data-testid="post-combat-primary-action"
+                                data-primary-kind={swiftKind}
+                                disabled={!inputReady}
+                                onClick={handleContinueExplore}
+                                icon={swiftKind === 'explore' ? <ArrowRight size={17} /> : <X size={17} />}
+                                label={swiftKind === 'explore' ? MSG.POST_COMBAT_CONTINUE : MSG.POST_COMBAT_CLOSE_LABEL}
+                                className="w-full"
+                            />
+                        </div>
+                    </Motion.div>
+                )}
+            </AnimatePresence>
+        );
+    }
 
     const primaryKind = recommendation.target === 'inventory' ? 'inventory' : canExplore ? 'explore' : 'close';
     const primaryIcon = primaryKind === 'inventory'
@@ -227,6 +299,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
             {!isClosing && (
                 <Motion.div
                     data-testid="post-combat-card"
+                    data-card-mode="full"
                     data-reveal-stage={revealDone ? 'done' : 'counting'}
                     data-input-ready={inputReady ? 'true' : 'false'}
                     data-boss-kill={isBossKill ? 'true' : undefined}
@@ -235,7 +308,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 16, scale: 0.97 }}
                     transition={{ duration: 0.2, ease: MOMENT_EASE }}
-                    className={`ae-sheet ae-moment-sheet fixed inset-x-3 bottom-[calc(var(--aether-safe-area-bottom)+0.8rem)] z-40 mx-auto max-h-[calc(100dvh-var(--aether-safe-area-top)-1.6rem)] max-w-[36rem] overflow-y-auto overscroll-contain ${isBossKill ? 'aether-post-combat-boss' : ''}`}
+                    className={sheetClassName}
                 >
                     <div className="space-y-3 px-4 pb-4 pt-4">
                         <header className="flex items-start justify-between gap-3">

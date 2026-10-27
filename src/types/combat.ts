@@ -61,6 +61,11 @@ export interface PostCombatResult {
     traitHint: PostCombatTraitHint;
     bossRewardHint: string | null;
     bossClearBonus: number;
+    /**
+     * 소유자 결정 2026-10-26 D1: 적이 한 번도 행동하지 않고 쓰러졌다 — 플레이어의 첫 행동이 끝낸 전투
+     * (`deadEnemy.actionCount`가 0, 적 행동은 기절 · 방어 차례까지 센다). 카드 모양은 `isSwiftPostCombat`이 정한다.
+     */
+    swift: boolean;
 
     // ── QA 시드 전용 레거시 별칭 (위 주석) ───────────────────────────────
     hpLow?: boolean;

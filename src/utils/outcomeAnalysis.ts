@@ -83,13 +83,18 @@ export const getPostCombatAnalysis = (result: PostCombatResultLike) => {
     };
 };
 
-export const getPostCombatRecommendation = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}) => {
-    const hpLow = typeof result.hpLow === 'boolean'
+/** 승리 뒤 생명 · 기력이 낮은가 — 추천과 한 행동 처치 판정(D1)이 같은 문턱을 읽는다. */
+const getPostCombatVitalsLow = (result: PostCombatResultLike) => ({
+    hpLow: typeof result.hpLow === 'boolean'
         ? result.hpLow
-        : clampRatio(result.playerHp, result.playerMaxHp) <= 0.35;
-    const mpLow = typeof result.mpLow === 'boolean'
+        : clampRatio(result.playerHp, result.playerMaxHp) <= 0.35,
+    mpLow: typeof result.mpLow === 'boolean'
         ? result.mpLow
-        : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3;
+        : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3,
+});
+
+export const getPostCombatRecommendation = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}) => {
+    const { hpLow, mpLow } = getPostCombatVitalsLow(result);
     const invFull = typeof result.invFull === 'boolean' ? result.invFull : false;
     const enemyTier = result.enemyTier || 'NORMAL';
     const droppedItems = Array.isArray(result.items) ? result.items : [];
@@ -113,6 +118,21 @@ export const getPostCombatRecommendation = (result: PostCombatResultLike, contex
         return { target: 'inventory', label: '소모품 확인' };
     }
     return { target: 'continue', label: '계속 탐험' };
+};
+
+/**
+ * 소유자 결정 2026-10-26 D1(감사 CL-01): 한 행동에 끝난 일반 전투 — 결과 카드는 이 결과를 조우 · 처치 · 전리품 한 장으로 접고
+ * 주 행동을 '계속 탐험'으로 둔다. 판단할 거리가 하나라도 있으면 원래 카드다: 정예 · 보스, 적이 한 번이라도 행동했음,
+ * 레벨 상승, 전설 각인 · 장비 갱신 · 성향 공명 · 보스 보상, 가방 가득, 생명 · 기력 낮음(위 추천과 같은 문턱).
+ * 수치 · 전투 규칙은 바꾸지 않는다 — 보이는 모양만이다(Wave 53 · 60 원칙).
+ */
+export const isSwiftPostCombat = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}): boolean => {
+    if (result.swift !== true || (result.enemyTier || 'NORMAL') !== 'NORMAL' || result.isBoss) return false;
+    if (result.leveledUp || result.invFull || result.upgradeHint || result.traitHint || result.bossRewardHint) return false;
+    if (Number(context.signatureLootCount) > 0) return false;
+    // 일반 전리품은 판단이 아니다(이미 가방에 들어갔다) — 생명 · 기력 · 가방 · 장비만 접기를 막는다.
+    const { hpLow, mpLow } = getPostCombatVitalsLow(result);
+    return !hpLow && !mpLow;
 };
 
 export const getPostCombatDecisionStrip = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}) => {

@@ -1975,4 +1975,9 @@ export const MSG = {
     SYSTEM_TOGGLE_STATE: (enabled: boolean) => (enabled ? '켜짐' : '꺼짐'),
     SYSTEM_HAPTICS_CHANGED: (enabled: boolean) => (enabled ? '진동을 켰습니다.' : '진동을 껐습니다.'),
     SYSTEM_SHORTCUTS_CHANGED: (enabled: boolean) => (enabled ? '한 글자 단축키를 켰습니다.' : '한 글자 단축키를 껐습니다.'),
+
+    // === 소유자 결정 2026-10-26 · 한 행동 처치 ===
+    // D1: 적이 행동하기 전에 끝난 일반 전투의 결과는 조우 · 처치 · 전리품 한 장이다 — 그 시트의 이름표와 제목.
+    POST_COMBAT_SWIFT_EYEBROW: '한 번에 처치',
+    POST_COMBAT_SWIFT_TITLE: (enemy: string) => `${enemy} 처치`,
 };

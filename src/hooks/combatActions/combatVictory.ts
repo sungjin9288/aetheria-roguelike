@@ -357,6 +357,7 @@ export const handleVictoryOutcome = ({
             traitHint,
             bossRewardHint: victoryResult.bossClearBonus?.rewardHint || null,
             bossClearBonus: victoryResult.bossClearBonus?.goldBonus || 0,
+            swift: (deadEnemy?.actionCount ?? 0) === 0,
         },
     });
 
