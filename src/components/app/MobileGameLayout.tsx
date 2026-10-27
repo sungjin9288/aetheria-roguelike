@@ -91,7 +91,9 @@ const MobileGameLayout = ({
                         />
                     </Suspense>
                 ) : (
-                    <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px]'}`}>
+                    // 2026-10-26 iPhone 수용: 마을 시설을 펼치면 조작판이 기록 창 최소 높이(240)와 함께 화면을 51px 넘쳐
+                    //   마지막 줄(제작 · 에테르 거울)이 홈 표시줄 위에 걸렸다(402×874, 안전 영역 62/34) — 펼친 동안만 112px까지 양보한다(375×812 mini에서도 넘치지 않는 값).
+                    <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px] [&:has(~*_.ae-town-facilities[open])]:min-h-[112px]'}`}>
                         <TerminalView
                             logs={engine.logs}
                             gameState={engine.gameState}

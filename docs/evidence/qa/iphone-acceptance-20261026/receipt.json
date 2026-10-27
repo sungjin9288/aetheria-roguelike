@@ -1,0 +1,39 @@
+{
+  "runbook": "docs/qa/IPHONE_ACCEPTANCE_RUNBOOK.md",
+  "date": "2026-10-26",
+  "kind": "simulator-proxy",
+  "note": "소유자 iPhone이 아니라 iOS 시뮬레이터에서 대신 확인했다. 실기기 수용(런북 기본 경로)은 남아 있다.",
+  "device": { "name": "iPhone 17 Pro (Simulator)", "points": "402x874", "safeArea": { "top": 62, "bottom": 34 }, "iosRuntime": "26.5" },
+  "baseCommit": "d15c45da",
+  "build": "npm run ios:sync → xcodebuild Debug (iphonesimulator)",
+  "network": "인증 지연 → 오프라인 모드. 클라우드 저장 동기화는 런북 §3에 따라 통과로 기록하지 않는다.",
+  "items": {
+    "1": { "verdict": "partial", "detail": "로컬 저장 복원은 됐다(레벨 · 위치 · 골드). 클라우드 복원은 오프라인이라 확인하지 못했다." },
+    "2": { "verdict": "not-checked", "detail": "6시간 공백을 만들지 않았다." },
+    "3": { "verdict": "pass" },
+    "4": { "verdict": "pass", "screenshot": "04-town-ready.png" },
+    "5": { "verdict": "pass" },
+    "6": { "verdict": "pass" },
+    "7": { "verdict": "pass" },
+    "8": { "verdict": "not-checked" },
+    "9": { "verdict": "pass" },
+    "10": { "verdict": "partial", "detail": "필드 지도 · 이동 단추만 눌러 봤다. 기록 탭 단추는 보지 못했다." },
+    "11": { "verdict": "pass" },
+    "12": { "verdict": "not-checked", "detail": "유물 발견이 나오지 않았다." },
+    "13": { "verdict": "pass", "detail": "관찰: 기술 아닌 줄에 '획득' 배지(회피 · 도착), 적 강타에 '치명타' 배지, '[강타]: 숲 요정에게'의 쌍점 — 소유자 판단 목록으로 넘김." },
+    "14": { "verdict": "not-checked" },
+    "15": { "verdict": "partial", "detail": "본 화면에서는 글자 누락이 없었다. 1 ~ 14를 다 보지 않았다." },
+    "16": { "verdict": "partial", "detail": "본 화면에서는 영어 낱말이 없었다. 1 ~ 14를 다 보지 않았다." },
+    "17": { "verdict": "pass" },
+    "18": { "verdict": "pass" },
+    "19": {
+      "verdict": "fail-fixed",
+      "detail": "마을 시설을 펼치면 기록 창 최소 높이 240px과 조작판이 화면을 51px 넘쳐 마지막 줄(제작 · 에테르 거울)이 홈 표시줄 영역(866 ~ 874pt)에 걸렸다. 펼친 동안만 기록 창 최소 높이를 112px로 낮췄다(MobileGameLayout). 다시 빌드한 뒤 마지막 줄이 홈 표시줄 위에 있다.",
+      "screenshot": "19-town-facilities-open-after-fix.png",
+      "regression": "tests/e2e/town-facilities-design.spec.ts '펼친 마을 시설 · 안전 영역' (375x812 · 402x874 · 430x932, 수정 전 코드로 375 · 402 실패 확인)"
+    },
+    "20": { "verdict": "not-checked" },
+    "21": { "verdict": "not-checked" },
+    "22": { "verdict": "not-checked" }
+  }
+}
