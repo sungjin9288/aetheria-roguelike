@@ -1079,11 +1079,8 @@ import { readFile } from 'node:fs/promises';
           'getSignatureItemNames inv default [] 제거');
   });
 
-  test('cycle 614: 정합성 가드 — caller |[] guard 추가', async () => {
-      const source = await readSrc('src/hooks/useLegendaryDropDetector.ts');
-      assert.ok(/getSignatureItemNames\(inv \|\| \[\]\)/.test(source),
-          'getSignatureItemNames(inv || []) defensive guard 명시');
-  });
+  // 2026-10-26 D33: 훅이 가방을 관찰하지 않게 되며 getSignatureItemNames(inv || []) 호출부 가드는 끝났다 —
+  //   가방 비교는 리듀서 획득 전이(`findArrivedSignatures`)가 하고 tests/signature-acquisition-transition.test.js가 잡는다.
 
   test('cycle 614: cycle 502-613 회귀 가드 — default 청소 시리즈 보존', async () => {
       const rp = await readSrc('src/utils/runProfile.ts');

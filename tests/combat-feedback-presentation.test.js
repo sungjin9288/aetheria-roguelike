@@ -265,36 +265,36 @@ test('GF-11: 모션 감소 설정에서도 피해 숫자가 보인다 — 처치
 
 const signatureItems = Object.keys(SIGNATURE_ITEM_REGISTRY).slice(0, 6)
     .map((name, index) => ({ id: `sig-${index}`, name, type: 'weapon', tier: 5 }));
+/** 2026-10-26 D33: 화면은 리듀서 획득 전이가 쌓은 목록(순번 · 아이템)만 읽는다 — 아래 상태는 그 목록을 차례로 키운다. */
+const acquired = (...items) => items.map((item, index) => ({ seq: index + 1, item }));
 
 test('GF-12: 전설 대기열 — 동시에 둘, 표시 중에 하나가 들어와도 모두 차례로 보인다', async (t) => {
     const [a, b, c, d] = signatureItems;
     const h = await openHarness(t);
-    await h.render('legendary', { inv: [], codex: {}, epoch: 0 });
-    const both = await h.render('legendary', { inv: [a, b], codex: {}, epoch: 0 });
+    await h.render('legendary', { acquisitions: [], epoch: 0 });
+    const both = await h.render('legendary', { acquisitions: acquired(a, b), epoch: 0 });
     assert.equal(both.snapshot.current, a.name);
-    assert.equal(both.dispatched.filter((type) => type === AT.ADD_LOG).length, 2, '둘 다 기록한다');
+    assert.deepEqual(both.dispatched, [], '화면은 원장을 고치지 않는다(D33 — 획득 전이가 남긴다)');
     assert.equal((await h.dismiss()).snapshot.current, b.name, '동시에 들어온 둘째를 잃지 않는다');
     assert.equal((await h.dismiss()).snapshot.current, null);
 
-    assert.equal((await h.render('legendary', { inv: [a, b, c], codex: {}, epoch: 0 })).snapshot.current, c.name);
-    const whileShowing = await h.render('legendary', { inv: [a, b, c, d], codex: {}, epoch: 0 });
+    assert.equal((await h.render('legendary', { acquisitions: acquired(a, b, c), epoch: 0 })).snapshot.current, c.name);
+    const whileShowing = await h.render('legendary', { acquisitions: acquired(a, b, c, d), epoch: 0 });
     assert.equal(whileShowing.snapshot.current, c.name, '보이는 전설은 그대로');
     assert.equal((await h.dismiss()).snapshot.current, d.name, '표시 중에 들어온 전설을 잃지 않는다');
 });
 
-test('GF-13: 복원된 가방의 전설은 연출 · 도감 · 시즌 · 기록 dispatch 없이 기준만 잡는다', async (t) => {
+test('GF-13: 마운트 · 복원 때 이미 있던 획득은 기준이다 — 복원 전의 대기열도 내리고, 복원 뒤 새 획득만 보인다', async (t) => {
     const [a, b, c, , e, f] = signatureItems;
     const h = await openHarness(t);
-    await h.render('legendary', { inv: [a], codex: {}, epoch: 0 });
-    const showing = await h.render('legendary', { inv: [a, b], codex: {}, epoch: 0 });
+    assert.equal((await h.render('legendary', { acquisitions: acquired(a), epoch: 0 })).snapshot.current, null, '마운트는 기준');
+    const showing = await h.render('legendary', { acquisitions: acquired(a, b), epoch: 0 });
     assert.equal(showing.snapshot.current, b.name);
-    const dispatchedBefore = showing.dispatched.length;
-    const restored = await h.render('legendary', { inv: [a, b, c, e], codex: {}, epoch: 1 });
+    const restored = await h.render('legendary', { acquisitions: acquired(a, b, c, e), epoch: 1 });
     assert.equal(restored.snapshot.current, null, '복원 전의 대기열도 내린다');
-    assert.equal(restored.dispatched.length, dispatchedBefore, '복원은 dispatch하지 않는다');
-    const fresh = await h.render('legendary', { inv: [a, b, c, e, f], codex: {}, epoch: 1 });
+    const fresh = await h.render('legendary', { acquisitions: acquired(a, b, c, e, f), epoch: 1 });
     assert.equal(fresh.snapshot.current, f.name, '복원 뒤 새로 얻은 전설은 연출한다');
-    assert.ok(fresh.dispatched.length > dispatchedBefore);
+    assert.deepEqual(fresh.dispatched, []);
 });
 
 test('GF-13: 레벨 상승 배너는 실제로 오른 레벨만 축하한다 — 복원으로 바뀐 레벨은 아니다', async (t) => {

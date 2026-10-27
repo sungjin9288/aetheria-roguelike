@@ -45,10 +45,9 @@ function Damage({ hp, epoch, feedback, reducedMotion }) {
     return flash.damageAmount ? React.createElement(DamageNumber, { amount: flash.damageAmount }) : null;
 }
 
-const recordDispatch = (action) => dispatched.push(action.type);
-
-function Legendary({ inv, codex, epoch }) {
-    const { currentDrop, dismissDrop: dismiss } = useLegendaryDropDetector(inv, recordDispatch, codex, epoch);
+// 2026-10-26 D33: 전설 획득 화면은 리듀서의 획득 목록만 읽는다 — dispatch가 없다(원장은 획득 전이가 남긴다).
+function Legendary({ acquisitions, epoch }) {
+    const { currentDrop, dismissDrop: dismiss } = useLegendaryDropDetector(acquisitions, epoch);
     dismissDrop = dismiss;
     snapshot = { current: currentDrop?.name ?? null };
     return null;

@@ -42,38 +42,18 @@ import { readFile } from 'node:fs/promises';
    * - GameRoot.tsx 호출부 codex prop 전달 추가.
    */
 
-  test('cycle 208: useLegendaryDropDetector hook signature에 codex 파라미터 추가', () => {
-      const file = path.join(ROOT, 'src/hooks/useLegendaryDropDetector.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(
-          content,
-          /useLegendaryDropDetector\s*=\s*\(\s*inv:[^)]*,\s*dispatch:[^)]*,\s*codex/,
-          'hook signature는 (inv, dispatch, codex) 형태로 codex 파라미터 포함해야 함',
-      );
-  });
-
-  test('cycle 208: codex 미존재 시에만 SEASON_XP.codexDiscover dispatch (alreadyInCodex 가드)', () => {
-      const file = path.join(ROOT, 'src/hooks/useLegendaryDropDetector.ts');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(
-          content,
-          /alreadyInCodex|codex(?:Ref\.current)?(?:\?\.)?\[bucket\]/,
-          'codex[bucket][name] 존재 여부 체크 로직 필요',
-      );
-      assert.ok(
-          content.includes('ADD_SEASON_XP') && content.includes('SEASON_XP'),
-          'SEASON_XP.codexDiscover dispatch 코드 필요',
-      );
-  });
-
-  test('cycle 208: GameRoot.tsx 호출부에 codex prop 전달', () => {
-      const file = path.join(ROOT, 'src/components/app/GameRoot.tsx');
-      const content = fs.readFileSync(file, 'utf-8');
-      assert.match(
-          content,
-          /useLegendaryDropDetector\s*\([^)]*codex/,
-          'GameRoot.tsx에서 useLegendaryDropDetector 호출 시 codex prop 전달 필요',
-      );
+  // 2026-10-26 소유자 결정 D33: 아래 세 가드(훅의 codex 파라미터 · alreadyInCodex · GameRoot codex 전달)는
+  //   원장이 표시 훅에 있던 동안의 것이다. 이제 도감 · 시즌 경험 · 기록 줄은 리듀서의 획득 전이
+  //   (`reducers/handlers/signatureAcquisition.ts`)가 남기고, 임무 · 체인 보상 각인의 시즌 경험과
+  //   이중 적립 금지는 tests/signature-acquisition-transition.test.js가 실제 전이로 잡는다.
+  //   남는 것은 부재 불변식이다 — 표시 훅이 다시 원장을 고치면(dispatch) 화면 유무에 따라 원장이 갈린다.
+  test('cycle 208 → D33: 전설 획득 화면 훅은 원장을 고치지 않는다(dispatch · 시즌 경험 · 도감 갱신 부재)', () => {
+      const content = fs.readFileSync(path.join(ROOT, 'src/hooks/useLegendaryDropDetector.ts'), 'utf-8');
+      for (const identifier of ['dispatch(', 'AT.UPDATE_CODEX', 'AT.ADD_SEASON_XP', 'AT.ADD_LOG']) {
+          assert.ok(!content.includes(identifier), `훅에 ${identifier}가 없다`);
+      }
+      const root = fs.readFileSync(path.join(ROOT, 'src/components/app/GameRoot.tsx'), 'utf-8');
+      assert.ok(!/useLegendaryDropDetector\([^)]*engine\.dispatch/.test(root), 'GameRoot는 화면 훅에 dispatch를 넘기지 않는다');
   });
 
   test('cycle 193 회귀 가드: combatVictory의 codex SEASON_XP dispatch 유지', () => {
@@ -312,23 +292,9 @@ import { readFile } from 'node:fs/promises';
           'useLegendaryDropDetector codex default null 제거');
   });
 
-  test('cycle 563: 정합성 가드 — 1 production callsite 보존', async () => {
-      const source = await readSrc('src/components/app/GameRoot.tsx');
-      // 게임 필 GF-13: 넷째 인자 presentationEpoch(복원 기준)가 더해졌다 — 앞의 세 인자는 그대로다.
-      assert.ok(/useLegendaryDropDetector\(engine\.player\?\.inv,\s*engine\.dispatch,\s*engine\.player\?\.stats\?\.codex,\s*engine\.presentationEpoch\)/.test(source),
-          'GameRoot useLegendaryDropDetector callsite (inv, dispatch, codex, presentationEpoch) 보존');
-  });
-
-  test('cycle 563: body codexRef / queueRef / dispatch 처리 보존', async () => {
-      const source = await readSrc('src/hooks/useLegendaryDropDetector.ts');
-      // Wave 6 X1: ref 제네릭이 any → 도메인 타입(Item[])으로 닫혔다 — ref 배관 자체는 동일.
-      assert.ok(/const codexRef = useRef\((codex|<[^>]+>\(codex)\)/.test(source),
-          'codexRef useRef(codex) 보존');
-      // 게임 필 GF-12: 대기열은 ref 변이가 아니라 상태다(동시 · 표시 중 전설을 잃던 결함) —
-      //   대기 순서 · 복원 기준은 tests/combat-feedback-presentation.test.js가 실제 훅으로 잡는다.
-      assert.ok(/useState<\{ epoch: number; items: Item\[\] \}>/.test(source),
-          '전설 대기열 useState<{ epoch, items: Item[] }> 보존');
-  });
+  // 2026-10-26 D33: 호출부 · 본문 모양 가드(inv · dispatch · codex 인자, codexRef, 대기열 useState 모양)는 훅이
+  //   리듀서 획득 목록만 읽게 되며 끝났다 — 대기열 순서 · 복원 기준은 tests/combat-feedback-presentation.test.js(GF-12 · 13)가
+  //   실제 훅으로, 원장은 tests/signature-acquisition-transition.test.js가 실제 전이로 잡는다.
 
   test('cycle 563: cycle 502-562 회귀 가드 — default 청소 시리즈 보존', async () => {
       const helpers = await readSrc('src/reducers/handlers/helpers.ts');
