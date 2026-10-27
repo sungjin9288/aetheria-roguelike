@@ -162,7 +162,8 @@ test.describe('Combat focus mode', () => {
 test('D25 전투 기록은 지난 차례를 한 줄로 접고 적 행동을 따로 표시한다', async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
     await startE2ERun(page);
-    expect(await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(true))).toBe(true);
+    // 정예 시나리오다 — 보스 시나리오(공격력 120)는 시작 능력치의 플레이어를 두 차례 안에 쓰러뜨릴 수 있어 기록을 재기 전에 여정이 끝났다.
+    expect(await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedCombatFocusScenario?.(false))).toBe(true);
     await expect(page.getByTestId('combat-focus-panel')).toBeVisible({ timeout: 8_000 });
     await waitForModeTransition(page);
 
