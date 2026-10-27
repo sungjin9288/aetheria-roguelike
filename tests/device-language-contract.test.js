@@ -37,7 +37,7 @@ test('기기 설정의 현재 칭호와 목록은 능력치 약어를 풀어 표
         actions: { leaderboard: [], isAdmin: () => false },
         runtime: { viewport: 'mobile', gameState: 'idle', syncStatus: 'synced', isAiThinking: false },
     }));
-    const section = html.slice(html.indexOf('data-testid="system-title-section"'), html.indexOf('data-testid="system-relic-list"'));
+    const section = html.slice(html.indexOf('data-testid="system-title-section"'), html.indexOf('data-testid="system-secondary-tools"'));
     assert.ok(section.includes('공격력 +1'));
     assert.ok(section.includes('공격력 +4 · 치명타 +1%'));
     assert.doesNotMatch(section, /\b(?:ATK|DEF|HP|MP|CRIT)\b/);

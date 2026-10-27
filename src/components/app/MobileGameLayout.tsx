@@ -91,7 +91,14 @@ const MobileGameLayout = ({
                         />
                     </Suspense>
                 ) : (
-                    <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px]'}`}>
+                    // 2026-10-26 iPhone 수용: 마을 시설을 펼치면 조작판이 기록 창 최소 높이(240)와 함께 화면을 51px 넘쳐
+                    //   마지막 줄(제작 · 에테르 거울)이 홈 표시줄 위에 걸렸다(402×874, 안전 영역 62/34) — 펼친 동안만 양보한다.
+                    //   소유자 결정 2026-10-26 D2: 에테르 교환소가 일곱째 시설이 되어 세 열 격자가 셋째 줄을 얻었다 — 112px로는 375×812 mini에서
+                    //   46px 넘쳐 펼친 동안의 양보를 56px로 내렸다(시설을 고르는 동안 기록 창은 두 줄 남는다).
+                    //   소유자 결정 2026-10-26 D14: 필드(조작판에 필드 독이 있을 때)에서는 임무 추적 · 신호 줄 · 독 두 줄이 240 최소 높이와 함께
+                    //   390×844(안전 영역 47/34)에서 독 둘째 줄(이동 · 지도 · 정찰 · 가방)을 화면 밖으로 밀었다(탐험 뒤 최대 67px 넘침) —
+                    //   필드에서는 96px까지 양보한다 — 375×812 mini에서 탐험 뒤 132px로도 28px 넘쳤다(기록 창은 여전히 flex-1이라 남는 높이를 그대로 채운다).
+                    <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px] [&:has(~*_.ae-town-facilities[open])]:min-h-[56px] [&:has(~*_.ae-field-dock)]:min-h-[96px]'}`}>
                         <TerminalView
                             logs={engine.logs}
                             gameState={engine.gameState}
@@ -132,6 +139,7 @@ const MobileGameLayout = ({
                         actions={engine.actions}
                         setGameState={engine.actions.setGameState}
                         onOpenMirror={onOpenMirror}
+                        onOpenCrystalExchange={onOpenCrystalExchange}
                         shopItems={engine.shopItems}
                         grave={engine.grave}
                         isAiThinking={engine.isAiThinking}

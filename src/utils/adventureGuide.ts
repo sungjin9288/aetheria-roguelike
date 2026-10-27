@@ -324,7 +324,7 @@ export const getMoveRecommendations = (player: Player, stats: FullStats | null |
                     } else {
                         score -= 16;
                         badge = '경계';
-                        reason = '보스 권역입니다. 회복과 퀵슬롯 정비 후 진입이 안전합니다.';
+                        reason = '보스 권역입니다. 회복과 빠른 칸 정비 후 진입이 안전합니다.';
                     }
                 } else if (!isVisited) {
                     badge = '개척';

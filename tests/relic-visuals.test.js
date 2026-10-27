@@ -64,14 +64,15 @@ test('선택·보유 목록은 같은 유물 아이콘을 사용한다 — 성�
     const [choice, advice, system, icon] = await Promise.all([
         readSource('src/components/RelicChoicePanel.tsx'),
         readSource('src/components/BuildAdvicePanel.tsx'),
-        readSource('src/components/tabs/SystemTab.tsx'),
+        // 소유자 결정 2026-10-26 D2: 보유 유물 목록은 상태 탭(StatsPanel)이 그린다.
+        readSource('src/components/StatsPanel.tsx'),
         readSource('src/components/icons/RelicIcon.tsx'),
     ]);
 
     assert.match(choice, /<RelicIcon relic=\{relic\}/);
     assert.doesNotMatch(advice, /<RelicIcon/);
     assert.match(system, /<RelicIcon relic=\{relic\}/);
-    assert.match(system, /getPrestigeUnlocks\(player\.meta\?\.prestigeRank\)\.maxRelics/);
+    assert.match(system, /getPrestigeUnlocks\(player\?\.meta\?\.prestigeRank\)\.maxRelics/);
     assert.doesNotMatch(system, /보유 유물 \$\{relics\.length\}\/5/);
     assert.match(icon, /data-relic-visual-category=\{visual\.category\}/);
 });

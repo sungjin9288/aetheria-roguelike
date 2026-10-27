@@ -54,6 +54,18 @@ export interface CombatLogSummary<T extends CombatLogLine> {
     readonly turnKey: string | null;
 }
 
+/** 지난 차례를 접은 한 줄(소유자 결정 D25, 감사 GF-07) — 그 차례의 첫 줄('내 행동')과 접힌 나머지 줄 수. */
+export interface CombatPreviousTurnFold<T extends CombatLogLine> {
+    readonly first: T;
+    readonly moreCount: number;
+    readonly turnKey: string;
+}
+
+export interface CombatLogSummaryWithPrevious<T extends CombatLogLine> extends CombatLogSummary<T> {
+    /** 이번 전투의 바로 앞 차례(경계 뒤). 없으면 null. 표시만이다 — 기록 줄은 그대로다. */
+    readonly previousTurn: CombatPreviousTurnFold<T> | null;
+}
+
 function findLatestTurnStart(logs: readonly CombatLogLine[], from: number): { start: number; key: string } | null {
     for (let index = logs.length - 1; index >= from; index -= 1) {
         const key = getCombatTurnKey(logs[index].id);
@@ -82,19 +94,38 @@ export function selectLatestCombatTurn<T extends CombatLogLine>(
     };
 }
 
+/** 경계(from) 뒤에서 `before` 앞의 마지막 차례 묶음 — 사이에 낀 다른 줄은 건너뛴다. */
+function findPreviousTurn<T extends CombatLogLine>(
+    logs: readonly T[],
+    from: number,
+    before: number,
+    currentKey: string,
+): CombatPreviousTurnFold<T> | null {
+    const head = logs.slice(0, before);
+    const turn = findLatestTurnStart(head, from);
+    if (!turn || turn.key === currentKey) return null;
+    const lines = head.slice(turn.start).filter((log) => getCombatTurnKey(log.id) === turn.key);
+    return { first: lines[0], moreCount: lines.length - 1, turnKey: turn.key };
+}
+
 export function selectCombatLogSummary<T extends CombatLogLine>(
     logs: readonly T[],
     options: CombatLogSummaryOptions,
-): CombatLogSummary<T> {
+): CombatLogSummaryWithPrevious<T> {
     const isSummaryLine = (log: T) => options.types.has(log.type) && !options.ambientTexts?.has(log.text);
-    const turn = findLatestTurnStart(logs, findFloorIndex(logs, options.floorId) + 1);
+    const from = findFloorIndex(logs, options.floorId) + 1;
+    const turn = findLatestTurnStart(logs, from);
     if (!turn) {
-        return { entries: logs.filter(isSummaryLine).slice(-Math.max(0, options.fallbackCount)), turnKey: null };
+        return {
+            entries: logs.filter(isSummaryLine).slice(-Math.max(0, options.fallbackCount)),
+            turnKey: null,
+            previousTurn: null,
+        };
     }
     const entries = logs
         .slice(turn.start)
         .filter((log) => getCombatTurnKey(log.id) === turn.key || isSummaryLine(log));
-    return { entries, turnKey: turn.key };
+    return { entries, turnKey: turn.key, previousTurn: findPreviousTurn(logs, from, turn.start, turn.key) };
 }
 
 /** 지역 분위기 문장 — 이동 기록이 남기는 지역 설명과 처음 방문 이야기. */

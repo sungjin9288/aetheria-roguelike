@@ -146,6 +146,8 @@ export interface EngineStableActions {
     setActiveTitle: (val: string | null) => void;
     setReadabilityMode: (val: string) => void;
     setEquipmentDetailMode: (val: string) => void;
+    setHapticsEnabled: (val: boolean) => void;
+    setKeyboardShortcutsEnabled: (val: boolean) => void;
     dismissEvent: () => void;
 
     // --- 기능 액션 ---

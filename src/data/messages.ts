@@ -96,8 +96,9 @@ export const MSG = {
 
     // --- 스킬 (Skill) ---
     // slice 19: tags 추가 — 치명타/약점/저항을 본문에 통합 (COMBAT_ATTACK_DETAIL 동일 패턴)
+    // 소유자 결정 D27(2026-10-26): 머리표 뒤 쌍점을 뺀다 — "[강타]: 숲 요정에게" → "[강타] 숲 요정에게"(다른 기술 줄과 같은 모양).
     SKILL_USE: (skillName: string | undefined, dmg: number, name: string | undefined, cur: number, max: number | undefined, tags: string[]) =>
-        `[${skillName}]: ${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
+        `[${skillName}] ${name}에게 ${dmg} 피해! (${cur}/${max})${tags.length ? ` [${tags.join(', ')}]` : ''}`,
     // 2026-10 Wave 52: 위력이 없는 보조 기술은 피해 줄 대신 사용 줄을 남긴다(효과 줄은 뒤따른다).
     SKILL_USE_SUPPORT: (skillName: string | undefined) => `[${skillName}] 사용!`,
     // 2026-10 Wave 53: 생명을 바치는 기술 · 다음 공격 강화 소진.
@@ -150,7 +151,7 @@ export const MSG = {
     SIGNATURE_PITY_RESONANCE: (pct: number | string, pity: number | undefined) => `✦ 각인 공명 +${pct}% — 보스 ${pity}회 연속 무획득 보정 적용`,
     // fix/signature-set-two-hand: 양손 시그니처 무기가 세트 카운트에 2피스로 반영됐을 때
     // EquipmentPanel "세트 진행도" 카드에 표시하는 힌트 1줄.
-    SIGNATURE_SET_TWO_HAND_HINT: '💡 양손 무기는 보조 슬롯을 함께 차지해 2피스로 계산됩니다.',
+    SIGNATURE_SET_TWO_HAND_HINT: '💡 양손 무기는 보조 칸을 함께 차지해 2피스로 계산됩니다.',
     OUTFIT_SET_TWO_HAND_SLOT: '양손 무기가 함께 사용',
     OUTFIT_SET_TWO_HAND_HINT: '양손 무기는 보조 장비 칸까지 2피스로 계산됩니다.',
     // 2026-10 Wave 58: 직업 장비 세트 "다음 단계" 안내 — 문구를 보너스 표에서 만든다(생명 · 기력 보너스가 빠져 있었다).
@@ -452,7 +453,7 @@ export const MSG = {
     CRAFT_DONE: (name: string) => `${name} 제작 완료`,
     // 2026-10 Wave 62 (원장 §61.4 C8): 같은 이름의 사본 중 강화된 것이 있을 때, 제작에 쓰일 사본의 강화 수치(낮은 강화부터 쓴다).
     CRAFT_INPUT_ENHANCE_USED: (levels: readonly number[]) => `${levels.map((level) => `+${level}`).join(' · ')} 사용`,
-    // 합성 재료 목록 · 슬롯의 강화 수치 표시(+N) — 강화된 사본을 고르면 강화가 함께 사라진다.
+    // 합성 재료 목록 · 칸의 강화 수치 표시(+N) — 강화된 사본을 고르면 강화가 함께 사라진다.
     SYNTHESIS_INPUT_ENHANCE: (level: number) => `+${level}`,
     // 2026-09 Wave 33 — 제작소 가방 단계(data/bagRecipes.ts). 이번 런에만 유효하다.
     BAG_CRAFTED: (name: string, capacity: number) => `${name} 제작 완료 — 이번 여정의 가방이 ${capacity}칸이 됐습니다.`,
@@ -519,6 +520,8 @@ export const MSG = {
         class: '전직',
         craft: '제작',
         mirror: '에테르 거울',
+        // 소유자 결정 2026-10-26 D2(UX-04): 크리스탈 교환도 마을 시설이다 — 기록의 설정 탭에 묻혀 있었다.
+        crystal: '에테르 교환소',
     },
     // 원정 조작판 — 이동은 하나, 탐험이 주 행동, 가방은 기록의 가방 탭을 연다(UX-03 · UX-07).
     FIELD_ACTION_BAG: '가방',
@@ -531,12 +534,12 @@ export const MSG = {
     SHOP_MODE_GROUP_ARIA: '구매 · 판매 전환',
     SHOP_MODE_BUY: '구매',
     SHOP_MODE_SELL: '판매',
-    // 퀵슬롯 배치 단추의 이름 — 숫자만 읽히던 단추가 무엇을 하는지 말한다(A11Y-05). 이 물건이 든 칸은 aria-pressed가 알린다.
-    //   화면 이름은 옆 라벨 '퀵슬롯:'과 같다(가방 화면 · 빈 칸 라벨 QUICK_SLOT_EMPTY_LABEL).
+    // 빠른 칸 배치 단추의 이름 — 숫자만 읽히던 단추가 무엇을 하는지 말한다(A11Y-05). 이 물건이 든 칸은 aria-pressed가 알린다.
+    //   화면 이름은 옆 라벨 '빠른 칸:'과 같다(가방 화면 · 빈 칸 라벨 QUICK_SLOT_EMPTY_LABEL).
     QUICK_SLOT_ASSIGN_ARIA: (slot: number, itemName?: string) => (
-        itemName ? `퀵슬롯 ${slot}: ${itemName}` : `퀵슬롯 ${slot}에 넣기`
+        itemName ? `빠른 칸 ${slot}: ${itemName}` : `빠른 칸 ${slot}에 넣기`
     ),
-    QUICK_SLOT_UNASSIGN: '퀵슬롯에서 빼기',
+    QUICK_SLOT_UNASSIGN: '빠른 칸에서 빼기',
     ARCHIVE_RAIL_MORE_ARIA: '다음 기록 탭 보기',
     ARCHIVE_RAIL_START_ARIA: '처음 기록 탭 보기',
     MAP_UNKNOWN: '알 수 없는 위치입니다. 시작 마을로 이동하세요.',
@@ -656,7 +659,7 @@ export const MSG = {
     EVENT_RESULT_DEFAULT: '선택의 결과가 반영되었습니다.',
     EVENT_REWARD_UNAVAILABLE: '이 선택의 보상 정보를 확인할 수 없습니다. 다른 선택을 골라주세요.',
     CHAIN_RELIC_ALREADY_OWNED: (name: string) => `${withJosa(name, '은/는')} 이미 보유하고 있습니다. 다른 선택을 골라주세요.`,
-    CHAIN_RELIC_SLOTS_FULL: '유물 슬롯이 가득 차 이 유물을 받을 수 없습니다. 다른 선택지를 고르세요.',
+    CHAIN_RELIC_SLOTS_FULL: '유물 칸이 가득 차 이 유물을 받을 수 없습니다. 다른 선택지를 고르세요.',
     // 캠프파이어 노드 (Phase 2, B+ 2026-06): 휴식 vs 단련 결정 (StS 캠프파이어).
     CAMPFIRE_DESC: '사그라드는 모닥불을 발견했습니다. 잠시 숨을 고를 수 있습니다. 무엇을 하시겠습니까?',
     CAMPFIRE_REST_CHOICE: '휴식 — 생명과 기력을 회복한다',
@@ -828,7 +831,6 @@ export const MSG = {
     A11Y_DIALOG_ASCENSION: '다음 여정으로 계승',
     A11Y_DIALOG_MIRROR: '에테르 거울 영구 성장',
     A11Y_DIALOG_PREMIUM_SHOP: '에테르 교환소',
-    A11Y_DIALOG_LEGENDARY: (name: string) => `전설 획득: ${name}`,
     A11Y_COMBAT_ACTIONS_HEADING: '전투 행동',
     A11Y_PLAYER_STATUS_HEADING: '내 상태',
     A11Y_LOG_HEADING: '모험 기록',
@@ -1357,14 +1359,14 @@ export const MSG = {
     //   상한을 넘지도 않는다 — 유물 선택 패널이 "보유 유물 하나와 교체"를 제안한다.
     /** 체인 완주 보상 유물이 상한에서 교체 제안으로 바뀔 때의 로그. */
     CHAIN_REWARD_RELIC_REPLACE_OFFER: (name: string) => (
-        `이야기 보상 · 유물 ${name} — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.`
+        `이야기 보상 · 유물 ${name} — 칸이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.`
     ),
     /** 상한에서 교체 없이 추가하려 할 때(`ADD_RELIC`) 남기는 거부 안내. */
-    RELIC_SLOTS_FULL_REPLACE: '유물 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 이번에는 고르지 마세요.',
+    RELIC_SLOTS_FULL_REPLACE: '유물 칸이 가득 찼습니다. 보유 유물 하나와 바꾸거나 이번에는 고르지 마세요.',
     RELIC_REPLACED: (released: string, gained: string) => `유물 교체 · ${released} → ${gained}`,
     /** 유물 선택 패널 — 상한일 때만 보이는 안내 줄. */
     RELIC_CHOICE_CAPACITY_FULL: (owned: number, capacity: number) => (
-        `유물 슬롯 ${owned}/${capacity} · 새 유물을 고르면 보유 유물 하나와 바꿉니다.`
+        `유물 칸 ${owned}/${capacity} · 새 유물을 고르면 보유 유물 하나와 바꿉니다.`
     ),
     RELIC_REPLACE_PROMPT: (name: string) => `${name} 대신 내려놓을 유물을 고르세요.`,
     RELIC_REPLACE_OPTION_LABEL: (released: string, gained: string) => `${released} 내려놓고 ${gained} 받기`,
@@ -1376,7 +1378,7 @@ export const MSG = {
         `이야기 보상 · ${promised} 유물을 이미 모두 가졌습니다. 남은 가장 높은 등급(${given})에서 고릅니다.`
     ),
     /** C4: 정찰 "정예의 흔적" 보장 유물이 유물 칸이 가득 찬 채 열릴 때. */
-    SCOUT_RELIC_REPLACE_OFFER: '정예의 흔적 보상 · 유물 선택 — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.',
+    SCOUT_RELIC_REPLACE_OFFER: '정예의 흔적 보상 · 유물 선택 — 칸이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.',
     /** Wave 77: 유물 칸이 가득 찬 채 탐험에서 유물을 발견했을 때 — 교체 제안으로 열린다. */
     /** Wave 79: 칸이 찼고 지금 유물보다 나은 카드가 없을 때 — 선택 화면 대신 계승 정수(유물의 잔향). */
     EXPLORE_RELIC_ECHO: (essence: number) => (
@@ -1439,10 +1441,10 @@ export const MSG = {
     HUNT_CONTRACT_NEXT_ROUND: (map: string, round: number, max: number, killGoal: number) => (
         `📜 [토벌 의뢰] ${map} ${round}/${max}차 의뢰가 이어집니다 — 처치 ${killGoal}부터, 우두머리는 더 강해집니다`
     ),
-    EXPLORE_RELIC_REPLACE_OFFER: '✨ [유물 발견] 고대의 유물이 눈에 들어옵니다 — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.',
+    EXPLORE_RELIC_REPLACE_OFFER: '✨ [유물 발견] 고대의 유물이 눈에 들어옵니다 — 칸이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.',
     /** C4: 사건 결과가 여는 유물 선택이 유물 칸이 가득 찬 채 열릴 때. */
     EVENT_RELIC_REPLACE_OFFER: (count: number) => (
-        `기묘한 기운이 남았습니다. 유물 선택지 ${count}개 — 슬롯이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.`
+        `기묘한 기운이 남았습니다. 유물 선택지 ${count}개 — 칸이 가득 찼습니다. 보유 유물 하나와 바꾸거나 넘길 수 있습니다.`
     ),
     /** C5: 회피 뒤 그 지역을 이만큼 더 탐험하는 동안 보스 카드가 뜨지 않는다(게이지는 만충 그대로). */
     BOSS_GAUGE_AVOID_SUPPRESSED: (explores: number) => (
@@ -1533,7 +1535,7 @@ export const MSG = {
     ESSENCE_REWARD: (amount: number) => `계승 정수 +${amount}`,
     PRESTIGE_RANK_LABEL: (rank: number) => `계승 ${rank}단계`,
     TRUE_ENDING_STAT_PRESTIGE: '계승 단계',
-    QUICK_SLOT_EMPTY_LABEL: (slot: number) => `퀵슬롯 ${slot} (가방에서 할당)`,
+    QUICK_SLOT_EMPTY_LABEL: (slot: number) => `빠른 칸 ${slot} (가방에서 할당)`,
     BAG_AUTOSELL_NOTICE: (count: number, capacity: number, sellable: number) => `가방 ${count}/${capacity} — 저가 재료 ${sellable}개 정리 가능`,
     STATUS_AILMENT_ARIA: (count: number, labels: string) => `상태이상 ${count}개: ${labels}`,
     ENEMY_DEBUFF_LABEL: '적 약화',
@@ -1580,7 +1582,6 @@ export const MSG = {
         growth: { cause: '보스를 쓰러뜨렸음', lesson: '기반은 충분했음', next: '약했던 곳 보강하기' },
     },
     RUN_SUMMARY_FOCUS_STRONG_STREAK: '공격을 이어 가며 연속 처치 보너스를 안정적으로 지켰습니다.',
-    SYSTEM_GROWTH_LINKS_DESC: '다음 여정을 준비하거나 모은 계승 정수와 크리스탈을 필요한 곳에 씁니다.',
     RUN_SUMMARY_STATS_ARIA: '이번 여정 성과',
     RUN_SUMMARY_RESTART: '새 여정 시작',
     // 사망 화면: 무엇에 쓰러졌는지 · 그 적이 얼마나 남았는지(정보만 — 추천은 붙이지 않는다).
@@ -1597,10 +1598,7 @@ export const MSG = {
     DEATH_BEAT_TITLE: '쓰러졌습니다',
     DEATH_BEAT_KILLED_BY: (name: string) => `${name}에게 쓰러졌습니다`,
     DEATH_BEAT_SKIP: '눌러서 여정 기록 보기',
-    // 다시 오르는 여정의 레벨업 기록 — 이번 회차 최고 레벨까지 남은 레벨, 넘었을 때.
-    CYCLE_BEST_LEVEL_CLIMB: (level: number, best: number) => (level < best
-        ? `이번 회차 최고 레벨 ${best}까지 ${best - level}레벨 남았습니다.`
-        : `이번 회차 최고 레벨 ${best}에 다시 닿았습니다.`),
+    // 다시 오르는 여정의 레벨업 기록 — 이번 회차 최고 레벨을 넘었을 때 한 번(소유자 결정 D22: 남은 레벨은 말하지 않는다).
     CYCLE_BEST_LEVEL_PASSED: (best: number) => `이번 회차 최고 레벨 ${withJosa(best, '을/를')} 넘었습니다.`,
     // 계승 화면 영구 능력치 정산 — 지금 값에서 내려놓는 몫을 빼고 계승 보상을 더한 값이 다음 여정으로 이어진다.
     ASCEND_GROWTH_TITLE: '영구 능력치 정산',
@@ -1720,17 +1718,12 @@ export const MSG = {
     SYSTEM_EQUIPMENT_DETAIL_DESC: '자동은 초반에는 핵심만, 성장한 뒤에는 세부 효과까지 보여 줍니다.',
     SYSTEM_READABILITY_CHANGED: (label: string) => `화면을 ${label} 표시로 바꿨습니다.`,
     SYSTEM_EQUIPMENT_DETAIL_CHANGED: (label: string) => `장비 정보를 ${label} 표시로 바꿨습니다.`,
-    SYSTEM_MIRROR_LINK_DESC: '계승 정수로 영구 성장을 준비합니다.',
-    SYSTEM_CRYSTAL_LINK_DESC: '가방과 원정 지원을 교환합니다.',
-    SYSTEM_ESSENCE_UNIT: '정수',
-    SYSTEM_CRYSTAL_UNIT: '크리스탈',
     SYSTEM_TITLE_NONE: '선택 안 함',
     SYSTEM_TITLE_NONE_HINT: '칭호를 선택하면 고유 효과가 적용됩니다.',
     SYSTEM_TITLE_PICKER: (count: number) => `칭호 바꾸기 · ${count}개 보유`,
     SYSTEM_TITLE_ACTIVE: '적용 중',
     SYSTEM_TITLE_APPLIED: (label: string) => `[${label}] 칭호를 적용했습니다.`,
     SYSTEM_TITLE_CLEARED: '칭호 적용을 해제했습니다.',
-    SYSTEM_RELIC_LIST_DESC: '현재 여정에서 얻은 유물과 효과를 확인합니다.',
     SYSTEM_SECONDARY_TITLE: '기타',
     SYSTEM_SECONDARY_DESC: '순위, 의견, 저장과 기기 점검은 필요할 때 펼쳐 봅니다.',
     SYSTEM_LEADERBOARD_DESC: '다른 모험가와 누적 처치 기록을 비교합니다.',
@@ -1945,4 +1938,46 @@ export const MSG = {
     SHELL_FATAL_TITLE: '게임 화면을 불러오지 못했습니다',
     SHELL_FATAL_BODY: '앱을 다시 열어 주세요. 같은 문제가 계속되면 고객센터에 알려 주세요.',
     // --- /w3:shell ---
+    // === 소유자 결정 2026-10-26 · 문구 · 데이터 정리 ===
+    // D5: 기술 성장(분기)을 고를 수 있게 된 순간의 기록 한 줄 — 어느 기술인지와 어디서 고르는지만 말한다(튜토리얼 · 반복 안내 아님).
+    SKILL_BRANCH_OPENED: (skillNames: readonly string[]) => (
+        `${skillNames.join(' · ')}의 성장을 고를 수 있습니다. 기록의 기술 탭에서 고릅니다.`
+    ),
+    // === 소유자 결정 2026-10-26 · 마을 · 진입점 · 데스크톱 ===
+    // D2: 보유 유물 목록은 기록의 상태 탭이 그린다(설정 탭에서 옮김) — 펼친 채로 보인다.
+    STATS_RELIC_TITLE: (count: number, capacity: number) => `보유 유물 ${count}/${capacity}`,
+    STATS_RELIC_DESC: '이번 여정에서 얻은 유물과 효과입니다.',
+    // D12: 지도 단추는 늘 보인다 — 열 수 없을 때는 눌리지 않고, 이름이 그 이유를 말한다.
+    FIELD_ACTION_MAP_UNAVAILABLE: '지도 · 지금은 모험 기록을 열 수 없습니다',
+    // D6: 데스크톱 기록 열의 세로 탭 목록 이름.
+    ARCHIVE_TAB_LIST_ARIA: '모험 기록 선택',
+    // D17(UX-09): 덮는 화면의 닫기 단추 이름은 "<무엇> 닫기"다 — 컴포넌트에 적혀 있던 이름을 옮겼다(끝 낱말은 UI_CLOSE와 같다).
+    PREMIUM_SHOP_CLOSE_ARIA: '에테르 교환소 닫기',
+    MIRROR_PANEL_CLOSE_ARIA: '에테르 거울 닫기',
+    // === 소유자 결정 2026-10-26 · 전투 · 기록 ===
+    // D25(감사 GF-07): 적이 자기 차례에 한 행동의 기록 배지 — 내 행동(전투 · 치명타)과 가른다. 강타는 '치명타'가 아니다.
+    LOG_BADGE_ENEMY_ACTION: '적 행동',
+    // D25: 전투 요약의 지난 차례는 한 줄로 접는다(표시만 — 기록 줄은 그대로다). 첫 줄('내 행동')과 접힌 나머지 줄 수.
+    COMBAT_LOG_PREVIOUS_TURN: (firstText: string, moreCount: number) => (
+        `지난 차례 · ${firstText}${moreCount > 0 ? ` 외 ${moreCount}줄` : ''}`
+    ),
+
+    // === 소유자 결정 2026-10-26 · 설정 · 접근성 · 진동 ===
+    // D24: 전설 획득은 초점을 옮기지 않는 상태 알림이다(대화상자가 아니다) — 알림 칸이 읽는 한 문장.
+    A11Y_LEGENDARY_STATUS: (name: string, desc?: string) => (desc ? `전설 각인 획득: ${name}. ${desc}` : `전설 각인 획득: ${name}`),
+    // D3 · D23: 기록 탭 '플레이 설정'의 진동 · 한 글자 단축키 켬/끔(기본 켬).
+    SYSTEM_HAPTICS_TITLE: '진동',
+    SYSTEM_HAPTICS_DESC: '맞을 때 · 치명타 · 레벨 상승 · 전설 획득 · 쓰러질 때 기기를 짧게 울립니다. 진동을 지원하지 않는 기기에서는 울리지 않습니다.',
+    SYSTEM_SHORTCUTS_TITLE: '한 글자 단축키',
+    SYSTEM_SHORTCUTS_DESC: '전투 중 1 · 2 · 3(공격 · 기술 · 도주)과 빠른 칸 Q · W · E. 끄면 이 키를 눌러도 아무 일도 일어나지 않습니다.',
+    SYSTEM_TOGGLE_ON: '켜기',
+    SYSTEM_TOGGLE_OFF: '끄기',
+    SYSTEM_TOGGLE_STATE: (enabled: boolean) => (enabled ? '켜짐' : '꺼짐'),
+    SYSTEM_HAPTICS_CHANGED: (enabled: boolean) => (enabled ? '진동을 켰습니다.' : '진동을 껐습니다.'),
+    SYSTEM_SHORTCUTS_CHANGED: (enabled: boolean) => (enabled ? '한 글자 단축키를 켰습니다.' : '한 글자 단축키를 껐습니다.'),
+
+    // === 소유자 결정 2026-10-26 · 한 행동 처치 ===
+    // D1: 적이 행동하기 전에 끝난 일반 전투의 결과는 조우 · 처치 · 전리품 한 장이다 — 그 시트의 이름표와 제목.
+    POST_COMBAT_SWIFT_EYEBROW: '한 번에 처치',
+    POST_COMBAT_SWIFT_TITLE: (enemy: string) => `${enemy} 처치`,
 };

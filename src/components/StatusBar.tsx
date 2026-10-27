@@ -212,18 +212,19 @@ const StatusBar = ({
               {!enemyDefeated && <SignalBadge tone="danger" size="sm">{MSG.SHELL_IN_COMBAT}</SignalBadge>}
               <SignalBadge tone="resonance" size="sm">{MSG.SHELL_LEVEL(player.level ?? 1)}</SignalBadge>
             </div>
-            {/* 전투 중에는 조작판의 생명 · 기력 막대(CombatVitalsStrip)가 같은 값을 그린다 — 여기서는 화면 낭독기에만 남긴다.
-                처치 순간(조작판이 내려간 뒤)에는 다시 보인다. */}
-            <div
-              data-testid="status-combat-vitals"
-              data-vitals-visible={enemyDefeated ? 'true' : 'false'}
-              className={enemyDefeated
-                ? `mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-readable text-[11px] ${isColumn ? 'justify-center' : ''}`
-                : 'sr-only'}
-            >
-              <span className="text-ae-ink"><span className="font-semibold text-ae-life">{MSG.SHELL_LIFE}</span> <span className="font-fira tabular-nums">{Math.max(0, player.hp || 0)}/{Math.max(1, stats?.maxHp || player.maxHp || 1)}</span></span>
-              <span className="text-ae-ink"><span className="font-semibold text-ae-will">{MSG.SHELL_WILL}</span> <span className="font-fira tabular-nums">{Math.max(0, player.mp || 0)}/{Math.max(1, stats?.maxMp || player.maxMp || 1)}</span></span>
-            </div>
+            {/* 전투 중에는 조작판의 생명 · 기력 막대(CombatVitalsStrip — 막대마다 이름과 값을 읽는 meter)가 같은 값을 그리고
+                화면 낭독기에도 알린다 — 여기서는 그리지 않는다(소유자 결정 D9 2026-10-26: 화면 낭독기 전용 사본이 같은 값을
+                두 번 읽혔다). 처치 순간(조작판이 내려간 뒤)에만 다시 보인다. */}
+            {enemyDefeated && (
+              <div
+                data-testid="status-combat-vitals"
+                data-vitals-visible="true"
+                className={`mt-1 flex flex-wrap items-center gap-x-3 gap-y-0.5 font-readable text-[11px] ${isColumn ? 'justify-center' : ''}`}
+              >
+                <span className="text-ae-ink"><span className="font-semibold text-ae-life">{MSG.SHELL_LIFE}</span> <span className="font-fira tabular-nums">{Math.max(0, player.hp || 0)}/{Math.max(1, stats?.maxHp || player.maxHp || 1)}</span></span>
+                <span className="text-ae-ink"><span className="font-semibold text-ae-will">{MSG.SHELL_WILL}</span> <span className="font-fira tabular-nums">{Math.max(0, player.mp || 0)}/{Math.max(1, stats?.maxMp || player.maxMp || 1)}</span></span>
+              </div>
+            )}
           </div>
         </div>
         <EnemyStatus enemy={enemy} enemyHitCrit={enemyHitCrit} defeated={enemyDefeated} />

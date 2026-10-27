@@ -286,6 +286,6 @@ test('shadow guild market keeps the event open when the relic is owned or slots 
         ...full.currentEvent,
         choiceFeedback: { choiceIndex: costCase.choiceIndex, text: fullRejected.logs.at(-1).text },
     });
-    assert.match(fullRejected.logs.at(-1).text, /유물 슬롯/);
+    assert.match(fullRejected.logs.at(-1).text, /유물 칸/);
     assert.strictEqual(resolve(fullRejected, payloadFor(costCase)), fullRejected);
 });

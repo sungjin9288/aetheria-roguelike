@@ -86,15 +86,11 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             p.exp = Math.min(p.exp!, Math.max(0, p.nextExp! - 1));
         }
 
-        // 다시 오르는 여정: 이번 회차에 끝낸 여정의 최고 레벨까지 얼마나 남았는지, 넘었는지를 레벨업 기록에 남긴다(기록일 뿐 판정은 없다).
+        // 다시 오르는 여정: 이번 회차에 끝낸 여정의 최고 레벨을 넘는 레벨업에만 한 줄을 남긴다(기록일 뿐 판정은 없다).
+        //   2026-10-26 소유자 결정 D22: 레벨마다 남은 레벨을 말하던 줄은 같은 안내의 반복이라 지웠다(Wave 130) — 되살리지 말 것.
         const cycleBest = levelUps > 0 ? getCycleBestLevel(p.meta) : null;
-        if (cycleBest !== null) {
-            const levelBefore = player.level || 1;
-            if (levelBefore <= cycleBest && p.level! > cycleBest) {
-                logs.push({ type: 'event', text: MSG.CYCLE_BEST_LEVEL_PASSED(cycleBest) });
-            } else if (p.level! <= cycleBest) {
-                logs.push({ type: 'system', text: MSG.CYCLE_BEST_LEVEL_CLIMB(p.level!, cycleBest) });
-            }
+        if (cycleBest !== null && (player.level || 1) <= cycleBest && p.level! > cycleBest) {
+            logs.push({ type: 'event', text: MSG.CYCLE_BEST_LEVEL_PASSED(cycleBest) });
         }
 
         return {

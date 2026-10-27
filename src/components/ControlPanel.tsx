@@ -41,6 +41,13 @@ interface ControlPanelProps {
   setGameState?: (state: GameMode) => void;
   /** 에테르 거울 열기 — 마을 시설의 거울 단추가 쓴다(GameRoot가 거울 화면을 소유한다, CL-02). */
   onOpenMirror?: () => void;
+  /** 에테르 교환소 열기 — 마을 시설의 교환소 단추가 쓴다(소유자 결정 2026-10-26 D2 — 설정 탭에서 옮김). */
+  onOpenCrystalExchange?: () => void;
+  /**
+   * 원정 준비의 '모험 기록' 단추를 그릴지 — 데스크톱은 오른쪽 기록 열이 늘 열려 있어 그리지 않는다(D6).
+   *   기록 열기 자체(가방 · 지도 단추)는 `onOpenArchiveConsole`이 그대로 소유한다.
+   */
+  showArchiveShortcut?: boolean;
   shopItems?: Item[];
   grave?: GameState['grave'];
   isAiThinking?: boolean;
@@ -64,6 +71,8 @@ const ControlPanel = ({
   actions,
   setGameState,
   onOpenMirror,
+  onOpenCrystalExchange,
+  showArchiveShortcut = true,
   shopItems,
   grave,
   isAiThinking,
@@ -198,7 +207,7 @@ const ControlPanel = ({
     auxiliaryButtons,
     buttonByKey,
     openQuestBoard,
-  } = buildControlButtons({ actions, setGameState, onOpenMirror, onOpenArchiveConsole, showGraveRecovery });
+  } = buildControlButtons({ actions, setGameState, onOpenMirror, onOpenCrystalExchange, onOpenArchiveConsole, showGraveRecovery });
 
   const townQuickButtons = townPresentation.quickKeys
     .map((key) => buttonByKey.get(key))
@@ -249,7 +258,7 @@ const ControlPanel = ({
     }
   };
 
-  const openTownArchive = onOpenArchiveConsole
+  const openTownArchive = onOpenArchiveConsole && showArchiveShortcut
     ? () => onOpenArchiveConsole('inventory')
     : undefined;
   const openMap = () => onOpenArchiveConsole?.('map');

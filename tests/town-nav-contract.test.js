@@ -23,6 +23,7 @@ import { makePlayerFixture, renderStatic } from './helpers/render.ts';
  *   UX-03 원정 조작판의 이동은 하나이고 탐험이 주 행동이다 · UX-07 원정 중 가방으로 가는 이름 있는 단추
  *   UX-09 같은 동작(이전으로)은 한 이름 · 선택 없이 떠난 이벤트는 기록에 남는다 · UX-02 경로 노드 이름은 칩과 한 줄을 다투지 않는다
  *   A11Y-05 상점 전환 · 할인 구매 · 크리스탈 · 퀵슬롯 배치 단추의 이름 · 선택 상태 · CL-02 마을 시설의 에테르 거울
+ *   소유자 결정 2026-10-26 D2 마을 시설의 에테르 교환소 · D6 데스크톱의 모험 기록 단추 · D12 지도 단추의 꺼진 이유
  */
 
 const noopActions = new Proxy({}, { get: () => () => {} });
@@ -94,6 +95,43 @@ test('CL-02: 마을 시설에는 에테르 거울이 있고, 거울을 열 수 �
 
     const withoutMirror = renderControlPanel({ player: town, onOpenMirror: undefined });
     assert.match(openingTag(withoutMirror, 'control-mirror'), /disabled=""/);
+});
+
+test('소유자 결정 2026-10-26 D2: 마을 시설에 에테르 교환소가 있고, 열 수 있을 때만 눌리며, 원정 중에는 없다', () => {
+    const town = makePlayerFixture({ name: '용사', loc: CONSTANTS.START_LOCATION, level: 1 });
+    const html = renderControlPanel({ player: town, onOpenCrystalExchange: () => {} });
+    const facilities = html.slice(html.indexOf('data-testid="control-town-facility-actions"'));
+    assert.ok(facilities.includes('data-testid="control-crystal-exchange"'), '마을 시설 안에 교환소 단추가 있다');
+    const crystalAt = html.indexOf('data-testid="control-crystal-exchange"');
+    assert.ok(html.slice(crystalAt, html.indexOf('</button>', crystalAt) + '</button>'.length).endsWith(`>${MSG.TOWN_FACILITY_LABELS.crystal}</button>`), '교환소 단추는 이름을 글자로 보인다');
+    assert.doesNotMatch(openingTag(html, 'control-crystal-exchange'), /disabled=""/);
+    assert.match(openingTag(html, 'control-town-facility-actions'), /grid-cols-3/, '시설 격자는 세 열 그대로다');
+
+    const withoutOpener = renderControlPanel({ player: town });
+    assert.match(openingTag(withoutOpener, 'control-crystal-exchange'), /disabled=""/);
+
+    const field = renderControlPanel({ onOpenCrystalExchange: () => {} });
+    assert.equal(countTestId(field, 'control-crystal-exchange'), 0, '안전지대 밖에는 교환소 진입점이 없다');
+});
+
+test('소유자 결정 2026-10-26 D6: 데스크톱(기록 열이 늘 열림)은 원정 준비의 모험 기록 단추를 그리지 않는다', () => {
+    const town = makePlayerFixture({ name: '용사', loc: CONSTANTS.START_LOCATION, level: 1 });
+    assert.equal(countTestId(renderControlPanel({ player: town }), 'mobile-console-open-archive'), 1, '휴대폰 배치에는 있다');
+    const desktop = renderControlPanel({ player: town, showArchiveShortcut: false });
+    assert.equal(countTestId(desktop, 'mobile-console-open-archive'), 0, '데스크톱 배치에는 없다');
+    assert.ok(desktop.includes('data-testid="control-expedition-start"'), '출발 단추는 그대로다');
+});
+
+test('소유자 결정 2026-10-26 D12: 지도 단추는 늘 보이고, 쓸 수 없으면 꺼진 채 이름 · 툴팁이 이유를 말한다', () => {
+    const enabled = openingTag(renderControlPanel(), 'control-map-open');
+    assert.doesNotMatch(enabled, /disabled=""/);
+    assert.ok(enabled.includes(`aria-label="${MSG.FIELD_ACTION_MAP}"`));
+
+    const disabled = openingTag(renderControlPanel({ onOpenArchiveConsole: undefined }), 'control-map-open');
+    assert.match(disabled, /disabled=""/, '쓸 수 없어도 사라지지 않고 꺼진다');
+    assert.ok(disabled.includes(`aria-label="${MSG.FIELD_ACTION_MAP_UNAVAILABLE}"`), '접근 이름이 이유를 말한다');
+    assert.ok(disabled.includes(`title="${MSG.FIELD_ACTION_MAP_UNAVAILABLE}"`), '툴팁이 이유를 말한다');
+    assert.ok(MSG.FIELD_ACTION_MAP_UNAVAILABLE.startsWith(MSG.FIELD_ACTION_MAP), '이름은 지도로 시작한다');
 });
 
 test('UX-09: 화면을 바꾸는 패널의 이전으로 단추는 모두 MSG.UI_BACK이다', () => {

@@ -131,7 +131,8 @@ test('[렌더] 장식 패널(ae-ornate)은 이야기 장 · 원정 장면 · 사
     assert.equal(tokens.filter((c) => c === 'ae-ornate').length, 1, '전설 획득');
     assert.ok(tokens.includes('ae-moment-ornate-legendary'), '전설 장식은 산호색');
     assert.ok(tokens.includes('text-ae-rarity-legendary'), '머리말은 전설 등급 토큰');
-    assert.match(legendary, /role="alertdialog"/u);
+    assert.doesNotMatch(legendary, /role="(alert)?dialog"/u, 'D24(2026-10-26): 대화상자가 아니라 상태 알림');
+    assert.match(legendary, /role="status"/u);
     assert.ok(legendary.includes(sigWeapon.name));
 });
 

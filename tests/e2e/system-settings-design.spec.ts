@@ -14,16 +14,14 @@ test.describe('System settings design', () => {
         await openSystemSettings(page);
     });
 
-    test('첫 화면은 플레이 설정과 장기 성장 판단을 먼저 보여 준다', async ({ page }) => {
+    test('첫 화면은 플레이 설정을 먼저 보여 준다', async ({ page }) => {
         const settings = page.getByTestId('system-player-settings');
-        const growth = page.getByTestId('system-growth-links');
 
         await expect(settings).toBeVisible();
-        await expect(growth).toBeVisible();
         await expect(settings).toContainText('화면 선명도');
         await expect(settings).toContainText('장비 설명');
-        await expect(growth).toContainText('220 정수');
-        await expect(growth).toContainText('65 크리스탈');
+        // 소유자 결정 2026-10-26 D2: 에테르 거울 · 교환소 진입점과 보유 유물은 설정 탭에 없다(마을 시설 · 능력치 탭).
+        await expect(page.getByTestId('system-growth-links')).toHaveCount(0);
         await expect(page.getByTestId('system-online-records')).not.toHaveAttribute('open', '');
         await expect(page.getByTestId('system-feedback')).not.toHaveAttribute('open', '');
         await expect(page.getByTestId('system-support-tools')).not.toHaveAttribute('open', '');

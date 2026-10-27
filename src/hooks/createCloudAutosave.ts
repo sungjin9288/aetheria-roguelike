@@ -16,13 +16,31 @@ interface MutableRef<T> {
  * - pendingCloudRecord: 로컬 import 가 실패해 아직 반영되지 못한 원격 레코드
  * - cloudRevisionFloor: 클라우드에서 받은 최신 리비전(이 아래로는 업로드 금지)
  * - cloudRevisionAdvanceRequired: floor 와 동률인 리비전도 거부해야 하는지
+ * - lastLeaderboardEntryKey: 이 세션에서 마지막으로 보낸 순위표 값(`getLeaderboardEntryKey`). 같은 값이면 순위표 쓰기를
+ *   건너뛴다(소유자 결정 D35). 없으면 매번 쓴다.
  */
 export interface CloudAutosaveRefs {
     localSavePromise: MutableRef<Promise<GameSaveRecord | null>>;
     pendingCloudRecord: MutableRef<GameSaveRecord | null>;
     cloudRevisionFloor: MutableRef<number>;
     cloudRevisionAdvanceRequired: MutableRef<boolean>;
+    lastLeaderboardEntryKey?: MutableRef<string | null>;
 }
+
+/** 순위표 문서(`public/data/leaderboard/{uid}`)에 쓰는 값 — 서버 시각(`updatedAt`)을 뺀 필드. */
+export const buildLeaderboardEntry = (player: Player, uid: string) => ({
+    nickname:     player.name,
+    totalKills:   player.stats?.kills || 0,
+    prestigeRank: player.meta?.prestigeRank || 0,
+    activeTitle:  player.activeTitle || null,
+    level:        player.level || 1,
+    bossKills:    player.stats?.bossKills || 0,
+    job:          player.job || CONSTANTS.DEFAULT_JOB,
+    uid,
+});
+
+/** 순위표 값의 비교 키 — 필드 순서가 고정된 직렬화라 같은 값이면 같은 키다. */
+export const getLeaderboardEntryKey = (entry: ReturnType<typeof buildLeaderboardEntry>): string => JSON.stringify(entry);
 
 export interface CloudAutosaveDeps {
     /**
@@ -128,19 +146,24 @@ export const createCloudAutosave = ({
         await setDoc(userDocRef, payload);
 
         // v5.0: 리더보드 entry 업데이트 (kills > 0 일 때만)
+        // 소유자 결정 D35(감사 CH-04): 자동 저장은 행동마다 돌고 그 순위표 쓰기의 73%가 같은 값이었다 — 이 세션에서
+        //   마지막으로 보낸 값과 같으면 순위표 쓰기만 건너뛴다(세이브 문서 교체 쓰기 · 순위표 merge 방식은 그대로).
+        //   보내기 전에 키를 적어 두므로 겹친 두 저장도 서버에 들어가는 순서대로 비교하고, 쓰기가 실패하면 키를 지워
+        //   다음 저장이 다시 쓴다.
         if (player.name && (player.stats?.kills || 0) > 0) {
-            const lbDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard', uid);
-            await setDoc(lbDocRef, {
-                nickname:     player.name,
-                totalKills:   player.stats?.kills || 0,
-                prestigeRank: player.meta?.prestigeRank || 0,
-                activeTitle:  player.activeTitle || null,
-                level:        player.level || 1,
-                bossKills:    player.stats?.bossKills || 0,
-                job:          player.job || CONSTANTS.DEFAULT_JOB,
-                uid,
-                updatedAt:    serverTimestamp(),
-            }, { merge: true });
+            const entry = buildLeaderboardEntry(player, uid);
+            const entryKey = getLeaderboardEntryKey(entry);
+            const lastKey = refs.lastLeaderboardEntryKey;
+            if (!lastKey || lastKey.current !== entryKey) {
+                if (lastKey) lastKey.current = entryKey;
+                const lbDocRef = doc(db, 'artifacts', APP_ID, 'public', 'data', 'leaderboard', uid);
+                try {
+                    await setDoc(lbDocRef, { ...entry, updatedAt: serverTimestamp() }, { merge: true });
+                } catch (error) {
+                    if (lastKey && lastKey.current === entryKey) lastKey.current = null;
+                    throw error;
+                }
+            }
         }
 
         dispatch({ type: AT.SET_SYNC_STATUS, payload: 'synced' });

@@ -81,6 +81,7 @@ test('첫 출발 문구는 미탐험 첫 임무에만 보이고 예언과 도감
     const prophecy = EVENT_CHAINS.find((chain) => chain.id === 'ancient_prophecy').steps[1].event.desc;
     assert.match(prophecy, /계승 3단계/);
     assert.ok(!prophecy.includes('세 번'));
-    assert.match(getBossBrief('원시의 신').entryHint, /혼돈의 심연/);
-    assert.ok(!getBossBrief('원시의 신').entryHint.includes('모아야만'));
+    // 소유자 결정 D32(2026-10-26): 보스 브리핑의 진입 추천 문구(entryHint)는 어느 화면도 그리지 않아 지웠다.
+    assert.equal('entryHint' in getBossBrief('원시의 신'), false);
+    assert.ok(!Object.values(getBossBrief('원시의 신')).flat().some((text) => String(text).includes('모아야만')));
 });

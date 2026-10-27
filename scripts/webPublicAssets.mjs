@@ -8,7 +8,7 @@ import { buildTossAssetCatalog, copyPublicFiles } from './tossAssetCatalog.mjs';
 // public/assets에는 런타임이 읽지 않는 그림이 함께 있다 — 1024px 레거시 장비 원본(item-weapon-* 126MB),
 // 몬스터 원본(monsterArtManifest의 sourceRuntimePath), 옛 SVG 아이콘. 저장소에는 그대로 두고(아트 재현성 · 증빙 계약),
 // 빌드 산출물에는 런타임 그림 목록(buildTossAssetCatalog — 매니페스트의 runtimePath)만 복사한다.
-// public/assets 밖의 파일은 웹 셸이다 — SPA 리다이렉트(_redirects), 서비스 워커와 그 앱 셸(/vite.svg),
+// public/assets 밖의 파일은 웹 셸이다 — SPA 리다이렉트(_redirects), 서비스 워커,
 // manifest · 아이콘, 정적 페이지(처리방침 등). 이 파일들은 목록 없이 그대로 담는다.
 const PUBLIC_ROOT = 'public';
 const ART_ROOT = 'public/assets';

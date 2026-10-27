@@ -227,6 +227,19 @@ export const useGameEngine = () => {
                     },
                 }),
             }),
+            // 2026-10-26 소유자 결정 D3 · D23: 진동 · 한 글자 단축키 켬/끔(기본 켬, settings의 선택 필드).
+            setHapticsEnabled: (val: boolean) => dispatch({
+                type: AT.SET_PLAYER,
+                payload: (currentPlayer: Player) => ({
+                    settings: { ...(currentPlayer.settings || {}), hapticsEnabled: val === true },
+                }),
+            }),
+            setKeyboardShortcutsEnabled: (val: boolean) => dispatch({
+                type: AT.SET_PLAYER,
+                payload: (currentPlayer: Player) => ({
+                    settings: { ...(currentPlayer.settings || {}), keyboardShortcutsEnabled: val === true },
+                }),
+            }),
             // 2026-10 통합 감사(town-nav UX-09): 선택 없이 떠나면 지나친 이벤트를 기록에 남긴다 — 전이는 리듀서가 소유한다.
             dismissEvent: () => dispatch({ type: AT.LEAVE_EVENT }),
 

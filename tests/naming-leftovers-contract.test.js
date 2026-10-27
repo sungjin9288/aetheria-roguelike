@@ -13,7 +13,6 @@ import { createElement } from 'react';
 
 import { MSG } from '../src/data/messages.ts';
 import RunSummaryCard from '../src/components/RunSummaryCard.tsx';
-import SystemTab from '../src/components/tabs/SystemTab.tsx';
 import Dashboard from '../src/components/Dashboard.tsx';
 import GravePanel from '../src/components/GravePanel.tsx';
 import { buildRunSummary } from '../src/utils/gameUtils.ts';
@@ -86,24 +85,6 @@ test('[렌더] 사망 화면은 다음 판을 한 이름("다음 여정")으로 
     assert.doesNotMatch(visible, /운영 유효|보스권/u);
     assert.ok(html.includes(`aria-label="${MSG.RUN_SUMMARY_REFLECTION_ARIA}"`));
     assert.ok(!MSG.RUN_SUMMARY_REFLECTION_ARIA.includes('시도'));
-});
-
-test('[렌더] 설정 탭 장기 성장 설명은 그 아래 단추가 쓰는 재화 이름(계승 정수 · 크리스탈)을 말한다', () => {
-    const player = makePlayerFixture({ meta: { essence: 120 }, premiumCurrency: 7 });
-    const html = renderStatic(createElement(SystemTab, {
-        player,
-        stats: { maxHp: 150, maxMp: 50 },
-        actions: { leaderboard: [], setReadabilityMode: () => {}, setEquipmentDetailMode: () => {}, setActiveTitle: () => {}, isAdmin: () => false },
-        runtime: { viewport: 'mobile', gameState: 'idle', syncStatus: 'synced', isAiThinking: false },
-    }));
-    const start = html.indexOf('data-testid="system-growth-links"');
-    assert.ok(start >= 0);
-    const section = visibleText(html.slice(start, html.indexOf('</section>', start)));
-    assert.ok(section.includes(MSG.SYSTEM_GROWTH_LINKS_DESC), section);
-    assert.ok(!section.includes('모은 에테르'), section);
-    // 설명이 말한 두 재화가 단추의 단위와 같다.
-    assert.ok(MSG.SYSTEM_GROWTH_LINKS_DESC.includes('계승 정수') && section.includes('120 정수'), section);
-    assert.ok(MSG.SYSTEM_GROWTH_LINKS_DESC.includes('크리스탈') && section.includes('7 크리스탈'), section);
 });
 
 test('[렌더] 기록 탭 아이콘은 탭마다 다르고, 설정 탭은 전투 기술 단추의 번개(Zap)를 쓰지 않는다', () => {

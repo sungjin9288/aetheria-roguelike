@@ -2078,6 +2078,21 @@
   --ae-forecast-accent: var(--aether-ether-hi-rgb);
 }
 
+/* 소유자 결정 D16(2026-10-26): 짧은 화면(높이 700px 이하 — 375 × 667)에서는 덱을 조인다. 보스전 판단 요약의 긴 값
+   ("방어 가능 (45%)")이 같은 폭 세 칸에서 두 줄이 되어 기술 칸이 첫 화면 아래로 7 ~ 15px 밀렸다.
+   판단 요약은 글 길이만큼 칸을 나눠 한 줄에 들고(그래도 길면 줄을 넘긴다 — 말줄임 없음), 덱의 칸 사이를 10 → 8px로 줄인다.
+   높이가 넉넉한 화면(812 · 844 · 932)과 데스크톱은 그대로다. e2e `combat-skill-tray.spec.ts`가 네 크기를 잰다. */
+@media (max-height: 700px) {
+  .ae-combat-forecast {
+    grid-template-columns: repeat(3, auto);
+  }
+
+  .ae-combat-deck.ae-combat-deck > :not([hidden]) ~ :not([hidden]) {
+    margin-top: 0.5rem;
+    margin-bottom: 0;
+  }
+}
+
 [data-readability-mode="high"] .ae-combat-forecast-cell {
   background: var(--aether-s2);
   box-shadow:
@@ -4359,9 +4374,10 @@ details[open] > summary .ab-chevron { transform: rotate(180deg); }
 }
 
 /* ── 데스크톱 배치 (VD-04 · UX-12, 1024px 이상 — hooks/useDesktopLayout.ts와 같은 경계) ── */
+/* 소유자 결정 2026-10-26 D6: 기록 열의 탭이 내용 왼쪽 세로 목록(56px)이 되어 열을 넓혔다 — 내용 폭이 휴대폰 기록 창(약 300px) 아래로 줄지 않게. */
 .ae-desktop-grid {
   display: grid;
-  grid-template-columns: 232px minmax(0, 1fr) 320px;
+  grid-template-columns: 216px minmax(0, 1fr) 384px;
   gap: 12px;
   width: 100%;
   max-width: 1480px;
@@ -4372,14 +4388,14 @@ details[open] > summary .ab-chevron { transform: rotate(180deg); }
 
 @media (min-width: 1280px) {
   .ae-desktop-grid {
-    grid-template-columns: 264px minmax(0, 1fr) 380px;
+    grid-template-columns: 256px minmax(0, 1fr) 432px;
     gap: 14px;
   }
 }
 
 @media (min-width: 1440px) {
   .ae-desktop-grid {
-    grid-template-columns: 280px minmax(0, 760px) 440px;
+    grid-template-columns: 280px minmax(0, 760px) 472px;
     justify-content: center;
     gap: 16px;
   }

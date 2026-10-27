@@ -10,6 +10,7 @@ import { buildCombatFeedback } from '../src/reducers/handlers/combatFeedback.js'
 import {
     getCombatAnnouncement,
     getCombatBeatTiming,
+    getCritPulseEndMs,
     getCombatStageView,
     getCounterStagger,
     getPresentedVisualEffect,
@@ -74,8 +75,9 @@ const scanSeeds = (state, count = 240) => Array.from({ length: count }, (_, inde
         next,
         logs,
         playerCritOracle: logs[0]?.type === 'critical',
-        enemyHeavyOracle: logs.slice(1).some((entry) => entry.type === 'critical'),
-        tailHeuristic: logs[logs.length - 1]?.type === 'critical',
+        // D25(2026-10-26): 적 강타 줄은 이제 'enemy-heavy'다 — 예전 꼬리 판정의 오발은 두 종류를 함께 'critical'로 읽던 것과 같다.
+        enemyHeavyOracle: logs.slice(1).some((entry) => entry.type === 'enemy-heavy'),
+        tailHeuristic: ['critical', 'enemy-heavy'].includes(logs[logs.length - 1]?.type),
     };
 });
 
@@ -162,7 +164,7 @@ test('GF-01: 쓰러진 차례 · 소모품 차례도 같은 기록을 남긴다'
     const drankLogs = turnLogs(hurt, drank);
     assert.equal(drank.combatFeedback.kind, 'continue');
     assert.equal(drank.combatFeedback.playerCrit, false, '물약은 치명타가 아니다');
-    assert.equal(drank.combatFeedback.enemyHeavy, drankLogs.some((entry) => entry.type === 'critical'));
+    assert.equal(drank.combatFeedback.enemyHeavy, drankLogs.some((entry) => entry.type === 'enemy-heavy'));
     assert.equal(drank.combatFeedback.playerHpDelta, drank.player.hp - hurt.player.hp);
     assert.equal(drank.combatFeedback.enemyDamage, 0);
 });
@@ -194,6 +196,11 @@ test('GF-06: 박자는 내가 맞힌 뒤 적이 행동한 이어지는 차례에
         shakeMs: BALANCE.COMBAT_SHAKE_MS,
     });
     assert.equal(getCombatBeatTiming(true).counterDelayMs, 0);
+    // D20(2026-10-26): 반격 박자 300ms — 금빛은 붉은 비네트가 오기 전에 끝난다(두 색이 겹치지 않는다).
+    assert.equal(BALANCE.ENEMY_TURN_DELAY_MS, 300);
+    const timing = getCombatBeatTiming(false);
+    assert.ok(getCritPulseEndMs(timing, timing.counterDelayMs) <= timing.counterDelayMs, '금빛은 반격 박자 안에서 끝난다');
+    assert.equal(getCritPulseEndMs(timing, 0), timing.pulseMs, '박자를 나누지 않는 차례는 비네트 길이 그대로');
     assert.ok(getCombatBeatTiming(true).killBeatMs <= 150, '모션 감소의 처치 순간은 150ms 이하');
 });
 

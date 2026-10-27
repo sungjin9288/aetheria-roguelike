@@ -105,9 +105,11 @@ test('menu, settings, and device playtest use one natural Korean vocabulary', as
     assert.match(controlPanel, />\s*모험 기록\s*</);
     assert.doesNotMatch(controlPanel, />\s*Menu\s*</);
 
-    for (const label of ['플레이 설정', '화면 선명도', '장비 설명', '장기 성장', '에테르 거울', '에테르 교환소', '유물', '칭호', '명예의 전당', '플레이 기록 저장', '의견 보내기', '저장과 기기 점검']) {
+    // 소유자 결정 2026-10-26 D2: 장기 성장 칸(에테르 거울 · 교환소)과 보유 유물은 설정 탭을 떠났다(마을 시설 · 상태 탭).
+    for (const label of ['플레이 설정', '화면 선명도', '장비 설명', '칭호', '명예의 전당', '플레이 기록 저장', '의견 보내기', '저장과 기기 점검']) {
         assert.match(systemTab, new RegExp(label));
     }
+    assert.doesNotMatch(systemTab, /장기 성장/);
     assert.match(systemTab, /offline: '연결 안 됨'/);
     assert.match(systemTab, /synced: '저장됨'/);
     assert.match(systemTab, /testId="system-support-tools"/);

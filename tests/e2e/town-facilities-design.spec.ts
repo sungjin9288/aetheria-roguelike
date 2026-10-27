@@ -1,11 +1,12 @@
 import { expect, test, type Locator, type Page } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { openTownFacilities, startE2ERun, waitForModeTransition } from './testHelpers';
 
 /**
  * E2E: 마을 시설 에테르 유리(2026-10 wave 3) — 임무 게시판 · 제작소 · 교환소 · 거울.
  * 렌더 계약(tests/town-facilities-design.test.js)이 단추 위계를 잡고, 여기서는 실제 화면의 크기 · 배치를 잰다.
  *   - 금빛 주 행동은 화면마다 하나, 조작은 44px, 가로 넘침 없음(375 · 430)
  *   - 교환소 · 거울은 1024px 이상에서 가운데 시트(폭 ≤ 640, 둥근 모서리), 휴대폰에서는 한 화면 가득
+ *   - 펼친 마을 시설의 단추는 홈 표시줄(아래 안전 영역) 위에 있다
  */
 
 const measurePanel = (panel: Locator) => panel.evaluate((root) => {
@@ -88,15 +89,17 @@ for (const width of [375, 430]) {
 
 test.describe('교환소 · 거울 시트', () => {
     for (const { label, seed, opener, sheet } of [
-        { label: '교환소', seed: 'crystal', opener: 'open-crystal-exchange', sheet: 'premium-shop' },
-        { label: '거울', seed: 'mirror', opener: 'open-mirror-panel', sheet: 'mirror-panel' },
+        // 소유자 결정 2026-10-26 D2: 둘 다 마을 시설에서 연다(설정 탭의 '장기 성장' 칸은 없앴다).
+        { label: '교환소', seed: 'crystal', opener: 'control-crystal-exchange', sheet: 'premium-shop' },
+        { label: '거울', seed: 'mirror', opener: 'control-mirror', sheet: 'mirror-panel' },
     ]) {
         test(`${label}: 1280px에서는 가운데 둥근 시트, 390px에서는 한 화면 가득`, async ({ page }) => {
             await page.setViewportSize({ width: 390, height: 844 });
-            await startE2ERun(page, { openStatusConsole: true });
+            await startE2ERun(page);
             await page.evaluate((kind) => (kind === 'crystal'
                 ? window.__AETHERIA_TEST_API__?.seedCrystalExchangeScenario?.(80)
                 : window.__AETHERIA_TEST_API__?.seedMirrorJourneyScenario?.()), seed);
+            await openTownFacilities(page);
             await expect(page.getByTestId(opener)).toBeVisible({ timeout: 8_000 });
             await page.getByTestId(opener).click();
             await expect(page.getByTestId(sheet)).toBeVisible();
@@ -114,6 +117,37 @@ test.describe('교환소 · 거울 시트', () => {
             expect(desk.top).toBeGreaterThanOrEqual(16);
             expect(desk.bottom).toBeLessThanOrEqual(desk.viewportHeight - 16);
             expect(desk.radius).toBeGreaterThan(0);
+        });
+    }
+});
+
+// 2026-10-26 iPhone 수용(시뮬레이터 iPhone 17 Pro): 마을 시설을 펼치면 기록 창 최소 높이(240)와 조작판이 화면을 넘쳐
+//   마지막 줄(제작 · 에테르 거울)이 홈 표시줄 위에 걸렸다. Chromium에는 안전 영역이 없으므로 기기 값을 변수로 넣어 잰다.
+test.describe('펼친 마을 시설 · 안전 영역', () => {
+    for (const device of [
+        { label: 'iPhone mini', width: 375, height: 812, top: 50, bottom: 34 },
+        { label: 'iPhone Pro', width: 402, height: 874, top: 62, bottom: 34 },
+        { label: 'iPhone Pro Max', width: 430, height: 932, top: 62, bottom: 34 },
+    ]) {
+        test(`${device.label}: 마지막 줄 단추가 홈 표시줄 위에 있고 화면이 넘치지 않는다`, async ({ page }) => {
+            await page.setViewportSize({ width: device.width, height: device.height });
+            await startE2ERun(page);
+            await page.evaluate(({ top, bottom }) => {
+                document.documentElement.style.setProperty('--aether-safe-area-top', `${top}px`);
+                document.documentElement.style.setProperty('--aether-safe-area-bottom', `${bottom}px`);
+            }, device);
+            await openTownFacilities(page);
+            await waitForModeTransition(page);
+
+            const geometry = await page.getByTestId('control-town-facility-actions').evaluate((grid) => {
+                const shell = document.querySelector<HTMLElement>('[data-app-shell]')!;
+                return {
+                    lastButtonBottom: Math.max(...[...grid.querySelectorAll('button')].map((button) => button.getBoundingClientRect().bottom)),
+                    shellOverflow: shell.scrollHeight - shell.clientHeight,
+                };
+            });
+            expect(geometry.lastButtonBottom).toBeLessThanOrEqual(device.height - device.bottom);
+            expect(geometry.shellOverflow).toBeLessThanOrEqual(0);
         });
     }
 });

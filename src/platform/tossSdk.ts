@@ -6,6 +6,7 @@ import {
     SafeArea as SdkSafeArea,
     Screen as SdkScreen,
     Storage as SdkStorage,
+    generateHapticFeedback as sdkGenerateHapticFeedback,
     graniteEvent as sdkGraniteEvent,
     loadFullScreenAd as sdkLoadFullScreenAd,
     showFullScreenAd as sdkShowFullScreenAd,
@@ -20,6 +21,8 @@ export interface TossSdkSurface {
     Storage: Pick<typeof SdkStorage, 'getItem' | 'setItem' | 'removeItem'>;
     SafeArea: Pick<typeof SdkSafeArea, 'get' | 'subscribe'>;
     Screen: Pick<typeof SdkScreen, 'close'>;
+    /** 2026-10-26 소유자 결정 D3: 진동 피드백(`platform/feedbackPort.ts`만 부른다). */
+    generateHapticFeedback: typeof sdkGenerateHapticFeedback;
     graniteEvent: typeof sdkGraniteEvent;
     loadFullScreenAd: typeof sdkLoadFullScreenAd;
     showFullScreenAd: typeof sdkShowFullScreenAd;
@@ -30,6 +33,7 @@ export const {
     Storage,
     SafeArea,
     Screen,
+    generateHapticFeedback,
     graniteEvent,
     loadFullScreenAd,
     showFullScreenAd,
@@ -38,6 +42,7 @@ export const {
     Storage: SdkStorage,
     SafeArea: SdkSafeArea,
     Screen: SdkScreen,
+    generateHapticFeedback: sdkGenerateHapticFeedback,
     graniteEvent: sdkGraniteEvent,
     loadFullScreenAd: sdkLoadFullScreenAd,
     showFullScreenAd: sdkShowFullScreenAd,

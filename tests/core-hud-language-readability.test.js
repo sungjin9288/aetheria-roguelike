@@ -66,9 +66,11 @@ test('StatusBar: 전투 중 표시는 직접적 한국어 라벨을 쓰고 영�
     const enemy = { name: '고블린 정찰병', hp: 40, maxHp: 80, isBoss: true };
     const html = renderStatic(createElement(StatusBar, { player, stats: null, enemy, enemyHitCrit: false }));
 
-    for (const label of ['생명', '기력', '교전 대상', '보스', '레벨']) {
+    // D9(소유자 결정 2026-10-26): 싸우는 동안 생명 · 기력은 전투 화면의 막대가 보이고 읽는다 — 상태 표시줄에는 없다.
+    for (const label of ['교전 대상', '보스', '레벨']) {
         assert.ok(html.includes(label), `"${label}" 라벨 노출`);
     }
+    assert.ok(!html.includes('data-testid="status-combat-vitals"'), '전투 중 상태 표시줄은 생명 · 기력 줄을 그리지 않는다');
     assert.ok(!/소리 켜기|소리 끄기|Volume2|VolumeX/.test(html));
     assert.ok(html.includes('data-testid="enemy-portrait"'));
     assert.ok(html.includes('data-testid="enemy-status-label"'));
@@ -124,9 +126,10 @@ test('avatar QA presets clamp current vitals to the rendered equipment maximums'
 });
 
 test('TerminalView: 로그 타입 뱃지는 개발자 약어가 아니라 뜻이 통하는 한국어다', () => {
-    const types = ['combat', 'critical', 'story', 'system', 'success', 'event', 'warning', 'error', 'legendary'];
-    const expectedLabels = ['전투', '치명타', '이야기', '안내', '획득', '이벤트', '주의', '오류', '전설'];
-    const logs = types.map((type, i) => ({ id: `l${i}`, type, text: `로그 ${type}` }));
+    const types = ['combat', 'critical', 'enemy', 'story', 'system', 'success', 'event', 'warning', 'error', 'legendary'];
+    const expectedLabels = ['전투', '치명타', '적 행동', '이야기', '안내', '획득', '이벤트', '주의', '오류', '전설'];
+    // D26(2026-10-26): '획득'은 실제로 얻은 줄에만 붙는다 — success 표본은 얻은 줄이다.
+    const logs = types.map((type, i) => ({ id: `l${i}`, type, text: type === 'success' ? '전리품 획득: 로그' : `로그 ${type}` }));
     const html = renderStatic(createElement(TerminalView, {
         logs, gameState: GS.IDLE, onCommand: () => {}, player: null, quickSlots: [], onQuickSlotUse: () => {},
     }));

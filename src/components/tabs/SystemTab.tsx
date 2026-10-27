@@ -1,18 +1,18 @@
 import { useCallback, useMemo, useState } from 'react';
+import type { ReactNode } from 'react';
 import {
     ChevronDown,
-    ChevronRight,
     Copy,
     Crown,
     Download,
     Eye,
-    Gem,
+    Keyboard,
     ListTree,
     MessageSquare,
     Save,
     Shield,
-    Sparkles,
     Trophy,
+    Vibrate,
     Wrench,
 } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -20,19 +20,16 @@ import type { FullStats, Item, Player, Relic } from '../../types/index.js';
 import type { LiveConfig } from '../../types/session.js';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { APP_ID, CONSTANTS, RARITY_CLASSES } from '../../data/constants';
-import { getPrestigeUnlocks } from '../../systems/prestigeUnlocks';
+import { APP_ID, CONSTANTS } from '../../data/constants';
 import { exportToJson } from '../../utils/fileUtils';
 import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/gameUtils';
 import { ELITE_TITLE_MAPS, splitEliteTitles, sumEliteTitleBonus } from '../../utils/eliteTitles';
 import { formatPermanentStatBonus } from '../../utils/permanentStatSources';
 import { FeedbackValidator } from '../../systems/FeedbackValidator';
-import { formatRelicText, getRelicDisplayName } from '../../utils/relicPresentation';
 import { trackRuntimeProductEvent } from '../../platform/productEventCoordinator';
 import { normalizeProductEventJob } from '../../platform/productEvents';
 import { MSG } from '../../data/messages';
-import RelicIcon from '../icons/RelicIcon';
-import { countOwnedRelics } from '../../systems/chaosHeart';
+import { isHapticsEnabled, isKeyboardShortcutsEnabled } from '../../utils/playerSettings';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { GameMode } from '../../reducers/gameStates';
 import ActionButton from '../ui/ActionButton';
@@ -94,20 +91,64 @@ const hasUserAgentData = (
 /** SystemTab이 실제로 호출하는 액션만 좁혀 받는다 (설정/칭호/순위/관리자). */
 type SystemTabActions = Pick<GameActions,
     'leaderboard' | 'setReadabilityMode' | 'setEquipmentDetailMode' | 'setActiveTitle' | 'liveConfig' | 'getUid' | 'isAdmin'
+    | 'setHapticsEnabled' | 'setKeyboardShortcutsEnabled'
 >;
+
+/** 2026-10-26 소유자 결정 D3 · D23: 켬/끔 두 칸(기본 켬) — 진동 · 한 글자 단축키가 같이 쓴다. */
+const TOGGLE_OPTIONS = [
+    { value: true, label: MSG.SYSTEM_TOGGLE_ON },
+    { value: false, label: MSG.SYSTEM_TOGGLE_OFF },
+] as const;
+
+interface SettingToggleRowProps {
+    testId: string;
+    icon: ReactNode;
+    iconTone: string;
+    title: string;
+    desc: string;
+    enabled: boolean;
+    onChange: (enabled: boolean) => void;
+}
+
+const SettingToggleRow = ({ testId, icon, iconTone, title, desc, enabled, onChange }: SettingToggleRowProps) => (
+    <div data-testid={testId} className="mt-4 border-t border-ae-ink/7 pt-4">
+        <div className="flex items-start gap-3">
+            <span className={`ab-icon-well ${iconTone}`} aria-hidden="true">{icon}</span>
+            <div className="min-w-0 flex-1">
+                <div className="font-readable aether-type-strong text-ae-ink">{title}</div>
+                <p className="mt-0.5 font-readable aether-type-meta leading-snug text-ae-ink-3">{desc}</p>
+            </div>
+            <Chip tone={enabled ? 'ether' : 'neutral'} data-testid={`${testId}-current`} className="shrink-0">
+                {MSG.SYSTEM_TOGGLE_STATE(enabled)}
+            </Chip>
+        </div>
+        <div className="ab-segment mt-3 grid-cols-2" role="group" aria-label={title}>
+            {TOGGLE_OPTIONS.map((option) => (
+                <button
+                    key={String(option.value)}
+                    type="button"
+                    data-testid={`${testId}-${option.value ? 'on' : 'off'}`}
+                    aria-pressed={enabled === option.value}
+                    onClick={() => onChange(option.value)}
+                    className="ab-segment-option font-readable"
+                >
+                    {option.label}
+                </button>
+            ))}
+        </div>
+    </div>
+);
 
 /**
  * MobileGameLayout이 만드는 런타임 컨텍스트 — SystemTab이 읽는 필드만 좁혀 받는다.
  * 생산자(`components/app/MobileGameLayout.tsx`)는 이 외에도 필드를 더 얹지만 이 화면은
- * viewport/gameState/syncStatus/isAiThinking/두 열림 콜백만 읽는다.
+ * viewport/gameState/syncStatus/isAiThinking만 읽는다(에테르 거울 · 교환소 진입은 2026-10-26 D2로 마을 시설에 있다).
  */
 export interface SystemTabRuntime {
     viewport?: string;
     gameState?: GameMode;
     syncStatus?: string;
     isAiThinking?: boolean;
-    onOpenMirror?: () => void;
-    onOpenCrystalExchange?: () => void;
 }
 
 interface SystemTabProps {
@@ -140,7 +181,6 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
     const titleGroups = useMemo(() => splitEliteTitles(titles), [titles]);
     const eliteTitleTotal = useMemo(() => sumEliteTitleBonus(titles), [titles]);
     const relics = useMemo(() => player.relics || [], [player.relics]);
-    const relicCapacity = getPrestigeUnlocks(player.meta?.prestigeRank).maxRelics;
     const leaderboard = actions?.leaderboard || [];
     const activeTitleLabel = player.activeTitle ? getTitleLabel(player.activeTitle) : MSG.SYSTEM_TITLE_NONE;
     const activeTitlePassive = player.activeTitle ? getTitlePassiveLabel(player.activeTitle) : MSG.SYSTEM_TITLE_NONE_HINT;
@@ -155,6 +195,17 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         actions?.setEquipmentDetailMode?.(mode);
         const label = EQUIPMENT_DETAIL_OPTIONS.find((option) => option.value === mode)?.label || EQUIPMENT_DETAIL_OPTIONS[0].label;
         setNotice({ type: 'success', text: MSG.SYSTEM_EQUIPMENT_DETAIL_CHANGED(label) });
+    }, [actions]);
+
+    const hapticsEnabled = isHapticsEnabled(player);
+    const shortcutsEnabled = isKeyboardShortcutsEnabled(player);
+    const handleSetHapticsEnabled = useCallback((enabled: boolean) => {
+        actions?.setHapticsEnabled?.(enabled);
+        setNotice({ type: 'success', text: MSG.SYSTEM_HAPTICS_CHANGED(enabled) });
+    }, [actions]);
+    const handleSetShortcutsEnabled = useCallback((enabled: boolean) => {
+        actions?.setKeyboardShortcutsEnabled?.(enabled);
+        setNotice({ type: 'success', text: MSG.SYSTEM_SHORTCUTS_CHANGED(enabled) });
     }, [actions]);
 
     const handleSetActiveTitle = useCallback((id: string) => {
@@ -438,6 +489,25 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                         })}
                     </div>
                 </div>
+
+                <SettingToggleRow
+                    testId="haptics-settings"
+                    icon={<Vibrate size={16} />}
+                    iconTone="is-exp"
+                    title={MSG.SYSTEM_HAPTICS_TITLE}
+                    desc={MSG.SYSTEM_HAPTICS_DESC}
+                    enabled={hapticsEnabled}
+                    onChange={handleSetHapticsEnabled}
+                />
+                <SettingToggleRow
+                    testId="keyboard-shortcut-settings"
+                    icon={<Keyboard size={16} />}
+                    iconTone="is-ether"
+                    title={MSG.SYSTEM_SHORTCUTS_TITLE}
+                    desc={MSG.SYSTEM_SHORTCUTS_DESC}
+                    enabled={shortcutsEnabled}
+                    onChange={handleSetShortcutsEnabled}
+                />
             </section>
 
             {notice && (
@@ -445,34 +515,6 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                     {notice.text}
                 </div>
             )}
-
-            <section data-testid="system-growth-links" className="ae-card ab-card-pad">
-                <SectionHead title="장기 성장" desc={MSG.SYSTEM_GROWTH_LINKS_DESC} />
-                <div className="ab-rows mt-2">
-                    <button type="button" data-testid="open-mirror-panel" onClick={() => runtime?.onOpenMirror?.()} className="ab-link-row">
-                        <span className="ab-icon-well is-exp" aria-hidden="true"><Sparkles size={16} /></span>
-                        <span className="min-w-0 flex-1">
-                            <span className="block font-readable aether-type-strong text-ae-ink">에테르 거울</span>
-                            <span className="mt-0.5 block font-readable aether-type-meta text-ae-ink-3">{MSG.SYSTEM_MIRROR_LINK_DESC}</span>
-                        </span>
-                        <span className="shrink-0 font-readable aether-type-meta text-ae-ink-2">
-                            <span className="font-fira tabular-nums aether-type-body font-bold text-ae-ink">{player.meta?.essence || 0}</span> {MSG.SYSTEM_ESSENCE_UNIT}
-                        </span>
-                        <ChevronRight size={16} className="shrink-0 text-ae-ink-3" aria-hidden="true" />
-                    </button>
-                    <button type="button" data-testid="open-crystal-exchange" onClick={() => runtime?.onOpenCrystalExchange?.()} className="ab-link-row">
-                        <span className="ab-icon-well is-ether" aria-hidden="true"><Gem size={16} /></span>
-                        <span className="min-w-0 flex-1">
-                            <span className="block font-readable aether-type-strong text-ae-ink">에테르 교환소</span>
-                            <span className="mt-0.5 block font-readable aether-type-meta text-ae-ink-3">{MSG.SYSTEM_CRYSTAL_LINK_DESC}</span>
-                        </span>
-                        <span className="shrink-0 font-readable aether-type-meta text-ae-ink-2">
-                            <span className="font-fira tabular-nums aether-type-body font-bold text-ae-ink">{player.premiumCurrency || 0}</span> {MSG.SYSTEM_CRYSTAL_UNIT}
-                        </span>
-                        <ChevronRight size={16} className="shrink-0 text-ae-ink-3" aria-hidden="true" />
-                    </button>
-                </div>
-            </section>
 
             {titles.length > 0 && (
                 <section data-testid="system-title-section" className="ae-card ab-card-pad">
@@ -514,37 +556,6 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                             )}
                         </div>
                     </details>
-                </section>
-            )}
-
-            {relics.length > 0 && (
-                <section data-testid="system-relic-section" className="ae-card is-quiet px-3.5 py-1">
-                    <SettingsDisclosure
-                        testId="system-relic-list"
-                        icon={Sparkles}
-                        tone="ether"
-                        title={`보유 유물 ${countOwnedRelics(relics)}/${relicCapacity}`}
-                        summary={MSG.SYSTEM_RELIC_LIST_DESC}
-                    >
-                        <div className="ab-rows">
-                            {relics.map((relic: Relic) => (
-                                <div key={relic.id} className="flex items-center gap-3 py-2.5">
-                                    <RelicIcon relic={relic} size={42} />
-                                    <div className="min-w-0 flex-1">
-                                        <div className={`font-readable aether-type-body font-bold ${RARITY_CLASSES[relic.rarity ?? ''] || 'text-ae-ink'}`}>
-                                            {getRelicDisplayName(relic.name)}
-                                            {relic.borrowed && (
-                                                <span data-testid="system-relic-borrowed" className="ae-chip ml-2 align-middle">
-                                                    {MSG.CHAOS_HEART_BORROWED_TAG}
-                                                </span>
-                                            )}
-                                        </div>
-                                        <p className="mt-1 font-readable aether-type-meta leading-snug text-ae-ink-2">{formatRelicText(relic.desc)}</p>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
-                    </SettingsDisclosure>
                 </section>
             )}
 

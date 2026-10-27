@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { startE2ERun, waitForModeTransition } from './testHelpers';
 
 /**
  * 2026-10 감사 CL-03 · CL-06 · VD-02 · GF-05 — 전투 화면을 실제 폭에서 잰다.
@@ -141,8 +141,8 @@ for (const viewport of VIEWPORTS) {
             expect(railBox).not.toBeNull();
             expect(bossCard).not.toBeNull();
             expect(escape!.y + escape!.height).toBeLessThanOrEqual(viewport.height + 1);
-            expect(railBox!.y).toBeLessThan(viewport.height);
-            if (viewport.height >= 844) expect(railBox!.y + railBox!.height).toBeLessThanOrEqual(viewport.height + 1);
+            // 소유자 결정 D16(2026-10-26): 375 × 667 보스전에서도 기술 칸 전체가 첫 화면 안이다(전에는 약 9px 밀렸다).
+            expect(railBox!.y + railBox!.height).toBeLessThanOrEqual(viewport.height + 1);
             expect(bossCard!.y).toBeGreaterThanOrEqual(railBox!.y + railBox!.height);
             await page.screenshot({ path: `playtest-artifacts/mobile-combat-focus/skill-tray-boss-${viewport.width}.png` });
             await page.getByTestId('combat-focus-panel').screenshot({ path: `playtest-artifacts/mobile-combat-focus/skill-tray-boss-panel-${viewport.width}.png` });
@@ -225,4 +225,46 @@ for (const viewport of VIEWPORTS) {
             await expect.poll(() => page.evaluate(() => (window as unknown as { __vitalsFlashSeen: string[] }).__vitalsFlashSeen.includes('damage'))).toBe(true);
         });
     });
+}
+
+/**
+ * 소유자 결정 D16(2026-10-26): 기술 칸(제목 + 칸 줄)은 맨 위에서 스크롤 없이 첫 화면 안이다 — 보스전 · 일반 전투, 네 크기.
+ * 375 × 667 보스전은 판단 요약의 긴 값이 같은 폭 세 칸에서 두 줄이 되어 기술 칸이 7 ~ 15px 아래로 밀렸다(높이 700px 이하에서
+ * 덱을 조여 고쳤다 — index.css `w3:combat`). 높이가 넉넉한 크기는 그 규칙 밖이라 배치가 그대로다.
+ */
+const TRAY_VIEWPORTS = [
+    { width: 375, height: 667 },
+    { width: 375, height: 812 },
+    { width: 390, height: 844 },
+    { width: 430, height: 932 },
+];
+
+for (const viewport of TRAY_VIEWPORTS) {
+    for (const boss of [true, false]) {
+        test(`D16 기술 칸은 첫 화면 안 ${viewport.width}x${viewport.height} ${boss ? '보스전' : '일반 전투'}`, async ({ page }) => {
+            await page.setViewportSize(viewport);
+            await startE2ERun(page);
+            await seedPaladinCombat(page, boss);
+            await waitForModeTransition(page);
+            await page.locator('[data-app-shell]').evaluate((shell) => { shell.scrollTop = 0; });
+            const layout = await page.evaluate(() => {
+                const bottom = (testId: string) => document.querySelector(`[data-testid="${testId}"]`)?.getBoundingClientRect().bottom ?? Number.NaN;
+                const shell = document.querySelector('[data-app-shell]') as HTMLElement;
+                return {
+                    tray: bottom('combat-skill-tray'),
+                    rail: bottom('combat-skill-rail'),
+                    escape: bottom('combat-action-escape'),
+                    shellScrollTop: shell.scrollTop,
+                    docOverflow: document.documentElement.scrollWidth - window.innerWidth,
+                    bossCard: Boolean(document.querySelector('[data-testid="combat-boss-signature"]')),
+                };
+            });
+            expect(layout.bossCard, '보스전이면 보스 카드가 있다').toBe(boss);
+            expect(layout.shellScrollTop).toBe(0);
+            expect(layout.escape).toBeLessThanOrEqual(viewport.height + 1);
+            expect(layout.rail, '기술 칸 줄은 첫 화면 안').toBeLessThanOrEqual(viewport.height + 1);
+            expect(layout.tray, '기술 칸(제목 포함)은 첫 화면 안').toBeLessThanOrEqual(viewport.height + 1);
+            expect(layout.docOverflow).toBeLessThanOrEqual(1);
+        });
+    }
 }

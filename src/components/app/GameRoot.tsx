@@ -5,6 +5,8 @@ import { GS } from '../../reducers/gameStates';
 import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
 import { useCombatFeedbackBeats } from '../../hooks/useCombatFeedbackBeats';
 import { useLevelUpCelebration } from '../../hooks/useLevelUpCelebration';
+import { usePresentationHaptic } from '../../hooks/useHapticFeedback';
+import { isHapticsEnabled } from '../../utils/playerSettings';
 import { getCombatStageView, getPresentedVisualEffect } from '../../utils/combatPresentation';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { getVisibleExpeditionSummary, getVisibleRegionTheme } from '../../utils/challengeRules';
@@ -165,6 +167,8 @@ const GameRoot = ({
     // 2026-10-26 소유자 결정 D33: 도감 · 시즌 경험 · 기록 줄은 리듀서의 획득 전이가 남기고, 이 화면은 그 획득 목록만 읽는다.
     // GF-13: presentationEpoch — 복원 전의 대기열은 그리지 않는다.
     const { currentDrop: legendaryDrop, dismissDrop: dismissLegendaryDrop } = useLegendaryDropDetector(engine.legendaryAcquisitions, engine.presentationEpoch);
+    // 2026-10-26 소유자 결정 D3: 전설 획득 화면이 새 전설로 뜨는 순간 진동한다(설정의 '진동'이 꺼져 있으면 울리지 않는다).
+    usePresentationHaptic('legendary', legendaryDrop, isHapticsEnabled(engine.player));
 
     // cycle 62: 신규 칭호(wanderer / pathfinder / cartographer / legend_seeker /
     // legend_chronicler 등)가 추가된 이후 기존 save를 로드하면, 이미 조건을 만족
