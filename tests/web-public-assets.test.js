@@ -104,10 +104,17 @@ test('웹 빌드는 런타임 그림 목록과 public/assets 밖의 웹 셸만 �
     for (const file of list.files.filter((entry) => !catalog.files.includes(entry))) {
         assert.ok(!file.startsWith('public/assets/'), `목록 밖 그림이 들어갔다: ${file}`);
     }
-    // 웹 셸: SPA 리다이렉트 · 서비스 워커(앱 셸이 /vite.svg를 캐시한다 — 하나라도 없으면 설치가 실패한다) · manifest · 아이콘.
-    for (const shell of ['public/_redirects', 'public/sw.js', 'public/vite.svg', 'public/manifest.webmanifest', 'public/icons/icon-192.png']) {
+    // 웹 셸: SPA 리다이렉트 · 서비스 워커 · manifest · 아이콘.
+    for (const shell of ['public/_redirects', 'public/sw.js', 'public/manifest.webmanifest', 'public/icons/icon-192.png']) {
         assert.ok(files.has(shell), shell);
     }
+    // 서비스 워커의 앱 셸(설치 때 미리 담는 목록)은 하나라도 없으면 설치가 실패한다 — 목록의 public 파일은 모두 빌드에 있다.
+    //   소유자 결정 D31(2026-10-26): 앱 셸이 더 이상 담지 않던 /vite.svg는 읽는 곳이 없어 지웠다.
+    const swSource = await readFile(path.join(repoRoot, 'public/sw.js'), 'utf8');
+    const appShell = [...(swSource.match(/const APP_SHELL = \[([^\]]*)\]/u)?.[1] || '').matchAll(/'(\/[^']+)'/gu)].map((match) => match[1]);
+    assert.ok(appShell.length > 0, '앱 셸 목록을 읽지 못했다');
+    for (const pathname of appShell) assert.ok(files.has(`public${pathname}`), `앱 셸: ${pathname}`);
+    assert.equal(files.has('public/vite.svg'), false, '쓰지 않는 vite.svg');
 
     assert.ok(!list.files.some((file) => file.startsWith('public/assets/equipment-exact/item-')), '1024px 레거시 장비 원본');
     assert.ok(!list.files.some((file) => /^public\/assets\/items\/item-weapon-\d+\.svg$/.test(file)), '옛 SVG 무기 아이콘');

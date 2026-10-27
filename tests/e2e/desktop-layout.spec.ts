@@ -1,5 +1,5 @@
 import { devices, expect, test, type Locator, type Page } from '@playwright/test';
-import { startE2ERun, waitForModeTransition } from './testHelpers';
+import { openTownFacilities, startE2ERun, waitForModeTransition } from './testHelpers';
 
 /**
  * 2026-10 데스크톱 배치(VD-04 · UX-12): 화면 폭 1024px 이상은 세 칸 — 왼쪽 캐릭터 · 가운데 무대 · 오른쪽 모험 기록.
@@ -117,6 +117,23 @@ for (const viewport of VIEWPORTS) {
             }
             // 데스크톱에는 '기록으로 돌아가기'가 없다(기록 창이 옆에 그대로 있다).
             await expect(page.getByTestId('mobile-console-return-log')).toBeHidden();
+            // 소유자 결정 2026-10-26 D6: 기록 열의 탭은 내용 왼쪽의 세로 목록이고, 원정 준비의 '모험 기록' 단추는 없다(열과 같은 일을 한다).
+            const tabBoxes = [];
+            for (const tab of ARCHIVE_TABS) tabBoxes.push((await archive.getByTestId(`archive-tab-${tab}`).boundingBox())!);
+            for (let index = 1; index < tabBoxes.length; index += 1) {
+                expect(Math.abs(tabBoxes[index].x - tabBoxes[0].x), `${ARCHIVE_TABS[index]} 같은 열`).toBeLessThanOrEqual(1);
+                expect(tabBoxes[index].y, `${ARCHIVE_TABS[index]} 아래로`).toBeGreaterThan(tabBoxes[index - 1].y);
+            }
+            const contentBox = (await archive.getByTestId('mobile-archive-console-content').boundingBox())!;
+            expect(contentBox.x, '내용은 목록 오른쪽이다').toBeGreaterThanOrEqual(tabBoxes[0].x + tabBoxes[0].width);
+            await expect(page.getByTestId('mobile-console-open-archive')).toHaveCount(0);
+            await expect(page.getByTestId('control-expedition-start')).toBeVisible();
+            // 소유자 결정 2026-10-26 D2: 데스크톱도 마을 시설에서 에테르 교환소를 연다.
+            await openTownFacilities(page);
+            await page.getByTestId('control-crystal-exchange').click();
+            await expect(page.getByTestId('premium-shop')).toBeVisible();
+            await page.getByTestId('premium-shop-close').click();
+            await expect(page.getByTestId('premium-shop')).toHaveCount(0);
 
             // 탐험 → 전투
             await page.getByTestId('control-expedition-start').click();

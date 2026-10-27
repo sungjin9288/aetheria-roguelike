@@ -94,7 +94,8 @@ test('A3: 한국어 희귀도 라벨은 MSG.RARITY_LABEL 하나뿐이다', async
 test('A3: Tailwind 희귀도 색은 constants의 RARITY_CLASSES를 직접 import한다', async () => {
     const consumers = [
         ['src/components/RelicChoicePanel.tsx', '../data/constants'],
-        ['src/components/tabs/SystemTab.tsx', '../../data/constants'],
+        // 소유자 결정 2026-10-26 D2: 보유 유물 목록은 설정 탭에서 상태 탭(StatsPanel)으로 옮겼다.
+        ['src/components/StatsPanel.tsx', '../data/constants'],
     ];
     for (const [relPath, from] of consumers) {
         const source = await readSrc(relPath);

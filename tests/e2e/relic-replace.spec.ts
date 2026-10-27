@@ -14,10 +14,10 @@ const openRelicSection = async (page: Page) => {
     if (await statusChip.count()) {
         await statusChip.click();
     }
-    await page.getByTestId('archive-tab-system').click();
-    const relicSection = page.getByTestId('system-relic-section');
+    // 소유자 결정 2026-10-26 D2: 보유 유물 목록은 능력치(상태) 탭에 펼친 채로 있다.
+    await page.getByTestId('archive-tab-stats').click();
+    const relicSection = page.getByTestId('stats-relic-section');
     await expect(relicSection).toBeVisible({ timeout: 5_000 });
-    await page.getByTestId('system-relic-list').locator('summary').click();
     return relicSection;
 };
 

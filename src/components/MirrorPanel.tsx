@@ -91,7 +91,7 @@ const MirrorPanel = ({ player, onClose, onPurchase }: MirrorPanelProps) => {
                             <span className="font-fira text-[15px] font-bold tabular-nums">{essence}</span>
                             <span className="font-readable text-[11px] text-ae-ink-2">계승 정수</span>
                         </div>
-                        <OverlayCloseButton data-testid="mirror-panel-close" aria-label="에테르 거울 닫기" onClick={onClose} />
+                        <OverlayCloseButton data-testid="mirror-panel-close" aria-label={MSG.MIRROR_PANEL_CLOSE_ARIA} onClick={onClose} />
                     </div>
                 </header>
 

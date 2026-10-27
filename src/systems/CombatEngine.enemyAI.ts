@@ -4,6 +4,7 @@ import { CLASSES } from '../data/classes.js';
 import type { FullStats, Monster, Player, Relic, RelicDotScope, RelicSynergy, StatusId } from '../types/index.js';
 import { getRelicDotMult } from './CombatEngine.actions.js';
 import type { LootLog } from './CombatEngine.loot.js';
+import { ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE } from '../data/logBadge.js';
 import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, getPlayerStatusStacks, getStatusStackMult, isEnemyBlindActive, isEnemyTauntActive } from './CombatEngine.status.js';
 import { getEnemyAttackElement, getEquipmentResistMult } from '../utils/equipmentPassives.js';
 import {
@@ -177,7 +178,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         const perHit = enemyHitAfterDefense((result.updatedEnemy.atk ?? 0) * summon.hitMult, stats.def);
         const total = applyIncomingDamageMods(perHit * summons, result.updatedEnemy, result.updatedPlayer, stats, logs, { elemental: false, quiet: true });
         const protectedResult = this.applyFatalProtection(result.updatedPlayer, stats.relics || [], total, logs, stats.activeSynergies || []);
-        logs.push({ type: 'warning', text: MSG.ENEMY_SUMMON_HIT(summon.name, summons, total) });
+        logs.push({ type: ENEMY_ACTION_LOG_TYPE, text: MSG.ENEMY_SUMMON_HIT(summon.name, summons, total) });
         return {
             ...result,
             updatedPlayer: protectedResult.updatedPlayer,
@@ -194,7 +195,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         const raw = (enemy.atk ?? 0) * counter.mult * getEnemyDebuffAtkMult(enemy) * (1 + getLongFightEnrageBonus(enemy));
         const damage = applyIncomingDamageMods(enemyHitAfterDefense(raw, stats.def), enemy, player, stats, logs);
         const protectedResult = this.applyFatalProtection(player, stats.relics || [], damage, logs, stats.activeSynergies || []);
-        logs.push({ type: 'critical', text: MSG.ENEMY_GUARD_COUNTER_HIT(enemy.name, damage) });
+        logs.push({ type: ENEMY_HEAVY_LOG_TYPE, text: MSG.ENEMY_GUARD_COUNTER_HIT(enemy.name, damage) });
         return {
             updatedPlayer: protectedResult.updatedPlayer,
             updatedEnemy: enemy,
@@ -326,7 +327,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
                 updatedEnemy,
                 damage: 0,
                 isDead: false,
-                logs: [...logs, { type: 'info', text: MSG.COMBAT_ENEMY_STUNNED(enemy.name) }]
+                logs: [...logs, { type: ENEMY_ACTION_LOG_TYPE, text: MSG.COMBAT_ENEMY_STUNNED(enemy.name) }]
             };
         }
 
@@ -343,7 +344,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         if (!breathTurn && roll < pattern.guardChance) {
             let guardEnemy: Monster = { ...updatedEnemy, guarding: true };
             const guardLogs: LootLog[] = [...logs, {
-                type: 'warning',
+                type: ENEMY_ACTION_LOG_TYPE,
                 // Wave 59 "강한 카운터" — 반격하는 보스는 방어 자세가 곧 반격 자세다(지금 공격하면 반격당한다).
                 text: mechanics?.guardCounter
                     ? MSG.ENEMY_GUARD_COUNTER_STANCE(updatedEnemy.name)
@@ -356,7 +357,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
                 const before = guardEnemy.hp ?? 0;
                 const healed = Math.min(maxHp, before + Math.max(1, Math.floor(maxHp * healRatio)));
                 guardEnemy = { ...guardEnemy, hp: healed };
-                guardLogs.push({ type: 'warning', text: MSG.ENEMY_GUARD_HEAL(guardEnemy.name, healed - before) });
+                guardLogs.push({ type: ENEMY_ACTION_LOG_TYPE, text: MSG.ENEMY_GUARD_HEAL(guardEnemy.name, healed - before) });
             }
             return {
                 updatedPlayer,
@@ -585,7 +586,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             isEnemyDead: !protectedResult.isDead && (finalEnemy.hp ?? 0) <= 0,
             isCrit: heavyResolved,
             logs: [...logs, {
-                type: heavyResolved || breathTurn ? 'critical' : 'warning',
+                type: heavyResolved || breathTurn ? ENEMY_HEAVY_LOG_TYPE : ENEMY_ACTION_LOG_TYPE,
                 text: breathTurn
                     ? MSG.ENEMY_BREATH_HIT(updatedEnemy.name, enemyDmg)
                     : heavyResolved
@@ -617,7 +618,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             damage: enemyDmg,
             logs: [
                 { type: 'error', text: MSG.ESCAPE_FAIL },
-                { type: 'warning', text: MSG.ESCAPE_FAIL_DMG(enemy.name, enemyDmg) }
+                { type: ENEMY_ACTION_LOG_TYPE, text: MSG.ESCAPE_FAIL_DMG(enemy.name, enemyDmg) }
             ]
         };
     },

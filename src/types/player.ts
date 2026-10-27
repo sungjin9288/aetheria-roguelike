@@ -407,10 +407,14 @@ interface WeeklyProtocol {
     claimed?: string[];
 }
 
-// 2026-09 B3 stage 2: 임의 문자열 키를 허용하던 인덱스 시그니처 제거 — 설정 키는 이 2개가 전부다.
+// 2026-09 B3 stage 2: 임의 문자열 키를 허용하던 인덱스 시그니처 제거 — 설정 키는 아래가 전부다.
+// 2026-10-26 소유자 결정 D3 · D23: 진동 · 한 글자 단축키는 기본 켬인 선택 필드다(없으면 켬 — `utils/playerSettings.ts`가 읽는다,
+//   DATA_VERSION을 올리지 않는다).
 interface PlayerSettings {
     readabilityMode?: 'standard' | 'high' | string;
     equipmentDetailMode?: 'auto' | 'summary' | 'full' | string;
+    hapticsEnabled?: boolean;
+    keyboardShortcutsEnabled?: boolean;
 }
 
 export interface ExpeditionInventoryCheckpoint {

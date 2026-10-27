@@ -78,7 +78,7 @@ test('slice 30 → GF-01: 적 강타가 기록 꼬리인 차례 — 예전 판�
             payload: { kind: 'attack', expectedTurn: 0, seed, now: 1_700_000_000_000 },
         });
         const logs = next.logs.slice(base.logs.length);
-        const tailSaysCrit = logs[logs.length - 1].type === 'critical';
+        const tailSaysCrit = logs[logs.length - 1].type === 'enemy-heavy'; // D25: 적 강타 줄의 종류
         const playerCrit = logs[0].type === 'critical';
         if (!tailSaysCrit || playerCrit) continue;
         checked += 1;

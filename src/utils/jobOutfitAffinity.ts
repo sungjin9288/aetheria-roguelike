@@ -88,7 +88,7 @@ export const getJobOutfitNextHint = (
     if (matchCount === 2) return MSG.OUTFIT_NEXT_STEP_HINT(MSG.OUTFIT_STAGE_FULL, formatOutfitBonus(FULL_OUTFIT_BONUS));
     return twoHandCounted
         ? '풀세트 발동 — 양손 무기 2피스와 방어구 매치 완료'
-        : '풀세트 발동 — 모든 슬롯 매치 완료';
+        : '풀세트 발동 — 모든 칸 매치 완료';
 };
 
 /**
@@ -186,7 +186,7 @@ export const getJobOutfitAffinity = (player: Player): OutfitAffinity => {
 
 /**
  * 직업 세트 카탈로그 — items DB에서 해당 직업 호환 장비 추출.
- * 각 슬롯별 후보를 tier → price 오름차순 정렬 (초급 → 고급).
+ * 각 칸별 후보를 tier → price 오름차순 정렬 (초급 → 고급).
  */
 export const getJobSetCatalog = (job: string | undefined | null, items: ItemsDb | undefined | null): SetCatalog => {
     const empty: SetCatalog = { weapon: [], armor: [], offhand: [] };

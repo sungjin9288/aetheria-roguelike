@@ -275,6 +275,22 @@ test('VD-02: 전투 조작판에 내 생명 · 기력 막대가 있고 실효 �
     assert.ok(vitalsAt < html.indexOf('combat-action-attack'), '행동 단추 위에 있다');
 });
 
+test('D9: 화면 낭독기는 생명 · 기력을 막대(meter)에서 한 번만 읽는다 — 보이는 이름 · 값 글자는 숨긴다', () => {
+    // 소유자 결정 D9(2026-10-26). 상태 표시줄의 전투 중 사본은 desktop-game-layout 테스트가 지킨다.
+    const html = renderStatic(createElement(CombatVitalsStrip, { hp: 50, maxHp: 100, mp: 10, maxMp: 40 }));
+    for (const [label, valueText] of [[MSG.COMBAT_VITALS_HP, '50/100'], [MSG.COMBAT_VITALS_MP, '10/40']]) {
+        assert.ok(html.includes(`role="meter" aria-label="${label}"`), `${label} 막대가 이름으로 읽힌다`);
+        assert.ok(html.includes(`aria-valuetext="${valueText}"`), `${label} 막대가 값을 읽는다`);
+    }
+    // aria-hidden 칸을 걷어 낸 나머지 글자에는 이름 · 값이 남지 않는다(남으면 같은 사실을 두세 번 읽는다).
+    const spoken = html
+        .replace(/<span aria-hidden="true"[^>]*>[^<]*<\/span>/g, '')
+        .replace(/<[^>]+>/g, ' ');
+    for (const text of [MSG.COMBAT_VITALS_HP, MSG.COMBAT_VITALS_MP, '50/100', '10/40']) {
+        assert.ok(!spoken.includes(text), `막대 밖에서 '${text}'를 다시 읽지 않는다`);
+    }
+});
+
 test('GF-05: 맞은 순간 · 회복한 순간은 App의 피해 번쩍임 상태를 그대로 읽는다', () => {
     const base = { hp: 50, maxHp: 100, mp: 10, maxMp: 40 };
     const hit = renderStatic(createElement(CombatVitalsStrip, { ...base, damageFlash: true }));

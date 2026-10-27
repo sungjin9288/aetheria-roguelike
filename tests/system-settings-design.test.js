@@ -48,21 +48,22 @@ const buildFixture = (overrides = {}) => {
     return { player, stats, actions, runtime };
 };
 
-test('설정 화면은 플레이 설정 → 장기 성장 → 기타 순으로 배치되고, 장기 성장에는 에테르 거울/교환소 링크가 있다', () => {
+test('설정 화면은 플레이 설정 → 기타 순이고, 장기 성장 칸(에테르 거울 · 교환소 · 보유 유물)은 없다', () => {
+    // 소유자 결정 2026-10-26 D2(UX-04): 교환소는 마을 시설로, 보유 유물은 능력치 탭으로 옮겼다.
+    //   에테르 거울은 이미 마을 시설과 계승 화면에 있어 이 칸의 세 번째 진입점을 지웠다.
     const { player, stats, actions, runtime } = buildFixture();
     const html = renderStatic(createElement(SystemTab, { player, actions, stats, runtime }));
 
     const playerSettings = html.indexOf('data-testid="system-player-settings"');
-    const growthLinks = html.indexOf('data-testid="system-growth-links"');
     const secondaryTools = html.indexOf('data-testid="system-secondary-tools"');
 
     assert.ok(playerSettings >= 0, '플레이 설정 섹션이 렌더된다');
-    assert.ok(growthLinks > playerSettings, '장기 성장이 플레이 설정 다음에 온다');
-    assert.ok(secondaryTools > growthLinks, '기타(부가 도구)가 장기 성장 다음에 온다');
+    assert.ok(secondaryTools > playerSettings, '기타(부가 도구)가 플레이 설정 다음에 온다');
     assert.ok(html.includes('플레이 설정'));
-    assert.ok(html.includes('장기 성장'));
-    assert.ok(html.includes('에테르 거울'));
-    assert.ok(html.includes('에테르 교환소'));
+    for (const testId of ['system-growth-links', 'open-mirror-panel', 'open-crystal-exchange', 'system-relic-section', 'system-relic-list']) {
+        assert.ok(!html.includes(`data-testid="${testId}"`), `${testId}는 설정 탭에 없다`);
+    }
+    assert.ok(!html.includes('장기 성장'));
 });
 
 test('칭호 선택: 현재 적용 중인 칭호의 실제 라벨/패시브 설명이 먼저 보이고, 나머지는 기본 접힌 details다', () => {
@@ -82,7 +83,6 @@ test('칭호 선택: 현재 적용 중인 칭호의 실제 라벨/패시브 설�
 
     for (const testId of [
         'system-title-picker',
-        'system-relic-list',
         'system-online-records',
         'system-feedback',
         'system-support-tools',

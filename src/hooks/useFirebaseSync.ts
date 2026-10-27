@@ -143,6 +143,8 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
     const pendingCloudRecordRef = useRef<GameSaveRecord | null>(null);
     const cloudRevisionFloorRef = useRef(0);
     const cloudRevisionAdvanceRequiredRef = useRef(false);
+    // 소유자 결정 D35: 이 세션에서 마지막으로 보낸 순위표 값 — 같으면 순위표 쓰기를 건너뛴다(세이브 문서 쓰기는 그대로).
+    const lastLeaderboardEntryKeyRef = useRef<string | null>(null);
 
     const flushLocalSave = useCallback(async (): Promise<GameSaveRecord | null> => {
         if ((mockMode && !deviceQaMode) || !player?.name) return null;
@@ -564,6 +566,7 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
                 pendingCloudRecord: pendingCloudRecordRef,
                 cloudRevisionFloor: cloudRevisionFloorRef,
                 cloudRevisionAdvanceRequired: cloudRevisionAdvanceRequiredRef,
+                lastLeaderboardEntryKey: lastLeaderboardEntryKeyRef,
             },
         });
 

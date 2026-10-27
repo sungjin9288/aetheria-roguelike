@@ -162,11 +162,14 @@ test('캐릭터 카드: 공격력 · 방어력과 세 장비 칸 — 양손 무�
     assert.ok(html.includes(MSG.OUTFIT_SET_TWO_HAND_SLOT), '양손 무기면 보조 칸은 함께 쓴다고 말한다');
 });
 
-test('전투 상태 카드: 내 생명 · 기력 글은 조작판 막대와 겹치지 않게 화면 낭독기에만 — 처치 순간에는 보인다', () => {
+test('전투 상태 카드: 내 생명 · 기력 글은 조작판 막대와 겹치지 않게 그리지 않는다(화면 낭독기에도) — 처치 순간에는 보인다', () => {
+    // 소유자 결정 D9(2026-10-26): 전투 중 생명 · 기력은 조작판 막대(meter)가 한 번만 읽는다 — 화면 낭독기 전용 사본도 없다.
     const player = makePlayerFixture({ name: '시험 모험가' });
-    const fighting = renderStatic(createElement(StatusBar, { player, enemy: eliteEnemy(), placement: 'bar' }));
-    assert.match(fighting, /data-testid="status-combat-vitals" data-vitals-visible="false" class="sr-only"/);
-    assert.ok(fighting.includes('기력'), '낭독기용 글은 남는다');
+    for (const placement of ['bar', 'column']) {
+        const fighting = renderStatic(createElement(StatusBar, { player, enemy: eliteEnemy(), placement }));
+        assert.ok(!fighting.includes('status-combat-vitals'), `${placement}: 전투 중 상태 카드에 생명 · 기력 줄이 없다`);
+        assert.ok(!fighting.includes(MSG.SHELL_WILL), `${placement}: 기력 글이 화면 낭독기에도 두 번째로 읽히지 않는다`);
+    }
 
     const defeated = renderStatic(createElement(StatusBar, { player, enemy: { ...eliteEnemy(), hp: 0 }, enemyDefeated: true, placement: 'bar' }));
     assert.match(defeated, /data-testid="status-combat-vitals" data-vitals-visible="true" class="mt-1 /);

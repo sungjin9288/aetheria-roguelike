@@ -75,9 +75,9 @@ test('vite.config.js가 SDK 빌드 대상 플러그인을 쓰고, 플러그인�
 
 test('대역은 앱이 쓰는 SDK 표면과 같은 이름을 내고, 부르면 던진다 — 지원 여부만 false', () => {
     assert.deepEqual(Object.keys(tossSdkUnavailable).sort(), Object.keys(tossSdk).sort());
-    assert.equal(Object.keys(tossSdk).length, 7);
+    assert.equal(Object.keys(tossSdk).length, 8);
 
-    const { Environment, Storage, SafeArea, Screen, graniteEvent, loadFullScreenAd, showFullScreenAd } = tossSdkUnavailable;
+    const { Environment, Storage, SafeArea, Screen, generateHapticFeedback, graniteEvent, loadFullScreenAd, showFullScreenAd } = tossSdkUnavailable;
     const calls = [
         () => Environment.environment,
         () => Environment.deploymentId,
@@ -87,6 +87,7 @@ test('대역은 앱이 쓰는 SDK 표면과 같은 이름을 내고, 부르면 �
         () => SafeArea.get(),
         () => SafeArea.subscribe({ onEvent: () => {} }),
         () => Screen.close(),
+        () => generateHapticFeedback({ type: 'tap' }),
         () => graniteEvent.addEventListener('backEvent', { onEvent: () => {} }),
         () => loadFullScreenAd({ onEvent: () => {}, onError: () => {} }),
         () => showFullScreenAd({ onEvent: () => {}, onError: () => {} }),

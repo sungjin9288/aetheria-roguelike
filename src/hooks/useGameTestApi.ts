@@ -23,6 +23,7 @@ import { BAG_RECIPES } from '../data/bagRecipes';
 import { MIRROR_NODES } from '../data/mirror';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { RELICS } from '../data/relics';
+import { isSignatureItem } from '../data/signatureItems';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
@@ -406,10 +407,17 @@ export interface AetheriaTestApi {
     seedActiveBountyPresentationScenario: () => void;
     seedExpeditionMissionLoadoutScenario: () => void;
     seedCombatFocusScenario: (bossMode: boolean) => boolean;
+    /**
+     * 소유자 결정 2026-10-26 D1: 지금 지역에서 한 번 치면 쓰러지는 일반 적과 싸우는 중으로 만든다 — 생명 · 기력은 실효 최대치,
+     * 경험은 0(레벨이 오르지 않는다), 가방은 앞의 다섯 칸만 남긴다(가득 차지 않는다). 첫 공격의 승리가 접힌 결과 카드다.
+     */
+    seedSwiftVictoryScenario: () => boolean;
     seedCombatSkillReadinessScenario: (mp: number) => boolean;
     seedAvatarScenario: (preset: string) => boolean;
     injectPostCombatResult: () => void;
     injectRelicChoice: () => boolean | undefined;
+    /** 2026-10-26 D24: 가방에 전설 각인 무기 하나를 넣고 그 이름을 돌려준다 — 전설 획득 알림(초점을 옮기지 않는 상태 알림) e2e 시드. */
+    injectLegendaryAcquisition: () => string | false;
     injectUndyingRelicChoice: () => void;
     /** Wave 30: 유물 상한(현재 rank)을 채운 채 유물 하나를 제안한다 — 교체 패널 e2e 시드. */
     injectRelicReplaceChoice: () => RelicReplaceChoiceSeed | false;
@@ -1787,6 +1795,34 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
                 return true;
             },
+            seedSwiftVictoryScenario: () => {
+                const er = engineRef.current;
+                const species = er.player.loc ? DB.MAPS[er.player.loc]?.monsters?.[0] : undefined;
+                if (er.gameState !== GS.IDLE || !species) return false;
+                const scenarioPlayer = { ...er.player, exp: 0, inv: (er.player.inv || []).slice(0, 5) };
+                const fullStats = calculateFullStats(scenarioPlayer)!;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: { exp: 0, inv: scenarioPlayer.inv, hp: fullStats.maxHp, mp: fullStats.maxMp },
+                });
+                er.dispatch({
+                    type: AT.SET_ENEMY,
+                    payload: {
+                        name: species,
+                        baseName: species,
+                        level: 1,
+                        hp: 1,
+                        maxHp: 1,
+                        atk: 1,
+                        def: 0,
+                        exp: 1,
+                        gold: 1,
+                        pattern: { heavyChance: 0, guardChance: 0 },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
+            },
             seedCombatSkillReadinessScenario: (mp: number) => {
                 const er = engineRef.current;
                 if (er.gameState !== GS.COMBAT || !er.enemy) return false;
@@ -1843,6 +1879,8 @@ export const useGameTestApi = (
                     enemyResistance: null,
                     bossRewardHint: null,
                     bossClearBonus: 0,
+                    // 소유자 결정 D1: 이 시드는 판단할 거리(장비 갱신 · 성향 공명)를 든 원래 카드다 — 한 행동 처치가 아니다.
+                    swift: false,
                 };
                 const seed: Partial<PostCombatResult> = {
                     enemy: '테스트 골렘',
@@ -1860,6 +1898,17 @@ export const useGameTestApi = (
                     type: AT.SET_POST_COMBAT_RESULT,
                     payload: { ...defaults, ...seed } as PostCombatResult,
                 });
+            },
+            injectLegendaryAcquisition: () => {
+                const er = engineRef.current;
+                const signatureWeapon = DB.ITEMS.weapons.find((item) => isSignatureItem(item));
+                if (!signatureWeapon) return false;
+                const item = { ...signatureWeapon, id: `e2e-legendary-${Date.now()}` };
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (player: Player) => ({ ...player, inv: [...(player.inv || []), item] }),
+                });
+                return signatureWeapon.name ?? false;
             },
             injectRelicChoice: () => {
                 const er = engineRef.current;

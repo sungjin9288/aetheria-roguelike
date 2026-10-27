@@ -25,6 +25,14 @@ export const getCombatBeatTiming = (reducedMotion: boolean): CombatBeatTiming =>
     shakeMs: BALANCE.COMBAT_SHAKE_MS,
 });
 
+/**
+ * 내 치명타 금빛이 끝나는 시각 — 적 반격(붉은 비네트)이 오기 전에 끝난다.
+ * D20(소유자 결정 2026-10-26)으로 반격 박자(300ms)가 비네트 길이(320ms)보다 짧아져, 두 색이 겹치지 않도록 반격 박자에서 자른다.
+ */
+export const getCritPulseEndMs = (timing: CombatBeatTiming, counterDelayMs: number): number => (
+    counterDelayMs > 0 ? Math.min(timing.pulseMs, counterDelayMs) : timing.pulseMs
+);
+
 /** 내가 적을 맞혔고 적이 그 뒤에 행동한 차례만 박자를 나눈다 — 앞의 연출(적 피격)이 없으면 기다릴 이유가 없다. */
 export const isCounterStaggered = (feedback: CombatFeedback | null | undefined): boolean => Boolean(
     feedback

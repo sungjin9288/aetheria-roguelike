@@ -1,17 +1,18 @@
 import { expect, test, type Page } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { openTownFacilities, startE2ERun } from './testHelpers';
 
 const openExchange = async (page: Page, balance: number) => {
     await page.evaluate((amount) => window.__AETHERIA_TEST_API__?.seedCrystalExchangeScenario?.(amount), balance);
-    await expect(page.getByTestId('open-crystal-exchange')).toBeVisible({ timeout: 8_000 });
-    await page.getByTestId('open-crystal-exchange').click();
+    // 소유자 결정 2026-10-26 D2: 교환소는 마을 시설에서 연다.
+    await openTownFacilities(page);
+    await page.getByTestId('control-crystal-exchange').click();
     await expect(page.getByTestId('premium-shop')).toBeVisible();
 };
 
 test.describe('에테르 교환소', () => {
     test.beforeEach(async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
-        await startE2ERun(page, { openStatusConsole: true });
+        await startE2ERun(page);
     });
 
     test('작은 화면에서 상품 변화와 실제 획득처를 읽을 수 있다', async ({ page }) => {

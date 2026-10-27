@@ -44,6 +44,8 @@ const STABLE_OWNED = [
     'setActiveTitle',
     'setReadabilityMode',
     'setEquipmentDetailMode',
+    'setHapticsEnabled',
+    'setKeyboardShortcutsEnabled',
     'dismissEvent',
     'setQuickSlot',
     'clearPostCombat',

@@ -2593,16 +2593,18 @@ import { readFile } from 'node:fs/promises';
       const profile = getEnemyTacticalProfile(enemy, { def: 10 });
       assert.ok(profile, 'getEnemyTacticalProfile 정상 반환');
       // 12 dead 필드 모두 제거됨.
+      // 소유자 결정 D32(2026-10-26): 읽는 곳 없는 추천 문구 hint · entryHint · phaseHint도 함께 지웠다.
       const deadFields = [
           'role', 'tier', 'guardChance', 'heavyChance', 'estimatedHit', 'estimatedHeavy',
           'weakness', 'resistance', 'rewardHint', 'warningChips', 'recommendedBuilds', 'phaseTriggered',
+          'hint', 'entryHint', 'phaseHint',
       ];
       deadFields.forEach((field) => {
           assert.equal(profile[field], undefined, `dead field '${field}' 제거됨`);
       });
   });
 
-  test('cycle 270: 사용 필드 5종 유지 (회귀 가드)', async () => {
+  test('cycle 270: 사용 필드 유지 (회귀 가드) — 보스 카드가 읽는 signature · counterHint 두 가지뿐', async () => {
       const { getEnemyTacticalProfile } = await import('../src/utils/runProfile.js');
       const enemy = {
           name: 'TestBoss', baseName: 'TestBoss', isBoss: true,
@@ -2610,16 +2612,11 @@ import { readFile } from 'node:fs/promises';
           pattern: { guardChance: 0.2, heavyChance: 0.3 },
       };
       const profile = getEnemyTacticalProfile(enemy, { def: 10 });
-      // hint는 항상 정의됨 (heavyChance 30% 임계로 텍스트 결정).
-      assert.ok(typeof profile.hint === 'string', 'hint 필드 유지');
-      // 나머지 4종은 BOSS_BRIEFS 매칭 시에만 정의됨 — 가상 보스라 null 가능.
-      assert.ok('entryHint' in profile, 'entryHint 필드 키 유지');
-      assert.ok('phaseHint' in profile, 'phaseHint 필드 키 유지');
-      assert.ok('signature' in profile, 'signature 필드 키 유지');
-      assert.ok('counterHint' in profile, 'counterHint 필드 키 유지');
+      // BOSS_BRIEFS 매칭 시에만 값이 있다 — 가상 보스라 null.
+      assert.deepEqual(Object.keys(profile).sort(), ['counterHint', 'signature']);
   });
 
-  test('cycle 270: 실제 BOSS_BRIEFS 매칭 보스에서 5 필드 동작', async () => {
+  test('cycle 270: 실제 BOSS_BRIEFS 매칭 보스에서 두 필드 동작', async () => {
       const { getEnemyTacticalProfile } = await import('../src/utils/runProfile.js');
       const enemy = {
           name: '화염의 군주', baseName: '화염의 군주', isBoss: true,
@@ -2627,7 +2624,6 @@ import { readFile } from 'node:fs/promises';
           pattern: { guardChance: 0.2, heavyChance: 0.3 },
       };
       const profile = getEnemyTacticalProfile(enemy, { def: 10 });
-      assert.ok(profile.entryHint, '화염의 군주 entryHint 정의');
       assert.ok(profile.signature, '화염의 군주 signature 정의');
       assert.ok(profile.counterHint, '화염의 군주 counterHint 정의');
   });

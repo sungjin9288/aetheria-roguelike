@@ -1,4 +1,4 @@
-import type { Item, Monster, MonsterPattern, Quest } from '../types/index.js';
+import type { Item, Monster, Quest } from '../types/index.js';
 import { BOSS_BRIEFS } from '../data/monsters.js';
 import { MSG } from '../data/messages.js';
 import type { FullStats, Player } from "../types/index.js";
@@ -476,29 +476,13 @@ export const getEnemyTacticalProfile = (enemy: Monster, stats: FullStats | null 
     if (!enemy) return null;
     void stats; // cycle 270: stats 파라미터는 estimatedHit/estimatedHeavy 계산용이었으나 dead — 시그니처 호환 보존.
 
-    const pattern: Partial<MonsterPattern> = enemy.pattern || {};
-    const guardChance = Math.max(0, Math.round((pattern.guardChance || 0) * 100));
-    const heavyChance = Math.max(0, Math.round((pattern.heavyChance || 0) * 100));
     const bossBrief = enemy.isBoss ? BOSS_BRIEFS[(enemy.baseName || enemy.name) as string] : null;
-    const rawPhaseHint = bossBrief?.phaseHint || (enemy.isBoss && enemy.phase2 ? '생명 50% 이하에서 2페이즈로 전환됩니다.' : null);
-    const phaseHint = rawPhaseHint && enemy.isBoss && enemy.phase2 && !rawPhaseHint.includes('50%')
-        ? `${rawPhaseHint} (전환 기준 생명 50%)`
-        : rawPhaseHint;
-    const hint = heavyChance >= 30
-        ? '강타 비중이 높습니다. 방어/회복 타이밍을 아껴두는 편이 좋습니다.'
-        : guardChance >= 30
-            ? '방어 빈도가 높습니다. 큰 기술은 방어 자세가 풀린 뒤에 쓰는 편이 좋습니다.'
-            : '공격 패턴이 고른 편입니다. 안정적인 교전이 유리합니다.';
 
-    // cycle 270: 12 dead 필드 제거 (role/tier/guardChance/heavyChance/estimatedHit/estimatedHeavy/
-    //   weakness/resistance/rewardHint/warningChips/recommendedBuilds/phaseTriggered) — dispatch 0건.
-    //   사용 5종만 반환 (cycle 245 hint/entryHint/phaseHint, cycle 269 signature/counterHint).
+    // cycle 270: 12 dead 필드 제거. 소유자 결정 D32(2026-10-26): 추천 문구 hint · entryHint · phaseHint도 읽는 곳이 없어 지웠다
+    //   (2026-10 감사 CL-06이 그 줄을 그리던 bossBriefLine을 지운 뒤) — 보스 카드가 읽는 기믹 · 공략 요령 두 가지만 남는다.
     return {
-        hint,
-        entryHint: bossBrief?.entryHint || null,
         signature: bossBrief?.signature || null,
         counterHint: bossBrief?.counterHint || null,
-        phaseHint,
     };
 };
 

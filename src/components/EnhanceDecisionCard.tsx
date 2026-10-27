@@ -39,7 +39,7 @@ const EnhanceDecisionCard = ({ preview, onCancel, onConfirm }: EnhanceDecisionCa
             data-testid="enhance-decision-overlay"
             className="fixed inset-0 z-[76] flex items-center justify-center px-3 py-[max(var(--aether-safe-area-top),0.5rem)] pb-[max(var(--aether-safe-area-bottom),0.5rem)]"
         >
-            <button type="button" aria-label="강화 확인 닫기" onClick={onCancel} className="ae-scrim" />
+            <button type="button" aria-label={MSG.ENHANCE_DECISION_CLOSE_ARIA} onClick={onCancel} className="ae-scrim" />
             {/* 2026-10 에테르 유리: 겹침 셸은 .ae-scrim + .ae-sheet 하나, 닫기는 OverlayCloseButton 하나(VD-10), 확정은 금빛 주 행동 하나. */}
             <Motion.section
                 initial={{ opacity: 0, y: 12 }}
