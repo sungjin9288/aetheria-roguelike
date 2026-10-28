@@ -187,8 +187,8 @@ const EVENT_GEMINI_JSON = {
     ]
 };
 
-const runProxy = async ({ body, rawBody, uid = 'uid-clamp', geminiStatus = 200, geminiErrorText = '', geminiJson = EVENT_GEMINI_JSON }) => {
-    const seen = { geminiCalls: 0, prompt: null };
+const runProxy = async ({ body, rawBody, uid = 'uid-clamp', geminiStatus = 200, geminiErrorText = '', geminiJson = EVENT_GEMINI_JSON, geminiParts = null }) => {
+    const seen = { geminiCalls: 0, prompt: null, geminiUrl: null, geminiHeaders: null, geminiRequest: null };
     const response = await withMockedFetch(
         async (url, init) => {
             const urlStr = String(url);
@@ -197,12 +197,15 @@ const runProxy = async ({ body, rawBody, uid = 'uid-clamp', geminiStatus = 200, 
             }
             if (urlStr.includes(GEMINI_HOST)) {
                 seen.geminiCalls += 1;
-                seen.prompt = JSON.parse(init.body).contents[0].parts[0].text;
+                seen.geminiUrl = urlStr;
+                seen.geminiHeaders = init.headers;
+                seen.geminiRequest = JSON.parse(init.body);
+                seen.prompt = seen.geminiRequest.contents[0].parts[0].text;
                 if (geminiStatus !== 200) {
                     return new Response(geminiErrorText, { status: geminiStatus });
                 }
                 return new Response(JSON.stringify({
-                    candidates: [{ content: { parts: [{ text: JSON.stringify(geminiJson) }] } }]
+                    candidates: [{ content: { parts: geminiParts ?? [{ text: JSON.stringify(geminiJson) }] } }]
                 }), { status: 200 });
             }
             throw new Error(`Unexpected fetch call: ${urlStr}`);
@@ -382,4 +385,57 @@ test('ai-proxy: Gemini 5xx는 500으로 접히고 상류 오류 본문을 노출
     const json = JSON.parse(raw);
     assert.equal('details' in json, false, '500 응답에 details 키가 없다');
     assert.equal(json.error, 'Internal server error');
+});
+
+// 2026-10 — 프롬프트의 계정 식별자 · 종료된 모델 (원장 §152.2 · §156). 프롬프트는 Google로 나가는 외부 전송이라
+// 모델이 쓰지 않는 계정 식별자를 싣지 않는다. 키는 주소가 아니라 머리글로 보낸다.
+const PROXY_UID = 'uid-must-not-reach-gemini-7f3a';
+
+test('ai-proxy: event · story 프롬프트에 계정 식별자가 없다', async () => {
+    const event = await runProxy({
+        uid: PROXY_UID,
+        body: { type: 'event', data: { location: '고요한 숲', history: [], playerSnapshot: { name: '용사' }, mapSnapshot: {}, uid: PROXY_UID } }
+    });
+    const story = await runProxy({
+        uid: PROXY_UID,
+        geminiJson: { narrative: '바람이 불었다.' },
+        body: { type: 'story', data: { storyType: 'victory', context: '승리', history: [], playerSnapshot: { name: '용사' }, uid: PROXY_UID } }
+    });
+    for (const { response, geminiCalls, geminiRequest } of [event, story]) {
+        assert.equal(response.status, 200);
+        assert.equal(geminiCalls, 1);
+        const sent = JSON.stringify(geminiRequest);
+        assert.ok(!sent.includes(PROXY_UID), 'Gemini 요청 본문 어디에도 계정 식별자가 없다');
+        assert.ok(!sent.includes('UID'), '프롬프트에 UID 줄이 없다');
+    }
+});
+
+test('ai-proxy: 지금 모델 · 생각 수준 · 키 머리글로 Gemini를 부른다', async () => {
+    const { response, geminiUrl, geminiHeaders, geminiRequest } = await runProxy({
+        body: { type: 'event', data: { location: '고요한 숲', history: [], playerSnapshot: { name: '용사' }, mapSnapshot: {} } }
+    });
+    assert.equal(response.status, 200);
+    const url = new URL(geminiUrl);
+    assert.equal(url.pathname, '/v1beta/models/gemini-3.5-flash-lite:generateContent');
+    assert.equal(url.search, '', '키가 주소에 실리지 않는다');
+    assert.equal(geminiHeaders['x-goog-api-key'], PROXY_ENV.GEMINI_API_KEY);
+    const config = geminiRequest.generationConfig;
+    assert.equal(config.thinkingConfig.thinkingLevel, 'minimal');
+    assert.equal('thinkingBudget' in config.thinkingConfig, false, '생각 수준과 예전 생각 예산을 함께 보내면 400이다');
+    assert.equal('temperature' in config, false, 'Gemini 3는 기본 온도를 권한다');
+    assert.ok(config.maxOutputTokens >= 1_024, '생각 토큰이 출력 상한에 들어가므로 이벤트 JSON이 잘리지 않을 여유를 둔다');
+    assert.equal(config.responseMimeType, 'application/json');
+});
+
+test('ai-proxy: 응답의 생각 조각은 건너뛰고 답 조각만 읽는다', async () => {
+    const { response } = await runProxy({
+        geminiParts: [
+            { text: '먼저 지역을 떠올려 본다…', thought: true },
+            { text: JSON.stringify(EVENT_GEMINI_JSON) }
+        ],
+        body: { type: 'event', data: { location: '고요한 숲', history: [], playerSnapshot: { name: '용사' }, mapSnapshot: {} } }
+    });
+    assert.equal(response.status, 200);
+    const json = await response.json();
+    assert.equal(json.data.desc, EVENT_GEMINI_JSON.desc);
 });

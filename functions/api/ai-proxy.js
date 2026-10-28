@@ -32,6 +32,16 @@ const CLAMP_STORY_CONTEXT = 300;
 const CLAMP_STORY_TYPE = 24;
 const MAX_PROMPT_LEVEL = 99;
 
+// 2026-10 — 모델 · 생성 설정. `gemini-1.5-flash`는 Google의 모델 목록 · 종료 표에서 사라진 지 오래다(1.5 계열 종료 공지
+// 2025-09) — AI를 켜면 모든 호출이 상류 오류로 폴백에 떨어졌다. 짧은 이벤트 · 내레이션에는 3.5 Flash-Lite가 맞다(Google이
+// 새 프로젝트에 권하는 둘 중 빠르고 싼 쪽, 종료 일정 없음 — ai.google.dev/gemini-api/docs/deprecations, 2026-10-28 확인).
+// Gemini 3 계열은 생각이 기본으로 켜져 있고 생각 토큰도 출력 상한(`maxOutputTokens`)에 들어간다 — 생각 수준을 가장 낮은
+// `minimal`로 두고(이 모델의 기본값과 같지만 명시한다) 상한은 이벤트 JSON이 잘리지 않을 만큼 둔다. 온도는 Gemini 3 권장대로
+// 기본값(1.0)이다 — 낮추면 반복 · 품질 저하가 날 수 있다고 안내한다.
+const GEMINI_MODEL = 'gemini-3.5-flash-lite';
+const GEMINI_THINKING_LEVEL = 'minimal';
+const GEMINI_MAX_OUTPUT_TOKENS = 1_024;
+
 const clampText = (value, max) => {
     if (value === null || value === undefined) return '';
     const text = typeof value === 'string' ? value : String(value);
@@ -189,7 +199,8 @@ const stringifyCompact = (value, limit = 700) => {
     return text.length > limit ? `${text.slice(0, limit)}...` : text;
 };
 
-const buildGeminiPayload = (type, data, uid) => {
+// 프롬프트에는 계정 식별자를 넣지 않는다 — 모델은 그것을 쓰지 않고, 외부 서비스로 보내는 개인정보만 늘린다(처리방침 근거 §152.2).
+const buildGeminiPayload = (type, data) => {
     let systemInstruction = "";
     let prompt = "";
     let schema = null;
@@ -225,7 +236,6 @@ const buildGeminiPayload = (type, data, uid) => {
 플레이어 상태:
 ${playerContext}
 최근 사건 요약: ${stringifyCompact(data.history || [], 700)}
-UID: ${uid}
 주의사항:
 - 최근 사건과 동일한 연출, 동일한 보상 패턴은 피할 것
 - 선택지 2~3개는 성격이 달라야 함 (신중/공격적/회피 등)
@@ -311,8 +321,7 @@ UID: ${uid}
         systemInstruction = "당신은 판타지 RPG 내레이터입니다. 주어진 상황을 한국어 1~2문장으로 묘사하되, 최근 사건과 어조를 반복하지 말고 현장감 있게 서술하세요. 보스 전환은 듀라운, 퀴스트 완료는 성취감, 사망 후회고는 비장미로 서술하세요.";
         prompt = `상황: ${context}
 예전 사건 요약: ${stringifyCompact(data.history || [], 700)}
-플레이어 정보: ${stringifyCompact(data.playerSnapshot || {}, 400)}
-UID: ${uid}`;
+플레이어 정보: ${stringifyCompact(data.playerSnapshot || {}, 400)}`;
 
         schema = {
             type: "OBJECT",
@@ -341,8 +350,8 @@ const callGemini = async (payloadConfig, apiKey) => {
         },
         contents: [{ parts: [{ text: prompt }] }],
         generationConfig: {
-            temperature: 0.8,
-            maxOutputTokens: 500,
+            maxOutputTokens: GEMINI_MAX_OUTPUT_TOKENS,
+            thinkingConfig: { thinkingLevel: GEMINI_THINKING_LEVEL },
             responseMimeType: "application/json",
             responseSchema: schema
         }
@@ -350,10 +359,11 @@ const callGemini = async (payloadConfig, apiKey) => {
 
     try {
         const response = await fetch(
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`,
+            // 키는 주소가 아니라 머리글로 보낸다 — 주소는 fetch 오류 문구 · 프록시 로그에 그대로 남는다.
+            `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`,
             {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 'Content-Type': 'application/json', 'x-goog-api-key': apiKey },
                 signal: controller.signal,
                 body: JSON.stringify(requestBody)
             }
@@ -365,7 +375,11 @@ const callGemini = async (payloadConfig, apiKey) => {
         }
 
         const geminiData = await response.json();
-        const textContent = geminiData?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        // 생각이 켜진 모델은 답 앞에 생각 조각(`thought: true`)을 둘 수 있다 — 답 조각의 글만 잇는다.
+        const parts = geminiData?.candidates?.[0]?.content?.parts;
+        const textContent = Array.isArray(parts)
+            ? parts.filter((part) => part && !part.thought && typeof part.text === 'string').map((part) => part.text).join('')
+            : '';
         if (!textContent) return null;
 
         return JSON.parse(textContent); // responseMimeType이 application/json이므로 100% JSON 문자열 반환을 신뢰
@@ -445,7 +459,7 @@ export async function onRequestPost(context) {
             return jsonResponse({ error: 'API key not configured' }, 500, corsHeaders);
         }
 
-        const payloadConfig = buildGeminiPayload(type, data, authUser.uid);
+        const payloadConfig = buildGeminiPayload(type, data);
         if (!payloadConfig) {
             return jsonResponse({ error: 'Invalid request type' }, 400, corsHeaders);
         }
