@@ -255,6 +255,23 @@ test('겹친 규칙은 단계 구간마다 거절할 수 있는 카드의 받아
     }
 });
 
+/**
+ * 2026-10 Wave 137 (소유자 결정 "측정값 그대로 + 예외 명시", 원장 §155): 다시 잰 카드별 값 가운데 여섯 칸은 받아들임 사망이 구간의
+ * 거절 값 이하다. 모두 강적의 길이 붙었거나 바탕인 가벼운 카드이고 회차당 차이는 0.01 ~ 0.35회다. 두 칸(순례 + 강적의 길 7 ~ 9단계 z −2.97,
+ * 용의 길 + 강적의 길 10 ~ 12단계 z −2.39)은 유의하게 받아들임이 더 안전하고, 나머지 넷은 유의하지 않다(z −0.16 ~ −1.16).
+ * 화면은 측정을 그대로 보이고 방향 계약은 이 칸만 이름으로 뺀다 — 새로 뒤집히는 칸은 계속 붉다.
+ */
+const STACKED_CARD_DEATH_INVERSIONS = new Set([
+    'stacked_lost_pilgrimage:7~9:eliteOnly',
+    'stacked_dry_dragon_road:10~12:eliteOnly',
+    'stacked_shadow_legion:7~9:blindMap',
+    'stacked_shadow_legion:10~12:blindMap',
+    'stacked_shadow_legion:10~12:noGold',
+    'stacked_shadow_legion:10~12:noPotion',
+]);
+/** 뒤집힌 칸의 거절 − 받아들임 사망 차이 상한(회차당) — 지금 가장 큰 칸이 0.35회다. 뒤집힘이 커지면 붉다. */
+const INVERSION_MAX_GAP = 0.4;
+
 test('Wave 126: 겹친 규칙의 카드별 측정은 거절할 수 있는 카드 칸만 빠짐없이 들고, 칸마다 받아들임이 더 위험하고 각인을 더 준다', async () => {
     const { MSG } = await import('../src/data/messages.js');
     const { buildAscensionRulePreview } = await import('../src/utils/ascensionRuleView.js');
@@ -268,7 +285,12 @@ test('Wave 126: 겹친 규칙의 카드별 측정은 거절할 수 있는 카드
             assert.ok(o.declinedSamples > 0, `${rule.id} ${band}: 거절 판 수`);
             for (const [second, card] of Object.entries(o.bySecond)) {
                 assert.ok(card.samples > 0, `${rule.id} + ${second} ${band}: 판 수`);
-                assert.ok(card.acceptedDeaths > o.declinedDeaths, `${rule.id} + ${second} ${band}: 받아들임이 더 위험하다`);
+                if (STACKED_CARD_DEATH_INVERSIONS.has(`${rule.id}:${band}:${second}`)) {
+                    assert.ok(card.acceptedDeaths <= o.declinedDeaths, `${rule.id} + ${second} ${band}: 예외 칸은 실제로 뒤집힌 칸이다 — 다시 바로 서면 예외에서 뺀다`);
+                    assert.ok(o.declinedDeaths - card.acceptedDeaths < INVERSION_MAX_GAP, `${rule.id} + ${second} ${band}: 뒤집힌 차이는 회차당 0.4회 미만이다`);
+                } else {
+                    assert.ok(card.acceptedDeaths > o.declinedDeaths, `${rule.id} + ${second} ${band}: 받아들임이 더 위험하다`);
+                }
                 assert.ok(card.acceptedSignatures > o.declinedSignatures, `${rule.id} + ${second} ${band}: 받아들임이 각인을 더 준다`);
             }
         }
@@ -287,16 +309,17 @@ test('Wave 123 · 126: 겹친 카드 미리보기는 지금 단계의 구간(영
     const byId = Object.fromEntries(STACKED_ASCENSION_RULES.map((rule) => [rule.id, rule]));
     const early = buildAscensionRulePreview(byId.stacked_empty_crusade, 8, 'halfHp');
     // 2026-10 Wave 126: 받아들임 줄은 이 카드(두 겹의 성전 + 약한 생명력)의 값이고 거절 줄은 구간 값이다(원장 §134).
-    assert.equal(early.outlook.accepted, '받아들이면: 사망 53.5회 · 새 각인 +1.1개 · 정복 보상');
-    assert.equal(early.outlook.declined, '거절하면: 사망 2.9회 · 새 각인 +0.2개');
-    assert.equal(early.outlook.source, '그 회차 평균 · 이 두 비틀기 카드 받아들임 50판 · 거절 151판 · 2순환 카드 뽑기, 계승 7 ~ 9단계에서 잰 값');
+    // 2026-10 Wave 137: 지금 게임으로 다시 잰 값이다(원장 §155).
+    assert.equal(early.outlook.accepted, '받아들이면: 사망 15.3회 · 새 각인 +1.0개 · 정복 보상');
+    assert.equal(early.outlook.declined, '거절하면: 사망 0.9회 · 새 각인 +0.0개');
+    assert.equal(early.outlook.source, '그 회차 평균 · 이 두 비틀기 카드 받아들임 41판 · 거절 148판 · 2순환 카드 뽑기, 계승 7 ~ 9단계에서 잰 값');
     const late = buildAscensionRulePreview(byId.stacked_empty_crusade, 10, 'halfHp');
-    assert.equal(late.outlook.accepted, '받아들이면: 사망 6.3회 · 새 각인 +1.1개 · 정복 보상', '1.05는 1.1로 반올림한다');
-    assert.equal(late.outlook.declined, '거절하면: 사망 0.4회 · 새 각인 +0.0개', '정복 보상이 없는 회차에는 새로 모으는 각인이 거의 없다');
-    assert.equal(late.outlook.source, '그 회차 평균 · 이 두 비틀기 카드 받아들임 42판 · 거절 132판 · 2순환 카드 뽑기, 계승 10 ~ 12단계에서 잰 값');
-    // 같은 규칙 · 같은 구간에서도 두 번째 비틀기에 따라 다르다 — 두 겹의 전설 7 ~ 9단계는 빈손 71.4회, 약한 생명력 284.9회.
-    assert.equal(buildAscensionRulePreview(byId.stacked_tangled_legends, 9, 'noGold').outlook.accepted, '받아들이면: 사망 71.4회 · 새 각인 +1.3개 · 정복 보상');
-    assert.equal(buildAscensionRulePreview(byId.stacked_tangled_legends, 9, 'halfHp').outlook.accepted, '받아들이면: 사망 284.9회 · 새 각인 +1.6개 · 정복 보상');
+    assert.equal(late.outlook.accepted, '받아들이면: 사망 1.2회 · 새 각인 +1.0개 · 정복 보상', '1.23은 1.2로 반올림한다');
+    assert.equal(late.outlook.declined, '거절하면: 사망 0.2회 · 새 각인 +0.0개', '정복 보상이 없는 회차에는 새로 모으는 각인이 거의 없다');
+    assert.equal(late.outlook.source, '그 회차 평균 · 이 두 비틀기 카드 받아들임 47판 · 거절 143판 · 2순환 카드 뽑기, 계승 10 ~ 12단계에서 잰 값');
+    // 같은 규칙 · 같은 구간에서도 두 번째 비틀기에 따라 다르다 — 두 겹의 전설 7 ~ 9단계는 빈손 22.4회, 약한 생명력 92.5회.
+    assert.equal(buildAscensionRulePreview(byId.stacked_tangled_legends, 9, 'noGold').outlook.accepted, '받아들이면: 사망 22.4회 · 새 각인 +1.0개 · 정복 보상');
+    assert.equal(buildAscensionRulePreview(byId.stacked_tangled_legends, 9, 'halfHp').outlook.accepted, '받아들이면: 사망 92.5회 · 새 각인 +1.0개 · 정복 보상');
     // 3순환 이후는 마지막 구간(영구 능력치 ×2 뒤) 값이고, 출처 줄이 잰 구간을 밝힌다(숫자를 지어내지 않는다).
     assert.deepEqual(buildAscensionRulePreview(byId.stacked_fading_dimension, 18, 'noGold').outlook, buildAscensionRulePreview(byId.stacked_fading_dimension, 12, 'noGold').outlook);
     assert.ok(!late.outlook.source.includes('고정 순서'), '겹친 규칙은 고정 순서에서 재지 않는다');

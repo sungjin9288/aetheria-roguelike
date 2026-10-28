@@ -392,6 +392,15 @@ test('Wave 91: 도감 수집 요약 — 거절한 회차에는 표적 묶음이 
     assert.ok(getCollectionSummary(playerAt(1, { ascensionRuleDeclined: true })).featuredLabel, '강제 규칙은 거절이 없다');
 });
 
+/**
+ * 2026-10 Wave 137 (소유자 결정 "측정값 그대로 + 예외 명시", 원장 §155): Wave 127 · 128과 드라이버 v3 뒤로 다시 잰 첫 순환에서
+ * 암흑의 군단(강적의 길, 6단계)은 받아들임 0.59회 · 거절 0.69회다(짝 120판, z 0.95 — 유의하지 않음). 화면은 측정을 그대로 보이고,
+ * 방향 계약은 이 칸만 이름으로 뺀다 — 새로 뒤집히는 칸은 계속 붉다.
+ */
+const FIRST_CYCLE_DEATH_INVERSIONS = new Set(['shadow_legion:6']);
+/** 뒤집힌 칸의 거절 − 받아들임 사망 차이 상한(회차당) — 지금 가장 큰 칸이 0.35회다. 뒤집힘이 커지면 붉다. */
+const INVERSION_MAX_GAP = 0.4;
+
 test('Wave 92 · 93: 측정 미리보기는 선택형 규칙에만 있고, 순환마다 받아들임이 거절보다 위험하고 각인을 더 준다(측정 그대로)', () => {
     const cycles = new Set();
     for (const rule of ASCENSION_RULES) {
@@ -405,7 +414,13 @@ test('Wave 92 · 93: 측정 미리보기는 선택형 규칙에만 있고, 순�
         rule.outlook.forEach((o, i) => {
             for (const value of Object.values(o)) assert.ok(Number.isFinite(value) && value >= 0);
             assert.equal(o.measuredRank, ASCENSION_RULES.indexOf(rule) + 1 + i * ASCENSION_RULES.length, `${rule.id} 순환 ${i + 1}: 잰 단계는 고정 순서의 그 자리다`);
-            assert.ok(o.acceptedDeaths > o.declinedDeaths, `${rule.id} 순환 ${i + 1}: 받아들이면 더 위험하다`);
+            // 2026-10 Wave 137: 측정이 뒤집힌 칸은 이름으로만 예외다(소유자 결정 "측정값 그대로 + 예외 명시", 원장 §155) — 뒤집힌 크기에도 상한을 둔다.
+            if (FIRST_CYCLE_DEATH_INVERSIONS.has(`${rule.id}:${o.measuredRank}`)) {
+                assert.ok(o.acceptedDeaths <= o.declinedDeaths, `${rule.id} 순환 ${i + 1}: 예외 칸은 실제로 뒤집힌 칸이다 — 다시 바로 서면 예외에서 뺀다`);
+                assert.ok(o.declinedDeaths - o.acceptedDeaths < INVERSION_MAX_GAP, `${rule.id} 순환 ${i + 1}: 뒤집힌 차이는 회차당 0.4회 미만이다`);
+            } else {
+                assert.ok(o.acceptedDeaths > o.declinedDeaths, `${rule.id} 순환 ${i + 1}: 받아들이면 더 위험하다`);
+            }
             assert.ok(o.acceptedSignatures > o.declinedSignatures, `${rule.id} 순환 ${i + 1}: 받아들이면 각인을 더 얻는다`);
         });
     }
@@ -434,11 +449,12 @@ test('Wave 92 · 93 · 94: 미리보기 줄은 그 순환의 측정을 그대로
     assert.deepEqual(getAscensionRulePreview(rk(10)).outlook, getAscensionRulePreview(rk(4)).outlook, '두 번째 순환은 마지막으로 잰 순환 값을 보인다');
     // 2026-10 Wave 121: 저장소 드라이버 v2 · Wave 118 게임으로 다시 쟀다 — 거절은 그 단계 카드 하나만 거절한 짝(원장 §128).
     // 2026-10 Wave 125: 각인 발견이 계정 장부가 된 게임으로 다시 쟀다 — 새 각인은 계정에 처음 모은 것만 센다(원장 §132.4).
-    assert.equal(getAscensionRulePreview(rk(4)).outlook.accepted, '받아들이면: 사망 11.9회 · 새 각인 +1.6개 · 정복 보상');
-    assert.equal(getAscensionRulePreview(rk(5)).outlook.accepted, '받아들이면: 사망 15.9회 · 새 각인 +1.1개 · 정복 보상');
-    assert.equal(getAscensionRulePreview(rk(5)).outlook.declined, '거절하면: 사망 1.4회 · 새 각인 +0.1개', '0.05는 0.1로 반올림한다');
-    assert.equal(getAscensionRulePreview(rk(6)).outlook.accepted, '받아들이면: 사망 4.8회 · 새 각인 +1.0개 · 정복 보상', '4.75는 4.8로 반올림한다');
-    assert.equal(getAscensionRulePreview(rk(4)).outlook.source, '그 회차 평균 · 모의 플레이 74판 · 고정 순서 계승 4단계에서 잰 값');
+    // 2026-10 Wave 137: Wave 127 · 128 · 드라이버 v3 · #191(임무 · 체인 보상 각인이 도감에 오른다) 뒤 게임으로 다시 쟀다(원장 §155).
+    assert.equal(getAscensionRulePreview(rk(4)).outlook.accepted, '받아들이면: 사망 3.2회 · 새 각인 +1.8개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(rk(5)).outlook.accepted, '받아들이면: 사망 3.8회 · 새 각인 +1.0개 · 정복 보상');
+    assert.equal(getAscensionRulePreview(rk(5)).outlook.declined, '거절하면: 사망 0.7회 · 새 각인 +0.0개', '0.65는 0.7로 반올림한다');
+    assert.equal(getAscensionRulePreview(rk(6)).outlook.accepted, '받아들이면: 사망 0.6회 · 새 각인 +1.0개 · 정복 보상', '받아들임이 거절(0.7회)보다 가볍다 — 측정 그대로');
+    assert.equal(getAscensionRulePreview(rk(4)).outlook.source, '그 회차 평균 · 모의 플레이 75판 · 고정 순서 계승 4단계에서 잰 값');
     assert.equal(getAscensionRulePreview(rk(17)).outlook.source, '그 회차 평균 · 모의 플레이 120판 · 고정 순서 계승 5단계에서 잰 값');
 });
 
