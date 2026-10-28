@@ -13,7 +13,7 @@
 | 제2조 다른 차원의 묘비 | playerName · level · loc · items(카탈로그 이름 · 종류, 최대 3) · gold(상한) · guardPower · uid · createdAt. 사망할 때 쓰고, 인증된 이용자(익명 포함)가 최근 20건을 10분마다 읽는다. 앱의 삭제는 규칙이 막는다 | `src/utils/publicGraveDoc.ts`(`buildPublicGraveDoc`), `src/platform/publicGraveFirestore.ts`, `src/hooks/useDimensionGravePool.ts`, `firestore.rules`(graves 블록) |
 | 제2조 의견 보내기 | uid · nickname · message(10 ~ 1,000자) · statsSummary{level, job, kills} · timestamp. 앱에서는 아무도 읽지 못한다(read · update · delete 모두 false). 60초 간격 제한 | `src/components/tabs/SystemTab.tsx`(`addDoc`), `src/systems/FeedbackValidator.ts`, `firestore.rules`(feedback 블록) |
 | 제2조 AI 사용 횟수 | `users/{uid}/quota/daily-ai`에 날짜별 요청 수. 인증 직후 부팅당 한 번 쓴다 | `src/systems/TokenQuotaManager.ts` |
-| 제2조 〔AI〕 AI 이벤트 | 요청 본문에 이름 · 직업 · 레벨 · 생명 · 기력 · 골드 · 칭호 · 진행 임무 · 빌드 성향 · 최근 사건 · 지역 · uid가 들어간다. 프록시는 항목별 길이를 자르고 Gemini(`gemini-1.5-flash`)로 보낸다. 요청 수 제한은 `uid:IP` 키로 서버 메모리 Map에 둔다. **기본은 꺼짐**(`CONSTANTS.USE_AI_PROXY = VITE_USE_AI_PROXY === 'true'`) | `src/services/aiService.ts`, `functions/api/ai-proxy.js`, `src/data/constants.ts` |
+| 제2조 〔AI〕 AI 이벤트 | 요청 본문에 이름 · 직업 · 레벨 · 생명 · 기력 · 골드 · 칭호 · 진행 임무 · 빌드 성향 · 최근 사건 · 지역 · uid가 들어간다. 프록시는 항목별 길이를 자르고 uid를 뺀 프롬프트를 Gemini(`gemini-3.5-flash-lite`)로 보낸다(2026-10-28 — 그 전에는 프롬프트에 `UID:` 줄이 있었다). uid는 요청 수 제한에만 쓰고, 그 키(`uid:IP`)는 서버 메모리 Map에 둔다. **기본은 꺼짐**(`CONSTANTS.USE_AI_PROXY = VITE_USE_AI_PROXY === 'true'`) | `src/services/aiService.ts`, `functions/api/ai-proxy.js`, `src/data/constants.ts` |
 | 제2조 ④ 기기 안 기록 | 활동 기록(최근 200건 · 128KiB)과 오류 기록(최근 20건)은 localStorage에만 둔다. 네트워크 전송 구현이 없다(싱크는 NOOP · LOCAL 두 가지). 설정 화면에서 지우고 내보낸다 | `src/platform/localProductEventStore.ts`, `src/platform/localErrorReportStore.ts`, `src/platform/productEventSink.ts`, `src/components/tabs/SystemTab.tsx` |
 | 제2조 ② 수집하지 않는 것 | Android 권한은 INTERNET 하나다. src에 위치 · 카메라 · 주소록 API가 없고, 클립보드는 이용자가 누를 때 쓰기만 한다(공유 문구 · 기록 복사). 공유 문구에 캐릭터 이름은 없다 | `android/app/src/main/AndroidManifest.xml`, `src/utils/runShareText.ts` |
 | 제5조 외부 글꼴 | 없다. 2026-10 디자인 기반에서 Rajdhani(`fonts.googleapis.com`)를 지웠다 — 글꼴은 저장소의 Fira Code와 기기 글꼴뿐이다 | `index.html`, `src/index.css`, `tests/design-token-absence-contract.test.js` |
@@ -28,9 +28,9 @@
    - 넣으면 클라우드 저장 · 순위표 · 다른 차원의 묘비 · 의견이 동작한다. 출시 검수 게이트 `cors`(토스 출처 `*.tossmini.com` 허용)를 확인해야 한다(런북 §0-9 · §3).
    - 빼면 저장은 기기에만 남는다. 앱을 지우거나 기기를 바꾸면 진행이 사라진다. 제2조 표의 계정 · 게임 저장 · 순위표 · 묘비 · 의견 · AI 사용 횟수 행과 제5조 Firebase 행을 지운다. 삭제 요청 경로(의견 보내기)도 사라지므로 연락처 경로를 적는다.
 3. **AI 이벤트를 켤지 정한다(`VITE_USE_AI_PROXY`).** 끄면 〔AI〕 줄과 Cloudflare · Gemini 행을 지운다. 켜면 다음 넷을 먼저 닫는다.
-   - 모델 `gemini-1.5-flash`가 지금도 응답하는지 확인한다. Google은 Gemini 1.5 계열 종료를 2025년 9월로 공지했었다(작성 시점의 지식 — 확인 필요).
+   - ~~모델 `gemini-1.5-flash`가 지금도 응답하는지 확인한다.~~ 닫음(2026-10-28): 1.5 계열은 Google의 모델 목록 · 종료 표에 없다. `gemini-3.5-flash-lite`(안정판, 종료 일정 없음)로 바꿨다. 실제 키로 부른 적은 아직 없다 — 켜기 전에 한 번 불러 본다.
    - 토스 웹뷰에서 상대 주소 `/api/ai-proxy`는 토스 출처로 풀린다. 절대 주소(`VITE_AI_PROXY_URL`)와 프록시의 `ALLOWED_ORIGINS`가 필요하다.
-   - 프롬프트에 계정 식별자 원문이 들어간다(`functions/api/ai-proxy.js`의 `UID: ${uid}` 두 곳). 생성에 쓰이지 않으므로 빼기를 권한다(최소 수집).
+   - ~~프롬프트에 계정 식별자 원문이 들어간다.~~ 닫음(2026-10-28): 두 곳 모두 뺐다. `tests/cf-functions.test.js`가 Gemini 요청 본문 전체에 uid가 없음을 확인한다.
    - Gemini 요금제의 데이터 사용 조건을 확인한다(무료 등급은 서비스 개선에 쓰일 수 있다).
 4. **Firestore 데이터 위치:** Firebase 콘솔 › Firestore › 위치. 제5조 처리 국가 칸에 적는다.
 5. **삭제 요청 처리 절차(운영자):** 의견 보내기로 받은 요청은 의견 문서의 uid로 처리한다.
