@@ -150,8 +150,8 @@ test.describe('계승 화면 — 회차 규칙 카드 · 선택형 규칙 미리
         const accepted = page.getByTestId('ascension-ascension-rule-outlook-accepted');
         const declined = page.getByTestId('ascension-ascension-rule-outlook-declined');
         await outlook.scrollIntoViewIfNeeded();
-        await expect(accepted).toContainText('11.9');
-        await expect(declined).toContainText('1.7');
+        await expect(accepted).toContainText('사망 3.2회');
+        await expect(declined).toContainText('사망 0.7회');
         await expect(accepted).toHaveAttribute('data-selected', 'true');
 
         await page.getByTestId('ascension-ascension-rule-toggle').click();
