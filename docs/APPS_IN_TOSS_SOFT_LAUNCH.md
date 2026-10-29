@@ -114,8 +114,9 @@ The Phase B base client emits only the approved vocabulary: `boot`, `character_c
 `restore`, `feedback_submission`, and `fatal_error_boundary`. Every event has the exact fields
 `name`, `releaseId`, `runtime`, `os`, `sessionId`, `job`, `levelBand`, `elapsedBucket`, and `outcome`.
 Unknown fields, free text, nickname, inventory, location, enemy identity, raw user keys, and combat
-logs are rejected before transport. The default transport and error reporter are no-ops, so this
-repository does not claim a production collector or Sentry connection.
+logs are rejected before transport. The default event transport is a no-op, so this repository does
+not claim a production collector. Error reports go to Sentry only when the build sets `VITE_SENTRY_DSN`
+(see below).
 
 - Toss and Sandbox release identity comes from the SDK deployment ID. Missing or local release
   identity disables emission instead of inventing production evidence.
@@ -138,10 +139,17 @@ cohort ID from authenticated identity, assign receive time and monotonic sequenc
 client allowlist. The Apps in Toss Analytics helper is not used because it adds an implicit
 anonymous identifier outside this payload contract.
 
-Sentry is also intentionally unconnected. A future integration must keep native tracking disabled,
-bind the DSN and release ID outside source control, upload source maps separately for that exact
-release, and retain a receipt. The installed SDK 3 CLI does not currently expose the documented
-source-map upload command, so CLI compatibility must be resolved before enabling the provider.
+Sentry is connected without the Sentry SDK (owner decision 2026-10-29). `src/platform/sentryErrorReporter.ts`
+posts one envelope per sanitized error report: controlled code, source, release ID (the SDK deployment
+ID), runtime, OS, and app-script frames (filename, line, column, oldest first, `app:///` prefix). It
+drops the session ID, sends nothing without a release ID, sends each distinct report once and at most
+10 per page session, and swallows transport failures. The DSN comes only from the build environment
+(`VITE_SENTRY_DSN`, never committed); without it the reporter is absent and reports stay on the device.
+Native tracking stays disabled because there is no SDK. The project must disable IP storage in Sentry.
+Source maps are not uploaded: the web build emits none and the installed `ait` CLI has no source-map
+command, so frames stay at minified positions until a release-scoped upload (`sentry-cli`, URL prefix
+`app:///assets`) is added. The `sentry_release` receipt cites a sandbox error that arrived under the
+candidate's deployment ID.
 
 ## Phase C optional return-supply rewarded ad contract
 

@@ -18,6 +18,7 @@ import vm from 'node:vm';
 const ORIGIN = 'https://game.test';
 const SW_SOURCE = await readFile(new URL('../public/sw.js', import.meta.url), 'utf8');
 const LEGACY_CACHE = 'aetheria-rpg-v3';
+const PRIVACY_HTML = '<!doctype html><html lang="ko"><head><title>처리방침</title></head><body><main></main></body></html>';
 const ART = ['/assets/monsters/catalog/monster-aaa111.png', '/assets/items/axe.png', '/icons/icon-192.png'];
 
 const urlOf = (input) => new URL(typeof input === 'string' ? input : input.url, ORIGIN);
@@ -143,6 +144,7 @@ const createNetwork = () => {
         async fetch(input) {
             if (!online) throw new TypeError('Failed to fetch');
             const { pathname } = urlOf(input);
+            if (pathname === '/privacy/' || pathname === '/privacy') return new Response(PRIVACY_HTML, { headers: { 'content-type': 'text/html; charset=utf-8' } });
             if (pathname === '/manifest.webmanifest') return new Response('{}', { headers: { 'content-type': 'application/manifest+json' } });
             if (ART.includes(pathname)) return new Response(`art:${pathname}`, { headers: { 'content-type': 'image/png' } });
             if (build && pathname in build.bodies) return new Response(build.bodies[pathname], { headers: { 'content-type': typeOf(pathname) } });
@@ -345,6 +347,23 @@ test('HTML이 아닌 주소를 탭에서 직접 열어도 오프라인 화면 ·
         assert.doesNotMatch(response.headers.get('content-type'), /text\/html/, pathname);
         assert.deepEqual(buildAssetsIn(caches), filesOf(build), `${pathname}: 지금 빌드 산출물이 지워지지 않는다`);
     }
+    await assertPlayableOffline(sw, network, build);
+});
+
+test('처리방침 같은 정적 페이지를 열어도 화면 · 빌드 산출물은 그대로다 — 서비스 워커가 손대지 않는다', async () => {
+    const { network, caches } = startWorld();
+    const sw = startServiceWorker({ network, caches });
+    const build = buildOf('a1');
+    network.deploy(build);
+    await sw.install();
+    await sw.activate();
+    await play(sw, build);
+
+    for (const pathname of ['/privacy', '/privacy/']) {
+        assert.equal(await sw.navigateTo(pathname), undefined, `${pathname}: 브라우저가 직접 받는다`);
+    }
+    assert.ok(!caches.paths(SHELL).some((pathname) => pathname.startsWith('/privacy')));
+    assert.deepEqual(buildAssetsIn(caches), filesOf(build), '지금 빌드 산출물이 지워지지 않는다');
     await assertPlayableOffline(sw, network, build);
 });
 

@@ -14,7 +14,8 @@
 | 제2조 의견 보내기 | uid · nickname · message(10 ~ 1,000자) · statsSummary{level, job, kills} · timestamp. 앱에서는 아무도 읽지 못한다(read · update · delete 모두 false). 60초 간격 제한 | `src/components/tabs/SystemTab.tsx`(`addDoc`), `src/systems/FeedbackValidator.ts`, `firestore.rules`(feedback 블록) |
 | 제2조 AI 사용 횟수 | `users/{uid}/quota/daily-ai`에 날짜별 요청 수. 인증 직후 부팅당 한 번 쓴다 | `src/systems/TokenQuotaManager.ts` |
 | 제2조 〔AI〕 AI 이벤트 | 요청 본문에 이름 · 직업 · 레벨 · 생명 · 기력 · 골드 · 칭호 · 진행 임무 · 빌드 성향 · 최근 사건 · 지역 · uid가 들어간다. 프록시는 항목별 길이를 자르고 uid를 뺀 프롬프트를 Gemini(`gemini-3.5-flash-lite`)로 보낸다(2026-10-28 — 그 전에는 프롬프트에 `UID:` 줄이 있었다). uid는 요청 수 제한에만 쓰고, 그 키(`uid:IP`)는 서버 메모리 Map에 둔다. **기본은 꺼짐**(`CONSTANTS.USE_AI_PROXY = VITE_USE_AI_PROXY === 'true'`) | `src/services/aiService.ts`, `functions/api/ai-proxy.js`, `src/data/constants.ts` |
-| 제2조 ④ 기기 안 기록 | 활동 기록(최근 200건 · 128KiB)과 오류 기록(최근 20건)은 localStorage에만 둔다. 네트워크 전송 구현이 없다(싱크는 NOOP · LOCAL 두 가지). 설정 화면에서 지우고 내보낸다 | `src/platform/localProductEventStore.ts`, `src/platform/localErrorReportStore.ts`, `src/platform/productEventSink.ts`, `src/components/tabs/SystemTab.tsx` |
+| 제2조 ④ 기기 안 기록 | 활동 기록(최근 200건 · 128KiB)은 localStorage에만 둔다. 네트워크 전송 구현이 없다(싱크는 NOOP · LOCAL 두 가지). 오류 기록(최근 20건)도 localStorage에 남고, 같은 리포트가 아래 '오류 보고'로도 간다. 설정 화면에서 지우고 내보낸다 | `src/platform/localProductEventStore.ts`, `src/platform/localErrorReportStore.ts`, `src/platform/productEventSink.ts`, `src/components/tabs/SystemTab.tsx` |
+| 제2조 오류 보고 · 제5조 Sentry | 빌드에 `VITE_SENTRY_DSN`이 있고 릴리스(토스 SDK 배포 id)가 있을 때만 보낸다 — 웹 빌드에는 릴리스가 없어 보내지 않는다. 항목은 정해진 코드 · 출처 · 릴리스 · 실행 환경 · OS · 알려진 스크립트의 파일 · 줄 · 칸뿐이고, 세션 id · 메시지 원문 · 계정 식별자 · 캐릭터 이름은 없다. 페이지 세션당 같은 리포트 1번, 최대 10건. IP는 전송 과정에서 Sentry에 닿으므로 프로젝트 설정에서 저장을 끈다 | `src/platform/sentryErrorReporter.ts`, `src/main.tsx`, `tests/sentry-error-reporter.test.js` |
 | 제2조 ② 수집하지 않는 것 | Android 권한은 INTERNET 하나다. src에 위치 · 카메라 · 주소록 API가 없고, 클립보드는 이용자가 누를 때 쓰기만 한다(공유 문구 · 기록 복사). 공유 문구에 캐릭터 이름은 없다 | `android/app/src/main/AndroidManifest.xml`, `src/utils/runShareText.ts` |
 | 제5조 외부 글꼴 | 없다. 2026-10 디자인 기반에서 Rajdhani(`fonts.googleapis.com`)를 지웠다 — 글꼴은 저장소의 Fira Code와 기기 글꼴뿐이다 | `index.html`, `src/index.css`, `tests/design-token-absence-contract.test.js` |
 | 제8조 접근 통제 | 위 보안 규칙. 공개 문서의 필드 · 크기 상한은 rules가 검사한다 | `firestore.rules`, `tests/firestore-rules-semantics.test.js` |
@@ -27,7 +28,7 @@
 2. **토스 빌드에 Firebase를 넣는다 — 결정(2026-10-21).** 처리방침은 지금 초안 그대로다(`VITE_FIREBASE_CONFIG`). 아래는 결정 근거로 남긴다.
    - 넣으면 클라우드 저장 · 순위표 · 다른 차원의 묘비 · 의견이 동작한다. 출시 검수 게이트 `cors`(토스 출처 `*.tossmini.com` 허용)를 확인해야 한다(런북 §0-9 · §3).
    - 빼면 저장은 기기에만 남는다. 앱을 지우거나 기기를 바꾸면 진행이 사라진다. 제2조 표의 계정 · 게임 저장 · 순위표 · 묘비 · 의견 · AI 사용 횟수 행과 제5조 Firebase 행을 지운다. 삭제 요청 경로(의견 보내기)도 사라지므로 연락처 경로를 적는다.
-3. **AI 이벤트를 켤지 정한다(`VITE_USE_AI_PROXY`).** 끄면 〔AI〕 줄과 Cloudflare · Gemini 행을 지운다. 켜면 다음 넷을 먼저 닫는다.
+3. **AI 이벤트는 끄고 출시한다 — 결정(2026-10-29).** 처리방침에서 〔AI〕 줄과 Cloudflare · Gemini 행을 지웠다(`tests/privacy-page.test.js`가 기본값 꺼짐과 처리방침을 함께 본다). 나중에 켜려면 AI 항목을 되살리고 다음 넷을 먼저 닫는다.
    - ~~모델 `gemini-1.5-flash`가 지금도 응답하는지 확인한다.~~ 닫음(2026-10-28): 1.5 계열은 Google의 모델 목록 · 종료 표에 없다. `gemini-3.5-flash-lite`(안정판, 종료 일정 없음)로 바꿨다. 실제 키로 부른 적은 아직 없다 — 켜기 전에 한 번 불러 본다.
    - 토스 웹뷰에서 상대 주소 `/api/ai-proxy`는 토스 출처로 풀린다. 절대 주소(`VITE_AI_PROXY_URL`)와 프록시의 `ALLOWED_ORIGINS`가 필요하다.
    - ~~프롬프트에 계정 식별자 원문이 들어간다.~~ 닫음(2026-10-28): 두 곳 모두 뺐다. `tests/cf-functions.test.js`가 Gemini 요청 본문 전체에 uid가 없음을 확인한다.
@@ -47,6 +48,7 @@
     - 웹 빌드도 `public/assets` 안은 런타임 그림 목록만 담는다(`scripts/webPublicAssets.mjs`). 처리방침 페이지는 `public/assets` 밖(예: `public/privacy/`)에 둔다 — 밖의 파일은 그대로 담긴다.
     - 토스 번들 안에 넣으려면 허용 목록과 번들 고정값 테스트(`tests/toss-asset-build.test.js`)를 함께 바꿔야 한다. 번들 여유도 3.3MB뿐이다.
     - 콘솔과 게임 설정에는 그 주소를 적는다.
+    - **만들었다(2026-10-29):** `public/privacy/index.html`을 `node scripts/build-privacy-page.mjs`가 이 초안에서 만든다. 서비스 워커는 `/privacy` 탐색을 손대지 않는다 — 화면(index.html)으로 저장하면 오프라인 실행이 처리방침을 내고 빌드 산출물이 지워진다(`tests/service-worker-cache.test.js`). 〔 〕 칸을 채우기 전에는 `main`에 머지하지 않는다(머지가 곧 공개다).
 12. **출시 검수 게이트:** 저장소 검증기의 `review` 단계는 `privacy_policy` · `support_channel` 외부 게이트 영수증을 요구한다(`scripts/tossReleaseEvidence.mjs`). 공개 주소가 생기면 영수증을 남긴다. 절차는 [앱인토스 샌드박스 런북](../qa/APPS_IN_TOSS_SANDBOX_RUNBOOK.md)을 따른다.
 
 ## 3. 범위 밖 관찰 (처리방침 문구에는 영향 없음)

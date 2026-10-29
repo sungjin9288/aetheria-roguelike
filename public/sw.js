@@ -21,6 +21,11 @@ const APP_SHELL = [SHELL_KEY, '/manifest.webmanifest'];
 // (tests/service-worker-cache.test.js가 실제 파일 수보다 큰지 확인한다).
 const ART_CACHE_MAX_ENTRIES = 2000;
 
+// 앱 화면이 아닌 정적 페이지(처리방침). 화면(index.html)으로 저장하면 오프라인 실행이 그 페이지를 내고,
+// 정리가 그 본문에서 빌드 산출물을 찾지 못해 전부 지운다 — 서비스 워커가 손대지 않는다.
+const STATIC_PAGE_PREFIXES = ['/privacy'];
+const isStaticPage = (pathname) => STATIC_PAGE_PREFIXES.some((prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`));
+
 const isStaticAsset = (pathname) => /\.(?:js|css|svg|png|jpg|jpeg|gif|webp|ico|woff2?)$/.test(pathname);
 // Vite 빌드 산출물만 `/assets/` 바로 아래에 있다(public 그림은 모두 하위 폴더).
 const isBuildAsset = (pathname) => /^\/assets\/[^/]+$/.test(pathname);
@@ -133,6 +138,7 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(request.url);
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) return;
+  if (isStaticPage(url.pathname)) return;
 
   if (request.mode === 'navigate') {
     event.respondWith((async () => {
