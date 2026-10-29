@@ -25,6 +25,10 @@ test('공개본에는 초안 안내(인용 블록)와 내부 문서 링크가 �
     assert.equal((page.match(/<h2>제\d+조/g) ?? []).length, 12);
 });
 
+test('공개본에는 채우지 않은 〔 〕 칸이 없다 — main 머지가 곧 공개다', () => {
+    assert.doesNotMatch(page, /[〔〕]/);
+});
+
 test('처리방침은 출시 결정과 같다 — AI 이벤트는 꺼져 있고 오류 보고는 Sentry로 간다', () => {
     // 빌드 환경 없이 읽은 기본값 — AI 이벤트를 켜려면 처리방침의 AI 항목(수탁자 포함)을 먼저 되살린다.
     assert.equal(CONSTANTS.USE_AI_PROXY, false);
