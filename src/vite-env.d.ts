@@ -14,6 +14,7 @@ interface ImportMetaEnv {
     readonly VITE_REMOTE_CONFIG?: string;
     readonly VITE_ENABLE_TEST_API?: string;
     readonly VITE_DEVICE_QA_SCENARIO?: string;
+    readonly VITE_SENTRY_DSN?: string;
     [key: string]: string | undefined;
 }
 

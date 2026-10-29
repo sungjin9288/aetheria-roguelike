@@ -35,6 +35,24 @@ export const installRuntimeErrorReporter = (reporter: ErrorReporter): void => {
 
 export const getRuntimeErrorReporter = (): ErrorReporter => runtimeErrorReporter;
 
+/** 여러 리포터에 같은 리포트를 건넨다 — 한 리포터의 실패가 다른 리포터를 막지 않는다. */
+export const composeErrorReporters = (
+    ...reporters: ReadonlyArray<ErrorReporter | null | undefined>
+): ErrorReporter => {
+    const active = reporters.filter((reporter): reporter is ErrorReporter => !!reporter);
+    return {
+        capture: (report) => {
+            for (const reporter of active) {
+                try {
+                    reporter.capture(report);
+                } catch {
+                    // 다음 리포터는 그대로 받는다.
+                }
+            }
+        },
+    };
+};
+
 const SAFE_ERROR_CODE = /^[a-z][a-z0-9_]{2,63}$/;
 
 const sanitizeFilename = (value: string): string => {
