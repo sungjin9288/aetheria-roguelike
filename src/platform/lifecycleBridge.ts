@@ -86,6 +86,32 @@ const defaultCapacitorBridge: CapacitorLifecycleBridge = {
     },
 };
 
+interface ExitRuntimeOptions {
+    environment: RuntimeEnvironment;
+    tossBridge?: Pick<TossLifecycleBridge, 'close'>;
+    capacitorBridge?: Pick<CapacitorLifecycleBridge, 'exitApp'>;
+}
+
+/**
+ * 종료 확인 창의 '종료'가 부른다 — 토스는 미니앱을, 네이티브는 앱을 닫는다.
+ * 웹에는 닫을 창이 없으므로 아무것도 하지 않고 false다(부르는 쪽이 확인 창을 닫는다).
+ */
+export const exitRuntime = async ({
+    environment,
+    tossBridge = defaultTossBridge,
+    capacitorBridge = defaultCapacitorBridge,
+}: ExitRuntimeOptions): Promise<boolean> => {
+    if (environment === 'toss' || environment === 'sandbox') {
+        await tossBridge.close();
+        return true;
+    }
+    if (environment === 'capacitor') {
+        capacitorBridge.exitApp();
+        return true;
+    }
+    return false;
+};
+
 const normalizeInset = (value: unknown) => {
     const parsed = Number(value);
     if (!Number.isFinite(parsed)) return 0;

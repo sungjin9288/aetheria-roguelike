@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
+import { useState, useRef, useCallback, useEffect, type ReactNode } from 'react';
 import type { Item } from './types';
 import { MotionConfig, useReducedMotion } from 'framer-motion';
 
@@ -11,7 +11,7 @@ import { useGameTestApi } from './hooks/useGameTestApi';
 import { markPerfOnce, measurePerfOnce, markPerf } from './utils/performanceMarks';
 import { getCounterStagger } from './utils/combatPresentation';
 import { getPendingMilestoneStoryBeat } from './utils/milestoneStory';
-import { bindLifecycleBridge } from './platform/lifecycleBridge';
+import { bindLifecycleBridge, exitRuntime } from './platform/lifecycleBridge';
 import { resolvePlatformBackAction } from './platform/platformBack';
 import { getRuntimeEnvironment } from './platform/runtimeEnvironment';
 import {
@@ -24,6 +24,7 @@ import IntroScreen from './components/IntroScreen';
 import BootScreen from './components/app/BootScreen';
 import GameRoot from './components/app/GameRootLoader';
 import DeathScreen, { preloadDeathScreen } from './components/app/DeathScreen';
+import ExitConfirmDialog from './components/app/ExitConfirmDialog';
 
 const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'item-investment'
@@ -85,8 +86,20 @@ function App() {
     /* eslint-disable-next-line react-hooks/refs */
     mirrorPanelOpenRef.current = mirrorPanelOpen;
     const [platformBackRegistry] = useState(createPlatformBackRegistry);
+    // 앱인토스 게임 체크리스트 '미니앱 종료 시 확인 모달': 뒤로가기가 앱을 닫을 차례면 먼저 묻는다.
+    //   창이 열린 동안의 뒤로가기는 창을 닫는다(계속하기와 같다).
+    const [exitConfirmOpen, setExitConfirmOpen] = useState(false);
+    const exitConfirmOpenRef = useRef(false);
+    const setExitConfirm = useCallback((open: boolean) => {
+        exitConfirmOpenRef.current = open;
+        setExitConfirmOpen(open);
+    }, []);
 
     const handlePlatformBack = useCallback(() => {
+        if (exitConfirmOpenRef.current) {
+            setExitConfirm(false);
+            return true;
+        }
         if (platformBackRegistry.handleBack()) return true;
         const currentEngine = engineRef.current;
         const summary = currentEngine.player?.lastExpeditionSummary;
@@ -119,9 +132,33 @@ function App() {
                 currentEngine.actions.setGameState?.(GS.IDLE);
                 return true;
             case 'close-app':
-                return false;
+                setExitConfirm(true);
+                return true;
         }
-    }, [platformBackRegistry]);
+    }, [platformBackRegistry, setExitConfirm]);
+
+    const handleExitConfirmed = useCallback(async () => {
+        try {
+            await engineRef.current.flushLocalSave();
+        } catch (error) {
+            console.warn('Exit save flush failed', error);
+        }
+        try {
+            await exitRuntime({ environment: getRuntimeEnvironment() });
+        } catch (error) {
+            console.warn('Platform exit unavailable', error);
+        }
+        setExitConfirm(false);
+    }, [setExitConfirm]);
+
+    const withExitConfirm = (content: ReactNode) => (
+        <>
+            {content}
+            {exitConfirmOpen && (
+                <ExitConfirmDialog onStay={() => setExitConfirm(false)} onLeave={() => { void handleExitConfirmed(); }} />
+            )}
+        </>
+    );
 
     useRuntimeGameTestApi(engineRef, fullStatsRef, handlePlatformBack);
 
@@ -182,12 +219,12 @@ function App() {
         engine.actions.useItem(item);
     };
 
-    if (engine.bootStage !== 'ready') return <BootScreen bootStage={engine.bootStage} />;
+    if (engine.bootStage !== 'ready') return withExitConfirm(<BootScreen bootStage={engine.bootStage} />);
 
     if (engine.gameState === GS.DEAD && engine.runSummary) {
         const firstDeathStory = getPendingMilestoneStoryBeat(engine.player, ['first_death']);
         // 사망 화면에서도 에테르 거울을 연다 — 게임 화면(GameRoot)이 마운트되지 않으므로 거울 · 뒤로가기 등록을 여기서 준다.
-        return (
+        return withExitConfirm(
             <PlatformBackProvider registry={platformBackRegistry}>
                 <MotionConfig reducedMotion="user">
                     <MainLayout visualEffect={null}>
@@ -214,7 +251,7 @@ function App() {
     }
 
     if (!String(engine.player.name || '').trim()) {
-        return (
+        return withExitConfirm(
             <MotionConfig reducedMotion="user">
                 <MainLayout visualEffect={null} immersive>
                     <IntroScreen onStart={engine.actions.start} prestigeRank={engine.player.meta?.prestigeRank} meta={engine.player.meta} />
@@ -223,7 +260,7 @@ function App() {
         );
     }
 
-    return (
+    return withExitConfirm(
         <PlatformBackProvider registry={platformBackRegistry}>
             <GameRoot
             engine={engine}

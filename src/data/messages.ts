@@ -1980,4 +1980,12 @@ export const MSG = {
     // D1: 적이 행동하기 전에 끝난 일반 전투의 결과는 조우 · 처치 · 전리품 한 장이다 — 그 시트의 이름표와 제목.
     POST_COMBAT_SWIFT_EYEBROW: '한 번에 처치',
     POST_COMBAT_SWIFT_TITLE: (enemy: string) => `${enemy} 처치`,
+
+    // === 앱인토스 게임 체크리스트 · 종료 확인 ===
+    // 뒤로가기로 미니앱을 닫기 전에 묻는다('미니앱 종료 시 확인 모달'). 여정은 저장한 뒤 닫는다.
+    A11Y_DIALOG_EXIT: '게임 종료 확인',
+    EXIT_CONFIRM_TITLE: '게임을 종료할까요?',
+    EXIT_CONFIRM_BODY: '지금까지의 여정은 이 기기에 저장되어, 다시 들어오면 이어서 할 수 있습니다.',
+    EXIT_CONFIRM_STAY: '계속하기',
+    EXIT_CONFIRM_LEAVE: '종료',
 };
