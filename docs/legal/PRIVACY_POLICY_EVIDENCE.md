@@ -48,7 +48,8 @@
     - 웹 빌드도 `public/assets` 안은 런타임 그림 목록만 담는다(`scripts/webPublicAssets.mjs`). 처리방침 페이지는 `public/assets` 밖(예: `public/privacy/`)에 둔다 — 밖의 파일은 그대로 담긴다.
     - 토스 번들 안에 넣으려면 허용 목록과 번들 고정값 테스트(`tests/toss-asset-build.test.js`)를 함께 바꿔야 한다. 번들 여유도 3.3MB뿐이다.
     - 콘솔과 게임 설정에는 그 주소를 적는다.
-    - **만들었다(2026-10-29):** `public/privacy/index.html`을 `node scripts/build-privacy-page.mjs`가 이 초안에서 만든다. 서비스 워커는 `/privacy` 탐색을 손대지 않는다 — 화면(index.html)으로 저장하면 오프라인 실행이 처리방침을 내고 빌드 산출물이 지워진다(`tests/service-worker-cache.test.js`). 〔 〕 칸을 채우기 전에는 `main`에 머지하지 않는다(머지가 곧 공개다).
+    - **만들었다(2026-10-29):** `public/privacy/index.html`을 `node scripts/build-privacy-page.mjs`가 이 초안에서 만든다. 서비스 워커는 `/privacy` 탐색을 손대지 않는다 — 화면(index.html)으로 저장하면 오프라인 실행이 처리방침을 내고 빌드 산출물이 지워진다(`tests/service-worker-cache.test.js`). 〔 〕 칸이 남으면 `tests/privacy-page.test.js`가 붉어진다.
+    - **공개했다(2026-10-29):** `https://aetheria-roguelike.pages.dev/privacy/`, Pages 첫 프로덕션 배포 `c3ca3023`(소스 `d023df7`). Pages 프로젝트는 GitHub와 연결돼 있지 않아 머지가 아니라 손으로 하는 배포가 공개다 — 처리방침을 고치면 다시 빌드해 올린다([런북](../qa/APPS_IN_TOSS_SANDBOX_RUNBOOK.md) §0-7).
 12. **출시 검수 게이트:** 저장소 검증기의 `review` 단계는 `privacy_policy` · `support_channel` 외부 게이트 영수증을 요구한다(`scripts/tossReleaseEvidence.mjs`). 공개 주소가 생기면 영수증을 남긴다. 절차는 [앱인토스 샌드박스 런북](../qa/APPS_IN_TOSS_SANDBOX_RUNBOOK.md)을 따른다.
 
 ## 3. 범위 밖 관찰 (처리방침 문구에는 영향 없음)
