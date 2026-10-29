@@ -6,6 +6,10 @@ Aetheria RPG를 친구들이 인터넷으로 접속해서 할 수 있도록 가�
 > 클라이언트 코드는 변경 없이 `/api/ai-proxy` 상대 경로를 그대로 호출하며,
 > 서버 로직은 `functions/api/`의 Cloudflare Pages Functions가 담당합니다. 피드백은 별도
 > 함수 없이 클라이언트가 Firestore에 직접 쓰고(rules가 검증) 전송됩니다.
+>
+> **지금 프로젝트(`aetheria-roguelike`)는 GitHub와 연결돼 있지 않다**(2026-10-29 확인) — `main`에 머지해도
+> 사이트는 바뀌지 않고, 방법 2(Wrangler)로 손으로 올린다. 출시 범위에서는 AI 이벤트를 끄므로 빌드는
+> `VITE_USE_AI_PROXY=false npm run build`, 배포는 `--branch=main`을 붙인다(그래야 프로덕션이다).
 
 ## 준비물
 - GitHub 계정 (또는 Cloudflare 계정)

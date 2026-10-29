@@ -25,7 +25,7 @@ test('공개본에는 초안 안내(인용 블록)와 내부 문서 링크가 �
     assert.equal((page.match(/<h2>제\d+조/g) ?? []).length, 12);
 });
 
-test('공개본에는 채우지 않은 〔 〕 칸이 없다 — main 머지가 곧 공개다', () => {
+test('공개본에는 채우지 않은 〔 〕 칸이 없다 — 이 파일이 그대로 배포된다', () => {
     assert.doesNotMatch(page, /[〔〕]/);
 });
 
