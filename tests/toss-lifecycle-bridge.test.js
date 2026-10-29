@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { readFile } from 'node:fs/promises';
 
-import { bindLifecycleBridge } from '../src/platform/lifecycleBridge.ts';
+import { bindLifecycleBridge, exitRuntime } from '../src/platform/lifecycleBridge.ts';
 import { resolvePlatformBackAction } from '../src/platform/platformBack.ts';
 import { createPlatformBackRegistry } from '../src/platform/platformBackRegistry.tsx';
 
@@ -253,7 +253,10 @@ test('App wires background persistence and reversible back actions through the l
     assert.match(source, /PlatformBackProvider/);
     assert.match(source, /resolvePlatformBackAction\(/);
     assert.match(source, /case 'close-premium'[\s\S]+?setPremiumShopOpen\(false\)/);
-    assert.match(source, /case 'close-app':[\s\S]+?return false/);
+    // 앱인토스 게임 체크리스트 '미니앱 종료 시 확인 모달': 앱을 닫을 차례의 뒤로가기는 확인 창을 띄우고
+    //   처리됨(true)이다 — false면 브리지가 묻지 않고 Screen.close()를 부른다. 종료는 확인 창의 '종료'만 한다.
+    assert.match(source, /case 'close-app':\s*setExitConfirm\(true\);\s*return true;/);
+    assert.match(source, /exitRuntime\(\{ environment: getRuntimeEnvironment\(\) \}\)/);
 });
 
 test('every local reversible surface registers a platform back handler', async () => {
@@ -290,4 +293,16 @@ test('mobile surfaces consume the SDK-backed safe-area variables with web env de
     assert.doesNotMatch(sources.join('\n'), /env\(safe-area-inset-/);
     assert.match(sources.join('\n'), /var\(--aether-safe-area-top\)/);
     assert.match(sources.join('\n'), /var\(--aether-safe-area-bottom\)/);
+});
+
+test('exitRuntime closes the Toss mini app, exits the native app, and does nothing on the web', async () => {
+    const calls = [];
+    const tossBridge = { close: async () => { calls.push('toss-close'); } };
+    const capacitorBridge = { exitApp: () => { calls.push('native-exit'); } };
+
+    assert.equal(await exitRuntime({ environment: 'toss', tossBridge, capacitorBridge }), true);
+    assert.equal(await exitRuntime({ environment: 'sandbox', tossBridge, capacitorBridge }), true);
+    assert.equal(await exitRuntime({ environment: 'capacitor', tossBridge, capacitorBridge }), true);
+    assert.equal(await exitRuntime({ environment: 'web', tossBridge, capacitorBridge }), false);
+    assert.deepEqual(calls, ['toss-close', 'toss-close', 'native-exit']);
 });
