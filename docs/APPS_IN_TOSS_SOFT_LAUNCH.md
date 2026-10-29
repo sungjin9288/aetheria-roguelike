@@ -29,6 +29,13 @@ following must be explicitly approved and evidenced:
 - confirm that `aetheria` is available before reserving it; do not register an alternative name
   without another decision.
 
+**Update (2026-10-29):** the owner approved publishing 3.x, and the SDK moved to `3.9.0` before the
+first candidate build. 3.0.4 added build-time validation of `appName`, `brand` and the web bundle,
+and nothing between 3.0.4 and 3.9.0 changes the surface the app calls (`Environment`, `Storage`,
+`SafeArea`, `Screen`, `generateHapticFeedback`). The production audit is unchanged by the bump.
+The built `.ait` records `sdkVersion` 3.9.0 and still carries `isGame: false`, so the console
+category remains the game classification.
+
 ## Local build contract
 
 ```bash

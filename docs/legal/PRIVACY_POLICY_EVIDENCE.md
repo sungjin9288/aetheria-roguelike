@@ -41,7 +41,7 @@
 6. **보유 기간:** 지금은 자동 삭제가 없다. 정하기 전에는 "삭제 요청 · 서비스 종료 시까지"가 사실이다. 기간을 정하면 Firestore TTL 정책이나 정리 작업을 함께 만든다.
 7. **순위표 공개 범위:** `allow read: if true`다. 그대로면 "누구나" 문구가 맞다. 로그인한 이용자로 좁히려면 rules를 바꾸고 rules 시맨틱 테스트를 함께 고친다.
 8. **Google Fonts — 닫음(2026-10 디자인 기반).** Rajdhani 외부 요청을 지웠다(표제는 본문 한글 글꼴 굵기 800). 제5조 Google Fonts 행을 지웠다. 기기 수용에서 표제 글꼴이 기기 글꼴로 보이는지만 확인한다.
-9. **토스 저장소 — 닫음(2026-10-29).** SDK 3.0.3 `Storage`의 타입 문서가 "로컬 저장소 … 앱이 종료되어도 유지"라고 적는다(`node_modules/@apps-in-toss/web-framework/dist/index.d.ts`). 앱은 `src/platform/tossSdk.ts`를 거쳐 `getItem` · `setItem` · `removeItem`만 쓴다. 기기 안 저장이라 제5조 비바리퍼블리카 행을 지웠다(제9조 '토스 앱 저장소'는 남긴다).
+9. **토스 저장소 — 닫음(2026-10-29).** SDK 3.0.3 · 3.9.0 `Storage`의 타입 문서가 "로컬 저장소 … 앱이 종료되어도 유지"라고 적는다(`node_modules/@apps-in-toss/web-framework/dist/index.d.ts`). 앱은 `src/platform/tossSdk.ts`를 거쳐 `getItem` · `setItem` · `removeItem`만 쓴다. 기기 안 저장이라 제5조 비바리퍼블리카 행을 지웠다(제9조 '토스 앱 저장소'는 남긴다).
 10. **만 14세 미만:** 게임은 나이를 받지 않는다. 앱인토스에는 틴즈(만 14세 이상) 노출 정책이 있다(검색 요약). 콘솔의 이용 연령과 함께 제6조 ④를 정한다.
 11. **처리방침 위치(URL):** 웹 배포(Cloudflare Pages)에 정적 페이지로 둔다.
     - `public/`에 두면 웹 `dist/`에만 들어가고 토스 번들 검증에는 영향이 없다. 토스 빌드는 허용 목록만 담는다(`scripts/tossAssetCatalog.mjs`).
