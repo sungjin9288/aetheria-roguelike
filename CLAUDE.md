@@ -21,7 +21,7 @@
 | Language | **TypeScript** (`.ts`/`.tsx`, `strict: true`) | 5.x |
 | Test | Node.js built-in `test` (실행은 `tsx` 로더) | — |
 | Linter | ESLint | 9.39.1 |
-| Node.js | — | >=18.0.0 |
+| Node.js | 24.22.2 (`.nvmrc`, CI · deploy 공통) | >=24.22.1 <25 |
 
 > **TypeScript 사용** — 전 소스 `.ts`/`.tsx` (파일 확장자 기준 마이그레이션 **100% 완료**, `.js`/`.jsx` 0개).
 > `tsconfig` `strict: true` + `tsc --noEmit` 0 에러. **src의 명시 `any`는 0이다**(2026-09-18 Wave 9 완료 —
