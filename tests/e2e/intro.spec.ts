@@ -71,6 +71,14 @@ test.describe('Intro flow', () => {
 
         const startButton = page.getByTestId('intro-start-button');
         await expect(startButton).toBeVisible();
+        // 다듬기(2026-10-30): 새 여정의 생명은 정해지는 것이지 회복이 아니다 — 첫 화면에 회복 숫자('+27')가 뜨던 결함.
+        await page.evaluate(() => {
+            const seen: string[] = [];
+            (window as unknown as { __damageNumbersSeen: string[] }).__damageNumbersSeen = seen;
+            new MutationObserver(() => {
+                document.querySelectorAll('[data-testid="damage-number"]').forEach((node) => seen.push(node.textContent || ''));
+            }).observe(document.body, { childList: true, subtree: true });
+        });
         await startButton.click();
 
         // Intro 입력창 사라지고 게임 진입
@@ -78,6 +86,8 @@ test.describe('Intro flow', () => {
         await expect(page.getByTestId('persistent-status-bar')).toBeVisible({ timeout: 15_000 });
         await expect(page.getByTestId('relic-choice-panel')).toBeHidden();
         await expect(page.getByTestId('control-town-primary')).toContainText('고요한 숲으로 첫 출발');
+        await page.waitForTimeout(500);
+        expect(await page.evaluate(() => (window as unknown as { __damageNumbersSeen: string[] }).__damageNumbersSeen)).toEqual([]);
     });
 
     test('StatusBar에 레벨 표시 (게임 부트 완료)', async ({ page }) => {

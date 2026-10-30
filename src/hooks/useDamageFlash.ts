@@ -39,7 +39,7 @@ const clearFlashTimers = (timers: FlashTimers) => {
  */
 export const useDamageFlash = (
     currentHp: number | undefined,
-    resetEpoch: number,
+    resetEpoch: number | string,
     stagger: CounterStagger | null = null,
 ) => {
     const [feedback, setFeedback] = useState({ ...EMPTY_FEEDBACK, epoch: resetEpoch });
