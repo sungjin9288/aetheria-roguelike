@@ -17,8 +17,7 @@ on:
     branches:
       - main
 
-env:
-  NODE_VERSION: '20'
+# Node 버전은 ci.yml과 같이 저장소 루트 `.nvmrc` 한 곳이 정한다.
 
 jobs:
   # Build and Test
@@ -31,7 +30,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ env.NODE_VERSION }}
+          node-version-file: '.nvmrc'
           cache: 'npm'
 
       - name: Install Dependencies
@@ -78,11 +77,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Setup Node.js
-        # 전역 NODE_VERSION(20)이 아니라 22다 — ci.yml의 firestore-rules job이 실측으로
-        # 고정한 런타임이다(firebase-tools 15.x의 전이 의존 17개가 >=22를 요구한다).
+        # ci.yml의 firestore-rules job과 같은 `.nvmrc`다(firebase-tools 15.x의 전이 의존
+        # 17개가 >=22를 요구한다 — 24는 그 하한을 만족한다).
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
+          node-version-file: '.nvmrc'
 
       - name: Resolve credentials
         # 시크릿 선택을 식 안의 "A && B || C" 삼항으로 쓰지 않는다: 그 형태는 B가 비어

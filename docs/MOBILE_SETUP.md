@@ -4,7 +4,7 @@ This project ships as a Capacitor app for both iOS and Android.
 
 ## Prerequisites
 
-- Node.js 18+
+- Node.js 24.22.2 (`.nvmrc` — `nvm use` 또는 `mise exec node@24.22.2 --`)
 - Xcode
 - Homebrew
 - Java 21
