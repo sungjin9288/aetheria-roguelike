@@ -88,7 +88,7 @@ export const EVENT_CHAINS = [
                 //   저장된 진행 값의 뜻이 바뀌지 않는다(다른 체인의 0단계도 같다).
                 questStart: chainQuestStart({
                     questId: FIRST_STORY_QUEST_ID,
-                    log: '첫 여정에서 주운 그을린 지팡이 파편은 사라진 마법사의 것이었습니다. 흔적은 수정 동굴로 이어집니다.',
+                    log: '고요한 숲의 돌기둥 아래에서 그을린 지팡이 파편을 주웠습니다. 사라진 마법사의 것이었습니다. 흔적은 수정 동굴로 이어집니다.',
                 }),
             },
             {
