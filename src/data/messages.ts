@@ -560,8 +560,24 @@ export const MSG = {
     // cycle 116: REST_DONE 제거 — REST_DONE_FULL이 active.
     SKILL_SWAP_SAFE_ONLY: '기술 교체는 안전한 지역에서만 가능합니다.',
     SKILL_SWAP_GOLD_INSUFFICIENT: (cost: number) => `기술을 바꿀 골드가 부족합니다. 필요 골드: ${cost}`,
-    SKILL_NO_BRANCH: '해당 기술에 분기가 없습니다.',
-    SKILL_INVALID_BRANCH: '유효하지 않은 분기입니다.',
+    SKILL_NO_BRANCH: '이 기술에는 고를 성장이 없습니다.',
+    SKILL_INVALID_BRANCH: '고를 수 없는 성장입니다.',
+    // 직업 여정 요약(원정 귀환 · 전직 화면) — 기술 성장의 화면 이름은 '기술 성장'이다(분기 · 시그니처는 화면 이름이 아니다).
+    CLASS_JOURNEY_TITLE: (job: string) => `이 직업으로 남긴 것 · ${job}`,
+    CLASS_JOURNEY_EMPTY: '첫 원정을 떠나 이 직업의 여정을 남겨보세요.',
+    CLASS_JOURNEY_REPRESENTATIVE: '대표 원정',
+    CLASS_JOURNEY_FOOTPRINT: '남긴 발자국',
+    CLASS_JOURNEY_NO_REGION: '기록된 지역 없음',
+    CLASS_JOURNEY_BUILD: '전투 방식',
+    CLASS_JOURNEY_NO_BRANCH: '기술 성장 아직 없음',
+    CLASS_JOURNEY_ENCOUNTER: '사건의 흔적',
+    CLASS_JOURNEY_NEXT: '다음 기록',
+    CLASS_JOURNEY_NEXT_BRANCH: '기술 성장 선택',
+    CLASS_JOURNEY_NEXT_SIGNATURE: '전설 각인',
+    CLASS_JOURNEY_NEXT_BOSS: '처음 만나는 보스',
+    CLASS_JOURNEY_NEXT_REGION: '새로운 지역',
+    CLASS_JOURNEY_NEXT_ENCOUNTER: '지역 사건의 선택',
+    CLASS_JOURNEY_NEXT_REGION_BOSS: '새로운 지역의 보스',
     JOB_CHANGE_INVALID: '전직 가능한 직업이 아닙니다.',
     JOB_CHANGE_LEVEL: '전직 레벨이 부족합니다.',
     QUEST_TOWN_ONLY: '임무 수락은 마을 게시판에서만 가능합니다.',
@@ -1074,7 +1090,7 @@ export const MSG = {
         `[${skillName}] ${enemyName}에게 [${label}] 부여!`
     ),
     SKILL_BRANCH_STATUS_APPLIED: (enemyName: string | undefined, label: string) => (
-        `[분기 효과] ${enemyName}에게 [${label}] 추가 부여!`
+        `[성장 효과] ${enemyName}에게 [${label}] 추가 부여!`
     ),
     SKILL_DRAIN_HEAL: (heal: number) => `[생명흡수] 생명 +${heal} 흡수!`,
     SKILL_HP_REGEN_PROC: (skillName: string | undefined, heal: number) => `[${skillName}] 생명 +${heal} 회복!`,

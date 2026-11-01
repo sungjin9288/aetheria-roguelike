@@ -25,6 +25,7 @@ import BootScreen from './components/app/BootScreen';
 import GameRoot from './components/app/GameRootLoader';
 import DeathScreen, { preloadDeathScreen } from './components/app/DeathScreen';
 import ExitConfirmDialog from './components/app/ExitConfirmDialog';
+import { getAppScreen, getPresentationKey } from './utils/appScreen';
 
 const TEST_API_BUILD = import.meta.env.VITE_ENABLE_TEST_API === '1'
     || import.meta.env.VITE_DEVICE_QA_SCENARIO === 'item-investment'
@@ -54,9 +55,15 @@ function App() {
     const fullStats = engine.getFullStats();
     // GF-06: 적 반격의 내 피격 연출은 내 타격 뒤 박자에 보인다(판정은 이미 끝났다 — 표시만 늦춘다).
     const reducedMotion = Boolean(useReducedMotion());
+    const appScreen = getAppScreen({
+        bootStage: engine.bootStage,
+        gameState: engine.gameState,
+        hasRunSummary: Boolean(engine.runSummary),
+        playerName: engine.player?.name,
+    });
     const { damageFlash, healFlash, damageAmount } = useDamageFlash(
         engine.player?.hp,
-        engine.presentationEpoch,
+        getPresentationKey(engine.presentationEpoch, appScreen),
         getCounterStagger(engine.combatFeedback, reducedMotion),
     );
     // 2026-10-26 소유자 결정 D3: 진동(맞음 · 치명타 · 레벨 상승 · 사망) — 사망 화면에서도 살아 있는 여기서 부른다.
@@ -219,9 +226,9 @@ function App() {
         engine.actions.useItem(item);
     };
 
-    if (engine.bootStage !== 'ready') return withExitConfirm(<BootScreen bootStage={engine.bootStage} />);
+    if (appScreen === 'boot') return withExitConfirm(<BootScreen bootStage={engine.bootStage} />);
 
-    if (engine.gameState === GS.DEAD && engine.runSummary) {
+    if (appScreen === 'dead' && engine.runSummary) {
         const firstDeathStory = getPendingMilestoneStoryBeat(engine.player, ['first_death']);
         // 사망 화면에서도 에테르 거울을 연다 — 게임 화면(GameRoot)이 마운트되지 않으므로 거울 · 뒤로가기 등록을 여기서 준다.
         return withExitConfirm(
@@ -250,7 +257,7 @@ function App() {
         );
     }
 
-    if (!String(engine.player.name || '').trim()) {
+    if (appScreen === 'intro') {
         return withExitConfirm(
             <MotionConfig reducedMotion="user">
                 <MainLayout visualEffect={null} immersive>

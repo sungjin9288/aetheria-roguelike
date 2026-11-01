@@ -1,4 +1,5 @@
 import { CLASSES } from '../data/classes.js';
+import { MSG } from '../data/messages';
 import type { ClassJourneyRecord, ExpeditionSummary } from '../types/player.js';
 
 interface ClassJourneySummaryProps {
@@ -42,10 +43,10 @@ const ClassJourneySummary = ({
                 className={`ae-well ae-class-journey min-w-0 overflow-hidden px-3 py-2.5 ${className}`}
             >
                 <div className="aether-type-label font-readable font-semibold text-ae-gold-text">
-                    이 직업으로 남긴 것 · {job}
+                    {MSG.CLASS_JOURNEY_TITLE(job)}
                 </div>
                 <p className="aether-type-body mt-1 break-words font-readable text-ae-ink-2">
-                    첫 원정을 떠나 이 직업의 여정을 남겨보세요.
+                    {MSG.CLASS_JOURNEY_EMPTY}
                 </p>
             </section>
         );
@@ -72,16 +73,16 @@ const ClassJourneySummary = ({
         ? last(latestSummary.encounterDiscoveries) || last(record.encounterDiscoveries)
         : last(record.encounterDiscoveries);
     const nextDiscovery = record.skillBranches.length === 0
-        ? '새로운 전투 분기'
+        ? MSG.CLASS_JOURNEY_NEXT_BRANCH
         : record.signatureItems.length === 0
-            ? '시그니처 장비'
+            ? MSG.CLASS_JOURNEY_NEXT_SIGNATURE
             : record.bossNames.length === 0
-                ? '처음 만나는 보스'
+                ? MSG.CLASS_JOURNEY_NEXT_BOSS
                 : record.regions.length === 0
-                    ? '새로운 지역'
+                    ? MSG.CLASS_JOURNEY_NEXT_REGION
                     : record.encounterDiscoveries.length === 0
-                        ? '지역 사건의 선택'
-                        : '새로운 지역의 보스';
+                        ? MSG.CLASS_JOURNEY_NEXT_ENCOUNTER
+                        : MSG.CLASS_JOURNEY_NEXT_REGION_BOSS;
 
     return (
         <section
@@ -89,25 +90,25 @@ const ClassJourneySummary = ({
             className={`ae-well ae-class-journey min-w-0 overflow-hidden px-3 py-2.5 ${className}`}
         >
             <div className="aether-type-label font-readable font-semibold text-ae-gold-text">
-                이 직업으로 남긴 것 · {job}
+                {MSG.CLASS_JOURNEY_TITLE(job)}
             </div>
             <div className="mt-1.5 space-y-1 font-readable text-ae-ink">
                 <p data-testid="class-journey-representative" className="aether-type-body break-words">
-                    {isRepresentativeSummary ? '대표 원정' : '남긴 발자국'} · {region || '기록된 지역 없음'}{boss ? ` · ${boss}` : ''}
+                    {isRepresentativeSummary ? MSG.CLASS_JOURNEY_REPRESENTATIVE : MSG.CLASS_JOURNEY_FOOTPRINT} · {region || MSG.CLASS_JOURNEY_NO_REGION}{boss ? ` · ${boss}` : ''}
                 </p>
                 <p data-testid="class-journey-build" className="aether-type-body break-words">
-                    전투 방식 · {discoveredBranch || '분기 미발견'}{buildDiscovery ? ` · ${buildDiscovery}` : ''}
+                    {MSG.CLASS_JOURNEY_BUILD} · {discoveredBranch || MSG.CLASS_JOURNEY_NO_BRANCH}{buildDiscovery ? ` · ${buildDiscovery}` : ''}
                 </p>
                 {encounterDiscovery && (
                     <p
                         data-testid="class-journey-encounter"
                         className="aether-type-body break-words text-ae-ink-2"
                     >
-                        사건의 흔적 · {encounterDiscovery.family} · {encounterDiscovery.choiceLabel}
+                        {MSG.CLASS_JOURNEY_ENCOUNTER} · {encounterDiscovery.family} · {encounterDiscovery.choiceLabel}
                     </p>
                 )}
                 <p data-testid="class-journey-next" className="aether-type-meta text-ae-ink-3">
-                    다음 기록 · {nextDiscovery}
+                    {MSG.CLASS_JOURNEY_NEXT} · {nextDiscovery}
                 </p>
             </div>
         </section>
