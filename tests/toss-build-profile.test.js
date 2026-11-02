@@ -27,3 +27,8 @@ test('canonical Toss web build refuses every QA activation flag', async () => {
     assert.match(source, /AETHERIA_TOSS_ALLOW_TEST_HARNESS/);
     assert.match(source, /Canonical Toss bundle refuses test-harness and device-QA build flags/);
 });
+
+test('canonical Toss web build forces AI events off over any local .env value', async () => {
+    const source = await readFile(new URL('../scripts/build-toss-web.mjs', import.meta.url), 'utf8');
+    assert.match(source, /VITE_USE_AI_PROXY: 'false'/);
+});

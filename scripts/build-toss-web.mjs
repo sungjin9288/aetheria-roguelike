@@ -42,6 +42,9 @@ const status = await new Promise((resolve, reject) => {
         env: {
             ...process.env,
             VITE_PLATFORM_TARGET: 'toss',
+            // AI 이벤트는 끄고 출시한다(소유자 결정 2026-10-29). Vite는 이미 있는 환경 변수를 `.env` 파일보다 앞에 두므로
+            //   로컬 `.env`가 켜 둔 값이 후보에 실리지 않는다. 켜려면 처리방침의 AI 항목을 먼저 되살린다(런북 §9).
+            VITE_USE_AI_PROXY: 'false',
         },
         stdio: 'inherit',
     });

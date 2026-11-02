@@ -417,7 +417,7 @@ export const runQuietRollAndCombat = (
                 phase3: bossProfile?.phase3,
                 statusOnHit: bossProfile?.statusOnHit,
             };
-            addLog('critical', MSG.ABYSS_BOSS_APPEAR(bossName));
+            addLog('warning', MSG.ABYSS_BOSS_APPEAR(bossName));
         } else if (floor % 5 === 0) {
             addLog('warning', MSG.ABYSS_FLOOR_WARNING(floor));
         }
@@ -449,7 +449,7 @@ export const runQuietRollAndCombat = (
     const champion = applyHuntChampion(mStats, player, mapData);
     if (champion.huntChampion) {
         mStats = champion;
-        addLog('critical', MSG.HUNT_CHAMPION_APPEAR(getHuntContract(champion.huntChampion)?.champion || champion.name, champion.huntChampion));
+        addLog('warning', MSG.HUNT_CHAMPION_APPEAR(getHuntContract(champion.huntChampion)?.champion || champion.name, champion.huntChampion));
         // Wave 87: 나타난 우두머리의 격노 강타 한 방을 내 최대 생명과 함께 보인다(실제 엔진 · 고정 난수 — 게임 난수를 쓰지 않는다).
         const threat = getHuntChampionThreat(player, champion);
         addLog('warning', MSG.HUNT_CHAMPION_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits));

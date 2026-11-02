@@ -4,6 +4,7 @@
 //   ③ 레벨은 탐험 난수를 쓰지 않는다 — 탐험 수만 다르면 추첨 수 · 종 · 접두어가 같다
 //   ④ 같은 탐험 · 지역 · 종이면 같은 레벨이다(리로드로 다시 굴릴 수 없다)
 //   ⑤ 보스 · 이야기 전투 · 구역 보스 · 토벌 우두머리는 지역 레벨 그대로다
+//   ⑤-2 심연은 레벨 폭 밖이다 — 층이 레벨을 정하고 지역 레벨을 남기지 않는다(전리품 등급이 층 레벨을 읽는다)
 //   ⑥ 접두어 강함은 배율 그대로이고 화면 레벨 보너스는 그 배율과 같은 강함이다
 //   ⑦ 전투 화면이 적 레벨을 그린다
 import test from 'node:test';
@@ -16,7 +17,7 @@ import { BALANCE, CONSTANTS } from '../src/data/constants.ts';
 import { DB } from '../src/data/db.ts';
 import { MSG } from '../src/data/messages.ts';
 import { spawnEnemy } from '../src/utils/exploreUtils.ts';
-import { getEnemyLevelSpread, getPrefixLevelBonus, getSpeciesLevelBias, rollEnemyLevel } from '../src/utils/enemyLevel.ts';
+import { getEnemyLevelSpread, getEnemyRewardLevel, getPrefixLevelBonus, getSpeciesLevelBias, rollEnemyLevel } from '../src/utils/enemyLevel.ts';
 import { isEncounterBoss } from '../src/utils/bossPresence.ts';
 import { applyHuntChampion } from '../src/utils/huntContracts.ts';
 import { HUNT_CONTRACTS } from '../src/data/huntContracts.ts';
@@ -144,6 +145,27 @@ test('⑤ 보스 · 이야기 전투 · 구역 보스 · 토벌 우두머리는 
             assert.ok(Math.abs(champion.atk / expected.atk - 1) < 0.01, `${contract.map} 공격력 ${champion.atk} ≠ ${expected.atk}`);
         }
         assert.ok(differed, `${contract.map}: 굴린 레벨이 지역 레벨과 다른 경우를 실제로 거쳤다`);
+    }
+});
+
+test('⑤-2 심연은 레벨 폭 밖이다 — 층이 레벨을 정하고 지역 레벨을 남기지 않는다', () => {
+    const abyss = Object.entries(DB.MAPS).filter(([, map]) => map.level === 'infinite');
+    assert.ok(abyss.length > 0, '심연 지역이 있다');
+    for (const [loc, map] of abyss) {
+        for (const abyssFloor of [0, 9, 40]) {
+            const depth = abyssFloor + 1;
+            const levels = new Set();
+            for (let explores = 0; explores < 40; explores += 1) {
+                const player = playerAt(loc, explores, { stats: { ...makePlayerFixture().stats, explores, abyssFloor } });
+                const enemy = spawnEnemy(map, player, [], noLog, { rng: () => 0.99 }).mStats;
+                if (!enemy) continue;
+                levels.add(enemy.level);
+                assert.equal(enemy.regionLevel, undefined, `${loc} ${abyssFloor}층 지역 레벨`);
+                // exploreFlow가 층 레벨(50 + 층)로 다시 쓴 뒤 전리품 등급은 그 레벨을 읽는다
+                assert.equal(getEnemyRewardLevel({ ...enemy, level: 50 + depth }), 50 + depth);
+            }
+            assert.deepEqual([...levels], [50 + Math.floor(depth / 2)], `${loc} ${abyssFloor}층 — 탐험 수로 흔들리지 않는다`);
+        }
     }
 });
 

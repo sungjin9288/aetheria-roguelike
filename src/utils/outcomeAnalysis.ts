@@ -1,3 +1,4 @@
+import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import type { PostCombatResult } from '../types/combat.js';
 import type { RunSummary } from '../reducers/actionTypes.js';
@@ -63,7 +64,7 @@ export const getPostCombatAnalysis = (result: PostCombatResultLike) => {
     else if (enemyTier === 'BOSS') rewardMood = '보스 돌파';
     else if (enemyTier === 'ELITE') rewardMood = '강적 제압';
     else if ((result.items?.length || 0) >= 2) rewardMood = '풍성한 전리품';
-    else if (hpRatio <= 0.35) rewardMood = '위험한 승리';
+    else if (hpRatio <= BALANCE.POST_COMBAT_HP_LOW_RATIO) rewardMood = '위험한 승리';
 
     const rewardHighlights = [];
     if (result.leveledUp) rewardHighlights.push('레벨 상승');
@@ -87,10 +88,10 @@ export const getPostCombatAnalysis = (result: PostCombatResultLike) => {
 const getPostCombatVitalsLow = (result: PostCombatResultLike) => ({
     hpLow: typeof result.hpLow === 'boolean'
         ? result.hpLow
-        : clampRatio(result.playerHp, result.playerMaxHp) <= 0.35,
+        : clampRatio(result.playerHp, result.playerMaxHp) <= BALANCE.POST_COMBAT_HP_LOW_RATIO,
     mpLow: typeof result.mpLow === 'boolean'
         ? result.mpLow
-        : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3,
+        : clampRatio(result.playerMp, result.playerMaxMp) <= BALANCE.POST_COMBAT_MP_LOW_RATIO,
 });
 
 export const getPostCombatRecommendation = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}) => {
@@ -136,12 +137,7 @@ export const isSwiftPostCombat = (result: PostCombatResultLike, context: PostCom
 };
 
 export const getPostCombatDecisionStrip = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}) => {
-    const hpLow = typeof result.hpLow === 'boolean'
-        ? result.hpLow
-        : clampRatio(result.playerHp, result.playerMaxHp) <= 0.35;
-    const mpLow = typeof result.mpLow === 'boolean'
-        ? result.mpLow
-        : clampRatio(result.playerMp, result.playerMaxMp) <= 0.3;
+    const { hpLow, mpLow } = getPostCombatVitalsLow(result);
     const invFull = typeof result.invFull === 'boolean' ? result.invFull : false;
     const enemyTier = result.enemyTier || 'NORMAL';
     const droppedItems = Array.isArray(result.items) ? result.items : [];

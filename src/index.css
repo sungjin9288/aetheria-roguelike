@@ -2360,10 +2360,11 @@
 }
 
 /* ── 추천 경로 줄 ── */
+/* 추천 경로 줄은 정보다 — 누를 수 없으므로 단추처럼 떠 보이지 않는다(높이 그림자 · 밝아지는 hover 없음, 2026-11 출시 전 점검).
+   길을 바꾸는 단추는 도크의 '이동' · '지도'다(UX-03: 같은 동작의 단추 둘을 두지 않는다). */
 .ae-route-signal {
   border-radius: var(--aether-r-md);
-  background: linear-gradient(180deg, var(--aether-s2) 0%, var(--aether-s1) 100%);
-  box-shadow: var(--aether-e1);
+  background: var(--aether-s1);
 }
 
 .ae-route-signal-icon {
@@ -2418,8 +2419,7 @@
     0 4px 12px rgb(var(--aether-void-rgb) / 0.4);
 }
 
-.ae-dock-btn:hover:not(:disabled),
-.ae-route-signal:hover {
+.ae-dock-btn:hover:not(:disabled) {
   filter: brightness(1.06);
 }
 

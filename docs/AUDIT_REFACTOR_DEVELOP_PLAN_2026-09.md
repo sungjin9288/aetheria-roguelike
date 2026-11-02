@@ -10534,3 +10534,33 @@ Wave 125의 48시드 측정에 시드 49 ~ 96을 더했다. 같은 코드이고,
   - `relic-drop-rate` · `relic-event-chance` · `equipment-combat-power`: 출처 해시만 바뀌었다(`CombatEngine.loot.ts`).
   - `content-reachability`: 비용 수치만 바뀌었다.
   - `progression-diagnostic-v2` · `exploration-rhythm`: 리포트 해시가 바뀌었다.
+
+## 158. 출시 전 점검의 결함 7건 (2026-11-02, 베이스 = `main` `c2067a5f` = PR #203 머지)
+
+소유자 요청: "업로드 전에 지금 작업 환경을 디벨롭 했는데 그것들을 이용해서 전체적으로 점검하고" → "결함 수정 후 고도화 설계". 새 작업 환경의 에이전트(코드 고고학 · 증빙 QA · 게임 디자인 · 통계)와 직접 플레이로 찾은 결함이다. 토스 후보 `aetheria-c2067a5-a6313ec3`는 올리지 않고 이 수정이 머지된 뒤 다시 만든다.
+
+### 158.1 결함과 수정
+| # | 결함 | 영향 | 수정 |
+|---|---|---|---|
+| D1 | 도감 마일스톤의 크리스털이 사망마다 다시 지급됐다 — 도감 · 수령 기록(`codexClaimed`)은 사망하면 비워지는데 크리스털은 초기화를 넘어 남는다 | 회차마다 최대 350개(26 마일스톤 합). Wave 108의 "영구 보상은 처음 한 번만"과 업적 크리스털 장부가 도감에는 없었다 | 계정 장부 `stats.crystalRewardedCodexMilestones`(`utils/codexCrystalLedger.ts`). `pickPermanentPlayerState`가 넘기고, 없던 세이브는 수령한 크리스털 마일스톤으로 채운다. 정산과 도감 카드가 같은 `getCodexMilestoneGrant`를 읽어 이미 받은 크리스털을 약속하지 않는다. 다시 받으면 "이미 받았습니다" 줄 |
+| D2 | 심연 일반 적이 지역 레벨 폭(§157)을 탔고 `regionLevel`(50 + 층 ÷ 2)을 남겼다 | `exploreFlow`가 레벨을 50 + 층으로 다시 써도 전리품 등급(`getEnemyRewardLevel`)은 `regionLevel`을 읽어 층 레벨의 절반 쪽으로 내려갔다. §157 이전에는 층 레벨이었다 | 심연은 `regionLevel = null` — 폭도 타지 않는다 |
+| D3 | 전투 결과 카드의 생명 · 기력 분모가 저장 최대치였다 | 장비 · 도감 · 직업 패시브로 늘어난 생명 위에서 낮은 생명을 여유로 읽어 한 장으로 접고 회복 추천을 빠뜨렸다 | 분모 = 실효 최대치(`getEffectiveMaxHp` · `getEffectiveMaxMpFull`). 문턱 0.35 · 0.3은 `BALANCE.POST_COMBAT_HP_LOW_RATIO` · `_MP_LOW_RATIO`로 옮기고 추천 · 판단 줄 · 접기가 같은 함수를 읽는다(사본 하나를 지웠다) |
+| D4 | 토스 빌드가 `process.env`를 그대로 넘겨 로컬 `.env`의 `VITE_USE_AI_PROXY=true`가 후보에 실릴 수 있었다 | 처리방침이 말하지 않는 외부 전송(소유자 결정 2026-10-29 "AI 끄고 출시") | 빌드가 `VITE_USE_AI_PROXY=false`를 강제하고 검증기가 켜진 번들(`VITE_USE_AI_PROXY:"true"`)을 거부한다(`aiProxyEnabled`) |
+| D5 | 적이 나타났다는 줄(정예 · 심연 층 보스 · 토벌 우두머리)이 '치명타' 배지였다 | D25가 적 행동을 '적 행동'으로 갈랐는데 출현 줄만 남았다 | `warning`('주의'). 기록 종류만 바뀌어 줄 수 · 난수는 그대로다 |
+| D6 | 조작판의 추천 경로 줄이 떠 있는 카드 그림자 · hover 밝아짐으로 단추처럼 보였지만 누를 수 없었다 | 눌러도 반응 없음 | 정보 줄로 보이게 했다(평평한 바탕, hover 없음). 길을 바꾸는 단추는 도크의 '이동' · '지도'다 — 줄을 단추로 만들면 같은 동작의 단추가 둘이 된다(UX-03) |
+| D7 | 개발 모드 StrictMode가 부트 이펙트를 두 번 돌려 익명 사용자가 둘 생겼다 | 앱 uid ≠ `auth.currentUser.uid` → 자기 문서 읽기 · 쓰기 전부 거부, '클라우드 연결 실패'. 프로덕션은 한 번만 돌아 해당 없음(기기 미확인) | `platform/anonymousSignIn.ts` — 한 Auth에 진행 중인 요청을 나눠 쓰고, 로그인한 사용자가 있으면 그 사용자, 실패하면 다음 부트가 다시 시도 |
+
+### 158.2 게이트
+- 새 · 고친 테스트(수정 전 붉고 수정 뒤 초록 — 각각 수정만 되돌려 확인):
+  - D1 `journey-reset-scope-contract` 2건(사망 → 다시 모음 → 크리스털 없음 · 공격력은 다시, 장부 없는 세이브 채우기);
+  - D2 `enemy-level-range-contract` ⑤-2(심연 3개 층 × 40탐험 — 레벨이 흔들리지 않고 `regionLevel` 없음);
+  - D3 `post-combat-card-production` ①-0(도감 생명 +100 위의 생명 60 → 실효 최대치 · 접지 않음 · 회복 추천). 같은 파일의 등급 테스트는 픽스처를 고쳤다 — 전사 "가득 찬 생명"을 저장 최대치(100)로 두었는데 실효 최대치는 180이다. 단언은 그대로다;
+  - D4 `toss-bundle-verifier` 1건(켜진 번들 거부 · 꺼진 번들 통과), `toss-build-profile` 1건;
+  - D5 `elite-threat-display-contract` 1건(탐험 실경로의 출현 줄 배지), `hunt-contracts-contract` 단언 1줄;
+  - D6 `route-signal-static-affordance`(새 파일 — 렌더에 누를 수 있는 요소 없음, hover · 높이 그림자 부재);
+  - D7 `anonymous-sign-in-once`(새 파일 — 동시 두 번 → 요청 하나 · 같은 uid, 로그인한 사용자 재사용, 실패 뒤 재시도).
+- `npm run type-check` · `lint` · `build:guard` 통과. 단위 6,493건 중 6,489 통과, 4건(`monster-source-preflight` — 하위 프로세스 30초 시간 제한)은 이 기계의 다른 작업(Unity 테스트 · 다른 저장소 pytest)으로 부하 평균이 62 ~ 115일 때만 시간 초과였고 따로 돌리면 5/5 통과한다. 이 변경과 무관한 아트 도구다.
+- `npm run evidence:verify` 15/15. 두 증빙은 출처 해시만 바뀌었다(리포트 본문 구조 비교 동일): `progression-diagnostic-v2`(`exploreUtils.ts`), `equipment-combat-power`(`constants.ts`).
+- e2e 23/23: `post-combat-continue-explore` · `field-dock-fit` · `codex-progression-design` · `mobile-legibility`.
+- 토스 웹 빌드 실측: `.env`가 AI를 켠 이 작업 트리에서 `npm run build:toss:web` → 번들의 env는 `VITE_USE_AI_PROXY:"false"`, 검증기 `ok: true` · `aiProxyEnabled: false`.
+- 자연 플레이 드라이버 v3: 기사 · 성직자 × 시드 2개 × 2회차가 `main`과 바이트 동일하다 — 드라이버는 도감 크리스털 · 심연 · 결과 카드 · 기록 배지를 측정하지 않는다.

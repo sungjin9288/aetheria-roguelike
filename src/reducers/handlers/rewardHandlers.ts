@@ -34,6 +34,7 @@ import { addNewTitles, addSeasonXp } from './helpers';
 import type { GameState, HandlerMap } from '../gameReducer';
 import type { Player } from '../../types';
 import { collectCrystalRewardedAchievementIds } from '../../utils/permanentProgress';
+import { collectCrystalRewardedCodexMilestoneIds, getCodexMilestoneGrant } from '../../utils/codexCrystalLedger';
 
 const formatNumber = (value: number) => new Intl.NumberFormat('ko-KR').format(value);
 
@@ -333,12 +334,17 @@ export const rewardActionMap = {
         );
         if (!milestone) return state;
 
-        const reward: CodexReward = milestone.reward || {};
+        // 2026-11 (출시 전 결함 수정): 크리스털은 계정당 한 번이다 — 사망 뒤 다시 모은 마일스톤은 크리스털 없이 준다.
+        const fullReward: CodexReward = milestone.reward || {};
+        const reward = getCodexMilestoneGrant(milestoneId, fullReward, state.player.stats);
+        const crystalAlreadyGranted = Boolean(fullReward.premiumCurrency) && !reward.premiumCurrency;
+        const crystalRewarded = collectCrystalRewardedCodexMilestoneIds(state.player.stats);
         let p: Player = {
             ...state.player,
             stats: {
                 ...state.player.stats,
                 codexClaimed: [...prevClaimed, milestoneId],
+                ...(reward.premiumCurrency ? { crystalRewardedCodexMilestones: [...crystalRewarded, milestoneId] } : {}),
                 codexBonusAtk: (state.player.stats?.codexBonusAtk || 0) + (reward.atk || 0),
                 codexBonusDef: (state.player.stats?.codexBonusDef || 0) + (reward.def || 0),
                 codexBonusHp: (state.player.stats?.codexBonusHp || 0) + (reward.hp || 0),
@@ -353,6 +359,7 @@ export const rewardActionMap = {
             player: p,
             logs: appendRewardLogs(state.logs, [
                 `도감 보상 · ${milestone.label} · ${rewardText}`,
+                ...(crystalAlreadyGranted ? [{ type: 'system', text: MSG.ACH_CRYSTAL_ALREADY_GRANTED(Number(fullReward.premiumCurrency)) }] : []),
             ]),
             syncStatus: 'syncing',
         };

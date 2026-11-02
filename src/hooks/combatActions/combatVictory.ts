@@ -17,6 +17,7 @@ import { queueMilestoneStoryBeat } from '../../utils/milestoneStory';
 import { recordCurrentRunMaxKillStreak } from '../../utils/runProgress';
 import { appendExpeditionBoss } from '../../utils/expeditionLedger';
 import { admitCombatLoot } from '../../systems/combatLootCapacity';
+import { getEffectiveMaxHp, getEffectiveMaxMpFull } from '../../systems/vitals';
 import { advanceHuntContractOnVictory } from '../../utils/huntContracts';
 import type { FullStats, Player } from '../../types';
 import type { LootSettlementReceipt } from '../../reducers/gameReducer';
@@ -345,10 +346,11 @@ export const handleVictoryOutcome = ({
             gold: victoryResult.goldGained,
             items: droppedItems,
             leveledUp: Boolean(victoryResult.leveledUp),
+            // 생명 · 기력 문턱(추천 · 한 장 접기)의 분모는 실효 최대치다 — 저장값은 장비 · 칭호 · 직업 약점(×0.8)을 모른다.
             playerHp: updatedPlayer.hp,
-            playerMaxHp: victoryStats.maxHp,
+            playerMaxHp: getEffectiveMaxHp(updatedPlayer),
             playerMp: updatedPlayer.mp,
-            playerMaxMp: victoryStats.maxMp,
+            playerMaxMp: getEffectiveMaxMpFull(updatedPlayer, updatedPlayer.relics || [], updatedPlayer.maxMp ?? stats.maxMp),
             invFull: (updatedPlayer.inv?.length || 0) >= inventoryCap,
             primaryBuild: buildProfile.primary.name,
             enemyWeakness: deadEnemy?.weakness || null,

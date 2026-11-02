@@ -6,6 +6,7 @@ import { BALANCE, CONSTANTS } from '../src/data/constants.js';
 import { DB } from '../src/data/db.js';
 import { HUNT_CONTRACTS, getHuntContract } from '../src/data/huntContracts.js';
 import { MSG } from '../src/data/messages.js';
+import { getLogBadgeKind } from '../src/data/logBadge.js';
 import { RELICS } from '../src/data/relics.js';
 import { runQuietRollAndCombat } from '../src/hooks/gameActions/exploreFlow.ts';
 import { AT } from '../src/reducers/actionTypes.js';
@@ -284,6 +285,8 @@ test('우두머리: 기척을 다 채운 지역의 다음 일반 개체가 우�
         assert.equal(champion.phase2.atkBonus, BALANCE.HUNT_CHAMPION_PHASE_ATK_BONUS);
         assert.ok(matchesQuestTarget(champion.baseName, before.baseName), '임무 목표 판정은 종으로');
         assert.ok(logTexts(hunting.state).includes(MSG.HUNT_CHAMPION_APPEAR(contract.champion, contract.map)));
+        const appearLog = hunting.state.logs.find((log) => log.text === MSG.HUNT_CHAMPION_APPEAR(contract.champion, contract.map));
+        assert.equal(getLogBadgeKind(appearLog), 'warning', '우두머리 출현은 주의 배지다 — 치명타가 아니다');
         assert.equal(plain.state.enemy.huntChampion, undefined, '의뢰 0단계에는 우두머리가 없다');
     }
 });

@@ -7,6 +7,7 @@ import { SIGNATURE_ITEM_REGISTRY } from '../data/signatureItems.js';
 import { AT } from '../reducers/actionTypes';
 import { MSG } from '../data/messages';
 import { getCollectionSummary } from '../utils/ascensionRuleView';
+import { getCodexMilestoneGrant } from '../utils/codexCrystalLedger';
 import {
     CODEX_CATEGORY_LABELS,
     formatCodexRewardParts,
@@ -155,7 +156,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                                 <div className="min-w-0 flex-1">
                                     <div className="aether-type-body font-semibold text-ae-ink">{milestone.label}</div>
                                     <div className="aether-type-meta mt-0.5 text-ae-gold-text">
-                                        {formatCodexRewardParts(milestone.reward, player).join(' · ')}
+                                        {formatCodexRewardParts(getCodexMilestoneGrant(milestone.id, milestone.reward, player?.stats), player).join(' · ')}
                                     </div>
                                 </div>
                                 <ActionButton
@@ -200,7 +201,7 @@ const Codex = ({ player, dispatch }: CodexProps) => {
                                 className="ab-gauge-thin mt-1.5"
                             />
                             <div className="aether-type-meta mt-1.5 text-ae-gold-text">
-                                {MSG.CODEX_PANEL_GOAL_REWARD(formatCodexRewardParts(goal.reward, player).join(' · '), goal.remaining)}
+                                {MSG.CODEX_PANEL_GOAL_REWARD(formatCodexRewardParts(getCodexMilestoneGrant(goal.id, goal.reward, player?.stats), player).join(' · '), goal.remaining)}
                             </div>
                         </div>
                     ))}
