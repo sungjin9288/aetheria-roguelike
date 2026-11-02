@@ -400,7 +400,7 @@ test('buildEquipmentPreviewAppearance derives specific loadout previews for offh
     assert.equal(daggerPreview.weapon?.art?.slot, 'weapon');
 });
 
-test('equipment preview candidates emphasize loadout silhouettes for weapon and offhand cards', () => {
+test('equipment preview candidates use the canonical portrait of the job the item implies', () => {
     const swordPreview = buildEquipmentPreviewAppearance({
         name: '롱소드',
         type: 'weapon',
@@ -431,12 +431,12 @@ test('equipment preview candidates emphasize loadout silhouettes for weapon and 
         elem: '빛',
     });
 
-    assert.equal(getAvatarEquipmentPreviewCandidates(swordPreview)[0], '/assets/avatars/adventurer-sword.png');
-    assert.equal(getAvatarEquipmentPreviewCandidates(shieldPreview)[0], '/assets/avatars/knight-plate-guardian.png');
-    assert.equal(getAvatarEquipmentPreviewCandidates(armorPreview)[0], '/assets/avatars/adventurer-coat.png');
-    assert.equal(getAvatarEquipmentPreviewCandidates(robePreview)[0], '/assets/avatars/archmage-robe.png');
-    assert.equal(getAvatarEquipmentPreviewCandidates(bowPreview)[0], '/assets/avatars/ranger-coat-archer.png');
-    assert.equal(getAvatarEquipmentPreviewCandidates(platePreview)[0], '/assets/avatars/paladin-plate.png');
+    assert.equal(getAvatarEquipmentPreviewCandidates(swordPreview)[0], '/assets/avatars/canonical/adventurer.png');
+    assert.equal(getAvatarEquipmentPreviewCandidates(shieldPreview)[0], '/assets/avatars/canonical/knight.png');
+    assert.equal(getAvatarEquipmentPreviewCandidates(armorPreview)[0], '/assets/avatars/canonical/adventurer.png');
+    assert.equal(getAvatarEquipmentPreviewCandidates(robePreview)[0], '/assets/avatars/canonical/archmage.png');
+    assert.equal(getAvatarEquipmentPreviewCandidates(bowPreview)[0], '/assets/avatars/canonical/ranger.png');
+    assert.equal(getAvatarEquipmentPreviewCandidates(platePreview)[0], '/assets/avatars/canonical/paladin.png');
 });
 
 test('equipment preview stage emphasizes the relevant slot instead of shrinking everything equally', () => {

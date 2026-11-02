@@ -36,12 +36,6 @@ const listFiles = async (directory, repoRoot) => {
     return files;
 };
 
-const listTopLevelFiles = async (directory, repoRoot) => (
-    (await readdir(path.join(repoRoot, directory), { withFileTypes: true }))
-        .filter((entry) => entry.isFile())
-        .map((entry) => path.posix.join(directory, entry.name))
-);
-
 const codePointSort = (left, right) => left < right ? -1 : left > right ? 1 : 0;
 
 export const buildTossAssetCatalog = async ({ repoRoot }) => {
@@ -66,8 +60,6 @@ export const buildTossAssetCatalog = async ({ repoRoot }) => {
         'potion', 'material', 'ore', 'crystal', 'scale', 'fang',
         'bone', 'core', 'relic', 'herb', 'pouch', 'key',
     ].map((assetKey) => `public/assets/items/${assetKey}.png`);
-    const compatibilityAvatarFiles = (await listTopLevelFiles('public/assets/avatars', repoRoot))
-        .filter((file) => file.endsWith('.png'));
 
     const staticDirectories = [
         'public/assets/locations',
@@ -92,7 +84,6 @@ export const buildTossAssetCatalog = async ({ repoRoot }) => {
         ...monsterFiles,
         ...nonEquipmentFiles,
         ...genericItemFiles,
-        ...compatibilityAvatarFiles,
         ...staticFiles,
         ...shellFiles,
     ])]
@@ -121,7 +112,6 @@ export const buildTossAssetCatalog = async ({ repoRoot }) => {
             signatureOverlays: signatureOverlayFiles.length,
             monsters: monsterFiles.length,
             nonEquipment: nonEquipmentFiles.length,
-            compatibilityAvatars: compatibilityAvatarFiles.length,
         },
         files,
         filesSha256: createHash('sha256').update(files.join('\n')).digest('hex'),

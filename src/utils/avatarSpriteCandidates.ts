@@ -21,66 +21,6 @@ export const JOB_SPRITE_SLUG_MAP: Record<string, string> = {
     대마법사: 'grand-mage',
 };
 
-const AVAILABLE_AVATAR_KEYS = new Set([
-    'adventurer',
-    'adventurer-archer',
-    'adventurer-caster',
-    'adventurer-coat',
-    'adventurer-dagger',
-    'adventurer-guardian',
-    'adventurer-heavy',
-    'adventurer-lancer',
-    'adventurer-leather',
-    'adventurer-plate',
-    'adventurer-robe',
-    'adventurer-sword',
-    'archmage',
-    'archmage-robe',
-    'archmage-robe-caster',
-    'assassin',
-    'assassin-leather',
-    'assassin-leather-dagger',
-    'berserker',
-    'berserker-plate',
-    'berserker-plate-heavy',
-    'chronomancer',
-    'chronomancer-robe',
-    'chronomancer-robe-caster',
-    'grand-mage',
-    'grand-mage-robe',
-    'grand-mage-robe-caster',
-    'knight',
-    'knight-plate',
-    'knight-plate-guardian',
-    'mage',
-    'mage-robe',
-    'mage-robe-caster',
-    'paladin',
-    'paladin-plate',
-    'paladin-plate-guardian',
-    'ranger',
-    'ranger-coat',
-    'ranger-coat-archer',
-    'rogue',
-    'rogue-leather',
-    'rogue-leather-dagger',
-    'shadow-lord',
-    'shadow-lord-leather',
-    'shadow-lord-leather-dagger',
-    'warlock',
-    'warlock-robe',
-    'warlock-robe-caster',
-    'warrior',
-    'warrior-plate',
-    'warrior-plate-heavy',
-    'warrior-plate-sword',
-]);
-
-const buildCandidatePaths = (orderedKeys: string[]) => (
-    [...new Set(orderedKeys.filter((key) => key && AVAILABLE_AVATAR_KEYS.has(key)))]
-        .map((key) => `/assets/avatars/${key}.png`)
-);
-
 type CharacterArtEntry = {
     slug: string;
     runtimePath: string;
@@ -105,15 +45,6 @@ interface AvatarAppearanceLike {
     offhand?: unknown;
 }
 
-const resolveAppearanceKeys = (appearance: AvatarAppearanceLike | null | undefined) => {
-    const normalizedJob = String(appearance?.job || '모험가').replace(/\s+/g, '');
-    const jobSlug = JOB_SPRITE_SLUG_MAP[normalizedJob] || JOB_SPRITE_SLUG_MAP[appearance?.job ?? ''] || 'adventurer';
-    const armorStyle = appearance?.armorStyle || 'coat';
-    const loadoutStyle = appearance?.loadoutStyle || 'sword';
-
-    return { jobSlug, armorStyle, loadoutStyle };
-};
-
 // cycle 395: weaponless adventurer sprite 정적 set 제거 — cycle 35 시점 작성된
 //   future-use 데이터였으나 도입 path가 끝내 미실현. src/, tests/ read 0건.
 
@@ -130,29 +61,9 @@ export const getAvatarSpriteCandidates = (appearance: AvatarAppearanceLike | nul
     return ['/assets/avatars/canonical/adventurer.png'];
 };
 
-export const getAvatarEquipmentPreviewCandidates = (appearance: AvatarAppearanceLike | null | undefined) => {
-    const { jobSlug, armorStyle, loadoutStyle } = resolveAppearanceKeys(appearance);
-    const emphasizesLoadout = Boolean(appearance?.weapon || appearance?.offhand);
-
-    const orderedKeys = emphasizesLoadout
-        ? [
-            `${jobSlug}-${armorStyle}-${loadoutStyle}`,
-            `${jobSlug}-${loadoutStyle}`,
-            `${jobSlug}-${armorStyle}`,
-            jobSlug,
-            `adventurer-${loadoutStyle}`,
-            `adventurer-${armorStyle}`,
-            'adventurer',
-        ]
-        : [
-            `${jobSlug}-${armorStyle}-${loadoutStyle}`,
-            `${jobSlug}-${armorStyle}`,
-            `${jobSlug}-${loadoutStyle}`,
-            jobSlug,
-            `adventurer-${armorStyle}`,
-            `adventurer-${loadoutStyle}`,
-            'adventurer',
-        ];
-
-    return buildCandidatePaths(orderedKeys);
-};
+// 2026-11: 장비 미리보기도 정식 초상화 하나를 쓴다 — 옛 무장별 초상화 52장은 그림체 · 얼굴이 정식 초상화와 달라
+//   아이콘을 불러오지 못한 순간 다른 캐릭터처럼 보였고, 토스 번들 79 MiB 중 52 MiB를 차지했다.
+//   미리보기의 직업(무기 · 방어구로 정한다)은 그대로 쓴다.
+export const getAvatarEquipmentPreviewCandidates = (appearance: AvatarAppearanceLike | null | undefined) => (
+    getAvatarSpriteCandidates({ job: appearance?.job })
+);
