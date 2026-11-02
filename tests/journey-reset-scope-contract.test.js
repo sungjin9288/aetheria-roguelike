@@ -167,6 +167,30 @@ test('크리스털 보상은 계정당 한 번이다 — 다시 달성한 업적
     assert.ok(result.logs.some((log) => String(log.text).includes('이미 받았습니다')), '이미 받았다고 알린다');
 });
 
+test('도감 크리스털도 계정당 한 번이다 — 사망 뒤 다시 모은 마일스톤은 공격력 · 골드만 준다', () => {
+    const claim = (player) => gameReducer({ ...clone(INITIAL_STATE), player }, { type: AT.CLAIM_CODEX_REWARD, payload: { milestoneId: 'weapons_15' } });
+    const fifteenWeapons = Object.fromEntries(Array.from({ length: 15 }, (_, index) => [`검 ${index}`, true]));
+    const withWeapons = (player) => ({ ...player, stats: { ...player.stats, codex: { ...player.stats.codex, weapons: fifteenWeapons }, codexClaimed: [], crystalRewardedCodexMilestones: [] } });
+    const once = claim(withWeapons(veteran())).player;
+    assert.equal(once.premiumCurrency, 77 + 5);
+    assert.deepEqual(once.stats.crystalRewardedCodexMilestones, ['weapons_15']);
+    const reborn = die(once);
+    assert.deepEqual(reborn.stats.codexClaimed, [], '도감 수령 기록은 사망하면 비워진다');
+    assert.deepEqual(reborn.stats.crystalRewardedCodexMilestones, ['weapons_15'], '크리스털 장부는 남는다');
+    const recollected = { ...reborn, stats: { ...reborn.stats, codex: { ...reborn.stats.codex, weapons: fifteenWeapons } } };
+    const result = claim(recollected);
+    assert.equal(result.player.premiumCurrency, once.premiumCurrency, '크리스털은 다시 주지 않는다');
+    assert.equal(result.player.stats.codexBonusAtk, (recollected.stats.codexBonusAtk || 0) + 4, '공격력은 다시 준다');
+    assert.ok(result.logs.some((log) => String(log.text).includes('이미 받았습니다')), '이미 받았다고 알린다');
+    assert.ok(!result.logs.some((log) => String(log.text).includes('도감 보상') && String(log.text).includes('크리스탈')), '보상 줄이 크리스털을 말하지 않는다');
+});
+
+test('장부가 없던 세이브는 수령한 크리스털 마일스톤으로 채운다', () => {
+    const legacy = veteran({ stats: { ...veteran().stats, codexClaimed: ['weapons_5', 'weapons_15'] } });
+    delete legacy.stats.crystalRewardedCodexMilestones;
+    assert.deepEqual(die(legacy).stats.crystalRewardedCodexMilestones, ['weapons_15'], '크리스털이 없는 weapons_5는 장부에 넣지 않는다');
+});
+
 test('기준점이 없는 이전 세이브는 평생 값을 읽는다 — 진행 중이던 업적이 0으로 떨어지지 않는다', () => {
     const legacyStats = { ...veteran().stats };
     delete legacyStats.currentRun;

@@ -120,3 +120,21 @@ test('production Toss verifier rejects every device-QA/test-harness marker', asy
         assert.deepEqual(result.testHarnessMarkers, [marker]);
     }
 });
+
+test('Toss bundle verifier rejects a bundle built with AI events on — the launch build ships AI off', async (t) => {
+    const bundleDir = await mkdtemp(path.join(os.tmpdir(), 'aetheria-toss-bundle-'));
+    t.after(() => rm(bundleDir, { recursive: true, force: true }));
+    await mkdir(path.join(bundleDir, 'assets'), { recursive: true });
+    await writeFile(path.join(bundleDir, 'index.html'), '<main>Aetheria</main>');
+    await writeFile(path.join(bundleDir, 'assets/required.png'), 'asset');
+    await writeFile(path.join(bundleDir, 'assets/index.js'), 'const e={BASE_URL:"./",VITE_USE_AI_PROXY:"true",VITE_PLATFORM_TARGET:"toss"};');
+
+    const on = await verifyTossBundle({ bundleDir, catalog: { files: ['public/assets/required.png'] } });
+    assert.equal(on.ok, false);
+    assert.equal(on.aiProxyEnabled, true);
+
+    await writeFile(path.join(bundleDir, 'assets/index.js'), 'const e={BASE_URL:"./",VITE_USE_AI_PROXY:"false",VITE_PLATFORM_TARGET:"toss"};');
+    const off = await verifyTossBundle({ bundleDir, catalog: { files: ['public/assets/required.png'] } });
+    assert.equal(off.ok, true);
+    assert.equal(off.aiProxyEnabled, false);
+});

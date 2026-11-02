@@ -13,6 +13,7 @@ import { AT } from '../src/reducers/actionTypes.js';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.js';
 import { GS } from '../src/reducers/gameStates.js';
 import { buildCombatView } from '../src/utils/combatView.js';
+import { getLogBadgeKind } from '../src/data/logBadge.js';
 import { estimateEnemyMaxHit, getAppearThreatLine, getEliteThreatChip, getEnemyThreat } from '../src/utils/enemyThreat.js';
 import { spawnEnemy } from '../src/utils/exploreUtils.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
@@ -135,6 +136,13 @@ test('탐험 중 정예가 나타나면 그 개체의 가장 센 한 방이 전�
     // 나타나는 순간의 플레이어로 잰다 — 정예 목격 칭호는 적이 나타나는 전이(`SET_ENEMY`)가 그 뒤에 준다.
     assert.ok(texts.includes(eliteLine(getEnemyThreat(player, state.enemy))), texts.join('\n'));
     assert.ok(!texts.some((text) => text.startsWith(BOSS_PREFIX)));
+});
+
+test('정예가 나타났다는 줄은 주의 배지다 — 내가 낸 치명타가 아니다', async () => {
+    const state = await explore(stateOf(playerAt(LOC, 8, { challengeModifiers: ['eliteOnly'] })));
+    const appear = (state.logs || []).find((log) => String(log.text).includes('정예 개체가 나타났습니다'));
+    assert.ok(appear, '정예 출현 줄이 있다');
+    assert.equal(getLogBadgeKind(appear), 'warning');
 });
 
 test('일반 개체 조우에는 정예 줄이 붙지 않는다', async () => {

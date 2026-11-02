@@ -5,7 +5,6 @@ import {
     setDoc,
     serverTimestamp
 } from 'firebase/firestore';
-import { signInAnonymously } from 'firebase/auth';
 
 import { auth, db, hasFirebaseConfig } from '../firebase';
 import { CONSTANTS, APP_ID, BALANCE } from '../data/constants';
@@ -13,6 +12,7 @@ import { migrateData } from '../utils/gameUtils';
 import { hasMigratedPlayer } from '../utils/dataMigration';
 import { buildPublicGraveDoc } from '../utils/publicGraveDoc';
 import { writePublicGrave } from '../platform/publicGraveFirestore';
+import { signInAnonymouslyOnce } from '../platform/anonymousSignIn';
 import { getDeviceQaScenario, isMockRuntime } from '../utils/runtimeMode';
 import { INITIAL_STATE } from '../reducers/gameReducer';
 import { AT } from '../reducers/actionTypes';
@@ -245,9 +245,10 @@ export const useFirebaseSync = (state: GameState, dispatch: Dispatch<GameAction>
                 case 'signIn':
                     // auth는 hasFirebaseConfig가 참일 때만 non-null(firebase.ts) — 타입 가드용 동치 검사.
                     if (!auth) break;
-                    signInAnonymously(auth)
-                        .then((cred) => {
-                            applyBoot({ kind: 'auth_ok', uid: cred.user.uid });
+                    // 한 Auth에 익명 로그인 한 번 — StrictMode의 두 번째 부트가 두 번째 익명 사용자를 만들지 않는다.
+                    signInAnonymouslyOnce(auth)
+                        .then((uid) => {
+                            applyBoot({ kind: 'auth_ok', uid });
                         })
                         .catch((e: unknown) => {
                             console.error('Auth Failed', e);

@@ -178,7 +178,9 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     }
     // 2026-11 (소유자 결정 "지역 레벨 ±4 · 강한 종은 폭 위쪽"): 일반 조우는 지역 레벨 폭 안의 레벨이다(utils/enemyLevel.ts —
     //   탐험 해시라 난수를 쓰지 않는다). 보스 · 이야기 전투 · 구역 보스 · 심연은 지역 레벨 그대로다(생명이 그 레벨에서 맞춘 값).
-    const regionLevel = typeof level === 'number' ? level : null;
+    //   심연은 지역이 아니다 — 층이 레벨을 정하고(`exploreFlow`가 50 + 층으로 다시 쓴다) 전리품 등급도 그 레벨을 읽으므로
+    //   지역 레벨(`regionLevel`)을 남기지 않는다. 남기면 층 레벨의 절반 쪽(50 + 층 ÷ 2)으로 전리품 등급이 내려간다.
+    const regionLevel = typeof level === 'number' && !isInfinite ? level : null;
     if (regionLevel !== null && !storyMonster && !spawnAreaBoss && !isEncounterBoss(baseName, mapData)) {
         level = rollEnemyLevel(regionLevel, baseName, mapData, player);
     }
@@ -312,7 +314,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         }
 
         // 2026-10 Wave 131: 화면 용어는 '정예'다("엘리트 몬스터 [정예] 개체"였다). 초반 정예는 접두어가 곧 '정예'라 되풀이하지 않는다.
-        if (mStats.isElite) addLog('critical', prefix.name === EARLY_ELITE_PREFIX_NAME ? MSG.ELITE_APPEAR : MSG.ELITE_PREFIX_APPEAR(prefix.name));
+        if (mStats.isElite) addLog('warning', prefix.name === EARLY_ELITE_PREFIX_NAME ? MSG.ELITE_APPEAR : MSG.ELITE_PREFIX_APPEAR(prefix.name));
         else if (prefix.name !== '일반적인') addLog('warning', MSG.PREFIX_APPEAR(prefix.name));
     }
 

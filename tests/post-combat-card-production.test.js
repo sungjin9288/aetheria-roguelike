@@ -11,7 +11,9 @@ import {
     getPostCombatAnalysis,
     getPostCombatDecisionStrip,
     getPostCombatRecommendation,
+    isSwiftPostCombat,
 } from '../src/utils/outcomeAnalysis.js';
+import { getEffectiveMaxHp } from '../src/systems/vitals.js';
 
 /**
  * 2026-09 D3 — 전투 결과 카드(PostCombatCard)를 실제 승리 흐름에 연결.
@@ -63,6 +65,21 @@ const makeState = (overrides = {}) => ({
 const attack = (state, seed = 11, now = 1_700_000_000_000) => actionMap.RESOLVE_COMBAT_ACTION(state, {
     type: AT.RESOLVE_COMBAT_ACTION,
     payload: { kind: 'attack', expectedTurn: state.combatTurn || 0, seed, now },
+});
+
+// ── ①-0 생명 · 기력 문턱의 분모는 실효 최대치다 ───────────────────────────
+test('①-0 결과 카드의 생명 분모는 실효 최대 생명이다 — 도감 보너스로 늘어난 생명 위에서 낮으면 접지 않는다', () => {
+    // 저장 최대 100에 도감 생명 +100 · 직업 패시브가 붙는다. 생명 60은 저장값으로 60%(여유)지만 실효로는 35% 아래(낮음)다.
+    const base = makeState();
+    const player = { ...base.player, stats: { ...base.player.stats, codexBonusHp: 100 } };
+    const effectiveMaxHp = getEffectiveMaxHp(player);
+    assert.ok(60 / effectiveMaxHp <= 0.35 && 60 / player.maxHp > 0.35, `전제: 실효 ${effectiveMaxHp}`);
+    const result = attack({ ...base, player }).postCombatResult;
+    assert.ok(result);
+    assert.equal(result.playerMaxHp, effectiveMaxHp, '저장 최대 생명(100)이 아니라 실효 최대 생명이다');
+    assert.equal(result.swift, true, '한 행동에 끝난 일반 전투다');
+    assert.equal(isSwiftPostCombat(result), false, '실효 생명 30%는 회복 판단 거리라 한 장으로 접지 않는다');
+    assert.equal(getPostCombatRecommendation(result).label, '회복 아이템 확인');
 });
 
 // ── ① 실제 승리가 카드 결과를 남긴다 ─────────────────────────────────────
@@ -119,8 +136,10 @@ test('① 카드가 쓰는 파생 요약이 실제 결과에서 빈 값 없이 �
 });
 
 test('① 생명 비율이 등급을 나눈다 — 불리언 플래그로 뭉개지지 않는다', () => {
+    // 가득 찬 생명은 실효 최대 생명이다(전사는 직업 패시브로 저장값보다 크다 — 결과 카드의 분모도 실효 최대치다).
+    const fullHp = getEffectiveMaxHp({ ...makeState().player, maxHp: 100 });
     const healthy = attack(makeState({
-        player: { ...makeState().player, hp: 100, maxHp: 100 },
+        player: { ...makeState().player, hp: fullHp, maxHp: 100 },
     })).postCombatResult;
     const battered = attack(makeState({
         player: { ...makeState().player, hp: 12, maxHp: 100 },

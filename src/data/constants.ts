@@ -675,6 +675,9 @@ export const BALANCE = {
 
     // 인벤토리 UX 임계값
     INV_FULL_THRESHOLD: 18,             // 인벤토리 과밀 경고 임계 (최대의 ~90%)
+    // 전투 결과 카드 — 승리 뒤 생명 · 기력이 이 비율 이하면 회복을 권하고 한 장 접기(D1)를 막는다(실효 최대치 기준)
+    POST_COMBAT_HP_LOW_RATIO: 0.35,
+    POST_COMBAT_MP_LOW_RATIO: 0.3,
 
     // 리텐션 훅 — 복귀 브리핑 카드
     RETURN_BRIEFING_HOURS: 6,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시

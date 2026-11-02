@@ -68,3 +68,19 @@
 - State whether `tasks/todo.md` was updated.
 - Name the latest native build, archive, or smoke artifact touched.
 - Separate app regressions from environment blockers such as signing, keystore, or device connectivity issues.
+
+<!-- BEGIN dev-env:shared-tools -->
+## 공용 skill·agent (dev-env)
+
+`~/dev/dev-env`에 설치된 공용 도구 중 이 프로젝트에 맞는 것이다. 이 문서의 프로젝트 규칙이 우선한다.
+agent 이름은 Claude가 하이픈(`evidence-qa`), Codex가 밑줄(`evidence_qa`, multi-agent `agent_type`)로 부른다.
+
+- 핵심 루프·새 기능·모드·진행 설계, GDD 검토: `game-designer` agent. 수치·곡선·보상표: `game-balancing` skill.
+- 밸런스 측정·플레이테스트 판정이 몇 판으로 믿을 만한지: `statistician` agent.
+- Playwright E2E 작성·불안정 테스트 정리·CI 연결: `e2e-test-engineer` agent.
+- "된다"는 결과를 완료로 판정하기 전 재현 가능한 증거 검증: `evidence-qa` agent.
+- 여러 세션·도구가 고친 코드의 파일 간 엇갈림·죽은 코드·낡은 문서 점검: `codebase-archaeologist` agent(읽기 전용).
+- 세이브·설정 저장 형식 변경: `deprecation-and-migration` skill.
+- 스토어 출시 규정·확률형 유료 보상 공시: `korean-app-store` skill.
+- 앱 화면·흐름 점검: `ux-review`. 시각 방향 평가: `design-critique`.
+<!-- END dev-env:shared-tools -->

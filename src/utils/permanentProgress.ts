@@ -3,6 +3,7 @@ import { normalizeClassJourneyLedger } from './classJourney';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward';
 import { collectSignatureLedger } from './signatureDiscovery';
 import { collectAchievedAchievementIds } from './achievementProgress';
+import { collectCrystalRewardedCodexMilestoneIds } from './codexCrystalLedger';
 import { recordCycleBestLevel } from './cycleBestLevel';
 import { ACHIEVEMENTS } from '../data/quests';
 import { TITLES } from '../data/titles';
@@ -147,6 +148,8 @@ export const pickPermanentPlayerState = (
             // 2026-10 Wave 108 (소유자 결정 "영구 보상은 처음 한 번만"): 크리스털처럼 초기화를 넘어 남는 업적 보상은 계정당
             //   한 번이다 — 다시 달성한 업적은 크리스털 없이 수령한다. 장부가 없던 세이브는 지금까지 수령한 업적으로 채운다.
             crystalRewardedAchievements: collectCrystalRewardedAchievementIds(stats),
+            // 2026-11 (출시 전 결함 수정): 도감 크리스털도 계정당 한 번이다 — 도감 · 수령 기록은 사망하면 비워지므로 장부를 넘긴다.
+            crystalRewardedCodexMilestones: collectCrystalRewardedCodexMilestoneIds(stats),
             // 2026-10 Wave 89: 회차 규칙 정복 기록 — 계정 단위(정복 보상은 단계마다 한 번).
             ruleConquestRanks: clone(Array.isArray(stats.ruleConquestRanks) ? stats.ruleConquestRanks : []),
             // 2026-10 Wave 94: 정복한 규칙 id(없으면 이전 세이브 — 읽는 쪽이 단계를 고정 순서로 읽는다).
