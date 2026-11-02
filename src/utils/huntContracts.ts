@@ -12,6 +12,7 @@ import type { GameMap, HuntContractProgress, Item, Monster, Player } from '../ty
 import { grantGold, makeItem } from './gameUtils.js';
 import type { SpawnedMonster } from './exploreUtils.js';
 import { createDomainRandom } from './seededRandom.js';
+import { rescaleEnemyToLevel } from './enemyLevel.js';
 import { getJobGearPool, getUsableGearTier } from './wanderingMerchant.js';
 
 /**
@@ -275,16 +276,18 @@ export const getHuntChampionAtkMult = (status: HuntContractDef['status']): numbe
 );
 
 export const applyHuntChampion = (
-    enemy: SpawnedMonster,
+    spawned: SpawnedMonster,
     player: Player,
     mapData: GameMap | null | undefined,
 ): HuntChampionCandidate => {
     const map = String(player.loc || '');
     const contract = getHuntContract(map);
-    if (!contract || !mapData || mapData.level === 'infinite') return enemy;
+    if (!contract || !mapData || mapData.level === 'infinite') return spawned;
     const { stage, progress, round } = getHuntContractProgress(player, map);
-    if (stage !== HUNT_STAGE_CHAMPION || progress < BALANCE.HUNT_CHAMPION_OMEN_KILLS) return enemy;
-    if (enemy.isBoss || enemy.isElite || !enemy.baseName || enemy.name !== enemy.baseName) return enemy;
+    if (stage !== HUNT_STAGE_CHAMPION || progress < BALANCE.HUNT_CHAMPION_OMEN_KILLS) return spawned;
+    if (spawned.isBoss || spawned.isElite || !spawned.baseName || spawned.name !== spawned.baseName) return spawned;
+    // 2026-11: 우두머리는 지역 레벨에서 맞춘 개체다 — 일반 조우의 레벨 폭(utils/enemyLevel.ts)을 물려받지 않는다.
+    const enemy = rescaleEnemyToLevel(spawned, mapLevelOf(map), player.meta?.prestigeRank);
     const roundMult = getHuntRoundMult(round);
     const hpMult = getHuntChampionHpMult(mapLevelOf(map)) * roundMult;
     return {

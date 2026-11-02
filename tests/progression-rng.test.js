@@ -5,6 +5,7 @@ import test from 'node:test';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import { pickFallbackEvent } from '../src/utils/aiEventUtils.ts';
 import { spawnEnemy } from '../src/utils/exploreUtils.ts';
+import { BALANCE } from '../src/data/constants.ts';
 import {
     createDomainRandom,
     createSeededRandom,
@@ -48,7 +49,9 @@ test('exploration spawn and fallback event accept explicit deterministic RNG wit
         { rng: createSeededRandom(seed) },
     );
     assert.deepEqual(spawn(7), spawn(7));
-    assert.equal(spawn(7).mStats.level, 7);
+    // 2026-11: 지역 레벨은 그대로 들고, 적 레벨은 그 폭(±4) 안에서 굴린다 — 난수가 아니라 탐험 해시라 같은 시드면 같다.
+    assert.equal(spawn(7).mStats.regionLevel, 7);
+    assert.ok(Math.abs(spawn(7).mStats.level - 7) <= BALANCE.ENEMY_LEVEL_SPREAD);
 
     const fallback = (seed) => pickFallbackEvent(
         '고요한 숲',

@@ -108,7 +108,9 @@ test('롤 수 불변 · 다른 종 불변 — 기능 이전 코드(ee2e47ea)에�
     const mage = spawnAt('고대 마법 탑', 'eliteOnly', 4);
     assert.equal(mage.calls, 2);
     assert.equal(mage.mStats.name, '재앙의 고대 마법사', '이전: 고대 고대 마법사 — 정예 강제 풀에 재앙의만 남는다');
-    assert.equal(mage.mStats.hp, 2175);
+    // 2026-11 적 레벨 폭: 이 개체는 지역 레벨 25가 아니라 24로 나온다(이름 · 난수 호출 수는 그대로, 이전 25레벨 값 2175).
+    assert.equal(mage.mStats.level, 24);
+    assert.equal(mage.mStats.hp, 2095);
 
     // 같은 지역의 다른 종: 이전과 값 · 난수 호출 수가 같다.
     const sprite = spawnAt('고요한 숲', 'normal', 4);

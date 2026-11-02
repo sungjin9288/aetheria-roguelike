@@ -825,9 +825,11 @@ const runProgressionSimulation = (
         const priorExp = player.exp || 0;
         const modeledMap = selectModeledMap(priorLevel, seed, action);
         const encounterRng = createDomainRandom(seed, MODEL_POLICY.id, MODEL_POLICY.version, 'encounter', action);
+        // 모델의 한 행동은 탐험 한 번이다 — 적 레벨(2026-11)은 탐험 수의 해시라 행동 번호를 탐험 수로 넘긴다.
+        //   넘기지 않으면 종마다 레벨이 한 값으로 굳어 지역 평균이 지역 레벨에서 벗어난다.
         const enemy = requireModeledSpawn(spawnEnemy(
             modeledMap.map,
-            { ...player, loc: modeledMap.name },
+            { ...player, loc: modeledMap.name, stats: { ...player.stats, explores: action } },
             [],
             { addLog: () => undefined },
             { rng: encounterRng },

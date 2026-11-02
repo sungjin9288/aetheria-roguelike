@@ -455,6 +455,15 @@ export const BALANCE = {
     MONSTER_DEF_PER_LEVEL: 1,
     MONSTER_DEF_PER_DEPTH: 1,       // 무한 심연 depth당 추가 def (level 외 추가 압박)
     MONSTER_GOLD_BASE: 16,          // 초반 휴식 경제: Lv1 골드 18 → 3-4전투당 휴식 1회
+    // 2026-11 적 레벨 폭(소유자 결정 "지역 레벨 ±4 · 강한 종은 폭 위쪽" · "지역 레벨÷5, 최대 ±4") — 일반 조우는
+    //   지역 레벨 ± min(이 값, ⌊지역 레벨 ÷ ENEMY_LEVEL_SPREAD_STEP⌋) 안이다. 판정은 utils/enemyLevel.ts.
+    ENEMY_LEVEL_SPREAD: 4,
+    // 폭이 1레벨 늘어나는 지역 레벨 간격 — 레벨 차이가 주는 강함(생명 70 + 32L)은 낮은 레벨일수록 크다. 고정 ±4 · Lv3 지역
+    //   1 ~ 5는 1회차 사망 1.08 → 1.45(서쪽 평원 멧돼지)였고, 이 간격(어디서나 약 ±15 ~ 18%)은 1.14로 유의하지 않았다(원장 §157).
+    ENEMY_LEVEL_SPREAD_STEP: 5,
+    // 접두어 배율 m을 같은 강함의 레벨로 바꾸는 오프셋 — (m − 1) × (레벨 + 이 값). 생명 곡선(70/32 ≈ 2.2) · 공격력
+    //   곡선(15/4 ≈ 3.8)의 가운데다. 화면의 "+N" 표시에만 쓴다(스탯은 배율 그대로).
+    PREFIX_LEVEL_EQUIV_OFFSET: 3,
 
     // slice 19 — 첫 유물 보장: 유물 0개 상태로 N탐험 경과 시 다음 전투형 탐험에서 유물 선택 보장
     FIRST_RELIC_PITY_EXPLORES: 6,

@@ -49,7 +49,11 @@ const HASH_ALGORITHM = 'sha256';
 // 그 편집(exploreUtils의 접두어 풀) 하나만 되돌리면 이전 값이 재현된다(실측).
 // 이전 값: '76898ed3a728b3a0ff67b009a6b569f56f5d2279257924fdb74d29b0fa3a2b52'.
 // Wave 118: 용의 둥지 보스 조우 비율(원장 §125) — 이전 값 '804a7617ea3c920c30e48b27f9923bdba245b9096a8e7f78d21c28b851a072f3'.
-const PROGRESSION_V1_BASELINE_HASH = '440890e589a3b552029bb93cb87a02722ddda36d38397ea1da8d7d9e153f63b8';
+// 2026-11 적 레벨 폭(소유자 결정 "지역 레벨÷5, 최대 ±4", 원장 §157): 일반 조우의 레벨이 지역 폭 안에서 갈린다. 이 시드의
+// 체크포인트 액션 16/56/87/170/1,581/5,267/7,983 → 16/56/88/171/1,580/5,265/7,981. 64시드 평균은 Lv2 · 5 그대로, Lv10 +0.49% ·
+// Lv20 +0.03% · Lv45 ~ 75 −0.01 ~ −0.02%다. 스폰의 레벨 굴림 하나만 끄면 이전 값이 재현된다(실측).
+// 이전 값: '440890e589a3b552029bb93cb87a02722ddda36d38397ea1da8d7d9e153f63b8'.
+const PROGRESSION_V1_BASELINE_HASH = '0e8de1a1b60b9ca5b923d49c796781c11b8040b9e62b72c50cc851c159de77cb';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';

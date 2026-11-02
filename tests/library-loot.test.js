@@ -8,6 +8,7 @@ import { SIGNATURE_ITEM_REGISTRY } from '../src/data/signatureItems.ts';
 import { validateCanonicalEquipmentCatalog } from '../src/utils/equipmentBaseIdentity.ts';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import { makeCombatActionMap } from '../src/reducers/handlers/combatHandlers.ts';
+import { getEnemyRewardLevel } from '../src/utils/enemyLevel.ts';
 
 const location = '금지된 도서관';
 const monsters = ['살아있는 마법서', '잉크 슬라임'];
@@ -47,7 +48,8 @@ test('library exclusive species use the exact ordered eight Tier4 ordinary items
 test('real library spawns and prefixed baseName use the same specialized selection', () => {
   for (const name of monsters) {
     const generated = spawnEnemy({ ...DB.MAPS[location], monsters: [name], boss: false, bossMonsters: [] }, player, [], { addLog() {} }, { rng: () => 0.5 }).mStats;
-    assert.equal(generated.level, 55);
+    // 2026-11: 적 레벨은 지역 폭 안에서 굴리고, 전리품 선택은 지역 레벨(`getEnemyRewardLevel`)을 읽는다.
+    assert.equal(getEnemyRewardLevel(generated), 55);
     assert.equal(roll(generated).result.items[0].name, names[0]);
     assert.deepEqual(roll({ ...generated, name: `불길한 ${name}`, baseName: name }), roll(generated));
   }

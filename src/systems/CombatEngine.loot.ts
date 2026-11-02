@@ -12,6 +12,7 @@ import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getRuleSignatureDropMult } from './ascensionRule.js';
 import { getProgressionLootMultiplier } from '../data/progressionProfiles.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
+import { getEnemyRewardLevel } from '../utils/enemyLevel.js';
 
 export type LootLog = { type: string; text: string };
 /**
@@ -27,7 +28,7 @@ export type LootResult = {
 const normalBonusPool = (enemy: Monster, player: Player | null): Item[] | null => {
     const map = player?.loc ? DB.MAPS[player.loc] : undefined;
     const name = enemy.baseName || enemy.name;
-    const enemyLevel = enemy.level;
+    const enemyLevel = getEnemyRewardLevel(enemy);
     if (enemy.isBoss || enemy.isElite || !map || map.level === 'infinite'
         || !name || !map.monsters?.includes(name)
         || !Number.isSafeInteger(enemyLevel) || (enemyLevel as number) <= 0) return null;
@@ -86,11 +87,11 @@ const calculateCappedLootChance = (...factors: unknown[]) => {
 };
 
 /**
- * 후반 강화 재료 드롭의 기본 확률(2026-09 Wave 39). 적 레벨(`enemy.level` — 스폰이 지역 레벨로, 심연은 층으로 채운다)이
+ * 후반 강화 재료 드롭의 기본 확률(2026-09 Wave 39). 지역 레벨(`getEnemyRewardLevel` — 심연은 층으로 채운 적 레벨)이
  * `ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL` 아래면 `null`이다 — 그 적은 난수를 더 쓰지 않으므로 초반 전리품과 그 뒤 난수 흐름이 그대로다.
  */
 const getLateEnhanceMaterialChance = (enemy: Monster): number | null => {
-    const level = enemy.level;
+    const level = getEnemyRewardLevel(enemy);
     if (typeof level !== 'number' || !Number.isFinite(level) || level < BALANCE.ENHANCE_MATERIAL_LATE_DROP_MIN_LEVEL) return null;
     return enemy.isBoss ? BALANCE.ENHANCE_MATERIAL_LATE_BOSS_DROP_CHANCE : BALANCE.ENHANCE_MATERIAL_LATE_DROP_CHANCE;
 };

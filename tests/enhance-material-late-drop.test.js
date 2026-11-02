@@ -10,6 +10,7 @@ import { processLoot } from '../src/systems/CombatEngine.loot.ts';
 import { spawnEnemy } from '../src/utils/exploreUtils.ts';
 import MaterialCodex from '../src/components/codex/MaterialCodex.tsx';
 import { renderStatic } from './helpers/render.ts';
+import { getEnemyRewardLevel } from '../src/utils/enemyLevel.ts';
 
 /**
  * 2026-09 Wave 39 — 후반 강화 재료 드롭 (소유자 결정 (b) "후반 드롭").
@@ -104,7 +105,9 @@ test('[실제 스폰] 지역이 스폰한 적은 레벨을 들고 있어 규칙�
     for (const loc of ['용의 둥지', '혼돈의 심연']) {
         const player = { level: 60, loc, relics: [], stats: { abyssFloor: 9 } };
         const { mStats } = spawnEnemy(DB.MAPS[loc], player, [], noLog, { rng: mulberry32(7) });
-        assert.ok(Number.isFinite(mStats.level) && mStats.level >= MIN_LEVEL, `${loc} 적 레벨 ${mStats.level}`);
+        // 2026-11: 적 레벨은 지역 폭 안에서 굴린다 — 규칙은 지역 레벨(`getEnemyRewardLevel`)을 읽는다(심연은 층 레벨).
+        const rewardLevel = getEnemyRewardLevel(mStats);
+        assert.ok(Number.isFinite(rewardLevel) && rewardLevel >= MIN_LEVEL, `${loc} 적 보상 레벨 ${rewardLevel}`);
         assert.equal(countMat(processLoot(mStats, player, 1, always(0), NOW).items) >= 1, true, loc);
     }
 });

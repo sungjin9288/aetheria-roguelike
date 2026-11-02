@@ -25,6 +25,7 @@ import { pickPermanentPlayerState } from '../src/utils/permanentProgress.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
 import HuntContractCard from '../src/components/tabs/HuntContractCard.tsx';
 import { renderStatic } from './helpers/render.ts';
+import { rescaleEnemyToLevel } from '../src/utils/enemyLevel.ts';
 
 /**
  * 2026-10 Wave 80 (소유자 결정 "C" → "회차마다 다시 하는 지역 토벌 의뢰") — Lv41 ~ 45 구간의 세 지역(천공 정원 · 어둠의 지하 감옥 ·
@@ -265,8 +266,11 @@ test('우두머리: 기척을 다 채운 지역의 다음 일반 개체가 우�
         assert.equal(omen.state.enemy.huntChampion, undefined, `${contract.map}: 기척을 다 채우기 전에는 나오지 않는다`);
         const hunting = spawnState(withContract(basePlayer({ loc: contract.map }), contract.map, HUNT_STAGE_CHAMPION, BALANCE.HUNT_CHAMPION_OMEN_KILLS), counting(draw));
         assert.equal(hunting.rng.calls, plain.rng.calls, `${contract.map}: 난수 소비 동일`);
-        const before = plain.state.enemy;
+        // 2026-11: 일반 개체는 지역 폭 안의 레벨로 나오고, 우두머리는 지역 레벨로 옮긴 그 개체 위에 배율을 얹는다.
+        const regionLevel = DB.MAPS[contract.map].level;
+        const before = rescaleEnemyToLevel(plain.state.enemy, regionLevel, undefined);
         const champion = hunting.state.enemy;
+        assert.equal(champion.level, regionLevel, `${contract.map}: 우두머리는 지역 레벨`);
         assert.equal(hunting.state.gameState, GS.COMBAT);
         assert.equal(champion.baseName, before.baseName, '종은 그대로');
         assert.equal(champion.huntChampion, contract.map);

@@ -30,6 +30,7 @@ import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { getPrestigeEnemyLevelBonus } from '../systems/metaBonusRamp.js';
+import { getPrefixLevelBonus, rollEnemyLevel } from './enemyLevel.js';
 // Track J1: FIRST_VISIT_REWARDS 테이블은 data/firstVisitRewards.ts로 분리됨.
 // Wave 62 (원장 §61.4 C11): 여정마다 한 번인 판정은 utils/firstVisitRewards.ts가 그 테이블을 읽는다.
 import { getJourneyFirstVisitReward } from './firstVisitRewards.js';
@@ -175,6 +176,12 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         depth = (player.stats?.abyssFloor || 0) + 1;
         level = 50 + Math.floor(depth / 2);
     }
+    // 2026-11 (소유자 결정 "지역 레벨 ±4 · 강한 종은 폭 위쪽"): 일반 조우는 지역 레벨 폭 안의 레벨이다(utils/enemyLevel.ts —
+    //   탐험 해시라 난수를 쓰지 않는다). 보스 · 이야기 전투 · 구역 보스 · 심연은 지역 레벨 그대로다(생명이 그 레벨에서 맞춘 값).
+    const regionLevel = typeof level === 'number' ? level : null;
+    if (regionLevel !== null && !storyMonster && !spawnAreaBoss && !isEncounterBoss(baseName, mapData)) {
+        level = rollEnemyLevel(regionLevel, baseName, mapData, player);
+    }
     // 심연의 층 태그 — 접두어가 붙어도 이 태그는 이름 앞에 남는다(Wave 35).
     const depthTag = isInfinite ? `[${depth}층] ` : '';
     // 2026-09 Wave 40: 계승 rank만큼 오른 전투 레벨 — 생명 · 공격력 · 방어력에만 쓴다. 표시 레벨 · 경험치 · 골드 · 행동 확률은 원래 레벨이다.
@@ -187,6 +194,7 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         name: `${depthTag}${baseName}`,
         baseName,
         level,
+        ...(regionLevel !== null ? { regionLevel } : {}),
         hp: BALANCE.MONSTER_HP_BASE + combatLevel * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
         maxHp: BALANCE.MONSTER_HP_BASE + combatLevel * BALANCE.MONSTER_HP_PER_LEVEL + (depth * 25),
         atk: 15 + combatLevel * 4 + (depth * 3),
@@ -236,7 +244,8 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
     // A-4 (B+ 2026-06): 초반 정예 — Lv ≤ cap에서 낮은 확률로 "정예" 개체 스폰.
     //   완전 엘리트(1.8~2.5x)는 Lv1에 불공정하므로 전용 완화 배율(EARLY_ELITE_MULT)로
     //   첫 위협은 남기되 시작 물약 2개를 모두 잃는 운 나쁜 전투는 제한한다.
-    const earlyBand = typeof level === 'number' && level <= BALANCE.EARLY_ELITE_LEVEL_CAP;
+    // 초반 구간은 지역 규칙이다 — 굴린 레벨이 아니라 지역 레벨로 정한다(Lv7 지역의 Lv5 개체도 초반 구간 밖이다).
+    const earlyBand = regionLevel !== null && regionLevel <= BALANCE.EARLY_ELITE_LEVEL_CAP;
     const earlyElite = !storyMonster && !mStats.isBoss && !forceElite
         && earlyBand
         && rng() < BALANCE.EARLY_ELITE_CHANCE;
@@ -278,6 +287,8 @@ export const spawnEnemy = (mapData: GameMap, player: Player, playerRelics: Relic
         mStats.exp = Math.floor(mStats.exp * prefix.expMod);
         mStats.gold = Math.floor(mStats.gold * prefix.expMod);
         mStats.dropMod = (mStats.dropMod || 1.0) * (prefix.dropMod || 1.0);
+        // 2026-11: 강함은 배율 그대로이고, 화면은 그 배율과 같은 강함의 레벨 보너스를 보인다(소유자 결정 "지금 강함 유지").
+        if (typeof level === 'number') mStats.levelBonus = getPrefixLevelBonus(level, prefix.mod);
         mStats.isElite = forceElite || prestigeElite || !!prefix.isElite;
 
         // 엘리트 몬스터 페이즈: HP 50% 이하 시 패턴 강화 (보스 제외)
