@@ -369,7 +369,8 @@ const CASES = [
         name: 'runQuietRollAndCombat / 전투 스폰(게이지 중복 누적 차단 경로)',
         expected: [
             'commit combat :: transform=fn :: map=null',
-            'dispatch SET_ENEMY :: {"atk":29,"baseName":"고블린","def":8,"exp":60,"gold":26,"hp":220,"isBoss":false,"level":5,"maxHp":220,"name":"고블린","pattern":{"guardChance":0,"heavyChance":0.2},"resistance":"자연","weakness":"화염"}',
+            // 2026-11 적 레벨 폭: 스폰이 지역 레벨(`regionLevel`)을 함께 든다. 이 탐험의 고블린은 지역 레벨 5 그대로다(스탯은 이동 전 트레이스와 같다).
+            'dispatch SET_ENEMY :: {"atk":29,"baseName":"고블린","def":8,"exp":60,"gold":26,"hp":220,"isBoss":false,"level":5,"maxHp":220,"name":"고블린","pattern":{"guardChance":0,"heavyChance":0.2},"regionLevel":5,"resistance":"자연","weakness":"화염"}',
             'dispatch SET_GAME_STATE :: "combat"',
             'log combat :: 고블린 등장!',
             'story encounter :: {"loc":"잊혀진 폐허","name":"고블린"}',

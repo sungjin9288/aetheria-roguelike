@@ -1927,6 +1927,10 @@ export const MSG = {
     SHELL_IN_COMBAT: '전투 중',
     SHELL_ENEMY_HEADING: '교전 대상',
     SHELL_BOSS: '보스',
+    // 2026-11 적 레벨 — 접두어가 있으면 배율과 같은 강함의 레벨을 더해 보이고 그 차이를 괄호로 밝힌다(utils/enemyLevel.ts).
+    SHELL_ENEMY_LEVEL: (level: number, bonus: number) => (bonus === 0
+        ? `레벨 ${level}`
+        : `레벨 ${level + bonus} (${bonus > 0 ? '+' : '−'}${Math.abs(bonus)})`),
     SHELL_LIFE: '생명',
     SHELL_WILL: '기력',
     SHELL_KILL_STREAK: (count: number) => `연속 처치 ${count}`,

@@ -185,6 +185,8 @@ for (const viewport of VIEWPORTS) {
             await expectReadableSurface(page, combat);
             // Wave 133: 전투 중 상태 표시줄(교전 대상 · 생명 이름표)도 11px 하한 안이다.
             await expectReadableSurface(page, page.getByTestId('persistent-status-bar'));
+            // 2026-11: 적 레벨 배지(시드 장면의 적은 레벨 2 · 접두어 레벨 없음)도 상태 표시줄 안에서 같은 하한을 지킨다.
+            await expect(page.getByTestId('enemy-level-badge')).toHaveText('레벨 2');
             for (const action of ['attack', 'skill', 'item', 'escape']) {
                 await expectTouchTarget(page.getByTestId(`combat-action-${action}`));
             }

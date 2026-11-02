@@ -95,6 +95,13 @@ export interface MonsterBase {
     gold?: number;
     /** 스폰 시 부여되는 적 레벨 (보상/난이도 계산). */
     level?: number;
+    /**
+     * 2026-11: 이 적이 나온 지역의 레벨(`level`은 그 지역 폭 안에서 굴린 레벨이다). 전리품 장비 등급 · 후반 강화 재료는
+     * 지역 규칙이라 이 값을 읽는다(`getEnemyRewardLevel`). 심연 · 지역 밖 적은 없다.
+     */
+    regionLevel?: number;
+    /** 2026-11: 접두어 배율과 같은 강함의 레벨 보너스(화면 표시 전용 — `getPrefixLevelBonus`). 접두어 없는 적은 없다. */
+    levelBonus?: number;
     weakness?: ElementKey;
     resistance?: ElementKey;
     /** 보스 여부. */

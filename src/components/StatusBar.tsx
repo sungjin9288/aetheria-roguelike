@@ -127,6 +127,11 @@ const EnemyStatus = ({ enemy, enemyHitCrit, defeated = false }: EnemyStatusProps
           </h2>
           <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
             <span className="min-w-0 font-display text-[15px] font-bold leading-snug text-ae-ink">{enemy.name}</span>
+            {typeof enemy.level === 'number' && (
+              <SignalBadge tone="neutral" size="sm" data-testid="enemy-level-badge">
+                {MSG.SHELL_ENEMY_LEVEL(enemy.level, enemy.levelBonus ?? 0)}
+              </SignalBadge>
+            )}
             {enemy.isBoss && <SignalBadge tone="danger" size="sm">{MSG.SHELL_BOSS}</SignalBadge>}
           </div>
           <div className="mt-2 flex items-center gap-2">

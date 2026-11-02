@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "b46ae4403eae1a20851137a17fe58e7074fcfcf208071da1deea593123505d58",
+  "reportHash": "a9fbcd0615f2da9e4ae071e810994b4303b5735b5c46529f56cadf86cfec20b5",
   "report": {
     "schemaVersion": 6,
     "catalog": {
@@ -5811,41 +5811,41 @@
         {
           "level": 10,
           "source": "checkpoint",
-          "modeledActions": 87,
-          "modeledSeconds": 7830,
-          "modeledHours": 2.18,
+          "modeledActions": 88,
+          "modeledSeconds": 7920,
+          "modeledHours": 2.2,
           "cumulativeExp": 3328
         },
         {
           "level": 20,
           "source": "checkpoint",
-          "modeledActions": 166,
-          "modeledSeconds": 14940,
-          "modeledHours": 4.15,
+          "modeledActions": 168,
+          "modeledSeconds": 15120,
+          "modeledHours": 4.2,
           "cumulativeExp": 17389
         },
         {
           "level": 45,
           "source": "checkpoint",
-          "modeledActions": 1570,
-          "modeledSeconds": 141300,
-          "modeledHours": 39.25,
+          "modeledActions": 1573,
+          "modeledSeconds": 141570,
+          "modeledHours": 39.33,
           "cumulativeExp": 612298
         },
         {
           "level": 60,
           "source": "checkpoint",
-          "modeledActions": 5252,
-          "modeledSeconds": 472680,
-          "modeledHours": 131.3,
+          "modeledActions": 5260,
+          "modeledSeconds": 473400,
+          "modeledHours": 131.5,
           "cumulativeExp": 2721799
         },
         {
           "level": 75,
           "source": "checkpoint",
-          "modeledActions": 7939,
-          "modeledSeconds": 714510,
-          "modeledHours": 198.48,
+          "modeledActions": 7941,
+          "modeledSeconds": 714690,
+          "modeledHours": 198.53,
           "cumulativeExp": 4971799
         }
       ],
@@ -5930,7 +5930,7 @@
                 "lowerLevel": 5,
                 "upperLevel": 10,
                 "lowerModeledActions": 56,
-                "upperModeledActions": 87,
+                "upperModeledActions": 88,
                 "lowerCumulativeExp": 994,
                 "upperCumulativeExp": 3328,
                 "expFraction": 0.3196229648671808
@@ -5946,15 +5946,15 @@
             "cost": {
               "level": 8,
               "basis": "interpolated",
-              "modeledActions": 72,
-              "modeledSeconds": 6480,
-              "modeledHours": 1.8,
+              "modeledActions": 73,
+              "modeledSeconds": 6570,
+              "modeledHours": 1.83,
               "cumulativeExp": 2198,
               "interpolation": {
                 "lowerLevel": 5,
                 "upperLevel": 10,
                 "lowerModeledActions": 56,
-                "upperModeledActions": 87,
+                "upperModeledActions": 88,
                 "lowerCumulativeExp": 994,
                 "upperCumulativeExp": 3328,
                 "expFraction": 0.5158526135389888
@@ -5971,9 +5971,9 @@
             "cost": {
               "level": 10,
               "basis": "anchored",
-              "modeledActions": 87,
-              "modeledSeconds": 7830,
-              "modeledHours": 2.18,
+              "modeledActions": 88,
+              "modeledSeconds": 7920,
+              "modeledHours": 2.2,
               "cumulativeExp": 3328,
               "interpolation": null
             }
@@ -5987,15 +5987,15 @@
             "cost": {
               "level": 12,
               "basis": "interpolated",
-              "modeledActions": 95,
-              "modeledSeconds": 8550,
-              "modeledHours": 2.38,
+              "modeledActions": 96,
+              "modeledSeconds": 8640,
+              "modeledHours": 2.4,
               "cumulativeExp": 4820,
               "interpolation": {
                 "lowerLevel": 10,
                 "upperLevel": 20,
-                "lowerModeledActions": 87,
-                "upperModeledActions": 166,
+                "lowerModeledActions": 88,
+                "upperModeledActions": 168,
                 "lowerCumulativeExp": 3328,
                 "upperCumulativeExp": 17389,
                 "expFraction": 0.1061090960813598
@@ -6011,15 +6011,15 @@
             "cost": {
               "level": 14,
               "basis": "interpolated",
-              "modeledActions": 106,
-              "modeledSeconds": 9540,
-              "modeledHours": 2.65,
+              "modeledActions": 108,
+              "modeledSeconds": 9720,
+              "modeledHours": 2.7,
               "cumulativeExp": 6791,
               "interpolation": {
                 "lowerLevel": 10,
                 "upperLevel": 20,
-                "lowerModeledActions": 87,
-                "upperModeledActions": 166,
+                "lowerModeledActions": 88,
+                "upperModeledActions": 168,
                 "lowerCumulativeExp": 3328,
                 "upperCumulativeExp": 17389,
                 "expFraction": 0.24628404807623924
@@ -6036,15 +6036,15 @@
             "cost": {
               "level": 15,
               "basis": "interpolated",
-              "modeledActions": 113,
-              "modeledSeconds": 10170,
-              "modeledHours": 2.83,
+              "modeledActions": 115,
+              "modeledSeconds": 10350,
+              "modeledHours": 2.88,
               "cumulativeExp": 8003,
               "interpolation": {
                 "lowerLevel": 10,
                 "upperLevel": 20,
-                "lowerModeledActions": 87,
-                "upperModeledActions": 166,
+                "lowerModeledActions": 88,
+                "upperModeledActions": 168,
                 "lowerCumulativeExp": 3328,
                 "upperCumulativeExp": 17389,
                 "expFraction": 0.33247990896806773
@@ -6061,15 +6061,15 @@
             "cost": {
               "level": 18,
               "basis": "interpolated",
-              "modeledActions": 140,
-              "modeledSeconds": 12600,
-              "modeledHours": 3.5,
+              "modeledActions": 142,
+              "modeledSeconds": 12780,
+              "modeledHours": 3.55,
               "cumulativeExp": 12838,
               "interpolation": {
                 "lowerLevel": 10,
                 "upperLevel": 20,
-                "lowerModeledActions": 87,
-                "upperModeledActions": 166,
+                "lowerModeledActions": 88,
+                "upperModeledActions": 168,
                 "lowerCumulativeExp": 3328,
                 "upperCumulativeExp": 17389,
                 "expFraction": 0.6763388094730105
@@ -6086,15 +6086,15 @@
             "cost": {
               "level": 25,
               "basis": "interpolated",
-              "modeledActions": 211,
-              "modeledSeconds": 18990,
-              "modeledHours": 5.28,
+              "modeledActions": 213,
+              "modeledSeconds": 19170,
+              "modeledHours": 5.33,
               "cumulativeExp": 36254,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.03171073222963512
@@ -6119,15 +6119,15 @@
             "cost": {
               "level": 35,
               "basis": "interpolated",
-              "modeledActions": 480,
-              "modeledSeconds": 43200,
-              "modeledHours": 12,
+              "modeledActions": 482,
+              "modeledSeconds": 43380,
+              "modeledHours": 12.05,
               "cumulativeExp": 150442,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.22365269310096167
@@ -6143,15 +6143,15 @@
             "cost": {
               "level": 36,
               "basis": "interpolated",
-              "modeledActions": 534,
-              "modeledSeconds": 48060,
-              "modeledHours": 13.35,
+              "modeledActions": 536,
+              "modeledSeconds": 48240,
+              "modeledHours": 13.4,
               "cumulativeExp": 173191,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.26189215493462026
@@ -6169,15 +6169,15 @@
             "cost": {
               "level": 40,
               "basis": "interpolated",
-              "modeledActions": 842,
-              "modeledSeconds": 75780,
-              "modeledHours": 21.05,
+              "modeledActions": 844,
+              "modeledSeconds": 75960,
+              "modeledHours": 21.1,
               "cumulativeExp": 303820,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.4814702752858
@@ -6194,15 +6194,15 @@
             "cost": {
               "level": 42,
               "basis": "interpolated",
-              "modeledActions": 1074,
-              "modeledSeconds": 96660,
-              "modeledHours": 26.85,
+              "modeledActions": 1077,
+              "modeledSeconds": 96930,
+              "modeledHours": 26.93,
               "cumulativeExp": 402188,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.6468199338050021
@@ -6218,15 +6218,15 @@
             "cost": {
               "level": 44,
               "basis": "interpolated",
-              "modeledActions": 1381,
-              "modeledSeconds": 124290,
-              "modeledHours": 34.53,
+              "modeledActions": 1384,
+              "modeledSeconds": 124560,
+              "modeledHours": 34.6,
               "cumulativeExp": 532278,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.8654920332353352
@@ -6243,15 +6243,15 @@
             "cost": {
               "level": 48,
               "basis": "interpolated",
-              "modeledActions": 2128,
-              "modeledSeconds": 191520,
-              "modeledHours": 53.2,
+              "modeledActions": 2132,
+              "modeledSeconds": 191880,
+              "modeledHours": 53.3,
               "cumulativeExp": 931846,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.1514803737945609
@@ -6267,15 +6267,15 @@
             "cost": {
               "level": 50,
               "basis": "interpolated",
-              "modeledActions": 2634,
-              "modeledSeconds": 237060,
-              "modeledHours": 65.85,
+              "modeledActions": 2638,
+              "modeledSeconds": 237420,
+              "modeledHours": 65.95,
               "cumulativeExp": 1221799,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.28893136338878245
@@ -6293,15 +6293,15 @@
             "cost": {
               "level": 52,
               "basis": "interpolated",
-              "modeledActions": 3157,
-              "modeledSeconds": 284130,
-              "modeledHours": 78.93,
+              "modeledActions": 3163,
+              "modeledSeconds": 284670,
+              "modeledHours": 79.08,
               "cumulativeExp": 1521799,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.43114509071102597
@@ -6319,15 +6319,15 @@
             "cost": {
               "level": 62,
               "basis": "interpolated",
-              "modeledActions": 5610,
-              "modeledSeconds": 504900,
-              "modeledHours": 140.25,
+              "modeledActions": 5617,
+              "modeledSeconds": 505530,
+              "modeledHours": 140.43,
               "cumulativeExp": 3021799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.13333333333333333
@@ -6345,15 +6345,15 @@
             "cost": {
               "level": 68,
               "basis": "interpolated",
-              "modeledActions": 6685,
-              "modeledSeconds": 601650,
-              "modeledHours": 167.13,
+              "modeledActions": 6690,
+              "modeledSeconds": 602100,
+              "modeledHours": 167.25,
               "cumulativeExp": 3921799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.5333333333333333
@@ -6369,15 +6369,15 @@
             "cost": {
               "level": 70,
               "basis": "interpolated",
-              "modeledActions": 7043,
-              "modeledSeconds": 633870,
-              "modeledHours": 176.08,
+              "modeledActions": 7047,
+              "modeledSeconds": 634230,
+              "modeledHours": 176.18,
               "cumulativeExp": 4221799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.6666666666666666
@@ -6393,15 +6393,15 @@
             "cost": {
               "level": 73,
               "basis": "interpolated",
-              "modeledActions": 7581,
-              "modeledSeconds": 682290,
-              "modeledHours": 189.53,
+              "modeledActions": 7584,
+              "modeledSeconds": 682560,
+              "modeledHours": 189.6,
               "cumulativeExp": 4671799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.8666666666666667
@@ -6417,9 +6417,9 @@
             "cost": {
               "level": 75,
               "basis": "anchored",
-              "modeledActions": 7939,
-              "modeledSeconds": 714510,
-              "modeledHours": 198.48,
+              "modeledActions": 7941,
+              "modeledSeconds": 714690,
+              "modeledHours": 198.53,
               "cumulativeExp": 4971799,
               "interpolation": null
             }
@@ -6557,7 +6557,7 @@
                 "lowerLevel": 5,
                 "upperLevel": 10,
                 "lowerModeledActions": 56,
-                "upperModeledActions": 87,
+                "upperModeledActions": 88,
                 "lowerCumulativeExp": 994,
                 "upperCumulativeExp": 3328,
                 "expFraction": 0.14867180805484148
@@ -6581,7 +6581,7 @@
                 "lowerLevel": 5,
                 "upperLevel": 10,
                 "lowerModeledActions": 56,
-                "upperModeledActions": 87,
+                "upperModeledActions": 88,
                 "lowerCumulativeExp": 994,
                 "upperCumulativeExp": 3328,
                 "expFraction": 0.3196229648671808
@@ -6601,15 +6601,15 @@
             "cost": {
               "level": 8,
               "basis": "interpolated",
-              "modeledActions": 72,
-              "modeledSeconds": 6480,
-              "modeledHours": 1.8,
+              "modeledActions": 73,
+              "modeledSeconds": 6570,
+              "modeledHours": 1.83,
               "cumulativeExp": 2198,
               "interpolation": {
                 "lowerLevel": 5,
                 "upperLevel": 10,
                 "lowerModeledActions": 56,
-                "upperModeledActions": 87,
+                "upperModeledActions": 88,
                 "lowerCumulativeExp": 994,
                 "upperCumulativeExp": 3328,
                 "expFraction": 0.5158526135389888
@@ -6634,9 +6634,9 @@
             "cost": {
               "level": 10,
               "basis": "anchored",
-              "modeledActions": 87,
-              "modeledSeconds": 7830,
-              "modeledHours": 2.18,
+              "modeledActions": 88,
+              "modeledSeconds": 7920,
+              "modeledHours": 2.2,
               "cumulativeExp": 3328,
               "interpolation": null
             }
@@ -6654,15 +6654,15 @@
             "cost": {
               "level": 12,
               "basis": "interpolated",
-              "modeledActions": 95,
-              "modeledSeconds": 8550,
-              "modeledHours": 2.38,
+              "modeledActions": 96,
+              "modeledSeconds": 8640,
+              "modeledHours": 2.4,
               "cumulativeExp": 4820,
               "interpolation": {
                 "lowerLevel": 10,
                 "upperLevel": 20,
-                "lowerModeledActions": 87,
-                "upperModeledActions": 166,
+                "lowerModeledActions": 88,
+                "upperModeledActions": 168,
                 "lowerCumulativeExp": 3328,
                 "upperCumulativeExp": 17389,
                 "expFraction": 0.1061090960813598
@@ -6679,15 +6679,15 @@
             "cost": {
               "level": 14,
               "basis": "interpolated",
-              "modeledActions": 106,
-              "modeledSeconds": 9540,
-              "modeledHours": 2.65,
+              "modeledActions": 108,
+              "modeledSeconds": 9720,
+              "modeledHours": 2.7,
               "cumulativeExp": 6791,
               "interpolation": {
                 "lowerLevel": 10,
                 "upperLevel": 20,
-                "lowerModeledActions": 87,
-                "upperModeledActions": 166,
+                "lowerModeledActions": 88,
+                "upperModeledActions": 168,
                 "lowerCumulativeExp": 3328,
                 "upperCumulativeExp": 17389,
                 "expFraction": 0.24628404807623924
@@ -6707,15 +6707,15 @@
             "cost": {
               "level": 15,
               "basis": "interpolated",
-              "modeledActions": 113,
-              "modeledSeconds": 10170,
-              "modeledHours": 2.83,
+              "modeledActions": 115,
+              "modeledSeconds": 10350,
+              "modeledHours": 2.88,
               "cumulativeExp": 8003,
               "interpolation": {
                 "lowerLevel": 10,
                 "upperLevel": 20,
-                "lowerModeledActions": 87,
-                "upperModeledActions": 166,
+                "lowerModeledActions": 88,
+                "upperModeledActions": 168,
                 "lowerCumulativeExp": 3328,
                 "upperCumulativeExp": 17389,
                 "expFraction": 0.33247990896806773
@@ -6732,15 +6732,15 @@
             "cost": {
               "level": 18,
               "basis": "interpolated",
-              "modeledActions": 140,
-              "modeledSeconds": 12600,
-              "modeledHours": 3.5,
+              "modeledActions": 142,
+              "modeledSeconds": 12780,
+              "modeledHours": 3.55,
               "cumulativeExp": 12838,
               "interpolation": {
                 "lowerLevel": 10,
                 "upperLevel": 20,
-                "lowerModeledActions": 87,
-                "upperModeledActions": 166,
+                "lowerModeledActions": 88,
+                "upperModeledActions": 168,
                 "lowerCumulativeExp": 3328,
                 "upperCumulativeExp": 17389,
                 "expFraction": 0.6763388094730105
@@ -6756,9 +6756,9 @@
             "cost": {
               "level": 20,
               "basis": "anchored",
-              "modeledActions": 166,
-              "modeledSeconds": 14940,
-              "modeledHours": 4.15,
+              "modeledActions": 168,
+              "modeledSeconds": 15120,
+              "modeledHours": 4.2,
               "cumulativeExp": 17389,
               "interpolation": null
             }
@@ -6779,15 +6779,15 @@
             "cost": {
               "level": 25,
               "basis": "interpolated",
-              "modeledActions": 211,
-              "modeledSeconds": 18990,
-              "modeledHours": 5.28,
+              "modeledActions": 213,
+              "modeledSeconds": 19170,
+              "modeledHours": 5.33,
               "cumulativeExp": 36254,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.03171073222963512
@@ -6803,15 +6803,15 @@
             "cost": {
               "level": 26,
               "basis": "interpolated",
-              "modeledActions": 224,
-              "modeledSeconds": 20160,
-              "modeledHours": 5.6,
+              "modeledActions": 226,
+              "modeledSeconds": 20340,
+              "modeledHours": 5.65,
               "cumulativeExp": 41880,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.04116764076522628
@@ -6827,15 +6827,15 @@
             "cost": {
               "level": 28,
               "basis": "interpolated",
-              "modeledActions": 257,
-              "modeledSeconds": 23130,
-              "modeledHours": 6.43,
+              "modeledActions": 259,
+              "modeledSeconds": 23310,
+              "modeledHours": 6.48,
               "cumulativeExp": 55788,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.06454600619590559
@@ -6851,15 +6851,15 @@
             "cost": {
               "level": 29,
               "basis": "interpolated",
-              "modeledActions": 277,
-              "modeledSeconds": 24930,
-              "modeledHours": 6.93,
+              "modeledActions": 279,
+              "modeledSeconds": 25110,
+              "modeledHours": 6.98,
               "cumulativeExp": 64342,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.07892467587479766
@@ -6875,15 +6875,15 @@
             "cost": {
               "level": 30,
               "basis": "interpolated",
-              "modeledActions": 300,
-              "modeledSeconds": 27000,
-              "modeledHours": 7.5,
+              "modeledActions": 302,
+              "modeledSeconds": 27180,
+              "modeledHours": 7.55,
               "cumulativeExp": 74179,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.09545997791258831
@@ -6899,15 +6899,15 @@
             "cost": {
               "level": 31,
               "basis": "interpolated",
-              "modeledActions": 327,
-              "modeledSeconds": 29430,
-              "modeledHours": 8.18,
+              "modeledActions": 329,
+              "modeledSeconds": 29610,
+              "modeledHours": 8.23,
               "cumulativeExp": 85491,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.11447465074490384
@@ -6943,15 +6943,15 @@
             "cost": {
               "level": 35,
               "basis": "interpolated",
-              "modeledActions": 480,
-              "modeledSeconds": 43200,
-              "modeledHours": 12,
+              "modeledActions": 482,
+              "modeledSeconds": 43380,
+              "modeledHours": 12.05,
               "cumulativeExp": 150442,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.22365269310096167
@@ -6975,15 +6975,15 @@
             "cost": {
               "level": 40,
               "basis": "interpolated",
-              "modeledActions": 842,
-              "modeledSeconds": 75780,
-              "modeledHours": 21.05,
+              "modeledActions": 844,
+              "modeledSeconds": 75960,
+              "modeledHours": 21.1,
               "cumulativeExp": 303820,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.4814702752858
@@ -6999,15 +6999,15 @@
             "cost": {
               "level": 41,
               "basis": "interpolated",
-              "modeledActions": 950,
-              "modeledSeconds": 85500,
-              "modeledHours": 23.75,
+              "modeledActions": 953,
+              "modeledSeconds": 85770,
+              "modeledHours": 23.83,
               "cumulativeExp": 349573,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.5583778359379333
@@ -7025,15 +7025,15 @@
             "cost": {
               "level": 42,
               "basis": "interpolated",
-              "modeledActions": 1074,
-              "modeledSeconds": 96660,
-              "modeledHours": 26.85,
+              "modeledActions": 1077,
+              "modeledSeconds": 96930,
+              "modeledHours": 26.93,
               "cumulativeExp": 402188,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.6468199338050021
@@ -7049,15 +7049,15 @@
             "cost": {
               "level": 43,
               "basis": "interpolated",
-              "modeledActions": 1217,
-              "modeledSeconds": 109530,
-              "modeledHours": 30.43,
+              "modeledActions": 1220,
+              "modeledSeconds": 109800,
+              "modeledHours": 30.5,
               "cumulativeExp": 462695,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.7485279261197931
@@ -7074,15 +7074,15 @@
             "cost": {
               "level": 44,
               "basis": "interpolated",
-              "modeledActions": 1381,
-              "modeledSeconds": 124290,
-              "modeledHours": 34.53,
+              "modeledActions": 1384,
+              "modeledSeconds": 124560,
+              "modeledHours": 34.6,
               "cumulativeExp": 532278,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.8654920332353352
@@ -7098,9 +7098,9 @@
             "cost": {
               "level": 45,
               "basis": "anchored",
-              "modeledActions": 1570,
-              "modeledSeconds": 141300,
-              "modeledHours": 39.25,
+              "modeledActions": 1573,
+              "modeledSeconds": 141570,
+              "modeledHours": 39.33,
               "cumulativeExp": 612298,
               "interpolation": null
             }
@@ -7114,15 +7114,15 @@
             "cost": {
               "level": 46,
               "basis": "interpolated",
-              "modeledActions": 1731,
-              "modeledSeconds": 155790,
-              "modeledHours": 43.28,
+              "modeledActions": 1734,
+              "modeledSeconds": 156060,
+              "modeledHours": 43.35,
               "cumulativeExp": 704321,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.043623112764582715
@@ -7138,15 +7138,15 @@
             "cost": {
               "level": 47,
               "basis": "interpolated",
-              "modeledActions": 1915,
-              "modeledSeconds": 172350,
-              "modeledHours": 47.88,
+              "modeledActions": 1919,
+              "modeledSeconds": 172710,
+              "modeledHours": 47.98,
               "cumulativeExp": 810147,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.09378947912326185
@@ -7166,15 +7166,15 @@
             "cost": {
               "level": 48,
               "basis": "interpolated",
-              "modeledActions": 2128,
-              "modeledSeconds": 191520,
-              "modeledHours": 53.2,
+              "modeledActions": 2132,
+              "modeledSeconds": 191880,
+              "modeledHours": 53.3,
               "cumulativeExp": 931846,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.1514803737945609
@@ -7190,15 +7190,15 @@
             "cost": {
               "level": 49,
               "basis": "interpolated",
-              "modeledActions": 2372,
-              "modeledSeconds": 213480,
-              "modeledHours": 59.3,
+              "modeledActions": 2376,
+              "modeledSeconds": 213840,
+              "modeledHours": 59.4,
               "cumulativeExp": 1071799,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.21782449972766071
@@ -7218,15 +7218,15 @@
             "cost": {
               "level": 50,
               "basis": "interpolated",
-              "modeledActions": 2634,
-              "modeledSeconds": 237060,
-              "modeledHours": 65.85,
+              "modeledActions": 2638,
+              "modeledSeconds": 237420,
+              "modeledHours": 65.95,
               "cumulativeExp": 1221799,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.28893136338878245
@@ -7243,15 +7243,15 @@
             "cost": {
               "level": 52,
               "basis": "interpolated",
-              "modeledActions": 3157,
-              "modeledSeconds": 284130,
-              "modeledHours": 78.93,
+              "modeledActions": 3163,
+              "modeledSeconds": 284670,
+              "modeledHours": 79.08,
               "cumulativeExp": 1521799,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.43114509071102597
@@ -7269,15 +7269,15 @@
             "cost": {
               "level": 55,
               "basis": "interpolated",
-              "modeledActions": 3943,
-              "modeledSeconds": 354870,
-              "modeledHours": 98.58,
+              "modeledActions": 3949,
+              "modeledSeconds": 355410,
+              "modeledHours": 98.73,
               "cumulativeExp": 1971799,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.6444656816943912
@@ -7293,9 +7293,9 @@
             "cost": {
               "level": 60,
               "basis": "anchored",
-              "modeledActions": 5252,
-              "modeledSeconds": 472680,
-              "modeledHours": 131.3,
+              "modeledActions": 5260,
+              "modeledSeconds": 473400,
+              "modeledHours": 131.5,
               "cumulativeExp": 2721799,
               "interpolation": null
             }
@@ -7309,15 +7309,15 @@
             "cost": {
               "level": 62,
               "basis": "interpolated",
-              "modeledActions": 5610,
-              "modeledSeconds": 504900,
-              "modeledHours": 140.25,
+              "modeledActions": 5617,
+              "modeledSeconds": 505530,
+              "modeledHours": 140.43,
               "cumulativeExp": 3021799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.13333333333333333
@@ -7333,15 +7333,15 @@
             "cost": {
               "level": 65,
               "basis": "interpolated",
-              "modeledActions": 6148,
-              "modeledSeconds": 553320,
-              "modeledHours": 153.7,
+              "modeledActions": 6154,
+              "modeledSeconds": 553860,
+              "modeledHours": 153.85,
               "cumulativeExp": 3471799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.3333333333333333
@@ -7364,15 +7364,15 @@
             "cost": {
               "level": 68,
               "basis": "interpolated",
-              "modeledActions": 6685,
-              "modeledSeconds": 601650,
-              "modeledHours": 167.13,
+              "modeledActions": 6690,
+              "modeledSeconds": 602100,
+              "modeledHours": 167.25,
               "cumulativeExp": 3921799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.5333333333333333
@@ -7388,15 +7388,15 @@
             "cost": {
               "level": 69,
               "basis": "interpolated",
-              "modeledActions": 6864,
-              "modeledSeconds": 617760,
-              "modeledHours": 171.6,
+              "modeledActions": 6869,
+              "modeledSeconds": 618210,
+              "modeledHours": 171.73,
               "cumulativeExp": 4071799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.6
@@ -7418,15 +7418,15 @@
             "cost": {
               "level": 70,
               "basis": "interpolated",
-              "modeledActions": 7043,
-              "modeledSeconds": 633870,
-              "modeledHours": 176.08,
+              "modeledActions": 7047,
+              "modeledSeconds": 634230,
+              "modeledHours": 176.18,
               "cumulativeExp": 4221799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.6666666666666666
@@ -7443,15 +7443,15 @@
             "cost": {
               "level": 73,
               "basis": "interpolated",
-              "modeledActions": 7581,
-              "modeledSeconds": 682290,
-              "modeledHours": 189.53,
+              "modeledActions": 7584,
+              "modeledSeconds": 682560,
+              "modeledHours": 189.6,
               "cumulativeExp": 4671799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.8666666666666667
@@ -7469,9 +7469,9 @@
             "cost": {
               "level": 75,
               "basis": "anchored",
-              "modeledActions": 7939,
-              "modeledSeconds": 714510,
-              "modeledHours": 198.48,
+              "modeledActions": 7941,
+              "modeledSeconds": 714690,
+              "modeledHours": 198.53,
               "cumulativeExp": 4971799,
               "interpolation": null
             }
@@ -7515,9 +7515,9 @@
             "cost": {
               "level": 10,
               "basis": "anchored",
-              "modeledActions": 87,
-              "modeledSeconds": 7830,
-              "modeledHours": 2.18,
+              "modeledActions": 88,
+              "modeledSeconds": 7920,
+              "modeledHours": 2.2,
               "cumulativeExp": 3328,
               "interpolation": null
             }
@@ -7529,15 +7529,15 @@
             "cost": {
               "level": 28,
               "basis": "interpolated",
-              "modeledActions": 257,
-              "modeledSeconds": 23130,
-              "modeledHours": 6.43,
+              "modeledActions": 259,
+              "modeledSeconds": 23310,
+              "modeledHours": 6.48,
               "cumulativeExp": 55788,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.06454600619590559
@@ -7551,9 +7551,9 @@
             "cost": {
               "level": 45,
               "basis": "anchored",
-              "modeledActions": 1570,
-              "modeledSeconds": 141300,
-              "modeledHours": 39.25,
+              "modeledActions": 1573,
+              "modeledSeconds": 141570,
+              "modeledHours": 39.33,
               "cumulativeExp": 612298,
               "interpolation": null
             }
@@ -7565,9 +7565,9 @@
             "cost": {
               "level": 60,
               "basis": "anchored",
-              "modeledActions": 5252,
-              "modeledSeconds": 472680,
-              "modeledHours": 131.3,
+              "modeledActions": 5260,
+              "modeledSeconds": 473400,
+              "modeledHours": 131.5,
               "cumulativeExp": 2721799,
               "interpolation": null
             }
@@ -7579,9 +7579,9 @@
             "cost": {
               "level": 75,
               "basis": "anchored",
-              "modeledActions": 7939,
-              "modeledSeconds": 714510,
-              "modeledHours": 198.48,
+              "modeledActions": 7941,
+              "modeledSeconds": 714690,
+              "modeledHours": 198.53,
               "cumulativeExp": 4971799,
               "interpolation": null
             }
@@ -7632,15 +7632,15 @@
             "cost": {
               "level": 12,
               "basis": "interpolated",
-              "modeledActions": 95,
-              "modeledSeconds": 8550,
-              "modeledHours": 2.38,
+              "modeledActions": 96,
+              "modeledSeconds": 8640,
+              "modeledHours": 2.4,
               "cumulativeExp": 4820,
               "interpolation": {
                 "lowerLevel": 10,
                 "upperLevel": 20,
-                "lowerModeledActions": 87,
-                "upperModeledActions": 166,
+                "lowerModeledActions": 88,
+                "upperModeledActions": 168,
                 "lowerCumulativeExp": 3328,
                 "upperCumulativeExp": 17389,
                 "expFraction": 0.1061090960813598
@@ -7656,15 +7656,15 @@
             "cost": {
               "level": 25,
               "basis": "interpolated",
-              "modeledActions": 211,
-              "modeledSeconds": 18990,
-              "modeledHours": 5.28,
+              "modeledActions": 213,
+              "modeledSeconds": 19170,
+              "modeledHours": 5.33,
               "cumulativeExp": 36254,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.03171073222963512
@@ -7685,15 +7685,15 @@
             "cost": {
               "level": 30,
               "basis": "interpolated",
-              "modeledActions": 300,
-              "modeledSeconds": 27000,
-              "modeledHours": 7.5,
+              "modeledActions": 302,
+              "modeledSeconds": 27180,
+              "modeledHours": 7.55,
               "cumulativeExp": 74179,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.09545997791258831
@@ -7713,9 +7713,9 @@
             "cost": {
               "level": 45,
               "basis": "anchored",
-              "modeledActions": 1570,
-              "modeledSeconds": 141300,
-              "modeledHours": 39.25,
+              "modeledActions": 1573,
+              "modeledSeconds": 141570,
+              "modeledHours": 39.33,
               "cumulativeExp": 612298,
               "interpolation": null
             }
@@ -7733,15 +7733,15 @@
             "cost": {
               "level": 35,
               "basis": "interpolated",
-              "modeledActions": 480,
-              "modeledSeconds": 43200,
-              "modeledHours": 12,
+              "modeledActions": 482,
+              "modeledSeconds": 43380,
+              "modeledHours": 12.05,
               "cumulativeExp": 150442,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.22365269310096167
@@ -7759,15 +7759,15 @@
             "cost": {
               "level": 40,
               "basis": "interpolated",
-              "modeledActions": 842,
-              "modeledSeconds": 75780,
-              "modeledHours": 21.05,
+              "modeledActions": 844,
+              "modeledSeconds": 75960,
+              "modeledHours": 21.1,
               "cumulativeExp": 303820,
               "interpolation": {
                 "lowerLevel": 20,
                 "upperLevel": 45,
-                "lowerModeledActions": 166,
-                "upperModeledActions": 1570,
+                "lowerModeledActions": 168,
+                "upperModeledActions": 1573,
                 "lowerCumulativeExp": 17389,
                 "upperCumulativeExp": 612298,
                 "expFraction": 0.4814702752858
@@ -7786,15 +7786,15 @@
             "cost": {
               "level": 48,
               "basis": "interpolated",
-              "modeledActions": 2128,
-              "modeledSeconds": 191520,
-              "modeledHours": 53.2,
+              "modeledActions": 2132,
+              "modeledSeconds": 191880,
+              "modeledHours": 53.3,
               "cumulativeExp": 931846,
               "interpolation": {
                 "lowerLevel": 45,
                 "upperLevel": 60,
-                "lowerModeledActions": 1570,
-                "upperModeledActions": 5252,
+                "lowerModeledActions": 1573,
+                "upperModeledActions": 5260,
                 "lowerCumulativeExp": 612298,
                 "upperCumulativeExp": 2721799,
                 "expFraction": 0.1514803737945609
@@ -7811,15 +7811,15 @@
             "cost": {
               "level": 68,
               "basis": "interpolated",
-              "modeledActions": 6685,
-              "modeledSeconds": 601650,
-              "modeledHours": 167.13,
+              "modeledActions": 6690,
+              "modeledSeconds": 602100,
+              "modeledHours": 167.25,
               "cumulativeExp": 3921799,
               "interpolation": {
                 "lowerLevel": 60,
                 "upperLevel": 75,
-                "lowerModeledActions": 5252,
-                "upperModeledActions": 7939,
+                "lowerModeledActions": 5260,
+                "upperModeledActions": 7941,
                 "lowerCumulativeExp": 2721799,
                 "upperCumulativeExp": 4971799,
                 "expFraction": 0.5333333333333333
@@ -8071,9 +8071,9 @@
           "openCost": {
             "level": 10,
             "basis": "anchored",
-            "modeledActions": 87,
-            "modeledSeconds": 7830,
-            "modeledHours": 2.18,
+            "modeledActions": 88,
+            "modeledSeconds": 7920,
+            "modeledHours": 2.2,
             "cumulativeExp": 3328,
             "interpolation": null
           },
@@ -8081,15 +8081,15 @@
           "completionCost": {
             "level": 48,
             "basis": "interpolated",
-            "modeledActions": 2128,
-            "modeledSeconds": 191520,
-            "modeledHours": 53.2,
+            "modeledActions": 2132,
+            "modeledSeconds": 191880,
+            "modeledHours": 53.3,
             "cumulativeExp": 931846,
             "interpolation": {
               "lowerLevel": 45,
               "upperLevel": 60,
-              "lowerModeledActions": 1570,
-              "upperModeledActions": 5252,
+              "lowerModeledActions": 1573,
+              "upperModeledActions": 5260,
               "lowerCumulativeExp": 612298,
               "upperCumulativeExp": 2721799,
               "expFraction": 0.1514803737945609
@@ -8113,15 +8113,15 @@
           "completionCost": {
             "level": 40,
             "basis": "interpolated",
-            "modeledActions": 842,
-            "modeledSeconds": 75780,
-            "modeledHours": 21.05,
+            "modeledActions": 844,
+            "modeledSeconds": 75960,
+            "modeledHours": 21.1,
             "cumulativeExp": 303820,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
-              "lowerModeledActions": 166,
-              "upperModeledActions": 1570,
+              "lowerModeledActions": 168,
+              "upperModeledActions": 1573,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
               "expFraction": 0.4814702752858
@@ -8153,15 +8153,15 @@
           "completionCost": {
             "level": 35,
             "basis": "interpolated",
-            "modeledActions": 480,
-            "modeledSeconds": 43200,
-            "modeledHours": 12,
+            "modeledActions": 482,
+            "modeledSeconds": 43380,
+            "modeledHours": 12.05,
             "cumulativeExp": 150442,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
-              "lowerModeledActions": 166,
-              "upperModeledActions": 1570,
+              "lowerModeledActions": 168,
+              "upperModeledActions": 1573,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
               "expFraction": 0.22365269310096167
@@ -8183,7 +8183,7 @@
               "lowerLevel": 5,
               "upperLevel": 10,
               "lowerModeledActions": 56,
-              "upperModeledActions": 87,
+              "upperModeledActions": 88,
               "lowerCumulativeExp": 994,
               "upperCumulativeExp": 3328,
               "expFraction": 0.14867180805484148
@@ -8193,15 +8193,15 @@
           "completionCost": {
             "level": 48,
             "basis": "interpolated",
-            "modeledActions": 2128,
-            "modeledSeconds": 191520,
-            "modeledHours": 53.2,
+            "modeledActions": 2132,
+            "modeledSeconds": 191880,
+            "modeledHours": 53.3,
             "cumulativeExp": 931846,
             "interpolation": {
               "lowerLevel": 45,
               "upperLevel": 60,
-              "lowerModeledActions": 1570,
-              "upperModeledActions": 5252,
+              "lowerModeledActions": 1573,
+              "upperModeledActions": 5260,
               "lowerCumulativeExp": 612298,
               "upperCumulativeExp": 2721799,
               "expFraction": 0.1514803737945609
@@ -8215,15 +8215,15 @@
           "openCost": {
             "level": 25,
             "basis": "interpolated",
-            "modeledActions": 211,
-            "modeledSeconds": 18990,
-            "modeledHours": 5.28,
+            "modeledActions": 213,
+            "modeledSeconds": 19170,
+            "modeledHours": 5.33,
             "cumulativeExp": 36254,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
-              "lowerModeledActions": 166,
-              "upperModeledActions": 1570,
+              "lowerModeledActions": 168,
+              "upperModeledActions": 1573,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
               "expFraction": 0.03171073222963512
@@ -8233,15 +8233,15 @@
           "completionCost": {
             "level": 48,
             "basis": "interpolated",
-            "modeledActions": 2128,
-            "modeledSeconds": 191520,
-            "modeledHours": 53.2,
+            "modeledActions": 2132,
+            "modeledSeconds": 191880,
+            "modeledHours": 53.3,
             "cumulativeExp": 931846,
             "interpolation": {
               "lowerLevel": 45,
               "upperLevel": 60,
-              "lowerModeledActions": 1570,
-              "upperModeledActions": 5252,
+              "lowerModeledActions": 1573,
+              "upperModeledActions": 5260,
               "lowerCumulativeExp": 612298,
               "upperCumulativeExp": 2721799,
               "expFraction": 0.1514803737945609
@@ -8255,15 +8255,15 @@
           "openCost": {
             "level": 35,
             "basis": "interpolated",
-            "modeledActions": 480,
-            "modeledSeconds": 43200,
-            "modeledHours": 12,
+            "modeledActions": 482,
+            "modeledSeconds": 43380,
+            "modeledHours": 12.05,
             "cumulativeExp": 150442,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
-              "lowerModeledActions": 166,
-              "upperModeledActions": 1570,
+              "lowerModeledActions": 168,
+              "upperModeledActions": 1573,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
               "expFraction": 0.22365269310096167
@@ -8273,15 +8273,15 @@
           "completionCost": {
             "level": 35,
             "basis": "interpolated",
-            "modeledActions": 480,
-            "modeledSeconds": 43200,
-            "modeledHours": 12,
+            "modeledActions": 482,
+            "modeledSeconds": 43380,
+            "modeledHours": 12.05,
             "cumulativeExp": 150442,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
-              "lowerModeledActions": 166,
-              "upperModeledActions": 1570,
+              "lowerModeledActions": 168,
+              "upperModeledActions": 1573,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
               "expFraction": 0.22365269310096167
@@ -8295,15 +8295,15 @@
           "openCost": {
             "level": 15,
             "basis": "interpolated",
-            "modeledActions": 113,
-            "modeledSeconds": 10170,
-            "modeledHours": 2.83,
+            "modeledActions": 115,
+            "modeledSeconds": 10350,
+            "modeledHours": 2.88,
             "cumulativeExp": 8003,
             "interpolation": {
               "lowerLevel": 10,
               "upperLevel": 20,
-              "lowerModeledActions": 87,
-              "upperModeledActions": 166,
+              "lowerModeledActions": 88,
+              "upperModeledActions": 168,
               "lowerCumulativeExp": 3328,
               "upperCumulativeExp": 17389,
               "expFraction": 0.33247990896806773
@@ -8313,15 +8313,15 @@
           "completionCost": {
             "level": 40,
             "basis": "interpolated",
-            "modeledActions": 842,
-            "modeledSeconds": 75780,
-            "modeledHours": 21.05,
+            "modeledActions": 844,
+            "modeledSeconds": 75960,
+            "modeledHours": 21.1,
             "cumulativeExp": 303820,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
-              "lowerModeledActions": 166,
-              "upperModeledActions": 1570,
+              "lowerModeledActions": 168,
+              "upperModeledActions": 1573,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
               "expFraction": 0.4814702752858
@@ -8335,15 +8335,15 @@
           "openCost": {
             "level": 40,
             "basis": "interpolated",
-            "modeledActions": 842,
-            "modeledSeconds": 75780,
-            "modeledHours": 21.05,
+            "modeledActions": 844,
+            "modeledSeconds": 75960,
+            "modeledHours": 21.1,
             "cumulativeExp": 303820,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
-              "lowerModeledActions": 166,
-              "upperModeledActions": 1570,
+              "lowerModeledActions": 168,
+              "upperModeledActions": 1573,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
               "expFraction": 0.4814702752858
@@ -8353,15 +8353,15 @@
           "completionCost": {
             "level": 40,
             "basis": "interpolated",
-            "modeledActions": 842,
-            "modeledSeconds": 75780,
-            "modeledHours": 21.05,
+            "modeledActions": 844,
+            "modeledSeconds": 75960,
+            "modeledHours": 21.1,
             "cumulativeExp": 303820,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
-              "lowerModeledActions": 166,
-              "upperModeledActions": 1570,
+              "lowerModeledActions": 168,
+              "upperModeledActions": 1573,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
               "expFraction": 0.4814702752858
@@ -8375,15 +8375,15 @@
           "openCost": {
             "level": 50,
             "basis": "interpolated",
-            "modeledActions": 2634,
-            "modeledSeconds": 237060,
-            "modeledHours": 65.85,
+            "modeledActions": 2638,
+            "modeledSeconds": 237420,
+            "modeledHours": 65.95,
             "cumulativeExp": 1221799,
             "interpolation": {
               "lowerLevel": 45,
               "upperLevel": 60,
-              "lowerModeledActions": 1570,
-              "upperModeledActions": 5252,
+              "lowerModeledActions": 1573,
+              "upperModeledActions": 5260,
               "lowerCumulativeExp": 612298,
               "upperCumulativeExp": 2721799,
               "expFraction": 0.28893136338878245
@@ -8393,15 +8393,15 @@
           "completionCost": {
             "level": 68,
             "basis": "interpolated",
-            "modeledActions": 6685,
-            "modeledSeconds": 601650,
-            "modeledHours": 167.13,
+            "modeledActions": 6690,
+            "modeledSeconds": 602100,
+            "modeledHours": 167.25,
             "cumulativeExp": 3921799,
             "interpolation": {
               "lowerLevel": 60,
               "upperLevel": 75,
-              "lowerModeledActions": 5252,
-              "upperModeledActions": 7939,
+              "lowerModeledActions": 5260,
+              "upperModeledActions": 7941,
               "lowerCumulativeExp": 2721799,
               "upperCumulativeExp": 4971799,
               "expFraction": 0.5333333333333333
@@ -8415,15 +8415,15 @@
           "openCost": {
             "level": 68,
             "basis": "interpolated",
-            "modeledActions": 6685,
-            "modeledSeconds": 601650,
-            "modeledHours": 167.13,
+            "modeledActions": 6690,
+            "modeledSeconds": 602100,
+            "modeledHours": 167.25,
             "cumulativeExp": 3921799,
             "interpolation": {
               "lowerLevel": 60,
               "upperLevel": 75,
-              "lowerModeledActions": 5252,
-              "upperModeledActions": 7939,
+              "lowerModeledActions": 5260,
+              "upperModeledActions": 7941,
               "lowerCumulativeExp": 2721799,
               "upperCumulativeExp": 4971799,
               "expFraction": 0.5333333333333333
@@ -8433,15 +8433,15 @@
           "completionCost": {
             "level": 68,
             "basis": "interpolated",
-            "modeledActions": 6685,
-            "modeledSeconds": 601650,
-            "modeledHours": 167.13,
+            "modeledActions": 6690,
+            "modeledSeconds": 602100,
+            "modeledHours": 167.25,
             "cumulativeExp": 3921799,
             "interpolation": {
               "lowerLevel": 60,
               "upperLevel": 75,
-              "lowerModeledActions": 5252,
-              "upperModeledActions": 7939,
+              "lowerModeledActions": 5260,
+              "upperModeledActions": 7941,
               "lowerCumulativeExp": 2721799,
               "upperCumulativeExp": 4971799,
               "expFraction": 0.5333333333333333
@@ -8465,15 +8465,15 @@
           "completionCost": {
             "level": 48,
             "basis": "interpolated",
-            "modeledActions": 2128,
-            "modeledSeconds": 191520,
-            "modeledHours": 53.2,
+            "modeledActions": 2132,
+            "modeledSeconds": 191880,
+            "modeledHours": 53.3,
             "cumulativeExp": 931846,
             "interpolation": {
               "lowerLevel": 45,
               "upperLevel": 60,
-              "lowerModeledActions": 1570,
-              "upperModeledActions": 5252,
+              "lowerModeledActions": 1573,
+              "upperModeledActions": 5260,
               "lowerCumulativeExp": 612298,
               "upperCumulativeExp": 2721799,
               "expFraction": 0.1514803737945609
@@ -8497,15 +8497,15 @@
           "completionCost": {
             "level": 35,
             "basis": "interpolated",
-            "modeledActions": 480,
-            "modeledSeconds": 43200,
-            "modeledHours": 12,
+            "modeledActions": 482,
+            "modeledSeconds": 43380,
+            "modeledHours": 12.05,
             "cumulativeExp": 150442,
             "interpolation": {
               "lowerLevel": 20,
               "upperLevel": 45,
-              "lowerModeledActions": 166,
-              "upperModeledActions": 1570,
+              "lowerModeledActions": 168,
+              "upperModeledActions": 1573,
               "lowerCumulativeExp": 17389,
               "upperCumulativeExp": 612298,
               "expFraction": 0.22365269310096167
@@ -8613,8 +8613,8 @@
         {
           "level": 8,
           "basis": "interpolated",
-          "modeledActions": 72,
-          "modeledHours": 1.8,
+          "modeledActions": 73,
+          "modeledHours": 1.83,
           "maps": 43,
           "quests": 124,
           "equipment": 193,
@@ -8624,8 +8624,8 @@
         {
           "level": 10,
           "basis": "anchored",
-          "modeledActions": 87,
-          "modeledHours": 2.18,
+          "modeledActions": 88,
+          "modeledHours": 2.2,
           "maps": 42,
           "quests": 119,
           "equipment": 193,
@@ -8635,8 +8635,8 @@
         {
           "level": 12,
           "basis": "interpolated",
-          "modeledActions": 95,
-          "modeledHours": 2.38,
+          "modeledActions": 96,
+          "modeledHours": 2.4,
           "maps": 40,
           "quests": 109,
           "equipment": 150,
@@ -8646,8 +8646,8 @@
         {
           "level": 14,
           "basis": "interpolated",
-          "modeledActions": 106,
-          "modeledHours": 2.65,
+          "modeledActions": 108,
+          "modeledHours": 2.7,
           "maps": 39,
           "quests": 104,
           "equipment": 150,
@@ -8657,8 +8657,8 @@
         {
           "level": 15,
           "basis": "interpolated",
-          "modeledActions": 113,
-          "modeledHours": 2.83,
+          "modeledActions": 115,
+          "modeledHours": 2.88,
           "maps": 38,
           "quests": 102,
           "equipment": 150,
@@ -8668,8 +8668,8 @@
         {
           "level": 18,
           "basis": "interpolated",
-          "modeledActions": 140,
-          "modeledHours": 3.5,
+          "modeledActions": 142,
+          "modeledHours": 3.55,
           "maps": 36,
           "quests": 97,
           "equipment": 150,
@@ -8679,8 +8679,8 @@
         {
           "level": 20,
           "basis": "anchored",
-          "modeledActions": 166,
-          "modeledHours": 4.15,
+          "modeledActions": 168,
+          "modeledHours": 4.2,
           "maps": 34,
           "quests": 95,
           "equipment": 150,
@@ -8690,8 +8690,8 @@
         {
           "level": 25,
           "basis": "interpolated",
-          "modeledActions": 211,
-          "modeledHours": 5.28,
+          "modeledActions": 213,
+          "modeledHours": 5.33,
           "maps": 34,
           "quests": 94,
           "equipment": 150,
@@ -8701,8 +8701,8 @@
         {
           "level": 26,
           "basis": "interpolated",
-          "modeledActions": 224,
-          "modeledHours": 5.6,
+          "modeledActions": 226,
+          "modeledHours": 5.65,
           "maps": 32,
           "quests": 86,
           "equipment": 150,
@@ -8712,8 +8712,8 @@
         {
           "level": 28,
           "basis": "interpolated",
-          "modeledActions": 257,
-          "modeledHours": 6.43,
+          "modeledActions": 259,
+          "modeledHours": 6.48,
           "maps": 32,
           "quests": 85,
           "equipment": 150,
@@ -8723,8 +8723,8 @@
         {
           "level": 29,
           "basis": "interpolated",
-          "modeledActions": 277,
-          "modeledHours": 6.93,
+          "modeledActions": 279,
+          "modeledHours": 6.98,
           "maps": 32,
           "quests": 84,
           "equipment": 107,
@@ -8734,8 +8734,8 @@
         {
           "level": 30,
           "basis": "interpolated",
-          "modeledActions": 300,
-          "modeledHours": 7.5,
+          "modeledActions": 302,
+          "modeledHours": 7.55,
           "maps": 32,
           "quests": 83,
           "equipment": 107,
@@ -8745,8 +8745,8 @@
         {
           "level": 31,
           "basis": "interpolated",
-          "modeledActions": 327,
-          "modeledHours": 8.18,
+          "modeledActions": 329,
+          "modeledHours": 8.23,
           "maps": 32,
           "quests": 82,
           "equipment": 107,
@@ -8756,8 +8756,8 @@
         {
           "level": 35,
           "basis": "interpolated",
-          "modeledActions": 480,
-          "modeledHours": 12,
+          "modeledActions": 482,
+          "modeledHours": 12.05,
           "maps": 32,
           "quests": 81,
           "equipment": 107,
@@ -8767,8 +8767,8 @@
         {
           "level": 36,
           "basis": "interpolated",
-          "modeledActions": 534,
-          "modeledHours": 13.35,
+          "modeledActions": 536,
+          "modeledHours": 13.4,
           "maps": 22,
           "quests": 60,
           "equipment": 107,
@@ -8778,8 +8778,8 @@
         {
           "level": 40,
           "basis": "interpolated",
-          "modeledActions": 842,
-          "modeledHours": 21.05,
+          "modeledActions": 844,
+          "modeledHours": 21.1,
           "maps": 21,
           "quests": 60,
           "equipment": 107,
@@ -8789,8 +8789,8 @@
         {
           "level": 41,
           "basis": "interpolated",
-          "modeledActions": 950,
-          "modeledHours": 23.75,
+          "modeledActions": 953,
+          "modeledHours": 23.83,
           "maps": 18,
           "quests": 51,
           "equipment": 107,
@@ -8800,8 +8800,8 @@
         {
           "level": 42,
           "basis": "interpolated",
-          "modeledActions": 1074,
-          "modeledHours": 26.85,
+          "modeledActions": 1077,
+          "modeledHours": 26.93,
           "maps": 18,
           "quests": 50,
           "equipment": 107,
@@ -8811,8 +8811,8 @@
         {
           "level": 43,
           "basis": "interpolated",
-          "modeledActions": 1217,
-          "modeledHours": 30.43,
+          "modeledActions": 1220,
+          "modeledHours": 30.5,
           "maps": 16,
           "quests": 47,
           "equipment": 107,
@@ -8822,8 +8822,8 @@
         {
           "level": 44,
           "basis": "interpolated",
-          "modeledActions": 1381,
-          "modeledHours": 34.53,
+          "modeledActions": 1384,
+          "modeledHours": 34.6,
           "maps": 16,
           "quests": 46,
           "equipment": 107,
@@ -8833,8 +8833,8 @@
         {
           "level": 45,
           "basis": "anchored",
-          "modeledActions": 1570,
-          "modeledHours": 39.25,
+          "modeledActions": 1573,
+          "modeledHours": 39.33,
           "maps": 15,
           "quests": 44,
           "equipment": 107,
@@ -8844,8 +8844,8 @@
         {
           "level": 46,
           "basis": "interpolated",
-          "modeledActions": 1731,
-          "modeledHours": 43.28,
+          "modeledActions": 1734,
+          "modeledHours": 43.35,
           "maps": 15,
           "quests": 43,
           "equipment": 65,
@@ -8855,8 +8855,8 @@
         {
           "level": 47,
           "basis": "interpolated",
-          "modeledActions": 1915,
-          "modeledHours": 47.88,
+          "modeledActions": 1919,
+          "modeledHours": 47.98,
           "maps": 15,
           "quests": 42,
           "equipment": 65,
@@ -8866,8 +8866,8 @@
         {
           "level": 48,
           "basis": "interpolated",
-          "modeledActions": 2128,
-          "modeledHours": 53.2,
+          "modeledActions": 2132,
+          "modeledHours": 53.3,
           "maps": 15,
           "quests": 41,
           "equipment": 65,
@@ -8877,8 +8877,8 @@
         {
           "level": 49,
           "basis": "interpolated",
-          "modeledActions": 2372,
-          "modeledHours": 59.3,
+          "modeledActions": 2376,
+          "modeledHours": 59.4,
           "maps": 13,
           "quests": 36,
           "equipment": 65,
@@ -8888,8 +8888,8 @@
         {
           "level": 50,
           "basis": "interpolated",
-          "modeledActions": 2634,
-          "modeledHours": 65.85,
+          "modeledActions": 2638,
+          "modeledHours": 65.95,
           "maps": 13,
           "quests": 35,
           "equipment": 65,
@@ -8899,8 +8899,8 @@
         {
           "level": 52,
           "basis": "interpolated",
-          "modeledActions": 3157,
-          "modeledHours": 78.93,
+          "modeledActions": 3163,
+          "modeledHours": 79.08,
           "maps": 12,
           "quests": 30,
           "equipment": 65,
@@ -8910,8 +8910,8 @@
         {
           "level": 55,
           "basis": "interpolated",
-          "modeledActions": 3943,
-          "modeledHours": 98.58,
+          "modeledActions": 3949,
+          "modeledHours": 98.73,
           "maps": 9,
           "quests": 28,
           "equipment": 65,
@@ -8921,8 +8921,8 @@
         {
           "level": 60,
           "basis": "anchored",
-          "modeledActions": 5252,
-          "modeledHours": 131.3,
+          "modeledActions": 5260,
+          "modeledHours": 131.5,
           "maps": 9,
           "quests": 25,
           "equipment": 65,
@@ -8932,8 +8932,8 @@
         {
           "level": 62,
           "basis": "interpolated",
-          "modeledActions": 5610,
-          "modeledHours": 140.25,
+          "modeledActions": 5617,
+          "modeledHours": 140.43,
           "maps": 9,
           "quests": 24,
           "equipment": 20,
@@ -8943,8 +8943,8 @@
         {
           "level": 65,
           "basis": "interpolated",
-          "modeledActions": 6148,
-          "modeledHours": 153.7,
+          "modeledActions": 6154,
+          "modeledHours": 153.85,
           "maps": 6,
           "quests": 23,
           "equipment": 20,
@@ -8954,8 +8954,8 @@
         {
           "level": 68,
           "basis": "interpolated",
-          "modeledActions": 6685,
-          "modeledHours": 167.13,
+          "modeledActions": 6690,
+          "modeledHours": 167.25,
           "maps": 6,
           "quests": 22,
           "equipment": 20,
@@ -8965,8 +8965,8 @@
         {
           "level": 69,
           "basis": "interpolated",
-          "modeledActions": 6864,
-          "modeledHours": 171.6,
+          "modeledActions": 6869,
+          "modeledHours": 171.73,
           "maps": 3,
           "quests": 14,
           "equipment": 20,
@@ -8976,8 +8976,8 @@
         {
           "level": 70,
           "basis": "interpolated",
-          "modeledActions": 7043,
-          "modeledHours": 176.08,
+          "modeledActions": 7047,
+          "modeledHours": 176.18,
           "maps": 3,
           "quests": 13,
           "equipment": 20,
@@ -8987,8 +8987,8 @@
         {
           "level": 73,
           "basis": "interpolated",
-          "modeledActions": 7581,
-          "modeledHours": 189.53,
+          "modeledActions": 7584,
+          "modeledHours": 189.6,
           "maps": 2,
           "quests": 6,
           "equipment": 20,
@@ -8998,8 +8998,8 @@
         {
           "level": 75,
           "basis": "anchored",
-          "modeledActions": 7939,
-          "modeledHours": 198.48,
+          "modeledActions": 7941,
+          "modeledHours": 198.53,
           "maps": 1,
           "quests": 4,
           "equipment": 20,

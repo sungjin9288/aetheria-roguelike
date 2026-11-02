@@ -11,6 +11,7 @@ import { AT } from '../src/reducers/actionTypes.ts';
 import { validateCanonicalEquipmentCatalog } from '../src/utils/equipmentBaseIdentity.ts';
 import { DROP_TABLES } from '../src/data/dropTables.ts';
 import { LOOT_TABLE } from '../src/data/loot.ts';
+import { getEnemyRewardLevel } from '../src/utils/enemyLevel.ts';
 
 const player = { job: '아크메이지', level: 75, loc: '용암 지대', relics: [], meta: {}, stats: {} };
 const enemy = { name: '용암 거북', baseName: '용암 거북', level: 36, exp: 370, isBoss: false, isElite: false };
@@ -39,10 +40,11 @@ test('normal bonus uses actual level tier boundaries, not EXP or player level', 
 
 test('actual regional spawn returns ordinary equipment usable at its level', () => {
   const generated = spawnEnemy({ ...DB.MAPS[player.loc], monsters: [enemy.name], boss: false, bossMonsters: [] }, player, [], { addLog() {} }, { rng: () => 0.5 }).mStats;
-  assert.equal(generated.level, 36);
+  // 2026-11: 적 레벨은 지역 폭 안에서 굴리고, 등급은 지역 레벨(`getEnemyRewardLevel`)이 정한다.
+  assert.equal(getEnemyRewardLevel(generated), 36);
   const result = roll(generated);
   assert.equal(result.items[0].tier, 3);
-  assert.ok(BALANCE.TIER_REQ_LEVEL[result.items[0].tier] <= generated.level);
+  assert.ok(BALANCE.TIER_REQ_LEVEL[result.items[0].tier] <= getEnemyRewardLevel(generated));
 });
 
 test('excluded and unproven encounters preserve exact legacy results', () => {
@@ -136,7 +138,7 @@ test('canonical regional spawns at18/36/55/62 use the approved tier curve', () =
     const map = DB.MAPS[loc];
     assert.ok(map.monsters.includes(name));
     const target = spawnEnemy({ ...map, monsters: [name], boss: false, bossMonsters: [] }, owner, [], { addLog() {} }, { rng: () => 0.5 }).mStats;
-    assert.equal(target.level, level);
+    assert.equal(getEnemyRewardLevel(target), level);
     assert.equal(roll(target, owner).items[0].tier, tier);
   }
 });
