@@ -106,7 +106,7 @@ const PixelCharacterAvatar = ({
     const spriteSignature = spriteCandidates.join('|');
     const [spriteState, setSpriteState] = useState({ signature: '', index: 0 });
     const activeSpriteState = spriteState.signature === spriteSignature ? spriteState : { signature: spriteSignature, index: 0 };
-    const activeSpriteSrc = spriteCandidates[Math.min(activeSpriteState.index, spriteCandidates.length - 1)] || '/assets/avatars/adventurer.png';
+    const activeSpriteSrc = spriteCandidates[Math.min(activeSpriteState.index, spriteCandidates.length - 1)] || '/assets/avatars/canonical/adventurer.png';
 
     const avatar = (
         <div
