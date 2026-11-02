@@ -6,6 +6,7 @@ import { MSG } from '../../data/messages';
 import type { RunSummary } from '../../reducers/actionTypes';
 import type { Player } from '../../types';
 import type { MilestoneStoryBeat } from '../../utils/milestoneStory';
+import { getUnrecordedClassBranches } from '../../utils/classJourney';
 import { MOMENT_DUR_PANEL, MOMENT_EASE } from '../moments/momentMotion';
 
 const loadRunSummaryCard = () => import('../RunSummaryCard');
@@ -94,6 +95,7 @@ const DeathScreen = ({
                     essence={Math.max(0, Number(player.meta?.essence) || 0)}
                     onOpenMirror={onOpenMirror}
                     onRestart={onRestart}
+                    unrecordedBranches={getUnrecordedClassBranches(player.classJourney, runSummary.job)}
                 />
             </Suspense>
             {mirrorOpen && (

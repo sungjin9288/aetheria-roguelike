@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { ChevronDown, ChevronRight, History, Landmark } from 'lucide-react';
+import { useState, type ReactNode } from 'react';
+import { ChevronDown, ChevronRight, History, Landmark, ListChecks } from 'lucide-react';
 import { MSG } from '../../data/messages';
 import { getPreferredScrollBehavior } from '../../utils/scrollBehavior';
 
@@ -18,6 +18,9 @@ interface TownActionsProps {
   facilityButtons: ReactNode;
   facilityCount: number;
   facilitySummary: string;
+  /** 오늘의 임무 한 줄(2026-11 고도화 E2) — 누를 수 없는 정보다. */
+  dailyLine: string;
+  dailyComplete: boolean;
 }
 
 // 2026-10 통합 감사(UX-01): 접힌 마을 시설을 열면 단추가 화면 아래(작은 폰에서는 전부)에 그려져
@@ -45,53 +48,72 @@ const TownActions = ({
   facilityButtons,
   facilityCount,
   facilitySummary,
-}: TownActionsProps) => (
-  <>
-    {lastExpedition && (
-      <button
-        type="button"
-        data-testid="control-last-expedition"
-        onClick={onOpenDebrief}
-        className="ae-town-row flex min-h-[48px] w-full items-center gap-2.5 px-3 py-2 text-left font-readable"
-      >
-        <History size={16} aria-hidden="true" className="shrink-0 text-ae-gold" />
-        <div className="min-w-0 flex-1">
-          <div className="aether-type-body font-semibold text-ae-ink">
-            지난 원정 · {lastExpedition.destination}
+  dailyLine,
+  dailyComplete,
+}: TownActionsProps) => {
+  // 2026-11 고도화 E2: 시설을 펼친 동안 오늘의 임무 줄은 자리를 내준다 — 작은 폰에서 시설 마지막 줄이 홈 표시줄 아래로
+  //   밀렸다(D14와 같은 양보: 기록 창도 시설을 펼친 동안 줄어든다).
+  const [facilitiesOpen, setFacilitiesOpen] = useState(false);
+  return (
+    <>
+      {lastExpedition && (
+        <button
+          type="button"
+          data-testid="control-last-expedition"
+          onClick={onOpenDebrief}
+          className="ae-town-row flex min-h-[48px] w-full items-center gap-2.5 px-3 py-2 text-left font-readable"
+        >
+          <History size={16} aria-hidden="true" className="shrink-0 text-ae-gold" />
+          <div className="min-w-0 flex-1">
+            <div className="aether-type-body font-semibold text-ae-ink">
+              지난 원정 · {lastExpedition.destination}
+            </div>
+            <div className="mt-0.5 font-fira aether-type-meta tabular-nums text-ae-ink-2">
+              {MSG.LAST_EXPEDITION_SUMMARY_LINE(lastExpedition.battles, lastExpedition.explores, lastExpedition.expGained)}
+            </div>
           </div>
-          <div className="mt-0.5 font-fira aether-type-meta tabular-nums text-ae-ink-2">
-            {MSG.LAST_EXPEDITION_SUMMARY_LINE(lastExpedition.battles, lastExpedition.explores, lastExpedition.expGained)}
-          </div>
-        </div>
-        <span className="inline-flex shrink-0 items-center gap-0.5 aether-type-body font-semibold text-ae-ether-hi">
-          보기
-          <ChevronRight size={14} aria-hidden="true" />
-        </span>
-      </button>
-    )}
-    <div data-testid="control-town-quick-actions" className={`ae-town-quick ${quickGridClass(quickCount)}`}>
-      {quickButtons}
-    </div>
-    {facilityCount > 0 && (
-      <details
-        data-testid="control-town-facilities"
-        onToggle={(event) => revealTownFacilities(event.currentTarget)}
-        className="ae-town-facilities group"
-      >
-        <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-3 py-2 text-left font-readable [&::-webkit-details-marker]:hidden">
-          <Landmark size={16} aria-hidden="true" className="shrink-0 text-ae-gold" />
-          <span className="shrink-0 aether-type-title font-semibold text-ae-ink">{MSG.TOWN_FACILITIES_TITLE}</span>
-          <span className="min-w-0 flex-1 text-right aether-type-meta text-ae-ink-2">
-            {facilitySummary}
+          <span className="inline-flex shrink-0 items-center gap-0.5 aether-type-body font-semibold text-ae-ether-hi">
+            보기
+            <ChevronRight size={14} aria-hidden="true" />
           </span>
-          <ChevronDown size={16} aria-hidden="true" className="ae-town-facilities-chevron shrink-0 text-ae-ink-3" />
-        </summary>
-        <div data-testid="control-town-facility-actions" className="ae-town-facility-grid grid grid-cols-3 gap-2 p-2 pt-0">
-          {facilityButtons}
-        </div>
-      </details>
-    )}
-  </>
-);
+        </button>
+      )}
+      <div data-testid="control-town-quick-actions" className={`ae-town-quick ${quickGridClass(quickCount)}`}>
+        {quickButtons}
+      </div>
+      {!facilitiesOpen && (
+      <div
+        data-testid="control-town-daily"
+        className="flex items-center gap-1.5 px-3 font-readable aether-type-meta text-ae-ink-2"
+      >
+        <ListChecks size={14} aria-hidden="true" className={`shrink-0 ${dailyComplete ? 'text-ae-good' : 'text-ae-gold'}`} />
+        <span className="font-fira tabular-nums">{dailyLine}</span>
+      </div>
+      )}
+      {facilityCount > 0 && (
+        <details
+          data-testid="control-town-facilities"
+          onToggle={(event) => {
+            setFacilitiesOpen(event.currentTarget.open);
+            revealTownFacilities(event.currentTarget);
+          }}
+          className="ae-town-facilities group"
+        >
+          <summary className="flex min-h-[48px] cursor-pointer list-none items-center gap-2 px-3 py-2 text-left font-readable [&::-webkit-details-marker]:hidden">
+            <Landmark size={16} aria-hidden="true" className="shrink-0 text-ae-gold" />
+            <span className="shrink-0 aether-type-title font-semibold text-ae-ink">{MSG.TOWN_FACILITIES_TITLE}</span>
+            <span className="min-w-0 flex-1 text-right aether-type-meta text-ae-ink-2">
+              {facilitySummary}
+            </span>
+            <ChevronDown size={16} aria-hidden="true" className="ae-town-facilities-chevron shrink-0 text-ae-ink-3" />
+          </summary>
+          <div data-testid="control-town-facility-actions" className="ae-town-facility-grid grid grid-cols-3 gap-2 p-2 pt-0">
+            {facilityButtons}
+          </div>
+        </details>
+      )}
+    </>
+  );
+};
 
 export default TownActions;

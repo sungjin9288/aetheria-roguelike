@@ -20,6 +20,7 @@ import { getTownActionPresentation } from '../utils/townActionPresentation';
 import { getExpeditionFocusRouteTargets } from '../utils/expeditionMissionFocus';
 import { getScoutAvailability } from '../utils/scoutEvents';
 import { getVisibleLocationName } from '../utils/challengeRules';
+import { getDailyMissionSummary } from '../utils/protocolCycle';
 import { MSG } from '../data/messages';
 import type { GameState } from '../reducers/gameReducer';
 import type { GameActions } from '../hooks/actionDeps';
@@ -262,6 +263,7 @@ const ControlPanel = ({
     ? () => onOpenArchiveConsole('inventory')
     : undefined;
   const openMap = () => onOpenArchiveConsole?.('map');
+  const daily = getDailyMissionSummary(player, new Date());
   const lastExpedition = player.lastExpeditionSummary
     ? {
       destination: getVisibleLocationName(player, player.lastExpeditionSummary.destination) || '',
@@ -336,6 +338,8 @@ const ControlPanel = ({
           facilityButtons={townFacilityButtons.map((button) => renderActionButton(button, '', {}))}
           facilityCount={townFacilityButtons.length}
           facilitySummary={townPresentation.facilitySummary}
+          dailyLine={MSG.DAILY_MISSION_LINE(daily.done, daily.total)}
+          dailyComplete={daily.done >= daily.total}
         />
       ) : (
         <FieldDock

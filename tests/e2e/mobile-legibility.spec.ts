@@ -108,6 +108,9 @@ for (const viewport of VIEWPORTS) {
             const preparation = page.getByTestId('control-expedition-prep');
             await expectReadableSurface(page, preparation);
             await expectTouchTarget(page.getByTestId('control-town-primary').locator('button'));
+            // 2026-11 고도화 E2: 오늘의 임무 한 줄 — 마을 조작판 안, 11px 하한 · 가로 넘침 없음.
+            await expect(page.getByTestId('control-town-daily')).toContainText('오늘의 임무');
+            await expectReadableSurface(page, page.getByTestId('control-town-daily'));
 
             await page.getByTestId('control-quests').click();
             const questBoard = page.getByTestId('quest-board-panel');
@@ -248,6 +251,7 @@ for (const viewport of VIEWPORTS) {
             await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.());
             const summary = page.getByTestId('run-summary-card');
             await expect(page.getByTestId('run-summary-notes')).toBeVisible({ timeout: 8_000 });
+            await expect(page.getByTestId('run-summary-unrecorded-branches')).toBeVisible();
             await expect(summary).toHaveCSS('opacity', '1');
             await expectReadableSurface(page, summary);
             if (viewport.width === 375) {
@@ -314,6 +318,7 @@ for (const viewport of VIEWPORTS) {
 
             await page.evaluate(() => window.__AETHERIA_TEST_API__?.showReturnBriefingScenario?.());
             const briefing = page.getByTestId('return-briefing-card');
+            await expect(page.getByTestId('return-briefing-resume')).toBeVisible({ timeout: 8_000 });
             await expectReadableSurface(page, briefing);
             await expectReadableSurface(page, bar);
             if (viewport.width === 375) {

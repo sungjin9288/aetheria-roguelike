@@ -1,5 +1,5 @@
 import { motion as Motion } from 'framer-motion';
-import { Gift, MapPin, Heart, ScrollText, ListChecks, Sparkles } from 'lucide-react';
+import { Gift, MapPin, Heart, ScrollText, ListChecks, Sparkles, Footprints } from 'lucide-react';
 import { MSG } from '../data/messages';
 import type { Briefing } from '../utils/returnBriefing';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
@@ -26,6 +26,7 @@ const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCa
         ? Math.max(0, Math.min(100, Math.round((briefing.hp / briefing.maxHp) * 100)))
         : 0;
     const hasClaimableRewards = briefing.claimableRewardCount > 0;
+    const resumeLines = briefing.resumeLines || [];
     const handlePrimaryAction = () => {
         if (hasClaimableRewards && onOpenGoals) {
             onOpenGoals();
@@ -111,6 +112,26 @@ const ReturnBriefingCard = ({ briefing, onClose, onOpenGoals }: ReturnBriefingCa
                             </div>
                         </div>
                     </div>
+
+                    {resumeLines.length > 0 && (
+                        <div className={`${TILE_CLASS} mt-2`} data-testid="return-briefing-resume">
+                            <div className={TILE_LABEL_CLASS}>
+                                <Footprints size={12} className="text-ae-ether" aria-hidden="true" />
+                                {MSG.RETURN_BRIEFING_RESUME_LABEL}
+                            </div>
+                            <ul className="mt-1.5 space-y-1">
+                                {resumeLines.map((line) => (
+                                    <li
+                                        key={line.kind}
+                                        data-resume-kind={line.kind}
+                                        className="font-readable text-[13px] leading-snug text-ae-ink"
+                                    >
+                                        {line.text}
+                                    </li>
+                                ))}
+                            </ul>
+                        </div>
+                    )}
 
                     {hasClaimableRewards && (
                         <div className="ae-moment-signal mt-2 flex items-center justify-between gap-3 rounded-ae-md px-3 py-2.5 font-readable text-[13px]" data-signal-tone="amber">

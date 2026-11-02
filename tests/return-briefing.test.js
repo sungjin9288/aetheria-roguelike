@@ -7,6 +7,7 @@ import { buildReturnBriefing } from '../src/utils/returnBriefing.js';
 import { getProtocolDayKey, getProtocolWeekKey } from '../src/utils/protocolCycle.js';
 
 const HOUR_MS = 60 * 60 * 1000;
+const THRESHOLD_H = BALANCE.RETURN_BRIEFING_HOURS;
 
 const basePlayer = (overrides = {}) => ({
     loc: '고요한 숲',
@@ -21,27 +22,27 @@ const basePlayer = (overrides = {}) => ({
     ...overrides,
 });
 
-test('buildReturnBriefing returns null when less than 6h have elapsed', () => {
+test('buildReturnBriefing returns null when less than the threshold has elapsed', () => {
     const now = 1_000_000_000_000;
-    const player = basePlayer({ stats: { lastSeenAt: now - (HOUR_MS * 5), dailyProtocol: null } });
+    const player = basePlayer({ stats: { lastSeenAt: now - (HOUR_MS * (THRESHOLD_H - 1)), dailyProtocol: null } });
     assert.equal(buildReturnBriefing(player, now), null);
 });
 
 test('buildReturnBriefing returns null exactly at boundary minus 1ms (just under threshold)', () => {
     const now = 1_000_000_000_000;
-    const player = basePlayer({ stats: { lastSeenAt: now - (HOUR_MS * 6) + 1, dailyProtocol: null } });
+    const player = basePlayer({ stats: { lastSeenAt: now - (HOUR_MS * THRESHOLD_H) + 1, dailyProtocol: null } });
     assert.equal(buildReturnBriefing(player, now), null);
 });
 
-test('buildReturnBriefing returns a briefing exactly at the 6h boundary', () => {
+test('buildReturnBriefing returns a briefing exactly at the threshold boundary', () => {
     const now = 1_000_000_000_000;
-    const player = basePlayer({ stats: { lastSeenAt: now - (HOUR_MS * 6), dailyProtocol: null } });
+    const player = basePlayer({ stats: { lastSeenAt: now - (HOUR_MS * THRESHOLD_H), dailyProtocol: null } });
     const briefing = buildReturnBriefing(player, now);
     assert.ok(briefing);
-    assert.equal(briefing.awayHours, 6);
+    assert.equal(briefing.awayHours, THRESHOLD_H);
 });
 
-test('buildReturnBriefing returns a briefing when well beyond 6h and includes location/level/hp', () => {
+test('buildReturnBriefing returns a briefing when well beyond the threshold and includes location/level/hp', () => {
     const now = 1_000_000_000_000;
     const player = basePlayer({
         loc: '에테르 폐허',

@@ -7,12 +7,14 @@ import {
     Coins,
     Compass,
     HeartPulse,
+    ListChecks,
     MapPin,
     Sparkles,
     Swords,
 } from 'lucide-react';
 import type { ClassJourneyRecord, ExpeditionSummary } from '../types/player.js';
 import type { ExpeditionReturnAction } from '../utils/expeditionReturnFlow.js';
+import type { DailyMissionSummary } from '../utils/protocolCycle.js';
 import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
 import ClassJourneySummary from './ClassJourneySummary';
 import ActionButton from './ui/ActionButton';
@@ -34,6 +36,8 @@ interface ExpeditionDebriefCardProps {
     onClose: () => void;
     onPrimaryAction: () => void;
     returnSupplyReward?: ReturnSupplyRewardViewModel;
+    /** 오늘의 임무 완료 수(2026-11 고도화 E2). */
+    daily?: DailyMissionSummary;
 }
 
 const formatDuration = (durationMs: number) => {
@@ -61,6 +65,7 @@ const ExpeditionDebriefCard = ({
     onClose,
     onPrimaryAction,
     returnSupplyReward,
+    daily,
 }: ExpeditionDebriefCardProps) => {
     usePlatformBackHandler(true, onClose, 70);
     const dialog = useOverlayDialog({ label: MSG.A11Y_DIALOG_EXPEDITION_DEBRIEF, onEscape: onClose });
@@ -178,6 +183,21 @@ const ExpeditionDebriefCard = ({
                                 </div>
                             </div>
                         </section>
+
+                        {daily && (
+                            <>
+                                <div className="ae-divider" />
+                                <section data-testid="expedition-debrief-daily" className="flex items-start gap-3">
+                                    <ListChecks size={15} className={`mt-0.5 shrink-0 ${daily.done >= daily.total ? 'text-ae-good' : 'text-ae-gold'}`} aria-hidden="true" />
+                                    <div className="min-w-0 flex-1">
+                                        <div className="ae-eyebrow">{MSG.QUEST_TAB_DAILY_TITLE}</div>
+                                        <div className="mt-0.5 font-fira text-[13px] tabular-nums text-ae-ink">
+                                            {MSG.DAILY_MISSION_PROGRESS(daily.done, daily.total)}
+                                        </div>
+                                    </div>
+                                </section>
+                            </>
+                        )}
                     </div>
 
                     {journeyJob && (

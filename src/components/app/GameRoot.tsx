@@ -11,6 +11,7 @@ import { getCombatStageView, getPresentedVisualEffect } from '../../utils/combat
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { getVisibleExpeditionSummary, getVisibleRegionTheme } from '../../utils/challengeRules';
 import { buildReturnBriefing } from '../../utils/returnBriefing';
+import { getDailyMissionSummary } from '../../utils/protocolCycle';
 import { getExpeditionReturnAction } from '../../utils/expeditionReturnFlow';
 import { getPendingMilestoneStoryBeat, type MilestoneStoryBeat } from '../../utils/milestoneStory';
 import { DB } from '../../data/db';
@@ -476,6 +477,7 @@ const GameRoot = ({
                         onClose={closeExpeditionDebrief}
                         onPrimaryAction={runExpeditionReturnAction}
                         returnSupplyReward={returnSupplyReward}
+                        daily={getDailyMissionSummary(engine.player, new Date())}
                     />
                 </Suspense>
             )}

@@ -10564,3 +10564,24 @@ Wave 125의 48시드 측정에 시드 49 ~ 96을 더했다. 같은 코드이고,
 - e2e 23/23: `post-combat-continue-explore` · `field-dock-fit` · `codex-progression-design` · `mobile-legibility`.
 - 토스 웹 빌드 실측: `.env`가 AI를 켠 이 작업 트리에서 `npm run build:toss:web` → 번들의 env는 `VITE_USE_AI_PROXY:"false"`, 검증기 `ok: true` · `aiProxyEnabled: false`.
 - 자연 플레이 드라이버 v3: 기사 · 성직자 × 시드 2개 × 2회차가 `main`과 바이트 동일하다 — 드라이버는 도감 크리스털 · 심연 · 결과 카드 · 기록 배지를 측정하지 않는다.
+
+## 159. 고도화 묶음 A — 다시 손이 가는 자리 세 곳 (2026-11-02, 베이스 = `main` `621a5e18` = PR #204 머지)
+
+소유자 결정(설계 `docs/ENHANCEMENT_DESIGN_2026-11.md` §5): Q1 "묶음 A를 출시 전에 넣는다", Q2 "오늘의 임무 보상은 그대로". 셋 다 이미 있는 상태를 보이는 자리만 바꾼다 — 판정 · 난수 · 세이브 봉투 · 수치는 그대로다.
+
+### 159.1 바꾼 것
+| # | 자리 | 규칙 |
+|---|---|---|
+| E1 | 복귀 브리핑 "멈춘 자리" | `getBriefingResumeLines`(`utils/returnBriefing.ts`) — 수락했고 끝나지 않은 본편 장(제목 · 진행) → 시작했고 완수하지 않은 토벌 의뢰(지금 지역 먼저, 임무 탭과 같은 상태 줄) → 지금 지역의 구역 보스 게이지(차기 시작했을 때만, 원정 HUD 칩 문구) → 다음 가방 재료(모으기 시작했을 때만, 필요한 수까지) 순서로 해당하는 줄만 최대 3줄. 길 잃은 여행이면 의뢰 지역 이름을 숨기고 게이지 줄은 없다(칩이 없다). 문턱 `RETURN_BRIEFING_HOURS` 6 → 2 — 사람 테스트로 다시 정한다. |
+| E2 | 오늘의 임무 한 줄 | `getDailyMissionSummary`(`utils/protocolCycle.ts`) 하나를 마을 조작판(시설 위) · 원정 결산 · 복귀 브리핑이 읽는다. 날짜가 지났으면 새 날의 0이다. 보상 · 연속 출석 · 놓친 날 손실은 넣지 않았다(Q2). 마을 시설을 펼친 동안 줄은 자리를 내준다 — iPhone mini(375 × 812, 아래 안전 영역 34px)에서 시설 마지막 줄이 홈 표시줄 아래로 14.6px 밀렸다(D14와 같은 양보). |
+| E3 | 사망 화면 "다음 갈래" | `getUnrecordedClassBranches`(`utils/classJourney.ts`) — 시작 직업의 첫 전직 갈래(전사 · 마법사 · 도적) 중 그 갈래의 어느 직업도 계정 장부 `classJourney`와 방금 끝난 여정의 직업에 없는 것. 장부는 안전한 귀환에서만 남으므로 돌아오지 못한 지난 여정의 직업을 모른다 — 문구는 "걷지 않은"이 아니라 "직업 여정에 없는 갈래"다. 모두 기록되면 그리지 않는다. 추천 문구 없음. |
+
+### 159.2 게이트
+- 새 계약 `tests/return-hooks-contract.test.js` 13건(E1 7 · E2 2 · E3 3 + 카드 렌더 1). `return-briefing.test.js`의 문턱 테스트 3건은 6시간 리터럴 대신 `BALANCE.RETURN_BRIEFING_HOURS`를 읽는다(단언은 그대로 — 문턱 직전 null · 문턱에서 브리핑).
+- 첫 `npm run verify`에서 9건이 붉었다: 손으로 만든 `Briefing` 픽스처 8건(필드 `resumeLines`가 없어 렌더가 던졌다 → 필드를 선택으로, 카드는 없으면 줄이 없다), 추적 증빙 1건. 증빙 둘(`progression-diagnostic-v2` · `equipment-combat-power`)은 `constants.ts` 출처 해시만 바뀌었다 — 다시 쓴 뒤 구조 비교로 본문 차이 0(해시 2 · 13개 경로만).
+- 두 번째 `npm run verify`: 6,506건 중 6,500 통과. 5건은 `monster-source-preflight`(하위 프로세스 30초 시간 제한)으로, 부하 평균 49 ~ 103에서만 시간 초과였고 따로 돌리면 5/5 통과한다(§158과 같다). 1건은 마지막 화면 수정 뒤의 진단 증빙 출처 해시였다 — 최종 소스로 다시 쓰고 `progression:diagnostic:verify` 통과, 본문 차이 0. `evidence:verify` 15/15, `build:guard` 통과.
+- e2e 36/36: `return-briefing`(멈춘 자리 본편 · 가방 줄) · `mobile-legibility`(마을 줄 · 브리핑 · 사망 화면의 갈래 줄, 세 폭 11px · 넘침) · `town-facilities-design`(펼치면 줄이 없음 · 세 기기 안전 영역) · `field-dock-fit` · `screen-text-clipping` · `expedition-debrief` · `screen-english-words`. 첫 실행은 iPhone mini 안전 영역 1건이 붉었고 위 양보로 고쳤다.
+- 자연 플레이 드라이버 v3: 기사 · 성직자 · 어쌔신 × 시드 1 ~ 3 × 2회차(9판, 약 28 모델시간)가 `main`(`621a5e18`)과 바이트 동일하다.
+
+### 159.3 남은 것
+- 문턱 2시간 · 줄 순서 · 오늘의 임무 줄이 행동을 바꾸는지는 사람 플레이테스트(설계 §4.1)로 본다. 묶음 B(E4 첫 전직 속도 · E5 연속 탐험)는 그 뒤다.

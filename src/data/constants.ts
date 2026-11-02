@@ -680,7 +680,8 @@ export const BALANCE = {
     POST_COMBAT_MP_LOW_RATIO: 0.3,
 
     // 리텐션 훅 — 복귀 브리핑 카드
-    RETURN_BRIEFING_HOURS: 6,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시
+    RETURN_BRIEFING_HOURS: 2,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시 (2026-11 고도화 E1: 6 → 2, 사람 테스트로 다시 정한다)
+    RETURN_BRIEFING_RESUME_LINES: 3,    // 복귀 브리핑 "멈춘 자리" 최대 줄 수
 
     // 리텐션 훅 — 심연 데일리 다이브
     ABYSS_DAILY_DIVE_MULT: 1.5,         // 혼돈의 심연 일일 첫 다이브 EXP/골드 배율

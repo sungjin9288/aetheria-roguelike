@@ -14,6 +14,11 @@ test('복귀 브리핑은 현재 목표와 받을 보상을 보여주고 임무 
     await expect(briefing).toContainText('0/3 완료');
     await expect(briefing).toContainText('받을 임무 보상');
     await expect(briefing).toContainText('2건');
+    // 2026-11 고도화 E1: 멈춘 자리 — 수락한 본편 장과 모으기 시작한 다음 가방 재료.
+    const resume = page.getByTestId('return-briefing-resume');
+    await expect(resume).toContainText('멈춘 자리');
+    await expect(resume.locator('[data-resume-kind="story"]')).toContainText('폐허의 진실 3/10');
+    await expect(resume.locator('[data-resume-kind="bag"]')).toContainText('다음 가방');
 
     const geometry = await briefing.evaluate((node) => {
         const rect = node.getBoundingClientRect();

@@ -136,8 +136,11 @@ test.describe('펼친 마을 시설 · 안전 영역', () => {
                 document.documentElement.style.setProperty('--aether-safe-area-top', `${top}px`);
                 document.documentElement.style.setProperty('--aether-safe-area-bottom', `${bottom}px`);
             }, device);
+            await expect(page.getByTestId('control-town-daily')).toBeVisible();
             await openTownFacilities(page);
             await waitForModeTransition(page);
+            // 2026-11 고도화 E2: 펼친 동안 오늘의 임무 줄은 자리를 내준다(iPhone mini에서 마지막 줄이 14px 밀렸다).
+            await expect(page.getByTestId('control-town-daily')).toHaveCount(0);
 
             const geometry = await page.getByTestId('control-town-facility-actions').evaluate((grid) => {
                 const shell = document.querySelector<HTMLElement>('[data-app-shell]')!;

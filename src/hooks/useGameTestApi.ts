@@ -119,7 +119,13 @@ const buildReturnBriefingScenarioPlayer = (player: Player, now: Date): Partial<P
             goal: 1,
             progress: 1,
             reward: { gold: 100 },
+        }, {
+            // 2026-11 고도화 E1: "멈춘 자리"의 본편 장 · 다음 가방 줄을 화면 계약(세 폭 · 11px)이 함께 잰다.
+            id: 81,
+            progress: 3,
         }],
+        inv: [...(player.inv || []), { id: 'return-bag-material', name: BAG_RECIPES[0].inputs[0].name, type: 'mat', price: 1 }],
+        bagTier: 0,
         weeklyProtocol: {
             kills: weeklyMission.target,
             explores: 0,
