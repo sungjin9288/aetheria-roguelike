@@ -138,7 +138,7 @@ export function buildReturnBriefing(
     const claimableWeeklyCount = weeklyMissions
         .filter((mission) => mission.done && !mission.claimed)
         .length;
-    const activeChainCount = buildChainJournal(player.eventChainProgress).length;
+    const activeChainCount = buildChainJournal(player.eventChainProgress, undefined, player.stats?.claimedQuestIds).length;
 
     const maxHp = typeof effectiveMaxHp === 'number' && Number.isFinite(effectiveMaxHp) && effectiveMaxHp > 0
         ? effectiveMaxHp

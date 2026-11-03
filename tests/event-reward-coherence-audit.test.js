@@ -43,8 +43,9 @@ test('event reward audit covers every canonical occurrence class without defects
         chainCount: 13,
         chainStepCount: 39,
         // Wave 128: 모든 이야기의 0단계가 임무로 열려 0단계 결과 28개가 빠지고 임무 단계가 13개다.
-        chainOutcomeCount: 54,
-        chainQuestStartCount: 13,
+        chainOutcomeCount: 56,
+        chainQuestStartCount: 12,
+        chainQuestGateCount: 1,
         boundedEncounterCount: 8,
         boundedChoiceCount: 16,
         fallbackTransactionCount: 3,
@@ -57,7 +58,7 @@ test('event reward audit covers every canonical occurrence class without defects
         eventMultiplier: 0.64,
         minimumNarrativeGap: 2,
     });
-    assert.equal(report.rows.length, 78);
+    assert.equal(report.rows.length, 80);
     assert.deepEqual(report.errors, []);
     assert.deepEqual(report, buildReport());
 });
@@ -71,7 +72,9 @@ test('event reward audit rejects unknown rewards, non-finite values, and under-t
     const shadowMarket = chains.find((chain) => chain.id === 'shadow_guild').steps[1];
     shadowMarket.event.outcomes[0].reward.relicId = 'missing_relic';
     // Wave 127 · 128: 임무로 여는 단계는 임무 id · 단서 문구가 있어야 하고, 게시판 소문이 있으면 빈 문자열이 아니다.
-    chains.find((chain) => chain.id === 'lost_wizard').steps[0].questStart.questId = 0;
+    chains.find((chain) => chain.id === 'ancient_prophecy').steps[0].questStart.questId = 0;
+    // 2026-11: 임무가 여는 이벤트 단계(사라진 마법사 0단계)도 임무 id · 수령 기록이 있어야 한다.
+    chains.find((chain) => chain.id === 'lost_wizard').steps[0].questGate.log = '';
     chains.find((chain) => chain.id === 'last_hero').steps[0].questStart.hook = '   ';
 
     const report = buildReport({ chains });
@@ -79,7 +82,8 @@ test('event reward audit rejects unknown rewards, non-finite values, and under-t
     assert.ok(report.errors.some((error) => error.startsWith('CHAIN_REWARD_NUMBER_INVALID:')));
     assert.ok(report.errors.includes('CHAIN_ITEM_TIER_TOO_LOW:forgotten_commander:2:1:기사의 흉갑:T2:MIN_T3'));
     assert.ok(report.errors.includes('CHAIN_RELIC_UNKNOWN:shadow_guild:1:0:missing_relic'));
-    assert.ok(report.errors.includes('CHAIN_QUEST_START_INVALID:lost_wizard:0'));
+    assert.ok(report.errors.includes('CHAIN_QUEST_START_INVALID:ancient_prophecy:0'));
+    assert.ok(report.errors.includes('CHAIN_QUEST_GATE_INVALID:lost_wizard:0'));
     assert.ok(report.errors.includes('CHAIN_QUEST_START_INVALID:last_hero:0'));
 });
 

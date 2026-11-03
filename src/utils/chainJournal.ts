@@ -5,7 +5,7 @@
  * "진행 중(시작됐지만 미완료)"인 체인만 추려 QuestTab 렌더링용 엔트리로 변환한다.
  * 컴포넌트에는 로직을 넣지 않는다 (CLAUDE.md §5 DO).
  */
-import { EVENT_CHAINS } from '../data/eventChains.js';
+import { EVENT_CHAINS, getChainQuestGate, isChainQuestGateOpen } from '../data/eventChains.js';
 import type { EventChainProgress } from '../types/player.js';
 
 /** EVENT_CHAINS 원소 — 데이터 리터럴에서 도출(생산자 인덱스 접근, 손으로 다시 선언하지 않음). */
@@ -27,10 +27,12 @@ export interface JournalEntry {
  * player.eventChainProgress를 기반으로 "시작됐고 아직 완료되지 않은" 체인들의
  * 저널 엔트리 목록을 만든다. 완료(step >= steps.length)되었거나 실패('failed')
  * 처리되었거나 아직 시작되지 않은(step 0/미존재) 체인은 제외한다.
+ * 2026-11: 임무가 여는 0단계(`questGate`)는 그 임무를 수령했으면 시작된 이야기다 — 단서를 찾을 지역을 일지가 보인다.
  */
 export function buildChainJournal(
     eventChainProgress: EventChainProgress | null | undefined,
     chains: EventChain[] = EVENT_CHAINS,
+    claimedQuestIds?: readonly unknown[] | null,
 ): JournalEntry[] {
     const progress = eventChainProgress || {};
 
@@ -42,8 +44,11 @@ export function buildChainJournal(
         const currentStep = typeof rawStep === 'number' ? rawStep : 0;
         const totalSteps = chain.steps.length;
 
-        // 미시작 또는 완료된 체인은 저널에 표시하지 않음.
-        if (currentStep <= 0 || currentStep >= totalSteps) return entries;
+        // 미시작 또는 완료된 체인은 저널에 표시하지 않음 — 수령한 임무가 연 0단계(`questGate`)는 시작된 이야기다.
+        const openedByQuest = currentStep === 0
+            && Boolean(getChainQuestGate(chain.steps[0]))
+            && isChainQuestGateOpen(chain.steps[0], claimedQuestIds);
+        if ((currentStep <= 0 && !openedByQuest) || currentStep >= totalSteps) return entries;
 
         const nextStepData = chain.steps[currentStep];
 

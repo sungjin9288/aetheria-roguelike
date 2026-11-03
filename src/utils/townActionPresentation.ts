@@ -25,7 +25,9 @@ export const getTownExploreIntent = (
     mapData: { type?: string; monsters?: readonly string[] } | undefined,
 ): TownExploreIntent => {
     const hasPendingChainStep = Boolean(
-        getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps, player.stats?.abyssFloor),
+        getChainEventForLoc(
+            player.loc, player.eventChainProgress, player.deferredEventChainSteps, player.stats?.abyssFloor, player.stats?.claimedQuestIds,
+        ),
     );
     if (hasPendingChainStep) return 'chain';
     return canInvestigateTown(player.loc, mapData) ? 'investigate' : null;

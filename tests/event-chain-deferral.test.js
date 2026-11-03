@@ -11,6 +11,7 @@ import { DB } from '../src/data/db.js';
 import { createExploreActions } from '../src/hooks/gameActions/exploreActions.js';
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
+import { isChainStepEncountered } from '../src/utils/chainStepEncounter.js';
 
 const cases = EVENT_CHAINS.flatMap(chain => chain.steps.filter(isChainEventStep).flatMap(step =>
     step.event.outcomes.flatMap((outcome, choiceIndex) => outcome.type === 'nothing'
@@ -19,6 +20,12 @@ const cases = EVENT_CHAINS.flatMap(chain => chain.steps.filter(isChainEventStep)
 //   이웃 안전지대 여행자의 쉼터)다.
 const wizard = cases.find(entry => entry.chainId === 'lost_wizard' && entry.step === 1);
 const SAFE_NEXT_TO_WIZARD = '여행자의 쉼터';
+/** 2026-11: 사냥 지역의 이야기 단계는 탐험마다 확률로 나타난다 — 이야기가 나와야 하는 탐험은 나타나는 탐험 수로 맞춘다. */
+const atEncounter = (state, entry = wizard) => {
+    let explores = state.player.stats?.explores || 0;
+    while (!isChainStepEncountered({ ...state.player, stats: { ...state.player.stats, explores } }, DB.MAPS[entry.data.loc]?.type, entry.chainId, entry.step)) explores += 1;
+    return { ...state, player: { ...state.player, stats: { ...state.player.stats, explores } } };
+};
 const buildState = (entry = wizard) => ({
     ...structuredClone(INITIAL_STATE), gameState: 'event',
     player: { ...structuredClone(INITIAL_STATE.player), name: '이야기 검증',
@@ -34,9 +41,10 @@ const restore = (state) => gameReducer(INITIAL_STATE, {
 });
 
 // Wave 128: 모든 이야기의 0단계가 임무로 열려 0단계의 nothing 선택 7개(예언 · 그림자 길드 · 잊혀진 신 2 · 기계 · 용 · 심연)가
-//   사라졌다 — 남은 미루기 대상은 1 · 2단계의 6개다.
-test('미루기 대상은 4개 이야기의 보상 없는 nothing 선택 6개다', () => {
-    assert.equal(cases.length, 6);
+//   사라졌다 — 남은 미루기 대상은 1 · 2단계의 6개였다. 2026-11: 사라진 마법사 0단계가 첫 임무가 여는 숲의 확률 이벤트가 되어
+//   그 '그대로 둔다'가 더해졌다(7개, 이야기 수는 그대로 4개).
+test('미루기 대상은 4개 이야기의 보상 없는 nothing 선택 7개다', () => {
+    assert.equal(cases.length, 7);
     assert.equal(new Set(cases.map(entry => entry.chainId)).size, 4);
     for (const entry of cases) assert.equal(entry.data.event.outcomes[entry.choiceIndex].reward, null);
 });
@@ -193,6 +201,7 @@ test('이전 원정의 늦은 선택은 다시 열린 같은 step을 닫지 못�
         liveConfig: {}, dispatch, addLog() {} }).move(loc);
     move(SAFE_NEXT_TO_WIZARD);
     move(wizard.data.loc);
+    state = atEncounter(state);
     await explore();
     assert.equal(state.currentEvent._chainId, wizard.chainId);
     const fresh = state;

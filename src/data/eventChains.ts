@@ -33,6 +33,17 @@ export interface ChainQuestStart {
 }
 const chainQuestStart = (value: ChainQuestStart): ChainQuestStart => value;
 
+/**
+ * 2026-11 소유자 결정 "이야기 이벤트는 확정이 아니라 확률 — 첫 맵을 돌아다니다 알게 되는 식": 임무가 이야기를 열지만 단서는
+ * 그 단계의 지역을 탐험하다 확률로 찾는 이벤트 단계다. 임무를 수령하기 전에는 나타나지 않고(임무로 시작한다는 Wave 128 규칙),
+ * 수령 기록(`log`)은 무엇을 찾아야 하는지만 말한다 — 다음 지역은 이벤트가 알린다.
+ */
+export interface ChainQuestGate {
+    questId: number;
+    log: string;
+}
+const chainQuestGate = (value: ChainQuestGate): ChainQuestGate => value;
+
 export const EVENT_CHAINS = [
     {
         id: 'ancient_prophecy',
@@ -84,12 +95,22 @@ export const EVENT_CHAINS = [
             {
                 step: 0,
                 loc: '고요한 숲',
-                // 본편 80 '[스토리] 첫 번째 여정'(Wave 127) — 첫 탐험이 이야기 화면으로 막히지 않는다. 단계 번호는 그대로라
-                //   저장된 진행 값의 뜻이 바뀌지 않는다(다른 체인의 0단계도 같다).
-                questStart: chainQuestStart({
+                // 본편 80 '[이야기] 첫 번째 여정'이 연다(Wave 127 — 첫 탐험이 이야기 화면으로 막히지 않는다). 2026-11 소유자 결정
+                //   "확정이 아니라 확률": 수령이 단서를 바로 주던 것을, 수령 뒤 숲을 돌아다니다 확률로 찾는 이벤트로 바꿨다.
+                //   단계 번호는 그대로라 저장된 진행 값의 뜻이 바뀌지 않는다.
+                questGate: chainQuestGate({
                     questId: FIRST_STORY_QUEST_ID,
-                    log: '고요한 숲의 돌기둥 아래에서 그을린 지팡이 파편을 주웠습니다. 사라진 마법사의 것이었습니다. 흔적은 수정 동굴로 이어집니다.',
+                    log: '숲의 돌기둥 아래에 무언가 타오른 자국이 남아 있었습니다. 고요한 숲을 더 돌아다니면 그 흔적의 주인을 알 수 있을지도 모릅니다.',
                 }),
+                event: {
+                    title: '그을린 지팡이 파편',
+                    desc: '덤불 사이에서 그을린 지팡이 파편을 발견했습니다. 마법의 잔열이 아직 남아 있고, 손잡이에는 한 마법사의 이름이 새겨져 있습니다.',
+                    choices: ['파편을 챙긴다', '그대로 둔다'],
+                    outcomes: [
+                        { type: 'chain_advance', log: '사라진 마법사의 지팡이였습니다. 파편에 묻은 수정 가루가 흔적이 수정 동굴로 이어진다고 말해 줍니다.', reward: null },
+                        { type: 'nothing', log: '파편을 그대로 두고 왔습니다.', reward: null },
+                    ],
+                },
             },
             {
                 step: 1,
@@ -694,6 +715,7 @@ export function getChainEventForLoc(
     progress: EventChainProgress | null | undefined,
     deferredSteps: Record<string, number> | undefined,
     clearedAbyssFloor: number | undefined,
+    claimedQuestIds?: readonly unknown[] | null,
 ) {
     for (const chain of EVENT_CHAINS) {
         const rawStep = progress?.[chain.id];
@@ -707,6 +729,8 @@ export function getChainEventForLoc(
 
         const step = chain.steps[currentStep];
         // Wave 127 · 128: 임무로 여는 단계(`questStart`)는 이벤트가 없다 — 그 자리에서 아무것도 띄우지 않고 다른 체인으로 넘어간다.
+        // 2026-11: 임무가 여는 이벤트 단계(`questGate`)는 그 임무를 수령해야 나타난다.
+        if (!isChainQuestGateOpen(step, claimedQuestIds)) continue;
         if (isChainEventStep(step) && step.loc === loc && isChainStepFloorReached(step, clearedAbyssFloor)) {
             return { chain, step };
         }
@@ -720,6 +744,35 @@ export type EventChainEventStep = EventChainStepEntry & { event: NonNullable<Eve
 
 export function isChainEventStep(step: EventChainStepEntry | undefined): step is EventChainEventStep {
     return Boolean(step?.event);
+}
+
+/** 임무가 여는 이벤트 단계(2026-11)면 그 임무 · 수령 기록, 아니면 null. */
+export function getChainQuestGate(step: EventChainStepEntry | undefined): ChainQuestGate | null {
+    return step && 'questGate' in step && step.questGate ? step.questGate : null;
+}
+
+/** 이 단계를 여는 임무가 없거나 이미 수령했는가 — 임무가 여는 이벤트 단계는 수령 전에 나타나지 않는다. */
+export function isChainQuestGateOpen(step: EventChainStepEntry | undefined, claimedQuestIds: readonly unknown[] | null | undefined): boolean {
+    const gate = getChainQuestGate(step);
+    return !gate || (Array.isArray(claimedQuestIds) && claimedQuestIds.includes(gate.questId));
+}
+
+/**
+ * 2026-11: 방금 수령한 임무가 연 이벤트 단계(`questGate`) — 진행 값은 그대로이고, 수령 기록이 무엇을 찾아야 하는지 알린다.
+ * 임무 수령(`CLAIM_QUEST_REWARD`)만 읽는다(불러오기는 알릴 것이 없다 — 단계는 수령 목록으로 열린다).
+ */
+export function getQuestGatedChainOpenings(
+    questId: unknown,
+    progress: EventChainProgress | null | undefined,
+): Array<{ label: string; log: string }> {
+    const openings: Array<{ label: string; log: string }> = [];
+    for (const chain of EVENT_CHAINS) {
+        const stepIndex = currentChainStepIndex(progress, chain.id);
+        if (stepIndex === null) continue;
+        const gate = getChainQuestGate(chain.steps[stepIndex]);
+        if (gate && gate.questId === questId) openings.push({ label: chain.label, log: gate.log });
+    }
+    return openings;
 }
 
 /** 임무로 여는 단계면 그 임무 · 소문 · 단서, 이벤트 단계면 null. */
@@ -744,8 +797,11 @@ export function getQuestOpenedChain(
     for (const chain of EVENT_CHAINS) {
         const stepIndex = currentChainStepIndex(progress, chain.id);
         if (stepIndex === null) continue;
-        const questStart = getChainQuestStart(chain.steps[stepIndex]);
+        const step = chain.steps[stepIndex];
+        const questStart = getChainQuestStart(step);
         if (questStart && questStart.questId === questId) return { chain, hook: questStart.hook ?? null };
+        const gate = getChainQuestGate(step);
+        if (gate && gate.questId === questId) return { chain, hook: null };
     }
     return null;
 }

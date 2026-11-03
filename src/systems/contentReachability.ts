@@ -1,7 +1,7 @@
 import { BALANCE, CONSTANTS } from '../data/constants.js';
 import { DB } from '../data/db.js';
 import { DROP_TABLES } from '../data/dropTables.js';
-import { EVENT_CHAINS, getChainQuestStart } from '../data/eventChains.js';
+import { EVENT_CHAINS, getChainQuestGate, getChainQuestStart } from '../data/eventChains.js';
 import { LOOT_TABLE } from '../data/loot.js';
 import {
     // Wave 13 E2: 경로 게이트 보행은 `utils/mapRouteGate.ts`가 소유한다 — 이 리포트와
@@ -802,8 +802,9 @@ type ChainStepGateSource = { kind: 'loc'; loc: string | null } | { kind: 'quest'
 const eventChainStepLocations = () => EVENT_CHAINS.map((chain) => ({
     chain: chain.id,
     gateSources: chain.steps.map((step): ChainStepGateSource => {
-        const questStart = getChainQuestStart(step);
-        return questStart ? { kind: 'quest', questId: questStart.questId } : { kind: 'loc', loc: step.loc ?? null };
+        // 2026-11: 임무가 여는 이벤트 단계(`questGate`)도 그 임무를 수령해야 열린다 — 이벤트가 그 임무의 목표 지역에서 나오므로 게이트는 같다.
+        const questOpener = getChainQuestStart(step) ?? getChainQuestGate(step);
+        return questOpener ? { kind: 'quest', questId: questOpener.questId } : { kind: 'loc', loc: step.loc ?? null };
     }),
     steps: chain.steps.length,
     // Wave 62 C17: 혼돈의 심연 층 조건 스텝 — 이 모델에는 심연 층 진행이 없어 지역 게이트로 값을 매기지 않는다.

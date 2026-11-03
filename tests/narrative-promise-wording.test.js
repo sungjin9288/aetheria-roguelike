@@ -61,7 +61,8 @@ test('C2 → Wave 108: 이야기 미리보기 · 문구는 능력치 보상을 "
             for (const text of texts) assert.ok(!String(text || '').includes('영구'), `${chain.id}:${step.step}: ${text}`);
         }
         // Wave 128: 임무로 여는 0단계의 단서 · 게시판 소문도 이야기 문구다.
-        const questStart = chain.steps[0].questStart;
+        // 2026-11: 임무가 여는 이벤트 0단계(`questGate`)의 수령 기록도 같다.
+        const questStart = chain.steps[0].questStart ?? chain.steps[0].questGate;
         for (const text of [questStart.log, questStart.hook]) assert.ok(!String(text || '').includes('영구'), `${chain.id}:0: ${text}`);
     }
     // Wave 128: 0단계의 능력치 선택지 셋(세계수 · 신전 · 균열)이 0단계 이벤트와 함께 사라져 표본은 1 · 2단계의 7개다.

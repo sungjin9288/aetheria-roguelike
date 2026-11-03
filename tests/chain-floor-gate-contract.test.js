@@ -5,7 +5,7 @@ import { createElement } from 'react';
 import { AT } from '../src/reducers/actionTypes.ts';
 import { GS } from '../src/reducers/gameStates.ts';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
-import { EVENT_CHAINS, getChainEventForLoc, isChainEventStep, isChainStepFloorReached } from '../src/data/eventChains.ts';
+import { EVENT_CHAINS, getChainEventForLoc, isChainEventStep, isChainStepFloorReached, getChainQuestGate } from '../src/data/eventChains.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 import { createExploreActions } from '../src/hooks/gameActions/exploreActions.ts';
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.ts';
@@ -146,9 +146,10 @@ for (const stepIndex of [1, 2]) {
 
 test('[트리거] 다른 지역 · 다른 체인 판정은 층과 무관하다', () => {
     for (const chain of EVENT_CHAINS) {
-        // Wave 127 · 128: 0단계는 임무로 연다 — 층과 무관한 첫 이벤트 단계(1단계)로 본다.
+        // Wave 127 · 128: 0단계는 임무로 연다 — 층과 무관한 첫 이벤트 단계(1단계)로 본다. 임무가 여는 이벤트 0단계(2026-11
+        //   사라진 마법사 — 수령 전에는 나오지 않는다)도 건너뛴다.
         if (chain.id === 'abyss_signal') continue;
-        const first = chain.steps.find((step) => isChainEventStep(step));
+        const first = chain.steps.find((step) => isChainEventStep(step) && !getChainQuestGate(step));
         assert.equal(first.step, 1);
         assert.equal(getChainEventForLoc(first.loc, { [chain.id]: 1 }, undefined, 0)?.chain.id, chain.id, `${chain.id}: 0층에서도 첫 이벤트 단계가 잡힌다`);
     }
