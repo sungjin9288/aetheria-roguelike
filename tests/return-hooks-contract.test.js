@@ -23,7 +23,8 @@ import { getDailyMissionSummary, getProtocolDayKey } from '../src/utils/protocol
 import { getUnrecordedClassBranches } from '../src/utils/classJourney.js';
 import { renderStatic, makePlayerFixture } from './helpers/render.ts';
 import ReturnBriefingCard from '../src/components/ReturnBriefingCard.tsx';
-import TownActions from '../src/components/control/TownActions.tsx';
+import ExpeditionPrepStrip from '../src/components/control/ExpeditionPrepStrip.tsx';
+import { getExpeditionPreparation } from '../src/utils/adventureGuide.js';
 import ExpeditionDebriefCard from '../src/components/ExpeditionDebriefCard.tsx';
 import RunSummaryCard from '../src/components/RunSummaryCard.tsx';
 import { buildRunSummary } from '../src/utils/gameUtils.js';
@@ -181,15 +182,16 @@ test('E2: 오늘의 임무 요약은 오늘 날짜의 완료 수이고, 날짜�
     assert.equal(briefing.dailyMissionCount, 3);
 });
 
-test('E2: 마을 조작판과 원정 결산이 오늘의 임무 한 줄을 그린다', () => {
-    const town = renderStatic(React.createElement(TownActions, {
-        lastExpedition: null,
-        onOpenDebrief: () => {},
-        quickButtons: null,
-        quickCount: 0,
-        facilityButtons: null,
-        facilityCount: 0,
-        facilitySummary: '',
+test('E2: 원정 준비 카드와 원정 결산이 오늘의 임무 한 줄을 그린다', () => {
+    // 오늘의 임무 줄은 원정 준비 카드 머리 줄에 있다 — 마을 조작판에 줄을 새로 쓰면 기록 창이 줄어 이야기 기록이 잘렸다(원장 §159).
+    const player = makePlayerFixture();
+    const preparation = getExpeditionPreparation(player, null, DB.MAPS[player.loc], DB.MAPS);
+    const town = renderStatic(React.createElement(ExpeditionPrepStrip, {
+        preparation,
+        primary: { kind: 'open_quest_board', testId: 'control-town-quest-board', label: '임무 고르기', disabled: false },
+        onPrimaryAction: () => {},
+        onEditFocus: () => {},
+        onOpenArchive: () => {},
         dailyLine: MSG.DAILY_MISSION_LINE(1, 3),
         dailyComplete: false,
     }));

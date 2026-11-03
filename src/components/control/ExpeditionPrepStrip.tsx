@@ -1,4 +1,4 @@
-import { Backpack, BookOpen, GraduationCap, Map as MapIcon, Moon, Route, ScrollText } from 'lucide-react';
+import { Backpack, BookOpen, GraduationCap, ListChecks, Map as MapIcon, Moon, Route, ScrollText } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import ActionButton from '../ui/ActionButton';
 import Chip from '../ui/Chip';
@@ -21,13 +21,24 @@ interface ExpeditionPrepStripProps {
   onPrimaryAction: () => void;
   onEditFocus: () => void;
   onOpenArchive?: () => void;
+  /** 오늘의 임무 한 줄(2026-11 고도화 E2) — 누를 수 없는 정보다. */
+  dailyLine: string;
+  dailyComplete: boolean;
 }
 
 /**
  * 마을의 원정 준비 카드(2026-10 에테르 유리) — 마을 화면의 금빛 주 행동은 이 카드의 단추 하나다(`townActionPresentation`이 고른다).
  *   목적지 · 목표는 톤만 다른 우물 두 칸, 준비 상태는 칩, 기록 · 원정 임무 구성은 유리 단추다.
  */
-const ExpeditionPrepStrip = ({ preparation, primary, onPrimaryAction, onEditFocus, onOpenArchive }: ExpeditionPrepStripProps) => {
+const ExpeditionPrepStrip = ({
+  preparation,
+  primary,
+  onPrimaryAction,
+  onEditFocus,
+  onOpenArchive,
+  dailyLine,
+  dailyComplete,
+}: ExpeditionPrepStripProps) => {
   const PrimaryIcon = townPrimaryIcons[primary.kind] || Route;
   const checks = [
     { label: '목적지', value: preparation.destination },
@@ -42,7 +53,18 @@ const ExpeditionPrepStrip = ({ preparation, primary, onPrimaryAction, onEditFocu
       className="aether-expedition-prep ae-card ae-prep-card px-3.5 py-3 font-readable"
     >
       <div className="flex items-center justify-between gap-2">
-        <div className="ae-eyebrow">원정 준비</div>
+        {/* 2026-11 고도화 E2: 오늘의 임무 줄은 머리 줄의 왼쪽 칸에 겹쳐 놓는다 — 이 줄은 '모험 기록' 단추로 이미 44px라
+            줄을 새로 쓰지 않는다(새 줄이 기록 창을 줄여 이야기 기록이 잘렸다, 원장 §159). */}
+        <div className="min-w-0">
+          <div className="ae-eyebrow">원정 준비</div>
+          <div
+            data-testid="control-town-daily"
+            className="mt-0.5 flex items-center gap-1 aether-type-meta text-ae-ink-2"
+          >
+            <ListChecks size={13} aria-hidden="true" className={`shrink-0 ${dailyComplete ? 'text-ae-good' : 'text-ae-gold'}`} />
+            <span className="font-fira tabular-nums">{dailyLine}</span>
+          </div>
+        </div>
         <div className="flex shrink-0 items-center gap-1.5">
           <Chip tone={preparation.readinessLabel === '출발 가능' ? 'good' : 'neutral'}>
             {preparation.readinessLabel}

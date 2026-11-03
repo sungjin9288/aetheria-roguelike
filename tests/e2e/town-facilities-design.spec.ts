@@ -139,8 +139,8 @@ test.describe('펼친 마을 시설 · 안전 영역', () => {
             await expect(page.getByTestId('control-town-daily')).toBeVisible();
             await openTownFacilities(page);
             await waitForModeTransition(page);
-            // 2026-11 고도화 E2: 펼친 동안 오늘의 임무 줄은 자리를 내준다(iPhone mini에서 마지막 줄이 14px 밀렸다).
-            await expect(page.getByTestId('control-town-daily')).toHaveCount(0);
+            // 2026-11 고도화 E2: 오늘의 임무 줄은 원정 준비 카드 머리 줄에 겹쳐 있어 높이를 쓰지 않는다 — 펼친 동안에도 남는다.
+            await expect(page.getByTestId('control-town-daily')).toBeVisible();
 
             const geometry = await page.getByTestId('control-town-facility-actions').evaluate((grid) => {
                 const shell = document.querySelector<HTMLElement>('[data-app-shell]')!;

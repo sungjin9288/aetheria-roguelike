@@ -298,6 +298,8 @@ const ControlPanel = ({
             onPrimaryAction={runTownPrimaryAction}
             onEditFocus={() => setGameState?.(GS.QUEST_BOARD)}
             onOpenArchive={openTownArchive}
+            dailyLine={MSG.DAILY_MISSION_LINE(daily.done, daily.total)}
+            dailyComplete={daily.done >= daily.total}
           />
         </div>
       ) : questTracker ? (
@@ -338,8 +340,6 @@ const ControlPanel = ({
           facilityButtons={townFacilityButtons.map((button) => renderActionButton(button, '', {}))}
           facilityCount={townFacilityButtons.length}
           facilitySummary={townPresentation.facilitySummary}
-          dailyLine={MSG.DAILY_MISSION_LINE(daily.done, daily.total)}
-          dailyComplete={daily.done >= daily.total}
         />
       ) : (
         <FieldDock

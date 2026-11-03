@@ -10573,15 +10573,21 @@ Wave 125의 48시드 측정에 시드 49 ~ 96을 더했다. 같은 코드이고,
 | # | 자리 | 규칙 |
 |---|---|---|
 | E1 | 복귀 브리핑 "멈춘 자리" | `getBriefingResumeLines`(`utils/returnBriefing.ts`) — 수락했고 끝나지 않은 본편 장(제목 · 진행) → 시작했고 완수하지 않은 토벌 의뢰(지금 지역 먼저, 임무 탭과 같은 상태 줄) → 지금 지역의 구역 보스 게이지(차기 시작했을 때만, 원정 HUD 칩 문구) → 다음 가방 재료(모으기 시작했을 때만, 필요한 수까지) 순서로 해당하는 줄만 최대 3줄. 길 잃은 여행이면 의뢰 지역 이름을 숨기고 게이지 줄은 없다(칩이 없다). 문턱 `RETURN_BRIEFING_HOURS` 6 → 2 — 사람 테스트로 다시 정한다. |
-| E2 | 오늘의 임무 한 줄 | `getDailyMissionSummary`(`utils/protocolCycle.ts`) 하나를 마을 조작판(시설 위) · 원정 결산 · 복귀 브리핑이 읽는다. 날짜가 지났으면 새 날의 0이다. 보상 · 연속 출석 · 놓친 날 손실은 넣지 않았다(Q2). 마을 시설을 펼친 동안 줄은 자리를 내준다 — iPhone mini(375 × 812, 아래 안전 영역 34px)에서 시설 마지막 줄이 홈 표시줄 아래로 14.6px 밀렸다(D14와 같은 양보). |
+| E2 | 오늘의 임무 한 줄 | `getDailyMissionSummary`(`utils/protocolCycle.ts`) 하나를 원정 준비 카드 머리 줄 · 원정 결산 · 복귀 브리핑이 읽는다. 날짜가 지났으면 새 날의 0이다. 보상 · 연속 출석 · 놓친 날 손실은 넣지 않았다(Q2). 마을 줄은 '원정 준비' 머리말 아래에 겹쳐 놓는다 — 그 머리 줄은 '모험 기록' 단추로 이미 44px라 높이를 새로 쓰지 않는다(§159.4). |
 | E3 | 사망 화면 "다음 갈래" | `getUnrecordedClassBranches`(`utils/classJourney.ts`) — 시작 직업의 첫 전직 갈래(전사 · 마법사 · 도적) 중 그 갈래의 어느 직업도 계정 장부 `classJourney`와 방금 끝난 여정의 직업에 없는 것. 장부는 안전한 귀환에서만 남으므로 돌아오지 못한 지난 여정의 직업을 모른다 — 문구는 "걷지 않은"이 아니라 "직업 여정에 없는 갈래"다. 모두 기록되면 그리지 않는다. 추천 문구 없음. |
 
 ### 159.2 게이트
 - 새 계약 `tests/return-hooks-contract.test.js` 13건(E1 7 · E2 2 · E3 3 + 카드 렌더 1). `return-briefing.test.js`의 문턱 테스트 3건은 6시간 리터럴 대신 `BALANCE.RETURN_BRIEFING_HOURS`를 읽는다(단언은 그대로 — 문턱 직전 null · 문턱에서 브리핑).
 - 첫 `npm run verify`에서 9건이 붉었다: 손으로 만든 `Briefing` 픽스처 8건(필드 `resumeLines`가 없어 렌더가 던졌다 → 필드를 선택으로, 카드는 없으면 줄이 없다), 추적 증빙 1건. 증빙 둘(`progression-diagnostic-v2` · `equipment-combat-power`)은 `constants.ts` 출처 해시만 바뀌었다 — 다시 쓴 뒤 구조 비교로 본문 차이 0(해시 2 · 13개 경로만).
 - 두 번째 `npm run verify`: 6,506건 중 6,500 통과. 5건은 `monster-source-preflight`(하위 프로세스 30초 시간 제한)으로, 부하 평균 49 ~ 103에서만 시간 초과였고 따로 돌리면 5/5 통과한다(§158과 같다). 1건은 마지막 화면 수정 뒤의 진단 증빙 출처 해시였다 — 최종 소스로 다시 쓰고 `progression:diagnostic:verify` 통과, 본문 차이 0. `evidence:verify` 15/15, `build:guard` 통과.
-- e2e 36/36: `return-briefing`(멈춘 자리 본편 · 가방 줄) · `mobile-legibility`(마을 줄 · 브리핑 · 사망 화면의 갈래 줄, 세 폭 11px · 넘침) · `town-facilities-design`(펼치면 줄이 없음 · 세 기기 안전 영역) · `field-dock-fit` · `screen-text-clipping` · `expedition-debrief` · `screen-english-words`. 첫 실행은 iPhone mini 안전 영역 1건이 붉었고 위 양보로 고쳤다.
+- e2e 36/36: `return-briefing`(멈춘 자리 본편 · 가방 줄) · `mobile-legibility`(마을 줄 · 브리핑 · 사망 화면의 갈래 줄, 세 폭 11px · 넘침) · `town-facilities-design`(펼쳐도 줄이 남음 · 세 기기 안전 영역 — §159.4) · `field-dock-fit` · `screen-text-clipping` · `expedition-debrief` · `screen-english-words`. 첫 실행은 iPhone mini 안전 영역 1건이 붉었고 위 양보로 고쳤다.
 - 자연 플레이 드라이버 v3: 기사 · 성직자 · 어쌔신 × 시드 1 ~ 3 × 2회차(9판, 약 28 모델시간)가 `main`(`621a5e18`)과 바이트 동일하다.
 
 ### 159.3 남은 것
 - 문턱 2시간 · 줄 순서 · 오늘의 임무 줄이 행동을 바꾸는지는 사람 플레이테스트(설계 §4.1)로 본다. 묶음 B(E4 첫 전직 속도 · E5 연속 탐험)는 그 뒤다.
+
+### 159.4 PR CI의 e2e — 마을 줄을 원정 준비 머리 줄로 옮겼다
+- 첫 PR CI(Linux)에서 `event-choice-visual`의 "첫 이야기 보상 수령" 1건이 세 번 모두 붉었다(이야기 줄 화면 안 비율 0.857). 로컬(macOS)은 통과였다.
+- 원인: 처음 구현은 오늘의 임무 줄을 마을 조작판에 새 줄(약 25px)로 넣었다. 기록 창은 남는 높이를 쓰므로 그만큼 줄었고, 수령 묶음(단서 사건 줄 + 장의 본문)은 사건 줄부터 보인다. Linux 글꼴에서 두 줄이 약 225px라 줄어든 기록 창(약 209px)에서 이야기 줄의 아래가 잘렸다(CI 실패 화면으로 확인 — 잘린 쪽이 아래다). 로컬은 같은 묶음이 182px라 여유가 있었다.
+- 고친 것: 줄을 원정 준비 카드 머리 줄의 왼쪽 칸, '원정 준비' 머리말 아래로 옮겼다. 그 줄은 '모험 기록' 단추(44px)가 높이를 정하므로 마을 화면 높이는 `main`과 같다(390 × 844 기록 창 아래 끝 444 → 468px, 머리 줄 44px 그대로). 시설을 펼친 동안 줄을 숨기던 양보는 필요 없어 지웠다(`TownActions`는 `main`과 같다).
+- 검증: `event-choice-visual` 포함 e2e 64/64(`mobile-legibility` · `town-facilities-design` · `field-dock-fit` · `return-briefing` · `screen-text-clipping` · `expedition-debrief` · `screen-english-words` · `product-acceptance-layout`), 계약 13/13, 진단 증빙은 출처 해시만 바뀌었고 본문 동일, `evidence:verify` 15/15.

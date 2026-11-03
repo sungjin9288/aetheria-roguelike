@@ -108,7 +108,7 @@ for (const viewport of VIEWPORTS) {
             const preparation = page.getByTestId('control-expedition-prep');
             await expectReadableSurface(page, preparation);
             await expectTouchTarget(page.getByTestId('control-town-primary').locator('button'));
-            // 2026-11 고도화 E2: 오늘의 임무 한 줄 — 마을 조작판 안, 11px 하한 · 가로 넘침 없음.
+            // 2026-11 고도화 E2: 오늘의 임무 한 줄 — 원정 준비 카드 머리 줄, 11px 하한 · 가로 넘침 없음.
             await expect(page.getByTestId('control-town-daily')).toContainText('오늘의 임무');
             await expectReadableSurface(page, page.getByTestId('control-town-daily'));
 
