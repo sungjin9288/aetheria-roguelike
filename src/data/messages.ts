@@ -980,6 +980,8 @@ export const MSG = {
     EXPLORE_CHAIN_EVENT: (label: string, desc: string) => `📜 [${label}] ${desc}`,
     /** Wave 127: 임무 수령이 연 체인 단계 — 이벤트 없이 다음 단서를 알린다. */
     CHAIN_QUEST_START: (label: string, text: string) => `📜 [${label}] ${text}`,
+    /** 2026-11: 임무 수령이 이야기를 열었지만 단서는 그 지역을 돌아다니다 확률로 찾는다 — 무엇을 찾을지만 알린다. */
+    CHAIN_QUEST_OPENED: (label: string, text: string) => `📜 [${label}] ${text}`,
     // --- 2026-09 Wave 3 I: 이벤트 결과 어휘 확장 (유물 / 상태이상 / 정예 / 버프) ---
     // 이벤트 outcome이 ±골드를 넘어 분기할 때의 로그. 모델·풀 어느 쪽에서 왔든
     //   aiEventUtils.normalizeOutcomes를 통과한 값만 여기로 온다.

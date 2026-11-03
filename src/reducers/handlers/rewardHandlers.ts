@@ -28,7 +28,7 @@ import { removeExpeditionFocusQuest } from '../../utils/expeditionMissionFocus';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { getGoldIncome } from '../../utils/challengeRules';
 import { MSG } from '../../data/messages';
-import { advanceQuestStartedChains } from '../../data/eventChains';
+import { advanceQuestStartedChains, getQuestGatedChainOpenings } from '../../data/eventChains';
 import { appendRewardLogs } from './rewardLog';
 import { addNewTitles, addSeasonXp } from './helpers';
 import type { GameState, HandlerMap } from '../gameReducer';
@@ -153,6 +153,10 @@ export const rewardActionMap = {
             for (const entry of questStartedChains.started) {
                 logs.push({ type: 'event', text: MSG.CHAIN_QUEST_START(entry.label, entry.log) });
             }
+        }
+        // 2026-11: 이 임무가 연 이벤트 단계(`questGate`)는 진행 값을 그대로 두고 무엇을 찾을지만 알린다 — 단서는 그 지역을 돌아다니다 확률로 찾는다.
+        for (const entry of getQuestGatedChainOpenings(questId, nextPlayer.eventChainProgress)) {
+            logs.push({ type: 'event', text: MSG.CHAIN_QUEST_OPENED(entry.label, entry.log) });
         }
 
         const receiptKey = [

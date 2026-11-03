@@ -188,7 +188,7 @@ const QuestTab = ({ player, actions, isInSafeZone }: QuestTabProps) => {
         progressPercent: getQuestProgressPercent(entry.progress, entry.quest.goal!),
     }));
     const claimableQuestCount = activeQuestEntries.filter((e) => e.isComplete).length;
-    const chainJournalEntries = buildChainJournal(player.eventChainProgress);
+    const chainJournalEntries = buildChainJournal(player.eventChainProgress, undefined, player.stats?.claimedQuestIds);
     const dp = getCurrentDailyProtocol(player, new Date());
     const dpMissions = dp.missions;
     const dpDoneCount = dpMissions.filter((m) => m.done).length;

@@ -11,7 +11,7 @@ import assert from 'node:assert/strict';
 import { createElement } from 'react';
 
 import { QUESTS } from '../src/data/quests.ts';
-import { EVENT_CHAINS, getChainQuestStart } from '../src/data/eventChains.ts';
+import { EVENT_CHAINS, getChainQuestStart, getChainQuestGate } from '../src/data/eventChains.ts';
 import { INITIAL_STATE } from '../src/reducers/gameReducer.ts';
 import { getQuestBoardRecommendations, isBasicHuntQuest, isSelfDescribingHuntQuest } from '../src/utils/questOperations.ts';
 import QuestBoardPanel from '../src/components/tabs/QuestBoardPanel.tsx';
@@ -56,7 +56,9 @@ test('[판정] 제목이 대상을 말하는 기본 토벌만 목표 줄을 생�
 });
 
 test('[이야기 칸] 이야기를 여는 임무와 본편 장은 제목이 대상을 말하지 않으면 추천 줄에 목표가 있다', () => {
-    const openers = EVENT_CHAINS.map((chain) => getChainQuestStart(chain.steps[0])?.questId).filter((id) => id !== undefined);
+    // 2026-11: 사라진 마법사는 첫 임무가 여는 이벤트 단계(`questGate`)로 시작한다 — 여는 임무로 함께 센다.
+    const openers = EVENT_CHAINS.map((chain) => (getChainQuestStart(chain.steps[0]) ?? getChainQuestGate(chain.steps[0]))?.questId)
+        .filter((id) => id !== undefined);
     assert.equal(openers.length, EVENT_CHAINS.length);
     const silentOpeners = openers.filter((id) => !isSelfDescribingHuntQuest(byId(id)) && isBasicHuntQuest(byId(id)));
     // 제목이 대상을 말하지 않는 여는 임무 — 2026-10 데이터에서 셋 이상(5 호수의 수호자 · 17 평원 정화 · 205 혼돈 속의 생존자 …).

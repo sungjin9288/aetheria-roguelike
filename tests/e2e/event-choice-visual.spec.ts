@@ -3,7 +3,8 @@ import { startE2ERun } from './testHelpers';
 
 test.describe('Event choice location continuity', () => {
     // 2026-10 Wave 127(소유자 결정 "처음 숲에서 이벤트로 새 길을 발견하는 기능 삭제 — 퀘스트를 통해 자동으로 알게"):
-    //   첫 탐험은 이야기 화면을 띄우지 않고, 사라진 마법사의 단서(수정 동굴)는 첫 임무를 수령할 때 기록으로 이어진다.
+    //   첫 탐험은 이야기 화면을 띄우지 않고, 사라진 마법사의 단서는 첫 임무를 수령할 때 기록으로 이어진다.
+    //   2026-11(원장 §162): 수령은 수정 동굴을 바로 알리지 않고 숲을 더 돌아다니라는 단서를 남긴다 — 동굴은 숲의 확률 이벤트가 알린다.
     test('첫 임무 수령이 연 이야기 단서가 짧은 기록에서도 화면 안에 이어진다', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });
         await startE2ERun(page);
@@ -15,7 +16,7 @@ test.describe('Event choice location continuity', () => {
         await page.getByTestId('control-route-option-시작의 마을').click();
         await page.getByTestId('expedition-debrief-close-icon').click();
         await page.getByTestId('control-claim-quest-reward').click();
-        const lead = page.getByTestId('terminal-panel').locator('[data-log-type]').filter({ hasText: '흔적은 수정 동굴로 이어집니다.' });
+        const lead = page.getByTestId('terminal-panel').locator('[data-log-type]').filter({ hasText: '고요한 숲을 더 돌아다니면 그 흔적의 주인을 알 수 있을지도 모릅니다.' });
         await expect(lead).toHaveCount(1);
         await expect(lead).toBeInViewport({ ratio: 1 });
     });

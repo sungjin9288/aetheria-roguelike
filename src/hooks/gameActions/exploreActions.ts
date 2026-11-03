@@ -12,6 +12,7 @@ import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { MSG } from '../../data/messages';
 import { getChainEventForLoc } from '../../data/eventChains';
+import { isChainStepEncountered } from '../../utils/chainStepEncounter';
 import { canInvestigateTown } from '../../utils/townInvestigation';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { formatEventText } from '../../utils/eventPresentation';
@@ -180,8 +181,10 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             const mapData = DB.MAPS[player.loc!];
             if (!mapData) return addLog('error', MSG.MAP_UNKNOWN);
             // 내러티브 이벤트 체인 체크 (AI 이벤트보다 우선)
-            const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps, player.stats?.abyssFloor);
-            if (chainTrigger) {
+            // 2026-11 소유자 결정 "확정이 아니라 확률": 사냥 지역의 이야기 단계는 탐험마다 확률로 나타난다(탐험 난수 미사용).
+            const claimedQuestIds = player.stats?.claimedQuestIds;
+            const chainTrigger = getChainEventForLoc(player.loc, player.eventChainProgress, player.deferredEventChainSteps, player.stats?.abyssFloor, claimedQuestIds);
+            if (chainTrigger && isChainStepEncountered(player, mapData.type, chainTrigger.chain.id, chainTrigger.step.step)) {
                 commitExploreOutcome('narrative_event', null, mapData);
                 const { chain, step } = chainTrigger;
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });

@@ -5,12 +5,15 @@
 //   - 본편 장 80 · 81 · 82 · 84가 그 지역의 곁가지 이야기(사라진 마법사 · 잊혀진 사령관 · 용의 유산 · 기계의 반란)를 열고,
 //   - 나머지 9개는 그 이야기가 시작되는 지역의 임무가 연다(게시판에 소문을 보이는 이야기 임무).
 //   임무를 수령하면 단서 기록이 다음 단계의 지역을 알리고, 1단계부터는 지역 이벤트다.
+// 2026-11 소유자 결정 "이야기 이벤트는 확정이 아니라 확률 — 첫 맵을 돌아다니다 알게 되는 식": 첫 임무(80)는 사라진 마법사를
+//   여는 것은 그대로지만, 단서는 수령 뒤 고요한 숲을 돌아다니다 확률로 찾는 0단계 이벤트다(`questGate`). 나머지 열두 이야기는
+//   임무 목표 자체가 단서를 얻는 일이라 수령이 단계를 끝낸다(`questStart`).
 //
 // 전부 실제 모듈(데이터 · 리듀서 · 탐험 액션 · 게시판 · 체인 일지)을 호출해 결과를 단언한다 — 소스 정규식 없음.
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { EVENT_CHAINS, getChainEventForLoc, getChainQuestStart, getQuestOpenedChain, isChainEventStep } from '../src/data/eventChains.ts';
+import { EVENT_CHAINS, getChainEventForLoc, getChainQuestGate, getChainQuestStart, getQuestOpenedChain, isChainEventStep } from '../src/data/eventChains.ts';
 import { QUESTS } from '../src/data/quests.ts';
 import { MSG } from '../src/data/messages.ts';
 import { DB } from '../src/data/db.ts';
@@ -30,7 +33,17 @@ import { renderStatic } from './helpers/render.ts';
 const TOWN = '시작의 마을';
 const questById = (id) => QUESTS.find((quest) => quest.id === id);
 const isMainStory = (quest) => String(quest?.title || '').includes('[이야기]');
-const openings = EVENT_CHAINS.map((chain) => ({ chain, start: getChainQuestStart(chain.steps[0]), quest: questById(getChainQuestStart(chain.steps[0])?.questId) }));
+const openerOf = (step) => getChainQuestStart(step) ?? getChainQuestGate(step);
+const openings = EVENT_CHAINS.map((chain) => ({
+    chain,
+    start: openerOf(chain.steps[0]),
+    gated: Boolean(getChainQuestGate(chain.steps[0])),
+    quest: questById(openerOf(chain.steps[0])?.questId),
+}));
+/** 다음 지역을 알리는 문구 — 임무로 끝내는 0단계는 수령 기록, 임무가 여는 이벤트 0단계는 그 이벤트의 진행 결과. */
+const leadText = ({ chain, start, gated }) => (gated
+    ? chain.steps[0].event.outcomes.filter((outcome) => outcome.type === 'chain_advance').map((outcome) => outcome.log).join(' ')
+    : start.log);
 
 /** 임무 목표가 진행되는 지역 — `location`이 있으면 그곳, 없으면 목표 몬스터가 나오는 지역 전부. */
 const objectiveRegions = (quest) => {
@@ -75,8 +88,9 @@ const claim = (state, quest) => gameReducer(state, { type: AT.CLAIM_QUEST_REWARD
 
 test('[데이터] 모든 이야기의 0단계는 임무로 연다 — 1단계부터는 지역 이벤트이고, 임무 하나는 이야기 하나만 연다', () => {
     assert.equal(EVENT_CHAINS.length, 13);
-    for (const { chain, start, quest } of openings) {
-        assert.equal(isChainEventStep(chain.steps[0]), false, `${chain.id} 0단계에 이벤트가 없다`);
+    for (const { chain, start, gated, quest } of openings) {
+        // 임무로 끝내는 0단계는 이벤트가 없고, 임무가 여는 이벤트 0단계(사라진 마법사 — 2026-11)는 수령 뒤 그 지역의 확률 이벤트다.
+        assert.equal(isChainEventStep(chain.steps[0]), gated, `${chain.id} 0단계 이벤트 여부`);
         assert.ok(start, `${chain.id} 0단계는 임무로 연다`);
         assert.ok(quest, `${chain.id} 여는 임무 ${start.questId}가 임무 목록에 있다`);
         for (const step of chain.steps.slice(1)) {
@@ -86,6 +100,7 @@ test('[데이터] 모든 이야기의 0단계는 임무로 연다 — 1단계부
     }
     const questIds = openings.map(({ start }) => start.questId);
     assert.equal(new Set(questIds).size, questIds.length, '한 임무가 두 이야기를 열지 않는다');
+    assert.deepEqual(openings.filter(({ gated }) => gated).map(({ chain }) => chain.id), ['lost_wizard']);
 });
 
 test('[데이터] 이야기는 여는 임무를 하는 지역에서 시작하고, 그 지역에 처음 들어가는 레벨에서 한 레벨 안에 열 수 있다', () => {
@@ -103,10 +118,17 @@ test('[데이터] 이야기는 여는 임무를 하는 지역에서 시작하고
 
 test('[데이터] 단서는 다음 단계의 지역을 말하고, 본편이 아닌 임무만 그 지역의 게시판 소문을 든다', () => {
     const mainOpeners = [];
-    for (const { chain, start, quest } of openings) {
+    for (const opening of openings) {
+        const { chain, start, gated, quest } = opening;
         const next = chain.steps[1];
-        assert.ok(start.log.includes(next.loc), `${chain.id} 단서가 ${next.loc}를 말한다`);
-        if (typeof next.minAbyssFloor === 'number') assert.ok(start.log.includes(`${next.minAbyssFloor}층`), `${chain.id} 단서가 층을 말한다`);
+        const lead = leadText(opening);
+        assert.ok(lead.includes(next.loc), `${chain.id} 단서가 ${next.loc}를 말한다`);
+        if (typeof next.minAbyssFloor === 'number') assert.ok(lead.includes(`${next.minAbyssFloor}층`), `${chain.id} 단서가 층을 말한다`);
+        // 임무가 여는 이벤트 단계의 수령 기록은 단서를 찾을 지역을 말한다(다음 지역은 이벤트가 알린다).
+        if (gated) {
+            assert.ok(start.log.includes(chain.steps[0].loc), `${chain.id} 수령 기록이 ${chain.steps[0].loc}를 말한다`);
+            assert.equal(start.log.includes(next.loc), false, `${chain.id} 수령 기록이 다음 지역을 미리 말하지 않는다`);
+        }
         if (isMainStory(quest)) {
             mainOpeners.push(quest.id);
             assert.equal(start.hook, undefined, `${chain.id}: 본편 장의 게시판 이유는 본편이다`);
@@ -136,11 +158,23 @@ test('[새 여정] 어느 지역의 첫 탐험도 이야기 화면을 띄우지 
 });
 
 test('[수령] 열세 이야기 모두 여는 임무를 수령하면 열린다 — 기록이 단서를 말하고 체인 일지 · 다음 지역 이벤트가 이어진다', () => {
-    for (const { chain, start, quest } of openings) {
+    for (const { chain, start, gated, quest } of openings) {
         const finished = acceptAndFinish(stateBeforeAccept(quest), quest);
         assert.equal(finished.player.eventChainProgress?.[chain.id] ?? 0, 0, `${chain.id}: 수령 전에는 열리지 않는다`);
         const claimed = claim(finished, quest);
         assert.ok(claimed.player.stats.claimedQuestIds.includes(quest.id), `${quest.id} 수령`);
+        if (gated) {
+            // 임무가 여는 이벤트 단계: 진행 값은 0 그대로이고, 기록 · 일지가 단서를 찾을 지역을 가리키며 그 지역에서 0단계가 열린다.
+            const claimedIds = claimed.player.stats.claimedQuestIds;
+            assert.equal(claimed.player.eventChainProgress?.[chain.id] ?? 0, 0, `${chain.id} 0단계 그대로`);
+            const opened = MSG.CHAIN_QUEST_OPENED(chain.label, start.log);
+            assert.equal(claimed.logs.filter((log) => log.type === 'event' && log.text === opened).length, 1, `${chain.id} 수령 기록 한 번`);
+            const entry = buildChainJournal(claimed.player.eventChainProgress, undefined, claimedIds).find((journal) => journal.chainId === chain.id);
+            assert.equal(entry?.nextLoc, chain.steps[0].loc, `${chain.id} 일지가 단서를 찾을 지역을 가리킨다`);
+            assert.equal(getChainEventForLoc(chain.steps[0].loc, claimed.player.eventChainProgress, undefined, 0, claimedIds)?.step.step, 0);
+            assert.equal(getChainEventForLoc(chain.steps[0].loc, claimed.player.eventChainProgress, undefined, 0, []), null, '수령 전에는 나오지 않는다');
+            continue;
+        }
         assert.equal(claimed.player.eventChainProgress[chain.id], 1, `${chain.id} 1단계로`);
         const lead = MSG.CHAIN_QUEST_START(chain.label, start.log);
         assert.equal(claimed.logs.filter((log) => log.type === 'event' && log.text === lead).length, 1, `${chain.id} 단서 기록 한 번`);

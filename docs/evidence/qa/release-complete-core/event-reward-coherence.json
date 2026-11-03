@@ -1,13 +1,14 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "5e903f67a932f824f71a72db54b540141655de03995b8eab19452a5d9b3037eb",
+  "reportHash": "c8754f8c34626546be1382d3bb18a7d0c1716b58807119eabb533d9fe1b6d130",
   "report": {
     "schemaVersion": 1,
     "catalog": {
       "chainCount": 13,
       "chainStepCount": 39,
-      "chainOutcomeCount": 54,
-      "chainQuestStartCount": 13,
+      "chainOutcomeCount": 56,
+      "chainQuestStartCount": 12,
+      "chainQuestGateCount": 1,
       "boundedEncounterCount": 8,
       "boundedChoiceCount": 16,
       "fallbackTransactionCount": 3,
@@ -456,6 +457,28 @@
         "occurrenceClass": "one-time-chain",
         "location": "암흑 성",
         "mapLevel": 35,
+        "outcomeType": "nothing",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:lost_wizard:0:0",
+        "occurrenceClass": "one-time-chain",
+        "location": "고요한 숲",
+        "mapLevel": 1,
+        "outcomeType": "chain_advance",
+        "rewardType": null,
+        "itemName": null,
+        "itemTier": null,
+        "relicId": null
+      },
+      {
+        "id": "chain:lost_wizard:0:1",
+        "occurrenceClass": "one-time-chain",
+        "location": "고요한 숲",
+        "mapLevel": 1,
         "outcomeType": "nothing",
         "rewardType": null,
         "itemName": null,
