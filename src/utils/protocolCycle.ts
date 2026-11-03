@@ -38,6 +38,20 @@ export const getCurrentDailyProtocol = (player: Player, date: Date): DailyProtoc
     return createDailyProtocol(player, date);
 };
 
+export interface DailyMissionSummary {
+    done: number;
+    total: number;
+}
+
+/**
+ * 오늘의 임무 완료 수 — 마을 · 원정 결산의 한 줄과 복귀 브리핑이 같이 읽는다(2026-11 고도화 E2).
+ * 날짜가 넘어갔으면 새 날의 임무(0 완료)로 읽는다. 갱신은 다음 탐험이 한다(`resetDailyProtocolIfNeeded`).
+ */
+export const getDailyMissionSummary = (player: Player, date: Date): DailyMissionSummary => {
+    const missions = getCurrentDailyProtocol(player, date).missions;
+    return { done: missions.filter((mission) => mission.done).length, total: missions.length };
+};
+
 const createWeeklyProtocol = (date: Date): WeeklyProtocol => ({
     kills: 0,
     explores: 0,

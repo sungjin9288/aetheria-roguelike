@@ -39,11 +39,13 @@ interface RunSummaryCardProps {
     essence?: number | null;
     /** 사망 화면에서 곧바로 에테르 거울로 — 없으면 단추를 그리지 않는다. */
     onOpenMirror?: () => void;
+    /** 직업 여정에 기록이 없는 첫 전직 갈래(2026-11 고도화 E3) — 비었으면 줄을 그리지 않는다. */
+    unrecordedBranches?: string[];
 }
 
 const toCount = (value: unknown): number | null => (Number.isFinite(value) ? Math.max(0, Math.floor(Number(value))) : null);
 
-const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart, essence = null, onOpenMirror }: RunSummaryCardProps) => {
+const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart, essence = null, onOpenMirror, unrecordedBranches = [] }: RunSummaryCardProps) => {
     const [copied, setCopied] = useState(false);
     const dialog = useOverlayDialog({ label: MSG.RUN_SUMMARY_EYEBROW });
     const analysis = getRunSummaryAnalysis(s);
@@ -214,6 +216,11 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart, essence = null, o
                         </p>
                         {analysis.notes.length > 0 && (
                             <p data-testid="run-summary-notes" className="mt-1.5 break-keep font-readable text-[11px] text-ae-ink-3">{analysis.notes.join(' · ')}</p>
+                        )}
+                        {unrecordedBranches.length > 0 && (
+                            <p data-testid="run-summary-unrecorded-branches" className="mt-1.5 font-readable text-[11px] text-ae-ink-2">
+                                {MSG.RUN_SUMMARY_UNRECORDED_BRANCHES(unrecordedBranches)}
+                            </p>
                         )}
                     </section>
 

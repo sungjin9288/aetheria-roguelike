@@ -1,3 +1,5 @@
+import { CLASSES } from '../data/classes.js';
+import { CONSTANTS } from '../data/constants.js';
 import type {
     ClassJourneyEncounterDiscovery,
     ClassJourneyLedger,
@@ -235,4 +237,34 @@ export const recordClassJourneyExpedition = (
             byJob: { ...ledger.byJob, [job]: nextRecord },
         },
     };
+};
+
+/** `job`에서 전직으로 닿는 모든 직업(자신 포함). */
+const getClassLineage = (job: string): Set<string> => {
+    const seen = new Set<string>();
+    const queue = [job];
+    while (queue.length > 0) {
+        const current = queue.shift() as string;
+        if (seen.has(current) || !CLASSES[current]) continue;
+        seen.add(current);
+        queue.push(...(CLASSES[current].next || []));
+    }
+    return seen;
+};
+
+/**
+ * 직업 여정에 아직 기록이 없는 첫 전직 갈래(2026-11 고도화 E3) — 사망 화면의 "다음 갈래" 한 줄이 읽는다.
+ *
+ * 갈래는 시작 직업의 첫 전직 하나와 그 뒤 전직 전부다. 기록은 계정 장부 `classJourney`(원정에서 안전하게 돌아올 때
+ * 남는다)와 방금 끝난 여정의 직업이다. 돌아오지 못하고 끝난 지난 여정의 직업은 장부에 없으므로, 화면은 "걷지 않은"이 아니라
+ * "직업 여정에 없는" 갈래라고 말한다. 직업 트리는 시작 화면이 이미 보이는 공개 정보다(Wave 103 발견 우선 밖).
+ */
+export const getUnrecordedClassBranches = (
+    ledger: ClassJourneyLedger | null | undefined,
+    currentJob?: string | null,
+): string[] => {
+    const recorded = new Set(Object.keys(ledger?.byJob || {}));
+    if (currentJob) recorded.add(currentJob);
+    return (CLASSES[CONSTANTS.DEFAULT_JOB]?.next || [])
+        .filter((branch) => ![...getClassLineage(branch)].some((job) => recorded.has(job)));
 };

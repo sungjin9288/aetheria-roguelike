@@ -778,6 +778,11 @@ export const MSG = {
     RETURN_BRIEFING_CHAINS_VALUE: (count: number) => `${count}건`,
     RETURN_BRIEFING_OPEN_REWARDS: '임무 보상 확인',
     RETURN_BRIEFING_CONTINUE: '현재 여정 이어가기',
+    RETURN_BRIEFING_RESUME_LABEL: '멈춘 자리',
+    RETURN_BRIEFING_RESUME_STORY: (title: string, progress: number, goal: number) => `${title} ${Math.min(progress, goal)}/${goal}`,
+    RETURN_BRIEFING_RESUME_HUNT: (map: string, status: string) => `토벌 의뢰 · ${map} — ${status}`,
+    RETURN_BRIEFING_RESUME_BOSS: (label: string) => `구역 보스 · ${label}`,
+    RETURN_BRIEFING_RESUME_BAG: (name: string, owned: number, total: number) => `다음 가방 · ${name} 재료 ${owned}/${total}`,
 
     // --- 심연 데일리 다이브 (리텐션 훅) ---
     ABYSS_DAILY_DIVE_START: (mult: number) => `🌀 오늘의 첫 다이브 — 보상 ${mult}배 적용!`,
@@ -1599,6 +1604,7 @@ export const MSG = {
     },
     RUN_SUMMARY_FOCUS_STRONG_STREAK: '공격을 이어 가며 연속 처치 보너스를 안정적으로 지켰습니다.',
     RUN_SUMMARY_STATS_ARIA: '이번 여정 성과',
+    RUN_SUMMARY_UNRECORDED_BRANCHES: (branches: readonly string[]) => `직업 여정에 없는 갈래 · ${branches.join(' · ')}`,
     RUN_SUMMARY_RESTART: '새 여정 시작',
     // 사망 화면: 무엇에 쓰러졌는지 · 그 적이 얼마나 남았는지(정보만 — 추천은 붙이지 않는다).
     RUN_SUMMARY_KILLED_BY_LABEL: '나를 쓰러뜨린 적',
@@ -1792,6 +1798,10 @@ export const MSG = {
     QUEST_TAB_OBJECTIVE_COUNT: (target: string | undefined, goal: number | undefined) => `${target} ${goal}회 달성`,
     QUEST_TAB_PROGRESS_LEVEL: (progress: number, goal: number | undefined) => `레벨 ${progress}/${goal}`,
     QUEST_TAB_DAILY_TITLE: '오늘의 임무',
+    DAILY_MISSION_PROGRESS: (done: number, total: number) => `${done}/${total} 완료`,
+    DAILY_MISSION_LINE: (done: number, total: number) => (
+        done >= total ? `오늘의 임무 ${done}/${total} 완료` : `오늘의 임무 ${done}/${total}`
+    ),
     QUEST_TAB_DAILY_TYPE: { kills: '처치', explores: '탐험', goldSpend: '골드 소비' },
     QUEST_TAB_RELIC_SHARD_REWARD: '유물 파편 +1',
     QUEST_TAB_RELIC_SHARDS: (count: number) => `유물 파편 ×${count}`,

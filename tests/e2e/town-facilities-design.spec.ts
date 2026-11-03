@@ -136,8 +136,11 @@ test.describe('펼친 마을 시설 · 안전 영역', () => {
                 document.documentElement.style.setProperty('--aether-safe-area-top', `${top}px`);
                 document.documentElement.style.setProperty('--aether-safe-area-bottom', `${bottom}px`);
             }, device);
+            await expect(page.getByTestId('control-town-daily')).toBeVisible();
             await openTownFacilities(page);
             await waitForModeTransition(page);
+            // 2026-11 고도화 E2: 오늘의 임무 줄은 원정 준비 카드 머리 줄에 겹쳐 있어 높이를 쓰지 않는다 — 펼친 동안에도 남는다.
+            await expect(page.getByTestId('control-town-daily')).toBeVisible();
 
             const geometry = await page.getByTestId('control-town-facility-actions').evaluate((grid) => {
                 const shell = document.querySelector<HTMLElement>('[data-app-shell]')!;
