@@ -733,6 +733,11 @@ export interface Player {
     /** 2026-09 Wave 33: 이번 런에 제작한 가방 단계(`data/bagRecipes.ts`). 영구 상태가 아니라 사망·계승에서 0으로 돌아간다. */
     bagTier?: number;
     /**
+     * 2026-11 E9: 이번 여정에 마을 상점에서 산 강화 재료 수 — 다음 하나의 값을 정한다(`utils/enhanceMaterialShop.ts`). 런 범위라
+     * `pickPermanentPlayerState`에 넣지 않는다(사망 · 계승에서 0). 없으면 0이다.
+     */
+    enhanceMaterialBought?: number;
+    /**
      * 2026-09 Wave 40: 이번 런의 재구성(새 게임 · 전직 · 사망 재시작) 때 잡은 영구 생명 · 기력 전체량(Wave 72부터 영구 이야기 생명 · 기력 포함). 저장된 `maxHp`/`maxMp`에는
      * 이 값 × 레벨 연동 비율만 구워져 있고, 레벨업이 비율이 오른 만큼 더 굽는다(`systems/metaBonusRamp.ts`). 없으면 예전 세이브다.
      * 런 범위라 `pickPermanentPlayerState`에 넣지 않는다.

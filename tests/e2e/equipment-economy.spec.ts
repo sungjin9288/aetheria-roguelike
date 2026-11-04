@@ -184,4 +184,40 @@ test.describe('Equipment economy at 390x844', () => {
 
         await releaseEvidenceScreenshot(page, testInfo, SCREENSHOT_FILENAME, { fullPage: false });
     });
+
+    // 2026-11 E9 (원장 §164): 마을 상점의 강화 재료 — 이번 여정에 산 수만큼 값이 오르고, 빠른 연타는 한 번만 산다.
+    test('sells enhancement material at a price that rises with each purchase this journey', async ({ page }) => {
+        await page.setViewportSize({ width: 390, height: 844 });
+        await page.addInitScript(({ key, snapshot }) => {
+            localStorage.setItem(key, JSON.stringify(snapshot));
+        }, { key: DEVICE_QA_SNAPSHOT_KEY, snapshot: legacySnapshot });
+        await page.goto('/?deviceQa=item-investment', { waitUntil: 'domcontentloaded' });
+        await expect(page.getByTestId('persistent-status-bar')).toBeVisible({ timeout: 20_000 });
+
+        const facilities = page.getByTestId('control-town-facilities');
+        await expect(facilities).toBeVisible();
+        if (await facilities.getAttribute('open') === null) await facilities.locator('summary').click();
+        await page.getByTestId('control-market').click();
+        const row = page.getByTestId('shop-enhance-material');
+        await expect(row).toBeVisible();
+        // 황금 왕국은 물가 × 1.3 — 첫 하나 1,000 → 1,300, 다음 하나 1,500 → 1,950.
+        await expect(page.getByTestId('shop-enhance-material-price')).toHaveText('1,300 골드');
+
+        const before = await readDeviceQaSnapshot(page);
+        await row.getByTestId('shop-enhance-material-buy').evaluate((button: HTMLButtonElement) => {
+            button.click();
+            button.click();
+        });
+        await expect(page.getByTestId('shop-enhance-material-price')).toHaveText('1,950 골드');
+        await expect.poll(async () => readDeviceQaSnapshot(page)).toMatchObject({
+            player: { gold: before.player.gold - 1300, enhanceMaterialBought: 1 },
+        });
+        const after = await readDeviceQaSnapshot(page);
+        expect(after.player.inv.filter((item: { name: string }) => item.name === '강화 재료')).toHaveLength(1);
+
+        const geometry = await row.getByTestId('shop-enhance-material-buy').boundingBox();
+        expect(geometry?.height).toBeGreaterThanOrEqual(44);
+        const overflowX = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+        expect(overflowX).toBe(0);
+    });
 });
