@@ -26,7 +26,12 @@ import { createSeededRandom, deriveSeed } from '../../src/utils/seededRandom.ts'
 import { getJobSkills } from '../../src/utils/gameUtils.ts';
 import { getClaimableQuestEntries } from '../../src/utils/questProgress.ts';
 import { getQuestBoardRecommendations } from '../../src/utils/questOperations.ts';
-import { pickBestEquippable } from '../../src/utils/equipmentUtils.ts';
+import { getEquipmentDecision, pickBestEquippable } from '../../src/utils/equipmentUtils.ts';
+import { getEnhanceMaterialCount, getEnhancePreview } from '../../src/utils/enhancementUtils.ts';
+import { ENHANCE_MATERIAL_SHOP_SOURCE, getEnhanceMaterialOffer } from '../../src/utils/enhanceMaterialShop.ts';
+import { BALANCE, CONSTANTS } from '../../src/data/constants.ts';
+import { getInventoryCapacity } from '../../src/utils/inventoryCapacity.ts';
+import { getShopBuyPrice, getShopCatalog } from '../../src/utils/shopRotation.ts';
 import { mapRouteGateLevels, MAP_ROUTE_START_LOCATION } from '../../src/utils/mapRouteGate.ts';
 import { getRelicChoiceDecisionStrip } from '../../src/utils/relicChoiceDecision.ts';
 import { getRelicSynergyScore } from '../../src/utils/relicSynergyHint.ts';
@@ -71,6 +76,12 @@ const STORY_OPENINGS = new Map(EVENT_CHAINS.flatMap((chain) => {
     return questStart ? [[questStart.questId, { chainId: chain.id, loc: chain.steps[0].loc }]] : [];
 }));
 const HIDDEN_BOSS_NAMES = new Set(HIDDEN_BOSS_UNLOCKS.map((entry) => entry.boss));
+const GEAR_TYPES = ['weapon', 'armor', 'shield'];
+const ENHANCE_SLOTS = ['weapon', 'armor', 'offhand'];
+/** 경제 정책(`economy: 'basic'`)이 남겨 두는 골드 — 휴식 몇 번 값. 강화 · 장비 구매가 쉴 돈까지 쓰지 않게 한다. */
+const ECONOMY_RESERVE_RESTS = 3;
+/** 경제 정책이 안전지대에서 비워 두는 가방 칸. */
+const ECONOMY_FREE_BAG_SLOTS = 4;
 const HP_POTIONS = DB.ITEMS.consumables.filter((item) => item.type === 'hp').sort((a, b) => (b.val || 0) - (a.val || 0));
 
 const isHuntMap = (name) => {
@@ -104,6 +115,11 @@ const installClock = (clock) => {
  * @param {'none'|'all'|'stacked'|`rank:${number}`} [options.ruleDecline] 거절할 수 있는 회차 규칙 카드를 거절하는 범위
  * @param {'default'|'fixed'|'random'} [options.rulePick] 회차 규칙 카드 — 화면이 처음 골라 두는 카드(기본), 고정 순서 규칙이 패에 있으면 그 카드, 또는 패에서 무작위
  *   (`fixed` — 첫 순환 미리보기 값을 잰 단계(`measuredRank`)에 놓는다, 원장 §121.7 · §128). 고르는 방식만 다르고 난수 소비는 같다.
+ * @param {'none'|'basic'|'materials'} [options.economy] 골드를 쓰는 정책(E9, 2026-11) — `none`(기본, v3 그대로)은 휴식 · 물약에만 쓴다.
+ *   `basic`은 장착한 장비를 강화하고(어디서나), 안전지대에서 쓰지 않을 장비 · 잡동사니 재료를 팔고 상점 장비가 나으면 산다.
+ *   가방이 거의 차면 강화 재료가 아닌 재료를 싼 것부터 판다(원장 §164 — 후반 가방이 31/20이라 아무것도 살 수 없었다).
+ *   `materials`는 `basic`에 더해 상점의 강화 재료(원장 §164)를 사서 가장 낮게 강화된 장비부터 강화한다 — `basic`과의 짝 비교가
+ *   그 기능의 효과다. 휴식 몇 번 값(`ECONOMY_RESERVE_RESTS`)은 남긴다. 회차 기록 `economy`에 무엇이 강화를 막았는지(골드 · 재료 · 남길 돈)를 센다.
  * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
  *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
@@ -135,8 +151,10 @@ export const runNaturalPlay = async (options) => {
         stepSeconds = 15,
         ruleDecline = 'none',
         rulePick = 'default',
+        economy = 'none',
         onDispatch,
     } = options;
+    if (!['none', 'basic', 'materials'].includes(economy)) throw new Error(`unknown economy ${economy}`);
     if (!Number.isInteger(seed)) throw new Error('seed must be an integer');
 
     const clock = { now: START_EPOCH_MS };
@@ -186,6 +204,7 @@ export const runNaturalPlay = async (options) => {
         jobPath,
         ruleDecline,
         rulePick,
+        ...(economy === 'none' ? {} : { economy }),
         stepSeconds,
         runs: [],
         deaths: [],
@@ -220,6 +239,10 @@ export const runNaturalPlay = async (options) => {
             fightsBy: {},
             // 큰 순간(원장 §80 정의 + 토벌 의뢰) — [회차 시작부터 시간, 종류]. 상태 차이만 읽는다(정책 · 난수 불변).
             moments: [],
+            // 경제 정책을 켠 회차만 — 강화 시도 · 성공, 다음 강화를 막은 것(골드 · 재료 · 남길 돈)을 본 대기 차례 수, 판매 · 구매 수.
+            ...(economy === 'none' ? {} : {
+                economy: { enhanceTries: 0, enhanceSuccess: 0, blockedGold: 0, blockedMaterial: 0, blockedReserve: 0, maxed: 0, sold: 0, gearBought: 0, shopVisits: 0, ...(economy === 'materials' ? { materialBought: 0 } : {}) },
+            }),
         };
     };
     const closeRun = () => {
@@ -453,6 +476,8 @@ export const runNaturalPlay = async (options) => {
             if (item) { A.useItem(item); A = buildActions(); p = state.player; }
         }
 
+        if (economy !== 'none') { enhanceEquipped(); A = buildActions(); p = state.player; }
+
         // 임무 — 받을 수 있는 보상은 받고, 게시판 추천은 받는다.
         for (const entry of getClaimableQuestEntries(p)) {
             A.completeQuest(entry.quest?.id ?? entry.id);
@@ -509,6 +534,7 @@ export const runNaturalPlay = async (options) => {
                 A.rest();
                 if (state.player !== before) return;
             }
+            if (economy !== 'none') { tradeGear(); A = buildActions(); p = state.player; }
             // 체력 물약 3개까지 산다.
             const owned = (p.inv || []).filter((item) => item.type === 'hp').length;
             if (owned < 3 && potionsAllowed()) {
@@ -540,6 +566,111 @@ export const runNaturalPlay = async (options) => {
         const target = chooseTargetMap(state.player);
         if (target && target !== state.player.loc) { stepToward(target); return; }
         await buildActions().explore();
+    }
+
+    /** 경제 정책이 남겨 두는 골드. */
+    function economyReserve() {
+        return getRestCost(state.player) * ECONOMY_RESERVE_RESTS;
+    }
+
+    /** 장착한 장비를 강화할 수 있는 만큼 강화한다 — 막히면 무엇이 막았는지 센다(대기 차례마다 한 번). */
+    function enhanceEquipped() {
+        for (const slot of ENHANCE_SLOTS) {
+            for (let guard = 0; guard < 12; guard += 1) {
+                const p = state.player;
+                const item = p.equip?.[slot];
+                const preview = item?.id ? getEnhancePreview(item, Number(p.gold) || 0, p.inv || [], slot) : null;
+                if (!item?.id) break;
+                if (!preview || !preview.requirement) { if (preview?.missing === 'max') run.economy.maxed += 1; break; }
+                if (preview.missing === 'gold') { run.economy.blockedGold += 1; break; }
+                if (preview.missing === 'material') { run.economy.blockedMaterial += 1; break; }
+                if ((Number(p.gold) || 0) - preview.requirement.gold < economyReserve()) { run.economy.blockedReserve += 1; break; }
+                const before = state.player;
+                buildActions().enhanceItem(item.id);
+                if (state.player === before) break;
+                run.economy.enhanceTries += 1;
+                if ((state.player.equip?.[slot]?.enhance || 0) > (item.enhance || 0)) run.economy.enhanceSuccess += 1;
+            }
+        }
+    }
+
+    /** 안전지대 상점 — 쓰지 않을 장비 · 잡동사니 재료를 팔고, 나은 상점 장비를 산다(남길 돈 위에서만). */
+    function tradeGear() {
+        buildActions().openShop();
+        if (state.gameState !== GS.SHOP) return;
+        run.economy.shopVisits += 1;
+        // 지금 낄 수 없어도 나중에 나아질 장비(레벨 · 직업 제한)는 남긴다.
+        for (const item of [...(state.player.inv || [])]) {
+            if (!GEAR_TYPES.includes(item.type)) continue;
+            const decision = getEquipmentDecision(state.player, item);
+            if (decision && !decision.equipable && decision.score > 0) continue;
+            const before = state.player;
+            buildActions().market('sell', item);
+            if (state.player !== before) run.economy.sold += 1;
+        }
+        buildActions().autoSell();
+        // 가방이 거의 차면 강화 재료가 아닌 재료를 싼 것부터 판다 — 살 자리를 남긴다.
+        const roomFloor = getInventoryCapacity(state.player) - ECONOMY_FREE_BAG_SLOTS;
+        const surplus = (state.player.inv || [])
+            .filter((item) => item.type === 'mat' && item.name !== CONSTANTS.ENHANCE_MATERIAL_NAME)
+            .sort((a, b) => (a.price || 0) - (b.price || 0));
+        for (const item of surplus) {
+            if ((state.player.inv || []).length <= roomFloor) break;
+            const before = state.player;
+            buildActions().market('sell', item);
+            if (state.player !== before) run.economy.sold += 1;
+        }
+        const loc = state.player.loc;
+        for (const type of GEAR_TYPES) {
+            let best = null;
+            for (const item of getShopCatalog(loc)) {
+                if (item.type !== type) continue;
+                const decision = getEquipmentDecision(state.player, item);
+                const price = getShopBuyPrice(loc, item.price || 0);
+                if (!decision?.equipable || decision.score <= 0) continue;
+                if ((Number(state.player.gold) || 0) - price < economyReserve()) continue;
+                if (!best || decision.score > best.score) best = { item, score: decision.score };
+            }
+            if (!best) continue;
+            const before = state.player;
+            buildActions().market('buy', best.item, 'stock');
+            if (state.player === before) continue;
+            run.economy.gearBought += 1;
+            const bought = pickBestEquippable(state.player, type, { upgradesOnly: true });
+            if (bought) buildActions().useItem(bought);
+        }
+        if (economy === 'materials') buyMaterialsAndEnhance();
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+    }
+
+    /** 상점의 강화 재료(E9) — 가장 낮게 강화된 장비의 다음 단계에 모자란 재료를 사서 강화한다(남길 돈 위에서만). */
+    function buyMaterialsAndEnhance() {
+        for (let guard = 0; guard < 60; guard += 1) {
+            const p = state.player;
+            const target = ENHANCE_SLOTS
+                .map((slot) => ({ slot, item: p.equip?.[slot] }))
+                .filter(({ item }) => item?.id && (item.enhance || 0) < BALANCE.ENHANCE_MAX)
+                .sort((a, b) => (a.item.enhance || 0) - (b.item.enhance || 0))[0];
+            if (!target) return;
+            const gold = Number(p.gold) || 0;
+            const preview = getEnhancePreview(target.item, gold, p.inv || [], target.slot);
+            if (!preview?.requirement) return;
+            if (getEnhanceMaterialCount(p.inv || []) >= preview.requirement.materials) {
+                if (gold - preview.requirement.gold < economyReserve()) return;
+                const before = state.player;
+                buildActions().enhanceItem(target.item.id);
+                if (state.player === before) return;
+                run.economy.enhanceTries += 1;
+                if ((state.player.equip?.[target.slot]?.enhance || 0) > (target.item.enhance || 0)) run.economy.enhanceSuccess += 1;
+                continue;
+            }
+            const offer = getEnhanceMaterialOffer(p);
+            if (!offer || gold - offer.price - preview.requirement.gold < economyReserve()) return;
+            const before = state.player;
+            buildActions().market('buy', offer.item, ENHANCE_MATERIAL_SHOP_SOURCE);
+            if (state.player === before) return;
+            run.economy.materialBought += 1;
+        }
     }
 
     /** 나아지는 교체에서 내려놓을 유물 — `isRelicReplacementUpgrade`와 같은 기준(조합 수가 늘거나, 같으면 등급이 오른다). */

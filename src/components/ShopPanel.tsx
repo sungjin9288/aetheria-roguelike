@@ -1,3 +1,5 @@
+import { ENHANCE_MATERIAL_SHOP_SOURCE, getEnhanceMaterialBoughtCount, getEnhanceMaterialOffer } from '../utils/enhanceMaterialShop';
+import { getEnhanceMaterialCount } from '../utils/enhancementUtils';
 import { useEffect, useMemo, useState } from 'react';
 import { ShieldCheck, ShoppingBag } from 'lucide-react';
 import { BALANCE, RARITY_CLASSES } from '../data/constants';
@@ -235,6 +237,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
             .sort((a, b) => (a.price || 0) - (b.price || 0))
     ), [player.inv]);
 
+    const materialOffer = isMerchant ? null : getEnhanceMaterialOffer(player);
     const dailyDeals = useMemo(
         () => getDailyDeals(player.level || 1, loc),
         [player.level, loc]
@@ -373,6 +376,37 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                         </div>
                     </div>
                 )}
+                {shopMode === 'buy' && materialOffer && (() => {
+                    // 2026-11 E9: 강화 재료 — 이번 여정에 산 수만큼 값이 오른다(구매 리듀서와 같은 제안 `getEnhanceMaterialOffer`).
+                    const affordable = currentGold >= materialOffer.price;
+                    const canBuy = affordable && inventoryHasRoom;
+                    const reason = getBuyBlockReason({ canStore: inventoryHasRoom, affordable, equipable: true, item: materialOffer.item });
+                    return (
+                        <div className="space-y-2">
+                            <div className="ae-eyebrow font-readable text-ae-gold-text">{MSG.SHOP_ENHANCE_MATERIAL_EYEBROW}</div>
+                            <div data-testid="shop-enhance-material" className="ae-town-group flex items-center justify-between gap-3 px-3 py-2.5">
+                                <div className="flex min-w-0 items-center gap-2.5">
+                                    <ItemIcon item={materialOffer.item} size={38} showBorder />
+                                    <div className="min-w-0">
+                                        <div className={`break-words font-readable text-[14px] font-semibold ${getRarityTextClass(materialOffer.item)}`}>{materialOffer.item.name}</div>
+                                        <div data-testid="shop-enhance-material-price" className="mt-0.5 font-fira text-[12px] font-bold tabular-nums text-ae-gold-text">{formatGold(materialOffer.price)}</div>
+                                        <div className="mt-0.5 font-readable text-[12px] text-ae-ink-2">
+                                            {MSG.SHOP_ENHANCE_MATERIAL_NOTE(getEnhanceMaterialBoughtCount(player), getEnhanceMaterialCount(player.inv || []))}
+                                        </div>
+                                    </div>
+                                </div>
+                                <ActionButton
+                                    data-testid="shop-enhance-material-buy"
+                                    onClick={() => { if (canBuy) actions?.market('buy', materialOffer.item, ENHANCE_MATERIAL_SHOP_SOURCE); }}
+                                    disabled={!canBuy}
+                                    title={!canBuy && reason ? reason : MSG.SHOP_MODE_BUY}
+                                    label={canBuy ? MSG.SHOP_MODE_BUY : reason}
+                                    className="aether-disabled-action min-h-[44px] min-w-11 shrink-0 px-3 text-[13px]"
+                                />
+                            </div>
+                        </div>
+                    );
+                })()}
                 {shopMode === 'buy' && !isMerchant && (dailyDeals.items.length > 0 || weeklySpecial) && (
                     <div className="space-y-2">
                         <div className="ae-eyebrow font-readable text-ae-gold-text">오늘의 할인 · 10%</div>

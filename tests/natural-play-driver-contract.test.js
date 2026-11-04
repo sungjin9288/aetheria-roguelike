@@ -102,3 +102,26 @@ test('무작위 카드 모드는 패 안의 카드를 시드 · 단계로 결정
     assert.equal(counts.size, 3, [...counts.keys()].join(','));
     for (const n of counts.values()) assert.ok(n > 60, `고르게 나온다 ${[...counts.values()]}`);
 });
+
+test('경제 정책(E9)은 옵션이다 — 끄면 결과에 흔적이 없고, 켜면 결정론적으로 장비를 팔고 사며 강화를 막은 것을 센다', async () => {
+    const off = await runNaturalPlay(SHORT);
+    assert.equal(off.economy, undefined, '기본(none) 결과에는 경제 필드가 없다');
+    assert.ok(off.runs.every((run) => run.economy === undefined));
+    const on = await runNaturalPlay({ ...SHORT, economy: 'basic' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, economy: 'basic' }), on);
+    assert.equal(on.economy, 'basic');
+    assert.equal(on.stalled, null, JSON.stringify(on.stalled));
+    const [run] = on.runs;
+    assert.ok(run.economy.sold >= 1, `판매 ${run.economy.sold}`);
+    assert.ok(run.economy.gearBought >= 1, `장비 구매 ${run.economy.gearBought}`);
+    // 강화는 대기 차례마다 판정한다 — 짧은 예산에서는 재료가 막는다(무엇이 막았는지가 E9의 측정값이다).
+    const blocked = run.economy.blockedGold + run.economy.blockedMaterial + run.economy.blockedReserve;
+    assert.ok(blocked + run.economy.enhanceTries > 0, '강화를 판정한다');
+    assert.equal(run.economy.materialBought, undefined, 'basic은 강화 재료를 사지 않는다');
+    // materials = basic + 상점 강화 재료 구매(원장 §164) — 같은 시드에서 결정론적이고 구매 수를 센다.
+    const mat = await runNaturalPlay({ ...SHORT, economy: 'materials' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, economy: 'materials' }), mat);
+    assert.equal(mat.economy, 'materials');
+    assert.ok(Number.isInteger(mat.runs[0].economy.materialBought), JSON.stringify(mat.runs[0].economy));
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, economy: 'all' }), /unknown economy/);
+});

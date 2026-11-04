@@ -18,6 +18,7 @@ import { getBagTier, getNextBagRecipe } from '../../data/bagRecipes';
 import { getAutoSellMaterialTargets } from '../../utils/bagCrafting';
 import { incrementStat } from '../../utils/playerStateUtils';
 import { syncQuestProgress } from '../../utils/questProgress';
+import { ENHANCE_MATERIAL_SHOP_SOURCE, getEnhanceMaterialBoughtCount, getEnhanceMaterialOffer } from '../../utils/enhanceMaterialShop';
 import { getCanonicalShopOffer } from '../../utils/shopRotation';
 import { endMerchantVisit, getActiveMerchantVisit, getMerchantOffer, markMerchantOfferSold } from '../../utils/wanderingMerchant';
 import { resolveSynthesis, validateSynthesis } from '../../utils/synthesisUtils';
@@ -68,7 +69,12 @@ const buyShopItem = (state: GameState, action: ActionOf<typeof AT.BUY_SHOP_ITEM>
 
     // 2026-10 Wave 75: 떠돌이 행상인의 물건은 이번 만남의 재고(`player.merchantVisit`)가 값을 정한다 — 그 지역에 있을 때만.
     const fromMerchant = source === 'merchant';
-    const offer = fromMerchant
+    // 2026-11 E9: 강화 재료는 이번 여정에 산 수만큼 값이 오른다(`utils/enhanceMaterialShop.ts`).
+    const fromMaterialShop = source === ENHANCE_MATERIAL_SHOP_SOURCE;
+    const materialOffer = fromMaterialShop ? getEnhanceMaterialOffer(state.player) : null;
+    const offer = fromMaterialShop
+        ? (materialOffer?.item.name === itemName ? materialOffer : null)
+        : fromMerchant
         ? getMerchantOffer(state.player, itemName)
         : getCanonicalShopOffer(
             source,
@@ -94,7 +100,11 @@ const buyShopItem = (state: GameState, action: ActionOf<typeof AT.BUY_SHOP_ITEM>
 
     const purchasedItem = makeItem(offer.item);
     const codexBefore = countNewCodexEntries(state.player);
-    const buyer = fromMerchant ? markMerchantOfferSold(state.player, itemName) : state.player;
+    const buyer = fromMerchant
+        ? markMerchantOfferSold(state.player, itemName)
+        : fromMaterialShop
+        ? { ...state.player, enhanceMaterialBought: getEnhanceMaterialBoughtCount(state.player) + 1 }
+        : state.player;
     let player = registerLootToCodex({
         ...buyer,
         gold: (state.player.gold || 0) - offer.price,

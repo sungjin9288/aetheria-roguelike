@@ -448,6 +448,9 @@ export const MSG = {
     GOLD_INSUFFICIENT: '골드가 부족합니다.',
     INV_FULL: '가방이 가득 찼습니다.',
     SHOP_BUY_DONE: (name: string | undefined) => `${name} 구매 완료.`,
+    // 2026-11 E9: 마을 상점의 강화 재료 — 이번 여정에 산 수만큼 값이 오른다.
+    SHOP_ENHANCE_MATERIAL_EYEBROW: '강화 재료 · 살 때마다 값이 오른다',
+    SHOP_ENHANCE_MATERIAL_NOTE: (bought: number, held: number) => `이번 여정 ${bought}개 구매 · 보유 ${held}개`,
     SHOP_SELL_DONE: (name: string | undefined, gold: number) => `${name} 판매 · 골드 +${gold}`,
     CRAFT_MAT_INSUFFICIENT: (name: string) => `재료 부족: ${name}`,
     CRAFT_DONE: (name: string) => `${name} 제작 완료`,
