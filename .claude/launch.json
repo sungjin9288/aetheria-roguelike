@@ -3,9 +3,27 @@
   "configurations": [
     {
       "name": "aetheria-dev",
-      "runtimeExecutable": "/Users/sungjin/.local/share/mise/installs/node/24.13.1/bin/node",
-      "runtimeArgs": ["/Users/sungjin/dev/personal/aetheria-roguelike/node_modules/.bin/vite", "--host", "--port", "5179"],
+      "runtimeExecutable": "/Users/sungjin/.local/share/mise/installs/node/lts/bin/node",
+      "runtimeArgs": [
+        "/Users/sungjin/dev/personal/aetheria-roguelike/node_modules/.bin/vite",
+        "--host",
+        "--port",
+        "5179"
+      ],
       "port": 5179
+    },
+    {
+      "name": "aetheria-dev-qa",
+      "runtimeExecutable": "/usr/bin/env",
+      "runtimeArgs": [
+        "VITE_ENABLE_TEST_API=1",
+        "/Users/sungjin/.local/share/mise/installs/node/lts/bin/node",
+        "/Users/sungjin/dev/personal/aetheria-roguelike/node_modules/.bin/vite",
+        "--host",
+        "--port",
+        "5180"
+      ],
+      "port": 5180
     }
   ]
 }
