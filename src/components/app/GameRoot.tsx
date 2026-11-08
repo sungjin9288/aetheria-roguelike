@@ -315,6 +315,8 @@ const GameRoot = ({
             placement={isDesktopLayout ? 'column' : 'bar'}
             // 2026-11 A1: 휴대폰 전투에서는 가운데 무대가 적을 그린다(MobileGameLayout).
             enemyPlacement={isDesktopLayout ? 'inline' : 'external'}
+            // 2026-11 A2: 골드 · 경험이 늘어난 순간 값 옆에 +N — 복원으로 바뀐 값은 띄우지 않는다.
+            presentationEpoch={engine.presentationEpoch}
         />
     );
 

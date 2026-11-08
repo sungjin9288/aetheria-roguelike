@@ -1660,6 +1660,9 @@ export const MSG = {
     FIELD_ROUTE_NONE: '경로 없음',
     FIELD_REGION_EYEBROW: '현재 지역',
     FIELD_REGION_KIND: { safe: '안전지대', boss: '보스 권역', field: '탐험 지역' },
+    // 2026-11 디자인 고도화 A2: 필드 무대 — 무대 영역 이름 · 발견 카드 머리(기록 배지와 같은 이름).
+    FIELD_STAGE_ARIA: (location: string) => `${location} 무대`,
+    FIELD_DISCOVERY_BADGE: { event: '이벤트', success: '획득', legendary: '전설', system: '안내', warning: '주의', error: '오류' } as Record<string, string>,
     // --- /w3:field ---
     // --- w3:town ---
     /** 2026-10 에테르 유리(마을 시설): 상점 세트 맞춤 칩 · 구매 영수증 · 제작 방식 묶음 이름. */

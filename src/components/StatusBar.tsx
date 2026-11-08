@@ -1,6 +1,7 @@
 import { Gem, MapPin } from 'lucide-react';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
+import GainFloat from './GainFloat';
 import EnemyStatus from './combat/EnemyStatus';
 import { getEnemyIntent } from '../utils/enemyIntent';
 import { getExpeditionHudChips } from '../utils/expeditionHud';
@@ -29,9 +30,11 @@ interface StatusMetricProps {
   value?: number;
   max?: number;
   variant: MeterVariant;
+  /** 2026-11 A2: 있으면 값이 늘어난 순간 `+N`을 값 옆에 띄운다(복원 epoch). */
+  gainEpoch?: number | string;
 }
 
-const StatusMetric = ({ label, value, max, variant }: StatusMetricProps) => {
+const StatusMetric = ({ label, value, max, variant, gainEpoch }: StatusMetricProps) => {
   const theme = METER_THEME[variant] || METER_THEME.hp;
   const safeMax = Math.max(1, max || 1);
   const safeValue = Math.max(0, value || 0);
@@ -44,7 +47,8 @@ const StatusMetric = ({ label, value, max, variant }: StatusMetricProps) => {
     >
       <div className="flex flex-wrap items-baseline justify-between gap-x-1 font-readable text-[11px] leading-tight">
         <span data-testid="status-metric-label" className={`whitespace-nowrap font-semibold ${theme.label}`}>{label}</span>
-        <span data-testid="status-metric-value" aria-label={`${safeValue}/${safeMax}`} className="font-fira text-[11px] font-semibold tabular-nums text-ae-ink"><span className="whitespace-nowrap">{safeValue}</span><wbr /><span className="whitespace-nowrap text-ae-ink-2">/{safeMax}</span></span>
+        <span data-testid="status-metric-value" aria-label={`${safeValue}/${safeMax}`} className="relative font-fira text-[11px] font-semibold tabular-nums text-ae-ink">
+          {gainEpoch !== undefined && <GainFloat value={safeValue} epoch={gainEpoch} testId={`status-${variant}-gain`} className={theme.label} />}<span className="whitespace-nowrap">{safeValue}</span><wbr /><span className="whitespace-nowrap text-ae-ink-2">/{safeMax}</span></span>
       </div>
       <div className={`ae-gauge ae-sunk mt-1 ${theme.gauge}`}>
         {/* slice 31: 바 fill 부드러운 tween — 데미지/EXP 변화가 끊겨 보이지 않게. EXP 바가 레벨업 직전까지 차오르고 → slice 29 배너. */}
@@ -81,6 +85,8 @@ interface StatusBarProps {
    * 같은 적을 크게 그린다. 상태 표시줄은 전투 모드(내 줄 · '전투 중')로 그대로다.
    */
   enemyPlacement?: 'inline' | 'external';
+  /** 2026-11 A2: 복원 epoch — 골드 · 경험이 실제로 늘어난 순간에만 `+N`을 띄운다(없으면 띄우지 않는다). */
+  presentationEpoch?: number | string;
 }
 
 const StatusBar = ({
@@ -93,6 +99,7 @@ const StatusBar = ({
   onOpenEquipment,
   placement,
   enemyPlacement = 'inline',
+  presentationEpoch,
 }: StatusBarProps) => {
   if (!player?.name) return null;
   const isColumn = placement === 'column';
@@ -184,7 +191,8 @@ const StatusBar = ({
             </div>
             <div className="flex shrink-0 items-center gap-1.5">
               <div className="flex items-center gap-2 text-right">
-                <span className="whitespace-nowrap">
+                <span className="relative whitespace-nowrap">
+                  {presentationEpoch !== undefined && <GainFloat value={player.gold || 0} epoch={presentationEpoch} testId="status-gold-gain" className="text-ae-gold-text" />}
                   <span className="font-fira text-[13px] font-semibold tabular-nums text-ae-gold-text">{player.gold}</span>
                   <span className="ml-0.5 font-readable text-[11px] text-ae-ink-2">{MSG.SHELL_GOLD_UNIT}</span>
                 </span>
@@ -258,7 +266,7 @@ const StatusBar = ({
       <div data-testid="status-metrics" className={`mt-2 grid gap-1.5 ${isColumn ? 'grid-cols-1' : 'grid-cols-3'}`}>
         <StatusMetric label="생명" value={player.hp} max={stats?.maxHp} variant="hp" />
         <StatusMetric label="기력" value={player.mp} max={stats?.maxMp} variant="mp" />
-        <StatusMetric label="경험" value={player.exp} max={player.nextExp} variant="exp" />
+        <StatusMetric label="경험" value={player.exp} max={player.nextExp} variant="exp" gainEpoch={presentationEpoch} />
       </div>
     </section>
   );

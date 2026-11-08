@@ -4,6 +4,8 @@ import { GS } from '../../reducers/gameStates';
 import TerminalView from '../TerminalView';
 import ControlPanel from '../ControlPanel';
 import EnemyStatus from '../combat/EnemyStatus';
+import FieldStage from '../field/FieldStage';
+import { isFieldStageMode } from '../../utils/fieldStage';
 import { getVisibleLocationVisual } from '../../utils/challengeRules';
 import { getEnemyIntent } from '../../utils/enemyIntent';
 import { usePreloadPostCombatCard, useStageEnterClass } from './stageLayoutHooks';
@@ -63,6 +65,8 @@ const MobileGameLayout = ({
     const stageBackdrop = stageEnemy ? getVisibleLocationVisual(engine.player)?.src ?? null : null;
     // A4: 적의 다음 행동 · 예상 피해는 무대가 보인다(조작판의 판단 요약 세 칸을 대신한다). 처치 순간에는 없다.
     const stageIntent = stageEnemy && !combatStage?.enemyDefeated ? getEnemyIntent(engine.player, stageEnemy) : null;
+    // A2: 사냥 지역의 대기 화면은 기록 창 자리의 위쪽이 필드 무대(지역 · 주인공 · 방금의 발견)이고, 기록은 아래 띠다.
+    const showFieldStage = !isPanelFocusState && !stageEnemy && isFieldStageMode(engine.player, engine.gameState);
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const modeEnterClass = useStageEnterClass(engine.gameState);
     usePreloadPostCombatCard(isCombat);
@@ -137,6 +141,24 @@ const MobileGameLayout = ({
                                     quickSlots={engine.quickSlots}
                                     onQuickSlotUse={handleQuickSlotUse}
                                     maxHp={fullStats?.maxHp}
+                                />
+                            </div>
+                        </div>
+                    ) : showFieldStage ? (
+                        <div data-testid="field-stage-column" className="ae-field-stage-column flex min-h-[96px] min-w-0 flex-1 flex-col gap-1.5">
+                            <div className="ae-field-stage-slot flex min-h-0 min-w-0 flex-1">
+                                <FieldStage player={engine.player} logs={engine.logs} />
+                            </div>
+                            <div className="ae-field-log-strip flex min-w-0">
+                                <TerminalView
+                                    logs={engine.logs}
+                                    gameState={engine.gameState}
+                                    onCommand={engine.handleCommand}
+                                    player={engine.player}
+                                    quickSlots={engine.quickSlots}
+                                    onQuickSlotUse={handleQuickSlotUse}
+                                    maxHp={fullStats?.maxHp}
+                                    hideScene
                                 />
                             </div>
                         </div>
