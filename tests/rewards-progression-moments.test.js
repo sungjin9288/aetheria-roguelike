@@ -276,7 +276,7 @@ test('GF-09 모드 전환: 처음 마운트는 박자가 없고, 전투 진입�
 test('GF-10 순서 공개 시간표: 숫자는 0에서 끝값까지 오르고, 진행도 1이면 정확히 끝값이다', () => {
     const { countUpMs, lootStaggerMs } = POST_COMBAT_REVEAL_TIMING;
     assert.ok(countUpMs >= 300 && countUpMs <= 500, '약 400ms');
-    assert.ok(lootStaggerMs >= 40 && lootStaggerMs <= 80, '약 60ms 간격');
+    assert.ok(lootStaggerMs >= 80 && lootStaggerMs <= 150, '하나씩 나오는 것이 보이는 80 ~ 150ms 간격(2026-11 디자인 고도화 A3)');
     assert.ok(POST_COMBAT_INPUT_GUARD_MS > 0 && POST_COMBAT_INPUT_GUARD_MS <= 500, '입력 무시는 짧다');
     assert.equal(getRevealProgress(0), 0);
     assert.equal(getRevealProgress(-5), 0);

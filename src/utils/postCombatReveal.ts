@@ -7,8 +7,8 @@
 export const POST_COMBAT_REVEAL_TIMING = {
     /** 경험 · 골드가 0에서 값까지 느는 시간. */
     countUpMs: 400,
-    /** 전리품 줄 사이 간격. */
-    lootStaggerMs: 60,
+    /** 전리품 칸 사이 간격 — 하나씩 나오는 것이 보이는 80 ~ 150ms 안(2026-11 디자인 고도화 A3, 60 → 100). */
+    lootStaggerMs: 100,
     /** rAF가 멈춘 탭(숨은 창)에서도 끝값으로 닫히게 하는 여유. */
     settleGraceMs: 250,
 } as const;

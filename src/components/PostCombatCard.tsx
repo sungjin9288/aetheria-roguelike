@@ -9,7 +9,7 @@ import {
 } from '../utils/outcomeAnalysis';
 import { isSignatureItem } from '../data/signatureItems.js';
 import { MSG } from '../data/messages';
-import { formatLootStacks, summarizeLoot } from '../utils/lootSummary';
+import { formatLootStacks, getLootChips, summarizeLoot } from '../utils/lootSummary';
 import {
     POST_COMBAT_INPUT_GUARD_MS,
     POST_COMBAT_REVEAL_DONE,
@@ -149,6 +149,11 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
     const lootSummary = lootView.shown.length > 0
         ? `${lootView.shown.join(' · ')}${lootView.restCount > 0 ? MSG.LOOT_SUMMARY_MORE(lootView.restCount) : ''}`
         : null;
+    // 2026-11 디자인 고도화 A3: 접히지 않은 카드는 묶음마다 칸 하나로 하나씩 나오고, 등급은 테두리 색으로만 보인다.
+    const lootChipView = getLootChips(nonSignatureLoot);
+    const lootChipCount = lootChipView.chips.length + (lootChipView.restCount > 0 ? 1 : 0);
+    // 전설 각인 칸은 몇 개든 한 줄이다 — 전리품 칸의 순서는 그 뒤부터 센다.
+    const lootRevealOffset = signatureLoot.length > 0 ? 1 : 0;
     const decisionContext = {
         signatureLootCount: signatureLoot.length,
         nonSignatureLootCount: nonSignatureLoot.length,
@@ -377,7 +382,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
                             )}
                         </section>
 
-                        {(signatureLoot.length > 0 || lootSummary || primarySignal) && (
+                        {(signatureLoot.length > 0 || lootChipCount > 0 || primarySignal) && (
                             <section
                                 data-testid="post-combat-loot"
                                 className={`ae-well space-y-2 p-2.5 ${revealDone ? '' : 'aether-reveal-pending'}`}
@@ -401,13 +406,31 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
                                     </div>
                                 )}
 
-                                {lootSummary && (
-                                    <div
-                                        className={`flex items-start gap-2 px-1 font-readable text-[13px] text-ae-ink-2 ${lootRevealClass('aether-reveal-pop')}`}
-                                        style={lootRevealStyle(signatureLoot.length > 0 ? 1 : 0)}
-                                    >
-                                        <Package size={14} className="mt-0.5 shrink-0 text-ae-gold" aria-hidden="true" />
-                                        <span className="min-w-0 break-keep">{lootSummary}</span>
+                                {lootChipCount > 0 && (
+                                    <div className="flex items-start gap-2 px-1">
+                                        <Package size={14} className="mt-[7px] shrink-0 text-ae-gold" aria-hidden="true" />
+                                        <ul data-testid="post-combat-loot-chips" className="flex min-w-0 flex-wrap gap-1.5" aria-label={MSG.POST_COMBAT_LOOT_ARIA}>
+                                            {lootChipView.chips.map((chip, index) => (
+                                                <li
+                                                    key={chip.label}
+                                                    data-testid="post-combat-loot-chip"
+                                                    data-rarity={chip.rarity}
+                                                    className={`ae-loot-chip font-readable text-[12px] ${lootRevealClass('aether-reveal-pop')}`}
+                                                    style={lootRevealStyle(lootRevealOffset + index)}
+                                                >
+                                                    {chip.label}
+                                                </li>
+                                            ))}
+                                            {lootChipView.restCount > 0 && (
+                                                <li
+                                                    data-testid="post-combat-loot-more"
+                                                    className={`ae-loot-chip is-more font-readable text-[12px] ${lootRevealClass('aether-reveal-pop')}`}
+                                                    style={lootRevealStyle(lootRevealOffset + lootChipView.chips.length)}
+                                                >
+                                                    {MSG.POST_COMBAT_LOOT_MORE(lootChipView.restCount)}
+                                                </li>
+                                            )}
+                                        </ul>
                                     </div>
                                 )}
 
@@ -415,7 +438,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
                                     <div
                                         data-signal-tone={primarySignal.tone}
                                         className={`ae-moment-signal rounded-ae-sm px-3 py-2 font-readable text-[12px] ${lootRevealClass('aether-reveal-pop')}`}
-                                        style={lootRevealStyle((signatureLoot.length > 0 ? 1 : 0) + (lootSummary ? 1 : 0))}
+                                        style={lootRevealStyle(lootRevealOffset + lootChipCount)}
                                     >
                                         <div className="flex flex-wrap items-baseline justify-between gap-x-2 gap-y-0.5">
                                             <span className="ae-moment-signal-title text-[11px] font-bold">{primarySignal.title}</span>

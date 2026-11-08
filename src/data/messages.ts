@@ -1698,6 +1698,8 @@ export const MSG = {
     POST_COMBAT_EXP: (n: number) => `경험 +${n}`,
     POST_COMBAT_GOLD: (n: number) => `골드 +${n}`,
     POST_COMBAT_LOOT_COUNT: (n: number) => `전리품 ${n}개`,
+    POST_COMBAT_LOOT_ARIA: '얻은 전리품',
+    POST_COMBAT_LOOT_MORE: (n: number) => `외 ${n}개`,
     POST_COMBAT_CONTINUE: '계속 탐험',
     POST_COMBAT_LEVEL_UP: '레벨 상승',
     POST_COMBAT_NOTE_FALLBACK: (enemy: string) => `${enemy} 전투를 정리했습니다.`,
