@@ -1015,42 +1015,6 @@
     0 10px 22px rgba(2, 8, 14, 0.2);
 }
 
-.aether-combat-forecast {
-  border: 1px solid rgba(244, 165, 202, 0.3);
-  background:
-    linear-gradient(90deg, rgba(242, 125, 154, 0.18) 0%, rgba(31, 25, 34, 0.96) 34%, rgba(11, 14, 21, 0.98) 100%);
-  box-shadow:
-    inset 4px 0 0 rgba(244, 165, 202, 0.82),
-    0 10px 22px rgba(2, 8, 14, 0.18);
-}
-
-.aether-combat-forecast[data-forecast-tone="advantage"] {
-  border-color: rgba(151, 231, 192, 0.34);
-  background:
-    linear-gradient(90deg, rgba(131, 214, 163, 0.2) 0%, rgba(18, 32, 27, 0.96) 34%, rgba(9, 13, 17, 0.98) 100%);
-  box-shadow:
-    inset 4px 0 0 rgba(151, 231, 192, 0.84),
-    0 10px 22px rgba(2, 8, 14, 0.18);
-}
-
-.aether-combat-forecast[data-forecast-tone="reward"] {
-  border-color: rgba(246, 217, 140, 0.38);
-  background:
-    linear-gradient(90deg, rgba(246, 217, 140, 0.2) 0%, rgba(34, 27, 17, 0.96) 34%, rgba(13, 11, 8, 0.98) 100%);
-  box-shadow:
-    inset 4px 0 0 rgba(246, 217, 140, 0.86),
-    0 10px 22px rgba(2, 8, 14, 0.18);
-}
-
-.aether-combat-forecast[data-forecast-tone="steady"] {
-  border-color: rgba(125, 212, 216, 0.34);
-  background:
-    linear-gradient(90deg, rgba(125, 212, 216, 0.18) 0%, rgba(17, 30, 37, 0.96) 34%, rgba(9, 13, 18, 0.98) 100%);
-  box-shadow:
-    inset 4px 0 0 rgba(125, 212, 216, 0.82),
-    0 10px 22px rgba(2, 8, 14, 0.18);
-}
-
 .aether-action-button {
   border: 1px solid rgba(238, 244, 249, 0.13);
   background:
@@ -1659,7 +1623,6 @@
 .aether-focus-panel { border-radius: var(--aether-r-shell); }
 .aether-action-button,
 .aether-mission-strip,
-.aether-combat-forecast,
 .aether-result-strip,
 .aether-relic-decision-strip,
 .aether-run-reflection-strip { border-radius: var(--aether-r-panel); }
@@ -1765,7 +1728,6 @@
 [data-readability-mode="high"] .aether-choice-row,
 [data-readability-mode="high"] .aether-craft-row,
 [data-readability-mode="high"] .aether-event-choice,
-[data-readability-mode="high"] .aether-combat-forecast,
 [data-readability-mode="high"] .aether-result-strip,
 [data-readability-mode="high"] .aether-relic-decision-strip,
 [data-readability-mode="high"] .aether-run-reflection-strip,
@@ -2052,52 +2014,13 @@
   box-shadow: inset 0 0 0 1px rgb(var(--aether-rarity-legendary-rgb) / 0.32);
 }
 
-/* 판단 요약 세 칸: 우물 층 위에 판단의 색(압박 = 위협, 우세 = 좋음, 보상 = 금, 평온 = 에테르)이 위쪽 테두리 빛으로 들어온다. */
-.ae-combat-forecast {
-  --ae-forecast-accent: var(--aether-ether-rgb);
-}
-
-.ae-combat-forecast[data-forecast-tone="pressure"] { --ae-forecast-accent: var(--aether-threat-rgb); }
-.ae-combat-forecast[data-forecast-tone="advantage"] { --ae-forecast-accent: var(--aether-good-rgb); }
-.ae-combat-forecast[data-forecast-tone="reward"] { --ae-forecast-accent: var(--aether-gold-rgb); }
-.ae-combat-forecast[data-forecast-tone="steady"] { --ae-forecast-accent: var(--aether-ether-rgb); }
-
-.ae-combat-forecast-cell {
-  box-shadow:
-    inset 0 2px 0 rgb(var(--ae-forecast-accent) / 0.7),
-    inset 0 0 0 1px rgb(var(--ae-forecast-accent) / 0.12);
-}
-
-.ae-combat-forecast-cell:first-child {
-  background:
-    linear-gradient(180deg, rgb(var(--ae-forecast-accent) / 0.12) 0%, transparent 70%),
-    var(--aether-s3);
-}
-
-[data-readability-mode="high"] .ae-combat-forecast {
-  --ae-forecast-accent: var(--aether-ether-hi-rgb);
-}
-
-/* 소유자 결정 D16(2026-10-26): 짧은 화면(높이 700px 이하 — 375 × 667)에서는 덱을 조인다. 보스전 판단 요약의 긴 값
-   ("방어 가능 (45%)")이 같은 폭 세 칸에서 두 줄이 되어 기술 칸이 첫 화면 아래로 7 ~ 15px 밀렸다.
-   판단 요약은 글 길이만큼 칸을 나눠 한 줄에 들고(그래도 길면 줄을 넘긴다 — 말줄임 없음), 덱의 칸 사이를 10 → 8px로 줄인다.
-   높이가 넉넉한 화면(812 · 844 · 932)과 데스크톱은 그대로다. e2e `combat-skill-tray.spec.ts`가 네 크기를 잰다. */
+/* 소유자 결정 D16(2026-10-26): 짧은 화면(높이 700px 이하 — 375 × 667)에서는 덱의 칸 사이를 10 → 8px로 줄인다(기술 칸이 첫 화면 아래로
+   밀리지 않게). 판단 요약 세 칸은 2026-11 A4가 지웠다. 높이가 넉넉한 화면과 데스크톱은 그대로다. e2e `combat-skill-tray.spec.ts`가 네 크기를 잰다. */
 @media (max-height: 700px) {
-  .ae-combat-forecast {
-    grid-template-columns: repeat(3, auto);
-  }
-
   .ae-combat-deck.ae-combat-deck > :not([hidden]) ~ :not([hidden]) {
     margin-top: 0.5rem;
     margin-bottom: 0;
   }
-}
-
-[data-readability-mode="high"] .ae-combat-forecast-cell {
-  background: var(--aether-s2);
-  box-shadow:
-    inset 0 2px 0 rgb(var(--ae-forecast-accent) / 0.9),
-    inset 0 0 0 1px rgb(var(--aether-ink-rgb) / 0.16);
 }
 
 /* 행동 단추: 아이콘은 32px 타일(공용 가독성 계약이 28px 이상을 잰다). 예전 `.aether-combat-action-icon` 테두리 · 흰 바탕을 덮는다. */
@@ -2291,6 +2214,216 @@
   color: rgb(var(--ae-phase-accent));
 }
 /* === /w3:combat === */
+
+/* === w3:stage === */
+/* 2026-11 디자인 고도화 A1(docs/DESIGN_MODERNIZATION_2026-11.md): 휴대폰 전투는 기록 창 자리의 위쪽이 적 무대이고, 기록은 아래 두세 줄 띠다.
+   연출은 표시 계층만 읽는다 — 판정 · 난수 · 기록 줄은 바꾸지 않는다. 그림은 160px 원본 그대로, 무대가 낮으면 정확히 절반(80px)이다. */
+
+.ae-combat-stage-slot {
+  container: ae-stage / size;
+}
+
+.ae-combat-stage-column {
+  container: ae-stage-column / size;
+}
+
+/* 무대 칸은 세로 세 줄(이름 · 그림 · 생명)이다. 낮으면 그림이 절반, 더 낮으면 그림이 왼쪽이고 이름 · 생명이 오른쪽이다. */
+.ae-combat-stage.aether-encounter-stage {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  grid-template-areas: "title" "arena" "health";
+  row-gap: 0.25rem;
+  min-height: 0;
+  isolation: isolate;
+}
+
+.ae-combat-stage .ae-stage-title { grid-area: title; }
+.ae-combat-stage .ae-combat-stage-arena { grid-area: arena; }
+.ae-combat-stage .ae-stage-health { grid-area: health; }
+
+/* 지역 그림은 흐린 배경이다 — 글자 대비를 해치지 않게 어둡게 덮는다(길 잃은 여행이면 그리지 않는다). */
+.ae-combat-stage-backdrop {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  image-rendering: pixelated;
+  opacity: 0.32;
+  filter: blur(2px) saturate(0.8);
+  transform: scale(1.06);
+  pointer-events: none;
+}
+
+.ae-combat-stage::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background:
+    radial-gradient(ellipse at 50% 55%, transparent 0%, rgb(var(--aether-void-rgb) / 0.55) 78%),
+    linear-gradient(180deg, rgb(var(--aether-s1-rgb) / 0.55) 0%, rgb(var(--aether-s1-rgb) / 0.15) 40%, rgb(var(--aether-s1-rgb) / 0.8) 100%);
+  pointer-events: none;
+}
+
+.ae-combat-stage-arena {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.ae-stage-portrait {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 176px;
+  height: 176px;
+}
+
+.ae-stage-portrait .ae-enemy-ground {
+  bottom: 14px;
+  width: 112px;
+  height: 16px;
+}
+
+.ae-stage-actor {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  transform-origin: 50% 100%;
+}
+
+/* 무대가 낮으면(작은 기기 · 전체 기록을 펼친 동안) 그림을 정확히 절반으로 — 원본 화소의 정수 배율이 남는다. */
+@container ae-stage (max-height: 268px) {
+  .ae-stage-portrait {
+    width: 96px;
+    height: 96px;
+  }
+
+  .ae-stage-portrait .aether-monster-art {
+    width: 80px !important;
+    height: 80px !important;
+  }
+
+  .ae-stage-portrait .ae-enemy-ground {
+    bottom: 9px;
+    width: 56px;
+    height: 10px;
+  }
+}
+
+/* 가장 낮은 무대(작은 기기의 보스전 등) — 교전 카드처럼 그림이 왼쪽이다. 그림 크기는 위와 같은 80px다. */
+@container ae-stage (max-height: 180px) {
+  .ae-combat-stage.aether-encounter-stage {
+    grid-template-columns: 96px minmax(0, 1fr);
+    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-areas: "arena title" "arena health";
+    column-gap: 0.75rem;
+    align-items: center;
+  }
+
+  .ae-combat-stage .ae-stage-title .text-center { text-align: left; }
+  .ae-combat-stage .ae-stage-title .justify-center { justify-content: flex-start; }
+  .ae-combat-stage .ae-stage-health { align-self: start; }
+}
+
+/* 기록 띠가 두 줄도 못 담을 만큼 낮으면 띠를 접는다 — 전체 기록은 '모험 기록'이 연다. */
+@container ae-stage-column (max-height: 213px) {
+  .ae-combat-log-strip { display: none; }
+}
+
+/* 맞은 자리 피드백 — 초상 위에서 숫자가 떠오른다(24 ~ 32px · 700ms · 마지막 200ms 사라짐). 치명타는 1.5배 · 금빛. */
+.ae-stage-damage {
+  font-size: 20px;
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 0 10px rgb(var(--aether-life-rgb) / 0.5), 0 2px 4px rgb(var(--aether-void-rgb) / 0.85);
+  animation: ae-stage-float 700ms cubic-bezier(.2, .8, .2, 1) forwards;
+}
+
+.ae-stage-damage.is-crit {
+  font-size: 30px;
+  text-shadow: 0 0 14px rgb(var(--aether-gold-rgb) / 0.6), 0 2px 4px rgb(var(--aether-void-rgb) / 0.85);
+}
+
+@keyframes ae-stage-float {
+  0% { transform: translate(-50%, 6px) scale(0.85); opacity: 0; }
+  14% { transform: translate(-50%, -4px) scale(1.12); opacity: 1; }
+  71% { opacity: 1; }
+  100% { transform: translate(-50%, -30px) scale(1); opacity: 0; }
+}
+
+/* 맞는 순간 초상이 하얗게 번쩍인다(한 번 100ms — 초당 3회 상한은 공격 박자가 지킨다). 치명타는 잠깐 멈췄다(80ms) 흔들린다. */
+.ae-combat-stage[data-hit-state] .ae-stage-portrait {
+  animation: ae-stage-hit-flash 100ms ease-out 1;
+}
+
+.ae-combat-stage[data-hit-state="crit"] .ae-stage-portrait {
+  animation: ae-stage-hit-flash 100ms ease-out 1, ae-stage-crit-shake 200ms linear 80ms 1;
+}
+
+@keyframes ae-stage-hit-flash {
+  0% { filter: brightness(2.4) saturate(0.2); }
+  100% { filter: brightness(1) saturate(1); }
+}
+
+@keyframes ae-stage-crit-shake {
+  0%, 100% { transform: translateX(0); }
+  25% { transform: translateX(-3px); }
+  50% { transform: translateX(3px); }
+  75% { transform: translateX(-2px); }
+}
+
+/* 처치 순간 — 초상이 가라앉으며 흩어진다(≤ 400ms). 끝 모습은 위 GF-02 규칙(흑백 · 흐림)이다. */
+.ae-combat-stage[data-defeated="true"] .ae-stage-actor {
+  animation: ae-stage-dissolve 380ms ease-in forwards;
+}
+
+@keyframes ae-stage-dissolve {
+  0% { transform: scale(1); opacity: 1; filter: blur(0); }
+  100% { transform: scale(0.92) translateY(6px); opacity: 0.35; filter: blur(2px); }
+}
+
+/* 숨쉬기(장식) — 3초에 한 번 1.02배. 맞는 순간 · 처치 순간에는 멈춘다. */
+@media (prefers-reduced-motion: no-preference) {
+  .ae-combat-stage:not([data-hit-state]):not([data-defeated]) .ae-stage-actor {
+    animation: ae-stage-breathe 3s ease-in-out infinite;
+  }
+}
+
+@keyframes ae-stage-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* 기록 띠 — 최근 두세 줄만 보인다. 전체 기록은 기록 탭 · '모험 기록'이 맡는다. */
+.ae-combat-log-strip {
+  flex: 0 0 92px;
+  min-height: 0;
+}
+
+/* 내 피해 · 회복 숫자 — 조작판의 내 생명 막대 위에서 뜬다. */
+.ae-vitals-float {
+  line-height: 1;
+  white-space: nowrap;
+  text-shadow: 0 2px 4px rgb(var(--aether-void-rgb) / 0.85);
+  animation: ae-stage-float 700ms cubic-bezier(.2, .8, .2, 1) forwards;
+}
+
+/* 모션 감소 설정 — 흔들림 · 번쩍임 · 흩어짐 · 숨쉬기를 끄고 숫자는 그 자리에 남긴다(GF-11과 같다). */
+@media (prefers-reduced-motion: reduce) {
+  .ae-combat-stage .ae-stage-portrait,
+  .ae-combat-stage .ae-stage-actor {
+    animation: none !important;
+  }
+
+  .ae-stage-damage,
+  .ae-vitals-float {
+    animation: floatHold 1s linear forwards !important;
+  }
+}
 
 /* === w3:field === */
 /* 2026-10 에테르 유리 — 원정 · 마을 조작판, 기록 창(연대기), 이벤트, 경로(w3:field).

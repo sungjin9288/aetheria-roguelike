@@ -3,6 +3,9 @@ import Gauge, { type GaugeKind } from '../ui/Gauge';
 
 type VitalTone = 'hp' | 'mp';
 
+/** App의 `useDamageFlash` 숫자(내 생명의 변화량) — type 모양만 받아 훅 모듈을 불러오지 않는다. */
+export type VitalsFloatAmount = { value: number; isHeal: boolean } | null;
+
 /** 생명 = life, 기력 = will — 막대 색 · 이름 글자색은 디자인 토큰 하나에서 온다. */
 const VITAL_TONE: Record<VitalTone, { kind: GaugeKind; label: string }> = {
   hp: { kind: 'life', label: 'text-ae-life' },
@@ -49,6 +52,8 @@ interface CombatVitalsStripProps {
   damageFlash?: boolean;
   /** 같은 상태의 회복 쪽 — 생명이 늘어난 순간. */
   healFlash?: boolean;
+  /** 내 생명의 변화량(2026-11 A1) — 맞은 자리(내 생명 막대 위)에서 떠오른다. 화면 가운데에는 적 무대가 있다. */
+  damageAmount?: VitalsFloatAmount;
 }
 
 /**
@@ -57,7 +62,7 @@ interface CombatVitalsStripProps {
  * 행동 단추 바로 위 — 적의 반격이 내 쪽에 떨어지는 자리다. 맞으면 우물 칸이 생명색으로 번쩍이고 1 ~ 2px 흔들린다
  * (모션 감소 설정이면 번쩍임만 — index.css `w3:combat`). 수치 · 판정은 바뀌지 않는다.
  */
-const CombatVitalsStrip = ({ hp, maxHp, mp, maxMp, damageFlash = false, healFlash = false }: CombatVitalsStripProps) => {
+const CombatVitalsStrip = ({ hp, maxHp, mp, maxMp, damageFlash = false, healFlash = false, damageAmount = null }: CombatVitalsStripProps) => {
   const flashState = damageFlash ? 'damage' : healFlash ? 'heal' : undefined;
   return (
     <div
@@ -65,8 +70,22 @@ const CombatVitalsStrip = ({ hp, maxHp, mp, maxMp, damageFlash = false, healFlas
       data-vitals-flash={flashState}
       role="group"
       aria-label={MSG.COMBAT_VITALS_ARIA}
-      className="ae-well ae-combat-vitals grid grid-cols-2 gap-3 rounded-ae-sm px-3 py-2"
+      className="ae-well ae-combat-vitals relative grid grid-cols-2 gap-3 rounded-ae-sm px-3 py-2"
     >
+      {/* 숫자는 막대 위 장식이다 — 화면 낭독기는 막대(meter)의 값만 읽는다. key가 바뀌면 같은 수치의 연속 피해도 다시 떠오른다. */}
+      {damageAmount && (
+        <span
+          key={`${damageAmount.isHeal ? 'heal' : 'hit'}-${damageAmount.value}-${hp}`}
+          aria-hidden="true"
+          data-testid="damage-number"
+          data-heal={damageAmount.isHeal ? 'true' : undefined}
+          className={`ae-vitals-float pointer-events-none absolute left-[25%] top-0 z-10 font-fira text-[18px] font-bold tabular-nums ${
+            damageAmount.isHeal ? 'text-ae-good' : 'text-ae-life'
+          }`}
+        >
+          {damageAmount.isHeal ? '+' : '-'}{damageAmount.value}
+        </span>
+      )}
       <VitalMeter tone="hp" label={MSG.COMBAT_VITALS_HP} value={hp} max={maxHp} />
       <VitalMeter tone="mp" label={MSG.COMBAT_VITALS_MP} value={mp} max={maxMp} />
     </div>

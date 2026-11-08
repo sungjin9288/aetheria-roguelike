@@ -1,5 +1,4 @@
 import { getEnemyTacticalProfile } from './runProfileUtils';
-import { getCombatForecast, type SelectedSkillLike } from './combatForecast';
 import { CombatEngine } from '../systems/CombatEngine';
 import { getDiscoveredBossSignatureDrops } from './bossSignatureHint.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
@@ -8,6 +7,18 @@ import { getCombatSkillTray } from './combatSkillTray';
 import { getConsumableDescription } from './consumablePresentation';
 import { isConsumableItem } from '../systems/consumableRules';
 import type { DictRelic, FullStats, Item, Monster, Player } from '../types/index.js';
+
+/**
+ * `getSelectedSkill()`(combatActions/_helpers)이 실제로 반환하는 값은 `ClassSkill | WeaponMagicSkill | traitSkill` 셋 중 하나다
+ * (무기 공명 · 성향 기술은 `type` · `effect`가 리터럴이 아닌 일반 문자열) — 이 뷰모델이 읽는 공통 필드만 좁힌다.
+ */
+interface SelectedSkillLike {
+    name?: string;
+    type?: string;
+    effect?: string;
+    mp?: number;
+    mult?: number;
+}
 
 interface CombatViewInput {
     player: Player;
@@ -75,25 +86,8 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
     const comboCount = player.combatFlags?.comboCount || 0;
     const comboStack = comboRelic?.val?.stack || 0;
 
-    // 보스 패턴 텔레그래프 (적의 다음 행동 예측)
-    const enemyTelegraph = enemy ? CombatEngine.predictEnemyNextAction(enemy) : null;
-    const combatForecast = getCombatForecast({
-        player,
-        enemy,
-        stats,
-        selectedSkill,
-        skillCooldown,
-        enemyTelegraph,
-        combatConsumables,
-        primarySignatureDrop,
-    });
-    const combatForecastCells = combatForecast
-        ? [
-            { label: '위협', value: combatForecast.intent },
-            { label: '권장 대응', value: combatForecast.response },
-            { label: '예상 흐름', value: combatForecast.window },
-        ]
-        : [];
+    // 2026-11 디자인 고도화 A4 (소유자 결정 Q2): 판단 요약 세 칸(위협 · 권장 대응 · 예상 흐름)은 지웠다 — 적의 다음 행동 · 예상 피해는
+    //   적 무대의 의도 표시(`utils/enemyIntent.ts`)가 보이고, 무엇을 하라고 권하지 않는다(Wave 88). 약점은 기술 칸이 보인다.
 
     // 2026-10 Wave 111: 정예와 싸우는 동안 가장 센 한 방(격노 포함)을 칩으로 보인다 — 나타날 때의 기록 줄은 밀려 올라간다.
     // 2026-10 감사 CL-06: 보스도 같은 칩이다(페이즈 · 하수인 · 브레스 포함). 위협 칩이 언제나 첫 신호다.
@@ -131,8 +125,6 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
         comboRelic,
         comboCount,
         comboStack,
-        combatForecast,
-        combatForecastCells,
         mobileCombatSignals,
         skillReadiness,
         skillTray,

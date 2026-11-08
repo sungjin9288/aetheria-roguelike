@@ -32,6 +32,7 @@ import FieldDock from './control/FieldDock';
 import RouteBoard from './control/RouteBoard';
 import TownActions from './control/TownActions';
 import type { ControlButton } from './control/types';
+import type { VitalsFloatAmount } from './combat/CombatVitalsStrip';
 import { buildControlButtons } from './control/controlButtons';
 
 interface ControlPanelProps {
@@ -58,6 +59,8 @@ interface ControlPanelProps {
   /** 전투 조작판의 내 생명 막대가 읽는 맞은 순간 · 회복한 순간(App의 `useDamageFlash`, 2026-10 감사 VD-02). */
   damageFlash?: boolean;
   healFlash?: boolean;
+  /** 싸우는 동안 내 생명 막대 옆에 뜨는 피해 · 회복 숫자(2026-11 A1 — 화면 가운데에는 적 무대가 있다). */
+  damageAmount?: VitalsFloatAmount;
 }
 
 // 2026-10 에테르 유리(감사 CH-08): 923줄이던 조작판을 화면 조각으로 나눴다 — 임무 카드 · 원정 준비 · 추천 경로 · 원정 도크 ·
@@ -82,6 +85,7 @@ const ControlPanel = ({
   onOpenArchiveConsole,
   damageFlash,
   healFlash,
+  damageAmount = null,
 }: ControlPanelProps) => {
   const mapData = DB.MAPS[player.loc as string];
   const currentLocation = player.loc || '';
@@ -161,6 +165,7 @@ const ControlPanel = ({
         mobile
         damageFlash={damageFlash}
         healFlash={healFlash}
+        damageAmount={damageAmount}
       />
     );
   }

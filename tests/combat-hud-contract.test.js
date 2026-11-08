@@ -8,7 +8,6 @@ import CombatVitalsStrip from '../src/components/combat/CombatVitalsStrip.tsx';
 import { MSG } from '../src/data/messages.ts';
 import { buildCombatView } from '../src/utils/combatView.ts';
 import { castTraySkill, getCombatSkillTray } from '../src/utils/combatSkillTray.ts';
-import { getCombatForecast } from '../src/utils/combatForecast.ts';
 import { hitsEnemyWeakness } from '../src/systems/skillPower.ts';
 import { getBossThreatChip, getEnemyThreat } from '../src/utils/enemyThreat.ts';
 import { getEnemyRank } from '../src/utils/enemyRank.ts';
@@ -173,10 +172,9 @@ test('CL-03: 칸마다 약점 표시 — 위력 기술이고 그 원소(기술 �
     assert.ok(getCombatSkillTray(player).every((entry) => !entry.weak), '적이 없으면 약점 표시도 없다');
     assert.ok(getCombatSkillTray(player, { enemy: bossEnemy(), stats }).every((entry) => !entry.weak), '약점 없는 적');
 
-    // 전투 예고는 고른 기술 하나만 본다 — 칸마다 그 기술을 골랐을 때의 예고와 같은 답이다.
+    // 칸의 약점 표시는 엔진과 같은 판정(`hitsEnemyWeakness`)이다 — 칸마다 그 기술의 판정과 같은 답이다.
     for (const [index, skill] of skills.entries()) {
-        const forecast = getCombatForecast({ player, enemy, stats, selectedSkill: skill, skillCooldown: 0 });
-        assert.equal(forecast.response.endsWith(' 약점'), tray[index].weak, `${skill.name}: 예고 "${forecast.response}"`);
+        assert.equal(hitsEnemyWeakness(skill, enemy, stats), tray[index].weak, skill.name);
     }
 
     // 화면: 약점 칸에만 표시가 있고 칸의 접근성 이름에도 실린다.
@@ -239,10 +237,12 @@ test('CL-06: 보스가 아닌 적 · 의뢰 우두머리에는 보스 칩이 없
 
 // ── CL-09 보스 카드 이름 ─────────────────────────────────────────────
 
-test("CL-09: 보스 화면에서 '권장 대응'은 판단 요약 칸 하나뿐이고 보스 카드는 '공략 요령'이다", () => {
+test("CL-09 · A4: 보스 화면에 '권장 대응'은 없고 보스 카드는 '공략 요령'이다", () => {
     const html = renderPanel(paladin(), bossEnemy());
-    assert.equal(html.split('권장 대응').length - 1, 1, "'권장 대응'이 한 번만 나온다");
-    assert.match(html, /data-testid="combat-forecast-label"[^>]*>권장 대응</, '남은 하나는 판단 요약 칸');
+    // 2026-11 A4 (소유자 결정 Q2): 판단 요약 세 칸(위협 · 권장 대응 · 예상 흐름)을 지웠다 — 권하는 말은 화면에 없다.
+    for (const word of ['권장 대응', '예상 흐름', 'combat-forecast']) {
+        assert.ok(!html.includes(word), `${word} 없음`);
+    }
     assert.match(html, new RegExp(`data-testid="combat-boss-counter"[^>]*><div[^>]*>${MSG.COMBAT_BOSS_CLUE_LABEL}<`));
     assert.match(html, new RegExp(`data-testid="combat-boss-signature"[^>]*><div[^>]*>${MSG.COMBAT_BOSS_SIGNATURE_LABEL}<`));
     assert.notEqual(MSG.COMBAT_BOSS_CLUE_LABEL, '권장 대응');

@@ -3,9 +3,14 @@ import { motion as Motion } from 'framer-motion';
 import { GS } from '../../reducers/gameStates';
 import TerminalView from '../TerminalView';
 import ControlPanel from '../ControlPanel';
+import EnemyStatus from '../combat/EnemyStatus';
+import { getVisibleLocationVisual } from '../../utils/challengeRules';
+import { getEnemyIntent } from '../../utils/enemyIntent';
 import { usePreloadPostCombatCard, useStageEnterClass } from './stageLayoutHooks';
 import type { FullStats, Item } from '../../types/index.js';
 import type { useGameEngine } from '../../hooks/useGameEngine';
+import type { useDamageFlash } from '../../hooks/useDamageFlash';
+import type { CombatStageView } from '../../utils/combatPresentation';
 
 const Dashboard = lazy(() => import('../Dashboard'));
 
@@ -32,6 +37,10 @@ interface MobileGameLayoutProps {
     setMobileConsoleMode: (mode: string) => void;
     onOpenMirror: () => void;
     onOpenCrystalExchange: () => void;
+    /** 싸우는 중이면 살아 있는 적, 처치 순간이면 쓰러진 적 — 있으면 기록 창 자리에 무대를 세운다(2026-11 A1). */
+    combatStage?: CombatStageView;
+    enemyHitCrit?: boolean;
+    damageAmount?: ReturnType<typeof useDamageFlash>['damageAmount'];
 }
 
 const MobileGameLayout = ({
@@ -43,8 +52,17 @@ const MobileGameLayout = ({
     setMobileConsoleMode,
     onOpenMirror,
     onOpenCrystalExchange,
+    combatStage,
+    enemyHitCrit = false,
+    damageAmount = null,
 }: MobileGameLayoutProps) => {
     const isCombat = engine.gameState === GS.COMBAT;
+    // 2026-11 디자인 고도화 A1: 전투(와 처치 순간)에는 기록 창 자리의 위쪽이 적 무대이고, 기록은 아래 두세 줄 띠다.
+    //   전체 기록을 펼치면 띠가 무대 쪽으로 커진다(무대는 최소 높이까지 줄어든다).
+    const stageEnemy = !isPanelFocusState ? combatStage?.enemy ?? null : null;
+    const stageBackdrop = stageEnemy ? getVisibleLocationVisual(engine.player)?.src ?? null : null;
+    // A4: 적의 다음 행동 · 예상 피해는 무대가 보인다(조작판의 판단 요약 세 칸을 대신한다). 처치 순간에는 없다.
+    const stageIntent = stageEnemy && !combatStage?.enemyDefeated ? getEnemyIntent(engine.player, stageEnemy) : null;
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const modeEnterClass = useStageEnterClass(engine.gameState);
     usePreloadPostCombatCard(isCombat);
@@ -98,17 +116,43 @@ const MobileGameLayout = ({
                     //   소유자 결정 2026-10-26 D14: 필드(조작판에 필드 독이 있을 때)에서는 임무 추적 · 신호 줄 · 독 두 줄이 240 최소 높이와 함께
                     //   390×844(안전 영역 47/34)에서 독 둘째 줄(이동 · 지도 · 정찰 · 가방)을 화면 밖으로 밀었다(탐험 뒤 최대 67px 넘침) —
                     //   필드에서는 96px까지 양보한다 — 375×812 mini에서 탐험 뒤 132px로도 28px 넘쳤다(기록 창은 여전히 flex-1이라 남는 높이를 그대로 채운다).
-                    <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px] [&:has(~*_.ae-town-facilities[open])]:min-h-[56px] [&:has(~*_.ae-field-dock)]:min-h-[96px]'}`}>
-                        <TerminalView
-                            logs={engine.logs}
-                            gameState={engine.gameState}
-                            onCommand={engine.handleCommand}
-                            player={engine.player}
-                            quickSlots={engine.quickSlots}
-                            onQuickSlotUse={handleQuickSlotUse}
-                            maxHp={fullStats?.maxHp}
-                        />
-                    </div>
+                    stageEnemy ? (
+                        <div data-testid="combat-stage" className="ae-combat-stage-column order-1 flex min-h-[116px] min-w-0 flex-1 flex-col gap-1.5">
+                            <div className="ae-combat-stage-slot flex min-h-[116px] min-w-0 flex-1">
+                                <EnemyStatus
+                                    enemy={stageEnemy}
+                                    enemyHitCrit={enemyHitCrit}
+                                    defeated={Boolean(combatStage?.enemyDefeated)}
+                                    layout="stage"
+                                    backdropSrc={stageBackdrop}
+                                    intent={stageIntent}
+                                />
+                            </div>
+                            <div className="ae-combat-log-strip flex min-w-0">
+                                <TerminalView
+                                    logs={engine.logs}
+                                    gameState={engine.gameState}
+                                    onCommand={engine.handleCommand}
+                                    player={engine.player}
+                                    quickSlots={engine.quickSlots}
+                                    onQuickSlotUse={handleQuickSlotUse}
+                                    maxHp={fullStats?.maxHp}
+                                />
+                            </div>
+                        </div>
+                    ) : (
+                        <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px] [&:has(~*_.ae-town-facilities[open])]:min-h-[56px] [&:has(~*_.ae-field-dock)]:min-h-[96px]'}`}>
+                            <TerminalView
+                                logs={engine.logs}
+                                gameState={engine.gameState}
+                                onCommand={engine.handleCommand}
+                                player={engine.player}
+                                quickSlots={engine.quickSlots}
+                                onQuickSlotUse={handleQuickSlotUse}
+                                maxHp={fullStats?.maxHp}
+                            />
+                        </div>
+                    )
                 )
             )}
         {/* Focus state (SHOP/EVENT/etc.): ControlPanel fills all remaining space via flex-1
@@ -148,6 +192,7 @@ const MobileGameLayout = ({
                         onOpenArchiveConsole={openArchiveConsole}
                         damageFlash={damageFlash}
                         healFlash={healFlash}
+                        damageAmount={isCombat ? damageAmount : null}
                     />
                 </div>
             ) : null}

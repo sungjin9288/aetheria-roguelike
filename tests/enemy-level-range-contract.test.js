@@ -197,7 +197,7 @@ test('⑥ 접두어 강함은 배율 그대로이고 레벨 보너스는 그 배
     assert.equal(getPrefixLevelBonus(50, 2.5), 80);
     assert.equal(getPrefixLevelBonus(10, 0.7), -4);
     assert.equal(getPrefixLevelBonus(1, 0.7), 0);
-    // 화면 보너스는 전리품 · 보상 판정에 들어가지 않는다 — 읽는 곳은 스폰 · 표시뿐이다(부재 불변식).
+    // 화면 보너스는 전리품 · 보상 판정에 들어가지 않는다 — 읽는 곳은 스폰 · 표시뿐이다(부재 불변식). 표시는 적 카드(2026-11 A1에 StatusBar에서 분리).
     const srcRoot = path.resolve('src');
     const readers = [];
     const walk = (dir) => {
@@ -208,7 +208,7 @@ test('⑥ 접두어 강함은 배율 그대로이고 레벨 보너스는 그 배
         }
     };
     walk(srcRoot);
-    assert.deepEqual(readers.sort(), ['components/StatusBar.tsx', 'types/monster.ts', 'utils/enemyLevel.ts', 'utils/exploreUtils.ts']);
+    assert.deepEqual(readers.sort(), ['components/combat/EnemyStatus.tsx', 'types/monster.ts', 'utils/enemyLevel.ts', 'utils/exploreUtils.ts']);
 });
 
 test('⑦ 전투 화면은 적 레벨과 접두어 레벨 보너스를 그린다', () => {

@@ -107,28 +107,30 @@ for (const viewport of VIEWPORTS) {
             await expect(bossChip).toBeVisible();
             await expect(bossChip).toContainText('보스 · 한 방 최대 생명의');
             await expect(bossChip).not.toContainText('권장');
-            // CL-09: 보스 카드는 '공략 요령', '권장 대응'은 판단 요약 칸 하나.
+            // CL-09: 보스 카드는 '공략 요령'이다. 2026-11 A4: 판단 요약 칸('권장 대응')은 없앴고 적 무대의 의도 칩이 다음 행동을 보인다.
             await expect(page.getByTestId('combat-boss-counter')).toContainText('공략 요령');
-            await expect(page.getByText('권장 대응', { exact: true })).toHaveCount(1);
+            await expect(page.getByText('권장 대응', { exact: true })).toHaveCount(0);
+            await expect(page.getByTestId('enemy-intent')).toBeVisible();
 
             // VD-02: 내 생명 · 기력 막대.
             await expect(page.getByTestId('combat-player-vitals')).toBeVisible();
             await expect(page.getByTestId('combat-player-hp-value')).toHaveText(/^\d+\/\d+$/);
 
-            // VD-02: 보스 초상은 일반 적과 다른 테두리(금빛 2px) · 80px 그림.
+            // VD-02: 보스 초상은 일반 적과 다른 테두리(금빛 2px). 2026-11 A1: 휴대폰 전투의 초상은 무대이고 그림은 160px 원본의
+            //   정수 배율(160 또는 무대가 낮으면 80)이다. 숨쉬기 장식(scale)이 경계 상자를 흔들므로 레이아웃 폭(offsetWidth)을 잰다.
             const portrait = await page.getByTestId('enemy-portrait').evaluate((node) => {
                 const art = node.querySelector('[data-monster-art]') as HTMLElement | null;
                 const img = node.querySelector('img');
                 return {
                     rank: (node as HTMLElement).dataset.enemyRank,
                     borderWidth: getComputedStyle(node).borderTopWidth,
-                    artWidth: art?.getBoundingClientRect().width ?? 0,
+                    artWidth: art?.offsetWidth ?? 0,
                     rendering: img ? getComputedStyle(img).imageRendering : 'none',
                 };
             });
             expect(portrait.rank).toBe('boss');
             expect(portrait.borderWidth).toBe('2px');
-            expect(portrait.artWidth).toBe(80);
+            expect([80, 160]).toContain(portrait.artWidth);
             expect(portrait.rendering).toBe('pixelated');
 
             // 주 행동 네 개는 맨 위로 올렸을 때 첫 화면 안이고 기술 칸은 그 바로 아래에서 시작한다. 보스 카드는 처음 한 번

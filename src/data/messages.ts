@@ -1170,15 +1170,19 @@ export const MSG = {
         `[${buffName}] 반격! ${enemyName}에게 ${dmg} 피해!`
     ),
     ENEMY_TELEGRAPH_STUNNED: '기절 중 — 행동 불가',
-    ENEMY_TELEGRAPH_PHASE2_IMMINENT: (formName?: string) => `⚡ 2페이즈 임박 — ${formName || '형태 변환'}`,
+    ENEMY_TELEGRAPH_PHASE2_IMMINENT: (formName?: string) => `2페이즈 임박 — ${formName || '형태 변환'}`,
     ENEMY_TELEGRAPH_GUARD_HIGH: (pct: number) => `방어 자세 (${pct}%)`,
     ENEMY_TELEGRAPH_HEAVY_HIGH: (pct: number) => `맹공 준비 (${pct}%)`,
     ENEMY_TELEGRAPH_GUARD_MED: (pct: number) => `방어 가능 (${pct}%)`,
     ENEMY_TELEGRAPH_HEAVY_MED: (pct: number) => `맹공 주의 (${pct}%)`,
     ENEMY_TELEGRAPH_NORMAL: '일반 공격 예상',
     // 2026-10 Wave 59: 보스 기믹(소유자 결정 "보스 기믹 전부 설명대로 구현").
-    ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `💀 3페이즈 임박 — ${formName || '최종 형태'}`,
-    ENEMY_TELEGRAPH_BREATH: '🔥 브레스 준비 — 다음 행동',
+    ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `3페이즈 임박 — ${formName || '최종 형태'}`,
+    ENEMY_TELEGRAPH_BREATH: '브레스 준비 — 다음 행동',
+    // 2026-11 디자인 고도화 A4: 적 무대의 의도 표시 — 다음 행동(위 예고 문구) · 그 행동 한 번의 예상 피해 · 강타가 거는 상태.
+    //   정보만이다 — 무엇을 하라고 권하지 않는다(Wave 88 · 소유자 결정 Q2 "권장 대응 칩은 없앤다").
+    ENEMY_INTENT_HIT: (hit: number) => `예상 피해 ${hit}`,
+    ENEMY_INTENT_SR_PREFIX: '다음 행동:',
     ENEMY_GUARD_COUNTER_STANCE: (enemyName: string | undefined) => (
         `${withJosa(enemyName, '이/가')} 반격 자세를 취했습니다. 지금 공격하면 반격당합니다.`
     ),
@@ -1439,8 +1443,8 @@ export const MSG = {
     ELITE_COMBAT_CHIP: (pct: number, hits: number) => `정예 · 한 방 최대 생명의 ${pct}% · ${hits}번에 쓰러짐`,
     // 2026-10 감사 CL-06: 보스도 싸우는 동안 같은 모양의 칩 — 나타날 때의 기록 줄(BOSS_THREAT)과 같은 추정기. 정보만이다(Wave 88).
     BOSS_COMBAT_CHIP: (pct: number, hits: number) => `보스 · 한 방 최대 생명의 ${pct}% · ${hits}번에 쓰러짐`,
-    // 2026-10 감사 CL-09: 보스 카드의 대응 문구는 '공략 요령'이다 — 판단 요약 칸의 '권장 대응'(선택한 기술 기준, 원장 §135.5 현행 유지)과
-    //   같은 이름 아래 다른 말을 하고 있었다.
+    // 2026-10 감사 CL-09: 보스 카드의 대응 문구는 '공략 요령'이다 — 판단 요약 칸의 '권장 대응'과 같은 이름 아래 다른 말을 하고 있었다.
+    //   그 칸은 2026-11 A4가 지웠다(소유자 결정 Q2 — 권하는 말은 화면에 없다).
     COMBAT_BOSS_SIGNATURE_LABEL: '보스 기믹',
     COMBAT_BOSS_CLUE_LABEL: '공략 요령',
     // 2026-10 감사 CL-03: 전투 기술 칸 — 가진 기술을 모두 펼쳐 누르면 바로 쓴다(이전에는 한 개 + 이름 없는 순환 단추).
@@ -1638,7 +1642,6 @@ export const MSG = {
     COMBAT_ACTION_ATTACK: '공격',
     COMBAT_ACTION_SKILL: '기술',
     COMBAT_ACTION_ITEM: '아이템',
-    COMBAT_FORECAST_ARIA: '전투 판단 요약',
     COMBAT_SIGNALS_ARIA: '전투 신호',
     COMBAT_SIGNATURE_HINT_LABEL: '전설 각인',
     COMBAT_SIGNATURE_HINT_MORE: (count: number) => `외 ${count}`,

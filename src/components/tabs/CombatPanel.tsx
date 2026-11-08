@@ -3,7 +3,7 @@ import { Sword, Zap, ArrowRight, Sparkles, Backpack, TriangleAlert, Skull, Chevr
 import { motion as Motion } from 'framer-motion';
 import { buildCombatView, type CombatSignalTone } from '../../utils/combatView';
 import CombatSkillTray from '../combat/CombatSkillTray';
-import CombatVitalsStrip from '../combat/CombatVitalsStrip';
+import CombatVitalsStrip, { type VitalsFloatAmount } from '../combat/CombatVitalsStrip';
 import ActionButton, { type ActionButtonVariant } from '../ui/ActionButton';
 import Chip, { type ChipTone } from '../ui/Chip';
 import { MSG } from '../../data/messages.js';
@@ -34,6 +34,7 @@ interface CombatPanelProps {
     /** App의 `useDamageFlash` 상태 — 내 생명 · 기력 막대가 맞은 순간 번쩍인다(2026-10 감사 VD-02 · GF-05). */
     damageFlash?: boolean;
     healFlash?: boolean;
+    damageAmount?: VitalsFloatAmount;
 }
 
 type CombatActionKey = 'attack' | 'skill' | 'item' | 'escape';
@@ -128,10 +129,10 @@ const getEnemyDebuffs = (enemy: Monster): string[] => {
 //   (ControlPanel) 6 props 모두 명시 전달이라 도달 불가.
 /**
  * 전투 조작판(2026-10 에테르 유리) — 한 장의 유리 카드 안에 내 생명 · 기력 → 신호 칩(위협 · 약화 · 전설 각인) →
- * 판단 요약 세 칸 → 행동 2 × 2(공격 = 금빛 주 행동) → 기술 칸 → 보스 카드 순서다. 넓은 칸(데스크톱 가운데 열)에서는
+ * 행동 2 × 2(공격 = 금빛 주 행동) → 기술 칸 → 보스 카드 순서다(판단 요약 세 칸은 2026-11 A4가 지웠다 — 적의 다음 행동은 적 무대가 보인다). 넓은 칸(데스크톱 가운데 열)에서는
  * 행동이 한 줄 독(dock)으로 늘어선다(index.css `w3:combat`의 컨테이너 쿼리).
  */
-const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, damageFlash, healFlash }: CombatPanelProps) => {
+const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, damageFlash, healFlash, damageAmount = null }: CombatPanelProps) => {
   const [itemsOpen, setItemsOpen] = useState(false);
   const selectedSkill = actions?.getSelectedSkill ? actions.getSelectedSkill() : null;
   const skillCooldown = selectedSkill ? player.skillLoadout?.cooldowns?.[selectedSkill.name ?? ''] || 0 : 0;
@@ -141,8 +142,6 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, dama
     tacticalProfile,
     signatureDropCandidates,
     primarySignatureDrop,
-    combatForecast,
-    combatForecastCells,
     mobileCombatSignals,
     skillReadiness,
     skillTray,
@@ -185,6 +184,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, dama
         maxMp={Math.max(1, stats?.maxMp || player.maxMp || 1)}
         damageFlash={damageFlash}
         healFlash={healFlash}
+        damageAmount={damageAmount}
       />
 
       {/* 2026-10 감사 CL-06: 보스에서도 그린다 — 위협 칩(가장 센 한 방)이 첫 신호다. 정보만이다(Wave 88 · 111).
@@ -234,24 +234,6 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, dama
             </span>
           )}
         </div>
-      )}
-
-      {combatForecast && (
-        <section
-          data-testid="combat-forecast-strip"
-          data-forecast-tone={combatForecast.tone}
-          aria-label={MSG.COMBAT_FORECAST_ARIA}
-          className="ae-combat-forecast grid grid-cols-3 gap-1.5"
-        >
-          {combatForecastCells.map((cell) => (
-            <div key={cell.label} className="ae-well ae-combat-forecast-cell min-w-0 rounded-ae-sm px-2.5 py-1.5">
-              <div data-testid="combat-forecast-label" className="ae-eyebrow font-readable">{cell.label}</div>
-              <div data-testid="combat-forecast-value" className="aether-type-body mt-0.5 font-readable font-bold leading-snug text-ae-ink">
-                {cell.value}
-              </div>
-            </div>
-          ))}
-        </section>
       )}
 
       <div className="ae-combat-actions grid grid-cols-2 gap-2">
@@ -340,7 +322,7 @@ const CombatPanel = ({ player, actions, enemy, stats, isAiThinking, mobile, dama
               data-testid="combat-boss-counter"
               className="ae-well ae-combat-boss-card min-w-0 rounded-ae-sm px-2.5 py-2 font-readable"
             >
-              {/* 2026-10 감사 CL-09: 판단 요약 칸의 '권장 대응'과 다른 말이라 이름도 다르다. */}
+              {/* 2026-10 감사 CL-09: 이름은 '공략 요령'이다 — 권하는 말('권장 대응')은 화면에 없다(2026-11 A4, 소유자 결정 Q2). */}
               <div className="aether-type-label font-bold text-ae-good">{MSG.COMBAT_BOSS_CLUE_LABEL}</div>
               <div className="aether-type-body mt-0.5 text-ae-ink-2" title={tacticalProfile.counterHint}>
                 {tacticalProfile.counterHint}

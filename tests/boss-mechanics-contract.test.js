@@ -15,7 +15,8 @@ import { getBossThemedLootPool, processLoot } from '../src/systems/CombatEngine.
 import { resolveCombatActionTurn } from '../src/systems/combatActionTurn.js';
 import { getPhaseStatuses } from '../src/systems/bossMechanics.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
-import { getCombatForecast } from '../src/utils/combatForecast.js';
+import { getEnemyIntent } from '../src/utils/enemyIntent.js';
+import { estimateEnemyMaxHit } from '../src/utils/enemyThreat.js';
 import { spawnEnemy } from '../src/utils/exploreUtils.js';
 import { pickBossRewardRelics } from '../src/utils/bossRelicReward.js';
 import { applyBossRelicReward } from '../src/hooks/combatActions/_helpers.js';
@@ -384,7 +385,7 @@ test('저항 무력화 — 에테르 심판자 3페이즈는 상태 저항 유�
     assert.equal(phase3Hit, phase2Hit * 2, `${phase2Hit} → ${phase3Hit}`);
 });
 
-test('예고 — 알릴 행동 가운데 확률이 높은 쪽 · 3페이즈 임박 · 3페이즈 문턱의 예보 칸', () => {
+test('예고 — 알릴 행동 가운데 확률이 높은 쪽 · 3페이즈 임박 · 적 무대의 의도 표시', () => {
     const sphinx = makeBoss('스핑크스', { pattern: { guardChance: 0.32, heavyChance: 0.35 } });
     assert.equal(CombatEngine.predictEnemyNextAction(sphinx).type, 'heavy');
     const shatter = makeBoss('차원 파쇄자', { pattern: { guardChance: 0.3, heavyChance: 0.3 } });
@@ -392,8 +393,11 @@ test('예고 — 알릴 행동 가운데 확률이 높은 쪽 · 3페이즈 임�
     const maou = makeBoss('마왕', { hp: 1_100, phase2Triggered: true });
     const telegraph = CombatEngine.predictEnemyNextAction(maou);
     assert.equal(telegraph.type, 'phase3_imminent');
-    const forecast = getCombatForecast({ player: makePlayer(), enemy: { ...maou, hp: 1_000 }, stats: stats(makePlayer()), enemyTelegraph: telegraph });
-    assert.equal(forecast.window, '전환 직전');
+    // 2026-11 A4: 적 무대의 의도는 '변신'이고, 숫자는 다음 행동이 새 페이즈이므로 가장 센 한 방이다.
+    const intent = getEnemyIntent(makePlayer(), { ...maou, hp: 1_000 });
+    assert.equal(intent.kind, 'phase');
+    assert.equal(intent.label, telegraph.label);
+    assert.equal(intent.hit, estimateEnemyMaxHit(makePlayer(), { ...maou, hp: 1_000 }));
     // 아직 2페이즈 전인데 한 번에 3페이즈 문턱 아래로 내려왔으면 3페이즈를 알린다.
     assert.equal(CombatEngine.predictEnemyNextAction(makeBoss('마왕', { hp: 900 })).type, 'phase3_imminent');
 });

@@ -1,11 +1,10 @@
 import { Gem, MapPin } from 'lucide-react';
 import PixelCharacterAvatar from './PixelCharacterAvatar';
 import SignalBadge from './SignalBadge';
-import EnemyPortrait from './combat/EnemyPortrait';
-import { useHitFlash } from '../hooks/useHitFlash';
+import EnemyStatus from './combat/EnemyStatus';
+import { getEnemyIntent } from '../utils/enemyIntent';
 import { getExpeditionHudChips } from '../utils/expeditionHud';
 import { getVisibleLocationName } from '../utils/challengeRules';
-import { getEnemyRank } from '../utils/enemyRank';
 import { MSG } from '../data/messages.js';
 import type { FullStats, Player, Monster } from '../types/index.js';
 
@@ -58,103 +57,8 @@ const StatusMetric = ({ label, value, max, variant }: StatusMetricProps) => {
   );
 };
 
-// 감사 A11Y-06: 전투 화면의 내 상태 · 적 정보는 제목이 있는 영역이다(화면 낭독기 영역 · 제목 이동).
+// 감사 A11Y-06: 전투 화면의 내 상태는 제목이 있는 영역이다(화면 낭독기 영역 · 제목 이동). 적 정보는 combat/EnemyStatus.
 const PLAYER_STATUS_HEADING_ID = 'combat-player-status-heading';
-const ENEMY_STATUS_HEADING_ID = 'combat-enemy-status-heading';
-
-interface EnemyStatusProps {
-  enemy?: Monster | null;
-  enemyHitCrit?: boolean;
-  /** 처치 순간(게임 필 GF-02) — 쓰러진 적을 막대 0 · 마지막 피해 숫자 · '처치' 도장으로 그린다. */
-  defeated?: boolean;
-}
-
-// 적이 피해를 받으면 생명력 막대와 피해 숫자를 함께 강조한다.
-//   데스크톱 배치(≥1024px)에서도 상태 카드 안에 있다 — 왼쪽 열이 "나와 상대"를 위아래로 보인다.
-const EnemyStatus = ({ enemy, enemyHitCrit, defeated = false }: EnemyStatusProps) => {
-  const { flash, amount } = useHitFlash(enemy?.hp, enemy?.name, { crit: !!enemyHitCrit });
-  if (!enemy) return null;
-
-  const safeMax = Math.max(1, enemy.maxHp || 1);
-  const safeValue = Math.max(0, enemy.hp || 0);
-  const percentage = Math.min(100, (safeValue / safeMax) * 100);
-  const isCritHit = amount?.meta?.crit;
-  // 2026-10 감사 VD-02: 적의 무게(보스 · 우두머리 · 정예 · 일반)가 카드 · 초상 테두리 · 생명 막대 색을 정한다(index.css).
-  const rank = getEnemyRank(enemy);
-
-  return (
-    <div
-      data-defeated={defeated ? 'true' : undefined}
-      data-testid="enemy-status"
-      role="region"
-      aria-labelledby={ENEMY_STATUS_HEADING_ID}
-      data-hit-flash={flash ? 'true' : undefined}
-      data-enemy-rank={rank}
-      className="aether-encounter-stage ae-encounter-stage relative mt-1.5 overflow-hidden rounded-ae-md px-3 py-2.5"
-    >
-      {/* 적 피해 숫자 — 치명타는 금빛에 별표(✦)를 단다(전투 연출 계약이 이 글자를 읽는다). */}
-      {amount && (
-        <span
-          key={amount.key}
-          data-crit={isCritHit ? 'true' : undefined}
-          data-testid="enemy-damage-number"
-          className={`ae-enemy-damage pointer-events-none absolute right-3 top-1 z-10 font-fira font-bold tabular-nums ${
-            isCritHit ? 'text-xl text-ae-gold-hi' : 'text-base text-ae-ink'
-          }`}
-          style={{ animation: 'floatUp 0.9s cubic-bezier(.2,.8,.2,1) forwards' }}
-        >
-          {isCritHit ? '✦ ' : ''}-{amount.value}
-        </span>
-      )}
-      {/* 처치 도장(게임 필 GF-02) — 카드 전체를 어둡게 덮고 가운데에 찍는다(초상 크기 · 배치와 무관하다).
-          마지막 일격 숫자(z-10)는 도장 위에 남는다. 초상이 빛을 잃는 모습은 index.css가 `data-defeated`로 그린다. */}
-      {defeated && (
-        <div className="pointer-events-none absolute inset-0 z-[5] flex items-center justify-center bg-ae-void/50">
-          <span
-            data-testid="enemy-defeated-stamp"
-            className="aether-defeated-stamp rounded-ae-xs border-2 border-ae-gold/70 bg-ae-void/80 px-3 py-1 font-display text-[16px] font-bold leading-none text-ae-gold-hi"
-          >
-            {MSG.COMBAT_DEFEATED_STAMP}
-          </span>
-        </div>
-      )}
-      {/* 2026-10 감사 VD-02: 초상은 80px 그림(160px 원본의 정수 배율) — 생명 막대는 이름 아래로 옮겨 높이를 아낀다. */}
-      <div className="flex items-center gap-3">
-        <EnemyPortrait enemy={enemy} rank={rank} />
-        <div className="min-w-0 flex-1">
-          <h2 id={ENEMY_STATUS_HEADING_ID} data-testid="enemy-status-label" className="ae-eyebrow font-readable">
-            {MSG.SHELL_ENEMY_HEADING}
-          </h2>
-          <div className="mt-0.5 flex min-w-0 flex-wrap items-center gap-x-1.5 gap-y-0.5">
-            <span className="min-w-0 font-display text-[15px] font-bold leading-snug text-ae-ink">{enemy.name}</span>
-            {typeof enemy.level === 'number' && (
-              <SignalBadge tone="neutral" size="sm" data-testid="enemy-level-badge">
-                {MSG.SHELL_ENEMY_LEVEL(enemy.level, enemy.levelBonus ?? 0)}
-              </SignalBadge>
-            )}
-            {enemy.isBoss && <SignalBadge tone="danger" size="sm">{MSG.SHELL_BOSS}</SignalBadge>}
-          </div>
-          <div className="mt-2 flex items-center gap-2">
-            <div className="aether-enemy-health-track ae-gauge ae-gauge-life ae-gauge-lg ae-sunk min-w-0 flex-1">
-              {/* 잔상은 지금 값과 같은 폭이고 늦게 줄어든다(.ae-gauge-trail의 지연 전환) — 방금 깎인 양이 잠깐 보인다. */}
-              <div className="ae-gauge-trail" aria-hidden="true" style={{ width: `${percentage}%` }} />
-              <div
-                data-testid="enemy-health-fill"
-                className="aether-enemy-health-fill ae-gauge-fill"
-                style={{ width: `${percentage}%` }}
-              />
-              <div className="ae-gauge-ticks" aria-hidden="true" />
-            </div>
-            <div className="shrink-0 whitespace-nowrap text-right leading-tight">
-              <span data-testid="enemy-health-label" className="font-readable text-[11px] text-ae-ink-3">{MSG.SHELL_LIFE}</span>{' '}
-              <span data-testid="enemy-health-value" className="font-fira text-[12px] font-semibold tabular-nums text-ae-ink">{safeValue}/{safeMax}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
 
 // cycle 495: 외부 보조 클래스 prop 인터페이스 제거 — GameRoot 1 callsite 전달
 //   0건이라 보간 결과 ''만 추가되는 unreachable. cycle 463/465/466/493 lens 회귀.
@@ -172,6 +76,11 @@ interface StatusBarProps {
    * 지표는 세로로 쌓인다(전투 중에는 그 아래에 상대 카드). 없으면 모바일 상단 표시줄(지금 모양)이다.
    */
   placement?: 'bar' | 'column';
+  /**
+   * 2026-11 디자인 고도화 A1: `external`이면 적 카드를 여기서 그리지 않는다 — 휴대폰 전투 화면은 가운데 무대(`CombatStage`)가
+   * 같은 적을 크게 그린다. 상태 표시줄은 전투 모드(내 줄 · '전투 중')로 그대로다.
+   */
+  enemyPlacement?: 'inline' | 'external';
 }
 
 const StatusBar = ({
@@ -183,6 +92,7 @@ const StatusBar = ({
   onCrystalClick,
   onOpenEquipment,
   placement,
+  enemyPlacement = 'inline',
 }: StatusBarProps) => {
   if (!player?.name) return null;
   const isColumn = placement === 'column';
@@ -232,7 +142,14 @@ const StatusBar = ({
             )}
           </div>
         </div>
-        <EnemyStatus enemy={enemy} enemyHitCrit={enemyHitCrit} defeated={enemyDefeated} />
+        {enemyPlacement === 'inline' && (
+          <EnemyStatus
+            enemy={enemy}
+            enemyHitCrit={enemyHitCrit}
+            defeated={enemyDefeated}
+            intent={enemyDefeated ? null : getEnemyIntent(player, enemy)}
+          />
+        )}
       </section>
     );
   }
