@@ -41,7 +41,7 @@ import PendingQuestRewardList from '../src/components/PendingQuestRewardList.tsx
 import QuestBoardPanel from '../src/components/tabs/QuestBoardPanel.tsx';
 import QuestTab from '../src/components/tabs/QuestTab.tsx';
 import SeasonPassPanel from '../src/components/tabs/SeasonPassPanel.tsx';
-import { renderStatic } from './helpers/render.ts';
+import { renderStatic, sliceElementByTestId } from './helpers/render.ts';
 
 /**
  * 2026-10 Wave 62 (원장 §61.4 C16, 소유자 원칙 "화면 · 로그가 말하는 것 = 엔진이 하는 것") — '빈손의 시작'(`noGold`)은 모든 골드
@@ -443,7 +443,7 @@ const renderedPreview = (event, choiceIndex, challengeModifiers) => {
     const marker = `data-testid="event-choice-preview-${choiceIndex}"`;
     const start = html.indexOf(marker);
     assert.ok(start >= 0);
-    return visibleText(html.slice(html.indexOf('>', start) + 1, html.indexOf('</div>', start))).trim();
+    return visibleText(sliceElementByTestId(html, `event-choice-preview-${choiceIndex}`)).trim();
 };
 
 test('한정 조우: 결과 줄 · 선택 미리보기의 골드 = 실제 골드 증가, 조사도 금액에 맞춘다', () => {
@@ -506,7 +506,7 @@ test('사건 미리보기: 폴백 거래 · 결과를 숨기는 사건의 골드
         const marker = `data-testid="event-choice-preview-${choiceIndex}"`;
         const start = html.indexOf(marker);
         assert.ok(start >= 0);
-        return visibleText(html.slice(html.indexOf('>', start) + 1, html.indexOf('</div>', start))).trim();
+        return visibleText(sliceElementByTestId(html, `event-choice-preview-${choiceIndex}`)).trim();
     };
 
     for (const transaction of STRUCTURED_FALLBACK_TRANSACTIONS) {

@@ -337,6 +337,76 @@ export interface EventPreviewContext {
     player?: ChallengeHolder;
 }
 
+/**
+ * 이벤트 선택지의 영향 점(2026-11 디자인 고도화 A6, 소유자 결정 Q3) — 이 선택이 **무엇을** 건드리는지만 말한다.
+ * 방향(얻음 · 잃음)과 크기는 말하지 않는다: 같은 자원이면 회복과 손실이 같은 점이다.
+ * 결과를 숨기는 폴백 이벤트(카드 · 수정 · 암호 상자)는 점도 숨긴다 — 이기는 칸만 골드 점을 들면 숨긴 결과가 드러난다.
+ * 순서는 `EVENT_STAKE_ORDER` 하나다(카드마다 같은 자리에 같은 점).
+ */
+export type EventStake = 'combat' | 'hp' | 'mp' | 'gold' | 'exp' | 'item' | 'relic' | 'buff' | 'stat' | 'status';
+
+export const EVENT_STAKE_ORDER: readonly EventStake[] = Object.freeze([
+    'combat', 'hp', 'mp', 'gold', 'exp', 'item', 'relic', 'buff', 'stat', 'status',
+]);
+
+const chainRewardStakes: Readonly<Record<string, EventStake>> = Object.freeze({
+    gold: 'gold',
+    item: 'item',
+    legendary_item: 'item',
+    relic: 'relic',
+    combat_bonus: 'buff',
+    stat_bonus: 'stat',
+});
+
+const addNumberStake = (stakes: Set<EventStake>, value: unknown, stake: EventStake) => {
+    const amount = Number(value);
+    if (Number.isFinite(amount) && amount !== 0) stakes.add(stake);
+};
+
+const collectOutcomeStakes = (stakes: Set<EventStake>, outcome: Partial<EventOutcome> | null | undefined) => {
+    if (!outcome) return;
+    if (outcome.elite === true || outcome.combat) stakes.add('combat');
+    addNumberStake(stakes, outcome.hp, 'hp');
+    addNumberStake(stakes, outcome.mp, 'mp');
+    addNumberStake(stakes, outcome.gold, 'gold');
+    addNumberStake(stakes, outcome.exp, 'exp');
+    if (outcome.item) stakes.add('item');
+    if (outcome.relic) stakes.add('relic');
+    if (outcome.buff) stakes.add('buff');
+    if (outcome.status) stakes.add('status');
+    const rewardStake = outcome.reward?.type ? chainRewardStakes[outcome.reward.type] : undefined;
+    if (rewardStake) stakes.add(rewardStake);
+};
+
+export const getEventChoiceStakes = (
+    event: PresentationEvent | null | undefined,
+    choiceIndex: number,
+): EventStake[] => {
+    if (!event || findStructuredFallbackHiddenEvent(event)) return [];
+    const stakes = new Set<EventStake>();
+    const outcome = findOutcome(event, choiceIndex);
+    if (event.isBossGaugeChallenge && outcome?.gaugeEffect === 'challenge') stakes.add('combat');
+    if (event.isDimensionGrave && outcome?.graveEffect === 'invade') stakes.add('combat');
+    if (event.isScout && (outcome?.scoutEffect === 'combat' || outcome?.scoutEffect === 'elite')) stakes.add('combat');
+    if (event.isBoundedEncounter) {
+        const encounter = BOUNDED_ENCOUNTERS.find((entry) => entry.id === event.boundedEncounterId);
+        const choice = encounter?.choices.find((entry) => entry.id === outcome?.choiceId);
+        if (choice) {
+            addNumberStake(stakes, choice.cost?.hp, 'hp');
+            addNumberStake(stakes, choice.cost?.mp, 'mp');
+            collectOutcomeStakes(stakes, choice.outcome as Partial<EventOutcome>);
+        }
+    } else {
+        collectOutcomeStakes(stakes, outcome);
+    }
+    const transaction = event.source === 'fallback' ? getStructuredFallbackTransaction(event.fallbackTransactionId) : null;
+    if (transaction?.choiceIndex === choiceIndex) {
+        stakes.add(transaction.cost.type === 'gold' ? 'gold' : 'item');
+        if (transaction.grossGold > 0) stakes.add('gold');
+    }
+    return EVENT_STAKE_ORDER.filter((stake) => stakes.has(stake));
+};
+
 export const getEventChoicePreview = (
     event: PresentationEvent | null | undefined,
     choiceIndex: number,

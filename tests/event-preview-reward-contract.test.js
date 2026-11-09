@@ -14,7 +14,7 @@ import { getEventChoicePreview } from '../src/utils/eventPresentation.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 import { createEventActions } from '../src/hooks/gameActions/eventActions.ts';
 import EventPanel from '../src/components/EventPanel.tsx';
-import { renderStatic } from './helpers/render.ts';
+import { renderStatic, sliceElementByTestId } from './helpers/render.ts';
 
 /**
  * 2026-10 Wave 62 — 이야기 · 사건 미리보기가 엔진이 바뀐 보상을 그대로 말한다.
@@ -45,7 +45,7 @@ const renderedPreview = (event, choiceIndex, props = {}) => {
     const marker = `data-testid="event-choice-preview-${choiceIndex}"`;
     const start = html.indexOf(marker);
     assert.ok(start >= 0);
-    return html.slice(html.indexOf('>', start) + 1, html.indexOf('</div>', start)).replace(/<[^>]+>/g, '');
+    return sliceElementByTestId(html, `event-choice-preview-${choiceIndex}`).replace(/<[^>]+>/g, '');
 };
 
 // ── C3 ────────────────────────────────────────────────────────────────────

@@ -17,6 +17,7 @@ import SkillTypeIcon from './icons/SkillTypeIcon';
 import ClassTree from './ClassTree';
 import SignalChip from './archive/SignalChip';
 import ActionButton from './ui/ActionButton';
+import ChoiceCard from './ui/ChoiceCard';
 
 interface SkillActions {
     chooseSkillBranch?: (skillName: string, choice: string) => void;
@@ -107,24 +108,22 @@ const GrowthDecision = ({
                     const choice = branch.choice as string;
                     const selected = selectedChoice === choice;
                     return (
-                        <button
+                        <ChoiceCard
                             key={choice}
-                            type="button"
+                            layout="tile"
                             data-testid={`skill-branch-choice-${skillName}-${choice}`}
                             data-selected={selected ? 'true' : 'false'}
                             aria-pressed={selected}
                             onClick={() => setSelectedChoice(choice)}
-                            data-active={selected ? 'true' : 'false'}
-                            className="ae-archive-tab is-tile min-h-[92px] rounded-ae-md px-3 py-2.5 text-left"
-                        >
-                            <div className="flex items-center justify-between gap-2">
-                                <span className="font-readable text-sm font-semibold text-ae-ink">{branch.label}</span>
-                                {selected && <Check size={14} aria-hidden="true" className="shrink-0 text-ae-ether-hi" />}
-                            </div>
-                            <div className="aether-type-body mt-2 font-readable leading-snug text-ae-ink-2">
-                                {formatSkillText(branch.desc)}
-                            </div>
-                        </button>
+                            emphasis={selected ? 'selected' : null}
+                            icon={(
+                                <span className="ae-choice-card-well">
+                                    {selected ? <Check size={15} strokeWidth={2.4} /> : <GitBranch size={15} strokeWidth={2} />}
+                                </span>
+                            )}
+                            title={branch.label}
+                            effect={formatSkillText(branch.desc)}
+                        />
                     );
                 })}
             </div>

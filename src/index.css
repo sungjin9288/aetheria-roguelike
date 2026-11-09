@@ -861,15 +861,6 @@
   backdrop-filter: blur(8px);
 }
 
-.aether-event-choice {
-  background:
-    linear-gradient(90deg, rgba(213, 177, 128, 0.11) 0%, rgba(17, 22, 30, 0.96) 36%, rgba(8, 12, 18, 0.99) 100%);
-  border: 1px solid rgba(213, 177, 128, 0.18);
-  box-shadow:
-    inset 3px 0 0 rgba(213, 177, 128, 0.58),
-    0 12px 24px rgba(2, 8, 14, 0.2);
-}
-
 .aether-craft-row {
   background:
     linear-gradient(90deg, rgba(251, 146, 60, 0.11) 0%, rgba(18, 23, 30, 0.96) 34%, rgba(8, 11, 16, 0.99) 100%);
@@ -1634,7 +1625,6 @@
 .aether-shop-row,
 .aether-log-row,
 .aether-status-metric,
-.aether-event-choice,
 .aether-craft-row,
 .aether-locked-row,
 .aether-choice-row { border-radius: var(--aether-r-card); }
@@ -1732,7 +1722,6 @@
 
 [data-readability-mode="high"] .aether-choice-row,
 [data-readability-mode="high"] .aether-craft-row,
-[data-readability-mode="high"] .aether-event-choice,
 [data-readability-mode="high"] .aether-result-strip,
 [data-readability-mode="high"] .aether-relic-decision-strip,
 [data-readability-mode="high"] .aether-run-reflection-strip,
@@ -3088,32 +3077,6 @@
   backdrop-filter: none;
 }
 
-.ae-event-choice.aether-event-choice {
-  border: 0;
-  background: linear-gradient(180deg, var(--aether-s4) 0%, var(--aether-s3) 100%);
-  box-shadow: inset 0 1px 0 var(--aether-rim), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
-  transition:
-    transform var(--aether-dur-press) var(--aether-ease),
-    box-shadow var(--aether-dur-ui) var(--aether-ease);
-}
-
-.ae-event-choice.aether-event-choice:hover {
-  box-shadow: inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.3), 0 4px 12px rgb(var(--aether-void-rgb) / 0.3);
-}
-
-.ae-event-choice.aether-event-choice:active {
-  transform: scale(0.985);
-}
-
-.ae-event-choice-arrow {
-  transition: transform var(--aether-dur-ui) var(--aether-ease), color var(--aether-dur-ui) var(--aether-ease);
-}
-
-.ae-event-choice:hover .ae-event-choice-arrow {
-  transform: translateX(2px);
-  color: var(--aether-gold);
-}
-
 .ae-event-art {
   opacity: 0.85;
   filter: drop-shadow(0 10px 20px rgb(var(--aether-void-rgb) / 0.45));
@@ -3125,15 +3088,8 @@
   .ae-town-facilities-chevron,
   .ae-mission-claim,
   .aether-route-topology-node,
-  .ae-quick-slot,
-  .ae-event-choice.aether-event-choice,
-  .ae-event-choice-arrow {
+  .ae-quick-slot {
     transition: none;
-  }
-
-  .ae-event-choice.aether-event-choice:active,
-  .ae-event-choice:hover .ae-event-choice-arrow {
-    transform: none;
   }
 }
 /* === /w3:field === */
@@ -3515,34 +3471,187 @@
 .ae-relic-decision[data-relic-tone="potential"] .ae-relic-decision-label { color: var(--aether-gold-text); }
 .ae-relic-decision[data-relic-tone="steady"] .ae-relic-decision-label { color: var(--aether-ether-hi); }
 
-.ae-relic-card {
+/* ── 선택 카드 하나의 문법(2026-11 디자인 고도화 A6, ui/ChoiceCard) — 유물 · 이벤트 · 회차 규칙 · 기술 분기 ──
+   아이콘 · 계열 빛 · 머리 · 이름 · 효과 한 줄 · 덧붙는 줄 · 대가 한 줄. 계열 색은 `--ae-choice-tone`(RGB 세 값) 하나다. */
+.ae-card.ae-choice-card {
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  overflow: hidden;
+  text-align: left;
+  color: var(--aether-ink);
   transition:
     transform var(--aether-dur-ui) var(--aether-ease),
     box-shadow var(--aether-dur-ui) var(--aether-ease),
     opacity var(--aether-dur-ui) var(--aether-ease);
 }
 
-/* 계열 빛 — 메달 뒤에서 카드 안쪽으로 번진다 */
-.ae-relic-card::after {
+.ae-choice-card[data-choice-layout="row"] {
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 12px;
+  min-height: 72px;
+  padding: 12px;
+}
+
+.ae-choice-card[data-choice-layout="tile"] {
+  grid-template-columns: minmax(0, 1fr);
+  align-content: start;
+  gap: 6px;
+  min-height: 4.5rem;
+  padding: 10px;
+}
+
+/* 계열 빛 — 아이콘 쪽에서 카드 안으로 번진다(row는 왼쪽, tile은 위) */
+.ae-choice-card::after {
   content: "";
   position: absolute;
   inset: 0;
   z-index: -1;
   border-radius: inherit;
   pointer-events: none;
-  background: radial-gradient(55% 95% at 0% 50%, rgb(var(--ae-relic-tone, var(--aether-ether-rgb)) / 0.16), transparent 72%);
+  background: radial-gradient(55% 95% at 0% 50%, rgb(var(--ae-choice-tone, var(--aether-ether-rgb)) / 0.16), transparent 72%);
 }
 
-/* 추천 카드 — 에테르 림 */
-.ae-relic-card[data-relic-recommended="true"] {
+.ae-choice-card[data-choice-layout="tile"]::after {
+  background: radial-gradient(90% 55% at 15% 0%, rgb(var(--ae-choice-tone, var(--aether-ether-rgb)) / 0.14), transparent 72%);
+}
+
+.ae-choice-card-icon {
+  display: inline-flex;
+  flex: none;
+  align-items: center;
+  justify-content: center;
+  color: rgb(var(--ae-choice-tone, var(--aether-ether-rgb)));
+}
+
+/* 그림이 없는 카드의 아이콘 우물 — 40px(row) · 28px(tile) */
+.ae-choice-card-well {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--aether-r-sm);
+  background: rgb(var(--ae-choice-tone, var(--aether-ether-rgb)) / 0.14);
+  box-shadow: inset 0 0 0 1px rgb(var(--ae-choice-tone, var(--aether-ether-rgb)) / 0.28);
+}
+
+.ae-choice-card[data-choice-layout="tile"] .ae-choice-card-well {
+  width: 28px;
+  height: 28px;
+}
+
+.ae-choice-card-body {
+  display: block;
+  min-width: 0;
+}
+
+.ae-choice-card-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 6px;
+}
+
+.ae-choice-card-title {
+  display: block;
+  font-size: var(--aether-type-heading);
+  font-weight: 800;
+  line-height: 1.3;
+}
+
+.ae-choice-card[data-choice-layout="tile"] .ae-choice-card-title {
+  font-size: var(--aether-type-meta);
+  font-weight: 700;
+  line-height: var(--aether-leading-meta);
+}
+
+.ae-choice-card-effect {
+  display: block;
+  margin-top: 2px;
+  font-size: var(--aether-type-body);
+  line-height: var(--aether-leading-body);
+}
+
+.ae-choice-card[data-choice-layout="tile"] .ae-choice-card-effect {
+  margin-top: 4px;
+  font-size: var(--aether-type-label);
+  line-height: var(--aether-leading-label);
+}
+
+.ae-choice-card-line {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+  margin-top: 6px;
+  font-size: var(--aether-type-meta);
+  font-weight: 600;
+  line-height: var(--aether-leading-meta);
+}
+
+.ae-choice-card-line + .ae-choice-card-line {
+  margin-top: 2px;
+}
+
+.ae-choice-card[data-choice-layout="tile"] .ae-choice-card-line {
+  margin-top: 4px;
+  font-size: var(--aether-type-label);
+  line-height: var(--aether-leading-label);
+}
+
+.ae-choice-card-line-icon {
+  display: inline-flex;
+  flex: none;
+  margin-top: 2px;
+}
+
+/* 이벤트 선택지의 영향 점(Q3) — 무엇이 걸렸는지만, 방향 · 크기는 말하지 않는다. 점은 모두 같은 색이다(색이 득실을 말하지 않게). */
+.ae-choice-dots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 10px;
+  margin-top: 6px;
+}
+
+.ae-choice-dot {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: var(--aether-type-label);
+  font-weight: 600;
+  line-height: var(--aether-leading-label);
+  color: var(--aether-ink-2);
+}
+
+.ae-choice-dot::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: var(--aether-ink-3);
+}
+
+/* 강조 하나 — 추천은 에테르 림, 고름은 에테르 테두리, 받을 대상은 금 림, 확정은 금빛 박자 */
+.ae-choice-card[data-choice-emphasis="recommended"] {
   box-shadow:
     inset 0 0 0 1px rgb(var(--aether-ether-rgb) / 0.5),
     0 0 22px rgb(var(--aether-ether-rgb) / 0.14),
     var(--aether-e2);
 }
 
-/* 상한에서 받을 유물로 고른 카드 */
-.ae-relic-card[data-relic-replace-target="true"] {
+.ae-choice-card[data-choice-emphasis="selected"] {
+  box-shadow:
+    var(--aether-e1),
+    inset 0 0 0 1.5px rgb(var(--aether-ether-hi-rgb) / 0.72),
+    0 0 16px rgb(var(--aether-ether-rgb) / 0.16);
+}
+
+.ae-choice-card[data-choice-emphasis="target"] {
   box-shadow:
     inset 0 0 0 1px rgb(var(--aether-gold-rgb) / 0.6),
     var(--aether-e2);
@@ -3555,7 +3664,7 @@
 }
 
 /* 확정 박자(GF-08) — 고른 카드가 금빛 림으로 빛난 뒤 받는다 */
-.ae-relic-card[data-relic-confirming="true"] {
+.ae-choice-card[data-choice-emphasis="confirming"] {
   animation: aeChoiceRelicConfirm var(--aether-dur-ui) var(--aether-ease) forwards;
   box-shadow:
     inset 0 0 0 1.5px rgb(var(--aether-gold-hi-rgb) / 0.75),
@@ -3563,17 +3672,32 @@
     var(--aether-e2);
 }
 
-.ae-relic-card:active {
+.ae-choice-card[data-choice-dimmed="true"] {
+  opacity: 0.55;
+}
+
+/* 세 열 배치(1024px 이상)에서는 줄 카드도 아이콘을 위로 쌓는다 — 카드가 나란히 놓인다 */
+@media (min-width: 1024px) {
+  .ae-choice-card[data-choice-layout="row"][data-choice-stack="lg"] {
+    grid-template-columns: minmax(0, 1fr);
+    align-content: start;
+    align-items: start;
+    gap: 10px;
+    padding: 14px;
+  }
+
+  .ae-choice-card[data-choice-layout="row"][data-choice-stack="lg"]::after {
+    background: radial-gradient(90% 55% at 15% 0%, rgb(var(--ae-choice-tone, var(--aether-ether-rgb)) / 0.16), transparent 72%);
+  }
+}
+
+.ae-choice-card:active {
   transform: scale(0.985);
 }
 
 @media (hover: hover) {
-  .ae-relic-card:hover {
+  .ae-choice-card:hover {
     transform: translateY(-1px);
-  }
-
-  .ae-relic-card:hover::before {
-    opacity: 0.85;
   }
 
   .ae-relic-replace:hover {
@@ -3581,33 +3705,12 @@
   }
 }
 
-.ae-relic-card-line {
-  display: flex;
-  align-items: flex-start;
-  gap: 6px;
-  margin-top: 6px;
-  font-size: var(--aether-type-meta);
-  font-weight: 600;
-  line-height: var(--aether-leading-meta);
-}
-
-.ae-relic-card-line + .ae-relic-card-line {
-  margin-top: 2px;
-}
-
-.ae-relic-card-line-icon {
-  flex: none;
-  margin-top: 2px;
+[data-readability-mode="high"] .ae-choice-card {
+  box-shadow: inset 0 0 0 1px var(--aether-rim), var(--aether-e1);
 }
 
 .ae-relic-replace {
   transition: background-color var(--aether-dur-ui) var(--aether-ease);
-}
-
-@media (min-width: 1024px) {
-  .ae-relic-card::after {
-    background: radial-gradient(90% 55% at 15% 0%, rgb(var(--ae-relic-tone, var(--aether-ether-rgb)) / 0.16), transparent 72%);
-  }
 }
 
 [data-readability-mode="high"] .ae-relic-decision {
@@ -3615,17 +3718,17 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .ae-relic-card,
+  .ae-choice-card,
   .ae-relic-replace {
     transition: none;
   }
 
-  .ae-relic-card:hover,
-  .ae-relic-card:active {
+  .ae-choice-card:hover,
+  .ae-choice-card:active {
     transform: none;
   }
 
-  .ae-relic-card[data-relic-confirming="true"] {
+  .ae-choice-card[data-choice-emphasis="confirming"] {
     animation: none;
   }
 }

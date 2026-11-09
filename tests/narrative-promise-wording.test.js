@@ -13,7 +13,7 @@ import { pickPermanentPlayerState } from '../src/utils/permanentProgress.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 import { createEventActions } from '../src/hooks/gameActions/eventActions.ts';
 import EventPanel from '../src/components/EventPanel.tsx';
-import { renderStatic } from './helpers/render.ts';
+import { renderStatic, sliceElementByTestId } from './helpers/render.ts';
 
 /**
  * 2026-10 Wave 62 — 강해지는 쪽 서사 문구 3건(원장 §61.4 · 소유자 답 §61.6 "서사는 문구").
@@ -47,7 +47,7 @@ const renderPreviewRow = (event, choiceIndex) => {
     const marker = `data-testid="event-choice-preview-${choiceIndex}"`;
     const start = html.indexOf(marker);
     assert.ok(start >= 0);
-    return html.slice(html.indexOf('>', start) + 1, html.indexOf('</div>', start)).replace(/<[^>]+>/g, '');
+    return sliceElementByTestId(html, `event-choice-preview-${choiceIndex}`).replace(/<[^>]+>/g, '');
 };
 
 // ── C2 ────────────────────────────────────────────────────────────────────

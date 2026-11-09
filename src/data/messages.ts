@@ -1032,6 +1032,11 @@ export const MSG = {
     EVENT_PREVIEW_BUFF_KEPT: '지금 걸린 강화가 더 강해 이 강화는 붙지 않음',
     // 2026-10: 일반 사건 미리보기 — 기력만 잃는 결과를 '생명 손실'로 말하던 결함.
     EVENT_PREVIEW_MP_LOSS: '기력 손실 위험',
+    // 2026-11 디자인 고도화 A6(Q3): 이벤트 선택지의 영향 점 — 무엇이 걸렸는지만, 방향 · 크기는 말하지 않는다.
+    EVENT_STAKE_LABELS: {
+        combat: '전투', hp: '생명', mp: '기력', gold: '골드', exp: '경험',
+        item: '아이템', relic: '유물', buff: '강화', stat: '능력치', status: '상태이상',
+    },
     ELITE_ENEMY_PREFIX: '정예',
     ELITE_ENEMY_NAME: (baseName: string) => `정예 ${baseName}`,
     // --- Wave 4 O2: 유물 선택 추천 사유 (빌드 공명 추첨과 표기를 맞춘다) ---

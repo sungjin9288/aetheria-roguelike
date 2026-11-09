@@ -1,4 +1,4 @@
-import { useEffect, useState, type CSSProperties, type Dispatch } from 'react';
+import { useEffect, useState, type Dispatch } from 'react';
 import { useReducedMotion } from 'framer-motion';
 import { Link2, Sparkles } from 'lucide-react';
 import { AT } from '../reducers/actionTypes';
@@ -13,6 +13,7 @@ import { formatRelicText, getRelicDisplayName } from '../utils/relicPresentation
 import { getRelicVisual } from '../utils/relicVisuals';
 import RelicIcon from './icons/RelicIcon';
 import ActionButton from './ui/ActionButton';
+import ChoiceCard, { ChoiceCardLine } from './ui/ChoiceCard';
 import Chip from './ui/Chip';
 import { useOverlayDialog } from '../hooks/useOverlayDialog';
 import type { FullStats, Player, Relic } from '../types/index.js';
@@ -191,11 +192,31 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                             const isConfirming = confirmingId !== null && confirmingId === relic.id;
                             const isReplaceTarget = replacementRelic != null && replacementRelic.id === relic.id;
                             const rarity = relic.rarity ?? 'common';
-                            const toneStyle = { '--ae-relic-tone': getRelicVisual(relic, isLegendaryComplete).tone } as CSSProperties;
+                            const emphasis = isConfirming ? 'confirming' : isReplaceTarget ? 'target' : isRecommended ? 'recommended' : null;
+                            const synergyLine = isLegendaryComplete ? (
+                                <ChoiceCardLine icon={<Sparkles size={13} />} className="text-ae-rarity-legendary">
+                                    {MSG.RELIC_SYNERGY_COMPLETE_LINE(synergy.legendaryHint!)}
+                                </ChoiceCardLine>
+                            ) : completesPair ? (
+                                <ChoiceCardLine data-testid={`relic-choice-${index}-pair`} icon={<Link2 size={13} />} className="text-ae-good">
+                                    {MSG.RELIC_SYNERGY_COMPLETE_LINE(completesPair)}
+                                </ChoiceCardLine>
+                            ) : hasNearLegendary ? (
+                                <ChoiceCardLine icon={<Link2 size={13} />} className="text-ae-gold-text">
+                                    {MSG.RELIC_NEAR_LEGENDARY_LINE(synergy.nearLegendary!)}
+                                </ChoiceCardLine>
+                            ) : startsCombo ? (
+                                <ChoiceCardLine data-testid={`relic-choice-${index}-start`} icon={<Link2 size={13} />} className="text-ae-ether-hi">
+                                    {MSG.RELIC_COMBO_START_LINE(startsCombo)}
+                                </ChoiceCardLine>
+                            ) : hasSynergy ? (
+                                <ChoiceCardLine icon={<Link2 size={13} className="text-ae-ether" />}>
+                                    {MSG.RELIC_EFFECT_PAIR_LINE(synergy.synergies.map(getRelicDisplayName).join(' · '))}
+                                </ChoiceCardLine>
+                            ) : null;
                             return (
-                                <button
+                                <ChoiceCard
                                     key={relic.id}
-                                    type="button"
                                     data-testid={`relic-choice-${index}`}
                                     data-relic-recommended={isRecommended ? 'true' : 'false'}
                                     data-relic-confirming={isConfirming ? 'true' : undefined}
@@ -203,13 +224,13 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                     onClick={() => handleSelect(relic)}
                                     aria-label={MSG.RELIC_CHOICE_CARD_LABEL(getRelicDisplayName(relic.name))}
                                     aria-pressed={isAtCapacity && pendingRelics.length > 1 ? isReplaceTarget : undefined}
-                                    style={toneStyle}
-                                    className={`ae-card ae-relic-card grid min-h-[82px] w-full grid-cols-[56px_minmax(0,1fr)] items-center gap-3 overflow-hidden p-3 text-left lg:grid-cols-1 lg:content-start lg:items-start lg:gap-2.5 lg:p-3.5${confirmingId && !isConfirming ? ' opacity-55' : ''}`}
-                                >
-                                    <RelicIcon relic={relic} size={56} completesLegendary={isLegendaryComplete} />
-
-                                    <span className="block min-w-0">
-                                        <span className="flex flex-wrap items-center gap-1">
+                                    stackOnDesktop
+                                    toneRgb={getRelicVisual(relic, isLegendaryComplete).tone}
+                                    emphasis={emphasis}
+                                    dimmed={confirmingId !== null && !isConfirming}
+                                    icon={<RelicIcon relic={relic} size={56} completesLegendary={isLegendaryComplete} />}
+                                    head={(
+                                        <>
                                             {isRecommended && (
                                                 <Chip tone="ether" icon={<Sparkles size={12} strokeWidth={2.2} />}>
                                                     {MSG.RELIC_CHOICE_RECOMMENDED}
@@ -225,46 +246,17 @@ const RelicChoicePanel = ({ pendingRelics, dispatch, player, stats }: RelicChoic
                                             )}
                                             {!isLegendaryComplete && completesPair && <Chip tone="good">{MSG.RELIC_PAIR_COMPLETE_BADGE}</Chip>}
                                             {!isLegendaryComplete && !completesPair && hasSynergy && <Chip>{synergy.label}</Chip>}
-                                        </span>
-                                        <span className={`mt-1.5 block aether-type-heading ${RARITY_CLASSES[rarity] || 'text-ae-ink'}`}>
-                                            {getRelicDisplayName(relic.name)}
-                                        </span>
-                                        <span className="mt-0.5 block aether-type-body text-ae-ink-2">
-                                            {formatRelicText(relic.desc)}
-                                        </span>
-                                        {isLegendaryComplete ? (
-                                            <span className="ae-relic-card-line text-ae-rarity-legendary">
-                                                <Sparkles size={13} aria-hidden="true" className="ae-relic-card-line-icon" />
-                                                {MSG.RELIC_SYNERGY_COMPLETE_LINE(synergy.legendaryHint!)}
-                                            </span>
-                                        ) : completesPair ? (
-                                            <span data-testid={`relic-choice-${index}-pair`} className="ae-relic-card-line text-ae-good">
-                                                <Link2 size={13} aria-hidden="true" className="ae-relic-card-line-icon" />
-                                                {MSG.RELIC_SYNERGY_COMPLETE_LINE(completesPair)}
-                                            </span>
-                                        ) : hasNearLegendary ? (
-                                            <span className="ae-relic-card-line text-ae-gold-text">
-                                                <Link2 size={13} aria-hidden="true" className="ae-relic-card-line-icon" />
-                                                {MSG.RELIC_NEAR_LEGENDARY_LINE(synergy.nearLegendary!)}
-                                            </span>
-                                        ) : startsCombo ? (
-                                            <span data-testid={`relic-choice-${index}-start`} className="ae-relic-card-line text-ae-ether-hi">
-                                                <Link2 size={13} aria-hidden="true" className="ae-relic-card-line-icon" />
-                                                {MSG.RELIC_COMBO_START_LINE(startsCombo)}
-                                            </span>
-                                        ) : hasSynergy ? (
-                                            <span className="ae-relic-card-line text-ae-ink-2">
-                                                <Link2 size={13} aria-hidden="true" className="ae-relic-card-line-icon text-ae-ether" />
-                                                {MSG.RELIC_EFFECT_PAIR_LINE(synergy.synergies.map(getRelicDisplayName).join(' · '))}
-                                            </span>
-                                        ) : null}
-                                        {(synergy.drawbacks?.length ?? 0) > 0 && (
-                                            <span data-testid={`relic-choice-${index}-drawback`} className="ae-relic-card-line text-ae-threat">
-                                                {MSG.RELIC_SYNERGY_DRAWBACK_LINE(synergy.drawbacks!.join(' · '))}
-                                            </span>
-                                        )}
-                                    </span>
-                                </button>
+                                        </>
+                                    )}
+                                    title={getRelicDisplayName(relic.name)}
+                                    titleClassName={RARITY_CLASSES[rarity] || 'text-ae-ink'}
+                                    effect={formatRelicText(relic.desc)}
+                                    lines={synergyLine}
+                                    cost={(synergy.drawbacks?.length ?? 0) > 0
+                                        ? MSG.RELIC_SYNERGY_DRAWBACK_LINE(synergy.drawbacks!.join(' · '))
+                                        : null}
+                                    costTestId={`relic-choice-${index}-drawback`}
+                                />
                             );
                         })}
                     </div>
