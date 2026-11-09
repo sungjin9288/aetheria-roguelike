@@ -116,6 +116,14 @@ test('Gauge: 종류 · 크기 클래스, 잔상은 지금 값보다 클 때만, 
     assert.doesNotMatch(healed, /data-gauge-part="trail"/u, '회복(잔상 < 지금 값)은 잔상이 없다');
     assert.doesNotMatch(healed, /data-gauge-part="ticks"/u);
 
+    // 2026-11 A1: 늦게 따라 주는 잔상은 지금 값과 같은 폭으로 채움 아래에 깔린다(지연 전환이 맞은 만큼을 잠깐 보인다).
+    const lagging = renderStatic(createElement(Gauge, { kind: 'life', value: 90, max: 200, lagTrail: true, label: '생명' }));
+    assert.match(lagging, /class="ae-gauge-trail" data-gauge-part="trail" aria-hidden="true" style="width:45%"/u);
+    assert.ok(lagging.indexOf('data-gauge-part="trail"') < lagging.indexOf('data-gauge-part="fill"'), '늦은 잔상도 채움 아래');
+    const both = renderStatic(createElement(Gauge, { kind: 'life', value: 60, max: 200, trail: 120, lagTrail: true, label: '생명' }));
+    assert.equal(both.split('data-gauge-part="trail"').length - 1, 1, '직전 값 잔상이 있으면 잔상은 하나');
+    assert.match(both, /data-gauge-part="trail" style="width:60%"/u);
+
     const empty = rootAttributes(renderStatic(createElement(Gauge, { kind: 'will', value: 5, max: 0, labelledBy: 'mp-label' })));
     assert.equal(empty['aria-labelledby'], 'mp-label');
     assert.equal(empty['aria-label'], undefined);

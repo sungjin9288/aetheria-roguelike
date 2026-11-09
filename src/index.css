@@ -397,15 +397,20 @@
     border-radius: inherit;
   }
 
+  /* 2026-11 A1 생명 막대 두 층: 앞 층은 곧바로(80ms) 줄고, 잔상이 200ms 뒤 400ms에 걸쳐 따라 준다(명세 지연 200 · 길이 300 ~ 500ms). */
   .ae-gauge > .ae-gauge-trail {
     background: var(--aether-life-trail);
     opacity: 0.75;
-    transition: width var(--aether-dur-panel) var(--aether-ease) 350ms;
+    transition: width 400ms var(--aether-ease) 200ms;
   }
 
   .ae-gauge > .ae-gauge-fill {
     box-shadow: 0 0 10px currentColor;
     transition: width var(--aether-dur-ui) var(--aether-ease);
+  }
+
+  .ae-gauge > .ae-gauge-trail ~ .ae-gauge-fill {
+    transition-duration: 80ms;
   }
 
   /* 10% 눈금 — 적 생명 막대용 */

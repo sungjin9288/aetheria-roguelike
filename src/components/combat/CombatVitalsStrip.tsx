@@ -33,6 +33,8 @@ const VitalMeter = ({ tone, label, value, max }: VitalMeterProps) => {
         max={safeMax}
         label={label}
         valueText={`${safeValue}/${safeMax}`}
+        // 2026-11 A1: 생명 막대는 두 층 — 앞 층은 곧바로 줄고 잔상이 늦게 따라 준다(맞은 만큼이 잠깐 보인다).
+        lagTrail={tone === 'hp'}
         className="ae-combat-vital-gauge min-w-0 flex-1"
         data-testid={`combat-player-${tone}-fill`}
       />
