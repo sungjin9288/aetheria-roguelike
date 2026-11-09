@@ -41,6 +41,15 @@ for (const viewport of VIEWPORTS) {
             await expect(chips.first()).toBeVisible();
             const count = await chips.count();
             expect(count).toBeGreaterThanOrEqual(8);
+            // 조작판 등장 박자(`animate-combat-start`, 260ms 내려오기) 동안은 칸의 경계 상자가 부동소수점으로 43.99997px가 된다 —
+            //   크기는 그대로이므로 박자가 끝난 뒤 잰다(끝없는 장식 애니메이션은 기다리지 않는다).
+            await chips.first().evaluate((chip) => Promise.all(document.getAnimations()
+                .filter((animation) => animation.effect?.getComputedTiming().iterations !== Infinity)
+                .filter((animation) => {
+                    const target = (animation.effect as KeyframeEffect | null)?.target;
+                    return target instanceof Element && target.contains(chip);
+                })
+                .map((animation) => animation.finished.catch(() => undefined))));
 
             const layout = await page.getByTestId('combat-focus-panel').evaluate((panel) => {
                 const rail = panel.querySelector('[data-testid="combat-skill-rail"]') as HTMLElement;
@@ -189,8 +198,10 @@ for (const viewport of VIEWPORTS) {
 
             // 명령 처리기(QA)의 다음 기술로 마지막 기술까지 고른다 — 칸을 누르지 않고 고른 기술만 바뀐다.
             const currentIndex = await chips.evaluateAll((nodes) => nodes.findIndex((node) => node.getAttribute('aria-current') === 'true'));
+            // 한 걸음마다 고른 칸이 옮겨진 것을 본 뒤 다음 명령을 보낸다 — 연달아 보내면 다시 그리기 전의 같은 기술에서 출발해 한 칸이 빠진다.
             for (let step = currentIndex; step < count - 1; step += 1) {
                 await page.evaluate(() => window.__AETHERIA_TEST_API__?.sendCommand?.('nextskill'));
+                await expect(chips.nth(step + 1)).toHaveAttribute('aria-current', 'true');
             }
             await expect(chips.last()).toHaveAttribute('aria-current', 'true');
             await expect.poll(() => rail.evaluate((node) => {
