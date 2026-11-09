@@ -120,8 +120,18 @@ const MobileGameLayout = ({
                     //   소유자 결정 2026-10-26 D14: 필드(조작판에 필드 독이 있을 때)에서는 임무 추적 · 신호 줄 · 독 두 줄이 240 최소 높이와 함께
                     //   390×844(안전 영역 47/34)에서 독 둘째 줄(이동 · 지도 · 정찰 · 가방)을 화면 밖으로 밀었다(탐험 뒤 최대 67px 넘침) —
                     //   필드에서는 96px까지 양보한다 — 375×812 mini에서 탐험 뒤 132px로도 28px 넘쳤다(기록 창은 여전히 flex-1이라 남는 높이를 그대로 채운다).
-                    stageEnemy ? (
-                        <div data-testid="combat-stage" className="ae-combat-stage-column order-1 flex min-h-[116px] min-w-0 flex-1 flex-col gap-1.5">
+                    // 무대(전투 A1 · 필드 A2)는 같은 칸 안에 조건부로 끼우고, 기록 창은 언제나 같은 자리에 둔다 — 갈래마다 따로 그리던 동안
+                    //   전투 ↔ 필드 ↔ 마을 전환마다 TerminalView가 다시 마운트되어 화면 낭독기 차례 알림의 생명 줄 · 기록 펼침 · 스크롤이 초기화됐다
+                    //   (e2e overlay-dialog-focus '전투 차례는 … 기록 줄을 더하지 않고 실린다').
+                    <div
+                        data-testid={stageEnemy ? 'combat-stage' : showFieldStage ? 'field-stage-column' : undefined}
+                        className={stageEnemy
+                            ? 'ae-combat-stage-column order-1 flex min-h-[116px] min-w-0 flex-1 flex-col gap-1.5'
+                            : showFieldStage
+                                ? 'ae-field-stage-column flex min-h-[96px] min-w-0 flex-1 flex-col gap-1.5'
+                                : `flex min-w-0 flex-1 flex-col ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px] [&:has(~*_.ae-town-facilities[open])]:min-h-[56px] [&:has(~*_.ae-field-dock)]:min-h-[96px]'}`}
+                    >
+                        {stageEnemy && (
                             <div className="ae-combat-stage-slot flex min-h-[116px] min-w-0 flex-1">
                                 <EnemyStatus
                                     enemy={stageEnemy}
@@ -132,38 +142,13 @@ const MobileGameLayout = ({
                                     intent={stageIntent}
                                 />
                             </div>
-                            <div className="ae-combat-log-strip flex min-w-0">
-                                <TerminalView
-                                    logs={engine.logs}
-                                    gameState={engine.gameState}
-                                    onCommand={engine.handleCommand}
-                                    player={engine.player}
-                                    quickSlots={engine.quickSlots}
-                                    onQuickSlotUse={handleQuickSlotUse}
-                                    maxHp={fullStats?.maxHp}
-                                />
-                            </div>
-                        </div>
-                    ) : showFieldStage ? (
-                        <div data-testid="field-stage-column" className="ae-field-stage-column flex min-h-[96px] min-w-0 flex-1 flex-col gap-1.5">
+                        )}
+                        {showFieldStage && (
                             <div className="ae-field-stage-slot flex min-h-0 min-w-0 flex-1">
                                 <FieldStage player={engine.player} logs={engine.logs} />
                             </div>
-                            <div className="ae-field-log-strip flex min-w-0">
-                                <TerminalView
-                                    logs={engine.logs}
-                                    gameState={engine.gameState}
-                                    onCommand={engine.handleCommand}
-                                    player={engine.player}
-                                    quickSlots={engine.quickSlots}
-                                    onQuickSlotUse={handleQuickSlotUse}
-                                    maxHp={fullStats?.maxHp}
-                                    hideScene
-                                />
-                            </div>
-                        </div>
-                    ) : (
-                        <div className={`flex min-w-0 flex-1 ${isCombat ? 'order-1 min-h-[132px]' : 'min-h-[240px] min-[740px]:min-h-[280px] [&:has(~*_.ae-town-facilities[open])]:min-h-[56px] [&:has(~*_.ae-field-dock)]:min-h-[96px]'}`}>
+                        )}
+                        <div className={stageEnemy ? 'ae-combat-log-strip flex min-w-0' : showFieldStage ? 'ae-field-log-strip flex min-w-0' : 'flex min-h-0 min-w-0 flex-1'}>
                             <TerminalView
                                 logs={engine.logs}
                                 gameState={engine.gameState}
@@ -172,9 +157,10 @@ const MobileGameLayout = ({
                                 quickSlots={engine.quickSlots}
                                 onQuickSlotUse={handleQuickSlotUse}
                                 maxHp={fullStats?.maxHp}
+                                hideScene={showFieldStage}
                             />
                         </div>
-                    )
+                    </div>
                 )
             )}
         {/* Focus state (SHOP/EVENT/etc.): ControlPanel fills all remaining space via flex-1
