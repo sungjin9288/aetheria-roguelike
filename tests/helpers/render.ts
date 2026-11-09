@@ -17,6 +17,30 @@ import type { Player } from '../../src/types';
 export const renderStatic = (element: ReactElement): string => renderToStaticMarkup(element);
 
 /**
+ * 렌더 문자열에서 `data-testid`가 붙은 요소 하나의 안쪽 HTML — 같은 태그의 중첩을 세어 그 요소의 닫는 태그까지 자른다.
+ * (2026-11 A6: 이벤트 미리보기가 선택 카드의 줄 `<span>`이 되어, 첫 `</div>`까지 자르던 방식이 다음 카드까지 읽었다.)
+ * 없으면 빈 문자열이다.
+ */
+export const sliceElementByTestId = (html: string, testId: string): string => {
+    const at = html.indexOf(`data-testid="${testId}"`);
+    if (at < 0) return '';
+    const tag = html.slice(html.lastIndexOf('<', at) + 1).match(/^[a-z0-9]+/u)?.[0] ?? 'div';
+    const innerStart = html.indexOf('>', at) + 1;
+    const pattern = new RegExp(`<(/?)${tag}\\b[^>]*>`, 'gu');
+    pattern.lastIndex = innerStart;
+    let depth = 1;
+    for (let match = pattern.exec(html); match; match = pattern.exec(html)) {
+        if (match[1]) {
+            depth -= 1;
+            if (depth === 0) return html.slice(innerStart, match.index);
+        } else if (!match[0].endsWith('/>')) {
+            depth += 1;
+        }
+    }
+    return html.slice(innerStart);
+};
+
+/**
  * `INITIAL_STATE.player`(gameReducer.ts, 실제 게임이 쓰는 기본값)를 베이스로 한
  * Player 픽스처. `src/types/player.ts`의 필드가 바뀌면 이 함수가 반환하는 값도
  * 함께 바뀌므로, signature 테스트의 픽스처가 실제 Player 셰이프와 갈라지지 않는다.

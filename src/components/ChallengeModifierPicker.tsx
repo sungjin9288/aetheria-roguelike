@@ -1,10 +1,11 @@
-import { ChevronDown, LockKeyhole } from 'lucide-react';
+import { ChevronDown, LockKeyhole, ScrollText } from 'lucide-react';
 import { BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
 import { getChallengeRewardPercent } from '../utils/challengeRules';
 import type { AscensionRulePreview, AscensionRuleRerollView } from '../utils/ascensionRuleView';
 import ActionButton from './ui/ActionButton';
 import Chip from './ui/Chip';
+import ChoiceCard from './ui/ChoiceCard';
 
 interface ChallengeModifierPickerProps {
     /** data-testid 접두어 — 인트로는 `intro`(기존 e2e 계약), 계승 화면은 `ascension`. */
@@ -51,19 +52,20 @@ const ChallengeModifierPicker = ({ testIdPrefix, selected, slots, onToggle, rule
                         {ruleOffer.map((card) => {
                             const isPicked = card.id === rule?.id;
                             return (
-                                <button
+                                <ChoiceCard
                                     key={card.id}
-                                    type="button"
+                                    layout="tile"
                                     data-testid={`${testIdPrefix}-rule-card-${card.id}`}
                                     data-selected={isPicked ? 'true' : 'false'}
                                     aria-pressed={isPicked}
                                     onClick={() => onSelectRule?.(card.id)}
-                                    className="ae-card ae-choice-option flex min-h-[4.5rem] min-w-0 flex-col justify-start px-2 py-2 text-left"
-                                >
-                                    <span className="aether-type-meta block break-keep font-bold leading-snug text-ae-ink">{card.name}</span>
-                                    <span className="aether-type-label mt-1 block leading-snug text-ae-ink-2">{card.twist}</span>
-                                    {card.optional && <span className="aether-type-label mt-1 block leading-snug text-ae-gold-text">{MSG.ASCENSION_RULE_CARD_OPTIONAL}</span>}
-                                </button>
+                                    toneRgb={card.optional ? 'var(--aether-gold-rgb)' : 'var(--aether-ether-rgb)'}
+                                    emphasis={isPicked ? 'selected' : null}
+                                    icon={<span className="ae-choice-card-well"><ScrollText size={15} strokeWidth={2} /></span>}
+                                    head={card.optional ? <Chip tone="gold">{MSG.ASCENSION_RULE_CARD_OPTIONAL}</Chip> : null}
+                                    title={card.name}
+                                    effect={card.twist}
+                                />
                             );
                         })}
                     </div>

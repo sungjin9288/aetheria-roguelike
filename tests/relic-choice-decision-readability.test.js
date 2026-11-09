@@ -169,8 +169,12 @@ test('RelicChoicePanel renders Korean decision labels and recommended marker', a
     assert.match(source, /formatRelicText/);
     assert.match(source, /<RelicIcon relic=\{relic\}/);
     // 2026-10 (감사 UX-11): 카드를 누르면 바로 받는데 다른 화면으로 넘어가는 듯한 꺾쇠(18px 칸)가 있었다 — 아이콘 · 본문 두 칸이다.
-    assert.match(source, /grid-cols-\[56px_minmax\(0,1fr\)\]/);
+    //   2026-11 A6: 카드는 공통 ChoiceCard의 row 배치(아이콘 · 본문 두 칸)다 — 꺾쇠는 패널에도 카드에도 없다.
+    assert.match(source, /<ChoiceCard\b/);
+    const cardSource = await readSrc('src/components/ui/ChoiceCard.tsx');
+    assert.match(cardSource, /data-choice-layout=\{layout\}/);
     assert.doesNotMatch(source, /ChevronRight/);
+    assert.doesNotMatch(cardSource, /ChevronRight/);
     assert.match(source, /max-h-\[calc\(100dvh-1rem\)\]/);
     assert.doesNotMatch(source, /현재 보유 유물과 직접 공명하는 효과는 없습니다|전설까지 -1|★ 전설 시너지/);
     assert.doesNotMatch(source, /Relic Archive|Legendary Synergy|Linked Relics|Near Legendary/);

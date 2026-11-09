@@ -20,7 +20,7 @@ import { createExploreActions } from '../src/hooks/gameActions/exploreActions.ts
 import { createEventActions } from '../src/hooks/gameActions/eventActions.ts';
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.ts';
 import EventPanel from '../src/components/EventPanel.tsx';
-import { renderStatic } from './helpers/render.ts';
+import { renderStatic, sliceElementByTestId } from './helpers/render.ts';
 
 /**
  * 2026-09 Wave 27 N1 — "이벤트 선택지를 눌렀는데 아무 일도 일어나지 않는다".
@@ -132,7 +132,7 @@ const renderedPreview = (event, choiceIndex) => {
     const marker = `data-testid="event-choice-preview-${choiceIndex}"`;
     const start = html.indexOf(marker);
     assert.ok(start >= 0, `선택 ${choiceIndex}의 미리보기가 그려져야 한다`);
-    return html.slice(start, html.indexOf('</div>', start));
+    return sliceElementByTestId(html, `event-choice-preview-${choiceIndex}`);
 };
 
 /**

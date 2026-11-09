@@ -1,9 +1,16 @@
 import { motion as Motion } from 'framer-motion';
-import { ArrowRight, BookOpen, CircleHelp, Gift, HeartPulse, ShieldAlert, type LucideIcon } from 'lucide-react';
+import { BookOpen, CircleHelp, Gift, HeartPulse, ShieldAlert, type LucideIcon } from 'lucide-react';
 import Chip from './ui/Chip';
+import ChoiceCard, { ChoiceCardLine } from './ui/ChoiceCard';
 import FocusPanelHeader from './FocusPanelHeader';
 import { MSG } from '../data/messages';
-import { formatEventText, getEventChoicePreview, getEventPanelCopy, type EventChoiceTone } from '../utils/eventPresentation';
+import {
+    formatEventText,
+    getEventChoicePreview,
+    getEventChoiceStakes,
+    getEventPanelCopy,
+    type EventChoiceTone,
+} from '../utils/eventPresentation';
 import { getLocationVisual } from '../utils/locationVisuals';
 import type { GameActions } from '../hooks/actionDeps';
 import type { GameEvent } from '../types/session.js';
@@ -33,12 +40,13 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModi
     const panelCopy = getEventPanelCopy(currentEvent);
     const locationVisual = location ? getLocationVisual(location) : null;
     // 2026-10 에테르 유리: 예상 결과의 색은 토큰 하나씩 — 보상 금 · 회복 초록 · 위험 장밋빛 · 이야기 보라 · 미상 잉크.
-    const previewStyle: Record<EventChoiceTone, { icon: LucideIcon; className: string }> = {
-        reward: { icon: Gift, className: 'text-ae-gold-text' },
-        recovery: { icon: HeartPulse, className: 'text-ae-good' },
-        danger: { icon: ShieldAlert, className: 'text-ae-threat' },
-        story: { icon: BookOpen, className: 'text-ae-exp' },
-        unknown: { icon: CircleHelp, className: 'text-ae-ink-2' },
+    // 아이콘 우물 · 계열 빛도 같은 토큰 채널이다(A6 선택 카드).
+    const previewStyle: Record<EventChoiceTone, { icon: LucideIcon; className: string; toneRgb: string }> = {
+        reward: { icon: Gift, className: 'text-ae-gold-text', toneRgb: 'var(--aether-gold-rgb)' },
+        recovery: { icon: HeartPulse, className: 'text-ae-good', toneRgb: 'var(--aether-good-rgb)' },
+        danger: { icon: ShieldAlert, className: 'text-ae-threat', toneRgb: 'var(--aether-threat-rgb)' },
+        story: { icon: BookOpen, className: 'text-ae-exp', toneRgb: 'var(--aether-exp-rgb)' },
+        unknown: { icon: CircleHelp, className: 'text-ae-ink-2', toneRgb: 'var(--aether-ink-3-rgb)' },
     };
     const panelBody = (
         <div data-testid="event-panel" className="relative flex flex-1 min-h-0 flex-col overflow-x-hidden overflow-y-auto custom-scrollbar">
@@ -64,43 +72,43 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModi
             <div data-testid="event-choice-list" className="mt-2 flex shrink-0 flex-col gap-2">
                 {choices.length > 0 ? choices.map((choice, idx) => {
                     const preview = getEventChoicePreview(currentEvent, idx, { activeBuff, player: { challengeModifiers } });
-                    const PreviewIcon = previewStyle[preview.tone].icon;
+                    const style = previewStyle[preview.tone];
+                    const PreviewIcon = style.icon;
+                    const stakeLabels = getEventChoiceStakes(currentEvent, idx).map((stake) => MSG.EVENT_STAKE_LABELS[stake]);
                     return (
-                        <button
+                        <ChoiceCard
                             key={`${choice}_${idx}`}
                             data-testid={`event-choice-${idx}`}
                             onClick={(event) => {
                                 event.currentTarget.blur();
                                 actions?.handleEventChoice(idx);
                             }}
-                            className="aether-event-choice ae-event-choice group min-h-[72px] rounded-ae-md px-3.5 py-3 text-left"
-                        >
-                            <div className="flex items-center gap-3">
-                                <div className="min-w-0 flex-1">
-                                    <div className="ae-eyebrow font-readable">선택 <span className="font-fira tabular-nums">{idx + 1}</span></div>
-                                    <div className="mt-0.5 font-readable text-[15px] font-bold leading-snug text-ae-ink">
-                                        {formatEventText(choice)}
-                                    </div>
-                                    <div
-                                        data-testid={`event-choice-preview-${idx}`}
-                                        className={`mt-1.5 flex items-start gap-1.5 font-readable text-[12px] font-semibold leading-snug ${previewStyle[preview.tone].className}`}
-                                    >
-                                        <PreviewIcon size={14} aria-hidden="true" className="mt-px shrink-0" />
-                                        <span>예상 결과 · {preview.text}</span>
-                                    </div>
-                                </div>
-                                <ArrowRight size={18} aria-hidden="true" className="ae-event-choice-arrow shrink-0 text-ae-ink-3" />
-                            </div>
-                        </button>
+                            toneRgb={style.toneRgb}
+                            icon={<span className="ae-choice-card-well"><PreviewIcon size={20} strokeWidth={2} /></span>}
+                            head={<span className="ae-eyebrow font-readable">선택 <span className="font-fira tabular-nums">{idx + 1}</span></span>}
+                            title={formatEventText(choice)}
+                            lines={(
+                                <>
+                                    <ChoiceCardLine data-testid={`event-choice-preview-${idx}`} className={style.className}>
+                                        예상 결과 · {preview.text}
+                                    </ChoiceCardLine>
+                                    {stakeLabels.length > 0 && (
+                                        <span data-testid={`event-choice-stakes-${idx}`} className="ae-choice-dots">
+                                            {stakeLabels.map((label) => (
+                                                <span key={label} className="ae-choice-dot">{label}</span>
+                                            ))}
+                                        </span>
+                                    )}
+                                </>
+                            )}
+                        />
                     );
                 }) : (
-                    <button
+                    <ChoiceCard
                         data-testid="event-dismiss"
                         onClick={() => actions?.dismissEvent?.()}
-                        className="aether-event-choice ae-event-choice min-h-[56px] rounded-ae-md px-4 py-4 text-left font-readable text-[15px] font-bold text-ae-ink"
-                    >
-                        이곳을 떠납니다.
-                    </button>
+                        title="이곳을 떠납니다."
+                    />
                 )}
             </div>
 

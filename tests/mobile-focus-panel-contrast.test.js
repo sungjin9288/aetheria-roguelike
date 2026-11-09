@@ -24,7 +24,7 @@ const NOOP_ACTIONS = new Proxy({}, { get: () => () => undefined });
 
 /**
  * 원래 계약 (각 assert가 지키던 것):
- *   1. src/index.css가 공유 대비 계약(.aether-focus-panel/.aether-event-choice/
+ *   1. src/index.css가 공유 대비 계약(.aether-focus-panel/.ae-choice-card(2026-11 A6 — 이벤트 선택지도 선택 카드)/
  *      .aether-craft-row/.aether-locked-row/.aether-lock-note, disabled:opacity:1,
  *      [data-readability-mode="high"] 오버라이드)을 정의한다.
  *   2. 잠기거나 비활성화된 포커스 패널 콘텐츠는 opacity-35/opacity-30/opacity-60/
@@ -32,7 +32,7 @@ const NOOP_ACTIONS = new Proxy({}, { get: () => () => undefined });
  *      aether-disabled-action 클래스로 표시된다 (읽기 가능성 유지).
  *   3. EventPanel/CraftingPanel/QuestBoardPanel/JobChangePanel/ShopPanel은 모두
  *      표준 모드에서 더 강한 대비의 aether-focus-panel(+ EventPanel은
- *      aether-event-choice)로 렌더링된다.
+ *      선택 카드 ae-choice-card)로 렌더링된다.
  *
  * 1은 CSS 파일 자체(계산된 스타일이 아니라 선언)라 렌더 대상이 없다 — 구조
  * 불변식(소스 텍스트)으로 유지한다. 2, 3은 실제로 그 클래스가 렌더링된 DOM에
@@ -46,7 +46,8 @@ test('mobile focus panels expose a shared contrast contract (index.css declarati
     const css = await readSrc('src/index.css');
 
     assert.match(css, /\.aether-focus-panel\s*\{/);
-    assert.match(css, /\.aether-event-choice\s*\{/);
+    assert.match(css, /\.ae-card\.ae-choice-card\s*\{/);
+    assert.match(css, /\[data-readability-mode="high"\]\s+\.ae-choice-card/);
     assert.match(css, /\.aether-craft-row\s*\{/);
     assert.match(css, /\.aether-locked-row\s*\{/);
     assert.match(css, /\.aether-lock-note\s*\{/);
@@ -110,7 +111,7 @@ test('EventPanel/CraftingPanel/QuestBoardPanel/JobChangePanel/ShopPanel은 표�
         actions: NOOP_ACTIONS, location: '시작의 마을',
     }));
     assert.ok(eventHtml.includes('aether-focus-panel'));
-    assert.ok(eventHtml.includes('aether-event-choice'));
+    assert.ok(eventHtml.includes('ae-choice-card'));
 
     const craftingHtml = renderStatic(createElement(CraftingPanel, {
         player, actions: NOOP_ACTIONS, setGameState: () => {}, onOpenArchiveConsole: () => {},
