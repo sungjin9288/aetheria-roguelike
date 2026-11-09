@@ -36,6 +36,7 @@ import DesktopGameLayout from './desktop/DesktopGameLayout';
 import { useDesktopLayout } from '../../hooks/useDesktopLayout';
 import ActionButton from '../ui/ActionButton';
 import ExpeditionDebriefCard from '../ExpeditionDebriefCard';
+import { getExpeditionChapterRecaps } from '../../utils/chapterRecap';
 import { usePlatformBackHandler } from '../../platform/platformBackRegistry';
 import { MAIN_CONTENT_ID } from '../../platform/modalFocus';
 import { useReturnSupplyRewardedAd } from '../../hooks/useReturnSupplyRewardedAd';
@@ -491,6 +492,7 @@ const GameRoot = ({
                         onPrimaryAction={runExpeditionReturnAction}
                         returnSupplyReward={returnSupplyReward}
                         daily={getDailyMissionSummary(engine.player, new Date())}
+                        chapterRecaps={getExpeditionChapterRecaps(engine.player, expeditionSummary.id)}
                     />
                 </Suspense>
             )}

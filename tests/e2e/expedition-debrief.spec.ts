@@ -202,6 +202,79 @@ test.describe('Expedition return debrief', () => {
     });
 });
 
+// 2026-11 B1 · B6 (명세 docs/CHAPTER_RECAP_DEATH_LORE_SPEC_2026-11.md §4.2): 원정 정리 시트의 장 결산 · 사망 화면의 돌기둥의 증언.
+const findClippedText = (root: Locator) => root.locator('*').evaluateAll((elements) => elements.flatMap((element) => {
+    if (!(element instanceof HTMLElement) || element.offsetParent === null) return [];
+    const hasOwnText = [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && Boolean(node.textContent?.trim()));
+    if (!hasOwnText) return [];
+    const style = getComputedStyle(element);
+    const clipsX = element.scrollWidth > element.clientWidth + 1 && style.overflowX !== 'visible';
+    const clipsY = element.scrollHeight > element.clientHeight + 1 && style.overflowY !== 'visible';
+    const ellipsis = style.textOverflow === 'ellipsis' && element.scrollWidth > element.clientWidth + 1;
+    return clipsX || clipsY || ellipsis ? [element.textContent?.trim() || ''] : [];
+}));
+
+const countGoldPrimary = (root: Locator) => root.evaluate((node) => node.querySelectorAll('[data-variant="primary"]').length);
+
+for (const width of [375, 390, 430]) {
+    test.describe(`Chapter recap · death lore @${width}`, () => {
+        test.beforeEach(async ({ page }) => {
+            await page.setViewportSize({ width, height: 844 });
+            await startE2ERun(page);
+        });
+
+        test('원정 정리 시트 맨 위에 그 원정의 장 결산 — 최신 2칸 + 외 1장, 넘침 · 잘림 0, 11px 이상, 금빛 주 행동 1개', async ({ page }) => {
+            expect(await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedChapterRecapScenario?.())).toBe(true);
+            const debrief = page.getByTestId('expedition-debrief-card');
+            await expect(debrief).toBeVisible({ timeout: 8_000 });
+            const recap = page.getByTestId('debrief-chapter-recap');
+            await expect(recap).toBeVisible();
+            const cards = page.getByTestId('debrief-chapter-recap-card');
+            await expect(cards).toHaveCount(2);
+            await expect(cards.first()).toContainText('3장');
+            await expect(cards.nth(1)).toContainText('2장');
+            await expect(page.getByTestId('debrief-chapter-recap-more')).toBeVisible();
+            await expect(recap).toContainText('전사');
+            await expect(recap).not.toContainText(/\b(?:LV|Lv|EXP|HP)\b/);
+
+            const widths = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth }));
+            expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+            expect(await findUndersizedText(recap)).toEqual([]);
+            expect(await findClippedText(recap)).toEqual([]);
+            expect(await countGoldPrimary(debrief)).toBe(1);
+
+            await debrief.screenshot({ path: `playtest-artifacts/expedition-return-flow/chapter-recap-${width}.png`, animations: 'disabled' });
+        });
+
+        for (const lore of ['new', 'known'] as const) {
+            test(`사망 화면의 돌기둥의 증언 — ${lore === 'new' ? '새 증언' : '이미 들은 증언'}, 잘림 0 · 11px 이상`, async ({ page }) => {
+                await page.emulateMedia({ reducedMotion: 'reduce' });
+                await page.evaluate((state) => window.__AETHERIA_TEST_API__?.injectRunSummary?.(state), lore);
+                const card = page.getByTestId('run-summary-card');
+                await expect(card).toBeVisible();
+                const panel = page.getByTestId('run-summary-death-lore');
+                await expect(panel).toBeVisible();
+                await expect(panel).toHaveAttribute('data-lore-new', lore === 'new' ? 'true' : 'false');
+                await expect(panel).toContainText(lore === 'new' ? '새 증언' : '이미 들은 증언');
+                await expect(page.getByTestId('run-summary-death-lore-count')).toHaveText(/^\d+\/\d+$/);
+                expect(await findUndersizedText(panel)).toEqual([]);
+                expect(await findClippedText(panel)).toEqual([]);
+                const widths = await page.evaluate(() => ({ viewport: window.innerWidth, document: document.documentElement.scrollWidth }));
+                expect(widths.document).toBeLessThanOrEqual(widths.viewport);
+                await panel.scrollIntoViewIfNeeded();
+                await panel.screenshot({ path: `playtest-artifacts/expedition-return-flow/death-lore-${lore}-${width}.png`, animations: 'disabled' });
+            });
+        }
+
+        test('증언이 없는 사망 요약에는 칸을 그리지 않는다', async ({ page }) => {
+            await page.emulateMedia({ reducedMotion: 'reduce' });
+            await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.('none'));
+            await expect(page.getByTestId('run-summary-card')).toBeVisible();
+            await expect(page.getByTestId('run-summary-death-lore')).toHaveCount(0);
+        });
+    });
+}
+
 test.describe('Class Journey encounter discovery', () => {
     test('지역 사건 선택을 안전 귀환 뒤 직업 여정에 한 번 기록한다', async ({ page }) => {
         await page.setViewportSize({ width: 390, height: 844 });

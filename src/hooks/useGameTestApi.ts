@@ -19,6 +19,9 @@ import type { GraveEntry } from '../utils/graveUtils';
 import type { RunSummary } from '../reducers/actionTypes';
 import { BALANCE, CONSTANTS } from '../data/constants';
 import { DB } from '../data/db';
+import { DEATH_LORE } from '../data/deathLore';
+import { DEATH_LORE_TOTAL } from '../utils/deathLore';
+import { createChapterProgress, type ChapterRecap } from '../utils/chapterRecap';
 import { BAG_RECIPES } from '../data/bagRecipes';
 import { MIRROR_NODES } from '../data/mirror';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
@@ -406,6 +409,11 @@ export interface AetheriaTestApi {
     seedTownRecoveryScenario: () => void;
     seedDailyMissionRewardScenario: () => boolean;
     seedExpeditionDebriefScenario: () => boolean | undefined;
+    /**
+     * 2026-11 B1: 원정 정리 시트 시드(`seedExpeditionDebriefScenario`) 위에 그 원정 중에 넘은 장 결산 셋(1 · 2 · 3장)을 싣는다 —
+     * 시트는 최신 2칸 + '외 1장'을 그린다. 큰 순간은 가장 긴 줄(구역 보스 이름 둘 + 외 N · 전직)로 채워 좁은 폭을 시험한다.
+     */
+    seedChapterRecapScenario: () => boolean;
     seedMilestoneStoryScenario: () => void;
     seedClassJourneyScenario: () => boolean;
     seedFirstDeathStoryScenario: () => void;
@@ -445,7 +453,8 @@ export interface AetheriaTestApi {
     injectEventChanceRelicChoice: () => boolean;
     injectStackedEventChanceRelicChoice: () => boolean;
     getCanonicalEventChanceRelicChoiceSnapshot: () => CanonicalEventChanceRelicChoiceSnapshot;
-    injectRunSummary: () => void;
+    /** 2026-11 B6: `lore`가 'known'이면 이미 들은 증언, 'none'이면 증언 칸 없음(기본은 새 증언). */
+    injectRunSummary: (lore?: unknown) => void;
     injectEvent: () => void;
     seedFallbackWagerScenario: (mode: unknown) => boolean;
     seedBoundedEncounterScenario: (region: string, encounterId: string) => boolean;
@@ -791,6 +800,18 @@ export const useGameTestApi = (
             killer: { name: Object.keys(DB.MONSTERS)[0] ?? '', hpPercent: 38 },
             essenceGained: 1240,
             previousBestLevel: 21,
+            // 2026-11 B6: 가장 긴 증언 줄 — 좁은 폭에서 잘리지 않는지 보는 값이다.
+            deathLore: (() => {
+                const longest = [...DEATH_LORE].sort((a, b) => b.text.length - a.text.length)[0];
+                return longest ? { id: longest.id, text: longest.text, isNew: true, collected: 7, total: DEATH_LORE_TOTAL } : null;
+            })(),
+        };
+        const withLoreState = (lore: unknown): RunSummary => {
+            if (lore === 'none') return { ...runSummaryScenario, deathLore: null };
+            if (lore === 'known' && runSummaryScenario.deathLore) {
+                return { ...runSummaryScenario, deathLore: { ...runSummaryScenario.deathLore, isNew: false } };
+            }
+            return runSummaryScenario;
         };
 
         const testApi: AetheriaTestApi = {
@@ -1638,6 +1659,36 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_EXPEDITION_DEBRIEF_OPEN, payload: true });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
             },
+            seedChapterRecapScenario: () => {
+                if (testApi.seedExpeditionDebriefScenario() === false) return false;
+                const er = engineRef.current;
+                const expeditionId = 'smoke-expedition-debrief';
+                const recap = (chapter: number, levelFrom: number, levelTo: number, moments: ChapterRecap['moments']): ChapterRecap => ({
+                    chapter, passed: [], expeditionId, levelFrom, levelTo, explores: 18 + chapter, kills: 31 + chapter, bossKills: chapter, relics: 1, moments,
+                });
+                // 이름은 지역 데이터의 구역 보스에서 읽는다(지도 순서 앞의 셋). 직업은 바로 위 시드가 세운 직업이다 — 그 디스패치는 아직
+                // engineRef에 반영되지 않았으므로 함수형 payload의 `p.job`으로 읽는다.
+                const bosses = Object.values(DB.MAPS).map((map) => map?.boss).filter((boss): boss is string => typeof boss === 'string' && boss.length > 0).slice(0, 3);
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (p: Player) => {
+                        const currentRun = p.stats?.currentRun;
+                        if (!currentRun) return p;
+                        const jobMoment: ChapterRecap['moments'] = p.job ? [{ kind: 'job', job: p.job }] : [];
+                        const chapters = {
+                            ...createChapterProgress(p.stats),
+                            reached: 4,
+                            recaps: [
+                                recap(1, 1, 8, [{ kind: 'story', count: 1 }]),
+                                recap(2, 8, 15, [{ kind: 'areaBoss', names: bosses.slice(0, 2), more: 1 }, ...jobMoment, { kind: 'signature', count: 1 }]),
+                                recap(3, 15, 20, [{ kind: 'areaBoss', names: bosses.slice(1, 3), more: 2 }, { kind: 'hunt', count: 2 }, { kind: 'eliteTitle', count: 3 }]),
+                            ],
+                        };
+                        return { ...p, stats: { ...p.stats, currentRun: { ...currentRun, chapters } } };
+                    },
+                });
+                return true;
+            },
             seedMilestoneStoryScenario: () => {
                 const er = engineRef.current;
                 er.dispatch({
@@ -2223,9 +2274,9 @@ export const useGameTestApi = (
                     eventChanceBonus: getAdditiveNumericRelicValue(relics, 'event_chance'),
                 };
             },
-            injectRunSummary: () => {
+            injectRunSummary: (lore?: unknown) => {
                 const er = engineRef.current;
-                er.dispatch({ type: AT.SET_RUN_SUMMARY, payload: runSummaryScenario });
+                er.dispatch({ type: AT.SET_RUN_SUMMARY, payload: withLoreState(lore) });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
             },
             injectEvent: () => {

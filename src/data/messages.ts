@@ -614,6 +614,7 @@ export const MSG = {
         crystals: '에테르 크리스탈',
         codex: '도감',
         signatureCollection: '전설 각인 수집',
+        deathLore: '돌기둥의 증언',
         unrecoveredGraves: '회수하지 못한 유해',
         level: '레벨',
         gear: '장비와 가방',
@@ -1623,6 +1624,12 @@ export const MSG = {
     // 사망 화면: 무엇에 쓰러졌는지 · 그 적이 얼마나 남았는지(정보만 — 추천은 붙이지 않는다).
     RUN_SUMMARY_KILLED_BY_LABEL: '나를 쓰러뜨린 적',
     RUN_SUMMARY_KILLER_HP: (percent: number) => `남은 생명 ${percent}%`,
+    // 2026-11 B6 돌기둥의 증언(`data/deathLore.ts`): 사망 화면의 한 칸 — 들은 증언과 모은 수(듣지 않은 줄의 자리 · 조건은 말하지 않는다).
+    DEATH_LORE_HEADING: '돌기둥의 증언',
+    DEATH_LORE_NEW: '새 증언',
+    DEATH_LORE_KNOWN: '이미 들은 증언',
+    DEATH_LORE_COUNT: (collected: number, total: number) => `${collected}/${total}`,
+    DEATH_LORE_ARIA: (collected: number, total: number) => `돌기둥의 증언 ${total}개 중 ${collected}개를 들었습니다`,
     // 사망 화면: 이번 회차에 끝낸 여정의 최고 레벨과 이번 여정(`utils/cycleBestLevel.ts`).
     RUN_SUMMARY_BEST_LEVEL: (best: number, level: number) => `이번 회차 최고 레벨 ${best} · 이번 여정 레벨 ${level}`,
     RUN_SUMMARY_BEST_LEVEL_NEW: (previous: number) => `이번 회차 최고 레벨 경신 · 이전 최고 레벨 ${previous}`,
@@ -1724,6 +1731,26 @@ export const MSG = {
     EXPEDITION_DEBRIEF_GOLD: '골드 변화',
     EXPEDITION_DEBRIEF_TIMES: (n: number) => `${n}회`,
     EXPEDITION_DEBRIEF_EYEBROW: '원정 기록',
+    // 2026-11 B1 장 결산(`utils/chapterRecap.ts` · `chapterRecapView.ts`): 원정 정리 시트 맨 위 칸 — 그 원정 중에 넘은 장의 기록.
+    //   지역 이름을 쓰지 않는다(길 잃은 여행에서도 그대로 보인다). 구역 보스 이름은 처치한 것이라 발견 원칙 안이다.
+    CHAPTER_RECAP_EYEBROW: '장 결산',
+    CHAPTER_RECAP_TITLE: (chapter: number, name: string) => `${chapter}장 · ${name}`,
+    CHAPTER_RECAP_ARIA: (chapter: number) => `${chapter}장 결산`,
+    CHAPTER_RECAP_LEVEL: (from: number, to: number) => `레벨 ${from} → ${to}`,
+    CHAPTER_RECAP_EXPLORES: (n: number) => `탐험 ${n}번`,
+    CHAPTER_RECAP_KILLS: (n: number, boss: number) => (boss > 0 ? `처치 ${n} · 보스 ${boss}` : `처치 ${n}`),
+    CHAPTER_RECAP_RELICS: (n: number) => `유물 ${n}개`,
+    CHAPTER_RECAP_MOMENTS_HEADING: '큰 순간',
+    CHAPTER_RECAP_MOMENT_AREA_BOSS: (names: readonly string[], more: number) => (
+        `구역 보스 격파 · ${names.join(' · ')}${more > 0 ? ` 외 ${more}` : ''}`
+    ),
+    CHAPTER_RECAP_MOMENT_STORY: (n: number) => `이야기 임무 ${n}개 완료`,
+    CHAPTER_RECAP_MOMENT_JOB: (job: string) => `${withJosa(job, '으로/로')} 전직`,
+    CHAPTER_RECAP_MOMENT_SIGNATURE: (n: number) => `새 전설 각인 ${n}개`,
+    CHAPTER_RECAP_MOMENT_HUNT: (n: number) => `토벌 의뢰 ${n}번 완수`,
+    CHAPTER_RECAP_MOMENT_ELITE_TITLE: (n: number) => `새 정예 칭호 ${n}개`,
+    CHAPTER_RECAP_PASSED: (passed: readonly number[]) => `지나친 장: ${passed.map((n) => `${n}장`).join(' · ')}`,
+    CHAPTER_RECAP_MORE: (n: number) => `외 ${n}장`,
     EXPEDITION_DEBRIEF_TITLE: '원정 귀환',
     EXPEDITION_DEBRIEF_LOWEST_HP: '가장 위험했던 순간',
     EXPEDITION_DEBRIEF_NEW_ITEMS: '새로 챙긴 것',

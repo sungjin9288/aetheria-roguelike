@@ -691,6 +691,12 @@ export const BALANCE = {
     RETURN_BRIEFING_HOURS: 2,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시 (2026-11 고도화 E1: 6 → 2, 사람 테스트로 다시 정한다)
     RETURN_BRIEFING_RESUME_LINES: 3,    // 복귀 브리핑 "멈춘 자리" 최대 줄 수
 
+    // 2026-11 B1 장 결산(`utils/chapterRecap.ts`, 명세 docs/CHAPTER_RECAP_DEATH_LORE_SPEC_2026-11.md §3)
+    CHAPTER_RECAP_MIN_EXPLORES: 1,      // 떠나는 장의 탐험이 이보다 적으면 결산하지 않고 '지나친 장'으로 접는다
+    CHAPTER_RECAP_MAX_MOMENTS: 3,       // 결산 한 칸의 큰 순간 최대 줄
+    CHAPTER_RECAP_MAX_CARDS: 2,         // 원정 정리 시트에 그리는 결산 칸 수(넘으면 '외 N장')
+    CHAPTER_RECAP_AREA_BOSS_NAMES: 2,   // 구역 보스 큰 순간에 적는 이름 수(넘으면 '외 N')
+
     // 리텐션 훅 — 심연 데일리 다이브
     ABYSS_DAILY_DIVE_MULT: 1.5,         // 혼돈의 심연 일일 첫 다이브 EXP/골드 배율
     ABYSS_DAILY_DIVE_COMBAT_COUNT: 5,   // 배율이 적용되는 하루 첫 전투 수 (1회는 체감 없음 — 리뷰 후속)

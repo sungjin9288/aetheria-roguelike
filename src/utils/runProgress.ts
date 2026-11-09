@@ -1,6 +1,7 @@
 import type { Player } from '../types/player.js';
 import { getEssenceLifetime, type EssenceMeta } from '../systems/essenceLedger.js';
 import type { JourneyCounterKey } from './journeyScope.js';
+import { createChapterProgress, readChapterProgress, type ChapterProgress } from './chapterRecap.js';
 
 export interface CurrentRunProgress {
     startedAt: number | null;
@@ -21,6 +22,11 @@ export interface CurrentRunProgress {
      * 이전 세이브에는 없다 — 그때는 모은 양을 그리지 않는다(지어내지 않는다).
      */
     essenceAtStart?: number;
+    /**
+     * 2026-11 B1 장 결산(`utils/chapterRecap.ts`): 이번 여정에서 들어선 가장 높은 장 · 그 장의 표식 · 굳힌 결산.
+     * 쓰는 곳은 이동(`advanceChapterOnEntry`) 하나다. 이전 세이브에는 없다 — 첫 이동에서 조용히 시작한다.
+     */
+    chapters?: ChapterProgress;
 }
 
 const JOURNEY_COUNTER_KEYS: readonly JourneyCounterKey[] = Object.freeze([
@@ -67,6 +73,7 @@ export const createCurrentRunProgress = (
     maxKillStreak: 0,
     countersAtStart: snapshotJourneyCounters(stats),
     ...readEssenceAtStart(options.essenceLifetime),
+    chapters: createChapterProgress(stats),
 });
 
 /**
@@ -84,7 +91,8 @@ export const normalizeCurrentRunProgress = (
     if (!isRecord(currentRun)) {
         // 2026-10 Wave 108: 여정 시작을 모르는 이전 세이브에는 카운터 기준점을 찍지 않는다 — 지금 값을 기준점으로
         //   찍으면 진행 중이던 업적 · 칭호 · 임무 진행이 0으로 떨어진다(평생 값 그대로 읽는다).
-        const { countersAtStart: _unknownStart, ...legacy } = createCurrentRunProgress(stats, { complete: false, startedAt: options.now });
+        //   장 진행도 같다(2026-11 B1) — 기준점 없는 결산을 지어내지 않고 첫 이동에서 조용히 시작한다.
+        const { countersAtStart: _unknownStart, chapters: _unknownChapters, ...legacy } = createCurrentRunProgress(stats, { complete: false, startedAt: options.now });
         return legacy;
     }
 
@@ -99,6 +107,8 @@ export const normalizeCurrentRunProgress = (
         maxKillStreak: toCount(currentRun.maxKillStreak),
         ...(readCountersAtStart(currentRun.countersAtStart) ? { countersAtStart: readCountersAtStart(currentRun.countersAtStart) } : {}),
         ...readEssenceAtStart(currentRun.essenceAtStart),
+        // 2026-11 B1: 필드마다 다시 짓는 함수라 장 진행을 명시적으로 넘긴다(빠뜨리면 불러올 때마다 1장으로 돌아가 같은 결산이 반복된다).
+        ...(readChapterProgress(currentRun.chapters) ? { chapters: readChapterProgress(currentRun.chapters)! } : {}),
     };
 };
 

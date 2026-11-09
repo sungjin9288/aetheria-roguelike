@@ -12,6 +12,7 @@ import type { DailyProtocol, DailyProtocolMissionType } from '../types/player.js
 import type { GameEvent, LeaderboardEntry, LiveConfig, LogEntry } from '../types/session.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
 import type { buildRunSummary } from '../utils/gameUtils.js';
+import type { DeathLoreView } from '../utils/deathLore.js';
 import type { GameMode } from './gameStates';
 
 export type UseCombatItemPayload = {
@@ -214,8 +215,11 @@ export const AT = Object.freeze({
 /** `SET_PLAYER`/`LOAD_DATA`가 넘기는 부분 갱신 — reducer가 `{...state.player, ...patch}`로 병합한다. */
 export type PlayerPatch = Partial<Player>;
 
-/** 런 요약(`state.runSummary`) — 생산자 `gameUtils.buildRunSummary`가 곧 정의다. */
-export type RunSummary = ReturnType<typeof buildRunSummary>;
+/**
+ * 런 요약(`state.runSummary`) — 생산자 `gameUtils.buildRunSummary`가 곧 정의다.
+ * `deathLore`(2026-11 B6)는 패배 전이(`settleNonVictory`)가 덧붙이는 이번 사망의 증언이고 저장되지 않는다.
+ */
+export type RunSummary = ReturnType<typeof buildRunSummary> & { deathLore?: DeathLoreView | null };
 
 /** `LOAD_DATA` — 클라우드/로컬 스냅샷을 `migrateData()`로 정규화한 결과(+ QA 시드). */
 export interface LoadDataPayload {
