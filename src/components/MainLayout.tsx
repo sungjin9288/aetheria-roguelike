@@ -7,6 +7,8 @@ interface MainLayoutProps {
   readabilityMode?: string;
   regionTheme?: RegionTheme | null;
   immersive?: boolean;
+  /** 2026-11 A5: 설정 '전투 속도'가 빠르게 — `data-combat-speed="fast"`가 CSS 연출 시간 변수(`--ae-combat-time`)를 절반으로 둔다. */
+  combatSpeedFast?: boolean;
 }
 
 /** React `CSSProperties`에 없는 커스텀 프로퍼티(지역 ambient 팔레트 변수) 2개만 더한 style 타입. */
@@ -20,7 +22,7 @@ type RegionAmbientStyle = CSSProperties & {
 //   시맨틱 컬러(행동/위험/보상)는 불변 — ambient 전용.
 // 2026-10 에테르 유리(VD-14): 바탕은 세 겹 — 앱 바탕(금 · 에테르 원광) · 지역 빛 · 비네트. 격자 · 빛 덩어리 셋 · 고리는 지웠다.
 //   셸의 고정폭 글꼴(font-mono)도 지웠다(VD-05) — 숫자만 `font-fira`가 Fira Code로 그린다.
-const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, immersive = false }: MainLayoutProps) => {
+const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, immersive = false, combatSpeedFast = false }: MainLayoutProps) => {
   const normalizedReadabilityMode = readabilityMode === 'high' ? 'high' : 'standard';
   const shellSpacing = immersive
     ? ''
@@ -31,6 +33,7 @@ const MainLayout = ({ children, visualEffect, readabilityMode, regionTheme, imme
       data-app-shell
       data-layout-mode={immersive ? 'immersive' : 'standard'}
       data-readability-mode={normalizedReadabilityMode}
+      data-combat-speed={combatSpeedFast ? 'fast' : 'normal'}
       data-region-theme={regionTheme?.key || 'haven'}
       style={{
         '--region-accent': regionTheme?.accent || 'var(--aether-gold)',

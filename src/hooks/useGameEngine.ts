@@ -240,6 +240,13 @@ export const useGameEngine = () => {
                     settings: { ...(currentPlayer.settings || {}), keyboardShortcutsEnabled: val === true },
                 }),
             }),
+            // 2026-11 디자인 고도화 A5: 전투 연출 속도(보통 · 빠르게) — 판정은 같다.
+            setCombatSpeed: (val: string) => dispatch({
+                type: AT.SET_PLAYER,
+                payload: (currentPlayer: Player) => ({
+                    settings: { ...(currentPlayer.settings || {}), combatSpeed: val === 'fast' ? 'fast' : 'normal' },
+                }),
+            }),
             // 2026-10 통합 감사(town-nav UX-09): 선택 없이 떠나면 지나친 이벤트를 기록에 남긴다 — 전이는 리듀서가 소유한다.
             dismissEvent: () => dispatch({ type: AT.LEAVE_EVENT }),
 

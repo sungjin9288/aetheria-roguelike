@@ -2018,6 +2018,13 @@ export const MSG = {
     SYSTEM_TOGGLE_STATE: (enabled: boolean) => (enabled ? '켜짐' : '꺼짐'),
     SYSTEM_HAPTICS_CHANGED: (enabled: boolean) => (enabled ? '진동을 켰습니다.' : '진동을 껐습니다.'),
     SYSTEM_SHORTCUTS_CHANGED: (enabled: boolean) => (enabled ? '한 글자 단축키를 켰습니다.' : '한 글자 단축키를 껐습니다.'),
+    // 2026-11 디자인 고도화 A5: 전투 속도 — 연출 시간만 바뀐다(판정 · 확률은 같다).
+    SYSTEM_COMBAT_SPEED_TITLE: '전투 속도',
+    SYSTEM_COMBAT_SPEED_DESC: '빠르게는 피해 숫자 · 반격 · 처치 · 보상 공개 연출을 절반 시간에 보입니다. 전투 결과와 확률은 같습니다.',
+    SYSTEM_COMBAT_SPEED_NORMAL: '보통 ×1',
+    SYSTEM_COMBAT_SPEED_FAST: '빠르게 ×2',
+    SYSTEM_COMBAT_SPEED_GROUP_ARIA: '전투 속도',
+    SYSTEM_COMBAT_SPEED_CHANGED: (label: string) => `전투 속도를 ${withJosa(label, '으로/로')} 바꿨습니다.`,
 
     // === 소유자 결정 2026-10-26 · 한 행동 처치 ===
     // D1: 적이 행동하기 전에 끝난 일반 전투의 결과는 조우 · 처치 · 전리품 한 장이다 — 그 시트의 이름표와 제목.

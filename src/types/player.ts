@@ -420,6 +420,8 @@ interface PlayerSettings {
     equipmentDetailMode?: 'auto' | 'summary' | 'full' | string;
     hapticsEnabled?: boolean;
     keyboardShortcutsEnabled?: boolean;
+    /** 2026-11 디자인 고도화 A5: 전투 연출 속도 — 없으면 보통(×1). 판정은 같고 연출 시간만 다르다. */
+    combatSpeed?: 'normal' | 'fast' | string;
 }
 
 export interface ExpeditionInventoryCheckpoint {

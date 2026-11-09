@@ -401,7 +401,7 @@
   .ae-gauge > .ae-gauge-trail {
     background: var(--aether-life-trail);
     opacity: 0.75;
-    transition: width 400ms var(--aether-ease) 200ms;
+    transition: width calc(400ms * var(--ae-combat-time, 1)) var(--aether-ease) calc(200ms * var(--ae-combat-time, 1));
   }
 
   .ae-gauge > .ae-gauge-fill {
@@ -410,7 +410,7 @@
   }
 
   .ae-gauge > .ae-gauge-trail ~ .ae-gauge-fill {
-    transition-duration: 80ms;
+    transition-duration: calc(80ms * var(--ae-combat-time, 1));
   }
 
   /* 10% 눈금 — 적 생명 막대용 */
@@ -794,7 +794,7 @@
 }
 
 .animate-shake {
-  animation: shake 0.5s cubic-bezier(.36, .07, .19, .97) both;
+  animation: shake calc(500ms * var(--ae-combat-time, 1)) cubic-bezier(.36, .07, .19, .97) both;
 }
 
 /* 펄스 글로우 (버프 활성) */
@@ -2339,13 +2339,19 @@
   .ae-combat-log-strip { display: none; }
 }
 
+/* 2026-11 디자인 고도화 A5: 설정 '전투 속도' — 빠르게면 전투 연출 시간(피해 숫자 · 번쩍임 · 치명타 흔들림 · 처치 흩어짐 · 생명 막대 잔상 ·
+   강타 흔들림 · 보상 큰 순간 빛)이 절반이다. 값은 `BALANCE.COMBAT_FAST_TIME_SCALE`과 같아야 한다(계약 테스트). 모션 감소 설정의 규칙은 그대로 이긴다. */
+[data-combat-speed="fast"] {
+  --ae-combat-time: 0.5;
+}
+
 /* 맞은 자리 피드백 — 초상 위에서 숫자가 떠오른다(24 ~ 32px · 700ms · 마지막 200ms 사라짐). 치명타는 1.5배 · 금빛. */
 .ae-stage-damage {
   font-size: 20px;
   line-height: 1;
   white-space: nowrap;
   text-shadow: 0 0 10px rgb(var(--aether-life-rgb) / 0.5), 0 2px 4px rgb(var(--aether-void-rgb) / 0.85);
-  animation: ae-stage-float 700ms cubic-bezier(.2, .8, .2, 1) forwards;
+  animation: ae-stage-float calc(700ms * var(--ae-combat-time, 1)) cubic-bezier(.2, .8, .2, 1) forwards;
 }
 
 .ae-stage-damage.is-crit {
@@ -2362,11 +2368,13 @@
 
 /* 맞는 순간 초상이 하얗게 번쩍인다(한 번 100ms — 초당 3회 상한은 공격 박자가 지킨다). 치명타는 잠깐 멈췄다(80ms) 흔들린다. */
 .ae-combat-stage[data-hit-state] .ae-stage-portrait {
-  animation: ae-stage-hit-flash 100ms ease-out 1;
+  animation: ae-stage-hit-flash calc(100ms * var(--ae-combat-time, 1)) ease-out 1;
 }
 
 .ae-combat-stage[data-hit-state="crit"] .ae-stage-portrait {
-  animation: ae-stage-hit-flash 100ms ease-out 1, ae-stage-crit-shake 200ms linear 80ms 1;
+  animation:
+    ae-stage-hit-flash calc(100ms * var(--ae-combat-time, 1)) ease-out 1,
+    ae-stage-crit-shake calc(200ms * var(--ae-combat-time, 1)) linear calc(80ms * var(--ae-combat-time, 1)) 1;
 }
 
 @keyframes ae-stage-hit-flash {
@@ -2383,7 +2391,7 @@
 
 /* 처치 순간 — 초상이 가라앉으며 흩어진다(≤ 400ms). 끝 모습은 위 GF-02 규칙(흑백 · 흐림)이다. */
 .ae-combat-stage[data-defeated="true"] .ae-stage-actor {
-  animation: ae-stage-dissolve 380ms ease-in forwards;
+  animation: ae-stage-dissolve calc(380ms * var(--ae-combat-time, 1)) ease-in forwards;
 }
 
 @keyframes ae-stage-dissolve {
@@ -2414,7 +2422,7 @@
   line-height: 1;
   white-space: nowrap;
   text-shadow: 0 2px 4px rgb(var(--aether-void-rgb) / 0.85);
-  animation: ae-stage-float 700ms cubic-bezier(.2, .8, .2, 1) forwards;
+  animation: ae-stage-float calc(700ms * var(--ae-combat-time, 1)) cubic-bezier(.2, .8, .2, 1) forwards;
 }
 
 /* 모션 감소 설정 — 흔들림 · 번쩍임 · 흩어짐 · 숨쉬기를 끄고 숫자는 그 자리에 남긴다(GF-11과 같다). */
@@ -4038,7 +4046,7 @@
 .ae-moment-sheet .aether-reveal-shimmer {
   animation:
     aeMomentRise var(--aether-dur-ui) var(--aether-ease) backwards,
-    aeMomentCoralPulse 1200ms var(--aether-ease) var(--aether-dur-ui) 1;
+    aeMomentCoralPulse calc(1200ms * var(--ae-combat-time, 1)) var(--aether-ease) var(--aether-dur-ui) 1;
 }
 
 /* 전리품 칸(2026-11 디자인 고도화 A3) — 묶음마다 하나, 등급은 테두리 색으로만(글자는 본문 색, 바탕은 무채색). */
