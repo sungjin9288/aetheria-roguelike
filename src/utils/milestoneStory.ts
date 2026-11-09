@@ -17,7 +17,7 @@ const MILESTONE_STORY_BEATS = {
         eyebrow: '첫 구역 보스 격파',
         title: '막혀 있던 길이 열렸다',
         body: '길을 짓누르던 거대한 기척이 사라졌다. 이제 이 땅은 두려운 장소가 아니라, 다시 찾아와 더 깊이 살필 수 있는 길이 되었다.',
-        closing: '마을로 돌아가 전리품을 정리하고 다음 권역을 준비하자.',
+        closing: '마을로 돌아가 전리품을 정리하고 다음 장을 준비하자.',
     },
     first_job_change: {
         eyebrow: '첫 전직',

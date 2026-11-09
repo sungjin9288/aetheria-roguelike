@@ -7,6 +7,7 @@ import {
     Flame,
     Footprints,
     Gem,
+    Landmark,
     MapPin,
     Radar,
     RotateCcw,
@@ -51,6 +52,7 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart, essence = null, o
     const analysis = getRunSummaryAnalysis(s);
     const reflection = getRunSummaryReflectionStrip(s, analysis);
     const killer = s.killer ?? null;
+    const deathLore = s.deathLore ?? null;
     const essenceGained = toCount(s.essenceGained);
     const heldEssence = toCount(essence);
     const previousBest = toCount(s.previousBestLevel);
@@ -145,6 +147,36 @@ const RunSummaryCard = ({ runSummary: s, storyBeat, onRestart, essence = null, o
                                         </span>
                                     )}
                                 </div>
+                            </div>
+                        </section>
+                    )}
+
+                    {deathLore && (
+                        <section
+                            data-testid="run-summary-death-lore"
+                            data-lore-new={deathLore.isNew ? 'true' : 'false'}
+                            className="ae-well mt-3 flex items-start gap-2.5 px-3 py-2.5"
+                        >
+                            <Landmark size={14} className="mt-0.5 shrink-0 text-ae-ether" aria-hidden="true" />
+                            <div className="min-w-0 flex-1">
+                                <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
+                                    <span className="font-readable text-[11px] font-bold text-ae-ether">{MSG.DEATH_LORE_HEADING}</span>
+                                    <span className="flex shrink-0 items-center gap-1.5">
+                                        <Chip tone={deathLore.isNew ? 'gold' : 'neutral'}>
+                                            {deathLore.isNew ? MSG.DEATH_LORE_NEW : MSG.DEATH_LORE_KNOWN}
+                                        </Chip>
+                                        <span
+                                            data-testid="run-summary-death-lore-count"
+                                            aria-label={MSG.DEATH_LORE_ARIA(deathLore.collected, deathLore.total)}
+                                            className="font-fira text-[11px] tabular-nums text-ae-ink-2"
+                                        >
+                                            {MSG.DEATH_LORE_COUNT(deathLore.collected, deathLore.total)}
+                                        </span>
+                                    </span>
+                                </div>
+                                <p data-testid="run-summary-death-lore-text" className="mt-1.5 font-readable text-[13px] leading-[1.5] text-ae-ink">
+                                    {deathLore.text}
+                                </p>
                             </div>
                         </section>
                     )}

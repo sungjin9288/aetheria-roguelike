@@ -13,6 +13,7 @@ import { checkDiscoveryChains } from './exploreFlow';
 import { CombatEngine } from '../../systems/CombatEngine';
 import { isAreaBossChallengeable, getAreaBossName } from '../../utils/bossGauge';
 import { finishExpedition, normalizeActiveExpedition, startExpedition } from '../../utils/expeditionLedger';
+import { advanceChapterOnEntry } from '../../utils/chapterRecap';
 import { resolveProgressionProfile, scaleProgressionExpReward } from '../../data/progressionProfiles';
 import type { Player } from '../../types';
 import type { GameActionDeps } from '../actionDeps';
@@ -73,6 +74,9 @@ export const createMoveActions = (deps: GameActionDeps) => {
                             resolveProgressionProfile(liveConfig?.progressionProfile),
                         );
                     }
+                    // 2026-11 B1: 더 높은 장의 지역에 들어서면 떠나는 장의 결산을 굳힌다(원정을 연 뒤라 새 원정 id가 붙는다).
+                    //   기록 줄 · 난수를 쓰지 않는다 — `nextPlayer.loc`은 아직 떠나는 자리다.
+                    nextPlayer = advanceChapterOnEntry(nextPlayer, loc);
                     return {
                         ...nextPlayer,
                         loc,

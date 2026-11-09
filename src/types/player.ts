@@ -85,6 +85,11 @@ interface PlayerStats {
      * (`collectSignatureLedger`), 읽는 곳은 `getSignatureLedger`(없으면 이전 세이브의 발견 흔적으로 채운다).
      */
     signatureLedger?: string[];
+    /**
+     * 2026-11 B6 돌기둥의 증언 (소유자 결정 2026-11-09): 들은 증언 id(들은 순서, 중복 없음) — 계정 단위라 사망 · 계승을 넘는다.
+     * 쓰는 곳은 패배 전이(`combatHandlers.settleNonVictory`) 하나, 운반은 `pickPermanentPlayerState`, 읽기는 `readDeathLoreLedger`.
+     */
+    deathLore?: string[];
     /** cycle 260: 수령 완료 퀘스트 영구 ledger. quest.id는 숫자(DB.QUESTS)와 문자열(bounty) 혼용. */
     claimedQuestIds?: Array<string | number>;
     explores?: number;

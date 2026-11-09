@@ -17,6 +17,8 @@ import type { ExpeditionReturnAction } from '../utils/expeditionReturnFlow.js';
 import type { DailyMissionSummary } from '../utils/protocolCycle.js';
 import type { MilestoneStoryBeat } from '../utils/milestoneStory.js';
 import ClassJourneySummary from './ClassJourneySummary';
+import ChapterRecapSection from './ChapterRecapSection';
+import type { ChapterRecap } from '../utils/chapterRecap.js';
 import ActionButton from './ui/ActionButton';
 import Gauge from './ui/Gauge';
 import MomentCloseButton from './moments/MomentCloseButton';
@@ -38,6 +40,8 @@ interface ExpeditionDebriefCardProps {
     returnSupplyReward?: ReturnSupplyRewardViewModel;
     /** 오늘의 임무 완료 수(2026-11 고도화 E2). */
     daily?: DailyMissionSummary;
+    /** 이 원정 중에 넘은 장의 결산(2026-11 B1, 최신이 먼저) — 시트 맨 위 칸. */
+    chapterRecaps?: readonly ChapterRecap[];
 }
 
 const formatDuration = (durationMs: number) => {
@@ -66,6 +70,7 @@ const ExpeditionDebriefCard = ({
     onPrimaryAction,
     returnSupplyReward,
     daily,
+    chapterRecaps = [],
 }: ExpeditionDebriefCardProps) => {
     usePlatformBackHandler(true, onClose, 70);
     const dialog = useOverlayDialog({ label: MSG.A11Y_DIALOG_EXPEDITION_DEBRIEF, onEscape: onClose });
@@ -123,6 +128,7 @@ const ExpeditionDebriefCard = ({
                 </header>
 
                 <div className="custom-scrollbar min-h-0 flex-1 overflow-y-auto px-4 pb-4">
+                    <ChapterRecapSection recaps={chapterRecaps} className="mb-3" />
                     <div className="grid grid-cols-2 gap-2">
                         {metrics.map(({ label, value, icon: Icon, tone }) => (
                             <div key={label} className="ae-moment-tile rounded-ae-md px-3 py-2.5">

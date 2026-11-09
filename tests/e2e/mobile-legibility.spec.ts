@@ -202,8 +202,10 @@ for (const viewport of VIEWPORTS) {
                 await page.screenshot({ path: 'playtest-artifacts/mobile-legibility/combat-390x844.png' });
             }
 
-            await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedExpeditionDebriefScenario?.());
+            // 2026-11 B1: 결산 칸이 있는 원정 정리 시트(seedExpeditionDebriefScenario + 장 결산 셋) — 결산 칸도 이 화면 목록에 든다.
+            await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedChapterRecapScenario?.());
             const debrief = page.getByTestId('expedition-debrief-card');
+            await expect(page.getByTestId('debrief-chapter-recap')).toBeVisible({ timeout: 8_000 });
             await expectReadableSurface(page, debrief);
             await expectTouchTarget(page.getByTestId('expedition-debrief-primary-action'));
             await expect(debrief).toHaveCSS('opacity', '1');

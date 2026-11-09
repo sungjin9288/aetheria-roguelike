@@ -61,6 +61,7 @@ const veteran = () => {
             codexBonusAtk: 3, codexBonusDef: 2, codexBonusHp: 15,
             claimedAchievements: ['ach_first_blood', 'ach_die_1'],
             ruleConquestRuleIds: ['worldtree_pilgrimage'],
+            deathLore: ['c1-f1', 'c2-s'],
         },
     };
 };
@@ -97,6 +98,8 @@ const KEPT = {
         && a.stats.visitedMaps.includes('버려진 광산'),
     unrecoveredGraves: (b, a, grave) => JSON.stringify(grave) === JSON.stringify(GRAVE),
     signatureCollection: (b, a) => isSignatureDiscovered(SURFACE_SIGNATURE, a) && getSignatureDiscoveryProgress(a).discovered === 1,
+    // 2026-11 B6: 들은 증언은 줄지 않는다(사망 전이는 그 사망의 증언을 더할 수 있다 — 여기서는 `handleDefeat`만 부르므로 같다).
+    deathLore: (b, a) => b.stats.deathLore.length > 0 && b.stats.deathLore.every((id) => (a.stats.deathLore || []).includes(id)),
 };
 const RESET = {
     level: (b, a) => a.level === 1,

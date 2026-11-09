@@ -140,8 +140,10 @@ for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }
         await expect(page.getByTestId('post-combat-card')).toBeVisible({ timeout: 8_000 });
         await expectNoClipping(page, '전투 결과 카드');
 
-        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedExpeditionDebriefScenario?.());
+        // 2026-11 B1: 결산 칸이 있는 원정 정리 시트(seedExpeditionDebriefScenario + 장 결산 셋) — 결산 칸도 이 화면 목록에 든다.
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedChapterRecapScenario?.());
         await expect(page.getByTestId('expedition-debrief-card')).toBeVisible({ timeout: 8_000 });
+        await expect(page.getByTestId('debrief-chapter-recap')).toBeVisible();
         await expectNoClipping(page, '원정 결산');
 
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.());

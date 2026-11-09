@@ -9,13 +9,12 @@ import { makeFeatureActionMap } from './handlers/featureHandlers';
 import type { CombatFeedback, Player, Item, Monster, PostCombatResult, Relic } from '../types';
 import type { LogEntry, GameEvent, LiveConfig, LeaderboardEntry } from '../types/session.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
-import type { buildRunSummary } from '../utils/gameUtils.js';
 import { createCurrentRunProgress } from '../utils/runProgress';
 import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
 import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
 import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
 import { settleSignatureAcquisitions } from './handlers/signatureAcquisition';
-import type { ActionOf, ActionType, GameAction } from './actionTypes';
+import type { ActionOf, ActionType, GameAction, RunSummary } from './actionTypes';
 import type { GameMode } from './gameStates';
 
 /**
@@ -57,7 +56,7 @@ export interface GameState {
     quickSlots: Array<Item | null>;
     postCombatResult: PostCombatResult | null;
     pendingRelics: Relic[] | null;
-    runSummary: ReturnType<typeof buildRunSummary> | null;
+    runSummary: RunSummary | null;
     expeditionDebriefOpen: boolean;
     questClaimReceipt: { key: string; questId: string | number; title: string } | null;
     economyReceipt: { key: string; type: 'buy'; itemName: string } | null;

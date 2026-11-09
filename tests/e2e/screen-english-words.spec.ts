@@ -84,8 +84,10 @@ test('실제 화면의 글자 · 화면 문구 속성에 영어 낱말이 없다
     await expectKoreanOnly(page, '유물 선택');
     await page.getByTestId('relic-choice-skip').click();
 
-    await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedExpeditionDebriefScenario?.());
+    // 2026-11 B1: 결산 칸이 있는 원정 정리 시트(seedExpeditionDebriefScenario + 장 결산 셋) — 결산 칸도 이 화면 목록에 든다.
+    await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedChapterRecapScenario?.());
     await expect(page.getByTestId('expedition-debrief-card')).toBeVisible({ timeout: 8_000 });
+    await expect(page.getByTestId('debrief-chapter-recap')).toBeVisible();
     await expectKoreanOnly(page, '원정 결산');
 
     await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.());

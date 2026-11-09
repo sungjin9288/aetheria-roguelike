@@ -7,6 +7,7 @@ import { resolveCombatActionTurn, type CombatActionTurnResult } from '../../syst
 import { resolveEndgameVictory } from '../../systems/endgameSettlement';
 import { appendGrave } from '../../utils/graveUtils.js';
 import { trackExpeditionVitals } from '../../utils/expeditionLedger';
+import { recordDeathLore } from '../../utils/deathLore';
 import { handleVictoryOutcome } from '../../hooks/combatActions/combatVictory';
 import { protocolActionMap } from './protocolHandlers';
 import { rewardActionMap } from './rewardHandlers';
@@ -250,10 +251,18 @@ const settleNonVictory = (
     const player = trackExpeditionVitals(result.kind === 'defeat'
         ? addNewTitles(result.player, logs)
         : result.player);
+    // 2026-11 B6 돌기둥의 증언: 패배 한 번에 증언 한 줄 — 장부를 쓰는 곳은 여기 하나다. 쓰러진 자리 · 적은 패배 전 상태에서 읽고,
+    //   장부는 새 여정 player(`pickPermanentPlayerState`가 운반한 계정 장부)에 남긴다. 기록 줄 · 난수를 쓰지 않는다.
+    const deathLore = result.kind === 'defeat'
+        ? recordDeathLore(player.stats?.deathLore, state.player.loc, state.enemy, player.stats?.deaths ?? 0)
+        : null;
+    const settledPlayer = deathLore
+        ? { ...player, stats: { ...player.stats, deathLore: deathLore.ledger } }
+        : player;
 
     return {
         ...state,
-        player,
+        player: settledPlayer,
         enemy: result.enemy,
         gameState: result.kind === 'defeat'
             ? GS.DEAD
@@ -265,7 +274,7 @@ const settleNonVictory = (
             : state.grave,
         // CombatActionTurnResult/CombatItemTurnResult.runSummary가 RunSummary(옵셔널)로 닫혔다 —
         // kind === 'defeat' 분기는 늘 채워 반환한다(두 systems 전이 모두 defeat에서 buildRunSummary 호출).
-        runSummary: result.kind === 'defeat' ? result.runSummary! : state.runSummary,
+        runSummary: result.kind === 'defeat' ? { ...result.runSummary!, deathLore: deathLore?.view ?? null } : state.runSummary,
         logs: appendCombatLogs(state.logs, logs, now, seed),
         quickSlots: consumedItem
             ? sanitizeConsumedQuickSlots(state.quickSlots, consumedItem, player.inv || [])
