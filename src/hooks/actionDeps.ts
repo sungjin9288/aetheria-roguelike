@@ -148,6 +148,7 @@ export interface EngineStableActions {
     setEquipmentDetailMode: (val: string) => void;
     setHapticsEnabled: (val: boolean) => void;
     setKeyboardShortcutsEnabled: (val: boolean) => void;
+    setCombatSpeed: (val: string) => void;
     dismissEvent: () => void;
 
     // --- 기능 액션 ---

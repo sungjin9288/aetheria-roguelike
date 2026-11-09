@@ -1,3 +1,4 @@
+import { BALANCE } from '../data/constants';
 import type { Player } from '../types/index.js';
 
 /**
@@ -13,4 +14,15 @@ export const isHapticsEnabled = (player: SettingsSource): boolean => player?.set
 
 export const isKeyboardShortcutsEnabled = (player: SettingsSource): boolean => (
     player?.settings?.keyboardShortcutsEnabled !== false
+);
+
+/**
+ * 전투 속도(2026-11 디자인 고도화 A5) — 기본은 보통(×1)이고 플레이어가 고른 경우(`'fast'`)만 ×2다.
+ * ×2는 **연출 시간만** 절반이다(판정 · 난수 · 기록 줄 · 입력 보호 시간은 같다). 연출 박자 · 결과 카드 · CSS 변수가 이 두 함수만 읽는다.
+ */
+export const isCombatSpeedFast = (player: SettingsSource): boolean => player?.settings?.combatSpeed === 'fast';
+
+/** 전투 연출 시간에 곱하는 배율 — 보통 1, 빠르게 `BALANCE.COMBAT_FAST_TIME_SCALE`. */
+export const getCombatTimeScale = (player: SettingsSource): number => (
+    isCombatSpeedFast(player) ? BALANCE.COMBAT_FAST_TIME_SCALE : 1
 );

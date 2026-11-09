@@ -6,7 +6,7 @@ import { GS } from './reducers/gameStates';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useDamageFlash } from './hooks/useDamageFlash';
 import { useGameFeedbackHaptics } from './hooks/useHapticFeedback';
-import { isHapticsEnabled } from './utils/playerSettings';
+import { getCombatTimeScale, isHapticsEnabled } from './utils/playerSettings';
 import { useGameTestApi } from './hooks/useGameTestApi';
 import { markPerfOnce, measurePerfOnce, markPerf } from './utils/performanceMarks';
 import { getCounterStagger } from './utils/combatPresentation';
@@ -64,7 +64,7 @@ function App() {
     const { damageFlash, healFlash, damageAmount } = useDamageFlash(
         engine.player?.hp,
         getPresentationKey(engine.presentationEpoch, appScreen),
-        getCounterStagger(engine.combatFeedback, reducedMotion),
+        getCounterStagger(engine.combatFeedback, reducedMotion, getCombatTimeScale(engine.player)),
     );
     // 2026-10-26 소유자 결정 D3: 진동(맞음 · 치명타 · 레벨 상승 · 사망) — 사망 화면에서도 살아 있는 여기서 부른다.
     //   전설 획득 진동은 그 화면을 띄우는 GameRoot가 부른다. 설정의 '진동'이 꺼져 있으면 울리지 않는다.

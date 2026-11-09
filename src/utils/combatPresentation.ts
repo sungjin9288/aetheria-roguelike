@@ -10,6 +10,8 @@ import type { CombatFeedback, DefeatedEnemySnapshot, Monster } from '../types/in
  *   counterDelayMs   적 반격 — 내 피격 숫자 · 붉은 테두리 · 적 강타 붉은 비네트와 흔들림
  *   killBeatMs       처치 순간 끝 — 결과 카드 · 유물 선택이 뜬다
  * 모션 감소 설정에서는 박자를 나누지 않고(지연 0) 처치 순간도 짧게 정지 표시한다.
+ * `timeScale`은 설정 '전투 속도'(2026-11 A5, `getCombatTimeScale`)의 배율이다 — 빠르게(0.5)면 네 박자가 모두 절반이다.
+ * 모션 감소 설정의 처치 정지(`KILL_BEAT_REDUCED_MS`)는 이미 최소라 줄이지 않는다.
  */
 export interface CombatBeatTiming {
     counterDelayMs: number;
@@ -18,11 +20,15 @@ export interface CombatBeatTiming {
     shakeMs: number;
 }
 
-export const getCombatBeatTiming = (reducedMotion: boolean): CombatBeatTiming => ({
-    counterDelayMs: reducedMotion ? 0 : BALANCE.ENEMY_TURN_DELAY_MS,
-    killBeatMs: reducedMotion ? BALANCE.KILL_BEAT_REDUCED_MS : BALANCE.KILL_BEAT_MS,
-    pulseMs: BALANCE.COMBAT_PULSE_MS,
-    shakeMs: BALANCE.COMBAT_SHAKE_MS,
+const scaleMs = (ms: number, timeScale: number): number => (
+    Number.isFinite(timeScale) && timeScale > 0 && timeScale < 1 ? Math.round(ms * timeScale) : ms
+);
+
+export const getCombatBeatTiming = (reducedMotion: boolean, timeScale = 1): CombatBeatTiming => ({
+    counterDelayMs: reducedMotion ? 0 : scaleMs(BALANCE.ENEMY_TURN_DELAY_MS, timeScale),
+    killBeatMs: reducedMotion ? BALANCE.KILL_BEAT_REDUCED_MS : scaleMs(BALANCE.KILL_BEAT_MS, timeScale),
+    pulseMs: scaleMs(BALANCE.COMBAT_PULSE_MS, timeScale),
+    shakeMs: scaleMs(BALANCE.COMBAT_SHAKE_MS, timeScale),
 });
 
 /**
@@ -50,9 +56,10 @@ export interface CounterStagger {
 export const getCounterStagger = (
     feedback: CombatFeedback | null | undefined,
     reducedMotion: boolean,
+    timeScale = 1,
 ): CounterStagger => ({
     key: feedback?.key ?? null,
-    delayMs: isCounterStaggered(feedback) ? getCombatBeatTiming(reducedMotion).counterDelayMs : 0,
+    delayMs: isCounterStaggered(feedback) ? getCombatBeatTiming(reducedMotion, timeScale).counterDelayMs : 0,
 });
 
 /** 화면 낭독기용 이번 차례 요약 — 눈으로 보는 숫자 연출과 같은 사실을 말한다(권고 없음). */

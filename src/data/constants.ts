@@ -245,6 +245,7 @@ export const BALANCE = {
     KILL_BEAT_REDUCED_MS: 150,      // 모션 감소 설정의 처치 순간 — 이동 없이 마지막 숫자만 정지 표시
     COMBAT_PULSE_MS: 320,           // 내 치명타(금색) · 적 강타(붉은색) 가장자리 비네트
     COMBAT_SHAKE_MS: 500,           // 적 강타 흔들림 — index.css `.animate-shake`(0.5s)와 같은 길이
+    COMBAT_FAST_TIME_SCALE: 0.5,    // 2026-11 디자인 고도화 A5: 설정 '전투 속도 ×2' — 전투 연출 시간에만 곱한다(판정 · 난수 · 입력 보호 불변). CSS는 `[data-combat-speed="fast"]`의 `--ae-combat-time`
     // cycle 195: MILESTONE_KILLS 제거 — checkMilestones에서 10/50/100을 inline 하드코딩하고 있어 dead config.
     //   향후 milestone 변경 시 checkMilestones 함수를 직접 수정하거나 이 상수 재도입 필요.
     INV_MAX_SIZE: 20,               // 인벤토리 최대 슬롯 수

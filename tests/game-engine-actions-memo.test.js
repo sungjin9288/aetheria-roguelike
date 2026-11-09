@@ -46,6 +46,7 @@ const STABLE_OWNED = [
     'setEquipmentDetailMode',
     'setHapticsEnabled',
     'setKeyboardShortcutsEnabled',
+    'setCombatSpeed',
     'dismissEvent',
     'setQuickSlot',
     'clearPostCombat',

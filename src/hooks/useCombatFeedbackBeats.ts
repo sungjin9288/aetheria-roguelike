@@ -57,6 +57,7 @@ interface Baseline {
 export const useCombatFeedbackBeats = (
     feedback: CombatFeedback | null | undefined,
     resetEpoch: number,
+    timeScale = 1,
 ): CombatFeedbackBeats => {
     const reducedMotion = Boolean(useReducedMotion());
     const [baseline, setBaseline] = useState<Baseline>({ epoch: resetEpoch, key: feedback?.key ?? null });
@@ -68,7 +69,7 @@ export const useCombatFeedbackBeats = (
     const fresh = feedback && feedback.key !== currentBaseline.key ? feedback : null;
 
     const [marks, setMarks] = useState<BeatMarks>(NO_MARKS);
-    const timing = getCombatBeatTiming(reducedMotion);
+    const timing = getCombatBeatTiming(reducedMotion, timeScale);
     const freshKey = fresh?.key ?? null;
     const counterDelay = isCounterStaggered(fresh) ? timing.counterDelayMs : 0;
     const { pulseMs, shakeMs, killBeatMs } = timing;

@@ -6,6 +6,7 @@ import {
     Crown,
     Download,
     Eye,
+    FastForward,
     Keyboard,
     ListTree,
     MessageSquare,
@@ -29,7 +30,7 @@ import { FeedbackValidator } from '../../systems/FeedbackValidator';
 import { trackRuntimeProductEvent } from '../../platform/productEventCoordinator';
 import { normalizeProductEventJob } from '../../platform/productEvents';
 import { MSG } from '../../data/messages';
-import { isHapticsEnabled, isKeyboardShortcutsEnabled } from '../../utils/playerSettings';
+import { isCombatSpeedFast, isHapticsEnabled, isKeyboardShortcutsEnabled } from '../../utils/playerSettings';
 import type { GameActions } from '../../hooks/actionDeps';
 import type { GameMode } from '../../reducers/gameStates';
 import ActionButton from '../ui/ActionButton';
@@ -77,6 +78,12 @@ const EQUIPMENT_DETAIL_OPTIONS = [
     { value: 'full', label: '상세' },
 ] as const;
 
+/** 2026-11 디자인 고도화 A5: 전투 속도 두 칸 — 연출 시간만 다르다(`getCombatTimeScale`). */
+const COMBAT_SPEED_OPTIONS = [
+    { value: 'normal', label: MSG.SYSTEM_COMBAT_SPEED_NORMAL },
+    { value: 'fast', label: MSG.SYSTEM_COMBAT_SPEED_FAST },
+] as const;
+
 const getQaValueLabel = (value: unknown) => QA_VALUE_LABELS[String(value)] || String(value || QA_VALUE_LABELS.unknown);
 
 /**
@@ -91,7 +98,7 @@ const hasUserAgentData = (
 /** SystemTab이 실제로 호출하는 액션만 좁혀 받는다 (설정/칭호/순위/관리자). */
 type SystemTabActions = Pick<GameActions,
     'leaderboard' | 'setReadabilityMode' | 'setEquipmentDetailMode' | 'setActiveTitle' | 'liveConfig' | 'getUid' | 'isAdmin'
-    | 'setHapticsEnabled' | 'setKeyboardShortcutsEnabled'
+    | 'setHapticsEnabled' | 'setKeyboardShortcutsEnabled' | 'setCombatSpeed'
 >;
 
 /** 2026-10-26 소유자 결정 D3 · D23: 켬/끔 두 칸(기본 켬) — 진동 · 한 글자 단축키가 같이 쓴다. */
@@ -195,6 +202,13 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         actions?.setEquipmentDetailMode?.(mode);
         const label = EQUIPMENT_DETAIL_OPTIONS.find((option) => option.value === mode)?.label || EQUIPMENT_DETAIL_OPTIONS[0].label;
         setNotice({ type: 'success', text: MSG.SYSTEM_EQUIPMENT_DETAIL_CHANGED(label) });
+    }, [actions]);
+
+    const combatSpeed = isCombatSpeedFast(player) ? 'fast' : 'normal';
+    const handleSetCombatSpeed = useCallback((speed: 'normal' | 'fast') => {
+        actions?.setCombatSpeed?.(speed);
+        const label = COMBAT_SPEED_OPTIONS.find((option) => option.value === speed)?.label || COMBAT_SPEED_OPTIONS[0].label;
+        setNotice({ type: 'success', text: MSG.SYSTEM_COMBAT_SPEED_CHANGED(label) });
     }, [actions]);
 
     const hapticsEnabled = isHapticsEnabled(player);
@@ -487,6 +501,30 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                 </button>
                             );
                         })}
+                    </div>
+                </div>
+
+                <div data-testid="combat-speed-settings" className="mt-4 border-t border-ae-ink/7 pt-4">
+                    <div className="flex items-start gap-3">
+                        <span className="ab-icon-well is-ether" aria-hidden="true"><FastForward size={16} /></span>
+                        <div className="min-w-0 flex-1">
+                            <div className="font-readable aether-type-strong text-ae-ink">{MSG.SYSTEM_COMBAT_SPEED_TITLE}</div>
+                            <p className="mt-0.5 font-readable aether-type-meta leading-snug text-ae-ink-3">{MSG.SYSTEM_COMBAT_SPEED_DESC}</p>
+                        </div>
+                    </div>
+                    <div className="ab-segment mt-3 grid-cols-2" role="group" aria-label={MSG.SYSTEM_COMBAT_SPEED_GROUP_ARIA}>
+                        {COMBAT_SPEED_OPTIONS.map((option) => (
+                            <button
+                                key={option.value}
+                                type="button"
+                                data-testid={`combat-speed-${option.value}`}
+                                aria-pressed={combatSpeed === option.value}
+                                onClick={() => handleSetCombatSpeed(option.value)}
+                                className="ab-segment-option font-readable"
+                            >
+                                {option.label}
+                            </button>
+                        ))}
                     </div>
                 </div>
 

@@ -47,6 +47,11 @@ interface PostCombatCardProps {
      * GameRoot가 넘긴다(`getPostCombatExploreAction`). 없으면 그 단추는 '닫기'다.
      */
     onExplore?: (() => void) | null;
+    /**
+     * 2026-11 디자인 고도화 A5: 설정 '전투 속도'의 배율(`getCombatTimeScale` — 보통 1, 빠르게 0.5). 숫자 증가 · 전리품 간격 ·
+     * 퇴장 시간에 곱한다. 주 행동 입력 보호(`POST_COMBAT_INPUT_GUARD_MS`)는 실수 방지라 곱하지 않는다.
+     */
+    timeScale?: number;
 }
 
 /** 닫기 단추를 누른 뒤 퇴장 애니메이션을 기다리는 시간(이전과 같은 값). */
@@ -59,7 +64,8 @@ const shouldAnimateReveal = (): boolean => {
 };
 
 // 2026-10 Wave 127(소유자 결정): 승리 뒤 "밀어붙인다 / 숨을 고른다" 선택은 없다 — 회복 · 강화는 낮은 확률의 이벤트(모닥불 등)로만 나온다.
-const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: PostCombatCardProps) => {
+const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null, timeScale = 1 }: PostCombatCardProps) => {
+    const revealScale = Number.isFinite(timeScale) && timeScale > 0 && timeScale < 1 ? timeScale : 1;
     const [isClosing, setIsClosing] = useState(false);
     usePlatformBackHandler(Boolean(result && onClose), () => onClose?.(), 40);
     // 2026-10 (감사 GF-10): 순서 공개 — 경험 · 골드가 0에서 값까지 늘고(utils/postCombatReveal.ts), 그 뒤 전리품이 차례로 나온다.
@@ -74,7 +80,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
         let startedAt: number | null = null;
         const tick = (now: number) => {
             if (startedAt === null) startedAt = now;
-            const progress = getRevealProgress(now - startedAt);
+            const progress = getRevealProgress((now - startedAt) / revealScale);
             setRevealProgress((current) => (current >= 1 ? current : progress));
             if (progress < 1) frame = window.requestAnimationFrame(tick);
         };
@@ -82,13 +88,13 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
         // rAF가 멈춘 창(숨은 탭)에서도 끝값으로 닫힌다.
         const settle = window.setTimeout(
             () => setRevealProgress(1),
-            POST_COMBAT_REVEAL_TIMING.countUpMs + POST_COMBAT_REVEAL_TIMING.settleGraceMs,
+            (POST_COMBAT_REVEAL_TIMING.countUpMs + POST_COMBAT_REVEAL_TIMING.settleGraceMs) * revealScale,
         );
         return () => {
             window.cancelAnimationFrame(frame);
             window.clearTimeout(settle);
         };
-    }, [animateReveal]);
+    }, [animateReveal, revealScale]);
 
     useEffect(() => {
         const timer = window.setTimeout(() => setInputReady(true), POST_COMBAT_INPUT_GUARD_MS);
@@ -167,7 +173,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
         closeTimerRef.current = window.setTimeout(() => {
             closeTimerRef.current = null;
             onClose?.();
-        }, POST_COMBAT_EXIT_MS);
+        }, POST_COMBAT_EXIT_MS * revealScale);
     };
 
     const handleClose = () => {
@@ -214,7 +220,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
     const shownGold = getCountUpValue(result.gold, revealProgress);
     const lootRevealClass = (base: string) => (playRevealMotion && revealDone ? base : '');
     const lootRevealStyle = (index: number) => (
-        playRevealMotion && revealDone ? { animationDelay: `${getLootRevealDelayMs(index)}ms` } : undefined
+        playRevealMotion && revealDone ? { animationDelay: `${getLootRevealDelayMs(index) * revealScale}ms` } : undefined
     );
     const canExplore = typeof onExplore === 'function';
     const primaryIsContinue = recommendation.target !== 'inventory';
@@ -238,7 +244,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 12 }}
-                        transition={{ duration: 0.16, ease: MOMENT_EASE }}
+                        transition={{ duration: 0.16 * revealScale, ease: MOMENT_EASE }}
                         className={sheetClassName}
                     >
                         <div className="space-y-2.5 px-4 pb-4 pt-3.5">
@@ -312,7 +318,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null }: 
                     initial={{ opacity: 0, y: 24, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: 16, scale: 0.97 }}
-                    transition={{ duration: 0.2, ease: MOMENT_EASE }}
+                    transition={{ duration: 0.2 * revealScale, ease: MOMENT_EASE }}
                     className={sheetClassName}
                 >
                     <div className="space-y-3 px-4 pb-4 pt-4">

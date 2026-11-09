@@ -17,6 +17,8 @@ type CritPulseTone = 'crit' | 'heavy';
 interface CritPulseProps {
     active: boolean;
     tone?: CritPulseTone;
+    /** 비네트 길이 — 설정 '전투 속도'를 반영한 박자(`getCombatBeatTiming().pulseMs`). */
+    durationMs?: number;
 }
 
 const PULSE_TONES: Record<CritPulseTone, { testId: string; background: string }> = {
@@ -30,7 +32,7 @@ const PULSE_TONES: Record<CritPulseTone, { testId: string; background: string }>
     },
 };
 
-const CritPulse = ({ active, tone = 'crit' }: CritPulseProps) => {
+const CritPulse = ({ active, tone = 'crit', durationMs = BALANCE.COMBAT_PULSE_MS }: CritPulseProps) => {
     const { testId, background } = PULSE_TONES[tone];
     return (
         <AnimatePresence>
@@ -41,7 +43,7 @@ const CritPulse = ({ active, tone = 'crit' }: CritPulseProps) => {
                     initial={{ opacity: 0 }}
                     animate={{ opacity: [0, 0.6, 0] }}
                     exit={{ opacity: 0 }}
-                    transition={{ duration: BALANCE.COMBAT_PULSE_MS / 1000, ease: 'easeOut' }}
+                    transition={{ duration: durationMs / 1000, ease: 'easeOut' }}
                     className="pointer-events-none fixed inset-0 z-[58]"
                     style={{ background }}
                 />

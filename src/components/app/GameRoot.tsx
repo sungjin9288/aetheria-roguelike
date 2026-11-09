@@ -6,8 +6,8 @@ import { useLegendaryDropDetector } from '../../hooks/useLegendaryDropDetector';
 import { useCombatFeedbackBeats } from '../../hooks/useCombatFeedbackBeats';
 import { useLevelUpCelebration } from '../../hooks/useLevelUpCelebration';
 import { usePresentationHaptic } from '../../hooks/useHapticFeedback';
-import { isHapticsEnabled } from '../../utils/playerSettings';
-import { getCombatStageView, getPresentedVisualEffect } from '../../utils/combatPresentation';
+import { getCombatTimeScale, isCombatSpeedFast, isHapticsEnabled } from '../../utils/playerSettings';
+import { getCombatBeatTiming, getCombatStageView, getPresentedVisualEffect } from '../../utils/combatPresentation';
 import { checkTitles, getTitleLabel } from '../../utils/gameUtils';
 import { getVisibleExpeditionSummary, getVisibleRegionTheme } from '../../utils/challengeRules';
 import { buildReturnBriefing } from '../../utils/returnBriefing';
@@ -196,7 +196,10 @@ const GameRoot = ({
 
     // 게임 필 감사 GF-01 · 02 · 06 · 11: 전투 연출은 리듀서의 차례 기록(combatFeedback)을 읽는다 — 기록 꼬리로 추측하지 않는다.
     //   내 치명타 = 금빛, 적 강타 = 붉은빛 + 흔들림(내 타격 뒤 박자), 처치 = 쓰러진 적을 잠깐 그린 뒤 결과 카드.
-    const beats = useCombatFeedbackBeats(engine.combatFeedback, engine.presentationEpoch);
+    //   2026-11 A5: 설정 '전투 속도'가 빠르게면 박자 · 비네트 · CSS 연출(`data-combat-speed`) · 결과 카드 공개가 절반 시간이다.
+    const combatTimeScale = getCombatTimeScale(engine.player);
+    const beats = useCombatFeedbackBeats(engine.combatFeedback, engine.presentationEpoch, combatTimeScale);
+    const pulseMs = getCombatBeatTiming(false, combatTimeScale).pulseMs; // 비네트 길이는 모션 감소와 무관하다
     const combatStage = getCombatStageView(engine.gameState === GS.COMBAT ? engine.enemy : null, beats.defeatedEnemy);
     const visualEffect = getPresentedVisualEffect(engine.visualEffect, beats.shake);
 
@@ -380,7 +383,7 @@ const GameRoot = ({
 
     return (
     <MotionConfig reducedMotion="user">
-        <MainLayout visualEffect={visualEffect} readabilityMode={readabilityMode} regionTheme={regionTheme}>
+        <MainLayout visualEffect={visualEffect} readabilityMode={readabilityMode} regionTheme={regionTheme} combatSpeedFast={isCombatSpeedFast(engine.player)}>
             {/* VD-14: 바탕은 MainLayout 한 곳(앱 바탕 · 지역 빛 · 비네트)이 그린다 — 여기서 같은 빛 번짐을 다시 깔지 않는다. */}
             <main id={MAIN_CONTENT_ID} tabIndex={-1} className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 focus-visible:outline-none">
                 {isDesktopLayout ? (
@@ -439,8 +442,8 @@ const GameRoot = ({
             {/* 2026-11 A1: 싸우는 동안 내 피해 · 회복 숫자는 조작판의 내 생명 막대 옆에서 뜬다(CombatVitalsStrip) — 화면 가운데에는 적 무대가 있다. */}
             {damageAmount && engine.gameState !== GS.COMBAT && <DamageNumber amount={damageAmount} />}
             <LevelUpBanner level={levelUpBanner} classChangeReady={isLevelUpClassChangeReady(levelUpBanner, classChangeReadyLevel)} />
-            <CritPulse active={beats.critPulse} />
-            <CritPulse active={beats.heavyPulse} tone="heavy" />
+            <CritPulse active={beats.critPulse} durationMs={pulseMs} />
+            <CritPulse active={beats.heavyPulse} tone="heavy" durationMs={pulseMs} />
             {/* GF-02: 처치 순간에는 손가락 아래가 이미 대기 화면(탐험 · 휴식 · 출발)이다 — 공격을 연타한 손이 그 단추를
                 누르지 않게 그 짧은 박자 동안 화면 입력을 받아 낸다(결과 카드 · 유물 선택은 박자 뒤에 연다). */}
             {combatStage.holdResultCards && (
@@ -471,6 +474,7 @@ const GameRoot = ({
                         onClose={() => engine.actions.clearPostCombat?.()}
                         onOpenInventory={() => handleOpenArchiveTab('inventory')}
                         onExplore={getPostCombatExploreAction(engine.gameState, engine.player, engine.actions.explore)}
+                        timeScale={combatTimeScale}
                     />
                 </Suspense>
             )}
