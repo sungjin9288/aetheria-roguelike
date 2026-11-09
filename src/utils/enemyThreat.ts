@@ -59,6 +59,34 @@ export const estimateEnemyMaxHit = (player: Player, enemy: Monster): number => {
     }
 };
 
+/** 다음 행동 예고의 종류(`CombatEngine.predictEnemyNextAction().type`). */
+export type EnemyTelegraphType = 'normal' | 'heavy' | 'guard' | 'stunned' | 'breath' | 'phase2_imminent' | 'phase3_imminent';
+
+/**
+ * 적의 다음 행동 한 번의 예상 피해(2026-11 디자인 고도화 A4 — 적 무대의 의도 표시).
+ *
+ * 가장 센 한 방(`estimateEnemyMaxHit`)과 같은 고정 굴림으로 엔진을 부르되, 페이즈를 미리 적용하지 않고 지금 상태(행동 수 ·
+ * 장기전 강화 · 저주 중첩 · 하수인 포함)로 예고한 행동만 굴린다 — 맹공이면 강타 확정, 브레스 차례면 브레스, 일반 · 방어
+ * 예고면 일반 공격(방어 예고는 공격할 때의 값이다). 페이즈 임박이면 다음 행동이 새 페이즈이므로 가장 센 한 방이다.
+ * 기절이면 행동하지 않아 null이다. 게임 난수를 쓰지 않는다.
+ */
+export const estimateEnemyNextHit = (player: Player, enemy: Monster, type: EnemyTelegraphType): number | null => {
+    if (type === 'stunned') return null;
+    if (type === 'phase2_imminent' || type === 'phase3_imminent') return estimateEnemyMaxHit(player, enemy);
+    const maxHp = Math.max(1, getEffectiveMaxHp(player));
+    const probe: Player = { ...player, hp: maxHp };
+    const foe: Monster = { ...enemy, stunnedTurns: 0, guarding: false };
+    const pattern = type === 'heavy' ? { guardChance: 0, heavyChance: 1 } : type === 'breath' ? foe.pattern : { guardChance: 0, heavyChance: 0 };
+    try {
+        const stats = calculateFullStats(probe);
+        if (!stats) return null;
+        const result = CombatEngine.enemyAttack(probe, { ...foe, pattern }, stats, probeRoll);
+        return Math.max(0, Math.floor(Number(result?.damage) || 0));
+    } catch {
+        return null;
+    }
+};
+
 export const toEnemyThreat = (player: Player, hit: number): EnemyThreat => {
     const maxHp = Math.max(1, getEffectiveMaxHp(player));
     const safeHit = Math.max(1, hit);

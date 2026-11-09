@@ -76,7 +76,9 @@ test.describe('Event choice location continuity', () => {
         await startE2ERun(page);
 
         await page.getByTestId('control-expedition-start').click();
-        await expect(page.getByTestId('terminal-location-visual')).toHaveAttribute(
+        // 2026-11 A2: 필드에서는 지역 그림을 기록 창 머리가 아니라 위쪽 필드 무대의 배경이 그린다(그림은 화면에 하나).
+        await expect(page.getByTestId('terminal-location-visual')).toHaveCount(0);
+        await expect(page.getByTestId('field-stage-backdrop')).toHaveAttribute(
             'data-location-visual',
             'quiet-forest',
         );

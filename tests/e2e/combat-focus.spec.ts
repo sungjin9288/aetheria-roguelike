@@ -18,9 +18,10 @@ test.describe('Combat focus mode', () => {
         await expect(enemyArt).toHaveAttribute('data-monster-art', 'exact');
         await expect(enemyArt).toHaveAttribute('data-region-family', 'forest');
         await expect(enemyArt.locator('img')).toHaveJSProperty('complete', true);
-        await expect(page.getByTestId('combat-forecast-strip')).toContainText('위협');
-        await expect(page.getByTestId('combat-forecast-strip')).toContainText('권장 대응');
-        await expect(page.getByTestId('combat-forecast-strip')).toContainText('예상 흐름');
+        const intent = page.getByTestId('enemy-intent');
+        await expect(intent).toBeVisible();
+        await expect(intent).toHaveAttribute('data-intent-kind', /^(attack|heavy|guard|stunned|breath|phase)$/);
+        await expect(intent).not.toContainText('권장 대응');
 
         const viewport = page.viewportSize();
         expect(viewport).not.toBeNull();

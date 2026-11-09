@@ -313,6 +313,10 @@ const GameRoot = ({
             onCrystalClick={(engine.player?.premiumCurrency || 0) > 0 ? () => setPremiumShopOpen(true) : null}
             onOpenEquipment={engine.gameState === GS.COMBAT ? null : handleOpenEquipment}
             placement={isDesktopLayout ? 'column' : 'bar'}
+            // 2026-11 A1: 휴대폰 전투에서는 가운데 무대가 적을 그린다(MobileGameLayout).
+            enemyPlacement={isDesktopLayout ? 'inline' : 'external'}
+            // 2026-11 A2: 골드 · 경험이 늘어난 순간 값 옆에 +N — 복원으로 바뀐 값은 띄우지 않는다.
+            presentationEpoch={engine.presentationEpoch}
         />
     );
 
@@ -384,6 +388,7 @@ const GameRoot = ({
                         <DesktopGameLayout
                             engine={engine}
                             fullStats={fullStats}
+                            damageAmount={damageAmount}
                             isPanelFocusState={isPanelFocusState}
                             mobileArchiveDockVisible={mobileArchiveDockVisible}
                             handleQuickSlotUse={handleQuickSlotUse}
@@ -406,6 +411,9 @@ const GameRoot = ({
                         <MobileGameLayout
                             engine={engine}
                             fullStats={fullStats}
+                            combatStage={combatStage}
+                            enemyHitCrit={beats.hitCrit}
+                            damageAmount={damageAmount}
                             isPanelFocusState={isPanelFocusState}
                             mobileArchiveDockVisible={mobileArchiveDockVisible}
                             handleQuickSlotUse={handleQuickSlotUse}
@@ -428,7 +436,8 @@ const GameRoot = ({
                 presentationEpoch={engine.presentationEpoch}
                 belowLevelUp={levelUpBanner != null}
             />
-            {damageAmount && <DamageNumber amount={damageAmount} />}
+            {/* 2026-11 A1: 싸우는 동안 내 피해 · 회복 숫자는 조작판의 내 생명 막대 옆에서 뜬다(CombatVitalsStrip) — 화면 가운데에는 적 무대가 있다. */}
+            {damageAmount && engine.gameState !== GS.COMBAT && <DamageNumber amount={damageAmount} />}
             <LevelUpBanner level={levelUpBanner} classChangeReady={isLevelUpClassChangeReady(levelUpBanner, classChangeReadyLevel)} />
             <CritPulse active={beats.critPulse} />
             <CritPulse active={beats.heavyPulse} tone="heavy" />

@@ -83,8 +83,11 @@ test.describe('Town decision hierarchy', () => {
         });
 
         await page.getByTestId('control-expedition-start').click();
-        await expect(locationVisual).toHaveAttribute('data-location-visual', 'quiet-forest');
-        await expect(locationVisual.locator('img')).toHaveAttribute('src', '/assets/locations/quiet-forest.png');
+        // 2026-11 A2: 필드에서는 지역 그림을 기록 창 머리가 아니라 위쪽 필드 무대의 배경이 그린다(그림은 화면에 하나).
+        await expect(locationVisual).toHaveCount(0);
+        const stageBackdrop = page.getByTestId('field-stage-backdrop');
+        await expect(stageBackdrop).toHaveAttribute('data-location-visual', 'quiet-forest');
+        await expect(stageBackdrop).toHaveAttribute('src', '/assets/locations/quiet-forest.png');
     });
 
     test('접힌 마을 시설을 열면 기존 기능을 모두 사용할 수 있다', async ({ page }) => {

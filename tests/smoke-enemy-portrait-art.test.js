@@ -96,10 +96,10 @@ test('smoke-gameplay는 초상 단정 전에 아트 <img> 로드 완료를 기�
     assert.match(helper[0], /naturalWidth\s*>\s*0/, '헬퍼가 naturalWidth를 기다리지 않는다');
     assert.match(helper[0], /svg path/, '헬퍼가 실루엣 fallback을 통과시키지 않는다');
 
-    const verify = source.match(/async function verifyCombatForecast\(page\)[\s\S]*?\n}\n/);
-    assert.ok(verify, 'verifyCombatForecast를 찾지 못했다');
+    const verify = source.match(/async function verifyCombatEnemyStage\(page\)[\s\S]*?\n}\n/);
+    assert.ok(verify, 'verifyCombatEnemyStage를 찾지 못했다');
     const waitIndex = verify[0].indexOf('await waitForEnemyPortraitArt(page)');
     const assertIndex = verify[0].indexOf('layout.portraitRendered');
-    assert.ok(waitIndex > 0, 'verifyCombatForecast가 초상 아트 로드를 기다리지 않는다');
+    assert.ok(waitIndex > 0, 'verifyCombatEnemyStage가 초상 아트 로드를 기다리지 않는다');
     assert.ok(assertIndex > waitIndex, '초상 단정이 아트 로드 대기보다 먼저 실행된다');
 });

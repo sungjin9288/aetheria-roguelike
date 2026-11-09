@@ -215,7 +215,8 @@ test('smoke verifies the rendered status, enemy, and log vocabulary', async () =
     assert.match(smoke, /Enemy status should use the player-facing target label/);
     assert.match(smoke, /Enemy portrait should remain visually identifiable/);
     assert.match(smoke, /Enemy portrait should render a monster family shape/);
-    assert.match(smoke, /Combat forecast labels should be at least 9px/);
+    assert.match(smoke, /Enemy intent should be at least 11px/);
+    assert.match(smoke, /Enemy intent should show information, not a recommended response/);
     assert.match(smoke, /Field log should expose at least one readable type badge/);
     assert.match(smoke, /Status command should use direct Korean metric labels/);
 });

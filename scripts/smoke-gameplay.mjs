@@ -229,7 +229,7 @@ async function verifyActionReachable(locator, label, options = {}) {
  * 디코드 완료 시점이 분리된다. 로드 완료를 기다리지 않고 naturalWidth를 읽으면
  * 머신 부하에 따라 "portraitRendered:false"로 깜빡이는 위양성이 난다.
  * 실루엣(svg path) fallback은 로드가 필요 없으므로 즉시 통과한다.
- * 타임아웃은 삼키고 실제 단정은 verifyCombatForecast의 ensure가 하도록 둔다 —
+ * 타임아웃은 삼키고 실제 단정은 verifyCombatEnemyStage의 ensure가 하도록 둔다 —
  * 아트가 진짜로 깨졌을 때(404/디코드 실패) 진단 가능한 메시지를 유지하기 위함이다.
  */
 async function waitForEnemyPortraitArt(page, timeout = 10000) {
@@ -246,43 +246,46 @@ async function waitForEnemyPortraitArt(page, timeout = 10000) {
   }
 }
 
-async function verifyCombatForecast(page) {
-  const forecast = page.locator('[data-testid="combat-forecast-strip"]');
+async function verifyCombatEnemyStage(page) {
   const enemyStatus = page.locator('[data-testid="enemy-status"]');
   const enemyPortrait = page.locator('[data-testid="enemy-portrait"]');
-  await forecast.waitFor({ state: 'visible', timeout: 5000 });
+  const enemyIntent = page.locator('[data-testid="enemy-intent"]');
   await enemyStatus.waitFor({ state: 'visible', timeout: 5000 });
   await enemyPortrait.waitFor({ state: 'visible', timeout: 5000 });
+  await enemyIntent.waitFor({ state: 'visible', timeout: 5000 });
   await waitForEnemyPortraitArt(page);
-  const text = await forecast.innerText();
   const enemyText = await enemyStatus.innerText();
-  const tone = await forecast.getAttribute('data-forecast-tone');
-  ensure(text.includes('위협'), 'Combat forecast should expose the current threat');
-  ensure(text.includes('권장 대응'), 'Combat forecast should expose the recommended response');
-  ensure(text.includes('예상 흐름'), 'Combat forecast should expose the expected flow');
+  const intentText = await enemyIntent.innerText();
+  const intentKind = await enemyIntent.getAttribute('data-intent-kind');
   ensure(enemyText.includes('교전 대상'), 'Enemy status should use the player-facing target label');
   ensure(enemyText.includes('생명'), 'Enemy status should use the player-facing health label');
   ensure(!/Target Lock|\bHP\b/.test(enemyText), 'Enemy status should not expose mechanical English labels');
-  ensure(!/\b(?:HP|MP|CD)\b|Combat Items|\d+T\b/.test(text), 'Combat forecast should not expose mechanical abbreviations');
-  ensure(['pressure', 'advantage', 'reward', 'steady'].includes(tone), 'Combat forecast should expose a known tone');
+  ensure(!/\b(?:HP|MP|CD)\b|\d+T\b/.test(intentText), 'Enemy intent should not expose mechanical abbreviations');
+  ensure(!/권장 대응|예상 흐름/.test(intentText), 'Enemy intent should show information, not a recommended response');
+  ensure(['attack', 'heavy', 'guard', 'stunned', 'breath', 'phase'].includes(intentKind), `Enemy intent should expose a known kind: ${intentKind}`);
 
-  const layout = await page.locator('[data-testid="persistent-status-bar"]').evaluate((statusBar) => {
-    const enemy = statusBar.querySelector('[data-testid="enemy-status"]');
-    const portrait = statusBar.querySelector('[data-testid="enemy-portrait"]');
+  const layout = await enemyStatus.evaluate((enemy) => {
+    const portrait = enemy.querySelector('[data-testid="enemy-portrait"]');
     const portraitPath = portrait?.querySelector('svg path');
     const portraitImage = portrait?.querySelector('img');
     const enemyLabels = [
-      statusBar.querySelector('[data-testid="enemy-status-label"]'),
-      statusBar.querySelector('[data-testid="enemy-health-label"]'),
+      enemy.querySelector('[data-testid="enemy-status-label"]'),
+      enemy.querySelector('[data-testid="enemy-health-label"]'),
     ].filter(Boolean);
-    const enemyValue = statusBar.querySelector('[data-testid="enemy-health-value"]');
-    const forecastLabels = [...document.querySelectorAll('[data-testid="combat-forecast-label"]')];
-    const forecastValues = [...document.querySelectorAll('[data-testid="combat-forecast-value"]')];
+    const enemyValue = enemy.querySelector('[data-testid="enemy-health-value"]');
+    const intentLabel = enemy.querySelector('[data-testid="enemy-intent-label"]');
     const fontSizes = (nodes) => nodes.map((node) => Number.parseFloat(getComputedStyle(node).fontSize));
     const portraitBox = portrait?.getBoundingClientRect();
+    // 무대 뒤 지역 그림(aria-hidden)은 흐림 가장자리를 숨기려고 일부러 1.06배로 넘친다 — 잘리는 장식이라 글 · 조작만 잰다.
+    const enemyBox = enemy.getBoundingClientRect();
+    const contentNodes = [...enemy.querySelectorAll('*')].filter((node) => !node.closest('[aria-hidden="true"]'));
+    const contentOverflow = contentNodes.reduce((worst, node) => {
+      const box = node.getBoundingClientRect();
+      if (box.width === 0) return worst;
+      return Math.max(worst, box.right - enemyBox.right, enemyBox.left - box.left);
+    }, 0);
     return {
-      enemyClientWidth: enemy?.clientWidth || 0,
-      enemyScrollWidth: enemy?.scrollWidth || 0,
+      enemyContentOverflow: Math.round(contentOverflow),
       portraitWidth: portraitBox?.width || 0,
       portraitHeight: portraitBox?.height || 0,
       portraitRendered: Boolean(
@@ -291,17 +294,15 @@ async function verifyCombatForecast(page) {
       ),
       enemyLabelSizes: fontSizes(enemyLabels),
       enemyValueSize: enemyValue ? Number.parseFloat(getComputedStyle(enemyValue).fontSize) : 0,
-      forecastLabelSizes: fontSizes(forecastLabels),
-      forecastValueSizes: fontSizes(forecastValues),
+      intentLabelSize: intentLabel ? Number.parseFloat(getComputedStyle(intentLabel).fontSize) : 0,
     };
   });
-  ensure(layout.enemyScrollWidth <= layout.enemyClientWidth + 1, `Enemy status should not overflow horizontally: ${JSON.stringify(layout)}`);
+  ensure(layout.enemyContentOverflow <= 1, `Enemy status should not overflow horizontally: ${JSON.stringify(layout)}`);
   ensure(layout.portraitWidth >= 44 && layout.portraitHeight >= 44, `Enemy portrait should remain visually identifiable: ${JSON.stringify(layout)}`);
   ensure(layout.portraitRendered, `Enemy portrait should render a monster family shape: ${JSON.stringify(layout)}`);
-  ensure(layout.enemyLabelSizes.length === 2 && layout.enemyLabelSizes.every((size) => size >= 10), `Enemy labels should be at least 10px: ${JSON.stringify(layout)}`);
+  ensure(layout.enemyLabelSizes.length === 2 && layout.enemyLabelSizes.every((size) => size >= 11), `Enemy labels should be at least 11px: ${JSON.stringify(layout)}`);
   ensure(layout.enemyValueSize >= 12, `Enemy health value should be at least 12px: ${JSON.stringify(layout)}`);
-  ensure(layout.forecastLabelSizes.length === 3 && layout.forecastLabelSizes.every((size) => size >= 9), `Combat forecast labels should be at least 9px: ${JSON.stringify(layout)}`);
-  ensure(layout.forecastValueSizes.length === 3 && layout.forecastValueSizes.every((size) => size >= 11), `Combat forecast values should be at least 11px: ${JSON.stringify(layout)}`);
+  ensure(layout.intentLabelSize >= 11, `Enemy intent should be at least 11px: ${JSON.stringify(layout)}`);
 
   if (isMobile) {
     const combatSurface = page.locator('[data-testid="combat-focus-panel"]');
@@ -315,9 +316,9 @@ async function verifyCombatForecast(page) {
       ensure(box && mobileViewport && box.y >= 0 && box.y + box.height <= mobileViewport.height + 1, `Combat ${key} action should stay in the first viewport: ${JSON.stringify(box)}`);
       ensure(box && box.height >= 44, `Combat ${key} action should retain a 44px touch target: ${JSON.stringify(box)}`);
     }
-    const encounterBox = await enemyStatus.boundingBox();
-    const forecastBox = await forecast.boundingBox();
-    ensure(encounterBox && forecastBox && encounterBox.y < forecastBox.y, 'Enemy stage should appear before the turn forecast');
+    const intentBox = await enemyIntent.boundingBox();
+    const attackBox = await page.locator('[data-testid="combat-action-attack"]').boundingBox();
+    ensure(intentBox && attackBox && intentBox.y + intentBox.height <= attackBox.y + 1, 'Enemy intent should appear above the combat actions');
   }
 }
 
@@ -1317,7 +1318,7 @@ async function driveExploreLoop(page, { requireEvent = true } = {}) {
     }
 
     if (state.gameState === 'combat' && state.enemy) {
-      await verifyCombatForecast(page);
+      await verifyCombatEnemyStage(page);
       await writeStateArtifact(`05-combat-${attempt + 1}`, state, page);
       await resolveCombat(page, observations);
       state = await waitForState(

@@ -13,9 +13,8 @@ import { AT } from '../src/reducers/actionTypes.ts';
 import { INITIAL_STATE, gameReducer } from '../src/reducers/gameReducer.ts';
 import { GS } from '../src/reducers/gameStates.ts';
 import { CombatEngine } from '../src/systems/CombatEngine.ts';
-import { getSkillElement, isDamagingSkill } from '../src/systems/skillPower.ts';
+import { getSkillElement, hitsEnemyWeakness, isDamagingSkill } from '../src/systems/skillPower.ts';
 import { buildEventPackage } from '../src/utils/aiEventUtils.ts';
-import { getCombatForecast } from '../src/utils/combatForecast.ts';
 import * as graveUtils from '../src/utils/graveUtils.ts';
 import { calculateFullStats } from '../src/utils/statsCalculator.ts';
 
@@ -148,42 +147,31 @@ test('③ 확률 침공은 없다 — 저장/실효 공격력 비대칭이 들�
     }
 });
 
-// ── ④ 전투 예고의 약점 표시 ───────────────────────────────────────────────────
+// ── ④ 약점 표시 ─────────────────────────────────────────────────────────────
+// 2026-11 A4: 전투 예고(판단 요약 세 칸)는 지웠다 — 약점 표시는 전투 기술 칸(`getCombatSkillTray`)이 같은 판정
+//   `hitsEnemyWeakness`(systems/skillPower.ts)를 읽어 보인다. 이 절은 그 판정이 엔진의 원소 배율과 같다는 것을 지킨다.
 
-const forecastPlayer = { ...structuredClone(INITIAL_STATE.player), hp: 100, maxHp: 100, mp: 9_999, maxMp: 9_999 };
 const forecastEnemy = { name: '표적', baseName: '표적', hp: 100, maxHp: 100, atk: 10, def: 0, level: 10, pattern: { guardChance: 0, heavyChance: 0 } };
-const forecastFor = (skill, stats, weakness) => getCombatForecast({
-    player: { ...forecastPlayer, skillLoadout: { selected: 0, cooldowns: {} } },
-    enemy: { ...forecastEnemy, weakness },
-    stats,
-    selectedSkill: skill,
-    skillCooldown: 0,
-    enemyTelegraph: { type: 'normal', label: '일반 공격 예상' },
-    combatConsumables: [],
-});
 const allSkills = () => Object.entries(CLASSES).flatMap(([job, def]) => (def.skills || []).map((skill) => ({ job, skill })));
 
-test('④ 무기 원소를 쓰는 위력 기술 24개는 무기 원소가 약점이면 예고가 약점을 말한다', () => {
+test('④ 무기 원소를 쓰는 위력 기술 24개는 무기 원소가 약점이면 약점으로 판정된다', () => {
     const weaponElement = allSkills().filter(({ skill }) => isDamagingSkill(skill) && !skill.type);
     assert.equal(weaponElement.length, 24);
     for (const { job, skill } of weaponElement) {
-        const hit = forecastFor(skill, { maxHp: 100, elem: '화염' }, '화염');
-        assert.equal(hit.window, '약점 타이밍', `${job} ${skill.name}`);
-        const miss = forecastFor(skill, { maxHp: 100, elem: '화염' }, '냉기');
-        assert.notEqual(miss.window, '약점 타이밍', `${job} ${skill.name}: 다른 원소`);
+        assert.equal(hitsEnemyWeakness(skill, { ...forecastEnemy, weakness: '화염' }, { elem: '화염' }), true, `${job} ${skill.name}`);
+        assert.equal(hitsEnemyWeakness(skill, { ...forecastEnemy, weakness: '냉기' }, { elem: '화염' }), false, `${job} ${skill.name}: 다른 원소`);
     }
 });
 
-test('④ 위력이 없는 기술은 무기 원소가 약점이어도 약점을 말하지 않는다 — 엔진이 피해를 굴리지 않는다', () => {
+test('④ 위력이 없는 기술은 무기 원소가 약점이어도 약점이 아니다 — 엔진이 피해를 굴리지 않는다', () => {
     const support = allSkills().filter(({ skill }) => !isDamagingSkill(skill));
     assert.ok(support.length > 0);
     for (const { job, skill } of support) {
-        const forecast = forecastFor(skill, { maxHp: 100, elem: '화염' }, '화염');
-        assert.notEqual(forecast.window, '약점 타이밍', `${job} ${skill.name}`);
+        assert.equal(hitsEnemyWeakness(skill, { ...forecastEnemy, weakness: '화염' }, { elem: '화염' }), false, `${job} ${skill.name}`);
     }
 });
 
-test('④ 예고의 약점 판정은 엔진의 원소 배율과 같다 — 위력 기술 전수 × 약점 일치 / 불일치', () => {
+test('④ 약점 판정은 엔진의 원소 배율과 같다 — 위력 기술 전수 × 약점 일치 / 불일치', () => {
     const player = {
         ...structuredClone(INITIAL_STATE.player),
         name: 'tester', level: 40, hp: 5_000, maxHp: 5_000, mp: 9_999, maxMp: 9_999, atk: 400, def: 50,
@@ -197,9 +185,7 @@ test('④ 예고의 약점 판정은 엔진의 원소 배율과 같다 — 위�
         for (const weakness of [element, element === '냉기' ? '화염' : '냉기']) {
             const result = CombatEngine.performSkill({ ...player, job }, enemyOf(weakness), stats, skill, () => 0.5);
             const engineWeak = (result.logs || []).some((log) => String(log.text).includes('속성 약점'));
-            // 예고의 생명 비율은 실효 최대 생명으로 나눈다 — 위급 판정이 약점 칸을 가리지 않게 생명을 가득 채운 비율(100/100)로 맞춘다.
-            const forecastWeak = forecastFor(skill, { ...stats, maxHp: 100 }, weakness).window === '약점 타이밍';
-            assert.equal(forecastWeak, engineWeak, `${job} ${skill.name} (약점 ${weakness})`);
+            assert.equal(hitsEnemyWeakness(skill, enemyOf(weakness), stats), engineWeak, `${job} ${skill.name} (약점 ${weakness})`);
             checked += 1;
         }
     }

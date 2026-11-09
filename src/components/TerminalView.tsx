@@ -7,7 +7,7 @@ import type { LogEntry } from '../types/session.js';
 import { GS } from '../reducers/gameStates';
 import type { GameMode } from '../reducers/gameStates';
 import { getVisibleLocationName, getVisibleLocationVisual } from '../utils/challengeRules';
-import { canBossAppearInMap } from '../utils/bossPresence';
+import { getFieldSceneKind } from '../utils/fieldStage';
 import Chip from './ui/Chip';
 import { FIRST_STORY_QUEST_ID } from '../data/quests';
 import { MSG } from '../data/messages';
@@ -97,6 +97,8 @@ interface TerminalViewProps {
     onQuickSlotUse?: (item: Item, idx: number) => void;
     /** 상태 표시줄과 같은 최대 생명(실효 최대치) — 화면 낭독기 차례 알림이 읽는다. */
     maxHp?: number;
+    /** 2026-11 A2: 위에 필드 무대가 지역 이름 · 그림을 그릴 때는 장면 머리를 그리지 않는다(그림은 화면에 하나). */
+    hideScene?: boolean;
 }
 
 // cycle 576: logs default [] 제거 — 1 production caller (MobileGameLayout:85
@@ -110,6 +112,7 @@ const TerminalView = ({
     quickSlots,
     onQuickSlotUse,
     maxHp,
+    hideScene = false,
 }: TerminalViewProps) => {
     const logViewportRef = useRef<HTMLDivElement>(null);
     const lastSeenLogIdRef = useRef<string | null>(null);
@@ -274,12 +277,9 @@ const TerminalView = ({
 
     // 2026-10 에테르 유리(시안 mock-expedition): 대기 중의 기록 창은 장면 카드다 — 머리에 지금 지역의 그림 · 이름 · 종류,
     //   그 아래 연대기. 첫 출발 안내가 그림을 들고 있을 때는 머리를 그리지 않는다(그림은 화면에 하나).
-    const showSceneHeader = Boolean(player) && gameState === GS.IDLE && !showFirstJourney;
-    const sceneMap = playerLoc ? DB.MAPS[playerLoc] : null;
-    const sceneKind = sceneMap?.type === 'safe'
-        ? 'safe'
-        // Wave 61 (원장 §61.3): 보스 표시는 이 플레이어가 실제로 보스를 만날 수 있을 때만(`canBossAppearInMap`).
-        : (player && canBossAppearInMap(playerLoc, sceneMap, player) ? 'boss' : 'field');
+    const showSceneHeader = Boolean(player) && gameState === GS.IDLE && !showFirstJourney && !hideScene;
+    // Wave 61 (원장 §61.3): 보스 표시는 이 플레이어가 실제로 보스를 만날 수 있을 때만 — 판정은 필드 무대와 같은 `getFieldSceneKind`.
+    const sceneKind = getFieldSceneKind(player, playerLoc);
     const sceneKindTone = sceneKind === 'boss' ? 'threat' : sceneKind === 'safe' ? 'good' : 'ether';
 
     return (

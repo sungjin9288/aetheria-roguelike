@@ -6,7 +6,7 @@ export type CombatSkillReadinessState = 'missing' | 'cooldown' | 'energy' | 'rea
 /**
  * 이 함수는 `selectedSkill.mp`만 읽는다 — 실제 호출측(CombatPanel의 `getSelectedSkill()`)이
  * 넘기는 값은 `ClassSkill | WeaponMagicSkill | traitSkill` 셋 중 하나라 공통 필드만 좁힌다
- * (W8-Z3, combatView.ts/combatForecast.ts가 이 함수를 부르는 두 지점의 소비자 좁힘과 짝).
+ * (W8-Z3, combatView.ts의 소비자 좁힘과 짝).
  */
 interface CombatSkillReadinessInput {
     player: Player;

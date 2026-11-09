@@ -9,6 +9,7 @@ import { usePreloadPostCombatCard, useStageEnterClass } from '../stageLayoutHook
 import DesktopCharacterSheet from './DesktopCharacterSheet';
 import type { FullStats, Item } from '../../../types/index.js';
 import type { useGameEngine } from '../../../hooks/useGameEngine';
+import type { VitalsFloatAmount } from '../../combat/CombatVitalsStrip';
 
 const Dashboard = lazy(() => import('../../Dashboard'));
 
@@ -23,6 +24,8 @@ interface DesktopGameLayoutProps {
     handleQuickSlotUse: (item: Item, idx: number) => void;
     damageFlash: boolean;
     healFlash: boolean;
+    /** 싸우는 동안 내 피해 · 회복 숫자 — 조작판의 내 생명 막대 옆에서 뜬다(2026-11 A1). */
+    damageAmount?: VitalsFloatAmount;
     /** GameRoot가 한 번 만든 상태 카드(`StatusBar` placement="column") — 왼쪽 열 맨 위에 그린다. */
     statusBar: ReactNode;
     /** 운영 공지 · 시즌 이벤트 띠 — 가운데 무대 맨 위에 그린다. */
@@ -52,7 +55,7 @@ const DesktopGameLayout = ({
     engine, fullStats,
     isPanelFocusState, mobileArchiveDockVisible,
     handleQuickSlotUse,
-    damageFlash, healFlash,
+    damageFlash, healFlash, damageAmount = null,
     statusBar, banners,
     mobileConsoleMode, setMobileConsoleMode,
     onOpenMirror, onOpenCrystalExchange,
@@ -152,6 +155,7 @@ const DesktopGameLayout = ({
                                 onOpenArchiveConsole={openArchiveConsole}
                                 damageFlash={damageFlash}
                                 healFlash={healFlash}
+                                damageAmount={engine.gameState === GS.COMBAT ? damageAmount : null}
                             />
                         </div>
                     </>

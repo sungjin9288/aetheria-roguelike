@@ -5,6 +5,7 @@ import { getGaugePercent, toFiniteNumber } from './gaugeMath';
  *
  * - 홈은 sunk 톤, 채움은 lo → hi 그라데이션과 은은한 광채.
  * - `trail`(직전 값)이 지금 값보다 크면 그 사이를 잔상으로 그린다 — 맞은 만큼이 잠깐 남는다.
+ * - `lagTrail`은 직전 값을 몰라도 되는 잔상이다 — 지금 값과 같은 폭으로 깔리고 CSS 지연 전환으로 늦게 따라 준다(2026-11 A1).
  * - `ticks`는 10% 눈금(적 생명 막대용), `size="lg"`는 12px 두께.
  * - 보조 기술에는 `role="meter"`로 읽힌다. 이름은 `label` 또는 `labelledBy` 중 하나가 반드시 있어야 한다(타입이 강제한다).
  */
@@ -17,6 +18,8 @@ interface GaugeBaseProps {
     max: number;
     /** 직전 값 — 지금 값보다 클 때만 잔상으로 그린다. */
     trail?: number;
+    /** 늦게 따라 주는 잔상 — 앞 층은 곧바로 줄고 잔상이 지연 전환으로 따라 준다(`.ae-gauge-trail`). `trail`이 있으면 그것이 먼저다. */
+    lagTrail?: boolean;
     /** 10% 눈금 */
     ticks?: boolean;
     size?: GaugeSize;
@@ -37,6 +40,7 @@ const Gauge = ({
     value,
     max,
     trail,
+    lagTrail = false,
     ticks = false,
     size = 'md',
     valueText,
@@ -50,6 +54,7 @@ const Gauge = ({
     const fillPercent = getGaugePercent(safeValue, safeMax);
     const trailPercent = trail === undefined ? null : getGaugePercent(trail, safeMax);
     const showTrail = trailPercent !== null && trailPercent > fillPercent;
+    const lagPercent = !showTrail && lagTrail ? fillPercent : null;
     const classes = ['ae-gauge', `ae-gauge-${kind}`, 'ae-sunk', size === 'lg' ? 'ae-gauge-lg' : '', className]
         .filter(Boolean)
         .join(' ');
@@ -69,6 +74,9 @@ const Gauge = ({
         >
             {showTrail ? (
                 <div className="ae-gauge-trail" data-gauge-part="trail" style={{ width: `${trailPercent}%` }} />
+            ) : null}
+            {lagPercent !== null ? (
+                <div className="ae-gauge-trail" data-gauge-part="trail" aria-hidden="true" style={{ width: `${lagPercent}%` }} />
             ) : null}
             <div className="ae-gauge-fill" data-gauge-part="fill" style={{ width: `${fillPercent}%` }} />
             {ticks ? <div className="ae-gauge-ticks" data-gauge-part="ticks" aria-hidden="true" /> : null}

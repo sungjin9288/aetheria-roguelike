@@ -113,7 +113,7 @@ export interface MonsterBase {
     dropMod?: number;
     /**
      * 강타(heavy hit) 적중 시 플레이어에게 부여하는 상태이상 키.
-     * 소비처: CombatEngine.enemyAI.ts:239, utils/combatForecast.ts:74.
+     * 소비처: CombatEngine.enemyAI.ts:239, utils/enemyIntent.ts(의도 칩의 상태).
      */
     statusOnHit?: string;
     /** 몬스터 계열(Wave 51) — 성직자 계열 회복 기술의 신성 피해(`smite`) 대상. 없으면 일반. */
