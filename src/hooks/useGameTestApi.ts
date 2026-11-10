@@ -404,6 +404,11 @@ export interface AetheriaTestApi {
      * 시트는 최신 2칸 + '외 1장'을 그린다. 큰 순간은 가장 긴 줄(구역 보스 이름 둘 + 외 N · 전직)로 채워 좁은 폭을 시험한다.
      */
     seedChapterRecapScenario: () => boolean;
+    /**
+     * 2026-11 H3 장 경계 3택: 이번 여정에서 `reached`장(기본 4)까지 들어선 대기 상태 — 받은 장은 비운다. 장비는 접두어 없는
+     * 무기 · 방어구라 패가 유물 · 접두어 · 무료 강화 셋이다.
+     */
+    seedChapterPickScenario: (reached?: number) => boolean;
     seedMilestoneStoryScenario: () => void;
     seedClassJourneyScenario: () => boolean;
     seedFirstDeathStoryScenario: () => void;
@@ -710,6 +715,9 @@ export const useGameTestApi = (
                     loc: e.player.loc,
                     // 2026-10 Wave 72: 정예 목격 칭호(`elite:<지역>`) 기록을 e2e가 읽는다.
                     titles: Array.isArray(e.player.titles) ? e.player.titles : [],
+                    // 2026-11 H3: 장의 선물 — 받은 장과 무료 강화 카드가 올린 무기 강화 단계를 e2e가 읽는다.
+                    chapterPicks: Array.isArray(e.player.stats?.currentRun?.chapterPicks) ? e.player.stats.currentRun.chapterPicks : [],
+                    weaponEnhance: e.player.equip?.weapon?.enhance || 0,
                     hp: e.player.hp,
                     maxHp: fs.maxHp,
                     mp: e.player.mp,
@@ -1676,9 +1684,36 @@ export const useGameTestApi = (
                                 recap(3, 15, 20, [{ kind: 'areaBoss', names: bosses.slice(1, 3), more: 2 }, { kind: 'hunt', count: 2 }, { kind: 'eliteTitle', count: 3 }]),
                             ],
                         };
-                        return { ...p, stats: { ...p.stats, currentRun: { ...currentRun, chapters } } };
+                        // 장 결산만 시험한다 — 4장 선물은 받은 것으로 둬 정리 시트를 닫은 뒤 선물 화면이 뜨지 않게 한다.
+                        return { ...p, stats: { ...p.stats, currentRun: { ...currentRun, chapters, chapterPicks: [4] } } };
                     },
                 });
+                return true;
+            },
+            seedChapterPickScenario: (reached = 4) => {
+                const er = engineRef.current;
+                const weapon = DB.ITEMS.weapons.find((item: Item) => !item.prefixed);
+                const armor = DB.ITEMS.armors.find((item: Item) => !item.prefixed);
+                if (!weapon || !armor) return false;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (p: Player) => {
+                        const currentRun = p.stats?.currentRun;
+                        if (!currentRun) return p;
+                        const chapters = { ...createChapterProgress(p.stats), reached };
+                        return {
+                            ...p,
+                            loc: CONSTANTS.START_LOCATION,
+                            equip: {
+                                ...p.equip,
+                                weapon: { ...weapon, id: 'e2e_chapter_pick_weapon', enhance: 0 },
+                                armor: { ...armor, id: 'e2e_chapter_pick_armor', enhance: 0 },
+                            },
+                            stats: { ...p.stats, currentRun: { ...currentRun, chapters, chapterPicks: [] } },
+                        };
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 return true;
             },
             seedMilestoneStoryScenario: () => {

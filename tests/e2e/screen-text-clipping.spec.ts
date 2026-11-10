@@ -136,6 +136,13 @@ for (const viewport of [{ width: 375, height: 667 }, { width: 390, height: 844 }
         await expectNoClipping(page, '유물 선택');
         await page.getByTestId('relic-choice-skip').click();
 
+        // 2026-11 H3 장 경계 3택: 장의 선물(유물 · 접두어 · 무료 강화 카드 셋).
+        await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedChapterPickScenario?.(4));
+        await expect(page.getByTestId('chapter-pick-panel')).toBeVisible({ timeout: 8_000 });
+        await expectNoClipping(page, '장의 선물');
+        await page.getByTestId('chapter-pick-skip').click();
+        await expect(page.getByTestId('chapter-pick-panel')).toHaveCount(0);
+
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectPostCombatResult?.());
         await expect(page.getByTestId('post-combat-card')).toBeVisible({ timeout: 8_000 });
         await expectNoClipping(page, '전투 결과 카드');
