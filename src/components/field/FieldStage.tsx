@@ -4,7 +4,8 @@ import { DB } from '../../data/db';
 import { MSG } from '../../data/messages';
 import { deriveCharacterAppearance } from '../../utils/characterAppearance';
 import { getAvatarSpriteCandidates } from '../../utils/avatarSpriteCandidates';
-import { getVisibleLocationName, getVisibleLocationVisual, getVisibleRegionTheme } from '../../utils/challengeRules';
+import { getVisibleLocationName, getVisibleLocationVisual, getVisibleRegionTheme, isBlindMap } from '../../utils/challengeRules';
+import { getChapterOf } from '../../utils/chapters';
 import { FIELD_MOTE_COUNT, getFieldSceneKind, selectFieldDiscovery } from '../../utils/fieldStage';
 import type { Player } from '../../types/index.js';
 import type { LogEntry } from '../../types/session.js';
@@ -37,6 +38,8 @@ const FieldStage = ({ player, logs }: FieldStageProps) => {
     const visual = getVisibleLocationVisual(player);
     const theme = getVisibleRegionTheme(player, player.loc ? DB.MAPS[player.loc] : null);
     const sceneKind = getFieldSceneKind(player, player.loc);
+    // 2026-11 B1 P1: 지금 지역의 장 번호(표시 도출 — 상태 · 기록 줄 없음). 길 잃은 여행이면 진입 레벨처럼 숨긴다.
+    const chapter = isBlindMap(player) ? null : getChapterOf(player.loc);
     const heroSrc = useMemo(() => getAvatarSpriteCandidates(deriveCharacterAppearance(player))[0], [player]);
 
     return (
@@ -74,6 +77,9 @@ const FieldStage = ({ player, logs }: FieldStageProps) => {
                     {locationName}
                 </h2>
                 <Chip tone={SCENE_KIND_TONE[sceneKind]}>{MSG.FIELD_REGION_KIND[sceneKind]}</Chip>
+                {chapter !== null && (
+                    <Chip data-testid="field-stage-chapter" className="font-fira tabular-nums">{MSG.FIELD_STAGE_CHAPTER_CHIP(chapter)}</Chip>
+                )}
             </header>
 
             <div data-testid="field-stage-arena" className="ae-field-stage-arena relative z-[2] min-h-0">

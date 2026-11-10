@@ -56,3 +56,8 @@ export const getExpeditionChapterRecapView = (recaps: readonly ChapterRecap[]): 
     cards: recaps.slice(0, BALANCE.CHAPTER_RECAP_MAX_CARDS).map(getChapterRecapView),
     more: Math.max(0, recaps.length - BALANCE.CHAPTER_RECAP_MAX_CARDS),
 });
+
+/** 능력치 탭 '이번 여정의 장' — 이번 여정의 결산 전부, 최신이 먼저(원정 밖에서 넘은 결산 포함). */
+export const getJourneyChapterRecapView = (recaps: readonly ChapterRecap[]): ChapterRecapView[] => (
+    [...recaps].reverse().map(getChapterRecapView)
+);
