@@ -60,7 +60,7 @@ test('Wave 100: 계승이 새 단계의 수집 기준점을 남기고, 그 회�
     const ascended = ascend(stateOf(start, GS.ASCENSION));
     assert.equal(ascended.player.meta.prestigeRank, 3);
     // 2026-10 Wave 108: 정예 칭호는 계승에서 비고(칭호 초기화) 도감(각인)은 남는다 — 기준점도 그 상태다.
-    assert.deepEqual(ascended.player.meta.cycleStart, { rank: 3, signatures: [SIGNATURE_NAMES[0]], eliteTitles: 0 });
+    assert.deepEqual(ascended.player.meta.cycleStart, { rank: 3, signatures: [SIGNATURE_NAMES[0]], eliteTitles: 0, judgment: { faced: 0, ready: 0, escaped: 0 } });
     const fresh = getCycleSummary(ascended.player);
     assert.deepEqual(fresh.signatures.newNames, []);
     assert.equal(fresh.eliteTitles.gained, 0);
@@ -90,7 +90,7 @@ test('Wave 100 → Wave 125: 기준점은 사망 재시작을 넘고, 각인 발
 
 test('Wave 100: 처음 시작한 여정(단계 0)은 빈 기준점 — 기준점 없는 이전 세이브의 계승 단계는 각인 · 정예 줄을 그리지 않는다', () => {
     const firstRun = discover(veteran({ prestigeRank: 0 }, { titles: [getEliteTitleId(ELITE_TITLE_MAPS[0])] }), SIGNATURE_NAMES[0]);
-    assert.deepEqual(getCycleStart(firstRun), { rank: 0, signatures: [], eliteTitles: 0 });
+    assert.deepEqual(getCycleStart(firstRun), { rank: 0, signatures: [], eliteTitles: 0, judgment: { faced: 0, ready: 0, escaped: 0 } });
     assert.deepEqual(getCycleSummary(firstRun).signatures.newNames, [SIGNATURE_NAMES[0]]);
     assert.equal(getCycleSummary(firstRun).eliteTitles.gained, 1);
     assert.equal(getCycleSummary(firstRun).rule, null, '단계 0에는 회차 규칙이 없다');
@@ -153,5 +153,5 @@ test('Wave 100: 기준점은 패 · 규칙 선택과 무관하다(계승 판정�
     const base = veteran();
     const withStart = veteran({ cycleStart: { rank: 2, signatures: [SIGNATURE_NAMES[0]], eliteTitles: 3 } });
     assert.deepEqual(getAscensionRuleOffer(base, 3).map((rule) => rule.id), getAscensionRuleOffer(withStart, 3).map((rule) => rule.id));
-    assert.deepEqual(snapshotCycleStart(base, 3), { rank: 3, signatures: [], eliteTitles: 0 });
+    assert.deepEqual(snapshotCycleStart(base, 3), { rank: 3, signatures: [], eliteTitles: 0, judgment: { faced: 0, ready: 0, escaped: 0 } });
 });

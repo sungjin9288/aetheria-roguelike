@@ -537,6 +537,10 @@ export const MSG = {
     FIELD_ACTION_BAG: '가방',
     // 같은 동작(이 화면을 닫고 이전으로)은 한 이름이다(UX-09) — 화면을 바꾸는 패널은 '뒤로', 위에 덮는 화면은 '닫기'(UI_CLOSE).
     UI_BACK: '뒤로',
+    // 2026-11 재미 분석 G2: 지난 여정에서 본 이야기 장면은 첫 문장으로 접는다(표시만).
+    STORY_SCENE_SEEN: '지난 여정에서 본 장면',
+    STORY_SCENE_REREAD: '다시 읽기',
+    STORY_SCENE_FOLD: '접기',
     EVENT_LEAVE_LOG: (title: string) => `${title} · 선택하지 않고 지나쳤습니다.`,
     STATUS_CRYSTAL_ARIA: (count: number) => `크리스탈 ${count}개 · 에테르 교환소 열기`,
     // 상태 표시줄 아바타는 기록(모험 기록)을 연다 — '장비 콘솔'은 화면 언어 밖의 이름이었다(UX-07).
@@ -963,6 +967,9 @@ export const MSG = {
     CYCLE_SUMMARY_SIGNATURES_NONE: (discovered: number, total: number) => `새 전설 각인 없음 (도감 ${discovered}/${total})`,
     CYCLE_SUMMARY_ELITE: (gained: number, owned: number, total: number) => `새 정예 칭호 ${gained}개 (${owned}/${total})`,
     CYCLE_SUMMARY_ELITE_NONE: (owned: number, total: number) => `새 정예 칭호 없음 (${owned}/${total})`,
+    // 2026-11 재미 분석 G3: 판단 기록 — 사실만(평가 · 추천 없음, Wave 88).
+    CYCLE_SUMMARY_JUDGMENT: (faced: number, ready: number, escaped: number) =>
+        `판단 기록 · 정예와 보스를 ${faced}번 마주침 — 가장 센 한 방보다 생명이 많던 때 ${ready}번, 물러난 전투 ${escaped}번`,
     // 2026-10 Wave 103 (소유자 결정 §107.6): 아직 도감에 없는 각인 · 장비 · 유물의 이름은 보이지 않는다.
     SIGNATURE_SET_UNKNOWN_CANDIDATE: '아직 발견하지 못한 전설 각인',
     BUILD_ADVICE_UNOWNED_RELICS: (count: number) => `이 성장에 어울리는 유물이 ${count}개 더 있습니다. 어떤 유물인지는 얻어야 알 수 있습니다.`,
