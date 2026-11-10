@@ -53,7 +53,11 @@ const HASH_ALGORITHM = 'sha256';
 // 체크포인트 액션 16/56/87/170/1,581/5,267/7,983 → 16/56/88/171/1,580/5,265/7,981. 64시드 평균은 Lv2 · 5 그대로, Lv10 +0.49% ·
 // Lv20 +0.03% · Lv45 ~ 75 −0.01 ~ −0.02%다. 스폰의 레벨 굴림 하나만 끄면 이전 값이 재현된다(실측).
 // 이전 값: '440890e589a3b552029bb93cb87a02722ddda36d38397ea1da8d7d9e153f63b8'.
-const PROGRESSION_V1_BASELINE_HASH = '0e8de1a1b60b9ca5b923d49c796781c11b8040b9e62b72c50cc851c159de77cb';
+// 2026-11 H2(소유자 결정 S1 · "1.06 확정", 원장 §166): Lv41 ~ 48 레벨업 요구량 ×1.06(`EXP_SCALE_RATE_LATE`)이고 체크포인트에
+// Lv48(마왕성 경로 게이트)이 더해진다 — 곡선이 **움직인다**. 이 시드의 체크포인트 액션 16/56/88/171/1,580/5,265/7,981 →
+// 16/56/88/171/1,473/1,873(Lv48)/4,471/7,213. Lv20까지는 바이트 동일하다. 체크포인트 칸 수도 리포트 모양이라 해시에 들어간다.
+// 이전 값: '0e8de1a1b60b9ca5b923d49c796781c11b8040b9e62b72c50cc851c159de77cb'.
+const PROGRESSION_V1_BASELINE_HASH = '724a9e3335b2a0f0c102a39d69951ca6eee168a6fa52cb9d796aa85f92bf04f9';
 
 export const PROGRESSION_DIAGNOSTIC_EVIDENCE_PATH =
     'docs/evidence/qa/release-complete-core/progression-diagnostic-v2.json';

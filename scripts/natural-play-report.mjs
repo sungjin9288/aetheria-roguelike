@@ -14,6 +14,34 @@ const longestGap = (run) => {
     const times = [0, ...run.moments.map(([at]) => at), run.hours];
     return times.slice(1).reduce((max, at, index) => Math.max(max, at - times[index]), 0);
 };
+/** 회차 시간 중 Lv41 → 48 구간 비중(H2, 2026-11) — Lv41에 닿지 못한 회차면 null. 48에 못 닿으면 회차 끝까지. */
+const LATE_BAND = [41, 48];
+const lateBandShare = (run) => {
+    const from = run.levelAt?.[LATE_BAND[0]];
+    if (from === undefined || !(run.hours > 0)) return null;
+    return ((run.levelAt[LATE_BAND[1]] ?? run.hours) - from) / run.hours;
+};
+/**
+ * 사망 뒤 다시 오르기(원장 §139) — 사망 직전 회차 최고 레벨 `best`에 다시 닿는 데 걸린 시간 ÷ 회차 시작부터 처음 `best`에 닿은 시간.
+ * 겹치는 구간(다시 오르다 또 죽음)은 첫 사망부터 센다. 끝내 닿지 못한 구간은 뺀다(비율이 정의되지 않는다). 기록이 없으면 [].
+ * (§139의 시간 합계는 '넘는 시각'까지지만 비율은 같은 레벨끼리 비교한다 — 넘는 레벨의 첫 시각은 그 순간 자체다.)
+ */
+const reclimbRatios = (run) => {
+    if (!Array.isArray(run.climbs)) return [];
+    const out = [];
+    let best = 0;
+    let pending = null;
+    for (const [at, level] of run.climbs) {
+        if (pending && level >= pending.best) {
+            const first = run.levelAt?.[pending.best];
+            if (first > 0) out.push({ best: pending.best, ratio: (at - pending.at) / first });
+            pending = null;
+        }
+        if (!pending && level < best) pending = { at, best };
+        best = Math.max(best, level);
+    }
+    return out;
+};
 const quantile = (xs, q) => { const sorted = [...xs].sort((a, b) => a - b); return sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))]; };
 const load = (dir, collectDeaths = false) => {
     const rows = new Map();
@@ -32,6 +60,7 @@ const load = (dir, collectDeaths = false) => {
                     path: name, run: run.run, rank: run.rank, deaths: run.deaths, hours: run.hours, longestGap: longestGap(run), moments: run.moments || null,
                     zero: run.deaths === 0 ? 1 : 0, loop: run.deaths >= LOOP_DEATHS ? 1 : 0,
                     ruleId: run.ruleId, ruleOptional: Boolean(run.ruleOptional), ruleDeclined: Boolean(run.ruleDeclined), newSignatures,
+                    lateShare: lateBandShare(run), reclimbs: reclimbRatios(run), ladderRank: Number(run.ladderRank) || 0, essence: Number(run.essence) || 0,
                 });
             });
             if (collectDeaths) for (const death of result.deaths || []) deathRows.push(death);
@@ -65,6 +94,14 @@ if (!baseDir) {
             const perHour = xs.reduce((sum, r) => sum + (r.moments || []).length, 0) / Math.max(1e-9, xs.reduce((sum, r) => sum + r.hours, 0));
             console.log(`  큰 순간: ${perHour.toFixed(2)}/시간 · 최장 공백 중앙값 ${quantile(gaps, 0.5).toFixed(2)}h · 상위 10% ${quantile(gaps, 0.9).toFixed(2)}h · 3시간 이상 ${gaps.filter((gap) => gap >= 3).length}판 · ${Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([kind, count]) => `${kind} ${count}`).join(' ')}`);
         }
+        const shares = xs.map((r) => r.lateShare).filter((share) => share !== null);
+        if (shares.length) console.log(`  Lv41-48 비중: 평균 ${(100 * mean(shares)).toFixed(1)}% · 중앙 ${(100 * quantile(shares, 0.5)).toFixed(1)}% (Lv41 닿은 ${shares.length}판) · 정수 사다리 ${mean(xs.map((r) => r.ladderRank)).toFixed(0)}단계`);
+        const climbs = xs.flatMap((r) => r.reclimbs);
+        if (climbs.length) {
+            const band = (c) => (c.best <= 20 ? 'Lv1~20' : c.best <= 30 ? 'Lv21~30' : c.best <= 40 ? 'Lv31~40' : 'Lv41+');
+            const bands = ['Lv1~20', 'Lv21~30', 'Lv31~40', 'Lv41+'].map((name) => [name, climbs.filter((c) => band(c) === name).map((c) => c.ratio)]).filter(([, rs]) => rs.length);
+            console.log(`  다시 오르기 ÷ 처음 오르기 중앙값: ${bands.map(([name, rs]) => `${name} ${quantile(rs, 0.5).toFixed(2)} (${rs.length})`).join(' · ')}`);
+        }
         if (deaths.length) console.log(`  적: ${tally(kind)}\n  레벨대: ${tally((death) => `Lv${Math.floor((death.level - 1) / 10) * 10 + 1}~${Math.floor((death.level - 1) / 10) * 10 + 10}`)}`);
     }
     // 회차 규칙별(거절할 수 있는 카드인지 · 거절했는지로 나눈다) — 카드 미리보기(`outlook`)의 입력이다. 2026-10 Wave 121.
@@ -94,6 +131,16 @@ if (!baseDir) {
             return `${key} ${mean(pairs.map(([b]) => b[key])).toFixed(2)}→${mean(pairs.map(([, r]) => r[key])).toFixed(2)} (z ${(se ? mean(diffs) / se : 0).toFixed(2)})`;
         };
         console.log(`run ${run} (짝 ${pairs.length}): ${['deaths', 'zero', 'loop', 'hours', ...(pairs.every(([b, r]) => b.longestGap !== null && r.longestGap !== null) ? ['longestGap'] : [])].map(cell).join(' · ')}`);
+        // 둘 다 Lv41에 닿은 짝만 — 구간 비중(H2)과 계승 때 정수 사다리 · 남은 정수.
+        const late = pairs.filter(([b, r]) => b.lateShare !== null && r.lateShare !== null);
+        if (late.length) {
+            const lateCell = (key, scale = 1, digits = 2) => {
+                const diffs = late.map(([b, r]) => (r[key] - b[key]) * scale);
+                const se = stdErr(diffs);
+                return `${key} ${(mean(late.map(([b]) => b[key])) * scale).toFixed(digits)}→${(mean(late.map(([, r]) => r[key])) * scale).toFixed(digits)} (z ${(se ? mean(diffs) / se : 0).toFixed(2)})`;
+            };
+            console.log(`  Lv41 닿은 짝 ${late.length}: ${[lateCell('lateShare', 100, 1), lateCell('ladderRank', 1, 0), lateCell('essence', 1, 0)].join(' · ')}`);
+        }
     }
     // 같은 경로 · 시드 · 회차 · 단계에서 같은 거절 가능한 카드를 만난 짝(받아들임 BASE_DIR ↔ 거절 DIR) — 첫 순환 미리보기 값. 2026-10 Wave 121.
     const rulePairs = new Map();

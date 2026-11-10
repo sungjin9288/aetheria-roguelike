@@ -182,7 +182,7 @@ test('역전 스텝을 가진 체인은 2개이고, 그중 완주 게이트가 �
 // Wave 61: 보스 6종이 지역 조우에 들어가 Lv25 이후 앵커가 −1 ~ −3% 움직였다(64시드 평균 — 실제 이동, 원장 §62).
 // Wave 71: 종 이름과 겹치는 접두어를 빼서 기준 시드의 Lv10 이후 앵커가 1액션씩 움직였다(64시드 평균 +0.00 ~ 0.39%, 원장 §74).
 // 2026-11 적 레벨 폭: 기준 시드 앵커가 한 번 더 움직였다(64시드 평균 Lv2 ~ 75 −0.02 ~ +0.49%, 원장 §157).
-test('forgotten_god은 승천 지점 안에서 닫힌다 — 열림 5.33h, 완주 53.3h', () => {
+test('forgotten_god은 승천 지점 안에서 닫힌다 — 열림 5.33h, 완주 46.7h', () => {
     const { cost } = buildContentReachabilityReport();
     const gates = routeGates();
     const chain = EVENT_CHAINS.find((candidate) => candidate.id === 'forgotten_god');
@@ -195,7 +195,8 @@ test('forgotten_god은 승천 지점 안에서 닫힌다 — 열림 5.33h, 완�
     assert.equal(span.completionGateLevel, Number(gates.get(chain.steps.at(-1).loc)));
     assert.equal(span.completionGateLevel, 48);
     assert.equal(span.openCost.modeledHours, 5.33);
-    assert.equal(span.completionCost.modeledHours, 53.3);
+    // 2026-11 H2(원장 §166): 마왕성 Lv48이 체크포인트 앵커가 되어 53.3h(보간) → 46.7h.
+    assert.equal(span.completionCost.modeledHours, 46.7);
 
     // 마왕성 경로 게이트(승천 지점)와 같은 칸이다 — 리셋이 완주를 가로막지 않는다.
     const demonCastle = cost.gates.maps.find((bucket) => bucket.members.includes('마왕성'));
@@ -259,9 +260,10 @@ test('승천 지점을 걸치는 체인이 0개다 — 값을 매기는 12개 �
             return [chain, span.openCost.modeledHours, span.completionGateLevel, span.completionCost.modeledHours];
         }),
         [
-            ['ancient_prophecy', 2.2, 48, 53.3],
-            ['dragon_legacy', 2.88, 40, 21.1],
-            ['world_tree_corruption', 21.1, 40, 21.1],
+            // 2026-11 H2(원장 §166): Lv48 앵커 46.7h, Lv40은 Lv20 ~ 45 보간의 위 끝(Lv45 누적 경험)이 줄어 21.1 → 21.33h.
+            ['ancient_prophecy', 2.2, 48, 46.7],
+            ['dragon_legacy', 2.88, 40, 21.33],
+            ['world_tree_corruption', 21.33, 40, 21.33],
         ],
     );
 
@@ -296,8 +298,9 @@ test('북부 권역 체인 둘은 Lv35(12h)에 완주되고 여전히 승천 전
             return [chain, span.openGateLevel, span.openCost.modeledHours, span.completionGateLevel, span.completionCost.modeledHours];
         }),
         [
-            ['machine_uprising', 35, 12.05, 35, 12.05],
-            ['water_apostle', 5, 1.4, 35, 12.05],
+            // 2026-11 H2(원장 §166): Lv20 ~ 45 보간의 위 끝이 바뀌어 12.05 → 12.15h.
+            ['machine_uprising', 35, 12.15, 35, 12.15],
+            ['water_apostle', 5, 1.4, 35, 12.15],
         ],
     );
     // 기준 ②(종착이 곧 완주 게이트)는 그대로다 — machine_uprising 35 → 18 → 35의 종착이 max다.

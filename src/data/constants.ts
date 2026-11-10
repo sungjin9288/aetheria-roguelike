@@ -303,7 +303,12 @@ export const BALANCE = {
     KEY_EVENT_PITY_PER_EXPLORE: 0.04,
     KEY_EVENT_MAX_CHANCE: 0.35,
     // v4.0 — 신규 시스템 상수
-    EXP_SCALE_RATE: 1.15,           // EXP 곡선 — 레벨업마다 요구량 ×1.15(Lv48 요구량 139,953 ≈ 기본 적 경험 기준 약 286처치). 읽는 곳은 systems/expCurve.ts 하나
+    EXP_SCALE_RATE: 1.15,           // EXP 곡선 — 레벨업마다 요구량 ×1.15. 읽는 곳은 systems/expCurve.ts 하나
+    // 2026-11 H2(소유자 결정 S1): 후반 구간의 레벨 요구량 배율 — 레벨 from → to 사이의 레벨업은 이 배율이고 to 뒤는 EXP_SCALE_RATE로 돌아간다.
+    //   1회차 Lv41-48 비중 48.4% → 39.8%(자연 플레이 8경로 × 24시드, 1.00 · 1.04 · 1.06을 재서 1.06 — 원장 §166).
+    //   적 경험은 그대로다(계승 정수 · 전리품 등급과 연동). 대가: 정수 사다리가 낮은 채 마왕에 닿아 1회차 사망 +0.05(소유자 결정 "1.06 확정").
+    EXP_SCALE_RATE_LATE: 1.06,
+    EXP_LATE_BAND: { from: 40, to: 48 },
     // cycle 195: EXP_LEVEL_CAP_50 제거 — deprecated 상태로 cycle 99에서 EXP_LEVEL_HARD_CAP으로 이행 완료.
     EXP_LEVEL_HARD_CAP: 150000,     // 레벨당 최대 EXP 요구량 상한선 반감 (기존 300K → 150K)
     RELIC_FIND_CHANCE: 0.08,        // 탐색 시 유물 발견 확률 (8%)

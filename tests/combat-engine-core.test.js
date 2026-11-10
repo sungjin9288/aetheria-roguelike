@@ -7,7 +7,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CombatEngine } from '../src/systems/CombatEngine.ts';
-import { getNextExpRequirement } from '../src/systems/expCurve.ts';
+import { getLevelExpRequirement } from '../src/systems/expCurve.ts';
 import { BALANCE as GAME_BALANCE } from '../src/data/constants.ts';
 
 const MAX_ROLL = 1 - Number.EPSILON;
@@ -71,7 +71,7 @@ function applyExpGain(player, expGained = 0) {
     while (p.level < MAX_LEVEL && p.exp >= p.nextExp) {
         p.exp -= p.nextExp;
         p.level += 1;
-        p.nextExp = getNextExpRequirement(p.level, p.nextExp);
+        p.nextExp = getLevelExpRequirement(p.level);
         p.maxHp += BALANCE.HP_PER_LEVEL;
         p.maxMp += BALANCE.MP_PER_LEVEL;
         p.hp = Math.min(p.hp + BALANCE.HP_PER_LEVEL, p.maxHp);
@@ -258,10 +258,10 @@ test('applyExpGain: 다중 레벨업 (EXP 충분할 때)', () => {
     assert.ok(result.levelUps > 2);
 });
 
-test('applyExpGain: 다음 요구량은 곡선 정본(expCurve)이 정한다', () => {
+test('applyExpGain: 다음 요구량은 새 레벨의 요구량이다 — 저장된 비표준 요구량(100)을 이어 굴리지 않는다', () => {
     const player = { level: 1, exp: 0, nextExp: 100, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 10, def: 5 };
     const result = applyExpGain(player, 100);
-    assert.equal(result.updatedPlayer.nextExp, getNextExpRequirement(2, 100));
+    assert.equal(result.updatedPlayer.nextExp, getLevelExpRequirement(2));
 });
 
 test('applyExpGain: MAX_LEVEL(99) 캡', () => {

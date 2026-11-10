@@ -1,5 +1,5 @@
 import { CONSTANTS } from '../data/constants.js';
-import { getNextExpRequirement } from '../systems/expCurve.js';
+import { getLevelExpRequirement } from '../systems/expCurve.js';
 import type { Player } from '../types/index.js';
 
 const EARLY_QUEST_CLAIM_PACING_MAX_LEVEL = 10;
@@ -28,7 +28,7 @@ export const getPacedQuestClaimExp = (player: Player | null | undefined, rewardE
 
     const currentExp = Math.max(0, Math.floor(Number(player?.exp) || 0));
     const nextExp = Math.max(1, Math.floor(Number(player?.nextExp) || CONSTANTS.START_NEXT_EXP));
-    const postLevelNextExp = getNextExpRequirement(level + 1, nextExp);
+    const postLevelNextExp = getLevelExpRequirement(level + 1);
     const remainingToNext = Math.max(0, nextExp - currentExp);
     const maxSingleQuestExp = remainingToNext + Math.floor(postLevelNextExp * POST_LEVEL_EXP_FILL_RATIO);
 

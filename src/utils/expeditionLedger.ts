@@ -1,5 +1,5 @@
 import { CONSTANTS } from '../data/constants.js';
-import { getNextExpRequirement } from '../systems/expCurve.js';
+import { getLevelExpRequirement } from '../systems/expCurve.js';
 import { CLASSES } from '../data/classes.js';
 import {
     BASELINE_PROGRESSION_PROFILE,
@@ -105,10 +105,9 @@ export const calculateExpeditionExpGain = (snapshot: ExpeditionSnapshot, player:
     if (endLevel === snapshot.startLevel) return Math.max(0, endExp - snapshot.startExp);
 
     let gained = Math.max(0, snapshot.startNextExp - snapshot.startExp);
-    let requirement = snapshot.startNextExp;
+    // 시작 레벨의 요구량은 그때 저장된 값(옛 곡선일 수 있다), 그 뒤 레벨은 엔진이 쓰는 레벨 인덱스형이다.
     for (let level = snapshot.startLevel + 1; level < endLevel; level += 1) {
-        requirement = getNextExpRequirement(level, requirement);
-        gained += requirement;
+        gained += getLevelExpRequirement(level);
     }
     return Math.max(0, gained + endExp);
 };

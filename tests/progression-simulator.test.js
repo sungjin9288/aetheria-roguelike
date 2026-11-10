@@ -93,7 +93,12 @@ const EXPECTED_JOB_NAMES = [
 //   모델은 행동 번호를 탐험 수로 넘긴다). 64시드 평균 체크포인트는 Lv2 · 5 그대로, Lv10 +0.49% · Lv20 +0.03% · Lv45 ~ 75 −0.01 ~ −0.02%.
 //   스폰의 레벨 굴림 하나만 끄면 이전 값이 재현된다(실측, 원장 §157).
 //   이전 값: 'c52cb9225f6a15846cd118bfb95670bb5d795b65e4162985b3dd2a394dedf9df'.
-const EXPECTED_BASELINE_REPORT_SHA256 = 'd4c2fedbc8f32eee78ebf7790999c6dfc94e2026324a5d6aefb761b569109286';
+// 2026-11 H2 커밋 2 (소유자 결정 S1 · "1.06 확정"): Lv41 ~ 48 레벨업 요구량이 ×1.06(이전 ×1.15)이고 체크포인트에 48(마왕성 경로
+//   게이트)이 더해졌다. 체크포인트 행동은 Lv2 ~ 20 그대로, Lv45 1,573 → 1,470 · Lv48 1,868(새 칸) · Lv60 → 4,473 · Lv75 → 7,163.
+//   두 편집이 따로 해시를 바꾼다: 구간 배율만 1.15로 되돌리면 '1471e64d…'(체크포인트 48만 더한 값), 체크포인트 48까지 빼면 이전 값이
+//   재현된다 — 레벨 인덱스형 엔진(`nextExp = 새 레벨의 요구량`)은 표준 곡선에서 결과를 바꾸지 않는다(실측, 원장 §166).
+//   이전 값: 'd4c2fedbc8f32eee78ebf7790999c6dfc94e2026324a5d6aefb761b569109286'.
+const EXPECTED_BASELINE_REPORT_SHA256 = 'e35afdfdf58d8b394325f8047bb83e791624f8568b3ca584803cbb94d51beb14';
 // 순서는 EXPECTED_JOB_NAMES와 같다 — 45가 찍힌 다섯 칸이 tier-3 5종(팔라딘·드래곤 나이트·
 // 대마법사·그림자 주군·사냥의 군주)이고, 시간술사는 원래부터 tier 3 / reqLv 25다.
 // 11번째 칸(성직자)이 Wave 14 F4로 5 → 12 — 무당과 같은 값이라 마법사의 첫 분기가 2택이 된다.
@@ -113,12 +118,13 @@ test('baseline simulation keeps immutable snapshots and reports the exact class 
         id: 'baseline', version: 1, expMultiplier: 1, lootMultiplier: 1, eventMultiplier: 1,
     });
 
-    assert.deepEqual(PROGRESSION_CHECKPOINT_LEVELS, [2, 5, 10, 20, 45, 60, 75]);
-    assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.targetLevel), [2, 5, 10, 20, 45, 60, 75]);
+    assert.deepEqual(PROGRESSION_CHECKPOINT_LEVELS, [2, 5, 10, 20, 45, 48, 60, 75]);
+    assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.targetLevel), [2, 5, 10, 20, 45, 48, 60, 75]);
     // Wave 13 E1: Lv45 체크포인트에서 tier-3 5종이 함께 열려 13 → 18.
     // Wave 14 F4: 성직자 `reqLv` 5 → 12이라 Lv5·Lv10 체크포인트가 5 → 4다 — Lv5의 후속 직업은
     //   이제 세 뿌리(전사·마법사·도적) 모두 0개이고, Lv20에서 무당과 함께 다시 합류해 6으로 돌아온다.
-    assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.reachableJobCount), [1, 4, 4, 6, 18, 18, 18]);
+    //   2026-11 H2: 48(마왕성 경로 게이트)이 체크포인트가 됐다 — tier-3 게이트(45) 뒤라 18.
+    assert.deepEqual(report.checkpoints.map((checkpoint) => checkpoint.reachableJobCount), [1, 4, 4, 6, 18, 18, 18, 18]);
     assert.deepEqual(report.jobReachability, {
         rootJob: '모험가',
         expectedJobCount: 18,
@@ -157,8 +163,10 @@ test('cumulative EXP ladder matches the BALANCE curve and anchors the cost axis 
     let expected = 0;
     for (let level = 2; level <= CONSTANTS.MAX_LEVEL; level += 1) {
         expected += nextExp;
+        // 2026-11 H2: 레벨 EXP_LATE_BAND.from → .to 사이에 올라선 레벨의 요구량만 EXP_SCALE_RATE_LATE다.
+        const inLateBand = level > BALANCE.EXP_LATE_BAND.from && level <= BALANCE.EXP_LATE_BAND.to;
         nextExp = Math.min(
-            Math.floor(nextExp * BALANCE.EXP_SCALE_RATE),
+            Math.floor(nextExp * (inLateBand ? BALANCE.EXP_SCALE_RATE_LATE : BALANCE.EXP_SCALE_RATE)),
             BALANCE.EXP_LEVEL_HARD_CAP,
         );
         assert.equal(cumulativeExpToLevel(level), expected, `cumulative EXP to level ${level}`);

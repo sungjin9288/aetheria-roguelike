@@ -397,7 +397,9 @@ const CASES = [
         expected: [
             'log event :: 🔍 세 곳의 화염 지역을 탐험하니 고대 용의 기운이 하나로 수렴합니다.',
             'log success :: 🏆 [발견 여정 완료] 화염의 수렴! 보상: 골드 3000, 경험 2000, 용의 화염',
-            'dispatch SET_PLAYER :: atk=43 | def=21 | exp=1000 | gold=3500 | hp=140 | inv=[{"baseItemName":"용의 화염","desc":"용의 화염을 담은 검.","desc_stat":"ATK+155(화) / 2H","elem":"화염","hands":2,"id":"disc_<now>","jobs":["전사","버서커"],"name":"용의 화염","price":25500,"tier":5,"type":"weapon","val":155}] | level=11 | maxHp=220 | maxMp=90 | mp=20 | nextExp=1150 | stats.discoveryChains=["fire_convergence"] | stats.total_gold=3000',
+            // 2026-11 H2 커밋 2: 픽스처의 nextExp 1000은 표준 곡선(Lv10 = 694)에 없는 값이다 — 레벨업한 플레이어의 요구량은 이제 새 레벨의
+            //   요구량(Lv11 = 798)이라 남은 1,000이 한 번 더 레벨업시킨다(이전: 1000 × 1.15 = 1,150을 이어 굴려 Lv11에 멈췄다).
+            'dispatch SET_PLAYER :: atk=46 | def=22 | exp=202 | gold=3500 | hp=160 | inv=[{"baseItemName":"용의 화염","desc":"용의 화염을 담은 검.","desc_stat":"ATK+155(화) / 2H","elem":"화염","hands":2,"id":"disc_<now>","jobs":["전사","버서커"],"name":"용의 화염","price":25500,"tier":5,"type":"weapon","val":155}] | level=12 | maxHp=240 | maxMp=100 | mp=30 | nextExp=917 | stats.discoveryChains=["fire_convergence"] | stats.total_gold=3000',
         ],
         run: () => {
             const player = basePlayer({

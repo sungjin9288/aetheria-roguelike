@@ -232,6 +232,8 @@ export const runNaturalPlay = async (options) => {
             startHours: hours(),
             deaths: 0,
             levelAt: {},
+            // 레벨이 바뀐 시각 [회차 시작부터 시간, 레벨] — 사망하면 1로 내려간다. 다시 오르기(원장 §139)와 구간 비중을 잰다(관찰 전용, H2).
+            climbs: [],
             combats: 0,
             eliteCombats: 0,
             bossCombats: 0,
@@ -299,6 +301,7 @@ export const runNaturalPlay = async (options) => {
             detectMoments(p);
             const level = Number(p.level) || 1;
             if (run.levelAt[level] === undefined) run.levelAt[level] = Number((hours() - run.startHours).toFixed(3));
+            if (run.climbs.at(-1)?.[1] !== level) run.climbs.push([Number((hours() - run.startHours).toFixed(3)), level]);
 
             // 유물 선택 — 화면 추천(`getRelicChoiceDecisionStrip`). 칸이 찼으면 나아지는 교체만 한다.
             if (Array.isArray(state.pendingRelics) && state.pendingRelics.length > 0) {
