@@ -88,7 +88,9 @@ test('PostCombatCard renders a compact reward summary and executable recommendat
     assert.match(source, /aria-label="전투 결과 판단 요약"/);
     assert.match(outcomeSource, /회복 아이템 확인/);
     assert.match(outcomeSource, /가방 정리/);
-    assert.match(rootSource, /onOpenInventory=\{\(\) => handleOpenArchiveTab\('inventory'\)\}/);
+    // 2026-11: 가방은 추천이 고른 분류로 열린다 — 동작은 tests/inventory-filter-request-contract.test.js가 렌더로 잡는다.
+    assert.match(rootSource, /onOpenInventory=\{handleOpenInventory\}/);
+    assert.match(rootSource, /handleOpenArchiveTab\('inventory'\)/);
     assert.doesNotMatch(source, /onRest|휴식 우선|>MP 회복 점검<|>인벤 정리/);
 });
 

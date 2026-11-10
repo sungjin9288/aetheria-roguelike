@@ -18,6 +18,7 @@ import ItemIcon from './icons/ItemIcon';
 import EnhanceDecisionCard from './EnhanceDecisionCard';
 import type { GameActions } from '../hooks/actionDeps';
 import type { Item, Player } from '../types/index.js';
+import type { InventoryFilterId, InventoryFilterRequest } from '../utils/inventoryFilters';
 
 /** SmartInventory가 실제로 호출하는 액션만 좁혀 받는다 (장착/강화/일괄 판매). */
 type SmartInventoryActions = Pick<GameActions, 'useItem' | 'enhanceItem' | 'autoSell'>;
@@ -36,6 +37,8 @@ interface SmartInventoryProps {
     actions?: SmartInventoryActions;
     quickSlots?: Array<Item | null>;
     onAssignQuickSlot?: (idx: number, item: Item | null) => void;
+    /** 이 분류로 열어 달라는 요청 — 요청 번호가 바뀔 때마다 분류를 그쪽으로 옮긴다(그 뒤는 플레이어가 고른다). */
+    filterRequest?: InventoryFilterRequest | null;
 }
 
 /**
@@ -55,7 +58,7 @@ const StatDiff = ({ val, label, suffix }: { val: number; label: string; suffix: 
 /**
  * SmartInventory — 인벤토리 스마트 필터 + 장비 비교 (시나리오 2)
  */
-const FILTERS = [
+const FILTERS: Array<{ id: InventoryFilterId; label: string }> = [
     { id: 'all', label: MSG.INV_FILTER_ALL },
     { id: 'weapon', label: MSG.INV_FILTER_WEAPON },
     { id: 'armor', label: MSG.INV_FILTER_ARMOR },
@@ -82,8 +85,13 @@ const getItemTags = (item: Item): string[] => {
 };
 
 // cycle 452: 컴팩트 default 제거 — Dashboard 호출자가 명시 전달이라 도달 불가.
-const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot }: SmartInventoryProps) => {
-    const [activeFilter, setActiveFilter] = React.useState('all');
+const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, filterRequest = null }: SmartInventoryProps) => {
+    const [activeFilter, setActiveFilter] = React.useState<InventoryFilterId>(filterRequest?.filter ?? 'all');
+    const [appliedRequestNonce, setAppliedRequestNonce] = React.useState(filterRequest?.nonce);
+    if (filterRequest && filterRequest.nonce !== appliedRequestNonce) {
+        setAppliedRequestNonce(filterRequest.nonce);
+        setActiveFilter(filterRequest.filter);
+    }
     const [detailOverride, setDetailOverride] = React.useState<boolean | null>(null);
     const [enhanceTarget, setEnhanceTarget] = React.useState<{ item: Item; slot: EnhanceItemSlot } | null>(null);
     const disclosure = getEquipmentDisclosure(player);

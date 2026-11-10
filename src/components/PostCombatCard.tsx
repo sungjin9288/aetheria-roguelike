@@ -25,6 +25,7 @@ import Chip from './ui/Chip';
 import MomentCloseButton from './moments/MomentCloseButton';
 import { MOMENT_EASE } from './moments/momentMotion';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
+import type { InventoryFilterId } from '../utils/inventoryFilters';
 
 /** 보상 신호 1건 — 보스 보상 / 장비 갱신 / 성향 공명 세 종류가 같은 모양을 쓴다. */
 interface RewardSignal {
@@ -41,7 +42,8 @@ interface PostCombatCardProps {
      */
     result?: PostCombatResult | null;
     onClose?: () => void;
-    onOpenInventory?: () => void;
+    /** 가방을 연다 — 추천이 고른 분류(없으면 '전체')로. */
+    onOpenInventory?: (filter: InventoryFilterId) => void;
     /**
      * 2026-10 (감사 UX-10): '계속 탐험'이 카드를 닫고 탐험을 바로 부른다 — 탐험할 수 있는 곳(대기 · 안전지대 밖)에서만
      * GameRoot가 넘긴다(`getPostCombatExploreAction`). 없으면 그 단추는 '닫기'다.
@@ -199,7 +201,7 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null, ti
 
     const handlePrimaryAction = () => {
         if (!inputReady || closingRef.current) return;
-        if (recommendation.target === 'inventory') onOpenInventory?.();
+        if (recommendation.target === 'inventory') onOpenInventory?.(recommendation.inventoryFilter ?? 'all');
         else if (onExplore) {
             handleContinueExplore();
             return;

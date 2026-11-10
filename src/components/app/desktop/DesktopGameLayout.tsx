@@ -10,6 +10,7 @@ import DesktopCharacterSheet from './DesktopCharacterSheet';
 import type { FullStats, Item } from '../../../types/index.js';
 import type { useGameEngine } from '../../../hooks/useGameEngine';
 import type { VitalsFloatAmount } from '../../combat/CombatVitalsStrip';
+import type { InventoryFilterRequest } from '../../../utils/inventoryFilters';
 
 const Dashboard = lazy(() => import('../../Dashboard'));
 
@@ -35,6 +36,8 @@ interface DesktopGameLayoutProps {
     setMobileConsoleMode: (mode: string) => void;
     onOpenMirror: () => void;
     onOpenCrystalExchange: () => void;
+    /** 가방을 이 분류로 열어 달라는 마지막 요청(결과 카드 · 원정 정리의 '회복 아이템 확인'). */
+    inventoryFilterRequest?: InventoryFilterRequest | null;
 }
 
 const DesktopArchiveLocked = () => (
@@ -59,6 +62,7 @@ const DesktopGameLayout = ({
     statusBar, banners,
     mobileConsoleMode, setMobileConsoleMode,
     onOpenMirror, onOpenCrystalExchange,
+    inventoryFilterRequest = null,
 }: DesktopGameLayoutProps) => {
     const isCombat = engine.gameState === GS.COMBAT;
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
@@ -185,6 +189,7 @@ const DesktopGameLayout = ({
                             stats={fullStats}
                             quickSlots={engine.quickSlots}
                             runtime={dashboardRuntime}
+                            inventoryFilterRequest={inventoryFilterRequest}
                         />
                     </Suspense>
                 ) : (

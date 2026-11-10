@@ -1181,7 +1181,7 @@ export const MSG = {
     ENEMY_TELEGRAPH_HEAVY_HIGH: (pct: number) => `맹공 준비 (${pct}%)`,
     ENEMY_TELEGRAPH_GUARD_MED: (pct: number) => `방어 가능 (${pct}%)`,
     ENEMY_TELEGRAPH_HEAVY_MED: (pct: number) => `맹공 주의 (${pct}%)`,
-    ENEMY_TELEGRAPH_NORMAL: '일반 공격 예상',
+    ENEMY_TELEGRAPH_NORMAL: '일반 공격',
     // 2026-10 Wave 59: 보스 기믹(소유자 결정 "보스 기믹 전부 설명대로 구현").
     ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `3페이즈 임박 — ${formName || '최종 형태'}`,
     ENEMY_TELEGRAPH_BREATH: '브레스 준비 — 다음 행동',
@@ -1630,6 +1630,8 @@ export const MSG = {
     DEATH_LORE_KNOWN: '이미 들은 증언',
     DEATH_LORE_COUNT: (collected: number, total: number) => `${collected}/${total}`,
     DEATH_LORE_ARIA: (collected: number, total: number) => `돌기둥의 증언 ${total}개 중 ${collected}개를 들었습니다`,
+    // 2026-11 B6 P1: 능력치 탭의 들은 증언 목록 — 첫 증언 뒤에만 생기고, 듣지 않은 줄의 자리 · 장소 · 조건은 그리지 않는다.
+    STATS_DEATH_LORE_HEADING: '돌기둥의 증언',
     // 사망 화면: 이번 회차에 끝낸 여정의 최고 레벨과 이번 여정(`utils/cycleBestLevel.ts`).
     RUN_SUMMARY_BEST_LEVEL: (best: number, level: number) => `이번 회차 최고 레벨 ${best} · 이번 여정 레벨 ${level}`,
     RUN_SUMMARY_BEST_LEVEL_NEW: (previous: number) => `이번 회차 최고 레벨 경신 · 이전 최고 레벨 ${previous}`,
@@ -1751,6 +1753,10 @@ export const MSG = {
     CHAPTER_RECAP_MOMENT_ELITE_TITLE: (n: number) => `새 정예 칭호 ${n}개`,
     CHAPTER_RECAP_PASSED: (passed: readonly number[]) => `지나친 장: ${passed.map((n) => `${n}장`).join(' · ')}`,
     CHAPTER_RECAP_MORE: (n: number) => `외 ${n}장`,
+    // 2026-11 B1 P1: 능력치 탭 '이번 여정의 장'(이번 여정의 결산 전부 — 원정 밖에서 넘은 결산의 유일한 표시처) · 필드 무대의 장 칩.
+    STATS_CHAPTER_RECAPS_HEADING: '이번 여정의 장',
+    STATS_CHAPTER_RECAPS_COUNT: (n: number) => `결산 ${n}개`,
+    FIELD_STAGE_CHAPTER_CHIP: (chapter: number) => `${chapter}장`,
     EXPEDITION_DEBRIEF_TITLE: '원정 귀환',
     EXPEDITION_DEBRIEF_LOWEST_HP: '가장 위험했던 순간',
     EXPEDITION_DEBRIEF_NEW_ITEMS: '새로 챙긴 것',

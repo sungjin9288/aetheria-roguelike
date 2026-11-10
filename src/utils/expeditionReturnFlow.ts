@@ -8,6 +8,7 @@ import { getEquipmentDecision } from './equipmentUtils.js';
 import { getExpeditionQuestEntries } from './expeditionMissionFocus.js';
 import { getMirrorEffects } from '../systems/mirrorUpgrades.js';
 import { getShopBuyPrice } from './shopRotation';
+import { RECOVERY_INVENTORY_FILTER, type InventoryFilterId } from './inventoryFilters.js';
 
 export type ExpeditionReturnActionKind =
     | 'claim_quest'
@@ -24,6 +25,8 @@ export interface ExpeditionReturnAction {
     detail: string;
     questId?: string | number;
     itemName?: string;
+    /** `open_inventory`가 열 가방 분류 — 없으면 '전체'. */
+    inventoryFilter?: InventoryFilterId;
 }
 
 const countItems = (items: Item[]) => {
@@ -97,6 +100,7 @@ export const getExpeditionReturnAction = (
                 kind: 'open_inventory',
                 label: '회복 아이템 확인',
                 detail: MSG.RETURN_USE_RECOVERY_ITEM(recoveryItem.name),
+                inventoryFilter: RECOVERY_INVENTORY_FILTER,
             };
         }
 

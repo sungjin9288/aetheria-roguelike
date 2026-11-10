@@ -16,6 +16,8 @@ import { getMetaBonusRamp } from '../systems/metaBonusRamp';
 import { countDiscoveredMaps } from '../utils/discoveredMaps';
 import { ELITE_TITLE_MAPS, sumEliteTitleBonus } from '../utils/eliteTitles';
 import { formatPermanentStatBonus, readStoryStatBonus } from '../utils/permanentStatSources';
+import StatsChapterRecaps from './stats/StatsChapterRecaps';
+import StatsDeathLore from './stats/StatsDeathLore';
 
 // cycle 475: 컴팩트 prop 인터페이스 제거 — cycle 471이 Dashboard callsite 전달
 //   제거 후 caller 0건. cascade로 토글 상태 / 가지 ternary / 토글 버튼 일괄 정리.
@@ -403,6 +405,8 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                     </div>
                 </details>
 
+                <StatsChapterRecaps player={player} />
+
                 <details data-testid="stats-legacy-records" className="group">
                     <summary className="flex min-h-14 cursor-pointer list-none items-center gap-2 py-2 font-readable [&::-webkit-details-marker]:hidden">
                         <Sparkles size={14} aria-hidden="true" className="text-ae-exp" />
@@ -440,6 +444,8 @@ const StatsPanel = ({ player, stats }: StatsPanelProps) => {
                         </p>
                     </div>
                 </details>
+
+                <StatsDeathLore player={player} />
             </div>
         </div>
     );

@@ -40,6 +40,7 @@ import { getExpeditionChapterRecaps } from '../../utils/chapterRecap';
 import { usePlatformBackHandler } from '../../platform/platformBackRegistry';
 import { MAIN_CONTENT_ID } from '../../platform/modalFocus';
 import { useReturnSupplyRewardedAd } from '../../hooks/useReturnSupplyRewardedAd';
+import type { InventoryFilterId, InventoryFilterRequest } from '../../utils/inventoryFilters';
 
 const RelicChoicePanel = lazy(() => import('../RelicChoicePanel'));
 const AscensionScreen  = lazy(() => import('../AscensionScreen'));
@@ -233,9 +234,25 @@ const GameRoot = ({
     // Wave 19 K2: 아카이브 진입 게이트는 `openArchive` 액션이 소유한다(§8-3/Wave 17 I1과
     //   같은 모양) — 여기서 두 dispatch를 직접 부르면 UI에만 있는 가드가 되어 버린다.
     //   콘솔 모드 전환도 액션이 수락했을 때만 한다(거부됐는데 화면이 바뀌면 안 된다).
-    const handleOpenArchiveTab = useCallback((tab: string) => {
-        if (engine.actions.openArchive(tab)) setMobileConsoleMode('archive');
+    const handleOpenArchiveTab = useCallback((tab: string): boolean => {
+        const accepted = engine.actions.openArchive(tab);
+        if (accepted) setMobileConsoleMode('archive');
+        return accepted;
     }, [engine.actions]);
+    // 2026-11 화면 점검: '회복 아이템 확인'은 가방을 그 분류로 연다 — 요청마다 새 번호라 같은 분류도 다시 적용된다.
+    const [inventoryFilterRequest, setInventoryFilterRequest] = useState<InventoryFilterRequest | null>(null);
+    const handleOpenInventory = useCallback((filter: InventoryFilterId = 'all') => {
+        if (handleOpenArchiveTab('inventory')) {
+            setInventoryFilterRequest((prev) => ({ filter, nonce: (prev?.nonce ?? 0) + 1 }));
+        }
+    }, [handleOpenArchiveTab]);
+    // 요청은 그 한 번의 열기에만 쓴다 — 기록을 닫거나 다른 탭으로 가면 비워서, 손으로 다시 연 가방은 '전체'부터다.
+    const filterRequestScope = `${mobileConsoleMode}|${engine.sideTab}`;
+    const [lastFilterRequestScope, setLastFilterRequestScope] = useState(filterRequestScope);
+    if (filterRequestScope !== lastFilterRequestScope) {
+        setLastFilterRequestScope(filterRequestScope);
+        if (mobileConsoleMode !== 'archive' || engine.sideTab !== 'inventory') setInventoryFilterRequest(null);
+    }
     const handleOpenEquipment = useCallback(() => {
         handleOpenArchiveTab('equipment');
     }, [handleOpenArchiveTab]);
@@ -267,7 +284,7 @@ const GameRoot = ({
                 handleOpenArchiveTab('equipment');
                 break;
             case 'open_inventory':
-                handleOpenArchiveTab('inventory');
+                handleOpenInventory(expeditionReturnAction.inventoryFilter);
                 break;
             case 'open_shop':
                 // Wave 17 I1: 상점 진입은 액션이 소유한다(가드 포함) — UI와 터미널이
@@ -404,6 +421,7 @@ const GameRoot = ({
                             setMobileConsoleMode={setMobileConsoleMode}
                             onOpenMirror={() => setMirrorPanelOpen(true)}
                             onOpenCrystalExchange={() => setPremiumShopOpen(true)}
+                            inventoryFilterRequest={inventoryFilterRequest}
                         />
                         {premiumShop}
                     </>
@@ -427,6 +445,7 @@ const GameRoot = ({
                             setMobileConsoleMode={setMobileConsoleMode}
                             onOpenMirror={() => setMirrorPanelOpen(true)}
                             onOpenCrystalExchange={() => setPremiumShopOpen(true)}
+                            inventoryFilterRequest={inventoryFilterRequest}
                         />
                     </>
                 )}
@@ -473,7 +492,7 @@ const GameRoot = ({
                     <PostCombatCard
                         result={engine.postCombatResult}
                         onClose={() => engine.actions.clearPostCombat?.()}
-                        onOpenInventory={() => handleOpenArchiveTab('inventory')}
+                        onOpenInventory={handleOpenInventory}
                         onExplore={getPostCombatExploreAction(engine.gameState, engine.player, engine.actions.explore)}
                         timeScale={combatTimeScale}
                     />

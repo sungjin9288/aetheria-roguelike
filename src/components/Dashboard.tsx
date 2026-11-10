@@ -29,6 +29,7 @@ import SmartInventory from './SmartInventory';
 import type { GameActions } from '../hooks/actionDeps';
 import type { GameState } from '../reducers/gameReducer';
 import type { SystemTabRuntime } from './tabs/SystemTab';
+import type { InventoryFilterRequest } from '../utils/inventoryFilters';
 import { getJourneySurfaceText } from '../utils/journeyScope';
 import { getPreferredScrollBehavior } from '../utils/scrollBehavior';
 
@@ -65,6 +66,8 @@ interface DashboardProps {
      * 'column' — 데스크톱(≥1024px) 기록 열: 같은 탭을 4열 타일로 펼치고 닫기 · 넘침 표시를 그리지 않는다.
      */
     layout?: 'sheet' | 'column';
+    /** 가방을 이 분류로 열어 달라는 마지막 요청 — 가방 탭이 받아 분류를 바꾼다. */
+    inventoryFilterRequest?: InventoryFilterRequest | null;
 }
 
 const TAB_ITEMS = [
@@ -133,6 +136,7 @@ const Dashboard = ({
     runtime,
     onReturnToLog,
     layout = 'sheet',
+    inventoryFilterRequest = null,
 }: DashboardProps) => {
     const isColumn = layout === 'column';
     const [confirmMenuReset, setConfirmMenuReset] = useState(false);
@@ -226,6 +230,7 @@ const Dashboard = ({
                     actions={actions}
                     quickSlots={quickSlots}
                     onAssignQuickSlot={(index, item) => actions?.setQuickSlot?.(index, item)}
+                    filterRequest={inventoryFilterRequest}
                 />
             )}
 

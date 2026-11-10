@@ -455,6 +455,8 @@ export interface AetheriaTestApi {
     getCanonicalEventChanceRelicChoiceSnapshot: () => CanonicalEventChanceRelicChoiceSnapshot;
     /** 2026-11 B6: `lore`가 'known'이면 이미 들은 증언, 'none'이면 증언 칸 없음(기본은 새 증언). */
     injectRunSummary: (lore?: unknown) => void;
+    /** 2026-11 B6 P1: 들은 증언 장부에 가장 긴 줄부터 `count`개를 넣는다(능력치 탭 '돌기둥의 증언' e2e 시드). 넣은 수를 돌려준다. */
+    seedDeathLoreLedger: (count: number) => number;
     injectEvent: () => void;
     seedFallbackWagerScenario: (mode: unknown) => boolean;
     seedBoundedEncounterScenario: (region: string, encounterId: string) => boolean;
@@ -2278,6 +2280,17 @@ export const useGameTestApi = (
                 const er = engineRef.current;
                 er.dispatch({ type: AT.SET_RUN_SUMMARY, payload: withLoreState(lore) });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.DEAD });
+            },
+            seedDeathLoreLedger: (count: number) => {
+                const ids = [...DEATH_LORE]
+                    .sort((a, b) => b.text.length - a.text.length)
+                    .slice(0, Math.max(0, Math.floor(Number(count) || 0)))
+                    .map((line) => line.id);
+                engineRef.current.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: (p: Player) => ({ ...p, stats: { ...p.stats, deathLore: ids } }),
+                });
+                return ids.length;
             },
             injectEvent: () => {
                 const er = engineRef.current;

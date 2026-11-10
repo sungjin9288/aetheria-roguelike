@@ -13,6 +13,7 @@ import type { FullStats, Item } from '../../types/index.js';
 import type { useGameEngine } from '../../hooks/useGameEngine';
 import type { useDamageFlash } from '../../hooks/useDamageFlash';
 import type { CombatStageView } from '../../utils/combatPresentation';
+import type { InventoryFilterRequest } from '../../utils/inventoryFilters';
 
 const Dashboard = lazy(() => import('../Dashboard'));
 
@@ -43,6 +44,8 @@ interface MobileGameLayoutProps {
     combatStage?: CombatStageView;
     enemyHitCrit?: boolean;
     damageAmount?: ReturnType<typeof useDamageFlash>['damageAmount'];
+    /** 가방을 이 분류로 열어 달라는 마지막 요청(결과 카드 · 원정 정리의 '회복 아이템 확인'). */
+    inventoryFilterRequest?: InventoryFilterRequest | null;
 }
 
 const MobileGameLayout = ({
@@ -57,6 +60,7 @@ const MobileGameLayout = ({
     combatStage,
     enemyHitCrit = false,
     damageAmount = null,
+    inventoryFilterRequest = null,
 }: MobileGameLayoutProps) => {
     const isCombat = engine.gameState === GS.COMBAT;
     // 2026-11 디자인 고도화 A1: 전투(와 처치 순간)에는 기록 창 자리의 위쪽이 적 무대이고, 기록은 아래 두세 줄 띠다.
@@ -110,6 +114,7 @@ const MobileGameLayout = ({
                             stats={fullStats}
                             quickSlots={engine.quickSlots}
                             runtime={dashboardRuntime}
+                            inventoryFilterRequest={inventoryFilterRequest}
                         />
                     </Suspense>
                 ) : (
