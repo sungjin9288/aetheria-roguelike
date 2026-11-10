@@ -2,6 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import type { PostCombatResult } from '../types/combat.js';
 import type { RunSummary } from '../reducers/actionTypes.js';
+import { RECOVERY_INVENTORY_FILTER, type InventoryFilterId } from './inventoryFilters.js';
 /**
  * `getPostCombatAnalysis`/`getPostCombatRecommendation`/`getPostCombatDecisionStrip`가
  * 공유하는 전투 결과 모양 — CombatEngine 승리 판정 산출물 중 이 파일이 읽는 필드만
@@ -94,7 +95,14 @@ const getPostCombatVitalsLow = (result: PostCombatResultLike) => ({
         : clampRatio(result.playerMp, result.playerMaxMp) <= BALANCE.POST_COMBAT_MP_LOW_RATIO,
 });
 
-export const getPostCombatRecommendation = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}) => {
+export interface PostCombatRecommendation {
+    target: 'inventory' | 'continue';
+    label: string;
+    /** 가방으로 보낼 때 열 분류 — 없으면 가방이 지금 고른 분류 그대로다. */
+    inventoryFilter?: InventoryFilterId;
+}
+
+export const getPostCombatRecommendation = (result: PostCombatResultLike, context: PostCombatDecisionContext = {}): PostCombatRecommendation => {
     const { hpLow, mpLow } = getPostCombatVitalsLow(result);
     const invFull = typeof result.invFull === 'boolean' ? result.invFull : false;
     const enemyTier = result.enemyTier || 'NORMAL';
@@ -108,15 +116,15 @@ export const getPostCombatRecommendation = (result: PostCombatResultLike, contex
     const hasUpgradeHint = Boolean(result.upgradeHint);
     const hasTraitHint = Boolean(result.traitHint);
 
-    if (hpLow) return { target: 'inventory', label: '회복 아이템 확인' };
+    if (hpLow) return { target: 'inventory', label: '회복 아이템 확인', inventoryFilter: RECOVERY_INVENTORY_FILTER };
     if (invFull) return { target: 'inventory', label: '가방 정리' };
-    if (mpLow) return { target: 'inventory', label: '기력 회복 확인' };
+    if (mpLow) return { target: 'inventory', label: '기력 회복 확인', inventoryFilter: RECOVERY_INVENTORY_FILTER };
     if (signatureLootCount > 0 || hasUpgradeHint || hasTraitHint) {
         return { target: 'inventory', label: '장비 확인' };
     }
     if (nonSignatureLootCount > 0) return { target: 'inventory', label: '전리품 확인' };
     if (enemyTier === 'BOSS' || enemyTier === 'ELITE') {
-        return { target: 'inventory', label: '소모품 확인' };
+        return { target: 'inventory', label: '소모품 확인', inventoryFilter: RECOVERY_INVENTORY_FILTER };
     }
     return { target: 'continue', label: '계속 탐험' };
 };

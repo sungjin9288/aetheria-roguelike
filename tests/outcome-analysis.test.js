@@ -32,7 +32,7 @@ test('post combat analysis flags risky wins and recovery actions', () => {
     assert.equal(analysis.grade, '붕괴 직전');
     assert.equal(analysis.rewardMood, '강적 제압');
     assert.ok(analysis.notes.some((note) => note.includes('정예')));
-    assert.deepEqual(recommendation, { target: 'inventory', label: '회복 아이템 확인' });
+    assert.deepEqual(recommendation, { target: 'inventory', label: '회복 아이템 확인', inventoryFilter: 'hp' });
     assert.ok(analysis.rewardHighlights.some((entry) => entry.includes('정예 격파')));
 });
 

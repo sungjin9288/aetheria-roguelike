@@ -1181,7 +1181,7 @@ export const MSG = {
     ENEMY_TELEGRAPH_HEAVY_HIGH: (pct: number) => `맹공 준비 (${pct}%)`,
     ENEMY_TELEGRAPH_GUARD_MED: (pct: number) => `방어 가능 (${pct}%)`,
     ENEMY_TELEGRAPH_HEAVY_MED: (pct: number) => `맹공 주의 (${pct}%)`,
-    ENEMY_TELEGRAPH_NORMAL: '일반 공격 예상',
+    ENEMY_TELEGRAPH_NORMAL: '일반 공격',
     // 2026-10 Wave 59: 보스 기믹(소유자 결정 "보스 기믹 전부 설명대로 구현").
     ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `3페이즈 임박 — ${formName || '최종 형태'}`,
     ENEMY_TELEGRAPH_BREATH: '브레스 준비 — 다음 행동',
