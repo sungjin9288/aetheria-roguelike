@@ -1,4 +1,5 @@
-import { BALANCE, CONSTANTS } from '../data/constants.js';
+import { CONSTANTS } from '../data/constants.js';
+import { getNextExpRequirement } from '../systems/expCurve.js';
 import { CLASSES } from '../data/classes.js';
 import {
     BASELINE_PROGRESSION_PROFILE,
@@ -97,11 +98,6 @@ const questCheckpoints = (player: Player, questCatalog: Quest[]): ExpeditionQues
     }];
 });
 
-const nextExpRequirement = (requirement: number) => Math.min(
-    Math.floor(requirement * BALANCE.EXP_SCALE_RATE),
-    BALANCE.EXP_LEVEL_HARD_CAP,
-);
-
 export const calculateExpeditionExpGain = (snapshot: ExpeditionSnapshot, player: Player) => {
     const endLevel = nonNegative(player.level, snapshot.startLevel);
     const endExp = nonNegative(player.exp);
@@ -111,7 +107,7 @@ export const calculateExpeditionExpGain = (snapshot: ExpeditionSnapshot, player:
     let gained = Math.max(0, snapshot.startNextExp - snapshot.startExp);
     let requirement = snapshot.startNextExp;
     for (let level = snapshot.startLevel + 1; level < endLevel; level += 1) {
-        requirement = nextExpRequirement(requirement);
+        requirement = getNextExpRequirement(level, requirement);
         gained += requirement;
     }
     return Math.max(0, gained + endExp);

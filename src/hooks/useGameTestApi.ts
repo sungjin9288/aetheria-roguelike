@@ -18,6 +18,7 @@ import type { FullStats } from '../utils/statsCalculator';
 import type { GraveEntry } from '../utils/graveUtils';
 import type { RunSummary } from '../reducers/actionTypes';
 import { BALANCE, CONSTANTS } from '../data/constants';
+import { getLevelExpRequirement } from '../systems/expCurve';
 import { DB } from '../data/db';
 import { DEATH_LORE } from '../data/deathLore';
 import { DEATH_LORE_TOTAL } from '../utils/deathLore';
@@ -96,17 +97,6 @@ interface AvatarScenario {
     equip: EquipSlots;
     inv?: Item[];
 }
-
-const getLevelExpRequirement = (level: number) => {
-    let requirement: number = CONSTANTS.START_NEXT_EXP;
-    for (let currentLevel = 1; currentLevel < level; currentLevel += 1) {
-        requirement = Math.min(
-            Math.floor(requirement * BALANCE.EXP_SCALE_RATE),
-            BALANCE.EXP_LEVEL_HARD_CAP,
-        );
-    }
-    return requirement;
-};
 
 const buildReturnBriefingScenarioPlayer = (player: Player, now: Date): Partial<Player> => {
     const yesterday = new Date(now);
