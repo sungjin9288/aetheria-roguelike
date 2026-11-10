@@ -499,6 +499,13 @@ export const MSG = {
     SKILL_BRANCH_CHOSEN: (name: string, branchName: string) => `${name} 성장 선택: ${branchName}`,
     SKILL_BRANCH_ALREADY_CHOSEN: (name: string) => `${name}의 첫 성장 선택은 끝났습니다. 안전한 지역에서 다시 선택할 수 있습니다.`,
     BULK_SELL_DONE: (count: number, gold: number) => `재료 ${count}개 판매 · 골드 +${gold}`,
+    // 2026-11 재미 분석 G4: 쓰지 않는 장비 한 번에 팔기(상점 판매 탭, 두 번 눌러 확인).
+    EQUIP_BULK_SELL_DONE: (count: number, gold: number) => `쓰지 않는 장비 ${count}개 판매 · 골드 +${gold}`,
+    EQUIP_BULK_SELL_TITLE: (count: number) => `쓰지 않는 장비 ${count}개`,
+    EQUIP_BULK_SELL_HINT: '끼고 있는 것보다 낫지 않거나, 지금 직업과 앞으로의 전직이 쓰지 못하는 장비 · 강화한 장비와 전설 각인은 남깁니다',
+    EQUIP_BULK_SELL_CONFIRM_HINT: '한 번 더 누르면 모두 판매됩니다.',
+    EQUIP_BULK_SELL_ACTION: '모두 판매',
+    EQUIP_BULK_SELL_CONFIRM: '정말 판매',
 
     // --- 이동/탐험 ---
     MOVE_BLOCKED: '지금은 이동할 수 없는 상태입니다.',

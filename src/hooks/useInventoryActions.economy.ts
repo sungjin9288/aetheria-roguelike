@@ -87,5 +87,11 @@ export const createEconomyActions = (ctx: InventoryActionCtx) => {
         autoSell: () => {
             dispatch({ type: AT.AUTO_SELL_MATERIALS });
         },
+
+        /** 화면이 보여 준 '쓰지 않는 장비' id만 보낸다 — 대상 판정은 리듀서가 판매 순간에 다시 한다(G4). */
+        sellUnusedEquipment: (itemIds: string[]) => {
+            if (gameState !== 'shop' || itemIds.length === 0) return;
+            dispatch({ type: AT.SELL_UNUSED_EQUIPMENT, payload: { itemIds } });
+        },
     };
 };
