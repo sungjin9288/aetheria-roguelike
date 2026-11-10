@@ -13,6 +13,7 @@ import { createCurrentRunProgress } from '../utils/runProgress';
 import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
 import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
 import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
+import { chapterPickActionMap } from './handlers/chapterPickHandlers';
 import { settleSignatureAcquisitions } from './handlers/signatureAcquisition';
 import type { ActionOf, ActionType, GameAction, RunSummary } from './actionTypes';
 import type { GameMode } from './gameStates';
@@ -208,6 +209,7 @@ const ACTION_MAP = {
     ...makeFeatureActionMap(INITIAL_STATE.player),
     ...returnSupplyRewardActionMap,
     ...boundedEncounterActionMap,
+    ...chapterPickActionMap,
 } satisfies HandlerMap;
 
 const deliverReturnSupply = (nextState: GameState): GameState => {

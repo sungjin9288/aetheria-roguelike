@@ -702,6 +702,12 @@ export const BALANCE = {
     CHAPTER_RECAP_MAX_CARDS: 2,         // 원정 정리 시트에 그리는 결산 칸 수(넘으면 '외 N장')
     CHAPTER_RECAP_AREA_BOSS_NAMES: 2,   // 구역 보스 큰 순간에 적는 이름 수(넘으면 '외 N')
 
+    // 2026-11 H3 장 경계 3택(`utils/chapterPick.ts`, 소유자 결정 S2 · S3, 실행 스케치 EXECUTION_SKETCH_H2_H3_2026-11.md §3)
+    CHAPTER_PICK_CHAPTERS: [4, 5, 7],   // 이 장에 처음 들어서면 카드 셋 중 하나를 받는다(여정마다)
+    CHAPTER_PICK_ENHANCE_STEPS: 2,      // 무료 강화 카드가 장착 무기에 더하는 단계(ENHANCE_MAX 안)
+    CHAPTER_PICK_RELIC_RARITIES: ['rare', 'epic', 'legendary'], // 유물 카드의 등급 풀
+    CHAPTER_PICK_RELIC_DRAWS: 3,        // 유물 카드 + 접두어 · 강화 카드가 설 수 없을 때의 대체 유물 칸
+
     // 리텐션 훅 — 심연 데일리 다이브
     ABYSS_DAILY_DIVE_MULT: 1.5,         // 혼돈의 심연 일일 첫 다이브 EXP/골드 배율
     ABYSS_DAILY_DIVE_COMBAT_COUNT: 5,   // 배율이 적용되는 하루 첫 전투 수 (1회는 체감 없음 — 리뷰 후속)

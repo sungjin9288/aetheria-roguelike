@@ -27,7 +27,19 @@ export interface CurrentRunProgress {
      * 쓰는 곳은 이동(`advanceChapterOnEntry`) 하나다. 이전 세이브에는 없다 — 첫 이동에서 조용히 시작한다.
      */
     chapters?: ChapterProgress;
+    /**
+     * 2026-11 H3 장 경계 3택(`utils/chapterPick.ts`): 이번 여정에서 카드를 받았거나 넘긴 장. 받을 권리는 저장하지 않고
+     * `chapters.reached`에서 도출한다. 이전 세이브 · 새 여정에는 없다(빈 목록과 같다).
+     */
+    chapterPicks?: number[];
 }
+
+/** 받은 장 목록 정규화 — 1 이상의 정수, 중복 없이 오름차순. */
+export const readChapterPicks = (value: unknown): number[] => (
+    Array.isArray(value)
+        ? [...new Set(value.filter((entry): entry is number => Number.isInteger(entry) && entry >= 1))].sort((a, b) => a - b)
+        : []
+);
 
 const JOURNEY_COUNTER_KEYS: readonly JourneyCounterKey[] = Object.freeze([
     'kills', 'bossKills', 'total_gold', 'escapes', 'explores', 'rests', 'crafts', 'syntheses', 'relicCount', 'bountiesCompleted',
@@ -109,6 +121,8 @@ export const normalizeCurrentRunProgress = (
         ...readEssenceAtStart(currentRun.essenceAtStart),
         // 2026-11 B1: 필드마다 다시 짓는 함수라 장 진행을 명시적으로 넘긴다(빠뜨리면 불러올 때마다 1장으로 돌아가 같은 결산이 반복된다).
         ...(readChapterProgress(currentRun.chapters) ? { chapters: readChapterProgress(currentRun.chapters)! } : {}),
+        // 2026-11 H3: 같은 이유로 받은 장 목록도 넘긴다(빠뜨리면 불러올 때마다 같은 장의 카드를 다시 받는다).
+        ...(readChapterPicks(currentRun.chapterPicks).length > 0 ? { chapterPicks: readChapterPicks(currentRun.chapterPicks) } : {}),
     };
 };
 

@@ -161,6 +161,8 @@ export const AT = Object.freeze({
     // 2026-09 Wave 27 N2 (D3): 보유 상한에서 제안 유물을 보유 유물 하나와 맞바꾼다.
     REPLACE_RELIC: 'REPLACE_RELIC',
     DECLINE_RELIC: 'DECLINE_RELIC',
+    // 2026-11 H3: 장 경계 3택 — 받을 권리 · 패 · 효과는 `utils/chapterPick.ts`, 검증은 리듀서가 소유한다.
+    CLAIM_CHAPTER_PICK: 'CLAIM_CHAPTER_PICK',
     ASCEND: 'ASCEND',
     // 2026-09 Wave 28 (D6): 계승 제안 미루기 / 미룬 계승 다시 열기 — 둘 다 게이트는 리듀서가 소유한다.
     DEFER_ASCENSION: 'DEFER_ASCENSION',
@@ -402,6 +404,8 @@ export interface ActionPayloadMap {
     /** `relicId`는 `pendingRelics`의 제안, `replaceRelicId`는 내려놓을 보유 유물 — 둘 다 id로만 보낸다. */
     [AT.REPLACE_RELIC]: { relicId: string; replaceRelicId: string };
     [AT.DECLINE_RELIC]: undefined;
+    /** `cardId`는 패의 카드 id 또는 `'skip'`(넘기기) — 받을 권리가 없는 장 · 패 밖 카드는 동일 참조로 무시한다. */
+    [AT.CLAIM_CHAPTER_PICK]: { chapter: number; cardId: string };
     [AT.ASCEND]: AscendPayload;
     [AT.DEFER_ASCENSION]: undefined;
     [AT.REOPEN_ASCENSION]: undefined;
