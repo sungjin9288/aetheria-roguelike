@@ -660,6 +660,10 @@ export const MSG = {
     MOVE_AREA_DANGER: (lv: number | string) => `이 지역의 권장 레벨은 ${lv}입니다. 정예와 구역 보스를 주의하고, 생명이 부족하면 돌아가세요.`,
     GRAVE_FOUND_MULTI: (count: number) => `근처에서 당신의 유해 ${count}구를 발견했습니다.`,
     GRAVE_FOUND_SINGLE: '근처에서 당신의 유해를 발견했습니다.',
+    // 묘비 회수 정산 줄 — 2026-11 재미 분석 F1: graveUtils가 'G' 약어로 하드코딩하던 문구(Wave 130 플레이어 언어).
+    GRAVE_RECOVER_GOLD: (gold: number) => `유해 회수: 골드 ${gold} 획득`,
+    GRAVE_RECOVER_ITEMS: (names: string) => `${names} 획득`,
+    GRAVE_RECOVER_COUNT: (count: number) => `${count}구의 유해 정리`,
     FIRST_JOURNEY_TITLE: '숲에 남은 전쟁의 흔적',
     FIRST_JOURNEY_REASON: '마법전쟁이 끝난 뒤에도 고요한 숲에는 변이가 남아 있습니다. 마을을 나서 숲을 조사하고, 첫 발견을 기록하세요.',
     ENDGAME_JOURNEY_TITLE: '마왕성의 봉인',
@@ -1612,7 +1616,8 @@ export const MSG = {
             lessonStreak: '연속 처치가 통함',
             lessonDiscovery: '넓은 탐험이 통함',
             lessonGrowth: '성장 방향이 맞았음',
-            nextBoss: '다른 속성 무기 준비',
+            // 재미 분석 F3: '다른 속성 무기 준비'는 사인과 무관한 처방이었다 — 이 칸은 보스를 3번 이상 잡은 여정의 다음 걸음일 뿐이다.
+            nextBoss: '다음 보스 구간 대비',
             nextKeep: '같은 강점 이어 가기',
         },
         growth: { cause: '보스를 쓰러뜨렸음', lesson: '기반은 충분했음', next: '약했던 곳 보강하기' },
@@ -1719,6 +1724,7 @@ export const MSG = {
     POST_COMBAT_LOOT_MORE: (n: number) => `외 ${n}개`,
     POST_COMBAT_CONTINUE: '계속 탐험',
     POST_COMBAT_LEVEL_UP: '레벨 상승',
+    POST_COMBAT_CLASS_CHANGE_READY: '전직 가능',
     POST_COMBAT_NOTE_FALLBACK: (enemy: string) => `${enemy} 전투를 정리했습니다.`,
     POST_COMBAT_SIGNAL_BOSS: '보스 보상',
     POST_COMBAT_SIGNAL_BOSS_BONUS: (n: number) => `첫 토벌 골드 +${n}`,

@@ -407,6 +407,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                         </div>
                     );
                 })()}
+                {/* 행상인은 자기 진열(`merchantShelf`)만 그린다 — 마을 재고의 "더 보기"가 행상인 화면에 남던 결함(재미 분석 F6). */}
                 {shopMode === 'buy' && !isMerchant && (dailyDeals.items.length > 0 || weeklySpecial) && (
                     <div className="space-y-2">
                         <div className="ae-eyebrow font-readable text-ae-gold-text">오늘의 할인 · 10%</div>
@@ -631,7 +632,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     )
                 )}
 
-                {shopMode === 'buy' && buyItems.length > visibleBuyItems.length && (
+                {shopMode === 'buy' && !isMerchant && buyItems.length > visibleBuyItems.length && (
                     <ActionButton
                         variant="ghost"
                         onClick={() => setBuyItemsExpansion({ key: expansionKey, expanded: true })}

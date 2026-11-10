@@ -19,6 +19,7 @@ import { appendExpeditionBoss } from '../../utils/expeditionLedger';
 import { admitCombatLoot } from '../../systems/combatLootCapacity';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull } from '../../systems/vitals';
 import { advanceHuntContractOnVictory } from '../../utils/huntContracts';
+import { isClassChangeNewlyReady } from '../../utils/classChangeReadiness';
 import type { FullStats, Player } from '../../types';
 import type { LootSettlementReceipt } from '../../reducers/gameReducer';
 import type { AddLog, AddStoryLog, EmitUnlockedTitles, GameActionDeps } from '../actionDeps';
@@ -346,6 +347,8 @@ export const handleVictoryOutcome = ({
             gold: victoryResult.goldGained,
             items: droppedItems,
             leveledUp: Boolean(victoryResult.leveledUp),
+            // 재미 분석 G5(2026-11): 이 승리의 레벨 상승이 전직을 새로 열었다 — 레벨 상승 띠의 부제는 잠깐이고 카드는 남는다.
+            classChangeReady: isClassChangeNewlyReady(updatedPlayer.job, playerAfterCombat.level ?? 1, updatedPlayer.level ?? 1),
             // 생명 · 기력 문턱(추천 · 한 장 접기)의 분모는 실효 최대치다 — 저장값은 장비 · 칭호 · 직업 약점(×0.8)을 모른다.
             playerHp: updatedPlayer.hp,
             playerMaxHp: getEffectiveMaxHp(updatedPlayer),

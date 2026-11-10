@@ -5,6 +5,7 @@ import { MotionConfig, useReducedMotion } from 'framer-motion';
 import { GS } from './reducers/gameStates';
 import { useGameEngine } from './hooks/useGameEngine';
 import { useDamageFlash } from './hooks/useDamageFlash';
+import { useCombatExitCount } from './hooks/useCombatExitCount';
 import { useGameFeedbackHaptics } from './hooks/useHapticFeedback';
 import { getCombatTimeScale, isHapticsEnabled } from './utils/playerSettings';
 import { useGameTestApi } from './hooks/useGameTestApi';
@@ -61,9 +62,11 @@ function App() {
         hasRunSummary: Boolean(engine.runSummary),
         playerName: engine.player?.name,
     });
+    // F5: 전투를 끝내는 전이의 생명 변화(처치 회복 · 레벨 상승 회복)는 떠오르는 숫자로 보이지 않는다 — `useCombatExitCount`.
+    const combatExits = useCombatExitCount(engine.gameState === GS.COMBAT);
     const { damageFlash, healFlash, damageAmount } = useDamageFlash(
         engine.player?.hp,
-        getPresentationKey(engine.presentationEpoch, appScreen),
+        getPresentationKey(engine.presentationEpoch, appScreen, combatExits),
         getCounterStagger(engine.combatFeedback, reducedMotion, getCombatTimeScale(engine.player)),
     );
     // 2026-10-26 소유자 결정 D3: 진동(맞음 · 치명타 · 레벨 상승 · 사망) — 사망 화면에서도 살아 있는 여기서 부른다.

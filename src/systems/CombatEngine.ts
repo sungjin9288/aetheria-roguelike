@@ -385,7 +385,8 @@ export const CombatEngine = {
             { ...DB.ITEMS.consumables[0], id: 'starter_1' },
             { ...DB.ITEMS.consumables[0], id: 'starter_2' }
         ];
-        const defeatLogs = [{ type: 'error', text: MSG.DEFEAT }];
+        // 사망은 오류가 아니다 — '오류' 배지로 찍히던 줄(2026-11 재미 분석 F2). 경고 배지('주의')로 남긴다.
+        const defeatLogs = [{ type: 'warning', text: MSG.DEFEAT }];
         if (isFirstDeath) {
             defeatLogs.push({ type: 'system', text: MSG.FIRST_DEATH_META(BALANCE.FIRST_DEATH_BONUS_ATK, BALANCE.FIRST_DEATH_BONUS_HP) });
         }

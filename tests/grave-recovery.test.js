@@ -91,7 +91,7 @@ test('lootGrave restores stored gold and all dropped items before clearing the g
     assert.equal(result.updatedPlayer.inv.length, 2);
     assert.deepEqual(result.updatedPlayer.inv.map((item) => item.name), ['녹슨 단검', '천 로브']);
     assert.ok(result.updatedPlayer.inv.every((item) => typeof item.id === 'string' && item.id.length > 0));
-    assert.match(result.logMsg, /유해 회수: 40G 획득/);
+    assert.match(result.logMsg, /유해 회수: 골드 40 획득/);
     assert.match(result.logMsg, /녹슨 단검/);
     assert.match(result.logMsg, /천 로브/);
 });
