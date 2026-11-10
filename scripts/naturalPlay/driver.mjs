@@ -35,6 +35,7 @@ import { getShopBuyPrice, getShopCatalog } from '../../src/utils/shopRotation.ts
 import { mapRouteGateLevels, MAP_ROUTE_START_LOCATION } from '../../src/utils/mapRouteGate.ts';
 import { getRelicChoiceDecisionStrip } from '../../src/utils/relicChoiceDecision.ts';
 import { getRelicSynergyScore } from '../../src/utils/relicSynergyHint.ts';
+import { CHAPTER_PICK_SKIP_ID, getChapterPickOffer, getNextChapterPick } from '../../src/utils/chapterPick.ts';
 import { getRunBuildProfile } from '../../src/utils/runProfile.ts';
 import { getPrestigeUnlocks } from '../../src/systems/prestigeUnlocks.ts';
 import { getActiveRelicSynergies, isRelicReplacementUpgrade } from '../../src/data/relics.ts';
@@ -120,6 +121,10 @@ const installClock = (clock) => {
  *   가방이 거의 차면 강화 재료가 아닌 재료를 싼 것부터 판다(원장 §164 — 후반 가방이 31/20이라 아무것도 살 수 없었다).
  *   `materials`는 `basic`에 더해 상점의 강화 재료(원장 §164)를 사서 가장 낮게 강화된 장비부터 강화한다 — `basic`과의 짝 비교가
  *   그 기능의 효과다. 휴식 몇 번 값(`ECONOMY_RESERVE_RESTS`)은 남긴다. 회차 기록 `economy`에 무엇이 강화를 막았는지(골드 · 재료 · 남길 돈)를 센다.
+ * @param {'none'|'skip'|'relic'|'prefix'|'enhance'|'random'} [options.chapterPick] 장의 선물(H3, 2026-11) — `none`(기본, v3 그대로)은
+ *   화면을 보지 않는다(선물이 없던 게임과 같다). `skip`은 넘기고, `relic` · `prefix` · `enhance`는 그 카드를(패에 없으면 유물 카드),
+ *   `random`은 패에서 고르게 하나를 받는다(별도 시드 스트림 — 게임 난수를 쓰지 않는다). 칸이 찬 유물 카드는 유물 선택 정책이 교체 · 거절을 정한다.
+ *   회차 기록 `chapterPicks`에 [회차 시작부터 시간, 장, 카드 종류, 레벨, 카드 내용]을 남긴다.
  * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
  *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
@@ -142,6 +147,18 @@ export const pickAscensionRuleId = (player, nextRank, rulePick, pickSeed = 0) =>
     return fixedRule && getAscensionRuleOffer(player, nextRank).some((rule) => rule.id === fixedRule.id) ? fixedRule.id : undefined;
 };
 
+export const CHAPTER_PICK_POLICIES = Object.freeze(['none', 'skip', 'relic', 'prefix', 'enhance', 'random']);
+
+/**
+ * 장의 선물 패에서 정책이 받을 카드 id. 카드 종류 정책은 그 종류가 패에 없으면(장비가 설 수 없어 대체 유물) 첫 유물 카드다.
+ * `random`은 시드 · 회차 · 사망 수 · 장의 별도 스트림이라 게임 난수(`Math.random`)를 쓰지 않는다.
+ */
+export const pickChapterPickCardId = (offer, chapterPick, pickSeed = 0) => {
+    if (chapterPick === 'skip' || offer.cards.length === 0) return CHAPTER_PICK_SKIP_ID;
+    if (chapterPick === 'random') return offer.cards[Math.floor(createSeededRandom(pickSeed)() * offer.cards.length)].id;
+    return (offer.cards.find((card) => card.kind === chapterPick) ?? offer.cards.find((card) => card.kind === 'relic') ?? offer.cards[0]).id;
+};
+
 export const runNaturalPlay = async (options) => {
     const {
         seed,
@@ -152,9 +169,11 @@ export const runNaturalPlay = async (options) => {
         ruleDecline = 'none',
         rulePick = 'default',
         economy = 'none',
+        chapterPick = 'none',
         onDispatch,
     } = options;
     if (!['none', 'basic', 'materials'].includes(economy)) throw new Error(`unknown economy ${economy}`);
+    if (!CHAPTER_PICK_POLICIES.includes(chapterPick)) throw new Error(`unknown chapterPick ${chapterPick}`);
     if (!Number.isInteger(seed)) throw new Error('seed must be an integer');
 
     const clock = { now: START_EPOCH_MS };
@@ -205,6 +224,7 @@ export const runNaturalPlay = async (options) => {
         ruleDecline,
         rulePick,
         ...(economy === 'none' ? {} : { economy }),
+        ...(chapterPick === 'none' ? {} : { chapterPick }),
         stepSeconds,
         runs: [],
         deaths: [],
@@ -242,6 +262,7 @@ export const runNaturalPlay = async (options) => {
             // 큰 순간(원장 §80 정의 + 토벌 의뢰) — [회차 시작부터 시간, 종류]. 상태 차이만 읽는다(정책 · 난수 불변).
             moments: [],
             // 경제 정책을 켠 회차만 — 강화 시도 · 성공, 다음 강화를 막은 것(골드 · 재료 · 남길 돈)을 본 대기 차례 수, 판매 · 구매 수.
+            ...(chapterPick === 'none' ? {} : { chapterPicks: [] }),
             ...(economy === 'none' ? {} : {
                 economy: { enhanceTries: 0, enhanceSuccess: 0, blockedGold: 0, blockedMaterial: 0, blockedReserve: 0, maxed: 0, sold: 0, gearBought: 0, shopVisits: 0, ...(economy === 'materials' ? { materialBought: 0 } : {}) },
             }),
@@ -325,6 +346,26 @@ export const runNaturalPlay = async (options) => {
             if (state.postCombatResult) {
                 dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
                 continue;
+            }
+
+            // 장의 선물(H3) — 화면과 같은 조건(대기 상태 · 유물 제안 · 전투 결과 없음)에서 뜬다.
+            if (chapterPick !== 'none' && state.gameState === GS.IDLE) {
+                const chapter = getNextChapterPick(p);
+                const offer = chapter != null ? getChapterPickOffer(p, chapter) : null;
+                if (offer) {
+                    const pickSeed = deriveSeed(seed, 'natural-play-chapter-pick', result.runs.length, run.deaths, chapter);
+                    const cardId = pickChapterPickCardId(offer, chapterPick, pickSeed);
+                    const card = offer.cards.find((entry) => entry.id === cardId);
+                    // 카드 내용(유물 id · 접두어 이름 · 오르는 강화 단계) — 어떤 카드가 효과를 냈는지 나눠 본다(관찰 전용).
+                    const detail = card?.kind === 'relic' ? card.relic.id : card?.kind === 'prefix' ? `${card.slot}:${card.prefixName}` : card?.kind === 'enhance' ? `+${card.to}` : null;
+                    run.chapterPicks.push([Number((hours() - run.startHours).toFixed(3)), chapter, card?.kind ?? 'skip', Number(p.level) || 1, detail]);
+                    dispatch({ type: AT.CLAIM_CHAPTER_PICK, payload: { chapter, cardId } });
+                    // 고르기는 행동으로 세지 않는다(가짜 시계 · 행동 수를 되돌린다) — 그래서 `skip`은 `none`과 결과가 같고(계약),
+                    //   다른 정책과의 차이는 받은 카드의 효과뿐이다. 칸이 찬 유물 카드가 여는 교체 화면은 다른 유물 선택처럼 행동이다.
+                    step -= 1;
+                    clock.now -= stepSeconds * 1000;
+                    continue;
+                }
             }
 
             switch (state.gameState) {

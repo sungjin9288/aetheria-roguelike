@@ -20,12 +20,14 @@ const claimChapterPick = (state: GameState, action: ActionOf<typeof AT.CLAIM_CHA
     if (!resolution) return state;
 
     const base = { ...state, syncStatus: 'syncing' as const };
+    // 기록 id의 씨앗을 넘긴다 — 생략하면 `Math.random`을 한 번 써서, 같은 시드의 자연 플레이 짝 비교에서 고른 쪽의 난수열이 밀린다.
+    const logEntropy = { seed: state.logs.length };
     switch (resolution.kind) {
         case 'skip':
             return {
                 ...base,
                 player: resolution.player,
-                logs: appendRewardLogs(state.logs, [{ type: 'info', text: MSG.CHAPTER_PICK_LOG_SKIP(chapter) }]),
+                logs: appendRewardLogs(state.logs, [{ type: 'info', text: MSG.CHAPTER_PICK_LOG_SKIP(chapter) }], logEntropy),
             };
         case 'relic':
             if (resolution.atCapacity) {
@@ -35,25 +37,25 @@ const claimChapterPick = (state: GameState, action: ActionOf<typeof AT.CLAIM_CHA
                     player: resolution.player,
                     pendingRelics: [resolution.relic],
                     postCombatResult: null,
-                    logs: appendRewardLogs(state.logs, [{ type: 'event', text: MSG.CHAPTER_PICK_LOG_RELIC_REPLACE(chapter, resolution.relic.name || '') }]),
+                    logs: appendRewardLogs(state.logs, [{ type: 'event', text: MSG.CHAPTER_PICK_LOG_RELIC_REPLACE(chapter, resolution.relic.name || '') }], logEntropy),
                 };
             }
             return {
                 ...base,
                 player: clampVitalsToEffectiveMax(resolution.player),
-                logs: appendRewardLogs(state.logs, [{ type: 'success', text: MSG.CHAPTER_PICK_LOG_RELIC(chapter, resolution.relic.name || '') }]),
+                logs: appendRewardLogs(state.logs, [{ type: 'success', text: MSG.CHAPTER_PICK_LOG_RELIC(chapter, resolution.relic.name || '') }], logEntropy),
             };
         case 'prefix':
             return {
                 ...base,
                 player: clampVitalsToEffectiveMax(resolution.player),
-                logs: appendRewardLogs(state.logs, [{ type: 'success', text: MSG.CHAPTER_PICK_LOG_PREFIX(chapter, resolution.itemName) }]),
+                logs: appendRewardLogs(state.logs, [{ type: 'success', text: MSG.CHAPTER_PICK_LOG_PREFIX(chapter, resolution.itemName) }], logEntropy),
             };
         case 'enhance':
             return {
                 ...base,
                 player: resolution.player,
-                logs: appendRewardLogs(state.logs, [{ type: 'success', text: MSG.CHAPTER_PICK_LOG_ENHANCE(chapter, resolution.itemName, resolution.level) }]),
+                logs: appendRewardLogs(state.logs, [{ type: 'success', text: MSG.CHAPTER_PICK_LOG_ENHANCE(chapter, resolution.itemName, resolution.level) }], logEntropy),
             };
         default:
             return state;

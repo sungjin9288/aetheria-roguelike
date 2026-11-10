@@ -180,6 +180,17 @@ test('리듀서: 넘기기는 기록만, 유물은 지급, 접두어 · 강화�
     assert.deepEqual(enhanced.player.inv, state.player.inv, '재료를 쓰지 않는다');
 });
 
+test('리듀서: 어떤 카드를 받아도 전역 난수를 쓰지 않는다(기록 id 포함 — 자연 플레이 짝 비교의 난수열을 밀지 않는다)', () => {
+    const state = stateOf(freshPlayer({ reached: 4 }));
+    const max = getPrestigeUnlocks(0).maxRelics;
+    const full = stateOf(freshPlayer({ reached: 4, relics: RELICS.filter((relic) => relic.rarity === 'common').slice(0, max) }));
+    for (const [from, cardId] of [[state, CHAPTER_PICK_SKIP_ID], [state, 'relic'], [state, 'prefix'], [state, 'enhance'], [full, 'relic']]) {
+        const next = withThrowingRandom(() => claim(from, 4, cardId));
+        assert.notEqual(next, from, cardId);
+        assert.equal(next.logs.length, from.logs.length + 1, cardId);
+    }
+});
+
 test('리듀서: 칸이 찬 유물 카드는 잔향으로 접지 않고 교체 화면을 연다', () => {
     const max = getPrestigeUnlocks(0).maxRelics;
     const ownedRelics = RELICS.filter((relic) => relic.rarity === 'common').slice(0, max);
