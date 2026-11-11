@@ -69,6 +69,10 @@ const FINAL_STORY_QUEST_ID = 87;
 // `data/relics.ts`의 등급 순서(내보내지 않는다)와 같다 — 나아지는 교체에서 내려놓을 유물을 고를 때만 쓴다.
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
 const START_EPOCH_MS = 1_790_000_000_000;
+// 첫 여정의 시작 시각(`currentRun.startedAt`)은 `INITIAL_STATE`를 만든 실제 시각이다 — 장의 선물 패의 씨앗이라(2026-11 H3)
+// 그대로 두면 측정이 비결정적이고, 고정 시각 하나로 두면 모든 시드가 같은 패를 받는다. 시드마다 다른 과거 시각(하루 안)을 쓴다.
+const DAY_MS = 86_400_000;
+const firstRunStartedAt = (seed) => START_EPOCH_MS - 1 - (deriveSeed(seed, 'first-run-started-at') % DAY_MS);
 const ROUTE_GATES = mapRouteGateLevels(MAP_ROUTE_START_LOCATION, DB.MAPS);
 const STORY_QUEST_IDS = QUESTS.filter((quest) => isMainStoryQuest(quest)).map((quest) => quest.id);
 /** 이야기를 여는 임무 → 그 이야기와 시작 지역(0단계 `loc`) — 데이터에서 도출한다(임무로 여는 단계가 없는 게임이면 비어 있다). */
@@ -181,7 +185,9 @@ export const runNaturalPlay = async (options) => {
     const realRandom = Math.random;
     Math.random = createSeededRandom(deriveSeed(seed, 'natural-play'));
 
-    let state = { ...structuredClone(INITIAL_STATE), bootStage: 'ready', logs: [] };
+    const initial = structuredClone(INITIAL_STATE);
+    initial.player.stats.currentRun.startedAt = firstRunStartedAt(seed);
+    let state = { ...initial, bootStage: 'ready', logs: [] };
     let logCounter = 0;
     const dispatch = (action) => {
         const prev = state;

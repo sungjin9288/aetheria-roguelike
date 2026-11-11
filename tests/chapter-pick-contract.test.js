@@ -134,6 +134,30 @@ test('결정론: 같은 여정 · 같은 장은 같은 패 — 장비를 바꿔�
     assert.ok(differs, '다른 여정은 다른 패');
 });
 
+test('첫 여정: 탐험 · 처치 수가 모두 0이어도 플레이어마다 패가 다르다(여정 시작 시각이 씨앗이다)', () => {
+    // 첫 여정의 기준점은 누구나 탐험 0 · 처치 0이다 — 그 둘만 씨앗이던 동안 자연 플레이 120판이 모두
+    // 4장 '불타는' 무기 · 5장 '저주받은' 방어구를 받았다.
+    const firstRunOf = (startedAt) => {
+        const player = freshPlayer({ reached: 7, startExplores: 0 });
+        const currentRun = createCurrentRunProgress({}, { startedAt });
+        return { ...player, stats: { ...player.stats, explores: 30, currentRun: { ...currentRun, chapters: player.stats.currentRun.chapters } } };
+    };
+    const startTimes = Array.from({ length: 12 }, (_, index) => 1_790_000_000_000 + index * 7_919);
+    for (const chapter of [4, 5, 7]) {
+        const offers = new Set(startTimes.map((startedAt) => JSON.stringify(getChapterPickOffer(firstRunOf(startedAt), chapter))));
+        assert.ok(offers.size > 1, `${chapter}장: 시작 시각이 다른 첫 여정 12개가 모두 같은 패`);
+    }
+    const prefixes = new Set(startTimes.map((startedAt) => getChapterPickOffer(firstRunOf(startedAt), 4).cards.find((card) => card.kind === 'prefix')?.prefixName));
+    assert.ok(prefixes.size > 1, '4장 접두어가 모든 플레이어에게 같다');
+
+    const same = firstRunOf(startTimes[3]);
+    assert.deepEqual(getChapterPickOffer(clone(same), 5), getChapterPickOffer(same, 5), '같은 여정은 같은 패');
+
+    const legacy = firstRunOf(null);
+    assert.equal(legacy.stats.currentRun.startedAt, null);
+    assert.equal(getChapterPickOffer(legacy, 4).cards.length, 3, '시작 시각이 없는 이전 세이브도 패를 만든다');
+});
+
 test('불러오기는 받은 장 목록을 남긴다(빠뜨리면 같은 장의 선물을 다시 받는다)', () => {
     const player = freshPlayer({ reached: 7, picks: [4, 5] });
     const normalized = normalizeCurrentRunProgress(JSON.parse(JSON.stringify(player.stats)));

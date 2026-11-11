@@ -14,8 +14,10 @@ import { createDomainRandom } from './seededRandom.js';
  *
  * - **받을 권리는 저장하지 않고 도출한다**: earned = 선물 장 ∩ {장 ≤ `chapters.reached`}, pending = earned − `chapterPicks`.
  *   장을 넘는 이동은 새 쓰기를 하지 않는다(장 결산의 쓰기 유일 · 바이트 동일 그대로). 3장에서 5장으로 건너뛰면 둘 다 받는다.
- * - **패는 여정 안에서 변하지 않는 값으로만 굴린다**: 씨앗은 장 · 여정 시작 기준점(탐험 · 처치 수)이다. 장비를 씨앗에 넣지 않는다 —
- *   장비를 벗었다 입어 패를 다시 굴릴 수 있게 된다. 탐험 난수(`actionRng`)를 쓰지 않는다.
+ * - **패는 여정 안에서 변하지 않는 값으로만 굴린다**: 씨앗은 장 · 여정 시작 시각(`currentRun.startedAt`) · 여정 시작 기준점(탐험 ·
+ *   처치 수)이다. 시작 시각이 플레이어를 가른다 — 첫 여정의 기준점은 누구나 탐험 0 · 처치 0이라, 그 둘만 쓰던 동안 모든 플레이어의
+ *   첫 여정이 같은 패였다(자연 플레이 120판 모두 4장 '불타는' 무기). 시작 시각은 여정을 만들 때 한 번 찍히고 저장되므로 리로드로
+ *   다시 굴릴 수 없다. 장비를 씨앗에 넣지 않는다 — 장비를 벗었다 입어 패를 다시 굴릴 수 있게 된다. 탐험 난수(`actionRng`)를 쓰지 않는다.
  * - 화면(`ChapterPickPanel`)과 리듀서(`AT.CLAIM_CHAPTER_PICK`)가 같은 `getChapterPickOffer`를 읽는다.
  */
 export type ChapterPickSlot = 'weapon' | 'armor';
@@ -61,10 +63,10 @@ export const getNextChapterPick = (player: PickSource | null | undefined): numbe
     getPendingChapterPicks(player)[0] ?? null
 );
 
-/** 여정 안에서 변하지 않는 씨앗 재료 — 여정 시작 때의 누적 탐험 · 처치 수. */
-const getRunSeedParts = (player: PickSource): [number, number] => {
+/** 여정 안에서 변하지 않는 씨앗 재료 — 여정 시작 시각(없으면 0, 이전 세이브) · 여정 시작 때의 누적 탐험 · 처치 수. */
+const getRunSeedParts = (player: PickSource): [number, number, number] => {
     const currentRun = player.stats?.currentRun;
-    return [toCount(currentRun?.countersAtStart?.explores), toCount(currentRun?.killsAtStart)];
+    return [toCount(currentRun?.startedAt), toCount(currentRun?.countersAtStart?.explores), toCount(currentRun?.killsAtStart)];
 };
 
 const pickRng = (player: PickSource, chapter: number, ...kind: Array<string | number>) => (
