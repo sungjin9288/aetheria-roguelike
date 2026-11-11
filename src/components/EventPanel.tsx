@@ -1,5 +1,6 @@
+import { useState } from 'react';
 import { motion as Motion } from 'framer-motion';
-import { BookOpen, CircleHelp, Gift, HeartPulse, ShieldAlert, type LucideIcon } from 'lucide-react';
+import { BookOpen, ChevronDown, ChevronUp, CircleHelp, Gift, HeartPulse, ShieldAlert, type LucideIcon } from 'lucide-react';
 import Chip from './ui/Chip';
 import ChoiceCard, { ChoiceCardLine } from './ui/ChoiceCard';
 import FocusPanelHeader from './FocusPanelHeader';
@@ -12,6 +13,7 @@ import {
     type EventChoiceTone,
 } from '../utils/eventPresentation';
 import { getLocationVisual } from '../utils/locationVisuals';
+import { getStorySceneExcerpt } from '../utils/storySceneLedger';
 import type { GameActions } from '../hooks/actionDeps';
 import type { GameEvent } from '../types/session.js';
 import type { Player } from '../types/index.js';
@@ -30,12 +32,20 @@ interface EventPanelProps {
     activeBuff?: Player['tempBuff'] | null;
     /** 도전 조건 — 미리보기의 골드 금액이 실제로 받는 금액('빈손의 시작'이면 절반)이 되게 한다(판정은 eventPresentation 소유). */
     challengeModifiers?: Player['challengeModifiers'];
+    /** 지난 여정에서 이미 지나간 이야기 단계인가(2026-11 G2, 판정은 `isStorySceneSeen`) — 참이면 '지금 상황'을 첫 문장으로 접는다. */
+    sceneSeen?: boolean;
 }
 
 // cycle 437: 모바일 포커스 default 값 제거 — 호출자 ControlPanel:192이 명시
 //   전달이라 default 도달 불가 (cycle 364-368 redundant default annotation lens).
-const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModifiers }: EventPanelProps) => {
+const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModifiers, sceneSeen = false }: EventPanelProps) => {
+    // 편친 장면은 그 장면에만 — 다음 이벤트가 오면 다시 접힌다.
+    const [rereadKey, setRereadKey] = useState<string | null>(null);
     if (!currentEvent) return null;
+    const sceneKey = currentEvent._chainId ? `${currentEvent._chainId}:${currentEvent._chainStep ?? ''}` : null;
+    const situation = formatEventText(currentEvent.desc);
+    const excerpt = sceneSeen && sceneKey ? getStorySceneExcerpt(situation) : null;
+    const folded = Boolean(excerpt) && rereadKey !== sceneKey;
     const choices = Array.isArray(currentEvent.choices) ? currentEvent.choices.slice(0, 3) : [];
     const panelCopy = getEventPanelCopy(currentEvent);
     const locationVisual = location ? getLocationVisual(location) : null;
@@ -61,11 +71,26 @@ const EventPanel = ({ currentEvent, actions, location, activeBuff, challengeModi
                 bleedClassName=""
             />
 
-            <div data-testid="event-situation" className="ae-ornate shrink-0 px-4 py-3.5">
-                <div className="ae-eyebrow font-readable text-ae-gold-text">지금 상황</div>
-                <div className="mt-1.5 font-readable text-[15px] leading-relaxed text-ae-ink">
-                    {formatEventText(currentEvent.desc)}
+            <div data-testid="event-situation" data-scene-folded={folded ? 'true' : 'false'} className="ae-ornate shrink-0 px-4 py-3.5">
+                <div className="flex items-center justify-between gap-2">
+                    <div className="ae-eyebrow font-readable text-ae-gold-text">지금 상황</div>
+                    {excerpt && <span data-testid="event-scene-seen" className="font-readable text-[11px] text-ae-ink-3">{MSG.STORY_SCENE_SEEN}</span>}
                 </div>
+                <div className="mt-1.5 font-readable text-[15px] leading-relaxed text-ae-ink">
+                    {folded ? excerpt : situation}
+                </div>
+                {excerpt && (
+                    <button
+                        type="button"
+                        data-testid="event-scene-reread"
+                        aria-expanded={!folded}
+                        onClick={() => setRereadKey(folded ? sceneKey : null)}
+                        className="mt-1 inline-flex min-h-11 items-center gap-1 font-readable text-[12px] font-semibold text-ae-ether-hi"
+                    >
+                        {folded ? <ChevronDown size={14} aria-hidden="true" /> : <ChevronUp size={14} aria-hidden="true" />}
+                        {folded ? MSG.STORY_SCENE_REREAD : MSG.STORY_SCENE_FOLD}
+                    </button>
+                )}
             </div>
 
             <div className="mt-3 shrink-0 font-readable text-[12px] font-semibold text-ae-ink-2">어떤 길을 택하시겠습니까?</div>

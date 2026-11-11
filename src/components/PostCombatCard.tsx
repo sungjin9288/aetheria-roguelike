@@ -342,6 +342,9 @@ const PostCombatCard = ({ result, onClose, onOpenInventory, onExplore = null, ti
                                     {hasLevelUp && (
                                         <Chip tone="gold" icon={<ChevronsUp size={12} />}>{MSG.POST_COMBAT_LEVEL_UP}</Chip>
                                     )}
+                                    {hasLevelUp && result.classChangeReady && (
+                                        <Chip tone="ether" data-testid="post-combat-class-change-ready">{MSG.POST_COMBAT_CLASS_CHANGE_READY}</Chip>
+                                    )}
                                 </div>
                                 <h2 className="mt-1 break-keep font-display text-[17px] font-extrabold leading-snug text-ae-ink">
                                     {MSG.POST_COMBAT_TITLE(enemyName)}

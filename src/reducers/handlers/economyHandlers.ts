@@ -16,6 +16,7 @@ import { getCraftingInvestmentPreview } from '../../utils/itemInvestmentPreview'
 import { getInventoryCapacity, growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
 import { getBagTier, getNextBagRecipe } from '../../data/bagRecipes';
 import { getAutoSellMaterialTargets } from '../../utils/bagCrafting';
+import { getUnusedEquipmentTargets } from '../../utils/equipmentBulkSell';
 import { incrementStat } from '../../utils/playerStateUtils';
 import { syncQuestProgress } from '../../utils/questProgress';
 import { ENHANCE_MATERIAL_SHOP_SOURCE, getEnhanceMaterialBoughtCount, getEnhanceMaterialOffer } from '../../utils/enhanceMaterialShop';
@@ -334,6 +335,29 @@ const autoSellMaterials = (state: GameState): GameState => {
     return completeTransaction(state, player, logs);
 };
 
+/**
+ * 쓰지 않는 장비 한 번에 팔기(2026-11 재미 분석 G4). 대상은 판매 순간의 상태로 다시 계산하고(`getUnusedEquipmentTargets`),
+ * 화면이 보여 준 id 중 지금도 대상인 것만 판다 — 화면을 연 뒤 장착 · 강화로 바뀐 장비가 함께 팔리지 않는다.
+ * 지급은 재료 일괄 정리와 같이 합계를 `grantGold` 한 번으로 준다(수입 규칙도 합계에 한 번).
+ */
+const sellUnusedEquipment = (state: GameState, action: ActionOf<typeof AT.SELL_UNUSED_EQUIPMENT>): GameState => {
+    if (state.gameState !== GS.SHOP) return state;
+    const requested = new Set(Array.isArray(action.payload?.itemIds) ? action.payload.itemIds : []);
+    const targets = getUnusedEquipmentTargets(state.player).filter((item) => requested.has(String(item.id)));
+    if (targets.length === 0) return state;
+
+    const targetIds = new Set(targets.map((item) => item.id));
+    const totalGold = targets.reduce((total, item) => total + getSellPrice(item), 0);
+    const logs: EconomyLog[] = [];
+    let player = grantGold({
+        ...state.player,
+        inv: (state.player.inv || []).filter((item) => !targetIds.has(item.id)),
+    }, totalGold);
+    player = addNewTitles(player, logs);
+    logs.push({ type: 'success', text: MSG.EQUIP_BULK_SELL_DONE(targets.length, getGoldIncome(state.player, totalGold)) });
+    return completeTransaction(state, player, logs);
+};
+
 /** 행상인 만남 카드 → 행상인 상점(사고팔기). 카드가 열려 있고 그 지역의 만남이 유효할 때만. */
 const openMerchantShop = (state: GameState): GameState => {
     if (state.gameState !== GS.EVENT || !state.currentEvent?.isWanderingMerchant) return state;
@@ -361,6 +385,7 @@ export const economyActionMap = {
     CRAFT_BAG: craftBag,
     SYNTHESIZE_ITEMS: synthesizeItems,
     AUTO_SELL_MATERIALS: autoSellMaterials,
+    SELL_UNUSED_EQUIPMENT: sellUnusedEquipment,
     OPEN_MERCHANT_SHOP: openMerchantShop,
     LEAVE_MERCHANT: leaveMerchant,
 } satisfies HandlerMap;

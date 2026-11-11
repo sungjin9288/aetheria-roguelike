@@ -499,6 +499,13 @@ export const MSG = {
     SKILL_BRANCH_CHOSEN: (name: string, branchName: string) => `${name} 성장 선택: ${branchName}`,
     SKILL_BRANCH_ALREADY_CHOSEN: (name: string) => `${name}의 첫 성장 선택은 끝났습니다. 안전한 지역에서 다시 선택할 수 있습니다.`,
     BULK_SELL_DONE: (count: number, gold: number) => `재료 ${count}개 판매 · 골드 +${gold}`,
+    // 2026-11 재미 분석 G4: 쓰지 않는 장비 한 번에 팔기(상점 판매 탭, 두 번 눌러 확인).
+    EQUIP_BULK_SELL_DONE: (count: number, gold: number) => `쓰지 않는 장비 ${count}개 판매 · 골드 +${gold}`,
+    EQUIP_BULK_SELL_TITLE: (count: number) => `쓰지 않는 장비 ${count}개`,
+    EQUIP_BULK_SELL_HINT: '끼고 있는 것보다 낫지 않거나, 지금 직업과 앞으로의 전직이 쓰지 못하는 장비 · 강화한 장비와 전설 각인은 남깁니다',
+    EQUIP_BULK_SELL_CONFIRM_HINT: '한 번 더 누르면 모두 판매됩니다.',
+    EQUIP_BULK_SELL_ACTION: '모두 판매',
+    EQUIP_BULK_SELL_CONFIRM: '정말 판매',
 
     // --- 이동/탐험 ---
     MOVE_BLOCKED: '지금은 이동할 수 없는 상태입니다.',
@@ -530,6 +537,10 @@ export const MSG = {
     FIELD_ACTION_BAG: '가방',
     // 같은 동작(이 화면을 닫고 이전으로)은 한 이름이다(UX-09) — 화면을 바꾸는 패널은 '뒤로', 위에 덮는 화면은 '닫기'(UI_CLOSE).
     UI_BACK: '뒤로',
+    // 2026-11 재미 분석 G2: 지난 여정에서 본 이야기 장면은 첫 문장으로 접는다(표시만).
+    STORY_SCENE_SEEN: '지난 여정에서 본 장면',
+    STORY_SCENE_REREAD: '다시 읽기',
+    STORY_SCENE_FOLD: '접기',
     EVENT_LEAVE_LOG: (title: string) => `${title} · 선택하지 않고 지나쳤습니다.`,
     STATUS_CRYSTAL_ARIA: (count: number) => `크리스탈 ${count}개 · 에테르 교환소 열기`,
     // 상태 표시줄 아바타는 기록(모험 기록)을 연다 — '장비 콘솔'은 화면 언어 밖의 이름이었다(UX-07).
@@ -660,6 +671,10 @@ export const MSG = {
     MOVE_AREA_DANGER: (lv: number | string) => `이 지역의 권장 레벨은 ${lv}입니다. 정예와 구역 보스를 주의하고, 생명이 부족하면 돌아가세요.`,
     GRAVE_FOUND_MULTI: (count: number) => `근처에서 당신의 유해 ${count}구를 발견했습니다.`,
     GRAVE_FOUND_SINGLE: '근처에서 당신의 유해를 발견했습니다.',
+    // 묘비 회수 정산 줄 — 2026-11 재미 분석 F1: graveUtils가 'G' 약어로 하드코딩하던 문구(Wave 130 플레이어 언어).
+    GRAVE_RECOVER_GOLD: (gold: number) => `유해 회수: 골드 ${gold} 획득`,
+    GRAVE_RECOVER_ITEMS: (names: string) => `${names} 획득`,
+    GRAVE_RECOVER_COUNT: (count: number) => `${count}구의 유해 정리`,
     FIRST_JOURNEY_TITLE: '숲에 남은 전쟁의 흔적',
     FIRST_JOURNEY_REASON: '마법전쟁이 끝난 뒤에도 고요한 숲에는 변이가 남아 있습니다. 마을을 나서 숲을 조사하고, 첫 발견을 기록하세요.',
     ENDGAME_JOURNEY_TITLE: '마왕성의 봉인',
@@ -952,6 +967,9 @@ export const MSG = {
     CYCLE_SUMMARY_SIGNATURES_NONE: (discovered: number, total: number) => `새 전설 각인 없음 (도감 ${discovered}/${total})`,
     CYCLE_SUMMARY_ELITE: (gained: number, owned: number, total: number) => `새 정예 칭호 ${gained}개 (${owned}/${total})`,
     CYCLE_SUMMARY_ELITE_NONE: (owned: number, total: number) => `새 정예 칭호 없음 (${owned}/${total})`,
+    // 2026-11 재미 분석 G3: 판단 기록 — 사실만(평가 · 추천 없음, Wave 88).
+    CYCLE_SUMMARY_JUDGMENT: (faced: number, ready: number, escaped: number) =>
+        `판단 기록 · 정예와 보스를 ${faced}번 마주침 — 가장 센 한 방보다 생명이 많던 때 ${ready}번, 물러난 전투 ${escaped}번`,
     // 2026-10 Wave 103 (소유자 결정 §107.6): 아직 도감에 없는 각인 · 장비 · 유물의 이름은 보이지 않는다.
     SIGNATURE_SET_UNKNOWN_CANDIDATE: '아직 발견하지 못한 전설 각인',
     BUILD_ADVICE_UNOWNED_RELICS: (count: number) => `이 성장에 어울리는 유물이 ${count}개 더 있습니다. 어떤 유물인지는 얻어야 알 수 있습니다.`,
@@ -1612,7 +1630,8 @@ export const MSG = {
             lessonStreak: '연속 처치가 통함',
             lessonDiscovery: '넓은 탐험이 통함',
             lessonGrowth: '성장 방향이 맞았음',
-            nextBoss: '다른 속성 무기 준비',
+            // 재미 분석 F3: '다른 속성 무기 준비'는 사인과 무관한 처방이었다 — 이 칸은 보스를 3번 이상 잡은 여정의 다음 걸음일 뿐이다.
+            nextBoss: '다음 보스 구간 대비',
             nextKeep: '같은 강점 이어 가기',
         },
         growth: { cause: '보스를 쓰러뜨렸음', lesson: '기반은 충분했음', next: '약했던 곳 보강하기' },
@@ -1719,6 +1738,7 @@ export const MSG = {
     POST_COMBAT_LOOT_MORE: (n: number) => `외 ${n}개`,
     POST_COMBAT_CONTINUE: '계속 탐험',
     POST_COMBAT_LEVEL_UP: '레벨 상승',
+    POST_COMBAT_CLASS_CHANGE_READY: '전직 가능',
     POST_COMBAT_NOTE_FALLBACK: (enemy: string) => `${enemy} 전투를 정리했습니다.`,
     POST_COMBAT_SIGNAL_BOSS: '보스 보상',
     POST_COMBAT_SIGNAL_BOSS_BONUS: (n: number) => `첫 토벌 골드 +${n}`,

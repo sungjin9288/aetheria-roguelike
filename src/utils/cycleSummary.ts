@@ -5,6 +5,7 @@ import type { Player } from '../types/index.js';
 import { ELITE_TITLE_MAPS, sumEliteTitleBonus } from './eliteTitles.js';
 import { hasConqueredRank } from './ruleConquest.js';
 import { getDiscoveredSignatureNames, SIGNATURE_NAMES } from './signatureDiscovery.js';
+import { EMPTY_JUDGMENT_LEDGER, readJudgmentLedger, type JudgmentLedger } from './judgmentLedger.js';
 
 /**
  * 이번 회차 요약 (2026-10 Wave 100, 원장 §104.4 c — 소유자 결정 "c로 진행").
@@ -25,6 +26,8 @@ export interface CycleSummary {
     signatures: { newNames: string[]; discovered: number; total: number } | null;
     /** 새 정예 칭호 — 기준점을 모르면 null. */
     eliteTitles: { gained: number; owned: number; total: number } | null;
+    /** 판단 기록(2026-11 G3) — 이번 회차의 정예 · 보스 출현 · 대비 · 물러남. 기준점에 판단 기록이 없으면 null. */
+    judgment: JudgmentLedger | null;
     /** 끝없는 거울이 열렸을 때만 의미가 있다(Wave 99). */
     mirrorUnlocked: boolean;
     mirror: MirrorEndlessCycle;
@@ -37,6 +40,7 @@ export const snapshotCycleStart = (player: Player, rank: number): CycleStart => 
     rank,
     signatures: getDiscoveredSignatureNames(player),
     eliteTitles: sumEliteTitleBonus(player.titles).count,
+    judgment: readJudgmentLedger(player.stats?.judgmentLedger),
 });
 
 /** 지금 회차의 기준점 — 단계가 맞는 기록, 단계 0은 빈 기준점, 그 밖(기록 없는 이전 세이브)은 null. */
@@ -44,8 +48,14 @@ export const getCycleStart = (player: Pick<Player, 'meta'>): CycleStart | null =
     const rank = currentRankOf(player);
     const record = player.meta?.cycleStart;
     if (record && record.rank === rank && Array.isArray(record.signatures)) return record;
-    return rank === 0 ? { rank: 0, signatures: [], eliteTitles: 0 } : null;
+    return rank === 0 ? { rank: 0, signatures: [], eliteTitles: 0, judgment: { ...EMPTY_JUDGMENT_LEDGER } } : null;
 };
+
+const diffJudgment = (now: JudgmentLedger, start: JudgmentLedger): JudgmentLedger => ({
+    faced: Math.max(0, now.faced - start.faced),
+    ready: Math.max(0, now.ready - start.ready),
+    escaped: Math.max(0, now.escaped - start.escaped),
+});
 
 export const getCycleSummary = (player: Player): CycleSummary => {
     const rank = currentRankOf(player);
@@ -76,12 +86,13 @@ export const getCycleSummary = (player: Player): CycleSummary => {
             owned: ownedElite,
             total: ELITE_TITLE_MAPS.length,
         } : null,
+        judgment: start?.judgment ? diffJudgment(readJudgmentLedger(player.stats?.judgmentLedger), readJudgmentLedger(start.judgment)) : null,
         mirrorUnlocked: isMirrorTreeComplete(player.meta?.mirror),
         mirror: getMirrorEndlessCycle(player.meta),
     };
 };
 
-export type CycleSummaryLineId = 'rule' | 'signatures' | 'elite' | 'mirror';
+export type CycleSummaryLineId = 'rule' | 'signatures' | 'elite' | 'judgment' | 'mirror';
 export interface CycleSummaryLine { id: CycleSummaryLineId; text: string; highlight: boolean }
 
 /** 요약 줄에 이름을 다 싣지 않는다 — 앞의 몇 개와 나머지 수. */
@@ -119,6 +130,11 @@ export const getCycleSummaryLines = (summary: CycleSummary): CycleSummaryLine[] 
             highlight: gained > 0,
             text: gained > 0 ? MSG.CYCLE_SUMMARY_ELITE(gained, owned, total) : MSG.CYCLE_SUMMARY_ELITE_NONE(owned, total),
         });
+    }
+    // 2026-11 G3: 사실만 — 강조 · 평가 · 추천을 붙이지 않는다(Wave 88). 정예 · 보스를 한 번도 만나지 않은 회차는 줄이 없다.
+    if (summary.judgment && (summary.judgment.faced > 0 || summary.judgment.escaped > 0)) {
+        const { faced, ready, escaped } = summary.judgment;
+        lines.push({ id: 'judgment', highlight: false, text: MSG.CYCLE_SUMMARY_JUDGMENT(faced, ready, escaped) });
     }
     if (summary.mirrorUnlocked) {
         const { steps, gains } = summary.mirror;

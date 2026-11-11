@@ -147,7 +147,8 @@ test('combat item turn commits defeat and grave data in the same state transitio
     assert.equal(defeated.player.stats.deaths, 1);
     assert.ok(defeated.grave);
     assert.ok(defeated.runSummary);
-    assert.ok(defeated.logs.some((log) => log.type === 'error' && /패배|쓰러/.test(log.text)));
+    // 재미 분석 F2(2026-11): 사망은 오류가 아니다 — 사망 줄은 '주의'(warning) 배지다.
+    assert.ok(defeated.logs.some((log) => log.type === 'warning' && /패배|쓰러/.test(log.text)));
 });
 
 test('a damage-over-time kill closes combat once before victory rewards resolve', () => {

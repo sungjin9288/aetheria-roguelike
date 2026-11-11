@@ -2,6 +2,8 @@ import type { Player } from '../types/player';
 import { normalizeClassJourneyLedger } from './classJourney';
 import { normalizeReturnSupplyRewardLedger } from './returnSupplyReward';
 import { collectSignatureLedger } from './signatureDiscovery';
+import { collectStorySceneLedger, type StorySceneLedger } from './storySceneLedger';
+import { readJudgmentLedger } from './judgmentLedger';
 import { collectAchievedAchievementIds } from './achievementProgress';
 import { collectCrystalRewardedCodexMilestoneIds } from './codexCrystalLedger';
 import { recordCycleBestLevel } from './cycleBestLevel';
@@ -62,6 +64,11 @@ export const collectCrystalRewardedAchievementIds = (stats: Player['stats'] | nu
         ...readIdList(stats?.crystalRewardedAchievements),
         ...readIdList(stats?.claimedAchievements).filter((id) => CRYSTAL_ACHIEVEMENT_IDS.has(id)),
     ])]
+);
+
+/** 빈 장부는 남기지 않는다 — 이야기를 지나지 않은 세이브의 모양이 그대로다. */
+const storySceneLedgerEntry = (ledger: StorySceneLedger) => (
+    Object.keys(ledger).length > 0 ? { storySceneLedger: ledger } : {}
 );
 
 export const pickPermanentPlayerState = (
@@ -162,6 +169,10 @@ export const pickPermanentPlayerState = (
             signatureLedger: collectSignatureLedger(player),
             // 2026-11 B6: 돌기둥의 증언 — 계정 장부라 사망 · 계승 모두 넘는다(쓰기가 아니라 운반).
             ...(Array.isArray(stats.deathLore) ? { deathLore: readDeathLoreLedger(stats.deathLore) } : {}),
+            // 2026-11 G2: 지난 여정에서 본 이야기 장면 — 체인 진행은 비워지므로 비우기 전 이 지점에서 장부에 합친다(표시만 읽는다).
+            ...storySceneLedgerEntry(collectStorySceneLedger(player)),
+            // 2026-11 G3: 판단 기록 — 평생 누적이라 그대로 운반한다(쓰기가 아니라 운반).
+            ...(stats.judgmentLedger ? { judgmentLedger: readJudgmentLedger(stats.judgmentLedger) } : {}),
             // 2026-10 Wave 108: 임무 · 이야기 수령 기록 · 현상수배 발급 기록은 여정 범위다(수령한 임무를 다시 받는다).
             codexBonusAtk: keepCodex ? numberOrZero(stats.codexBonusAtk) : 0,
             codexBonusDef: keepCodex ? numberOrZero(stats.codexBonusDef) : 0,

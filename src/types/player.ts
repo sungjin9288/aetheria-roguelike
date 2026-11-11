@@ -90,6 +90,17 @@ interface PlayerStats {
      * 쓰는 곳은 패배 전이(`combatHandlers.settleNonVictory`) 하나, 운반은 `pickPermanentPlayerState`, 읽기는 `readDeathLoreLedger`.
      */
     deathLore?: string[];
+    /**
+     * 2026-11 재미 분석 G2: 지난 여정들에서 지나간 이야기 체인 단계 수(체인마다 가장 큰 진행 값) — 계정 단위라 사망 · 계승을 넘는다.
+     * 쓰는 곳은 `pickPermanentPlayerState` 하나(`collectStorySceneLedger`), 읽는 곳은 이벤트 화면의 접기 판정(`isStorySceneSeen`)뿐이다.
+     */
+    storySceneLedger?: Record<string, number>;
+    /**
+     * 2026-11 재미 분석 G3: 판단 기록 — 정예 · 보스가 나타난 수(`faced`), 그때 생명이 예상 가장 센 한 방보다 많았던 수(`ready`),
+     * 정예 · 보스에게서 물러난 수(`escaped`). 평생 누적이고 계정 단위다. 쓰는 곳은 적 출현 전이(`SET_ENEMY`)와 도주 성공(`combatActionTurn`),
+     * 읽는 곳은 회차 요약(회차 시작 기준점과의 차이)뿐이다 — 게임 판정은 읽지 않는다.
+     */
+    judgmentLedger?: { faced: number; ready: number; escaped: number };
     /** cycle 260: 수령 완료 퀘스트 영구 ledger. quest.id는 숫자(DB.QUESTS)와 문자열(bounty) 혼용. */
     claimedQuestIds?: Array<string | number>;
     explores?: number;
@@ -307,7 +318,8 @@ interface PlayerMeta {
      * 2026-10 Wave 100: 이 계승 단계(회차)를 시작할 때의 수집 기준점 — 계승(`ASCEND`)이 새 단계로 남긴다. 계승 화면의 "이번 회차 요약"이
      * 지금 수집 − 기준점으로 새로 얻은 것을 센다(`getCycleSummary`). `rank`가 지금 `prestigeRank`와 다르면 없는 것으로 읽는다.
      */
-    cycleStart?: { rank: number; signatures: string[]; eliteTitles: number };
+    /** 2026-11 G3: `judgment` — 회차를 시작할 때의 판단 기록(`stats.judgmentLedger`). 없으면(이전 기준점) 판단 줄을 그리지 않는다. */
+    cycleStart?: { rank: number; signatures: string[]; eliteTitles: number; judgment?: { faced: number; ready: number; escaped: number } };
     /**
      * 이 계승 단계(회차)에서 끝낸 여정의 최고 레벨 — 사망 · 다시 시작(`pickPermanentPlayerState`)이 남기고 사망 화면 · 다시 오르는 레벨업
      * 기록이 읽는다(`utils/cycleBestLevel.ts`). `rank`가 지금 `prestigeRank`와 다르면 없는 것으로 읽는다. 게임 판정은 읽지 않는다.

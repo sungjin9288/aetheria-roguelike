@@ -47,6 +47,8 @@ export interface PostCombatResult {
     /** 가방에 실제로 들어간 전리품의 **이름** 목록 (`admittedItems.map((i) => i.name)`). */
     items: Array<Item['name']>;
     leveledUp: boolean;
+    /** 이 승리의 레벨 상승으로 전직이 새로 열렸다(`isClassChangeNewlyReady`) — 없으면 아니다(QA 시드 · 이전 결과). */
+    classChangeReady?: boolean;
     playerHp: Player['hp'];
     /** 생산자는 `victoryStats.maxHp`(= `updatedPlayer.maxHp`)를 쏜다. */
     playerMaxHp: Player['maxHp'];

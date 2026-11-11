@@ -1,7 +1,7 @@
 import { ENHANCE_MATERIAL_SHOP_SOURCE, getEnhanceMaterialBoughtCount, getEnhanceMaterialOffer } from '../utils/enhanceMaterialShop';
 import { getEnhanceMaterialCount } from '../utils/enhancementUtils';
 import { useEffect, useMemo, useState } from 'react';
-import { ShieldCheck, ShoppingBag } from 'lucide-react';
+import { PackageMinus, ShieldCheck, ShoppingBag } from 'lucide-react';
 import { BALANCE, RARITY_CLASSES } from '../data/constants';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
 import { DB } from '../data/db';
@@ -16,13 +16,14 @@ import ActionButton from './ui/ActionButton';
 import Chip, { type ChipTone } from './ui/Chip';
 import { getItemRarity } from '../utils/gameUtils';
 import { getSignatureSaleVerdict } from '../utils/signatureSale';
+import { getUnusedEquipmentSummary } from '../utils/equipmentBulkSell';
 import { getConsumableDescription, getConsumableEffectSummary } from '../utils/consumablePresentation';
 import type { GameActions } from '../hooks/actionDeps';
 import type { FullStats, Item, ItemType, Player } from '../types/index.js';
 import type { GameMode } from '../reducers/gameStates';
 
 /** ShopPanel이 실제로 호출하는 액션만 좁혀 받는다 (구매/판매/구매 영수증 해제). */
-type ShopPanelActions = Pick<GameActions, 'economyReceipt' | 'clearEconomyReceipt' | 'market'> & Partial<Pick<GameActions, 'leaveMerchant'>>;
+type ShopPanelActions = Pick<GameActions, 'economyReceipt' | 'clearEconomyReceipt' | 'market'> & Partial<Pick<GameActions, 'leaveMerchant' | 'sellUnusedEquipment'>>;
 
 /** getComparisonMeta / getEquipmentDecision이 쓰는 비교 어조 — getToneClass 배색과 1:1. */
 type ComparisonTone = 'positive' | 'negative' | 'neutral';
@@ -170,6 +171,8 @@ const MOBILE_INITIAL_BUY_LIMIT = 12;
 const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArchiveConsole }: ShopPanelProps) => {
     const [shopMode, setShopMode] = useState('buy');
     const [sellConfirmId, setSellConfirmId] = useState<string | null | undefined>(null);
+    // G4: 일괄 판매 확인은 '본 대상 집합'에 묶인다 — 대상이 바뀌면(장착 · 판매 · 강화) 확인이 저절로 풀린다.
+    const [bulkConfirmKey, setBulkConfirmKey] = useState<string | null>(null);
     const [buyItemsExpansion, setBuyItemsExpansion] = useState({ key: '', expanded: false });
     const [detailOverride, setDetailOverride] = useState<boolean | null>(null);
     const disclosure = getEquipmentDisclosure(player);
@@ -237,6 +240,10 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
             .sort((a, b) => (a.price || 0) - (b.price || 0))
     ), [player.inv]);
 
+    const unusedEquipment = useMemo(() => getUnusedEquipmentSummary(player), [player]);
+    const unusedEquipmentKey = unusedEquipment.items.map((item) => item.id).join('|');
+    const isBulkConfirming = bulkConfirmKey !== null && bulkConfirmKey === unusedEquipmentKey;
+
     const materialOffer = isMerchant ? null : getEnhanceMaterialOffer(player);
     const dailyDeals = useMemo(
         () => getDailyDeals(player.level || 1, loc),
@@ -288,6 +295,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                         onClick={() => {
                             setShopMode('buy');
                             setSellConfirmId(null);
+                            setBulkConfirmKey(null);
                         }}
                         className="ae-town-seg-btn min-h-11 min-w-11 font-readable"
                     >
@@ -300,6 +308,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                         onClick={() => {
                             setShopMode('sell');
                             setSellConfirmId(null);
+                            setBulkConfirmKey(null);
                         }}
                         className="ae-town-seg-btn min-h-11 min-w-11 font-readable"
                     >
@@ -407,6 +416,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                         </div>
                     );
                 })()}
+                {/* 행상인은 자기 진열(`merchantShelf`)만 그린다 — 마을 재고의 "더 보기"가 행상인 화면에 남던 결함(재미 분석 F6). */}
                 {shopMode === 'buy' && !isMerchant && (dailyDeals.items.length > 0 || weeklySpecial) && (
                     <div className="space-y-2">
                         <div className="ae-eyebrow font-readable text-ae-gold-text">오늘의 할인 · 10%</div>
@@ -547,6 +557,43 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     )
                 ) : (
                     sellItems.length > 0 ? (
+                        <>
+                        {unusedEquipment.items.length > 0 && actions?.sellUnusedEquipment && (
+                            <div
+                                data-testid="shop-bulk-sell-equipment"
+                                data-count={unusedEquipment.items.length}
+                                className={`ae-well mb-3 flex flex-col gap-2 px-3 py-2.5 transition-colors ${isBulkConfirming ? 'bg-ae-threat/10' : ''}`}
+                            >
+                                <div className="flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <div className="font-readable text-[13px] font-bold text-ae-ink">{MSG.EQUIP_BULK_SELL_TITLE(unusedEquipment.items.length)}</div>
+                                        <div className="mt-0.5 font-readable text-[12px] leading-snug text-ae-ink-2">{MSG.EQUIP_BULK_SELL_HINT}</div>
+                                    </div>
+                                    <span data-testid="shop-bulk-sell-income" className="shrink-0 font-fira text-[14px] font-bold tabular-nums text-ae-gold-text">+{formatGold(unusedEquipment.income)}</span>
+                                </div>
+                                <div className="flex items-center justify-between gap-3">
+                                    <div className={`min-w-0 font-readable text-[12px] ${isBulkConfirming ? 'font-semibold text-ae-threat' : 'text-ae-ink-3'}`}>
+                                        {isBulkConfirming ? MSG.EQUIP_BULK_SELL_CONFIRM_HINT : unusedEquipment.items.map((item) => item.name).join(' · ')}
+                                    </div>
+                                    <ActionButton
+                                        data-testid="shop-bulk-sell-action"
+                                        variant={isBulkConfirming ? 'danger' : 'glass'}
+                                        onClick={() => {
+                                            if (!isBulkConfirming) {
+                                                setBulkConfirmKey(unusedEquipmentKey);
+                                                setSellConfirmId(null);
+                                                return;
+                                            }
+                                            actions.sellUnusedEquipment?.(unusedEquipment.items.map((item) => String(item.id)));
+                                            setBulkConfirmKey(null);
+                                        }}
+                                        icon={isBulkConfirming ? undefined : <PackageMinus size={15} />}
+                                        label={isBulkConfirming ? MSG.EQUIP_BULK_SELL_CONFIRM : MSG.EQUIP_BULK_SELL_ACTION}
+                                        className="min-h-[44px] shrink-0 px-3.5 text-[13px]"
+                                    />
+                                </div>
+                            </div>
+                        )}
                         <div className="ae-town-group">
                             {sellItems.map((item) => {
                                 const isConfirming = sellConfirmId === item.id;
@@ -614,6 +661,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                                         return;
                                                     }
                                                     setSellConfirmId(item.id);
+                                                    setBulkConfirmKey(null);
                                                 }}
                                                 icon={isSignatureLocked ? <ShieldCheck size={15} /> : undefined}
                                                 label={isSignatureLocked ? MSG.SIGNATURE_SELL_PROTECTED_BADGE : isConfirming ? '정말 판매' : '판매'}
@@ -624,6 +672,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                                 );
                             })}
                         </div>
+                        </>
                     ) : (
                         <div className="ae-sunk rounded-ae-md py-10 text-center font-readable text-[13px] text-ae-ink-2">
                             판매할 수 있는 아이템이 없습니다.
@@ -631,7 +680,7 @@ const ShopPanel = ({ player, actions, shopItems, setGameState, stats, onOpenArch
                     )
                 )}
 
-                {shopMode === 'buy' && buyItems.length > visibleBuyItems.length && (
+                {shopMode === 'buy' && !isMerchant && buyItems.length > visibleBuyItems.length && (
                     <ActionButton
                         variant="ghost"
                         onClick={() => setBuyItemsExpansion({ key: expansionKey, expanded: true })}

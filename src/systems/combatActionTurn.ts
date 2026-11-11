@@ -9,6 +9,7 @@ import { createSeededRandom } from './combatItemTurn';
 import { tickAfterAction } from './combatTurnTick';
 import type { CombatTurnSignals, Monster, Player } from '../types/index.js';
 import type { GraveEntry } from '../utils/graveUtils.js';
+import { recordThreatEscape } from '../utils/judgmentLedger';
 
 export type CombatActionKind = 'attack' | 'skill' | 'escape';
 
@@ -125,13 +126,13 @@ export const resolveCombatActionTurn = ({
             const hpRatio = (player.hp || 0) / Math.max(1, player.maxHp || 1);
             return {
                 kind: 'escape',
-                player: {
+                player: recordThreatEscape({
                     ...endCombatScope(endDevourBonus(player)),
                     stats: {
                         ...pushBattleRecord(player.stats, makeBattleRecord('escape', hpRatio)),
                         escapes: (player.stats?.escapes || 0) + 1,
                     },
-                },
+                }, enemy),
                 enemy: null,
                 logs: escapeResult.logs,
                 visualEffect: null,
@@ -211,13 +212,13 @@ export const resolveCombatActionTurn = ({
         const hpRatio = (escapedPlayer.hp || 0) / Math.max(1, escapedPlayer.maxHp || 1);
         return {
             kind: 'escape',
-            player: {
+            player: recordThreatEscape({
                 ...escapedPlayer,
                 stats: {
                     ...pushBattleRecord(escapedPlayer.stats, makeBattleRecord('escape', hpRatio)),
                     escapes: (escapedPlayer.stats?.escapes || 0) + 1,
                 },
-            },
+            }, enemy),
             enemy: null,
             logs,
             visualEffect: null,

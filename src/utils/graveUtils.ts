@@ -1,6 +1,7 @@
 import type { Item, Player } from '../types/index.js';
 import { MAPS } from '../data/maps.js';
 import { CONSTANTS } from '../data/constants.js';
+import { MSG } from '../data/messages.js';
 import { getGoldIncome, type ChallengeHolder } from './challengeRules.js';
 
 /**
@@ -197,14 +198,14 @@ export const resolveGraveRecovery = (player: Player, grave: GraveInput) => {
             total_gold: (player?.stats?.total_gold || 0) + goldGain,
         }
     };
-    const summary = [`유해 회수: ${goldGain}G 획득`];
+    const summary = [MSG.GRAVE_RECOVER_GOLD(goldGain)];
 
     if (recoveredItems.length > 0) {
-        summary.push(`${recoveredItems.map((item) => item.name).join(', ')} 획득`);
+        summary.push(MSG.GRAVE_RECOVER_ITEMS(recoveredItems.map((item) => item.name).join(', ')));
     }
 
     if (graves.length > 1) {
-        summary.push(`${graves.length}구의 유해 정리`);
+        summary.push(MSG.GRAVE_RECOVER_COUNT(graves.length));
     }
 
     return {
