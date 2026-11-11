@@ -375,8 +375,9 @@ export const buildEventRewardCoherenceReport = ({
     if (chainOutcomeCount !== 56) errors.add('CHAIN_OUTCOME_COUNT_MISMATCH');
     if (chainQuestStartCount !== 12) errors.add('CHAIN_QUEST_START_COUNT_MISMATCH');
     if (chainQuestGateCount !== 1) errors.add('CHAIN_QUEST_GATE_COUNT_MISMATCH');
-    if (boundedList.length !== 8) errors.add('BOUNDED_COUNT_MISMATCH');
-    if (boundedChoiceCount !== 16) errors.add('BOUNDED_CHOICE_COUNT_MISMATCH');
+    // 2026-11 H7: 숲 · 평원 8 + 토벌 의뢰 8곳 × 4.
+    if (boundedList.length !== 40) errors.add('BOUNDED_COUNT_MISMATCH');
+    if (boundedChoiceCount !== 80) errors.add('BOUNDED_CHOICE_COUNT_MISMATCH');
     if (fallbackList.length !== 3) errors.add('FALLBACK_COUNT_MISMATCH');
     if (campfireEvent?.choices?.length !== 2) errors.add('CAMPFIRE_CHOICE_COUNT_MISMATCH');
     if (scoutEvent?.choices?.length !== 3) errors.add('SCOUT_CHOICE_COUNT_MISMATCH');

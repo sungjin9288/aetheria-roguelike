@@ -16,6 +16,7 @@ import { getDiscoveredSignatureNames } from './signatureDiscovery.js';
 import { calculateFullStats } from './statsCalculator.js';
 import { getGoldIncome } from './challengeRules.js';
 import { reportPaidGold } from './eventPresentation.js';
+import { deriveSeed } from './seededRandom.js';
 
 const SAFE_ID = /^[a-z0-9][a-z0-9._:-]{0,127}$/;
 const HP_BANDS = new Set(['critical', 'strained', 'healthy']);
@@ -149,7 +150,7 @@ export const validateBoundedEncounterPack = (
 ) => {
     const errors: string[] = [];
     if (!Array.isArray(encounters) || !Array.isArray(selectedRegions)
-        || selectedRegions.length !== 2 || new Set(selectedRegions).size !== 2
+        || selectedRegions.length === 0 || new Set(selectedRegions).size !== selectedRegions.length
         || selectedRegions.some((region) => !DB.MAPS[region] || DB.MAPS[region].type === 'safe')) {
         return { ok: false, errors: ['SELECTED_REGIONS_INVALID'] };
     }
@@ -242,17 +243,19 @@ export const isBoundedEncounterEligible = (
         || !Array.isArray(context.buildTags)
         || !Array.isArray(context.receiptKeys)) return false;
     if (receipt) {
-        let receiptKey: string;
+        // 2026-11 H7(소유자 결정 Q3 a): 조우마다 원정당 한 번 — 이 원정에서 이미 받은 조우는 탐험 수와 무관하게 자격이 없다.
+        //   수령 키는 `원정:조우:탐험 수`라 같은 원정 · 조우의 키 앞부분이 같다.
+        let receivedPrefix: string;
         try {
-            receiptKey = buildBoundedEncounterReceiptKey(
+            receivedPrefix = buildBoundedEncounterReceiptKey(
                 receipt.expeditionId,
                 encounter.id,
                 receipt.occurrenceSequence,
-            );
+            ).replace(/[^:]+$/, '');
         } catch {
             return false;
         }
-        if (context.receiptKeys.includes(receiptKey)) return false;
+        if (context.receiptKeys.some((key) => key.startsWith(receivedPrefix))) return false;
     }
     const eligibility = encounter.eligibility;
     if (eligibility.lineage
@@ -266,22 +269,25 @@ export const isBoundedEncounterEligible = (
     return true;
 };
 
+const UINT32 = 0x100000000;
+
+/**
+ * 2026-11 H7(소유자 결정 Q3 a): 고르기는 탐험 난수가 아니라 평생 탐험 수 · 지역의 해시다 — 자격이 있는 조우가 있어도
+ *   그 탐험 뒤의 난수열이 밀리지 않는다(Wave 70 · 75와 같은 원칙). 같은 탐험이면 같은 조우라 리로드로 다시 고를 수 없다.
+ *   원정 id는 넣지 않는다 — 벽시계가 들어 있어 같은 세이브 · 같은 탐험의 결과가 실행마다 달라진다(재현 · e2e가 깨진다).
+ */
 export const selectBoundedEncounter = (
     encounters: readonly BoundedEncounter[],
     context: BoundedEncounterContext,
-    receiptOrRng: { expeditionId: string; occurrenceSequence: number } | (() => number),
-    maybeRng?: () => number,
-) => {
-    const receipt = typeof receiptOrRng === 'function' ? undefined : receiptOrRng;
-    const rng = typeof receiptOrRng === 'function' ? receiptOrRng : maybeRng;
-    if (!Array.isArray(encounters) || typeof rng !== 'function') return null;
+    receipt: { expeditionId: string; occurrenceSequence: number },
+): BoundedEncounter | null => {
+    if (!Array.isArray(encounters) || !isPlainObject(receipt)) return null;
     const eligible = encounters
         .filter((encounter) => isBoundedEncounterEligible(encounter, context, receipt))
         .sort((left, right) => left.id.localeCompare(right.id));
     if (eligible.length === 0) return null;
-    const roll = rng();
-    if (!Number.isFinite(roll) || roll < 0 || roll >= 1) return null;
-    return eligible[Math.floor(roll * eligible.length)] || null;
+    const unit = deriveSeed(0, 'bounded-encounter', receipt.occurrenceSequence, context.region) / UINT32;
+    return eligible[Math.floor(unit * eligible.length)] || null;
 };
 
 const jobLineageFor = (job: string) => {

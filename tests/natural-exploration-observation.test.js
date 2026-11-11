@@ -44,7 +44,7 @@ const validSurfaceObservation = (overrides = {}) => ({
         },
         {
             kind: 'bounded_event',
-            seed: 37,
+            seed: 1,
             visibleSituation: '고요한 숲의 오래된 돌기둥 사이로 먼저 지나간 모험가의 흔적과 희미한 문장이 드러납니다.',
             visibleChoices: ['돌기둥의 문장을 읽는다', '무거운 돌을 들어 올린다'],
         },
@@ -180,7 +180,7 @@ test('source and surface provenance are exact and fail closed', () => {
             surfaceObservation: { ...validSurfaceObservation(), freshContextCount: 1 },
         }],
         ['wrong seed order', {
-            surfaceObservation: { ...validSurfaceObservation(), seeds: [8, 112596, 37] },
+            surfaceObservation: { ...validSurfaceObservation(), seeds: [8, 112596, 1] },
         }],
         ['wrong outcome order', {
             surfaceObservation: {

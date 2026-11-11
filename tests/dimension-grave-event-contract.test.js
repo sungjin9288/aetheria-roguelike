@@ -331,7 +331,10 @@ test('이기면 유품을 받는다 — 카탈로그 수치로(위조된 수치�
 });
 
 test('지거나 물러나면 유품이 없다', async () => {
-    const fight = choose(await openGrave(baseState({}, { hp: 1 })), 0);
+    // 상태는 둘째 인자다 — 첫째(묘비 후보 풀)에 넘기던 동안 묘비가 나오지 않고 정찰 카드의 전투로 우연히 통과했다(2026-11 H7에서 드러남).
+    const opened = await openGrave(undefined, baseState({}, { hp: 1 }));
+    assert.equal(opened.currentEvent?.isDimensionGrave, true, '전제: 묘비 이벤트');
+    const fight = choose(opened, 0);
     let lost = { ...fight, enemy: { ...fight.enemy, hp: 1e9, maxHp: 1e9, atk: 1e7 } };
     for (let seed = 1; seed <= 20 && lost.gameState === GS.COMBAT; seed += 1) lost = act(lost, 'attack', seed);
     assert.equal(lost.gameState, GS.DEAD, '전제: 실제로 쓰러졌다');

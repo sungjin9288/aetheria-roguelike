@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "c8754f8c34626546be1382d3bb18a7d0c1716b58807119eabb533d9fe1b6d130",
+  "reportHash": "57f22e7723b92826f028c8fdf7e40780c101e04a81058cd3b22b615cfa8ef40c",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -9,8 +9,8 @@
       "chainOutcomeCount": 56,
       "chainQuestStartCount": 12,
       "chainQuestGateCount": 1,
-      "boundedEncounterCount": 8,
-      "boundedChoiceCount": 16,
+      "boundedEncounterCount": 40,
+      "boundedChoiceCount": 80,
       "fallbackTransactionCount": 3,
       "campfireChoiceCount": 2,
       "scoutChoiceCount": 3
@@ -22,6 +22,62 @@
       "minimumNarrativeGap": 2
     },
     "rows": [
+      {
+        "id": "bounded:dungeon-chain-vault:break-vault-chains",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "어둠의 지하 감옥",
+        "rewardType": "item",
+        "itemName": "어둠의 정수"
+      },
+      {
+        "id": "bounded:dungeon-chain-vault:pick-vault-lock",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "어둠의 지하 감옥",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:dungeon-chapel-ruin:collect-chapel-water",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "어둠의 지하 감옥",
+        "rewardType": "item",
+        "itemName": "성수"
+      },
+      {
+        "id": "bounded:dungeon-chapel-ruin:purify-chapel",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "어둠의 지하 감옥",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:dungeon-engraved-cell:answer-cell-engraving",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "어둠의 지하 감옥",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:dungeon-engraved-cell:loot-engraved-cell",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "어둠의 지하 감옥",
+        "rewardType": "item",
+        "itemName": "강화 재료"
+      },
+      {
+        "id": "bounded:dungeon-prisoner-tally:dig-behind-tally",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "어둠의 지하 감옥",
+        "rewardType": "item",
+        "itemName": "상급 체력 물약"
+      },
+      {
+        "id": "bounded:dungeon-prisoner-tally:honor-prisoner-tally",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "어둠의 지하 감옥",
+        "rewardType": "buff",
+        "itemName": null
+      },
       {
         "id": "bounded:forest-engraved-echo:align-engraving",
         "occurrenceClass": "repeatable-bounded",
@@ -79,6 +135,286 @@
         "itemName": "강화 재료"
       },
       {
+        "id": "bounded:lava-ash-spring:scoop-spring-ash",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용암 지대",
+        "rewardType": "item",
+        "itemName": "치료약"
+      },
+      {
+        "id": "bounded:lava-ash-spring:soak-ash-spring",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용암 지대",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:lava-cooling-crust:break-lava-crust",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용암 지대",
+        "rewardType": "item",
+        "itemName": "용암 핵"
+      },
+      {
+        "id": "bounded:lava-cooling-crust:skirt-lava-crust",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용암 지대",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:lava-giant-footprint:follow-footprint",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용암 지대",
+        "rewardType": "item",
+        "itemName": "강화 재료"
+      },
+      {
+        "id": "bounded:lava-giant-footprint:read-footprint-rhythm",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용암 지대",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:lava-obsidian-bulwark:absorb-obsidian",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용암 지대",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:lava-obsidian-bulwark:chip-obsidian",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용암 지대",
+        "rewardType": "item",
+        "itemName": "오리할콘"
+      },
+      {
+        "id": "bounded:machine-coolant-pipe:bottle-coolant",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "기계 폐도",
+        "rewardType": "item",
+        "itemName": "치료약"
+      },
+      {
+        "id": "bounded:machine-coolant-pipe:cool-wounds",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "기계 폐도",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:machine-overclock-rig:overclock-weapon",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "기계 폐도",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:machine-overclock-rig:stabilize-rig",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "기계 폐도",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:machine-prototype-blueprint:pry-mithril-frame",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "기계 폐도",
+        "rewardType": "item",
+        "itemName": "미스릴 원석"
+      },
+      {
+        "id": "bounded:machine-prototype-blueprint:study-blueprint",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "기계 폐도",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:machine-repair-bay:extract-core",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "기계 폐도",
+        "rewardType": "item",
+        "itemName": "기계 코어"
+      },
+      {
+        "id": "bounded:machine-repair-bay:scrap-bay-parts",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "기계 폐도",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:maze-avenger-grave:claim-avenger-relic",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "지하 미궁",
+        "rewardType": "item",
+        "itemName": "엘릭서"
+      },
+      {
+        "id": "bounded:maze-avenger-grave:lay-avenger-to-rest",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "지하 미궁",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:maze-centipede-den:coat-blade-venom",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "지하 미궁",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:maze-centipede-den:milk-venom-gland",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "지하 미궁",
+        "rewardType": "item",
+        "itemName": "해독제"
+      },
+      {
+        "id": "bounded:maze-dead-end-shrine:pray-dead-end",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "지하 미궁",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:maze-dead-end-shrine:take-shrine-potion",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "지하 미궁",
+        "rewardType": "item",
+        "itemName": "상급 체력 물약"
+      },
+      {
+        "id": "bounded:maze-trap-cache:disarm-trap-cache",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "지하 미궁",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:maze-trap-cache:spring-trap-cache",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "지하 미궁",
+        "rewardType": "item",
+        "itemName": "강화 재료"
+      },
+      {
+        "id": "bounded:nest-ember-hollow:gather-cooling-ash",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용의 둥지",
+        "rewardType": "item",
+        "itemName": "치료약"
+      },
+      {
+        "id": "bounded:nest-ember-hollow:temper-in-embers",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용의 둥지",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:nest-red-dragon-hoard:claim-heart-shard",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용의 둥지",
+        "rewardType": "item",
+        "itemName": "화염의 결정"
+      },
+      {
+        "id": "bounded:nest-red-dragon-hoard:melt-hoard-gold",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용의 둥지",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:nest-shed-scales:grab-hot-scale",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용의 둥지",
+        "rewardType": "item",
+        "itemName": "용의 비늘"
+      },
+      {
+        "id": "bounded:nest-shed-scales:wait-scale-cool",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용의 둥지",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:nest-wyvern-roost:pluck-roost-wing",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용의 둥지",
+        "rewardType": "item",
+        "itemName": "와이번 날개"
+      },
+      {
+        "id": "bounded:nest-wyvern-roost:rest-in-roost",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "용의 둥지",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:outpost-drill-yard:drill-shield-wall",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "몰락한 전초기지",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:outpost-drill-yard:spar-scarecrow",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "몰락한 전초기지",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:outpost-field-surgeon:dress-wounds",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "몰락한 전초기지",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:outpost-field-surgeon:pack-field-kit",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "몰락한 전초기지",
+        "rewardType": "item",
+        "itemName": "하급 체력 물약"
+      },
+      {
+        "id": "bounded:outpost-ration-crate:pry-ration-crate",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "몰락한 전초기지",
+        "rewardType": "item",
+        "itemName": "중급 체력 물약"
+      },
+      {
+        "id": "bounded:outpost-ration-crate:salvage-crate-coins",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "몰락한 전초기지",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:outpost-signal-fire:light-signal-fire",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "몰락한 전초기지",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:outpost-signal-fire:strip-signal-iron",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "몰락한 전초기지",
+        "rewardType": "item",
+        "itemName": "철광석"
+      },
+      {
         "id": "bounded:plain-bandit-banner:follow-cache-map",
         "occurrenceClass": "repeatable-bounded",
         "location": "서쪽 평원",
@@ -133,6 +469,118 @@
         "location": "서쪽 평원",
         "rewardType": "gold",
         "itemName": null
+      },
+      {
+        "id": "bounded:sky-dew-garden:drink-cloud-dew",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "천공 정원",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:sky-dew-garden:pick-sky-blossom",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "천공 정원",
+        "rewardType": "item",
+        "itemName": "상급 마나 물약"
+      },
+      {
+        "id": "bounded:sky-falling-crystal:collect-fallen-shards",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "천공 정원",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:sky-falling-crystal:lunge-for-crystal",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "천공 정원",
+        "rewardType": "item",
+        "itemName": "천공 결정"
+      },
+      {
+        "id": "bounded:sky-hidden-perch:lift-sentinel-cache",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "천공 정원",
+        "rewardType": "item",
+        "itemName": "상급 체력 물약"
+      },
+      {
+        "id": "bounded:sky-hidden-perch:mark-sky-targets",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "천공 정원",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:sky-storm-chime:cut-storm-chime",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "천공 정원",
+        "rewardType": "item",
+        "itemName": "폭풍 정수"
+      },
+      {
+        "id": "bounded:sky-storm-chime:tune-storm-chime",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "천공 정원",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:tower-curse-ward:scrape-curse-glyph",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고대 마법 탑",
+        "rewardType": "item",
+        "itemName": "저주해제 주문서"
+      },
+      {
+        "id": "bounded:tower-curse-ward:step-around-glyph",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고대 마법 탑",
+        "rewardType": "gold",
+        "itemName": null
+      },
+      {
+        "id": "bounded:tower-last-ward:bind-ward-to-armor",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고대 마법 탑",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:tower-last-ward:kneel-in-ward",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고대 마법 탑",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:tower-mana-wellspring:bottle-wellspring",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고대 마법 탑",
+        "rewardType": "item",
+        "itemName": "중급 마나 물약"
+      },
+      {
+        "id": "bounded:tower-mana-wellspring:drink-wellspring",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고대 마법 탑",
+        "rewardType": "buff",
+        "itemName": null
+      },
+      {
+        "id": "bounded:tower-rune-library:copy-margin-notes",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고대 마법 탑",
+        "rewardType": "recovery",
+        "itemName": null
+      },
+      {
+        "id": "bounded:tower-rune-library:unseal-library",
+        "occurrenceClass": "repeatable-bounded",
+        "location": "고대 마법 탑",
+        "rewardType": "item",
+        "itemName": "마나 결정"
       },
       {
         "id": "campfire:0",

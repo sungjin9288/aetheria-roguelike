@@ -13,6 +13,7 @@ import { buildBoundedEncounterEvent } from '../src/utils/boundedEncounterEvent.j
 import {
     applyBoundedEncounterChoice,
     buildBoundedEncounterContext,
+    isBoundedEncounterEligible,
     selectBoundedEncounter,
 } from '../src/utils/boundedEncounterSelector.js';
 
@@ -80,18 +81,13 @@ const stateForEncounter = (encounter, overrides = {}) => {
     };
 };
 
-test('accepted general narrative roll selects a bounded encounter before AI generation', async () => {
+// 2026-11 H7(소유자 결정 "정찰 자리"): 한정 조우는 정찰 자리에서 나온다 — 카드를 먼저 만들고 바꾸므로
+//   같은 굴림이면 원정 여부와 무관하게 난수 소비가 같다. 이야기 이벤트 굴림은 더 이상 한정 조우를 내지 않는다.
+const runExplore = async (player, rolls) => {
     const dispatches = [];
     let committed = 0;
-    const player = activePlayer({
-        hp: 120,
-        stats: {
-            ...clone(INITIAL_STATE.player.stats),
-            explores: 1,
-            exploreState: { ...clone(INITIAL_STATE.player.stats.exploreState), sinceNarrativeEvent: 1 },
-        },
-        eventChainProgress: { lost_wizard: 99 },
-    });
+    let draws = 0;
+    const queue = [...rolls];
     const actions = createExploreActions({
         player,
         gameState: GS.IDLE,
@@ -100,22 +96,56 @@ test('accepted general narrative roll selects a bounded encounter before AI gene
         addLog: () => {},
         addStoryLog: () => {},
         getFullStats: () => ({ maxHp: player.maxHp, maxMp: player.maxMp }),
-        rng: (() => {
-            const rolls = [0.99, 0.99, 0, 0];
-            return () => rolls.shift() ?? 0.99;
-        })(),
+        rng: () => {
+            draws += 1;
+            return queue.shift() ?? 0.5;
+        },
     }, {
         commitExploreOutcome: () => { committed += 1; },
     });
-
     await actions.explore();
+    return { dispatches, committed, draws, event: dispatches.find((action) => action.type === AT.SET_EVENT)?.payload };
+};
 
-    const eventAction = dispatches.find((action) => action.type === AT.SET_EVENT);
-    assert.equal(eventAction.payload.isBoundedEncounter, true);
-    assert.equal(eventAction.payload.boundedEncounterId, 'forest-old-pillars');
-    assert.equal(eventAction.payload.boundedOccurrenceSequence, 2);
-    assert.equal(committed, 1);
-    assert.equal(dispatches.some((action) => action.type === AT.SET_AI_THINKING), false);
+const explorePlayer = (overrides = {}) => activePlayer({
+    hp: 120,
+    stats: {
+        ...clone(INITIAL_STATE.player.stats),
+        explores: 1,
+        exploreState: { ...clone(INITIAL_STATE.player.stats.exploreState), sinceNarrativeEvent: 1 },
+    },
+    eventChainProgress: { lost_wizard: 99 },
+    ...overrides,
+});
+
+const claimedAllForestPlayer = () => explorePlayer({
+    eventChainProgress: {
+        lost_wizard: 99,
+        boundedEncounterReceipts: Object.fromEntries(BOUNDED_ENCOUNTERS
+            .filter((entry) => entry.region === '고요한 숲')
+            .map((entry) => [`expedition-test-1:${entry.id}:1`, true])),
+    },
+});
+
+test('scout slot shows an unclaimed regional encounter instead of the card, with the same draws as the card', async () => {
+    // 모닥불 0.99(실패) → 정찰 0(발동) → 카드 안의 추첨들. 기준선은 같은 원정에서 이 지역 조우를 모두 받은 플레이어(카드).
+    const rolls = [0.99, 0];
+    const encounter = await runExplore(explorePlayer(), rolls);
+    const card = await runExplore(claimedAllForestPlayer(), rolls);
+
+    assert.equal(encounter.draws, card.draws);
+    assert.notEqual(card.event.isBoundedEncounter, true);
+    assert.equal(encounter.event.isBoundedEncounter, true);
+    assert.equal(encounter.event.boundedOccurrenceSequence, 2);
+    assert.equal(encounter.committed, 1);
+    assert.equal(card.committed, 1);
+    assert.equal(encounter.dispatches.some((action) => action.type === AT.SET_AI_THINKING), false);
+});
+
+test('story-event roll no longer yields a regional encounter', async () => {
+    // 모닥불 · 정찰 실패 → 이야기 이벤트 굴림 0(발동).
+    const result = await runExplore(explorePlayer(), [0.99, 0.99, 0]);
+    assert.notEqual(result.event?.isBoundedEncounter, true);
 });
 
 test('bounded event shape exposes canonical trade-offs but not settlement fields', () => {
@@ -147,13 +177,12 @@ test('real signature codex and class journey boss history unlock independent pro
     const signatureContext = buildBoundedEncounterContext(signaturePlayer, '고요한 숲');
     assert.ok(signatureContext?.signatureNames.includes('성검 에테르니아'));
     assert.equal(
-        selectBoundedEncounter(
-            BOUNDED_ENCOUNTERS,
+        isBoundedEncounterEligible(
+            BOUNDED_ENCOUNTERS.find((entry) => entry.id === 'forest-engraved-echo'),
             signatureContext,
             { expeditionId: 'expedition-signature', occurrenceSequence: 1 },
-            () => 0,
-        )?.id,
-        'forest-engraved-echo',
+    ),
+        true,
     );
 
     const bossPlayer = activePlayer({
@@ -167,13 +196,12 @@ test('real signature codex and class journey boss history unlock independent pro
     const bossContext = buildBoundedEncounterContext(bossPlayer, '서쪽 평원');
     assert.ok(bossContext?.bossNames.includes('고대 호수의 수호신'));
     assert.equal(
-        selectBoundedEncounter(
-            BOUNDED_ENCOUNTERS,
+        isBoundedEncounterEligible(
+            BOUNDED_ENCOUNTERS.find((entry) => entry.id === 'plain-guardian-waterway'),
             bossContext,
             { expeditionId: 'expedition-boss', occurrenceSequence: 1 },
-            () => 0,
-        )?.id,
-        'plain-guardian-waterway',
+    ),
+        true,
     );
 });
 
