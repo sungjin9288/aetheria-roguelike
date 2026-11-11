@@ -13,6 +13,7 @@ import { buildBoundedEncounterEvent } from '../src/utils/boundedEncounterEvent.j
 import {
     applyBoundedEncounterChoice,
     buildBoundedEncounterContext,
+    isBoundedEncounterEligible,
     selectBoundedEncounter,
 } from '../src/utils/boundedEncounterSelector.js';
 
@@ -83,6 +84,7 @@ const stateForEncounter = (encounter, overrides = {}) => {
 test('accepted general narrative roll selects a bounded encounter before AI generation', async () => {
     const dispatches = [];
     let committed = 0;
+    let draws = 0;
     const player = activePlayer({
         hp: 120,
         stats: {
@@ -102,13 +104,18 @@ test('accepted general narrative roll selects a bounded encounter before AI gene
         getFullStats: () => ({ maxHp: player.maxHp, maxMp: player.maxMp }),
         rng: (() => {
             const rolls = [0.99, 0.99, 0, 0];
-            return () => rolls.shift() ?? 0.99;
+            return () => {
+                draws += 1;
+                return rolls.shift() ?? 0.99;
+            };
         })(),
     }, {
         commitExploreOutcome: () => { committed += 1; },
     });
 
     await actions.explore();
+    // 2026-11 H7(소유자 결정 Q3 a): 고르기는 해시다 — 모닥불 · 정찰 · 이야기 이벤트 굴림 셋 뒤에 난수를 더 쓰지 않는다.
+    assert.equal(draws, 3);
 
     const eventAction = dispatches.find((action) => action.type === AT.SET_EVENT);
     assert.equal(eventAction.payload.isBoundedEncounter, true);
@@ -147,13 +154,12 @@ test('real signature codex and class journey boss history unlock independent pro
     const signatureContext = buildBoundedEncounterContext(signaturePlayer, '고요한 숲');
     assert.ok(signatureContext?.signatureNames.includes('성검 에테르니아'));
     assert.equal(
-        selectBoundedEncounter(
-            BOUNDED_ENCOUNTERS,
+        isBoundedEncounterEligible(
+            BOUNDED_ENCOUNTERS.find((entry) => entry.id === 'forest-engraved-echo'),
             signatureContext,
             { expeditionId: 'expedition-signature', occurrenceSequence: 1 },
-            () => 0,
-        )?.id,
-        'forest-engraved-echo',
+    ),
+        true,
     );
 
     const bossPlayer = activePlayer({
@@ -167,13 +173,12 @@ test('real signature codex and class journey boss history unlock independent pro
     const bossContext = buildBoundedEncounterContext(bossPlayer, '서쪽 평원');
     assert.ok(bossContext?.bossNames.includes('고대 호수의 수호신'));
     assert.equal(
-        selectBoundedEncounter(
-            BOUNDED_ENCOUNTERS,
+        isBoundedEncounterEligible(
+            BOUNDED_ENCOUNTERS.find((entry) => entry.id === 'plain-guardian-waterway'),
             bossContext,
             { expeditionId: 'expedition-boss', occurrenceSequence: 1 },
-            () => 0,
-        )?.id,
-        'plain-guardian-waterway',
+    ),
+        true,
     );
 });
 

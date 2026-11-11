@@ -372,17 +372,48 @@ test('production selection includes each context-gated encounter only when its a
         ['plain-supply-cart', 'plain-bandit-banner'],
     );
     assert.equal(
-        selectBoundedEncounter(BOUNDED_ENCOUNTERS, context(), receipt, () => 0)?.id,
-        'forest-engraved-echo',
+        isBoundedEncounterEligible(BOUNDED_ENCOUNTERS.find((entry) => entry.id === 'forest-engraved-echo'), context(), receipt),
+        true,
     );
 });
 
-test('same seed selects the same eligible encounter without global randomness', () => {
+test('selection is a hash of expedition, occurrence and region — no random draw', () => {
     const pack = validPack();
-    const first = selectBoundedEncounter(pack, context(), createDomainRandom(20260811, 'bounded'));
-    const second = selectBoundedEncounter(pack, context(), createDomainRandom(20260811, 'bounded'));
-    assert.equal(first?.id, second?.id);
-    assert.ok(['forest-lineage', 'forest-signature', 'forest-engraved-echo'].includes(first?.id));
+    const receipt = { expeditionId: 'expedition-20260811', occurrenceSequence: 7 };
+    const originalRandom = Math.random;
+    Math.random = () => { throw new Error('selection must not draw Math.random'); };
+    try {
+        const first = selectBoundedEncounter(pack, context(), receipt);
+        const second = selectBoundedEncounter(pack, context(), receipt);
+        assert.equal(first?.id, second?.id);
+        assert.ok(['forest-lineage', 'forest-signature', 'forest-engraved-echo'].includes(first?.id));
+        const picked = new Set(Array.from({ length: 60 }, (_, index) => (
+            selectBoundedEncounter(pack, context(), { ...receipt, occurrenceSequence: index + 1 })?.id
+        )));
+        assert.ok(picked.size >= 2, `different occurrences should reach different encounters: ${[...picked]}`);
+    } finally {
+        Math.random = originalRandom;
+    }
+});
+
+test('an encounter received in this expedition is not offered again in it (H7 Q3 a)', () => {
+    const pack = validPack();
+    const receipt = { expeditionId: 'expedition-20260811', occurrenceSequence: 9 };
+    const eligibleIds = pack.filter((entry) => isBoundedEncounterEligible(entry, context(), receipt)).map((entry) => entry.id);
+    assert.ok(eligibleIds.length >= 2);
+    const [received] = eligibleIds;
+    const receivedKey = buildBoundedEncounterReceiptKey(receipt.expeditionId, received, 3);
+    const afterReceipt = context({ receiptKeys: [receivedKey] });
+    assert.equal(isBoundedEncounterEligible(pack.find((entry) => entry.id === received), afterReceipt, receipt), false);
+    for (let occurrence = 1; occurrence <= 40; occurrence += 1) {
+        assert.notEqual(selectBoundedEncounter(pack, afterReceipt, { ...receipt, occurrenceSequence: occurrence })?.id, received);
+    }
+    const otherExpedition = { expeditionId: 'expedition-next', occurrenceSequence: 9 };
+    assert.equal(isBoundedEncounterEligible(pack.find((entry) => entry.id === received), afterReceipt, otherExpedition), true);
+    const allReceived = context({
+        receiptKeys: eligibleIds.map((id) => buildBoundedEncounterReceiptKey(receipt.expeditionId, id, 1)),
+    });
+    assert.equal(selectBoundedEncounter(pack, allReceived, receipt), null);
 });
 
 test('choice settlement is atomic, receipt-backed and replay is exact no-op', () => {

@@ -79,7 +79,7 @@ const runExplorePostDecisionRoll = async (
             : null;
         const context = receipt ? buildBoundedEncounterContext(player, player.loc!) : null;
         const encounter = receipt && context && BOUNDED_ENCOUNTER_PACK_ENABLED
-            ? selectBoundedEncounter(BOUNDED_ENCOUNTERS, context, receipt, rng)
+            ? selectBoundedEncounter(BOUNDED_ENCOUNTERS, context, receipt)
             : null;
 
         if (encounter) {
