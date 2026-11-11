@@ -6,6 +6,7 @@ import { getPrestigeUnlocks } from './prestigeUnlocks';
 import { getEssenceRewardMult } from './essenceRewardMult';
 import { getLongFightRewardBonus } from './bossMechanics.js';
 import { getMetaVitalsLevelUpDelta } from './metaBonusRamp.js';
+import { getLevelExpRequirement } from './expCurve.js';
 import { applyEssenceGain, getEssenceGainFromExp } from './essenceLedger';
 import { getPacedCombatExp } from '../utils/progressionPacing.js';
 import { getStrongestNumericRelicValue } from './CombatEngine.actions.js';
@@ -37,10 +38,7 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         while (p.level! < CONSTANTS.MAX_LEVEL && p.exp! >= p.nextExp!) {
             p.exp = p.exp! - p.nextExp!;
             p.level = p.level! + 1;
-            p.nextExp = Math.min(
-                Math.floor(p.nextExp! * BALANCE.EXP_SCALE_RATE),
-                BALANCE.EXP_LEVEL_HARD_CAP
-            );
+            p.nextExp = getLevelExpRequirement(p.level);
             // 2026-09 Wave 40: 영구 생명 · 기력은 연동 비율이 오른 만큼 함께 굽는다(스냅숏이 없는 예전 세이브는 0).
             const metaDelta = getMetaVitalsLevelUpDelta(p.metaVitalsSnapshot, p.level - 1, p.level);
             // 2026-10 Wave 62 (원장 §61.2 A9): '약한 생명력'은 레벨업으로 늘어나는 생명도 절반이다 — 시작 때 한 번만 절반이던 동안

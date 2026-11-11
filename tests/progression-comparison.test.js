@@ -57,7 +57,7 @@ test('multi-seed comparison is deterministic, canonical, and remains report-only
         'retention',
     ]);
 
-    assert.deepEqual(first.aggregates.checkpoints.map((entry) => entry.targetLevel), [2, 5, 10, 20, 45, 60, 75]);
+    assert.deepEqual(first.aggregates.checkpoints.map((entry) => entry.targetLevel), [2, 5, 10, 20, 45, 48, 60, 75]);
     for (const entry of first.aggregates.checkpoints) {
         assert.equal(entry.predecessor.p10 <= entry.predecessor.p50, true);
         assert.equal(entry.predecessor.p50 <= entry.predecessor.p90, true);

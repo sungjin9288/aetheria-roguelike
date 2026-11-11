@@ -322,7 +322,7 @@ type ContentSource = {
  */
 const DB_SOURCE = DB as unknown as ContentSource;
 
-const CHECKPOINT_LEVELS = [2, 5, 10, 20, 45, 60, 75];
+const CHECKPOINT_LEVELS = [2, 5, 10, 20, 45, 48, 60, 75];
 const PROGRESSION_ANCHOR_SEED = 20_260_810;
 const COST_INTERPOLATION_RULE = 'modeledActions(L) = round(lower.modeledActions + expFraction × (upper.modeledActions − lower.modeledActions)), '
     + 'expFraction = (cumulativeExp(L) − cumulativeExp(lower)) / (cumulativeExp(upper) − cumulativeExp(lower)); '

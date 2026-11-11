@@ -27,7 +27,8 @@ import {
     type ProgressionDiagnosticOptions,
 } from './progressionDiagnostic.js';
 
-export const PROGRESSION_CHECKPOINT_LEVELS = Object.freeze([2, 5, 10, 20, 45, 60, 75]);
+// 2026-11 H2: 48 = 마왕성 경로 게이트(승천 지점). 그 전에는 Lv45 ~ 60 보간이었고 그 사이에 곡선 꺾임(구간 배율 → 1.15 → 상한)이 있다.
+export const PROGRESSION_CHECKPOINT_LEVELS = Object.freeze([2, 5, 10, 20, 45, 48, 60, 75]);
 
 const EXPECTED_JOB_COUNT = 18;
 const DEFAULT_SEED = 20_260_810;

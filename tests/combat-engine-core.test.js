@@ -7,6 +7,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { CombatEngine } from '../src/systems/CombatEngine.ts';
+import { getLevelExpRequirement } from '../src/systems/expCurve.ts';
+import { BALANCE as GAME_BALANCE } from '../src/data/constants.ts';
 
 const MAX_ROLL = 1 - Number.EPSILON;
 
@@ -15,8 +17,7 @@ const BALANCE = {
     ESCAPE_CHANCE: 0.5,
     ELEMENT_WEAK_MULT: 1.25,
     ELEMENT_RESIST_MULT: 0.75,
-    EXP_SCALE_RATE: 1.15,              // 실제값: 완화된 스케일 (1.20 → 1.15)
-    EXP_LEVEL_HARD_CAP: 150000,        // 레벨당 최대 EXP 상한선 (300K → 150K)
+    // 경험 요구량 곡선은 미러하지 않는다 — 정본 src/systems/expCurve.ts를 import한다(H2, 2026-11).
     HP_PER_LEVEL: 20,
     MP_PER_LEVEL: 10,
     ATK_PER_LEVEL: 3,                  // slice 19: 2 → 3 (레벨업 성장 체감)
@@ -70,10 +71,7 @@ function applyExpGain(player, expGained = 0) {
     while (p.level < MAX_LEVEL && p.exp >= p.nextExp) {
         p.exp -= p.nextExp;
         p.level += 1;
-        p.nextExp = Math.min(
-            Math.floor(p.nextExp * BALANCE.EXP_SCALE_RATE),
-            BALANCE.EXP_LEVEL_HARD_CAP
-        );
+        p.nextExp = getLevelExpRequirement(p.level);
         p.maxHp += BALANCE.HP_PER_LEVEL;
         p.maxMp += BALANCE.MP_PER_LEVEL;
         p.hp = Math.min(p.hp + BALANCE.HP_PER_LEVEL, p.maxHp);
@@ -260,10 +258,10 @@ test('applyExpGain: 다중 레벨업 (EXP 충분할 때)', () => {
     assert.ok(result.levelUps > 2);
 });
 
-test('applyExpGain: nextExp 스케일링 (EXP_SCALE_RATE = 1.15)', () => {
+test('applyExpGain: 다음 요구량은 새 레벨의 요구량이다 — 저장된 비표준 요구량(100)을 이어 굴리지 않는다', () => {
     const player = { level: 1, exp: 0, nextExp: 100, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 10, def: 5 };
     const result = applyExpGain(player, 100);
-    assert.equal(result.updatedPlayer.nextExp, Math.floor(100 * BALANCE.EXP_SCALE_RATE));
+    assert.equal(result.updatedPlayer.nextExp, getLevelExpRequirement(2));
 });
 
 test('applyExpGain: MAX_LEVEL(99) 캡', () => {
@@ -372,10 +370,10 @@ test('applyExpGain: Lv.15 마일스톤 → 골드만 보상 (15 * MILESTONE_GOLD
 
 test('applyExpGain: nextExp는 EXP_LEVEL_HARD_CAP을 초과하지 않음', () => {
     // nextExp가 매우 클 때 하드캡 적용 확인
-    const player = { level: 1, exp: 0, nextExp: BALANCE.EXP_LEVEL_HARD_CAP, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 10, def: 5 };
-    const result = applyExpGain(player, BALANCE.EXP_LEVEL_HARD_CAP);
+    const player = { level: 1, exp: 0, nextExp: GAME_BALANCE.EXP_LEVEL_HARD_CAP, hp: 150, maxHp: 150, mp: 50, maxMp: 50, atk: 10, def: 5 };
+    const result = applyExpGain(player, GAME_BALANCE.EXP_LEVEL_HARD_CAP);
     const nextExp = result.updatedPlayer.nextExp;
-    assert.ok(nextExp <= BALANCE.EXP_LEVEL_HARD_CAP, `nextExp ${nextExp}가 하드캡 ${BALANCE.EXP_LEVEL_HARD_CAP}을 초과함`);
+    assert.ok(nextExp <= GAME_BALANCE.EXP_LEVEL_HARD_CAP, `nextExp ${nextExp}가 하드캡 ${GAME_BALANCE.EXP_LEVEL_HARD_CAP}을 초과함`);
 });
 
 // ── calculateDamage 범위 안전성 추가 테스트 ─────────────────────────────────

@@ -45,13 +45,13 @@ test('canonical content has the approved production catalog counts and routes', 
     assert.deepEqual(report.quests.invalidRewards, []);
     assert.equal(report.jobs.reachable.length, 18);
     assert.equal(report.jobs.terminalLineages.length, 8);
-    assert.deepEqual(report.jobs.checkpointLevels, [2, 5, 10, 20, 45, 60, 75]);
+    assert.deepEqual(report.jobs.checkpointLevels, [2, 5, 10, 20, 45, 48, 60, 75]);
     // Wave 13 E1: tier-3 5종이 Lv45 체크포인트로 내려와 그 칸이 13 → 18이 된다.
     // Wave 14 F4: 성직자 `reqLv` 5 → 12이라 Lv5·Lv10 칸이 5 → 4다. Lv5의 후속 직업이 세 뿌리
     //   모두 0이 됐고(첫 되돌릴 수 없는 분기가 같은 모양이 됐다), Lv20 칸에서 6으로 합류한다.
     assert.deepEqual(
         report.jobs.checkpointSnapshots.map((checkpoint) => checkpoint.reachableJobCount),
-        [1, 4, 4, 6, 18, 18, 18],
+        [1, 4, 4, 6, 18, 18, 18, 18],
     );
     assert.deepEqual(
         report.jobs.checkpointSnapshots.at(-1).reachableJobs.toSorted(),
@@ -147,7 +147,7 @@ test('custom source reachability compares against its own graph instead of the l
 // 계열의 게이트 레벨과 그 레벨의 모델 액션/초/시간을 고정하고, 무엇보다 **앵커와 보간을
 // 리포트가 구분한다**는 것을 강제한다. 보간값을 모델 산출처럼 싣는 것이 이 트랙의 실패다.
 
-const ANCHOR_LEVELS = [1, 2, 5, 10, 20, 45, 60, 75];
+const ANCHOR_LEVELS = [1, 2, 5, 10, 20, 45, 48, 60, 75];
 
 test('cost axis anchors come from the progression checkpoints plus the simulation origin', () => {
     const { cost } = buildContentReachabilityReport();
@@ -254,6 +254,8 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     // 2026-11 적 레벨 폭(소유자 결정 "지역 레벨÷5, 최대 ±4"): 일반 조우의 레벨이 지역 폭 안에서 갈려 기준 시드의 앵커가
     //   움직였다(1,570 → 1,573 / 39.25 → 39.33h, 마왕성 53.2 → 53.3h, 에테르 관문 167.13 → 167.25h). 64시드 평균은 Lv2 · 5 그대로,
     //   Lv10 +0.49% · Lv20 +0.03% · Lv45 ~ 75 −0.01 ~ −0.02%다 — 지역 평균이 지역 레벨이라 기준 시드의 잡음이다(원장 §157).
+    // 2026-11 H2(소유자 결정 S1 · "1.06 확정"): Lv41 ~ 48 레벨업 요구량이 ×1.06이라 앵커가 1,573 → 1,470 / 39.33 → 36.75h이고
+    //   Lv60 5,260 → 4,473 · Lv75 → 7,163이다. 48이 체크포인트가 되어 마왕성 경로 게이트가 앵커다(1,868 / 46.7h, 이전 보간 53.3h, 원장 §166).
     // Wave 14 F4: 성직자가 5 → 12 버킷으로 옮겨가 5:4 → 5:3, 12:1 → 12:2다. Lv5는 이제 세
     //   뿌리(전사·마법사·도적)만 있고 그 어느 것도 후속을 열어두지 않는다 — 첫 되돌릴 수 없는
     //   분기가 세 뿌리에서 같은 모양이 된다는 것이 이 버킷 이동의 기준이다.
@@ -269,8 +271,8 @@ test('the gate levels behind each content class carry their modeled cost', () =>
         '그림자 주군', '대마법사', '드래곤 나이트', '사냥의 군주', '팔라딘',
     ].toSorted());
     assert.equal(tierThreeJobs.cost.basis, 'anchored');
-    assert.equal(tierThreeJobs.cost.modeledActions, 1_573);
-    assert.equal(tierThreeJobs.cost.modeledHours, 39.33);
+    assert.equal(tierThreeJobs.cost.modeledActions, 1_470);
+    assert.equal(tierThreeJobs.cost.modeledHours, 36.75);
     assert.equal(bucketAt(cost.gates.jobs, 60), undefined);
     assert.equal(cost.gates.jobs.reduce((sum, bucket) => sum + bucket.count, 0), 18);
 
@@ -281,7 +283,7 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     );
     assert.equal(cost.gates.equipmentTiers.reduce((sum, tier) => sum + tier.count, 0), 229);
     assert.equal(bucketAt(cost.gates.equipmentTiers, 28).cost.basis, 'interpolated');
-    assert.equal(bucketAt(cost.gates.equipmentTiers, 60).cost.modeledActions, 5_260);
+    assert.equal(bucketAt(cost.gates.equipmentTiers, 60).cost.modeledActions, 4_473);
 
     // Wave 27 N3: 143 → 141 / 52 → 49. 걷는 길이 없는 지역 3곳(시즌 둘 · 고대 보물고)은 값을 매기지 않고
     //   `mapsWithoutWalkingRoute`로 빠진다. 그 보물고가 목표인 임무 둘(136 · 137)도 같은 이유로
@@ -322,8 +324,9 @@ test('the gate levels behind each content class carry their modeled cost', () =>
     // 68에 남는 둘은 승천 **뒤에** 열리는 체인이라 애초에 걸치지 않는다.
     assert.deepEqual(etherGate.members, ['divine_apostle_trial', 'rift_secret']);
     assert.equal(etherGate.cost.basis, 'interpolated');
-    assert.equal(etherGate.cost.modeledActions, 6_690);
-    assert.equal(etherGate.cost.modeledHours, 167.25);
+    // 2026-11 H2(원장 §166): Lv41 ~ 48 요구량 ×1.06 — 6,690 / 167.25h → 5,908 / 147.7h.
+    assert.equal(etherGate.cost.modeledActions, 5_908);
+    assert.equal(etherGate.cost.modeledHours, 147.7);
     // Wave 62 C17: 48 버킷의 다섯 중 심연의 신호가 층 조건 목록으로 빠져 넷이다.
     assert.equal(bucketAt(cost.gates.eventChainCompletions, 48).count, 4);
     assert.ok(!bucketAt(cost.gates.eventChainCompletions, 48).members.includes('abyss_signal'));
@@ -356,8 +359,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     assert.deepEqual(rowAt(45), {
         level: 45,
         basis: 'anchored',
-        modeledActions: 1_573,
-        modeledHours: 39.33,
+        modeledActions: 1_470,
+        modeledHours: 36.75,
         maps: 15,
         // Wave 74: 이야기 212 · 213 · 214(Lv45 · 46 · 47)가 이 행 뒤에 있다 — 41 → 44.
         quests: 44,
@@ -366,14 +369,14 @@ test('the behind-the-gate summary states how many hours of content sits past eac
         // Wave 62 C17: 7 → 6 (심연의 신호는 층 조건 목록).
         eventChains: 6,
     });
-    // 승천(마왕성 Lv48)은 체크포인트가 없다 — 보간이고, 리포트가 그렇게 표기한다.
+    // 2026-11 H2(원장 §166): 승천(마왕성 Lv48)이 체크포인트가 되어 앵커다(이전 보간 2,132 / 53.3h).
     // Wave 13 E1: 승천 시점과 그 너머에 남는 직업이 5 → 0이다. 같은 행의
     // modeledActions/modeledHours는 한 자리도 안 움직인다 — 움직인 건 `jobs` 열뿐이다.
     assert.deepEqual(rowAt(48), {
         level: 48,
-        basis: 'interpolated',
-        modeledActions: 2_132,
-        modeledHours: 53.3,
+        basis: 'anchored',
+        modeledActions: 1_868,
+        modeledHours: 46.7,
         maps: 15,
         quests: 41,
         equipment: 65,
@@ -386,8 +389,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     assert.deepEqual(rowAt(49), {
         level: 49,
         basis: 'interpolated',
-        modeledActions: 2_376,
-        modeledHours: 59.4,
+        modeledActions: 1_991,
+        modeledHours: 49.78,
         maps: 13,
         quests: 36,
         equipment: 65,
@@ -401,8 +404,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     assert.deepEqual(rowAt(60), {
         level: 60,
         basis: 'anchored',
-        modeledActions: 5_260,
-        modeledHours: 131.5,
+        modeledActions: 4_473,
+        modeledHours: 111.83,
         maps: 9,
         quests: 25,
         equipment: 65,
@@ -412,8 +415,8 @@ test('the behind-the-gate summary states how many hours of content sits past eac
     assert.deepEqual(rowAt(68), {
         level: 68,
         basis: 'interpolated',
-        modeledActions: 6_690,
-        modeledHours: 167.25,
+        modeledActions: 5_908,
+        modeledHours: 147.7,
         maps: 6,
         quests: 22,
         equipment: 20,
@@ -472,9 +475,10 @@ test('직업 게이트 최대값은 마왕성 경로 게이트(승천 지점)를
     //   움직여 여유는 13.93h다. Wave 61: 보스 6종 지역 조우로 앵커가 −0.65h · −0.63h 움직여 여유는 13.95h다.
     //   Wave 71: 접두어 겹침 제외로 둘 다 +0.03h라 여유는 13.95h 그대로다.
     //   2026-11 적 레벨 폭: 직업 게이트 +0.08h · 마왕성 +0.1h라 여유는 13.97h다(원장 §157).
-    assert.equal(deepestJobCost.modeledHours, 39.33);
-    assert.equal(demonCastleGate.cost.modeledHours, 53.3);
-    assert.equal(headroomHours, 13.97);
+    //   2026-11 H2: Lv41 ~ 48 요구량 ×1.06이고 마왕성이 보간이 아니라 앵커라 36.75h · 46.7h, 여유 9.95h다(원장 §166).
+    assert.equal(deepestJobCost.modeledHours, 36.75);
+    assert.equal(demonCastleGate.cost.modeledHours, 46.7);
+    assert.equal(headroomHours, 9.95);
 
     // 그래서 승천 시점에 남아 있는 직업은 0이다.
     assert.equal(cost.behind.find((row) => row.level === demonCastleGate.gateLevel).jobs, 0);
@@ -576,8 +580,8 @@ test('임무 게이트 = max(수락 게이트, 목표 지역의 경로 게이트
     assert.equal(gateOf.get(83), 35);
 
     const bucketOf = (id) => cost.gates.quests.find((bucket) => bucket.members.includes(id));
-    assert.equal(bucketOf(87).cost.modeledHours, 53.3, '87: 170.23h(L68, Wave 27) → 53.38h(L48, Wave 28) → 기준 시드 앵커 이동(Wave 29 · 61 · 71 · 118 · 2026-11 적 레벨)');
-    assert.equal(bucketOf(84).cost.modeledHours, 12.05, '84: 6.38h(L28) → 12h(L35), 앵커 이동(Wave 28 D7 · Wave 29)으로 12h → 2026-11 적 레벨 12.05h');
+    assert.equal(bucketOf(87).cost.modeledHours, 46.7, '87: 170.23h(L68, Wave 27) → 53.38h(L48, Wave 28) → 기준 시드 앵커 이동(Wave 29 · 61 · 71 · 118 · 2026-11 적 레벨) → 46.7h(2026-11 H2 Lv48 앵커)');
+    assert.equal(bucketOf(84).cost.modeledHours, 12.15, '84: 6.38h(L28) → 12h(L35), 앵커 이동(Wave 28 D7 · Wave 29)으로 12h → 2026-11 적 레벨 12.05h → H2 보간(Lv45 앵커 누적 경험 감소) 12.15h');
 });
 
 test('임무 게이트가 minLv와 갈라지는 19개는 전부 목표 지역에 가기 전에 수락되는 임무다', () => {
