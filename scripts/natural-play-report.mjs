@@ -71,6 +71,7 @@ const load = (dir, collectDeaths = false) => {
                     zero: run.deaths === 0 ? 1 : 0, loop: run.deaths >= LOOP_DEATHS ? 1 : 0,
                     ruleId: run.ruleId, ruleOptional: Boolean(run.ruleOptional), ruleDeclined: Boolean(run.ruleDeclined), newSignatures,
                     chapterPicks: Array.isArray(run.chapterPicks) ? run.chapterPicks : null, pickBandHours: bandHours(run, ...PICK_BAND),
+                    events: run.events || null, firstPerHour: run.events && run.hours > 0 ? run.events.firstAt.length / run.hours : null,
                     lateShare: lateBandShare(run), reclimbs: reclimbRatios(run), ladderRank: Number(run.ladderRank) || 0, essence: Number(run.essence) || 0,
                 });
             });
@@ -104,6 +105,16 @@ if (!baseDir) {
             const kinds = xs.flatMap((r) => r.moments || []).reduce((acc, [, kind]) => ({ ...acc, [kind]: (acc[kind] || 0) + 1 }), {});
             const perHour = xs.reduce((sum, r) => sum + (r.moments || []).length, 0) / Math.max(1e-9, xs.reduce((sum, r) => sum + r.hours, 0));
             console.log(`  큰 순간: ${perHour.toFixed(2)}/시간 · 최장 공백 중앙값 ${quantile(gaps, 0.5).toFixed(2)}h · 상위 10% ${quantile(gaps, 0.9).toFixed(2)}h · 3시간 이상 ${gaps.filter((gap) => gap >= 3).length}판 · ${Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([kind, count]) => `${kind} ${count}`).join(' ')}`);
+        }
+        // 이벤트 화면(H7) — 틀별 판당 수(처음 보는 수) · 처음 보는 선택/시간(재미 분석 §2.1).
+        const observed = xs.filter((r) => r.events);
+        if (observed.length) {
+            const tallyKinds = (key) => observed.reduce((acc, r) => { for (const [kind, n] of Object.entries(r.events[key])) acc[kind] = (acc[kind] || 0) + n; return acc; }, {});
+            const all = tallyKinds('byKind');
+            const first = tallyKinds('firstByKind');
+            const firstTotal = observed.reduce((sum, r) => sum + r.events.firstAt.length, 0);
+            const perHour = firstTotal / Math.max(1e-9, observed.reduce((sum, r) => sum + r.hours, 0));
+            console.log(`  이벤트: 판당 ${(observed.reduce((sum, r) => sum + r.events.total, 0) / observed.length).toFixed(0)} · 처음 보는 ${(firstTotal / observed.length).toFixed(1)} (${perHour.toFixed(2)}/시간, 판 중앙값 ${quantile(observed.map((r) => r.firstPerHour), 0.5).toFixed(2)}) · ${Object.entries(all).sort((a, b) => b[1] - a[1]).map(([kind, n]) => `${kind} ${(n / observed.length).toFixed(1)}(${((first[kind] || 0) / observed.length).toFixed(1)})`).join(' ')}`);
         }
         const picked = xs.filter((r) => r.chapterPicks);
         if (picked.length) {
@@ -149,7 +160,7 @@ if (!baseDir) {
             const se = stdErr(diffs);
             return `${key} ${mean(pairs.map(([b]) => b[key])).toFixed(2)}→${mean(pairs.map(([, r]) => r[key])).toFixed(2)} (z ${(se ? mean(diffs) / se : 0).toFixed(2)})`;
         };
-        console.log(`run ${run} (짝 ${pairs.length}): ${['deaths', 'zero', 'loop', 'hours', ...(pairs.every(([b, r]) => b.longestGap !== null && r.longestGap !== null) ? ['longestGap'] : [])].map(cell).join(' · ')}`);
+        console.log(`run ${run} (짝 ${pairs.length}): ${['deaths', 'zero', 'loop', 'hours', ...(pairs.every(([b, r]) => b.longestGap !== null && r.longestGap !== null) ? ['longestGap'] : []), ...(pairs.every(([b, r]) => b.firstPerHour !== null && r.firstPerHour !== null) ? ['firstPerHour'] : [])].map(cell).join(' · ')}`);
         // 둘 다 Lv41에 닿은 짝만 — 구간 비중(H2)과 계승 때 정수 사다리 · 남은 정수.
         const late = pairs.filter(([b, r]) => b.lateShare !== null && r.lateShare !== null);
         if (late.length) {

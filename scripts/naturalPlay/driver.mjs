@@ -53,6 +53,26 @@ import { hasChallengeModifier } from '../../src/utils/challengeRules.ts';
 //   여는 임무가 없는 게임(Wave 127까지)에서는 v2와 같은 결과다. 회차마다 이야기별로 닿은 단계(`chainSteps`)도 남긴다(상태만 읽는다).
 export const DRIVER_VERSION = 3;
 
+/**
+ * 이벤트 화면의 틀과 정체(H7, 2026-11) — 회차 기록 `events`의 입력이다(관찰 전용, 상태만 읽는다).
+ *   틀: 이야기 단계 · 한정 조우 · 모닥불 · 정찰 · 구역 보스 카드 · 다른 차원의 묘비 · 행상인 · 폴백(AI 끔).
+ *   정체: id가 있으면 id, 없으면 제목 + 문장 + 선택지(숫자는 지운다 — 같은 글의 레벨 비례 수치를 다른 글로 세지 않는다).
+ *   "처음 보는 선택" = 그 회차에서 처음 나온 정체의 수(재미 분석 §2.1).
+ */
+export const classifyEventFrame = (event) => {
+    if (!event) return null;
+    const text = () => [event.title || '', event.desc || '', ...(Array.isArray(event.choices) ? event.choices : [])]
+        .join('|').replace(/\d+/g, '#');
+    if (event._chainId) return { kind: 'chain', key: `chain:${event._chainId}:${event._chainStep ?? ''}` };
+    if (event.isBoundedEncounter) return { kind: 'bounded', key: `bounded:${event.boundedEncounterId ?? text()}` };
+    if (event.isCampfire) return { kind: 'campfire', key: `campfire:${text()}` };
+    if (event.isScout) return { kind: 'scout', key: `scout:${text()}` };
+    if (event.isBossGaugeChallenge) return { kind: 'gauge', key: `gauge:${text()}` };
+    if (event.isDimensionGrave) return { kind: 'grave', key: 'grave' };
+    if (event.isWanderingMerchant) return { kind: 'merchant', key: 'merchant' };
+    return { kind: event.source ? 'fallback' : 'other', key: `${event.source ? 'fallback' : 'other'}:${text()}` };
+};
+
 /** 직업 경로 기본값 — 경로 이름 → [1차, 2차, 3차]. */
 export const JOB_PATHS = {
     knight: ['전사', '나이트', '드래곤 나이트'],
@@ -192,6 +212,7 @@ export const runNaturalPlay = async (options) => {
     const dispatch = (action) => {
         const prev = state;
         state = gameReducer(state, action);
+        observeEventFrame(prev);
         onDispatch?.(prev, action, state);
     };
     const addLog = (type, text) => dispatch({ type: AT.ADD_LOG, payload: { id: `np-${logCounter++}`, type, text } });
@@ -267,6 +288,8 @@ export const runNaturalPlay = async (options) => {
             fightsBy: {},
             // 큰 순간(원장 §80 정의 + 토벌 의뢰) — [회차 시작부터 시간, 종류]. 상태 차이만 읽는다(정책 · 난수 불변).
             moments: [],
+            // 이벤트 화면(H7) — 틀별 수 · 처음 보는 정체의 틀별 수 · 처음 보는 정체의 시각 [회차 시작부터 시간, 틀]. 상태만 읽는다.
+            events: { total: 0, byKind: {}, firstByKind: {}, firstAt: [], storySlotByLoc: {} },
             // 경제 정책을 켠 회차만 — 강화 시도 · 성공, 다음 강화를 막은 것(골드 · 재료 · 남길 돈)을 본 대기 차례 수, 판매 · 구매 수.
             ...(chapterPick === 'none' ? {} : { chapterPicks: [] }),
             ...(economy === 'none' ? {} : {
@@ -276,7 +299,7 @@ export const runNaturalPlay = async (options) => {
     };
     const closeRun = () => {
         const meta = state.player?.meta || {};
-        const { momentBest: _best, momentJobs: _jobs, chainBest, ...runRecord } = run;
+        const { momentBest: _best, momentJobs: _jobs, eventSeen: _seen, chainBest, ...runRecord } = run;
         result.runs.push({
             ...runRecord,
             // 이야기별로 그 회차에 닿은 가장 높은 단계(사망하면 처음부터라 최고치) — 어떤 이야기가 열리고 끝났는지 본다(v3).
@@ -293,6 +316,26 @@ export const runNaturalPlay = async (options) => {
         run = null;
     };
     // `rank:N` — 그 단계의 카드 하나만 거절한다(앞 회차는 받아들임과 같은 역사라 받아들임 결과와 깨끗한 짝이 된다, 원장 §128).
+    // 이벤트 화면이 새로 열린 순간만 센다 — 거부 문장(`choiceFeedback`)만 바뀐 같은 이벤트는 다시 세지 않는다.
+    function observeEventFrame(prev) {
+        if (!run || state.gameState !== GS.EVENT || !state.currentEvent || state.currentEvent === prev.currentEvent) return;
+        const frame = classifyEventFrame(state.currentEvent);
+        const before = prev.gameState === GS.EVENT ? classifyEventFrame(prev.currentEvent) : null;
+        if (!frame || before?.key === frame.key) return;
+        const events = run.events;
+        const seen = run.eventSeen || (run.eventSeen = new Set());
+        events.total += 1;
+        events.byKind[frame.kind] = (events.byKind[frame.kind] || 0) + 1;
+        // 이야기 이벤트 자리(폴백 · 한정 조우)가 어느 지역에서 열렸는가 — 새 한정 조우를 놓을 곳의 크기다.
+        if (frame.kind === 'fallback' || frame.kind === 'bounded' || frame.kind === 'other') {
+            const loc = state.player?.loc || '?';
+            events.storySlotByLoc[loc] = (events.storySlotByLoc[loc] || 0) + 1;
+        }
+        if (seen.has(frame.key)) return;
+        seen.add(frame.key);
+        events.firstByKind[frame.kind] = (events.firstByKind[frame.kind] || 0) + 1;
+        events.firstAt.push([Number((hours() - run.startHours).toFixed(3)), frame.kind]);
+    }
     const declineFor = (nextRank) => ruleDecline === 'all' || (ruleDecline === 'stacked' && nextRank > 6) || ruleDecline === `rank:${nextRank}`;
 
     let lastGameState = null;

@@ -4,7 +4,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { JOB_PATHS, pickAscensionRuleId, pickChapterPickCardId, runNaturalPlay } from '../scripts/naturalPlay/driver.mjs';
+import { JOB_PATHS, classifyEventFrame, pickAscensionRuleId, pickChapterPickCardId, runNaturalPlay } from '../scripts/naturalPlay/driver.mjs';
 import { CHAPTER_PICK_SKIP_ID } from '../src/utils/chapterPick.js';
 import { getAscensionRule, getAscensionRuleOffer } from '../src/systems/ascensionRule.js';
 
@@ -160,4 +160,27 @@ test('장의 선물(H3): 기본 none은 흔적이 없고, skip은 고르기만 �
     const strip = ({ chapterPick: _policy, ...rest }) => ({ ...rest, runs: rest.runs.map(({ chapterPicks: _picks, ...run }) => run) });
     assert.deepEqual(strip(skip), strip(none));
     await assert.rejects(() => runNaturalPlay({ ...SHORT, chapterPick: 'best' }), /unknown chapterPick/);
+});
+
+test('이벤트 화면 관찰(H7): 틀을 가르고 숫자만 다른 글은 같은 정체다 — 회차 기록의 합이 맞는다', async () => {
+    assert.equal(classifyEventFrame(null), null);
+    assert.deepEqual(classifyEventFrame({ _chainId: 'lost_mage', _chainStep: 1, desc: 'x', choices: [] }), { kind: 'chain', key: 'chain:lost_mage:1' });
+    assert.equal(classifyEventFrame({ isBoundedEncounter: true, boundedEncounterId: 'forest.a', desc: 'x', choices: [] }).key, 'bounded:forest.a');
+    assert.equal(classifyEventFrame({ isCampfire: true, desc: 'd', choices: ['a', 'b'] }).kind, 'campfire');
+    assert.equal(classifyEventFrame({ isScout: true, desc: 'd', choices: ['a'] }).kind, 'scout');
+    assert.equal(classifyEventFrame({ isWanderingMerchant: true, desc: 'd', choices: [] }).key, 'merchant');
+    const fallback = (gold) => classifyEventFrame({ source: 'cave', desc: `골드 ${gold}을 줍는다`, choices: ['줍는다'] });
+    assert.equal(fallback(120).kind, 'fallback');
+    assert.equal(fallback(120).key, fallback(4500).key, '레벨 비례 수치만 다른 같은 글');
+
+    const result = await runNaturalPlay({ seed: 3, maxSteps: 3000 });
+    const events = result.runs[0].events;
+    const sum = (obj) => Object.values(obj).reduce((total, n) => total + n, 0);
+    assert.ok(events.total > 0, JSON.stringify(events));
+    assert.equal(sum(events.byKind), events.total);
+    assert.equal(sum(events.firstByKind), events.firstAt.length);
+    assert.ok(events.firstAt.length <= events.total);
+    for (const [kind, n] of Object.entries(events.firstByKind)) assert.ok(n <= events.byKind[kind], kind);
+    assert.ok(events.firstAt.every(([at], i, all) => i === 0 || at >= all[i - 1][0]), '시각 순서');
+    assert.equal(result.runs[0].eventSeen, undefined, '내부 집합은 기록에 남기지 않는다');
 });
