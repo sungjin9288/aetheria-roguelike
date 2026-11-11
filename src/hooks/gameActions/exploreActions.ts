@@ -51,6 +51,21 @@ const takeHarnessExploreSeed = (): number | undefined => {
  * runQuietRollAndCombat(exploreFlow.ts)만 재사용한다 — firebase-free 단위 테스트 유지).
  * AI 이벤트가 발동하지 않으면 quiet 롤 이하 파이프(runQuietRollAndCombat)로 이어진다.
  */
+/**
+ * 2026-11 H7(소유자 결정 "정찰 자리 + 32개", 실행 스케치 §5): 원정 중 이 지역에 아직 받지 않은 한정 조우가 있으면
+ *   정찰 카드 대신 그 조우가 나온다 — 고르기는 해시(난수 없음), 조우마다 원정당 한 번이다. 없으면 null(정찰 카드 그대로).
+ *   플레이어가 직접 부르는 정찰(`scout`)은 바꾸지 않는다.
+ */
+const pickScoutSlotEncounter = (player: Player) => {
+    const expeditionId = player.activeExpedition?.id;
+    if (!BOUNDED_ENCOUNTER_PACK_ENABLED || typeof expeditionId !== 'string' || !player.loc) return null;
+    const occurrenceSequence = Math.max(1, Number(player.stats?.explores || 0) + 1);
+    const context = buildBoundedEncounterContext(player, player.loc);
+    if (!context) return null;
+    const encounter = selectBoundedEncounter(BOUNDED_ENCOUNTERS, context, { expeditionId, occurrenceSequence });
+    return encounter ? { encounter, occurrenceSequence } : null;
+};
+
 const runExplorePostDecisionRoll = async (
     mapData: GameMap,
     deps: GameActionDepsWithRng,
@@ -71,25 +86,8 @@ const runExplorePostDecisionRoll = async (
     );
 
     // AI 랜덤 이벤트 체크. 직전 선택 뒤 한 번의 일반 탐험이 없으면 optional roll을 소비하지 않는다.
+    // 2026-11 H7(소유자 결정 "정찰 자리"): 지역 한정 조우는 이 자리가 아니라 정찰 자리에서 나온다(`pickScoutSlotEncounter`).
     if (optionalDecisionAllowed && rng() < effectiveEventChance) {
-        const occurrenceSequence = Math.max(1, Number(player.stats?.explores || 0) + 1);
-        const expeditionId = player.activeExpedition?.id;
-        const receipt = typeof expeditionId === 'string'
-            ? { expeditionId, occurrenceSequence }
-            : null;
-        const context = receipt ? buildBoundedEncounterContext(player, player.loc!) : null;
-        const encounter = receipt && context && BOUNDED_ENCOUNTER_PACK_ENABLED
-            ? selectBoundedEncounter(BOUNDED_ENCOUNTERS, context, receipt)
-            : null;
-
-        if (encounter) {
-            commitExploreOutcome('narrative_event', null, mapData);
-            dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
-            dispatch({ type: AT.SET_EVENT, payload: buildBoundedEncounterEvent(encounter, occurrenceSequence) });
-            addLog('event', encounter.situation);
-            return;
-        }
-
         // 2026-09 Wave 19 K1: 준비 중은 `EVENT`가 아니라 `EVENT_PENDING`이다.
         //   예전에는 여기서 `SET_GAME_STATE EVENT` + `SET_AI_THINKING true`를 쏘고
         //   최대 9.5초를 기다렸다 — 그 창은 `{event, currentEvent: null}`이라
@@ -296,7 +294,15 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             //   스카우팅 > 나머지 롤(AI 이벤트/quiet/전투) 순 우선순위. 선택은 eventActions.ts가 같은 턴에 해소.
             if (optionalDecisionAllowed && shouldTriggerScout(mapData, actionRng)) {
                 commitExploreOutcome('narrative_event', null, mapData);
+                // 카드를 먼저 만든다 — 한정 조우로 바뀌어도 이 탐험의 난수 소비는 정찰과 같다(바뀌는 것은 결과뿐이다).
                 const scoutEvent = buildScoutEvent(player, mapData, actionRng);
+                const regional = pickScoutSlotEncounter(player);
+                if (regional) {
+                    dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+                    dispatch({ type: AT.SET_EVENT, payload: buildBoundedEncounterEvent(regional.encounter, regional.occurrenceSequence) });
+                    addLog('event', regional.encounter.situation);
+                    return;
+                }
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: scoutEvent });
                 addLog('event', scoutEvent.desc);

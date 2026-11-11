@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "dd746e09b1ff42371c1bf0a6c6b948c466eeb7b30b639185a6d223e3af040382",
+  "reportHash": "15d5fd031fc55e7535a03f56173e2176e182d903da83181e93172ccd2a64cc1c",
   "progressionEvidence": {
     "candidateProfile": {
       "id": "exploration-rhythm",
@@ -105,7 +105,7 @@
       "scout": 28509,
       "generalNarrative": 11250,
       "boundedEncounter": {
-        "classification": "subset-of-general-narrative",
+        "classification": "subset-of-scout",
         "countAuthority": "production-integration"
       },
       "combat": 167447,
@@ -135,7 +135,7 @@
       "scout": 23666,
       "generalNarrative": 9392,
       "boundedEncounter": {
-        "classification": "subset-of-general-narrative",
+        "classification": "subset-of-scout",
         "countAuthority": "production-integration"
       },
       "combat": 175335,

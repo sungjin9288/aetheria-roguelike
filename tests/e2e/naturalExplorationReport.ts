@@ -28,7 +28,8 @@ export const NATURAL_EXPLORATION_SOURCE_CONTRACT = deepFreeze({
     },
 });
 
-export const NATURAL_EXPLORATION_SEEDS = deepFreeze([112596, 8, 37]);
+// 2026-11 H7: 한정 조우는 정찰 자리에서 나온다 — 셋째 씨앗은 모닥불을 비껴가고 정찰이 발동하는 1이다(이전 37은 이야기 이벤트 굴림이었다).
+export const NATURAL_EXPLORATION_SEEDS = deepFreeze([112596, 8, 1]);
 
 export const NATURAL_EXPLORATION_OUTCOMES = deepFreeze([
     'combat',
@@ -239,7 +240,7 @@ const validateBoundedStep = (value: unknown) => {
     const step = requireObject(value, 'surfaceObservation.sequence[2]');
     if (!hasExactKeys(step, BOUNDED_SURFACE_KEYS)
         || step.kind !== 'bounded_event'
-        || step.seed !== 37
+        || step.seed !== 1
         || step.visibleSituation !== '고요한 숲의 오래된 돌기둥 사이로 먼저 지나간 모험가의 흔적과 희미한 문장이 드러납니다.') {
         invalid('surfaceObservation.sequence[2]:exact');
     }
@@ -250,7 +251,7 @@ const validateBoundedStep = (value: unknown) => {
     );
     return {
         kind: 'bounded_event',
-        seed: 37,
+        seed: 1,
         visibleSituation: '고요한 숲의 오래된 돌기둥 사이로 먼저 지나간 모험가의 흔적과 희미한 문장이 드러납니다.',
         visibleChoices,
     };

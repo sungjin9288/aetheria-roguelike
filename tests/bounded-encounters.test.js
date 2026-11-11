@@ -89,19 +89,25 @@ const context = (overrides = {}) => ({
     ...overrides,
 });
 
-test('production encounter pack contains exactly the approved build-reactive early-region families', () => {
+// 2026-11 H7(소유자 결정 "정찰 자리 + 32개"): 숲 · 평원 8개 + 토벌 의뢰 8곳 × 4개.
+const APPROVED_REGIONS = [
+    '고요한 숲', '서쪽 평원',
+    '몰락한 전초기지', '고대 마법 탑', '용의 둥지', '기계 폐도', '용암 지대', '천공 정원', '어둠의 지하 감옥', '지하 미궁',
+];
+
+test('production encounter pack contains exactly the approved regions, four families each', () => {
     assert.equal(BOUNDED_ENCOUNTER_PACK_ENABLED, true);
-    assert.equal(BOUNDED_ENCOUNTERS.length, 8);
-    assert.deepEqual([...new Set(BOUNDED_ENCOUNTERS.map((entry) => entry.region))], ['고요한 숲', '서쪽 평원']);
+    assert.equal(BOUNDED_ENCOUNTERS.length, 40);
+    assert.deepEqual([...new Set(BOUNDED_ENCOUNTERS.map((entry) => entry.region))], APPROVED_REGIONS);
     assert.deepEqual(
         BOUNDED_ENCOUNTERS.reduce((counts, entry) => ({
             ...counts,
             [entry.region]: (counts[entry.region] || 0) + 1,
         }), {}),
-        { '고요한 숲': 4, '서쪽 평원': 4 },
+        Object.fromEntries(APPROVED_REGIONS.map((region) => [region, 4])),
     );
     assert.deepEqual(
-        BOUNDED_ENCOUNTERS.map((entry) => entry.id),
+        BOUNDED_ENCOUNTERS.slice(0, 8).map((entry) => entry.id),
         [
             'forest-old-pillars',
             'forest-mutated-trail',
@@ -117,7 +123,13 @@ test('production encounter pack contains exactly the approved build-reactive ear
         [...new Set(BOUNDED_ENCOUNTERS.flatMap((entry) => Object.keys(entry.eligibility)))].sort(),
         ['anyBuildTags', 'hpBand', 'lineage', 'previousBoss', 'requiresSignature'],
     );
-    assert.deepEqual(validateBoundedEncounterPack(BOUNDED_ENCOUNTERS, ['고요한 숲', '서쪽 평원']), { ok: true, errors: [] });
+    // 지역마다 조건 없는 조우 둘 이상 · 조건 있는 조우 하나 이상 — 같은 지역에서도 상태에 따라 다른 조우가 나온다.
+    for (const region of APPROVED_REGIONS.slice(2)) {
+        const regional = BOUNDED_ENCOUNTERS.filter((entry) => entry.region === region);
+        const unconditional = regional.filter((entry) => Object.keys(entry.eligibility).length === 0).length;
+        assert.ok(unconditional >= 2 && unconditional < 4, `${region}: 조건 없는 조우 ${unconditional}`);
+    }
+    assert.deepEqual(validateBoundedEncounterPack(BOUNDED_ENCOUNTERS, APPROVED_REGIONS), { ok: true, errors: [] });
 });
 
 test('production pack keeps the approved signature and previous-boss encounter contracts', () => {

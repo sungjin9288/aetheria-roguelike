@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "9758e639e1b091610b16d1ac9b22a5a76521df8a8cf420590addaab707593c02",
+  "reportHash": "78b8dc7b5da81a0e1661b2b54215175c46123f780b11b608692fc0eeb67552ed",
   "authorityHashes": {
     "combatExp": "f24b9d3a3cd81728f1d9cfe078f1136748dedee2c1eab2083f1de226bdf8f3fe",
     "combatLoot": "45050293fd7943b039f33255326d7001d959027cbd11295b253fbefc88b23f63",
@@ -107,7 +107,7 @@
           "scout": 28509,
           "generalNarrative": 11250,
           "boundedEncounter": {
-            "classification": "subset-of-general-narrative",
+            "classification": "subset-of-scout",
             "countAuthority": "production-integration"
           },
           "combat": 167447,
@@ -136,7 +136,7 @@
           "scout": 28509,
           "generalNarrative": 11250,
           "boundedEncounter": {
-            "classification": "subset-of-general-narrative",
+            "classification": "subset-of-scout",
             "countAuthority": "production-integration"
           },
           "combat": 167447,
@@ -248,7 +248,7 @@
           "scout": 28114,
           "generalNarrative": 14710,
           "boundedEncounter": {
-            "classification": "subset-of-general-narrative",
+            "classification": "subset-of-scout",
             "countAuthority": "production-integration"
           },
           "combat": 165077,
@@ -277,7 +277,7 @@
           "scout": 28417,
           "generalNarrative": 12129,
           "boundedEncounter": {
-            "classification": "subset-of-general-narrative",
+            "classification": "subset-of-scout",
             "countAuthority": "production-integration"
           },
           "combat": 166847,
@@ -389,7 +389,7 @@
           "scout": 28302,
           "generalNarrative": 13055,
           "boundedEncounter": {
-            "classification": "subset-of-general-narrative",
+            "classification": "subset-of-scout",
             "countAuthority": "production-integration"
           },
           "combat": 166199,
@@ -418,7 +418,7 @@
           "scout": 28302,
           "generalNarrative": 13055,
           "boundedEncounter": {
-            "classification": "subset-of-general-narrative",
+            "classification": "subset-of-scout",
             "countAuthority": "production-integration"
           },
           "combat": 166199,
@@ -530,7 +530,7 @@
           "scout": 27904,
           "generalNarrative": 16337,
           "boundedEncounter": {
-            "classification": "subset-of-general-narrative",
+            "classification": "subset-of-scout",
             "countAuthority": "production-integration"
           },
           "combat": 164034,
@@ -559,7 +559,7 @@
           "scout": 28191,
           "generalNarrative": 13881,
           "boundedEncounter": {
-            "classification": "subset-of-general-narrative",
+            "classification": "subset-of-scout",
             "countAuthority": "production-integration"
           },
           "combat": 165646,

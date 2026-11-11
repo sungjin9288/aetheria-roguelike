@@ -46,8 +46,8 @@ test('event reward audit covers every canonical occurrence class without defects
         chainOutcomeCount: 56,
         chainQuestStartCount: 12,
         chainQuestGateCount: 1,
-        boundedEncounterCount: 8,
-        boundedChoiceCount: 16,
+        boundedEncounterCount: 40,
+        boundedChoiceCount: 80,
         fallbackTransactionCount: 3,
         campfireChoiceCount: 2,
         scoutChoiceCount: 3,
@@ -58,7 +58,7 @@ test('event reward audit covers every canonical occurrence class without defects
         eventMultiplier: 0.64,
         minimumNarrativeGap: 2,
     });
-    assert.equal(report.rows.length, 80);
+    assert.equal(report.rows.length, 144);
     assert.deepEqual(report.errors, []);
     assert.deepEqual(report, buildReport());
 });

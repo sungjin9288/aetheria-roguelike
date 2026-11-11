@@ -73,7 +73,7 @@ export interface ExplorationRhythmAggregate {
     scout: number;
     generalNarrative: number;
     boundedEncounter: {
-        classification: 'subset-of-general-narrative';
+        classification: 'subset-of-scout';
         countAuthority: 'production-integration';
     };
     combat: number;
@@ -147,7 +147,7 @@ const aggregate = (outcomes: ExplorationRhythmOutcome[], gaps: number[]): Explor
     scout: outcomes.filter((outcome) => outcome === 'scout').length,
     generalNarrative: outcomes.filter((outcome) => outcome === 'generalNarrative').length,
     boundedEncounter: {
-        classification: 'subset-of-general-narrative',
+        classification: 'subset-of-scout',
         countAuthority: 'production-integration',
     },
     combat: outcomes.filter((outcome) => outcome === 'combat').length,
@@ -301,7 +301,7 @@ const sumAggregates = (runs: SeedRhythmResult[]) => {
         campfire: sum('campfire'),
         scout: sum('scout'),
         generalNarrative: sum('generalNarrative'),
-        boundedEncounter: { classification: 'subset-of-general-narrative', countAuthority: 'production-integration' },
+        boundedEncounter: { classification: 'subset-of-scout', countAuthority: 'production-integration' },
         combat: sum('combat'),
         discovery: sum('discovery'),
         discoveryBreakdown: {

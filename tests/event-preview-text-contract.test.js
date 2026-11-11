@@ -266,6 +266,8 @@ test('U5: 한정 조우의 회복이 상한에 걸리면 결과 줄이 실제 �
                 loc: encounter.region,
                 mp: 999,
                 maxMp: 999,
+                // 2026-11 H7: 후반 지역 회복(최대 500)이 상한에 닿지 않는 경우도 재야 한다 — 최대 생명을 가장 큰 회복보다 크게 둔다.
+                maxHp: 2_000,
                 stats: { ...clone(INITIAL_STATE.player.stats), explores: 1 },
                 activeExpedition: { id: 'expedition-u5', explores: 0 },
             });
