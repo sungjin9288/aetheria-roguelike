@@ -11,6 +11,8 @@ import { RELICS } from '../src/data/relics.js';
 import { getPrestigeUnlocks } from '../src/systems/prestigeUnlocks.js';
 import { advanceChapterOnEntry } from '../src/utils/chapterRecap.js';
 import { createCurrentRunProgress, normalizeCurrentRunProgress } from '../src/utils/runProgress.js';
+import { getWeaponMagicSkills, isMagicWeapon } from '../src/utils/equipmentUtils.js';
+import { applyItemPrefixByName } from '../src/utils/itemPrefixUtils.js';
 import {
     CHAPTER_PICK_SKIP_ID,
     getChapterPickOffer,
@@ -238,4 +240,35 @@ test('범위: 사망 · 다시 시작은 받은 장을 비운다(새 여정은 �
     const defeated = CombatEngine.handleDefeat(clone(veteran), clone(INITIAL_STATE.player), () => 0.5, () => 1).updatedPlayer;
     assert.equal(defeated.stats.currentRun.chapterPicks, undefined);
     assert.deepEqual(getPendingChapterPicks(defeated), []);
+});
+
+test('접두어 카드: 원소 접두어가 무기 마법 기술을 새로 열면 그 기술을 카드가 말한다', () => {
+    // 접두어 정책의 1회차 사망 감소(원장 §167)는 접두어 수치가 아니라 원소 무기가 자동으로 여는 무기 마법 기술에서 왔다 —
+    // 카드가 "공격력 +N · 화염 속성"만 말하던 동안 가장 큰 효과가 보이지 않았다.
+    const prefixCardOf = (startedAt, weapon) => {
+        const player = freshPlayer({ reached: 7, equip: { weapon, armor: armorOf(2), offhand: null } });
+        player.stats.currentRun.startedAt = startedAt;
+        return getChapterPickOffer(player, 4).cards.find((card) => card.kind === 'prefix');
+    };
+    const plain = weaponOf(1);
+    assert.equal(isMagicWeapon(plain), false);
+    const cards = Array.from({ length: 80 }, (_, index) => prefixCardOf(index * 104_729, plain));
+    const elemental = cards.find((card) => card.elem);
+    const physical = cards.find((card) => !card.elem);
+    assert.ok(elemental && physical, '시작 시각 80개 안에 원소 · 비원소 접두어가 모두 나온다');
+
+    const prefixed = applyItemPrefixByName(plain, elemental.prefixName);
+    assert.equal(elemental.opensSkill, getWeaponMagicSkills({ weapon: prefixed })[0].name);
+    assert.ok(elemental.opensSkill.length > 0);
+    assert.equal(physical.opensSkill, null, '원소가 없는 접두어는 기술을 열지 않는다');
+
+    const staff = weaponOf(2);
+    assert.equal(isMagicWeapon(staff), true);
+    const staffCards = Array.from({ length: 80 }, (_, index) => prefixCardOf(index * 104_729, staff));
+    assert.ok(staffCards.every((card) => card.opensSkill === null), '이미 마법 무기면 새로 여는 기술이 없다');
+
+    const armorCard = getChapterPickOffer(freshPlayer({ reached: 7, equip: { weapon: null, armor: armorOf(2), offhand: null } }), 4)
+        .cards.find((card) => card.kind === 'prefix');
+    assert.equal(armorCard?.slot, 'armor');
+    assert.equal(armorCard.opensSkill, null, '방어구 접두어는 기술을 열지 않는다');
 });

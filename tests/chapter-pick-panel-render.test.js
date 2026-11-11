@@ -112,3 +112,25 @@ test('장비가 없으면 접두어 · 강화 자리는 대체 유물이고, 11p
         assert.doesNotMatch(variant, /\btruncate\b|line-clamp/u);
     }
 });
+
+test('원소 접두어 카드는 새로 여는 무기 마법 기술을 한 줄로 그린다 — 기술을 열지 않는 카드에는 그 줄이 없다', () => {
+    const playerWith = (startedAt, weapon) => {
+        const player = playerAt({ reached: 7, equip: { weapon, armor: { ...clone(DB.ITEMS.armors[2]), id: 'a-2' }, offhand: null } });
+        player.stats.currentRun.startedAt = startedAt;
+        return player;
+    };
+    const plain = { ...clone(DB.ITEMS.weapons[1]), id: 'w-1' };
+    const players = Array.from({ length: 80 }, (_, index) => playerWith(index * 104_729, plain));
+    const prefixCard = (player) => getChapterPickOffer(player, 4).cards.find((card) => card.kind === 'prefix');
+    const opening = players.find((player) => prefixCard(player)?.opensSkill);
+    const closed = players.find((player) => prefixCard(player) && !prefixCard(player).opensSkill);
+    assert.ok(opening && closed);
+
+    const html = render(opening);
+    const skill = prefixCard(opening).opensSkill;
+    const visibleText = sliceElementByTestId(html, 'chapter-pick-prefix-skill').replace(/<[^>]+>/gu, '').replace(/&#x27;/gu, "'");
+    assert.equal(visibleText, MSG.CHAPTER_PICK_PREFIX_SKILL(skill));
+    assert.ok(MSG.CHAPTER_PICK_PREFIX_SKILL(skill).includes(skill));
+    assert.deepEqual(undersizedClasses(html), []);
+    assert.ok(!render(closed).includes('data-testid="chapter-pick-prefix-skill"'));
+});

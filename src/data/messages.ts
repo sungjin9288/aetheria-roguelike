@@ -2107,6 +2107,7 @@ export const MSG = {
     CHAPTER_PICK_PREFIX_STAT: (stat: 'atk' | 'def', val: number, elem: string | null) => (
         `${stat === 'atk' ? '공격력' : '방어력'} +${val}${elem ? ` · ${elem} 속성` : ''}`
     ),
+    CHAPTER_PICK_PREFIX_SKILL: (skill: string) => `무기 마법 기술 ${withJosa(`'${skill}'`, '이/가')} 열립니다.`,
     CHAPTER_PICK_ENHANCE_TITLE: (itemName: string, from: number, to: number) => `${itemName} +${from} → +${to}`,
     CHAPTER_PICK_ENHANCE_EFFECT: '장착한 무기를 골드 · 재료 없이 반드시 강화합니다.',
     CHAPTER_PICK_CONFIRM: '이것으로 받기',

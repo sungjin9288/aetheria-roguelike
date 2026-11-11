@@ -4,6 +4,7 @@ import { RELICS, pickWeightedRelics } from '../data/relics.js';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks.js';
 import type { Item, ItemPrefixDef, Player, Relic } from '../types/index.js';
 import { readChapterProgress } from './chapterRecap.js';
+import { getWeaponMagicSkills, isMagicWeapon } from './equipmentUtils.js';
 import { applyItemPrefixByName, getItemPrefixCandidateNames } from './itemPrefixUtils.js';
 import { readChapterPicks } from './runProgress.js';
 import { createDomainRandom } from './seededRandom.js';
@@ -24,7 +25,12 @@ export type ChapterPickSlot = 'weapon' | 'armor';
 
 export type ChapterPickCard =
     | { id: string; kind: 'relic'; relic: Relic; atCapacity: boolean }
-    | { id: string; kind: 'prefix'; slot: ChapterPickSlot; itemName: string; prefixName: string; stat: 'atk' | 'def'; val: number; elem: string | null }
+    | {
+        id: string; kind: 'prefix'; slot: ChapterPickSlot; itemName: string; prefixName: string;
+        stat: 'atk' | 'def'; val: number; elem: string | null;
+        /** 원소 접두어가 마법 무기가 아니던 무기에 새로 여는 무기 마법 기술의 이름(`getWeaponMagicSkills`). 없으면 null. */
+        opensSkill: string | null;
+    }
     | { id: string; kind: 'enhance'; slot: 'weapon'; itemName: string; from: number; to: number };
 
 export interface ChapterPickOffer {
@@ -91,6 +97,14 @@ const findPrefixDef = (name: string): ItemPrefixDef | null => (
     (Array.isArray(DB.ITEMS?.prefixes) ? DB.ITEMS.prefixes : []).find((prefix: ItemPrefixDef) => prefix.name === name) ?? null
 );
 
+/** 접두어를 붙인 뒤 새로 열리는 무기 마법 기술 — 무기 칸이고, 붙이기 전에는 마법 무기가 아니었고, 붙인 뒤에는 마법 무기일 때만. */
+const getOpenedWeaponSkill = (slot: ChapterPickSlot, item: Item, prefixName: string): string | null => {
+    if (slot !== 'weapon' || isMagicWeapon(item)) return null;
+    const prefixed = applyItemPrefixByName(item, prefixName);
+    if (!prefixed || !isMagicWeapon(prefixed)) return null;
+    return getWeaponMagicSkills({ weapon: prefixed })[0]?.name ?? null;
+};
+
 const buildPrefixCard = (player: PickSource, chapter: number): ChapterPickCard | null => {
     const slots: ChapterPickSlot[] = ['weapon', 'armor'];
     for (const slot of slots) {
@@ -109,6 +123,7 @@ const buildPrefixCard = (player: PickSource, chapter: number): ChapterPickCard |
             stat: slot === 'weapon' ? 'atk' : 'def',
             val: toCount(prefix.val),
             elem: prefix.elem && !item.elem ? prefix.elem : null,
+            opensSkill: getOpenedWeaponSkill(slot, item, prefixName),
         };
     }
     return null;

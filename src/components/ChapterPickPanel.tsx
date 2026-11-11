@@ -76,9 +76,16 @@ const renderCardBody = (card: ChapterPickCard, selected: boolean) => {
             titleClassName: 'text-ae-ink',
             effect: MSG.CHAPTER_PICK_PREFIX_EFFECT(slotLabel, card.itemName, card.prefixName),
             lines: (
-                <ChoiceCardLine data-testid="chapter-pick-prefix-stat" className="text-ae-good">
-                    {MSG.CHAPTER_PICK_PREFIX_STAT(card.stat, card.val, card.elem)}
-                </ChoiceCardLine>
+                <>
+                    <ChoiceCardLine data-testid="chapter-pick-prefix-stat" className="text-ae-good">
+                        {MSG.CHAPTER_PICK_PREFIX_STAT(card.stat, card.val, card.elem)}
+                    </ChoiceCardLine>
+                    {card.opensSkill ? (
+                        <ChoiceCardLine data-testid="chapter-pick-prefix-skill" className="text-ae-good">
+                            {MSG.CHAPTER_PICK_PREFIX_SKILL(card.opensSkill)}
+                        </ChoiceCardLine>
+                    ) : null}
+                </>
             ),
         };
     }
