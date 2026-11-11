@@ -42,6 +42,16 @@ const reclimbRatios = (run) => {
     }
     return out;
 };
+/** 회차 시간 중 레벨이 [lo, hi]였던 시간(사망 뒤 다시 오른 구간 포함) — 레벨 기록이 없으면 0. */
+const bandHours = (run, lo, hi) => {
+    if (!Array.isArray(run.climbs)) return 0;
+    return run.climbs.reduce((sum, [at, level], index) => {
+        const until = run.climbs[index + 1]?.[0] ?? run.hours;
+        return level >= lo && level <= hi ? sum + (until - at) : sum;
+    }, 0);
+};
+/** 장의 선물(H3) 판단 구간 — 재미 분석 §2.1의 빌드 결정이 시간당 0.08 · 0.5였던 Lv31-48. */
+const PICK_BAND = [31, 48];
 const quantile = (xs, q) => { const sorted = [...xs].sort((a, b) => a - b); return sorted[Math.min(sorted.length - 1, Math.floor(q * sorted.length))]; };
 const load = (dir, collectDeaths = false) => {
     const rows = new Map();
@@ -60,6 +70,7 @@ const load = (dir, collectDeaths = false) => {
                     path: name, run: run.run, rank: run.rank, deaths: run.deaths, hours: run.hours, longestGap: longestGap(run), moments: run.moments || null,
                     zero: run.deaths === 0 ? 1 : 0, loop: run.deaths >= LOOP_DEATHS ? 1 : 0,
                     ruleId: run.ruleId, ruleOptional: Boolean(run.ruleOptional), ruleDeclined: Boolean(run.ruleDeclined), newSignatures,
+                    chapterPicks: Array.isArray(run.chapterPicks) ? run.chapterPicks : null, pickBandHours: bandHours(run, ...PICK_BAND),
                     lateShare: lateBandShare(run), reclimbs: reclimbRatios(run), ladderRank: Number(run.ladderRank) || 0, essence: Number(run.essence) || 0,
                 });
             });
@@ -93,6 +104,14 @@ if (!baseDir) {
             const kinds = xs.flatMap((r) => r.moments || []).reduce((acc, [, kind]) => ({ ...acc, [kind]: (acc[kind] || 0) + 1 }), {});
             const perHour = xs.reduce((sum, r) => sum + (r.moments || []).length, 0) / Math.max(1e-9, xs.reduce((sum, r) => sum + r.hours, 0));
             console.log(`  큰 순간: ${perHour.toFixed(2)}/시간 · 최장 공백 중앙값 ${quantile(gaps, 0.5).toFixed(2)}h · 상위 10% ${quantile(gaps, 0.9).toFixed(2)}h · 3시간 이상 ${gaps.filter((gap) => gap >= 3).length}판 · ${Object.entries(kinds).sort((a, b) => b[1] - a[1]).map(([kind, count]) => `${kind} ${count}`).join(' ')}`);
+        }
+        const picked = xs.filter((r) => r.chapterPicks);
+        if (picked.length) {
+            const all = picked.flatMap((r) => r.chapterPicks);
+            const kinds = all.reduce((acc, [, , kind]) => ({ ...acc, [kind]: (acc[kind] || 0) + 1 }), {});
+            const inBand = all.filter(([, , , level]) => level >= PICK_BAND[0] && level <= PICK_BAND[1]).length;
+            const bandTime = picked.reduce((sum, r) => sum + r.pickBandHours, 0);
+            console.log(`  장의 선물: 판당 ${(all.length / picked.length).toFixed(2)}번 · ${Object.entries(kinds).map(([kind, count]) => `${kind} ${(100 * count / all.length).toFixed(0)}%`).join(' ')} · Lv${PICK_BAND[0]}-${PICK_BAND[1]} ${(inBand / Math.max(1e-9, bandTime)).toFixed(2)}/시간 (그 구간 판당 ${(bandTime / picked.length).toFixed(1)}h)`);
         }
         const shares = xs.map((r) => r.lateShare).filter((share) => share !== null);
         if (shares.length) console.log(`  Lv41-48 비중: 평균 ${(100 * mean(shares)).toFixed(1)}% · 중앙 ${(100 * quantile(shares, 0.5)).toFixed(1)}% (Lv41 닿은 ${shares.length}판) · 정수 사다리 ${mean(xs.map((r) => r.ladderRank)).toFixed(0)}단계`);

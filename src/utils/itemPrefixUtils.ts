@@ -61,17 +61,7 @@ const applyPrefixStats = (item: Item, prefix: ItemPrefixDef) => {
     return next;
 };
 
-export const applyItemPrefix = <T extends Item | null | undefined>(item: T, rng?: () => number): T | Item => {
-    const random = typeof rng === 'function' ? rng : Math.random;
-    if (!item) return item;
-    if (item.prefixed) return withCanonicalEquipmentBaseIdentity(item);
-
-    if (random() >= BALANCE.ITEM_PREFIX_CHANCE) return item;
-
-    const candidates = getPrefixCandidates(item);
-    if (!candidates.length) return item;
-
-    const prefix = candidates[Math.floor(random() * candidates.length)];
+const withPrefix = (item: Item, prefix: ItemPrefixDef): Item => {
     const withStats = applyPrefixStats(withCanonicalEquipmentBaseIdentity(item), prefix);
     const normalizedType = normalizeItemType(withStats.type);
     const statText = formatStatText(withStats, normalizedType);
@@ -83,4 +73,35 @@ export const applyItemPrefix = <T extends Item | null | undefined>(item: T, rng?
         prefixed: true,
         prefixName: prefix.name
     };
+};
+
+/** 이 아이템에 붙을 수 있는 접두어 이름(데이터 순서). 이미 접두어가 있으면 빈 목록. */
+export const getItemPrefixCandidateNames = (item: Item | null | undefined): string[] => (
+    item && !item.prefixed
+        ? getPrefixCandidates(item).map((prefix: ItemPrefixDef) => prefix.name).filter((name): name is string => typeof name === 'string')
+        : []
+);
+
+/**
+ * 2026-11 H3 장 경계 3택: 정해진 접두어 하나를 붙인다(무작위 `applyItemPrefix`와 같은 적용 — 확률 굴림만 없다).
+ * 이미 접두어가 있거나 그 아이템에 붙을 수 없는 접두어면 `null`.
+ */
+export const applyItemPrefixByName = (item: Item | null | undefined, prefixName: string): Item | null => {
+    if (!item || item.prefixed) return null;
+    const prefix = getPrefixCandidates(item).find((candidate: ItemPrefixDef) => candidate.name === prefixName);
+    return prefix ? withPrefix(item, prefix) : null;
+};
+
+export const applyItemPrefix = <T extends Item | null | undefined>(item: T, rng?: () => number): T | Item => {
+    const random = typeof rng === 'function' ? rng : Math.random;
+    if (!item) return item;
+    if (item.prefixed) return withCanonicalEquipmentBaseIdentity(item);
+
+    if (random() >= BALANCE.ITEM_PREFIX_CHANCE) return item;
+
+    const candidates = getPrefixCandidates(item);
+    if (!candidates.length) return item;
+
+    const prefix = candidates[Math.floor(random() * candidates.length)];
+    return withPrefix(item, prefix);
 };

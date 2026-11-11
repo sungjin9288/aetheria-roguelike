@@ -84,6 +84,13 @@ test('실제 화면의 글자 · 화면 문구 속성에 영어 낱말이 없다
     await expectKoreanOnly(page, '유물 선택');
     await page.getByTestId('relic-choice-skip').click();
 
+    // 2026-11 H3 장 경계 3택: 장의 선물(유물 · 접두어 · 무료 강화 카드 셋).
+    await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedChapterPickScenario?.(4));
+    await expect(page.getByTestId('chapter-pick-panel')).toBeVisible({ timeout: 8_000 });
+    await expectKoreanOnly(page, '장의 선물');
+    await page.getByTestId('chapter-pick-skip').click();
+    await expect(page.getByTestId('chapter-pick-panel')).toHaveCount(0);
+
     // 2026-11 B1: 결산 칸이 있는 원정 정리 시트(seedExpeditionDebriefScenario + 장 결산 셋) — 결산 칸도 이 화면 목록에 든다.
     await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedChapterRecapScenario?.());
     await expect(page.getByTestId('expedition-debrief-card')).toBeVisible({ timeout: 8_000 });

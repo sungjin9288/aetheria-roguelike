@@ -2089,6 +2089,36 @@ export const MSG = {
     POST_COMBAT_SWIFT_EYEBROW: '한 번에 처치',
     POST_COMBAT_SWIFT_TITLE: (enemy: string) => `${enemy} 처치`,
 
+    // === 2026-11 H3 장 경계 3택(`utils/chapterPick.ts` · `ChapterPickPanel`) ===
+    // 4 · 5 · 7장에 처음 들어선 뒤 대기 상태가 되면 '장의 선물' 카드 셋 중 하나를 받는다(넘길 수 있다). 지역 이름을 쓰지 않는다.
+    CHAPTER_PICK_EYEBROW: (chapter: number, name: string) => `${chapter}장 · ${name}`,
+    CHAPTER_PICK_TITLE: '장의 선물',
+    CHAPTER_PICK_BODY: '새 장에 들어섰습니다. 하나를 골라 받으세요.',
+    CHAPTER_PICK_ARIA: (chapter: number) => `${chapter}장의 선물`,
+    CHAPTER_PICK_HEAD_RELIC: '유물',
+    CHAPTER_PICK_HEAD_PREFIX: '접두어',
+    CHAPTER_PICK_HEAD_ENHANCE: '무료 강화',
+    CHAPTER_PICK_SLOT_LABEL: { weapon: '무기', armor: '방어구' } as Record<'weapon' | 'armor', string>,
+    CHAPTER_PICK_RELIC_FULL: '유물 칸이 가득 차 있어 고르면 내려놓을 유물을 고릅니다.',
+    CHAPTER_PICK_PREFIX_TITLE: (prefix: string) => `${prefix} 접두어`,
+    CHAPTER_PICK_PREFIX_EFFECT: (slotLabel: string, itemName: string, prefix: string) => (
+        `장착한 ${slotLabel} ${itemName}에 '${prefix}' 접두어를 붙입니다.`
+    ),
+    CHAPTER_PICK_PREFIX_STAT: (stat: 'atk' | 'def', val: number, elem: string | null) => (
+        `${stat === 'atk' ? '공격력' : '방어력'} +${val}${elem ? ` · ${elem} 속성` : ''}`
+    ),
+    CHAPTER_PICK_PREFIX_SKILL: (skill: string) => `무기 마법 기술 ${withJosa(`'${skill}'`, '이/가')} 열립니다.`,
+    CHAPTER_PICK_ENHANCE_TITLE: (itemName: string, from: number, to: number) => `${itemName} +${from} → +${to}`,
+    CHAPTER_PICK_ENHANCE_EFFECT: '장착한 무기를 골드 · 재료 없이 반드시 강화합니다.',
+    CHAPTER_PICK_CONFIRM: '이것으로 받기',
+    CHAPTER_PICK_SKIP: '받지 않고 넘기기',
+    CHAPTER_PICK_EMPTY: '지금 받을 수 있는 선물이 없습니다.',
+    CHAPTER_PICK_LOG_RELIC: (chapter: number, relic: string) => `${chapter}장의 선물 — 유물 ${withJosa(relic, '을/를')} 얻었습니다.`,
+    CHAPTER_PICK_LOG_RELIC_REPLACE: (chapter: number, relic: string) => `${chapter}장의 선물 — ${withJosa(relic, '과/와')} 바꿀 유물을 고르세요.`,
+    CHAPTER_PICK_LOG_PREFIX: (chapter: number, itemName: string) => `${chapter}장의 선물 — 장비가 ${withJosa(itemName, '이/가')} 되었습니다.`,
+    CHAPTER_PICK_LOG_ENHANCE: (chapter: number, itemName: string, level: number) => `${chapter}장의 선물 — ${itemName} +${level} 강화.`,
+    CHAPTER_PICK_LOG_SKIP: (chapter: number) => `${chapter}장의 선물을 받지 않고 지나갔습니다.`,
+
     // === 앱인토스 게임 체크리스트 · 종료 확인 ===
     // 뒤로가기로 미니앱을 닫기 전에 묻는다('미니앱 종료 시 확인 모달'). 여정은 저장한 뒤 닫는다.
     A11Y_DIALOG_EXIT: '게임 종료 확인',

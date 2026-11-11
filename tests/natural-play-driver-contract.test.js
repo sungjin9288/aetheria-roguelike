@@ -4,7 +4,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { JOB_PATHS, pickAscensionRuleId, runNaturalPlay } from '../scripts/naturalPlay/driver.mjs';
+import { JOB_PATHS, pickAscensionRuleId, pickChapterPickCardId, runNaturalPlay } from '../scripts/naturalPlay/driver.mjs';
+import { CHAPTER_PICK_SKIP_ID } from '../src/utils/chapterPick.js';
 import { getAscensionRule, getAscensionRuleOffer } from '../src/systems/ascensionRule.js';
 
 const SHORT = { seed: 7, maxSteps: 800 };
@@ -124,4 +125,39 @@ test('경제 정책(E9)은 옵션이다 — 끄면 결과에 흔적이 없고, �
     assert.equal(mat.economy, 'materials');
     assert.ok(Number.isInteger(mat.runs[0].economy.materialBought), JSON.stringify(mat.runs[0].economy));
     await assert.rejects(() => runNaturalPlay({ ...SHORT, economy: 'all' }), /unknown economy/);
+});
+
+test('장의 선물 정책(H3)은 카드 종류를 고르고, 그 종류가 패에 없으면 유물 카드 · 무작위는 시드로 결정론적이다', () => {
+    const full = { chapter: 4, cards: [{ id: 'relic', kind: 'relic' }, { id: 'prefix', kind: 'prefix' }, { id: 'enhance', kind: 'enhance' }] };
+    const noGear = { chapter: 5, cards: [{ id: 'relic', kind: 'relic' }, { id: 'relic-2', kind: 'relic' }, { id: 'relic-3', kind: 'relic' }] };
+    assert.equal(pickChapterPickCardId(full, 'skip'), CHAPTER_PICK_SKIP_ID);
+    for (const kind of ['relic', 'prefix', 'enhance']) {
+        assert.equal(pickChapterPickCardId(full, kind), kind);
+        assert.equal(pickChapterPickCardId(noGear, kind), 'relic', `${kind}가 없으면 첫 유물 카드`);
+    }
+    assert.equal(pickChapterPickCardId({ chapter: 7, cards: [] }, 'relic'), CHAPTER_PICK_SKIP_ID, '패가 비면 넘긴다');
+    const counts = new Map();
+    for (let pickSeed = 0; pickSeed < 300; pickSeed += 1) {
+        const id = pickChapterPickCardId(full, 'random', pickSeed);
+        assert.equal(id, pickChapterPickCardId(full, 'random', pickSeed));
+        counts.set(id, (counts.get(id) || 0) + 1);
+    }
+    assert.deepEqual([...counts.keys()].sort(), ['enhance', 'prefix', 'relic']);
+    for (const n of counts.values()) assert.ok(n > 60, `고르게 나온다 ${[...counts.values()]}`);
+});
+
+test('장의 선물(H3): 기본 none은 흔적이 없고, skip은 고르기만 기록해 결과가 none과 같다 — 고르기는 행동 · 난수를 쓰지 않는다', async () => {
+    // 한 회차(마왕 처치 → 계승)가 약 5,400행동이라 4 · 5 · 7장을 지나간다.
+    const options = { seed: 7, maxSteps: 6000 };
+    const none = await runNaturalPlay(options);
+    assert.equal(none.chapterPick, undefined);
+    assert.ok(none.runs.every((run) => run.chapterPicks === undefined));
+    const skip = await runNaturalPlay({ ...options, chapterPick: 'skip' });
+    assert.equal(skip.chapterPick, 'skip');
+    const picks = skip.runs.flatMap((run) => run.chapterPicks);
+    assert.ok(picks.length >= 3, JSON.stringify(picks));
+    assert.ok(picks.every(([, chapter, kind]) => [4, 5, 7].includes(chapter) && kind === 'skip'), JSON.stringify(picks));
+    const strip = ({ chapterPick: _policy, ...rest }) => ({ ...rest, runs: rest.runs.map(({ chapterPicks: _picks, ...run }) => run) });
+    assert.deepEqual(strip(skip), strip(none));
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, chapterPick: 'best' }), /unknown chapterPick/);
 });

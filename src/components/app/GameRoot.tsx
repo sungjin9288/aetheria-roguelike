@@ -14,6 +14,7 @@ import { buildReturnBriefing } from '../../utils/returnBriefing';
 import { getDailyMissionSummary } from '../../utils/protocolCycle';
 import { getExpeditionReturnAction } from '../../utils/expeditionReturnFlow';
 import { getPendingMilestoneStoryBeat, type MilestoneStoryBeat } from '../../utils/milestoneStory';
+import { getNextChapterPick } from '../../utils/chapterPick';
 import { DB } from '../../data/db';
 import { AT } from '../../reducers/actionTypes';
 import { MSG } from '../../data/messages';
@@ -50,6 +51,7 @@ const PremiumShop      = lazy(() => import('../PremiumShop'));
 const MirrorPanel      = lazy(() => import('../MirrorPanel'));
 const ReturnBriefingCard = lazy(() => import('../ReturnBriefingCard'));
 const MilestoneStoryCard = lazy(() => import('../MilestoneStoryCard'));
+const ChapterPickPanel = lazy(() => import('../ChapterPickPanel'));
 
 /**
  * liveConfig.seasonEvent.endsAt(`types/session.ts`)는 Firestore Timestamp | 문자열 | 숫자가
@@ -162,6 +164,17 @@ const GameRoot = ({
         && engine.gameState === GS.IDLE
         && !engine.pendingRelics
         && !engine.postCombatResult,
+    );
+    // 2026-11 H3 장 경계 3택: 장에 들어선 뒤 처음 대기 상태가 되면 뜬다. 원정 정리 · 이야기 카드 · 유물 제안 · 전투 결과가 먼저다
+    //   (리듀서도 대기 상태 · 열린 유물 제안이 없을 때만 받는다 — 같은 조건).
+    const showChapterPick = Boolean(
+        engine.bootStage === 'ready'
+        && engine.gameState === GS.IDLE
+        && !engine.pendingRelics
+        && !engine.postCombatResult
+        && !showExpeditionDebrief
+        && !showStandaloneStory
+        && getNextChapterPick(engine.player) != null,
     );
     const readabilityMode = engine.player?.settings?.readabilityMode === 'high' ? 'high' : 'standard';
     // slice 21: 지역별 ambient 팔레트 — 위치 기반 accent/wash CSS 변수.
@@ -525,7 +538,13 @@ const GameRoot = ({
                 </Suspense>
             )}
 
-            {engine.bootStage === 'ready' && engine.player && !showExpeditionDebrief && !showStandaloneStory && (
+            {showChapterPick && !combatStage.holdResultCards && (
+                <Suspense fallback={null}>
+                    <ChapterPickPanel player={engine.player} dispatch={engine.dispatch} />
+                </Suspense>
+            )}
+
+            {engine.bootStage === 'ready' && engine.player && !showExpeditionDebrief && !showStandaloneStory && !showChapterPick && (
                 <ReturnBriefingGate
                     player={engine.player}
                     maxHp={fullStats?.maxHp}
