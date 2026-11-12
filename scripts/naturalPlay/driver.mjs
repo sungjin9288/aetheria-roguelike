@@ -50,6 +50,7 @@ import { hasChallengeModifier } from '../../src/utils/challengeRules.ts';
 import { getChargeBreakDamage, getChargeDamageTaken, isChargeBrokenByDamage } from '../../src/systems/bossMechanics.ts';
 import { estimateEnemyNextHit } from '../../src/utils/enemyThreat.ts';
 import { getBehaviorCombo, getChargeBreakMult, getCrossRhythmStrike, getFinisherStrike, getThirdBeat, isPotionSkillReady, isPursuitCrit } from '../../src/systems/relicBehaviorCombos.ts';
+import { getAutoExploreStep } from '../../src/utils/autoExplore.ts';
 
 // v2 (Wave 119): 퇴마 · 회복 기술을 쓴다 — v1은 위력(`mult`) 있는 기술만 써서 성직자가 회복도 퇴마도 하지 않았다(원장 §126).
 // v3 (Wave 128): 받은 이야기 임무 — 본편 장과 곁가지 이야기를 여는 임무 — 를 받은 순서대로 하러 간다. v2는 본편 장의 목표 지역만
@@ -169,6 +170,16 @@ const installClock = (clock) => {
  *   `aware`는 걸린 조건을 쓴다 — 마무리 문턱의 적에 일반 공격(보스는 ×3이 가장 센 기술 이상일 때), 물약술이면 기력이 모자랄 때 물약,
  *   추격이면 보스 · 정예에 기절 기술 먼저, 교차 리듬이면 기술 뒤 일반 공격(보스 · 정예, 또는 ×1.8이 가장 센 기술 이상일 때).
  *   셋째 박자 · 끊는 일격은 기본 정책(가장 센 기술)이 이미 맞춘다. 옵션이라 `DRIVER_VERSION`은 그대로다.
+ * @param {'off'|'on'} [options.autoExplore] 연속 탐험(H1, 2026-11) — `off`(기본, v3 그대로)는 토글을 쓰지 않는다. `on`은 토글을 켤 수
+ *   있을 때마다 켜 둔 사람이다: 게임과 같은 판정(`getAutoExploreStep`)이 `attack`을 내는 전투는 가장 센 기술 대신 일반 공격을 쓰고,
+ *   판정이 멈춤을 내거나 드라이버가 탐험이 아닌 일(이동 · 휴식 · 물약 · 전직)을 하면 연쇄가 끊긴다. 끊긴 뒤 다음 탐험은 토글을 다시
+ *   켜는 입력(수동 1번)이다. 회차 기록 `autoExplore`가 탐험 · 전투 입력을 연속 탐험 / 수동으로 나눠(Lv21 이후 따로) 세고, 멈춤 이유 ·
+ *   연쇄 길이 · 연쇄 중 사망을 남긴다. 결과 카드를 닫는 것은 어느 쪽이든 입력으로 세지 않는다('계속 탐험'이 다음 탐험을 겸한다).
+ *   옵션이라 `DRIVER_VERSION`은 그대로다.
+ * @param {'off'|'on'} [options.bagRoom] 가방 여유(H1, 2026-11) — `off`(기본, v3 그대로)는 가방이 차도 계속 다닌다. `on`은 사냥 지역에서
+ *   가방이 가득 차면 가장 가까운 안전지대로 가서 판다(쓰지 않을 장비 · 잡동사니 재료, 강화 재료가 아닌 재료는 싼 것부터 빈칸
+ *   `ECONOMY_FREE_BAG_SLOTS`까지). 다녀와도 칸이 나지 않으면 `BAG_ROOM_RETRY_STEPS` 행동 동안 다시 가지 않는다. 가방이 찬 채로는
+ *   결과 카드가 접히지 않아(D1) 연속 탐험이 걸음마다 멈추므로, 연속 탐험의 짝 측정은 두 짝 모두 이 정책을 켠다.
  * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
  *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
@@ -209,6 +220,12 @@ export const ENHANCE_BRANCH_POLICIES = Object.freeze(['first', 'alt', 'random'])
 /** 유물 선택 · 행동 조합 정책(H4, 2026-11) — 기본 `recommend` · `none`은 v3 그대로다. */
 export const RELIC_PICK_POLICIES = Object.freeze(['recommend', 'first']);
 export const RELIC_PLAY_POLICIES = Object.freeze(['none', 'observe', 'aware']);
+/** 연속 탐험 정책(H1, 2026-11) — 기본 `off`는 v3 그대로다. */
+export const AUTO_EXPLORE_POLICIES = Object.freeze(['off', 'on']);
+/** 연속 탐험 입력을 따로 세는 레벨(재미 분석 §2.2 — 전직 뒤 1행동 전투가 대부분인 구간). */
+const AUTO_EXPLORE_LATE_LEVEL = 21;
+/** 가방 여유 정책 — 다녀와도 칸이 나지 않았으면 이만큼의 행동 동안 다시 팔러 가지 않는다. */
+const BAG_ROOM_RETRY_STEPS = 300;
 /** 회차 기록 `behavior`가 세는 행동 조합 효과(`relicBehaviorCombos.ts`의 6개). */
 const BEHAVIOR_EFFECTS = Object.freeze(['cross_rhythm', 'break_strike', 'void_pursuit', 'battle_alchemy', 'third_beat', 'finisher']);
 
@@ -241,8 +258,14 @@ export const runNaturalPlay = async (options) => {
         bossResponse = 'none',
         relicPick = 'recommend',
         relicPlay = 'none',
+        autoExplore = 'off',
+        bagRoom = 'off',
         onDispatch,
     } = options;
+    if (!['off', 'on'].includes(bagRoom)) throw new Error(`unknown bagRoom ${bagRoom}`);
+    const keepBagRoom = bagRoom === 'on';
+    if (!AUTO_EXPLORE_POLICIES.includes(autoExplore)) throw new Error(`unknown autoExplore ${autoExplore}`);
+    const useAutoExplore = autoExplore === 'on';
     if (!RELIC_PICK_POLICIES.includes(relicPick)) throw new Error(`unknown relicPick ${relicPick}`);
     if (!RELIC_PLAY_POLICIES.includes(relicPlay)) throw new Error(`unknown relicPlay ${relicPlay}`);
     const trackBehavior = relicPick !== 'recommend' || relicPlay !== 'none';
@@ -309,6 +332,8 @@ export const runNaturalPlay = async (options) => {
         ...(bossResponse === 'none' ? {} : { bossResponse }),
         ...(relicPick === 'recommend' ? {} : { relicPick }),
         ...(relicPlay === 'none' ? {} : { relicPlay }),
+        ...(useAutoExplore ? { autoExplore } : {}),
+        ...(keepBagRoom ? { bagRoom } : {}),
         stepSeconds,
         runs: [],
         deaths: [],
@@ -362,12 +387,22 @@ export const runNaturalPlay = async (options) => {
                     plays: Object.fromEntries(BEHAVIOR_EFFECTS.map((effect) => [effect, 0])),
                 },
             } : {}),
+            // 연속 탐험을 켠 회차만(H1) — 입력: 연속 탐험이 낸 탐험 · 일반 공격(auto) / 그 밖(manual, 토글을 다시 켜는 탐험 포함),
+            //   `late`는 Lv21 이후만. 멈춤 이유별 수 · 연쇄 길이(켠 뒤 멈출 때까지 연속 탐험이 낸 걸음 수) · 연쇄 중 사망.
+            ...(useAutoExplore ? {
+                autoExplore: {
+                    inputs: { autoExplore: 0, autoAttack: 0, manualExplore: 0, manualCombat: 0 },
+                    late: { autoExplore: 0, autoAttack: 0, manualExplore: 0, manualCombat: 0 },
+                    starts: 0, stops: {}, chains: [], deathsInChain: 0,
+                },
+            } : {}),
             ...(economy === 'none' ? {} : {
                 economy: { enhanceTries: 0, enhanceSuccess: 0, blockedGold: 0, blockedMaterial: 0, blockedReserve: 0, maxed: 0, sold: 0, gearBought: 0, shopVisits: 0, branchAttempts: 0, branches: {}, ...(economy === 'materials' ? { materialBought: 0 } : {}) },
             }),
         };
     };
     const closeRun = () => {
+        if (autoChain) endAutoChain('run_end');
         const meta = state.player?.meta || {};
         const { momentBest: _best, momentJobs: _jobs, eventSeen: _seen, chainBest, ...runRecord } = run;
         result.runs.push({
@@ -424,6 +459,24 @@ export const runNaturalPlay = async (options) => {
         events.firstByKind[frame.kind] = (events.firstByKind[frame.kind] || 0) + 1;
         events.firstAt.push([Number((hours() - run.startHours).toFixed(3)), frame.kind]);
     }
+    // 연속 탐험(H1) — 켜진 연쇄 { steps }. 게임과 같은 판정을 지금 상태로 읽는다(상태만 읽고 게임 난수를 쓰지 않는다).
+    let autoChain = null;
+    const autoStep = () => getAutoExploreStep({
+        gameState: state.gameState, player: state.player, enemy: state.enemy, currentEvent: state.currentEvent,
+        pendingRelics: state.pendingRelics, postCombatResult: state.postCombatResult, isAiThinking: Boolean(state.isAiThinking),
+    });
+    function endAutoChain(reason) {
+        if (!autoChain || !run?.autoExplore) { autoChain = null; return; }
+        const record = run.autoExplore;
+        record.stops[reason] = (record.stops[reason] || 0) + 1;
+        record.chains.push(autoChain.steps);
+        autoChain = null;
+    }
+    function countInput(kind) {
+        if (!run?.autoExplore) return;
+        run.autoExplore.inputs[kind] += 1;
+        if ((Number(state.player?.level) || 1) >= AUTO_EXPLORE_LATE_LEVEL) run.autoExplore.late[kind] += 1;
+    }
     const declineFor = (nextRank) => ruleDecline === 'all' || (ruleDecline === 'stacked' && nextRank > 6) || ruleDecline === `rank:${nextRank}`;
 
     let lastGameState = null;
@@ -432,6 +485,9 @@ export const runNaturalPlay = async (options) => {
     let lastProgressStep = 0;
     let lastSignature = '';
     let lastMoments = null;
+    let exploredThisIdle = false;
+    let bagTripRetryAt = 0;
+    let bagTripPending = false;
 
     try {
         while (step < maxSteps && result.runs.length < targetRuns) {
@@ -460,6 +516,15 @@ export const runNaturalPlay = async (options) => {
             const level = Number(p.level) || 1;
             if (run.levelAt[level] === undefined) run.levelAt[level] = Number((hours() - run.startHours).toFixed(3));
             if (run.climbs.at(-1)?.[1] !== level) run.climbs.push([Number((hours() - run.startHours).toFixed(3)), level]);
+
+            // 연속 탐험(H1) — 켜져 있으면 지금 상태에서 판정이 멈춤인지 본다(결과 카드를 닫기 전 — 접히지 않은 카드는 멈춤이다).
+            if (useAutoExplore && autoChain) {
+                const next = autoStep();
+                if (next.kind === 'stop') {
+                    if (next.reason === 'defeat') run.autoExplore.deathsInChain += 1;
+                    endAutoChain(next.reason);
+                }
+            }
 
             // 유물 선택 — 화면 추천(`getRelicChoiceDecisionStrip`). 칸이 찼으면 나아지는 교체만 한다.
             if (Array.isArray(state.pendingRelics) && state.pendingRelics.length > 0) {
@@ -549,7 +614,10 @@ export const runNaturalPlay = async (options) => {
                 dispatch({ type: AT.RESOLVE_AI_EVENT, payload: { event: null } });
                 continue;
             default:
+                exploredThisIdle = false;
                 await playIdle();
+                // 연속 탐험이 켜져 있었는데 드라이버가 탐험이 아닌 일(이동 · 휴식 · 물약 · 계승 다시 열기)을 했다 — 사람이 멈춘 것이다.
+                if (useAutoExplore && autoChain && !exploredThisIdle) endAutoChain('manual');
             }
         }
     } finally {
@@ -583,6 +651,16 @@ export const runNaturalPlay = async (options) => {
                 run.fightsBy[key] = (run.fightsBy[key] || 0) + 1;
             }
         }
+        // 연속 탐험(H1) — 켜진 연쇄에서 판정이 일반 공격이면 일반 공격(사람이 토글을 켠 것과 같은 행동).
+        if (useAutoExplore && autoChain && autoStep().kind === 'attack') {
+            lastCombatSnapshot = { level: Number(p.level) || 1, loc: p.loc, hpRatio: Number((p.hp / Math.max(1, getFullStats().maxHp)).toFixed(3)), enemy: { name: enemy.name, baseName: enemy.baseName, isElite: enemy.isElite, isBoss: enemy.isBoss, huntChampion: enemy.huntChampion } };
+            countInput('autoAttack');
+            autoChain.steps += 1;
+            if (run.behavior) run.behavior.attack += 1;
+            A.combat('attack');
+            return;
+        }
+        if (useAutoExplore) countInput('manualCombat');
         const stats = getFullStats();
         const hpRatio = p.hp / Math.max(1, stats.maxHp);
         lastCombatSnapshot = { level: Number(p.level) || 1, loc: p.loc, hpRatio: Number(hpRatio.toFixed(3)), enemy: { name: enemy.name, baseName: enemy.baseName, isElite: enemy.isElite, isBoss: enemy.isBoss, huntChampion: enemy.huntChampion } };
@@ -814,6 +892,16 @@ export const runNaturalPlay = async (options) => {
                 if (state.player !== before) return;
             }
             if (economy !== 'none') { tradeGear(); A = buildActions(); p = state.player; }
+            else if (keepBagRoom && bagTripPending) {
+                buildActions().openShop();
+                if (state.gameState === GS.SHOP) { sellForRoom(); dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE }); }
+                A = buildActions(); p = state.player;
+            }
+            if (bagTripPending) {
+                bagTripPending = false;
+                // 다녀와도 칸이 나지 않았다 — 한동안 다시 가지 않는다(남은 것이 전부 팔지 않는 물건이다).
+                if ((p.inv || []).length >= getInventoryCapacity(p)) bagTripRetryAt = step + BAG_ROOM_RETRY_STEPS;
+            }
             // 체력 물약 3개까지 산다.
             const owned = (p.inv || []).filter((item) => item.type === 'hp').length;
             if (owned < 3 && potionsAllowed()) {
@@ -836,6 +924,13 @@ export const runNaturalPlay = async (options) => {
             if (safe) { stepToward(safe); return; }
         }
 
+        // 가방 여유(H1) — 사냥 지역에서 가방이 가득 차면 팔러 간다.
+        if (keepBagRoom && map?.type !== 'safe' && step >= bagTripRetryAt
+            && (state.player.inv || []).length >= getInventoryCapacity(state.player)) {
+            const safe = nearestSafeMap(state.player.loc);
+            if (safe) { bagTripPending = true; stepToward(safe); return; }
+        }
+
         // 받을 수 있는 이야기 장이 있으면 게시판(안전지대)으로 돌아간다.
         if (map?.type !== 'safe' && nextStoryQuest(state.player)) {
             const safe = nearestSafeMap(state.player.loc);
@@ -844,6 +939,18 @@ export const runNaturalPlay = async (options) => {
 
         const target = chooseTargetMap(state.player);
         if (target && target !== state.player.loc) { stepToward(target); return; }
+        if (useAutoExplore) {
+            // 켜진 연쇄에서 판정이 탐험이면 연속 탐험의 걸음이다. 아니면 수동 탭이고, 판정이 탐험이면 그 탭이 토글을 켠다.
+            const canAuto = autoStep().kind === 'explore';
+            if (autoChain && canAuto) {
+                countInput('autoExplore');
+                autoChain.steps += 1;
+            } else {
+                countInput('manualExplore');
+                if (canAuto) { autoChain = { steps: 0 }; run.autoExplore.starts += 1; }
+            }
+            exploredThisIdle = true;
+        }
         await buildActions().explore();
     }
 
@@ -892,27 +999,7 @@ export const runNaturalPlay = async (options) => {
         buildActions().openShop();
         if (state.gameState !== GS.SHOP) return;
         run.economy.shopVisits += 1;
-        // 지금 낄 수 없어도 나중에 나아질 장비(레벨 · 직업 제한)는 남긴다.
-        for (const item of [...(state.player.inv || [])]) {
-            if (!GEAR_TYPES.includes(item.type)) continue;
-            const decision = getEquipmentDecision(state.player, item);
-            if (decision && !decision.equipable && decision.score > 0) continue;
-            const before = state.player;
-            buildActions().market('sell', item);
-            if (state.player !== before) run.economy.sold += 1;
-        }
-        buildActions().autoSell();
-        // 가방이 거의 차면 강화 재료가 아닌 재료를 싼 것부터 판다 — 살 자리를 남긴다.
-        const roomFloor = getInventoryCapacity(state.player) - ECONOMY_FREE_BAG_SLOTS;
-        const surplus = (state.player.inv || [])
-            .filter((item) => item.type === 'mat' && item.name !== CONSTANTS.ENHANCE_MATERIAL_NAME)
-            .sort((a, b) => (a.price || 0) - (b.price || 0));
-        for (const item of surplus) {
-            if ((state.player.inv || []).length <= roomFloor) break;
-            const before = state.player;
-            buildActions().market('sell', item);
-            if (state.player !== before) run.economy.sold += 1;
-        }
+        sellForRoom();
         const loc = state.player.loc;
         for (const type of GEAR_TYPES) {
             let best = null;
@@ -934,6 +1021,32 @@ export const runNaturalPlay = async (options) => {
         }
         if (economy === 'materials') buyMaterialsAndEnhance();
         dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+    }
+
+    /** 상점에서 쓰지 않을 장비 · 잡동사니 재료를 판다(경제 정책 · 가방 여유 정책 공용 — 상점 화면이 열려 있어야 한다). */
+    function sellForRoom() {
+        const sold = () => { if (run.economy) run.economy.sold += 1; };
+        // 지금 낄 수 없어도 나중에 나아질 장비(레벨 · 직업 제한)는 남긴다.
+        for (const item of [...(state.player.inv || [])]) {
+            if (!GEAR_TYPES.includes(item.type)) continue;
+            const decision = getEquipmentDecision(state.player, item);
+            if (decision && !decision.equipable && decision.score > 0) continue;
+            const before = state.player;
+            buildActions().market('sell', item);
+            if (state.player !== before) sold();
+        }
+        buildActions().autoSell();
+        // 가방이 거의 차면 강화 재료가 아닌 재료를 싼 것부터 판다 — 살 자리를 남긴다.
+        const roomFloor = getInventoryCapacity(state.player) - ECONOMY_FREE_BAG_SLOTS;
+        const surplus = (state.player.inv || [])
+            .filter((item) => item.type === 'mat' && item.name !== CONSTANTS.ENHANCE_MATERIAL_NAME)
+            .sort((a, b) => (a.price || 0) - (b.price || 0));
+        for (const item of surplus) {
+            if ((state.player.inv || []).length <= roomFloor) break;
+            const before = state.player;
+            buildActions().market('sell', item);
+            if (state.player !== before) sold();
+        }
     }
 
     /** 상점의 강화 재료(E9) — 가장 낮게 강화된 장비의 다음 단계에 모자란 재료를 사서 강화한다(남길 돈 위에서만). */

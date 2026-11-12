@@ -73,6 +73,7 @@ const load = (dir, collectDeaths = false) => {
                     chapterPicks: Array.isArray(run.chapterPicks) ? run.chapterPicks : null, pickBandHours: bandHours(run, ...PICK_BAND),
                     bossCharge: run.bossCharge || null,
                     behavior: run.behavior || null,
+                    autoExplore: run.autoExplore || null,
                     events: run.events || null, firstPerHour: run.events && run.hours > 0 ? run.events.firstAt.length / run.hours : null,
                     lateShare: lateBandShare(run), reclimbs: reclimbRatios(run), ladderRank: Number(run.ladderRank) || 0, essence: Number(run.essence) || 0,
                 });
@@ -137,6 +138,33 @@ if (!baseDir) {
             const items = tracked.reduce((sum, r) => sum + r.behavior.item, 0);
             console.log(`  행동 조합: 판당 전투 행동 ${(actions / tracked.length).toFixed(0)} · 일반 공격 ${(100 * attacks / actions).toFixed(1)}% · 소모품 ${(100 * items / actions).toFixed(1)}%`);
             parts.forEach((part) => console.log(`    ${part}`));
+        }
+        // 연속 탐험(H1) — 탐험 · 전투 입력 중 연속 탐험이 낸 비율(전체 · Lv21 이후), 연쇄 길이, 멈춤 이유, 연쇄 중 사망.
+        const autoRows = xs.filter((r) => r.autoExplore);
+        if (autoRows.length) {
+            const sumInputs = (key) => autoRows.reduce((acc, r) => {
+                for (const [kind, n] of Object.entries(r.autoExplore[key])) acc[kind] = (acc[kind] || 0) + n;
+                return acc;
+            }, {});
+            const share = (t) => {
+                const auto = (t.autoExplore || 0) + (t.autoAttack || 0);
+                const all = auto + (t.manualExplore || 0) + (t.manualCombat || 0);
+                return `${(100 * auto / Math.max(1, all)).toFixed(1)}% (판당 연속 ${(auto / autoRows.length).toFixed(0)} / 수동 ${((all - auto) / autoRows.length).toFixed(0)}, 탐험 수동 ${((t.manualExplore || 0) / autoRows.length).toFixed(0)} · 전투 수동 ${((t.manualCombat || 0) / autoRows.length).toFixed(0)})`;
+            };
+            const shareOf = (r, key) => {
+                const t = r.autoExplore[key];
+                const auto = t.autoExplore + t.autoAttack;
+                const all = auto + t.manualExplore + t.manualCombat;
+                return all > 0 ? auto / all : null;
+            };
+            const lateShares = autoRows.map((r) => shareOf(r, 'late')).filter((v) => v !== null);
+            const chains = autoRows.flatMap((r) => r.autoExplore.chains);
+            const stops = autoRows.reduce((acc, r) => { for (const [k, n] of Object.entries(r.autoExplore.stops)) acc[k] = (acc[k] || 0) + n; return acc; }, {});
+            const stopTotal = Math.max(1, Object.values(stops).reduce((a, b) => a + b, 0));
+            console.log(`  연속 탐험: 전체 ${share(sumInputs('inputs'))}`);
+            console.log(`    Lv${21}+ ${share(sumInputs('late'))} · 판 중앙값 ${lateShares.length ? (100 * quantile(lateShares, 0.5)).toFixed(1) : '-'}% · 하위 10% ${lateShares.length ? (100 * quantile(lateShares, 0.1)).toFixed(1) : '-'}%`);
+            console.log(`    연쇄: 판당 ${(chains.length / autoRows.length).toFixed(0)} · 길이 중앙값 ${chains.length ? quantile(chains, 0.5) : '-'} · 상위 10% ${chains.length ? quantile(chains, 0.9) : '-'} · 0걸음 ${(100 * chains.filter((n) => n === 0).length / Math.max(1, chains.length)).toFixed(0)}% · 3걸음 미만 ${(100 * chains.filter((n) => n < 3).length / Math.max(1, chains.length)).toFixed(0)}% · 연쇄 중 사망 ${autoRows.reduce((sum, r) => sum + r.autoExplore.deathsInChain, 0)}`);
+            console.log(`    멈춤: ${Object.entries(stops).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${(100 * n / stopTotal).toFixed(0)}%`).join(' · ')}`);
         }
         const picked = xs.filter((r) => r.chapterPicks);
         if (picked.length) {

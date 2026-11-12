@@ -206,3 +206,35 @@ test('이벤트 화면 관찰(H7): 틀을 가르고 숫자만 다른 글은 같�
     assert.ok(events.firstAt.every(([at], i, all) => i === 0 || at >= all[i - 1][0]), '시각 순서');
     assert.equal(result.runs[0].eventSeen, undefined, '내부 집합은 기록에 남기지 않는다');
 });
+
+test('연속 탐험 · 가방 여유 정책(H1)은 옵션이다 — 기본은 흔적이 없고, 켜면 결정론적이며 입력 · 연쇄 · 멈춤의 합이 맞는다', async () => {
+    const off = await runNaturalPlay(SHORT);
+    assert.equal(off.autoExplore, undefined);
+    assert.equal(off.bagRoom, undefined);
+    assert.ok(off.runs.every((run) => run.autoExplore === undefined), '기본 결과에는 연속 탐험 기록이 없다');
+    // 가방이 찬 채로는 결과 카드가 접히지 않아 연쇄를 켤 수 없다(드라이버는 가방을 정리하지 않는다) — 가방 여유 정책과 함께 켠다.
+    const ON = { ...SHORT, autoExplore: 'on', bagRoom: 'on' };
+    const on = await runNaturalPlay(ON);
+    assert.deepEqual(await runNaturalPlay(ON), on);
+    assert.equal(on.autoExplore, 'on');
+    assert.equal(on.stalled, null, JSON.stringify(on.stalled));
+    for (const run of on.runs) {
+        const record = run.autoExplore;
+        const { inputs, late, chains, stops } = record;
+        assert.ok(record.starts >= 1, '첫 전직 뒤 연쇄를 켠다');
+        // 회차가 닫힐 때 열린 연쇄도 닫는다 — 켠 수 = 닫힌 연쇄 수 = 멈춤 수.
+        assert.equal(chains.length, record.starts);
+        assert.equal(Object.values(stops).reduce((a, b) => a + b, 0), chains.length);
+        // 연쇄 길이의 합 = 연속 탐험이 낸 입력(탐험 + 일반 공격). 켜는 탭은 수동이다.
+        assert.equal(chains.reduce((a, b) => a + b, 0), inputs.autoExplore + inputs.autoAttack);
+        assert.ok(inputs.manualExplore >= record.starts);
+        for (const key of Object.keys(inputs)) assert.ok(late[key] <= inputs[key], key);
+        assert.equal(record.deathsInChain, 0, '연속 탐험은 한 번에 쓰러지는 적과만 싸운다');
+    }
+    const bag = await runNaturalPlay({ ...SHORT, bagRoom: 'on' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, bagRoom: 'on' }), bag);
+    assert.equal(bag.bagRoom, 'on');
+    assert.equal(bag.stalled, null, JSON.stringify(bag.stalled));
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, autoExplore: 'yes' }), /unknown autoExplore/);
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, bagRoom: 'yes' }), /unknown bagRoom/);
+});
