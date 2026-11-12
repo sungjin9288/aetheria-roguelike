@@ -121,10 +121,12 @@ test('출처 없는 legacy HP와 무관한 유물은 보존하고 소유 설명�
     assert.deepEqual(migrateData(migrated), migrated);
 });
 
-test('관련 시너지 설명은 기존 합산과 회복 수치를 정확하게 안내한다', () => {
-    assert.match(RELIC_SYNERGIES.find((s) => s.label === '절멸자').desc, /추가/);
-    assert.match(RELIC_SYNERGIES.find((s) => s.label === '공허의 용').desc, /추가/);
-    assert.match(RELIC_SYNERGIES.find((s) => s.label === '무한 포식').desc, /15%.*회복/);
+test('관련 조합(2026-11 H4 행동 조합)은 원정 누적 · 처치 회복을 더하지 않는다', () => {
+    for (const label of ['절멸자', '공허의 용', '끊는 일격']) {
+        const synergy = RELIC_SYNERGIES.find((s) => s.label === label);
+        assert.ok(synergy, label);
+        assert.doesNotMatch(synergy.desc, /누적|회복/, `${label}: 처치 누적 · 회복을 말하지 않는다`);
+    }
 });
 
 for (const mode of ['attack', 'skill', 'attack-DOT', 'item-DOT', 'combat-item']) {

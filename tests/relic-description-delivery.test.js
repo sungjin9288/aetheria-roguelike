@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 
 import { BALANCE } from '../src/data/constants.js';
 import { MSG } from '../src/data/messages.js';
-import { RELICS, getActiveRelicSynergies } from '../src/data/relics.js';
+import { RELICS, RELIC_SYNERGIES, getActiveRelicSynergies } from '../src/data/relics.js';
 import { MAPS } from '../src/data/maps.js';
 import { AT } from '../src/reducers/actionTypes.js';
 import { CombatEngine } from '../src/systems/CombatEngine.js';
@@ -124,9 +124,9 @@ test('지속 피해 유물은 틱에도 붙는다 — 죽음의 낙인 독 · �
     assert.equal(tick(['저주의 결정'], { dots: ['bleed'] }), Math.floor(base * 1.5));
     const curseBase = Math.floor(100_000 * BALANCE.CURSE_DOT_RATIO);
     assert.equal(tick(['저주의 결정'], { cursed: true, cursedTurns: 3 }), Math.floor(curseBase * 1.5));
-    // 둘 다: 독은 강한 쪽(3) × 죽음의 예언자(1.5), 저주 틱도 예언자가 키운다.
-    assert.equal(tick(['죽음의 낙인', '저주의 결정'], { dots: ['poison'] }), Math.floor(base * 1.5 * 3));
-    assert.equal(tick(['죽음의 낙인', '저주의 결정'], { cursed: true, cursedTurns: 3 }), Math.floor(curseBase * 1.5 * 1.5));
+    // 둘 다: 독은 강한 쪽(3), 저주 틱은 저주의 결정(1.5). 2026-11 H4: 두 유물의 조합은 셋째 박자(행동 조합)라 지속 피해를 더 키우지 않는다.
+    assert.equal(tick(['죽음의 낙인', '저주의 결정'], { dots: ['poison'] }), Math.floor(base * 3));
+    assert.equal(tick(['죽음의 낙인', '저주의 결정'], { cursed: true, cursedTurns: 3 }), Math.floor(curseBase * 1.5));
 });
 
 test('조합 최댓값 — 시간의 지배자(강화) 30% · 원초의 분노 치명 2.5배 · 엔트로피의 신 매 행동 15%', () => {
@@ -170,13 +170,15 @@ test('조합 최댓값 — 시간의 지배자(강화) 30% · 원초의 분노 �
     assert.deepEqual(ticks, [true, true, true]);
 });
 
-test('절멸자 · 공허의 용: 실제 승리 경로(buildPassiveBonusWithScout → handleVictory)에서 처치 공격력이 쌓인다', () => {
+test('허공의 왕좌: 실제 승리 경로(buildPassiveBonusWithScout → handleVictory)에서 처치 공격력이 쌓인다 — 절멸자 · 공허의 용은 더하지 않는다(2026-11 H4)', () => {
     const player = makePlayer(['허공의 왕좌', '처형자의 날', '드래곤 발톱']);
+    const labels = getActiveRelicSynergies(player.relics).map((s) => s.label);
+    assert.ok(labels.includes('절멸자') && labels.includes('공허의 용'));
     const stats = statsOf(player);
     const bonus = buildPassiveBonusWithScout(stats, { ...makeEnemy({ exp: 10, gold: 10 }) });
     const result = CombatEngine.handleVictory(player, makeEnemy({ exp: 10, gold: 10 }), bonus, {});
-    // 허공의 왕좌 5% + 절멸자 7% + 공허의 용 8% = 20%.
-    assert.ok(Math.abs(result.updatedPlayer.adventureRelicBonuses.killStackAtk - 0.2) < 1e-9);
+    // 허공의 왕좌 5%만 — 두 조합은 행동 조합(마무리 · 추격)이 됐다.
+    assert.ok(Math.abs(result.updatedPlayer.adventureRelicBonuses.killStackAtk - 0.05) < 1e-9);
 });
 
 test('지옥의 수확자: 심연의 계약 생명 소모가 5% → 3%', () => {
@@ -206,7 +208,7 @@ test('비전 파동 기력 무소모 확률 ×2 · 비전 특이점 최소 35% �
     assert.ok(Math.abs(ratio - 1.3) < 0.01, `기술 피해 배율 ${ratio}`);
 });
 
-test('부활 조합은 어느 부활 수단에도 — 불멸의 전사(불사조) 50%, 난공불락 조합은 사망 방지에 30%를 더한다', () => {
+test('부활 조합은 어느 부활 수단에도 — 불멸의 전사(불사조) 50%, 강철 의지 · 난공불락(교차 리듬, 2026-11 H4)은 부활 회복을 더하지 않는다', () => {
     const phoenixOnly = makePlayer(['불사조의 깃털'], { hp: 10 });
     const phoenix = CombatEngine.applyFatalProtection(phoenixOnly, phoenixOnly.relics, 9_999, [], getActiveRelicSynergies(phoenixOnly.relics));
     // 2026-10 Wave 58: 부활 회복의 "최대 생명"은 실효 최대다(패시브 · 장비 보너스 포함).
@@ -217,7 +219,7 @@ test('부활 조합은 어느 부활 수단에도 — 불멸의 전사(불사조
     assert.equal(revived.updatedPlayer.hp, Math.floor(maxOf(warrior) * 0.5), '불멸의 전사 50%');
     const fortress = makePlayer(['강철 의지', '난공불락', '불사조의 깃털'], { hp: 10 });
     const saved = CombatEngine.applyFatalProtection(fortress, fortress.relics, 9_999, [], getActiveRelicSynergies(fortress.relics));
-    assert.equal(saved.updatedPlayer.hp, Math.floor(maxOf(fortress) * 0.3) + Math.floor(maxOf(fortress) * 0.3), '불사조 30% + 난공불락 30%');
+    assert.equal(saved.updatedPlayer.hp, Math.floor(maxOf(fortress) * 0.3), '불사조 30%만');
     // 부활하지 않은 피격에는 붙지 않는다.
     const alive = CombatEngine.applyFatalProtection(fortress, fortress.relics, 5, [], getActiveRelicSynergies(fortress.relics));
     assert.equal(alive.updatedPlayer.hp, 5);
@@ -327,4 +329,34 @@ test('문구는 동작과 같다 — 하향 방향 4건은 문구를 동작에 �
     assert.match(reaper.desc, /일반 공격/);
     assert.match(desc('영혼 수집가'), /얻은 뒤/);
     assert.equal(relic('룬 왕관').mpVal, 0.4);
+});
+
+test('2026-11 H4 행동 조합: 설명의 수치는 조합 데이터와 같다(동작은 relic-behavior-combo-contract가 엔진으로 확인)', () => {
+    const syn = (effect) => {
+        const found = RELIC_SYNERGIES.find((s) => s.bonus.effect === effect);
+        assert.ok(found, effect);
+        return found;
+    };
+    const pct = (ratio) => `${Math.round(ratio * 100)}%`;
+    const cross = syn('cross_rhythm');
+    assert.match(cross.desc, new RegExp(`피해 ${pct(cross.bonus.afterSkillAttackMult - 1)} 증가`));
+    assert.match(cross.desc, new RegExp(`받는 피해 ${pct(cross.bonus.afterSkillGuard)} 감소`));
+    const beat = syn('third_beat');
+    assert.equal(beat.bonus.beatEvery, 3);
+    assert.equal(beat.bonus.beatMult, 2);
+    assert.match(beat.desc, /세 번 쓰면 다음 위력 있는 기술의 피해 두 배/);
+    const finisher = syn('finisher');
+    assert.match(finisher.desc, new RegExp(`생명 ${pct(finisher.bonus.finisherThreshold)} 이하`));
+    assert.equal(finisher.bonus.finisherBossMult, 3);
+    assert.match(finisher.desc, /보스에게는 피해 세 배/);
+    assert.equal(syn('battle_alchemy').bonus.potionFreeSkill, true);
+    const brk = syn('break_strike');
+    assert.equal(brk.bonus.chargeBreakMult, 2);
+    assert.equal(brk.bonus.breakStun, 1);
+    assert.match(brk.desc, /두 배로 세고/);
+    assert.equal(syn('void_pursuit').bonus.pursuitCrit, true);
+    // "빙결된 적"도 약속이다 — 빙결은 기절과 같은 적 상태(`stunnedTurns`)를 건다.
+    const frozen = CombatEngine.applyStatusEffectToEnemy(makeEnemy(), 'freeze');
+    const pursuitStats = { ...statsOf(makePlayer()), critChance: 0, activeSynergies: [syn('void_pursuit')] };
+    assert.equal(CombatEngine.attack(makePlayer(), frozen, pursuitStats, () => 0.99).isCrit, true);
 });

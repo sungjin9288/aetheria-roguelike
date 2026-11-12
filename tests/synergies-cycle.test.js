@@ -56,12 +56,10 @@ import { readFile } from 'node:fs/promises';
           + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8'))
           + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.enemyAI.ts'), 'utf8'));
       const expected = [
+          // 2026-11 H4: unbreakable · death_oracle · infinite_devour는 행동 조합(systems/relicBehaviorCombos.ts)이 됐다.
           'vampire_lord',
-          'unbreakable',
           'time_master',
-          'death_oracle',
           'immortal_warrior',
-          'infinite_devour',
           'absolute_immortal',
           'blood_immortal',
       ];
@@ -70,9 +68,10 @@ import { readFile } from 'node:fs/promises';
       }
   });
 
-  test("statsCalculator.ts: applySynergyBonuses에 vampire_lord / arcane_surge / eternal_life / primordial_wrath 명시", async () => {
+  test("statsCalculator.ts: applySynergyBonuses에 vampire_lord / arcane_surge / primordial_wrath 명시", async () => {
       const calcSrc = await readFile(path.join(ROOT, 'src/utils/statsCalculator.ts'), 'utf8');
-      for (const eff of ['vampire_lord', 'arcane_surge', 'eternal_life', 'primordial_wrath']) {
+      // 2026-11 H4: eternal_life(statBonus)는 전투 물약술(행동 조합)이 됐다.
+      for (const eff of ['vampire_lord', 'arcane_surge', 'primordial_wrath']) {
           assert.match(calcSrc, new RegExp(`'${eff}'`), `expected '${eff}' in statsCalculator.ts`);
       }
   });
@@ -166,7 +165,7 @@ import { readFile } from 'node:fs/promises';
       assert.ok(Math.abs(atkRatio - expected) < 0.02, `expected entropy_god 트리거 후 atk ratio ≈ ${expected.toFixed(3)}; got ${atkRatio.toFixed(3)}`);
   });
 
-  test("CombatEngine.actions.ts: void_dragon / primordial_wrath critDmg 곱셈 분기 명시", async () => {
+  test("CombatEngine.actions.ts: primordial_wrath critDmg 곱셈 분기 명시(공허의 용은 2026-11 H4에 추격 조합이 됐다)", async () => {
       const { readFile } = await import('node:fs/promises');
       const path = await import('node:path');
       const { fileURLToPath } = await import('node:url');
@@ -174,7 +173,6 @@ import { readFile } from 'node:fs/promises';
       const ROOT = path.join(HERE, '..');
       // critDmg 곱셈 분기(attack/performSkill)는 CombatEngine.actions.ts로 분리됨 (mixin).
       const engineSrc = await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8');
-      assert.match(engineSrc, /'void_dragon'/);
       // 2026-10 Wave 56: 두 시너지가 함께 켜지면 큰 배율을 쓰는 공용 판정(getStrongestSynergyCritDmg)을 공격 · 기술이 같이 읽는다.
       assert.match(engineSrc, /'primordial_wrath'/);
       assert.equal((engineSrc.match(/getStrongestSynergyCritDmg\(stats\.activeSynergies\)/g) || []).length, 2);
@@ -292,17 +290,16 @@ import { readFile } from 'node:fs/promises';
   const HERE = path.dirname(fileURLToPath(import.meta.url));
   const ROOT = path.join(HERE, '..');
 
-  test("CombatEngine.ts: hell_reaper / annihilator / absolute_reflect effect-name 명시", async () => {
+  test("CombatEngine.ts: hell_reaper / absolute_reflect effect-name 명시", async () => {
       // annihilator(attack)·absolute_reflect(enemyAttack)는 actions/enemyAI mixin으로 분리 — 합쳐 검사.
       const src = (await readFile(path.join(ROOT, 'src/systems/CombatEngine.ts'), 'utf8'))
           + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.actions.ts'), 'utf8'))
           + (await readFile(path.join(ROOT, 'src/systems/CombatEngine.enemyAI.ts'), 'utf8'));
       assert.match(src, /'hell_reaper'/);
-      assert.match(src, /'annihilator'/);
       assert.match(src, /'absolute_reflect'/);
   });
 
-  test("attack: annihilator executeThreshold 0.35 — 적 HP 30%에서 처형 발동 (threshold 25% 유물 단독으론 불발 케이스)", () => {
+  test("attack: 처형 문턱은 유물만 정한다 — 조합 executeThreshold는 H4에서 없앴다(적 HP 30%, 유물 문턱 25% → 불발)", () => {
       const player = {
           name: 'tester', job: '모험가', level: 10,
           hp: 1000, maxHp: 1000, mp: 100, maxMp: 100,
@@ -311,16 +308,15 @@ import { readFile } from 'node:fs/promises';
       };
       const enemy = { name: '슬라임', hp: 30, maxHp: 100, atk: 10, def: 5 };
       const stats = {
-          atk: 1, def: 50, elem: 'physical',  // 낮은 atk로 1타에 안 죽도록
+          atk: 1, def: 50, elem: 'physical',
           relics: [{ effect: 'execute_bonus', val: { threshold: 0.25, mult: 0.5 } }],
           activeSynergies: [{ bonus: { effect: 'annihilator', executeThreshold: 0.35, killStack: 0.07 } }],
           critChance: 0,
       };
 
-      const result = CombatEngine.attack(player, enemy, stats);
-      // hpRatio 0.3 < threshold(0.35) → executeTriggered 됐다는 로그 확인.
+      const result = CombatEngine.attack(player, enemy, stats, () => 0.5);
       const executeLog = result.logs.find((l) => l.text && l.text.includes('처형자의 날'));
-      assert.ok(executeLog, '시너지 annihilator threshold 0.35로 처형 발동돼야 함');
+      assert.equal(executeLog, undefined, '옛 조합 키(executeThreshold)는 더 이상 처형 문턱을 올리지 않는다');
   });
 
   test("enemyAttack: absolute_reflect reflect 1.0 — stats.def 기반 반사 (기존 thorns-style 보존)", () => {
@@ -436,8 +432,7 @@ import { readFile } from 'node:fs/promises';
           `kill_stack_atk relic perKill 0.05 누적되어야 함`);
   });
 
-  test('cycle 236: 시너지 보유 시 killStack가 perKill에 합산', () => {
-      // 본 cycle의 핵심 — annihilator 시너지의 killStack 0.07이 누적에 +.
+  test('H4: 조합의 killStack은 perKill에 더해지지 않는다 — 처치 누적은 유물만', () => {
       const player = {
           name: 'Test', level: 10, hp: 100, maxHp: 100, mp: 50, maxMp: 100,
           meta: { essence: 0, rank: 0, bonusAtk: 0, bonusHp: 0, bonusMp: 0 },
@@ -448,11 +443,9 @@ import { readFile } from 'node:fs/promises';
       };
       const enemy = { name: '슬라임', hp: 0, maxHp: 100, isBoss: false, exp: 50, gold: 10 };
       const passiveBonus = { goldMult: 0, expMult: 0, activeSynergies: player.activeSynergies };
-      const result = CombatEngine.handleVictory(player, enemy, passiveBonus, {}); // cycle 624: explicit elimination
-      // 합산 0.05 + 0.07 = 0.12 누적
+      const result = CombatEngine.handleVictory(player, enemy, passiveBonus, {});
       const stack = result.updatedPlayer.adventureRelicBonuses?.killStackAtk || 0;
-      assert.ok(stack >= 0.12,
-          `annihilator killStack 0.07 + relic 0.05 = 0.12 누적되어야 함 (실제 ${stack})`);
+      assert.ok(Math.abs(stack - 0.05) < 1e-9, `유물 0.05만 누적되어야 함 (실제 ${stack})`);
   });
 
   test('cycle 236: entropy_brand 기존 damage 키 동작 유지 (회귀 가드)', () => {

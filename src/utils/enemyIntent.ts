@@ -1,6 +1,8 @@
 import { MSG } from '../data/messages.js';
 import { CombatEngine } from '../systems/CombatEngine.js';
 import { getActiveHeavyStatus } from '../systems/bossMechanics.js';
+import { getChargeBreakMult } from '../systems/relicBehaviorCombos.js';
+import { getActiveRelicSynergies } from '../data/relics.js';
 import type { Monster, Player, StatusId } from '../types/index.js';
 import { estimateEnemyNextHit, type EnemyTelegraphType } from './enemyThreat.js';
 
@@ -52,7 +54,8 @@ const getStatusThreat = (enemy: Monster): string | null => {
 
 export const getEnemyIntent = (player: Player | null | undefined, enemy: Monster | null | undefined): EnemyIntent | null => {
     if (!player || !enemy) return null;
-    const telegraph = CombatEngine.predictEnemyNextAction(enemy);
+    // 2026-11 H4 끊는 일격: 충전 끊기까지 남은 피해는 그 조합의 배율로 센다(엔진의 끊김 판정과 같다).
+    const telegraph = CombatEngine.predictEnemyNextAction(enemy, getChargeBreakMult(getActiveRelicSynergies(player.relics || [])));
     if (!telegraph || !isTelegraphType(telegraph.type)) return null;
     const kind = INTENT_KIND[telegraph.type];
     const hit = estimateEnemyNextHit(player, enemy, telegraph.type);

@@ -154,15 +154,7 @@ export const relicEffectMethods: RelicEffectMixin & ThisType<RelicEffectMixinCon
                     || s.bonus.effect === 'blood_immortal' || s.bonus.reviveHeal)
                 .reduce((best: number, s) => Math.max(best, Number(s.bonus.reviveHeal) || 0), 0);
             if (reviveHeal > 0) nextHp = Math.max(nextHp, Math.floor(reviveMaxHp * reviveHeal));
-            // cycle 153: 'unbreakable' — healOnSave(사망 방지 발동 시 추가 회복).
-            const healOnSave = activeSynergies
-                .filter((s) => s.bonus.effect === 'unbreakable' || s.bonus.healOnSave)
-                .reduce((best: number, s) => Math.max(best, Number(s.bonus.healOnSave) || 0), 0);
-            if (healOnSave > 0) {
-                const bonus = Math.floor(reviveMaxHp * healOnSave);
-                nextHp = Math.min(reviveMaxHp, nextHp + bonus);
-                logs.push({ type: 'heal', text: MSG.RELIC_HEAL_ON_SAVE_PROC(bonus) });
-            }
+            //   2026-11 H4: 난공불락 조합의 사망 방지 추가 회복(healOnSave)은 교차 리듬(행동 조합)이 됐다.
         }
 
         let updatedPlayer: Player = { ...player, hp: nextHp, combatFlags: flags };

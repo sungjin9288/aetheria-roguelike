@@ -88,10 +88,20 @@ export const getChargeDamageTaken = (enemy: Monster) => (
     Math.max(0, (enemy.chargeHpMark ?? enemy.hp ?? 0) - (enemy.hp ?? 0))
 );
 
-/** 모은 강타가 피해로 끊겼는가(기절로 끊기는 것은 엔진의 기절 차례가 판정한다). */
-export const isChargeBrokenByDamage = (enemy: Monster) => (
-    Boolean(enemy.mechanics?.charge && enemy.chargeArmed) && getChargeDamageTaken(enemy) >= getChargeBreakDamage(enemy)
+/**
+ * 모은 강타가 피해로 끊겼는가(기절로 끊기는 것은 엔진의 기절 차례가 판정한다). `breakMult`는 준 피해를 몇 배로 세나 —
+ * 끊는 일격 조합(2026-11 H4, `getChargeBreakMult`)만 1보다 크다.
+ */
+export const isChargeBrokenByDamage = (enemy: Monster, breakMult = 1) => (
+    Boolean(enemy.mechanics?.charge && enemy.chargeArmed)
+    && getChargeDamageTaken(enemy) * Math.max(1, breakMult) >= getChargeBreakDamage(enemy)
 );
+
+/** 끊기까지 더 줘야 하는 실제 피해(예고용) — 센 배율이 크면 그만큼 적다. */
+export const getChargeBreakRemaining = (enemy: Monster, breakMult = 1) => {
+    const mult = Math.max(1, breakMult);
+    return Math.max(1, Math.ceil((getChargeBreakDamage(enemy) - getChargeDamageTaken(enemy) * mult) / mult));
+};
 
 /**
  * 충전 강타의 배율 — 지금 패턴(페이즈 · 도발 포함)의 보통 행동 기대 배율 × 2. 방어 자세는 피해 0, 맹공은 `ENEMY_HEAVY_HIT_MULT`다.

@@ -26,7 +26,7 @@ import { createChapterProgress, type ChapterRecap } from '../utils/chapterRecap'
 import { BAG_RECIPES } from '../data/bagRecipes';
 import { MIRROR_NODES } from '../data/mirror';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
-import { RELICS } from '../data/relics';
+import { RELICS, RELIC_SYNERGIES } from '../data/relics';
 import { isSignatureItem } from '../data/signatureItems';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { GS } from '../reducers/gameStates';
@@ -427,6 +427,11 @@ export interface AetheriaTestApi {
      */
     seedBossChargeScenario: (bossName: string, mapName: string, partialDamage?: number) => boolean;
     seedCombatSkillReadinessScenario: (mp: number) => boolean;
+    /**
+     * 2026-11 H4: 행동 조합 하나의 유물 두 조각을 든 채 일반 적과 전투를 시작한다 — `enemyHpRatio`는 적의 남은 생명 비율,
+     * `beatCount`는 셋째 박자의 센 수. 조합 효과가 없거나 유물을 못 찾으면 false.
+     */
+    seedBehaviorComboScenario: (effect: string, options?: { enemyHpRatio?: number; beatCount?: number }) => boolean;
     seedAvatarScenario: (preset: string) => boolean;
     injectPostCombatResult: () => void;
     injectRelicChoice: () => boolean | undefined;
@@ -1927,6 +1932,36 @@ export const useGameTestApi = (
                         exp: 1,
                         gold: 1,
                         pattern: { heavyChance: 0, guardChance: 0 },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
+            },
+            seedBehaviorComboScenario: (effect: string, options: { enemyHpRatio?: number; beatCount?: number } = {}) => {
+                const er = engineRef.current;
+                const synergy = RELIC_SYNERGIES.find((syn) => syn.bonus.effect === effect);
+                const relics = synergy?.requires.map((name) => RELICS.find((relic) => relic.name === name));
+                const species = (er.player.loc ? DB.MAPS[er.player.loc]?.monsters?.[0] : undefined)
+                    ?? Object.values(DB.MAPS).find((map) => (map.monsters?.length ?? 0) > 0)?.monsters?.[0];
+                if (!synergy || !relics || relics.some((relic) => !relic) || !species) return false;
+                const ownedRelics = relics.filter((relic): relic is Relic => Boolean(relic)).map((relic) => ({ ...relic }));
+                const beatCount = Math.max(0, Math.floor(Number(options.beatCount) || 0));
+                const scenarioPlayer: Player = { ...er.player, level: 20, relics: ownedRelics };
+                const fullStats = calculateFullStats(scenarioPlayer)!;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        level: 20, relics: ownedRelics, hp: fullStats.maxHp, mp: fullStats.maxMp,
+                        combatFlags: beatCount > 0 ? { beatCount } : {},
+                    },
+                });
+                const maxHp = 2000;
+                const ratio = Math.min(1, Math.max(0.01, Number(options.enemyHpRatio) || 1));
+                er.dispatch({
+                    type: AT.SET_ENEMY,
+                    payload: {
+                        name: species, baseName: species, level: 20, hp: Math.max(1, Math.floor(maxHp * ratio)), maxHp,
+                        atk: 30, def: 0, exp: 10, gold: 5, pattern: { heavyChance: 0, guardChance: 0 },
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });

@@ -134,7 +134,6 @@ test('first-session record uses natural player language from start through growt
         MSG.BLOOD_OATH_HEAL(10),
         MSG.WORLD_DEVOUR_HEALTH(8),
         MSG.IMMORTAL_WARRIOR_HEAL(12),
-        MSG.INFINITE_DEVOUR_HEAL(14),
         MSG.STAR_CORE_RESTORE,
         MSG.LEGACY_ESSENCE(2),
         MSG.LEGACY_RANK(1),

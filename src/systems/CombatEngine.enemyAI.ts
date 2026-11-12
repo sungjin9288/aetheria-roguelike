@@ -8,9 +8,10 @@ import { ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE } from '../data/logBadge.js
 import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, getPlayerStatusStacks, getStatusStackMult, isEnemyBlindActive, isEnemyTauntActive } from './CombatEngine.status.js';
 import { getEnemyAttackElement, getEquipmentResistMult } from '../utils/equipmentPassives.js';
 import {
-    getActiveHeavyStatus, getChargeBreakDamage, getChargeDamageTaken, getChargeReleaseMult, getLongFightEnrageBonus, getPhase2Threshold, getPhase3Threshold, getPhaseStatuses,
+    getActiveHeavyStatus, getChargeBreakRemaining, getChargeReleaseMult, getLongFightEnrageBonus, getPhase2Threshold, getPhase3Threshold, getPhaseStatuses,
     isBreathAction, isBreathNext, isChargeBrokenByDamage, isChargeTurn, isChargeTurnNext, isResistPierced,
 } from './bossMechanics.js';
+import { getBehaviorComboLabel, getBreakStunTurns, getChargeBreakMult, getCrossGuard, spendCrossGuard } from './relicBehaviorCombos.js';
 
 interface EnemyAttackResult {
     updatedPlayer: Player;
@@ -60,7 +61,8 @@ interface EnemyAIMixin {
     /** 방어 자세 중에 맞은 보스의 반격(Wave 59, `mechanics.guardCounter`). 반격이 없으면 null. */
     resolveGuardCounter(player: Player, enemy: Monster, stats: FullStats): EnemyAttackResult | null;
     attemptEscape(enemy: Monster, stats: FullStats, rng?: () => number): EscapeResult;
-    predictEnemyNextAction(enemy: Monster): EnemyTelegraph | null;
+    /** `breakMult` — 끊는 일격 조합의 충전 끊기 배율(2026-11 H4, 생략하면 1). 끊기까지 남은 피해 예고가 읽는다. */
+    predictEnemyNextAction(enemy: Monster, breakMult?: number): EnemyTelegraph | null;
 }
 
 /** 모은 강타 상태를 지운 적(H5) — 강타를 냈거나 끊겼다. */
@@ -113,6 +115,9 @@ const applyIncomingDamageMods = (
     // 2026-09 Wave 50: 조합의 대가 — 받는 피해 증가(statsCalculator가 활성 조합에서 모은 배율). 난수를 쓰지 않는다.
     const synergyDamageTakenMult = stats.damageTakenMult ?? 1;
     if (synergyDamageTakenMult !== 1) out = Math.max(1, Math.floor(out * synergyDamageTakenMult));
+    // 2026-11 H4 교차 리듬: 기술 바로 다음 일반 공격이 세운 받는 피해 감소 — 그 적 행동 한 번(`enemyAttack`이 지운다).
+    const crossGuard = getCrossGuard(player);
+    if (crossGuard > 0) out = Math.max(1, Math.floor(out * (1 - crossGuard)));
     return out;
 };
 
@@ -176,7 +181,9 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         const random = typeof rng === 'function' ? rng : Math.random;
         // 2026-10 Wave 59: 이번 행동을 센다 — 브레스 주기 · 장기전이 읽는다(기절 · 방어 턴도 행동이다).
         const actingEnemy: Monster = { ...enemy, actionCount: (enemy.actionCount ?? 0) + 1 };
-        const result = this.enemyAction(player, actingEnemy, stats, random);
+        const acted = this.enemyAction(player, actingEnemy, stats, random);
+        // 2026-11 H4: 교차 리듬의 받는 피해 감소는 이 적 행동 한 번(하수인 공격 포함)이 쓴다 — 지운 플레이어를 돌려준다.
+        const result: EnemyAttackResult = { ...acted, updatedPlayer: spendCrossGuard(acted.updatedPlayer) };
 
         // 소환된 하수인(망자)이 함께 친다 — 이번 행동 전에 있던 수만큼(이번 행동에 깨어난 하수인은 다음 행동부터).
         const summons = Math.max(0, enemy.summons ?? 0);
@@ -184,7 +191,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         if (!summon || summons === 0 || result.isDead || result.isEnemyDead) return result;
         const logs = [...result.logs];
         const perHit = enemyHitAfterDefense((result.updatedEnemy.atk ?? 0) * summon.hitMult, stats.def);
-        const total = applyIncomingDamageMods(perHit * summons, result.updatedEnemy, result.updatedPlayer, stats, logs, { elemental: false, quiet: true });
+        const total = applyIncomingDamageMods(perHit * summons, result.updatedEnemy, acted.updatedPlayer, stats, logs, { elemental: false, quiet: true });
         const protectedResult = this.applyFatalProtection(result.updatedPlayer, stats.relics || [], total, logs, stats.activeSynergies || []);
         logs.push({ type: ENEMY_ACTION_LOG_TYPE, text: MSG.ENEMY_SUMMON_HIT(summon.name, summons, total) });
         return {
@@ -225,13 +232,10 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         // curse_amp 패시브: 무당/시간술사 직업 보너스
         const curseAmpPassive = CLASSES[player.job as string]?.skills?.find((s) => s.passive && s.effect === 'curse_amp');
         const curseAmpMult = curseAmpPassive ? (curseAmpPassive.val || 1) : 1;
-        // cycle 153: 시너지 'death_oracle' — dotMult DoT 피해 증폭.
+        // 2026-11 H4: 지속 피해를 키우던 조합(죽음의 예언자 dotMult)은 셋째 박자(행동 조합)가 됐다 — 조합 배율은 1이다
+        //   (`tickEnemyStatus`의 인자는 그대로 둔다).
         const activeSynergies = stats.activeSynergies || [];
-        const synergyDotMult = activeSynergies.reduce((acc: number, syn) =>
-            (syn.bonus.effect === 'death_oracle' ? acc + (syn.bonus.dotMult || 0)
-                : syn.bonus.dotMult ? acc + syn.bonus.dotMult
-                : acc),
-            1);
+        const synergyDotMult = 1;
         // 2026-09 Wave 44: 약화(실명 · 공포 · 저주 · 도발)는 틱 전 상태로 이번 행동에 적용한다 — "N턴"은
         //   영향받는 적 행동 N번이다. 틱 뒤 상태로 읽던 동안 "3턴" 공포는 공격 2번, "2턴" 연막탄은 1번만 줄였다
         //   (기절은 이미 N번 — 행동 판정에서 줄인다).
@@ -239,7 +243,8 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         const debuffAtkLabel = getEnemyDebuffAtkLabel(enemy);
         // 2026-11 H5 충전 강타: 끊김은 이번 행동의 지속 피해 틱 전 상태로 잰다(충전 뒤 플레이어 · 반사가 준 피해만 센다).
         const chargeTurn = isChargeTurn(enemy);
-        const chargeBroken = isChargeBrokenByDamage(enemy);
+        //   2026-11 H4 끊는 일격: 준 피해를 그 배율로 센다(조합이 없으면 1).
+        const chargeBroken = isChargeBrokenByDamage(enemy, getChargeBreakMult(stats.activeSynergies));
         const tauntActive = isEnemyTauntActive(enemy);
         const blindActive = isEnemyBlindActive(enemy);
         // 2026-10 Wave 56: 지속 피해 유물은 틱에도 붙는다(대상별 — 죽음의 낙인은 독 · 화상만).
@@ -354,12 +359,19 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         // H5: 충전과 강타 사이에 끊는 피해를 받았으면 강타가 사라진다 — 이 행동은 그것으로 끝난다(행동 판정 난수는 한 번 쓴다).
         if (charge && chargeBroken) {
             random();
+            // H4 끊는 일격: 끊긴 보스는 다음 행동도 기절한다.
+            const breakStun = getBreakStunTurns(stats.activeSynergies);
+            const broken = clearCharge(updatedEnemy);
             return {
                 updatedPlayer,
-                updatedEnemy: clearCharge(updatedEnemy),
+                updatedEnemy: breakStun > 0 ? { ...broken, stunnedTurns: Math.max(broken.stunnedTurns ?? 0, breakStun) } : broken,
                 damage: 0,
                 isDead: false,
-                logs: [...logs, { type: 'success', text: MSG.BOSS_CHARGE_BROKEN(updatedEnemy.name, charge.name) }],
+                logs: [
+                    ...logs,
+                    { type: 'success', text: MSG.BOSS_CHARGE_BROKEN(updatedEnemy.name, charge.name) },
+                    ...(breakStun > 0 ? [{ type: 'event', text: MSG.BEHAVIOR_COMBO_BREAK_STUN(getBehaviorComboLabel(stats.activeSynergies, 'break_strike'), updatedEnemy.name) }] : []),
+                ],
             };
         }
 
@@ -684,19 +696,19 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
      * 적의 다음 행동을 예측하여 텔레그래프 메시지를 반환합니다.
      * CombatPanel에서 UI 경고 표시에 사용.
      */
-    predictEnemyNextAction(enemy: Monster) {
+    predictEnemyNextAction(enemy: Monster, breakMult = 1) {
         if (!enemy || (enemy.hp ?? 0) <= 0) return null;
         if ((enemy.stunnedTurns || 0) > 0) return { type: 'stunned', label: MSG.ENEMY_TELEGRAPH_STUNNED, color: 'blue' };
 
         // 2026-11 H5: 모은 강타가 다음 행동이다 — 이미 끊는 피해를 받았으면 그 행동은 사라진다(행동 판정과 같은 식). 페이즈 임박보다 앞선다.
         const charge = enemy.mechanics?.charge;
         if (charge && enemy.chargeArmed) {
-            return isChargeBrokenByDamage(enemy)
+            return isChargeBrokenByDamage(enemy, breakMult)
                 ? { type: 'charge_broken', label: MSG.ENEMY_TELEGRAPH_CHARGE_BROKEN(charge.name), color: 'blue' }
                 : {
                     type: 'charge',
                     // 끊기까지 남은 피해 — 규칙 정보와 정확한 숫자만이다(권하지 않는다, Wave 88).
-                    label: MSG.ENEMY_TELEGRAPH_CHARGE(charge.name, Math.max(1, getChargeBreakDamage(enemy) - getChargeDamageTaken(enemy))),
+                    label: MSG.ENEMY_TELEGRAPH_CHARGE(charge.name, getChargeBreakRemaining(enemy, breakMult)),
                     color: 'red',
                 };
         }

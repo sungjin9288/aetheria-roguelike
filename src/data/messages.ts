@@ -123,7 +123,6 @@ export const MSG = {
     BLOOD_OATH_HEAL: (health: number) => `피의 서약으로 생명을 ${health}만큼 회복했습니다.`,
     WORLD_DEVOUR_HEALTH: (health: number) => `세계 포식자가 영혼을 흡수했습니다. 다음 전투 한 번의 기본 최대 생명과 현재 생명이 ${health}만큼 늘어납니다.`,
     IMMORTAL_WARRIOR_HEAL: (health: number) => `불멸의 전사 효과로 생명을 ${health}만큼 회복했습니다.`,
-    INFINITE_DEVOUR_HEAL: (health: number) => `무한 포식 효과로 생명을 ${health}만큼 회복했습니다.`,
     STAR_CORE_RESTORE: '별의 핵이 기력을 모두 회복했습니다.',
     LOOT_GET: (name: string) => `전리품: ${name}`,
     // 2026-10 Wave 67: 같은 전리품은 묶어서 보인다(utils/lootSummary.ts) — "벌레 껍질 · 벌레 껍질"이 "벌레 껍질 x2"가 된다.
@@ -1280,7 +1279,25 @@ export const MSG = {
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.relics.ts.
     RELIC_CRIT_MP_RESTORE: (amount: number) => `[피의 갈증] 기력 +${amount}`,
-    RELIC_HEAL_ON_SAVE_PROC: (bonus: number) => `[난공불락] 부활하며 생명 +${bonus} 회복!`,
+
+    // 2026-11 H4 행동 조합(`systems/relicBehaviorCombos.ts`) — 조합 이름은 데이터의 `label`을 받는다. 터질 때 기록 한 줄,
+    //   걸려 있는 동안 전투 칩 한 개. 추천 · 권고 문구는 붙이지 않는다(Wave 88).
+    BEHAVIOR_COMBO_CROSS_RHYTHM_PROC: (label: string, guardPct: number) => `[${label}] 기술 뒤 일반 공격 — 이번 적 행동에서 받는 피해 ${guardPct}% 감소`,
+    BEHAVIOR_COMBO_PURSUIT_PROC: (label: string, enemyName: string | undefined) => `[${label}] 움직이지 못하는 ${withJosa(enemyName, '을/를')} 추격 — 치명타`,
+    BEHAVIOR_COMBO_FINISHER_KILL: (label: string, enemyName: string | undefined) => `[${label}] ${withJosa(enemyName, '을/를')} 일반 공격으로 마무리!`,
+    BEHAVIOR_COMBO_FINISHER_BOSS: (label: string, mult: number) => `[${label}] 마무리 일격 — 피해 ${mult}배`,
+    BEHAVIOR_COMBO_POTION_READY: (label: string) => `[${label}] 다음 기술 한 번은 기력을 쓰지 않고 재사용 대기를 무시합니다`,
+    BEHAVIOR_COMBO_POTION_SKILL_PROC: (label: string, skillName: string) => `[${label}] ${withJosa(skillName, '이/가')} 기력 없이 나갑니다`,
+    BEHAVIOR_COMBO_THIRD_BEAT_PROC: (label: string, mult: number) => `[${label}] 기술 피해 ${mult}배!`,
+    BEHAVIOR_COMBO_BREAK_STUN: (label: string, enemyName: string | undefined) => `[${label}] ${withJosa(enemyName, '이/가')} 다음 행동에 기절합니다`,
+    SKILL_READY_POTION_FREE: '기력 0 · 재사용 대기 무시',
+    BEHAVIOR_CHIP_CROSS_RHYTHM: (label: string) => `${label} · 다음 일반 공격 강화`,
+    BEHAVIOR_CHIP_THIRD_BEAT: (label: string, count: number, every: number) => `${label} ${count}/${every}`,
+    BEHAVIOR_CHIP_THIRD_BEAT_READY: (label: string) => `${label} · 다음 위력 기술 강화`,
+    BEHAVIOR_CHIP_POTION_READY: (label: string) => `${label} · 다음 기술 무료`,
+    BEHAVIOR_CHIP_PURSUIT: (label: string) => `${label} · 치명타 확정`,
+    BEHAVIOR_CHIP_FINISHER: (label: string) => `${label} · 일반 공격 마무리`,
+    BEHAVIOR_CHIP_BREAK_STRIKE: (label: string, mult: number) => `${label} · 끊기 피해 ${mult}배`,
     RELIC_DEATH_SAVE_REVIVE: (count: number) => `[절대 불사] ${count}회 부활!`,
     RELIC_DEATH_SAVE_FIRST: '[불사의 의지] 치명상을 버텼습니다!',
     RELIC_VOID_HEART_REVIVE: '[허공의 심장] 죽음을 거부했습니다. 다음 공격이 강화됩니다!',
@@ -1299,13 +1316,11 @@ export const MSG = {
     FIRST_BOSS_REWARD_HINT_FALLBACK: '초회 토벌 보너스를 확보했습니다.',
     KILL_STACK_SOURCE_RELIC: '[허공의 왕좌]',
     // 2026-10 Wave 131: 조합의 이름을 쓴다("[시너지 처형 분노]"는 화면에 없는 이름이었다 — 화면 용어는 '조합').
-    KILL_STACK_SOURCE_SYNERGY: (labels: string) => `[${labels}]`,
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.ts.
     RELIC_TURN_MP_REGEN: (val: number) => `[비전 서지] 기력 +${val}`,
     RELIC_TURN_HP_REGEN: (label: string | undefined, heal: number) => `[${label}] 생명 +${heal} 재생`,
     RELIC_LABEL_EARTH_HEART: '대지의 심장',
-    RELIC_LABEL_ETERNAL_LIFE: '영원의 생명',
     RELIC_LABEL_GENESIS_CORE: '창세의 핵',
     RELIC_LABEL_ETERNAL_FORTRESS: '영원의 요새',
     HP_DRAIN_ATK_COST_MARKER,

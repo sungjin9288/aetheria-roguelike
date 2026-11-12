@@ -241,13 +241,7 @@ export const CombatEngine = {
             logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(equipmentPassives.regenSource ?? undefined, heal) });
         }
 
-        // 시너지: 영원의 생명 (healPerTurn) — 매 턴 4% HP 재생
-        const healPerTurnSyn = getActiveRelicSynergies(relics).find((s) => s.bonus.healPerTurn);
-        if (healPerTurnSyn && (updated.hp || 0) < (updated.maxHp || BALANCE.DEFAULT_MAX_HP)) {
-            const heal = Math.max(1, Math.floor((updated.maxHp || BALANCE.DEFAULT_MAX_HP) * (healPerTurnSyn.bonus.healPerTurn ?? 0)));
-            updated.hp = healWithinMax(updated.hp || 1, heal, tickMaxHp);
-            logs.push({ type: 'heal', text: MSG.RELIC_TURN_HP_REGEN(MSG.RELIC_LABEL_ETERNAL_LIFE, heal) });
-        }
+        // 2026-11 H4: 영원의 생명 조합의 매 턴 회복(healPerTurn)은 전투 물약술(행동 조합)이 됐다.
 
         // cycle 161: 'genesis' 유물 (창세의 핵) — val.healPerTurn 0.02 매 턴 HP 회복.
         //   cycle 149에서 statBonus만 적용했고 healPerTurn은 별도 사이클로 미뤘던 잔존.

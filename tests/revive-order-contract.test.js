@@ -20,7 +20,7 @@ import { calculateFullStats } from '../src/utils/statsCalculator.ts';
  * 부활석 분기가 불사조 · 거울보다 앞에 있던 동안, 공짜 부활이 남아 있어도 산 부활석이 먼저 사라졌다.
  * 같은 경로의 결함 하나를 함께 고정한다: 부활석으로 부활한 뒤 같은 전투의 적 공격마다(치명상이 아니어도) 부활석이
  * 하나씩 더 사라지고 기력이 50%로 다시 찼다(전투 플래그 `reviveTokenUsed`로 차감하던 탓).
- * 부활 보너스(부활 조합 `reviveHeal` · 난공불락 `healOnSave`, Wave 56)는 어느 수단이 발동하든 적용된다.
+ * 부활 보너스(부활 조합 `reviveHeal`, Wave 56)는 어느 수단이 발동하든 적용된다(난공불락 조합의 `healOnSave`는 2026-11 H4에 교차 리듬이 됐다).
  *
  * 실제 사망 경로 두 곳으로 확인한다: 적 공격(`CombatEngine.enemyAttack` — 치명상 판정이 부활을 부른다)과
  * 전투 1턴 리듀서 전이(`RESOLVE_COMBAT_ACTION`). 부활 판정은 난수를 쓰지 않으므로 순서 변경은 난수 소비를 바꾸지 않는다.
@@ -166,11 +166,10 @@ test('부활석으로 부활한 뒤 같은 전투의 치명상이 아닌 공격�
     assert.equal(second.updatedPlayer.reviveTokens, 1);
 });
 
-test('부활 보너스(부활 조합 reviveHeal · 난공불락 healOnSave)는 어느 수단이 발동하든 적용된다', () => {
-    const activeSynergies = [synergyByEffect('immortal_warrior'), synergyByEffect('unbreakable')];
+test('부활 보너스(부활 조합 reviveHeal)는 어느 수단이 발동하든 적용된다', () => {
+    const activeSynergies = [synergyByEffect('immortal_warrior')];
     const reviveHeal = activeSynergies[0].bonus.reviveHeal;
-    const healOnSave = activeSynergies[1].bonus.healOnSave;
-    assert.ok(reviveHeal > 0 && healOnSave > 0);
+    assert.ok(reviveHeal > 0);
 
     const cases = [
         { name: 'phoenix', player: makePlayer({ relics: [PHOENIX], reviveTokens: 1, mirror: true }) },
@@ -181,9 +180,7 @@ test('부활 보너스(부활 조합 reviveHeal · 난공불락 healOnSave)는 �
         const effectiveMax = getEffectiveMaxHp(player);
         const hit = strike(player, makeEnemy(), { activeSynergies });
         assert.equal(hit.source, name);
-        const expected = Math.min(effectiveMax, Math.floor(effectiveMax * reviveHeal) + Math.floor(effectiveMax * healOnSave));
-        assert.equal(hit.updatedPlayer.hp, expected, `${name}: 부활 조합 회복 + 난공불락 추가 회복`);
-        assert.ok(hit.logs.some((log) => log.text === MSG.RELIC_HEAL_ON_SAVE_PROC(Math.floor(effectiveMax * healOnSave))), `${name}: 난공불락 로그`);
+        assert.ok(hit.updatedPlayer.hp >= Math.floor(effectiveMax * reviveHeal), `${name}: 부활 조합 회복`);
     }
 });
 

@@ -260,57 +260,70 @@ export type Relic = NumericRelic | DictRelic | ValuelessRelic;
 export type RelicSynergyEffect =
     | 'absolute_immortal'
     | 'absolute_reflect'
-    | 'annihilator'
     | 'arcane_singularity'
     | 'arcane_surge'
+    | 'battle_alchemy'
     | 'blood_immortal'
-    | 'death_oracle'
+    | 'break_strike'
+    | 'cross_rhythm'
     | 'entropy_brand'
     | 'entropy_god'
     | 'eternal_fortress'
-    | 'eternal_life'
+    | 'finisher'
     | 'hell_reaper'
     | 'immortal_warrior'
-    | 'infinite_devour'
     | 'primordial_wrath'
+    | 'third_beat'
     | 'time_dominator'
     | 'time_master'
-    | 'unbreakable'
     | 'vampire_lord'
-    | 'void_dragon';
+    | 'void_pursuit';
 
 export interface RelicSynergyBonus {
     effect: RelicSynergyEffect;
     atkMult?: number;
+    /** 행동 조합(2026-11 H4) — 기술 바로 다음 일반 공격의 피해 배율(교차 리듬). */
+    afterSkillAttackMult?: number;
+    /** 행동 조합(H4) — 기술 바로 다음 일반 공격 뒤 이번 적 행동에서 받는 피해 감소율(교차 리듬). */
+    afterSkillGuard?: number;
+    /** 행동 조합(H4) — 기술 N번을 쓴 뒤 다음 위력 기술이 강해진다(셋째 박자). */
+    beatEvery?: number;
+    /** 행동 조합(H4) — 셋째 박자의 위력 배율. */
+    beatMult?: number;
+    /** 행동 조합(H4) — 충전한 보스를 끊을 때 준 피해를 몇 배로 세나(끊는 일격). */
+    chargeBreakMult?: number;
+    /** 행동 조합(H4) — 충전을 끊으면 그 보스가 기절하는 행동 수(끊는 일격). */
+    breakStun?: number;
     cdReduction?: number;
     chaosAtk?: number;
     critChance?: number;
     critDmg?: number;
     damage?: number;
     defMult?: number;
-    devour?: number;
-    dotMult?: number;
-    executeThreshold?: number;
     extraAction?: number;
     extraTurnChance?: number;
+    /** 행동 조합(H4) — 생명이 이 비율 이하인 적에게 일반 공격이 마무리한다(절멸자). */
+    finisherThreshold?: number;
+    /** 행동 조합(H4) — 마무리 대상이 보스이면 처치 대신 이 피해 배율(절멸자). */
+    finisherBossMult?: number;
     fixedDmg?: number;
     freeSkillChance?: number;
-    healOnSave?: number;
-    healPerTurn?: number;
     hpCostReduction?: number;
     interval?: number;
     killHeal?: number;
-    killStack?: number;
     lifeSteal?: number;
     lifeStealBonus?: number;
     lowHpAtk?: number;
     mpMult?: number;
+    /** 행동 조합(H4) — 전투 중 소모품을 쓰면 다음 기술 1번이 기력 · 재사용 대기 없이 나간다(전투 물약술). */
+    potionFreeSkill?: boolean;
+    /** 행동 조합(H4) — 기절 · 빙결된 적에게 하는 피해 행동은 치명타 확정(공허의 용). */
+    pursuitCrit?: boolean;
     reflect?: number;
     regenPerTurn?: number;
     reviveCount?: number;
     reviveHeal?: number;
     skillMult?: number;
-    statBonus?: number;
     stunOnReflect?: number;
 }
 

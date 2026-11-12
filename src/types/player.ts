@@ -383,6 +383,18 @@ interface CombatFlags {
     chaosGemStat?: 'atk' | 'def';
     /** 빙결 누적(Wave 59) — 보스 강타가 쌓고, 보스가 선언한 수에 닿으면 빙결이 걸리고 0으로 돌아간다. */
     frostStacks?: number;
+    /**
+     * 행동 조합(2026-11 H4, `systems/relicBehaviorCombos.ts`) — 그 조합이 켜져 있을 때만 세운다. 전투 범위(`endCombatScope` ·
+     * 전투 시작이 비운다).
+     * - `afterSkill`: 직전 행동이 기술이었다(교차 리듬). 일반 공격 · 소모품이 지운다.
+     * - `crossGuard`: 이번 적 행동에서 받는 피해 감소율(교차 리듬). 적 행동 한 번이 쓰고 지운다.
+     * - `potionReady`: 다음 기술 1번이 기력 · 재사용 대기 없이 나간다(전투 물약술).
+     * - `beatCount`: 셋째 박자가 센 위력 기술 수 — `beatEvery`에 닿으면 다음 위력 기술이 강해지고 0으로 돌아간다.
+     */
+    afterSkill?: boolean;
+    crossGuard?: number;
+    potionReady?: boolean;
+    beatCount?: number;
 }
 
 /**
