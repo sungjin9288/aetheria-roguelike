@@ -704,6 +704,14 @@ export const BALANCE = {
     // 전투 결과 카드 — 승리 뒤 생명 · 기력이 이 비율 이하면 회복을 권하고 한 장 접기(D1)를 막는다(실효 최대치 기준)
     POST_COMBAT_HP_LOW_RATIO: 0.35,
     POST_COMBAT_MP_LOW_RATIO: 0.3,
+    // 2026-11 H1 연속 탐험(docs/EXECUTION_SKETCH_H1_2026-11.md, `utils/autoExplore.ts`) — 걸음 사이 박자(전투 속도 ×2면 절반) ·
+    //   설정의 생명 멈춤 문턱(소유자 결정 Q3 (b) 30 · 50 · 70%, 기본 50% — 실제 멈춤은 위 결과 카드 문턱 아래로 내려가지 않는다) ·
+    //   "최소 피해 한 방" 시험 굴림(첫 굴림 = 피해 분산 최소, 나머지 = 치명타 · 빙결 판정에 걸리지 않는 값).
+    AUTO_EXPLORE_STEP_MS: 450,
+    AUTO_EXPLORE_HP_STOP_OPTIONS: [0.3, 0.5, 0.7],
+    AUTO_EXPLORE_HP_STOP_DEFAULT: 0.5,
+    AUTO_EXPLORE_PROBE_VARIANCE_ROLL: 0,
+    AUTO_EXPLORE_PROBE_OTHER_ROLL: 0.999999,
 
     // 리텐션 훅 — 복귀 브리핑 카드
     RETURN_BRIEFING_HOURS: 2,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시 (2026-11 고도화 E1: 6 → 2, 사람 테스트로 다시 정한다)

@@ -451,6 +451,8 @@ interface PlayerSettings {
     keyboardShortcutsEnabled?: boolean;
     /** 2026-11 디자인 고도화 A5: 전투 연출 속도 — 없으면 보통(×1). 판정은 같고 연출 시간만 다르다. */
     combatSpeed?: 'normal' | 'fast' | string;
+    /** 2026-11 H1: 연속 탐험의 생명 멈춤 문턱(0.3 · 0.5 · 0.7) — 없으면 기본 50%. 판정은 `utils/autoExplore.ts`. */
+    autoExploreHpStop?: number;
 }
 
 export interface ExpeditionInventoryCheckpoint {

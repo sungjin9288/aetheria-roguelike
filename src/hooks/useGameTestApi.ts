@@ -422,6 +422,11 @@ export interface AetheriaTestApi {
      */
     seedSwiftVictoryScenario: () => boolean;
     /**
+     * 2026-11 H1: 연속 탐험을 켤 수 있는 상태로 만든다 — 첫 전직(전사) 뒤 · 처음 숲 대기 · Lv10 경험 0(숲의 처치로 레벨이 오르지 않는다) ·
+     * 공격력 500(숲의 일반 적은 최소 피해 한 방) · 생명 · 기력 실효 최대 · 가방 앞 다섯 칸. 연속 탐험 토글이 그려지고 켤 수 있다.
+     */
+    seedAutoExploreScenario: () => boolean;
+    /**
      * 2026-11 H5: 충전 강타를 모은 보스(`bossName` — 실제 `mechanics`, `mapName`에서)와 싸우는 중으로 만든다. 보스 생명은 3200이고
      * 예고 칩은 충전 강타 · 끊기까지 남은 피해다(`partialDamage`만큼 이미 깎인 상태). 생명은 실효 최대치다.
      */
@@ -704,6 +709,9 @@ export const useGameTestApi = (
                     job: e.player.job,
                     level: e.player.level,
                     exp: e.player.exp,
+                    // 2026-11 H1: 연속 탐험 e2e가 읽는다 — 걸음이 실제 탐험인지 · 생명 멈춤 문턱 설정.
+                    explores: e.player.stats?.explores ?? 0,
+                    autoExploreHpStop: e.player.settings?.autoExploreHpStop ?? null,
                     questCount: Array.isArray(e.player.quests) ? e.player.quests.length : 0,
                     expeditionFocusQuestIds: Array.isArray(e.player.expeditionFocusQuestIds)
                         ? e.player.expeditionFocusQuestIds
@@ -1935,6 +1943,33 @@ export const useGameTestApi = (
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
+            },
+            seedAutoExploreScenario: () => {
+                const er = engineRef.current;
+                // 시작 마을에서 나가는 첫 사냥 지역 · 기본 직업의 첫 전직(데이터에서 읽는다).
+                const loc = (DB.MAPS[CONSTANTS.START_LOCATION]?.exits || [])
+                    .find((name) => DB.MAPS[name]?.type === 'dungeon' && (DB.MAPS[name]?.monsters?.length ?? 0) > 0);
+                const job = DB.CLASSES[CONSTANTS.DEFAULT_JOB]?.next?.[0];
+                if (!loc || !job) return false;
+                const patch = {
+                    job,
+                    loc,
+                    level: 10,
+                    exp: 0,
+                    nextExp: getLevelExpRequirement(10),
+                    atk: 500,
+                    inv: (er.player.inv || []).slice(0, 5),
+                    status: [],
+                    activeExpedition: null,
+                };
+                const fullStats = calculateFullStats({ ...er.player, ...patch })!;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: { ...patch, hp: fullStats.maxHp, mp: fullStats.maxMp },
+                });
+                er.dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 return true;
             },
             seedBehaviorComboScenario: (effect: string, options: { enemyHpRatio?: number; beatCount?: number } = {}) => {

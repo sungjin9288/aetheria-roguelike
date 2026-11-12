@@ -41,6 +41,8 @@ import { getExpeditionChapterRecaps } from '../../utils/chapterRecap';
 import { usePlatformBackHandler } from '../../platform/platformBackRegistry';
 import { MAIN_CONTENT_ID } from '../../platform/modalFocus';
 import { useReturnSupplyRewardedAd } from '../../hooks/useReturnSupplyRewardedAd';
+import { useAutoExplore } from '../../hooks/useAutoExplore';
+import { AutoExploreContext } from '../control/autoExploreContext';
 import type { InventoryFilterId, InventoryFilterRequest } from '../../utils/inventoryFilters';
 
 const RelicChoicePanel = lazy(() => import('../RelicChoicePanel'));
@@ -317,6 +319,30 @@ const GameRoot = ({
         closeExpeditionDebrief();
     };
 
+    // 2026-11 H1 연속 탐험: 판단을 기다리는 화면(원정 정리 · 이야기 카드 · 장 선택 · 거울 · 교환소 · 휴대폰 기록 창)이 덮으면 멈춘다.
+    //   처치 박자(결과 카드를 띄우기 전) 동안은 다음 걸음을 미룬다. 토글은 화면 상태다 — 세이브 봉투 밖.
+    const autoExplore = useAutoExplore({
+        state: {
+            gameState: engine.gameState,
+            player: engine.player,
+            enemy: engine.enemy,
+            currentEvent: engine.currentEvent,
+            pendingRelics: engine.pendingRelics,
+            postCombatResult: engine.postCombatResult,
+            isAiThinking: engine.isAiThinking,
+        },
+        actions: {
+            explore: engine.actions.explore,
+            combat: engine.actions.combat,
+            clearPostCombat: engine.actions.clearPostCombat,
+        },
+        addLog: engine.addLog,
+        blocked: showExpeditionDebrief || showStandaloneStory || showChapterPick || mirrorPanelOpen || premiumShopOpen
+            || (mobileConsoleMode === 'archive' && !isDesktopLayout),
+        paused: combatStage.holdResultCards,
+        timeScale: combatTimeScale,
+    });
+
     const visiblePhaseBanner = engine.enemy && phaseBanner
         && engine.enemy.name === phaseBanner.name
         && ((phaseBanner.n === 2 && engine.enemy.phase2Triggered)
@@ -414,6 +440,7 @@ const GameRoot = ({
 
     return (
     <MotionConfig reducedMotion="user">
+      <AutoExploreContext.Provider value={autoExplore}>
         <MainLayout visualEffect={visualEffect} readabilityMode={readabilityMode} regionTheme={regionTheme} combatSpeedFast={isCombatSpeedFast(engine.player)}>
             {/* VD-14: 바탕은 MainLayout 한 곳(앱 바탕 · 지역 빛 · 비네트)이 그린다 — 여기서 같은 빛 번짐을 다시 깔지 않는다. */}
             <main id={MAIN_CONTENT_ID} tabIndex={-1} className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 focus-visible:outline-none">
@@ -584,6 +611,7 @@ const GameRoot = ({
                 </Suspense>
             )}
         </MainLayout>
+      </AutoExploreContext.Provider>
     </MotionConfig>
     );
 };

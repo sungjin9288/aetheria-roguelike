@@ -27,6 +27,7 @@ import { useProductTelemetry } from './useProductTelemetry';
 import { createGameActions } from './useGameActions';
 import { createCombatActions } from './useCombatActions';
 import { createInventoryActions } from './useInventoryActions';
+import { getAutoExploreHpSetting } from '../utils/autoExplore';
 
 export const consumeCombatReceiptStories = (
     receipt: GameState['combatReceipt'],
@@ -245,6 +246,16 @@ export const useGameEngine = () => {
                 type: AT.SET_PLAYER,
                 payload: (currentPlayer: Player) => ({
                     settings: { ...(currentPlayer.settings || {}), combatSpeed: val === 'fast' ? 'fast' : 'normal' },
+                }),
+            }),
+            // 2026-11 H1: 연속 탐험의 생명 멈춤 문턱 — 고를 수 있는 값(`BALANCE.AUTO_EXPLORE_HP_STOP_OPTIONS`)만 남긴다.
+            setAutoExploreHpStop: (val: number) => dispatch({
+                type: AT.SET_PLAYER,
+                payload: (currentPlayer: Player) => ({
+                    settings: {
+                        ...(currentPlayer.settings || {}),
+                        autoExploreHpStop: getAutoExploreHpSetting({ settings: { autoExploreHpStop: val } }),
+                    },
                 }),
             }),
             // 2026-10 통합 감사(town-nav UX-09): 선택 없이 떠나면 지나친 이벤트를 기록에 남긴다 — 전이는 리듀서가 소유한다.

@@ -149,6 +149,8 @@ export interface EngineStableActions {
     setHapticsEnabled: (val: boolean) => void;
     setKeyboardShortcutsEnabled: (val: boolean) => void;
     setCombatSpeed: (val: string) => void;
+    /** 2026-11 H1: 연속 탐험의 생명 멈춤 문턱(0.3 · 0.5 · 0.7, 목록 밖이면 기본값). */
+    setAutoExploreHpStop: (val: number) => void;
     dismissEvent: () => void;
 
     // --- 기능 액션 ---
