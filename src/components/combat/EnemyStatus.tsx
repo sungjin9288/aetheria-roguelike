@@ -1,4 +1,4 @@
-import { Ban, Flame, Shield, Sword, Swords, TriangleAlert, type LucideIcon } from 'lucide-react';
+import { Ban, Flame, Hourglass, Shield, ShieldOff, Sword, Swords, TriangleAlert, Zap, type LucideIcon } from 'lucide-react';
 import SignalBadge from '../SignalBadge';
 import Chip, { type ChipTone } from '../ui/Chip';
 import EnemyPortrait from './EnemyPortrait';
@@ -36,6 +36,9 @@ const INTENT_PRESENTATION: Record<EnemyIntentKind, { icon: LucideIcon; tone: Chi
   stunned: { icon: Ban, tone: 'good' },
   breath: { icon: Flame, tone: 'threat' },
   phase: { icon: TriangleAlert, tone: 'threat' },
+  charge: { icon: Zap, tone: 'threat' },
+  charging: { icon: Hourglass, tone: 'neutral' },
+  broken: { icon: ShieldOff, tone: 'good' },
 };
 
 /**

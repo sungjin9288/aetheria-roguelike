@@ -67,6 +67,13 @@ export interface BossMechanics {
     guardHeal?: number;
     /** `every`번째 행동마다 브레스 — 방어 판정 없이 공격력 × `mult`, 맞으면 `status`를 건다. */
     breath?: { every: number; mult: number; status?: StatusId };
+    /**
+     * 충전 강타(2026-11 H5) — `every`번째 행동이 강타이고 그 앞 행동은 공격 대신 힘을 모은다(`name`을 준비한다).
+     * 그 사이에 최대 생명 × `breakRatio` 이상을 깎거나 기절시키면 강타가 끊겨 그 행동이 사라진다. 강타의 배율은 데이터가 아니라
+     * 지금 패턴에서 도출한다(`getChargeReleaseMult` — 충전 + 강타 두 행동이 보통 두 행동의 기대 피해 이하, 소유자 결정 Q3 (a)).
+     * 브레스와 함께 선언하면 강타가 곧 브레스다(`every`가 같아야 한다 — 레드 드래곤 "충전 → 브레스").
+     */
+    charge?: { name: string; every?: number; breakRatio?: number; first?: number };
     /** 2페이즈 전환 때 `count`체를 소환한다 — 적 행동마다 공격력 × `hitMult`로 함께 친다. 내 피해 행동 1번에 1체가 쓰러진다. */
     summon?: { name: string; count: number; hitMult: number };
     /** 장기전 손해 — `afterActions`번째 행동 뒤로 행동마다 공격력 +`perAction`(최대 `max`). */
@@ -171,6 +178,10 @@ export interface MonsterBase {
     actionCount?: number;
     /** 소환된 하수인 수(Wave 59 망자 소환). */
     summons?: number;
+    /** 충전 강타를 모은 상태(2026-11 H5) — 다음 행동이 강타다(끊기면 그 행동이 사라진다). */
+    chargeArmed?: boolean;
+    /** 충전을 마친 순간의 생명 — 강타 차례에 그 사이 깎인 양을 잰다. */
+    chargeHpMark?: number;
 }
 
 // cycle 328: BossPhase export 제거 — phase2/phase3 필드 타입으로만 사용, 외부 import 0건.

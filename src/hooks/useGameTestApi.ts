@@ -421,6 +421,11 @@ export interface AetheriaTestApi {
      * 경험은 0(레벨이 오르지 않는다), 가방은 앞의 다섯 칸만 남긴다(가득 차지 않는다). 첫 공격의 승리가 접힌 결과 카드다.
      */
     seedSwiftVictoryScenario: () => boolean;
+    /**
+     * 2026-11 H5: 충전 강타를 모은 보스(`bossName` — 실제 `mechanics`, `mapName`에서)와 싸우는 중으로 만든다. 보스 생명은 3200이고
+     * 예고 칩은 충전 강타 · 끊기까지 남은 피해다(`partialDamage`만큼 이미 깎인 상태). 생명은 실효 최대치다.
+     */
+    seedBossChargeScenario: (bossName: string, mapName: string, partialDamage?: number) => boolean;
     seedCombatSkillReadinessScenario: (mp: number) => boolean;
     seedAvatarScenario: (preset: string) => boolean;
     injectPostCombatResult: () => void;
@@ -1875,6 +1880,26 @@ export const useGameTestApi = (
                         type: AT.ADD_LOG,
                         payload: { id: `combat-focus-${Date.now()}-${index}`, type, text },
                     });
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
+            },
+            seedBossChargeScenario: (bossName: string, mapName: string, partialDamage = 0) => {
+                const er = engineRef.current;
+                const profile = DB.MONSTERS[bossName];
+                if (!profile?.mechanics?.charge || !DB.MAPS[mapName]) return false;
+                const scenarioPlayer = { ...er.player, loc: mapName, level: 35 };
+                const fullStats = calculateFullStats(scenarioPlayer)!;
+                er.dispatch({ type: AT.SET_PLAYER, payload: { loc: mapName, level: 35, hp: fullStats.maxHp, mp: fullStats.maxMp } });
+                const maxHp = 3200;
+                const dealt = Math.max(0, Math.floor(Number(partialDamage) || 0));
+                er.dispatch({
+                    type: AT.SET_ENEMY,
+                    payload: {
+                        name: bossName, baseName: bossName, level: 35, hp: maxHp - dealt, maxHp, atk: 120, def: 54, exp: 2400, gold: 1800,
+                        isBoss: true, pattern: { heavyChance: 0.4, guardChance: 0.45 }, mechanics: profile.mechanics,
+                        actionCount: 3, chargeArmed: true, chargeHpMark: maxHp,
+                    },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
                 return true;

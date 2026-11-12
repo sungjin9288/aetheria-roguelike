@@ -302,7 +302,7 @@ test('Monster: 보스 기믹 필드가 BossMechanics 선언 집합 안에 있다
     const mechanics = Object.values(MONSTERS).map((monster) => monster.mechanics).filter(Boolean);
     assert.ok(mechanics.length > 0);
     assertDeclared('MONSTERS mechanics', mechanics, [
-        'heavyStatus', 'guardCounter', 'guardHeal', 'breath', 'summon', 'longFightEnrage', 'longFightReward',
+        'heavyStatus', 'guardCounter', 'guardHeal', 'breath', 'charge', 'summon', 'longFightEnrage', 'longFightReward',
         'firstClearBonusMult', 'relicReward', 'lootTheme',
     ]);
 });

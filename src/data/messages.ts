@@ -1236,6 +1236,10 @@ export const MSG = {
     // 2026-10 Wave 59: 보스 기믹(소유자 결정 "보스 기믹 전부 설명대로 구현").
     ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `3페이즈 임박 — ${formName || '최종 형태'}`,
     ENEMY_TELEGRAPH_BREATH: '브레스 준비 — 다음 행동',
+    // 2026-11 H5: 충전 강타 예고 — 정보만이다(어떻게 대응하라고 권하지 않는다, Wave 88).
+    ENEMY_TELEGRAPH_CHARGE: (chargeName: string, breakLeft: number) => `${chargeName} — 다음 행동 · 끊기까지 피해 ${breakLeft}`,
+    ENEMY_TELEGRAPH_CHARGE_START: (chargeName: string) => `${withJosa(chargeName, '을/를')} 준비하려 함 — 다음 행동은 공격하지 않음`,
+    ENEMY_TELEGRAPH_CHARGE_BROKEN: (chargeName: string) => `${withJosa(chargeName, '이/가')} 끊김 — 다음 행동 없음`,
     // 2026-11 디자인 고도화 A4: 적 무대의 의도 표시 — 다음 행동(위 예고 문구) · 그 행동 한 번의 예상 피해 · 강타가 거는 상태.
     //   정보만이다 — 무엇을 하라고 권하지 않는다(Wave 88 · 소유자 결정 Q2 "권장 대응 칩은 없앤다").
     ENEMY_INTENT_HIT: (hit: number) => `예상 피해 ${hit}`,
@@ -1246,6 +1250,16 @@ export const MSG = {
     ENEMY_GUARD_COUNTER_HIT: (enemyName: string | undefined, dmg: number) => `[반격] ${enemyName}의 반격! ${dmg} 피해를 받았습니다.`,
     ENEMY_GUARD_HEAL: (enemyName: string | undefined, heal: number) => `${withJosa(enemyName, '이/가')} 방어 자세로 생명을 ${heal} 회복했습니다.`,
     ENEMY_BREATH_HIT: (enemyName: string | undefined, dmg: number) => `🔥 ${enemyName}의 브레스! ${dmg} 피해를 받았습니다.`,
+    // 2026-11 H5 충전 강타 — 준비 줄의 숫자는 실제 엔진 한 방(고정 굴림)이고 백분율은 실효 최대 생명 기준이다.
+    BOSS_CHARGE_START: (enemyName: string | undefined, chargeName: string, hit: number, pct: number) => (
+        `⚠ ${withJosa(enemyName, '이/가')} ${withJosa(chargeName, '을/를')} 준비합니다 — 다음 행동 예상 피해 ${hit} (최대 생명의 ${pct}%)`
+    ),
+    BOSS_CHARGE_BROKEN: (enemyName: string | undefined, chargeName: string) => (
+        `${withJosa(chargeName, '이/가')} 끊겼습니다! ${enemyName}의 이번 행동이 사라집니다.`
+    ),
+    BOSS_CHARGE_RELEASE_HIT: (enemyName: string | undefined, chargeName: string, dmg: number) => (
+        `💥 ${enemyName}의 ${chargeName}! ${dmg} 피해를 받았습니다.`
+    ),
     ENEMY_SUMMON: (enemyName: string | undefined, summonName: string, count: number) => (
         `${withJosa(enemyName, '이/가')} ${summonName} ${count}체를 깨웠습니다! 공격할 때마다 하나씩 쓰러집니다.`
     ),

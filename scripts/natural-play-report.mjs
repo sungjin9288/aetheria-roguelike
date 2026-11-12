@@ -71,6 +71,7 @@ const load = (dir, collectDeaths = false) => {
                     zero: run.deaths === 0 ? 1 : 0, loop: run.deaths >= LOOP_DEATHS ? 1 : 0,
                     ruleId: run.ruleId, ruleOptional: Boolean(run.ruleOptional), ruleDeclined: Boolean(run.ruleDeclined), newSignatures,
                     chapterPicks: Array.isArray(run.chapterPicks) ? run.chapterPicks : null, pickBandHours: bandHours(run, ...PICK_BAND),
+                    bossCharge: run.bossCharge || null,
                     events: run.events || null, firstPerHour: run.events && run.hours > 0 ? run.events.firstAt.length / run.hours : null,
                     lateShare: lateBandShare(run), reclimbs: reclimbRatios(run), ladderRank: Number(run.ladderRank) || 0, essence: Number(run.essence) || 0,
                 });
@@ -115,6 +116,13 @@ if (!baseDir) {
             const firstTotal = observed.reduce((sum, r) => sum + r.events.firstAt.length, 0);
             const perHour = firstTotal / Math.max(1e-9, observed.reduce((sum, r) => sum + r.hours, 0));
             console.log(`  이벤트: 판당 ${(observed.reduce((sum, r) => sum + r.events.total, 0) / observed.length).toFixed(0)} · 처음 보는 ${(firstTotal / observed.length).toFixed(1)} (${perHour.toFixed(2)}/시간, 판 중앙값 ${quantile(observed.map((r) => r.firstPerHour), 0.5).toFixed(2)}) · ${Object.entries(all).sort((a, b) => b[1] - a[1]).map(([kind, n]) => `${kind} ${(n / observed.length).toFixed(1)}(${((first[kind] || 0) / observed.length).toFixed(1)})`).join(' ')}`);
+        }
+        // 보스 충전 강타(H5) — 판당 모은 수 · 끊긴 비율 · 맞은 비율 · 강타 전에 쓰러뜨린 비율.
+        const charged = xs.filter((r) => r.bossCharge);
+        if (charged.length) {
+            const sum = (key) => charged.reduce((acc, r) => acc + (r.bossCharge[key] || 0), 0);
+            const total = Math.max(1, sum('charged'));
+            console.log(`  충전 강타: 판당 ${(sum('charged') / charged.length).toFixed(1)} · 끊김 ${(100 * sum('broken') / total).toFixed(0)}% · 맞음 ${(100 * sum('hit') / total).toFixed(0)}% · 강타 전 처치 ${(100 * sum('killed') / total).toFixed(0)}%`);
         }
         const picked = xs.filter((r) => r.chapterPicks);
         if (picked.length) {

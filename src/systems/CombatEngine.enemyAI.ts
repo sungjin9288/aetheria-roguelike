@@ -8,8 +8,8 @@ import { ENEMY_ACTION_LOG_TYPE, ENEMY_HEAVY_LOG_TYPE } from '../data/logBadge.js
 import { getEnemyDebuffAtkLabel, getEnemyDebuffAtkMult, getPlayerStatusStacks, getStatusStackMult, isEnemyBlindActive, isEnemyTauntActive } from './CombatEngine.status.js';
 import { getEnemyAttackElement, getEquipmentResistMult } from '../utils/equipmentPassives.js';
 import {
-    getActiveHeavyStatus, getLongFightEnrageBonus, getPhase2Threshold, getPhase3Threshold, getPhaseStatuses,
-    isBreathAction, isBreathNext, isResistPierced,
+    getActiveHeavyStatus, getChargeBreakDamage, getChargeDamageTaken, getChargeReleaseMult, getLongFightEnrageBonus, getPhase2Threshold, getPhase3Threshold, getPhaseStatuses,
+    isBreathAction, isBreathNext, isChargeBrokenByDamage, isChargeTurn, isChargeTurnNext, isResistPierced,
 } from './bossMechanics.js';
 
 interface EnemyAttackResult {
@@ -39,6 +39,8 @@ interface EnemyTelegraph {
  * CombatEngine.status/.relics 패턴과 동일 — 실제로 호출하는 2개만 최소 인터페이스로 선언한다.
  */
 interface EnemyAIMixinContext {
+    /** 충전 차례가 다음 행동(강타)의 예상 피해를 실제 엔진으로 굴린다(H5). */
+    enemyAttack(player: Player, enemy: Monster, stats: FullStats, rng?: () => number): EnemyAttackResult;
     enemyAction(player: Player, enemy: Monster, stats: FullStats, random: () => number): EnemyAttackResult;
     tickEnemyStatus(enemy: Monster, logs: LootLog[], curseAmpMult: number, synergyDotMult: number, relicDotMults?: Partial<Record<RelicDotScope, number>>): { updatedEnemy: Monster; logs: LootLog[] };
     applyFatalProtection(
@@ -60,6 +62,12 @@ interface EnemyAIMixin {
     attemptEscape(enemy: Monster, stats: FullStats, rng?: () => number): EscapeResult;
     predictEnemyNextAction(enemy: Monster): EnemyTelegraph | null;
 }
+
+/** 모은 강타 상태를 지운 적(H5) — 강타를 냈거나 끊겼다. */
+const clearCharge = (enemy: Monster): Monster => {
+    const { chargeArmed: _armed, chargeHpMark: _mark, ...rest } = enemy;
+    return rest;
+};
 
 /** 적 공격 피해(방어 전 → 방어 뒤) — 최소 피해는 방어 전 피해의 ENEMY_MIN_DMG_RATIO(방어력으로 완전히 막지 못한다). */
 const enemyHitAfterDefense = (raw: number, def: number) => {
@@ -229,6 +237,9 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         //   (기절은 이미 N번 — 행동 판정에서 줄인다).
         const debuffAtkMult = getEnemyDebuffAtkMult(enemy);
         const debuffAtkLabel = getEnemyDebuffAtkLabel(enemy);
+        // 2026-11 H5 충전 강타: 끊김은 이번 행동의 지속 피해 틱 전 상태로 잰다(충전 뒤 플레이어 · 반사가 준 피해만 센다).
+        const chargeTurn = isChargeTurn(enemy);
+        const chargeBroken = isChargeBrokenByDamage(enemy);
         const tauntActive = isEnemyTauntActive(enemy);
         const blindActive = isEnemyBlindActive(enemy);
         // 2026-10 Wave 56: 지속 피해 유물은 틱에도 붙는다(대상별 — 죽음의 낙인은 독 · 화상만).
@@ -255,7 +266,8 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         const cloakPending = Boolean(updatedPlayer.combatFlags?.cloakEvadePending)
             && relics.some((relic) => relic.effect === 'first_turn_evade');
         const stealthActive = (updatedPlayer.combatFlags?.stealthHits ?? 0) > 0 || Boolean(updatedPlayer.nextHitEvaded) || cloakPending;
-        if (!stealthActive && armorEvasion > 0 && random() < armorEvasion) {
+        // 충전 차례 · 끊긴 강타는 공격이 아니라 장비 회피를 굴리지 않는다(H5).
+        if (!stealthActive && !chargeTurn && !chargeBroken && armorEvasion > 0 && random() < armorEvasion) {
             return {
                 updatedPlayer, updatedEnemy, damage: 0, isDead: false,
                 logs: [...logs, { type: 'success', text: MSG.ARMOR_EVADE_PROC(enemy.name) }]
@@ -320,14 +332,50 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             }
         }
 
+        const charge = updatedEnemy.mechanics?.charge;
         if ((updatedEnemy.stunnedTurns || 0) > 0) {
             updatedEnemy.stunnedTurns! -= 1;
+            // H5: 모은 강타는 기절로 끊긴다 — 기절 차례가 그 강타 차례를 쓴다.
+            const stunBreak = Boolean(charge && updatedEnemy.chargeArmed);
+            if (stunBreak) updatedEnemy = clearCharge(updatedEnemy);
             return {
                 updatedPlayer,
                 updatedEnemy,
                 damage: 0,
                 isDead: false,
-                logs: [...logs, { type: ENEMY_ACTION_LOG_TYPE, text: MSG.COMBAT_ENEMY_STUNNED(enemy.name) }]
+                logs: [
+                    ...logs,
+                    ...(stunBreak && charge ? [{ type: 'success', text: MSG.BOSS_CHARGE_BROKEN(updatedEnemy.name, charge.name) }] : []),
+                    { type: ENEMY_ACTION_LOG_TYPE, text: MSG.COMBAT_ENEMY_STUNNED(enemy.name) },
+                ]
+            };
+        }
+
+        // H5: 충전과 강타 사이에 끊는 피해를 받았으면 강타가 사라진다 — 이 행동은 그것으로 끝난다(행동 판정 난수는 한 번 쓴다).
+        if (charge && chargeBroken) {
+            random();
+            return {
+                updatedPlayer,
+                updatedEnemy: clearCharge(updatedEnemy),
+                damage: 0,
+                isDead: false,
+                logs: [...logs, { type: 'success', text: MSG.BOSS_CHARGE_BROKEN(updatedEnemy.name, charge.name) }],
+            };
+        }
+
+        // H5: 충전 차례 — 공격하지 않고 힘을 모은다. 다음 행동(강타)의 예상 피해는 실제 엔진을 고정 굴림으로 부른 값이다.
+        if (charge && chargeTurn) {
+            random();
+            const armed: Monster = { ...updatedEnemy, guarding: false, chargeArmed: true, chargeHpMark: updatedEnemy.hp ?? 0 };
+            const probe = this.enemyAttack(updatedPlayer, armed, stats, () => BALANCE.ENEMY_THREAT_PROBE_ROLL);
+            const hit = Math.max(0, Math.floor(Number(probe.damage) || 0));
+            const pct = Math.ceil((hit / Math.max(1, stats.maxHp || updatedPlayer.maxHp || 1)) * 100);
+            return {
+                updatedPlayer,
+                updatedEnemy: armed,
+                damage: 0,
+                isDead: false,
+                logs: [...logs, { type: 'warning', text: MSG.BOSS_CHARGE_START(updatedEnemy.name, charge.name, hit, pct) }],
             };
         }
 
@@ -340,8 +388,11 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         const mechanics = updatedEnemy.mechanics;
         // 2026-10 Wave 59 "브레스" — `every`번째 행동은 방어 판정 없이 브레스다(행동 판정 난수는 그대로 1번 쓴다).
         const breathTurn = isBreathAction(updatedEnemy);
+        // 2026-11 H5: 모은 강타 차례 — 브레스처럼 방어 판정이 없다. 회피 · 은신 · 실명으로 빗나가도 모은 힘은 쓴 것이다.
+        const releaseTurn = Boolean(charge && updatedEnemy.chargeArmed);
+        if (releaseTurn) updatedEnemy = clearCharge(updatedEnemy);
         const roll = random();
-        if (!breathTurn && roll < pattern.guardChance) {
+        if (!breathTurn && !releaseTurn && roll < pattern.guardChance) {
             let guardEnemy: Monster = { ...updatedEnemy, guarding: true };
             const guardLogs: LootLog[] = [...logs, {
                 type: ENEMY_ACTION_LOG_TYPE,
@@ -420,8 +471,12 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             };
         }
 
-        const heavy = breathTurn || roll < pattern.guardChance + pattern.heavyChance;
-        let mult = breathTurn ? (mechanics?.breath?.mult ?? 1.4) : heavy ? 1.4 : 1;
+        const heavy = breathTurn || releaseTurn || roll < pattern.guardChance + pattern.heavyChance;
+        // 충전 강타(브레스가 아닌 강타)는 두 행동 몫이라 배율이 기대 배율 × 2이고 방어력도 두 번 받는다(`getChargeReleaseMult`).
+        const chargeRelease = releaseTurn && !breathTurn;
+        let mult = breathTurn ? (mechanics?.breath?.mult ?? BALANCE.ENEMY_HEAVY_HIT_MULT)
+            : chargeRelease ? getChargeReleaseMult(pattern)
+                : heavy ? BALANCE.ENEMY_HEAVY_HIT_MULT : 1;
         const critBlockRelic = relics.find((relic) => relic.effect === 'crit_block');
         if (heavy && critBlockRelic && random() < critBlockRelic.val) {
             mult = 1;
@@ -460,7 +515,7 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         }
         const rawEnemyAtk = (updatedEnemy.atk ?? 0) * mult * enemyAtkMult * (1 + enrageBonus);
         // 최소 피해량: 원래 공격력의 10% (DEF 스택으로 완전 무효화 방지, 고DEF 빌드 보상)
-        let enemyDmg = enemyHitAfterDefense(rawEnemyAtk, stats.def);
+        let enemyDmg = enemyHitAfterDefense(rawEnemyAtk, chargeRelease ? stats.def * 2 : stats.def);
         if (enemyAtkMult < 1 && debuffAtkLabel) {
             logs.push({ type: 'info', text: MSG.ENEMY_ATK_REDUCED_STATUS(MSG.DOT_LABELS[debuffAtkLabel], updatedEnemy.name) });
         }
@@ -586,9 +641,11 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
             isEnemyDead: !protectedResult.isDead && (finalEnemy.hp ?? 0) <= 0,
             isCrit: heavyResolved,
             logs: [...logs, {
-                type: heavyResolved || breathTurn ? ENEMY_HEAVY_LOG_TYPE : ENEMY_ACTION_LOG_TYPE,
+                type: heavyResolved || breathTurn || chargeRelease ? ENEMY_HEAVY_LOG_TYPE : ENEMY_ACTION_LOG_TYPE,
                 text: breathTurn
                     ? MSG.ENEMY_BREATH_HIT(updatedEnemy.name, enemyDmg)
+                    : chargeRelease && charge
+                        ? MSG.BOSS_CHARGE_RELEASE_HIT(updatedEnemy.name, charge.name, enemyDmg)
                     : heavyResolved
                         ? MSG.COMBAT_ENEMY_HEAVY_HIT(updatedEnemy.name, enemyDmg, random)
                         : MSG.COMBAT_ENEMY_HIT(updatedEnemy.name, enemyDmg, random)
@@ -631,6 +688,19 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         if (!enemy || (enemy.hp ?? 0) <= 0) return null;
         if ((enemy.stunnedTurns || 0) > 0) return { type: 'stunned', label: MSG.ENEMY_TELEGRAPH_STUNNED, color: 'blue' };
 
+        // 2026-11 H5: 모은 강타가 다음 행동이다 — 이미 끊는 피해를 받았으면 그 행동은 사라진다(행동 판정과 같은 식). 페이즈 임박보다 앞선다.
+        const charge = enemy.mechanics?.charge;
+        if (charge && enemy.chargeArmed) {
+            return isChargeBrokenByDamage(enemy)
+                ? { type: 'charge_broken', label: MSG.ENEMY_TELEGRAPH_CHARGE_BROKEN(charge.name), color: 'blue' }
+                : {
+                    type: 'charge',
+                    // 끊기까지 남은 피해 — 규칙 정보와 정확한 숫자만이다(권하지 않는다, Wave 88).
+                    label: MSG.ENEMY_TELEGRAPH_CHARGE(charge.name, Math.max(1, getChargeBreakDamage(enemy) - getChargeDamageTaken(enemy))),
+                    color: 'red',
+                };
+        }
+
         // 보스 페이즈 전환 임박 — 문턱 + 10% 안이면 알린다. 다음 행동이 두 문턱을 함께 넘으면(또는 이미 2페이즈면) 3페이즈를 알린다
         //   (Wave 59: 이전에는 3페이즈 문턱에서도 2페이즈 값을 보였는데 다음 행동은 3페이즈 값으로 굴렀다).
         const hpRatio = (enemy.hp ?? 0) / Math.max(1, enemy.maxHp || (enemy.hp ?? 1));
@@ -643,6 +713,9 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         if (enemy.isBoss && phase2Pending && hpRatio <= getPhase2Threshold(enemy, BALANCE.BOSS_PHASE2_THRESHOLD) + 0.1) {
             return { type: 'phase2_imminent', label: MSG.ENEMY_TELEGRAPH_PHASE2_IMMINENT(enemy.phase2?.name), color: 'purple' };
         }
+
+        // H5: 다음 행동이 충전 차례면 공격하지 않는다는 것을 알린다.
+        if (charge && isChargeTurnNext(enemy)) return { type: 'charge_start', label: MSG.ENEMY_TELEGRAPH_CHARGE_START(charge.name), color: 'orange' };
 
         // Wave 59: 다음 행동이 브레스면 브레스를 알린다(행동 판정과 같은 `isBreathNext`).
         if (isBreathNext(enemy)) return { type: 'breath', label: MSG.ENEMY_TELEGRAPH_BREATH, color: 'red' };

@@ -69,13 +69,30 @@ test('A4: 방어 예고 — 숫자는 공격할 때의 일반 공격 피해다',
 test('A4: 브레스 차례 — 숫자는 엔진의 브레스 피해와 같다', () => {
     const player = makePlayer();
     const profile = MONSTERS['레드 드래곤'];
+    // H5: 레드 드래곤의 브레스는 충전 뒤에만 나온다 — 충전 강타를 뺀 모양으로 브레스 예고를 본다(모은 브레스는 아래 시험).
     const dragon = makeEnemy({
-        name: '레드 드래곤', baseName: '레드 드래곤', isBoss: true, mechanics: profile.mechanics, actionCount: profile.mechanics.breath.every - 1,
+        name: '레드 드래곤', baseName: '레드 드래곤', isBoss: true, mechanics: { ...profile.mechanics, charge: undefined },
+        actionCount: profile.mechanics.breath.every - 1,
     });
     const intent = getEnemyIntent(player, dragon);
     assert.equal(intent.kind, 'breath');
     assert.equal(intent.hit, engineHit(player, dragon, 0.999));
     assert.ok(intent.hit > engineHit(player, { ...dragon, actionCount: 0 }, 0.999), '브레스는 일반 공격보다 세다');
+});
+
+test('A4: 모은 브레스(H5 "충전 → 브레스") — 예고는 충전 강타이고 숫자는 엔진의 브레스 피해와 같다', () => {
+    const player = makePlayer();
+    const profile = MONSTERS['레드 드래곤'];
+    const armed = makeEnemy({
+        name: '레드 드래곤', baseName: '레드 드래곤', isBoss: true, mechanics: profile.mechanics,
+        actionCount: profile.mechanics.breath.every - 1, chargeArmed: true,
+    });
+    const intent = getEnemyIntent(player, { ...armed, chargeHpMark: armed.hp });
+    assert.equal(intent.kind, 'charge');
+    assert.equal(intent.hit, engineHit(player, { ...armed, chargeHpMark: armed.hp }, 0.999));
+    // 모은 강타가 곧 브레스다 — 충전을 뺀 브레스 차례와 같은 피해다.
+    const breathTurn = { ...armed, chargeArmed: undefined, mechanics: { ...profile.mechanics, charge: undefined } };
+    assert.equal(intent.hit, engineHit(player, breathTurn, 0.999));
 });
 
 test('A4: 기절한 적은 숫자 · 상태가 없다', () => {

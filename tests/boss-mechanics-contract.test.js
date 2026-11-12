@@ -54,6 +54,8 @@ const makeBoss = (name, extra = {}) => {
         ...extra,
     };
 };
+/** 한 기믹만 보는 시험 — 충전 강타(H5)는 자기 계약(boss-charge-strike-contract)이 지키므로 뺀다. */
+const withoutCharge = (name) => ({ mechanics: { ...MONSTERS[name].mechanics, charge: undefined } });
 const stats = (player) => calculateFullStats(player);
 const act = (player, enemy, rng) => CombatEngine.enemyAttack(player, enemy, stats(player), rng);
 const texts = (result) => result.logs.map((log) => log.text);
@@ -106,6 +108,22 @@ test('칩 · 문구가 약속한 행동은 데이터가 선언한다 — 반격 
     }
 });
 
+test('충전 강타(H5, 소유자 결정 Q2 (a)) — 브리핑 보스 모두 선언하고, 칩은 그 이름 · 공략 요령은 끊기 규칙을 말한다', () => {
+    const briefed = new Set(BRIEFED);
+    for (const name of BRIEFED) {
+        const charge = MONSTERS[name].mechanics?.charge;
+        assert.ok(charge?.name, `${name} charge 선언`);
+        assert.ok(BOSS_BRIEFS[name].warningChips.includes(charge.name), `${name} 칩 "${charge.name}"`);
+        assert.match(BOSS_BRIEFS[name].counterHint, new RegExp(`${charge.name}[은는] 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다`), name);
+        // 브레스와 함께 선언하면 강타가 곧 브레스다 — 주기가 같아야 한다(레드 드래곤 "충전 → 브레스").
+        const breath = MONSTERS[name].mechanics?.breath;
+        if (breath) assert.equal(charge.every, breath.every, `${name} 충전 주기 = 브레스 주기`);
+    }
+    // 브리핑 밖 몬스터는 충전하지 않는다(범위 밖 — 정예 · 우두머리 · 숨은 보스 외 일반 몬스터).
+    const outside = Object.keys(MONSTERS).filter((name) => !briefed.has(name) && MONSTERS[name].mechanics?.charge);
+    assert.deepEqual(outside, []);
+});
+
 test('브리핑이 말하는 상태 종류가 페이즈 상태와 같다 — 아누비스 저주 · 빙결의 마녀 빙결+저주 · 아이스 드래곤 빙결 · 종말의 기사 화상+저주', () => {
     assert.deepEqual(getPhaseStatuses(MONSTERS['아누비스 수호자'].phase2), ['curse']);
     assert.doesNotMatch(briefText('아누비스 수호자'), /독성/);
@@ -137,7 +155,7 @@ test('"방어 자세 빈도가 높아집니다" · "방어 자세와 독이 섞�
 test('"잦은 방어 자세" 보스는 방어가 가장 잦은 행동이고 예고도 방어를 말한다', () => {
     const pattern = MONSTERS['고대 호수의 수호신'].pattern;
     assert.ok(pattern.guardChance > pattern.heavyChance && pattern.guardChance > 1 - pattern.guardChance - pattern.heavyChance);
-    assert.equal(CombatEngine.predictEnemyNextAction(makeBoss('고대 호수의 수호신')).type, 'guard');
+    assert.equal(CombatEngine.predictEnemyNextAction(makeBoss('고대 호수의 수호신', withoutCharge('고대 호수의 수호신'))).type, 'guard');
 });
 
 test('추천 빌드는 실제 빌드 라벨이다(직업 이름 금지)', () => {
@@ -216,7 +234,7 @@ test('페이즈 상태 로그는 한국어 라벨이다(기절 · 출혈 포함)
 
 test('누적 — 2페이즈 강타가 화상을 3중첩까지 쌓고, 중첩마다 틱 피해가 커진다(3중첩 = 2배)', () => {
     let player = makePlayer();
-    let enemy = makeBoss('화염의 군주', { hp: 2_400 });
+    let enemy = makeBoss('화염의 군주', { ...withoutCharge('화염의 군주'), hp: 2_400 });
     // 강타(0.1 < 0 + 0.55) · 누적 확률 통과(0.1 < 0.5)
     const stackLogs = [];
     for (let i = 0; i < 5; i += 1) {
@@ -236,7 +254,7 @@ test('누적 — 2페이즈 강타가 화상을 3중첩까지 쌓고, 중첩마�
     assert.equal(tickAt(1), Math.floor(10_000 * BALANCE.STATUS_DOT_RATIO));
     assert.equal(tickAt(3), Math.floor(10_000 * BALANCE.STATUS_DOT_RATIO * 2));
     // 2페이즈 전에는 강타여도 걸지 않는다(0.3 = 방어 0.2 위 · 강타 0.5 아래 · 누적 확률 0.5 아래).
-    const early = act(makePlayer(), makeBoss('화염의 군주'), () => 0.3);
+    const early = act(makePlayer(), makeBoss('화염의 군주', withoutCharge('화염의 군주')), () => 0.3);
     assert.ok(early.isCrit, '강타');
     assert.equal(early.updatedPlayer.status.includes('burn'), false);
 });
@@ -251,7 +269,7 @@ test('저주 중첩 — 받는 피해 증폭이 중첩마다 커진다(1중첩 +
 
 test('빙결 누적 — 2페이즈 강타가 냉기를 쌓고 세 번째에 얼어붙는다', () => {
     let player = makePlayer({ status: ['freeze'] }); // 전환 빙결은 이미 걸린 상태로 시작(누적만 본다)
-    let enemy = makeBoss('아이스 드래곤', { phase2Triggered: true, pattern: { guardChance: 0.05, heavyChance: 0.55 } });
+    let enemy = makeBoss('아이스 드래곤', { ...withoutCharge('아이스 드래곤'), phase2Triggered: true, pattern: { guardChance: 0.05, heavyChance: 0.55 } });
     player = { ...player, status: [] };
     const seen = [];
     for (let i = 0; i < 3; i += 1) {
@@ -266,7 +284,7 @@ test('빙결 누적 — 2페이즈 강타가 냉기를 쌓고 세 번째에 얼�
 
 test('연속 기절 — 2페이즈 강타마다 확률로 기절을 다시 건다(전환 1번이 아니다)', () => {
     let player = makePlayer();
-    let enemy = makeBoss('시간의 파수꾼', { phase2Triggered: true, pattern: { guardChance: 0, heavyChance: 0.65 } });
+    let enemy = makeBoss('시간의 파수꾼', { ...withoutCharge('시간의 파수꾼'), phase2Triggered: true, pattern: { guardChance: 0, heavyChance: 0.65 } });
     let stuns = 0;
     for (let i = 0; i < 5; i += 1) {
         const result = act(player, enemy, () => 0.2);
@@ -280,40 +298,42 @@ test('연속 기절 — 2페이즈 강타마다 확률로 기절을 다시 건�
 
 test('강한 반격 — 방어 자세 중인 보스를 때리면 반격당하고, 방어 자세가 아니면 반격이 없다', () => {
     const player = makePlayer();
-    const guarded = resolveCombatActionTurn({ player, enemy: makeBoss('아이스 드래곤', { guarding: true }), kind: 'attack', initialPlayer: player, seed: 7, now: 0 });
-    const open = resolveCombatActionTurn({ player, enemy: makeBoss('아이스 드래곤'), kind: 'attack', initialPlayer: player, seed: 7, now: 0 });
+    const guarded = resolveCombatActionTurn({ player, enemy: makeBoss('아이스 드래곤', { ...withoutCharge('아이스 드래곤'), guarding: true }), kind: 'attack', initialPlayer: player, seed: 7, now: 0 });
+    const open = resolveCombatActionTurn({ player, enemy: makeBoss('아이스 드래곤', withoutCharge('아이스 드래곤')), kind: 'attack', initialPlayer: player, seed: 7, now: 0 });
     assert.ok(guarded.logs.some((log) => log.text.startsWith('[반격] 아이스 드래곤의 반격!')));
     assert.ok(!open.logs.some((log) => log.text.startsWith('[반격]')));
     // 반격 없는 보스는 방어 자세여도 반격하지 않는다.
-    const plain = resolveCombatActionTurn({ player, enemy: makeBoss('레드 드래곤', { guarding: true }), kind: 'attack', initialPlayer: player, seed: 7, now: 0 });
+    const plain = resolveCombatActionTurn({ player, enemy: makeBoss('레드 드래곤', { ...withoutCharge('레드 드래곤'), guarding: true }), kind: 'attack', initialPlayer: player, seed: 7, now: 0 });
     assert.ok(!plain.logs.some((log) => log.text.startsWith('[반격]')));
     // 방어 자세는 반격 자세라고 알린다.
-    const stance = act(player, makeBoss('아이스 드래곤', { pattern: { guardChance: 1, heavyChance: 0 } }), () => 0.1);
+    const stance = act(player, makeBoss('아이스 드래곤', { ...withoutCharge('아이스 드래곤'), pattern: { guardChance: 1, heavyChance: 0 } }), () => 0.1);
     assert.ok(texts(stance).includes(MSG.ENEMY_GUARD_COUNTER_STANCE('아이스 드래곤')));
 });
 
 test('회복 압박 — 방어 자세마다 최대 생명의 6%를 회복한다(최대치를 넘지 않는다)', () => {
-    const healed = act(makePlayer(), makeBoss('고대 호수의 수호신', { hp: 3_000 }), () => 0.1);
+    const healed = act(makePlayer(), makeBoss('고대 호수의 수호신', { ...withoutCharge('고대 호수의 수호신'), hp: 3_000 }), () => 0.1);
     assert.equal(healed.updatedEnemy.hp, 3_000 + Math.floor(5_000 * MONSTERS['고대 호수의 수호신'].mechanics.guardHeal));
-    const nearFull = act(makePlayer(), makeBoss('고대 호수의 수호신', { hp: 4_900 }), () => 0.1);
+    const nearFull = act(makePlayer(), makeBoss('고대 호수의 수호신', { ...withoutCharge('고대 호수의 수호신'), hp: 4_900 }), () => 0.1);
     assert.equal(nearFull.updatedEnemy.hp, 5_000);
 });
 
-test('브레스 — 세 번째 행동마다 방어 없이 브레스이고, 예고가 그 차례를 알리며, 브레스 차례에 기절시키면 넘어간다', () => {
+test('브레스 — 모은 다음 행동이 방어 없이 브레스이고(H5: 첫 행동부터 충전 · 3행동 주기), 예고가 그 차례를 알리며, 충전 차례에 기절시키면 넘어간다', () => {
     let player = makePlayer();
     let enemy = makeBoss('레드 드래곤', { pattern: { guardChance: 0.9, heavyChance: 0 } });
     const kinds = [];
     for (let i = 0; i < 6; i += 1) {
         const telegraph = CombatEngine.predictEnemyNextAction(enemy);
         const result = act(player, enemy, () => 0.1);
-        kinds.push(`${telegraph.type}:${result.updatedEnemy.guarding ? 'guard' : texts(result).at(-1).startsWith('🔥') ? 'breath' : 'hit'}`);
+        kinds.push(`${telegraph.type}:${result.updatedEnemy.guarding ? 'guard' : result.updatedEnemy.chargeArmed ? 'charge' : texts(result).at(-1).startsWith('🔥') ? 'breath' : 'hit'}`);
         player = result.updatedPlayer;
         enemy = result.updatedEnemy;
     }
-    assert.deepEqual(kinds, ['guard:guard', 'guard:guard', 'breath:breath', 'guard:guard', 'guard:guard', 'breath:breath']);
-    const stunned = act(makePlayer(), makeBoss('레드 드래곤', { actionCount: 2, stunnedTurns: 1 }), () => 0.1);
-    assert.ok(!texts(stunned).some((text) => text.startsWith('🔥')));
-    assert.equal(stunned.updatedEnemy.actionCount, 3);
+    assert.deepEqual(kinds, ['charge_start:charge', 'charge:breath', 'guard:guard', 'charge_start:charge', 'charge:breath', 'guard:guard']);
+    const stunned = act(makePlayer(), makeBoss('레드 드래곤', { stunnedTurns: 1 }), () => 0.1);
+    assert.equal(stunned.updatedEnemy.actionCount, 1);
+    assert.equal(stunned.updatedEnemy.chargeArmed, undefined);
+    const after = act(makePlayer(), stunned.updatedEnemy, () => 0.1);
+    assert.ok(!texts(after).some((text) => text.startsWith('🔥')), '모으지 못하면 브레스가 없다');
 });
 
 test('망자 소환 — 2페이즈 전환에 깨어나 다음 행동부터 함께 치고, 내 피해 행동 하나에 하나씩 쓰러진다', () => {
@@ -330,7 +350,7 @@ test('망자 소환 — 2페이즈 전환에 깨어나 다음 행동부터 함�
 
 test('장기전 손해 — 8번째 행동 뒤로 행동마다 공격력 +5%, 상한 +50%', () => {
     let player = makePlayer();
-    let enemy = makeBoss('차원 파쇄자', { pattern: { guardChance: 0, heavyChance: 0 } });
+    let enemy = makeBoss('차원 파쇄자', { ...withoutCharge('차원 파쇄자'), pattern: { guardChance: 0, heavyChance: 0 } });
     const damages = [];
     for (let i = 0; i < 20; i += 1) {
         const result = act(player, enemy, () => 0.9);
@@ -386,9 +406,9 @@ test('저항 무력화 — 에테르 심판자 3페이즈는 상태 저항 유�
 });
 
 test('예고 — 알릴 행동 가운데 확률이 높은 쪽 · 3페이즈 임박 · 적 무대의 의도 표시', () => {
-    const sphinx = makeBoss('스핑크스', { pattern: { guardChance: 0.32, heavyChance: 0.35 } });
+    const sphinx = makeBoss('스핑크스', { ...withoutCharge('스핑크스'), pattern: { guardChance: 0.32, heavyChance: 0.35 } });
     assert.equal(CombatEngine.predictEnemyNextAction(sphinx).type, 'heavy');
-    const shatter = makeBoss('차원 파쇄자', { pattern: { guardChance: 0.3, heavyChance: 0.3 } });
+    const shatter = makeBoss('차원 파쇄자', { ...withoutCharge('차원 파쇄자'), pattern: { guardChance: 0.3, heavyChance: 0.3 } });
     assert.equal(CombatEngine.predictEnemyNextAction(shatter).type, 'heavy', '같으면 맹공');
     const maou = makeBoss('마왕', { hp: 1_100, phase2Triggered: true });
     const telegraph = CombatEngine.predictEnemyNextAction(maou);

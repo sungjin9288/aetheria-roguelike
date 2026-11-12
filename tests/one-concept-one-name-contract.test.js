@@ -241,7 +241,7 @@ test('[데이터 전수] 그대로 그리는 시스템 문장(보스 브리핑 �
     assert.deepEqual(offenders, []);
     // 고친 자리가 실제로 화면 이름을 말한다.
     assert.match(TRAIT_DEFINITIONS.fortress.questFocus, /임무와 잘 맞습니다/u);
-    assert.deepEqual(BOSS_BRIEFS['아이스 드래곤'].warningChips, ['빙결 누적', '반격']);
+    assert.deepEqual(BOSS_BRIEFS['아이스 드래곤'].warningChips, ['빙결 누적', '반격', '빙하 붕괴']);
     assert.match(BOSS_BRIEFS['고대 호수의 수호신'].rewardHint, /중반 보스입니다/u);
     assert.equal(MIRROR_NODES.find((node) => node.id === 'essence_flow').name, '정수 공명');
     assert.match(DB.MAPS['영혼의 강'].desc, /묘비에 더 많은 아이템과 골드가 남습니다/u);

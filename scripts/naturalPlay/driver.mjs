@@ -47,6 +47,8 @@ import { countDiscoveredSignatures, getDiscoveredSignatureNames } from '../../sr
 import { getAscensionRule, getAscensionRuleOffer, isActiveAscensionRuleOptional } from '../../src/systems/ascensionRule.ts';
 import { HIDDEN_BOSS_UNLOCKS } from '../../src/utils/bossPresence.ts';
 import { hasChallengeModifier } from '../../src/utils/challengeRules.ts';
+import { getChargeBreakDamage, getChargeDamageTaken, isChargeBrokenByDamage } from '../../src/systems/bossMechanics.ts';
+import { estimateEnemyNextHit } from '../../src/utils/enemyThreat.ts';
 
 // v2 (Wave 119): 퇴마 · 회복 기술을 쓴다 — v1은 위력(`mult`) 있는 기술만 써서 성직자가 회복도 퇴마도 하지 않았다(원장 §126).
 // v3 (Wave 128): 받은 이야기 임무 — 본편 장과 곁가지 이야기를 여는 임무 — 를 받은 순서대로 하러 간다. v2는 본편 장의 목표 지역만
@@ -153,6 +155,11 @@ const installClock = (clock) => {
  * @param {'first'|'alt'|'random'} [options.enhanceBranch] 강화 갈래(H6, 2026-11) — 갈래 단계로 가는 강화에서 표의 첫 갈래 · 둘째 갈래 ·
  *   고르게 하나(별도 시드 스트림 — 게임 난수를 쓰지 않는다). 강화하는 경제 정책(`basic` · `materials`)에서만 쓰인다. 회차 기록
  *   `economy.branchAttempts`(갈래를 고른 강화 시도 수 = 강화 카드의 갈래 결정 수) · `economy.branches`(붙은 갈래 id별 수).
+ * @param {'none'|'basic'|'full'} [options.bossResponse] 보스 충전 강타(H5, 2026-11)에 반응하는 정책 — `none`(기본)은 예고를 보지 않는다.
+ *   `basic`은 보스가 강타를 모은 동안(끊기지 않았으면) 기절 기술 → 끊기까지 남은 피해에 닿는다고 어림한 가장 센 기술 → 생명이
+ *   예상 피해 이하이면 물약 순서로 대응한다(도주는 하지 않는다). 어림은 공격력 × 위력 × 0.9 − 적 방어력이다(정책이라 엔진 식을 따르지 않는다).
+ *   `full`은 `basic`에 빙결 · 은신 · 방어 강화 기술(예상 피해 ≥ 생명 60%일 때)을 더하고, 물약은 마시면 견딜 때만 마신다.
+ *   옵션이라 `DRIVER_VERSION`은 그대로다. 회차 기록 `bossCharge`(충전 · 끊김 · 맞음)는 정책과 무관하게 상태 차이로 센다.
  * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
  *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
@@ -176,6 +183,8 @@ export const pickAscensionRuleId = (player, nextRank, rulePick, pickSeed = 0) =>
 };
 
 export const CHAPTER_PICK_POLICIES = Object.freeze(['none', 'skip', 'relic', 'prefix', 'enhance', 'random']);
+/** 보스 충전 강타에 반응하는 정책(H5, 2026-11) — `none`(기본, v3 그대로)은 예고를 보지 않는다. */
+export const BOSS_RESPONSE_POLICIES = Object.freeze(['none', 'basic', 'full']);
 
 /**
  * 장의 선물 패에서 정책이 받을 카드 id. 카드 종류 정책은 그 종류가 패에 없으면(장비가 설 수 없어 대체 유물) 첫 유물 카드다.
@@ -215,8 +224,10 @@ export const runNaturalPlay = async (options) => {
         economy = 'none',
         chapterPick = 'none',
         enhanceBranch = 'first',
+        bossResponse = 'none',
         onDispatch,
     } = options;
+    if (!BOSS_RESPONSE_POLICIES.includes(bossResponse)) throw new Error(`unknown bossResponse ${bossResponse}`);
     if (!ENHANCE_BRANCH_POLICIES.includes(enhanceBranch)) throw new Error(`unknown enhanceBranch ${enhanceBranch}`);
     if (!['none', 'basic', 'materials'].includes(economy)) throw new Error(`unknown economy ${economy}`);
     if (!CHAPTER_PICK_POLICIES.includes(chapterPick)) throw new Error(`unknown chapterPick ${chapterPick}`);
@@ -235,6 +246,7 @@ export const runNaturalPlay = async (options) => {
         const prev = state;
         state = gameReducer(state, action);
         observeEventFrame(prev);
+        observeBossCharge(prev);
         onDispatch?.(prev, action, state);
     };
     const addLog = (type, text) => dispatch({ type: AT.ADD_LOG, payload: { id: `np-${logCounter++}`, type, text } });
@@ -275,6 +287,7 @@ export const runNaturalPlay = async (options) => {
         ...(economy === 'none' ? {} : { economy }),
         ...(chapterPick === 'none' ? {} : { chapterPick }),
         ...(enhanceBranch === 'first' ? {} : { enhanceBranch }),
+        ...(bossResponse === 'none' ? {} : { bossResponse }),
         stepSeconds,
         runs: [],
         deaths: [],
@@ -313,6 +326,8 @@ export const runNaturalPlay = async (options) => {
             moments: [],
             // 이벤트 화면(H7) — 틀별 수 · 처음 보는 정체의 틀별 수 · 처음 보는 정체의 시각 [회차 시작부터 시간, 틀]. 상태만 읽는다.
             events: { total: 0, byKind: {}, firstByKind: {}, firstAt: [], storySlotByLoc: {} },
+            // 보스 충전 강타(H5) — 모은 수 · 끊긴 수(기절 · 피해) · 맞은 수 · 강타 전에 쓰러뜨린 수. 상태 차이만 읽는다.
+            bossCharge: { charged: 0, broken: 0, hit: 0, killed: 0 },
             // 경제 정책을 켠 회차만 — 강화 시도 · 성공, 다음 강화를 막은 것(골드 · 재료 · 남길 돈)을 본 대기 차례 수, 판매 · 구매 수.
             ...(chapterPick === 'none' ? {} : { chapterPicks: [] }),
             ...(economy === 'none' ? {} : {
@@ -340,6 +355,24 @@ export const runNaturalPlay = async (options) => {
     };
     // `rank:N` — 그 단계의 카드 하나만 거절한다(앞 회차는 받아들임과 같은 역사라 받아들임 결과와 깨끗한 짝이 된다, 원장 §128).
     // 이벤트 화면이 새로 열린 순간만 센다 — 거부 문장(`choiceFeedback`)만 바뀐 같은 이벤트는 다시 세지 않는다.
+    function observeBossCharge(prev) {
+        if (!run) return;
+        const before = prev.enemy;
+        const after = state.enemy;
+        const wasArmed = Boolean(before?.chargeArmed);
+        const isArmed = Boolean(after?.chargeArmed) && after?.name === before?.name;
+        if (!wasArmed && Boolean(after?.chargeArmed)) { run.bossCharge.charged += 1; return; }
+        if (!wasArmed || isArmed) return;
+        // 모은 강타가 풀렸다 — 같은 적이 남아 있으면 끊김 · 맞음(행동 기록의 끊김 줄), 적이 사라졌으면 강타 전에 쓰러뜨렸다.
+        if (!after || after.name !== before.name || (after.hp ?? 0) <= 0) { run.bossCharge.killed += 1; return; }
+        // 기록은 길이 상한이 있어 길이로 자를 수 없다 — 직전 상태에 없던 기록 객체만 본다(리듀서는 남은 기록 객체를 그대로 둔다).
+        const seen = new Set(prev.logs || []);
+        const newLogs = (state.logs || []).filter((log) => !seen.has(log));
+        const chargeName = before.mechanics?.charge?.name;
+        const broken = chargeName && newLogs.some((log) => typeof log?.text === 'string' && log.text.includes(chargeName) && log.text.includes('끊겼'));
+        run.bossCharge[broken ? 'broken' : 'hit'] += 1;
+    }
+
     function observeEventFrame(prev) {
         if (!run || state.gameState !== GS.EVENT || !state.currentEvent || state.currentEvent === prev.currentEvent) return;
         const frame = classifyEventFrame(state.currentEvent);
@@ -544,6 +577,44 @@ export const runNaturalPlay = async (options) => {
             const heal = skills.filter((skill) => skill.effect === 'hp_regen' && (Number(skill.val) || 0) >= 0.2 && usable(skill))
                 .sort((a, b) => (Number(b.val) || 0) - (Number(a.val) || 0))[0];
             if (heal) { useSkill(heal); return; }
+        }
+        if (bossResponse === 'basic' && enemy.mechanics?.charge && enemy.chargeArmed && !isChargeBrokenByDamage(enemy)) {
+            const breakLeft = getChargeBreakDamage(enemy) - getChargeDamageTaken(enemy);
+            const stun = canChooseSkill && skills.find((skill) => skill.effect === 'stun' && usable(skill));
+            if (stun) { useSkill(stun); return; }
+            const breaker = canChooseSkill && skills
+                .filter((skill) => (Number(skill.mult) || 0) > 0 && skill.effect !== 'escape_100' && usable(skill))
+                .filter((skill) => (stats.atk || 0) * Number(skill.mult) * 0.9 - (Number(enemy.def) || 0) >= breakLeft)
+                .sort((a, b) => Number(b.mult) - Number(a.mult))[0];
+            if (breaker) { useSkill(breaker); return; }
+            const incoming = estimateEnemyNextHit(p, enemy, 'charge');
+            if (incoming != null && p.hp <= incoming && potionsAllowed()) {
+                const potion = HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean);
+                if (potion) { A.combatUseItem(potion); return; }
+            }
+        }
+        if (bossResponse === 'full' && enemy.mechanics?.charge && enemy.chargeArmed && !isChargeBrokenByDamage(enemy)) {
+            // `basic`에 더해 빙결 · 은신 · 방어 강화 기술을 쓰고, 물약은 마시면 강타를 견딜 때만 마신다(Wave 88 — 못 견디는 물약은 차례 낭비).
+            const breakLeft = getChargeBreakDamage(enemy) - getChargeDamageTaken(enemy);
+            const stun = canChooseSkill && skills.find((skill) => (skill.effect === 'stun' || skill.effect === 'freeze') && usable(skill));
+            if (stun) { useSkill(stun); return; }
+            const breaker = canChooseSkill && skills
+                .filter((skill) => (Number(skill.mult) || 0) > 0 && skill.effect !== 'escape_100' && usable(skill))
+                .filter((skill) => (stats.atk || 0) * Number(skill.mult) * (Number(skill.hits) || 1) * 0.9 - (Number(enemy.def) || 0) >= breakLeft)
+                .sort((a, b) => Number(b.mult) - Number(a.mult))[0];
+            if (breaker) { useSkill(breaker); return; }
+            const incoming = estimateEnemyNextHit(p, enemy, 'charge');
+            if (incoming != null && incoming >= p.hp * 0.6) {
+                const guard = canChooseSkill && (skills.find((skill) => skill.effect === 'stealth' && usable(skill))
+                    || skills.filter((skill) => (skill.effect === 'def_up' || skill.effect === 'all_up') && usable(skill))
+                        .sort((a, b) => (Number(b.val) || 0) - (Number(a.val) || 0))[0]);
+                if (guard) { useSkill(guard); return; }
+            }
+            if (incoming != null && p.hp <= incoming && potionsAllowed()) {
+                const potion = HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name))
+                    .find((item) => item && Math.min(stats.maxHp, p.hp + (Number(item.val) || 0)) > incoming);
+                if (potion) { A.combatUseItem(potion); return; }
+            }
         }
         if (hpRatio < 0.3 && potionsAllowed()) {
             const potion = HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean);

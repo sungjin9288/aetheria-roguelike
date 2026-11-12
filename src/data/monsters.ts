@@ -29,7 +29,7 @@ export const MONSTERS: Record<string, Monster> = {
         goldMult: 1.35,
         phase2: { name: '분노한 화염의 군주', atkBonus: 0.35, pattern: { guardChance: 0.0, heavyChance: 0.55 }, log: '화염의 군주가 핵심 불꽃을 해방했습니다! 모든 것이 불타오릅니다!', statusEffect: 'burn' },
         // Wave 59: "화상 누적" — 2페이즈 강타가 화상을 겹쳐 건다.
-        mechanics: { heavyStatus: { status: 'burn', chance: 0.5, maxStacks: 3 } },
+        mechanics: { charge: { name: '업화 분출' }, heavyStatus: { status: 'burn', chance: 0.5, maxStacks: 3 } },
     },
     '레드 드래곤': {
         isBoss: true,
@@ -41,7 +41,7 @@ export const MONSTERS: Record<string, Monster> = {
         goldMult: 1.4,
         phase2: { name: '격노한 레드 드래곤', atkBonus: 0.4, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '레드 드래곤이 진정한 화염의 분노를 해방했습니다! 대기가 불꽃으로 가득 찹니다!', statusEffect: 'burn' },
         // Wave 59: "고화력 브레스" — 세 번째 행동마다 방어 없이 브레스(화상).
-        mechanics: { breath: { every: 3, mult: 1.6, status: 'burn' } },
+        mechanics: { charge: { name: '화염 브레스', every: 3 }, breath: { every: 3, mult: 1.6, status: 'burn' } },
     },
     스핑크스: {
         isBoss: true,
@@ -55,6 +55,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '각성한 스핑크스', atkBonus: 0.35, pattern: { guardChance: 0.4, heavyChance: 0.4 }, log: '스핑크스가 태고의 수수께끼를 풀어냈습니다! 공간이 뒤틀립니다!', statusEffect: 'poison' },
         // "독 누적" · "긴 교전을 피하는 편이 좋습니다"(공략 요령 — 진입 추천 문구는 D32에서 지웠다).
         mechanics: {
+            charge: { name: '수수께끼의 심판' },
             heavyStatus: { status: 'poison', chance: 0.5, maxStacks: 3 },
             longFightEnrage: { afterActions: 8, perAction: 0.05, max: 0.5 },
         },
@@ -68,6 +69,7 @@ export const MONSTERS: Record<string, Monster> = {
         expMult: 1.34,
         goldMult: 1.34,
         phase2: { name: '심판하는 아누비스', atkBonus: 0.38, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '아누비스가 저승의 심판을 내립니다! 영혼의 울부짖음이 들립니다!', statusEffect: 'curse' },
+        mechanics: { charge: { name: '사자의 심판' } },
     },
     '아이스 드래곤': {
         isBoss: true,
@@ -80,6 +82,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '빙하기의 아이스 드래곤', atkBonus: 0.38, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '아이스 드래곤이 절대 영도의 냉기를 해방했습니다! 모든 것이 얼어붙습니다!', statusEffect: 'freeze' },
         // Wave 59: "빙결 누적과 강한 카운터" — 2페이즈 강타가 냉기를 쌓아 세 번째에 얼리고, 방어 자세 중에 맞으면 반격한다.
         mechanics: {
+            charge: { name: '빙하 붕괴' },
             heavyStatus: { status: 'freeze', chance: 1, maxStacks: 3 },
             guardCounter: { mult: 1.4 },
             firstClearBonusMult: 10,
@@ -94,6 +97,7 @@ export const MONSTERS: Record<string, Monster> = {
         expMult: 1.3,
         goldMult: 1.3,
         phase2: { name: '저주받은 빙결의 마녀', atkBonus: 0.42, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '빙결의 마녀가 저주의 힘을 해방했습니다! 마법 에너지가 폭주합니다!', statusEffect: ['freeze', 'curse'] },
+        mechanics: { charge: { name: '혹한의 주문' } },
     },
     데스나이트: { family: 'undead', weakness: '빛', resistance: '어둠', hpMult: 1.12, atkMult: 1.08 },
     리치: { family: 'undead', weakness: '빛', resistance: '어둠', hpMult: 1.2, atkMult: 1.12 },
@@ -109,6 +113,7 @@ export const MONSTERS: Record<string, Monster> = {
         dropMod: 2.2,
         phase2: { name: '분노한 마왕', atkBonus: 0.3, pattern: { guardChance: 0.0, heavyChance: 0.5 }, log: '마왕이 절망의 심연을 해방했습니다! 세계가 어둠에 잠깁니다...', statusEffect: 'burn' },
         phase3: { name: '종말의 마왕', threshold: 0.2, atkBonus: 0.6, defBonus: 10, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '마왕이 최후의 힘을 끌어냅니다! 현실이 붕괴하기 시작합니다!', statusEffect: 'curse' },
+        mechanics: { charge: { name: '절망의 일격' } },
     },
     '심연의 수호자': { weakness: '빛', resistance: '어둠', hpMult: 1.25, atkMult: 1.15 },
     '공허의 짐승': { weakness: '빛', resistance: '어둠', hpMult: 1.2, atkMult: 1.1 },
@@ -140,7 +145,7 @@ export const MONSTERS: Record<string, Monster> = {
         // Wave 59: "완전 개방 후 가드 빈도가 높아집니다" — 기본(Lv68 0.40)보다 높다(이전 0.30으로 오히려 내려갔다).
         phase2: { name: '완전 개방된 차원 파쇄자', atkBonus: 0.5, pattern: { guardChance: 0.5, heavyChance: 0.4 }, log: '차원의 균열이 극대화됩니다! 현실과 허상의 경계가 무너집니다!' },
         // "긴 교전은 차원 왜곡 때문에 손해가 커집니다".
-        mechanics: { longFightEnrage: { afterActions: 8, perAction: 0.05, max: 0.5 } },
+        mechanics: { charge: { name: '차원 붕괴' }, longFightEnrage: { afterActions: 8, perAction: 0.05, max: 0.5 } },
     },
     '영겁의 수문장': {
         isBoss: true,
@@ -154,6 +159,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '해방된 영겁의 수문장', atkBonus: 0.45, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '영겁의 수문장이 시간의 족쇄를 끊었습니다! 모든 시간이 멈춥니다!', statusEffect: 'stun' },
         // Wave 59: "해방 후 강타와 제어가 섞여" · "장기전 보상".
         mechanics: {
+            charge: { name: '영겁의 철퇴' },
             heavyStatus: { status: 'stun', chance: 0.3 },
             longFightReward: { perAction: 0.05, max: 1 },
         },
@@ -169,7 +175,7 @@ export const MONSTERS: Record<string, Monster> = {
         dropMod: 2.3,
         phase2: { name: '해방된 에테르 드래곤', atkBonus: 0.45, pattern: { guardChance: 0.1, heavyChance: 0.5 }, log: '에테르의 흐름이 역전됩니다! 용이 에테르의 근원에 닿았습니다!', statusEffect: 'poison' },
         // Wave 59: "대량 초회 보상".
-        mechanics: { firstClearBonusMult: 10 },
+        mechanics: { charge: { name: '에테르 포효' }, firstClearBonusMult: 10 },
     },
 
     // 기계 폐도 추가 몬스터
@@ -333,6 +339,7 @@ export const MONSTERS: Record<string, Monster> = {
         dropMod: 5.0,
         phase2: { name: '분노한 원시의 신', atkBonus: 0.5, pattern: { guardChance: 0.0, heavyChance: 0.55 }, log: '원시의 신이 고대의 분노를 해방했습니다! 세계의 근원이 흔들립니다...', statusEffect: 'burn' },
         phase3: { name: '원초적 혼돈', atkBonus: 0.9, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '원시의 신이 존재 자체를 무너뜨립니다. 이것이 진짜 끝입니다!', statusEffect: 'curse' },
+        mechanics: { charge: { name: '태초의 진노' } },
     },
 
     // ── Sprint 18: 신규 일반 몬스터 25종 ────────────────────────────────────
@@ -376,6 +383,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '분열하는 시간의 파수꾼', atkBonus: 0.6, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '시간이 뒤틀립니다! 파수꾼이 과거와 미래를 동시에 공격합니다!', statusEffect: 'stun' },
         // Wave 59: "연속 기절 패턴" · "희귀 유물이 높은 확률로 드랍".
         mechanics: {
+            charge: { name: '시간 역류' },
             heavyStatus: { status: 'stun', chance: 0.4 },
             relicReward: { rarities: ['rare', 'epic', 'legendary'], preferNames: ['시간', '시공'] },
         },
@@ -386,7 +394,7 @@ export const MONSTERS: Record<string, Monster> = {
         pattern: { guardChance: 0.1, heavyChance: 0.45 },
         phase2: { name: '절규하는 원한의 용사', atkBonus: 0.7, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '원한이 극에 달했습니다! 용사가 최후의 힘을 폭발시킵니다!', statusEffect: 'curse' },
         // Wave 59: "기사 계열 전설 장비".
-        mechanics: { lootTheme: { jobs: ['나이트'], minTier: 5 } },
+        mechanics: { charge: { name: '원한의 일섬' }, lootTheme: { jobs: ['나이트'], minTier: 5 } },
     },
     '공허의 군주': {
         isBoss: true, weakness: '빛', resistance: '어둠',
@@ -395,7 +403,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '해방된 공허의 군주', atkBonus: 0.8, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '공허가 세계를 집어삼킵니다! 군주가 진정한 힘을 드러냅니다!', statusEffect: 'burn' },
         phase3: { name: '공허의 심연', atkBonus: 1.2, pattern: { guardChance: 0.0, heavyChance: 0.8 }, log: '모든 것이 공허로 돌아갑니다!', statusEffect: 'curse' },
         // Wave 59: "공허 계열 전설 유물이 드랍됩니다".
-        mechanics: { relicReward: { rarities: ['legendary'], preferNames: ['공허', '허공'] } },
+        mechanics: { charge: { name: '공허 붕괴' }, relicReward: { rarities: ['legendary'], preferNames: ['공허', '허공'] } },
     },
 
     // ── Sprint 21: 신규 지역 몬스터 ─────────────────────────────────────────
@@ -719,7 +727,7 @@ export const MONSTERS: Record<string, Monster> = {
         pattern: { guardChance: 0.15, heavyChance: 0.4 },
         phase2: { name: '폭주하는 프로토타입 제로', atkBonus: 0.4, pattern: { guardChance: 0.05, heavyChance: 0.55 }, log: '프로토타입 제로의 리미터가 해제됩니다! 파괴 프로토콜이 기동합니다!', statusEffect: 'burn' },
         // Wave 59: "기계 계열 장비".
-        mechanics: { lootTheme: { nameIncludes: ['기계'] } },
+        mechanics: { charge: { name: '과부하 포격' }, lootTheme: { nameIncludes: ['기계'] } },
     },
 
     // 저주받은 묘지 (Lv34) — 3 regular + 1 boss
@@ -734,6 +742,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '각성한 묘지기 네크론', atkBonus: 0.42, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '네크론이 묘지의 모든 망자를 깨웁니다! 죽음의 기운이 폭발합니다!', statusEffect: 'curse' },
         // Wave 59: "망자 소환" · "2페이즈에서 저주가 중첩".
         mechanics: {
+            charge: { name: '죽음의 낫' },
             summon: { name: '망자', count: 2, hitMult: 0.5 },
             heavyStatus: { status: 'curse', chance: 0.5, maxStacks: 3 },
             // "어둠 계열 희귀 장비".
@@ -752,6 +761,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '진화한 화염 군주 이프리트', atkBonus: 0.45, pattern: { guardChance: 0.0, heavyChance: 0.6 }, log: '이프리트가 용암의 심장을 해방합니다! 대지가 녹아내리기 시작합니다!', statusEffect: 'burn' },
         // Wave 59: "화상 누적" · "화염 계열 상위 장비".
         mechanics: {
+            charge: { name: '용암 폭발' },
             heavyStatus: { status: 'burn', chance: 0.5, maxStacks: 3 },
             lootTheme: { elems: ['화염'], minTier: 4 },
         },
@@ -768,6 +778,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '폭풍의 천둥새 제피로스', atkBonus: 0.48, pattern: { guardChance: 0.0, heavyChance: 0.65 }, log: '제피로스가 폭풍의 눈을 해방합니다! 하늘 전체가 뇌광으로 뒤덮입니다!', statusEffect: 'stun' },
         // Wave 59: "기절 연속 공격" · "바람 계열 상위 장비".
         mechanics: {
+            charge: { name: '낙뢰 강하' },
             heavyStatus: { status: 'stun', chance: 0.4 },
             lootTheme: { elems: ['바람'], nameIncludes: ['바람', '폭풍'], minTier: 4 },
         },
@@ -786,7 +797,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '각성한 에테르 심판자', atkBonus: 0.5, pattern: { guardChance: 0.05, heavyChance: 0.6 }, log: '에테르 심판자가 차원의 법칙을 재편합니다! 공간이 뒤틀리기 시작합니다!', statusEffect: 'burn' },
         phase3: { name: '에테르의 절대 심판', atkBonus: 0.85, defBonus: 15, pattern: { guardChance: 0.0, heavyChance: 0.75 }, log: '심판자가 에테르의 근원과 하나가 됩니다! 모든 저항이 무력화됩니다!', statusEffect: 'curse', pierceResist: true },
         // Wave 59: "에테르 계열 최상위 장비".
-        mechanics: { lootTheme: { elems: ['에테르'], nameIncludes: ['에테르'], minTier: 5 } },
+        mechanics: { charge: { name: '차원 심판' }, lootTheme: { elems: ['에테르'], nameIncludes: ['에테르'], minTier: 5 } },
     },
     // PR #11: 프레스티지 rank≥10 "에테르 초월" 숨겨진 보스 — 가장 강력한 3페이즈 hidden boss.
     //   에테르 관문(Lv68)에서 rank≥10일 때만 출현. 에테르 군주 로브를 떨군다.
@@ -810,6 +821,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase3: { name: '절대 공허의 대행자', threshold: 0.2, atkBonus: 0.95, defBonus: 20, pattern: { guardChance: 0.0, heavyChance: 0.78 }, log: '대행자가 공허 그 자체와 합일합니다! 모든 것이 소멸로 향합니다!', statusEffect: 'burn' },
         // Wave 59: "공허 계열 전설 장비와 대량 보상".
         mechanics: {
+            charge: { name: '허무의 파동' },
             firstClearBonusMult: 10,
             lootTheme: { nameIncludes: ['공허', '허공'], minTier: 5 },
         },
@@ -823,7 +835,7 @@ export const MONSTERS: Record<string, Monster> = {
         phase2: { name: '분노한 종말의 기사', atkBonus: 0.6, pattern: { guardChance: 0.0, heavyChance: 0.7 }, log: '종말의 기사가 파멸의 검을 뽑아듭니다! 전장 전체가 검은 화염에 휩싸입니다!', statusEffect: 'burn' },
         phase3: { name: '종말의 화신', threshold: 0.2, atkBonus: 1.1, defBonus: 25, pattern: { guardChance: 0.0, heavyChance: 0.82 }, log: '기사가 종말 그 자체로 변모합니다! 이것이 최후의 전투입니다!', statusEffect: ['curse', 'burn'] },
         // Wave 59: "종말 계열 전설 장비" — 종말(아포칼립스) · 파멸 · 절멸.
-        mechanics: { lootTheme: { nameIncludes: ['아포칼립스', '파멸', '절멸'], minTier: 5 } },
+        mechanics: { charge: { name: '파멸의 참격' }, lootTheme: { nameIncludes: ['아포칼립스', '파멸', '절멸'], minTier: 5 } },
     },
     // cycle 68: 신성한 호수의 mid-game 보스. Lv 7~15 구간 진입자에게 보스 경험을
     // 일찍 제공해 cycle 67까지의 칭호/체인 흐름과 자연스러운 시너지.
@@ -839,6 +851,7 @@ export const MONSTERS: Record<string, Monster> = {
         pattern: { guardChance: 0.45, heavyChance: 0.15 },
         // "회복 압박" — 방어 자세마다 회복한다. "빙결 누적" — 2페이즈 강타가 냉기를 쌓아 세 번째에 얼린다.
         mechanics: {
+            charge: { name: '대해일' },
             guardHeal: 0.06,
             heavyStatus: { status: 'freeze', chance: 1, maxStacks: 3 },
         },
@@ -861,179 +874,179 @@ export const MONSTERS: Record<string, Monster> = {
 const BOSS_BRIEF_ENTRIES = {
     '화염의 군주': {
         signature: '광역 화상과 강타 연사',
-        counterHint: '냉기 속성과 회복 수단을 준비하면 화상 누적을 버티기 쉽습니다.',
+        counterHint: '냉기 속성과 회복 수단을 준비하면 화상 누적을 버티기 쉽습니다. 업화 분출은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '생명 50% 이하부터 강타 비중이 크게 늘어납니다. 회복과 방어를 아껴두세요.',
         rewardHint: '초회 토벌 보너스와 화염 계열 전리품을 노릴 가치가 큽니다.',
-        warningChips: ['화상 누적', '강타 폭증'],
+        warningChips: ['화상 누적', '강타 폭증', '업화 분출'],
         recommendedBuilds: ['방패 요새', '비전 공명']
     },
     '레드 드래곤': {
         signature: '고화력 브레스와 연속 강타',
-        counterHint: '냉기 속성과 방패 조합이 브레스 패턴을 안정적으로 받아냅니다.',
+        counterHint: '냉기 속성과 방패 조합이 브레스 패턴을 안정적으로 받아냅니다. 화염 브레스는 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '격노 이후에는 화상과 강타가 겹치므로 단기 화력으로 빠르게 넘기는 편이 낫습니다.',
         rewardHint: '초회 토벌 보너스와 고화력 무기를 노릴 가치가 높은 보스입니다.',
-        warningChips: ['브레스', '연속 강타'],
+        warningChips: ['화염 브레스', '연속 강타'],
         recommendedBuilds: ['양손 파쇄', '방패 요새']
     },
     스핑크스: {
         signature: '교전 조절과 수수께끼 독패턴',
-        counterHint: '어둠 약점에 맞춰 순간 화력을 준비하고, 긴 교전을 피하는 편이 좋습니다.',
+        counterHint: '어둠 약점에 맞춰 순간 화력을 준비하고, 긴 교전을 피하는 편이 좋습니다. 수수께끼의 심판은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '각성 후 방어 자세와 독이 섞이므로 큰 기술은 방어 자세가 풀린 턴에 몰아야 합니다.',
         rewardHint: '정교한 마도 전리품과 추가 골드를 노리기 좋은 지능형 보스입니다.',
-        warningChips: ['독 누적', '방어 자세 전환'],
+        warningChips: ['독 누적', '방어 자세 전환', '수수께끼의 심판'],
         recommendedBuilds: ['비전 공명', '광전 도박']
     },
     '아누비스 수호자': {
         signature: '저주성 압박과 심판 강타',
-        counterHint: '빛 속성과 안정적인 회복 수단이 길어진 심판 턴을 버티는 핵심입니다.',
+        counterHint: '빛 속성과 안정적인 회복 수단이 길어진 심판 턴을 버티는 핵심입니다. 사자의 심판은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '2페이즈에서는 강타와 저주 압박이 동시에 들어오므로 방어형 빌드가 유리합니다.',
         rewardHint: '초회 심판 보너스와 성역형 장비를 노릴 수 있습니다.',
-        warningChips: ['심판 강타', '저주 압박'],
+        warningChips: ['심판 강타', '저주 압박', '사자의 심판'],
         recommendedBuilds: ['방패 요새', '비전 공명']
     },
     '아이스 드래곤': {
         signature: '빙결 누적과 강한 반격',
-        counterHint: '화염 속성과 빠른 마무리 화력이 얼음 장기전을 끊는 데 유리합니다.',
+        counterHint: '화염 속성과 빠른 마무리 화력이 얼음 장기전을 끊는 데 유리합니다. 빙하 붕괴는 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '절대 영도 이후에는 강타 주기가 짧아집니다. 회복보다 마무리 타이밍이 더 중요합니다.',
         rewardHint: '빙결 계열 재료와 첫 토벌 보상이 커서 고난도 진입 가치가 높습니다.',
-        warningChips: ['빙결 누적', '반격'],
+        warningChips: ['빙결 누적', '반격', '빙하 붕괴'],
         recommendedBuilds: ['양손 파쇄', '광전 도박']
     },
     '빙결의 마녀': {
         signature: '빙결 저주와 지속 압박',
-        counterHint: '화염 속성과 기력 유지가 중요합니다. 제어가 길어져도 기술 순환이 끊기지 않아야 합니다.',
+        counterHint: '화염 속성과 기력 유지가 중요합니다. 제어가 길어져도 기술 순환이 끊기지 않아야 합니다. 혹한의 주문은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '저주 페이즈에 들어가면 상태이상이 겹칩니다. 정화 수단이나 단기 화력을 챙기세요.',
         rewardHint: '비전/저주 계열 장비와 추가 보상을 기대할 수 있는 마도형 보스입니다.',
-        warningChips: ['빙결 저주', '상태 겹침'],
+        warningChips: ['빙결 저주', '상태 겹침', '혹한의 주문'],
         recommendedBuilds: ['비전 공명', '상태이상 집행자']
     },
     마왕: {
         signature: '전영역 압박과 절망 페이즈',
-        counterHint: '빛 속성과 안정적인 회복, 그리고 보스전 전용 마무리 화력이 모두 필요합니다.',
+        counterHint: '빛 속성과 안정적인 회복, 그리고 보스전 전용 마무리 화력이 모두 필요합니다. 절망의 일격은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '분노한 마왕(50%)은 강타와 화상을, 종말의 마왕(20%)은 저주와 극강 강타를 쏟아냅니다. 리소스 비축이 핵심입니다.',
         rewardHint: '최종 토벌 보상과 계승으로 이어지는 핵심 전투입니다.',
-        warningChips: ['절망 페이즈', '강타+화상', '종말 페이즈'],
+        warningChips: ['절망 페이즈', '강타+화상', '종말 페이즈', '절망의 일격'],
         recommendedBuilds: ['방패 요새', '양손 파쇄']
     },
     '차원 파쇄자': {
         signature: '현실 붕괴 패턴과 방어 자세 변조',
-        counterHint: '빛 속성이나 단기 화력이 좋고, 긴 교전은 차원 왜곡 때문에 손해가 커집니다.',
+        counterHint: '빛 속성이나 단기 화력이 좋고, 긴 교전은 차원 왜곡 때문에 손해가 커집니다. 차원 붕괴는 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '완전 개방 후 방어 자세 빈도가 높아집니다. 큰 기술은 빈틈에 맞춰야 합니다.',
         rewardHint: '차원 계열 상위 전리품과 초회 관문 보너스를 노릴 수 있습니다.',
-        warningChips: ['방어 자세 변조', '왜곡 화력'],
+        warningChips: ['방어 자세 변조', '왜곡 화력', '차원 붕괴'],
         recommendedBuilds: ['양손 파쇄', '비전 공명']
     },
     '영겁의 수문장': {
         signature: '시간 지연과 중장기 소모전',
-        counterHint: '자연 약점 대응과 높은 방어력이 중요합니다. 회복 타이밍을 미리 잡는 편이 좋습니다.',
+        counterHint: '자연 약점 대응과 높은 방어력이 중요합니다. 회복 타이밍을 미리 잡는 편이 좋습니다. 영겁의 철퇴는 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '해방 후 강타와 제어가 섞여 들어오니 방패나 높은 생명이 체감됩니다.',
         rewardHint: '장기전 보상과 수호 계열 전리품 효율이 높은 보스입니다.',
-        warningChips: ['시간 지연', '강타 제어'],
+        warningChips: ['시간 지연', '강타 제어', '영겁의 철퇴'],
         recommendedBuilds: ['방패 요새', '탐험 수집가']
     },
     '에테르 드래곤': {
         signature: '에테르 역류와 최고난도 화력 체크',
-        counterHint: '어둠 약점 대응과 단기 화력, 그리고 기력 회전이 모두 갖춰져야 합니다.',
+        counterHint: '어둠 약점 대응과 단기 화력, 그리고 기력 회전이 모두 갖춰져야 합니다. 에테르 포효는 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '해방 이후 공격 패턴이 고르게 강합니다. 한 가지 대응만 준비하면 무너집니다.',
         rewardHint: '최상위 전리품과 대량 초회 보상을 노릴 수 있는 최종 상위 보스입니다.',
-        warningChips: ['에테르 역류', '전영역 압박'],
+        warningChips: ['에테르 역류', '전영역 압박', '에테르 포효'],
         recommendedBuilds: ['비전 공명', '양손 파쇄']
     },
     '시간의 파수꾼': {
         signature: '시간 분열과 2페이즈 기절 패턴',
-        counterHint: '어둠 속성 공격이 효과적입니다. 기절에 대비해 생명을 넉넉히 유지하세요.',
+        counterHint: '어둠 속성 공격이 효과적입니다. 기절에 대비해 생명을 넉넉히 유지하세요. 시간 역류는 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '50% 이하에서 연속 기절 패턴으로 전환됩니다. 고속 마무리가 핵심입니다.',
         rewardHint: '시간 계열 전리품과 희귀 유물이 높은 확률로 나옵니다.',
-        warningChips: ['2페이즈', '기절 연속', '시간 분열'],
+        warningChips: ['2페이즈', '기절 연속', '시간 분열', '시간 역류'],
         // Wave 59: '시간술사'는 직업이지 빌드가 아니다 — 시간술사가 굴리는 빌드(상태이상)로 적는다.
         recommendedBuilds: ['상태이상 집행자', '비전 공명']
     },
     '원한의 용사': {
         signature: '원한 강화와 2페이즈 저주 폭발',
-        counterHint: '빛 속성이 효과적입니다. 저주 해제 아이템을 준비하세요.',
+        counterHint: '빛 속성이 효과적입니다. 저주 해제 아이템을 준비하세요. 원한의 일섬은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '50% 이하에서 저주 + 고화력 복합 패턴이 시작됩니다.',
         rewardHint: '기사 계열 전설 장비가 나올 수 있습니다.',
-        warningChips: ['2페이즈', '저주 폭발', '원한 강화'],
+        warningChips: ['2페이즈', '저주 폭발', '원한 강화', '원한의 일섬'],
         recommendedBuilds: ['방패 요새', '양손 파쇄']
     },
     '공허의 군주': {
         signature: '공허 흡수와 3페이즈 전영역 파괴',
-        counterHint: '빛 속성과 높은 기력 회전이 모두 필요합니다. 재사용 대기에 막히지 않는 연속 공세가 중요합니다.',
+        counterHint: '빛 속성과 높은 기력 회전이 모두 필요합니다. 재사용 대기에 막히지 않는 연속 공세가 중요합니다. 공허 붕괴는 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '50% 이하에서 화상, 25% 이하에서 저주 + 전영역 압박으로 변신합니다.',
         rewardHint: '최상위 보상과 공허 계열 전설 유물이 나옵니다.',
-        warningChips: ['3페이즈', '화상+저주', '전영역 압박'],
+        warningChips: ['3페이즈', '화상+저주', '전영역 압박', '공허 붕괴'],
         recommendedBuilds: ['비전 공명', '양손 파쇄']
     },
     '원시의 신': {
         signature: '존재 자체를 무너뜨리는 3페이즈 원초 파괴',
-        counterHint: '빛 속성 무기와 최고 등급 방어력, 그리고 충분한 기력 회전이 전제 조건입니다.',
+        counterHint: '빛 속성 무기와 최고 등급 방어력, 그리고 충분한 기력 회전이 전제 조건입니다. 태초의 진노는 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '50% 이하에서 분노 페이즈, 25% 이하에서 원초적 혼돈으로 변신합니다. 자원을 아끼세요.',
         rewardHint: '이 보스를 쓰러뜨리면 진 엔딩이 해금됩니다. 게임의 진정한 결말입니다.',
-        warningChips: ['3페이즈', '원초 저주', '강타+화상'],
+        warningChips: ['3페이즈', '원초 저주', '강타+화상', '태초의 진노'],
         recommendedBuilds: ['비전 공명', '양손 파쇄', '방패 요새']
     },
     '프로토타입 제로': {
         signature: '리미터 해제와 파괴 프로토콜',
-        counterHint: '대지 속성이 효과적입니다. 2페이즈 화상에 대비해 해제 수단을 준비하세요.',
+        counterHint: '대지 속성이 효과적입니다. 2페이즈 화상에 대비해 해제 수단을 준비하세요. 과부하 포격은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '생명 50% 이하에서 리미터가 해제되며 강타 빈도가 크게 늘어납니다.',
         rewardHint: '기계 계열 장비와 연구소 전리품을 얻을 수 있습니다.',
-        warningChips: ['리미터 해제', '화상 패턴'],
+        warningChips: ['리미터 해제', '화상 패턴', '과부하 포격'],
         recommendedBuilds: ['방패 요새', '양손 파쇄']
     },
     '묘지기 네크론': {
         signature: '망자 소환과 죽음의 저주',
-        counterHint: '빛 속성이 효과적입니다. 2페이즈에서 저주가 중첩되므로 단기전이 유리합니다.',
+        counterHint: '빛 속성이 효과적입니다. 2페이즈에서 저주가 중첩되므로 단기전이 유리합니다. 죽음의 낫은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '생명 50% 이하에서 망자를 깨우며 저주 폭발 패턴으로 전환됩니다.',
         rewardHint: '어둠 계열 희귀 장비와 묘지 전리품을 얻을 수 있습니다.',
-        warningChips: ['망자 소환', '저주 폭발'],
+        warningChips: ['망자 소환', '저주 폭발', '죽음의 낫'],
         recommendedBuilds: ['비전 공명', '양손 파쇄']
     },
     '화염 군주 이프리트': {
         signature: '용암 해방과 대지 용해',
-        counterHint: '냉기 속성이 효과적입니다. 화상 누적에 대비해 회복 수단을 챙기세요.',
+        counterHint: '냉기 속성이 효과적입니다. 화상 누적에 대비해 회복 수단을 챙기세요. 용암 폭발은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '생명 50% 이하에서 용암 심장이 해방되며 화상과 강타가 겹칩니다.',
         rewardHint: '화염 계열 상위 장비와 이프리트 전리품을 얻을 수 있습니다.',
-        warningChips: ['용암 해방', '화상 누적'],
+        warningChips: ['용암 해방', '화상 누적', '용암 폭발'],
         recommendedBuilds: ['방패 요새', '비전 공명']
     },
     '천둥새 제피로스': {
         signature: '폭풍 해방과 뇌광 기절',
-        counterHint: '대지 속성이 효과적입니다. 2페이즈 기절 패턴에 대비해 생명을 넉넉히 유지하세요.',
+        counterHint: '대지 속성이 효과적입니다. 2페이즈 기절 패턴에 대비해 생명을 넉넉히 유지하세요. 낙뢰 강하는 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '생명 50% 이하에서 폭풍의 눈이 해방되며 기절 연속 공격이 시작됩니다.',
         rewardHint: '바람 계열 상위 장비와 고원 전리품을 얻을 수 있습니다.',
-        warningChips: ['폭풍 해방', '기절 연속'],
+        warningChips: ['폭풍 해방', '기절 연속', '낙뢰 강하'],
         recommendedBuilds: ['양손 파쇄', '광전 도박']
     },
     '에테르 심판자': {
         signature: '차원 재편과 3페이즈 절대 심판',
-        counterHint: '어둠 속성이 효과적입니다. 3페이즈에 대비해 자원을 비축하세요.',
+        counterHint: '어둠 속성이 효과적입니다. 3페이즈에 대비해 자원을 비축하세요. 차원 심판은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '생명 50% 이하에서 차원을 재편하고, 25% 이하에서 절대 심판으로 저주와 극강 강타를 퍼붓습니다.',
         rewardHint: '에테르 계열 최상위 장비와 차원 전리품을 얻을 수 있습니다.',
-        warningChips: ['3페이즈', '차원 재편', '절대 심판'],
+        warningChips: ['3페이즈', '차원 재편', '절대 심판', '차원 심판'],
         recommendedBuilds: ['비전 공명', '방패 요새']
     },
     '공허의 대행자': {
         signature: '허무 권능과 3페이즈 공허 합일',
-        counterHint: '빛 속성이 효과적입니다. 3페이즈 소멸 패턴에 대비해 마무리 화력을 챙기세요.',
+        counterHint: '빛 속성이 효과적입니다. 3페이즈 소멸 패턴에 대비해 마무리 화력을 챙기세요. 허무의 파동은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '생명 50% 이하에서 허무의 권능이 해방되고, 20% 이하에서 공허와 합일하여 모든 것을 소멸시킵니다.',
         rewardHint: '공허 계열 전설 장비와 대량 보상을 얻을 수 있습니다.',
-        warningChips: ['3페이즈', '허무 권능', '공허 합일'],
+        warningChips: ['3페이즈', '허무 권능', '공허 합일', '허무의 파동'],
         recommendedBuilds: ['비전 공명', '양손 파쇄', '방패 요새']
     },
     '종말의 기사': {
         signature: '파멸의 검과 3페이즈 종말 변모',
-        counterHint: '빛 속성이 효과적입니다. 3페이즈에서 화상과 저주가 겹치므로 해제 수단이 필수입니다.',
+        counterHint: '빛 속성이 효과적입니다. 3페이즈에서 화상과 저주가 겹치므로 해제 수단이 필수입니다. 파멸의 참격은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '생명 50% 이하에서 파멸의 검을 뽑아들고, 20% 이하에서 종말 그 자체로 변모합니다. 자원 비축이 핵심입니다.',
         rewardHint: '종말 계열 전설 장비와 최상위 보상을 얻을 수 있는 최종급 보스입니다.',
-        warningChips: ['3페이즈', '파멸의 검', '종말 변모'],
+        warningChips: ['3페이즈', '파멸의 검', '종말 변모', '파멸의 참격'],
         recommendedBuilds: ['방패 요새', '양손 파쇄', '비전 공명']
     },
     '고대 호수의 수호신': {
         signature: '잦은 방어 자세와 회복 압박',
-        counterHint: '어둠 속성과 단기 화력이 방어 자세 사이의 빈 턴을 노리는 데 효과적입니다.',
+        counterHint: '어둠 속성과 단기 화력이 방어 자세 사이의 빈 턴을 노리는 데 효과적입니다. 대해일은 준비하는 동안 기절이나 큰 피해로 끊을 수 있습니다.',
         phaseHint: '생명 50% 이하에서 각성하여 빙결 상태이상이 도입됩니다. 회복 물약 또는 빙결 저항을 비축하세요.',
         rewardHint: '초회 토벌 보너스와 호수 계열 전리품(자연 · 냉기 무기)을 노릴 가치가 있는 중반 보스입니다.',
-        warningChips: ['잦은 방어 자세', '빙결 누적'],
+        warningChips: ['잦은 방어 자세', '빙결 누적', '대해일'],
         recommendedBuilds: ['양손 파쇄', '비전 공명']
     }
 };
