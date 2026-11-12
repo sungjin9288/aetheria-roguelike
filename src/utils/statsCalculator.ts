@@ -11,6 +11,7 @@ import { getRampedMetaAtk } from '../systems/metaBonusRamp.js';
 import { getJobOutfitAffinity } from './jobOutfitAffinity.js';
 import { resolveHpDrainAtkRelic } from './hpDrainAtkRelic.js';
 import { getEquipmentPassives } from './equipmentPassives.js';
+import { getEquipEnhanceBranchRatios } from './enhanceBranch.js';
 import { getRampedEliteTitleBonus } from './eliteTitles.js';
 import { getRampedStoryFlat } from './permanentStatSources.js';
 
@@ -373,6 +374,12 @@ export const calculateFullStats = (player: Player) => {
 
     const passiveBonus = getPassiveSkillBonuses(player);
     const enhanceBonus = computeEnhanceBonus(player.equip || {});
+    // 2026-11 H6: 강화 갈래 — 장비 몫이라 배율 안이다(강화 보너스와 같은 자리). 생명 · 기력은 장비 생명 · 기력 보너스 자리.
+    const branchRatios = getEquipEnhanceBranchRatios(player.equip);
+    const branchAtk = Math.floor(mainAttack * branchRatios.weaponAtkPct) + Math.floor(offhandAttack * branchRatios.offhandAtkPct);
+    const branchDef = Math.floor(armorVal * branchRatios.armorDefPct);
+    const branchHp = Math.floor((player.maxHp ?? 0) * branchRatios.hpPct);
+    const branchMp = Math.floor((player.maxMp || 50) * branchRatios.mpPct);
 
     // 2026-10 Wave 58: "공격력 +N" · "방어력 +N" · "최대 생명 +N" · "최대 기력 +N"으로 광고하는 고정 보너스(직업 패시브 · 도감 ·
     //   몬스터 도감 처치 이정표 · 칭호)는 모든 배율 뒤에 더한다 — 직업 배율 · 세트 · 조합 배율 앞에 더하던 동안 전사의
@@ -388,7 +395,7 @@ export const calculateFullStats = (player: Player) => {
     const flatMp = passiveBonus.mp + (titlePassive.mp || 0) + eliteTitleBonus.mp;
 
     const baseAtk =
-        ((player.atk ?? 0) + mainAttack + offhandAttack + enhanceBonus.atk + killStackAtkBonus + getRampedMetaAtk(meta, player.level)) *
+        ((player.atk ?? 0) + mainAttack + offhandAttack + enhanceBonus.atk + branchAtk + killStackAtkBonus + getRampedMetaAtk(meta, player.level)) *
         cls.atkMod! *
         (1 + (buff.atk || 0) + abyssBonus.atk + chaosGemBonus.atk) *
         setBonus.atkMult *
@@ -398,7 +405,7 @@ export const calculateFullStats = (player: Player) => {
         (passiveBonus.lowHpAtkMult || 1);
 
     const baseDef =
-        ((player.def ?? 0) + armorVal + shieldDef + enhanceBonus.def) *
+        ((player.def ?? 0) + armorVal + shieldDef + enhanceBonus.def + branchDef) *
         (1 + (buff.def || 0) + abyssBonus.def + chaosGemBonus.def) *
         setBonus.defMult *
         signatureSetBonus.defMult *
@@ -407,11 +414,11 @@ export const calculateFullStats = (player: Player) => {
 
     // cycle 225: equipmentHpBonus 합산 — armor의 hpBonus 필드 (용암 판금갑 / 용비늘 갑주) 적용.
     //   기존엔 dead config이라 +230 HP가 영원히 미적용이었음. cycle 224 mpBonus 패턴 동일.
-    const baseMaxHp = ((player.maxHp ?? 0) + (equipmentHpBonus || 0)) * setBonus.hpMult * signatureSetBonus.hpMult * (1 + affinityHpBonus);
-    const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + relicBonus.mpFlat) * relicBonus.mpMult * (1 + affinityMpBonus);
+    const baseMaxHp = ((player.maxHp ?? 0) + (equipmentHpBonus || 0) + branchHp) * setBonus.hpMult * signatureSetBonus.hpMult * (1 + affinityHpBonus);
+    const baseMaxMp = ((player.maxMp || 50) + equipmentMpBonus + branchMp + relicBonus.mpFlat) * relicBonus.mpMult * (1 + affinityMpBonus);
     const baseCritChance = Math.min(
         0.75,
-        BALANCE.CRIT_CHANCE + equipmentCritBonus + relicBonus.critBonus + abyssBonus.crit + (titlePassive.crit || 0) + passiveBonus.crit
+        BALANCE.CRIT_CHANCE + equipmentCritBonus + branchRatios.crit + relicBonus.critBonus + abyssBonus.crit + (titlePassive.crit || 0) + passiveBonus.crit
     );
 
     // 배율이 걸리는 부분 — 마지막 배율 단계가 이 값에 곱하고, 고정 보너스는 그 뒤에 더한다.

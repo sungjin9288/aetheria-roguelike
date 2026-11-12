@@ -441,6 +441,9 @@ export const BALANCE = {
     // 초반부터 성공을 보장하지 않고, 고강화에서는 투자 결정을 요구하는 단계형 곡선.
     ENHANCE_RATES: [0.90, 0.80, 0.70, 0.60, 0.50, 0.42, 0.35, 0.28, 0.22, 0.18],
     ENHANCE_MATERIAL_COSTS: [1, 1, 1, 2, 2, 3, 3, 4, 4, 5],
+    // 2026-11 H6 (소유자 결정 "권고안대로" — 실행 스케치 EXECUTION_SKETCH_H6_2026-11.md): 강화가 이 단계에 닿을 때 갈래 둘 중 하나를
+    //   고른다(`data/enhanceBranches.ts` · `utils/enhanceBranch.ts`). 순서대로다 — 갈래 i는 이 표의 i번째 단계다.
+    ENHANCE_BRANCH_LEVELS: [3, 6],
     // 2026-11 E9 (소유자 결정 Q7 (a) "재료를 골드로 구매", 원장 §163 · §164): 마을 상점이 강화 재료를 판다 — 이번 여정에 k개를 샀으면
     //   다음 하나는 기본값 + 오름폭 × k(상점 가격 규칙 `getShopBuyPrice`를 거친다). 강화를 막던 것이 골드가 아니라 재료였다.
     ENHANCE_MATERIAL_BUY_BASE: 1000,

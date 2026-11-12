@@ -312,6 +312,11 @@ export interface EnhanceItemPayload {
     expectedGold: number;
     roll: number;
     relicRoll?: number;
+    /**
+     * 고른 강화 갈래(2026-11 H6) — 이번 강화로 닿는 갈래 단계(앞서 건너뛴 단계 포함)마다 하나, 순서대로.
+     * 골라야 할 갈래가 있는데 없거나 맞지 않으면 리듀서가 아무것도 쓰지 않고 거부한다(`resolveEnhanceBranchChoices`).
+     */
+    branches?: readonly string[];
 }
 
 /** `PURCHASE_PREMIUM_OFFER` — 프리미엄 상점 1건. */

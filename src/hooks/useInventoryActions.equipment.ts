@@ -35,7 +35,8 @@ export const createEquipmentActions = ({ player, dispatch, addLog }: InventoryAc
         });
     },
 
-    enhanceItem: (itemId: string) => {
+    /** `branches` — 이번 강화로 닿는 갈래 단계마다 고른 갈래(2026-11 H6, 화면이 고르게 한다). */
+    enhanceItem: (itemId: string, branches?: readonly string[]) => {
         const item = findEnhanceTarget(player, itemId);
         if (!item) return;
         dispatch({
@@ -47,6 +48,7 @@ export const createEquipmentActions = ({ player, dispatch, addLog }: InventoryAc
                 expectedGold: player.gold || 0,
                 roll: Math.random(),
                 relicRoll: Math.random(),
+                ...(branches && branches.length > 0 ? { branches: [...branches] } : {}),
             },
         });
     },

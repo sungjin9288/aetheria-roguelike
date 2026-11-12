@@ -248,6 +248,39 @@ export const MSG = {
     ENHANCE_NO_GOLD: (cost: number) => `강화할 골드가 부족합니다. 필요 골드: ${cost}`,
     ENHANCE_NO_MATERIAL: (name: string, count: number) => `${withJosa(name, '이/가')} 부족합니다. (필요: ${count}개)`,
     ENHANCE_NOT_EQUIP: '강화는 장비 아이템에만 가능합니다.',
+    // 2026-11 H6 강화 갈래(`data/enhanceBranches.ts` · `utils/enhanceBranch.ts`)
+    ENHANCE_BRANCH_REQUIRED: '이번 강화는 갈래를 하나 골라야 합니다.',
+    ENHANCE_BRANCH_NAMES: {
+        atkPct: '날 벼리기',
+        crit: '급소 노리기',
+        defPct: '판 덧대기',
+        hpPct: '생명의 결',
+        mpPct: '기력 모으기',
+        regen: '재생의 결',
+    } as Record<'atkPct' | 'crit' | 'defPct' | 'hpPct' | 'mpPct' | 'regen', string>,
+    ENHANCE_BRANCH_EFFECT: (stat: 'atkPct' | 'crit' | 'defPct' | 'hpPct' | 'mpPct' | 'regen', value: number) => {
+        const pct = `${Math.round(value * 1000) / 10}%`;
+        if (stat === 'atkPct') return `무기 공격력 +${pct}`;
+        if (stat === 'crit') return `치명타 확률 +${pct}`;
+        if (stat === 'defPct') return `방어구 방어력 +${pct}`;
+        if (stat === 'hpPct') return `최대 생명 +${pct}`;
+        if (stat === 'mpPct') return `최대 기력 +${pct}`;
+        return `행동마다 최대 생명의 ${pct} 회복`;
+    },
+    ENHANCE_BRANCH_EYEBROW: (level: number) => `+${level} 갈래 — 하나를 고릅니다`,
+    ENHANCE_BRANCH_STAT_LABELS: {
+        atkPct: '공격력',
+        crit: '치명타 확률',
+        defPct: '방어력',
+        hpPct: '최대 생명',
+        mpPct: '최대 기력',
+        regen: '행동마다 회복',
+    } as Record<'atkPct' | 'crit' | 'defPct' | 'hpPct' | 'mpPct' | 'regen', string>,
+    ENHANCE_BRANCH_CHOSEN: (items: readonly string[]) => `갈래 ${items.join(' · ')}`,
+    ENHANCE_BRANCH_CHOSEN_ITEM: (level: number, name: string, effect: string) => `+${level} ${name}(${effect})`,
+    ENHANCE_BRANCH_FAIL_NOTE: '실패하면 갈래도 붙지 않습니다.',
+    ENHANCE_BRANCH_UNEQUIPPED_NOTE: '장착해야 효과가 납니다.',
+    ENHANCE_BRANCH_OPTION_ARIA: (level: number, name: string) => `+${level} 갈래 ${name} 고르기`,
 
     // --- 주간 미션 (Weekly Mission) ---
     // cycle 116: WEEKLY_MISSION_COMPLETE/RESET 제거 — 0건 사용. CLAIM만 active.

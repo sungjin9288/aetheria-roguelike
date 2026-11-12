@@ -39,6 +39,11 @@ interface ItemBase {
     jobs?: string[];
     /** 강화 단계. */
     enhance?: number;
+    /**
+     * 고른 강화 갈래 id(2026-11 H6) — i번째가 `BALANCE.ENHANCE_BRANCH_LEVELS[i]` 단계의 갈래다. 읽기는
+     * `getItemEnhanceBranches`(`utils/enhanceBranch.ts`)가 표로 검증한다(문자열이라 이전 · 위조 값은 버려진다).
+     */
+    enhanceBranches?: readonly string[];
     /** 속성 (화염/냉기/빛 등). */
     elem?: string;
     /** 시그니처 식별자 (선택). */

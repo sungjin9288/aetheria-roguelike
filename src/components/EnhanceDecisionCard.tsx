@@ -1,8 +1,9 @@
 import { motion as Motion } from 'framer-motion';
 import { ArrowRight, Coins, Gem, ShieldAlert, Sparkles } from 'lucide-react';
 import { createPortal } from 'react-dom';
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import type { EnhancePreview } from '../utils/enhancementUtils.js';
+import type { EnhanceBranchStageView } from '../utils/enhanceBranchView.js';
 import ItemIcon from './icons/ItemIcon';
 import { usePlatformBackHandler } from '../platform/platformBackRegistry';
 import { useOverlayDialog } from '../hooks/useOverlayDialog';
@@ -12,22 +13,29 @@ import ActionButton from './ui/ActionButton';
 
 interface EnhanceDecisionCardProps {
     preview: EnhancePreview;
+    /** 이번 강화로 골라야 하는 갈래 단계(2026-11 H6) — 없으면 빈 배열. */
+    branchStages: readonly EnhanceBranchStageView[];
+    /** 장착한 장비인지 — 아니면 갈래 수치 대신 "장착해야 효과가 납니다"를 보인다. */
+    equipped: boolean;
     onCancel: () => void;
-    onConfirm: () => void;
+    onConfirm: (branches: string[]) => void;
 }
 
 const formatRate = (rate: number) => `${Math.round(rate * 100)}%`;
 
-const EnhanceDecisionCard = ({ preview, onCancel, onConfirm }: EnhanceDecisionCardProps) => {
+const EnhanceDecisionCard = ({ preview, branchStages, equipped, onCancel, onConfirm }: EnhanceDecisionCardProps) => {
     usePlatformBackHandler(true, onCancel, 76);
     const dialog = useOverlayDialog({ label: MSG.A11Y_DIALOG_ENHANCE(preview.item.name ?? ''), onEscape: onCancel });
     const requirement = preview.requirement;
-    const canConfirm = preview.canEnhance && preview.affordable && Boolean(requirement);
+    // 갈래는 기본으로 골라 두지 않는다 — 추천 없이 플레이어가 고른다(Wave 88 원칙).
+    const [picked, setPicked] = useState<Record<number, string>>({});
+    const branchesPicked = branchStages.every((stage) => Boolean(picked[stage.level]));
+    const canConfirm = preview.canEnhance && preview.affordable && Boolean(requirement) && branchesPicked;
     const submittedRef = useRef(false);
     const handleConfirm = () => {
         if (!canConfirm || submittedRef.current) return;
         submittedRef.current = true;
-        onConfirm();
+        onConfirm(branchStages.map((stage) => picked[stage.level]));
     };
 
     return createPortal(
@@ -109,6 +117,43 @@ const EnhanceDecisionCard = ({ preview, onCancel, onConfirm }: EnhanceDecisionCa
                             </>
                         )}
                     </div>
+
+                    {branchStages.map((stage) => (
+                        <div key={stage.level} data-testid={`enhance-branch-stage-${stage.level}`} className="mt-4">
+                            <div className="ae-eyebrow text-ae-gold-text">{MSG.ENHANCE_BRANCH_EYEBROW(stage.level)}</div>
+                            <div role="radiogroup" aria-label={MSG.ENHANCE_BRANCH_EYEBROW(stage.level)} className="mt-2 grid grid-cols-2 gap-2">
+                                {stage.options.map((option) => {
+                                    const selected = picked[stage.level] === option.id;
+                                    return (
+                                        <button
+                                            key={option.id}
+                                            type="button"
+                                            role="radio"
+                                            aria-checked={selected}
+                                            aria-label={MSG.ENHANCE_BRANCH_OPTION_ARIA(stage.level, option.name)}
+                                            data-testid={`enhance-branch-option-${option.id}`}
+                                            onClick={() => setPicked((prev) => ({ ...prev, [stage.level]: option.id }))}
+                                            className={`ae-well min-h-11 rounded-ae-md px-3 py-2.5 text-left transition-colors ${selected ? 'ring-2 ring-ae-gold' : ''}`}
+                                        >
+                                            <div className="font-readable text-[14px] font-bold text-ae-ink">{option.name}</div>
+                                            <div className="mt-1 font-readable text-[12px] leading-snug text-ae-ink-2">{option.effect}</div>
+                                            {option.change && (
+                                                <div data-testid={`enhance-branch-change-${option.id}`} className="mt-1.5 font-readable text-[12px] text-ae-ink-2">
+                                                    {option.change.label}{' '}
+                                                    <span className="font-fira font-bold tabular-nums text-ae-ink">{option.change.before} → {option.change.after}</span>
+                                                </div>
+                                            )}
+                                        </button>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    ))}
+                    {branchStages.length > 0 && (
+                        <p data-testid="enhance-branch-note" className="mt-2 text-[12px] font-readable leading-relaxed text-ae-ink-2">
+                            {equipped ? MSG.ENHANCE_BRANCH_FAIL_NOTE : `${MSG.ENHANCE_BRANCH_FAIL_NOTE} ${MSG.ENHANCE_BRANCH_UNEQUIPPED_NOTE}`}
+                        </p>
+                    )}
 
                     <p data-testid="enhance-failure-consequence" className="mt-4 text-[13px] font-readable leading-relaxed text-ae-ink-2">
                         {preview.failureText}

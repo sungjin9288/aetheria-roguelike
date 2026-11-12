@@ -4,6 +4,7 @@ import { Sparkles, Target, ChevronDown, ChevronUp, ListTree } from 'lucide-react
 import { CONSTANTS } from '../data/constants';
 import { MSG } from '../data/messages';
 import { countInventoryItemByName, getEnhancePreview, type EnhanceItemSlot } from '../utils/enhancementUtils';
+import { getEnhanceBranchStages, getEnhanceBranchSummary } from '../utils/enhanceBranchView';
 import { getEquipmentDisclosure, getEquipmentProfile, getItemStatText } from '../utils/equipmentUtils';
 import { deriveCharacterAppearance } from '../utils/characterAppearance';
 import { getSignatureSetGuidance } from '../utils/signatureSetBonus.js';
@@ -108,9 +109,13 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
             : null
     ), [enhanceTarget, player?.gold, player?.inv]);
 
-    const confirmEnhancement = () => {
+    const enhanceBranchStages = useMemo(() => (
+        enhanceTarget && player ? getEnhanceBranchStages(player, enhanceTarget.item, enhanceTarget.slot) : []
+    ), [enhanceTarget, player]);
+
+    const confirmEnhancement = (branches: string[]) => {
         if (!enhanceTarget || !enhancePreview?.affordable) return;
-        actions?.enhanceItem?.(enhanceTarget.itemId);
+        actions?.enhanceItem?.(enhanceTarget.itemId, branches);
         setEnhanceTarget(null);
     };
 
@@ -457,6 +462,9 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
                                     {item && (
                                         <>
                                             <div className="mt-1.5 text-[12px] font-readable leading-relaxed text-ae-ink-2">{getItemStatText(item, slot.key === 'offhand' ? 'offhand' : undefined)}</div>
+                                            {getEnhanceBranchSummary(item) && (
+                                                <div data-testid={`equipment-enhance-branches-${slot.key}`} className="mt-1 text-[12px] font-readable leading-relaxed text-ae-gold-text">{getEnhanceBranchSummary(item)}</div>
+                                            )}
                                             {slot.canEnhance && slot.requirement && (
                                                 <div className="ae-sunk mt-2 space-y-0.5 rounded-ae-sm px-2.5 py-2 text-[12px] font-readable">
                                                     <div className="text-ae-ink-2">
@@ -495,6 +503,8 @@ const EquipmentPanel = ({ player, stats, actions }: EquipmentPanelProps) => {
             {enhancePreview && (
                 <EnhanceDecisionCard
                     preview={enhancePreview}
+                    branchStages={enhanceBranchStages}
+                    equipped
                     onCancel={() => setEnhanceTarget(null)}
                     onConfirm={confirmEnhancement}
                 />

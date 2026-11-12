@@ -104,6 +104,58 @@ test.describe('Item investment preview', () => {
         expect(renderSnapshot.logTail.filter((log: { text: string }) => log.text.includes('강화 성공'))).toHaveLength(1);
     });
 
+    // 2026-11 H6: 갈래 단계(+3)로 가는 강화는 갈래 둘 중 하나를 골라야 확정된다 — 기본으로 골라 두지 않고, 갈래마다 실제 수치를 보인다.
+    for (const width of [375, 390, 430]) {
+        test(`강화 갈래를 골라야 +3 강화가 확정되고 장비에 갈래가 남는다 (${width}px)`, async ({ page }) => {
+            await page.setViewportSize({ width, height: 844 });
+            await startE2ERun(page, { openStatusConsole: true });
+            await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedEnhanceScenario?.({
+                gold: 100_000,
+                materialCount: 3,
+                weaponEnhance: 2,
+            }));
+
+            const panel = page.getByTestId('equipment-panel');
+            await expect(panel).toBeVisible();
+            if (await panel.getAttribute('data-equipment-view') === 'summary') {
+                await page.getByTestId('equipment-detail-toggle').click();
+            }
+            await page.getByTestId('equipment-enhance-weapon').click();
+
+            const decision = page.getByTestId('enhance-decision-card');
+            await expect(decision).toBeVisible();
+            await expect(page.getByTestId('enhance-branch-stage-3')).toBeVisible();
+            const edge = page.getByTestId('enhance-branch-option-weapon_edge_3');
+            const vital = page.getByTestId('enhance-branch-option-weapon_vital_3');
+            await expect(edge).toHaveAttribute('aria-checked', 'false');
+            await expect(vital).toHaveAttribute('aria-checked', 'false');
+            await expect(page.getByTestId('enhance-decision-confirm')).toBeDisabled();
+            await expect(page.getByTestId('enhance-branch-change-weapon_edge_3')).toContainText('→');
+            await expect(page.getByTestId('enhance-branch-change-weapon_vital_3')).toContainText('%');
+
+            for (const option of [edge, vital]) {
+                const box = await option.boundingBox();
+                expect(box?.height ?? 0).toBeGreaterThanOrEqual(44);
+            }
+            expect(await findUndersizedText(decision)).toEqual([]);
+            const overflowX = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+            expect(overflowX).toBe(0);
+
+            await vital.click();
+            await expect(vital).toHaveAttribute('aria-checked', 'true');
+            await expect(page.getByTestId('enhance-decision-confirm')).toBeEnabled();
+            await page.evaluate(() => {
+                Math.random = () => 0;
+                document.querySelector<HTMLElement>('[data-testid="enhance-decision-confirm"]')?.click();
+            });
+            await expect(decision).toBeHidden();
+            await expect(page.getByTestId('equipment-slot-weapon')).toContainText('+3');
+            await expect(page.getByTestId('equipment-enhance-branches-weapon')).toContainText('급소 노리기');
+            const snapshot = (await page.evaluate(() => window.__AETHERIA_TEST_API__?.getInvestmentSnapshot?.()))!;
+            expect(snapshot.weaponEnhance).toBe(3);
+        });
+    }
+
     test('제작과 합성 결과를 아이콘·수치·현재 장비 대비로 비교한다', async ({ page }) => {
         await startE2ERun(page);
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedItemInvestmentScenario?.());

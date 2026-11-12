@@ -6,6 +6,7 @@ import {
     type ResistElement,
 } from '../data/equipmentPassives.js';
 import { resolveEquipmentBaseIdentity } from './equipmentBaseIdentity.js';
+import { getEquipEnhanceBranchRatios } from './enhanceBranch.js';
 import type { EquipSlots, Item } from '../types/item.js';
 import type { Monster } from '../types/monster.js';
 
@@ -28,7 +29,10 @@ export interface EquipmentPassiveSummary {
     regenSource: string | null;
 }
 
-/** 장착한 방어구 · 보조 방패의 상시 효과를 모은다(무기는 상시 효과가 없다). */
+/**
+ * 장착한 방어구 · 보조 방패의 상시 효과를 모은다(무기는 상시 효과가 없다).
+ * 2026-11 H6: 강화 갈래의 재생(`regen`)도 같은 틱 · 같은 기준이라 여기서 더한다 — 엔진의 재생 틱은 이 요약 하나를 읽는다.
+ */
 export const getEquipmentPassives = (equip: EquipSlots | null | undefined): EquipmentPassiveSummary => {
     const resist = new Set<ResistElement>();
     let regenPerTurn = 0;
@@ -42,10 +46,11 @@ export const getEquipmentPassives = (equip: EquipSlots | null | undefined): Equi
             regenSource ??= item?.name ?? null;
         }
     }
+    const branch = getEquipEnhanceBranchRatios(equip);
     return {
         resist: ALL_RESIST_ELEMENTS.filter((element) => resist.has(element)),
-        regenPerTurn,
-        regenSource,
+        regenPerTurn: regenPerTurn + branch.regen,
+        regenSource: regenSource ?? branch.regenSource,
     };
 };
 
