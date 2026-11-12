@@ -147,13 +147,13 @@ if (!baseDir) {
                 return acc;
             }, {});
             const share = (t) => {
-                const auto = (t.autoExplore || 0) + (t.autoAttack || 0);
+                const auto = (t.autoExplore || 0) + (t.autoAttack || 0) + (t.autoSkill || 0);
                 const all = auto + (t.manualExplore || 0) + (t.manualCombat || 0);
                 return `${(100 * auto / Math.max(1, all)).toFixed(1)}% (판당 연속 ${(auto / autoRows.length).toFixed(0)} / 수동 ${((all - auto) / autoRows.length).toFixed(0)}, 탐험 수동 ${((t.manualExplore || 0) / autoRows.length).toFixed(0)} · 전투 수동 ${((t.manualCombat || 0) / autoRows.length).toFixed(0)})`;
             };
             const shareOf = (r, key) => {
                 const t = r.autoExplore[key];
-                const auto = t.autoExplore + t.autoAttack;
+                const auto = t.autoExplore + t.autoAttack + (t.autoSkill || 0);
                 const all = auto + t.manualExplore + t.manualCombat;
                 return all > 0 ? auto / all : null;
             };

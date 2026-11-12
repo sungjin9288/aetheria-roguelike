@@ -171,7 +171,8 @@ const installClock = (clock) => {
  *   추격이면 보스 · 정예에 기절 기술 먼저, 교차 리듬이면 기술 뒤 일반 공격(보스 · 정예, 또는 ×1.8이 가장 센 기술 이상일 때).
  *   셋째 박자 · 끊는 일격은 기본 정책(가장 센 기술)이 이미 맞춘다. 옵션이라 `DRIVER_VERSION`은 그대로다.
  * @param {'off'|'on'} [options.autoExplore] 연속 탐험(H1, 2026-11) — `off`(기본, v3 그대로)는 토글을 쓰지 않는다. `on`은 토글을 켤 수
- *   있을 때마다 켜 둔 사람이다: 게임과 같은 판정(`getAutoExploreStep`)이 `attack`을 내는 전투는 가장 센 기술 대신 일반 공격을 쓰고,
+ *   있을 때마다 켜 둔 사람이다: 게임과 같은 판정(`getAutoExploreStep`)이 `attack` · `skill`을 내는 전투는 그 행동(일반 공격 · 지금 고른
+ *   기술 — Q1 (c), 원장 §172)을 쓰고,
  *   판정이 멈춤을 내거나 드라이버가 탐험이 아닌 일(이동 · 휴식 · 물약 · 전직)을 하면 연쇄가 끊긴다. 끊긴 뒤 다음 탐험은 토글을 다시
  *   켜는 입력(수동 1번)이다. 회차 기록 `autoExplore`가 탐험 · 전투 입력을 연속 탐험 / 수동으로 나눠(Lv21 이후 따로) 세고, 멈춤 이유 ·
  *   연쇄 길이 · 연쇄 중 사망을 남긴다. 결과 카드를 닫는 것은 어느 쪽이든 입력으로 세지 않는다('계속 탐험'이 다음 탐험을 겸한다).
@@ -387,12 +388,12 @@ export const runNaturalPlay = async (options) => {
                     plays: Object.fromEntries(BEHAVIOR_EFFECTS.map((effect) => [effect, 0])),
                 },
             } : {}),
-            // 연속 탐험을 켠 회차만(H1) — 입력: 연속 탐험이 낸 탐험 · 일반 공격(auto) / 그 밖(manual, 토글을 다시 켜는 탐험 포함),
+            // 연속 탐험을 켠 회차만(H1) — 입력: 연속 탐험이 낸 탐험 · 일반 공격 · 고른 기술(auto) / 그 밖(manual, 토글을 다시 켜는 탐험 포함),
             //   `late`는 Lv21 이후만. 멈춤 이유별 수 · 연쇄 길이(켠 뒤 멈출 때까지 연속 탐험이 낸 걸음 수) · 연쇄 중 사망.
             ...(useAutoExplore ? {
                 autoExplore: {
-                    inputs: { autoExplore: 0, autoAttack: 0, manualExplore: 0, manualCombat: 0 },
-                    late: { autoExplore: 0, autoAttack: 0, manualExplore: 0, manualCombat: 0 },
+                    inputs: { autoExplore: 0, autoAttack: 0, autoSkill: 0, manualExplore: 0, manualCombat: 0 },
+                    late: { autoExplore: 0, autoAttack: 0, autoSkill: 0, manualExplore: 0, manualCombat: 0 },
                     starts: 0, stops: {}, chains: [], deathsInChain: 0,
                 },
             } : {}),
@@ -651,13 +652,14 @@ export const runNaturalPlay = async (options) => {
                 run.fightsBy[key] = (run.fightsBy[key] || 0) + 1;
             }
         }
-        // 연속 탐험(H1) — 켜진 연쇄에서 판정이 일반 공격이면 일반 공격(사람이 토글을 켠 것과 같은 행동).
-        if (useAutoExplore && autoChain && autoStep().kind === 'attack') {
+        // 연속 탐험(H1) — 켜진 연쇄에서 판정이 일반 공격 · 고른 기술이면 그것(사람이 토글을 켠 것과 같은 행동). 기술은 지금 고른 기술이다.
+        const autoCombat = useAutoExplore && autoChain ? autoStep().kind : null;
+        if (autoCombat === 'attack' || autoCombat === 'skill') {
             lastCombatSnapshot = { level: Number(p.level) || 1, loc: p.loc, hpRatio: Number((p.hp / Math.max(1, getFullStats().maxHp)).toFixed(3)), enemy: { name: enemy.name, baseName: enemy.baseName, isElite: enemy.isElite, isBoss: enemy.isBoss, huntChampion: enemy.huntChampion } };
-            countInput('autoAttack');
+            countInput(autoCombat === 'attack' ? 'autoAttack' : 'autoSkill');
             autoChain.steps += 1;
-            if (run.behavior) run.behavior.attack += 1;
-            A.combat('attack');
+            if (run.behavior) run.behavior[autoCombat] += 1;
+            A.combat(autoCombat);
             return;
         }
         if (useAutoExplore) countInput('manualCombat');

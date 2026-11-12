@@ -15,7 +15,8 @@ import type { AddLog } from './actionDeps';
  * 연속 탐험 토글(2026-11 H1, docs/EXECUTION_SKETCH_H1_2026-11.md §3.3) — 화면 상태다(세이브 봉투 밖, 리로드하면 꺼져 있다).
  *
  * 걸음마다 `BALANCE.AUTO_EXPLORE_STEP_MS`(전투 속도 ×2면 절반) 뒤 판정(`getAutoExploreStep`)을 다시 읽고, 수동 탭과 같은 액션을
- * 부른다 — 탐험은 결과 카드의 '계속 탐험'처럼 카드를 닫고 `actions.explore()`, 전투는 `actions.combat('attack')`. 게이트 · 전이는
+ * 부른다 — 탐험은 결과 카드의 '계속 탐험'처럼 카드를 닫고 `actions.explore()`, 전투는 `actions.combat('attack' | 'skill')`(기술은
+ * 플레이어가 고른 그 기술 — 판정이 고른 기술을 바꾸지 않는다). 게이트 · 전이는
  * 그 액션이 소유한다. 판단할 거리가 생기면 멈추고 이유 한 줄을 기록에 남긴다(행동을 권하지 않는다 — Wave 88).
  */
 
@@ -104,7 +105,7 @@ export function useAutoExplore({ state, actions, addLog, blocked, paused, timeSc
                         if (stateRef.current.postCombatResult) actionsRef.current.clearPostCombat?.();
                         await actionsRef.current.explore();
                     } else {
-                        actionsRef.current.combat('attack');
+                        actionsRef.current.combat(latest.kind);
                     }
                     setSteps((value) => value + 1);
                 } catch {

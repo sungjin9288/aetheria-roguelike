@@ -226,7 +226,7 @@ test('연속 탐험 · 가방 여유 정책(H1)은 옵션이다 — 기본은 �
         assert.equal(chains.length, record.starts);
         assert.equal(Object.values(stops).reduce((a, b) => a + b, 0), chains.length);
         // 연쇄 길이의 합 = 연속 탐험이 낸 입력(탐험 + 일반 공격). 켜는 탭은 수동이다.
-        assert.equal(chains.reduce((a, b) => a + b, 0), inputs.autoExplore + inputs.autoAttack);
+        assert.equal(chains.reduce((a, b) => a + b, 0), inputs.autoExplore + inputs.autoAttack + inputs.autoSkill);
         assert.ok(inputs.manualExplore >= record.starts);
         for (const key of Object.keys(inputs)) assert.ok(late[key] <= inputs[key], key);
         assert.equal(record.deathsInChain, 0, '연속 탐험은 한 번에 쓰러지는 적과만 싸운다');
