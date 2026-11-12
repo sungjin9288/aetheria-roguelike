@@ -167,6 +167,8 @@ export interface MonsterBase {
     fearAtkMult?: number;
     cursedTurns?: number;
     stunnedTurns?: number;
+    /** H4 공허의 용(추격) — 이 적이 직전 행동을 기절 · 빙결로 넘겼다(그 조합이 켜져 있을 때만 세운다). 다음 실제 행동이 지운다. */
+    pursuitOpen?: boolean;
     tauntTurns?: number;
     cursed?: boolean;
     taunted?: boolean;

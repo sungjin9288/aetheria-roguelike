@@ -49,6 +49,7 @@ import { HIDDEN_BOSS_UNLOCKS } from '../../src/utils/bossPresence.ts';
 import { hasChallengeModifier } from '../../src/utils/challengeRules.ts';
 import { getChargeBreakDamage, getChargeDamageTaken, isChargeBrokenByDamage } from '../../src/systems/bossMechanics.ts';
 import { estimateEnemyNextHit } from '../../src/utils/enemyThreat.ts';
+import { getBehaviorCombo, getChargeBreakMult, getCrossRhythmStrike, getFinisherStrike, getThirdBeat, isPotionSkillReady, isPursuitCrit } from '../../src/systems/relicBehaviorCombos.ts';
 
 // v2 (Wave 119): 퇴마 · 회복 기술을 쓴다 — v1은 위력(`mult`) 있는 기술만 써서 성직자가 회복도 퇴마도 하지 않았다(원장 §126).
 // v3 (Wave 128): 받은 이야기 임무 — 본편 장과 곁가지 이야기를 여는 임무 — 를 받은 순서대로 하러 간다. v2는 본편 장의 목표 지역만
@@ -111,6 +112,7 @@ const ECONOMY_RESERVE_RESTS = 3;
 /** 경제 정책이 안전지대에서 비워 두는 가방 칸. */
 const ECONOMY_FREE_BAG_SLOTS = 4;
 const HP_POTIONS = DB.ITEMS.consumables.filter((item) => item.type === 'hp').sort((a, b) => (b.val || 0) - (a.val || 0));
+const MP_POTIONS = DB.ITEMS.consumables.filter((item) => item.type === 'mp').sort((a, b) => (b.val || 0) - (a.val || 0));
 
 const isHuntMap = (name) => {
     const map = DB.MAPS[name];
@@ -160,6 +162,13 @@ const installClock = (clock) => {
  *   예상 피해 이하이면 물약 순서로 대응한다(도주는 하지 않는다). 어림은 공격력 × 위력 × 0.9 − 적 방어력이다(정책이라 엔진 식을 따르지 않는다).
  *   `full`은 `basic`에 빙결 · 은신 · 방어 강화 기술(예상 피해 ≥ 생명 60%일 때)을 더하고, 물약은 마시면 견딜 때만 마신다.
  *   옵션이라 `DRIVER_VERSION`은 그대로다. 회차 기록 `bossCharge`(충전 · 끊김 · 맞음)는 정책과 무관하게 상태 차이로 센다.
+ * @param {'recommend'|'first'} [options.relicPick] 유물 선택(H4, 2026-11) — `recommend`(기본, v3 그대로)는 화면 추천 카드, `first`는 첫 카드다.
+ *   칸이 찼으면 어느 쪽이든 나아지는 교체만 한다. 두 결과의 짝 비교가 유물 선택의 무게다(재미 분석 §2.5).
+ * @param {'none'|'observe'|'aware'} [options.relicPlay] 행동 조합(H4, 2026-11)에 반응하는 정책 — `none`(기본)은 조합을 보지 않는다.
+ *   `observe`는 `none`과 같은 행동에 회차 기록 `behavior`(일반 공격 · 기술 · 소모품 수, 조합별 켜진 차례 · 걸린 차례 · 터진 차례)만 더한다.
+ *   `aware`는 걸린 조건을 쓴다 — 마무리 문턱의 적에 일반 공격(보스는 ×3이 가장 센 기술 이상일 때), 물약술이면 기력이 모자랄 때 물약,
+ *   추격이면 보스 · 정예에 기절 기술 먼저, 교차 리듬이면 기술 뒤 일반 공격(보스 · 정예, 또는 ×1.8이 가장 센 기술 이상일 때).
+ *   셋째 박자 · 끊는 일격은 기본 정책(가장 센 기술)이 이미 맞춘다. 옵션이라 `DRIVER_VERSION`은 그대로다.
  * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
  *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
@@ -197,6 +206,11 @@ export const pickChapterPickCardId = (offer, chapterPick, pickSeed = 0) => {
 };
 
 export const ENHANCE_BRANCH_POLICIES = Object.freeze(['first', 'alt', 'random']);
+/** 유물 선택 · 행동 조합 정책(H4, 2026-11) — 기본 `recommend` · `none`은 v3 그대로다. */
+export const RELIC_PICK_POLICIES = Object.freeze(['recommend', 'first']);
+export const RELIC_PLAY_POLICIES = Object.freeze(['none', 'observe', 'aware']);
+/** 회차 기록 `behavior`가 세는 행동 조합 효과(`relicBehaviorCombos.ts`의 6개). */
+const BEHAVIOR_EFFECTS = Object.freeze(['cross_rhythm', 'break_strike', 'void_pursuit', 'battle_alchemy', 'third_beat', 'finisher']);
 
 /** 강화 갈래 정책이 이번 강화에서 고르는 갈래(골라야 할 단계마다 하나). `random`은 시드 · 시도 번호의 별도 스트림이다. */
 export const pickEnhanceBranches = (item, enhanceBranch, pickSeed = 0) => {
@@ -225,8 +239,13 @@ export const runNaturalPlay = async (options) => {
         chapterPick = 'none',
         enhanceBranch = 'first',
         bossResponse = 'none',
+        relicPick = 'recommend',
+        relicPlay = 'none',
         onDispatch,
     } = options;
+    if (!RELIC_PICK_POLICIES.includes(relicPick)) throw new Error(`unknown relicPick ${relicPick}`);
+    if (!RELIC_PLAY_POLICIES.includes(relicPlay)) throw new Error(`unknown relicPlay ${relicPlay}`);
+    const trackBehavior = relicPick !== 'recommend' || relicPlay !== 'none';
     if (!BOSS_RESPONSE_POLICIES.includes(bossResponse)) throw new Error(`unknown bossResponse ${bossResponse}`);
     if (!ENHANCE_BRANCH_POLICIES.includes(enhanceBranch)) throw new Error(`unknown enhanceBranch ${enhanceBranch}`);
     if (!['none', 'basic', 'materials'].includes(economy)) throw new Error(`unknown economy ${economy}`);
@@ -288,6 +307,8 @@ export const runNaturalPlay = async (options) => {
         ...(chapterPick === 'none' ? {} : { chapterPick }),
         ...(enhanceBranch === 'first' ? {} : { enhanceBranch }),
         ...(bossResponse === 'none' ? {} : { bossResponse }),
+        ...(relicPick === 'recommend' ? {} : { relicPick }),
+        ...(relicPlay === 'none' ? {} : { relicPlay }),
         stepSeconds,
         runs: [],
         deaths: [],
@@ -330,6 +351,17 @@ export const runNaturalPlay = async (options) => {
             bossCharge: { charged: 0, broken: 0, hit: 0, killed: 0 },
             // 경제 정책을 켠 회차만 — 강화 시도 · 성공, 다음 강화를 막은 것(골드 · 재료 · 남길 돈)을 본 대기 차례 수, 판매 · 구매 수.
             ...(chapterPick === 'none' ? {} : { chapterPicks: [] }),
+            // 유물 정책을 켠 회차만(H4) — 전투 행동 종류별 수, 조합별 켜진 차례(on) · 조건이 걸린 차례(ready) · 터진 차례(fired),
+            //   aware 정책이 조합 때문에 바꾼 행동 수(plays). 상태만 읽는다.
+            ...(trackBehavior ? {
+                behavior: {
+                    attack: 0, skill: 0, item: 0,
+                    on: Object.fromEntries(BEHAVIOR_EFFECTS.map((effect) => [effect, 0])),
+                    ready: Object.fromEntries(BEHAVIOR_EFFECTS.map((effect) => [effect, 0])),
+                    fired: Object.fromEntries(BEHAVIOR_EFFECTS.map((effect) => [effect, 0])),
+                    plays: Object.fromEntries(BEHAVIOR_EFFECTS.map((effect) => [effect, 0])),
+                },
+            } : {}),
             ...(economy === 'none' ? {} : {
                 economy: { enhanceTries: 0, enhanceSuccess: 0, blockedGold: 0, blockedMaterial: 0, blockedReserve: 0, maxed: 0, sold: 0, gearBought: 0, shopVisits: 0, branchAttempts: 0, branches: {}, ...(economy === 'materials' ? { materialBought: 0 } : {}) },
             }),
@@ -435,7 +467,7 @@ export const runNaturalPlay = async (options) => {
                 const cards = state.pendingRelics.map((relic, index) => ({ relic, index, synergy: getRelicSynergyScore(relic, owned) }));
                 const buildId = getRunBuildProfile(p, getFullStats()).primary.id;
                 const decision = getRelicChoiceDecisionStrip(cards, buildId);
-                const pick = state.pendingRelics[Math.max(0, decision.recommendedIndex)];
+                const pick = state.pendingRelics[relicPick === 'first' ? 0 : Math.max(0, decision.recommendedIndex)];
                 const capacity = getPrestigeUnlocks(p.meta?.prestigeRank).maxRelics;
                 if (owned.length < capacity) {
                     dispatch({ type: AT.ADD_RELIC, payload: pick });
@@ -559,7 +591,46 @@ export const runNaturalPlay = async (options) => {
         const usable = (skill) => (p.mp || 0) >= (Number(skill.mp) || 0) && !((cooldowns[String(skill.name)] || 0) > 0);
         // '뒤섞인 기술' 회차는 고른 기술을 뺀 나머지가 무작위로 나간다(보조 기술이면 차례를 버린다) — 기술을 고르지 않는다.
         const canChooseSkill = !hasChallengeModifier(p, 'randomSkills');
+        // 행동 조합(H4) — 이번 차례에 켜진 조합 · 걸린 조건. 기록(`behavior`)과 aware 정책이 같이 읽는다.
+        const synergies = trackBehavior ? getActiveRelicSynergies(p.relics || []) : [];
+        const comboOn = (effect) => Boolean(getBehaviorCombo(synergies, effect));
+        const flags = p.combatFlags;
+        const beat = trackBehavior ? getThirdBeat(synergies, flags) : null;
+        const finisher = trackBehavior && (enemy.hp ?? 0) > 0 ? getFinisherStrike(synergies, enemy) : null;
+        const ready = trackBehavior ? {
+            cross_rhythm: Boolean(getCrossRhythmStrike(synergies, flags)),
+            break_strike: getChargeBreakMult(synergies) > 1 && Boolean(enemy.mechanics?.charge && enemy.chargeArmed),
+            void_pursuit: isPursuitCrit(synergies, enemy),
+            battle_alchemy: isPotionSkillReady(synergies, flags),
+            third_beat: Boolean(beat?.ready),
+            finisher: Boolean(finisher),
+        } : null;
+        const recordAction = (kind, skill = null) => {
+            const behavior = run.behavior;
+            if (!behavior) return;
+            behavior[kind] += 1;
+            const damaging = kind === 'attack' || (kind === 'skill' && (Number(skill?.mult) || 0) > 0);
+            const fired = {
+                cross_rhythm: kind === 'attack',
+                break_strike: damaging,
+                void_pursuit: damaging,
+                battle_alchemy: kind === 'skill',
+                third_beat: kind === 'skill' && damaging,
+                finisher: kind === 'attack',
+            };
+            for (const effect of BEHAVIOR_EFFECTS) {
+                if (!comboOn(effect)) continue;
+                behavior.on[effect] += 1;
+                if (!ready[effect]) continue;
+                behavior.ready[effect] += 1;
+                if (fired[effect]) behavior.fired[effect] += 1;
+            }
+        };
+        const attack = () => { recordAction('attack'); A.combat('attack'); };
+        const useItem = (item) => { recordAction('item'); A.combatUseItem(item); };
         const useSkill = (skill) => {
+            // '뒤섞인 기술' 회차는 고른 기술 대신 다른 기술이 나간다 — 기록은 고른 기술로 센다(어림).
+            recordAction('skill', skill);
             const selected = skills[p.skillLoadout?.selected ?? 0];
             if (selected?.name !== skill.name) A.selectSkill(skill.name);
             buildActions().combat('skill');
@@ -578,6 +649,27 @@ export const runNaturalPlay = async (options) => {
                 .sort((a, b) => (Number(b.val) || 0) - (Number(a.val) || 0))[0];
             if (heal) { useSkill(heal); return; }
         }
+        // aware(H4): 걸린 조건을 쓴다. 가장 센 기술은 아래 기본 정책과 같은 기준이다.
+        if (relicPlay === 'aware') {
+            const play = (effect) => { run.behavior.plays[effect] += 1; };
+            const damagingSkills = skills.filter((skill) => (Number(skill.mult) || 0) > 0 && skill.effect !== 'escape_100' && usable(skill));
+            const bestMult = canChooseSkill ? Math.max(0, ...damagingSkills.map((skill) => Number(skill.mult) || 0)) : 0;
+            const toughFight = Boolean(enemy.isBoss || enemy.isElite);
+            if (finisher && (finisher.kill || finisher.mult >= bestMult)) { play('finisher'); attack(); return; }
+            if (comboOn('battle_alchemy') && !ready.battle_alchemy && canChooseSkill && damagingSkills.length === 0 && potionsAllowed()) {
+                // 엔진이 받아 주는 물약만 — 가득 찬 생명에 생명 물약은 거부돼(소모품 차례 없음) 같은 판단을 되풀이한다.
+                const pool = [...(p.hp < stats.maxHp ? HP_POTIONS : []), ...((p.mp || 0) < (stats.maxMp || 0) ? MP_POTIONS : [])];
+                const potion = pool.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean);
+                if (potion) { play('battle_alchemy'); useItem(potion); return; }
+            }
+            if (comboOn('void_pursuit') && toughFight && !ready.void_pursuit && canChooseSkill) {
+                const stun = skills.find((skill) => (skill.effect === 'stun' || skill.effect === 'freeze') && usable(skill));
+                if (stun) { play('void_pursuit'); useSkill(stun); return; }
+            }
+            if (ready.cross_rhythm && (toughFight || (getCrossRhythmStrike(synergies, flags)?.attackMult ?? 1) >= bestMult)) {
+                play('cross_rhythm'); attack(); return;
+            }
+        }
         if (bossResponse === 'basic' && enemy.mechanics?.charge && enemy.chargeArmed && !isChargeBrokenByDamage(enemy)) {
             const breakLeft = getChargeBreakDamage(enemy) - getChargeDamageTaken(enemy);
             const stun = canChooseSkill && skills.find((skill) => skill.effect === 'stun' && usable(skill));
@@ -590,7 +682,7 @@ export const runNaturalPlay = async (options) => {
             const incoming = estimateEnemyNextHit(p, enemy, 'charge');
             if (incoming != null && p.hp <= incoming && potionsAllowed()) {
                 const potion = HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean);
-                if (potion) { A.combatUseItem(potion); return; }
+                if (potion) { useItem(potion); return; }
             }
         }
         if (bossResponse === 'full' && enemy.mechanics?.charge && enemy.chargeArmed && !isChargeBrokenByDamage(enemy)) {
@@ -613,12 +705,12 @@ export const runNaturalPlay = async (options) => {
             if (incoming != null && p.hp <= incoming && potionsAllowed()) {
                 const potion = HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name))
                     .find((item) => item && Math.min(stats.maxHp, p.hp + (Number(item.val) || 0)) > incoming);
-                if (potion) { A.combatUseItem(potion); return; }
+                if (potion) { useItem(potion); return; }
             }
         }
         if (hpRatio < 0.3 && potionsAllowed()) {
             const potion = HP_POTIONS.map((def) => (p.inv || []).find((item) => item.name === def.name)).find(Boolean);
-            if (potion) { A.combatUseItem(potion); return; }
+            if (potion) { useItem(potion); return; }
         }
         let best = null;
         skills.forEach((skill) => {
@@ -627,7 +719,7 @@ export const runNaturalPlay = async (options) => {
             if (!best || mult > best.mult) best = { skill, mult };
         });
         if (best && canChooseSkill) { useSkill(best.skill); return; }
-        A.combat('attack');
+        attack();
     }
 
     function playEvent() {

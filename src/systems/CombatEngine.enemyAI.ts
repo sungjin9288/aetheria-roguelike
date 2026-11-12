@@ -11,7 +11,7 @@ import {
     getActiveHeavyStatus, getChargeBreakRemaining, getChargeReleaseMult, getLongFightEnrageBonus, getPhase2Threshold, getPhase3Threshold, getPhaseStatuses,
     isBreathAction, isBreathNext, isChargeBrokenByDamage, isChargeTurn, isChargeTurnNext, isResistPierced,
 } from './bossMechanics.js';
-import { getBehaviorComboLabel, getBreakStunTurns, getChargeBreakMult, getCrossGuard, spendCrossGuard } from './relicBehaviorCombos.js';
+import { getBehaviorCombo, getBehaviorComboLabel, getBreakStunTurns, getChargeBreakMult, getCrossGuard, spendCrossGuard } from './relicBehaviorCombos.js';
 
 interface EnemyAttackResult {
     updatedPlayer: Player;
@@ -338,8 +338,16 @@ export const enemyAIMethods: EnemyAIMixin & ThisType<EnemyAIMixinContext> = {
         }
 
         const charge = updatedEnemy.mechanics?.charge;
+        // H4 추격의 창은 기절로 넘긴 행동 하나 뒤까지다 — 실제로 행동하는 차례가 지운다.
+        if (updatedEnemy.pursuitOpen && !((updatedEnemy.stunnedTurns || 0) > 0)) {
+            const { pursuitOpen: _closed, ...awake } = updatedEnemy;
+            updatedEnemy = awake;
+        }
         if ((updatedEnemy.stunnedTurns || 0) > 0) {
             updatedEnemy.stunnedTurns! -= 1;
+            // H4 공허의 용(추격): 기절로 넘긴 행동 다음의 내 피해 행동이 추격이다 — 1턴 기절은 이 차례에 다 쓰여서
+            //   `stunnedTurns`만 보면 기절 기술 → 큰 기술 순서가 한 번도 추격이 되지 않았다(자연 플레이 측정).
+            if (getBehaviorCombo(stats.activeSynergies, 'void_pursuit')?.pursuitCrit) updatedEnemy.pursuitOpen = true;
             // H5: 모은 강타는 기절로 끊긴다 — 기절 차례가 그 강타 차례를 쓴다.
             const stunBreak = Boolean(charge && updatedEnemy.chargeArmed);
             if (stunBreak) updatedEnemy = clearCharge(updatedEnemy);

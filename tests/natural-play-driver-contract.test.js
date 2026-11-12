@@ -127,6 +127,28 @@ test('경제 정책(E9)은 옵션이다 — 끄면 결과에 흔적이 없고, �
     await assert.rejects(() => runNaturalPlay({ ...SHORT, economy: 'all' }), /unknown economy/);
 });
 
+test('유물 정책(H4)은 옵션이다 — 기본은 흔적이 없고, observe는 행동을 바꾸지 않고 기록만 더하며, aware · first는 결정론적이다', async () => {
+    const off = await runNaturalPlay(SHORT);
+    assert.equal(off.relicPlay, undefined);
+    assert.equal(off.relicPick, undefined);
+    assert.ok(off.runs.every((run) => run.behavior === undefined), '기본 결과에는 행동 기록이 없다');
+    const observed = await runNaturalPlay({ ...SHORT, relicPlay: 'observe' });
+    const strip = ({ relicPlay: _p, runs, ...rest }) => ({ ...rest, runs: runs.map(({ behavior: _b, ...run }) => run) });
+    assert.deepEqual(strip(observed), off, 'observe는 기록만 더한다(행동 · 난수 그대로)');
+    const [run] = observed.runs;
+    assert.ok(run.behavior.attack + run.behavior.skill + run.behavior.item > 0, '전투 행동을 센다');
+    for (const key of ['on', 'ready', 'fired', 'plays']) assert.equal(Object.keys(run.behavior[key]).length, 6, key);
+    assert.ok(Object.values(run.behavior.plays).every((n) => n === 0), 'observe는 조합 때문에 바꾼 행동이 없다');
+    const aware = await runNaturalPlay({ ...SHORT, relicPlay: 'aware' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, relicPlay: 'aware' }), aware);
+    assert.equal(aware.relicPlay, 'aware');
+    const first = await runNaturalPlay({ ...SHORT, relicPick: 'first' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, relicPick: 'first' }), first);
+    assert.equal(first.relicPick, 'first');
+    await assert.rejects(runNaturalPlay({ ...SHORT, relicPlay: 'always' }), /unknown relicPlay/);
+    await assert.rejects(runNaturalPlay({ ...SHORT, relicPick: 'best' }), /unknown relicPick/);
+});
+
 test('장의 선물 정책(H3)은 카드 종류를 고르고, 그 종류가 패에 없으면 유물 카드 · 무작위는 시드로 결정론적이다', () => {
     const full = { chapter: 4, cards: [{ id: 'relic', kind: 'relic' }, { id: 'prefix', kind: 'prefix' }, { id: 'enhance', kind: 'enhance' }] };
     const noGear = { chapter: 5, cards: [{ id: 'relic', kind: 'relic' }, { id: 'relic-2', kind: 'relic' }, { id: 'relic-3', kind: 'relic' }] };

@@ -72,6 +72,7 @@ const load = (dir, collectDeaths = false) => {
                     ruleId: run.ruleId, ruleOptional: Boolean(run.ruleOptional), ruleDeclined: Boolean(run.ruleDeclined), newSignatures,
                     chapterPicks: Array.isArray(run.chapterPicks) ? run.chapterPicks : null, pickBandHours: bandHours(run, ...PICK_BAND),
                     bossCharge: run.bossCharge || null,
+                    behavior: run.behavior || null,
                     events: run.events || null, firstPerHour: run.events && run.hours > 0 ? run.events.firstAt.length / run.hours : null,
                     lateShare: lateBandShare(run), reclimbs: reclimbRatios(run), ladderRank: Number(run.ladderRank) || 0, essence: Number(run.essence) || 0,
                 });
@@ -123,6 +124,19 @@ if (!baseDir) {
             const sum = (key) => charged.reduce((acc, r) => acc + (r.bossCharge[key] || 0), 0);
             const total = Math.max(1, sum('charged'));
             console.log(`  충전 강타: 판당 ${(sum('charged') / charged.length).toFixed(1)} · 끊김 ${(100 * sum('broken') / total).toFixed(0)}% · 맞음 ${(100 * sum('hit') / total).toFixed(0)}% · 강타 전 처치 ${(100 * sum('killed') / total).toFixed(0)}%`);
+        }
+        // 행동 조합(H4) — 일반 공격 비율, 조합별 켜진 차례 비율(전투 행동 중) · 걸린 차례 중 터진 비율 · aware가 바꾼 행동 수(판당).
+        const tracked = xs.filter((r) => r.behavior);
+        if (tracked.length) {
+            const total = (r) => r.behavior.attack + r.behavior.skill + r.behavior.item;
+            const actions = Math.max(1, tracked.reduce((sum, r) => sum + total(r), 0));
+            const sumOf = (key, effect) => tracked.reduce((sum, r) => sum + (r.behavior[key][effect] || 0), 0);
+            const effects = Object.keys(tracked[0].behavior.on);
+            const parts = effects.map((effect) => `${effect} 켜짐 ${(100 * sumOf('on', effect) / actions).toFixed(1)}% · 걸림 ${(sumOf('ready', effect) / tracked.length).toFixed(1)} · 터짐 ${(100 * sumOf('fired', effect) / Math.max(1, sumOf('ready', effect))).toFixed(0)}% · 바꿈 ${(sumOf('plays', effect) / tracked.length).toFixed(1)}`);
+            const attacks = tracked.reduce((sum, r) => sum + r.behavior.attack, 0);
+            const items = tracked.reduce((sum, r) => sum + r.behavior.item, 0);
+            console.log(`  행동 조합: 판당 전투 행동 ${(actions / tracked.length).toFixed(0)} · 일반 공격 ${(100 * attacks / actions).toFixed(1)}% · 소모품 ${(100 * items / actions).toFixed(1)}%`);
+            parts.forEach((part) => console.log(`    ${part}`));
         }
         const picked = xs.filter((r) => r.chapterPicks);
         if (picked.length) {

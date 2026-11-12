@@ -156,6 +156,30 @@ test('B3 공허의 용(추격): 기절한 적에게 하는 피해 행동은 확�
     assert.equal(skillProc.calls, skillPlain.calls);
 });
 
+test('B3 추격의 창: 1턴 기절은 적 차례에 다 쓰이지만, 그 기절로 넘긴 행동 다음의 피해 행동이 추격이다 — 실제로 행동하면 닫힌다', () => {
+    const player = makePlayer();
+    // 기절 기술을 맞은 적(1턴) → 적 차례가 기절로 넘어간다.
+    const stunned = makeEnemy({ stunnedTurns: 1 });
+    const skipped = CombatEngine.enemyAttack(player, stunned, statsWith(player, ['void_pursuit']), countingRng());
+    assert.equal(skipped.damage, 0);
+    assert.equal(skipped.updatedEnemy.stunnedTurns, 0, '1턴 기절은 이미 다 썼다');
+    assert.equal(skipped.updatedEnemy.pursuitOpen, true);
+    assert.equal(strike(player, skipped.updatedEnemy, ['void_pursuit'], countingRng(0.99)).result.isCrit, true, '넘긴 행동 다음의 일반 공격');
+    assert.equal(cast(player, skipped.updatedEnemy, ['void_pursuit'], SKILL, countingRng(0.99)).result.isCrit, true, '위력 기술도');
+    // 조합이 없으면 표시를 세우지 않는다(상태가 이전과 같다).
+    const plain = CombatEngine.enemyAttack(player, stunned, statsWith(player, []), countingRng());
+    assert.equal(plain.updatedEnemy.pursuitOpen, undefined);
+    // 다음 적 차례가 실제 행동이면 창이 닫힌다.
+    const acted = CombatEngine.enemyAttack(player, skipped.updatedEnemy, statsWith(player, ['void_pursuit']), countingRng());
+    assert.equal(acted.updatedEnemy.pursuitOpen, undefined);
+    assert.equal(strike(player, acted.updatedEnemy, ['void_pursuit'], countingRng(0.99)).result.isCrit, false);
+    // 2턴 기절은 두 번 넘기는 동안 창이 열려 있다.
+    const twice = CombatEngine.enemyAttack(player, makeEnemy({ stunnedTurns: 2 }), statsWith(player, ['void_pursuit']), countingRng());
+    assert.equal(twice.updatedEnemy.stunnedTurns, 1);
+    const again = CombatEngine.enemyAttack(player, twice.updatedEnemy, statsWith(player, ['void_pursuit']), countingRng());
+    assert.equal(again.updatedEnemy.pursuitOpen, true);
+});
+
 test('B4 전투 물약술: 전투 중 소모품 뒤의 기술 한 번은 기력 · 재사용 대기와 무관하다 — 조합이 없으면 거부', () => {
     const enemy = makeEnemy();
     const ready = applyConsumableBehaviorCombos(makePlayer({ relics: synergyOf('battle_alchemy').requires.map(relic) }));

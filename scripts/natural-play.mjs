@@ -1,4 +1,4 @@
-// 자연 플레이 한 시드: node --import tsx scripts/natural-play.mjs --seed 1 [--path knight] [--runs 1] [--max-steps N] [--rule-decline none|all|stacked|rank:N] [--rule-pick default|fixed|random] [--economy none|basic|materials] [--chapter-pick none|skip|relic|prefix|enhance|random] [--enhance-branch first|alt|random] [--boss-response none|basic|full] [--out file.json]
+// 자연 플레이 한 시드: node --import tsx scripts/natural-play.mjs --seed 1 [--path knight] [--runs 1] [--max-steps N] [--rule-decline none|all|stacked|rank:N] [--rule-pick default|fixed|random] [--economy none|basic|materials] [--chapter-pick none|skip|relic|prefix|enhance|random] [--enhance-branch first|alt|random] [--boss-response none|basic|full] [--relic-pick recommend|first] [--relic-play none|observe|aware] [--out file.json]
 // 2026-10 Wave 117 — 드라이버 본체는 `scripts/naturalPlay/driver.mjs`.
 import fs from 'node:fs';
 import { JOB_PATHS, runNaturalPlay } from './naturalPlay/driver.mjs';
@@ -22,6 +22,8 @@ const result = await runNaturalPlay({
     chapterPick: flag('--chapter-pick', 'none'),
     enhanceBranch: flag('--enhance-branch', 'first'),
     bossResponse: flag('--boss-response', 'none'),
+    relicPick: flag('--relic-pick', 'recommend'),
+    relicPlay: flag('--relic-play', 'none'),
 });
 result.path = pathName;
 const out = flag('--out', null);

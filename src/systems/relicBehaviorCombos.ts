@@ -75,9 +75,12 @@ export const getBreakStunTurns = (synergies: readonly RelicSynergy[] | undefined
 
 // ── B3 추격(공허의 용) ───────────────────────────────────────────────────────
 
-/** 이번 피해 행동이 확정 치명타인가 — 행동 전에 적이 기절 · 빙결(`stunnedTurns`)이었다. */
+/**
+ * 이번 피해 행동이 확정 치명타인가 — 행동 전에 적이 기절 · 빙결(`stunnedTurns`)이거나, 직전 행동을 기절로 넘겼다(`pursuitOpen`).
+ * 기절은 적 차례에 줄어서 1턴 기절은 내 다음 행동 전에 이미 0이다 — 넘긴 행동 표시가 없으면 기절 기술 → 큰 기술이 추격이 되지 않는다.
+ */
 export const isPursuitCrit = (synergies: readonly RelicSynergy[] | undefined, enemy: Monster): boolean =>
-    Boolean(getBehaviorCombo(synergies, 'void_pursuit')?.pursuitCrit) && (enemy.stunnedTurns ?? 0) > 0;
+    Boolean(getBehaviorCombo(synergies, 'void_pursuit')?.pursuitCrit) && ((enemy.stunnedTurns ?? 0) > 0 || enemy.pursuitOpen === true);
 
 // ── B4 전투 물약술 ───────────────────────────────────────────────────────────
 
