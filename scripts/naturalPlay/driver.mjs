@@ -28,6 +28,7 @@ import { getClaimableQuestEntries } from '../../src/utils/questProgress.ts';
 import { getQuestBoardRecommendations } from '../../src/utils/questOperations.ts';
 import { getEquipmentDecision, pickBestEquippable } from '../../src/utils/equipmentUtils.ts';
 import { getEnhanceMaterialCount, getEnhancePreview } from '../../src/utils/enhancementUtils.ts';
+import { getEnhanceBranchKind, getEnhanceBranchOptions, getItemEnhanceBranches, getOwedEnhanceBranchLevels } from '../../src/utils/enhanceBranch.ts';
 import { ENHANCE_MATERIAL_SHOP_SOURCE, getEnhanceMaterialOffer } from '../../src/utils/enhanceMaterialShop.ts';
 import { BALANCE, CONSTANTS } from '../../src/data/constants.ts';
 import { getInventoryCapacity } from '../../src/utils/inventoryCapacity.ts';
@@ -149,6 +150,9 @@ const installClock = (clock) => {
  *   화면을 보지 않는다(선물이 없던 게임과 같다). `skip`은 넘기고, `relic` · `prefix` · `enhance`는 그 카드를(패에 없으면 유물 카드),
  *   `random`은 패에서 고르게 하나를 받는다(별도 시드 스트림 — 게임 난수를 쓰지 않는다). 칸이 찬 유물 카드는 유물 선택 정책이 교체 · 거절을 정한다.
  *   회차 기록 `chapterPicks`에 [회차 시작부터 시간, 장, 카드 종류, 레벨, 카드 내용]을 남긴다.
+ * @param {'first'|'alt'|'random'} [options.enhanceBranch] 강화 갈래(H6, 2026-11) — 갈래 단계로 가는 강화에서 표의 첫 갈래 · 둘째 갈래 ·
+ *   고르게 하나(별도 시드 스트림 — 게임 난수를 쓰지 않는다). 강화하는 경제 정책(`basic` · `materials`)에서만 쓰인다. 회차 기록
+ *   `economy.branchAttempts`(갈래를 고른 강화 시도 수 = 강화 카드의 갈래 결정 수) · `economy.branches`(붙은 갈래 id별 수).
  * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
  *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
@@ -183,6 +187,22 @@ export const pickChapterPickCardId = (offer, chapterPick, pickSeed = 0) => {
     return (offer.cards.find((card) => card.kind === chapterPick) ?? offer.cards.find((card) => card.kind === 'relic') ?? offer.cards[0]).id;
 };
 
+export const ENHANCE_BRANCH_POLICIES = Object.freeze(['first', 'alt', 'random']);
+
+/** 강화 갈래 정책이 이번 강화에서 고르는 갈래(골라야 할 단계마다 하나). `random`은 시드 · 시도 번호의 별도 스트림이다. */
+export const pickEnhanceBranches = (item, enhanceBranch, pickSeed = 0) => {
+    const owed = getOwedEnhanceBranchLevels(item, (item?.enhance || 0) + 1);
+    const kind = getEnhanceBranchKind(item);
+    return owed.map((level, index) => {
+        const options = getEnhanceBranchOptions(kind, level);
+        if (enhanceBranch === 'alt') return options[1] ?? options[0];
+        if (enhanceBranch === 'random') {
+            return options[Math.floor(createSeededRandom(deriveSeed(pickSeed, 'natural-play-enhance-branch', index))() * options.length)];
+        }
+        return options[0];
+    });
+};
+
 export const runNaturalPlay = async (options) => {
     const {
         seed,
@@ -194,8 +214,10 @@ export const runNaturalPlay = async (options) => {
         rulePick = 'default',
         economy = 'none',
         chapterPick = 'none',
+        enhanceBranch = 'first',
         onDispatch,
     } = options;
+    if (!ENHANCE_BRANCH_POLICIES.includes(enhanceBranch)) throw new Error(`unknown enhanceBranch ${enhanceBranch}`);
     if (!['none', 'basic', 'materials'].includes(economy)) throw new Error(`unknown economy ${economy}`);
     if (!CHAPTER_PICK_POLICIES.includes(chapterPick)) throw new Error(`unknown chapterPick ${chapterPick}`);
     if (!Number.isInteger(seed)) throw new Error('seed must be an integer');
@@ -252,6 +274,7 @@ export const runNaturalPlay = async (options) => {
         rulePick,
         ...(economy === 'none' ? {} : { economy }),
         ...(chapterPick === 'none' ? {} : { chapterPick }),
+        ...(enhanceBranch === 'first' ? {} : { enhanceBranch }),
         stepSeconds,
         runs: [],
         deaths: [],
@@ -293,7 +316,7 @@ export const runNaturalPlay = async (options) => {
             // 경제 정책을 켠 회차만 — 강화 시도 · 성공, 다음 강화를 막은 것(골드 · 재료 · 남길 돈)을 본 대기 차례 수, 판매 · 구매 수.
             ...(chapterPick === 'none' ? {} : { chapterPicks: [] }),
             ...(economy === 'none' ? {} : {
-                economy: { enhanceTries: 0, enhanceSuccess: 0, blockedGold: 0, blockedMaterial: 0, blockedReserve: 0, maxed: 0, sold: 0, gearBought: 0, shopVisits: 0, ...(economy === 'materials' ? { materialBought: 0 } : {}) },
+                economy: { enhanceTries: 0, enhanceSuccess: 0, blockedGold: 0, blockedMaterial: 0, blockedReserve: 0, maxed: 0, sold: 0, gearBought: 0, shopVisits: 0, branchAttempts: 0, branches: {}, ...(economy === 'materials' ? { materialBought: 0 } : {}) },
             }),
         };
     };
@@ -666,6 +689,24 @@ export const runNaturalPlay = async (options) => {
         return getRestCost(state.player) * ECONOMY_RESERVE_RESTS;
     }
 
+    /** 장착 장비 강화 한 번 — 갈래 단계면 정책의 갈래를 함께 보낸다. 리듀서가 받았으면 true. */
+    function tryEnhance(item, slot) {
+        const branches = pickEnhanceBranches(item, enhanceBranch, deriveSeed(seed, run.rank, run.economy.enhanceTries));
+        const before = state.player;
+        buildActions().enhanceItem(item.id, branches);
+        if (state.player === before || (state.player.gold === before.gold && state.player.equip === before.equip)) return false;
+        run.economy.enhanceTries += 1;
+        if (branches.length > 0) run.economy.branchAttempts += 1;
+        const after = state.player.equip?.[slot];
+        if ((after?.enhance || 0) > (item.enhance || 0)) {
+            run.economy.enhanceSuccess += 1;
+            getItemEnhanceBranches(after).slice(getItemEnhanceBranches(item).length).forEach((id) => {
+                run.economy.branches[id] = (run.economy.branches[id] || 0) + 1;
+            });
+        }
+        return true;
+    }
+
     /** 장착한 장비를 강화할 수 있는 만큼 강화한다 — 막히면 무엇이 막았는지 센다(대기 차례마다 한 번). */
     function enhanceEquipped() {
         for (const slot of ENHANCE_SLOTS) {
@@ -678,11 +719,7 @@ export const runNaturalPlay = async (options) => {
                 if (preview.missing === 'gold') { run.economy.blockedGold += 1; break; }
                 if (preview.missing === 'material') { run.economy.blockedMaterial += 1; break; }
                 if ((Number(p.gold) || 0) - preview.requirement.gold < economyReserve()) { run.economy.blockedReserve += 1; break; }
-                const before = state.player;
-                buildActions().enhanceItem(item.id);
-                if (state.player === before) break;
-                run.economy.enhanceTries += 1;
-                if ((state.player.equip?.[slot]?.enhance || 0) > (item.enhance || 0)) run.economy.enhanceSuccess += 1;
+                if (!tryEnhance(item, slot)) break;
             }
         }
     }
@@ -750,11 +787,7 @@ export const runNaturalPlay = async (options) => {
             if (!preview?.requirement) return;
             if (getEnhanceMaterialCount(p.inv || []) >= preview.requirement.materials) {
                 if (gold - preview.requirement.gold < economyReserve()) return;
-                const before = state.player;
-                buildActions().enhanceItem(target.item.id);
-                if (state.player === before) return;
-                run.economy.enhanceTries += 1;
-                if ((state.player.equip?.[target.slot]?.enhance || 0) > (target.item.enhance || 0)) run.economy.enhanceSuccess += 1;
+                if (!tryEnhance(target.item, target.slot)) return;
                 continue;
             }
             const offer = getEnhanceMaterialOffer(p);

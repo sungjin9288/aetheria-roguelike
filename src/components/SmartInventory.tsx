@@ -4,6 +4,7 @@ import { ArrowUp, ArrowDown, Minus, Star, Package, AlertCircle, ListTree, Sparkl
 import { QuickSlotAssigner } from './QuickSlot';
 import { getEquipmentDecision, getEquipmentDisclosure, getEquipmentIdentity, getItemStatText, getWeaponStyleLabel, isWeapon, pickBestEquippable } from '../utils/equipmentUtils';
 import { getEnhanceAvailability, getEnhancePreview, type EnhanceItemSlot } from '../utils/enhancementUtils';
+import { getEnhanceBranchStages, getEnhanceBranchSummary } from '../utils/enhanceBranchView';
 import { getTraitItemResonance, getTraitProfile } from '../utils/runProfileUtils';
 import { MSG } from '../data/messages';
 import { BALANCE, RARITY_CLASSES } from '../data/constants';
@@ -139,11 +140,15 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, filter
         return Boolean(decision?.equipable && decision.score > 0);
     }, [player]);
 
-    const confirmEnhancement = () => {
+    const enhanceBranchStages = useMemo(() => (
+        enhanceTarget ? getEnhanceBranchStages(player, enhanceTarget.item, enhanceTarget.slot) : []
+    ), [enhanceTarget, player]);
+
+    const confirmEnhancement = (branches: string[]) => {
         if (!enhanceTarget || !enhancePreview?.affordable) return;
 
         const itemId = enhanceTarget.item.id || (enhanceTarget.slot ? `equip:${enhanceTarget.slot}` : null);
-        if (itemId) actions?.enhanceItem?.(itemId);
+        if (itemId) actions?.enhanceItem?.(itemId, branches);
         setEnhanceTarget(null);
     };
 
@@ -345,6 +350,9 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, filter
                                 {(!isEquipment || showDetails) && (getItemStatText(item) || item.desc_stat) && (
                                     <div className="mt-1 text-[12px] font-readable leading-relaxed text-ae-ink-2">{getItemStatText(item) || item.desc_stat}</div>
                                 )}
+                                {showDetails && getEnhanceBranchSummary(item) && (
+                                    <div data-testid={`inventory-enhance-branches-${item.id || item.name}`} className="mt-1 text-[12px] font-readable leading-relaxed text-ae-gold-text">{getEnhanceBranchSummary(item)}</div>
+                                )}
                                 {showDetails && enhanceRequirement && (
                                     <div className="mt-1 space-y-0.5 text-[12px] font-readable">
                                         <div className="text-ae-ink-3">
@@ -403,6 +411,8 @@ const SmartInventory = ({ player, actions, quickSlots, onAssignQuickSlot, filter
             {enhancePreview && (
                 <EnhanceDecisionCard
                     preview={enhancePreview}
+                    branchStages={enhanceBranchStages}
+                    equipped={Boolean(enhanceTarget?.slot)}
                     onCancel={() => setEnhanceTarget(null)}
                     onConfirm={confirmEnhancement}
                 />

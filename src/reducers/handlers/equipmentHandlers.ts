@@ -8,6 +8,7 @@ import {
 } from '../../utils/equipmentUtils';
 import { canEquip } from '../../utils/equipmentValidation';
 import { consumeInventoryItemByName, getEnhancePreview } from '../../utils/enhancementUtils';
+import { resolveEnhanceBranchChoices, withEnhanceResult } from '../../utils/enhanceBranch';
 import { makeItem } from '../../utils/gameUtils';
 import { growsPastInventoryCapacity } from '../../utils/inventoryCapacity';
 import { resolveConsumableEffect, sanitizeConsumedQuickSlots } from '../../systems/consumableEffect';
@@ -197,6 +198,10 @@ const enhanceItem = (state: GameState, action: ActionOf<typeof AT.ENHANCE_ITEM>)
         );
     }
 
+    // 2026-11 H6: 갈래 단계로 가는 강화는 고른 갈래와 함께만 받는다 — 비용을 쓰기 전에 거부한다.
+    const branchChoices = resolveEnhanceBranchChoices(item, currentLevel + 1, action.payload?.branches);
+    if (!branchChoices) return rejectEquipmentTransaction(state, 'warn', MSG.ENHANCE_BRANCH_REQUIRED);
+
     const {
         nextInventory: inventoryAfterCost,
         removed: removedMaterials,
@@ -211,12 +216,13 @@ const enhanceItem = (state: GameState, action: ActionOf<typeof AT.ENHANCE_ITEM>)
     const nextLevel = currentLevel + 1;
     const inventory = inventoryAfterCost.map((inventoryItem) => (
         success && inventoryItem.id === itemId
-            ? { ...inventoryItem, enhance: nextLevel }
+            ? withEnhanceResult(inventoryItem, nextLevel, branchChoices)
             : inventoryItem
     ));
     const equip = { ...(state.player.equip || {}) };
-    if (success && slot && equip[slot]) {
-        equip[slot] = { ...equip[slot], enhance: nextLevel };
+    const equippedTarget = slot ? equip[slot] : null;
+    if (success && slot && equippedTarget) {
+        equip[slot] = withEnhanceResult(equippedTarget, nextLevel, branchChoices);
     }
 
     let player: Player = {
