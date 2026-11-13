@@ -1,4 +1,6 @@
 import { BALANCE } from '../data/constants';
+import { MSG } from '../data/messages';
+import { isPlayerPotionSkillReady } from '../systems/relicBehaviorCombos';
 import type { Player } from '../types/index.js';
 
 export type CombatSkillReadinessState = 'missing' | 'cooldown' | 'energy' | 'ready';
@@ -31,6 +33,17 @@ export const getCombatSkillReadiness = ({
 
     const cost = selectedSkill.mp || BALANCE.SKILL_MP_COST;
     const currentEnergy = Math.max(0, player.mp || 0);
+
+    // 2026-11 H4 전투 물약술: 전투 중 소모품을 썼으면 다음 기술 한 번은 재사용 대기 · 기력과 무관하게 나간다(엔진 `performSkill`과 같은 판정).
+    if (isPlayerPotionSkillReady(player)) {
+        return {
+            state: 'ready' as const,
+            canUse: true,
+            cost: 0,
+            detailLabel: MSG.SKILL_READY_POTION_FREE,
+            buttonLabel: MSG.COMBAT_ACTION_SKILL,
+        };
+    }
 
     if (skillCooldown > 0) {
         return {

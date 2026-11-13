@@ -7,6 +7,7 @@ import {
     Download,
     Eye,
     FastForward,
+    HeartPulse,
     Keyboard,
     ListTree,
     MessageSquare,
@@ -21,7 +22,7 @@ import type { FullStats, Item, Player, Relic } from '../../types/index.js';
 import type { LiveConfig } from '../../types/session.js';
 import { addDoc, collection, doc, serverTimestamp, setDoc } from 'firebase/firestore';
 import { db } from '../../firebase';
-import { APP_ID, CONSTANTS } from '../../data/constants';
+import { APP_ID, BALANCE, CONSTANTS } from '../../data/constants';
 import { exportToJson } from '../../utils/fileUtils';
 import { getTitleColor, getTitleLabel, getTitlePassiveLabel } from '../../utils/gameUtils';
 import { ELITE_TITLE_MAPS, splitEliteTitles, sumEliteTitleBonus } from '../../utils/eliteTitles';
@@ -32,6 +33,7 @@ import { normalizeProductEventJob } from '../../platform/productEvents';
 import { MSG } from '../../data/messages';
 import { isCombatSpeedFast, isHapticsEnabled, isKeyboardShortcutsEnabled } from '../../utils/playerSettings';
 import type { GameActions } from '../../hooks/actionDeps';
+import { getAutoExploreHpSetting } from '../../utils/autoExplore';
 import type { GameMode } from '../../reducers/gameStates';
 import ActionButton from '../ui/ActionButton';
 import Chip from '../ui/Chip';
@@ -98,7 +100,7 @@ const hasUserAgentData = (
 /** SystemTab이 실제로 호출하는 액션만 좁혀 받는다 (설정/칭호/순위/관리자). */
 type SystemTabActions = Pick<GameActions,
     'leaderboard' | 'setReadabilityMode' | 'setEquipmentDetailMode' | 'setActiveTitle' | 'liveConfig' | 'getUid' | 'isAdmin'
-    | 'setHapticsEnabled' | 'setKeyboardShortcutsEnabled' | 'setCombatSpeed'
+    | 'setHapticsEnabled' | 'setKeyboardShortcutsEnabled' | 'setCombatSpeed' | 'setAutoExploreHpStop'
 >;
 
 /** 2026-10-26 소유자 결정 D3 · D23: 켬/끔 두 칸(기본 켬) — 진동 · 한 글자 단축키가 같이 쓴다. */
@@ -209,6 +211,12 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
         actions?.setCombatSpeed?.(speed);
         const label = COMBAT_SPEED_OPTIONS.find((option) => option.value === speed)?.label || COMBAT_SPEED_OPTIONS[0].label;
         setNotice({ type: 'success', text: MSG.SYSTEM_COMBAT_SPEED_CHANGED(label) });
+    }, [actions]);
+
+    const autoExploreHpStop = getAutoExploreHpSetting(player);
+    const handleSetAutoExploreHpStop = useCallback((ratio: number) => {
+        actions?.setAutoExploreHpStop?.(ratio);
+        setNotice({ type: 'success', text: MSG.SYSTEM_AUTO_EXPLORE_CHANGED(Math.round(ratio * 100)) });
     }, [actions]);
 
     const hapticsEnabled = isHapticsEnabled(player);
@@ -523,6 +531,31 @@ const SystemTab = ({ player, actions, stats, runtime }: SystemTabProps) => {
                                 className="ab-segment-option font-readable"
                             >
                                 {option.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
+
+                {/* 2026-11 H1: 연속 탐험의 생명 멈춤 문턱(소유자 결정 Q3 (b) 30 · 50 · 70%, 기본 50%). */}
+                <div data-testid="auto-explore-settings" className="mt-4 border-t border-ae-ink/7 pt-4">
+                    <div className="flex items-start gap-3">
+                        <span className="ab-icon-well is-ether" aria-hidden="true"><HeartPulse size={16} /></span>
+                        <div className="min-w-0 flex-1">
+                            <div className="font-readable aether-type-strong text-ae-ink">{MSG.SYSTEM_AUTO_EXPLORE_TITLE}</div>
+                            <p className="mt-0.5 font-readable aether-type-meta leading-snug text-ae-ink-3">{MSG.SYSTEM_AUTO_EXPLORE_DESC}</p>
+                        </div>
+                    </div>
+                    <div className="ab-segment mt-3 grid-cols-3" role="group" aria-label={MSG.SYSTEM_AUTO_EXPLORE_GROUP_ARIA}>
+                        {BALANCE.AUTO_EXPLORE_HP_STOP_OPTIONS.map((ratio) => (
+                            <button
+                                key={ratio}
+                                type="button"
+                                data-testid={`auto-explore-hp-${Math.round(ratio * 100)}`}
+                                aria-pressed={autoExploreHpStop === ratio}
+                                onClick={() => handleSetAutoExploreHpStop(ratio)}
+                                className="ab-segment-option font-readable"
+                            >
+                                {MSG.SYSTEM_AUTO_EXPLORE_OPTION(Math.round(ratio * 100))}
                             </button>
                         ))}
                     </div>

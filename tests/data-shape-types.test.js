@@ -134,18 +134,19 @@ const RELIC_VAL_FIELDS = [
 ];
 
 const SYNERGY_EFFECTS = [
-    'absolute_immortal', 'absolute_reflect', 'annihilator', 'arcane_singularity', 'arcane_surge',
-    'blood_immortal', 'death_oracle', 'entropy_brand', 'entropy_god', 'eternal_fortress',
-    'eternal_life', 'hell_reaper', 'immortal_warrior', 'infinite_devour', 'primordial_wrath',
-    'time_dominator', 'time_master', 'unbreakable', 'vampire_lord', 'void_dragon',
+    'absolute_immortal', 'absolute_reflect', 'arcane_singularity', 'arcane_surge', 'battle_alchemy',
+    'blood_immortal', 'break_strike', 'cross_rhythm', 'entropy_brand', 'entropy_god', 'eternal_fortress',
+    'finisher', 'hell_reaper', 'immortal_warrior', 'primordial_wrath', 'third_beat',
+    'time_dominator', 'time_master', 'vampire_lord', 'void_pursuit',
 ];
 
 const SYNERGY_BONUS_FIELDS = [
-    'effect', 'atkMult', 'cdReduction', 'chaosAtk', 'critChance', 'critDmg', 'damage',
-    'defMult', 'devour', 'dotMult', 'executeThreshold', 'extraAction', 'extraTurnChance',
-    'fixedDmg', 'freeSkillChance', 'healOnSave', 'healPerTurn', 'hpCostReduction', 'interval',
-    'killHeal', 'killStack', 'lifeSteal', 'lifeStealBonus', 'lowHpAtk', 'mpMult', 'reflect',
-    'regenPerTurn', 'reviveCount', 'reviveHeal', 'skillMult', 'statBonus', 'stunOnReflect',
+    'effect', 'afterSkillAttackMult', 'afterSkillGuard', 'atkMult', 'beatEvery', 'beatMult', 'breakStun',
+    'cdReduction', 'chaosAtk', 'chargeBreakMult', 'critChance', 'critDmg', 'damage', 'defMult',
+    'extraAction', 'extraTurnChance', 'finisherBossMult', 'finisherThreshold', 'fixedDmg', 'freeSkillChance',
+    'hpCostReduction', 'interval', 'killHeal', 'lifeSteal', 'lifeStealBonus', 'lowHpAtk', 'mpMult',
+    'potionFreeSkill', 'pursuitCrit', 'reflect', 'regenPerTurn', 'reviveCount', 'reviveHeal', 'skillMult',
+    'stunOnReflect',
 ];
 
 test('Relic: 데이터 필드가 types/relic.ts 선언 집합 안에 있다', () => {
@@ -302,7 +303,7 @@ test('Monster: 보스 기믹 필드가 BossMechanics 선언 집합 안에 있다
     const mechanics = Object.values(MONSTERS).map((monster) => monster.mechanics).filter(Boolean);
     assert.ok(mechanics.length > 0);
     assertDeclared('MONSTERS mechanics', mechanics, [
-        'heavyStatus', 'guardCounter', 'guardHeal', 'breath', 'summon', 'longFightEnrage', 'longFightReward',
+        'heavyStatus', 'guardCounter', 'guardHeal', 'breath', 'charge', 'summon', 'longFightEnrage', 'longFightReward',
         'firstClearBonusMult', 'relicReward', 'lootTheme',
     ]);
 });

@@ -241,11 +241,10 @@ const computeEnhanceBonus = (equip: EquipSlots) => {
  * @param {Array<object>} synergies
  * @param {object} preBuildStats
  * @param {number} hpRatio
- * @returns {{ atkMult: number, statMult: number, mpFlat: number, lowHpAtk: number, defMult: number }}
+ * @returns {{ atkMult: number, mpFlat: number, lowHpAtk: number, defMult: number }}
  */
 const applySynergyBonuses = (synergies: RelicSynergy[], preBuildStats: { maxMp: number }, hpRatio: number) => {
     let atkMult = 1;
-    let statMult = 1;
     let mpFlat = 0;
     let lowHpAtk = 0;
     // cycle 154: defMult — 'eternal_fortress' 시너지 (DEF +80%) 반영.
@@ -255,11 +254,10 @@ const applySynergyBonuses = (synergies: RelicSynergy[], preBuildStats: { maxMp: 
 
     synergies.forEach((syn) => {
         // cycle 153: 시너지 effect-name 명시 매핑 — baseline 가드 통과 + 향후 분기 확장 지점.
-        // 'vampire_lord' (atkMult 0.2), 'arcane_surge' (mpMult 0.3), 'eternal_life' (statBonus 0.2),
+        // 'vampire_lord' (atkMult 0.2), 'arcane_surge' (mpMult 0.3),
         // 'primordial_wrath' (lowHpAtk 0.8) 모두 bonus-key 기반으로 이미 functional.
         if (syn.bonus.atkMult) atkMult += syn.bonus.atkMult;
         if (syn.bonus.mpMult) mpFlat += Math.floor(preBuildStats.maxMp * syn.bonus.mpMult);
-        if (syn.bonus.statBonus) statMult += syn.bonus.statBonus;
         if (syn.bonus.lowHpAtk && hpRatio < 0.4) lowHpAtk += syn.bonus.lowHpAtk;
         // cycle 154: 'eternal_fortress' (defMult 0.8) — 영원의 요새 — DEF 직접 배율.
         if (syn.bonus.effect === 'eternal_fortress' || syn.bonus.defMult) {
@@ -276,7 +274,7 @@ const applySynergyBonuses = (synergies: RelicSynergy[], preBuildStats: { maxMp: 
         }
     });
 
-    return { atkMult, statMult, mpFlat, lowHpAtk, defMult, critBonus };
+    return { atkMult, mpFlat, lowHpAtk, defMult, critBonus };
 };
 
 /**
@@ -457,14 +455,13 @@ export const calculateFullStats = (player: Player) => {
         scaledAtk *
         (traitBonus.atkMult || 1) *
         synergyBonus.atkMult *
-        synergyBonus.statMult *
         (1 + synergyBonus.lowHpAtk) *
         (1 + streak.atkBonus) *
         synergyDrawback.atkMult
     ) + flatAtk;
     // cycle 154: synergyBonus.defMult — 'eternal_fortress' 시너지 (defMult 0.8) 반영.
-    const finalDef = Math.floor(scaledDef * (traitBonus.defMult || 1) * synergyBonus.statMult * synergyBonus.defMult * synergyDrawback.defMult) + flatDef;
-    const finalMaxHp = Math.floor(scaledMaxHp * synergyBonus.statMult) + flatHp;
+    const finalDef = Math.floor(scaledDef * (traitBonus.defMult || 1) * synergyBonus.defMult * synergyDrawback.defMult) + flatDef;
+    const finalMaxHp = Math.floor(scaledMaxHp) + flatHp;
     const finalMaxMp = scaledMaxMp + flatMp + (traitBonus.mpFlat || 0) + synergyBonus.mpFlat;
     // cycle 237: synergyBonus.critBonus 합산 — primordial_wrath 등 시너지 critChance dead config fix.
     //   baseCritChance에서 제외 (preBuildStats 의존성 회피), finalCritChance에서 합산.

@@ -1647,7 +1647,7 @@ const readSrc = (relPath) => readFile(path.join(ROOT, relPath), 'utf8');
       const source = await readSrc('src/data/relics.ts');
       const fixtures = [
           'eternal_fortress', 'entropy_god', 'primordial_wrath',
-          'vampire_lord', 'arcane_surge', 'eternal_life', 'annihilator',
+          'vampire_lord', 'arcane_surge', 'cross_rhythm', 'finisher',
       ];
       for (const effect of fixtures) {
           const re = new RegExp(`bonus:[^}]+effect: '${effect}'`);

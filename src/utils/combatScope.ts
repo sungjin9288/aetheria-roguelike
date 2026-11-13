@@ -1,5 +1,6 @@
 import type { Player } from '../types/index.js';
 import { endCombatScopedRelics } from './combatScopedRelics.js';
+import { endBehaviorComboScope } from '../systems/relicBehaviorCombos.js';
 
 /**
  * 전투 한 판의 범위를 끝낸다(2026-10 Wave 66) — 전투가 끝나는 모든 경로가 이것 하나를 부른다:
@@ -10,10 +11,12 @@ import { endCombatScopedRelics } from './combatScopedRelics.js';
  *   대기는 전투 턴에만 줄어서, 비우지 않던 동안 대기 상태 스냅숏의 92.1%가 잠긴 기술을 들고 다음 전투를 시작했다
  *   (휴식 · 귀환에서도 그대로였다, 원장 §67.6). 마왕 처치 직후 이어지는 진 보스전도 승리 정산이 이것을 거친다.
  *
+ * - 행동 조합의 세는 수 · 준비 플래그를 지운다(2026-11 H4, `endBehaviorComboScope`) — 셋째 박자 2/3을 다음 전투로 들고 가지 않는다.
+ *
  * 끝낼 것이 없으면 같은 참조를 돌려준다.
  */
 export const endCombatScope = (player: Player): Player => {
-    const relicEnded = endCombatScopedRelics(player);
+    const relicEnded = endBehaviorComboScope(endCombatScopedRelics(player));
     const loadout = relicEnded.skillLoadout;
     if (!loadout || !Object.values(loadout.cooldowns || {}).some((turns) => turns > 0)) return relicEnded;
     return { ...relicEnded, skillLoadout: { ...loadout, cooldowns: {} } };

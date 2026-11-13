@@ -288,6 +288,16 @@ export const BALANCE = {
     // Wave 87 → Wave 88: 예상 타격 계산용 고정 난수(우두머리 · 보스 공용, utils/enemyThreat.ts) — 회피 · 막기 · 방어 자세 판정에
     //   걸리지 않는 값. 강타는 패턴을 강타 확정으로 두고 굴린다.
     ENEMY_THREAT_PROBE_ROLL: 0.999,
+    // 2026-11 H5 (소유자 결정 Q1 ~ Q4, docs/EXECUTION_SKETCH_H5_2026-11.md): 보스 충전 강타 — `every`번째 행동이 강타,
+    //   그 앞 행동이 충전 차례다. 충전과 강타 사이에 보스 최대 생명 × `breakRatio` 이상을 깎거나 기절시키면 강타가 끊긴다.
+    //   보스 데이터(`mechanics.charge`)가 값을 쓰지 않으면 이 기본값이다.
+    BOSS_CHARGE_EVERY: 4,
+    BOSS_CHARGE_BREAK_RATIO: 0.15,
+    // 첫 강타 차례(몇 번째 행동) — 0이면 `every`번째. 2(소유자 결정 "B로 확정", 스케치 §8.1): 첫 행동이 충전, 둘째가 강타 —
+    //   `every`번째(4)이던 동안 충전의 58%가 강타 전에 끝나 대응해도 사망이 줄지 않았다(z −0.82 → 2이면 −2.42).
+    BOSS_CHARGE_FIRST_STRIKE: 2,
+    // 적의 강타 · 맹공 배율(이전에는 enemyAI의 리터럴 1.4) — 충전 강타의 배율 도출(`getChargeReleaseMult`)도 같은 값을 읽는다.
+    ENEMY_HEAVY_HIT_MULT: 1.4,
     HUNT_CHAMPION_READY_MP_PCT: 0.3,
     // Wave 82 (소유자 결정 (c)): 같은 회차 안에서 의뢰가 차수로 이어진다 — 의뢰를 끝낸 뒤에도 그 지역에 머무는 구간(고대 마법 탑 Lv31 ~ 35)을 채운다.
     // Wave 84 (소유자 결정 (c)): 3차까지이던 동안 2회차 고대 마법 탑 Lv31 ~ 35는 세 차수를 다 끝낸 뒤 머무는 구간이라 3시간 이상 공백의 2/3였다(원장 §87).
@@ -694,6 +704,14 @@ export const BALANCE = {
     // 전투 결과 카드 — 승리 뒤 생명 · 기력이 이 비율 이하면 회복을 권하고 한 장 접기(D1)를 막는다(실효 최대치 기준)
     POST_COMBAT_HP_LOW_RATIO: 0.35,
     POST_COMBAT_MP_LOW_RATIO: 0.3,
+    // 2026-11 H1 연속 탐험(docs/EXECUTION_SKETCH_H1_2026-11.md, `utils/autoExplore.ts`) — 걸음 사이 박자(전투 속도 ×2면 절반) ·
+    //   설정의 생명 멈춤 문턱(소유자 결정 Q3 (b) 30 · 50 · 70%, 기본 50% — 실제 멈춤은 위 결과 카드 문턱 아래로 내려가지 않는다) ·
+    //   "최소 피해 한 방" 시험 굴림(첫 굴림 = 피해 분산 최소, 나머지 = 치명타 · 빙결 판정에 걸리지 않는 값).
+    AUTO_EXPLORE_STEP_MS: 450,
+    AUTO_EXPLORE_HP_STOP_OPTIONS: [0.3, 0.5, 0.7],
+    AUTO_EXPLORE_HP_STOP_DEFAULT: 0.5,
+    AUTO_EXPLORE_PROBE_VARIANCE_ROLL: 0,
+    AUTO_EXPLORE_PROBE_OTHER_ROLL: 0.999999,
 
     // 리텐션 훅 — 복귀 브리핑 카드
     RETURN_BRIEFING_HOURS: 2,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시 (2026-11 고도화 E1: 6 → 2, 사람 테스트로 다시 정한다)

@@ -111,17 +111,23 @@ test('페이즈: 마지막 페이즈(3페이즈) 강타가 페이즈 전 강타�
     // 페이즈 전 강타는 엔진의 강타 한 방과 같다(강타 확정 · 고정 굴림).
     const stats = calculateFullStats({ ...player, hp: calculateFullStats(player).maxHp });
     const direct = CombatEngine.enemyAttack({ ...player, hp: stats.maxHp, status: [], statusStacks: {} },
-        { ...boss, phase2: undefined, phase3: undefined, pattern: { guardChance: 0, heavyChance: 1 }, actionCount: 0 },
+        // 3번째 행동(충전 · 강타 차례 밖, H5)으로 굴린다.
+        { ...boss, phase2: undefined, phase3: undefined, pattern: { guardChance: 0, heavyChance: 1 }, actionCount: 2 },
         stats, () => BALANCE.ENEMY_THREAT_PROBE_ROLL).damage;
     assert.equal(noPhases, Math.floor(direct));
 });
 
-test('브레스: 브레스가 강타보다 센 보스는 브레스 값이다', () => {
+test('브레스: 브레스가 강타보다 센 보스는 브레스 값이다(H5 — 레드 드래곤은 "충전 → 브레스"라 모은 브레스가 그 값이다)', () => {
     const { player, boss } = bossAt('용의 둥지', '레드 드래곤', 25);
     assert.ok(boss.mechanics?.breath);
-    const withBreath = estimateEnemyMaxHit(player, boss);
-    const heavyOnly = estimateEnemyMaxHit(player, { ...boss, mechanics: { ...boss.mechanics, breath: undefined } });
+    assert.ok(boss.mechanics?.charge);
+    // 충전 강타를 빼고 브레스만 본다 — 브레스가 강타보다 세면 브레스 값이다.
+    const breathOnly = { ...boss, mechanics: { ...boss.mechanics, charge: undefined } };
+    const withBreath = estimateEnemyMaxHit(player, breathOnly);
+    const heavyOnly = estimateEnemyMaxHit(player, { ...breathOnly, mechanics: { ...breathOnly.mechanics, breath: undefined } });
     assert.ok(withBreath > heavyOnly, `브레스 ${withBreath} > 강타 ${heavyOnly}`);
+    // 충전과 함께 선언하면 모은 강타가 곧 브레스다 — 가장 센 한 방은 같은 브레스 값이다(충전 강타 배율이 따로 붙지 않는다).
+    assert.equal(estimateEnemyMaxHit(player, boss), withBreath);
 });
 
 test('소환 · 전환 상태: 하수인이 함께 친 피해와 2페이즈 저주의 증폭이 한 행동에 들어간다', () => {

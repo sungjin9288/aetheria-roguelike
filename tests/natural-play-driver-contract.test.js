@@ -127,6 +127,28 @@ test('경제 정책(E9)은 옵션이다 — 끄면 결과에 흔적이 없고, �
     await assert.rejects(() => runNaturalPlay({ ...SHORT, economy: 'all' }), /unknown economy/);
 });
 
+test('유물 정책(H4)은 옵션이다 — 기본은 흔적이 없고, observe는 행동을 바꾸지 않고 기록만 더하며, aware · first는 결정론적이다', async () => {
+    const off = await runNaturalPlay(SHORT);
+    assert.equal(off.relicPlay, undefined);
+    assert.equal(off.relicPick, undefined);
+    assert.ok(off.runs.every((run) => run.behavior === undefined), '기본 결과에는 행동 기록이 없다');
+    const observed = await runNaturalPlay({ ...SHORT, relicPlay: 'observe' });
+    const strip = ({ relicPlay: _p, runs, ...rest }) => ({ ...rest, runs: runs.map(({ behavior: _b, ...run }) => run) });
+    assert.deepEqual(strip(observed), off, 'observe는 기록만 더한다(행동 · 난수 그대로)');
+    const [run] = observed.runs;
+    assert.ok(run.behavior.attack + run.behavior.skill + run.behavior.item > 0, '전투 행동을 센다');
+    for (const key of ['on', 'ready', 'fired', 'plays']) assert.equal(Object.keys(run.behavior[key]).length, 6, key);
+    assert.ok(Object.values(run.behavior.plays).every((n) => n === 0), 'observe는 조합 때문에 바꾼 행동이 없다');
+    const aware = await runNaturalPlay({ ...SHORT, relicPlay: 'aware' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, relicPlay: 'aware' }), aware);
+    assert.equal(aware.relicPlay, 'aware');
+    const first = await runNaturalPlay({ ...SHORT, relicPick: 'first' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, relicPick: 'first' }), first);
+    assert.equal(first.relicPick, 'first');
+    await assert.rejects(runNaturalPlay({ ...SHORT, relicPlay: 'always' }), /unknown relicPlay/);
+    await assert.rejects(runNaturalPlay({ ...SHORT, relicPick: 'best' }), /unknown relicPick/);
+});
+
 test('장의 선물 정책(H3)은 카드 종류를 고르고, 그 종류가 패에 없으면 유물 카드 · 무작위는 시드로 결정론적이다', () => {
     const full = { chapter: 4, cards: [{ id: 'relic', kind: 'relic' }, { id: 'prefix', kind: 'prefix' }, { id: 'enhance', kind: 'enhance' }] };
     const noGear = { chapter: 5, cards: [{ id: 'relic', kind: 'relic' }, { id: 'relic-2', kind: 'relic' }, { id: 'relic-3', kind: 'relic' }] };
@@ -183,4 +205,41 @@ test('이벤트 화면 관찰(H7): 틀을 가르고 숫자만 다른 글은 같�
     for (const [kind, n] of Object.entries(events.firstByKind)) assert.ok(n <= events.byKind[kind], kind);
     assert.ok(events.firstAt.every(([at], i, all) => i === 0 || at >= all[i - 1][0]), '시각 순서');
     assert.equal(result.runs[0].eventSeen, undefined, '내부 집합은 기록에 남기지 않는다');
+});
+
+test('연속 탐험 · 가방 여유 정책(H1)은 옵션이다 — 기본은 흔적이 없고, 켜면 결정론적이며 입력 · 연쇄 · 멈춤의 합이 맞는다', async () => {
+    const off = await runNaturalPlay(SHORT);
+    assert.equal(off.autoExplore, undefined);
+    assert.equal(off.bagRoom, undefined);
+    assert.ok(off.runs.every((run) => run.autoExplore === undefined), '기본 결과에는 연속 탐험 기록이 없다');
+    // 가방이 찬 채로는 결과 카드가 접히지 않아 연쇄를 켤 수 없다(드라이버는 가방을 정리하지 않는다) — 가방 여유 정책과 함께 켠다.
+    const ON = { ...SHORT, autoExplore: 'on', bagRoom: 'on' };
+    const on = await runNaturalPlay(ON);
+    assert.deepEqual(await runNaturalPlay(ON), on);
+    assert.equal(on.autoExplore, 'on');
+    assert.equal(on.stalled, null, JSON.stringify(on.stalled));
+    for (const run of on.runs) {
+        const record = run.autoExplore;
+        const { inputs, late, chains, stops } = record;
+        assert.ok(record.starts >= 1, '첫 전직 뒤 연쇄를 켠다');
+        // 회차가 닫힐 때 열린 연쇄도 닫는다 — 켠 수 = 닫힌 연쇄 수 = 멈춤 수.
+        assert.equal(chains.length, record.starts);
+        assert.equal(Object.values(stops).reduce((a, b) => a + b, 0), chains.length);
+        // 연쇄 길이의 합 = 연속 탐험이 낸 입력(탐험 + 일반 공격). 켜는 탭은 수동이다.
+        assert.equal(chains.reduce((a, b) => a + b, 0), inputs.autoExplore + inputs.autoAttack + inputs.autoSkill);
+        assert.ok(inputs.manualExplore >= record.starts);
+        for (const key of Object.keys(inputs)) assert.ok(late[key] <= inputs[key], key);
+        assert.equal(record.deathsInChain, 0, '연속 탐험은 한 번에 쓰러지는 적과만 싸운다');
+    }
+    const bag = await runNaturalPlay({ ...SHORT, bagRoom: 'on' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, bagRoom: 'on' }), bag);
+    assert.equal(bag.bagRoom, 'on');
+    assert.equal(bag.stalled, null, JSON.stringify(bag.stalled));
+    // `tidy`는 `on`에 더해 소모품도 판다(종류마다 몇 개만 남긴다) — 결정론적이고 `on`과 다른 결과다.
+    const tidy = await runNaturalPlay({ ...SHORT, bagRoom: 'tidy' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, bagRoom: 'tidy' }), tidy);
+    assert.equal(tidy.bagRoom, 'tidy');
+    assert.equal(tidy.stalled, null, JSON.stringify(tidy.stalled));
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, autoExplore: 'yes' }), /unknown autoExplore/);
+    await assert.rejects(() => runNaturalPlay({ ...SHORT, bagRoom: 'yes' }), /unknown bagRoom/);
 });

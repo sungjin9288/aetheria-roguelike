@@ -16,7 +16,6 @@ import type { LootLog } from './CombatEngine.loot.js';
 import { scaleProgressionExpReward } from '../data/progressionProfiles.js';
 import { endDevourBonus } from '../utils/adventureRelicBonuses.js';
 import { endCombatScope } from '../utils/combatScope.js';
-import { isBorrowedRelic } from './chaosHeart.js';
 import { getEffectiveMaxHp, getEffectiveMaxMpFull, healWithinMax } from './vitals.js';
 import { getChallengeMaxHpGain, getChallengeRewardMult, getGoldIncome } from '../utils/challengeRules.js';
 import { getCycleBestLevel } from '../utils/cycleBestLevel.js';
@@ -106,7 +105,6 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
         //   (마왕 처치 직후 이어지는 진 보스전도 새로 시작한다).
         const p: Player = { ...endCombatScope(endDevourBonus(player)) };
         const relics = p.relics || [];
-        const returnedBorrowedRelic = (player.relics || []).some(isBorrowedRelic);
         const baseName: string = this.resolveEnemyBaseName(enemy) || '';
         const previousBossClears = p.stats?.killRegistry?.[baseName] || 0;
         const bossBrief = enemy.isBoss ? BOSS_BRIEFS[baseName] : null;
@@ -243,24 +241,15 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             p.relics = relics.map((r) => (r.effect === 'kill_stack' ? { ...r, kills: (r.kills || 0) + 1 } : r));
         }
 
-        // 처치 공격력은 원정 동안 유지하며 시너지는 처치당 증가량에 합산한다.
-        // 2026-10 Wave 56: 실제 승리 경로가 켜진 조합을 넘기지 않아 절멸자 · 공허의 용의 누적이 0이었다 — 넘기지 않으면 유물에서 구한다.
+        // 처치 공격력은 원정 동안 유지한다(허공의 왕좌). 2026-11 H4: 처치당 증가량을 더하던 조합(절멸자 · 공허의 용 killStack)은
+        //   행동 조합(마무리 · 추격)이 됐다.
         const killStackRelic = relics.find((r) => r.effect === 'kill_stack_atk');
-        //   Wave 57: 빌린 유물을 돌려줬으면 전투 중 조합(빌린 유물이 켠 조합 포함)이 아니라 남은 유물로 다시 구한다.
-        const synergiesForKill = returnedBorrowedRelic
-            ? getActiveRelicSynergies(relics)
-            : (passiveBonus.activeSynergies ?? getActiveRelicSynergies(relics));
-        const killStackSynergyBonus = synergiesForKill.reduce((acc: number, s) =>
-            acc + (s.bonus?.killStack || 0), 0);
-        if (killStackRelic || killStackSynergyBonus > 0) {
-            const perKill = (killStackRelic?.val?.perKill || 0) + killStackSynergyBonus;
-            const maxStack = killStackRelic?.val?.max || 1;
+        if (killStackRelic) {
+            const perKill = killStackRelic.val?.perKill || 0;
+            const maxStack = killStackRelic.val?.max || 1;
             const next = Math.min(maxStack, (p.adventureRelicBonuses?.killStackAtk || 0) + perKill);
             p.adventureRelicBonuses = { ...p.adventureRelicBonuses, killStackAtk: next };
-            const sourceLabel = killStackRelic
-                ? MSG.KILL_STACK_SOURCE_RELIC
-                : MSG.KILL_STACK_SOURCE_SYNERGY(synergiesForKill.filter((s) => s.bonus?.killStack).map((s) => s.label).join(' · '));
-            logs.push({ type: 'event', text: MSG.KILL_STACK_ATTACK(sourceLabel, Math.round(next * 100)) });
+            logs.push({ type: 'event', text: MSG.KILL_STACK_ATTACK(MSG.KILL_STACK_SOURCE_RELIC, Math.round(next * 100)) });
         }
 
         // 마지막 처치량만 다음 전투에 예약한다. 승리 화면에서는 HP를 올리지 않는다.
@@ -276,7 +265,7 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             }
         }
 
-        // cycle 153: 시너지 'immortal_warrior' (killHeal) / 'infinite_devour' (devour) — 처치 시 HP 회복.
+        // cycle 153: 시너지 'immortal_warrior' (killHeal) — 처치 시 HP 회복. 무한 포식(devour)은 2026-11 H4에 끊는 일격이 됐다.
         const victorySynergies = getActiveRelicSynergies(relics);
         const killHealSyn = victorySynergies.find((s) =>
             s.bonus.effect === 'immortal_warrior' || s.bonus.killHeal);
@@ -284,13 +273,6 @@ export const outcomeMethods: OutcomeMixin & ThisType<OutcomeMixinContext> = {
             const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (killHealSyn.bonus.killHeal ?? 0));
             p.hp = healWithinMax(p.hp || 1, heal, effectiveMaxHp);
             logs.push({ type: 'heal', text: MSG.IMMORTAL_WARRIOR_HEAL(heal) });
-        }
-        const devourSyn = victorySynergies.find((s) =>
-            s.bonus.effect === 'infinite_devour' || s.bonus.devour);
-        if (devourSyn) {
-            const heal = Math.floor((p.maxHp || BALANCE.DEFAULT_MAX_HP) * (devourSyn.bonus.devour ?? 0));
-            p.hp = healWithinMax(p.hp || 1, heal, effectiveMaxHp);
-            logs.push({ type: 'heal', text: MSG.INFINITE_DEVOUR_HEAL(heal) });
         }
 
         // 유물: 별의 핵 (mp_restore_battle) — 전투 종료 시 MP 전량 회복

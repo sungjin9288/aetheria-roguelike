@@ -35,6 +35,8 @@ import type { ControlButton } from './control/types';
 import type { VitalsFloatAmount } from './combat/CombatVitalsStrip';
 import { buildControlButtons } from './control/controlButtons';
 import { isStorySceneSeen } from '../utils/storySceneLedger';
+import AutoExploreToggle from './control/AutoExploreToggle';
+import { useAutoExploreControl } from './control/autoExploreContext';
 
 interface ControlPanelProps {
   gameState?: GameMode;
@@ -88,6 +90,7 @@ const ControlPanel = ({
   healFlash,
   damageAmount = null,
 }: ControlPanelProps) => {
+  const autoExplore = useAutoExploreControl();
   const mapData = DB.MAPS[player.loc as string];
   const currentLocation = player.loc || '';
   const playerLevel = player.level || 1;
@@ -156,7 +159,7 @@ const ControlPanel = ({
   };
 
   if (gameState === GS.COMBAT) {
-    return (
+    const combatPanel = (
       <CombatPanel
         player={player}
         actions={actions}
@@ -168,6 +171,14 @@ const ControlPanel = ({
         healFlash={healFlash}
         damageAmount={damageAmount}
       />
+    );
+    // 2026-11 H1: 연속 탐험이 시작한 전투에서도 진행 줄 · 멈추기 단추가 보인다.
+    if (!autoExplore?.running) return combatPanel;
+    return (
+      <div className="w-full space-y-2">
+        <AutoExploreToggle control={autoExplore} />
+        {combatPanel}
+      </div>
     );
   }
 
@@ -349,7 +360,8 @@ const ControlPanel = ({
         />
       ) : (
         <FieldDock
-          explore={exploreButton}
+          // 2026-11 H1: 연속 탐험이 걷는 동안 탐험 단추는 쉰다 — 같은 걸음을 두 번 보내지 않는다.
+          explore={autoExplore?.running ? { ...exploreButton, disabled: true } : exploreButton}
           move={moveButton}
           bag={bagButton}
           exploreSublabel={getVisibleLocationName(player, player.loc) || ''}
@@ -357,6 +369,7 @@ const ControlPanel = ({
           scoutAvailability={scoutAvailability}
           onScout={actions?.scout ? () => actions.scout?.() : undefined}
           recommendedKey={recommendedButton}
+          autoExplore={autoExplore?.unlocked ? <AutoExploreToggle control={autoExplore} /> : null}
           auxiliary={auxiliaryButtons.length > 0 ? (
             <div className="mt-2 grid grid-cols-1 gap-2">
               {auxiliaryButtons.map((button) => renderActionButton(button, '', {}))}

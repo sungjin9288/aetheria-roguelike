@@ -1,9 +1,9 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "618e6965542180e4e211dbbd7212498ea5933fabf1b6c4cd02dd0a1f542d4419",
+  "reportHash": "43457a4cfe906798cd2e310ade189fdeeb4ffcb87f55856354e7483f84b2cc83",
   "sourceHashes": {
-    "src/data/relics.ts": "3f25d653491db200092246c461650f6d2f50caf2175a984bf43c0d1ad20731d4",
-    "src/systems/CombatEngine.actions.ts": "3555d67b425c77f0e2e37555367aa95ca68243fb071f1b859c893a0043023829",
+    "src/data/relics.ts": "bebb63def30729876202ad58f344f39407a557e346bfaf856eddbaff1f81b66c",
+    "src/systems/CombatEngine.actions.ts": "62a72d9e1e003f37c1acc0d1129fab7a2588c47c07f5dac7500a454e43be1f91",
     "src/systems/relicDotMultiplierAudit.ts": "6eb7b8877edbd22b035ce13e3944029a39f099b3e32bb372900d46c1ad1985c2",
     "src/utils/dataMigration.ts": "92f19020fa32e195c27cd63b32e5be2cc82eddd970a10344971d9e2d6d999e4b",
     "src/reducers/handlers/combatHandlers.ts": "1f2aa015ea4dce5a610373ca2c7c88f397d9ae3d0f51cc120b18578eacdde576",
@@ -266,7 +266,7 @@
       "settledOnce": true,
       "replayIsSameObject": true,
       "mp": 180,
-      "enemyHp": 145,
+      "enemyHp": 205,
       "enemyDots": [
         "burn"
       ],

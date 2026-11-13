@@ -2,10 +2,10 @@
   "hashAlgorithm": "sha256",
   "reportHash": "db4e560c4f618e7dd58f746b5705d45acebf267ef3c97e1cd43dca162b6aa25d",
   "authorityHashes": {
-    "catalog": "3f25d653491db200092246c461650f6d2f50caf2175a984bf43c0d1ad20731d4",
+    "catalog": "bebb63def30729876202ad58f344f39407a557e346bfaf856eddbaff1f81b66c",
     "resolver": "df171d5221128d47b8bf516fe4fad2cf916b5cfc8be0211720dd0197c2692b55",
-    "statsCalculator": "0aaa77bdd376f9be3a1b14d112f9beb5a631ed182d682778976f1cb5587a3b1c",
-    "combatEngine": "1affa044c91b77835eda2e9ff6a3b7462fd42c71dc729654d53cfe8a329cfc42",
+    "statsCalculator": "625297d6a5a06c8192146803d6b4c3f69e176b8597af1a737bd1a64f59d66836",
+    "combatEngine": "faf17c4b012b357110db5e7a69903a74d6066d711e1ca882f9b088472a7457ab",
     "audit": "e457cefa17209a3840ccbd48101e9e00bc5db6059dbc319bea779a429b9b17fc",
     "verifier": "e69920bf3143b989052fd8278ec8006d79412a8e3c58222f7c66cf22a5afbb0a",
     "focusedTest": "8d59929e454b062d86c16981dcce1212dc76061888b2697bec5c250bb3a84972",

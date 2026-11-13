@@ -26,7 +26,7 @@ import { createChapterProgress, type ChapterRecap } from '../utils/chapterRecap'
 import { BAG_RECIPES } from '../data/bagRecipes';
 import { MIRROR_NODES } from '../data/mirror';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
-import { RELICS } from '../data/relics';
+import { RELICS, RELIC_SYNERGIES } from '../data/relics';
 import { isSignatureItem } from '../data/signatureItems';
 import { getPrestigeUnlocks } from '../systems/prestigeUnlocks';
 import { GS } from '../reducers/gameStates';
@@ -421,7 +421,22 @@ export interface AetheriaTestApi {
      * 경험은 0(레벨이 오르지 않는다), 가방은 앞의 다섯 칸만 남긴다(가득 차지 않는다). 첫 공격의 승리가 접힌 결과 카드다.
      */
     seedSwiftVictoryScenario: () => boolean;
+    /**
+     * 2026-11 H1: 연속 탐험을 켤 수 있는 상태로 만든다 — 첫 전직(전사) 뒤 · 처음 숲 대기 · Lv10 경험 0(숲의 처치로 레벨이 오르지 않는다) ·
+     * 공격력 500(숲의 일반 적은 최소 피해 한 방) · 생명 · 기력 실효 최대 · 가방 앞 다섯 칸. 연속 탐험 토글이 그려지고 켤 수 있다.
+     */
+    seedAutoExploreScenario: () => boolean;
+    /**
+     * 2026-11 H5: 충전 강타를 모은 보스(`bossName` — 실제 `mechanics`, `mapName`에서)와 싸우는 중으로 만든다. 보스 생명은 3200이고
+     * 예고 칩은 충전 강타 · 끊기까지 남은 피해다(`partialDamage`만큼 이미 깎인 상태). 생명은 실효 최대치다.
+     */
+    seedBossChargeScenario: (bossName: string, mapName: string, partialDamage?: number) => boolean;
     seedCombatSkillReadinessScenario: (mp: number) => boolean;
+    /**
+     * 2026-11 H4: 행동 조합 하나의 유물 두 조각을 든 채 일반 적과 전투를 시작한다 — `enemyHpRatio`는 적의 남은 생명 비율,
+     * `beatCount`는 셋째 박자의 센 수. 조합 효과가 없거나 유물을 못 찾으면 false.
+     */
+    seedBehaviorComboScenario: (effect: string, options?: { enemyHpRatio?: number; beatCount?: number }) => boolean;
     seedAvatarScenario: (preset: string) => boolean;
     injectPostCombatResult: () => void;
     injectRelicChoice: () => boolean | undefined;
@@ -694,6 +709,9 @@ export const useGameTestApi = (
                     job: e.player.job,
                     level: e.player.level,
                     exp: e.player.exp,
+                    // 2026-11 H1: 연속 탐험 e2e가 읽는다 — 걸음이 실제 탐험인지 · 생명 멈춤 문턱 설정.
+                    explores: e.player.stats?.explores ?? 0,
+                    autoExploreHpStop: e.player.settings?.autoExploreHpStop ?? null,
                     questCount: Array.isArray(e.player.quests) ? e.player.quests.length : 0,
                     expeditionFocusQuestIds: Array.isArray(e.player.expeditionFocusQuestIds)
                         ? e.player.expeditionFocusQuestIds
@@ -1879,6 +1897,26 @@ export const useGameTestApi = (
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
                 return true;
             },
+            seedBossChargeScenario: (bossName: string, mapName: string, partialDamage = 0) => {
+                const er = engineRef.current;
+                const profile = DB.MONSTERS[bossName];
+                if (!profile?.mechanics?.charge || !DB.MAPS[mapName]) return false;
+                const scenarioPlayer = { ...er.player, loc: mapName, level: 35 };
+                const fullStats = calculateFullStats(scenarioPlayer)!;
+                er.dispatch({ type: AT.SET_PLAYER, payload: { loc: mapName, level: 35, hp: fullStats.maxHp, mp: fullStats.maxMp } });
+                const maxHp = 3200;
+                const dealt = Math.max(0, Math.floor(Number(partialDamage) || 0));
+                er.dispatch({
+                    type: AT.SET_ENEMY,
+                    payload: {
+                        name: bossName, baseName: bossName, level: 35, hp: maxHp - dealt, maxHp, atk: 120, def: 54, exp: 2400, gold: 1800,
+                        isBoss: true, pattern: { heavyChance: 0.4, guardChance: 0.45 }, mechanics: profile.mechanics,
+                        actionCount: 3, chargeArmed: true, chargeHpMark: maxHp,
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
+            },
             seedSwiftVictoryScenario: () => {
                 const er = engineRef.current;
                 const species = er.player.loc ? DB.MAPS[er.player.loc]?.monsters?.[0] : undefined;
@@ -1902,6 +1940,63 @@ export const useGameTestApi = (
                         exp: 1,
                         gold: 1,
                         pattern: { heavyChance: 0, guardChance: 0 },
+                    },
+                });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });
+                return true;
+            },
+            seedAutoExploreScenario: () => {
+                const er = engineRef.current;
+                // 시작 마을에서 나가는 첫 사냥 지역 · 기본 직업의 첫 전직(데이터에서 읽는다).
+                const loc = (DB.MAPS[CONSTANTS.START_LOCATION]?.exits || [])
+                    .find((name) => DB.MAPS[name]?.type === 'dungeon' && (DB.MAPS[name]?.monsters?.length ?? 0) > 0);
+                const job = DB.CLASSES[CONSTANTS.DEFAULT_JOB]?.next?.[0];
+                if (!loc || !job) return false;
+                const patch = {
+                    job,
+                    loc,
+                    level: 10,
+                    exp: 0,
+                    nextExp: getLevelExpRequirement(10),
+                    atk: 500,
+                    inv: (er.player.inv || []).slice(0, 5),
+                    status: [],
+                    activeExpedition: null,
+                };
+                const fullStats = calculateFullStats({ ...er.player, ...patch })!;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: { ...patch, hp: fullStats.maxHp, mp: fullStats.maxMp },
+                });
+                er.dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                return true;
+            },
+            seedBehaviorComboScenario: (effect: string, options: { enemyHpRatio?: number; beatCount?: number } = {}) => {
+                const er = engineRef.current;
+                const synergy = RELIC_SYNERGIES.find((syn) => syn.bonus.effect === effect);
+                const relics = synergy?.requires.map((name) => RELICS.find((relic) => relic.name === name));
+                const species = (er.player.loc ? DB.MAPS[er.player.loc]?.monsters?.[0] : undefined)
+                    ?? Object.values(DB.MAPS).find((map) => (map.monsters?.length ?? 0) > 0)?.monsters?.[0];
+                if (!synergy || !relics || relics.some((relic) => !relic) || !species) return false;
+                const ownedRelics = relics.filter((relic): relic is Relic => Boolean(relic)).map((relic) => ({ ...relic }));
+                const beatCount = Math.max(0, Math.floor(Number(options.beatCount) || 0));
+                const scenarioPlayer: Player = { ...er.player, level: 20, relics: ownedRelics };
+                const fullStats = calculateFullStats(scenarioPlayer)!;
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: {
+                        level: 20, relics: ownedRelics, hp: fullStats.maxHp, mp: fullStats.maxMp,
+                        combatFlags: beatCount > 0 ? { beatCount } : {},
+                    },
+                });
+                const maxHp = 2000;
+                const ratio = Math.min(1, Math.max(0.01, Number(options.enemyHpRatio) || 1));
+                er.dispatch({
+                    type: AT.SET_ENEMY,
+                    payload: {
+                        name: species, baseName: species, level: 20, hp: Math.max(1, Math.floor(maxHp * ratio)), maxHp,
+                        atk: 30, def: 0, exp: 10, gold: 5, pattern: { heavyChance: 0, guardChance: 0 },
                     },
                 });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.COMBAT });

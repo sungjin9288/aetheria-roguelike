@@ -32,7 +32,7 @@ test('elemental six preserves approved monster and map gameplay data', () => {
     // Wave 51(소유자 결정 "성직자의 컨셉"): 몬스터 계열 태그(family, 언데드 22 · 마족 7)를 더한 의도된 게임 데이터 변경 — 재고정.
     // Wave 59(소유자 결정 "보스 기믹 전부 설명대로"): 보스 기믹 선언(mechanics) · 페이즈 상태 · 2페이즈 패턴을 고친 의도된 게임 데이터 변경 — 재고정.
     // Wave 60(소유자 결정 "보스별 고정 생명 상향"): 브리핑 보스 22종 hpMult를 1:1 대결로 보정한 의도된 게임 데이터 변경 — 재고정.
-    assert.equal(hashMonsters(), 'fb70034911ffd1fa30908d7ee253e35f127bab634487bd772b3406ebed872dce', 'src/data/monsters.ts gameplay data');
+    assert.equal(hashMonsters(), '62f069febc72d4d23417a65105c67ddec7f643e6b45019a69a770a5428fb506c', 'src/data/monsters.ts gameplay data');
     // Wave 61(소유자 결정 "지역 조우에 넣음"): 보스 6종을 지역 조우 풀에 넣고 심연 층 보스 목록을 채우고 지역 설명 잔재를 고친 의도된 게임 데이터 변경 — 재고정.
     // Wave 62(소유자 결정 "전부 설명대로"): 북부 요새 판매 등급 3 · 황금 왕국 물가 ×1.3을 지역 데이터로 선언하고 두 상점 · 허공의 섬 문구를 고친 의도된 게임 데이터 변경 — 재고정.
     // Wave 118(소유자 결정 "보스를 조우의 일부로"): 용의 둥지에 bossEncounterShare를 선언한 의도된 게임 데이터 변경 — 재고정.

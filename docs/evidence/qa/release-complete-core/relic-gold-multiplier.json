@@ -2,9 +2,9 @@
   "hashAlgorithm": "sha256",
   "reportHash": "40ed0a3e64d43377ba9fedf64c9b210b322faa41ad5e0803e2b243d6512bb69c",
   "authorityHashes": {
-    "catalog": "3f25d653491db200092246c461650f6d2f50caf2175a984bf43c0d1ad20731d4",
-    "combatActions": "3555d67b425c77f0e2e37555367aa95ca68243fb071f1b859c893a0043023829",
-    "combatOutcome": "f24b9d3a3cd81728f1d9cfe078f1136748dedee2c1eab2083f1de226bdf8f3fe"
+    "catalog": "bebb63def30729876202ad58f344f39407a557e346bfaf856eddbaff1f81b66c",
+    "combatActions": "62a72d9e1e003f37c1acc0d1129fab7a2588c47c07f5dac7500a454e43be1f91",
+    "combatOutcome": "452645f9f1741873a3201e0d65d6cedd3a1fb103a22285b76850372f7df72e92"
   },
   "report": {
     "schemaVersion": 1,

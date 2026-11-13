@@ -71,6 +71,9 @@ const load = (dir, collectDeaths = false) => {
                     zero: run.deaths === 0 ? 1 : 0, loop: run.deaths >= LOOP_DEATHS ? 1 : 0,
                     ruleId: run.ruleId, ruleOptional: Boolean(run.ruleOptional), ruleDeclined: Boolean(run.ruleDeclined), newSignatures,
                     chapterPicks: Array.isArray(run.chapterPicks) ? run.chapterPicks : null, pickBandHours: bandHours(run, ...PICK_BAND),
+                    bossCharge: run.bossCharge || null,
+                    behavior: run.behavior || null,
+                    autoExplore: run.autoExplore || null,
                     events: run.events || null, firstPerHour: run.events && run.hours > 0 ? run.events.firstAt.length / run.hours : null,
                     lateShare: lateBandShare(run), reclimbs: reclimbRatios(run), ladderRank: Number(run.ladderRank) || 0, essence: Number(run.essence) || 0,
                 });
@@ -115,6 +118,53 @@ if (!baseDir) {
             const firstTotal = observed.reduce((sum, r) => sum + r.events.firstAt.length, 0);
             const perHour = firstTotal / Math.max(1e-9, observed.reduce((sum, r) => sum + r.hours, 0));
             console.log(`  이벤트: 판당 ${(observed.reduce((sum, r) => sum + r.events.total, 0) / observed.length).toFixed(0)} · 처음 보는 ${(firstTotal / observed.length).toFixed(1)} (${perHour.toFixed(2)}/시간, 판 중앙값 ${quantile(observed.map((r) => r.firstPerHour), 0.5).toFixed(2)}) · ${Object.entries(all).sort((a, b) => b[1] - a[1]).map(([kind, n]) => `${kind} ${(n / observed.length).toFixed(1)}(${((first[kind] || 0) / observed.length).toFixed(1)})`).join(' ')}`);
+        }
+        // 보스 충전 강타(H5) — 판당 모은 수 · 끊긴 비율 · 맞은 비율 · 강타 전에 쓰러뜨린 비율.
+        const charged = xs.filter((r) => r.bossCharge);
+        if (charged.length) {
+            const sum = (key) => charged.reduce((acc, r) => acc + (r.bossCharge[key] || 0), 0);
+            const total = Math.max(1, sum('charged'));
+            console.log(`  충전 강타: 판당 ${(sum('charged') / charged.length).toFixed(1)} · 끊김 ${(100 * sum('broken') / total).toFixed(0)}% · 맞음 ${(100 * sum('hit') / total).toFixed(0)}% · 강타 전 처치 ${(100 * sum('killed') / total).toFixed(0)}%`);
+        }
+        // 행동 조합(H4) — 일반 공격 비율, 조합별 켜진 차례 비율(전투 행동 중) · 걸린 차례 중 터진 비율 · aware가 바꾼 행동 수(판당).
+        const tracked = xs.filter((r) => r.behavior);
+        if (tracked.length) {
+            const total = (r) => r.behavior.attack + r.behavior.skill + r.behavior.item;
+            const actions = Math.max(1, tracked.reduce((sum, r) => sum + total(r), 0));
+            const sumOf = (key, effect) => tracked.reduce((sum, r) => sum + (r.behavior[key][effect] || 0), 0);
+            const effects = Object.keys(tracked[0].behavior.on);
+            const parts = effects.map((effect) => `${effect} 켜짐 ${(100 * sumOf('on', effect) / actions).toFixed(1)}% · 걸림 ${(sumOf('ready', effect) / tracked.length).toFixed(1)} · 터짐 ${(100 * sumOf('fired', effect) / Math.max(1, sumOf('ready', effect))).toFixed(0)}% · 바꿈 ${(sumOf('plays', effect) / tracked.length).toFixed(1)}`);
+            const attacks = tracked.reduce((sum, r) => sum + r.behavior.attack, 0);
+            const items = tracked.reduce((sum, r) => sum + r.behavior.item, 0);
+            console.log(`  행동 조합: 판당 전투 행동 ${(actions / tracked.length).toFixed(0)} · 일반 공격 ${(100 * attacks / actions).toFixed(1)}% · 소모품 ${(100 * items / actions).toFixed(1)}%`);
+            parts.forEach((part) => console.log(`    ${part}`));
+        }
+        // 연속 탐험(H1) — 탐험 · 전투 입력 중 연속 탐험이 낸 비율(전체 · Lv21 이후), 연쇄 길이, 멈춤 이유, 연쇄 중 사망.
+        const autoRows = xs.filter((r) => r.autoExplore);
+        if (autoRows.length) {
+            const sumInputs = (key) => autoRows.reduce((acc, r) => {
+                for (const [kind, n] of Object.entries(r.autoExplore[key])) acc[kind] = (acc[kind] || 0) + n;
+                return acc;
+            }, {});
+            const share = (t) => {
+                const auto = (t.autoExplore || 0) + (t.autoAttack || 0) + (t.autoSkill || 0);
+                const all = auto + (t.manualExplore || 0) + (t.manualCombat || 0);
+                return `${(100 * auto / Math.max(1, all)).toFixed(1)}% (판당 연속 ${(auto / autoRows.length).toFixed(0)} / 수동 ${((all - auto) / autoRows.length).toFixed(0)}, 탐험 수동 ${((t.manualExplore || 0) / autoRows.length).toFixed(0)} · 전투 수동 ${((t.manualCombat || 0) / autoRows.length).toFixed(0)})`;
+            };
+            const shareOf = (r, key) => {
+                const t = r.autoExplore[key];
+                const auto = t.autoExplore + t.autoAttack + (t.autoSkill || 0);
+                const all = auto + t.manualExplore + t.manualCombat;
+                return all > 0 ? auto / all : null;
+            };
+            const lateShares = autoRows.map((r) => shareOf(r, 'late')).filter((v) => v !== null);
+            const chains = autoRows.flatMap((r) => r.autoExplore.chains);
+            const stops = autoRows.reduce((acc, r) => { for (const [k, n] of Object.entries(r.autoExplore.stops)) acc[k] = (acc[k] || 0) + n; return acc; }, {});
+            const stopTotal = Math.max(1, Object.values(stops).reduce((a, b) => a + b, 0));
+            console.log(`  연속 탐험: 전체 ${share(sumInputs('inputs'))}`);
+            console.log(`    Lv${21}+ ${share(sumInputs('late'))} · 판 중앙값 ${lateShares.length ? (100 * quantile(lateShares, 0.5)).toFixed(1) : '-'}% · 하위 10% ${lateShares.length ? (100 * quantile(lateShares, 0.1)).toFixed(1) : '-'}%`);
+            console.log(`    연쇄: 판당 ${(chains.length / autoRows.length).toFixed(0)} · 길이 중앙값 ${chains.length ? quantile(chains, 0.5) : '-'} · 상위 10% ${chains.length ? quantile(chains, 0.9) : '-'} · 0걸음 ${(100 * chains.filter((n) => n === 0).length / Math.max(1, chains.length)).toFixed(0)}% · 3걸음 미만 ${(100 * chains.filter((n) => n < 3).length / Math.max(1, chains.length)).toFixed(0)}% · 연쇄 중 사망 ${autoRows.reduce((sum, r) => sum + r.autoExplore.deathsInChain, 0)}`);
+            console.log(`    멈춤: ${Object.entries(stops).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${(100 * n / stopTotal).toFixed(0)}%`).join(' · ')}`);
         }
         const picked = xs.filter((r) => r.chapterPicks);
         if (picked.length) {

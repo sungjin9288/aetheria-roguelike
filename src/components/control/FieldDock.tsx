@@ -19,6 +19,8 @@ interface FieldDockProps {
   onScout?: () => void;
   /** 안내가 고른 행동(`ACTION_KIND_TO_BUTTON`) — 유리 단추에 에테르 림 하나를 더한다. */
   recommendedKey: string | null;
+  /** 연속 탐험 토글(2026-11 H1) — 첫 전직 뒤에만 넘어온다. */
+  autoExplore?: ReactNode;
   /** 묘비 회수처럼 그 자리에서만 생기는 행동. */
   auxiliary?: ReactNode;
 }
@@ -42,6 +44,7 @@ const FieldDock = ({
   scoutAvailability,
   onScout,
   recommendedKey,
+  autoExplore,
   auxiliary,
 }: FieldDockProps) => {
   const MoveIcon = move.icon;
@@ -115,6 +118,7 @@ const FieldDock = ({
           {scoutReason}
         </p>
       )}
+      {autoExplore && <div className="mt-2">{autoExplore}</div>}
       {auxiliary}
     </div>
   );

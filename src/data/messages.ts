@@ -123,7 +123,6 @@ export const MSG = {
     BLOOD_OATH_HEAL: (health: number) => `피의 서약으로 생명을 ${health}만큼 회복했습니다.`,
     WORLD_DEVOUR_HEALTH: (health: number) => `세계 포식자가 영혼을 흡수했습니다. 다음 전투 한 번의 기본 최대 생명과 현재 생명이 ${health}만큼 늘어납니다.`,
     IMMORTAL_WARRIOR_HEAL: (health: number) => `불멸의 전사 효과로 생명을 ${health}만큼 회복했습니다.`,
-    INFINITE_DEVOUR_HEAL: (health: number) => `무한 포식 효과로 생명을 ${health}만큼 회복했습니다.`,
     STAR_CORE_RESTORE: '별의 핵이 기력을 모두 회복했습니다.',
     LOOT_GET: (name: string) => `전리품: ${name}`,
     // 2026-10 Wave 67: 같은 전리품은 묶어서 보인다(utils/lootSummary.ts) — "벌레 껍질 · 벌레 껍질"이 "벌레 껍질 x2"가 된다.
@@ -1236,6 +1235,10 @@ export const MSG = {
     // 2026-10 Wave 59: 보스 기믹(소유자 결정 "보스 기믹 전부 설명대로 구현").
     ENEMY_TELEGRAPH_PHASE3_IMMINENT: (formName?: string) => `3페이즈 임박 — ${formName || '최종 형태'}`,
     ENEMY_TELEGRAPH_BREATH: '브레스 준비 — 다음 행동',
+    // 2026-11 H5: 충전 강타 예고 — 정보만이다(어떻게 대응하라고 권하지 않는다, Wave 88).
+    ENEMY_TELEGRAPH_CHARGE: (chargeName: string, breakLeft: number) => `${chargeName} — 다음 행동 · 끊기까지 피해 ${breakLeft}`,
+    ENEMY_TELEGRAPH_CHARGE_START: (chargeName: string) => `${withJosa(chargeName, '을/를')} 준비하려 함 — 다음 행동은 공격하지 않음`,
+    ENEMY_TELEGRAPH_CHARGE_BROKEN: (chargeName: string) => `${withJosa(chargeName, '이/가')} 끊김 — 다음 행동 없음`,
     // 2026-11 디자인 고도화 A4: 적 무대의 의도 표시 — 다음 행동(위 예고 문구) · 그 행동 한 번의 예상 피해 · 강타가 거는 상태.
     //   정보만이다 — 무엇을 하라고 권하지 않는다(Wave 88 · 소유자 결정 Q2 "권장 대응 칩은 없앤다").
     ENEMY_INTENT_HIT: (hit: number) => `예상 피해 ${hit}`,
@@ -1246,6 +1249,16 @@ export const MSG = {
     ENEMY_GUARD_COUNTER_HIT: (enemyName: string | undefined, dmg: number) => `[반격] ${enemyName}의 반격! ${dmg} 피해를 받았습니다.`,
     ENEMY_GUARD_HEAL: (enemyName: string | undefined, heal: number) => `${withJosa(enemyName, '이/가')} 방어 자세로 생명을 ${heal} 회복했습니다.`,
     ENEMY_BREATH_HIT: (enemyName: string | undefined, dmg: number) => `🔥 ${enemyName}의 브레스! ${dmg} 피해를 받았습니다.`,
+    // 2026-11 H5 충전 강타 — 준비 줄의 숫자는 실제 엔진 한 방(고정 굴림)이고 백분율은 실효 최대 생명 기준이다.
+    BOSS_CHARGE_START: (enemyName: string | undefined, chargeName: string, hit: number, pct: number) => (
+        `⚠ ${withJosa(enemyName, '이/가')} ${withJosa(chargeName, '을/를')} 준비합니다 — 다음 행동 예상 피해 ${hit} (최대 생명의 ${pct}%)`
+    ),
+    BOSS_CHARGE_BROKEN: (enemyName: string | undefined, chargeName: string) => (
+        `${withJosa(chargeName, '이/가')} 끊겼습니다! ${enemyName}의 이번 행동이 사라집니다.`
+    ),
+    BOSS_CHARGE_RELEASE_HIT: (enemyName: string | undefined, chargeName: string, dmg: number) => (
+        `💥 ${enemyName}의 ${chargeName}! ${dmg} 피해를 받았습니다.`
+    ),
     ENEMY_SUMMON: (enemyName: string | undefined, summonName: string, count: number) => (
         `${withJosa(enemyName, '이/가')} ${summonName} ${count}체를 깨웠습니다! 공격할 때마다 하나씩 쓰러집니다.`
     ),
@@ -1266,7 +1279,25 @@ export const MSG = {
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.relics.ts.
     RELIC_CRIT_MP_RESTORE: (amount: number) => `[피의 갈증] 기력 +${amount}`,
-    RELIC_HEAL_ON_SAVE_PROC: (bonus: number) => `[난공불락] 부활하며 생명 +${bonus} 회복!`,
+
+    // 2026-11 H4 행동 조합(`systems/relicBehaviorCombos.ts`) — 조합 이름은 데이터의 `label`을 받는다. 터질 때 기록 한 줄,
+    //   걸려 있는 동안 전투 칩 한 개. 추천 · 권고 문구는 붙이지 않는다(Wave 88).
+    BEHAVIOR_COMBO_CROSS_RHYTHM_PROC: (label: string, guardPct: number) => `[${label}] 기술 뒤 일반 공격 — 이번 적 행동에서 받는 피해 ${guardPct}% 감소`,
+    BEHAVIOR_COMBO_PURSUIT_PROC: (label: string, enemyName: string | undefined) => `[${label}] 움직이지 못하는 ${withJosa(enemyName, '을/를')} 추격 — 치명타`,
+    BEHAVIOR_COMBO_FINISHER_KILL: (label: string, enemyName: string | undefined) => `[${label}] ${withJosa(enemyName, '을/를')} 일반 공격으로 마무리!`,
+    BEHAVIOR_COMBO_FINISHER_BOSS: (label: string, mult: number) => `[${label}] 마무리 일격 — 피해 ${mult}배`,
+    BEHAVIOR_COMBO_POTION_READY: (label: string) => `[${label}] 다음 기술 한 번은 기력을 쓰지 않고 재사용 대기를 무시합니다`,
+    BEHAVIOR_COMBO_POTION_SKILL_PROC: (label: string, skillName: string) => `[${label}] ${withJosa(skillName, '이/가')} 기력 없이 나갑니다`,
+    BEHAVIOR_COMBO_THIRD_BEAT_PROC: (label: string, mult: number) => `[${label}] 기술 피해 ${mult}배!`,
+    BEHAVIOR_COMBO_BREAK_STUN: (label: string, enemyName: string | undefined) => `[${label}] ${withJosa(enemyName, '이/가')} 다음 행동에 기절합니다`,
+    SKILL_READY_POTION_FREE: '기력 0 · 재사용 대기 무시',
+    BEHAVIOR_CHIP_CROSS_RHYTHM: (label: string) => `${label} · 다음 일반 공격 강화`,
+    BEHAVIOR_CHIP_THIRD_BEAT: (label: string, count: number, every: number) => `${label} ${count}/${every}`,
+    BEHAVIOR_CHIP_THIRD_BEAT_READY: (label: string) => `${label} · 다음 위력 기술 강화`,
+    BEHAVIOR_CHIP_POTION_READY: (label: string) => `${label} · 다음 기술 무료`,
+    BEHAVIOR_CHIP_PURSUIT: (label: string) => `${label} · 치명타 확정`,
+    BEHAVIOR_CHIP_FINISHER: (label: string) => `${label} · 일반 공격 마무리`,
+    BEHAVIOR_CHIP_BREAK_STRIKE: (label: string, mult: number) => `${label} · 끊기 피해 ${mult}배`,
     RELIC_DEATH_SAVE_REVIVE: (count: number) => `[절대 불사] ${count}회 부활!`,
     RELIC_DEATH_SAVE_FIRST: '[불사의 의지] 치명상을 버텼습니다!',
     RELIC_VOID_HEART_REVIVE: '[허공의 심장] 죽음을 거부했습니다. 다음 공격이 강화됩니다!',
@@ -1285,13 +1316,11 @@ export const MSG = {
     FIRST_BOSS_REWARD_HINT_FALLBACK: '초회 토벌 보너스를 확보했습니다.',
     KILL_STACK_SOURCE_RELIC: '[허공의 왕좌]',
     // 2026-10 Wave 131: 조합의 이름을 쓴다("[시너지 처형 분노]"는 화면에 없는 이름이었다 — 화면 용어는 '조합').
-    KILL_STACK_SOURCE_SYNERGY: (labels: string) => `[${labels}]`,
 
     // 2026-09 Wave 6 X2: systems 이관 — CombatEngine.ts.
     RELIC_TURN_MP_REGEN: (val: number) => `[비전 서지] 기력 +${val}`,
     RELIC_TURN_HP_REGEN: (label: string | undefined, heal: number) => `[${label}] 생명 +${heal} 재생`,
     RELIC_LABEL_EARTH_HEART: '대지의 심장',
-    RELIC_LABEL_ETERNAL_LIFE: '영원의 생명',
     RELIC_LABEL_GENESIS_CORE: '창세의 핵',
     RELIC_LABEL_ETERNAL_FORTRESS: '영원의 요새',
     HP_DRAIN_ATK_COST_MARKER,
@@ -2116,6 +2145,35 @@ export const MSG = {
     SYSTEM_COMBAT_SPEED_FAST: '빠르게 ×2',
     SYSTEM_COMBAT_SPEED_GROUP_ARIA: '전투 속도',
     SYSTEM_COMBAT_SPEED_CHANGED: (label: string) => `전투 속도를 ${withJosa(label, '으로/로')} 바꿨습니다.`,
+    // 2026-11 H1 연속 탐험(utils/autoExplore.ts · hooks/useAutoExplore.ts) — 멈춘 이유만 말하고 행동을 권하지 않는다(Wave 88).
+    SYSTEM_AUTO_EXPLORE_TITLE: '연속 탐험 멈춤',
+    SYSTEM_AUTO_EXPLORE_DESC: '생명이 이 비율 이하가 되면 연속 탐험이 멈춥니다. 35%보다 낮게 골라도 35% 이하에서는 멈춥니다.',
+    SYSTEM_AUTO_EXPLORE_OPTION: (pct: number) => `생명 ${pct}%`,
+    SYSTEM_AUTO_EXPLORE_GROUP_ARIA: '연속 탐험 멈춤 문턱',
+    SYSTEM_AUTO_EXPLORE_CHANGED: (pct: number) => `연속 탐험은 생명 ${pct}% 이하에서 멈춥니다.`,
+    AUTO_EXPLORE_START: '연속 탐험',
+    AUTO_EXPLORE_START_ARIA: '연속 탐험 시작 — 판단할 일이 생기면 멈춥니다',
+    AUTO_EXPLORE_RUNNING: (steps: number) => `연속 탐험 중 · ${steps}걸음`,
+    AUTO_EXPLORE_STOP_BUTTON: '멈추기',
+    AUTO_EXPLORE_STOP_HP_LOW: (pct: number) => `생명이 ${pct}% 이하라 연속 탐험을 멈췄습니다.`,
+    AUTO_EXPLORE_STOP: {
+        locked: '연속 탐험은 첫 전직 뒤에 쓸 수 있습니다.',
+        safe_zone: '안전지대라 연속 탐험을 멈췄습니다.',
+        mode: '탐험할 수 있는 상태가 아니라 연속 탐험을 멈췄습니다.',
+        event: '고를 일이 생겨 연속 탐험을 멈췄습니다.',
+        relic_choice: '유물을 고를 차례라 연속 탐험을 멈췄습니다.',
+        decision_card: '전투 결과에 살펴볼 것이 있어 연속 탐험을 멈췄습니다.',
+        mp_low: '기력이 30% 이하라 연속 탐험을 멈췄습니다.',
+        bag_full: '가방이 가득 차 연속 탐험을 멈췄습니다.',
+        boss: '보스가 나타나 연속 탐험을 멈췄습니다.',
+        elite: '정예가 나타나 연속 탐험을 멈췄습니다.',
+        champion: '토벌 우두머리가 나타나 연속 탐험을 멈췄습니다.',
+        not_one_shot: '일반 공격이나 고른 기술 한 번에 쓰러지지 않는 적이라 연속 탐험을 멈췄습니다.',
+        status: '상태이상이 걸려 연속 탐험을 멈췄습니다.',
+        defeat: '쓰러져 연속 탐험을 멈췄습니다.',
+        manual: '연속 탐험을 멈췄습니다.',
+        hidden: '화면을 벗어나 연속 탐험을 멈췄습니다.',
+    },
 
     // === 소유자 결정 2026-10-26 · 한 행동 처치 ===
     // D1: 적이 행동하기 전에 끝난 일반 전투의 결과는 조우 · 처치 · 전리품 한 장이다 — 그 시트의 이름표와 제목.

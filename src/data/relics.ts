@@ -585,11 +585,13 @@ export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
         desc: '최대 기력 30% 증가, 기술이 기력을 소모하지 않을 확률 두 배',
         drawback: { stat: 'def', pct: 0.1 },
     },
+    // 2026-11 H4(소유자 결정 Q1 ~ Q4 (a)): 생존 묶음 · 엔트로피가 아닌 수치형 두 조각 6개를 행동 조합으로 바꿨다 — 판정은
+    //   `systems/relicBehaviorCombos.ts`가 소유한다(세는 수 · 적 상태만 읽고 난수를 쓰지 않는다). 요구 유물 · 대가는 그대로다.
     {
-        label: '난공불락',
+        label: '교차 리듬',
         requires: ['강철 의지', '난공불락'],
-        bonus: { effect: 'unbreakable', healOnSave: 0.3 },
-        desc: '사망 방지가 발동하면 최대 생명의 30% 회복',
+        bonus: { effect: 'cross_rhythm', afterSkillAttackMult: 1.8, afterSkillGuard: 0.4 },
+        desc: '기술 바로 다음 일반 공격의 피해 80% 증가, 그 차례 적에게 받는 피해 40% 감소',
         drawback: { stat: 'atk', pct: 0.1 },
     },
     {
@@ -600,10 +602,10 @@ export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
         drawback: { stat: 'def', pct: 0.1 },
     },
     {
-        label: '죽음의 예언자',
+        label: '셋째 박자',
         requires: ['죽음의 낙인', '저주의 결정'],
-        bonus: { effect: 'death_oracle', dotMult: 0.5 },
-        desc: '모든 지속 피해 50% 증가',
+        bonus: { effect: 'third_beat', beatEvery: 3, beatMult: 2 },
+        desc: '위력 있는 기술을 세 번 쓰면 다음 위력 있는 기술의 피해 두 배',
         drawback: { stat: 'atk', pct: 0.1 },
     },
     // ─── 신규 시너지 (10개) ──────────────────────────────────────────────────
@@ -624,15 +626,15 @@ export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
     {
         label: '절멸자',
         requires: ['허공의 왕좌', '처형자의 날'],
-        bonus: { effect: 'annihilator', executeThreshold: 0.35, killStack: 0.07 },
-        desc: '생명 35% 이하인 적에게 마무리 효과 발동, 처치 공격력 누적에 7% 추가',
+        bonus: { effect: 'finisher', finisherThreshold: 0.35, finisherBossMult: 3 },
+        desc: '생명 35% 이하인 적을 일반 공격으로 마무리(보스에게는 피해 세 배)',
         drawback: { stat: 'def', pct: 0.1 },
     },
     {
-        label: '영원의 생명',
+        label: '전투 물약술',
         requires: ['창세의 핵', '재생 코어'],
-        bonus: { effect: 'eternal_life', healPerTurn: 0.04, statBonus: 0.2 },
-        desc: '매 턴 생명 4% 회복, 모든 능력치 20% 증가',
+        bonus: { effect: 'battle_alchemy', potionFreeSkill: true },
+        desc: '전투 중 소모품을 쓰면 다음 기술 한 번은 기력을 쓰지 않고 재사용 대기를 무시',
         drawback: { stat: 'atk', pct: 0.15 },
     },
     {
@@ -657,17 +659,17 @@ export const RELIC_SYNERGIES: readonly RelicSynergy[] = Object.freeze([
         drawback: { stat: 'atk', pct: 0.1 },
     },
     {
-        label: '무한 포식',
+        label: '끊는 일격',
         requires: ['세계 포식자', '광전사의 분노'],
-        bonus: { effect: 'infinite_devour', devour: 0.15, lowHpAtk: 0.6 },
-        desc: '적 처치 시 최대 생명의 15%만큼 생명 회복, 생명이 낮을 때 공격력 60% 증가',
+        bonus: { effect: 'break_strike', chargeBreakMult: 2, breakStun: 1 },
+        desc: '충전 중인 보스에게 준 피해를 끊기 계산에 두 배로 세고, 충전을 끊으면 그 보스의 다음 행동이 기절',
         drawback: { stat: 'def', pct: 0.2 },
     },
     {
         label: '공허의 용',
         requires: ['허공의 왕좌', '드래곤 발톱'],
-        bonus: { effect: 'void_dragon', killStack: 0.08, critDmg: 2.0 },
-        desc: '처치 공격력 누적에 8% 추가, 치명타 피해 2배',
+        bonus: { effect: 'void_pursuit', pursuitCrit: true },
+        desc: '기절 · 빙결된 적에게 하는 일반 공격과 위력 있는 기술은 반드시 치명타',
         drawback: { stat: 'def', pct: 0.15 },
     },
     {

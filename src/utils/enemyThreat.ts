@@ -2,6 +2,7 @@ import { BALANCE } from '../data/constants.js';
 import { MSG } from '../data/messages.js';
 import { CombatEngine } from '../systems/CombatEngine.js';
 import { getEffectiveMaxHp } from '../systems/vitals.js';
+import { getChargeFirstStrike } from '../systems/bossMechanics.js';
 import type { Monster, Player } from '../types/index.js';
 import { calculateFullStats } from './statsCalculator.js';
 
@@ -31,6 +32,16 @@ export interface EnemyThreat {
 
 const probeRoll = () => BALANCE.ENEMY_THREAT_PROBE_ROLL;
 
+/**
+ * 충전 강타(H5)를 뺀 적 — 페이즈 · 강타 확정 시험이 충전 차례(첫 행동이 충전이다)에 걸려 피해 0이 되지 않게 한다.
+ * 충전 강타 값은 따로 굴린다.
+ */
+const withoutCharge = (enemy: Monster): Monster => {
+    if (!enemy.mechanics?.charge) return enemy;
+    const { chargeArmed: _armed, chargeHpMark: _mark, ...rest } = enemy;
+    return { ...rest, mechanics: { ...enemy.mechanics, charge: undefined } };
+};
+
 const strike = (player: Player, enemy: Monster, actionCount: number) => {
     const stats = calculateFullStats(player);
     if (!stats) return null;
@@ -44,15 +55,19 @@ export const estimateEnemyMaxHit = (player: Player, enemy: Monster): number => {
     let foe: Monster = { ...enemy, hp: fullEnemyHp, stunnedTurns: 0, guarding: false };
     try {
         if ((foe.isBoss || foe.isElite) && (foe.phase2 || foe.phase3)) {
-            const phased = strike(probe, { ...foe, hp: 1 }, 0);
+            const phased = strike(probe, withoutCharge({ ...foe, hp: 1 }), 0);
             if (!phased) return 0;
-            foe = { ...phased.updatedEnemy, hp: fullEnemyHp, stunnedTurns: 0, guarding: false };
+            foe = { ...phased.updatedEnemy, mechanics: enemy.mechanics, hp: fullEnemyHp, stunnedTurns: 0, guarding: false };
             probe = { ...phased.updatedPlayer, hp: maxHp };
         }
-        const heavy = strike(probe, { ...foe, pattern: { guardChance: 0, heavyChance: 1 } }, 0);
+        const heavy = strike(probe, withoutCharge({ ...foe, pattern: { guardChance: 0, heavyChance: 1 } }), 0);
         const breathEvery = foe.mechanics?.breath?.every;
         const breath = breathEvery ? strike(probe, foe, breathEvery - 1) : null;
-        const value = Math.max(Number(heavy?.damage) || 0, Number(breath?.damage) || 0);
+        // 2026-11 H5: 충전 강타 — 모은 상태(끊기지 않은 생명 표시)로 강타 차례를 굴린다. 브레스와 함께 선언한 보스는 이것이 브레스다.
+        const charged = foe.mechanics?.charge
+            ? strike(probe, { ...foe, chargeArmed: true, chargeHpMark: fullEnemyHp }, getChargeFirstStrike(foe) - 1)
+            : null;
+        const value = Math.max(Number(heavy?.damage) || 0, Number(breath?.damage) || 0, Number(charged?.damage) || 0);
         return Math.max(0, Math.floor(value));
     } catch {
         return 0;
@@ -60,7 +75,12 @@ export const estimateEnemyMaxHit = (player: Player, enemy: Monster): number => {
 };
 
 /** 다음 행동 예고의 종류(`CombatEngine.predictEnemyNextAction().type`). */
-export type EnemyTelegraphType = 'normal' | 'heavy' | 'guard' | 'stunned' | 'breath' | 'phase2_imminent' | 'phase3_imminent';
+export type EnemyTelegraphType =
+    | 'normal' | 'heavy' | 'guard' | 'stunned' | 'breath' | 'phase2_imminent' | 'phase3_imminent'
+    | 'charge' | 'charge_start' | 'charge_broken';
+
+/** 충전 강타 예고(H5) — 패턴을 바꾸지 않고 지금 상태 그대로 다음 행동을 굴린다(강타 배율이 패턴에서 나온다). */
+const CHARGE_TELEGRAPHS: readonly EnemyTelegraphType[] = ['charge', 'charge_start', 'charge_broken'];
 
 /**
  * 적의 다음 행동 한 번의 예상 피해(2026-11 디자인 고도화 A4 — 적 무대의 의도 표시).
@@ -76,12 +96,16 @@ export const estimateEnemyNextHit = (player: Player, enemy: Monster, type: Enemy
     const maxHp = Math.max(1, getEffectiveMaxHp(player));
     const probe: Player = { ...player, hp: maxHp };
     const foe: Monster = { ...enemy, stunnedTurns: 0, guarding: false };
-    const pattern = type === 'heavy' ? { guardChance: 0, heavyChance: 1 } : type === 'breath' ? foe.pattern : { guardChance: 0, heavyChance: 0 };
+    const asIs = type === 'breath' || CHARGE_TELEGRAPHS.includes(type);
+    const pattern = type === 'heavy' ? { guardChance: 0, heavyChance: 1 } : asIs ? foe.pattern : { guardChance: 0, heavyChance: 0 };
     try {
         const stats = calculateFullStats(probe);
         if (!stats) return null;
         const result = CombatEngine.enemyAttack(probe, { ...foe, pattern }, stats, probeRoll);
-        return Math.max(0, Math.floor(Number(result?.damage) || 0));
+        const damage = Math.max(0, Math.floor(Number(result?.damage) || 0));
+        // 충전 차례 · 끊긴 강타는 공격하지 않는다 — 함께 치는 하수인이 없으면 숫자를 그리지 않는다.
+        if ((type === 'charge_start' || type === 'charge_broken') && damage === 0) return null;
+        return damage;
     } catch {
         return null;
     }

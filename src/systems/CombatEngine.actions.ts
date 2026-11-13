@@ -6,6 +6,9 @@ import type { EnemyDotId, FullStats, Monster, NumericRelicEffect, Player, Relic,
 import type { LootLog } from './CombatEngine.loot.js';
 import { mergeFearAtkMult } from './CombatEngine.status.js';
 import { getSkillElement, isDamagingSkill } from './skillPower.js';
+import {
+    getBehaviorComboLabel, getCrossRhythmStrike, getFinisherStrike, getThirdBeat, isPotionSkillReady, isPursuitCrit, nextBeatCount,
+} from './relicBehaviorCombos.js';
 import { healWithinMax } from './vitals.js';
 import type { CalculateDamageOptions } from './CombatEngine.js';
 
@@ -37,10 +40,10 @@ export function getRelicDotMult(relics: readonly Relic[], target: RelicDotScope)
     return inScope.length > 0 ? getStrongestNumericRelicValue(inScope, 'dot_mult') : 1;
 }
 
-/** 2026-10 Wave 56: 켜진 조합 중 가장 큰 치명타 피해 배율(공허의 용 2.0 · 원초의 분노 2.5). 없으면 1. */
+/** 2026-10 Wave 56: 켜진 조합 중 가장 큰 치명타 피해 배율(원초의 분노 2.5 — 공허의 용은 2026-11 H4에 추격 조합이 됐다). 없으면 1. */
 export const getStrongestSynergyCritDmg = (synergies: readonly RelicSynergy[] | undefined): number =>
     (synergies || [])
-        .filter((s) => s.bonus.effect === 'void_dragon' || s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg)
+        .filter((s) => s.bonus.effect === 'primordial_wrath' || s.bonus.critDmg)
         .reduce((best: number, s) => Math.max(best, s.bonus.critDmg || 1), 1);
 
 /**
@@ -176,6 +179,12 @@ export const actionMethods = {
         // 유물: 방어 무시 (armor_pen) — PR #3: 적 DEF 경감 단계(mitigateByEnemyDef)에서
         //   effDef를 줄이는 방식으로 작동. 여기선 태그 표기용으로만 보유 여부 확인.
         const apRelic = relics.find((r) => r.effect === 'armor_pen');
+        // 2026-11 H4 행동 조합 — 판정은 행동 전 상태(적 기절 · 생명, 직전 행동)로 한다. 추격의 확정 치명타는 치명 확률을 1로
+        //   두어 치명 판정 난수 한 번은 그대로 쓴다.
+        const activeSynergies = stats.activeSynergies || [];
+        const pursuitCrit = isPursuitCrit(activeSynergies, enemy);
+        const crossRhythm = getCrossRhythmStrike(activeSynergies, flags);
+        const finisher = getFinisherStrike(activeSynergies, enemy);
 
         const { damage: rawBaseDmg, isCrit } = this.calculateDamage(stats, {
             mult: 1,
@@ -185,13 +194,12 @@ export const actionMethods = {
             // cycle 242: stats.critChance dispatch — finalCritChance(equipment / relic / 칭호 /
             //   심연 / 시너지 / killStreak / 트레이트 합산)가 SystemTab에 표시만 되고 실제
             //   attack/skill에는 dispatch 0건이던 dead config fix. 미정의 시 default(0.1) fallback.
-            ...(typeof stats.critChance === 'number' ? { critChance: stats.critChance } : {})
+            ...(pursuitCrit ? { critChance: 1 } : typeof stats.critChance === 'number' ? { critChance: stats.critChance } : {})
         });
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
         const critDmgRelic = relics.find((r) => r.effect === 'crit_dmg');
-        // cycle 154: 시너지 'void_dragon' / 'primordial_wrath' — bonus.critDmg 곱셈 추가.
-        // 2026-10 Wave 56: 두 시너지가 함께 켜지면 큰 배율(원초의 분노 2.5)을 쓴다 — `find`가 공허의 용(2.0)을 먼저 골랐다.
+        // cycle 154: 시너지 'primordial_wrath' — bonus.critDmg 곱셈 추가(가장 큰 배율, Wave 56).
         const synCritDmg = getStrongestSynergyCritDmg(stats.activeSynergies);
         const critDmgMult = (critDmgRelic?.val || 1) * (isCrit && synCritDmg > 1 ? synCritDmg : 1);
         const baseDmg = (isCrit && (critDmgRelic || synCritDmg > 1)) ? Math.floor(rawBaseDmg * critDmgMult) : rawBaseDmg;
@@ -203,11 +211,9 @@ export const actionMethods = {
 
         // 유물: 처형자의 날 (execute_bonus) — 적 HP 25% 미만 시 추가 피해.
         const exRelic = relics.find((r) => r.effect === 'execute_bonus');
-        // cycle 156: 시너지 'annihilator' (executeThreshold 0.35) — 처형 임계치 상향. 유물의 threshold와 max 합산.
-        const annihilatorSyn = (stats.activeSynergies || []).find((s) =>
-            s.bonus.effect === 'annihilator' || s.bonus.executeThreshold);
-        const exThreshold = Math.max(exRelic?.val?.threshold || 0, annihilatorSyn?.bonus.executeThreshold || 0);
-        const executeTriggered = Boolean((exRelic || annihilatorSyn) && (enemy.hp ?? 0) / (enemy.maxHp || 1) < exThreshold);
+        //   2026-11 H4: 절멸자 조합의 처형 문턱 상향(executeThreshold)은 마무리 조합(일반 공격)이 대신한다.
+        const exThreshold = exRelic?.val?.threshold || 0;
+        const executeTriggered = Boolean(exRelic && (enemy.hp ?? 0) / (enemy.maxHp || 1) < exThreshold);
         const exMult = exRelic?.val?.mult || 0;
         let finalDamage = executeTriggered
             ? Math.floor(damage * (1 + exMult))
@@ -266,8 +272,15 @@ export const actionMethods = {
             }
         }
 
+        // H4 교차 리듬 — 기술 바로 다음 일반 공격.
+        if (crossRhythm) finalDamage = Math.floor(finalDamage * crossRhythm.attackMult);
+        // H4 마무리(보스) — 문턱 이하 보스에게 피해 배율.
+        if (finisher && !finisher.kill) finalDamage = Math.floor(finalDamage * finisher.mult);
+
         // PR #3: 적 DEF 비율 경감 — 모든 공격 배율 적용 후 최종 1회. armor_pen은 effDef 감소.
         finalDamage = this.mitigateByEnemyDef(finalDamage, enemy.def ?? 0, relics);
+        // H4 마무리(일반 적) — 문턱 이하 적은 이 공격으로 쓰러진다.
+        if (finisher?.kill) finalDamage = Math.max(finalDamage, enemy.hp ?? 0);
 
         const newEnemyHp = (enemy.hp ?? 0) - finalDamage;
         // slice 19: 치명타/약점/저항/연격을 본문 태그로 통합 — 기존엔 같은 정보가
@@ -284,7 +297,12 @@ export const actionMethods = {
 
         // cycle 229: 일반 공격 사용 시 spellStackCount 리셋 (연속 스킬 사용 깨짐).
         //   spell_stack 유물 보유 여부와 무관하게 reset (다음 사용 대비 깨끗한 상태).
-        updatedPlayer = { ...updatedPlayer, combatFlags: { ...flags, spellStackCount: 0 } };
+        //   H4: 일반 공격은 교차 리듬의 '직전 기술'을 지우고, 교차 리듬을 받았으면 이번 적 행동의 받는 피해 감소를 세운다.
+        const { afterSkill: _afterSkill, ...restFlags } = flags;
+        updatedPlayer = {
+            ...updatedPlayer,
+            combatFlags: { ...restFlags, spellStackCount: 0, ...(crossRhythm && crossRhythm.guard > 0 ? { crossGuard: crossRhythm.guard } : {}) },
+        };
         if (isCrit) {
             updatedPlayer = this.applyCritMpRestore(updatedPlayer, relics, logs);
         }
@@ -314,6 +332,11 @@ export const actionMethods = {
         if (executeAtkTriggered) logs.push({ type: 'critical', text: MSG.RELIC_EXECUTE_ATK_PROC });
         if (echoTriggered) logs.push({ type: 'event', text: MSG.RELIC_ECHO_ATK_PROC });
         if (strikeMult > 1) logs.push({ type: 'event', text: MSG.NEXT_ATTACK_MULT_PROC(strikeMult) });
+        if (pursuitCrit) logs.push({ type: 'event', text: MSG.BEHAVIOR_COMBO_PURSUIT_PROC(getBehaviorComboLabel(activeSynergies, 'void_pursuit'), enemy.name) });
+        if (crossRhythm) logs.push({ type: 'event', text: MSG.BEHAVIOR_COMBO_CROSS_RHYTHM_PROC(getBehaviorComboLabel(activeSynergies, 'cross_rhythm'), Math.round(crossRhythm.guard * 100)) });
+        if (finisher) logs.push({ type: 'critical', text: finisher.kill
+            ? MSG.BEHAVIOR_COMBO_FINISHER_KILL(getBehaviorComboLabel(activeSynergies, 'finisher'), enemy.name)
+            : MSG.BEHAVIOR_COMBO_FINISHER_BOSS(getBehaviorComboLabel(activeSynergies, 'finisher'), finisher.mult) });
 
         // cycle 152: 'on_hit_freeze' (frost_anchor) — val 확률로 적 1턴 빙결.
         let postHitEnemy: Monster = { ...enemy, hp: newEnemyHp, guarding: false };
@@ -431,10 +454,13 @@ export const actionMethods = {
             };
         }
 
-        if (cooldown > 0) {
+        // 2026-11 H4 전투 물약술 — 전투 중 소모품을 썼으면 이 기술은 재사용 대기 · 기력과 무관하게 나간다(한 번).
+        const behaviorSyns = stats.activeSynergies || [];
+        const potionSkill = isPotionSkillReady(behaviorSyns, player.combatFlags);
+        if (cooldown > 0 && !potionSkill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_ON_COOLDOWN(String(skill.name), cooldown) }] };
         }
-        if ((player.mp ?? 0) < mpCost) {
+        if ((player.mp ?? 0) < mpCost && !potionSkill) {
             return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
         }
 
@@ -452,9 +478,11 @@ export const actionMethods = {
         const playerFlags = player.combatFlags || {};
         const cdRelicForFree = relics.find((r) => r.effect === 'cooldown_reduce');
         const firstFreeAvailable = cdRelicForFree?.val?.firstFree && !playerFlags.firstSkillUsed;
-        const actualMpCost = firstFreeAvailable
+        //   H4: 전투 물약술은 무료 판정 난수를 그대로 쓴 뒤 비용을 0으로 둔다(뒤의 난수열이 밀리지 않는다).
+        const rolledMpCost = firstFreeAvailable
             ? 0
             : (freeChance > 0 && random() < freeChance) ? 0 : mpCost;
+        const actualMpCost = potionSkill ? 0 : rolledMpCost;
 
         const skillElem = getSkillElement(skill, stats);
         const elementMultiplier = this.getElementMultiplier(skillElem, enemy, relics);
@@ -478,9 +506,13 @@ export const actionMethods = {
         //   (분산 · 치명타 · 속성)도 굴리지 않으므로 보조 기술은 치명타 기력 회복 · 흡수 · 속성 태그를 만들지 않는다.
         //   언데드 · 마족에 대한 신성 피해(`smite`)는 회복량에서 따로 계산한다.
         const dealsDamage = isDamagingSkill(skill);
+        // H4 추격 · 셋째 박자 — 위력 있는 기술만. 추격은 행동 전 적 기절 상태로 판정하고 치명 판정 난수는 그대로 쓴다.
+        const pursuitCritSkill = dealsDamage && isPursuitCrit(behaviorSyns, enemy);
+        const thirdBeat = dealsDamage ? getThirdBeat(behaviorSyns, player.combatFlags) : null;
+        const beatMult = thirdBeat?.ready ? thirdBeat.mult : 1;
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
         const critDmgRelicSkill = relics.find((r) => r.effect === 'crit_dmg');
-        // cycle 154: 시너지 'void_dragon' / 'primordial_wrath' — 스킬 크리에도 bonus.critDmg 곱셈 적용.
+        // cycle 154: 시너지 'primordial_wrath' — 스킬 크리에도 bonus.critDmg 곱셈 적용.
         const synCritDmgSkill = getStrongestSynergyCritDmg(stats.activeSynergies);
         // 2026-10 Wave 54: 연속 타격(`hits`) — 타격마다 피해 · 치명을 따로 굴린다(이중 자상 "두 번 연속 공격, 각 70% 치명타").
         //   한 번 타격은 이전과 같은 난수 순서다. 적의 방어 자세는 `ignoreGuard`(파워배시)가 무시한다.
@@ -493,7 +525,7 @@ export const actionMethods = {
                 guarding: !!enemy.guarding && !skill.ignoreGuard,
                 elementMultiplier,
                 rng: random,
-                ...(typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
+                ...(pursuitCritSkill ? { critChance: 1 } : typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
             });
             const hitCritMult = (critDmgRelicSkill?.val || 1) * (roll.isCrit && synCritDmgSkill > 1 ? synCritDmgSkill : 1);
             damage += (roll.isCrit && (critDmgRelicSkill || synCritDmgSkill > 1)) ? Math.floor(roll.damage * hitCritMult) : roll.damage;
@@ -543,11 +575,9 @@ export const actionMethods = {
         let skillProphecyTriggered = false;
         if (dealsDamage) {
             const exRelicSkill = relics.find((r) => r.effect === 'execute_bonus');
-            const annihilatorSkill = (stats.activeSynergies || []).find((s) =>
-                s.bonus.effect === 'annihilator' || s.bonus.executeThreshold);
-            const exThresholdSkill = Math.max(exRelicSkill?.val?.threshold || 0, annihilatorSkill?.bonus.executeThreshold || 0);
+            const exThresholdSkill = exRelicSkill?.val?.threshold || 0;
             const enemyHpRatio = (enemy.hp ?? 0) / Math.max(1, enemy.maxHp || 1);
-            if ((exRelicSkill || annihilatorSkill) && enemyHpRatio < exThresholdSkill) {
+            if (exRelicSkill && enemyHpRatio < exThresholdSkill) {
                 relicSkillMult *= 1 + (exRelicSkill?.val?.mult || 0);
                 skillExecuteTriggered = true;
             }
@@ -562,7 +592,7 @@ export const actionMethods = {
                 skillProphecyTriggered = true;
             }
         }
-        const rawTotalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill * strikeMult * relicSkillMult * skillDamageSynMult);
+        const rawTotalDamage = Math.floor((damage + extraDamage) * smMult * lowHpMultSkill * strikeMult * relicSkillMult * skillDamageSynMult * beatMult);
         const totalDamage = dealsDamage ? this.mitigateByEnemyDef(rawTotalDamage, enemy.def ?? 0, relics) : 0;
         const newEnemyHp = (enemy.hp ?? 0) - totalDamage;
 
@@ -689,8 +719,15 @@ export const actionMethods = {
                     : (player.combatFlags?.spellStackCount || 0),
                 ...(strikeMult > 1 ? { nextAttackMult: 0 } : {}),
                 ...(skillVoidHeartTriggered ? { voidHeartArmed: false } : {}),
+                // H4: 교차 리듬은 기술 뒤를 기억하고, 셋째 박자는 위력 기술을 센다. 전투 물약술의 준비는 이 기술이 쓴다.
+                ...(behaviorSyns.some((s) => s.bonus.effect === 'cross_rhythm') ? { afterSkill: true } : {}),
+                ...(thirdBeat ? { beatCount: nextBeatCount(thirdBeat) } : {}),
+                ...(potionSkill ? { potionReady: false } : {}),
             }
         };
+        if (potionSkill) logs.push({ type: 'event', text: MSG.BEHAVIOR_COMBO_POTION_SKILL_PROC(getBehaviorComboLabel(behaviorSyns, 'battle_alchemy'), String(skill.name)) });
+        if (pursuitCritSkill) logs.push({ type: 'event', text: MSG.BEHAVIOR_COMBO_PURSUIT_PROC(getBehaviorComboLabel(behaviorSyns, 'void_pursuit'), enemy.name) });
+        if (thirdBeat?.ready) logs.push({ type: 'critical', text: MSG.BEHAVIOR_COMBO_THIRD_BEAT_PROC(getBehaviorComboLabel(behaviorSyns, 'third_beat'), thirdBeat.mult) });
         if (strikeMult > 1) logs.push({ type: 'event', text: MSG.NEXT_ATTACK_MULT_PROC(strikeMult) });
         if (skillExecuteTriggered) logs.push({ type: 'event', text: MSG.RELIC_EXECUTE_PROC });
         if (skillVoidHeartTriggered) logs.push({ type: 'event', text: MSG.RELIC_VOID_HEART_PROC });

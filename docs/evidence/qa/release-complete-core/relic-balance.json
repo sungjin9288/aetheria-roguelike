@@ -1,6 +1,6 @@
 {
   "hashAlgorithm": "sha256",
-  "reportHash": "d626a91c5487f0e2749bdf7c6bf58cc120abf3d8dc5114ae87f2e3988b71706a",
+  "reportHash": "e32f38e423111716840c50755aca16d9fffc7ba31f2d07fd1488a10a3c4a29b8",
   "report": {
     "schemaVersion": 1,
     "catalog": {
@@ -663,14 +663,14 @@
         ]
       },
       {
-        "label": "난공불락",
+        "label": "교차 리듬",
         "requiredRelicNames": [
           "강철 의지",
           "난공불락"
         ]
       },
       {
-        "label": "무한 포식",
+        "label": "끊는 일격",
         "requiredRelicNames": [
           "광전사의 분노",
           "세계 포식자"
@@ -696,6 +696,13 @@
         "requiredRelicNames": [
           "마나 수정",
           "주문 메아리"
+        ]
+      },
+      {
+        "label": "셋째 박자",
+        "requiredRelicNames": [
+          "저주의 결정",
+          "죽음의 낙인"
         ]
       },
       {
@@ -728,13 +735,6 @@
         ]
       },
       {
-        "label": "영원의 생명",
-        "requiredRelicNames": [
-          "재생 코어",
-          "창세의 핵"
-        ]
-      },
-      {
         "label": "영원의 요새",
         "requiredRelicNames": [
           "난공불락",
@@ -748,6 +748,13 @@
           "고대의 분노",
           "광전사의 분노",
           "드래곤 발톱"
+        ]
+      },
+      {
+        "label": "전투 물약술",
+        "requiredRelicNames": [
+          "재생 코어",
+          "창세의 핵"
         ]
       },
       {
@@ -769,13 +776,6 @@
         "requiredRelicNames": [
           "처형자의 날",
           "허공의 왕좌"
-        ]
-      },
-      {
-        "label": "죽음의 예언자",
-        "requiredRelicNames": [
-          "저주의 결정",
-          "죽음의 낙인"
         ]
       },
       {

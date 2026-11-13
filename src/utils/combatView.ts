@@ -3,6 +3,7 @@ import { CombatEngine } from '../systems/CombatEngine';
 import { getDiscoveredBossSignatureDrops } from './bossSignatureHint.js';
 import { getCombatSkillReadiness } from './combatSkillReadiness';
 import { getBossThreatChip, getEliteThreatChip } from './enemyThreat';
+import { getBehaviorComboChip } from '../systems/relicBehaviorCombos';
 import { getCombatSkillTray } from './combatSkillTray';
 import { getConsumableDescription } from './consumablePresentation';
 import { isConsumableItem } from '../systems/consumableRules';
@@ -93,6 +94,7 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
     // 2026-10 감사 CL-06: 보스도 같은 칩이다(페이즈 · 하수인 · 브레스 포함). 위협 칩이 언제나 첫 신호다.
     const eliteThreatChip = enemy ? getEliteThreatChip(player, enemy) : null;
     const bossThreatChip = enemy ? getBossThreatChip(player, enemy) : null;
+    const behaviorChip = getBehaviorComboChip(player, enemy);
     const mobileCombatSignals = [
         eliteThreatChip
             ? {
@@ -106,6 +108,14 @@ export const buildCombatView = ({ player, enemy, stats, selectedSkill, skillCool
                 key: 'boss-threat',
                 text: bossThreatChip,
                 tone: 'boss' as CombatSignalTone,
+            }
+            : null,
+        // 2026-11 H4: 걸린 행동 조합 조건 하나(엔진 판정 그대로) — 위협 칩 다음이다.
+        behaviorChip
+            ? {
+                key: `behavior-${behaviorChip.effect}`,
+                text: behaviorChip.text,
+                tone: (behaviorChip.ready ? 'ready' : 'building') as CombatSignalTone,
             }
             : null,
         comboRelic

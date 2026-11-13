@@ -1,6 +1,8 @@
 import { MSG } from '../data/messages.js';
 import { CombatEngine } from '../systems/CombatEngine.js';
 import { getActiveHeavyStatus } from '../systems/bossMechanics.js';
+import { getChargeBreakMult } from '../systems/relicBehaviorCombos.js';
+import { getActiveRelicSynergies } from '../data/relics.js';
 import type { Monster, Player, StatusId } from '../types/index.js';
 import { estimateEnemyNextHit, type EnemyTelegraphType } from './enemyThreat.js';
 
@@ -13,7 +15,7 @@ import { estimateEnemyNextHit, type EnemyTelegraphType } from './enemyThreat.js'
  */
 
 /** 화면이 아이콘을 고르는 의도 종류 — 3페이즈 임박은 2페이즈 임박과 같은 '변신'이다. */
-export type EnemyIntentKind = 'attack' | 'heavy' | 'guard' | 'stunned' | 'breath' | 'phase';
+export type EnemyIntentKind = 'attack' | 'heavy' | 'guard' | 'stunned' | 'breath' | 'phase' | 'charge' | 'charging' | 'broken';
 
 export interface EnemyIntent {
     kind: EnemyIntentKind;
@@ -25,7 +27,9 @@ export interface EnemyIntent {
     status: string | null;
 }
 
-const TELEGRAPH_TYPES: readonly EnemyTelegraphType[] = ['normal', 'heavy', 'guard', 'stunned', 'breath', 'phase2_imminent', 'phase3_imminent'];
+const TELEGRAPH_TYPES: readonly EnemyTelegraphType[] = [
+    'normal', 'heavy', 'guard', 'stunned', 'breath', 'phase2_imminent', 'phase3_imminent', 'charge', 'charge_start', 'charge_broken',
+];
 
 const isTelegraphType = (value: string): value is EnemyTelegraphType => (TELEGRAPH_TYPES as readonly string[]).includes(value);
 
@@ -37,6 +41,9 @@ const INTENT_KIND: Record<EnemyTelegraphType, EnemyIntentKind> = {
     breath: 'breath',
     phase2_imminent: 'phase',
     phase3_imminent: 'phase',
+    charge: 'charge',
+    charge_start: 'charging',
+    charge_broken: 'broken',
 };
 
 const getStatusThreat = (enemy: Monster): string | null => {
@@ -47,11 +54,12 @@ const getStatusThreat = (enemy: Monster): string | null => {
 
 export const getEnemyIntent = (player: Player | null | undefined, enemy: Monster | null | undefined): EnemyIntent | null => {
     if (!player || !enemy) return null;
-    const telegraph = CombatEngine.predictEnemyNextAction(enemy);
+    // 2026-11 H4 끊는 일격: 충전 끊기까지 남은 피해는 그 조합의 배율로 센다(엔진의 끊김 판정과 같다).
+    const telegraph = CombatEngine.predictEnemyNextAction(enemy, getChargeBreakMult(getActiveRelicSynergies(player.relics || [])));
     if (!telegraph || !isTelegraphType(telegraph.type)) return null;
     const kind = INTENT_KIND[telegraph.type];
     const hit = estimateEnemyNextHit(player, enemy, telegraph.type);
-    const status = kind === 'stunned' ? null : getStatusThreat(enemy);
+    const status = kind === 'stunned' || kind === 'charging' || kind === 'broken' ? null : getStatusThreat(enemy);
     return {
         kind,
         label: telegraph.label,
