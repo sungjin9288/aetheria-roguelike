@@ -112,6 +112,8 @@ const ENHANCE_SLOTS = ['weapon', 'armor', 'offhand'];
 const ECONOMY_RESERVE_RESTS = 3;
 /** 경제 정책이 안전지대에서 비워 두는 가방 칸. */
 const ECONOMY_FREE_BAG_SLOTS = 4;
+/** 가방 정리(`bagRoom: 'tidy'`)가 남기는 소모품 — 종류마다 이만큼(효과가 큰 것부터), 나머지는 판다. */
+const TIDY_KEEP_CONSUMABLES = { hp: 3, mp: 3, cure: 1, buff: 1 };
 const HP_POTIONS = DB.ITEMS.consumables.filter((item) => item.type === 'hp').sort((a, b) => (b.val || 0) - (a.val || 0));
 const MP_POTIONS = DB.ITEMS.consumables.filter((item) => item.type === 'mp').sort((a, b) => (b.val || 0) - (a.val || 0));
 
@@ -181,6 +183,9 @@ const installClock = (clock) => {
  *   가방이 가득 차면 가장 가까운 안전지대로 가서 판다(쓰지 않을 장비 · 잡동사니 재료, 강화 재료가 아닌 재료는 싼 것부터 빈칸
  *   `ECONOMY_FREE_BAG_SLOTS`까지). 다녀와도 칸이 나지 않으면 `BAG_ROOM_RETRY_STEPS` 행동 동안 다시 가지 않는다. 가방이 찬 채로는
  *   결과 카드가 접히지 않아(D1) 연속 탐험이 걸음마다 멈추므로, 연속 탐험의 짝 측정은 두 짝 모두 이 정책을 켠다.
+ *   `tidy`는 `on`에 더해 상점에서 소모품도 판다 — 종류마다 `TIDY_KEEP_CONSUMABLES`만 남기고, 나중에 낄 장비는 같은 이름을 한 벌만
+ *   남긴다(`on`은 소모품을 팔지 않아 Lv21 이후
+ *   가방이 물약 · 해독제로 차 한 행동 승리의 92%가 가방 가득으로 접히지 않았다, 원장 §172.7).
  * @param {(prev: object, action: object, next: object) => void} [options.onDispatch] 리듀서 전이마다 부르는 관찰 함수(Wave 130 —
  *   기록 · 이벤트 문장 감사). 상태를 바꾸지 않고 난수도 쓰지 않아 결과는 그대로다(정책이 아니므로 `DRIVER_VERSION` 그대로).
  */
@@ -263,8 +268,9 @@ export const runNaturalPlay = async (options) => {
         bagRoom = 'off',
         onDispatch,
     } = options;
-    if (!['off', 'on'].includes(bagRoom)) throw new Error(`unknown bagRoom ${bagRoom}`);
-    const keepBagRoom = bagRoom === 'on';
+    if (!['off', 'on', 'tidy'].includes(bagRoom)) throw new Error(`unknown bagRoom ${bagRoom}`);
+    const keepBagRoom = bagRoom !== 'off';
+    const tidyBag = bagRoom === 'tidy';
     if (!AUTO_EXPLORE_POLICIES.includes(autoExplore)) throw new Error(`unknown autoExplore ${autoExplore}`);
     const useAutoExplore = autoExplore === 'on';
     if (!RELIC_PICK_POLICIES.includes(relicPick)) throw new Error(`unknown relicPick ${relicPick}`);
@@ -1028,11 +1034,15 @@ export const runNaturalPlay = async (options) => {
     /** 상점에서 쓰지 않을 장비 · 잡동사니 재료를 판다(경제 정책 · 가방 여유 정책 공용 — 상점 화면이 열려 있어야 한다). */
     function sellForRoom() {
         const sold = () => { if (run.economy) run.economy.sold += 1; };
-        // 지금 낄 수 없어도 나중에 나아질 장비(레벨 · 직업 제한)는 남긴다.
+        // 지금 낄 수 없어도 나중에 나아질 장비(레벨 · 직업 제한)는 남긴다 — `tidy`는 같은 이름을 한 벌만.
+        const keptFuture = new Set();
         for (const item of [...(state.player.inv || [])]) {
             if (!GEAR_TYPES.includes(item.type)) continue;
             const decision = getEquipmentDecision(state.player, item);
-            if (decision && !decision.equipable && decision.score > 0) continue;
+            if (decision && !decision.equipable && decision.score > 0 && !(tidyBag && keptFuture.has(item.name))) {
+                keptFuture.add(item.name);
+                continue;
+            }
             const before = state.player;
             buildActions().market('sell', item);
             if (state.player !== before) sold();
@@ -1048,6 +1058,22 @@ export const runNaturalPlay = async (options) => {
             const before = state.player;
             buildActions().market('sell', item);
             if (state.player !== before) sold();
+        }
+        if (tidyBag) sellSurplusConsumables(sold);
+    }
+
+    /** 가방 정리(`tidy`) — 소모품을 종류마다 효과가 큰 것부터 `TIDY_KEEP_CONSUMABLES`개만 남기고 판다. */
+    function sellSurplusConsumables(sold) {
+        for (const [type, keep] of Object.entries(TIDY_KEEP_CONSUMABLES)) {
+            const surplus = (state.player.inv || [])
+                .filter((item) => item.type === type)
+                .sort((a, b) => (Number(b.val) || 0) - (Number(a.val) || 0) || (Number(b.price) || 0) - (Number(a.price) || 0))
+                .slice(keep);
+            for (const item of surplus) {
+                const before = state.player;
+                buildActions().market('sell', item);
+                if (state.player !== before) sold();
+            }
         }
     }
 

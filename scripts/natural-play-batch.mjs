@@ -1,7 +1,7 @@
 // 자연 플레이 여러 시드를 병렬로: node scripts/natural-play-batch.mjs --out DIR [--seeds 1-24] [--paths knight,archmage,...]
 //   [--runs 7] [--jobs 2] [--rule-decline none|all|stacked|rank:N] [--rule-pick default|fixed|random] [--economy none|basic|materials]
 //   [--chapter-pick none|skip|relic|prefix|enhance|random] [--enhance-branch first|alt|random] [--boss-response none|basic|full]
-//   [--relic-pick recommend|first] [--relic-play none|observe|aware] [--auto-explore off|on] [--bag-room off|on] [--max-steps N]
+//   [--relic-pick recommend|first] [--relic-play none|observe|aware] [--auto-explore off|on] [--bag-room off|on|tidy] [--max-steps N]
 // 결과는 DIR/<path>/seed-<n>.json — 이미 있는 파일은 건너뛴다(중단 뒤 이어 돌리기). 2026-10 Wave 117.
 import { spawn } from 'node:child_process';
 import fs from 'node:fs';

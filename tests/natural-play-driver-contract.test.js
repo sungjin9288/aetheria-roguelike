@@ -235,6 +235,11 @@ test('연속 탐험 · 가방 여유 정책(H1)은 옵션이다 — 기본은 �
     assert.deepEqual(await runNaturalPlay({ ...SHORT, bagRoom: 'on' }), bag);
     assert.equal(bag.bagRoom, 'on');
     assert.equal(bag.stalled, null, JSON.stringify(bag.stalled));
+    // `tidy`는 `on`에 더해 소모품도 판다(종류마다 몇 개만 남긴다) — 결정론적이고 `on`과 다른 결과다.
+    const tidy = await runNaturalPlay({ ...SHORT, bagRoom: 'tidy' });
+    assert.deepEqual(await runNaturalPlay({ ...SHORT, bagRoom: 'tidy' }), tidy);
+    assert.equal(tidy.bagRoom, 'tidy');
+    assert.equal(tidy.stalled, null, JSON.stringify(tidy.stalled));
     await assert.rejects(() => runNaturalPlay({ ...SHORT, autoExplore: 'yes' }), /unknown autoExplore/);
     await assert.rejects(() => runNaturalPlay({ ...SHORT, bagRoom: 'yes' }), /unknown bagRoom/);
 });
