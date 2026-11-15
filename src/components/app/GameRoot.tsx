@@ -43,6 +43,8 @@ import { MAIN_CONTENT_ID } from '../../platform/modalFocus';
 import { useReturnSupplyRewardedAd } from '../../hooks/useReturnSupplyRewardedAd';
 import { useAutoExplore } from '../../hooks/useAutoExplore';
 import { AutoExploreContext } from '../control/autoExploreContext';
+import { useFieldMap } from '../../hooks/useFieldMap';
+import { FieldMapContext } from '../field/fieldMapContext';
 import type { InventoryFilterId, InventoryFilterRequest } from '../../utils/inventoryFilters';
 
 const RelicChoicePanel = lazy(() => import('../RelicChoicePanel'));
@@ -321,6 +323,34 @@ const GameRoot = ({
 
     // 2026-11 H1 연속 탐험: 판단을 기다리는 화면(원정 정리 · 이야기 카드 · 장 선택 · 거울 · 교환소 · 휴대폰 기록 창)이 덮으면 멈춘다.
     //   처치 박자(결과 카드를 띄우기 전) 동안은 다음 걸음을 미룬다. 토글은 화면 상태다 — 세이브 봉투 밖.
+    const autoExploreBlocked = showExpeditionDebrief || showStandaloneStory || showChapterPick || mirrorPanelOpen || premiumShopOpen
+        || (mobileConsoleMode === 'archive' && !isDesktopLayout);
+    // 2026-11 지역 지도 걷기(docs/OVERWORLD_WALK_DESIGN_2026-11.md): 지도 지역의 조우는 걷기에서 나온다 — 처리할 일(조우 · 출구 · 미믹)과
+    //   지도 자동 탐험을 이 훅이 넘긴다. 연속 탐험(H1)은 지도 지역에서 쉰다(걷지 않고 탐험하면 지도를 건너뛴다).
+    const fieldMap = useFieldMap({
+        state: {
+            gameState: engine.gameState,
+            player: engine.player,
+            enemy: engine.enemy,
+            currentEvent: engine.currentEvent,
+            pendingRelics: engine.pendingRelics,
+            postCombatResult: engine.postCombatResult,
+            isAiThinking: engine.isAiThinking,
+        },
+        actions: {
+            fieldEnter: engine.actions.fieldEnter,
+            fieldStep: engine.actions.fieldStep,
+            fieldStartAuto: engine.actions.fieldStartAuto,
+            processFieldPending: engine.actions.processFieldPending,
+            combat: engine.actions.combat,
+            clearPostCombat: engine.actions.clearPostCombat,
+        },
+        addLog: engine.addLog,
+        blocked: autoExploreBlocked,
+        paused: combatStage.holdResultCards,
+        timeScale: combatTimeScale,
+    });
+
     const autoExplore = useAutoExplore({
         state: {
             gameState: engine.gameState,
@@ -337,8 +367,7 @@ const GameRoot = ({
             clearPostCombat: engine.actions.clearPostCombat,
         },
         addLog: engine.addLog,
-        blocked: showExpeditionDebrief || showStandaloneStory || showChapterPick || mirrorPanelOpen || premiumShopOpen
-            || (mobileConsoleMode === 'archive' && !isDesktopLayout),
+        blocked: autoExploreBlocked || fieldMap.active,
         paused: combatStage.holdResultCards,
         timeScale: combatTimeScale,
     });
@@ -441,6 +470,7 @@ const GameRoot = ({
     return (
     <MotionConfig reducedMotion="user">
       <AutoExploreContext.Provider value={autoExplore}>
+      <FieldMapContext.Provider value={fieldMap}>
         <MainLayout visualEffect={visualEffect} readabilityMode={readabilityMode} regionTheme={regionTheme} combatSpeedFast={isCombatSpeedFast(engine.player)}>
             {/* VD-14: 바탕은 MainLayout 한 곳(앱 바탕 · 지역 빛 · 비네트)이 그린다 — 여기서 같은 빛 번짐을 다시 깔지 않는다. */}
             <main id={MAIN_CONTENT_ID} tabIndex={-1} className="relative z-10 flex min-h-0 min-w-0 flex-1 flex-col gap-1.5 focus-visible:outline-none">
@@ -611,6 +641,7 @@ const GameRoot = ({
                 </Suspense>
             )}
         </MainLayout>
+      </FieldMapContext.Provider>
       </AutoExploreContext.Provider>
     </MotionConfig>
     );

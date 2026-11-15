@@ -182,6 +182,8 @@ export const pickPermanentPlayerState = (
             dailyInvadeCount: numberOrZero(stats.dailyInvadeCount),
             lastInvadeDate: stats.lastInvadeDate ?? null,
             abyssDailyDive: clone(stats.abyssDailyDive ?? null),
+            // 2026-11 지역 지도: 그날 쓴 자동 탐험 횟수는 사망 · 계승으로 되돌아오지 않는다(설계 §7). 지도 · 클리어 기록은 넘기지 않는다.
+            ...(stats.fieldAutoRuns ? { fieldAutoRuns: clone(stats.fieldAutoRuns) } : {}),
             lastSeenAt: stats.lastSeenAt ?? null,
         },
     };

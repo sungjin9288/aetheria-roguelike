@@ -18,6 +18,7 @@ import type { FullStats } from '../utils/statsCalculator';
 import type { GraveEntry } from '../utils/graveUtils';
 import type { RunSummary } from '../reducers/actionTypes';
 import { BALANCE, CONSTANTS } from '../data/constants';
+import { createFieldMapState, getFieldMapLayout, isFieldMapRegion } from '../systems/fieldMapWalk';
 import { getLevelExpRequirement } from '../systems/expCurve';
 import { DB } from '../data/db';
 import { DEATH_LORE } from '../data/deathLore';
@@ -361,6 +362,10 @@ export interface CanonicalEventChanceRelicChoiceSnapshot {
  * 통해서만 엔진을 조작·관측한다. 새 멤버를 추가하면 여기에도 시그니처를 추가할 것 —
  * `const testApi: AetheriaTestApi = {...}`가 어긋난 멤버를 즉시 컴파일 에러로 잡는다.
  */
+/** 지역 지도 QA 시드의 갈래 */
+/** walk: 새 지도 · mimic: 첫 상자의 미믹이 깨어남 · opened: 상자를 모두 연 지도(나가면 클리어) · cleared: 클리어한 지역 */
+export type FieldMapSeedKind = 'walk' | 'mimic' | 'opened' | 'cleared';
+
 export interface AetheriaTestApi {
     getTrueEndingJourneySnapshot: () => TrueEndingJourneySnapshot;
     getInvestmentSnapshot: () => InvestmentSnapshot;
@@ -426,6 +431,11 @@ export interface AetheriaTestApi {
      * 공격력 500(숲의 일반 적은 최소 피해 한 방) · 생명 · 기력 실효 최대 · 가방 앞 다섯 칸. 연속 탐험 토글이 그려지고 켤 수 있다.
      */
     seedAutoExploreScenario: () => boolean;
+    /**
+     * 2026-11 지역 지도 걷기: 첫 지도 지역에서 Lv10 전직 캐릭터(공격력 500)로 새 지도의 입구에 선다. 'mimic'은 첫 상자를 막 연
+     * 자리에 미믹 처리할 일을 남기고(훅이 전투를 연다), 'cleared'는 그 지역을 클리어한 기록과 오늘 쓰지 않은 자동 탐험을 준다.
+     */
+    seedFieldMapScenario: (kind?: FieldMapSeedKind) => boolean;
     /**
      * 2026-11 H5: 충전 강타를 모은 보스(`bossName` — 실제 `mechanics`, `mapName`에서)와 싸우는 중으로 만든다. 보스 생명은 3200이고
      * 예고 칩은 충전 강타 · 끊기까지 남은 피해다(`partialDamage`만큼 이미 깎인 상태). 생명은 실효 최대치다.
@@ -741,6 +751,25 @@ export const useGameTestApi = (
                     mp: e.player.mp,
                     maxMp: fs.maxMp,
                     gold: e.player.gold,
+                    // 2026-11 지역 지도 걷기: 걷는 상태 · 클리어 기록 · 오늘 쓴 자동 탐험 — e2e가 읽는다.
+                    fieldMap: e.player.fieldMap ?? null,
+                    fieldClearedRegions: e.player.fieldClearedRegions ?? [],
+                    fieldAutoRuns: e.player.stats?.fieldAutoRuns ?? null,
+                    // 지도 칸(벽 · 길 · 풀숲) · 입구 · 출구 · 상자 자리 — e2e 걷기 도우미가 경로를 고른다.
+                    fieldLayout: (() => {
+                        const field = e.player.fieldMap;
+                        const mapData = field && e.player.loc ? DB.MAPS[e.player.loc] : null;
+                        if (!field || !mapData || field.loc !== e.player.loc) return null;
+                        const layout = getFieldMapLayout(field, mapData);
+                        return {
+                            width: layout.width,
+                            height: layout.height,
+                            tiles: layout.tiles,
+                            entrance: layout.entrance,
+                            exits: layout.exits.map((exit) => ({ index: exit.index, to: exit.to })),
+                            chests: layout.chests.map((chest) => ({ id: chest.id, index: chest.index })),
+                        };
+                    })(),
                 },
                 enemy: e.enemy
                     ? {
@@ -1948,8 +1977,10 @@ export const useGameTestApi = (
             seedAutoExploreScenario: () => {
                 const er = engineRef.current;
                 // 시작 마을에서 나가는 첫 사냥 지역 · 기본 직업의 첫 전직(데이터에서 읽는다).
+                // 2026-11: 지도 지역(`FIELD_MAP_REGIONS`)은 연속 탐험 대신 지도 자동 탐험을 쓰므로 건너뛴다.
                 const loc = (DB.MAPS[CONSTANTS.START_LOCATION]?.exits || [])
-                    .find((name) => DB.MAPS[name]?.type === 'dungeon' && (DB.MAPS[name]?.monsters?.length ?? 0) > 0);
+                    .find((name) => DB.MAPS[name]?.type === 'dungeon' && (DB.MAPS[name]?.monsters?.length ?? 0) > 0
+                        && !isFieldMapRegion(name, DB.MAPS[name]));
                 const job = DB.CLASSES[CONSTANTS.DEFAULT_JOB]?.next?.[0];
                 if (!loc || !job) return false;
                 const patch = {
@@ -1969,6 +2000,46 @@ export const useGameTestApi = (
                     payload: { ...patch, hp: fullStats.maxHp, mp: fullStats.maxMp },
                 });
                 er.dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+                er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+                return true;
+            },
+            seedFieldMapScenario: (kind: FieldMapSeedKind = 'walk') => {
+                const er = engineRef.current;
+                const loc = BALANCE.FIELD_MAP_REGIONS[0];
+                const mapData = loc ? DB.MAPS[loc] : null;
+                const job = DB.CLASSES[CONSTANTS.DEFAULT_JOB]?.next?.[0];
+                if (!loc || !mapData || !job || !isFieldMapRegion(loc, mapData)) return false;
+                const base = { ...er.player, loc, fieldMap: null };
+                const fresh = createFieldMapState(base, loc, mapData);
+                const layout = getFieldMapLayout(fresh, mapData);
+                const chest = layout.chests[0];
+                const fieldMap = kind === 'mimic' && chest
+                    ? { ...fresh, pos: chest.index, visited: [...new Set([...fresh.visited, chest.index])].sort((a, b) => a - b), openedChests: [chest.id], pending: { kind: 'mimic' as const, chestId: chest.id } }
+                    : kind === 'opened'
+                        ? { ...fresh, openedChests: layout.chests.map((entry) => entry.id).sort((a, b) => a - b) }
+                        : fresh;
+                const patch = {
+                    job,
+                    loc,
+                    level: 10,
+                    exp: 0,
+                    nextExp: getLevelExpRequirement(10),
+                    atk: 500,
+                    inv: (er.player.inv || []).slice(0, 5),
+                    status: [],
+                    activeExpedition: null,
+                    fieldMap,
+                    fieldClearedRegions: kind === 'cleared' ? [loc] : [],
+                    stats: { ...er.player.stats, fieldAutoRuns: undefined },
+                };
+                const fullStats = calculateFullStats({ ...er.player, ...patch })!;
+                er.dispatch({ type: AT.SET_PENDING_RELICS, payload: null });
+                er.dispatch({ type: AT.SET_POST_COMBAT_RESULT, payload: null });
+                er.dispatch({ type: AT.SET_ENEMY, payload: null });
+                er.dispatch({
+                    type: AT.SET_PLAYER,
+                    payload: { ...patch, hp: fullStats.maxHp, mp: fullStats.maxMp },
+                });
                 er.dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
                 return true;
             },

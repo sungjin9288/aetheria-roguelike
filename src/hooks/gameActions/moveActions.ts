@@ -15,6 +15,7 @@ import { isAreaBossChallengeable, getAreaBossName } from '../../utils/bossGauge'
 import { finishExpedition, normalizeActiveExpedition, startExpedition } from '../../utils/expeditionLedger';
 import { advanceChapterOnEntry } from '../../utils/chapterRecap';
 import { resolveProgressionProfile, scaleProgressionExpReward } from '../../data/progressionProfiles';
+import { getFieldMapOnArrival } from '../../systems/fieldMapWalk';
 import type { Player } from '../../types';
 import type { GameActionDeps } from '../actionDeps';
 
@@ -80,6 +81,8 @@ export const createMoveActions = (deps: GameActionDeps) => {
                     return {
                         ...nextPlayer,
                         loc,
+                        // 2026-11 지역 지도: 지도 지역에 들어서면 새 지도의 입구에 선다(방문마다 새 지도).
+                        fieldMap: getFieldMapOnArrival(nextPlayer, loc, targetMap),
                         // 예전 세이브(목록 없음)는 방문 기록을 받은 목록으로 읽는다 — 아래에서 방문 기록에 이 지역을 더하기 전에 목록을
                         //   굳혀 둬야 이번 이동의 첫 방문 보상이 "이미 받음"으로 읽히지 않는다.
                         firstVisitRewardMaps: getFirstVisitClaimedMaps(p),

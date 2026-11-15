@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { startE2ERun, expectExploreReady, exploreOnce } from './testHelpers';
 
 /**
  * E2E: 떠돌이 행상인 (2026-10 Wave 75, 소유자 결정 "낮은 확률의 이벤트로 행상인 — 물품은 늘 바뀌고 가끔 희귀한 재료 · 장비,
@@ -18,14 +18,14 @@ test.describe('떠돌이 행상인', () => {
     test('탐험 중 행상인을 만나 이번 만남의 물건을 사고, 가방 물건을 팔고, 떠나면 다시 볼 수 없다', async ({ page }) => {
         await startE2ERun(page);
         await page.getByTestId('control-town-primary').getByRole('button').first().click();
-        await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 8_000 });
+        await expectExploreReady(page, 8_000);
 
         const seed = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedWanderingMerchantScenario?.());
         expect(seed).toBeTruthy();
         const { sellItemName } = seed as { sellItemName: string };
 
         await page.evaluate((value) => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(value), TRIGGER_SEED);
-        await page.getByTestId('control-explore').click();
+        await exploreOnce(page);
 
         const panel = page.getByTestId('event-panel');
         await expect(panel).toBeVisible({ timeout: 8_000 });
@@ -66,7 +66,7 @@ test.describe('떠돌이 행상인', () => {
 
         // 떠나기 — 만남이 끝나고 다시 볼 수 없다.
         await page.getByTestId('shop-close').click();
-        await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 8_000 });
+        await expectExploreReady(page, 8_000);
         const left = await snapshot(page);
         expect(left!.gameState).toBe('idle');
         expect(left!.stock).toEqual([]);

@@ -1,5 +1,5 @@
 import { test, expect, type Page } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { startE2ERun, exploreOnce } from './testHelpers';
 
 const expectReadableHud = async (page: Page) => {
     const metrics = page.locator('[data-testid^="status-metric-"]').filter({ has: page.getByTestId('status-metric-label') });
@@ -57,7 +57,7 @@ test('첫 출발의 이유를 읽고 탐험하면 시작 안내가 반복되지 
     await expect(opening).toHaveCount(0);
     // 2026-10 Wave 127: 첫 탐험은 강제 이야기 없이 자연 결과다 — 조용한 결과 씨앗으로 고정한다.
     await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8));
-    await page.getByTestId('control-explore').click();
+    await exploreOnce(page);
     await expect(page.getByTestId('event-panel')).toBeHidden();
     await page.getByTestId('control-move').click();
     await page.getByTestId('control-route-option-시작의 마을').click();

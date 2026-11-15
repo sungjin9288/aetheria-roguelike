@@ -1,5 +1,5 @@
 import { devices, expect, test, type Locator, type Page } from '@playwright/test';
-import { openTownFacilities, startE2ERun, waitForModeTransition } from './testHelpers';
+import { openTownFacilities, startE2ERun, waitForModeTransition, expectExploreReady, exploreOnce } from './testHelpers';
 
 /**
  * 2026-10 데스크톱 배치(VD-04 · UX-12): 화면 폭 1024px 이상은 세 칸 — 왼쪽 캐릭터 · 가운데 무대 · 오른쪽 모험 기록.
@@ -137,9 +137,9 @@ for (const viewport of VIEWPORTS) {
 
             // 탐험 → 전투
             await page.getByTestId('control-expedition-start').click();
-            await expect(page.getByTestId('control-explore')).toBeVisible();
+            await expectExploreReady(page);
             await page.evaluate((seed) => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(seed), COMBAT_EXPLORE_SEED);
-            await page.getByTestId('control-explore').click();
+            await exploreOnce(page);
             await expect.poll(async () => (await readGame(page)).gameState, { timeout: 10_000 }).toBe('combat');
             await expect(page.getByTestId('combat-focus-panel')).toBeVisible();
             await waitForModeTransition(page);

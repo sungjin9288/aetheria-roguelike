@@ -4,7 +4,7 @@ import { expect, test, type Browser, type Page, type TestInfo } from '@playwrigh
 import { devices } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
-import { startE2ERun } from './testHelpers';
+import { startE2ERun, expectExploreReady, exploreOnce } from './testHelpers';
 import {
     NATURAL_EXPLORATION_OUTCOMES,
     NATURAL_EXPLORATION_REQUIRED_GATES,
@@ -175,7 +175,7 @@ const winCombatThroughVisibleAttacks = async (page: Page) => {
         await page.getByTestId('post-combat-close').click();
         await expect(postCombatCard).toBeHidden({ timeout: 8_000 });
     }
-    await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 10_000 });
+    await expectExploreReady(page, 10_000);
     return attackCount;
 };
 
@@ -288,11 +288,11 @@ const runJourney = async (browser: Browser, testInfo: TestInfo, journeyNumber: n
     try {
         const runtimeGate = await startE2ERun(page).then(() => assertMobileRuntime(page));
         await page.getByTestId('control-expedition-start').click();
-        await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 8_000 });
+        await expectExploreReady(page, 8_000);
 
         // 2026-10 Wave 127(소유자 결정): 첫 탐험은 강제 이야기를 띄우지 않는다 — 첫 탐험부터 씨앗대로의 자연 결과다.
         await armExploreSeed(page, NATURAL_EXPLORATION_SEEDS[0]);
-        await page.getByTestId('control-explore').click();
+        await exploreOnce(page);
         await expect(page.getByTestId('combat-action-attack')).toBeVisible({ timeout: 10_000 });
         const noForcedStory = !await page.getByTestId('event-panel').isVisible();
         expect(noForcedStory).toBe(true);
@@ -305,8 +305,8 @@ const runJourney = async (browser: Browser, testInfo: TestInfo, journeyNumber: n
         };
 
         await armExploreSeed(page, NATURAL_EXPLORATION_SEEDS[1]);
-        await page.getByTestId('control-explore').click();
-        await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 8_000 });
+        await exploreOnce(page);
+        await expectExploreReady(page, 8_000);
         await expect(page.getByTestId('event-panel')).toBeHidden();
         await expect(page.getByTestId('combat-action-attack')).toBeHidden();
         const nothing = {
@@ -318,7 +318,7 @@ const runJourney = async (browser: Browser, testInfo: TestInfo, journeyNumber: n
         };
 
         await armExploreSeed(page, NATURAL_EXPLORATION_SEEDS[2]);
-        await page.getByTestId('control-explore').click();
+        await exploreOnce(page);
         const boundedSurfaceGates = await assertBoundedSurface(page);
         const bounded = {
             kind: 'bounded_event',

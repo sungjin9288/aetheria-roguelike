@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { startE2ERun, exploreOnce } from './testHelpers';
 
 /**
  * E2E: Intro 화면 → 캐릭터 시작 flow.
@@ -111,7 +111,7 @@ test.describe('Intro flow', () => {
 
         // 2026-10 Wave 127(소유자 결정): 첫 탐험은 강제 이야기를 띄우지 않는다 — 조용한 결과 씨앗으로 고정한다.
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8));
-        await page.getByTestId('control-explore').click();
+        await exploreOnce(page);
         const completedMission = page.getByTestId('control-mission-tracker');
         await expect(completedMission).toContainText('보상 대기');
         await expect(completedMission).toContainText('마을에서 보상 회수');

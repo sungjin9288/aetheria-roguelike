@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { openTownFacilities, startE2ERun } from './testHelpers';
+import { openTownFacilities, startE2ERun, expectExploreReady, exploreOnce } from './testHelpers';
 
 const readRenderedState = (page: Page) => page.evaluate(() => (
     JSON.parse(window.render_game_to_text?.() || '{}')
@@ -69,7 +69,7 @@ test.describe('release-complete player journey', () => {
         await startE2ERun(page);
 
         await page.getByTestId('control-town-primary').getByRole('button').click();
-        await expect(page.getByTestId('control-explore')).toBeVisible();
+        await expectExploreReady(page);
         let state = await readRenderedState(page);
         expect(state.player.loc).toBe('고요한 숲');
         expect(state.player.activeExpeditionId).toBeTruthy();
@@ -79,7 +79,7 @@ test.describe('release-complete player journey', () => {
             window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(112596)
         ));
         expect(armed).toBe(true);
-        await page.getByTestId('control-explore').click();
+        await exploreOnce(page);
         await expect(page.getByTestId('combat-action-attack')).toBeVisible({ timeout: 10_000 });
         await winCurrentCombat(page);
         // 2026-09 D3: 실제 승리에도 전투 결과 카드가 열린다(이전엔 QA 주입 전용이었다).

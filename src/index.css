@@ -3095,6 +3095,166 @@
     transition: none;
   }
 }
+/* ── 지역 지도 걷기(2026-11, docs/OVERWORLD_WALK_DESIGN_2026-11.md §8): 지도 무대 · 방향 패드 · 걷는 도크 ── */
+.ae-field-map-slot {
+  min-height: 168px;
+}
+
+.ae-field-map-slot.is-desktop {
+  flex: 0 0 auto;
+  height: min(52vh, 460px);
+}
+
+/* 지도에서는 기록 띠를 내린다(설계 결정 1) — 사건은 지도 위 한 줄 소식이 보이고 전체 기록은 '모험 기록'에 있다. */
+.ae-field-log-strip.is-map {
+  flex: 0 0 60px;
+}
+
+.ae-field-map {
+  isolation: isolate;
+  background: rgb(var(--aether-bg-rgb));
+  box-shadow: inset 0 1px 0 var(--aether-rim);
+  touch-action: none;
+}
+
+.ae-field-map::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+.ae-field-map.is-encounter::after {
+  animation: ae-field-encounter 380ms ease-out both;
+}
+
+@keyframes ae-field-encounter {
+  0% { background: rgb(var(--aether-ink-rgb) / 0.5); }
+  100% { background: rgb(var(--aether-ink-rgb) / 0); }
+}
+
+.ae-field-map-top {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  right: 8px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  pointer-events: none;
+}
+
+.ae-field-orb {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px 4px 6px;
+  border-radius: 999px;
+  background: rgb(var(--aether-s2-rgb) / 0.88);
+  box-shadow: inset 0 0 0 1px var(--aether-rim);
+  color: rgb(var(--aether-ink-2-rgb));
+}
+
+.ae-field-orb-ball {
+  width: 16px;
+  height: 16px;
+  border-radius: 999px;
+  background: linear-gradient(to top, rgb(var(--aether-threat-rgb)) var(--ae-orb-fill), rgb(var(--aether-s4-rgb)) var(--ae-orb-fill));
+  box-shadow: inset 0 0 0 1px var(--aether-rim);
+  transition: background 200ms ease;
+}
+
+.ae-field-orb[data-level="0"] { --ae-orb-fill: 0%; }
+.ae-field-orb[data-level="1"] { --ae-orb-fill: 35%; }
+.ae-field-orb[data-level="2"] { --ae-orb-fill: 65%; }
+.ae-field-orb[data-level="3"] { --ae-orb-fill: 100%; color: rgb(var(--aether-threat-rgb)); }
+
+.ae-field-map-news {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+  padding: 6px 10px;
+  border-radius: var(--aether-r-sm);
+  background: rgb(var(--aether-s2-rgb) / 0.9);
+  box-shadow: inset 0 0 0 1px var(--aether-rim);
+  color: rgb(var(--aether-ink-rgb));
+  pointer-events: none;
+  animation: ae-field-discovery-in 260ms cubic-bezier(.2, .8, .2, 1) both;
+}
+
+.ae-field-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 46px);
+  grid-template-rows: repeat(3, 46px);
+  grid-template-areas: ". up ." "left . right" ". down .";
+  gap: 2px;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.ae-field-pad-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: var(--aether-r-sm);
+  background: linear-gradient(180deg, rgb(var(--aether-s3-rgb)) 0%, rgb(var(--aether-s2-rgb)) 100%);
+  box-shadow: inset 0 1px 0 var(--aether-rim), 0 2px 6px rgb(var(--aether-void-rgb) / 0.35);
+  color: rgb(var(--aether-ink-rgb));
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+}
+
+.ae-field-pad-btn:active:not(:disabled) {
+  filter: brightness(1.18);
+  transform: translateY(1px);
+}
+
+.ae-field-pad-btn:disabled {
+  opacity: 0.45;
+}
+
+.ae-field-pad-btn:focus-visible {
+  outline: 2px solid rgb(var(--aether-ether-rgb));
+  outline-offset: 2px;
+}
+
+.ae-field-dock.is-walk {
+  grid-template-columns: auto repeat(2, minmax(0, 1fr));
+  align-items: stretch;
+}
+
+.ae-field-dock.is-walk > .ae-dock-pad {
+  grid-row: 1 / span 2;
+  display: flex;
+  align-items: center;
+}
+
+.ae-field-dock.is-walk > .ae-dock-btn.ae-btn {
+  min-height: 0;
+}
+
+@container ae-control (min-width: 600px) {
+  .ae-field-dock.is-walk {
+    grid-template-columns: auto repeat(4, minmax(0, 1fr));
+  }
+
+  .ae-field-dock.is-walk > .ae-dock-pad {
+    grid-row: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ae-field-map.is-encounter::after,
+  .ae-field-map-news {
+    animation: none;
+  }
+}
 /* === /w3:field === */
 
 /* === w3:town === */
