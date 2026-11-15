@@ -21,6 +21,7 @@ import {
     planFieldAutoStep,
     resolveFieldStep,
 } from '../src/systems/fieldMapWalk.js';
+import { isFieldAutoResumable } from '../src/utils/fieldAuto.js';
 
 // 2026-11 지역 지도 걷기 — 설계 docs/OVERWORLD_WALK_DESIGN_2026-11.md §2 · §3 · §9 계약 2 · 3 · 4.
 
@@ -217,4 +218,16 @@ test('자동 경로는 상자를 모두 열고 출구를 밟지 않고 입구로
         assert.equal(state.openedChests.length, layout.chests.length);
         assert.equal(state.pos, layout.entrance);
     }
+});
+
+test('자동 탐험은 입구로 돌아올 때까지 이어 가기다 — 돌아가는 길에 멈춰도 다시 켜면 횟수를 쓰지 않는다(설계 §7)', () => {
+    const map = DB.MAPS['고요한 숲'];
+    const start = { ...createFieldMapState({ stats: { explores: 7 } }, '고요한 숲', map), autoRun: true };
+    const layout = getFieldMapLayout(start, map);
+    assert.equal(isFieldAutoResumable(start, layout), true, '시작한 지도');
+    const allOpened = layout.chests.map((chest) => chest.id);
+    const away = layout.chests.find((chest) => chest.index !== layout.entrance).index;
+    assert.equal(isFieldAutoResumable({ ...start, openedChests: allOpened, pos: away }, layout), true, '상자는 다 열었고 입구로 돌아가는 중');
+    assert.equal(isFieldAutoResumable({ ...start, openedChests: allOpened, pos: layout.entrance }, layout), false, '입구에 돌아오면 끝');
+    assert.equal(isFieldAutoResumable({ ...start, autoRun: false }, layout), false, '손으로 걷는 지도');
 });

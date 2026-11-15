@@ -6,7 +6,8 @@ import { toCoord } from '../../systems/fieldMapGen';
 import { getFieldDangerSignal, getFieldEncounterThreshold, getFieldRevealed } from '../../systems/fieldMapWalk';
 import { deriveCharacterAppearance } from '../../utils/characterAppearance';
 import { getAvatarSpriteCandidates } from '../../utils/avatarSpriteCandidates';
-import { getVisibleLocationName } from '../../utils/challengeRules';
+import { getVisibleLocationName, isBlindMap } from '../../utils/challengeRules';
+import { getChapterOf } from '../../utils/chapters';
 import { selectFieldNews } from '../../utils/fieldStage';
 import { fieldColor, readFieldMapPalette } from '../../utils/fieldMapPalette';
 import type { FieldMapLayout, FieldMapState } from '../../types/fieldMap';
@@ -174,6 +175,8 @@ const FieldMapView = ({ player, field, layout, logs }: FieldMapViewProps) => {
     const signal = getFieldDangerSignal(field.danger, threshold);
     const opened = layout.chests.filter((chest) => field.openedChests.includes(chest.id)).length;
     const locationName = getVisibleLocationName(player, player.loc) ?? '';
+    // 2026-11 B1 P1: 지금 지역의 장 번호 — 필드 무대(FieldStage)와 같은 칩 · 같은 판정(길 잃은 여행이면 숨긴다).
+    const chapter = isBlindMap(player) ? null : getChapterOf(player.loc);
 
     // 지도가 선 순간 뒤의 기록 한 줄 — 아무 일 없음 · 작은 발견 · 상자는 화면을 바꾸지 않고 여기서 보인다.
     const [floorId] = useState<string | null>(() => (logs.length > 0 ? logs[logs.length - 1].id : null));
@@ -193,7 +196,12 @@ const FieldMapView = ({ player, field, layout, logs }: FieldMapViewProps) => {
                 <canvas ref={canvasRef} role="img" aria-label={MSG.FIELD_A11Y_MAP} className="block h-full w-full" />
             </div>
             <div className="ae-field-map-top">
-                <Chip tone="ether" data-testid="field-map-chests">{MSG.FIELD_CHESTS_LEFT(opened, layout.chests.length)}</Chip>
+                <div className="flex min-w-0 flex-wrap items-center gap-1">
+                    <Chip tone="ether" data-testid="field-map-chests">{MSG.FIELD_CHESTS_LEFT(opened, layout.chests.length)}</Chip>
+                    {chapter !== null && (
+                        <Chip data-testid="field-stage-chapter" className="font-fira tabular-nums">{MSG.FIELD_STAGE_CHAPTER_CHIP(chapter)}</Chip>
+                    )}
+                </div>
                 <div data-testid="field-danger-orb" className="ae-field-orb" data-level={signal}>
                     <span className="ae-field-orb-ball" aria-hidden="true" />
                     <span className="aether-type-meta">{MSG.FIELD_DANGER_LABEL[signal]}</span>

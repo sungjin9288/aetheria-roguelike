@@ -29,9 +29,13 @@ export const getFieldAutoRunsUsed = (player: Pick<Player, 'stats'>, now: number)
     return Math.max(0, Math.trunc(Number(record.used) || 0));
 };
 
-/** 이 지도에서 자동 탐험을 이어 갈 수 있다 — 자동으로 시작한 지도이고 열지 않은 상자가 남았다. */
+/**
+ * 이 지도에서 자동 탐험을 이어 갈 수 있다 — 자동으로 시작한 지도이고 그 탐험이 아직 끝나지 않았다.
+ * 끝은 자동 경로(`planFieldAutoStep`)와 같다: 상자를 다 열고 입구에 돌아왔을 때다. 상자만 보던 동안
+ * 입구로 돌아가는 길에 멈춘 탐험을 다시 켜면 새 지도를 만들고 횟수를 하나 더 썼다(설계 §7 위반).
+ */
 export const isFieldAutoResumable = (field: FieldMapState | null | undefined, layout: FieldMapLayout | null): boolean => (
-    Boolean(field?.autoRun && layout && !areAllFieldChestsOpened(field, layout))
+    Boolean(field?.autoRun && layout && !(areAllFieldChestsOpened(field, layout) && field.pos === layout.entrance))
 );
 
 export const getFieldAutoAvailability = (
