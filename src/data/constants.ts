@@ -713,6 +713,37 @@ export const BALANCE = {
     AUTO_EXPLORE_PROBE_VARIANCE_ROLL: 0,
     AUTO_EXPLORE_PROBE_OTHER_ROLL: 0.999999,
 
+    // 2026-11 지역 지도 걷기(docs/OVERWORLD_WALK_DESIGN_2026-11.md) — 1단계 시제품은 고요한 숲 하나만 켠다(`FIELD_MAP_REGIONS`).
+    //   크기는 지역 레벨 10레벨 구간마다 가로 · 세로 +2칸(13 × 19 → 27 × 33), 상자는 3 + ⌊구간 ÷ 2⌋ + 0 ~ 1개.
+    //   조우 문턱은 풀숲 평균 10걸음(6 ~ 14), 이미 밟은 칸은 위험 0. 상자 · 미믹 값은 2단계에서 측정으로 정한다.
+    FIELD_MAP_REGIONS: ['고요한 숲'],
+    FIELD_MAP_WIDTH_BASE: 13,
+    FIELD_MAP_HEIGHT_BASE: 19,
+    FIELD_MAP_SIZE_STEP: 2,
+    FIELD_MAP_SIZE_MAX_BAND: 7,
+    FIELD_MAP_GEN_ATTEMPTS: 24,
+    FIELD_MAP_FOG_RADIUS: 2,
+    FIELD_CHEST_BASE: 3,
+    FIELD_CHEST_EXTRA_MAX: 1,
+    FIELD_CHEST_MIN_SPACING: 4,
+    FIELD_DANGER_GRASS: 1,
+    FIELD_DANGER_DEEP: 1.5,
+    FIELD_ENCOUNTER_MIN: 6,
+    FIELD_ENCOUNTER_MAX: 14,
+    FIELD_DANGER_SIGNAL_STEPS: [0.45, 0.6, 0.75],
+    FIELD_CHEST_GOLD_MULT: 1.5,
+    FIELD_CHEST_MATERIAL_CHANCE: 0.25,
+    FIELD_MIMIC_CHANCE: 0.05,
+    FIELD_MIMIC_GOLD_MULT: 2,
+    FIELD_MIMIC_RARE_MAT_CHANCE: 0.03,
+    FIELD_MIMIC_EARLY_MULT: 1.4,
+    FIELD_MIMIC_MULT: 2.5,
+    FIELD_MIMIC_SPECIES: '미믹',        // 미믹 종(몬스터 데이터의 이름) — 정해진 종 경로로 만든다
+    FIELD_AUTO_RUNS_PER_DAY: 3,
+    FIELD_AUTO_STEP_MS: 200,           // 자동 탐험 걸음 박자(전투 속도 ×2면 절반) — 걷는 모습을 빠르게 보인다(설계 §7)
+    FIELD_WALK_REPEAT_MS: 170,         // 방향 패드를 누르고 있을 때 다음 걸음까지
+    FIELD_TILE_PX: 38,                 // 지도 칸 크기(설계 §8 — 36 ~ 40px, 시제품에서 잰다)
+
     // 리텐션 훅 — 복귀 브리핑 카드
     RETURN_BRIEFING_HOURS: 2,           // 마지막 플레이로부터 이 시간(h) 이상 경과 시 복귀 브리핑 표시 (2026-11 고도화 E1: 6 → 2, 사람 테스트로 다시 정한다)
     RETURN_BRIEFING_RESUME_LINES: 3,    // 복귀 브리핑 "멈춘 자리" 최대 줄 수

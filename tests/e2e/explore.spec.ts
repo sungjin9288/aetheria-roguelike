@@ -21,8 +21,10 @@ test.describe('Explore flow', () => {
         await expect(page.getByTestId('control-map-signal')).toBeVisible({ timeout: 5_000 });
 
         await page.getByTestId('control-expedition-start').click();
-        await expect(explore).toBeVisible({ timeout: 5_000 });
-        await expect(explore).toHaveAccessibleName('탐험');
+        // 2026-11 지역 지도 걷기: 첫 사냥 지역(고요한 숲)은 탐험 단추 대신 지도와 방향 패드다 — 걸어서 조우하면 탐험 1회다.
+        await expect(page.getByTestId('field-map')).toBeVisible({ timeout: 5_000 });
+        await expect(page.getByTestId('field-pad')).toHaveAccessibleName('걷기');
+        await expect(explore).toHaveCount(0);
     });
 
     test('이동 버튼 클릭 → 이동 가능 지역 노출', async ({ page }) => {

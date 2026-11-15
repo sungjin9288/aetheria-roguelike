@@ -12,6 +12,7 @@ import type { ProgressionProfile } from './progression.js';
 // 타입 전용 re-import — types/index.ts의 FullStats re-export와 동일 패턴(런타임 의존 0).
 //   단일 진실 원천을 중복 선언하지 않기 위해 계산/정규화 모듈의 타입을 그대로 쓴다.
 import type { BattleRecord } from '../systems/DifficultyManager.js';
+import type { FieldMapState } from './fieldMap.js';
 import type { CurrentRunProgress } from '../utils/runProgress.js';
 
 /**
@@ -58,6 +59,11 @@ interface PlayerStats {
      * 도감은 사망하면 비워져 같은 마일스톤을 다시 받을 수 있지만 크리스털은 계정당 한 번이다.
      */
     crystalRewardedCodexMilestones?: string[];
+    /**
+     * 2026-11 지역 지도 자동 탐험 횟수(설계 §7) — 날짜 키(`getProtocolDayKey`)와 그날 쓴 횟수. 계정 범위라 사망해도
+     * 그날 쓴 횟수는 되돌아오지 않는다(`pickPermanentPlayerState`가 넘긴다).
+     */
+    fieldAutoRuns?: { day: string; used: number };
     /**
      * 2026-10 Wave 58: 달성했지만 아직 수령하지 않은 업적 — 계승 · 사망 재시작 직전에 남긴다(`pickPermanentPlayerState`).
      * 레벨 · 방문 지역처럼 런마다 줄어드는 값이 수령 전 업적을 다시 잠그지 않게 한다.
@@ -800,6 +806,13 @@ export interface Player {
      * 2 우두머리 · 3 완수)와 그 단계의 진행. 회차마다 다시 하는 의뢰라 런 범위다 — `pickPermanentPlayerState`에 넣지 않는다.
      */
     huntContracts?: Record<string, HuntContractProgress>;
+    /**
+     * 2026-11 지역 지도 걷기(docs/OVERWORLD_WALK_DESIGN_2026-11.md): 지금 걷는 지도의 상태. 지도 모양은 시드에서 다시 만든다.
+     * 런 범위라 `pickPermanentPlayerState`에 넣지 않는다(사망 · 계승에서 비워진다).
+     */
+    fieldMap?: FieldMapState | null;
+    /** 2026-11 지역 지도: 이번 여정에서 클리어한 지역(상자를 모두 열고 출구로 나감) — 자동 탐험 자격. 여정 범위. */
+    fieldClearedRegions?: string[];
     /** cycle 186: PremiumShop 부활 토큰 보유 수 — 환생에도 보존되는 영구 자산. */
     reviveTokens?: number;
     /** 2026-07 에테르 거울 revive를 이 런에서 이미 썼는지. 새 런 시작 시 자연 리셋. */

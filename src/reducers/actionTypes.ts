@@ -14,6 +14,7 @@ import type { GraveEntry } from '../utils/graveUtils.js';
 import type { buildRunSummary } from '../utils/gameUtils.js';
 import type { DeathLoreView } from '../utils/deathLore.js';
 import type { GameMode } from './gameStates';
+import type { FieldDirection, FieldPending } from '../types/fieldMap';
 
 export type UseCombatItemPayload = {
     itemId: string;
@@ -154,6 +155,11 @@ export const AT = Object.freeze({
     //   권한은 리듀서 하나에 있다 — 늦게 도착한 응답은 상태 검사로 버려진다).
     BEGIN_AI_EVENT: 'BEGIN_AI_EVENT',
     RESOLVE_AI_EVENT: 'RESOLVE_AI_EVENT',
+    // 2026-11 지역 지도 걷기(docs/OVERWORLD_WALK_DESIGN_2026-11.md) — 지도 만들기 · 한 걸음 · 처리할 일 지우기 · 자동 탐험 시작.
+    FIELD_ENTER: 'FIELD_ENTER',
+    FIELD_STEP: 'FIELD_STEP',
+    FIELD_CLEAR_PENDING: 'FIELD_CLEAR_PENDING',
+    FIELD_AUTO_START: 'FIELD_AUTO_START',
 
     // v4.0 — Relic / Prestige / Title / Daily
     SET_PENDING_RELICS: 'SET_PENDING_RELICS',
@@ -402,6 +408,12 @@ export interface ActionPayloadMap {
     [AT.RESOLVE_SCOUT]: ResolveScoutPayload;
     [AT.BEGIN_AI_EVENT]: undefined;
     [AT.RESOLVE_AI_EVENT]: ResolveAiEventPayload;
+    [AT.FIELD_ENTER]: undefined;
+    /** `auto`면 자동 탐험의 걸음이다(미믹이 나오지 않는다). `now`는 상자 아이템 id · 기록의 시각. */
+    [AT.FIELD_STEP]: { direction: FieldDirection; auto?: boolean; now: number };
+    /** 화면 쪽 훅이 처리를 시작한 일 — 지금 남은 일과 종류가 같을 때만 지운다. */
+    [AT.FIELD_CLEAR_PENDING]: { kind: FieldPending['kind'] };
+    [AT.FIELD_AUTO_START]: { now: number };
 
     // ── v4.0 — Relic / Prestige / Title / Daily ──────────────────────────
     [AT.SET_PENDING_RELICS]: Relic[] | null;

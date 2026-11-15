@@ -84,12 +84,13 @@ for (const width of [375, 390, 430]) {
 
         test('필드 무대의 장 칩 — 첫 원정 지역은 1장, 무대 머리가 잘리지 않는다', async ({ page }) => {
             await page.getByTestId('control-expedition-start').click();
-            const chip = page.getByTestId('field-stage-chapter');
+            // 2026-11 지역 지도 걷기: 첫 원정 지역(고요한 숲)의 위쪽 무대는 걷는 지도이고, 장 칩은 지도 위쪽 줄에 있다.
+            const stage = page.getByTestId('field-map');
+            const chip = stage.getByTestId('field-stage-chapter');
             await expect(chip).toHaveText('1장', { timeout: 8_000 });
-            const stage = page.getByTestId('field-stage');
             await expectNoHorizontalOverflow(page);
             expect(await findUndersizedText(stage)).toEqual([]);
-            expect(await findClippedText(page.getByTestId('field-stage-location'))).toEqual([]);
+            expect(await findClippedText(stage)).toEqual([]);
         });
     });
 }

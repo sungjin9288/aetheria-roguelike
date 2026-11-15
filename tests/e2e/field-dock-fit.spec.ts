@@ -1,5 +1,5 @@
 import { expect, test, type Page } from '@playwright/test';
-import { startE2ERun, waitForModeTransition } from './testHelpers';
+import { startE2ERun, waitForModeTransition, exploreOnce } from './testHelpers';
 
 /**
  * 소유자 결정 2026-10-26 D14: 390×844(iPhone 14 · 안전 영역 47/34)에서 원정 조작판(필드 독)의 둘째 줄
@@ -58,7 +58,7 @@ test.describe('원정 조작판 · 스크롤 없이 한 화면', () => {
                 await expectDockFits(page, device, '출발 직후');
 
                 await page.evaluate((seed) => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(seed), QUIET_EXPLORE_SEED);
-                await page.getByTestId('control-explore').click();
+                await exploreOnce(page);
                 await expect.poll(() => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}').gameState)).toBe('idle');
                 await expectDockFits(page, device, '탐험 한 번 뒤');
             });

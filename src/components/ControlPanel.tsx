@@ -37,6 +37,9 @@ import { buildControlButtons } from './control/controlButtons';
 import { isStorySceneSeen } from '../utils/storySceneLedger';
 import AutoExploreToggle from './control/AutoExploreToggle';
 import { useAutoExploreControl } from './control/autoExploreContext';
+import { useFieldMapControl } from './field/fieldMapContext';
+import FieldPad from './field/FieldPad';
+import FieldAutoButton from './field/FieldAutoButton';
 
 interface ControlPanelProps {
   gameState?: GameMode;
@@ -91,6 +94,9 @@ const ControlPanel = ({
   damageAmount = null,
 }: ControlPanelProps) => {
   const autoExplore = useAutoExploreControl();
+  // 2026-11 지역 지도 걷기: 지도 지역에서는 방향 패드가 탐험 단추를, 지도 자동 탐험이 연속 탐험(H1)을 대신한다.
+  const fieldMap = useFieldMapControl();
+  const walkingField = fieldMap?.active ? fieldMap : null;
   const mapData = DB.MAPS[player.loc as string];
   const currentLocation = player.loc || '';
   const playerLevel = player.level || 1;
@@ -173,6 +179,14 @@ const ControlPanel = ({
       />
     );
     // 2026-11 H1: 연속 탐험이 시작한 전투에서도 진행 줄 · 멈추기 단추가 보인다.
+    if (fieldMap?.auto.running) {
+      return (
+        <div className="w-full space-y-2">
+          <FieldAutoButton control={fieldMap} />
+          {combatPanel}
+        </div>
+      );
+    }
     if (!autoExplore?.running) return combatPanel;
     return (
       <div className="w-full space-y-2">
@@ -340,14 +354,14 @@ const ControlPanel = ({
         />
       )}
       {/* slice 22: 가이드 스트립 — 퀘스트 트래커 부재 시(신규 플레이어 포함) 다음 행동 제목+이유를 같은 자리에 노출. */}
-      {!isSafeZone && !questTracker && guidance?.title && (
+      {!isSafeZone && !walkingField && !questTracker && guidance?.title && (
         <div data-testid="adventure-guidance-strip" className="ae-card is-quiet px-3.5 py-3 font-readable">
           <div className="ae-eyebrow">다음 행동</div>
           <div className="mt-1 aether-type-title font-semibold text-ae-ink">{guidance.title}</div>
           <div className="mt-0.5 aether-type-meta text-ae-ink-2">{guidance.detail}</div>
         </div>
       )}
-      {!isSafeZone && <MapSignalStrip player={player} routes={moveRecommendations} />}
+      {!isSafeZone && !walkingField && <MapSignalStrip player={player} routes={moveRecommendations} />}
       {isSafeZone ? (
         <TownActions
           lastExpedition={lastExpedition}
@@ -369,7 +383,9 @@ const ControlPanel = ({
           scoutAvailability={scoutAvailability}
           onScout={actions?.scout ? () => actions.scout?.() : undefined}
           recommendedKey={recommendedButton}
-          autoExplore={autoExplore?.unlocked ? <AutoExploreToggle control={autoExplore} /> : null}
+          fieldPad={walkingField ? <FieldPad canWalk={walkingField.canWalk} onWalk={walkingField.walk} /> : undefined}
+          autoExplore={walkingField ? <FieldAutoButton control={walkingField} />
+            : autoExplore?.unlocked ? <AutoExploreToggle control={autoExplore} /> : null}
           auxiliary={auxiliaryButtons.length > 0 ? (
             <div className="mt-2 grid grid-cols-1 gap-2">
               {auxiliaryButtons.map((button) => renderActionButton(button, '', {}))}

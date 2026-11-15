@@ -14,6 +14,7 @@ import { deliverPendingReturnSupplyRewards } from '../utils/returnSupplyReward';
 import { returnSupplyRewardActionMap } from './handlers/rewardedAdHandlers';
 import { boundedEncounterActionMap } from './handlers/boundedEncounterHandlers';
 import { chapterPickActionMap } from './handlers/chapterPickHandlers';
+import { fieldActionMap } from './handlers/fieldHandlers';
 import { settleSignatureAcquisitions } from './handlers/signatureAcquisition';
 import type { ActionOf, ActionType, GameAction, RunSummary } from './actionTypes';
 import type { GameMode } from './gameStates';
@@ -210,6 +211,7 @@ const ACTION_MAP = {
     ...returnSupplyRewardActionMap,
     ...boundedEncounterActionMap,
     ...chapterPickActionMap,
+    ...fieldActionMap,
 } satisfies HandlerMap;
 
 const deliverReturnSupply = (nextState: GameState): GameState => {

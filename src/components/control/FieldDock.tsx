@@ -23,6 +23,8 @@ interface FieldDockProps {
   autoExplore?: ReactNode;
   /** 묘비 회수처럼 그 자리에서만 생기는 행동. */
   auxiliary?: ReactNode;
+  /** 지역 지도(2026-11 지역 지도 걷기)의 방향 패드 — 넘어오면 탐험 주 행동 자리를 대신한다(조우는 걷기에서 나온다). */
+  fieldPad?: ReactNode;
 }
 
 const getScoutSublabel = (scout: ScoutAvailability) => {
@@ -46,6 +48,7 @@ const FieldDock = ({
   recommendedKey,
   autoExplore,
   auxiliary,
+  fieldPad,
 }: FieldDockProps) => {
   const MoveIcon = move.icon;
   const BagIcon = bag.icon;
@@ -54,7 +57,8 @@ const FieldDock = ({
 
   return (
     <div className="ae-field-dock-wrap">
-      <div data-testid="control-field-actions" aria-label={MSG.FIELD_DOCK_LABEL} role="group" className="ae-field-dock">
+      <div data-testid="control-field-actions" aria-label={MSG.FIELD_DOCK_LABEL} role="group" className={`ae-field-dock${fieldPad ? ' is-walk' : ''}`}>
+        {fieldPad ? <div className="ae-dock-pad">{fieldPad}</div> : (
         <ActionButton
           variant="primary"
           size="lg"
@@ -69,6 +73,7 @@ const FieldDock = ({
           onClick={explore.onClick}
           className="ae-dock-primary w-full"
         />
+        )}
         <ActionButton
           data-testid={move.testId}
           title={move.label}

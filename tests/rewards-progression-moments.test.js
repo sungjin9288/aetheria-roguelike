@@ -8,6 +8,7 @@ import MomentBanners from '../src/components/MomentBanners.tsx';
 import PostCombatCard from '../src/components/PostCombatCard.tsx';
 import RelicChoicePanel from '../src/components/RelicChoicePanel.tsx';
 import { CLASSES } from '../src/data/classes.ts';
+import { BALANCE } from '../src/data/constants.ts';
 import { DB } from '../src/data/db.ts';
 import { MSG } from '../src/data/messages.ts';
 import { RELICS, RELIC_SYNERGIES } from '../src/data/relics.ts';
@@ -342,8 +343,10 @@ const renderControlPanel = (player, gameState = GS.IDLE) => renderStatic(createE
 }));
 
 test('UX-10 계속 탐험 판정은 조작판의 탐험 단추와 같다 — 사냥 지역 · 마을 · 조사 도시 · 이야기 스텝이 기다리는 안전지대', () => {
-    const field = Object.entries(DB.MAPS).find(([, map]) => map.type !== 'safe' && (map.monsters || []).length > 0)?.[0];
+    // 2026-11 지역 지도 걷기: 지도 지역(고요한 숲)은 걷는 것이 탐험이라 결과 카드가 탐험을 넘기지 않는다 — 아래 따로 본다.
+    const field = Object.entries(DB.MAPS).find(([loc, map]) => map.type !== 'safe' && (map.monsters || []).length > 0 && !BALANCE.FIELD_MAP_REGIONS.includes(loc))?.[0];
     assert.ok(field);
+    assert.equal(canContinueExploreAfterCombat(GS.IDLE, playerAt(BALANCE.FIELD_MAP_REGIONS[0])), false, '지도 지역: 결과 카드는 닫고 지도로 돌아간다');
     const cases = [
         ['사냥 지역', playerAt(field), true],
         ['시작 마을', playerAt('시작의 마을'), false],
@@ -368,7 +371,7 @@ test('UX-10 계속 탐험 판정은 조작판의 탐험 단추와 같다 — 사
 });
 
 test('UX-10 결과 카드에 넘기는 탐험은 실제 탐험 액션을 정확히 한 번 부르고, 탐험할 수 없으면 넘기지 않는다', () => {
-    const field = playerAt('고요한 숲');
+    const field = playerAt('서쪽 평원');
     let explored = 0;
     const explore = () => { explored += 1; return Promise.resolve(); };
     const action = getPostCombatExploreAction(GS.IDLE, field, explore);
@@ -378,6 +381,7 @@ test('UX-10 결과 카드에 넘기는 탐험은 실제 탐험 액션을 정확�
     assert.equal(getPostCombatExploreAction(GS.IDLE, playerAt('시작의 마을'), explore), null);
     assert.equal(getPostCombatExploreAction(GS.SHOP, field, explore), null);
     assert.equal(getPostCombatExploreAction(GS.IDLE, field, undefined), null);
+    assert.equal(getPostCombatExploreAction(GS.IDLE, playerAt(BALANCE.FIELD_MAP_REGIONS[0]), explore), null, '지도 지역은 걸어서 탐험한다');
     assert.equal(explored, 1);
 });
 

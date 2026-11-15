@@ -208,7 +208,8 @@ test('⑥ 접두어 강함은 배율 그대로이고 레벨 보너스는 그 배
         }
     };
     walk(srcRoot);
-    assert.deepEqual(readers.sort(), ['components/combat/EnemyStatus.tsx', 'types/monster.ts', 'utils/enemyLevel.ts', 'utils/exploreUtils.ts']);
+    // 2026-11 지역 지도의 미믹(`systems/fieldChest.ts`)도 스폰 지점이다 — 정예 배율과 같은 강함을 레벨 보너스로 단다.
+    assert.deepEqual(readers.sort(), ['components/combat/EnemyStatus.tsx', 'systems/fieldChest.ts', 'types/monster.ts', 'utils/enemyLevel.ts', 'utils/exploreUtils.ts']);
 });
 
 test('⑦ 전투 화면은 적 레벨과 접두어 레벨 보너스를 그린다', () => {

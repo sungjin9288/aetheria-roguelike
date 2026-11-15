@@ -4,6 +4,8 @@ import { GS } from '../../../reducers/gameStates';
 import { MSG } from '../../../data/messages';
 import TerminalView from '../../TerminalView';
 import ControlPanel from '../../ControlPanel';
+import FieldMapView from '../../field/FieldMapView';
+import { useFieldMapControl } from '../../field/fieldMapContext';
 import { DashboardFallback } from '../MobileGameLayout';
 import { usePreloadPostCombatCard, useStageEnterClass } from '../stageLayoutHooks';
 import DesktopCharacterSheet from './DesktopCharacterSheet';
@@ -65,6 +67,9 @@ const DesktopGameLayout = ({
     inventoryFilterRequest = null,
 }: DesktopGameLayoutProps) => {
     const isCombat = engine.gameState === GS.COMBAT;
+    // 2026-11 지역 지도 걷기: 지도 지역의 대기 화면은 기록 위에 지도를 둔다(전투 · 집중 화면 동안은 그리지 않는다).
+    const fieldMap = useFieldMapControl();
+    const showFieldMap = !isPanelFocusState && engine.gameState === GS.IDLE && Boolean(fieldMap?.active);
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const modeEnterClass = useStageEnterClass(engine.gameState);
     usePreloadPostCombatCard(isCombat);
@@ -130,6 +135,11 @@ const DesktopGameLayout = ({
                     </div>
                 ) : (
                     <>
+                        {showFieldMap && fieldMap?.field && fieldMap.layout && engine.player && (
+                            <div className="ae-field-map-slot is-desktop flex min-w-0">
+                                <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} logs={engine.logs} />
+                            </div>
+                        )}
                         <div className="flex min-h-[200px] min-w-0 flex-1">
                             <TerminalView
                                 logs={engine.logs}

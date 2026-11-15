@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { startE2ERun, expectExploreReady, exploreOnce } from './testHelpers';
 
 /**
  * E2E: 다른 차원의 묘비 (2026-10 Wave 70, 소유자 결정 "이벤트식으로 발생 · 망령과 실제 전투 · 실제 플레이어 묘비만").
@@ -16,7 +16,7 @@ test.describe('다른 차원의 묘비', () => {
     test('탐험 중 다른 플레이어의 묘비가 나타나고, 망령을 이기면 유품을 카탈로그 수치로 받는다', async ({ page }) => {
         await startE2ERun(page);
         await page.getByTestId('control-town-primary').getByRole('button').first().click();
-        await expect(page.getByTestId('control-explore')).toBeVisible({ timeout: 8_000 });
+        await expectExploreReady(page, 8_000);
 
         const seed = await page.evaluate(() => window.__AETHERIA_TEST_API__?.seedDimensionGraveScenario?.());
         expect(seed).toBeTruthy();
@@ -24,7 +24,7 @@ test.describe('다른 차원의 묘비', () => {
         expect(forgedVal).not.toBe(catalogVal);
 
         await page.evaluate((value) => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(value), TRIGGER_SEED);
-        await page.getByTestId('control-explore').click();
+        await exploreOnce(page);
 
         const panel = page.getByTestId('event-panel');
         await expect(panel).toBeVisible({ timeout: 8_000 });

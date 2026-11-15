@@ -54,5 +54,12 @@ export const selectFieldDiscovery = (logs: readonly LogEntry[], floorId: string 
     return null;
 };
 
+/** 지역 지도(2026-11)의 한 줄 소식 — 지도가 선 순간 뒤의 가장 최근 기록 한 줄(종류와 무관 — 아무 일 없음도 보인다). */
+export const selectFieldNews = (logs: readonly LogEntry[], floorId: string | null): LogEntry | null => {
+    const last = logs.length > 0 ? logs[logs.length - 1] : null;
+    if (!last || (floorId !== null && last.id === floorId)) return null;
+    return last;
+};
+
 /** 지역별 미세 입자 — 지역 색 테마 키(utils/regionTheme)가 고른다. 길 잃은 여행이면 테마가 없어 입자도 없다. */
 export const FIELD_MOTE_COUNT = 8;

@@ -183,11 +183,14 @@ const judgeIdle = (state: AutoExploreState, player: Player): AutoExploreStep => 
     return { kind: 'explore' };
 };
 
-/** 다음 걸음 — 탐험 · 일반 공격 · 고른 기술 · 멈춤(이유). */
-export const getAutoExploreStep = (state: AutoExploreState): AutoExploreStep => {
+/**
+ * 다음 걸음 — 탐험 · 일반 공격 · 고른 기술 · 멈춤(이유). 지역 지도의 자동 탐험(2026-11 설계 §7)은 첫 전직이 아니라
+ * 그 지역의 클리어가 자격이라 `requireJob: false`로 같은 판정을 쓴다.
+ */
+export const getAutoExploreStep = (state: AutoExploreState, options: { requireJob?: boolean } = {}): AutoExploreStep => {
     const player = state.player;
     if (!player) return stop('mode');
-    if (!isAutoExploreUnlocked(player)) return stop('locked');
+    if (options.requireJob !== false && !isAutoExploreUnlocked(player)) return stop('locked');
     switch (state.gameState) {
         case GS.IDLE:
             return judgeIdle(state, player);

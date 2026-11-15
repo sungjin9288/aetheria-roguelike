@@ -5,6 +5,8 @@ import TerminalView from '../TerminalView';
 import ControlPanel from '../ControlPanel';
 import EnemyStatus from '../combat/EnemyStatus';
 import FieldStage from '../field/FieldStage';
+import FieldMapView from '../field/FieldMapView';
+import { useFieldMapControl } from '../field/fieldMapContext';
 import { isFieldStageMode } from '../../utils/fieldStage';
 import { getVisibleLocationVisual } from '../../utils/challengeRules';
 import { getEnemyIntent } from '../../utils/enemyIntent';
@@ -71,6 +73,9 @@ const MobileGameLayout = ({
     const stageIntent = stageEnemy && !combatStage?.enemyDefeated ? getEnemyIntent(engine.player, stageEnemy) : null;
     // A2: 사냥 지역의 대기 화면은 기록 창 자리의 위쪽이 필드 무대(지역 · 주인공 · 방금의 발견)이고, 기록은 아래 띠다.
     const showFieldStage = !isPanelFocusState && !stageEnemy && isFieldStageMode(engine.player, engine.gameState);
+    // 2026-11 지역 지도 걷기: 지도 지역의 대기 화면은 무대 대신 지도다(기록 띠는 아래에 그대로).
+    const fieldMap = useFieldMapControl();
+    const showFieldMap = showFieldStage && Boolean(fieldMap?.active && fieldMap.field && fieldMap.layout);
     const archiveAvailable = !isPanelFocusState && mobileArchiveDockVisible;
     const modeEnterClass = useStageEnterClass(engine.gameState);
     usePreloadPostCombatCard(isCombat);
@@ -148,12 +153,16 @@ const MobileGameLayout = ({
                                 />
                             </div>
                         )}
-                        {showFieldStage && (
+                        {showFieldMap && fieldMap?.field && fieldMap.layout ? (
+                            <div className="ae-field-map-slot flex min-h-0 min-w-0 flex-1">
+                                <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} logs={engine.logs} />
+                            </div>
+                        ) : showFieldStage && (
                             <div className="ae-field-stage-slot flex min-h-0 min-w-0 flex-1">
                                 <FieldStage player={engine.player} logs={engine.logs} />
                             </div>
                         )}
-                        <div className={stageEnemy ? 'ae-combat-log-strip flex min-w-0' : showFieldStage ? 'ae-field-log-strip flex min-w-0' : 'flex min-h-0 min-w-0 flex-1'}>
+                        <div className={stageEnemy ? 'ae-combat-log-strip flex min-w-0' : showFieldMap ? 'ae-field-log-strip is-map flex min-w-0' : showFieldStage ? 'ae-field-log-strip flex min-w-0' : 'flex min-h-0 min-w-0 flex-1'}>
                             <TerminalView
                                 logs={engine.logs}
                                 gameState={engine.gameState}

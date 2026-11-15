@@ -9,6 +9,7 @@ import { addItemByName } from '../../utils/inventoryUtils';
 import { getRunBuildProfile, getTraitLootHint, getTraitProfile } from '../../utils/runProfileUtils';
 import { pushBattleRecord, makeBattleRecord } from '../../systems/DifficultyManager';
 import { SEASON_XP } from '../../data/seasonPass';
+import { settleFieldMimicVictory } from '../../systems/fieldChest';
 import { addCombatDigestLogs, getLootUpgradeHint, applyScoutGuaranteedRelic, applyBossRelicReward, applyChainCombatVictory, applyDimensionGraveVictory, buildPassiveBonusWithScout } from './_helpers';
 import { applyAbyssFloorAdvance } from './combatBossHandlers';
 import { getSignaturePityMultiplier } from '../../utils/signaturePity';
@@ -164,6 +165,10 @@ export const handleVictoryOutcome = ({
     updatedPlayer = huntResult.player;
     huntResult.logs.forEach((log) => addLog(log.type, log.text));
     if (huntResult.items.length > 0) updatedPlayer = registerLootToCodex(updatedPlayer, huntResult.items);
+    // 2026-11 지역 지도: 미믹을 이기면 그 상자의 미믹 보상(상자 해시로 정해진 값)을 준다.
+    const mimicResult = settleFieldMimicVictory(updatedPlayer, deadEnemy, currentTime());
+    updatedPlayer = mimicResult.player;
+    mimicResult.logs.forEach((log) => addLog(log.type, log.text));
 
     // codex
     const baseName = CombatEngine.resolveEnemyBaseName(deadEnemy);

@@ -1,5 +1,6 @@
 import { DB } from '../data/db';
 import { GS, type GameMode } from '../reducers/gameStates';
+import { isFieldMapRegion } from '../systems/fieldMapWalk';
 import { getTownExploreIntent } from './townActionPresentation';
 import type { Player } from '../types/index.js';
 
@@ -19,6 +20,8 @@ export const canContinueExploreAfterCombat = (
     if (gameState !== GS.IDLE || !player?.loc) return false;
     const mapData = DB.MAPS[player.loc];
     if (!mapData) return false;
+    // 지도 지역(2026-11 지역 지도 걷기)에서는 조우가 걷기에서 나온다 — 카드는 '닫기'로 지도에 돌아간다.
+    if (isFieldMapRegion(player.loc, mapData)) return false;
     return mapData.type !== 'safe' || getTownExploreIntent(player, mapData) !== null;
 };
 

@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { startE2ERun } from './testHelpers';
+import { startE2ERun, exploreOnce } from './testHelpers';
 
 test.describe('Event choice location continuity', () => {
     // 2026-10 Wave 127(소유자 결정 "처음 숲에서 이벤트로 새 길을 발견하는 기능 삭제 — 퀘스트를 통해 자동으로 알게"):
@@ -10,7 +10,7 @@ test.describe('Event choice location continuity', () => {
         await startE2ERun(page);
         await page.getByTestId('control-expedition-start').click();
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8));
-        await page.getByTestId('control-explore').click();
+        await exploreOnce(page);
         await expect(page.getByTestId('event-panel')).toBeHidden();
         await page.getByTestId('control-move').click();
         await page.getByTestId('control-route-option-시작의 마을').click();
@@ -26,7 +26,7 @@ test.describe('Event choice location continuity', () => {
         await startE2ERun(page);
         await page.getByTestId('control-expedition-start').click();
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8));
-        await page.getByTestId('control-explore').click();
+        await exploreOnce(page);
         await page.getByTestId('control-move').click();
         await page.getByTestId('control-route-option-시작의 마을').click();
         await page.getByTestId('expedition-debrief-close-icon').click();
@@ -78,10 +78,8 @@ test.describe('Event choice location continuity', () => {
         await page.getByTestId('control-expedition-start').click();
         // 2026-11 A2: 필드에서는 지역 그림을 기록 창 머리가 아니라 위쪽 필드 무대의 배경이 그린다(그림은 화면에 하나).
         await expect(page.getByTestId('terminal-location-visual')).toHaveCount(0);
-        await expect(page.getByTestId('field-stage-backdrop')).toHaveAttribute(
-            'data-location-visual',
-            'quiet-forest',
-        );
+        // 2026-11 지역 지도 걷기: 지도 지역(고요한 숲)의 위쪽 무대는 걷는 지도다 — 지역 그림은 이벤트 카드가 그린다.
+        await expect(page.getByTestId('field-map')).toBeVisible();
 
         await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectEvent?.());
         const panel = page.getByTestId('event-panel');

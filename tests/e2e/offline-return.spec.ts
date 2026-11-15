@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { exploreOnce } from './testHelpers';
 
 test('첫 원정은 연결이 끊겨도 귀환 기록을 표시하고 다시 불러온다', async ({ page, context }) => {
     await page.setViewportSize({ width: 390, height: 844 });
@@ -10,7 +11,7 @@ test('첫 원정은 연결이 끊겨도 귀환 기록을 표시하고 다시 불
         await page.getByTestId('control-expedition-start').click();
         // 2026-10 Wave 127(소유자 결정): 첫 탐험은 강제 이야기를 띄우지 않는다 — 조용한 결과 씨앗으로 고정한다.
         expect(await page.evaluate(() => window.__AETHERIA_TEST_API__?.armNextExploreSeed?.(8))).toBe(true);
-        await page.getByTestId('control-explore').click();
+        await exploreOnce(page);
         await expect(page.getByTestId('event-panel')).toBeHidden();
         // 2026-10 통합 감사(town-nav UX-03): 원정 조작판의 이동은 하나다(control-move).
         await page.getByTestId('control-move').click();

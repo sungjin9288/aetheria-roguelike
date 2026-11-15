@@ -93,6 +93,9 @@ export const createCharacterActions = (deps: GameActionDeps, { emitUnlockedTitle
                 expeditionFocusQuestIds,
                 // 2026-10 Wave 62 (원장 §61.4 C11, 소유자 결정 "첫 방문은 여정마다"): 새 여정은 첫 방문 보상을 지역마다 한 번 다시 받는다.
                 firstVisitRewardMaps: [],
+                // 2026-11 지역 지도: 지도 · 클리어 기록은 여정 범위다 — 이전 여정의 처리할 일(미믹 · 조우)이 새 여정에서 다시 처리되지 않는다.
+                fieldMap: null,
+                fieldClearedRegions: [],
                 stats: { ...(player.stats || {}), visitedMaps: [CONSTANTS.START_LOCATION] }
             }});
             const cls = CLASSES[jobId] || CLASSES[CONSTANTS.DEFAULT_JOB];
