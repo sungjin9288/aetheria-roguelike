@@ -125,13 +125,16 @@ export const getFieldAutoStopText = (
 /** 자동 걷기를 쓸 수 있는가 — 연속 탐험(H1)과 같은 첫 전직 조건 */
 export const isFieldAutoWalkUnlocked = (player: Pick<Player, 'job'> | null | undefined): boolean => isAutoExploreUnlocked(player);
 
-/** 지금 지도에서 자동 걷기의 다음 걸음 — 보이는 보스 문과 지금 레벨로 들어갈 수 있는 출구를 목표로 넘긴다. */
+/**
+ * 지금 지도에서 자동 걷기의 다음 걸음 — 보이는 보스 문과 지금 레벨로 들어갈 수 있는 출구를 목표로 넘긴다.
+ * `seasonActive`는 필수다 — 리듀서(`fieldStep`)의 출구 판정과 같은 값이어야 한다(기본값 false이던 동안 화면 경로만 시즌 출구를 뺐다).
+ */
 export const planPlayerFieldAutoWalk = (
     player: Player,
     field: FieldMapState,
     layout: FieldMapLayout,
-    acknowledgedChests: readonly number[] = [],
-    seasonActive = false,
+    acknowledgedChests: readonly number[],
+    seasonActive: boolean,
 ): FieldAutoWalkPlan => {
     const mapData = DB.MAPS[field.loc];
     const door = getFieldDoor(player, field.loc, mapData, layout);

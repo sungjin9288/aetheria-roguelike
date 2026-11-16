@@ -41,6 +41,8 @@ export interface UseFieldMapInput {
     /** 처치 박자 — 끝날 때까지 다음 걸음을 미룬다. */
     paused: boolean;
     timeScale: number;
+    /** 시즌 이벤트 중인가 — 자동 걷기의 출구 목표가 리듀서의 출구 판정(`liveConfig.seasonEvent.active`)과 같아야 한다. */
+    seasonActive: boolean;
 }
 
 export interface FieldMapControl {
@@ -75,7 +77,7 @@ const KEY_DIRECTIONS: Record<string, FieldDirection> = {
     ArrowRight: 'right',
 };
 
-export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale }: UseFieldMapInput): FieldMapControl {
+export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale, seasonActive }: UseFieldMapInput): FieldMapControl {
     const { gameState, player, postCombatResult, pendingRelics, currentEvent } = state;
     const loc = player?.loc || '';
     const mapData = loc ? DB.MAPS[loc] : null;
@@ -88,9 +90,11 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
 
     const stateRef = useRef(state);
     const actionsRef = useRef(actions);
+    const seasonActiveRef = useRef(seasonActive);
     useEffect(() => {
         stateRef.current = state;
         actionsRef.current = actions;
+        seasonActiveRef.current = seasonActive;
     });
 
     // (1) 지도 지역인데 지도가 없다(이전 세이브 · 새 여정의 시작 지역) — 대기 상태에서 만든다.
@@ -163,7 +167,7 @@ export function useFieldMap({ state, actions, addLog, blocked, paused, timeScale
                         const currentLayout = getFieldMapLayout(current, currentMap);
                         if (walkMode) {
                             if (acknowledgedRef.current.seq !== current.seq) acknowledgedRef.current = { seq: current.seq, chests: [] };
-                            const plan = planPlayerFieldAutoWalk(latest.player, current, currentLayout, acknowledgedRef.current.chests);
+                            const plan = planPlayerFieldAutoWalk(latest.player, current, currentLayout, acknowledgedRef.current.chests, seasonActiveRef.current);
                             if (plan.kind === 'stop') {
                                 if (plan.chestId !== undefined) {
                                     acknowledgedRef.current = { seq: current.seq, chests: [...acknowledgedRef.current.chests, plan.chestId] };

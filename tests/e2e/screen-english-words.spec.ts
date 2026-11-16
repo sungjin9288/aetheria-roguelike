@@ -1,5 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 import { openTownFacilities, startE2ERun } from './testHelpers';
+import { visitNewScreens } from './screenSweepScreens';
 
 /**
  * 2026-10 Wave 134(원장 §147): 실제 화면이 그리는 글자와 화면 문구 속성(aria-label · title · alt · placeholder)에 영어 낱말이 없다.
@@ -100,4 +101,10 @@ test('실제 화면의 글자 · 화면 문구 속성에 영어 낱말이 없다
     await page.evaluate(() => window.__AETHERIA_TEST_API__?.injectRunSummary?.());
     await expect(page.getByTestId('run-summary-card')).toBeVisible({ timeout: 8_000 });
     await expectKoreanOnly(page, '사망 화면');
+});
+
+test('신규 화면(지도 · 보스 문 · 자동 걷기 · 강화 갈래 · 장 보스 규칙 · 충전 강타)에 영어 낱말이 없다', async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.setViewportSize({ width: 390, height: 844 });
+    await visitNewScreens(page, (screen) => expectKoreanOnly(page, screen));
 });

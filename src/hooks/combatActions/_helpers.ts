@@ -32,7 +32,7 @@ export type DefeatedEnemy = Monster & {
     dimensionGrave?: DimensionGraveRef;
     /** Wave 80: 지역 토벌 의뢰의 우두머리 — 그 지역 이름. 이기면 `advanceHuntContractOnVictory`가 의뢰를 완수한다. */
     huntChampion?: string;
-    /** 2026-11 지역 지도의 미믹 — 이기면 `applyFieldMimicVictory`가 그 상자의 미믹 보상을 준다(상자 해시로 정해진 값). */
+    /** 2026-11 지역 지도의 미믹 — 이기면 `settleFieldMimicVictory`가 그 상자의 미믹 보상을 준다(상자 해시로 정해진 값). */
     fieldMimic?: FieldMimicRef;
 };
 

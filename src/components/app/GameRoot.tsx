@@ -337,6 +337,7 @@ const GameRoot = ({
             postCombatResult: engine.postCombatResult,
             isAiThinking: engine.isAiThinking,
         },
+        seasonActive: Boolean(engine.liveConfig?.seasonEvent?.active),
         actions: {
             fieldEnter: engine.actions.fieldEnter,
             fieldStep: engine.actions.fieldStep,

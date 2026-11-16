@@ -351,7 +351,7 @@ test('자동 걷기: 첫 전직 뒤에만 쓰고, 지금 레벨로 들어갈 수
     assert.equal(isFieldAutoWalkUnlocked({ job: '전사' }), true);
     const player = doorPlayer({}, { level: 1 });
     const layout = getFieldMapLayout(player.fieldMap, DOOR_MAP);
-    const plan = withThrowingRandom(() => planPlayerFieldAutoWalk(player, { ...player.fieldMap, visited: layout.tiles.split('').map((_, index) => index) }, layout));
+    const plan = withThrowingRandom(() => planPlayerFieldAutoWalk(player, { ...player.fieldMap, visited: layout.tiles.split('').map((_, index) => index) }, layout, [], false));
     assert.equal(plan.kind, 'step', '레벨 1에서도 문(보이는)으로 걸어간다');
     for (const reason of ['chest', 'door', 'exit', 'stuck']) {
         assert.equal(getFieldWalkStopText(reason, player), MSG.FIELD_WALK_STOPPED(MSG.FIELD_WALK_STOP_REASON[reason]));

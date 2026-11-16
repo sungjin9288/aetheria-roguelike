@@ -450,7 +450,6 @@ export const MSG = {
     // cycle 116: EQUIP_EQUIPPED / UI_EQUIPPED 둘 다 '장착 중' 중복 정의였음. 둘 다 제거.
 
     // --- 인벤토리/장비 액션 ---
-    INV_ITEM_NOT_FOUND: '가방에 없는 아이템입니다.',
     EQUIP_JOB_RESTRICT: (job: string | undefined, name: string | undefined) => `${withJosa(job, '은/는')} ${withJosa(name, '을/를')} 장착할 수 없습니다.`,
     EQUIP_TWO_HAND_SHIELD_BLOCK: '양손 무기 사용 중에는 방패를 장착할 수 없습니다.',
     EQUIP_TWO_HAND_OFFHAND_RELEASE: '양손 무기로 전환되어 보조 손 장비가 해제되었습니다.',
@@ -891,7 +890,6 @@ export const MSG = {
     SYNC_CONNECT_FAIL: '클라우드 연결 실패로 오프라인 모드로 시작했습니다.',
 
     // --- 탐험 선택지 ---
-    CHOICE_DEFAULT: (n: number) => `선택지 ${n}`,
 
     // --- 이동 기본값 ---
     MOVE_NO_EXITS: '없음',
@@ -913,12 +911,7 @@ export const MSG = {
     // --- UI 라벨 (버튼/섹션) ---
     UI_CLOSE: '닫기',
     UI_REFRESH: '갱신',
-    UI_REVIEW: '검토',
-    UI_NOTABLE: '주목',
     // cycle 116: UI_ALL / UI_EQUIPPED 제거 — 0건 사용 (INV_FILTER_ALL과 inline string으로 대체).
-    UI_LOOT_REVIEW: '전리품 검토',
-    UI_LOOT_FOCUS: '전리품 주목',
-    UI_LOOT_FOCUS_HINT: '이번 전투에서 얻은 장비를 우선 확인하세요.',
     UI_AUTO_EQUIP_BEST: '최적 장비 자동 장착',
 
     // --- 인벤토리 필터 ---
@@ -1653,7 +1646,6 @@ export const MSG = {
     ELITE_APPEAR: '⚠️ 정예 개체가 나타났습니다!',
     ELITE_PREFIX_APPEAR: (prefix: string) => `⚠️ [${prefix}] 정예 개체가 나타났습니다!`,
     PREFIX_APPEAR: (prefix: string) => `[${prefix}] 개체가 나타났습니다.`,
-    MOBILE_SUMMARY_QUEST_PILL: (done: number, total: number) => `임무 ${done}/${total}`,
     QUEST_EMPTY_TOWN_HINT: '마을 게시판에서 새 임무를 수락할 수 있습니다.',
     QUEST_EMPTY_FIELD_HINT: '마을로 이동하면 임무 게시판을 이용할 수 있습니다.',
     ESSENCE_REWARD: (amount: number) => `계승 정수 +${amount}`,
@@ -1976,7 +1968,6 @@ export const MSG = {
     SEASON_PANEL_DONE: '시즌 여정 완료',
     SEASON_PANEL_TO_NEXT: (remaining: number) => `다음 단계까지 ${remaining}`,
     SEASON_PANEL_XP: (current: number, max: number) => `${current}/${max} 시즌 경험`,
-    SEASON_PANEL_TRACK_ARIA: (tier: number, total: number) => `시즌 여정 ${tier}/${total}단계`,
     SEASON_PANEL_CLAIMABLE_TITLE: '받을 보상',
     SEASON_PANEL_COUNT: (count: number) => `${count}개`,
     SEASON_PANEL_TIER_REWARD: (tier: number) => `${tier}단계 보상`,
@@ -2238,7 +2229,6 @@ export const MSG = {
     ),
     FIELD_MIMIC_FLED: '미믹에게서 달아났습니다. 상자는 비어 버렸습니다.',
     FIELD_CLEARED: (loc: string) => `${withJosa(loc, '을/를')} 모두 둘러봤습니다 — 이제 자동 탐험을 쓸 수 있습니다.`,
-    FIELD_FLOAT_QUIET: '…',
     FIELD_A11Y_MAP: '지역 지도',
     FIELD_A11Y_PAD: '걷기',
     FIELD_DIR_UP: '위로',
@@ -2257,7 +2247,6 @@ export const MSG = {
     FIELD_AUTO_BUTTON_CRYSTAL: (cost: number) => `자동 탐험 · 크리스탈 ${cost}`,
     FIELD_AUTO_STARTED_PAID_GOLD: (cost: number) => `${withJosa(`골드 ${cost}`, '을/를')} 내고 자동 탐험을 시작합니다.`,
     FIELD_AUTO_STARTED_PAID_CRYSTAL: (cost: number) => `에테르 크리스탈 ${cost}개를 내고 자동 탐험을 시작합니다.`,
-    FIELD_AUTO_LOCKED_BUSY: '지금은 자동 탐험을 시작할 수 없습니다.',
     FIELD_AUTO_STARTED: (left: number) => `자동 탐험을 시작합니다(오늘 남은 무료 횟수 ${left}).`,
     FIELD_AUTO_RESUMED: '자동 탐험을 이어 갑니다.',
     FIELD_AUTO_DONE: '자동 탐험을 마쳤습니다 — 입구로 돌아왔습니다.',

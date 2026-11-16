@@ -15,6 +15,13 @@ import { getChapterRuleBlockedLog, isRuleEscapeSealed } from './chapterBossRule'
 export type CombatActionKind = 'attack' | 'skill' | 'escape';
 
 /**
+ * 지역 지도 미믹에게서 달아나면 그 상자는 이미 연 것으로 남아 보상이 없다(설계 §6) — 일반 도주 줄 뒤에 그 사실을 한 줄 더 남긴다.
+ * 미믹 표식(`fieldMimic`)은 `buildFieldMimic`이 단다.
+ */
+const getFieldMimicFleeLogs = (enemy: Monster | null | undefined): Array<{ type: string; text: string }> =>
+    enemy && (enemy as { fieldMimic?: unknown }).fieldMimic ? [{ type: 'warning', text: MSG.FIELD_MIMIC_FLED }] : [];
+
+/**
  * 이 전이가 실제로 반환하는 `attack`/`performSkill`(CombatEngine.actions.ts) 결과 병합형.
  * `attack`은 `success`/`forceEscape` 필드가 없고, `performSkill`의 거부 분기(쿨다운/MP 부족/
  * 스킬 없음)는 `updatedPlayer`/`updatedEnemy`/`isCrit`/`isVictory`가 없다 — 두 생산자를
@@ -146,7 +153,7 @@ export const resolveCombatActionTurn = ({
                     },
                 }, enemy),
                 enemy: null,
-                logs: escapeResult.logs,
+                logs: [...escapeResult.logs, ...getFieldMimicFleeLogs(enemy)],
                 visualEffect: null,
                 stories: [],
             };
@@ -232,7 +239,7 @@ export const resolveCombatActionTurn = ({
                 },
             }, enemy),
             enemy: null,
-            logs,
+            logs: [...logs, ...getFieldMimicFleeLogs(enemy)],
             visualEffect: null,
             stories: [],
         };
