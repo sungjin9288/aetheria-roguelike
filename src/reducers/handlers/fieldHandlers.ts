@@ -11,7 +11,7 @@ import {
     resolveFieldStep,
 } from '../../systems/fieldMapWalk';
 import { getMapAccess } from '../../utils/mapAccess';
-import { getFieldAutoRunsUsed, isFieldAutoResumable } from '../../utils/fieldAuto';
+import { canPayFieldAutoCost, getFieldAutoRunCost, getFieldAutoRunsUsed, isFieldAutoResumable } from '../../utils/fieldAuto';
 import { getProtocolDayKey } from '../../utils/protocolCycle';
 import { createDomainRandom } from '../../utils/seededRandom';
 import type { FieldMapState } from '../../types/fieldMap';
@@ -107,7 +107,7 @@ const fieldStep = (state: GameState, action: ActionOf<typeof AT.FIELD_STEP>): Ga
             createDomainRandom(field.seed, loc, outcome.chestId, 'chest-item'),
             now,
         );
-        const lines: LogLine[] = [{ type: 'success', text: MSG.FIELD_CHEST_OPENED(grant.gold, grant.admitted) }];
+        const lines: LogLine[] = [{ type: 'success', text: MSG.FIELD_CHEST_OPENED(grant.gold, grant.admitted, grant.converted) }];
         if (grant.dropped.length > 0) lines.push({ type: 'warning', text: MSG.FIELD_CHEST_BAG_FULL(grant.dropped) });
         return withLogs(state, grant.player, lines, now);
     }
@@ -131,14 +131,24 @@ const fieldAutoStart = (state: GameState, action: ActionOf<typeof AT.FIELD_AUTO_
     if (isFieldAutoResumable(field, getFieldMapLayout(field, DB.MAPS[loc]))) return state;
     const now = Number.isFinite(action.payload?.now) ? action.payload.now : 0;
     const used = getFieldAutoRunsUsed(state.player, now);
-    if (used >= BALANCE.FIELD_AUTO_RUNS_PER_DAY) return state;
+    // 무료를 다 쓴 뒤의 한 번은 값을 내고 시작한다 — 값을 내는 것과 횟수를 쓰는 것은 이 전이 하나다(연타에도 두 번 내지 않는다).
+    const cost = getFieldAutoRunCost(used, state.player.level || 1);
+    if (cost === undefined) return state;
+    if (cost && !canPayFieldAutoCost(state.player, cost)) return state;
     const fresh = createFieldMapState(state.player, loc, DB.MAPS[loc]);
+    const paid: Partial<Player> = !cost ? {}
+        : cost.currency === 'gold' ? { gold: (state.player.gold || 0) - cost.amount }
+            : { premiumCurrency: (state.player.premiumCurrency || 0) - cost.amount };
     const player: Player = {
         ...state.player,
+        ...paid,
         fieldMap: { ...fresh, autoRun: true },
         stats: { ...state.player.stats, fieldAutoRuns: { day: getProtocolDayKey(new Date(now)), used: used + 1 } },
     };
-    return withLogs(state, player, [{ type: 'system', text: MSG.FIELD_AUTO_STARTED(BALANCE.FIELD_AUTO_RUNS_PER_DAY - used - 1) }], now);
+    const text = !cost ? MSG.FIELD_AUTO_STARTED(BALANCE.FIELD_AUTO_RUNS_PER_DAY - used - 1)
+        : cost.currency === 'gold' ? MSG.FIELD_AUTO_STARTED_PAID_GOLD(cost.amount)
+            : MSG.FIELD_AUTO_STARTED_PAID_CRYSTAL(cost.amount);
+    return withLogs(state, player, [{ type: 'system', text }], now);
 };
 
 export const fieldActionMap = {

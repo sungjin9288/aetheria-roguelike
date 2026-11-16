@@ -74,6 +74,7 @@ const load = (dir, collectDeaths = false) => {
                     bossCharge: run.bossCharge || null,
                     behavior: run.behavior || null,
                     autoExplore: run.autoExplore || null,
+                    field: run.field || null,
                     events: run.events || null, firstPerHour: run.events && run.hours > 0 ? run.events.firstAt.length / run.hours : null,
                     lateShare: lateBandShare(run), reclimbs: reclimbRatios(run), ladderRank: Number(run.ladderRank) || 0, essence: Number(run.essence) || 0,
                 });
@@ -165,6 +166,23 @@ if (!baseDir) {
             console.log(`    Lv${21}+ ${share(sumInputs('late'))} · 판 중앙값 ${lateShares.length ? (100 * quantile(lateShares, 0.5)).toFixed(1) : '-'}% · 하위 10% ${lateShares.length ? (100 * quantile(lateShares, 0.1)).toFixed(1) : '-'}%`);
             console.log(`    연쇄: 판당 ${(chains.length / autoRows.length).toFixed(0)} · 길이 중앙값 ${chains.length ? quantile(chains, 0.5) : '-'} · 상위 10% ${chains.length ? quantile(chains, 0.9) : '-'} · 0걸음 ${(100 * chains.filter((n) => n === 0).length / Math.max(1, chains.length)).toFixed(0)}% · 3걸음 미만 ${(100 * chains.filter((n) => n < 3).length / Math.max(1, chains.length)).toFixed(0)}% · 연쇄 중 사망 ${autoRows.reduce((sum, r) => sum + r.autoExplore.deathsInChain, 0)}`);
             console.log(`    멈춤: ${Object.entries(stops).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${(100 * n / stopTotal).toFixed(0)}%`).join(' · ')}`);
+        }
+        // 지도 걷기(오버월드 2단계) — 판당 지도 · 걸음(조우당) · 상자 수입(번 골드 중 몫) · 미믹, 자동 탐험을 켰으면 대신한 몫 · 멈춤 이유.
+        const fieldRows = xs.filter((r) => r.field);
+        if (fieldRows.length) {
+            const sumField = (key) => fieldRows.reduce((acc, r) => acc + (Number(r.field[key]) || 0), 0);
+            const per = (key, digits = 0) => (sumField(key) / fieldRows.length).toFixed(digits);
+            console.log(`  지도: 판당 지도 ${per('maps')} · 출구 ${per('exits')} · 클리어 ${per('clears', 1)} · 걸음 ${per('steps')} (조우당 ${(sumField('steps') / Math.max(1, sumField('encounters'))).toFixed(1)}, Lv21+ ${per('lateSteps')}) · 조우 ${per('encounters')} · 막힘 ${sumField('fallbacks')}`);
+            console.log(`    상자: 판당 ${per('chests')} · 골드 ${per('chestGold')} (번 골드의 ${(100 * sumField('chestGold') / Math.max(1, sumField('goldEarned'))).toFixed(2)}%) · 아이템 ${per('chestItems')} · 미믹 ${per('mimics', 1)} (처치 ${sumField('mimicWins')} · 도주 ${sumField('mimicFlees')} · 사망 ${sumField('mimicDeaths')} · 강화 재료 ${sumField('mimicRareWins')})`);
+            const autoFieldRows = fieldRows.filter((r) => r.field.inputs);
+            if (autoFieldRows.length) {
+                const sumAuto = (group, key) => autoFieldRows.reduce((acc, r) => acc + (r.field[group][key] || 0), 0);
+                const share = (group) => `${(100 * sumAuto(group, 'autoCombat') / Math.max(1, sumAuto(group, 'autoCombat') + sumAuto(group, 'manualCombat'))).toFixed(1)}%`;
+                const stops = autoFieldRows.reduce((acc, r) => { for (const [k, n] of Object.entries(r.field.autoStops)) acc[k] = (acc[k] || 0) + n; return acc; }, {});
+                const stopTotal = Math.max(1, Object.values(stops).reduce((x, y) => x + y, 0));
+                console.log(`    자동 탐험: 판당 ${per('autoRuns', 1)}번 (끝까지 ${per('autoDone', 1)} · 이어 가기 ${per('autoResumes', 1)}) · 자동 걸음 ${(100 * sumField('autoSteps') / Math.max(1, sumField('steps'))).toFixed(1)}% (Lv21+ ${(100 * sumField('lateAutoSteps') / Math.max(1, sumField('lateSteps'))).toFixed(1)}%) · 지도 전투 입력 자동 ${share('inputs')} (Lv21+ ${share('late')})`);
+                if (Object.keys(stops).length) console.log(`      멈춤: ${Object.entries(stops).sort((x, y) => y[1] - x[1]).map(([k, n]) => `${k} ${(100 * n / stopTotal).toFixed(0)}%`).join(' · ')}`);
+            }
         }
         const picked = xs.filter((r) => r.chapterPicks);
         if (picked.length) {
