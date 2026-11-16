@@ -9,7 +9,11 @@ import { getAvatarSpriteCandidates } from '../../utils/avatarSpriteCandidates';
 import { getVisibleLocationName, isBlindMap } from '../../utils/challengeRules';
 import { getChapterOf } from '../../utils/chapters';
 import { selectFieldNews } from '../../utils/fieldStage';
-import { fieldColor, readFieldMapPalette } from '../../utils/fieldMapPalette';
+import { fieldColor, readFieldBiomePalette, readFieldMapPalette } from '../../utils/fieldMapPalette';
+import { getFieldBiome } from '../../systems/fieldBiome';
+import { getAreaBossName } from '../../utils/bossGauge';
+import { DB } from '../../data/db';
+import { drawFieldDoor, drawFieldTile } from './fieldTileArt';
 import type { FieldMapLayout, FieldMapState } from '../../types/fieldMap';
 import type { Player } from '../../types/index.js';
 import type { LogEntry } from '../../types/session.js';
@@ -24,6 +28,8 @@ interface FieldMapViewProps {
     field: FieldMapState;
     layout: FieldMapLayout;
     logs: readonly LogEntry[];
+    /** 지금 보이는 보스 문의 칸(오버월드 3단계) — 닫혀 있으면 null */
+    door?: number | null;
 }
 
 const useHeroImage = (src: string | undefined) => {
@@ -39,11 +45,16 @@ const useHeroImage = (src: string | undefined) => {
     return image;
 };
 
-const FieldMapView = ({ player, field, layout, logs }: FieldMapViewProps) => {
+const FieldMapView = ({ player, field, layout, logs, door = null }: FieldMapViewProps) => {
     const wrapRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const [size, setSize] = useState({ width: 0, height: 0 });
     const palette = useMemo(() => readFieldMapPalette(), []);
+    // 오버월드 3단계: 바이옴(지역 색 테마에서 도출 — 길 잃은 여행이면 중립 폐허)
+    const blind = isBlindMap(player);
+    const mapData = DB.MAPS[layout.loc];
+    const biome = getFieldBiome(layout.loc, mapData, blind);
+    const biomeColors = useMemo(() => readFieldBiomePalette(biome), [biome]);
     const heroSrc = useMemo(() => getAvatarSpriteCandidates(deriveCharacterAppearance(player))[0], [player]);
     const heroImage = useHeroImage(heroSrc);
 
@@ -100,31 +111,17 @@ const FieldMapView = ({ player, field, layout, logs }: FieldMapViewProps) => {
         for (let y = y0; y <= y1; y += 1) {
             for (let x = x0; x <= x1; x += 1) {
                 const index = y * layout.width + x;
-                if (!revealed.has(index)) continue;
                 const px = x * tile - camX;
                 const py = y * tile - camY;
+                if (index === door) {
+                    // 보스 문은 밝혀지지 않아도 보인다 — 가야 할 곳이 지도 위에 있다.
+                    if (revealed.has(index)) drawFieldTile({ ctx, biome, char: layout.tiles[index], px, py, tile, index, base: palette, colors: biomeColors });
+                    drawFieldDoor(ctx, px, py, tile, palette);
+                    continue;
+                }
+                if (!revealed.has(index)) continue;
                 const char = layout.tiles[index];
-                ctx.fillStyle = char === '#' ? fieldColor(palette.wall, 1)
-                    : char === ',' ? fieldColor(palette.grass, 0.32)
-                        : char === ';' ? fieldColor(palette.deep, 0.45)
-                            : fieldColor(palette.path, 1);
-                ctx.fillRect(px, py, tile, tile);
-                if (char === '#') {
-                    // 벽 — 위쪽 가장자리만 밝혀 길과 갈라 보이게 한다.
-                    ctx.fillStyle = fieldColor(palette.ink, 0.06);
-                    ctx.fillRect(px, py, tile, 3);
-                } else if (char === '.') {
-                    ctx.strokeStyle = fieldColor(palette.ink, 0.05);
-                    ctx.lineWidth = 1;
-                    ctx.strokeRect(px + 0.5, py + 0.5, tile - 1, tile - 1);
-                }
-                if (char === ',' || char === ';') {
-                    // 풀숲 무늬 — 칸 번호로 정한 고정 자리(난수 없음)
-                    ctx.fillStyle = fieldColor(palette.grass, char === ';' ? 0.75 : 0.55);
-                    const ox = (index * 7) % (tile - 12);
-                    ctx.fillRect(px + 4 + ox, py + tile * 0.55, 2, tile * 0.25);
-                    ctx.fillRect(px + 9 + ox, py + tile * 0.45, 2, tile * 0.35);
-                }
+                drawFieldTile({ ctx, biome, char, px, py, tile, index, base: palette, colors: biomeColors });
                 if (index === layout.entrance) {
                     ctx.strokeStyle = fieldColor(palette.entrance, 0.8);
                     ctx.lineWidth = 2;
@@ -169,14 +166,15 @@ const FieldMapView = ({ player, field, layout, logs }: FieldMapViewProps) => {
             ctx.arc(hx + tile / 2, hy + tile / 2, tile * 0.3, 0, Math.PI * 2);
             ctx.fill();
         }
-    }, [size, palette, layout, field.pos, field.openedChests, revealed, heroImage, facingLeft]);
+    }, [size, palette, biome, biomeColors, door, layout, field.pos, field.openedChests, revealed, heroImage, facingLeft]);
 
     const threshold = getFieldEncounterThreshold(player, layout.loc);
     const signal = getFieldDangerSignal(field.danger, threshold);
     const opened = layout.chests.filter((chest) => field.openedChests.includes(chest.id)).length;
     const locationName = getVisibleLocationName(player, player.loc) ?? '';
     // 2026-11 B1 P1: 지금 지역의 장 번호 — 필드 무대(FieldStage)와 같은 칩 · 같은 판정(길 잃은 여행이면 숨긴다).
-    const chapter = isBlindMap(player) ? null : getChapterOf(player.loc);
+    const chapter = blind ? null : getChapterOf(player.loc);
+    const doorBoss = door !== null ? getAreaBossName(mapData) : null;
 
     // 지도가 선 순간 뒤의 기록 한 줄 — 아무 일 없음 · 작은 발견 · 상자는 화면을 바꾸지 않고 여기서 보인다.
     const [floorId] = useState<string | null>(() => (logs.length > 0 ? logs[logs.length - 1].id : null));
@@ -189,6 +187,8 @@ const FieldMapView = ({ player, field, layout, logs }: FieldMapViewProps) => {
             data-field-pos={field.pos}
             data-field-danger={signal}
             data-field-chests={`${opened}/${layout.chests.length}`}
+            data-field-biome={biome}
+            data-field-door={door ?? undefined}
             aria-label={MSG.FIELD_STAGE_ARIA(locationName)}
             className={`ae-field-map relative h-full min-h-0 w-full overflow-hidden rounded-ae-lg${encounterFlash ? ' is-encounter' : ''}`}
         >
@@ -198,6 +198,9 @@ const FieldMapView = ({ player, field, layout, logs }: FieldMapViewProps) => {
             <div className="ae-field-map-top">
                 <div className="flex min-w-0 flex-wrap items-center gap-1">
                     <Chip tone="ether" data-testid="field-map-chests">{MSG.FIELD_CHESTS_LEFT(opened, layout.chests.length)}</Chip>
+                    {doorBoss && (
+                        <Chip tone="threat" data-testid="field-door-chip">{MSG.FIELD_DOOR_CHIP(doorBoss)}</Chip>
+                    )}
                     {chapter !== null && (
                         <Chip data-testid="field-stage-chapter" className="font-fira tabular-nums">{MSG.FIELD_STAGE_CHAPTER_CHIP(chapter)}</Chip>
                     )}

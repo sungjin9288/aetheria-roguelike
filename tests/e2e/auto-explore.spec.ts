@@ -3,7 +3,8 @@ import { startE2ERun } from './testHelpers';
 
 /**
  * 2026-11 H1 연속 탐험(docs/EXECUTION_SKETCH_H1_2026-11.md §3) — 화면 쪽 계약.
- *   - 첫 전직 전에는 토글이 없고(Q2 (b)), 전직 뒤 사냥 지역 대기에서는 원정 도크 아래에 그려지고 켤 수 있다.
+ *   - 첫 전직 전에는 토글이 없고(Q2 (b)), 전직 뒤 지도가 아닌 사냥 지역(오버월드 3단계 뒤 혼돈의 심연) 대기에서는 원정 도크
+ *     아래에 그려지고 켤 수 있다. 지도 지역은 자동 걷기 · 지도 자동 탐험이 대신한다(overworld-phase3 · field-map 스펙).
  *   - 토글 줄도 홈 표시줄 위에 있고 화면이 넘치지 않는다(field-dock-fit과 같은 기기 값 — Chromium에는 안전 영역이 없다).
  *   - 켜면 수동 탭과 같은 액션으로 걷고(걸음 수가 오르거나 판단할 거리에서 스스로 멈춘다), 멈추기 단추로 멈추면 이유 한 줄이 기록에 남는다.
  *   - 설정의 생명 멈춤 문턱은 30 · 50 · 70% 중 하나이고 기본 50%다.
@@ -16,7 +17,8 @@ const DEVICES = [
     { label: 'iPhone Pro Max', width: 430, height: 932, top: 62, bottom: 34 },
 ] as const;
 
-// 고요한 숲의 다음 탐험이 전투가 아닌 결과로 끝나는 씨앗(field-dock-fit과 같다).
+// 다음 탐험 씨앗을 고정한다(결과가 전투든 아니든 탐험 수는 오른다). 2026-11 오버월드 3단계부터 연속 탐험이 남는 곳은
+// 지도가 아닌 사냥 지역(혼돈의 심연)뿐이라 씨앗 시나리오가 그곳에 선다.
 const QUIET_EXPLORE_SEED = 7;
 
 const readGame = (page: Page) => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
@@ -79,7 +81,8 @@ test('켜면 걷고, 멈추기를 누르면 멈춘 이유가 기록에 남는다
         .toBeGreaterThan(before.player?.explores ?? 0);
 
     if (await running.isVisible()) {
-        await page.getByTestId('auto-explore-stop').click();
+        // 스스로 멈추는 순간과 겹칠 수 있다(심연은 조우가 잦다) — 단추가 사라졌으면 누르지 않는다.
+        await page.getByTestId('auto-explore-stop').click({ timeout: 2_000 }).catch(() => undefined);
     }
     await expect(running).toBeHidden({ timeout: 8_000 });
     await expect.poll(async () => (await readGame(page)).logTail.some((log: { text: string }) => /연속 탐험.*멈췄습니다/.test(log.text)), { timeout: 8_000 })

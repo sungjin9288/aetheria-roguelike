@@ -17,9 +17,9 @@ import { canInvestigateTown } from '../../utils/townInvestigation';
 import { buildCampfireEvent } from '../../utils/campfireEvent';
 import { formatEventText } from '../../utils/eventPresentation';
 import { shouldTriggerScout, buildScoutEvent, getScoutAvailability } from '../../utils/scoutEvents';
-import { isAreaBossChallengeable, isBossGaugeFull, isBossGaugeCardSuppressed, getAreaBossName, buildBossChallengeEvent } from '../../utils/bossGauge';
-import { spawnEnemy } from '../../utils/exploreUtils';
-import { getEnemyThreat } from '../../utils/enemyThreat';
+import { isAreaBossChallengeable, isBossGaugeFull, isBossGaugeCardSuppressed } from '../../utils/bossGauge';
+import { buildAreaBossChallengeCard } from '../../utils/bossChallengeCard';
+import { isFieldMapRegion } from '../../systems/fieldMapWalk';
 import { getProgressionEventMultiplier } from '../../data/progressionProfiles';
 import type { GameMap, Player } from '../../types';
 import type { GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -239,15 +239,12 @@ export const createExploreActions = (deps: GameActionDeps, shared: SharedHelpers
             //   미뤄지면 "접근했는데 아무 일도 안 일어남"이 반복돼 게이지 시스템의
             //   존재감이 사라짐).
             //   Wave 62 C5: "회피"를 고른 지역은 `BALANCE.BOSS_GAUGE_EVADE_EXPLORES`번 탐험하는 동안 카드를 건너뛴다(게이지는 만충 그대로).
+            //   2026-11 오버월드 3단계(소유자 결정 2026-11-16): 지도 지역에서는 이 카드가 지도의 보스 문으로 옮겨 갔다 — 탐험은 카드를
+            //   띄우지 않고 다음 분기로 간다(결과열이 바뀐다 — 원장 §178에서 짝 비교로 쟀다). 지도가 아닌 지역은 그대로다.
             if (isAreaBossChallengeable(mapData, player) && isBossGaugeFull(player, player.loc!)
-                && !isBossGaugeCardSuppressed(player, player.loc!)) {
+                && !isBossGaugeCardSuppressed(player, player.loc!) && !isFieldMapRegion(player.loc, mapData)) {
                 commitExploreOutcome('narrative_event', null, mapData);
-                const bossName = getAreaBossName(mapData) as string;
-                // Wave 88: 카드의 위협은 도전 경로와 같은 구역 보스 스폰을 고정 난수로 만든 개체다(접두어 없음 — 게임 난수를 쓰지 않는다).
-                const probeBoss = spawnEnemy(mapData, player, player.relics || [], { addLog: () => undefined }, {
-                    forceAreaBoss: true, rng: () => BALANCE.ENEMY_THREAT_PROBE_ROLL,
-                }).mStats;
-                const challengeEvent = buildBossChallengeEvent(bossName, probeBoss ? getEnemyThreat(player, probeBoss) : null);
+                const challengeEvent = buildAreaBossChallengeCard(player, mapData);
                 dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
                 dispatch({ type: AT.SET_EVENT, payload: challengeEvent });
                 addLog('event', challengeEvent.desc);

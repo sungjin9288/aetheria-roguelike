@@ -10,6 +10,7 @@ import {
     getBehaviorComboLabel, getCrossRhythmStrike, getFinisherStrike, getThirdBeat, isPotionSkillReady, isPursuitCrit, nextBeatCount,
 } from './relicBehaviorCombos.js';
 import { healWithinMax } from './vitals.js';
+import { getChapterRuleBlockedLog, getRuleBuffTurns, getRuleSkillCooldown, getRuleSkillMpCost, isRuleCritSealed, isRuleDotSealed, isRuleEscapeSealed, isRuleLifestealSealed } from './chapterBossRule.js';
 import type { CalculateDamageOptions } from './CombatEngine.js';
 
 export function getStrongestNumericRelicValue(
@@ -183,6 +184,8 @@ export const actionMethods = {
         //   두어 치명 판정 난수 한 번은 그대로 쓴다.
         const activeSynergies = stats.activeSynergies || [];
         const pursuitCrit = isPursuitCrit(activeSynergies, enemy);
+        // 2026-11 B5: 장 보스 규칙 '붉은 용린' — 치명 확률 0(치명 판정 난수 한 번은 그대로 쓴다). 추격의 확정 치명타도 막는다.
+        const critSealed = isRuleCritSealed(enemy);
         const crossRhythm = getCrossRhythmStrike(activeSynergies, flags);
         const finisher = getFinisherStrike(activeSynergies, enemy);
 
@@ -194,7 +197,7 @@ export const actionMethods = {
             // cycle 242: stats.critChance dispatch — finalCritChance(equipment / relic / 칭호 /
             //   심연 / 시너지 / killStreak / 트레이트 합산)가 SystemTab에 표시만 되고 실제
             //   attack/skill에는 dispatch 0건이던 dead config fix. 미정의 시 default(0.1) fallback.
-            ...(pursuitCrit ? { critChance: 1 } : typeof stats.critChance === 'number' ? { critChance: stats.critChance } : {})
+            ...(critSealed ? { critChance: 0 } : pursuitCrit ? { critChance: 1 } : typeof stats.critChance === 'number' ? { critChance: stats.critChance } : {})
         });
 
         // 유물: 드래곤 발톱 (crit_dmg) — 크리티컬 피해 배율 상승
@@ -312,7 +315,8 @@ export const actionMethods = {
         const hellReaperSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'hell_reaper' || s.bonus.lifeStealBonus);
         const totalLifeSteal = getStrongestSynergyLifeSteal(stats.activeSynergies) + (hellReaperSyn?.bonus.lifeStealBonus || 0);
-        if (totalLifeSteal > 0) {
+        // 2026-11 B5: 장 보스 규칙 '혈월' — 흡혈이 생명을 회복하지 않는다.
+        if (totalLifeSteal > 0 && !isRuleLifestealSealed(enemy)) {
             const steal = Math.floor(finalDamage * totalLifeSteal);
             if (steal > 0) {
                 updatedPlayer = { ...updatedPlayer, hp: healWithinMax(updatedPlayer.hp ?? player.hp, steal, stats.maxHp || updatedPlayer.maxHp || player.maxHp) };
@@ -432,13 +436,19 @@ export const actionMethods = {
             }
         }
 
-        const mpCost = skill.mp || BALANCE.SKILL_MP_COST;
+        // 2026-11 B5: 장 보스 규칙 '얼어붙은 마력' — 기력 소모 두 배. 재사용 대기 도출은 원래 소모(`baseMpCost`)로 한다.
+        const baseMpCost = skill.mp || BALANCE.SKILL_MP_COST;
+        const mpCost = getRuleSkillMpCost(baseMpCost, enemy);
         const loadout = player.skillLoadout || this.DEFAULT_SKILL_LOADOUT;
         const cooldowns: Record<string, number> = { ...(loadout.cooldowns || {}) };
         const cooldown = cooldowns[String(skill.name)] || 0;
 
         // escape_100: 즉시 100% 전투 이탈 (무당 공허의 문 / 시간술사 순간 이동)
         if (skill.effect === 'escape_100') {
+            // 2026-11 B5: 장 보스 규칙 '마왕의 영역' — 도주할 수 없다(기력 · 차례를 쓰지 않는다).
+            if (isRuleEscapeSealed(enemy)) {
+                return { success: false, logs: [{ type: 'warning', text: getChapterRuleBlockedLog(enemy) ?? MSG.ESCAPE_FAIL }] };
+            }
             if ((player.mp ?? 0) < mpCost) {
                 return { success: false, logs: [{ type: 'error', text: MSG.SKILL_NO_MP }] };
             }
@@ -525,7 +535,7 @@ export const actionMethods = {
                 guarding: !!enemy.guarding && !skill.ignoreGuard,
                 elementMultiplier,
                 rng: random,
-                ...(pursuitCritSkill ? { critChance: 1 } : typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
+                ...(isRuleCritSealed(enemy) ? { critChance: 0 } : pursuitCritSkill ? { critChance: 1 } : typeof skillCritChance === 'number' ? { critChance: skillCritChance } : {})
             });
             const hitCritMult = (critDmgRelicSkill?.val || 1) * (roll.isCrit && synCritDmgSkill > 1 ? synCritDmgSkill : 1);
             damage += (roll.isCrit && (critDmgRelicSkill || synCritDmgSkill > 1)) ? Math.floor(roll.damage * hitCritMult) : roll.damage;
@@ -551,7 +561,8 @@ export const actionMethods = {
         const dotMult = skillDotTarget ? getRelicDotMult(relics, skillDotTarget) : 1;
         const hasDotMultRelic = Boolean(skillDotTarget) && relics.some((relic) => relic.effect === 'dot_mult'
             && (!relic.dotScope || relic.dotScope.includes(skillDotTarget!)));
-        const extraDamage = skillDotTarget
+        //   2026-11 B5: 장 보스 규칙 '망자의 봉인' — 지속 피해 추가 타격도 없다.
+        const extraDamage = skillDotTarget && !isRuleDotSealed(enemy)
             ? Math.floor(damage * 0.2 * dotMult)
             : 0;
 
@@ -746,19 +757,22 @@ export const actionMethods = {
         const timeDomSyn = (stats.activeSynergies || []).find((s) =>
             s.bonus.effect === 'time_dominator' || s.bonus.cdReduction);
         const cdReduction = (cdRelic?.val?.cdReduction || 0) + (timeDomSyn?.bonus.cdReduction || 0);
-        const baseCd = skill.cooldown || Math.max(1, Math.ceil(mpCost / 15));
+        const baseCd = skill.cooldown || Math.max(1, Math.ceil(baseMpCost / 15));
         // updatedPlayer.skillLoadout은 위 literal에서 항상 채워 넣었다(non-null 단언, 런타임 값 변화 없음).
-        updatedPlayer.skillLoadout!.cooldowns[String(skill.name)] = Math.max(0, baseCd - cdReduction);
+        //   2026-11 B5: 장 보스 규칙 '과부하 회로' — 줄인 뒤의 대기를 두 배로.
+        updatedPlayer.skillLoadout!.cooldowns[String(skill.name)] = getRuleSkillCooldown(Math.max(0, baseCd - cdReduction), enemy);
 
         // 유물: 영혼 흡수 (skill_lifesteal) — 스킬 피해의 10% HP 흡수
         const effectiveMaxHp = stats.maxHp || updatedPlayer.maxHp || player.maxHp;
-        const slRelic = relics.find((r) => r.effect === 'skill_lifesteal');
+        // 2026-11 B5: 장 보스 규칙 '혈월' — 흡혈 · 흡수(영혼 흡수 · 조합 흡혈 · 흡수 기술)가 생명을 회복하지 않는다.
+        const lifestealSealed = isRuleLifestealSealed(enemy);
+        const slRelic = lifestealSealed ? undefined : relics.find((r) => r.effect === 'skill_lifesteal');
         if (slRelic) {
             const heal = Math.floor(totalDamage * slRelic.val);
             updatedPlayer.hp = healWithinMax(updatedPlayer.hp ?? player.hp, heal, effectiveMaxHp);
         }
         // 2026-10 Wave 56: 흡혈 군주 · 혈맹 불사 "모든 공격으로 준 피해" — 위력 있는 기술의 피해도 흡혈한다.
-        const synLifeStealSkill = dealsDamage ? getStrongestSynergyLifeSteal(stats.activeSynergies) : 0;
+        const synLifeStealSkill = dealsDamage && !lifestealSealed ? getStrongestSynergyLifeSteal(stats.activeSynergies) : 0;
         if (synLifeStealSkill > 0 && totalDamage > 0) {
             const steal = Math.floor(totalDamage * synLifeStealSkill);
             if (steal > 0) {
@@ -778,7 +792,8 @@ export const actionMethods = {
         //   defBonus가 있는 분기('수호의 손길')는 아래 else-if가 방어 강화를 그대로 준다.
         const isRegenSkill = skill.effect === 'hp_regen';
         if ((skill.type === 'buff' && !isRegenSkill) || ['atk_up', 'def_up', 'all_up', 'berserk', 'counter'].includes(String(skill.effect)) || skill.atkBonus !== undefined) {
-            const buff: { atk: number; def: number; turn: number; name: string | undefined; counterChance?: number } = { atk: 0, def: 0, turn: skill.turn || 3, name: skill.name };
+            // 2026-11 B5: 장 보스 규칙 '열기의 장막' — 기술로 건 강화의 지속 턴 절반(올림).
+            const buff: { atk: number; def: number; turn: number; name: string | undefined; counterChance?: number } = { atk: 0, def: 0, turn: getRuleBuffTurns(skill.turn || 3, enemy), name: skill.name };
             if (skill.effect === 'atk_up') buff.atk = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'def_up') buff.def = Math.max(0.15, (skill.val || 1.3) - 1);
             if (skill.effect === 'all_up') {
@@ -819,7 +834,7 @@ export const actionMethods = {
             updatedPlayer.tempBuff = {
                 atk: 0,
                 def: (skill.defBonus || 1) - 1,
-                turn: skill.turn || 1,
+                turn: getRuleBuffTurns(skill.turn || 1, enemy),
                 name: skill.name,
             };
         }
@@ -827,7 +842,7 @@ export const actionMethods = {
         // drain: 스킬 피해의 N% HP 흡수 (#5)
         // cycle 257: skill.drainRatio override — '혼의 흡수' (desc 30%) / '흡혈의 낫' (desc 35%)이
         //   광고와 달리 hardcoded 25%로 흡수되던 desc-data 모순 fix. 미정의 시 default 0.25.
-        if (skill.effect === 'drain') {
+        if (skill.effect === 'drain' && !lifestealSealed) {
             const ratio = (typeof skill.drainRatio === 'number' && skill.drainRatio > 0) ? skill.drainRatio : 0.25;
             const drainHeal = Math.floor(totalDamage * ratio);
             updatedPlayer.hp = healWithinMax(updatedPlayer.hp ?? player.hp, drainHeal, effectiveMaxHp);

@@ -1,4 +1,4 @@
-import test from 'node:test';
+import test, { after, before } from 'node:test';
 import assert from 'node:assert/strict';
 
 import { BALANCE } from '../src/data/constants.js';
@@ -20,6 +20,13 @@ import {
 } from '../src/utils/bossGauge.js';
 import { migrateData } from '../src/utils/dataMigration.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
+import { setFieldMapRegions } from './helpers/fieldRegions.mjs';
+
+// 2026-11 오버월드 3단계: 지도 지역에서는 카드가 지도의 보스 문으로 옮겨 갔다(tests/field-boss-door-contract.test.js).
+// 이 계약은 지도가 아닌 지역의 탐험 카드를 고정한다 — 목록을 비워 신성한 호수를 지도가 아닌 지역으로 둔다.
+let restoreFieldRegions = () => {};
+before(() => { restoreFieldRegions = setFieldMapRegions([]); });
+after(() => restoreFieldRegions());
 
 /**
  * Wave 62 C5 — 보스 게이지 카드의 "회피 — 흔적을 피해 계속 나아간다"는 실제로 계속 나아간다(소유자 결정: 설명대로 구현).

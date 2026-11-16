@@ -1259,6 +1259,13 @@ export const MSG = {
     BOSS_CHARGE_RELEASE_HIT: (enemyName: string | undefined, chargeName: string, dmg: number) => (
         `💥 ${enemyName}의 ${chargeName}! ${dmg} 피해를 받았습니다.`
     ),
+    // 2026-11 B5: 장 보스 규칙 — 규칙만 말한다(권고를 붙이지 않는다, Wave 88). 규칙 이름 · 내용은 data/chapterBossRules.ts.
+    CHAPTER_RULE_LINE: (ruleName: string, ruleText: string) => `📜 보스 규칙 「${ruleName}」 — ${ruleText}.`,
+    CHAPTER_RULE_CHIP: (ruleName: string, ruleText: string) => `규칙 「${ruleName}」 ${ruleText}`,
+    CHAPTER_RULE_BLOCKED: (ruleName: string, ruleText: string) => `「${ruleName}」 ${ruleText}.`,
+    CHAPTER_RULE_DOT_SEALED: (ruleName: string) => `「${ruleName}」 지속 피해가 보스에게 통하지 않았습니다.`,
+    CHAPTER_RULE_EVADE_SEALED: (ruleName: string) => `「${ruleName}」 회피가 통하지 않았습니다.`,
+    CHAPTER_RULE_CODEX_LABEL: '보스 규칙',
     ENEMY_SUMMON: (enemyName: string | undefined, summonName: string, count: number) => (
         `${withJosa(enemyName, '이/가')} ${summonName} ${count}체를 깨웠습니다! 공격할 때마다 하나씩 쓰러집니다.`
     ),
@@ -2275,4 +2282,20 @@ export const MSG = {
     FIELD_AUTO_STOP_HP_LOW: (pct: number) => `생명이 ${pct}% 이하라`,
     FIELD_AUTO_STOPPED: (why: string) => `${why} 자동 탐험을 멈췄습니다.`,
     FIELD_AUTO_STOPPED_MANUAL: '자동 탐험을 멈췄습니다.',
+
+    // === 2026-11 오버월드 3단계 (소유자 결정 2026-11-16) — 보스 문 · 자동 걷기 ===
+    FIELD_DOOR_CHIP: (bossName: string) => `${bossName}의 문`,
+    FIELD_DOOR_AVOID_CHOICE: '물러선다 — 문을 두고 지도를 계속 걷는다',
+    FIELD_DOOR_AVOID_LOG: '문 앞에서 물러섭니다. 문은 그대로 열려 있습니다.',
+    FIELD_DOOR_AVOID_PREVIEW: '물러남 · 문은 그대로 남는다',
+    FIELD_WALK_START: '자동 걷기',
+    FIELD_WALK_STOP: '자동 걷기 멈추기',
+    FIELD_WALK_STOP_REASON: {
+        chest: '보물상자 앞이라',
+        door: '보스 문 앞이라',
+        exit: '지도를 다 밟아 출구 앞이라',
+        stuck: '더 걸을 곳이 없어',
+    },
+    FIELD_WALK_STOPPED: (why: string) => `${why} 자동 걷기를 멈췄습니다.`,
+    FIELD_WALK_STOPPED_MANUAL: '자동 걷기를 멈췄습니다.',
 };

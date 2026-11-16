@@ -17,6 +17,7 @@ import { buildBossChallengeEvent } from '../src/utils/bossGauge.js';
 import { estimateEnemyMaxHit, getEnemyThreat } from '../src/utils/enemyThreat.js';
 import { spawnEnemy } from '../src/utils/exploreUtils.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
+import { setFieldMapRegions } from './helpers/fieldRegions.mjs';
 
 /**
  * Wave 88 (소유자 결정 §91.4 b "예상 타격 표시를 보스에도"): 보스가 나타날 때 · 구역 보스 도전 카드에서 그 보스의 가장 센 한 행동
@@ -163,7 +164,10 @@ test('구역 보스 도전 카드는 문구에 위협을 싣고, 도전하면 �
     const LOC = '신성한 호수';
     const player = playerAt(LOC, 12, {});
     player.stats = { ...player.stats, bossGauge: { [LOC]: 1 }, exploresByLocation: { [LOC]: 10 } };
-    const opened = await explore(stateOf(player));
+    // 오버월드 3단계: 탐험의 카드는 지도가 아닌 지역의 경로다(지도 지역은 보스 문이 같은 카드를 연다).
+    const restore = setFieldMapRegions([]);
+    let opened;
+    try { opened = await explore(stateOf(player)); } finally { restore(); }
     assert.equal(opened.gameState, GS.EVENT);
     assert.equal(opened.currentEvent?.isBossGaugeChallenge, true);
     const probe = spawnEnemy(DB.MAPS[LOC], opened.player, opened.player.relics, { addLog: () => {} }, {

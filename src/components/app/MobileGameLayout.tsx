@@ -155,7 +155,7 @@ const MobileGameLayout = ({
                         )}
                         {showFieldMap && fieldMap?.field && fieldMap.layout ? (
                             <div className="ae-field-map-slot flex min-h-0 min-w-0 flex-1">
-                                <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} logs={engine.logs} />
+                                <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} logs={engine.logs} door={fieldMap.door} />
                             </div>
                         ) : showFieldStage && (
                             <div className="ae-field-stage-slot flex min-h-0 min-w-0 flex-1">

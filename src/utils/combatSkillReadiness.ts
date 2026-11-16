@@ -1,7 +1,8 @@
 import { BALANCE } from '../data/constants';
 import { MSG } from '../data/messages';
 import { isPlayerPotionSkillReady } from '../systems/relicBehaviorCombos';
-import type { Player } from '../types/index.js';
+import { getRuleSkillMpCost } from '../systems/chapterBossRule';
+import type { Monster, Player } from '../types/index.js';
 
 export type CombatSkillReadinessState = 'missing' | 'cooldown' | 'energy' | 'ready';
 
@@ -14,12 +15,15 @@ interface CombatSkillReadinessInput {
     player: Player;
     selectedSkill?: { mp?: number } | null;
     skillCooldown?: number;
+    /** 싸우는 적 — 장 보스 규칙(기력 소모 두 배, 2026-11 B5)을 엔진과 같은 판정으로 읽는다. */
+    enemy?: Monster | null;
 }
 
 export const getCombatSkillReadiness = ({
     player,
     selectedSkill,
     skillCooldown = 0,
+    enemy = null,
 }: CombatSkillReadinessInput) => {
     if (!selectedSkill) {
         return {
@@ -31,7 +35,7 @@ export const getCombatSkillReadiness = ({
         };
     }
 
-    const cost = selectedSkill.mp || BALANCE.SKILL_MP_COST;
+    const cost = getRuleSkillMpCost(selectedSkill.mp || BALANCE.SKILL_MP_COST, enemy);
     const currentEnergy = Math.max(0, player.mp || 0);
 
     // 2026-11 H4 전투 물약술: 전투 중 소모품을 썼으면 다음 기술 한 번은 재사용 대기 · 기력과 무관하게 나간다(엔진 `performSkill`과 같은 판정).

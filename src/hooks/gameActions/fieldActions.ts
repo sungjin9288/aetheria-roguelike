@@ -3,6 +3,9 @@ import { MSG } from '../../data/messages';
 import { AT } from '../../reducers/actionTypes';
 import { GS } from '../../reducers/gameStates';
 import { buildFieldMimic } from '../../systems/fieldChest';
+import { isFieldDoorOpen } from '../../systems/fieldDoor';
+import { isFieldMapRegion } from '../../systems/fieldMapWalk';
+import { buildAreaBossChallengeCard } from '../../utils/bossChallengeCard';
 import { getEnemyThreat } from '../../utils/enemyThreat';
 import { applyBattleStartRelics } from './exploreFlow';
 import type { FieldDirection } from '../../types/fieldMap';
@@ -42,7 +45,24 @@ export const createFieldActions = (deps: GameActionDeps, links: FieldActionLinks
         addLog('warning', MSG.ELITE_THREAT(threat.hit, threat.maxHp, threat.pct, threat.hits));
     };
 
+    /**
+     * 오버월드 3단계 보스 문 — 탐험의 카드와 같은 도전 카드를 연다(같은 카드 · 같은 전투, 물러나면 문 앞으로 돌아간다).
+     * 문이 닫혔으면(게이지 · 격파 기록이 바뀐 뒤 다시 불러옴) 아무 일도 없다. 탐험이 아니라 탐험 수 · 게이지 · 위험은 그대로다.
+     */
+    const openFieldBossDoor = (): boolean => {
+        const loc = player.loc;
+        const mapData = loc ? DB.MAPS[loc] : null;
+        if (gameState !== GS.IDLE || !loc || !mapData || !isFieldMapRegion(loc, mapData) || !isFieldDoorOpen(player, loc, mapData)) return false;
+        const card = buildAreaBossChallengeCard(player, mapData, { door: true });
+        dispatch({ type: AT.SET_GAME_STATE, payload: GS.EVENT });
+        dispatch({ type: AT.SET_EVENT, payload: card });
+        addLog('event', card.desc);
+        return true;
+    };
+
     return {
+        /** 보스 문을 연다 — 걷기가 남긴 처리할 일과 자연 플레이 드라이버(걷지 않는 정책)가 부른다. */
+        fieldOpenDoor: openFieldBossDoor,
         /** 지도 지역에 있는데 지도가 없으면(이전 세이브 · 새 여정의 시작) 지도를 만든다. */
         fieldEnter: () => dispatch({ type: AT.FIELD_ENTER }),
         fieldStep: (direction: FieldDirection, auto = false) => dispatch({
@@ -65,6 +85,9 @@ export const createFieldActions = (deps: GameActionDeps, links: FieldActionLinks
                     return;
                 case 'mimic':
                     startFieldMimic(pending.chestId);
+                    return;
+                case 'door':
+                    openFieldBossDoor();
                     return;
                 default:
                     return;

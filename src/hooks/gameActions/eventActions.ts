@@ -26,6 +26,7 @@ import { applyStoryStatGrant } from '../../utils/permanentStatSources';
 import type { Player, Relic, StatusId } from '../../types';
 import type { ChainCombatSpec, EventOutcome, EventReward, OutcomeBuff, OutcomeRelic, OutcomeStatus } from '../../types/session.js';
 import { getAppearThreatLine } from '../../utils/enemyThreat';
+import { getAppearRuleLine } from '../../systems/chapterBossRule';
 import type { ChainCombatRef } from '../combatActions/_helpers';
 import type { GameState } from '../../reducers/gameReducer';
 import type { AddLog, GameActionDeps, GameActionDepsWithRng } from '../actionDeps';
@@ -488,6 +489,9 @@ const queueOutcomeRelics = (
 const logAppearThreat = (player: Player, enemy: Parameters<typeof getAppearThreatLine>[1], addLog: AddLog) => {
     const line = getAppearThreatLine(player, enemy);
     if (line) addLog('warning', line);
+    // 2026-11 B5: 장 보스 규칙 — 이 전투에만 통하는 규칙을 말한다(권고 없음).
+    const ruleLine = getAppearRuleLine(enemy);
+    if (ruleLine) addLog('warning', ruleLine);
 };
 
 const buildEliteStats = (rawStats: SpawnedEnemyStats, baseName: string) => ({
@@ -767,6 +771,12 @@ const handleBossGaugeChoice = (idx: number, currentEvent: GameState['currentEven
     addLog('event', outcome.log || '');
 
     if (outcome.gaugeEffect === 'avoid') {
+        // 오버월드 3단계: 지도의 보스 문이 연 카드는 탐험이 아니다 — 물러나면 문 앞으로 돌아갈 뿐이다(회피 기록 · 이어지는
+        //   탐험 롤 없음, 문은 남는다).
+        if (currentEvent?.fromFieldDoor) {
+            dispatch({ type: AT.SET_GAME_STATE, payload: GS.IDLE });
+            return;
+        }
         const loc = player.loc || '';
         dispatch({
             type: AT.SET_PLAYER,

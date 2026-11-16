@@ -1,3 +1,5 @@
+import { BALANCE } from '../data/constants.js';
+import { getRuleElementMultiplier } from './chapterBossRule.js';
 /**
  * 2026-10 Wave 52 (소유자 결정 "피해를 없앤다"): 위력(`mult`)이 있는 기술만 적에게 기본 피해를 준다.
  *
@@ -26,6 +28,8 @@ export function getSkillElement(skill: { type?: string } | null | undefined, sta
  */
 export const hitsEnemyWeakness = (
     skill: { type?: string; mult?: number } | null | undefined,
-    enemy: { weakness?: string | null } | null | undefined,
+    enemy: { weakness?: string | null; name?: string; baseName?: string; isBoss?: boolean } | null | undefined,
     stats: { elem?: string } | null | undefined,
-): boolean => Boolean(isDamagingSkill(skill) && enemy?.weakness && getSkillElement(skill, stats) === enemy.weakness);
+): boolean => Boolean(isDamagingSkill(skill) && enemy?.weakness && getSkillElement(skill, stats) === enemy.weakness
+    // 2026-11 B5: 장 보스 규칙 '물든 뿌리'는 약점 배율을 없앤다 — 엔진(`getElementMultiplier`)과 같은 판정.
+    && getRuleElementMultiplier(BALANCE.ELEMENT_WEAK_MULT, enemy) > 1);

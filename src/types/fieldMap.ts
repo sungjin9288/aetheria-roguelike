@@ -38,7 +38,9 @@ export interface FieldMapLayout {
 export type FieldPending =
     | { kind: 'encounter' }
     | { kind: 'exit'; to: string }
-    | { kind: 'mimic'; chestId: number };
+    | { kind: 'mimic'; chestId: number }
+    /** 3단계 보스 문 — 구역 보스 도전 카드(탐험의 카드와 같은 카드 · 같은 전투)를 연다 */
+    | { kind: 'door' };
 
 export interface FieldMapState {
     loc: string;

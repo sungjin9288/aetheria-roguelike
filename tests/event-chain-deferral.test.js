@@ -12,6 +12,7 @@ import { createExploreActions } from '../src/hooks/gameActions/exploreActions.js
 import { makeSharedHelpers } from '../src/hooks/gameActions/_shared.js';
 import { calculateFullStats } from '../src/utils/statsCalculator.js';
 import { isChainStepEncountered } from '../src/utils/chainStepEncounter.js';
+import { setFieldMapRegions } from './helpers/fieldRegions.mjs';
 
 const cases = EVENT_CHAINS.flatMap(chain => chain.steps.filter(isChainEventStep).flatMap(step =>
     step.event.outcomes.flatMap((outcome, choiceIndex) => outcome.type === 'nothing'
@@ -224,7 +225,9 @@ for (const route of ['scout', 'boss']) {
             rng: () => route === 'scout' && rolls++ > 0 ? 0 : 0.99,
             dispatch(action) { state = gameReducer(state, action); }, addLog() {}, addStoryLog() {},
             getFullStats: () => calculateFullStats(state.player) };
-        await createExploreActions(deps, makeSharedHelpers(deps)).explore();
+        // 오버월드 3단계: 탐험의 보스 카드는 지도가 아닌 지역의 경로다(지도 지역은 보스 문).
+        const restore = route === 'boss' ? setFieldMapRegions([]) : () => {};
+        try { await createExploreActions(deps, makeSharedHelpers(deps)).explore(); } finally { restore(); }
         assert.equal(state.gameState, 'event');
         assert.equal(state.currentEvent[route === 'scout' ? 'isScout' : 'isBossGaugeChallenge'], true);
         assert.equal(state.player.stats.explores, 11);

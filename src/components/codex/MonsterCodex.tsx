@@ -9,6 +9,7 @@ import SkillTypeIcon from '../icons/SkillTypeIcon';
 import Chip from '../ui/Chip';
 import type { ElementKey, GameMap, Player } from '../../types/index.js';
 import { withoutUndiscoveredSignatures } from '../../utils/signatureDiscovery';
+import { getChapterRuleForBossName, type ActiveChapterRule } from '../../systems/chapterBossRule';
 
 interface MonsterCodexProps {
     player?: Player | null;
@@ -34,6 +35,8 @@ interface MonsterCodexEntry {
     resistance: ElementKey | null;
     isBoss: boolean;
     bossBrief: BossBrief | null;
+    /** 장 보스 규칙(2026-11 B5) — 엔진 · 전투 칩과 같은 선언. */
+    chapterRule: ActiveChapterRule | null;
 }
 
 const BRIEF_ROWS = [
@@ -97,6 +100,11 @@ const MonsterCodexDetail = ({ monster }: { monster: MonsterCodexEntry }) => (
             </div>
         )}
 
+        {monster.chapterRule && (
+            <div data-testid="codex-monster-chapter-rule" className="ae-well aether-type-meta mt-3 px-3 py-2.5 text-ae-ink-2">
+                <strong className="text-ae-threat">{MSG.CHAPTER_RULE_CODEX_LABEL}</strong> · {MSG.CHAPTER_RULE_CHIP(monster.chapterRule.name, monster.chapterRule.text)}
+            </div>
+        )}
         {monster.bossBrief && <BossBriefBlock brief={monster.bossBrief} />}
 
         <div className="aether-type-meta mt-3 space-y-1">
@@ -150,6 +158,7 @@ const MonsterCodex = ({ player, initialSelectedMonster = null }: MonsterCodexPro
                 resistance: monsterMeta.resistance || null,
                 isBoss: Boolean(monsterMeta.isBoss),
                 bossBrief: getBossBrief(name),
+                chapterRule: getChapterRuleForBossName(name),
             };
         });
     }, [player]);
