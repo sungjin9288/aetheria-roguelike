@@ -114,7 +114,7 @@ const DesktopGameLayout = ({
                 ref={stageRef}
                 data-testid="desktop-stage-column"
                 tabIndex={-1}
-                className={`ae-desktop-column ae-desktop-stage rounded-ae-lg focus-visible:outline-none ${flashClass}`}
+                className={`ae-desktop-column ae-desktop-stage rounded-ae-lg focus-visible:outline-none ${showFieldMap ? 'has-field-map' : ''} ${flashClass}`}
             >
                 {banners}
                 {isPanelFocusState ? (
@@ -140,7 +140,7 @@ const DesktopGameLayout = ({
                                 <FieldMapView player={engine.player} field={fieldMap.field} layout={fieldMap.layout} logs={engine.logs} />
                             </div>
                         )}
-                        <div className="flex min-h-[200px] min-w-0 flex-1">
+                        <div className={showFieldMap ? 'ae-desktop-field-log flex min-w-0' : 'flex min-h-[200px] min-w-0 flex-1'}>
                             <TerminalView
                                 logs={engine.logs}
                                 gameState={engine.gameState}
