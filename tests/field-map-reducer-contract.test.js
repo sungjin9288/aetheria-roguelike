@@ -10,9 +10,16 @@ import { CombatEngine } from '../src/systems/CombatEngine.ts';
 import {
     buildFieldMimic,
     getFieldChestReward,
+    getFieldRegionMaterials,
+    grantFieldChestReward,
     isFieldChestMimic,
     settleFieldMimicVictory,
 } from '../src/systems/fieldChest.ts';
+import { MSG } from '../src/data/messages.ts';
+import { getFieldAutoAvailability, getFieldAutoButtonText, getFieldAutoLockText } from '../src/utils/fieldAuto.ts';
+import { getSellPrice } from '../src/utils/equipmentUtils.ts';
+import { findItemByName, makeItem } from '../src/utils/gameUtils.ts';
+import { getInventoryCapacity } from '../src/utils/inventoryCapacity.ts';
 import { generateFieldMap } from '../src/systems/fieldMapGen.ts';
 import {
     createFieldMapState,
@@ -186,12 +193,17 @@ test('처리할 일이 남아 있거나 대기 상태가 아니면 걷지 않는
     assert.equal(gameReducer(elsewhere, { type: AT.FIELD_STEP, payload: { direction: 'up', now: NOW } }), elsewhere);
 });
 
-test('계약 9: 자동 탐험은 클리어한 지역에서만, 하루 3번, 같은 지도의 이어 가기는 횟수를 쓰지 않는다', () => {
+test('계약 9: 자동 탐험은 클리어한 지역에서만, 하루 무료 5 + 골드 1 + 크리스탈 3, 같은 지도의 이어 가기는 횟수 · 값을 쓰지 않는다', () => {
     const start = (state, now = NOW) => gameReducer(state, { type: AT.FIELD_AUTO_START, payload: { now } });
+    const finish = (s) => ({ ...s, player: { ...s.player, fieldMap: { ...s.player.fieldMap, openedChests: getFieldMapLayout(s.player.fieldMap, MAP).chests.map((c) => c.id) } } });
     const uncleared = stateOf(basePlayer());
     assert.equal(start(uncleared), uncleared, '클리어하지 않은 지역은 거부한다');
 
-    let state = stateOf(basePlayer({ fieldClearedRegions: [LOC] }));
+    const level = 10;
+    const goldCost = level * BALANCE.FIELD_AUTO_EXTRA_GOLD_PER_LEVEL;
+    const crystalCosts = BALANCE.FIELD_AUTO_EXTRA_CRYSTAL_COSTS;
+    const crystalTotal = crystalCosts.reduce((sum, cost) => sum + cost, 0);
+    let state = stateOf(basePlayer({ level, fieldClearedRegions: [LOC], gold: goldCost + 7, premiumCurrency: crystalTotal + 3 }));
     const firstSeq = state.player.fieldMap.seq;
     state = start(state);
     assert.equal(state.player.fieldMap.autoRun, true);
@@ -201,17 +213,93 @@ test('계약 9: 자동 탐험은 클리어한 지역에서만, 하루 3번, 같�
     const resumed = start(state);
     assert.equal(resumed, state, '상자가 남은 자동 탐험 지도에서는 다시 켜도 횟수를 쓰지 않는다');
 
-    const finish = (s) => ({ ...s, player: { ...s.player, fieldMap: { ...s.player.fieldMap, openedChests: getFieldMapLayout(s.player.fieldMap, MAP).chests.map((c) => c.id) } } });
+    for (let used = 2; used <= BALANCE.FIELD_AUTO_RUNS_PER_DAY; used += 1) {
+        state = start(finish(state));
+        assert.equal(state.player.stats.fieldAutoRuns.used, used);
+    }
+    assert.equal(state.player.gold, goldCost + 7, '무료 횟수는 값을 내지 않는다');
+    assert.equal(state.player.premiumCurrency, crystalTotal + 3);
+
+    // 무료를 다 쓰면 골드 한 번 — 낼 수 없으면 거부한다.
+    const broke = finish({ ...state, player: { ...state.player, gold: goldCost - 1 } });
+    assert.equal(start(broke), broke, '골드가 모자라면 거부한다(동일 참조)');
     state = start(finish(state));
-    assert.equal(state.player.stats.fieldAutoRuns.used, 2);
-    state = start(finish(state));
-    assert.equal(state.player.stats.fieldAutoRuns.used, 3);
-    const exhausted = finish(state);
-    assert.equal(start(exhausted), exhausted, '그날 네 번째는 거부한다');
+    assert.equal(state.player.gold, 7, '골드 한 번은 레벨 × 200');
+    assert.equal(state.player.premiumCurrency, crystalTotal + 3);
+    assert.equal(state.player.stats.fieldAutoRuns.used, BALANCE.FIELD_AUTO_RUNS_PER_DAY + 1);
+    assert.equal(start(state), state, '값을 내고 시작한 지도의 이어 가기도 다시 내지 않는다');
+
+    // 그 뒤 크리스탈이 점점 비싸진다.
+    let crystals = crystalTotal + 3;
+    for (const cost of crystalCosts) {
+        const short = finish({ ...state, player: { ...state.player, premiumCurrency: cost - 1 } });
+        assert.equal(start(short), short, `크리스탈 ${cost}이 모자라면 거부한다`);
+        state = start(finish(state));
+        crystals -= cost;
+        assert.equal(state.player.premiumCurrency, crystals, `크리스탈 ${cost}`);
+        assert.equal(state.player.gold, 7, '크리스탈 차례에는 골드를 쓰지 않는다');
+    }
+    const exhausted = finish({ ...state, player: { ...state.player, gold: 999999, premiumCurrency: 9999 } });
+    assert.equal(start(exhausted), exhausted, '무료 + 골드 + 크리스탈을 다 쓰면 그날은 거부한다');
+    assert.equal(exhausted.player.stats.fieldAutoRuns.used, BALANCE.FIELD_AUTO_RUNS_PER_DAY + BALANCE.FIELD_AUTO_EXTRA_GOLD_RUNS + crystalCosts.length);
 
     const nextDay = start(exhausted, NOW + DAY);
-    assert.equal(nextDay.player.stats.fieldAutoRuns.used, 1, '다음 날 다시 3번');
+    assert.equal(nextDay.player.stats.fieldAutoRuns.used, 1, '다음 날 다시 무료부터');
+    assert.equal(nextDay.player.gold, 999999, '다음 날 첫 번은 무료');
     assert.equal(nextDay.player.stats.fieldAutoRuns.day, getProtocolDayKey(new Date(NOW + DAY)));
+});
+
+test('계약 9: 자동 탐험 단추 · 잠금 문구는 리듀서와 같은 값을 읽는다', () => {
+    const level = 12;
+    const make = (used, extra = {}) => basePlayer({
+        level,
+        fieldClearedRegions: [LOC],
+        stats: { ...clone(INITIAL_STATE.player.stats), fieldAutoRuns: { day: getProtocolDayKey(new Date(NOW)), used } },
+        ...extra,
+    });
+    const free = BALANCE.FIELD_AUTO_RUNS_PER_DAY;
+    const view = (player) => getFieldAutoAvailability(player, LOC, null, null, NOW);
+    assert.equal(getFieldAutoButtonText(view(make(0))), MSG.FIELD_AUTO_BUTTON(free, free));
+    const goldView = view(make(free, { gold: 0 }));
+    assert.deepEqual(goldView.cost, { currency: 'gold', amount: level * BALANCE.FIELD_AUTO_EXTRA_GOLD_PER_LEVEL });
+    assert.equal(goldView.lock, 'no_gold');
+    assert.equal(getFieldAutoButtonText(goldView), MSG.FIELD_AUTO_BUTTON_GOLD(level * BALANCE.FIELD_AUTO_EXTRA_GOLD_PER_LEVEL));
+    assert.equal(getFieldAutoLockText(goldView.lock, goldView.cost), MSG.FIELD_AUTO_LOCKED_NO_GOLD(level * BALANCE.FIELD_AUTO_EXTRA_GOLD_PER_LEVEL));
+    const crystalView = view(make(free + 1, { premiumCurrency: 100 }));
+    assert.deepEqual(crystalView.cost, { currency: 'crystal', amount: BALANCE.FIELD_AUTO_EXTRA_CRYSTAL_COSTS[0] });
+    assert.equal(crystalView.lock, null);
+    const done = view(make(free + 1 + BALANCE.FIELD_AUTO_EXTRA_CRYSTAL_COSTS.length, { gold: 1e9, premiumCurrency: 1e9 }));
+    assert.equal(done.lock, 'no_runs');
+    assert.equal(done.cost, null);
+});
+
+test('상자 소모품은 같은 이름이 이미 가방에 있으면 판매가 골드로 바뀌고, 없으면 그대로 들어온다(원장 §175)', () => {
+    const reward = { gold: 40, items: ['하급 체력 물약', '하급 마나 물약'] };
+    const potion = findItemByName('하급 체력 물약');
+    const rng = createDomainRandom(1, LOC, 1, 'chest-item');
+    const owned = basePlayer({ gold: 0, inv: [makeItem(potion, rng, () => NOW)] });
+    const grant = grantFieldChestReward(owned, reward, createDomainRandom(1, LOC, 1, 'chest-item'), NOW);
+    assert.deepEqual(grant.converted, ['하급 체력 물약']);
+    assert.deepEqual(grant.admitted, ['하급 마나 물약']);
+    assert.equal(grant.gold, 40 + getSellPrice(potion));
+    assert.equal(grant.player.gold, 40 + getSellPrice(potion));
+    assert.equal(grant.player.inv.length, 2, '가진 물약은 하나 그대로, 마나 물약 하나만 더해진다');
+    assert.ok(MSG.FIELD_CHEST_OPENED(grant.gold, grant.admitted, grant.converted).includes('하급 체력 물약(골드로 바꿈)'));
+
+    const empty = basePlayer({ gold: 0, inv: [] });
+    const fresh = grantFieldChestReward(empty, reward, createDomainRandom(1, LOC, 1, 'chest-item'), NOW);
+    assert.deepEqual(fresh.converted, []);
+    assert.deepEqual(fresh.admitted, reward.items);
+    assert.equal(fresh.gold, 40);
+
+    // 가방이 가득 차도 이미 가진 소모품은 두고 오지 않고 골드가 된다. 재료는 바꾸지 않는다.
+    const material = getFieldRegionMaterials(MAP)[0];
+    const capacity = getInventoryCapacity(owned);
+    const full = basePlayer({ gold: 0, inv: Array.from({ length: capacity }, () => makeItem(potion, rng, () => NOW)) });
+    const fullGrant = grantFieldChestReward(full, { gold: 0, items: ['하급 체력 물약', material] }, createDomainRandom(1, LOC, 1, 'chest-item'), NOW);
+    assert.deepEqual(fullGrant.converted, ['하급 체력 물약']);
+    assert.deepEqual(fullGrant.dropped, [material]);
+    assert.equal(fullGrant.player.inv.length, capacity);
 });
 
 test('계약 10: 미믹은 초반 지역 ×1.4 · 그 위 ×2.5이고 정예 목격 칭호를 남기지 않는다', () => {

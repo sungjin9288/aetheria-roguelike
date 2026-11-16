@@ -15,7 +15,7 @@ const SIZES = [
 
 const readState = (page: Page) => page.evaluate(() => JSON.parse(window.render_game_to_text?.() || '{}'));
 
-const seed = async (page: Page, kind: 'walk' | 'mimic' | 'opened' | 'cleared') => {
+const seed = async (page: Page, kind: 'walk' | 'mimic' | 'opened' | 'cleared' | 'paid') => {
     const ok = await page.evaluate((value) => window.__AETHERIA_TEST_API__?.seedFieldMapScenario?.(value), kind);
     expect(ok).toBe(true);
 };
@@ -106,7 +106,7 @@ for (const size of SIZES) {
             await page.getByTestId('control-route-option-고요한 숲').click();
             await expect(page.getByTestId('field-map')).toBeVisible({ timeout: 8_000 });
             await expect(auto).toBeEnabled({ timeout: 8_000 });
-            await expect(auto).toContainText('3/3');
+            await expect(auto).toContainText('5/5');
             await auto.click();
             await expect(page.getByTestId('field-auto-stop')).toBeVisible({ timeout: 5_000 });
 
@@ -130,8 +130,25 @@ for (const size of SIZES) {
             }
             const finished = await readState(page);
             expect(finished.player.fieldAutoRuns.used, '이어 가기는 횟수를 쓰지 않는다').toBe(1);
-            await expect(page.getByTestId('field-auto-start')).toContainText('2/3');
+            await expect(page.getByTestId('field-auto-start')).toContainText('4/5');
             await expectFieldLayout(page, size.width);
+        });
+
+        test('무료 자동 탐험을 다 쓰면 단추가 다음 한 번의 값을 말하고, 누르면 그 골드를 내고 시작한다', async ({ page }) => {
+            await seed(page, 'paid');
+            const auto = page.getByTestId('field-auto-start');
+            // 씨앗 레벨 10 × 200
+            await expect(auto).toContainText('골드 2000');
+            await expect(auto).toBeEnabled();
+            await expectFieldLayout(page, size.width);
+            const box = await auto.boundingBox();
+            expect(box!.x + box!.width, '값 단추 화면 안').toBeLessThanOrEqual(size.width);
+            const before = await readState(page);
+            await auto.click();
+            await expect(page.getByTestId('field-auto-stop')).toBeVisible({ timeout: 5_000 });
+            const after = await readState(page);
+            expect(after.player.gold, '골드 2000을 낸다').toBe(before.player.gold - 2000);
+            expect(after.player.fieldAutoRuns.used).toBe(before.player.fieldAutoRuns.used + 1);
         });
     });
 }

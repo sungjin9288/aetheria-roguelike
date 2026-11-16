@@ -364,7 +364,8 @@ export interface CanonicalEventChanceRelicChoiceSnapshot {
  */
 /** 지역 지도 QA 시드의 갈래 */
 /** walk: 새 지도 · mimic: 첫 상자의 미믹이 깨어남 · opened: 상자를 모두 연 지도(나가면 클리어) · cleared: 클리어한 지역 */
-export type FieldMapSeedKind = 'walk' | 'mimic' | 'opened' | 'cleared';
+/** `paid` — 클리어한 지역, 오늘 무료 자동 탐험을 다 쓴 상태(다음 한 번은 골드) · 골드 넉넉 */
+export type FieldMapSeedKind = 'walk' | 'mimic' | 'opened' | 'cleared' | 'paid';
 
 export interface AetheriaTestApi {
     getTrueEndingJourneySnapshot: () => TrueEndingJourneySnapshot;
@@ -2029,8 +2030,14 @@ export const useGameTestApi = (
                     status: [],
                     activeExpedition: null,
                     fieldMap,
-                    fieldClearedRegions: kind === 'cleared' ? [loc] : [],
-                    stats: { ...er.player.stats, fieldAutoRuns: undefined },
+                    fieldClearedRegions: kind === 'cleared' || kind === 'paid' ? [loc] : [],
+                    stats: {
+                        ...er.player.stats,
+                        fieldAutoRuns: kind === 'paid'
+                            ? { day: getProtocolDayKey(new Date()), used: BALANCE.FIELD_AUTO_RUNS_PER_DAY }
+                            : undefined,
+                    },
+                    ...(kind === 'paid' ? { gold: 100_000 } : {}),
                 };
                 const fullStats = calculateFullStats({ ...er.player, ...patch })!;
                 er.dispatch({ type: AT.SET_PENDING_RELICS, payload: null });

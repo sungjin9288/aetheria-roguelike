@@ -2220,12 +2220,15 @@ export const MSG = {
     EXIT_CONFIRM_LEAVE: '종료',
 
     // === 2026-11 지역 지도 걷기 (docs/OVERWORLD_WALK_DESIGN_2026-11.md) ===
-    FIELD_CHEST_OPENED: (gold: number, items: string[]) => (items.length > 0
-        ? `보물상자를 열었습니다 — 골드 ${gold} · ${items.join(' · ')}`
-        : `보물상자를 열었습니다 — 골드 ${gold}`),
+    // 같은 소모품이 이미 가방에 있으면 판매가 골드로 바꾼다(원장 §175) — 바꾼 것은 이름 뒤에 표시한다(골드는 합친 값).
+    FIELD_CHEST_OPENED: (gold: number, items: string[], converted: string[] = []) => (
+        [`보물상자를 열었습니다 — 골드 ${gold}`, ...items, ...converted.map((name) => `${name}(골드로 바꿈)`)].join(' · ')
+    ),
     FIELD_CHEST_BAG_FULL: (items: string[]) => `가방이 가득 차 ${withJosa(items.join(' · '), '을/를')} 두고 왔습니다.`,
     FIELD_MIMIC_AWAKE: '보물상자가 이빨을 드러냈습니다 — 미믹이다!',
-    FIELD_MIMIC_REWARD: (gold: number, items: string[]) => `미믹이 품고 있던 보물 — 골드 ${gold} · ${items.join(' · ')}`,
+    FIELD_MIMIC_REWARD: (gold: number, items: string[], converted: string[] = []) => (
+        [`미믹이 품고 있던 보물 — 골드 ${gold}`, ...items, ...converted.map((name) => `${name}(골드로 바꿈)`)].join(' · ')
+    ),
     FIELD_MIMIC_FLED: '미믹에게서 달아났습니다. 상자는 비어 버렸습니다.',
     FIELD_CLEARED: (loc: string) => `${withJosa(loc, '을/를')} 모두 둘러봤습니다 — 이제 자동 탐험을 쓸 수 있습니다.`,
     FIELD_FLOAT_QUIET: '…',
@@ -2241,8 +2244,14 @@ export const MSG = {
     FIELD_AUTO_STOP: '자동 탐험 멈추기',
     FIELD_AUTO_LOCKED_UNCLEARED: '이 지역의 보물상자를 모두 열고 출구로 나가면 쓸 수 있습니다.',
     FIELD_AUTO_LOCKED_NO_RUNS: '오늘의 자동 탐험을 모두 썼습니다.',
+    FIELD_AUTO_LOCKED_NO_GOLD: (cost: number) => `골드가 부족합니다 — ${withJosa(`골드 ${cost}`, '이/가')} 필요합니다.`,
+    FIELD_AUTO_LOCKED_NO_CRYSTAL: (cost: number) => `에테르 크리스탈이 부족합니다 — ${cost}개가 필요합니다.`,
+    FIELD_AUTO_BUTTON_GOLD: (cost: number) => `자동 탐험 · 골드 ${cost}`,
+    FIELD_AUTO_BUTTON_CRYSTAL: (cost: number) => `자동 탐험 · 크리스탈 ${cost}`,
+    FIELD_AUTO_STARTED_PAID_GOLD: (cost: number) => `${withJosa(`골드 ${cost}`, '을/를')} 내고 자동 탐험을 시작합니다.`,
+    FIELD_AUTO_STARTED_PAID_CRYSTAL: (cost: number) => `에테르 크리스탈 ${cost}개를 내고 자동 탐험을 시작합니다.`,
     FIELD_AUTO_LOCKED_BUSY: '지금은 자동 탐험을 시작할 수 없습니다.',
-    FIELD_AUTO_STARTED: (left: number) => `자동 탐험을 시작합니다(오늘 남은 횟수 ${left}).`,
+    FIELD_AUTO_STARTED: (left: number) => `자동 탐험을 시작합니다(오늘 남은 무료 횟수 ${left}).`,
     FIELD_AUTO_RESUMED: '자동 탐험을 이어 갑니다.',
     FIELD_AUTO_DONE: '자동 탐험을 마쳤습니다 — 입구로 돌아왔습니다.',
     // 지도 자동 탐험이 멈춘 이유 — 연속 탐험(H1)과 같은 판정(`getAutoExploreStep`)이고 기능 이름만 다르다.

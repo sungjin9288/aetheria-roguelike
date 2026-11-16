@@ -739,7 +739,12 @@ export const BALANCE = {
     FIELD_MIMIC_EARLY_MULT: 1.4,
     FIELD_MIMIC_MULT: 2.5,
     FIELD_MIMIC_SPECIES: '미믹',        // 미믹 종(몬스터 데이터의 이름) — 정해진 종 경로로 만든다
-    FIELD_AUTO_RUNS_PER_DAY: 3,
+    // 자동 탐험 하루 횟수(2026-11 소유자 결정 "무료 5 + 골드 1 + 크리스탈 3, 광고는 추후") — 무료를 다 쓰면 다음 한 번은 골드
+    //   (레벨 × 200), 그 뒤 세 번은 크리스탈(점점 비싸진다). 광고 한 번은 광고를 켤 때 무료 다음 칸으로 넣는다(출시 범위 밖).
+    FIELD_AUTO_RUNS_PER_DAY: 5,
+    FIELD_AUTO_EXTRA_GOLD_RUNS: 1,
+    FIELD_AUTO_EXTRA_GOLD_PER_LEVEL: 200,
+    FIELD_AUTO_EXTRA_CRYSTAL_COSTS: [10, 20, 40],
     FIELD_AUTO_STEP_MS: 200,           // 자동 탐험 걸음 박자(전투 속도 ×2면 절반) — 걷는 모습을 빠르게 보인다(설계 §7)
     FIELD_WALK_REPEAT_MS: 170,         // 방향 패드를 누르고 있을 때 다음 걸음까지
     FIELD_TILE_PX: 38,                 // 지도 칸 크기(설계 §8 — 36 ~ 40px, 시제품에서 잰다)

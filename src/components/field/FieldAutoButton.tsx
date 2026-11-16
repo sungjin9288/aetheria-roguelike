@@ -1,12 +1,12 @@
 import { Footprints, Pause } from 'lucide-react';
 import ActionButton from '../ui/ActionButton';
 import { MSG } from '../../data/messages';
-import { getFieldAutoLockText } from '../../utils/fieldAuto';
+import { getFieldAutoButtonText, getFieldAutoLockText } from '../../utils/fieldAuto';
 import type { FieldMapControl } from '../../hooks/useFieldMap';
 
 /**
- * 지도 자동 탐험 단추(설계 §7) — '자동 탐험 N/3'. 클리어하지 않았거나 오늘 횟수를 다 쓴 지역에서는 이유와 함께 꺼진 채로 보인다
- * (D12와 같은 방식). 걷는 동안에는 멈추기 단추가 된다.
+ * 지도 자동 탐험 단추(설계 §7) — 무료면 '자동 탐험 N/5', 무료를 다 썼으면 다음 한 번의 값('자동 탐험 · 골드 6000'). 클리어하지
+ * 않았거나 오늘 횟수를 다 썼거나 값을 낼 수 없으면 이유와 함께 꺼진 채로 보인다(D12와 같은 방식). 걷는 동안에는 멈추기 단추가 된다.
  */
 const FieldAutoButton = ({ control }: { control: FieldMapControl }) => {
     const { auto } = control;
@@ -22,13 +22,13 @@ const FieldAutoButton = ({ control }: { control: FieldMapControl }) => {
             />
         );
     }
-    const lockText = auto.lock ? getFieldAutoLockText(auto.lock) : null;
+    const lockText = auto.lock ? getFieldAutoLockText(auto.lock, auto.cost) : null;
     return (
         <div>
             <ActionButton
                 data-testid="field-auto-start"
                 icon={<Footprints size={18} />}
-                label={MSG.FIELD_AUTO_BUTTON(auto.left, auto.total)}
+                label={getFieldAutoButtonText(auto)}
                 title={lockText ?? undefined}
                 disabled={!auto.canStart}
                 onClick={control.startAuto}

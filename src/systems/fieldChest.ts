@@ -7,6 +7,8 @@ import { spawnEnemy } from '../utils/exploreUtils';
 import { getPrefixLevelBonus } from '../utils/enemyLevel';
 import { findItemByName, grantGold, makeItem, registerLootToCodex } from '../utils/gameUtils';
 import { getInventoryCapacity } from '../utils/inventoryCapacity';
+import { getSellPrice } from '../utils/equipmentUtils';
+import { isConsumableItem } from './consumableRules';
 import type { GameMap } from '../types/map';
 import type { Item } from '../types/item';
 import type { Monster } from '../types/monster';
@@ -134,13 +136,19 @@ export const buildFieldMimic = (player: Player, mapData: GameMap, ref: FieldMimi
 
 export interface FieldChestGrant {
     player: Player;
+    /** 받은 골드 전부(상자 골드 + 골드로 바꾼 소모품) — 수입 규칙을 건 실제 지급액 */
     gold: number;
     admitted: string[];
+    /** 같은 종류가 이미 가방에 있어 판매가 골드로 바꾼 소모품 */
+    converted: string[];
     dropped: string[];
 }
 
 /**
  * 상자 · 미믹 보상을 가방에 넣는다. 전리품과 같이 가방 상한에서 멈춘다(넣지 못한 것은 두고 온다 — 상자는 이미 열렸다).
+ * 소모품은 같은 이름이 이미 가방에 있으면 넣지 않고 판매가(`getSellPrice`) 골드로 바꾼다(2026-11 소유자 결정, 원장 §175) —
+ * 사냥 지역 전부가 지도가 되면 상자 소모품이 판당 1,800개 가까이 들어와 가방 비우기 왕복이 2.4배였다. 상점에 파는 것과 같은 값이라
+ * 골드 가치는 그대로이고, 아직 없는 소모품은 그대로 들어온다. 재료는 제작에 쓰므로 바꾸지 않는다.
  * 아이템 id는 넘겨받은 난수 · 시각으로 만든다(리듀서 결정론).
  */
 export const grantFieldChestReward = (
@@ -149,24 +157,33 @@ export const grantFieldChestReward = (
     rng: RandomSource,
     now: number,
 ): FieldChestGrant => {
-    let next = grantGold(player, reward.gold);
-    const gold = (next.gold || 0) - (player.gold || 0);
-    const capacity = getInventoryCapacity(next);
+    const capacity = getInventoryCapacity(player);
+    const owned = new Set((player.inv || []).map((item) => item?.name));
     const made: Item[] = [];
     const admitted: string[] = [];
+    const converted: string[] = [];
     const dropped: string[] = [];
+    let convertedGold = 0;
     for (const name of reward.items) {
         const template = findItemByName(name);
         if (!template) continue;
-        if ((next.inv || []).length + made.length >= capacity) {
+        if (isConsumableItem(template) && owned.has(name)) {
+            convertedGold += getSellPrice(template);
+            converted.push(name);
+            continue;
+        }
+        if ((player.inv || []).length + made.length >= capacity) {
             dropped.push(name);
             continue;
         }
         made.push(makeItem(template, rng, () => now));
         admitted.push(name);
+        owned.add(name);
     }
+    let next = grantGold(player, reward.gold + convertedGold);
+    const gold = (next.gold || 0) - (player.gold || 0);
     if (made.length > 0) next = registerLootToCodex({ ...next, inv: [...(next.inv || []), ...made] }, made);
-    return { player: next, gold, admitted, dropped };
+    return { player: next, gold, admitted, converted, dropped };
 };
 
 /**
@@ -183,7 +200,7 @@ export const settleFieldMimicVictory = (
     if (!ref || !mapData) return { player, logs: [] };
     const reward = getFieldChestReward(ref.loc, mapData, ref.seed, ref.chestId, true);
     const grant = grantFieldChestReward(player, reward, createDomainRandom(ref.seed, ref.loc, ref.chestId, 'mimic-item'), now);
-    const logs = [{ type: 'success', text: MSG.FIELD_MIMIC_REWARD(grant.gold, grant.admitted) }];
+    const logs = [{ type: 'success', text: MSG.FIELD_MIMIC_REWARD(grant.gold, grant.admitted, grant.converted) }];
     if (grant.dropped.length > 0) logs.push({ type: 'warning', text: MSG.FIELD_CHEST_BAG_FULL(grant.dropped) });
     return { player: grant.player, logs };
 };
